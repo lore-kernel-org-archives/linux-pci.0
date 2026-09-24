@@ -1,154 +1,168 @@
-Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011013.outbound.protection.outlook.com [40.93.194.13])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yx2-f43.google.com (mail-yx2-f43.google.com [74.125.224.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C876837DEA4;
-	Thu, 24 Sep 2026 14:04:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.194.13
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790258653; cv=fail; b=Y9/3xBhu04dKfqvxbfr8HAswUPMteWJ53bCsMMuod3MMg9Gbz3eMfwHF7FcBVUVfiPnG5NXIGKrDThTr/RZ7mbT2qkFIy5nH4W9HM5TsQCtD3isEkIpovwsOvMUswSg+7bwiW3zv1l3XHWXx6q3BvGVhEarfetkiCxSeshe9HOY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790258653; c=relaxed/simple;
-	bh=sciox+q3/aDcSM1+dkUTqZCuJyvYBcVj1v7ypPXE05Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=RdabwASroxGIHizXh4Vir+j+GGa8OItYUiEfLQ+7yK2N3g/2s/iK/b3NmWzqmNSNe9a8PHqgwLf6VToTNTZyDWd6mCqEPBGPKyGE3OqhWchC2Q8e9D1RcnwOpO/56n+0z4UclMqU/b+gJ+qkTf2rRQQMRL6p8FgVzfaVKACa31U=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=panJ8On6; arc=fail smtp.client-ip=40.93.194.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F058749E139
+	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 15:02:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.171
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790262150; cv=none; b=qLiSg97S5gD7o1vym0zeAXq4m7K07s5e2vIw/7Awdha/S4aDH3U6WxqXd/nDXqQgxSQAPLX6zM8iv68kGGB4Iv2baLmsTzV12xHXoVwLYf6rUYPYk2FClamGB+K/PAU6vi31v63UoS6bE8mfuo80dvKmxCdhvwT3StOL3Uk9Erg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790262150; c=relaxed/simple;
+	bh=tatPPp9ksq/AKo1fWOy1GCy/kXeBxFyrR4k8B50gV04=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JWdRf0yYhZhVaaLlZBZE8vZhFpdbg4x53H1qBqaDwvME45jFLGzK6rFEg3Yxx21TeZXadvg3m9vgRVz3sLO7Bp2lmsvGLl1LWrK48KLd9IxDo1hlGVX73wvRBnsv1tJ/DVtc1TG/fRj9mFfdhIoUK4l0fMluFgw/uiyMr+tTnRo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=T29L4Oiz; arc=none smtp.client-ip=74.125.224.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="panJ8On6"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=GZKRIq/umtcDpZJT1GpCczXcMrGi7k2LB8QGbqLyli8LCFYbAVoWDv5gSDDVHxWPkwspDYC+CMFcqpvhbm8HEnXBSqzdZuRqceC3ZzmJwD0Xklj/L9QawG94W3fDLQD+RiHJ+85ee1RS+eW/eIdlTnRC9fN8e9YZoV3uJA8sb7luqH5WLXjt1GUnGPX66uWSdTBUAC5JhXv9JCjd1dIE3M7AhykQ2O5LyH4IMLux+XfhVjcfzbbcjKV4a59lKxwGIJEzX9G+EaAEt6qASZCEURfhMhHVbjFg3HXDsUN9aUvEvAaVdeFM4PcKo9I8uU7FMGIJYgV8521PCSYJy9tByQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=9zgOUGjaaPmLa24WXMHC3YPTQSeK//CTX0GDcuSC6fE=;
- b=q4EFg9Tk0mceiQ4OH6zFu6yiVXNrYIJwaKMHRQjaSjyvpzhMFxVaENNCVXo4kMkLFQPPcoSDgebydSUrJVh1rpKGYJmwKO7DqY7rtokvIQEG5LCKNVPXGapxP27sz8OTxkyTE2+BDvG6zE+cSTtC0FRmMY/Q4SkTuOVTuSMuWNfCRngp2exFRTnCUWqAF81yvpxXJBjcKTp0aDNys3PXwPdU65V3mAJ0YcxCTBDR94tFI4wlolX75L26AoJMARQZnu1OfgNeODqC1RqfUA7XrOuiamMZPCgyn7nXzNW5MkjDKd5jpqVCtVIt0WUg8zG7VolX9m8uzN903rMWcUZp7A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9zgOUGjaaPmLa24WXMHC3YPTQSeK//CTX0GDcuSC6fE=;
- b=panJ8On6YrH+X6OiasnsWF/Dv0tJThUZflW6KnwJr3t99eb6m+j5wbXJ1fk+HV/ge/2IgU5LmU61AJrklXt7e+N8Hyl1YGaJYQu0zzBhjQ+8HsCZLdujnD4aIeyFegfycRajrsFig0y1V6tRnK9kGJnm79dSlgxnFoCBv1zWiUTzNDS9ebSpWPwPBmHPQf5JvO0CvBCtMMxkVBoOEVXIDsisCvvAM8IPwsNyszX7L6N5d/5jo7t+ZloJGLjPd/K2EOBUJ2VLJ49uGouIQ+vj0XOdwGmBZ0vBr4uo4iYCNu+PXDD30euGgVE7ZWs4dDr2drZo+4Dv6X+WCVUsTKTukw==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CHBPR12MB731189.namprd12.prod.outlook.com
- (2603:10b6:610:33d::12) by IA0PPFB6B4D32F9.namprd12.prod.outlook.com
- (2603:10b6:20f:fc04::be3) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.14; Thu, 24 Sep
- 2026 14:03:52 +0000
-Received: from CHBPR12MB731189.namprd12.prod.outlook.com
- ([fe80::b0e5:123d:fe06:e10d]) by CHBPR12MB731189.namprd12.prod.outlook.com
- ([fe80::b0e5:123d:fe06:e10d%6]) with mapi id 15.21.0451.014; Thu, 24 Sep 2026
- 14:03:52 +0000
-Date: Thu, 24 Sep 2026 11:03:50 -0300
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: Nicolin Chen <nicolinc@nvidia.com>
-Cc: will@kernel.org, robin.murphy@arm.com,
-	Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>,
-	joro@8bytes.org, bhelgaas@google.com, praan@google.com,
-	kevin.tian@intel.com, kees@kernel.org, smostafa@google.com,
-	baolu.lu@linux.intel.com, Jean-Philippe Brucker <jpb@kernel.org>,
-	Eric Auger <eric.auger@redhat.com>,
-	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	skaestle@nvidia.com, mmarrid@nvidia.com, skolothumtho@nvidia.com,
-	bbiber@nvidia.com, harsha.v@oss.qualcomm.com
-Subject: Re: [PATCH v5 04/15] iommu/arm-smmu-v3: Drain in-flight fault events
- on domain detach
-Message-ID: <20260924140350.GA9354@nvidia.com>
-References: <cover.1789446520.git.nicolinc@nvidia.com>
- <cc7eabdd07e7705c84e30b04c85271d4ddf66055.1789446520.git.nicolinc@nvidia.com>
- <179018862538.3334538.17643821143626392419.b4-review@b4>
- <arRTojIlWBOF57zO@nvidia.com>
- <20260923233920.GJ2545495@nvidia.com>
- <arSAEjFLr5y/ycJx@nvidia.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <arSAEjFLr5y/ycJx@nvidia.com>
-X-ClientProxiedBy: PH7P220CA0064.NAMP220.PROD.OUTLOOK.COM
- (2603:10b6:510:32c::8) To CHBPR12MB731189.namprd12.prod.outlook.com
- (2603:10b6:610:33d::12)
+	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="T29L4Oiz"
+Received: by mail-yx2-f43.google.com with SMTP id 956f58d0204a3-66e4ab22370so1878819d50.3
+        for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 08:02:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1790262147; x=1790866947; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=IDTLFiJl2PPRWbMX82Sp0m0i5ZXEftxTb/TEfVM9Qb8=;
+        b=T29L4OizJgWBNyihloBD+DxyCxioeaIfobK7xJXGd7siVu5xqlb4q0JICPw+KO4j3l
+         53FHLO15u/zuUnFoqt9XEAHp/9Tegh1z3JLdYogQBcGVryvB/tVpWnq6ECFkiQFZK3Qu
+         VivrWznTcO9gPy+QHXJ/MDHGladfm82lHA5x5l75/vJM8Oz3YCNBqZGyZs6RnJZHzmUJ
+         5FN/jFH8c4u2BShh+rdgAJ1qq0/1M+Uwfs3WSxa5pq0bRtN7xISF0YRm+aFzJFcMDZxk
+         zpd2eGb3sZBtguW9Nd9U/gY+7Q53oSMSYswS2ZHJODuFsBKGkgmBbHexa+ET/9BOAT2T
+         HAEw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790262147; x=1790866947;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=IDTLFiJl2PPRWbMX82Sp0m0i5ZXEftxTb/TEfVM9Qb8=;
+        b=FE14UORLjw+RzKR6hk+FLYMTL6AHounl28cjO4uFQFrMqObTP/i/P0jSOwpgUTwo0N
+         4Zmq8ayQ237bNgKov849bnnqgxSTxp8jkj2LfKivP4lFRkko8gPtAB6kDZ1T13t/HLBY
+         Qe9eFa9iapLYM4GpSFmUq02tWYugohzaAkaP9bBVtOx9hRm9mTk+r3RXTZ5KyUv6+kdJ
+         zOxPou3nyhVzeyqrXEEokbSIBQvRqDnyDFHNp4FNGpam0pLpf1SPg6zYvITiN+wXYp8u
+         jQ7QwkQxDsM11hoIKOfTY22Mtyp7RILCEfo3uYme/NgfY5G2+aV/zSTRS+l5SSp/4TcC
+         POZg==
+X-Forwarded-Encrypted: i=1; AKwUvBy7Wx4p8LcSWcpCB/WiUEnkPbcVDYseBWWPVpYPx7Wnel8IcUu1TWrZhIjlKbA7pb9FdWYTogFmZV4=@vger.kernel.org
+X-Gm-Message-State: AFuF++mUK2Jl/tHPQ87PDv8kDw2+TciTYzB+pvbt0fBoiHLtLI5Bhi/V
+	jFS0gUtmY9GyRwRmVjFtsoYyVnA2mr5NwvMv2JL1lUn+tjpe/Z/QNaOK4PAKX0EX5fI=
+X-Gm-Gg: AYBFou1hW6cGq+M6dmze/0mBgrioDEY0Nlh7shWx1S0v9IVwNwy1OyBow9WuhoxaW3r
+	LClqD6rDMTLOikcXDeDKxMmAIPuJxOHcE9TEpb/u5mXMoRt++VkrE5Lo5s7sNn87+M8LZqFz3wj
+	WP/O6FFSbAB4rRvnu1WtqNVSl6A852tylJ6ZC7X8AVjwjEFVkGMHEn7bjejSYy5DS/is5X1oc63
+	S9KdcyLfrXOwiDeJL76QqJKreC0k/EXRae3GdBmL2r1DMFWw/XK1DLYY5WwqX7dzj4qrUJm+1q4
+	/v3TVhJw1E2qExzr/jHze7K0sJJ4CMkgiQFXhEQvv3V5m/85AmDKPqss1Ztubo9rfcZ9euCE3bO
+	VY3npKuHvHXUsQLK59vtUyF+dNJYUObllHG10lCikoro5J8b+CzAtRUTLsPnRjPqLmReIEkGuCm
+	SMF+c+1/rtxxUjXusLmX0sKy7RzlJ+4espuIO7oOIZWPPMD+1dHCzEpuoSXVzvxvcbWlvncxysd
+	VY=
+X-Received: by 2002:a05:690e:4386:b0:671:1da3:288e with SMTP id 956f58d0204a3-672ed243124mr992877d50.31.1790262146512;
+        Thu, 24 Sep 2026 08:02:26 -0700 (PDT)
+Received: from zippy.localdomain ([73.62.185.64])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9141e24e458sm18438236d6.21.2026.09.24.08.02.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 24 Sep 2026 08:02:25 -0700 (PDT)
+From: Alex Elder <elder@riscstar.com>
+To: bhelgaas@google.com,
+	robh@kernel.org,
+	saravanak@kernel.org
+Cc: herve.codina@bootlin.com,
+	daniel@riscstar.com,
+	mohd.anwar@oss.qualcomm.com,
+	lorenzo.bianconi@oss.qualcomm.com,
+	linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v6 0/4] PCI: of: warn on bogus device_type property
+Date: Thu, 24 Sep 2026 10:02:17 -0500
+Message-ID: <20260924150222.1179235-1-elder@riscstar.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CHBPR12MB731189:EE_|IA0PPFB6B4D32F9:EE_
-X-MS-Office365-Filtering-Correlation-Id: 912e279c-c0d0-492e-e21f-08df1a44a9ff
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|23010399003|7416014|366016|376014|10067099003|56012099006|11063799006|4143699003|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	HSwh5bReva8B2EOWTyx7RChW3dIh6eBJAl8VNNc7s8k1lqVjRgCgfpaXEBPutdDMtsBuVgnBjJhchmiubc/UJimT3lZ/HHLvx41bAopu5EL5n0QDewzYMdmOOlfqDEVSzfbV8YBsVkZAjl1qdHk4iTa71+2KIss9mw8AdwHWiCewRxFDg88zSrp22RuG0ZMlKU06DPl1//19vP4IlIVP0ifx9mjrc1vUnOEixznSNF6af9wy5qNMK9H3Z/T+iyTDO2+Ot2yR97EZjHFMR6e1yMTrTA/+aX/OIlmCE6GcW8SjszYjAWw8CIT3sacTYIuSPHqzHpbuzatzgyDlYxqBa7VVh99oAcxBpuPfYCOm3fUNEiHh1WLOsA3evY5bewmO3KinfxXXOq5a6wQLhndMUNKGZmGcbazKuBFLmMu4QafIBz7gXZwbGCFd2sKkIXCC2drUOgvvj3HS9jG7TKUtrL1sbxVuyBtgDBQll7LXXLkN7xUATFI8+g5dXA56mBnfSFP7fRA9rinE3ditFblwbLBUGFhcELsjoKnCmWVJu3eHpGcmLaR/nzjJoOWtT56nKZTeg2a3TMk/4lvvtQmSfaS2GRI4zAg96C2ZNdxH+qGXGUm+LCF4+YtHvZfuki3tGMddes7iRNIrWpeSV9SwRvdmX1TUvFH6CVp78xaipZA=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CHBPR12MB731189.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(7416014)(366016)(376014)(10067099003)(56012099006)(11063799006)(4143699003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?YXAood8LbQYzMfjMgMqSZO+Pqhn/NoKKeEUeLEC0wvrqkytHMAFQKX8bBnYW?=
- =?us-ascii?Q?fZXlDj0voBgXUKwA73r3do7narMudz3cJYwxg2FVjgtDof11+2HOc0zORtAE?=
- =?us-ascii?Q?L8Jv4QsPbDRSDkSJgR2pWJZm25f8qdozzNTJu+JVVEAohcIVEMWqHxSt6NRS?=
- =?us-ascii?Q?vzWVNBTrVhqP/bEKHtfOdxx/6X07y/sLfm6ze5xNVbMljnvRRcK4gD4beXol?=
- =?us-ascii?Q?BqXGB7x8EJy0lzwYlvGaTR/m9EppqtzDKhVwQsZeRLqFQchOFryxYi11x07b?=
- =?us-ascii?Q?3e1vdReKaRqWl36Oc49SL6fnv0sRWfk8kj/I3zDgftP+j5WeOc3noXYAp0H+?=
- =?us-ascii?Q?am2sOmeCXW1Q0EpciqyeG9YD8x78je63CRi/wELjDTySDtmYsHyv8kF3b9ta?=
- =?us-ascii?Q?Ml3vms61Y+usXhKMD1aSlw9NFk3ggIAo44rejFLosLQvc8EtOoXG59OBBpSd?=
- =?us-ascii?Q?5xGN4JzIlx+BZN6ZYu0ek+8aXy7ndLwVHY5lzD2jKZblJSOZY1tVLya3FWcO?=
- =?us-ascii?Q?U7d4GfodkzsNSUYV2CC1LBoUfEO+oNs+HVG1oQU1BE4s9ZXySUQ43Bdl1oLn?=
- =?us-ascii?Q?oHSbBBWQTcTPQCDOuoZGosqbeR6MKQAOy0zNcZs+1r2ZgkVmxOn+NXrOgRv6?=
- =?us-ascii?Q?vzHEnDpLFTA9/DPU7i3spd295KL4VIXrKmb4nIcc2E8GMq96SO89ehmVFOC8?=
- =?us-ascii?Q?bSqo01CY7I4rVIrcwl3a7aCkIGkF9YUn/R+l3H+O+4nmFDOMgWAsKrfzJbEn?=
- =?us-ascii?Q?oDrXArRGG8iIijjr3CFKhBXAwl2ynMBHk/GLfnI2WxANS1yChHyBV+wj4g93?=
- =?us-ascii?Q?B2tzAN1802bZuT7rxD8jHM+ysfIMux5NLyuYZIde5hwyA3Uazh7LXLwsYhHy?=
- =?us-ascii?Q?oIjGwtSzt8+5jhJXcDdQT+Fo6jUwPWdNQb8sQ95b+0huz73/WksC1gQ4n01C?=
- =?us-ascii?Q?NlUXcIhvRkvht5HL4zzNukkF6tavaLfvIFRIk8X+AWXevf/0sLG+iJ8hDDhy?=
- =?us-ascii?Q?S4xIwbMNVv1MyI5TdwCRJZkxrtBGJDZHtOd1JoUhbZak1KTXxBBm6jCrq8Aw?=
- =?us-ascii?Q?J7ZKl6ug5eHSVfLUvn0ZW04t8MGnQOzb4nD5e1TmzApIxtQ+4AmpF6g+oSK2?=
- =?us-ascii?Q?0ahPTAD59rgjLYoI8w7mJhDBWM8dvtWiT+MXD/XLTuqYYd7wMgB+kt8YImtE?=
- =?us-ascii?Q?utYElZ4gKEpVRadM4alXvFyz4AHq0+DV0dSd8R9qCGZ4FR+qHeHjsSy04eGi?=
- =?us-ascii?Q?xei7EXGSlLVox0Uw1T6oLhMc84/wgrxkqInHq5RHCLqpvXHQ6P3wNNQkyVVz?=
- =?us-ascii?Q?ctZbGi31G8rzQPc3uC0iO/4CnLA5+QvGew5mRbIHpVnpfLRjGQYATa7Trzy9?=
- =?us-ascii?Q?THHGv/fRs24+y9wvWyJ380KBgBLqjlpBxjVlaHGLjKuoLKpU9MuM96A3DT7x?=
- =?us-ascii?Q?k+c/qsZLFXE2F6xArXyviaP5YOWMFs57UjEVICilsyMTUhVBVELIQTrtoHZW?=
- =?us-ascii?Q?kWLPD8ZAXu5/2+F8kT4KnUGrRuiSMRLzuuyV0RKtJw2R87MSjFhyUA/Ii6S9?=
- =?us-ascii?Q?rtBFPNItsdOAjAueF0iisYy/gJmgwvI5hTe8SJxIux/AegL0XSRfTYwnGPiP?=
- =?us-ascii?Q?g1Sg6m+DF8nNZnewfxAavsxXvk4BTBfq6J+58pG6YSgM1HSShSFHSMsbfTpm?=
- =?us-ascii?Q?6akVouQ+er7nHRKtzxAGCD1T0mO0Ga7jeTn4EQYYHssMS3ly?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 912e279c-c0d0-492e-e21f-08df1a44a9ff
-X-MS-Exchange-CrossTenant-AuthSource: CHBPR12MB731189.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Sep 2026 14:03:52.3068
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 0C4EvadXJFZUZapaz+mOzu9amyf0RlhsF6LrxKZuClMJNakaV63jgFxMVdKbpfTs
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PPFB6B4D32F9
+Content-Transfer-Encoding: 8bit
 
-On Wed, Sep 23, 2026 at 06:42:42PM -0700, Nicolin Chen wrote:
+Add a check when adding a PCI device to ensure the device_type
+property is (or is not) correctly defined when the device has
+a non-null devicetree node pointer.
 
-> There is a problem, however, if one of them wraps twice (i.e. 2 x
-> queue size): then it would miss the exit at the target length even
-> if it is already much longer; and the penalty would be a timeout,
-> yet at that moment the queue is definitely drained.
+While working on a Qualcomm platform, I learned that some PCI
+endpoint nodes were defined with device_type = "pci" properties.
+Herve Codina pointed out that this was not correct.  Rob Herring
+indicated that people seem to have trouble getting the PCI
+devicetree nodes right, and asked whether we could warn if this
+particular problem occurred.  During review, Herve Codina also
+suggested that bridge nodes be checked to ensure they *do*
+have the proper device_type property, and later, Sashiko suggested
+that "pciex" (and "cardbus") also be accepted as valid bridge
+device_type property values.
 
-Yes, we this routine should not hit timeouts, that's really bad. The
-point is you can hit a false timeout because the algorithm does not
-work.
+The first patch prevents a possible null pointer dereference that
+Sashiko pointed out some time back.  This is the only patch that
+has changed in this version.  (Last time I neglected to enable the
+Kconfig option that ensured this go compiled, and it contained
+two obvious compile errors.)
 
-> > > FWIW, the idea of HW drain came from intel_iommu_drain_pasid_prq()..
-> > 
-> > Yeah, but I think they might have over done it too..
-> 
-> I see.
+The second and third patches are simple cleanups.  The last adds
+the new PCI devicetree node checks and warnings.
 
-The HW queue may need flushing on the device hot remove path, that
-depends how they implemented things. Like on ARM you had a mutex
-around the whole thing dev pointer so we don't even need that..
+At this point we are waiting for (and requesting) an ack from
+Rob Herring on the last patch.
 
-Jason
+					-Alex
+
+Between version 5 and version 6:
+- Simplified the patch header on the last patch, as suggested by
+  Bjorn
+- Rebased on v7.3-rc4; otherwise no code changes
+
+Version 5 is available here:
+  https://lore.kernel.org/lkml/20260908213459.2519059-1-elder@riscstar.com/
+
+Between version 4 and version 5:
+- Made a local variable (bufp) a pointer type in the first patch
+- Eliminated an unused local variable (i) in the first patch
+
+Version 4 is available here:
+  https://lore.kernel.org/lkml/20260904134607.1856121-1-elder@riscstar.com/
+
+Between version 3 and version 4:
+- Insert a first patch that fixes a Sashiko-reported issue
+- Drop the final "duplicate warning" patch from v3
+- Include "pciex" as a valid PCI bridge device_type property value
+- Add Herve's Reviewed-by tag on the last patch
+
+Version 3 is available here:
+  https://lore.kernel.org/lkml/20260901011338.1323243-1-elder@riscstar.com/
+
+Between version 2 and version 3:
+- Drop a patch that made a change only needed by a different series
+- Switch a function header to use kernel-doc format
+- Add a warning if a PCI bridge node has no device_type property
+- Added a patch to remove a duplicate warning in the devicetree code
+
+Version 2 is available here:
+  https://lore.kernel.org/lkml/20260812172247.276554-1-elder@riscstar.com/
+
+Between version 1 and version 2:
+- Check the PCI devicetree node even when PCI_DYNAMIC_OF_NODES is
+  not enabled
+
+Version 1 is available here:
+  https://lore.kernel.org/lkml/20260807194100.455599-1-elder@riscstar.com/
+
+Alex Elder (4):
+  PCI: of: avoid allocations in of_pci_prop_compatible()
+  PCI: of: drop the reg_num argument to of_pci_set_address()
+  PCI: of: don't zero flags in of_pci_get_addr_flags()
+  PCI: of: introduce of_pci_verify_node()
+
+ drivers/pci/bus.c         |  1 +
+ drivers/pci/of.c          | 32 ++++++++++++++++++++++++++
+ drivers/pci/of_property.c | 47 ++++++++++++++++++++++-----------------
+ drivers/pci/pci.h         |  3 +++
+ 4 files changed, 63 insertions(+), 20 deletions(-)
+
+
+base-commit: 93f51579e7df248780214094418f205253383cc5
+-- 
+2.53.0
+
