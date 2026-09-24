@@ -1,72 +1,71 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3070B4A2A62;
-	Thu, 24 Sep 2026 15:34:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E53E94A0F03;
+	Thu, 24 Sep 2026 15:34:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790264063; cv=none; b=dqssQUAdUjve+hWj9Ee6C3pBSZQovRnbgJ66SggHIfotLtDBhi72WCBYQpIijyVV5Xgort+xZGhIHfxIh6EtWcEc/hOZwq0816H2MHPRRNPN3K3X+7Q6vZH0QDFV/Ke7mLL5PcA8T+hWfgKG5fhu1U8DMRjAW3Ox7DD4efC/3ug=
+	t=1790264089; cv=none; b=emWsw1Y9jifSL5iXwYAYx00paL79brUgSnZ9rdlOyafh23qjNB6WxF7ehK5/kGIBtAuXpvGVJjftV7oHpURGGHeLvLesdS0nSVvIHVWyLvBVA9KBSpAAl0joWDjF3rci47qgvOk8AfqmaKNUDctdOyUnk1Pzzj2NcC7BsePwjXQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790264063; c=relaxed/simple;
-	bh=Afqp5XnClEqiK2xol6lnQuzxFiRulHaTe99w+2C7Nbw=;
+	s=arc-20240116; t=1790264089; c=relaxed/simple;
+	bh=uHwylYgB56cgoum85+3Ecr3mtQSwMScUwkFqCa7sH7E=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=rqw6yKutGnP73STpa/JTgyeDg0XZ2APBiHWVMAOVfZHOTcgSpY8eJdOOP1hlth1LWuco6uV+iXPyOrXBo8xT0jmso/aBwQB5bJNNutNpHO2ruSkr2zESoRfGbnzCme/7RJLIoGVtHw28gnz6q07vVQGcNPcC05WwxClBjM+2RnU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jlGMvFMh; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=YwRIkbzTLgzh0AMrFOzTQ/XolylT6fhA0PwZX/tqGE8LRVbflO06Yu1zNsElRddIcDklvEQ69jC86CKsv6c2CtoFD35iU0Q4xTnl3pDt5KZ6Uci+pWM/Dvqyfl/f+SM4ovi4FSG1YgpzrQP7ymY9xydpQYT2DJAmJP3ublhbPsg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dAud4Vcr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jlGMvFMh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77CB11F000FF;
-	Thu, 24 Sep 2026 15:34:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dAud4Vcr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 353B81F000FF;
+	Thu, 24 Sep 2026 15:34:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790264061;
-	bh=az7xxfOSK3d7joncT9mggFE1+UrHB7sT8pFuodahjII=;
+	s=k20260515; t=1790264087;
+	bh=h4Tf2vUdivgoMcY2ZUSCYrN3hrZSbKaJk08C4XCBqg0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jlGMvFMhOQ/royNRBsJE1AzE6EFZnpSugaXsY9pSyNDNx+Opa1coatYKIZU+sVWi+
-	 rjweNpyTtcLq8k32gJB9ukF7ALzlKMw+dJZk/0WHjmjnnxMlrtPCnteEEAkhMAgUBg
-	 41MKL5u2DBDcUg9gBU55tfjDTyvq32illNz5qbh6MHSpMi2vhlA+SNqyOMwF9N95ZC
-	 zAYreI66RZtAa3KvrRYbU503ni/Fkq8gAPBVXm9Ijx9MRN/NrNneGk8O25/SN0uKtv
-	 04nx2G1zAj5gqxzT/JnCSi9JI3coWcG3TfdyC8IK6gaSVtgXFJUxED8x31h9vcnkMx
-	 X8FuVKXTBdrKQ==
+	b=dAud4VcrCdyio6E2yepaWeh1hkBiVFJzaEa6UEbrZvKtnVkWYGBakh9wAErQ8VgW3
+	 DakbHbzYCmYXV4VkK0Aplmr5+2Gc+1fCKfknQCymA9n5vXStlZXCTyYYsrqA+V0NUI
+	 KdWXBHhS2w2yJPHff2FBYicfDVF8Dj600bWwAppprrIx57MEdBzYv8m7PQUMECeIuL
+	 x7KWRkOFrpA6wZEvPQvZerPA4J21UErDobnfGrY6Kc5PPRHMLC3/9Lw/hIQIFGROkL
+	 fU9Y/Uu9uJLOZo3JSNY8YjwvuGvKYrIyCl3m2aCkdtG87+LzFIO/7ddlpuYRBiBaHU
+	 pWdWzl+wa6bNg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 6/9] vfio/pci: Convert BAR mmap() to use a DMABUF
+Subject: Re: [PATCH v7 7/9] vfio/pci: Clean up BAR zap and revocation
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Matt Evans" <matt@ozlabs.org>
-Cc: media-ci@linuxtv.org, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, kvm@vger.kernel.org
-In-Reply-To: <20260924152159.49702-7-matt@ozlabs.org>
+Cc: media-ci@linuxtv.org, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, kvm@vger.kernel.org
+In-Reply-To: <20260924152159.49702-8-matt@ozlabs.org>
 References: <20260924152159.49702-1-matt@ozlabs.org>
- <20260924152159.49702-7-matt@ozlabs.org>
+ <20260924152159.49702-8-matt@ozlabs.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 24 Sep 2026 15:34:20 +0000
-Message-Id: <20260924153421.77CB11F000FF@smtp.kernel.org>
+Date: Thu, 24 Sep 2026 15:34:46 +0000
+Message-Id: <20260924153447.353B81F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Convert the VFIO device fd fops->mmap to create a DMABUF representing
-> the BAR mapping, and make the VMA fault handler look up PFNs from the
-> corresponding DMABUF.  This supports future code mmap()ing BAR
-> DMABUFs, and iommufd work to support Type1 P2P.
+> Previously, vfio_pci_zap_bars() (and the wrapper
+> vfio_pci_zap_and_down_write_memory_lock()) calls were paired with
+> calls to vfio_pci_dma_buf_move().
 >=20
-> First, vfio_pci_core_mmap() uses the new
-> vfio_pci_core_mmap_prep_dmabuf() helper to export a DMABUF
-> representing a single BAR range.  Then, the vfio_pci_mmap_huge_fault()
-> callback is updated to understand revoked buffers, and uses the new
-> vfio_pci_dma_buf_find_pfn() helper to determine the PFN for a given
-> fault address.
+> This commit replaces them with a unified new function,
+> vfio_pci_revoke_bars() containing both the vfio_pci_dma_buf_move() and
+> the unmap_mapping_range(), making it harder for callers to omit one.
+> It adds a wrapper, vfio_pci_lock_revoke_bars(), which takes the write
+> memory_lock before zapping, and adds a new vfio_pci_unrevoke_bars()
+> for the re-enable path.
 >=20
-> Now that the VFIO DMABUFs can be mmap()ed, vfio_pci_dma_buf_move()
-> zaps PTEs (used on the revocation and cleanup paths).
+> As of "vfio/pci: Convert BAR mmap() to use a DMABUF", the zap via
+> unmap_mapping_range() is no longer performed for vfio-pci since the
+> DMABUFs used for BAR mappings already zap PTEs when the
+> vfio_pci_dma_buf_move() occurs.
 >=20
-> CONFIG_VFIO_PCI_CORE now unconditionally selects
-> CONFIG_DMA_SHARED_BUFFER.  The CONFIG_VFIO_PCI_DMABUF feature
-> conditionally includes support for VFIO_DEVICE_FEATURE_DMA_BUF,
-> depending on the availability of CONFIG_PCI_P2PDMA.
->=20
-> When the DMABUF feature is not present, DMABUFs are used internally
-> for the BAR mappings.  In this case, DMABUF attach is prohibited (and
-> the requirement for a P2PDMA provider is relaxed).
+> However, it must be assumed that VFIO drivers which override the .mmap
+> op could create mappings _not_ backed by DMABUFs.  So, the zap is
+> still performed on revoke if .mmap is overridden, using a new
+> zap_bars_on_revoke flag.  A driver can explicitly opt out; the flag is
+> cleared by the hisi_acc_vfio_pci driver, since its .mmap just wraps
+> vfio_pci_core_mmap() and so still uses DMABUFs.
 >=20
 > Signed-off-by: Matt Evans <matt@ozlabs.org>
 
@@ -74,5 +73,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260924152159.4970=
-2-1-matt@ozlabs.org?part=3D6
+2-1-matt@ozlabs.org?part=3D7
 
