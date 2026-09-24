@@ -1,140 +1,153 @@
-Received: from smtpbg150.qq.com (smtpbg150.qq.com [18.132.163.193])
+Received: from mail-m12796.qiye.163.com (mail-m12796.qiye.163.com [115.236.127.96])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFABA3D525F;
-	Thu, 24 Sep 2026 03:26:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.132.163.193
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A92E28851F
+	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 03:33:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.236.127.96
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790220416; cv=none; b=JqHbSCTCQUSoc2GVU5Z8k2RvZG34S10KkVxBz8bjog//vQaU2/24/w+jhKQ4smT+rhpw6L9r7VeAg1Mg6K/apmX2LCYpdK3WPfPNeSzqmo+E1Qru0GrJ2rDMQj70XX3WwRqpNjhEYkFn2JzkXlhV9ILr1GxkQXexsVGD3k5Hb8k=
+	t=1790220790; cv=none; b=hxePFTxEoXzj4fxSADSOfyew5l8W8s17EEsRO3vWY9QY6sAso/iTbTBu9F+QJxs8QNZthSWAP8ZCp8PBeoXYOxJkbdHxtF2v2kDNl9TfcsvzuYGYx6vvAVHW5NAQkBdivO8ZgNEM5IZCKt2W4Xo9/9Ib6Tf4KjP3m24Ljafr/lo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790220416; c=relaxed/simple;
-	bh=CXlH3SBMSFvkfQPfiQxGklN1CS3iPjfzCSqlZqogoG0=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
-	 In-Reply-To:References; b=tYL35Fe6UyCRxg+QQGKy/TBx2m5R/5ekep8nx/UGOqMqmCZSjJ6Z9rY0gjuRSn4yly2G1YqTWUN5w81HBNvAVc6D5ydlSWV/yXHq474IS7V+YuhRAfJIp/N2+1rS8n1yrAA87laCIB7En49aToZ5e0/RYLfVE8YsIcRvouA88PE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux.spacemit.com; spf=none smtp.mailfrom=linux.spacemit.com; dkim=pass (1024-bit key) header.d=linux.spacemit.com header.i=@linux.spacemit.com header.b=k5tYNDMa; arc=none smtp.client-ip=18.132.163.193
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux.spacemit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.spacemit.com
+	s=arc-20240116; t=1790220790; c=relaxed/simple;
+	bh=KsHWnf/QnKdey0zU8UV6jcH9fLt8NZAgogLA7JOw2bg=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=NIgxdHC6f8x945M+V6hOhyse/J+QG5oykjJpXW6/ZV8I36kIBOHtFaBndK+fBNSHGLq41zqEKyXphyz4Jsyc02LgYqstsU+Ye05/iLv1YTTOAA+gNoJxm/qjr8pyYGCwDy9O0DO2DlJCiXtXjg07puidl2+oPvFLHuSNSzOlUfE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=SKP7ccLQ; arc=none smtp.client-ip=115.236.127.96
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.spacemit.com header.i=@linux.spacemit.com header.b="k5tYNDMa"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.spacemit.com;
-	s=mxsw2412; t=1790220322;
-	bh=1OuECCNgnc6CLvCQwxn/XTZt38EU5TJNmlwiHDDUrSc=;
-	h=Mime-Version:Date:Message-Id:Subject:From:To;
-	b=k5tYNDMa42TGq0tgygg8GGiMdTdxYU8sA466MFGd705xPcEFrp2+oMBHWsfORPhxq
-	 2blPdjTkyllTDw98VJLpwhR1uZ19JJzzz+oSPypsCIAxEb6+EPPMe7RyWWGHqmq9Hu
-	 f4i4RCRM0aRJ8+r+tIg2K5QVlJD6ly6pN7dKZpYs=
-X-QQ-mid: zesmtpgz1t1790220314te0b2c6a7
-X-QQ-Originating-IP: 4x/4dzp1jA75d0q38ahlTcs6JiNxTb0iijMQfx4Sicc=
-Received: from = ( [120.237.158.181])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Thu, 24 Sep 2026 11:25:10 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 0
-X-BIZMAIL-ID: 11185655890934613812
-EX-QQ-RecipientCnt: 41
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="SKP7ccLQ"
+Received: from [172.16.12.48] (unknown [61.154.14.86])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 4ef5fe4e7;
+	Thu, 24 Sep 2026 11:27:44 +0800 (GMT+08:00)
+Message-ID: <c531d929-24a3-4b5b-b329-a11b0191baf9@rock-chips.com>
+Date: Thu, 24 Sep 2026 11:27:44 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed;
- boundary=c1efa6dd65a7157a3cf15d727fdb83c765b9167dfac6b27657fb2a2cc304;
- micalg=pgp-sha512; protocol="application/pgp-signature"
-Date: Thu, 24 Sep 2026 11:25:07 +0800
-Message-Id: <DLN84VV7GX6M.9VWJBT3INEFO@linux.spacemit.com>
-Cc: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
- <spacemit@lists.linux.dev>, "Yixun Lan" <dlan@gentoo.org>, "Longbin Li"
- <looong.bin@gmail.com>, "Troy Mitchell" <troy.mitchell@linux.spacemit.com>
-Subject: Re: [PATCH v6 6/6] PCI: spacemit-k1: Add Spacemit K3 PCIe host
- controller support
-From: "Troy Mitchell" <troy.mitchell@linux.spacemit.com>
-To: "Jingoo Han" <jingoohan1@gmail.com>, "Manivannan Sadhasivam"
- <mani@kernel.org>, "Lorenzo Pieralisi" <lpieralisi@kernel.org>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Rob
- Herring" <robh@kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>,
- "Krzysztof Kozlowski" <krzk+dt@kernel.org>, "Conor Dooley"
- <conor+dt@kernel.org>, "Yixun Lan" <dlan@kernel.org>, "Paul Walmsley"
- <pjw@kernel.org>, "Palmer Dabbelt" <palmer@dabbelt.com>, "Albert Ou"
- <aou@eecs.berkeley.edu>, "Alexandre Ghiti" <alex@ghiti.fr>, "Frank Li"
- <Frank.Li@nxp.com>, "Niklas Cassel" <cassel@kernel.org>, "Sherry Sun"
- <sherry.sun@nxp.com>, "Arnd Bergmann" <arnd@arndb.de>, "Christian Bruel"
- <christian.bruel@foss.st.com>, "Sascha Hauer" <s.hauer@pengutronix.de>,
- "Vidya Sagar" <vidyas@nvidia.com>, "Xincheng Zhang"
- <zhangxincheng@ultrarisc.com>, "Alex Elder" <elder@riscstar.com>,
- "Siddharth Vadapalli" <s-vadapalli@ti.com>, "Randolph Lin"
- <randolph@andestech.com>, "Andy Shevchenko"
- <andriy.shevchenko@linux.intel.com>, "Neil Armstrong"
- <neil.armstrong@linaro.org>, "Marek Vasut"
- <marek.vasut+renesas@mailbox.org>, "Inochi Amaoto" <inochiama@gmail.com>,
- "Pengpeng Hou" <pengpeng@iscas.ac.cn>, "Ping-Ke Shih" <pkshih@realtek.com>,
- "Anirudh Srinivasan" <asrinivasan@oss.tenstorrent.com>,
- =?utf-8?b?VXdlIEtsZWluZS1Lw7ZuaWcgKFRoZSBDYXBhYmxlIEh1Yik=?=
- <u.kleine-koenig@baylibre.com>, "Gustavo Pimentel"
- <gustavo.pimentel@synopsys.com>
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <20260923015016.64069-7-inochiama@gmail.com>
-References: <20260923015016.64069-1-inochiama@gmail.com>
- <20260923015016.64069-7-inochiama@gmail.com>
-X-QQ-SENDSIZE: 520
-Feedback-ID: zesmtpgz:linux.spacemit.com:qybglogicsvrgz:qybglogicsvrgz3a-0
-X-QQ-XMAILINFO: Mfy7wfw2LMQ46+6RGrspbCzA8lFQzcL2XGXmMkaoq/PagtaPhYQOXPrd
-	mMNBAzHqDYKfnBfIQ6mqaX1NIfH8Bg/WRTTZ02neqlGB2dJKfd2PihwjbWb3Q1E/GgGVHD9
-	FRL/v7h2+XYrmrn6lH8FR1v5VTMhG/C8hG/plLf1DX3rKapMGmNILTo4Oy1P1B5mP+GACcb
-	fO4h/L69z1FdzzfZ+eBopwNanrgAS/Bnblmi+g3/B9uaNE5wxLDWxr4iPtE1xtR8JFRbHu2
-	8kg64acCzBStzQTQskdzzgusyTRtnkhP+4w91lw9/9oCjOoiroiTJwIe5Q9s9OCHS2ctqXV
-	elwzRd66GVFEKcmptgcqKFBEM7lvTQYN/0t34WJ6AV/LVBES7pHmqykB7fdEyyIc2wgAdel
-	EMbSniX0ydkQaR58c1p3DtnPOzFGM5q3AAvY2Unt5K+pxITA3eKTt3mXV1EgmiK86byKSOR
-	/bqGPk4jUybPYNbGInAXjRQ7mUciVc4djXHh2FvcC/DM77TY8dOHwn+KO9atp2kcTUrpBZs
-	7cpYjoumfPuJnA8c/WoUxkhDwO5hz9RdX97CzlRXvM61SJtCxbOgpQSuNbyE9F/2t48jom6
-	3A52kLe10ceNFkTUgWkNtMHLVpZCsuKAk0/ks7xsQkVVitTI3jUzU5kVUy7gpJwR6cvBlPC
-	h4i5vhFxNP588Z/eBUNJuOhlVmJ02uTux6/689kESak1pMccSKeqebn2Kz2PbAjiSIy956d
-	ktbBAeqPFN/yinQBlSkZXn856e8NvUKMjq+zKjOn6ciItxLGwBd3tnoSkF0N2OKM1/Knm5N
-	uWiPe8AZgMVXZhi4dtSODbFXXtyzNrVFH0BwysFiFIxQrjtuBeeY/8MII5qlGYVlrNv2a5M
-	et5gPdd766rNYOhICfNGemLdAQlq0/QpuON6PY86EWH15ZD3O5RVsRGB7ICr5t67iNTBCYm
-	ZV9lmdO5oze7jwjxEppWImsOAjUES6hN+HdIJHDMpAvawORx4GznuPiBUWEnw0qppHXGyUN
-	zxoeoe2SnzOZgl+Nj9+ey6ghkI/1Su7U4t7IUYAPPSRZTE7z4jUGa8a1OOAcHEbajdOe4D2
-	FBUs9+kdh0ff0cNWGuU8jo=
-X-QQ-XMRINFO: NI4Ajvh11aEjEMj13RCX7UuhPEoou2bs1g==
-X-QQ-RECHKSPAM: 0
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Cc: shawn.lin@rock-chips.com, Diederik de Haas <diederik@cknow-tech.com>,
+ linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
+ Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v3 0/3] Small INTx fixes for Rockchip's dwc based PCIe
+ controller driver
+To: Niklas Cassel <cassel@kernel.org>
+References: <1790044622-164744-1-git-send-email-shawn.lin@rock-chips.com>
+ <DLMKWV1AH8TZ.2R3JK2NPM4KZB@cknow-tech.com>
+ <08329b2b-449a-4036-8e82-ad67d0d037ee@rock-chips.com>
+ <arPvcQIu46N_gTmB@ryzen>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <arPvcQIu46N_gTmB@ryzen>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa0d174730803a4kunmabe36c1150bb7c
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCQh1NVhkYTUNNHRpJQ0tJQlYVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUJCSU
+	5LVUpLS1VKQktCWQY+
+DKIM-Signature: a=rsa-sha256;
+	b=SKP7ccLQWc33EiBC8F8/NJaKmN3/XEbN5/J3rG4yrcrHfH2lmAhzYVil6h74oaLY2ExwCJn8oTT3WizjF+Y01eA19ydHQnIwIOPt5RfF9iW6a5PouEn9Z1DRXqCKhKm4/4Ytst4X0IhW+u50Qk1tJrgIHMtFqP+5HpAnBtpn6+A=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=v+qqOE+xh9kXPgV1iezB4P8lSaYSSVqLNw4Hghtva1E=;
+	h=date:mime-version:subject:message-id:from;
 
---c1efa6dd65a7157a3cf15d727fdb83c765b9167dfac6b27657fb2a2cc304
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
+Hi Niklas
 
-On Wed, Sep 23, 2026 at 09:50:15AM +0800, Inochi Amaoto wrote:
-> @@ -315,6 +328,123 @@ static int k1_pcie_parse_port(struct k1_pcie *k1)
-> +static int k3_pcie_init(struct dw_pcie_rp *pp)
-> +{
-> [...]
-> +failed_phy_power_on:
-> +	phy_bulk_exit(k1->phy_count, k1->phys);
-> +failed_phy_init:
-> +	k1_pcie_disable_resources(k1);
-> +failed_resources:
-> +	regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
-> +			   PCIE_PERSTN_OUT | PCIE_PERSTN_OE | PCIE_IGNORE_PERSTN,
-> +			   PCIE_PERSTN_OUT | PCIE_PERSTN_OE);
+在 2026/09/23 星期三 23:25, Niklas Cassel 写道:
+> Hello Shawn, Diederik,
+> 
+> On Wed, Sep 23, 2026 at 05:21:59PM +0800, Shawn Lin wrote:
+>>>
+>>> I build a kernel with this patch set (7.3~rc4-2) and got several warnings
+>>> like this, shortly followed by a stack trace:
+>>
+>> Sashiko already reportted some valid concern around this, and I'll plan
+>> to rework this series a bit later. Thanks for reporting this.
+> 
+> Just thinking out loud:
+> 
+> Patch 1/3 in this series fixes a regression, so it should be picked up as
+> soon as possible.
+> 
 
-Could we keep PERST# asserted on the error path, as k3_pcie_deinit()
-does? Setting PCIE_PERSTN_OUT here releases the endpoint from reset
-even though initialization has failed and the controller resources
-are unavailable.
+Thank you for your detailed analysis and valuable suggestions.
 
+My original intention was to provide a minimal fix for the regression 
+introduced during the merge window. However, after Sashiko's review, 
+some existing problems (even if only theoretical) were pointed out, so 
+the series grew into three patches.
 
---=20
-Troy Mitchell
+I agree with your reasoning: patch 1 fixes a real regression and should 
+be picked up as soon as possible, while patches 2 and 3 can be handled 
+separately. Given that we are approaching -rc5 and I will have two 
+consecutive national holidays in the coming weeks, I may be unable to 
+access my development equipment for about two weeks. Therefore, I plan 
+to revise patch 1 based on your suggestion (moving the code before 
+dw_pcie_host_init()) and send it out promptly.
 
---c1efa6dd65a7157a3cf15d727fdb83c765b9167dfac6b27657fb2a2cc304
-Content-Type: application/pgp-signature; name="signature.asc"
+> Patch 2/3 is converting the resources to be device managed.
+> However, after patch 1/3 (if the moved code is called _before_
+> dw_pcie_host_init()) the only thing left after dw_pcie_host_init() is the
+> PCIE_CLIENT_INTR_MASK_MISC write.
+> 
+> I.e. there is no error return remains that would need a dw_pcie_host_deinit().
+> 
+> So there is no strict need to convert to devm_().
+> You can do so, but that should be in a separate series IMO.
+> 
+> 
+> In fact, Diederik's later warnings are a result of Patch 2/3 which replaced
+> irq_domain_create_linear() with devm_irq_domain_instantiate():
+> 
+>     error: hwirq 0x0 is too large for :pcie@fe150000:legacy-interrupt-controller
+>     WARNING: kernel/irq/irqdomain.c:676 at irq_domain_associate_locked+0x118/0x1a0
+> 
+> 
+> The fix seems to be to add .hwirq_max = PCI_NUM_INTX, to
+> rockchip_pcie_init_irq_domain():
+> 
+> The fix is one line in rockchip_pcie_init_irq_domain() :
+> 				.size = PCI_NUM_INTX,
+> 				.hwirq_max = PCI_NUM_INTX,
+> 
+> 
+> 
+> Patch 3/3 looks like a theoretical problem that Sashiko found.
+> 
+> Is the underlying problem real? It's plausible, but nobody has reproduced it.
+> For it to happen, the controller's legacy IRQ output has to be asserted while
+> clocks are gated. Two ways that could happen:
+> 
+> - The output was high when clk_bulk_disable_unprepare() froze the logic.
+> - A device was still asserting INTx when an AER- or sysfs-triggered reset
+>    stopped the link.
+> 
+> Patch 3/3 is not enough though:
+> 
+> disable_irq() never masks this chained IRQ in hardware, so
+> rockchip_pcie_intx_handler() can still run and read the unclocked APB.
+> 
+> This is the kind of case IRQ_DISABLE_UNLAZY exists for, according to the
+> comment above irq_disable().
+> 
+> Minimal amend of patch 3/3 as it currently looks:
+> 
+> turn off lazy disable for this line when the chained handler is installed:
+> 	irq_set_status_flags(rockchip->intx_irq, IRQ_DISABLE_UNLAZY);
+> 	irq_set_chained_handler_and_data(rockchip->intx_irq,
+> 					 rockchip_pcie_intx_handler, rockchip);
+> 
+> Such that irq_disable() masks the chained IRQ.
+> 
+> Do we want patch 3/3? Probably.. but this race seems very small...
+> probably most imporent to get patch 1 (with the code move _before_
+> dw_pcie_host_init()) accepted ASAP, as it currently is causing problems
+> for Diederik.
+> 
+> 
+> Kind regards,
+> Niklas
+> 
 
------BEGIN PGP SIGNATURE-----
-
-iIMEABYKACsWIQSL4Ay2cExaPXAQcU2YCe+A+TM0LwUCarSYEw0caUB0cm95LXku
-b3JnAAoJEJgJ74D5MzQvnBMBAOqoYG0RTGya7s/xnZ8oNm2v68GflTIw5APMoNFC
-yKH0AQDdN3A8M5rPjea5jEI3eGpn06cdTl/AmbYmgItVl4/mAg==
-=B9Ym
------END PGP SIGNATURE-----
-
---c1efa6dd65a7157a3cf15d727fdb83c765b9167dfac6b27657fb2a2cc304--
