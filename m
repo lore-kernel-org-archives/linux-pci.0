@@ -1,23 +1,23 @@
-Received: from out28-3.mail.aliyun.com (out28-3.mail.aliyun.com [115.124.28.3])
+Received: from out28-221.mail.aliyun.com (out28-221.mail.aliyun.com [115.124.28.221])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29E8C3BD22E;
-	Thu, 24 Sep 2026 06:15:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.28.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61BFA30C606;
+	Thu, 24 Sep 2026 06:15:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.28.221
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790230549; cv=none; b=UM1B8my1r3U7NTW5CAHB3ppZ/oWLVMdvIfNczPvAUIuCXgfXBbb+DZUxd55b3nAr8WjR9Cp1V6nvVaWy2yeIhuq/QTh9YrXYhxTYmjrtxcSAVLmYt+evZq+Ys8Re/YewitQsfJEty/yT7qV9o6PPbNRP8Wwovgu+oad9DE7RxxU=
+	t=1790230554; cv=none; b=rEqAfLbV6Hm1Q2ECZtjgshhbseCzNoaUKLvl9FJuglJjxZTkbzFd8SEa2uFme0aKqgfCpT2BlEOlerQPZCyT1uWoF7Hh5hnWaxFnBux0+esnmPTb0cpNnu30x9st1DbrRiIdElw3TVDrJlG/1/txZkG+b+v1Rt6E46urrKBfqXE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790230549; c=relaxed/simple;
-	bh=O2s2nMDXA8bUUx/tDQcMqrSq2h8qTyV5Dmcm7g7R0SM=;
+	s=arc-20240116; t=1790230554; c=relaxed/simple;
+	bh=UbMWoKe6pqT353V/GlqBxI/KJSnu/EKkAA1ahBadfmU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZQzEjhxz4yCBGgg2bbFWFveSPE5cgCOQM0jxRE61cKwsQ7E7RbFkcigQMZADHf7TfXkMzPcZUszOPx5TmP8iqzVQ/t5h/9US4XHh7dl7T5ncsL5gHW4kJsy2n+IPHxnn5wYiPAIVp40mxxOdYakEVjHwVH2zF5oKhislvERIwsQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=open-hieco.net; spf=pass smtp.mailfrom=open-hieco.net; arc=none smtp.client-ip=115.124.28.3
+	 MIME-Version; b=QIQ6XQRzZCN7u5E7C0Ey2RGQBZJ+IriFs/RYMFivj1/ipTZnLc2hbeegIHELmWDrwfgs8dOiK4/rDq+1H13+WQOMu3otiu8ynME/lUuTOC6Ogn5UqUbGx/wpI++9FyBHIkC6ZiMjUkIzyocdl/3vnUY2XlZTCBL4LIeVjOLYBC0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=open-hieco.net; spf=pass smtp.mailfrom=open-hieco.net; arc=none smtp.client-ip=115.124.28.221
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=open-hieco.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=open-hieco.net
-X-Alimail-AntiSpam:AC=CONTINUE;BC=0.9109073|0.1356083;CH=green;DM=|AD|false|;DS=CONTINUE|ham_regular_dialog|0.0110819-0.00116182-0.987756;FP=2518774180095731379|4|2|2|0|-1|-1|-1;HT=maildocker-contentspam033037025160;MF=liaoxuan@open-hieco.net;NM=1;PH=DS;RN=10;RT=10;SR=0;TI=SMTPD_---.jLtpc1n_1790230533;
-Received: from Ubuntu2404-XLH.hygon.cn(mailfrom:liaoxuan@open-hieco.net fp:SMTPD_---.jLtpc1n_1790230533 cluster:ay29)
+X-Alimail-AntiSpam:AC=CONTINUE;BC=0.9243626|0.8991501;CH=green;DM=|SPAM|false|;DS=CONTINUE|ham_system_inform|0.0183685-0.000289767-0.981342;FP=5974062528137348283|4|2|2|0|-1|-1|-1;HT=maildocker-contentspam033032053168;MF=liaoxuan@open-hieco.net;NM=1;PH=DS;RN=10;RT=10;SR=0;TI=SMTPD_---.jLtpcA7_1790230539;
+Received: from Ubuntu2404-XLH.hygon.cn(mailfrom:liaoxuan@open-hieco.net fp:SMTPD_---.jLtpcA7_1790230539 cluster:ay29)
           by smtp.aliyun-inc.com;
-          Thu, 24 Sep 2026 14:15:39 +0800
+          Thu, 24 Sep 2026 14:15:42 +0800
 From: Liao Xuan <liaoxuan@open-hieco.net>
 To: kbusch@kernel.org,
 	axboe@kernel.dk,
@@ -29,9 +29,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-nvme@lists.infradead.org,
 	linux-pci@vger.kernel.org,
 	Liao Xuan <liaoxuan@open-hieco.net>
-Subject: [PATCH 2/3] nvme: Add hysteresis and idle detection to link rate switching
-Date: Thu, 24 Sep 2026 14:15:12 +0800
-Message-ID: <de23e8b9699b5a7a77e7ee215e8e4c9f530ce5da.1790222172.git.liaoxuan@hygon.cn>
+Subject: [PATCH 3/3] nvme: Expose link rate switching tunables via sysfs
+Date: Thu, 24 Sep 2026 14:15:13 +0800
+Message-ID: <be224cd8385a5c28a20db65d635000a7be4da91a.1790222172.git.liaoxuan@hygon.cn>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1790222172.git.liaoxuan@hygon.cn>
 References: <cover.1790222172.git.liaoxuan@hygon.cn>
@@ -43,143 +43,230 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The rate switching decision currently toggles the link rate in every
-monitoring window based on the I/O of that window alone, which can
-cause excessive rate switching when the workload fluctuates around the
-threshold.
+Add a speed attribute group under /sys/class/nvme/nvmeX/ that
+exposes the adaptive link rate switching parameters for runtime tuning:
 
-Add counters that require the threshold to be exceeded for a
-consecutive number of windows before the rate is upgraded, and to stay
-below the threshold for a consecutive number of windows before it is
-downgraded. The upgrade happens immediately (threshold 0 by default)
-so that latency is not sacrificed, while the downgrade requires 10
-consecutive windows.
+  enable           - toggle the feature on/off (0/1)
+  monitor_interval - I/O monitoring window in milliseconds (>= 100)
+  min_speed        - minimum PCIe generation to downgrade to (1-5)
+  up_threshold     - windows above the threshold needed to upgrade
+  down_threshold   - windows below the threshold needed to downgrade
 
-Monitoring is stopped after 10 seconds of inactivity and is re-armed by
-the next I/O.
+The attributes are read/write and are removed when the controller is
+torn down.
 
 Signed-off-by: Liao Xuan <liaoxuan@open-hieco.net>
 ---
- drivers/nvme/host/nvme.h         |  5 +++
- drivers/nvme/host/speed_switch.c | 52 ++++++++++++++++++++++++++++----
- 2 files changed, 51 insertions(+), 6 deletions(-)
+ drivers/nvme/host/nvme.h         |   3 +
+ drivers/nvme/host/speed_switch.c |  15 +++-
+ drivers/nvme/host/sysfs.c        | 143 +++++++++++++++++++++++++++++++
+ 3 files changed, 160 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index ff06f85d1..5d5034601 100644
+index 5d5034601..fb958ff13 100644
 --- a/drivers/nvme/host/nvme.h
 +++ b/drivers/nvme/host/nvme.h
-@@ -346,6 +346,11 @@ struct nvme_speed_switch {
- 	u8 min_speed;
- 	u32 monitor_interval;	/* ms */
- 	u32 threshold;		/* KB */
-+	u32 up_cnt;
-+	u32 down_cnt;
-+	u32 up_threshold;
-+	u32 down_threshold;
-+	u32 idle_cnt;
- 	struct timer_list timer;
- 	struct work_struct work;
- 	struct nvme_speed_switch_stats __percpu *stats;
+@@ -1076,6 +1076,9 @@ extern const struct attribute_group nvme_dev_attrs_group;
+ extern const struct attribute_group nvme_dev_diag_attrs_group;
+ extern const struct attribute_group *nvme_subsys_attrs_groups[];
+ extern const struct attribute_group *nvme_dev_attr_groups[];
++#ifdef CONFIG_NVME_SPEED_SWITCH
++extern const struct attribute_group nvme_speed_attr_group;
++#endif
+ extern const struct block_device_operations nvme_bdev_ops;
+ 
+ void nvme_delete_ctrl_sync(struct nvme_ctrl *ctrl);
 diff --git a/drivers/nvme/host/speed_switch.c b/drivers/nvme/host/speed_switch.c
-index 88c046fcd..22f180c81 100644
+index 22f180c81..fce426845 100644
 --- a/drivers/nvme/host/speed_switch.c
 +++ b/drivers/nvme/host/speed_switch.c
-@@ -228,10 +228,15 @@ static void nvme_clear_io_stats(struct nvme_speed_switch *sw)
- 
- /*
-  * Aggregate the per-CPU I/O counters of the last monitoring window and
-- * decide the target rate: the maximum rate if the window exceeded the
-- * threshold, the minimum rate otherwise.
-+ * decide the target rate.  Hysteresis counters are used to avoid
-+ * excessive rate switching when the workload fluctuates around the
-+ * threshold: the rate is only upgraded after the threshold was exceeded
-+ * for a number of consecutive windows, and only downgraded after it
-+ * stayed below the threshold for a number of consecutive windows.  When
-+ * no I/O was observed for 10 seconds the monitoring is stopped.
-  */
--static int nvme_check_io_and_decide_speed(struct nvme_speed_switch *sw)
-+static int nvme_check_io_and_decide_speed(struct nvme_speed_switch *sw,
-+					  bool *io_activity)
+@@ -325,7 +325,7 @@ void nvme_speed_switch_init(struct nvme_ctrl *ctrl)
  {
- 	struct nvme_ctrl *ctrl = container_of(sw, struct nvme_ctrl, speed_switch);
- 	u64 read_bytes = 0, write_bytes = 0;
-@@ -247,31 +252,62 @@ static int nvme_check_io_and_decide_speed(struct nvme_speed_switch *sw)
- 		stat->write_bytes = 0;
- 	}
+ 	struct nvme_speed_switch *sw = &ctrl->speed_switch;
+ 	struct pci_dev *pdev;
+-	int max_speed;
++	int max_speed, ret;
  
-+	if (read_bytes || write_bytes) {
-+		*io_activity = true;
-+		sw->idle_cnt = 0;
-+	} else {
-+		sw->idle_cnt++;
-+	}
+ 	if (boot_cpu_data.x86_vendor != X86_VENDOR_HYGON) {
+ 		dev_dbg(ctrl->device,
+@@ -376,6 +376,18 @@ void nvme_speed_switch_init(struct nvme_ctrl *ctrl)
+ 	timer_setup(&sw->timer, nvme_speed_switch_timer_fn, 0);
+ 	atomic_set(&sw->timer_active, NVME_SPEED_TIMER_INACTIVE);
+ 	WRITE_ONCE(sw->enabled, true);
 +
-+	/* Stop monitoring after 10 seconds of inactivity (100 windows of 100ms). */
-+	if (sw->idle_cnt >= 100)
-+		*io_activity = false;
-+
- 	read_kb = read_bytes / 1024;
- 	write_kb = write_bytes / 1024;
- 	dev_dbg(ctrl->device,
- 		"I/O in window: read=%lu KB, write=%lu KB, threshold=%u KB\n",
- 		read_kb, write_kb, READ_ONCE(sw->threshold));
- 
--	if (read_kb >= sw->threshold || write_kb >= sw->threshold)
-+	if (read_kb >= sw->threshold || write_kb >= sw->threshold) {
-+		sw->up_cnt++;
-+		sw->down_cnt = 0;
-+	} else {
-+		sw->down_cnt++;
-+		sw->up_cnt = 0;
-+	}
-+
-+	if (sw->up_cnt > READ_ONCE(sw->up_threshold)) {
-+		sw->up_cnt = 0;
- 		return sw->max_speed;
-+	}
-+
-+	if (sw->down_cnt > READ_ONCE(sw->down_threshold) || !*io_activity) {
-+		sw->down_cnt = 0;
-+		return sw->min_speed;
-+	}
- 
--	return sw->min_speed;
-+	return READ_ONCE(sw->cur_speed);
- }
- 
- static void nvme_speed_switch_timer_fn(struct timer_list *t)
- {
- 	struct nvme_speed_switch *sw = container_of(t, struct nvme_speed_switch, timer);
-+	bool io_activity = true;
- 
- 	if (!READ_ONCE(sw->enabled)) {
- 		atomic_set(&sw->timer_active, NVME_SPEED_TIMER_INACTIVE);
- 		return;
- 	}
- 
--	sw->target_speed = nvme_check_io_and_decide_speed(sw);
-+	sw->target_speed = nvme_check_io_and_decide_speed(sw, &io_activity);
- 	if (sw->target_speed != READ_ONCE(sw->cur_speed))
- 		schedule_work(&sw->work);
- 
-+	if (!io_activity) {
-+		atomic_set(&sw->timer_active, NVME_SPEED_TIMER_INACTIVE);
++	ret = sysfs_create_group(&ctrl->device->kobj, &nvme_speed_attr_group);
++	if (ret) {
++		dev_err(ctrl->device,
++			"failed to create link rate switching sysfs group (%d)\n",
++			ret);
++		timer_delete_sync(&sw->timer);
++		free_percpu(sw->stats);
++		sw->stats = NULL;
++		WRITE_ONCE(sw->enabled, false);
 +		return;
 +	}
- 	mod_timer(t, jiffies + msecs_to_jiffies(READ_ONCE(sw->monitor_interval)));
- }
+ 	sw->initialized = true;
  
-@@ -279,6 +315,10 @@ static void nvme_speed_switch_params_init(struct nvme_speed_switch *sw)
- {
- 	sw->monitor_interval = 100;
- 	sw->min_speed = PCI_EXP_LNKSTA_CLS_2_5GB;
-+	/* Upgrade immediately once the threshold is exceeded. */
-+	sw->up_threshold = 0;
-+	/* Downgrade after 10 consecutive below-threshold windows. */
-+	sw->down_threshold = 10;
- }
+ 	dev_info(ctrl->device,
+@@ -405,6 +417,7 @@ void nvme_speed_switch_exit(struct nvme_ctrl *ctrl)
+ 	WRITE_ONCE(sw->enabled, false);
+ 	timer_delete_sync(&sw->timer);
+ 	cancel_work_sync(&sw->work);
++	sysfs_remove_group(&ctrl->device->kobj, &nvme_speed_attr_group);
  
- void nvme_speed_switch_init(struct nvme_ctrl *ctrl)
+ 	free_percpu(sw->stats);
+ 	sw->stats = NULL;
+diff --git a/drivers/nvme/host/sysfs.c b/drivers/nvme/host/sysfs.c
+index 75b2d69b5..cd899b87b 100644
+--- a/drivers/nvme/host/sysfs.c
++++ b/drivers/nvme/host/sysfs.c
+@@ -1308,3 +1308,146 @@ const struct attribute_group *nvme_subsys_attrs_groups[] = {
+ 	&nvme_subsys_attrs_group,
+ 	NULL,
+ };
++
++#ifdef CONFIG_NVME_SPEED_SWITCH
++enum nvme_speed_attr_id {
++	NVME_SPEED_ATTR_ENABLE,
++	NVME_SPEED_ATTR_MONITOR_INTERVAL,
++	NVME_SPEED_ATTR_MIN_SPEED,
++	NVME_SPEED_ATTR_UP_THRESHOLD,
++	NVME_SPEED_ATTR_DOWN_THRESHOLD,
++};
++
++struct nvme_speed_attr {
++	struct device_attribute attr;
++	enum nvme_speed_attr_id id;
++};
++
++static ssize_t nvme_speed_attr_show(struct device *dev,
++				    struct device_attribute *attr, char *buf)
++{
++	struct nvme_ctrl *ctrl = dev_get_drvdata(dev);
++	struct nvme_speed_switch *sw = &ctrl->speed_switch;
++	struct nvme_speed_attr *sa =
++		container_of(attr, struct nvme_speed_attr, attr);
++	u32 val;
++
++	switch (sa->id) {
++	case NVME_SPEED_ATTR_ENABLE:
++		val = READ_ONCE(sw->enabled);
++		break;
++	case NVME_SPEED_ATTR_MONITOR_INTERVAL:
++		val = READ_ONCE(sw->monitor_interval);
++		break;
++	case NVME_SPEED_ATTR_MIN_SPEED:
++		val = READ_ONCE(sw->min_speed);
++		break;
++	case NVME_SPEED_ATTR_UP_THRESHOLD:
++		val = READ_ONCE(sw->up_threshold);
++		break;
++	case NVME_SPEED_ATTR_DOWN_THRESHOLD:
++		val = READ_ONCE(sw->down_threshold);
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return sysfs_emit(buf, "%u\n", val);
++}
++
++static ssize_t nvme_speed_attr_store(struct device *dev,
++				     struct device_attribute *attr,
++				     const char *buf, size_t count)
++{
++	struct nvme_ctrl *ctrl = dev_get_drvdata(dev);
++	struct nvme_speed_switch *sw = &ctrl->speed_switch;
++	struct nvme_speed_attr *sa =
++		container_of(attr, struct nvme_speed_attr, attr);
++	u32 val;
++	int ret;
++
++	ret = kstrtou32(buf, 10, &val);
++	if (ret)
++		return ret;
++
++	switch (sa->id) {
++	case NVME_SPEED_ATTR_ENABLE:
++		if (val > 1)
++			return -EINVAL;
++		if (!val && READ_ONCE(sw->enabled)) {
++			WRITE_ONCE(sw->enabled, false);
++			timer_delete_sync(&sw->timer);
++			cancel_work_sync(&sw->work);
++			atomic_set(&sw->timer_active, NVME_SPEED_TIMER_INACTIVE);
++		} else
++			WRITE_ONCE(sw->enabled, val);
++		break;
++	case NVME_SPEED_ATTR_MONITOR_INTERVAL:
++		if (val < 100)
++			return -EINVAL;
++		WRITE_ONCE(sw->monitor_interval, val);
++		break;
++	case NVME_SPEED_ATTR_MIN_SPEED:
++		if (val < 1 || val > 5)
++			return -EINVAL;
++		if (val > sw->max_speed)
++			val = sw->max_speed;
++		WRITE_ONCE(sw->min_speed, val);
++		break;
++	case NVME_SPEED_ATTR_UP_THRESHOLD:
++		WRITE_ONCE(sw->up_threshold, val);
++		break;
++	case NVME_SPEED_ATTR_DOWN_THRESHOLD:
++		WRITE_ONCE(sw->down_threshold, val);
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return count;
++}
++
++static struct nvme_speed_attr nvme_speed_attr_enable = {
++	.attr = __ATTR(enable, 0644,
++		       nvme_speed_attr_show, nvme_speed_attr_store),
++	.id = NVME_SPEED_ATTR_ENABLE,
++};
++
++static struct nvme_speed_attr nvme_speed_attr_monitor_interval = {
++	.attr = __ATTR(monitor_interval, 0644,
++		       nvme_speed_attr_show, nvme_speed_attr_store),
++	.id = NVME_SPEED_ATTR_MONITOR_INTERVAL,
++};
++
++static struct nvme_speed_attr nvme_speed_attr_min_speed = {
++	.attr = __ATTR(min_speed, 0644,
++		       nvme_speed_attr_show, nvme_speed_attr_store),
++	.id = NVME_SPEED_ATTR_MIN_SPEED,
++};
++
++static struct nvme_speed_attr nvme_speed_attr_up_threshold = {
++	.attr = __ATTR(up_threshold, 0644,
++		       nvme_speed_attr_show, nvme_speed_attr_store),
++	.id = NVME_SPEED_ATTR_UP_THRESHOLD,
++};
++
++static struct nvme_speed_attr nvme_speed_attr_down_threshold = {
++	.attr = __ATTR(down_threshold, 0644,
++		       nvme_speed_attr_show, nvme_speed_attr_store),
++	.id = NVME_SPEED_ATTR_DOWN_THRESHOLD,
++};
++
++static struct attribute *nvme_speed_attrs[] = {
++	&nvme_speed_attr_enable.attr.attr,
++	&nvme_speed_attr_monitor_interval.attr.attr,
++	&nvme_speed_attr_min_speed.attr.attr,
++	&nvme_speed_attr_up_threshold.attr.attr,
++	&nvme_speed_attr_down_threshold.attr.attr,
++	NULL,
++};
++
++const struct attribute_group nvme_speed_attr_group = {
++	.name = "speed",
++	.attrs = nvme_speed_attrs,
++};
++#endif /* CONFIG_NVME_SPEED_SWITCH */
 -- 
 2.43.0
 
