@@ -1,124 +1,205 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8259C4756CE
-	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 10:30:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C5051A6814
+	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 11:03:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790245823; cv=none; b=gtSv4NIK5OKDpYYEL+odhoytibqXG7R8vxZxoTi99OO9HMoBfcGmbZbWSfQPyAHeSx+lrAksv1TsaR83dHpdVD5/PMyTqg+Je14exzd/OyaBuLCWnp9pDz3vrjgSighNOI5ozR/0kh87yxeNCHbJKrph9DeHF5gtdcF/XaElQ7c=
+	t=1790247821; cv=none; b=DaG1qvFZtUuM8M+L4VaqvD7yYFnRMYlv1w5bnSaXwXSWFrQOXVvEFdeNj70/0DCZF2cm9w89Cks7222slw+awb/rm+C3hXy4tQk1Z5HlfTpKfgH40d595+KP9puAvNG7UM/X79KDW5OBnw4URN+70yWpWuB7g9MMtB+6rgA+02I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790245823; c=relaxed/simple;
-	bh=U8nMggfZB2pfvOMthpuD5eenXWw+txwYNB5gvHaXPPM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=tPkBGQXx4wRleUZYFhcgM68dnylKvqmNTK8M8ed2LvKPm4xQRvuV6UHX4TXnnEVDJwkbMmnlPnXPbZ11teKoV4vCDI3H+0ow8YT7m2kjOeTKp4ORVPAFT/3ybaWz1CTSvOwMeLHiap8tqBMRd+mGbgThAzkLbRsmOhw8oaM9ZzU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m9Fn69XR; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790247821; c=relaxed/simple;
+	bh=IhabpTLczNnSHQ0UJk2NzC+d4ckaiZ88UI5IfHfDiAk=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=Sjb+5bx+9zvAzJWnUryUgtKuhG5mnBM/QOyS+iycbCeIOW0P9svFmoR88ysR/O+Q6HP3SSG7VJEfoTPrWbUntSRaN1PwxKCxyBEpRkSiy2icbzvjzIHUoil4l9vmVOFIxYCJiwo74d5QYca782WR8MbWUHSh+rL7CX/U4KhQwQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=X2CSM7eb; arc=none smtp.client-ip=198.175.65.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m9Fn69XR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C88CB1F000FF;
-	Thu, 24 Sep 2026 10:30:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790245822;
-	bh=rAFMTMvterXZhAVHx/XFXcEzI70FvYsFK594h0Se8zM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=m9Fn69XRCAj0LPQTvX9MUjtlrqWDrUa4P+svKD1Fw3UOUHhsZezd2m7PuZbckL0/9
-	 JTjsd6IetFfHI7nhQwZdkP85MkGsylKxowT3bLzkH2dPAF2UtK7yEBjk36/175gSW/
-	 ZujvR6NXSpe6wqmT8sK35of59qlfCgE2EVRrmX1B1Nt+yN2K8rSbLcX0Ds0GLfTCpv
-	 xNk+vyby/ltKm321S/05qvTkmmwoDFS9m+wl8/Gvj4+qChTsxQCvj1Y3Ae0MbtWed1
-	 TbeTHNAsQ9+ZL5ezkTp64P6gB1g+2l9r8jVOIKHoA/FM+n2BRWM331ng1r/jiadHxP
-	 DqSIU1pruTBXw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: pciehp: Re-read Slot Control when cached HPIE is
- clear
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Zhu Qiyu" <qiyuzhu2@amd.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260924101929.143806-1-qiyuzhu2@amd.com>
-References: <20260924101929.143806-1-qiyuzhu2@amd.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 24 Sep 2026 10:30:21 +0000
-Message-Id: <20260924103021.C88CB1F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="X2CSM7eb"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1790247820; x=1821783820;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version:content-id;
+  bh=IhabpTLczNnSHQ0UJk2NzC+d4ckaiZ88UI5IfHfDiAk=;
+  b=X2CSM7ebLsvmjRl92OW1z8fYTfoN9zrqgKx9w/YFdcYFVXmH4GKT2GF1
+   xVkA0KcUN77ZR1F59976w3wwT8ywURKfddlQixdzk/0Zy9DafIZn7cmjP
+   VedwxAxVTXrOBIavIeStAT+j8ldFRJIVL876EvLztLvj55qDr9rSQ2Dar
+   Jc++7YcojOwf+fdMxAKlfdwnjMxjzx3bDa7F6L431IY2GrNC95019RfTS
+   ZunKXwMNCLXWKFvoZVXfKGIY3oyk5rlP0IURVgHYmWzUJP6JvYqczGZuk
+   skiDoY3zZAmr8SejS/4T+KgTwpsSRAF948zKTVly09AFd4/21UVFMZXBV
+   w==;
+X-CSE-ConnectionGUID: Vpud5gDmQU+/4FXDqupb9Q==
+X-CSE-MsgGUID: 3VPz+TnbTX+HfvhXDjswJQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11914"; a="101186713"
+X-IronPort-AV: E=Sophos;i="6.27,120,1787036400"; 
+   d="scan'208";a="101186713"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2026 04:03:39 -0700
+X-CSE-ConnectionGUID: XKhCMxK0SkGEqi9xCjf9dw==
+X-CSE-MsgGUID: IzzmPFaURc6e1HBUr37y5Q==
+X-ExtLoop1: 1
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.183])
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2026 04:03:37 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Thu, 24 Sep 2026 14:03:33 +0300 (EEST)
+To: sashiko-reviews@lists.linux.dev
+cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/5] PCI: Place resources to either edge of the window
+In-Reply-To: <20260923132848.B7A451F000FF@smtp.kernel.org>
+Message-ID: <9aa21437-c8c1-8b51-62aa-aeaa64854f1f@linux.intel.com>
+References: <20260923131757.7792-1-ilpo.jarvinen@linux.intel.com> <20260923131757.7792-4-ilpo.jarvinen@linux.intel.com> <20260923132848.B7A451F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; BOUNDARY="8323328-467248736-1790245410=:1187"
+Content-ID: <98b81c16-5dbd-a0e4-5742-f88e0aba1a5b@linux.intel.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] pci: TOCTOU race in config space read leading to master abort
---
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-commit 7ceb468446bd25d57acbe78d0b28b124ca7b5902
-Author: Zhu Qiyu <qiyuzhu2@amd.com>
+--8323328-467248736-1790245410=:1187
+Content-Type: text/plain; CHARSET=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-ID: <1cc40ac6-288f-1647-2d71-a8848471b11d@linux.intel.com>
 
-PCI: pciehp: Re-read Slot Control when cached HPIE is clear
+On Wed, 23 Sep 2026, sashiko-bot@kernel.org wrote:
 
-This commit addresses missed hot-plug events by re-reading the Slot
-Control register directly from hardware when the cached Hot-Plug
-Interrupt Enable (HPIE) bit is clear and the port is in the D0 state.
+> Thank you for your contribution! Sashiko AI review found 2 potential issu=
+e(s) to consider:
+> - [High] pci: undefined behavior from 64-bit resource sizes on 32-bit sys=
+tems
+> - [Medium] pci: res->end + 1 overflow breaks natural alignment logic
+> --
+>=20
+> commit 65c3dea851ed27dd4bf3576e0a9387eaa7359798
+> Author: Ilpo J=E4rvinen <ilpo.jarvinen@linux.intel.com>
+> Subject: PCI: Place resources to either edge of the window
+>=20
+> This commit updates the PCI resource assignment phase to use a window edg=
+e
+> aware resource assignment algorithm. It alters the greedy assignment logi=
+c
+> to place resources either to the left or right edge of the window to avoi=
+d
+> fragmenting contiguous free space.
+>=20
+> > diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> > index eacce9e2486bf..1ab5d167ab5c6 100644
+> > --- a/drivers/pci/setup-res.c
+> > +++ b/drivers/pci/setup-res.c
+> [ ... ]
+> > @@ -262,16 +265,80 @@ resource_size_t pci_resource_alignment(const stru=
+ct pci_dev *dev,
+> >  =09return resource_alignment(res);
+> >  }
+> > =20
+> > +static resource_size_t pci_max_natural_size(const struct resource *res=
+,
+> > +=09=09=09=09=09    resource_size_t *max_align)
+> > +{
+> > +=09resource_size_t size =3D resource_size(res);
+> > +=09resource_size_t powof2, natural_start;
+> > +
+> > +=09*max_align =3D 1;
+> > +=09if (!size)
+> > +=09=09return 0;
+> > +
+> > +=09powof2 =3D rounddown_pow_of_two(size);
+>=20
+> [Severity: High]
+> Does this code inadvertently truncate 64-bit resource sizes on 32-bit sys=
+tems?
+>=20
+> When a 32-bit kernel is built with a 64-bit phys_addr_t (like x86 PAE or
+> ARM LPAE), passing a 64-bit size into rounddown_pow_of_two() casts it to =
+an
+> unsigned long. If the size is a multiple of 4GB (which is common for larg=
+e
+> GPU BARs), the lower 32 bits are silently truncated to 0, causing powof2 =
+to
+> be evaluated as 0.
 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pcieh=
-p_hpc.c
-> index 4c62140a3cb44..df977d4af4056 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+This is a pre-existing issue. PCI core already uses __ffs() which is based=
+=20
+on unsigned long (at least on x86).
 
-[ ... ]
+There's also a serious discussion in x86 space about future of 32-bit=20
+support where keeping it wastes development effort:
 
-> @@ -628,13 +628,34 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
->  	u16 status, events =3D 0;
-> =20
->  	/*
-> -	 * Interrupts only occur in D3hot or shallower and only if enabled
-> -	 * in the Slot Control register (PCIe r4.0, sec 6.7.3.4).
-> +	 * Interrupts only occur in D3hot or shallower (PCIe r4.0, sec 6.7.3.4).
->  	 */
-> -	if (pdev->current_state =3D=3D PCI_D3cold ||
-> -	    (!(ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE) && !pciehp_poll_mode))
-> +	if (pdev->current_state =3D=3D PCI_D3cold)
->  		return IRQ_NONE;
-> =20
-> +	/*
-> +	 * Interrupts are only sent if enabled in the Slot Control register
-> +	 * (PCIe r4.0, sec 6.7.3.4).  ctrl->slot_ctrl caches that register, but
-> +	 * the cached Hot-Plug Interrupt Enable bit can fall transiently out of
-> +	 * sync with the hardware if platform firmware clears it behind the
-> +	 * driver's back (e.g. concurrently with a Slot Control read-modify-
-> +	 * write).  While the port is in D0 it is accessible, so re-read the
-> +	 * register from hardware before dismissing the interrupt as not ours.
-> +	 * In a low-power state the port may be inaccessible and the cached
-> +	 * value is authoritative.
-> +	 */
-> +	if (!pciehp_poll_mode && !(ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE)) {
-> +		u16 slot_ctrl;
-> +
-> +		if (pdev->current_state !=3D PCI_D0)
-> +			return IRQ_NONE;
-> +
-> +		pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
+https://lore.kernel.org/all/bd252483-fb0a-4818-bfaf-b9b6ebd187fe@intel.com/
 
-[Severity: High]
-Does this introduce a Time-of-Check to Time-of-Use (TOCTOU) race condition =
-when
-reading the config space?
+The non-trivial cost here is avoiding the problematic generic helpers=20
+(custom coding them) or fixing ffs() and round*_pow_of_two() when input=20
+size > sizeof(unsigned long), for ability to run >=3D4GB BARs on a 32-bit=
+=20
+platform. Yeah, modern GPUs have big BARs but running them on a 32-bit=20
+platform doesn't sound that great combination.
 
-A concurrent pm_runtime_suspend operation powering down the device can race
-with pciehp_isr receiving an interrupt.
 
-The lockless pdev->current_state !=3D PCI_D0 check could pass just before t=
-he
-state is updated, leading to an unprotected pcie_capability_read_word after
-the device becomes inaccessible.
+That being said, I think round*_pow_of_two() interface should be made
+to return same type as the input because it simply doesn't make sense to=20
+convert the value to some other type. I briefly looked into that earlier=20
+but it requires auditting that all the callers can handle that (IIRC,=20
+there were even some build failures from making just the type change and
+there could be logic flaws as well if something relies on type expansion
+to unsigned long).
 
-Reading the PCI config space of a suspended device can trigger an Unsupport=
-ed
-Request (UR) or Completion Timeout. On some platforms (e.g. ARM64), this do=
-es
-not gracefully return 0xFFFF but instead triggers a Synchronous External Ab=
-ort
-(SEA), leading to a kernel panic.
+> > +=09natural_start =3D ALIGN(res->start, powof2);
+> > +=09if (natural_start >=3D ALIGN_DOWN(res->end + 1, powof2)) {
+>=20
+> [Severity: Medium]
+> Could this boundary check overflow if the window ends exactly at ~0U?
+>=20
+> If a 32-bit system maps PCI space just below the 4GB boundary, res->end
+> could be 0xFFFFFFFF. In that scenario, res->end + 1 wraps to 0, which
+> causes ALIGN_DOWN(0, powof2) to return 0. The check natural_start >=3D 0 =
+then
+> unconditionally evaluates to true for unsigned types, incorrectly forcing
+> the algorithm to halve powof2 and potentially failing to pack memory wind=
+ows
+> tightly.
+
+This will be fixed by subtracting 1 from the aligned result to underflow=20
+it back from 0 to ~0.
+
+> > +=09=09powof2 =3D max(powof2 / 2, 1U);
+> > +=09=09natural_start =3D ALIGN(res->start, powof2);
+> > +=09}
+> > +
+> > +=09if (natural_start) {
+> > +=09=09*max_align <<=3D __ffs(natural_start);
+>=20
+> [Severity: High]
+> Does this trigger undefined behavior when passing a truncated 64-bit valu=
+e?
+>=20
+> Similar to rounddown_pow_of_two(), __ffs() takes an unsigned long. If a
+> 64-bit natural_start is a multiple of 4GB, the cast truncates it to 0.
+> Passing 0 to __ffs() invokes undefined behavior, which can lead to
+> unpredictable results or kernel panics during boot (such as garbage shift
+> amounts or arch-specific trap instructions on zero inputs).
+
+Sashiko knows no shame with rather bold claims. I'm pretty sure the answer=
+=20
+should have fit into its context window, no matter how small that was. ;-)
+
+> > +=09} else {
+> > +=09=09/*
+> > +=09=09 * Zero address has infinite alignment, return the largest
+> > +=09=09 * representable number even if it's not a power of two.
+> > +=09=09 */
+> > +=09=09*max_align =3D RESOURCE_SIZE_MAX;
+> > +=09}
+> > +
+> > +=09return powof2;
+> > +}
+>=20
+>=20
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260924101929.1438=
-06-1-qiyuzhu2@amd.com?part=3D1
+ i.
+--8323328-467248736-1790245410=:1187--
