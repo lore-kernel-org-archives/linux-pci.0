@@ -1,125 +1,78 @@
-Received: from mail-yx2-f13.google.com (mail-yx2-f13.google.com [74.125.224.141])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61F883B6BF4
-	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 15:30:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3070B4A2A62;
+	Thu, 24 Sep 2026 15:34:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790263852; cv=none; b=OtzSI4wAL6sAv108DFy1zCkYpM820gZahNKSYf0f4x+9QUuc8TfzbSk4fVUE7BpcdKp5nqgv6PNDjnAn+zdMaxhIT89MR8/u5PDp6LplZc5ibEC1eEHWQOAiZKAeblSM5xSYNqx0mphCRiCCJ7ZjuEtNIrd9FaNvByUAypRR/IE=
+	t=1790264063; cv=none; b=dqssQUAdUjve+hWj9Ee6C3pBSZQovRnbgJ66SggHIfotLtDBhi72WCBYQpIijyVV5Xgort+xZGhIHfxIh6EtWcEc/hOZwq0816H2MHPRRNPN3K3X+7Q6vZH0QDFV/Ke7mLL5PcA8T+hWfgKG5fhu1U8DMRjAW3Ox7DD4efC/3ug=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790263852; c=relaxed/simple;
-	bh=Zv0yR6BbcReSaHov0VqNC9B/8SSZfpbix7YMNfapxko=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qje0z56Ek7gRzv2fW2lx49ru7FmORIuOKf4QPUkW7ArDN32EuTmd+EHoe6Q0KnA/y8pLbhea6eclh14vFMwkzWCE3rbj7chmZ8RbU3aXnDPKGno/XLOr4cUOwOHMbWWnEekCq/VlqGvsmzjceP6SsHySg7vZuV4v6KKpQTTFPCs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rowland.harvard.edu; spf=fail smtp.mailfrom=g.harvard.edu; dkim=pass (2048-bit key) header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.b=T0wPbh7d; arc=none smtp.client-ip=74.125.224.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rowland.harvard.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=g.harvard.edu
+	s=arc-20240116; t=1790264063; c=relaxed/simple;
+	bh=Afqp5XnClEqiK2xol6lnQuzxFiRulHaTe99w+2C7Nbw=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=rqw6yKutGnP73STpa/JTgyeDg0XZ2APBiHWVMAOVfZHOTcgSpY8eJdOOP1hlth1LWuco6uV+iXPyOrXBo8xT0jmso/aBwQB5bJNNutNpHO2ruSkr2zESoRfGbnzCme/7RJLIoGVtHw28gnz6q07vVQGcNPcC05WwxClBjM+2RnU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jlGMvFMh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.b="T0wPbh7d"
-Received: by mail-yx2-f13.google.com with SMTP id 956f58d0204a3-66e4ab22370so1930100d50.3
-        for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 08:30:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=rowland.harvard.edu; s=google; t=1790263849; x=1790868649; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=iDrpvpL5sqLAVvdAjrAo2ss1QyRZ0bD4iQxldapowE0=;
-        b=T0wPbh7d/Bx9PC95dGTd6rBz3qyg9tLmExyFAHpN7n0iC8qLrdvvYxYzVgb7hH5Dmb
-         gRo12ueIRaB78jY7HuDbDrXHEqRvC2jkn4Ft2h1TvDFb/BLcEIQj9ply63Eniv+sYl2f
-         FuyekpbwnRtg+7P7RG8SkTSZ7TaIkczgptk2GCcqVDEFmAU7qOjv6zJgOByjZzbuQQO1
-         qi6YZaMEaAAPuz7xVtQ1PJwvNSyWHm2uuHbj2nbULcp5nys3PD64PPCaiyFSM5gttSOf
-         p0eDaV99i4QpVED0C2CG04yNBdbfEAOK8KX2gFYnlNjgdLbeMVphvxpZwFPL148zfYWE
-         Hjtw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790263849; x=1790868649;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=iDrpvpL5sqLAVvdAjrAo2ss1QyRZ0bD4iQxldapowE0=;
-        b=pySLDYKi5OzmztTCfrla/rUdQkesycdfdux34cISBQLRnGlDqgV4NK1WIUFcgIZIe9
-         rdqPNac+sU0yqk1TFexB6HRG/ewjsqdAit7RT3BMzXGckfwb5NKq2NFmJzgOqDlf/fBj
-         GUetOT/LvRK2zEtLa9SH8qz10xWd/YcJ/kEzfsXTCYXws8CFXvnBX5p7CFwd0FPwxREc
-         IemgIQEk8FGWCDFPa3hIQJ+uqUkoLtZ0vl0S80CVnwqsx1pVGMpYOeJOdmI3nb8XvchU
-         1yl/xuQSb+Q/g9sIZv0eZtGrRWiCZfR6+iqPuw1nJNG7jc92Yu9gcaETbIpYeyYTq5Tr
-         CO6w==
-X-Forwarded-Encrypted: i=1; AKwUvBzA6EKBJI+uJSGePfCkwQHYeddpMa2LQCsPybkOHR4rSld/3m6BHV+2/594C7XoUMxiN7JYu9xR5YM=@vger.kernel.org
-X-Gm-Message-State: AFuF++lEXEY8zG+AoK4D1loqSncv7e+gBrXWacV73l4KF3/5rwAmBJ7z
-	gYEynKTofJo4AtHWIdXMGSHQt62Sx+Pv95axqKha2z4IOcSqphKDieAMDd3CVnp8tg==
-X-Gm-Gg: AYBFou36gWOG9jh1Yc3f+/tUtatTFENzd7wjo5hWOJ+MYcGnBy8APjg9dRUOb0XL3kd
-	GME7Hr99StI5JHKmLbu/q2VrCDcE2JFoVixril/z4i2zxU14a9+dF/6Ed84/ljpyzUJB9e4zwMj
-	GiqFbyWAA3QFpQyJZenaL0LNdAMmIQiVLQ+PFhRQSTY6hiWz0fqYrVSh8PNpvjZPt2I4A40CR0B
-	AusECH2v2h63IXYnMBtkf1QQC4Sxm6AsNZGJxp8ly8IvuTmip3A6aLntyP/yuLzhpSByqCKPrcZ
-	yaZrUkAS2lryPiMQN+tXYJm6JAZlnnOdjfpXXEVF1lsi/pYEOjv7hoE/JeYjWgYEmGy3o9cyBzW
-	ren4OiXKuJX6l6uqKREiAJ3WqgszczqN3limh1qoUH38LgIF4xO3zSp+9+7d0cuwSsMygNpJN9N
-	H54jTCa7Yrdzq2ol/cxE8Hb94U61VBpSvfb9OZvV9LfsXsqMF5BtN9sPeGVh0s8sBcDyPSHUlFq
-	Y1jLkdOIp+hGuT2NYtPnUxOjg8Y1xtDz/cORJcVbro=
-X-Received: by 2002:a05:690e:1188:b0:672:cf59:f2f9 with SMTP id 956f58d0204a3-672ed4db4f2mr1353663d50.101.1790263849097;
-        Thu, 24 Sep 2026 08:30:49 -0700 (PDT)
-Received: from rowland.harvard.edu ([2607:fb60:1011:2006:2008:aeb7:73d7:d8ff])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9141e21792bsm18821596d6.11.2026.09.24.08.30.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Sep 2026 08:30:48 -0700 (PDT)
-Date: Thu, 24 Sep 2026 11:30:46 -0400
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Francisco =?iso-8859-1?Q?Beltr=E1n_Millal=E9n?= <fbeltranmillalen@gmail.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, linux-usb@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/4] usb: hcd-pci: Honour pci_save_state() failure
-Message-ID: <cbd8331c-5049-4521-bba1-b57a892e4269@rowland.harvard.edu>
-References: <20260924124221.12374-1-fbeltranmillalen@gmail.com>
- <20260924124221.12374-2-fbeltranmillalen@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jlGMvFMh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77CB11F000FF;
+	Thu, 24 Sep 2026 15:34:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790264061;
+	bh=az7xxfOSK3d7joncT9mggFE1+UrHB7sT8pFuodahjII=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=jlGMvFMhOQ/royNRBsJE1AzE6EFZnpSugaXsY9pSyNDNx+Opa1coatYKIZU+sVWi+
+	 rjweNpyTtcLq8k32gJB9ukF7ALzlKMw+dJZk/0WHjmjnnxMlrtPCnteEEAkhMAgUBg
+	 41MKL5u2DBDcUg9gBU55tfjDTyvq32illNz5qbh6MHSpMi2vhlA+SNqyOMwF9N95ZC
+	 zAYreI66RZtAa3KvrRYbU503ni/Fkq8gAPBVXm9Ijx9MRN/NrNneGk8O25/SN0uKtv
+	 04nx2G1zAj5gqxzT/JnCSi9JI3coWcG3TfdyC8IK6gaSVtgXFJUxED8x31h9vcnkMx
+	 X8FuVKXTBdrKQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v7 6/9] vfio/pci: Convert BAR mmap() to use a DMABUF
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Matt Evans" <matt@ozlabs.org>
+Cc: media-ci@linuxtv.org, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, kvm@vger.kernel.org
+In-Reply-To: <20260924152159.49702-7-matt@ozlabs.org>
+References: <20260924152159.49702-1-matt@ozlabs.org>
+ <20260924152159.49702-7-matt@ozlabs.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 24 Sep 2026 15:34:20 +0000
+Message-Id: <20260924153421.77CB11F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260924124221.12374-2-fbeltranmillalen@gmail.com>
 
-On Thu, Sep 24, 2026 at 09:42:18AM -0300, Francisco Beltrán Millalén wrote:
-> hcd_pci_suspend_noirq() calls pci_save_state() and ignores its return
-> value, then goes on to call pci_prepare_to_sleep().  pci_save_state()
-> can fail -- it already propagates failures from pci_save_pcie_state()
-> and friends -- and when it does there is no saved state to restore
-> later, so putting the device into a low-power state only makes matters
-> worse: the subsequent transition fails too, and the PCI core then warns
-> that the callback returned without saving the state.
-> 
-> Check the return value.  If the state could not be saved, leave the
-> device alone and return success, so the rest of the system can still
-> suspend.  Leaving the power state untouched also means the PCI core has
-> nothing to complain about.
-> 
-> Signed-off-by: Francisco Beltrán Millalén <fbeltranmillalen@gmail.com>
-> ---
+> Convert the VFIO device fd fops->mmap to create a DMABUF representing
+> the BAR mapping, and make the VMA fault handler look up PFNs from the
+> corresponding DMABUF.  This supports future code mmap()ing BAR
+> DMABUFs, and iommufd work to support Type1 P2P.
+>=20
+> First, vfio_pci_core_mmap() uses the new
+> vfio_pci_core_mmap_prep_dmabuf() helper to export a DMABUF
+> representing a single BAR range.  Then, the vfio_pci_mmap_huge_fault()
+> callback is updated to understand revoked buffers, and uses the new
+> vfio_pci_dma_buf_find_pfn() helper to determine the PFN for a given
+> fault address.
+>=20
+> Now that the VFIO DMABUFs can be mmap()ed, vfio_pci_dma_buf_move()
+> zaps PTEs (used on the revocation and cleanup paths).
+>=20
+> CONFIG_VFIO_PCI_CORE now unconditionally selects
+> CONFIG_DMA_SHARED_BUFFER.  The CONFIG_VFIO_PCI_DMABUF feature
+> conditionally includes support for VFIO_DEVICE_FEATURE_DMA_BUF,
+> depending on the availability of CONFIG_PCI_P2PDMA.
+>=20
+> When the DMABUF feature is not present, DMABUFs are used internally
+> for the BAR mappings.  In this case, DMABUF attach is prohibited (and
+> the requirement for a P2PDMA provider is relaxed).
+>=20
+> Signed-off-by: Matt Evans <matt@ozlabs.org>
 
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-> diff --git a/drivers/usb/core/hcd-pci.c b/drivers/usb/core/hcd-pci.c
-> --- a/drivers/usb/core/hcd-pci.c
-> +++ b/drivers/usb/core/hcd-pci.c
-> @@ -541,7 +541,17 @@
->  	if (retval)
->  		return retval;
->  
-> -	pci_save_state(pci_dev);
-> +	/*
-> +	 * If the controller is already inaccessible, there is no state to
-> +	 * save and nothing to put into a low-power state.  Leaving the power
-> +	 * state alone also keeps the PCI core from warning that this callback
-> +	 * returned without saving the state.
-> +	 */
-> +	retval = pci_save_state(pci_dev);
-> +	if (retval) {
-> +		dev_dbg(dev, "--> not suspending, device inaccessible\n");
-> +		return 0;
-> +	}
->  
->  	/* If the root hub is dead rather than suspended, disallow remote
->  	 * wakeup.  usb_hc_died() should ensure that both hosts are marked as
-> 
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260924152159.4970=
+2-1-matt@ozlabs.org?part=3D6
+
