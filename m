@@ -1,96 +1,96 @@
-Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
+Received: from mail-wr2-f35.google.com (mail-wr2-f35.google.com [74.125.225.99])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A648380FD1
-	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 12:23:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8AF74734CD
+	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 12:26:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.99
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790252617; cv=pass; b=lpgiCM0hhyI8AFsuMQyRkPCXeTiG6JL0DgigCnh2paDSNK6q43MZRoWPqoHNkvlGabVjOnhmjvAcStsNHDxs/PXHU/+8001iMYLXMx+EVTQIwjIQ0KKB3RvohHz4gjzzEi9WWWck/sxEJTxSpo2nxawF+2pmgWVHqSUt37G+ljA=
+	t=1790252784; cv=pass; b=pDjfPNfSyecaX6/Rkr+uersiF6wdJszcgYlvSFY3mdsfytc8cVLMs44NKXt3yplUqu5Reo2mqcqwYPwmXkXVSa3flhL0BXPQvtBldrhPoQwA9+361INE5ZOEHcAQHAAs5dXcHaJGg3ak3CE2AkpxWUikyWj8DEDFt3DB+regdU0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790252617; c=relaxed/simple;
-	bh=RNjjUPAqj04Zgmf3ERyYj6L+drgEgOadI/eoAl8Rxyg=;
+	s=arc-20240116; t=1790252784; c=relaxed/simple;
+	bh=9vSyr3e26Qz/fAvJZ42PLSKkIjr0FOmX+AK8aedKEO4=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nVphmkGXJD0794Soh9WPKnJNjgqmMVR3wZ0kaN9qKr1Cp5HIBcP/LAjw7Y3ZfuBLFXd51wha1RVttNHKnB4e9fT7oqi41tEbZK9ObpXHqCTNhmo6N9VplbkzjV4uOH0gn6UZvXCNmlx/6GpL8do2dWX+Pz6TI3vIpODCGypleYM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TUtIuKUp; arc=pass smtp.client-ip=74.125.225.76
+	 To:Cc:Content-Type; b=aGrcOieIg4zdcCDa3nBKa5kxjbm2Y/BJhv50XI/tkLyhsMIp4xKghxgVmZu5NXTSoitlBNt6LGLx85BA9PLj1He4D8+l6ZRkbPleKlCwcd0MQUeYk5UkyVzlSDetQgIcLG0Nnho6lc4z2aZx09fb2UlWIHrbRIV8l3WCeUxUHyg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jq0LWYru; arc=pass smtp.client-ip=74.125.225.99
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TUtIuKUp"
-Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-486e1a044c5so1630826f8f.3
-        for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 05:23:36 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790252614; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jq0LWYru"
+Received: by mail-wr2-f35.google.com with SMTP id ffacd0b85a97d-48877902c99so83527f8f.2
+        for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 05:26:22 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790252781; cv=none;
         d=google.com; s=arc-20260327;
-        b=byinBMdB0ZUP+fagGjDY8Ap7i9fPwiyRaa4NeROS1HO3+6Rq96SwIH3fFFylP1uaoW
-         NWyD3dos4LCT4QFhXzCFs8sKXvNhecKqTbVPKIbeD9c92xKByC+d93T0mj2EY11JHcgI
-         Y8Ti9f0i1O5H4WrhLTgWWKEYk63vyaWs8UXy5oDOMR2goTPbJiU2xLF+1AR2twjBMCSE
-         YUWz6vJo2EgZDmjh+GvuGHFba0qP56j8Vs6DgL3PWAHmenVkoAK7ru1zAjT/RY8Q/UJw
-         uVBNetBBsrpZcFcdIgc866vbATSB3vhsiXZQq95G90OpsA0h+oGTWMHTbf91TOn2Hs2p
-         l0Ng==
+        b=MDzEuPx6pe4D32ZY92us5BgEYR5lZ1wg8s5gLeErxrztAQ72vyw6AgwMyiCnXm9x3P
+         Ua+RBOaAVn4pTsHg56+2dZN/H1yTHaC6dfthuD64IONIV24zmHDD1wVqPtn+ZJxmJeEP
+         RnvekiWYUDjXXKWM/OsI93DZcC7EgdNF/KPWfpn33uJPXB5FqBiR3OB9Wu0oidzCd/Ud
+         +fuxBKehFq0UCwMwqHs2X7WchMlO8DW+GxstyOAYkPzL/tpCn14cmEKZufaD163D3xtk
+         SQW7fMJCC4EhQhBaoodiJnzWHIJiaH/hpKW4JaE8+1NBJ/bdyfqm5/GxBqcuTC2r59XX
+         8zHQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=rdRrzn5S9xJBL1cPeQCdlU0zlgaKl3QYL9gnErwMUoA=;
-        fh=oMsfI9nKyfjB9pNkdU9RVOY9iJePpS4yaqsRZVdeZmw=;
-        b=DaNDXiC21UBAxBruF+4M3IdnFT8BKmYhuzXg/4y3L1Go5TvDHkSocX8mDzIK4kT/5F
-         6e/BKd6hUI/O0Dj2/IcxYZnVywLSxkl/tgi/blTv2Hx2l6BHwTQaRpXTs6kgjzCTrrFt
-         LnWTecCfurTENyCUa94i3h/o9qX6dFjywVKjplSwJYep1+Kf5Kh05yeYHnMYYbEy47FG
-         BtwErrP8d1DHkwKJUV/6YqONuoy6c15W3eTCS45jw2FBMftfYPYtMPud9Cz+tRUAG1FC
-         NEm7MwyuEFM+zryLYpa11xPLx7+RimI4lfqivvMbWAHpQq2oGMUJ5uzWBIRWqMQENkQh
-         QxEg==;
+        bh=44/rB8ZswRc008KoGmaclPt6xvztpmvmKKTq9AsEafQ=;
+        fh=bJ2fyqjLgz5xGVrfcQ0ecS1g6vibYXLa9pF86Pd7+Vg=;
+        b=kCfmvZZYA7NVZozUDIuKUkOoP0hQ2zBjlqB/owWUr5i9dVCplu1CNClHhWNl+TRXcA
+         Hsu0pL+i0RPRpBxesK38YJdYPBH/Wv667j7R+m4at2EETn+7BHIjpJfKJA2f+Q8/0+87
+         i3f5+T3OZHt9M5kcXc7R8hMM+Gz5yrj7cl0pSTY5gBBSz7O4MFGPzHtj3C2xJQmthZkk
+         AVWdhqBOTs3vPhsmXHnvq3M684NPrpDz0YKPgNevwMkk8cGzTvrHb9R6B8YS4Wo7GMhq
+         6sSR9daXBJ21Dlstd0uUEmpgay2NdDMhJCtE7Wek7+MwDn65chAqRR1rpjlCL9WVE56o
+         i65A==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790252614; x=1790857414; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1790252781; x=1790857581; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=rdRrzn5S9xJBL1cPeQCdlU0zlgaKl3QYL9gnErwMUoA=;
-        b=TUtIuKUp287WjjaJ/J5W1Doqa4hIngcO0ksxIaxRuZRwDbiWyRujH4zL8KlOWrED3C
-         PJ9DW+ulAF/7H1TwMNpsJ+8LcvQF7R/ak0Zs5nIz7MqNdu/dTMJ/WA99Vq83XfmhYufL
-         ktJe0Ll9WAQMi3GBDRKFzM9HxlMjPhYPfFTtIeIOWUxQ8W5l3D7pHmnsLDtngJcIqluA
-         R97fD72gY5NRT/AFcd64rU/bVu8GQCKcxs7trNyBxlpgdwiZbStdwF6P0KRsbIXADimv
-         tCiWJYgxFNGCZ+U+L+pXdFkKkMD2e3OoIfyUmzRwyZapeAnUb6tGU+a2eMNKlv4GTSD4
-         4bhg==
+        bh=44/rB8ZswRc008KoGmaclPt6xvztpmvmKKTq9AsEafQ=;
+        b=jq0LWYrur3pxZgTwnaZPgTj6hdlIygHkwAAmz4wRVGVxadRYqMhDqvDKbg1fxuzHnU
+         rV2FvybfnMZDhNySDh1KOIT1iqRC31HHpLeGcBdqRBAo6R1bX128VKkXJC4lHvu94vnF
+         5DZ82qRc9dtzPA71B4oZ7lZ2Dlwjuvke94wvfbiisoEXClVFTC31i6ZMztPYh1uPAWAL
+         U3o/8nJ2HT8x23qLmwSNHNM66+7qoTWisyQpyG6h6ppsCsz+e0hEnJ8H0hqJ2h5WlzHt
+         1w1Qj9wpXkM5xCGF4vWFt2JkLePh7gkBFsMJQRhI9XgFiebH7uht4Wj4Ha+zIkuNVRrL
+         KOPg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790252614; x=1790857414;
+        d=1e100.net; s=20260707; t=1790252781; x=1790857581;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=rdRrzn5S9xJBL1cPeQCdlU0zlgaKl3QYL9gnErwMUoA=;
-        b=xRLHwv1BSlLaBMFt1anquNXD85okOn8/8q48EBBhuuuRtEB4EXNxmVLgJN5aJ8L+qo
-         i+x3T/phuBUne7FnHSpRGYCGIiIxywpwzceKhRNxFwk2INsg9ZpZSI6GSL3kV3xUGzQ2
-         5MpYkFFBR5W1wosKUtyuffJZ8CAwFxK3DaHNpfVbUMxBPuOQ3iRD1xHVHpH+q7OsVQ5w
-         N3b/HvdBKzl0nNQTOu50XBnxX7pjpSYngyXxPflf5E45/DpuaKrszfqo+puXQnQjtcBs
-         UqiyB5Jegi131k2J/2ivBU5Wrspao88YgMgxyw9KjgvHNu8G0X1Q4ZJ1yGXXUIOjyx8q
-         0kDA==
-X-Forwarded-Encrypted: i=1; AKwUvBwAPR42W47fPxPg+kzWqsxpIGCWxicmSlrsyN57LdP700D8YDkBPypfRx+vbhYceq8k6lfBftB4ja0=@vger.kernel.org
-X-Gm-Message-State: AFuF++kbnvJFJ28RBtbf55LSo+kloCF8mCGdotIUpEDhuS+Tj4+6IoA3
-	pD100e99PTa84tMkpK7q4GxJA1fz0NGdkNY6gMMbM5pFcFfvsQHnrHnCPbETJGW91IwgWnPP0Ao
-	uzHQs/FLPJM7QW9cJdAdCOFfa5ekS8mk=
-X-Gm-Gg: AYBFou1wp0Lc3lS5GWw9dGPvJ+LifFmrS71oSN4/tzQcKxjqs9VUC4PI88Vw11nCP5N
-	h76PEZX31XMioh3iiy1h65dsz4jOBKbzhLjwE2Dl/OkHmjPUyASRJSNFZe4rwN6ZllG6UIODCzO
-	W5OyaXUDUeTc5TgpjFWrk/wFAzdd6haqxBkD8sWS01sMPKKdr/SkvbsE/fSq2HtRG/3OwcYzj4r
-	0vNBfmLA6sWTjSIwrPSpufHL6uityv/gTSSSYiQabUoTzcbdMCvhWNyQv8GM0I3U9642GM8vqCh
-	KxstiRAeXE8Gu0jh7l/8gjOQPfRODUbScOIi8DCwAa36UhFdAE6pA16CHieIarUkoB6twPgC53K
-	+u1eR24g/pVEes0kbGScuX+PSIx39B7A8DAun4AtLQ1g=
-X-Received: by 2002:a5d:5f8e:0:b0:486:e737:d94b with SMTP id
- ffacd0b85a97d-48871974c2fmr3738525f8f.51.1790252613801; Thu, 24 Sep 2026
- 05:23:33 -0700 (PDT)
+        bh=44/rB8ZswRc008KoGmaclPt6xvztpmvmKKTq9AsEafQ=;
+        b=RLFhb+nYEuTFFRZ1JELEq7lXNziFS0Xlp4aH0WGBk7k7xkbWkcv3DOB6Gv7G3su4Bd
+         vl0mCkeTeZ59Eeq3+5UV0s5xN0j4zUWcJwVnAMPcxbV0OUUNdJJvjcZibgqCrlaV1Uw1
+         H2cePQEOdBji3/agBzc0Bh2triwOzKjexPnZ2sl5CV9itYBVH182awMuNO4y6y1suNRN
+         TYzBY7nqREQrZuA6buU53PLl1XIxBwv80SoQjpA6LVXSRVRlyQIOUcC6DGbUmkUFqL5j
+         rHx30a2M6ccPQbQyLsy2jUhe3UfO/CJL48K4NuueftKBNJwga65FQXrrstXbbs2Xe27V
+         AErA==
+X-Forwarded-Encrypted: i=1; AKwUvByCKh2byz18W4deQYtpRkl619Uj41C8cqEM6CYTUJQ1Mi/GuG34MbQzG/9YU9ec1AM+d54BZDWttU8=@vger.kernel.org
+X-Gm-Message-State: AFuF++kjWs0iT4g6xHMf0bvdCf0K/KIv1IN9mI9cjW71tbBpOUT99jQ+
+	h8ETs+4xaEJhMQaMtcMr8ek7F3hxCJpj4rqmh/07KaD5rHpD4YFcIajjCAHIxPxRf9tF9BtjZbP
+	phhO/daEe/rLdbVmGmrluYaIL2z1ekmM=
+X-Gm-Gg: AYBFou0C/JR+uV86osMkVV+R6haqlpkG/NdPiVuBReL5DmqX6o51C2R07nXpVFizJTx
+	mysK8k11lEidqPTOoaAPLibuCdPLvzMRqR4e3oFh7Xo5t+ESn7lm0WQ1nUOR+D7VPoQByPhCiib
+	w6dNu0tL0SjW7AI0x2cbt08IDny/UGcvqBpEMOrKBMiYVGzwkkI52ua5rk5EPrBwK0eOdbzvbGl
+	TLmwbzSuiQpxra/nD4tlWrixrQZFc6W1DD5zMOtDnl8DGGT6QVnJjTSeu2bqqUjSSSppjGlITP6
+	PWpUQgNgTneGeCyQ34E/ha/6B7AsTW3CiKt9UHToIQwugMYudfsdDuSSdXpkJW1Eyp9h1hBnh59
+	mrHAhrH2jYhR6941EFtA5lVcVIeyFGeNAVEZqrlFYsVa0d6iyI8ArNdqa/OPJqTwSixLai6ljgA
+	==
+X-Received: by 2002:a05:6000:705:b0:487:bef:31cb with SMTP id
+ ffacd0b85a97d-488716ca7e9mr3905909f8f.22.1790252780878; Thu, 24 Sep 2026
+ 05:26:20 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260922144629.586997-1-claudiu.beznea@kernel.org> <20260922144629.586997-6-claudiu.beznea@kernel.org>
-In-Reply-To: <20260922144629.586997-6-claudiu.beznea@kernel.org>
+References: <20260922144629.586997-1-claudiu.beznea@kernel.org> <20260922144629.586997-7-claudiu.beznea@kernel.org>
+In-Reply-To: <20260922144629.586997-7-claudiu.beznea@kernel.org>
 From: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Date: Thu, 24 Sep 2026 13:23:07 +0100
-X-Gm-Features: AclHuK-A9mOEuZHDK0Q_tjNq3JBCpEEYs1c2VB24F6HG3wDPVZfQ5b43QBAhTjs
-Message-ID: <CA+V-a8vr--5UVR+TLTWyEkzany3W-nwsteeVZEDv7D-sVqyK4g@mail.gmail.com>
-Subject: Re: [PATCH v4 5/8] PCI: rzg3s-host: Move suspend/resume code into
- dedicated functions
+Date: Thu, 24 Sep 2026 13:25:53 +0100
+X-Gm-Features: AclHuK9gavbB6M7C_1T08SEgonhC2MdBJl0CvHQ9gIdkytsFMiv_mcHbK1pSAfU
+Message-ID: <CA+V-a8t=7PGALbP3HMTYZyzB9Vp3w=Rx41yPCc_DHR-Z9+Afig@mail.gmail.com>
+Subject: Re: [PATCH v4 6/8] PCI: rzg3s-host: Move IRQ domain setup code
 To: Claudiu Beznea <claudiu.beznea@kernel.org>
 Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
 	robh@kernel.org, bhelgaas@google.com, p.zabel@pengutronix.de, 
@@ -100,16 +100,16 @@ Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 22, 2026 at 3:56=E2=80=AFPM Claudiu Beznea
+On Tue, Sep 22, 2026 at 3:54=E2=80=AFPM Claudiu Beznea
 <claudiu.beznea@kernel.org> wrote:
 >
 > From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 >
-> In preparation for implementing hotplug using
-> pci_host_bridge::reset_root_port(), move the suspend/resume code into
-> rzg3s_pcie_host_stop() and rzg3s_pcie_host_start(). These functions
-> will later be reused by the hotplug implementation through
-> pci_host_bridge::reset_root_port().
+> Subsequent patches add support for the event IRQ to handle link
+> up/down events. The event IRQ handler will use
+> rzg3s_pcie_set_max_link_speed(). In preparation for adding event IRQ
+> support, move the IRQ domain initialization code after
+> rzg3s_pcie_set_max_link_speed().
 >
 > Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 > ---
@@ -120,8 +120,8 @@ On Tue, Sep 22, 2026 at 3:56=E2=80=AFPM Claudiu Beznea
 > Changes in v3:
 > - none, this patch is new
 >
->  drivers/pci/controller/pcie-rzg3s-host.c | 181 ++++++++++++-----------
->  1 file changed, 96 insertions(+), 85 deletions(-)
+>  drivers/pci/controller/pcie-rzg3s-host.c | 147 +++++++++++------------
+>  1 file changed, 73 insertions(+), 74 deletions(-)
 >
 Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
@@ -131,230 +131,186 @@ Prabhakar
 
 > diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/contr=
 oller/pcie-rzg3s-host.c
-> index 3ecada238402..40d5ef3e347e 100644
+> index 40d5ef3e347e..f4b27a77a89d 100644
 > --- a/drivers/pci/controller/pcie-rzg3s-host.c
 > +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-> @@ -1742,6 +1742,100 @@ rzg3s_pcie_host_setup(struct rzg3s_pcie_host *hos=
-t,
+> @@ -1006,80 +1006,6 @@ static const struct irq_domain_ops rzg3s_pcie_intx=
+_domain_ops =3D {
+>         .xlate =3D irq_domain_xlate_onetwocell,
+>  };
+>
+> -static void rzg3s_pcie_teardown_intx(struct rzg3s_pcie_host *host,
+> -                                    int count)
+> -{
+> -       while (--count >=3D 0) {
+> -               irq_set_chained_handler_and_data(host->intx_irqs[count], =
+NULL,
+> -                                                NULL);
+> -       }
+> -
+> -       if (host->intx_domain)
+> -               irq_domain_remove(host->intx_domain);
+> -}
+> -
+> -static int rzg3s_pcie_init_irqdomain(struct rzg3s_pcie_host *host)
+> -{
+> -       struct device *dev =3D host->dev;
+> -       struct platform_device *pdev =3D to_platform_device(dev);
+> -       int i, ret;
+> -
+> -       for (i =3D 0; i < PCI_NUM_INTX; i++) {
+> -               char irq_name[5] =3D {0};
+> -               int irq;
+> -
+> -               scnprintf(irq_name, ARRAY_SIZE(irq_name), "int%c", 'a' + =
+i);
+> -
+> -               irq =3D platform_get_irq_byname(pdev, irq_name);
+> -               if (irq < 0) {
+> -                       ret =3D irq;
+> -                       dev_err_probe(dev, ret,
+> -                                     "Failed to parse and map INT%c IRQ\=
+n",
+> -                                     'A' + i);
+> -                       goto teardown_intx;
+> -               }
+> -
+> -               host->intx_irqs[i] =3D irq;
+> -               irq_set_chained_handler_and_data(irq,
+> -                                                rzg3s_pcie_intx_irq_hand=
+ler,
+> -                                                host);
+> -       }
+> -
+> -       host->intx_domain =3D irq_domain_create_linear(dev_fwnode(dev),
+> -                                                    PCI_NUM_INTX,
+> -                                                    &rzg3s_pcie_intx_dom=
+ain_ops,
+> -                                                    host);
+> -       if (!host->intx_domain) {
+> -               ret =3D -EINVAL;
+> -               dev_err_probe(dev, ret,
+> -                             "Failed to add irq domain for INTx IRQs\n")=
+;
+> -               goto teardown_intx;
+> -       }
+> -       irq_domain_update_bus_token(host->intx_domain, DOMAIN_BUS_WIRED);
+> -
+> -       if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> -               ret =3D rzg3s_pcie_init_msi(host);
+> -
+> -               if (ret)
+> -                       goto teardown_intx;
+> -       }
+> -
+> -       return 0;
+> -
+> -teardown_intx:
+> -       rzg3s_pcie_teardown_intx(host, i);
+> -
+> -       return ret;
+> -}
+> -
+> -static void rzg3s_pcie_teardown_irqdomain(struct rzg3s_pcie_host *host)
+> -{
+> -       if (IS_ENABLED(CONFIG_PCI_MSI))
+> -               rzg3s_pcie_teardown_msi(host);
+> -
+> -       rzg3s_pcie_teardown_intx(host, PCI_NUM_INTX);
+> -}
+> -
+>  static int rzg3s_pcie_set_max_link_speed(struct rzg3s_pcie_host *host)
+>  {
+>         u32 remote_supported_link_speeds, max_supported_link_speeds;
+> @@ -1169,6 +1095,79 @@ static int rzg3s_pcie_set_max_link_speed(struct rz=
+g3s_pcie_host *host)
 >         return ret;
 >  }
 >
-> +static int rzg3s_pcie_host_stop(struct rzg3s_pcie_host *host)
+> +static void rzg3s_pcie_teardown_intx(struct rzg3s_pcie_host *host, int c=
+ount)
 > +{
-> +       const struct rzg3s_pcie_soc_data *data =3D host->data;
-> +       struct rzg3s_pcie_port *port =3D &host->port;
-> +       struct rzg3s_sysc *sysc =3D host->sysc;
-> +       int ret;
+> +       if (host->intx_domain)
+> +               irq_domain_remove(host->intx_domain);
 > +
-> +       clk_disable_unprepare(port->refclk);
-> +
-> +       /* SoC-specific de-initialization */
-> +       ret =3D data->config_deinit(host);
-> +       if (ret)
-> +               goto refclk_restore;
-> +
-> +       ret =3D reset_control_bulk_assert(data->num_power_resets,
-> +                                       host->power_resets);
-> +       if (ret)
-> +               goto config_reinit;
-> +
-> +       /*
-> +        * Since the power domain's genpd_suspend_noirq() will disable cl=
-ocks,
-> +        * there is no need to manually invoke runtime PM API here.
-> +        */
-> +
-> +       ret =3D rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B=
-, 0);
-> +       if (ret)
-> +               goto power_resets_restore;
-> +
-> +       return 0;
-> +
-> +       /* Restore the previous state if any error happens */
-> +power_resets_restore:
-> +       reset_control_bulk_deassert(data->num_power_resets,
-> +                                   host->power_resets);
-> +config_reinit:
-> +       if (data->config_pre_init)
-> +               data->config_pre_init(host);
-> +       data->config_post_init(host);
-> +refclk_restore:
-> +       clk_prepare_enable(port->refclk);
-> +       return ret;
+> +       while (--count >=3D 0) {
+> +               irq_set_chained_handler_and_data(host->intx_irqs[count], =
+NULL,
+> +                                                NULL);
+> +       }
 > +}
 > +
-> +static int rzg3s_pcie_host_start(struct rzg3s_pcie_host *host)
+> +static int rzg3s_pcie_init_irqdomain(struct rzg3s_pcie_host *host)
 > +{
-> +       const struct rzg3s_pcie_soc_data *data =3D host->data;
-> +       struct rzg3s_sysc *sysc =3D host->sysc;
-> +       int ret;
+> +       struct device *dev =3D host->dev;
+> +       struct platform_device *pdev =3D to_platform_device(dev);
+> +       int i, ret;
 > +
-> +       ret =3D rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_MODE, 1);
-> +       if (ret)
-> +               return ret;
+> +       for (i =3D 0; i < PCI_NUM_INTX; i++) {
+> +               char irq_name[5] =3D {0};
+> +               int irq;
 > +
-> +       ret =3D rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B=
-, 1);
-> +       if (ret)
-> +               return ret;
+> +               scnprintf(irq_name, ARRAY_SIZE(irq_name), "int%c", 'a' + =
+i);
 > +
-> +       if (host->num_lanes) {
-> +               ret =3D rzg3s_sysc_config_func(host->sysc,
-> +                                            RZG3S_SYSC_FUNC_ID_LINK_MAST=
-ER,
-> +                                            host->num_lanes =3D=3D 2  ?
-> +                                            RZG3S_SYSC_LINK_MODE_DUAL_X2=
- :
-> +                                            RZG3S_SYSC_LINK_MODE_SINGLE_=
-X4);
-> +               if (ret)
-> +                       goto assert_rst_rsm_b;
+> +               irq =3D platform_get_irq_byname(pdev, irq_name);
+> +               if (irq < 0) {
+> +                       ret =3D irq;
+> +                       dev_err_probe(dev, ret,
+> +                                     "Failed to parse and map INT%c IRQ\=
+n",
+> +                                     'A' + i);
+> +                       goto teardown_intx;
+> +               }
+> +
+> +               host->intx_irqs[i] =3D irq;
+> +               irq_set_chained_handler_and_data(irq,
+> +                                                rzg3s_pcie_intx_irq_hand=
+ler,
+> +                                                host);
 > +       }
 > +
-> +       /*
-> +        * Since the power domain's genpd_resume_noirq() will enable cloc=
-ks,
-> +        * there is no need to manually invoke runtime PM API here.
-> +        */
+> +       host->intx_domain =3D irq_domain_create_linear(dev_fwnode(dev),
+> +                                                    PCI_NUM_INTX,
+> +                                                    &rzg3s_pcie_intx_dom=
+ain_ops,
+> +                                                    host);
+> +       if (!host->intx_domain) {
+> +               ret =3D -EINVAL;
+> +               dev_err_probe(dev, ret,
+> +                             "Failed to add irq domain for INTx IRQs\n")=
+;
+> +               goto teardown_intx;
+> +       }
+> +       irq_domain_update_bus_token(host->intx_domain, DOMAIN_BUS_WIRED);
 > +
-> +       ret =3D rzg3s_pcie_power_resets_deassert(host);
-> +       if (ret)
-> +               goto assert_rst_rsm_b;
+> +       if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +               ret =3D rzg3s_pcie_init_msi(host);
 > +
-> +       ret =3D rzg3s_pcie_host_setup(host, rzg3s_pcie_msi_hw_setup,
-> +                                   rzg3s_pcie_msi_hw_teardown);
-> +       if (ret)
-> +               goto assert_power_resets;
+> +               if (ret)
+> +                       goto teardown_intx;
+> +       }
 > +
 > +       return 0;
 > +
-> +       /*
-> +        * If any error happens there is no way to recover the IP. Put it=
- in the
-> +        * lowest possible power state.
-> +        */
-> +assert_power_resets:
-> +       reset_control_bulk_assert(data->num_power_resets, host->power_res=
-ets);
-> +assert_rst_rsm_b:
-> +       rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
+> +teardown_intx:
+> +       rzg3s_pcie_teardown_intx(host, i);
+> +
 > +       return ret;
 > +}
 > +
->  static int rzg3s_pcie_get_controller_id(struct rzg3s_pcie_host *host)
+> +static void rzg3s_pcie_teardown_irqdomain(struct rzg3s_pcie_host *host)
+> +{
+> +       if (IS_ENABLED(CONFIG_PCI_MSI))
+> +               rzg3s_pcie_teardown_msi(host);
+> +
+> +       rzg3s_pcie_teardown_intx(host, PCI_NUM_INTX);
+> +}
+> +
+>  static int rzg3s_pcie_config_init(struct rzg3s_pcie_host *host)
 >  {
->         struct device_node *np =3D host->dev->of_node;
-> @@ -1939,98 +2033,15 @@ static int rzg3s_pcie_probe(struct platform_devic=
-e *pdev)
->  static int rzg3s_pcie_suspend_noirq(struct device *dev)
->  {
->         struct rzg3s_pcie_host *host =3D dev_get_drvdata(dev);
-> -       const struct rzg3s_pcie_soc_data *data =3D host->data;
-> -       struct rzg3s_pcie_port *port =3D &host->port;
-> -       struct rzg3s_sysc *sysc =3D host->sysc;
-> -       int ret;
-> -
-> -       clk_disable_unprepare(port->refclk);
-> -
-> -       /* SoC-specific de-initialization */
-> -       ret =3D data->config_deinit(host);
-> -       if (ret)
-> -               goto refclk_restore;
-> -
-> -       ret =3D reset_control_bulk_assert(data->num_power_resets,
-> -                                       host->power_resets);
-> -       if (ret)
-> -               goto config_reinit;
-> -
-> -       /*
-> -        * Since the power domain's genpd_suspend_noirq() will disable cl=
-ocks,
-> -        * there is no need to manually invoke runtime PM API here.
-> -        */
-> -
-> -       ret =3D rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B=
-, 0);
-> -       if (ret)
-> -               goto power_resets_restore;
->
-> -       return 0;
-> -
-> -       /* Restore the previous state if any error happens */
-> -power_resets_restore:
-> -       reset_control_bulk_deassert(data->num_power_resets,
-> -                                   host->power_resets);
-> -config_reinit:
-> -       if (data->config_pre_init)
-> -               data->config_pre_init(host);
-> -       data->config_post_init(host);
-> -refclk_restore:
-> -       clk_prepare_enable(port->refclk);
-> -       return ret;
-> +       return rzg3s_pcie_host_stop(host);
->  }
->
->  static int rzg3s_pcie_resume_noirq(struct device *dev)
->  {
->         struct rzg3s_pcie_host *host =3D dev_get_drvdata(dev);
-> -       const struct rzg3s_pcie_soc_data *data =3D host->data;
-> -       struct rzg3s_sysc *sysc =3D host->sysc;
-> -       int ret;
->
-> -       ret =3D rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_MODE, 1);
-> -       if (ret)
-> -               return ret;
-> -
-> -       ret =3D rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B=
-, 1);
-> -       if (ret)
-> -               return ret;
-> -
-> -       if (host->num_lanes) {
-> -               ret =3D rzg3s_sysc_config_func(host->sysc,
-> -                                            RZG3S_SYSC_FUNC_ID_LINK_MAST=
-ER,
-> -                                            host->num_lanes =3D=3D 2  ?
-> -                                            RZG3S_SYSC_LINK_MODE_DUAL_X2=
- :
-> -                                            RZG3S_SYSC_LINK_MODE_SINGLE_=
-X4);
-> -               if (ret)
-> -                       goto assert_rst_rsm_b;
-> -       }
-> -
-> -       /*
-> -        * Since the power domain's genpd_resume_noirq() will enable cloc=
-ks,
-> -        * there is no need to manually invoke runtime PM API here.
-> -        */
-> -
-> -       ret =3D rzg3s_pcie_power_resets_deassert(host);
-> -       if (ret)
-> -               goto assert_rst_rsm_b;
-> -
-> -       ret =3D rzg3s_pcie_host_setup(host, rzg3s_pcie_msi_hw_setup,
-> -                                   rzg3s_pcie_msi_hw_teardown);
-> -       if (ret)
-> -               goto assert_power_resets;
-> -
-> -       return 0;
-> -
-> -       /*
-> -        * If any error happens there is no way to recover the IP. Put it=
- in the
-> -        * lowest possible power state.
-> -        */
-> -assert_power_resets:
-> -       reset_control_bulk_assert(data->num_power_resets,
-> -                                 host->power_resets);
-> -assert_rst_rsm_b:
-> -       rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
-> -       return ret;
-> +       return rzg3s_pcie_host_start(host);
->  }
->
->  static const struct dev_pm_ops rzg3s_pcie_pm_ops =3D {
+>         struct pci_host_bridge *bridge =3D pci_host_bridge_from_priv(host=
+);
 > --
 > 2.43.0
 >
