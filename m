@@ -1,153 +1,330 @@
-Received: from mail-m12796.qiye.163.com (mail-m12796.qiye.163.com [115.236.127.96])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A92E28851F
-	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 03:33:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.236.127.96
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C15743CF032;
+	Thu, 24 Sep 2026 03:36:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790220790; cv=none; b=hxePFTxEoXzj4fxSADSOfyew5l8W8s17EEsRO3vWY9QY6sAso/iTbTBu9F+QJxs8QNZthSWAP8ZCp8PBeoXYOxJkbdHxtF2v2kDNl9TfcsvzuYGYx6vvAVHW5NAQkBdivO8ZgNEM5IZCKt2W4Xo9/9Ib6Tf4KjP3m24Ljafr/lo=
+	t=1790220978; cv=none; b=GUofiGNRXus7lK5G/0kDKbJXEjMfB21ls7OZs9W2JcFebZCIUnXFmIZJ0dm+w+NrONxkGj6aw+guvLwHFYLUah+hBi06ua0ERJXjmieVOhdglI7xUaqR4GGqbbrCRJMEg/PI6z4hM1QeSuLvx+cySDWn+1spW6DfA/7ASK77Eo0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790220790; c=relaxed/simple;
-	bh=KsHWnf/QnKdey0zU8UV6jcH9fLt8NZAgogLA7JOw2bg=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=NIgxdHC6f8x945M+V6hOhyse/J+QG5oykjJpXW6/ZV8I36kIBOHtFaBndK+fBNSHGLq41zqEKyXphyz4Jsyc02LgYqstsU+Ye05/iLv1YTTOAA+gNoJxm/qjr8pyYGCwDy9O0DO2DlJCiXtXjg07puidl2+oPvFLHuSNSzOlUfE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=SKP7ccLQ; arc=none smtp.client-ip=115.236.127.96
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1790220978; c=relaxed/simple;
+	bh=37NG+zVsSRo8YaXnUJldRHtHxbZhsJ41nENKVL4Woy0=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=fC7hRs2Jp59Ekhz+KwmNj+NsgXxVPdSRZNBMR/JLCslcp6/mOwSrIuV6CNwoNVeOgxsK6fu6bfwVpXvNQEm6TKk47hSMnnLFVQWND1WR9QGzCZWIpeDhJyc8GmJ6B8l9wL5KJX50iEaQ3WN7a9Ni65VQbypRaMEDaJQrQDb4HgM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BLRAX8E/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="SKP7ccLQ"
-Received: from [172.16.12.48] (unknown [61.154.14.86])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 4ef5fe4e7;
-	Thu, 24 Sep 2026 11:27:44 +0800 (GMT+08:00)
-Message-ID: <c531d929-24a3-4b5b-b329-a11b0191baf9@rock-chips.com>
-Date: Thu, 24 Sep 2026 11:27:44 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BLRAX8E/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 340C71F000FF;
+	Thu, 24 Sep 2026 03:36:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790220976;
+	bh=hqUONY15mblfrbweb+lCaDMlvswl82wq+y8LoUP1c2M=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=BLRAX8E/hBDbFGUNbcIn38hmzGpyyheRUw3pAkMmcH2slqhqTCaYk+8xGpe7tydN8
+	 WoQpASf63EQmkF3NDF+H/6hnm3gy5fcwgzkBtFT0wwSdCpnB3zYvU5F3XpYoLtAlJu
+	 q2tEPme9WiNUo+IQC5K3UnjHokFj5UxD6cXrioK1uiJEChe1OEkNrMoSKyrH2qu3XD
+	 LgsnoJXok8qr1wD/W53cd2nkhsHHXXLFtw7Oyzf0ew/r8Zw/YC2d0+JQpSt/c02N2E
+	 aT0TyLdE2F560gwXXGNcITYQkI09Nch3+0Zq9ZJujFTT5dc9fCN04MRDzz2WZu9hYa
+	 0SP0y8gGJKZcw==
+Date: Thu, 24 Sep 2026 04:36:09 +0100
+From: Jonathan Cameron <jic23@kernel.org>
+To: Srirangan Madhavan <smadhavan@nvidia.com>
+Cc: Alison Schofield <alison.schofield@intel.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>, Davidlohr Bueso
+ <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>, Vishal Verma
+ <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Alex Williamson
+ <alex.williamson@redhat.com>, vsethi@nvidia.com, alwilliamson@nvidia.com,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>, Vishal Aslot
+ <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>, Jiandi An
+ <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v13 09/15] cxl: Cache endpoint HDM state during PCI
+ enumeration
+Message-ID: <20260924043609.5dc4a7f4@jic23-hlaptop>
+In-Reply-To: <20260922083924.2451158-10-smadhavan@nvidia.com>
+References: <20260922083924.2451158-1-smadhavan@nvidia.com>
+	<20260922083924.2451158-10-smadhavan@nvidia.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, Diederik de Haas <diederik@cknow-tech.com>,
- linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
- Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v3 0/3] Small INTx fixes for Rockchip's dwc based PCIe
- controller driver
-To: Niklas Cassel <cassel@kernel.org>
-References: <1790044622-164744-1-git-send-email-shawn.lin@rock-chips.com>
- <DLMKWV1AH8TZ.2R3JK2NPM4KZB@cknow-tech.com>
- <08329b2b-449a-4036-8e82-ad67d0d037ee@rock-chips.com>
- <arPvcQIu46N_gTmB@ryzen>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <arPvcQIu46N_gTmB@ryzen>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa0d174730803a4kunmabe36c1150bb7c
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCQh1NVhkYTUNNHRpJQ0tJQlYVFA
-	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUJCSU
-	5LVUpLS1VKQktCWQY+
-DKIM-Signature: a=rsa-sha256;
-	b=SKP7ccLQWc33EiBC8F8/NJaKmN3/XEbN5/J3rG4yrcrHfH2lmAhzYVil6h74oaLY2ExwCJn8oTT3WizjF+Y01eA19ydHQnIwIOPt5RfF9iW6a5PouEn9Z1DRXqCKhKm4/4Ytst4X0IhW+u50Qk1tJrgIHMtFqP+5HpAnBtpn6+A=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=v+qqOE+xh9kXPgV1iezB4P8lSaYSSVqLNw4Hghtva1E=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hi Niklas
+On Tue, 22 Sep 2026 08:39:18 +0000
+Srirangan Madhavan <smadhavan@nvidia.com> wrote:
 
-在 2026/09/23 星期三 23:25, Niklas Cassel 写道:
-> Hello Shawn, Diederik,
+> PCI capability initialization runs before BAR resources are finalized,
+> while driver binding is too late for driver-independent reset support.
+> Create pci_dev->hdm during pci_bus_add_device(), after PCI resource setup
+> and before driver binding.
 > 
-> On Wed, Sep 23, 2026 at 05:21:59PM +0800, Shawn Lin wrote:
->>>
->>> I build a kernel with this patch set (7.3~rc4-2) and got several warnings
->>> like this, shortly followed by a stack trace:
->>
->> Sashiko already reportted some valid concern around this, and I'll plan
->> to rework this series a bit later. Thanks for reporting this.
+> Cache BAR-relative HDM location, global control, decoder settings, and CXL
+> Device DVSEC Control, then publish the completed cache under cxl_rwsem.dpa.
+> Restore PCI_COMMAND after temporary MMIO access and reject decoder-count
+> changes.
 > 
-> Just thinking out loud:
-> 
-> Patch 1/3 in this series fixes a regression, so it should be picked up as
-> soon as possible.
-> 
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
 
-Thank you for your detailed analysis and valuable suggestions.
+A few things inline.  Maybe well overlap with Benjamin's comments!
 
-My original intention was to provide a minimal fix for the regression 
-introduced during the merge window. However, after Sashiko's review, 
-some existing problems (even if only theoretical) were pointed out, so 
-the series grew into three patches.
+> diff --git a/drivers/cxl/core/resource.c b/drivers/cxl/core/resource.c
+> index 7eea2bc38d94..b5f8c28e613f 100644
+> --- a/drivers/cxl/core/resource.c
+> +++ b/drivers/cxl/core/resource.c
 
-I agree with your reasoning: patch 1 fixes a real regression and should 
-be picked up as soon as possible, while patches 2 and 3 can be handled 
-separately. Given that we are approaching -rc5 and I will have two 
-consecutive national holidays in the coming weeks, I may be unable to 
-access my development equipment for about two weeks. Therefore, I plan 
-to revise patch 1 based on your suggestion (moving the code before 
-dw_pcie_host_init()) and send it out promptly.
 
-> Patch 2/3 is converting the resources to be device managed.
-> However, after patch 1/3 (if the moved code is called _before_
-> dw_pcie_host_init()) the only thing left after dw_pcie_host_init() is the
-> PCIE_CLIENT_INTR_MASK_MISC write.
-> 
-> I.e. there is no error return remains that would need a dw_pcie_host_deinit().
-> 
-> So there is no strict need to convert to devm_().
-> You can do so, but that should be in a separate series IMO.
-> 
-> 
-> In fact, Diederik's later warnings are a result of Patch 2/3 which replaced
-> irq_domain_create_linear() with devm_irq_domain_instantiate():
-> 
->     error: hwirq 0x0 is too large for :pcie@fe150000:legacy-interrupt-controller
->     WARNING: kernel/irq/irqdomain.c:676 at irq_domain_associate_locked+0x118/0x1a0
-> 
-> 
-> The fix seems to be to add .hwirq_max = PCI_NUM_INTX, to
-> rockchip_pcie_init_irq_domain():
-> 
-> The fix is one line in rockchip_pcie_init_irq_domain() :
-> 				.size = PCI_NUM_INTX,
-> 				.hwirq_max = PCI_NUM_INTX,
-> 
-> 
-> 
-> Patch 3/3 looks like a theoretical problem that Sashiko found.
-> 
-> Is the underlying problem real? It's plausible, but nobody has reproduced it.
-> For it to happen, the controller's legacy IRQ output has to be asserted while
-> clocks are gated. Two ways that could happen:
-> 
-> - The output was high when clk_bulk_disable_unprepare() froze the logic.
-> - A device was still asserting INTx when an AER- or sysfs-triggered reset
->    stopped the link.
-> 
-> Patch 3/3 is not enough though:
-> 
-> disable_irq() never masks this chained IRQ in hardware, so
-> rockchip_pcie_intx_handler() can still run and read the unclocked APB.
-> 
-> This is the kind of case IRQ_DISABLE_UNLAZY exists for, according to the
-> comment above irq_disable().
-> 
-> Minimal amend of patch 3/3 as it currently looks:
-> 
-> turn off lazy disable for this line when the chained handler is installed:
-> 	irq_set_status_flags(rockchip->intx_irq, IRQ_DISABLE_UNLAZY);
-> 	irq_set_chained_handler_and_data(rockchip->intx_irq,
-> 					 rockchip_pcie_intx_handler, rockchip);
-> 
-> Such that irq_disable() masks the chained IRQ.
-> 
-> Do we want patch 3/3? Probably.. but this race seems very small...
-> probably most imporent to get patch 1 (with the code move _before_
-> dw_pcie_host_init()) accepted ASAP, as it currently is causing problems
-> for Diederik.
-> 
-> 
-> Kind regards,
-> Niklas
-> 
+> +static int __cxl_pci_hdm_read_info(struct pci_dev *pdev,
+> +				   struct cxl_register_map *map, int dvsec,
+> +				   struct cxl_hdm_info **out)
+> +{
+> +	struct cxl_reg_map *hdm_map = &map->component_map.hdm_decoder;
+> +	struct cxl_hdm_info *info = NULL;
+
+Fits in with comments below, but that should not be set to NULL up
+here.
+
+> +	resource_size_t hdm_offset;
+> +	void __iomem *hdm;
+> +	int decoder_count;
+> +	size_t required;
+> +	u16 dvsec_ctrl;
+> +	int rc;
+> +
+> +	rc = cxl_setup_regs(map);
+> +	if (rc)
+> +		return rc;
+> +	if (!hdm_map->valid)
+> +		return -ENODEV;
+> +	if (hdm_map->offset > map->max_size ||
+> +	    hdm_map->size > map->max_size - hdm_map->offset)
+> +		return -ENXIO;
+
+That first lot can happen before setup regs.  Does it makes sense
+to do that, then setup the regs before the follow up check?
+
+> +	if (check_add_overflow(map->bar_offset,
+> +			       (resource_size_t)hdm_map->offset, &hdm_offset))
+> +		return -EOVERFLOW;
+> +
+> +	hdm = ioremap(map->resource + hdm_map->offset, hdm_map->size);
+> +	if (!hdm)
+> +		return -ENOMEM;
+> +
+> +	decoder_count = cxl_hdm_decoder_count(readl(hdm + CXL_HDM_DECODER_CAP_OFFSET));
+> +	if (decoder_count < 0) {
+> +		rc = decoder_count;
+> +		goto out_unmap;
+> +	}
+> +
+> +	required = CXL_HDM_DECODER0_TL_HIGH(decoder_count - 1) +
+> +		   sizeof(u32);
+
+I'd add a comment on why this size.
+
+> +	if (required > hdm_map->size) {
+> +		pci_err(pdev,
+> +			"CXL HDM decoder count exceeds mapped register block\n");
+> +		rc = -ENXIO;
+> +		goto out_unmap;
+> +	}
+> +
+> +	rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL,
+> +				  &dvsec_ctrl);
+> +	if (rc) {
+> +		rc = pcibios_err_to_errno(rc);
+> +		goto out_unmap;
+> +	}
+> +
+> +	info = kzalloc(struct_size(info, settings, decoder_count), GFP_KERNEL);
+
+Ah. So burried in here is where info is allocated.
+If you can use struct_size for the size you can use the _obj allocators instead.
+Probably kzalloc_flex().
+
+
+
+> +	if (!info) {
+> +		rc = -ENOMEM;
+> +		goto out_unmap;
+> +	}
+> +
+> +	info->decoder_count = decoder_count;
+> +	info->hdm_bar = map->bar;
+> +	info->hdm_offset = hdm_offset;
+> +	info->hdm_size = hdm_map->size;
+> +	info->global_ctrl = readl(hdm + CXL_HDM_DECODER_CTRL_OFFSET);
+> +	info->dvsec_ctrl = dvsec_ctrl;
+> +	info->dvsec_ctrl_valid = true;
+> +
+> +	for (int i = 0; i < decoder_count; i++) {
+> +		rc = cxl_pci_hdm_read_decoder(pdev, &info->settings[i], hdm, i);
+> +		if (rc)
+> +			goto out_unmap;
+
+with ordering below fixed this should goto free_info; or something like that.
+
+> +	}
+> +
+> +	/*
+> +	 * A changed decoder count means the snapshot no longer describes the
+> +	 * complete hardware state. Reject it rather than publish a partial cache.
+> +	 */
+> +	rc = cxl_hdm_decoder_count(readl(hdm + CXL_HDM_DECODER_CAP_OFFSET));
+> +	if (rc != decoder_count) {
+> +		pci_err(pdev, "CXL HDM decoder count changed from %d to %d\n",
+> +			decoder_count, rc);
+> +		rc = -ENXIO;
+> +		goto out_unmap;
+> +	}
+> +
+> +	*out = info;
+> +	info = NULL;
+
+Don't use this pattern of papering over stuff before then
+running your error path.  Given no __free magic for iounmap just
+have two exit paths and duplicate the iounmap().
+
+> +	rc = 0;
+> +
+> +out_unmap:
+> +	kfree(info);
+> +	iounmap(hdm);
+
+FWIW these are in the wrong order. You should unwind in reverse of
+setup.
+
+> +	return rc;
+> +}
+> +
+> +static int cxl_pci_hdm_read_info(struct pci_dev *pdev,
+> +				 struct cxl_register_map *map, int dvsec,
+> +				 struct cxl_hdm_info **out)
+> +{
+> +	bool restore_command = false;
+> +	u16 command;
+> +	int rc, rc2;
+> +
+> +	guard(pci_dev)(pdev);
+> +
+> +	rc = pci_read_config_word(pdev, PCI_COMMAND, &command);
+> +	if (rc)
+> +		return pcibios_err_to_errno(rc);
+> +
+> +	if (!(command & PCI_COMMAND_MEMORY)) {
+> +		rc = pci_write_config_word(pdev, PCI_COMMAND,
+> +					   command | PCI_COMMAND_MEMORY);
+> +		if (rc)
+> +			return pcibios_err_to_errno(rc);
+> +		restore_command = true;
+> +	}
+> +
+> +	rc = __cxl_pci_hdm_read_info(pdev, map, dvsec, out);
+
+To keep ownership and lifetimes clear I'd have this helper return "out"
+and use a PTR_ERR() for errors.  Then I'd hand over to a __free()
+in here so that you can then explicitly hand ownership on by again
+returning out (with a ptr_no_free() or similar).  Basically
+we want that flow of ownership to be obvious.  That may lead to dances
+where you allocate then pass the ptr on via a ptr_no_free() in two
+lines but that is fine.
+
+> +	if (!restore_command)
+> +		return rc;
+> +
+> +	if (!rc) {
+
+This looks like a good path?  If so have the bad path out of line
+not this.
+
+> +		rc = pci_write_config_word(pdev, PCI_COMMAND, command);
+> +		return pcibios_err_to_errno(rc);
+> +	}
+> +
+> +	rc2 = pci_write_config_word(pdev, PCI_COMMAND, command);
+> +	if (rc2)
+> +		pci_err(pdev,
+> +			"failed to restore PCI_COMMAND after CXL HDM cache init: %d\n",
+> +			pcibios_err_to_errno(rc2));
+> +
+> +	return rc;
+> +}
+> +
+> +static int __pci_cxl_hdm_cache_init(struct pci_dev *pdev)
+> +{
+> +	struct cxl_hdm_info *info __free(kfree) = NULL;
+
+See cleanup.h documentation.  I have no idea where the = NULL
+at the top pattern is coming from, but there has been strong
+push back from Linus and others on that in the kernel because
+it introduces ordering problems. 
+
+Here I have no idea where it is getting allocated.
+If possible make that allocation function return info.
+
+
+> +	struct cxl_register_map map = { };
+> +	struct resource *bar;
+> +	int dvsec;
+> +	int rc;
+> +
+> +	scoped_guard(rwsem_read, &cxl_rwsem.dpa)
+> +		if (pdev->hdm)
+> +			return 0;
+
+Add a comment on why just taking the lock briefly for this
+check is useful. I'd expect something to need hdm to stick around
+though perhaps lifetimes are fine and that isn't an issue.
+
+> +
+> +	dvsec = cxl_pci_hdm_dvsec(pdev);
+> +	if (dvsec < 0)
+> +		return dvsec;
+> +
+> +	rc = cxl_find_regblock(pdev, CXL_REGLOC_RBI_COMPONENT, &map);
+> +	if (rc)
+> +		return rc;
+> +	if (map.bar < 0 || map.bar >= PCI_STD_NUM_BARS)
+> +		return -ENODEV;
+> +
+> +	bar = &pdev->resource[map.bar];
+> +	if (!pci_resource_len(pdev, map.bar) ||
+> +	    (bar->flags & (IORESOURCE_UNSET | IORESOURCE_DISABLED)) ||
+> +	    resource_type(bar) != IORESOURCE_MEM || !bar->start || !bar->end)
+> +		return -ENODEV;
+> +
+> +	rc = cxl_pci_hdm_read_info(pdev, &map, dvsec, &info);
+> +	if (rc)
+> +		return rc;
+> +
+> +	guard(rwsem_write)(&cxl_rwsem.dpa);
+> +	if (!pdev->hdm)
+
+Needs a comment. I'm going to guess race given this pairs
+with the one above?
+
+> +		pdev->hdm = no_free_ptr(info);
+> +
+> +	return 0;
+> +}
+
+> +
+> +void pci_cxl_hdm_cache_release(struct pci_dev *pdev)
+> +{
+> +	struct cxl_hdm_info *info;
+> +
+> +	guard(rwsem_write)(&cxl_rwsem.dpa);
+> +	info = pdev->hdm;
+> +	pdev->hdm = NULL;
+
+I'd like a comment on why we need to set this NULL.
+I'd kind of not really expect there to ever be a path by
+which this is checked after release but maybe there is?
+
+> +	kfree(info);
+> +}
 
