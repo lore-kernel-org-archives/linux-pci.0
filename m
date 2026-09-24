@@ -1,56 +1,56 @@
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62898535FBA
-	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 17:35:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57E205383CD
+	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 17:35:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790271318; cv=none; b=m1vx+n/ei+ghXfEyWvj4l1esm3BrctRnELx5fM/2rTlM4dbUKhalPaNYR3+/Ok50/9wIc4LRtlkOzzUUYE4BWsutDNVGYnzEhzNe6cyLxe/0/G1W1FYqsxDkPkCV0jCoUNP7s4YuRC7TWOhrHLfFmMbCFqXIHDFM2pVsHTJuts8=
+	t=1790271319; cv=none; b=VMH8yzgxqQDB5R82HNaznbdDk6iYq55nbzkwScB4ZN85O8V48D4NM/MUHpsrmCUtllfRt7p5SDjlgj9+5fLXpUL15eo2nyJUBrPILxJFTc1LM8/Az2KTPZkRJ7DHJSuuQgH5oLAybtw9izlxfNhijE2L/KhGk9DFF64UtP9teVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790271318; c=relaxed/simple;
-	bh=+2XkVyc+d7lmXngp5c27amWCxF9xLyfF2JbamA+2GNw=;
+	s=arc-20240116; t=1790271319; c=relaxed/simple;
+	bh=pEfV34CkxtfqvOYXgFuWoFiiNWTtD4LGHsGafxuivZ8=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=BjDL8SCcZpxfIyX4tTTlYtwa3QdAdp0aiBEQT2jeuZAFens8ESJUfw+LuLFrPADhennrgIPcGeT98CuJ+ak9CMYpyjncnCFZaMuJOBi5KPgg12wH1O4Ph8ybPlWlLWScOIXYMSoqmOx4mdDEt5h8ql8LWWFCHsZd4Urrtdts+9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=YWO5iqQN; arc=none smtp.client-ip=209.85.215.200
+	 To:Cc:Content-Type; b=i2Z6k8bYMsODDTaDF/YZME2fpmgt2JUQmvZHD80Ruh8n5BepIH5qzNYfwThOm1JkCi3mC1lHWW9FVjfs2++b7D+/3+LT5Iawh6yvJNYgqx1vLb5c59L0CMzGRaVn14Wwzu5tYvG7u9xrbW7NkTvp5xED7ZS85SHOY/eDGLUD9xo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=fN2xBRp/; arc=none smtp.client-ip=209.85.216.71
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="YWO5iqQN"
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cc489e7a701so15499a12.2
-        for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 10:35:16 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="fN2xBRp/"
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-39aee9b4cf2so209019a91.0
+        for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 10:35:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790271315; x=1790876115; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1790271316; x=1790876116; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=9KIWUowhWgqgcS9B9uJaCFyMmng9ri0RWLxjQM7dDfo=;
-        b=YWO5iqQN69x7zGNZfbJvjf7KHMBSryoym5VSkLMbGCSvEWwvdwtvdqQeKCMuExcTMb
-         0H7vsL1NtBbmp+nMHKXr+xXnP8VB1I9opVv774LQWD7mz5gjZCXGOdhy12py0XTWyWCB
-         VYzrdw03Y8d0yRt1Kcqdfh9cJcyL/s1wQNM/KXDWS0bcqTxgvi1qvdjoP8gIIZslggND
-         IoFOQxelHbIHs+YHRVYM2EIjk4MzVwuBtI5n7uNcDEYVt42Vh9HczeYx5RjZUVTCtcul
-         XE4xX31IyYWzpPWXh7DKyyb0Emp6eLdh3RtU5EZGYQlnZwTtATYZqDOpG6NXQ51sDogx
-         c1Fg==
+        bh=zFj8/UWJalzVgVbf9Z+bMao7LvxnzpTDorii05nidDQ=;
+        b=fN2xBRp/jObSofXIDKagPVsqjnU23mGEGlYHO9O7UcYAlve7jcYhPEvDpqA3TJcAm/
+         s7N/geVa9UWPpyJXUtmMu74qqZ8JA7z6GmoSY1W9ThxBeg17jjoP+H43M/tx6FvNe8Dx
+         6s/sMtVvSi7rsbJ4wo43XqXsgBc3b8NT08Lwj2mkaarIKeFGYf8nyYsUeiaKuur7l6O7
+         BhI6+HFHEWxRRPWpi0LWAweVm+mUB0OY/jXw7BcEP9puB8ojVMQG7T92zkF+jIW9KHWi
+         8lT/k5QlEs+c+6fYkbgWPk7IpQSQ2JIIqdl91b7CqE+1HN6+MePKJfYqACzaK2pXjyuK
+         pNpA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790271315; x=1790876115;
+        d=1e100.net; s=20260707; t=1790271316; x=1790876116;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=9KIWUowhWgqgcS9B9uJaCFyMmng9ri0RWLxjQM7dDfo=;
-        b=W4Afk6J2NS4U7WesPz1jxy4sY6QR0BGLDIoVa4B7R+/OkNOG3VM/vrSQpfCjN023ve
-         jkCQUkIwtpYP+OQmzgXep75UsSfT8wzmiV+EKrzbpsEdIrhgM3MbaRq9n15C2h3nRIqT
-         9mcZZThzQL1agwvjmtESWp1EJUFBi3Iknq0SDBHM0x4yMU8VjVI/pjc/IAGYYtDaaIP3
-         Sm9apOoCPdwIYiFi7QQxJjPPdm94dtnutfwjBVXqXGhCr+r7q9NQyul6GWM3vgr5I0m0
-         crTI6+z7RVOQPmXqe2zptIfUmaBfnOhlHSw/aQPb4Y8TrqoUrU500Pi6kUf6A76xmBNi
-         IFiQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxURWbM7QuebDiA1WgVkk8EFN/t6NTgPO/Gv2AzGXTrlR8xpBleCPUOB/j2ZgusBLx+ABH53rpInTA=@vger.kernel.org
-X-Gm-Message-State: AFuF++kBx7T1/rouaJC56X/Dd5QxmTrarp8s7xk5sjH9oYk3oKB39rPX
-	4kgY5UGkC+Lmpb7YojuP/hA7Yxvhl+JRWpcJBUbiu2tRK5VhITp0IuionYxQSnzqKV9aH+hsaTA
-	I0t+HjAs6zY8kVw==
-X-Received: from pfbmt15.prod.google.com ([2002:a05:6a00:6e6f:b0:87f:a748:7030])
+        bh=zFj8/UWJalzVgVbf9Z+bMao7LvxnzpTDorii05nidDQ=;
+        b=PVzhX1RQNTOJMF2w/MXgQsHPN8umGcTYAtLuwB4W437a/9v/6dzAa1Nngi4TwKN45R
+         olGc8vqSOw/zvYS3E5U64Aw4WSRTS/srD790OOTnBVZMdIsPQ5mmz8SPiBgyLWv0jfGF
+         08rn+nnPtSggup+9ud0ZXctUEJLom1DEPTp5sHQz5tpWRTPwRpy7REPN7/M1xgOrHCvP
+         9pCgDwW1rcXrrW0XrKkoSiSH/ezbSGKVEqREJdgq3JhTvPu+RSAUbEIhM6CV35Y6Ru7V
+         qbEBmNvVPrntEqF30FWdzCPGAG+i9WXDJZ9FV/ZLSHvn2BD1+9uy4y/ZGcgQlRLOyONj
+         cV9Q==
+X-Forwarded-Encrypted: i=1; AKwUvBxafGOXaoVy+uhNbncgEtepcdw+2qogSrONKTi7g1J35KerD6/Or79RBa/4rwdzjyObcVgCv7FPaK0=@vger.kernel.org
+X-Gm-Message-State: AFuF++l6OyvfAuk7alJ745CLdJT7AK1Rc1rluYXBOhxOIaxP39kYggtD
+	l5xzSOP0Noqq017bn3avT8tsdNgQWxsRpeOuLUVQRuZMLes7YCe3/6xciYzixaW2uYfiBRPs7pA
+	tDVcdZsWObuDoxg==
+X-Received: from pjzc9.prod.google.com ([2002:a17:90a:e109:b0:39d:bd8c:be19])
  (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a20:b7a6:b0:3dd:651e:b71d with SMTP id adf61e73a8af0-3de0e7445c3mr3228498637.24.1790271315360;
- Thu, 24 Sep 2026 10:35:15 -0700 (PDT)
-Date: Thu, 24 Sep 2026 17:34:55 +0000
+ 2002:a17:90b:3c12:b0:3a0:b210:643e with SMTP id 98e67ed59e1d1-3a0b21068bcmr591367a91.22.1790271316212;
+ Thu, 24 Sep 2026 10:35:16 -0700 (PDT)
+Date: Thu, 24 Sep 2026 17:34:56 +0000
 In-Reply-To: <20260924173501.856380-1-dmatlack@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -60,8 +60,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260924173501.856380-1-dmatlack@google.com>
 X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
-Message-ID: <20260924173501.856380-10-dmatlack@google.com>
-Subject: [PATCH 09/15] PCI/PTM: Save PTM state in the saved capability store
+Message-ID: <20260924173501.856380-11-dmatlack@google.com>
+Subject: [PATCH 10/15] PCI/TPH: Save TPH state in the saved capability store
 From: David Matlack <dmatlack@google.com>
 To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
 	linuxppc-dev@lists.ozlabs.org
@@ -73,76 +73,125 @@ Cc: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>,
 	David Matlack <dmatlack@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Save and restore the PTM Control register through the per-device saved
-capability store instead of a private pci_cap_saved_state buffer.
+Save and restore the TPH Control register and Steering Tag table through
+the per-device saved capability store instead of a private
+pci_cap_saved_state buffer.
 
-Report a reservation failure. pci_ptm_init() ignored the return value of
+The Steering Tag table is variable length, so pci_tph_init() had to compute
+a buffer size and both the save and restore loops had to walk that buffer
+in step with configuration space. Reserve the table by offset instead so
+that the loops can address the entries directly.
+
+Report a reservation failure. pci_tph_init() ignored the return value of
 pci_add_ext_cap_save_buffer() entirely, so a failed allocation was only
-noticed later as silently missing PTM state.
+noticed later as silently missing TPH state.
 
 No functional change intended.
 
 Assisted-by: LLM
 Signed-off-by: David Matlack <dmatlack@google.com>
 ---
- drivers/pci/pcie/ptm.c | 29 ++++++-----------------------
- 1 file changed, 6 insertions(+), 23 deletions(-)
+ drivers/pci/tph.c | 44 ++++++++++++++++----------------------------
+ 1 file changed, 16 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
-index bd3bd39f6372..a9e29e19b0f9 100644
---- a/drivers/pci/pcie/ptm.c
-+++ b/drivers/pci/pcie/ptm.c
-@@ -53,7 +53,8 @@ void pci_ptm_init(struct pci_dev *dev)
+diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+index 655ffd60e62f..fa9f60e5a431 100644
+--- a/drivers/pci/tph.c
++++ b/drivers/pci/tph.c
+@@ -439,10 +439,7 @@ EXPORT_SYMBOL(pcie_enable_tph);
  
- 	dev->ptm_cap = ptm;
- 	atomic_set(&dev->ptm_enable_cnt, 0);
--	pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_PTM, sizeof(u32));
-+	if (pci_reserve_saved_cap(dev, ptm + PCI_PTM_CTRL, sizeof(u32)))
-+		pci_err(dev, "unable to reserve PTM save state\n");
- 
- 	pci_read_config_dword(dev, ptm + PCI_PTM_CAP, &cap);
- 	dev->ptm_granularity = FIELD_GET(PCI_PTM_GRANULARITY_MASK, cap);
-@@ -90,36 +91,18 @@ void pci_ptm_init(struct pci_dev *dev)
- 
- void pci_save_ptm_state(struct pci_dev *dev)
+ void pci_restore_tph_state(struct pci_dev *pdev)
  {
--	u16 ptm = dev->ptm_cap;
 -	struct pci_cap_saved_state *save_state;
+ 	int num_entries, i, offset;
+-	u16 *st_entry;
 -	u32 *cap;
--
--	if (!ptm)
--		return;
--
--	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_PTM);
--	if (!save_state)
-+	if (!dev->ptm_cap)
+ 
+ 	if (!pdev->tph_cap)
+ 		return;
+@@ -450,29 +447,19 @@ void pci_restore_tph_state(struct pci_dev *pdev)
+ 	if (!pdev->tph_enabled)
  		return;
  
--	cap = (u32 *)&save_state->cap.data[0];
--	pci_read_config_dword(dev, ptm + PCI_PTM_CTRL, cap);
-+	pci_save_cap_dword(dev, dev->ptm_cap + PCI_PTM_CTRL);
- }
- 
- void pci_restore_ptm_state(struct pci_dev *dev)
- {
--	u16 ptm = dev->ptm_cap;
--	struct pci_cap_saved_state *save_state;
--	u32 *cap;
--
--	if (!ptm)
+-	save_state = pci_find_saved_ext_cap(pdev, PCI_EXT_CAP_ID_TPH);
+-	if (!save_state)
 -		return;
 -
--	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_PTM);
--	if (!save_state)
-+	if (!dev->ptm_cap)
- 		return;
- 
--	cap = (u32 *)&save_state->cap.data[0];
--	pci_write_config_dword(dev, ptm + PCI_PTM_CTRL, *cap);
-+	pci_restore_cap_dword(dev, dev->ptm_cap + PCI_PTM_CTRL);
+ 	/* Restore control register and all ST entries */
+-	cap = &save_state->cap.data[0];
+-	pci_write_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, *cap++);
+-	st_entry = (u16 *)cap;
++	pci_restore_cap_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL);
+ 	offset = PCI_TPH_BASE_SIZEOF;
+ 	num_entries = pcie_tph_get_st_table_size(pdev);
+ 	for (i = 0; i < num_entries; i++) {
+-		pci_write_config_word(pdev, pdev->tph_cap + offset,
+-				      *st_entry++);
++		pci_restore_cap_word(pdev, pdev->tph_cap + offset);
+ 		offset += sizeof(u16);
+ 	}
  }
  
- /* Enable PTM in the Control register if possible */
+ void pci_save_tph_state(struct pci_dev *pdev)
+ {
+-	struct pci_cap_saved_state *save_state;
+ 	int num_entries, i, offset;
+-	u16 *st_entry;
+-	u32 *cap;
+ 
+ 	if (!pdev->tph_cap)
+ 		return;
+@@ -480,21 +467,14 @@ void pci_save_tph_state(struct pci_dev *pdev)
+ 	if (!pdev->tph_enabled)
+ 		return;
+ 
+-	save_state = pci_find_saved_ext_cap(pdev, PCI_EXT_CAP_ID_TPH);
+-	if (!save_state)
+-		return;
+-
+ 	/* Save control register */
+-	cap = &save_state->cap.data[0];
+-	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, cap++);
++	pci_save_cap_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL);
+ 
+ 	/* Save all ST entries in extended capability structure */
+-	st_entry = (u16 *)cap;
+ 	offset = PCI_TPH_BASE_SIZEOF;
+ 	num_entries = pcie_tph_get_st_table_size(pdev);
+ 	for (i = 0; i < num_entries; i++) {
+-		pci_read_config_word(pdev, pdev->tph_cap + offset,
+-				     st_entry++);
++		pci_save_cap_word(pdev, pdev->tph_cap + offset);
+ 		offset += sizeof(u16);
+ 	}
+ }
+@@ -508,14 +488,22 @@ void pci_no_tph(void)
+ 
+ void pci_tph_init(struct pci_dev *pdev)
+ {
+-	int num_entries;
+-	u32 save_size;
++	unsigned int off, len;
++	int error, num_entries;
+ 
+ 	pdev->tph_cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_TPH);
+ 	if (!pdev->tph_cap)
+ 		return;
+ 
++	off = pdev->tph_cap + PCI_TPH_CTRL;
++	error = pci_reserve_saved_cap(pdev, off, sizeof(u32));
++
+ 	num_entries = pcie_tph_get_st_table_size(pdev);
+-	save_size = sizeof(u32) + num_entries * sizeof(u16);
+-	pci_add_ext_cap_save_buffer(pdev, PCI_EXT_CAP_ID_TPH, save_size);
++	if (!error && num_entries) {
++		off = pdev->tph_cap + PCI_TPH_BASE_SIZEOF;
++		len = num_entries * sizeof(u16);
++		error = pci_reserve_saved_cap(pdev, off, len);
++	}
++	if (error)
++		pci_err(pdev, "unable to reserve TPH save state\n");
+ }
 -- 
 2.56.0.rc1.315.gc6ed9934b7-goog
 
