@@ -1,117 +1,117 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AE70377AB2;
-	Thu, 24 Sep 2026 16:44:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A2683E3D80;
+	Thu, 24 Sep 2026 16:55:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790268248; cv=none; b=A1M5NC7nFIVK3G9r2swX9FXTvxSb6zzewNBBNFQIPP6SmIIAIg5gZCZBJ5u9KWjgpbAjU18LMua22rzRgCIXaTLsv5SOLcxQ5JqZCK4zDN7mhUE7Hi/0yTKuSGkJ2t7VrtoTQBegHUqdyXImJkGv1HzxseFMod975kJukFbRGss=
+	t=1790268926; cv=none; b=FuBWLDLUEx3YCzgBlheUzwKkWbQFoniwVUeFNnGtujI9UlEc551sTvvGlwosAocSc5HjZD6+iDiIraX+HRuzfY5E5ssNunJQB91bYzJOVP4mtYViB4clLn2gdhc6tH+1RYIUzPt1iMKWOEyyl+eme7y+9TXY3+pu/QLmjItjCi8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790268248; c=relaxed/simple;
-	bh=yWDGUNYlDOQ9M01mvHfJsxBz+oC7ZQe0eWImr93vgWg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=si8a+achhSA2AszClsO39nL0Wl9o+7toeZl+j4aHI0y3JsShFwboinLp6wEvXlHvTFi3jpy2fn3DRfnbpy4KbobYL0pCCN7geK5I8d8cIkxux5plxmrINSC+qDFc/zVgVRxa3652cSMWs6/2LTpftRNINhm8ScGd3dYkUW3t0ow=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xn+Gumji; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790268926; c=relaxed/simple;
+	bh=6dQdmiQfmu7E7lPMmHE3dRzgnkhHdkJC+aa88UFF+ms=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jZSIyLDSfH3fbR0msXj/DpfuqYoz76R1FJpZbiv+xdtwv5l4XRCENzNAjsSkUhMi1wLFBBAQkz873AqfMUu0gSAooEgPkZWUK2WBBnUooR4ka4mEH2LxeT2gSV9HoEZVZpH4mXFbGLLCXw2BJe7NNCArxkx+h9QBbTa1H6GmOBI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GaWiUqyD; arc=none smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xn+Gumji"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7A151F000FF;
-	Thu, 24 Sep 2026 16:44:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790268247;
-	bh=TTeN3d4CFaPrQNo2R9gxfHf6c99d6TAVrA/sBkk6KjM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Xn+GumjiV+szrSaOrHsFMO8e25nKEnKaQTcHZk6cy2g1fmRraZnNVMVRl6bq8ci0h
-	 QTRdlXBChl/dPPDKNCEjSZuYToqAZwJUOZP5M5bl5AMA6ouUo21dyg1XDAqPMwE9nx
-	 ve/lKSgWVl8Bw9SvGGhKioRaHgs5bLjU3TDJRdDzlpXphSQN9gLjhaFNusVJRfFROD
-	 Z9qFtw8CE1QagvhBImjvKvJsPrSGM4GFZkLfhxoSB6VD97eTNmLblutYyOebzOufUs
-	 yXSfPQzMvVjdMpg4Jm785qxtEMnAimsVCO15tarUcTXRYN00XdQH+4s+6A1eTwRlRA
-	 MLYat8moZTI+w==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v15 5/5] s390/pci: Fix circular/recursive deadlocks in
- PCI-bus and -device release
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Benjamin Block" <bblock@linux.ibm.com>
-Cc: linux-s390@vger.kernel.org, "Heiko Carstens" <hca@linux.ibm.com>, "Vasily
- Gorbik" <gor@linux.ibm.com>, "Alexander Gordeev" <agordeev@linux.ibm.com>, "Christian
- Borntraeger" <borntraeger@linux.ibm.com>, intel-xe@lists.freedesktop.org, linux-pci@vger.kernel.org
-In-Reply-To: <845f3fd0e94294765ea10454823c21e464d2f4bd.1790267348.git.bblock@linux.ibm.com>
-References: <cover.1790267348.git.bblock@linux.ibm.com>
- <845f3fd0e94294765ea10454823c21e464d2f4bd.1790267348.git.bblock@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 24 Sep 2026 16:44:06 +0000
-Message-Id: <20260924164406.B7A151F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GaWiUqyD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1790268923; x=1821804923;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=6dQdmiQfmu7E7lPMmHE3dRzgnkhHdkJC+aa88UFF+ms=;
+  b=GaWiUqyD6PcHFPJse9YRQ1JOrADGNJitM6PUs9Gy6TeZVWGqWPZ/I8yd
+   GvvcOhnntWoaQdgvLbufwqikcjwebCGGMFfJgavj/9pEAOzbU4613rQ/T
+   Xg+5Nx6BKRerggciS80gKOueVft0ic+6nNfiH667Tk8pyf4LZWtpyjVXZ
+   RMzRptLJtkmmCqPpZF1gXooTYC+FcGO3yuEckvRZR45tAbIlwdfGnf8n4
+   lRKNrlKUgjTOFi2bZFudIGX5mVnzEkMHc58EdwG5dtr6c+cmmkLpHDNnc
+   xwLOoH2KRWEZLG5CWEfig/gxKRTKErkXwTzY3X0mqwB3l4JBVOgOLuQdN
+   w==;
+X-CSE-ConnectionGUID: bR1K+xWBQrqHUOCWrNP+OQ==
+X-CSE-MsgGUID: Vstpg77NT4uJCjxJ8H0tkg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11915"; a="89955135"
+X-IronPort-AV: E=Sophos;i="6.27,120,1787036400"; 
+   d="scan'208";a="89955135"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2026 09:55:22 -0700
+X-CSE-ConnectionGUID: SXwGW+N/ScOhy8p68GY4FA==
+X-CSE-MsgGUID: Py9uXdteTUC0FwYXpeiF9Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,120,1787036400"; 
+   d="scan'208";a="273299531"
+Received: from dwoodwor-mobl2.amr.corp.intel.com (HELO [10.125.110.186]) ([10.125.110.186])
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2026 09:55:21 -0700
+Message-ID: <fb513893-7c6c-408c-811f-1eae20f0436c@intel.com>
+Date: Thu, 24 Sep 2026 09:55:20 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v13 02/15] cxl: Share CXL port upstream PCI device lookup
+To: Jonathan Cameron <jic23@kernel.org>,
+ "Cheatham, Benjamin" <benjamin.cheatham@amd.com>
+Cc: Srirangan Madhavan <smadhavan@nvidia.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
+ Ira Weiny <ira.weiny@intel.com>, Vishal Verma <vishal.l.verma@intel.com>,
+ linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
+ vsethi@nvidia.com, alwilliamson@nvidia.com,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
+ Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
+ Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org
+References: <20260922083924.2451158-1-smadhavan@nvidia.com>
+ <20260922083924.2451158-3-smadhavan@nvidia.com>
+ <63e196f0-7175-4421-8677-5ae30cbfbacf@amd.com>
+ <20260924022156.5d376e91@jic23-hlaptop>
+From: Dave Jiang <dave.jiang@intel.com>
+Content-Language: en-US
+In-Reply-To: <20260924022156.5d376e91@jic23-hlaptop>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] pci: mixing goto and cleanup helpers in __zpci_event_error and p=
-ci_base_init
---
 
-commit 703530c4b98b53581e1625ffc110fa9701e163ee
-Author: Benjamin Block <bblock@linux.ibm.com>
 
-s390/pci: Fix circular/recursive deadlocks in PCI-bus and -device release
+On 9/23/26 6:21 PM, Jonathan Cameron wrote:
+> 
+>>>  
+>>>  	/*
+>>> @@ -625,11 +612,13 @@ void read_cdat_data(struct cxl_port *port)
+>>>  	port->cdat.table = buf->data;
+>>>  	port->cdat.length = length;
+>>>  
+>>> -	return;
+>>> +	goto out;
+> 
+> Confusing flow, just duplicate the pci_dev_put()
+> 
+>>>  err:
+>>>  	/* Don't leave table data allocated on error */
+>>>  	devm_kfree(dev, buf);
+>>>  	dev_err(dev, "Failed to read/validate CDAT.\n");
+>>> +out:
+>>> +	pci_dev_put(pdev);  
+>>
+>> I'd use __free() instead of introducing another goto, especially since this is the ideal
+>> use case for it. There should be a free action defined for this, but I can't remember what
+>> it's called.
+> 
+> Don't do that.  See the guidance on where __free should be used in
+> cleanup.h.  There are places where it 'could' be used but we don't
+> because it adds fragility under potential code refactoring.
 
-When removing PCI device or PCI bus objects there are a couple of
-call-chains where it is possible that the kernel runs into a circular
-deadlock involving the central pci_rescan_remove_lock.
+Ah yeah because the devm_kzalloc() forcing the goto. Essentially don't mix goto and __cleanup(). 
+> 
+> Jonathan
+> 
+> 
+> 
+> 
+> 
 
-> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-> index d64c544b32b0c..4fc3e3dc87ad1 100644
-> --- a/arch/s390/pci/pci.c
-> +++ b/arch/s390/pci/pci.c
-[ ... ]
-> @@ -1208,7 +1212,8 @@ static int __init pci_base_init(void)
->  	if (rc)
->  		goto out_irq;
-> =20
-> -	rc =3D zpci_scan_devices();
-> +	scoped_guard(pci_rescan_remove)
-> +		rc =3D zpci_scan_devices();
->  	if (rc)
->  		goto out_find;
-> =20
-
-[Severity: Medium]
-Is it intentional to mix goto-based error handling with scope-based cleanup
-helpers here?
-
-The pci_base_init() function contains multiple goto statements for error
-handling, and this patch introduces a scoped_guard() into the same routine.
-The cleanup.h guidelines state that usage of goto and cleanup helpers should
-never be mixed in the same function.
-
-[ ... ]
-> diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
-> index f317a1465dad8..268f435677ae3 100644
-> --- a/arch/s390/pci/pci_event.c
-> +++ b/arch/s390/pci/pci_event.c
-[ ... ]
-> @@ -382,6 +382,7 @@ static void __zpci_event_error(struct zpci_ccdf_err *=
-ccdf)
->  	pci_dev_put(pdev);
->  no_pdev:
->  	mutex_unlock(&zdev->state_lock);
-> +	guard(pci_rescan_remove)();
->  	zpci_zdev_put(zdev);
->  }
-> =20
-
-[Severity: Medium]
-Can this introduction of guard() into __zpci_event_error() also cause issues
-with mixed cleanup paradigms?
-
-In __zpci_event_error(), there are goto statements used for error handling,
-and this patch introduces a guard() right at the cleanup label. Mixing goto
-with cleanup.h helpers in the same function goes against the subsystem
-guidelines.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1790267348.gi=
-t.bblock@linux.ibm.com?part=3D5
