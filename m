@@ -1,49 +1,52 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75932227EBC;
-	Thu, 24 Sep 2026 02:45:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A200175A97;
+	Thu, 24 Sep 2026 02:49:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790217939; cv=none; b=TURx14mv1HrO8dcMyheyIrliNtCbs9a4YPYanPutqltodducpz+CC1iZE6LQZKlsz/nNLv0URwB6LUosGtC/W9bWka5lFZLdJJQHfTnNnUqtEPDdu4MLFLTQ7U9+V9DSa3OYCuOPtEmHxTVuQO2JBCygRnes4hFnl7mZEC+y7V4=
+	t=1790218189; cv=none; b=fR7CGdQqqu4EMsKgk8SC+xD6tq+o/OLwMGUFhIW4BACua+j64GznK/72CZo9BkwMyHe4Y30AKzn2JAX5oAzzbm3a5p6pEPj7TGPbfk7mbO+rUxET1xrNB+LaiDWHVd0SvvtnvUFLQaXkk58Q/hGhqHGZB0mwgGwjmmB4bXr/UZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790217939; c=relaxed/simple;
-	bh=zL1yq7hU8lj4076zQUtnEM5DA5kq8YV2Z1K9B0FYS0c=;
+	s=arc-20240116; t=1790218189; c=relaxed/simple;
+	bh=BLQzwM9CA3pvKcX6gamTi/W9oZ+qPtKWcjCSvOYd8O8=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ne2IeTuU7gHromqTjaNV3hnx3mHGcVz9wwPNw9pOhGYpce3a2qWoOu6Cc8UP6ZGt9wrOrV7/xp0rwaP3sYDN/pqKJlpKQSk6XhAXZVwLvTZoSY+N2ZQ0wKdcqvHyJAJpcPbTlHhu5grRrfANl1JQ97omNBEJIuLAzHfiTuAN9/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P5c6KDz6; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=LqzSNKmTBAcZn3oSGtgpDqqytbqNHqawEjKZ9dWRhLwTInQ3sAEjnmhvvavQRGRl+GVQfEMahYN1UkdTD12g3/sPz3x34qy5ENfCi7uWsKw8A0iAkJUVJDTalIBxT8x7jQH5JP6e87p5ip6QtAR53UOcMuN0rvCMex/YZGEPO+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mnWvXjPz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P5c6KDz6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDEDC1F000FF;
-	Thu, 24 Sep 2026 02:45:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mnWvXjPz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E6021F000FF;
+	Thu, 24 Sep 2026 02:49:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790217938;
-	bh=ZrDYZ4GF77lP0V1I5YcIUUSOV/11KelVnT9Rob6lO/I=;
+	s=k20260515; t=1790218187;
+	bh=nqKrv9j7nwDwuCkYFcrrxbsaXIr+3HPgnP9RBtNkUtk=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=P5c6KDz6/lcRa6KC40sPXoTuQrdD/TS4r5VS3/C/BVSpkYOJOUihi0r8n5sKlpdP2
-	 RD5Om9xK/FqIZg6TyaF2qXiLg6Ztm5bTVCgq1cpQ+Dhajx2W9j5ETmVIco+1L+Pqan
-	 2wBzef5PopjiJBtn+B43eUHlfTTDn8nRDpqAe7g4xPbm5sSAS74EFI5tSZA6wtrRJX
-	 nECqhNJXl4pfYTkZJOiCsPkkeJS8kpc4uFC+ltf7DYjLHaBXMdrrAb2kALTZx1KzdF
-	 ncO4fRGZSMYl0sWkNgBl/tje7P4kHFTTiKKs1fHXuVrq8tIvuoOsEgPr7kzubhVKWt
-	 H7J2LjV8Rk6fw==
-Date: Thu, 24 Sep 2026 03:45:31 +0100
+	b=mnWvXjPzkgHH6kgadH3CpVG3/VA5eagnZtRckk8d0VkjGBBkB806jU1X6jt1mWPD5
+	 tUpaWV31reVS3JiKeFz0ljtBOJdhtxllzI0RCx0gV2T8q3BsNyNHb5TGIEEGXdW96S
+	 Va0SWGANeyCGUjewwLXMYdqtsutrwjKpPzdLt6cYbJOeGSLAObJG9gWtW6MMHKhhrM
+	 jRijO53y+HzTilCwrRoUFvLAVgbqppYN3UgQD2sCicvKT+pIehNUwaXroy4uvjiQV7
+	 eyDGkqadQd9tKMmOev8TNldNgsvgBK9HY9JocFG2ME9JOUSUQm8vmevck2gE5z7Fin
+	 /Pa8jbHuFPZlQ==
+Date: Thu, 24 Sep 2026 03:49:40 +0100
 From: Jonathan Cameron <jic23@kernel.org>
-To: Srirangan Madhavan <smadhavan@nvidia.com>
-Cc: Alison Schofield <alison.schofield@intel.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>, Davidlohr Bueso
- <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>, Vishal Verma
- <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Alex Williamson
- <alex.williamson@redhat.com>, vsethi@nvidia.com, alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>, Vishal Aslot
- <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>, Jiandi An
- <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v13 05/15] cxl: Introduce reusable HDM decoder settings
-Message-ID: <20260924034531.0210cafd@jic23-hlaptop>
-In-Reply-To: <20260922083924.2451158-6-smadhavan@nvidia.com>
+To: "Cheatham, Benjamin" <benjamin.cheatham@amd.com>
+Cc: Srirangan Madhavan <smadhavan@nvidia.com>, Alison Schofield
+ <alison.schofield@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, Dave
+ Jiang <dave.jiang@intel.com>, Davidlohr Bueso <dave@stgolabs.net>, Ira
+ Weiny <ira.weiny@intel.com>, Vishal Verma <vishal.l.verma@intel.com>,
+ <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, Alex Williamson
+ <alex.williamson@redhat.com>, <vsethi@nvidia.com>,
+ <alwilliamson@nvidia.com>, Sai Yashwanth Reddy Kancherla
+ <skancherla@nvidia.com>, Vishal Aslot <vaslot@nvidia.com>, Manish Honap
+ <mhonap@nvidia.com>, Jiandi An <jan@nvidia.com>, Richard Cheng
+ <icheng@nvidia.com>, <linux-tegra@vger.kernel.org>
+Subject: Re: [PATCH v13 06/15] cxl: Make HDM reset helpers available to
+ built-in PCI code
+Message-ID: <20260924034940.2e22b300@jic23-hlaptop>
+In-Reply-To: <6dc03976-faa8-49cb-9b74-680e957f2f9e@amd.com>
 References: <20260922083924.2451158-1-smadhavan@nvidia.com>
-	<20260922083924.2451158-6-smadhavan@nvidia.com>
+	<20260922083924.2451158-7-smadhavan@nvidia.com>
+	<6dc03976-faa8-49cb-9b74-680e957f2f9e@amd.com>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -54,92 +57,58 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Tue, 22 Sep 2026 08:39:14 +0000
-Srirangan Madhavan <smadhavan@nvidia.com> wrote:
+On Wed, 23 Sep 2026 16:40:05 -0500
+"Cheatham, Benjamin" <benjamin.cheatham@amd.com> wrote:
 
-> Represent HDM programming state with struct cxl_decoder_settings and pass
-> it to the commit helpers. Keep endpoint skip and switch targets at their
-> call sites, place flags with the programming state, and leave runtime
-> region ownership outside the snapshot.
+> On 9/22/2026 3:39 AM, Srirangan Madhavan wrote:
+> > PCI can be built in while CXL_BUS is modular, so PCI reset code cannot
+> > depend on helpers provided by the cxl_core module.
+> > 
+> > Build the HDM resource helpers under CONFIG_CXL_RESET and restrict their
+> > exports to cxl_core.
+> >   
 > 
-> Separate commit initiation from completion waiting so reset restoration
-> can reuse register programming without changing normal DPA-lock policy.
+> I think you should squash this patch into 3/15. Having this earlier does two things:
+> 1) it makes it more clear why you're moving everything earlier in the set, and 2)
+> bisects across the pass 3 patches will all result in the same configuration.
 > 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-Hi Srirangan,
+> An alternative option would be to refactor the preceding 3 patches in-place and then
+> move all of the helpers to this file in this patch, either would work.
 
-I'm not sure if others will agree, but my inclination here
-would not be to use the struct_group_tagged machine because
-of the structure then being embedded in two places.
+There may indeed be some better orderings that make it easier to review
+still - though this is already a great improvement on the earlier versions.
 
-I'd just define the structure independently and pay the price
-in churn to access the version in cxl_decoder.  The point being
-to say 'these are the bits of cxl_decoder that we need
-to store for reset purposes'.
+> 
+> > Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> > ---
 
-Jonathan
+> > diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
+> > index 57995777af0d..30470799e059 100644
+> > --- a/drivers/cxl/core/Makefile
+> > +++ b/drivers/cxl/core/Makefile
+> > @@ -1,12 +1,12 @@
+> >  # SPDX-License-Identifier: GPL-2.0
+> >  obj-$(CONFIG_CXL_BUS) += cxl_core.o
+> > +obj-$(CONFIG_CXL_RESET) += resource.o  
+> 
+> This file should probably be called reset.c instead of resource.c to match the
+> Kconfig functionality.
 
-> diff --git a/include/cxl/cxl.h b/include/cxl/cxl.h
-> index 69941f7fdb76..1acdf537e4e9 100644
-> --- a/include/cxl/cxl.h
-> +++ b/include/cxl/cxl.h
-> @@ -42,8 +42,8 @@ enum cxl_decoder_type {
->   * @interleave_ways: number of cxl_dports in this decode
->   * @interleave_granularity: data stride per dport
->   * @target_type: accelerator vs expander (type2 vs type3) selector
-> - * @region: currently assigned region for this decoder
->   * @flags: memory type capabilities and locking
-> + * @region: currently assigned region for this decoder
->   * @target_map: cached copy of hardware port-id list, available at init
->   *              before all @dport objects have been instantiated. While
->   *              dport id is 8bit, CFMWS interleave targets are 32bits.
-> @@ -52,18 +52,31 @@ enum cxl_decoder_type {
->  */
->  struct cxl_decoder {
->  	struct device dev;
-> -	int id;
-> -	struct range hpa_range;
-> -	int interleave_ways;
-> -	int interleave_granularity;
-> -	enum cxl_decoder_type target_type;
-> +
-> +	struct_group_tagged(cxl_decoder_config, config,
+I'm not keen on that change because the functions are core CXL stuff
+that just happens to also be useful in reset.  You could change the object
+name via some Kconfig magic so that matches, but the c file itself
+wants to remain with some generic name.
 
-Whilst strictly speaking correct, to me struct_group_tagged()
-should only really be used when there is only one place that
-the structure appears.  Otherwise it is just a bit obscure
-to read.  It does give us the option of accessing the elements
-in here without the extra jump, but I'm not sure that is
-a good idea in this case.  So I'd just make this a normal
-structure.  After all what is special about it being
-defined here that isn't equally true of the cxl_decoder_settings
-structure below?
 
-> +		int id;
-> +		struct range hpa_range;
-> +		int interleave_ways;
-> +		int interleave_granularity;
-> +		enum cxl_decoder_type target_type;
-> +		unsigned long flags;
-> +	);
->  	struct cxl_region *region;
-> -	unsigned long flags;
->  	u32 target_map[CXL_DECODER_MAX_INTERLEAVE];
->  	int (*commit)(struct cxl_decoder *cxld);
->  	void (*reset)(struct cxl_decoder *cxld);
->  };
->  
-> +/**
-> + * struct cxl_decoder_settings - CXL HDM decoder programming snapshot
-> + * @config: common decoder configuration
-> + * @target_or_skip_reg_val: switch target list or endpoint skip register value
-> + */
-> +struct cxl_decoder_settings {
-> +	struct cxl_decoder_config config;
-> +	u64 target_or_skip_reg_val;
-> +};
-> +
->  /*
->   * Using struct_group() allows for per register-block-type helper routines,
->   * without requiring block-type agnostic code to include the prefix.
+> >  obj-$(CONFIG_CXL_SUSPEND) += suspend.o
+> >  
+> >  ccflags-y += -I$(srctree)/drivers/cxl
+> >  CFLAGS_trace.o = -DTRACE_INCLUDE_PATH=. -I$(src)
+> >  
+> >  cxl_core-y := port.o
+> > -cxl_core-y += resource.o
+> >  cxl_core-y += pmem.o
+> >  cxl_core-y += regs.o
+> >  cxl_core-y += memdev.o
+
 
