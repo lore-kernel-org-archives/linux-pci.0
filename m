@@ -1,53 +1,52 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DFF749E5F4;
-	Thu, 24 Sep 2026 15:07:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E81D18A6D4;
+	Thu, 24 Sep 2026 15:08:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790262440; cv=none; b=LZcW1sgM40MDHqEfP517BoDKi//qKBV47QO2/Z1djfTzMSzBDhSmQBgExs+g+HumzgsayPXv69HaXnhbltYDb83gbc6UzJHf2rr8KXxFv2H7kR/m6iGRJzvnGePClXfH7H9aTRDbT7VicRlBrBRrFZOGw3jxk462C9aZ3iD/1ts=
+	t=1790262497; cv=none; b=O+ign5tblTkxV/gJ1rilMSYix5i6K00yu5BbDB7dYkNmH4LY71s4t6cCUbqnDems7U7HcRMccZ0SUmbwXi0C55N7MVN+zM4qeOHqY4jGvSihYq49wjiDNW3pIwVXutHjURv7yiKnyX2BJCeiZRBmiXrIChGWDd47GAXWwLbTLu8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790262440; c=relaxed/simple;
-	bh=638KZsts/EnjSXEsopg6omDDcwB8YVrNYu8PPgMsUao=;
+	s=arc-20240116; t=1790262497; c=relaxed/simple;
+	bh=SYOMIRu9GXqLoX5rwMEmja6bQ4yVdqAP8/0TxvyrX0w=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=IhPz2SHudwkZYuiCAoosrc+B2z29fyrb1YkLzPR2t+nS1+Sut7BXS2QB5JlyAzqyriQRThCJWjxSLyJhTwlxJ6XqBPsvqHnMQNYJrw4aF6JWVnGWp9+Zv6AyJdZbsqqF7WI5GBloet97k66frmUgjVP+tEwsageuNvvwoHP7n6Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XbzXevEn; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=O1BjvZp1/UIYjRgZK58+nb6d979usr/tB4vleTW9v6GDRXBh6q022gugDzkPTxMmy7chGY2un2sjO6YG762cZ1TphhiN1Rcp0JSyHOHB/6l02M8bz1n+YZ5Cq5l23x7A/N9d+Kl3xQExCPHNKJSi3NFw+OgQcUBWV7TSTinv5b0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FHrh5Q7i; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XbzXevEn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5012B1F000FF;
-	Thu, 24 Sep 2026 15:07:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FHrh5Q7i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C10C21F000FF;
+	Thu, 24 Sep 2026 15:08:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790262437;
-	bh=nfHH4P9ftHDIqNLe5rmUK8ivO7QxB0dY9kdIfw57pDs=;
+	s=k20260515; t=1790262489;
+	bh=SYOMIRu9GXqLoX5rwMEmja6bQ4yVdqAP8/0TxvyrX0w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XbzXevEnW3jiATGW2FyUnou2iKSdzidIeVU4IVi5Fzx8WjoSzNcvxpbIr+Biko7yM
-	 q/nkiw5K9ufjsDZ3lgnAwKYMhdWjA1YFKOU86hlKkOG7F7zUkmXpVv2u6Iqp7RMAnG
-	 bvMiR7000McjYBpg2Jm353aXKA1P5hdi74rS1u6YonCY4sgrtSRqijPnZ7cwXTByD6
-	 XupnRcRKqSUDv/dhGBCSzYmHI39nq8eRzYlXURvvsEAJna0LA21lBvfTb4k3z8+y+a
-	 dORmJ/S537tVjxn1zYumtNwDBg/w5TGeBDHgcSXAJLTAOqFD+I5qNXkKtjND4Kl77h
-	 P0+s7U9KZkDYQ==
+	b=FHrh5Q7iUn6zhYUab+QKwjmWvbAl3s3Qp6kPNo4ogV/Gd6g5+Fq0se2Lx/s0D2ZGG
+	 DmgZTcJlOFnc3E94vt369kw+Gqtpw5+ydG7c47iS9Puu33QM6dfAX5GAGg1V3aG+TL
+	 ELPxsTtlRFNLeugbL7hKBbK1ph76xuppg4JNz4Z8+uz6sB1D87813FTJANNDBCibKB
+	 8eCnIzazFQZOa2Gmp9pn8c/GqiACGBnyGr64pn2bkDL1S/U9XbcdY3OksyG2QoK3HP
+	 E9IrqO8oPA4JTxCSZko9NxvqgyJmtXmS0Ys4zXMrHf+mMtJmyqEUxfBdFcuaqIWTZ3
+	 wz2ypzZ5Db3mA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 3/4] PCI: of: don't zero flags in
- of_pci_get_addr_flags()
+Subject: Re: [PATCH v6 2/4] PCI: of: drop the reg_num argument to
+ of_pci_set_address()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Alex Elder" <elder@riscstar.com>
-Cc: conor+dt@kernel.org, devicetree@vger.kernel.org, robh@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260924150222.1179235-4-elder@riscstar.com>
+Cc: robh@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org, conor+dt@kernel.org
+In-Reply-To: <20260924150222.1179235-3-elder@riscstar.com>
 References: <20260924150222.1179235-1-elder@riscstar.com>
- <20260924150222.1179235-4-elder@riscstar.com>
+ <20260924150222.1179235-3-elder@riscstar.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 24 Sep 2026 15:07:16 +0000
-Message-Id: <20260924150717.5012B1F000FF@smtp.kernel.org>
+Date: Thu, 24 Sep 2026 15:08:07 +0000
+Message-Id: <20260924150808.C10C21F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> The flags variable whose address is passed to of_pci_get_addr_flags()
-> is zeroed before assigning a value to it.  Skip the zeroing and just
-> assign it instead.
+> The reg_num argument passed to of_pci_set_address() is always zero,
+> so get rid of it.
 >=20
 > Reviewed-by: Herve Codina <herve.codina@bootlin.com>
 > Signed-off-by: Alex Elder <elder@riscstar.com>
@@ -56,5 +55,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260924150222.1179=
-235-1-elder@riscstar.com?part=3D3
+235-1-elder@riscstar.com?part=3D2
 
