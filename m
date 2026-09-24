@@ -1,46 +1,51 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E28DCA4E;
-	Thu, 24 Sep 2026 00:40:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C95D82AD2E;
+	Thu, 24 Sep 2026 00:45:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790210409; cv=none; b=Dcr9EuDj8C9DChhdvKqwfNr0VRD4skm1BN0Cc2PMICXv4qSVsYxWUwmg8ksgzxj+MlhXOfIYA3Q+4x/L4jYmvzsqO9YSmsSo8bNIeO/Y5xZFrU6xT/SaqaVowk9U7j17oJZ0pe3O3sPxTEapcv5SmuHeI+OAaInXYRZF1G/XLkQ=
+	t=1790210736; cv=none; b=TAWQomhooH8hINgIl5ZZF04nGraCyptXjF0SRf594P+GJoSO+OLYaVH4hgLGRQLc3UWwGnrziaZKT6fYlmKqSrwqLTvbt4319JlOOUiyGByiQKidwrNBbppXQo6fKyOmhcSxBzMDPVDgF5PB3akveV+s86jrd3DrQLkRB7G3/NY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790210409; c=relaxed/simple;
-	bh=64uXb4X38XrSq/BVvQdzMJq2eRbmsD2MiKhrL+mD7IU=;
+	s=arc-20240116; t=1790210736; c=relaxed/simple;
+	bh=79t5RkkZYdvzTFcS+J5j0DdwmcG5fi1lB3lXZq0WH94=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dfyHEGthn5/JVufFStkE/O5IbjumF0MhaR8QljUyxQohDjh7r2a6CfwLKgxR5G4pZqaxMumDnAP9HKvAUIP4rfyknqrwtOaJU4KYxIzOKwKj/Bv0uESnktUt7g5ItH21ikHCUMr8KbAII9nE3oVJixYfHwL4CDoLj/kJArf0VaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GsFpotYB; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=C23lvvyYiSRK8G/E/g0EiLXTzn84d4eMQ8lVHQD3//vfs6FldYy180sFjVmi5BJa31wsA0W0VKUrOHLDK6WiemwUwzAbXeodkt3/ogrIVCigGvkEShn0l2xOAPqnQPTSkPondoBu7sUX5nuF2u2ezXFLDeFp8c3OiGK/vPqTBxU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RSaPi0ke; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GsFpotYB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F17AE1F000FF;
-	Thu, 24 Sep 2026 00:40:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RSaPi0ke"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51CCF1F000FF;
+	Thu, 24 Sep 2026 00:45:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790210408;
-	bh=I5fr4m5zV1HsbEvg5cpoj9adC8pbGMxGUDeIlmewPaA=;
+	s=k20260515; t=1790210735;
+	bh=FTtLb8VyXEHloDep2vMebstVqQAsMPCB5frjs2I3Bw4=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=GsFpotYB328iRGcLSIV0KOtxbjtU0E4lZg8FC8ydEzp+mPQq/3gSTgBABICu31Irk
-	 ZlWgFeLlBRBGsl9VIq2Hnz9tjQfR6q1+1O2FwVFekMcB4AL8T6Ob3Z1SkF8ZOy/5Op
-	 7gohvq3hbSRXkhWAsr6Q+gTWuXhfL077sPNgdXD9Si5W6hzmzPpb/ilA4sQbj+N+9j
-	 A66l4Lzg3Ul7GDzMXOEUfXvFqU5PuCSs2NgfbHNl0Ev/8kW6FYlHXyuYuwIVDPk4zE
-	 IPjviNgfbKP17cxID4qPeNUb+Vn6VsCguEggqwIUC9YwNsgit84Mmw2PGD2CgbxQ7v
-	 5CViqO1tQ/EXg==
-Date: Thu, 24 Sep 2026 01:40:01 +0100
+	b=RSaPi0keu4vF4ieaV8Vt8S3ry3mL0K450EOKK2AfwN47MP1fnblhj3WuOd37XnsFb
+	 otwMPDIC2mfTNB8Xkh+wE5U4DcIlRQcc6oCeAUcrQOn2UIA9Fi0HLY2zMloow5bL8I
+	 O027V8TX2aDWcdK5RRGeL/ux/+LhSnZpF6zgj6cJNb90CSs4SFiKR9+1gXxXUY++h8
+	 b0Xl+I7uSCbbvsL5oQ0iC4ELZxOTbk9rFEQeVCdtvcMfBn/gbASWubR9MfcvQbOhlE
+	 naTz0uS/V3XN0UkymcpuTVkDYkJ2TAYlbiH1MaPfdW3Sg6sCmugctIiONY77qgk70I
+	 VLxwdCuXLP4gw==
+Date: Thu, 24 Sep 2026 01:45:26 +0100
 From: Jonathan Cameron <jic23@kernel.org>
-To: alistair23@gmail.com
-Cc: linux-pci@vger.kernel.org, Jonathan.Cameron@huawei.com, djbw@kernel.org,
- rust-for-linux@vger.kernel.org, lukas@wunner.de, alistair@alistair23.me,
- linux-cxl@vger.kernel.org, bhelgaas@google.com, akpm@linux-foundation.org,
- linux-kernel@vger.kernel.org, gary@garyguo.net, ojeda@kernel.org,
- benno.lossin@proton.me, a.hindborg@kernel.org, wilfred.mallawa@wdc.com,
- tmgross@umich.edu, boqun.feng@gmail.com, bjorn3_gh@protonmail.com,
- alex.gaynor@gmail.com, aliceryhl@google.com, Alistair Francis
- <alistair.francis@wdc.com>
-Subject: Re: [PATCH v3 00/21] lib: Rust implementation of SPDM
-Message-ID: <20260924014001.328ca0ef@jic23-hlaptop>
-In-Reply-To: <20260901010347.2614656-1-alistair.francis@wdc.com>
-References: <20260901010347.2614656-1-alistair.francis@wdc.com>
+To: Srirangan Madhavan <smadhavan@nvidia.com>
+Cc: Alison Schofield <alison.schofield@intel.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>, Davidlohr Bueso
+ <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>, Vishal Verma
+ <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Alex Williamson
+ <alex.williamson@redhat.com>, vsethi@nvidia.com, alwilliamson@nvidia.com,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>, Vishal Aslot
+ <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>, Jiandi An
+ <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v12 06/12] cxl: Add CXL Device Reset helper
+Message-ID: <20260924014526.3cd5a375@jic23-hlaptop>
+In-Reply-To: <9ea4b1cd-d801-486b-959a-47e6d1914005@nvidia.com>
+References: <20260910070808.1444264-1-smadhavan@nvidia.com>
+	<20260910070808.1444264-7-smadhavan@nvidia.com>
+	<20260912022617.47860862@jic23-hlaptop>
+	<9ea4b1cd-d801-486b-959a-47e6d1914005@nvidia.com>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -51,42 +56,49 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
+On Tue, 22 Sep 2026 17:20:06 -0700
+Srirangan Madhavan <smadhavan@nvidia.com> wrote:
+
+> On 9/11/26 6:26 PM, Jonathan Cameron wrote:
+> >> +     if (dvsec < 0)
+> >> +             return dvsec;
+> >> +
+> >> +     if (!(cap & PCI_DVSEC_CXL_CACHE_CAPABLE) ||
+> >> +         !(cap & PCI_DVSEC_CXL_MEM_CAPABLE))  
+> > Why do we need them both? Sure that's type 2, but a non
+> > class code matching type3 would I think need the same infrastructure
+> > you are building here. That would have cxl.mem but not cxl.cache
+> > - I think some of the CXL SSD prototypes fit in this category.  
+> 
+> I did not yet address this in v13 because I did not want to expand the 
+> series beyond its original Type 2 scope without settling the expected 
+> eligibility policy first.
+> 
+> The current check requires both CXL.cache and CXL.mem capability and 
+> both protocols to be enabled. The reset sequence currently assumes that 
+> CXL.cache is active and performs cache disable, optional writeback, and 
+> subsequent cache-policy restoration. This might need change.
+
+Yes, we'd need to sanity check if CXL.cache is active.  Probably need to
+do that anyway because we might have a situation where the driver code
+isn't done for CXL.cache yet but CXL.mem is in use. I think that's
+the case for Alejandro's device?
 
 > 
-> qemu-system-x86_64 \
->   -nic none \
->   -object rng-random,filename=/dev/urandom,id=rng0 \
->   -device virtio-rng-pci,rng=rng0 \
->   -drive file=deploy/images/qemux86-64/core-image-pcie-qemux86-64.rootfs.ext4,if=virtio,format=raw \
->   -usb -device usb-tablet -usb -device usb-kbd \
->   -cpu Skylake-Client \
->   -machine q35,i8042=off \
->   -smp 4 -m 2G \
->   -drive file=blknvme,if=none,id=mynvme,format=raw \
->   -device nvme,drive=mynvme,serial=deadbeef,spdm_port=2323,spdm_trans=doe \
->   -snapshot \
->   -serial mon:stdio -serial null -nographic \
->   -kernel deploy/images/qemux86-64/bzImage \
->   -append 'root=/dev/vda rw  console=ttyS0 console=ttyS1 oprofile.timer=1 tsc=reliable no_timer_check rcupdate.rcu_expedited=1 swiotlb=0 '
+> Is the current policies (HDM snapshot, range synchronization, and 
+> restoration infrastrcture) adapted by these patches for cxl_reset also 
+> apply directly for type 3? If so, I can generalize this. 
+
+Yes. That should all apply as a type3+ is a just a type 2 that doesn't
+support CXL.cache.
+
+> But if Type 3 
+> requires additional ownership or lifecycle handling, can we please 
+> address that separately?
+Agreed for anything new that is needed but I'm not sure what that would
+be.
+
+Jonathan
+
 > 
-Looking at this because of discussion about RCiEPs.
-
-For the test I'd do something more realistic and throw in a root port and put your
-device on that rather than as currently where I think it'll is presented as
-a Root Complex Integrated Endpoint.
-
-You don't want a particularly complex setup for this but those ones in
-the qemu tests tend to provide syntax to copy.
-I like the HMAT bios table tests
-https://elixir.bootlin.com/qemu/v11.1.1/source/tests/qtest/bios-tables-test.c#L2058
-
-And that suggests you want something like:
-
--device pcie-root-port,chassis=1,id=pci.1"
--device nvme,drive=mynvme,serial=deadbeef,spdm_port=2323,spdm_trans=doe,bus=pci.1"
-
-Then you'll have a normal looking direct connected NVMe pcie express devices.
-
-Shouldn't make any real difference in practice beyond paths changing and it
-smelling more normal for something you might want to attest!
 
