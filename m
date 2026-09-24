@@ -1,102 +1,140 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtpbg150.qq.com (smtpbg150.qq.com [18.132.163.193])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1EF26FC5;
-	Thu, 24 Sep 2026 03:08:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFABA3D525F;
+	Thu, 24 Sep 2026 03:26:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.132.163.193
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790219309; cv=none; b=ltXn/pj/9X1JLrMJJXP4FNylD1SPLq6G+8iVuU9/6Qw7ta6nq+gww2vyD4kbmijFemMAKE8osZJ//YFCCOoWbTNkIJm/ZSuQUzE2+NTVXXkDTRhuc7OC7pPZF4Iw0dqj82SLA5vgUzHwmoLfFVAm6hEb7ZnwhExhI+qVKsX9+qg=
+	t=1790220416; cv=none; b=JqHbSCTCQUSoc2GVU5Z8k2RvZG34S10KkVxBz8bjog//vQaU2/24/w+jhKQ4smT+rhpw6L9r7VeAg1Mg6K/apmX2LCYpdK3WPfPNeSzqmo+E1Qru0GrJ2rDMQj70XX3WwRqpNjhEYkFn2JzkXlhV9ILr1GxkQXexsVGD3k5Hb8k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790219309; c=relaxed/simple;
-	bh=aHLCe9GDgquO1jNNuuddxO+BhU/C056D/lCl3Kik9tU=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TaQPuGA0tKjBVtwLarE1dPLuvWLbm5KFOyxWg1BjwuIV0TJa5uSlQI7oMNGNgC4hRmdHgsYks6ysq2/hRMa1qbOKpMeJ7SUnOj5YpSsEojIhUTqt8zkIYP8gkFekQWGAVj7UwkxsCmCoxFuY3WNcSBesETGmAVoxH50S21INB6Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iH+hNAo+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790220416; c=relaxed/simple;
+	bh=CXlH3SBMSFvkfQPfiQxGklN1CS3iPjfzCSqlZqogoG0=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 In-Reply-To:References; b=tYL35Fe6UyCRxg+QQGKy/TBx2m5R/5ekep8nx/UGOqMqmCZSjJ6Z9rY0gjuRSn4yly2G1YqTWUN5w81HBNvAVc6D5ydlSWV/yXHq474IS7V+YuhRAfJIp/N2+1rS8n1yrAA87laCIB7En49aToZ5e0/RYLfVE8YsIcRvouA88PE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux.spacemit.com; spf=none smtp.mailfrom=linux.spacemit.com; dkim=pass (1024-bit key) header.d=linux.spacemit.com header.i=@linux.spacemit.com header.b=k5tYNDMa; arc=none smtp.client-ip=18.132.163.193
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux.spacemit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.spacemit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iH+hNAo+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A14351F000FF;
-	Thu, 24 Sep 2026 03:08:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790219307;
-	bh=1lHst4u39cEHlmK22+WdrxAU3AZESZfSCznVC/vLCt8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=iH+hNAo+xsg9gfUAIikUxs+FivNswNf5PRtiEj8JL1Pd/zodG9/ihecXbd8ZOgfaL
-	 ab42G8RMepYPUD3CETsG5XDDhJ9eTJTyDL2Y/pWeXBvCLRwP+MWi+YK5d5A4pLFNVv
-	 PnyZDXwdhIBRrTxPdz/x64vxMt1JC/2zL9TfIsfdPZLSX/u7ywLE1Yf+BgrmcniZUa
-	 LlJrv3knzsCeCMFcvRWDcvlLtmM06jSQAJnWPE/iMx3DA7XWuTHZOEOCFajDoMI3dt
-	 kELZPEawyh/Ft75tMMokIrjjcRcrF+sD8KBmbhCbB1Yd0/O9LXDwUJKDXiO0OBRY+n
-	 nfmJdCd4Z2wIw==
-Date: Thu, 24 Sep 2026 04:08:20 +0100
-From: Jonathan Cameron <jic23@kernel.org>
-To: Srirangan Madhavan <smadhavan@nvidia.com>
-Cc: Alison Schofield <alison.schofield@intel.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>, Davidlohr Bueso
- <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>, Vishal Verma
- <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Alex Williamson
- <alex.williamson@redhat.com>, vsethi@nvidia.com, alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>, Vishal Aslot
- <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>, Jiandi An
- <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v13 08/15] cxl: Refresh cached PCI HDM decoder settings
-Message-ID: <20260924040820.008a2575@jic23-hlaptop>
-In-Reply-To: <20260922083924.2451158-9-smadhavan@nvidia.com>
-References: <20260922083924.2451158-1-smadhavan@nvidia.com>
-	<20260922083924.2451158-9-smadhavan@nvidia.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=linux.spacemit.com header.i=@linux.spacemit.com header.b="k5tYNDMa"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.spacemit.com;
+	s=mxsw2412; t=1790220322;
+	bh=1OuECCNgnc6CLvCQwxn/XTZt38EU5TJNmlwiHDDUrSc=;
+	h=Mime-Version:Date:Message-Id:Subject:From:To;
+	b=k5tYNDMa42TGq0tgygg8GGiMdTdxYU8sA466MFGd705xPcEFrp2+oMBHWsfORPhxq
+	 2blPdjTkyllTDw98VJLpwhR1uZ19JJzzz+oSPypsCIAxEb6+EPPMe7RyWWGHqmq9Hu
+	 f4i4RCRM0aRJ8+r+tIg2K5QVlJD6ly6pN7dKZpYs=
+X-QQ-mid: zesmtpgz1t1790220314te0b2c6a7
+X-QQ-Originating-IP: 4x/4dzp1jA75d0q38ahlTcs6JiNxTb0iijMQfx4Sicc=
+Received: from = ( [120.237.158.181])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Thu, 24 Sep 2026 11:25:10 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 0
+X-BIZMAIL-ID: 11185655890934613812
+EX-QQ-RecipientCnt: 41
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+Content-Type: multipart/signed;
+ boundary=c1efa6dd65a7157a3cf15d727fdb83c765b9167dfac6b27657fb2a2cc304;
+ micalg=pgp-sha512; protocol="application/pgp-signature"
+Date: Thu, 24 Sep 2026 11:25:07 +0800
+Message-Id: <DLN84VV7GX6M.9VWJBT3INEFO@linux.spacemit.com>
+Cc: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
+ <spacemit@lists.linux.dev>, "Yixun Lan" <dlan@gentoo.org>, "Longbin Li"
+ <looong.bin@gmail.com>, "Troy Mitchell" <troy.mitchell@linux.spacemit.com>
+Subject: Re: [PATCH v6 6/6] PCI: spacemit-k1: Add Spacemit K3 PCIe host
+ controller support
+From: "Troy Mitchell" <troy.mitchell@linux.spacemit.com>
+To: "Jingoo Han" <jingoohan1@gmail.com>, "Manivannan Sadhasivam"
+ <mani@kernel.org>, "Lorenzo Pieralisi" <lpieralisi@kernel.org>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Rob
+ Herring" <robh@kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>,
+ "Krzysztof Kozlowski" <krzk+dt@kernel.org>, "Conor Dooley"
+ <conor+dt@kernel.org>, "Yixun Lan" <dlan@kernel.org>, "Paul Walmsley"
+ <pjw@kernel.org>, "Palmer Dabbelt" <palmer@dabbelt.com>, "Albert Ou"
+ <aou@eecs.berkeley.edu>, "Alexandre Ghiti" <alex@ghiti.fr>, "Frank Li"
+ <Frank.Li@nxp.com>, "Niklas Cassel" <cassel@kernel.org>, "Sherry Sun"
+ <sherry.sun@nxp.com>, "Arnd Bergmann" <arnd@arndb.de>, "Christian Bruel"
+ <christian.bruel@foss.st.com>, "Sascha Hauer" <s.hauer@pengutronix.de>,
+ "Vidya Sagar" <vidyas@nvidia.com>, "Xincheng Zhang"
+ <zhangxincheng@ultrarisc.com>, "Alex Elder" <elder@riscstar.com>,
+ "Siddharth Vadapalli" <s-vadapalli@ti.com>, "Randolph Lin"
+ <randolph@andestech.com>, "Andy Shevchenko"
+ <andriy.shevchenko@linux.intel.com>, "Neil Armstrong"
+ <neil.armstrong@linaro.org>, "Marek Vasut"
+ <marek.vasut+renesas@mailbox.org>, "Inochi Amaoto" <inochiama@gmail.com>,
+ "Pengpeng Hou" <pengpeng@iscas.ac.cn>, "Ping-Ke Shih" <pkshih@realtek.com>,
+ "Anirudh Srinivasan" <asrinivasan@oss.tenstorrent.com>,
+ =?utf-8?b?VXdlIEtsZWluZS1Lw7ZuaWcgKFRoZSBDYXBhYmxlIEh1Yik=?=
+ <u.kleine-koenig@baylibre.com>, "Gustavo Pimentel"
+ <gustavo.pimentel@synopsys.com>
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20260923015016.64069-7-inochiama@gmail.com>
+References: <20260923015016.64069-1-inochiama@gmail.com>
+ <20260923015016.64069-7-inochiama@gmail.com>
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpgz:linux.spacemit.com:qybglogicsvrgz:qybglogicsvrgz3a-0
+X-QQ-XMAILINFO: Mfy7wfw2LMQ46+6RGrspbCzA8lFQzcL2XGXmMkaoq/PagtaPhYQOXPrd
+	mMNBAzHqDYKfnBfIQ6mqaX1NIfH8Bg/WRTTZ02neqlGB2dJKfd2PihwjbWb3Q1E/GgGVHD9
+	FRL/v7h2+XYrmrn6lH8FR1v5VTMhG/C8hG/plLf1DX3rKapMGmNILTo4Oy1P1B5mP+GACcb
+	fO4h/L69z1FdzzfZ+eBopwNanrgAS/Bnblmi+g3/B9uaNE5wxLDWxr4iPtE1xtR8JFRbHu2
+	8kg64acCzBStzQTQskdzzgusyTRtnkhP+4w91lw9/9oCjOoiroiTJwIe5Q9s9OCHS2ctqXV
+	elwzRd66GVFEKcmptgcqKFBEM7lvTQYN/0t34WJ6AV/LVBES7pHmqykB7fdEyyIc2wgAdel
+	EMbSniX0ydkQaR58c1p3DtnPOzFGM5q3AAvY2Unt5K+pxITA3eKTt3mXV1EgmiK86byKSOR
+	/bqGPk4jUybPYNbGInAXjRQ7mUciVc4djXHh2FvcC/DM77TY8dOHwn+KO9atp2kcTUrpBZs
+	7cpYjoumfPuJnA8c/WoUxkhDwO5hz9RdX97CzlRXvM61SJtCxbOgpQSuNbyE9F/2t48jom6
+	3A52kLe10ceNFkTUgWkNtMHLVpZCsuKAk0/ks7xsQkVVitTI3jUzU5kVUy7gpJwR6cvBlPC
+	h4i5vhFxNP588Z/eBUNJuOhlVmJ02uTux6/689kESak1pMccSKeqebn2Kz2PbAjiSIy956d
+	ktbBAeqPFN/yinQBlSkZXn856e8NvUKMjq+zKjOn6ciItxLGwBd3tnoSkF0N2OKM1/Knm5N
+	uWiPe8AZgMVXZhi4dtSODbFXXtyzNrVFH0BwysFiFIxQrjtuBeeY/8MII5qlGYVlrNv2a5M
+	et5gPdd766rNYOhICfNGemLdAQlq0/QpuON6PY86EWH15ZD3O5RVsRGB7ICr5t67iNTBCYm
+	ZV9lmdO5oze7jwjxEppWImsOAjUES6hN+HdIJHDMpAvawORx4GznuPiBUWEnw0qppHXGyUN
+	zxoeoe2SnzOZgl+Nj9+ey6ghkI/1Su7U4t7IUYAPPSRZTE7z4jUGa8a1OOAcHEbajdOe4D2
+	FBUs9+kdh0ff0cNWGuU8jo=
+X-QQ-XMRINFO: NI4Ajvh11aEjEMj13RCX7UuhPEoou2bs1g==
+X-QQ-RECHKSPAM: 0
 
-On Tue, 22 Sep 2026 08:39:17 +0000
-Srirangan Madhavan <smadhavan@nvidia.com> wrote:
+--c1efa6dd65a7157a3cf15d727fdb83c765b9167dfac6b27657fb2a2cc304
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
 
-> Early PCI discovery creates the HDM cache, while later CXL enumeration and
-> decoder operations provide updated programming state.
-> 
-> Refresh the PCI snapshot when decoders are enumerated, committed, or reset
-> so reset recovery need not walk the CXL topology. Ignore updates when no
-> cache exists and reject decoder-count mismatches.
-> 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+On Wed, Sep 23, 2026 at 09:50:15AM +0800, Inochi Amaoto wrote:
+> @@ -315,6 +328,123 @@ static int k1_pcie_parse_port(struct k1_pcie *k1)
+> +static int k3_pcie_init(struct dw_pcie_rp *pp)
+> +{
+> [...]
+> +failed_phy_power_on:
+> +	phy_bulk_exit(k1->phy_count, k1->phys);
+> +failed_phy_init:
+> +	k1_pcie_disable_resources(k1);
+> +failed_resources:
+> +	regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
+> +			   PCIE_PERSTN_OUT | PCIE_PERSTN_OE | PCIE_IGNORE_PERSTN,
+> +			   PCIE_PERSTN_OUT | PCIE_PERSTN_OE);
 
-> diff --git a/include/cxl/cxl.h b/include/cxl/cxl.h
-> index 1acdf537e4e9..005259e38f4b 100644
-> --- a/include/cxl/cxl.h
-> +++ b/include/cxl/cxl.h
-> @@ -77,6 +77,28 @@ struct cxl_decoder_settings {
->  	u64 target_or_skip_reg_val;
->  };
->  
-> +/**
-> + * struct cxl_hdm_info - cached CXL HDM state for a PCI device
-> + * @decoder_count: number of entries in @settings
-> + * @hdm_bar: PCI BAR containing the HDM decoder capability
-> + * @hdm_offset: offset of the HDM decoder capability in @hdm_bar
-> + * @hdm_size: size of the HDM decoder register block
-> + * @global_ctrl: HDM decoder global control register
-> + * @dvsec_ctrl: CXL DVSEC control register
-> + * @dvsec_ctrl_valid: whether @dvsec_ctrl contains valid state
-> + * @settings: per-decoder programming state
-> + */
-> +struct cxl_hdm_info {
-> +	int decoder_count;
-> +	int hdm_bar;
-> +	resource_size_t hdm_offset;
-> +	resource_size_t hdm_size;
-> +	u32 global_ctrl;
-> +	u16 dvsec_ctrl;
-> +	bool dvsec_ctrl_valid;
-> +	struct cxl_decoder_settings settings[];
-
-Can we use __counted_by(decoder_count) for this?
-
-> +};
+Could we keep PERST# asserted on the error path, as k3_pcie_deinit()
+does? Setting PCIE_PERSTN_OUT here releases the endpoint from reset
+even though initialization has failed and the controller resources
+are unavailable.
 
 
+--=20
+Troy Mitchell
+
+--c1efa6dd65a7157a3cf15d727fdb83c765b9167dfac6b27657fb2a2cc304
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iIMEABYKACsWIQSL4Ay2cExaPXAQcU2YCe+A+TM0LwUCarSYEw0caUB0cm95LXku
+b3JnAAoJEJgJ74D5MzQvnBMBAOqoYG0RTGya7s/xnZ8oNm2v68GflTIw5APMoNFC
+yKH0AQDdN3A8M5rPjea5jEI3eGpn06cdTl/AmbYmgItVl4/mAg==
+=B9Ym
+-----END PGP SIGNATURE-----
+
+--c1efa6dd65a7157a3cf15d727fdb83c765b9167dfac6b27657fb2a2cc304--
