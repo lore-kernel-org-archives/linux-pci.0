@@ -1,96 +1,96 @@
-Received: from mail-wr2-f35.google.com (mail-wr2-f35.google.com [74.125.225.99])
+Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C193476045
-	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 12:19:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6558547DD42
+	for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 12:21:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.76
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790252393; cv=pass; b=YXgJR42Q00u8vR1XvFLin/RbRkpbyBq767b7LuiyUxYYVfmDNxArtRvJ469MjwH5GYsdBEP9A1stoYG8PpQEA6se6rtE2J4bR7cTuDqVoNPZkMHEI+CCrh/MbhaWEE20PF3DXYBIJSsRRnBy9b34QR6+fGEoIbjY53P+eGv1B2c=
+	t=1790252492; cv=pass; b=AJN/SxhvNGQQpHAuPWj6xkpVPyLo/ywq6M9N6qgOYL/ZrCG8rnd0q1fgXZypLm2Vk/oeGgBwxcUdNLYwIMcJbR4rcpefGIhtzYg3brS9C8lKsXVnLok9hiIKXEPZIXfj+tyohyad5amCCR3JQ3k/BUXUsBmrsQ7zTztdDbUCQ64=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790252393; c=relaxed/simple;
-	bh=QrzmK3wGyZKCxCcAVNUy/oG4X2vMWpqXP/L7GgMxP+g=;
+	s=arc-20240116; t=1790252492; c=relaxed/simple;
+	bh=xeNd5Z4KutAQUnG4imh+PXHxOYvDguVwzRBnlJk6ubU=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZA80IBcrL1lwQfP6PHR8WnqPKjvIeq1ZjFTc+hFh+Jv15ox07KUauk88Pjn5RpqH/OOUGh0p2S1A6uEUkEs75QlpdhbK4Q7cfR5mqv8Mmu8/5o6F9fzJatiXCxSubL3ByE3BjW5C1UtCrh+bo/U/XXOlQ1+Mo6S4Gz9zm1rgrN0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PPcUBqDT; arc=pass smtp.client-ip=74.125.225.99
+	 To:Cc:Content-Type; b=tUI4gWtws9GqLUL+/k2P+kW7FBWFiyeHjYlk9opI5e9xD64tsWZCQXfLtgBSb76FkPEUAKxHYALYXaUNHWRaDvH7UCoVIDyobpkLqAqMimrvnyx2/OJnpTHUTu9T4mZxlbl16q2zQix1LcJSKTtWFiz7HgjDEMDC9nvnbFxSeRU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Zg1veJnj; arc=pass smtp.client-ip=74.125.225.76
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PPcUBqDT"
-Received: by mail-wr2-f35.google.com with SMTP id ffacd0b85a97d-482f635552aso1628545f8f.2
-        for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 05:19:51 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790252389; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Zg1veJnj"
+Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-482f6350f91so1265885f8f.1
+        for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 05:21:30 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790252489; cv=none;
         d=google.com; s=arc-20260327;
-        b=e1AKurrugNfyHrDuc5iWXPzEZzbUt8kv/eEE3hFwh4ixA6a9qvEyFdsHN+gadvlLUp
-         oZetVj11P3wGrwHxBx+zonEEBlLzO0FheZKvP8nJorQYIX+i7uKZtjQm+lbyVqfQXO9J
-         oGdvi6QFoIlIOZ22iKvh+aZPu+8PnOtWYqB78/3VsZsabg9L90Nk4u/4i+mFmU7fkcRF
-         mIkxzIR7AXxyZNRnSzpoXISyVm9MNmlgzgozC7AxHT7NyiqXqu8+1LuUG5GCVH0FTQVo
-         y8lg6XaF2r8wUYuUJg1fmfY2iX2wkDuTcX8L29q/mZ/wA3en5HKDFCm8Z2Vm4g10C6dF
-         d/nQ==
+        b=AoQs6EOUZ4GHCM4atnQU815OHbQ0iC7OPcr1vYPlqLjfTO89EWbOpP9gVyewhokWmP
+         8HrKWfvwXYwyX2RQFTrFps4/Svc+Rp2E1A0KTwZ/WWO4LI4COPDGXCXMNtq1CixKv3Ox
+         dd3FLU0xvYjul3uhNumAhlhqiEMkZQSFOm9a92dnTbO6rEGYZ8emOn2bOlUhxfukBROI
+         1welY4gEyq5O01wApWxTuOBCBT1hA2QH/nfdwS07B2/AoQpbCqTMGV72tuNW0ETDGTqM
+         MfTsPwLcQ560nq73GUYwhMvFPGvIFGpNM8pGZBkB0/LP5suEpQrIPWZCQA71h6mDGAji
+         nXkQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=sOdRDaL5nLRUX0xNiudVZSR4Cv7Thxx5Y/qYJ603sMw=;
-        fh=JzEgLB9ur4idavkJgBHTdo2NagnvoK8cKU4o7Cfs7Us=;
-        b=ReSeE26Cw9bGFJDQ3CLp9vFQj5ebwLJS0lOZnvgTns9mZ6NC5Q2QJicHW3nvt+ahha
-         jdIEs1sL4xi6vg8vM+L9YgYIN0ZPeSCXUCxExPhDmltUFA3MelWC7OAXL6rzslq9Z6km
-         xV2zfuez5bUjoZZY7sKvFkWWxmhfoJrdpITo3IPITe0BR7HAkyTiC+F2xSzRdzN668wZ
-         6lnfqUEUc0He5tAHhg7MM0CQyE2X79ITCTNXOVrm45bMfeE9a2znPAHDwucM0Q3fkwoj
-         eJ+ioDR8nMQOzp32v8XGuSyU1Aiznl+5Ml694vzAAMtLRF17BOvJNQ1I/bjVDC+AmXHQ
-         6jsg==;
+        bh=qM5+SKQmy+vgU7/eLGaFkuMRmst60I3hKbtua8AJCxc=;
+        fh=moo5wMaDsYnPnCTeqmcDkhBxHV0zn189b7AdUTBp8p8=;
+        b=av0rtkVFq1RS7KS0+yDJETHCAOwF+VvsQSX/INx32bmhwphoKxzZ7sMVxmTZ4T7MC4
+         NWRm0FDXTH9c5ljT6IiiYXa3EdWf15xc/vDj/XxQJyUUNbM2P7w6Ksvs7AKh1ds/MQMK
+         Q3cRKStBhI9HFkNFjEVpIYsnM4MknMD/9EeyhYe+Q7dEHWc2yqdtfK+1KIhDU0jV6sJB
+         qeaSxxlqkokK52RqrlM2T1Q7Lx7SOC/w1q1YnP009fa4Q9CC5ttQh10ksGYhrr9xUVQJ
+         4R+sc/97EFXsxsPWu2Rw/a6nW0lesnjPsbDRhMo0tNM4/CYZaqS5P150Npuc5GQuzoui
+         N+wg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790252389; x=1790857189; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1790252489; x=1790857289; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=sOdRDaL5nLRUX0xNiudVZSR4Cv7Thxx5Y/qYJ603sMw=;
-        b=PPcUBqDTOHXMbQqnuToY4PpxvUAX5PNdSZD+MIImFeeX20rDeNqccQ34vtNOQIXT6g
-         pZhlGtSmi3tnU3UqqfatzdI39oYv/jOV3IoSW0AfI9cOenHrOK7q7T6YT3oNqtPonF6m
-         6QMekfIz+0pozib8s0wmry63TNp94rLMeCWavcjj25q+GUIn7s7J5pqpVPCkLK+4iCJc
-         fn8TdMKhd39RdndpsOxl35ica9Gdji9q3tCr9QaOKb4y9VSjXp9RwxJC8qJJ9WaQpqsp
-         a2gxHy3jQfEHITsmAqkhd7/G/SBELSzqSIVW1ccdxXWVmUcfdKfqU98Ka4E0KL5sReMu
-         aIww==
+        bh=qM5+SKQmy+vgU7/eLGaFkuMRmst60I3hKbtua8AJCxc=;
+        b=Zg1veJnjezsEgJvBYZtGGJ+l1w5aCC3xIToB28sSyDZ6qrclGyHkZ/BkblIybs6Oj/
+         BD2FsYhT2bQjZPGYAlSMUEO2ZmURV/2oDLLt6w81DWQhjVCb4v7QpXEkQ6o7M885RfWP
+         7ljUhNqdYxe9qSuExVXISLn1DhufuDrJnEDeaqB2umhgQ+ptjrPERmzMHPTw+tOwibIR
+         XBzoKX4HNqPmr1U5KUQySm+vmRKMN3qTTyIPSYkNouwVHhun86IqAoW+tlV50p3LxKLS
+         WM0M1FZKknIkHkwklcNTP5tAfG4XJf0pwha3/Cse40U9S1KCrJgw8/1XnUGmnJq0jiQS
+         mOZQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790252389; x=1790857189;
+        d=1e100.net; s=20260707; t=1790252489; x=1790857289;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=sOdRDaL5nLRUX0xNiudVZSR4Cv7Thxx5Y/qYJ603sMw=;
-        b=tucrmaJsghzBjG2b6Syk3nQr5RqVe4iZ1SdB4uXaAPvBrozDF3jmw/THk/QWW6adMZ
-         vMHenI/FUXjb8LnrRFz8wsitIIEEcV48WfKYRenAzVatEZxt5mH0e1Benc5eg5x2ngCH
-         0xaX/x8xgbltannmGlxfOK2bgKAgVLZH161o11nkbkOroliflSX+pzc1REge5rA5xbxR
-         9Z5FAJR1dJZk1ZAw8cftDnk86BqCf0wOX/kiAq85zO4YrFWxN1XchvS9/ed3RwZxUy0G
-         UMQhqEFVgwI2nBHEm6RRqzgSmigxHnHuBwCv21e0oRJrV/Qr/BkIl5L9P+Ip6ewFqD7b
-         g17Q==
-X-Forwarded-Encrypted: i=1; AKwUvBz9tXsOVu76EzrRUuTIL/HJOmiYFFGwDkGRyCy5TVO7cbYlA1uAN4X0ynjAjUiZJtQXS6MdCNp8i6Y=@vger.kernel.org
-X-Gm-Message-State: AFuF++nCc7T5F4GJ2gqRaOrSyP32ui05BWdNA+XqCqudrXkKn9eiZzoE
-	/tGuoEtuJbNtd4MOD1LIf5tgNS+yaK34poPOqWvtsuel2XQndzr59+T+DzcPlBTQeYQcAzZIjOD
-	2X2AtDHLPny2n/fIqqM9orxVDsftNpNs=
-X-Gm-Gg: AYBFou0mde7mj3kLQdH1eGsAou3GszotpkNLKbK84Vm/dt8Y0UqlgLNPoQISBtUy62l
-	iC+/U1v2ydR7NKoaDOTD8Ajh74c1++cdcGKL7W8M3QPsafq4pYMNB1oPitGdSSpkQT8lZqADd2E
-	9TEQNMsD2vNMKKEWnDv8bJF0eo2qWem6utFBHpLfV+jyVXBWEdlSo2T+EwZOmh8epQCHfRF6URs
-	Bf2OOGLUWdcuv97dcmlC4ZmbTJs7jxgMXdJWR+D7mFWdF0E9dcnTPj//95W3eAFHHNjJpPfPxX/
-	HMwp0ADejFOCcBq8RL5vM0ZiKhNO6wQGzkgGPPBfVooVJ723zpxnHTf9N9BRpLjGwg5/Ra8AJAe
-	HjuwOjhP5opRGJ27SjuZkHjx1P/7veWbjJgm164J5xbA=
-X-Received: by 2002:adf:e188:0:b0:486:f980:2361 with SMTP id
- ffacd0b85a97d-48872ac750cmr3107347f8f.45.1790252389207; Thu, 24 Sep 2026
- 05:19:49 -0700 (PDT)
+        bh=qM5+SKQmy+vgU7/eLGaFkuMRmst60I3hKbtua8AJCxc=;
+        b=waEosZzcQu0Mcav2uX4XosCnVxz3JIuEJMvv3F6/imcux1qtw/FzXNhkYCwGrXECLj
+         1suO23G+QM++MiggdM3U+Q9WjfPWzJRFo80Xp7FrjGZ/AJE0Vh5sFKoyvv3p7tmbxO3x
+         1P9Rx9m1POKXZgJAeZ1eEqMXdsCcqezExylM3Hb3p2y2GjMLd2jGoCKdkP27gMAWIWNY
+         1piNUa94KeuEQRDS8MZ1zM4N78i8rdfSD3fZ0qDHHgcZFVtnf1I5dUnMJMTn4hG2dB90
+         pq7oYFdU+xSy7bFIJSv/SsTkZaN0E/T3KgS+OmIdB6jCwsBdGwhWfiyqUbQCEhRz7NuL
+         M6dA==
+X-Forwarded-Encrypted: i=1; AKwUvBxBBjPCh2WsJRUqhe4/ab1G43VAbBTGHaKyPUYL7eIGPhoxq2lOJoa9UNYMIrQ1iMAJPL00Oq4q6kk=@vger.kernel.org
+X-Gm-Message-State: AFuF++mKubxhABQ8ZyZlE84SyqXBVxQrEIo+oUlSxbDVaM6eC42ZNu4e
+	MgMh3lrCNWGoObgZ4hledc13+qJm5EeMVYS8NE3wwNfQgnx9u6kQt1Pp1SXBi86bQbZ9XdntlKJ
+	aB7SQyvBGxA7TA0Djl4effKETavtKZaw=
+X-Gm-Gg: AYBFou1qG2LJVJKYdKBwLAfXjdOfV1cvpFQa0RZYNHR/Ro/d/2O4DL1wq2sxoCt1g2O
+	1pNzToaJkhZropIUj5IvWPF25DKZs1JbWXm9zfBqPFY4HzIgp4fnV+0yt6Qkr/3AAVBrHr6Au4B
+	INPu/rh0mlh2dBOA1HynBD6xqDQS+WvVCu//xfrd08zVJyRtxMoXYa2u2Ah6WUWki2+LW2Vhmbz
+	OngmBVX5Ywkgoa0XMdwewmV5gOGJuybofnI02C6EO6iCxC+yB+HjHGOf8UMADS0Wdezxv7kB9MD
+	vaZZn1WCF/cfZQ6hmnBx3med8KwFR8UccqocVd6jU6j0jQImoMjcJBiPwc2OBHPnzAd/4LVwQYO
+	wZfC7IeUmFHDdLLw5jLcJOgjVu0oprgwJ8vEIz+WbA/uhnEPOFwfcJw==
+X-Received: by 2002:a05:6000:41ee:b0:487:71a:be5e with SMTP id
+ ffacd0b85a97d-48871751e7emr3952817f8f.28.1790252488589; Thu, 24 Sep 2026
+ 05:21:28 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260922144629.586997-1-claudiu.beznea@kernel.org> <20260922144629.586997-2-claudiu.beznea@kernel.org>
-In-Reply-To: <20260922144629.586997-2-claudiu.beznea@kernel.org>
+References: <20260922144629.586997-1-claudiu.beznea@kernel.org> <20260922144629.586997-3-claudiu.beznea@kernel.org>
+In-Reply-To: <20260922144629.586997-3-claudiu.beznea@kernel.org>
 From: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Date: Thu, 24 Sep 2026 13:19:22 +0100
-X-Gm-Features: AclHuK-idVdhsB6tGLLC0zrpRkFq8euSZ0ifbTPMKw_QOO-4kHiRYVKAvxMjB_A
-Message-ID: <CA+V-a8tqoLXKX2W2-QdR+_+grpskwXpDwg32aJ72cgmbUqMG5g@mail.gmail.com>
-Subject: Re: [PATCH v4 1/8] PCI: rzg3s-host: Follow hardware manual
- clock/reset initialization order
+Date: Thu, 24 Sep 2026 13:21:01 +0100
+X-Gm-Features: AclHuK_X7dFqx5_PZTR1oHZdsVG_VtavdMBztYLyOGLheA-ut1aT-qqdUnVWM6M
+Message-ID: <CA+V-a8tnpOF8gEjMcz8+sg7c2ec-uAncRK01NWcsL4A-TM-bSQ@mail.gmail.com>
+Subject: Re: [PATCH v4 2/8] PCI: rzg3s-host: Fix runtime PM handling in the
+ NOIRQ suspend/resume phase
 To: Claudiu Beznea <claudiu.beznea@kernel.org>
 Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
 	robh@kernel.org, bhelgaas@google.com, p.zabel@pengutronix.de, 
@@ -100,16 +100,53 @@ Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 22, 2026 at 3:53=E2=80=AFPM Claudiu Beznea
+On Tue, Sep 22, 2026 at 3:57=E2=80=AFPM Claudiu Beznea
 <claudiu.beznea@kernel.org> wrote:
 >
 > From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 >
-> The RZ/G3S PCIe hardware manual specifies that the clocks must be enabled
-> before the reset signals are deasserted during initialization.
+> The runtime PM documentation states the following:
+> - During system suspend, pm_runtime_get_noresume() is called for every
+>   device right before executing the subsystem-level .prepare() callback
+>   (in device_prepare()). In addition, the PM core disables runtime PM for
+>   every device right before executing the subsystem-level .suspend_late()
+>   callback (in device_suspend_late()).
+> - During system resume, pm_runtime_enable() is called for every device
+>   right after executing the subsystem-level .resume_early() callback (in
+>   device_resume_early()), and pm_runtime_put() is called right after
+>   executing the subsystem-level .complete() callback (in
+>   device_complete()).
 >
-> Follow this sequence in the probe(), suspend(), and resume() paths to
-> match the hardware requirements and avoid potential issues.
+> The driver's .suspend_noirq() callback is invoked after .suspend_late(),
+> while .resume_noirq() is invoked before .resume_early().
+>
+> If:
+> - the device is not part of the wake-up path, and
+> - its runtime PM status is not RPM_SUSPENDED,
+> the generic power domain .suspend_noirq()/.resume_noirq() callbacks
+> (genpd_suspend_noirq()/genpd_resume_noirq()) invoke the driver's
+> .suspend_noirq()/.resume_noirq() callbacks and call
+> genpd_stop_dev()/genpd_start_dev() before and after them, respectively.
+>
+> Calling genpd_stop_dev()/genpd_start_dev() allows devices whose power is
+> controlled by generic power domains to be powered off and on during
+> system suspend and resume, even though their runtime PM usage count does
+> not reach zero.
+>
+> Since the runtime PM usage count is incremented in device_prepare() and
+> decremented in device_complete(), runtime PM operations performed from
+> the driver's .suspend_noirq()/.resume_noirq() callbacks are no-ops. The
+> actual power transitions are handled by the generic power domain
+> .suspend_noirq()/.resume_noirq() callbacks.
+>
+> Moreover, attempting to runtime resume a device while runtime PM is
+> disabled may return -EACCES. This may cause system resume to fail when
+> resuming after a failed Root Port reset, as described in a subsequent
+> patch adding hot-plug support.
+>
+> Remove the runtime PM calls from the driver's
+> .suspend_noirq()/.resume_noirq() callbacks and rely on the generic power
+> domain callbacks to power the device off and on.
 >
 > Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
 > Cc: stable@vger.kernel.org
@@ -117,13 +154,14 @@ On Tue, Sep 22, 2026 at 3:53=E2=80=AFPM Claudiu Beznea
 > ---
 >
 > Changes in v4:
-> - none
+> - simplified the comments in rzg3s_pcie_suspend_noirq()/rzg3s_pcie_resume=
+_noirq()
 >
 > Changes in v3:
 > - none, this patch is new
 >
->  drivers/pci/controller/pcie-rzg3s-host.c | 40 +++++++++++++-----------
->  1 file changed, 21 insertions(+), 19 deletions(-)
+>  drivers/pci/controller/pcie-rzg3s-host.c | 22 ++++++++++------------
+>  1 file changed, 10 insertions(+), 12 deletions(-)
 >
 Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
@@ -133,140 +171,65 @@ Prabhakar
 
 > diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/contr=
 oller/pcie-rzg3s-host.c
-> index 077cfb0834b3..e1105b1f2652 100644
+> index e1105b1f2652..0ef49bb5ab1a 100644
 > --- a/drivers/pci/controller/pcie-rzg3s-host.c
 > +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-> @@ -1888,10 +1888,6 @@ static int rzg3s_pcie_probe(struct platform_device=
- *pdev)
->         if (ret)
->                 goto sysc_signal_restore;
->
-> -       ret =3D rzg3s_pcie_power_resets_deassert(host);
-> -       if (ret)
-> -               goto sysc_signal_restore;
-> -
->         pm_runtime_enable(dev);
->
->         /*
-> @@ -1902,12 +1898,16 @@ static int rzg3s_pcie_probe(struct platform_devic=
-e *pdev)
->         if (ret)
->                 goto rpm_disable;
->
-> +       ret =3D rzg3s_pcie_power_resets_deassert(host);
-> +       if (ret)
-> +               goto rpm_put;
-> +
->         raw_spin_lock_init(&host->hw_lock);
->
->         ret =3D rzg3s_pcie_host_setup(host, rzg3s_pcie_init_irqdomain,
->                                     rzg3s_pcie_teardown_irqdomain);
->         if (ret)
-> -               goto rpm_put;
-> +               goto power_resets_assert;
->
->         bridge->sysdata =3D host;
->         bridge->ops =3D &rzg3s_pcie_root_ops;
-> @@ -1922,12 +1922,13 @@ static int rzg3s_pcie_probe(struct platform_devic=
-e *pdev)
->         clk_disable_unprepare(host->port.refclk);
->         rzg3s_pcie_teardown_irqdomain(host);
->         host->data->config_deinit(host);
-> +power_resets_assert:
-> +       reset_control_bulk_assert(host->data->num_power_resets,
-> +                                 host->power_resets);
->  rpm_put:
->         pm_runtime_put_sync(dev);
->  rpm_disable:
->         pm_runtime_disable(dev);
-> -       reset_control_bulk_assert(host->data->num_power_resets,
-> -                                 host->power_resets);
->  sysc_signal_restore:
->         /*
->          * SYSC RST_RSM_B signal need to be asserted before turning off t=
-he
-> @@ -1948,10 +1949,6 @@ static int rzg3s_pcie_suspend_noirq(struct device =
-*dev)
->         struct rzg3s_sysc *sysc =3D host->sysc;
->         int ret;
->
-> -       ret =3D pm_runtime_put_sync(dev);
-> -       if (ret)
-> -               return ret;
-> -
->         clk_disable_unprepare(port->refclk);
->
->         /* SoC-specific de-initialization */
-> @@ -1964,13 +1961,19 @@ static int rzg3s_pcie_suspend_noirq(struct device=
+> @@ -1961,19 +1961,18 @@ static int rzg3s_pcie_suspend_noirq(struct device=
  *dev)
 >         if (ret)
 >                 goto config_reinit;
 >
-> -       ret =3D rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B=
-, 0);
-> +       ret =3D pm_runtime_put_sync(dev);
->         if (ret)
->                 goto power_resets_restore;
+> -       ret =3D pm_runtime_put_sync(dev);
+> -       if (ret)
+> -               goto power_resets_restore;
+> +       /*
+> +        * Since the power domain's genpd_suspend_noirq() will disable cl=
+ocks,
+> +        * there is no need to manually invoke runtime PM API here.
+> +        */
 >
-> +       ret =3D rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B=
+>         ret =3D rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B=
 , 0);
-> +       if (ret)
-> +               goto rpm_resume;
-> +
+>         if (ret)
+> -               goto rpm_resume;
+> +               goto power_resets_restore;
+>
 >         return 0;
 >
 >         /* Restore the previous state if any error happens */
-> +rpm_resume:
-> +       pm_runtime_resume_and_get(dev);
+> -rpm_resume:
+> -       pm_runtime_resume_and_get(dev);
 >  power_resets_restore:
 >         reset_control_bulk_deassert(data->num_power_resets,
 >                                     host->power_resets);
-> @@ -1980,7 +1983,6 @@ static int rzg3s_pcie_suspend_noirq(struct device *=
-dev)
->         data->config_post_init(host);
->  refclk_restore:
->         clk_prepare_enable(port->refclk);
-> -       pm_runtime_resume_and_get(dev);
->         return ret;
->  }
->
-> @@ -2009,18 +2011,18 @@ static int rzg3s_pcie_resume_noirq(struct device =
+> @@ -2011,13 +2010,14 @@ static int rzg3s_pcie_resume_noirq(struct device =
 *dev)
 >                         goto assert_rst_rsm_b;
 >         }
 >
-> -       ret =3D rzg3s_pcie_power_resets_deassert(host);
-> +       ret =3D pm_runtime_resume_and_get(dev);
->         if (ret)
->                 goto assert_rst_rsm_b;
->
 > -       ret =3D pm_runtime_resume_and_get(dev);
-> +       ret =3D rzg3s_pcie_power_resets_deassert(host);
+> -       if (ret)
+> -               goto assert_rst_rsm_b;
+> +       /*
+> +        * Since the power domain's genpd_resume_noirq() will enable cloc=
+ks,
+> +        * there is no need to manually invoke runtime PM API here.
+> +        */
+>
+>         ret =3D rzg3s_pcie_power_resets_deassert(host);
 >         if (ret)
-> -               goto assert_power_resets;
-> +               goto rpm_put;
+> -               goto rpm_put;
+> +               goto assert_rst_rsm_b;
 >
 >         ret =3D rzg3s_pcie_host_setup(host, rzg3s_pcie_msi_hw_setup,
 >                                     rzg3s_pcie_msi_hw_teardown);
->         if (ret)
-> -               goto rpm_put;
-> +               goto assert_power_resets;
->
->         return 0;
->
-> @@ -2028,11 +2030,11 @@ static int rzg3s_pcie_resume_noirq(struct device =
-*dev)
->          * If any error happens there is no way to recover the IP. Put it=
- in the
->          * lowest possible power state.
->          */
-> -rpm_put:
-> -       pm_runtime_put_sync(dev);
+> @@ -2033,8 +2033,6 @@ static int rzg3s_pcie_resume_noirq(struct device *d=
+ev)
 >  assert_power_resets:
 >         reset_control_bulk_assert(data->num_power_resets,
 >                                   host->power_resets);
-> +rpm_put:
-> +       pm_runtime_put_sync(dev);
+> -rpm_put:
+> -       pm_runtime_put_sync(dev);
 >  assert_rst_rsm_b:
 >         rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
 >         return ret;
