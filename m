@@ -1,52 +1,38 @@
-Received: from pauli.colberg.org (pauli.colberg.org [49.12.123.176])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ACF34D794C;
-	Fri, 25 Sep 2026 20:52:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=49.12.123.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35C534F6468;
+	Fri, 25 Sep 2026 21:02:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790369522; cv=none; b=ZKGxfvlVLq3nVMk4IrMz8YS3lJxNgx+Tv2YVljO0wIm5R9/2BljpjK/35+VzHgxQKat2FLT9Vui9UukP4LAq942UxJSbGfwjUPxiunirEtD92srduzKL3beFpRTZJeUSS4qYsnNLb4NbDPE2phDzItFS5njDOQfnJdFm+Pq5Xy0=
+	t=1790370131; cv=none; b=JfujFDTfqPkBnnD6EO3DcXk/dN86UlYcsNLC0x08EL24PD/xAIbCtjLCAkpyLoFw7nwm4j9zlAfPIFXYaQgwa8WOpyM9+rS0vaDBEcewboldwKrfNzEtN3b1S9XJYsLec6Xr2xhv1eJA32pbWDJF/h+clo3wEL/Nl9uTro94ljY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790369522; c=relaxed/simple;
-	bh=baqCl2g8v0IXsGc53+FhYBoccf/DGv71eWtZ3aCrydI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lL0aZruct5KRu3IwociMDkMjk+M8BWSd0jaPB6kwnZ6YhaaRPymCgVz7hR6WUaRQDUbyQBXYcpGQ9Mekvr12dEGZVGIJJS+GV8+b/TEuqDXZ1sC0WjUs/+v6ZA5x/ZUp5ByJ0hRH5wdJITcfjza3aue++t9iuf/S/OwqnvyXAKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=colberg.org; spf=pass smtp.mailfrom=colberg.org; dkim=pass (2048-bit key) header.d=colberg.org header.i=@colberg.org header.b=kA3FAD/f; arc=none smtp.client-ip=49.12.123.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=colberg.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=colberg.org
+	s=arc-20240116; t=1790370131; c=relaxed/simple;
+	bh=1meTcNlj9NWmKXjNVxoCO1GoHjR2aMAFZtfd2GRj6ho=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=Cd8fK5/iOWXkTm0KsV7By223oWK7+vNOnmt+6pneZeHLy9zeX751g6BA9RExSEqaKzPp8KT+wzO39LRIBupa+JeSSfBd2Xe4QYNvnHfH7gFwKFvUoWbVqRQdyDhzu6QH32T8B5Fvod5kXxFVn5cTfNbt1MwLJglRLNQuwIoeGqo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QkDam5UB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=colberg.org header.i=@colberg.org header.b="kA3FAD/f"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=colberg.org;
-	s=20160215; t=1790369000;
-	bh=ZHYHOZeD0Of5TFCKmJIE2CKC6f1OnIbYO8/4uhdk89E=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=kA3FAD/fY9BP4dg4F5tO2GzAzhs3b/lEKQuTwxMEE6Jc3xT/oAtXJMo/z+Of2brwX
-	 BgjgARTOXbQl7NBHwgweTRLTaVa/nh3AMm5l3Mbk7yA1bKX03TLNToEPCDHbCWdfc1
-	 s6HDRTS7YSQo+z/Py/3gWxvKSuXJgSpLqcArD2aSiFdw+3Yn4pV2ouNzal1ZRcC4Dp
-	 N3g5titrhc2fuHXZhC9A4cXIRSwLriVb24eUFlEjoPl+8QpwZ9N2TXjK5ec/Dg/XzA
-	 40p581h6wWCOGsvADL3FCY6GmUxjRTikhtsTWM8H//S5EbSRTnGlYpCYjwWNVqOID9
-	 TOgEYmsN1VCKQ==
-Received: by pauli.colberg.org (Postfix) id E4147483A083;
-	Fri, 25 Sep 2026 16:43:19 -0400 (EDT)
-Date: Fri, 25 Sep 2026 16:43:16 -0400
-From: Peter Colberg <peter@colberg.org>
-To: Zhi Wang <zhiw@nvidia.com>
-Cc: rust-for-linux@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dakr@kernel.org, aliceryhl@google.com,
-	bhelgaas@google.com, kwilczynski@kernel.org, ojeda@kernel.org,
-	boqun@kernel.org, gary@garyguo.net, bjorn3_gh@protonmail.com,
-	lossin@kernel.org, a.hindborg@kernel.org, tmgross@umich.edu,
-	markus.probst@posteo.de, cjia@nvidia.com, smitra@nvidia.com,
-	ankita@nvidia.com, aniketa@nvidia.com, kwankhede@nvidia.com,
-	targupta@nvidia.com, kjaju@nvidia.com, alkumar@nvidia.com,
-	acourbot@nvidia.com, jhubbard@nvidia.com, zhiwang@kernel.org,
-	jgg@nvidia.com, alex@shazbot.org,
-	Peter Colberg <pcolberg@redhat.com>
-Subject: Re: [PATCH v2 1/8] rust: pci: add {enable,disable}_sriov(), to
- control SR-IOV capability
-Message-ID: <arbc5IsuFxvtJnVj@colberg.org>
-References: <20260924190556.1620886-1-zhiw@nvidia.com>
- <20260924190556.1620886-2-zhiw@nvidia.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QkDam5UB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CC491F000FF;
+	Fri, 25 Sep 2026 21:02:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790370129;
+	bh=Xxnwq2liuR/h0COSiDia8u8avPdnrITgnRI+KPDTj+Q=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=QkDam5UBe8G1n6b3cupssgLkR09k8GjbnTRnTKeXzPli2mC+EaHP11wDhlNwO9cM9
+	 3dwAaOfD3jVRE0ZO1JMGSlXMD0t/Hlt49JTlUVcqZ8c8ScJrJ/6JTiIW0YBm/agDQr
+	 BfU/OWGxFP7zotKQVtiCuwhl7bA5cpGxAp2xQir9FYbr0YXSqT4JXaEkls03yj5JWJ
+	 BnHaRFNerl9qIpOSiSXoHudJP2JqhbDbb/Ta3m/2totL8S73gwgkw3ZoAw8tT3+Ga6
+	 Ca+h5uk78MgLBOloico1WnfoEysIO6ITHxaRIO+3f2IvDIaHazODT2tdnqT8fUnVAo
+	 TJLtgjJlXCNeg==
+Date: Fri, 25 Sep 2026 16:02:08 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Odell <loganodell@google.com>
+Cc: KarimAllah Ahmed <karahmed@amazon.de>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/IOV: Make VF config reads match PCIe 7.0 spec
+Message-ID: <20260925210208.GA2098512@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -55,98 +41,140 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260924190556.1620886-2-zhiw@nvidia.com>
+In-Reply-To: <20260924225944.GA2019638@bhelgaas>
 
-Hi Zhi,
-
-On Thu, Sep 24, 2026 at 10:05:48PM +0300, Zhi Wang wrote:
-> From: Peter Colberg <pcolberg@redhat.com>
-
-Thank you for updating the series and apologies for the silence.
-
-As part of the next revision, could you please update my email address
-in all patches, which has changed (for kernel contributions only):
-
-From: Peter Colberg <peter@colberg.org>
-
-Thanks,
-Peter
-
+On Thu, Sep 24, 2026 at 05:59:44PM -0500, Bjorn Helgaas wrote:
+> On Thu, Sep 10, 2026 at 10:36:48AM -0700, Logan Odell wrote:
+> > The revision and subsystem ID of the VFs for a given PF do not all have
+> > to match per 7.5.1.1.5 and 7.5.1.2.3[1]. Read these values from the
+> > config space instead of using cached values from VF0. Class codes and
+> > subsystem vendor IDs do need to match per 7.5.1.1.6 and 7.5.1.2.3. Use
+> > the PF's value instead of reading from the VF config space. Per
+> > 7.5.1.1.9, the header type for a VF should be 0, so hardcode that
+> > assignment.
+> > 
+> > [1] https://members.pcisig.com/wg/PCI-SIG/document/previewpdf/22464
+> > 
+> > Fixes: cf0921bea66c ("PCI/IOV: Use VF0 cached config registers for other VFs")
+> > Signed-off-by: Logan Odell <loganodell@google.com>
 > 
-> Add methods to enable and disable the Single Root I/O Virtualization
-> (SR-IOV) capability for a PCI device. The wrapped C methods take care
-> of validating whether the device is a Physical Function (PF), whether
-> SR-IOV is currently disabled (or enabled), and whether the number of
-> requested VFs does not exceed the total number of supported VFs.
+> Applied to pci/iov for v7.4, thanks!
 > 
-> Synchronously disable SR-IOV in the Rust PCI remove callback before
-> unbinding the PF driver. This ensures that when a Virtual
-> Function (VF) is bound to a driver, the corresponding Physical Function
-> (PF) is bound to a driver, too, which is a prerequisite for exposing a
-> safe Rust API that allows a VF driver to obtain the PF device for a VF
-> device and subsequently access the private data of the PF driver.
-> 
-> Suggested-by: Danilo Krummrich <dakr@kernel.org>
-> Signed-off-by: Peter Colberg <pcolberg@redhat.com>
-> Signed-off-by: Zhi Wang <zhiw@nvidia.com>
-> ---
->  rust/kernel/pci.rs | 36 ++++++++++++++++++++++++++++++++++++
->  1 file changed, 36 insertions(+)
-> 
-> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-> index 3ec897709e89..e6dac919f02d 100644
-> --- a/rust/kernel/pci.rs
-> +++ b/rust/kernel/pci.rs
-> @@ -133,6 +133,10 @@ extern "C" fn remove_callback(pdev: *mut bindings::pci_dev) {
->          // INVARIANT: `pdev` is valid for the duration of `remove_callback()`.
->          let pdev = unsafe { &*pdev.cast::<Device<device::CoreInternal<'_>>>() };
->  
-> +        // Keep PF data installed until all VF remove callbacks have completed.
-> +        #[cfg(CONFIG_PCI_IOV)]
-> +        pdev.disable_sriov();
-> +
->          // SAFETY: `remove_callback` is only ever called after a successful call to
->          // `probe_callback`, hence it's guaranteed that `Device::set_drvdata()` has been called
->          // and stored a `Pin<KBox<T::Data<'_>>>`.
-> @@ -472,6 +476,38 @@ pub fn set_master(&self) {
->          // SAFETY: `self.as_raw` is guaranteed to be a pointer to a valid `struct pci_dev`.
->          unsafe { bindings::pci_set_master(self.as_raw()) };
->      }
-> +
-> +    /// Enable the Single Root I/O Virtualization (SR-IOV) capability for this device,
-> +    /// where `nr_virtfn` is number of Virtual Functions (VF) to enable.
-> +    #[cfg(CONFIG_PCI_IOV)]
-> +    pub fn enable_sriov(&self, nr_virtfn: i32) -> Result {
-> +        // SAFETY:
-> +        // `self.as_raw` returns a valid pointer to a `struct pci_dev`.
-> +        //
-> +        // `pci_enable_sriov()` checks that the enable operation is valid:
-> +        // - the device is a Physical Function (PF),
-> +        // - SR-IOV is currently disabled, and
-> +        // - `nr_virtfn` does not exceed the total number of supported VFs.
-> +        //
-> +        // The Core device context inherits from the Bound device context,
-> +        // which guarantees that the PF device is bound to a driver.
-> +        to_result(unsafe { bindings::pci_enable_sriov(self.as_raw(), nr_virtfn) })
-> +    }
-> +
-> +    /// Disable the Single Root I/O Virtualization (SR-IOV) capability for this device.
-> +    #[cfg(CONFIG_PCI_IOV)]
-> +    pub fn disable_sriov(&self) {
-> +        // SAFETY:
-> +        // `self.as_raw` returns a valid pointer to a `struct pci_dev`.
-> +        //
-> +        // `pci_disable_sriov()` checks that the disable operation is valid:
-> +        // - the device is a Physical Function (PF), and
-> +        // - SR-IOV is currently enabled.
-> +        //
-> +        // The Core device context inherits from the Bound device context,
-> +        // which guarantees that the PF device is bound to a driver.
-> +        unsafe { bindings::pci_disable_sriov(self.as_raw()) };
-> +    }
->  }
->  
->  // SAFETY: `pci::Device` is a transparent wrapper of `struct pci_dev`.
-> -- 
-> 2.53.0
-> 
+> > ---
+> >  drivers/pci/iov.c   | 25 -------------------------
+> >  drivers/pci/pci.h   |  4 ----
+> >  drivers/pci/probe.c | 14 +++++++++-----
+> >  3 files changed, 9 insertions(+), 34 deletions(-)
+> > 
+> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> > index 9d408fb8ac25..9185934a900f 100644
+> > --- a/drivers/pci/iov.c
+> > +++ b/drivers/pci/iov.c
+> > @@ -179,29 +179,6 @@ bool pci_iov_is_memory_decoding_enabled(struct pci_dev *dev)
+> >  	return cmd & PCI_SRIOV_CTRL_MSE;
+> >  }
+> >  
+> > -static void pci_read_vf_config_common(struct pci_dev *virtfn)
+> > -{
+> > -	struct pci_dev *physfn = virtfn->physfn;
+> > -
+> > -	/*
+> > -	 * Some config registers are the same across all associated VFs.
+> > -	 * Read them once from VF0 so we can skip reading them from the
+> > -	 * other VFs.
+> > -	 *
+> > -	 * PCIe r4.0, sec 9.3.4.1, technically doesn't require all VFs to
+> > -	 * have the same Revision ID and Subsystem ID, but we assume they
+> > -	 * do.
+> > -	 */
+> > -	pci_read_config_dword(virtfn, PCI_CLASS_REVISION,
+> > -			      &physfn->sriov->class);
+> > -	pci_read_config_byte(virtfn, PCI_HEADER_TYPE,
+> > -			     &physfn->sriov->hdr_type);
+> > -	pci_read_config_word(virtfn, PCI_SUBSYSTEM_VENDOR_ID,
+> > -			     &physfn->sriov->subsystem_vendor);
+> > -	pci_read_config_word(virtfn, PCI_SUBSYSTEM_ID,
+> > -			     &physfn->sriov->subsystem_device);
+> > -}
+> > -
+> >  int pci_iov_sysfs_link(struct pci_dev *dev,
+> >  		struct pci_dev *virtfn, int id)
+> >  {
+> > @@ -329,8 +306,6 @@ static struct pci_dev *pci_iov_scan_device(struct pci_dev *dev, int id,
+> >  	virtfn->physfn = pci_dev_get(dev);
+> >  	virtfn->no_command_memory = 1;
+> >  
+> > -	if (id == 0)
+> > -		pci_read_vf_config_common(virtfn);
+> >  
+> >  	rc = pci_setup_device(virtfn);
+> >  	if (rc) {
+> > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> > index ba3c3fddddc2..5b3dd1adbf35 100644
+> > --- a/drivers/pci/pci.h
+> > +++ b/drivers/pci/pci.h
+> > @@ -711,10 +711,6 @@ struct pci_sriov {
+> >  	u16		driver_max_VFs;	/* Max num VFs driver supports */
+> >  	struct pci_dev	*dev;		/* Lowest numbered PF */
+> >  	struct pci_dev	*self;		/* This PF */
+> > -	u32		class;		/* VF device */
+> > -	u8		hdr_type;	/* VF header type */
+> > -	u16		subsystem_vendor; /* VF subsystem vendor */
+> > -	u16		subsystem_device; /* VF subsystem device */
+> >  	resource_size_t	barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
+> >  	u16		vf_rebar_cap;	/* VF Resizable BAR capability offset */
+> >  	bool		drivers_autoprobe; /* Auto probing of VFs by driver */
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index 27008e2ea5af..693c07cf45ff 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -1888,10 +1888,14 @@ int pci_cfg_space_size(struct pci_dev *dev)
+> >  static u32 pci_class(struct pci_dev *dev)
+> >  {
+> >  	u32 class;
+> > +	u8 rev;
+> >  
+> >  #ifdef CONFIG_PCI_IOV
+> > -	if (dev->is_virtfn)
+> > -		return dev->physfn->sriov->class;
+> > +	if (dev->is_virtfn) {
+
+I moved the "rev" declaration here to avoid an unused variable warning
+when CONFIG_PCI_IOV is not set:
+
+https://lore.kernel.org/all/179030514298.542007.4329779510355469675@kernelci.org
+https://lore.kernel.org/all/arac0WyK8MIbFeNP@sirena.org.uk
+
+Check
+https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=iov&id=180b6d7bd729d5f07374af6fd4c3b8a7eefde0d1
+
+> > +		if (pci_read_config_byte(dev, PCI_REVISION_ID, &rev))
+> > +			rev = 0;
+> > +		return (dev->physfn->class << 8) | rev;
+> > +	}
+> >  #endif
+> >  	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class);
+> >  	return class;
+> > @@ -1901,8 +1905,8 @@ static void pci_subsystem_ids(struct pci_dev *dev, u16 *vendor, u16 *device)
+> >  {
+> >  #ifdef CONFIG_PCI_IOV
+> >  	if (dev->is_virtfn) {
+> > -		*vendor = dev->physfn->sriov->subsystem_vendor;
+> > -		*device = dev->physfn->sriov->subsystem_device;
+> > +		*vendor = dev->physfn->subsystem_vendor;
+> > +		pci_read_config_word(dev, PCI_SUBSYSTEM_ID, device);
+> >  		return;
+> >  	}
+> >  #endif
+> > @@ -1916,7 +1920,7 @@ static u8 pci_hdr_type(struct pci_dev *dev)
+> >  
+> >  #ifdef CONFIG_PCI_IOV
+> >  	if (dev->is_virtfn)
+> > -		return dev->physfn->sriov->hdr_type;
+> > +		return 0;
+> >  #endif
+> >  	pci_read_config_byte(dev, PCI_HEADER_TYPE, &hdr_type);
+> >  	return hdr_type;
+> > -- 
+> > 2.55.0.1007.g17ff1f9808-goog
+> > 
