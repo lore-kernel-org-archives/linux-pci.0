@@ -1,33 +1,50 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B7D8345729
-	for <linux-pci@vger.kernel.org>; Fri, 25 Sep 2026 16:37:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E54852931DE;
+	Fri, 25 Sep 2026 17:38:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790354252; cv=none; b=kkmier/6X4+vaZKZx47RfQM8+z9GBli4XEQW1enXCT4xdKTTKaA/f2MnlAjCRvb/lNynpKenMlxMmu7DMlDkEuUf8RjTm5/1yjy3XeXrL6S71k7M5h95ZBOPVO4FM6Y+DerGQRZrWDkiANVKrmSGwzrF1btUoVX+sBOqt/5irFk=
+	t=1790357892; cv=none; b=oX7+Jxa/MdYVH0UaqsrV5XWzZntVGLwFgkVmeHnZqRpGQVCAM9oOkOgRCDr50zn/2I+KF4/rr90ayd58w1SSIZ74cXQJuB4TIkYNyN2LJqDwmI/fgjGJ3ywnX7u36XuJYT+yzk4CE2RnllsA37DC8U6kSTJTHGSa2ykwj9NelUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790354252; c=relaxed/simple;
-	bh=ihWK1VmreFuJYVXL5ZdcBtpwuk65IAGwsVcZhBJpO4k=;
+	s=arc-20240116; t=1790357892; c=relaxed/simple;
+	bh=MlHOHPeHD7877V5XgcXRy9N2S9TD0570vOMzy0okZ0I=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Deoozs4X5U+BqeqNk9Yj86uqXODcCZxNXne5jPGQZ+MZZJZHMaBzO/4ovJQi30POgL4j5NHFdgGCPVbQH9uVLq8zibPHNcXcfpu87ga6aXUEhQXj4jWXuFVEwLezaZYk2Bp7T2ORygSKPeWdcNGRXEs+ys6o6RfauQEpD0MF6fc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QFOgO0jO; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=tZ9gBwM3XOF8Kz/qHd8WTljPR+ezV9llsDLMg/7wEiRXYBHf/UvWz0Hmi6LyoliJYfO7Afth/i4VSAZ+oL2ILKaQIPrQ7rzy37+YGhTsjlkmpiF3mNVdxipMTSxZGozdJhQ8z4Qq8gd4KObUwGlwhF2A1PuqA/tVrL9D6siMoCE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Zkkuw07U; arc=none smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QFOgO0jO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39CCE1F000FF;
-	Fri, 25 Sep 2026 16:37:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790354250;
-	bh=JiPJFXO7KWcuKUJ4hYJ0udhO+qZE7a2DXap7+1iUt/Y=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=QFOgO0jOEifngCjmSfa+cQ9at5m6WUpmOCNDtWZu5CQ8i0BfIceI3uE/aOm3gru47
-	 FNJ6sW2apMlrPSr4wW+KHCktS8hBYND/O3i7KBW9rLCBSPj1DSEyOD6F/JMvGrHPYp
-	 q7oUnL6hwhM+wi11ayrqxvsIZwlvrou7+ZgLVtPYAKVwzPwG3CBbAEdSt5+kYJ0Cwu
-	 Jh55c1p83J9/NIo+ztv4uGy0zChlI2KFVu1TN3p7rqw3HtlBM9F1CDQgEEZzdekiZn
-	 OR/pBcVdXTmJO5JOtD9MRT+3Fw0bd9okseQr2OE/0cSKb4nB6JrCDbjNB784OfJM0J
-	 YIBtx4cDBf+FA==
-Message-ID: <91faeaaf-4252-4d21-84a3-c8069b2d85cf@kernel.org>
-Date: Fri, 25 Sep 2026 18:37:25 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Zkkuw07U"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1790357890; x=1821893890;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=MlHOHPeHD7877V5XgcXRy9N2S9TD0570vOMzy0okZ0I=;
+  b=Zkkuw07UyVXqXaQLnL0s/zWCs+/w9MFjDHaj9nydvUiMlOH5Mz4EsXVm
+   ypsuum3pOZ3UvJcquP7MnNmr+O5AWLSCHd2d9xsqhizJMeuCMQtgMIEaS
+   gdR6beCVpKBmWnLayBBVPCXGEJ4h1lxEGhgLutNnWUpnifs2t3kJW0sqM
+   vmE0q18KR50Mt4WI7suJ0iW2XF2DiO1MCoJ3ov+RgCYFYRyzbsW3Ds9Oe
+   d9PfmzyhXiJf9KMbwgjjgpj0+/8kVmBvaSlbKiPhg6sTMCkDiKk0IStRX
+   WV9c4uJRWeKDVM3fSxN+JxWpbsrxyD4qhrq+K3FCx19gVVH5aY5yOU0gm
+   A==;
+X-CSE-ConnectionGUID: 5F7cBU2/QkG45+LgGkqewg==
+X-CSE-MsgGUID: yBloYVyxScy2A8cPueGq3Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11916"; a="116677935"
+X-IronPort-AV: E=Sophos;i="6.27,122,1787036400"; 
+   d="scan'208";a="116677935"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Sep 2026 10:38:09 -0700
+X-CSE-ConnectionGUID: RhN67IFCS4eHFnfQ16oaEA==
+X-CSE-MsgGUID: pG9QP/YXTO2B4n2UF3CyqQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,122,1787036400"; 
+   d="scan'208";a="270874835"
+Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.80.90]) ([10.24.80.90])
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Sep 2026 10:38:08 -0700
+Message-ID: <c5754240-1768-44a2-869c-6b159fd54907@linux.intel.com>
+Date: Fri, 25 Sep 2026 10:38:08 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -35,101 +52,100 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [pci:controller:dwc-rcar-gen4] BUILD SUCCESS WITH UNVERIFIED
- WARNING 7fc9907223d6fa1bea13f896af7d0c77b36724e0
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Marek Vasut <marek.vasut+renesas@mailbox.org>
-Cc: linux-pci@vger.kernel.org, kernel test robot <lkp@intel.com>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>
-References: <202609250740.xsN0zhYb-lkp@intel.com>
- <20260925161402.GA2056819@bhelgaas>
-From: Krzysztof Kozlowski <krzk@kernel.org>
+Subject: Re: [PATCH v3] PCI: pciehp: Fix hotplug on Catlow Lake with
+ unreliable PME status
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ "Rafael J . Wysocki" <rafael@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <ca15feda-5d63-405d-a4c4-00cbb9991fed@linux.intel.com>
+ <20260325061131.GY2275908@black.igk.intel.com>
+ <5d6d94b4-458f-473c-84df-c6fab7805dbe@linux.intel.com>
+ <20260326061200.GA3552@black.igk.intel.com>
+ <3a97fb38-70c7-4ca9-8c49-4c95e1623c91@linux.intel.com>
+ <20260327111616.GC3552@black.igk.intel.com>
+ <633cef07-2991-4ce8-b8c6-6b091deaeb0b@linux.intel.com>
+ <20260407070800.GF3552@black.igk.intel.com>
+ <bd8e9c59-afd8-48ac-ad54-64abad8bfbd1@linux.intel.com>
+ <161e11c7-af4c-4cc7-8ad5-a5901f231d54@linux.intel.com>
+ <20260925051922.GU106095@black.igk.intel.com>
 Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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
-In-Reply-To: <20260925161402.GA2056819@bhelgaas>
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <20260925051922.GU106095@black.igk.intel.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 25/09/2026 18:14, Bjorn Helgaas wrote:
-> [+to Marek, +cc Rob, Krzysztof, Conor]
+Hi Mika,
+
+On 9/24/2026 10:19 PM, Mika Westerberg wrote:
+> Hi,
 > 
-> On Fri, Sep 25, 2026 at 07:18:43AM +0800, kernel test robot wrote:
->> tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-rcar-gen4
->> branch HEAD: 7fc9907223d6fa1bea13f896af7d0c77b36724e0  PCI: rcar-gen4: Add Application/Local register reset control
+> On Thu, Sep 24, 2026 at 11:46:04AM -0700, Kuppuswamy Sathyanarayanan wrote:
+>> Hi Bjorn/Mika,
 >>
->> Unverified Warning (likely false positive, kindly check if interested):
+>> On 9/11/2026 10:01 AM, Kuppuswamy Sathyanarayanan wrote:
+>>> Hi Mika, Bjorn, Lukas, Rafael,
+>>>
 >>
->>     https://lore.kernel.org/oe-kbuild/202609230547.zdjJoKk2-lkp@intel.com
->>     https://lore.kernel.org/oe-kbuild/202609230819.0wgao12k-lkp@intel.com
+>> Gentle ping on my reply below.
 >>
->>     Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml: properties:reset-names: {'minItems': 1, 'maxItems': 2, 'items': [{'const': 'pwr'}, {'const': 'core'}]} should not be valid under {'required': ['maxItems']}
->>     Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml: properties:reset-names: {'minItems': 1, 'maxItems': 2, 'items': [{'const': 'pwr'}, {'const': 'core'}]} should not be valid under {'required': ['maxItems']}
+>> Bjorn, could you let me know which of the three directions you would like
+>> me to take for v5?
+>>
+>> Mika, could you take a look at the acpi_pci_bridge_d3() findings and let
+>> me know if they match your understanding?
 > 
-> Can you take a look at this?  I'm not much of a DT reader, but I think the
-> warning is saying that maxItems: is unnecessary when the items: list
-> already tells us the maxItems?
+> I have already forgotten what this is about ;-) Maybe some refresher would
+> help here.
 > 
->   reset-names:
->     minItems: 1
->     maxItems: 2
->     items:
->       - const: pwr
->       - const: core
-> 
-> I don't see any other PCI .yaml that uses maxItems: and items: in quite the
-> same way, but maybe we want them to match the 'reset:' property?
+> If I understand right the root port has _PR3() but no _S0W so
+> acpi_pci_bridge_d3() returns false for it? Then pci_bridge_d3_possible()
+> returns false as well and the root port stays in D0? And that should make
+> the hotplug PME work just fine but you are sayng that's not the case on
+> Catlow Lake?
 
+Sorry, my last mail was too long. It is the other way around on both
+points.
 
-The code was never tested. You need to drop maxItems, so
+For reference, I did a detailed recap of the overall problem, the D3cold 
+evaluation, and the three potential design paths for v5 in my last email here:
 
-  reset-names:
-    minItems: 1
-    items:
-      - const: pwr
-      - const: core
+https://lore.kernel.org/linux-pci/20260911170100.kuppuswamy.sathyanarayanan@intel.com/
 
-Best regards,
-Krzysztof
+To recap the ACPI behavior:
+The Root Port (\_SB.PC00.RP25) has _PS0, _PS3 and _PRW. It has no _PR0,
+no _PR3, no _S0W and no HotPlugSupportInD3.
+
+So acpi_pci_bridge_d3() returns true, not false. It never gets to the
+HotPlugSupportInD3 check because it returns early here:
+
+	if (adev) {
+		if (acpi_dev_power_state_for_wake(adev) <= ACPI_STATE_D2)
+			return false;	/* no _S0W, not taken */
+		if (acpi_device_power_manageable(adev))
+			return true;	/* _PS0 is enough, taken */
+	}
+
+pci_bridge_d3_possible() is therefore true and the port runtime suspends
+to D3hot (sysfs shows power/control is "auto" for this port). Because there
+is no _PR0 or _PR3, it never reaches D3cold.
+
+Once the port is in D3hot, pciehp has cleared HPIE and depends on PME.
+That is where Catlow breaks. The PME interrupt arrives, but PME Status in
+Root Status is never set. pcie_pme_irq() returns IRQ_NONE, the port stays
+in D3hot and the hot-add event is lost.
+
+If the port stayed in D0 as you describe, runtime hotplug would work. v2
+did that and it worked. But it costs about 10% PC6 residency, and
+pciehp_suspend() still clears HPIE on the way into s2idle.
+
+The question for you is whether this matches your reading. With no power
+resource, there is no PERST# assertion and no presence detect toggle on
+suspend. So leaving HPIE enabled should not bring back the spurious wakeup
+that eb34da60edee fixed. If you agree, that is the justification I would
+put in v5 for keeping HPIE enabled on these ports.
+
+-- 
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
+
