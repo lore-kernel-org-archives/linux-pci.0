@@ -1,115 +1,284 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013071.outbound.protection.outlook.com [40.107.201.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E53D2377A80;
-	Fri, 25 Sep 2026 06:36:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790318178; cv=none; b=ceEAPivHbo1RJFzfhkNEVt8oMS2E2jsOH2x0WkWQv62F8Hn4rTGniOMjwEFJVpTpEIUZMZl/77BNhMasFtePWj//6AfxM+cs3q6IWiQNTXOkniQ6OVW9yU/r9SCsQFTcY61Nqv957Fy4gXqGdOS6xl9evMURUNVqfNB4YMlnQSQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790318178; c=relaxed/simple;
-	bh=6NLCUhqQooEkbJUlQ1iLLeeX1wce4q6ftksGR/L1gEA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fqpowJL1P+VYWU95uSisONWNFHnnhCHcX4s5HOdeqH8FkjfaLVEowdVi9W2S20QFZGwASVOYfKtPI0wJfOICaFUb8Sfrd0YyI2fv45g14JJ7iO6fRV6HcjvqqrqrXUDUCK1O+ZMWGJhrnAQxw2LAFJ1bCmet6+gCoxGLP/CBYOM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R26EJ6z4; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F4D2449999;
+	Fri, 25 Sep 2026 08:40:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.71
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790325617; cv=fail; b=kukpzwDuXijbJFUANqAcdmvVtH5smiJNGDOT+3E5cazjiE2X3euMXaxQER3eJf44SWut8ryEZ7eotYUlNRwfJdZ90290IcwigRAAOhtoIrdD35DMJrrH4m6+FWEq/psESRgTxohec8894qWgL8uP5L+aIM7yXl07gsRB/k5He5c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790325617; c=relaxed/simple;
+	bh=7IJkILZbU8RqSQgzNT1FGYa3oszD7JALXNYIp8DZYJQ=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=DbNVg0Wmv3w60RQQPwpJZOif5AWQ6nHu3tYAWNQTgg41fYdQQ3sr3li0r4IK9zRATFrACWX4+GERsgfdC6WXJTWq6LPC3zsNitL4ssXKPItUOeCCPYDyvlHzQbEtGNulU6yakwR6SI4a1jB+QPNX9Z2fZY7QXkMgrObusHSUTxQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=3E+1xIZi; arc=fail smtp.client-ip=40.107.201.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R26EJ6z4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 336731F000FF;
-	Fri, 25 Sep 2026 06:36:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790318176;
-	bh=p8rslO5t96PYUDZI3bkR02KMKPkCIVM1vCUFIY9mUhs=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=R26EJ6z44sny9/A+y/pfZfdhChALd+J9fbCYr4DV2JfuV5lwMH5nlAyQ0eXb+IZN/
-	 qghgCsCRkji/g5HCltDIWIdBVvP/Q0PStgWEsw5tSXBJ4YxlGpFby/RnBtPAB/CCxe
-	 Vc5qb8OZsGcvhbqdqpAOTMVuk3WyvsVRCmVIKCj6NKeDzyNEgFpQNCLI/GvvOagb3j
-	 5XZrttOFlEN8CJybugQJWsqbSU/Ov0RHzuT0iCYUNwzAvWkoyt6ZHktUzzusQTvEok
-	 iD2XxIvufE4OWmdbo5BXFzBWDBlZFWyKCi9whZHrn1De7M9Htis2lYWc6TfZW8sEKF
-	 ttXmneRW5df7g==
-Message-ID: <5674102a-9460-43e6-907b-97efd8263853@kernel.org>
-Date: Fri, 25 Sep 2026 08:36:07 +0200
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="3E+1xIZi"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=AkZsXsXNIHYAZdY6mzmNT1c6/n2zqPdZZkcRAJ4PSDKOcCKq0PX16VnB5/4thk5R8QWypyR1hzS37lEwzfbkqPnVbaBFv5LNTGTkOnVrXD6BJPTOTHW70LiLb1BDPIPR8owL937K6klN+aA100rxG9j0SxZYTQreokumYfiuvQ2PDWFEdXp/Rm7kEiH+6UnT7nTSwQRByomfnTUu729z/mKC1jVuquyeVBgZnM2AhcE8jRf73bbsdI9ahs9y5wvtMgB9wzfH7WzRUbpT++oiVylmEqIDP1sM2fb9ubQwCdYzH7cl2ixMHorgKMwhAH9L5z8CiS2njUf5q6bZ9BYs3Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=TcoTRta24a9c08NNsPQTEqOBpoeJztmYb+oU8GJqxSA=;
+ b=WPX9w0yktcYiy7s7bsUVLcLS5lyohE6yA7EqoM26mqqHSihMwzAs/9JspmuOHvUWGyPzYS2OXH3fFDpSPope4jxAY4unGkjgVGzYe7Oau9kg2SQ5mJdjNK/5mMEEJrEGpykOZqzeLjrAlzOpbr0hL7QHdDtJhKWMbrj2TNdl1UWutkvJpCPiRaG5X+cIIs5peFKvZmp+s/szBRFSkfRVZuFbXo3lDsToYtnI0l8vkast9rHjfKt7pR6prndPtVwFOWzAcF06N5qDWCS2eeB7gp7cYNedjyUDBZOycLlrf3DsqydmXWKc38/JzmkErUdG39a/fgXXJHqJutIZePEwNw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=TcoTRta24a9c08NNsPQTEqOBpoeJztmYb+oU8GJqxSA=;
+ b=3E+1xIZiZnuw+YmOvdFPRHBgwXoqqfeo4jcEuqthSUvkaObUsinoVtANKEtEVUvNu+ovd6ccfSnv6rlX565Pg7i0c0prNi3ceNUDDFjbWjQdw+dnDOkNxRrKb/ckHLFJlAsIvUdFP67pVqbsqJn3hRzVWPhTFcAGI7yFe1VQai0=
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from PH7PR12MB5685.namprd12.prod.outlook.com (2603:10b6:510:13c::22)
+ by DS7PR12MB5719.namprd12.prod.outlook.com (2603:10b6:8:72::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.18; Fri, 25 Sep
+ 2026 08:40:11 +0000
+Received: from PH7PR12MB5685.namprd12.prod.outlook.com
+ ([fe80::ce69:cfae:774d:a65c]) by PH7PR12MB5685.namprd12.prod.outlook.com
+ ([fe80::ce69:cfae:774d:a65c%3]) with mapi id 15.21.0451.014; Fri, 25 Sep 2026
+ 08:40:03 +0000
+Message-ID: <654a5994-97e4-4a0d-aba9-24090b495da5@amd.com>
+Date: Fri, 25 Sep 2026 10:39:58 +0200
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 3/9] dma-buf: Provide dma_buf_set_name()
+To: Matt Evans <matt@ozlabs.org>, Alex Williamson <alex@shazbot.org>,
+ Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
+ Alex Mastro <amastro@fb.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Logan Gunthorpe <logang@deltatee.com>, Kevin Tian <kevin.tian@intel.com>,
+ Pranjal Shrivastava <praan@google.com>, Longfang Liu <liulongfang@huawei.com>
+Cc: Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
+ =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
+ Sumit Semwal <sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>,
+ Alistair Popple <apopple@nvidia.com>,
+ Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
+ linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20260924152159.49702-1-matt@ozlabs.org>
+ <20260924152159.49702-4-matt@ozlabs.org>
+Content-Language: en-US
+From: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+In-Reply-To: <20260924152159.49702-4-matt@ozlabs.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: FR4P281CA0235.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:e9::6) To PH7PR12MB5685.namprd12.prod.outlook.com
+ (2603:10b6:510:13c::22)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 1/6] dt-bindings: phy: qcom: add Nord QMP PCIe PHY
- binding
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
- Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>, Lorenzo Pieralisi
- <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Bjorn Andersson <andersson@kernel.org>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Philipp Zabel <p.zabel@pengutronix.de>
-Cc: shengchao.guo@oss.qualcomm.com, linux-arm-msm@vger.kernel.org,
- linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-References: <20260921-nord-v4-0-ed05c6e09240@oss.qualcomm.com>
- <20260921-nord-v4-1-ed05c6e09240@oss.qualcomm.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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
-In-Reply-To: <20260921-nord-v4-1-ed05c6e09240@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH7PR12MB5685:EE_|DS7PR12MB5719:EE_
+X-MS-Office365-Filtering-Correlation-Id: 690f8295-1219-47b2-1914-08df1ae09812
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|23010399003|366016|7416014|376014|10067099003|56012099006|18002099003|22082099003|4143699003|11063799006|921020;
+X-Microsoft-Antispam-Message-Info:
+	Keq27O1/3tNWNJoflLbPIxd9Vn4hLErRG7ajVqE2fdiclC9BlFbKlh5h8iBd9wBuWZ1CGliiPgVMxmvzIBXHhO/Hm8WCTaz4ifakosJ71/jVtv48nEt4FG2OETiEQzrC+XtSggzNAQot3UOCoHv2Tltj5Ah+98YhCZN7a714wtZ7llMX0gPAxX0290usEd4/kpqiGyPR8v8lZ9ppkcLX3rpW5mMA1SukSQsubQPEDE2idBTL61Bo1aBcoim/913GRzDcnU5fh95fWF4huT/VSCjiH6OOQZqvgyr2m4ZFD1VUQ35l/85yXQkwzmKLXwrhZrba1Ipj/Vhwm3tax0H+CFntoVaIWluMJefjFUa3fTG5Qs8dzm2VP1lafNcfoLe/wM1itdzkI388bek3GfFzkgh+LlayCE2LVTVWKLItk/Xrto3Xuc9KfMT7tgFgKyczbqTHbvH3LB3262pMbAU6DyMnZIBNHtWk5r1/nxOPOXVc2+c/ZLnMxIt8B4dkRXIQSXI4zFGD4pt/LH4kBikFQfgODMMWvT/GHOcKJK7G0Cpc/7rU097AbzrVURTCCbSIXIHElmksekE+Er2LUF+sqvJaIFSsFRq8hJw9kpfG0SdlEowq0CzSblazXr4v2WivfIgTO5vI3Eb6gRYQdcUpsJzUNA/v32hq07fB/VFXeco7KRYW71evB1P5dalTpVjC1c9BdoE+3dxBbAr4e/tkEg==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR12MB5685.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(366016)(7416014)(376014)(10067099003)(56012099006)(18002099003)(22082099003)(4143699003)(11063799006)(921020);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?cDNYWW5qU2YwQ0MvMTA2ZTZWZUNZYVV3VHlIb1ZaTXpXcHZGVGZyT08rOURC?=
+ =?utf-8?B?NXFuMVNjM2dNNkJPWWcySjkvVS9wY1RUdEJoK3h5WUd3S2xWRFJPekpLUGhQ?=
+ =?utf-8?B?S252eWlqZUdTeW44eXZBSkViV0FOZHBabHFYb0U2UUY0MnBnS0FIQkNvcU9r?=
+ =?utf-8?B?Smp0bENvbUVrMmlwYTNFQ1F4di9RdHVjaXFidmNFMnN6VGREd0h6TmVnc2Z4?=
+ =?utf-8?B?WVZQZk96ZTZEVU5PSWowdFJQOWFHa0RhOUg4ZWJnakNHODc1N1J6TiswZlh1?=
+ =?utf-8?B?aExNUERpMU0vSnA1aHZ6bklreXgvZEtXcTlJd0d1VmIrZ29pcFBBc3ZYQVBL?=
+ =?utf-8?B?SjBrdGgxN0lpNS9UUHgzVHhqL09YRHlhWTdiZzFGUkhDcmlsY3FuWmhCbFR0?=
+ =?utf-8?B?NDdQZ1pJMkZiRDFFdDhUZGFvZE5HRi9vaU92OGhDYWNHZ2RsR2E5MGgvMTZo?=
+ =?utf-8?B?SmE2czRDakgxZVlybDB0eUZoNGdqU0pSZG4ydVNONElRN1B6dWxRajkvbEtC?=
+ =?utf-8?B?azVlZ3JUY0ZaZkRCYUhDZmlVTzlSZmgrQVkrd05SZmk2Mm9sUStpMVVHSEwz?=
+ =?utf-8?B?NG9CazhnYkJ5QXJVVGNaNmMrbGt1Q0NpVms0aFpnRW85NUdIL2c4VzJRMTVm?=
+ =?utf-8?B?eFJxM2pSZUJOaDRmN0RnQWQ2SlRPUFdUckF6aTkyd0Q4TndBRXEvRkFZWmZQ?=
+ =?utf-8?B?T1lUcFprbWtKdzNpSmFSK2NYdnFSRlpaODlCNlg3U25kd3JQdkcyOVU4clZ5?=
+ =?utf-8?B?THU3Q0tsYXVLUFNRUlgvUnVLUmhGd1dFYzFPQzVWQUM2Y1k1Q0cwRHlwUE45?=
+ =?utf-8?B?QmJyUUZGa1JOWmpTUmVoVndEakh6cVVMemJ6bFZnOGZMbVBTUm1IMFQ3SUY5?=
+ =?utf-8?B?bkhlQjdCemUyTVhjb25vNkozWDlOak5NaTJkeHRSRnhJYlc5eUQ0UnA4VWti?=
+ =?utf-8?B?cS9WWEtZUDF5V2JIRStYd2hZQ09aQ2tZZ2ZzQXNhY1FQWElPam1ubTNuU09N?=
+ =?utf-8?B?MFU5NXNCeDNqWWZnWktrRHJqT08wQlcvVlRSYzVwQUZNeTgvYXJ1Yk1FVCtm?=
+ =?utf-8?B?cmtsRGswdzQvQ3lETHVMeDJ6U0M3NmZnZVkrMHZsdG9SOW9ZSUErbmNsNHhs?=
+ =?utf-8?B?VitKc3Zia2s3TFdlTFdLcDZHVEEzVTV0TVRUUlp4OXVEUXppaXljckh4a3pm?=
+ =?utf-8?B?anZjZ05GVlp4dXBEaFVncDhqbURoNmVnWTBLNFNYNE81YUZhRmlRdk9VaGlC?=
+ =?utf-8?B?RDFSQWRYcm5kTlE0eEVHVTlVa3JIVXpMUGN4ZW5YdzNaZmdxZnhGRGRYQy9K?=
+ =?utf-8?B?UzVVMXZXelBQVXE0bGJPREd1UzUwaEpIY1VIVTM4VVZFd3ExQ3d5bmdqQWl1?=
+ =?utf-8?B?Rkh1VUVMcklwbGRQR3JzcEErdmorODQ1WTMrMDFsN1NsWmEybDZNcHZvZFZL?=
+ =?utf-8?B?SFpBVi9qVHpDQzExZmY1R3FqeUhjdDdyWStBcDgrZlNPU0FQNFhGUEllaXZN?=
+ =?utf-8?B?aEU2YXI5MXRYKzcvV2lUZnRsa0N4VHBpMG5OUy9qT1MvLzQwYnFtS29tanh1?=
+ =?utf-8?B?UWJyTitma1Npd1hrL3pjaG1QTXUyMjBEeGNYcWc1UmJqUEdoaEtpcUhPMU1Q?=
+ =?utf-8?B?UEErcnNyNmR5aFZvZHp3aXE4M3BIUElBdkhHQ0ZYdlNUa3QvRnRZNzNkaGtL?=
+ =?utf-8?B?S2NVcWVtRVhGY1BzTnp5UVJ4T0RHOU9oRTY4WjBSZDU4UHhYK2J2TVBzVmlH?=
+ =?utf-8?B?bVBKMmw2YzN1aENjRmUzRDNTL2JpdVU4ZC82eldqa05HelJMVm4xU24xQzRZ?=
+ =?utf-8?B?emRmNEhhR01YbDJkeDY0WktXTU5YTWRGdCtpOWE4K2xXS0VXeTRlNmhlU2JY?=
+ =?utf-8?B?Y0k1STZrUytic0JMQTMraTNsSWJSRjAxeXZIWkdOZkhJdWpCTzFrN2haZkM3?=
+ =?utf-8?B?SENyQW9sT0xrdTU5eHJibmZBZEFpSjBDenJHVTVKNVZkRlUyd0o0MmhnSkp4?=
+ =?utf-8?B?N0tCeU9HQUk0d3pzQSs1VFZZdzVpRXh6TTN5V2d3d2dyN2hwTjUybzNsNkFh?=
+ =?utf-8?B?Ty8vNGpwb21MNkpVeVhpS25vOW93WnIwUlB5eEdjVjBZOWF2eS9oQnhSeXo0?=
+ =?utf-8?B?RzVyejBVZXI0MjE0VGcwR0ZDekRjTFlJT3daZTYrQ2JpSVVtK3dkYmFUNGda?=
+ =?utf-8?B?ZlhXZEFmWG1KMm4rTWQyUU00Nk5vUFQrR2UxUXA0REZIOTg1WUZzRVdETlJQ?=
+ =?utf-8?B?M2pCUTFUUVhkQTBTbFZVUS8zcnVYRFpWMW1TdjY0TEFzSTVvUlJOekdQTnRG?=
+ =?utf-8?Q?1hHBiLDvZZVsJ4v9KL?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 690f8295-1219-47b2-1914-08df1ae09812
+X-MS-Exchange-CrossTenant-AuthSource: PH7PR12MB5685.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Sep 2026 08:40:03.8128
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: J3vy778GwPHMJE45PTZUeJAeCx6ZegQsA6xcd59OdAQA1rvOe/bDtuFRs39yzrrT
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB5719
 
-On 21/09/2026 07:37, Krishna Chaitanya Chundru wrote:
-> Document the PCIe PHY found on the Qualcomm Nord platform.
+
+
+On 9/24/26 17:21, Matt Evans wrote:
+> Allow exporters to set the name of buffers, during export or for
+> subsequent updates.  This is useful to express buffer-specific debug
+> information, indicate state particular to the exporter's usage, etc.
+> Only exporters and userspace are expected to set names; it isn't
+> sensible for importers to do it.
 > 
-> Nord has a 32.0 GT/s capable QMP PCIe PHY that can operate in multiple
-> lane configurations using four PHY segments (A/B/C/D). The active
-> topology is selected by firmware through a TCSR configuration
-> register and may be configured as x16, x8+x8, x8+x4+x4, or
-> x8+x4+x2+x2.
+> Originally, the static dma_buf_set_name() was used for
+> DMA_BUF_SET_NAME ioctls, taking a __user string parameter.  Export
+> this function as a generic set-name helper, taking a kernel-allocated
+> string.  The SET_NAME ioctls now locally duplicate the __user string,
+> and use the new function to set the name.
+> 
+> Signed-off-by: Matt Evans <matt@ozlabs.org>
+> ---
+>  drivers/dma-buf/dma-buf.c | 78 ++++++++++++++++++++++++---------------
+>  include/linux/dma-buf.h   |  2 +
+>  2 files changed, 50 insertions(+), 30 deletions(-)
+> 
+> diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
+> index 4c9add51f9ef..e4ec504e9288 100644
+> --- a/drivers/dma-buf/dma-buf.c
+> +++ b/drivers/dma-buf/dma-buf.c
+> @@ -404,34 +404,6 @@ static __poll_t dma_buf_poll(struct file *file, poll_table *poll)
+>  	return events;
+>  }
+>  
+> -/**
+> - * dma_buf_set_name - Set a name to a specific dma_buf to track the usage.
+> - * It could support changing the name of the dma-buf if the same
+> - * piece of memory is used for multiple purpose between different devices.
+> - *
+> - * @dmabuf: [in]     dmabuf buffer that will be renamed.
+> - * @buf:    [in]     A piece of userspace memory that contains the name of
+> - *                   the dma-buf.
+> - *
+> - * Returns 0 on success. If the dma-buf buffer is already attached to
+> - * devices, return -EBUSY.
+> - *
+> - */
+> -static long dma_buf_set_name(struct dma_buf *dmabuf, const char __user *buf)
+> -{
+> -	char *name = strndup_user(buf, DMA_BUF_NAME_LEN);
+> -
+> -	if (IS_ERR(name))
+> -		return PTR_ERR(name);
+> -
+> -	spin_lock(&dmabuf->name_lock);
+> -	kfree(dmabuf->name);
+> -	dmabuf->name = name;
+> -	spin_unlock(&dmabuf->name_lock);
+> -
+> -	return 0;
+> -}
+> -
+>  #if IS_ENABLED(CONFIG_SYNC_FILE)
+>  static long dma_buf_export_sync_file(struct dma_buf *dmabuf,
+>  				     void __user *user_data)
+> @@ -577,8 +549,19 @@ static long dma_buf_ioctl(struct file *file,
+>  		return ret;
+>  
+>  	case DMA_BUF_SET_NAME_A:
+> -	case DMA_BUF_SET_NAME_B:
+> -		return dma_buf_set_name(dmabuf, (const char __user *)arg);
+> +	case DMA_BUF_SET_NAME_B: {
+> +		char *name = strndup_user((const char __user *)arg,
+> +					  DMA_BUF_NAME_LEN);
+> +
+> +		if (IS_ERR(name))
+> +			return PTR_ERR(name);
+> +
+> +		ret = dma_buf_set_name(dmabuf, name);
+> +		if (ret)
+> +			kfree(name);
+> +
+> +		return ret;
+> +	}
+>  
+>  #if IS_ENABLED(CONFIG_SYNC_FILE)
+>  	case DMA_BUF_IOCTL_EXPORT_SYNC_FILE:
+> @@ -874,6 +857,41 @@ void dma_buf_put(struct dma_buf *dmabuf)
+>  }
+>  EXPORT_SYMBOL_NS_GPL(dma_buf_put, "DMA_BUF");
+>  
+> +/**
+> + * dma_buf_set_name - Set a dmabuf's name
+> + * Intended to be used by the exporter to set a name for debug
+> + * purposes.  This can also change an existing name if the same piece
+> + * of memory is used for multiple purposes over time.
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Add something like "Importers should *NOT* use this function to overwrite the name." here and add some note under "DOC: locking convention" how this function is supposed to be called.
 
-Best regards,
-Krzysztof
+Apart from that looks good to me,
+Christian.
+
+> + *
+> + * @dmabuf: [in]     dmabuf buffer that will be renamed.
+> + * @name:   [in]     The name of the dma-buf, allocated with kmalloc() or
+> + *                   similar.  This takes ownership of the allocation
+> + *                   on success, which will be kfree()d when the
+> + *                   dmabuf is released or a new name assigned.
+> + *
+> + * Returns 0 on success, -EINVAL if the name is NULL, or -E2BIG if the
+> + * name (including terminator) exceeds DMA_BUF_NAME_LEN.
+> + */
+> +int dma_buf_set_name(struct dma_buf *dmabuf, char *name)
+> +{
+> +	if (!name)
+> +		return -EINVAL;
+> +
+> +	/* dmabuffs_dname() won't use the string if the length
+> +	 * (including terminator) exceeds DMA_BUF_NAME_LEN:
+> +	 */
+> +	if (strlen(name) >= DMA_BUF_NAME_LEN)
+> +		return -E2BIG;
+> +
+> +	spin_lock(&dmabuf->name_lock);
+> +	kfree(dmabuf->name);
+> +	dmabuf->name = name;
+> +	spin_unlock(&dmabuf->name_lock);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_NS_GPL(dma_buf_set_name, "DMA_BUF");
+> +
+>  static int dma_buf_wrap_sg_table(struct sg_table **sg_table)
+>  {
+>  	struct scatterlist *to_sg, *from_sg;
+> diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
+> index d15b2b31d3c9..952a2c196ad4 100644
+> --- a/include/linux/dma-buf.h
+> +++ b/include/linux/dma-buf.h
+> @@ -571,6 +571,8 @@ void dma_buf_fd_install(struct dma_buf *dmabuf, int fd);
+>  struct dma_buf *dma_buf_get(int fd);
+>  void dma_buf_put(struct dma_buf *dmabuf);
+>  
+> +int dma_buf_set_name(struct dma_buf *dmabuf, char *name);
+> +
+>  struct sg_table *dma_buf_map_attachment(struct dma_buf_attachment *,
+>  					enum dma_data_direction);
+>  void dma_buf_unmap_attachment(struct dma_buf_attachment *, struct sg_table *,
+
