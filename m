@@ -1,99 +1,67 @@
-Received: from relay.virtuozzo.com (relay.virtuozzo.com [130.117.225.111])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B8534A1DF6;
-	Fri, 25 Sep 2026 13:31:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=130.117.225.111
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14CB43A1E8C
+	for <linux-pci@vger.kernel.org>; Fri, 25 Sep 2026 13:36:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790343113; cv=none; b=mrBVUWuOE/e3fQFAwXPc2RWvL8aIqBCKVUN/bRYZOErt5s0ytpzY3MX8gGNYp5U1R/EhGpYvyX5wNUnkkCQt12h/byZwYtqAY47YwnZQrc6GcHI9f89bYoegbk0lzihON1NfP7nqG91moc5ObDMNMaNm3SzfTQsF6mX2yjMM3kI=
+	t=1790343405; cv=none; b=CmQYBtdG8b34I7+1H5VZTLf2MoaGTyxiPmXamZTZS0CLpX6m25cBe5XOZyr95E05EHsaFn8nau0fJL/wO3iWz7LhZbVpiWuOKL/ULWKmJLItbMznvUhopTEdLfEASJILfe6Gwr8sF30DPeM6/SbptOkpzG/97FDg2E81wwLeU7A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790343113; c=relaxed/simple;
-	bh=1PZmj32CRTBPqeXsEu/4paBeqkMGtbVNIlBpO3t1akw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kJXqTj7ADZdRgXSYku3vaWtb3u02lt/B9rB7Sf3FFpKQZmhRKqnnUb08QhfvAQLQY9IxfoLI3lVeTjSYN+YDJq7aSIAmQaVGYylERG3LRXQbKeDA/n4tnDVht7mg1CqGQMjq+lYXYNQQPHW/IFCYlsx/rmVAVp8oaxkhnjp4KrU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=virtuozzo.com; spf=pass smtp.mailfrom=virtuozzo.com; dkim=pass (2048-bit key) header.d=virtuozzo.com header.i=@virtuozzo.com header.b=JBAOeDIc; arc=none smtp.client-ip=130.117.225.111
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=virtuozzo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=virtuozzo.com
+	s=arc-20240116; t=1790343405; c=relaxed/simple;
+	bh=S1LRFCWaMYr6F3Ct7FaTSIQggp4dPJ7T6QlE5UsYWl0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Kn1cc+fF+FVXC351pkf2FV1qED1JxN4CewXp2PhTTZx/6vIzzU9fbjHt3ALBzJik/Tf5r8ofb+iLHv4NBul6lwn1o47++AIHpWzA2fXAOM7/52q3ScyO6NiA9+51+VKIT93lQI1Ef45A9Dmr+KmEqBF6mexRQYqG7HxNyYSmjw4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YWkA3JZd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=virtuozzo.com header.i=@virtuozzo.com header.b="JBAOeDIc"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=virtuozzo.com; s=relay; h=MIME-Version:Message-ID:Date:Subject:From:
-	Content-Type; bh=Q4/9ic0XNq6fQcZmyLRi1JoQNXeypJEroEwy7jfonHY=; b=JBAOeDIck5ah
-	VfgkoiiGEovtouCDdjOs7p6Kp9K1xONJ35y/GoIwhj8QSqAMN5lumXzoGFsCii9FCkmHygCSo0nT3
-	V1SCBDQOSppdkGFwM2o957+l9gq5nLz/hNXJ5bsG/Y1WcyTrjlWcFYg8wgetSMwYHJ1bTF/tTDE59
-	7eznKo1248cbUx/ez1ZYvnSbLNVBSswdX24Q3mNLmhJwXqxFGnKPmNpmjT0INcU3qe9rvZxA71e8j
-	2cBFOuUPXVW1YY9x9KYs68o/VEYQOna22XC+GtCWFpTQn3aFb5+27xK4IE2sZjlSE8V62n9VFDnSE
-	B/vKlpr8Zyx9qSDvL8ZW8g==;
-Received: from ch-vpn.virtuozzo.com ([130.117.225.6] helo=LekKit-T14)
-	by relay.virtuozzo.com with esmtp (Exim 4.96)
-	(envelope-from <eva.kurchatova@virtuozzo.com>)
-	id 1xA5yn-008Orv-1u;
-	Fri, 25 Sep 2026 15:31:45 +0200
-From: Eva Kurchatova <eva.kurchatova@virtuozzo.com>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Frank Li <Frank.Li@kernel.org>,
-	Shuah Khan <shuah@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	Eva Kurchatova <eva.kurchatova@virtuozzo.com>,
-	linux-pci@vger.kernel.org,
-	linux-kselftest@vger.kernel.org
-Subject: [PATCH] selftests: pci_endpoint: skip when the test device is absent
-Date: Fri, 25 Sep 2026 16:31:32 +0300
-Message-ID: <20260925133141.3634476-1-eva.kurchatova@virtuozzo.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YWkA3JZd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FA931F000FF;
+	Fri, 25 Sep 2026 13:36:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790343403;
+	bh=S1LRFCWaMYr6F3Ct7FaTSIQggp4dPJ7T6QlE5UsYWl0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=YWkA3JZdK2TZUkzPq8q5uu6kyzfyK08iESvAbKZsZErLCUZke2urUfvclvzjG8meL
+	 hkE43rX2qLBtdZ0SHeANoyozpx0M8MklgOlVwuQKhGSexa6s/jptYlhz5s2iJE5lg1
+	 kZl5eKHF6Js5y0Xwji9hIVLm1XPdN4IFqV7vA4z3almLRVwoud7KAETGw/kZ1WPogm
+	 BcFPi/KRlCQJ9qzapZX2F86fTtw/4B3wY4RThoIS6LrAcaL2QdUQ/Cr0qgLERAnX4M
+	 Fv6BaO04HKpAiOAjyaNoMhFxL9n/U4Eu5CAF55FW3+CoYdDH+Imed3d28XYlo8It19
+	 QYNC+qvfOeQ+A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] selftests: pci_endpoint: skip when the test device is
+ absent
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Eva Kurchatova" <eva.kurchatova@virtuozzo.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260925133141.3634476-1-eva.kurchatova@virtuozzo.com>
+References: <20260925133141.3634476-1-eva.kurchatova@virtuozzo.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 25 Sep 2026 13:36:43 +0000
+Message-Id: <20260925133643.7FA931F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Every fixture opens /dev/pci-endpoint-test.0 and asserts on the result,
-so on a machine that has no PCI endpoint test device all 17 cases fail
-in fixture setup rather than reporting that the hardware is not there.
+> Every fixture opens /dev/pci-endpoint-test.0 and asserts on the result,
+> so on a machine that has no PCI endpoint test device all 17 cases fail
+> in fixture setup rather than reporting that the hardware is not there.
+>=20
+> Check for the device once before handing over to the harness. Doing it
+> there rather than in each of the four fixtures keeps it to a single skip,
+> and leaves the fixtures to fail as before on an open that goes wrong for
+> any other reason, which is not something to skip over.
+>=20
+> The harness parses its own arguments inside test_harness_run(), so only
+> the plain invocation, the one kselftest makes, turns into a skip, -l and
+> -h keep working on a machine without the device.
+>=20
+> Signed-off-by: Eva Kurchatova <eva.kurchatova@virtuozzo.com>
 
-Check for the device once before handing over to the harness. Doing it
-there rather than in each of the four fixtures keeps it to a single skip,
-and leaves the fixtures to fail as before on an open that goes wrong for
-any other reason, which is not something to skip over.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-The harness parses its own arguments inside test_harness_run(), so only
-the plain invocation, the one kselftest makes, turns into a skip, -l and
--h keep working on a machine without the device.
-
-Signed-off-by: Eva Kurchatova <eva.kurchatova@virtuozzo.com>
----
- .../selftests/pci_endpoint/pci_endpoint_test.c | 18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
-
-diff --git a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-index 588d75c97ad1..efec4a84aa15 100644
---- a/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-+++ b/tools/testing/selftests/pci_endpoint/pci_endpoint_test.c
-@@ -286,4 +286,20 @@ TEST_F(pcie_ep_doorbell, DOORBELL_TEST)
- 		SKIP(return, "Doorbell test is not supported");
- 	EXPECT_FALSE(ret) TH_LOG("Test failed for Doorbell\n");
- }
--TEST_HARNESS_MAIN
-+
-+static bool test_device_available(void)
-+{
-+	return access(test_device, F_OK) == 0;
-+}
-+
-+int main(int argc, char **argv)
-+{
-+	/*
-+	 * Only the plain invocation, which is the one kselftest uses, turns
-+	 * into a skip, so that -l and -h keep working without the hardware.
-+	 */
-+	if (argc == 1 && !test_device_available())
-+		ksft_exit_skip("no PCI endpoint test device %s\n", test_device);
-+
-+	return test_harness_run(argc, argv);
-+}
--- 
-2.55.0
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260925133141.3634=
+476-1-eva.kurchatova@virtuozzo.com?part=3D1
 
