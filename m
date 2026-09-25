@@ -1,91 +1,102 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 116E51DDA18;
-	Fri, 25 Sep 2026 05:09:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A75D367291;
+	Fri, 25 Sep 2026 05:19:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790312982; cv=none; b=agfaB/157351jZq5dSDiFR6Lraqup1d69hCaUR3nOm4IzadlTU1KjizyljCxoJOImQPjVdzM961La9/jSrRr1nQ65XGMB2PFCmsuqKVjUhbz1ouTbfcKHqyy7zY0gD3RGGt1fS2aiBEpAIh/nCW1WYoHbpOWpuhjVwsPTG9I93M=
+	t=1790313567; cv=none; b=Qnkq0LbqTOKmdbIltuMV5Ld6YaadWpFBtmy1wyAE01BK+MDRxkPlGNsUm7TibTO5Q9ko+7NnkQAnfwauwTvT9EG55EnVaQRkqe8yoelCeP0e6h87BgfxPOM5Yh5fHAh4mBqCpUyrb1xaGVU+NAJGu1NupQZduKuoh4z29jkPg0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790312982; c=relaxed/simple;
-	bh=wEwPOc2WQyyy/2t/P4dqWVW+sEpoy7tMrAbctEy9e5M=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ndKD8Y2mf/QU3G70MX9eA4BgtO6a6HJFDqIv5VTLxQF/5p+tFXj3st37mWUZ/12if+0yIm6kDqvTe2GgXtqHmWL3PCQv7AUzjxvMb4o9SWW3SuoTmHvOga3oeA7nL4ewrDzLMrJ0TWQmLQJH77GdaOX+aMwGyABhDzkLqkbqzqc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=SjaCNnKr; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=m1o7XIhn; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1790313567; c=relaxed/simple;
+	bh=QvipE+nmmvIqL3oEgR09getShPzEEdCiYqzdEJrvai4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=s/Eot3zvKGJaxXJRQliHILNCA0k4FbthqKoMT6fJlfrx0MFxomtzvIG9o0XqG7oX4fulbH6Zpkv4rLam43I/E95+neWVfaDqHMZ1KRBPNdm5esYBOY3f9OHBL92rA70z+u+76ivmQofexi0im3yW9cb3zvM/13aBpwSkz8TyZGM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iuJgaEdK; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="SjaCNnKr";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="m1o7XIhn"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4hrdzc0wBVz8v2B;
-	Fri, 25 Sep 2026 07:09:32 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1790312972;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=oKsKlVZl8uuQQnOAtnTUFnRYg7AX745LF+QJJaTDUXo=;
-	b=SjaCNnKrXGGiqKcSR4se9BQjZG9Wt4pQZGUD7X3xeYPGwGaAxheKCJIynR7eAdzvCJ1FkR
-	DJuCDR5LKpCujIvwHeffkoPPkeTN2AQHYjTKp4TjsKgbGpmD/d27qc/xoBcY2rHur2+sCO
-	e3935Z1zMM31biNB7rZg9VQBzidOZs97gfYPaiE9CQ7NAVKmKkrN0OWqSLE3mqTkyPSsvf
-	ZmiKPvOLEZ7fQlcaSBBXPaKtNr0LyLYstM27kVHNjwsV28UewMAPQAcltWfaqRieDoGNca
-	QoG5FntjVON/OaHTJHstanz8oF10tEHGEl6Nl9MGW3g7fxlGVrJuvCuZIypLUg==
-Authentication-Results: outgoing_mbo_mout;
-	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=m1o7XIhn;
-	spf=pass (outgoing_mbo_mout: domain of marek.vasut@mailbox.org designates 2001:67c:2050:b231:465::102 as permitted sender) smtp.mailfrom=marek.vasut@mailbox.org
-Message-ID: <ff358193-8c64-4200-aa9e-fe6619dc8948@mailbox.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1790312970;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=oKsKlVZl8uuQQnOAtnTUFnRYg7AX745LF+QJJaTDUXo=;
-	b=m1o7XIhnZb+Vp/uiU6FDd52l3TU+9RaTmhY4ZvsQ4p36Bxb4xvkE02HjZtjcqn+Ru79gRc
-	pZZmiuWEbFoIXN3O9sAwqrf0zWN3j6jbjJlgWAlF5FF/oUQhT+UoOT3jG/ubHYyXFqiSNq
-	ZPGjREbZ/iBMnflTXKckl8anmD8ViKUUUVPcMwNp5aOpXZ1vu4sXVdYnODmRuSYZrMyyvS
-	ehdgeqiWFyIzgdbKSw10uCNsLTRM0Y9FKMcH5jUU7LZZdTeCVFnEoFjIhjgUzZcGe8f/oy
-	fb47M0brXDmZD3a4m3KxOG47rmEabuI1HtNNcr4156YM560LYNEbAAa/rKPcXQ==
-Date: Fri, 25 Sep 2026 06:31:43 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iuJgaEdK"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1790313566; x=1821849566;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=QvipE+nmmvIqL3oEgR09getShPzEEdCiYqzdEJrvai4=;
+  b=iuJgaEdK64ybMb4LFsoPm7ySy5dPXusr8XI3T+jbBaYZB0xmz/KVgzif
+   6JKxdBx1z7NERYU6A+4RxA1wpNXIfrMNnhEagWQgdXDy16vKvXosAnlD1
+   ZpkTTw0WuVRk75uDKOjMwNbyoVKULF6/cAQ/GQja3+hZ8D6g4Bn5YrQ26
+   LlcrEBcbAgrtD/Zij3kOu66iXZNNLI0MhOdw0hBNHu/sO1jdHwri5UOwv
+   BXkyXPGhSeSiSlBVNJ9PtkIBHCqeoTaQVbAzaspE8kpbD0X6IuqFf7D/L
+   5eekI66I5rStWUGPHDT2mKVGt1ibiHtW7QRCu4yD7siu1+wsiTCGkRiFi
+   g==;
+X-CSE-ConnectionGUID: jwCNswsoT8+sXgpW/ywu+A==
+X-CSE-MsgGUID: 6ETbksimRcGg7bNecynjHA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11915"; a="90962047"
+X-IronPort-AV: E=Sophos;i="6.27,121,1787036400"; 
+   d="scan'208";a="90962047"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2026 22:19:25 -0700
+X-CSE-ConnectionGUID: nMbAXwXoSAyFezTuicmMVQ==
+X-CSE-MsgGUID: /GSdbPWCSH+S3KPzRuJFSQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,121,1787036400"; 
+   d="scan'208";a="282322635"
+Received: from black.igk.intel.com ([10.91.253.5])
+  by fmviesa005.fm.intel.com with ESMTP; 24 Sep 2026 22:19:23 -0700
+Received: by black.igk.intel.com (Postfix, from userid 1001)
+	id 4C76199; Fri, 25 Sep 2026 07:19:22 +0200 (CEST)
+Date: Fri, 25 Sep 2026 07:19:22 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: pciehp: Fix hotplug on Catlow Lake with
+ unreliable PME status
+Message-ID: <20260925051922.GU106095@black.igk.intel.com>
+References: <ca15feda-5d63-405d-a4c4-00cbb9991fed@linux.intel.com>
+ <20260325061131.GY2275908@black.igk.intel.com>
+ <5d6d94b4-458f-473c-84df-c6fab7805dbe@linux.intel.com>
+ <20260326061200.GA3552@black.igk.intel.com>
+ <3a97fb38-70c7-4ca9-8c49-4c95e1623c91@linux.intel.com>
+ <20260327111616.GC3552@black.igk.intel.com>
+ <633cef07-2991-4ce8-b8c6-6b091deaeb0b@linux.intel.com>
+ <20260407070800.GF3552@black.igk.intel.com>
+ <bd8e9c59-afd8-48ac-ad54-64abad8bfbd1@linux.intel.com>
+ <161e11c7-af4c-4cc7-8ad5-a5901f231d54@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] PCI: rcar: Release temporary device tree node
- reference
-To: Yuho Choi <oss.patchbox@gmail.com>,
- Marek Vasut <marek.vasut+renesas@mailbox.org>,
- Manivannan Sadhasivam <mani@kernel.org>,
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260924010418.726980-1-oss.patchbox@gmail.com>
-Content-Language: en-US
-From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <20260924010418.726980-1-oss.patchbox@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MBO-RS-ID: af84b3c26f185d3a6bb
-X-MBO-RS-META: xwooipfiedu7iqqtgymzp9ashnna8ept
-X-Rspamd-Queue-Id: 4hrdzc0wBVz8v2B
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <161e11c7-af4c-4cc7-8ad5-a5901f231d54@linux.intel.com>
 
-On 9/24/26 3:04 AM, Yuho Choi wrote:
-> of_find_matching_node() returns a referenced node even when it is used
-> only as a boolean test. Drop the reference right after the match check.
+Hi,
+
+On Thu, Sep 24, 2026 at 11:46:04AM -0700, Kuppuswamy Sathyanarayanan wrote:
+> Hi Bjorn/Mika,
 > 
-> Fixes: a115b1bd3af0 ("PCI: rcar: Add L1 link state fix into data abort hook")
-> Signed-off-by: Yuho Choi <oss.patchbox@gmail.com>
-Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+> On 9/11/2026 10:01 AM, Kuppuswamy Sathyanarayanan wrote:
+> > Hi Mika, Bjorn, Lukas, Rafael,
+> > 
+> 
+> Gentle ping on my reply below.
+> 
+> Bjorn, could you let me know which of the three directions you would like
+> me to take for v5?
+> 
+> Mika, could you take a look at the acpi_pci_bridge_d3() findings and let
+> me know if they match your understanding?
 
-Thank you !
+I have already forgotten what this is about ;-) Maybe some refresher would
+help here.
+
+If I understand right the root port has _PR3() but no _S0W so
+acpi_pci_bridge_d3() returns false for it? Then pci_bridge_d3_possible()
+returns false as well and the root port stays in D0? And that should make
+the hotplug PME work just fine but you are sayng that's not the case on
+Catlow Lake?
