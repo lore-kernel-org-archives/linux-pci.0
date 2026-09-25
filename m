@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F9F23F1AB7;
-	Fri, 25 Sep 2026 06:28:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E53D2377A80;
+	Fri, 25 Sep 2026 06:36:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790317733; cv=none; b=h4DQe/I7DTNNXl9PGr/NQzdfjlSCrxYeIacQmwYvcIR85cOiI4z04/ltjHdLCYOw+MkxPYhfXtYZSrw807+c5UWHth8Upzd/G89Tau8KzrDb+MCEvGJ0QFP6/KwifO66Jxqr44CZ4SKFt3OFi6d32Sd9L85ZK++r0I8VscTPCzA=
+	t=1790318178; cv=none; b=ceEAPivHbo1RJFzfhkNEVt8oMS2E2jsOH2x0WkWQv62F8Hn4rTGniOMjwEFJVpTpEIUZMZl/77BNhMasFtePWj//6AfxM+cs3q6IWiQNTXOkniQ6OVW9yU/r9SCsQFTcY61Nqv957Fy4gXqGdOS6xl9evMURUNVqfNB4YMlnQSQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790317733; c=relaxed/simple;
-	bh=GgGYAhAKf4iLWFMmTXFcapoTzJU8y1vLSxmdqD5JJ68=;
+	s=arc-20240116; t=1790318178; c=relaxed/simple;
+	bh=6NLCUhqQooEkbJUlQ1iLLeeX1wce4q6ftksGR/L1gEA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LzreX4OnwoOlIjKo4JVy8s3FOHZZ34vEEEnAmi2lFQeevhuWFxULZmg0Y97OK8JlEQ2avavvxd18V6YkcfnVWZ0DRp2mzwL0VtxXIZ1MswSlsATonDXfJxE+mhWuOZczDl02tGfY1/kE6/8gVHIJ2d9yOb+DwicP9o/kyhjp5iw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hFWHnpDQ; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=fqpowJL1P+VYWU95uSisONWNFHnnhCHcX4s5HOdeqH8FkjfaLVEowdVi9W2S20QFZGwASVOYfKtPI0wJfOICaFUb8Sfrd0YyI2fv45g14JJ7iO6fRV6HcjvqqrqrXUDUCK1O+ZMWGJhrnAQxw2LAFJ1bCmet6+gCoxGLP/CBYOM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R26EJ6z4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hFWHnpDQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B71241F000FF;
-	Fri, 25 Sep 2026 06:28:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R26EJ6z4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 336731F000FF;
+	Fri, 25 Sep 2026 06:36:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790317729;
-	bh=BPPjjn1CvKsUI7yM/hq8jU+Pg8KjNYzEAq1cyTZMulw=;
+	s=k20260515; t=1790318176;
+	bh=p8rslO5t96PYUDZI3bkR02KMKPkCIVM1vCUFIY9mUhs=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=hFWHnpDQrT3THQcEbsmGsm9HiEjbg8wN/Bdd0IEQGC8H8v0+iy+stF8sAMhhf701S
-	 v5lAENcU4rRSWVs3xFhfrDTxSz/LJwl0b2V69EomdKpi5FsJNGQmptda9K/wIH35Qb
-	 7yZ2wnz1AxDDi5xxzkuAYkUFHd81rFImIKz+l5yMz2t9E+4B8Zm/oq/b96Nta5CnJH
-	 gXuYwoopEnQW7LBUV5HLwYfdI9OMvgpWBKfdxpdHk6qpGZTlzBOkuu6Vk1VjA74XYL
-	 AZjXMOJtMzX/ywRBsyPQt5gx6PNDQVOqD6/zrbeCo9wGbvei9HF217PI39GeK2ps3X
-	 ym3LV0LFdcdRA==
-Message-ID: <89bdd01c-74b5-4425-9ef1-19a69b9a07a5@kernel.org>
-Date: Fri, 25 Sep 2026 08:28:40 +0200
+	b=R26EJ6z44sny9/A+y/pfZfdhChALd+J9fbCYr4DV2JfuV5lwMH5nlAyQ0eXb+IZN/
+	 qghgCsCRkji/g5HCltDIWIdBVvP/Q0PStgWEsw5tSXBJ4YxlGpFby/RnBtPAB/CCxe
+	 Vc5qb8OZsGcvhbqdqpAOTMVuk3WyvsVRCmVIKCj6NKeDzyNEgFpQNCLI/GvvOagb3j
+	 5XZrttOFlEN8CJybugQJWsqbSU/Ov0RHzuT0iCYUNwzAvWkoyt6ZHktUzzusQTvEok
+	 iD2XxIvufE4OWmdbo5BXFzBWDBlZFWyKCi9whZHrn1De7M9Htis2lYWc6TfZW8sEKF
+	 ttXmneRW5df7g==
+Message-ID: <5674102a-9460-43e6-907b-97efd8263853@kernel.org>
+Date: Fri, 25 Sep 2026 08:36:07 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -37,23 +37,20 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v4 1/6] dt-bindings: phy: qcom: add Nord QMP PCIe PHY
  binding
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Vinod Koul <vkoul@kernel.org>, Neil Armstrong
- <neil.armstrong@linaro.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas
- <bhelgaas@google.com>, Bjorn Andersson <andersson@kernel.org>,
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+ Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>, Lorenzo Pieralisi
+ <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Bjorn Andersson <andersson@kernel.org>,
  Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Philipp Zabel <p.zabel@pengutronix.de>, shengchao.guo@oss.qualcomm.com,
- linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org
+ Philipp Zabel <p.zabel@pengutronix.de>
+Cc: shengchao.guo@oss.qualcomm.com, linux-arm-msm@vger.kernel.org,
+ linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 References: <20260921-nord-v4-0-ed05c6e09240@oss.qualcomm.com>
  <20260921-nord-v4-1-ed05c6e09240@oss.qualcomm.com>
- <20260924-lumpy-robust-fulmar-1bfbe0@quoll>
- <050f7d22-48a2-4114-babf-7cf21c4bc08b@oss.qualcomm.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -99,45 +96,20 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  K9bCVaboTA2T77QYkRcRJYSsO1alGX0ome/hMLD1daXlkrNUp1HWa3K4iytLRXjCSIorWiGs
  n+q3krnpXu3TFkA8qtOFZMdnIiFuiq1yLT8hptsV5xh1TA2nsVvSYiaCr3q4s4BKjS/KrLDb
  qoxzw8ISjdUp4pA85vb6YLCmb39NgidD+7PmAr65lBNveIFynTgsja1rRQ4=
-In-Reply-To: <050f7d22-48a2-4114-babf-7cf21c4bc08b@oss.qualcomm.com>
+In-Reply-To: <20260921-nord-v4-1-ed05c6e09240@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 25/09/2026 06:08, Krishna Chaitanya Chundru wrote:
+On 21/09/2026 07:37, Krishna Chaitanya Chundru wrote:
+> Document the PCIe PHY found on the Qualcomm Nord platform.
 > 
-> 
-> On 9/24/2026 6:52 PM, Krzysztof Kozlowski wrote:
->> On Mon, Sep 21, 2026 at 11:07:09AM +0530, Krishna Chaitanya Chundru wrote:
->>> +
->>> +  vdda-pll-d-supply: true
->>> +
->>> +  qcom,link-mode:
->>> +    description:
->>> +      Reference to the TCSR syscon register containing the PCIe link mode
->>> +      selected by firmware. The property consists of the TCSR syscon
->>> +      phandle followed by the offset of the TCSR_PCIE_LINK_CONFIG_MODE
->>> +      register.
->>> +      The register value selects one of these topologies.
->>> +        0 (QMP_PCIE_NORD_MODE_X16)         — all ports combined as one x16 PHY
->>> +        1 (QMP_PCIE_NORD_MODE_X8_X8)       — port A as x8 and ports B+C+D as x8
->>> +        2 (QMP_PCIE_NORD_MODE_X8_X4_X4)    — port A as x8, port B as x4, and ports C+D as x4
->>> +        3 (QMP_PCIE_NORD_MODE_X8_X4_X2_X2) — port A as x8, port B as x4, and ports C and D as x2
->> Same question as last time. phy-cells tells which mode you are here.
->> This is duplicating it and the register value CANNOT choose the
->> topology. If it does, then phy-cells should be 0 as topology is defined
->> by hardware already, no?
-> phy-cells does not describe the topology. The PHY argument is only used by the
-> PCIe controller to identify the PHY instance associated with that controller
-> (for example, phys = <&pcie_phy 2> selects PHY instance 2).
-> 
-> The qcom,link-mode property serves a different purpose. It provides access to
-> the firmware-programmed TCSR_PCIE_LINK_CONFIG_MODE register, which describes
-> the global lane partitioning (x16, x8+x8, x8+x4+x4, x8+x4+x2+x2, etc.).
-> 
->   - phy-cells identifies which PHY instance a controller is using.
->   - qcom,link-mode reports the overall topology selected by firmware.
-OK, I assumed the cell argument defines the instance in that topology,
-but it seems not. I think that was the misunderstanding.
+> Nord has a 32.0 GT/s capable QMP PCIe PHY that can operate in multiple
+> lane configurations using four PHY segments (A/B/C/D). The active
+> topology is selected by firmware through a TCSR configuration
+> register and may be configured as x16, x8+x8, x8+x4+x4, or
+> x8+x4+x2+x2.
+
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
 Best regards,
 Krzysztof
