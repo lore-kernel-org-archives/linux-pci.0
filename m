@@ -1,36 +1,87 @@
-Received: from mta1.migadu.com (out-161.mta1.migadu.com [95.215.58.161])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6324E3C4B93
-	for <linux-pci@vger.kernel.org>; Fri, 25 Sep 2026 04:47:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DFB53DDB0A
+	for <linux-pci@vger.kernel.org>; Fri, 25 Sep 2026 05:00:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790311634; cv=none; b=iFK4BPgKmFlYvxY1kWQE+IHTFIVLGkR6GlcwlcI1YR+Qm0nXf9XNK5NtRGEmQH53VVj3eRVJwdKvDtsAzPAYd273HDymgBy5nRzbBAAuLPvgnoO2JOPp1ULTL/5nF4n8kuTQKSgSqjBtJ5J124MOUIjqVyKhSeWjh65qTKl2YZg=
+	t=1790312409; cv=none; b=daEciRyeHkJ/fU6ZZmsKZDFerK2+x5EpCsD8mX0pa7LcgwprE36CiJG8yZViP1hpVpNyAODzXC4P2U2GJQ0i75pmQUEvjrLMeHP4i5XiR0BoPobtwkt48ZDZ9uK/ab6UmzBl59K+leQxJP/tx1uOqX5H6GlFAdBvvSVgtCol+oY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790311634; c=relaxed/simple;
-	bh=jh8C5ShYQXr3viaQ/Mi2fvp0GqNzxRBy1mECrQ4hGaU=;
+	s=arc-20240116; t=1790312409; c=relaxed/simple;
+	bh=RtE2yICuWC2Xzmr/th2q8pMy+78oOgXrdrBPWEWIxno=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=i/deltwXektpEdYmN1BWj26yOHPcicX4i+GjOpJ25l9fMbldybnYaXBTUe/KWcC052S9HbVTlW48vbqVoIdPNR3I6S9QQ53SldwM7Bk6ptFf8ktMLy/4EvZlhWrmsmmeB1QfaWquwE7yNP1ffgHKj2LpF7WA3+CaLAiB0fuMDVg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=FCNIHfma; arc=none smtp.client-ip=95.215.58.161
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 In-Reply-To:Content-Type; b=pyousgP1bj0uIq3C/oUHSh/7g2U5sXkIueP5EZJGXIK4LaiMn74csPrllLECBodPsdlPWbTNcbheJB6cyLuNfpOa1dpEZEq6ws/rNHE99rT25qPLILfO7/QWfvc5F9pYnsqtpDQUaJ6jsTBi+MY66qyiGUdR1PDpUWjiFqooP/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=KyRXfnyJ; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ZLgB3E40; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="FCNIHfma"
-X-Envelope-To: linux-pci@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=jh8C5ShYQXr3viaQ/Mi2fvp0GqNzxRBy1mECrQ4hGaU=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790311630; v=1; x=1790916430;
- b=FCNIHfma3LS/3JaA2BJJYgDvh1b5rgyweLTodShdjDg10c9sNGQLzo2UvkvnwLTdJtjoIrS7
- mMXE2rZi3p1dVlTJpgMILbaFwI/JbzCqyKkox75GhQxTTxTX2sEMVAnja/huZQTORQDsTLPa2mX
- vlIlxjfm+N/2uTk4OrJ46b9c=
-X-Envelope-To: linux-pci@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id f70f5b72ae709b91;
-	Fri, 25 Sep 2026 04:47:10 +0000
-X-Mizu-Trace-ID: f70f5b72ae709b91
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <b1a845c3-3720-4ef6-8c97-8a40ee7bd286@linux.dev>
-Date: Thu, 24 Sep 2026 21:47:03 -0700
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="KyRXfnyJ";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ZLgB3E40"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68P4YXVq289475
+	for <linux-pci@vger.kernel.org>; Fri, 25 Sep 2026 05:00:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	t3t+oYdWH+6ysPGxcESScSMlb82KWXBBZjf5aTFSETg=; b=KyRXfnyJwC9C8keW
+	KIBTBCfJ7RL+uh01GnrQL5XFTO4vSGMYisiWGmaMSKJe5JifYI6JjUJ+iTlSukkU
+	INaE35sHExeXSa8N2ndPWNBBtq+58njlHklZPOT8wRj9JGS6h4FI9Mv6GFyRKYev
+	8ULMuqSuPlJ6FXUxLNMazWIdVqMwDOFSRiDP6zRWwCMNfbAVnz/nyo3ndvhAuo6B
+	kIdyPV9a9ynHZEb624rQ/rYwbwVf+gDoho3FPEoXDVqmTCFtPhxiIeKDxKjnF2vR
+	+CvAFXzxKe1Vwawe8GNCzSjLotz5ePTG5dUheU3uBZghzaoKxyBQy3v/diIi6faI
+	mkn1vQ==
+Received: from mail-dy1-f197.google.com (mail-dy1-f197.google.com [74.125.82.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gw881t3mh-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 25 Sep 2026 05:00:03 +0000 (GMT)
+Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-3282d5302ffso620978eec.1
+        for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 22:00:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1790312402; x=1790917202; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=t3t+oYdWH+6ysPGxcESScSMlb82KWXBBZjf5aTFSETg=;
+        b=ZLgB3E40ePdXt90S0ActCsEsk77GN/GPDdT1WHDuiUqh1VxCSHWWksAcb8kFsbHUsc
+         9S89hXeNyTtGDZVJasK5Me46GzdNRTxjy2bBc86j4t8c5Z0OlZBXdAo4fV6lsXhm1ahl
+         6UrFrp7+13KFXSA9TDsjI/XVYO2QypYs0W1MmI8D1kUUtgoaRmxBM+sdeTTSJUD4Q4Fj
+         cDUZWr+/slsS84In46Z38XzCRagNzbaSQOFGT5/Vy72/VPW7j+4rRjq4lQoBaPRrflcw
+         u8YOQohpRq5auqjIx3yKCSNP4F3km1e3m+nVhZp/pwCGnK5BPIKa1o3PVIzGzakQ/K8A
+         Hc+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790312402; x=1790917202;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=t3t+oYdWH+6ysPGxcESScSMlb82KWXBBZjf5aTFSETg=;
+        b=sRprsAKe25pCLx0WVaK7nCGZhWlM2HTCM6uuRYbfUJT1VqYRNXkhPhot+NRutYNWSz
+         aHeQVn1y53QfNr8GYZpZWdNDezkFRVCsJPFPyGNnfOAHBm2zIEAa0TZFLLro2wAKcuMN
+         OAdy7ShCFjHbZ9wCSgAOZEdfKJ+f3hTEir4xv23RWtYRqwSH/YcIm8nrnf9hclKiO2x7
+         JcktdKZBCqRaT40j706OZzCw1vHczVSIhPXLcDQBG8PuY4yi7/ODMm6f3M+GUM+rjr3y
+         sTshOjAgh/LjH2pJWqgO6dXtGdHFKKFRhhxfm+QfG4rVCSrho8Djy1rv5v1xaHZq7Iwm
+         2p7A==
+X-Forwarded-Encrypted: i=1; AKwUvByUE2Z/vuMHjm0CaZn7Q2WQmu4ig5CKVFvC/RxcpEuq6PmjUssDUYCA4dRzEapGFhBNy6uZt1jnVHY=@vger.kernel.org
+X-Gm-Message-State: AFuF++k3rf81755Y1lHAtWtq/chjdp2ehAQ39MVozS++NIYHH2l7NPFF
+	5ijaVEEYGsMiN2JltH42+iKXnQr/N413Xlfz3zOpwAtSpLolnrdzArFQRUx9nmjnGETCs0jyin/
+	hb/XomlJANaUqayvgRj5UT8gxZxcFFl2shWQ1hfh/xPIffs9NnsFpyrpOGze3hHA=
+X-Gm-Gg: AYBFou2mIpVRhEeQrlvUsfLP4Lw2xIWszZjSJIqSPxxMNJtXClVDXL1bGBhHBdeQljp
+	PU3x9/ykBG8S9zjzE4idWbBbSQvWxD4Q8NzYsV/uQ09UUPBhzAKZ2Taou5giv2Y4104kYsu6KKr
+	sAcC2yEV+uAjJF9QagluXRBU73h1cwJg6uHEjCsfVtfVAXltsnqocY7rVbl7gQNxd3gufcjOWdh
+	zkSOnczQdnnrGnsj0o9f2xHV9Nzqdn5HMY9s0eudsILr0fnOryHM6mR3s2SNzc7mfJVvhrkQzDj
+	jp02JFHCTCoygxTC72HI9r4vCR0tPucT0/FPSg71nbuahjTbWv8RZNvt8OdkC1Li5YMzxMauilZ
+	+xKKSOMrpQV9z35psiUelN1hAxvOegUvn3Ma566E4
+X-Received: by 2002:a05:693c:87d5:20b0:33c:34b4:85d4 with SMTP id 5a478bee46e88-3400449d085mr3558576eec.10.1790312402353;
+        Thu, 24 Sep 2026 22:00:02 -0700 (PDT)
+X-Received: by 2002:a05:693c:87d5:20b0:33c:34b4:85d4 with SMTP id 5a478bee46e88-3400449d085mr3558551eec.10.1790312401716;
+        Thu, 24 Sep 2026 22:00:01 -0700 (PDT)
+Received: from [10.218.5.182] ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3414407d18fsm2941091eec.10.2026.09.24.21.59.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 24 Sep 2026 22:00:01 -0700 (PDT)
+Message-ID: <fd578600-d9a7-44a5-9131-8771262f82dc@oss.qualcomm.com>
+Date: Fri, 25 Sep 2026 10:29:55 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -38,115 +89,112 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 00/13] PCI: liveupdate: PCI core support for Live
- Update
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org,
- Adithya Jayachandran <ajayachandra@nvidia.com>,
- Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
- David Rientjes <rientjes@google.com>,
- Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>,
- Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
- Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
- Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
- Pasha Tatashin <pasha.tatashin@soleen.com>,
- Pranjal Shrivastava <praan@google.com>, Pratyush Yadav
- <pratyush@kernel.org>, Randy Dunlap <rdunlap@infradead.org>,
- Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>,
- Shuah Khan <skhan@linuxfoundation.org>, Vipin Sharma <vipinsh@google.com>,
- William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>,
- "yanjun.zhu@linux.dev" <yanjun.zhu@linux.dev>
-References: <20260918200640.887030-1-dmatlack@google.com>
- <2e88b92a-d3f2-41f7-bdbe-11fd71690606@linux.dev>
- <CALzav=eJU+fnPr-QN4s7gY_Lj8Pc3T6KXfC9kiQQ=g4rPEDMuA@mail.gmail.com>
-From: Zhu Yanjun <yanjun.zhu@linux.dev>
-In-Reply-To: <CALzav=eJU+fnPr-QN4s7gY_Lj8Pc3T6KXfC9kiQQ=g4rPEDMuA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH] PCI: qcom: Prevent GDSC power down on suspend
+To: Manivannan Sadhasivam <mani@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>
+Cc: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        Taniya Das <taniya.das@oss.qualcomm.com>
+References: <20260128-genpd_fix-v1-1-cd45a249d12f@oss.qualcomm.com>
+ <zfs6krk2whthgdjl2s2w4o5pjwimzw37afoiyrqllykrk6jugt@4ijk5iqplohr>
+ <6osboej6luxekrw4okhlbf3irednx7gduhmqbzqkkgd3ldm2cn@esalet4ruwcb>
+Content-Language: en-US
+From: Jagadeesh Kona <jagadeesh.kona@oss.qualcomm.com>
+In-Reply-To: <6osboej6luxekrw4okhlbf3irednx7gduhmqbzqkkgd3ldm2cn@esalet4ruwcb>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=TptzFzXh c=1 sm=1 tr=0 ts=6ab5ffd3 cx=c_pps
+ a=Uww141gWH0fZj/3QKPojxA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
+ a=gd26oBflmgMxjqPpG_sA:9 a=QEXdDO2ut3YA:10 a=PxkB5W3o20Ba91AHUih5:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTI1MDAxOSBTYWx0ZWRfX5Qu+yZNZp9qT
+ 8VD4uGc/g29nYdEOiNXaHTeynhialbgPkUo6s8skUy4Y8dYtXqm900R26aRZeyeM+vz/Fp0mCzY
+ /18YJrWA8bm6Ef2tQrAhaqnzYDaorBvB3UKpN3jx8iiLnk66qoEMCFBpJ/WlGLyP7eKLfUgKZio
+ vBCYKrxfbLb/kuxvtMl47g3IS6+nkNmlDbxTFcYjWmnzfUdPjys5sONF2cL1Joaps3Wd0yk5jiI
+ x2iQx3QY5BMj3B88Sy+r/8cd9myrrtVUKXwzznBK4/o3jzX7ZrDqRXCjHAV/iG88VpwOl7zRmSE
+ aISEh4Ms4GJerj9QPpUDwNYqMAqGP6UWPiQjzc9XskDw2qqjue6kgp7A9qQkLVif/01zseDfebn
+ 3s/TqFyP1ThsBUH202yTo6oic1R0/RaI1GcIMvQcY8lQaAsiObU8lUsEPlP84OMfXajFsivOSvL
+ IAjIx0drmlRxROfeAsQ==
+X-Proofpoint-ORIG-GUID: d9QG4bPpLUYZ6pz1tBe2mvmhWtuJoRkc
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTI1MDAxOSBTYWx0ZWRfX1c5JJ51+7FT7
+ kY5WZn2mgl7GVanLJhxFMjfWqtG1jNZxb71Yoas+C7tTYnDJo2UvFDsvm/TPwegF87qSSYZC7Qb
+ 5ZJbfkc3HU9zYqUhSpexw79LZ4EXE6A=
+X-Proofpoint-GUID: d9QG4bPpLUYZ6pz1tBe2mvmhWtuJoRkc
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-25_02,2026-09-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 phishscore=0 clxscore=1011 priorityscore=1501 impostorscore=0
+ malwarescore=0 suspectscore=0 lowpriorityscore=0 adultscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609250019
 
 
-在 2026/9/22 11:53, David Matlack 写道:
-> On Tue, Sep 22, 2026 at 11:36 AM Zhu Yanjun <yanjun.zhu@linux.dev> wrote:
->> 在 2026/9/18 13:06, David Matlack 写道:
->>> Future Work
->>> -----------
+
+On 2/18/2026 6:03 PM, Manivannan Sadhasivam wrote:
+> On Wed, Jan 28, 2026 at 08:13:48AM -0600, Bjorn Andersson wrote:
+>> On Wed, Jan 28, 2026 at 05:52:42PM +0530, Krishna Chaitanya Chundru wrote:
+>>> Currently, the driver expects the devices to remain in D0 across system
+>>> suspend, but the genpd framework may still power down the associated
+>>> GDSC during suspend. When that happens, the PCIe link goes down and
+>>> cannot be recovered on resume.
 >>>
->>> Following this series, we expect to make further improvements to the PCI
->>> core support for Live Update:
->>>
->>>     - Allow P2P across Live Update by avoiding resizing or moving
->>>       preserved device BARs and preserving all upstream bridge windows.
->>>
->>>     - Support preserving Virtual Functions by preserving SR-IOV
->>>       configuration on PFs and enumerating VFs after Live Update.
->> Preserving the PCIe topology, bus numbers, ACS, and Bus Mastering across
->> kexec is a foundational step for minimizing downtime.
 >>
->> As we look toward complete end-to-end support for DMA preservation
->> across Live Update—especially for VFIO device passthrough and dma-buf
->> sharing scenarios—IOMMU table/domain preservation becomes crucial to
->> prevent IOMMU page faults when devices continue performing DMA during kexec.
+>> The GDSC is a child of CX, so by keeping it always-on, you effectively
+>> put an always-on vote on CX, forever preventing CXPC.
 >>
->> I would like to ask about the current status and roadmap regarding IOMMU
->> Live Update / KHO (Kexec Handover) support:
+>> In fact, this is one of the reasons why the PCIe GDSCs on most targets
+>> is marked PWRSTS_RET_ON (in the clock driver) so that the "off state"
+>> doesn't actually turn off the GDSC, but it relinquishes the inherited
+>> vote on CX.
 >>
->> Is there an ongoing effort or RFC series for IOMMU handover / page-table
->> preservation currently in development or under discussion?
->>
->> How is the coordination between the PCI core Live Update mechanisms and
->> the IOMMU subsystem being envisioned for preserving IOVA mappings (e.g.,
->> restoring domains or handing over root tables)?
->>
->> Any pointers to active discussion threads, RFCs, or future plans
->> regarding IOMMU participation in Live Update would be greatly appreciated.
-> The first IOMMU series to support Live update, can be found here:
->
->    https://lore.kernel.org/linux-iommu/20260921004834.2601285-1-skhawaja@google.com/
+> 
 
-After cloning the source code from samikhawaja/linux, branch 
-iommu/phase1-v5, I tested the VFIO live update functionality in my local 
-KVM environment and encountered the following issue.
+Hi Bjorn,
 
-When I run the following commands to verify that VFIO live update works 
-correctly, I get the output shown below.
+USB host-mode and PCIe non-D3cold use cases require their respective GDSCs
+to remain enabled during system suspend. This requirement exists on multiple
+targets and is expected to apply to additional targets as well.
 
-I am currently testing with VFIO v5 and PCI core v9, and I am not sure 
-whether this behavior is expected.
+The affected GDSCs currently use PWRSTS_RET_ON flag. However, this prevents
+the GDSC driver from disabling the GDSC hardware after the first enable, even
+when all consumers have become inactive. As a result, the GDSC remains powered
+ON unnecessarily.
 
-Interestingly, when I revert the following commit:
+We propose using the GenPD synced_poweroff flag instead. When synced_poweroff
+is set, the GDSC can be disabled during suspend. When it is not set, the GDSC
+remains enabled to support consumers that require it across suspend. Consumer
+drivers can set this flag using dev_pm_genpd_synced_poweroff() based on their
+usecase.
 
-vfio/pci: Preserve the iommufd state of the vfio cdev
+For the affected USB and PCIe GDSCs, this could be implemented using a poweroff
+callback as below in gdsc driver:
 
-the issue disappears.
+int gdsc_synced_poweroff_disable(struct generic_pm_domain *domain)
+ {
+         struct gdsc *sc = domain_to_gdsc(domain);
 
-Could you please let me know whether this is expected behavior, or 
-whether it indicates a problem with the current VFIO live update 
-implementation?
+         /* Disable GDSC when synced_poweroff is set */
+         if (domain->synced_poweroff)
+                 return gdsc_toggle_logic(sc, GDSC_OFF, false);
 
-"
+         /* Dont disable GDSC in HW when synced_poweroff is not set */
+         if (sc->rsupply)
+                 return regulator_disable(sc->rsupply);
 
-echo "vfio-pci" > /sys/bus/pci/devices/0000:00:04.0/driver_override
+         return 0;
+ }
 
-echo "0000:00:04.0" > /sys/bus/pci/drivers/vfio-pci/bind
-Preserving device in session
-vfio_pci_liveupdate_kexec_test.c:122: Assertion Failure
+This would allow the GDSC to remain enabled only when required, while permitting
+it to be powered down for other use cases.
 
-   Expression: ret == 0
-   Observed: 0xffffffffffffffea == 0
-   [errno: 22 - Invalid argument]
-"
+Please let us know your comments and suggestions on this approach.
 
-Thanks a lot.
-
-Yanjun Zhu
-
->
-> The IOMMU series builds on top of the PCI core support (this series)
-> and the VFIO series linked further up in the cover letter.
-
--- 
-Best Regards,
-Yanjun.Zhu
-
+Thanks,
+Jagadeesh
