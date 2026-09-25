@@ -1,75 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2D9C46D545
-	for <linux-pci@vger.kernel.org>; Fri, 25 Sep 2026 11:54:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22FE3442B3C;
+	Fri, 25 Sep 2026 13:11:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790337284; cv=none; b=oZNBxDfsoef2PsG8cq9ktFM1m1QqOGwHKPdsTsgua4UN4TPGrdO9grgVvsWSjOcuppc44ZzCZ1eoYn/fmW3Mcp6Y00fBWtA7HnnPEPK5iEykN5NGKfdx/ITLXjebbp5Gikzxjfe/j+JudzTnjj2OlgJAKPMjr7vMXr+3QGWgoPo=
+	t=1790341862; cv=none; b=gWyK2NteZbxWOWCq9hDyv+/ChLUAxT2ck/oAGTQNwZPQ35yyiSNz33UuYnJ3feiitlx0zCFbHgJu3hqrFT+EhqWeg0H7JMDECZKFOXLFx9ZuOsY0TlRyAeYxNh48iGgXwQeIKav1GtB8sTq6UKlrdlfZkci1iPH0kQJJ904vzZM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790337284; c=relaxed/simple;
-	bh=r0Vpu8MHdtG/jOJ4lfIo3BNo/VA/F1ic0itHuEq9YCE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=IXDqywQyqDQlIZi+PScqMh8h+a2p2ZbUCdZ1fADFFWOO8vvo0gwEOWxNxUM9lAkaLtf7EKQTTanCJRneM1G7SI/TN5WWXWw/B+OYZ/yigs+B7G1TpQgLlFntCQcDiVNrYYw5qoMB+xxBPDZTCWjg8Q0u8dks0iVCRssTfC8tHOg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MN6yf2F1; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790341862; c=relaxed/simple;
+	bh=509zKjJim0GG5jL8NdMoH4U8eOJwMUQ5iOysVNkLZgA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fFdfWW3I+j6/lOCO1gI6l5Qv9qRLRvv7UfxZP3Az+DJspuCRNDZ09GQtE6/FHlilcs7DDfz4X5xNLIcNbGQcOKwZ+rENQTyVz8hQUDpO87lbqaIgRY9Jtwyzfppwua4Bf2pW26BcmSSPJihtnulFb0o3lbMEBgv/VeVjdnVCLZk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XGDWvzUz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MN6yf2F1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63D461F00898;
-	Fri, 25 Sep 2026 11:54:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XGDWvzUz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 404361F000FF;
+	Fri, 25 Sep 2026 13:10:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790337282;
-	bh=GXtvE1gZqdp036d6DGSHPOKxWPM/GwgJ0D59jRHdfNg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=MN6yf2F1zaVarhp+iQz2txTZZTWf6OJ/9Vi81+fcI9MmV0TZ0PXIg5e+b+nDnnlCY
-	 sNoyswM22I/X88Qn2UtGhjiWefEFEEpZhIsv9owToQ+dgcUWA5nyEMj9HmftEQX3/j
-	 AjDWCi7rKC8DRvRuJrPTgDFoRDRqDbV3nzh8MB2Io17Fqgkoukb60HGmoQ7S7n3RlB
-	 vc5KupQ0W8e716ZxAJRjUvn9VFZpsjSr2ftnii63UXYhDj91DFt0li97BlW/rqzGFq
-	 jAqXqXKRdUTb75VuHoH9LuCze5Cen7OJ6ZcPS6U0pOFS1YFaSMC0sVMmuEwq0n6adg
-	 ZCDzWqKwAtYsA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI: pciehp: Avoid dropping hotplug interrupts due
- to stale HPIE
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Zhu Qiyu" <qiyuzhu2@amd.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260925114635.192878-1-qiyuzhu2@amd.com>
-References: <20260924101929.143806-1-qiyuzhu2@amd.com>
- <20260925114635.192878-1-qiyuzhu2@amd.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 25 Sep 2026 11:54:41 +0000
-Message-Id: <20260925115442.63D461F00898@smtp.kernel.org>
+	s=k20260515; t=1790341861;
+	bh=BB+RBucDn7drafKRirY+tsjOIqaMLesM5kPeSmCd7Ds=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=XGDWvzUz5K7sPSuNwzw/BAgvYQUFyLAagTEKLuLXafBAuYKXiXsSVDgsFU57wslfG
+	 6mHKbUEirDLfW+s/HU0+Ed92AOIsp/ezcuUvnwb5+UWWk0h3c2hG55RHLc+ZaAKUsx
+	 82kXvNsvImo3Jqqg4vq8elG+OTSJU/RzHX6/hRdFF9I7exrq48mzAmw59u8T5eE+Sv
+	 tDDiycX9zsJKK8AexpuXZ1/H9pVFHCyEz7NAlPGRb3qjxq8NOQmjjnzBMNjHx95Hvf
+	 Fk1q7+wKkRCcjWzYMElSrJxGDHYrqHup0A7oLF1l0nFwFFVu8HOhmPUQvxusgwLI4D
+	 zeVclsXl5v9BA==
+Date: Fri, 25 Sep 2026 15:10:56 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Vinod Koul <vkoul@kernel.org>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
+	linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/6] dt-bindings: phy: qcom,sc8280xp-qmp-pcie-phy: Add
+ qcs8300 16 GT/s PHY
+Message-ID: <20260925-nocturnal-voracious-lobster-3de6ea@quoll>
+References: <20260921-monaco_ep-v1-0-63c5282fb0db@oss.qualcomm.com>
+ <20260921-monaco_ep-v1-1-63c5282fb0db@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260921-monaco_ep-v1-1-63c5282fb0db@oss.qualcomm.com>
 
-> pciehp_isr() uses the Hot-Plug Interrupt Enable (HPIE) bit in
-> ctrl->slot_ctrl to reject interrupts when hotplug interrupts are
-> disabled.  This check is needed because hotplug can share an interrupt
-> with other sources, including native PME.
->=20
-> However, ctrl->slot_ctrl is updated from hardware on every Slot Control
-> Register read-modify-write.  A firmware change to HPIE can race with an
-> unrelated driver operation, such as an LED indicator update:
->=20
->   1. The driver enables hotplug interrupts, setting both hardware HPIE
-> 	  and the cached HPIE bit to 1.
->   2. Firmware temporarily clears hardware HPIE; the cached bit remains 1.
->   3. pcie_do_write_cmd() reads Slot Control for an indicator update and
-> 	  observes HPIE=3D0.  Since the command's mask excludes HPIE, it
-> 	  preserves the value read from hardware.
-> [ ... ]
-> This prevents stale-cache rejection of delivered interrupts, but does
-> not restore hardware interrupt delivery.  If firmware restores HPIE
-> before the driver's write, that write may clear it again.
->=20
-> Signed-off-by: Zhu Qiyu <qiyuzhu2@amd.com>
+On Mon, Sep 21, 2026 at 04:28:12PM +0530, Krishna Chaitanya Chundru wrote:
+> The QCS8300 16 GT/s x4 QMP PCIe PHY was previously described using only
+> the qcom,sa8775p-qmp-gen4x4-pcie-phy compatible, since no QCS8300-specific
+> compatible existed for this PHY. This was a mistake, as it left the PHY
+> undocumented as QCS8300 hardware and indistinguishable from SA8775P in
+> the binding.
+> 
+> Correct this by documenting a dedicated
+> "qcom,qcs8300-qmp-gen4x4-pcie-phy" compatible, with
+> "qcom,sa8775p-qmp-gen4x4-pcie-phy" listed as its fallback compatible.
+> 
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260925114635.1928=
-78-1-qiyuzhu2@amd.com?part=3D1
+Best regards,
+Krzysztof
 
