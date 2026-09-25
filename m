@@ -1,200 +1,91 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DFB53DDB0A
-	for <linux-pci@vger.kernel.org>; Fri, 25 Sep 2026 05:00:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 116E51DDA18;
+	Fri, 25 Sep 2026 05:09:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790312409; cv=none; b=daEciRyeHkJ/fU6ZZmsKZDFerK2+x5EpCsD8mX0pa7LcgwprE36CiJG8yZViP1hpVpNyAODzXC4P2U2GJQ0i75pmQUEvjrLMeHP4i5XiR0BoPobtwkt48ZDZ9uK/ab6UmzBl59K+leQxJP/tx1uOqX5H6GlFAdBvvSVgtCol+oY=
+	t=1790312982; cv=none; b=agfaB/157351jZq5dSDiFR6Lraqup1d69hCaUR3nOm4IzadlTU1KjizyljCxoJOImQPjVdzM961La9/jSrRr1nQ65XGMB2PFCmsuqKVjUhbz1ouTbfcKHqyy7zY0gD3RGGt1fS2aiBEpAIh/nCW1WYoHbpOWpuhjVwsPTG9I93M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790312409; c=relaxed/simple;
-	bh=RtE2yICuWC2Xzmr/th2q8pMy+78oOgXrdrBPWEWIxno=;
+	s=arc-20240116; t=1790312982; c=relaxed/simple;
+	bh=wEwPOc2WQyyy/2t/P4dqWVW+sEpoy7tMrAbctEy9e5M=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pyousgP1bj0uIq3C/oUHSh/7g2U5sXkIueP5EZJGXIK4LaiMn74csPrllLECBodPsdlPWbTNcbheJB6cyLuNfpOa1dpEZEq6ws/rNHE99rT25qPLILfO7/QWfvc5F9pYnsqtpDQUaJ6jsTBi+MY66qyiGUdR1PDpUWjiFqooP/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=KyRXfnyJ; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ZLgB3E40; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	 In-Reply-To:Content-Type; b=ndKD8Y2mf/QU3G70MX9eA4BgtO6a6HJFDqIv5VTLxQF/5p+tFXj3st37mWUZ/12if+0yIm6kDqvTe2GgXtqHmWL3PCQv7AUzjxvMb4o9SWW3SuoTmHvOga3oeA7nL4ewrDzLMrJ0TWQmLQJH77GdaOX+aMwGyABhDzkLqkbqzqc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=SjaCNnKr; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=m1o7XIhn; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="KyRXfnyJ";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ZLgB3E40"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68P4YXVq289475
-	for <linux-pci@vger.kernel.org>; Fri, 25 Sep 2026 05:00:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	t3t+oYdWH+6ysPGxcESScSMlb82KWXBBZjf5aTFSETg=; b=KyRXfnyJwC9C8keW
-	KIBTBCfJ7RL+uh01GnrQL5XFTO4vSGMYisiWGmaMSKJe5JifYI6JjUJ+iTlSukkU
-	INaE35sHExeXSa8N2ndPWNBBtq+58njlHklZPOT8wRj9JGS6h4FI9Mv6GFyRKYev
-	8ULMuqSuPlJ6FXUxLNMazWIdVqMwDOFSRiDP6zRWwCMNfbAVnz/nyo3ndvhAuo6B
-	kIdyPV9a9ynHZEb624rQ/rYwbwVf+gDoho3FPEoXDVqmTCFtPhxiIeKDxKjnF2vR
-	+CvAFXzxKe1Vwawe8GNCzSjLotz5ePTG5dUheU3uBZghzaoKxyBQy3v/diIi6faI
-	mkn1vQ==
-Received: from mail-dy1-f197.google.com (mail-dy1-f197.google.com [74.125.82.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gw881t3mh-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 25 Sep 2026 05:00:03 +0000 (GMT)
-Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-3282d5302ffso620978eec.1
-        for <linux-pci@vger.kernel.org>; Thu, 24 Sep 2026 22:00:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1790312402; x=1790917202; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=t3t+oYdWH+6ysPGxcESScSMlb82KWXBBZjf5aTFSETg=;
-        b=ZLgB3E40ePdXt90S0ActCsEsk77GN/GPDdT1WHDuiUqh1VxCSHWWksAcb8kFsbHUsc
-         9S89hXeNyTtGDZVJasK5Me46GzdNRTxjy2bBc86j4t8c5Z0OlZBXdAo4fV6lsXhm1ahl
-         6UrFrp7+13KFXSA9TDsjI/XVYO2QypYs0W1MmI8D1kUUtgoaRmxBM+sdeTTSJUD4Q4Fj
-         cDUZWr+/slsS84In46Z38XzCRagNzbaSQOFGT5/Vy72/VPW7j+4rRjq4lQoBaPRrflcw
-         u8YOQohpRq5auqjIx3yKCSNP4F3km1e3m+nVhZp/pwCGnK5BPIKa1o3PVIzGzakQ/K8A
-         Hc+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790312402; x=1790917202;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=t3t+oYdWH+6ysPGxcESScSMlb82KWXBBZjf5aTFSETg=;
-        b=sRprsAKe25pCLx0WVaK7nCGZhWlM2HTCM6uuRYbfUJT1VqYRNXkhPhot+NRutYNWSz
-         aHeQVn1y53QfNr8GYZpZWdNDezkFRVCsJPFPyGNnfOAHBm2zIEAa0TZFLLro2wAKcuMN
-         OAdy7ShCFjHbZ9wCSgAOZEdfKJ+f3hTEir4xv23RWtYRqwSH/YcIm8nrnf9hclKiO2x7
-         JcktdKZBCqRaT40j706OZzCw1vHczVSIhPXLcDQBG8PuY4yi7/ODMm6f3M+GUM+rjr3y
-         sTshOjAgh/LjH2pJWqgO6dXtGdHFKKFRhhxfm+QfG4rVCSrho8Djy1rv5v1xaHZq7Iwm
-         2p7A==
-X-Forwarded-Encrypted: i=1; AKwUvByUE2Z/vuMHjm0CaZn7Q2WQmu4ig5CKVFvC/RxcpEuq6PmjUssDUYCA4dRzEapGFhBNy6uZt1jnVHY=@vger.kernel.org
-X-Gm-Message-State: AFuF++k3rf81755Y1lHAtWtq/chjdp2ehAQ39MVozS++NIYHH2l7NPFF
-	5ijaVEEYGsMiN2JltH42+iKXnQr/N413Xlfz3zOpwAtSpLolnrdzArFQRUx9nmjnGETCs0jyin/
-	hb/XomlJANaUqayvgRj5UT8gxZxcFFl2shWQ1hfh/xPIffs9NnsFpyrpOGze3hHA=
-X-Gm-Gg: AYBFou2mIpVRhEeQrlvUsfLP4Lw2xIWszZjSJIqSPxxMNJtXClVDXL1bGBhHBdeQljp
-	PU3x9/ykBG8S9zjzE4idWbBbSQvWxD4Q8NzYsV/uQ09UUPBhzAKZ2Taou5giv2Y4104kYsu6KKr
-	sAcC2yEV+uAjJF9QagluXRBU73h1cwJg6uHEjCsfVtfVAXltsnqocY7rVbl7gQNxd3gufcjOWdh
-	zkSOnczQdnnrGnsj0o9f2xHV9Nzqdn5HMY9s0eudsILr0fnOryHM6mR3s2SNzc7mfJVvhrkQzDj
-	jp02JFHCTCoygxTC72HI9r4vCR0tPucT0/FPSg71nbuahjTbWv8RZNvt8OdkC1Li5YMzxMauilZ
-	+xKKSOMrpQV9z35psiUelN1hAxvOegUvn3Ma566E4
-X-Received: by 2002:a05:693c:87d5:20b0:33c:34b4:85d4 with SMTP id 5a478bee46e88-3400449d085mr3558576eec.10.1790312402353;
-        Thu, 24 Sep 2026 22:00:02 -0700 (PDT)
-X-Received: by 2002:a05:693c:87d5:20b0:33c:34b4:85d4 with SMTP id 5a478bee46e88-3400449d085mr3558551eec.10.1790312401716;
-        Thu, 24 Sep 2026 22:00:01 -0700 (PDT)
-Received: from [10.218.5.182] ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3414407d18fsm2941091eec.10.2026.09.24.21.59.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 24 Sep 2026 22:00:01 -0700 (PDT)
-Message-ID: <fd578600-d9a7-44a5-9131-8771262f82dc@oss.qualcomm.com>
-Date: Fri, 25 Sep 2026 10:29:55 +0530
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="SjaCNnKr";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="m1o7XIhn"
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4hrdzc0wBVz8v2B;
+	Fri, 25 Sep 2026 07:09:32 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1790312972;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=oKsKlVZl8uuQQnOAtnTUFnRYg7AX745LF+QJJaTDUXo=;
+	b=SjaCNnKrXGGiqKcSR4se9BQjZG9Wt4pQZGUD7X3xeYPGwGaAxheKCJIynR7eAdzvCJ1FkR
+	DJuCDR5LKpCujIvwHeffkoPPkeTN2AQHYjTKp4TjsKgbGpmD/d27qc/xoBcY2rHur2+sCO
+	e3935Z1zMM31biNB7rZg9VQBzidOZs97gfYPaiE9CQ7NAVKmKkrN0OWqSLE3mqTkyPSsvf
+	ZmiKPvOLEZ7fQlcaSBBXPaKtNr0LyLYstM27kVHNjwsV28UewMAPQAcltWfaqRieDoGNca
+	QoG5FntjVON/OaHTJHstanz8oF10tEHGEl6Nl9MGW3g7fxlGVrJuvCuZIypLUg==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=m1o7XIhn;
+	spf=pass (outgoing_mbo_mout: domain of marek.vasut@mailbox.org designates 2001:67c:2050:b231:465::102 as permitted sender) smtp.mailfrom=marek.vasut@mailbox.org
+Message-ID: <ff358193-8c64-4200-aa9e-fe6619dc8948@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1790312970;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=oKsKlVZl8uuQQnOAtnTUFnRYg7AX745LF+QJJaTDUXo=;
+	b=m1o7XIhnZb+Vp/uiU6FDd52l3TU+9RaTmhY4ZvsQ4p36Bxb4xvkE02HjZtjcqn+Ru79gRc
+	pZZmiuWEbFoIXN3O9sAwqrf0zWN3j6jbjJlgWAlF5FF/oUQhT+UoOT3jG/ubHYyXFqiSNq
+	ZPGjREbZ/iBMnflTXKckl8anmD8ViKUUUVPcMwNp5aOpXZ1vu4sXVdYnODmRuSYZrMyyvS
+	ehdgeqiWFyIzgdbKSw10uCNsLTRM0Y9FKMcH5jUU7LZZdTeCVFnEoFjIhjgUzZcGe8f/oy
+	fb47M0brXDmZD3a4m3KxOG47rmEabuI1HtNNcr4156YM560LYNEbAAa/rKPcXQ==
+Date: Fri, 25 Sep 2026 06:31:43 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: qcom: Prevent GDSC power down on suspend
-To: Manivannan Sadhasivam <mani@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>
-Cc: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        Taniya Das <taniya.das@oss.qualcomm.com>
-References: <20260128-genpd_fix-v1-1-cd45a249d12f@oss.qualcomm.com>
- <zfs6krk2whthgdjl2s2w4o5pjwimzw37afoiyrqllykrk6jugt@4ijk5iqplohr>
- <6osboej6luxekrw4okhlbf3irednx7gduhmqbzqkkgd3ldm2cn@esalet4ruwcb>
+Subject: Re: [PATCH v2] PCI: rcar: Release temporary device tree node
+ reference
+To: Yuho Choi <oss.patchbox@gmail.com>,
+ Marek Vasut <marek.vasut+renesas@mailbox.org>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>,
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260924010418.726980-1-oss.patchbox@gmail.com>
 Content-Language: en-US
-From: Jagadeesh Kona <jagadeesh.kona@oss.qualcomm.com>
-In-Reply-To: <6osboej6luxekrw4okhlbf3irednx7gduhmqbzqkkgd3ldm2cn@esalet4ruwcb>
-Content-Type: text/plain; charset=UTF-8
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <20260924010418.726980-1-oss.patchbox@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Authority-Analysis: v=2.4 cv=TptzFzXh c=1 sm=1 tr=0 ts=6ab5ffd3 cx=c_pps
- a=Uww141gWH0fZj/3QKPojxA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
- a=gd26oBflmgMxjqPpG_sA:9 a=QEXdDO2ut3YA:10 a=PxkB5W3o20Ba91AHUih5:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTI1MDAxOSBTYWx0ZWRfX5Qu+yZNZp9qT
- 8VD4uGc/g29nYdEOiNXaHTeynhialbgPkUo6s8skUy4Y8dYtXqm900R26aRZeyeM+vz/Fp0mCzY
- /18YJrWA8bm6Ef2tQrAhaqnzYDaorBvB3UKpN3jx8iiLnk66qoEMCFBpJ/WlGLyP7eKLfUgKZio
- vBCYKrxfbLb/kuxvtMl47g3IS6+nkNmlDbxTFcYjWmnzfUdPjys5sONF2cL1Joaps3Wd0yk5jiI
- x2iQx3QY5BMj3B88Sy+r/8cd9myrrtVUKXwzznBK4/o3jzX7ZrDqRXCjHAV/iG88VpwOl7zRmSE
- aISEh4Ms4GJerj9QPpUDwNYqMAqGP6UWPiQjzc9XskDw2qqjue6kgp7A9qQkLVif/01zseDfebn
- 3s/TqFyP1ThsBUH202yTo6oic1R0/RaI1GcIMvQcY8lQaAsiObU8lUsEPlP84OMfXajFsivOSvL
- IAjIx0drmlRxROfeAsQ==
-X-Proofpoint-ORIG-GUID: d9QG4bPpLUYZ6pz1tBe2mvmhWtuJoRkc
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTI1MDAxOSBTYWx0ZWRfX1c5JJ51+7FT7
- kY5WZn2mgl7GVanLJhxFMjfWqtG1jNZxb71Yoas+C7tTYnDJo2UvFDsvm/TPwegF87qSSYZC7Qb
- 5ZJbfkc3HU9zYqUhSpexw79LZ4EXE6A=
-X-Proofpoint-GUID: d9QG4bPpLUYZ6pz1tBe2mvmhWtuJoRkc
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-25_02,2026-09-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 phishscore=0 clxscore=1011 priorityscore=1501 impostorscore=0
- malwarescore=0 suspectscore=0 lowpriorityscore=0 adultscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609250019
+X-MBO-RS-ID: af84b3c26f185d3a6bb
+X-MBO-RS-META: xwooipfiedu7iqqtgymzp9ashnna8ept
+X-Rspamd-Queue-Id: 4hrdzc0wBVz8v2B
 
-
-
-On 2/18/2026 6:03 PM, Manivannan Sadhasivam wrote:
-> On Wed, Jan 28, 2026 at 08:13:48AM -0600, Bjorn Andersson wrote:
->> On Wed, Jan 28, 2026 at 05:52:42PM +0530, Krishna Chaitanya Chundru wrote:
->>> Currently, the driver expects the devices to remain in D0 across system
->>> suspend, but the genpd framework may still power down the associated
->>> GDSC during suspend. When that happens, the PCIe link goes down and
->>> cannot be recovered on resume.
->>>
->>
->> The GDSC is a child of CX, so by keeping it always-on, you effectively
->> put an always-on vote on CX, forever preventing CXPC.
->>
->> In fact, this is one of the reasons why the PCIe GDSCs on most targets
->> is marked PWRSTS_RET_ON (in the clock driver) so that the "off state"
->> doesn't actually turn off the GDSC, but it relinquishes the inherited
->> vote on CX.
->>
+On 9/24/26 3:04 AM, Yuho Choi wrote:
+> of_find_matching_node() returns a referenced node even when it is used
+> only as a boolean test. Drop the reference right after the match check.
 > 
+> Fixes: a115b1bd3af0 ("PCI: rcar: Add L1 link state fix into data abort hook")
+> Signed-off-by: Yuho Choi <oss.patchbox@gmail.com>
+Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 
-Hi Bjorn,
-
-USB host-mode and PCIe non-D3cold use cases require their respective GDSCs
-to remain enabled during system suspend. This requirement exists on multiple
-targets and is expected to apply to additional targets as well.
-
-The affected GDSCs currently use PWRSTS_RET_ON flag. However, this prevents
-the GDSC driver from disabling the GDSC hardware after the first enable, even
-when all consumers have become inactive. As a result, the GDSC remains powered
-ON unnecessarily.
-
-We propose using the GenPD synced_poweroff flag instead. When synced_poweroff
-is set, the GDSC can be disabled during suspend. When it is not set, the GDSC
-remains enabled to support consumers that require it across suspend. Consumer
-drivers can set this flag using dev_pm_genpd_synced_poweroff() based on their
-usecase.
-
-For the affected USB and PCIe GDSCs, this could be implemented using a poweroff
-callback as below in gdsc driver:
-
-int gdsc_synced_poweroff_disable(struct generic_pm_domain *domain)
- {
-         struct gdsc *sc = domain_to_gdsc(domain);
-
-         /* Disable GDSC when synced_poweroff is set */
-         if (domain->synced_poweroff)
-                 return gdsc_toggle_logic(sc, GDSC_OFF, false);
-
-         /* Dont disable GDSC in HW when synced_poweroff is not set */
-         if (sc->rsupply)
-                 return regulator_disable(sc->rsupply);
-
-         return 0;
- }
-
-This would allow the GDSC to remain enabled only when required, while permitting
-it to be powered down for other use cases.
-
-Please let us know your comments and suggestions on this approach.
-
-Thanks,
-Jagadeesh
+Thank you !
