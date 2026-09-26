@@ -1,82 +1,94 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0070C26B742;
-	Sat, 26 Sep 2026 04:34:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A56E37478;
+	Sat, 26 Sep 2026 08:49:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790397261; cv=none; b=JSfg57eRi0TSETH/bUa0lJcHjnxx/2PIXJ8Di7tdC4T5Eb6RtvlI8DZr7Z5se7w/xWPZhmeDTtXdJOfeLADqG4qFSdiQUIYYSHFeWBts5e5r/hbXR3R0xtC2QWEtaS5NfXdG47CBPaE9SROo0y6m1Ex4q8CrBdcKEw4uC2WYlSE=
+	t=1790412559; cv=none; b=jGMP3M4URTQhD+k5c+3bwEFleB7GzBe6yUGDn3QIXsVmFJo3T9lVJau4OXYvK/h7f0zJxOVaURijg4R/wqxnpMX5dj5SmZqrcD4g2R1cto36OI7xta3ieaWQPdFm9pfZbyjj4ht3yVYAgj3fENKSBNJXwL70QGr1X2BIPdunfaY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790397261; c=relaxed/simple;
-	bh=EeDEawESlDcdhv22Xgc+V2t6DxfBca/df8KEC9OnmmU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oKre/DWWTUqnq4MNh5yFCRo+QiWS8a5H0lQ4CL8e1+Bh88cNIfCYf0hssm1+UGNjLFZ+SMPeSURPE/KY1liPoPzhV4em9ifHstc1i8dm426hHq35DNFSf/JajCq3wlkaZ3ydikF07PMSWr98+RUk0//xEeivyp3rbictYoujL9g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=MDCo314I; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1790412559; c=relaxed/simple;
+	bh=z2Y2BYaLt4DQXbLx6S/OQNCYizRiWRx0Wa2mXGLaif4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=prcv/OZpM3FFTlDVlhmme168Dbl9b72Rm/Snkcl3f3fRxwOxvBFQ8+sruWUuKYOwN/nNWqhfsT84ybPvvjPDvE+BhxYx+v7B89FFMtrFiH+wBoT5UA/M1i7NjKg7MP2zA+ooaVCiirW6pH0f5WebEeDznElTRHjj+PoLurASNPQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HjNtj4VZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="MDCo314I"
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4hsF8Q4Y13z8v2P;
-	Sat, 26 Sep 2026 06:34:14 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1790397254;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0mNruMgEL3fGNghAL1UFG8QVNZq3M8EqHIjf+VgnEkc=;
-	b=MDCo314I6VjAPnUo9loq2iA501bua9c83vSGksXe6VM1dXYDJIN/9E0Kt2d2aRZJdkiirc
-	1GEVPUyWGuv7T+AWAgJaIJt4H53QSYhsDQTuwNruDwRL4iHw23bNx3zx3rhRxmycg7MAPB
-	kYJDrTs6/8AXZpRbW9F+GX7Rfcd30LqBhEi4POGZmNnpnCtsn+3zFgby04o03jbMbNoSso
-	AdOeSuceXsY89wRbp+qhBykBMTrbOtLAiP0GVSyYvw+xm97BXytyNlbXCr8yZ637GeHrZK
-	fY6hZEwIheRbxj4nETZQslIxoitB5yJA4HnvSxRrrkuOaeuDZIZkkLcTYAi9JA==
-Message-ID: <1ae0d036-82a2-452f-9ee8-f7120a7552ee@mailbox.org>
-Date: Sat, 26 Sep 2026 06:34:10 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HjNtj4VZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC1831F000FF;
+	Sat, 26 Sep 2026 08:49:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790412558;
+	bh=uzhsfGFro+u+wLnkktG3mmK5Fb3Rm5c/4uVwSXwXcXw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=HjNtj4VZiGyoV3iD3U21Lcv86RGkT7ycywPtTwek0rq+SsVB4S9QMMz2qwfmifwhl
+	 cF4y60iTTlTtzNtVat5gPZ/QGnoYaJgMzdixm1y6kTSW8bnkZfcAKHvYuxPz1LaNyU
+	 WidkIrwv+N57PyaFk95Ardt5ts+bxzTNV1Gd0j3s5S0pDsSryNUoWnCqYzazEA8SjG
+	 TiFPNAd+Uo8US8WLjlHlW9fAniJXcGzpuMAFW7vLJIRynAxrC6AVzSjoMmI+9F03J2
+	 7aNil5IetD3ETf5nSYM89bI4s8Wn5y5fTY+nhO0BuTCFuUlvMqKpZbBDwuME0UHFl7
+	 auorkI18U/z6g==
+Date: Sat, 26 Sep 2026 10:49:04 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Frank Li <Frank.li@oss.nxp.com>, 
+	Sumit Kumar <sumit.kumar@oss.qualcomm.com>
+Cc: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>, 
+	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Jeff Hugo <jeff.hugo@oss.qualcomm.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Kishon Vijay Abraham I <kishon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, dmaengine@vger.kernel.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, mhi@lists.linux.dev, 
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 4/5] PCI: epf-mhi: Add batched DMA read support
+Message-ID: <ep3rjgc4idxt2ta53cebdzpqvyvvm2rnpxbo2ka3sqcmgqwdb2@cwi6gixldtxg>
+References: <20260803-dma_multi_sg-v2-0-c12bb05e42d6@oss.qualcomm.com>
+ <20260803-dma_multi_sg-v2-4-c12bb05e42d6@oss.qualcomm.com>
+ <anTARsISvCPUA9_v@SMW015318>
+ <szx7jctqp4h6yhgvhwmiqfjtsemwlu3iardtntp4nfc22u3bfi@ux5ioixmfdnh>
+ <90fcc9ff-4ba6-4e16-a322-17ad8e4a51e7@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] dt-bindings: PCI: rcar-gen4-pci-host: Fix reset-names
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Conor Dooley <conor+dt@kernel.org>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Magnus Damm <magnus.damm@gmail.com>, Manivannan Sadhasivam
- <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-renesas-soc@vger.kernel.org
-References: <20260925205158.GA2087943@bhelgaas>
-Content-Language: en-US
-From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <20260925205158.GA2087943@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MBO-RS-ID: d0c00d7916057249204
-X-MBO-RS-META: r7hagkew7hpnuaxmaajngby9jaredqob
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <90fcc9ff-4ba6-4e16-a322-17ad8e4a51e7@oss.qualcomm.com>
 
-On 9/25/26 10:51 PM, Bjorn Helgaas wrote:
-> On Fri, Sep 25, 2026 at 10:29:51PM +0200, Marek Vasut wrote:
->> Drop maxItems: from reset-names, since the entry already contains items: .
->> Fixes the following warning detected by DT checker:
->> "
->> Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml: properties:reset-names: {'minItems': 1, 'maxItems': 2, 'items': [{'const': 'pwr'}, {'const': 'core'}]} should not be valid under {'required': ['maxItems']}
->>          hint: "maxItems" is not needed with an "items" list
->>          from schema $id: http://devicetree.org/meta-schemas/items.yaml
->> "
->>
->> Fixes: 50b1333e0c7b ("dt-bindings: PCI: rcar-gen4-pci-host: Document Application/Local register reset")
->> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+On Tue, Sep 15, 2026 at 10:42:39AM +0530, Sumit Kumar wrote:
 > 
-> I squashed both of these into the relevant commits on
-> pci/controller/dwc-rcar-gen4, thanks!
-Thank you too .
+> 
+> On 8/14/2026 8:22 PM, Manivannan Sadhasivam wrote:
+> > On Thu, Aug 06, 2026 at 12:11:34PM -0500, Frank Li wrote:
+> > 
+> > [...]
+> > 
+> > > > +       config.direction = DMA_DEV_TO_MEM;
+> > > > +       ret = dmaengine_slave_config(chan, &config);
+> > > > +       if (ret) {
+> > > > +               dev_err(dev, "Failed to configure DMA channel for %u-buffer batch read: %d\n",
+> > > > +                       num_buffers, ret);
+> > > > +               goto err_unmap;
+> > > > +       }
+> > > > +
+> > > > +       desc = dmaengine_prep_dma_sg(chan, dst_sg, num_buffers,
+> > > > +                                    src_sg, num_buffers,
+> > > > +                                    DMA_CTRL_ACK | DMA_PREP_INTERRUPT);
+> > > Although both side memory address, but as previous discussion, which is not
+> > > memcpy, still memory to IO space transfer.
+> > > 
+> > I agree, it is peripheral DMA nevertheless.
+> > 
+> > > Maybe enhence device_prep_peripheral_dma_vec(). Actually eDMA still split
+> > > it to small trunk and linked together.
+> > > 
+> > By enhance you mean keeping the semantics of device_prep_peripheral_dma_vec()
+> > API? I don't know how it helps because we would most likely end up with two
+> > vector arguments and duplicating scatter-gather lists.
+> Frank can you comment on this.
+
+Frank, ping!
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
