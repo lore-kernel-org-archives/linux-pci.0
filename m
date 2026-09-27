@@ -1,75 +1,79 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C25F93A1684
-	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 18:02:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED6C72D0620
+	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 18:02:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790532125; cv=none; b=kyc2W9A/lP6Z7LXFsKONhLlFQ0IyhpRTzK2ZxMsD5y5/WuFx/W0imLGN45PCSHHPMEk3cq+n/0m4v/2ect9Ui2ZmyFEfVgsk3h8Ub7Cz0emfyFBjk6hw1oJ1Rz1F/w4l24mpGcAaXB5r6QIDEvRNguJE+fUUsFIeQ0qXa3VLCpQ=
+	t=1790532134; cv=none; b=KM6pQC1LgGXM2LIKaUseK+FssLVuL2BM9KKWcVV0cEmsF67Yczz3OUj9qNJ+BFYV/yG1BhNEssD+2/oVUhn2JUbr1nNaWY8nR0Y50Rf/USmQygkn27rmMYiPIp3ISSW4G6kyMOLNk3l8pIKE6Xqg0SwjoXR/Sh5vKTcneNRUzYI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790532125; c=relaxed/simple;
-	bh=KX1t3qfoTVj0TT7mumB5IwJikCtQ7tKr3wprQI4cPtI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MmzgAXHoY5aWBnkS3sgjzXAKGi8i1fjYfpwPRnkxQ8vDJWizAxLmuKfkRXw4IYzdSviRydELlO2ON6ZN9afCSUUq1Xb8QSDR9BXSFPgGtt6MHI2feOdvJV+6SMnYLCLxtsZG6Uxo6+yLdLnUVusczIozgFAwCubVi9qCnyfIM9Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cX9B/Gt/; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cX9B/Gt/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C7B91F000FF;
-	Sun, 27 Sep 2026 18:02:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790532124;
-	bh=eT+AJYL5DCmthnJ/xh7XYTqG4GbSMuE/D8YrU5qIapY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cX9B/Gt/jwa/cvTzS7wlaYxPnUmeamtJOGvQILdDlYYsebTZN2CB6Jlw/xh+X5cys
-	 79WTkZozAnbSyFFrh3laZhDhAqM69nDqtXa1vGRo1VV1resMZche0FZXeemq0dKO7s
-	 M9cvtFI7SBbdtojAFCUFpN0G2IOjQzJSGSdG65nvc+Oex6KuXiV1Gj8KB96QpY47ZK
-	 wYsFpz1Pmqn7FufCRU3ircrQIfRa4HmkmSxhIvfMRmJCOY2kIUhviQb/L9MROaYpua
-	 p/e1/oHCyCqC1/OsIc1akVc3V71gOV5hdnVf1DgvcyqhiEUDQShquOYsGM6QygE5jH
-	 xlraJ9TxcQ2iQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC v3 1/5] PCI: Report surprise removal event
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Abhin Parekadan Jose" <abhinjoses@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260927175203.928270-2-abhinjoses@gmail.com>
-References: <20260927175203.928270-1-abhinjoses@gmail.com>
- <20260927175203.928270-2-abhinjoses@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 27 Sep 2026 18:02:03 +0000
-Message-Id: <20260927180204.2C7B91F000FF@smtp.kernel.org>
+	s=arc-20240116; t=1790532134; c=relaxed/simple;
+	bh=cmcGevHOktaCpS0lp7cgN1F5aS+q31ecM0D6e9OxgqA=;
+	h=Message-ID:From:Date:Subject:To:Cc; b=ttazn3AMuBa9bjk7XnSkU0Q5rRjLuQQqvLVPjmCZJDBNSAqjYLB5gddiYS8EdeKZ/eiX3q5o6rasqt7rbJdrB0GnRVWG/NqQ7b4VXVfSXNNAfU07y/V2htlJrwex4Wi2ZYgZqxa/1xMM5N8v8VJb8JRPRl1wCGyfOmQ+J6YV5IU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id E64391D03;
+	Sun, 27 Sep 2026 20:02:02 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id A341D6078B58; Sun, 27 Sep 2026 20:02:02 +0200 (CEST)
+Message-ID: <cover.1790531238.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 27 Sep 2026 20:02:00 +0200
+Subject: [PATCH 0/7] Error reporting for AER-incapable devices
+To: Bjorn Helgaas <helgaas@kernel.org>, Raag Jadav <raag.jadav@intel.com>, Riana Tauro <riana.tauro@intel.com>, Yury Murashka <yurypm@arista.com>, "Matthew W Carlis" <mattc@purestorage.com>, linux-pci@vger.kernel.org
+Cc: "Mahesh J Salgaonkar" <mahesh@linux.ibm.com>, Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org, Aravind Iddamsetty <aravind.iddamsetty@intel.com>, Srinivasa Adatrao <srinivasa.adatrao@intel.com>, Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>, Terry Bowman <terry.bowman@amd.com>, Keith Busch <kbusch@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> From: "Michael S. Tsirkin" <mst@redhat.com>
->=20
-> At the moment, in case of a surprise removal, the regular remove
-> callback is invoked, exclusively.  This works well, because mostly,
-> the cleanup would be the same.
->=20
-> However, there's a race: imagine device removal was initiated by a user
-> action, such as driver unbind, and it in turn initiated some cleanup
-> and is now waiting for an interrupt from the device. If the device is
-> now surprise-removed, that never arrives and the remove callback hangs
-> forever.
->=20
-> For example, this was reported for virtio-blk:
->=20
-> 	1. the graceful removal is ongoing in the remove() callback,
-> [ ... ]
->=20
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> Link: https://lore.kernel.org/all/fba3d235e38c1c6fcef2a30ed083ad9e25b20fa=
-3.1752094439.git.mst@redhat.com/
-> [Abhin: adapted subject, serialize with a per-device spinlock]
-> Signed-off-by: Abhin Parekadan Jose <abhinjoses@gmail.com>
+Bjorn suggests "the PCI core should do pci_enable_pcie_error_reporting()
+independent of whether the device has an AER Capability":
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+https://lore.kernel.org/r/20260826212619.GA1566339@bhelgaas/
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260927175203.9282=
-70-1-abhinjoses@gmail.com?part=3D1
+This is done in patch [7/7].  The preceding patches contain prep work.
+
+For context, PCIe r7.1 sec 6.2.1 defines two error reporting paradigms:
+AER and baseline capability.  The latter relies (solely) on the error
+enable/status bits in the Device Control and Device Status registers,
+which exist on every PCIe device.  The kernel has supported the AER
+paradigm for 20 years.  With the present series, it gains support for
+the baseline capability paradigm.
+
+Patches [1/7] and [2/7] reinstate DPC on AER-incapable Downstream Ports.
+The kernel used to support this until 2020.  It is hereby fixed because
+it eases introduction of baseline capability error reporting in the
+subsequent patches.
+
+Lukas Wunner (6):
+  PCI/DPC: Avoid access to non-existent AER capability
+  PCI/DPC: Reinstate support for AER-incapable ports
+  PCI/AER: Drop AER native check from handles_cxl_errors()
+  PCI/AER: Move AER capability check out of pcie_aer_is_native()
+  PCI/AER: Renumber severity constants
+  PCI/AER: Enable baseline capability error reporting
+
+Yury Murashka (1):
+  PCI/ERR: Avoid stale error status bits on recovery failure
+
+ .../ABI/testing/sysfs-bus-pci-devices-aer     | 26 +++++++---
+ Documentation/PCI/pcieaer-howto.rst           |  9 ++--
+ drivers/pci/pcie/aer.c                        | 51 +++++++++++--------
+ drivers/pci/pcie/aer_cxl_rch.c                |  3 +-
+ drivers/pci/pcie/dpc.c                        | 24 ++++-----
+ drivers/pci/pcie/err.c                        |  5 ++
+ include/linux/aer.h                           |  8 +--
+ include/ras/ras_event.h                       |  2 +-
+ 8 files changed, 72 insertions(+), 56 deletions(-)
+
+-- 
+2.53.0
 
