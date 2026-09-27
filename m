@@ -1,84 +1,113 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE1BB3B42D7
-	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 18:28:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 631A8427FB0
+	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 18:29:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790533712; cv=none; b=neWFL7N9rJPAWZAz5hhqjRTRNXvY7dVjP3GSrSKTI4PSg4QoXNUUgPvuv6c5gHMGIihbkuk7VMPvnLvQNs/7A7bK80CNeoX6tnuaY+pTAu4s2lPdp7NfM4D+bwMcrTzWaOaQKhhyAfAVyZqkvbF6tfoL8QTWt6TmwSvPY8yYXz0=
+	t=1790533787; cv=none; b=gDdMkXZVgPt5U3DygpRLWFKf5zS9ye1XU6sYk5HszcJQ8WonfzOGPHRs+vDXul0EfILtV07jFT0zbdMa9x32+WQ9L5201P1tjTJXZxW3aYkuGcqNKCBgMxKhg1wgSCKVHYFnyzQTfs69pXfdisNBgXeReI2IuDIq43Gw0b0vTEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790533712; c=relaxed/simple;
-	bh=1uNtCGF65stc3r8cvvIr48Yler24up+Bv+CTKYA3B5s=;
+	s=arc-20240116; t=1790533787; c=relaxed/simple;
+	bh=3jh01DUm3Vkcr1dpDydsiC4CXQ1G5KRtm2gNg6LsJeA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=JsPa9eHAt65rpKXpd8DQAtH6IO+0DdA/FyE1swaiWEme9nROpQ7+zO+kJQ7JsAQYD2ErxvPNuNcXafqfyyST8s+/EgHY7QqgcL/qBKUiyOUkf8RwdYOq0ecPI5lVzWgAprC1USPK0DwzphM4Z92td4UVQDkvMvbFTDvDWWpafvA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=brK8cZAB; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=QwesLZfu3nAkU1uGYjMxyH7q88XN5b8bRxFae/eQwpB+x4jvPvIOPeMKq4Ar3w47IHYklOMXi92h/8C49hcqwxQThtPtjYMvLNU8oaPr8CZ+xMUlXTIh3WHqPZvA59sjqQRs9N/hcPur9Wz7+kIpQJbLZAEnTe3+M76TxQBSKwU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X1XRvPw+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="brK8cZAB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71BCB1F000FF;
-	Sun, 27 Sep 2026 18:28:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X1XRvPw+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 224981F000FF;
+	Sun, 27 Sep 2026 18:29:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790533710;
-	bh=1uNtCGF65stc3r8cvvIr48Yler24up+Bv+CTKYA3B5s=;
+	s=k20260515; t=1790533786;
+	bh=WZoWbATcGlbaw3MaeAsesoVhsnCa1pefTQdFC9++Cm0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=brK8cZAB+kV9R9SIidwUjYVXzExCzaxtYLyM50m0dJvZNWmQghcLq0CbEyHCmmQot
-	 mH32Wzy3gGN1F2D730m9PR5cLJwwE2GDQ1v+QfCNiARbP4xEW04XbPWE1JJVaCzc4E
-	 lYwH+kGBCgIqs3cDm88cltwq4AGmR65jdipra8GofGIr0NGAFjZ5uQE9A5p83sFsN7
-	 EQTSlq+jzzKy+QpGxzLJm66ccDtCwfaUEJEk/7tG4bsKz7WbRqPcGORwuRmwQqEpWi
-	 wX4asTJ6oe16LLo1i+U0rq2xU5izlZ8QIepyg+Zn/LgE7Mi+8KUMXB2VZUZmSW2qiG
-	 hrFJi1iY0MeYw==
+	b=X1XRvPw+Lt8Jp4bYk7vtoe+gy3zoQbs49MyVChUGSN65TNRMAzPkVOZTFrIyFJLgp
+	 c53n1XqTus4W8TqEFv/s7zl07DUPg7Ele4Jb5G206sBdadsGhz++oPqSQsMRoHts0X
+	 Lgrrh7BTfkV16Ny92Zpzwm+UZ1YnOd5J85pw2O+XB+SbM4Ovr90W9OgwwbXgU3tKHU
+	 AvKCbztDHjVR4jOWwDJqzinqu3ujrpVf7aKba2PN4/hPVUdsxQNRWHDAdVv/uglB+h
+	 q0VdfFGiMpyfBAPdNUbfPTb2RbEwX1/GWs4UILwe0W4aJHQevFY9MvC7MHr5+/YhVh
+	 sDgldsSwRipsQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC v4 4/5] PCI: pciehp: Report surprise removal from
- pciehp_isr()
+Subject: Re: [PATCH 6/7] PCI/AER: Renumber severity constants
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Abhin Parekadan Jose" <abhinjoses@gmail.com>
+To: "Lukas Wunner" <lukas@wunner.de>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260927182017.938565-5-abhinjoses@gmail.com>
-References: <20260927182017.938565-1-abhinjoses@gmail.com>
- <20260927182017.938565-5-abhinjoses@gmail.com>
+In-Reply-To: <244713dea3786099e9ad4eb10ff9f2f430cd7ad3.1790531238.git.lukas@wunner.de>
+References: <cover.1790531238.git.lukas@wunner.de>
+ <244713dea3786099e9ad4eb10ff9f2f430cd7ad3.1790531238.git.lukas@wunner.de>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 27 Sep 2026 18:28:29 +0000
-Message-Id: <20260927182830.71BCB1F000FF@smtp.kernel.org>
+Date: Sun, 27 Sep 2026 18:29:45 +0000
+Message-Id: <20260927182946.224981F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> A surprise removal during a safe removal cannot be reported: the
-> removal blocks waiting on a device interrupt or status read, and the
-> single-threaded IRQ thread is itself executing that removal, so it
-> cannot report that the device is gone. The removal hangs.
->=20
-> The hardirq handler pciehp_isr() still runs while the IRQ thread is
-> blocked, so it can report the disconnect. However, pciehp_ist()
-> deliberately ignores link and presence changes caused by a Secondary
-> Bus Reset or Downstream Port Containment, where the device is only
-> temporarily inaccessible. Distinguishing those normally requires
-> waiting for the SBR or DPC to conclude, which takes seconds and is not
-> possible in hardirq context.
->=20
-> Schedule a work item from pciehp_isr() when a PDC or DLLSC event
-> arrives and neither Presence Detect State nor Data Link Layer Link
-> Active indicates that a card is present.
-> This provides us a pathway to wait/block/sleep as we will not be
-> in pciehp_isr().
->=20
-> In pciehp_disconnect_work(), wait for the DPC recovery or SBR to complete
-> before checking presence and not consume the link change flags, so that
-> pciehp_ist() can still see them and ignore the link change if it was
-> caused by a DPC or SBR. Even after the DPC or SBR has completed, if the
-> device is really gone then pciehp_disconnect_work() will see that and
-> report the surprise removal. Like pciehp_ist(), it holds a runtime PM
-> reference on the port and checks presence under reset_lock, since a
-> slot reset may make Presence Detect State and Link Active flap.
->=20
-> Link: https://lore.kernel.org/all/aHlZE18kPuHuDtTT@wunner.de/
-> Signed-off-by: Abhin Parekadan Jose <abhinjoses@gmail.com>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Critical] ras/aer: ABI breakage in aer_event tracepoint severity values
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+commit 1b45a2c88d40942123bcb76f3b3bbf8eb9ec2cac
+Author: Lukas Wunner <lukas@wunner.de>
+
+PCI/AER: Renumber severity constants
+
+This commit modifies the AER severity constants to align with the Device St=
+atus
+Register bit numbers defined in the PCIe specification. It updates the seve=
+rity
+strings and the ras_event documentation to reflect the new constant values.
+
+> diff --git a/include/linux/aer.h b/include/linux/aer.h
+> index df0f5c382286f..795c551320088 100644
+> --- a/include/linux/aer.h
+> +++ b/include/linux/aer.h
+> @@ -11,10 +11,10 @@
+>  #include <linux/errno.h>
+>  #include <linux/types.h>
+> =20
+> -#define AER_NONFATAL			0
+> -#define AER_FATAL			1
+> -#define AER_CORRECTABLE			2
+> -#define DPC_FATAL			3
+> +/* Must match bit number in Device Status Register (PCIe r7.1, sec 7.5.3=
+.5) */
+> +#define AER_CORRECTABLE			0
+> +#define AER_NONFATAL			1
+> +#define AER_FATAL			2
+
+[ ... ]
+
+> diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
+> index fdb785fa4613a..1e03ade99386b 100644
+> --- a/include/ras/ras_event.h
+> +++ b/include/ras/ras_event.h
+> @@ -302,7 +302,7 @@ TRACE_EVENT(non_standard_event,
+>   *			([domain:]bus:device.function).
+>   * u32 status -		Either the correctable or uncorrectable register
+>   *			indicating what error or errors have been seen
+> - * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
+> + * u8 severity -	error severity 0:CORRECTED 1:NONFATAL 2:FATAL
+>   */
+
+[Severity: Critical]
+Does this change unintentionally break the userspace ABI for the aer_event
+tracepoint?
+
+The tracepoint exports the severity field as a raw u8 integer in the binary
+trace ring buffer. By renumbering the underlying AER constants in
+include/linux/aer.h, the tracepoint now emits different integers for hardwa=
+re
+error events without an ABI translation layer.
+
+Userspace tools like rasdaemon that rely on the historical raw integer valu=
+es
+will now misclassify hardware error severities. For example, a correctable
+error (now 0) would be incorrectly interpreted as non-fatal by older tools
+expecting the previous ABI layout.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260927182017.9385=
-65-1-abhinjoses@gmail.com?part=3D4
-
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1790531238.gi=
+t.lukas@wunner.de?part=3D6
