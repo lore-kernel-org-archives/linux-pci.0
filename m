@@ -1,114 +1,63 @@
-Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05FB53502A7
-	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 19:23:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CD6F3F926F;
+	Sun, 27 Sep 2026 19:49:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790537021; cv=none; b=jEsTs/rFtZO+N9GlC/3ldWR5y7aiiB2OncTV3tmgbbQLwhvLTrg5O4C/yzJvCbmqhqcpPdkCZG7vzhhTmonFxUiEQMUBwQdQ1i0on4W61PWYzVEZxsqAwZHPAKttvrJfZUju53iMrtVWS1M+ZC8V2p86lMVedy6T9jTZDCfbLZQ=
+	t=1790538560; cv=none; b=Pa5sM//vt6Zc08X9HOH7IKtR754ymn1YCwbjBlLHJ1tOaP2Kq14DI7DWSfEvh68DJJbi2xnLXwGiP/0a6Z6xrY9tdIXXEHTZ2xYqB8JRHNknTDQGxTnofP0FoUySkLkxwzpbHbh5zZ+pPrCSD5BZ/yJcp1C6lHCPS7YeziRaxaI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790537021; c=relaxed/simple;
-	bh=zABX1+4Cs7ctBNzJDwB2riz0rGmqRhkqb/LME9uAtjM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RQiAfN5/EN7nfwdrzlH2XlUoOtmSVdvuf8k7mnwV9kXXgG6VnrGOkce9E21oRfXqPHcefcXFnmSCV0gx9nzSFBDrT+7srBIfUPwWrKAQrOmwcDk2kITPHpKLXyZb0oiUpe5vhbyAfwIrYyISJvU6b37XWZkhTh1cw+Vo9h340lg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout2.hostsharing.net (Postfix) with ESMTPS id 01216709F;
-	Sun, 27 Sep 2026 21:23:37 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id D16CC6252950; Sun, 27 Sep 2026 21:23:36 +0200 (CEST)
-Date: Sun, 27 Sep 2026 21:23:36 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: sashiko-reviews@lists.linux.dev, Tony Luck <tony.luck@intel.com>,
-	Steven Rostedt <rostedt@goodmis.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 6/7] PCI/AER: Renumber severity constants
-Message-ID: <arltOHrdHdokyfC9@wunner.de>
-References: <cover.1790531238.git.lukas@wunner.de>
- <244713dea3786099e9ad4eb10ff9f2f430cd7ad3.1790531238.git.lukas@wunner.de>
- <20260927182946.224981F000FF@smtp.kernel.org>
+	s=arc-20240116; t=1790538560; c=relaxed/simple;
+	bh=iWCmURMLuDpQkHHgL5/qAvECS3kjwSbk59FrytsEm7I=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=cfPRE6ghcEOB5hpzbJFARFs33k8/MqyvJgr46Fg0edQXlwQh/jvEfqgq63jlSG1+fKuLUO1RJVIrRrgwHfUtkCd7G95Co9EWfurL0RhoWBxhwgPaGt0bwEyB1x8mgbi0FDwNGq+ney9tnBGdYTOodKD3W9wC8vPV8TiJfUe8Z+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YkyBIvk5; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YkyBIvk5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F067F1F00893;
+	Sun, 27 Sep 2026 19:49:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790538559;
+	bh=JgjVMJzoTDXZLljiCvxHnmepUJtCbTxKOtjiawS7R+Q=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc;
+	b=YkyBIvk5rAxDIFg/orhsgpZ15jQFwTeqwhsviFVK2X4uG5SCtb/KCB8HcfibbUr9a
+	 AfMHX7yRImJh81bKegtoiCA5Edp4nESH5TslRUBFnHoCcFq5bUUQBdz/GAvTeCDNv6
+	 sFYopgqkNcPRghXhmYwbVl0T1raJOJNln7vnul08nxNAP5AP/IB+Zf2w48jDFuX+11
+	 r/Y7DmhR830FkHE7cFlPN83PKf32vNYDX88aEwIJn3Hzjtl+E+rer9En/Xnft889AE
+	 ijI7yPH63jDwNuMU3waxoe6lluY2grH2DHVfJEcpmYRf0tl7w3paI+w4S8/DYiB9ua
+	 LcuoAzLNnri1w==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id D0A41380AA5F;
+	Sun, 27 Sep 2026 19:48:05 +0000 (UTC)
+Subject: Re: [GIT PULL] PCI fixes for v7.3
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20260926165811.GA2146023@bhelgaas>
+References: <20260926165811.GA2146023@bhelgaas>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20260926165811.GA2146023@bhelgaas>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v7.3-fixes-2
+X-PR-Tracked-Commit-Id: 4fde448225123442c5796f54b7a4400e2d3cbaf6
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: fddfc3ec31799a932bb92f1b8a84cb3d1f963be9
+Message-Id: <179053848466.2777566.15245149270723962711.pr-tracker-bot@kernel.org>
+Date: Sun, 27 Sep 2026 19:48:04 +0000
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Mario Limonciello <mario.limonciello@amd.com>, Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, Mikael Etienne <mikael1022bzh@gmail.com>, Arthur Husband <artmoty@gmail.com>, Alvin Lim <alvinwylim@gmail.com>, Niklas Cassel <cassel@kernel.org>, Roland Waltersson <roland.waltersson@netinsight.net>, x86@kernel.org, Angel J <iamanaws@httpd.dev>, Herve Codina <herve.codina@bootlin.com>, Andrea della Porta <andrea.porta@suse.com>, Liz Fong-Jones <lizf@honeycomb.io>, Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260927182946.224981F000FF@smtp.kernel.org>
 
-[cc += Tony Luck, Steven Rostedt, start of thread is here:
-https://lore.kernel.org/r/244713dea3786099e9ad4eb10ff9f2f430cd7ad3.1790531238.git.lukas@wunner.de
-]
+The pull request you sent on Sat, 26 Sep 2026 11:58:11 -0500:
 
-On Sun, Sep 27, 2026 at 06:29:45PM +0000, sashiko-bot@kernel.org wrote:
-> PCI/AER: Renumber severity constants
-> 
-> This commit modifies the AER severity constants to align with the Device Status
-> Register bit numbers defined in the PCIe specification. It updates the severity
-> strings and the ras_event documentation to reflect the new constant values.
-> 
-> > +++ b/include/linux/aer.h
-> > @@ -11,10 +11,10 @@
-> >  #include <linux/errno.h>
-> >  #include <linux/types.h>
-> >  
-> > -#define AER_NONFATAL			0
-> > -#define AER_FATAL			1
-> > -#define AER_CORRECTABLE			2
-> > -#define DPC_FATAL			3
-> > +/* Must match bit number in Device Status Register (PCIe r7.1, sec 7.5.3.5) */
-> > +#define AER_CORRECTABLE			0
-> > +#define AER_NONFATAL			1
-> > +#define AER_FATAL			2
-> 
-> [ ... ]
-> 
-> > +++ b/include/ras/ras_event.h
-> > @@ -302,7 +302,7 @@ TRACE_EVENT(non_standard_event,
-> >   *			([domain:]bus:device.function).
-> >   * u32 status -		Either the correctable or uncorrectable register
-> >   *			indicating what error or errors have been seen
-> > - * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
-> > + * u8 severity -	error severity 0:CORRECTED 1:NONFATAL 2:FATAL
-> >   */
-> 
-> [Severity: Critical]
-> Does this change unintentionally break the userspace ABI for the aer_event
-> tracepoint?
-> 
-> The tracepoint exports the severity field as a raw u8 integer in the binary
-> trace ring buffer. By renumbering the underlying AER constants in
-> include/linux/aer.h, the tracepoint now emits different integers for hardware
-> error events without an ABI translation layer.
-> 
-> Userspace tools like rasdaemon that rely on the historical raw integer values
-> will now misclassify hardware error severities. For example, a correctable
-> error (now 0) would be incorrectly interpreted as non-fatal by older tools
-> expecting the previous ABI layout.
+> git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v7.3-fixes-2
 
-Hm, my understanding was that the TP_PROTO() arguments to a TRACE_EVENT()
-do not constitute ABI, but rather (only) the string emitted by
-TP_printk().
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/fddfc3ec31799a932bb92f1b8a84cb3d1f963be9
 
-My patch changes the value of a TP_PROTO() argument but not the
-TP_printk() output.
+Thank you!
 
-However, looking at rasdaemon source code, it's defining constants with
-values identical to the kernel:
-
-https://github.com/mchehab/rasdaemon/blob/master/core/ras-events.h#L248
-
-So it looks like this is uAPI without being marked as such and we're stuck
-with it. And so apparently patch [6/7] is not applicable and patch [7/7]
-needs a fixup. :(
-
-Thanks,
-
-Lukas
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
