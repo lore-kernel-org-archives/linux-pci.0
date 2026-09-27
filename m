@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 220972D5937
-	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 17:03:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 166222E22B5
+	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 17:07:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790528637; cv=none; b=LlhTmMont/+5rXmYXgwQYn+Z56svsXrJs+/RRSwfrhICPNUMKmjkeqFZG3fFPmcz2THwXHb8g12q9P0hLsmFyLkaQGP0mWHyGpR/831+4i1EFNs6AOu+3ddfTJFfbvRAbt47p6u27rYECqQLcMcKHWsq66xxYBnuN/kPa07tRJg=
+	t=1790528829; cv=none; b=WyG+MShYHTQXPLeg0o1zj6TvLDs6cvYNWbZDEMDBrPyMgx2ezo63ogwiQbJoHXAQjtRRlRzArPk5sUdFsLch1qmOi9MJYTR5ufVcTUxXQPaQbfNRdobSg1e38M2qqM0IVm92jCkhzDcHlvrc3Bc+qt86PhYHYdrM7zJWUBSfg+s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790528637; c=relaxed/simple;
-	bh=PdmDkpfuDM8nnaA0qWE17K6XogtbwIL6gGrkjbONv9A=;
+	s=arc-20240116; t=1790528829; c=relaxed/simple;
+	bh=t4MpzbGhDP3WTd4tOwBOMMxF71dEEHxNnmTyXe4dwzg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=km0MOGJW93keaixWKZnYaJ0PjdOAobSH5wArUquKmrTK6b34oSHxYeBTFradOWpg/GWZiUlHq0qDSI7yUCAn+FaSr7bitDKjRLaY06+Uu3c0e5ZUQ58ZL9XOLdy1ypB9Jd6CE/nDZE0MteYxdwWL0WhArO1DvF1U8uScalMcwCk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DlqPo/xV; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=cPLz2UhZM0EpahCRQB6BxAuWnIA7g/or9gzbkAbCzz0UEVoVMjLICwfE8qvwDhs44avsFox2xhCq4GWY2o4KcEub3Co03rRmfX6QiHINrss7NC/m3X00s38IHV0Vt1pzyJyq1FcmpyEqA8ypDkiy5XSx8RCpVSh5n9bMjpSptZ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LARzo6Hh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DlqPo/xV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 759301F000FF;
-	Sun, 27 Sep 2026 17:03:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LARzo6Hh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F9241F000FF;
+	Sun, 27 Sep 2026 17:07:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790528635;
-	bh=mh+jqrSoSSIAlOVpovpfQv/bv4y6lj3lbamfyyBGOq4=;
+	s=k20260515; t=1790528827;
+	bh=WlaHa6omdYQ1NynS/u3240jDNLFr3tva4Fy+DjN1fT8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DlqPo/xVy1XIdGt5C/mQhzJoJzgvjUiQRTn+FZFNUgrsrm4BeHDc0gbghtM7Chytd
-	 bDJ7Ssi1qgTAeD/aqhJpG5yem2ubgwkU7wizcr2Hqr1EWXeF+E1Ye8WtaP1jp9/jZe
-	 LrcoaQQHjg4alhE8YGYUqNmBpfP9tfo407ujNCFG4Ec2L3jjvzJH5SifulbiUINIMC
-	 iKV4cXp/mLy6tTZl9OPR4XQ6B0Ia+89sYW3HrbmxfF5zP/RD2wulKPQ1OZIQGnmn7G
-	 BTAYnyEJMCLxQwA1H1C8f9THw1I29qjB+k4usWex/+D7688PIzRQz+YB0cvmFT4vov
-	 3BACMPyzv9Uug==
+	b=LARzo6HhQJJ0cIPG7Q8pCURD56wthHWNsJt61ga26ASYxcjcC9BSF9DoFjJUjiqCP
+	 C11AS5lbDlsEtyXpCAf2Qmrg/Oyqn4d2NqaFs/GMz8t9p3KnualBJkj/CC50/htvgq
+	 IgcIqomznn/5N7YUrNyJ/Mn8zGq7J58PrVq2H7y8Nfl+RzbqWmyPwNNrLRA7rr/AcH
+	 Q68F6DN7AXnQTwmkN1Vi6hMBUwjFC5ZIA6TYOgWGCwzH7AQRmviGIOlraT28iDzFtu
+	 mQQ70JGi3DEU0J0MWeLz9zvHEsYeB3aTFtmRINzGC4Q66XpuBQaD9mNt1T0K6yI+3G
+	 Rpas2sU4gLppg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC v2 2/5] PCI: pciehp: Add pci_hp_wait_link_change()
+Subject: Re: [PATCH RFC v2 1/5] PCI: Report surprise removal event
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Abhin Parekadan Jose" <abhinjoses@gmail.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260927165459.829900-3-abhinjoses@gmail.com>
+In-Reply-To: <20260927165459.829900-2-abhinjoses@gmail.com>
 References: <20260927165459.829900-1-abhinjoses@gmail.com>
- <20260927165459.829900-3-abhinjoses@gmail.com>
+ <20260927165459.829900-2-abhinjoses@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 27 Sep 2026 17:03:55 +0000
-Message-Id: <20260927170355.759301F000FF@smtp.kernel.org>
+Date: Sun, 27 Sep 2026 17:07:07 +0000
+Message-Id: <20260927170707.6F9241F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,78 +46,87 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] pci: missing acquire barrier in pci_hp_wait_link_change()
+- [High] pci: workqueue list corruption via TOCTTOU in pci_dev_set_disconne=
+cted
 --
 
-commit 4a9f36e746ab6c768961f1d34f724895b17c9def
-Author: Abhin Parekadan Jose <abhinjoses@gmail.com>
+commit 95014e29e88ff3b1020861e3c7351ac0913e2410
+Author: Michael S. Tsirkin <mst@redhat.com>
 
-PCI: pciehp: Add pci_hp_wait_link_change()
+PCI: Report surprise removal event
 
-pci_hp_spurious_link_change() awaits the end of a code section causing
-spurious link changes, such as a Secondary Bus Reset. This patch splits the
-wait out into a new function pci_hp_wait_link_change() to allow hotplug
-drivers to wait for the link to settle without clearing the changed state.
+This commit introduces a mechanism to notify drivers about surprise device
+disconnects via a work struct. It allows drivers to perform necessary clean=
+up=20
+knowing the device is inactive, preventing the remove callback from hanging=
+=20
+forever when waiting for interrupts.
 
-> diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug=
-/pci_hotplug_core.c
-> index fadcf98a8a660..c3e0ee8b36381 100644
-> --- a/drivers/pci/hotplug/pci_hotplug_core.c
-> +++ b/drivers/pci/hotplug/pci_hotplug_core.c
+Link: https://lore.kernel.org/all/fba3d235e38c1c6fcef2a30ed083ad9e25b20fa3.=
+1752094439.git.mst@redhat.com/
+
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index ba3c3fddddc23..23b1605e783a3 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -805,6 +805,12 @@ static inline int pci_dev_set_disconnected(struct pc=
+i_dev *dev, void *unused)
+>  	pci_dev_set_io_state(dev, pci_channel_io_perm_failure);
+>  	pci_doe_disconnected(dev);
+> =20
+> +	if (READ_ONCE(dev->disconnect_work_enable)) {
+> +		/* Make sure work is up to date. */
+> +		smp_rmb();
+> +		schedule_work(&dev->disconnect_work);
+> +	}
+
+[Severity: High]
+Can this lockless check cause a race condition if the CPU is preempted right
+after the READ_ONCE(), but before schedule_work() executes?
+
+If preemption occurs here, the driver could be concurrently unbound, calling
+pci_clear_disconnect_work().
+
+If a new driver then binds and initializes the work item via=20
+INIT_WORK(&dev->disconnect_work, ...) during its probe, the delayed
+schedule_work() from the preempted CPU might execute concurrently with the
+new initialization.
 
 [ ... ]
 
-> @@ -528,6 +528,24 @@ void pci_hp_unignore_link_change(struct pci_dev *pde=
-v)
->  	wake_up_all(&pci_hp_link_change_wq);
->  }
-> =20
-> +/**
-> + * pci_hp_wait_link_change - await end of code section causing spurious =
-link changes
-> + * @pdev: PCI hotplug bridge
-> + *
-> + * Await the end of a concurrently executing code section which is causi=
-ng
-> + * spurious link changes on the Secondary Bus of @pdev, if there is one.
-> + *
-> + * Unlike pci_hp_spurious_link_change(), leave the record that such a co=
-de
-> + * section has executed in place.  May be called by hotplug drivers whic=
-h need
-> + * the link to have settled, but not the cause of a link change, so that=
- they
-> + * don't take the answer away from the caller of pci_hp_spurious_link_ch=
-ange().
-> + */
-> +void pci_hp_wait_link_change(struct pci_dev *pdev)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index d31a8d107b1ef..f4c0240b62dc8 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+[ ... ]
+> @@ -2123,6 +2126,49 @@ pci_release_mem_regions(struct pci_dev *pdev)
+[ ... ]
+> +static inline void pci_clear_disconnect_work(struct pci_dev *pdev)
 > +{
-> +	wait_event(pci_hp_link_change_wq,
-> +		   !test_bit(PCI_LINK_CHANGING, &pdev->priv_flags));
-> +}
+> +	WRITE_ONCE(pdev->disconnect_work_enable, 0x0);
 > +
+> +	/* Make sure to stop using work from now on. */
+> +	smp_wmb();
+> +
+> +	/* Leaves the work disabled, so a racing schedule_work() is a no-op. */
+> +	disable_work_sync(&pdev->disconnect_work);
+> +}
 
 [Severity: High]
-Does this wait_event() condition check need an explicit acquire barrier?
+Does this function provide enough protection against the delayed
+schedule_work() scenario mentioned above?
 
-If !test_bit(PCI_LINK_CHANGING, ...) evaluates to true immediately,
-wait_event() returns without executing any memory barriers.
+While disable_work_sync() prevents immediate races by setting disable bits =
+on
+the work item, a subsequent driver probe calling INIT_WORK() will
+non-atomically reset work->data.
 
-On weakly ordered architectures like ARM64, could this allow the CPU or
-compiler to reorder the caller's subsequent state reads before the test_bit=
-()
-load?
-
-For instance, if thread A clears PCI_LINK_CHANGING and wakes waiters, and
-thread B calls pci_hp_wait_link_change() and returns immediately without a
-barrier, could thread B's subsequent PCIe config reads execute before obser=
-ving
-the link state change, even if inside an acquire lock like down_read_nested=
-()?
-
-Would using test_bit_acquire() or an explicit smp_mb() prevent stale reads
-here?
+This reset clears all flags, including the WORK_OFFQ_DISABLE_BITS. If
+INIT_WORK() executes INIT_LIST_HEAD() concurrently with the delayed
+schedule_work() insertion, couldn't this overwrite the next and prev pointe=
+rs
+of the queued work item and corrupt the workqueue linked list?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260927165459.8299=
-00-1-abhinjoses@gmail.com?part=3D2
+00-1-abhinjoses@gmail.com?part=3D1
