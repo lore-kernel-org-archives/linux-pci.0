@@ -1,65 +1,64 @@
-Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
+Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D93D8427FBE
-	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 17:52:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CABE93BB9E1
+	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 17:52:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790531535; cv=none; b=Kfo0A0M2+lY3HKSLQs9jrLevtCptc5se1CZtl37mdxYmneUX42gVr926QtyuURe7jySQVA/4Yh5FmESWTcAsERCbxVG1U4rclcNNoNFwU5Wy4XtsLRFRvcslCJh7hwGesFrP5Kpl68G5fUEq7WEt/v0Nks9hFhAGqlIxt8J2xU8=
+	t=1790531537; cv=none; b=LH33c62/EHKTqpXMVx5FDowmpde5Oe7lDRHJ1obDdSwICYi4VMuISYKNtR2dyG59UD8QP4EXCOB5j+wRiCTRhJblLfsClWpB1quqFZgXj6jgtxfhTiC+5Q0bsO8ivx+tQSi01moUuczg4BablV+FMIxl3r/PTdRNz1O6kFoGdW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790531535; c=relaxed/simple;
-	bh=W4R8p7pU7NTW2xYYBKXi0TB7rn/G0MhL746kJAez4jg=;
+	s=arc-20240116; t=1790531537; c=relaxed/simple;
+	bh=XSQC/81m+2NGyN2HF+46o8gTXzhtxgDYUbfAyk7YscA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LvnPfiw9vdMKQJphNxu2GPf1NhIH5Q23GRNciSh8HxLGqRzcCFf/Hr6nBfWRQOEMnBlY5AExMlnvabRxm/kBpXys57T6kvX9uWFFlv7jSt4jfr5FaRlOpkvtSxGhkb49M8Qit8krSA8/9uMKbvL8YlK0/Vj9IubV8xG1huKVavo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sdcq3Rm9; arc=none smtp.client-ip=209.85.221.45
+	 MIME-Version; b=d+4fjEExDJnQ7HZFwtqvNlTGgFCF/gqZiLRDwbpsVR5xW/UpYXnHxR8m7Yv7nqRU5FjdPZBlbPFTqiTcXhFVEVAzqo5rdL+RJffAm9TJ+fImWSxNujgEz07JhcsfVobiGA3Jlaky02C6cxsbQWdaN8mHAw98qmy5qfIfTuXGHkc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=C0bhMz9H; arc=none smtp.client-ip=74.125.225.76
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sdcq3Rm9"
-Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-488885c3844so714243f8f.0
-        for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 10:52:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C0bhMz9H"
+Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-482f6350f91so1314562f8f.1
+        for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 10:52:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790531532; x=1791136332; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1790531533; x=1791136333; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=DAfIRjqX3j9SJ+2tHHyzYdgAbG7vEZeWXs9def6Qdmg=;
-        b=sdcq3Rm9krh4r+FCe+sVVnA7QCCTTXvEiU0GPC6cT8lsRSFkgAGb2OlUE/I5LEEBLW
-         6C+ozr/8SkiO+pE9976HGS/ln4102yTrONB47u0+kx3ERTtnOxku+UDTFO8gqWqJV4QE
-         0BQvYbjvG9sVCCNHq6Agz87roQEaayZ/OWKBa7ykR2bbGYWhSneirYxth81JBOhUncQd
-         IOuqT2Po+DuoTKIxLH1YLm/B7cOwXSCS+fowlxwLV7WjcqT7JF/XZQncW4ggz91mY0qM
-         gxI+pCSM77sNo+gnsgUwRM9D82yjRQ4YF+SxV6SG+bc8e7LZKOlZZLWwRlBfXR0wEwz6
-         mELw==
+        bh=/YmLfvNYngEdzxR1cneHvQxjYljmSjSjM29lfe3X1Ew=;
+        b=C0bhMz9HjNzjPLDdYarMqRhGc6e0crr4KxNWG89p9AbkVW9F698rVzImgG1L3cJ2je
+         ucIwZApj//5n39lwrk2N35hSEkUuTgjWv+QWb0C2ueFmqoNMf+UCRU5kpTLCvu416WOu
+         ufwJpgoTsX5BW+LAmignUNJWSG267ygsgmfC5VAUNv2FIRYIHl9Ckibef5cOcLhCvAKK
+         NHivJi2qCO4Y54V5uWBhHQhBbAgzvfatoDYs9TlMyEM/3a5IryS/BSE6bYNweMdYVFJn
+         OTMrwJNazIj5lK7OC7tIKnR6l8j9tKA4PL3PLMJOUuBJz2GKh1Pim8Ff4kSGYQfLbYuY
+         WgZg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790531532; x=1791136332;
+        d=1e100.net; s=20260707; t=1790531533; x=1791136333;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=DAfIRjqX3j9SJ+2tHHyzYdgAbG7vEZeWXs9def6Qdmg=;
-        b=SImC3si/rSbCEDGzq1c7nMUDgcv8bUFdLQTdgXiso7NctfmNXqK6PqldhwDgK5lcqw
-         IWrBZ2uuIKCoV+R3XPAyDR+ULuRNTw6Gza5rWWQAQjP72TqYCzVE8K+3ka4HKuKYOb8C
-         cPuMaFfOimpMxKnHzjmYUIv1nsvyi1yqSqU76HcD4Mjn3f1mk57AbKrtbV2g4aieK3YW
-         tl+9NyG3LKuCxonb7XrXOA65iCFVMXK0RLp+cVu+04dUd8xnTtK6OnHpX81lMozfQHBN
-         3eBaGbtGDB6+2K/ASiM6MY6tZ/ig/CbXkxu4vLAGuVjZRWUBHH8Fus8YeIVC7gaOEy3Y
-         xhYg==
-X-Forwarded-Encrypted: i=1; AKwUvBzHi1rVN4p5Fr+8gzxvGwOfB5h7Px6JVXDmpj8yFBIYp+Z0qKXo4Gei3FKF97z7+/QO4+QWCvIoMQI=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKrirs8SFkPdtOxc13g2H7lXd7kUSS35TL+VJsTwAFlw3Wi9Pbr
-	u3QVoLMUWnn6TlCr/Vnfo3vtEuPYTCAcVAZnb+kBJKob4gk7LyoBcY7H
-X-Gm-Gg: AYBFou2K+5ub0SKYc1Ar9VDFGQGS8chxYMd+ZhTSpVESKweHGNQetvLaHXYq5iE8kap
-	wSXekrFEnAsWzL/Um2MPI8UahhjiOCB6XcC7QVVHJ6NDWcd8EEzT9YiRHb1ubjm2rC/lIY2xwRo
-	g6t+WzzKl4pyKfs/KU+0ZUj/pAZSjiOmuVuF1G0BK04UWJKh7MKQMhWG7zqavTPMx68A3laiQ2P
-	lZuxKbMd8MrCumGswXVVDgdTJYvF9eR36OsEq0neO+XTM2ZrctRPwZQ9SXFK9f/rXmgFsuSNNUD
-	QRJzgYuCOYIEIFpkPx0HHM8Nb95ktG8fMxO0e1xuirCEXYsqWK8PcCczCuW5qxb6naZuwEF7yF9
-	kTxOqWSjAM06nRoTOKBpnNUykKZY+reWCrRU/BTb76F2HXyO34mUaG2IIFaYh/3VodO/IRuBGkL
-	6hfHVZlRlqUJH/b3lQsfLFp67rw7PYHHFm/usJWxz/cDIlF0yviSRS9Dbd76eTubcMrTUpbrj8m
-	ukZl1o+uevk6V9gUHp5qL/2uigpJaKalzWz6ezxvBPjDqcu6V94CmOxYSS+R/SpCVIdn7g1DwMK
-	2Q==
-X-Received: by 2002:adf:e197:0:b0:488:8cf8:1c with SMTP id ffacd0b85a97d-4888cf80236mr4089251f8f.0.1790531531795;
-        Sun, 27 Sep 2026 10:52:11 -0700 (PDT)
+        bh=/YmLfvNYngEdzxR1cneHvQxjYljmSjSjM29lfe3X1Ew=;
+        b=UFnxKabSuz8s2r7tbsZyGH1DOTT7rPk+SO1nxjrG9kqEqV9Rhsxyirhjs+HpHGIKDM
+         hGq3ATFI/Q0KpcPaRV/WFg2YkBzJJOK+iOgamUwAJGjUbyf8OQWvgRMz8WZg1RPhWchs
+         Vkko7zg/3DX7rxt84WPVx6p0l+2X2Ti7DpAU39EW0Vrweaij38i62SIOHANiFeqTFFc7
+         O4I8tlCFRzInbcNcYWmQznNG3IRUM3XR//OxdPxV1Wn2bNG0bHCybrX5Vwrr6OUxxA7K
+         HPROFFUiPm+VFbOOY71ACzbprpngEd3JhvI73FB0ZCOY2F0ZtwXlWkZrKw0SmzSXgtl9
+         ThjQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzcR7qG7G3SP/swd0PshursL1nuDcXXH6Usd9TMjt1NsdkRyj79xgcEoOPFWwGH/2dWF6+5LvAni68=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKuknNMt9K2kzKgK6jJ6lJFxK78VpRXatCvQVbMHOzCNuHhBoUI
+	ufLwjOQlif7boAEWRUBfrq55TmfrXMr9Na2x6bRkMsvS0sVP7t0C2MwD
+X-Gm-Gg: AYBFou39i2kuRj2Pic+Tk6g4Zg2xGtCh8M1QZuqD9n3YB8IXZQabaB+GEkTihi0J6Z9
+	f82vxUHphnVP70zC+752Yki/PxTyEIkJRacXPngGxI8qkRpSaEqPIV+mmpcCQvgicrTv8llol1J
+	hee/a5TFF/qY/khf6SAf6Pg9owZiMr85Ti9lZoRwGilGXsLtc3TAeyGn5OC4ALyWIkN024gmnRP
+	hi1Rw6UKLzxRYVXI5geUwfqkm7auDiwrg68nD1kt1/o5XK8tdkirltgYwVEkDpWwDH4kyb+X2Fk
+	RknEfiaDYpnDgl+9nfahCjuCP/xrSi5I87VRi7PANbOiPQeKSOS6ZMUX7b332GgebqRyYrns3Jd
+	WUdVZzTOrU2gux6ZzpP6NpxIDPNUcY7kzam3Yez7pogodQzDDGQe1jpLxfrvPAWEMQuc3gsCj/M
+	/ZiHOEsjed6wEQiammW6cOER3rVeMeT5PH8ZvQ79I5epUcZRu8om21L8I8doS6vzYFaNXPavish
+	swk0Ms+uWFb/fpaCQkDlP+4WH2PV1++4JfyQTmEI+vz20S8f4Fn8XPcNUwQ3SnGN4Q=
+X-Received: by 2002:a05:6000:2010:b0:488:7803:c1ef with SMTP id ffacd0b85a97d-4887db496acmr14370762f8f.48.1790531532912;
+        Sun, 27 Sep 2026 10:52:12 -0700 (PDT)
 Received: from f3a6eae2255e.fritz.box (dynamic-002-214-014-217.2.214.pool.telefonica.de. [2.214.14.217])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4887a30bcc4sm22563923f8f.1.2026.09.27.10.52.10
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4887a30bcc4sm22563923f8f.1.2026.09.27.10.52.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Sep 2026 10:52:11 -0700 (PDT)
+        Sun, 27 Sep 2026 10:52:12 -0700 (PDT)
 From: Abhin Parekadan Jose <abhinjoses@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Lukas Wunner <lukas@wunner.de>,
@@ -73,9 +72,9 @@ Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
 	linuxppc-dev@lists.ozlabs.org,
 	linux-kernel@vger.kernel.org,
 	Abhin Parekadan Jose <abhinjoses@gmail.com>
-Subject: [PATCH RFC v3 2/5] PCI: pciehp: Add pci_hp_wait_link_change()
-Date: Sun, 27 Sep 2026 17:51:59 +0000
-Message-ID: <20260927175203.928270-3-abhinjoses@gmail.com>
+Subject: [PATCH RFC v3 3/5] PCI/DPC: Add pci_dpc_wait_recovery()
+Date: Sun, 27 Sep 2026 17:52:00 +0000
+Message-ID: <20260927175203.928270-4-abhinjoses@gmail.com>
 X-Mailer: git-send-email 2.51.1
 In-Reply-To: <20260927175203.928270-1-abhinjoses@gmail.com>
 References: <20260927175203.928270-1-abhinjoses@gmail.com>
@@ -87,84 +86,131 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-pci_hp_spurious_link_change() awaits the end of a code section causing
-spurious link changes, such as a Secondary Bus Reset, and then tells
-whether such a section has executed, using test_and_clear_bit() on
-PCI_LINK_CHANGED. The answer is one-shot: only the first caller sees
+pci_dpc_recovered() awaits completion of DPC recovery and then tells
+whether DPC recovered successfully, using test_and_clear_bit() on
+PCI_DPC_RECOVERED. The answer is one-shot: only the first caller sees
 true.
 
-Split the wait out into pci_hp_wait_link_change(), which leaves
-PCI_LINK_CHANGED alone, and implement pci_hp_spurious_link_change() on
-top of it. Test PCI_LINK_CHANGING with test_bit_acquire(), so that the
-caller's subsequent accesses are ordered after the end of the code
-section even if wait_event() returns without sleeping. No functional
-change intended.
+Split pci_dpc_recovered() into:
+
+ - pci_dpc_hp_sync_supported(), the check whether hotplug can
+   synchronize with DPC at all.
+ - dpc_wait_completed(), the wait for recovery with its 4 second
+   timeout;
+ - the final test_and_clear_bit().
+
+Add pci_dpc_wait_recovery(), which does the check and the wait but
+leaves PCI_DPC_RECOVERED alone. No functional change intended.
 
 Signed-off-by: Abhin Parekadan Jose <abhinjoses@gmail.com>
 Assisted-by: LLM
-
 ---
-Changes since RFC v2:
-- Test PCI_LINK_CHANGING with test_bit_acquire(). (Sashiko)
+ drivers/pci/pci.h      |  2 ++
+ drivers/pci/pcie/dpc.c | 54 ++++++++++++++++++++++++++++++++----------
+ 2 files changed, 44 insertions(+), 12 deletions(-)
 
-RFC v2: https://lore.kernel.org/all/20260927165459.829900-3-abhinjoses@gmail.com/
-Sashiko review of v2: https://lore.kernel.org/all/20260927170355.759301F000FF@smtp.kernel.org/
----
- drivers/pci/hotplug/pci_hotplug_core.c | 21 +++++++++++++++++++--
- drivers/pci/pci.h                      |  1 +
- 2 files changed, 20 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
-index fadcf98a8a660..75524fe2bec6e 100644
---- a/drivers/pci/hotplug/pci_hotplug_core.c
-+++ b/drivers/pci/hotplug/pci_hotplug_core.c
-@@ -528,6 +528,24 @@ void pci_hp_unignore_link_change(struct pci_dev *pdev)
- 	wake_up_all(&pci_hp_link_change_wq);
- }
- 
-+/**
-+ * pci_hp_wait_link_change - await end of code section causing spurious link changes
-+ * @pdev: PCI hotplug bridge
-+ *
-+ * Await the end of a concurrently executing code section which is causing
-+ * spurious link changes on the Secondary Bus of @pdev, if there is one.
-+ *
-+ * Unlike pci_hp_spurious_link_change(), leave the record that such a code
-+ * section has executed in place.  May be called by hotplug drivers which need
-+ * the link to have settled, but not the cause of a link change, so that they
-+ * don't take the answer away from the caller of pci_hp_spurious_link_change().
-+ */
-+void pci_hp_wait_link_change(struct pci_dev *pdev)
-+{
-+	wait_event(pci_hp_link_change_wq,
-+		   !test_bit_acquire(PCI_LINK_CHANGING, &pdev->priv_flags));
-+}
-+
- /**
-  * pci_hp_spurious_link_change - check for spurious link changes
-  * @pdev: PCI hotplug bridge
-@@ -551,8 +569,7 @@ void pci_hp_unignore_link_change(struct pci_dev *pdev)
-  */
- bool pci_hp_spurious_link_change(struct pci_dev *pdev)
- {
--	wait_event(pci_hp_link_change_wq,
--		   !test_bit(PCI_LINK_CHANGING, &pdev->priv_flags));
-+	pci_hp_wait_link_change(pdev);
- 
- 	return test_and_clear_bit(PCI_LINK_CHANGED, &pdev->priv_flags);
- }
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 175273756c183..cfa0202bf610b 100644
+index cfa0202bf610b..b1d9df904c625 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -360,6 +360,7 @@ static inline int pci_proc_detach_bus(struct pci_bus *bus) { return 0; }
+@@ -941,12 +941,14 @@ void pci_restore_dpc_state(struct pci_dev *dev);
+ void pci_dpc_init(struct pci_dev *pdev);
+ void dpc_process_error(struct pci_dev *pdev);
+ pci_ers_result_t dpc_reset_link(struct pci_dev *pdev);
++void pci_dpc_wait_recovery(struct pci_dev *pdev);
+ bool pci_dpc_recovered(struct pci_dev *pdev);
+ unsigned int dpc_tlp_log_len(struct pci_dev *dev);
+ #else
+ static inline void pci_save_dpc_state(struct pci_dev *dev) { }
+ static inline void pci_restore_dpc_state(struct pci_dev *dev) { }
+ static inline void pci_dpc_init(struct pci_dev *pdev) { }
++static inline void pci_dpc_wait_recovery(struct pci_dev *pdev) { }
+ static inline bool pci_dpc_recovered(struct pci_dev *pdev) { return false; }
+ #endif
  
- /* Functions for PCI Hotplug drivers to use */
- int pci_hp_add_bridge(struct pci_dev *dev);
-+void pci_hp_wait_link_change(struct pci_dev *pdev);
- bool pci_hp_spurious_link_change(struct pci_dev *pdev);
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 2b779bd1d861b..a6438a7e3d9c7 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -92,15 +92,7 @@ static bool dpc_completed(struct pci_dev *pdev)
+ 	return true;
+ }
  
- /* Lock for read/write access to pci device and bus lists */
+-/**
+- * pci_dpc_recovered - whether DPC triggered and has recovered successfully
+- * @pdev: PCI device
+- *
+- * Return true if DPC was triggered for @pdev and has recovered successfully.
+- * Wait for recovery if it hasn't completed yet.  Called from the PCIe hotplug
+- * driver to recognize and ignore Link Down/Up events caused by DPC.
+- */
+-bool pci_dpc_recovered(struct pci_dev *pdev)
++static bool pci_dpc_hp_sync_supported(struct pci_dev *pdev)
+ {
+ 	struct pci_host_bridge *host;
+ 
+@@ -108,13 +100,18 @@ bool pci_dpc_recovered(struct pci_dev *pdev)
+ 		return false;
+ 
+ 	/*
+-	 * Synchronization between hotplug and DPC is not supported
+-	 * if DPC is owned by firmware and EDR is not enabled.
+-	 */
++	* Synchronization between hotplug and DPC is only supported if DPC is owned
++	* by the OS, or by firmware with EDR enabled.
++	*/
+ 	host = pci_find_host_bridge(pdev->bus);
+ 	if (!host->native_dpc && !IS_ENABLED(CONFIG_PCIE_EDR))
+ 		return false;
+ 
++	return true;
++}
++
++static void dpc_wait_completed(struct pci_dev *pdev)
++{
+ 	/*
+ 	 * Need a timeout in case DPC never completes due to failure of
+ 	 * dpc_wait_rp_inactive().  The spec doesn't mandate a time limit,
+@@ -122,6 +119,39 @@ bool pci_dpc_recovered(struct pci_dev *pdev)
+ 	 */
+ 	wait_event_timeout(dpc_completed_waitqueue, dpc_completed(pdev),
+ 			   msecs_to_jiffies(4000));
++}
++
++/**
++ * pci_dpc_wait_recovery - await completion of DPC recovery
++ * @pdev: PCI device
++ *
++ * Wait for recovery if DPC was triggered for @pdev and recovery hasn't
++ * completed yet.  Unlike pci_dpc_recovered(), leave the record of a
++ * successful recovery in place.  Called from the PCIe hotplug driver where
++ * it needs the link to have settled, but not the cause of a link change.
++ * Nothing is awaited if synchronization between hotplug and DPC is not
++ * supported for @pdev.
++ */
++void pci_dpc_wait_recovery(struct pci_dev *pdev)
++{
++	if (pci_dpc_hp_sync_supported(pdev))
++		dpc_wait_completed(pdev);
++}
++
++/**
++ * pci_dpc_recovered - whether DPC triggered and has recovered successfully
++ * @pdev: PCI device
++ *
++ * Return true if DPC was triggered for @pdev and has recovered successfully.
++ * Wait for recovery if it hasn't completed yet.  Called from the PCIe hotplug
++ * driver to recognize and ignore Link Down/Up events caused by DPC.
++ */
++bool pci_dpc_recovered(struct pci_dev *pdev)
++{
++	if (!pci_dpc_hp_sync_supported(pdev))
++		return false;
++
++	dpc_wait_completed(pdev);
+ 
+ 	return test_and_clear_bit(PCI_DPC_RECOVERED, &pdev->priv_flags);
+ }
 -- 
 2.51.1
 
