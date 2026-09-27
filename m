@@ -1,325 +1,70 @@
-Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B2FD4137B2
-	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 18:21:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FB654279FE
+	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 18:25:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790533279; cv=none; b=stqbttM59ieC2Q0zw2znoJ3UCHmR4fchg1puFcU2BIErXXgy9yfUy6+yIUoNbBQyHDCVeulCTDlq03im8GK4+BOaWXaRVaY2fGaK9g6YwuY+KW3ZONM3qzQW/ymIR/oHwFKC4lLozkYgIKC2bXK2BK+tw7piK1bWaHyqB6cizZk=
+	t=1790533504; cv=none; b=KVurUrcR/lFvxt+RwLZiQprYpTgUSVlpxjvnmngBxZbrnYHhrloP4+vFcsRyOx+Aq776AqjhEui9E/ftShQLTbz3Hi6QyUQI42EvskbcVUKGJ9zQwv1alrCWEdfydK8KQyZUobv2zNFGhBRQyVIWL8A6f0jg0ElIjCurf6sY9YE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790533279; c=relaxed/simple;
-	bh=Er9JilpLT8rgMfjWdkyImJJh8PCQO8cucnF5VQKG8qg=;
-	h=Message-ID:In-Reply-To:References:From:Date:Subject:To:Cc; b=peKTs46Cdm7p6xAbkgorflhGVOId+CE+TpiuWxfVZBEbKOJ4KbS38y3QgO30F16Cnt3IfkDsTlJKvl5seKG2099Nrj2tJzdeNHOXt2GAL3kPaD7RaJcH3Waab11pUhe9flJrBkGD1jCNOpG733JN/wF5GhNITCjtlENAHyFSt80=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout2.hostsharing.net (Postfix) with ESMTPS id 9B1C270A0;
-	Sun, 27 Sep 2026 20:21:15 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 83BC3625294D; Sun, 27 Sep 2026 20:21:15 +0200 (CEST)
-Message-ID: <42a76bec58f9a844ef8d8405abafd6680b7f2ecc.1790531238.git.lukas@wunner.de>
-In-Reply-To: <cover.1790531238.git.lukas@wunner.de>
-References: <cover.1790531238.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 27 Sep 2026 20:02:07 +0200
-Subject: [PATCH 7/7] PCI/AER: Enable baseline capability error reporting
-To: Bjorn Helgaas <helgaas@kernel.org>, Raag Jadav <raag.jadav@intel.com>, Riana Tauro <riana.tauro@intel.com>, Yury Murashka <yurypm@arista.com>, "Matthew W Carlis" <mattc@purestorage.com>, linux-pci@vger.kernel.org
-Cc: "Mahesh J Salgaonkar" <mahesh@linux.ibm.com>, Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org, Aravind Iddamsetty <aravind.iddamsetty@intel.com>, Srinivasa Adatrao <srinivasa.adatrao@intel.com>, Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>, Terry Bowman <terry.bowman@amd.com>, Keith Busch <kbusch@kernel.org>
+	s=arc-20240116; t=1790533504; c=relaxed/simple;
+	bh=hGskFRHpVYOUjXSwgoC0God9ObA7BBMDYzfdYj/JRjQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=NiAq4QTTsVD7hbRVMIurkgiKNP2uNOt4XCVcyMFJk3DHjepDKN7SVbso6nOMVqFW2Fjhwl7IbWmDfCYOjJblwEVBfUe9X8tMqYTl7gAz1CCpJYwLv29T5dKjMFSD3JIzl/qoQa0O6HcMppIh9F/3sWzpA1Yw9hQ0fnHP0+9t2Vs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T3JX+/be; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T3JX+/be"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15DDA1F000FF;
+	Sun, 27 Sep 2026 18:25:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790533500;
+	bh=/5/tV5t8eRUaGADVw8IugSkJsUoNF2OTrI0ZbA436nY=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=T3JX+/beHKnWCKQG0/V61sOdgYNlGeGCVPB7LqbBzCLml2siOWbf3Du6BzQOlFq4e
+	 R9uajjsJQQ75jcIdLf2BpcrEZTSDtO3fJtxNd/RL2/KCZBZ7H4sWvhqfZWhyldlhBd
+	 E1jrLshYDVySiTWpXG39/fLaQOpPlCZohr9d7rUvbhTDIQQpYWIQ7B3imXpDgSpgXt
+	 SwFALKI0d4k7OibwdyYpDopNXM9nQsoVREx2SsiAe4QrU2oAEK/T7d9mdV0t/vPrdZ
+	 PFPKLfi1pChvNfOoIPrdZI5hWj6R0QOKygxkTmPfibSw4DV3Vciv0y0bB+HRxJPw0J
+	 3LhcsqU44DRYg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH RFC v4 3/5] PCI/DPC: Add pci_dpc_wait_recovery()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Abhin Parekadan Jose" <abhinjoses@gmail.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260927182017.938565-4-abhinjoses@gmail.com>
+References: <20260927182017.938565-1-abhinjoses@gmail.com>
+ <20260927182017.938565-4-abhinjoses@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 27 Sep 2026 18:24:59 +0000
+Message-Id: <20260927182500.15DDA1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-PCIe r7.1 sec 6.2.1 defines two error reporting paradigms:  Baseline
-capability and Advanced Error Reporting Extended Capability (AER).
+> pci_dpc_recovered() awaits completion of DPC recovery and then tells
+> whether DPC recovered successfully, using test_and_clear_bit() on
+> PCI_DPC_RECOVERED. The answer is one-shot: only the first caller sees
+> true.
+>=20
+> Split pci_dpc_recovered() into:
+>=20
+>  - pci_dpc_hp_sync_supported(), the check whether hotplug can
+>    synchronize with DPC at all.
+>  - dpc_wait_completed(), the wait for recovery with its 4 second
+>    timeout;
+>  - the final test_and_clear_bit().
+>=20
+> Add pci_dpc_wait_recovery(), which does the check and the wait but
+> leaves PCI_DPC_RECOVERED alone. No functional change intended.
+>=20
+> Signed-off-by: Abhin Parekadan Jose <abhinjoses@gmail.com>
 
-So far the kernel only supports the AER paradigm.  Enable the baseline
-capability paradigm to complete the kernel's support for error reporting.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-Baseline capability (solely) relies on the error enable/status bits in the
-Device Control and Device Status registers, which exist on every PCIe
-device.  One difference between baseline capability and AER is that the
-severity of Uncorrectable Errors cannot be controlled.  Another difference
-is that Advisory Non-Fatal Errors are not reported at all (PCIe r7.1 sec
-6.2.5).
-
-But the main difference to AER is that no detailed error information is
-available:  It is only known that an error occurred and which severity it
-had, but not its type or the Prefix / Header of the TLP that caused it.
-An exception are Unsupported Request Errors which are signaled with a
-dedicated bit in the Device Status register.  Report these as if the
-Unsupported Request Error Status bit in the Uncorrectable Error Status
-register was set, for consistency with the AER paradigm.
-
-Error recovery works the same for baseline capability as it already does
-for AER:  Drivers are informed about errors through the pci_error_handlers
-callbacks.  Recovery from Fatal Errors (and from Non-Fatal Errors, if
-chosen by drivers) is attempted through a Secondary Bus Reset.
-
-Similarly to commit f26e58bf6f54 ("PCI/AER: Enable error reporting when
-AER is native"), which universally enabled error reporting on AER-capable
-devices, the present commit is invasive because it universally enables
-error reporting on non-AER-capable devices.  Previously those errors were
-neither reported nor recovered.  It may be necessary to amend more drivers
-with pci_error_handlers callbacks to recover from newly reported errors.
-
-Baseline capability is only enabled if firmware grants AER control to the
-operating system.  Otherwise firmware owns the error enable/status bits in
-the Device Control and Device Status registers (PCI Firmware r3.3 table
-4-6 bit 3).
-
-Baseline capability support is initially only implemented for native error
-handling, not Firmware First error handling:  ghes_handle_aer() would have
-to be amended to pass the Device Control and Device Status registers to
-aer_recover_queue(), and to only pass an AER capability structure if it is
-present in the CPER record.  It's not clear whether any firmware actually
-generates such CPER records and whether implementing support for it is
-worthwhile, so postpone that for now.
-
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Link: https://lore.kernel.org/r/20260826212619.GA1566339@bhelgaas/
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- .../ABI/testing/sysfs-bus-pci-devices-aer     | 26 ++++++++----
- Documentation/PCI/pcieaer-howto.rst           |  9 ++--
- drivers/pci/pcie/aer.c                        | 42 ++++++++++++-------
- drivers/pci/pcie/dpc.c                        |  2 +-
- 4 files changed, 50 insertions(+), 29 deletions(-)
-
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci-devices-aer b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer
-index 5ed284523956..9e772e1ed9b3 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci-devices-aer
-+++ b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer
-@@ -1,9 +1,9 @@
- PCIe Device AER statistics
- --------------------------
- 
--These attributes show up under all the devices that are AER capable. These
-+These attributes show up under all PCIe devices (AER capable or not). These
- statistical counters indicate the errors "as seen/reported by the device".
--Note that this may mean that if an endpoint is causing problems, the AER
-+Note that this may mean that if an endpoint is causing problems, the error
- counters may increment at its link partner (e.g. root port) because the
- errors may be "seen" / reported by the link partner and not the
- problematic endpoint itself (which may report all counters as 0 as it never
-@@ -17,7 +17,10 @@ Description:	List of correctable errors seen and reported by this
- 		PCI device using ERR_COR. Note that since multiple errors may
- 		be reported using a single ERR_COR message, thus
- 		TOTAL_ERR_COR at the end of the file may not match the actual
--		total of all the errors in the file. Sample output::
-+		total of all the errors in the file.
-+		For PCIe devices without AER Extended Capability, only the
-+		total counter is meaningful while all other counters remain 0.
-+		Sample output::
- 
- 		    localhost /sys/devices/pci0000:00/0000:00:1c.0 # cat aer_dev_correctable
- 		    Receiver Error 2
-@@ -38,7 +41,10 @@ Description:	List of uncorrectable fatal errors seen and reported by this
- 		PCI device using ERR_FATAL. Note that since multiple errors may
- 		be reported using a single ERR_FATAL message, thus
- 		TOTAL_ERR_FATAL at the end of the file may not match the actual
--		total of all the errors in the file. Sample output::
-+		total of all the errors in the file.
-+		For PCIe devices without AER Extended Capability, only the
-+		total counter is meaningful while all other counters remain 0.
-+		Sample output::
- 
- 		    localhost /sys/devices/pci0000:00/0000:00:1c.0 # cat aer_dev_fatal
- 		    Undefined 0
-@@ -68,7 +74,11 @@ Description:	List of uncorrectable nonfatal errors seen and reported by this
- 		PCI device using ERR_NONFATAL. Note that since multiple errors
- 		may be reported using a single ERR_FATAL message, thus
- 		TOTAL_ERR_NONFATAL at the end of the file may not match the
--		actual total of all the errors in the file. Sample output::
-+		actual total of all the errors in the file.
-+		For PCIe devices without AER Extended Capability, only the
-+		total counter and the Unsupported Request counter is meaningful
-+		while all other counters remain 0.
-+		Sample output::
- 
- 		    localhost /sys/devices/pci0000:00/0000:00:1c.0 # cat aer_dev_nonfatal
- 		    Undefined 0
-@@ -121,7 +131,7 @@ Description:	Total number of ERR_NONFATAL messages reported to rootport.
- PCIe AER ratelimits
- -------------------
- 
--These attributes show up under all the devices that are AER capable.
-+These attributes show up under all PCIe devices (AER capable or not).
- They represent configurable ratelimits of logs per error type.
- 
- See Documentation/PCI/pcieaer-howto.rst for more info on ratelimits.
-@@ -130,7 +140,7 @@ What:		/sys/bus/pci/devices/<dev>/aer/correctable_ratelimit_interval_ms
- Date:		May 2025
- KernelVersion:	6.16.0
- Contact:	linux-pci@vger.kernel.org
--Description:	Writing 0 disables AER correctable error log ratelimiting.
-+Description:	Writing 0 disables Correctable Error log ratelimiting.
- 		Writing a positive value sets the ratelimit interval in ms.
- 		Default is DEFAULT_RATELIMIT_INTERVAL (5000 ms).
- 
-@@ -147,7 +157,7 @@ What:		/sys/bus/pci/devices/<dev>/aer/nonfatal_ratelimit_interval_ms
- Date:		May 2025
- KernelVersion:	6.16.0
- Contact:	linux-pci@vger.kernel.org
--Description:	Writing 0 disables AER non-fatal uncorrectable error log
-+Description:	Writing 0 disables Non-Fatal Uncorrectable Error log
- 		ratelimiting. Writing a positive value sets the ratelimit
- 		interval in ms. Default is DEFAULT_RATELIMIT_INTERVAL
- 		(5000 ms).
-diff --git a/Documentation/PCI/pcieaer-howto.rst b/Documentation/PCI/pcieaer-howto.rst
-index 90fdfddd3ae5..e969e563b61d 100644
---- a/Documentation/PCI/pcieaer-howto.rst
-+++ b/Documentation/PCI/pcieaer-howto.rst
-@@ -34,9 +34,8 @@ set of error reporting requirements. Advanced Error Reporting
- capability is implemented with a PCIe Advanced Error Reporting
- extended capability structure providing more robust error reporting.
- 
--The PCIe AER driver provides the infrastructure to support PCIe Advanced
--Error Reporting capability. The PCIe AER driver provides three basic
--functions:
-+The PCIe AER driver provides the infrastructure to support both paradigms.
-+It provides three basic functions:
- 
-   - Gathers the comprehensive error information if errors occurred.
-   - Reports error to the users.
-@@ -69,7 +68,7 @@ Specification for details regarding _OSC usage.
- AER error output
- ----------------
- 
--When a PCIe AER error is captured, an error message will be output to
-+When a PCIe error is captured, an error message will be output to
- console. If it's a correctable error, it is output as a warning message.
- Otherwise, it is printed as an error. So users could choose different
- log level to filter out correctable error messages.
-@@ -113,7 +112,7 @@ See Documentation/ABI/testing/sysfs-bus-pci-devices-aer.
- AER Statistics / Counters
- -------------------------
- 
--When PCIe AER errors are captured, the counters / statistics are also exposed
-+When PCIe errors are captured, the counters / statistics are also exposed
- in the form of sysfs attributes which are documented at
- Documentation/ABI/testing/sysfs-bus-pci-devices-aer.
- 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 6bc843ab9b37..62376aab4b6f 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -397,21 +397,22 @@ void pci_aer_init(struct pci_dev *dev)
- {
- 	int n;
- 
--	dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
--	if (!dev->aer_cap)
-+	if (!pci_is_pcie(dev))
- 		return;
- 
- 	dev->aer_info = kzalloc_obj(*dev->aer_info);
--	if (!dev->aer_info) {
--		dev->aer_cap = 0;
-+	if (!dev->aer_info)
- 		return;
--	}
- 
- 	ratelimit_state_init(&dev->aer_info->correctable_ratelimit,
- 			     DEFAULT_RATELIMIT_INTERVAL, DEFAULT_RATELIMIT_BURST);
- 	ratelimit_state_init(&dev->aer_info->nonfatal_ratelimit,
- 			     DEFAULT_RATELIMIT_INTERVAL, DEFAULT_RATELIMIT_BURST);
- 
-+	dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-+	if (!dev->aer_cap)
-+		goto enable;
-+
- 	/*
- 	 * We save/restore PCI_ERR_UNCOR_MASK, PCI_ERR_UNCOR_SEVER,
- 	 * PCI_ERR_COR_MASK, and PCI_ERR_CAP.  Root and Root Complex Event
-@@ -431,6 +432,9 @@ void pci_aer_init(struct pci_dev *dev)
- 					       PCI_ERR_COR_ADV_NFAT, 0);
- 
- 	pci_aer_clear_status(dev);
-+enable:
-+	if (pcie_aer_is_native(dev))
-+		pcie_clear_device_status(dev);
- 
- 	if (pci_aer_available())
- 		pci_enable_pcie_error_reporting(dev);
-@@ -980,15 +984,12 @@ void aer_print_error(struct aer_err_info *info, int i)
- 	if (!info->ratelimit_print[i])
- 		goto anfe;
- 
--	if (!info->status) {
--		pci_err(dev, "%s Bus Error: severity=%s (Inaccessible)\n",
--			bus_type, aer_error_severity_string[info->severity]);
--		return;
--	}
--
- 	aer_printk(level, dev, "%s Bus Error: severity=%s\n",
- 		   bus_type, aer_error_severity_string[info->severity]);
- 
-+	if (!info->status)
-+		return;
-+
- 	aer_printk(level, dev, "  device [%04x:%04x] error status/mask=%08x/%08x\n",
- 		   dev->vendor, dev->device, info->status, info->mask);
- 
-@@ -1182,8 +1183,11 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
- 	if (!(reg16 & PCI_EXP_AER_FLAGS))
- 		return false;
- 
--	if (!aer)
--		return false;
-+	if (!aer) {
-+		pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &reg16);
-+		return reg16 & BIT(e_info->severity) &&
-+		       !PCI_POSSIBLE_ERROR(reg16);
-+	}
- 
- 	/* Check if error is recorded */
- 	if (e_info->severity == AER_CORRECTABLE) {
-@@ -1455,6 +1459,7 @@ int aer_get_device_error_info(struct aer_err_info *info, int i)
- {
- 	struct pci_dev *dev;
- 	int type, aer;
-+	u16 devsta;
- 
- 	if (i >= AER_MAX_MULTI_ERR_DEVICES)
- 		return 0;
-@@ -1470,8 +1475,15 @@ int aer_get_device_error_info(struct aer_err_info *info, int i)
- 	info->is_cxl = pcie_is_cxl(dev);
- 
- 	/* The device might not support AER */
--	if (!aer)
--		return 0;
-+	if (!aer) {
-+		if (info->severity != AER_CORRECTABLE) {
-+			pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &devsta);
-+			if (devsta & PCI_EXP_DEVSTA_URD &&
-+			    !PCI_POSSIBLE_ERROR(devsta))
-+				info->status = PCI_ERR_UNC_UNSUP;
-+		}
-+		return 1;
-+	}
- 
- 	if (info->severity == AER_CORRECTABLE) {
- 		pci_read_config_dword(dev, aer + PCI_ERR_COR_STATUS,
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index 104ff2b91f1f..fdea3db61a4a 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -269,7 +269,7 @@ void dpc_process_error(struct pci_dev *pdev)
- 		pci_warn(pdev, "containment event, status:%#06x: unmasked uncorrectable error detected\n",
- 			 status);
- 		if (dpc_get_aer_uncorrect_severity(pdev, &info) &&
--		    (aer_get_device_error_info(&info, 0) || !pdev->aer_cap)) {
-+		    aer_get_device_error_info(&info, 0)) {
- 			aer_print_error(&info, 0);
- 			pci_aer_clear_nonfatal_status(pdev);
- 			pci_aer_clear_fatal_status(pdev);
--- 
-2.53.0
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260927182017.9385=
+65-1-abhinjoses@gmail.com?part=3D3
 
