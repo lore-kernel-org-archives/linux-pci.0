@@ -1,76 +1,129 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FC8E3E40F0
-	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 18:27:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BA894279F9
+	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 18:27:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790533640; cv=none; b=m9k9H2Lef44hMg6/E4XKszT6UqwadBzUQZwFaEb/TM51FTIdBMshbjY1L+mMmd9p0zfgrbIdVw1jQWLlYmJg9CJ0X8Q8t1Z+yDYqAfmSfrvkYsw4XEXvr+iEIgwFYcIHA3jHw/QFKPZOi3yczUhIh96zSsu1f08nrWLEzQqTtTQ=
+	t=1790533676; cv=none; b=EFmS9Y8W/Myfu1uw1rSvEyghQRbiBeTR5ZqGf8tzetjEvLUi5OEh3kZSaTBbCDP3floNdZlGoxJ4P5U8ZF33w0LNCEOZYCnNjZnh3pAdMB/z0+X6pd+RpUdohZbAbdu1s6RCrezHexnQVObPvb9SHcsLcPcPhlsfFF9t3A+l55M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790533640; c=relaxed/simple;
-	bh=D+cm3yZWfjJLjTpa7xNse7hMFD+75+xehDr836iteMA=;
+	s=arc-20240116; t=1790533676; c=relaxed/simple;
+	bh=8UuVEgqa6u3UWcKSZpol2AEwbNIjVBGO9NfAh+plGIA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BZo2PHJoGEuJRojDIuhxZIYdO5irDiVL0Z1EfvtQg+ma790gCUKpd2UFhFOvkD1/Eyhoc/T+JZDFGW0D+5HjmlsEZVKvzJgh54B1aB3RiX2Bma9gYaS+0GoVOv1kgfkPu/B5o/24IMqKzCu5CeK58c4IkGkcaQZZnOePtvpQM48=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uog2QaOo; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=ZIkXwl/PoGgGCHR3DrmodJ+POk9LjlHz+F3T+yAKxraMQX0LXn0P8hzD/RMb8XMvKTSKZfqeKt06FcrtjtnoMvH8aoqfifoolbwoQ+m218tDPol7V/dLLk4/4h9ClJhEGTwcOEli1bP0bKpiRey+W6F1UAOQgYXxXMhhIIlJBww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RL767jKC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uog2QaOo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF8811F000FF;
-	Sun, 27 Sep 2026 18:27:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RL767jKC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99C821F000FF;
+	Sun, 27 Sep 2026 18:27:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790533639;
-	bh=ldjyjKkLBHkz70QJnNOVi4hfan1re6hrbzgs8tyXF/M=;
+	s=k20260515; t=1790533674;
+	bh=6PYGDLHKkHizyAdQz0XFwkdEJqZOpo155kKRCc6Xb/I=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Uog2QaOoR+o1yi5qol8Kb7reg9FHe3vuHiNITbv6tBoyTZ5CZ0ofPhIgMLH8dzZ0x
-	 zHnka6AFq9fR6EDoD9r2Aiu2fnbJtA9DaN9yU0F5qW9mSIkPyCKi2wKtrhXEsOxUmn
-	 j5r1JmX4DVWxsSuDzn3/KNN493a9ndMcCCUmVtW1WMhiOROzIDnLWx6+5BXPl/bFTJ
-	 LT6ZRG0lmBbmPYd/Rvt/q0Adq+WgDDsB/jVsv4xPxz7CsIxLsXtCLwMMROvTWhtfHv
-	 15/4KzJ2xYAZVaqAiyi5W4hN9L451HW3hu29aRbAKsmXq2mKfdf1svB3//Czw04GE0
-	 5UmEYPQlJp8Tg==
+	b=RL767jKCB4ZcgJPuwUTnzpgCeA8xVLG5Bj63DPdjvSfckAV8r/DGfTVwMoxns41by
+	 Z2EOSW2/IKz0QnADDV76zOW+Ezqvlwg+jGusE+pveB7VfWYGCDNUnZDi1M9kQGvcRi
+	 +QNDflhqNw1RdeHbc8i8KHR7A8UqI63WYbcJ4qpAHXoPRshIOjeN/3ZhzOQQw1ktPz
+	 aBV6SRabbXtB7nwsLx+NgIirzC5ejwfUM8AWa994vIohBTHPv2L8MmbFHa3aMIgNMJ
+	 bMHC7w9fFFjKJ3SsoKBbfqzo/nsEGId8LerPzjF7nyKgswBikBQJTp6OOUYNVVz81T
+	 B4uj9FiWArieg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/7] PCI/DPC: Avoid access to non-existent AER
- capability
+Subject: Re: [PATCH RFC v4 5/5] misc: Add edu_srpoc surprise removal POC
+ driver
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Lukas Wunner" <lukas@wunner.de>
+To: "Abhin Parekadan Jose" <abhinjoses@gmail.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <ae05fe2df3a3182594c4a9638daba1c72cf40358.1790531238.git.lukas@wunner.de>
-References: <cover.1790531238.git.lukas@wunner.de>
- <ae05fe2df3a3182594c4a9638daba1c72cf40358.1790531238.git.lukas@wunner.de>
+In-Reply-To: <20260927182017.938565-6-abhinjoses@gmail.com>
+References: <20260927182017.938565-1-abhinjoses@gmail.com>
+ <20260927182017.938565-6-abhinjoses@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 27 Sep 2026 18:27:18 +0000
-Message-Id: <20260927182718.DF8811F000FF@smtp.kernel.org>
+Date: Sun, 27 Sep 2026 18:27:54 +0000
+Message-Id: <20260927182754.99C821F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Downstream Port Containment does not mandate presence of an Advanced Error
-> Reporting capability, so a Downstream Port may support DPC, but not AER
-> (PCIe r7.1 sec 6.2.11.2).
->=20
-> In February 2019, commit 9f08a5d896ce ("PCI/DPC: Fix print AER status in
-> DPC event handling") amended the DPC driver to access the AER capability
-> without checking for its presence.
->=20
-> In May 2020, commit 708b20003624 ("PCI/AER: Remove HEST/FIRMWARE_FIRST
-> parsing for AER ownership") fixed it by inserting a call to
-> pcie_aer_is_native() in dpc_probe(), which implicitly checks for presence
-> of an AER capability.
->=20
-> However already in October 2019, commit 35a0b2378c19 ("PCI/DPC: Add
-> "pcie_ports=3Ddpc-native" to allow DPC without AER control") made it
-> [ ... ]
-> for AER-unsupporting devices.  The check will become obsolete and will be
-> removed with the imminent baseline capability error reporting.
->=20
-> Fixes: 35a0b2378c19 ("PCI/DPC: Add "pcie_ports=3Ddpc-native" to allow DPC=
- without AER control")
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] misc: edu_srpoc: lost disconnect_work completion causes remove()=
+ deadlock
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+commit bc425826c0abe82189b4fc145666a7bddb680acf
+Author: Abhin Parekadan Jose <abhinjoses@gmail.com>
+
+misc: Add edu_srpoc surprise removal POC driver
+
+A test driver for the QEMU edu device that reproduces a surprise removal ha=
+ng.
+It blocks in remove() until a delayed interrupt arrives or the device is
+surprise removed and its disconnect work runs.
+
+Link: https://lore.kernel.org/all/20260905183905.997833-4-abhinjoses@gmail.=
+com/
+Link: https://lore.kernel.org/all/20260905185027.291191F00A3A@smtp.kernel.o=
+rg/
+Link: https://lore.kernel.org/all/20260927175203.928270-6-abhinjoses@gmail.=
+com/
+Link: https://lore.kernel.org/all/20260927175937.E006F1F00893@smtp.kernel.o=
+rg/
+
+> diff --git a/drivers/misc/edu_srpoc.c b/drivers/misc/edu_srpoc.c
+> new file mode 100644
+> index 0000000000000..1f395b2c31ee3
+> --- /dev/null
+> +++ b/drivers/misc/edu_srpoc.c
+
+[ ... ]
+
+> +static void edu_remove(struct pci_dev *pdev)
+> +{
+> +	struct edu_dev *edu =3D pci_get_drvdata(pdev);
+> +
+> +	reinit_completion(&edu->irq_done);
+
+[Severity: Medium]
+Can this cause a deadlock if the device is surprise-removed before
+edu_remove() starts executing?
+
+If the PCI core schedules and executes edu_disconnect() first, it clears the
+disconnect_work_enable flag and signals complete() on edu->irq_done:
+
+drivers/misc/edu_srpoc.c:edu_disconnect() {
+    ...
+	if (!pci_test_and_clear_disconnect_enable(pdev))
+		return;
+    ...
+	complete(&edu->irq_done);
+}
+
+When edu_remove() then runs, it unconditionally calls reinit_completion(),
+which wipes out the unblock signal from edu_disconnect(). Because the
+disconnect flag was already cleared, edu_disconnect() will not run again.
+
+> +	iowrite32(EDU_STATUS_IRQFACT, edu->regs + EDU_REG_STATUS);
+> +	iowrite32(600000, edu->regs + EDU_REG_DELAYED_IRQ);
+> +
+> +	dev_info(&pdev->dev, "Waiting for IRQ in remove()\n");
+> +	wait_for_completion(&edu->irq_done);
+
+Since the device is gone and no hardware interrupts will arrive, will
+wait_for_completion() block indefinitely here, defeating the test driver's
+stated purpose of unblocking on surprise removal?
+
+> +	dev_info(&pdev->dev, "Unblocked, cleaning up\n");
+> +
+> +	pci_clear_disconnect_work(pdev);
+> +	free_irq(pci_irq_vector(pdev, 0), edu);
+> +	pci_free_irq_vectors(pdev);
+> +	pci_clear_master(pdev);
+> +	pci_iounmap(pdev, edu->regs);
+> +	pci_release_regions(pdev);
+> +	pci_disable_device(pdev);
+> +}
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1790531238.gi=
-t.lukas@wunner.de?part=3D1
-
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260927182017.9385=
+65-1-abhinjoses@gmail.com?part=3D5
