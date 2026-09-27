@@ -1,70 +1,107 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E9D62EACEF
-	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 18:30:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D833B42DA3D
+	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 18:31:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790533838; cv=none; b=nXLRNJf5oF75sxdTn16sRyCek+Zrtx8s2xB7QDe207lxyv+16mAGlibGz0xDmx3fcTngQ/Z/6yz7cLLHkyb9U8y4LSD7Dm7oG3E9LNi/F8DktqjXqrQRLSyAcb0KjQyipwYGwbL5362ZWw7FR2wfBtNTdeVwlO8/zEGhGj1JL64=
+	t=1790533884; cv=none; b=A8PpZP7AunSS6B86ZQcctJRkjUtzY63QXbjzs36zIFqhyst1vT753apJAQYEyTnzwAIq4GJI9pOprd5WHhw06UBW9/JrvJpPd2ShWUIO5JC/bK6qMZDFP/WuxwRqsrv+3V5v4Rn3lIQl/Z1HZhVg08j88vz76xamMMubxONfliQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790533838; c=relaxed/simple;
-	bh=VuGYL/F26xgkh4dDnLv3ycMb1jFPav3PVJeyAKzhC0M=;
+	s=arc-20240116; t=1790533884; c=relaxed/simple;
+	bh=ZYgYI49JQzsK8yo+3ZKTa+ARAoghhuWdfm3vLxNAG1o=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=UDuGwtf6xS9m44MMpoUymYl+6QKWONEZ+szUfHSdvtruwX/TWF7F16BtoxQZdnSUrdNwb/qSHWfV9JTwXBJcOoPk1dRTS22OlnEX6p9Yc2r6R6MUPCtd428vrr6Gj5TDTL0nB2E1x7yRqMppdQiRqU2YqU0gZuWuiJr9daqq0xE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ax4dC7tO; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Z0smPML1AHgxjft+l+weNMFi5mtS03FoxTRtm6YXs1H87YCqNBOq0LkK/vvHrxhDjzaSLl+xAMJ4HFbFy81D+0+RPXuVmaVDPMC+0hKCSk6HwuL3UAyZ3oKVmWjvfudg+n6msK1ODatNkgwaCG/Ek5J5Si/6wAxxTAjCBn/b+HE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OIvzmuMU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ax4dC7tO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2C941F000FF;
-	Sun, 27 Sep 2026 18:30:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OIvzmuMU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B3F91F000FF;
+	Sun, 27 Sep 2026 18:31:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790533837;
-	bh=VuGYL/F26xgkh4dDnLv3ycMb1jFPav3PVJeyAKzhC0M=;
+	s=k20260515; t=1790533882;
+	bh=wISAszQLsvCHNX5V7PRih78zIr1ySkCkpCUljL1P7SQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ax4dC7tOTqyuzTTpzOaKM5whUt+VSblNBEeT5IdN+N1xkATizKek69JRGyUDv9Zfj
-	 Hi2CPktv4q8DVOWs6J6Yhj9NzhHWHPZrvy1tZVuktttiHoI1wJanC3sdaXoXP36wwH
-	 +OOT6ZeTTDj6Q+lfUXsFGHiSYGW0x6wMBeUZnw2SaJSbbPvIr1rTCYpO7YP+VI5tWk
-	 RSBVG30nd6zNTIe+MEV0gj1drBYvcT2tA/vzdF9sBdfGod5mHGKukhvNdZLhU6kprp
-	 6fNBqh5WAVkAh1cfQgwu9CK4QT0pWHckDgk7cKErh8iU/7pC43IFDaG/Z29zE8Difp
-	 JXrX/1UxDgUWQ==
+	b=OIvzmuMU6d2vUT5qWmt5lcm/ftldvw8aPp1pPdTzm5Pj06/EuH8wuxz6YqIMM4Yjs
+	 1eL0PTYN/LYmVdD6QtDblujxlrzkfdCZ1x9OoXG+2aOiCI++NdhfUB0OE8BbKqy71f
+	 l7ynfmOkYaaGAvfptjAY6AeiOHmmKF5/gAQp6TDj1AzBKP2JFTh7Ac02kanmG7SPA4
+	 heZhYzZ7Apr/7lx5xx7B360c5FRNejb6WiORdu6tRnkZq7eY+oKXbYyiYFXrEeXYvK
+	 RE8iVNdp+43GkIzCQxrgbUPuw20hZXZcMC8IKPNX3ray58mpnDFoXfQFVeVQvz3WjG
+	 hF+AULLFrfLpg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 5/7] PCI/AER: Move AER capability check out of
- pcie_aer_is_native()
+Subject: Re: [PATCH 3/7] PCI/ERR: Avoid stale error status bits on recovery
+ failure
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Lukas Wunner" <lukas@wunner.de>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <6a21637111397810d75679d1ca597766f3bf5605.1790531238.git.lukas@wunner.de>
+In-Reply-To: <c7048e7dafe470f1f85709169c31b5aafe7ad59f.1790531238.git.lukas@wunner.de>
 References: <cover.1790531238.git.lukas@wunner.de>
- <6a21637111397810d75679d1ca597766f3bf5605.1790531238.git.lukas@wunner.de>
+ <c7048e7dafe470f1f85709169c31b5aafe7ad59f.1790531238.git.lukas@wunner.de>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 27 Sep 2026 18:30:36 +0000
-Message-Id: <20260927183036.D2C941F000FF@smtp.kernel.org>
+Date: Sun, 27 Sep 2026 18:31:22 +0000
+Message-Id: <20260927183122.8B3F91F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> When firmware grants control of Advanced Error Reporting to the operating
-> system, that not only encompasses the AER capability, but also error
-> enable/status bits in the Device Control and Device Status registers
-> (PCI Firmware r3.3 table 4-6 bit 3).
->=20
-> PCIe devices without AER capability still support baseline capability
-> error reporting through these enable/status bits (PCIe r7.1 sec 6.2.1),
-> but the bits must not be modified unless AER control was granted.
->=20
-> pcie_aer_is_native() is unsuitable to check for control of AER-incapable
-> devices because it implicitly checks for presence of an AER capability.
->=20
-> Move that check to its callers (where needed) to allow using the function
-> for the imminent baseline capability error reporting.
->=20
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] pci: stale fatal AER status bits left uncleared on recovery fail=
+ure path
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+commit f65c6a5d555f5001060d8335ce4ca73c0130b547
+Author: Yury Murashka <yurypm@arista.com>
+PCI/ERR: Avoid stale error status bits on recovery failure
+
+This commit clears error status bits on recovery failure to prevent the
+AER driver from falsely identifying unaffected devices as the source of
+new errors. It does this by calling pcie_clear_device_status() and
+pci_aer_clear_nonfatal_status() on the failure path in pcie_do_recovery().
+
+Link: https://lore.kernel.org/r/CAPzpGcRCTCZtaX1EVaJNZ103THZKsoszZduY7=3Dgw=
+fYdcrMo-SQ@mail.gmail.com/
+
+> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> --- a/drivers/pci/pcie/err.c
+> +++ b/drivers/pci/pcie/err.c
+> @@ -284,6 +284,11 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *de=
+v,
+>  	return status;
+> =20
+>  failed:
+> +	if (host->native_aer || pcie_ports_native) {
+> +		pcie_clear_device_status(dev);
+> +		pci_aer_clear_nonfatal_status(dev);
+
+[Severity: Medium]
+When pcie_do_recovery() is invoked for a fatal error (pci_channel_io_frozen)
+and recovery fails, will this leave the fatal error bits uncleared?
+
+Looking at pci_aer_clear_nonfatal_status() in drivers/pci/pcie/aer.c, it
+explicitly masks out fatal errors before writing back to the status registe=
+r:
+
+    pci_read_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS, &status);
+    pci_read_config_dword(dev, aer + PCI_ERR_UNCOR_SEVER, &sev);
+    status &=3D ~sev;
+    if (status)
+        pci_write_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS, status);
+
+If a fatal error occurred, the severity bit is 1, so the status bit is never
+cleared. Could this leave stale fatal error bits that cause subsequent
+is_error_source() checks to falsely identify this device?
+
+Should this failure path use pci_aer_clear_status() or explicitly clear all
+uncorrectable errors instead?
+
+> +	}
+> +
+>  	pci_walk_bridge(bridge, pci_pm_runtime_put, NULL);
+> =20
+>  	pci_walk_bridge(bridge, report_perm_failure_detected, NULL);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1790531238.gi=
-t.lukas@wunner.de?part=3D5
-
+t.lukas@wunner.de?part=3D3
