@@ -1,70 +1,74 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FB654279FE
-	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 18:25:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4150841DEDA
+	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 18:26:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790533504; cv=none; b=KVurUrcR/lFvxt+RwLZiQprYpTgUSVlpxjvnmngBxZbrnYHhrloP4+vFcsRyOx+Aq776AqjhEui9E/ftShQLTbz3Hi6QyUQI42EvskbcVUKGJ9zQwv1alrCWEdfydK8KQyZUobv2zNFGhBRQyVIWL8A6f0jg0ElIjCurf6sY9YE=
+	t=1790533583; cv=none; b=Y6o0B0qF42jrh723w3X353Iwqz9dHqOE9d5HfnCP8dm4MfPwpH1aD7/bic/qhkIK3UG3KeACRlV6KVAY0Pn/abAnaHfVcaIXb9We9Mwx3INwz66F3jEg4jeY/cf77ZQl9USW9wt4YjPIoZzeKw/K/px6AAwIj09uL5lvV0NH8T8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790533504; c=relaxed/simple;
-	bh=hGskFRHpVYOUjXSwgoC0God9ObA7BBMDYzfdYj/JRjQ=;
+	s=arc-20240116; t=1790533583; c=relaxed/simple;
+	bh=zYK4gVfp1/s2a8eVtD6a/RiYkjdRfD1Smmz5m7zuX5Y=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=NiAq4QTTsVD7hbRVMIurkgiKNP2uNOt4XCVcyMFJk3DHjepDKN7SVbso6nOMVqFW2Fjhwl7IbWmDfCYOjJblwEVBfUe9X8tMqYTl7gAz1CCpJYwLv29T5dKjMFSD3JIzl/qoQa0O6HcMppIh9F/3sWzpA1Yw9hQ0fnHP0+9t2Vs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T3JX+/be; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=oVUcCH9QRSO60xjySq3W5MK4ifOaLOsMOFI8b+qPDyJn9ivUODXJaxI1J0UPblyvm7JAf+UwYSt3teFQs5pWPPJPoOzGIJhNPh2Nel2Ce5aUEEQQOWDGyuqhrlJJgDRV87PoSA2hD77TryZyk2mUQI8hgj82Hgx/4qiswcvrs14=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F0YH2fjJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T3JX+/be"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15DDA1F000FF;
-	Sun, 27 Sep 2026 18:25:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F0YH2fjJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B79B51F000FF;
+	Sun, 27 Sep 2026 18:26:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790533500;
-	bh=/5/tV5t8eRUaGADVw8IugSkJsUoNF2OTrI0ZbA436nY=;
+	s=k20260515; t=1790533581;
+	bh=A/EeBbnXEiueAF1wnfFQovDP1x6Hv/94v9j/3X2YL68=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=T3JX+/beHKnWCKQG0/V61sOdgYNlGeGCVPB7LqbBzCLml2siOWbf3Du6BzQOlFq4e
-	 R9uajjsJQQ75jcIdLf2BpcrEZTSDtO3fJtxNd/RL2/KCZBZ7H4sWvhqfZWhyldlhBd
-	 E1jrLshYDVySiTWpXG39/fLaQOpPlCZohr9d7rUvbhTDIQQpYWIQ7B3imXpDgSpgXt
-	 SwFALKI0d4k7OibwdyYpDopNXM9nQsoVREx2SsiAe4QrU2oAEK/T7d9mdV0t/vPrdZ
-	 PFPKLfi1pChvNfOoIPrdZI5hWj6R0QOKygxkTmPfibSw4DV3Vciv0y0bB+HRxJPw0J
-	 3LhcsqU44DRYg==
+	b=F0YH2fjJimfCYPgwkd0P/Qj8l8PyOvdXag1WWQz59pX5O1rtcgGFG5sz8kzj1Oc1V
+	 oktsO57ZrAbwYbY2i/qbc4rU3NApLmXXvc+Ic609fOxBAu+OkEWGudD+jDaXtDnIn6
+	 6Wsz9uMxe15eILPotG+oQBWeuS9/hlTpYosdVSA2sGhsE1gg4Wfs3q7swxk66PBPrQ
+	 SHItGU/tJIik4zx02uqqI91Y1AmqJC9r6lmbeDdFjbcz+AK4CoO32m1mxhDKB1Wwqx
+	 3/IAYWHtenzFuyEZLTJ9x1lnJxOBI6LHtHaxkhVCjyqUSQ6Pwaln+QQvSIxc4NW+kX
+	 er5ey3oSp5jaw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC v4 3/5] PCI/DPC: Add pci_dpc_wait_recovery()
+Subject: Re: [PATCH 4/7] PCI/AER: Drop AER native check from
+ handles_cxl_errors()
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Abhin Parekadan Jose" <abhinjoses@gmail.com>
+To: "Lukas Wunner" <lukas@wunner.de>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260927182017.938565-4-abhinjoses@gmail.com>
-References: <20260927182017.938565-1-abhinjoses@gmail.com>
- <20260927182017.938565-4-abhinjoses@gmail.com>
+In-Reply-To: <1a00e832eab9539f7328f5d547f11b67e17bd0da.1790531238.git.lukas@wunner.de>
+References: <cover.1790531238.git.lukas@wunner.de>
+ <1a00e832eab9539f7328f5d547f11b67e17bd0da.1790531238.git.lukas@wunner.de>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 27 Sep 2026 18:24:59 +0000
-Message-Id: <20260927182500.15DDA1F000FF@smtp.kernel.org>
+Date: Sun, 27 Sep 2026 18:26:21 +0000
+Message-Id: <20260927182621.B79B51F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> pci_dpc_recovered() awaits completion of DPC recovery and then tells
-> whether DPC recovered successfully, using test_and_clear_bit() on
-> PCI_DPC_RECOVERED. The answer is one-shot: only the first caller sees
-> true.
+> Drop a superfluous call to pcie_aer_is_native() from handles_cxl_errors().
 >=20
-> Split pci_dpc_recovered() into:
+> The call is superfluous because the function is only called from:
 >=20
->  - pci_dpc_hp_sync_supported(), the check whether hotplug can
->    synchronize with DPC at all.
->  - dpc_wait_completed(), the wait for recovery with its 4 second
->    timeout;
->  - the final test_and_clear_bit().
+>   aer_probe()
+>     cxl_rch_enable_rcec()
+>       handles_cxl_errors()
 >=20
-> Add pci_dpc_wait_recovery(), which does the check and the wait but
-> leaves PCI_DPC_RECOVERED alone. No functional change intended.
+> ...and aer_probe() is only invoked if an AER port service was instantiated
+> in get_port_device_capability(), which is conditional on:
 >=20
-> Signed-off-by: Abhin Parekadan Jose <abhinjoses@gmail.com>
+>   (pci_pcie_type(dev) =3D=3D PCI_EXP_TYPE_ROOT_PORT ||
+>    pci_pcie_type(dev) =3D=3D PCI_EXP_TYPE_RC_EC) &&
+>   pci_aer_available() &&
+>   dev->aer_cap && (pcie_ports_native || host->native_aer))
+>=20
+> ...and the last line of those conditions is equivalent to
+> pcie_aer_is_native().
+>=20
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260927182017.9385=
-65-1-abhinjoses@gmail.com?part=3D3
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1790531238.gi=
+t.lukas@wunner.de?part=3D4
 
