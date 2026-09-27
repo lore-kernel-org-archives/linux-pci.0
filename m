@@ -1,84 +1,115 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D05631AF4E9
-	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 17:59:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52B8241DEC9
+	for <linux-pci@vger.kernel.org>; Sun, 27 Sep 2026 17:59:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790531963; cv=none; b=utblSEgOiqGZGC8OiFqydDikJsUkVTSfnVEQXD6wQY5VpuGZUq04KanIP4rhy4AmFLeKneEtP2dGSDRgH1Fg7CY6dIWBrJ8qevAqvGJgjOhwS1EGQxKRfKue0AaWbsGtf/lOtNX17jrC3GCdN3qjh8v827bEc3BRnqtcEFIHB0g=
+	t=1790531979; cv=none; b=kHnqhTKJZFB2h1XjSWRBWq9x1h5+Pf3rvc5/Y77AZXHXT5cwkhsgAjPz/MJZ96QS1CjWzQULbTai29esWLFtHe2N2713xYGzV0trlCXJaof6TBOa5fy8YJipjfYFnbj2BL26VHu9EpXyT8wCiBrpQ0Y7eiaRGA3A7WN+vAGtKFs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790531963; c=relaxed/simple;
-	bh=F+n/SpHtPv0GpFjLLAe9K3PYafU27JeLdF87Ws/AswA=;
+	s=arc-20240116; t=1790531979; c=relaxed/simple;
+	bh=E/aFFoYyb0zx4ieoI2M0XHXxqL8f2KkxkajSq3/lZrw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Gi31v1YgmGw4eUGmIExXBLTw6Yzm3n6PYFWig88GZ2AOePOCzEo6Y8wnkntnTqO6dQPSDfwBvmMrxPU4YOmICvzz26s7p1bSJiqjqVu3tDzrBJ6s5ILabvsz85un8T5dWUzdAtp/8l8iiHfH6IZWQsFNy4v9+DtywpMrSEzUF6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O3+sMbIR; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=vD03+w+L1Iv7svIgThcHUMHq1zngLb3wqrjAkCoSj2SBaNTx59qqkVjdmu9o7iJiGSiVZ1k8fZPpaUM63RQRMwN1Zn1cnHIMtAt0qnCD3tpVq9KxBAlzLQ9M/TF1jJWU6M2jKWgEqJu0zNFVUklP+lutzHX332M34ETzCC9lzec=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VEtTP2rz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O3+sMbIR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CDA01F000FF;
-	Sun, 27 Sep 2026 17:59:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VEtTP2rz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E006F1F00893;
+	Sun, 27 Sep 2026 17:59:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790531962;
-	bh=F+n/SpHtPv0GpFjLLAe9K3PYafU27JeLdF87Ws/AswA=;
+	s=k20260515; t=1790531978;
+	bh=MCFoybTeJBKlQFPWMqcRsge47L4LXQxAjehARGw9x2o=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=O3+sMbIRvguo4MeCCfZ9WhK2bc2ZHN02geXnRIrTFb+7fdc3EG3Slfv3GjnyVu22j
-	 C9Kgqh+tOLuKOXanNUpVAMojPWM3iCikChtm2v/ek4yTfQ+t6mbCydnkjxDYN8UNLS
-	 6fFA730B9zwUtz9IAzzwFAXBXf77HF1r5GA/QCQXL3HxXuJQZvNXpBG7f8EqBVbQ8Y
-	 9MHBzOvYxMwb9SDBMAJa3cqZX5vL89nvg6Yn8Cl0V+/6jr9j+7pSbB9hp3RSzeZWAx
-	 Y+8YqNF3PKeu4jJ3o1foabqewSEiYBqSS6R0XelFFuzC6byW2sZCw/y22Fek65WXMw
-	 FvgySdtaIGYmw==
+	b=VEtTP2rzTkMEM56fKLGOpONAFy9ed27L5hK4IyAS9IvHtl6Bhjn0Q91ymxX2m2T+A
+	 xDTYZSjNAeHG8Eq+uf8tzbiMuQHFX9W4gO6bW2ES6HDNmEabaxQ1jQUzTBrLxejQxg
+	 cWbDlMHBVIoAzbZoXb2OzLOqwtaWVRhj1OsK37UckSRs5cZWv0SW+DrBiKlHG1Sns/
+	 knRz54mfsHamZPk1q9kKdpfhO9WWYFd4gCudpJ2T5QBQjrzQ9D0Bic2jsEu5dz3JJc
+	 Q9VbJvN0gUCDygatbQeCzs1AultET2GpdaLONtO5mJWj9uuv/HZnxtxn7PUc3Va3SS
+	 VH6jlJ5wsbTfw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC v3 4/5] PCI: pciehp: Report surprise removal from
- pciehp_isr()
+Subject: Re: [PATCH RFC v3 5/5] misc: Add edu_srpoc surprise removal POC
+ driver
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Abhin Parekadan Jose" <abhinjoses@gmail.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260927175203.928270-5-abhinjoses@gmail.com>
+In-Reply-To: <20260927175203.928270-6-abhinjoses@gmail.com>
 References: <20260927175203.928270-1-abhinjoses@gmail.com>
- <20260927175203.928270-5-abhinjoses@gmail.com>
+ <20260927175203.928270-6-abhinjoses@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 27 Sep 2026 17:59:21 +0000
-Message-Id: <20260927175922.3CDA01F000FF@smtp.kernel.org>
+Date: Sun, 27 Sep 2026 17:59:37 +0000
+Message-Id: <20260927175937.E006F1F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> A surprise removal during a safe removal cannot be reported: the
-> removal blocks waiting on a device interrupt or status read, and the
-> single-threaded IRQ thread is itself executing that removal, so it
-> cannot report that the device is gone. The removal hangs.
->=20
-> The hardirq handler pciehp_isr() still runs while the IRQ thread is
-> blocked, so it can report the disconnect. However, pciehp_ist()
-> deliberately ignores link and presence changes caused by a Secondary
-> Bus Reset or Downstream Port Containment, where the device is only
-> temporarily inaccessible. Distinguishing those normally requires
-> waiting for the SBR or DPC to conclude, which takes seconds and is not
-> possible in hardirq context.
->=20
-> Schedule a work item from pciehp_isr() when a PDC or DLLSC event
-> arrives and neither Presence Detect State nor Data Link Layer Link
-> Active indicates that a card is present.
-> This provides us a pathway to wait/block/sleep as we will not be
-> in pciehp_isr().
->=20
-> In pciehp_disconnect_work(), wait for the DPC recovery or SBR to complete
-> before checking presence and not consume the link change flags, so that
-> pciehp_ist() can still see them and ignore the link change if it was
-> caused by a DPC or SBR. Even after the DPC or SBR has completed, if the
-> device is really gone then pciehp_disconnect_work() will see that and
-> report the surprise removal. Like pciehp_ist(), it holds a runtime PM
-> reference on the port and checks presence under reset_lock, since a
-> slot reset may make Presence Detect State and Link Active flap.
->=20
-> Link: https://lore.kernel.org/all/aHlZE18kPuHuDtTT@wunner.de/
-> Signed-off-by: Abhin Parekadan Jose <abhinjoses@gmail.com>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] misc: missing reinit_completion() in edu_remove() causes unhandl=
+ed IRQ storm
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+commit f9ed797f2f520a59d9e2c04ca2421e2d89d85acb
+Author: Abhin Parekadan Jose <abhinjoses@gmail.com>
+
+misc: Add edu_srpoc surprise removal POC driver
+
+This commit adds a test driver for the QEMU edu device to reproduce
+a surprise removal hang. The driver's remove callback schedules a
+delayed interrupt and blocks until it fires or a disconnect work runs.
+
+Link: https://lore.kernel.org/all/20260905183905.997833-4-abhinjoses@gmail.=
+com/
+Link: https://lore.kernel.org/all/20260905185027.291191F00A3A@smtp.kernel.o=
+rg/
+
+> diff --git a/drivers/misc/edu_srpoc.c b/drivers/misc/edu_srpoc.c
+> new file mode 100644
+> index 0000000000000..b74a95109dba9
+> --- /dev/null
+> +++ b/drivers/misc/edu_srpoc.c
+[ ... ]
+> +static void edu_remove(struct pci_dev *pdev)
+> +{
+> +	struct edu_dev *edu =3D pci_get_drvdata(pdev);
+> +
+> +	iowrite32(EDU_STATUS_IRQFACT, edu->regs + EDU_REG_STATUS);
+> +	iowrite32(600000, edu->regs + EDU_REG_DELAYED_IRQ);
+> +
+> +	dev_info(&pdev->dev, "Waiting for IRQ in remove()\n");
+> +	wait_for_completion(&edu->irq_done);
+
+[Severity: Medium]
+Could this leave an unhandled interrupt pending if the completion count was
+already incremented?
+
+If a prior interrupt (for example, from a previous test run or device state
+before the driver loaded) has already called complete(&edu->irq_done),
+wait_for_completion() will return immediately instead of waiting for the
+600-second delayed interrupt requested just above.
+
+This would allow edu_remove() to finish and the driver to unload while the
+delayed hardware interrupt remains pending. When this interrupt fires later
+with no handler registered, it could trigger an unhandled IRQ storm that
+permanently disables the shared PCI INTx line, potentially affecting other
+devices.
+
+Should there be a call to reinit_completion(&edu->irq_done) before
+requesting the delayed interrupt here?
+
+> +	dev_info(&pdev->dev, "Unblocked, cleaning up\n");
+> +
+> +	pci_clear_disconnect_work(pdev);
+> +	free_irq(pci_irq_vector(pdev, 0), edu);
+> +	pci_free_irq_vectors(pdev);
+> +	pci_clear_master(pdev);
+> +	pci_iounmap(pdev, edu->regs);
+> +	pci_release_regions(pdev);
+> +	pci_disable_device(pdev);
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260927175203.9282=
-70-1-abhinjoses@gmail.com?part=3D4
-
+70-1-abhinjoses@gmail.com?part=3D5
