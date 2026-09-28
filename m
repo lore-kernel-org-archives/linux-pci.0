@@ -1,133 +1,161 @@
-Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2217B3750A9;
-	Mon, 28 Sep 2026 18:00:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0D8E378822
+	for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 18:17:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790618443; cv=none; b=K7snflS7F/8IzyNnTmVt5Z7QiHXun0gxR7Ms0cXNHwxqWKcwX1TXG0m3HPw3IXDd4k6afC4JcCCekpp+lqokTG1t1KQKDxwBdj/Jk5suhCiHEzjsML9UaX2MsKtOlH2ezQ57EQkg4XR4PeuFTwmqp7Ds0Z+OrGvU6py4aoqIvFE=
+	t=1790619463; cv=none; b=KELaRg3ExBXFi+gl2RWave5ILpTswKxL7uKFnDkRiaod2QWeLaJEC3CLohtm0B5qTlX1R+hxCJl870Lxt0S9MerOPfx5ZtNeMfbBTStl0w1y/rq9iTxsuL3MAzuHunIUwAUU90MLXV+efPG0S20C3ncAtIFFkupxfb4/vfOOV7w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790618443; c=relaxed/simple;
-	bh=DrV29lL9cL1NQXPk/MG3/cXxxQzYFgynM2Iuq5wjAWM=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gzenyYRxN/wqdzICEAj4MXzhVQV04Kbk8NWc9ngsaqhdtr5jz9uVw0+ZAMCcPIomLvw6SPCzJMkgE/Qh4jbWnAiiva9nSSTfVI+Sb4DnItcgtE4UMHigyeMUZx8Mp5eoIJLLvqzWnRARqUdNS1kdUBvrB3lDmS5jJk1LBKKpgWs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fb.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=fb.com header.i=@fb.com header.b=kAUaIAMl; arc=none smtp.client-ip=67.231.153.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fb.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1790619463; c=relaxed/simple;
+	bh=t7wnAbQo9fhp75YDIZ8Di2uLMxtaqNgTQQQgRgB2y7Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=WvZBWFzpZVOFJhKRlkBfyqux3QS+IKYG9exZXCBx9ZADiYtRMLkGBxka+z3kw5OnylHIAltwqLwx1FJNkfoE/ntXGZBmPMXra3hzMHhE0liUH5+kHZgX7I2dCGuEJBPOCSqfPj391RTwOsnnG5V7f6/wDsG9a+UDygZsKx2qveY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cbLERrcq; arc=none smtp.client-ip=74.125.225.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fb.com header.i=@fb.com header.b="kAUaIAMl"
-Received: from pps.filterd (m0528005.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68SHwukK3561556;
-	Mon, 28 Sep 2026 10:59:49 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pps82601-s2048-2026-q3; bh=pEF+FSbGC0I
-	yV+m+oO1hZz2RvMreBEf6ik/hQ9tP7DA=; b=kAUaIAMlccHRfXvCHNx9HLLgSvS
-	zUzXCppBo+HK8nIQev08VJ7mlkiwJOEAcPTfsYzBN9RLvoTu2Xa+Ae9hDz4riYAi
-	M4973+1KiZJOsPV8xEmrqIiege4V4D7UrEEKIYWiAepty/5n5O7KZX/133LwhcVf
-	QgnaxN4pqXyGz5gh0YbxVnYzi6Ik4wD0nDpA20s7CkHfC2TH0enbggx2LA5Pq7hX
-	Gg3K9R9fD4YfYlw9OVoHQl2pd90I6DX2ru/4DCzqXM72aJvgYJnXRbQa7rKud2N2
-	QGfT5GnzUUQNoalo6bif1GZHDKTvCN0XIAzJgHAiWktYCHfG9bG3eae8hmQ==
-Received: from maileast.thefacebook.com ([163.114.135.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4gxymj8skw-10
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-	Mon, 28 Sep 2026 10:59:49 -0700 (PDT)
-Received: from devgpu015.cco6.facebook.com (2620:10d:c0a8:1b::2d) by
- mail.thefacebook.com (2620:10d:c0a9:6f::237c) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.45; Mon, 28 Sep 2026 17:59:10 +0000
-Date: Mon, 28 Sep 2026 10:59:05 -0700
-From: Alex Mastro <amastro@fb.com>
-To: Matt Evans <matt@ozlabs.org>
-CC: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Christian =?iso-8859-1?Q?K=F6nig?=
-	<christian.koenig@amd.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Logan
- Gunthorpe <logang@deltatee.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Pranjal
- Shrivastava <praan@google.com>,
-        Longfang Liu <liulongfang@huawei.com>,
-        Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
-        =?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>,
-        Sumit Semwal
-	<sumit.semwal@linaro.org>,
-        Ankit Agrawal <ankita@nvidia.com>,
-        Alistair Popple
-	<apopple@nvidia.com>,
-        Vivek Kasireddy <vivek.kasireddy@intel.com>,
-        <linux-kernel@vger.kernel.org>, <linux-media@vger.kernel.org>,
-        <dri-devel@lists.freedesktop.org>, <linaro-mm-sig@lists.linaro.org>,
-        <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v7 6/9] vfio/pci: Convert BAR mmap() to use a DMABUF
-Message-ID: <arqq6VXW8Rif59BL@devgpu015.cco6.facebook.com>
-References: <20260924152159.49702-1-matt@ozlabs.org>
- <20260924152159.49702-7-matt@ozlabs.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cbLERrcq"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49b912d391aso25041405e9.2
+        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 11:17:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790619460; x=1791224260; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=7P4n65OS1muIcpC3FLPM1Cf6wgXMdF30weAgyrooSwc=;
+        b=cbLERrcqKD/iOx0zNL9szerynmLpYRmAEg0WAk2cgUSNgqaSYG4iE/hkL5Meo8zWZk
+         l6AuMPOzBoTZTosFX6LNrPtQ372ff3ATLSqxr+Udv2PeFJmRoyS+4en3Zhc/A7pIT3CQ
+         +BOV9ypIyujKFzljQPwviI3CYGPJ7BoBNv/JdhDizZVBzyT5ib6P4vEw/SVDAKm2zyl7
+         LEWs66oHgK4DVjGIbuVbWkJO34NM42NXS/sTrQevGaqXILZFAMKhydVefE/UycrGgftZ
+         VA+lhwc7CIjNrmIL9Jjpx5Sy9yTqxzMci/bTEFzFKFmxz29IKm0Wn6lh9QMFrnlUT1R3
+         lBnw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790619460; x=1791224260;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=7P4n65OS1muIcpC3FLPM1Cf6wgXMdF30weAgyrooSwc=;
+        b=es7HDTzjowDGtpR4GmG0MNBssO1jcEwUEtlMWWEgXrTHBoPLtQSld1KHOAk8AcxyMj
+         lFa39+nVf6nHY8wMI0NtUUVJE+atV34oJ6CcpdA6gyPAV9H+M8tbJrHNNsD0GBxH1jMa
+         NA+ryVyyxgZSV8uQJueFEqdVEziHcrXgYefCI9MKSc/9MK5qyd7viWRsLvUWhVQgg0VP
+         W62MppWSHEOkAKUqRYL1P4KjMGN60T1G/mh6UpCDJAAzqR+6T4t7tDtuvAZC+e6wGLYO
+         5iFj/i/h/QRRKyNx4slh0jWxbabwgDcLOKfx5ehxFR2Cn3IVuJwUS/81tCpQEm6ULsqI
+         L9ow==
+X-Forwarded-Encrypted: i=1; AKwUvBziYa0idbxKeFmGAohDaicpLaBHXeJ1AwUHr5pzD83lWS0YIKsopTxhqGO3gIYwKJ4Ph7rE2Yc/TXI=@vger.kernel.org
+X-Gm-Message-State: AFuF++kwZ39bU2WYe/eWLSWWC+G5SwlotWIY1+9koOlJIGt0jxybkDno
+	BXz0JhKEXEnRlTWmuCNfB5j/SuJmv0lFZMWBB/VkOT2NlVTazwwDUSHo
+X-Gm-Gg: AYBFou0r9VSIaGJlgI5HiwOp3a+NsP8zcFwL9PbNxAf2LbaZuuDjwCO+Yl4h9yoiyg6
+	JA8QZOXwfR+yNfAeNvjz7S0xIfQ9S5BQ3Zl6jmFBbginQ3prnxPIXHohqSMaI1YYnYvvE1sYLfE
+	rr7dA+QpZeRVRmhXZPs4ZjeGVzu+5duMAB87KFLdsb5b1sTA6ObxYOium+crEF7d6teWTmgH2es
+	aD8PtB1sFA3UYDi5wHXv1PrzLVRXbO9zM7TWCeqjSdbKQV00rzqLczebAOO1kLgwHzZgcm2/JBP
+	MNp4kBeqHLqMwpNkZEmNxLdTDO7Z5IPxH2K0q3rsQopLCb1wB26VQj30k23lnnWsm4qC0Fd9LkY
+	OML2X/dKq87tRbawAh7VXNmrrZGcf84HNQ2PrClRFThJAJhhQnAaQteuSTsloZcgY+zw3QziBsr
+	nP+gFKoqbk2ANeWrzgyiN0qCTnPaVAqR4djzchdj5XjSl9a8HIfA0yd6zEZ3z+xh98c3NDWoBxJ
+	hxjNMsgyt0FbnVUXgmL7OTAG7JJUjwyOmM=
+X-Received: by 2002:a05:600c:3511:b0:49d:17d4:d6ad with SMTP id 5b1f17b1804b1-49fe66fca74mr225174635e9.23.1790619459558;
+        Mon, 28 Sep 2026 11:17:39 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a00cf9b72fsm14819315e9.9.2026.09.28.11.17.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 28 Sep 2026 11:17:39 -0700 (PDT)
+Date: Mon, 28 Sep 2026 19:17:37 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: Ilpo =?UTF-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
+Cc: Deepanshu Kartikey <kartikey406@gmail.com>, bhelgaas@google.com,
+ linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+ syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
+Subject: Re: [PATCH v2] PCI: sysfs: Reject unaligned resource I/O port
+ accesses
+Message-ID: <20260928191737.20c8a985@pumpkin>
+In-Reply-To: <fd1753ec-020b-b90d-ec1a-9d21ab2fa9a4@linux.intel.com>
+References: <20260928123036.7902-1-kartikey406@gmail.com>
+	<fd1753ec-020b-b90d-ec1a-9d21ab2fa9a4@linux.intel.com>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20260924152159.49702-7-matt@ozlabs.org>
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTI4MDA3MSBTYWx0ZWRfXwkixo5mFwJL+
- 3HxVttVUw+QY1JoVP6q/63ZuKC1iNj+c/kiuAoI/m0mErc4e+ALmZ+sdLPtiu5xXfpLVL1H5sw1
- KoQeyUON47ZXxYfTn/Brx09PCPtLkJk=
-X-Proofpoint-GUID: wtQ7mSHJGALMv_7s4tdWeER5WmOUv9o1
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTI4MDA3MSBTYWx0ZWRfXz7SjoAw7WbsZ
- 0rw1WR/kQSLSd+1v8o5N+oHGO7nv54+PqYN6mxhHQ/CwrRq+y7emYcDWXrwym0zCeMMMa2FCMCr
- BgTsqJWofCMKDD/BC1iVgqGdG8iuKaxUQlHgXPSVhLmVjo32uo4XDVPvOfkAJsE6l0QuDm3w6VE
- r31kXYppLEsgTWVzeJAaNWssShBQ9jlnBI+0vZyyvl2QIQ+D5ATJFvqVcgq0h20cR4TvBkYmq0M
- M8o2mx94ripun1SkUw+MKHWcBV2azAbayTjK4wGG4TjCpk2vdsJr4a0jBMRq3F91qr0MejGDxNu
- av0w7LR5mviJeRXJ1g0VKYHCFm6bp9VnvAoCaFbTm6XDRiJ562qJsky0FcUzLFfpQxNh9IICMTx
- xnF9zDKglBN9URMpMjFlJYCN+0uNXYvcUvUqCn0+YjDXn6PkNL2MQsovuF2qwuRx9WWfFbGbhyz
- obwvwrEB9L0mFhnvAZQ==
-X-Authority-Analysis: v=2.4 cv=Hp3jiETS c=1 sm=1 tr=0 ts=6abaab15 cx=c_pps
- a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
- a=kj9zAlcOel0A:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=7x6HtfJdh03M6CCDgxCd:22 a=jCddH8ec0KUNCymVuxII:22 a=NEAV23lmAAAA:8
- a=wdxqxBYYAAAA:20 a=FOH2dFAWAAAA:8 a=RDIsNprFJan8OBN3x1YA:9 a=CjuIK1q_8ugA:10
- a=bA3UWDv6hWIuX7UZL3qL:22
-X-Proofpoint-ORIG-GUID: wtQ7mSHJGALMv_7s4tdWeER5WmOUv9o1
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-28_05,2026-09-21_02,2025-10-01_01
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I used [1] to validate that the problematic sequence that deadlocks
-in v5 is resolved by this v7 series.
+On Mon, 28 Sep 2026 15:57:23 +0300 (EEST)
+Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com> wrote:
 
-The test stands up a spoofed nvgrace device [2] in QEMU and runs a test [3]
-which:
+> On Mon, 28 Sep 2026, Deepanshu Kartikey wrote:
+>=20
+> > pci_resource_io() validates that the requested port lies within the
+> > BAR but never checks that it is aligned to the access size. A
+> > pwrite64()/pread64() on a resourceN file with an odd offset and
+> > count=3D2 or count=3D4 reaches outw()/outl() with a misaligned address.
+> > On arm64 this becomes a store/load to a Device-memory mapping
+> > (PCI_IOBASE + port), which architecturally requires natural
+> > alignment, causing an alignment fault and kernel oops.
+> >=20
+> > Reject misaligned 2- and 4-byte accesses before they reach the
+> > low-level accessor. With natural alignment enforced, an access that
+> > starts inside the BAR cannot extend past its end, so drop the
+> > port + count - 1 range check.
+> >=20
+> > Reported-by: syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
+> > Closes: https://syzkaller.appspot.com/bug?extid=3D7134530b25073b4ef373
+> > Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
+> > ---
+> > v2: Check alignment per access size in the case 2/case 4 branches
+> >     instead of using IS_ALIGNED() with a user-controlled count, and
+> >     drop the now-redundant port + count - 1 range check.
+> >     (Bjorn, David, sashiko)
+> > ---
+> >  drivers/pci/pci-sysfs.c | 7 ++++---
+> >  1 file changed, 4 insertions(+), 3 deletions(-)
+> >=20
+> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> > index 1f21856aac8a..8118cc6b3a61 100644
+> > --- a/drivers/pci/pci-sysfs.c
+> > +++ b/drivers/pci/pci-sysfs.c
+> > @@ -1209,9 +1209,6 @@ static ssize_t pci_resource_io(struct file *filp,=
+ struct kobject *kobj,
+> >  	if (port > pci_resource_end(pdev, bar))
+> >  		return 0;
+> > =20
+> > -	if (port + count - 1 > pci_resource_end(pdev, bar))
+> > -		return -EINVAL;
+> > -
+> >  	switch (count) {
+> >  	case 1:
+> >  		if (write)
+> > @@ -1220,12 +1217,16 @@ static ssize_t pci_resource_io(struct file *fil=
+p, struct kobject *kobj,
+> >  			*(u8 *)buf =3D inb(port);
+> >  		return 1;
+> >  	case 2:
+> > +		if (port & 1)
+> > +			return -EINVAL;
+> >  		if (write)
+> >  			outw(*(u16 *)buf, port);
+> >  		else
+> >  			*(u16 *)buf =3D inw(port);
+> >  		return 2;
+> >  	case 4:
+> > +		if (port & 3) =20
+>=20
+> Why fon't these use !IS_ALIGNED() anymore? You can use e.g. sizeof() to=20
+> connect it to the natural alignment of the type so you don't have to use=
+=20
+> literals at all.
 
-1. Launch reader thread: pread() from vfio device fd into a userfaultfd-managed
-   page.
-2. Wait until the uffd fires, but do not resolve the fault. Now pread()
-   from 1. is blocked, holding memory_lock(R) inside nvgrace_gpu_read_mem().
-3. Launch writer thread: pwrite() the PCI command word, queuing for
-   memory_lock(W) inside vfio_basic_config_write().
-4. Launch mmap thread: mmap() on the vfio device fd, taking mmap_lock(W)
-   and triggering the internal dma-buf export that backs the mapping.
-5. Resolve the uffd fault.
-6. Join the threads.
+That just obfuscates what is going on....
 
-On v5 the dma-buf export in step 4 takes memory_lock(W) and blocks behind the
-reader and the queued writer. The reader's fault path nests mmap_lock(R) inside
-memory_lock(R), while the mapper holds mmap_lock(W) across the mmap handler and
-waits on memory_lock (lockdep reports the cycle).
+David
 
-On v7 the export takes only the new dmabuf_lock, which neither the reader nor
-the writer holds, so step 4 completes while the uffd fault is unresolved.
-
-Tested-by: Alex Mastro <amastro@fb.com>
-Reviewed-by: Alex Mastro <amastro@fb.com>
-
-[1] https://github.com/opsound/vfio-dmabuf-lab.git
-[2] https://github.com/opsound/qemu/commit/349f0b12ca633fc42532aeda33273079b2b8e5d4
-[3] https://github.com/opsound/vfio-dmabuf-lab/blob/cfe762123076c4543fdc4e8d5e9b62ad6bf998d9/tests/nvgrace_uaccess_test.c#L309
-
-Alex
+>=20
+> > +			return -EINVAL;
+> >  		if (write)
+> >  			outl(*(u32 *)buf, port);
+> >  		else
+> >  =20
+>=20
 
