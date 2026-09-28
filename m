@@ -1,239 +1,377 @@
-Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010068.outbound.protection.outlook.com [52.101.201.68])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk2-f39.google.com (mail-qk2-f39.google.com [74.125.230.231])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98E074FDA52;
-	Mon, 28 Sep 2026 19:33:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.68
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7113A511213
+	for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 19:33:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.230.231
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790623997; cv=fail; b=GDvV1uWAAevV1UZxL87hIVhGnxaXeJxc8bLJs8dEu9E9WGTen4FFa9UTBWC+k/XLHBUQd7u4xbQNW1x43ogSBtiPc/qmXQoc3JaDjcAnxpom1WM27xOOlZjfUHg/bSL6eNt/pXcvSMbSlJ8z5l3CN2HupR303yHV3wgD1TI00cA=
+	t=1790624037; cv=pass; b=eXXGYMPA/yy8a7VkUNQS04CUzrATCQl8qpwhYaoWsBCs2iZuemzXHXij6pvddX/UH+O61jsHGkWwyJ5Sr8XaKu9YS5YqVhAsqplcHBRwIlY6rEsz/EqHE3zLg6d3M8ifBP5Ev9s/suKiM5iZvH5xp4nMVqtPDWE3VgfF83xXd4s=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790623997; c=relaxed/simple;
-	bh=8ayUKjulANacyqI5ffjA2dpsR2NEu309/5ZIBI6wC1o=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aQp1bIwMbFM09JacuwkZ/Ex0MvMXWy1qRPT2PeXKmHSCurl+LvQRcfX0wEIkCYl94aAZ7K4rYrpxs+q6YYkKF5JP5Nmru/aMZVyUDnH27EC38igAsaTxfJBWx/gTuh7GixJ4kDghMpQUO3z9qdtKrj9akflPV3CUx0T0gwK167E=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=q4DURGEE; arc=fail smtp.client-ip=52.101.201.68
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1790624037; c=relaxed/simple;
+	bh=49UVDPsfhpCuIHZ3UG5p9FtrrAcGEKNJjsJt45MZKOY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=jDLfeugKFOHhdDH4mZr0JgRNu8AmiO40aYpXr6R2Nn1reDpsQ2SSw4fPK0FxYaReTERTHkbGMqwXO2pWdq0Lq4seKTn4yhjZTPq/o2s1ZDJmXBP4ZExt+wgfHlGv2ZFDVk3Z/APfJzecc0pbf2BmsLnxYOgs74ogEE66RN2d6cQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eJAc4DMW; arc=pass smtp.client-ip=74.125.230.231
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="q4DURGEE"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=GchWhO0wI76CFVIUT5WWiruGLknEXzZkRRPJRQtxK/0LoJRFXiHNTxkLefGLyNiNUKg1iOSoW32ydfxTB1RtLs2NIiYs6BiZRqlaI0FMVrKAO8U3x6GwAyiKNLCeL9sCSsU7UiBwCPfUqr/vvqTkaEJcI7DwGnHNaiuImE1jf0xGceJaFFB6w5lAx9FP4UAxks1fqwXtP9fpI87iP/VRvAp1bi8rr+BbwsXH75cFOD4ZnxiuM4vPFkfK5aJedEvEXFB47ZWS9k7uadsGt6AlzSJZDz3olG7ks0dZwrC+txzhIWpQRyN0PbWMoKz16qjLRYKm4i5FH+RdI2e89kIzhg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=tZ2bSMDpjS8YwA2UnpqvcYFeZEvPxn0dH/nrCPFBf1s=;
- b=dg4DKVKErYWQHDHAUU5FsO9o1chcOD0/gTJghmf+06XeKnH2BMw4acPsmY1pX4njG01vbeKqCuF09AjvmTcxBcx2gDNODam/r6MAxmlr585oTSPABxq0DfMF7bFrrMcI/CXLnmP+X/M0VITXUz2t5TJOfE+pa1uSLLJsVPH2W3o1blPha2lh7wMIgxqNNdqGU/s7NOLMv38BnBwCFCBaAUO9RGNBaPUsv4csDpS1B60tyJ1yVt7xG1CC2NwfWsGeDIEEMZiNS9R1mXW2+5JQubxZBvEbhD/BZkbezoxfBCZIf1GfCF9VNpWHXiIbkq1x4NdTLAWojzHFZPxBI8N9EA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.118.232) smtp.rcpttodomain=colberg.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tZ2bSMDpjS8YwA2UnpqvcYFeZEvPxn0dH/nrCPFBf1s=;
- b=q4DURGEENNMeDkWrIrjjOLk09LfX2o6kK+YOti6jqIfv0bxNofQ0I/gNjhD1KErJjGmKCpsHj2/OOv2Li1HXzEK+GhBy3k/vpK3Mp350jW6IDW2W8BMJM0SKk7k45MYyb7B8n0gjMi3AXrt/vFUxS4RRsFxMafKeS6CabDgiBkWuSPlujqSExD6vfjnMfMF9rN327s9nW7WZY/ThunDoZib0BMl6NCYdQJP7h7gYtk8OdttwiWaV7DtXQGIrIpFaWRx//fJ4OUyMhrimQlR4bqaQ2RAcwuGbsQpFkYmXAp0jhSoW+lSiLw13SUJqeMmZ8ZVnBmp2CJgLkB6yJExM/g==
-Received: from LV3P220CA0006.NAMP220.PROD.OUTLOOK.COM (2603:10b6:408:234::9)
- by CH4PR12MB720178.namprd12.prod.outlook.com (2603:10b6:610:50e::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.24; Mon, 28 Sep
- 2026 19:33:08 +0000
-Received: from BN1PEPF00018547.namprd05.prod.outlook.com
- (2603:10b6:408:234:cafe::a1) by LV3P220CA0006.outlook.office365.com
- (2603:10b6:408:234::9) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.451.23 via Frontend Transport; Mon,
- 28 Sep 2026 19:33:07 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.118.232) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.118.232) by
- BN1PEPF00018547.mail.protection.outlook.com (10.167.248.6) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.472.14 via Frontend Transport; Mon, 28 Sep 2026 19:33:07 +0000
-Received: from drhqmail202.nvidia.com (10.126.190.181) by mail.nvidia.com
- (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Mon, 28 Sep
- 2026 12:32:42 -0700
-Received: from drhqmail201.nvidia.com (10.126.190.180) by
- drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Mon, 28 Sep 2026 12:32:41 -0700
-Received: from inno-dell (10.127.8.10) by mail.nvidia.com (10.126.190.180)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
- Transport; Mon, 28 Sep 2026 12:32:35 -0700
-Date: Mon, 28 Sep 2026 22:32:32 +0300
-From: Zhi Wang <zhiw@nvidia.com>
-To: Peter Colberg <peter@colberg.org>
-CC: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <dakr@kernel.org>, <aliceryhl@google.com>,
-	<bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
-	<boqun@kernel.org>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
-	<lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
-	<markus.probst@posteo.de>, <cjia@nvidia.com>, <smitra@nvidia.com>,
-	<ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
-	<targupta@nvidia.com>, <kjaju@nvidia.com>, <alkumar@nvidia.com>,
-	<acourbot@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
-	<jgg@nvidia.com>, <alex@shazbot.org>, Peter Colberg <pcolberg@redhat.com>
-Subject: Re: [PATCH v2 1/8] rust: pci: add {enable,disable}_sriov(), to
- control SR-IOV capability
-Message-ID: <20260928223232.41e93123@inno-dell>
-In-Reply-To: <arbc5IsuFxvtJnVj@colberg.org>
-References: <20260924190556.1620886-1-zhiw@nvidia.com>
-	<20260924190556.1620886-2-zhiw@nvidia.com>
-	<arbc5IsuFxvtJnVj@colberg.org>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eJAc4DMW"
+Received: by mail-qk2-f39.google.com with SMTP id af79cd13be357-93c64c01c86so118183785a.1
+        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 12:33:55 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790624034; cv=none;
+        d=google.com; s=arc-20260327;
+        b=aMu1+Tc+8RJwN2LOj5kSggzoPrTip4FWfoYi6tVuKbfUPcSd12sXbfoP5OoXZu7aNq
+         5AMHCb2aHxk/OiLaW834RoGDnbI3cbzhXUzeHNuR+V0bzhbMTzp56l0a9lSi0N7nlQPr
+         i0Dq78e2DW+8IYdl5tgVnFI8zo7jPxVNNToGOp6OUYB/qpFeTf5bDkrt2rkaI0iAH361
+         x4WxinFiJAWsNCpukc9kaCEYqXolhTJ8BKA+sTlpo72CXPSNNNbGhElergVaPuriYOtr
+         PU3GD7nFGJJOGjKe1Mzt2Z02awKEN+DLBy4MOk44MYHRNmPsaaZUc687sVCDyf7HUHiY
+         7JzA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=IuIiIDvTF28b5jDv9opUgdHcN4uGqk2vytTOQavm6Es=;
+        fh=s32eNJDkPGh1AdJU3qqJgG6mrCqMB2Av0pMjoC2bDkw=;
+        b=kPhnBjbN1iS0PRwHZ3Hd6cgAMYF+kNciZjwrwSwif6xwc1pS9SDm6ZFPJJkEaEwvAD
+         1Udae7Slbd77LNwTzFkvFNBQvLOXEOCBoxBQ3SfjKkfjYl2kM+Ux49DK1HS3y3Jyt/vX
+         BuLkABV1HSU3NUbaFk9eMC91OV/ajck1aHdWl+gbHbGwZS18o4TlLbl/yn11zCLguhuU
+         76znfaEAlNl3Jv1IcqlYbj/sR8NvAQiIm7FKEuaj5hb9bW2o44Mzaab3oW5SHpig0jV9
+         J2xmj2/XYkMKVvj0juWRX8S06gB3mCDJPaf3EKRRxa04wTBOubOA1JKoSfyJJi+OGb80
+         lk/g==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790624034; x=1791228834; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=IuIiIDvTF28b5jDv9opUgdHcN4uGqk2vytTOQavm6Es=;
+        b=eJAc4DMWrTLj4jGg9+/d/GqfzVzt16XTP9DDcsim6KcQZ/3fv25podszFOlSJhYo4b
+         acFVpqmp1zMlvFpDNqrVhkSF9Ejq6HDl3VbfMprUaTJjTH+P643ggWtDmUxZpC5e1d25
+         yT72XRPfYzeLFAGcwl5D5Zjc4GbT9mop5yNYp4BktnZNENUFRdCH55vM9W2tNuSB9f2+
+         Sjc+WO3kP86eKEdk8SG7/UPtnQ9dGBKVQdx3s701t3J8RMtSJ657a8aqZC3zRis/qC0u
+         UH6c6UntTsju8r7stOdq5uoIdI84U/No4JrR7UwZ58LdcCqyZV+/U6f/LPR5rPR4Bogt
+         tFXw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790624034; x=1791228834;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=IuIiIDvTF28b5jDv9opUgdHcN4uGqk2vytTOQavm6Es=;
+        b=1ZqGZnojNHMbV+A50pYsEajm6+qb4J8t03woFX3Xo5Wt4bOKXCxqizHjY1ouzOq4ji
+         4IUBc6kGC2gIGo3o32qMutqOjjJJ6+bK8F6Nk8NqelYBvBF0l9Og2mSwtHjkePz0uJ3M
+         zqTrQSgrC31cEP9aFIqDMJv5vI+t6fUOXgfoq4YbT18asFIkaEdBTgLJRQvr7nbttGTa
+         fSrj5H0lyRf31V2njNp5DEcV1/nKPe2veBQT3ZjVLWESj7YPTf4C3FJkwOxqWRLX+A9t
+         ewGaLXNb5tctGJ1mUAmBTv8kEQ5Il+NshUs6O/hZKqTKmTIKQABYaSeJ8Va5dqX5mRve
+         06ng==
+X-Forwarded-Encrypted: i=1; AKwUvBwF/Pp6g09qmmhIEAeo9IfkF9JJL/V5y2+SWmFz3hCSZK6ZCUFB0cWdeXmWmGfKjeHeYLSOx+IFDmM=@vger.kernel.org
+X-Gm-Message-State: AFuF++m3sZgQezpxVC8B+aew1t5AdFVtoUmjG2MqPLDTkwkbyUTbKGWh
+	5EheyI14h//uGc8/3Lsy6PbMZVEumB2cHY/CDK53sVqznqWn/O14x9VF7dDCzIx9WYMqCx9C3WS
+	nm1y/quNXkrSKoFGKbfkkmLEZx316UHo=
+X-Gm-Gg: AYBFou0bwE28Uiaeqh1abFTpLpcm8Y/1YC9Hu2op/qiyutFa6XkrpPetT1v15OnzqoC
+	KxcFvEBuAAYaNeoAbjibhJM0VBN9lhl8xbOI12TH4mgCZUgxFBroCX1QfACDpb14GpW85AVUzYt
+	vXQLVs0WAQbhKTKqQCKkFFDwcD3SHuqJRYtIczWkVUqlmr7C97mKYmOhR5NRBfWPZia+HQ9iOsu
+	v/aaGDyq94SgMZ01ItgzKf04avgzfesmXQvf4CAnULIZRqM7oF66ZFr90/sG0oOx3s90zhp6wAi
+	lAX/G+915DjegvVix78wL7fZqHHpIJp6rx06qjUOrOahCCUmkRCgQW6mEjxHUbOUSCyUqtQP1WY
+	M/EhtuhcfiP1FwNs7n8zIeB5GAsASTk95dIO2SOG/
+X-Received: by 2002:a05:620a:4686:b0:93b:d7a2:dd2c with SMTP id
+ af79cd13be357-93c43d3468dmr2068881185a.60.1790624034002; Mon, 28 Sep 2026
+ 12:33:54 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN1PEPF00018547:EE_|CH4PR12MB720178:EE_
-X-MS-Office365-Filtering-Correlation-Id: 820a62f2-d996-4b22-1725-08df1d975295
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|376014|7416014|1800799024|82310400026|23010399003|4143699003|6133799003|10067099003|56012099006|11063799006|22082099003|18002099003|3023799007;
-X-Microsoft-Antispam-Message-Info:
-	MMefleUqCzOlkgOFqhMlw79a2bMCOTuleaitrhqz7XH/W4FFInZiN/Xwkm8kAeKX8XQEdTTYzbKkCYulw11grl88h7gliocSaysDv819WvZvP+LPOANHnXvLKGuas3xW/GuOEwQS1yLuKUndvCAK74Hr+cnQJifyxqA/FEfuOQ5ExHhREmc2pBklHzuo4cLWWgctgllM7FI9+u1zjZJd84fhY/vDy0aLULgbRcg1XmuagsImwLwq5oFuPppATKMZbgI+3KrJ2HWSDXuDYj56LBec+T9aliN0sbtPd5ObUGRvFQrGH21EumQY49HTSb9LU9fBpPZmLklT+IVj61KlOHZPgYj5DkHt+C5cmC3av8+f+8an7vp/zAjNg3VYmMdGLWsKzzM27CgFLY5LEtPzLtgOWzSVglqGc6NQgXTV1P0DyL1FaWCMpkSjSnCXrSB2VbQ22K5hqpYIwYM8jWQtAnSshclhPuR0PO8qy7ULWB9zf07562ipbXx8WYYgXMWzlCpE/UsERF+pS9Bslv1rOq7lDzItRORzDuyOOX4g7MsCqugaItEI7mc5u4/ZK89aMb1OHZ+ks5nHEF25C36ctpzRYBkzvtGndQqAJ4mMxOALYcKJPs5f9qAYBUwWHNVMAhswW47V4Gvm6bsKsr6T0xMr555iFozuSMFObZu+YxJxb4/Y6kep+/CK/iQ67NzTQ4PaRyP7NL3pfYmWRhPHtQ==
-X-Forefront-Antispam-Report:
-	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(376014)(7416014)(1800799024)(82310400026)(23010399003)(4143699003)(6133799003)(10067099003)(56012099006)(11063799006)(22082099003)(18002099003)(3023799007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	EbJcO8h9NOvlwo5bwb2QhaXjEnv3qoZGltyv2ip22haDXDH73+HtSgK8/mWyrSciKqVL3z75r6PbgYob9dpkPn8zdHlz8Nkczh+BQxpb0LDjIr0mxDaZe5TnVOV0Y/jl2HVwaqNPTmWHhRuKWgKrkCH0FAAs6nIf+TSbAJ4ULC3hp7rFTYaI7IklkdSudVif2+fGJZAMevpQk+DhKcDp9NaduNIugHmhyAWhYBTtZtMBTcfAoyUmWu7ON9WvjxPNWrRQMQcBkPOaqirCGc1by+urbZn3/6eFRly389eb9F+TIoRlyqp4Fn7ucfAixrxMDwkHIWUIyoqEWcFNz18zgBiuJXfIKX18feEj+WaeNMM3lZRFn6wu8G3JGMWNdHWGLG43cwiSdTgFRcacLmhN98D7NnmNxvQ2bUtZ1OJxp1WGifGy5nv0FanONsZOlle8
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Sep 2026 19:33:07.0805
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 820a62f2-d996-4b22-1725-08df1d975295
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	BN1PEPF00018547.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH4PR12MB720178
+References: <20260922071807.2533884-1-airlied@gmail.com>
+In-Reply-To: <20260922071807.2533884-1-airlied@gmail.com>
+From: Dave Airlie <airlied@gmail.com>
+Date: Tue, 29 Sep 2026 05:33:41 +1000
+X-Gm-Features: AclHuK-sQSLvzYjEjXWXH3RxSWPaJTQOvV3BfLQe4gXQZEzn2tL4fGGuHRa1r-A
+Message-ID: <CAPM=9tx6A=hT8VS2s4KfxkDsTi3wBwmRQP6Cmqz6ng--uFnDog@mail.gmail.com>
+Subject: Re: [PATCH] pci/vgaarb: pass a data pointer to be used in the decode
+ callback (v2)
+To: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
+	kvm@vger.kernel.org
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dave Airlie <airlied@redhat.com>, Alex Williamson <alex@shazbot.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, 
+	Alex Deucher <alexander.deucher@amd.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri, 25 Sep 2026 16:43:16 -0400
-Peter Colberg <peter@colberg.org> wrote:
+> This changes the vgaarb client API so that the user can pass a
+> private data pointer into the register that will get used in
+> the decode callback.
+>
+> This allows a bunch of pdev conversions in the drivers, and lets
+> some future vfio cleanups be nicer.
+>
+> I'd like to merge this via the drm next tree but also fine with
+> it going via pci.
+>
+> Signed-off-by: Dave Airlie <airlied@redhat.com>
+> Cc: Alex Williamson <alex@shazbot.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Rodrigo Vivi <rodrigo.vivi@intel.com>
+> Cc: Alex Deucher <alexander.deucher@amd.com>
+> ---
+> v2: fix loongson (spotted by sashiko)
 
-> Hi Zhi,
-> 
-> On Thu, Sep 24, 2026 at 10:05:48PM +0300, Zhi Wang wrote:
-> > From: Peter Colberg <pcolberg@redhat.com>  
-> 
-> Thank you for updating the series and apologies for the silence.
-> 
-> As part of the next revision, could you please update my email address
-> in all patches, which has changed (for kernel contributions only):
-> 
-> From: Peter Colberg <peter@colberg.org>
-> 
+@Alex Williamson or @Jason Gunthorpe can I get an ack on the vfio
+piece, since I think the initial report on this problem came from
+Jason.
 
-Sure!
+Dave.
 
-> Thanks,
-> Peter
-> 
-> > 
-> > Add methods to enable and disable the Single Root I/O Virtualization
-> > (SR-IOV) capability for a PCI device. The wrapped C methods take
-> > care of validating whether the device is a Physical Function (PF),
-> > whether SR-IOV is currently disabled (or enabled), and whether the
-> > number of requested VFs does not exceed the total number of
-> > supported VFs.
-> > 
-> > Synchronously disable SR-IOV in the Rust PCI remove callback before
-> > unbinding the PF driver. This ensures that when a Virtual
-> > Function (VF) is bound to a driver, the corresponding Physical
-> > Function (PF) is bound to a driver, too, which is a prerequisite
-> > for exposing a safe Rust API that allows a VF driver to obtain the
-> > PF device for a VF device and subsequently access the private data
-> > of the PF driver.
-> > 
-> > Suggested-by: Danilo Krummrich <dakr@kernel.org>
-> > Signed-off-by: Peter Colberg <pcolberg@redhat.com>
-> > Signed-off-by: Zhi Wang <zhiw@nvidia.com>
-> > ---
-> >  rust/kernel/pci.rs | 36 ++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 36 insertions(+)
-> > 
-> > diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-> > index 3ec897709e89..e6dac919f02d 100644
-> > --- a/rust/kernel/pci.rs
-> > +++ b/rust/kernel/pci.rs
-> > @@ -133,6 +133,10 @@ extern "C" fn remove_callback(pdev: *mut
-> > bindings::pci_dev) { // INVARIANT: `pdev` is valid for the duration
-> > of `remove_callback()`. let pdev = unsafe {
-> > &*pdev.cast::<Device<device::CoreInternal<'_>>>() }; 
-> > +        // Keep PF data installed until all VF remove callbacks
-> > have completed.
-> > +        #[cfg(CONFIG_PCI_IOV)]
-> > +        pdev.disable_sriov();
-> > +
-> >          // SAFETY: `remove_callback` is only ever called after a
-> > successful call to // `probe_callback`, hence it's guaranteed that
-> > `Device::set_drvdata()` has been called // and stored a
-> > `Pin<KBox<T::Data<'_>>>`. @@ -472,6 +476,38 @@ pub fn
-> > set_master(&self) { // SAFETY: `self.as_raw` is guaranteed to be a
-> > pointer to a valid `struct pci_dev`. unsafe {
-> > bindings::pci_set_master(self.as_raw()) }; }
-> > +
-> > +    /// Enable the Single Root I/O Virtualization (SR-IOV)
-> > capability for this device,
-> > +    /// where `nr_virtfn` is number of Virtual Functions (VF) to
-> > enable.
-> > +    #[cfg(CONFIG_PCI_IOV)]
-> > +    pub fn enable_sriov(&self, nr_virtfn: i32) -> Result {
-> > +        // SAFETY:
-> > +        // `self.as_raw` returns a valid pointer to a `struct
-> > pci_dev`.
-> > +        //
-> > +        // `pci_enable_sriov()` checks that the enable operation
-> > is valid:
-> > +        // - the device is a Physical Function (PF),
-> > +        // - SR-IOV is currently disabled, and
-> > +        // - `nr_virtfn` does not exceed the total number of
-> > supported VFs.
-> > +        //
-> > +        // The Core device context inherits from the Bound device
-> > context,
-> > +        // which guarantees that the PF device is bound to a
-> > driver.
-> > +        to_result(unsafe {
-> > bindings::pci_enable_sriov(self.as_raw(), nr_virtfn) })
-> > +    }
-> > +
-> > +    /// Disable the Single Root I/O Virtualization (SR-IOV)
-> > capability for this device.
-> > +    #[cfg(CONFIG_PCI_IOV)]
-> > +    pub fn disable_sriov(&self) {
-> > +        // SAFETY:
-> > +        // `self.as_raw` returns a valid pointer to a `struct
-> > pci_dev`.
-> > +        //
-> > +        // `pci_disable_sriov()` checks that the disable operation
-> > is valid:
-> > +        // - the device is a Physical Function (PF), and
-> > +        // - SR-IOV is currently enabled.
-> > +        //
-> > +        // The Core device context inherits from the Bound device
-> > context,
-> > +        // which guarantees that the PF device is bound to a
-> > driver.
-> > +        unsafe { bindings::pci_disable_sriov(self.as_raw()) };
-> > +    }
-> >  }
-> >  
-> >  // SAFETY: `pci::Device` is a transparent wrapper of `struct
-> > pci_dev`. -- 
-> > 2.53.0
-> >   
-
+> ---
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |  6 +++---
+>  drivers/gpu/drm/i915/display/intel_vga.c   |  7 ++++---
+>  drivers/gpu/drm/loongson/lsdc_drv.c        |  4 ++--
+>  drivers/gpu/drm/nouveau/nouveau_vga.c      |  6 +++---
+>  drivers/gpu/drm/radeon/radeon_device.c     |  7 +++----
+>  drivers/pci/vgaarb.c                       | 13 +++++++++----
+>  drivers/vfio/pci/vfio_pci_core.c           |  9 +++++----
+>  include/linux/vgaarb.h                     |  8 +++++---
+>  8 files changed, 34 insertions(+), 26 deletions(-)
+>
+> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+> index 62b5b4a23f17..1344b2b1bd16 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+> @@ -1435,10 +1435,10 @@ bool amdgpu_device_should_use_aspm(struct amdgpu_device *adev)
+>   * Enable/disable vga decode (all asics).
+>   * Returns VGA resource flags.
+>   */
+> -static unsigned int amdgpu_device_vga_set_decode(struct pci_dev *pdev,
+> +static unsigned int amdgpu_device_vga_set_decode(void *data,
+>                 bool state)
+>  {
+> -       struct amdgpu_device *adev = drm_to_adev(pci_get_drvdata(pdev));
+> +       struct amdgpu_device *adev = (struct amdgpu_device *)data;
+>
+>         amdgpu_asic_set_vga_state(adev, state);
+>         if (state)
+> @@ -4208,7 +4208,7 @@ int amdgpu_device_init(struct amdgpu_device *adev,
+>          * ignore it
+>          */
+>         if ((adev->pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA)
+> -               vga_client_register(adev->pdev, amdgpu_device_vga_set_decode);
+> +               vga_client_register(adev->pdev, amdgpu_device_vga_set_decode, adev);
+>
+>         px = amdgpu_device_supports_px(adev);
+>
+> diff --git a/drivers/gpu/drm/i915/display/intel_vga.c b/drivers/gpu/drm/i915/display/intel_vga.c
+> index 4966fd7eea92..0889edb36190 100644
+> --- a/drivers/gpu/drm/i915/display/intel_vga.c
+> +++ b/drivers/gpu/drm/i915/display/intel_vga.c
+> @@ -283,9 +283,10 @@ void intel_vga_disable(struct intel_display *display)
+>         intel_de_posting_read(display, vga_reg);
+>  }
+>
+> -static unsigned int intel_vga_set_decode(struct pci_dev *pdev, bool enable_decode)
+> +static unsigned int intel_vga_set_decode(void *data, bool enable_decode)
+>  {
+> -       struct intel_display *display = to_intel_display(pdev);
+> +       struct intel_display *display = (struct intel_display *)data;
+> +       struct pci_dev *pdev = to_pci_dev(display->drm->dev);
+>         unsigned int decodes = VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM;
+>
+>         drm_dbg_kms(display->drm, "%s VGA decode due to VGA arbitration\n",
+> @@ -331,7 +332,7 @@ void intel_vga_register(struct intel_display *display)
+>          * then we do not take part in VGA arbitration and the
+>          * vga_client_register() fails with -ENODEV.
+>          */
+> -       ret = vga_client_register(pdev, intel_vga_set_decode);
+> +       ret = vga_client_register(pdev, intel_vga_set_decode, display);
+>         drm_WARN_ON(display->drm, ret && ret != -ENODEV);
+>  }
+>
+> diff --git a/drivers/gpu/drm/loongson/lsdc_drv.c b/drivers/gpu/drm/loongson/lsdc_drv.c
+> index 3fd828d23271..5a13df31eb90 100644
+> --- a/drivers/gpu/drm/loongson/lsdc_drv.c
+> +++ b/drivers/gpu/drm/loongson/lsdc_drv.c
+> @@ -254,7 +254,7 @@ lsdc_create_device(struct pci_dev *pdev,
+>
+>  /* For multiple GPU driver instance co-exixt in the system */
+>
+> -static unsigned int lsdc_vga_set_decode(struct pci_dev *pdev, bool state)
+> +static unsigned int lsdc_vga_set_decode(void *data, bool state)
+>  {
+>         return VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM;
+>  }
+> @@ -291,7 +291,7 @@ static int lsdc_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+>
+>         pci_set_drvdata(pdev, ddev);
+>
+> -       vga_client_register(pdev, lsdc_vga_set_decode);
+> +       vga_client_register(pdev, lsdc_vga_set_decode, NULL);
+>
+>         drmm_kms_helper_poll_init(ddev);
+>
+> diff --git a/drivers/gpu/drm/nouveau/nouveau_vga.c b/drivers/gpu/drm/nouveau/nouveau_vga.c
+> index 29a801124e56..6662e30466f2 100644
+> --- a/drivers/gpu/drm/nouveau/nouveau_vga.c
+> +++ b/drivers/gpu/drm/nouveau/nouveau_vga.c
+> @@ -9,9 +9,9 @@
+>  #include "nouveau_vga.h"
+>
+>  static unsigned int
+> -nouveau_vga_set_decode(struct pci_dev *pdev, bool state)
+> +nouveau_vga_set_decode(void *data, bool state)
+>  {
+> -       struct nouveau_drm *drm = pci_get_drvdata(pdev);
+> +       struct nouveau_drm *drm = (struct nouveau_drm *)data;
+>         struct nvif_object *device = &drm->client.device.object;
+>
+>         if (drm->client.device.info.family == NV_DEVICE_INFO_V0_CURIE &&
+> @@ -103,7 +103,7 @@ nouveau_vga_init(struct nouveau_drm *drm)
+>                 return;
+>         pdev = to_pci_dev(dev->dev);
+>
+> -       vga_client_register(pdev, nouveau_vga_set_decode);
+> +       vga_client_register(pdev, nouveau_vga_set_decode, drm);
+>
+>         /* don't register Thunderbolt eGPU with vga_switcheroo */
+>         if (pci_is_thunderbolt_attached(pdev))
+> diff --git a/drivers/gpu/drm/radeon/radeon_device.c b/drivers/gpu/drm/radeon/radeon_device.c
+> index 9523240110a6..cf8a6bd00c77 100644
+> --- a/drivers/gpu/drm/radeon/radeon_device.c
+> +++ b/drivers/gpu/drm/radeon/radeon_device.c
+> @@ -1076,10 +1076,9 @@ void radeon_combios_fini(struct radeon_device *rdev)
+>   * Enable/disable vga decode (all asics).
+>   * Returns VGA resource flags.
+>   */
+> -static unsigned int radeon_vga_set_decode(struct pci_dev *pdev, bool state)
+> +static unsigned int radeon_vga_set_decode(void *data, bool state)
+>  {
+> -       struct drm_device *dev = pci_get_drvdata(pdev);
+> -       struct radeon_device *rdev = dev->dev_private;
+> +       struct radeon_device *rdev = (struct radeon_device *)data;
+>         radeon_vga_set_state(rdev, state);
+>         if (state)
+>                 return VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM |
+> @@ -1431,7 +1430,7 @@ int radeon_device_init(struct radeon_device *rdev,
+>         /* if we have > 1 VGA cards, then disable the radeon VGA resources */
+>         /* this will fail for cards that aren't VGA class devices, just
+>          * ignore it */
+> -       vga_client_register(rdev->pdev, radeon_vga_set_decode);
+> +       vga_client_register(rdev->pdev, radeon_vga_set_decode, rdev);
+>
+>         if (rdev->flags & RADEON_IS_PX)
+>                 runtime = true;
+> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+> index 3de05aee7859..3e58b2c05c85 100644
+> --- a/drivers/pci/vgaarb.c
+> +++ b/drivers/pci/vgaarb.c
+> @@ -51,7 +51,8 @@ struct vga_device {
+>         unsigned int mem_norm_cnt;      /* normal MEM count */
+>         bool bridge_has_one_vga;
+>         bool is_firmware_default;       /* device selected by firmware */
+> -       unsigned int (*set_decode)(struct pci_dev *pdev, bool decode);
+> +       unsigned int (*set_decode)(void *data, bool decode);
+> +       void *set_decode_data;
+>  };
+>
+>  static LIST_HEAD(vga_list);
+> @@ -935,6 +936,7 @@ EXPORT_SYMBOL(vga_set_legacy_decoding);
+>   * vga_client_register - register or unregister a VGA arbitration client
+>   * @pdev: PCI device of the VGA client
+>   * @set_decode: VGA decode change callback
+> + * @data: private data to pass to callback
+>   *
+>   * Clients have two callback mechanisms they can use.
+>   *
+> @@ -956,15 +958,18 @@ EXPORT_SYMBOL(vga_set_legacy_decoding);
+>   * Returns: 0 on success, -ENODEV on failure
+>   */
+>  int vga_client_register(struct pci_dev *pdev,
+> -               unsigned int (*set_decode)(struct pci_dev *pdev, bool decode))
+> +               unsigned int (*set_decode)(void *data, bool decode),
+> +               void *data)
+>  {
+>         unsigned long flags;
+>         struct vga_device *vgadev;
+>
+>         spin_lock_irqsave(&vga_lock, flags);
+>         vgadev = vgadev_find(pdev);
+> -       if (vgadev)
+> +       if (vgadev) {
+>                 vgadev->set_decode = set_decode;
+> +               vgadev->set_decode_data = data;
+> +       }
+>         spin_unlock_irqrestore(&vga_lock, flags);
+>         if (!vgadev)
+>                 return -ENODEV;
+> @@ -1464,7 +1469,7 @@ static void vga_arbiter_notify_clients(void)
+>         spin_lock_irqsave(&vga_lock, flags);
+>         list_for_each_entry(vgadev, &vga_list, list) {
+>                 if (vgadev->set_decode) {
+> -                       new_decodes = vgadev->set_decode(vgadev->pdev,
+> +                       new_decodes = vgadev->set_decode(vgadev->set_decode_data,
+>                                                          new_state);
+>                         vga_update_device_decodes(vgadev, new_decodes);
+>                 }
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> index 6757054e9d87..b04ce3ded08c 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -162,9 +162,10 @@ static inline void vfio_pci_core_debugfs_init(struct vfio_pci_core_device *vdev)
+>   * has no way to get to it and routing can be disabled externally at the
+>   * bridge.
+>   */
+> -static unsigned int vfio_pci_set_decode(struct pci_dev *pdev, bool single_vga)
+> +static unsigned int vfio_pci_set_decode(void *data, bool single_vga)
+>  {
+> -       struct vfio_pci_core_device *vdev = dev_get_drvdata(&pdev->dev);
+> +       struct vfio_pci_core_device *vdev = data;
+> +       struct pci_dev *pdev = vdev->pdev;
+>         struct pci_dev *tmp = NULL;
+>         unsigned char max_busnr;
+>         unsigned int decodes;
+> @@ -2159,10 +2160,10 @@ static int vfio_pci_vga_init(struct vfio_pci_core_device *vdev)
+>         if (ret)
+>                 return ret;
+>
+> -       ret = vga_client_register(pdev, vfio_pci_set_decode);
+> +       ret = vga_client_register(pdev, vfio_pci_set_decode, vdev);
+>         if (ret)
+>                 return ret;
+> -       vga_set_legacy_decoding(pdev, vfio_pci_set_decode(pdev, false));
+> +       vga_set_legacy_decoding(pdev, vfio_pci_set_decode(vdev, false));
+>         return 0;
+>  }
+>
+> diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
+> index 97129a1bbb7d..71a364669eaf 100644
+> --- a/include/linux/vgaarb.h
+> +++ b/include/linux/vgaarb.h
+> @@ -33,7 +33,8 @@ struct pci_dev *vga_default_device(void);
+>  void vga_set_default_device(struct pci_dev *pdev);
+>  int vga_remove_vgacon(struct pci_dev *pdev);
+>  int vga_client_register(struct pci_dev *pdev,
+> -               unsigned int (*set_decode)(struct pci_dev *pdev, bool state));
+> +               unsigned int (*set_decode)(void *data, bool state),
+> +               void *data);
+>  #else /* CONFIG_VGA_ARB */
+>  static inline void vga_set_legacy_decoding(struct pci_dev *pdev,
+>                 unsigned int decodes)
+> @@ -59,7 +60,8 @@ static inline int vga_remove_vgacon(struct pci_dev *pdev)
+>         return 0;
+>  }
+>  static inline int vga_client_register(struct pci_dev *pdev,
+> -               unsigned int (*set_decode)(struct pci_dev *pdev, bool state))
+> +               unsigned int (*set_decode)(void *data, bool state),
+> +               void *data)
+>  {
+>         return 0;
+>  }
+> @@ -97,7 +99,7 @@ static inline int vga_get_uninterruptible(struct pci_dev *pdev,
+>
+>  static inline void vga_client_unregister(struct pci_dev *pdev)
+>  {
+> -       vga_client_register(pdev, NULL);
+> +       vga_client_register(pdev, NULL, NULL);
+>  }
+>
+>  #endif /* LINUX_VGA_H */
+> --
+> 2.54.0
+>
