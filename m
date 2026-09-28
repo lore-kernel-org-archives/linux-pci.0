@@ -1,66 +1,66 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 355F727466A
-	for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 17:19:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 955384F402D
+	for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 17:19:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790615951; cv=none; b=KfNGwsJqvXrH+dkBi13W5W1d+upC0j4rJ2nS0rvuakTOOymSoS5W6zpsDNCynECCLrdBwIX6AmE3oGnfjf51Hm/YINXU9AfZmlJAxhqN/SqPvm5Q0s9Uq7QKjB1HQjQP7P14PojOVvktPD6CWADu3ZmEVKcpGg437JoZQyXe6C8=
+	t=1790615995; cv=none; b=kHhIm7aw9ZKMcmpQZgJVTd/FnoHueBZwUHxRoTnwCA+Z+UcfRFwf/FYC5ILjY8kTVKvL0UJsfg1jsyEa3afqkkj8mJcqr42VXfanpkuiIzmdvDsQ9hYShvOWrK8ePy2uWas3GXrxCjdiwD2C4nmcvSgHb9vXInTun0zDFwgGcFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790615951; c=relaxed/simple;
-	bh=WnPzOTBnOLBjWHSRy274vlZE7IROYEPKRRksgkVb/iw=;
+	s=arc-20240116; t=1790615995; c=relaxed/simple;
+	bh=9bVXZ77Pzbh2OYLwrCoAhJ9SNTHguTxHVRc+s2gfuIE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TkboGw08aqL2DbOidmOVIPCQ4VZwkY+K02AWq+6+ypY5Epc0ngg7erTY/HGuuTySvJWHIbQquAh9o1xgBVivVteYDrR2yw2ZS0mSuL00XpH7DbUheF9T2x6b3h+eleaTXBy9m5iRCcFwRlxe128ulOeL9dQoTFTLdMBGW+G1gw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=VB3TXCXe; arc=none smtp.client-ip=209.85.214.177
+	 Content-Type:Content-Disposition:In-Reply-To; b=WAzY7RCKt3j7R79H0Jw3pbWaTUyL99YY1Ifsw9TEYsvLQAypto9HI3rnOpcO5th5mFILrNz9Px5CWgLMIgj8uJZWonkHMPWk0HDxf2fs0MQhGaZ98al8byCyx69gGD8S3Y3zJhHapBucPT1345RuntoCH0UgRuL+iswH+h4vVks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=hBDq4Hjw; arc=none smtp.client-ip=209.85.214.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="VB3TXCXe"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2d8facae850so3305ad.0
-        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 10:19:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="hBDq4Hjw"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2d3b445a84fso3145ad.1
+        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 10:19:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790615949; x=1791220749; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1790615991; x=1791220791; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=qGfj2Y/eKe1ZG7o5pFOTvuJbhKG8WlfCFzo9fqTzU3o=;
-        b=VB3TXCXe+HN4r+UQAWPMjyHh4A31RCm1xTAKQsC0FoCk6lCiZ2+E9GXfnxE/s0yWN4
-         JzawP+KLcRIX+3fnvJpegNySVke/0qQVAwvTXRZirdm4YOzMVphXaCiH+Ax0a2qu8yjR
-         8f6WMexWjWjS+DB/9DRrZmF5+BAROEoQB8fBxpPfhTs4YRFVeXCv1WdQOGg3eMwiD0oV
-         UfzPgfNMChm4mwyBT9jDjfvYVmbJXJLKB9ipARpQRj0NVTnCOE9r0XLBa9uonxFFGniR
-         6JcT9ToseIDd1BBb8kQ8dD0QV3CH7dOjg837ntYDReMZSsvDPQKyh5zszFdu3PYxXyso
-         QgAw==
+        bh=DWEY4l/bIKaUQ0LkmUfe65oGxH2cGGoTK+zPHQ0IPQM=;
+        b=hBDq4HjwxP1eGmrlPhZ3odGGR3Px9kfWs0X0sj4G+s4xv1n4iSLw4UzrLWKbX1MWcu
+         +l95p5GNeDwJNkb2CTxKGkGgTMY6OS2lg0xqK5yGrWP7ems0dbFxwmVGGlskcXr/0bGo
+         nQZlJxfySz/Ki4xh9+ZlFUm13+Mts5WCKAMP/IdmCXjQF/oVLQzvimqKRhHGzSyfBsq2
+         iFIysEZ3S7yHOoWxk4jYYDSWAT65orvKrzsBBw45YXUDCxxPUkjTwsvgJ+73g7Cyu0Jg
+         u6Hc5fIUQyylVjn0X6koEM7ca8J5IqxlETirS0AvoIEiGjxztMj5zs3yG5vQxSNcIp21
+         Mq2g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790615949; x=1791220749;
+        d=1e100.net; s=20260707; t=1790615991; x=1791220791;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=qGfj2Y/eKe1ZG7o5pFOTvuJbhKG8WlfCFzo9fqTzU3o=;
-        b=U9FoAIub+vf2TcnkP6dY3irH75V8ZqMCPGQMXafWXh3wbdSHyb+d8YljEUEWEMaTJj
-         xEYy3t+m2BbcHKm4pvaRam8xvmFYzgLyuipjSf4mWAAIWJEEcy5rE8hMBGR6/hY8ssIv
-         Wru7N+MMJtuO65q95oPZ/aQe7pDbyw4sCNRycZFrw1DeSRG4Xmo9AwcPX5Bl5p2tNfk8
-         /aj5YonG5HvhfJZzzHbWt4EJAZCW8tTScWNHrI/6ReAYIA2wSminIhUYQTU7OUAn8zUW
-         Ik2NBVI8jsJ4EG1WGdK+OWV1QGq+ONuL3oyT50HKMSGjVlDULCaV8MnvFPTUMgB7nUkS
-         IPqA==
-X-Forwarded-Encrypted: i=1; AKwUvBx+FqGCkoi4ahhgE9H4bVICB2pTSZkMGLf8HEYW9yZztc6/WxuXVGeZcLfzpxExqnRHHQdrYcqdej4=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKpMbIPl8upAyPnpSEnzEXCq2LGFMp3gVk5NzZcvnLg45IplsJu
-	4r7qMKwxSBz7OAFocZKdP1qUa9FI2ryTCibPOaFrDYzdO2q7qdRsx+xrzaNqtD1RVg==
-X-Gm-Gg: AYBFou0LEUVHIZ/KnMKWHy/KpvQKK9QjFmTqDKLmYJwcjaAEspQ5mjFSIy3qOUD1Zhu
-	/7rmD8crT8+G8DMGXlw4KkQPdFBhfJTY5Py61lFYmbsOYGPq12jsIseboFY98G7SwSVsDzEJw3b
-	QruDAey98mUN7QV/LxFAo9s0AnwLc7gEciOEiced1IRtciVyhFcsGuE6MujN+Y5vodPEMW7H8Dq
-	DFgCxzJTeqgqqWQk1VcqdllPHtIuJ8R2NjgqaaeVhVP0ParBB73ybh3Sofze6kSD7X7U21VV5WJ
-	0/HN+H88BYZwW2nV7spNPkx5XB8rwUVqfKgQRWjWK1Ivkm/Y62DuxJyBhHXQtI8RQ9qRiSyoeS3
-	YjknL+mPoi2LMiUmYkMQbpsunzSsdPmtuBFd2CVIj0KzsBu/ItlL98ByNfAq6E0g6TbLeDvoGva
-	1A8e5CUGSrLSjLoShTteFvy/23VpRNXYkGJFMpn+NINwycw+7UmWmsBOeYm6sKr+5EMo3cHVu/i
-	ytTScnfD0zBjA1u3mz7+n7+7qbHHEnf7w8O
-X-Received: by 2002:a17:902:f70b:b0:2df:8e89:3bff with SMTP id d9443c01a7336-2dfa9795c44mr8307715ad.17.1790615948122;
-        Mon, 28 Sep 2026 10:19:08 -0700 (PDT)
+        bh=DWEY4l/bIKaUQ0LkmUfe65oGxH2cGGoTK+zPHQ0IPQM=;
+        b=dQXhDccO8beBB2qoV4hua2HkYeBhNj7e9BZuv65YiZ60v2F5wJXuKb5Cs/APAP+r0f
+         o+r57ahISU7jlvfgRwenpaMHm/lybsWbc0LrnXFWf7kgmj294v9ND/Aht8T/YCbbJqT1
+         dszkwe//a+AhmEBVVghJeCpPRDshQKEw/zAG/HpbKbkijUXhEyu+8FweS2xNkKz+SO2i
+         sh/r26wCvVbB7O3x0yM0u8heMU87EB0LNW2hAux076O1DBku4//Kudd5vsQ1WV/L0MMl
+         nKllvdFuV2FlUwzOTRcj2h66hXApqOjKVwLEXW2D2Exjqhfkubu9KpQPASEEEV5kW61s
+         1xQQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzZk172IW0dISDThZ+d8TniLtFA8UTKO+Q6UetjVFjxnjAcYPjqlw/W/N6ot5xsYmSfqYCEXt1WsQw=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJSqKlQ333Ze7bS5qb/UnoEeZL46gnpl7irPI0kw+Xg9HPFdjkG
+	WH28yIzXpUo+43J3FpR5GrY0n7ugzigNSAwlT9E5oUQcNKcqBEGn/AFcJZq/2Eblww==
+X-Gm-Gg: AYBFou3hC5fRTaiJYVCpdJqboAkB/evFQF/ufHOyBn7qUbyC6OvsBgLsZKfhB3ZvUzC
+	YJj9SJQKhqbgphuZssGA8JbojZj/4A8LvHV9zmopS2BEkc2SGAjZ3gNpUrH+5my1qpVOcPDCLgD
+	L1kzDoYBuh3puSIXU7FIrUcQPvkCWtf9HfUc8rrQTMcN4GoHd2HPx3CnqkHiDN1yO6c5VRHabj8
+	e/fiINa09Zn3CQUDYfZfGSqfycZ50iGS9285cOJ+dNIyFfUrfpuWhCdf/G/VxDqJ2IaVk/nDoZz
+	V9Wh13CTYslIrlLVwqZ7sQFb/A1Pk6hII75og4lYf60fwFa2JN2jctXmtt8ZpKa5pkeTaEv8wSX
+	glp0ZKbPIXETlN+5u7ReYBuPzmoTVANj1HtPUmUn8xr6bJhyauBJ+n3OEWoqI++GcQ4Rxv8kpy7
+	1yexkXwFFDfW97NraVyzi0kVpdk3Kv3kVrQZc62hqbihGXPNRCVjQDo9RQ5u2QzSxP7sKDI/mB+
+	XmTRRmPS0wp9X/+1RCAY2tvpaUeHooYv95t
+X-Received: by 2002:a17:902:f54b:b0:2c6:99be:9dd with SMTP id d9443c01a7336-2dfa6248695mr7310435ad.12.1790615990264;
+        Mon, 28 Sep 2026 10:19:50 -0700 (PDT)
 Received: from google.com (105.211.142.34.bc.googleusercontent.com. [34.142.211.105])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc7a4b03082sm2784007a12.11.2026.09.28.10.19.02
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a49858c123sm538411a91.3.2026.09.28.10.19.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Sep 2026 10:19:07 -0700 (PDT)
-Date: Mon, 28 Sep 2026 17:18:58 +0000
+        Mon, 28 Sep 2026 10:19:49 -0700 (PDT)
+Date: Mon, 28 Sep 2026 17:19:41 +0000
 From: Pranjal Shrivastava <praan@google.com>
 To: David Matlack <dmatlack@google.com>
 Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
@@ -84,10 +84,11 @@ Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
 	Shuah Khan <skhan@linuxfoundation.org>,
 	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
 	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v9 08/13] PCI: Save and restore the ACS Control register
-Message-ID: <arqhghssNc4fIu_9@google.com>
+Subject: Re: [PATCH v9 09/13] PCI: liveupdate: Adopt ACS controls in incoming
+ preserved devices
+Message-ID: <arqhrVi0YfFNwKuS@google.com>
 References: <20260918200640.887030-1-dmatlack@google.com>
- <20260918200640.887030-9-dmatlack@google.com>
+ <20260918200640.887030-10-dmatlack@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -96,37 +97,32 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260918200640.887030-9-dmatlack@google.com>
+In-Reply-To: <20260918200640.887030-10-dmatlack@google.com>
 
-On Fri, Sep 18, 2026 at 08:06:34PM +0000, David Matlack wrote:
-> Save the ACS Control register in pci_save_state() and write it back
-> in pci_restore_state(), instead of recomputing the ACS controls from
-> scratch with pci_enable_acs().
+On Fri, Sep 18, 2026 at 08:06:35PM +0000, David Matlack wrote:
+> Adopt Access Control Services (ACS) controls on all incoming preserved
+> devices (endpoints and upstream bridges) during a Live Update.
 > 
-> This makes ACS symmetric with the rest of a device's saved state. Today
-> pci_save_state() ignores ACS entirely and pci_restore_state() re-enables
-> the ACS controls from the kernel's current ACS policy. As a result, a
-> device can come out of a reset with different ACS controls than it went
-> in with, e.g. any controls programmed outside of pci_enable_acs() are
-> silently dropped.
+> Inheriting ACS flags avoids changing routing rules while memory
+> transactions are in flight from preserved devices. This is also strictly
+> necessary to ensure that IOMMU group assignments do not change during or
+> after Live Update.
 > 
-> pci_enable_acs() runs when a driver binds to a device
-> (pci_dma_configure()), i.e. after pci_bus_add_device() has already saved
-> the device's state. Refresh the saved ACS Control register there as
-> well, otherwise a subsequent reset would revert ACS back to the
-> configuration left behind by firmware.
+> The adopted controls are recorded by the pci_save_state() call in
+> pci_bus_add_device(), which runs before drivers bind, so they are
+> automatically reapplied by pci_restore_state() if the device is reset.
+> If that save buffer could not be allocated there is nowhere to record
+> the adopted controls, and they would be silently lost by the first
+> reset. Program ACS from scratch in that case, which is a better outcome
+> than leaving ACS disabled.
 > 
-> Devices that rely on device-specific quirks to enable an ACS equivalent
-> keep that configuration outside of the ACS Control register, so keep
-> configuring ACS from scratch for them. Do the same for devices that have
-> no saved ACS state at all.
+> To simplify ACS inheritance, reject preserving any devices that require
+> quirks to enable ACS as those quirks would also have to take Live Update
+> into account.
 > 
-> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-> Assisted-by: Claude:claude-opus-5
 > Signed-off-by: David Matlack <dmatlack@google.com>
 
 Reviewed-by: Pranjal Shrivastava <praan@google.com>
 
 Thanks,
 Praan
-
