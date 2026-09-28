@@ -1,132 +1,100 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vs2-f43.google.com (mail-vs2-f43.google.com [74.125.227.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B23A3D0C07;
-	Mon, 28 Sep 2026 12:57:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB4023BB669
+	for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 13:00:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790600251; cv=none; b=VHuq0Y9OC3cgH/JNoEegxk4aQ6bSKIce1m9P83Tr/SVBbBW0dAiDu24xA0NkKEVctG2hsQaLYkXDm4/uXzOn8jqkXWYL2qd6/sCA3EtQ84Afq0TAl3kY4WlRiPTYn8FYRQ2kgcaRwl9qCVNttZbK9mApqSSlcSFC1mFy7c0HX4k=
+	t=1790600427; cv=none; b=Xt2+lSsF8ox6aZmOngeeOMtvh49spmacnDCRXlyOlhpMCGn5AzFRxLZb6/WPxhbbTUZPRMmj1UiANOIkzGjXS1x99m6ipZpY5gpLS8Aa34oaC9mNyNNDQjYjq6Jm6dTdlJeitxhSZV2jOhLmcWTLL3SNVloz2ZsivEGcUoOxmbQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790600251; c=relaxed/simple;
-	bh=NO3m05+MVb9sGRkEEQQ9zeN9rgKnk3WgXbm9hzLVRfM=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=RG6yS2+JXCStQDBPkMtCiD4QFrkXl/CLG+hpC+b6RSXIOA1CDc1dmGRY8V7E9cJRr+z4yQIQeIz6B/g+Wt7FACv7P1VAX4KOTB+Nv9PdmYxnMLpg3Is6Ea2Y5Lwk5MlYqZru5krK3M3g/vEnnQ7lTl5ofLM+bcdJS59ClRw7jTc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZfB/F5jK; arc=none smtp.client-ip=198.175.65.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZfB/F5jK"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790600250; x=1822136250;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=NO3m05+MVb9sGRkEEQQ9zeN9rgKnk3WgXbm9hzLVRfM=;
-  b=ZfB/F5jKpf0McRc27Djpsv7XGak+JYzrO0+EqGnXlHqjsx2wBBhR6Rr+
-   tf4msmTpub6sQk39dT3bD7MbkU2JKaXeE1gJxbDxQhQBwEn8flY1TfcGu
-   8rnjNit5zEbTPtf3M2HnLPG+ZQ2M7cNvXVSWn4emIeeGpkCFhWqtK9ZCW
-   jh49XuDuatPrGQdqqT70gOTk7rAKlTUxjJ0ylCX7AQGCDChSBoBEJoSaU
-   BECvFBeKzA6ati1KzLQESwSVPFMXcfclCZlOVrJC9UeD6WUMk8LSNHMXT
-   KCSUhCzfRDUS1s74IVatsOVhS4K8nDl7gCSBmOG2BxX1uTXwNas8UXEon
-   g==;
-X-CSE-ConnectionGUID: qVfpZFQ0TmSJw1Vf4zdH9Q==
-X-CSE-MsgGUID: aKb+Df1UQYWkhHCHLogXjA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11918"; a="101466244"
-X-IronPort-AV: E=Sophos;i="6.27,128,1787036400"; 
-   d="scan'208";a="101466244"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2026 05:57:30 -0700
-X-CSE-ConnectionGUID: tskufYWuSWqrGgDCV3n1NA==
-X-CSE-MsgGUID: Z13anqShQyCagxvJjJ2+Ww==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,128,1787036400"; 
-   d="scan'208";a="279772219"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.109])
-  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2026 05:57:27 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Mon, 28 Sep 2026 15:57:23 +0300 (EEST)
-To: Deepanshu Kartikey <kartikey406@gmail.com>
-cc: bhelgaas@google.com, david.laight.linux@gmail.com, 
-    linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, 
-    syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
-Subject: Re: [PATCH v2] PCI: sysfs: Reject unaligned resource I/O port
- accesses
-In-Reply-To: <20260928123036.7902-1-kartikey406@gmail.com>
-Message-ID: <fd1753ec-020b-b90d-ec1a-9d21ab2fa9a4@linux.intel.com>
-References: <20260928123036.7902-1-kartikey406@gmail.com>
+	s=arc-20240116; t=1790600427; c=relaxed/simple;
+	bh=J1UCxf74Usvo8/m/zisLMoMzaDelPgwuv0YSMGlmZ0c=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=PLexzZE8pZj9Wb84iheAMYZIzjUuMS5xnEDWGlk9a448/ZP1T/nLwmmbdbeFU/ppKkmYBXbnqZ4IvvaVoBELtV5XZeI4eBHMAbQqExeWhtw1euQc1URwbJuCAB7VCiVy7Oj+cndisWkdNHUx3bZewv2zDt8DtQ5l5JaotQUNPH8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=74.125.227.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-vs2-f43.google.com with SMTP id 71dfb90a1353d-5ce4d8751cbso606514e0c.0
+        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 06:00:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790600424; x=1791205224;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=swC+rKb42cR1zlVWS2oz+HcUhOn9Ph47VvSZUMBtH00=;
+        b=hXSrSAHOm0MrH285l74UY9ZhJ+Gat+HkvHQK8SXiVAfKqNoIB0iI66YBVwAv5VRqX0
+         RERWPeTIid4U+9o3z7heG4bqqiaDcW9r6kK354Esz/YNQSNX1qts9TARFhRzUf5gngHm
+         k48p34SEzEmW/8fx93lm1+hPKvoYOMpUPqq6qx1NV+onQDOdmSKRbBvdUtbQ3QRQRD67
+         7vtD3Nppaa6dCg73x1+3YozNOb4uw8gk7x86rKk/X3+v9ji5kQM7vDvKbHj0iFdbO+gq
+         IBYB4hC0drtR2QwzB/FL5HaOtP7Cg/rC+cI5JZpgbAzYyfrMV9PWBAmMtn/hyEXO6qQ2
+         vBsg==
+X-Gm-Message-State: AFq9FYKuGqvziIhdiCIPtK0beVlGP/p+7y17/Sg5yzlj1SiK5iDYPI38
+	4Jp43e9eAvKe2ParWFWG0XJ7gUENbebdoY9PUlmbJZIZiIBR0DPk7Dhq+xic5Ob9
+X-Gm-Gg: AYBFou3WyUPHvGmNf6q9TqhuRyV8CFhr3WXBoCaS+N4w86ob9R5GvGIU0JBFXrxyKp0
+	cHwfOU/HtSYdLwZjYXXaeZNXrZA7o66QUb5rFuntJ/xWwHm+X+iAN+Vkcw9kNRgLpLvtAKBc2kH
+	bg6akdyqGu+JJBqo3thXgmCdXjjqzNE3YFjh2lcZRjc6Enlx3IzuXRe+iiCcBFeZ52+21bn9oDJ
+	ccidq+hDTAr3/FEHMsCDHwbXaSJbNEs9//Vy39KRCVm4LuQFxr+rwM5ScWUVyx5vkprDEki2e4a
+	Fjw7iBZUMieiIXZTUjxRVM6mb0QjBXHaoPNLfLN0OjbdzRPXmBS06oJINWnEJW67PnUIapW55aV
+	ty3FiY2BGmUuu4B6PhJiCh8qoABUfF3CF0xZCvyTJIEuiocNNcFAyqYMBxwYK4hm7WzFYkvJcQX
+	HDJonp/4/L9ydpEmwwftWDsEN+NAAhO/rz9FS7s13OxCbuRwChc/4RQD8wVhvLZMAa6fjMHIQGd
+	NFh2ZBWEffDIi07xKOMVD8z4phnuVphrSwF
+X-Received: by 2002:a05:6122:3d44:b0:5cf:5ba7:b3fe with SMTP id 71dfb90a1353d-5cf5ba7b808mr1221068e0c.14.1790600424358;
+        Mon, 28 Sep 2026 06:00:24 -0700 (PDT)
+Received: from mail-vs2-f12.google.com (mail-vs2-f12.google.com. [74.125.227.12])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5cde664c06esm8782760e0c.16.2026.09.28.06.00.19
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 28 Sep 2026 06:00:20 -0700 (PDT)
+Received: by mail-vs2-f12.google.com with SMTP id ada2fe7eead31-79028ca9371so1016371137.0
+        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 06:00:19 -0700 (PDT)
+X-Received: by 2002:a05:6102:5346:b0:7a7:19aa:f0d2 with SMTP id
+ ada2fe7eead31-7af1f40a6ebmr3883955137.31.1790600418873; Mon, 28 Sep 2026
+ 06:00:18 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+References: <20260903205153.283553-1-marek.vasut+renesas@mailbox.org> <20260903205153.283553-4-marek.vasut+renesas@mailbox.org>
+In-Reply-To: <20260903205153.283553-4-marek.vasut+renesas@mailbox.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Mon, 28 Sep 2026 15:00:07 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdVHAFoa+RvhzXDS=hijNXqBk=Fnt++LVm5rTiRQzzvm2g@mail.gmail.com>
+X-Gm-Features: AclHuK_dpCNqN6yq7ND9MT0G1Ai1EvNq4GQtb8fvGHVDUDen2mnNfX37jzbkzIA
+Message-ID: <CAMuHMdVHAFoa+RvhzXDS=hijNXqBk=Fnt++LVm5rTiRQzzvm2g@mail.gmail.com>
+Subject: Re: [PATCH 4/6] arm64: dts: renesas: r8a779f0: Add PCIe
+ Application/Local register reset
+To: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Cc: linux-pci@vger.kernel.org, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Conor Dooley <conor+dt@kernel.org>, 
+	Koichiro Den <den@valinux.co.jp>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Magnus Damm <magnus.damm@gmail.com>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, 28 Sep 2026, Deepanshu Kartikey wrote:
+On Thu, 3 Sept 2026 at 22:52, Marek Vasut
+<marek.vasut+renesas@mailbox.org> wrote:
+> Renesas R-Car S4 documentation R19UH0161EJ0140 Rev.1.40 , Jul. 31, 2026
+> chapter 9A.1.1.12 Software Reset Control Register 11 (SRCR11) bits 22
+> and 21 describe PCIEC ch1/ch0 Application/Local register reset. Add the
+> matching reset into both RC and EP DT nodes of both PCIe controllers.
+>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 
-> pci_resource_io() validates that the requested port lies within the
-> BAR but never checks that it is aligned to the access size. A
-> pwrite64()/pread64() on a resourceN file with an odd offset and
-> count=2 or count=4 reaches outw()/outl() with a misaligned address.
-> On arm64 this becomes a store/load to a Device-memory mapping
-> (PCI_IOBASE + port), which architecturally requires natural
-> alignment, causing an alignment fault and kernel oops.
-> 
-> Reject misaligned 2- and 4-byte accesses before they reach the
-> low-level accessor. With natural alignment enforced, an access that
-> starts inside the BAR cannot extend past its end, so drop the
-> port + count - 1 range check.
-> 
-> Reported-by: syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=7134530b25073b4ef373
-> Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
-> ---
-> v2: Check alignment per access size in the case 2/case 4 branches
->     instead of using IS_ALIGNED() with a user-controlled count, and
->     drop the now-redundant port + count - 1 range check.
->     (Bjorn, David, sashiko)
-> ---
->  drivers/pci/pci-sysfs.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 1f21856aac8a..8118cc6b3a61 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1209,9 +1209,6 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
->  	if (port > pci_resource_end(pdev, bar))
->  		return 0;
->  
-> -	if (port + count - 1 > pci_resource_end(pdev, bar))
-> -		return -EINVAL;
-> -
->  	switch (count) {
->  	case 1:
->  		if (write)
-> @@ -1220,12 +1217,16 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
->  			*(u8 *)buf = inb(port);
->  		return 1;
->  	case 2:
-> +		if (port & 1)
-> +			return -EINVAL;
->  		if (write)
->  			outw(*(u16 *)buf, port);
->  		else
->  			*(u16 *)buf = inw(port);
->  		return 2;
->  	case 4:
-> +		if (port & 3)
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+i.e. will queue in renesas-devel for v7.4.
 
-Why fon't these use !IS_ALIGNED() anymore? You can use e.g. sizeof() to 
-connect it to the natural alignment of the type so you don't have to use 
-literals at all.
+Gr{oetje,eeting}s,
 
-> +			return -EINVAL;
->  		if (write)
->  			outl(*(u32 *)buf, port);
->  		else
-> 
+                        Geert
 
 -- 
- i.
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
