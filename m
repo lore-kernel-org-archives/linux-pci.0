@@ -1,106 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from www537.your-server.de (www537.your-server.de [188.40.3.216])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC26A4A4824;
-	Mon, 28 Sep 2026 11:21:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FA694ABBCC;
+	Mon, 28 Sep 2026 11:45:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.40.3.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790594465; cv=none; b=e0TZ9Zn4y+fIz1Y4tGfJY6y5S8QTivJBZYtGaBLDR9e3qylYXtKTYG03vX4yHaH/9Y1vYhuhALYV61AfYbNlzuDDZvhmSs4KWbDtT0ZjJA/3mxeR4/7dINHGey5dVIO85Vdhi45aufuaxFbOl6O8sOAtE6PLncBDsWa7AFog0Uw=
+	t=1790595943; cv=none; b=SkxrcOpOGo5OxbNkeOnqwPOTSX8yRGKSvyvbQxgXKdoCwojNooVCQ828Onb3675vN42OBekjozxg4NqTNRLtGMQ3J1jd2ohGgDKZ3JO4JY+4uS63+yjODxdohD47fbOWZ0Rf/RMuF6UHshYIqA8OTghoafL1340XXoH9udbLPEQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790594465; c=relaxed/simple;
-	bh=5xjUEmJHIrwDr/jWN/dMBJqofDzgpEevyqEk+J5ypYk=;
+	s=arc-20240116; t=1790595943; c=relaxed/simple;
+	bh=e+52jJ9jaL3CmNOBgW6VBGnbc1ROvbMtnuuxRgQ5TcE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XEMHkuvj1OfKdSwGcXctE0kjIaW6pXOmxbOvY9Y2Qpqu4NGHN22wCSiI6TpUMFUgY8sXlXuNHuxiMJiLyffpnkmMHFUmqq0ZlFlfS0GCNSxcbu+bEEKFmqg2HPCbqYZ25hdmWMEC7jZ8DZp+dQIQHxvgRGzWzrbAl5oEMduli9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RIsEuhBG; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=GQXc6D+J4e2+AKVs83Ik4lXawyVsZGODsY1yY+UxYthI91wtgvhgCg44JbmnJFtmb/zql6a6DPLc33NZyuIMn3QHB1yk7PrwiZJi1R64AJOwd+ZuJ3bxtveVtp61wFXo/RU8HQy07pwIrcuuh1CPgbrHehzoaJlRuoV6jqldOTA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ew.tq-group.com; spf=pass smtp.mailfrom=ew.tq-group.com; dkim=pass (2048-bit key) header.d=ew.tq-group.com header.i=@ew.tq-group.com header.b=l05XfVCO; arc=none smtp.client-ip=188.40.3.216
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ew.tq-group.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ew.tq-group.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RIsEuhBG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45EE31F00893;
-	Mon, 28 Sep 2026 11:21:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790594463;
-	bh=LpkC/LmM+yKvvfA+t3CNU0fBQxqnJxtpH59jGwykX2g=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=RIsEuhBG7XNvu6OT6rBf2xDIeAQrOIGWAK4Uffb37GTs+P4XLxWtHwZQPv6aqFCYu
-	 8TNE44t9qyMXTAK47myr9Px6h0XHRXv16x6GiKyfs7bvL1UF50YTWxWz9ULiITdU0U
-	 Nl3NCNExjfae0+Y8iNg0Ppeh+toNwtQhVHTlh/yQkzAckATObh+oKeydglNm45T6DK
-	 WtB72knS22H1WUpjqDPT2cB8DqkwFfSqOMcTfyT44vUNwYPJkXZaU3bHIp9ekcMiJ8
-	 f1z9TzrpP05q6zf/7YYBh/HiyVhLKmVjWsBvdJpfRhZvFz0JP8MQkO8hFA5AMH9C5X
-	 WrJ1VUmc7MG4w==
-From: Leon Romanovsky <leon@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Leon Romanovsky <leon@kernel.org>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	=?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
-	=?utf-8?q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	iommu@lists.linux.dev,
-	Tushar Dave <tdave@nvidia.com>,
-	linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	linaro-mm-sig@lists.linaro.org,
-	linux-rdma@vger.kernel.org,
-	kvm@vger.kernel.org,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>,
-	Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: [PATCH v8 21/23] RDMA/mlx5: Declare to P2PDMA that ATS is selected per memory key
-Date: Mon, 28 Sep 2026 14:19:25 +0300
-Message-ID: <20260928-fix-p2p-acs-v4-0-v8-21-404453b9c435@nvidia.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260928-fix-p2p-acs-v4-0-v8-0-404453b9c435@nvidia.com>
-References: <20260928-fix-p2p-acs-v4-0-v8-0-404453b9c435@nvidia.com>
+	dkim=pass (2048-bit key) header.d=ew.tq-group.com header.i=@ew.tq-group.com header.b="l05XfVCO"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=ew.tq-group.com; s=default2602; h=Content-Type:Content-Transfer-Encoding:
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID;
+	bh=z2vdG/ru8rw1Y5ayEWt8P3IH0H9UUvdg+EVu0ifmHCE=; b=l05XfVCOFvsk9DdwzUCAsnavXx
+	PJO1n1k0F9xm4SEFbbmjUhhQK63SKyApZsdpzEY5RB+fpBBNxTJwzqESP6kTSv5J6N66COgaDQcfZ
+	o0vlA5aRL2RjNSwftywHozraCEogY9FOGiCmHQPbXjrbk9P73Qb+mHtufFr9AaJyUtvVcvVuPl+oF
+	QCL4awUXjwwGTDj8p4pR78dQo8TTXtkgvNaFRnNGezTpeQTJSftzaaE4mbq6mGC2fq9L1xID+ApWD
+	amIGNKryYAeC+JWIMu68jQ/jx1AqpLDyEYf8vsE+VRZpZqeabfFmHLR35EJOperLZyUQEOk2RJl91
+	HnYeO3hQ==;
+Received: from sslproxy05.your-server.de ([78.46.172.2])
+	by www537.your-server.de with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+	(Exim 4.96.2)
+	(envelope-from <alexander.stein@ew.tq-group.com>)
+	id 1xB9ne-000M8U-33;
+	Mon, 28 Sep 2026 13:45:39 +0200
+Received: from localhost ([127.0.0.1])
+	by sslproxy05.your-server.de with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <alexander.stein@ew.tq-group.com>)
+	id 1xB9nd-0007Qc-1D;
+	Mon, 28 Sep 2026 13:45:38 +0200
+From: Alexander Stein <alexander.stein@ew.tq-group.com>
+To: Richard Zhu <hongxing.zhu@nxp.com>, Lucas Stach <l.stach@pengutronix.de>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Krzysztof =?utf-8?B?V2lsY3p5xYRza2k=?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
+ Sascha Hauer <s.hauer@pengutronix.de>,
+ Pengutronix Kernel Team <kernel@pengutronix.de>,
+ Fabio Estevam <festevam@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ imx@lists.linux.dev, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] PCI: imx6: Use dev_err_probe
+Date: Mon, 28 Sep 2026 13:45:36 +0200
+Message-ID: <3441664.44csPzL39Z@steina-w>
+Organization: TQ-Systems GmbH
+In-Reply-To: <20260619112535.1127850-1-alexander.stein@ew.tq-group.com>
+References: <20260619112535.1127850-1-alexander.stein@ew.tq-group.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Mailer: b4 0.15-dev-18f8f
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"
+X-Virus-Scanned: Clear (ClamAV 1.4.3/28137/Mon Sep 28 08:24:12 2026)
 
-From: Leon Romanovsky <leonro@nvidia.com>
+Hi,
 
-An mlx5 function issues Translated Requests only through memory keys
-created with ATS. Enabling ATS in its PCIe configuration therefore does
-not make it translate every address it is handed.
+Am Freitag, 19. Juni 2026, 13:25:33 CEST schrieb Alexander Stein:
+> pci_pwrctrl_power_on_devices() might return -EPROBE_DEFER resulting in
+> an error message. Use dev_err_probe to silence this non-error message.
+>=20
+> Signed-off-by: Alexander Stein <alexander.stein@ew.tq-group.com>
 
-Declare that where the function's P2PDMA state is set up, before P2PDMA
-starts treating clients with ATS enabled as translating everything.
-Without the declaration, mlx5 would lose bus addressing for peer-to-peer
-DMA whenever the IOMMU enables its ATS.
+Is there anything missing after receiving Frank's r-b?
 
-Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
----
- drivers/infiniband/hw/mlx5/main.c | 2 ++
- 1 file changed, 2 insertions(+)
+Thanks and best regards
+Alexander
 
-diff --git a/drivers/infiniband/hw/mlx5/main.c b/drivers/infiniband/hw/mlx5/main.c
-index 373ee1f42d4a..dcf659beaba0 100644
---- a/drivers/infiniband/hw/mlx5/main.c
-+++ b/drivers/infiniband/hw/mlx5/main.c
-@@ -4561,6 +4561,8 @@ static int mlx5_ib_stage_init_init(struct mlx5_ib_dev *dev)
- 	if (err && err != -EOPNOTSUPP)
- 		goto err_dd;
- 
-+	pcim_p2pdma_set_ats_per_mapping(mdev->pdev);
-+
- 	mlx5_cmd_init_async_ctx(mdev, &dev->async_ctx);
- 
- 	return 0;
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controll=
+er/dwc/pci-imx6.c
+> index 98e1db751132a..b7a502e9a1c59 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -1381,7 +1381,7 @@ static int imx_pcie_host_init(struct dw_pcie_rp *pp)
+> =20
+>  	ret =3D pci_pwrctrl_power_on_devices(dev);
+>  	if (ret) {
+> -		dev_err(dev, "failed to power on pwrctrl devices\n");
+> +		dev_err_probe(dev, ret, "failed to power on pwrctrl devices\n");
+>  		goto err_pwrctrl_destroy;
+>  	}
+> =20
+>=20
 
--- 
-2.55.0
+
+=2D-=20
+TQ-Systems GmbH | M=FChlstra=DFe 2, Gut Delling | 82229 Seefeld, Germany
+Amtsgericht M=FCnchen, HRB 105018
+Gesch=E4ftsf=FChrer: Detlef Schneider, R=FCdiger Stahl, Stefan Schneider
+http://www.tq-group.com/
+
 
