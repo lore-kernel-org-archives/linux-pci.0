@@ -1,136 +1,125 @@
-Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
+Received: from mail-yx2-f39.google.com (mail-yx2-f39.google.com [74.125.224.167])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B130029A309
-	for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 12:30:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790598646; cv=none; b=Og9vFUW/uSVrlcrzs329cAO0D0ScOojSIk8wMP3ZTgT05GlKRtu7slG9khzbMMBMysScrToduftbPFcUZgw43yr0mAIEvV5TRN4r1n3Frtna7uK54teEGSjJ7b+OR26xsEubGREBS2IF9sGR1bUv/7kuEGEB+X8WpGe9vN9jduk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790598646; c=relaxed/simple;
-	bh=lW1sE3GkZSINChbEihYaVI4nLt96EbTsmg4AS8HyOt4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LRUioL/ROGbXiZiZYPBM3A+rnGfUftGsl+3Xl3/7C0V8xElbF0IwVhYluYld9M66Lz4FZx4zx/5rUSC7aSqQ3FAuseHYw8SzVGktCThAPKuvhP/vvWSMy7WCIJrCvjy1gFMu3YxXyNtCaJPC8wvFjw57z59+qRLanYi7xv/6KVw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=p9hjUjLl; arc=none smtp.client-ip=74.125.227.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BA6F248896
+	for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 12:32:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.167
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790598726; cv=pass; b=ZAUmD7ZBiWNhiQB4c+XUSPoH/P3S+BbzKIYP+FQM61KAIRBVmr/odCN9PD2No5hxRYwK0XQocSrk9L6ciBg3oBB2gLgv+koQ+04R4rR8fI5AGW7BlCJWrPr6kWDuz1Pzjzr4DbNlti5XDNt5rz9cFgoOCMsnP9udQnKZRApCtss=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790598726; c=relaxed/simple;
+	bh=LvGdn2hkiIeEdQO/+4P0N6T1Y/jNQdIt2aZQDR7H4Vo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=pYjiW0Y05js+GPbaoqSd57J3hZg7/GPka9bu5QcR0/1tTszUch98mNDfDZRSx1uVDxq+SPs+wcOnQwJKA5Za+75HqKgaz0K75Z04yAIk/K1Bw6kukkTvMFv6lNnIl80f3btYtEKGeU/kcHpPN61Yd06kuM4ctev1modoUtt5nR8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VsoA/ObH; arc=pass smtp.client-ip=74.125.224.167
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p9hjUjLl"
-Received: by mail-pj2-f12.google.com with SMTP id 98e67ed59e1d1-398beb616f5so1497344a91.1
-        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 05:30:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VsoA/ObH"
+Received: by mail-yx2-f39.google.com with SMTP id 956f58d0204a3-6755a6109c1so153929d50.3
+        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 05:32:04 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790598724; cv=none;
+        d=google.com; s=arc-20260327;
+        b=swhbrTtxD5jHG/1GlXpGiZf/FMZ3XCjwe+nNn7T65x/C7U9EevW5fZGFYN1zN0cS8e
+         mQ7tf/+qb83ZPuXwtwPjx3PeecmllGn9WfdT//jQcbsBNvKBvOVkoWI+4Ie0IT65NnS5
+         UXiaQ/ShE72j6TZUYfms8BJpaxkr5BPTeCmRPaTFVmdPDylB+n9MDP2cF/jwleVVY+Ve
+         wdfGBGgDmcWatuHSaRX/rNijIRrkZpi0+T3Ngu0rfVK1eLYKn3sY3/Qo80jW1y6Vh58D
+         LcvwVlgptLc+Q1qxRYH3xPUBhYhbShN8s06UPrxvKFi9gV3XIdpgSygOT5QUJ9IxYJ52
+         F16w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=LvGdn2hkiIeEdQO/+4P0N6T1Y/jNQdIt2aZQDR7H4Vo=;
+        fh=3G1laKckcayz8RjlMcbVoeHQaQkhxo+Owo/mAeJGwlk=;
+        b=XXlT90lgIb4KiGSy9t3t1z/NGuzDhOK+7TqvojuN2gpt/7Jah8LIYwspDJbX2KT4Pe
+         zpo9Ed8F5weAofIkglYVoolzXHYufXNoQncUbCWvwneKlIdmywXTf08v8q4RrsFvc0uX
+         Ih2Ba/+K9d1TqhF8XVYQsOl29CVzlstwbL6ZJuYVrDqsn22vHU5CHJ4+tT67WPoG7T9e
+         ffWpro5i/St4t/hWNmDhP8uAKGvZTgKrJokZZYhXyQVw9xb2NKCY6GmynPBQYw040QIm
+         d8536+oJTlhwaIw53+qUQ8PwsdXrBmgZvw/7a2uWzTdS8zFAv8JQMBpUkSy4cGQTkkD2
+         UQ/A==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790598645; x=1791203445; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=kRdJi1zk/+tXAmS2OAPRi0foJMTeGfHkadWquQLI/Ac=;
-        b=p9hjUjLlzkpxsWeUXKTamma7T+fJBZhxfPnIbfBwihp7CLqXR2hibAgUGfrvHGRNW8
-         Oo/BTzzBbSAgZ49daUH1yG9+YWkdbwOLQF4AD9Nm4wuEwdpZEenNFHSg3O258lu32QPU
-         oNu81O/C2JBoRFJGw/cAAqpcd8dOVU7EOaYSZI91iiGkdyLAy9AKGhTCo0FJarl9CJqf
-         6SkkM/PjvlKbKWrL/u/Ra4ELYhN8Dw5mvlzi3RbjplaozcFUWHoLuad9W70sQ6dbt5n+
-         tSZRDfL36Tvh6g4s+bugBYlOiuueNLsHDuW6uaL65/y/TAwGs/1fNRA60+yX97EhYm3R
-         I+Jw==
+        d=gmail.com; s=20251104; t=1790598724; x=1791203524; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=LvGdn2hkiIeEdQO/+4P0N6T1Y/jNQdIt2aZQDR7H4Vo=;
+        b=VsoA/ObHaVQQX+rJUBqac4OF7VxPSy/ydlo2HtzqPni1a/loImcDn1e6hmtfth0NwE
+         NgyaP0KUfC0ymfqqMorkSLhvOq8/fXlnz5Hc1y/RR8uFchWOsE9gbkpUFDPnbM15873K
+         fYlg7DOcxgBJU5e+1rGWr07Kl3VBbMkbt2W0bnoRLowoQWH7sIjuvGxyIuulxwqLt8LS
+         5zk8m9q44s0IDIT1kTDu5cj4vDqptBMDQm5m/1w3CTvbWIvSNF9Ea6Wm3NIzy3+2yCRu
+         qYn4dtcyGq+WdL+Fg43HwLAQjso1ENrQgDEdRhpEWb3Xf5Xl26TLCwqPIBjfOM6cntnG
+         XMPA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790598645; x=1791203445;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=kRdJi1zk/+tXAmS2OAPRi0foJMTeGfHkadWquQLI/Ac=;
-        b=sewyejGLgsTd5HR9H92lilM3KTuQheapuSMoeNnvj83GP5T3sgAjSSC/oXBNp68X8y
-         7i66VDFl50bx4fUoQXUcl+nrjrn9killspecap6F4QJ8SgEy50PN3lq1sN2rYJdRZsy8
-         Y2Rr3A32IszC69R7wImp/UcpvPPk/8igwHK7DjZeZtEzJwWCvJFCRM0pJF/HHFwxSnsZ
-         KN+DEVmpJmY179jRXd5u5+t5Q9IS1WHjYtx51FpMg0yD60zhIhvgrgEqq7LS780NQgRB
-         AtEG3AJ/BPhcabOS/mMLwf+iul/HjBk0qEm2p820FgQ5gmpnzFl/MyHrmNf/G3R595SF
-         g3mA==
-X-Gm-Message-State: AFq9FYLSRq2UyMa9agi3V82+cfBDIhjQLECgwU4QSEF6Jg/jhUnBe4Qt
-	ywiTCtcvjNh+obyt7/1m/vQ0TE/AyU+e6yMIr4y0auy7ZHZMMPPkoO1m
-X-Gm-Gg: AYBFou1prLZzo1OmA1Ac+NnNfD70/R2tftbf2rp1Otxt8hQZiecfCHlY9mdbzHk8osV
-	NNXVWK9pjWNxB0mJ+yt2hkCwbBeSfSuxk1aHpxwBLRqDr4+lHbEtBXeWClyPsccO3nXbPeXmbhs
-	3mgt7HfJaBDs+kVb2hXZFETIQUnWFDhOvAevWRjauvKHIccDy23WZ/omvs6ijLyR/DhBF7wM40K
-	X6Q98OLvGbUszhU2yWpXTn0dgQ02N+rnlRw5CI3aRvlqaHfPCmIfxsfczIwXFqZ59QZz6v2MO6H
-	E5eINrKTeRxSYlNlvjCRVtH/oiCzjKEE4p1+YfcpNhrTplfTa0wTmVLN9+GZ7u5nRoGTbIizcH8
-	3QR4Af7HtbQnRpeqgJ+I0t5/JuuyCrE4CG9sXuryxQfMYg/G3UkbWjMe/OjQREnJleASr4TGWDv
-	yslaYjs1tmcYerGmP1fi4E65grpKdwgb3tqSDEYmE2ObsVvhJbCQ50Bh174kutXurbaw4fO+obH
-	/hlDyNB/QApVmqpau8fbg7GMFIYXbdSVV8yrFghaPRHQt+2ttkk6iTqz70eOnYg
-X-Received: by 2002:a17:90b:1dc7:b0:3a0:b7b4:b65e with SMTP id 98e67ed59e1d1-3a0b7b4bae2mr4411774a91.2.1790598644712;
-        Mon, 28 Sep 2026 05:30:44 -0700 (PDT)
-Received: from deepanshu-Legion-Pro-5-16AFR10.. ([2405:201:682f:383f:92e9:2799:890f:9b5b])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2df913ff34fsm39878305ad.37.2026.09.28.05.30.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Sep 2026 05:30:43 -0700 (PDT)
-From: Deepanshu Kartikey <kartikey406@gmail.com>
-To: bhelgaas@google.com,
-	david.laight.linux@gmail.com
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Deepanshu Kartikey <kartikey406@gmail.com>,
-	syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
-Subject: [PATCH v2] PCI: sysfs: Reject unaligned resource I/O port accesses
-Date: Mon, 28 Sep 2026 18:00:36 +0530
-Message-ID: <20260928123036.7902-1-kartikey406@gmail.com>
-X-Mailer: git-send-email 2.43.0
+        d=1e100.net; s=20260707; t=1790598724; x=1791203524;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=LvGdn2hkiIeEdQO/+4P0N6T1Y/jNQdIt2aZQDR7H4Vo=;
+        b=x6oWrW9pMyWfVryCrBt33igbRB578DdgIZ9D3cNHCheeK7T0HuhDAdqjt98DLHLDLC
+         mgMHp8yNtIdtlq9NR3TWuniFBuFsNUH+0c212vmrWe1Eu91+NEWP5OdDl5W1vAAieDgD
+         aEuRMvMP3BNP49Y7X7ba7SsGhEWKOUxulYDI368R1tECfOL8W218VwvJ57n/5mM9CZgx
+         WBCawX3riKLDj5VwslEn2RwkQ/sK8I8vn1TYaV/vWkAy90oe5nPhvvIRjDzqkT/n0Our
+         QGaIZ93HQyX8FANK8AePBlx55VX9LJoGSLbjBawaFTvB44e5Qeh5iEEZg3ksx7STGGro
+         HU/w==
+X-Forwarded-Encrypted: i=1; AKwUvBzO7uTyZCNRMOupQifqV5kRks+jtdDATmhcEZ1hyfLEAnS7Lk3iuN6X8jQNQBctzHv5WKGTaBMTL5M=@vger.kernel.org
+X-Gm-Message-State: AFq9FYIvJC6RuqpgFRJVr38jP0hFGgyS3GoXJG/0aY3aBU/XZY8xdYEr
+	6Uf2b/nmhG6LAryTGvf05+kD25ZIDyGZu8QZGwNZuLlAzlu/uTehiFM3dBleSUdvRe+C9RV9JGB
+	7DwqBklXR4hWSttiKyDJ5tokspn+Jvno=
+X-Gm-Gg: AYBFou1VIJTN3VNUaIA7XMn7qIc5YMNIWL4/b0sJQM1PXuJnna/I3hIWQ+OTisBFf/9
+	sVFeBJtdqcx08bm4OPyJZO7NGb7EfJAwlFLEUaBMzABV3jcGTDYstqpKSd5YLZVCyNoiCPjyh9k
+	RgtTsmqMvtw6YilR37CQmvNKSf6eL4/ayDiTXlAdNe3IixAx49VcNO75sPsvHOXVLaVw6CIgKbA
+	NXXBEMp92b/ekPQ1loRxmaeR+OXsD0Ay2FBoyJg7fzFKoV59VNgkT1c0EPr5RyDDF1r356vJgTS
+	sxdxOKxJMD0r090e0Acb+h9gtajjPJZPfQSwXRl95kdRX8Lu9izCZTGJoVum6FYfZRUMjKEQ4H7
+	jlWgznz1XEgDAPbN8rNCeJKbshnKIOsEEgSLKZveSLn2Yyj4yWEAjy1M3
+X-Received: by 2002:a05:690e:43d7:b0:672:a098:bfa4 with SMTP id
+ 956f58d0204a3-6740bad5163mr2491644d50.90.1790598723665; Mon, 28 Sep 2026
+ 05:32:03 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CADhLXY7008e4JA35T2wE8TnJnR_r82RCpfSd=aLBmDh5xAQ02A@mail.gmail.com>
+ <20260923205518.GA1941939@bhelgaas> <20260923225059.5c8cf0d7@pumpkin>
+In-Reply-To: <20260923225059.5c8cf0d7@pumpkin>
+From: Deepanshu Kartikey <kartikey406@gmail.com>
+Date: Mon, 28 Sep 2026 18:01:51 +0530
+X-Gm-Features: AclHuK8NUjREgQIAohkxNSm-52_ycxHjkhDYIqnt9K1ygKIEBhfIimWuLdHG6jE
+Message-ID: <CADhLXY65fwGS=87oOtyAi9V4oXjbr8jgJNcSc0wXkVV9OOsREw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: sysfs: Reject unaligned resource I/O port accesses
+To: David Laight <david.laight.linux@gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, bhelgaas@google.com, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, 
+	syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-pci_resource_io() validates that the requested port lies within the
-BAR but never checks that it is aligned to the access size. A
-pwrite64()/pread64() on a resourceN file with an odd offset and
-count=2 or count=4 reaches outw()/outl() with a misaligned address.
-On arm64 this becomes a store/load to a Device-memory mapping
-(PCI_IOBASE + port), which architecturally requires natural
-alignment, causing an alignment fault and kernel oops.
+On Thu, Sep 24, 2026 at 3:21=E2=80=AFAM David Laight
+<david.laight.linux@gmail.com> wrote:
+>
+> On Wed, 23 Sep 2026 15:55:18 -0500
+> Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >
+> > What do you think of the sashiko comments:
+> > https://lore.kernel.org/all/20260809051652.36BA31F000E9@smtp.kernel.org=
+?
+> >
+>
+> You could just add 'if (port & 1) return -EINVAL;' to the 'case 2:' branc=
+h,
+> and a similar '& 3' to the 'case 4:' one.
+>
+> Did it miss that loff_t is (probably) 64bit on 32bit?
+> Or do large offsets get detected earlier?
+>
+> David
 
-Reject misaligned 2- and 4-byte accesses before they reach the
-low-level accessor. With natural alignment enforced, an access that
-starts inside the BAR cannot extend past its end, so drop the
-port + count - 1 range check.
+Thanks David for the suggestion. I have send patch v2
 
-Reported-by: syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=7134530b25073b4ef373
-Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
----
-v2: Check alignment per access size in the case 2/case 4 branches
-    instead of using IS_ALIGNED() with a user-controlled count, and
-    drop the now-redundant port + count - 1 range check.
-    (Bjorn, David, sashiko)
----
- drivers/pci/pci-sysfs.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Thanks
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 1f21856aac8a..8118cc6b3a61 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1209,9 +1209,6 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
- 	if (port > pci_resource_end(pdev, bar))
- 		return 0;
- 
--	if (port + count - 1 > pci_resource_end(pdev, bar))
--		return -EINVAL;
--
- 	switch (count) {
- 	case 1:
- 		if (write)
-@@ -1220,12 +1217,16 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
- 			*(u8 *)buf = inb(port);
- 		return 1;
- 	case 2:
-+		if (port & 1)
-+			return -EINVAL;
- 		if (write)
- 			outw(*(u16 *)buf, port);
- 		else
- 			*(u16 *)buf = inw(port);
- 		return 2;
- 	case 4:
-+		if (port & 3)
-+			return -EINVAL;
- 		if (write)
- 			outl(*(u32 *)buf, port);
- 		else
--- 
-2.43.0
-
+Deepanshu
