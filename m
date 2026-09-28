@@ -1,128 +1,156 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+Received: from mail-qv2-f42.google.com (mail-qv2-f42.google.com [74.125.230.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 955384F402D
-	for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 17:19:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D1553537C4
+	for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 17:29:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790615995; cv=none; b=kHhIm7aw9ZKMcmpQZgJVTd/FnoHueBZwUHxRoTnwCA+Z+UcfRFwf/FYC5ILjY8kTVKvL0UJsfg1jsyEa3afqkkj8mJcqr42VXfanpkuiIzmdvDsQ9hYShvOWrK8ePy2uWas3GXrxCjdiwD2C4nmcvSgHb9vXInTun0zDFwgGcFI=
+	t=1790616583; cv=none; b=CBd9SDUduEQlfSvD60KTDB5e+dckAofqcRxUADSLHd6wvOYzThgo1gN2urRVKbgiRU79AY8kkk+Iof/axRrKxzqzPa/XjYYAFx9Fq0RU2RiwQjHx2EOypvOH0CoTtNy2ajZc4aj/CWN3kV/H2xcdvsMoOrSWCNhVqUzqfRnUYVE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790615995; c=relaxed/simple;
-	bh=9bVXZ77Pzbh2OYLwrCoAhJ9SNTHguTxHVRc+s2gfuIE=;
+	s=arc-20240116; t=1790616583; c=relaxed/simple;
+	bh=SKQB0mEZagqmGsDNZPnaWe7gUble3NHrhIKbwNSH1Jw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WAzY7RCKt3j7R79H0Jw3pbWaTUyL99YY1Ifsw9TEYsvLQAypto9HI3rnOpcO5th5mFILrNz9Px5CWgLMIgj8uJZWonkHMPWk0HDxf2fs0MQhGaZ98al8byCyx69gGD8S3Y3zJhHapBucPT1345RuntoCH0UgRuL+iswH+h4vVks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=hBDq4Hjw; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=YoeXCtkSLscwerYPDGq3F3GTJzNIne1wzqJ1jEoNbrdOABd8Rlkw15pw1bzV/iDqbl84Mjnfgcm35BHHR09xaB/QiSx1dJH/FzT0haAiffnPh7RRz6ckK65toqlWxw5kiS3HfCzEeaIyF92QwUWAqdT6kzC5CMq1hn0OxXMSUFY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=AXmJdboN; arc=none smtp.client-ip=74.125.230.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="hBDq4Hjw"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2d3b445a84fso3145ad.1
-        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 10:19:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="AXmJdboN"
+Received: by mail-qv2-f42.google.com with SMTP id 6a1803df08f44-9143e192df5so24932606d6.3
+        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 10:29:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790615991; x=1791220791; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=DWEY4l/bIKaUQ0LkmUfe65oGxH2cGGoTK+zPHQ0IPQM=;
-        b=hBDq4HjwxP1eGmrlPhZ3odGGR3Px9kfWs0X0sj4G+s4xv1n4iSLw4UzrLWKbX1MWcu
-         +l95p5GNeDwJNkb2CTxKGkGgTMY6OS2lg0xqK5yGrWP7ems0dbFxwmVGGlskcXr/0bGo
-         nQZlJxfySz/Ki4xh9+ZlFUm13+Mts5WCKAMP/IdmCXjQF/oVLQzvimqKRhHGzSyfBsq2
-         iFIysEZ3S7yHOoWxk4jYYDSWAT65orvKrzsBBw45YXUDCxxPUkjTwsvgJ+73g7Cyu0Jg
-         u6Hc5fIUQyylVjn0X6koEM7ca8J5IqxlETirS0AvoIEiGjxztMj5zs3yG5vQxSNcIp21
-         Mq2g==
+        d=ziepe.ca; s=google; t=1790616581; x=1791221381; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=F8wHi2lHLlVmnngzxn3a4naORn9qZPczzGL0TvCk5Do=;
+        b=AXmJdboNcWfKQqwuUPCXX6Rn93Y/ElzgHMYokUjabBvqd2Xqe8xSV+pwcD0LXzNZW2
+         8viM3Ku+mp73QMATFvmcekMooi2y7DURd7K97gX6ogo9XH/0i80JoLcUwLr14lwGgje2
+         uXVL+jaLV2cPhsmHFcgkWM1+NQflhZkSRUkCpfI6fR8UBC5ZOrsLx/3Zp6rgE+ZXQW+v
+         YZZAFTIec7nOUhTYT0SSMxVudqvgh/VKoBxSo48Ry8BMg9KgFWpnIKlEW+yJW/Db4J5B
+         fSF7H1/lLqMh9MrlEVrvnSqWdih01PAd0RdYO/AaK8rLLHEvulSG7LoKrZ/8QZ6sCiln
+         1a5A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790615991; x=1791220791;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=DWEY4l/bIKaUQ0LkmUfe65oGxH2cGGoTK+zPHQ0IPQM=;
-        b=dQXhDccO8beBB2qoV4hua2HkYeBhNj7e9BZuv65YiZ60v2F5wJXuKb5Cs/APAP+r0f
-         o+r57ahISU7jlvfgRwenpaMHm/lybsWbc0LrnXFWf7kgmj294v9ND/Aht8T/YCbbJqT1
-         dszkwe//a+AhmEBVVghJeCpPRDshQKEw/zAG/HpbKbkijUXhEyu+8FweS2xNkKz+SO2i
-         sh/r26wCvVbB7O3x0yM0u8heMU87EB0LNW2hAux076O1DBku4//Kudd5vsQ1WV/L0MMl
-         nKllvdFuV2FlUwzOTRcj2h66hXApqOjKVwLEXW2D2Exjqhfkubu9KpQPASEEEV5kW61s
-         1xQQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzZk172IW0dISDThZ+d8TniLtFA8UTKO+Q6UetjVFjxnjAcYPjqlw/W/N6ot5xsYmSfqYCEXt1WsQw=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJSqKlQ333Ze7bS5qb/UnoEeZL46gnpl7irPI0kw+Xg9HPFdjkG
-	WH28yIzXpUo+43J3FpR5GrY0n7ugzigNSAwlT9E5oUQcNKcqBEGn/AFcJZq/2Eblww==
-X-Gm-Gg: AYBFou3hC5fRTaiJYVCpdJqboAkB/evFQF/ufHOyBn7qUbyC6OvsBgLsZKfhB3ZvUzC
-	YJj9SJQKhqbgphuZssGA8JbojZj/4A8LvHV9zmopS2BEkc2SGAjZ3gNpUrH+5my1qpVOcPDCLgD
-	L1kzDoYBuh3puSIXU7FIrUcQPvkCWtf9HfUc8rrQTMcN4GoHd2HPx3CnqkHiDN1yO6c5VRHabj8
-	e/fiINa09Zn3CQUDYfZfGSqfycZ50iGS9285cOJ+dNIyFfUrfpuWhCdf/G/VxDqJ2IaVk/nDoZz
-	V9Wh13CTYslIrlLVwqZ7sQFb/A1Pk6hII75og4lYf60fwFa2JN2jctXmtt8ZpKa5pkeTaEv8wSX
-	glp0ZKbPIXETlN+5u7ReYBuPzmoTVANj1HtPUmUn8xr6bJhyauBJ+n3OEWoqI++GcQ4Rxv8kpy7
-	1yexkXwFFDfW97NraVyzi0kVpdk3Kv3kVrQZc62hqbihGXPNRCVjQDo9RQ5u2QzSxP7sKDI/mB+
-	XmTRRmPS0wp9X/+1RCAY2tvpaUeHooYv95t
-X-Received: by 2002:a17:902:f54b:b0:2c6:99be:9dd with SMTP id d9443c01a7336-2dfa6248695mr7310435ad.12.1790615990264;
-        Mon, 28 Sep 2026 10:19:50 -0700 (PDT)
-Received: from google.com (105.211.142.34.bc.googleusercontent.com. [34.142.211.105])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a49858c123sm538411a91.3.2026.09.28.10.19.44
+        d=1e100.net; s=20260707; t=1790616581; x=1791221381;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=F8wHi2lHLlVmnngzxn3a4naORn9qZPczzGL0TvCk5Do=;
+        b=pdfTpjyvuUR4QwWivOIBsqTyBIRMb0vK/0YislyjmaARXsDKZRkZXfTnw2HbVhBPIV
+         DwcdAXza5ezSJxjpAWiJ+ugXm0F74n6Df9p8OImVLMjQNwJK1IGZAOICC2149bikVGN3
+         o/ZcWxrLBPdeGfVrUZZl7NEFU94zWKUzjhF5OfW9nN++5zeOKhvOOR7TYXm4EEAtem10
+         JNdS9Pf0tCdG40e9UpxZ6JLwKx/3foWeJeENic0L+xPlGIezIep/uIwoah6yZyCHUzoP
+         Ut3tk43c5SZUfhS9CTv841zOFM4e99nkt7oZSZlerjm1QlKzgkFyvMmDcVu5Dq6rIFj4
+         D8Eg==
+X-Forwarded-Encrypted: i=1; AKwUvBwDkmUtmYgTq5XQNkMKWOphzf1zV9CBYMxlhf6dizcvLSGClHe/65P/c50RhBetlBG7OtI0krgJC7Y=@vger.kernel.org
+X-Gm-Message-State: AFuF++mSsBlCNU0SGh8mEoyzspzYsUHLW40YhLaAdnrlOfD9OBV/+bYX
+	bux98hzYZsnfW9q4hbrwE36Wcmef/RLPM6Jo7oYuK9/tq/QUeFyyb60vWkyALtQ0dYg=
+X-Gm-Gg: AYBFou1YgMZdyvTsKweI7XaXapCXKU9qnZnlqfc5lSfNMwdpUR7mSMhNQBobbwOfl9L
+	XlvIiWqSiFTcl7AM0kc3OugtuH9Pu6rGorj+h5/k9yx2LjYRzUW+K2rc/bbZoCXk7zplAVIaP2j
+	6MKJOJyoNRn+qh+khucZOhfmjZkMSTYX2LilCJD1CjbO8TkhrLJX6/Wc5ZfB/9q7B9iR2osGxWf
+	AZCDnBt8MDTQ+lIcygC/Xr2zhtzFJbIAZsxxQYoIb1I0cpl1UwYIYk/N2NX1kBPBXKc8mht8Gwf
+	bUIDiBsuL8RCd2wl2IwBp4+qOCSPZ9hBsUk1/9x20++v48SyOB3s4z3msSqjCIQiQXT43T8nSdn
+	upBI4YiU71+0LT6OPFRC0vB3vrgK/+Fb6TCu7ey74XPNml/Ia4VpN4jrbEjEh0uR1PVX2/kkFph
+	cR1Dz6n+NFnkzv1MnpmegM8bbkuEO7oIYsB8e+R5f9Aoea
+X-Received: by 2002:a05:6214:19c6:b0:916:7629:f1c with SMTP id 6a1803df08f44-91676291098mr52487856d6.10.1790616581176;
+        Mon, 28 Sep 2026 10:29:41 -0700 (PDT)
+Received: from ziepe.ca ([130.41.10.202])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91430df77adsm84361036d6.26.2026.09.28.10.29.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Sep 2026 10:19:49 -0700 (PDT)
-Date: Mon, 28 Sep 2026 17:19:41 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
+        Mon, 28 Sep 2026 10:29:40 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1xBFAZ-00000007NhG-43XU;
+	Mon, 28 Sep 2026 14:29:39 -0300
+Date: Mon, 28 Sep 2026 14:29:39 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Zhiping Zhang <zhipingz@meta.com>
+Cc: fengchengwen <fengchengwen@huawei.com>,
+	Leon Romanovsky <leon@kernel.org>,
+	Michael Guralnik <michaelgur@nvidia.com>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Christian Konig <christian.koenig@amd.com>,
 	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v9 09/13] PCI: liveupdate: Adopt ACS controls in incoming
- preserved devices
-Message-ID: <arqhrVi0YfFNwKuS@google.com>
-References: <20260918200640.887030-1-dmatlack@google.com>
- <20260918200640.887030-10-dmatlack@google.com>
+	Bjorn Helgaas <bhelgaas@google.com>, kvm@vger.kernel.org,
+	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH v13 5/5] RDMA/mlx5: get tph for p2p access when
+ registering dma-buf mr
+Message-ID: <20260928172939.GK163130@ziepe.ca>
+References: <20260731211601.3033906-1-zhipingz@meta.com>
+ <20260731211601.3033906-6-zhipingz@meta.com>
+ <f4ff7ced-63b6-42e6-8e01-9f01d2e59843@huawei.com>
+ <CAH3zFs24esHCGA=wPrkiH8oKQCv7SnOwcBbkMxrOEvOVtwstYg@mail.gmail.com>
+ <20260924233058.GA163130@ziepe.ca>
+ <CAH3zFs2rhg6-b-pVDps1V8LsM4Dn48t4J4LFVyKOZtT4axdY=Q@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260918200640.887030-10-dmatlack@google.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAH3zFs2rhg6-b-pVDps1V8LsM4Dn48t4J4LFVyKOZtT4axdY=Q@mail.gmail.com>
 
-On Fri, Sep 18, 2026 at 08:06:35PM +0000, David Matlack wrote:
-> Adopt Access Control Services (ACS) controls on all incoming preserved
-> devices (endpoints and upstream bridges) during a Live Update.
+On Thu, Sep 24, 2026 at 11:17:57PM -0700, Zhiping Zhang wrote:
+> On Thu, Sep 24, 2026 at 4:31 PM Jason Gunthorpe <jgg@ziepe.ca> wrote:
+> >
+> > >
+> > On Wed, Sep 23, 2026 at 11:24:56PM -0700, Zhiping Zhang wrote:
+> > > I don't think this belongs in the importer. Every in-tree dma-buf
+> > > caller of pci_p2pdma_distance() is the exporter, in its .attach,
+> > > clearing attach->peer2peer -- amdgpu_dma_buf.c, xe_dma_buf.c,
+> > > habanalabs memory.c. There is no importer-side caller.
+> >
+> > Right, and they shouldn't be doing that, but it still has to be
+> > checked that the st is going directly to the peer device not the host
+> > bridge. Not using the distance, but by the PCI_P2PDMA_MAP_BUS_ADDR
+> > indication.
+> >
+> > I fear you will need some of Leon's series to make that happen.
+> >
+> > So probably the proposed change to dmabuf ops is far too simple.
+> >
+> > Jason
 > 
-> Inheriting ACS flags avoids changing routing rules while memory
-> transactions are in flight from preserved devices. This is also strictly
-> necessary to ensure that IOMMU group assignments do not change during or
-> after Live Update.
+> Hi Jason,
 > 
-> The adopted controls are recorded by the pci_save_state() call in
-> pci_bus_add_device(), which runs before drivers bind, so they are
-> automatically reapplied by pci_restore_state() if the device is reset.
-> If that save buffer could not be allocated there is nowhere to record
-> the adopted controls, and they would be silently lost by the first
-> reset. Program ACS from scratch in that case, which is a better outcome
-> than leaving ACS disabled.
+> Thanks for the comments.
 > 
-> To simplify ACS inheritance, reject preserving any devices that require
-> quirks to enable ACS as those quirks would also have to take Live Update
-> into account.
+> Agreed -- the tag should not be handed out unless the routing is
+> PCI_P2PDMA_MAP_BUS_ADDR. That can be enforced conservatively on 7.3
+> with two changes. I can fold both into patch 4.
+> ```
+> In drivers/pci/p2pdma.c, make pci_p2pdma_map_type() callable from
+> tristate VFIO_PCI_CORE:
 > 
-> Signed-off-by: David Matlack <dmatlack@google.com>
+>     EXPORT_SYMBOL_GPL(pci_p2pdma_map_type);
 
-Reviewed-by: Pranjal Shrivastava <praan@google.com>
+No, that's been rejected several times already.
+ 
+> and in drivers/vfio/pci/vfio_pci_dmabuf.c,
+> vfio_pci_dma_buf_get_pci_tph() gains:
+> 
+>     struct dma_buf_attachment *attach;
+> 
+>     if (list_empty(&dmabuf->attachments))
+>         return -EOPNOTSUPP;
+> 
+>     list_for_each_entry(attach, &dmabuf->attachments, node)
+>         if (pci_p2pdma_map_type(priv->provider, attach->dev) !=
+>             PCI_P2PDMA_MAP_BUS_ADDR)
+>                 return -EOPNOTSUPP;
+> ```
 
-Thanks,
-Praan
+Also no, this has to be done via PCI_P2PDMA_MAP_BUS_ADDR which also
+enforces putting the determination in the right place in the code
+flow..
+
+> Two properties are worth stating explicitly:
+
+Ah! AI!
+
+Jason
