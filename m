@@ -1,483 +1,340 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 624FC4F85A2;
-	Mon, 28 Sep 2026 20:08:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D388A37E5C5;
+	Mon, 28 Sep 2026 20:14:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790626136; cv=none; b=JEEgLS5uwpFaDFv780eNV2vqRv2TwASZQXp8/xcmW3WuL2nuJlqOBPBgZOOj1Vl//CfCY5KcPbHNp4imwgQMbjRGU10quVFJ9rsC1k+reFlYrIDu36MV9XjoEPjDZBYYmZzfXXD3z5fFoKOkPvsrhMLzp11sgtIsUQmeBvwJtpA=
+	t=1790626446; cv=none; b=bhLbQ4HiNn5KGV6N2fUxEK9vDiI7+pz+VIwdgKVcPw+XXIbM/MDe7EiB39M/B7JmapfiCnTzLpvNzrz3ESlqPfovdK9+FKh0xgUlxSohXYNFK69+OEmbmU1ro5gDPHTyMuyVdN/5rl8bEjvh9uLfiniYnok0rOIA9TC5Dn+dgNY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790626136; c=relaxed/simple;
-	bh=OqdxOmelmC4K5tJnL5a/TX39w/j+FLW3fbn1bwC4GEw=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=hCd9SVmOxKvSonHYlHDxcs3pv5d06rmYYSDeJ2i2u0CBmYhlUH37BOAcGpLNNU9eq76dAFjBhuhh0EOTMJvUE9Flv8uA+w3agcxiSIi+Zv5TpLt+njzIXsDanm49WT/N4h60cMOsMyAnR7msiWEpdLXmDylKRc9Qx0JioSw9UG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HGqB6jq+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790626446; c=relaxed/simple;
+	bh=Mh5uGHFwQngAoZW+kINsiufJMqoEwV95xfGdWGlnXhI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=ptOR1FzLqemZwMxoZfqBXB7rbEbbCYlRF927YlTUE81BEXgr+JNIRQqrti8pQOfRlcCWCV3+9cF7V9ATCkla70iQf9JZoDHBtrxG3rxerCWC76CZvp5EvQT/3j8CLUDo0NiRFXOJF5pgDvN7Jq4o0cW6dJIh+6aidKeDnhcD3DE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HtUSlHA2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HGqB6jq+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7703A1F000FF;
-	Mon, 28 Sep 2026 20:08:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HtUSlHA2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0FD81F000FF;
+	Mon, 28 Sep 2026 20:14:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790626134;
-	bh=yLI0dufzkxa9fkken2NMaTtqjbQ6+/w3Rtiw+Ipzh5w=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To;
-	b=HGqB6jq+TYtVLrKxSgcTFqzyqudOMt85p9BS7zpQerkiErd6kpnuTOPp72Y0VGJsU
-	 6yCmFarL6k7C5GSiE4PtBVlJZL0ZasQp8iUS8fvlyfQsNArIvfBCWsJQZm4eHlT63S
-	 jIP6vRRuT/aP3uWSklBFnQPzaJ2c3epdGduhgKcxCZmrJpt04IdrpwSD6YrlupQdke
-	 6vPxeNldJJyJQmIBImjxCbdOTxo144savIUFVoG3uS+OjruEyeMJ+pM/lTtpELqP7t
-	 Q1wexVbq5lMyk9l4eZRfrB17KucDJRrKA/54aURe0vbTMHEpnLFtGWBTHHjaja1mKt
-	 zfKq7p/BPIWCw==
+	s=k20260515; t=1790626443;
+	bh=z6/DSl04QmKGk6YuZMP+BDUkmoRWb0b5amxIjsDiNEo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=HtUSlHA2FgdGKupaemsf6ub9i792HTZdwd9wl1m95efJlYKa9UXax3Kv7DRNCpaQh
+	 z+iL+Rxwu77wNfiDADoegIxfBzrscFlDi6oL2jd16kjHzMcwdk8hjuhcmDYUmpvbIb
+	 El49Zcmk71vnHxNYMmOZSGLbwpivXX1EUlzIgLxaVlxkdvgjEL4BNFnCYDjwvSCK99
+	 T+CfLUszTIalI0Qz/3CGA3rnviyoeHjTbjbuf//KgMQm4s3CHuYpRdQgBUM2sKPPf2
+	 IYNiG1j36JzADe5jlzKd7ylz8k4JvdZmGDZNXoPxMemlM0MPhWLXtiYPgaho+YYHCJ
+	 5q0ciyL4ZmK1A==
+Date: Mon, 28 Sep 2026 15:14:01 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dave Airlie <airlied@gmail.com>
+Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, Jason Gunthorpe <jgg@ziepe.ca>,
+	Dave Airlie <airlied@redhat.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Alex Deucher <alexander.deucher@amd.com>
+Subject: Re: [PATCH] pci/vgaarb: pass a data pointer to be used in the decode
+ callback (v2)
+Message-ID: <20260928201401.GA2256773@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 28 Sep 2026 22:08:46 +0200
-Message-Id: <DLR7ZIHFTUWF.160C4AKB6W3II@kernel.org>
-Subject: Re: [PATCH v2 7/8] rust: pci: add typed SR-IOV PF registration data
-Cc: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <aliceryhl@google.com>,
- <bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
- <boqun@kernel.org>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
- <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
- <markus.probst@posteo.de>, <cjia@nvidia.com>, <smitra@nvidia.com>,
- <ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
- <targupta@nvidia.com>, <kjaju@nvidia.com>, <alkumar@nvidia.com>,
- <acourbot@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
- <jgg@nvidia.com>, <alex@shazbot.org>
-To: "Zhi Wang" <zhiw@nvidia.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260924190556.1620886-1-zhiw@nvidia.com>
- <20260924190556.1620886-8-zhiw@nvidia.com>
-In-Reply-To: <20260924190556.1620886-8-zhiw@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260922071807.2533884-1-airlied@gmail.com>
 
-On Thu Sep 24, 2026 at 9:05 PM CEST, Zhi Wang wrote:
-> @@ -166,7 +170,16 @@ extern "C" fn sriov_configure_callback(
->          // INVARIANT: `pdev` is valid for the duration of `sriov_configu=
-re_callback()`.
->          let pdev =3D unsafe { &*pdev.cast::<Device<device::CoreInternal<=
-'_>>>() };
-> =20
-> -        from_result(|| T::sriov_configure(pdev, nr_virtfn))
-> +        // SAFETY: `sriov_configure` is called only after a successful p=
-robe and before unbind, so
-> +        // the stored pointer has type `T::Data<'_>` and remains valid t=
-hroughout this callback.
-> +        let data =3D unsafe { pdev.as_ref().drvdata_borrow::<T::Data<'_>=
->() };
-> +
-> +        from_result(|| {
-> +            if !pdev.is_physfn() {
-> +                return Err(ENODEV);
-> +            }
-> +            T::sriov_configure(pdev, data, nr_virtfn)
+On Tue, Sep 22, 2026 at 05:18:07PM +1000, Dave Airlie wrote:
+> From: Dave Airlie <airlied@redhat.com>
+> 
+> This changes the vgaarb client API so that the user can pass a
+> private data pointer into the register that will get used in
+> the decode callback.
+> 
+> This allows a bunch of pdev conversions in the drivers, and lets
+> some future vfio cleanups be nicer.
+> 
+> I'd like to merge this via the drm next tree but also fine with
+> it going via pci.
+> 
+> Signed-off-by: Dave Airlie <airlied@redhat.com>
+> Cc: Alex Williamson <alex@shazbot.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Rodrigo Vivi <rodrigo.vivi@intel.com>
+> Cc: Alex Deucher <alexander.deucher@amd.com>
 
-Yes, we want to pass the driver's bus device private data, but this belongs=
- into
-patch 6, but please also see my reply in patch 1 about the sriov_configure(=
-)
-callback.
+The only diff between v1
+(https://lore.kernel.org/all/20260922064111.2468741-1-airlied@gmail.com)
+and this is the trivial Loongson change.
 
-> @@ -496,24 +518,24 @@ pub fn resource_start(&self, bar: u32) -> Result<bi=
-ndings::resource_size_t> {
->      }
-> =20
->      /// Returns `true` if this device is a Physical Function (PF).
-> +    #[cfg(CONFIG_PCI_IOV)]
+It looks like the new kernel-doc warning is still there:
+https://lore.kernel.org/all/202609241015.1yXHBzfy-lkp@intel.com/
 
-Belongs into the patch that introduces the function, but I think it would b=
-e
-easier to move everything that is behind this config into rust/kernel/pci/i=
-ov.rs
-and guard the whole module.
+And it would still be nice to update the subject line as I mentioned:
+https://lore.kernel.org/all/20260924191253.GA1994586@bhelgaas
 
->      #[inline]
-> -    #[expect(dead_code)]
->      pub(crate) fn is_physfn(&self) -> bool {
->          // SAFETY: `self.as_raw` is a valid pointer to a `struct pci_dev=
-`.
->          unsafe { (*self.as_raw()).is_physfn() !=3D 0 }
->      }
-> =20
->      /// Returns `true` if this device is a Virtual Function (VF).
-> +    #[cfg(CONFIG_PCI_IOV)]
->      #[inline]
-> -    #[expect(dead_code)]
-> -    pub(crate) fn is_virtfn(&self) -> bool {
-> +    pub fn is_virtfn(&self) -> bool {
->          // SAFETY: `self.as_raw` is a valid pointer to a `struct pci_dev=
-`.
->          unsafe { (*self.as_raw()).is_virtfn() !=3D 0 }
->      }
-> =20
->      /// Returns the number of Virtual Functions (VF) enabled for a Physi=
-cal Function (PF).
->      #[cfg(CONFIG_PCI_IOV)]
-> -    pub(crate) fn num_vf(&self) -> i32 {
-> +    pub fn num_vf(&self) -> i32 {
->          // SAFETY: `self.as_raw` is a valid pointer to a `struct pci_dev=
-`.
->          unsafe { bindings::pci_num_vf(self.as_raw()) }
->      }
-> diff --git a/rust/kernel/pci/sriov.rs b/rust/kernel/pci/sriov.rs
-> new file mode 100644
-> index 000000000000..90abe878f67c
-> --- /dev/null
-> +++ b/rust/kernel/pci/sriov.rs
-> @@ -0,0 +1,253 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +
-> +//! Abstractions for PCI Single Root I/O Virtualization (SR-IOV) drivers=
-.
-> +
-> +use super::Device as PciDevice;
+I'm still fine with it being merged via drm.
 
-Not needed, just refer to it as Device please.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-> +use crate::{
-> +    bindings,
-> +    device, //
-> +    prelude::*,
-> +    types::{
-> +        CovariantForLt,
-> +        ForLt, //
-> +    },
-> +};
-> +use core::{
-> +    any::TypeId,
-> +    marker::PhantomPinned, //
-> +};
-> +
-> +/// Wrapper for VF registration data stored inside a [`VfRegistration`].
-> +///
-> +/// Stores a [`TypeId`] header (derived from `F`) followed by the pinned=
- data,
-> +/// so that [`PciDevice::vf_registration_data_with()`] can verify the ty=
-pe at
-> +/// runtime.
-> +#[repr(C)]
-> +#[pin_data]
-> +struct VfRegistrationData<'a, F: ForLt + 'static> {
-> +    type_id: TypeId,
-> +    #[pin]
-> +    data: F::Of<'a>,
-> +}
-> +
-> +static_assert!(
-> +    core::mem::offset_of!(VfRegistrationData<'static, CovariantForLt!(()=
-)>, type_id) =3D=3D 0
-> +);
-> +
-> +impl<'a, F: ForLt + 'static> VfRegistrationData<'a, F> {
-> +    /// Pin-initializer for the registration data.
-> +    fn new<D>(data: D) -> impl PinInit<Self, Error> + use<'a, D, F>
-> +    where
-> +        D: PinInit<F::Of<'a>, Error> + 'a,
-
-NIT: I prefer to have this in the signature as impl PinInit<F::Of<'a>, E>.
-
-> +    {
-> +        try_pin_init!(Self {
-> +            type_id: TypeId::of::<F>(),
-> +            data <- data,
-> +        })
-> +    }
-> +}
-> +
-> +/// SR-IOV VF registration on a PF device.
-> +///
-> +/// Owns the registration data that VF drivers access via
-> +/// [`PciDevice::vf_registration_data_with()`] and [`PciDevice::vf_regis=
-tration_data()`].
-> +///
-> +/// The Rust PCI adapter removes all VFs before invoking the PF driver's=
- unbind callback or
-> +/// dropping its data. Drop of a published registration calls `pci_disab=
-le_sriov()` before
-> +/// clearing the pointer and letting the data fields drop.
-> +#[pin_data(PinnedDrop)]
-> +pub struct VfRegistration<'a, F: ForLt + 'static> {
-> +    pdev: &'a PciDevice<device::Bound>,
-> +    #[pin]
-> +    inner: VfRegistrationData<'a, F>,
-> +    published: bool,
-
-I don't think we need this bool.
-
-> +    #[pin]
-> +    _pin: PhantomPinned,
-> +}
-> +
-> +impl<'a, F: ForLt + 'static> VfRegistration<'a, F>
-> +where
-> +    for<'b> F::Of<'b>: Send + Sync,
-> +{
-> +    /// Create a new VF registration.
-> +    ///
-> +    /// Returns a pin-initializer so the registration can be embedded di=
-rectly
-> +    /// in the PF driver's bus device private data.
-> +    ///
-> +    /// # Safety
-> +    ///
-> +    /// The caller must ensure that the containing struct's field orderi=
-ng drops
-> +    /// this `VfRegistration` before any resources that the registration=
- data
-> +    /// borrows.
-
-This is not needed.
-
-> +    ///
-> +    /// The caller must invoke this during the PCI driver's probe and em=
-bed the result in the driver
-> +    /// data. On an SR-IOV PF, no VF may be enabled before probe success=
-fully installs the complete
-> +    /// driver data.
-
-Saying that it must go into the driver's bus device private data should be
-enough. (We can probably improve this once we have the bus setup tokens.)
-
-> +    pub unsafe fn new<'core, D>(
-> +        pdev: &'a PciDevice<device::Core<'core>>,
-> +        data: D,
-
-As above, I prefer to inline impl PinInit<F::Of<'a>, E>.
-
-> +    ) -> impl PinInit<Self, Error> + use<'a, 'core, D, F>
-> +    where
-> +        D: PinInit<F::Of<'a>, Error> + 'a,
-> +    {
-> +        pin_init::pin_init_scope(move || {
-
-Let's avoid pin_init_scope() and just make everything part of the initializ=
-er.
-
-> +            if pdev.is_virtfn() {
-> +                return Err(ENODEV);
-> +            }
-> +
-> +            let published =3D pdev.is_physfn();
-> +            if published {
-
-The published thing seems unnecessary, am I missing something?
-
-> +                if pdev.num_vf() !=3D 0 {
-> +                    return Err(EBUSY);
-> +                }
-> +
-> +                if !pdev.vf_registration_data_rust().is_null() {
-> +                    return Err(EBUSY);
-> +                }
-> +            }
-> +
-> +            Ok(try_pin_init!(Self {
-> +                pdev,
-> +                inner <- VfRegistrationData::new(data),
-> +                published,
-> +                _pin: PhantomPinned,
-> +                _: {
-> +                    if *published {
-> +                        // Store the pointer to the pinned `VfRegistrati=
-onData`
-> +                        // on the PCI device so VF drivers can find it.
-> +                        pdev.set_vf_registration_data_rust(
-> +                            core::ptr::from_ref(inner.as_ref().get_ref()=
-).cast_mut().cast(),
-> +                        );
-> +                    }
-> +                },
-> +            }))
-> +        })
-> +    }
-> +}
-> +
-> +#[pinned_drop]
-> +impl<F: ForLt + 'static> PinnedDrop for VfRegistration<'_, F> {
-> +    fn drop(self: Pin<&mut Self>) {
-> +        if !self.published {
-> +            return;
-> +        }
-
-How can this ever happen?
-
-> +
-> +        // SAFETY: `pci_disable_sriov()` is safe to call on any `pci_dev=
-`; it
-> +        // is a no-op if the device has no VFs enabled. When VFs are ena=
-bled,
-> +        // this blocks until all VF `remove()` callbacks complete.
-> +        unsafe { bindings::pci_disable_sriov(self.pdev.as_raw()) };
-> +
-> +        // After `pci_disable_sriov()` all VFs are gone, so no one can r=
-ead
-> +        // the pointer anymore.
-> +        self.pdev
-> +            .set_vf_registration_data_rust(core::ptr::null_mut());
-> +
-> +        // The pinned `inner` field is dropped automatically after this =
-returns.
-> +    }
-> +}
-> +
-> +// SAFETY: The inner data is `Send` (enforced by the bound), and `&PciDe=
-vice` is `Send + Sync`.
-> +unsafe impl<F: ForLt> Send for VfRegistration<'_, F> where for<'a> F::Of=
-<'a>: Send {}
-> +
-> +// SAFETY: The inner data is `Send + Sync`. `VfRegistration` doesn't exp=
-ose mutable access;
-> +// VF drivers only read the data through an immutable pinned reference.
-> +unsafe impl<F: ForLt> Sync for VfRegistration<'_, F> where for<'a> F::Of=
-<'a>: Send + Sync {}
-> +
-> +impl<Ctx: device::DeviceContext> PciDevice<Ctx> {
-> +    /// Returns the raw `vf_registration_data_rust` pointer from this de=
-vice.
-> +    fn vf_registration_data_rust(&self) -> *mut core::ffi::c_void {
-> +        // SAFETY: `self.as_raw()` is valid.
-> +        unsafe { (*self.as_raw()).vf_registration_data_rust }
-> +    }
-> +
-> +    /// Sets the `vf_registration_data_rust` pointer on this device.
-> +    fn set_vf_registration_data_rust(&self, ptr: *mut core::ffi::c_void)=
- {
-> +        // SAFETY: `self.as_raw()` is valid. PCI probe publishes the dat=
-a before enabling VFs;
-> +        // teardown removes all VFs before withdrawing it.
-> +        unsafe { (*self.as_raw()).vf_registration_data_rust =3D ptr };
-> +    }
-> +}
-
-Those can't be safe functions, but I'd just drop those helpers anyway and j=
-ust
-inline the accesses. It should only be three places after all.
-
-> +
-> +impl PciDevice<device::Bound> {
-> +    /// Returns the PF for this VF, or [`ENODEV`] if this is not a VF.
-> +    fn physfn(&self) -> Result<&PciDevice> {
-> +        if !self.is_virtfn() {
-> +            return Err(ENODEV);
-> +        }
-> +
-> +        // SAFETY: `self.as_raw()` is valid and this VF uses the `physfn=
-` union field.
-> +        let pf =3D unsafe { (*self.as_raw()).__bindgen_anon_1.physfn };
-> +        if pf.is_null() {
-> +            return Err(ENODEV);
-> +        }
-> +
-> +        // SAFETY: PCI holds a PF reference until VF removal completes. =
-The returned borrow
-> +        // cannot outlive this bound VF, and `PciDevice` is a transparen=
-t wrapper of `pci_dev`.
-> +        Ok(unsafe { &*pf.cast() })
-> +    }
-
-I don't think we need this, the PF's pci::Device<Bound> can be part of the =
-data
-stored in the VfRegistrationData if needed.
-
-> +
-> +    /// Internal helper: reads the `vf_registration_data_rust` pointer f=
-rom the
-> +    /// PF, checks the `TypeId`, and returns a pinned reference.
-> +    ///
-> +    /// # Safety
-> +    ///
-> +    /// The returned borrow must be confined by a closure higher-ranked =
-independently over its
-> +    /// borrow and data lifetimes, or `F` must be covariant in its encod=
-ed lifetime.
-> +    unsafe fn vf_registration_data_pinned<F: ForLt + 'static>(&self) -> =
-Result<Pin<&F::Of<'_>>> {
-> +        let pf =3D self.physfn()?;
-> +
-> +        let ptr =3D pf.vf_registration_data_rust();
-> +        if ptr.is_null() {
-> +            return Err(ENOENT);
-> +        }
-> +
-> +        // SAFETY: The Rust PCI adapter keeps the PF data installed unti=
-l VF removal completes.
-> +        // `ptr` points to a `VfRegistrationData` whose first field is a=
- `TypeId`.
-> +        let type_id =3D unsafe { ptr.cast::<TypeId>().read() };
-> +        if type_id !=3D TypeId::of::<F>() {
-> +            return Err(EINVAL);
-> +        }
-> +
-> +        // SAFETY: TypeId check confirms the stored type matches `F`. Th=
-e data
-> +        // is pinned inside the PF's driver data struct. Lifetime shorte=
-ning
-> +        // from the PF's binding scope to `'_` is layout-compatible.
-> +        let data_ptr =3D unsafe {
-> +            let vfrd =3D ptr.cast::<VfRegistrationData<'_, F>>();
-> +            &raw const (*vfrd).data
-> +        };
-> +
-> +        // SAFETY: `data` is structurally pinned inside `VfRegistrationD=
-ata`.
-> +        Ok(unsafe { Pin::new_unchecked(&*data_ptr) })
-> +    }
-> +
-> +    /// Access the VF registration data through a closure with an HRTB l=
-ifetime.
-> +    ///
-> +    /// `F` is the [`ForLt`](trait@ForLt) encoding of the data type. Ret=
-urns
-> +    /// [`ENODEV`] if this is not a VF, [`ENOENT`] if no data was regist=
-ered,
-> +    /// or [`EINVAL`] if `F` does not match the type registered by the P=
-F.
-> +    ///
-> +    /// The closure's borrow and the registration data's lifetime are in=
-dependent, so a borrow of
-> +    /// the context cannot be stored in invariant registration data.
-> +    pub fn vf_registration_data_with<F: ForLt + 'static, R>(
-> +        &self,
-> +        f: impl for<'borrow, 'data> FnOnce(Pin<&'borrow F::Of<'data>>) -=
-> R,
-> +    ) -> Result<R> {
-> +        // SAFETY: The higher-ranked closure prevents the borrow from es=
-caping or being stored in
-> +        // invariant data by keeping its lifetime independent of the era=
-sed data lifetime.
-> +        let pinned =3D unsafe { self.vf_registration_data_pinned::<F>()?=
- };
-> +        Ok(f(pinned))
-> +    }
-
-Just like in auxiliary, the signature should be:
-
-	pub fn registration_data_with<'this, F: ForLt + 'static, R>(
-	    &'this self,
-	    f: impl for<'a> FnOnce(Pin<&'this F::Of<'a>>) -> R,
-	) -> Result<R> {
-
-> +
-> +    /// Returns a pinned reference to the VF registration data.
-> +    ///
-> +    /// Available only when `F` implements [`CovariantForLt`](trait@crat=
-e::types::CovariantForLt),
-> +    /// guaranteeing that shortening the PF data lifetime is sound.
-> +    ///
-> +    /// For non-covariant types, use [`Self::vf_registration_data_with()=
-`].
-> +    ///
-> +    /// It returns the same errors as [`Self::vf_registration_data_with(=
-)`].
-> +    pub fn vf_registration_data<F: CovariantForLt + 'static>(&self) -> R=
-esult<Pin<&F::Of<'_>>> {
-> +        // SAFETY: `CovariantForLt` permits shortening the encoded lifet=
-ime to this borrow.
-> +        unsafe { self.vf_registration_data_pinned::<F>() }
-> +    }
-> +}
-> --=20
-> 2.53.0
-
+> ---
+> v2: fix loongson (spotted by sashiko)
+> ---
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |  6 +++---
+>  drivers/gpu/drm/i915/display/intel_vga.c   |  7 ++++---
+>  drivers/gpu/drm/loongson/lsdc_drv.c        |  4 ++--
+>  drivers/gpu/drm/nouveau/nouveau_vga.c      |  6 +++---
+>  drivers/gpu/drm/radeon/radeon_device.c     |  7 +++----
+>  drivers/pci/vgaarb.c                       | 13 +++++++++----
+>  drivers/vfio/pci/vfio_pci_core.c           |  9 +++++----
+>  include/linux/vgaarb.h                     |  8 +++++---
+>  8 files changed, 34 insertions(+), 26 deletions(-)
+> 
+> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+> index 62b5b4a23f17..1344b2b1bd16 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+> @@ -1435,10 +1435,10 @@ bool amdgpu_device_should_use_aspm(struct amdgpu_device *adev)
+>   * Enable/disable vga decode (all asics).
+>   * Returns VGA resource flags.
+>   */
+> -static unsigned int amdgpu_device_vga_set_decode(struct pci_dev *pdev,
+> +static unsigned int amdgpu_device_vga_set_decode(void *data,
+>  		bool state)
+>  {
+> -	struct amdgpu_device *adev = drm_to_adev(pci_get_drvdata(pdev));
+> +	struct amdgpu_device *adev = (struct amdgpu_device *)data;
+>  
+>  	amdgpu_asic_set_vga_state(adev, state);
+>  	if (state)
+> @@ -4208,7 +4208,7 @@ int amdgpu_device_init(struct amdgpu_device *adev,
+>  	 * ignore it
+>  	 */
+>  	if ((adev->pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA)
+> -		vga_client_register(adev->pdev, amdgpu_device_vga_set_decode);
+> +		vga_client_register(adev->pdev, amdgpu_device_vga_set_decode, adev);
+>  
+>  	px = amdgpu_device_supports_px(adev);
+>  
+> diff --git a/drivers/gpu/drm/i915/display/intel_vga.c b/drivers/gpu/drm/i915/display/intel_vga.c
+> index 4966fd7eea92..0889edb36190 100644
+> --- a/drivers/gpu/drm/i915/display/intel_vga.c
+> +++ b/drivers/gpu/drm/i915/display/intel_vga.c
+> @@ -283,9 +283,10 @@ void intel_vga_disable(struct intel_display *display)
+>  	intel_de_posting_read(display, vga_reg);
+>  }
+>  
+> -static unsigned int intel_vga_set_decode(struct pci_dev *pdev, bool enable_decode)
+> +static unsigned int intel_vga_set_decode(void *data, bool enable_decode)
+>  {
+> -	struct intel_display *display = to_intel_display(pdev);
+> +	struct intel_display *display = (struct intel_display *)data;
+> +	struct pci_dev *pdev = to_pci_dev(display->drm->dev);
+>  	unsigned int decodes = VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM;
+>  
+>  	drm_dbg_kms(display->drm, "%s VGA decode due to VGA arbitration\n",
+> @@ -331,7 +332,7 @@ void intel_vga_register(struct intel_display *display)
+>  	 * then we do not take part in VGA arbitration and the
+>  	 * vga_client_register() fails with -ENODEV.
+>  	 */
+> -	ret = vga_client_register(pdev, intel_vga_set_decode);
+> +	ret = vga_client_register(pdev, intel_vga_set_decode, display);
+>  	drm_WARN_ON(display->drm, ret && ret != -ENODEV);
+>  }
+>  
+> diff --git a/drivers/gpu/drm/loongson/lsdc_drv.c b/drivers/gpu/drm/loongson/lsdc_drv.c
+> index 3fd828d23271..5a13df31eb90 100644
+> --- a/drivers/gpu/drm/loongson/lsdc_drv.c
+> +++ b/drivers/gpu/drm/loongson/lsdc_drv.c
+> @@ -254,7 +254,7 @@ lsdc_create_device(struct pci_dev *pdev,
+>  
+>  /* For multiple GPU driver instance co-exixt in the system */
+>  
+> -static unsigned int lsdc_vga_set_decode(struct pci_dev *pdev, bool state)
+> +static unsigned int lsdc_vga_set_decode(void *data, bool state)
+>  {
+>  	return VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM;
+>  }
+> @@ -291,7 +291,7 @@ static int lsdc_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  
+>  	pci_set_drvdata(pdev, ddev);
+>  
+> -	vga_client_register(pdev, lsdc_vga_set_decode);
+> +	vga_client_register(pdev, lsdc_vga_set_decode, NULL);
+>  
+>  	drmm_kms_helper_poll_init(ddev);
+>  
+> diff --git a/drivers/gpu/drm/nouveau/nouveau_vga.c b/drivers/gpu/drm/nouveau/nouveau_vga.c
+> index 29a801124e56..6662e30466f2 100644
+> --- a/drivers/gpu/drm/nouveau/nouveau_vga.c
+> +++ b/drivers/gpu/drm/nouveau/nouveau_vga.c
+> @@ -9,9 +9,9 @@
+>  #include "nouveau_vga.h"
+>  
+>  static unsigned int
+> -nouveau_vga_set_decode(struct pci_dev *pdev, bool state)
+> +nouveau_vga_set_decode(void *data, bool state)
+>  {
+> -	struct nouveau_drm *drm = pci_get_drvdata(pdev);
+> +	struct nouveau_drm *drm = (struct nouveau_drm *)data;
+>  	struct nvif_object *device = &drm->client.device.object;
+>  
+>  	if (drm->client.device.info.family == NV_DEVICE_INFO_V0_CURIE &&
+> @@ -103,7 +103,7 @@ nouveau_vga_init(struct nouveau_drm *drm)
+>  		return;
+>  	pdev = to_pci_dev(dev->dev);
+>  
+> -	vga_client_register(pdev, nouveau_vga_set_decode);
+> +	vga_client_register(pdev, nouveau_vga_set_decode, drm);
+>  
+>  	/* don't register Thunderbolt eGPU with vga_switcheroo */
+>  	if (pci_is_thunderbolt_attached(pdev))
+> diff --git a/drivers/gpu/drm/radeon/radeon_device.c b/drivers/gpu/drm/radeon/radeon_device.c
+> index 9523240110a6..cf8a6bd00c77 100644
+> --- a/drivers/gpu/drm/radeon/radeon_device.c
+> +++ b/drivers/gpu/drm/radeon/radeon_device.c
+> @@ -1076,10 +1076,9 @@ void radeon_combios_fini(struct radeon_device *rdev)
+>   * Enable/disable vga decode (all asics).
+>   * Returns VGA resource flags.
+>   */
+> -static unsigned int radeon_vga_set_decode(struct pci_dev *pdev, bool state)
+> +static unsigned int radeon_vga_set_decode(void *data, bool state)
+>  {
+> -	struct drm_device *dev = pci_get_drvdata(pdev);
+> -	struct radeon_device *rdev = dev->dev_private;
+> +	struct radeon_device *rdev = (struct radeon_device *)data;
+>  	radeon_vga_set_state(rdev, state);
+>  	if (state)
+>  		return VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM |
+> @@ -1431,7 +1430,7 @@ int radeon_device_init(struct radeon_device *rdev,
+>  	/* if we have > 1 VGA cards, then disable the radeon VGA resources */
+>  	/* this will fail for cards that aren't VGA class devices, just
+>  	 * ignore it */
+> -	vga_client_register(rdev->pdev, radeon_vga_set_decode);
+> +	vga_client_register(rdev->pdev, radeon_vga_set_decode, rdev);
+>  
+>  	if (rdev->flags & RADEON_IS_PX)
+>  		runtime = true;
+> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+> index 3de05aee7859..3e58b2c05c85 100644
+> --- a/drivers/pci/vgaarb.c
+> +++ b/drivers/pci/vgaarb.c
+> @@ -51,7 +51,8 @@ struct vga_device {
+>  	unsigned int mem_norm_cnt;	/* normal MEM count */
+>  	bool bridge_has_one_vga;
+>  	bool is_firmware_default;	/* device selected by firmware */
+> -	unsigned int (*set_decode)(struct pci_dev *pdev, bool decode);
+> +	unsigned int (*set_decode)(void *data, bool decode);
+> +	void *set_decode_data;
+>  };
+>  
+>  static LIST_HEAD(vga_list);
+> @@ -935,6 +936,7 @@ EXPORT_SYMBOL(vga_set_legacy_decoding);
+>   * vga_client_register - register or unregister a VGA arbitration client
+>   * @pdev: PCI device of the VGA client
+>   * @set_decode: VGA decode change callback
+> + * @data: private data to pass to callback
+>   *
+>   * Clients have two callback mechanisms they can use.
+>   *
+> @@ -956,15 +958,18 @@ EXPORT_SYMBOL(vga_set_legacy_decoding);
+>   * Returns: 0 on success, -ENODEV on failure
+>   */
+>  int vga_client_register(struct pci_dev *pdev,
+> -		unsigned int (*set_decode)(struct pci_dev *pdev, bool decode))
+> +		unsigned int (*set_decode)(void *data, bool decode),
+> +		void *data)
+>  {
+>  	unsigned long flags;
+>  	struct vga_device *vgadev;
+>  
+>  	spin_lock_irqsave(&vga_lock, flags);
+>  	vgadev = vgadev_find(pdev);
+> -	if (vgadev)
+> +	if (vgadev) {
+>  		vgadev->set_decode = set_decode;
+> +		vgadev->set_decode_data = data;
+> +	}
+>  	spin_unlock_irqrestore(&vga_lock, flags);
+>  	if (!vgadev)
+>  		return -ENODEV;
+> @@ -1464,7 +1469,7 @@ static void vga_arbiter_notify_clients(void)
+>  	spin_lock_irqsave(&vga_lock, flags);
+>  	list_for_each_entry(vgadev, &vga_list, list) {
+>  		if (vgadev->set_decode) {
+> -			new_decodes = vgadev->set_decode(vgadev->pdev,
+> +			new_decodes = vgadev->set_decode(vgadev->set_decode_data,
+>  							 new_state);
+>  			vga_update_device_decodes(vgadev, new_decodes);
+>  		}
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> index 6757054e9d87..b04ce3ded08c 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -162,9 +162,10 @@ static inline void vfio_pci_core_debugfs_init(struct vfio_pci_core_device *vdev)
+>   * has no way to get to it and routing can be disabled externally at the
+>   * bridge.
+>   */
+> -static unsigned int vfio_pci_set_decode(struct pci_dev *pdev, bool single_vga)
+> +static unsigned int vfio_pci_set_decode(void *data, bool single_vga)
+>  {
+> -	struct vfio_pci_core_device *vdev = dev_get_drvdata(&pdev->dev);
+> +	struct vfio_pci_core_device *vdev = data;
+> +	struct pci_dev *pdev = vdev->pdev;
+>  	struct pci_dev *tmp = NULL;
+>  	unsigned char max_busnr;
+>  	unsigned int decodes;
+> @@ -2159,10 +2160,10 @@ static int vfio_pci_vga_init(struct vfio_pci_core_device *vdev)
+>  	if (ret)
+>  		return ret;
+>  
+> -	ret = vga_client_register(pdev, vfio_pci_set_decode);
+> +	ret = vga_client_register(pdev, vfio_pci_set_decode, vdev);
+>  	if (ret)
+>  		return ret;
+> -	vga_set_legacy_decoding(pdev, vfio_pci_set_decode(pdev, false));
+> +	vga_set_legacy_decoding(pdev, vfio_pci_set_decode(vdev, false));
+>  	return 0;
+>  }
+>  
+> diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
+> index 97129a1bbb7d..71a364669eaf 100644
+> --- a/include/linux/vgaarb.h
+> +++ b/include/linux/vgaarb.h
+> @@ -33,7 +33,8 @@ struct pci_dev *vga_default_device(void);
+>  void vga_set_default_device(struct pci_dev *pdev);
+>  int vga_remove_vgacon(struct pci_dev *pdev);
+>  int vga_client_register(struct pci_dev *pdev,
+> -		unsigned int (*set_decode)(struct pci_dev *pdev, bool state));
+> +		unsigned int (*set_decode)(void *data, bool state),
+> +		void *data);
+>  #else /* CONFIG_VGA_ARB */
+>  static inline void vga_set_legacy_decoding(struct pci_dev *pdev,
+>  		unsigned int decodes)
+> @@ -59,7 +60,8 @@ static inline int vga_remove_vgacon(struct pci_dev *pdev)
+>  	return 0;
+>  }
+>  static inline int vga_client_register(struct pci_dev *pdev,
+> -		unsigned int (*set_decode)(struct pci_dev *pdev, bool state))
+> +		unsigned int (*set_decode)(void *data, bool state),
+> +		void *data)
+>  {
+>  	return 0;
+>  }
+> @@ -97,7 +99,7 @@ static inline int vga_get_uninterruptible(struct pci_dev *pdev,
+>  
+>  static inline void vga_client_unregister(struct pci_dev *pdev)
+>  {
+> -	vga_client_register(pdev, NULL);
+> +	vga_client_register(pdev, NULL, NULL);
+>  }
+>  
+>  #endif /* LINUX_VGA_H */
+> -- 
+> 2.54.0
+> 
