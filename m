@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 130C613FEE;
-	Mon, 28 Sep 2026 01:41:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 068D9336897;
+	Mon, 28 Sep 2026 01:41:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790559707; cv=none; b=AD0Rs33z0Br6vPSW1lnKc7BCscCkVDbBfsSFVTe0G1BZZr5RYmvpokGhWhB1XRyoVVeft/dfA+ZhXXv60ZKCPErv6rpHp8Ciav1rMht24a9WC4lyh0XoMDiaWEl09RAUnahIx9c8rKlRKjnD3iiant90u9hBAO5l+iswPnW6/no=
+	t=1790559713; cv=none; b=iBib7S+Qfn8ESO1EWgMmYJ6M+Zd2t3ZoOhLmCXYLUhDOFluQMrK7pKSDIQZlxR99mlmR+wmcFr1xK+d5Kke1ASDjjcBzWxpwGNlsUpUePZo6bAT35uQfLQ2AojyFmlUvfSrw+2fxK8YaXHmC0GAn2xKtgPJmkUNmsA9i9F0Vmpk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790559707; c=relaxed/simple;
-	bh=3lmNbUy9Obh2EFwh4JkLS2PuZqp3oevZJ4MZhvyejV8=;
+	s=arc-20240116; t=1790559713; c=relaxed/simple;
+	bh=J/Y9/oHd/TKhRjBWKgaHynT5Cix9ywVo8hcGVD90oz4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=M/Ftyd8l5RV6a683w8cmE/2uh5aeBoXBh1GyRApQdejh8+4Dcc8kdXnK1ESxdGLLzDfC8aAFPNTDrA+Ws4L8LKvv+u+ISEduqN2qy4UyfBRQUifA7nDNVw/RVrVTpWvLGtgaoKwp5Km0gPkn42x9dOVs2edG8TM6B2Ki1sbDK6k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aOp92PYO; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=g8l/8Rxh0vm+OxFNAK5y08TQZG9/m6frNH39nvFPBnE3ODq3MSHwSteS5Zz3CT8DRwbrmgL2nml57uU/E2AFbttRO2iNlw9nn1cKDmTRsAcuUjHFfc/LC9smhU6nx51mm011zUKJojQbJBy0d9f+zehjZRnM92GBGb5C0yTAzw8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GM+qbOfc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aOp92PYO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0CD71F000FF;
-	Mon, 28 Sep 2026 01:41:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GM+qbOfc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63E4A1F000FF;
+	Mon, 28 Sep 2026 01:41:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790559706;
-	bh=3lmNbUy9Obh2EFwh4JkLS2PuZqp3oevZJ4MZhvyejV8=;
+	s=k20260515; t=1790559711;
+	bh=J/Y9/oHd/TKhRjBWKgaHynT5Cix9ywVo8hcGVD90oz4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=aOp92PYOSzUJ+ra53vTWffS2mUtykcPytN1JT3A+vNNw/VZ+JuMXxrLwc/pfsTesU
-	 3jlfoA0EXQ9IcHOfB0lWfnxxcw9Wqy/lAo7ghNKCuxUSCJ8TgQqc8FFB62aJcDDo8k
-	 ng8dCR3Y9R42Ce0bGkAjhUS9OKO+0dydm72mY9+KDvfuYhUs/GVQKnzuja0HeZfG2d
-	 4uSki+SPgbP+JXX1Wof5WB70pmxkJXFGxM3n7T98x43/IuwmOPHTanCJWEg9jf12gF
-	 We0ppSKjUGh0cI06I02eo1SwtEKAiqKwLAZ507wmCwjjZ9VQgHwW54Q2BPl5xvIeJo
-	 VjtXhYpAT3/zQ==
+	b=GM+qbOfcnXy3xUAIPtuzWkyMs1dkuqYJP4NPmUl7ZGJyPoiMXvx9ipkYzoGZg8ihq
+	 VLAqX0HTKWPT8ERAv0sf3AUiD8D/lsn3AkDTHj40P3Snro6AKfyfnCh/aj8Ky+S5it
+	 PFw8XcZYDJCbyOk0L4m46IrfY+IsSxjtjASbDTJijL6qBzkGr/ty/QmeCuxcO5GheX
+	 4Fv34ZLc5NdTYAoiJ7olEi0Gwua3nJXv7ViLqSh/QZgu23yM/3k54HPeGbwSdJfY0R
+	 N6eeCU2ux4eSMt2Svdu+JNez5eLo6x3CC1BjKOT1BHKu/eLeaacaTBQWaXtLnygqY6
+	 WGKD6eN/UfO3Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 11/22] PCI/TSM: Rename pf0 to host
+Subject: Re: [PATCH v4 01/22] virt: coco: change tsm_register() to use a
+ const struct
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org, gary@garyguo.net, ojeda@kernel.org
-In-Reply-To: <20260928011123.450800-12-alistair.francis@wdc.com>
+Cc: linux-cxl@vger.kernel.org, ojeda@kernel.org, gary@garyguo.net, linux-pci@vger.kernel.org
+In-Reply-To: <20260928011123.450800-2-alistair.francis@wdc.com>
 References: <20260928011123.450800-1-alistair.francis@wdc.com>
- <20260928011123.450800-12-alistair.francis@wdc.com>
+ <20260928011123.450800-2-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 28 Sep 2026 01:41:45 +0000
-Message-Id: <20260928014145.A0CD71F000FF@smtp.kernel.org>
+Date: Mon, 28 Sep 2026 01:41:51 +0000
+Message-Id: <20260928014151.63E4A1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,13 +47,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 > From: Alistair Francis <alistair.francis@wdc.com>
 >=20
-> Rename pci_tsm_pf0 to pci_tsm_host (and rename variables and function
-> names from pf0 to host) as part of converting pci_tsm_host
-> to be any device that knows how to speak any of CMA, IDE, or
-> TDISP.
->=20
-> This commit just renames the functions and provides no functional
-> change. That will happen in the next commit.
+> The tsm_register() function takes a struct pci_tsm_ops *ops argument.
+> This eventually is stored in struct tsm_dev as a const, so we should
+> just change the tsm_register() register function argument to be a const.
 >=20
 > Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
 
@@ -60,5 +57,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260928011123.4508=
-00-1-alistair.francis@wdc.com?part=3D11
+00-1-alistair.francis@wdc.com?part=3D1
 
