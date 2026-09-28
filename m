@@ -1,149 +1,66 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 768832EEE86;
-	Mon, 28 Sep 2026 01:46:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7F46360ED0;
+	Mon, 28 Sep 2026 01:47:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790560016; cv=none; b=tR5S02Y04f4wIYlnpejMkwJBZA/BWSaouXg5xkvhSWuNhJAPcZJCq8ObqH2O+j5AL8SiaP97m3fIAG5YvGRG2bBM9HUiaTgrjJNWx/qzipacDge1cpiPlo7+7RAhT5uLXFxkbj48kmeM/3g0xhfnsjnf96MYC4jRn0qO/qU11gs=
+	t=1790560042; cv=none; b=C2Ho/nQWJdtRdwI96gE8Uh9FEMYagyDiBCYtN/ZI8Ss1dLhhFxWdXja0EIfOtK6XOPK3yZWd5PPqlarhztzL5wF33O37TvBJBM/ZcQrdlEEiERQKm/jdcabfRCN8XAAIE6nwhDrQGJqg586Cwpi26M868GXOqWTb/rMwBVA3dR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790560016; c=relaxed/simple;
-	bh=6jIYWaX2EfqAWIPF604zabs00IiTcC5ObBsvBSJr1zw=;
+	s=arc-20240116; t=1790560042; c=relaxed/simple;
+	bh=45UZnj4pb8I74EMWo14ztAnZ0B5QwuTZAvCkzT2e5iU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=q/2RcQ+5//qKbbdsxGU5h59TFum7ICIm69b917wDViaBLgFdAr1uvIlQZX5exWinbj6D/p5yahN5yakOWynNCyQI+syjMq8/1SkkwenqPuoQ1ZTGZwMdelGMJ74m7OWr7CRbNWSCEYtl2q5YiwmyHcP6NGMTkDPUCtdhuwwDwUo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SLQ2YjK6; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=crBLV9c+TwxCJnOcjHtSeEI3UtX83uKKcutij1ADp8tU86X1N28Xb1Mqb79S57kk7WSX9zRJkKCVI+8VKj73fn3HH9Tx7rThDLIrYpe/2RuNtYItucCp9lGWash2MwVrNKF8N4IOTramXrM4mI5KMODYJn+5pGS8UQ2En5aVB2c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gu3w6TW/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SLQ2YjK6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A15841F000FF;
-	Mon, 28 Sep 2026 01:46:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gu3w6TW/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C11C1F000FF;
+	Mon, 28 Sep 2026 01:47:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790560015;
-	bh=1GemqDvwaGeOH6uyFygMS7OrNWgD4v0CgKpSkWwpadU=;
+	s=k20260515; t=1790560040;
+	bh=45UZnj4pb8I74EMWo14ztAnZ0B5QwuTZAvCkzT2e5iU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SLQ2YjK69k13/YlbFAM3V0cP7UmdwUE4fzJAgTC26Um1pFaN7J6F0zjs1DMHQAS8A
-	 DJew7jSHKNrrGwAS/MMyn7CST2b7yWuIeQ8Zj9M5jpecv0nEtC4GCxcayKgJuz5kBe
-	 N6aUdxK/gc5oUbmGErvHx0GLZ01lpSi4HOrF/DgmL9PU/1+cgHJpfawurqnH/g77sw
-	 3hRX5TyxsB3mrqNrz3yF1BntapcpfhF5sQW6e0QUaCmzOTk8SM2L9pgN9t/eobTYwq
-	 bOnaAPAu2YeDwCd9QKzH2HWOIiEnmdUV6Boyi4rEc+eldUwOYNNlvEP5g/zyRrpBPB
-	 CJ3vmrJXqJk5Q==
+	b=Gu3w6TW/AxNx4PzgMxVaZI4MBbLBYYiLkAYQw0HC3LGHS6M0Q6F6ThrhBCachbu2+
+	 2grdY35xoF6S78lDHKqSV1so3gVigaLn9imhVlxn9xAKJK2WnwOTD0GudBbo65L2AB
+	 W0FLmpQI82bHMqKdj0GM9yNZp4UI/6S9AQRofM3a3k3ZtMxipNEmjVoaZ5j+8vLa7y
+	 1F7bS8rbnJaRSLL/2vtgTDATtFPaRKWWqpn4AvRbm4rgDaNCN+HH5OYnU8dqCLLEYg
+	 kEK2DuAnclgZTw62Dt3AKS/ZrvXAHwFIenjHBJUFPflBNKzEF03S4c1mCbLqj4XZ15
+	 kFMnYReI+ua9g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 22/22] lib: rspdm: Support SPDM challenge
+Subject: Re: [PATCH v4 20/22] lib: rspdm: Support SPDM certificate
+ validation
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com
-Cc: ojeda@kernel.org, gary@garyguo.net, linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260928013123.566184-4-alistair.francis@wdc.com>
+Cc: linux-cxl@vger.kernel.org, ojeda@kernel.org, linux-pci@vger.kernel.org, gary@garyguo.net
+In-Reply-To: <20260928013123.566184-2-alistair.francis@wdc.com>
 References: <20260928011123.450800-1-alistair.francis@wdc.com>
  <20260928013123.566184-1-alistair.francis@wdc.com>
- <20260928013123.566184-4-alistair.francis@wdc.com>
+ <20260928013123.566184-2-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 28 Sep 2026 01:46:54 +0000
-Message-Id: <20260928014654.A15841F000FF@smtp.kernel.org>
+Date: Mon, 28 Sep 2026 01:47:20 +0000
+Message-Id: <20260928014720.6C11C1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] rspdm: missing CertChainHash verification in CHALLENGE_AUTH resp=
-onse
---
+> From: Alistair Francis <alistair@alistair23.me>
+>=20
+> Support validating the SPDM certificate chain. This only performs basic
+> sanity checks on the chain before we continue on. This does not ensure
+> that the root CA is trusted, we leave that for userspace to check and
+> enforce. Instead we just make sure that the chain is correct, uses
+> supported signatures and that it isn't blacklisted in the kernel.
+>=20
+> We then store the first leaf certificate for use later.
+>=20
+> Signed-off-by: Alistair Francis <alistair@alistair23.me>
 
-commit eee76c6b536b5164eade967b244ae4e6193db601
-Author: Alistair Francis <alistair@alistair23.me>
-
-lib: rspdm: Support SPDM challenge
-
-This commit adds support for the CHALLENGE SPDM command. It introduces the
-state handling and response validation for SPDM challenges to authenticate
-the responder.
-
-> diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
-> index 9f7f6d0ffac65..d6ece65a6fc05 100644
-> --- a/lib/rspdm/state.rs
-> +++ b/lib/rspdm/state.rs
-
-[ ... ]
-
-> @@ -907,4 +957,165 @@ pub(crate) fn validate_cert_chain(&mut self, slot: =
-u8) -> Result<(), Error> {
-
-[ ... ]
-
-> +    pub(crate) fn challenge(&mut self, slot: u8) -> Result<(), Error> {
-
-[ ... ]
-
-> +        let mut response: ChallengeRsp =3D
-> +            Untrusted::new(response_vec.as_slice()).validate(&*self)?;
-> +
-> +        if request.context !=3D response.context {
-> +            pr_err!("Mismatched challenge context response\n");
-> +            return Err(EIO);
-> +        }
-> +
-> +        self.transcript
-> +            .extend_from_slice(response_vec.get(..response.len()).ok_or(=
-EIO)?, GFP_KERNEL)?;
-> +
-> +        match self.verify_signature(&mut response.signature) {
-
-[Severity: Medium]
-Does this code skip the verification of the certificate chain hash?
-
-The SPDM specification (e.g., DSP0274 Section 11.2) explicitly mandates that
-the requester must verify that the response cert_chain_hash matches the hash
-of the certificate chain that the requester possesses for the specified slo=
-t.
-
-Since response.cert_chain_hash is ignored here instead of being verified
-against the expected hash of self.certs[slot], could this allow protocol
-confusion or downgrade attacks if a responder uses a different certificate
-chain for the signature than the one the requester holds?
-
-> +            Ok(()) =3D> {
-> +                pr_info!("Authenticated with certificate slot {slot}\n");
-> +                Ok(())
-> +            }
-> +            Err(e) =3D> {
-> +                pr_err!("Cannot verify challenge_auth signature: {e:?}\n=
-");
-> +                Err(EPROTO)
-> +            }
-> +        }
-> +    }
->  }
-
-> diff --git a/lib/rspdm/validator.rs b/lib/rspdm/validator.rs
-> index f4e9485179d01..9992679f7c8a3 100644
-> --- a/lib/rspdm/validator.rs
-> +++ b/lib/rspdm/validator.rs
-
-[ ... ]
-
-> @@ -946,3 +943,149 @@ fn validate(unvalidated: &[u8], context: &'c SpdmSt=
-ate<'c>) -> Result<Self, Self
-
-[ ... ]
-
-> +impl<'a, 'c> Validate<'c, Untrusted<&'a [u8]>> for ChallengeRsp {
-
-[ ... ]
-
-> +        let mut cert_chain_hash =3D KVec::new();
-> +        cert_chain_hash.extend_from_slice(
-> +            unvalidated
-> +                .get(mem::size_of::<SpdmHeader>()..nonce_offset)
-> +                .ok_or(EIO)?,
-> +            GFP_KERNEL,
-> +        )?;
-
-This isn't a bug in the extraction itself, but the cert_chain_hash is parsed
-from the response here, confirming it is available to the requester, yet it
-appears to be ultimately left unused in SpdmState::challenge().
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260928011123.4508=
-00-1-alistair.francis@wdc.com?part=3D22
+00-1-alistair.francis@wdc.com?part=3D20
+
