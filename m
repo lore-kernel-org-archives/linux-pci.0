@@ -1,137 +1,134 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 276F2329E4B;
-	Mon, 28 Sep 2026 01:44:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20F9B22157B;
+	Mon, 28 Sep 2026 01:45:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790559852; cv=none; b=dOitiUr6bbpyxHVeG6amP/vjaWumxBSBlhMHCv0YBe8dsqlfPmvchOy7Q6wZtyvMyN0qtkr8K0DfeuNMZKftiGy+VK/8hoWHqs6fVs+6beQf4X3pN8a7po7iNL3O2If2YKFXC7Y46QOGHRWNp/m91PxBoqGdYbrhWx+R07mylhY=
+	t=1790559908; cv=none; b=jvAJivoS1pZaivUEg6cgRwQD4abC4LTx3TAaTUqBfG4LTKCY+FeRn8AqYgTLCiYSaKy90tB1S1WtUKytHndMMz+AXjBeJ1DjTjtXk94TnAYLFdMKG3f4MolM2lIADZu4HD2RedtUg939gaay0NvHEfvpfkB9FSfoZSmISAHdTms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790559852; c=relaxed/simple;
-	bh=2A7fHysPMzM1bo0gvg41rDwkRrxQiuDzHDq8PLcoMZQ=;
+	s=arc-20240116; t=1790559908; c=relaxed/simple;
+	bh=h4oAw9QehyZ5G6bRgmxk6Lf9k7RpOMRsSGPjS485vsQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=HX0ifbJy5ZAqtxqS/8jftZWtXjjBGTv4RsccuvfkAVidlAthT6oxbuo7Ctl/sju8XCE2vhxcR1PottWh5oCu1HkeNvvgxjExParYCDazTUjCq8Bz7hpdIlkxPOFR/ElpE+NASSKoEx33ZjV5KMugv1IvsIkIuUBQRJ8GNFP9FGc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oxedhWiv; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=dwFm4Onh+Wz4mgXXlYMzY1Hl65u+x8y8qcbD+206Od6CbNedZD/EnciUA67oZHDeJcX3LzoaqDtoxoO2dRYQ+yXEvtgnRvZEyjDCuyUOP95SKUUAkDIWCDPVmdb92HJuBsEC3TCCpsVkrKkW8M//qUAcAwdi1xge/3aLGJcgddA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R8rftJQe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oxedhWiv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91F261F00893;
-	Mon, 28 Sep 2026 01:44:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R8rftJQe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C19E1F000FF;
+	Mon, 28 Sep 2026 01:45:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790559850;
-	bh=0i5Qm1ktJnboX2+CTL/BtH/36uCFxoyxaE6Xm55vEyg=;
+	s=k20260515; t=1790559906;
+	bh=+2m2yKM0qETJptP3GWu6BuEOhgTpfRZqmNOJNXUwhSQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=oxedhWivbvjnqcUqfv7dTUr8bexZ3PgR1RumGsN8+optSA2mt+j8r/uwPYvVHtwXs
-	 CKiZVPeFKFa54ITuRDfiKyK8QSbp7AVFCMids+5rpmsB1RdwKljOxtpWogRD0K4TZl
-	 ed1TQeoucYA5DEVzo410+fSpLZt/X9bNkvKfMwH7AIOoa4BsZDL/mWATXibN7jlLpc
-	 YvXTdCquYq699o0+r71cccTm8rLk9ZQ5HLQMN8kZN3ekKemfuP8izhPzedKF/M3aYx
-	 OUJzLraq5VYORdWSJq0/ue/VDf0S708VVeGZr2Wf81ems3LrXWfxdH9xDtHxZf31JH
-	 X9/zzYFcQEzVQ==
+	b=R8rftJQepxbXKOD8ABDij2Vavzb9Vxj0V3xTsxerWhoO8/MIbAZnPCLpssh3CD7om
+	 uuVlt+HUAfDnsG7VMW+H5YCvlzI8ProIaLZ7ijJXcFCrn5aMRax6J3BOV8e1B0cvoK
+	 WaPmSI06MjZUqNkPVnjeMM7BbiAw3HZuMDhCeCuoEDnerKSWGYcRad1CArXuYyk+t8
+	 6A3JUMK9+P/0HZZr+dQ8sG9sWgC+3CkKy1+HWq1svvnKavEq6BjIscAnw6hx+gaGmF
+	 ymGCX/Gv/8GGMhdne5+n8U/o67AOYKSfjgIzhS1W1j2YAIbpyXprsAHy1o7gWLKyIj
+	 FZ0Id77Og+SzA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 14/22] PCI/CMA: Validate Subject Alternative Name in
- certificates
+Subject: Re: [PATCH v4 18/22] lib: rspdm: Support SPDM get_digests
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org, gary@garyguo.net, ojeda@kernel.org
-In-Reply-To: <20260928011123.450800-15-alistair.francis@wdc.com>
+Cc: linux-cxl@vger.kernel.org, gary@garyguo.net, ojeda@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260928011123.450800-19-alistair.francis@wdc.com>
 References: <20260928011123.450800-1-alistair.francis@wdc.com>
- <20260928011123.450800-15-alistair.francis@wdc.com>
+ <20260928011123.450800-19-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 28 Sep 2026 01:44:10 +0000
-Message-Id: <20260928014410.91F261F00893@smtp.kernel.org>
+Date: Mon, 28 Sep 2026 01:45:05 +0000
+Message-Id: <20260928014506.5C19E1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] pci: case-sensitive SAN validation rejects uppercase hexadecimal d=
-evice identities
-- [High] pci: ASN.1 decoder aborts prematurely on certificates with multipl=
-e CMA SANs
+- [High] rspdm: GET_DIGESTS buffer truncation and invalid length breaks SPD=
+M 1.3+ authentication
 --
 
-commit 8216d5120f9a26d7f0a6ec14495fd951b1a7513d
-Author: Lukas Wunner <lukas@wunner.de>
+commit 302ede91b9559c0e7a23017a89574c6ce5ec60eb
+Author: Alistair Francis <alistair@alistair23.me>
 
-PCI/CMA: Validate Subject Alternative Name in certificates
+lib: rspdm: Support SPDM get_digests
+   =20
+Support the get_digests Spdm command.
 
-This patch introduces validation for the Subject Alternative Name (SAN) in =
-PCIe
-leaf certificates per PCIe r6.1 specifications. It uses an ASN.1 decoder mo=
-dule
-to parse and authenticate the identity encoding within the certificate's SAN
-against the device's actual configuration space.
-
-> diff --git a/drivers/pci/cma.c b/drivers/pci/cma.c
-> index 6b52b129574ec..6e4eb3b921131 100644
-> --- a/drivers/pci/cma.c
-> +++ b/drivers/pci/cma.c
-
-[ ... ]
-
-> +int pci_cma_note_san(void *context, size_t hdrlen, unsigned char tag,
-> +		     const void *value, size_t vlen)
-> +{
-> +	struct pci_cma_x509_context *ctx =3D context;
+> diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
+> index 51055ea521d72..502d99eb13a66 100644
+> --- a/lib/rspdm/state.rs
+> +++ b/lib/rspdm/state.rs
+> [ ... ]
+> @@ -600,4 +618,40 @@ pub(crate) fn negotiate_algs(&mut self) -> Result<()=
+, Error> {
+> =20
+>          Ok(())
+>      }
 > +
-> +	/* These aren't the drOIDs we're looking for. */
-> +	if (ctx->last_oid !=3D OID_CMA)
-> +		return 0;
+> +    pub(crate) fn get_digests(&mut self) -> Result<(), Error> {
+> +        let mut request =3D GetDigestsReq::default();
+> +        request.header.version =3D self.version;
 > +
-> +	if (tag !=3D ASN1_UTF8STR ||
-> +	    vlen !=3D ctx->expected_len ||
-> +	    memcmp(value, ctx->expected_name, vlen) !=3D 0) {
+> +        let rsp_sz =3D core::mem::size_of::<SpdmHeader>() + SPDM_SLOTS *=
+ self.hash_len;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^=
+^^^^^^^^^^^^^
 
 [Severity: High]
-Will this strict memcmp() in pci_cma_note_san() fail if a device presents
-a compliant SAN string using uppercase hexadecimal characters?
+Does this allocation provide enough capacity for Spdm 1.3+ payloads?
 
-> +		pci_err(ctx->pdev, "Leaf certificate of slot %u "
-> +			"has invalid Subject Alternative Name\n", ctx->slot);
-> +		return -EINVAL;
+For Spdm 1.3+, the response appends 4 bytes per provisioned slot for items
+like KeyPairID, CertificateInfo, and KeyUsageMask.
+
+If the device utilizes multiple slots, it seems the extra bytes will exceed
+this capacity, causing transport errors when interacting with valid Spdm 1.3
+or 1.4 responder devices.
+
+> +
+> +        let mut request_buf =3D request.to_bytes()?;
+> +
+> +        let mut response_vec: KVec<u8> =3D KVec::from_elem(0u8, rsp_sz, =
+GFP_KERNEL)?;
+> [ ... ]
+> diff --git a/lib/rspdm/validator.rs b/lib/rspdm/validator.rs
+> index 58f6a3d436a8b..c058dde314401 100644
+> --- a/lib/rspdm/validator.rs
+> +++ b/lib/rspdm/validator.rs
+> [ ... ]
+> @@ -697,3 +700,97 @@ fn validate(unvalidated: &[u8], context: &'c SpdmSta=
+te<'c>) -> Result<Self, Self
+> [ ... ]
+> +        if context.version >=3D SPDM_VER_13 && (header.param2 & !header.=
+param1 !=3D 0) {
+> +            pr_err!("Malformed digests response\n");
+> +            return Err(EPROTO);
+> +        }
+> +
+> +        Ok(GetDigestsRsp {
+> +            header,
+> +            digests,
+> +            length: offset,
+                        ^^^^^^
 
 [Severity: High]
-Could returning -EINVAL here prematurely abort the ASN.1 decoding sequence
-for certificates with multiple CMA SANs?
+Does returning only the offset for the length drop the Spdm 1.3+ suffix
+fields?
 
-If a multi-function device shares a single leaf certificate containing
-multiple Subject Alternative Name entries, aborting on the first mismatch
-prevents the decoder from checking subsequent SANs that might legitimately
-match the current PCIe function.
+In GetDigestsRsp::validate, this length only covers the header and hashes,
+which appears to explicitly ignore the Spdm 1.3+ suffix fields completely.
 
-> +	}
-> +
-> +	ctx->found =3D true;
-> +
-> +	return 0;
+Since this truncated response length is appended to the host transcript,
+could this silently corrupt the transcript computation and cause the challe=
+nge
+authentication signature verification to fail?
+
+> +        })
+> +    }
 > +}
-
-[ ... ]
-
-> +static unsigned int pci_cma_construct_san(struct pci_dev *pdev, char *na=
-me)
-> +{
-> +	unsigned int len;
-> +	u64 serial;
-> +
-> +	len =3D scnprintf(name, CMA_NAME_MAX,
-> +			"Vendor=3D%04hx:Device=3D%04hx:CC=3D%06x:REV=3D%02hhx",
-> +			pdev->vendor, pdev->device, pdev->class, pdev->revision);
-
-[Severity: High]
-Is it possible that using lowercase formatting (%04hx) here inadvertently
-causes the validation in pci_cma_note_san() to reject valid certificates
-that encode their identity using uppercase hexadecimal characters?
-
-> +
-> +	if (pdev->hdr_type =3D=3D PCI_HEADER_TYPE_NORMAL)
-> +		len +=3D scnprintf(name + len, CMA_NAME_MAX - len,
-> +				 ":SSVID=3D%04hx:SSID=3D%04hx",
-> +				 pdev->subsystem_vendor, pdev->subsystem_device);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260928011123.4508=
-00-1-alistair.francis@wdc.com?part=3D14
+00-1-alistair.francis@wdc.com?part=3D18
