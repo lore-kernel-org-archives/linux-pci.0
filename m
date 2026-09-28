@@ -1,185 +1,132 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39E0B29ACC6;
-	Mon, 28 Sep 2026 12:44:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B23A3D0C07;
+	Mon, 28 Sep 2026 12:57:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790599482; cv=none; b=j9mwfYjpOI4XYbqfjVdpQoTl4c1Gz4UqGsltG58S/et4y3v163K9rpqkLf9ESSs3ZfZLTXkfVyWm4xoqQfKdbIum+HAH5ngpe0CB76N9+bha6o6oLK2x7P6LHKCEf0RDzYptlmXU72VpJWz9DSFbRuXkqU38OZpqfj6JEuzYchQ=
+	t=1790600251; cv=none; b=VHuq0Y9OC3cgH/JNoEegxk4aQ6bSKIce1m9P83Tr/SVBbBW0dAiDu24xA0NkKEVctG2hsQaLYkXDm4/uXzOn8jqkXWYL2qd6/sCA3EtQ84Afq0TAl3kY4WlRiPTYn8FYRQ2kgcaRwl9qCVNttZbK9mApqSSlcSFC1mFy7c0HX4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790599482; c=relaxed/simple;
-	bh=ZXNlI+RAX+nTm0DvvNRSw2dlsVY/sr/atGTezTTinoY=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=M1+zuDoHUzHqHkJpNKoneraeuxwl0Yzfo/NtVJuHulFzZMpxs9aRg2GSGpWKquS5BXtqbZuXv1PfjeW946cbtnNpU354VonARC13PJopM0xm85s4K4C7GAgyZ+gnl1Rb2UlvrDozgSOgxz+mVsu7VzE+zLhzvVjoC+om3FOeyCo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KJiDs8xD; arc=none smtp.client-ip=198.175.65.13
+	s=arc-20240116; t=1790600251; c=relaxed/simple;
+	bh=NO3m05+MVb9sGRkEEQQ9zeN9rgKnk3WgXbm9hzLVRfM=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=RG6yS2+JXCStQDBPkMtCiD4QFrkXl/CLG+hpC+b6RSXIOA1CDc1dmGRY8V7E9cJRr+z4yQIQeIz6B/g+Wt7FACv7P1VAX4KOTB+Nv9PdmYxnMLpg3Is6Ea2Y5Lwk5MlYqZru5krK3M3g/vEnnQ7lTl5ofLM+bcdJS59ClRw7jTc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZfB/F5jK; arc=none smtp.client-ip=198.175.65.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KJiDs8xD"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZfB/F5jK"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790599481; x=1822135481;
-  h=message-id:subject:from:to:cc:date:in-reply-to:
-   references:content-transfer-encoding:mime-version;
-  bh=ZXNlI+RAX+nTm0DvvNRSw2dlsVY/sr/atGTezTTinoY=;
-  b=KJiDs8xDJPEjb9oGMBn9jCsVPTYFalvEsCjsybq6zcDSYhjBJf4AQK9E
-   b2HQjicrqIrSd/c7G6ZwXY9DBboJe7zjT+7tP1273EfMfNT+GOs4AZzRd
-   5kJimaiaHFcAxsBjpoXQ9MMlCDtHFYslLGaLGoFgPV4XXrEBXZrw0pHXH
-   rzJilWIESiEbLKDum4D1cpxdjQsDErsu+ENbEM78zEW7T/b3jH4oUcvFk
-   KdVLKAevI0GM2EU2lAEYeXhJWO1E7JPDgZWl1khiWGIGU3wMlYW99lS1V
-   V8kKB3T4jTX+F+lOi5r0vTKCkrp1VOhaJ/Q1s5H/B9oph59uc8auhmX5T
-   A==;
-X-CSE-ConnectionGUID: wceG/DgvQVmWT/3vcbQE5g==
-X-CSE-MsgGUID: JGgB9U/WQqm03VgsSC41iA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11918"; a="101465243"
+  t=1790600250; x=1822136250;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=NO3m05+MVb9sGRkEEQQ9zeN9rgKnk3WgXbm9hzLVRfM=;
+  b=ZfB/F5jKpf0McRc27Djpsv7XGak+JYzrO0+EqGnXlHqjsx2wBBhR6Rr+
+   tf4msmTpub6sQk39dT3bD7MbkU2JKaXeE1gJxbDxQhQBwEn8flY1TfcGu
+   8rnjNit5zEbTPtf3M2HnLPG+ZQ2M7cNvXVSWn4emIeeGpkCFhWqtK9ZCW
+   jh49XuDuatPrGQdqqT70gOTk7rAKlTUxjJ0ylCX7AQGCDChSBoBEJoSaU
+   BECvFBeKzA6ati1KzLQESwSVPFMXcfclCZlOVrJC9UeD6WUMk8LSNHMXT
+   KCSUhCzfRDUS1s74IVatsOVhS4K8nDl7gCSBmOG2BxX1uTXwNas8UXEon
+   g==;
+X-CSE-ConnectionGUID: qVfpZFQ0TmSJw1Vf4zdH9Q==
+X-CSE-MsgGUID: aKb+Df1UQYWkhHCHLogXjA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11918"; a="101466244"
 X-IronPort-AV: E=Sophos;i="6.27,128,1787036400"; 
-   d="scan'208";a="101465243"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2026 05:44:40 -0700
-X-CSE-ConnectionGUID: fFRMilzCTkWSkFZj16NO1w==
-X-CSE-MsgGUID: h6+JZbPHRayLtVxz/h87ig==
+   d="scan'208";a="101466244"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2026 05:57:30 -0700
+X-CSE-ConnectionGUID: tskufYWuSWqrGgDCV3n1NA==
+X-CSE-MsgGUID: Z13anqShQyCagxvJjJ2+Ww==
 X-ExtLoop1: 1
-Received: from conormcd-mobl2.ger.corp.intel.com (HELO [10.245.244.73]) ([10.245.244.73])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2026 05:44:35 -0700
-Message-ID: <417b4032fd106c6730558759fd02e67e2fdc1c82.camel@linux.intel.com>
-Subject: Re: [PATCH v8 20/23] PCI/P2PDMA: Let a client declare that it
- selects ATS per mapping
-From: Thomas =?ISO-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>
-To: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- Logan Gunthorpe <logang@deltatee.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- "Joerg Roedel (AMD)" <joro@8bytes.org>,  Will Deacon <will@kernel.org>,
- Robin Murphy <robin.murphy@arm.com>, Christian =?ISO-8859-1?Q?K=F6nig?=	
- <christian.koenig@amd.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-doc@vger.kernel.org, iommu@lists.linux.dev, Tushar Dave
- <tdave@nvidia.com>, 	linux-media@vger.kernel.org,
- dri-devel@lists.freedesktop.org, 	linaro-mm-sig@lists.linaro.org,
- linux-rdma@vger.kernel.org, kvm@vger.kernel.org,  Chaitanya Kulkarni	
- <kch@nvidia.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jens
- Axboe	 <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>, Ankit Agrawal
-	 <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan	
- <skhan@linuxfoundation.org>, Randy Dunlap <rdunlap@infradead.org>, Sumit
- Semwal	 <sumit.semwal@linaro.org>
-Date: Mon, 28 Sep 2026 14:44:32 +0200
-In-Reply-To: <20260928-fix-p2p-acs-v4-0-v8-20-404453b9c435@nvidia.com>
-References: <20260928-fix-p2p-acs-v4-0-v8-0-404453b9c435@nvidia.com>
-	 <20260928-fix-p2p-acs-v4-0-v8-20-404453b9c435@nvidia.com>
-Organization: Intel Sweden AB, Registration Number: 556189-6027
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+X-IronPort-AV: E=Sophos;i="6.27,128,1787036400"; 
+   d="scan'208";a="279772219"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.109])
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2026 05:57:27 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Mon, 28 Sep 2026 15:57:23 +0300 (EEST)
+To: Deepanshu Kartikey <kartikey406@gmail.com>
+cc: bhelgaas@google.com, david.laight.linux@gmail.com, 
+    linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, 
+    syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
+Subject: Re: [PATCH v2] PCI: sysfs: Reject unaligned resource I/O port
+ accesses
+In-Reply-To: <20260928123036.7902-1-kartikey406@gmail.com>
+Message-ID: <fd1753ec-020b-b90d-ec1a-9d21ab2fa9a4@linux.intel.com>
+References: <20260928123036.7902-1-kartikey406@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 
-On Mon, 2026-09-28 at 14:19 +0300, Leon Romanovsky wrote:
-> From: Leon Romanovsky <leonro@nvidia.com>
->=20
-> The PCIe ATS Enable bit covers the whole device, so P2PDMA cannot
-> tell
-> from it whether a client will translate a given address. Most devices
-> translate any address once ATS is enabled, but some choose ATS per
-> DMA
-> mapping and can still use bus addresses for the rest.
->=20
-> Add pcim_p2pdma_set_ats_per_mapping() so the driver of such a device
-> can
-> declare that before P2PDMA starts treating clients with ATS enabled
-> as
-> translating everything. Keep it in the device's P2PDMA state, which
-> already ends with the driver binding.
->=20
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
-Reviewed-by: Thomas Hellstr=C3=B6m <thomas.hellstrom@linux.intel.com>
+On Mon, 28 Sep 2026, Deepanshu Kartikey wrote:
 
+> pci_resource_io() validates that the requested port lies within the
+> BAR but never checks that it is aligned to the access size. A
+> pwrite64()/pread64() on a resourceN file with an odd offset and
+> count=2 or count=4 reaches outw()/outl() with a misaligned address.
+> On arm64 this becomes a store/load to a Device-memory mapping
+> (PCI_IOBASE + port), which architecturally requires natural
+> alignment, causing an alignment fault and kernel oops.
+> 
+> Reject misaligned 2- and 4-byte accesses before they reach the
+> low-level accessor. With natural alignment enforced, an access that
+> starts inside the BAR cannot extend past its end, so drop the
+> port + count - 1 range check.
+> 
+> Reported-by: syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=7134530b25073b4ef373
+> Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
 > ---
-> =C2=A0drivers/pci/p2pdma.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 | 27 +++++=
-++++++++++++++++++++++
-> =C2=A0include/linux/pci-p2pdma.h |=C2=A0 4 ++++
-> =C2=A02 files changed, 31 insertions(+)
->=20
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index 1f4bf0125a5c..ae676509f9f3 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-> @@ -26,6 +26,7 @@
-> =C2=A0struct pci_p2pdma {
-> =C2=A0	struct gen_pool *pool;
-> =C2=A0	bool p2pmem_published;
-> +	bool ats_per_mapping;
-> =C2=A0	struct xarray map_types;
-> =C2=A0	struct p2pdma_provider mem[PCI_STD_NUM_BARS];
-> =C2=A0};
-> @@ -1568,6 +1569,32 @@ void pci_p2pmem_publish(struct pci_dev *pdev,
-> bool publish)
-> =C2=A0}
-> =C2=A0EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
-> =C2=A0
-> +/**
-> + * pcim_p2pdma_set_ats_per_mapping - Declare per-mapping ATS for a
-> client
-> + * @pdev: PCI device that initiates peer-to-peer DMA
-> + *
-> + * Declare that @pdev issues Translated Requests only for the DMA
-> mappings its
-> + * driver sets up to use ATS, rather than for any address once ATS
-> is enabled.
-> + * P2PDMA then takes the Address Type of this client's Requests from
-> the TLP
-> + * flags its callers pass.
-> + */
-> +void pcim_p2pdma_set_ats_per_mapping(struct pci_dev *pdev)
-> +{
-> +	struct pci_p2pdma *p2p;
-> +
-> +	p2p =3D rcu_dereference_protected(pdev->p2pdma, 1);
-> +	if (!p2p)
-> +		/*
-> +		 * ats_per_mapping is a performance optimization,
-> +		 * if pcim_p2pdma_init() didn't set pdev->p2pdma
-> pointer
-> +		 * for some reason, let's simply use ATS global
-> settings.
-> +		 */
-> +		return;
-> +
-> +	p2p->ats_per_mapping =3D true;
-> +}
-> +EXPORT_SYMBOL_GPL(pcim_p2pdma_set_ats_per_mapping);
-> +
-> =C2=A0/**
-> =C2=A0 * pci_p2pdma_map_type_tlp - Determine the mapping type for P2PDMA
-> transfers
-> =C2=A0 * @provider: P2PDMA provider structure
-> diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
-> index 36045b1b730c..543a09426a11 100644
-> --- a/include/linux/pci-p2pdma.h
-> +++ b/include/linux/pci-p2pdma.h
-> @@ -109,6 +109,7 @@ struct scatterlist *pci_p2pmem_alloc_sgl(struct
-> pci_dev *pdev,
-> =C2=A0					 unsigned int *nents, u32
-> length);
-> =C2=A0void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist
-> *sgl);
-> =C2=A0void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
-> +void pcim_p2pdma_set_ats_per_mapping(struct pci_dev *pdev);
-> =C2=A0int pci_p2pdma_enable_store(const char *page, struct pci_dev
-> **p2p_dev,
-> =C2=A0			=C2=A0=C2=A0=C2=A0 bool *use_p2pdma);
-> =C2=A0ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
-> @@ -166,6 +167,9 @@ static inline void pci_p2pmem_free_sgl(struct
-> pci_dev *pdev,
-> =C2=A0static inline void pci_p2pmem_publish(struct pci_dev *pdev, bool
-> publish)
-> =C2=A0{
-> =C2=A0}
-> +static inline void pcim_p2pdma_set_ats_per_mapping(struct pci_dev
-> *pdev)
-> +{
-> +}
-> =C2=A0static inline int pci_p2pdma_enable_store(const char *page,
-> =C2=A0		struct pci_dev **p2p_dev, bool *use_p2pdma)
-> =C2=A0{
+> v2: Check alignment per access size in the case 2/case 4 branches
+>     instead of using IS_ALIGNED() with a user-controlled count, and
+>     drop the now-redundant port + count - 1 range check.
+>     (Bjorn, David, sashiko)
+> ---
+>  drivers/pci/pci-sysfs.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 1f21856aac8a..8118cc6b3a61 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1209,9 +1209,6 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
+>  	if (port > pci_resource_end(pdev, bar))
+>  		return 0;
+>  
+> -	if (port + count - 1 > pci_resource_end(pdev, bar))
+> -		return -EINVAL;
+> -
+>  	switch (count) {
+>  	case 1:
+>  		if (write)
+> @@ -1220,12 +1217,16 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
+>  			*(u8 *)buf = inb(port);
+>  		return 1;
+>  	case 2:
+> +		if (port & 1)
+> +			return -EINVAL;
+>  		if (write)
+>  			outw(*(u16 *)buf, port);
+>  		else
+>  			*(u16 *)buf = inw(port);
+>  		return 2;
+>  	case 4:
+> +		if (port & 3)
+
+Why fon't these use !IS_ALIGNED() anymore? You can use e.g. sizeof() to 
+connect it to the natural alignment of the type so you don't have to use 
+literals at all.
+
+> +			return -EINVAL;
+>  		if (write)
+>  			outl(*(u32 *)buf, port);
+>  		else
+> 
+
+-- 
+ i.
+
