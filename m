@@ -1,156 +1,182 @@
-Received: from mail-qv2-f42.google.com (mail-qv2-f42.google.com [74.125.230.170])
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D1553537C4
-	for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 17:29:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F0D23783C4
+	for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 17:40:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790616583; cv=none; b=CBd9SDUduEQlfSvD60KTDB5e+dckAofqcRxUADSLHd6wvOYzThgo1gN2urRVKbgiRU79AY8kkk+Iof/axRrKxzqzPa/XjYYAFx9Fq0RU2RiwQjHx2EOypvOH0CoTtNy2ajZc4aj/CWN3kV/H2xcdvsMoOrSWCNhVqUzqfRnUYVE=
+	t=1790617235; cv=none; b=iThJQl8BbF8X/Q9n0x1uDxHbotTE1n6A6R/2QcIGl/M4WuMkEQJjtW4tAaYhKFui5a/bicPNB5BJxu/jAJ1+qdRGl8Ii6CN5t1gGoHWN9RsumQ+XihwV2iCNVxCaosnXmqv3ONGcV95dSoGCTEYuPOFYv1P/Oju62DAgpw/eyu4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790616583; c=relaxed/simple;
-	bh=SKQB0mEZagqmGsDNZPnaWe7gUble3NHrhIKbwNSH1Jw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YoeXCtkSLscwerYPDGq3F3GTJzNIne1wzqJ1jEoNbrdOABd8Rlkw15pw1bzV/iDqbl84Mjnfgcm35BHHR09xaB/QiSx1dJH/FzT0haAiffnPh7RRz6ckK65toqlWxw5kiS3HfCzEeaIyF92QwUWAqdT6kzC5CMq1hn0OxXMSUFY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=AXmJdboN; arc=none smtp.client-ip=74.125.230.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1790617235; c=relaxed/simple;
+	bh=nPAqJ4uD5RYEM12wOUBT/UCW6qyyWcMP/dCf/ibr9Ws=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=mcYz2q54eDCk+hnSvaEc8wfOpR4zS0zbpGFtKBjbGXyLTgvxR+JQxAcoewsRsl96afnKXef0WYp5wCyrKFzWx9QHMd5gOxHrDuNElgaBuTXB4vD9Id2WvtVx5uZPJmTIGVjQ7/5F6iBtpO2YX92xVZ5xWubdoOWvGZe/TfnHvW8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=gUioNVFq; arc=none smtp.client-ip=209.85.215.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="AXmJdboN"
-Received: by mail-qv2-f42.google.com with SMTP id 6a1803df08f44-9143e192df5so24932606d6.3
-        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 10:29:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="gUioNVFq"
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cbedbd182f5so51716a12.1
+        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 10:40:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1790616581; x=1791221381; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=F8wHi2lHLlVmnngzxn3a4naORn9qZPczzGL0TvCk5Do=;
-        b=AXmJdboNcWfKQqwuUPCXX6Rn93Y/ElzgHMYokUjabBvqd2Xqe8xSV+pwcD0LXzNZW2
-         8viM3Ku+mp73QMATFvmcekMooi2y7DURd7K97gX6ogo9XH/0i80JoLcUwLr14lwGgje2
-         uXVL+jaLV2cPhsmHFcgkWM1+NQflhZkSRUkCpfI6fR8UBC5ZOrsLx/3Zp6rgE+ZXQW+v
-         YZZAFTIec7nOUhTYT0SSMxVudqvgh/VKoBxSo48Ry8BMg9KgFWpnIKlEW+yJW/Db4J5B
-         fSF7H1/lLqMh9MrlEVrvnSqWdih01PAd0RdYO/AaK8rLLHEvulSG7LoKrZ/8QZ6sCiln
-         1a5A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790616581; x=1791221381;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=google.com; s=20251104; t=1790617233; x=1791222033; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:mime-version:date:from:to:cc:subject:date:message-id
          :reply-to:content-type;
-        bh=F8wHi2lHLlVmnngzxn3a4naORn9qZPczzGL0TvCk5Do=;
-        b=pdfTpjyvuUR4QwWivOIBsqTyBIRMb0vK/0YislyjmaARXsDKZRkZXfTnw2HbVhBPIV
-         DwcdAXza5ezSJxjpAWiJ+ugXm0F74n6Df9p8OImVLMjQNwJK1IGZAOICC2149bikVGN3
-         o/ZcWxrLBPdeGfVrUZZl7NEFU94zWKUzjhF5OfW9nN++5zeOKhvOOR7TYXm4EEAtem10
-         JNdS9Pf0tCdG40e9UpxZ6JLwKx/3foWeJeENic0L+xPlGIezIep/uIwoah6yZyCHUzoP
-         Ut3tk43c5SZUfhS9CTv841zOFM4e99nkt7oZSZlerjm1QlKzgkFyvMmDcVu5Dq6rIFj4
-         D8Eg==
-X-Forwarded-Encrypted: i=1; AKwUvBwDkmUtmYgTq5XQNkMKWOphzf1zV9CBYMxlhf6dizcvLSGClHe/65P/c50RhBetlBG7OtI0krgJC7Y=@vger.kernel.org
-X-Gm-Message-State: AFuF++mSsBlCNU0SGh8mEoyzspzYsUHLW40YhLaAdnrlOfD9OBV/+bYX
-	bux98hzYZsnfW9q4hbrwE36Wcmef/RLPM6Jo7oYuK9/tq/QUeFyyb60vWkyALtQ0dYg=
-X-Gm-Gg: AYBFou1YgMZdyvTsKweI7XaXapCXKU9qnZnlqfc5lSfNMwdpUR7mSMhNQBobbwOfl9L
-	XlvIiWqSiFTcl7AM0kc3OugtuH9Pu6rGorj+h5/k9yx2LjYRzUW+K2rc/bbZoCXk7zplAVIaP2j
-	6MKJOJyoNRn+qh+khucZOhfmjZkMSTYX2LilCJD1CjbO8TkhrLJX6/Wc5ZfB/9q7B9iR2osGxWf
-	AZCDnBt8MDTQ+lIcygC/Xr2zhtzFJbIAZsxxQYoIb1I0cpl1UwYIYk/N2NX1kBPBXKc8mht8Gwf
-	bUIDiBsuL8RCd2wl2IwBp4+qOCSPZ9hBsUk1/9x20++v48SyOB3s4z3msSqjCIQiQXT43T8nSdn
-	upBI4YiU71+0LT6OPFRC0vB3vrgK/+Fb6TCu7ey74XPNml/Ia4VpN4jrbEjEh0uR1PVX2/kkFph
-	cR1Dz6n+NFnkzv1MnpmegM8bbkuEO7oIYsB8e+R5f9Aoea
-X-Received: by 2002:a05:6214:19c6:b0:916:7629:f1c with SMTP id 6a1803df08f44-91676291098mr52487856d6.10.1790616581176;
-        Mon, 28 Sep 2026 10:29:41 -0700 (PDT)
-Received: from ziepe.ca ([130.41.10.202])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91430df77adsm84361036d6.26.2026.09.28.10.29.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Sep 2026 10:29:40 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xBFAZ-00000007NhG-43XU;
-	Mon, 28 Sep 2026 14:29:39 -0300
-Date: Mon, 28 Sep 2026 14:29:39 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Zhiping Zhang <zhipingz@meta.com>
-Cc: fengchengwen <fengchengwen@huawei.com>,
-	Leon Romanovsky <leon@kernel.org>,
-	Michael Guralnik <michaelgur@nvidia.com>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Christian Konig <christian.koenig@amd.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, kvm@vger.kernel.org,
-	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH v13 5/5] RDMA/mlx5: get tph for p2p access when
- registering dma-buf mr
-Message-ID: <20260928172939.GK163130@ziepe.ca>
-References: <20260731211601.3033906-1-zhipingz@meta.com>
- <20260731211601.3033906-6-zhipingz@meta.com>
- <f4ff7ced-63b6-42e6-8e01-9f01d2e59843@huawei.com>
- <CAH3zFs24esHCGA=wPrkiH8oKQCv7SnOwcBbkMxrOEvOVtwstYg@mail.gmail.com>
- <20260924233058.GA163130@ziepe.ca>
- <CAH3zFs2rhg6-b-pVDps1V8LsM4Dn48t4J4LFVyKOZtT4axdY=Q@mail.gmail.com>
+        bh=fYPTVor7lW3r9SolJqGFaqIvM2+F+nxKkoRVuMrFoD0=;
+        b=gUioNVFqCpsN6pr1xXNikPn1cja1lW7izMXnswQ+46Y1/XkIo8+jGIUeUVlNH9oGLj
+         6gdnYFrxE2VOTDEdO3wsbIULlOH0bD6lb7aIq+egctc5Q0gmEkOrs4SUvKkUnGcRbB7c
+         /9+yIrbsA9kstOH9NGmRCznE+wH1v+yZBHASp2fg6G4EKcd63heXwd88ze9zlRr0K2uL
+         IbeL+2iHxrJAuqAZ9MeRszkAPm/RHyEUBTV/EoRGVqL2u1whoHIuW7TWL1qS1MuT4oCW
+         +cn/os+1cz9r6Z6CnAGRcZJ7V162YZQgQskGN5ZNwqNW97UtW64o1UZyICx+ndxmDntM
+         +FdA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790617233; x=1791222033;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:mime-version:date:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=fYPTVor7lW3r9SolJqGFaqIvM2+F+nxKkoRVuMrFoD0=;
+        b=1mE+2o3p2U2wxHMVcvXse3wFvOY6Ev4NI2B/Vxx+pBY0aXhbrGwC11+VAJpRcO4ryt
+         0jNybv7QdTxCIKh0r+7ZAEEsCgOHhwcTspLACYZ5zWaDB2UScm/jHuhVNHodmJPMmV66
+         lyttONqJyHs7a5nQrYviokYlzmnrCw88SKqv/Lf3yyZQtbRjeV98rS89xm9fjs+RRcOj
+         DEhs+oenBxbutOO60KWlLHIt66dxdQhBmd6kRVdj8kXvGAknfcE0PeIeB7hdk3Zm3cqZ
+         P2qONTAdGmR1Yw4Qh67AvPEfLm5kg/CpIMPJcuVCSfGZ+FnDLkKw++UpOmuMqdAFSMjs
+         p+jA==
+X-Forwarded-Encrypted: i=1; AKwUvBzkgtDg+pYGE3kLLYzDAAjxC6XqmcfKYSfEAi7AVZq84qIniVrRvrnurap7u0F5hs77IoxvYcPaets=@vger.kernel.org
+X-Gm-Message-State: AFuF++lGvTEIXScDnX5PpVOVuQAEVSDjNRbqvTZbMTyc/XXgLgJbEDh3
+	ltF/t7EsFDYjIvu/K2rzsD03yXGGnQx209IuJRubzbfBpxmJOSAacCop/rli+OzaHa6Ov2eIvJI
+	7O9uTdrcxv/vzQ2hsN9KdFsQOG//DaFt9og==
+X-Received: from pgbgj4.prod.google.com ([2002:a05:6a02:4944:b0:cc7:9801:78ce])
+ (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a21:790b:b0:3db:887:7868 with SMTP id adf61e73a8af0-3de7cd46233mr58280637.15.1790617232335;
+ Mon, 28 Sep 2026 10:40:32 -0700 (PDT)
+Date: Mon, 28 Sep 2026 17:40:11 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAH3zFs2rhg6-b-pVDps1V8LsM4Dn48t4J4LFVyKOZtT4axdY=Q@mail.gmail.com>
+Mime-Version: 1.0
+X-B4-Tracking: v=1; b=H4sIAHumumoC/43OQY7CMAwF0KugrDGKnQSSWc090CzSxm0jaIMSV
+ IFQ7z6BxYwQLFh+y//ZN1E4Ry7ia3UTmedYYppqMOuVaAc/9Qwx1CxI0lZaqaDR0MULeM4w8nh
+ kfyhgSHtsgmFrrajNU+a681D3PzUPsZxTvj6OzHif/nlolTVqoxVp44Ag+/OQwinHq58O331K/
+ ZE3bRrF3Znpqfv2l5kAoQvoXCNxh114QdQHiKoI2x0at0V0Sr0g+h9xaN8jGiR00lNLyAEDPiH LsvwC0WDYiX0BAAA=
+X-Change-Id: 20260803-b4-fix-aer-memleaks-524a1bd5e888
+X-Mailer: b4 0.14.3
+Message-ID: <20260928-b4-fix-aer-memleaks-v5-0-ba6b94c9c9a6@google.com>
+Subject: [PATCH v5 0/3] PCI/AER: Fix ghes_estatus_pool memory leaks in error handling
+From: Priyank Rathod <rathodpriyank@google.com>
+To: Mahesh J Salgaonkar <mahesh@linux.ibm.com>, "Oliver O'Halloran" <oohall@gmail.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lukas Wunner <lukas@wunner.de>, 
+	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>, 
+	Jonathan Cameron <jic23@kernel.org>, 
+	"=?utf-8?q?Ilpo_J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, Dave Jiang <dave.jiang@intel.com>, 
+	Shiju Jose <shiju.jose@huawei.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, 
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Priyank Rathod <rathodpriyank@google.com>, 
+	stable@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Sep 24, 2026 at 11:17:57PM -0700, Zhiping Zhang wrote:
-> On Thu, Sep 24, 2026 at 4:31 PM Jason Gunthorpe <jgg@ziepe.ca> wrote:
-> >
-> > >
-> > On Wed, Sep 23, 2026 at 11:24:56PM -0700, Zhiping Zhang wrote:
-> > > I don't think this belongs in the importer. Every in-tree dma-buf
-> > > caller of pci_p2pdma_distance() is the exporter, in its .attach,
-> > > clearing attach->peer2peer -- amdgpu_dma_buf.c, xe_dma_buf.c,
-> > > habanalabs memory.c. There is no importer-side caller.
-> >
-> > Right, and they shouldn't be doing that, but it still has to be
-> > checked that the st is going directly to the peer device not the host
-> > bridge. Not using the distance, but by the PCI_P2PDMA_MAP_BUS_ADDR
-> > indication.
-> >
-> > I fear you will need some of Leon's series to make that happen.
-> >
-> > So probably the proposed change to dmabuf ops is far too simple.
-> >
-> > Jason
-> 
-> Hi Jason,
-> 
-> Thanks for the comments.
-> 
-> Agreed -- the tag should not be handed out unless the routing is
-> PCI_P2PDMA_MAP_BUS_ADDR. That can be enforced conservatively on 7.3
-> with two changes. I can fold both into patch 4.
-> ```
-> In drivers/pci/p2pdma.c, make pci_p2pdma_map_type() callable from
-> tristate VFIO_PCI_CORE:
-> 
->     EXPORT_SYMBOL_GPL(pci_p2pdma_map_type);
+When firmware reports PCIe Advanced Error Reporting (AER) events via ACPI
+APEI GHES (ghes_handle_aer()), it allocates a snapshot buffer from
+ghes_estatus_pool to store the aer_capability_regs registers before
+enqueuing the error record into aer_recover_ring.
 
-No, that's been rejected several times already.
- 
-> and in drivers/vfio/pci/vfio_pci_dmabuf.c,
-> vfio_pci_dma_buf_get_pci_tph() gains:
-> 
->     struct dma_buf_attachment *attach;
-> 
->     if (list_empty(&dmabuf->attachments))
->         return -EOPNOTSUPP;
-> 
->     list_for_each_entry(attach, &dmabuf->attachments, node)
->         if (pci_p2pdma_map_type(priv->provider, attach->dev) !=
->             PCI_P2PDMA_MAP_BUS_ADDR)
->                 return -EOPNOTSUPP;
-> ```
+aer_recover_queue() returns void, so ghes_handle_aer() cannot release that
+buffer itself; ownership is handed to the AER code, which until now freed
+it only on the fully successful path. If the record cannot be enqueued, or
+if a dequeued record cannot be mapped to a pci_dev, the allocation is
+silently leaked. Under a sustained error storm this exhausts
+ghes_estatus_pool, which then breaks GHES hardware error reporting
+system-wide.
 
-Also no, this has to be done via PCI_P2PDMA_MAP_BUS_ADDR which also
-enforces putting the determination in the right place in the code
-flow..
+This series fixes both leak paths and documents the ownership rule:
 
-> Two properties are worth stating explicitly:
+Patch 1: aer_recover_queue() when kfifo_in_spinlocked() fails because
+         aer_recover_ring (capacity 16) is full. The rejected entry is
+         freed immediately via ghes_estatus_pool_region_free().
 
-Ah! AI!
+Patch 2: aer_recover_work_func() when a dequeued entry cannot be mapped to
+         an active PCI device (pdev is NULL). The loop is restructured so
+         ghes_estatus_pool_region_free() runs unconditionally for every
+         dequeued item.
 
-Jason
+Patch 3: Add a kernel-doc comment stating that aer_recover_queue() takes
+         ownership of @aer_regs, which must be allocated from
+         ghes_estatus_pool. This is documentation only, so unlike
+         patches 1 and 2 it has no Fixes: or Cc: stable tag.
+
+Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
+---
+Changes in v5:
+- Add patch 3, a kernel-doc comment on aer_recover_queue() stating that
+  it takes ownership of @aer_regs, which must come from ghes_estatus_pool
+  (suggested by Kuppuswamy Sathyanarayanan). It is a separate patch so
+  that the two fixes stay minimal for stable backports, and because the
+  comment is only accurate once patch 2 is applied.
+- Add Kuppuswamy's Reviewed-by to patches 1 and 2. Their code is
+  unchanged from v4.
+- Still applies cleanly to pci/next (94e8d4e94266), before or after
+  Lukas' "Error reporting for AER-incapable devices" series:
+  https://lore.kernel.org/r/cover.1790531238.git.lukas@wunner.de
+- Cc Kuppuswamy Sathyanarayanan, Jonathan Cameron, Ilpo J=C3=A4rvinen and
+  Dave Jiang, plus Shiju Jose and Rafael J. Wysocki as the author and
+  committer of the commit in Fixes:.
+- Link to v4: https://lore.kernel.org/r/20260918-b4-fix-aer-memleaks-v4-0-f=
+0a2c21ed1d1@google.com
+
+Changes in v4:
+- Rebased onto v7.3-rc3+ (f259f446f519); applies cleanly to pci/next as
+  well. No conflicts with the Advisory Non-Fatal Error support that landed
+  in the meantime.
+- Added missing Fixes: e2abc47a5a1a ("ACPI: APEI: Fix AER info corruption
+  when error status data has multiple sections") and Cc: stable to both
+  patches; that commit (v6.7-rc1) introduced the ghes_estatus_pool
+  allocation whose ownership these paths drop.
+- Patch 1: use braces on both arms of the if/else and fix the continuation
+  alignment (checkpatch --strict).
+- Both patches now build warning-free with W=3D1 and CONFIG_ACPI_APEI_PCIEA=
+ER=3Dy
+  (earlier revisions were only build-tested with APEI disabled, which
+  compiles neither of the modified functions).
+- Explained in both commit messages why the caller cannot free the buffer,
+  and when the missing-pci_dev path is reachable.
+- Cc: Lukas Wunner, who has been active in this code.
+- Link to v3: https://lore.kernel.org/r/20260803-b4-fix-aer-memleaks-v3-1-e=
+87159611933@google.com
+
+Changes in v3:
+- Resent to fix threading of the series.
+- Link to v2: https://lore.kernel.org/r/20260803-b4-fix-aer-memleaks-v2-1-f=
+d199b0171fd@google.com
+
+Changes in v2:
+- Refactored aer_recover_work_func() to ensure ghes_estatus_pool_region_fre=
+e()
+  is called unconditionally for every dequeued record.
+- Added Patch 1 to fix related memory leak in aer_recover_queue() on kfifo
+  buffer overflow.
+- Link to v1: https://lore.kernel.org/r/20260803183853.432459-2-rathodpriya=
+nk@google.com
+
+---
+Priyank Rathod (3):
+      PCI/AER: Fix memory leak in aer_recover_queue() on kfifo buffer overf=
+low
+      PCI/AER: Fix memory leak in aer_recover_work_func() when pci_dev is m=
+issing
+      PCI/AER: Document that aer_recover_queue() takes ownership of aer_reg=
+s
+
+ drivers/pci/pcie/aer.c | 48 +++++++++++++++++++++++++++++++++++-----------=
+--
+ 1 file changed, 35 insertions(+), 13 deletions(-)
+---
+base-commit: f259f446f5198d98e13756d2cd531812a0ad3064
+change-id: 20260803-b4-fix-aer-memleaks-524a1bd5e888
+
+Best regards,
+--=20
+Priyank Rathod <rathodpriyank@google.com>
+
