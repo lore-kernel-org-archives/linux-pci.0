@@ -1,161 +1,120 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0D8E378822
-	for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 18:17:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57C7C39060B;
+	Mon, 28 Sep 2026 18:29:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790619463; cv=none; b=KELaRg3ExBXFi+gl2RWave5ILpTswKxL7uKFnDkRiaod2QWeLaJEC3CLohtm0B5qTlX1R+hxCJl870Lxt0S9MerOPfx5ZtNeMfbBTStl0w1y/rq9iTxsuL3MAzuHunIUwAUU90MLXV+efPG0S20C3ncAtIFFkupxfb4/vfOOV7w=
+	t=1790620200; cv=none; b=cx9a0/e/OtqDOYzXlx9tKxWiOj5h8+PdQz3djGhVj7oOMnhyr/mXWR918NaQcqxUOfdhyK2WUN5nPeReIY1wPKTK4oMNUnHOktYtu0AyIRvp9JBx1K+k35sCBVoNxkP9gOo6zk3fcA6XnnwQN8RqZPFJZu5xdk3bl2p/IcMqfkY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790619463; c=relaxed/simple;
-	bh=t7wnAbQo9fhp75YDIZ8Di2uLMxtaqNgTQQQgRgB2y7Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WvZBWFzpZVOFJhKRlkBfyqux3QS+IKYG9exZXCBx9ZADiYtRMLkGBxka+z3kw5OnylHIAltwqLwx1FJNkfoE/ntXGZBmPMXra3hzMHhE0liUH5+kHZgX7I2dCGuEJBPOCSqfPj391RTwOsnnG5V7f6/wDsG9a+UDygZsKx2qveY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cbLERrcq; arc=none smtp.client-ip=74.125.225.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790620200; c=relaxed/simple;
+	bh=X71mzH2uZG4Zz90V/svIDvBuqeL/+Ow6zYk3jJO0vE0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AK+4b9SsTcoqkq/Gq+gGUmwEJooJsQ+GP+RZOHFK+7bVkamAryoUc7u+DeyKHYs8mwQX2RpjKOgrbiIFpZv9a8BmM6hUDOMw+2NPubPj3SH3mVCIvVMAbWDXJJaQEsTfmX48+EADpr0rDIn00TRnVrkJbUwjuoFspgJNzOWDueE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=jS2k2Qal; arc=none smtp.client-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cbLERrcq"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49b912d391aso25041405e9.2
-        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 11:17:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790619460; x=1791224260; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=7P4n65OS1muIcpC3FLPM1Cf6wgXMdF30weAgyrooSwc=;
-        b=cbLERrcqKD/iOx0zNL9szerynmLpYRmAEg0WAk2cgUSNgqaSYG4iE/hkL5Meo8zWZk
-         l6AuMPOzBoTZTosFX6LNrPtQ372ff3ATLSqxr+Udv2PeFJmRoyS+4en3Zhc/A7pIT3CQ
-         +BOV9ypIyujKFzljQPwviI3CYGPJ7BoBNv/JdhDizZVBzyT5ib6P4vEw/SVDAKm2zyl7
-         LEWs66oHgK4DVjGIbuVbWkJO34NM42NXS/sTrQevGaqXILZFAMKhydVefE/UycrGgftZ
-         VA+lhwc7CIjNrmIL9Jjpx5Sy9yTqxzMci/bTEFzFKFmxz29IKm0Wn6lh9QMFrnlUT1R3
-         lBnw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790619460; x=1791224260;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=7P4n65OS1muIcpC3FLPM1Cf6wgXMdF30weAgyrooSwc=;
-        b=es7HDTzjowDGtpR4GmG0MNBssO1jcEwUEtlMWWEgXrTHBoPLtQSld1KHOAk8AcxyMj
-         lFa39+nVf6nHY8wMI0NtUUVJE+atV34oJ6CcpdA6gyPAV9H+M8tbJrHNNsD0GBxH1jMa
-         NA+ryVyyxgZSV8uQJueFEqdVEziHcrXgYefCI9MKSc/9MK5qyd7viWRsLvUWhVQgg0VP
-         W62MppWSHEOkAKUqRYL1P4KjMGN60T1G/mh6UpCDJAAzqR+6T4t7tDtuvAZC+e6wGLYO
-         5iFj/i/h/QRRKyNx4slh0jWxbabwgDcLOKfx5ehxFR2Cn3IVuJwUS/81tCpQEm6ULsqI
-         L9ow==
-X-Forwarded-Encrypted: i=1; AKwUvBziYa0idbxKeFmGAohDaicpLaBHXeJ1AwUHr5pzD83lWS0YIKsopTxhqGO3gIYwKJ4Ph7rE2Yc/TXI=@vger.kernel.org
-X-Gm-Message-State: AFuF++kwZ39bU2WYe/eWLSWWC+G5SwlotWIY1+9koOlJIGt0jxybkDno
-	BXz0JhKEXEnRlTWmuCNfB5j/SuJmv0lFZMWBB/VkOT2NlVTazwwDUSHo
-X-Gm-Gg: AYBFou0r9VSIaGJlgI5HiwOp3a+NsP8zcFwL9PbNxAf2LbaZuuDjwCO+Yl4h9yoiyg6
-	JA8QZOXwfR+yNfAeNvjz7S0xIfQ9S5BQ3Zl6jmFBbginQ3prnxPIXHohqSMaI1YYnYvvE1sYLfE
-	rr7dA+QpZeRVRmhXZPs4ZjeGVzu+5duMAB87KFLdsb5b1sTA6ObxYOium+crEF7d6teWTmgH2es
-	aD8PtB1sFA3UYDi5wHXv1PrzLVRXbO9zM7TWCeqjSdbKQV00rzqLczebAOO1kLgwHzZgcm2/JBP
-	MNp4kBeqHLqMwpNkZEmNxLdTDO7Z5IPxH2K0q3rsQopLCb1wB26VQj30k23lnnWsm4qC0Fd9LkY
-	OML2X/dKq87tRbawAh7VXNmrrZGcf84HNQ2PrClRFThJAJhhQnAaQteuSTsloZcgY+zw3QziBsr
-	nP+gFKoqbk2ANeWrzgyiN0qCTnPaVAqR4djzchdj5XjSl9a8HIfA0yd6zEZ3z+xh98c3NDWoBxJ
-	hxjNMsgyt0FbnVUXgmL7OTAG7JJUjwyOmM=
-X-Received: by 2002:a05:600c:3511:b0:49d:17d4:d6ad with SMTP id 5b1f17b1804b1-49fe66fca74mr225174635e9.23.1790619459558;
-        Mon, 28 Sep 2026 11:17:39 -0700 (PDT)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a00cf9b72fsm14819315e9.9.2026.09.28.11.17.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Sep 2026 11:17:39 -0700 (PDT)
-Date: Mon, 28 Sep 2026 19:17:37 +0100
-From: David Laight <david.laight.linux@gmail.com>
-To: Ilpo =?UTF-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
-Cc: Deepanshu Kartikey <kartikey406@gmail.com>, bhelgaas@google.com,
- linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
- syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
-Subject: Re: [PATCH v2] PCI: sysfs: Reject unaligned resource I/O port
- accesses
-Message-ID: <20260928191737.20c8a985@pumpkin>
-In-Reply-To: <fd1753ec-020b-b90d-ec1a-9d21ab2fa9a4@linux.intel.com>
-References: <20260928123036.7902-1-kartikey406@gmail.com>
-	<fd1753ec-020b-b90d-ec1a-9d21ab2fa9a4@linux.intel.com>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="jS2k2Qal"
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4htqbj3f3ZzKp1J;
+	Mon, 28 Sep 2026 20:29:53 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1790620193;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=J4UOx5QX7kX+W5/Ie5nHMORdMpDg/AS6sI2RXKzrPs0=;
+	b=jS2k2QalraFTd0mPbabNjUw57uYZ91D6GRz16oV/j0WCmDpfNkvzn9bOGr1yZiIYm68SQH
+	vgB5Sk/EluiS7f+aY9mTPyQWE0Iz2A0+1BBfS7tLBZZV8IwPl4PzGBetgUQRru1tWBw7j/
+	fp02IAlREJhUMuIQALPKIZP5PdC+Q003lqwu+OsUDOhUoa6YswejAPJWCthXi0nFghimcI
+	QM+Shr9IEbmcYFvkn6p0vt+/EgtIELAYQMvXieD9GfJTvv0++ySREemVaMzkrQtQUe5HU8
+	vDlM0gR6QgNjebGvJKVpi9BseMl67c+xrNatzRtyZXbdwwzSeIGzG2xYr523IA==
+Message-ID: <4b82b8e9-6cf5-4f88-af10-dcbce0181d5f@mailbox.org>
+Date: Mon, 28 Sep 2026 17:07:41 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 02/11] PCI: rcar-gen4: Drop the APP-based link_up check
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski
+ <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Magnus Damm <magnus.damm@gmail.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Philipp Zabel <p.zabel@pengutronix.de>, Frank Li <Frank.Li@nxp.com>,
+ Niklas Cassel <cassel@kernel.org>, Wilfred Mallawa
+ <wilfred.mallawa@wdc.com>, Serge Semin <fancer.lancer@gmail.com>,
+ linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260918032038.2216471-1-den@valinux.co.jp>
+ <20260918032038.2216471-3-den@valinux.co.jp>
+ <c2807afc-3e69-4744-8588-20f60839a603@mailbox.org>
+ <4peziifkgyfpglfl4jtyvcxqht2yo4r4bswmkweicpxdf45ejc@jxbqgurozlft>
+ <badcd2d5-7d61-426a-86d6-000043a6aa93@mailbox.org>
+ <4fgnblug6mknuy4zq2lqeuni3dmu2f6c4mpb2qfvvyt5bpnovm@b6gundxnhr7d>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <4fgnblug6mknuy4zq2lqeuni3dmu2f6c4mpb2qfvvyt5bpnovm@b6gundxnhr7d>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MBO-RS-META: pfr94jinfo8zdyppkwf9s6rq1kxnbpz8
+X-MBO-RS-ID: dd2d6aa1575c6556ca9
 
-On Mon, 28 Sep 2026 15:57:23 +0300 (EEST)
-Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com> wrote:
+On 9/28/26 6:20 AM, Koichiro Den wrote:
 
-> On Mon, 28 Sep 2026, Deepanshu Kartikey wrote:
->=20
-> > pci_resource_io() validates that the requested port lies within the
-> > BAR but never checks that it is aligned to the access size. A
-> > pwrite64()/pread64() on a resourceN file with an odd offset and
-> > count=3D2 or count=3D4 reaches outw()/outl() with a misaligned address.
-> > On arm64 this becomes a store/load to a Device-memory mapping
-> > (PCI_IOBASE + port), which architecturally requires natural
-> > alignment, causing an alignment fault and kernel oops.
-> >=20
-> > Reject misaligned 2- and 4-byte accesses before they reach the
-> > low-level accessor. With natural alignment enforced, an access that
-> > starts inside the BAR cannot extend past its end, so drop the
-> > port + count - 1 range check.
-> >=20
-> > Reported-by: syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
-> > Closes: https://syzkaller.appspot.com/bug?extid=3D7134530b25073b4ef373
-> > Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
-> > ---
-> > v2: Check alignment per access size in the case 2/case 4 branches
-> >     instead of using IS_ALIGNED() with a user-controlled count, and
-> >     drop the now-redundant port + count - 1 range check.
-> >     (Bjorn, David, sashiko)
-> > ---
-> >  drivers/pci/pci-sysfs.c | 7 ++++---
-> >  1 file changed, 4 insertions(+), 3 deletions(-)
-> >=20
-> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> > index 1f21856aac8a..8118cc6b3a61 100644
-> > --- a/drivers/pci/pci-sysfs.c
-> > +++ b/drivers/pci/pci-sysfs.c
-> > @@ -1209,9 +1209,6 @@ static ssize_t pci_resource_io(struct file *filp,=
- struct kobject *kobj,
-> >  	if (port > pci_resource_end(pdev, bar))
-> >  		return 0;
-> > =20
-> > -	if (port + count - 1 > pci_resource_end(pdev, bar))
-> > -		return -EINVAL;
-> > -
-> >  	switch (count) {
-> >  	case 1:
-> >  		if (write)
-> > @@ -1220,12 +1217,16 @@ static ssize_t pci_resource_io(struct file *fil=
-p, struct kobject *kobj,
-> >  			*(u8 *)buf =3D inb(port);
-> >  		return 1;
-> >  	case 2:
-> > +		if (port & 1)
-> > +			return -EINVAL;
-> >  		if (write)
-> >  			outw(*(u16 *)buf, port);
-> >  		else
-> >  			*(u16 *)buf =3D inw(port);
-> >  		return 2;
-> >  	case 4:
-> > +		if (port & 3) =20
->=20
-> Why fon't these use !IS_ALIGNED() anymore? You can use e.g. sizeof() to=20
-> connect it to the natural alignment of the type so you don't have to use=
-=20
-> literals at all.
+Hello Den-san,
 
-That just obfuscates what is going on....
+[...]
 
-David
+>>> That said, I agree that in general we should follow the R-Car reference manual
+>>> where possible, and your draft makes sense for that purpose. If we go that way,
+>>> I have one question: would we need a polling loop with a timeout
+>>> (PCIE_LINK_WAIT_MAX_RETRIES * PCIE_LINK_WAIT_SLEEP_MS) in
+>>> rcar_gen4_pcie_start_link(), similar to dw_pcie_wait_for_link()?
+>>
+>> This is a good point, and I think we probably shouldn't do it this way,
+>> because we can reuse the DWC core code for that purpose.
+>>
+>> How about extending the .link_up callback, and check both the SMLH/RDLH bits
+>> there (to fulfill the datasheet compliance, dw_pcie_start_link() is always
+>> followed by dw_pcie_wait_for_link() which calls the .link_up() callback) and
+>> the DEBUG1 bits (to make sure we check the current state of the link) ?
+>>
+>> That should cover all our concerns (datasheet compliance, DEBUG1 current
+>> state of link check, polling), shouldn't it ?
+> 
+> If you mean AND-ing the SMLH/RDLH check with the DEBUG1 check, that sounds
+> reasonable. We could clear the APP latches in .start_link(), before enabling
+> LTSSM, and leave them latched across .link_up() calls.
 
->=20
-> > +			return -EINVAL;
-> >  		if (write)
-> >  			outl(*(u32 *)buf, port);
-> >  		else
-> >  =20
->=20
+Yes, that.
 
+> Thanks for the suggestion!
+> 
+>>
+>>> P.S. I'll rebase v2 onto the latest pci/controller/dwc-rcar-gen4.
+>>
+>> Thank you, and I apologize for the inconvenience.
+> 
+> No worries at all. I just hadn't caught up with your X5H series.
+> I've now rebased v2 onto next-20260925, since the series also needs
+> b43aa6a6ebe8 ("arm64: dts: renesas: r8a779f0: Add GICv3 ITS and update PCIe nodes"),
+> as noted in the cover letter.
+
+Understood.
+
+-- 
+Best regards,
+Marek Vasut
