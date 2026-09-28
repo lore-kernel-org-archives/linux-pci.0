@@ -1,87 +1,66 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6FA033DEC8;
-	Mon, 28 Sep 2026 16:18:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAFD04E2F35
+	for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 16:20:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790612297; cv=none; b=ons6SBUA9f4/nZEb+t9cLbygBUpeTWt7Ad6RPkwZDHaWFEj7ZM7J5basNqCSB9pyaCbKyCNI44edaUfNP3DHC5Tr+p84x1rjf4es7grV1Y7HDkAAoxERqEH+/v4A9Uifz+W+c07QLJO0HxQt6JXUO2yGuUf+WFjRmntIhS2Deng=
+	t=1790612424; cv=none; b=RjprC+vJcI/y540mfNqOxBSBkhi16IKowZW/9SSV+41AaqNzM2TnbAru08BerPDDIh3Fegbn47Ty1xmmEwHCJVjuS6C8De0g10qUO7ds7hPgALqkRCn/uMexjIvzd+IGtHazLpa4alp0bYWcOnmlaiMwWRbuDyaaScaO61FoVRY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790612297; c=relaxed/simple;
-	bh=8lB/L25BR0WqiPJRqoFVhhskoHCDIdGlySOme8stKQU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=oLRXVj/X8L0Qnhw3DoVsv7k9QG/HFKJqiQNfZcSjiSeNTSfL2RH+tlRdNVFWUwkh6y4x/5jcwN1AUWTbDS5pFoe5/AN5EhAWGAgo9SqiJqBFYyruCJ4i1vXO3rnYW3pVq98pdAAW9lWaq5ZF/0DINFy67z70kIIUaGE82UFX4+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E5PO6l9V; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790612424; c=relaxed/simple;
+	bh=p9PEiSlA/jPUQ46miFxSEO0iX76mlXyBHBrdy/bhaRg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=rp3dw7W/20Qgaka8uqbBBqrjPH5bmvlXq+Mz5vzX906ux9KnNIEiQCVF4cNIdrtQUqZbGOoiFJzzRnhkuNiLgsOXTCL+xXfvfYeczBsyo0/ILf/i/mt8QYqSH2RJTqciJxsiqrwky+fPmUUzs0L70R2iraEyEU5MXSJ1lsB7l28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LVkCY17/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E5PO6l9V"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A78511F000FF;
-	Mon, 28 Sep 2026 16:18:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LVkCY17/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25A481F000FF;
+	Mon, 28 Sep 2026 16:20:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790612296;
-	bh=XTBPwNyPvxdYakQHXtSdu9252oBFhwM6n0M7vu0bEyU=;
-	h=From:To:Cc:Subject:Date;
-	b=E5PO6l9VMyxNWta8oi4xBRrE+MmumR85+jKa+mJUX651NH+P4VHFdLDJA/pfN6dbN
-	 LSG8X05HjxHpR4wceAN2ZV9gHrfD4ybbU/i1Lwdfp6WnYlCTaExA5YUb7ReOn+8P1d
-	 /ROQye0H0HR6ysCfICy9Z6oV4nDXXF07mdLqBw3dOh5TtaFnB9lHGxoYrRUnJ8uVI0
-	 UluNpfi/Rrul2S1XL14+Y+C0jvyJdhPotct1YlVeWfDdhU02sya6XP7aqCd+8L5x5o
-	 HTzLe3Ao1cKfkPDvADyaWt7RX9TwsMcKtS9miG3L4wnYyj9n+bHxE5CwM8ZDYT289y
-	 E4Igj/9zqlLbA==
-From: Arnd Bergmann <arnd@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Odell <loganodell@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Dan Williams <djbw@kernel.org>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-	David Matlack <dmatlack@google.com>,
-	=?UTF-8?q?H=C3=A5kon=20Bugge?= <haakon.bugge@oracle.com>,
-	Terry Bowman <terry.bowman@amd.com>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI/IOV: fix building without CONFIG_PCI_IOV
-Date: Mon, 28 Sep 2026 18:16:39 +0200
-Message-ID: <20260928161811.2846627-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.53.0
+	s=k20260515; t=1790612423;
+	bh=p9PEiSlA/jPUQ46miFxSEO0iX76mlXyBHBrdy/bhaRg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=LVkCY17/BRIwXBkG50bOH4y3FuDWTpfGMu7m9/c7KMKEd6q3W+9UC3ntQWmicUNyb
+	 jh4y6kYRmANLs0Hk6cai52quGIF1yek7kGXzt9otWA368ycpzXUb+2XOXsl3uXRsjO
+	 EqrVj6c5HGnVcW+RdpcLaTJBiBGHrl7J8AEP+e2V6xYLzfwks02Vrxwf354zJER/SR
+	 8k6iv/yK/+5rG2AOSex9ctE7D8Ikpu/oKzyiAMEpiPPH2EMaGBL6a36HLETs2FCpkx
+	 0/OrUueQRts7vZB6ZQDiEacPh4/iBRgP7VSdBPuvU58ZHbVnHvo5qKq//3DbSuo+vM
+	 DhIaEtTv/Fbwg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI/IOV: fix building without CONFIG_PCI_IOV
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Arnd Bergmann" <arnd@kernel.org>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260928161811.2846627-1-arnd@kernel.org>
+References: <20260928161811.2846627-1-arnd@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 28 Sep 2026 16:20:22 +0000
+Message-Id: <20260928162023.25A481F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-From: Arnd Bergmann <arnd@arndb.de>
+> From: Arnd Bergmann <arnd@arndb.de>
+>=20
+> The newly added code dealing with virtual functions causes
+> a harmless build warning:
+>=20
+> drivers/pci/probe.c: In function 'pci_class':
+> drivers/pci/probe.c:1902:12: error: unused variable 'rev' [-Werror=3Dunus=
+ed-variable]
+>=20
+> Move the unused variable into the #ifdef block that uses it.
+>=20
+> Fixes: 8a2a9fa37b81 ("PCI/IOV: Read VF config values that need not match =
+PF")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-The newly added code dealing with virtual functions causes
-a harmless build warning:
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-drivers/pci/probe.c: In function 'pci_class':
-drivers/pci/probe.c:1902:12: error: unused variable 'rev' [-Werror=unused-variable]
-
-Move the unused variable into the #ifdef block that uses it.
-
-Fixes: 8a2a9fa37b81 ("PCI/IOV: Read VF config values that need not match PF")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/pci/probe.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 833ce364f880..1ff07c592857 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1899,9 +1899,9 @@ int pci_cfg_space_size(struct pci_dev *dev)
- static u32 pci_class(struct pci_dev *dev)
- {
- 	u32 class;
-+#ifdef CONFIG_PCI_IOV
- 	u8 rev;
- 
--#ifdef CONFIG_PCI_IOV
- 	if (dev->is_virtfn) {
- 		if (pci_read_config_byte(dev, PCI_REVISION_ID, &rev))
- 			rev = 0;
--- 
-2.53.0
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260928161811.2846=
+627-1-arnd@kernel.org?part=3D1
 
