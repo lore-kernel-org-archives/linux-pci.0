@@ -1,49 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 582B22EEE9E;
-	Mon, 28 Sep 2026 22:24:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6E0C503902;
+	Mon, 28 Sep 2026 22:26:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790634285; cv=none; b=Dr/iaOXaVKHPYkhJyqB772PlkUMrmsBGglk3Cdj6agZOdtPC94EH7O0mAZWaQhL2EulbtqwX7CEQSKTfhOSOyN3F0uDgojWNZVbpoe9YsImcT8V8rL0LrhwR5csQ8l3EvakEa2cemLDQH6Mg57aGjUHRuAg91wjtN44WT3v5SNc=
+	t=1790634415; cv=none; b=bFCID5i5LJtD02F1in5HHnhRd2ySbjrtrTN7zIDHV+wVlvqStsmOjwAZzIAqSU7aul+AHRh9B3aVbzi2/QQ+rqixNc0renm0waeh3WyUPyH3oEksJd7L+F3lsxN0W58icGSZt/AMNmnwJUGRK+UeJ18i4qz0hlY8yUWVjGHoE94=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790634285; c=relaxed/simple;
-	bh=CQ1sHx0JdzzR5DVXNUibmZyTLdxwADEgfkQSPEiTcW0=;
+	s=arc-20240116; t=1790634415; c=relaxed/simple;
+	bh=0DBxCiH408Pe0fMFfF8zyo/f9bpP7Vr6FroWcHTkjvc=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=DSVr9U9LZCTqflYl0DOw/r3iMRHKE/jaCGmy32KNimtC7uB2XD01EU6cfy2+k24cWDyfo6pnSpLyzZ+I1T6V/+ii18kae1l5zN/xukhPfQ4rk6RDyx66X6zD0UdSRXXmpfZ+daUNBL6Eq80TyJtipYr5C/xlUXKj9RKKLNZm5kk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F/m4TO+b; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=KlsQgdjaPQR9Oj0CYq+ec7oPuz4hu3xFjnWx+MEYriEZ7P6w7vR3GN0+hGKQ8OYVke4mCB/lh3AMmIZVNZdo7AkSL79aZCBhHYCP5gghIdl1Rk4WuNhtbvnSvXgdo5WJhQXIjvhuncl34EFQRjiWI2qQqGUyfxUuUACO1Olp2To=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=adtBzOQD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F/m4TO+b"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A16091F000FF;
-	Mon, 28 Sep 2026 22:24:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="adtBzOQD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B6481F000FF;
+	Mon, 28 Sep 2026 22:26:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790634283;
-	bh=QXHVC5yMZceL5J1JsKV4vQfSwG3c2NxZWnu6Pfi0xFw=;
+	s=k20260515; t=1790634411;
+	bh=U1dmN/zp44H2KfU4Iegnm1vOzdW2Hcje7Muo8x+avQU=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=F/m4TO+b8y+Bwyx9DgGsfW0txIaTWEuEM6ClnjSJfebYcblSdTTjbzP1Fcioz33Pd
-	 z3mvkX5AA3HiF+s2GgpeYaqXzJNxX2cIb9F2uS6yG//b3i7eeqkqU+fusQmhy7ni6i
-	 zmSxlnBxTofWY65Q/tGeTVyQhIL9s/EEtOJ/6+9vtVPgEcN4QjaxRS0OBAxwGBuDsM
-	 vl4NblMQBj/oOcOrChd2PZJMbltqau8oJvI50Kx+BEqLH8uOINJAuCsGRWERYM8WMW
-	 kHViKsa++YJSl9B8dh2Q39BC/C2THqEfjkKB/ofLWXMqMUqQtxKe9SP4IWb349mMBh
-	 QjlNROFCx2nEg==
-Date: Mon, 28 Sep 2026 17:24:42 -0500
+	b=adtBzOQD0BCFj1XagHswtxBjyOHynKVVQfNGDFWOtwJto5YmXKoIFGjqFEMMoSP53
+	 MvIaiW6nJXWqqkGgZxiW7dtTv/Gz67QUVCgadGnaky0YeTi7RN0bFGEaZY1DMu0hma
+	 Y8Z0UM8au2o7wz2cURz8ZUUHdnqd4aXtFZbkeyewmL7zFPlhvGgL7YGDlO4PWwZhRN
+	 2elswE8P/uXy3Rb8ww9+KlIyOCvabaxUEbgz4QOLkgBbqfsueoEdNwWKFYOUiO04ll
+	 N3Vk6EfDVU2mhjUhCSZaOMX4sRvom1+enlcRdQnOZAandwcy0EwkG3MeR4qsbjtYdo
+	 1mjSHgZryr1Eg==
+Date: Mon, 28 Sep 2026 17:26:50 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marek Vasut <marek.vasut@mailbox.org>
-Cc: linux-pci@vger.kernel.org,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH v5 6/6] PCI: dwc: rcar-gen4: Add support for R-Car X5H
- PCIe4
-Message-ID: <20260928222442.GA2266778@bhelgaas>
+To: Arnd Bergmann <arnd@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Odell <loganodell@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Dan Williams <djbw@kernel.org>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	David Matlack <dmatlack@google.com>,
+	=?utf-8?B?SMOla29u?= Bugge <haakon.bugge@oracle.com>,
+	Terry Bowman <terry.bowman@amd.com>,
+	Heiner Kallweit <hkallweit1@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/IOV: fix building without CONFIG_PCI_IOV
+Message-ID: <20260928222650.GA2268446@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,66 +50,57 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3bb47958-09e2-4726-85e3-8e5d3873840e@mailbox.org>
+In-Reply-To: <20260928161811.2846627-1-arnd@kernel.org>
 
-On Mon, Sep 28, 2026 at 11:32:37PM +0200, Marek Vasut wrote:
-> On 9/28/26 11:01 PM, Bjorn Helgaas wrote:
-> > On Mon, Sep 21, 2026 at 10:27:48PM +0200, Marek Vasut wrote:
-> > > Add support for R8A78000 (R-Car X5H) PCIe4.
-> > > 
-> > > This driver previously supported R-Car Gen4 S4/V4H/V4M. PCIe features
-> > > of R-Car X5H PCIe4 are almost all the same.
-> > > 
-> > > The controller initialization sequence is slightly different and is
-> > > factored out into controller specific callbacks, in a manner similar
-> > > to previous R-Car Gen4 handling.
-> > > 
-> > > The controller does have a PHY attached to it, but the PHY is operated
-> > > by a separate PHY driver, the PHY driver instance binding is handled
-> > > in rcar_gen4_pcie_get_resources() and controlled in the aforementioned
-> > > controller specific callbacks.
-> > > 
-> > > The controller driver is deliberately using "renesas,rcar-gen5-pcie4"
-> > > DT compatible string to discern R-Car X5H PCIe4 controller supported
-> > > by this driver, from R-Car X5H PCIe6 controller which will most likely
-> > > use a separate driver.
-> > 
-> > The gen5/pcie4 usage is confusing.
-> > 
-> > I often push back on things like "PCIe Gen4" because it's ambiguous
-> > (does it mean "compliant with base spec r4.0" or "supports 16 GT/s" or
-> > something else), but it's so widely used to mean transfer rate that
-> > it's hard to resist, and the best I can hope for is clarification.
-> > 
-> > But in "renesas,rcar-gen5-pcie4", I don't know what the 5 and the 4
-> > mean.  Maybe "gen5" refers to some internal R-Car thing, and "pcie4"
-> > is something like "PCIe Gen4, i.e., 16 GT/s"?
+On Mon, Sep 28, 2026 at 06:16:39PM +0200, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
 > 
-> Gen5 refers to R-Car Gen5 (5th R-Car SoC generation).
+> The newly added code dealing with virtual functions causes
+> a harmless build warning:
 > 
-> PCIe4 refers to the PCIe Gen4 core in the R-Car Gen5 SoC. There is also PCIe
-> Gen6 core in the same SoC, but that will require a different driver and
-> different compatible string.
+> drivers/pci/probe.c: In function 'pci_class':
+> drivers/pci/probe.c:1902:12: error: unused variable 'rev' [-Werror=unused-variable]
 > 
-> Since none of this shipped in any kernel version yet, would you prefer some
-> sort of rename ? I can send patches.
+> Move the unused variable into the #ifdef block that uses it.
+> 
+> Fixes: 8a2a9fa37b81 ("PCI/IOV: Read VF config values that need not match PF")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Huh.  TIL that pcie-rcar-gen4.c refers to the 4th generation R-Car
-SoCs (and, I guess the point of this series is to add support for 5th
-generation SoCs), not to PCIe Gen4 link speeds.  I see that
-"renesas,rcar-genX" is all over the place in 'compatible' strings, so
-I guess we should follow that precedent.
+Thanks, I fixed this similarly:
 
-If the "renesas,rcar-gen5" SoC includes both PCIe Gen4 and PCIe Gen6
-cores, I suppose everybody refers to them as pcie-gen4 and pcie-gen6,
-so the "renesas,rcar-gen5-pcie4" you used is probably the obvious
-choice.
+https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=virtualization
 
-But maybe we can make commit logs less confusing by saying things
-like:
+   #ifdef CONFIG_PCI_IOV
+  -	if (dev->is_virtfn)
+  -		return dev->physfn->sriov->class;
+  +	if (dev->is_virtfn) {
+  +		u8 rev;
+  +
+  +		if (pci_read_config_byte(dev, PCI_REVISION_ID, &rev))
+  +			rev = 0;
+  +		return (dev->physfn->class << 8) | rev;
+  +	}
+   #endif
 
-  - R-Car Gen4 SoCs S4/V4H/V4M
-  - R-Car Gen5 SoC X5H
-  - the R-Car Gen5 SoC PCIe Gen4 core
-  - the R-Car R8A78000 X5H PCIe Gen4 core, which supports a x8 link at
-    16 GT/s
+> ---
+>  drivers/pci/probe.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 833ce364f880..1ff07c592857 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1899,9 +1899,9 @@ int pci_cfg_space_size(struct pci_dev *dev)
+>  static u32 pci_class(struct pci_dev *dev)
+>  {
+>  	u32 class;
+> +#ifdef CONFIG_PCI_IOV
+>  	u8 rev;
+>  
+> -#ifdef CONFIG_PCI_IOV
+>  	if (dev->is_virtfn) {
+>  		if (pci_read_config_byte(dev, PCI_REVISION_ID, &rev))
+>  			rev = 0;
+> -- 
+> 2.53.0
+> 
