@@ -1,95 +1,77 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C95F3336897;
-	Mon, 28 Sep 2026 01:41:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CB9E3101A6;
+	Mon, 28 Sep 2026 01:41:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790559680; cv=none; b=bYBGNEbbO1PtNwOTUNHP6BX1sEwFMwcy8Sn/khdo/Rmsko2jUfjkFDXP1bVU2/3sS1uf/Szh4sx5qzm3BTfJ+f6wiIqdgaOLrLNOq/ruxZuc1wy7TRWD1WeKDdGk2rsLSjeDnvIVj6tB0I0yDQ16KQ7Y8jinA2/85IcbnmKBT24=
+	t=1790559690; cv=none; b=MA66Vc2obJsMucYA4nJjeKZrcY8eXTst5Pp4I7AA4cBTiKB9p2Il1g6K2VU2ZqfOSLnf9AIYY1tO8lYQ49ymtelEUsDgagLTzea02xOppEB0Mh/Q/10iRvuN3Q5SFzn43dP/LSR5AxqThm/ZMzNUhj2YUQt2u29oNnuTMVYtT44=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790559680; c=relaxed/simple;
-	bh=yqIWUQOUYo8S4TJWWwavGT3dpKBWF3mqA5+hNN9UBd0=;
+	s=arc-20240116; t=1790559690; c=relaxed/simple;
+	bh=4r9PrqNJrYf2aflSBP+gznOQUzIaQDale1DSwlADyuU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=QFHoNj08Lp047MGD0fEIL6ffvcwVA9yizUaP0uIAqgPV72FCYh1XzgiLyuikWwk1SaMOevvN9+vyzKrt0UupQrY1yE2984elp+jat1qL7yZaNdQDQtghiXNz3clF+0G3uXFTp3IW2g3wD4lv+eBldvZ5vYE+y0w8T784+zrpCX8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dnk8YiR2; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=E6hZeE/J3V3UbFF6IvzkB4wNm9jMb/JaG43P9opTHvpTKFzlcwyNA77thTRULq0cDcpXzB9+OMMGjjNpioKkTY78751bsKXFb7hR4D0ptUDSDPgPCl8dsJym1BdslWVKQfgbmKKrzjiCnbZqsaDhdv1681oa8IcV3/8GXDW4goE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K9dvD+L4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dnk8YiR2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DCD41F000FF;
-	Mon, 28 Sep 2026 01:41:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K9dvD+L4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E06A81F000FF;
+	Mon, 28 Sep 2026 01:41:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790559678;
-	bh=t2wBN4JimPRlQV7l4QBz0u7B1mulufV8GvP3NTC1Vmw=;
+	s=k20260515; t=1790559689;
+	bh=4r9PrqNJrYf2aflSBP+gznOQUzIaQDale1DSwlADyuU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Dnk8YiR2UtlMIKs8mfAE1KQClK+KBigouRIYn+S01w+zq87UsJPrtx36wGPhrGb4m
-	 nfev4Z4kMswGDY+ZA/9aTNJblEl4DehsY9eiKJqj5GixqAfi+neLjPFqk3ze3yASyp
-	 +PkFUN9ApgPuGhT6tbeZHOFS/5xlKDIEQk4VYbfYe6CRZ/XDxdZWN/XbW0o1gW4COu
-	 mcd9E+hN8hRMA1p6CtO8RrKfpR4Ldk0WYMnWKgd1QP143AEyVViO8nKoFIbWr/LQlE
-	 ie7ytN/aEuuqPqDp4S4nY1GEUxN/sXhZiXMzF7yC+wIekbsDmdqstXB4f1d0qX8h7k
-	 3T9fiI4gzanRg==
+	b=K9dvD+L4Fr/Pktfryf/ea5+L4V61zSgKiByYbWlqDYWaa45yT7jPU3fEK0roX13gh
+	 T+Eue5ZSYIStQg10t+LXzFRWJGR6xJn1PkO5JxnKDhNG1enUnWkVU5PnMtQz4k0I2U
+	 qSzaAsXrW4wT1CEJUs7ixuxME/eEdlB9t8IADpM7T/95Iw+l0l9CdLstcImTso7r38
+	 JHq0kD2JAYiXXs5XjrFt7ugvD2JU4YBCMDiBlIL+mMf3C1opaOjrNb3G7AVd/aDQNh
+	 7bNZ7zaQe+t7qBYZM4qjlkbDnDyh8vuWmAOeo9Z6rnqpNPr/8jgLffKw04bfRZqxwO
+	 en0qHwjmnv5Sg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 21/22] rust: allow extracting the buffer from a
- CString
+Subject: Re: [PATCH v4 04/22] rust: validate: add `Validate` trait
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com
-Cc: ojeda@kernel.org, linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org, gary@garyguo.net
-In-Reply-To: <20260928013123.566184-3-alistair.francis@wdc.com>
+Cc: linux-pci@vger.kernel.org, ojeda@kernel.org, linux-cxl@vger.kernel.org, gary@garyguo.net
+In-Reply-To: <20260928011123.450800-5-alistair.francis@wdc.com>
 References: <20260928011123.450800-1-alistair.francis@wdc.com>
- <20260928013123.566184-1-alistair.francis@wdc.com>
- <20260928013123.566184-3-alistair.francis@wdc.com>
+ <20260928011123.450800-5-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 28 Sep 2026 01:41:17 +0000
-Message-Id: <20260928014118.1DCD41F000FF@smtp.kernel.org>
+Date: Mon, 28 Sep 2026 01:41:28 +0000
+Message-Id: <20260928014128.E06A81F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] rust: str: CString::into_vec() ambiguously retains NUL terminator
---
+> From: Benno Lossin <benno.lossin@proton.me>
+>=20
+> Introduce the `Validate<Input>` trait and functions to validate
+> `Untrusted<T>` using said trait. This allows one to access the inner
+> value of `Untrusted<T>` via `validate{,_ref,_mut}` functions which
+> subsequently delegate the validation to user-implemented `Validate`
+> trait.
+>=20
+> The `Validate` trait is the only entry point for validation code, making
+> it easy to spot where data is being validated.
+>=20
+> The reason for restricting the types that can be inputs to
+> `Validate::validate` is to be able to have the `validate...` functions
+> on `Untrusted`. This is also the reason for the suggestions in the
+> `Usage in API Design` section in the commit that introduced
+> `Untrusted<T>`.
+>=20
+> The `Validate::validate()` function allows additional context to be
+> passed, which can be used as part of the validation process. For example
+> comparing data against already negotiated information.
+>=20
+> Signed-off-by: Benno Lossin <benno.lossin@proton.me>
+> Message-ID: <20250814124424.516191-4-lossin@kernel.org>
+> Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
 
-commit 2eeadc6d96d6cb1bbc75fa7b1a4d782fb1ed8cd5
-Author: Alistair Francis <alistair@alistair23.me>
-rust: allow extracting the buffer from a CString
-
-This patch introduces a method to consume a CString and retrieve its
-underlying buffer. It allows users to convert a string to a CString and
-then access the internal KVec directly.
-
-> diff --git a/rust/kernel/str.rs b/rust/kernel/str.rs
-> index a556788bcc5e9..3fd8a218547f4 100644
-> --- a/rust/kernel/str.rs
-> +++ b/rust/kernel/str.rs
-[ ... ]
-> @@ -870,6 +870,12 @@ pub fn try_from_fmt(args: fmt::Arguments<'_>) -> Res=
-ult<Self, Error> {
->          // exist in the buffer.
->          Ok(Self { buf })
->      }
-> +
-> +    /// Return the internal buffer while consuming the original [`CStrin=
-g`]
-> +    #[inline]
-> +    pub fn into_vec(self) -> KVec<u8> {
-> +        self.buf
-> +    }
-
-[Severity: Low]
-This isn't a bug, but could the name of this method cause confusion about
-whether the NUL terminator is retained in the returned vector?
-
-In the standard library, std::ffi::CString uses into_bytes() to drop the
-terminator and into_bytes_with_nul() to retain it. Because into_vec()
-silently retains the trailing NUL byte, could developers assume it drops
-it, similar to standard string conversions?
-
-Could this lead to regressions like off-by-one errors or embedded NUL bytes
-when the buffer is used for network payloads? Would it be clearer to use a
-naming convention that explicitly indicates the presence of the terminator?
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260928011123.4508=
-00-1-alistair.francis@wdc.com?part=3D21
+00-1-alistair.francis@wdc.com?part=3D4
+
