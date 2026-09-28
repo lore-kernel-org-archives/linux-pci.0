@@ -1,66 +1,74 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7F46360ED0;
-	Mon, 28 Sep 2026 01:47:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A54892AD0C;
+	Mon, 28 Sep 2026 02:11:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790560042; cv=none; b=C2Ho/nQWJdtRdwI96gE8Uh9FEMYagyDiBCYtN/ZI8Ss1dLhhFxWdXja0EIfOtK6XOPK3yZWd5PPqlarhztzL5wF33O37TvBJBM/ZcQrdlEEiERQKm/jdcabfRCN8XAAIE6nwhDrQGJqg586Cwpi26M868GXOqWTb/rMwBVA3dR4=
+	t=1790561491; cv=none; b=qDJK4YD+C6UTEao7zVGnie9/00lp0XNiRcCyBIS6kOo22/CUYIlP6C9+SoPZDNsfcIQzK5xQiWq5Jd3KuEht7b0nNvXdVxpfnVQzErJvGdlVrEHEcOlkFcvBrpnGVEWofBVN7ishFGrW5rd/kRHiK+v7MPItI+D+YK7g69SWN68=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790560042; c=relaxed/simple;
-	bh=45UZnj4pb8I74EMWo14ztAnZ0B5QwuTZAvCkzT2e5iU=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=crBLV9c+TwxCJnOcjHtSeEI3UtX83uKKcutij1ADp8tU86X1N28Xb1Mqb79S57kk7WSX9zRJkKCVI+8VKj73fn3HH9Tx7rThDLIrYpe/2RuNtYItucCp9lGWash2MwVrNKF8N4IOTramXrM4mI5KMODYJn+5pGS8UQ2En5aVB2c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gu3w6TW/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790561491; c=relaxed/simple;
+	bh=jsCIRLSgX9Iz5Hrutn0S/xZpHnwv1ekhNiNsimpHOe4=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=kNJlkSYESVumBBrwMocmISedQnC5xqVXJ/5S+PJbYxMM7E1K0I9C65sDw7fKdQuHl4buUhTW9D5dUmFyZ3JbnE54gaTKEwBOZgm/E9nrc1ADprAyeRSowMxFbqJx7dLqrv3kFbzLR8urdKsonVotshtY4gsjn+feYVc3KclO2iM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lD32weZR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gu3w6TW/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C11C1F000FF;
-	Mon, 28 Sep 2026 01:47:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lD32weZR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54DA61F000FF;
+	Mon, 28 Sep 2026 02:11:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790560040;
-	bh=45UZnj4pb8I74EMWo14ztAnZ0B5QwuTZAvCkzT2e5iU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Gu3w6TW/AxNx4PzgMxVaZI4MBbLBYYiLkAYQw0HC3LGHS6M0Q6F6ThrhBCachbu2+
-	 2grdY35xoF6S78lDHKqSV1so3gVigaLn9imhVlxn9xAKJK2WnwOTD0GudBbo65L2AB
-	 W0FLmpQI82bHMqKdj0GM9yNZp4UI/6S9AQRofM3a3k3ZtMxipNEmjVoaZ5j+8vLa7y
-	 1F7bS8rbnJaRSLL/2vtgTDATtFPaRKWWqpn4AvRbm4rgDaNCN+HH5OYnU8dqCLLEYg
-	 kEK2DuAnclgZTw62Dt3AKS/ZrvXAHwFIenjHBJUFPflBNKzEF03S4c1mCbLqj4XZ15
-	 kFMnYReI+ua9g==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 20/22] lib: rspdm: Support SPDM certificate
- validation
-Reply-To: sashiko-reviews@lists.linux.dev
-To: alistair23@gmail.com
-Cc: linux-cxl@vger.kernel.org, ojeda@kernel.org, linux-pci@vger.kernel.org, gary@garyguo.net
-In-Reply-To: <20260928013123.566184-2-alistair.francis@wdc.com>
-References: <20260928011123.450800-1-alistair.francis@wdc.com>
- <20260928013123.566184-1-alistair.francis@wdc.com>
- <20260928013123.566184-2-alistair.francis@wdc.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 28 Sep 2026 01:47:20 +0000
-Message-Id: <20260928014720.6C11C1F000FF@smtp.kernel.org>
+	s=k20260515; t=1790561490;
+	bh=7kF1jCJXQPGQnKzu7bfD8o9+bY/4lVV7oKw9/3UQFts=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=lD32weZR6knzm+bzjW07TKW4uUzlE9c8JSNykjhVCxOI9mpkJWRvp/ByDzjVJLxCz
+	 VOzGBJTndO6dGdiSbml8QobTchASjXCEOmXfJd/w5d/oUr3+63Ff0A0dFJiAhpo8xC
+	 XbdqbMao0sfy3G7w4NwTYCwOpcEjdrnL2Ik+o4HPalEwak/zfaLemjkZgX+RIb4udy
+	 jgB4aD74zV57ZSxCGUnBjZBCAmNZ92rkRvrJx+sEfejJ99PryiO77cK68IiH8wZrDA
+	 HgWsKgud/tLLpL8ocjQ8piQRUJu85UHm7wtGXvM0ghZspRLtA62DwU+4nc9u2fK2AK
+	 G1lt6lan3S3Nw==
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: linux-pci@vger.kernel.org, Myeonghun Pak <mhun512@gmail.com>
+Cc: thomas.petazzoni@bootlin.com, pali@kernel.org, lpieralisi@kernel.org, 
+ kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, 
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ Ijae Kim <ae878000@gmail.com>
+In-Reply-To: <20260910221725.91980-1-mhun512@gmail.com>
+References: <20260910221725.91980-1-mhun512@gmail.com>
+Subject: Re: [PATCH] PCI: aardvark: Disable PHY on probe failures
+Message-Id: <179056148593.292653.12177941977002115273.b4-ty@b4>
+Date: Mon, 28 Sep 2026 04:11:25 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Mailer: b4 0.15.2
 
-> From: Alistair Francis <alistair@alistair23.me>
->=20
-> Support validating the SPDM certificate chain. This only performs basic
-> sanity checks on the chain before we continue on. This does not ensure
-> that the root CA is trusted, we leave that for userspace to check and
-> enforce. Instead we just make sure that the chain is correct, uses
-> supported signatures and that it isn't blacklisted in the kernel.
->=20
-> We then store the first leaf certificate for use later.
->=20
-> Signed-off-by: Alistair Francis <alistair@alistair23.me>
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+On Thu, 10 Sep 2026 18:17:25 -0400, Myeonghun Pak wrote:
+> advk_pcie_setup_phy() initializes and powers on the PHY before the
+> emulated bridge and IRQ domains are created.  If any of those later
+> initialization steps or pci_host_probe() fails, probe returns without
+> powering off or exiting the PHY.
+> 
+> Replace the direct returns with staged cleanup labels.  Remove IRQ
+> domains in reverse order, release the emulated bridge allocation only
+> after successful initialization, and disable the PHY on every failure
+> after advk_pcie_setup_phy() succeeds.  A setup_phy() failure still
+> returns directly, so its partial internal cleanup is not repeated.
+> 
+> [...]
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260928011123.4508=
-00-1-alistair.francis@wdc.com?part=3D20
+Applied, thanks!
+
+[1/1] PCI: aardvark: Disable PHY on probe failures
+      commit: 28cc5bc5a6c6cffbe7ba27c0acbfbe06747fa173
+
+Best regards,
+-- 
+மணிவண்ணன் சதாசிவம்
+
 
