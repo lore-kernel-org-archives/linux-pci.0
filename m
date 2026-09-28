@@ -1,42 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A54892AD0C;
-	Mon, 28 Sep 2026 02:11:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44486361DD5;
+	Mon, 28 Sep 2026 03:10:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790561491; cv=none; b=qDJK4YD+C6UTEao7zVGnie9/00lp0XNiRcCyBIS6kOo22/CUYIlP6C9+SoPZDNsfcIQzK5xQiWq5Jd3KuEht7b0nNvXdVxpfnVQzErJvGdlVrEHEcOlkFcvBrpnGVEWofBVN7ishFGrW5rd/kRHiK+v7MPItI+D+YK7g69SWN68=
+	t=1790565012; cv=none; b=nO+QLbDjT/xjmMs1yrxcLgQeOEkZM1qKewA75Yp9znvu3PWXH4nZLlCep8xKkBasMcNSKZcB1+xJYMT2GFat4iq+RPrr7Qd3qMrhJZbgPhLw8qQzUGBZdwcjkzSG0V17/qRREIKze6Sg1PNsib0EpusYBhM+PNImFK259Rgps9k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790561491; c=relaxed/simple;
-	bh=jsCIRLSgX9Iz5Hrutn0S/xZpHnwv1ekhNiNsimpHOe4=;
+	s=arc-20240116; t=1790565012; c=relaxed/simple;
+	bh=s4i7bjQS3hTJqcapsRCQwavARHyKb9RyH9bZl2AuNr8=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=kNJlkSYESVumBBrwMocmISedQnC5xqVXJ/5S+PJbYxMM7E1K0I9C65sDw7fKdQuHl4buUhTW9D5dUmFyZ3JbnE54gaTKEwBOZgm/E9nrc1ADprAyeRSowMxFbqJx7dLqrv3kFbzLR8urdKsonVotshtY4gsjn+feYVc3KclO2iM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lD32weZR; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=ukYjEfPEJRmvI4roIU3n5A7GusxdhMPsc5dLy5oZcLJxXQrmBLG05o9IdIWdgRU23XO1clfVcNmRpP1fiEHHwpJp0LO0lFm6PWY8JBzXGIoh7IejJTIX1580loETLmaMQm2ADFjVALVwCG/uXgxTuXKdxauMcBYYoCgwKJD24/A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e5D282Bw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lD32weZR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54DA61F000FF;
-	Mon, 28 Sep 2026 02:11:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e5D282Bw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D4031F000FF;
+	Mon, 28 Sep 2026 03:10:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790561490;
-	bh=7kF1jCJXQPGQnKzu7bfD8o9+bY/4lVV7oKw9/3UQFts=;
+	s=k20260515; t=1790565011;
+	bh=572ZApzffR2V5WVZZG923BXMb95uxq8rXlHIXJhmvi4=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=lD32weZR6knzm+bzjW07TKW4uUzlE9c8JSNykjhVCxOI9mpkJWRvp/ByDzjVJLxCz
-	 VOzGBJTndO6dGdiSbml8QobTchASjXCEOmXfJd/w5d/oUr3+63Ff0A0dFJiAhpo8xC
-	 XbdqbMao0sfy3G7w4NwTYCwOpcEjdrnL2Ik+o4HPalEwak/zfaLemjkZgX+RIb4udy
-	 jgB4aD74zV57ZSxCGUnBjZBCAmNZ92rkRvrJx+sEfejJ99PryiO77cK68IiH8wZrDA
-	 HgWsKgud/tLLpL8ocjQ8piQRUJu85UHm7wtGXvM0ghZspRLtA62DwU+4nc9u2fK2AK
-	 G1lt6lan3S3Nw==
+	b=e5D282Bw7e+LCL3BfaBn/xHL5axhjK4+/hI1+KnHpF0fOc4M9VGiMkah8tqedfPPl
+	 4VozO5QljckrQqi8d0htX/SoPJlvWkhnhUZYftpsleLPSrpkm19v4PDxW1CzQfvcEI
+	 vDlTuAQ30QQ7t83WpGIWk0dgxvid1/E1R01F0+s1m5/lpAf311A+12PDXutGyY3ySF
+	 y8/WERcDxVbsK1VAZBfzo4ai8jbwwRtZApBBw0wZwMKn6B589YPSX9y97ceVN87k4O
+	 u2invxepd54ZbZSaXlzT5kqIp5XK1U8UbNev8wcVzBZdFcoBOesOvJYB4qAGxkQiLq
+	 bdH8j9IeCzd4w==
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: linux-pci@vger.kernel.org, Myeonghun Pak <mhun512@gmail.com>
-Cc: thomas.petazzoni@bootlin.com, pali@kernel.org, lpieralisi@kernel.org, 
- kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, 
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
- Ijae Kim <ae878000@gmail.com>
-In-Reply-To: <20260910221725.91980-1-mhun512@gmail.com>
-References: <20260910221725.91980-1-mhun512@gmail.com>
-Subject: Re: [PATCH] PCI: aardvark: Disable PHY on probe failures
-Message-Id: <179056148593.292653.12177941977002115273.b4-ty@b4>
-Date: Mon, 28 Sep 2026 04:11:25 +0200
+To: lpieralisi@kernel.org, kwilczynski@kernel.org, bhelgaas@google.com, 
+ helgaas@kernel.org, heiko@sntech.de, yue.wang@Amlogic.com, 
+ Hans Zhang <18255117159@163.com>
+Cc: pali@kernel.org, neil.armstrong@linaro.org, robh@kernel.org, 
+ jingoohan1@gmail.com, khilman@baylibre.com, jbrunet@baylibre.com, 
+ martin.blumenstingl@googlemail.com, cassel@kernel.org, 
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-amlogic@lists.infradead.org, 
+ linux-rockchip@lists.infradead.org
+In-Reply-To: <20260911162537.469018-1-18255117159@163.com>
+References: <20260911162537.469018-1-18255117159@163.com>
+Subject: Re: [PATCH 0/2] PCI: dwc: Clean up DWC PCIe register macros
+Message-Id: <179056500511.302500.18235445992989185257.b4-ty@b4>
+Date: Mon, 28 Sep 2026 05:10:05 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,24 +52,24 @@ Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.15.2
 
 
-On Thu, 10 Sep 2026 18:17:25 -0400, Myeonghun Pak wrote:
-> advk_pcie_setup_phy() initializes and powers on the PHY before the
-> emulated bridge and IRQ domains are created.  If any of those later
-> initialization steps or pci_host_probe() fails, probe returns without
-> powering off or exiting the PHY.
+On Sat, 12 Sep 2026 00:25:35 +0800, Hans Zhang wrote:
+> This series cleans up the DWC PCIe controller register macros to better
+> match the Synopsys DesignWare PCIe Controller Reference Manual, and
+> removes an unused set of iATU unroll register definitions.
 > 
-> Replace the direct returns with staged cleanup labels.  Remove IRQ
-> domains in reverse order, release the emulated bridge allocation only
-> after successful initialization, and disable the PHY on every failure
-> after advk_pcie_setup_phy() succeeds.  A setup_phy() failure still
-> returns directly, so its partial internal cleanup is not repeated.
+> Patch 1 renames various register and field macros, dropping redundant
+> PCIE_ prefixes and using documented base names.  Field macros are
+> renamed consistently so their register association is clear.  No
+> functional change intended.
 > 
 > [...]
 
 Applied, thanks!
 
-[1/1] PCI: aardvark: Disable PHY on probe failures
-      commit: 28cc5bc5a6c6cffbe7ba27c0acbfbe06747fa173
+[1/2] PCI: dwc: Align register macros with Synopsys documentation
+      commit: f29719b5064c07cec23c928055df302181374df5
+[2/2] PCI: dwc: Remove unused PCIE_ATU_UNR_* register definitions
+      commit: 4996364a46e738cc455f5fa9b8b09f2f3348bcc9
 
 Best regards,
 -- 
