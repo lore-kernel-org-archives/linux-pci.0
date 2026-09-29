@@ -1,56 +1,56 @@
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D38FF3DB31B
-	for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 03:45:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 772E2382F2F
+	for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 03:45:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790653521; cv=none; b=EIZfvmiv+YUbl+fKNAqT3kVdKL4T5Bc6+1bQa2cE6hGSGoHjemZed5SZuHciqxB0tKmvyTgcPpckmzxF5XVV6Fgri2eWrqZdcHDYYXLH9q8BpurPdCSCIwb604uJy41tDuHV6v60CrUGMkwLLMBeuvK/wWWkGCB6ZzFYFhlhEnI=
+	t=1790653523; cv=none; b=UBJZmnYgwgFRmFeJh1lGLCnktZEcsNTpWvu29xhLe28QagOUKDlFd+lE0ZlX84aAfPbw1adWCESRxhRGSriCwN9SZ2/vSvRdvYs/2znxz+RFADYlc6OwephErAWkI2zvEi+2KVtBx5dRW6ml+lyj0mPYKGg5j75btd6UlMo1pas=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790653521; c=relaxed/simple;
-	bh=pE26nF1O+gywfS7XBjjrgnl7qbj8WmsIYOvIg08cyIM=;
+	s=arc-20240116; t=1790653523; c=relaxed/simple;
+	bh=fFhDv6xiTzoP5mXky/YcdL+5KxtKOvsug5MtllavMrg=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=s8AErPvXt/5vrNb3PwoN27yTviZpndIDf2QQtLBrkncO+pZgqCaCwvzqcbMnDly0JwgwnjDO5zyoi9Rs9EJ0VdjHhYbhBYQ/ad0wJ3g5ky92hmL39OFnnOHvYc3riO0fElFsmk6AJo3YHjQtyvsGmb++StH0bwVHRHF/fuPP3b8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=VBFr4Lm6; arc=none smtp.client-ip=209.85.210.200
+	 To:Cc:Content-Type; b=T2xMuzCnogq1ZpAPJg0DVUv2iusouveoy/jA6dZEJHAId3G53hUEPhHY/kRaTXrp1W0QG/BM4ioeVfhtQluHEG0+WjGyBkZwv256wcVPw8BJikH2wT8f+qRLHOndeU+c6Kwv01H2vw7d3jOa9V/8GPePjRw78kQpklJg5GU27hk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=LfCPAbCK; arc=none smtp.client-ip=209.85.215.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="VBFr4Lm6"
-Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-88551591365so314425b3a.0
-        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 20:45:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="LfCPAbCK"
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-cc79b966c51so1193086a12.0
+        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 20:45:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790653519; x=1791258319; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1790653522; x=1791258322; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=TURFZphfVPL8QZrp+2aK2dezkQwEA5VMpCPWip8CV2s=;
-        b=VBFr4Lm60mo8UabCUn9vejRqP15NLo2fTM/A958L/OAb6mL978cTy7SvKneByOCanw
-         ItWefagrXPVKVCGmOUeJX2BtwuY2WbFGvOz7Hlkn+I6+lqLy6yA/CbgtRksGB5aoYUjr
-         4CnIenNlKBAtlZ36bXN7UFUug+gptq/IPkvRAuU5KfYPxsXD0Q3kUTIot6EIPCsrTWba
-         n9P0ufOBSK8KWVmSTeRSz9O4/2xPAF1h4vDwwdbRRumn1XEM1HcfWaCVruwdC9/yJ/nw
-         Ul2EU073J/gTjhNPn3dJkYrA5MOHHrQODD/62PK5xGre9DPHmZyo1BRkXPqaLl5S3hBC
-         d55Q==
+        bh=PzOEbNfjD3OpqFZFEVxnhgWiMymsFPxW/9SXAAccjko=;
+        b=LfCPAbCKFI6eJQr2n+BdiXya2Dt7TJ0XNnQMvNdu/GBKqxogqBB9tu8apTTd/iXB4i
+         PpA/CCixySpIFjZKTXhgm01Be8H5R3zfaV+uNQbeJzaIIB9wU+W7DWYuICWkGmo+dPsU
+         9Rqc3A8elJ5E0PTrE4SL0iNsl/RkFu2kliNDPoagl+DqH6i6QXAtVqNw7LU5t5tkLU7n
+         M7GQe+BrTfiuGOl4xiiBWTpHszAxghDpihJG6UGBvYCp/AhuN952QObi/Nplc0/q8sAV
+         UJeI6dUsr/uoxavmYWzDl9NnGvcYQVYu5fvZsGI8S4zoYng6m7rkVqOeqFsn5IlFR4rO
+         0lDw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790653519; x=1791258319;
+        d=1e100.net; s=20260707; t=1790653522; x=1791258322;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=TURFZphfVPL8QZrp+2aK2dezkQwEA5VMpCPWip8CV2s=;
-        b=B+UrWPxKUFvoWDUmuw4vrhfrDB49dZBTwmw5F8ELvWzbvWKB7FB7QIzJzF9Zt+BHK6
-         uf5ltJedzEWsbmEXBNJLwUl6NtlgsyofD4Pc1KVDrIvpUGamVgxWNmzzd6rSXsL7CQMB
-         La0QdRjwud+V684etBgOq/ZQaBokGXNAL/jSwKODeniseIEbX0CKfGs1ni8i5dIYj9cd
-         UM/nGSErbXzpgwBINqMIQ0p+jI2XN2fjZ038elWKlPaZNQb35HgP1T80gM/99dtFeyfG
-         vbRC7p9BlJTCPzxdguak7vmKS+CJ/n5Se7Pxw35iapBhdVEy2ofVlae/BdoamNGilZkl
-         BKyA==
-X-Forwarded-Encrypted: i=1; AKwUvBy2schmHgGzu7P8BJBc/zBUDrQ0vIvuZX6+Xfh9Rgb/LL4HKUc1xrJMOkAbK5qyHvgMQHxAG57ftS4=@vger.kernel.org
-X-Gm-Message-State: AFuF++kv/ktt59h/6ZSBV3Rw+5epa95vvD5SuOgTgXYqVyAE/ymv7vPq
-	JD/HRPe2yezxc2rqLmHEC/B1USFJaRQztCUy+BrPo+U3t15m6Ws8a77mMxK2HvG5jFN17U+VCxu
-	5fQ==
-X-Received: from pgut3.prod.google.com ([2002:a65:6083:0:b0:cc7:85b1:2114])
- (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a20:3d1a:b0:3dd:a9a9:3967
- with SMTP id adf61e73a8af0-3de7cf9d001mr1160408637.43.1790653518920; Mon, 28
- Sep 2026 20:45:18 -0700 (PDT)
-Date: Tue, 29 Sep 2026 03:44:56 +0000
+        bh=PzOEbNfjD3OpqFZFEVxnhgWiMymsFPxW/9SXAAccjko=;
+        b=Xb0nBl99b99EY2WEKGu82mhIElE8LZLY99f23NejetNBUGK2N70J1wJ0qj90y8MaTV
+         NnOU+BYLCijE+5u/Pcbj88QHcezkZwfijHrgGpS1QG5xLag3WdfN4j0X8EDfOdtETnii
+         r/4twGYnJnO0mFiVTs9cEfYmJ1wDY7eKWITdjITChzDBoU3ICz6Zh77/M/8Gu8D4DNC6
+         rOUI5OyKTefs6DGura3QPa3jyimRpzsgUQse3y2WigyyShHhOoPrhbYF714oZLaVHomn
+         1cwn+zYnb9cyg+1c4jHLwJWZpPlGSdFevdSmdDlXYFAfxsShvJYp4VM4bf4E7fVU6+m3
+         e05w==
+X-Forwarded-Encrypted: i=1; AKwUvBxvuPwgtZwiyRApDmxg3nzMGgCXNRNljNjSags/iabPYwaYplEQQH+Yy5/tna6k6JTa/lb2ByHHzyM=@vger.kernel.org
+X-Gm-Message-State: AFuF++k85LePh5eVSADI/vTRD87WQLu9ydi4K0ipj2hdImA1nS7z2z77
+	/eLzyWPuo9jGAF0xZXJkKSZtdvnVOMKMoO9uhnjbTcK+7FXxzoJcyJUOJzPUiEBblJcmda87A2E
+	Kmg==
+X-Received: from pgnn16.prod.google.com ([2002:a05:6a02:4f10:b0:cc4:ac4b:d736])
+ (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a21:820c:b0:3da:b089:dba4
+ with SMTP id adf61e73a8af0-3de0e6f1564mr15182146637.2.1790653521605; Mon, 28
+ Sep 2026 20:45:21 -0700 (PDT)
+Date: Tue, 29 Sep 2026 03:44:57 +0000
 In-Reply-To: <20260929034510.2023173-1-praan@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -60,8 +60,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260929034510.2023173-1-praan@google.com>
 X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
-Message-ID: <20260929034510.2023173-3-praan@google.com>
-Subject: [PATCH v11 02/16] iommu/arm-smmu-v3: Add Q_POS() macro
+Message-ID: <20260929034510.2023173-4-praan@google.com>
+Subject: [PATCH v11 03/16] iommu/arm-smmu-v3: Add arm_smmu_drain_queue() helper
 From: Pranjal Shrivastava <praan@google.com>
 To: iommu@lists.linux.dev
 Cc: Will Deacon <will@kernel.org>, Joerg Roedel <joro@8bytes.org>, 
@@ -77,75 +77,126 @@ Content-Type: text/plain; charset="UTF-8"
 
 From: Nicolin Chen <nicolinc@nvidia.com>
 
-A queue position, the wrap bit combined with the index, is Q_WRP | Q_IDX.
-It is a (max_n_shift + 1)-bit value that wraps at twice the queue capacity.
-queue_inc_cons(), queue_sync_cons_ovf(), and queue_inc_prod_n() currently
-compute such positions by open-coding the two macros at each call site.
+Add a counting-based arm_smmu_drain_queue() helper, to replace queue
+specific polling loops. Its until_empty mode serves the suspend and
+runtime PM routines that would drain the CMDQ. Any timed-out drain fires
+a WARN_ON as well, since reaching the timeout would take some stuck
+consumer in any realistic case.
 
-Add a Q_POS() macro and switch the open-coded sites to it.
+The existing queue_poll() API is not reusable for such a drain: it is the
+atomic busy-wait for the command issuing paths, and it assumes a hardware
+consumer making progress. A drain caller is sleepable, in contrast, while
+the EVTQ/PRIQ consumer is a threaded IRQ handler that needs the CPU: such
+a busy wait would starve the handler throughout an entire timeout, whenever
+the waiter and the handler shared one CPU on a non-preemptible kernel. So,
+this new sleeping helper is marked with a might_sleep() as well, given that
+an atomic-context misuse would otherwise hide behind an empty queue.
 
-A subsequent change will apply Q_POS() to a position difference, to count
-the entries that a queue pointer moved past.
-
-No functional change intended.
+Note that a drained event is dequeued, but not necessarily handled, since
+queue_remove_raw() moves the MMIO CONS before the threaded IRQ handler gets
+to push the event onto the IOPF workqueue. A subsequent change will invoke
+synchronize_irq() and iopf_queue_flush_dev() to close that gap, and it will
+act on the errno of a timed-out drain too.
 
 Assisted-by: Claude:claude-fable-5
 Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 Signed-off-by: Pranjal Shrivastava <praan@google.com>
 ---
- drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 11 +++++------
- drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h |  2 ++
- 2 files changed, 7 insertions(+), 6 deletions(-)
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 81 +++++++++++++++++++++
+ 1 file changed, 81 insertions(+)
 
 diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-index 270e6617a19a..06b7de2e6e4b 100644
+index 06b7de2e6e4b..84b56849f6dc 100644
 --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
 +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-@@ -181,8 +181,8 @@ static void queue_sync_cons_out(struct arm_smmu_queue *q)
+@@ -948,6 +948,87 @@ static int arm_smmu_cmdq_batch_submit(struct arm_smmu_device *smmu,
+ 					   cmds->num, true);
+ }
  
- static void queue_inc_cons(struct arm_smmu_ll_queue *q)
++/**
++ * arm_smmu_drain_queue - Drain an SMMU queue
++ * @smmu: the SMMU device
++ * @q: the queue to drain
++ * @until_empty: target selection
++ *
++ * With @until_empty == true (for CMDQ), exit once the queue is observed empty:
++ *
++ *   cons0                cons                                prod
++ *     |                   |                                   |
++ *  ---+###################+=====================+=============+--->
++ *                         |<--------- undrained==0? --------->|
++ *
++ * With @until_empty == false (for EVTQ/PRIQ), exit once "drained" reaches its
++ * target: "pending" (i.e. prod0 - cons0, frozen at the entry time):
++ *
++ *   cons0                cons                 prod0         (prod)
++ *     |<---- drained ---->|                     |             |
++ *  ---+###################+=====================+=============+--->
++ *     |<--------------- pending --------------->|
++ *
++ * Note that a drained entry is dequeued, but not necessarily handled: the
++ * EVTQ/PRIQ callers must follow up with a synchronize_irq() to wait for the
++ * threaded IRQ handler to finish handling the dequeued entries.
++ *
++ * Context: Process context; may sleep.
++ * Return: 0 on success or a negative errno on timeout.
++ */
++static int __maybe_unused arm_smmu_drain_queue(struct arm_smmu_device *smmu,
++					       struct arm_smmu_queue *q,
++					       bool until_empty)
++{
++	ktime_t timeout = ktime_add_us(ktime_get(), ARM_SMMU_POLL_TIMEOUT_US);
++	u32 cons, prod, prev, undrained;
++	u32 drained = 0, pending;
++
++	might_sleep();
++
++	cons = readl_relaxed(q->cons_reg);
++	prod = readl_relaxed(q->prod_reg);
++	/* The exit target: the number of entries in the queue at entry */
++	pending = Q_POS(&q->llq, prod - cons);
++
++	while (true) {
++		/* Accumulate the entries consumed since the last poll */
++		prev = cons;
++		cons = readl_relaxed(q->cons_reg);
++		drained += Q_POS(&q->llq, cons - prev);
++
++		prod = readl_relaxed(q->prod_reg);
++		undrained = Q_POS(&q->llq, prod - cons);
++
++		/* Exit on an empty queue, regardless of until_empty */
++		if (!undrained)
++			return 0;
++
++		/* Snapshot mode: exit once the pending entries are drained */
++		if (!until_empty && drained >= pending)
++			return 0;
++
++		/*
++		 * A timeout means the consumer might be stuck. In theory, if it
++		 * moves 2 * qsize entries or more within a single poll interval
++		 * Q_POS() would wrap and undercount drained: that could trigger
++		 * a spurious warning too, if the queue was never once observed
++		 * empty. Yet, that much consumption in such a short interval is
++		 * unrealistic. WARN it only, as a stuck consumer is a real bug.
++		 */
++		if (WARN_ON(ktime_compare(ktime_get(), timeout) > 0))
++			break;
++
++		/* The consumer might be a threaded IRQ handler. Yield to it */
++		usleep_range(100, 200);
++	}
++
++	dev_warn_ratelimited(smmu->dev,
++			     "queue drain timed out at prod=0x%x cons=0x%x\n",
++			     prod, cons);
++	return -ETIMEDOUT;
++}
++
+ static void arm_smmu_page_response(struct device *dev, struct iopf_fault *unused,
+ 				   struct iommu_page_response *resp)
  {
--	u32 cons = (Q_WRP(q, q->cons) | Q_IDX(q, q->cons)) + 1;
--	q->cons = Q_OVF(q->cons) | Q_WRP(q, cons) | Q_IDX(q, cons);
-+	u32 cons = Q_POS(q, q->cons) + 1;
-+	q->cons = Q_OVF(q->cons) | Q_POS(q, cons);
- }
- 
- static void queue_sync_cons_ovf(struct arm_smmu_queue *q)
-@@ -192,8 +192,7 @@ static void queue_sync_cons_ovf(struct arm_smmu_queue *q)
- 	if (likely(Q_OVF(llq->prod) == Q_OVF(llq->cons)))
- 		return;
- 
--	llq->cons = Q_OVF(llq->prod) | Q_WRP(llq, llq->cons) |
--		      Q_IDX(llq, llq->cons);
-+	llq->cons = Q_OVF(llq->prod) | Q_POS(llq, llq->cons);
- 	queue_sync_cons_out(q);
- }
- 
-@@ -218,8 +217,8 @@ static int queue_sync_prod_in(struct arm_smmu_queue *q)
- 
- static u32 queue_inc_prod_n(struct arm_smmu_ll_queue *q, int n)
- {
--	u32 prod = (Q_WRP(q, q->prod) | Q_IDX(q, q->prod)) + n;
--	return Q_OVF(q->prod) | Q_WRP(q, prod) | Q_IDX(q, prod);
-+	u32 prod = Q_POS(q, q->prod) + n;
-+	return Q_OVF(q->prod) | Q_POS(q, prod);
- }
- 
- static void queue_poll_init(struct arm_smmu_device *smmu,
-diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
-index dd2fee2f560e..84e618a7fa9e 100644
---- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
-+++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
-@@ -187,6 +187,8 @@ struct arm_vsmmu;
- 
- #define Q_IDX(llq, p)			((p) & ((1 << (llq)->max_n_shift) - 1))
- #define Q_WRP(llq, p)			((p) & (1 << (llq)->max_n_shift))
-+/* A position is Q_WRP | Q_IDX, wrapping at twice the queue capacity */
-+#define Q_POS(llq, p)			(Q_WRP(llq, p) | Q_IDX(llq, p))
- #define Q_OVERFLOW_FLAG			(1U << 31)
- #define Q_OVF(p)			((p) & Q_OVERFLOW_FLAG)
- #define Q_ENT(q, p)			((q)->base +			\
 -- 
 2.56.0.rc1.315.gc6ed9934b7-goog
 
