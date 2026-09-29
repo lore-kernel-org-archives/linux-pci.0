@@ -1,50 +1,50 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D10E84582DC
-	for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 19:20:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5392055294B
+	for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 19:24:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790709625; cv=none; b=V/3mfqd1T+3VNYMOHMZKFHD83xTUzfYr05rXDCH21JrO2BeBK2JXS8/KQ1hDrt4kdrZ6YsCtzyV5af/0lkPoJi3ohV6VM5wbV/9uS0oI/Du1OyqG9F9uAzk13UwFbK8tlnR13rliH3najf6te2zfK7qdDeQzmfmHXXSkdi6dnDI=
+	t=1790709893; cv=none; b=knAWIcGixyCQAJoc0WaU3rL6wgEXM3buLqkDatO/STA3PgxjoUBxEDB9ahAxDGbJrLrUCe5+E42nqlAtqKQz42W2XQjvUphQtokwLcIT0HBNs6X2e5VsjVKq2zN5/AdN2wqxrNMoiBPLiN//NpDC25HIDTWB5rI1XWWJ+ibTWQw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790709625; c=relaxed/simple;
-	bh=lsJW8PoLoWwqdXMo/RBv2iqDlvjNOGyT8FfkT6mX9r8=;
+	s=arc-20240116; t=1790709893; c=relaxed/simple;
+	bh=TLlPtwM9+jBoyZmH2gCTAvCqM903Ko9m2ipWHJKM4D0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kfMUzQk9lIcXvrBXiZeov0qLqHq3reYoVjoCN+ktTMO4y9+P9BGf5+TE8mH1v61aL7rWPUm8kXVx9107OJds+fI36sbA5y0/zpih3uPnBvnkrOu4PvvA3M56+ANYoAong85hmxB/FiV8S0ABFOTIXPj7N8ReLFl3BFBoEWMolw4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mtl56qGs; arc=none smtp.client-ip=192.198.163.9
+	 In-Reply-To:Content-Type; b=cUIkLXBz3mNvrlhZchgrR9elm9rZFlt2xam5aOnOQAPCqrqTJdVwtbeE6YXh4PYGkyKePLQ7gC9gztcM5oipH7I9Z4c7P5SHEVn5kpQ1BZ9f3+SIWviILCsyyy33jlsiXAiB/VHXheGWuDzb5B6qdh3TyBDaL/7YEtX6Y0QuWqw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DjiaCt/1; arc=none smtp.client-ip=192.198.163.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mtl56qGs"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DjiaCt/1"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790709623; x=1822245623;
+  t=1790709891; x=1822245891;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=lsJW8PoLoWwqdXMo/RBv2iqDlvjNOGyT8FfkT6mX9r8=;
-  b=mtl56qGsNkBl4wEwR0naak51dGsIuzydp41mAIPLsxG9ACTVzLLLXn2q
-   WD6YFOA7Nz9x9BbXozXDMDLSmtRGMPz7Ad9uXazOsPTSuZ60lgER73Syv
-   FSi/qidIkm8iLCeALA4DDPgUlKZ/psP+MgPBXABfBv8ieFUhEiOEX3brU
-   JqnvKpgy4L53ml50/ELg1DpQnqXyE8uCa9tEIexltKUF3+WUCRqxTGmfi
-   oSkxvWyd+QMKCaJrULkP7BFEHR2ZTA3+k6y9D7Fnyag2BPQuoe0vIxjAx
-   AYsxRdeWwcQXsHN/BI5CNP5zFjFtlGjo7FRPoOpy1o/Dgcc/APGFaPlaz
+  bh=TLlPtwM9+jBoyZmH2gCTAvCqM903Ko9m2ipWHJKM4D0=;
+  b=DjiaCt/1AHFCK1QzQBRcijl9bVMLLQ2KBf+9yS9143jSMWLlNKafs668
+   fspVMUa36YRxkvIt63tKB7FSW/F8h3O1xCs64NLTivT6bvutLyjbV28UT
+   54vX7tX4fO1f9lIpWx1in9ldFAqv6xYW1KuRmsBo+3KNd9p+ZHRp4RJp2
+   B8MOqGSV1/ZTQbztrbJp4CiCL+8qQflSGWHTkmo19DBeyRoyCXQy2SDCq
+   SQGTpPSDzTc5OuJLfGYE2csJkFDnSCY+S+zaYPYE7YfmvaxcWI+mmPjsR
+   PN8fjvWxvwh5N/c/vVEWQyOGmlM10NDXRmdSelWjYTFcfv4uIYglK6TXe
    A==;
-X-CSE-ConnectionGUID: ak9ldLgCQSCMpDpX+0grMA==
-X-CSE-MsgGUID: xKsZLufgTRCQ/J+LANTPDA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="102112343"
+X-CSE-ConnectionGUID: Nc1OcvzySWmmysMvOGNMvw==
+X-CSE-MsgGUID: Wa5Mg1ltSGCUQ7wrPguPOg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="102112637"
 X-IronPort-AV: E=Sophos;i="6.27,130,1787036400"; 
-   d="scan'208";a="102112343"
+   d="scan'208";a="102112637"
 Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2026 12:20:22 -0700
-X-CSE-ConnectionGUID: R1BEhrwJT1ek6egCvPxHSA==
-X-CSE-MsgGUID: XfbfVqTCQeKlR5yhZza6aA==
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2026 12:24:50 -0700
+X-CSE-ConnectionGUID: RkhCk2BbSSeE/Rr+qQDZ/A==
+X-CSE-MsgGUID: h2sXK3lORbWX61B578fp4Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,130,1787036400"; 
-   d="scan'208";a="278655075"
+   d="scan'208";a="278655597"
 Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.80.90]) ([10.24.80.90])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2026 12:20:22 -0700
-Message-ID: <8af8a1ee-69bc-4819-a9dc-b3321dc4e30d@linux.intel.com>
-Date: Tue, 29 Sep 2026 12:20:21 -0700
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2026 12:24:51 -0700
+Message-ID: <b857cc94-2624-4478-ae06-a3512dde948a@linux.intel.com>
+Date: Tue, 29 Sep 2026 12:24:50 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,8 +52,8 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/7] PCI/ERR: Avoid stale error status bits on recovery
- failure
+Subject: Re: [PATCH 4/7] PCI/AER: Drop AER native check from
+ handles_cxl_errors()
 To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
  Raag Jadav <raag.jadav@intel.com>, Riana Tauro <riana.tauro@intel.com>,
  Yury Murashka <yurypm@arista.com>, Matthew W Carlis <mattc@purestorage.com>,
@@ -64,67 +64,60 @@ Cc: Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
  Srinivasa Adatrao <srinivasa.adatrao@intel.com>,
  Terry Bowman <terry.bowman@amd.com>, Keith Busch <kbusch@kernel.org>
 References: <cover.1790531238.git.lukas@wunner.de>
- <c7048e7dafe470f1f85709169c31b5aafe7ad59f.1790531238.git.lukas@wunner.de>
+ <1a00e832eab9539f7328f5d547f11b67e17bd0da.1790531238.git.lukas@wunner.de>
 Content-Language: en-US
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <c7048e7dafe470f1f85709169c31b5aafe7ad59f.1790531238.git.lukas@wunner.de>
+In-Reply-To: <1a00e832eab9539f7328f5d547f11b67e17bd0da.1790531238.git.lukas@wunner.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-Hi,
+
 
 On 9/27/2026 11:02 AM, Lukas Wunner wrote:
-> From: Yury Murashka <yurypm@arista.com>
+> Drop a superfluous call to pcie_aer_is_native() from handles_cxl_errors().
 > 
-> pcie_do_recovery() only clears the error status bits of an error-reporting
-> device if recovery succeeds, but not if it fails.  (E.g. because reset
-> failed, drivers are missing pci_error_handlers or those handlers failed.)
+> The call is superfluous because the function is only called from:
 > 
-> One undesirable consequence is that the AER driver may subsequently
-> identify a wrong device when searching for error-reporting devices in
-> is_error_source(), due to stale bits on an unaffected device.
+>   aer_probe()
+>     cxl_rch_enable_rcec()
+>       handles_cxl_errors()
 > 
-> Avoid by clearing error status bits on recovery failure.
+> ...and aer_probe() is only invoked if an AER port service was instantiated
+> in get_port_device_capability(), which is conditional on:
 > 
-> Link: https://lore.kernel.org/r/CAPzpGcRCTCZtaX1EVaJNZ103THZKsoszZduY7=gwfYdcrMo-SQ@mail.gmail.com/
-> Signed-off-by: Yury Murashka <yurypm@arista.com>
-> [lukas: drop cmdline param, rewrite commit msg, tag for stable]
+>   (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+>    pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC) &&
+>   pci_aer_available() &&
+>   dev->aer_cap && (pcie_ports_native || host->native_aer))
+> 
+> ...and the last line of those conditions is equivalent to
+> pcie_aer_is_native().
+> 
 > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> Cc: stable@vger.kernel.org
 > ---
->  drivers/pci/pcie/err.c | 5 +++++
->  1 file changed, 5 insertions(+)
+
+Looks good to me.
+
+Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+
+
+>  drivers/pci/pcie/aer_cxl_rch.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> index d77403d8855b..cfcfc7e4f10d 100644
-> --- a/drivers/pci/pcie/err.c
-> +++ b/drivers/pci/pcie/err.c
-> @@ -284,6 +284,11 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
->  	return status;
+> diff --git a/drivers/pci/pcie/aer_cxl_rch.c b/drivers/pci/pcie/aer_cxl_rch.c
+> index e471eefec9c4..9cc2d5749b9d 100644
+> --- a/drivers/pci/pcie/aer_cxl_rch.c
+> +++ b/drivers/pci/pcie/aer_cxl_rch.c
+> @@ -87,8 +87,7 @@ static bool handles_cxl_errors(struct pci_dev *rcec)
+>  {
+>  	bool handles_cxl = false;
 >  
->  failed:
-> +	if (host->native_aer || pcie_ports_native) {
-
-If Bjorn takes AER cleanup patch before this series, we can avoid sprinkling
-pcie_ports_native checks everywhere.
-
-https://lore.kernel.org/linux-pci/20260922204548.3884906-1-sathyanarayanan.kuppuswamy@linux.intel.com/
-
-
-> +		pcie_clear_device_status(dev);
-> +		pci_aer_clear_nonfatal_status(dev);
-
-This only clears Non-Fatal status bits.  On the success path, Fatal
-status bits are cleared by pci_restore_state() -> pci_aer_clear_status(),
-which drivers call from their ->slot_reset() callback.  On the failure
-path, that may not happen (e.g. if the reset failed or the driver lacks
-pci_error_handlers).
-
-> +	}
-> +
->  	pci_walk_bridge(bridge, pci_pm_runtime_put, NULL);
+> -	if (pci_pcie_type(rcec) == PCI_EXP_TYPE_RC_EC &&
+> -	    pcie_aer_is_native(rcec))
+> +	if (pci_pcie_type(rcec) == PCI_EXP_TYPE_RC_EC)
+>  		pcie_walk_rcec(rcec, handles_cxl_error_iter, &handles_cxl);
 >  
->  	pci_walk_bridge(bridge, report_perm_failure_detected, NULL);
+>  	return handles_cxl;
 
 -- 
 Sathyanarayanan Kuppuswamy
