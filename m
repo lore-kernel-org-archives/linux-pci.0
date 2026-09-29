@@ -1,300 +1,130 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC05B218592
-	for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 22:30:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4C1D1DA57;
+	Tue, 29 Sep 2026 00:42:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790634660; cv=none; b=j50+6TLN61O3KT0YiC9MdQTfVacJ1T/rcwVFpAdVCpFl8uqNjUIv73Gn/NgVvvQ5B0+9mYKmX371AkP3KTl2PegJ8MaRunHWglSA4m8yBLmWiN1Sr8mwGJtwJMndMTuYtbUD6GVAE9d8rdmkuvCDUcKoyBTxWSrMgWWorvcQL9M=
+	t=1790642565; cv=none; b=CcFkzd1iX6rNSIoFDwBk1bIU2uVB2/sYCZERmq/7VyTQGQqw0JkCznJoJKzfdmpVEwS8TpMPNy/sRd85zQRPcBLy4mRYHQ0PGAjsT3DA8HQzZGaSJvFKoWrFhjm3cVry1WWGTu3lvyUAcm8dF8Ez0jDLwgPo2B35Xn0cp7nVAPk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790634660; c=relaxed/simple;
-	bh=s0N4fCEzf1OhEBqAmcavvYdMPC1XCsX2lqKziNqgxDQ=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=jzzBCa4PwxZB/ewQHV9vMfU87XxqgrTOnvV7dKTG+FDlzmp1I9BguPQuxjXZjSmVjZq7lEddFAGIQP7EeRCfE/7MIwhConVEZyvyqkNOwifnq2lppsgxi45HwMrwtUH0EOPkQ1S6odzwapjCG4/FrNkKUj2sT6OBw2YdMG6WxSE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YYyJzi6r; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1790642565; c=relaxed/simple;
+	bh=OWhcwknLRyPzDmXgalH6NabLxd+2MPu1XxuBbMgZxsY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=QH0/YG0ITOIGnuZYFO/7UtZgD5wr8MZgGGrTOUJfoK6oaHy2XH8eNP63C6J5Z0kgEM1eGDSzojDmcM1QIwTG7TQER99J+z1yiA3tarW6D88xPCGz9yQ3ZFe2vwaUKC8UJrdfLCtci8xIQGNcg/9zChHmEiQHa8IPxXOXV+zjWr8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=ysoZstVY; arc=none smtp.client-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YYyJzi6r"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790634659; x=1822170659;
-  h=date:from:to:cc:subject:message-id;
-  bh=s0N4fCEzf1OhEBqAmcavvYdMPC1XCsX2lqKziNqgxDQ=;
-  b=YYyJzi6ruiYRXBaFr109e1l8df1cLmufYdcInqhQ6QcfxlTTPXyeU/Ny
-   M3Jpp/WvDLf3UY0mgVp6xJN4cbQJb8wJubQU1pYCPUutpsby8Bn49QhU0
-   sRRqGve4HTOEvkOeC3MMUmaHZtSUEgq3ho364aNS4GTRLgBPHv7dCo3d5
-   quLFbTDwfnYoOYSBDPh6rgu1q3HK7E0CXKfnGvlUpecmtQI9kC6w+hOL+
-   DKYCRnexB0PNxvbmbffHd+lUAHWQ6HlJ+WDWjShw/byWkGEKHmvM1FL2i
-   Vll0JyOQ4s+O/ONy0oH4yFO0hJo9TpYB1QMLpIIYnCutG10GSy2TEpFvk
-   Q==;
-X-CSE-ConnectionGUID: LI3YvsSIQFeUvPvsHoMC5w==
-X-CSE-MsgGUID: HDbizSKnTiif5DKre+GhVw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11919"; a="108836246"
-X-IronPort-AV: E=Sophos;i="6.27,129,1787036400"; 
-   d="scan'208";a="108836246"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2026 15:30:58 -0700
-X-CSE-ConnectionGUID: k8vQigi2RSylXkeWzNt7PQ==
-X-CSE-MsgGUID: ow1ENU/wQp2QLQdRrT4hYA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,129,1787036400"; 
-   d="scan'208";a="278993154"
-Received: from lkp-server01.sh.intel.com (HELO 462990a40a85) ([10.239.97.150])
-  by orviesa005.jf.intel.com with ESMTP; 28 Sep 2026 15:30:56 -0700
-Received: from kbuild by 462990a40a85 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xBJs6-00000000Obs-2DB5;
-	Mon, 28 Sep 2026 22:30:54 +0000
-Date: Tue, 29 Sep 2026 06:30:25 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:for-linus] BUILD SUCCESS
- 4fde448225123442c5796f54b7a4400e2d3cbaf6
-Message-ID: <202609290621.TV8KWkrJ-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="ysoZstVY"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4htzsj020ZzKn2J;
+	Tue, 29 Sep 2026 02:42:33 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1790642553;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=qYZdjHSXMYQifjl/oycijS7tIo3obhxZW530Z+Tdr74=;
+	b=ysoZstVYT9kJZ0p+C3oJMwuX/R3prdjcwqklLJ814vDuPxUJYwk4I4JlifmfqZK1II4bCG
+	GPQ0F2CaCZrjdgdqAuBJbOI699d2+3nkumTLGq3T9nedDKQ9jnGcqX3trKwK0S0z/sCXCc
+	Oc8Wcq1yoNLWXlhz8XzumjosPwTfw3jvCDnJ5Spa4qHHuICNvkyQ1ckUa8ep2efdqqsZO+
+	y46vKlbRu5FePJ0R7oYr64FkyltPdSuwpKgwqouS+Pe4ABfCWLZOREm+fZcb1ATaAxjTB+
+	F4qZiFhtd+K0Anf4Mc7ubjkP7slLdSydqPsae0IyQiWliQm0CoVhEM7VvS4JOg==
+Message-ID: <d4cab7d0-23d7-4998-8957-b879382395b9@mailbox.org>
+Date: Tue, 29 Sep 2026 02:42:29 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 6/6] PCI: dwc: rcar-gen4: Add support for R-Car X5H
+ PCIe4
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Conor Dooley <conor+dt@kernel.org>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org
+References: <20260928222442.GA2266778@bhelgaas>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <20260928222442.GA2266778@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MBO-RS-META: n5r3abih9upesd63k85pf9uic4hcaarb
+X-MBO-RS-ID: 56a18349aca01d73551
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git for-linus
-branch HEAD: 4fde448225123442c5796f54b7a4400e2d3cbaf6  x86/PCI: Disable enhanced atomics on AMD NBIO 7.7 and 7.11
+On 9/29/26 12:24 AM, Bjorn Helgaas wrote:
 
-elapsed time: 1288m
+Hello Bjorn,
 
-configs tested: 223
-configs skipped: 6
+>>> The gen5/pcie4 usage is confusing.
+>>>
+>>> I often push back on things like "PCIe Gen4" because it's ambiguous
+>>> (does it mean "compliant with base spec r4.0" or "supports 16 GT/s" or
+>>> something else), but it's so widely used to mean transfer rate that
+>>> it's hard to resist, and the best I can hope for is clarification.
+>>>
+>>> But in "renesas,rcar-gen5-pcie4", I don't know what the 5 and the 4
+>>> mean.  Maybe "gen5" refers to some internal R-Car thing, and "pcie4"
+>>> is something like "PCIe Gen4, i.e., 16 GT/s"?
+>>
+>> Gen5 refers to R-Car Gen5 (5th R-Car SoC generation).
+>>
+>> PCIe4 refers to the PCIe Gen4 core in the R-Car Gen5 SoC. There is also PCIe
+>> Gen6 core in the same SoC, but that will require a different driver and
+>> different compatible string.
+>>
+>> Since none of this shipped in any kernel version yet, would you prefer some
+>> sort of rename ? I can send patches.
+> 
+> Huh.  TIL that pcie-rcar-gen4.c refers to the 4th generation R-Car
+> SoCs
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Yes.
 
-tested configs:
-alpha                              allnoconfig    gcc-16.1.0
-alpha                             allyesconfig    gcc-16.1.0
-alpha                                defconfig    gcc-16.1.0
-arc                               allmodconfig    clang-24
-arc                                allnoconfig    gcc-16.1.0
-arc                               allyesconfig    clang-24
-arc                               allyesconfig    gcc-16.1.0
-arc                                  defconfig    gcc-16.1.0
-arc                          haps_hs_defconfig    gcc-16.1.0
-arc                   randconfig-1000-20260928    clang-24
-arc                   randconfig-1000-20260929    clang-17
-arc                   randconfig-1001-20260928    clang-24
-arc                   randconfig-1001-20260929    clang-17
-arc                     vdk_hs38_smp_defconfig    gcc-16.1.0
-arm                                allnoconfig    clang-17
-arm                                allnoconfig    gcc-16.1.0
-arm                               allyesconfig    clang-24
-arm                                  defconfig    gcc-16.1.0
-arm                            h3600_defconfig    gcc-16.1.0
-arm                          lpc32xx_defconfig    gcc-16.1.0
-arm                          mv78xx0_defconfig    gcc-16.1.0
-arm                         mvebu_v5_defconfig    clang-24
-arm                   randconfig-1000-20260928    clang-24
-arm                   randconfig-1000-20260929    clang-17
-arm                   randconfig-1001-20260928    clang-24
-arm                   randconfig-1001-20260929    clang-17
-arm                   randconfig-1002-20260928    clang-24
-arm                   randconfig-1002-20260929    clang-17
-arm                   randconfig-1003-20260928    clang-24
-arm                   randconfig-1003-20260929    clang-17
-arm64                             allmodconfig    clang-24
-arm64                              allnoconfig    gcc-16.1.0
-arm64                                defconfig    gcc-16.1.0
-arm64                 randconfig-1000-20260928    gcc-15.2.0
-arm64                 randconfig-1000-20260929    clang-24
-arm64                 randconfig-1001-20260928    gcc-15.2.0
-arm64                 randconfig-1001-20260929    clang-24
-arm64                 randconfig-1002-20260928    gcc-15.2.0
-arm64                 randconfig-1002-20260929    clang-24
-arm64                 randconfig-1003-20260928    gcc-15.2.0
-arm64                 randconfig-1003-20260929    clang-24
-csky                              allmodconfig    gcc-16.1.0
-csky                               allnoconfig    gcc-16.1.0
-csky                                 defconfig    gcc-16.1.0
-csky                  randconfig-1000-20260928    gcc-15.2.0
-csky                  randconfig-1000-20260929    clang-24
-csky                  randconfig-1001-20260928    gcc-15.2.0
-csky                  randconfig-1001-20260929    clang-24
-hexagon                           allmodconfig    gcc-16.1.0
-hexagon                            allnoconfig    clang-24
-hexagon                            allnoconfig    gcc-16.1.0
-hexagon                              defconfig    gcc-16.1.0
-hexagon               randconfig-1000-20260928    gcc-8.5.0
-hexagon               randconfig-1001-20260928    gcc-8.5.0
-i386                              allmodconfig    clang-22
-i386                               allnoconfig    gcc-14
-i386                               allnoconfig    gcc-16.1.0
-i386        buildonly-randconfig-1000-20260928    clang-22
-i386        buildonly-randconfig-1001-20260928    clang-22
-i386        buildonly-randconfig-1002-20260928    clang-22
-i386        buildonly-randconfig-1003-20260928    clang-22
-i386        buildonly-randconfig-1004-20260928    clang-22
-i386        buildonly-randconfig-1005-20260928    clang-22
-i386                                 defconfig    gcc-16.1.0
-i386                  randconfig-1000-20260928    gcc-14
-i386                  randconfig-1001-20260928    gcc-14
-i386                  randconfig-1002-20260928    gcc-14
-i386                  randconfig-1003-20260928    gcc-14
-i386                  randconfig-1004-20260928    gcc-14
-i386                  randconfig-1005-20260928    gcc-14
-i386                  randconfig-1006-20260928    gcc-14
-i386                  randconfig-1007-20260928    clang-22
-i386                  randconfig-1007-20260929    gcc-14
-i386                  randconfig-1008-20260928    clang-22
-i386                  randconfig-1008-20260929    gcc-14
-i386                  randconfig-1009-20260928    clang-22
-i386                  randconfig-1009-20260929    gcc-14
-i386                  randconfig-1010-20260928    clang-22
-i386                  randconfig-1010-20260929    gcc-14
-i386                  randconfig-1011-20260928    clang-22
-i386                  randconfig-1011-20260929    gcc-14
-i386                  randconfig-1012-20260928    clang-22
-i386                  randconfig-1012-20260929    gcc-14
-i386                  randconfig-1013-20260928    clang-22
-i386                  randconfig-1013-20260929    gcc-14
-loongarch                         allmodconfig    clang-24
-loongarch                          allnoconfig    clang-20
-loongarch                          allnoconfig    gcc-16.1.0
-loongarch                            defconfig    clang-24
-loongarch             randconfig-1000-20260928    gcc-8.5.0
-loongarch             randconfig-1001-20260928    gcc-8.5.0
-m68k                              allmodconfig    gcc-16.1.0
-m68k                               allnoconfig    gcc-16.1.0
-m68k                              allyesconfig    clang-24
-m68k                                 defconfig    clang-24
-microblaze                         allnoconfig    gcc-16.1.0
-microblaze                           defconfig    clang-24
-mips                              allmodconfig    gcc-16.1.0
-mips                               allnoconfig    gcc-16.1.0
-mips                              allyesconfig    gcc-16.1.0
-mips                       fuloong2e_defconfig    gcc-16.1.0
-mips                       loongson3_defconfig    gcc-16.1.0
-mips                         omega2p_defconfig    gcc-16.1.0
-mips                         vocore2_defconfig    gcc-16.1.0
-nios2                             allmodconfig    clang-20
-nios2                              allnoconfig    clang-24
-nios2                                defconfig    clang-24
-nios2                 randconfig-1000-20260928    gcc-8.5.0
-nios2                 randconfig-1001-20260928    gcc-8.5.0
-openrisc                          allmodconfig    clang-20
-openrisc                           allnoconfig    clang-24
-openrisc                             defconfig    gcc-16.1.0
-parisc                            allmodconfig    gcc-16.1.0
-parisc                             allnoconfig    clang-24
-parisc                            allyesconfig    clang-17
-parisc                               defconfig    gcc-16.1.0
-parisc                randconfig-1000-20260928    clang-24
-parisc                randconfig-1000-20260929    gcc-8.5.0
-parisc                randconfig-1001-20260928    clang-24
-parisc                randconfig-1001-20260929    gcc-8.5.0
-parisc64                             defconfig    clang-24
-powerpc                           allmodconfig    gcc-16.1.0
-powerpc                            allnoconfig    clang-24
-powerpc                       bamboo_defconfig    clang-24
-powerpc                  linkstation_defconfig    clang-24
-powerpc                  mpc834x_itx_defconfig    clang-24
-powerpc                       ppc6xx_defconfig    gcc-16.1.0
-powerpc                      rainier_defconfig    clang-24
-powerpc               randconfig-1000-20260928    clang-24
-powerpc               randconfig-1000-20260929    gcc-8.5.0
-powerpc               randconfig-1001-20260928    clang-24
-powerpc               randconfig-1001-20260929    gcc-8.5.0
-powerpc                      redwood_defconfig    gcc-16.1.0
-powerpc                          wii_defconfig    gcc-16.1.0
-powerpc64             randconfig-1000-20260928    clang-24
-powerpc64             randconfig-1000-20260929    gcc-8.5.0
-powerpc64             randconfig-1001-20260928    clang-24
-powerpc64             randconfig-1001-20260929    gcc-8.5.0
-riscv                             allmodconfig    clang-24
-riscv                              allnoconfig    clang-24
-riscv                             allyesconfig    clang-24
-riscv                                defconfig    gcc-16.1.0
-riscv                 randconfig-1000-20260928    clang-24
-riscv                 randconfig-1000-20260929    clang-24
-riscv                 randconfig-1001-20260928    clang-24
-riscv                 randconfig-1001-20260929    clang-24
-s390                              alldefconfig    gcc-16.1.0
-s390                              allmodconfig    clang-17
-s390                               allnoconfig    clang-24
-s390                              allyesconfig    gcc-16.1.0
-s390                                 defconfig    gcc-16.1.0
-s390                  randconfig-1000-20260928    clang-24
-s390                  randconfig-1000-20260929    clang-24
-s390                  randconfig-1001-20260928    clang-24
-s390                  randconfig-1001-20260929    clang-24
-s390                        zfcpdump_defconfig    clang-24
-sh                                allmodconfig    gcc-16.1.0
-sh                                 allnoconfig    clang-24
-sh                                allyesconfig    clang-17
-sh                                   defconfig    gcc-14
-sh                         dreamcast_defconfig    clang-24
-sh                         edosk7705_defconfig    gcc-16.1.0
-sh                             hp6xx_defconfig    gcc-16.1.0
-sh                    randconfig-1000-20260928    clang-24
-sh                    randconfig-1000-20260929    clang-24
-sh                    randconfig-1001-20260928    clang-24
-sh                    randconfig-1001-20260929    clang-24
-sh                            se7712_defconfig    gcc-16.1.0
-sh                    sh7770_generic_defconfig    clang-24
-sparc                              allnoconfig    clang-24
-sparc                                defconfig    gcc-16.1.0
-sparc                 randconfig-1000-20260928    clang-17
-sparc                 randconfig-1001-20260928    clang-17
-sparc64                           allmodconfig    clang-20
-sparc64                              defconfig    gcc-14
-sparc64               randconfig-1000-20260928    clang-17
-sparc64               randconfig-1001-20260928    clang-17
-um                                allmodconfig    clang-17
-um                                 allnoconfig    clang-24
-um                                allyesconfig    gcc-16.1.0
-um                                   defconfig    gcc-14
-um                              i386_defconfig    gcc-14
-um                    randconfig-1000-20260928    clang-17
-um                    randconfig-1001-20260928    clang-17
-um                            x86_64_defconfig    gcc-14
-x86_64                             allnoconfig    clang-24
-x86_64      buildonly-randconfig-1000-20260928    gcc-14
-x86_64      buildonly-randconfig-1001-20260928    gcc-14
-x86_64      buildonly-randconfig-1002-20260928    gcc-14
-x86_64      buildonly-randconfig-1003-20260928    gcc-14
-x86_64      buildonly-randconfig-1004-20260928    gcc-14
-x86_64      buildonly-randconfig-1005-20260928    gcc-14
-x86_64                               defconfig    gcc-14
-x86_64                                   kexec    clang-22
-x86_64                randconfig-1000-20260928    gcc-14
-x86_64                randconfig-1001-20260928    gcc-14
-x86_64                randconfig-1002-20260928    gcc-14
-x86_64                randconfig-1003-20260928    gcc-14
-x86_64                randconfig-1004-20260928    gcc-14
-x86_64                randconfig-1005-20260928    gcc-14
-x86_64                randconfig-1006-20260928    gcc-14
-x86_64                randconfig-1007-20260928    gcc-14
-x86_64                randconfig-1008-20260928    gcc-14
-x86_64                randconfig-1009-20260928    gcc-14
-x86_64                randconfig-1010-20260928    gcc-14
-x86_64                randconfig-1011-20260928    gcc-14
-x86_64                randconfig-1012-20260928    clang-22
-x86_64                randconfig-1013-20260928    clang-22
-x86_64                randconfig-1014-20260928    clang-22
-x86_64                randconfig-1015-20260928    clang-22
-x86_64                randconfig-1016-20260928    clang-22
-x86_64                randconfig-1017-20260928    clang-22
-x86_64                                rhel-9.4    clang-22
-x86_64                            rhel-9.4-bpf    gcc-14
-x86_64                           rhel-9.4-func    clang-22
-x86_64                     rhel-9.4-kselftests    clang-22
-x86_64                          rhel-9.4-kunit    gcc-14
-x86_64                            rhel-9.4-ltp    gcc-14
-x86_64                           rhel-9.4-rust    clang-22
-xtensa                             allnoconfig    clang-24
-xtensa                            allyesconfig    clang-20
-xtensa                randconfig-1000-20260928    clang-17
-xtensa                randconfig-1001-20260928    clang-17
+> (and, I guess the point of this series is to add support for 5th
+> generation SoCs), not to PCIe Gen4 link speeds.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Correct.
+
+> I see that
+> "renesas,rcar-genX" is all over the place in 'compatible' strings, so
+> I guess we should follow that precedent.
+
+Yes.
+
+> If the "renesas,rcar-gen5" SoC includes both PCIe Gen4 and PCIe Gen6
+> cores, I suppose everybody refers to them as pcie-gen4 and pcie-gen6,
+> so the "renesas,rcar-gen5-pcie4" you used is probably the obvious
+> choice.
+
+Right, and also the least cumbersome compatible string I could come up with.
+
+> But maybe we can make commit logs less confusing by saying things
+> like:
+> 
+>    - R-Car Gen4 SoCs S4/V4H/V4M
+>    - R-Car Gen5 SoC X5H
+>    - the R-Car Gen5 SoC PCIe Gen4 core
+>    - the R-Car R8A78000 X5H PCIe Gen4 core, which supports a x8 link at
+>      16 GT/s
+
+Understood, I'll expand future patches to be more explicit about this.
+
+Does that work for you ?
+
+-- 
+Best regards,
+Marek Vasut
