@@ -1,231 +1,270 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B72E1514770;
-	Tue, 29 Sep 2026 11:43:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA4DB3A901D;
+	Tue, 29 Sep 2026 12:17:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790682239; cv=none; b=JrMDovPQloWkGEs1eNjzM012kt676l9luOHRruCKEihs52KwWmzufFNoDf5c+K1K5ESjC2X91oaW9xHII311DUMXK3F8t7GTOvNaKZU9t+ZdnEeqliwK5OCykEsjJGqvC33pRU+T4TtB1hOFARNS03Dp21h70l+x5BkW0VZ6g2E=
+	t=1790684239; cv=none; b=YOcfx1ZhoPoL2a20IUigbwfow/SlO3h7Os4DEFvslvTHSFpeB0Jngoo3ibv1vgLfo5JsTIZ8RE2qEtL0Z4t7i12ensPCCD4a5GV5uvl4XUo3bbeOdO6zpuqZD+E0NryfIQFgS/UCxMryrKb0/mk3T9pJFfcX8DQuoyk5ban3+/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790682239; c=relaxed/simple;
-	bh=KbI05H8257pbTzuYfeN0E7QF6PPoH8UPLCkl8YK1WlI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cwTc6Syw5YVwa6UOwQOA5mwTLRO8FNqsoPCtp+d09vexynYQB8xsJ9JpCjNlovR2KIw1a1eaINu9ImRAKJQV3Jib9+uhrw0Uvjoqz65dOy8ihwBa3J2LYI2E05JAcYWwDLMhw9HJywKbNG8k7oLDUHnvaXYrnFSBddwITrQ3rZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=y72ExFnk; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
+	s=arc-20240116; t=1790684239; c=relaxed/simple;
+	bh=EDWxlHWhi14wfZEdiyiEfOrL9X3cmIqaThULEkRzX/w=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=RIefNljB+vPt2wARP3EDmI0gWiKKm1J/eOcNW1U2wsGZMzoeBvjH7BFdfQ8OWMNMiZo2mY38AlchLrc+2zV+9UECeUj85m8YTyx5dXYHJf1GUVerJ1Guv4tybS4R6uFmb+vHPSeuMVlButE7wB0ndX4a/tWa14faYaZECJ/2D5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HDifMsqw; arc=none smtp.client-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="y72ExFnk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1790682200;
-	bh=odX8h+v3SuO3LBAU4tzqREo252vsuXpN4nbA3pZgk4M=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=y72ExFnkOblYlkejvfz50psNdKfcbaTHptBCwG5Fs0LSKDtLdjoPF1A/pnJOgMB/R
-	 vJl0KHdDt6OAxcRDdxMX1hmmIVBsKAd4EyeBjaC84sNrPxQrmOoWRA5g2rlAOSiAmO
-	 IVvfN94A4Jf+aK0UZgxDy4bwu36RRmrgW+A0/BzMrju9b7Krr1ns3Rf285FSCi3J7/
-	 RLwxRxZg6UnUsTKvGVwkd426DmWDJuDiORwQqlndhUjncGsGZP5c+X3OjN51rVCD10
-	 K10j+YGrS+CJG8YDDDy3ZsJfuryhnGzBffduAaow9tb3p38Hgryzgt2qGrJRPiPk92
-	 bl4Jv/7LhEk6w==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4hvGWz0nfcz4wDx;
-	Tue, 29 Sep 2026 21:43:10 +1000 (AEST)
-Message-ID: <ed9a25ad-9a10-407d-b910-1b5cbdff88b4@ozlabs.org>
-Date: Tue, 29 Sep 2026 12:43:37 +0100
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HDifMsqw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1790684237; x=1822220237;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version:content-id;
+  bh=EDWxlHWhi14wfZEdiyiEfOrL9X3cmIqaThULEkRzX/w=;
+  b=HDifMsqw9Uhwm6QcSqNMi6foe+a1ddqvhzol7TJSSCTuCPIrrlbJ1332
+   TEmxE306R4dLQ+1REVoEMdHs3+FPGxtE/NhKrKr1SuhU0yDn2AN1FnCDF
+   v5Wfa+DSvGQhj+8tmsCSnDmWbtDrDsDchXIxqbZHx3vantTL9dX+nsAcN
+   07Jy0PER5TUpUtY5vf8s395YQ5SqVYhXLRGSdoDK/dOXhQQaqghLS5Pzi
+   7VdthbthNsfnjWm11CmMnJ/oxFqf/fXC/RTG4wBfQc0Wu3tZfmB4Fvv5G
+   Awmy5fVjot2c65V1Jf8iq6S5tfLh4YcJfvuucK/5zxdMynVmvS9xIvA0Q
+   A==;
+X-CSE-ConnectionGUID: gySVDcILRda0MtyOAyYgkw==
+X-CSE-MsgGUID: 0RkutFRYS3+q8VaoRvqDDA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11919"; a="90620537"
+X-IronPort-AV: E=Sophos;i="6.27,130,1787036400"; 
+   d="scan'208";a="90620537"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2026 05:17:17 -0700
+X-CSE-ConnectionGUID: yEE3TPHxQjiCsX13kWT4FA==
+X-CSE-MsgGUID: uu9gYkMxTnGitAtNjRttFQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,130,1787036400"; 
+   d="scan'208";a="273140732"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.234])
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2026 05:17:13 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Tue, 29 Sep 2026 15:17:09 +0300 (EEST)
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+cc: =?ISO-2022-JP?Q?=1B$BD=3B0f86LP=1B=28J?= <monogokoro2026@gmail.com>, 
+    linux-pci@vger.kernel.org, bhelgaas@google.com, linux-usb@vger.kernel.org, 
+    westeri@kernel.org, andreas.noever@gmail.com, YehezkelShB@gmail.com
+Subject: Re: PCI: Resizable BAR never considered for Thunderbolt/USB4 hotplugged
+ eGPUs
+In-Reply-To: <20260911090800.GZ106095@black.igk.intel.com>
+Message-ID: <992676e6-6769-d72d-9ef6-94c1ba758992@linux.intel.com>
+References: <CAFpUU0sqt2VzdGGUcx3fkLyyDSynOhNgAraT7-gL53oBq1aMfw@mail.gmail.com> <20260911090800.GZ106095@black.igk.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 3/9] dma-buf: Provide dma_buf_set_name()
-Content-Language: en-GB
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
- Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>,
- Kevin Tian <kevin.tian@intel.com>, Pranjal Shrivastava <praan@google.com>,
- Longfang Liu <liulongfang@huawei.com>, Mahmoud Adam <mngyadam@amazon.de>,
- David Matlack <dmatlack@google.com>, =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?=
- <bjorn@kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>,
- Ankit Agrawal <ankita@nvidia.com>, Alistair Popple <apopple@nvidia.com>,
- Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
- linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260924152159.49702-1-matt@ozlabs.org>
- <20260924152159.49702-4-matt@ozlabs.org>
- <654a5994-97e4-4a0d-aba9-24090b495da5@amd.com>
-From: Matt Evans <matt@ozlabs.org>
-In-Reply-To: <654a5994-97e4-4a0d-aba9-24090b495da5@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/mixed; BOUNDARY="8323328-1710482085-1790682627=:1173"
+Content-ID: <2f68f70f-f1c0-388b-e6af-714d18487bb7@linux.intel.com>
 
-On 25/09/2026 09:39, Christian König wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+--8323328-1710482085-1790682627=:1173
+Content-Type: text/plain; CHARSET=ISO-2022-JP
+Content-ID: <3f0f78f9-8401-8bb5-c730-ee51b2f989e1@linux.intel.com>
+
+On Fri, 11 Sep 2026, Mika Westerberg wrote:
+> On Fri, Sep 11, 2026 at 05:58:26PM +0900, $BD;0f86LP(J wrote:
+> > 
+> > I am reporting a case where a Thunderbolt/USB4-attached eGPU is
+> > enumerated and links
+> > correctly but can never be used for compute, because its BAR stays at
+> > the power-on
+> > default of 256MB and the Resizable BAR capability is never exercised.
+> > 
+> > I am not sure whether this is considered a known limitation or a bug
+> > worth fixing, and
+> > I would like to ask before assuming either. I have the hardware and am
+> > happy to test
+> > patches.
+> > 
+> > Environment
+> > -----------
+> >   Host:      ThinkPad X1 Carbon Gen 13 (21NS0000JP), Lunar Lake
+> >              BIOS N4BET77W (1.47), 2026-06-30
 > 
+> I don't know if we support REBAR or how well in PCIe side, Ilpo probably
+> knows that. Typically there is just certain amount of resources allocated
+> for each PCIe root port that gets tunneled so the way to do this is to
+> increase that in the BIOS. Having said that most of the vendors don't
+> actually allow it to be changed.
 > 
-> On 9/24/26 17:21, Matt Evans wrote:
->> Allow exporters to set the name of buffers, during export or for
->> subsequent updates.  This is useful to express buffer-specific debug
->> information, indicate state particular to the exporter's usage, etc.
->> Only exporters and userspace are expected to set names; it isn't
->> sensible for importers to do it.
->>
->> Originally, the static dma_buf_set_name() was used for
->> DMA_BUF_SET_NAME ioctls, taking a __user string parameter.  Export
->> this function as a generic set-name helper, taking a kernel-allocated
->> string.  The SET_NAME ioctls now locally duplicate the __user string,
->> and use the new function to set the name.
->>
->> Signed-off-by: Matt Evans <matt@ozlabs.org>
->> ---
->>   drivers/dma-buf/dma-buf.c | 78 ++++++++++++++++++++++++---------------
->>   include/linux/dma-buf.h   |  2 +
->>   2 files changed, 50 insertions(+), 30 deletions(-)
->>
->> diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
->> index 4c9add51f9ef..e4ec504e9288 100644
->> --- a/drivers/dma-buf/dma-buf.c
->> +++ b/drivers/dma-buf/dma-buf.c
->> @@ -404,34 +404,6 @@ static __poll_t dma_buf_poll(struct file *file, poll_table *poll)
->>   	return events;
->>   }
->>   
->> -/**
->> - * dma_buf_set_name - Set a name to a specific dma_buf to track the usage.
->> - * It could support changing the name of the dma-buf if the same
->> - * piece of memory is used for multiple purpose between different devices.
->> - *
->> - * @dmabuf: [in]     dmabuf buffer that will be renamed.
->> - * @buf:    [in]     A piece of userspace memory that contains the name of
->> - *                   the dma-buf.
->> - *
->> - * Returns 0 on success. If the dma-buf buffer is already attached to
->> - * devices, return -EBUSY.
->> - *
->> - */
->> -static long dma_buf_set_name(struct dma_buf *dmabuf, const char __user *buf)
->> -{
->> -	char *name = strndup_user(buf, DMA_BUF_NAME_LEN);
->> -
->> -	if (IS_ERR(name))
->> -		return PTR_ERR(name);
->> -
->> -	spin_lock(&dmabuf->name_lock);
->> -	kfree(dmabuf->name);
->> -	dmabuf->name = name;
->> -	spin_unlock(&dmabuf->name_lock);
->> -
->> -	return 0;
->> -}
->> -
->>   #if IS_ENABLED(CONFIG_SYNC_FILE)
->>   static long dma_buf_export_sync_file(struct dma_buf *dmabuf,
->>   				     void __user *user_data)
->> @@ -577,8 +549,19 @@ static long dma_buf_ioctl(struct file *file,
->>   		return ret;
->>   
->>   	case DMA_BUF_SET_NAME_A:
->> -	case DMA_BUF_SET_NAME_B:
->> -		return dma_buf_set_name(dmabuf, (const char __user *)arg);
->> +	case DMA_BUF_SET_NAME_B: {
->> +		char *name = strndup_user((const char __user *)arg,
->> +					  DMA_BUF_NAME_LEN);
->> +
->> +		if (IS_ERR(name))
->> +			return PTR_ERR(name);
->> +
->> +		ret = dma_buf_set_name(dmabuf, name);
->> +		if (ret)
->> +			kfree(name);
->> +
->> +		return ret;
->> +	}
->>   
->>   #if IS_ENABLED(CONFIG_SYNC_FILE)
->>   	case DMA_BUF_IOCTL_EXPORT_SYNC_FILE:
->> @@ -874,6 +857,41 @@ void dma_buf_put(struct dma_buf *dmabuf)
->>   }
->>   EXPORT_SYMBOL_NS_GPL(dma_buf_put, "DMA_BUF");
->>   
->> +/**
->> + * dma_buf_set_name - Set a dmabuf's name
->> + * Intended to be used by the exporter to set a name for debug
->> + * purposes.  This can also change an existing name if the same piece
->> + * of memory is used for multiple purposes over time.
+> >   Kernel:    7.0.0-31 (Ubuntu 26.04.1)
+> >   Enclosure: AOOSTAR AG03, connected over USB4 (not OCuLink)
+> >   GPU:       Intel Arc B580 (Battlemage, 12GB), driver xe
+> > 
+> > What happens
+> > ------------
+> > The card enumerates, binds to xe, and its edge connector trains at
+> > 16GT/s x4, which is
+> > the expected ceiling for a USB4 PCIe tunnel. The link is healthy.
+> > 
+> > BAR2 stays at 256 MiB. The card advertises Resizable BAR support for
+> > 256MB..16GB:
+> > 
+> >   # cat /sys/bus/pci/devices/0000:24:00.0/resource2_resize
+> >   0000000000007f00
+> > 
+> > Level Zero (intel-compute-runtime 26.31.39395.13) prints
+> > 
+> >   WARNING: Resizable BAR not detected for device 0000:24:00.0
+> > 
+> > and then drops the device from enumeration entirely, so it never
+> > appears to any compute
+> > API. The integrated Arc 140V is enumerated normally.
+> > 
+> > Why the BAR cannot be grown after the fact
+> > ------------------------------------------
+> > Attempting the resize by hand fails for every size down to 512MB:
+> > 
+> >   # echo 0000:24:00.0 > /sys/bus/pci/drivers/xe/unbind
+> >   # echo 14 > /sys/bus/pci/devices/0000:24:00.0/resource2_resize   #
+> > 16GB -> fails
+> >   # echo 9  > /sys/bus/pci/devices/0000:24:00.0/resource2_resize   #
+> > 512MB -> fails
+> > 
+> > BAR2 is placed at 0x2010000000, which is only 256MB-aligned, so a
+> > larger size cannot be
+> > aligned to the bridge base. The prefetchable window of the Thunderbolt root port
+> > (0000:00:07.0) is only a few hundred MB and comes from firmware:
+
+The usual result.
+
+> >   PCI: Using host bridge windows from ACPI; if necessary, use
+> > "pci=nocrs" and report a bug
+> > 
+> > I measured 711 MiB and 448 MiB for that window across two boots.
+> > 
+> > Things that do not help
+> > -----------------------
+> >   pci=realloc                  no effect on already-populated bridges
+
+This was my discovery as well which blocked my Resizable BAR aware 
+resource sizing from doing anything. I did some work to solve it but then 
+got regressions from the earlier resource work to address so I've not had 
+time to look into this for a while.
+
+Solving this is among the last few blockers for the resizable BAR-aware 
+resource sizing (sans the yet to be discovered bugs in the resizable 
+BAR-aware code itself).
+
+> >   pci=hpmmioprefsize=32G       makes it worse: the Thunderbolt
+> > downstream port the GPU
+> >                                sits behind gets no window at all, and
+> > the whole card
+> >                                disappears from the bus:
+> > 
+> >     pci 0000:22:00.0: BAR 0 [mem 0x00800000-0x00ffffff 64bit pref]: assigned
+> >     pcieport 0000:21:00.0: bridge window [mem 0x00800000-0x00ffffff 64bit pref]:
+> >         can't claim; no compatible bridge window
+> > 
+> >   pci=nocrs                    the machine does not boot: the NVMe
+> > holding the rootfs
+> >                                fails to get resources and probe returns -ENOMEM
+> >     nvme 0000:04:00.0: probe with driver nvme failed with error -12
+> > 
+> >   thunderbolt.host_reset=0     no effect here, and I believe the
+> > reason is that the
+> >                                firmware never enumerates the tunnel at
+> > POST. The eGPU
+> >                                first appears 63 seconds after kernel
+> > boot (16:05:11 boot,
+> >                                16:06:14 first sighting of the card),
+> > i.e. purely as an
+> >                                OS-side hotplug event. There is nothing
+> > from POST to
+> >                                preserve.
+> > 
+> > The BIOS has no relevant setup option: under Config > Thunderbolt 4
+> > there is only
+> > "PCIe Tunneling" (on/off). No Resizable BAR, no Above 4G Decoding, no
+> > BIOS Assist Mode.
+> > I have filed a separate request with the vendor about that.
 > 
-> Add something like "Importers should *NOT* use this function to overwrite the name." here and add some note under "DOC: locking convention" how this function is supposed to be called.
+> BIOS assist mode is a workaround for early Windows systems that did not
+> support native PCIe hotplug. It should not be used in any modern systems
+> and I doubt it's not even capable of what you are doing.
 > 
-> Apart from that looks good to me,
-
-Thanks, Christian.  Good point, done.
-
-Re the locking convention, it appears dma_buf_set_name() is agnostic to 
-whether resv is held or not.  However, rather than adding that as a new 
-category to the 'DOC: locking convention', I've put this function in the 
-existing "don't hold resv" section.
-
-Whilst conservative, this matches existing (and this series's) usage, 
-and can then be relaxed in future.  If you think a new "resv is 
-permitted but not required to be held" category of API doc is better, do 
-say.
-
-Thanks,
-
-
-Matt
-
-
-> Christian.
+> > What I think the underlying issue is
+> > ------------------------------------
+> > On hotplug, the PCI core reads the BAR at its power-on size, sizes the
+> > bridge windows to
+> > match and assigns addresses, all before any driver binds -- and the
+> > ReBAR capability is
+> > not consulted at any point in that path. By the time a driver could
+> > ask for a larger BAR,
+> > the surrounding windows are already committed and too small to grow into.
+> > 
+> > This looks like exactly what "PCI: Allow BAR movement during boot and hotplug"
+> > (Sergei Miroshnichenko, v9, Dec 2020, 26 patches) was written to solve
+> > -- the cover letter
+> > explicitly lists Resizable BARs as a use case. As far as I can tell it
+> > never landed:
+> > 
+> >   # grep -c -e rescan_prepare -e rescan_done -e bar_fixed -e
+> > movable_bars /proc/kallsyms
+> >   0
+> > 
+> > Questions
+> > ---------
+> > 1. Is ReBAR-over-Thunderbolt-hotplug considered a known limitation, or
+> > is this worth
+> >    treating as a bug?
 > 
->> + *
->> + * @dmabuf: [in]     dmabuf buffer that will be renamed.
->> + * @name:   [in]     The name of the dma-buf, allocated with kmalloc() or
->> + *                   similar.  This takes ownership of the allocation
->> + *                   on success, which will be kfree()d when the
->> + *                   dmabuf is released or a new name assigned.
->> + *
->> + * Returns 0 on success, -EINVAL if the name is NULL, or -E2BIG if the
->> + * name (including terminator) exceeds DMA_BUF_NAME_LEN.
->> + */
->> +int dma_buf_set_name(struct dma_buf *dmabuf, char *name)
->> +{
->> +	if (!name)
->> +		return -EINVAL;
->> +
->> +	/* dmabuffs_dname() won't use the string if the length
->> +	 * (including terminator) exceeds DMA_BUF_NAME_LEN:
->> +	 */
->> +	if (strlen(name) >= DMA_BUF_NAME_LEN)
->> +		return -E2BIG;
->> +
->> +	spin_lock(&dmabuf->name_lock);
->> +	kfree(dmabuf->name);
->> +	dmabuf->name = name;
->> +	spin_unlock(&dmabuf->name_lock);
->> +
->> +	return 0;
->> +}
->> +EXPORT_SYMBOL_NS_GPL(dma_buf_set_name, "DMA_BUF");
->> +
->>   static int dma_buf_wrap_sg_table(struct sg_table **sg_table)
->>   {
->>   	struct scatterlist *to_sg, *from_sg;
->> diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
->> index d15b2b31d3c9..952a2c196ad4 100644
->> --- a/include/linux/dma-buf.h
->> +++ b/include/linux/dma-buf.h
->> @@ -571,6 +571,8 @@ void dma_buf_fd_install(struct dma_buf *dmabuf, int fd);
->>   struct dma_buf *dma_buf_get(int fd);
->>   void dma_buf_put(struct dma_buf *dmabuf);
->>   
->> +int dma_buf_set_name(struct dma_buf *dmabuf, char *name);
->> +
->>   struct sg_table *dma_buf_map_attachment(struct dma_buf_attachment *,
->>   					enum dma_data_direction);
->>   void dma_buf_unmap_attachment(struct dma_buf_attachment *, struct sg_table *,
-> 
+> I would say here that it's not even related to the underlying transport,
+> could be something else than TB too, as long as PCIe goes inside.
 
+It's a known problem, but fixing it without introducing regressions is not 
+easy. The solution must be able to fallback gracefully to smaller sizes 
+as needed. Without that, a regression that will surely come up soonish 
+would just lead reverting the improvment.
+
+> > 2. Is there any current plan to consult the ReBAR capability during
+> > hotplug resource
+> >    assignment?
+
+Yes, infact patches already exist to consired ReBAR during resource 
+fitting, but they just don't run as is when a bridge is already assigned
+so more work is still needed once I get the most recent set of regressions 
+out of the way first.
+
+> > 3. What is the status of the movable-BARs series? Is it abandoned,
+> > superseded, or waiting
+> >    on something?
+
+I've no plans on basing anything on that work.
+
+> > 4. Is there a kernel parameter or sysfs path I have missed that would
+> > let the BAR grow
+> >    after enumeration?
+
+In some cases, removing siblings that pin any of the upstream bridge 
+windows in place prior to executing the resize may allow the entire window 
+to move elsewhere.
+
+There's even a patch from Geramy Loveless that would do this automatically 
+for empty siblings [1] which is definitely worth a try. It does not work 
+universally, however, so YMMV (I don't see your /proc/iomem anywhere so I 
+cannot tell whether it likely works in your case).
+
+Somebody was against Geramy's patch as it didn't (and kind of doesn't 
+even want to) ensure the unused siblings would be guaranteed to be 
+allocated at least some space after the resize (any unused hotplug 
+reservation is "optional" so it would be a major change to alter that 
+differentiation to address that review comment).
+
+But if that patch works for you, sending your Tested-by tag to its thread 
+might actually be helpful.
+
+[1] https://lore.kernel.org/linux-pci/20260428225146.3104063-1-gloveless@jqluv.com/
+
+-- 
+ i.
+--8323328-1710482085-1790682627=:1173--
