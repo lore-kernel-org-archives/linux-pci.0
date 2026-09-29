@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C56050EBFF
-	for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 10:12:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 832563DDB1E
+	for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 10:13:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790676769; cv=none; b=rvkjm3xyL1g1EsLFDQ48bvvvHfL7sstsGDBQISohRFOjeGbAN6BdVwOLOuCZOFMG4nBbZT4g4DklNEbPkFXxrp/d7sDDozdhYfxnS1lxrsM1yRaDkUKxSE7sH+/U8saJbfHZYIVpegvSlZ7duW+hN3B288LwmKqyC78ohyJHhu0=
+	t=1790676836; cv=none; b=L0mCRI08NPVhAqnVK0MzA2HLfXiPwZxsEn9fOU8KQanSay0WLuF95WFqZqIHbtcizrIfx0dS9o/g+nqG/rrA+bEk7PxmfuNFBfi9RNZN3Y+trug51hHId0ipMij+iPo6ydilD5DBNdVZ6jNzC7Tox71F5yi1EW5I5LT6YTM41DE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790676769; c=relaxed/simple;
-	bh=Q3NBw6Qt3BCiVm5/t3/FI1ERLCPnosh4k4flIppGRz0=;
+	s=arc-20240116; t=1790676836; c=relaxed/simple;
+	bh=J/dx9HEjWpn/ORYG/MV3V2FZUFF64oVdH90m84NrzFc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=nTnxz9Djo2znSRZa1FEwxxy1v+7WgRycRyORkHM3mB1FB6yhqlKux3w8We71Xf0EMnkDlLnfbndXmfL4UNkODubfVyV7sdAbKnc8Po/ym5IH4FAsqEDqLWT9UvNeFU63216CN+9xG+aRYFAdFa7OXkJCPa0/z3UJZgzHV56xmHk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VZ7h0Vwn; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=OcDs2h4ESGJLDnwNt+irN7JDccQKUzYHC7LSzd8JHv8c9Owrsyp6cp60MxEhvZV8YYJZ4Hy8ka43pTOvO+GcF+CiNUvJER9NIJ/dQOiwaYinRLhUwcsHnjp1WV49rU2wZoh+0Ek2oIg0dkYTXEe6/op9olBo+e6zpv/zzdZCbfU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SAbDdZzD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VZ7h0Vwn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A4291F000FF;
-	Tue, 29 Sep 2026 10:12:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SAbDdZzD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA0F01F00893;
+	Tue, 29 Sep 2026 10:13:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790676755;
-	bh=Q3NBw6Qt3BCiVm5/t3/FI1ERLCPnosh4k4flIppGRz0=;
+	s=k20260515; t=1790676816;
+	bh=J/dx9HEjWpn/ORYG/MV3V2FZUFF64oVdH90m84NrzFc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VZ7h0Vwn4sh+lMtu8CeW+cGvxw94ad6XtI4kLxXsNn7aDH4Ocfzo1cL9RxtQ4z3Jh
-	 YtzmGCrX4q0jLiNKqlysr7h23n28OD78tXZ4gxbgR2jf3DDOxMILchCfLb1z8fhQEI
-	 FudKD2ZciQwio2Irp914i/Us8fqxpBjKFrSCDzZhneTRT18zST5rbTteWTEF80SLQp
-	 Ip+Txsu2kDxxm+2c+ku1Gmz7w/rY7Oy/sbm7IxjCG+6zRlBkecbEeFzuW0wFup5y4M
-	 MQn5lhzsOp45cQ2NsFLTo/XxHTl0DVbQHvWgNvgU/zCt7fSATQJJijA1WPw8HaUCKc
-	 EExxqIRLO7H4w==
+	b=SAbDdZzDA5SieeWZJ6zmoW2n7jmvIKJPSPd1Lh9gYUM4d6Asq88YQrMVJWqrR9udz
+	 DKr1cTQ1/PGNICLa/XgK0SqhdbEqbeZiyIcKScW0U9R9uNa8vrgdClMhCVEmtq7NUR
+	 mc60l9rcUvgpxTnjYhSWh4UndON05pVZls/2ES/WZ5WykuA7Tv3mBk0HWWJQwweIFx
+	 kjqWs38seWaG3XZZPI+LEc2ioFsh32TFKs3mb0eQ8SqREuVJBXEw/zAN5C9wb2/ZbP
+	 kCkeMxdqMhyBQM8sW2KkUUkX97klVa0zEXTVPtI5KfHtdjbnc1vttUbZCNWIkPp0Ci
+	 71Kvh1iNSTvew==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 4/4] PCI/pwrctrl: generic: Fix leaking array from
+Subject: Re: [PATCH 3/4] power: sequencing: pcie-m2: Fix leaking array from
  of_regulator_bulk_get_all()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Alexey Charkov" <alchark@flipper.net>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260929-regulator-get-all-v1-4-e887c66a47f1@flipper.net>
+In-Reply-To: <20260929-regulator-get-all-v1-3-e887c66a47f1@flipper.net>
 References: <20260929-regulator-get-all-v1-0-e887c66a47f1@flipper.net>
- <20260929-regulator-get-all-v1-4-e887c66a47f1@flipper.net>
+ <20260929-regulator-get-all-v1-3-e887c66a47f1@flipper.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 29 Sep 2026 10:12:34 +0000
-Message-Id: <20260929101235.1A4291F000FF@smtp.kernel.org>
+Date: Tue, 29 Sep 2026 10:13:35 +0000
+Message-Id: <20260929101335.CA0F01F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,17 +47,18 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 > of_regulator_bulk_get_all() allocates the consumers array and hands it to
 > the caller, who is expected to free it at an appropriate time.
-> PCI pwrctrl never did, leading to a memory leak.
+> pwrseq-pcie-m2.c never did, leading to a memory leak.
 >=20
 > Add an explicit kfree() for the consumers array.
 >=20
 > Cc: stable@vger.kernel.org
-> Fixes: 75996c92f4de ("PCI/pwrctrl: Add pwrctrl driver for PCI slots")
+> Fixes: 52e7b5bd62ba ("power: sequencing: Add the Power Sequencing driver =
+for the PCIe M.2 connectors")
 > Signed-off-by: Alexey Charkov <alchark@flipper.net>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260929-regulator-=
-get-all-v1-0-e887c66a47f1@flipper.net?part=3D4
+get-all-v1-0-e887c66a47f1@flipper.net?part=3D3
 
