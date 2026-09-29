@@ -1,125 +1,148 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5392055294B
-	for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 19:24:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8B9F23B14DE;
+	Tue, 29 Sep 2026 19:43:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790709893; cv=none; b=knAWIcGixyCQAJoc0WaU3rL6wgEXM3buLqkDatO/STA3PgxjoUBxEDB9ahAxDGbJrLrUCe5+E42nqlAtqKQz42W2XQjvUphQtokwLcIT0HBNs6X2e5VsjVKq2zN5/AdN2wqxrNMoiBPLiN//NpDC25HIDTWB5rI1XWWJ+ibTWQw=
+	t=1790711039; cv=none; b=GZZiT4hnEbA1UgflPfjd7lGGr0c31T8iEtZdiHICOCLoTAA0T4d/gZiV4jPVsnyL4gqIcIxAYDSRDsNiaX5HWO1YbgvjGbW9U9CVqFuMq6dux5v4WYxlvT+sii6hZbIkuLNLolpOdSVkdI0E6UK9rX23/J0a7M/EV+42e5Cv7zE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790709893; c=relaxed/simple;
-	bh=TLlPtwM9+jBoyZmH2gCTAvCqM903Ko9m2ipWHJKM4D0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cUIkLXBz3mNvrlhZchgrR9elm9rZFlt2xam5aOnOQAPCqrqTJdVwtbeE6YXh4PYGkyKePLQ7gC9gztcM5oipH7I9Z4c7P5SHEVn5kpQ1BZ9f3+SIWviILCsyyy33jlsiXAiB/VHXheGWuDzb5B6qdh3TyBDaL/7YEtX6Y0QuWqw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DjiaCt/1; arc=none smtp.client-ip=192.198.163.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1790711039; c=relaxed/simple;
+	bh=M0Da55fAk3f5sg11hCY0mZN4G1cBSfd5x8sRoxUgQJ4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gUVLBuI6ps1URDqCjxO7Qqm3c7eNFJgwdWIHM8Ht1zrvDSmOiSEabeiawU/KOdfEwvo03y4IHOs7sy32U3/7CdZxtESOhAVCvFs5F6paZk72f0wF1lFXvl5b9MKNOJht18P/En0XIMSCWhW6xJnNeHESFiO7e1m7uwxjFmxtkj0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=X5YInvO1; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DjiaCt/1"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790709891; x=1822245891;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=TLlPtwM9+jBoyZmH2gCTAvCqM903Ko9m2ipWHJKM4D0=;
-  b=DjiaCt/1AHFCK1QzQBRcijl9bVMLLQ2KBf+9yS9143jSMWLlNKafs668
-   fspVMUa36YRxkvIt63tKB7FSW/F8h3O1xCs64NLTivT6bvutLyjbV28UT
-   54vX7tX4fO1f9lIpWx1in9ldFAqv6xYW1KuRmsBo+3KNd9p+ZHRp4RJp2
-   B8MOqGSV1/ZTQbztrbJp4CiCL+8qQflSGWHTkmo19DBeyRoyCXQy2SDCq
-   SQGTpPSDzTc5OuJLfGYE2csJkFDnSCY+S+zaYPYE7YfmvaxcWI+mmPjsR
-   PN8fjvWxvwh5N/c/vVEWQyOGmlM10NDXRmdSelWjYTFcfv4uIYglK6TXe
-   A==;
-X-CSE-ConnectionGUID: Nc1OcvzySWmmysMvOGNMvw==
-X-CSE-MsgGUID: Wa5Mg1ltSGCUQ7wrPguPOg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="102112637"
-X-IronPort-AV: E=Sophos;i="6.27,130,1787036400"; 
-   d="scan'208";a="102112637"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2026 12:24:50 -0700
-X-CSE-ConnectionGUID: RkhCk2BbSSeE/Rr+qQDZ/A==
-X-CSE-MsgGUID: h2sXK3lORbWX61B578fp4Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,130,1787036400"; 
-   d="scan'208";a="278655597"
-Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.80.90]) ([10.24.80.90])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2026 12:24:51 -0700
-Message-ID: <b857cc94-2624-4478-ae06-a3512dde948a@linux.intel.com>
-Date: Tue, 29 Sep 2026 12:24:50 -0700
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="X5YInvO1"
+Received: from jeffbarnes-ThinkPad-P14s-Gen-2i.corp.microsoft.com (unknown [52.167.115.14])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 8964020B7166;
+	Tue, 29 Sep 2026 12:42:56 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 8964020B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1790710978;
+	bh=XSr/FpY6Ep2Y64lvgMS/GCnnKAwRUccneELijM9K4dk=;
+	h=From:To:Cc:Subject:Date:From;
+	b=X5YInvO10SJeiGSwh9q8U8njS2R52RaMF/ewdT7PfgPwRAcbZVaKZqEI8dRBpt8tk
+	 W0/v6GLlABhxJpjDf4l6fVWcmbSzrRS0w2C77FuwsoR69MFLHiO2PlDheP7jD1Ofny
+	 HPj5fSKCYtfmb4tA+0ZELdpJGtD2jh728EJkdGlc=
+From: jeffbarnes@linux.microsoft.com
+To: linux-pci@vger.kernel.org
+Cc: minghuan.Lian@nxp.com,
+	mingkai.hu@nxp.com,
+	roy.zang@nxp.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	Zhiqiang.Hou@nxp.com,
+	linuxppc-dev@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org,
+	imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH] PCI: layerscape: use default error response behavior
+Date: Tue, 29 Sep 2026 15:43:39 -0400
+Message-ID: <20260929194339.233271-1-jeffbarnes@linux.microsoft.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/7] PCI/AER: Drop AER native check from
- handles_cxl_errors()
-To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
- Raag Jadav <raag.jadav@intel.com>, Riana Tauro <riana.tauro@intel.com>,
- Yury Murashka <yurypm@arista.com>, Matthew W Carlis <mattc@purestorage.com>,
- linux-pci@vger.kernel.org
-Cc: Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
- Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org,
- Aravind Iddamsetty <aravind.iddamsetty@intel.com>,
- Srinivasa Adatrao <srinivasa.adatrao@intel.com>,
- Terry Bowman <terry.bowman@amd.com>, Keith Busch <kbusch@kernel.org>
-References: <cover.1790531238.git.lukas@wunner.de>
- <1a00e832eab9539f7328f5d547f11b67e17bd0da.1790531238.git.lukas@wunner.de>
-Content-Language: en-US
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <1a00e832eab9539f7328f5d547f11b67e17bd0da.1790531238.git.lukas@wunner.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
+From: Jeff Barnes <jeffbarnes@linux.microsoft.com>
 
+The Layerscape PCIe driver programs PCIE_ABSERR to forward errors from
+outbound non-posted requests to the internal AXI interface.
 
-On 9/27/2026 11:02 AM, Lukas Wunner wrote:
-> Drop a superfluous call to pcie_aer_is_native() from handles_cxl_errors().
-> 
-> The call is superfluous because the function is only called from:
-> 
->   aer_probe()
->     cxl_rch_enable_rcec()
->       handles_cxl_errors()
-> 
-> ...and aer_probe() is only invoked if an AER port service was instantiated
-> in get_port_device_capability(), which is conditional on:
-> 
->   (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
->    pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC) &&
->   pci_aer_available() &&
->   dev->aer_cap && (pcie_ports_native || host->native_aer))
-> 
-> ...and the last line of those conditions is equivalent to
-> pcie_aer_is_native().
-> 
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
+A PCI configuration access can race with the link going down after
+dw_pcie_other_conf_map_bus() checks the link but before the MMIO access
+is performed. When the resulting Completion Timeout is forwarded to
+AXI, it causes an asynchronous SError and kernel panic.
 
-Looks good to me.
+For example:
 
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+  Kernel panic - not syncing: Asynchronous SError Interrupt
+  ...
+  Call trace:
+   arm64_serror_panic+0x78/0x90
+   do_serror+0x84/0x90
+   el1h_64_error_handler+0x30/0x40
+   el1h_64_error+0x68/0x70
+   pci_generic_config_read+0x64/0xb0
+   dw_pcie_rd_other_conf+0x1c/0x68
+   pci_bus_read_config_word+0x68/0x118
+   pcie_capability_read_word+0xa8/0xd8
+   find_device_iter+0x8c/0x160
+   pci_walk_bus+0x60/0xb8
+   find_source_device+0x78/0xb0
+   aer_isr+0x1dc/0x230
 
+Restore the controller's default error response behavior instead of
+forwarding these errors to AXI.
 
->  drivers/pci/pcie/aer_cxl_rch.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer_cxl_rch.c b/drivers/pci/pcie/aer_cxl_rch.c
-> index e471eefec9c4..9cc2d5749b9d 100644
-> --- a/drivers/pci/pcie/aer_cxl_rch.c
-> +++ b/drivers/pci/pcie/aer_cxl_rch.c
-> @@ -87,8 +87,7 @@ static bool handles_cxl_errors(struct pci_dev *rcec)
->  {
->  	bool handles_cxl = false;
->  
-> -	if (pci_pcie_type(rcec) == PCI_EXP_TYPE_RC_EC &&
-> -	    pcie_aer_is_native(rcec))
-> +	if (pci_pcie_type(rcec) == PCI_EXP_TYPE_RC_EC)
->  		pcie_walk_rcec(rcec, handles_cxl_error_iter, &handles_cxl);
->  
->  	return handles_cxl;
+Reproduce the race by instrumenting dw_pcie_rd_other_conf() to call
+map_bus() while the link is up, then schedule a worker on another CPU
+to set PCI_EXP_LNKCTL_LD. Synchronize the CPUs immediately before the
+Link Disable DBI write, then perform readl() using the address returned
+by map_bus() concurrently with the link transition.
 
+Without this change, the overlapping configuration read results in an
+asynchronous SError and kernel panic. With this change, the same test
+returns 0xffffffff from the configuration read. In this test, AER
+reports a non-fatal Completion Timeout, and no SError or kernel panic
+occurs.
+
+This effectively reverts the error response behavior introduced by
+commit 84d897d69938
+("PCI: layerscape: Change default error response behavior").
+
+Fixes: 84d897d69938 ("PCI: layerscape: Change default error response behavior")
+Cc: stable@vger.kernel.org
+Signed-off-by: Jeff Barnes <jeffbarnes@linux.microsoft.com>
+---
+ drivers/pci/controller/dwc/pci-layerscape.c | 12 ------------
+ 1 file changed, 12 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
+index 14d6ac4fc53f..d333f1ae8a41 100644
+--- a/drivers/pci/controller/dwc/pci-layerscape.c
++++ b/drivers/pci/controller/dwc/pci-layerscape.c
+@@ -28,8 +28,6 @@
+ 
+ /* PEX Internal Configuration Registers */
+ #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
+-#define PCIE_ABSERR		0x8d0 /* Bridge Slave Error Response Register */
+-#define PCIE_ABSERR_SETTING	0x9401 /* Forward error of non-posted request */
+ 
+ /* PF Message Command Register */
+ #define LS_PCIE_PF_MCR		0x2c
+@@ -103,14 +101,6 @@ static void ls_pcie_drop_msg_tlp(struct ls_pcie *pcie)
+ 	iowrite32(val, pci->dbi_base + PCIE_STRFMR1);
+ }
+ 
+-/* Forward error response of outbound non-posted requests */
+-static void ls_pcie_fix_error_response(struct ls_pcie *pcie)
+-{
+-	struct dw_pcie *pci = pcie->pci;
+-
+-	iowrite32(PCIE_ABSERR_SETTING, pci->dbi_base + PCIE_ABSERR);
+-}
+-
+ static u32 ls_pcie_pf_lut_readl(struct ls_pcie *pcie, u32 off)
+ {
+ 	if (pcie->big_endian)
+@@ -180,8 +170,6 @@ static int ls_pcie_host_init(struct dw_pcie_rp *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct ls_pcie *pcie = to_ls_pcie(pci);
+ 
+-	ls_pcie_fix_error_response(pcie);
+-
+ 	dw_pcie_dbi_ro_wr_en(pci);
+ 	ls_pcie_clear_multifunction(pcie);
+ 	dw_pcie_dbi_ro_wr_dis(pci);
 -- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+2.43.0
 
