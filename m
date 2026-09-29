@@ -1,67 +1,70 @@
-Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C244935DA63
-	for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 10:06:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE5634FC8FA
+	for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 10:06:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790676376; cv=none; b=Hrfufzy/1a8YR05zua4FmwceJODCTe+Lnpi0qqw37/PdF7xKDWNcETfgojEDBIjpPfAGS/lLMMXWtQCet+p1AsTmIQcuqUPN+ak7Dmhf3yR9szrhGw6K7V6yt0c1tb1ssQ8QlRMk9J2TLx35lQUgJ1xlSBXu37I+x9rF5MRvI2E=
+	t=1790676376; cv=none; b=hJAn7SnIv/mR8yzee924lSVnrHutgIoRMOoRWksuONANEKVQIUFX9lN1uEjyrn0biMSO7cTHfExfR9PpzOLkI+WOav/08CY9/vGH54GKXi3wiVU9w8u5ZNtstjVhuXMmX1OwAEZXag90mXI6lw1Xm3d/qPsVjO/hLG7rAzsXnXg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1790676376; c=relaxed/simple;
-	bh=xNlUmKwbQXLSEE3QC0Rx5R5Pncj1II95pqPAg1hd7CY=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=snlUwYKOLWF7BI+neEyTYeLmSIAxrKimYiAZAh/bbB3ESVeSonwlEMQu1i1xeft0PLOqsh5bMsKA18WjkJornpkPEmRyQD8T4HM0jk9UbhdQ/zR+xKHZ6A1Lha2d2IDRzvYj+dyhYlH8y4SJ1Ue5FcPD5CLcAg0JZXvBHGKdjhI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=flipper.net; spf=pass smtp.mailfrom=flipper.net; dkim=pass (2048-bit key) header.d=flipper.net header.i=@flipper.net header.b=cymnc4JG; arc=none smtp.client-ip=74.125.225.76
+	bh=92VE8r9mzYOK8AC7tCzlvbIDtHDlmpg8zlN0tg/3Zcs=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=SVFC3rhryE6QkoTXYM7UyWH5MtygslWaCizEQNeV5WdbxVamh3h6NrFlpxRcPkOHUdlaK/VZ3GKByDww5vJsuKNXJ3B62VXyaOvsLQaUKHUyjiPEq0bxD2bVfUP3EFqDcc7KXXWzbdSghGKatdT+Ct4NOuZSC8NR42+Rrp0G8JM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=flipper.net; spf=pass smtp.mailfrom=flipper.net; dkim=pass (2048-bit key) header.d=flipper.net header.i=@flipper.net header.b=tCmaeZVc; arc=none smtp.client-ip=209.85.221.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=flipper.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flipper.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=flipper.net header.i=@flipper.net header.b="cymnc4JG"
-Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-485933b24c3so2418042f8f.0
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 03:06:01 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=flipper.net header.i=@flipper.net header.b="tCmaeZVc"
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-488885c3844so436488f8f.0
+        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 03:06:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=flipper.net; s=google; t=1790676357; x=1791281157; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=G3eWez+V61iDGrqgukhgzGO2U/52pms2AtqUAmMdSCY=;
-        b=cymnc4JGNiJaiBKPvPL7OFk+ctzIgiTlpVb/8UuCxR5YWiGodr28g3sX93MtxcLODB
-         I3/o08LPbxdsviLnAjLpFoGQnTzE9KOs4dnnp3YoaGrTlSoPul3kjggB8aEDAkjPakLh
-         2OqjZKAqYWiwNVCXrCBm7xcecjjXhlI4oN6I8jeHvnDiK59/jZJFZKNHKcnq3QwvpzBH
-         A6+Rr29zp1CnkcXPnA/DcdEjnTPGwL9wCU4EA9c/aa+0wafjKd80KMuraBBgSUVkSF4G
-         e1UDnH6efpgy1ney6YiI2kJDfozsfB6M0SZ/fj9NMlKL12QJihWGqVCErll4cqlUMkxl
-         08Ew==
+        d=flipper.net; s=google; t=1790676369; x=1791281169; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=eYE9Edgd99flwjX5TMY3XUDStNFD9sn4w1TpgBQJ6eA=;
+        b=tCmaeZVcwD1h4SN5M1Br72TaRuAmYEW4hEWLCPrHRMeF5IQ+pFgP1Fp+luyWIsRoUa
+         sm93UFzFNsNCxvaK/rOFbHeSpB8DG/GHYP2P+MizdkIImLgM2re3cPR9e8Hs/CTxa1WP
+         qGNxNP/kDhAXUs+rd10VA5tCsi9/kvAb79EQo9Jyhz5YNkGPKGhYgXUDSNT3bAcIoXja
+         Ej7l+WiittEMl+ZPLnHrQJvttXngWppVU1vC/ahPVVzX7LE8d1+rZICW57HFpC/ss9Jw
+         gXYLFQnFX2rBKDTABWnTQC9uTs6zhWvQeW6FoujjErrU44uLwonaQRjd5y9s3rFFz0u6
+         1sMA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790676357; x=1791281157;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=G3eWez+V61iDGrqgukhgzGO2U/52pms2AtqUAmMdSCY=;
-        b=TMNZiKBTnBfrsieAxiAfoc+MPZklv2FNkeMtZ75/9povX4qaisKR9nd3mkWYyXRE6d
-         OpJG6lnlJONl36tzGx5NKZDQ34bgBLZ4ghiCwRycx6lKTEmeCMmAWIa3rsuyArvZfshH
-         W/huRdXvUUTxmiywfwrDV+JWyNvC5f+tq1kCiJwl7c5lv2kOJGu4Zv0Os1IvaPV2w/1c
-         Iw8Y78P6eQau5y6OG0mQt1hAb4Me1xylnKq3hPDFxlTr5MwwGR18w1LSlbWlwIlvlTcq
-         Mt5spiNr4vXwp7M/Dkftb/vUNzI7bpXw9O4oSry+OaatAxRMiKea03P6T+baXmnkNuwE
-         tEzA==
-X-Forwarded-Encrypted: i=1; AKwUvBxakR6Z2Y1MllgsyWprlm0iz5TRWhR91lg0qCllg6i9YrX4xzEvrTXKRqtFwlFS4vsvI2GU4gt8g5s=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLKgFCYx3PdhdUS2YFgmEs9AbMA+Maxa+54oJmOLBWxela2F4lT
-	BJCJqUKkzqhq0yLagYvBWNNuzGiiYdSUMZKqu81bFmWKsEzVShndEKo96TL+nDyAKh4=
-X-Gm-Gg: AYBFou2KFaKj/VLbKX4j7Z2iFnSi52wO+iK1KDOe5X+ipFZpprddDDNtQCIuLGZVO98
-	62/KrP8wraFQpJmNkIPmHJErwvqpTChn4ZVosCXLhZ3R6YHCJFNn0k57cAVJOE8I1IckLoDn/jJ
-	7Rnpn3+qyXuNyysqIF4DXo9heKVrONCJ5NFcdCCsQ+Vg/Ni6RfVEkMh1qmHpRZIRIb9/N8gXxaw
-	q6rVPbYQ0Bztx/8KHTIDtmW4TccZWCUtgfaUdMNNKV5fLd8a6Rn+/MnfLjV7ttApoaegg5ir9LQ
-	nJl7gsMWAT7kRafSmGDjs39RRJJWGF/DJi2FDs5z4BVqE5O+FhdulrkKvLDrLAwWQlj0KtIu0eB
-	q7tqGNgN/rXLyP4RkgvfpWnZqTCX7/eq6eCXDRwcXqYAcDOTmJLjuJuhTrrq4SyraL/IwkVWlNF
-	ibQRziMhbNFZ5DtJAkbuDIuu74wExFqb/NiNZRjPfUcWGl88a+QPL5rg9Il3iLj/Is0rWKnYqz2
-	tUN0Mkjc+VLxOqM
-X-Received: by 2002:a5d:5f87:0:b0:488:87f6:c20c with SMTP id ffacd0b85a97d-48887f6c7bamr16422031f8f.13.1790676357052;
-        Tue, 29 Sep 2026 03:05:57 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1790676369; x=1791281169;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=eYE9Edgd99flwjX5TMY3XUDStNFD9sn4w1TpgBQJ6eA=;
+        b=XH+roKOzOg7qsyqkNbHhVB0Pu+ukBtoTtT+4CLevHAD57pTPr+7+r2oapknjJb0QOE
+         wxRVH23onVn9nQD0sMz+HWzbXP4fDIBwhOMG5gNFEBRUF2gpWScadRKk7EE6akxa/r49
+         2vf/xDOIa5EDbLD4qLwrIsIxODv62h6dl/UEKLX002LyvyL0jg31clYmlQuEnvG6uPZH
+         8wEVAz6fIdoBDI6yfQbjKOMXfliTxOPRndGJXBubj5RDIRILd6/FTvMxz0wpZ8RSDLb/
+         ktq0TR9yzcFvfhuXMdIUF/ZFCMkDNjyRAXMNcGPchnhmoxftVL8yhar2anvaMGm2ZGnF
+         DhzA==
+X-Forwarded-Encrypted: i=1; AKwUvByA3C3k966NJ06KhMTdnuD+gqdzWWsTUio5nOdNyZZhhP/0R/xMW2D3eQxlvRPTbUraldPOH8QoI/Q=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKxVIQXcDLzYfm1LOxa2qDS1RVPXMKvd6s54NKXPgCzEk2Q9/Dh
+	iAGaLMIEtoeV4AKb/qmbO0ehynXwSPuKQLYApcvszNAUTcgqig2KEUM4qA46hgCyCl1+GNHBijr
+	NliDO
+X-Gm-Gg: AYBFou3fmtB6MQb6yC4Y80OwGPmp3raEpITyeas5XexrYO1TMoI5Az3ZnjeezGV17N5
+	7PAHqmKMPo5v1SHtddQZU5x5rxDnyCr8RvPfkFgZXL0uHUwno9enHDH9jY96Gifyhp6bANQAz98
+	1jBvwrd2tJBwrFx0HdHzF9MRY+k59dN2ena63hVeSG3T2qkm+1x7qKbrGBmiebEdk9H1VqcVG0j
+	2Hs34SqkvHrD+xRrFWwGFAiTmjzYMNMLCzxO47Vl5vn7TrNPmS+UJQUZnvVTBezyqDdITEIlVIR
+	Zb5jogEaLqhdv5Ah8vYzRDwEuRss4bmclbSeFpSd+ebQonSWdnQgbEF9Z77EYxFseTWOVBS+uhX
+	COTEc215zT9r6RcCskNeGmRG+WMgpmQ3KbwFKvF4aGeiUw5WhosTnKAwldsAcBjeU2JRkXkxAlw
+	61ICEhXuPMjcKYyGE3HBmct5QMKU4Trzn7QAbd7Kufjp/p4nBibdvr8bvLbkNd8fjc3YlMW3ql6
+	lTseFwWaiXYiBsf
+X-Received: by 2002:a5d:588d:0:b0:488:80ef:7fd4 with SMTP id ffacd0b85a97d-48af1b36244mr3851230f8f.7.1790676368816;
+        Tue, 29 Sep 2026 03:06:08 -0700 (PDT)
 Received: from alchark-surface.localdomain ([5.194.93.183])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48af502f79dsm2954995f8f.6.2026.09.29.03.05.54
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48af502f79dsm2954995f8f.6.2026.09.29.03.06.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Sep 2026 03:05:56 -0700 (PDT)
+        Tue, 29 Sep 2026 03:06:08 -0700 (PDT)
 From: Alexey Charkov <alchark@flipper.net>
-Subject: [PATCH 0/4] regulator: of: Fixes to of_regulator_bulk_get_all()
-Date: Tue, 29 Sep 2026 14:05:45 +0400
-Message-Id: <20260929-regulator-get-all-v1-0-e887c66a47f1@flipper.net>
+Date: Tue, 29 Sep 2026 14:05:49 +0400
+Subject: [PATCH 4/4] PCI/pwrctrl: generic: Fix leaking array from
+ of_regulator_bulk_get_all()
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -70,10 +73,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMQQqDMBBG4avIrDugES32KqWLmP6JU4KWSRRBv
- HvTdvkt3jsoQQWJbtVBik2SLHNBc6nITXYOYHkWk6lNXw9mYEVYo82LckBmGyPbrmtxbb1vHKh
- 0b4WX/fe8P/5O6/iCy98RnecHY4OSJHUAAAA=
-X-Change-ID: 20260929-regulator-get-all-a553e73ff1ce
+Message-Id: <20260929-regulator-get-all-v1-4-e887c66a47f1@flipper.net>
+References: <20260929-regulator-get-all-v1-0-e887c66a47f1@flipper.net>
+In-Reply-To: <20260929-regulator-get-all-v1-0-e887c66a47f1@flipper.net>
 To: Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, 
  Corentin Labbe <clabbe@baylibre.com>, 
  Manivannan Sadhasivam <mani@kernel.org>, 
@@ -83,46 +85,43 @@ Cc: linux-kernel@vger.kernel.org,
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
  Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
  linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
- Alexey Charkov <alchark@flipper.net>, stable@vger.kernel.org, 
- Sashiko <sashiko-bot@kernel.org>
+ Alexey Charkov <alchark@flipper.net>, stable@vger.kernel.org
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1317; i=alchark@flipper.net;
- h=from:subject:message-id; bh=xNlUmKwbQXLSEE3QC0Rx5R5Pncj1II95pqPAg1hd7CY=;
- b=owGbwMvMwCW2adGNfoHIK0sZT6slMWTt7m1uqD1g4zN7rbndrd4VWyvdD7x5cufyy9aprxOO/
- D60+sqcro6JLAxiXAyWYoosc78tsZ1qxDdrl4fHV5g5rEwgQ6RFGhiAgIWBLzcxr9RIx0jPVNtQ
- z9BIx1jHiIGLUwCmeukBRobtDh+zuZZul7tkFaujVxdmL5/4WlzxqOnZqDDz0BnGiZcZGe7XMsy
- d4OEXfnvCgVNeb/+yMV/6YH37fsdXfd0/guYB7ewA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=943; i=alchark@flipper.net;
+ h=from:subject:message-id; bh=92VE8r9mzYOK8AC7tCzlvbIDtHDlmpg8zlN0tg/3Zcs=;
+ b=owGbwMvMwCW2adGNfoHIK0sZT6slMWTt7m15s8EzK/JN78xJbtPerfnDtOuVWBHHzrrMAwa/9
+ y66bdS0pGMiC4MYF4OlmCLL3G9LbKca8c3a5eHxFWYOKxPIEGmRBgYgYGHgy03MKzXSMdIz1TbU
+ MzTSMdYxYuDiFICpfhvK8N9NU5T9zdJA/U0CAuc6PuwMPCvy3y0kJCg083aWzbRMpg+MDM2xKRm
+ v2RbL/j/53Xr5u69rZfcnZjxZvzw9q34df2rwBm4A
 X-Developer-Key: i=alchark@flipper.net; a=openpgp;
  fpr=9DF6A43D95320E9ABA4848F5B2A2D88F1059D4A5
 
-of_regulator_bulk_get_all() only fills in the .consumer part of the
-struct regulator_bulk_data for the regulators it gets, leaving .supply as
-garbage, while the rest of the regulator core expects a meaningful name
-there (e.g. for error prints), causing uninitialized memory access in any
-failure paths in the core.
+of_regulator_bulk_get_all() allocates the consumers array and hands it to
+the caller, who is expected to free it at an appropriate time.
+PCI pwrctrl never did, leading to a memory leak.
 
-It also allocates the supplies array and hands it to callers, but never
-says the callers need to free it (which they don't), causing leaks.
+Add an explicit kfree() for the consumers array.
 
-Fix both (the latter in two instances).
-
+Cc: stable@vger.kernel.org
+Fixes: 75996c92f4de ("PCI/pwrctrl: Add pwrctrl driver for PCI slots")
 Signed-off-by: Alexey Charkov <alchark@flipper.net>
 ---
-Alexey Charkov (4):
-      regulator: of: fill in supply names in of_regulator_bulk_get_all()
-      regulator: of: state who owns the array from of_regulator_bulk_get_all()
-      power: sequencing: pcie-m2: Fix leaking array from of_regulator_bulk_get_all()
-      PCI/pwrctrl: generic: Fix leaking array from of_regulator_bulk_get_all()
+ drivers/pci/pwrctrl/generic.c | 1 +
+ 1 file changed, 1 insertion(+)
 
- drivers/pci/pwrctrl/generic.c             |  1 +
- drivers/power/sequencing/pwrseq-pcie-m2.c |  2 ++
- drivers/regulator/of_regulator.c          | 29 ++++++++++++++++++++++-------
- 3 files changed, 25 insertions(+), 7 deletions(-)
----
-base-commit: 6375e61c01e93e35ee7acd336a689ac1fae4b509
-change-id: 20260929-regulator-get-all-a553e73ff1ce
+diff --git a/drivers/pci/pwrctrl/generic.c b/drivers/pci/pwrctrl/generic.c
+index d56171e0ee24..4b6cbbb52248 100644
+--- a/drivers/pci/pwrctrl/generic.c
++++ b/drivers/pci/pwrctrl/generic.c
+@@ -63,6 +63,7 @@ static void devm_slot_pwrctrl_release(void *data)
+ 	struct slot_pwrctrl *slot = data;
+ 
+ 	regulator_bulk_free(slot->num_supplies, slot->supplies);
++	kfree(slot->supplies);
+ }
+ 
+ static int slot_pwrctrl_probe(struct platform_device *pdev)
 
-Best regards,
---  
-Alexey Charkov <alchark@flipper.net>
+-- 
+2.55.0
 
