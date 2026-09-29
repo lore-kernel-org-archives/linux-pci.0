@@ -1,27 +1,28 @@
-Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010009.outbound.protection.outlook.com [40.93.198.9])
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013053.outbound.protection.outlook.com [40.93.196.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 760853DE43D;
-	Tue, 29 Sep 2026 17:33:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A51CE54146B;
+	Tue, 29 Sep 2026 17:34:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.53
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790703238; cv=fail; b=hPdRUQaz5CzdmaA965VT2WqIyZ8UDs/zbU957tiNNr3/dSYGDKlv0QOk5QSwdWv4FiKzY+2mJyi7I559lKJGiuYawFtJEK6ec8/jPDkMlwaEn7RImh4vlZB3xhSnsyZPlBlTDZwx4SrJAq9B2f5hrfizI+4cE/lrz8D1qJa2aw8=
+	t=1790703244; cv=fail; b=Misnw4nnVFu/Aqc8b9WbD4rkWV6KYHzC+73tNTw/hmH/6oAgjlgP//0a+DnwQgZtgcgTbVNceaQ5yQXLb0V+rGLug7pLovNbEmIRZpHajPbACHjITHpWLHUhusvtuT+Gw1zSOVHz3MBO90H1gzBN3wOc6E/pxcQqNVAxS1A6dlw=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790703238; c=relaxed/simple;
-	bh=QG5e9Gusx8Kklemi4OwAHNFZxLqEdv29TZb9DfszuMU=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=svnRTqFvv21BQwvuGxypS4A1KWdF3/1HxRqyumszmhnmnIVwyAQsK7dmJj40P9zc/x1kmU9lV/BsGCYjRXTbjrjDd+GIgar6vO/9MwD4EyJq+UTQLn7ZQC04sCyT8lSbL13QtAwGYCL5VrOeIhQkgJSNnQqbxMhPowqVjdwY4nE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=mq34r/Sh; arc=fail smtp.client-ip=40.93.198.9
+	s=arc-20240116; t=1790703244; c=relaxed/simple;
+	bh=Z8jWZinQlWLOL45PQeB5lrH+WfHGMW9b5SROLzSMwnA=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=bsy2brnEjnH7V26YhWEAAa2aIdW4ALvK0Y0NolhxWrOo18UPrGczeODsNFcKmXgb7crrJpwmwGZ08w2NdaBNd+wyqeHwtT4EV6DvEtYs2MqDy5/yQvUItFJg/EQr/v2vcgljRkVoP9pMBvEY1258sMSuXIXEshkw45tJou2lbDo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=tHwpDntO; arc=fail smtp.client-ip=40.93.196.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="mq34r/Sh"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="tHwpDntO"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=d/7k8lYHN5gZKpB93QWOLP2tnUXLlfcNzTIltwJf0fmXYuwQV/A3XgTfsabplmCWoOuKLEPWIDNyzHI28vhv83YPETHwhdSmQl2GlXUtuKEGKaqwXrmLs7c7XnGMDtsnxGY9GeadNMvTgHjsz/0c3mmy6zKcr0IrP7VYoBrsYp6koWP/ipIi+f/IRfs7vpyO8PQmE68oGYsEMrSJpAYsi9v8juVVDibNSzIWiSVvoRuRNuq9RZLmq2JFy9f2QNNkSCIoXu0az5OnTDBwO9ffe6+NnRsGIktsqaBOKhX6A+g929EMoHkxTcA+Y+JaInKisRC9BMWI/w83XzrJlrUlYw==
+ b=aKNwpNEerZK3kSo6lIgJwrDCTJwcrulVu5+AvoJAQV7mKezToAG293FApcBFurMIKJeTqzcdFMdxr8WeS1IXghIQU4oVDojQdypbmFZ9L6nlAzBRYEfBtBmMrpafJ4Tj4A3UXkvyRHlF6v1ObcQygMkA8F4YTS3ub9eJcvJkFqa6oXrshnrBabHjiCVBXODZNiKG+H/zSQQ0U7cSeKt7k1suOgjHlet7MlbTKhk2hyst4CrPLB8tT/vrWXpkXJHrxIiEJct948n4lQDoDnR/K9J4Fs7zIZ1hwxkSB05lOKpP0YHA7ZyxMCHV9uNduuMgsGFAxgIOiHoipmdHBVpwrg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=JRl58GWjZOcUiiLORDDmtZCiS+aO9JxKIom7e/HFo1o=;
- b=H4a7iH2qX8Sg+pqQLGDDHuFGq8p1ymKdculHzHl+ylEmnWoJwcSBUmMPuo0afzsHgQv+oXBTndV9I3NMZ5HFsStfxtbM8kSKdZOP0vgI57NZTh7xzxOVO4L313T6ocyliTJYclJ1n1Y6STxrs38U2sYgfyM+CyjYxS9L+Omyq4Wl/bVUv7tcCfMACB0URaExPw1rgz0ZkUcD6DdpFvc3PlW1V0jSlB+pIL5THquGCjHpLrQWholYHqJe7KITReDlLOjt/Esdo2N9cgvTiQMoztzfcY5UQlJx1idJNPhKNBtedqwRieSZQ5qJbx1P+hY21jX2MDY4k0LXq9WHLvz46g==
+ bh=dMIW0LkLn5EtC53OLrlI/pNdDfZq9DLcGUT+kgbOfSY=;
+ b=gLA+yx3bEJX57BiARKAvfHRObPttBwZxnnQznSKq4Xi4G1Y7CybmzmlYUlP4315safsMZbsJs2DKVbuV1jEVpvc5vMiQjjkdeP202RH3ilLeDFoq9vJeV6+XBnqmWwp/b/pmycl2InGVDUfxUze3+wkBQu1/Yxbel13gFW3gaxSEYfgrxiolEa5/b+wBHbc6mM271utyg9NYuEPLtM+IK3alXuXs5VUWp3iv/AM9lkQFY9OXWxzkBtadUSQXGiWn2L8Xll4lqtYp9xU8zKBxszwTn7z96RVSUR+/eRuQwl7THAc3AhOLsRgrgPhxRmUb5Y7n6dXZqZgNV7cS6mf3bg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -29,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JRl58GWjZOcUiiLORDDmtZCiS+aO9JxKIom7e/HFo1o=;
- b=mq34r/Shv3YG45737wYg3zOSQFhKzObhQX+0kh9x40eymXw2NR/EH9Gm4ua0DXCYKzxpwseq1Waag+c+ezpmcdiwQXZdpdCOIStCs8XxUqm7D6/BwSyqlFSoACjN1F+JmVSLhCF+bMVBjMYLA2uQBvbAiJAnpDhLXd/Kwx59quvvoysJB5SnDlxwkRxWhVWDwmjRSMYUeRg2SFgFsGn3RqQMMdyCOMNZjD4CPZjU85qacHBxEcguY+Iz4RAr6eVqSk6/Zap1ATYp/+C385TzWJJLmB9dVaoHWM5lbSVSlFqVTLBM1EmC+h+sfiYiv+7riVzyrl4y8aQJltIxYx7NLA==
-Received: from PH8P223CA0007.NAMP223.PROD.OUTLOOK.COM (2603:10b6:510:2db::10)
- by DM4PR12MB6230.namprd12.prod.outlook.com (2603:10b6:8:a7::10) with
+ bh=dMIW0LkLn5EtC53OLrlI/pNdDfZq9DLcGUT+kgbOfSY=;
+ b=tHwpDntOdfmymmkZVAzUnYRZi475ch3qTUfz52CjrjFvJBr/Hni/AjcG9gzDAZ9MqIrNHOjkh43aUFOt/u+EJVNhS+jqduWUl1tq6id2zHWvHHcel8eLFTzBzSF8sQueEpaD5TMX2ccfUop2U4boClWIBcFrFAVsQz2UjBBn7Jp/a1kSbYUc/efCXfg536MarelstIln9Qy22helw/aBcpiF197A4lxZl0KKGSwTEkMixUvw3+J5IiuS42+1h7r0XQVgQvFF4GBI0LX1D37fKMG2+u3InqGMSrnxzTtqBAPpfUPPE3wTy5R7UrTeR+MLWkf6kUEPEgoo9xvCcAyTYg==
+Received: from PH8PR07CA0019.namprd07.prod.outlook.com (2603:10b6:510:2cd::18)
+ by IA3PR12MB460542.namprd12.prod.outlook.com (2603:10b6:208:709::23) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.24; Tue, 29 Sep
- 2026 17:33:49 +0000
-Received: from BY1PEPF000264B5.namprd02.prod.outlook.com
- (2603:10b6:510:2db:cafe::63) by PH8P223CA0007.outlook.office365.com
- (2603:10b6:510:2db::10) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.472.15 via Frontend Transport; Tue,
- 29 Sep 2026 17:33:49 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.26; Tue, 29 Sep
+ 2026 17:33:57 +0000
+Received: from BY1PEPF000264B3.namprd02.prod.outlook.com
+ (2603:10b6:510:2cd:cafe::8a) by PH8PR07CA0019.outlook.office365.com
+ (2603:10b6:510:2cd::18) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.451.24 via Frontend Transport; Tue,
+ 29 Sep 2026 17:33:57 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -48,17 +49,17 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.117.161 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.117.161) by
- BY1PEPF000264B5.mail.protection.outlook.com (10.167.242.122) with Microsoft
+ BY1PEPF000264B3.mail.protection.outlook.com (10.167.242.120) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.472.14 via Frontend Transport; Tue, 29 Sep 2026 17:33:49 +0000
+ 15.21.472.14 via Frontend Transport; Tue, 29 Sep 2026 17:33:57 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
  (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Tue, 29 Sep
- 2026 10:33:22 -0700
+ 2026 10:33:27 -0700
 Received: from NV-2Y5XW94.nvidia.com (10.126.230.37) by rnnvmail201.nvidia.com
  (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Tue, 29 Sep
- 2026 10:33:19 -0700
+ 2026 10:33:24 -0700
 From: Shameer Kolothum <skolothumtho@nvidia.com>
 To: <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>
@@ -66,10 +67,12 @@ CC: <alex@shazbot.org>, <jgg@ziepe.ca>, <kevin.tian@intel.com>,
 	<kbusch@meta.com>, <michal.winiarski@intel.com>,
 	<satyanarayana.k.v.p@intel.com>, <sonangp@nvidia.com>, <ankita@nvidia.com>,
 	<nathanc@nvidia.com>, <mochs@nvidia.com>, <skolothumtho@nvidia.com>
-Subject: [RFC PATCH v2 00/16] vfio/pci: Handle PCI error recovery and report state to userspace
-Date: Tue, 29 Sep 2026 18:32:49 +0100
-Message-ID: <20260929173305.204856-1-skolothumtho@nvidia.com>
+Subject: [RFC PATCH v2 01/16] vfio/pci: Add a device access gate
+Date: Tue, 29 Sep 2026 18:32:50 +0100
+Message-ID: <20260929173305.204856-2-skolothumtho@nvidia.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260929173305.204856-1-skolothumtho@nvidia.com>
+References: <20260929173305.204856-1-skolothumtho@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -82,202 +85,213 @@ X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BY1PEPF000264B5:EE_|DM4PR12MB6230:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0f4696f1-9457-4400-2dd6-08df1e4fd293
+X-MS-TrafficTypeDiagnostic: BY1PEPF000264B3:EE_|IA3PR12MB460542:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8b95ad7a-bfb5-4a10-54e5-08df1e4fd75a
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|36860700016|1800799024|376014|23010399003|10067099003|56012099006|11063799006|6133799003|18002099003|13003099007;
+	BCL:0;ARA:13230040|23010399003|1800799024|36860700016|82310400026|376014|260925021911599003|11063799006|56012099006|260925021311599003|260925022911599003|10067099003|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	2h1UjKfLbAQzdRbVMnERsha8YbrgZUJwwrdHFHkOUt57d5fBpD956Af2Im1zC3g6LfZYtzUtHMT0sdsBoweCCvIfFvrKnyc9kXmCaT7Wx/KowchK/ywRk1cBdL6Dbmbw/7ynji4ulHDfHSVt1E7NiRFHzUo3Gw0/CGTNZ+6sasuuYG2mccGEWS6RDs0JE4owUdCROAgscDgnD6uaIizB3XSJoTGrzkunrEEMqwGgiMyXT8jDXyq9LyEiQ1a29SR83dIdX0ispCm9slSr5rET3hG42mAubjCgO001r4laBbnZN20M6AXFNxdC289YuDehj487YYIVfuGUUNLbBGFHwSCIXXx4BD/lfupYmQHUQ4vP+1n5IrGwVC8cs6l1+Jw5yVQX1kCiRKp8B39YSo/2GMeMTjbXgczkrCWzJkudziIRFYoBmASiKAOLbYg0WXsLXHUAcFiUW1Njg/XxzXB1dAIwY4AS/eqRyGY1mmKd5y47Z8R6/WnSVFF4eRN54lr4gJhE6WHHXb+xLkTwHbLqRpnQvuMW4jbh2s/IWdjB8XL2cC7NBzQawfGm8bZ3jmlnC02ai9BeoyFB4/ScOA6FmCFp1DWA0wKWMoBtTRDKE/vjUFs2p9gnOlvaOHC9sv0eCia1Gp8qsxJm8hQlFqA+V5xpM33tK5gUCXaxtiJAMfzftTIGHKoEEaXgSoYh7R3qde0z+t4U26gKh0Izp6u6ag==
+	INEfaaWd/IJiv8oZUtOkbhqljD7ptkOz43/pptxbxU/qEp7VUrJ835ZNKSdE9HRpKuZ1GqqaDYgnREgHPNLmg4GJ/hjaYz0dUh7aAswhs5bBDa8ZhxrONJXKVAuz53g5qHfGdbsC4VusazPAgLc1KHISsubfEH5+/fDs2XxDzxThXlXEayUwBJq8HZAzZHgttXK/xs7igxfjgqYE8NCEfGYKxzGtq/z6wB3Ah59JGhzuTkJKsCmm6FLex84DUIndtyAK1eth+qGg5usBjn44nTzYtz/339xDDtd+VZ/DtTRe2apySNwpFOqH2rDY0C6tD1SIGyTHlVxDHZNkAVOF9ZY7y0lSOzNfRTOv09y6c9sZ/8s2x2JqdoI/E34BlJB5j/f0GhbUannducxmJ9aJlIvVf+Txv1jxlVAPAViMjNzfsvUNjWx0K2EtPv2lWN1ahoidlhpnsyYGTpM4wyzX6mC+jTaZax8GvcYvxFLyDRjTQU5PNvE2gT2cr0X7UPkJe5RW0l8wwYMhySsFyKlVZGa52RcaVuFUGeNJ3RkjYAQdCu603B+mpB20JxJGLa++1fEnhKsrO93JuulkYeoYzbcTlgtRScG1eFqFXqCEVUuEY3FcRZHpODY6zYWRBplXLHPAyRJ5QIvsMky1JB/1gkNk4eq+CDyOJEHO7CMFAwCU3IclLoGpqHPmfrcrIGjEE5QqZtGzZRxZQefZgiC5bA==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(36860700016)(1800799024)(376014)(23010399003)(10067099003)(56012099006)(11063799006)(6133799003)(18002099003)(13003099007);DIR:OUT;SFP:1101;
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(36860700016)(82310400026)(376014)(260925021911599003)(11063799006)(56012099006)(260925021311599003)(260925022911599003)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	K94WZFaMvc7xuIobOtXBTRlO6Sa25pnUrF9h3TMo9bAv4lnn17tqtScknwRGzXDVOoxBDdNDuU9uXHcfbttlmHkikPKTr9URQ0ef842ttGI1BSmXHrtspX2gRF4shnpwt9FtyXAJ+Zys4di4VmEFSG7XqH/U/KkSF4tnP5Xr7yGGNWiIdlicDuEht/zGqqN/J8xTMKfplkVpAgxkHRcs9XoGxhsMe2Z7MmVPttsoCrCPdDgVxNwWHNjdk0hFM01JBnQ7tIteyd8yLrOzjNAaK+vndpyOUOlIaiLVSNf4OgKYvRFF7cGCgbhi08odOMRzqPmMIW4/DK2LjJ0B1AqCSkfylD0879mLZ6Q+ywtg9djRhPtg4eytWJlZR1sXeECGoftzDM5Aqx7803ASimob5CdcPvrSD+Y1vgug3O6GNQuFuV759oWHA7c6hCoEzE5B
+	s4U0JKUIPhlzNthcs3QEIivgC7Dcp+BHBlp8qbqefBfcOpimFDNltRAxbQ8/aTvS6F7gsIT/SGfR+uftk5BXCJmBq9okXkCYim+zjHy3v/KG02ROk9GyuCaZ41c5/uhaGwJoKg8mx14VGp9/GafQ1gxS/5wKC+0fpAAvYDs66aE1Zb8Hy8ta2jyJ9hUkki+dzhuhDsRC62Q0rEUH5ReeX9CuT4eR23W35ml0x7zJgYkJO38tIcDwkNez67ZeToIcZX0W3uOD/6j+pYyjSNGIaaTog0IXK27pWCqGF9AschphgxgEujJVY5dviIWLAVi+P3pdMgln7a+dmGmCqW4s8n5+yE6m95VHAga1/9XVVt8kgwmDA6gWU9otPOS3+UWkTWy4f7lz2AIGe4m27uZlx6lJ2vWLKRi+GTi1YcX7bLV73qoDhjXaUQNSHTyMCbeG
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Sep 2026 17:33:49.2678
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Sep 2026 17:33:57.2928
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0f4696f1-9457-4400-2dd6-08df1e4fd293
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8b95ad7a-bfb5-4a10-54e5-08df1e4fd75a
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BY1PEPF000264B5.namprd02.prod.outlook.com
+	BY1PEPF000264B3.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6230
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA3PR12MB460542
 
-Hi,
+PCI error recovery needs to block new device accesses and drain
+outstanding accesses before changing device state.
 
-Currently, vfio-pci signals the error eventfd from error_detected() and
-returns PCI_ERS_RESULT_CAN_RECOVER, including for permanent failure. It
-has no slot_reset() or resume() callback, so userspace is not notified
-when host recovery completes or whether the device was reset.
+Add an SRCU-based access gate, enabled by pci_recovery_supported.
+Serialize open and close state updates with access_lock.
 
-This series adds opt-in host PCI error recovery for vfio-pci. It blocks
-device access during recovery, restores device state after a host reset,
-and reports recovery status to userspace. The kernel runs host recovery
-and the VMM decides how to recover the guest.
+Assisted-by: LLM
+Signed-off-by: Shameer Kolothum <skolothumtho@nvidia.com>
+---
+ drivers/vfio/pci/vfio_pci_priv.h |  3 ++
+ include/linux/vfio_pci_core.h    | 19 ++++++++++++
+ drivers/vfio/pci/vfio_pci_core.c | 53 ++++++++++++++++++++++++++++++++
+ 3 files changed, 75 insertions(+)
 
-Changes from v1
----------------
- v1: https://lore.kernel.org/kvm/20260901093217.8539-1-skolothumtho@nvidia.com/
-  
- - Thanks to Satya and Alex for reviews/feedback.
- - Use SRCU to drain ongoing device accesses and reject new accesses during
-   recovery. A mutex protects recovery-state updates. 
- - Return SIGBUS for blocked BAR faults instead of waiting in the fault
-   handler. VMM handling still needs target validation.
- - Reject userspace SR-IOV changes while access is blocked.
- - Exclude s390 and all CXL memory devices for now as s390 and CXL RCH
-   recovery can omit completion callbacks.
-  
-Design
-------
-Userspace opts in through VFIO_DEVICE_FEATURE_PCI_ERROR_RECOVERY. It
-registers an eventfd and reads status flags and a sequence number. The
-existing error eventfd is still signaled.
-
-The callbacks handle the host recovery sequence:
-
- - error_detected() blocks new accesses and drains admitted ones,
-   quiesces INTx, and revokes BAR mappings and exported DMA-BUFs. On a
-   normal channel it also clears bus mastering. It votes CAN_RECOVER
-   for a normal channel, NEED_RESET for a frozen channel, and DISCONNECT
-   for permanent failure. Failure to save PCI_COMMAND or disable bus
-   mastering leaves access blocked and returns NONE so other devices
-   can continue recovery.
- - slot_reset() restores the configuration saved at open after a host
-   reset, then tears down interrupt configuration. Userspace must set
-   up interrupts again.
- - resume() completes restoration, unblocks access and completes INTx
-   handling. A restoration failure keeps the device blocked.
-
-Non-fatal errors also block device access because host recovery may
-require a reset. Userspace reads the recovery status to determine
-whether the device was reset or recovery failed.
-  
-Without opt-in, the existing error notification behavior is retained.
-The open check also rejects a previously recorded host transaction when
-recovery is disabled, so closing the device does not discard that state.
-
-Locking and open questions
---------------------------
-Several locks are involved in recovery. PCI core holds device_lock
-while calling the driver, preventing concurrent driver binding or
-unbinding. During the bus walk, it also holds pci_bus_sem for reading
-to keep the device list stable. Adding or removing PCI devices requires
-the write lock. This semaphore is shared across all PCI buses.
+diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
+index 4e7162234a2e..623e73f379cc 100644
+--- a/drivers/vfio/pci/vfio_pci_priv.h
++++ b/drivers/vfio/pci/vfio_pci_priv.h
+@@ -73,6 +73,9 @@ u16 vfio_pci_memory_lock_and_enable(struct vfio_pci_core_device *vdev);
+ void vfio_pci_memory_unlock_and_restore(struct vfio_pci_core_device *vdev,
+ 					u16 cmd);
  
-VFIO recovery blocks new accesses, waits for existing SRCU readers to
-finish, and takes memory_lock. Power transitions also take memory_lock,
-but entering D0 can then acquire pci_bus_sem to update PCIe link power
-management (ASPM).
-
-Local Sashiko/Claude review reports a lock-order conflict as below:
-
- 1. A guest D0 request holds memory_lock.
- 2. PCI core holds pci_bus_sem for reading while VFIO's recovery
-    callback waits for memory_lock.
- 3. Removal of an unrelated PCI device waits for the bus write lock.
- 4. D0's ASPM update requests the bus read lock and waits behind that
-    writer.
-
-Each task waits for another, so none can proceed.
-
-One possible solution could be(not implemented):
-
- - PCI core guarantees that pci_bus_sem is held for reading before
-   invoking supported recovery callbacks. VFIO uses
-   pci_set_power_state_locked() in those callbacks, avoiding another
-   acquisition of the bus lock.
- - A new pci_try_set_power_state() helper tries to acquire pci_bus_sem
-   and returns -EAGAIN on contention. Ordinary VFIO D0 paths use this
-   helper and handle failure instead of waiting while holding VFIO locks
-	  
-Not sure there are better ways to handle this or not. Feedbacks appreciated
-on this.
-
-Another issue flagged was(I think this is a pre-existing one):
- - Open/close coordination with the whole host recovery transaction
-   was already missing. Recovery can start after the open check, and
-   close can overlap the physical reset. Restoration of closed devices
-   is also not implemented.
-
-Testing
--------
-Basic sanity tests performed on a GB200 with an NVIDIA GPU assigned.
-
-Kernel branch:
- https://github.com/shamiali2008/linux/tree/vfio-aer-rfc-v2-ext
-
-QEMU test branch is here(This registers the recovery eventfd and uses
-pcie_aer_inject_error() to report the error to Guest)
- https://github.com/shamiali2008/qemu-master/commits/private-master-vfio-aer-test-v2/
-
-Software AER injection was performed using a modified pcieaer_inject
-module.
-
-./aer-inject nonfatal.conf
-
-qemu-system-aarch64: info: vfio 0018:06:00.0: host PCI error recovery completed (seq 1)
-
-Guest kernel:
-
-[   59.036988] pcieport 0000:01:00.0: AER: Uncorrectable (Non-Fatal) error message received from 0000:02:00.0
-[   59.038326] nvidia 0000:02:00.0: PCIe Bus Error: severity=Uncorrectable (Non-Fatal), type=Transaction Layer, (Completer ID)
-[   59.038440] nvidia 0000:02:00.0:   device [10de:2941] error status/mask=00008000/02400000
-[   59.038533] nvidia 0000:02:00.0:    [15] CmpltAbrt              (First)
-[   59.038705] nvidia 0000:02:00.0: AER:   TLP Header: 0x00000000 0x00000000 0x00000000 0x00000000
-...
-
-./aer-inject fatal.conf
-qemu-system-aarch64: info: vfio 0018:06:00.0: host PCI error recovery started (seq 2, channel frozen)
-qemu-system-aarch64: info: vfio 0018:06:00.0: host PCI error recovery completed (seq 2, device was reset)
-
-Guest kernel:
-
-[  150.909306] pcieport 0000:01:00.0: AER: Uncorrectable (Fatal) error message received from 0000:02:00.0
-[  150.909566] nvidia 0000:02:00.0: AER: PCIe Bus Error: severity=Uncorrectable (Fatal), type=Inaccessible, (Unregistered Agent ID)
-[  150.909835] nvidia 0000:02:00.0: AER: can't recover (no error_detected callback)
-[  150.910062] pcieport 0000:01:00.0: unlocked secondary bus reset via: pciehp_reset_slot+0x54/0x98
-[  156.603467] pcieport 0000:01:00.0: AER: Root Port link has been reset (0)
-...
-
-Please take a look and let me know your feedback.
-
-Thanks,
-Shameer
-
-Shameer Kolothum (16):
-  vfio/pci: Add a device access gate
-  vfio/pci: Gate config space access
-  vfio/pci: Buffer ROM reads before copying to userspace
-  vfio/pci: Gate BAR and ROM access
-  vfio/pci: Fail BAR faults while access is blocked
-  vfio/pci: Gate interrupt configuration
-  vfio/pci: Gate function reset and runtime power management
-  vfio/pci: Gate device information queries and DMA-BUF export
-  vfio/pci: Add PCI error recovery state
-  vfio/pci: Quiesce INTx while access is blocked
-  vfio/pci: Add INTx recovery start and finish helpers
-  vfio/pci: Restore device state from slot_reset()
-  vfio/pci: Complete recovery in resume()
-  vfio/pci: Block device access during host recovery
-  vfio/pci: Add VFIO_DEVICE_FEATURE_PCI_ERROR_RECOVERY
-  vfio/pci: Enable host PCI error recovery for vfio-pci
-
- drivers/vfio/pci/vfio_pci_priv.h   |  10 +
- include/linux/vfio_pci_core.h      |  38 ++
- include/uapi/linux/vfio.h          |  44 ++
- drivers/vfio/pci/vfio_pci.c        |  12 +
- drivers/vfio/pci/vfio_pci_config.c | 104 ++++-
- drivers/vfio/pci/vfio_pci_core.c   | 636 ++++++++++++++++++++++++++++-
- drivers/vfio/pci/vfio_pci_dmabuf.c |  21 +-
- drivers/vfio/pci/vfio_pci_intrs.c  | 131 ++++++
- drivers/vfio/pci/vfio_pci_rdwr.c   | 169 ++++++--
- 9 files changed, 1090 insertions(+), 75 deletions(-)
-
++int vfio_pci_core_access_begin(struct vfio_pci_core_device *vdev);
++void vfio_pci_core_access_end(struct vfio_pci_core_device *vdev, int idx);
++
+ #ifdef CONFIG_VFIO_PCI_IGD
+ bool vfio_pci_is_intel_display(struct pci_dev *pdev);
+ int vfio_pci_igd_init(struct vfio_pci_core_device *vdev);
+diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
+index 9a1674c152aa..de0993280344 100644
+--- a/include/linux/vfio_pci_core.h
++++ b/include/linux/vfio_pci_core.h
+@@ -13,6 +13,7 @@
+ #include <linux/vfio.h>
+ #include <linux/irqbypass.h>
+ #include <linux/rcupdate.h>
++#include <linux/srcu.h>
+ #include <linux/types.h>
+ #include <linux/uuid.h>
+ #include <linux/notifier.h>
+@@ -129,6 +130,7 @@ struct vfio_pci_core_device {
+ 	bool			disable_idle_d3:1;
+ 	bool			nointxmask:1;
+ 	bool			disable_vga:1;
++	bool			pci_recovery_supported:1;
+ 	/* Flags modified at runtime - dedicated storage unit */
+ 	bool			needs_reset;
+ 	bool			pm_intx_masked;
+@@ -148,6 +150,23 @@ struct vfio_pci_core_device {
+ 	struct vfio_pci_core_device	*sriov_pf_core_dev;
+ 	struct notifier_block	nb;
+ 	struct rw_semaphore	memory_lock;
++	/*
++	 * Device accesses take access_srcu and check device_open and
++	 * access_blocked. To block access, set access_blocked and wait for
++	 * existing readers with synchronize_srcu(). New accesses fail with
++	 * -EIO while blocked.
++	 *
++	 * Close clears access_blocked before device_open.
++	 *
++	 * INTx paths use irqlock instead of access_srcu to coordinate with
++	 * recovery. They read pci_recovery_enabled and access_blocked with
++	 * READ_ONCE(), since writers do not always hold irqlock.
++	 */
++	struct srcu_struct	access_srcu;
++	bool			access_blocked;
++	/* Set after open completes, cleared before close tears down state. */
++	bool			device_open;
++	struct mutex		access_lock;	/* gate flag writers */
+ 	struct list_head	dmabufs;
+ };
+ 
+diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+index 6757054e9d87..88a78766c178 100644
+--- a/drivers/vfio/pci/vfio_pci_core.c
++++ b/drivers/vfio/pci/vfio_pci_core.c
+@@ -662,10 +662,18 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
+ 	if (!vfio_vga_disabled(vdev) && vfio_pci_is_vga(pdev))
+ 		vdev->has_vga = true;
+ 
++	if (vdev->pci_recovery_supported) {
++		ret = init_srcu_struct(&vdev->access_srcu);
++		if (ret)
++			goto out_free_config;
++	}
++
+ 	vfio_pci_core_map_bars(vdev);
+ 
+ 	return 0;
+ 
++out_free_config:
++	vfio_config_free(vdev);
+ out_free_zdev:
+ 	vfio_pci_zdev_close_device(vdev);
+ out_free_state:
+@@ -812,6 +820,9 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
+ 	/* Put the pm-runtime usage counter acquired during enable */
+ 	if (!vdev->disable_idle_d3)
+ 		pm_runtime_put(&pdev->dev);
++
++	if (vdev->pci_recovery_supported)
++		cleanup_srcu_struct(&vdev->access_srcu);
+ }
+ EXPORT_SYMBOL_GPL(vfio_pci_core_disable);
+ 
+@@ -820,6 +831,13 @@ void vfio_pci_core_close_device(struct vfio_device *core_vdev)
+ 	struct vfio_pci_core_device *vdev =
+ 		container_of(core_vdev, struct vfio_pci_core_device, vdev);
+ 
++	if (vdev->pci_recovery_supported) {
++		scoped_guard(mutex, &vdev->access_lock) {
++			WRITE_ONCE(vdev->access_blocked, false);
++			WRITE_ONCE(vdev->device_open, false);
++		}
++	}
++
+ 	if (vdev->sriov_pf_core_dev) {
+ 		mutex_lock(&vdev->sriov_pf_core_dev->vf_token->lock);
+ 		WARN_ON(!vdev->sriov_pf_core_dev->vf_token->users);
+@@ -852,6 +870,12 @@ void vfio_pci_core_finish_enable(struct vfio_pci_core_device *vdev)
+ 		vdev->sriov_pf_core_dev->vf_token->users++;
+ 		mutex_unlock(&vdev->sriov_pf_core_dev->vf_token->lock);
+ 	}
++
++	if (vdev->pci_recovery_supported) {
++		guard(mutex)(&vdev->access_lock);
++		WRITE_ONCE(vdev->access_blocked, false);
++		WRITE_ONCE(vdev->device_open, true);
++	}
+ }
+ EXPORT_SYMBOL_GPL(vfio_pci_core_finish_enable);
+ 
+@@ -1680,6 +1704,33 @@ static ssize_t vfio_pci_rw(struct vfio_pci_core_device *vdev, char __user *buf,
+ 	return ret;
+ }
+ 
++/*
++ * Return an SRCU index for access_end(), or -EIO if access is blocked
++ * or the device is closed. Do not wait for recovery.
++ */
++int vfio_pci_core_access_begin(struct vfio_pci_core_device *vdev)
++{
++	int idx;
++
++	if (!vdev->pci_recovery_supported)
++		return 0;
++
++	idx = srcu_read_lock(&vdev->access_srcu);
++	if (unlikely(!READ_ONCE(vdev->device_open) ||
++		     READ_ONCE(vdev->access_blocked))) {
++		srcu_read_unlock(&vdev->access_srcu, idx);
++		return -EIO;
++	}
++
++	return idx;
++}
++
++void vfio_pci_core_access_end(struct vfio_pci_core_device *vdev, int idx)
++{
++	if (vdev->pci_recovery_supported)
++		srcu_read_unlock(&vdev->access_srcu, idx);
++}
++
+ ssize_t vfio_pci_core_read(struct vfio_device *core_vdev, char __user *buf,
+ 		size_t count, loff_t *ppos)
+ {
+@@ -2196,6 +2247,7 @@ int vfio_pci_core_init_dev(struct vfio_device *core_vdev)
+ 	if (ret && ret != -EOPNOTSUPP)
+ 		return ret;
+ 	INIT_LIST_HEAD(&vdev->dmabufs);
++	mutex_init(&vdev->access_lock);
+ 	init_rwsem(&vdev->memory_lock);
+ 	xa_init(&vdev->ctx);
+ 
+@@ -2210,6 +2262,7 @@ void vfio_pci_core_release_dev(struct vfio_device *core_vdev)
+ 
+ 	mutex_destroy(&vdev->igate);
+ 	mutex_destroy(&vdev->ioeventfds_lock);
++	mutex_destroy(&vdev->access_lock);
+ 	kfree(vdev->region);
+ 	kfree(vdev->pm_save);
+ }
 -- 
 2.43.0
 
