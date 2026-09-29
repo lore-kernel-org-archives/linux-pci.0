@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5811544D60;
-	Tue, 29 Sep 2026 17:48:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D4EE53C3A9;
+	Tue, 29 Sep 2026 17:49:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790704130; cv=none; b=lUdpr2MzxFNFjBljl127Yx1AhY3Dw2CpyFDOUm+ODlLCMdwS51XuAClQQJ3MOsPwe1RW1T2UUbXbIh7NmF0OJgMFErYcTO8Ot8l52LZpvVDA6JQLGiukUaSxMck1qX3n6cfBG8MBtp8MlTOCE1RJuDvwjYBvwSq8eXD9pByGulQ=
+	t=1790704191; cv=none; b=Smv55mHvlBNOoiWVgopLWiExl5i3cwxJ5JWVaOI0m/D2umFdS2t3SxMzLNn7q/deKDNpHiVidCTdHVJqJWvbQWDkdyKUrPiSkz5kxI0b8dD6j8pVfPppEhPT7sy+3LejjkO6bIhHPoS9ooUcfBzXYmKka+iJKy4GnnHjR7+5NcQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790704130; c=relaxed/simple;
-	bh=dvLjeSufS6j54UNBaF7Ctn0RNjfhpWmfvjSbcFxtlMA=;
+	s=arc-20240116; t=1790704191; c=relaxed/simple;
+	bh=P/k4f/eTi3CvrRllbfZMRkiksfAGIzP2q4PKRmVoEBA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CPbufQ+KWjSrCwF1fbOwTaejh+3VgX4KLHw2REtAvHTShMtrxfumZBR6+EE8tdBhhI8oDBSknEnNOA7COUlv85M5F/03crCRvc0cP/2uE44/nnURsKm5W5N5rxRBfd91iF9pyHDy6hNaMjCt97CIsFrbtKh+8peeE1TOZK65B8k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gda7WNSs; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=jM+9sdaDeq820/HcHaIwUZm5zU93ai2aJsY0V1K/gqkNrHi0uXjRAp8xd5gVGObpUHZAOoxZ1ckj6TnxKDzP9bYem3sb7ZR4/m/6SQd7TAKuvQfCb5BIKkLHpYQAoI+Jk/SOFjsWTySuJqRy7HwKIdsz2tOvQf98aGpGdSvbvgs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=brXosUTw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gda7WNSs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2BE6E1F000FF;
-	Tue, 29 Sep 2026 17:48:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="brXosUTw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69BE11F000FF;
+	Tue, 29 Sep 2026 17:49:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790704128;
-	bh=2BvN3XOcdZYklJcn02KCfi0KtcY4qclQ9jKnxKqNRpA=;
+	s=k20260515; t=1790704189;
+	bh=VFLVaCJ04h8QR8kYowCEUJL19oIQH8ZG5ysEH+fwf/M=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gda7WNSsP0SE0ZitJpRnRRMAs9dgXpNX5yQB3/R01R6+Iw9cOQa2EK8WTPnsAtYf/
-	 eqG38hlH+7nEpLZ4pe4k7/q86kgD4Zms57r1zdzaBnD6FGZBA95998mxangSbGApR0
-	 aGNtV7wYxWGdYZiX3d811sbdiHlpfFvVZ/97IFh4V7tZzL0u4CrJLzxbOSJsPppgiS
-	 Q/YZgXQUawGFb6PHhpyLRr1OP9I90b2mpQmHSu43H1L0NMxBjW9EIlQKp89vKHqJO0
-	 NGJ2vgrYXozvomD62y3KHXVEKsw3U7evDuqkrZZ4tPcmfLOc4AfpU21SGfdaL2VehC
-	 S8RxnUxTYSscA==
+	b=brXosUTwIqs/WaZ/TmMJUlhK/rLh+f14jgg2YA9p6rk1MvtEExLiuQfHEPrq5e/+4
+	 dJzlmVJCWnRwyXN+e9wlAmJGsOhqBvszviGCIChZjZCu1KuwKVr+mRBFbKGsLMp2w8
+	 1vNQ1ti55kjLrMhhCjrH3P/Ysd51rmL6/RAZfT3nJEdFeQ+kE606KP2nwQRKY1m9ue
+	 E3lHeZZtoNVpiG53hzNRNcRsxOluyDE3gzGlXTPGqQ0v+OtWAmAMVgXXnJS2bhtwS5
+	 yvFxKHYuC5fRxSMtNwDSUf4I60IH8lKgoeGThw7dU2raqiN7uujN6uslpYqgYEmmg8
+	 c6y4pyrSN9z6Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH v2 15/16] vfio/pci: Add
- VFIO_DEVICE_FEATURE_PCI_ERROR_RECOVERY
+Subject: Re: [RFC PATCH v2 03/16] vfio/pci: Buffer ROM reads before copying
+ to userspace
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shameer Kolothum" <skolothumtho@nvidia.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260929173305.204856-16-skolothumtho@nvidia.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
+In-Reply-To: <20260929173305.204856-4-skolothumtho@nvidia.com>
 References: <20260929173305.204856-1-skolothumtho@nvidia.com>
- <20260929173305.204856-16-skolothumtho@nvidia.com>
+ <20260929173305.204856-4-skolothumtho@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 29 Sep 2026 17:48:47 +0000
-Message-Id: <20260929174848.2BE6E1F000FF@smtp.kernel.org>
+Date: Tue, 29 Sep 2026 17:49:49 +0000
+Message-Id: <20260929174949.69BE11F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,58 +47,59 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] vfio/pci: mixing goto-based cleanup and guard() in vfio_pci_reco=
-very_set()
+- [High] vfio/pci: soft lockup in vfio_pci_rom_read loops due to missing co=
+nd_resched
 --
 
-commit a042b1f42248620e0a4adaa43aee23e3f4d393dc
+commit 27d4f4cebe481807304449721e6097b02db9fc50
 Author: Shameer Kolothum <skolothumtho@nvidia.com>
 
-vfio/pci: Add VFIO_DEVICE_FEATURE_PCI_ERROR_RECOVERY
+vfio/pci: Buffer ROM reads before copying to userspace
 
-This commit adds a device feature to enable host PCI error recovery and
-query its status via VFIO.
+This commit moves ROM reads into a separate helper, buffering the requested
+ROM data and unmapping the ROM before copying it to userspace. This helps
+keep userspace faults outside the recovery gate.
 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-> index 2ec8022e4a692..314d77868803c 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> diff --git a/drivers/vfio/pci/vfio_pci_rdwr.c b/drivers/vfio/pci/vfio_pci=
+_rdwr.c
+> --- a/drivers/vfio/pci/vfio_pci_rdwr.c
+> +++ b/drivers/vfio/pci/vfio_pci_rdwr.c
 [ ... ]
-> @@ -1752,6 +1752,111 @@ static int vfio_pci_core_feature_token(struct vfi=
-o_pci_core_device *vdev,
->  	return 0;
->  }
-> =20
-> +/* Consumes the eventfd reference on both success and failure. */
-> +static int vfio_pci_recovery_set(struct vfio_pci_core_device *vdev,
-> +				 struct eventfd_ctx *ctx, bool enable)
+> +static ssize_t vfio_pci_rom_read(struct vfio_pci_core_device *vdev,
+> +				 char __user *buf, size_t count, loff_t pos)
 > +{
-> +	int ret;
-> +
-> +	guard(mutex)(&vdev->access_lock);
-> +	if (!vdev->device_open) {
-> +		ret =3D -ENODEV;
-> +		goto out_put;
-> +	}
-
-[Severity: Medium]
-Does this code mix goto-based error handling with scope-based guard()
-cleanup?
-
-Subsystem guidelines expect that a given routine should either convert all
-resources that need cleanup to scope-based cleanup, or convert none of them.
-Mixing the two in the same function creates confusing ownership semantics
-that can lead to bugs during future modifications.
-
 [ ... ]
+> +	/*
+> +	 * Certain devices (e.g. Intel X710) don't support qword
+> +	 * access to the ROM bar. Otherwise PCI AER errors might be
+> +	 * triggered.
+> +	 *
+> +	 * Disable qword access to the ROM bar universally, which
+> +	 * worked reliably for years before qword access is enabled.
+> +	 */
+> +	while (done < length) {
+> +		if (length - done >=3D 4 && IS_ALIGNED(pos + done, 4)) {
+> +			u32 val =3D vfio_ioread32(io + pos + done);
+
+[Severity: High]
+Can this loop cause a soft lockup on large ROM reads?
+
+If a userspace application or guest issues a large read on the ROM BAR (for
+example, 16MB), this while loop in vfio_pci_rom_read() will perform millions
+of synchronous MMIO reads without yielding.
+
+Since each MMIO read can take significant time, this could stall the CPU co=
+re
+for seconds and trigger a soft lockup panic. Should this loop include a
+cond_resched() to prevent an untrusted guest from causing a local Denial of
+Service?
+
 > +
-> +out_put:
-> +	if (ctx)
-> +		eventfd_ctx_put(ctx);
-> +	return ret;
-> +}
+> +			memcpy(data + done, &val, sizeof(val));
+> +			done +=3D sizeof(val);
+> +		} else if (length - done >=3D 2 && IS_ALIGNED(pos + done, 2)) {
+[ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260929173305.2048=
-56-1-skolothumtho@nvidia.com?part=3D15
+56-1-skolothumtho@nvidia.com?part=3D3
