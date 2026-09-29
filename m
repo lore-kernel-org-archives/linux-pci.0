@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E8E423394A;
-	Tue, 29 Sep 2026 17:51:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0549A54A7CD;
+	Tue, 29 Sep 2026 17:51:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790704273; cv=none; b=rD8nh/l7tB03hynRdble08MmG10w+F00R5mSLZ0GLVV6EgMcqH5aO7QVrdZueCXli4kN/fidu/j10jddcsS/mGatP4oL+fYA4G7qMECcO9Hi92DF4DPsM5u3MyySNdJ4z2kf9fDBOE+J6HA78la2KgQ7fczgPZB96WsfgT2fOEk=
+	t=1790704295; cv=none; b=nE7EhOj+j9IB7Z0v8BZAOB97nRbiFXh0Nvzgmt0UQqzN2pLrhWqmGjthpIxv7Gb0xxZPHdW8182LTPy90oaCGqsniyVZskYlqcIFL2bRGb4TC6CiXUbbVdkKWoGODcbNw+Dh708SKe1H2bcC9hKigyotHnh3reRqT8yaxFsS4Ng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790704273; c=relaxed/simple;
-	bh=PzRO7iZxKad7zLZy20RqAA4LPdnscqXdcy1fni94Jwo=;
+	s=arc-20240116; t=1790704295; c=relaxed/simple;
+	bh=7PigMz/SjXJFUZzXgfFifGRrZ2xo3StMSwMAty9Oezg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ZP4KD3EfXn5DuY7BjOokne759rhYHaEdGKPLiSAGtLRZUp6INBxhVd1i7crj3K+2iKgcq52EYYINP4lczr15+PlWRoijQpxM5gadAYMWaXjnQ9xlnIT5b/rrIaBbts6ZnmlcZSDT00nTLMbebNKnXBBN/k9sIm1b9P+jYVx+TgA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f/tnewMH; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=UO6wLUISrgbpZEgnJ43kj3gzodvyJOv5Iu6NA+4cpg9qOyIRxU7Gt5eOErjIlQmBP/jnpsHM1/MV+x15VVN3EgoG3DBQxiPT1nFazve0dTVvGBmk1mGygyk7RlQmTYT7a+1p6MbJylGPmgtb3PG74uLb3QFVbvi2hr2KCmsosRQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K7EF6uDC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f/tnewMH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2FA61F000FF;
-	Tue, 29 Sep 2026 17:51:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K7EF6uDC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 605B51F00893;
+	Tue, 29 Sep 2026 17:51:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790704272;
-	bh=WdsYedQbxvNzvxZItlMmv+EVwSCS34Z3T4rR6imyunY=;
+	s=k20260515; t=1790704293;
+	bh=14+QWNba9sXjAEe6Nuh+3Ihp0wHQPzmYPpEvS7f3IZY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=f/tnewMHmuSD1Z9aypK8aPMMrVPdPM73VoZXYwH/8V1KCYP4Hf/acxq7zMJnpxbU9
-	 D9q6WYNHXkmxcHDGz2UR0wrw1JRbPqWb/JA/ZGspiTKsvyHLPfkOdnE9xyFHxKQwkc
-	 Z/6T2XJ+KpiggwTPLi2br5fiqpWF5cMCKioKGN3m0/t3v66x/4gCFK87asjp/2wVVI
-	 Pt9cxP/CSjUUDfOh82yMRMy7xNuTmWY65h7JIW9DORPTXBVEzd7lNou12GXceYCwh4
-	 MWROwFvbE5sErpwW3XwnzCN/XLvFI6Z+rqg/+yls7QyzdqArSS9eQQokQxeiel8g3v
-	 Rc8iBNTJ7i1nw==
+	b=K7EF6uDC7lCFeVj3f8h4iHnSR1MFuGOMFKFg5CuyMYnyeXNex5o/ChkVA601NFX//
+	 CR7osJVeqmeCqTyDVEitPkVjzJ3odn7b8JmssTeJsw2iGAxLYjrrpPt/KBu7ij5X8e
+	 5Fc4ymQ+NCh3Ygs6BP7hO8HyLPtRNSkFMMx2IzW1Ys88Mm+7MyLaZzA+vB+vZvKTKx
+	 hJ6hY3jHpUT2WJK0zUl8Eal5ugPUw721+JoueIJ60BzpaOhFmGuKSlrg7VEozx7hdo
+	 q0oZs4sbWydai/Ez46BIVplKWZo4HkoJTd5mKTIRvD8jNaxLYk1nXScpmI1MyQC9nv
+	 YgwaIUVo8SYyg==
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH v2 13/16] vfio/pci: Complete recovery in resume()
+Subject: Re: [RFC PATCH v2 14/16] vfio/pci: Block device access during host
+ recovery
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shameer Kolothum" <skolothumtho@nvidia.com>
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
-In-Reply-To: <20260929173305.204856-14-skolothumtho@nvidia.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260929173305.204856-15-skolothumtho@nvidia.com>
 References: <20260929173305.204856-1-skolothumtho@nvidia.com>
- <20260929173305.204856-14-skolothumtho@nvidia.com>
+ <20260929173305.204856-15-skolothumtho@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 29 Sep 2026 17:51:11 +0000
-Message-Id: <20260929175111.F2FA61F000FF@smtp.kernel.org>
+Date: Tue, 29 Sep 2026 17:51:33 +0000
+Message-Id: <20260929175133.605B51F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,69 +47,62 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] PCI: deadlock in AER resume due to recursive pci_bus_sem read lock
+- [Low] cleanup: vfio_pci_core_enable() mixes goto and scoped_guard()
 --
 
-commit ac6b588d8a9a2d9a21c17325b45933f079efe247
+commit 054f5c9b3c995b5b332595d9db5677b803d39ed9
 Author: Shameer Kolothum <skolothumtho@nvidia.com>
 
-vfio/pci: Complete recovery in resume()
+vfio/pci: Block device access during host recovery
 
-This commit adds the resume() callback to complete host transactions and no=
-tify
-userspace during VFIO PCI recovery. It restores device state, handles PCI
-power state transitions, and finishes restoring hardware state before allow=
-ing
-accesses.
+This patch extends error_detected() to block device access during host
+recovery by draining existing SRCU readers. It also masks INTx, revokes
+BAR mappings, and manages the host transaction state across device open
+and close.
 
 > diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
 _core.c
-> index a7b7499e071c1..d6cc34240b250 100644
+> index d6cc34240b250..2ec8022e4a692 100644
 > --- a/drivers/vfio/pci/vfio_pci_core.c
 > +++ b/drivers/vfio/pci/vfio_pci_core.c
-
-[ ... ]
-
-> @@ -2615,6 +2616,87 @@ static pci_ers_result_t vfio_pci_core_aer_slot_res=
-et(struct pci_dev *pdev)
->  	return PCI_ERS_RESULT_NONE;
->  }
+> @@ -617,6 +617,15 @@ int vfio_pci_core_enable(struct vfio_pci_core_device=
+ *vdev)
+>  	u16 cmd;
+>  	u8 msix_pos;
 > =20
-> +static void vfio_pci_core_aer_resume(struct pci_dev *pdev)
-> +{
-> +	struct vfio_pci_core_device *vdev =3D dev_get_drvdata(&pdev->dev);
+> +	if (vdev->pci_recovery_supported) {
+> +		if (pci_dev_is_disconnected(pdev))
+> +			return -ENODEV;
+> +		scoped_guard(mutex, &vdev->access_lock) {
 
-[ ... ]
+[Severity: Low]
+Does this mix scope-based cleanup with goto-based error handling in the same
+function?
 
-> +	/*
-> +	 * Apply deferred D0 requests before restoring PCI_COMMAND.
-> +	 * slot_reset() has already established D0 after a reset.
-> +	 */
-> +	power_up =3D vdev->power_up_pending;
-> +	vdev->power_up_pending =3D false;
-> +	if (power_up && !(vdev->pci_recovery_flags & VFIO_PCI_RECOVERY_RESET)) {
-> +		ret =3D vfio_pci_set_power_state(vdev, PCI_D0);
+The cleanup subsystem guidelines in include/linux/cleanup.h state that goto
+and cleanup helpers like scoped_guard() should never be mixed in the same
+function to prevent ownership confusion. For a given routine, the expectati=
+on
+is to convert all resources that need a goto cleanup to scope-based cleanup,
+or convert none of them.
 
-[Severity: High]
-Can this lead to a deadlock of the PCI subsystem?
+Looking at vfio_pci_core_enable(), the function still relies heavily on
+legacy goto cleanup labels (like out_disable_device: and out_power:) on its
+error paths.=20
 
-An AER recovery event triggers the AER core, which acquires pci_bus_sem for
-read via pci_walk_bridge().
+Should this function be fully converted to scope-based cleanup first, or
+should this new lock acquisition continue using the traditional lock and
+unlock pattern to match the rest of the function?
 
-The AER resume callback vfio_pci_core_aer_resume() then calls
-vfio_pci_set_power_state(), which internally attempts to recursively acquire
-pci_bus_sem for read via pcie_aspm_pm_state_change().
-
-If a writer, such as a PCI hotplug event, requests pci_bus_sem between these
-two read lock attempts, the second read attempt will deadlock.
-
-While this is noted as an unresolved issue in the series cover letter, is
-there a plan to mitigate this recursive lock before merging?
-
-> +		if (ret)
-> +			goto out_memory;
+> +			if (vdev->pci_recovery_host_active)
+> +				return -EBUSY;
+> +		}
 > +	}
+> +
+>  	if (!vdev->disable_idle_d3) {
+>  		ret =3D pm_runtime_resume_and_get(&pdev->dev);
+>  		if (ret < 0)
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260929173305.2048=
-56-1-skolothumtho@nvidia.com?part=3D13
+56-1-skolothumtho@nvidia.com?part=3D14
