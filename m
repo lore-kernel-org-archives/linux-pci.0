@@ -1,105 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D4EE53C3A9;
-	Tue, 29 Sep 2026 17:49:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C334E538D7A;
+	Tue, 29 Sep 2026 17:49:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790704191; cv=none; b=Smv55mHvlBNOoiWVgopLWiExl5i3cwxJ5JWVaOI0m/D2umFdS2t3SxMzLNn7q/deKDNpHiVidCTdHVJqJWvbQWDkdyKUrPiSkz5kxI0b8dD6j8pVfPppEhPT7sy+3LejjkO6bIhHPoS9ooUcfBzXYmKka+iJKy4GnnHjR7+5NcQ=
+	t=1790704196; cv=none; b=eLMqjYd3okln/bt4mJleaduLdO8D6ETvEbMslmXGDpFEQmyiz7VnNBU2le9BG1MTs+aL4EYWU9OYtchy06fRBI4YzJRVn+PLSGbFsX/Fcb8V9HoAPan9OmJoDGGx7Vj/oknekiKgRSDjWtrx6VfZTzA4V0nbZGlIjd56riK+2Q8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790704191; c=relaxed/simple;
-	bh=P/k4f/eTi3CvrRllbfZMRkiksfAGIzP2q4PKRmVoEBA=;
+	s=arc-20240116; t=1790704196; c=relaxed/simple;
+	bh=XjLQsSYWlTGUl63+dvVEjuRbt0lKeRobGHijGhEskyY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jM+9sdaDeq820/HcHaIwUZm5zU93ai2aJsY0V1K/gqkNrHi0uXjRAp8xd5gVGObpUHZAOoxZ1ckj6TnxKDzP9bYem3sb7ZR4/m/6SQd7TAKuvQfCb5BIKkLHpYQAoI+Jk/SOFjsWTySuJqRy7HwKIdsz2tOvQf98aGpGdSvbvgs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=brXosUTw; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=ugZF7f5wvs0AsluSAGBP6zaChj0Fo/1JlK2XMJDO3bKO8aaJRDoN2VbmsL9otQhfNVNpsaPtOW/MrpDD8TEJVBKM8Yl+wEkiDhEQsPf7CuOFtQ41nUMjPB//1UdXhvDiwqfgq/RqEapCMAT1pcLpVPX8+M/5+x/CfCXNP9BqSpA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JsY9MA32; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="brXosUTw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69BE11F000FF;
-	Tue, 29 Sep 2026 17:49:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JsY9MA32"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33E751F000FF;
+	Tue, 29 Sep 2026 17:49:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790704189;
-	bh=VFLVaCJ04h8QR8kYowCEUJL19oIQH8ZG5ysEH+fwf/M=;
+	s=k20260515; t=1790704195;
+	bh=XjLQsSYWlTGUl63+dvVEjuRbt0lKeRobGHijGhEskyY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=brXosUTwIqs/WaZ/TmMJUlhK/rLh+f14jgg2YA9p6rk1MvtEExLiuQfHEPrq5e/+4
-	 dJzlmVJCWnRwyXN+e9wlAmJGsOhqBvszviGCIChZjZCu1KuwKVr+mRBFbKGsLMp2w8
-	 1vNQ1ti55kjLrMhhCjrH3P/Ysd51rmL6/RAZfT3nJEdFeQ+kE606KP2nwQRKY1m9ue
-	 E3lHeZZtoNVpiG53hzNRNcRsxOluyDE3gzGlXTPGqQ0v+OtWAmAMVgXXnJS2bhtwS5
-	 yvFxKHYuC5fRxSMtNwDSUf4I60IH8lKgoeGThw7dU2raqiN7uujN6uslpYqgYEmmg8
-	 c6y4pyrSN9z6Q==
+	b=JsY9MA32RxOiWgfU2iRkIa2JEYVb6hhgb8vlZewp/AgdgdAF134bU9eXP5CG5uB5o
+	 DqjteSVoqunGjn2zZswN5eeTNTRlWRrb2ny2GUm0MwtDQSMODDP7yH7k0lrVnbQqKx
+	 QazBMRZgTBNJAfJyKSTAjJNQ8bo/oUpMq2c+evn6WBB+NFmQhwbdqeEdgUeQq3xEk1
+	 GKu7201wi7Brfy7HQMu1YvTxwh5g9tmHRYBUWFylw5hH8imXOHkJjSfCHtFNpTC9M2
+	 N8f2pE0JinW4c32exldGL9/QKgW1QDssZ72vnz2+ocI3cYXj54qqrYCxfLq1es0a8o
+	 FTFjo91xQC0rQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH v2 03/16] vfio/pci: Buffer ROM reads before copying
- to userspace
+Subject: Re: [RFC PATCH v2 16/16] vfio/pci: Enable host PCI error recovery
+ for vfio-pci
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shameer Kolothum" <skolothumtho@nvidia.com>
 Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
-In-Reply-To: <20260929173305.204856-4-skolothumtho@nvidia.com>
+In-Reply-To: <20260929173305.204856-17-skolothumtho@nvidia.com>
 References: <20260929173305.204856-1-skolothumtho@nvidia.com>
- <20260929173305.204856-4-skolothumtho@nvidia.com>
+ <20260929173305.204856-17-skolothumtho@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 29 Sep 2026 17:49:49 +0000
-Message-Id: <20260929174949.69BE11F000FF@smtp.kernel.org>
+Date: Tue, 29 Sep 2026 17:49:54 +0000
+Message-Id: <20260929174955.33E751F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] vfio/pci: soft lockup in vfio_pci_rom_read loops due to missing co=
-nd_resched
---
-
-commit 27d4f4cebe481807304449721e6097b02db9fc50
-Author: Shameer Kolothum <skolothumtho@nvidia.com>
-
-vfio/pci: Buffer ROM reads before copying to userspace
-
-This commit moves ROM reads into a separate helper, buffering the requested
-ROM data and unmapping the ROM before copying it to userspace. This helps
-keep userspace faults outside the recovery gate.
-
-> diff --git a/drivers/vfio/pci/vfio_pci_rdwr.c b/drivers/vfio/pci/vfio_pci=
-_rdwr.c
-> --- a/drivers/vfio/pci/vfio_pci_rdwr.c
-> +++ b/drivers/vfio/pci/vfio_pci_rdwr.c
-[ ... ]
-> +static ssize_t vfio_pci_rom_read(struct vfio_pci_core_device *vdev,
-> +				 char __user *buf, size_t count, loff_t pos)
-> +{
-[ ... ]
-> +	/*
-> +	 * Certain devices (e.g. Intel X710) don't support qword
-> +	 * access to the ROM bar. Otherwise PCI AER errors might be
-> +	 * triggered.
-> +	 *
-> +	 * Disable qword access to the ROM bar universally, which
-> +	 * worked reliably for years before qword access is enabled.
-> +	 */
-> +	while (done < length) {
-> +		if (length - done >=3D 4 && IS_ALIGNED(pos + done, 4)) {
-> +			u32 val =3D vfio_ioread32(io + pos + done);
-
-[Severity: High]
-Can this loop cause a soft lockup on large ROM reads?
-
-If a userspace application or guest issues a large read on the ROM BAR (for
-example, 16MB), this while loop in vfio_pci_rom_read() will perform millions
-of synchronous MMIO reads without yielding.
-
-Since each MMIO read can take significant time, this could stall the CPU co=
+> Enable recovery support for generic vfio-pci. Userspace opts in through
+> VFIO_DEVICE_FEATURE_PCI_ERROR_RECOVERY. Open rejects an active host
+> recovery even without opt-in. Leave variant drivers disabled until their
+> access paths are covered.
+>=20
+> Exclude CXL memory devices and s390: Restricted CXL Host (RCH) and s390
+> mediated recovery can omit completion callbacks. On s390, permanent-failu=
 re
-for seconds and trigger a soft lockup panic. Should this loop include a
-cond_resched() to prevent an untrusted guest from causing a local Denial of
-Service?
+> notification also blocks config access, so draining SRCU can deadlock
+> with config readers.
+>=20
+> Assisted-by: LLM
+> Signed-off-by: Shameer Kolothum <skolothumtho@nvidia.com>
 
-> +
-> +			memcpy(data + done, &val, sizeof(val));
-> +			done +=3D sizeof(val);
-> +		} else if (length - done >=3D 2 && IS_ALIGNED(pos + done, 2)) {
-[ ... ]
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260929173305.2048=
-56-1-skolothumtho@nvidia.com?part=3D3
+56-1-skolothumtho@nvidia.com?part=3D16
+
