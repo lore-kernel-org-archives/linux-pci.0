@@ -1,72 +1,90 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DD5F55198A
-	for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 15:20:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2BDE3D88F2;
+	Tue, 29 Sep 2026 15:31:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790695263; cv=none; b=UsMkdepdpqvF5yBJ8YZFnn6YD+FttiJChDbMrI1ykA6d+GAa9LynkFX8gLi14KYl12EZOZR8l3jFlU5nBHByahgyux6ocBYXAYxwTBcIu2mfcLY8CmSniAe+9ss5LKPJ6iZFp94OARDiPP62vljmYj9Igjdh8uGd48t5MqTn2iY=
+	t=1790695884; cv=none; b=Yhu0r/Al6BvHlTVgTW+qwIyNmw9KpQHsY/c4Ws+6E6xoCrMoz74sBrevEJTPe/j2LztQ1PtRahSed8RHNkbVrwIIL+TZxKGjW10QhpS8pFjtI5FSZM6W4LivWVynXiPs2dOFrK7gdLbLu5Nl78tT/ppBdR334NRhZc75fyTjbWw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790695263; c=relaxed/simple;
-	bh=FJKiZMywhJlFwPlUwx3u19M4tdkpCG4bjZ2F+qAVUNc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=JFaWO9E3djh97NhRH2eFQB373Rpm+BsTlDQhp87FA3q9WLhZRr7Ehn0OI+2ZZv8k1pn8Gkjng5GvW/GnZETaZeB6WVT1dnEHueFNPr4Y3HbH1VbtpotdOeP+RKTG1re8GyoByMuIRWi7qqmxirqpW8iLWNNUsZ/6yM4XHnENdy8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PbK2iYXx; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790695884; c=relaxed/simple;
+	bh=2ZewhfadxiSWnz4AaDisoAKtPq56s4kBxyCgZUZbvxk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TZWilaAIC5X5ig+6WxeQ6573JnrLqIxlcRnBsSC5unDpdcN3HY1ldBk+CP6wfqdVPeIwAlZPtLg06XbFjfc2OV4DCdDeDCUaCtbr9KPfZtW68SMTTe5rAHsy3mD8WJ4LuZ7Fn+3ifJExbI/2jNFxwZAk7jbPYy+fjqYl1yKBSn8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TC9Qgybb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PbK2iYXx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05F7E1F00899;
-	Tue, 29 Sep 2026 15:20:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TC9Qgybb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2707E1F00899;
+	Tue, 29 Sep 2026 15:31:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790695246;
-	bh=lpHuRIzrYGUzaVM6GIRkYmmqyuJHVc04M1FookNMDXQ=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PbK2iYXxkJSypuJvi1+CKtPDpwo+gzokaUowuTP+iojzC3Y9rq2ffjbK8L4jSrqzN
-	 qt0b8orqR1zQpiV7HP3uViEXVVLVNYSlxWjcr2uxItIlBk1wk59p6huUywygC+k2fg
-	 KCQ/13bjv6amnHaw2nLr7tmFDvtBZf7YldMP9skzowkwHY3yr75G+TfE/Tfz8rNbHX
-	 sSbzmztZPcDNwvtWl5z6F4825ylr9pDJ9BclkpHmMCTEO19p0Tcie4dfNVedU0cbst
-	 LJqOHqdE/fJLuij3/YbG9WZM6ac6CMKfQ8e5n/ASI/i8372PsyjSaSpSkW6K68B+jD
-	 JrktHco7JI45w==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: Add function 1 DMA alias quirk for Toshiba AHCI
- SSD controller
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Michael Stolovitzsky" <emestee@catnarok.net>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260929150924.2376309-1-emestee@catnarok.net>
-References: <20260929150924.2376309-1-emestee@catnarok.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 29 Sep 2026 15:20:45 +0000
-Message-Id: <20260929152046.05F7E1F00899@smtp.kernel.org>
+	s=k20260515; t=1790695882;
+	bh=oHuujSasinLI7hEqP77ZK4vcwV+0umrHPRpUO3Iumeo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=TC9QgybbOnjrXp5VGy0t4URIje1OCUU3w0BXLWX4GYcVVnu/QB9sgTvo7r1w6hiSP
+	 3f1byAoDAnrAVSp/E5uM+58spjHTArkI3XKpGz+NZ85hrlx92tAxaEqxoJs5el6oCs
+	 hsgPh085ETcZN3pSVAkXNa06bRt5ni8+06JihaFp/tDXqyylISjg8CPR6fEbjKm96O
+	 Yxa3F0KzEXAjkVp5xhyaubeAfTxOHQezLw9YiRLQeu0t8aOMeOT0Rqo0ViJ5NQ5H0U
+	 4QLTk0iquJjorBYbAYvTWejc+J16HbgkJDdYjN2xCj5Q8pFWTBTc0oh0YKCsso37V3
+	 +wrVrX5xjQ1Cw==
+Date: Tue, 29 Sep 2026 16:31:17 +0100
+From: Mark Brown <broonie@kernel.org>
+To: Alexey Charkov <alchark@flipper.net>
+Cc: Liam Girdwood <lgirdwood@gmail.com>,
+	Corentin Labbe <clabbe@baylibre.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	stable@vger.kernel.org, Sashiko <sashiko-bot@kernel.org>
+Subject: Re: [PATCH 0/4] regulator: of: Fixes to of_regulator_bulk_get_all()
+Message-ID: <e8e21dc7-7b83-40cf-a006-ac5bdeb54d16@sirena.org.uk>
+References: <20260929-regulator-get-all-v1-0-e887c66a47f1@flipper.net>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="PMup6bLNlrwwEGA2"
+Content-Disposition: inline
+In-Reply-To: <20260929-regulator-get-all-v1-0-e887c66a47f1@flipper.net>
+X-Cookie: 1 bulls, 3 cows.
 
-> The Toshiba AHCI SATA controller [1179:010b] (subsystem [1b4b:9183])
-> used in 11-inch MacBook Air models (MacBookAir6,1 and MacBookAir7,1)
-> issues DMA with the requester ID of function 1, which does not exist.
-> With the Intel IOMMU enabled (intel_iommu=3Don, or
-> CONFIG_INTEL_IOMMU_DEFAULT_ON=3Dy), these DMA writes are blocked, IDENTIFY
-> fails and the internal disk never appears:
->=20
->   DMAR: [DMA Write NO_PASID] Request device [0000:04:00.1] fault addr 0xf=
-ffe0000 [fault reason 0x02] Present bit in context entry is clear
->   ata1.00: failed to IDENTIFY (INIT_DEV_PARAMS failed, err_mask=3D0x80)
->=20
-> Add the controller to the quirk_dma_func1_alias() list. With it, the
-> SSD is identified and the system boots with the IOMMU enabled.
->=20
-> Link: https://github.com/omacom/omarchy/issues/12097
-> Link: https://github.com/omacom/omarchy/issues/13010
-> Cc: stable@vger.kernel.org
-> Assisted-by: Claude Opus 5.5
-> Signed-off-by: Michael Stolovitzsky <emestee@catnarok.net>
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+--PMup6bLNlrwwEGA2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260929150924.2376=
-309-1-emestee@catnarok.net?part=3D1
+On Tue, Sep 29, 2026 at 02:05:45PM +0400, Alexey Charkov wrote:
 
+>       regulator: of: fill in supply names in of_regulator_bulk_get_all()
+>       regulator: of: state who owns the array from of_regulator_bulk_get_all()
+>       power: sequencing: pcie-m2: Fix leaking array from of_regulator_bulk_get_all()
+>       PCI/pwrctrl: generic: Fix leaking array from of_regulator_bulk_get_all()
+
+Please don't combine tangentially related patches for multiple
+subsystems into a single series, it just causes problems getting things
+applied.  If there's no actual dependencies send things separately to
+each subsystem.
+
+--PMup6bLNlrwwEGA2
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmq72cQACgkQJNaLcl1U
+h9BW0Af7BmDivtMYIvX97relpTiu+hGwIUb97C8f4oRuS9CugEDtWDvkDSLJ9FYD
+RZxEeI9p8aFc8EBwjEcSU2GxSO/Hq6t9uyEeNa7eoa7Pdrju11VSMShs8XzouzBB
+WLcPckZE/69EctnAvVyg314wF3lKkrIiwOv9i+HWB8kgVGtOtq5hnt9D13DqOxfG
+F1gj5gqAIr7oOtbfY6l+6wiM0loHXsWCVQ7U0hbG+wmfIEeFZajR//idWRwFWFsP
+hA0jtuQJXcXHSrhgqLnTBru3jty5catTK8W5dgqrHFXCEo5PyMj6dP52/+ZSrrWm
+l6/adbk7CKJVZUsPD22bi7d3EjHCuQ==
+=VEi+
+-----END PGP SIGNATURE-----
+
+--PMup6bLNlrwwEGA2--
