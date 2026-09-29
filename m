@@ -1,64 +1,111 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5818630F92E
-	for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 04:42:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A05D383984
+	for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 05:07:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790656941; cv=none; b=c4tMRCvONtW9jy5Uu+fZmy8f77DkqToyvRdGKopnIuFiSZtS54AG5eKlel83wxC1lMZiPrGVJnII4s0Grm7/mKTiME2kXL6OAungJvDlxrQIjfNT4uwP8WCQsVWnkQ2OIvJ9cdbmtCCyxjidedZIFXR6K17zEYLYqAHJXq43KBE=
+	t=1790658465; cv=none; b=N1PrEyc0hbAMnUmqEPT6DKQ1IjrdBA7kYKYgKF8PMF6tFwoaYQMRhDN4B7h1pGzxP+tGHIuRKr/6vHbFcsP4FpGQHMJBxHXJZDWqTayi6z1c8Ia1TMM5ZXetGIkyPZYwFDs46NHEg7wCIwK1Qc7ID/U8INO+dpPzDgcoVPP3Mxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790656941; c=relaxed/simple;
-	bh=K713UB/p8cSGbaHAkph+dnuYxA/ZFNmGAmLX5pPyJUY=;
+	s=arc-20240116; t=1790658465; c=relaxed/simple;
+	bh=x0CziyJ1VZizScjT8AdvwpzK4N6gWSJ14QXY850Z7Hk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=pn6/ShSs9DAhuJ9XG+2zxpPyNiU+985Y2npMbl6yMdiP1EBi3U1VrSfk409ytYbK34FPH8nAqRYC94lzJauuyFl0is6MtSgfmE963jgJ7ZILc5X8MQFapBiuLV9yH17qlH4h1Fayq4DE2LxArduHE/OASVS8xxq+37sPu4DMH2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h+swixT0; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=erDd3G8Rg5WSmhVeQOucsiK2mqvsgQiUbVBEm5pd8y4AXyfEHBYuXeJQVbZahInbqNYKCB7fiRBWzlZrCORSirQxnkvSyq9pktUj+q12GaD6epc/TOfl4cxYmHnYrzfIzrv9mL6wt7d3dab3L/Tia4bBmG8xJG/sIsUot7DDInM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UJS55YPw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h+swixT0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE5D01F000FF;
-	Tue, 29 Sep 2026 04:42:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UJS55YPw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D5981F00893;
+	Tue, 29 Sep 2026 05:07:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790656939;
-	bh=K713UB/p8cSGbaHAkph+dnuYxA/ZFNmGAmLX5pPyJUY=;
+	s=k20260515; t=1790658463;
+	bh=tLtVlsbDc9ysfP9kfnSAmIcAjcP+OnyF0vU9LG8wTzk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=h+swixT0YzCz4DX3He+Kzm0GO4+k6d8N6bQdeOGi9KA6RLU+Oe80lP7fkBbb7lFzD
-	 WLIAFesBGTQelo/wvjbO6tSi6Vjn5K5cRLf82dSsPrg/j6v+rpHNB+DGk4t4W4Rb/D
-	 vI+WNmPQ6BvOWQncc5qMk3iDBMeEL/AT1aZGK1XQDolWdyqeXHGFNy3sBuiT+KT5z9
-	 63M0PGcOanSBWJyyXqfcdLv0JqKHrfQmLcNp1G3A12ZiqDRNXjMK/S8mE6WWxlSp5e
-	 bn/2zOy021XeMC7DG3VIdSlTYQ3qoyW7Wl2p2iMlUX+HL4/UhraHijZxj5KyezR97P
-	 SLmQy6Gt9NdsA==
+	b=UJS55YPwDHkKryhQ/rWLp90zkBJRFVTEbo8mLH+18/4/obXlCyZKnZmDHQN5bCkff
+	 7fLfNAyLhO1dIgozH2B1YvX2aXgXZ+w/l9JmglWBXM8IuVzM1n8Y/UcIVsYpjDGUMg
+	 KTln+vlQ2ks7gGKWuMX9PRm1eJjr8s9c+F5WCPA8JQqTmKJls3G6y1fG9fl27p/jCB
+	 WKDWZmgjgUbU4mla+u5HU7CCWwLv/uNZXBTw1L28/8VdorlR29LYWBG29p76OXR7qS
+	 hMTrwRKp7g46Y7w4rvQk+9xc7QjAnPy5cMHs7upd+FTq5yH/+hdsaSARyIJhAL3DM7
+	 jwHz8OMssHufg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v11 06/16] iommu/tegra241-cmdqv: Restore PROD and CONS
- after resume
+Subject: Re: [PATCH v11 07/16] genirq/msi: Cache MSI message in
+ irq_chip_write_msi_msg()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Pranjal Shrivastava" <praan@google.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260929034510.2023173-7-praan@google.com>
+In-Reply-To: <20260929034510.2023173-8-praan@google.com>
 References: <20260929034510.2023173-1-praan@google.com>
- <20260929034510.2023173-7-praan@google.com>
+ <20260929034510.2023173-8-praan@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 29 Sep 2026 04:42:19 +0000
-Message-Id: <20260929044219.AE5D01F000FF@smtp.kernel.org>
+Date: Tue, 29 Sep 2026 05:07:43 +0000
+Message-Id: <20260929050743.9D5981F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> From: Ashish Mhetre <amhetre@nvidia.com>
->=20
-> PROD and CONS indices for vcmdqs are getting set to 0 after resume.
-> Because of this the vcmdq is not consuming commands after resume.
-> Fix this by restoring PROD and CONS indices after resume from
-> saved pointers.
->=20
-> Reviewed-by: Nicolin Chen <nicolinc@nvidia.com>
-> Signed-off-by: Ashish Mhetre <amhetre@nvidia.com>
-> Signed-off-by: Pranjal Shrivastava <praan@google.com>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Critical] irq: NULL pointer dereference in irq_chip_write_msi_msg()
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+commit 98ab4cb46e40acf3e5ccb95b4213b5490ae2ff8a
+Author: Pranjal Shrivastava <praan@google.com>
+
+genirq/msi: Cache MSI message in irq_chip_write_msi_msg()
+
+Currently, PCI MSI caches the composed MSI message into the MSI descriptor
+inside __pci_write_msi_msg(). This patch caches the message directly in
+irq_chip_write_msi_msg() so that all hierarchical MSI domains automatically
+record the latest message.
+
+> diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+> index fb5f372215bf2..df460a574d800 100644
+> --- a/kernel/irq/msi.c
+> +++ b/kernel/irq/msi.c
+> @@ -634,6 +634,15 @@ static unsigned int msi_domain_get_hwsize(struct dev=
+ice *dev, unsigned int domid
+>  static inline void irq_chip_write_msi_msg(struct irq_data *data,
+>  					  struct msi_msg *msg)
+>  {
+> +	struct msi_desc *desc =3D irq_data_get_msi_desc(data);
+> +
+> +	/*
+> +	 * PCI Multi-MSI shares a single descriptor across all vectors and
+> +	 * the device stores only the base message. Cache the message of the
+> +	 * first interrupt only, so that sub-vectors cannot overwrite it.
+> +	 */
+> +	if (desc->irq =3D=3D data->irq)
+
+[Severity: Critical]
+Does this code cause a NULL pointer dereference for domains without an
+msi_desc object?
+
+Looking at irq_chip_write_msi_msg() in kernel/irq/msi.c,
+architecture-specific domains like the x86 HPET (hpet_msi_domain_info) and
+DMAR (dmar_msi_domain_info) utilize generic MSI domain operations but do not
+allocate an msi_desc object for their interrupts.
+
+When an interrupt from these domains is activated or its affinity is update=
+d,
+calls like msi_domain_activate() or msi_domain_set_affinity() invoke
+irq_chip_write_msi_msg().
+
+Because irq_data_get_msi_desc(data) returns NULL for these interrupts,
+checking desc->irq unconditionally could lead to a fatal dereference during
+boot.
+
+I checked the follow-up patches in the series and it appears a check for
+desc is not introduced in any subsequent patch, so this regression remains
+present in the final series state.
+
+Should this be updated to check if desc is valid first?
+
+> +		desc->msg =3D *msg;
+>  	data->chip->irq_write_msi_msg(data, msg);
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260929034510.2023=
-173-1-praan@google.com?part=3D6
-
+173-1-praan@google.com?part=3D7
