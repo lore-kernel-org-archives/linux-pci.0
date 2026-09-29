@@ -1,264 +1,231 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0044237F32C;
-	Tue, 29 Sep 2026 11:41:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B72E1514770;
+	Tue, 29 Sep 2026 11:43:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790682064; cv=none; b=Nu+H+wCaaYfdO8LuA3SgCrnMfmOahSOVBqHpJMRL3wgzvstqvx57fhqCZrWI/I5y0glCdF4SyMSU+uecip7sGam2vwYv7vnHKIW8HphB38m65Z6wkb5TCyuRtGoQmk8GM8Ujgr0BB8xEucteEY2CdAt8otw+zq+wPraFrg5/SDc=
+	t=1790682239; cv=none; b=JrMDovPQloWkGEs1eNjzM012kt676l9luOHRruCKEihs52KwWmzufFNoDf5c+K1K5ESjC2X91oaW9xHII311DUMXK3F8t7GTOvNaKZU9t+ZdnEeqliwK5OCykEsjJGqvC33pRU+T4TtB1hOFARNS03Dp21h70l+x5BkW0VZ6g2E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790682064; c=relaxed/simple;
-	bh=KTNfABpsGWMFaoBkTNO/xqP1cl+XE/SUx5+L4W+DPnM=;
-	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=dafBxS+3UufgxnbWgmMDGAFnohtD0A7aPvU+MJUxpa+a9Czf/X344ufI85jLBOcY6JJhkCpBwXs3PmZjvmy+uxoO30TY9q6Mv5TkFgWrvJiFFj8i0XBqGK4a7VKxieHWYlhF2HUz3ddBDU4J9Z3Hj3ZhebkgY8lNppth0IRdUYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m3BD3xoV; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790682239; c=relaxed/simple;
+	bh=KbI05H8257pbTzuYfeN0E7QF6PPoH8UPLCkl8YK1WlI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=cwTc6Syw5YVwa6UOwQOA5mwTLRO8FNqsoPCtp+d09vexynYQB8xsJ9JpCjNlovR2KIw1a1eaINu9ImRAKJQV3Jib9+uhrw0Uvjoqz65dOy8ihwBa3J2LYI2E05JAcYWwDLMhw9HJywKbNG8k7oLDUHnvaXYrnFSBddwITrQ3rZA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=y72ExFnk; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m3BD3xoV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B4191F000FF;
-	Tue, 29 Sep 2026 11:41:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790682062;
-	bh=YajkRf88ajtVJDW2GBmYe9Gx4OdPQQLdhTOJZupqZvk=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References;
-	b=m3BD3xoVf5adZLLJLspFFFQ8xVDWkY7frxQhjiVgDVUJtGNib5/hFeT8BIeafT7sO
-	 elqBRpd+jh0AqlZEAMRd9DOOuY4R7USk0vD1GnpMOucxS1Llonzmxpyp0kTsb55DTz
-	 RhJNaOZgxxQfqg0YPXLTooImbpbJlcYJzNM1FyyQqcN8NLpbhbHZwRyoRpexmGJ4id
-	 Ks2wDdsmCwd/Dnwl2nkXNFFz8bTEoGp2IY5MXUImv3CIkZU43FnFHOc2VJCMGnCw7E
-	 0hUSSyc2woGKrRssUA679fkrCSkDqJptGCRF4FMenC50gX2poxWv6vFTGYOOkRZ7mZ
-	 eNHEUMtqGYoYQ==
-Subject: Re: [PATCH net] igc: Disable PCIe L1.2 substate on I225-LMvP and
- I226-LMvP devices
-From: netdev-bot+sashiko@kernel.org
-To: danividanivi@gmail.com
-Cc: anthony.l.nguyen@intel.com, przemyslaw.kitszel@intel.com,
- intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org, bhelgaas@google.com,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, kuba@kernel.org
-Date: Tue, 29 Sep 2026 11:41:01 +0000
-Message-ID: <179068206160.434549.1717741783856466607@kernel.org>
-In-Reply-To: <20260925112850.189302-1-danividanivi@gmail.com>
-References: <20260925112850.189302-1-danividanivi@gmail.com>
-X-sashiko-severity: High
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="y72ExFnk"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
+	s=201707; t=1790682200;
+	bh=odX8h+v3SuO3LBAU4tzqREo252vsuXpN4nbA3pZgk4M=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=y72ExFnkOblYlkejvfz50psNdKfcbaTHptBCwG5Fs0LSKDtLdjoPF1A/pnJOgMB/R
+	 vJl0KHdDt6OAxcRDdxMX1hmmIVBsKAd4EyeBjaC84sNrPxQrmOoWRA5g2rlAOSiAmO
+	 IVvfN94A4Jf+aK0UZgxDy4bwu36RRmrgW+A0/BzMrju9b7Krr1ns3Rf285FSCi3J7/
+	 RLwxRxZg6UnUsTKvGVwkd426DmWDJuDiORwQqlndhUjncGsGZP5c+X3OjN51rVCD10
+	 K10j+YGrS+CJG8YDDDy3ZsJfuryhnGzBffduAaow9tb3p38Hgryzgt2qGrJRPiPk92
+	 bl4Jv/7LhEk6w==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4hvGWz0nfcz4wDx;
+	Tue, 29 Sep 2026 21:43:10 +1000 (AEST)
+Message-ID: <ed9a25ad-9a10-407d-b910-1b5cbdff88b4@ozlabs.org>
+Date: Tue, 29 Sep 2026 12:43:37 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 3/9] dma-buf: Provide dma_buf_set_name()
+Content-Language: en-GB
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
+ Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>,
+ Kevin Tian <kevin.tian@intel.com>, Pranjal Shrivastava <praan@google.com>,
+ Longfang Liu <liulongfang@huawei.com>, Mahmoud Adam <mngyadam@amazon.de>,
+ David Matlack <dmatlack@google.com>, =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?=
+ <bjorn@kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>,
+ Ankit Agrawal <ankita@nvidia.com>, Alistair Popple <apopple@nvidia.com>,
+ Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
+ linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20260924152159.49702-1-matt@ozlabs.org>
+ <20260924152159.49702-4-matt@ozlabs.org>
+ <654a5994-97e4-4a0d-aba9-24090b495da5@amd.com>
+From: Matt Evans <matt@ozlabs.org>
+In-Reply-To: <654a5994-97e4-4a0d-aba9-24090b495da5@amd.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential
-issue(s) to consider.
+On 25/09/2026 09:39, Christian König wrote:
+> 
+> 
+> On 9/24/26 17:21, Matt Evans wrote:
+>> Allow exporters to set the name of buffers, during export or for
+>> subsequent updates.  This is useful to express buffer-specific debug
+>> information, indicate state particular to the exporter's usage, etc.
+>> Only exporters and userspace are expected to set names; it isn't
+>> sensible for importers to do it.
+>>
+>> Originally, the static dma_buf_set_name() was used for
+>> DMA_BUF_SET_NAME ioctls, taking a __user string parameter.  Export
+>> this function as a generic set-name helper, taking a kernel-allocated
+>> string.  The SET_NAME ioctls now locally duplicate the __user string,
+>> and use the new function to set the name.
+>>
+>> Signed-off-by: Matt Evans <matt@ozlabs.org>
+>> ---
+>>   drivers/dma-buf/dma-buf.c | 78 ++++++++++++++++++++++++---------------
+>>   include/linux/dma-buf.h   |  2 +
+>>   2 files changed, 50 insertions(+), 30 deletions(-)
+>>
+>> diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
+>> index 4c9add51f9ef..e4ec504e9288 100644
+>> --- a/drivers/dma-buf/dma-buf.c
+>> +++ b/drivers/dma-buf/dma-buf.c
+>> @@ -404,34 +404,6 @@ static __poll_t dma_buf_poll(struct file *file, poll_table *poll)
+>>   	return events;
+>>   }
+>>   
+>> -/**
+>> - * dma_buf_set_name - Set a name to a specific dma_buf to track the usage.
+>> - * It could support changing the name of the dma-buf if the same
+>> - * piece of memory is used for multiple purpose between different devices.
+>> - *
+>> - * @dmabuf: [in]     dmabuf buffer that will be renamed.
+>> - * @buf:    [in]     A piece of userspace memory that contains the name of
+>> - *                   the dma-buf.
+>> - *
+>> - * Returns 0 on success. If the dma-buf buffer is already attached to
+>> - * devices, return -EBUSY.
+>> - *
+>> - */
+>> -static long dma_buf_set_name(struct dma_buf *dmabuf, const char __user *buf)
+>> -{
+>> -	char *name = strndup_user(buf, DMA_BUF_NAME_LEN);
+>> -
+>> -	if (IS_ERR(name))
+>> -		return PTR_ERR(name);
+>> -
+>> -	spin_lock(&dmabuf->name_lock);
+>> -	kfree(dmabuf->name);
+>> -	dmabuf->name = name;
+>> -	spin_unlock(&dmabuf->name_lock);
+>> -
+>> -	return 0;
+>> -}
+>> -
+>>   #if IS_ENABLED(CONFIG_SYNC_FILE)
+>>   static long dma_buf_export_sync_file(struct dma_buf *dmabuf,
+>>   				     void __user *user_data)
+>> @@ -577,8 +549,19 @@ static long dma_buf_ioctl(struct file *file,
+>>   		return ret;
+>>   
+>>   	case DMA_BUF_SET_NAME_A:
+>> -	case DMA_BUF_SET_NAME_B:
+>> -		return dma_buf_set_name(dmabuf, (const char __user *)arg);
+>> +	case DMA_BUF_SET_NAME_B: {
+>> +		char *name = strndup_user((const char __user *)arg,
+>> +					  DMA_BUF_NAME_LEN);
+>> +
+>> +		if (IS_ERR(name))
+>> +			return PTR_ERR(name);
+>> +
+>> +		ret = dma_buf_set_name(dmabuf, name);
+>> +		if (ret)
+>> +			kfree(name);
+>> +
+>> +		return ret;
+>> +	}
+>>   
+>>   #if IS_ENABLED(CONFIG_SYNC_FILE)
+>>   	case DMA_BUF_IOCTL_EXPORT_SYNC_FILE:
+>> @@ -874,6 +857,41 @@ void dma_buf_put(struct dma_buf *dmabuf)
+>>   }
+>>   EXPORT_SYMBOL_NS_GPL(dma_buf_put, "DMA_BUF");
+>>   
+>> +/**
+>> + * dma_buf_set_name - Set a dmabuf's name
+>> + * Intended to be used by the exporter to set a name for debug
+>> + * purposes.  This can also change an existing name if the same piece
+>> + * of memory is used for multiple purposes over time.
+> 
+> Add something like "Importers should *NOT* use this function to overwrite the name." here and add some note under "DOC: locking convention" how this function is supposed to be called.
+> 
+> Apart from that looks good to me,
 
-Critical: 0 · High: 1 (1) · Medium: 1 · Low: 1
+Thanks, Christian.  Good point, done.
 
-If you believe none of the issues are legitimate, please reply to each
-issue of Medium severity or higher and explain why the AI is wrong.
-If any of them are legitimate and you plan to respin, please let patchwork
-know by including "pw-bot: cr" as a separate line at the end of your reply
-(one such reply per series is enough).
+Re the locking convention, it appears dma_buf_set_name() is agnostic to 
+whether resv is held or not.  However, rather than adding that as a new 
+category to the 'DOC: locking convention', I've put this function in the 
+existing "don't hold resv" section.
 
-- [High] The widened condition in `__igc_resume()` (igc_main.c:7562-7563)
-  makes I225-LMvP and I226-LMvP call the non-locked…
-- [Medium] Adding `IGC_DEV_ID_I226_LMVP` to `igc_is_device_id_i226()`
-  (drivers/net/ethernet/intel/igc/igc_base.c:450) changes more than the…
-- [Low] In `igc_probe()`, `__igc_resume()` and `igc_io_slot_reset()`, the
-  return value of…
+Whilst conservative, this matches existing (and this series's) usage, 
+and can then be relaxed in future.  If you think a new "resv is 
+permitted but not required to be held" category of API doc is better, do 
+say.
 
-Pre-existing issues:
-- [High] This problem wasn't introduced by this patch, but the patch now
-  exposes I226-LMvP to it.
+Thanks,
 
---
 
-igc: Disable PCIe L1.2 substate on I225-LMvP and I226-LMvP devices
+Matt
 
-This commit adds IGC_DEV_ID_I226_LMVP to igc_is_device_id_i226(). It also
-extends the ASPM L1.2 disable in probe, resume and PCI error recovery to
-IGC_DEV_ID_I225_LMVP. The motivation is BadDLLP errors, link timeouts and
-shutdown hangs seen when I225-LMvP negotiates L1.2 behind Thunderbolt/USB4
-docks.
 
-Link: https://lore.kernel.org/lkml/eb5a9805-3e53-ec22-696e-21c6b8cf0bfc@molgen.mpg.de/T/
+> Christian.
+> 
+>> + *
+>> + * @dmabuf: [in]     dmabuf buffer that will be renamed.
+>> + * @name:   [in]     The name of the dma-buf, allocated with kmalloc() or
+>> + *                   similar.  This takes ownership of the allocation
+>> + *                   on success, which will be kfree()d when the
+>> + *                   dmabuf is released or a new name assigned.
+>> + *
+>> + * Returns 0 on success, -EINVAL if the name is NULL, or -E2BIG if the
+>> + * name (including terminator) exceeds DMA_BUF_NAME_LEN.
+>> + */
+>> +int dma_buf_set_name(struct dma_buf *dmabuf, char *name)
+>> +{
+>> +	if (!name)
+>> +		return -EINVAL;
+>> +
+>> +	/* dmabuffs_dname() won't use the string if the length
+>> +	 * (including terminator) exceeds DMA_BUF_NAME_LEN:
+>> +	 */
+>> +	if (strlen(name) >= DMA_BUF_NAME_LEN)
+>> +		return -E2BIG;
+>> +
+>> +	spin_lock(&dmabuf->name_lock);
+>> +	kfree(dmabuf->name);
+>> +	dmabuf->name = name;
+>> +	spin_unlock(&dmabuf->name_lock);
+>> +
+>> +	return 0;
+>> +}
+>> +EXPORT_SYMBOL_NS_GPL(dma_buf_set_name, "DMA_BUF");
+>> +
+>>   static int dma_buf_wrap_sg_table(struct sg_table **sg_table)
+>>   {
+>>   	struct scatterlist *to_sg, *from_sg;
+>> diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
+>> index d15b2b31d3c9..952a2c196ad4 100644
+>> --- a/include/linux/dma-buf.h
+>> +++ b/include/linux/dma-buf.h
+>> @@ -571,6 +571,8 @@ void dma_buf_fd_install(struct dma_buf *dmabuf, int fd);
+>>   struct dma_buf *dma_buf_get(int fd);
+>>   void dma_buf_put(struct dma_buf *dmabuf);
+>>   
+>> +int dma_buf_set_name(struct dma_buf *dmabuf, char *name);
+>> +
+>>   struct sg_table *dma_buf_map_attachment(struct dma_buf_attachment *,
+>>   					enum dma_data_direction);
+>>   void dma_buf_unmap_attachment(struct dma_buf_attachment *, struct sg_table *,
+> 
 
-> diff --git a/drivers/net/ethernet/intel/igc/igc_base.c b/drivers/net/ethernet/intel/igc/igc_base.c
-> index ab9120a3127f2..6865fef4049ff 100644
-> --- a/drivers/net/ethernet/intel/igc/igc_base.c
-> +++ b/drivers/net/ethernet/intel/igc/igc_base.c
-> @@ -447,6 +447,7 @@ bool igc_is_device_id_i226(struct igc_hw *hw)
->  	case IGC_DEV_ID_I226_V:
->  	case IGC_DEV_ID_I226_K:
->  	case IGC_DEV_ID_I226_IT:
-> +	case IGC_DEV_ID_I226_LMVP:
->  		return true;
->  	default:
->  		return false;
-
-[Severity: Medium]
-Does this change do more than the L1.2 handling the commit message
-describes? igc_is_device_id_i226() also selects I226-specific TSN/Qbv
-register programming in igc_tsn.c. I226-LMvP now takes these paths:
-
-drivers/net/ethernet/intel/igc/igc_tsn.c:igc_tsn_disable_offload() {
-    ...
-	if (igc_is_device_id_i226(hw))
-		igc_tsn_restore_retx_default(adapter);
-    ...
-}
-
-drivers/net/ethernet/intel/igc/igc_tsn.c:igc_tsn_enable_offload() {
-    ...
-	if (igc_is_device_id_i226(hw))
-		igc_tsn_set_retx_qbvfullthreshold(adapter);
-    ...
-		if (igc_is_device_id_i226(hw)) {
-			...
-				tqavctrl |= IGC_TQAVCTRL_FUTSCDDIS;
-			...
-			hrtimer_start(&adapter->hrtimer, expires_time, HRTIMER_MODE_REL);
-		}
-    ...
-}
-
-Before this patch, 0x5503 matched neither igc_is_device_id_i225() nor
-igc_is_device_id_i226(). So none of the following ran on that SKU: the
-RETX_CTL QBVFULLTH/QBVFULLEN workaround, the FutScdDis programming, the
-Qbv hrtimer and the double BASET_L write.
-
-The new behaviour matches the other I226 SKUs, but the subject and body
-only describe an ASPM L1.2 fix. Because of the Fixes: 0325143b59c6 tag,
-these TSN register changes would go into stable trees without any
-mention.
-
-The TSN part also seems to fix an omission from when
-igc_is_device_id_i226() was introduced, not one from 0325143b59c6.
-
-Could the commit message describe the TSN side effects? Alternatively,
-could that part be split into a separate patch with its own Fixes: tag?
-
-[Severity: High]
-This isn't a bug introduced by this patch. However, classifying 0x5503 as
-I226 also exposes I226-LMvP to an existing problem with adapter->hrtimer.
-
-igc_tsn_enable_offload() arms adapter->hrtimer when the taprio base time
-is in the future. The only hrtimer_cancel() for it is in igc_remove().
-
-__igc_shutdown() (system and runtime suspend) and igc_reinit_queues() call
-igc_clear_interrupt_scheme() without cancelling the timer:
-
-igc_clear_interrupt_scheme()
-  igc_free_q_vectors()
-    adapter->num_tx_queues = 0;
-    igc_reset_q_vector()
-      adapter->tx_ring[...] = NULL;
-
-The timer is not cancelled across suspend, so it can still be pending
-when resume runs. On resume or reinit, the queue count is restored before
-the rings exist again:
-
-igc_init_interrupt_scheme()
-  igc_set_interrupt_capability()
-    adapter->num_tx_queues = adapter->rss_queues;
-    pci_enable_msix_range()
-  igc_alloc_q_vectors()
-    /* tx_ring[] repopulated here */
-
-The timer callback loops over num_tx_queues without a NULL check:
-
-drivers/net/ethernet/intel/igc/igc_main.c:igc_qbv_scheduling_timer() {
-    ...
-	for (i = 0; i < adapter->num_tx_queues; i++) {
-		struct igc_ring *tx_ring = adapter->tx_ring[i];
-
-		if (tx_ring->admin_gate_closed) {
-    ...
-}
-
-The callback takes qbv_tx_lock, but the teardown and setup paths don't.
-Suppose the timer expires between igc_set_interrupt_capability() and
-igc_alloc_q_vectors(), or runs at the same time as igc_free_q_vectors().
-Can it then dereference a NULL tx_ring in hardirq context?
-
-> diff --git a/drivers/net/ethernet/intel/igc/igc_main.c b/drivers/net/ethernet/intel/igc/igc_main.c
-> index 1fb5f3cbe93c5..6c4e046610689 100644
-> --- a/drivers/net/ethernet/intel/igc/igc_main.c
-> +++ b/drivers/net/ethernet/intel/igc/igc_main.c
-> @@ -7172,8 +7172,8 @@ static int igc_probe(struct pci_dev *pdev,
->  	hw->subsystem_vendor_id = pdev->subsystem_vendor;
->  	hw->subsystem_device_id = pdev->subsystem_device;
->  
-> -	/* Disable ASPM L1.2 on I226 devices to avoid packet loss */
-> -	if (igc_is_device_id_i226(hw))
-> +	/* Disable ASPM L1.2 on I226 and I225-LMvP devices to avoid packet loss */
-> +	if (igc_is_device_id_i226(hw) || hw->device_id == IGC_DEV_ID_I225_LMVP)
->  		pci_disable_link_state(pdev, PCIE_LINK_STATE_L1_2);
-
-[Severity: Low]
-This probably isn't a bug, but the return value of pci_disable_link_state()
-is ignored here. The same is true in __igc_resume(), and for
-pci_disable_link_state_locked() in igc_io_slot_reset().
-
-__pci_disable_link_state() can return -EINVAL when there is no link state
-(for example with pcie_aspm=off). It can also return -EPERM when the OS
-doesn't have ASPM control:
-
-drivers/pci/pcie/aspm.c:__pci_disable_link_state() {
-    ...
-	if (aspm_disabled) {
-		pci_warn(pdev, "can't disable ASPM; OS doesn't have ASPM control\n");
-		return -EPERM;
-	}
-    ...
-}
-
-In those cases L1.2 stays as firmware configured it on the newly covered
-I225-LMvP and I226-LMvP devices.
-
-The PCI core already warns on the -EPERM path. Failing probe, resume or
-recovery would leave the NIC unusable, and the existing I226 handling
-does the same thing. Is continuing silently here the intended behaviour?
-
-> @@ -7559,7 +7559,7 @@ static int __igc_resume(struct device *dev, bool rpm)
->  	pci_enable_wake(pdev, PCI_D3hot, 0);
->  	pci_enable_wake(pdev, PCI_D3cold, 0);
->  
-> -	if (igc_is_device_id_i226(hw))
-> +	if (igc_is_device_id_i226(hw) || hw->device_id == IGC_DEV_ID_I225_LMVP)
->  		pci_disable_link_state(pdev, PCIE_LINK_STATE_L1_2);
-
-[Severity: High]
-Can this take pci_bus_sem recursively during AER recovery?
-
-__igc_resume() is also the runtime resume path, and igc runtime suspends
-after link loss via igc_runtime_idle(). pcie_do_recovery() runtime
-resumes devices from inside a bus walk that holds pci_bus_sem for read:
-
-pcie_do_recovery()
-  pci_walk_bridge(bridge, pci_pm_runtime_get_sync, NULL)
-    pci_walk_bus()
-      down_read(&pci_bus_sem);
-      pci_pm_runtime_get_sync()
-        pm_runtime_get_sync()
-          igc_runtime_resume()
-            __igc_resume(dev, true)
-              pci_disable_link_state()
-                __pci_disable_link_state()
-                  down_read(&pci_bus_sem);
-
-A writer could queue between the two down_read() calls, for example
-pci_device_add() from enumeration or hotplug, which is plausible behind a
-Thunderbolt dock. The nested reader would then block behind the writer,
-while the writer waits for the outer reader. Would that deadlock AER
-recovery and PCI enumeration? Lockdep would also be expected to report
-recursive locking here.
-
-igc_io_slot_reset() already uses pci_disable_link_state_locked() for this
-reason. The runtime resume step earlier in recovery isn't covered,
-though.
-
-The other I226 IDs already have the same pattern, and this patch extends
-it to both LMvP devices. Could it be fixed for all of them at the same
-time?
-
--- 
-Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/20260925112850.189302-1-danividanivi%40gmail.com
