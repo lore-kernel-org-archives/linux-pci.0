@@ -1,56 +1,56 @@
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com [209.85.210.197])
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 719FE3F9263
-	for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 03:45:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D112F3FA5E9
+	for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2026 03:45:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790653536; cv=none; b=fD2i7+VmKFeQ0YJna35flX0vfNgNBAUHAn+ZUzmJxmVeQUzRsClb/s43KNxkIHm/wMVu7zI47SQMS9i2+ImEl3RRS+FflPzqbOwm3iVG8QJsEsoDmPrAfYLKTaeUpDgcycKaiHE9dLZhhkA9k2/sxrPdzUtkWglVppys0FBmLhA=
+	t=1790653539; cv=none; b=rACGmGjpPegRaDa3SZWrW5N8Uq7LKfrz9GL+9oMb1LuxXuZ/cjp3/svgCjkal3nfFC9NqA7A/gyjvDhti3hTO7Ukf+cuPcTZa9AEsQ/WoRcGCl8s/SMlASHlXehzEHhgDPGcNrS/J5rCfdF0sU58NPOSdN4ERH8etCsq+OwE98M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790653536; c=relaxed/simple;
-	bh=t6s4Oe+o2p1ts8W0BX63x7TlPfAs6I5sA3X1EA+4bIY=;
+	s=arc-20240116; t=1790653539; c=relaxed/simple;
+	bh=fBsvcJTGySkCd+eb4363p1Jk8F2h4J7YsqmmUHp9hgU=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=lbcTel/ZKEQcS1SrTqi0tW+3tqvk4V5MFgZMUEgkTqGWoaexHN/w2ZHnjEym6xxLuFroR1Go+XHB6pMGAB5lfGUJ1tu4uQ+7PntETZgb0VAElAl1agpdrCoOf1GFGEgq4x265OLRaYa7QJOJSF3AhoDcV3eY29/hr1E7CzAauvU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=q9PKogkv; arc=none smtp.client-ip=209.85.210.197
+	 To:Cc:Content-Type; b=WrjeSwCM/7R6eGt5QT8D8xVNwZtK9N7GqvIS+bgcSOXBf2cq4INVahAZHpw8v2AviG7C/gWnIuLV07hmjTR2TfQ3ShsQqXalAVhmwdmZ0xp/F0B6jTt2IA55d1/MhA4YqYrcYwAdZpqmoiHyas2taYk1fiPzGX9mfR/pjvuolgs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ku3dpin0; arc=none smtp.client-ip=209.85.215.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="q9PKogkv"
-Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-880babf652aso511952b3a.1
-        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 20:45:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ku3dpin0"
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-cc795ad1f5aso1901386a12.2
+        for <linux-pci@vger.kernel.org>; Mon, 28 Sep 2026 20:45:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790653534; x=1791258334; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1790653536; x=1791258336; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=mNojz/m5/pZo5fqQWuhdwjNU5hLUXAkkyG3PUmd5nDE=;
-        b=q9PKogkv6YDgLQIyhJ2XD4moH50hdabhUOPoy47SxRomxKDEP3/Ay8iBcqXMN90vQr
-         9OfQrr4QEjagrkQtUceDMFrlvYjLeXmg8mz4Zp35tdp6Ucj9BASOEaZQlsfoag4fqHhG
-         t29HgZjZ4u+hzmCxeg3/BXP6t/uXFlOIEoaGKGxGwdzYSgGZgZWG1fsop4TzPWqjAsg4
-         woOnbf1g7DohYaSE9on7VWetqFAmoPJzQ3kG6bHBLv/wQ/dJ77Vz1ZnCFrnjYWPTSeHR
-         7bJWsrQJaT2koKaF4JCJtouRED6b7yyEaG4juDHcnujiIkVqd+7nXW+eF5sAVRNA1nQV
-         ZbeQ==
+        bh=FTnb5gdEOwnPdz4JRroX+sFrer89MQl7kw/S2QGLtV4=;
+        b=ku3dpin0ngpLyX7ZzagHIAR7ZynSiwuFMpuJufJINVxElvG+atUqOMr6i+K2j12maC
+         7zmJIsbXMQAG8FKuja8u617KPxf4Q0JnFVuNXfBN4IFwVmwxqWBqqDiRVV9URoOzFqp4
+         RR1XncOAQZ5CrFRFt3QQPuFPncRUJTM6I/EAdNOjMUahItDI678Waj5Ank+HIowMX5CL
+         a6xRuNeWF4o3dVhF+9tR+9I19dHXr53PCo0UEYa3k8oi2SPZDtJZjuHF/71c9UIELzEI
+         wXd06Iseilgl55/oeQMn0zlsM0WOvmZCJS9PBD4D0R4iBfebsjQVRCjSyEf4PJTuqOsG
+         Mt+Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790653534; x=1791258334;
+        d=1e100.net; s=20260707; t=1790653536; x=1791258336;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=mNojz/m5/pZo5fqQWuhdwjNU5hLUXAkkyG3PUmd5nDE=;
-        b=kxBtPUiZyiDXhmqlCJdrTf1nvmY86CTzFWbHulfMF4pPCzy61VkAnJe4vkCjZiv9fh
-         ZmI9L9eKh84VJVvPl8mmzJzDzEJFnR56mzofSbUfKoGmh3STaeOQL5t73LPLRDBXr8/+
-         ZU+y3AdjkNgrzoQvnfLeah7o3blZ6fY1/0zzZi9fw1JnspbYVDUn/5Fd0Z3v1JhAlgFJ
-         Cr58ixH1Mww7jaNcuCMxtixOQTh/d+esIgGJaGcMyRLL/47HDqXrlNxy4MYE4ctrYN54
-         4YANhM0bBgVL4kYLMGqzJyTGBeAEpUTBjxpHugOk+6saspHYRGCeeg62zKwke5WR6qpt
-         ApGw==
-X-Forwarded-Encrypted: i=1; AKwUvBzaByXW6sC3o2T4Vqc+2LefMTdcG/R95VfoUJBe7r5PYxqJr2XdIqwoKtL+4cfmhdfUee8l1lrulLQ=@vger.kernel.org
-X-Gm-Message-State: AFuF++nTrLIYv6PCJtGCPMP+0vNoS5xxt/gMCnmrGjOvz6kTjca5GOPr
-	S0au2GwejcK+7GddZTeCUhUfNRRtuhrqIYuvzYwFqXU7HuC43zzI2kw8CHUCccugf/eIlw9YpLE
-	jfw==
-X-Received: from pflr18.prod.google.com ([2002:aa7:9892:0:b0:878:112:ded2])
- (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a00:1703:b0:878:3705:5724
- with SMTP id d2e1a72fcca58-8856314d6ffmr806898b3a.48.1790653532960; Mon, 28
- Sep 2026 20:45:32 -0700 (PDT)
-Date: Tue, 29 Sep 2026 03:45:00 +0000
+        bh=FTnb5gdEOwnPdz4JRroX+sFrer89MQl7kw/S2QGLtV4=;
+        b=d+isDbQGepDunW0SfKZyDXNSDlywvE1YcBXxF3q200OQwlVdvww8kVdH8pDmo5spiR
+         SAd6uu2KvJcFhLZ8i11nozs4r6JiA+tx1grRugG3vak5zruI9kDEUWHF5P9Ph3Rfbw/x
+         RidyxdIH6wv/Ein13fYykR66qWGtRyrVhb8zUNWijyCwK7WmrdjcSG5PJdF4/tJcWxqq
+         Owx4AJuOeH2J7lxTU2+iVdXQXt9N4mM6349Rdz95G7OVYPOaHppWglZaurH1X6wEq9Kv
+         l0oudOwq8pQ/oA9pXnv/RvZY+z5tdFoG+NgIn7UtoWV7iRmc4g3L9UX62kPOm4GK6FHh
+         JPGQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwM/rgVJtOHiTQ9/NcyZBAtg3O2gQuTxa9CeRanVksYB4A9DSFocLvSoMjuGBVFFH5zP1Q/yuGtqTQ=@vger.kernel.org
+X-Gm-Message-State: AFuF++m1KIzGiiLP26ndyz3DzNqMIi/JRKXf9U7+xCdNtNM6kIyg3k1G
+	QWngy7OkwzzAb3D1c1gzSEEGuTQV5vNJbsIJc+4cpgwopW0llykqEyWxMqvR+wxDWsLnD2hXEAM
+	Fjw==
+X-Received: from pgbdp8.prod.google.com ([2002:a05:6a02:f08:b0:cc7:a092:edd9])
+ (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a21:e38b:b0:3de:67b8:26bc
+ with SMTP id adf61e73a8af0-3de67b82a79mr3606310637.30.1790653536063; Mon, 28
+ Sep 2026 20:45:36 -0700 (PDT)
+Date: Tue, 29 Sep 2026 03:45:01 +0000
 In-Reply-To: <20260929034510.2023173-1-praan@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -60,8 +60,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260929034510.2023173-1-praan@google.com>
 X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
-Message-ID: <20260929034510.2023173-7-praan@google.com>
-Subject: [PATCH v11 06/16] iommu/tegra241-cmdqv: Restore PROD and CONS after resume
+Message-ID: <20260929034510.2023173-8-praan@google.com>
+Subject: [PATCH v11 07/16] genirq/msi: Cache MSI message in irq_chip_write_msi_msg()
 From: Pranjal Shrivastava <praan@google.com>
 To: iommu@lists.linux.dev
 Cc: Will Deacon <will@kernel.org>, Joerg Roedel <joro@8bytes.org>, 
@@ -75,41 +75,62 @@ Cc: Will Deacon <will@kernel.org>, Joerg Roedel <joro@8bytes.org>,
 	Pranjal Shrivastava <praan@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-From: Ashish Mhetre <amhetre@nvidia.com>
+Currently, PCI MSI caches the composed MSI message into the MSI
+descriptor inside __pci_write_msi_msg(), whereas platform MSI and other
+device MSI domains do not cache the message in the core, forcing
+individual drivers to manually copy the message into desc->msg if they
+need to restore it across power transitions.
 
-PROD and CONS indices for vcmdqs are getting set to 0 after resume.
-Because of this the vcmdq is not consuming commands after resume.
-Fix this by restoring PROD and CONS indices after resume from
-saved pointers.
+Cache desc->msg in irq_chip_write_msi_msg() before invoking the chip
+callback so all hierarchical MSI domains automatically record the
+latest message. Document why the redundant assignment in
+__pci_write_msi_msg() must remain for direct callers outside the
+irq_chip hierarchy.
 
-Reviewed-by: Nicolin Chen <nicolinc@nvidia.com>
-Signed-off-by: Ashish Mhetre <amhetre@nvidia.com>
+Suggested-by: Thomas Gleixner <tglx@kernel.org>
 Signed-off-by: Pranjal Shrivastava <praan@google.com>
 ---
- drivers/iommu/arm/arm-smmu-v3/tegra241-cmdqv.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/pci/msi/msi.c | 6 ++++++
+ kernel/irq/msi.c      | 9 +++++++++
+ 2 files changed, 15 insertions(+)
 
-diff --git a/drivers/iommu/arm/arm-smmu-v3/tegra241-cmdqv.c b/drivers/iommu/arm/arm-smmu-v3/tegra241-cmdqv.c
-index a394bf0f487f..c7989fcd2c62 100644
---- a/drivers/iommu/arm/arm-smmu-v3/tegra241-cmdqv.c
-+++ b/drivers/iommu/arm/arm-smmu-v3/tegra241-cmdqv.c
-@@ -567,6 +567,16 @@ static int tegra241_vcmdq_hw_init(struct tegra241_vcmdq *vcmdq)
- 	/* Configure and enable VCMDQ */
- 	writeq_relaxed(vcmdq->cmdq.q.q_base, REG_VCMDQ_PAGE1(vcmdq, BASE));
+diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+index 80a9db417dc8..f7bedc31d486 100644
+--- a/drivers/pci/msi/msi.c
++++ b/drivers/pci/msi/msi.c
+@@ -257,6 +257,12 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ 		pci_write_msg_msi(dev, entry, msg);
+ 	}
  
 +	/*
-+	 * HW Registers reset to 0 when power-cycled. Restore them from their
-+	 * SW copies to prevent executing stale/ghost commands after resume.
-+	 * Note on RPM: Power-cycles can never happen when VCMDQs are assigned
-+	 * to the Guests since the relevant frameworks (IOMMUFD / VFIO) hold
-+	 * active PM references preventing suspend while VMs are active.
++	 * Although irq_chip_write_msi_msg() already caches the message,
++	 * keep the assignment here for callers that invoke
++	 * __pci_write_msi_msg() or pci_write_msi_msg() directly outside
++	 * the irq_chip hierarchy.
 +	 */
-+	writel_relaxed(vcmdq->cmdq.q.llq.prod, REG_VCMDQ_PAGE0(vcmdq, PROD));
-+	writel_relaxed(vcmdq->cmdq.q.llq.cons, REG_VCMDQ_PAGE0(vcmdq, CONS));
+ 	entry->msg = *msg;
+ 
+ 	if (entry->write_msi_msg)
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+index fb5f372215bf..df460a574d80 100644
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -634,6 +634,15 @@ static unsigned int msi_domain_get_hwsize(struct device *dev, unsigned int domid
+ static inline void irq_chip_write_msi_msg(struct irq_data *data,
+ 					  struct msi_msg *msg)
+ {
++	struct msi_desc *desc = irq_data_get_msi_desc(data);
 +
- 	ret = vcmdq_write_config(vcmdq, VCMDQ_EN);
- 	if (ret) {
- 		dev_err(vcmdq->cmdqv->dev,
++	/*
++	 * PCI Multi-MSI shares a single descriptor across all vectors and
++	 * the device stores only the base message. Cache the message of the
++	 * first interrupt only, so that sub-vectors cannot overwrite it.
++	 */
++	if (desc->irq == data->irq)
++		desc->msg = *msg;
+ 	data->chip->irq_write_msi_msg(data, msg);
+ }
+ 
 -- 
 2.56.0.rc1.315.gc6ed9934b7-goog
 
