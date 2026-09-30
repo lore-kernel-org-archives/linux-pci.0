@@ -1,94 +1,152 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C63A2DFA4A
-	for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 10:34:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F78C3C3F60
+	for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 10:35:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790764464; cv=none; b=Kw7mBq2qUlcJHz33bNmJCr7dDx8RfyYgKTVsBhNcprgeEXfU8iS9SGt+34N09Vq6BUz8H/3VzTyOtKGzBTxVc/1uSm12Haq8OfEgwA88WOXuoTds62lOl/CZVJ7axuXeGdD2zvg9E/mVfToG2EMlEdHHIsY1CS1F0qGFSQJYpn0=
+	t=1790764503; cv=none; b=M986Jrdek/u4pBtuDB5dIKIIhAcZmMkTMd4Qx8sMkFgmfezvthnrDNnmNZ85wSzjb44wig9r4aq947enWHBEpc9td+pOIxUy0YMjgb+Uf3/jUOdBTHRrcVb45s4slbAE+cEa08ZS3fdTm2X1DKlUl1uPhMrmOmo/wJjhuhXduA4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790764464; c=relaxed/simple;
-	bh=p9ds84XS48RcNt7RGyzfylBjCNEv2V32Z40DPVhgowk=;
+	s=arc-20240116; t=1790764503; c=relaxed/simple;
+	bh=VbKNHCQzqyQMpZ2E6kyg5DU365ROwSGCjAlrBABi6J0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=YvjfSkZiR/dVLwacYX3CMKpPDaeSgZO7xFYKlFy/PRhfX7vgnn/3vnIVE9kgchOhH4hjAbB0+yOKLsPyONbc3y/wiOgRpIpbp+D7gzi/Xnu9uxCCpWk5bitmeslBI9Hb930mJMUQzSjHBbsItmtCB7iFlXVyVB5wTcU9XRzq6kQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H0CtyYvu; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Dc1dn5EVjtj82ge4op8CxudP8PgtXa2fR4s23uziIOWJsWF7dHryr/uOxaiOhBY0IwHHwJl9Zkow2hSstU1Oe1XJY/HKMvIF9vZHoRecMELAx7YZd0/uXYk4OIumWHefie4w0d5GnUdaLs7+ix5UuKcZyLmRG4k+yzLZj1BKzs8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gFzSa+X/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H0CtyYvu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C79661F000FF;
-	Wed, 30 Sep 2026 10:34:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gFzSa+X/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5C401F000FF;
+	Wed, 30 Sep 2026 10:34:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790764463;
-	bh=iYdqjMWldb41lEQjIkHDV0UMkKJ8BPBYWGb7yEyRwWM=;
+	s=k20260515; t=1790764501;
+	bh=v7fafheqzqaDB6X4SWWjhcrJE92yUrr3J9DSSAOv8HY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=H0CtyYvuwvajOz9t9cGoZLbOFVVTixzuwRi7EajtqNcCNEOLncQS1egsFG4/37LVC
-	 iHV3IIS0gcK3XxcDbWTubzvSELopOxBzRyhMsO3eXk2usRrod6AS9tank02Sc6sNt9
-	 H/ptz44bWhWlix1iibXjIlWyCXDqysM6+vIzHSbBkH6VQy6lExverz5a3qvJT9FALR
-	 QxN0Ee/IHD6EpeWqW7Peocy54GMlV67lL+ymmIsV8gEppdeiLeisIwHCqo5RMu8TML
-	 Jq5GbBTP+J1ffOI0wQ6M1RTTXwWPhFRfJNyoosvq5EPx+xDbloCHINRiATbqY20LpM
-	 nd54tejVONO2Q==
+	b=gFzSa+X/tQ6AuZJU3Qg/zUyiAJ4eJMVmyCbxBt5qScGvDKTHEqxkdAxR1qubFS+Th
+	 CN4eHLcso9DSNINoor+8oREIZEKc0MJ6CB3+iEKR0fm1syIkNReNkt1bp3+8atp7tC
+	 iBCEkwjPgdbSm1g1xMR8M01O7Y6iBSZ4Y9uVBG6jdczv65xp3cj6Tc+411jfRYH0Xw
+	 Jwh0qksn+bq0cWp3NQrjH9EafvnxT5pUAf/yjbLY/D+c0Lq/cWGm+8sX/ptmjDbx1F
+	 OJv4UFNhDJmXCqZ7mQb8W3X4CFzhYL/Uj4p09DpklwUpLPdwnb1AICr9zGcquGB1ve
+	 oVKYRDiBZAH5g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 03/10] rust: pci: add is_virtfn(), to check for VFs
+Subject: Re: [PATCH v3 01/10] rust: pci: add internal SR-IOV enable and
+ disable helpers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Zhi Wang" <zhiw@nvidia.com>
-Cc: linux-pci@vger.kernel.org, ojeda@kernel.org, gary@garyguo.net
-In-Reply-To: <eca774843f5bbeec015307d6491ae9da5a222275.1790759932.git.zhiw@nvidia.com>
+Cc: ojeda@kernel.org, linux-pci@vger.kernel.org, gary@garyguo.net
+In-Reply-To: <af34ce6151b5be98668d712fbe62b5d6af291770.1790759932.git.zhiw@nvidia.com>
 References: <cover.1790705494.git.zhiw@nvidia.com>
- <eca774843f5bbeec015307d6491ae9da5a222275.1790759932.git.zhiw@nvidia.com>
+ <af34ce6151b5be98668d712fbe62b5d6af291770.1790759932.git.zhiw@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 30 Sep 2026 10:34:22 +0000
-Message-Id: <20260930103422.C79661F000FF@smtp.kernel.org>
+Date: Wed, 30 Sep 2026 10:34:53 +0000
+Message-Id: <20260930103500.C5C401F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Medium] pci: conditional compilation bug for pci::Device::is_virtfn()
+- [Medium] rust: conditional compilation gap for SR-IOV API forcing downstr=
+eam #cfg usage
+- [Low] rust: missing #[inline] on abstraction functions forwarding to C bi=
+ndings
 --
 
-commit 1fc1516a8aa1429dbd6a2108303ca0548d1cd4cf
-Author: John Hubbard <jhubbard@nvidia.com>
+commit 3f2a7b7fc60a2b23673b53641eba3ae3ba445ce8
+Author: Peter Colberg <peter@colberg.org>
 
-rust: pci: add is_virtfn(), to check for VFs
+rust: pci: add internal SR-IOV enable and disable helpers
 
-This commit adds a method to the PCI device abstraction to check if a
-device is a Virtual Function (VF) created through SR-IOV.
+Wrap pci_enable_sriov() and pci_disable_sriov() on Device<CoreInternal>
+for use by the SR-IOV callback tokens and their rollback guard.
+Keep these operations internal so drivers can only enable or disable
+VFs through the callback-scoped API introduced later in this series.
 
-> diff --git a/rust/kernel/pci/iov.rs b/rust/kernel/pci/iov.rs
-> index c37ce51346731..272ed677f1451 100644
-> --- a/rust/kernel/pci/iov.rs
-> +++ b/rust/kernel/pci/iov.rs
-> @@ -11,6 +11,15 @@
->      prelude::*, //
->  };
+> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
+> index 3ec897709e890..b11a1d32c5db5 100644
+> --- a/rust/kernel/pci.rs
+> +++ b/rust/kernel/pci.rs
+> @@ -34,6 +34,8 @@
 > =20
-> +impl Device {
-> +    /// Returns `true` if this device is a Virtual Function (VF).
-> +    #[inline]
-> +    pub fn is_virtfn(&self) -> bool {
+>  mod id;
+>  mod io;
+> +#[cfg(CONFIG_PCI_IOV)]
+> +mod iov;
 
 [Severity: Medium]
-Does this introduce a conditional compilation issue when CONFIG_PCI_IOV
-is disabled?
+Does hiding the `iov` module unconditionally when `CONFIG_PCI_IOV` is disab=
+led
+break downstream driver compilation?
 
-Since the is_virtfn method is defined in rust/kernel/pci/iov.rs, which is
-entirely compiled out when CONFIG_PCI_IOV is not set, it becomes unavailable
-to drivers. In the C API, the is_virtfn bitfield in struct pci_dev is
-unconditionally available regardless of the CONFIG_PCI_IOV configuration.
+By gating the `iov` module behind `#[cfg(CONFIG_PCI_IOV)]`, this cascades i=
+nto
+missing types (`SriovEnable`) and trait methods (`Driver::sriov_enable`). T=
+his
+forces Rust driver developers to either pollute their code with
+`#[cfg(CONFIG_PCI_IOV)]` on trait methods or add `depends on PCI_IOV` to th=
+eir
+Kconfig to avoid compilation failures.
 
-If a Rust driver attempts to call pdev.is_virtfn() on a kernel configured
-with CONFIG_PCI_IOV=3Dn, the build will fail. Should this method be moved
-to a module that is always compiled, matching the C API's availability?
+In the C PCI subsystem, `.sriov_configure` and `pci_enable_sriov()` are
+unconditionally available and fall back to static inlines returning `-ENODE=
+V`
+when disabled, allowing drivers to compile seamlessly without `#ifdef`s.
+Could we provide `!CONFIG_PCI_IOV` helpers in `rust/helpers/pci.c` to maint=
+ain
+C parity and avoid breaking valid Kconfig combinations?
 
-> +        // SAFETY: `self.as_raw` is a valid pointer to a `struct pci_dev=
-`.
-> +        unsafe { (*self.as_raw()).is_virtfn() !=3D 0 }
+>  mod irq;
+> =20
+>  pub use self::id::{
+> diff --git a/rust/kernel/pci/iov.rs b/rust/kernel/pci/iov.rs
+> new file mode 100644
+> index 0000000000000..c37ce51346731
+> --- /dev/null
+> +++ b/rust/kernel/pci/iov.rs
+> @@ -0,0 +1,46 @@
+[ ... ]
+> +impl Device<device::CoreInternal<'_>> {
+> +    /// Enable the Single Root I/O Virtualization (SR-IOV) capability fo=
+r this device,
+> +    /// where `nr_virtfn` is number of Virtual Functions (VF) to enable.
+> +    #[expect(dead_code)]
+> +    pub(crate) fn enable_sriov(&self, nr_virtfn: c_int) -> Result {
+
+[Severity: Low]
+This isn't a bug, but should this function have an `#[inline]` annotation?
+
+The rust.md guidelines recommend that small functions or functions forwardi=
+ng
+to a C binding call in abstractions (like the `kernel` crate) be annotated
+with `#[inline]`. `enable_sriov()` directly forwards to
+`bindings::pci_enable_sriov`.
+
+> +        // SAFETY:
+[ ... ]
+> +        to_result(unsafe { bindings::pci_enable_sriov(self.as_raw(), nr_=
+virtfn) })
+> +    }
+> +
+> +    /// Disable the Single Root I/O Virtualization (SR-IOV) capability f=
+or this device.
+> +    #[expect(dead_code)]
+> +    pub(crate) fn disable_sriov(&self) {
+
+[Severity: Low]
+This isn't a bug, but should this function also have an `#[inline]`
+annotation?
+
+Similar to `enable_sriov()`, `disable_sriov()` directly forwards to
+`bindings::pci_disable_sriov` and lacks the `#[inline]` annotation
+recommended for abstraction methods.
+
+> +        // SAFETY:
+[ ... ]
+> +        unsafe { bindings::pci_disable_sriov(self.as_raw()) };
 > +    }
 > +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1790705494.gi=
-t.zhiw@nvidia.com?part=3D3
+t.zhiw@nvidia.com?part=3D1
