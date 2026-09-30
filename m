@@ -1,156 +1,89 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66B904E50B5;
-	Wed, 30 Sep 2026 15:29:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FD583749FA;
+	Wed, 30 Sep 2026 15:48:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790782151; cv=none; b=t8457B/BTPSx2KCvVp/pk3vGWQI+D/sqU+xqVyvn43qpPzGT76B/qIOz57o1W2o+gPTakH/Mna2osOn4FrCRa25DQGZ0abzVuCgBIJYkTcWDNvMFAXk6+CugLaOtRKm4lktglO0Hy5W2qQkZfjUf2qSnS9gwgo6PRq9R2sCrGDM=
+	t=1790783303; cv=none; b=Cwe2+I4b+jOoxvULIOqeNPSrD1bjJMW5I4YeEdDFaOzIb7hFT30OcAJeVHqg+l2ZXGUUSTJBpv/Epd+JoowyIcqbKqdcNrsY/lTAdr0nZ1LJ+HUM8f2BH9Vkt6SydNdSJUu5dM9MHgTBtUX7lmO4SkHfwaq3O6Q5jmsOLYBC8FE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790782151; c=relaxed/simple;
-	bh=1PAjXxgNFSKEiVlKNvm7/ZzcpiA6ddBRTLLTxNa1uxM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=X9kliD2DpfRtjKiRhA/uARDHpyo74Ad+dKt8YQIniclQKEh72XDIYSI5X6vuoTYKaxVJLu8TC7T5S4XNAMW22MDq2f4vVJ8sqH8tBE+sRpya66DxFTadV3wYhrD5hfUCEwMDPSdyHHY2wca0e2TnYGv36xSSG4isMMTSb7gJSFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fhGB2WG0; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790783303; c=relaxed/simple;
+	bh=MJOgAvAcfwjCPLRrSS8M66NTXmnn994l12opYVC7Kjc=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
+	 References:In-Reply-To; b=gfaM7lpdhlmIxpPZqRVJPGhBX5rpU4RRQuKewbUtHvSrkEZbaq2xO6rYf10aO9krfiitrNq0G1LJlvOalU54EOiVhOcHr2JqMLMiPoLA2vqK98B6OkTJFdeCmpD/dbsCRtIdCNsoTsCE/CPbS0Fj6kIJ4UlH1UEl0hhEOm2MPQ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XE6fwnUA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fhGB2WG0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 571EE1F000FF;
-	Wed, 30 Sep 2026 15:29:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XE6fwnUA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E4B11F00899;
+	Wed, 30 Sep 2026 15:48:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790782142;
-	bh=FBj8YD+zBJYlD1qZQv2Nlq97notj5/p8p6iJ2wnueTQ=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fhGB2WG08jAc/DoJCQlEL+qqI8onUMEYqXrMnARC4s54FTN4Zsq/1iD36QVEzjwv7
-	 GkDTHBjB2xNA6WQBZynG1ErFyj++toTVN41N52EhH5qpMKKYsGiXEkDyq91ubnqgc0
-	 8AdGx8bbxBEEPfmxWr/jaqKYcn/SgmajYgQ4H9V6ULIaIUttwgfSwvz/Q5k8KVa2uR
-	 jvlayEZsEC506Kb5es5urlRPdQO9ZxSNOedjzrhheZIFIu8nKUAkVQzl2+YyADZpJS
-	 Hv7HeKBgbI4E5+DYyVoq7hfJVChy9n2SwkEFdBM0WufAZqqZkhKMsSRvwOi0A4ipEW
-	 q4du4H2SiiK7Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 7/7] ath12k: Use VFIO MSI cache when available
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
-In-Reply-To: <20260930140833.576941-8-jtornosm@redhat.com>
-References: <20260930140833.576941-1-jtornosm@redhat.com>
- <20260930140833.576941-8-jtornosm@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 30 Sep 2026 15:29:01 +0000
-Message-Id: <20260930152902.571EE1F000FF@smtp.kernel.org>
+	s=k20260515; t=1790783299;
+	bh=Q3dyweEFIw9MMaAQ3qtHiJGRvzjhtsRVs97Lrtaxxi0=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To;
+	b=XE6fwnUAwglbhcdAUGpYMPdG6pAocT+0GJ5tREtciyKq9M/ayirFD3z5tatqi/m2y
+	 XdnU+DEV3c5XAPWOkwrLafhvFCPr+WvbtIWvwMFLr8oJJpojVgbaRASMJn5fVHsRN6
+	 TslBl21/rtXKG4Bvps/fJmnjganr3OjcNR2VXt9jURpgGNhl0y2wLQf/JRbdHHPo7C
+	 Ra8AJpFvppqxFtYgVPFoyzk+GNHG8yTfdcMxAY2+zGOzicmp7EiQkAxuzvZk03oRdO
+	 8D3na2MB1l0tLPvqflMEvx3Pm41YQ605NginVf9qZWEzym/LrxgeI6AZ/rmr/nZrn3
+	 DGtyGapgXY0kA==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 30 Sep 2026 17:48:08 +0200
+Message-Id: <DLSRP1M7HK6V.PJ3SDXZ991JU@kernel.org>
+Subject: Re: [PATCH 2/7] rust: pci: expose the VF index within its PF
+Cc: <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
+ <rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
+ <linux-pci@vger.kernel.org>, <alex@shazbot.org>, <jgg@nvidia.com>,
+ <yishaih@nvidia.com>, <skolothumtho@nvidia.com>, <kevin.tian@intel.com>,
+ <airlied@gmail.com>, <simona@ffwll.ch>, <ojeda@kernel.org>,
+ <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>, <gary@garyguo.net>,
+ <bjorn3_gh@protonmail.com>, <lossin@kernel.org>, <a.hindborg@kernel.org>,
+ <aliceryhl@google.com>, <tmgross@umich.edu>, <jhubbard@nvidia.com>,
+ <ecourtney@nvidia.com>, <cjia@nvidia.com>, <smitra@nvidia.com>,
+ <kjaju@nvidia.com>, <alkumar@nvidia.com>, <ankita@nvidia.com>,
+ <aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
+ <linux-kernel@vger.kernel.org>, <zhiwang@kernel.org>, "Boqun Feng"
+ <boqun@kernel.org>, "Daniel Almeida" <daniel.almeida@collabora.com>, "Tamir
+ Duberstein" <tamird@kernel.org>, =?utf-8?q?Onur_=C3=96zkan?=
+ <work@onurozkan.dev>, "Jason Gunthorpe" <jgg@ziepe.ca>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>, "Peter
+ Colberg" <peter@colberg.org>, "Simon Song" <xinmengs@nvidia.com>
+To: "Zhi Wang" <zhiw@nvidia.com>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <cover.1790764573.git.zhiw@nvidia.com>
+ <5828df56a42b784ce9da005b338e8580ea63294c.1790764573.git.zhiw@nvidia.com>
+In-Reply-To: <5828df56a42b784ce9da005b338e8580ea63294c.1790764573.git.zhiw@nvidia.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] ath12k: ath12k_pci_config_msi_data() overwrites cached host MSI da=
-ta
-- [Medium] ath12k: qcom_vfio_find_msi_cache() linearly scans PCIe config sp=
-ace
---
-
-commit e6e6b7a0866fae15d51a21b4502b67de316ac9af
-Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-
-ath12k: Use VFIO MSI cache when available
-
-This patch reads physical host MSI addresses from a VFIO cache exposed in
-the PCI extended configuration space, allowing the ath12k firmware to
-handle interrupt configuration in virtualized environments.
-
-> diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless=
-/ath/ath12k/pci.c
-> index 65712486d3127..832d3cf652d9d 100644
-> --- a/drivers/net/wireless/ath/ath12k/pci.c
-> +++ b/drivers/net/wireless/ath/ath12k/pci.c
-[ ... ]
-> @@ -812,6 +816,39 @@ static int ath12k_pci_msi_alloc(struct ath12k_pci *a=
-b_pci)
-> =20
->  	ath12k_info(ab, "MSI vectors: %d\n", num_vectors);
-> =20
-> +	/*
-> +	 * Try to get host MSI address from VFIO cache.
-> +	 * When running on a VM, the ath12k firmware requires physical host
-> +	 * MSI addresses and cannot handle guest IOVA addresses.
-> +	 * qcom-vfio-pci writes host MSI values to extended config space with
-> +	 * a magic signature "QMSI" for discovery. Search for it.
-> +	 */
-> +	msi_offset =3D qcom_vfio_find_msi_cache(ab_pci->pdev);
-
-[Severity: Medium]
-Does this call perform an unsafe and unstandardized linear scan of the PCIe
-extended configuration space?
-
-Looking at qcom_vfio_find_msi_cache() in include/linux/qcom_vfio.h:
-
-static inline int qcom_vfio_find_msi_cache(struct pci_dev *pdev)
-{
-	...
-	for (offset =3D 0x100; offset <=3D 0xf00; offset +=3D 4) {
-		if (pci_read_config_dword(pdev, offset, &magic))
-			continue;
-		...
-
-Performing a linear dword-by-dword read of the entire PCIe extended
-configuration space violates PCIe specifications. Reading unimplemented spa=
-ce
-can generate Unsupported Request (UR) errors, potentially triggering Advanc=
-ed
-Error Reporting (AER) events or system machine checks on certain platforms.
-
-Could this traversal use the standard PCIe linked list of Extended
-Capabilities (e.g., standard DVSEC or VSEC headers)?
-
-> +	if (msi_offset) {
-> +		pci_read_config_dword(ab_pci->pdev,
-> +				      msi_offset + QCOM_VFIO_MSI_ADDR_LO_OFFSET,
-> +				      &msi_addr_lo);
-> +		pci_read_config_dword(ab_pci->pdev,
-> +				      msi_offset + QCOM_VFIO_MSI_ADDR_HI_OFFSET,
-> +				      &msi_addr_hi);
-> +		pci_read_config_word(ab_pci->pdev,
-> +				     msi_offset + QCOM_VFIO_MSI_DATA_OFFSET,
-> +				     &msi_data);
+On Wed Sep 30, 2026 at 12:57 PM CEST, Zhi Wang wrote:
+> @@ -40,6 +40,14 @@ pub fn is_virtfn(&self) -> bool {
+>          // SAFETY: `self.as_raw` is a valid pointer to a `struct pci_dev=
+`.
+>          unsafe { (*self.as_raw()).is_virtfn() !=3D 0 }
+>      }
 > +
-> +		if (msi_addr_lo && msi_addr_lo !=3D 0xFFFFFFFF) {
-> +			ab_pci->msi_addr_hi =3D msi_addr_hi;
-> +			ab_pci->msi_addr_lo =3D msi_addr_lo;
-> +			ab_pci->msi_ep_base_data =3D msi_data;
+> +    /// Return the zero-based VF index within its PF, or an error for a =
+non-VF device.
+> +    pub fn vf_id(&self) -> Result<u32> {
+> +        // SAFETY: `self.as_raw()` points to a live PCI device; the help=
+er checks VF membership.
+> +        let id =3D unsafe { bindings::pci_iov_vf_id(self.as_raw()) };
+> +        to_result(id)?;
+> +        Ok(id as u32)
+> +    }
 
-[Severity: High]
-Does this cached host MSI data get overwritten shortly after it is saved he=
-re?
+In my PoC I had this implemented for Device<Bound>, but here it is implemen=
+ted
+for just Device I think? It's not visible from the context, but IIRC you mo=
+ved
+is_virtfn() in an impl Device block (which is correct).
 
-When the driver probes in a VM, ath12k_pci_probe() unconditionally calls
-ath12k_pci_config_msi_data(). In ath12k_pci_config_msi_data(), it directly
-overwrites msi_ep_base_data with the guest's virtual MSI data:
-
-static int ath12k_pci_config_msi_data(struct ath12k_pci *ab_pci)
-{
-	...
-	ab_pci->msi_ep_base_data =3D msi_desc->msg.data;
-	...
-}
-
-Will this defeat the VFIO cache mechanism by replacing the host MSI data wi=
-th
-the guest's virtual MSI data, preventing the device from receiving hardware
-interrupts in a VM?
-
-> +			ab_pci->msi_addr_cached =3D true;
-> +
-> +			ath12k_info(ab,
-> +				    "using host MSI from VFIO at offset 0x%x: addr_lo=3D0x%x addr_hi=
-=3D0x%x data=3D%d\n",
-> +				    msi_offset, msi_addr_lo, msi_addr_hi, msi_data);
-> +			return 0;
-> +		}
-> +	}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260930140833.5769=
-41-1-jtornosm@redhat.com?part=3D7
+So, if this is correct, please move it under Device<Bound>, as offset and s=
+tride
+are not guaranteed to not be concurrently modified otherwise.
