@@ -1,117 +1,153 @@
-Received: from mail-oo2-f43.google.com (mail-oo2-f43.google.com [74.125.231.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBEB24ED1A1
-	for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 15:08:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF0F54D98EB;
+	Wed, 30 Sep 2026 15:08:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790780943; cv=none; b=Zk+Fiy7qqhmkEOdy+J0LDpFtXGEjG6OiYGTLWc+0/UCB8c2whB87bcnBSCVez9DNhIS1An1QYbSXNCb7z/LRYpb4Q0fic2PwFZLxwjyEB3qfESjnqy6RqUiVbpkM6avCjFczgDV+MRdFxMFPJ5QoMPOpLMHbLQzTDeoMxVIJqFs=
+	t=1790780945; cv=none; b=U82Ooxw5T23FJGv/Ra2qurYcBALYSqmI4CknBq3TAUamrFBFOGnpne63vSCD2mOdb7l/d2yvVIHyfgtCOwHP/dojRyD1NspSr/79ouw0eXP7Dwav1jQJvlOwyB5wvop5oAqyGInQVOT/a8ch4e2AiaMHn05j9UA9ecIEFoJnNoQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790780943; c=relaxed/simple;
-	bh=DPVKVN5xXXAoaMKbr9xf4JRJlRrtKEzhZ77EGh6aO/Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ye9FAtN7D2B2yoin8+D7VXQocCtVlhu4eFqitmjFWPWbC6Fb1vn8UIXNgapzjdcburhDBLi/p1aSKdP4pKVeNeof4UH3tWgkRhSsb6+s8+hrnvDl+0G5ObnGfusmWZe7ZLPEHNX6Ve2hKjqYK66SYqvvV86A4WjSR1UsZIMMBBM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ElgjC/o+; arc=none smtp.client-ip=74.125.231.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790780945; c=relaxed/simple;
+	bh=e8Phd42DTJdLAnGLVfXXimqbeDjLtZbbv+CnDmezlco=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=tjZke8h2Vex4oHJqia2qxBBPvVSslJDeox8de2FzXrmKtr39dZDK2fJZPnGQ5pqeBVtol1RO9wno416Pv69ZTb8VcNOjuk2YnqYVxAoRy+p949hxd9JH8De0s/LEz89lR76Z2fjcEoxXvSDucRIBpqQdsjvaAP+UgtpQV8DE0tI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fnI098zD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ElgjC/o+"
-Received: by mail-oo2-f43.google.com with SMTP id 46e09a7af769-81b15bca7dfso2969605a34.0
-        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 08:08:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790780934; x=1791385734; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=fPgmINCV8SVNtxSwxWT/uE2/pfejEYPQvV6kz07ef0s=;
-        b=ElgjC/o+m9EGCSMuUCxjvJxSyRWInYLIh4wPpEL2U2uhr3IKDOyiRzMzGaPPolj55/
-         STnTo7GBULtTRnGn/jopxFyPjd70jMjVUasHAUzrCGz+N9EJK9bnmexCUui3d7+rPlPH
-         MMZrrjrz2nkuA9T2JkDPBrn9kFjb1wtMiuBOprv5kSl/1jQ5i/F14z7YSaaXdN/vvpSS
-         WXlxCzQEektylYTIgRbunjBT7NaakE5SVMHJa4rQExxCv7etZ5W+AHTTKU7BG0EkcisG
-         nWsT+IBeBhKqJY7I57OKYvfoQyR6YIeO7VuzXHEerIL2cdt1w4p5SMrlZ2P1ydzcl5PG
-         gA4g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790780934; x=1791385734;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=fPgmINCV8SVNtxSwxWT/uE2/pfejEYPQvV6kz07ef0s=;
-        b=oDbps1vaTaB4u/jPQCVgXaVirFrZsP5S4gvbjV2P2PlO1sIvGhDHQSP90U5stdQGZp
-         /uywWhLvhN1B5+9Ybzh74omAwTr19HuIakolCUedsiJ73/JMc9kLjCnlXQwu8AT5pxYU
-         dAKdTGEup8vbYWxe8VZRW9GMGhmMIq9NY6WMVUpj5NM/lF4lNU+cHvNSLUyLC3kmtVLN
-         O6thXnltEZEdhfvtsRlRJ0VdlsDAJ3VOMlxIWTSilfQCsKi0A1ZXTevQfo16iv3vOEyb
-         2H6DLdzpDrL3WxnuiZshc3euK8YQ07PZf378kDkxldAYb/9buOmwCWtq0kNyPYKVVWqL
-         qEiQ==
-X-Gm-Message-State: AFuF++kTe/X1IWhckAes7OHiJ4QwB4ODsc/vZk4ZLUOfIwevq9mkXGlZ
-	Dggfu4NgC4peT8S2Y6o9aCyCzx0gfKreMgdUeEwdxiMDiB0xL4PEF21nTgsXI/oI
-X-Gm-Gg: AYBFou0AtACVep8Kg0i3TMSBuMZ3Xk8vtByWblHrOE+LcqkyKKEtSXewjlTUyOINXw0
-	VUNBkzaxZJA9d1Wi4gwwPcxSP3Xogu8S/biO6NXyufXIH8wk0oY0H6BIjEsxSj8SfX+Yg6Fc2BA
-	KIjpcVYXOmwfm7KTQMrw5lmCOfHfiyvn7JK76KGgMcRxMF8dMyKrlvZSHgjPgD6bWWEL+jyXajB
-	1anOx1l2P0lU4h6cCfpQXGoeNoWr3AAji7M/1TL1juP7VBJIUwmTEw4ObE/U9lIqwhMUD8WFf/z
-	scv2+kn/eaGVw3Kt1gLNHi6z5roA42fnmccAXHdUvEA+WvijHVY7vloGEux+F915nHU1naE2ykB
-	AYrBQQtfkkvRF+T6LwtGnqnkr2i0X/Wm3hsCDE7lYH5fr8r1VAs4XvwAnEX9alQQhnYWSwWynd7
-	Hnakj4ORjKGi3XRjb5kuZjgjeYoM/B1Fhre5fbRvWJhfg39sYB8QDvSDV54hV8rIv4O2oZYmvSU
-	t4qebKaOZQb/zoePBkE
-X-Received: by 2002:a05:6830:3916:b0:7fa:5c68:d04c with SMTP id 46e09a7af769-8204b5c2093mr2071820a34.22.1790780934250;
-        Wed, 30 Sep 2026 08:08:54 -0700 (PDT)
-Received: from localhost.localdomain ([103.179.231.92])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-82062ccb8c9sm1087165a34.6.2026.09.30.08.08.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Sep 2026 08:08:53 -0700 (PDT)
-From: Sreeraj S Kurup <sreekuttan2156239@gmail.com>
-To: linux-pci@vger.kernel.org,
-	ryder.lee@mediatek.com
-Cc: bhelgaas@google.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	robh@kernel.org,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
-	linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v4] PCI: mediatek: Fix integer truncation and handle oversized resources
-Date: Wed, 30 Sep 2026 15:07:27 +0000
-Message-ID: <20260930150727.2897-1-sreekuttan2156239@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260930120539.4967-1-sreekuttan2156239@gmail.com>
-References: <20260930120539.4967-1-sreekuttan2156239@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fnI098zD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ED211F00898;
+	Wed, 30 Sep 2026 15:08:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790780936;
+	bh=wvd2NOR9cMCtk5nzpD8yt3d4Z4we1096f0lVjvDem4g=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=fnI098zDEckYskRLMdmy1V8DH6dCuRp4LejDojkyG4KW/Edwaak9/orOaNl9ewKjm
+	 t22INuSWaP3I5GOD7MCuZ+caT/lP1azYLtl90+DPfMy7nBTT0JL1Q6SGDxj4vyouQv
+	 pjXAWr2+ReyAYg2IP2LEqspEI3vdjxvmh34RWpGp+yunBEQqB723wGY5CYeWWovujv
+	 zxsYSkgov8E58/cw6HsR83GURTL/CqjSLm7AmTDOFEhRgJjzM+od9CHJclQ6f3phU+
+	 afziWPpg1Mpfe8A6PO8VIAHM6veBTy/tiycCnCvdM6BuBcQ3KZoQs7+30t84DFKeqO
+	 wXfUXNOU26Wvw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 5/7] ath11k: Use VFIO MSI cache when available
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
+In-Reply-To: <20260930140833.576941-6-jtornosm@redhat.com>
+References: <20260930140833.576941-1-jtornosm@redhat.com>
+ <20260930140833.576941-6-jtornosm@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 30 Sep 2026 15:08:56 +0000
+Message-Id: <20260930150856.8ED211F00898@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Hi PCI Maintainers,
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [High] ath11k/pci: guest MSI data unconditionally overwrites host VFIO ca=
+che
+- [Medium] ath11k/pci: early return bypasses ath11k_pci_msi_disable()
+- [Low] PCIe: linear scan of extended config space risks side effects
+--
 
-Apologies for omitting the revision history in the main patch post.
-Here is the complete changelog for v4:
+commit fb991301d679c8e835b3eb00875de8e25f6d571d
+Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 
-Changelog:
- - v4: Fixed struct device pointer access (pcie->dev) for dev_err().
-       Verified build and passed Sashiko review checks.
-       [Subject: PCI: mediatek: Fix integer truncation and handle
-       oversized resources]
+ath11k: Use VFIO MSI cache when available
 
- - v3: Replaced clamping logic with strict size validation
-       (size_order > 31 returns -EINVAL), added !size check, and
-       updated size calculation to fls64(size - 1) to handle
-       power-of-two sizes correctly.
-       [Subject: PCI: mediatek: Fix integer truncation and handle
-       oversized resources]
+This patch adds support for reading cached host MSI values from the PCI
+extended configuration space when running in a VM via VFIO. This allows the
+firmware to receive physical host MSI addresses rather than guest IOVA
+addresses.
 
- - v2: Added size clamping for size_order > 31 to prevent overflowing
-       the 5-bit AHB2PCIE_SIZE() macro mask.
-       [Subject: PCI: mediatek: Fix integer truncation in fls() and
-       clamp size]
+> diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless=
+/ath/ath11k/pci.c
+> index c372676b097f5..99a3a709831c1 100644
+> --- a/drivers/net/wireless/ath/ath11k/pci.c
+> +++ b/drivers/net/wireless/ath/ath11k/pci.c
+[ ... ]
+> @@ -488,6 +492,35 @@ static int ath11k_pci_alloc_msi(struct ath11k_pci *a=
+b_pci)
+>  	}
+>  	ath11k_info(ab, "MSI vectors: %d\n", num_vectors);
+> =20
+> +	/*
+> +	 * Try to get host MSI address from VFIO cache.
+> +	 * When running on a VM, the ath11k firmware requires physical host
+> +	 * MSI addresses and cannot handle guest IOVA addresses.
+> +	 * qcom-vfio-pci writes host MSI values to extended config space with
+> +	 * a magic signature "QMSI" for discovery. Search for it.
+> +	 */
+> +	msi_offset =3D qcom_vfio_find_msi_cache(pci_dev);
 
- - v1: Initial submission using fls64() to handle 64-bit resource
-       sizes and prevent integer truncation.
-       [Subject: PCI: mediatek: Fix integer truncation in fls() for
-       resource size]
+[Severity: Low]
+Does this unconditional linear scan of the extended configuration space risk
+unintended hardware side effects?
 
-Best regards,
-Sreeraj
+Calling qcom_vfio_find_msi_cache() loops over the entire extended
+configuration space reading 4 bytes at a time instead of using the standard
+PCIe capability linked-list traversal.
+
+This could trigger side effects if there are clear-on-read registers present
+in the configuration space.
+
+> +	if (msi_offset) {
+> +		pci_read_config_dword(pci_dev,
+> +				      msi_offset + QCOM_VFIO_MSI_ADDR_LO_OFFSET,
+> +				      &msi_addr_lo);
+> +		pci_read_config_dword(pci_dev,
+> +				      msi_offset + QCOM_VFIO_MSI_ADDR_HI_OFFSET,
+> +				      &msi_addr_hi);
+> +		pci_read_config_word(pci_dev,
+> +				     msi_offset + QCOM_VFIO_MSI_DATA_OFFSET,
+> +				     &msi_data);
+> +
+> +		if (msi_addr_lo && msi_addr_lo !=3D 0xFFFFFFFF) {
+> +			ab->pci.msi.addr_lo =3D msi_addr_lo;
+> +			ab->pci.msi.addr_hi =3D msi_addr_hi;
+> +			ab->pci.msi.ep_base_data =3D msi_data;
+
+[Severity: High]
+Will this host physical MSI data be unconditionally overwritten later during
+the probe sequence?
+
+After ath11k_pci_alloc_msi() correctly sets ab->pci.msi.ep_base_data from t=
+he
+VFIO cache, the probe sequence in ath11k_pci_probe() continues.
+
+Later, ath11k_pci_probe() calls ath11k_pci_config_msi_data() which does thi=
+s:
+
+ath11k_pci_config_msi_data() {
+        ...
+        ab_pci->ab->pci.msi.ep_base_data =3D msi_desc->msg.data;
+}
+
+This appears to overwrite the host MSI data retrieved from the VFIO cache
+with the guest virtual MSI data, which could break interrupt delivery in VM=
+s.
+
+> +			ath11k_info(ab, "VFIO MSI cache at offset 0x%x: addr_lo=3D0x%x addr_h=
+i=3D0x%x data=3D%d\n",
+> +				    msi_offset, msi_addr_lo, msi_addr_hi, msi_data);
+> +			return 0;
+
+[Severity: Medium]
+Does returning early here skip ath11k_pci_msi_disable() and leave the device
+in an inconsistent initialization state compared to the bare-metal path?
+
+By bypassing the ath11k_pci_msi_disable(ab_pci) call just below, the device
+is left with MSI enabled prematurely in the PCI configuration space.
+
+> +		}
+> +	}
+> +
+>  	ath11k_pci_msi_disable(ab_pci);
+> =20
+>  	msi_desc =3D irq_get_msi_desc(ab_pci->pdev->irq);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260930140833.5769=
+41-1-jtornosm@redhat.com?part=3D5
