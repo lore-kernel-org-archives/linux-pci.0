@@ -1,145 +1,282 @@
-Received: from mail-oa2-f41.google.com (mail-oa2-f41.google.com [74.125.231.105])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4130F4F68DF
-	for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 15:12:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E1C64FECEE;
+	Wed, 30 Sep 2026 15:15:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790781163; cv=none; b=tdsf24CG/CTEKzB7JIj3hNu7Uu13O3nA4L8Vhjr4AXFk/0P0xyuwabMsm+yKqJV9rh06GA02v7CrvMl8mtG2fgx7LPAuIbivo+IvYUaY4GPz7PACuSmA7L+cN/qKkZuaPE3TfMuY3279cKauJymriDTlmVhFixvu3jIKgnISUoA=
+	t=1790781316; cv=none; b=RlxRKctghEJpwD32N2fAUTnp1X4432wnkqFfbWiIjVA7A04LQXKI2G+/z6bB0ssi/Q5S3zUADpwyZ88Mz7EFFlp9S6GAfvKI8L0k7ntaAv2bNtbKsivFhUDh/N0Vt2P2oRJ7lp2D67iioXcP8O15mCjwHlClwTdmI+TuGSohSBU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790781163; c=relaxed/simple;
-	bh=N5TwGmCOg73FQhkQUlqK26vGWZ+6twK0jOc1jidbG9w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=se5A/DY+TNusn38aZU+Srm0i8oupD7AJvmtcQ5ULQkS3MW0s5Trq5Wib7tjVPPBUlR1HVJT3GYDW+j41Xv7O7GdrL45KZqxOKX5xMLrpwSY/CPk1LOr5/djIhCxLeoUAug+YjOAlXW4AJRWUFTMejYs/YumR0KkH6Wp7Iy38mC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=F2LynHut; arc=none smtp.client-ip=74.125.231.105
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1790781316; c=relaxed/simple;
+	bh=7DRKaAl9MRTRd6KPUPAgzNUtr5/McdZ/UvnWQVbFj+k=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
+	 References:In-Reply-To; b=mOdJP4/skBilCm9M+Y4J7iaRkeMVIhfZdtmEj9uzRZcijM4Nn94srUSohXjlTg1FZ+1ZVSLjZyvBtsA3+JB91BnN0Boc7b7YLQaGTBQbhtEyMVoIP27XW9Oqk+0Zm99GGEccUnvsh81+yvqxwSZh0t3Kz75n2p3DjEWmqIp+X0M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ai3klTCy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="F2LynHut"
-Received: by mail-oa2-f41.google.com with SMTP id 586e51a60fabf-47bc923fe6aso3478965fac.3
-        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 08:12:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1790781152; x=1791385952; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=i3zztcZwHv33xTSBhcuuRwUuO/mC2YE/oPR+7vCHXWU=;
-        b=F2LynHutv0ZOmuF8vmFQU0cyqiI4GB5kyNhWNIcFmTm03ZYDlIdoeMvOS1ol6pHe7P
-         1opniFMp9w/1hoNxwBw1abApRh1Po/j0x2ZuaQZgt0r7WvI/GTEHkvv7KKThQRNgUeDk
-         U3vhG4nOcBSBbCwSBzxPAF2/N9kbmWUuQeOCbbHXQ+GZ3OEDXh8iCi7m7OhysGURcFuR
-         MYdYJN3ZhgKPd9PQq1QsBlgi+KBVppXhOjswSN+K42z+R3efFI3SH3JDdd9Kub164vap
-         FKr2jNuW6GBhqs4aVFIb+0YT7DujIACVvy1vKyp41BAFenyWoJ63gl+3RGCO5hghcRCU
-         QQ9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790781152; x=1791385952;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=i3zztcZwHv33xTSBhcuuRwUuO/mC2YE/oPR+7vCHXWU=;
-        b=1nryeIEqI903XrEIIEA65vZyEBsAFIBnvb24lxmGB6FS6U4zGcmZ+IADsGvgDAjUXF
-         YufSXY+IbSr6YgZunqaLKK+xR/4nYN9NVSMFp1USLLvh6viy/p8sKEPdMQ+puGgI0Ky9
-         MvAPA7nBAiyih6jNnYBX+zlXmrL4Uu7iYirdCu00lefNd1iRLoPHX32a2FfyO/DbbQdC
-         vd87u2gxprZYUvB60iWON3bzeZkbxYj64zUmhWZl2HBibx5OgyaZ+/JZxTeQLl9YL77T
-         zngNHPbScZz4hhnjWhnDjHKbcseEnsRWXqEZqbK14Kq/J12kcW1yuSJnVF4qSkoj9zxF
-         aLsQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwcWlckDl7OnR79ppLSJrFTjdZNu7WA0N3t8kGT9gmwUfZlY8ia7u39NMCW7kbrueJpTkHC+WlpS0Y=@vger.kernel.org
-X-Gm-Message-State: AFuF++lnTwG1K+zD13eP0Iz28gnddDPcOEsF/3RTp11HmZVxJjcx40cY
-	7kcRxjnA8KEwlxXoRzoP05t4Zz2OGSAHhsadKTH5U3VurAUkFEjzgFRTRh02g2AHS64=
-X-Gm-Gg: AYBFou082mt+o55JFXBkHfw2d8clhTPMBR28Cp+fO9b7Ymf1zm/9F5zcVG4iVJbEouR
-	yDwkmtf14maQH9RFfAAQmJgsh/Rsg7Dqa3Oz08dHrahF60dua5RNAE9RXqxoLQIFRJOxhEFvTIZ
-	7ikCypoiARXzllCrQe9UtSFQukOgFz3HOwTMgL0Fjn6Qejk1euw3yhLq77iJRcT4G6hJFqN8OEm
-	+yNLNl3l6VIu1WNYrqPCKpKytAVEacunSRjowNcDoKAAXaCMKEYKFzrkEQp+cDuQI/z0U7c2iz+
-	ebougdwzq2PrUsSHdLZC2TvE2z4rBobF8Ts6D25MPs4SA5tLdzZEi3Tdwx5p57Ox1l+RjoMLf25
-	7F8mUKrh70W85+N4rzbwXEatDrZXw64ThIuRc7RS/xWbw7Y9mHrEjfxfG0fqA8J3fFCUS67Y0TO
-	QiZYdn9B/zXI0SEjsUlRH3A3M5uE5LMBdfFMIAtR6mRbUJ
-X-Received: by 2002:a05:6808:23cd:b0:4d6:90d3:e187 with SMTP id 5614622812f47-4f1b9a4dd1fmr1463609b6e.48.1790781151901;
-        Wed, 30 Sep 2026 08:12:31 -0700 (PDT)
-Received: from ziepe.ca ([130.41.10.202])
-        by smtp.gmail.com with ESMTPSA id 5614622812f47-4f1b61be7d8sm1076055b6e.17.2026.09.30.08.12.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Sep 2026 08:12:31 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xBvyv-0000000BwZW-3H3V;
-	Wed, 30 Sep 2026 12:12:29 -0300
-Date: Wed, 30 Sep 2026 12:12:29 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: bhelgaas@google.com, alex@shazbot.org, jjohnson@kernel.org,
-	johannes@sipsolutions.net, mani@kernel.org, yishaih@nvidia.com,
-	skolothumtho@nvidia.com, kevin.tian@intel.com,
-	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/7] vfio/pci: Add qcom-vfio-pci variant driver
-Message-ID: <20260930151229.GR163130@ziepe.ca>
-References: <20260930140833.576941-1-jtornosm@redhat.com>
- <20260930140833.576941-4-jtornosm@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ai3klTCy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE3D51F000FF;
+	Wed, 30 Sep 2026 15:15:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790781307;
+	bh=1AiHyLAhopLDoTTNW5LPqeB55N6+FZ/BmsicIOJUInE=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To;
+	b=Ai3klTCygbJmPT4iMX/ULQyafsw0Jyu3jI1ZSVp0GVFvd/MEoXT9XOTdRhzF4QOuL
+	 bV6RI9MKwVdpDryDYAsGihRwACLKouSb4L5AHmeQyd2ZMxsZmPmw/PxZxgFVCQeAc7
+	 kJeJGHN1e+4FfUsgAohN4XfwhnDU2D1eirW2J6FxuwJxTMNTvkX2ZXcQL4HeH3JKWp
+	 /NyWza/egk05bKWtLlezjBmyqkgRl/bB6m6dMD+abmcqN1Ejs9EkX7YkSqS69BNyKy
+	 EvE9i3BIOoUMaGCj8PokfKpHAFQP/KKfZYkq8ZfS/ohsB4T1N6EUXr5VUkkIlxiai3
+	 ezyjv5EB0Bv6g==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260930140833.576941-4-jtornosm@redhat.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 30 Sep 2026 17:15:00 +0200
+Message-Id: <DLSQZO7U8S8U.1DDL9MVEYS7ED@kernel.org>
+Subject: Re: [PATCH v3 10/10] samples: rust: add Rust SR-IOV VF driver
+ sample
+Cc: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <aliceryhl@google.com>,
+ <bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
+ <boqun@kernel.org>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
+ <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
+ <markus.probst@posteo.de>, <cjia@nvidia.com>, <smitra@nvidia.com>,
+ <ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
+ <targupta@nvidia.com>, <kjaju@nvidia.com>, <alkumar@nvidia.com>,
+ <acourbot@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
+ <jgg@nvidia.com>, <alex@shazbot.org>, "Peter Colberg" <peter@colberg.org>
+To: "Zhi Wang" <zhiw@nvidia.com>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <cover.1790705494.git.zhiw@nvidia.com>
+ <a50d3eba8fca1ecf094da263a749fa012a512b7f.1790759932.git.zhiw@nvidia.com>
+In-Reply-To: <a50d3eba8fca1ecf094da263a749fa012a512b7f.1790759932.git.zhiw@nvidia.com>
 
-On Wed, Sep 30, 2026 at 04:08:29PM +0200, Jose Ignacio Tornos Martinez wrote:
-> Add VFIO variant driver for Qualcomm PCIe devices that require
-> MSI address passthrough for VM operation.
-> 
-> Qualcomm ath11k and ath12k WiFi devices have embedded interrupt
-> controllers that require physical host MSI addresses programmed to
-> device registers. In VMs, the driver only sees virtualized guest
-> addresses, causing firmware initialization to fail.
-> 
-> This variant driver:
-> 1. Caches physical host MSI values after allocation
-> 2. Writes them to extended config space with magic signature "QMSI"
-> 3. VM drivers discover and use these values automatically
+On Wed Sep 30, 2026 at 12:18 PM CEST, Zhi Wang wrote:
+> +#[pin_data(PinnedDrop)]
+> +struct PfDriverData<'bound> {
+> +    // Keep the device alive until the registration stops exposing `PfAp=
+i::pdev`.
 
-You should probably explain a little be more here
+What does this mean?
 
-1) Linux VM driver fills up the normal MSI-X table
-2) HW has some non-MSI-X table registers
-3) Linux VM driver pokes into the interrupt layer and extracts
-   one of the MSX-X table entries addr/data pair
-4) Linux VM driver now programs that copied addr/data pair into #2
+> +    #[pin]
+> +    _registration: pci::VfRegistration<'bound, PfApiForLt>,
+> +    pdev: ARef<pci::Device>,
 
-This is, of course, all wrong. These days it should be using one of
-our mechanisms to allow devices to have their own private MSI
-registers.
+	pdev: &'bound pci::Device<Bound>,
 
-I forget if this is the right way for PCI, but the driver can call
+> +}
+> +
+> +#[pin_data(PinnedDrop)]
+> +struct VfDriverData {
+> +    pdev: ARef<pci::Device>,
 
-  platform_device_msi_init_and_alloc_irqs()
+	pdev: &'bound pci::Device<Bound>,
 
-And directly program the MSI registers with their own special
-interrupts vectors, no copying from MSI-X.
+> +}
+> +
+> +kernel::pci_device_table!(
+> +    PF_TABLE,
+> +    <SamplePfDriver as pci::Driver>::IdInfo,
+> +    [(
+> +        // E1000_DEV_ID_82576
+> +        pci::DeviceId::from_id(pci::Vendor::INTEL, 0x10c9),
+> +        ()
+> +    )]
+> +);
+> +
+> +kernel::pci_device_table!(
+> +    VF_TABLE,
+> +    <SampleVfDriver as pci::Driver>::IdInfo,
+> +    [(
+> +        // E1000_DEV_ID_82576_VF
+> +        pci::DeviceId::from_id(pci::Vendor::INTEL, 0x10ca),
+> +        ()
+> +    )]
+> +);
 
-If the driver is fixed to work like this, as it should be, then it
-fully breaks the scheme you propose here. That's not good.
+Since this is two drivers in the same module, can we please put everythng t=
+hat
+belongs to the PF driver first and then everything that belongs into the VF
+driver second please? We could also make it two separate files.
 
-The problem here is not really a qcom problem, and treating it as a
-qcom quirk is why it keeps being stuck, IMHO.
+> +#[vtable]
+> +impl pci::Driver for SamplePfDriver {
+> +    type IdInfo =3D ();
+> +    type Data<'bound> =3D PfDriverData<'bound>;
+> +
+> +    const ID_TABLE: pci::IdTable<Self::IdInfo> =3D &PF_TABLE;
+> +
+> +    fn probe<'bound>(
+> +        pdev: &'bound pci::Device<Core<'_>>,
+> +        _info: Option<&'bound Self::IdInfo>,
+> +    ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound {
+> +        pin_init::pin_init_scope(move || {
+> +            dev_info!(
+> +                pdev,
+> +                "Probe Rust SR-IOV PF sample (PCI ID: {}, 0x{:x}).\n",
+> +                pdev.vendor_id(),
+> +                pdev.device_id()
+> +            );
+> +
+> +            pdev.enable_device_mem()?;
+> +            pdev.set_master();
+> +
+> +            Ok(try_pin_init!(PfDriverData {
+> +                // SAFETY:
+> +                // - probe has exclusive access to this PF before SR-IOV=
+ is enabled;
+> +                // - the registration is pinned in the PF driver data an=
+d dropped before `pdev`;
+> +                // - no other registration is created for this PF; and
+> +                // - VFs are enabled only after probe by `sriov_enable`.
+> +                _registration <- unsafe {
+> +                    pci::VfRegistration::new(
+> +                        pdev,
+> +                        try_pin_init!(PfApi {
+> +                            pdev,
+> +                            requests <- new_mutex!(0),
+> +                        }),
+> +                    )
+> +                },
+> +                pdev: pdev.into(),
+> +            }))
+> +        })
 
-The real issue is that this device MSI scheme does not work in VMs at
-all. It does not work because the VM IRQ design requires the VM to
-trap and modify all the MSI addr/data pairs at the register write.
+Let's put everything within a single try_pin_init!() block please.
 
-The technically clean solution is to redo the VMMs so they don't
-require that, ie use interrupt remapping so the VM's view of the
-addr/data pair matches physical. That's super hard and will probably
-never happen.
+> +#[vtable]
+> +impl pci::Driver for SampleVfDriver {
+> +    type IdInfo =3D ();
+> +    type Data<'bound> =3D VfDriverData;
+> +
+> +    const ID_TABLE: pci::IdTable<Self::IdInfo> =3D &VF_TABLE;
+> +
+> +    fn probe<'bound>(
+> +        pdev: &'bound pci::Device<Core<'_>>,
+> +        _info: Option<&'bound Self::IdInfo>,
+> +    ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound {
+> +        pin_init::pin_init_scope(move || {
+> +            dev_info!(
+> +                pdev,
+> +                "Probe Rust SR-IOV VF sample (PCI ID: {}, 0x{:x}).\n",
+> +                pdev.vendor_id(),
+> +                pdev.device_id()
+> +            );
+> +
+> +            let pdev_bound: &'bound pci::Device<Bound> =3D pdev;
+> +            let pf_api =3D pdev_bound.vf_registration_data::<PfApiForLt>=
+()?;
+> +
+> +            pdev.enable_device_mem()?;
+> +            pdev.set_master();
+> +
+> +            let request =3D pf_api.submit(pdev)?;
+> +            dev_info!(pdev, "Submitted request {} through PF data.\n", r=
+equest);
+> +
+> +            Ok(try_pin_init!(VfDriverData { pdev: pdev.into() }))
+> +        })
 
-But! Now that we have these device MSI domains I wonder if there is
-some half option to provide a hypercall so the device MSI domains can
-call out to the hypervisor to get the true physical addr/data pair to
-program?
+Same here. Also no need for pdev_bound, it derefs automatically, you can ju=
+st
+call pdev.vf_registration_data().
 
-This is fundamentally an irq layer issue in Linux, not a qcom one.
+> +    }
+> +}
+> +
+> +#[pinned_drop]
+> +impl PinnedDrop for PfDriverData<'_> {
+> +    fn drop(self: Pin<&mut Self>) {
+> +        dev_info!(self.pdev, "Remove Rust SR-IOV PF sample.\n");
+> +    }
+> +}
+> +
+> +#[pinned_drop]
+> +impl PinnedDrop for VfDriverData {
+> +    fn drop(self: Pin<&mut Self>) {
+> +        dev_info!(self.pdev, "Remove Rust SR-IOV VF sample.\n");
+> +    }
+> +}
 
-Jason
+Let's drop those, we don't really need them.
+
+Here's the two probe() functions I came up with:
+
+    fn probe<'bound>(
+        pdev: &'bound pci::Device<Core<'_>>,
+        _info: Option<&'bound Self::IdInfo>,
+    ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound {
+        try_pin_init!(PfDriverData {
+            _: {
+                dev_info!(
+                    pdev,
+                    "Probe Rust SR-IOV PF sample (PCI ID: {}, 0x{:x}).\n",
+                    pdev.vendor_id(),
+                    pdev.device_id()
+                );
+            },
+
+            _: {
+                pdev.enable_device_mem()?;
+                pdev.set_master();
+            },
+
+            // SAFETY:
+            // - probe has exclusive access to this PF before SR-IOV is ena=
+bled;
+            // - the registration is pinned in the PF driver data and dropp=
+ed before `pdev`;
+            // - no other registration is created for this PF; and
+            // - VFs are enabled only after probe by `sriov_enable`.
+            _registration <- unsafe {
+                pci::VfRegistration::new(
+                    pdev,
+                    try_pin_init!(PfApi {
+                        pdev,
+                        requests <- new_mutex!(0),
+                    }),
+                )
+            },
+
+            pdev,
+        })
+    }
+
+    fn probe<'bound>(
+        pdev: &'bound pci::Device<Core<'_>>,
+        _info: Option<&'bound Self::IdInfo>,
+    ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound {
+        try_pin_init!(VfDriverData {
+            _: {
+                dev_info!(
+                    pdev,
+                    "Probe Rust SR-IOV VF sample (PCI ID: {}, 0x{:x}).\n",
+                    pdev.vendor_id(),
+                    pdev.device_id()
+                );
+            },
+
+            _: {
+                pdev.enable_device_mem()?;
+                pdev.set_master();
+            },
+
+            pdev,
+
+            _: {
+                let pf_api =3D pdev.vf_registration_data::<PfApiForLt>()?;
+
+                let request =3D pf_api.submit(pdev)?;
+                dev_info!(pdev, "Submitted request {} through PF data.\n", =
+request);
+            },
+        })
+    }
+
+Note that enable_device() and set_master() have their own block as they wil=
+l be
+replaced with a pci::DeviceEnableGuard soon.
