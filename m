@@ -1,122 +1,202 @@
-Received: from mail-dl2-f15.google.com (mail-dl2-f15.google.com [74.125.229.143])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 967BF4F93A8
-	for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 16:52:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.143
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4432F515964;
+	Wed, 30 Sep 2026 17:02:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790787161; cv=none; b=qjVJKBu6frRcc/LHj1xnZZlrmTchg2u7k6aCVlQukAuGjeLACe7icJvPKPXhTGWJjNnp+Vxf0GqXTRgP/0BaBCIWiJIiVa2Y0PzhTaYSJ1Lei9Ur6/V4tdl5f1Kau4in4ONxk2c/rn8NMOiyifoBDdtuy7mn3y8g55g44RP2dYE=
+	t=1790787734; cv=none; b=rqKrMH7U5dEIAd2VMWY2SoafyeRSPs150HOex14YQH6DxiGJ8WFBcIANNi1a4LA8cfml3JtRMn0DFnV1hNCGwr3Qj7oVIaHhNbGMRy0gYERFu5XPyh3Rx/QBvviDnZSkg5g8kh0E+K3eoMiof73jEoEm2brBvcJvL9LjN5iOxnQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790787161; c=relaxed/simple;
-	bh=USoosmtGDycX1a/Va/WTZ2HKM0YP5/LMRYBi/jK/1WU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=p5Mg3SiFLffNaQeJucSwdtvzQXGWyxrH34fJXt3U72jJFlFecZdWXqujeJ9Cq0wKeEUakgR1eY7hOFGl8kdu3CfTA+tJ2m7Crx/R31m6HVRWMWD5/htA+NOftahO4zCuRuDkqrcS4E7evuBH2Cb1HGpLgZVmsCgVGgF9tOJTDH0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=OhOI/Tgd; arc=none smtp.client-ip=74.125.229.143
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1790787734; c=relaxed/simple;
+	bh=9lMV5dgcBCBmAm7tn/MclC+xRIeMw2vFnKEJ5c6rgFg=;
+	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
+	 MIME-Version:Content-Type:Content-Disposition; b=ZN0S/eOMxBT3GLyElhXYmmqnxqJ/N9SNByMKoHk4xwD7JWrfrN2s7LBYpAzLRs+t60SMWrFKwz2pFZzSzcRAeGVVr9fYoXj2oxZY99Av8YA9mP5mfXxARtx8is6N1pugxrZ/0U43T+0uS9cz3TreM26WaAyeXtafj/pJIdcpK1A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=fqJB8AnY; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="OhOI/Tgd"
-Received: by mail-dl2-f15.google.com with SMTP id a92af1059eb24-14d7cc24630so177230c88.3
-        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 09:52:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1790787158; x=1791391958; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=USoosmtGDycX1a/Va/WTZ2HKM0YP5/LMRYBi/jK/1WU=;
-        b=OhOI/TgdclwGcCILD+ANQGEgwuLJ1ZFSSM6jZ0eyyZ5+emPldVS5zYq/zAUpJhDnrG
-         yK0jdBXbcETvevcDmN1A4j946Qj4hSNu0rKZCPee7rIB7Dqmcb1xcIedR/Bmt5K58SxD
-         cAI3QtH0pMAXwQJYvhU8d0wGmHg9MdTQg5xMwKqWLaulux13gkarK7uX7e/BVSlO0NJ0
-         L8y2Xh0n9cuFXrampV3zVqU70hZ2hbkcWrmJOsSLWkDdDLly1pNPqk/rE5dK6UpPfnjF
-         PKz+PLpK+1hm3LyrH2xo9sMnWM9KVbPso6lmlhuBWaIZmwq4yxmEqHqznGVGaqHEvJIi
-         KLyA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790787158; x=1791391958;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=USoosmtGDycX1a/Va/WTZ2HKM0YP5/LMRYBi/jK/1WU=;
-        b=rMJRz4RFcdJrOEoxN7TGMa4Gfex7ip1yCNSX1QIkRgwgW2ct4jujH2MyX44yvLUmH8
-         ALMy/U0B+oIwoz8b1mknoR8zTR6AmMDsQbUTNCF4MBYlB8FITnWj0X2d7zfZaVxwBN+M
-         Pj+rGeADb3VxMaEDZHWtwQG1DUzDG4xN/HcSW/fMxcrrPuCiojPWiEr92IBaKTlVeijH
-         xsrtYL21oY/EhljabKNwOllX1ur5fIKfHEQX1yFMNhmJAerUbOWoeD4h7fVQsHJwxgCB
-         UlsPqtWsOYU36wceA3Tjqp4C5LvldzRYStRCukgZqV0RWXngQPLbNmEyFxER79Km1L8M
-         B86A==
-X-Forwarded-Encrypted: i=1; AKwUvBxev3dt3vlZtCZbJKCZ0FWutan05Zsvg9SPXPRuJ0PUt8BK5DP1d+2MMgYaz/zKP7Q8unXMpnu+vO0=@vger.kernel.org
-X-Gm-Message-State: AFuF++nsRPT6UDzH8KHuO2rbUX0mTNgzem/uVqGT3zFz0m7uGlTPuAO4
-	vgLxOkSzAH87BAOs/TxHT3OzOjmIdpatFLQmY1ngdoPb3zRktZAwrkUvn4C57hzKPpc=
-X-Gm-Gg: AYBFou1dXf3MzRIXiwqqIKVI9q+EOdyBklXLOJ1PHbsrjUTibgmKlJQDcfBWzoNnpzC
-	6FaT5UBbJAozPDsf6wmXS8IGfy1CyMdWiiK1Iq4czYnbHp3UafNmM5GPPMo+zMkZjGKtp4TNSwf
-	+GqdRHUYVHY5rXPF8QCCjrAmB363RljE3QsIoeUc+5e7p1AiyPB8CCk5W+ugspwKTGh5EnBkJ38
-	hr7BnvBOC+bSB+dKlsWn6hpFeqjn7CXvEgPpy7uW5n6zVsLEuEDNIcslsdJ9cnv6VkrsHvj7d35
-	U5bVE7i4BSpXdz4ct8m3r7OqAHVQti/8ima2XMmDDq5dCqK3W0y4KhTI9L1Fs9/XHC+ODLmxOZs
-	3x/qdihCYn2d6P5VZeg0ZZmbZimIgqVSsHQUINNyl2r1usWDfE4APT+Rb33zWdsAefevaBSVWpS
-	wcjZ8hGdnqlSKoaKChMe7qRvAvCcgXn41USZNqfha/MaDWcA==
-X-Received: by 2002:a05:7022:4595:b0:143:297c:276c with SMTP id a92af1059eb24-14d330b1ca2mr3017652c88.33.1790787158196;
-        Wed, 30 Sep 2026 09:52:38 -0700 (PDT)
-Received: from ziepe.ca ([130.41.10.202])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-14d313b9c38sm4523537c88.1.2026.09.30.09.52.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Sep 2026 09:52:37 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xBxXo-0000000C7JB-1eI9;
-	Wed, 30 Sep 2026 13:52:36 -0300
-Date: Wed, 30 Sep 2026 13:52:36 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>
-Cc: Leon Romanovsky <leon@kernel.org>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
-	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: Re: [PATCH v8 16/23] dma-buf: Let importers ask how peer-to-peer
- traffic is routed
-Message-ID: <20260930165236.GS163130@ziepe.ca>
-References: <20260929132305.GJ563127@unreal>
- <720dbac3-24f6-4c91-899e-e205865c1fd1@amd.com>
- <20260929175737.GK563127@unreal>
- <eeef5951-825e-459f-b474-bf8c59588446@amd.com>
- <20260930081832.GA3401365@unreal>
- <4549640c-f4a5-4dac-9be3-2e5aa127555c@amd.com>
- <20260930114356.GC3401365@unreal>
- <fbdc710d-7be1-4021-83c2-548c798d9d14@amd.com>
- <20260930143237.GI3401365@unreal>
- <b2e766389e57a55da959369c5ad4b9e39e425659.camel@linux.intel.com>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="fqJB8AnY"
+Received: from [100.96.208.60] (unknown [52.179.129.152])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 3A68720B7166;
+	Wed, 30 Sep 2026 10:01:18 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 3A68720B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1790787680;
+	bh=J4FHysKmL3sST3B6JYnWBExkNR6TyUEiXRkB5SFBJQA=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
+	b=fqJB8AnY0C0Mq2QOcZ1YCLFv0XUWWYTx2I86zAQN0rU1/2quofja7K/tU0ZKhk715
+	 MiLXiQue02RBuXUNUXvWpKyWTl2ECXmL6J5pjVxxqDP3b8/eyTxoei4k09x29s1P6N
+	 fBYGiIrKjlCDCa6cbNAiEzSLmOrUJdKEbhL2U/YI=
+Date: Wed, 30 Sep 2026 13:02:08 -0400
+From: Jeff Barnes <jeffbarnes@linux.microsoft.com>
+To: Frank Li <Frank.li@oss.nxp.com>
+Cc: "=?utf-8?Q?linux-pci=40vger.kernel.org?=" <linux-pci@vger.kernel.org>, 
+ "=?utf-8?Q?minghuan.Lian=40nxp.com?=" <minghuan.Lian@nxp.com>, 
+ "=?utf-8?Q?mingkai.hu=40nxp.com?=" <mingkai.hu@nxp.com>, 
+ "=?utf-8?Q?roy.zang=40nxp.com?=" <roy.zang@nxp.com>, 
+ "=?utf-8?Q?lpieralisi=40kernel.org?=" <lpieralisi@kernel.org>, 
+ "=?utf-8?Q?kwilczynski=40kernel.org?=" <kwilczynski@kernel.org>, 
+ "=?utf-8?Q?mani=40kernel.org?=" <mani@kernel.org>, 
+ "=?utf-8?Q?robh=40kernel.org?=" <robh@kernel.org>, 
+ "=?utf-8?Q?bhelgaas=40google.com?=" <bhelgaas@google.com>, 
+ "=?utf-8?Q?Zhiqiang.Hou=40nxp.com?=" <Zhiqiang.Hou@nxp.com>, 
+ "=?utf-8?Q?linuxppc-dev=40lists.ozlabs.org?="
+ <linuxppc-dev@lists.ozlabs.org>, 
+ "=?utf-8?Q?linux-arm-kernel=40lists.infradead.org?="
+ <linux-arm-kernel@lists.infradead.org>, 
+ "=?utf-8?Q?imx=40lists.linux.dev?=" <imx@lists.linux.dev>, 
+ "=?utf-8?Q?linux-kernel=40vger.kernel.org?="
+ <linux-kernel@vger.kernel.org>, "=?utf-8?Q?stable=40vger.kernel.org?="
+ <stable@vger.kernel.org>
+Message-ID: <0FEA6868-5A7C-4955-9FBB-BE9A1AE8D3F7@getmailspring.com>
+In-Reply-To: <ar07ubdYLk-Tje1q@SMW015318>
+References: <ar07ubdYLk-Tje1q@SMW015318>
+Subject: Re: [PATCH] PCI: layerscape: use default error response
+ behavior
+X-Mailer: Mailspring
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <b2e766389e57a55da959369c5ad4b9e39e425659.camel@linux.intel.com>
 
-On Wed, Sep 30, 2026 at 04:57:04PM +0200, Thomas Hellström wrote:
 
-> Returning again to Jason's series. Let's say we'd add just the mapping
-> type infrastructure, converted users of pcie_p2pdma only to use that
-> and then we'd have access to per-mapping-type data. This could actually
-> be done as a prereq for this series and merged separately. It's a
-> couple of patches only.
 
-I'm happy to say I found someone here to pick it up again, so we
-should see something on it after LPC!
+On Sep 30 2026, at 12:41 pm, Frank Li <Frank.li@oss.nxp.com> wrote:
 
-Jason
+> On Tue, Sep 29, 2026 at 03:43:39PM -0400,
+> jeffbarnes@linux.microsoft.com wrote:
+>> [You don't often get email from jeffbarnes@linux.microsoft.com. Learn
+>> why this is important at
+>> https://aka.ms/LearnAboutSenderIdentification ]
+>> 
+>> From: Jeff Barnes <jeffbarnes@linux.microsoft.com>
+>> 
+>> The Layerscape PCIe driver programs PCIE_ABSERR to forward errors from
+>> outbound non-posted requests to the internal AXI interface.
+>> 
+>> A PCI configuration access can race with the link going down after
+>> dw_pcie_other_conf_map_bus() checks the link but before the MMIO access
+>> is performed. When the resulting Completion Timeout is forwarded to
+>> AXI, it causes an asynchronous SError and kernel panic.
+>> 
+>> For example:
+>> 
+>>   Kernel panic - not syncing: Asynchronous SError Interrupt
+>>   ...
+>>   Call trace:
+>>    arm64_serror_panic+0x78/0x90
+>>    do_serror+0x84/0x90
+>>    el1h_64_error_handler+0x30/0x40
+>>    el1h_64_error+0x68/0x70
+>>    pci_generic_config_read+0x64/0xb0
+>>    dw_pcie_rd_other_conf+0x1c/0x68
+>>    pci_bus_read_config_word+0x68/0x118
+>>    pcie_capability_read_word+0xa8/0xd8
+>>    find_device_iter+0x8c/0x160
+>>    pci_walk_bus+0x60/0xb8
+>>    find_source_device+0x78/0xb0
+>>    aer_isr+0x1dc/0x230
+>> 
+>> Restore the controller's default error response behavior instead of
+>> forwarding these errors to AXI.
+>> 
+>> Reproduce the race by instrumenting dw_pcie_rd_other_conf() to call
+>> map_bus() while the link is up, then schedule a worker on another CPU
+>> to set PCI_EXP_LNKCTL_LD. Synchronize the CPUs immediately before the
+>> Link Disable DBI write, then perform readl() using the address returned
+>> by map_bus() concurrently with the link transition.
+>> 
+>> Without this change, the overlapping configuration read results in an
+>> asynchronous SError and kernel panic. With this change, the same test
+>> returns 0xffffffff from the configuration read. In this test, AER
+>> reports a non-fatal Completion Timeout, and no SError or kernel panic
+>> occurs.
+>> 
+>> This effectively reverts the error response behavior introduced by
+>> commit 84d897d69938
+>> ("PCI: layerscape: Change default error response behavior").
+> 
+> Subject should be revert ...
+> 
+> I am not sure what's expect behavior by other dwc PCI controller. returns
+> 0xfffffffff or report bus error.
+> 
+> Frank
+
+
+Thanks, Frank.
+
+Agreed on the subject. This is mechanically a revert of 84d897d69938, so
+I'll change the subject to:
+Revert "PCI: layerscape: Change default error response behavior"
+
+Regarding the expected behavior on other DWC controllers, I don't have
+hardware available to test those implementations, so I don't want to speculate.
+
+What I have verified on Layerscape is that with PCIE_ABSERR programmed,
+the failed configuration access is forwarded to AXI and results in an
+asynchronous SError and kernel panic. With the controller's default
+response, the identical injected race returns 0xffffffff and the kernel survives.
+
+Please let me know if you think the behavior of other DWC
+implementations needs to be established before proceeding with this revert.
+
+Thanks, Jeff
+
+> 
+>> 
+>> Fixes: 84d897d69938 ("PCI: layerscape: Change default error response behavior")
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Jeff Barnes <jeffbarnes@linux.microsoft.com>
+>> ---
+>>  drivers/pci/controller/dwc/pci-layerscape.c | 12 ------------
+>>  1 file changed, 12 deletions(-)
+>> 
+>> diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
+>> index 14d6ac4fc53f..d333f1ae8a41 100644
+>> --- a/drivers/pci/controller/dwc/pci-layerscape.c
+>> +++ b/drivers/pci/controller/dwc/pci-layerscape.c
+>> @@ -28,8 +28,6 @@
+>> 
+>>  /* PEX Internal Configuration Registers */
+>>  #define PCIE_STRFMR1           0x71c /* Symbol Timer & Filter Mask
+>> Register1 */
+>> -#define PCIE_ABSERR            0x8d0 /* Bridge Slave Error Response
+>> Register */
+>> -#define PCIE_ABSERR_SETTING    0x9401 /* Forward error of non-posted
+>> request */
+>> 
+>>  /* PF Message Command Register */
+>>  #define LS_PCIE_PF_MCR         0x2c
+>> @@ -103,14 +101,6 @@ static void ls_pcie_drop_msg_tlp(struct ls_pcie *pcie)
+>>         iowrite32(val, pci->dbi_base + PCIE_STRFMR1);
+>>  }
+>> 
+>> -/* Forward error response of outbound non-posted requests */
+>> -static void ls_pcie_fix_error_response(struct ls_pcie *pcie)
+>> -{
+>> -       struct dw_pcie *pci = pcie->pci;
+>> -
+>> -       iowrite32(PCIE_ABSERR_SETTING, pci->dbi_base + PCIE_ABSERR);
+>> -}
+>> -
+>>  static u32 ls_pcie_pf_lut_readl(struct ls_pcie *pcie, u32 off)
+>>  {
+>>         if (pcie->big_endian)
+>> @@ -180,8 +170,6 @@ static int ls_pcie_host_init(struct dw_pcie_rp *pp)
+>>         struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>>         struct ls_pcie *pcie = to_ls_pcie(pci);
+>> 
+>> -       ls_pcie_fix_error_response(pcie);
+>> -
+>>         dw_pcie_dbi_ro_wr_en(pci);
+>>         ls_pcie_clear_multifunction(pcie);
+>>         dw_pcie_dbi_ro_wr_dis(pci);
+>> --
+>> 2.43.0
+>> 
+>> 
+> 
