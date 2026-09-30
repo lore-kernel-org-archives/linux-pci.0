@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62CF94052D5
-	for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 15:06:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28C224E3EF6
+	for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 15:06:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790780786; cv=none; b=UDHQ7zEMt+zKiGrNFbKlps1aatSo7Gax4ui+owjtFtMmUvFx4fFoS784teDw9Xe+cD6t6Gq9YX6KJsWuFnAv6ccbVlxXeXp7/IEG7utvU0bTTb0KOT1i6cQNZgjOHwM59v4ZwMvOCiGMcc0CC8Ys4zQf8sSsJqLEHNvhEKWMRJo=
+	t=1790780800; cv=none; b=TehyQyUC1Wio9mI1OMS9HAOTewskfRqFQFHPn+/m4Jd4T42wLg7aNuHsqG9ddN21+qfqTMrYpBl2VgeS8C+O6U5mp2xQBUHHvTUiUEBp7M4HP0hwTFo2KquWMnViRiGvJKmKIk83dADzFNJisP40xFC1hs/o+tthgyGx7dIzC2Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790780786; c=relaxed/simple;
-	bh=xAl0AhyE7gS/uXkn5QTmhPUpovy45ztQFzVoqiHp+dA=;
+	s=arc-20240116; t=1790780800; c=relaxed/simple;
+	bh=7DWwSI2Mnq6pUtg9d20CGQwz1+F/VnzQdyBdQOzOTGw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=cSSR519wJnJcwJE7M8BVraxC0t599/Ek7Tzx1FudaQUcHBDAcFdXveC7myRH1e5BUEO2QTnEFAFR3zMq6Zzhwj3iJ69Cj+NWK9ow0+7TtRUm+lltWnC5PWlpPJq1fADMy4oD5ZJAbDMkNtUYp+3kKs+bm+OiG9keeShdUloukzY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z2Ofiafd; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=kWY/GMlMsYyw2jS338z5QeSwvq7lEL0fhM0ybRXvBTDarH+hGT6zPCWEpQmiJbZU/H34mf2uX39BuIPfJpItfO99XyC3WFx1eoa8yPraTFcPnGg4yw7Ym2RrMy3SqWd52SxaGT0FNOUb+hMb1MTCbGJDpqegdX+TaG/V596dcA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FpgQaWJq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z2Ofiafd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE88A1F000FF;
-	Wed, 30 Sep 2026 15:06:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FpgQaWJq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A35FA1F00893;
+	Wed, 30 Sep 2026 15:06:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790780778;
-	bh=Q9QfSuVvRZW99z8e8L2TYXnqUAq9jufmC8kej6tIPIE=;
+	s=k20260515; t=1790780788;
+	bh=iHo9TwPPP7GD5eX0C2msl8K4Ss64RPFXGJEGALVj/Qo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Z2OfiafdlavXjAQ7CGObUxCzd7UylPzkKcsrMOwQSmT/e5iXr2t5yYawJP3kP39PD
-	 4+XeSJBWw9JuT5A3t91wYtKnFjKzycfiT+OjLPSZNb+ErowS/IMUDHJlodeHZg2Hiz
-	 HBX5CWYmFQqhP7+AWgBrExZi8LLcbyJ93fATJwmXh7uzdoW83R73T2Pse0jMjeyXpF
-	 6PHTEwavz2VIlKuNx+IapQJmScmaRCMyqtpXlsI6ZC6Kvvr+jwUGDhICT6GRF79gqH
-	 0im1Rq/UxgF0PaX3hOg1HoKO0uBx3atekRLQ5MluhxCUHWpK8vXtNziBktO8Hdn9X7
-	 R6B95rJqhfF4A==
+	b=FpgQaWJqKZ9KpBo+A1CnsEInES/ev+rAsQj5J6H8QpBqTcwXVZGH5wtjHwGx12qHQ
+	 Bj/PQV1ZckeBwwX/+i3OK1KHj9P3L1s/8FyNECEzwK/Jr4925P876W/Wv0geDsIZiE
+	 qPvG6BeYkQv/ZUxtaThJwRWeX2EJeidwjk3YAmCzlA5H840DpBmHYE8VYC8qs8ynRE
+	 pZM5twlYkD+py0hhyUkPDaUp/jkBnHDzbtTrNJ7tmpg4fDLrgTmOruEb5YlutSvaqi
+	 Jkk2u5xf3VC9AAbxfrrRFtjmSqrspJUvDRAG6V0bQSjWOLmrlEIKbWOCw/tHm03NC+
+	 eBTRh9L8oZUGA==
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH 3/4] PCI: Configure Root Port MPS after scanning its
- hierarchy
+Subject: Re: [PATCH 2/2] PCI/ASPM: Clear ASPM Control on links without
+ common ASPM support
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Niklas Cassel" <cassel@kernel.org>
-Cc: linux-amlogic@lists.infradead.org, neil.armstrong@linaro.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260930145017.1356088-9-cassel@kernel.org>
-References: <20260930145017.1356088-6-cassel@kernel.org>
- <20260930145017.1356088-9-cassel@kernel.org>
+To: "Stefan Roese" <stefan.roese@mailbox.org>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260930144650.3701516-3-stefan.roese@mailbox.org>
+References: <20260930144650.3701516-1-stefan.roese@mailbox.org>
+ <20260930144650.3701516-3-stefan.roese@mailbox.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 30 Sep 2026 15:06:17 +0000
-Message-Id: <20260930150617.CE88A1F000FF@smtp.kernel.org>
+Date: Wed, 30 Sep 2026 15:06:28 +0000
+Message-Id: <20260930150628.A35FA1F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,94 +47,63 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] pci: ignoring pcie_set_mps() failures causes illegal MPS topology
+- [High] pci/aspm: cached saved state not updated after clearing ASPMC
 --
 
-commit 6dac99f476ff730ab7dd14051b62e9402806b339
-Author: Niklas Cassel <cassel@kernel.org>
+commit d667f086616b3d0999815c8db89e04e4d40aea30
+Author: Stefan Roese <stefan.roese@mailbox.org>
 
-PCI: Configure Root Port MPS after scanning its hierarchy
+PCI/ASPM: Clear ASPM Control on links without common ASPM support
 
-This commit introduces logic to raise the Maximum Payload Size (MPS) for Ro=
-ot
-Ports and their downstream hierarchies to the largest supported value during
-scanning or rescan. It applies to PCIE_BUS_DEFAULT configurations to improve
-efficiency. It also enables the Intel read completion coalescing quirk for =
-the
-default MPS strategy.
+This commit ensures ASPM Control is cleared for all functions on a link that
+lacks common ASPM support, processing downstream components first. This
+prevents devices that enable ASPM by default from keeping it enabled when
+connected to a port that does not support it.
 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index d8e58e5ef7309..5f37b480b51df 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index f8e64971c6c3d..13d7a6d3f6ad3 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
 
 [ ... ]
 
-> @@ -3083,6 +3083,82 @@ static int pcie_bus_configure_set(struct pci_dev *=
-dev, void *data)
->  	return 0;
->  }
+> @@ -947,11 +959,17 @@ static void pcie_aspm_cap_init(struct pcie_link_sta=
+te *link, int blacklist)
 > =20
-> +static int pcie_raise_mps(struct pci_dev *dev, void *data)
-> +{
-> +	int mps =3D *(int *)data;
-> +
-> +	/* MPS is of type 'RsvdP' for VFs */
-> +	if (!pci_is_pcie(dev) || dev->is_virtfn)
-> +		return 0;
-> +
-> +	if (pcie_get_mps(dev) < mps && pcie_set_mps(dev, mps))
-> +		pci_err(dev, "can't set Max Payload Size to %d\n", mps);
-> +
-> +	return 0;
-> +}
+>  	/*
+>  	 * If ASPM not supported, don't mess with the clocks and link,
+> -	 * bail out now.
+> +	 * bail out now. A device may still come out of reset with ASPM
+> +	 * Control set, which the rest of this code never touches for
+> +	 * such a link. Clear it, downstream component first.
+>  	 */
+>  	if (!(parent->aspm_l0s_support && child->aspm_l0s_support) &&
+> -	    !(parent->aspm_l1_support && child->aspm_l1_support))
+> +	    !(parent->aspm_l1_support && child->aspm_l1_support)) {
+> +		list_for_each_entry(fn, &linkbus->devices, bus_list)
+> +			pcie_aspm_clear_aspmc(fn);
+> +		pcie_aspm_clear_aspmc(parent);
 
-[Severity: Medium]
-When pcie_set_mps() fails in pcie_raise_mps(), this error is logged but
-swallowed by returning 0 to the pci_walk_bus() callback loop. Does this all=
-ow
-the loop to continue and potentially create an illegal MPS topology where a
-downstream device inherits a larger MPS than its upstream bridge?
+[Severity: High]
+Does this bypass updating the parent's cached saved state?
 
-> +
-> +/*
-> + * With PCIE_BUS_DEFAULT, pci_configure_mps() only matches each device t=
-o its
+By clearing the ASPM Control in hardware but returning immediately without
+updating the cache (e.g., via pci_update_aspm_saved_state()), it appears the
+parent bridge's saved_config_space will retain the stale ASPMC enabled valu=
+e.
 
-[ ... ]
+If a non-ASPM-capable device is hot-added, and the system undergoes an AER =
+or
+DPC reset before any power management event forces a state save, could
+pci_restore_state() use this stale cache to erroneously re-enable ASPM on t=
+he
+parent port?
 
-> + * leave hierarchies alone once any of their devices may have a driver b=
-ound.
-> + */
-> +static void pcie_bus_raise_default_mps(struct pci_bus *bus)
-> +{
-> +	struct pci_dev *rp =3D bus->self;
-> +	u8 smpss =3D rp->pcie_mpss;
-> +	int mps, old_mps;
-> +
-> +	if (pci_pcie_type(rp) !=3D PCI_EXP_TYPE_ROOT_PORT ||
-> +	    list_empty(&bus->devices) || pci_bus_in_use(bus))
-> +		return;
-> +
-> +	pci_walk_bus(bus, pcie_find_smpss, &smpss);
-> +	mps =3D 128 << smpss;
-> +	old_mps =3D pcie_get_mps(rp);
-> +	if (mps <=3D old_mps)
-> +		return;
-> +
-> +	pcie_raise_mps(rp, &mps);
-> +	pci_walk_bus(bus, pcie_raise_mps, &mps);
+This might lead to completion timeouts or link hangs.
 
-[Severity: Medium]
-If the call to pcie_raise_mps() for the Root Port (rp) fails to set its MPS,
-does this dangerously proceed to call pci_walk_bus() and set the MPS of
-downstream devices anyway? Could this result in a PCIe protocol violation
-leading to Malformed TLP errors and packet drops?
-
-> +	pci_info(rp, "Max Payload Size of hierarchy set to %d (was %d)\n",
-> +		 mps, old_mps);
-> +}
+>  		return;
+> +	}
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260930145017.1356=
-088-6-cassel@kernel.org?part=3D3
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260930144650.3701=
+516-1-stefan.roese@mailbox.org?part=3D2
