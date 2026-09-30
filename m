@@ -1,49 +1,49 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E5D644C51D;
-	Wed, 30 Sep 2026 07:57:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 962D23BE647;
+	Wed, 30 Sep 2026 07:58:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790755073; cv=none; b=fiht1dC0Apuhz6pQWI6g4Sr5B/vqEwiJ2YTttnh+w2oLELdHJbwVpF2fUnkRgqmjinNr6DRB2eUrz5Lo++RewnHZhXatoPQqJ70nfBzftt30ITwVx0UVZOf2WXBe1v55DAxuhR1zrXnawJngdcYpZKp/V5O+NaSWuXmTgjB9VeM=
+	t=1790755125; cv=none; b=Eetq9w8T5fHJQFjwDcc84pKKp1HhCcdwvp434PEatV5I/UKNcCmGECASj+3X+F3XO6rshNvpcV2tT09ZHT3qsXB0hmaZUnw0wv2TFlRrTfATGiN/IB7r1Ox3KFrX8hiY/9owCK3CxVn73X6lk5/BfEi5lEjFF/UEXKz4G3hIzhg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790755073; c=relaxed/simple;
-	bh=cuwgXGs90Gk/ODGQsA6axEGFAM6CWZSsxbIz/u4KVd0=;
+	s=arc-20240116; t=1790755125; c=relaxed/simple;
+	bh=f5XnbmNpSItuDv08U93jqOAN6TUi6Fmhs7xYs2DVQg0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oJN4v7twSBBgggfP/d+qpgd/RLkvklhyTbdFBGlAYix8oDc3fNLKhVPzMtDr6Hom6Kmo1DqTCyDsgbmtJ4zpbL4+ACqem2+rIt3nTp4V/50YKf5S3XrsssDo5/a8AJ0RWKsMTgwmwx+5okS6INsvI09CKtqEiMfSqbpzQExExYk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TupeDRrj; arc=none smtp.client-ip=192.198.163.7
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZI8XHU34hpuxH5+Xfew6YFn4Myfd/4SzWVdzcfQ3DFaGc0h5c6KjmiVx5amoyiYeXx0/i09jDVBjQzdQfO04FWv6B3ZtwN+4Ef3Gy0KRP1+qxs6NrSZMvP/qMbX04NCojPxltyulINvQoV1ybLycrI8M/M323AOYv2LvsI3FQqc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZYUzAAro; arc=none smtp.client-ip=198.175.65.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TupeDRrj"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZYUzAAro"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790755072; x=1822291072;
+  t=1790755123; x=1822291123;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=cuwgXGs90Gk/ODGQsA6axEGFAM6CWZSsxbIz/u4KVd0=;
-  b=TupeDRrjVXwIfiRAMAQEv8y7khJ/7hZJMDNeckWUrByQt91YyT3mhdXm
-   6mvBLl3jyqCzJQdn5uXqi8CrC1JWgXx6jWszYfQQl/RGceFxeIYYW1gxq
-   0S0IOYKDAtoe/u7G0pRZTILNuhFecatjImfIcbj4FU2qh58dbrKBuZFIP
-   PtmH0xdOyx4lY2C/c/JOCyWp5WhrxCFou5eHXrozoRxahSNDYGrY1quYc
-   7rPkcGrnutosHcrz3LgafMLrg52AiPHfQuDYYI9KiKAYiZkTH+Ha6KvVd
-   B3E81f/AoVAYtQBv9B7aVdkvYp2IEMq+2mwI1IbKwcjOzB0nhYowVJFm1
-   w==;
-X-CSE-ConnectionGUID: ERoFYTnFTdaGyMSmSiu01Q==
-X-CSE-MsgGUID: AXKmy37pRweM2n81x+YI6A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="117015327"
+  bh=f5XnbmNpSItuDv08U93jqOAN6TUi6Fmhs7xYs2DVQg0=;
+  b=ZYUzAAroenBtabXmXGony3RIqyim/xKcnXFfaIWYTLG2z2Uu+R0UV/mN
+   4LvC7enZ3M3ijkUj+bt+ffRa6NPnlLMXCq8DMj/yoTiu7+74lIEuoeoLM
+   XjIYvexHkkGH814ZRCt0UzJckE8fN1bwQAFZNEKDUTAkzY3qg5nuVqbjj
+   kZPvrRC4w/blNDSQItqAD1Q3gAMw0zimRkOc1dbssg8/VXsy6Q//1HAqr
+   sIRguhRlgntJ1oG0QCmOPyfLFSBiv1Iae4Qn3C2/eLxw6VHaCiL+EgICv
+   WbJeqmEGvfWDotDunEjOIvTCcHp7felNYi3KMOqEwUtS2JRp4eyn19Wol
+   A==;
+X-CSE-ConnectionGUID: StzIBXIORge2/GcQpmp6lA==
+X-CSE-MsgGUID: KTGWSm7tRAC4g1w6B1LW0g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11920"; a="107872879"
 X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="117015327"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 00:57:51 -0700
-X-CSE-ConnectionGUID: DPdnac1mRyaoOETELn+/aQ==
-X-CSE-MsgGUID: Paabs1L0TRi7PxRmTrUolw==
+   d="scan'208";a="107872879"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 00:58:42 -0700
+X-CSE-ConnectionGUID: hkX2u+h8SLybJRwjvsMdQg==
+X-CSE-MsgGUID: AFt/ReHoRgq1jGAARcXIYQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,132,1787036400"; 
-   d="scan'208";a="279419770"
+   d="scan'208";a="275760395"
 Received: from spandruv-desk1.amr.corp.intel.com (HELO localhost) ([10.245.245.137])
-  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 00:57:44 -0700
-Date: Wed, 30 Sep 2026 10:57:41 +0300
+  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2026 00:58:34 -0700
+Date: Wed, 30 Sep 2026 10:58:32 +0300
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: Inochi Amaoto <inochiama@gmail.com>
 Cc: Jingoo Han <jingoohan1@gmail.com>,
@@ -74,10 +74,10 @@ Cc: Jingoo Han <jingoohan1@gmail.com>,
 	linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
 	spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>,
 	Longbin Li <looong.bin@gmail.com>
-Subject: Re: [PATCH v7 2/6] PCI: spacemit-k1: Add multiple PHY handles support
-Message-ID: <arzA9VgJvKr2G7bq@ashevche-desk.local>
+Subject: Re: [PATCH v7 3/6] PCI: spacemit-k1: Add device id update helper
+Message-ID: <arzBKCur7DOjRjVr@ashevche-desk.local>
 References: <20260929083755.458238-1-inochiama@gmail.com>
- <20260929083755.458238-3-inochiama@gmail.com>
+ <20260929083755.458238-4-inochiama@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -86,14 +86,13 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260929083755.458238-3-inochiama@gmail.com>
+In-Reply-To: <20260929083755.458238-4-inochiama@gmail.com>
 Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
  krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Tue, Sep 29, 2026 at 04:37:48PM +0800, Inochi Amaoto wrote:
-> The PCIe controller on Spacemit K3 may use multiple PHYs at the
-> same time. The feature is not supported by the current driver.
-> So extend the PHY definition to support multiple PHY handles.
+On Tue, Sep 29, 2026 at 04:37:49PM +0800, Inochi Amaoto wrote:
+> Both K1 and K3 need to set vendor id and device id, add a helper function
+> to simplify this.
 
 Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
