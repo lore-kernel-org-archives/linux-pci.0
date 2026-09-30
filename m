@@ -1,112 +1,73 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09076513551;
-	Wed, 30 Sep 2026 20:34:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E588E4C042D;
+	Wed, 30 Sep 2026 21:39:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790800476; cv=none; b=OmK84SxBYEN4d9nF0fI0iIr3gQB64PJOQL7io5AQ+vSD+Npixj/22tejh17dS3p9qOLjZU3hQZGo55AwqUdksjGiK4ysLSrjRVJk11FnO1LGd4ZhQx9Us0CH+BQJiJW8+3snQ+AfjgyF1/u6nLlOLY4WakGnOIAzVLGMFaB9uyg=
+	t=1790804371; cv=none; b=j2IK44DSh7/AIAfpntx7FDM2h8zSrbchh1485HdCHJ3K+AmpHnBfamzAUGYtu44H/JUYTJiajsSBjOov6c/QNFMif79zjS8egUXFRnCee7jsIAkb1VUS7CfmWEL8I8m4/hWVAjJk/upkKx5lYaGUgKibkmwwvjNH50SZFRMYu4g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790800476; c=relaxed/simple;
-	bh=MXJoWh27o9MwkRcEATF3A5TQDOZPuv4rjg5+A1xWiX8=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=B2JtiQt2YwsjknqVt4zeVURwpwIwLHS9Dx7G1opX0mDYR7yuOwnLkAhms85W8Ml21nbOkIPYi8mo0I41lhUx0H+eVXxGxLVhcr87PWyawk4VcVL98Z9OYMdxrX/LgFjCx2NnIaEux5L8Q9BLga/Jkxcs92xL9mLtTot6k4ZDdC8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GPnL235e; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790804371; c=relaxed/simple;
+	bh=pIC+32Moh3s+b5yAdkoypkhCOGBey8c13z0efH25kIA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=GWcBHXxhAsbSOsZ2JfZhGpK1T4MVJxBu6z9s2UvX5ov1bPcdM6X1JKyITRPvtUlv09sWc6PjIlJQQ84vockugh4xDVr5mHHy+D0mk9hgK+rjp+3hGC1DHsBdI/dN6SzRATpofNn+6cg8UMjpI3PT70SFmSeaMec8k2pPxI+w3D0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mRdNuUTW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GPnL235e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DB8C1F000FF;
-	Wed, 30 Sep 2026 20:34:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mRdNuUTW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DAB71F000FF;
+	Wed, 30 Sep 2026 21:39:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790800474;
-	bh=ylQ0OITIo4dh+Zpz7IdOtmIaWbcTxvEIto7puD4Q1qQ=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To;
-	b=GPnL235e6qVPtblrQO9gWHazeNFm6t3ehtvJmBmJMkpSufXfk2qDUStBov1nZaLAS
-	 xcaPxbjBmc2UB9j10FOxkrLQuLnqy7L+mtwdwxy00f6jIbnyi7WwVnXCH85TVIHwF0
-	 btVEGE4AifXoPvVVExkRpV737QqLL1iVJ9LI94OayZ4M2gIstxH+onWrN2GPEALfhc
-	 vzZe8naUlZSNaTuXeIieOtz+uatIQ6/UjJCrfDW1LFAP4tarhUvyacnmOzW4vK0rt+
-	 exR+sEBV+HV9iSB4bvyJrPGEaolZd31aX+1O4GXptScwiDYUA+bh9/Gnt4G98QocG6
-	 /DRHgclyskunA==
+	s=k20260515; t=1790804369;
+	bh=5tm0bUXMlDRasVeoxZAxMV/Zu0wCzbVQDjXiM8kTqdU=;
+	h=From:To:Cc:Subject:Date;
+	b=mRdNuUTWaGDNp5W6gZFKDY7HfQWixAlWrAZfeHvGiKEe44H7gLUz+M+h1WV/x0g32
+	 gbqsAr1NyzrMIO/5K5rhckEcMLQHZLJrbXr/fqNiSWzhtSqMPKPDm6DVitj+xI/vMq
+	 oJabV2Ij/4lO8X6Sj4qHqiWiZrp/vUEE78CapwxrpQq2IoVg/wPoJyVcPxzRxid7DE
+	 HcTCsHL4AmpnNSxS6vq5gBO0qxbaDSRiUN08BiEWMYUdb3pR0g2BA51m1q8grZqUPN
+	 HPCqy2nsC6B/qoM9jrNhy/8+8HKSvQO7lX8Wnlu0v4MAoSWbMICM1ony2LhCBBgEod
+	 ZupkV4SWAuP/A==
+From: "Mario Limonciello (AMD)" <superm1@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM)
+Cc: linux-pm@vger.kernel.org,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Mario Limonciello <superm1@kernel.org>
+Subject: [PATCH v6 0/2] Unify PCI suspend and hibernate paths
+Date: Wed, 30 Sep 2026 16:39:21 -0500
+Message-ID: <20260930213923.566846-1-superm1@kernel.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date: Wed, 30 Sep 2026 22:34:27 +0200
-Message-Id: <DLSXS9MO4YW5.2YLITM1OJ7P0P@kernel.org>
-Subject: Re: [PATCH v10 1/1] rust: pci: add extended capability and SR-IOV
- support
-Cc: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <aliceryhl@google.com>,
- <bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
- <boqun@kernel.org>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
- <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
- <markus.probst@posteo.de>, <cjia@nvidia.com>, <smitra@nvidia.com>,
- <ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
- <targupta@nvidia.com>, <kjaju@nvidia.com>, <alkumar@nvidia.com>,
- <acourbot@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
- =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To: "Zhi Wang" <zhiw@nvidia.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260906060404.3336193-1-zhiw@nvidia.com>
- <20260906060404.3336193-2-zhiw@nvidia.com>
-In-Reply-To: <20260906060404.3336193-2-zhiw@nvidia.com>
+Content-Transfer-Encoding: 8bit
 
-On Sun Sep 6, 2026 at 8:04 AM CEST, Zhi Wang wrote:
-> +    pub fn vf_bars(&self) -> Result<impl Iterator<Item =3D ExtSriovVfBar=
->> {
-> +        let slots: [u32; NUM_VF_BARS] =3D
-> +            core::array::from_fn(|slot| crate::io_read!(*self, .vf_bar[p=
-anic: slot]));
-> +        let mut slots =3D slots.into_iter();
-> +        let mut bars =3D [None; NUM_VF_BARS];
-> +        let mut count =3D 0;
-> +
-> +        let mut decode =3D || {
-> +            while let Some(low) =3D slots.next().map(BarLow::from) {
-> +                // SR-IOV VF BARs describe memory-space apertures; an I/=
-O-space encoding is not
-> +                // valid for these registers.
-> +                if low.io_space() {
-> +                    return Err(EINVAL);
-> +                }
-> +
-> +                let low_address =3D u64::from(low.address()) << BarLow::=
-ADDRESS_SHIFT;
-> +                let bar =3D match low.memory_type()? {
-> +                    BarMemoryType::Bits64 =3D> ExtSriovVfBar {
-> +                        address: (u64::from(slots.next().ok_or(EINVAL)?)=
- << 32) | low_address,
-> +                        is_64bit: true,
-> +                    },
-> +                    BarMemoryType::Bits32 =3D> ExtSriovVfBar {
-> +                        address: low_address,
-> +                        is_64bit: false,
-> +                    },
-> +                };
-> +
-> +                bars[count] =3D Some(bar);
-> +                count +=3D 1;
-> +            }
-> +
-> +            Ok(())
-> +        };
-> +
-> +        decode().inspect_err(|_| {
-> +            dev_err!(self.pdev, "invalid VF BAR encoding in SR-IOV capab=
-ility\n");
-> +        })?;
-> +        Ok(bars.into_iter().flatten())
-> +    }
+From: Mario Limonciello <superm1@kernel.org>
 
-I don't mind too much, but can you please remind me why we decode the VF BA=
-R
-registers and can't use the PCI core's VF resource information instead?
+Many cycles ago I sent out a kernel series for using the S4 paths when
+the system goes to S5.  Some parts of it got merged, and Rafael suggested
+to split the other parts into smaller pieces across multiple kernel cycles
+to make bisecting easier.
 
-(I gave it a very quick try and using pci_bus_address() and pci_resource_fl=
-ags()
-actually turned out worse, but that could be me spending less than 5 minute=
-s on
-it. :)
+This series attempts to unify the PCI suspend and hibernate paths so that
+PCIe bridges with downstream devices are put into D3 at hibernate the same
+way they already are at S3 suspend.  I have been carrying it, rebasing it
+and personally using it for a while now.
+
+v6:
+ * Fix a NEW recovery failure identified by Sashiko
+ * rebase on pci/next
+
+Mario Limonciello (AMD) (2):
+  PCI/PM: Split out code from pci_pm_suspend_noirq() into helper
+  PCI: Align hibernate poweroff flow with suspend flow for bridges
+
+ drivers/pci/pci-driver.c | 100 +++++++++++++++++++++++++++------------
+ 1 file changed, 70 insertions(+), 30 deletions(-)
+
+base-commit: bc80f6c85a8e97bdb69604f82af37179fcb01c38
+-- 
+2.53.0
+
