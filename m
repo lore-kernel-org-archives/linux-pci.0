@@ -1,72 +1,125 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88AD94B4031;
-	Wed, 30 Sep 2026 11:13:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 82DE64CCDDF
+	for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 11:16:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790766816; cv=none; b=j3dtPLOrsCoFJ3db/hZnmj0h4Fg5ew+kQIhxEwNukcX9dT7XoVgMs1DimLDD5OFNegNIB6wF7+Ty1mimQGhUPz1aqvcfhUvXu0WOGU/jn/vtBBwKCgmOa41ArLiIuOXT6WOPcOTc2iXzP1xnnupmUoIxtQ+IiQJuDwtbsHo0eb8=
+	t=1790766971; cv=none; b=MTacVkXd+UH+8TUXFo/1wQ0tQe9qr5K323q5nHLwdyq6gPt9TV1mG3f+jIw7Xj6E7NHLNtlDhmygX2+fWHOivzO7EUgFxEIN9hrbJPHeQhTDhz3uZSN+8AhaPsEGeb+/C49iy4RoeljcbJp3Pr9LI9z1eIs3ebP6F+1t8O0m6fQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790766816; c=relaxed/simple;
-	bh=QEM39wlCCg0lvt3nB55HRNjsjsbcQcl20N7cPW6NAug=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=a+XfidJTFnKaNMRG8FcLcusNTJJaVshgoSbaXBOFAUCTUzwieJfCOZ69SeiIRWVqvolvhd/pDTzbLxOeZ+D/AosTZu4bFwW6YL00toTBSRT2MTum602OtNlOg8h2wiRcVgPxwfxw5EGjwycmclZxM5zPDVpIhDC1jMShtg72gLw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L7qo5ffp; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790766971; c=relaxed/simple;
+	bh=ZsjyXoTLEOggldzf9Iy0psOGxgbnbPtVAlO5pYMWG9s=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=FpZMCHIpfZG6bloJ3iKFqBWNZbAvtXTru5IiK1sFXSKAD8xZRsKOtt1caOMAdjl48fLZ6jQtWVaTj98OWsA7/SmvwxgghbFZ54MlUy9xzfFtwtVli0Mc93VSKQljLLTbRiyK3XNyvYb0oabhp0o1Ti7citpXrYFe1W1OlWmvGc8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b=GOPKu7Rt; arc=none smtp.client-ip=217.140.110.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L7qo5ffp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03C1E1F000FF;
-	Wed, 30 Sep 2026 11:13:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790766812;
-	bh=jW2HwPUTyH+T8DgW2QqCZduqxGErq/+WJc1xQpFDJ1A=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To;
-	b=L7qo5ffp0c5uKB9Y6kl8uVHMdu59IaAFEAmtC9zlR4EEn8zv04bL2qykM+fXjt413
-	 /+ckREgJ1F5DZMwajN37O92sppzQYAPZReFxX89YbQtum5x6KHxigoisqrpmuvNYcH
-	 8GPcJkKiHckq/RPX5YGnZfvOZSeu+iBDBwxp0+wxlo3k92bXBtzudnA38qag+iUtFw
-	 0vWZT4PmSobqqSthIIGeGsUaAC2H12l4/Cwc99rcBLFwJiHrosKZCtqJDV7qrweBi0
-	 WbgGHxdUY8uwYh2oKdrat9S1t0rzuxP4Bce++3myEHyZCUwVTjh1i6qWFmBxyH3Lu1
-	 5AifSBvT+DwIw==
+	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b="GOPKu7Rt"
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 5BD41497;
+	Wed, 30 Sep 2026 04:16:05 -0700 (PDT)
+Received: from [10.57.9.178] (unknown [10.57.9.178])
+	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 01B253F86F;
+	Wed, 30 Sep 2026 04:16:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=arm.com; s=foss;
+	t=1790766968; bh=ZsjyXoTLEOggldzf9Iy0psOGxgbnbPtVAlO5pYMWG9s=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=GOPKu7RtkypA4/arJKEc/r9+1xM/rmVS9g53WT5+98MrGTptyuZqA676/gx5xA/bo
+	 DD9ApatuAcrdcH4F95uMO35UI/6VFKp8znRMOpdnhsQ8FinfHzg755WSirl5vyh1yY
+	 +dZpeF9b4a4hE6FUcJrGaxyGVy8v1ht8oG5KxjYg=
+Message-ID: <9c9402e6-ac2f-49fa-a4b5-88122b7e618e@arm.com>
+Date: Wed, 30 Sep 2026 12:16:02 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 30 Sep 2026 13:13:25 +0200
-Message-Id: <DLSLUPDXOA11.VWE3XT1CRSRQ@kernel.org>
-Subject: Re: [PATCH v3 05/10] rust: pci: add num_vf(), to return number of
- VFs
-Cc: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <aliceryhl@google.com>,
- <bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
- <boqun@kernel.org>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
- <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
- <markus.probst@posteo.de>, <cjia@nvidia.com>, <smitra@nvidia.com>,
- <ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
- <targupta@nvidia.com>, <kjaju@nvidia.com>, <alkumar@nvidia.com>,
- <acourbot@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
- <jgg@nvidia.com>, <alex@shazbot.org>, "Peter Colberg" <peter@colberg.org>
-To: "Zhi Wang" <zhiw@nvidia.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <cover.1790705494.git.zhiw@nvidia.com>
- <c65da1c1437da6a543720b1e04e977a665ae2de7.1790759932.git.zhiw@nvidia.com>
-In-Reply-To: <c65da1c1437da6a543720b1e04e977a665ae2de7.1790759932.git.zhiw@nvidia.com>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] coco/tsm: Update maintainership
+Content-Language: en-GB
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: Alexey Kardashevskiy <aik@amd.com>,
+ "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>, ankita@nvidia.com,
+ Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+ "Borislav Petkov (AMD)" <bp@alien8.de>, Cedric Xing <cedric.xing@intel.com>,
+ Jonathan Corbet <corbet@lwn.net>, Eric Biggers <ebiggers@kernel.org>,
+ Jani Nikula <jani.nikula@intel.com>, Jonathan Cameron <jic23@kernel.org>,
+ Jiri Pirko <jiri@resnulli.us>, Kai Huang <kai.huang@intel.com>,
+ Kees Cook <kees@kernel.org>, Leon Romanovsky <leon@kernel.org>,
+ linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
+ =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>,
+ Lukas Wunner <lukas@wunner.de>, Luis Chamberlain <mcgrof@kernel.org>,
+ Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+ "Fontenot, Nathan" <Nathan.Fontenot@amd.com>,
+ Fang Peter <peter.fang@intel.com>, Petr Pavlu <petr.pavlu@suse.com>,
+ rick.p.edgecombe@intel.com, Samuel Ortiz <sameo@rivosinc.com>,
+ Sami Tolvanen <samitolvanen@google.com>,
+ Saravana Kannan <saravanak@google.com>,
+ Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+ Steven Price <steven.price@arm.com>, Tom Lendacky <thomas.lendacky@amd.com>,
+ Will Deacon <will@kernel.org>, yilun.xu@intel.com,
+ Kevin Tian <kevin.tian@intel.com>, Xu Yilun <yilun.xu@linux.intel.com>
+References: <0-v1-52697321555d+14e66-tsm_maintainer_jgg@nvidia.com>
+From: Suzuki K Poulose <suzuki.poulose@arm.com>
+In-Reply-To: <0-v1-52697321555d+14e66-tsm_maintainer_jgg@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed Sep 30, 2026 at 12:18 PM CEST, Zhi Wang wrote:
-> +impl Device<device::Core<'_>> {
-> +    /// Returns the number of Virtual Functions (VF) enabled for a Physi=
-cal Function (PF).
-> +    pub fn num_vf(&self) -> i32 {
+On 30/09/2026 00:26, Jason Gunthorpe wrote:
+> With Dan's passing Aneesh and Jason have volunteered to take this on, with
+> the support of their employers.
+> 
+> Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
+> ---
+>   CREDITS     | 9 +++++++++
+>   MAINTAINERS | 3 ++-
+>   2 files changed, 11 insertions(+), 1 deletion(-)
+> 
+> I've now spoken to all the main companies contributing here and asked for
+> volunteers. This is what I could confirm at this point. I'll be at LPC also
+> for any further discussion. Regards
+> 
+> diff --git a/CREDITS b/CREDITS
+> index a0bd941ca5dd26..7749f1e477ab43 100644
+> --- a/CREDITS
+> +++ b/CREDITS
+> @@ -4414,6 +4414,15 @@ W: ftp://ftp.uk.linux.org/pub/linux/people/willy/
+>   D: Linux/PARISC hacker.  Filesystem hacker.  Random other hacking.  Custom
+>   D: PPC port hacking.
+>   
+> +N: Dan Williams
+> +D: Technical Advisory Board member
+> +D: Asynchronous Transfers/Transforms (IOAT) API, Compute Express Link (CXL),
+> +D: Device Direct Access (DAX), Filesystem Direct Access (DAX),
+> +D: Intel I/OAT DMA driver, libnvdimm BTT: block translation table,
+> +D: libnvdimm PMEM: persistent memory driver,
+> +D: libnvdimm: non-volatile memory device subsystem,
+> +D: Trusted Execution Environment Security Manager (TSM)
+> +
+>   N: G\"unter Windau
+>   E: gunter@mbfys.kun.nl
+>   D: Some bug fixes in the polling printer driver (lp.c)
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 72294ddfa5b757..729ab465af96a8 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -27788,7 +27788,8 @@ S:	Maintained
+>   F:	Documentation/devicetree/bindings/trigger-source/*
+>   
+>   TRUSTED EXECUTION ENVIRONMENT SECURITY MANAGER (TSM)
+> -M:	Dan Williams <djbw@kernel.org>
+> +M:	Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+> +M:	Jason Gunthorpe <jgg@nvidia.com>
+>   L:	linux-coco@lists.linux.dev
+>   S:	Maintained
+>   F:	Documentation/ABI/testing/configfs-tsm-report
+> 
+> base-commit: 72d3fcf802c45d00b300f25b848a93c3a2bd7c7e
 
-For the reasons mentioned in patch 1, I'd make this return u16.
+FWIW:
 
-I suggest to do the converstion with .try_into().expect("pdev->sriov->num_V=
-Fs is u16").
+Acked-by: Suzuki K Poulose <suzuki.poulose@arm.com>
 
-> +        // SAFETY: `self.as_raw()` is valid and this call runs in the PC=
-I core callback context.
-> +        unsafe { bindings::pci_num_vf(self.as_raw()) }
-> +    }
-> +}
+Thank you for stepping in !
+
+Suzuki
