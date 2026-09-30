@@ -1,77 +1,80 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 067344E780D
-	for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 14:26:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02AEB4F3ED5;
+	Wed, 30 Sep 2026 14:27:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790778407; cv=none; b=jN5vlslR5OvDw0N8eE5r5EBEtPW+sYdEd9Wkn8VFJl3w3ywtzsHvYTDz489vwLjiPQrbdfkovASgWy4orpDA3xmqWM5ZkSZFUZvLjqMttdnVOhqFvU8nIaDqOdObGAzjGnELn9pryjTFRi6maR5YasPpJhrDU1p1qkmEQpZ0+Ms=
+	t=1790778467; cv=none; b=j91435vu78mUjH3/sk5gru+AxMtdD6IEeTrT4Wwn/O5CkkUVGigbgMU9ot4jW4PRCqoCCLlBW6W7N+5R07/DXakX6zp/RX3KAtFa6K33kPk2J6w+hl2nllyqia+XoocXeMeQMWSxJy3kInl0Cb6TKLOmkic5/87HXyt5jlek7OA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790778407; c=relaxed/simple;
-	bh=s26huTZBBrF2bln+7OTj8WFntX45UxvSCChJZqd88Vc=;
+	s=arc-20240116; t=1790778467; c=relaxed/simple;
+	bh=Wfi26VXgshrkmgSWcy0xfANrukFOjTdXZLi516LNLbk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=aT5Mcx/X6r44+/WiO2hFzTCRYeJxsVik9s6delmBaQ2XJjbeA1uORF1QWCxsB/bvUCrZmRjOWiTuI/bsptWng6tGBjtYnlcVL2yQ3gmGnNJH5mMektHByRYqHu1c480RyJZvY9Jj0a+8kx8fRAPUqNGK2L6QBnw1pYOtcKJCPpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VEbiedRv; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=px0+xZJkNt46sBQFbtJt7Aluhg0IoaBOEtJZJVZ/FSS8FI8frVnR6DuAKrwuPgx87DeK9RRsaAopu7syFCJCRevjXkJ+Z1g5pZiHFaJ5kh41Fzg+fboSNlbfXQOebdH4m2Px5JYZiT8HtqcP+NuB4o1UTWhZN7KSWloHDXc2D/E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Oa41pPv/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VEbiedRv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A62A51F00893;
-	Wed, 30 Sep 2026 14:26:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Oa41pPv/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 172031F000FF;
+	Wed, 30 Sep 2026 14:27:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790778396;
-	bh=gc7LcRd42BHMZz9E/67qWS9URcitopAA1+dehm0Gi1M=;
+	s=k20260515; t=1790778453;
+	bh=WsSkvb5QIumlCO0oqFroFjggPccVImChj2tnLC7Gp8k=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VEbiedRvc+BKpYS8A0Cy2TsdVCUmlXXd6DV3oP4c624FKu1bLXq1hSIqHp1GU48Ol
-	 Ip8l2bEMkTFrFtpGl2Pnq0tIHDjWO8lQWxUfbvk58AnaA2hIg7JWsTjoGfMDuUUDZF
-	 ogFzIya4k4Wyq6jhuy1414rGAnuL4RwJpNYqL8mSGse5stufl21c0pLeiKU/f2jZgE
-	 njtZVzre9drm2ZjYTb/VFPvcxmFRjihlLnN/A9b0CLPU6+Z3YGLaafhia3NFt9V9Iz
-	 bo7MBS6jfwOqLNkkTnCu9H8Ag3ocBGtMUOZQHfx8HISrFcevWwfCvXV/sD33a1Bpxu
-	 EGAQagLRiVtnQ==
+	b=Oa41pPv/IH6Y4uuahu7F2+cjPb2PtxFsTjD3Tj3X6HisiIMDkrCtyZTMCwPCYzzlv
+	 h78VwDZkBhPZgPsksIas5IvX3Sdm00g7SGt6CHvcgtlLOWwMjrj6wAaWkeq6Xtv9cH
+	 uZnxXv9E7ccBG3JY2p+dG0Q6hPHHWVOgFf8tsTQsE6WgWMVwGpEJiiMOv4u838Qk4K
+	 TloIZFDWR8GZUO23BTE783mOTtM2WqCdfxnv1VJQQ2f8VvvivJia57H/nENV9FtX+g
+	 da1knbdO2tfp0L9+zoYKclx0WhJrL317t+e9zdz07Iz9Om6jIkeShmj+S2shx270+Z
+	 PKicaqC5VbZCA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 1/3] usb: hcd-pci: Honour pci_save_state() failure
+Subject: Re: [PATCH v6 1/5] hyperv: Introduce new hypercall interfaces used
+ by Hyper-V guest IOMMU
 Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?RnJhbmNpc2NvIEJlbHRyw6FuIE1pbGxhbMOpbg==?= <fbeltranmillalen@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260930141914.6678-2-fbeltranmillalen@gmail.com>
-References: <20260930141914.6678-1-fbeltranmillalen@gmail.com>
- <20260930141914.6678-2-fbeltranmillalen@gmail.com>
+To: "Yu Zhang" <zhangyu1@linux.microsoft.com>
+Cc: linux-pci@vger.kernel.org, linux-hyperv@vger.kernel.org
+In-Reply-To: <20260930141409.437904-2-zhangyu1@linux.microsoft.com>
+References: <20260930141409.437904-1-zhangyu1@linux.microsoft.com>
+ <20260930141409.437904-2-zhangyu1@linux.microsoft.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 30 Sep 2026 14:26:36 +0000
-Message-Id: <20260930142636.A62A51F00893@smtp.kernel.org>
+Date: Wed, 30 Sep 2026 14:27:32 +0000
+Message-Id: <20260930142733.172031F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> hcd_pci_suspend_noirq() ignores the return value of pci_save_state() and
-> goes on to pci_prepare_to_sleep().
+> From: Wei Liu <wei.liu@kernel.org>
 >=20
-> The next patch makes pci_save_state() fail, without marking the state as
-> saved, when the config space of the device is not accessible.  For such
-> a controller pci_prepare_to_sleep() does not work either:
-> pci_set_low_power_state() reads the PM control register as all ones and
-> marks the device D3cold.  pci_pm_suspend_noirq() then finds a device
-> whose power state changed without its state being saved, and warns.
-> With an earlier version of the next patch on a MacBookPro14,3, whose
-> Thunderbolt xHCI controllers can be inaccessible at this point:
+> Hyper-V guest IOMMU is a para-virtualized IOMMU based on hypercalls.
+> Introduce the hypercalls used by the child partition to interact with
+> this facility.
 >=20
->   xhci_hcd 0000:7d:00.0: PCI PM: State of device not saved by hcd_pci_sus=
-pend_noirq+0x0/0x180
->   WARNING: CPU: 7 PID: 96793 at drivers/pci/pci-driver.c:888 pci_pm_suspe=
-nd_noirq+0x2f4/0x300
+> These hypercalls fall into below categories:
+> - Detection and capability: HVCALL_GET_IOMMU_CAPABILITIES is used to
+>   detect the existence and capabilities of the guest IOMMU.
 >=20
-> [ ... ]
-> in D0 instead of being put into a low-power state with an incomplete
-> saved state.
+> - Device management: HVCALL_GET_LOGICAL_DEVICE_PROPERTY is used to
+>   check whether an endpoint device is managed by the guest IOMMU.
 >=20
-> Assisted-by: LLM
-> Signed-off-by: Francisco Beltr=C3=A1n Millal=C3=A9n <fbeltranmillalen@gma=
-il.com>
+> - Domain management: A set of hypercalls is provided to handle the
+>   creation, configuration, and deletion of guest domains, as well as
+>   the attachment/detachment of endpoint devices to/from those domains.
+>=20
+> - IOTLB flushing: HVCALL_FLUSH_DEVICE_DOMAIN is used to ask Hyper-V
+>   for a domain-selective IOTLB flush (which in its handler may flush
+>   the device TLB as well).
+>=20
+> Signed-off-by: Wei Liu <wei.liu@kernel.org>
+> Co-developed-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
+> Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
+> Co-developed-by: Yu Zhang <zhangyu1@linux.microsoft.com>
+> Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260930141914.6678=
--1-fbeltranmillalen@gmail.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260930141409.4379=
+04-1-zhangyu1@linux.microsoft.com?part=3D1
 
