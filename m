@@ -1,39 +1,39 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57470509F19;
-	Wed, 30 Sep 2026 14:46:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73AAD50B435;
+	Wed, 30 Sep 2026 14:47:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790779631; cv=none; b=Y46ZXvcY7raRx5o6nA3WSOhWSs6nSho79f4QW6UiDzY3qH5ej6SoDWwe658KGCe8/ImRLV6skSPewEFdCi5/XJ+pWdTaIAofy83FsAQH0tfQQ1pLu1G01A6IRnhrYTqKcU6L3nfTTXLJ5PbP9eYKqbdF3/HISCE71pcmDa8Fv0k=
+	t=1790779633; cv=none; b=YVPUetzmEWi6dCkXNDcY2IRlEyI6TFRSNXRo8GpnrzNrPJYNFBVonXi4i1fzWwd1A5bI+KcvymmRb+p4cV2avYPO+2+8KwRMDttVrFdx+cJJe8U3HVhc5+2EG77xFKIYCAL47gRmZX/4jbIBhOxJ76F5xCdpVPfe0i+HBMXa85A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790779631; c=relaxed/simple;
-	bh=P0gYmt5B7UIuIhXQRAa97rh/C9fF+F6OpSajoGILOPM=;
+	s=arc-20240116; t=1790779633; c=relaxed/simple;
+	bh=xLaWugtGaL5V+YjiA1ZObsRg1NBjZeHZ+OWSjIgpcB4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NMrTb+6BWSl0Au+ZcL7okqJcI/7d/oDM536klG4PMpQjem8f0PM8jSu2cr5YbbGc97c/f7eaRAAsVyjb9Uh7QCCUpDMOa15EaFDl8iKJlqh9R+dnysS2OwEHE31uIHJEPY6E6JH4i5RkBoKj5/gQo3VTEqjy5pBrOeCd4yqrXQA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=gACvY/G1; arc=none smtp.client-ip=80.241.56.151
+	 MIME-Version; b=MsEt21ZVrERU4ciE+3JurY+JfnTJSMbiaI9BmhusRKOUp5LqANAtPlmFlN5YqpY0MZ78dm9wvPYnW4nDsgQ3xt51lLtSqUvS97PFCsqg6fojC4DJUZU/x4qr2+8uG/ecbUndOdmZvDBtBOWjwemlvTVFBu6DU0yaWoBu4zz8c5k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=i2YhaRLG; arc=none smtp.client-ip=80.241.56.161
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="gACvY/G1"
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="i2YhaRLG"
 Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4hvyYT6QZKz8tx2;
-	Wed, 30 Sep 2026 16:46:53 +0200 (CEST)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4hvyYW4CcdzKmy5;
+	Wed, 30 Sep 2026 16:46:55 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1790779613;
+	t=1790779615;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=/UhMwutnBrljFXZgJ3lBP0GFIcwnWhOBYqHu1M3eDO8=;
-	b=gACvY/G1Z67DjQ9ayEWDQdo+P/d90e5RBkbvhfcajqsLpXgNcdYLTBDcWwwtvv8NM8gWG6
-	SGaTKjyDgM0yeRIwvVcrZBpW8MEFPKrxd1JxZtVIEMAV6FCEPpGphUauiG1rJ0u7CgN3Iy
-	giaDtXZm/VNXyNDu2KaJo6lf+vUxEgnIu8O1Rkcd66oaAzt2tUapxFwbWWdLp7cVhT43dR
-	sMGcN5vgZJFmOpknDeOAfQCTolFXygKaMbuWe4inM3/DM/h8yyPO54g1owzkd079sdt7Gq
-	M9vs1eSpwqnSSXjWCBiTYSGhNXQ4xJILSIMjUWystASpJ1qNPKyI9DEqq5hGHA==
+	bh=mONE5Z4yykxdHO0aIpNw/R01NrY2zchyszmmvZjcC0I=;
+	b=i2YhaRLGyxe+FUrYBAasuLnxbtkHslVM5T8GiUnoAz4Qh6CISajlY9bRbLP2DBEuN5HjP1
+	WHjtq41/7GhyBwKE/5O4KSzDzUIK3rU482ViP5fINiiZjs/XVy0uqo1VDvuOQ3WFjqRRbw
+	W28rgKVdL9q0fH0DLHrQKolLU+9jLI+D/B3XoWSwFqQK2OIMtdXWFrbro1EvCU4ikI90XL
+	TAY7SNpeMCgH4S6nWk/30wtlDCBsOnGZC5TfKGtunY1W4hF90pag9M0uHXD7hmV+egCawq
+	N6aesABbAClVMjZEdQeDtutk1q2qZehYnTntEgm94xzYUDHM34EL693/qeFaDQ==
 From: Stefan Roese <stefan.roese@mailbox.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-pci@vger.kernel.org,
@@ -43,9 +43,9 @@ Cc: linux-pci@vger.kernel.org,
 	Lukas Wunner <lukas@wunner.de>,
 	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
 	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Subject: [PATCH 1/2] PCI: Write RCB only when it changes
-Date: Wed, 30 Sep 2026 16:46:49 +0200
-Message-ID: <20260930144650.3701516-2-stefan.roese@mailbox.org>
+Subject: [PATCH 2/2] PCI/ASPM: Clear ASPM Control on links without common ASPM support
+Date: Wed, 30 Sep 2026 16:46:50 +0200
+Message-ID: <20260930144650.3701516-3-stefan.roese@mailbox.org>
 In-Reply-To: <20260930144650.3701516-1-stefan.roese@mailbox.org>
 References: <20260930144650.3701516-1-stefan.roese@mailbox.org>
 Precedence: bulk
@@ -55,70 +55,80 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MBO-RS-ID: 0bad432e0277a7f6722
-X-MBO-RS-META: 3dsc7d4bdxnzon9fu64n1co73kk5fb79
+X-MBO-RS-ID: 761cddb35362e1cf6e7
+X-MBO-RS-META: 5rzdgd48i49hncxc5fc4x3aqqoyh18n5
 
-pci_configure_rcb() does a read-modify-write of the Link Control
-register of every endpoint at enumeration, even when RCB already has
-the right value. Some devices react to any write of this register.
+pcie_aspm_cap_init() returns early when the two ends of a link share
+no ASPM state. It then never touches Link Control, so ASPM Control
+keeps whatever the device came out of reset with. A device that
+enables ASPM by default, against a port that cannot do it, keeps ASPM
+enabled, which the spec does not allow.
 
-The Renesas uPD720201 xHCI (1912:0014) comes out of reset with ASPM L0s
-and L1 enabled in Link Control. On a link whose Root Port supports no
-ASPM, nothing else writes that register before the driver loads, and
-the chip clears ASPM Control itself during the firmware download. After
-a host write, even of the unchanged value 0x0003, it no longer does
-so. ASPM stays enabled, and the first access to the xHCI BAR runs into
-PCIe completion timeouts that hang the system.
+The Renesas uPD720201 xHCI (1912:0014) is such a device: it resets
+with LnkCtl 0x0003 (L0s and L1 enabled) and sits behind the CPM Root
+Port of AMD Versal, which supports no ASPM. It only works because the
+chip clears ASPM Control itself during its firmware download, and it
+stops doing so once the host has written Link Control.
 
-Seen on an AMD Versal board (CPM Root Port without ASPM support): the
-hang bisects to this commit, reverting it fixes it, and on a kernel
-without it a single setpci write of the unchanged value reproduces it.
+Clear ASPM Control on every function of such a link, downstream
+component first, and only where it is set.
 
-Read Link Control first and write it only when RCB has to change.
+Before (lspci -vvv -s 01:00.0):
+  LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes, LnkDisable- CommClk-
 
-Fixes: 1a6845aaa6de ("PCI: Initialize RCB from pci_configure_device()")
-Cc: stable@vger.kernel.org
+After:
+  pci 0000:01:00.0: ASPM: link supports no ASPM, clearing ASPM Control
+  LnkCtl: ASPM Disabled; RCB 64 bytes, LnkDisable- CommClk-
+
 Assisted-by: Claude:claude-opus-5-5
 Signed-off-by: Stefan Roese <stefan.roese@mailbox.org>
 ---
- drivers/pci/probe.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ drivers/pci/pcie/aspm.c | 22 ++++++++++++++++++++--
+ 1 file changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 721daf5c5184..35e794df3be4 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2426,7 +2426,7 @@ static void pci_configure_serr(struct pci_dev *dev)
- static void pci_configure_rcb(struct pci_dev *dev)
- {
- 	struct pci_dev *rp;
--	u16 rp_lnkctl;
-+	u16 rp_lnkctl, lnkctl, rcb;
- 
- 	/*
- 	 * Per PCIe r7.0, sec 7.5.3.7, RCB is only meaningful in Root Ports
-@@ -2448,10 +2448,17 @@ static void pci_configure_rcb(struct pci_dev *dev)
- 		return;
- 
- 	pcie_capability_read_word(rp, PCI_EXP_LNKCTL, &rp_lnkctl);
--	pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
--					   PCI_EXP_LNKCTL_RCB,
--					   (rp_lnkctl & PCI_EXP_LNKCTL_RCB) ?
--					   PCI_EXP_LNKCTL_RCB : 0);
-+	rcb = rp_lnkctl & PCI_EXP_LNKCTL_RCB;
-+
-+	/*
-+	 * Write Link Control only when RCB actually changes. Some devices
-+	 * react to any write of this register, even one with an unchanged
-+	 * value.
-+	 */
-+	pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &lnkctl);
-+	if ((lnkctl & PCI_EXP_LNKCTL_RCB) != rcb)
-+		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
-+						   PCI_EXP_LNKCTL_RCB, rcb);
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index f8e64971c6c3..13d7a6d3f6ad 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -931,6 +931,18 @@ static void pcie_aspm_override_default_link_state(struct pcie_link_state *link)
+ 	}
  }
  
- static void pci_configure_device(struct pci_dev *dev)
++static void pcie_aspm_clear_aspmc(struct pci_dev *pdev)
++{
++	u16 lnkctl;
++
++	pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &lnkctl);
++	if (!(lnkctl & PCI_EXP_LNKCTL_ASPMC))
++		return;
++
++	pci_info(pdev, "ASPM: link supports no ASPM, clearing ASPM Control\n");
++	pcie_capability_clear_word(pdev, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_ASPMC);
++}
++
+ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ {
+ 	struct pci_dev *child = link->downstream, *parent = link->pdev;
+@@ -947,11 +959,17 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ 
+ 	/*
+ 	 * If ASPM not supported, don't mess with the clocks and link,
+-	 * bail out now.
++	 * bail out now. A device may still come out of reset with ASPM
++	 * Control set, which the rest of this code never touches for
++	 * such a link. Clear it, downstream component first.
+ 	 */
+ 	if (!(parent->aspm_l0s_support && child->aspm_l0s_support) &&
+-	    !(parent->aspm_l1_support && child->aspm_l1_support))
++	    !(parent->aspm_l1_support && child->aspm_l1_support)) {
++		list_for_each_entry(fn, &linkbus->devices, bus_list)
++			pcie_aspm_clear_aspmc(fn);
++		pcie_aspm_clear_aspmc(parent);
+ 		return;
++	}
+ 
+ 	/* Configure common clock before checking latencies */
+ 	pcie_aspm_configure_common_clock(link);
 -- 
 2.56.0
 
