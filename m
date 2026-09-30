@@ -1,282 +1,145 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E1C64FECEE;
-	Wed, 30 Sep 2026 15:15:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61F184F30FE;
+	Wed, 30 Sep 2026 15:17:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790781316; cv=none; b=RlxRKctghEJpwD32N2fAUTnp1X4432wnkqFfbWiIjVA7A04LQXKI2G+/z6bB0ssi/Q5S3zUADpwyZ88Mz7EFFlp9S6GAfvKI8L0k7ntaAv2bNtbKsivFhUDh/N0Vt2P2oRJ7lp2D67iioXcP8O15mCjwHlClwTdmI+TuGSohSBU=
+	t=1790781475; cv=none; b=X6MFdL1LdSMMoOPDGkMN/+bgpB0zEH0VIaiTaI/0j27kZDNy9nqyJ9ClFTOTZgg7Gbx+OxTApD99sv9nwdOVUyDivIyZIDGqW/x/BxMpusWYzmVY5DSc3F0ifkAPJIabrRbCEIywfQBRrRByQxlQv5k5TfzyImaV8OJh/ON4XNE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790781316; c=relaxed/simple;
-	bh=7DRKaAl9MRTRd6KPUPAgzNUtr5/McdZ/UvnWQVbFj+k=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=mOdJP4/skBilCm9M+Y4J7iaRkeMVIhfZdtmEj9uzRZcijM4Nn94srUSohXjlTg1FZ+1ZVSLjZyvBtsA3+JB91BnN0Boc7b7YLQaGTBQbhtEyMVoIP27XW9Oqk+0Zm99GGEccUnvsh81+yvqxwSZh0t3Kz75n2p3DjEWmqIp+X0M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ai3klTCy; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790781475; c=relaxed/simple;
+	bh=IpHiY1hRZ4ZqoNtBptXW5wIqv/+HeqkF2zParF6pE6M=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=GBWCzwGgi18uzCRdrpAoLkdJVGmYxs8D/1QnftcmwCLeTWQhoHlfeYFTlb8cXDM9gnpv+uTUkSCddVv1J7b27NQYDaNx8JT2QjuwUlEANbLPQn8Q4S8/E6NZp7MwL6yXgAffgTxqcH8vfZjuXxILCxJgVYp+yMXmaX73rXQaFtk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ELHyD1m1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ai3klTCy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE3D51F000FF;
-	Wed, 30 Sep 2026 15:15:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ELHyD1m1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDE401F00893;
+	Wed, 30 Sep 2026 15:17:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790781307;
-	bh=1AiHyLAhopLDoTTNW5LPqeB55N6+FZ/BmsicIOJUInE=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To;
-	b=Ai3klTCygbJmPT4iMX/ULQyafsw0Jyu3jI1ZSVp0GVFvd/MEoXT9XOTdRhzF4QOuL
-	 bV6RI9MKwVdpDryDYAsGihRwACLKouSb4L5AHmeQyd2ZMxsZmPmw/PxZxgFVCQeAc7
-	 kJeJGHN1e+4FfUsgAohN4XfwhnDU2D1eirW2J6FxuwJxTMNTvkX2ZXcQL4HeH3JKWp
-	 /NyWza/egk05bKWtLlezjBmyqkgRl/bB6m6dMD+abmcqN1Ejs9EkX7YkSqS69BNyKy
-	 EvE9i3BIOoUMaGCj8PokfKpHAFQP/KKfZYkq8ZfS/ohsB4T1N6EUXr5VUkkIlxiai3
-	 ezyjv5EB0Bv6g==
+	s=k20260515; t=1790781466;
+	bh=UNu5zVZ7xQk/ROVl1xUlzSAPPPInMy0HhdC6GL98V/I=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ELHyD1m1qINrGFl75geurTwbL0VhY90bNmyPqY3PiKjtHzcdj2/GDN1AKkcLGNB0o
+	 pghQ91P62hdv1JQJ+cXxen33tPObPPTtMx/leNzcWaC+jRIOAIgnEm50ZXhMqBCZVS
+	 hBv+iGyCQZ3G2L20Kzmhl+aDOZNRx9hoN9PkdTuJKv+tZal8w57CyBOAYojjdJL0P4
+	 JH/pUfdgpzessKI5Yz5JvBVRmzoyZ/sAhb/nCfQfClR7xnn8NbXznQ61rR3FiNIDBe
+	 6wVda1OdD0lPcKLnK0QN3Fx5jS16PWXBoZND32onk+r9sVYuCzr11LHx9r4hBEDxi5
+	 wi7A591tHLZsQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 6/7] ath12k: add PCIe link recovery retry
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
+In-Reply-To: <20260930140833.576941-7-jtornosm@redhat.com>
+References: <20260930140833.576941-1-jtornosm@redhat.com>
+ <20260930140833.576941-7-jtornosm@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 30 Sep 2026 15:17:45 +0000
+Message-Id: <20260930151745.DDE401F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 30 Sep 2026 17:15:00 +0200
-Message-Id: <DLSQZO7U8S8U.1DDL9MVEYS7ED@kernel.org>
-Subject: Re: [PATCH v3 10/10] samples: rust: add Rust SR-IOV VF driver
- sample
-Cc: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <aliceryhl@google.com>,
- <bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
- <boqun@kernel.org>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
- <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
- <markus.probst@posteo.de>, <cjia@nvidia.com>, <smitra@nvidia.com>,
- <ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
- <targupta@nvidia.com>, <kjaju@nvidia.com>, <alkumar@nvidia.com>,
- <acourbot@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
- <jgg@nvidia.com>, <alex@shazbot.org>, "Peter Colberg" <peter@colberg.org>
-To: "Zhi Wang" <zhiw@nvidia.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <cover.1790705494.git.zhiw@nvidia.com>
- <a50d3eba8fca1ecf094da263a749fa012a512b7f.1790759932.git.zhiw@nvidia.com>
-In-Reply-To: <a50d3eba8fca1ecf094da263a749fa012a512b7f.1790759932.git.zhiw@nvidia.com>
 
-On Wed Sep 30, 2026 at 12:18 PM CEST, Zhi Wang wrote:
-> +#[pin_data(PinnedDrop)]
-> +struct PfDriverData<'bound> {
-> +    // Keep the device alive until the registration stops exposing `PfAp=
-i::pdev`.
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [High] ath12k: infinite loop in panic handler due to jiffies-based timeout
+- [Medium] ath12k: 5-second busy-wait loop using mdelay() causes severe CPU=
+ stall
+- [Medium] ath12k: missing post-loop check causes spurious timeouts on pree=
+mption
+--
 
-What does this mean?
+commit 5337b864dac2a64cb78f0c14498962bdb92990b4
+Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 
-> +    #[pin]
-> +    _registration: pci::VfRegistration<'bound, PfApiForLt>,
-> +    pdev: ARef<pci::Device>,
+ath12k: add PCIe link recovery retry
 
-	pdev: &'bound pci::Device<Bound>,
+This patch modifies ath12k_pci_soc_global_reset() to add a retry loop
+waiting up to 5000ms for the PCIe link to recover after a global reset.
+It returns an error if the link remains down, preventing continued MHI
+initialization with a dead link.
 
-> +}
-> +
-> +#[pin_data(PinnedDrop)]
-> +struct VfDriverData {
-> +    pdev: ARef<pci::Device>,
+> diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless=
+/ath/ath12k/pci.c
+> index af0e882fd0b51..65712486d3127 100644
+> --- a/drivers/net/wireless/ath/ath12k/pci.c
+> +++ b/drivers/net/wireless/ath/ath12k/pci.c
 
-	pdev: &'bound pci::Device<Bound>,
+[ ... ]
 
-> +}
-> +
-> +kernel::pci_device_table!(
-> +    PF_TABLE,
-> +    <SamplePfDriver as pci::Driver>::IdInfo,
-> +    [(
-> +        // E1000_DEV_ID_82576
-> +        pci::DeviceId::from_id(pci::Vendor::INTEL, 0x10c9),
-> +        ()
-> +    )]
-> +);
-> +
-> +kernel::pci_device_table!(
-> +    VF_TABLE,
-> +    <SampleVfDriver as pci::Driver>::IdInfo,
-> +    [(
-> +        // E1000_DEV_ID_82576_VF
-> +        pci::DeviceId::from_id(pci::Vendor::INTEL, 0x10ca),
-> +        ()
-> +    )]
-> +);
+> @@ -206,14 +208,29 @@ static void ath12k_pci_soc_global_reset(struct ath1=
+2k_base *ab)
+> =20
+>  	mdelay(delay);
+> =20
+> -	val =3D ath12k_pci_read32(ab, PCIE_SOC_GLOBAL_RESET);
+> -	if (val =3D=3D 0xffffffff)
+> -		ath12k_warn(ab, "link down error during global reset\n");
+> +	/* Wait for PCIe link to recover, especially important in VM environmen=
+ts
+> +	 * where timing can vary significantly from bare metal.
+> +	 */
+> +	timeout =3D jiffies + msecs_to_jiffies(5000);
+> +	while (time_before(jiffies, timeout)) {
 
-Since this is two drivers in the same module, can we please put everythng t=
-hat
-belongs to the PF driver first and then everything that belongs into the VF
-driver second please? We could also make it two separate files.
+[Severity: High]
+Will this create an infinite loop during a kernel panic?
 
-> +#[vtable]
-> +impl pci::Driver for SamplePfDriver {
-> +    type IdInfo =3D ();
-> +    type Data<'bound> =3D PfDriverData<'bound>;
-> +
-> +    const ID_TABLE: pci::IdTable<Self::IdInfo> =3D &PF_TABLE;
-> +
-> +    fn probe<'bound>(
-> +        pdev: &'bound pci::Device<Core<'_>>,
-> +        _info: Option<&'bound Self::IdInfo>,
-> +    ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound {
-> +        pin_init::pin_init_scope(move || {
-> +            dev_info!(
-> +                pdev,
-> +                "Probe Rust SR-IOV PF sample (PCI ID: {}, 0x{:x}).\n",
-> +                pdev.vendor_id(),
-> +                pdev.device_id()
-> +            );
-> +
-> +            pdev.enable_device_mem()?;
-> +            pdev.set_master();
-> +
-> +            Ok(try_pin_init!(PfDriverData {
-> +                // SAFETY:
-> +                // - probe has exclusive access to this PF before SR-IOV=
- is enabled;
-> +                // - the registration is pinned in the PF driver data an=
-d dropped before `pdev`;
-> +                // - no other registration is created for this PF; and
-> +                // - VFs are enabled only after probe by `sriov_enable`.
-> +                _registration <- unsafe {
-> +                    pci::VfRegistration::new(
-> +                        pdev,
-> +                        try_pin_init!(PfApi {
-> +                            pdev,
-> +                            requests <- new_mutex!(0),
-> +                        }),
-> +                    )
-> +                },
-> +                pdev: pdev.into(),
-> +            }))
-> +        })
+The panic handler ath12k_pci_panic_handler() executes via the panic notifier
+chain:
 
-Let's put everything within a single try_pin_init!() block please.
+ath12k_pci_panic_handler()
+    ath12k_pci_sw_reset()
+        ath12k_pci_soc_global_reset()
 
-> +#[vtable]
-> +impl pci::Driver for SampleVfDriver {
-> +    type IdInfo =3D ();
-> +    type Data<'bound> =3D VfDriverData;
-> +
-> +    const ID_TABLE: pci::IdTable<Self::IdInfo> =3D &VF_TABLE;
-> +
-> +    fn probe<'bound>(
-> +        pdev: &'bound pci::Device<Core<'_>>,
-> +        _info: Option<&'bound Self::IdInfo>,
-> +    ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound {
-> +        pin_init::pin_init_scope(move || {
-> +            dev_info!(
-> +                pdev,
-> +                "Probe Rust SR-IOV VF sample (PCI ID: {}, 0x{:x}).\n",
-> +                pdev.vendor_id(),
-> +                pdev.device_id()
-> +            );
-> +
-> +            let pdev_bound: &'bound pci::Device<Bound> =3D pdev;
-> +            let pf_api =3D pdev_bound.vf_registration_data::<PfApiForLt>=
-()?;
-> +
-> +            pdev.enable_device_mem()?;
-> +            pdev.set_master();
-> +
-> +            let request =3D pf_api.submit(pdev)?;
-> +            dev_info!(pdev, "Submitted request {} through PF data.\n", r=
-equest);
-> +
-> +            Ok(try_pin_init!(VfDriverData { pdev: pdev.into() }))
-> +        })
+Since interrupts are disabled during a panic, jiffies does not advance. If
+the PCIe link fails to recover, which is common during a system crash, does
+this loop evaluate to true indefinitely and prevent kexec or reboot?
 
-Same here. Also no need for pdev_bound, it derefs automatically, you can ju=
-st
-call pdev.vf_registration_data().
+> +		val =3D ath12k_pci_read32(ab, PCIE_SOC_GLOBAL_RESET);
+> +		if (val !=3D 0xffffffff) {
+> +			link_recovered =3D true;
+> +			break;
+> +		}
+> +		mdelay(20);
 
-> +    }
-> +}
-> +
-> +#[pinned_drop]
-> +impl PinnedDrop for PfDriverData<'_> {
-> +    fn drop(self: Pin<&mut Self>) {
-> +        dev_info!(self.pdev, "Remove Rust SR-IOV PF sample.\n");
-> +    }
-> +}
-> +
-> +#[pinned_drop]
-> +impl PinnedDrop for VfDriverData {
-> +    fn drop(self: Pin<&mut Self>) {
-> +        dev_info!(self.pdev, "Remove Rust SR-IOV VF sample.\n");
-> +    }
-> +}
+[Severity: Medium]
+Does this busy-wait cause a severe CPU stall?
 
-Let's drop those, we don't really need them.
+A 5000ms busy-wait monopolizes the CPU, causing a severe latency spike. In a
+virtualized environment, which this patch targets, it can starve other vCPUs
+or host tasks, and risks triggering RCU stall warnings.
 
-Here's the two probe() functions I came up with:
+Since mdelay() relies on a spinning loop and actively consumes 100% of the
+CPU instead of yielding, should msleep() or context-aware wait functions be
+used for delays this long outside of atomic contexts?
 
-    fn probe<'bound>(
-        pdev: &'bound pci::Device<Core<'_>>,
-        _info: Option<&'bound Self::IdInfo>,
-    ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound {
-        try_pin_init!(PfDriverData {
-            _: {
-                dev_info!(
-                    pdev,
-                    "Probe Rust SR-IOV PF sample (PCI ID: {}, 0x{:x}).\n",
-                    pdev.vendor_id(),
-                    pdev.device_id()
-                );
-            },
+> +	}
+> +	if (!link_recovered) {
 
-            _: {
-                pdev.enable_device_mem()?;
-                pdev.set_master();
-            },
+[Severity: Medium]
+Can this cause a spurious timeout if the thread is preempted?
 
-            // SAFETY:
-            // - probe has exclusive access to this PF before SR-IOV is ena=
-bled;
-            // - the registration is pinned in the PF driver data and dropp=
-ed before `pdev`;
-            // - no other registration is created for this PF; and
-            // - VFs are enabled only after probe by `sriov_enable`.
-            _registration <- unsafe {
-                pci::VfRegistration::new(
-                    pdev,
-                    try_pin_init!(PfApi {
-                        pdev,
-                        requests <- new_mutex!(0),
-                    }),
-                )
-            },
+If the thread is preempted or descheduled during or just after the mdelay()
+call, which is common in VM environments due to vCPU scheduling, jiffies may
+advance past the timeout.
 
-            pdev,
-        })
-    }
+When the loop terminates due to time_before() evaluating to false, it retur=
+ns
+-ETIMEDOUT without verifying the register one last time. Does this ignore t=
+he
+possibility that the hardware condition was satisfied during the preemption
+window?
 
-    fn probe<'bound>(
-        pdev: &'bound pci::Device<Core<'_>>,
-        _info: Option<&'bound Self::IdInfo>,
-    ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound {
-        try_pin_init!(VfDriverData {
-            _: {
-                dev_info!(
-                    pdev,
-                    "Probe Rust SR-IOV VF sample (PCI ID: {}, 0x{:x}).\n",
-                    pdev.vendor_id(),
-                    pdev.device_id()
-                );
-            },
+> +		ath12k_err(ab, "PCIe link failed to recover - device may need power cy=
+cle\n");
+> +		return -ETIMEDOUT;
+> +	}
 
-            _: {
-                pdev.enable_device_mem()?;
-                pdev.set_master();
-            },
-
-            pdev,
-
-            _: {
-                let pf_api =3D pdev.vf_registration_data::<PfApiForLt>()?;
-
-                let request =3D pf_api.submit(pdev)?;
-                dev_info!(pdev, "Submitted request {} through PF data.\n", =
-request);
-            },
-        })
-    }
-
-Note that enable_device() and set_master() have their own block as they wil=
-l be
-replaced with a pci::DeviceEnableGuard soon.
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260930140833.5769=
+41-1-jtornosm@redhat.com?part=3D6
