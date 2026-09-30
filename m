@@ -1,230 +1,159 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 56E27511E6F;
-	Wed, 30 Sep 2026 14:14:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from mail-vs2-f40.google.com (mail-vs2-f40.google.com [74.125.227.40])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA48D51EE1C
+	for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 14:19:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.40
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790777698; cv=none; b=tc3GSmNJjwR2UiqE2B85+l6VIV7K79uedXy/4JLC2uRSVT3l9Rw5N38AwGJrCeCNdciTKWHxTS8pjfHvLFuXcXzhSXU5koUp02BpjB/BUp/kEW38t3XBpx5sNjmW8udVRV76vO7jVUjR9s5NWB+HTfGYfGrGsdxPAToMN8zGKKo=
+	t=1790777988; cv=none; b=ZKKiaZ6e6NtQRkDFd7wIQkaDehCH30zg/RM68TYUuindt4KZkdFlzsAuqT7m/vZurMXp0NqVcC5SHMrr4CXQrZqXIqYb4niLiVLIVuPG+KEPeNACEgBE7zNL3WaP9HBBIIhhYIqHuwiBj09F9hRAOIU7tRFaa1Bu4vuJmoD5Mkc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790777698; c=relaxed/simple;
-	bh=7/RbzMPdI1aD2EV6LbUCW/HmRrdqWGkyGILrSE+j0TY=;
+	s=arc-20240116; t=1790777988; c=relaxed/simple;
+	bh=yUHWtEgkE8SNdRJwGODRT7SvV8pdrTHVh0q86Pd+8t8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IXe4s8YUza1E9XJt9ZkBj2KuDcnCwrprTsIOJAZotpcRys4Oj2C2Fmw5EFUuwU9DkNLb4MHXxAM378HHRTcPuTUJL8CVOymRldjFIFtq9+cbvKsWnZP24yYqb215D/viu6l9eAH/ecGoa79WO78S/JZkOSE03eX5ONmnOLtCM/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=EtKT6bvk; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	 MIME-Version:Content-Type; b=r2fBvFlUT5nflwAioCUwl9TdHS1nFe1+EG5NT0BikPokF1FvDWFVfKjOZE1AYNFqLpY5SyyDfkchw9P3Y4/OJkuzmet7SD0TXao161dRAV7XkyNJ5Q+XezmfBy1IoYz3tpejV017DAGRkKpFBvyexLMu7DskzrjXpZvMl50Voys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Rz/S4dbV; arc=none smtp.client-ip=74.125.227.40
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="EtKT6bvk"
-Received: from zhangyu-hyperv.mshome.net (unknown [167.220.233.38])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 8A81320B716A;
-	Wed, 30 Sep 2026 07:13:46 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 8A81320B716A
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1790777630;
-	bh=Q99fMk2gfkWw/fV2k2A1SwgVJLDV1ZFs/sYum8UpDr0=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=EtKT6bvk6UjmldcTFOqLqfOfENOZZVel6sogTssrCWn2YBozzKPeZS+03Y/WVJAKW
-	 Xo1ovrbYXkcb/nzbFWU7F7DtvKnxyeQtA7zR8q+f2+QyZwiSvMJZwxLydci8G6OUIB
-	 WG6ECzSJHj0+dmaVg/9nSFhYvmU9hkLkYZ/Z6UVk=
-From: Yu Zhang <zhangyu1@linux.microsoft.com>
-To: linux-kernel@vger.kernel.org,
-	linux-hyperv@vger.kernel.org,
-	iommu@lists.linux.dev,
-	linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	x86@kernel.org
-Cc: wei.liu@kernel.org,
-	kys@microsoft.com,
-	haiyangz@microsoft.com,
-	decui@microsoft.com,
-	joro@8bytes.org,
-	will@kernel.org,
-	robin.murphy@arm.com,
-	bhelgaas@google.com,
-	kwilczynski@kernel.org,
-	lpieralisi@kernel.org,
-	mani@kernel.org,
-	robh@kernel.org,
-	arnd@arndb.de,
-	jgg@ziepe.ca,
-	mhklinux@outlook.com,
-	jacob.pan@linux.microsoft.com,
-	tgopinath@linux.microsoft.com,
-	easwar.hariharan@linux.microsoft.com,
-	mrathor@linux.microsoft.com,
-	baolu.lu@linux.intel.com,
-	suravee.suthikulpanit@amd.com,
-	vasant.hegde@amd.com
-Subject: [PATCH v6 5/5] iommu/hyperv: Add page-selective IOTLB flush support
-Date: Wed, 30 Sep 2026 22:14:09 +0800
-Message-ID: <20260930141409.437904-6-zhangyu1@linux.microsoft.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260930141409.437904-1-zhangyu1@linux.microsoft.com>
-References: <20260930141409.437904-1-zhangyu1@linux.microsoft.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Rz/S4dbV"
+Received: by mail-vs2-f40.google.com with SMTP id ada2fe7eead31-7ac5b4011a4so3299665137.2
+        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 07:19:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790777971; x=1791382771; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=z73kz9yWTyFv6L75BByVAffIP7W5SI44w1Nri5Q0shQ=;
+        b=Rz/S4dbVqyVTUhyaZhYRKj38uBPCT5DMZ3zo17MG+jy5YANP9w/djTL0lH/D70zU5T
+         0zZLYkkXWKq0la9pYs91X5Lne+9dabNB1a8sAqPfW3UHk4X8sGS//zjaJeGwI5KCHL8a
+         EG87gIiaNj+RXvCJOoWvzFIsePiE/kJCMt4826t5PaeoWsRehnYTd5Q+EMxoYivN2qqG
+         DEKdcCphAQkslTHw+gCh20ZDTY8Uv2wR60+MZ0rA06k+yM/sh9O667F0S7z8szEoYCyj
+         H33LgmIwm3WajgKpT4bKduvmytB9SPk0GKWkHhHUT6Y/pu5+nX0GWPMLqS83A/JezsMO
+         diFw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790777971; x=1791382771;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=z73kz9yWTyFv6L75BByVAffIP7W5SI44w1Nri5Q0shQ=;
+        b=c0dFiowAqKMj6cDOXYRKg9mF6DarPpWqWCs6bOvN522ZjO2d9rYcC3SBzzY97qoW1t
+         tyV7TaUu7L2v8iIqTgHTD2/vlJG8mxKuOjgRf7Q6I2HrMzEKMmUGcSiqpHpR4e00hvym
+         ESNhtLRhXN4KjydqXlmey9c7TCRwWFynMeae/+phfS1jRFFwsWNc79VSlZWhTdwIBNtI
+         U6PHzziHLBCNR67EMMJC6t5euCB8D43M8RjeHoJOACRbvZqqSCHOaRTnTrJBZ7PwRYuh
+         5eqErZvP59Q4LV1PH0Q5TXS7Wg5CCP5UjOedPJj9g8d+y+rgF1XilQOBDtkZFIwXXmWV
+         tyqQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxefANEDYDTsaQbAZ4dQVPr2cxP9CHuprDQG/QgGoMUTAVZjUJeAa9ZSY9NPKX3IX151TrXyGQD+BE=@vger.kernel.org
+X-Gm-Message-State: AFq9FYI57dYRseozgoOE0kgP04dMapQ+zXUSDLOlCG0Z83vl28D42oLN
+	4vcIoesyiiEpRSwuJlnuSGNJg7FIeeQfJKdn6Xq8KPuzygKH5Cfd03cr5mgUUg==
+X-Gm-Gg: AYBFou0QF2W7lrlPy21NWksMk/fMvmptjAvBiXKYycG73kt6xAClLoXNPGv6p7DuH+R
+	eHnAJX+aLv5bHXwedWQBeN+2sMPKttCBP9eJuRRnPQG5UEfPCSIB7TxrwKodUIRIqKkL871Lnib
+	NnufJAUizh94RXL9LfTi/3WT94CRyjIE3QLat7n4hLzHVRXHUWUr5pm7KBEecIqFApt7CmaSrYd
+	nd1PQnpuUzxl/5nJondNerhu3HujDu1j4vlXKzTDWJlUytIRWfX7bpQJYIbjdn1rG8TNg24iMTy
+	3BwiGkGhKsS07RG3GiW9LAw+LvzkeRFHgnIrt5EYFooCI9zkyQL9dJi2MvapmPx3xaAb1WcO6pT
+	FES4Au1i3jXY3b7IVrnR3kkx7izEFZMLrDRpcUwnmuHveLbYQZdUrZVUaIvdE9g+pD9df40hNTm
+	xodLe7US4exYr9hsEVjuAMt6rZxKsOTnsbAJf+VW/Lan4j54whUPjYeicVO9JZHIUHbqqEu3UyF
+	Re5B1R6
+X-Received: by 2002:a05:6102:cca:b0:7b4:b196:f632 with SMTP id ada2fe7eead31-7be73c89aa8mr401228137.30.1790777970958;
+        Wed, 30 Sep 2026 07:19:30 -0700 (PDT)
+Received: from maclinux ([2803:c600:9110:8ba5:43a9:9b8b:ebdc:6411])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-988d909c4cbsm1793220241.1.2026.09.30.07.19.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 30 Sep 2026 07:19:30 -0700 (PDT)
+From: =?UTF-8?q?Francisco=20Beltr=C3=A1n=20Millal=C3=A9n?= <fbeltranmillalen@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 1/3] usb: hcd-pci: Honour pci_save_state() failure
+Date: Wed, 30 Sep 2026 11:19:12 -0300
+Message-ID: <20260930141914.6678-2-fbeltranmillalen@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260930141914.6678-1-fbeltranmillalen@gmail.com>
+References: <20260930141914.6678-1-fbeltranmillalen@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Add page-selective IOTLB flush using HVCALL_FLUSH_DEVICE_DOMAIN_LIST.
-This hypercall accepts a list of (page_number, page_mask_shift) entries,
-enabling finer-grained IOTLB invalidation compared to the domain-wide
-HVCALL_FLUSH_DEVICE_DOMAIN used by hv_iommu_flush_iotlb_all().
+hcd_pci_suspend_noirq() ignores the return value of pci_save_state() and
+goes on to pci_prepare_to_sleep().
 
-hv_iommu_calc_flush_range() computes the smallest power-of-two aligned
-range that covers the target IOVA region, producing a single flush
-descriptor. This may over-flush when the range is not naturally aligned,
-matching the approach used by Intel VT-d PSI. If the page-selective
-flush fails, the code falls back to a full domain flush.
+The next patch makes pci_save_state() fail, without marking the state as
+saved, when the config space of the device is not accessible.  For such
+a controller pci_prepare_to_sleep() does not work either:
+pci_set_low_power_state() reads the PM control register as all ones and
+marks the device D3cold.  pci_pm_suspend_noirq() then finds a device
+whose power state changed without its state being saved, and warns.
+With an earlier version of the next patch on a MacBookPro14,3, whose
+Thunderbolt xHCI controllers can be inaccessible at this point:
 
-Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
-Reviewed-by: Jacob Pan <jacob.pan@linux.microsoft.com>
-Reviewed-by: Michael Kelley <mhklinux@outlook.com>
-Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
+  xhci_hcd 0000:7d:00.0: PCI PM: State of device not saved by hcd_pci_suspend_noirq+0x0/0x180
+  WARNING: CPU: 7 PID: 96793 at drivers/pci/pci-driver.c:888 pci_pm_suspend_noirq+0x2f4/0x300
+
+Check the return value and, if the state could not be saved, return 0
+without putting the controller into a low-power state.  The PCI core
+then handles it as it handles a driver without a suspend_noirq callback:
+it tries to save the state and to put the device into a low-power state
+itself, which fails in the same way, but without the warning, as the
+power state did not change inside the driver callback.
+
+Move the check that disables wakeup for a dead root hub ahead of it, so
+that it is not skipped.
+
+Today pci_save_state() only fails if a capability save buffer is missing
+or the VC state cannot be saved.  In that case the controller is now left
+in D0 instead of being put into a low-power state with an incomplete
+saved state.
+
+Assisted-by: LLM
+Signed-off-by: Francisco Beltrán Millalén <fbeltranmillalen@gmail.com>
 ---
- drivers/iommu/hyperv/hv-iommu-guest.c | 74 ++++++++++++++++++++++++++-
- include/hyperv/hvgdk_mini.h           |  1 +
- include/hyperv/hvhdk_mini.h           | 18 +++++++
- 3 files changed, 92 insertions(+), 1 deletion(-)
+v2:
+- Rewrote the commit message: the failure handled here comes from the
+  next patch, not from pci_save_state() as it is today.
+- Disable wakeup for a dead root hub before the early return.
+- Dropped Alan's Acked-by because of both changes.
 
-diff --git a/drivers/iommu/hyperv/hv-iommu-guest.c b/drivers/iommu/hyperv/hv-iommu-guest.c
-index 341d70eed592..fe06bd970621 100644
---- a/drivers/iommu/hyperv/hv-iommu-guest.c
-+++ b/drivers/iommu/hyperv/hv-iommu-guest.c
-@@ -383,11 +383,82 @@ static void hv_iommu_flush_iotlb_all(struct iommu_domain *domain)
- 	hv_flush_device_domain(to_hv_iommu_domain(domain));
- }
+ drivers/usb/core/hcd-pci.c |   15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/usb/core/hcd-pci.c b/drivers/usb/core/hcd-pci.c
+index cd2234759..7f8a56425 100644
+--- a/drivers/usb/core/hcd-pci.c
++++ b/drivers/usb/core/hcd-pci.c
+@@ -541,8 +541,6 @@ static int hcd_pci_suspend_noirq(struct device *dev)
+ 	if (retval)
+ 		return retval;
  
-+/*
-+ * Calculate the minimal power-of-two aligned range that covers [start, end]
-+ * (end is inclusive). Returns a single (page_number, page_mask_shift)
-+ * descriptor that may over-flush when the range is not naturally aligned.
-+ */
-+static void
-+hv_iommu_calc_flush_range(unsigned long start, unsigned long end,
-+			  union hv_iommu_flush_va *va)
-+{
-+	unsigned long aligned_start;
-+	unsigned int sz_lg2;
-+
-+	sz_lg2 = max(fls_long(start ^ end), HV_HYP_PAGE_SHIFT);
-+
+-	pci_save_state(pci_dev);
+-
+ 	/* If the root hub is dead rather than suspended, disallow remote
+ 	 * wakeup.  usb_hc_died() should ensure that both hosts are marked as
+ 	 * dying, so we only need to check the primary roothub.
+@@ -551,6 +549,19 @@ static int hcd_pci_suspend_noirq(struct device *dev)
+ 		device_set_wakeup_enable(dev, 0);
+ 	dev_dbg(dev, "wakeup: %d\n", device_may_wakeup(dev));
+ 
 +	/*
-+	 * A valid IOVA range shall not span bit 63. Use the maximum mask
-+	 * so the host can safely perform a full flush.
++	 * If the state could not be saved, most likely because the controller
++	 * is no longer accessible, putting it into a low-power state would
++	 * fail as well and leave it marked as D3cold, and the PCI core would
++	 * then warn that its state was not saved.  Leave it to the PCI core
++	 * instead, as for a driver without a suspend_noirq callback.
 +	 */
-+	if (WARN_ON_ONCE(sz_lg2 == BITS_PER_LONG))
-+		aligned_start = 0;
-+	else
-+		aligned_start =
-+			start & GENMASK(BITS_PER_LONG - 1, sz_lg2);
-+
-+	va->page_number = aligned_start >> HV_HYP_PAGE_SHIFT;
-+	va->page_mask_shift = sz_lg2 - HV_HYP_PAGE_SHIFT;
-+}
-+
-+static void hv_flush_device_domain_list(struct hv_iommu_domain *hv_domain,
-+					struct iommu_iotlb_gather *iotlb_gather)
-+{
-+	u64 status;
-+	unsigned long flags;
-+	struct hv_input_flush_device_domain_list *input;
-+
-+	local_irq_save(flags);
-+
-+	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
-+	/* Clear the fixed header and the single range entry. */
-+	memset(input, 0, struct_size(input, iova_list, 1));
-+
-+	input->device_domain = hv_domain->device_domain;
-+	input->flags |= HV_FLUSH_DEVICE_DOMAIN_LIST_IOMMU_FORMAT;
-+	hv_iommu_calc_flush_range(iotlb_gather->start, iotlb_gather->end,
-+				  &input->iova_list[0]);
-+
-+	status = hv_do_rep_hypercall(HVCALL_FLUSH_DEVICE_DOMAIN_LIST,
-+				     1, 0, input, NULL);
-+
-+	if (WARN_ONCE(!hv_result_success(status),
-+		      "HVCALL_FLUSH_DEVICE_DOMAIN_LIST failed: %#llx (%s)\n",
-+		      status, hv_result_to_string(status))) {
-+		/* Page-selective flush failed, fall back to full flush. */
-+		struct hv_input_flush_device_domain *flush_all = (void *)input;
-+
-+		memset(flush_all, 0, sizeof(*flush_all));
-+		flush_all->device_domain = hv_domain->device_domain;
-+		status = hv_do_hypercall(HVCALL_FLUSH_DEVICE_DOMAIN,
-+					 flush_all, NULL);
-+		WARN(!hv_result_success(status),
-+		     "HVCALL_FLUSH_DEVICE_DOMAIN fallback also failed: %#llx (%s)\n",
-+		     status, hv_result_to_string(status));
++	retval = pci_save_state(pci_dev);
++	if (retval) {
++		dev_dbg(dev, "--> not suspending, state not saved\n");
++		return 0;
 +	}
 +
-+	local_irq_restore(flags);
-+}
-+
- static void hv_iommu_iotlb_sync(struct iommu_domain *domain,
- 				struct iommu_iotlb_gather *iotlb_gather)
- {
--	hv_flush_device_domain(to_hv_iommu_domain(domain));
-+	hv_flush_device_domain_list(to_hv_iommu_domain(domain), iotlb_gather);
- 
-+	/*
-+	 * The hypercall also invalidates non-leaf page-walk caches, so
-+	 * detached page-table pages can now be freed.
-+	 */
- 	iommu_put_pages_list(&iotlb_gather->freelist);
- }
- 
-@@ -439,6 +510,7 @@ static struct iommu_domain *hv_iommu_domain_alloc_paging(struct device *dev)
- 
- 	cfg.common.hw_max_vasz_lg2 = hv_iommu_device->max_iova_width;
- 	cfg.common.hw_max_oasz_lg2 = 52;
-+	cfg.common.features |= BIT(PT_FEAT_FLUSH_RANGE);
- 	/*
- 	 * Hyper-V S1 domains use a 4-level root for IOVA widths up to
- 	 * 48 bits. A 5-level root is used only for wider apertures when
-diff --git a/include/hyperv/hvgdk_mini.h b/include/hyperv/hvgdk_mini.h
-index 5d1338197eee..966945f0504f 100644
---- a/include/hyperv/hvgdk_mini.h
-+++ b/include/hyperv/hvgdk_mini.h
-@@ -497,6 +497,7 @@ union hv_vp_assist_msr_contents {	 /* HV_REGISTER_VP_ASSIST_PAGE */
- #define HVCALL_GET_GPA_PAGES_ACCESS_STATES		0x00c9
- #define HVCALL_CONFIGURE_DEVICE_DOMAIN			0x00ce
- #define HVCALL_FLUSH_DEVICE_DOMAIN			0x00d0
-+#define HVCALL_FLUSH_DEVICE_DOMAIN_LIST			0x00d1
- #define HVCALL_ACQUIRE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d7
- #define HVCALL_RELEASE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d8
- #define HVCALL_MODIFY_SPARSE_GPA_PAGE_HOST_VISIBILITY	0x00db
-diff --git a/include/hyperv/hvhdk_mini.h b/include/hyperv/hvhdk_mini.h
-index 7b9f43b320cd..57b70efe60d4 100644
---- a/include/hyperv/hvhdk_mini.h
-+++ b/include/hyperv/hvhdk_mini.h
-@@ -685,4 +685,22 @@ struct hv_input_flush_device_domain {
- 	u32 reserved;
- } __packed;
- 
-+union hv_iommu_flush_va {	/* HV_IOMMU_GVA_RANGE */
-+	u64 as_uint64;
-+	struct {
-+		u64 page_mask_shift : 6;
-+		u64 reserved : 6;
-+		u64 page_number : 52;
-+	};
-+} __packed;
-+
-+/* HV_INPUT_FLUSH_DEVICE_DOMAIN_LIST */
-+struct hv_input_flush_device_domain_list {
-+	struct hv_input_device_domain device_domain;
-+#define HV_FLUSH_DEVICE_DOMAIN_LIST_IOMMU_FORMAT BIT(0)
-+	u32 flags;
-+	u32 reserved;
-+	union hv_iommu_flush_va iova_list[];
-+} __packed;
-+
- #endif /* _HV_HVHDK_MINI_H */
--- 
-2.52.0
-
+ 	/* Possibly enable remote wakeup,
+ 	 * choose the appropriate low-power state, and go to that state.
+ 	 */
