@@ -1,153 +1,145 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa2-f41.google.com (mail-oa2-f41.google.com [74.125.231.105])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF0F54D98EB;
-	Wed, 30 Sep 2026 15:08:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4130F4F68DF
+	for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 15:12:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790780945; cv=none; b=U82Ooxw5T23FJGv/Ra2qurYcBALYSqmI4CknBq3TAUamrFBFOGnpne63vSCD2mOdb7l/d2yvVIHyfgtCOwHP/dojRyD1NspSr/79ouw0eXP7Dwav1jQJvlOwyB5wvop5oAqyGInQVOT/a8ch4e2AiaMHn05j9UA9ecIEFoJnNoQ=
+	t=1790781163; cv=none; b=tdsf24CG/CTEKzB7JIj3hNu7Uu13O3nA4L8Vhjr4AXFk/0P0xyuwabMsm+yKqJV9rh06GA02v7CrvMl8mtG2fgx7LPAuIbivo+IvYUaY4GPz7PACuSmA7L+cN/qKkZuaPE3TfMuY3279cKauJymriDTlmVhFixvu3jIKgnISUoA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790780945; c=relaxed/simple;
-	bh=e8Phd42DTJdLAnGLVfXXimqbeDjLtZbbv+CnDmezlco=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=tjZke8h2Vex4oHJqia2qxBBPvVSslJDeox8de2FzXrmKtr39dZDK2fJZPnGQ5pqeBVtol1RO9wno416Pv69ZTb8VcNOjuk2YnqYVxAoRy+p949hxd9JH8De0s/LEz89lR76Z2fjcEoxXvSDucRIBpqQdsjvaAP+UgtpQV8DE0tI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fnI098zD; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790781163; c=relaxed/simple;
+	bh=N5TwGmCOg73FQhkQUlqK26vGWZ+6twK0jOc1jidbG9w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=se5A/DY+TNusn38aZU+Srm0i8oupD7AJvmtcQ5ULQkS3MW0s5Trq5Wib7tjVPPBUlR1HVJT3GYDW+j41Xv7O7GdrL45KZqxOKX5xMLrpwSY/CPk1LOr5/djIhCxLeoUAug+YjOAlXW4AJRWUFTMejYs/YumR0KkH6Wp7Iy38mC0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=F2LynHut; arc=none smtp.client-ip=74.125.231.105
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fnI098zD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ED211F00898;
-	Wed, 30 Sep 2026 15:08:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790780936;
-	bh=wvd2NOR9cMCtk5nzpD8yt3d4Z4we1096f0lVjvDem4g=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fnI098zDEckYskRLMdmy1V8DH6dCuRp4LejDojkyG4KW/Edwaak9/orOaNl9ewKjm
-	 t22INuSWaP3I5GOD7MCuZ+caT/lP1azYLtl90+DPfMy7nBTT0JL1Q6SGDxj4vyouQv
-	 pjXAWr2+ReyAYg2IP2LEqspEI3vdjxvmh34RWpGp+yunBEQqB723wGY5CYeWWovujv
-	 zxsYSkgov8E58/cw6HsR83GURTL/CqjSLm7AmTDOFEhRgJjzM+od9CHJclQ6f3phU+
-	 afziWPpg1Mpfe8A6PO8VIAHM6veBTy/tiycCnCvdM6BuBcQ3KZoQs7+30t84DFKeqO
-	 wXfUXNOU26Wvw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 5/7] ath11k: Use VFIO MSI cache when available
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
-In-Reply-To: <20260930140833.576941-6-jtornosm@redhat.com>
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="F2LynHut"
+Received: by mail-oa2-f41.google.com with SMTP id 586e51a60fabf-47bc923fe6aso3478965fac.3
+        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 08:12:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1790781152; x=1791385952; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=i3zztcZwHv33xTSBhcuuRwUuO/mC2YE/oPR+7vCHXWU=;
+        b=F2LynHutv0ZOmuF8vmFQU0cyqiI4GB5kyNhWNIcFmTm03ZYDlIdoeMvOS1ol6pHe7P
+         1opniFMp9w/1hoNxwBw1abApRh1Po/j0x2ZuaQZgt0r7WvI/GTEHkvv7KKThQRNgUeDk
+         U3vhG4nOcBSBbCwSBzxPAF2/N9kbmWUuQeOCbbHXQ+GZ3OEDXh8iCi7m7OhysGURcFuR
+         MYdYJN3ZhgKPd9PQq1QsBlgi+KBVppXhOjswSN+K42z+R3efFI3SH3JDdd9Kub164vap
+         FKr2jNuW6GBhqs4aVFIb+0YT7DujIACVvy1vKyp41BAFenyWoJ63gl+3RGCO5hghcRCU
+         QQ9w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790781152; x=1791385952;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=i3zztcZwHv33xTSBhcuuRwUuO/mC2YE/oPR+7vCHXWU=;
+        b=1nryeIEqI903XrEIIEA65vZyEBsAFIBnvb24lxmGB6FS6U4zGcmZ+IADsGvgDAjUXF
+         YufSXY+IbSr6YgZunqaLKK+xR/4nYN9NVSMFp1USLLvh6viy/p8sKEPdMQ+puGgI0Ky9
+         MvAPA7nBAiyih6jNnYBX+zlXmrL4Uu7iYirdCu00lefNd1iRLoPHX32a2FfyO/DbbQdC
+         vd87u2gxprZYUvB60iWON3bzeZkbxYj64zUmhWZl2HBibx5OgyaZ+/JZxTeQLl9YL77T
+         zngNHPbScZz4hhnjWhnDjHKbcseEnsRWXqEZqbK14Kq/J12kcW1yuSJnVF4qSkoj9zxF
+         aLsQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwcWlckDl7OnR79ppLSJrFTjdZNu7WA0N3t8kGT9gmwUfZlY8ia7u39NMCW7kbrueJpTkHC+WlpS0Y=@vger.kernel.org
+X-Gm-Message-State: AFuF++lnTwG1K+zD13eP0Iz28gnddDPcOEsF/3RTp11HmZVxJjcx40cY
+	7kcRxjnA8KEwlxXoRzoP05t4Zz2OGSAHhsadKTH5U3VurAUkFEjzgFRTRh02g2AHS64=
+X-Gm-Gg: AYBFou082mt+o55JFXBkHfw2d8clhTPMBR28Cp+fO9b7Ymf1zm/9F5zcVG4iVJbEouR
+	yDwkmtf14maQH9RFfAAQmJgsh/Rsg7Dqa3Oz08dHrahF60dua5RNAE9RXqxoLQIFRJOxhEFvTIZ
+	7ikCypoiARXzllCrQe9UtSFQukOgFz3HOwTMgL0Fjn6Qejk1euw3yhLq77iJRcT4G6hJFqN8OEm
+	+yNLNl3l6VIu1WNYrqPCKpKytAVEacunSRjowNcDoKAAXaCMKEYKFzrkEQp+cDuQI/z0U7c2iz+
+	ebougdwzq2PrUsSHdLZC2TvE2z4rBobF8Ts6D25MPs4SA5tLdzZEi3Tdwx5p57Ox1l+RjoMLf25
+	7F8mUKrh70W85+N4rzbwXEatDrZXw64ThIuRc7RS/xWbw7Y9mHrEjfxfG0fqA8J3fFCUS67Y0TO
+	QiZYdn9B/zXI0SEjsUlRH3A3M5uE5LMBdfFMIAtR6mRbUJ
+X-Received: by 2002:a05:6808:23cd:b0:4d6:90d3:e187 with SMTP id 5614622812f47-4f1b9a4dd1fmr1463609b6e.48.1790781151901;
+        Wed, 30 Sep 2026 08:12:31 -0700 (PDT)
+Received: from ziepe.ca ([130.41.10.202])
+        by smtp.gmail.com with ESMTPSA id 5614622812f47-4f1b61be7d8sm1076055b6e.17.2026.09.30.08.12.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 30 Sep 2026 08:12:31 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1xBvyv-0000000BwZW-3H3V;
+	Wed, 30 Sep 2026 12:12:29 -0300
+Date: Wed, 30 Sep 2026 12:12:29 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: bhelgaas@google.com, alex@shazbot.org, jjohnson@kernel.org,
+	johannes@sipsolutions.net, mani@kernel.org, yishaih@nvidia.com,
+	skolothumtho@nvidia.com, kevin.tian@intel.com,
+	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/7] vfio/pci: Add qcom-vfio-pci variant driver
+Message-ID: <20260930151229.GR163130@ziepe.ca>
 References: <20260930140833.576941-1-jtornosm@redhat.com>
- <20260930140833.576941-6-jtornosm@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 30 Sep 2026 15:08:56 +0000
-Message-Id: <20260930150856.8ED211F00898@smtp.kernel.org>
+ <20260930140833.576941-4-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260930140833.576941-4-jtornosm@redhat.com>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] ath11k/pci: guest MSI data unconditionally overwrites host VFIO ca=
-che
-- [Medium] ath11k/pci: early return bypasses ath11k_pci_msi_disable()
-- [Low] PCIe: linear scan of extended config space risks side effects
---
+On Wed, Sep 30, 2026 at 04:08:29PM +0200, Jose Ignacio Tornos Martinez wrote:
+> Add VFIO variant driver for Qualcomm PCIe devices that require
+> MSI address passthrough for VM operation.
+> 
+> Qualcomm ath11k and ath12k WiFi devices have embedded interrupt
+> controllers that require physical host MSI addresses programmed to
+> device registers. In VMs, the driver only sees virtualized guest
+> addresses, causing firmware initialization to fail.
+> 
+> This variant driver:
+> 1. Caches physical host MSI values after allocation
+> 2. Writes them to extended config space with magic signature "QMSI"
+> 3. VM drivers discover and use these values automatically
 
-commit fb991301d679c8e835b3eb00875de8e25f6d571d
-Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+You should probably explain a little be more here
 
-ath11k: Use VFIO MSI cache when available
+1) Linux VM driver fills up the normal MSI-X table
+2) HW has some non-MSI-X table registers
+3) Linux VM driver pokes into the interrupt layer and extracts
+   one of the MSX-X table entries addr/data pair
+4) Linux VM driver now programs that copied addr/data pair into #2
 
-This patch adds support for reading cached host MSI values from the PCI
-extended configuration space when running in a VM via VFIO. This allows the
-firmware to receive physical host MSI addresses rather than guest IOVA
-addresses.
+This is, of course, all wrong. These days it should be using one of
+our mechanisms to allow devices to have their own private MSI
+registers.
 
-> diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless=
-/ath/ath11k/pci.c
-> index c372676b097f5..99a3a709831c1 100644
-> --- a/drivers/net/wireless/ath/ath11k/pci.c
-> +++ b/drivers/net/wireless/ath/ath11k/pci.c
-[ ... ]
-> @@ -488,6 +492,35 @@ static int ath11k_pci_alloc_msi(struct ath11k_pci *a=
-b_pci)
->  	}
->  	ath11k_info(ab, "MSI vectors: %d\n", num_vectors);
-> =20
-> +	/*
-> +	 * Try to get host MSI address from VFIO cache.
-> +	 * When running on a VM, the ath11k firmware requires physical host
-> +	 * MSI addresses and cannot handle guest IOVA addresses.
-> +	 * qcom-vfio-pci writes host MSI values to extended config space with
-> +	 * a magic signature "QMSI" for discovery. Search for it.
-> +	 */
-> +	msi_offset =3D qcom_vfio_find_msi_cache(pci_dev);
+I forget if this is the right way for PCI, but the driver can call
 
-[Severity: Low]
-Does this unconditional linear scan of the extended configuration space risk
-unintended hardware side effects?
+  platform_device_msi_init_and_alloc_irqs()
 
-Calling qcom_vfio_find_msi_cache() loops over the entire extended
-configuration space reading 4 bytes at a time instead of using the standard
-PCIe capability linked-list traversal.
+And directly program the MSI registers with their own special
+interrupts vectors, no copying from MSI-X.
 
-This could trigger side effects if there are clear-on-read registers present
-in the configuration space.
+If the driver is fixed to work like this, as it should be, then it
+fully breaks the scheme you propose here. That's not good.
 
-> +	if (msi_offset) {
-> +		pci_read_config_dword(pci_dev,
-> +				      msi_offset + QCOM_VFIO_MSI_ADDR_LO_OFFSET,
-> +				      &msi_addr_lo);
-> +		pci_read_config_dword(pci_dev,
-> +				      msi_offset + QCOM_VFIO_MSI_ADDR_HI_OFFSET,
-> +				      &msi_addr_hi);
-> +		pci_read_config_word(pci_dev,
-> +				     msi_offset + QCOM_VFIO_MSI_DATA_OFFSET,
-> +				     &msi_data);
-> +
-> +		if (msi_addr_lo && msi_addr_lo !=3D 0xFFFFFFFF) {
-> +			ab->pci.msi.addr_lo =3D msi_addr_lo;
-> +			ab->pci.msi.addr_hi =3D msi_addr_hi;
-> +			ab->pci.msi.ep_base_data =3D msi_data;
+The problem here is not really a qcom problem, and treating it as a
+qcom quirk is why it keeps being stuck, IMHO.
 
-[Severity: High]
-Will this host physical MSI data be unconditionally overwritten later during
-the probe sequence?
+The real issue is that this device MSI scheme does not work in VMs at
+all. It does not work because the VM IRQ design requires the VM to
+trap and modify all the MSI addr/data pairs at the register write.
 
-After ath11k_pci_alloc_msi() correctly sets ab->pci.msi.ep_base_data from t=
-he
-VFIO cache, the probe sequence in ath11k_pci_probe() continues.
+The technically clean solution is to redo the VMMs so they don't
+require that, ie use interrupt remapping so the VM's view of the
+addr/data pair matches physical. That's super hard and will probably
+never happen.
 
-Later, ath11k_pci_probe() calls ath11k_pci_config_msi_data() which does thi=
-s:
+But! Now that we have these device MSI domains I wonder if there is
+some half option to provide a hypercall so the device MSI domains can
+call out to the hypervisor to get the true physical addr/data pair to
+program?
 
-ath11k_pci_config_msi_data() {
-        ...
-        ab_pci->ab->pci.msi.ep_base_data =3D msi_desc->msg.data;
-}
+This is fundamentally an irq layer issue in Linux, not a qcom one.
 
-This appears to overwrite the host MSI data retrieved from the VFIO cache
-with the guest virtual MSI data, which could break interrupt delivery in VM=
-s.
-
-> +			ath11k_info(ab, "VFIO MSI cache at offset 0x%x: addr_lo=3D0x%x addr_h=
-i=3D0x%x data=3D%d\n",
-> +				    msi_offset, msi_addr_lo, msi_addr_hi, msi_data);
-> +			return 0;
-
-[Severity: Medium]
-Does returning early here skip ath11k_pci_msi_disable() and leave the device
-in an inconsistent initialization state compared to the bare-metal path?
-
-By bypassing the ath11k_pci_msi_disable(ab_pci) call just below, the device
-is left with MSI enabled prematurely in the PCI configuration space.
-
-> +		}
-> +	}
-> +
->  	ath11k_pci_msi_disable(ab_pci);
-> =20
->  	msi_desc =3D irq_get_msi_desc(ab_pci->pdev->irq);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260930140833.5769=
-41-1-jtornosm@redhat.com?part=3D5
+Jason
