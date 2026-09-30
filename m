@@ -1,127 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E23044E67E
-	for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 11:04:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88AD94B4031;
+	Wed, 30 Sep 2026 11:13:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790766306; cv=none; b=Ae5MF39d3XwJEwDj6+lQAQ+WJtPT25cKzckHYEEfQwSK8XTgIgsJN38U0kpN4Gc7+lL911veHskPZTrZUkp+KkE6Xp7rv8GGLunZOh9n22vcqOz22rLfJL8gU6u8kTv10at8bqkGrsOj9TwUVHZxHs/IP2w/5YoyCk7N7qq8Ka4=
+	t=1790766816; cv=none; b=j3dtPLOrsCoFJ3db/hZnmj0h4Fg5ew+kQIhxEwNukcX9dT7XoVgMs1DimLDD5OFNegNIB6wF7+Ty1mimQGhUPz1aqvcfhUvXu0WOGU/jn/vtBBwKCgmOa41ArLiIuOXT6WOPcOTc2iXzP1xnnupmUoIxtQ+IiQJuDwtbsHo0eb8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790766306; c=relaxed/simple;
-	bh=HHq9UNquzPDtdMoyccF2ThYvbTD2T/81MxYQXFWnZlc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=e2tqYAAZG35UJtaQVOAoSI5cuYQs+L0Me5GEuaJtGvWB4wZmtNQZ5pWuzdusA6E2+GQQjHEPF4TKolsZN8h2mdJabPQon7mHZ+BdHleXgJtgOqIImqoMuqnIElPLcI4HrUjC/4uWCfAh0EnZ0TjQfpUTFUvZT0GB3nqmP6qblGc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TyYN2FmR; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790766816; c=relaxed/simple;
+	bh=QEM39wlCCg0lvt3nB55HRNjsjsbcQcl20N7cPW6NAug=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
+	 References:In-Reply-To; b=a+XfidJTFnKaNMRG8FcLcusNTJJaVshgoSbaXBOFAUCTUzwieJfCOZ69SeiIRWVqvolvhd/pDTzbLxOeZ+D/AosTZu4bFwW6YL00toTBSRT2MTum602OtNlOg8h2wiRcVgPxwfxw5EGjwycmclZxM5zPDVpIhDC1jMShtg72gLw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L7qo5ffp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TyYN2FmR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C42F1F000FF;
-	Wed, 30 Sep 2026 11:04:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L7qo5ffp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03C1E1F000FF;
+	Wed, 30 Sep 2026 11:13:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790766290;
-	bh=zxQj+5XbcKhkTQlL1PF9LfpzojqCG8+9Ym6F1/dl6wY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TyYN2FmRm5znzZ5GiaMpdnnNZ5KradEXGS/s9mg/kZozYTZ0g9rEHIKBo9d/aC3Ml
-	 d/F2EtRxtzg2DjFVr9XXWWzgCu51A/DqIPfM+Y3m7WQ0b83iqkP25VRdGZrODJtqFj
-	 pkLvWqos57FcSJ3Ygoz2lq6xDN7nam97RzGPFscNZXTYVmd0Ls7N6SjtMzyIeHoTTF
-	 LJMo3FcBM3AIV3T3b31pqjxVGtiGZOEK0tDbdfmYhv00TfdnxTUTaPaAr8tQOFfR6L
-	 uZN6Vgca5kMRA/IKPWW2tKbrHQcZv2R/PSZ3jtsTUcr/ImIy821zb5u4bznPqkSUin
-	 jbQlzGawjvEEg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI: mediatek: Fix integer truncation in fls() and
- clamp size
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sreeraj S Kurup" <sreekuttan2156239@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260930105435.3660-1-sreekuttan2156239@gmail.com>
-References: <20260930105435.3660-1-sreekuttan2156239@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 30 Sep 2026 11:04:49 +0000
-Message-Id: <20260930110450.0C42F1F000FF@smtp.kernel.org>
+	s=k20260515; t=1790766812;
+	bh=jW2HwPUTyH+T8DgW2QqCZduqxGErq/+WJc1xQpFDJ1A=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To;
+	b=L7qo5ffp0c5uKB9Y6kl8uVHMdu59IaAFEAmtC9zlR4EEn8zv04bL2qykM+fXjt413
+	 /+ckREgJ1F5DZMwajN37O92sppzQYAPZReFxX89YbQtum5x6KHxigoisqrpmuvNYcH
+	 8GPcJkKiHckq/RPX5YGnZfvOZSeu+iBDBwxp0+wxlo3k92bXBtzudnA38qag+iUtFw
+	 0vWZT4PmSobqqSthIIGeGsUaAC2H12l4/Cwc99rcBLFwJiHrosKZCtqJDV7qrweBi0
+	 WbgGHxdUY8uwYh2oKdrat9S1t0rzuxP4Bce++3myEHyZCUwVTjh1i6qWFmBxyH3Lu1
+	 5AifSBvT+DwIw==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 30 Sep 2026 13:13:25 +0200
+Message-Id: <DLSLUPDXOA11.VWE3XT1CRSRQ@kernel.org>
+Subject: Re: [PATCH v3 05/10] rust: pci: add num_vf(), to return number of
+ VFs
+Cc: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <aliceryhl@google.com>,
+ <bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
+ <boqun@kernel.org>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
+ <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
+ <markus.probst@posteo.de>, <cjia@nvidia.com>, <smitra@nvidia.com>,
+ <ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
+ <targupta@nvidia.com>, <kjaju@nvidia.com>, <alkumar@nvidia.com>,
+ <acourbot@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
+ <jgg@nvidia.com>, <alex@shazbot.org>, "Peter Colberg" <peter@colberg.org>
+To: "Zhi Wang" <zhiw@nvidia.com>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <cover.1790705494.git.zhiw@nvidia.com>
+ <c65da1c1437da6a543720b1e04e977a665ae2de7.1790759932.git.zhiw@nvidia.com>
+In-Reply-To: <c65da1c1437da6a543720b1e04e977a665ae2de7.1790759932.git.zhiw@nvidia.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] pci: silent hardware window truncation causes unmapped BARs
---
+On Wed Sep 30, 2026 at 12:18 PM CEST, Zhi Wang wrote:
+> +impl Device<device::Core<'_>> {
+> +    /// Returns the number of Virtual Functions (VF) enabled for a Physi=
+cal Function (PF).
+> +    pub fn num_vf(&self) -> i32 {
 
-commit 3807ae15ec6ca796b24e06b510d2cb2153d9a5c8
-Author: Sreeraj S Kurup <sreekuttan2156239@gmail.com>
+For the reasons mentioned in patch 1, I'd make this return u16.
 
-PCI: mediatek: Fix integer truncation in fls() and clamp size
+I suggest to do the converstion with .try_into().expect("pdev->sriov->num_V=
+Fs is u16").
 
-This commit fixes an integer truncation issue by using fls64() for 64-bit
-resource sizes. It also clamps the resulting size_order to a maximum of 31
-to avoid overflowing the 5-bit register field used in AHB2PCIE_SIZE().
-
-> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/control=
-ler/pcie-mediatek.c
-> index 3a3e91cd0c211..ddc7ed28ef843 100644
-> --- a/drivers/pci/controller/pcie-mediatek.c
-> +++ b/drivers/pci/controller/pcie-mediatek.c
-[ ... ]
-> @@ -753,8 +756,13 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_=
-port *port)
->  		mtk_pcie_enable_msi(port);
-> =20
->  	/* Set AHB to PCIe translation windows */
-> +	size =3D resource_size(mem);
-> +	size_order =3D fls64(size);
-> +	if (size_order > 31)
-> +		size_order =3D 31;
-> +
-
-[Severity: High]
-Does clamping the size order here in mtk_pcie_startup_port_v2() cause
-unmapped BARs?
-
-The hardware translation window size is clamped to size order 31, but the
-patch does not adjust the OS-level mem resource (e.g., mem->end). If the
-device tree provides a PCIe memory resource of 4 GiB or larger, the Linux
-PCI core will allocate BARs within the full original window. Because the
-hardware only translates the truncated portion, will CPU accesses to BARs
-placed above the clamped limit fail with a data abort or bus error?
-
-Additionally, using fls64(size) on a power-of-two size computes
-ilog2(size) + 1, which may evaluate to a larger window than requested.
-
-Should the driver reject oversized windows entirely, or shrink the OS
-resource size to match the hardware reality?
-
->  	val =3D lower_32_bits(mem->start) |
-> -	      AHB2PCIE_SIZE(fls(resource_size(mem)));
-> +	      AHB2PCIE_SIZE(size_order);
->  	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
-> =20
->  	val =3D upper_32_bits(mem->start);
-[ ... ]
-> @@ -829,8 +839,13 @@ static int mtk_pcie_startup_port_en7528(struct mtk_p=
-cie_port *port)
->  		mtk_pcie_enable_msi(port);
-> =20
->  	/* Set AHB to PCIe translation windows */
-> +	size =3D resource_size(mem);
-> +	size_order =3D fls64(size);
-> +	if (size_order > 31)
-> +		size_order =3D 31;
-> +
-
-[Severity: High]
-Does this suffer from the same silent hardware window truncation issue as
-mtk_pcie_startup_port_v2() above? The hardware translation window is
-clamped without adjusting the corresponding OS-level resource.
-
->  	val =3D lower_32_bits(mem->start) |
-> -	      AHB2PCIE_SIZE(fls(resource_size(mem)));
-> +	      AHB2PCIE_SIZE(size_order);
->  	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
-> =20
->  	val =3D upper_32_bits(mem->start);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260930105435.3660=
--1-sreekuttan2156239@gmail.com?part=3D1
+> +        // SAFETY: `self.as_raw()` is valid and this call runs in the PC=
+I core callback context.
+> +        unsafe { bindings::pci_num_vf(self.as_raw()) }
+> +    }
+> +}
