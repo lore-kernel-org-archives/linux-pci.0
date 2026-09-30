@@ -1,151 +1,136 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41D44463B8B;
-	Wed, 30 Sep 2026 14:21:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 987474DE728;
+	Wed, 30 Sep 2026 14:25:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790778097; cv=none; b=RL9KHocp/6BAfPAq6H4RUqHoZdvD63JaWl4j60Qe2w6vSDaDtJJABH82KbFUMsWm38wBk4HXy1+CVEsRmEgFlUsLiDwtBCFIVo0HFeMLifxm3Xd4ZyrDgtxvGtYX2x05fc0ULDZzJbNmz5BR5ZLdOSMHpnIUMSPie1dAK7caIMg=
+	t=1790778355; cv=none; b=UM/Yy0XrN1zDL3c1SjmxoWvgVQnpUM00xk1jEox0lWbW894RIpXYVe9joKaGW3CZVIB2zfT2gTr9/pcITjkQXzH2wE1JEtJAQV1RpUPs112c0HWmQfZsGmFW9O2vxdxf8w/aZqxEe+XbnSWQR0Kt2Qw7pf/6V7sVS6ps75exYUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790778097; c=relaxed/simple;
-	bh=qOGGQpcV4adFKXFJPDC7wkDK6ZL2KkF+hBrcaqDSTRU=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=sLf8cWARH/AjBcspJAZkC2/1+FarVZe0Uu3pGCiqzFYB8h5FXzpVFnuCCRqHobiZ+ukqywx9Ujc42a4Z3wLxAGOUnNDwGWSYLwo4rLclBQCURwfBeU6dqpJ+dtZpKyTdGBHJ0znJFonhVcZ7WQgqQjupQxZbvXbpV8BNv97m4wU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HiSo8fE0; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790778355; c=relaxed/simple;
+	bh=sFTRJFqtVYKWAfrFtg2v2Y1AVLhVCYKz9iekFUdvHhA=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
+	 References:In-Reply-To; b=KqC3/64UQAclnrdzaGaS+FbgNDCDovzMFeJRgKxUf945P0iL9aRE5zqyes/4wqm398GZL1ECOoObmS1Mn4jAbs13nLskAnzC/XSfIjw/cnKSu5BXYtn84GJTQ05wSzLHiUkCbbJQ03c9ARRluHrMYqT3S7NH/Nzc2iel2R3BeQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eTppVOQq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HiSo8fE0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BE351F000FF;
-	Wed, 30 Sep 2026 14:21:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eTppVOQq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 328521F000FF;
+	Wed, 30 Sep 2026 14:25:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790778087;
-	bh=xKPNqitElMsSvuJgqRsEtc0NdLLL40K8tqIo1gkfE5I=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HiSo8fE0z6CJsuw6J5MwgKiVzuFk9HsJQnzko4HgB4wM6yYNKwt4AzonDMFKmBA1i
-	 L+AXOeGAUJcL6Cx8j0YnQ/8WbkkGpj/1k8sgwGGIj4pqkMskBjpOROu6XQolaxz/ls
-	 jGBtlMyff0kyYgRik7zCYhZButbs2Iz+376BPKXnYFIoGQ75yDn53P1NPItenGxIQY
-	 z8gQDTEzJwNxJdbd3Gh80PUtVzPhXJ8fUZsOkGa8Ya3P95UIo5unnAsOcRE7YNLevh
-	 IEl761tPSVS7IanHwMCly/O/I5yKFZYiJ4zFJW/xGR72KSCh8cS+wyqpagpBLMWlAr
-	 TYexIvBg0kmDA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/7] PCI: Add pci_find_free_ext_cap_offset() helper
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
-In-Reply-To: <20260930140833.576941-2-jtornosm@redhat.com>
-References: <20260930140833.576941-1-jtornosm@redhat.com>
- <20260930140833.576941-2-jtornosm@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 30 Sep 2026 14:21:27 +0000
-Message-Id: <20260930142127.9BE351F000FF@smtp.kernel.org>
+	s=k20260515; t=1790778343;
+	bh=Jqaukmxoh+YmJmbm/EJ3OHqbjz+fE8i2VWtHgQPGwbo=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To;
+	b=eTppVOQqzCpPEmLEytkG1MLDSXhlxypE36QFo6qp0UrfRANgPu11aWJHiaPip3kNZ
+	 oU7NfPFOorpQ90KxV6rhOYt4e1tzkB4deBOJK2Wxbzu9gS8i3BE+v32nE+m7kN3kqw
+	 8nMVR7aUyZclv9wkIvkruhuDPc7FffLEeVSym5ahgHLGYOwoNBrgWrlg9vLD87KtAE
+	 0enOppQyziCs57SxJzp4WCqmCKukWstT/5J6K4HYxocR8cqthIg62xxl4joo6fZD+7
+	 YFTKHc4ooj1UXldEIyfLypFPJX3kmxlxEmO3KnD7NPVgb9hPjXQMZ5R8nE0bghpH+Q
+	 bztKY0xT9D5eA==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 30 Sep 2026 16:25:36 +0200
+Message-Id: <DLSPXUPSF0TC.3PC9F8RTDV1IL@kernel.org>
+Subject: Re: [PATCH v3 08/10] rust: pci: add SR-IOV enable and disable
+ tokens
+Cc: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <aliceryhl@google.com>,
+ <bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
+ <boqun@kernel.org>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
+ <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
+ <markus.probst@posteo.de>, <cjia@nvidia.com>, <smitra@nvidia.com>,
+ <ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
+ <targupta@nvidia.com>, <kjaju@nvidia.com>, <alkumar@nvidia.com>,
+ <acourbot@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
+ <jgg@nvidia.com>, <alex@shazbot.org>, "Peter Colberg" <peter@colberg.org>
+To: "Zhi Wang" <zhiw@nvidia.com>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <cover.1790705494.git.zhiw@nvidia.com>
+ <9b092d339961f744c7ded1e4f21911b66c80ecb4.1790759932.git.zhiw@nvidia.com>
+In-Reply-To: <9b092d339961f744c7ded1e4f21911b66c80ecb4.1790759932.git.zhiw@nvidia.com>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [High] pci: infinite loop in pci_find_free_ext_cap_offset() without TTL
-- [High] pci: hardcoded 64-byte size in pci_find_free_ext_cap_offset() clob=
-bers large capabilities
-- [High] pci: out-of-bounds config access via integer underflow in pci_find=
-_free_ext_cap_offset()
-- [Medium] pci: stateless allocation in pci_find_free_ext_cap_offset() caus=
-es resource collisions
---
+On Wed Sep 30, 2026 at 12:18 PM CEST, Zhi Wang wrote:
+> +pub struct SriovEnable<'callback> {
 
-commit cd8d51b3f77c9157b1c6d30b169fe7c04efaecb1
-Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+I understand why you chose 'callback, but I think just 'a is good enough.
 
-PCI: Add pci_find_free_ext_cap_offset() helper
+> +    pdev: &'callback Device<device::CoreInternal<'callback>>,
+> +    num_vfs: u32,
 
-This commit adds a helper function to find free space in the PCI extended
-configuration space. It scans the extended capability chain and returns an
-offset to a gap of at least the requested size, intending to allow VFIO
-variant drivers to use unused space.
+Please see patch 1.
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b2879a6be5f80..31f70e2982b63 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-
-[ ... ]
-
-> +int pci_find_free_ext_cap_offset(struct pci_dev *dev, size_t size)
-> +{
-> +	int pos =3D PCI_CFG_SPACE_SIZE;
-> +	int last_cap_start =3D 0;
-> +	int free_offset;
-> +	u32 header;
-> +	int next;
-> +
-> +	if (!pci_is_pcie(dev))
-> +		return 0;
-> +
-> +	while (pos >=3D PCI_CFG_SPACE_SIZE) {
-> +		if (pci_read_config_dword(dev, pos, &header))
-> +			break;
-> +
-> +		if (header =3D=3D 0 || header =3D=3D 0xffffffff)
-> +			break;
-> +
-> +		last_cap_start =3D pos;
-> +		next =3D PCI_EXT_CAP_NEXT(header);
-> +		if (!next)
-> +			break;
-> +		pos =3D next;
-> +	}
-
-[Severity: High]
-Could this loop indefinitely if a malicious or buggy PCI device presents an
-extended capability chain where the next pointer points backwards or forms
-a cycle? It looks like this traversal lacks the Time-To-Live (TTL) limit
-that is present in other helpers like pci_find_next_ext_capability().
-
-> +
-> +	/*
-> +	 * Use space after the last capability. We align to the next capability
-> +	 * boundary (typically 4-byte aligned). Start at a safe offset past the
-> +	 * last capability - capabilities vary in size, so use a conservative
-> +	 * offset. Most extended capabilities are <=3D 64 bytes.
-> +	 */
-> +	if (last_cap_start) {
-> +		free_offset =3D last_cap_start + 64;
-> +		free_offset =3D ALIGN(free_offset, 4);
-
-[Severity: High]
-Is a hardcoded 64 bytes always sufficient here? Some standard capabilities
-are larger than 64 bytes (for example, AER is 72 bytes, and VSEC/DVSEC can
-be up to 4KB). If the device's last extended capability exceeds 64 bytes,
-would this offset fall inside the bounds of the active capability and lead
-to data corruption when written?
-
-> +		if (PCI_CFG_SPACE_EXP_SIZE - free_offset >=3D size)
-
-[Severity: High]
-Can this subtraction result in an integer underflow?
-
-If the last capability starts near the end of the configuration space such
-that free_offset exceeds PCI_CFG_SPACE_EXP_SIZE (4096), the subtraction
-would yield a negative integer. Because size is a size_t, wouldn't the
-negative integer be implicitly promoted to a very large unsigned value,
-bypassing this capacity check and returning an out-of-bounds offset?
-
-> +			return free_offset;
-
-[Severity: Medium]
-Because this offset is returned without reserving the space in the
-capability chain, could multiple callers receive the exact same offset?
-This stateless allocation appears like it might cause multiple subsystems
-or quirks to overwrite each other's data at the same offset.
-
-> +	}
-> +
-> +	return 0;
 > +}
-> +EXPORT_SYMBOL_GPL(pci_find_free_ext_cap_offset);
+> +
+> +impl<'callback> SriovEnable<'callback> {
+> +    /// Returns the number of VFs requested for this callback.
+> +    pub fn num_vfs(&self) -> u32 {
+> +        self.num_vfs
+> +    }
+> +
+> +    /// Enables between one and the requested number of VFs.
+> +    ///
+> +    /// VF drivers can probe before this method returns, so the PF resou=
+rces they access must
+> +    /// already be initialized. The returned guard disables the VFs if s=
+ubsequent setup fails.
+> +    /// Return it from `sriov_enable()` to leave the VFs enabled on call=
+back success.
+> +    pub fn enable(self, num_vfs: u32) -> Result<SriovEnabled<'callback>>=
+ {
+> +        if num_vfs =3D=3D 0 || num_vfs > self.num_vfs {
+> +            return Err(EINVAL);
+> +        }
+> +        let num_vfs =3D c_int::try_from(num_vfs).map_err(|_| EOVERFLOW)?=
+;
+> +
+> +        // SAFETY: The PF's driver data and registration remain installe=
+d throughout this callback.
+> +        // The registration owns final VF teardown after the enable guar=
+d is disarmed.
+> +        if unsafe { (*self.pdev.as_raw()).vf_registration_data_rust }.is=
+_null() {
+> +            return Err(ENODEV);
+> +        }
+> +
+> +        self.pdev.enable_sriov(num_vfs)?;
+> +        Ok(SriovEnabled {
+> +            pdev: Some(self.pdev),
+> +            num_vfs,
+> +        })
+> +    }
+> +}
+> +
+> +/// Enabled VFs awaiting successful completion of `sriov_enable()`.
+> +pub struct SriovEnabled<'callback> {
+> +    pdev: Option<&'callback Device<device::CoreInternal<'callback>>>,
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260930140833.5769=
-41-1-jtornosm@redhat.com?part=3D1
+This doesn't need to be an Option.
+
+> +    num_vfs: c_int,
+> +}
+> +
+> +impl SriovEnabled<'_> {
+> +    #[expect(dead_code)]
+> +    fn disarm(mut self) -> c_int {
+> +        self.pdev =3D None;
+> +        self.num_vfs
+
+Instead of the Option dance, you can use ManuallyDrop to prevent the destru=
+ctor
+from running.
+
+> +    }
+> +}
+> +
+> +impl Drop for SriovEnabled<'_> {
+> +    fn drop(&mut self) {
+> +        if let Some(pdev) =3D self.pdev.take() {
+> +            pdev.disable_sriov();
+> +        }
+> +    }
+> +}
