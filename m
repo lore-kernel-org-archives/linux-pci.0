@@ -1,145 +1,156 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61F184F30FE;
-	Wed, 30 Sep 2026 15:17:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66B904E50B5;
+	Wed, 30 Sep 2026 15:29:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790781475; cv=none; b=X6MFdL1LdSMMoOPDGkMN/+bgpB0zEH0VIaiTaI/0j27kZDNy9nqyJ9ClFTOTZgg7Gbx+OxTApD99sv9nwdOVUyDivIyZIDGqW/x/BxMpusWYzmVY5DSc3F0ifkAPJIabrRbCEIywfQBRrRByQxlQv5k5TfzyImaV8OJh/ON4XNE=
+	t=1790782151; cv=none; b=t8457B/BTPSx2KCvVp/pk3vGWQI+D/sqU+xqVyvn43qpPzGT76B/qIOz57o1W2o+gPTakH/Mna2osOn4FrCRa25DQGZ0abzVuCgBIJYkTcWDNvMFAXk6+CugLaOtRKm4lktglO0Hy5W2qQkZfjUf2qSnS9gwgo6PRq9R2sCrGDM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790781475; c=relaxed/simple;
-	bh=IpHiY1hRZ4ZqoNtBptXW5wIqv/+HeqkF2zParF6pE6M=;
+	s=arc-20240116; t=1790782151; c=relaxed/simple;
+	bh=1PAjXxgNFSKEiVlKNvm7/ZzcpiA6ddBRTLLTxNa1uxM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=GBWCzwGgi18uzCRdrpAoLkdJVGmYxs8D/1QnftcmwCLeTWQhoHlfeYFTlb8cXDM9gnpv+uTUkSCddVv1J7b27NQYDaNx8JT2QjuwUlEANbLPQn8Q4S8/E6NZp7MwL6yXgAffgTxqcH8vfZjuXxILCxJgVYp+yMXmaX73rXQaFtk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ELHyD1m1; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=X9kliD2DpfRtjKiRhA/uARDHpyo74Ad+dKt8YQIniclQKEh72XDIYSI5X6vuoTYKaxVJLu8TC7T5S4XNAMW22MDq2f4vVJ8sqH8tBE+sRpya66DxFTadV3wYhrD5hfUCEwMDPSdyHHY2wca0e2TnYGv36xSSG4isMMTSb7gJSFE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fhGB2WG0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ELHyD1m1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDE401F00893;
-	Wed, 30 Sep 2026 15:17:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fhGB2WG0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 571EE1F000FF;
+	Wed, 30 Sep 2026 15:29:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790781466;
-	bh=UNu5zVZ7xQk/ROVl1xUlzSAPPPInMy0HhdC6GL98V/I=;
+	s=k20260515; t=1790782142;
+	bh=FBj8YD+zBJYlD1qZQv2Nlq97notj5/p8p6iJ2wnueTQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ELHyD1m1qINrGFl75geurTwbL0VhY90bNmyPqY3PiKjtHzcdj2/GDN1AKkcLGNB0o
-	 pghQ91P62hdv1JQJ+cXxen33tPObPPTtMx/leNzcWaC+jRIOAIgnEm50ZXhMqBCZVS
-	 hBv+iGyCQZ3G2L20Kzmhl+aDOZNRx9hoN9PkdTuJKv+tZal8w57CyBOAYojjdJL0P4
-	 JH/pUfdgpzessKI5Yz5JvBVRmzoyZ/sAhb/nCfQfClR7xnn8NbXznQ61rR3FiNIDBe
-	 6wVda1OdD0lPcKLnK0QN3Fx5jS16PWXBoZND32onk+r9sVYuCzr11LHx9r4hBEDxi5
-	 wi7A591tHLZsQ==
+	b=fhGB2WG08jAc/DoJCQlEL+qqI8onUMEYqXrMnARC4s54FTN4Zsq/1iD36QVEzjwv7
+	 GkDTHBjB2xNA6WQBZynG1ErFyj++toTVN41N52EhH5qpMKKYsGiXEkDyq91ubnqgc0
+	 8AdGx8bbxBEEPfmxWr/jaqKYcn/SgmajYgQ4H9V6ULIaIUttwgfSwvz/Q5k8KVa2uR
+	 jvlayEZsEC506Kb5es5urlRPdQO9ZxSNOedjzrhheZIFIu8nKUAkVQzl2+YyADZpJS
+	 Hv7HeKBgbI4E5+DYyVoq7hfJVChy9n2SwkEFdBM0WufAZqqZkhKMsSRvwOi0A4ipEW
+	 q4du4H2SiiK7Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 6/7] ath12k: add PCIe link recovery retry
+Subject: Re: [PATCH 7/7] ath12k: Use VFIO MSI cache when available
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
 Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
-In-Reply-To: <20260930140833.576941-7-jtornosm@redhat.com>
+In-Reply-To: <20260930140833.576941-8-jtornosm@redhat.com>
 References: <20260930140833.576941-1-jtornosm@redhat.com>
- <20260930140833.576941-7-jtornosm@redhat.com>
+ <20260930140833.576941-8-jtornosm@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 30 Sep 2026 15:17:45 +0000
-Message-Id: <20260930151745.DDE401F00893@smtp.kernel.org>
+Date: Wed, 30 Sep 2026 15:29:01 +0000
+Message-Id: <20260930152902.571EE1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] ath12k: infinite loop in panic handler due to jiffies-based timeout
-- [Medium] ath12k: 5-second busy-wait loop using mdelay() causes severe CPU=
- stall
-- [Medium] ath12k: missing post-loop check causes spurious timeouts on pree=
-mption
+- [High] ath12k: ath12k_pci_config_msi_data() overwrites cached host MSI da=
+ta
+- [Medium] ath12k: qcom_vfio_find_msi_cache() linearly scans PCIe config sp=
+ace
 --
 
-commit 5337b864dac2a64cb78f0c14498962bdb92990b4
+commit e6e6b7a0866fae15d51a21b4502b67de316ac9af
 Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 
-ath12k: add PCIe link recovery retry
+ath12k: Use VFIO MSI cache when available
 
-This patch modifies ath12k_pci_soc_global_reset() to add a retry loop
-waiting up to 5000ms for the PCIe link to recover after a global reset.
-It returns an error if the link remains down, preventing continued MHI
-initialization with a dead link.
+This patch reads physical host MSI addresses from a VFIO cache exposed in
+the PCI extended configuration space, allowing the ath12k firmware to
+handle interrupt configuration in virtualized environments.
 
 > diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless=
 /ath/ath12k/pci.c
-> index af0e882fd0b51..65712486d3127 100644
+> index 65712486d3127..832d3cf652d9d 100644
 > --- a/drivers/net/wireless/ath/ath12k/pci.c
 > +++ b/drivers/net/wireless/ath/ath12k/pci.c
-
 [ ... ]
-
-> @@ -206,14 +208,29 @@ static void ath12k_pci_soc_global_reset(struct ath1=
-2k_base *ab)
+> @@ -812,6 +816,39 @@ static int ath12k_pci_msi_alloc(struct ath12k_pci *a=
+b_pci)
 > =20
->  	mdelay(delay);
+>  	ath12k_info(ab, "MSI vectors: %d\n", num_vectors);
 > =20
-> -	val =3D ath12k_pci_read32(ab, PCIE_SOC_GLOBAL_RESET);
-> -	if (val =3D=3D 0xffffffff)
-> -		ath12k_warn(ab, "link down error during global reset\n");
-> +	/* Wait for PCIe link to recover, especially important in VM environmen=
-ts
-> +	 * where timing can vary significantly from bare metal.
+> +	/*
+> +	 * Try to get host MSI address from VFIO cache.
+> +	 * When running on a VM, the ath12k firmware requires physical host
+> +	 * MSI addresses and cannot handle guest IOVA addresses.
+> +	 * qcom-vfio-pci writes host MSI values to extended config space with
+> +	 * a magic signature "QMSI" for discovery. Search for it.
 > +	 */
-> +	timeout =3D jiffies + msecs_to_jiffies(5000);
-> +	while (time_before(jiffies, timeout)) {
+> +	msi_offset =3D qcom_vfio_find_msi_cache(ab_pci->pdev);
+
+[Severity: Medium]
+Does this call perform an unsafe and unstandardized linear scan of the PCIe
+extended configuration space?
+
+Looking at qcom_vfio_find_msi_cache() in include/linux/qcom_vfio.h:
+
+static inline int qcom_vfio_find_msi_cache(struct pci_dev *pdev)
+{
+	...
+	for (offset =3D 0x100; offset <=3D 0xf00; offset +=3D 4) {
+		if (pci_read_config_dword(pdev, offset, &magic))
+			continue;
+		...
+
+Performing a linear dword-by-dword read of the entire PCIe extended
+configuration space violates PCIe specifications. Reading unimplemented spa=
+ce
+can generate Unsupported Request (UR) errors, potentially triggering Advanc=
+ed
+Error Reporting (AER) events or system machine checks on certain platforms.
+
+Could this traversal use the standard PCIe linked list of Extended
+Capabilities (e.g., standard DVSEC or VSEC headers)?
+
+> +	if (msi_offset) {
+> +		pci_read_config_dword(ab_pci->pdev,
+> +				      msi_offset + QCOM_VFIO_MSI_ADDR_LO_OFFSET,
+> +				      &msi_addr_lo);
+> +		pci_read_config_dword(ab_pci->pdev,
+> +				      msi_offset + QCOM_VFIO_MSI_ADDR_HI_OFFSET,
+> +				      &msi_addr_hi);
+> +		pci_read_config_word(ab_pci->pdev,
+> +				     msi_offset + QCOM_VFIO_MSI_DATA_OFFSET,
+> +				     &msi_data);
+> +
+> +		if (msi_addr_lo && msi_addr_lo !=3D 0xFFFFFFFF) {
+> +			ab_pci->msi_addr_hi =3D msi_addr_hi;
+> +			ab_pci->msi_addr_lo =3D msi_addr_lo;
+> +			ab_pci->msi_ep_base_data =3D msi_data;
 
 [Severity: High]
-Will this create an infinite loop during a kernel panic?
+Does this cached host MSI data get overwritten shortly after it is saved he=
+re?
 
-The panic handler ath12k_pci_panic_handler() executes via the panic notifier
-chain:
+When the driver probes in a VM, ath12k_pci_probe() unconditionally calls
+ath12k_pci_config_msi_data(). In ath12k_pci_config_msi_data(), it directly
+overwrites msi_ep_base_data with the guest's virtual MSI data:
 
-ath12k_pci_panic_handler()
-    ath12k_pci_sw_reset()
-        ath12k_pci_soc_global_reset()
+static int ath12k_pci_config_msi_data(struct ath12k_pci *ab_pci)
+{
+	...
+	ab_pci->msi_ep_base_data =3D msi_desc->msg.data;
+	...
+}
 
-Since interrupts are disabled during a panic, jiffies does not advance. If
-the PCIe link fails to recover, which is common during a system crash, does
-this loop evaluate to true indefinitely and prevent kexec or reboot?
+Will this defeat the VFIO cache mechanism by replacing the host MSI data wi=
+th
+the guest's virtual MSI data, preventing the device from receiving hardware
+interrupts in a VM?
 
-> +		val =3D ath12k_pci_read32(ab, PCIE_SOC_GLOBAL_RESET);
-> +		if (val !=3D 0xffffffff) {
-> +			link_recovered =3D true;
-> +			break;
+> +			ab_pci->msi_addr_cached =3D true;
+> +
+> +			ath12k_info(ab,
+> +				    "using host MSI from VFIO at offset 0x%x: addr_lo=3D0x%x addr_hi=
+=3D0x%x data=3D%d\n",
+> +				    msi_offset, msi_addr_lo, msi_addr_hi, msi_data);
+> +			return 0;
 > +		}
-> +		mdelay(20);
-
-[Severity: Medium]
-Does this busy-wait cause a severe CPU stall?
-
-A 5000ms busy-wait monopolizes the CPU, causing a severe latency spike. In a
-virtualized environment, which this patch targets, it can starve other vCPUs
-or host tasks, and risks triggering RCU stall warnings.
-
-Since mdelay() relies on a spinning loop and actively consumes 100% of the
-CPU instead of yielding, should msleep() or context-aware wait functions be
-used for delays this long outside of atomic contexts?
-
-> +	}
-> +	if (!link_recovered) {
-
-[Severity: Medium]
-Can this cause a spurious timeout if the thread is preempted?
-
-If the thread is preempted or descheduled during or just after the mdelay()
-call, which is common in VM environments due to vCPU scheduling, jiffies may
-advance past the timeout.
-
-When the loop terminates due to time_before() evaluating to false, it retur=
-ns
--ETIMEDOUT without verifying the register one last time. Does this ignore t=
-he
-possibility that the hardware condition was satisfied during the preemption
-window?
-
-> +		ath12k_err(ab, "PCIe link failed to recover - device may need power cy=
-cle\n");
-> +		return -ETIMEDOUT;
 > +	}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260930140833.5769=
-41-1-jtornosm@redhat.com?part=3D6
+41-1-jtornosm@redhat.com?part=3D7
