@@ -1,246 +1,364 @@
-Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazon11012012.outbound.protection.outlook.com [52.101.53.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D3723DDB19;
-	Thu,  1 Oct 2026 23:14:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.53.12
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790896478; cv=fail; b=cYgzdwok3i2XW8bGS7oEWwNoEGoLOtenwUPTE0N8tOgiKKISmJp3jhX2E7/CKXP8UruaLHsuOusFwROes24MShYZgl3GIUBOTc2w2vPocK/XSpew3fe1DgMxpLF8MVLyuowTetnoJ9W0Z/qdzdDFQEDCGvr2duW6+SVABaqM3Oo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790896478; c=relaxed/simple;
-	bh=7DBYf5LmTpUfeMJdVzeulhCln0T4DUh94XP2utnf0TA=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=U08PvooYW8LYxti7fPmUbp8PEp/zoyofksg851BnSv/77AUWQnyAi8YRTTbO2J0+R4F08U2cyKqVGQK6y6UibpHh5ymJEdCXloF6S25flSNnYoyf8QKKh67caewqZuB1ItKaWmO6JywhT7E1q1GYvpAaYgIWJ/lIoQWvitLnxQg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=H1FJ5UTv; arc=fail smtp.client-ip=52.101.53.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC94C3C3C08
+	for <linux-pci@vger.kernel.org>; Thu,  1 Oct 2026 23:21:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.197
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790896909; cv=none; b=Kq8NWyqlbZq8Na6XzJ/H4zORryTVB0UvRII/ioc3ncawtXXDUrKH7SUqA+d1bPooEAT46eW2FAm6sY2wIiE1Mu4x7cZ/z+YNrMV/kYDRRp0jWGoXygSZwl+h/Djn683ZOJtzejZLjlF/+IHCzyFqjDwVr6nReHN9Cf9mxe5LcCQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790896909; c=relaxed/simple;
+	bh=CAQJ4AH9ck0dNustqMu2MOb79P0N7gK3NmW0EHyVxR8=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=Tzriqkx831P6Pxp5C0zps3E9VQe5mUyx6uU5W2XvDZ0rpJEWzHkSmJChS2aPSiHvRlAymqOFpK2ht0RzcPkEMW8z1GzXqcdpuREiCYuJUtacHOdkm3vY0dRt/glzoqB1QiIh7aii4EC9S5ogmkmm0+JKDgxUkeFRhENcwyrjeY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=p7hZyx9x; arc=none smtp.client-ip=209.85.214.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="H1FJ5UTv"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=cw8nZWC1sDHJkllk8CEuq4A4sQHxyI/oICdOsMd67kq96gD6F6XqMns2x294yloKN0+f5fcUb9ESfxmdmFJdopQS4rKhNReV3R5SU2AfL+pRau6Y1rSZbeGtSPifrvxTA9rrppP7U89l3pNf9GPHRBVWpsVWW8YvRnzSPcpRkPS8p4Y9F8Vj4yti2y7+J+U6TnRwWVBoLLacxN0tYxmo7kVK+gOccKg6qdkqJJFlHeniGTSNy6qNn6zgGe0YRKQjtTk0+/gCrvzeTfQpCthGsVNBvrXwfkBltid71gsrgZhrx5WXDNawiFK/9H3lJcYv/ITYybo+LK8JR1hJRZ6q3Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=AltdZD4GOuiLP8wxy6aCZdZ4P87ANnQoUAxLEMq6SLk=;
- b=L7RQX+Ds8RPKl7fglsBC6LwyfLAdSoNXe5QB30dfzj9H2UCsvibXqWmtVA7Gb/sEBNTrK/wDhgJ/KVrNoUybjLXKl5QdmAWcGXpYZwr6MDEN79lg7vCsUV2NxWAx8EVQkcr03hk/pHs5/pr80vCthY/2azhSzAUXP7XRrACg7iQ0nt8EvjZoKxLsUHjIwjaKe0UfIBkbgvATtSdoNL0qYDdsPsk6A6ysMcJEYGweO7eYFXfxxAu5GRBEaLZ3kaBr5kzbndbWayRujpkuHfQ7zcml3Pxiidq0hWwNaFJuLdkP0VZ+F8K9Zr59JUVvrgYMlUQeJgRU+PkIOFutdiRffg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AltdZD4GOuiLP8wxy6aCZdZ4P87ANnQoUAxLEMq6SLk=;
- b=H1FJ5UTvAbGcduWlv3PCf9e8f0Que5ItbnwkSftLN5BtaEyJ+S6IJxOadOlkZk/dM5RnhbdbVjCIyEj+ewtqGTHvsEQ/X/XxYQkQn97aHX8q0kCkBVzhu5aOXvWI6xYIYrLs3B6ZhpUzyi0BbFIggvBbIWWCYM4V/A8qphwZaDsYHAiqF7wIH9l2zmE5FGVeRNQ0UCpOajvev7k/VZQW6Lf9xpKNI4WpqVed0kKOWT7gQEjIm4gPgBQy1hi5Dmg3JYCwjybKm9eXTNvPTwzrk9tW/KPiVXDqI8GPpEQwEseRkVqgEAC3VGCzyJOSoL2tPQIASFct1w+QNJsVG28RjA==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from LY0PR12MB727857.namprd12.prod.outlook.com
- (2603:10b6:408:3ba::5) by MN6PR12MB8513.namprd12.prod.outlook.com
- (2603:10b6:208:472::13) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.16; Thu, 1 Oct
- 2026 23:14:32 +0000
-Received: from LY0PR12MB727857.namprd12.prod.outlook.com
- ([fe80::843e:82cd:41ca:f522]) by LY0PR12MB727857.namprd12.prod.outlook.com
- ([fe80::843e:82cd:41ca:f522%5]) with mapi id 15.21.0451.022; Thu, 1 Oct 2026
- 23:14:30 +0000
-Message-ID: <c5e6a8b0-c850-47d4-8513-649507f05b88@nvidia.com>
-Date: Thu, 1 Oct 2026 16:14:27 -0700
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v13 09/15] cxl: Cache endpoint HDM state during PCI
- enumeration
-To: "Cheatham, Benjamin" <benjamin.cheatham@amd.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
- Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>,
- Jonathan Cameron <jic23@kernel.org>, Vishal Verma
- <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
- alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20260922083924.2451158-1-smadhavan@nvidia.com>
- <20260922083924.2451158-10-smadhavan@nvidia.com>
- <71af56f9-6e2e-4210-9f67-386e29f45ccc@amd.com>
-Content-Language: en-US
-From: Srirangan Madhavan <smadhavan@nvidia.com>
-In-Reply-To: <71af56f9-6e2e-4210-9f67-386e29f45ccc@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: PH7PR17CA0066.namprd17.prod.outlook.com
- (2603:10b6:510:325::15) To LY0PR12MB727857.namprd12.prod.outlook.com
- (2603:10b6:408:3ba::5)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="p7hZyx9x"
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2d001671a54so70721975ad.2
+        for <linux-pci@vger.kernel.org>; Thu, 01 Oct 2026 16:21:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1790896907; x=1791501707; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=bH2Pq1q5pIyFrXqiHygcqwFBcPzQ4OFyA1DBLvgDPs4=;
+        b=p7hZyx9xYh2xwu8ZQ7RzWp/EzAw2Y7pKyJnhlIDlxtyizVh88DTln53EujRtxt2BUL
+         wf2oO2a3t6v/aMOlakssNxrb8STeKlJGR4sADp0U0i1nXybwjvHmT3/hNN/6ohapnErq
+         WZoXMHFrUlV8M0EaZrZVQwn9MnnvrQbgUFMLITqPkpkIpUXOWe14RLOqdMjJmJhtGUFE
+         yY7qIT+6K61yXP6MhPHnapz7ulA8t5NKQ3nMUxYyEzbqwUTcW5Ms7RYEoHAq+7hFoYlv
+         5mU5hBJisLabqRIMw/fQyIY7EQrd2/NN5NjtxxMCYICzQsUhNNPkboWMX4oE/wIUQzjz
+         DsXg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790896907; x=1791501707;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=bH2Pq1q5pIyFrXqiHygcqwFBcPzQ4OFyA1DBLvgDPs4=;
+        b=JWQNVtwI2Pouqrtu3+zghIx3pEhexjTnn0Bx7OmAeUcX2nStHhHGPpYT8I7/jwYpyy
+         wlgQ9SJDDRpdgjAiLaqwmwp++QacGus5sPD1GaLu9XUaTLFLLOrDkxwvJx0vr1PRITTx
+         Vbyfm4QPra9liJpjkTpOOonfooa8lVZNJ4r7kbWTB+vPxZE0jM2taZw3p8RtIx//UHEK
+         6f53cfNqhjiwe/Y293KO+IipVPqLNlyxAMoxFBb6czbRI3WrMVLOpgHkDqEpbodsAHUS
+         mHySXtME8pLXtXOFy2JUfaAE+yrR3oOSa6We/gz6l7pCOKTUj05v+xzZXiDCqsM+Gs7w
+         L/Ow==
+X-Gm-Message-State: AFq9FYKkReaijGgi1YBXIvjEj7sI0iCiadH0FPzpBkxzgwl5fc6YuCOR
+	vMEdaoxBWn6h40ni5iweZZdT4+sgMQqKwj5uK5bPO3MIyfiAA+N9e8MlACwq+MGlNeoq4uxEtNO
+	11UdPJSyvVv6sFA77cVAzkrzVbJ80y+uog1/i5N+HHzK1YbZWBLQOSGMpCFcVemAMuTqVYWtMaH
+	gHHQt1hTMYGgKlwPj49NJeEWDVL3WzP3G6wx2NY5p1q+CsyTQ7AkE=
+X-Received: from pldv20.prod.google.com ([2002:a17:902:ca94:b0:2e2:f25a:7b5])
+ (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:902:e807:b0:2dd:ad74:6d16 with SMTP id d9443c01a7336-2e49b6add39mr7150245ad.28.1790896906728;
+ Thu, 01 Oct 2026 16:21:46 -0700 (PDT)
+Date: Thu,  1 Oct 2026 23:21:07 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LY0PR12MB727857:EE_|MN6PR12MB8513:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0e9e766b-5b55-464a-115f-08df2011bf31
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|23010399003|1800799024|376014|7416014|921020|4143699003|56012099006|10067099003|11063799006|22082099003|18002099003|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	lQI7Dj1+KXl70zgdyNu4FC9EOfhpdPCQ7yCvKM+/bNbCTJSZ73ntIuvEsvEXKsFnuDtD5mjyh+KparWnP8N8IU+DIJiNsGtdqRswg0f0pptglX1DMsuPZVg0dd0S9S14rW6+KDCUe25vIWzVDfyIwR4psAzxVcOIc3ZYzLmxUzSTtaqDFpJEZgaG/QID514PKbzxsva6QkfiJMn9dYKnbRnABdV7we1rThFlHLTDCVIf3HV5XvT9uX7Y1UxhHSI8IvvmlXhVhyz61WHeLHivfpp923VXLZ0rSzr1WJVUvr3WerFq2Swf/nTsFCSLa0b9lQeKnOdvwOhR+X3T7bZRWprz+t/4tmF/YVgjaGDvYIhZWT2yem9mofyznMeLUUIE6RD2gK/77nVxAG2LyI+ADtIVJqTTWfYaVdHckEkCZI2bGY5C34a6EgR/6BA+yZnhdBdjbrL2GvFNvlIOscTQ0EV4dIPXztrmrO6qqwe4zqnxsgCpgU9r2ZYMImqBwB5IsSCmbEk6M3w/C7hfTvRxsp4ZQ1vRUbTa1nTWiq0ifpKGHpjB+VTx6RUXa+w+2wiztuqo795KDDoI876en3X0Xe1Jr/WORyK3/mi+9at68XFYtlDNX1CJGx2sYIMv+B3DtbzGHm9xxEetXdbhHnT2lVTDVdZLBAi39rLhn+uWz7GmakacpRJDGjI22NaFHW+JPYHp02aQuCKNHYLtQO37fg==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LY0PR12MB727857.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(1800799024)(376014)(7416014)(921020)(4143699003)(56012099006)(10067099003)(11063799006)(22082099003)(18002099003)(6133799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?TitDMlg5cHNQUVRwcFhKakVZcUdqZDdyamQyR2tXajI3WTRQSTZuY1RrTHhK?=
- =?utf-8?B?dGJLcGlhckpRaHo3eDhLdUF4NGpVNCttSkdQMFBiYmgyd1YxZkc3WkRtMVlD?=
- =?utf-8?B?OHljVjRibVdDM3V4dmdkV01obU1kWjBJWU9TLzMrUnl0Rk5YUGNCTFBmUmUy?=
- =?utf-8?B?cTE4MThuVzNrclI4cmwyV0dkSkdGQkN4NEFVVjVjTUE2ZTY0V0VsUmYrOE1R?=
- =?utf-8?B?Q3lyN1JOcDFOV3Y5cjVoMFEydng0Qkh3WmN1VUQvcDlCREM1S1d3aDRDZXRm?=
- =?utf-8?B?VGR5MU9KaE9lRlUxMlNlTThQei8yN0U2NjJ0NjRIUEY2R0Znbmc0ZUtsTzhs?=
- =?utf-8?B?Yml3c0xaOXpFYjdicktlT0F0QTBsMS9qMFZDUDliRXRIV1BTb2tjWWtuSUFR?=
- =?utf-8?B?VjVFTm5XV1N0YWRHZkg1N0JJeGtibTI5UTJYOHpLM2tGOEFCeWxoMG5ONytn?=
- =?utf-8?B?NVZtaEV5UUY0N0hrTDRlME04cndyallKaXBjOXFzTTd6TVczY1dFRU13NFk4?=
- =?utf-8?B?djAxRHlRa3ZWRDJ5djlLeVFzcGwzTk0yZ0hzOW0rRm9SeUI3M1lWWXBBL3B2?=
- =?utf-8?B?bE9YS2tYaGt1QTBPbUtVUlI1bDh0WFphQ0YzTWJSSDlYZFYvTTBiTm01VE1N?=
- =?utf-8?B?MmZhK3g1aWdNYjZIOXgrZ0dnNkd1YWhnbXlwc25tUEo4K1Jaa1NpTnBIKzEz?=
- =?utf-8?B?emZzLzR0MTRBaWFkVzBRUHRsSzNYT05yUG9GaDZ4TEtCRG82ZE1jc09wOHFi?=
- =?utf-8?B?QzNndWYrN0FoZ05Xa1FhVGh2L1Y0S0hNUVcycFJWQTJ1SHV3WmVTdldxZXRq?=
- =?utf-8?B?eWQ4VUdCQ2xTMU5ubmgwZXg5aHdRSVFXWEtpOVYxMTJhTER1ZUp4Nk5KaTN0?=
- =?utf-8?B?RllNZTdyVFRiNUZIQUtRSC9KaGppa24vS2ljakNua0FtU0hMNnFnRVJsbTZK?=
- =?utf-8?B?MXJ1M3hmMTdOSnVRdFhzN29vV25SdlA1VUl0Ukl3L0VadmdPUmFqOEtheThB?=
- =?utf-8?B?UTdERE1MT1FWR0ZIWHE0NHpEMFdTMEdyT2xaaEZZNWJCSDlYdEs1TWlhSFEy?=
- =?utf-8?B?bWdxSHlHSHJtcy82dENYYnRvMUtwWThVZEJQaW50VUtIRlhZazRwVzFJWnBH?=
- =?utf-8?B?dkIxd2R3RzNGbzVJbWJlRG1XK0JLbndTRm9ENGtjMzFQNXVFcUYvTlgrNjNk?=
- =?utf-8?B?ZFQ1aXV4SzRWOEJPdzZhMUo0dUR0M0c4Y0VZamZneFBnM0pjb0daRHhUK3N0?=
- =?utf-8?B?R0thM1ZxdDhvNWNTRTBnQitxV3RQZWJmNDVkc01zWWZSZ25uMTZSRGNpdGw4?=
- =?utf-8?B?WXdoVXVOQ3ZhM2J2OWpJQzBEaUVkNjRzaFdYVmozYUdMUnFBY1dJTHFycmc5?=
- =?utf-8?B?R3Z4VHhvRDhyQjQxb2ZQb01vUHM5cHo2VS8razZHYjYrYnc5b2tOR001MGdV?=
- =?utf-8?B?WityTTdQaGl1V0s2UWZCeFJPL2hzTUtaazdvOGZ1YW9pVXJQVkZiSVZqeVlX?=
- =?utf-8?B?WWxIZTdpY0FzejdHRWVieG1uWVFIa3RpT1p1UTBBSXQ4QnR3M1pjaDhMbGh3?=
- =?utf-8?B?SUFpZ1hudEZvaUF1aUhqdHRkOGE0eW85UktxVnoxRTY0NXYwK2Z1dXdidG95?=
- =?utf-8?B?U1RQT1FlVm1QNERkOHFVRHNWQ0FmeFY5QUYwSjN5MWJORkJ1cC9BcmhMUUxQ?=
- =?utf-8?B?WERXQlBPN1daSDRPbVMyTlI3MllqUmp4ZUN6NCtuaXJTaHVSdCtGUFNNeU9V?=
- =?utf-8?B?aGViWUNncUpXVE0zS2dZajBhV0trd2hCOUJldEVnWlU5eVp5TTR1alpNbUNo?=
- =?utf-8?B?b3Z5VS83ekQzNzJqVzAyZTFlaitMV0EwTjdaeGhtS3J4c3BxRUNnWkZ6MnBp?=
- =?utf-8?B?Z29oSDZXVFlTNkd3aHd5U0xKVE1xVSthdlpWSWIzTk5DbXYxenZNMWQxeEEx?=
- =?utf-8?B?eTF6ZTdrTi8vcWdYbDlKMVNFR0Z2S2ZLZjNWckNyUmtoSXI1M0h3MlpkYnA1?=
- =?utf-8?B?bHN1MzI3cjVMMkFRay8zNXFmMHAwVkZXbEZ3eXFVUytVVExGTGtMamxFdXpv?=
- =?utf-8?B?OTMwUHhONWt2MXdGdkcwTis0S1JnVHVoak5SSGlncEJ5TWRLRjNsdGF4bGVm?=
- =?utf-8?B?T0NTR1RObW5kRHBKQ2hsVnlrTDBTVDdyRkpzMjhqQ0pnc3lYYjdxU2UxNnpZ?=
- =?utf-8?B?Mmc0a2RseXpmWGRSTm5OeU8ydU9qQnVuSFhaWHlHcDYrV3FaYlI4TXMrMFRW?=
- =?utf-8?B?dW9tVUV2aktMV0R4cDZQNjBXYllxTm9GaDRiK0FEMCtqdVBYMWtnKzJUbUlJ?=
- =?utf-8?B?blYrOE1KckJTemhnWHJtMHFPemEvU1BVeU14YS85cU5lay9nUWJqQT09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0e9e766b-5b55-464a-115f-08df2011bf31
-X-MS-Exchange-CrossTenant-AuthSource: LY0PR12MB727857.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Oct 2026 23:14:30.4815
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: XYXHDknHBoMgCH/avsb6/4kMEkawwz283PBIe84bVvWcLRXAdhcMlvXM0AnoW3Gwxf0tGYJrNV96Vzs6x6vGpg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN6PR12MB8513
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
+Message-ID: <20261001232133.560284-1-dmatlack@google.com>
+Subject: RFC: PCI core Live Update Roadmap
+From: David Matlack <dmatlack@google.com>
+To: linux-pci@vger.kernel.org
+Cc: David Matlack <dmatlack@google.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Alex Williamson <alex@shazbot.org>, Pasha Tatashin <pasha.tatashin@soleen.com>, 
+	Mike Rapoport <rppt@kernel.org>, Pratyush Yadav <pratyush@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>, 
+	Kevin Tian <kevin.tian@intel.com>, Lukas Wunner <lukas@wunner.de>, 
+	Logan Gunthorpe <logang@deltatee.com>, 
+	"=?UTF-8?q?Ilpo=20J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, Lu Baolu <baolu.lu@linux.intel.com>, 
+	Joerg Roedel <joro@8bytes.org>, Samiullah Khawaja <skhawaja@google.com>, Vipin Sharma <vipinsh@google.com>, 
+	Pranjal Shrivastava <praan@google.com>, kexec@lists.infradead.org, kvm@vger.kernel.org, 
+	iommu@lists.linux.dev, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 9/23/26 2:40 PM, Cheatham, Benjamin wrote:
-> External email: Use caution opening links or attachments
-> 
->> +static int cxl_pci_hdm_dvsec(struct pci_dev *pdev)
->> +{
->> +     u16 cap;
->> +     int dvsec;
->> +     int rc;
->> +
->> +     dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
->> +                                       PCI_DVSEC_CXL_DEVICE);
->> +     if (!dvsec)
->> +             return -ENOTTY;
-> 
-> Why -ENOTTY here and below? I would've expected -ENXIO for a missing capability.
->
+Hi all,
 
-Agreed. Fixed this in v14 for this and other similar cases.
+Now that the base PCI core support for Live Update has been applied to
+liveupdate.git [1], I wanted to share the plan for the rest of the PCI core
+work, so that reviewers can see what is coming and how the pieces fit
+together.
 
->> +     rc2 = pci_write_config_word(pdev, PCI_COMMAND, command);
->> +     if (rc2)
->> +             pci_err(pdev,
->> +                     "failed to restore PCI_COMMAND after CXL HDM cache init: %d\n",
->> +                     pcibios_err_to_errno(rc2));
->> +
->> +     return rc;
-> 
-> 
-> I think the above would flow better as:
-> 
-> rc = __cxl_pci_hdm_read_info(pdev, map, dvsec, out);
-> if (rc) {
->          if (!restore_command)
->                  return rc;
-> 
->          rc2 = pci_write_config_word(pdev, PCI_COMMAND, command);
->          if (rc2)
->                  ...
-> } else {
->          rc = pci_write_config_word(pdev, PCI_COMMAND, command);
->          return pcibios_err_to_errno(rc);
-> }
-> 
-> return rc;
-> 
+I was originally going to present this roadmap at LPC next week [2], but
+since there are no immediate blockers, we decided to repurpose the talk to
+cover tmpfs file preservation instead [3]. If anyone would like to discuss
+the roadmap at LPC, please reach out. I would love to talk about it.
 
-I reworked this flow in v14. Sashiko pointed out a small issue with 
-error log. I’ll also fix that missing restore-error log in the next 
-revision.
+As a reminder, the goal of Live Update is to allow the host kernel to be
+updated with kexec while VFIO-assigned PCI devices keep running and keep
+doing DMA to guest memory and P2P to other preserved devices. This work
+aims to get every PCI core change needed for that merged upstream.
 
->> +}
->> +
->> +static int __pci_cxl_hdm_cache_init(struct pci_dev *pdev)
->> +{
->> +     struct cxl_hdm_info *info __free(kfree) = NULL;
->> +     struct cxl_register_map map = { };
->> +     struct resource *bar;
->> +     int dvsec;
->> +     int rc;
->> +
->> +     scoped_guard(rwsem_read, &cxl_rwsem.dpa)
->> +             if (pdev->hdm)
->> +                     return 0;
->> +
->> +     dvsec = cxl_pci_hdm_dvsec(pdev);
->> +     if (dvsec < 0)
->> +             return dvsec;
-> 
-> Might be better to just return 0 here. If the device doesn't have a CXL capability
-> then I wouldn't consider that an error from the perspective of the PCI subsystem.
-> 
+This roadmap only covers functional support in the PCI core. Blackout time
+(from VM pause to VM resume) is intentionally out of scope. For preserved
+devices, the PCI core mostly skips work it would normally do (bus number
+and BAR assignment, ACS/ATS/PASID programming), so these changes should not
+add meaningfully to blackout time. Please call out anything in this plan
+that would make blackout time worse or harder to optimize later.
 
-Fixed this in v14. pci_cxl_hdm_cache_init() returns void; a missing CXL 
-capability does not fail PCI enumeration now.
+The work is split into six series (five feature series plus one selftests
+series). Each one will be sent and merged on its own. Feedback on the plan,
+the ordering, and the open question in #5 is very welcome.
 
->> +
->> +     rc = __pci_cxl_hdm_cache_init(pdev);
->> +     if (rc && rc != -ENOTTY && rc != -ENODEV)
->> +             pci_dbg(pdev, "CXL HDM cache init failed: %d\n", rc);
-> 
-> I don't know if it's worth filtering out -ENOTTY and -ENODEV for a debug message,
-> but that's more of a question for the PCI people.
->
+Overview
+========
 
-V14 logs all nonzero cache initialization results at debug level; the 
-error filtering is gone.
+  #   Series                              Status             Target
+  --  ----------------------------------  -----------------  ------
+  1   PCI core support for Live Update    v9 applied         7.4
+  2   Index saved capability state by     v1 posted          7.5
+      configuration space offset
+  3   Do not break P2P across             In progress        7.6
+      Live Update
+  4   Adopt ATS and PASID state across    Not yet posted     7.7
+      Live Update
+  5   SR-IOV support across Live Update   Not started        7.8
+  T1  PCI core Live Update selftests      Not started        7.5
 
->>   cxl_core-y := $(CXL_CORE_SRC)/port.o
->>   cxl_core-y += $(CXL_CORE_SRC)/pmem.o
->> -cxl_core-y += $(CXL_CORE_SRC)/regs.o
-> 
-> Did you run CXL test with this change? I don't think there are any test symbols in regs.c, but you should
-> make sure this doesn't break anything there. You may not need to even fix anything if it does, but just
-> make a note of the regression.
-> 
+Targets are tentative and based on the usual release cadence [4]. The 7.4
+merge window is expected to open in late October 2026, 7.5 in January 2027,
+7.6 in March, 7.7 in May, and 7.8 in July. A series needs to be in
+linux-next by about rc6 of the preceding cycle to make its target.
 
-The test build is not broken. For v14, make M=tools/testing/cxl/ passed 
-after this change and at every patch in the series. I haven't tested the 
-runtime yet.
+Dependencies
+============
 
--- 
-Regards,
-Srirangan
+  LUO FLB refcounting (applied) ---+
+                                   |
+  LUO FLB fixes (applied) ---------+
+                                   |
+                                   v
+                  #1 PCI core support for Live Update
+                                   |
+         +-------------+-----------+-----------+-------------+
+         |             |                       |             |
+         v             v                       v             v
+      #3 P2P     #4 ATS/PASID              #5 SR-IOV   T1 Selftests
+                 (+ IOMMU Live             (+ VFIO PF
+                  Update series)            preservation)
+
+#2 (saved state indexed by config space offset) is an independent PCI
+refactor with no dependency on #1. It is a prerequisite for VFIO carrying
+struct pci_saved_state across Live Update.
+
+Details
+=======
+
+1. PCI core support for Live Update
+-----------------------------------
+
+Status: v9 [5] was applied to liveupdate.git on Sep 28 [1] and is in
+linux-next, targeting 7.4. Thanks to everyone who reviewed it.
+
+One item from v9 review is still open. Alex pointed out that the ACS Egress
+Control Vector is not saved and restored along with the ACS Control
+register [6]. An updated patch that handles it is in that thread, and it
+will be sent as a follow-up if it turns out to be needed.
+
+This is the base series. It allows preserved PCI devices to keep doing DMA
+to system memory (preserved memfds) across Live Update. Devices can sit
+behind bridges but cannot be VFs, and P2P is not supported yet. The series:
+
+  - Sets up the PCI core FLB handler that carries struct pci_ser across
+    kexec through KHO. The ABI lives in include/linux/kho/abi/pci.h.
+
+  - Adds APIs for drivers to register devices for preservation (outgoing)
+    and lets the PCI core recognize preserved devices during enumeration
+    (incoming).
+
+  - Automatically preserves every upstream bridge of a preserved endpoint,
+    with refcounting.
+
+  - Keeps each preserved device's Requester ID (BDF) the same by inheriting
+    secondary/subordinate bus numbers and ARI Forwarding Enable on
+    preserved bridges.
+
+  - Keeps TLP routing the same by adopting the ACS controls on the path
+    from the endpoint up to the root port. ACS Control is now saved and
+    restored through the normal save/restore path.
+
+  - Freezes preservation status at shutdown and leaves Bus Master Enable on
+    for preserved devices during kexec.
+
+  - Adds Documentation/PCI/liveupdate.rst describing what the PCI core,
+    drivers, and userspace are each responsible for.
+
+Size: 17 files, about 1.4k lines added (mostly the new
+drivers/pci/liveupdate.c).
+
+History: v1 was posted in November 2025 together with the VFIO changes [7].
+The PCI core changes were split out into their own series in v4 (April
+2026) [8].
+
+2. Index saved capability state by configuration space offset
+-------------------------------------------------------------
+
+Status: v1 [9] (15 patches) was posted on Sep 24 and is waiting for review.
+It is intended to go through pci.git and has no dependency on #1.
+
+Why: VFIO saves a device's state with pci_store_saved_state() on first open
+and restores it with pci_load_and_free_saved_state() on last close. A Live
+Update can happen between those two calls. Today struct pci_saved_state
+cannot be handed to the next kernel, because its layout depends on the
+kernel that wrote it (which capabilities are recorded, how big each record
+is, what each word means). The receiving kernel has no way to check it
+against the device in front of it.
+
+What: Replace the per-capability save buffers with a single per-device
+store indexed by config space offset (new drivers/pci/saved-caps.c), and
+lay out struct pci_saved_state the same way: a bitmap of saved DWORDs plus
+their values. The format of the blob then comes from the hardware rather
+than the kernel version, so any kernel can check it.
+
+Side benefits:
+
+  - One saved-state allocation per device instead of up to nine separate
+    ones. The one remaining allocation failure is reported (AER, DPC, PTM,
+    and TPH used to ignore allocation failures).
+
+  - Removes fragile save/restore ordering that relied on running buffer
+    cursors. Restore routines now name registers by offset.
+
+  - Saves 32 to 160 bytes per device, and fixes a possible unaligned access
+    in pci_load_saved_state().
+
+Size: 13 files, +680/-621. The series is bisect-safe and converts one
+capability per patch, so feedback on one capability does not have to hold
+up review of the rest.
+
+Follow-on work (not part of this series): Serializing struct
+pci_saved_state across Live Update (a KHO ABI definition in
+include/linux/kho/abi/ plus serialize/deserialize routines) will be part of
+the VFIO Live Update work rather than a separate PCI core series. It builds
+on the offset-indexed layout from this series. Separately, the remaining
+saved-state allocation failure should be made fatal to device setup.
+
+3. Do not break P2P across Live Update
+--------------------------------------
+
+Status: In progress, not yet posted.
+
+Scope: This series only ensures that the PCI core does not break ongoing
+P2P between preserved devices across Live Update, e.g. by changing BAR
+addresses. Actually supporting P2P across Live Update will also require
+work in VFIO and a story around preserving dma-bufs.
+
+Why: Preserved devices may be doing peer-to-peer DMA to each other
+throughout the Live Update, e.g. device-to-device traffic between
+VFIO-assigned devices in a VM. That traffic breaks if the next kernel
+changes BAR addresses or bridge windows during enumeration. Independent of
+P2P, VFIO also needs stable BAR addresses so that it can safely preserve
+the rbar field in struct vfio_pci_core_device.
+
+Approach: This touches PCI resource code (preserve_config, BAR sizing). The
+new behavior will be limited to incoming preserved devices, so that boots
+without Live Update are unaffected, and existing mechanisms such as
+preserve_config will be reused rather than adding new ones.
+
+Dependencies: #1 and the LUO FLB fixes (applied).
+
+Next steps: Rebase onto the applied base series and post an RFC, so that
+review of the resource assignment changes can overlap with #1 soaking in
+linux-next. Early feedback on the approach from Bjorn and the PCI resource
+reviewers would be much appreciated.
+
+4. Adopt ATS and PASID state across Live Update
+-----------------------------------------------
+
+Status: Patches written, not yet posted.
+
+Why: Turning ATS or PASID on or off while a device is doing DMA is unsafe.
+Enabling ATS is not atomic (the IOMMU context entry and the endpoint's ATS
+Control register are separate), and disabling ATS without quiescing DMA can
+leave stale ATC translations behind, which risks silent memory corruption.
+For preserved devices the kernel must adopt the existing hardware state
+instead of reprogramming it.
+
+Dependencies: #1. Samiullah's IOMMU Live Update series [10] also needs to
+land for this to be useful end to end, since the IOMMU driver is what calls
+into ATS/PASID enablement. The plan is to post #4 once the IOMMU series has
+settled (targeting 7.7, with 7.6 as a stretch), and to agree on the
+ATS/PASID adoption interface with Samiullah ahead of time. Alternatively,
+these PCI core patches may be folded into a larger IOMMU series from
+Samiullah that handles ATS and PASID end to end.
+
+5. SR-IOV support across Live Update
+------------------------------------
+
+Status: Not started.
+
+Why: VFs assigned to VMs through VFIO need to survive Live Update. That
+means preserving the parent PF's SR-IOV configuration (NumVFs, VF Enable,
+VF BARs, etc.) and enumerating the VFs after kexec without resetting or
+reconfiguring them.
+
+Scope: Userspace must explicitly preserve a PF for a VF to be preserved.
+Unlike upstream bridges, the PCI core will not automatically preserve the
+PF of a preserved VF. The PF must be explicitly preserved by its driver.
+
+Expected work:
+
+  - Remove the base series' restriction against preserving VFs.
+
+  - Preserve and adopt the PF's SR-IOV capability state instead of
+    reprogramming it on the incoming side.
+
+  - Enumerate VFs on the incoming side while keeping their Requester IDs
+    and BARs unchanged (builds on the bus number and BAR work in #1 and
+    #3).
+
+Open question: When should the VFs be enumerated on the incoming side? The
+PCI core has enough information to enumerate them during the initial bus
+scan, but userspace may prefer to trigger enumeration itself after
+disabling VF autoprobe (sriov_drivers_autoprobe).
+
+Dependencies: #1 and VFIO PF preservation support.
+
+T1. PCI core Live Update selftests
+----------------------------------
+
+Status: Not started.
+
+Why: PCI core support for Live Update is currently tested by applying the
+VFIO series [11] on top and running the VFIO Live Update selftests. That
+works for basic sanity testing, but it will make it harder to test new PCI
+core features that need to land ahead of their VFIO counterparts. Adding
+PCI core specific tests under tools/testing/selftests/liveupdate would make
+PCI core development less coupled to VFIO. That requires a test driver,
+provided by the selftests, that can preserve devices without VFIO.
+
+Dependencies: #1.
+
+Related work outside the PCI core
+=================================
+
+  - LUO: Refcounting for incoming FLB [12]. Applied in May. Needed by #1,
+    #3, and #5.
+
+  - LUO: FLB fixes, outgoing refcounting, and preventing multiple retrieve
+    [13]. Applied in July. Needed by #1, #3, and #5.
+
+  - Vipin's VFIO PCI Live Update series (v5) [11]. Under review. The main
+    user of #1, and a future user of #2 (saved state) and #5 (PF/VF).
+
+  - Samiullah's IOMMU Live Update series (v5) [10]. Posted on Sep 21.
+    Needed end to end for DMA through the IOMMU. Pairs with #4.
+
+  - LUO file dependencies (Samiullah). LPC talk planned. Needed for
+    VFIO/iommufd ordering and for PF/VF dependencies (#5).
+
+Thanks,
+David
+
+[1] https://lore.kernel.org/linux-pci/179061032462.173069.6066907606098407222.b4-ty@b4/
+[2] https://lpc.events/event/20/contributions/2618/
+[3] https://lore.kernel.org/kexec/20260925143000.2729890-1-pasha.tatashin@soleen.com/
+[4] https://deb.tandrin.de/phb-crystal-ball.htm
+[5] https://lore.kernel.org/linux-pci/20260918200640.887030-1-dmatlack@google.com/
+[6] https://lore.kernel.org/linux-pci/20260918191846.2f68b23b@shazbot.org/
+[7] https://lore.kernel.org/kvm/20251126193608.2678510-1-dmatlack@google.com/
+[8] https://lore.kernel.org/linux-pci/20260423212316.3431746-1-dmatlack@google.com/
+[9] https://lore.kernel.org/linux-pci/20260924173501.856380-1-dmatlack@google.com/
+[10] https://lore.kernel.org/linux-iommu/20260921004834.2601285-1-skhawaja@google.com/
+[11] https://lore.kernel.org/kvm/20260714151505.3466855-1-vipinsh@google.com/
+[12] https://lore.kernel.org/lkml/177766042304.401635.6805828117822344063.b4-ty@soleen.com/
+[13] https://lore.kernel.org/kexec/178448096578.306041.16503153363800577876.b4-ty@b4/
