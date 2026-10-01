@@ -1,134 +1,201 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 269C23D8121;
-	Thu,  1 Oct 2026 12:59:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86F1B401A14
+	for <linux-pci@vger.kernel.org>; Thu,  1 Oct 2026 14:04:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790859591; cv=none; b=JZX3X3larjRmca3plEII92LqpsJ1qUUX7w2QSj7VINI2etk9TYENuJNviJrxNtLANcuoTpYx+DlUlhL2BqHQs1asdzewuaGZS9FEUSr1gD9L0GbfNdDbZ34zIEjpc/b/ob7DpjJWePgPgHwVSO3Dt2bh69kVRgc3uTjj/MwuGnc=
+	t=1790863445; cv=none; b=Vq0mZJpqKGQCdAwpMSetU1F5Dklad7HplaLvOJAW+EinJVg+tnlq9PwKbSixohwvMptrmOvS2olH8BrMRwuxHyxlFjwHeOhvAKysgAZCgHjAz2r4MEvuTeyvxUqtpnbItKKFOZjs85C1ZE0ERUvWbzTUElY9dneP5kNCLrEEmuU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790859591; c=relaxed/simple;
-	bh=+oEEYMyapdfy2MygoVgo6lezDIyzegG2R9t+lllJbIA=;
+	s=arc-20240116; t=1790863445; c=relaxed/simple;
+	bh=rHkNJ7QMkISfim0aGhEpH5Hm+Y6IOVsd382Lgw7YMPM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hRp0bIXDNuskvk6SzK+OoATc6vTZPiK9n44OP02TWWOD/Cf7jkRPRiVQKg0P9+m2ryEEg2qdwDBk8KimB04BqV2O05CAgK+Csn7aQIyQQGbc7iN7LpqIdC0+OKegh/Gurf/0hdq2SxOAUBgJc3ecYW+rUG8qjgIh2HoGXLhzPtk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JIF/B0EW; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=XW1DENAgHiM92OyTLG5cbziXFi+CwB9BjsEDF1mhZqAIFFcPv4yeagymXFJF6gdBY7Rap9a0ZwRPCogidKKG49VRScs2J8RIOL9Sn4rYGfLxIasdY1Ln2+lOsYNB+TNVWK4/FSkbaKEK7+SV3MTz8UbaD2M1TDeS0KcTOhgSKtU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=B11M9BKt; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=iWftwiKH; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JIF/B0EW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB11F1F000FF;
-	Thu,  1 Oct 2026 12:59:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790859589;
-	bh=mWEhNC2bx28+yRg0dPmgwrk6vKK8w5OBcpeNy+gKRH4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=JIF/B0EWXJ0MDjxeLJZ7yO1RQlpIaMdKbKKNsSXNWszWPJ3PBB4IoBEyGD5DARCr6
-	 EghD/+7Ha3UjceHW9Y7A7cvC/XxmnNWI28uTVunnCjnAZhrBDv5jL1BQBGa3yejDd9
-	 8JtJ9TQEwE9J8Epe8QYSKPF+/imypf3aX6Ku8z3ojDryet26BK6wy/1B+aVsbYEP8A
-	 bCyy3I8sdeW1g+eTaXFkbJPLdBLEP9UbiViiSkgnH4LRiYzLb6taZ99aGK9yoG235C
-	 WMk4EwMOCwp9Tvw37ZZdHse/DBW/9OckkefvsDEBIG7Q+OIcogIXov6gHrykqeG8MO
-	 4GyhjSqX2XKAg==
-Date: Thu, 1 Oct 2026 15:59:44 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
-	media-ci@linuxtv.org, linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org
-Subject: Re: [PATCH v9 16/18] PCI/P2PDMA: Let a client declare that it
- selects ATS per mapping
-Message-ID: <20261001125944.GM3401365@unreal>
-References: <20261001-fix-p2p-acs-v4-0-v9-0-1a8e0f50ddd9@nvidia.com>
- <20261001-fix-p2p-acs-v4-0-v9-16-1a8e0f50ddd9@nvidia.com>
- <20261001120807.8723F1F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="B11M9BKt";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="iWftwiKH"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 691Djtdn1304134
+	for <linux-pci@vger.kernel.org>; Thu, 1 Oct 2026 14:04:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=g63Mt9nJGe3rsrmvedMjTEiY
+	enXslIodcFPnj473Ydo=; b=B11M9BKtIdCSe/QmsVHWlEO+PAZTio19scMmdBG9
+	VYMiHW4tRh1E+0wzMr8RWstWHamh1ySQ7fzY9HK8f/soAm6ptNJ1B/oYpItFDkyX
+	kazZdyV29LIP9QF6EYEA93yzKDY35vbV+8yB9ZA8jXCm9N9UufqJK4kyFlHgOZVB
+	kbXnOrkSbP2QmJArMEBiNTrU0e5Zf99LtsGwYfFkEjI9Bt45xpg/gvndHnShU5Eh
+	hSgIyNfUOfzxhInsZ+NfCpefZT8DpTEXhUgcCJVSEoJrsUFuu1RP19Nfjz43D+Tz
+	4pe9IVd15N8vU371o+9IglK5aJYhC/z6+h1Ozb4fMJDYkg==
+Received: from mail-dl1-f69.google.com (mail-dl1-f69.google.com [74.125.82.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h1bh5bnfe-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 01 Oct 2026 14:04:02 +0000 (GMT)
+Received: by mail-dl1-f69.google.com with SMTP id a92af1059eb24-1438fef603cso14738276c88.0
+        for <linux-pci@vger.kernel.org>; Thu, 01 Oct 2026 07:04:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1790863442; x=1791468242; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=g63Mt9nJGe3rsrmvedMjTEiYenXslIodcFPnj473Ydo=;
+        b=iWftwiKH9m02y/hapzDCVhx/oNrZYunbM6FETnYedAqzho156aXNwF6BoZULKaHvkX
+         C2VJ0bBy4Bejq7g5jeoaDm4ObP3CYB8A2sx77ytI7OW2FOZOOSJzH9MWWzMdHsv9Kko0
+         gs1GRoS9CblwOQLbOItkmemeZJrS4ltE+lLW/+Mv3g1IuHpV1I/yghOZzsFiGxy23+x8
+         XGYcFPwYQCTF7dvmAG8aC54CtCbwAkteVZgTzBVUC7iiujJpCG4xD78WdgAXH2HUFdFC
+         pKcGEAuTJkFObt9WGa/im2fqornm96qrrgpKtcQjGQXsrxk5loKj0bYATjLvuT6W96Xt
+         JVsw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790863442; x=1791468242;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=g63Mt9nJGe3rsrmvedMjTEiYenXslIodcFPnj473Ydo=;
+        b=Tu+ZDFSmStqf5X9gBYNSeqF7SNvHgWcWlKTbNlWEBcitSBBive48PWlkM/rAHooFwG
+         hCcA4Gvv5m0n52QbITNvBVki/EA4Ol1GjN4z65Nmt9t+bicyROH1ZycyEG0jCabgyjdc
+         Lb52C6RNMmmv3AoPshCr/MEpgsv3PTUZlgHB1DtLJPiC3MYmPlLHQHMTcqZx2hPjiuga
+         DFdDE1Z35+NjmMh+mxfgckiveKATQg0abZQ8R6eB/g4lMJ7BRf+zo0a38CSwCKZccqnw
+         vDBmFPx+hUCKf1q/rKyrH4FYjGpUPyYBI+eC/SITQMj/5Y4fTe90E3iRXQZN1cWwsAyQ
+         16qA==
+X-Forwarded-Encrypted: i=1; AKwUvBw9SNsiRjpcAJNA1I+mbnMkXOkYWXzzgLfN4D24XvW1SeyydH2ZtdMSfbVH1q+fPb/uRywltCWTQ+4=@vger.kernel.org
+X-Gm-Message-State: AFuF++mMwsEyyU4zbMfj3Cw2PM3Iyy0HXvvlxjFLaB+2PE6C2Kuhw/gX
+	qPLfhHHYTji5QgcVOyB6+wcUL6h/hbMj6eBq4lqjqDma79dA7pwj9wg16C8agN90HvQqpU9KmWz
+	wIXJZzoozWvNnEvaSGD8cntKiWgD6FtrLFLMRI69Qa6y1DvMy7XUueecINR4Hi+E=
+X-Gm-Gg: AYBFou1/v0BjgMB/qI4MMmFSSK7gImNTw91y7ydTEAqrG0VkX/WiZCaSdmW2ugkCHe2
+	4N1y5DOEh0+BSxMnK7WE3gOr3ohqh9SHzJDO9L7z2zJXJJ4vLbJQn/mDGZ8CUzZj3yx5PwNZOsJ
+	IskIfCYbyMhIWsvxt7zdWClHx8j2j0VtAjDhmzM2b+TWIK2eCDa/hOH/eWuic++zRTakeQ7mbE1
+	no+Gd9L6LKJxrv0fcDfqwB6bnGlIzGlJHAamqv9J4KrBbk2ZsVyYC2naQAMNK3CiAzZn+R9+kHl
+	uIhh0+dNGS7epqfFhTBuCsF+HR2JGQxioc7BcITNbOYAb56jiiETHlu+K7xhnUTkXwHhj+qgsGf
+	5utbJ4ydJBS1JJvS2APl9UBUVQ2sRYsTyg5/yW3vd3gcP3Q==
+X-Received: by 2002:a05:7022:7e0b:b0:14a:5d07:9b with SMTP id a92af1059eb24-14d3641df3fmr5066342c88.28.1790863441312;
+        Thu, 01 Oct 2026 07:04:01 -0700 (PDT)
+X-Received: by 2002:a05:7022:7e0b:b0:14a:5d07:9b with SMTP id a92af1059eb24-14d3641df3fmr5066298c88.28.1790863440393;
+        Thu, 01 Oct 2026 07:04:00 -0700 (PDT)
+Received: from hu-qianyu-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-14df48c45cdsm6407616c88.16.2026.10.01.07.03.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 01 Oct 2026 07:03:59 -0700 (PDT)
+Date: Thu, 1 Oct 2026 07:03:57 -0700
+From: Qiang Yu <qiang.yu@oss.qualcomm.com>
+To: Mayank Rana <mayank.rana@oss.qualcomm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: qcom: Block accesses to downstream devices on
+ link down
+Message-ID: <ar5oTVp3vY3hvr+f@hu-qianyu-lv.qualcomm.com>
+References: <ienbx5wjdzhgtdtbmuqcc76ovzy5d4wid7x4nhq5e4bco6u4il@264db3obw2qq>
+ <20260911171807.GA402207@bhelgaas>
+ <aqeTyRnmsEcChW8G@hu-qianyu-lv.qualcomm.com>
+ <c1213157-076a-496c-870e-cf5469193600@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261001120807.8723F1F000FF@smtp.kernel.org>
+In-Reply-To: <c1213157-076a-496c-870e-cf5469193600@oss.qualcomm.com>
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDAxMDA1NSBTYWx0ZWRfXzBd2MkOzU3SE
+ BBjL7gpgOn/0reCa6A7Ncpt+UDyNmShvMB+ICCq0tH8PQWvG94eqZ7kPVkbyUJnkC3pOK9wJe8b
+ MxhNhTQk0I3kxRWssofHLTIhXxfweFzpWzWqkNCP28gJ5JKIQdJK2YC3HNhBReiQQPTsGx+YHXc
+ rmUGcPQlsMb1aEnWSzvo5AgdV9o4uj4gkCOTcGdkRPOiKMXloUhJvnykip39PV2TDmTKobv/dmr
+ k0sUPiSCXjs5sYqr1PbZf+I7sePlksV/r5HEETzemYYsz9T03g79++tdEe1wfEq2ZWie1Y8pOjJ
+ 6Qw8mIBjd79vCSm/nHvMiYZ7+jT4PH5Oivv4RY98CSvBABxebcnzPMlBA1YKBFmRr5y54SqF6tw
+ AiQukERLkLk3tQgCGPjpeIJ98B9Rxk+xSu2bjD/QOcCOL1f/7/FZSIbei1RG+549WgXDzZ+vJKI
+ sME1ga4Pn8fffHj3YaA==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDAxMDA1NSBTYWx0ZWRfXyqGDg1rJff4I
+ HQ6bxp/yR5Olz1Un2zAjLcSlDw/Qg7aRpGesCH8nOwfb2K9R/O9PoSL1BC8hylCkcO5iy7eMGWI
+ aaEMnADx8nvPbejuN6WSV8pvZBxhG2Q=
+X-Proofpoint-ORIG-GUID: f5dpaymLBKSIs4VdY1cR1-tnjDX4laVT
+X-Proofpoint-GUID: f5dpaymLBKSIs4VdY1cR1-tnjDX4laVT
+X-Authority-Analysis: v=2.4 cv=NrJE4MdJ c=1 sm=1 tr=0 ts=6abe6852 cx=c_pps
+ a=kVLUcbK0zfr7ocalXnG1qA==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=kj9zAlcOel0A:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=3dMp213M2K4KTSGRTs4A:9 a=CjuIK1q_8ugA:10 a=vr4QvYf-bLy2KjpDp97w:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-01_04,2026-09-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 priorityscore=1501 impostorscore=0 clxscore=1015 bulkscore=0
+ lowpriorityscore=0 suspectscore=0 malwarescore=0 spamscore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2610010055
 
-On Thu, Oct 01, 2026 at 12:08:07PM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Medium] pci/p2pdma: pure clients cannot set ats_per_mapping because pdev->p2pdma is NULL
-> --
+On Wed, Sep 30, 2026 at 09:51:57AM -0700, Mayank Rana wrote:
+> Hi Qiang
 > 
-> commit f332086fc4a4273d099c81fafb33298021d47d1a
-> Author: Leon Romanovsky <leon@kernel.org>
-> 
-> PCI/P2PDMA: Let a client declare that it selects ATS per mapping
-> 
-> The PCIe ATS Enable bit covers the whole device, so P2PDMA cannot tell
-> from it whether a client will translate a given address. Most devices
-> translate any address once ATS is enabled, but some choose ATS per DMA
-> mapping and can still use bus addresses for the rest.
-> 
-> Add pcim_p2pdma_set_ats_per_mapping() so the driver of such a device can
-> declare that before P2PDMA starts treating clients with ATS enabled as
-> translating everything.
-> 
-> > diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> > index cf190bd572d4a..6a63901c65fb6 100644
-> > --- a/drivers/pci/p2pdma.c
-> > +++ b/drivers/pci/p2pdma.c
-> 
-> [ ... ]
-> 
-> > @@ -1562,6 +1563,32 @@ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
-> >  }
-> >  EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
-> >  
-> > +/**
-> > + * pcim_p2pdma_set_ats_per_mapping - Declare per-mapping ATS for a client
-> > + * @pdev: PCI device that initiates peer-to-peer DMA
-> > + *
-> > + * Declare that @pdev issues Translated Requests only for the DMA mappings its
-> > + * driver sets up to use ATS, rather than for any address once ATS is enabled.
-> > + * P2PDMA then routes this client's Requests with the Address Type each query
-> > + * asks about, rather than the one its ATS Enable bit implies.
-> > + */
-> > +void pcim_p2pdma_set_ats_per_mapping(struct pci_dev *pdev)
-> > +{
-> > +	struct pci_p2pdma *p2p;
-> > +
-> > +	p2p = rcu_dereference_protected(pdev->p2pdma, 1);
-> > +	if (!p2p)
-> > +		/*
-> > +		 * ats_per_mapping is a performance optimization,
-> > +		 * if pcim_p2pdma_init() didn't set pdev->p2pdma pointer
-> > +		 * for some reason, let's simply use ATS global settings.
-> > +		 */
-> > +		return;
-> 
-> [Severity: Medium]
-> Will this silently fail for pure P2PDMA clients?
-> 
-> It looks like pdev->p2pdma is only allocated when a device registers as a
-> P2P memory provider via pcim_p2pdma_init():
+> On 9/13/2026 11:27 PM, Qiang Yu wrote:
+> > On Fri, Sep 11, 2026 at 12:18:07PM -0500, Bjorn Helgaas wrote:
+> > > On Fri, Sep 11, 2026 at 08:17:29AM +0200, Manivannan Sadhasivam wrote:
+> > > > On Tue, Sep 08, 2026 at 06:00:30PM -0500, Bjorn Helgaas wrote:
+> > > > > On Wed, Aug 19, 2026 at 11:36:54PM -0700, Qiang Yu wrote:
+> > > > > > After a PCIe link goes down, software may still access the BAR
+> > > > > > (MMIO) space or configuration space of devices behind that link
+> > > > > > before recovery has run. As the link is down, these accesses
+> > > > > > never complete, resulting in a storm of Completion Timeout AERs.
+> > > > > 
+> > > > > What is special about qcom here?  It seems like the Completion
+> > > > > Timeouts and AER interrupts should happen with every PCIe
+> > > > > controller.
+> > > > 
+> > > > The special behavior which is common across many (not all) ARM SoCs
+> > > > is that they don't synthesize all-one response for completion
+> > > > timeouts, unlike RCs in x86 machines. Rather, they return AXI error
+> > > > response, resulting in CPU treating them as SError, in-addition to
+> > > > AER storm.
+> > > > 
+> > > > Commit message missed mentioning SError though.
+> > > 
+> > > I don't know how SError works, but this sounds like a pretty big open
+> > > issue with respect to RAS.  I don't think we want a kernel panic
+> > > because a device failed to respond to a config or MMIO access, e.g.,
+> > > if a card or Thunderbolt cable got unplugged.
+> > > 
+> > > > > Is this mitigating an issue that will still happen on other
+> > > > > controllers and should be solved elsewhere, e.g., by changing the
+> > > > > software that accesses the BAR to look for the error responses it
+> > > > > gets when the Completion Timeout happens?
+> > > > 
+> > > > That would be too late as we don't get a proper error response.
+> > > > That's why this patch is used.
+> > > > 
+> > > > > The patch refers to the ECAM blocker (which I assume affects
+> > > > > config accesses) and doesn't mention MMIO.  Is the SLV_AXI stuff
+> > > > > for MMIO?
+> > > > 
+> > > > ECAM blocker is a Qcom's custom implementation which prevents the
+> > > > config access to go out of the link and terminate the request
+> > > > properly. And yes, it doesn't affect MMIO like BAR.
+> > > 
+> > > The commit log implies that the patch blocks both config and MMIO
+> > > accesses: "software may access MMIO or config space ... Use ECAM
+> > > blocker to drop these accesses."  If the ECAM blocker only affects
+> > > config accesses, we need to reword that description.
+> > > 
+> > 
+> > This patch can block both config space and MMIO accesses.
+> To avoid confusion, can you rename APIs by replacing ecam by outbound
+> i.e.
+> qcom_pcie_init_ecam_blocker() as qcom_pcie_init_outboud_blocker() and
+> qcom_pcie_enable_ecam_blocker() as qcom_pcie_enable_outbound_blocker().
 
-Yes, this is exactly for them and no one else.
+Agreed, "outbound" is a better name here since this blocker drops both
+config and MMIO accesses, not just config space as "ecam" implies.
+This also lines up with Bjorn's earlier point that the commit log and
+the API naming were inconsistent about scope.
 
-Thanks
+Mani, this patch is applied to your branch, can I still respin this patch
+to rename APIs?
 
-> 
-> drivers/pci/p2pdma.c:pcim_p2pdma_init() {
-> 	...
-> 	p2p = devm_kzalloc(&pdev->dev, sizeof(*p2p), GFP_KERNEL);
-> 	...
-> }
-> 
-> If a driver for a pure P2PDMA client (e.g., an NVMe initiator without CMB)
-> calls pcim_p2pdma_set_ats_per_mapping() to declare its ATS behavior, won't
-> pdev->p2pdma be NULL since it never called pcim_p2pdma_init()?
-
-Only RDMA NICs support that per-mapping thing.
-
-Thanks
-
-> 
-> If so, wouldn't this cause the client to silently fall back to suboptimal
-> global ATS routing, as it can never successfully set the ats_per_mapping flag?
-> 
-> -- 
-> Sashiko AI review · https://sashiko.dev/#/patchset/20261001-fix-p2p-acs-v4-0-v9-0-1a8e0f50ddd9@nvidia.com?part=16
+- Qiang Yu
