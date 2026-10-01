@@ -1,130 +1,122 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72625409275
-	for <linux-pci@vger.kernel.org>; Thu,  1 Oct 2026 16:10:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 779D12BD022;
+	Thu,  1 Oct 2026 16:23:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790871003; cv=none; b=YWesSpLamYOGhxUaxxTv4xF5cWxNKVHp2zdV/N20o7+fwIyQtAyScttCp0oT7OLh6kLvjXUYyzu2cegCdStvPd8viPQ5Rc20B9Zw64N4DNGkfRsi6Z2a0AlO0scH4aNAYi9mO7hw+p/NqHmUjURZgrmdRqw7W1bEImCuUf7QvHc=
+	t=1790871819; cv=none; b=PZIjShoZXz2C5lvKHlFaZzqHYAvNPx1h16TNqzP8d1jN/vNVCM5ZwCaquUptt6ewTAm1mTSCJTVp9IH7bn5hUTUw72AkobJXRCsYHZPS7ZfTH+d8iEWSSvBnSWWgU0FG0Tm3mhi1e+6isFysbyaTmj/+YsslKuBnuam/u8MWWSc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790871003; c=relaxed/simple;
-	bh=zHMEn9mBt336/JVgb7iB54AgdSDZLc1kqjy1o9LE44g=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=WgrCzxW5PqWw6JgKYiqLVTGK0fFGtYhED1S4GYJrjQOQy5AkhOZyd1PYnTeYB+XCvZM6fxbtgbLlRLqrm7EAO7iXA0sptiue8EcAvgcSuKxP5iSWHTiX7JIc5mdVC7B/hN5fh+6ohHM/fXyzkcCiWUrzqzgQZ5BbqvEG5j4E+kk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HPkshFlW; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790871819; c=relaxed/simple;
+	bh=2YNI7pB6efh2PLKthQqPV3hJUbC1LkdRRgWLeml4KcU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=qzvhozV6DRW+gv2TIeI2LH0EujLAgSJtvDYsFypPhknt0+5Yr+XKkazlFwbmntyTWzde9Sz+ZpimgrQTrR9u5NL43g+vMV8iOr44qeWSyZtw9zY5lqpz8UpOdV3jpZ27uk5Pxt+9sQQH8qmpjY8vqiFWMHWFHh8oxQ53XRYMdM8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RD0Z2qnc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HPkshFlW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1379B1F000FF;
-	Thu,  1 Oct 2026 16:10:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RD0Z2qnc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77AC31F000FF;
+	Thu,  1 Oct 2026 16:23:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790871002;
-	bh=f1sm/bW1O3VudyW6w95/8ZT5b8IRkhDV3r3OVOVHT74=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HPkshFlWnGiTV7t3whxVPNuVjenN7edaS6kQNBl22nyxKAt0OsHIRoXZk2QCUo4Yd
-	 +gkxOIVwDWfRiUuB0DniEXw73WcftOvIDaYHCuZ6m+IRY0BvqYnOXY+Nrm8k94/E50
-	 vLGjxVT1/gnoOOBLnSMVwH/xNWSzhF3lyxtUzK84cG/WrLT07fZhJi6PVCeCCKi5C+
-	 ub8p20AyAyu1M6T6n3KDUe0jNHC9fGCapQ/CHeqyLu0VqW8lxGTLnAOa5nLbTm1ULu
-	 8jlLeleltvKimEw9sNEYJI2QKX7P6ijAJ/oPa8r6SuiVGslB8k4cssMUIpuYGrYWOb
-	 9NZk/I0no91Bw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 2/3] PCI: Add per-device debugfs directories
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Wei Huang" <wei.huang2@amd.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261001155551.4182899-3-wei.huang2@amd.com>
-References: <20261001155551.4182899-1-wei.huang2@amd.com>
- <20261001155551.4182899-3-wei.huang2@amd.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 01 Oct 2026 16:10:00 +0000
-Message-Id: <20261001161002.1379B1F000FF@smtp.kernel.org>
+	s=k20260515; t=1790871814;
+	bh=oViQG46mglwKreUchYO11Hqs4mHMpQhSXG2+xTbUjf8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=RD0Z2qncsM3PctrR28TbKTitwf8mKG575RALyVD7/tjLtXEsdVQlsm6e5TYqxWi5T
+	 Z0FQlJl1vaQlrGUrOvRSCjyeYswJQVXZ1ViTzK9h9w0cu2hPTuiwrFwvY/3MoUGCnD
+	 G2SkmxJYWtNlt9aRxBMiNDVq+Q759QxUoS0Z/oEgoyhsvTUGeK+g+GHyc4tkiXq5sw
+	 V+evUQNpMI28kcTLBfrVo0dqnxTgBZwAbkFajEJt+NtXtf2D3b3Ln6Oc5gEscpV5Lb
+	 ofEAJrIFJ205rzH3WiyKPq8uAZx50JUZ8rEkh/6MEMrDSbRq86l0xv9ROYIaZMDitb
+	 Sw3lrRQ+0TgNg==
+Date: Thu, 1 Oct 2026 11:23:33 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Nikola Prica <nikprica@amd.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	jerry.jiang@amd.com, haijun.chang@amd.com, andy.zhang@amd.com,
+	christian.koenig@amd.com, jim.chow@broadcom.com,
+	matthew.mcclure@broadcom.com, gbayer@linux.ibm.com,
+	regressions@lists.linux.dev, Nikola Prica <nikola.prica@amd.com>
+Subject: Re: [PATCH v4] PCI: Accept AtomicOps already enabled by the
+ hypervisor
+Message-ID: <20261001162333.GA2692735@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260921111903.978687-1-nikprica@amd.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] PCI: system-wide stall during hotplug due to global pci_debugfs_lo=
-ck held over debugfs removal
-- [Medium] PCI: speculative resource leak due to unpoisoned debugfs pointer=
- on teardown
---
+On Mon, Sep 21, 2026 at 01:19:03PM +0200, Nikola Prica wrote:
+> From: Nikola Prica <nikola.prica@amd.com>
+> 
+> pci_enable_atomic_ops_to_root() currently fails when no Root Port is
+> visible. That is common in passthrough guests (ESXi, Hyper-V): the
+> endpoint is assigned to the VM, but the guest topology has no Root
+> Port above it.
+> 
+> In those setups the hypervisor may already have enabled AtomicOp
+> Requester Enable on the device. If PCI_EXP_DEVCTL2_ATOMIC_REQ is set,
+> treat AtomicOps as already enabled and return success instead of
+> failing the Root Port walk.
+> 
+> After 1ae8c4ce1570 ("PCI: Enable AtomicOps only if Root Port
+> supports them"), pci_enable_atomic_ops_to_root() always fails if the
+> Root Port is not visible.  On systems where the Root Port is not
+> visible but *does* support AtomicOps, this is a regression: prior to
+> 1ae8c4ce1570, it enabled AtomicOps in the endpoint and returned
+> success.
+> 
+> Fixes: 1ae8c4ce1570 ("PCI: Enable AtomicOps only if Root Port supports them")
+> Reviewed-by: Christian König <christian.koenig@amd.com>
+> Reviewed-by: Gerd Bayer <gbayer@linux.ibm.com>
+> Tested-by: Gerd Bayer <gbayer@linux.ibm.com>
+> Signed-off-by: Nikola Prica <nikola.prica@amd.com>
 
-commit 64859f6a500632327edcd41b730592212c9d3478
-Author: Wei Huang <wei.huang2@amd.com>
+Applied to pci/for-linus for v7.3, thank you!
 
-PCI: Add per-device debugfs directories
+I tweaked the last paragraph to be more explicit about the regression
+behavior (as I understand it):
 
-This commit adds per-device debugfs directories owned by the PCI core,
-using pci_dev_debugfs_dir() to create them on demand and pci_destroy_dev()
-to recursively remove them.
+  After 1ae8c4ce1570 ("PCI: Enable AtomicOps only if Root Port
+  supports them"), pci_enable_atomic_ops_to_root() always returns
+  failure if the Root Port is not visible, so drivers don't use
+  atomics when they could.
 
-> diff --git a/drivers/pci/debugfs.c b/drivers/pci/debugfs.c
-> new file mode 100644
-> index 0000000000000..682fb614d7cfb
-> --- /dev/null
-> +++ b/drivers/pci/debugfs.c
-
-[ ... ]
-
-> +void pci_dev_debugfs_remove(struct pci_dev *dev)
-> +{
-> +	guard(mutex)(&pci_debugfs_lock);
+> ---
+> v4: Updates commit log to make regression point clear
+> v3: Add Fixes tag
+> v2: Be more strict and only apply logic in headless device case.
+> ---
+>  drivers/pci/pci.c | 12 +++++++++++-
+>  1 file changed, 11 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b2879a6be5f8..62729ade496f 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3769,8 +3769,18 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
+>  	}
+>  
+>  	root = pcie_find_root_port(dev);
+> -	if (!root)
+> +	if (!root) {
+> +		/*
+> +		 * A hypervisor may expose a headless topology with no
+> +		 * visible root port.  If it has already set AtomicOp
+> +		 * Requester Enable, there is nothing more to do.
+> +		 */
+> +		pcie_capability_read_dword(dev, PCI_EXP_DEVCTL2, &ctl2);
+> +		if (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_REQ)
+> +			return 0;
 > +
-> +	debugfs_remove_recursive(dev->debugfs);
-
-[Severity: High]
-Does holding the global pci_debugfs_lock during debugfs_remove_recursive()
-risk a system-wide stall?
-
-If a userspace process is actively reading a debugfs file, the removal will
-block for SRCU synchronization. Because the global lock is held via
-guard(mutex) for the entire function scope, any concurrent
-pci_dev_debugfs_dir() or pci_dev_debugfs_remove() calls on unrelated PCI
-devices will then block indefinitely during hotplug and removal operations.
-
-Could the dentry be extracted under the lock and removed outside of it?
-
-> +	dev->debugfs =3D NULL;
-
-[Severity: Medium]
-Can a concurrent runtime sysfs operation mistakenly recreate this debugfs
-directory after removal?
-
-This sets the pointer to NULL while the device is still exposed to the
-system. As seen in pci_destroy_dev(), pci_dev_debugfs_remove() is called
-prior to device_del(). If a concurrent operation calls pci_dev_debugfs_dir()
-and sees NULL, it might recreate the directory and permanently leak it after
-the device is finally deleted.
-
-Should the pointer be explicitly poisoned with ERR_PTR(-ENODEV) instead
-of set to NULL to prevent recreation?
-
-> +}
-
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index e711ac1d4e38a..e10139117d578 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-
-[ ... ]
-
-> @@ -37,6 +37,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
->  	platform_pci_remove_wake(dev);
->  	pci_doe_sysfs_teardown(dev);
->  	pci_npem_remove(dev);
-> +	pci_dev_debugfs_remove(dev);
-> =20
->  	/*
->  	 * While device is in D0 drop the device from TSM link operations
->  	 * including unbind and disconnect (IDE + SPDM teardown).
->  	 */
->  	pci_tsm_destroy(dev);
-> =20
->  	device_del(&dev->dev);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261001155551.4182=
-899-1-wei.huang2@amd.com?part=3D2
+>  		return -EINVAL;
+> +	}
+>  
+>  	pcie_capability_read_dword(root, PCI_EXP_DEVCAP2, &cap);
+>  	if ((cap & cap_mask) != cap_mask)
+> -- 
+> 2.34.1
+> 
