@@ -1,114 +1,134 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73A6D496D55;
-	Thu,  1 Oct 2026 12:14:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 269C23D8121;
+	Thu,  1 Oct 2026 12:59:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790856899; cv=none; b=q9OvZY0m+yfSSrK+GcKECgrybN3/hbFJzgPEyd4AkHUiwe+JY1cjiTuR0Dk8yBVpleq4KROsSOL3yjnJtQHLGteV+b9EtLEGJGoeuzaots8QITFzLu1vnYnVgEJQ3FdsfSmKf72vzXYq9dcc78k2W3FepSY2YFxwDk4//faQmSs=
+	t=1790859591; cv=none; b=JZX3X3larjRmca3plEII92LqpsJ1qUUX7w2QSj7VINI2etk9TYENuJNviJrxNtLANcuoTpYx+DlUlhL2BqHQs1asdzewuaGZS9FEUSr1gD9L0GbfNdDbZ34zIEjpc/b/ob7DpjJWePgPgHwVSO3Dt2bh69kVRgc3uTjj/MwuGnc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790856899; c=relaxed/simple;
-	bh=wzl4bQpHufVbGcUH2VpVjtJU0TDaij6VKMDPl43NN0I=;
+	s=arc-20240116; t=1790859591; c=relaxed/simple;
+	bh=+oEEYMyapdfy2MygoVgo6lezDIyzegG2R9t+lllJbIA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UX4f4xTzQH8rJIcbAP/4WMTUtQM4PsuzGwG9qIUGqsHEG1t9M51jQJMwHCcSBHyG2FfxcA6y/RTTK0r4EzZYKrT9XwuLfDywS5RWOGD1TQ66F0ZRuswY4a3/3bCMRN8lJRbiP10e5SS2n6/Qa83ZdSvAGA9B2392HCKvEEwbJTU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EazoPou7; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=hRp0bIXDNuskvk6SzK+OoATc6vTZPiK9n44OP02TWWOD/Cf7jkRPRiVQKg0P9+m2ryEEg2qdwDBk8KimB04BqV2O05CAgK+Csn7aQIyQQGbc7iN7LpqIdC0+OKegh/Gurf/0hdq2SxOAUBgJc3ecYW+rUG8qjgIh2HoGXLhzPtk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JIF/B0EW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EazoPou7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 747F31F00898;
-	Thu,  1 Oct 2026 12:14:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JIF/B0EW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB11F1F000FF;
+	Thu,  1 Oct 2026 12:59:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790856897;
-	bh=DYmoiuH04vCrKntkd6fvwAuUoeiwmoc5CuyAp/tVUL0=;
+	s=k20260515; t=1790859589;
+	bh=mWEhNC2bx28+yRg0dPmgwrk6vKK8w5OBcpeNy+gKRH4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=EazoPou70hQV84XiGWeQ+BeuJoBKc/GYwYe9XuLqYpTz2Fg9aFnD6H48Vu8DM3Xtm
-	 oEz9bOD2d9e95OsLDsvMpuLs2FAV761uBC/zHq3uwi5gvW6Z3fB1g+m3jiR5aQmai2
-	 Yb3dqLWR+s8ZzSnAqreTt9XMKrDr5r0g5+RH2vXyKSs7oLqxBxVS4AwejkDFNyWXSF
-	 Kvfn8tQs/1dGByjVSzzMo0lczqFxsxFVwNMbR7wWce+7axsqz/kYQX7gZ2dEAG3dNZ
-	 xJABUE1EMx0X9LaUUoZszyqKkM5qNugxkFPQJdCMp8h9ERuBaZ/mb4wvnzIctgYfsW
-	 gten9bB/dSIWg==
-Date: Thu, 1 Oct 2026 14:14:54 +0200
-From: Andi Shyti <andi.shyti@kernel.org>
-To: Janusz Krzysztofik <janusz.krzysztofik@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-	intel-gfx@lists.freedesktop.org, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, 
-	Andi Shyti <andi.shyti@linux.intel.com>, Krzysztof Karas <krzysztof.karas@intel.com>, 
-	Sebastian Brzezinka <sebastian.brzezinka@intel.com>, Krzysztof Niemiec <krzysztof.niemiec@intel.com>, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: Disable not supported reset methods on DG1 0x4905
-Message-ID: <ar5Ol94SjttvxEAO@zenone.zhora.eu>
-References: <20260907090249.1348552-2-janusz.krzysztofik@linux.intel.com>
+	b=JIF/B0EWXJ0MDjxeLJZ7yO1RQlpIaMdKbKKNsSXNWszWPJ3PBB4IoBEyGD5DARCr6
+	 EghD/+7Ha3UjceHW9Y7A7cvC/XxmnNWI28uTVunnCjnAZhrBDv5jL1BQBGa3yejDd9
+	 8JtJ9TQEwE9J8Epe8QYSKPF+/imypf3aX6Ku8z3ojDryet26BK6wy/1B+aVsbYEP8A
+	 bCyy3I8sdeW1g+eTaXFkbJPLdBLEP9UbiViiSkgnH4LRiYzLb6taZ99aGK9yoG235C
+	 WMk4EwMOCwp9Tvw37ZZdHse/DBW/9OckkefvsDEBIG7Q+OIcogIXov6gHrykqeG8MO
+	 4GyhjSqX2XKAg==
+Date: Thu, 1 Oct 2026 15:59:44 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
+	media-ci@linuxtv.org, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org
+Subject: Re: [PATCH v9 16/18] PCI/P2PDMA: Let a client declare that it
+ selects ATS per mapping
+Message-ID: <20261001125944.GM3401365@unreal>
+References: <20261001-fix-p2p-acs-v4-0-v9-0-1a8e0f50ddd9@nvidia.com>
+ <20261001-fix-p2p-acs-v4-0-v9-16-1a8e0f50ddd9@nvidia.com>
+ <20261001120807.8723F1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20260907090249.1348552-2-janusz.krzysztofik@linux.intel.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261001120807.8723F1F000FF@smtp.kernel.org>
 
-Hi,
+On Thu, Oct 01, 2026 at 12:08:07PM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [Medium] pci/p2pdma: pure clients cannot set ats_per_mapping because pdev->p2pdma is NULL
+> --
+> 
+> commit f332086fc4a4273d099c81fafb33298021d47d1a
+> Author: Leon Romanovsky <leon@kernel.org>
+> 
+> PCI/P2PDMA: Let a client declare that it selects ATS per mapping
+> 
+> The PCIe ATS Enable bit covers the whole device, so P2PDMA cannot tell
+> from it whether a client will translate a given address. Most devices
+> translate any address once ATS is enabled, but some choose ATS per DMA
+> mapping and can still use bus addresses for the rest.
+> 
+> Add pcim_p2pdma_set_ats_per_mapping() so the driver of such a device can
+> declare that before P2PDMA starts treating clients with ATS enabled as
+> translating everything.
+> 
+> > diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> > index cf190bd572d4a..6a63901c65fb6 100644
+> > --- a/drivers/pci/p2pdma.c
+> > +++ b/drivers/pci/p2pdma.c
+> 
+> [ ... ]
+> 
+> > @@ -1562,6 +1563,32 @@ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
+> >  
+> > +/**
+> > + * pcim_p2pdma_set_ats_per_mapping - Declare per-mapping ATS for a client
+> > + * @pdev: PCI device that initiates peer-to-peer DMA
+> > + *
+> > + * Declare that @pdev issues Translated Requests only for the DMA mappings its
+> > + * driver sets up to use ATS, rather than for any address once ATS is enabled.
+> > + * P2PDMA then routes this client's Requests with the Address Type each query
+> > + * asks about, rather than the one its ATS Enable bit implies.
+> > + */
+> > +void pcim_p2pdma_set_ats_per_mapping(struct pci_dev *pdev)
+> > +{
+> > +	struct pci_p2pdma *p2p;
+> > +
+> > +	p2p = rcu_dereference_protected(pdev->p2pdma, 1);
+> > +	if (!p2p)
+> > +		/*
+> > +		 * ats_per_mapping is a performance optimization,
+> > +		 * if pcim_p2pdma_init() didn't set pdev->p2pdma pointer
+> > +		 * for some reason, let's simply use ATS global settings.
+> > +		 */
+> > +		return;
+> 
+> [Severity: Medium]
+> Will this silently fail for pure P2PDMA clients?
+> 
+> It looks like pdev->p2pdma is only allocated when a device registers as a
+> P2P memory provider via pcim_p2pdma_init():
 
-any news here? This patch looks to be stuck, can someone please
-give it a look?
+Yes, this is exactly for them and no one else.
 
-Thanks,
-Andi
+Thanks
 
-On Mon, Sep 07, 2026 at 10:59:18AM +0200, Janusz Krzysztofik wrote:
-> DRM CI consistently reports failing device reset attempts on Intel DG1
-> discrete graphics adapters.  Manual reproduction attempts allowed to
-> narrow down the scope of that problem to a specific revision of that
-> hardware, SKU 8086:4905.  It has been confirmed that both reset methods
-> claimed by the device, i.e., flr and bus, suffer from that issue.
 > 
-> Since consecutively failing device resets may lead to system hangs,
-> disable both useless reset methods.  A respective CI test will then be
-> skipped instead of aborting whole CI jobs.
+> drivers/pci/p2pdma.c:pcim_p2pdma_init() {
+> 	...
+> 	p2p = devm_kzalloc(&pdev->dev, sizeof(*p2p), GFP_KERNEL);
+> 	...
+> }
 > 
-> Suggested-by: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
-> Closes: https://gitlab.freedesktop.org/drm/i915/kernel/-/work_items/11814
-> Reviewed-by: Andi Shyti <andi.shyti@linux.intel.com>
-> Reviewed-by: Krzysztof Karas <krzysztof.karas@intel.com>
-> Signed-off-by: Janusz Krzysztofik <janusz.krzysztofik@linux.intel.com>
-> ---
-> v2: Fix commit description wording (Andi)
->   - add Suggested-by: tag missing from v1,
->   - add collected Reviewed-by: tags.
+> If a driver for a pure P2PDMA client (e.g., an NVMe initiator without CMB)
+> calls pcim_p2pdma_set_ats_per_mapping() to declare its ATS behavior, won't
+> pdev->p2pdma be NULL since it never called pcim_p2pdma_init()?
+
+Only RDMA NICs support that per-mapping thing.
+
+Thanks
+
 > 
->  drivers/pci/quirks.c | 5 +++++
->  1 file changed, 5 insertions(+)
+> If so, wouldn't this cause the client to silently fall back to suboptimal
+> global ATS routing, as it can never successfully set the ats_per_mapping flag?
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index de9bbccda21fd..e55475374c6fd 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3811,6 +3811,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TI, 0xb005, quirk_no_bus_reset);
->   */
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1164, quirk_no_bus_reset);
->  
-> +/* Intel DG1 0x4905 may not recover from bus reset */
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4905, quirk_no_bus_reset);
-> +
->  static void quirk_no_pm_reset(struct pci_dev *dev)
->  {
->  	/*
-> @@ -5597,6 +5600,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
->   * AMD Neural Processing Unit 0x1502 0x17f0
->   * Intel 82579LM Gigabit Ethernet Controller 0x1502
->   * Intel 82579V Gigabit Ethernet Controller 0x1503
-> + * Intel DG1 Discrete Graphics Adapter 0x4905
->   * Mediatek MT7922 802.11ax PCI Express Wireless Network Adapter
->   * Mediatek MT7925 802.11be PCI Express Wireless Network Adapter
->   */
-> @@ -5612,6 +5616,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1502, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x17f0, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x4905, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x0616, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x7925, quirk_no_flr);
->  
 > -- 
-> 2.54.0
-> 
+> Sashiko AI review · https://sashiko.dev/#/patchset/20261001-fix-p2p-acs-v4-0-v9-0-1a8e0f50ddd9@nvidia.com?part=16
