@@ -1,38 +1,38 @@
 Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B59CE51E457;
-	Thu,  1 Oct 2026 14:29:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 997F8521216;
+	Thu,  1 Oct 2026 14:29:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790864965; cv=none; b=QUE0ht4etblXOlCIkSaMEgAUl1xxPz+tN8iEvcowuVIJp9VskwRPdgki5Qd92ZICOZbdLVbLYJoQ5eG0cULxNlA3wvZ2mo5lgMGWq0V97dnj+YWdzg7nwKfJ7vpS8o6b0aK/bsntauMhr87QoT9zjdkWKOKw2QrI6TL4SyGd5WE=
+	t=1790864968; cv=none; b=r3nTLff38fWLxGWIqNdD+sgbHoALVBnCpbtDrwcQ0mAhulEeRfRKWIj7CNNVyYsi/JKoGGwryU+jaRYOPtQHjwqkWsjc62k6ZKNJoexIZr8vO879pHlltcy6/5a5AoLyrlkjY7HMCBq1UlKJcyoQbMPqQ/W4323xR4fuygfP8D0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790864965; c=relaxed/simple;
-	bh=gMNtK/0YjzbUiWPTlVbcnx+RZMHYxHe3zyVfcHByLZ4=;
+	s=arc-20240116; t=1790864968; c=relaxed/simple;
+	bh=NcU3zyHrdoqF7Sz2BWcoYero8xdv5Bz83v9sBOVAEgM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=E498MH56LwnDqsfVn+E+N1cNnX4MDFDqFcf65sZliuRe0kRGgX+WGrJuViGrL8tfGBot3BhWpDRONI2J0bANpNiG3zaPQoDnJjzdv8cFLPahQ6uNqGZ3nYY/ddYOUr12q3KZpuhqTmvrvzx5MJQScljCfQH0IW9MmMsp+B+Bc10=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=KNbXLEsa; arc=none smtp.client-ip=185.246.84.56
+	 MIME-Version; b=inY0qUO5pLmcG03PvChNepyXKT3ZaDEg/3sgQt8bmaE32AocTeF5a/TSrX48jDDOqs54u8NDnsL+PqsXhRVsgKPRdXbmsAqsWr2WekHU+t7+evhKMybxalLXTf7/NsjBj4fjBzuZEhqJ9yJpCiURJEkUHRw+KrIiNpOzv3CfNxA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=issNXQWf; arc=none smtp.client-ip=185.246.84.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="KNbXLEsa"
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="issNXQWf"
 Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-02.galae.net (Postfix) with ESMTPS id 36C401A10B5;
-	Thu,  1 Oct 2026 14:29:13 +0000 (UTC)
+	by smtpout-02.galae.net (Postfix) with ESMTPS id E489B1A10B6;
+	Thu,  1 Oct 2026 14:29:18 +0000 (UTC)
 Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 0910160341;
-	Thu,  1 Oct 2026 14:29:13 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 41E1A10328199;
-	Thu,  1 Oct 2026 16:29:04 +0200 (CEST)
+	by smtpout-01.galae.net (Postfix) with ESMTPS id B526E60341;
+	Thu,  1 Oct 2026 14:29:18 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id D605510328149;
+	Thu,  1 Oct 2026 16:29:10 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1790864949; h=from:subject:date:message-id:to:cc:mime-version:
+	t=1790864956; h=from:subject:date:message-id:to:cc:mime-version:
 	 content-transfer-encoding:in-reply-to:references;
-	bh=+ChnyDkFUv0fqgvepwYYsoR4k2/DprmHV3Gvk8JzTTc=;
-	b=KNbXLEsad25MO3LJVTB4Tkrueex5ndLsvpV+2vXQRvD6fuB1OL/Qxv/hPXang0kMZ1SAiM
-	Z7DAn3kpHeMXChe2Zr/Xfurj1IvoKmRT4vQlYD2TfEufPI5R4HApjxu0r/OjrkjTNpp7ae
-	WV9VLfyW7/S/EG2bNhN4Lwg6qbYHXjgpJ22DoHuB4hrklzWy5us4vs4YeMBgkIUL1LqcHQ
-	sL5B+DEhQU+qWp3rvxIApcBbxE8PafzW5OJGMFX3+sxgqnQy/niETz0+X/mEg1j51h4ETQ
-	7qRyqtaIZk1l1AVx8GRoaFgQTF0fX0+AMJiSQ/gGAICDYdFXuCDwA7VpMoZWTA==
+	bh=i9zMtqlaeC/N/r/1IZp7EGtF4TlbMbXPfFl8uC42X1Y=;
+	b=issNXQWf/FFMcnRDCdEwKvDuAbV44bRni5LmYEKesUHCZ5DQWtvNBPlYP4YT6XBJMSXEiN
+	bVZ72M7EWjyYuV+dhRTYyNduc2Lzx/zLWyT/bDY2wOZRTJOM8l3J7FEK89symebLmHtvrq
+	LPDnhJEXAExZFrYFvwYyyzg3JXXOh+4/Ys3TNIAA6k/aNQQ0V6fl+bGEpgaQcZfF5cGXkq
+	hxcrwFawINhhqv9iMOoCtnPlvlOY6+DuxvWV9L4fyd79530+cxE/V1kPuW/rnkPC13hDHK
+	wEesmgARmaNMC8pwRlTqq0wkeeuhuM1ve7zyVmD/4Xn5DhLzAXZ+FVEVG5ckWA==
 From: Herve Codina <herve.codina@bootlin.com>
 To: Richard Cheng <icheng@nvidia.com>,
 	Andrew Lunn <andrew@lunn.ch>,
@@ -76,11 +76,12 @@ Cc: driver-core@lists.linux.dev,
 	Steen Hegelund <steen.hegelund@microchip.com>,
 	Luca Ceresoli <luca.ceresoli@bootlin.com>,
 	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	stable@vger.kernel.org,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
 	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: [PATCH v12 05/10] cxl/test: Use fw_devlink_set_device()
-Date: Thu,  1 Oct 2026 16:28:05 +0200
-Message-ID: <20261001142815.277550-6-herve.codina@bootlin.com>
+Subject: [PATCH v12 06/10] PCI: of: Use fw_devlink_set_device()
+Date: Thu,  1 Oct 2026 16:28:06 +0200
+Message-ID: <20261001142815.277550-7-herve.codina@bootlin.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261001142815.277550-1-herve.codina@bootlin.com>
 References: <20261001142815.277550-1-herve.codina@bootlin.com>
@@ -98,29 +99,32 @@ The code set directly fwnode.dev field.
 Use the dedicated fw_devlink_set_device() helper to perform this
 operation.
 
+Cc: stable@vger.kernel.org
 Signed-off-by: Herve Codina <herve.codina@bootlin.com>
-Reviewed-by: Dave Jiang <dave.jiang@intel.com>
-Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
 Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 Reviewed-by: Richard Cheng <icheng@nvidia.com>
+Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
 ---
- tools/testing/cxl/test/cxl.c | 2 +-
+Cc stable because used by other patches with Fixes + Cc stable
+---
+ drivers/pci/of.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/tools/testing/cxl/test/cxl.c b/tools/testing/cxl/test/cxl.c
-index 547ebc97bf59..e21e45fe1572 100644
---- a/tools/testing/cxl/test/cxl.c
-+++ b/tools/testing/cxl/test/cxl.c
-@@ -1678,7 +1678,7 @@ static void mock_companion(struct acpi_device *adev, struct device *dev)
- 	device_initialize(&adev->dev);
- 	fwnode_init(&adev->fwnode, NULL);
- 	device_set_node(dev, &adev->fwnode);
--	adev->fwnode.dev = dev;
-+	fw_devlink_set_device(&adev->fwnode, dev);
- }
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index a51dff91b196..0f45c5b72458 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -882,7 +882,7 @@ void of_pci_make_host_bridge_node(struct pci_host_bridge *bridge)
+ 	 * bus. Avoid any new device creation.
+ 	 */
+ 	of_node_set_flag(np, OF_POPULATED);
+-	np->fwnode.dev = &bridge->dev;
++	fw_devlink_set_device(&np->fwnode, &bridge->dev);
+ 	fwnode_dev_initialized(&np->fwnode, true);
  
- #ifndef SZ_64G
+ 	ret = of_changeset_apply(cset);
 -- 
 2.55.0
 
