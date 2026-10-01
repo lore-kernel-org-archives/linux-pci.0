@@ -1,180 +1,172 @@
-Received: from mail-qk2-f38.google.com (mail-qk2-f38.google.com [74.125.230.230])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79FD63B9D8C
-	for <linux-pci@vger.kernel.org>; Thu,  1 Oct 2026 19:19:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.230
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25F5A36A03F;
+	Thu,  1 Oct 2026 19:29:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790882360; cv=none; b=d+puYiUsGyWRnfrWeN8X4k8nQxoUbYt9d7AbRUe453h0uGEpruGVNJzgeloSQQ8LAA0VAFhHspH3EfY6ChT7wv2XOgCFJ+qiX4YwRiS2E5WcAcY6Guvs60PKFEcEUeWP9kBkDyq1lqITsFfZkSIs+XNr8iBKcbgAlpl6dxCe2d4=
+	t=1790882972; cv=none; b=cWlHUfeX81DICTGcgeVtdHT3Sr5GuC0WhtdQMcyeLP+Tu4FEvSvCkKIA8FUmghR3PG6kTdm95P/aBO9a85N/Bpc+gkquT0dyNg7whkhgbOi22S4yqINVFOq8Tsbt02xYamzoJCS7s5mmt5mxJsrPEG8b4auUmVxqlPZpkF7j3Ic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790882360; c=relaxed/simple;
-	bh=fO68JDy7h2mkSC3wXOiTOR3KYoEnokUrbzSoIUOfMVA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=b2xWjMDRwioKab9OCqaKPwsgCvSujgYtQCEW1gGtHG7brvLGpanC9rtEaQJaEo/Fri3PK3bOkcPqRN2+/ecCODgY6DeXN4MVnWEEbH0gmdmFAh565QU+Of5yknWA+Euv2LDvrAnnYExe6Zir8dhHcFkE+HeS+lPQoBJ4uwgN5CE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=quVvXwwj; arc=none smtp.client-ip=74.125.230.230
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
+	s=arc-20240116; t=1790882972; c=relaxed/simple;
+	bh=guOW+/08gRNSqfTaEYCyx+gyJOlrtAaIaRO6zclFIGw=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=VxKG7qqskOyAxEA0Ueqwwko2dQ1qpMAY94zJdcb/9s2mAvxhVFE7nlg1xFGtQvlVrddgdiUlZYKghV7djnOMJTEGCzpLFfYIsXY5bLoQXfEYrmaB2SzBLsbBge0BevYUBPq/rlPAhmGn5ve1Rru/Sj+TYmdywYpqmf44F7tKeDk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=etqvOpLP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="quVvXwwj"
-Received: by mail-qk2-f38.google.com with SMTP id d75a77b69052e-5339b4a29f9so851061cf.1
-        for <linux-pci@vger.kernel.org>; Thu, 01 Oct 2026 12:19:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1790882356; x=1791487156; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=H5ABqliwt/0HVQecrzmM2IfcVofZb65+VwqbBeb7yHg=;
-        b=quVvXwwj5ePkH9anmrBdM2truSpmQi7t4poj2NJ0fWi2kvwmLENF1dBP4YPkrB4FiY
-         hArb4hcdczVEl2ZTEfDw+chea5oxgc4s8C1u/HTWim1ZCyS5QEI+woE2s4HO5zGe4Dfw
-         0j/9h+4LuuIac/tRDmhrrC8adSEa3V0D8mMoYamHS6blSYXFsZCM/49Sz91EwBBLaAAt
-         FCwTSWFsJUDBeALpniCC46ClkLUcyqQOp+Q3fMm4zy4FpSAhyKsQR8um0I2yEWyzF+t3
-         o4Zw9YpqnGE9QfdCRwDj0Y7paJCLaAQl1FBhZ9X1NFU02lC/4tI2osQTLPMO0gUJwhK7
-         Ktiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790882356; x=1791487156;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=H5ABqliwt/0HVQecrzmM2IfcVofZb65+VwqbBeb7yHg=;
-        b=Vcf0iz8z3bjvq0prQpsHDQFOpq2tIVt0a1IJeCiADMBTlu/AfAzdwGAEYVkrW1XJaU
-         CMBYVU/+nllUK77xVjLnCOdWocDGmkA8vqwcpmO2BrIWcYDr5EhRFxVdtYESfBzfzkWn
-         X800LiLqi0wZ40lIdyvWlx3YN3jXSk4U3iv0J2IAcREp8yzkQCBGpU/ybR3ICGkDi4VK
-         nn6krFeEAJrpMim5uk24X5zcEhQQogVv44q6SIkxgRTe/7xmQsWItESYx1APxd/fNqHE
-         etyw/fEAUaGHnceoWuPDRIIqbsvk89jr6znj6z1TNrzgAoUv6knn8+isxslpohobZjW/
-         HkWQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzbj9XWN/PC9AR4F3fZNMqCLIA1tZbnXOkwitnBhNbipTTYx2DKGV6mt+sTw/NBGbUwG+nm7/sr1sQ=@vger.kernel.org
-X-Gm-Message-State: AFuF++mZGMLxf4hXGSlBaHoswzJzHaShpRgEIf0oeyQtnE/znIvL/yzK
-	opJ1zz690sR89i/Lbhmxgx3ud3qBz/Kdn4QboqWou/M9e2PIMntht85lKXTkW+feQSA=
-X-Gm-Gg: AYBFou01ignUpmwMI1xxDmZG3NnOd6C6mrVsEP7GLtmdMCuO+R7bOU+6B6Yzf9tRkbT
-	VBPF78WYANB+OO73SSK0d2yMX+i+3FPdkkH3fCiMNrGRkm+xDbm9COTBY6oE54Q0lb3IWxdfXEj
-	kB6qvOJaiWor84ldrmF9pBIfFLmQBi5NMIspJuHVUgdVwF5xT7G93ecaIowCEP5QezW9i6nZtAB
-	pKG6+4eI3j3TZQiKEBOj0mj5w0r37y2dUzCAylc4hta6RLp7lu3/WHFZDsbuhjR4ANGI2fztnUP
-	OdOk9l19OjP7UwWTBHGXcUz7q6PxSg1so0knnqlQkPqeH/QEAayqZQCb7hT/sS4Vw5TxhiV37Y5
-	vvWSuy5ciGjjbjQwUULQjrz5K9/XjzspU1jbXgcsNqY3a14rU98QmogEjStzIap1aYrQVn1YcG+
-	l72j6Ds1cM7AnJecLLLZGE0Iu6yalzfwk1zpHdu9B8rOZpd4QC5Ez5gAMUmAX/cXrRL3hzmAs=
-X-Received: by 2002:a05:622a:4296:b0:533:3fc2:8b19 with SMTP id d75a77b69052e-533cba5b5b6mr2082701cf.20.1790882356405;
-        Thu, 01 Oct 2026 12:19:16 -0700 (PDT)
-Received: from [172.22.22.28] ([73.62.185.64])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-53398bf8196sm5954131cf.22.2026.10.01.12.19.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 01 Oct 2026 12:19:16 -0700 (PDT)
-Message-ID: <9c426950-b3f3-42fd-b31d-f14085a7d2d1@riscstar.com>
-Date: Thu, 1 Oct 2026 14:19:14 -0500
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="etqvOpLP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC4451F000FF;
+	Thu,  1 Oct 2026 19:29:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790882970;
+	bh=0sWDayJOkxAeOGqqB0NIGD2EYTzPiQHVomT9o9M6NJE=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=etqvOpLPcimxHlPPMuhIKLv01U67MpgFnDZ8Y3ieFvsD8dguldGMoBRIjHNML1ell
+	 /8euWeMtkYpB9iJGTyOwz8+RAkiDppmh9yWUQcFOI2sOjC3e2WNyBqlsIxfRf8zDnt
+	 R/J0upFjOe+7FopiiAKnmP6Cbuu6z80pGh+Pc8DNd6Yi2ahDp7+uD5qo//nb7UJCMf
+	 ioWsMQhp3n/Nu/IoWKDMUDgt2IhQ3TSO+dhOgYSafmwCNScW6lgts5VXrMnxktHs1A
+	 yx/jLmuL2oWfB87JG/PEpa2blPrsHTwr/DwrAV4ZReaq3ryymkqKAduTRudHXmry60
+	 7sXWdTzVZzCcw==
+From: Thomas Gleixner <tglx@kernel.org>
+To: Han / =?utf-8?B?7ZWc7IOB7JqwU2FuZ3dvbw==?= <sangwoo.han@nearthlab.com>,
+ Bjorn Helgaas
+ <helgaas@kernel.org>
+Cc: jim2101024@gmail.com, florian.fainelli@broadcom.com,
+ lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ bhelgaas@google.com, bcm-kernel-feedback-list@broadcom.com,
+ robh@kernel.org, linux-pci@vger.kernel.org,
+ linux-rpi-kernel@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Inochi
+ Amaoto <inochiama@gmail.com>
+Subject: Re: [PATCH] PCI: brcmstb: Reserve only the MSI vectors that are
+ handed out
+In-Reply-To: <CAFg7d9bJJjR7JEMXanttGVcGisa4x3uLYPR43Te4+JKMzHBkfQ@mail.gmail.com>
+References: <87cxuo3fl9.ffs@fw13> <20260916231029.GA988000@bhelgaas>
+ <CAFg7d9bJJjR7JEMXanttGVcGisa4x3uLYPR43Te4+JKMzHBkfQ@mail.gmail.com>
+Date: Thu, 01 Oct 2026 21:29:27 +0200
+Message-ID: <871pa9gqy0.ffs@fw13>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 3/3] arm64: dts: qcom: qcs6490-rb3gen2: add endpoint
- buses
-To: Greg KH <gregkh@linuxfoundation.org>, andersson@kernel.org,
- konradybcio@kernel.org
-Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, arnd@arndb.de,
- bhelgaas@google.com, abelvesa@kernel.org, daniel@riscstar.com,
- mohd.anwar@oss.qualcomm.com, lorenzo.bianconi@oss.qualcomm.com,
- devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260918152659.413268-1-elder@riscstar.com>
- <20260918152659.413268-4-elder@riscstar.com>
- <2026100159-retold-could-3468@gregkh>
-Content-Language: en-US
-From: Alex Elder <elder@riscstar.com>
-In-Reply-To: <2026100159-retold-could-3468@gregkh>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On 10/1/26 7:06 AM, Greg KH wrote:
-> On Fri, Sep 18, 2026 at 10:26:58AM -0500, Alex Elder wrote:
->> The TC9564 SoC incorporates a PCIe switch, which is connected via
->> the second PCI segment (0001) on the RB3gen2 platform.  The third
->> downstream port of that switch (pcie@3,0) has an embedded PCIe
->> endpoint that implements two PCIe functions.
->>
->> The SoC implements other peripherals, and they will be accessed via
->> PCI endpoint bus.  Define the devicetree nodes representing these
->> buses, including the mapping of each BAR's address range to its
->> local address space.
->>
->> The endpoint's ranges property must be defined, but it will be
->> updated dynamically to include all BARs.  As a result of this update,
->> the parent address portion of each range will reflect the specific
->> address assigned to the BAR.
->>
->> Co-developed-by: Daniel Thompson <daniel@riscstar.com>
->> Signed-off-by: Daniel Thompson <daniel@riscstar.com>
->> Signed-off-by: Alex Elder <elder@riscstar.com>
->> ---
->>   arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts | 30 ++++++++++++++++++++
->>   1 file changed, 30 insertions(+)
->>
->> diff --git a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
->> index 3bb5fca8e2b13..5b7f5292a8864 100644
->> --- a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
->> +++ b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
->> @@ -955,11 +955,41 @@ pcie@3,0 {
->>   			bus-range = <0x5 0xff>;
->>   
->>   			dev@0,0 {
->> +				compatible = "pci1179,0220";
->>   				reg = <0x50000 0x0 0x0 0x0 0x0>;
->> +				#address-cells = <3>;
->> +				#size-cells = <2>;
->> +				/* Ranges will be updated dynamically */
->> +				ranges = <0x0 0x0 0x0  0x83050000 0x0 0x0  0x0 0x4000>,
->> +					 <0x2 0x0 0x0  0x83050000 0x0 0x4000  0x0 0x80000>,
->> +					 <0x4 0x0 0x0  0x83050000 0x0 0x84000  0x0 0x200000>;
->> +
->> +				pci-ep-bus@4 {
->> +					compatible = "simple-bus";
->> +					#address-cells = <1>;
->> +					#size-cells = <1>;
->> +					/* Map 0x0-0x1fffff to BAR 4 */
->> +					ranges = <0x0  0x4 0x0 0x0  0x200000>;
->> +				};
->>   			};
->>   
->>   			dev@0,1 {
->> +				compatible = "pci1179,0220";
->>   				reg = <0x50100 0x0 0x0 0x0 0x0>;
->> +				#address-cells = <3>;
->> +				#size-cells = <2>;
->> +				/* Ranges will be updated dynamically */
->> +				ranges = <0x0 0x0 0x0  0x83050100 0x0 0x0  0x0 0x4000>,
->> +					 <0x2 0x0 0x0  0x83050100 0x0 0x4000  0x0 0x80000>,
->> +					 <0x4 0x0 0x0  0x83050100 0x0 0x84000  0x0 0x200000>;
->> +
->> +				pci-ep-bus@4 {
->> +					compatible = "simple-bus";
->> +					#address-cells = <1>;
->> +					#size-cells = <1>;
->> +					/* Map 0x0-0x1fffff to BAR 4 */
->> +					ranges = <0x0  0x4 0x0 0x0  0x200000>;
->> +				};
->>   			};
->>   		};
->>   	};
->> -- 
->> 2.53.0
->>
-> 
-> This doesn't apply to the char-misc-testing branch :(
+On Mon, Sep 21 2026 at 18:05, Han / =ED=95=9C=EC=83=81=EC=9A=B0Sangwoo wrot=
+e:
+> I tested Thomas's patch on the same hardware setup with the 5-vector
+> MSI endpoint. The patch was applied as posted on top of 6.12.93
+> (rpi-6.12.y).
+>
+> With the patch applied:
+>
+> - The MSI base hwirq remained at 0x8 across 200 driver reload cycles.
+> - The driver got all 5 requested vectors on every cycle, with no
+> single-MSI fallback. Multiple Message Enable remained at 8.
+> - The brcmstb inner-domain mapping returned to baseline after each
+> unload/reload, with 12 mapped while the driver was loaded and 4 after
+> unload.
+> - A kprobe showed one allocation of 8 vectors followed by eight
+> single-vector frees, with nothing left over.
 
-Sorry about that.  It does apply to to the for-next branch for
-Qualcomm, so this should probably get merged through that path.
+8 single vector frees?
 
-https://lore.kernel.org/lkml/20260918152659.413268-1-elder@riscstar.com/
+Seems I got something wrong there verus the bulk free. Updated patch
+below.
 
-> So I took the first two patches only.
+> The MSI vector exhaustion issue I originally observed no longer
+> reproduces with the patch.
 
-Thank you.
+Good. Can you please retest with the updated patch?
 
-					-Alex
+> I also observed a KASAN report with managed affinity. Using a small
+> out-of-tree test module bound to the same endpoint and requesting 1..3
+> vectors with PCI_IRQ_MSI | PCI_IRQ_AFFINITY, a request for 3 vectors
+> resulted in:
+>
+> BUG: KASAN: slab-out-of-bounds in __irq_alloc_descs+0x158/0x460
+>
+> Requests for 5 and 7 vectors were capped to 4 on this 4-CPU system and
+> did not trigger the report. I have not checked this against the
+> unpatched kernel yet, so I cannot tell whether it is related to the
+> patch.
 
-> thanks,
-> 
-> greg k-h
+Any updates on that? Also please provide the source for that test.
 
+Thanks,
+
+        tglx
+---
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -1610,6 +1610,17 @@ static void irq_domain_free_irqs_hierarc
+ 	if (!domain->ops->free)
+ 		return;
+=20
++	/*
++	 * MSI device domains are capable of bulk free.
++	 *
++	 * CHECKME: Are all MSI parent domains capable?
++	 */
++	if (domain->flags & (IRQ_DOMAIN_FLAG_MSI_DEVICE | IRQ_DOMAIN_FLAG_MSI_PAR=
+ENT)) {
++		if (irq_domain_get_irq_data(domain, irq_base))
++			domain->ops->free(domain, irq_base, nr_irqs);
++		return;
++	}
++
+ 	for (i =3D 0; i < nr_irqs; i++) {
+ 		if (irq_domain_get_irq_data(domain, irq_base + i))
+ 			domain->ops->free(domain, irq_base + i, 1);
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -1333,20 +1333,28 @@ static int __msi_domain_alloc_irqs(struc
+=20
+ 		ops->set_desc(&arg, desc);
+=20
+-		virq =3D __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
++		/* Make sure a MULTI-MSI allocation is power of two */
++		unsigned int nvec_aligned =3D roundup_pow_of_two(desc->nvec_used);
++
++		virq =3D __irq_domain_alloc_irqs(domain, -1, nvec_aligned,
+ 					       dev_to_node(dev), &arg, false,
+ 					       desc->affinity);
+ 		if (virq < 0)
+ 			return msi_handle_pci_fail(domain, desc, allocated);
+=20
+-		for (i =3D 0; i < desc->nvec_used; i++) {
++		for (i =3D 0; i < nvec_aligned; i++) {
+ 			irq_set_msi_desc_off(virq, i, desc);
+ 			irq_debugfs_copy_devname(virq + i, dev);
+ 			ret =3D msi_init_virq(domain, virq + i, vflags);
+ 			if (ret)
+ 				return ret;
+ 		}
++
+ 		if (info->flags & MSI_FLAG_DEV_SYSFS) {
++			/*
++			 * This only exposes desc->nvec_used and ignores the
++			 * overallocated MULTI-MSI ones.
++			 */
+ 			ret =3D msi_sysfs_populate_desc(dev, desc);
+ 			if (ret)
+ 				return ret;
+@@ -1610,13 +1618,15 @@ static void __msi_domain_free_irqs(struc
+ 			continue;
+=20
+ 		/* Make sure all interrupts are deactivated */
+-		for (i =3D 0; i < desc->nvec_used; i++) {
++		unsigned int nvec_aligned =3D roundup_pow_of_two(desc->nvec_used);
++
++		for (i =3D 0; i < nvec_aligned; i++) {
+ 			irqd =3D irq_domain_get_irq_data(domain, desc->irq + i);
+ 			if (irqd && irqd_is_activated(irqd))
+ 				irq_domain_deactivate_irq(irqd);
+ 		}
+=20
+-		irq_domain_free_irqs(desc->irq, desc->nvec_used);
++		irq_domain_free_irqs(desc->irq, nvec_aligned);
+ 		if (info->flags & MSI_FLAG_DEV_SYSFS)
+ 			msi_sysfs_remove_desc(dev, desc);
+ 		desc->irq =3D 0;
