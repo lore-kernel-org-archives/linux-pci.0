@@ -1,74 +1,75 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1956035DA55
-	for <linux-pci@vger.kernel.org>; Thu,  1 Oct 2026 14:41:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 506D530D401;
+	Thu,  1 Oct 2026 14:43:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790865673; cv=none; b=qgUY0ooKen2E+ghbtHorXgzQOnLSl6x3myqdC0O27XZPCVqwD222gwqhMYPPsnXbb3WPy6Rntr8urTnnv4N85JcIJ9r9+beZRyaiPcI+DNlrmcXeDPhiPk+z+AIxQa9Q/rMvC+PiPOgbgOzJHXzLNJK6Ibbv76v6dz8AJK7qoLg=
+	t=1790865783; cv=none; b=FCnQt6kB04ncj0f77t50hIbDN0LjplNKCPhnaXTZGHFG+oBRXZ/Rj6D28FNs3MZMvolVEjnPxqNRh3j9J571QSuwPfvhvWxYwPwOO9hVgViLBsw7kfZpU6aJOqZBR3aPIX0InqgCxVMIH692pk/ynPNA/blvJwIh6fZOadgLcoc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790865673; c=relaxed/simple;
-	bh=zy6CCAracjWN8loJGw2qzYJ1aVf4c021H02q7z8NK1Q=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=NogF8XveY6VCB2lnfFV2k68IoFkRfvNCf1Qzo1zcPK+IBBJhdHtdJsz3uxbomNapJMf84TH9KRF3yCJkyVdvcFnRsf1OzUn0iXdKHObkCqDjTUDSfP3fD+ZNILnJTLNz8HAtlLaZ/58uv+edwsP/XAwnXkWYQl7kaswr6wQ/luE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hB30BBA2; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790865783; c=relaxed/simple;
+	bh=5KSd4hPY3e/12g+/jEjuvaIAC8Km1dILdYrnyMdVTLY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=oXhoJ6s/GmvFr+gpAkgB+64suTNBsmpafVobxFr6eHoSJXeSvEjKjzv/TqDX2wGOYe+Db/OcRU3P+dzJLeamO7L/hQELaZvMRudy6J/ffDK1HBRUzVE9JCKtHevRFIdEO4kCNaqJ7RSnPWFI1F11p3phmVBOaJ+sH0sxWElsAXs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YDCZdmxW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hB30BBA2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABA311F00899
-	for <linux-pci@vger.kernel.org>; Thu,  1 Oct 2026 14:41:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YDCZdmxW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBDEA1F00898;
+	Thu,  1 Oct 2026 14:43:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790865666;
-	bh=zy6CCAracjWN8loJGw2qzYJ1aVf4c021H02q7z8NK1Q=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=hB30BBA2s2N6Ovnxee4U7EDLiIFvYutUVyH5YvGVftuyDKXEjmRPR9eI/Sc2q96s5
-	 VJvg8LQ5H+IBARdocZ7EJGrt0Hnwuwj1ScHzhVL39k31j3M9ylFj1Oati232bC/Ao4
-	 hJynvAXYZwFBa7JrBtgQvnO70nS9xFB4g8NBTsjP/POYZr6asvkvskYra6+FvyBl1k
-	 +7OyiZ72bMbrt5FOGB1V7ECNnJ3jAp1AIgT4xRbDZRXRfxLWWviKZZEKNX2dDbN1LW
-	 exm/4mobspo3nVDvJOBwTFsFlRnvIKNnpTXyiKLycFCnHiaWaFLD4Dd5Rg7idlVQJD
-	 GKbGGmA8qwhtQ==
-Received: by mail-lf2-f12.google.com with SMTP id 2adb3069b0e04-5b8e986b8b1so6747644e87.3
-        for <linux-pci@vger.kernel.org>; Thu, 01 Oct 2026 07:41:06 -0700 (PDT)
-X-Gm-Message-State: AFq9FYIfgfWF9KIYAIj5aiOLVJNsrNyryt8uPj3IMt9NSWpsNAJEuA3H
-	fBgw58UH+AcEgsmQVZLEjiHcZi/LQd1RSpuk1tYkxfMK2dStJGoDWuC3GQmQYH2oPCOMIEeNt1P
-	OvGL+YLDGGk2JjLzNhdMCwMLGj+t1z2qrDQR0CXVyBQ==
-X-Received: by 2002:ac2:5b5e:0:b0:5b7:de2d:191a with SMTP id
- 2adb3069b0e04-5ba405ee64fmr1365647e87.23.1790865665403; Thu, 01 Oct 2026
- 07:41:05 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Thu, 1 Oct 2026 17:41:03 +0300
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Thu, 1 Oct 2026 17:41:03 +0300
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260930-pci-pwrctrl-kfree-v1-1-f09bbffd8da3@flipper.net>
+	s=k20260515; t=1790865781;
+	bh=1QH29HAYUEf7B/MDfzswUTQtSnJ1BAHRh7C9vjPg890=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=YDCZdmxWpSFqOEhZEtXIwqPJIxhsQivMiCiu3YVjyCRXLiHmmP7lC/4hxX6+n5/8O
+	 thInxuj4ypoklx8S+NWBfNS7K3hgmj4QD7hZdU0CR/MZaY2mTfXdtYA0/kGe2q9/t/
+	 HhhBqb968WAevhTdFx4Bhwg+xq/6GE0SzwGJWdm7yUVCZwp2eO2YdM4QmbNUHiEHYC
+	 Bqwm0jqO20OA6Yyui/cVrNEVccYLLbOWT7GU82g+zVNkLyQT0WLS5ngBKYsf5yKvcq
+	 hEf+AwJovy5HfleQ82cbyFVZzhVQRsdTtTLzAuKy6XnRo2Gl0pMxlNyf8GzotsBBXf
+	 CV8fZPYQ8wIEg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v12 07/10] PCI: of: Clear fwnode->dev during root bridge
+ node removal and error path
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Herve Codina" <herve.codina@bootlin.com>
+Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20261001142815.277550-8-herve.codina@bootlin.com>
+References: <20261001142815.277550-1-herve.codina@bootlin.com>
+ <20261001142815.277550-8-herve.codina@bootlin.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 01 Oct 2026 14:43:00 +0000
+Message-Id: <20261001144300.CBDEA1F00898@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260930-pci-pwrctrl-kfree-v1-1-f09bbffd8da3@flipper.net>
-Date: Thu, 1 Oct 2026 17:41:03 +0300
-X-Gmail-Original-Message-ID: <CAMRc=MdXoMSvjYzsG8hO5MmcGWq8mz4pCB0whK=jHM0J9gdKLw@mail.gmail.com>
-X-Gm-Features: AclHuK_MX1UIRJgcpQ8TKbaoXQoLl5jbkAQEv_2If_uRnnPzNzc-2WWFoXI33ds
-Message-ID: <CAMRc=MdXoMSvjYzsG8hO5MmcGWq8mz4pCB0whK=jHM0J9gdKLw@mail.gmail.com>
-Subject: Re: [PATCH] PCI/pwrctrl: generic: Fix leaking array from of_regulator_bulk_get_all()
-To: Alexey Charkov <alchark@flipper.net>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	stable@vger.kernel.org, Bartosz Golaszewski <brgl@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 
-On Wed, 30 Sep 2026 18:07:45 +0200, Alexey Charkov <alchark@flipper.net> said:
-> of_regulator_bulk_get_all() allocates the consumers array and hands it to
-> the caller, who is expected to free it at an appropriate time.
-> PCI pwrctrl never did, leading to a memory leak.
->
-> Add an explicit kfree() for the consumers array.
->
+> During the of_pci_make_host_bridge_node() call, an OF node is created
+> dynamically and its fwnode device (fwnode->dev) is set to the PCI root
+> bridge device using the fw_devlink_set_device(&np->fwnode, &bridge->dev)
+> call.
+>=20
+> On removal, of_pci_remove_host_bridge_node() is called and calls
+> device_remove_of_node() which in turn set to NULL the related
+> dev->fwnode.
+>=20
+> Later in the removal sequence, device_del() is called and runs its
+> cleanup logic:
+>=20
+>     if (dev->fwnode && dev->fwnode->dev =3D=3D dev)
+>         fw_devlink_set_device(dev->fwnode, NULL);
+>=20
+> [ ... ]
+> error path.
+>=20
+> Fixes: 1f340724419e ("PCI: of: Create device tree PCI host bridge node")
 > Cc: stable@vger.kernel.org
-> Fixes: 75996c92f4de ("PCI/pwrctrl: Add pwrctrl driver for PCI slots")
-> Signed-off-by: Alexey Charkov <alchark@flipper.net>
-> ---
+> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Sashiko has reviewed this patch and found no issues. It looks great!
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261001142815.2775=
+50-1-herve.codina@bootlin.com?part=3D7
+
