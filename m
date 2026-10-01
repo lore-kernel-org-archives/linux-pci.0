@@ -1,172 +1,162 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25F5A36A03F;
-	Thu,  1 Oct 2026 19:29:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DC0D3BFE2B;
+	Thu,  1 Oct 2026 19:37:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790882972; cv=none; b=cWlHUfeX81DICTGcgeVtdHT3Sr5GuC0WhtdQMcyeLP+Tu4FEvSvCkKIA8FUmghR3PG6kTdm95P/aBO9a85N/Bpc+gkquT0dyNg7whkhgbOi22S4yqINVFOq8Tsbt02xYamzoJCS7s5mmt5mxJsrPEG8b4auUmVxqlPZpkF7j3Ic=
+	t=1790883450; cv=none; b=mZH4I3gERdUOfQdpEe2JxFsTnyHIvWPOIKBLoKB/Va8D7zWrtUEf4i/YTDD/iK32n6GtDY4nLVxPutLMvu20Z6Fk1aocozuv/qZ0oO88FNOyqwzV6ts7Ff2+tSHK30XqBCmYhGW0PyRmcTcqxzzXRRR8wa6awIgne8eDGxse+r4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790882972; c=relaxed/simple;
-	bh=guOW+/08gRNSqfTaEYCyx+gyJOlrtAaIaRO6zclFIGw=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=VxKG7qqskOyAxEA0Ueqwwko2dQ1qpMAY94zJdcb/9s2mAvxhVFE7nlg1xFGtQvlVrddgdiUlZYKghV7djnOMJTEGCzpLFfYIsXY5bLoQXfEYrmaB2SzBLsbBge0BevYUBPq/rlPAhmGn5ve1Rru/Sj+TYmdywYpqmf44F7tKeDk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=etqvOpLP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790883450; c=relaxed/simple;
+	bh=IwlDC8wn5b8kCP6Z/TFT1NMXwzbGOW7GKSvw2JJYln4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=B6qgytD/VzHvEeeApgnweU0KnIA54xWJB/f7WYHl07v47bZp06yeBf0v2o/ByQEYjgeEoDgR3qwEVE9lQXQGKQe5Bb9vWql7RCozZvt/pbnejjdqSRFTOk1LIdb/NGkrFcSnWXVsdHO0GlOr94AYVA7in2wr9SX2SfnVJXydlh0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YsyRrOev; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="etqvOpLP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC4451F000FF;
-	Thu,  1 Oct 2026 19:29:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790882970;
-	bh=0sWDayJOkxAeOGqqB0NIGD2EYTzPiQHVomT9o9M6NJE=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=etqvOpLPcimxHlPPMuhIKLv01U67MpgFnDZ8Y3ieFvsD8dguldGMoBRIjHNML1ell
-	 /8euWeMtkYpB9iJGTyOwz8+RAkiDppmh9yWUQcFOI2sOjC3e2WNyBqlsIxfRf8zDnt
-	 R/J0upFjOe+7FopiiAKnmP6Cbuu6z80pGh+Pc8DNd6Yi2ahDp7+uD5qo//nb7UJCMf
-	 ioWsMQhp3n/Nu/IoWKDMUDgt2IhQ3TSO+dhOgYSafmwCNScW6lgts5VXrMnxktHs1A
-	 yx/jLmuL2oWfB87JG/PEpa2blPrsHTwr/DwrAV4ZReaq3ryymkqKAduTRudHXmry60
-	 7sXWdTzVZzCcw==
-From: Thomas Gleixner <tglx@kernel.org>
-To: Han / =?utf-8?B?7ZWc7IOB7JqwU2FuZ3dvbw==?= <sangwoo.han@nearthlab.com>,
- Bjorn Helgaas
- <helgaas@kernel.org>
-Cc: jim2101024@gmail.com, florian.fainelli@broadcom.com,
- lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
- bhelgaas@google.com, bcm-kernel-feedback-list@broadcom.com,
- robh@kernel.org, linux-pci@vger.kernel.org,
- linux-rpi-kernel@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Inochi
- Amaoto <inochiama@gmail.com>
-Subject: Re: [PATCH] PCI: brcmstb: Reserve only the MSI vectors that are
- handed out
-In-Reply-To: <CAFg7d9bJJjR7JEMXanttGVcGisa4x3uLYPR43Te4+JKMzHBkfQ@mail.gmail.com>
-References: <87cxuo3fl9.ffs@fw13> <20260916231029.GA988000@bhelgaas>
- <CAFg7d9bJJjR7JEMXanttGVcGisa4x3uLYPR43Te4+JKMzHBkfQ@mail.gmail.com>
-Date: Thu, 01 Oct 2026 21:29:27 +0200
-Message-ID: <871pa9gqy0.ffs@fw13>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YsyRrOev"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1790883449; x=1822419449;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=IwlDC8wn5b8kCP6Z/TFT1NMXwzbGOW7GKSvw2JJYln4=;
+  b=YsyRrOev2ZbWt2pk1rzhKRGabeFOwhlmeXCSz7sSM476fNOGUKyFfabD
+   VpTC1WN7sL5GVtkBjwEm83JB6OVgU+6wL//hKSLa4mcSjk40qrz8/KOGt
+   InRTxbMRBwTx4lsyjAtkHo7EUCr0VvHh6o8URIm4wt7bE58jM94Eq9PQl
+   pQ0fucYB11d/OhZIJC4g8PZoCCO/N8i3yrPo/eJSE1mcaHz3jyyAE/MhS
+   QaBwPVmdSGtEtI1yBNk/1NtdmoZisatruvP5pbgcphVSkLP4KUs6sLKHu
+   dirOdZ9kKb/aEgWYnDZV+njFrflf1CHP+tK2BGkPqDCdn4V5RV7sJT3Px
+   A==;
+X-CSE-ConnectionGUID: zv0dbStlQzyoYTD/wfMG9g==
+X-CSE-MsgGUID: 1Szc+1izSCKygmcVz/FIdQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11922"; a="113439128"
+X-IronPort-AV: E=Sophos;i="6.27,135,1787036400"; 
+   d="scan'208";a="113439128"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Oct 2026 12:37:28 -0700
+X-CSE-ConnectionGUID: 5saRle/kR5GVopSKB8UEhQ==
+X-CSE-MsgGUID: drHUxuAESCitOMFVcMcoBw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,135,1787036400"; 
+   d="scan'208";a="279837423"
+Received: from abityuts-desk1.ger.corp.intel.com (HELO localhost) ([10.245.244.27])
+  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Oct 2026 12:37:18 -0700
+Date: Thu, 1 Oct 2026 22:37:16 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Herve Codina <herve.codina@bootlin.com>
+Cc: Richard Cheng <icheng@nvidia.com>, Andrew Lunn <andrew@lunn.ch>,
+	Rob Herring <robh@kernel.org>,
+	Saravana Kannan <saravanak@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Charles Keepax <ckeepax@opensource.cirrus.com>,
+	Richard Fitzgerald <rf@opensource.cirrus.com>,
+	David Rhodes <david.rhodes@cirrus.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Daniel Scally <djrscally@gmail.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sakari Ailus <sakari.ailus@linux.intel.com>,
+	Bartosz Golaszewski <brgl@kernel.org>, Len Brown <lenb@kernel.org>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dan Williams <djbw@kernel.org>, Ira Weiny <iweiny@kernel.org>,
+	Li Ming <ming.li@zohomail.com>, Lizhi Hou <lizhi.hou@amd.com>,
+	driver-core@lists.linux.dev, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
+	patches@opensource.cirrus.com, linux-gpio@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org,
+	Allan Nielsen <allan.nielsen@microchip.com>,
+	Horatiu Vultur <horatiu.vultur@microchip.com>,
+	Daniel Machon <daniel.machon@microchip.com>,
+	Steen Hegelund <steen.hegelund@microchip.com>,
+	Luca Ceresoli <luca.ceresoli@bootlin.com>,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+	stable+noautosel@kernel.org
+Subject: Re: [PATCH v12 10/10] PCI: of: Avoid np->data usage for the node
+ changeset
+Message-ID: <ar62bJzBEAhGL2iu@ashevche-desk.local>
+References: <20261001142815.277550-1-herve.codina@bootlin.com>
+ <20261001142815.277550-11-herve.codina@bootlin.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261001142815.277550-11-herve.codina@bootlin.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Mon, Sep 21 2026 at 18:05, Han / =ED=95=9C=EC=83=81=EC=9A=B0Sangwoo wrot=
-e:
-> I tested Thomas's patch on the same hardware setup with the 5-vector
-> MSI endpoint. The patch was applied as posted on top of 6.12.93
-> (rpi-6.12.y).
->
-> With the patch applied:
->
-> - The MSI base hwirq remained at 0x8 across 200 driver reload cycles.
-> - The driver got all 5 requested vectors on every cycle, with no
-> single-MSI fallback. Multiple Message Enable remained at 8.
-> - The brcmstb inner-domain mapping returned to baseline after each
-> unload/reload, with 12 mapped while the driver was loaded and 4 after
-> unload.
-> - A kprobe showed one allocation of 8 vectors followed by eight
-> single-vector frees, with nothing left over.
+On Thu, Oct 01, 2026 at 04:28:10PM +0200, Herve Codina wrote:
+> of_pci_remove_node() and of_pci_remove_host_bridge_node() check
+> whether the node is dynamic but not whether it has valid private data.
+> 
+> During the node creation, an OF changeset is used and this changeset is
+> stored in np->data to be available for removal functions.
+> 
+> If, for instance, a PCI host bridge is created using a device-tree
+> overlay, the related node will have the dynamic flag set but np->data
+> will be NULL. This leads to NULL pointer dereferences.
+> 
+> Checking for a non-NULL np->data pointer to determine if the node has
+> been created by the PCI node creation process is not enough. Indeed,
+> on some platforms like PowerPC, the OF_RECONFIG_ATTACH_NODE notifier
+> (e.g., in the pci_dn_reconfig_notifier() function) intercepts node
+> additions and populates np->data with its own structure, such as a
+> struct pci_dn. In that case, np->data is not NULL but it is not related
+> to our changeset stored during the PCI node process creation.
+> 
+> Avoid the usage of np->data to store the changeset used during the PCI
+> node creation. Store our changeset in a more relevant structure: either
+> struct pci_dev when the node is created for a PCI device or struct
+> pci_host_bridge when the node is created for the PCI host bridge.
+> 
+> With that done, no ambiguity remains on removal. Indeed, this changeset,
+> if non-NULL, is the one used during PCI node creation. Check and use
+> this changeset on the removal process.
 
-8 single vector frees?
+...
 
-Seems I got something wrong there verus the bulk free. Updated patch
-below.
+>  void of_pci_remove_node(struct pci_dev *pdev)
 
-> The MSI vector exhaustion issue I originally observed no longer
-> reproduces with the patch.
+>  	struct device_node *np;
+>  
+>  	np = pci_device_to_OF_node(pdev);
+> -	if (!np || !of_node_check_flag(np, OF_DYNAMIC))
+> +	if (!pdev->cset || !np)
+>  		return;
 
-Good. Can you please retest with the updated patch?
+Wouldn't be better to split this conditional to two?
 
-> I also observed a KASAN report with managed affinity. Using a small
-> out-of-tree test module bound to the same endpoint and requesting 1..3
-> vectors with PCI_IRQ_MSI | PCI_IRQ_AFFINITY, a request for 3 vectors
-> resulted in:
->
-> BUG: KASAN: slab-out-of-bounds in __irq_alloc_descs+0x158/0x460
->
-> Requests for 5 and 7 vectors were capped to 4 on this 4-CPU system and
-> did not trigger the report. I have not checked this against the
-> unpatched kernel yet, so I cannot tell whether it is related to the
-> patch.
+	if (!pdev->cset)
+		return;
 
-Any updates on that? Also please provide the source for that test.
+	np = pci_device_to_OF_node(pdev);
+	if (!np)
+		return;
 
-Thanks,
+>  	fw_devlink_set_device(&np->fwnode, NULL);
+>  	device_remove_of_node(&pdev->dev);
+> -	of_changeset_revert(np->data);
+> -	of_changeset_destroy(np->data);
+> +	of_changeset_revert(pdev->cset);
+> +	of_changeset_destroy(pdev->cset);
+>  	of_node_put(np);
+> +	kfree(pdev->cset);
+> +	pdev->cset = NULL;
+>  }
 
-        tglx
----
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -1610,6 +1610,17 @@ static void irq_domain_free_irqs_hierarc
- 	if (!domain->ops->free)
- 		return;
-=20
-+	/*
-+	 * MSI device domains are capable of bulk free.
-+	 *
-+	 * CHECKME: Are all MSI parent domains capable?
-+	 */
-+	if (domain->flags & (IRQ_DOMAIN_FLAG_MSI_DEVICE | IRQ_DOMAIN_FLAG_MSI_PAR=
-ENT)) {
-+		if (irq_domain_get_irq_data(domain, irq_base))
-+			domain->ops->free(domain, irq_base, nr_irqs);
-+		return;
-+	}
-+
- 	for (i =3D 0; i < nr_irqs; i++) {
- 		if (irq_domain_get_irq_data(domain, irq_base + i))
- 			domain->ops->free(domain, irq_base + i, 1);
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -1333,20 +1333,28 @@ static int __msi_domain_alloc_irqs(struc
-=20
- 		ops->set_desc(&arg, desc);
-=20
--		virq =3D __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
-+		/* Make sure a MULTI-MSI allocation is power of two */
-+		unsigned int nvec_aligned =3D roundup_pow_of_two(desc->nvec_used);
-+
-+		virq =3D __irq_domain_alloc_irqs(domain, -1, nvec_aligned,
- 					       dev_to_node(dev), &arg, false,
- 					       desc->affinity);
- 		if (virq < 0)
- 			return msi_handle_pci_fail(domain, desc, allocated);
-=20
--		for (i =3D 0; i < desc->nvec_used; i++) {
-+		for (i =3D 0; i < nvec_aligned; i++) {
- 			irq_set_msi_desc_off(virq, i, desc);
- 			irq_debugfs_copy_devname(virq + i, dev);
- 			ret =3D msi_init_virq(domain, virq + i, vflags);
- 			if (ret)
- 				return ret;
- 		}
-+
- 		if (info->flags & MSI_FLAG_DEV_SYSFS) {
-+			/*
-+			 * This only exposes desc->nvec_used and ignores the
-+			 * overallocated MULTI-MSI ones.
-+			 */
- 			ret =3D msi_sysfs_populate_desc(dev, desc);
- 			if (ret)
- 				return ret;
-@@ -1610,13 +1618,15 @@ static void __msi_domain_free_irqs(struc
- 			continue;
-=20
- 		/* Make sure all interrupts are deactivated */
--		for (i =3D 0; i < desc->nvec_used; i++) {
-+		unsigned int nvec_aligned =3D roundup_pow_of_two(desc->nvec_used);
-+
-+		for (i =3D 0; i < nvec_aligned; i++) {
- 			irqd =3D irq_domain_get_irq_data(domain, desc->irq + i);
- 			if (irqd && irqd_is_activated(irqd))
- 				irq_domain_deactivate_irq(irqd);
- 		}
-=20
--		irq_domain_free_irqs(desc->irq, desc->nvec_used);
-+		irq_domain_free_irqs(desc->irq, nvec_aligned);
- 		if (info->flags & MSI_FLAG_DEV_SYSFS)
- 			msi_sysfs_remove_desc(dev, desc);
- 		desc->irq =3D 0;
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
