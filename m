@@ -1,47 +1,47 @@
 Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010014.outbound.protection.outlook.com [52.101.85.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFBAB4E73C6;
-	Thu,  1 Oct 2026 09:22:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A7534EA368;
+	Thu,  1 Oct 2026 09:23:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.85.14
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790846580; cv=fail; b=Cq3CGrlB/atRFNK8FjDR8vH+Q2dev0ODkDKvt4TBDlRz8kNJhOFYV8/4iIsa1AeqRMmNLbAzerlYkK/It7bm981K7S+fTKvoK7QJZFz5MC6RXfHz59m6GynyOWQJzHN8sHgHysV9hVzH4PtiXeXyjKXFoVe20Oo9zNrqICtvNKY=
+	t=1790846582; cv=fail; b=OausnfWeGFDyCyXJzyN8qa3lS3V/XetTpvvf8IufkH5Xmk9yoIXnV5OEevegEOPDSGlVfMJ3v2M+bKxpQZs3wVhGp4np9kUUVXioZTjxBJXpDHGqrxtzPcU7xPnqffQyc++9kgbUL6DYpoiynOEIMBf8I1bnGtGyOIjyo0c7n08=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790846580; c=relaxed/simple;
-	bh=f+bgoJ6/0fTYfmlguWGjQe+q7eURUoSZt3CTz6a8WsM=;
+	s=arc-20240116; t=1790846582; c=relaxed/simple;
+	bh=xmaQ5pVSAjP+6bFfj32p4IEZCT+jJZL5tdEzW9RYJqs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Uxd2EEaB+fMkilRrmmDaWSY7CTnbG1fg/jIsLxWKl3F2aqeRRT4uuPFAk0HbaY5mgf3Iknw9Rkn7RWh4k8a5OWohriHE6J+LQTE4N11D6EJv0+uddtFCmOLyoqK+ucPXyXmI8+D6YYDMocxX7eqvxundxGth+hjsTLsbU3yF0Sw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=IEcgeEK2; arc=fail smtp.client-ip=52.101.85.14
+	 Content-Type:MIME-Version; b=BcURw0yRPXq03UyUT+PTOkJjrk5krYOUFYK20pSIPyOnnXOg/7Af4ujBjYs6TnV12dWXOyrfTgTsJt2AFAfaQ1yCZPKTGAzElmeDAuh1QVps53FUE9/D0dOr/4d15yp7iDZCPwhreNQvubmRAxYjQKVkiEUR/YfnEMvIhd5vDms=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=C7WpFdmU; arc=fail smtp.client-ip=52.101.85.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="IEcgeEK2"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="C7WpFdmU"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=C16NL4uhct3iUIOVSPgLOes8Q9su2uDXu5CWp6SCNMwuEC189KkOyGBB0EIu0qrm4veIrw9JdcjxqBdrwdHW9ZaEDJjLr2zAmol2ank71Oo8JbuFxmtMf+v/ZDPMeJ4EG6oL3vc5S13kDGOXXdpiHZD3yjX6U9qt68396EQje8VCsXaJaTQdxeIvHDuh/kQMRklguW6+LHZv6mwrGk2Cgle7qtVUg6bLjkRpuwVkqfZwrB8W7nAKq/0iLHRatzsOT0qdwjBMxyqeV/n0Umd/QXZBitk1kcer8PpbuleDoqEnw7XewlDw/5xsOFxQ18M4yXtGdaH9PxaAEIUW2ZeZ3g==
+ b=wUO/TLkTEHDKXvKhH/wqnIVB5d088lZNFWyoZ3a0jYRbH2msnN2mQKNLwL8DDJ3VciqvMsVIDWCLoRAoyksHuZUqmO8+dR9ZpQFprxn90tP1LvBV//YFLWJiJeYT5PtNtUxs3WvhoL5kKtSwpMZ9xsLJ4SoS67wEP+tWeVYuOR/vVLE9BIIdS3iIUVyY+FEJ/buSlPbx6s9J9YXd/0yYsB9lRSbST0CpiBweASUVLxGO5gTNAFQ/mUkkNYrSnTB86fLdj74zQoIEzS+eiI6hb/PUFJ4yBo/aottPvg1WjgSCZP7wLEgd/c8ku1WD2c8d8i4HqA1Dq2iEhdj98KOXEw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=IVuq4lidaAtHCF//BU2fQvGCaIW728keTDr7vMMydEI=;
- b=DXBsF0F0ycAvkN2d0EkCv30QmU7SZgEgKiJUMABArYucbKBLRzXEPC9SmQPNgu27k1acUyRMbrJnrG9Fs4UI3fu2/TaFDeemEmQULQu2BYZvNjNxmvzaJEbqIYjqSOmsndDHCdokbswO2Htgt2pCKARorHQoMYl2u/LGavJC8F8qMKvU4wel2JDQynPZuHbqeyAVMNbCJDhD7jWBpr17j95j8jqzZM2ZeYiBckN7UpJbcjjcusE4pASISw7F0bXcn4BEkOq1runfi3EA0pgus1htrgZVLMgPxA+E8WOQ8bY9jfyQo5qRw2ekygaWEi+R7HoIRSISWpigkBrozf8hxw==
+ bh=PJPkaxssBp9GbD4rr12J+iWQYyQr99eMgV8ao6pJJYA=;
+ b=YgSmTcCb//n8G59Db4QV1PtTHmDGZ4wpViByrMbbrbZqVCJ9xQhUae3K73DAwCumunj9IQigDUAl4x37/3LOkj53xtsnHwu50f4aHYHBZg++swvw5984EWX2oqh0JNgdsostuetlRkfYpks8RzS93NUaiAflqh+9+ZBH6gPbMO9JBwlLR2jwImVc/xFFva142KGDALOj4q+D+y1JhnEmFv1U8cQ50RWCEOgJXeryECFox88n7dWti4mpQYZl8OzGHtZU53wxZk0QNp6bbYBGsTtOOl8s22pMuV69DC0mpTGyevn+BibrF15Wii88NECREw0iKCSMf4ODEcexJt0kOA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IVuq4lidaAtHCF//BU2fQvGCaIW728keTDr7vMMydEI=;
- b=IEcgeEK2aU3MifwzJrE6TTxZDBXcfubkJqgDuQhQbZI00nURMQOsjMPXvGSd1SOza11rIdEpfulH4t9rqJxmT8hmD4k2KJkoujsRmHLO/zgMf/CVb8BFvNHQ45Vg8szUGlAasgprgOjEyRDCLexAFWAIMMhPOgZDT+91BiPfH8aOevK1caGd3L6eHiEgE88Ikg6w+Yue450NxeoiJ5uAIurlUL4ps5mWwjzBQZwJagzXT9j/csYPOIJ6bVgIvA6MCGPFSbBsa0tvLefv53ynuJ761B9ZLPaCpcLf40v0se2Uydoc3ARpGoxUQeY9se1OG49eUPmn7w82FXd3Jhbnzg==
+ bh=PJPkaxssBp9GbD4rr12J+iWQYyQr99eMgV8ao6pJJYA=;
+ b=C7WpFdmU0fq/XdCS3YB0MpL3eggE2FkBmQ+LVwPJBoTKXutENAG3Kc/2xnHuXWNvV5ZuCv1q1RqneN31fXjGTh6Xx8YH0vM+DM+DC3G3UHsUw74CS13KzBpiaAenBFrmUOgEATPdfYEtfzjrsX681UWqKaaQysaD6Gp3krTLctwtJNfnto79ODRR+UvHBTJUIiQfdhBTxjZtBliz9GNxwitixxtP+eCTBJVxFzIVP9qS+g5t+u4Fre7MfAWRmZAQ6RaqyyGqzq+VIqgVlz3n5qkmjLNZA5llkL7OwU5E6fTV187DkoI42IJxsCwSFkHjRsJ1L4H/e5X7ZDLl2SK6mA==
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from LY0PR12MB727857.namprd12.prod.outlook.com
  (2603:10b6:408:3ba::5) by CY5PR12MB6300.namprd12.prod.outlook.com
  (2603:10b6:930:f::8) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.15; Thu, 1 Oct
- 2026 09:22:41 +0000
+ 2026 09:22:52 +0000
 Received: from LY0PR12MB727857.namprd12.prod.outlook.com
  ([fe80::843e:82cd:41ca:f522]) by LY0PR12MB727857.namprd12.prod.outlook.com
  ([fe80::843e:82cd:41ca:f522%5]) with mapi id 15.21.0451.022; Thu, 1 Oct 2026
- 09:22:41 +0000
+ 09:22:52 +0000
 From: Srirangan Madhavan <smadhavan@nvidia.com>
 To: Alison Schofield <alison.schofield@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -63,16 +63,16 @@ Cc: Alex Williamson <alex.williamson@redhat.com>,
 	Richard Cheng <icheng@nvidia.com>,
 	linux-tegra@vger.kernel.org,
 	Srirangan Madhavan <smadhavan@nvidia.com>
-Subject: [PATCH v14 04/16] cxl: Embed decoder configuration in a standalone structure
-Date: Thu,  1 Oct 2026 09:22:15 +0000
-Message-ID: <20261001092227.3004747-5-smadhavan@nvidia.com>
+Subject: [PATCH v14 07/16] cxl: Share HDM decoder register unpacking
+Date: Thu,  1 Oct 2026 09:22:18 +0000
+Message-ID: <20261001092227.3004747-8-smadhavan@nvidia.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261001092227.3004747-1-smadhavan@nvidia.com>
 References: <20261001092227.3004747-1-smadhavan@nvidia.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: MW4PR04CA0269.namprd04.prod.outlook.com
- (2603:10b6:303:88::34) To LY0PR12MB727857.namprd12.prod.outlook.com
+X-ClientProxiedBy: MW4PR03CA0054.namprd03.prod.outlook.com
+ (2603:10b6:303:8e::29) To LY0PR12MB727857.namprd12.prod.outlook.com
  (2603:10b6:408:3ba::5)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -82,1515 +82,273 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: LY0PR12MB727857:EE_|CY5PR12MB6300:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1e286705-deef-4127-0875-08df1f9d8b02
+X-MS-Office365-Filtering-Correlation-Id: 915e898f-5992-4f5b-b90c-08df1f9d918c
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|1800799024|7416014|376014|366016|10067099003|56012099006|6133799003|921020|3023799007|11063799006|18002099003|22082099003;
+	BCL:0;ARA:13230040|23010399003|1800799024|7416014|376014|366016|10067099003|56012099006|6133799003|921020|3023799007|5023799004|11063799006|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	SueYJLBUB0n6fCT8LL5XoqzjIh/YZ6gI6oipbguRst+WJU+rhHqMiQvir20haqQ2ZJ4QNUzrOmLi7axrqY5+bcDbOJND9bggsEq7EtUJF8nRg48cgWKQU784evXs5PpZ3pctVaG7MiEBgYtHKs6OJ/QIbGdfJF2DYEK4Jw19GXGRG3hLMBpwapUs9NT14UQZ0x7k83bES2tdNKD9RwKf7B0wOUMGYNTws4T5AcVneLABb4jT+iXgtRZD2A3juhrq54ceos7NWS5pVd8NmzPJiED1IL62gXRAkvzZZP592j0iX/jKgN/arPc8/TQBkkGlQvac/1NsWs+6usUeIbvHJfpPg2KihevY5G930xZZ4AxwilkeLr6nbITc53mhE7GJwfdlnbcu+Od4n3HXVIQEC2Y6AOLBRkZHaXI4kWlKwrRTqFrFl+Z/phjibYgbkyLmpugm4lEyuEraRg1n7JaDFI+eIn/rS7PgQ3CkKRr9T/mFkJxaCn0WVcGA4/xAtugsnUJ7DKq67yWM9Y2oS7BvOjSsP/bIqi8ebd4AcOoN1K2n21L1dGQxz+L7x4Lt1fKxwG+RxfSbYZpdaFqsPrZdMP7MnVLODR/xf8S9F0//Fg1n5sCzrCpXEVkqA1YF6hN3VFXtz/dccwt4PSQ8rvNn9rLSqTtD+UT8aiDpCpIQ3F02rlUshV7+u+DGg1jCFKPTaAVWTNUN+PNCmVU4+viIeg==
+	s7WW0gdVAeSHG4SatMV1Sn3maanZEm8V72YlqyrNitKG0ANdnPJHAO+wmaov1WciavCl+FsjUNTHHqemNkNnj+XuwBjrWw29/Pf+SFFerPWDwnjMOWfrDE64ttA8ZY1LkwZucX9l6JWroX7BxLFyvUvKgOR3lcQx0vcA0KdxWQV+97yC3CBnf6jYh/8vxsD8Max4Ux1ey0HVAQkgkwwKfF3UTAmLP8qCalOUWfzmUul3kfveyyEDT/EpCsangbUgQsPzMqNliPtl4SEm7Uj+0tRT9ek9nCjmyN1AkZm3npSgdim2lEtGWCl70pB1a8DS9pZcRrEbybi5VMh78OKH305ni1Xm6/xHXUaQ4JvYaU/gcsxGzQ8kXJ3nARpKqzGD103LVLc/ktbQ/ifeuFjxZ0DXypq/F+v5NHiFUliEKWF2dcxjwjklNtYU6zvIljc3bZGhfeiUDadXWQ9DCh1E29mHVtrEoDIhuX4Vq7KuOWVaorI5BH57i8+qOzcxVxE+YNqibnSGMAwzxyH2hMfjerPfymEik0YdSx1+TOez/JgbkI3FPw8QpKffihohSSAg1ZGiwr3SIEWg5bJxAAcDWANtRSW8a0r6sx/tckZ7ye0d8ppSqWFSgaf/fZuKiVgqSV5lZghuAf53LMO0EKrP8gsqWnDcUr9R0TneplA0elGmcTkq1XtHobvaF8gU6KBxrtPBsqJFsdt3yj2V0cHxew==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LY0PR12MB727857.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(7416014)(376014)(366016)(10067099003)(56012099006)(6133799003)(921020)(3023799007)(11063799006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LY0PR12MB727857.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(7416014)(376014)(366016)(10067099003)(56012099006)(6133799003)(921020)(3023799007)(5023799004)(11063799006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?fQRhxsPLXaNinKOx+gE+o0Fz1tWT0q+eX4xCw1VWtGy7pnYSdDPOxyjWICyI?=
- =?us-ascii?Q?QLRz9PGWXgzn8q9cSb47ocp3nr9Xk7N9IHe1kjyHjr3EyprG3Se/qsLURVtz?=
- =?us-ascii?Q?cX1UR/ooIVC+Y5M47nteL7pcgMs3boRyqjXTyLmtn58nkOuHoApjQ7AcsHMq?=
- =?us-ascii?Q?i5PC/RyWfX6GulJNQrzR/hTAFNsQF03DV5ed4ZNGmUFC1/Oep0LsI0IPKEDQ?=
- =?us-ascii?Q?crNWFeeTIJ2rSQRfg2D0BADHVvXDHoCPq4niYsnnwvZku1v0MJFPDGWMP7ng?=
- =?us-ascii?Q?YjNeB8hE1anohYjSakTxP5eExljaph3azr3oiNFUjcmAi6zA+t2s2bn5zz3j?=
- =?us-ascii?Q?LZw+02JSsC+3KyjwzTSQ7+gY2xrmBOvffaQWT39W7hBViAOobYz6p+Mn4EGm?=
- =?us-ascii?Q?+FQlxm7bFyFdj3JTfqtnG46ExbDLjmaYnR6tS+V236cvdmNR0oeeJ/iCQOcc?=
- =?us-ascii?Q?nKoIp6RIJiHNYu2Grf3WwBFBcqzqrOne5O9gefL3KBwSw8naS6QADSqKvRnG?=
- =?us-ascii?Q?PGTVn1QTZ05/39RSE5cjb6N8WRAiOjdQLeVuJb/TNwCVpIW26BKpyBN8KsFr?=
- =?us-ascii?Q?ktTtatCq3WEppsu/HecnYIdUkSzXXJa5SRf6uPItpMC/4sltSe1myWrYYS2M?=
- =?us-ascii?Q?0tehIyeMpuMXuIAKwBWaT4aaagkdBSpZw0duKuZGtRNDoER9AbdoC7/5CfIL?=
- =?us-ascii?Q?QfzmZXueCD1avNrJAtIaDRou3g5MRlXAhqfIfFI2YrD/Ef4Q57N1YHtJ4Ki+?=
- =?us-ascii?Q?f89MOxBMLmRHUdiF09woD5EPMm6BzzIt77XOS+alg1KSQvjnFbJEOXlv7XYB?=
- =?us-ascii?Q?phJTMxp7WDr1cIZOOcFVykvUKRs6oHC5OH00Sh/qm7RDAE7H83mNjpXgWKAV?=
- =?us-ascii?Q?DlUIn6BG/0bnP0JkAfNQwV9jJjRN/Mk+U2MAuBj+MVvTszzHM/4UA/B+Forq?=
- =?us-ascii?Q?C7oRVlhQ7+w7n9SLHeL6SYrH6QM4TR7I6TL79jOw8EVHVtlUjoYqYFOxBS93?=
- =?us-ascii?Q?x+zQmEZd91P0Fc9M0hcMBxwK5Cwrf8yXRbgHsD3vgsijDlKR5y/ti3Nn8AsI?=
- =?us-ascii?Q?LtkU/LONMJ3I7T3hPq4p9VEruV9+5309j0qVK8skH4COCEpOWUyyn+QrRKfJ?=
- =?us-ascii?Q?Lw1/VaS9oNU6WLflPS9Kl3OXV48kEJR1XZ6GZLCzD9eJY2rzhXM8C7jZpjxc?=
- =?us-ascii?Q?9lNYUysNzGzvRhZxmUEy0quwVWSZizZadaGShvxb5jlMGw9FWxmD/wYMvSQ0?=
- =?us-ascii?Q?eXLeGXAPj49qBbnQj5CPzyAhgiEg6LRZU+M0W50GuOpHQsaEc7yJ87cWQntT?=
- =?us-ascii?Q?rhmugdyKGo/gxJijAksyp1iUZBdyHVFbjCJd5a6T8/q79+eyRcDJcBVfd4cj?=
- =?us-ascii?Q?dvYR650MgQkX0P/XycfCzYQVVWz6IgkAaUy43Sisnv8r8OGmpglfGgc4SAYy?=
- =?us-ascii?Q?Fu9cCJIja3BpgiWFeWwppMClmUXfYfI1PIGNELnO0bsrGAxN4RxzJ1IYi5Ry?=
- =?us-ascii?Q?4N1ywlWolgfsh5Qrv7tHdbKYLrsiCbXAOyIZw7i49ExI126+CSktWpcZtAbg?=
- =?us-ascii?Q?5z4ZE0jPtZNFbi2X8UGNCL0wqpPiQiQfAXBg8XWZQ9z6G1OyuQXYMDGt21Vm?=
- =?us-ascii?Q?WvPLR3pXp6+v+7T42fTdgMEqyjJqot1crF/1RjiYkL5NFP/BiPqBWAVHHnvt?=
- =?us-ascii?Q?QXqOV9KhghZueP6VVDT8weFIrbY64NgTOP7G+Hd3k6ISvMghIe3rQv1FEfQD?=
- =?us-ascii?Q?p8ifva3QYA=3D=3D?=
+	=?us-ascii?Q?1aMJMMovbEM1LKpqr6pWcPuwDZDKdxtOfdK39MFd9ZmnDeavgE8pB7q4l2Kj?=
+ =?us-ascii?Q?nC5Ila8GvJR6f6QAXzxQ+gl487gdr+kO6RFwGQ329qS5Ca7avyf9/JIZntG0?=
+ =?us-ascii?Q?CnD0BZgCzJ5Ns4ysTAZw9dAo5JPLbVF4AHAvfVXsBDCNBYvsBvaYfiJ93uDC?=
+ =?us-ascii?Q?AJmWxH7iWBh16PenfeYmJJG5KJ4HqmB/RAcf+LEANe5T/E93tVXbgXmbBAEu?=
+ =?us-ascii?Q?KvSEW6whW3X+1sEfCs5RAx77lr7FAg80fB9WkwHHMWEMazkAieYjT6cTwKEg?=
+ =?us-ascii?Q?yk7dKZtph9TiukvcgjSPsCz244GMmGF4CNnduiTnJIspxPRieAb8CxhAL0mw?=
+ =?us-ascii?Q?/51j3WpWYKW7IwO5ArTrDUQFivv/pq6OA1no9QvEOKUbKNSvlff43Kj+x3eP?=
+ =?us-ascii?Q?ccMK8135AuIeTOipFXGEw9cQ3r+N+O0P/qJTIcplBQON7+XvNJ6FxB70omvL?=
+ =?us-ascii?Q?Hn1L+EeSRtpj8Ng73uFZLSAnI93h8AEF1gvw4Tn+A9+J90nrzaT8RHCFo7+G?=
+ =?us-ascii?Q?uGuiFg7yjIVDT7XVDdllVaf+WHsNNOgpXp/rf57BUaGfjTqiQcKXlwcw9O7G?=
+ =?us-ascii?Q?cuqZ73uzeAekSdXjJmem8M7kou9T5FI/QWLykQoN2htCPnt5B8cJJcnjAflE?=
+ =?us-ascii?Q?c1u1RkvzCUg3AgkzoDhOidWY3I+YKbkfsnTE1Or+1IlT2OKxlEvj/tpZZ2ch?=
+ =?us-ascii?Q?Q9U16QLJ0tIDCHsabr4GGa4wW2AUADcDR02P1LTl4z3YjagprM/GpyR1tRfT?=
+ =?us-ascii?Q?gWKjOSulmfV6u1RRRpfvIolzvsA1WXrEpMG2FjK+15RznDQk2AQgRAHiobsg?=
+ =?us-ascii?Q?Z0h5oOrUCprnvUnXlFm2IEycTtD6r50Ta6e3n28P1TfV/6bo1YI1X/BRLCT4?=
+ =?us-ascii?Q?aM4727IkEmTcb+cQM63pk8swBo4wVxKpI2rQO1kodaJsLmI104NNLCM76TDa?=
+ =?us-ascii?Q?pWu6DMAXLTqSuUG3ROEl8/CKRkz7q14rxco8AKj9UCacJEc/4L8eAXp+UH0n?=
+ =?us-ascii?Q?667+gMEdWpl/E/hUaOauOlt0aWacuVnS1ktfztVHGVeGkHIFOKX9Lo9el1Ea?=
+ =?us-ascii?Q?CqFcUUUkJ2seeOrpzWM9TNaK16kLCJHC7r82Xq2A+3P4RJGMGyHd7MyRGPMG?=
+ =?us-ascii?Q?dzR/UO7vEkRDEMr9QiNOMBylDuR1kddVyoWLWhriCPvLDKO+0RBgCOMKkZvZ?=
+ =?us-ascii?Q?43vLNmcV6BgVEih7/0FTu6QUvCMEAvWLuKkROQaAetyMsBeGg2D+tABmSAqT?=
+ =?us-ascii?Q?J9o+DznMlR9e2x1FvIzv3pJk+tDwBa5UnO3vqHKrkpgFmtTTL+tuyxFxJyH9?=
+ =?us-ascii?Q?rCwGG45VgorFauHDWAwC9NyqcCqPaYCTdt0MGeTmeTlxjhblPqwr+GhKt7MT?=
+ =?us-ascii?Q?hNW6SBamJLM4k6b0OsxQmmAtk6yk4xjchMgbDPDajsB3UFkNm4+Yu32S4HnM?=
+ =?us-ascii?Q?aFxmxuTOM8+diuKJ7oYZ9u9HMdTKWx8d6zqfB8RunloFf/rSbnwGuKv79OjE?=
+ =?us-ascii?Q?EIW03TNp/mJJg/QCtbrDSYeEA+WoY/l7TDy/bqDto9kRBhtjby4Leq0fjBjZ?=
+ =?us-ascii?Q?y3MBu8Qd13rxIJrRiFLTACq/8KH1aGxvF9HwZWngTsScs14AL/Pm/rTqznnx?=
+ =?us-ascii?Q?LGIAO+bygl7tfNojvoHWKImV3t6M0+JelBs7H8yaQOB4fd5fsefHNdfbgsh6?=
+ =?us-ascii?Q?gn1EzOtp9It07Aw/2q5WRRfF/kbzZCE55Ovmhav8acknQqEL0oX/1ZNduywt?=
+ =?us-ascii?Q?jO+RZCouRQ=3D=3D?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1e286705-deef-4127-0875-08df1f9d8b02
+X-MS-Exchange-CrossTenant-Network-Message-Id: 915e898f-5992-4f5b-b90c-08df1f9d918c
 X-MS-Exchange-CrossTenant-AuthSource: LY0PR12MB727857.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Oct 2026 09:22:41.3913
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Oct 2026 09:22:52.2727
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 5EuiE65hXm2DyMg/5rOPUAVoG3iFz9Qd1Dz88d3rnNxAm9P5uxxBxKwjyR8qegMrNMbcNYoo+3KzOjCaj0yRsA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: /18FnZdJUUiDVbRjbgsO8YDBbMLfZWfbMwSYLIWsXtF+md0NQ6i9SF+0omfasEecw0VKAm9GAU+1+cjKJF0Lqw==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY5PR12MB6300
 
-Define cxl_decoder_config independently and embed it in cxl_decoder. Update
-decoder field accesses without changing behavior, so reset snapshots can
-reuse the configuration type without struct_group_tagged().
+Factor HDM register parsing into cxl_hdm_unpack_decoder(). Validate the
+range and interleave parameters in locals before publishing the complete
+settings, including enable/lock flags and the target-or-skip register
+value.
+
+Use the unpacked settings in init_hdm_decoder(), retaining the target-list
+union and passing endpoint skip state to the existing DPA reservation
+helper.
 
 Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
 ---
- drivers/cxl/acpi.c           |  26 +++---
- drivers/cxl/core/atl.c       |   4 +-
- drivers/cxl/core/hdm.c       | 114 ++++++++++++-------------
- drivers/cxl/core/pci.c       |   8 +-
- drivers/cxl/core/port.c      |  42 +++++-----
- drivers/cxl/core/region.c    | 102 +++++++++++-----------
- drivers/cxl/cxl.h            |   2 +-
- drivers/cxl/pci.c            |   2 +-
- drivers/cxl/port.c           |   4 +-
- include/cxl/cxl.h            |  26 ++++--
- tools/testing/cxl/test/cxl.c | 158 +++++++++++++++++------------------
- 11 files changed, 246 insertions(+), 242 deletions(-)
+ drivers/cxl/core/core.h     |  4 +++
+ drivers/cxl/core/hdm.c      | 68 +++++++++++--------------------------
+ drivers/cxl/core/resource.c | 57 +++++++++++++++++++++++++++++++
+ 3 files changed, 81 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/cxl/acpi.c b/drivers/cxl/acpi.c
-index 3b818adbd38b..692a4e067678 100644
---- a/drivers/cxl/acpi.c
-+++ b/drivers/cxl/acpi.c
-@@ -109,16 +109,16 @@ static int cxl_parse_cxims(union acpi_subtable_headers *header, void *arg,
- 		return rc;
+diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
+index a3fddb2bed63..a0bef246121d 100644
+--- a/drivers/cxl/core/core.h
++++ b/drivers/cxl/core/core.h
+@@ -142,6 +142,10 @@ extern struct cxl_rwsem cxl_rwsem;
+ void cxl_commit_start(void __iomem *hdm, struct cxl_decoder_settings *settings);
+ int cxld_await_commit(void __iomem *hdm, int id);
  
- 	/* Does this CXIMS entry apply to the given CXL Window? */
--	if (hbig != cxld->interleave_granularity)
-+	if (hbig != cxld->config.interleave_granularity)
- 		return 0;
- 
- 	/* IW 1,3 do not use xormaps and skip this parsing entirely */
--	if (is_power_of_2(cxld->interleave_ways))
-+	if (is_power_of_2(cxld->config.interleave_ways))
- 		/* 2, 4, 8, 16 way */
--		nr_maps = ilog2(cxld->interleave_ways);
-+		nr_maps = ilog2(cxld->config.interleave_ways);
- 	else
- 		/* 6, 12 way */
--		nr_maps = ilog2(cxld->interleave_ways / 3);
-+		nr_maps = ilog2(cxld->config.interleave_ways / 3);
- 
- 	if (cxims->nr_xormaps < nr_maps) {
- 		dev_dbg(dev, "CXIMS nr_xormaps[%d] expected[%d]\n",
-@@ -363,7 +363,7 @@ static int add_or_reset_cxl_resource(struct resource *parent, struct resource *r
- static void cxl_setup_extended_linear_cache(struct cxl_root_decoder *cxlrd)
- {
- 	struct cxl_decoder *cxld = &cxlrd->cxlsd.cxld;
--	struct range *hpa = &cxld->hpa_range;
-+	struct range *hpa = &cxld->config.hpa_range;
- 	resource_size_t size = range_len(hpa);
- 	resource_size_t start = hpa->start;
- 	resource_size_t cache_size;
-@@ -436,13 +436,13 @@ static int __cxl_parse_cfmws(struct acpi_cedt_cfmws *cfmws,
- 		return PTR_ERR(cxlrd);
- 
- 	cxld = &cxlrd->cxlsd.cxld;
--	cxld->flags = cfmws_to_decoder_flags(cfmws->restrictions);
--	cxld->target_type = CXL_DECODER_HOSTONLYMEM;
--	cxld->hpa_range = (struct range) {
-+	cxld->config.flags = cfmws_to_decoder_flags(cfmws->restrictions);
-+	cxld->config.target_type = CXL_DECODER_HOSTONLYMEM;
-+	cxld->config.hpa_range = (struct range) {
- 		.start = cfmws->base_hpa,
- 		.end = cfmws->base_hpa + cfmws->window_size - 1,
- 	};
--	cxld->interleave_ways = ways;
-+	cxld->config.interleave_ways = ways;
- 	for (i = 0; i < ways; i++)
- 		cxld->target_map[i] = cfmws->interleave_targets[i];
- 	/*
-@@ -451,7 +451,7 @@ static int __cxl_parse_cfmws(struct acpi_cedt_cfmws *cfmws,
- 	 */
- 	if (ways == 1)
- 		ig = CXL_DECODER_MIN_GRANULARITY;
--	cxld->interleave_granularity = ig;
-+	cxld->config.interleave_granularity = ig;
- 
- 	if (cfmws->interleave_arithmetic == ACPI_CEDT_CFMWS_ARITHMETIC_XOR) {
- 		if (ways != 1 && ways != 3) {
-@@ -752,7 +752,7 @@ static int add_root_nvdimm_bridge(struct device *match, void *data)
- 		return 0;
- 
- 	cxld = to_cxl_decoder(match);
--	if (!(cxld->flags & CXL_DECODER_F_PMEM))
-+	if (!(cxld->config.flags & CXL_DECODER_F_PMEM))
- 		return 0;
- 
- 	cxl_nvb = devm_cxl_add_nvdimm_bridge(host, root_port);
-@@ -869,8 +869,8 @@ static int pair_cxl_resource(struct device *dev, void *data)
- 		struct cxl_root_decoder *cxlrd = to_cxl_root_decoder(dev);
- 		struct cxl_decoder *cxld = &cxlrd->cxlsd.cxld;
- 		struct resource res = {
--			.start = cxld->hpa_range.start,
--			.end = cxld->hpa_range.end,
-+			.start = cxld->config.hpa_range.start,
-+			.end = cxld->config.hpa_range.end,
- 			.flags = IORESOURCE_MEM,
- 		};
- 
-diff --git a/drivers/cxl/core/atl.c b/drivers/cxl/core/atl.c
-index 310668786189..07ce7c50c47a 100644
---- a/drivers/cxl/core/atl.c
-+++ b/drivers/cxl/core/atl.c
-@@ -172,8 +172,8 @@ static int cxl_prm_setup_root(struct cxl_root *cxl_root, void *data)
- 	 *
- 	 * Indicate that Normalized Addressing is enabled.
- 	 */
--	cxld->flags |= CXL_DECODER_F_LOCK;
--	cxld->flags |= CXL_DECODER_F_NORMALIZED_ADDRESSING;
-+	cxld->config.flags |= CXL_DECODER_F_LOCK;
-+	cxld->config.flags |= CXL_DECODER_F_NORMALIZED_ADDRESSING;
- 
- 	ctx->hpa_range = hpa_range;
- 	ctx->interleave_ways = ways;
++int cxl_hdm_unpack_decoder(struct cxl_decoder_settings *settings, int id,
++			   u32 ctrl, u64 base, u64 size,
++			   u64 target_or_skip_reg_val);
++
+ int cxl_memdev_init(void);
+ void cxl_memdev_exit(void);
+ void cxl_mbox_init(void);
 diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
-index 39fe283cbc74..9e05032a5426 100644
+index 629e3420ad0b..b6a8fe83d336 100644
 --- a/drivers/cxl/core/hdm.c
 +++ b/drivers/cxl/core/hdm.c
-@@ -384,11 +384,11 @@ static int __cxl_dpa_reserve(struct cxl_endpoint_decoder *cxled,
- 
- 	if (cxled->dpa_res) {
- 		dev_dbg(dev, "decoder%d.%d: existing allocation %pr assigned\n",
--			port->id, cxled->cxld.id, cxled->dpa_res);
-+			port->id, cxled->cxld.config.id, cxled->dpa_res);
- 		return -EBUSY;
- 	}
- 
--	if (port->hdm_end + 1 != cxled->cxld.id) {
-+	if (port->hdm_end + 1 != cxled->cxld.config.id) {
- 		/*
- 		 * Assumes alloc and commit order is always in hardware instance
- 		 * order per expectations from 8.2.5.12.20 Committing Decoder
-@@ -396,7 +396,7 @@ static int __cxl_dpa_reserve(struct cxl_endpoint_decoder *cxled,
- 		 * decoder[m+1] commit start.
- 		 */
- 		dev_dbg(dev, "decoder%d.%d: expected decoder%d.%d\n", port->id,
--			cxled->cxld.id, port->id, port->hdm_end + 1);
-+			cxled->cxld.config.id, port->id, port->hdm_end + 1);
- 		return -EBUSY;
- 	}
- 
-@@ -409,7 +409,7 @@ static int __cxl_dpa_reserve(struct cxl_endpoint_decoder *cxled,
- 				     dev_name(&cxled->cxld.dev));
- 	if (IS_ERR(res)) {
- 		dev_dbg(dev, "decoder%d.%d: failed to reserve allocation\n",
--			port->id, cxled->cxld.id);
-+			port->id, cxled->cxld.config.id);
- 		if (skipped)
- 			release_skip(cxlds, base - skipped, skipped);
- 		return PTR_ERR(res);
-@@ -432,7 +432,7 @@ static int __cxl_dpa_reserve(struct cxl_endpoint_decoder *cxled,
- 	/* Empty decoders may not be contained by a partition boundary */
- 	if (cxled->part < 0 && resource_size(res))
- 		dev_warn(dev, "decoder%d.%d: %pr does not map any partition\n",
--			 port->id, cxled->cxld.id, res);
-+			 port->id, cxled->cxld.config.id, res);
- 
- 	port->hdm_end++;
- 	get_device(&cxled->cxld.dev);
-@@ -580,11 +580,11 @@ int cxl_dpa_free(struct cxl_endpoint_decoder *cxled)
- 			dev_name(&cxled->cxld.region->dev));
- 		return -EBUSY;
- 	}
--	if (cxled->cxld.flags & CXL_DECODER_F_ENABLE) {
-+	if (cxled->cxld.config.flags & CXL_DECODER_F_ENABLE) {
- 		dev_dbg(dev, "decoder enabled\n");
- 		return -EBUSY;
- 	}
--	if (cxled->cxld.id != port->hdm_end) {
-+	if (cxled->cxld.config.id != port->hdm_end) {
- 		dev_dbg(dev, "expected decoder%d.%d\n", port->id,
- 			port->hdm_end);
- 		return -EBUSY;
-@@ -603,7 +603,7 @@ int cxl_dpa_set_part(struct cxl_endpoint_decoder *cxled,
- 	int part;
- 
- 	guard(rwsem_write)(&cxl_rwsem.dpa);
--	if (cxled->cxld.flags & CXL_DECODER_F_ENABLE)
-+	if (cxled->cxld.config.flags & CXL_DECODER_F_ENABLE)
- 		return -EBUSY;
- 
- 	for (part = 0; part < cxlds->nr_partitions; part++)
-@@ -641,7 +641,7 @@ static int __cxl_dpa_alloc(struct cxl_endpoint_decoder *cxled, u64 size)
- 		return -EBUSY;
- 	}
- 
--	if (cxled->cxld.flags & CXL_DECODER_F_ENABLE) {
-+	if (cxled->cxld.config.flags & CXL_DECODER_F_ENABLE) {
- 		dev_dbg(dev, "decoder enabled\n");
- 		return -EBUSY;
- 	}
-@@ -716,12 +716,12 @@ static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
- 	 * Input validation ensures these warns never fire, but otherwise
- 	 * suppress unititalized variable usage warnings.
- 	 */
--	if (WARN_ONCE(ways_to_eiw(cxld->interleave_ways, &eiw),
--		      "invalid interleave_ways: %d\n", cxld->interleave_ways))
-+	if (WARN_ONCE(ways_to_eiw(cxld->config.interleave_ways, &eiw),
-+		      "invalid interleave_ways: %d\n", cxld->config.interleave_ways))
- 		return;
--	if (WARN_ONCE(granularity_to_eig(cxld->interleave_granularity, &eig),
-+	if (WARN_ONCE(granularity_to_eig(cxld->config.interleave_granularity, &eig),
- 		      "invalid interleave_granularity: %d\n",
--		      cxld->interleave_granularity))
-+		      cxld->config.interleave_granularity))
- 		return;
- 
- 	u32p_replace_bits(ctrl, eig, CXL_HDM_DECODER0_CTRL_IG_MASK);
-@@ -732,14 +732,14 @@ static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
- static void cxld_set_type(struct cxl_decoder *cxld, u32 *ctrl)
+@@ -932,8 +932,8 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
+ 			    u64 *dpa_base, struct cxl_endpoint_dvsec_info *info)
  {
- 	u32p_replace_bits(ctrl,
--			  !!(cxld->target_type == CXL_DECODER_HOSTONLYMEM),
-+			  !!(cxld->config.target_type == CXL_DECODER_HOSTONLYMEM),
- 			  CXL_HDM_DECODER0_CTRL_HOSTONLY);
- }
- 
- static void cxlsd_set_targets(struct cxl_switch_decoder *cxlsd, u64 *tgt)
- {
- 	struct cxl_dport **t = &cxlsd->target[0];
--	int ways = cxlsd->cxld.interleave_ways;
-+	int ways = cxlsd->cxld.config.interleave_ways;
- 
- 	*tgt = FIELD_PREP(GENMASK(7, 0), t[0]->port_id);
- 	if (ways > 1)
-@@ -786,16 +786,16 @@ static int cxld_await_commit(void __iomem *hdm, int id)
- 
- static void setup_hw_decoder(struct cxl_decoder *cxld, void __iomem *hdm)
- {
--	int id = cxld->id;
-+	int id = cxld->config.id;
- 	u64 base, size;
+ 	struct cxl_endpoint_decoder *cxled = NULL;
+-	u64 size, base, skip, dpa_size, lo, hi;
+-	bool committed;
++	struct cxl_decoder_settings settings;
++	u64 size, base, skip, dpa_size, lo, hi, target_or_skip_reg_val;
+ 	u32 remainder;
+ 	int i, rc;
  	u32 ctrl;
- 
- 	/* common decoder settings */
--	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(cxld->id));
-+	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(cxld->config.id));
- 	cxld_set_interleave(cxld, &ctrl);
- 	cxld_set_type(cxld, &ctrl);
--	base = cxld->hpa_range.start;
--	size = range_len(&cxld->hpa_range);
-+	base = cxld->config.hpa_range.start;
+@@ -953,35 +953,28 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
+ 	lo = readl(hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(which));
+ 	hi = readl(hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(which));
+ 	size = (hi << 32) + lo;
+-	committed = !!(ctrl & CXL_HDM_DECODER0_CTRL_COMMITTED);
++	lo = readl(hdm + CXL_HDM_DECODER0_TL_LOW(which));
++	hi = readl(hdm + CXL_HDM_DECODER0_TL_HIGH(which));
++	target_or_skip_reg_val = (hi << 32) + lo;
++	rc = cxl_hdm_unpack_decoder(&settings, which, ctrl, base, size,
++				    target_or_skip_reg_val);
++	if (rc) {
++		dev_warn(&port->dev,
++			 "decoder%d.%d: Invalid decoder configuration (ctrl: %#x): %d\n",
++			 port->id, cxld->config.id, ctrl, rc);
++		return rc;
++	}
++
+ 	cxld->commit = cxl_decoder_commit;
+ 	cxld->reset = cxl_decoder_reset;
+-
+-	if (!committed)
+-		size = 0;
+-	if (base == U64_MAX || size == U64_MAX) {
+-		dev_warn(&port->dev, "decoder%d.%d: Invalid resource range\n",
+-			 port->id, cxld->config.id);
+-		return -ENXIO;
+-	}
++	cxld->config = settings.config;
 +	size = range_len(&cxld->config.hpa_range);
- 
- 	writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
- 	writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
-@@ -830,9 +830,9 @@ static int cxl_decoder_commit(struct cxl_decoder *cxld)
- 	struct cxl_port *port = to_cxl_port(cxld->dev.parent);
- 	struct cxl_hdm *cxlhdm = dev_get_drvdata(&port->dev);
- 	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
--	int id = cxld->id, rc;
-+	int id = cxld->config.id, rc;
- 
--	if (cxld->flags & CXL_DECODER_F_ENABLE)
-+	if (cxld->config.flags & CXL_DECODER_F_ENABLE)
- 		return 0;
- 
- 	if (cxl_num_decoders_committed(port) != id) {
-@@ -865,14 +865,14 @@ static int cxl_decoder_commit(struct cxl_decoder *cxld)
- 	scoped_guard(rwsem_read, &cxl_rwsem.dpa)
- 		setup_hw_decoder(cxld, hdm);
- 
--	rc = cxld_await_commit(hdm, cxld->id);
-+	rc = cxld_await_commit(hdm, cxld->config.id);
- 	if (rc) {
- 		dev_dbg(&port->dev, "%s: error %d committing decoder\n",
- 			dev_name(&cxld->dev), rc);
- 		return rc;
- 	}
- 	port->commit_end++;
--	cxld->flags |= CXL_DECODER_F_ENABLE;
-+	cxld->config.flags |= CXL_DECODER_F_ENABLE;
- 
- 	return 0;
- }
-@@ -886,8 +886,8 @@ static int commit_reap(struct device *dev, void *data)
- 		return 0;
- 
- 	cxld = to_cxl_decoder(dev);
--	if (port->commit_end == cxld->id &&
--	    ((cxld->flags & CXL_DECODER_F_ENABLE) == 0)) {
-+	if (port->commit_end == cxld->config.id &&
-+	    ((cxld->config.flags & CXL_DECODER_F_ENABLE) == 0)) {
- 		port->commit_end--;
- 		dev_dbg(&port->dev, "reap: %s commit_end: %d\n",
- 			dev_name(&cxld->dev), port->commit_end);
-@@ -919,13 +919,13 @@ static void cxl_decoder_reset(struct cxl_decoder *cxld)
- 	struct cxl_port *port = to_cxl_port(cxld->dev.parent);
- 	struct cxl_hdm *cxlhdm = dev_get_drvdata(&port->dev);
- 	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
--	int id = cxld->id;
-+	int id = cxld->config.id;
- 	u32 ctrl;
- 
--	if ((cxld->flags & CXL_DECODER_F_ENABLE) == 0)
-+	if ((cxld->config.flags & CXL_DECODER_F_ENABLE) == 0)
- 		return;
- 
--	if (cxld->flags & CXL_DECODER_F_LOCK)
-+	if (cxld->config.flags & CXL_DECODER_F_LOCK)
- 		return;
- 
- 	if (port->commit_end == id)
-@@ -944,7 +944,7 @@ static void cxl_decoder_reset(struct cxl_decoder *cxld)
- 	writel(0, hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
- 	writel(0, hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
- 
--	cxld->flags &= ~CXL_DECODER_F_ENABLE;
-+	cxld->config.flags &= ~CXL_DECODER_F_ENABLE;
- 
- 	/* Userspace is now responsible for reconfiguring this decoder */
- 	if (is_endpoint_decoder(&cxld->dev)) {
-@@ -971,23 +971,23 @@ static int cxl_setup_hdm_decoder_from_dvsec(
- 	if (!len)
- 		return -ENOENT;
- 
--	cxld->target_type = CXL_DECODER_HOSTONLYMEM;
-+	cxld->config.target_type = CXL_DECODER_HOSTONLYMEM;
- 	cxld->commit = NULL;
- 	cxld->reset = NULL;
--	cxld->hpa_range = info->dvsec_range[which];
-+	cxld->config.hpa_range = info->dvsec_range[which];
- 
- 	/*
- 	 * Set the emulated decoder as locked pending additional support to
- 	 * change the range registers at run time.
- 	 */
--	cxld->flags |= CXL_DECODER_F_ENABLE | CXL_DECODER_F_LOCK;
--	port->commit_end = cxld->id;
-+	cxld->config.flags |= CXL_DECODER_F_ENABLE | CXL_DECODER_F_LOCK;
-+	port->commit_end = cxld->config.id;
- 
- 	rc = devm_cxl_dpa_reserve(cxled, *dpa_base, len, 0);
- 	if (rc) {
- 		dev_err(&port->dev,
- 			"decoder%d.%d: Failed to reserve DPA range %#llx - %#llx: %d\n",
--			port->id, cxld->id, *dpa_base, *dpa_base + len - 1, rc);
-+			port->id, cxld->config.id, *dpa_base, *dpa_base + len - 1, rc);
- 		return rc;
- 	}
- 	*dpa_base += len;
-@@ -1030,36 +1030,36 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
- 		size = 0;
- 	if (base == U64_MAX || size == U64_MAX) {
- 		dev_warn(&port->dev, "decoder%d.%d: Invalid resource range\n",
--			 port->id, cxld->id);
-+			 port->id, cxld->config.id);
- 		return -ENXIO;
- 	}
  
  	if (info)
  		cxled = to_cxl_endpoint_decoder(&cxld->dev);
--	cxld->hpa_range = (struct range) {
-+	cxld->config.hpa_range = (struct range) {
- 		.start = base,
- 		.end = base + size - 1,
- 	};
+-	cxld->config.hpa_range = (struct range) {
+-		.start = base,
+-		.end = base + size - 1,
+-	};
  
  	/* decoders are enabled if committed */
- 	if (committed) {
--		cxld->flags |= CXL_DECODER_F_ENABLE;
-+		cxld->config.flags |= CXL_DECODER_F_ENABLE;
- 		if (ctrl & CXL_HDM_DECODER0_CTRL_LOCK)
--			cxld->flags |= CXL_DECODER_F_LOCK;
-+			cxld->config.flags |= CXL_DECODER_F_LOCK;
- 		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_HOSTONLY, ctrl))
--			cxld->target_type = CXL_DECODER_HOSTONLYMEM;
-+			cxld->config.target_type = CXL_DECODER_HOSTONLYMEM;
- 		else
--			cxld->target_type = CXL_DECODER_DEVMEM;
-+			cxld->config.target_type = CXL_DECODER_DEVMEM;
- 
+-	if (committed) {
+-		cxld->config.flags |= CXL_DECODER_F_ENABLE;
+-		if (ctrl & CXL_HDM_DECODER0_CTRL_LOCK)
+-			cxld->config.flags |= CXL_DECODER_F_LOCK;
+-		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_HOSTONLY, ctrl))
+-			cxld->config.target_type = CXL_DECODER_HOSTONLYMEM;
+-		else
+-			cxld->config.target_type = CXL_DECODER_DEVMEM;
+-
++	if (cxld->config.flags & CXL_DECODER_F_ENABLE) {
  		guard(rwsem_write)(&cxl_rwsem.region);
--		if (cxld->id != cxl_num_decoders_committed(port)) {
-+		if (cxld->config.id != cxl_num_decoders_committed(port)) {
+ 		if (cxld->config.id != cxl_num_decoders_committed(port)) {
  			dev_warn(&port->dev,
- 				 "decoder%d.%d: Committed out of order\n",
--				 port->id, cxld->id);
-+				 port->id, cxld->config.id);
- 			return -ENXIO;
- 		}
- 
--		port->commit_end = cxld->id;
-+		port->commit_end = cxld->config.id;
- 	} else {
- 		if (cxled) {
- 			struct cxl_memdev *cxlmd = cxled_to_memdev(cxled);
-@@ -1070,46 +1070,46 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
- 			 * more precision.
- 			 */
- 			if (cxlds->type == CXL_DEVTYPE_CLASSMEM)
--				cxld->target_type = CXL_DECODER_HOSTONLYMEM;
-+				cxld->config.target_type = CXL_DECODER_HOSTONLYMEM;
- 			else
--				cxld->target_type = CXL_DECODER_DEVMEM;
-+				cxld->config.target_type = CXL_DECODER_DEVMEM;
- 		} else {
- 			/* To be overridden by region type at commit time */
--			cxld->target_type = CXL_DECODER_HOSTONLYMEM;
-+			cxld->config.target_type = CXL_DECODER_HOSTONLYMEM;
- 		}
- 
- 		if (!FIELD_GET(CXL_HDM_DECODER0_CTRL_HOSTONLY, ctrl) &&
--		    cxld->target_type == CXL_DECODER_HOSTONLYMEM) {
-+		    cxld->config.target_type == CXL_DECODER_HOSTONLYMEM) {
- 			ctrl |= CXL_HDM_DECODER0_CTRL_HOSTONLY;
+@@ -1015,38 +1008,19 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
  			writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(which));
  		}
  	}
- 	rc = eiw_to_ways(FIELD_GET(CXL_HDM_DECODER0_CTRL_IW_MASK, ctrl),
--			  &cxld->interleave_ways);
-+			  &cxld->config.interleave_ways);
- 	if (rc) {
- 		dev_warn(&port->dev,
- 			 "decoder%d.%d: Invalid interleave ways (ctrl: %#x)\n",
--			 port->id, cxld->id, ctrl);
-+			 port->id, cxld->config.id, ctrl);
- 		return rc;
- 	}
- 	rc = eig_to_granularity(FIELD_GET(CXL_HDM_DECODER0_CTRL_IG_MASK, ctrl),
--				 &cxld->interleave_granularity);
-+				 &cxld->config.interleave_granularity);
- 	if (rc) {
- 		dev_warn(&port->dev,
- 			 "decoder%d.%d: Invalid interleave granularity (ctrl: %#x)\n",
--			 port->id, cxld->id, ctrl);
-+			 port->id, cxld->config.id, ctrl);
- 		return rc;
- 	}
- 
+-	rc = eiw_to_ways(FIELD_GET(CXL_HDM_DECODER0_CTRL_IW_MASK, ctrl),
+-			  &cxld->config.interleave_ways);
+-	if (rc) {
+-		dev_warn(&port->dev,
+-			 "decoder%d.%d: Invalid interleave ways (ctrl: %#x)\n",
+-			 port->id, cxld->config.id, ctrl);
+-		return rc;
+-	}
+-	rc = eig_to_granularity(FIELD_GET(CXL_HDM_DECODER0_CTRL_IG_MASK, ctrl),
+-				 &cxld->config.interleave_granularity);
+-	if (rc) {
+-		dev_warn(&port->dev,
+-			 "decoder%d.%d: Invalid interleave granularity (ctrl: %#x)\n",
+-			 port->id, cxld->config.id, ctrl);
+-		return rc;
+-	}
+-
  	dev_dbg(&port->dev, "decoder%d.%d: range: %#llx-%#llx iw: %d ig: %d\n",
--		port->id, cxld->id, cxld->hpa_range.start, cxld->hpa_range.end,
--		cxld->interleave_ways, cxld->interleave_granularity);
-+		port->id, cxld->config.id, cxld->config.hpa_range.start, cxld->config.hpa_range.end,
-+		cxld->config.interleave_ways, cxld->config.interleave_granularity);
+ 		port->id, cxld->config.id, cxld->config.hpa_range.start, cxld->config.hpa_range.end,
+ 		cxld->config.interleave_ways, cxld->config.interleave_granularity);
  
  	if (!cxled) {
- 		lo = readl(hdm + CXL_HDM_DECODER0_TL_LOW(which));
- 		hi = readl(hdm + CXL_HDM_DECODER0_TL_HIGH(which));
- 		target_list.value = (hi << 32) + lo;
--		for (i = 0; i < cxld->interleave_ways; i++)
-+		for (i = 0; i < cxld->config.interleave_ways; i++)
+-		lo = readl(hdm + CXL_HDM_DECODER0_TL_LOW(which));
+-		hi = readl(hdm + CXL_HDM_DECODER0_TL_HIGH(which));
+-		target_list.value = (hi << 32) + lo;
++		target_list.value = settings.target_or_skip_reg_val;
+ 		for (i = 0; i < cxld->config.interleave_ways; i++)
  			cxld->target_map[i] = target_list.target_id[i];
  
  		return 0;
-@@ -1118,11 +1118,11 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
- 	if (!committed)
+ 	}
+ 
+-	if (!committed)
++	if (!(cxld->config.flags & CXL_DECODER_F_ENABLE))
  		return 0;
  
--	dpa_size = div_u64_rem(size, cxld->interleave_ways, &remainder);
-+	dpa_size = div_u64_rem(size, cxld->config.interleave_ways, &remainder);
- 	if (remainder) {
- 		dev_err(&port->dev,
- 			"decoder%d.%d: invalid committed configuration size: %#llx ways: %d\n",
--			port->id, cxld->id, size, cxld->interleave_ways);
-+			port->id, cxld->config.id, size, cxld->config.interleave_ways);
+ 	dpa_size = div_u64_rem(size, cxld->config.interleave_ways, &remainder);
+@@ -1056,9 +1030,7 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
+ 			port->id, cxld->config.id, size, cxld->config.interleave_ways);
  		return -ENXIO;
  	}
- 	lo = readl(hdm + CXL_HDM_DECODER0_SKIP_LOW(which));
-@@ -1132,7 +1132,7 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
+-	lo = readl(hdm + CXL_HDM_DECODER0_SKIP_LOW(which));
+-	hi = readl(hdm + CXL_HDM_DECODER0_SKIP_HIGH(which));
+-	skip = (hi << 32) + lo;
++	skip = settings.target_or_skip_reg_val;
+ 	rc = devm_cxl_dpa_reserve(cxled, *dpa_base + skip, dpa_size, skip);
  	if (rc) {
  		dev_err(&port->dev,
- 			"decoder%d.%d: Failed to reserve DPA range %#llx - %#llx: %d\n",
--			port->id, cxld->id, *dpa_base,
-+			port->id, cxld->config.id, *dpa_base,
- 			*dpa_base + dpa_size + skip - 1, rc);
- 		return rc;
- 	}
-diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-index 99c8b02d42e5..9411694b93b3 100644
---- a/drivers/cxl/core/pci.c
-+++ b/drivers/cxl/core/pci.c
-@@ -231,10 +231,10 @@ static int dvsec_range_allowed(struct device *dev, const void *arg)
- 
- 	cxld = to_cxl_decoder(dev);
- 
--	if (!(cxld->flags & CXL_DECODER_F_RAM))
-+	if (!(cxld->config.flags & CXL_DECODER_F_RAM))
- 		return 0;
- 
--	return range_contains(&cxld->hpa_range, dev_range);
-+	return range_contains(&cxld->config.hpa_range, dev_range);
+diff --git a/drivers/cxl/core/resource.c b/drivers/cxl/core/resource.c
+index ff027cb89e57..8dfeb12de8c9 100644
+--- a/drivers/cxl/core/resource.c
++++ b/drivers/cxl/core/resource.c
+@@ -104,3 +104,60 @@ void cxl_commit_start(void __iomem *hdm, struct cxl_decoder_settings *settings)
+ 	setup_hw_decoder(hdm, settings);
  }
- 
- static void disable_hdm(void *_cxlhdm)
-@@ -671,12 +671,12 @@ static int __cxl_endpoint_decoder_reset_detected(struct device *dev, void *data)
- 		return 0;
- 
- 	cxld = to_cxl_decoder(dev);
--	if ((cxld->flags & CXL_DECODER_F_ENABLE) == 0)
-+	if ((cxld->config.flags & CXL_DECODER_F_ENABLE) == 0)
- 		return 0;
- 
- 	cxlhdm = dev_get_drvdata(&port->dev);
- 	hdm = cxlhdm->regs.hdm_decoder;
--	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(cxld->id));
-+	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(cxld->config.id));
- 
- 	return !FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMITTED, ctrl);
- }
-diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
-index 5dc2815d82d8..84374873f3d0 100644
---- a/drivers/cxl/core/port.c
-+++ b/drivers/cxl/core/port.c
-@@ -129,7 +129,7 @@ static ssize_t start_show(struct device *dev, struct device_attribute *attr,
- {
- 	struct cxl_decoder *cxld = to_cxl_decoder(dev);
- 
--	return sysfs_emit(buf, "%#llx\n", cxld->hpa_range.start);
-+	return sysfs_emit(buf, "%#llx\n", cxld->config.hpa_range.start);
- }
- static DEVICE_ATTR_ADMIN_RO(start);
- 
-@@ -138,7 +138,7 @@ static ssize_t size_show(struct device *dev, struct device_attribute *attr,
- {
- 	struct cxl_decoder *cxld = to_cxl_decoder(dev);
- 
--	return sysfs_emit(buf, "%#llx\n", range_len(&cxld->hpa_range));
-+	return sysfs_emit(buf, "%#llx\n", range_len(&cxld->config.hpa_range));
- }
- static DEVICE_ATTR_RO(size);
- 
-@@ -149,7 +149,7 @@ static ssize_t name##_show(struct device *dev,                       \
- 	struct cxl_decoder *cxld = to_cxl_decoder(dev);              \
-                                                                      \
- 	return sysfs_emit(buf, "%s\n",                               \
--			  (cxld->flags & (flag)) ? "1" : "0");       \
-+			  (cxld->config.flags & (flag)) ? "1" : "0");       \
- }                                                                    \
- static DEVICE_ATTR_RO(name)
- 
-@@ -164,7 +164,7 @@ static ssize_t target_type_show(struct device *dev,
- {
- 	struct cxl_decoder *cxld = to_cxl_decoder(dev);
- 
--	switch (cxld->target_type) {
-+	switch (cxld->config.target_type) {
- 	case CXL_DECODER_DEVMEM:
- 		return sysfs_emit(buf, "accelerator\n");
- 	case CXL_DECODER_HOSTONLYMEM:
-@@ -180,14 +180,14 @@ static ssize_t emit_target_list(struct cxl_switch_decoder *cxlsd, char *buf)
- 	ssize_t offset = 0;
- 	int i, rc = 0;
- 
--	for (i = 0; i < cxld->interleave_ways; i++) {
-+	for (i = 0; i < cxld->config.interleave_ways; i++) {
- 		struct cxl_dport *dport = cxlsd->target[i];
- 		struct cxl_dport *next = NULL;
- 
- 		if (!dport)
- 			break;
- 
--		if (i + 1 < cxld->interleave_ways)
-+		if (i + 1 < cxld->config.interleave_ways)
- 			next = cxlsd->target[i + 1];
- 		rc = sysfs_emit_at(buf, offset, "%d%s", dport->port_id,
- 				   next ? "," : "");
-@@ -314,7 +314,7 @@ static ssize_t interleave_granularity_show(struct device *dev,
- {
- 	struct cxl_decoder *cxld = to_cxl_decoder(dev);
- 
--	return sysfs_emit(buf, "%d\n", cxld->interleave_granularity);
-+	return sysfs_emit(buf, "%d\n", cxld->config.interleave_granularity);
- }
- 
- static DEVICE_ATTR_RO(interleave_granularity);
-@@ -324,7 +324,7 @@ static ssize_t interleave_ways_show(struct device *dev,
- {
- 	struct cxl_decoder *cxld = to_cxl_decoder(dev);
- 
--	return sysfs_emit(buf, "%d\n", cxld->interleave_ways);
-+	return sysfs_emit(buf, "%d\n", cxld->config.interleave_ways);
- }
- 
- static DEVICE_ATTR_RO(interleave_ways);
-@@ -368,14 +368,14 @@ static bool can_create_pmem(struct cxl_root_decoder *cxlrd)
- {
- 	unsigned long flags = CXL_DECODER_F_TYPE3 | CXL_DECODER_F_PMEM;
- 
--	return (cxlrd->cxlsd.cxld.flags & flags) == flags;
-+	return (cxlrd->cxlsd.cxld.config.flags & flags) == flags;
- }
- 
- static bool can_create_ram(struct cxl_root_decoder *cxlrd)
- {
- 	unsigned long flags = CXL_DECODER_F_TYPE3 | CXL_DECODER_F_RAM;
- 
--	return (cxlrd->cxlsd.cxld.flags & flags) == flags;
-+	return (cxlrd->cxlsd.cxld.config.flags & flags) == flags;
- }
- 
- static umode_t cxl_root_decoder_visible(struct kobject *kobj, struct attribute *a, int n)
-@@ -450,7 +450,7 @@ static void __cxl_decoder_release(struct cxl_decoder *cxld)
- {
- 	struct cxl_port *port = to_cxl_port(cxld->dev.parent);
- 
--	ida_free(&port->decoder_ida, cxld->id);
-+	ida_free(&port->decoder_ida, cxld->config.id);
- 	put_device(&port->dev);
- }
- 
-@@ -1646,7 +1646,7 @@ static int update_decoder_targets(struct device *dev, void *data)
- 	cxld = &cxlsd->cxld;
- 	guard(rwsem_write)(&cxl_rwsem.region);
- 
--	for (i = 0; i < cxld->interleave_ways; i++) {
-+	for (i = 0; i < cxld->config.interleave_ways; i++) {
- 		if (cxld->target_map[i] == dport->port_id) {
- 			cxlsd->target[i] = dport;
- 			dev_dbg(dev, "dport%d found in target list, index %d\n",
-@@ -1952,7 +1952,7 @@ static int decoder_populate_targets(struct cxl_switch_decoder *cxlsd,
- 		return 0;
- 
- 	guard(rwsem_write)(&cxl_rwsem.region);
--	for (i = 0; i < cxlsd->cxld.interleave_ways; i++) {
-+	for (i = 0; i < cxlsd->cxld.config.interleave_ways; i++) {
- 		struct cxl_dport *dport = find_dport(port, cxld->target_map[i]);
- 
- 		if (!dport) {
-@@ -1988,7 +1988,7 @@ static int cxl_decoder_init(struct cxl_port *port, struct cxl_decoder *cxld)
- 
- 	/* need parent to stick around to release the id */
- 	get_device(&port->dev);
--	cxld->id = rc;
-+	cxld->config.id = rc;
- 
- 	dev = &cxld->dev;
- 	device_initialize(dev);
-@@ -1998,10 +1998,10 @@ static int cxl_decoder_init(struct cxl_port *port, struct cxl_decoder *cxld)
- 	dev->bus = &cxl_bus_type;
- 
- 	/* Pre initialize an "empty" decoder */
--	cxld->interleave_ways = 1;
--	cxld->interleave_granularity = PAGE_SIZE;
--	cxld->target_type = CXL_DECODER_HOSTONLYMEM;
--	cxld->hpa_range = (struct range) {
-+	cxld->config.interleave_ways = 1;
-+	cxld->config.interleave_granularity = PAGE_SIZE;
-+	cxld->config.target_type = CXL_DECODER_HOSTONLYMEM;
-+	cxld->config.hpa_range = (struct range) {
- 		.start = 0,
- 		.end = -1,
- 	};
-@@ -2172,7 +2172,7 @@ int cxl_decoder_add_locked(struct cxl_decoder *cxld)
- 	if (WARN_ON_ONCE(IS_ERR(cxld)))
- 		return PTR_ERR(cxld);
- 
--	if (cxld->interleave_ways < 1)
-+	if (cxld->config.interleave_ways < 1)
- 		return -EINVAL;
- 
- 	dev = &cxld->dev;
-@@ -2182,14 +2182,14 @@ int cxl_decoder_add_locked(struct cxl_decoder *cxld)
- 		struct cxl_switch_decoder *cxlsd = to_cxl_switch_decoder(dev);
- 
- 		rc = decoder_populate_targets(cxlsd, port);
--		if (rc && (cxld->flags & CXL_DECODER_F_ENABLE)) {
-+		if (rc && (cxld->config.flags & CXL_DECODER_F_ENABLE)) {
- 			dev_err(&port->dev,
- 				"Failed to populate active decoder targets\n");
- 			return rc;
- 		}
- 	}
- 
--	rc = dev_set_name(dev, "decoder%d.%d", port->id, cxld->id);
-+	rc = dev_set_name(dev, "decoder%d.%d", port->id, cxld->config.id);
- 	if (rc)
- 		return rc;
- 
-diff --git a/drivers/cxl/core/region.c b/drivers/cxl/core/region.c
-index bb51e67f25f5..8cfc06df3134 100644
---- a/drivers/cxl/core/region.c
-+++ b/drivers/cxl/core/region.c
-@@ -502,8 +502,8 @@ static int set_interleave_ways(struct cxl_region *cxlr, int val)
- 	 * Even for x3, x6, and x12 interleaves the region interleave must be a
- 	 * power of 2 multiple of the host bridge interleave.
- 	 */
--	if (!is_power_of_2(val / cxld->interleave_ways) ||
--	    (val % cxld->interleave_ways)) {
-+	if (!is_power_of_2(val / cxld->config.interleave_ways) ||
-+	    (val % cxld->config.interleave_ways)) {
- 		dev_dbg(&cxlr->dev, "invalid interleave: %d\n", val);
- 		return -EINVAL;
- 	}
-@@ -580,7 +580,7 @@ static int set_interleave_granularity(struct cxl_region *cxlr, int val)
- 	 * with a granularity greater than the root interleave result in invalid
- 	 * DPA translations (invalid to support).
- 	 */
--	if (cxld->interleave_ways > 1 && val != cxld->interleave_granularity)
-+	if (cxld->config.interleave_ways > 1 && val != cxld->config.interleave_granularity)
- 		return -EINVAL;
- 
- 	lockdep_assert_held_write(&cxl_rwsem.region);
-@@ -880,7 +880,7 @@ static int check_commit_order(struct device *dev, void *data)
- 	 * order shutdown has occurred, block further allocations until
- 	 * that is resolved
- 	 */
--	if (((cxld->flags & CXL_DECODER_F_ENABLE) == 0))
-+	if (((cxld->config.flags & CXL_DECODER_F_ENABLE) == 0))
- 		return -EBUSY;
- 	return 0;
- }
-@@ -896,7 +896,7 @@ static int match_free_decoder(struct device *dev, const void *data)
- 
- 	cxld = to_cxl_decoder(dev);
- 
--	if (cxld->id != port->commit_end + 1)
-+	if (cxld->config.id != port->commit_end + 1)
- 		return 0;
- 
- 	if (cxld->region) {
-@@ -942,7 +942,7 @@ static int match_auto_decoder(struct device *dev, const void *data)
- 		return 0;
- 
- 	cxld = to_cxl_decoder(dev);
--	r = &cxld->hpa_range;
-+	r = &cxld->config.hpa_range;
- 
- 	if (spa_maps_hpa(p, r))
- 		return 1;
-@@ -1003,10 +1003,10 @@ static bool auto_order_ok(struct cxl_port *port, struct cxl_region *cxlr_iter,
- 	 * starting address has the lesser id.
- 	 */
- 	dev_dbg(&cxld->dev, "check for HPA violation %s:%d < %s:%d\n",
--		dev_name(&cxld->dev), cxld->id,
--		dev_name(&cxld_iter->dev), cxld_iter->id);
-+		dev_name(&cxld->dev), cxld->config.id,
-+		dev_name(&cxld_iter->dev), cxld_iter->config.id);
- 
--	if (cxld_iter->id > cxld->id)
-+	if (cxld_iter->config.id > cxld->config.id)
- 		return true;
- 
- 	return false;
-@@ -1137,11 +1137,11 @@ static int cxl_rr_assign_decoder(struct cxl_port *port, struct cxl_region *cxlr,
- 	 */
- 	dev_WARN_ONCE(&cxlr->dev,
- 		      port == cxled_to_port(cxled) &&
--			      cxld->target_type != cxlr->type,
-+			      cxld->config.target_type != cxlr->type,
- 		      "%s:%s mismatch decoder type %d -> %d\n",
- 		      dev_name(&cxled_to_memdev(cxled)->dev),
--		      dev_name(&cxld->dev), cxld->target_type, cxlr->type);
--	cxld->target_type = cxlr->type;
-+		      dev_name(&cxld->dev), cxld->config.target_type, cxlr->type);
-+	cxld->config.target_type = cxlr->type;
- 	cxl_rr->decoder = cxld;
- 	return 0;
- }
-@@ -1162,12 +1162,12 @@ static void cxl_region_setup_flags(struct cxl_region *cxlr,
- 			set_bit(CXL_REGION_F_LOCK, &cxlr->flags);
- 	}
- 
--	if (cxld->flags & CXL_DECODER_F_LOCK) {
-+	if (cxld->config.flags & CXL_DECODER_F_LOCK) {
- 		set_bit(CXL_REGION_F_LOCK, &cxlr->flags);
- 		clear_bit(CXL_REGION_F_NEEDS_RESET, &cxlr->flags);
- 	}
- 
--	if (cxld->flags & CXL_DECODER_F_NORMALIZED_ADDRESSING)
-+	if (cxld->config.flags & CXL_DECODER_F_NORMALIZED_ADDRESSING)
- 		set_bit(CXL_REGION_F_NORMALIZED_ADDRESSING, &cxlr->flags);
- }
- 
-@@ -1483,7 +1483,7 @@ static int cxl_port_setup_targets(struct cxl_port *port,
- 			distance *= cxl_rr_iter->nr_targets;
- 			iter = to_cxl_port(iter->dev.parent);
- 		} while (!is_cxl_root(iter));
--		distance *= cxlrd->cxlsd.cxld.interleave_ways;
-+		distance *= cxlrd->cxlsd.cxld.config.interleave_ways;
- 
- 		for (i = 0; i < cxl_rr->nr_targets_set; i++)
- 			if (ep->dport == cxlsd->target[i]) {
-@@ -1505,7 +1505,7 @@ static int cxl_port_setup_targets(struct cxl_port *port,
- 		 * root IG != region IG.
- 		 */
- 		parent_ig = p->interleave_granularity;
--		parent_iw = cxlrd->cxlsd.cxld.interleave_ways;
-+		parent_iw = cxlrd->cxlsd.cxld.config.interleave_ways;
- 		/*
- 		 * For purposes of address bit routing, use power-of-2 math for
- 		 * switch ports.
-@@ -1518,8 +1518,8 @@ static int cxl_port_setup_targets(struct cxl_port *port,
- 
- 		parent_rr = cxl_rr_load(parent_port, cxlr);
- 		parent_cxld = parent_rr->decoder;
--		parent_ig = parent_cxld->interleave_granularity;
--		parent_iw = parent_cxld->interleave_ways;
-+		parent_ig = parent_cxld->config.interleave_granularity;
-+		parent_iw = parent_cxld->config.interleave_ways;
- 	}
- 
- 	rc = granularity_to_eig(parent_ig, &peig);
-@@ -1575,10 +1575,10 @@ static int cxl_port_setup_targets(struct cxl_port *port,
- 	}
- 
- 	if (test_bit(CXL_REGION_F_AUTO, &cxlr->flags)) {
--		if (cxld->interleave_ways != iw ||
--		    (iw > 1 && cxld->interleave_granularity != ig) ||
--		    !spa_maps_hpa(p, &cxld->hpa_range) ||
--		    ((cxld->flags & CXL_DECODER_F_ENABLE) == 0)) {
-+		if (cxld->config.interleave_ways != iw ||
-+		    (iw > 1 && cxld->config.interleave_granularity != ig) ||
-+		    !spa_maps_hpa(p, &cxld->config.hpa_range) ||
-+		    ((cxld->config.flags & CXL_DECODER_F_ENABLE) == 0)) {
- 			dev_err(&cxlr->dev,
- 				"%s:%s %s expected iw: %d ig: %d %pr\n",
- 				dev_name(port->uport_dev), dev_name(&port->dev),
-@@ -1586,10 +1586,10 @@ static int cxl_port_setup_targets(struct cxl_port *port,
- 			dev_err(&cxlr->dev,
- 				"%s:%s %s got iw: %d ig: %d state: %s %#llx:%#llx\n",
- 				dev_name(port->uport_dev), dev_name(&port->dev),
--				__func__, cxld->interleave_ways,
--				cxld->interleave_granularity,
--				str_enabled_disabled(cxld->flags & CXL_DECODER_F_ENABLE),
--				cxld->hpa_range.start, cxld->hpa_range.end);
-+				__func__, cxld->config.interleave_ways,
-+				cxld->config.interleave_granularity,
-+				str_enabled_disabled(cxld->config.flags & CXL_DECODER_F_ENABLE),
-+				cxld->config.hpa_range.start, cxld->config.hpa_range.end);
- 			return -ENXIO;
- 		}
- 	} else {
-@@ -1602,9 +1602,9 @@ static int cxl_port_setup_targets(struct cxl_port *port,
- 			return rc;
- 		}
- 
--		cxld->interleave_ways = iw;
--		cxld->interleave_granularity = ig;
--		cxld->hpa_range = (struct range) {
-+		cxld->config.interleave_ways = iw;
-+		cxld->config.interleave_granularity = ig;
-+		cxld->config.hpa_range = (struct range) {
- 			.start = p->res->start,
- 			.end = p->res->end,
- 		};
-@@ -1657,7 +1657,7 @@ static void cxl_port_reset_targets(struct cxl_port *port,
- 	cxl_rr->nr_targets_set = 0;
- 
- 	cxld = cxl_rr->decoder;
--	cxld->hpa_range = (struct range) {
-+	cxld->config.hpa_range = (struct range) {
- 		.start = 0,
- 		.end = -1,
- 	};
-@@ -1804,7 +1804,7 @@ static int cxl_region_attach_position(struct cxl_region *cxlr,
- 	struct cxl_memdev *cxlmd = cxled_to_memdev(cxled);
- 	struct cxl_switch_decoder *cxlsd = &cxlrd->cxlsd;
- 	struct cxl_decoder *cxld = &cxlsd->cxld;
--	int iw = cxld->interleave_ways;
-+	int iw = cxld->config.interleave_ways;
- 	struct cxl_port *iter;
- 	int rc;
- 
-@@ -1902,7 +1902,7 @@ static int match_switch_decoder_by_range(struct device *dev,
- 		return 0;
- 
- 	cxlsd = to_cxl_switch_decoder(dev);
--	r1 = &cxlsd->cxld.hpa_range;
-+	r1 = &cxlsd->cxld.config.hpa_range;
- 
- 	if (is_root_decoder(dev))
- 		return range_contains(r1, r2);
-@@ -1929,7 +1929,7 @@ static int find_pos_and_ways(struct cxl_port *port, struct range *range,
- 		return rc;
- 	}
- 	cxlsd = to_cxl_switch_decoder(dev);
--	*ways = cxlsd->cxld.interleave_ways;
-+	*ways = cxlsd->cxld.config.interleave_ways;
- 
- 	for (int i = 0; i < *ways; i++) {
- 		if (cxlsd->target[i] == port->parent_dport) {
-@@ -2105,10 +2105,10 @@ static int cxl_region_attach(struct cxl_region *cxlr,
- 		return -ENXIO;
- 	}
- 
--	if (cxled->cxld.target_type != cxlr->type) {
-+	if (cxled->cxld.config.target_type != cxlr->type) {
- 		dev_dbg(&cxlr->dev, "%s:%s type mismatch: %d vs %d\n",
- 			dev_name(&cxlmd->dev), dev_name(&cxled->cxld.dev),
--			cxled->cxld.target_type, cxlr->type);
-+			cxled->cxld.config.target_type, cxlr->type);
- 		return -ENXIO;
- 	}
- 
-@@ -2194,9 +2194,9 @@ static int cxl_region_attach(struct cxl_region *cxlr,
- 		cxl_region_shared_upstream_bandwidth_update(cxlr);
- 	}
- 
--	cxled->cxld.interleave_ways = p->interleave_ways;
--	cxled->cxld.interleave_granularity = p->interleave_granularity;
--	cxled->cxld.hpa_range = (struct range) {
-+	cxled->cxld.config.interleave_ways = p->interleave_ways;
-+	cxled->cxld.config.interleave_granularity = p->interleave_granularity;
-+	cxled->cxld.config.hpa_range = (struct range) {
- 		.start = p->res->start,
- 		.end = p->res->end,
- 	};
-@@ -2320,7 +2320,7 @@ __cxl_decoder_detach(struct cxl_region *cxlr,
- 	}
- 	p->targets[cxled->pos] = NULL;
- 	p->nr_targets--;
--	cxled->cxld.hpa_range = (struct range) {
-+	cxled->cxld.config.hpa_range = (struct range) {
- 		.start = 0,
- 		.end = -1,
- 	};
-@@ -2992,7 +2992,7 @@ static int poison_by_decoder(struct device *dev, void *arg)
- 	}
- 
- 	/* Iterate until commit_end is reached */
--	if (cxled->cxld.id == ctx->port->commit_end) {
-+	if (cxled->cxld.config.id == ctx->port->commit_end) {
- 		ctx->offset = cxled->dpa_res->end + 1;
- 		ctx->part = cxled->part;
- 		return 1;
-@@ -3315,10 +3315,10 @@ static u64 restore_parent(u64 addr, u64 pos, u64 gran, u64 ways)
- static u64 unaligned_dpa_to_hpa(struct cxl_decoder *cxld,
- 				struct cxl_region_params *p, int pos, u64 dpa)
- {
--	int ways_port = p->interleave_ways / cxld->interleave_ways;
-+	int ways_port = p->interleave_ways / cxld->config.interleave_ways;
- 	int gran_port = p->interleave_granularity;
--	int gran_hb = cxld->interleave_granularity;
--	int ways_hb = cxld->interleave_ways;
-+	int gran_hb = cxld->config.interleave_granularity;
-+	int ways_hb = cxld->config.interleave_ways;
- 	int pos_port, pos_hb, gran_shift;
- 	u64 hpa_port = 0;
- 
-@@ -3365,7 +3365,7 @@ static bool region_is_unaligned_mod3(struct cxl_region *cxlr)
- 	struct cxl_root_decoder *cxlrd = to_cxl_root_decoder(cxlr->dev.parent);
- 	struct cxl_decoder *cxld = &cxlrd->cxlsd.cxld;
- 	struct cxl_region_params *p = &cxlr->params;
--	int hbiw = cxld->interleave_ways;
-+	int hbiw = cxld->config.interleave_ways;
- 	u64 rem;
- 
- 	if (is_power_of_2(hbiw))
-@@ -3480,8 +3480,8 @@ static int unaligned_region_offset_to_dpa_result(struct cxl_region *cxlr,
- 	 * a dpa_offset independent of the target device and then enumerate
- 	 * and test that dpa_offset against each candidate endpoint decoder.
- 	 */
--	gran = cxld->interleave_granularity;
--	interleave_width = gran * cxld->interleave_ways;
-+	gran = cxld->config.interleave_granularity;
-+	interleave_width = gran * cxld->config.interleave_ways;
- 	interleave_index = div64_u64(offset, interleave_width);
- 	gran_offset = do_div(tmp, gran);
- 
-@@ -3581,7 +3581,7 @@ static int match_root_decoder(struct device *dev, const void *data)
- 		return 0;
- 
- 	cxlrd = to_cxl_root_decoder(dev);
--	r1 = &cxlrd->cxlsd.cxld.hpa_range;
-+	r1 = &cxlrd->cxlsd.cxld.config.hpa_range;
- 
- 	return range_contains(r1, r2);
- }
-@@ -3786,7 +3786,7 @@ static struct cxl_region *construct_region(struct cxl_root_decoder *cxlrd,
- 	do {
- 		cxlr = __create_region(cxlrd, cxlds->part[part].mode,
- 				       atomic_read(&cxlrd->region_id),
--				       cxled->cxld.target_type);
-+				       cxled->cxld.config.target_type);
- 	} while (IS_ERR(cxlr) && PTR_ERR(cxlr) == -EBUSY);
- 
- 	if (IS_ERR(cxlr)) {
-@@ -3829,9 +3829,9 @@ int cxl_add_to_region(struct cxl_endpoint_decoder *cxled)
- 
- 	ctx = (struct cxl_region_context) {
- 		.cxled = cxled,
--		.hpa_range = cxled->cxld.hpa_range,
--		.interleave_ways = cxled->cxld.interleave_ways,
--		.interleave_granularity = cxled->cxld.interleave_granularity,
-+		.hpa_range = cxled->cxld.config.hpa_range,
-+		.interleave_ways = cxled->cxld.config.interleave_ways,
-+		.interleave_granularity = cxled->cxld.config.interleave_granularity,
- 	};
- 
- 	struct cxl_root_decoder *cxlrd __free(put_cxl_root_decoder) =
-diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-index 44ff3334648c..688350c7c5fb 100644
---- a/drivers/cxl/cxl.h
-+++ b/drivers/cxl/cxl.h
-@@ -281,7 +281,7 @@ enum cxl_decoder_state {
-  * struct cxl_endpoint_decoder - Endpoint  / SPA to DPA decoder
-  * @cxld: base cxl_decoder_object
-  * @dpa_res: actively claimed DPA span of this decoder
-- * @skip: offset into @dpa_res where @cxld.hpa_range maps
-+ * @skip: offset into @dpa_res where @cxld.config.hpa_range maps
-  * @state: autodiscovery state
-  * @part: partition index this decoder maps
-  * @pos: interleave position in @cxld.region
-diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index c7c91e8dc51d..9a0cbcd230b2 100644
---- a/drivers/cxl/pci.c
-+++ b/drivers/cxl/pci.c
-@@ -966,7 +966,7 @@ static int cxl_endpoint_decoder_clear_reset_flags(struct device *dev, void *data
- 		return 0;
- 
- 	cxled = to_cxl_endpoint_decoder(dev);
--	cxled->cxld.flags &= ~CXL_DECODER_F_RESET_MASK;
-+	cxled->cxld.config.flags &= ~CXL_DECODER_F_RESET_MASK;
- 
- 	return 0;
- }
-diff --git a/drivers/cxl/port.c b/drivers/cxl/port.c
-index c12fd0b89883..b369d3e3876d 100644
---- a/drivers/cxl/port.c
-+++ b/drivers/cxl/port.c
-@@ -40,7 +40,7 @@ static int discover_region(struct device *dev, void *unused)
- 		return 0;
- 
- 	cxled = to_cxl_endpoint_decoder(dev);
--	if ((cxled->cxld.flags & CXL_DECODER_F_ENABLE) == 0)
-+	if ((cxled->cxld.config.flags & CXL_DECODER_F_ENABLE) == 0)
- 		return 0;
- 
- 	if (cxled->state != CXL_DECODER_STATE_AUTO)
-@@ -56,7 +56,7 @@ static int discover_region(struct device *dev, void *unused)
- 	rc = cxl_add_to_region(cxled);
- 	if (rc)
- 		dev_dbg(dev, "failed to add to region: %#llx-%#llx\n",
--			cxled->cxld.hpa_range.start, cxled->cxld.hpa_range.end);
-+			cxled->cxld.config.hpa_range.start, cxled->cxld.config.hpa_range.end);
- 
- 	return 0;
- }
-diff --git a/include/cxl/cxl.h b/include/cxl/cxl.h
-index 69941f7fdb76..237b31d54249 100644
---- a/include/cxl/cxl.h
-+++ b/include/cxl/cxl.h
-@@ -35,15 +35,28 @@ enum cxl_decoder_type {
- #define CXL_DECODER_MAX_INTERLEAVE 16
- 
- /**
-- * struct cxl_decoder - Common CXL HDM Decoder Attributes
-- * @dev: this decoder's device
-+ * struct cxl_decoder_config - CXL HDM decoder programming state
-  * @id: kernel device name id
-  * @hpa_range: Host physical address range mapped by this decoder
-  * @interleave_ways: number of cxl_dports in this decode
-  * @interleave_granularity: data stride per dport
-  * @target_type: accelerator vs expander (type2 vs type3) selector
-- * @region: currently assigned region for this decoder
-  * @flags: memory type capabilities and locking
-+ */
-+struct cxl_decoder_config {
-+	int id;
-+	struct range hpa_range;
-+	int interleave_ways;
-+	int interleave_granularity;
-+	enum cxl_decoder_type target_type;
-+	unsigned long flags;
-+};
+ EXPORT_SYMBOL_FOR_MODULES(cxl_commit_start, "cxl_core");
 +
-+/**
-+ * struct cxl_decoder - Common CXL HDM Decoder Attributes
-+ * @dev: this decoder's device
-+ * @config: HDM decoder programming state
-+ * @region: currently assigned region for this decoder
-  * @target_map: cached copy of hardware port-id list, available at init
-  *              before all @dport objects have been instantiated. While
-  *              dport id is 8bit, CFMWS interleave targets are 32bits.
-@@ -52,13 +65,8 @@ enum cxl_decoder_type {
- */
- struct cxl_decoder {
- 	struct device dev;
--	int id;
--	struct range hpa_range;
--	int interleave_ways;
--	int interleave_granularity;
--	enum cxl_decoder_type target_type;
-+	struct cxl_decoder_config config;
- 	struct cxl_region *region;
--	unsigned long flags;
- 	u32 target_map[CXL_DECODER_MAX_INTERLEAVE];
- 	int (*commit)(struct cxl_decoder *cxld);
- 	void (*reset)(struct cxl_decoder *cxld);
-diff --git a/tools/testing/cxl/test/cxl.c b/tools/testing/cxl/test/cxl.c
-index 2921f1111870..034d3a923b2c 100644
---- a/tools/testing/cxl/test/cxl.c
-+++ b/tools/testing/cxl/test/cxl.c
-@@ -773,7 +773,7 @@ static int map_targets(struct device *dev, void *data)
-  * id into the low bits.
-  *
-  * The key is formed as:
-- *     ((unsigned long)port->uport_dev << 4) | cxld->id
-+ *     ((unsigned long)port->uport_dev << 4) | cxld->config.id
-  *
-  * The low bits hold the decoder id (which must fit in 4 bits) while
-  * the remaining bits identify the upstream port. This key is only used
-@@ -783,9 +783,9 @@ static unsigned long cxld_registry_index(struct cxl_decoder *cxld)
- {
- 	struct cxl_port *port = to_cxl_port(cxld->dev.parent);
- 
--	dev_WARN_ONCE(&port->dev, cxld->id >= 16,
--		      "decoder id:%d out of range\n", cxld->id);
--	return (((unsigned long)port->uport_dev) << 4) | cxld->id;
-+	dev_WARN_ONCE(&port->dev, cxld->config.id >= 16,
-+		      "decoder id:%d out of range\n", cxld->config.id);
-+	return (((unsigned long)port->uport_dev) << 4) | cxld->config.id;
- }
- 
- struct cxl_test_decoder {
-@@ -801,14 +801,15 @@ static struct cxl_test_decoder *cxld_registry_find(struct cxl_decoder *cxld)
- 	return xa_load(&decoder_registry, cxld_registry_index(cxld));
- }
- 
--#define dbg_cxld(port, msg, cxld)                                                       \
--	do {                                                                            \
--		struct cxl_decoder *___d = (cxld);                                      \
--		dev_dbg((port)->uport_dev,                                              \
-+#define dbg_cxld(port, msg, cxld)                                      \
-+	do {                                                              \
-+		struct cxl_decoder *___d = (cxld);                        \
-+		const struct cxl_decoder_config *___c = &___d->config;    \
-+		dev_dbg((port)->uport_dev,                                \
- 			"decoder%d: %s range: %#llx-%#llx iw: %d ig: %d flags: %#lx\n", \
--			___d->id, msg, ___d->hpa_range.start,                           \
--			___d->hpa_range.end + 1, ___d->interleave_ways,                 \
--			___d->interleave_granularity, ___d->flags);                     \
-+			___c->id, msg, ___c->hpa_range.start,               \
-+			___c->hpa_range.end + 1, ___c->interleave_ways,     \
-+			___c->interleave_granularity, ___c->flags);         \
- 	} while (0)
- 
- static int mock_decoder_commit(struct cxl_decoder *cxld);
-@@ -817,12 +818,7 @@ static void init_disabled_mock_decoder(struct cxl_decoder *cxld);
- 
- static void cxld_copy(struct cxl_decoder *a, struct cxl_decoder *b)
- {
--	a->id = b->id;
--	a->hpa_range = b->hpa_range;
--	a->interleave_ways = b->interleave_ways;
--	a->interleave_granularity = b->interleave_granularity;
--	a->target_type = b->target_type;
--	a->flags = b->flags;
-+	a->config = b->config;
- 	a->commit = mock_decoder_commit;
- 	a->reset = mock_decoder_reset;
- }
-@@ -847,7 +843,7 @@ static int cxld_registry_restore(struct cxl_decoder *cxld,
- 		struct cxl_switch_decoder *cxlsd =
- 			to_cxl_switch_decoder(&cxld->dev);
- 
--		if (!(td->cxlsd.cxld.flags & CXL_DECODER_F_ENABLE))
-+		if (!(td->cxlsd.cxld.config.flags & CXL_DECODER_F_ENABLE))
- 			return 0;
- 
- 		dbg_cxld(port, "restore", &td->cxlsd.cxld);
-@@ -860,13 +856,13 @@ static int cxld_registry_restore(struct cxl_decoder *cxld,
- 			cxld->target_map[i] = td->cxlsd.cxld.target_map[i];
- 		}
- 
--		port->commit_end = cxld->id;
-+		port->commit_end = cxld->config.id;
- 
- 	} else {
- 		struct cxl_endpoint_decoder *cxled =
- 			to_cxl_endpoint_decoder(&cxld->dev);
- 
--		if (!(td->cxled.cxld.flags & CXL_DECODER_F_ENABLE))
-+		if (!(td->cxled.cxld.config.flags & CXL_DECODER_F_ENABLE))
- 			return 0;
- 
- 		dbg_cxld(port, "restore", &td->cxled.cxld);
-@@ -881,7 +877,7 @@ static int cxld_registry_restore(struct cxl_decoder *cxld,
- 			init_disabled_mock_decoder(cxld);
- 			return rc;
- 		}
--		port->commit_end = cxld->id;
-+		port->commit_end = cxld->config.id;
- 	}
- 
- 	return 0;
-@@ -915,7 +911,7 @@ static void __cxld_registry_save(struct cxl_test_decoder *td,
- 		td->cxled.state = cxled->state;
- 		td->cxled.skip = cxled->skip;
- 
--		if (!(cxld->flags & CXL_DECODER_F_ENABLE)) {
-+		if (!(cxld->config.flags & CXL_DECODER_F_ENABLE)) {
- 			td->dpa_range.start = 0;
- 			td->dpa_range.end = -1;
- 		} else if (cxled->dpa_res) {
-@@ -952,9 +948,9 @@ static void cxld_registry_update(struct cxl_decoder *cxld)
- static int mock_decoder_commit(struct cxl_decoder *cxld)
- {
- 	struct cxl_port *port = to_cxl_port(cxld->dev.parent);
--	int id = cxld->id;
-+	int id = cxld->config.id;
- 
--	if (cxld->flags & CXL_DECODER_F_ENABLE)
-+	if (cxld->config.flags & CXL_DECODER_F_ENABLE)
- 		return 0;
- 
- 	dev_dbg(&port->dev, "%s commit\n", dev_name(&cxld->dev));
-@@ -967,7 +963,7 @@ static int mock_decoder_commit(struct cxl_decoder *cxld)
- 	}
- 
- 	port->commit_end++;
--	cxld->flags |= CXL_DECODER_F_ENABLE;
-+	cxld->config.flags |= CXL_DECODER_F_ENABLE;
- 	if (is_endpoint_decoder(&cxld->dev)) {
- 		struct cxl_endpoint_decoder *cxled =
- 			to_cxl_endpoint_decoder(&cxld->dev);
-@@ -982,9 +978,9 @@ static int mock_decoder_commit(struct cxl_decoder *cxld)
- static void mock_decoder_reset(struct cxl_decoder *cxld)
- {
- 	struct cxl_port *port = to_cxl_port(cxld->dev.parent);
--	int id = cxld->id;
-+	int id = cxld->config.id;
- 
--	if ((cxld->flags & CXL_DECODER_F_ENABLE) == 0)
-+	if ((cxld->config.flags & CXL_DECODER_F_ENABLE) == 0)
- 		return;
- 
- 	dev_dbg(&port->dev, "%s reset\n", dev_name(&cxld->dev));
-@@ -994,7 +990,7 @@ static void mock_decoder_reset(struct cxl_decoder *cxld)
- 		dev_dbg(&port->dev,
- 			"%s: out of order reset, expected decoder%d.%d\n",
- 			dev_name(&cxld->dev), port->id, port->commit_end);
--	cxld->flags &= ~CXL_DECODER_F_ENABLE;
-+	cxld->config.flags &= ~CXL_DECODER_F_ENABLE;
- 
- 	if (is_endpoint_decoder(&cxld->dev)) {
- 		struct cxl_endpoint_decoder *cxled =
-@@ -1005,7 +1001,7 @@ static void mock_decoder_reset(struct cxl_decoder *cxld)
- 	}
- 	if (decoder_reset_preserve_registry)
- 		dev_dbg(port->uport_dev, "decoder%d: skip registry update\n",
--			cxld->id);
-+			cxld->config.id);
- 	else
- 		cxld_registry_update(cxld);
- }
-@@ -1030,12 +1026,12 @@ static struct cxl_test_decoder *cxld_registry_new(struct cxl_decoder *cxld)
- 
- static void init_disabled_mock_decoder(struct cxl_decoder *cxld)
- {
--	cxld->hpa_range.start = 0;
--	cxld->hpa_range.end = -1;
--	cxld->interleave_ways = 1;
--	cxld->interleave_granularity = 0;
--	cxld->target_type = CXL_DECODER_HOSTONLYMEM;
--	cxld->flags = 0;
-+	cxld->config.hpa_range.start = 0;
-+	cxld->config.hpa_range.end = -1;
-+	cxld->config.interleave_ways = 1;
-+	cxld->config.interleave_granularity = 0;
-+	cxld->config.target_type = CXL_DECODER_HOSTONLYMEM;
-+	cxld->config.flags = 0;
- 	cxld->commit = mock_decoder_commit;
- 	cxld->reset = mock_decoder_reset;
- 
-@@ -1058,14 +1054,14 @@ static void init_disabled_mock_decoder(struct cxl_decoder *cxld)
- 
- static void default_mock_decoder(struct cxl_decoder *cxld)
- {
--	cxld->hpa_range = (struct range){
-+	cxld->config.hpa_range = (struct range){
- 		.start = 0,
- 		.end = -1,
- 	};
- 
--	cxld->interleave_ways = 1;
--	cxld->interleave_granularity = 256;
--	cxld->target_type = CXL_DECODER_HOSTONLYMEM;
-+	cxld->config.interleave_ways = 1;
-+	cxld->config.interleave_granularity = 256;
-+	cxld->config.target_type = CXL_DECODER_HOSTONLYMEM;
- 	cxld->commit = mock_decoder_commit;
- 	cxld->reset = mock_decoder_reset;
- 
-@@ -1080,7 +1076,7 @@ static int match_decoder_by_index(struct device *dev, const void *data)
- 	if (!is_switch_decoder(dev))
- 		return 0;
- 	cxld = to_cxl_decoder(dev);
--	return cxld->id == target_id;
-+	return cxld->config.id == target_id;
- }
- 
- /*
-@@ -1093,11 +1089,11 @@ static void size_zero_mock_decoder_ep(struct cxl_decoder *cxld, u64 base)
- {
- 	struct cxl_endpoint_decoder *cxled = to_cxl_endpoint_decoder(&cxld->dev);
- 
--	cxld->hpa_range = DEFINE_RANGE(base, base - 1);
--	cxld->interleave_ways = 2;
--	cxld->interleave_granularity = 4096;
--	cxld->target_type = CXL_DECODER_HOSTONLYMEM;
--	cxld->flags = CXL_DECODER_F_ENABLE | CXL_DECODER_F_LOCK;
-+	cxld->config.hpa_range = DEFINE_RANGE(base, base - 1);
-+	cxld->config.interleave_ways = 2;
-+	cxld->config.interleave_granularity = 4096;
-+	cxld->config.target_type = CXL_DECODER_HOSTONLYMEM;
-+	cxld->config.flags = CXL_DECODER_F_ENABLE | CXL_DECODER_F_LOCK;
- 	cxled->state = CXL_DECODER_STATE_AUTO;
- 	/* decoder[0] reserved [0, size/2), empty decoders sit at that watermark */
- 	devm_cxl_dpa_reserve(cxled, mock_auto_region_size / 2, 0, 0);
-@@ -1108,11 +1104,11 @@ static void size_zero_mock_decoder_ep(struct cxl_decoder *cxld, u64 base)
- static void size_zero_mock_decoder_sw(struct cxl_decoder *cxld, u64 base,
- 				      int level)
- {
--	cxld->flags = CXL_DECODER_F_ENABLE | CXL_DECODER_F_LOCK;
--	cxld->target_type = CXL_DECODER_HOSTONLYMEM;
--	cxld->interleave_ways = level == 0 ? 2 : 1;
--	cxld->interleave_granularity = 4096;
--	cxld->hpa_range = DEFINE_RANGE(base, base - 1);
-+	cxld->config.flags = CXL_DECODER_F_ENABLE | CXL_DECODER_F_LOCK;
-+	cxld->config.target_type = CXL_DECODER_HOSTONLYMEM;
-+	cxld->config.interleave_ways = level == 0 ? 2 : 1;
-+	cxld->config.interleave_granularity = 4096;
-+	cxld->config.hpa_range = DEFINE_RANGE(base, base - 1);
- 	cxld->commit = mock_decoder_commit;
- 	cxld->reset = mock_decoder_reset;
- }
-@@ -1147,7 +1143,7 @@ static enum cxld_init_type get_decoder_init_type(struct cxl_decoder *cxld,
- 	 * See 'cxl list -BMPu -m cxl_mem.0,cxl_mem.4'
- 	 */
- 	if (!is_endpoint_decoder(&cxld->dev) || !hb0 || pdev->id % 4 ||
--	    pdev->id > 4 || cxld->id > (mock_zero_size_decoders ? 2 : 0))
-+	    pdev->id > 4 || cxld->config.id > (mock_zero_size_decoders ? 2 : 0))
- 		return MOCK_DECODER_INIT_DEFAULT;
- 
- 	return type2_test ? MOCK_DECODER_INIT_TYPE2_AUTO :
-@@ -1159,9 +1155,9 @@ static bool mock_decoder_handle_saved(struct cxl_decoder *cxld, struct cxl_test_
- 	bool enabled;
- 
- 	if (is_switch_decoder(&cxld->dev))
--		enabled = td->cxlsd.cxld.flags & CXL_DECODER_F_ENABLE;
-+		enabled = td->cxlsd.cxld.config.flags & CXL_DECODER_F_ENABLE;
- 	else
--		enabled = td->cxled.cxld.flags & CXL_DECODER_F_ENABLE;
-+		enabled = td->cxled.cxld.config.flags & CXL_DECODER_F_ENABLE;
- 
- 	if (enabled)
- 		return !cxld_registry_restore(cxld, td);
-@@ -1183,19 +1179,19 @@ static void mock_init_hdm_type2_cxled(struct cxl_endpoint_decoder *cxled,
- 	int id = 0;
- 
- 	base = window->base_hpa;
--	cxld->hpa_range = (struct range) {
-+	cxld->config.hpa_range = (struct range) {
- 		.start = base,
- 		.end = base + mock_auto_region_size - 1,
- 	};
- 
--	cxld->interleave_ways = 1;
--	eig_to_granularity(window->granularity, &cxld->interleave_granularity);
--	cxld->target_type = CXL_DECODER_DEVMEM;
--	cxld->flags = CXL_DECODER_F_ENABLE;
-+	cxld->config.interleave_ways = 1;
-+	eig_to_granularity(window->granularity, &cxld->config.interleave_granularity);
-+	cxld->config.target_type = CXL_DECODER_DEVMEM;
-+	cxld->config.flags = CXL_DECODER_F_ENABLE;
- 	cxled->state = CXL_DECODER_STATE_AUTO;
--	port->commit_end = cxld->id;
-+	port->commit_end = cxld->config.id;
- 	devm_cxl_dpa_reserve(cxled, 0,
--			     mock_auto_region_size / cxld->interleave_ways, 0);
-+			     mock_auto_region_size / cxld->config.interleave_ways, 0);
- 	cxld->commit = mock_decoder_commit;
- 	cxld->reset = mock_decoder_reset;
- 
-@@ -1216,13 +1212,13 @@ static void mock_init_hdm_type2_cxled(struct cxl_endpoint_decoder *cxled,
- 
- 	cxlsd = to_cxl_switch_decoder(dev);
- 	cxld = &cxlsd->cxld;
--	cxld->target_type = CXL_DECODER_DEVMEM;
--	cxld->flags = CXL_DECODER_F_ENABLE;
-+	cxld->config.target_type = CXL_DECODER_DEVMEM;
-+	cxld->config.flags = CXL_DECODER_F_ENABLE;
- 	root_port->commit_end = 0;
--	cxld->interleave_ways = 1;
--	cxld->interleave_granularity = 4096;
-+	cxld->config.interleave_ways = 1;
-+	cxld->config.interleave_granularity = 4096;
- 	cxld->target_map[0] = dport->port_id;
--	cxld->hpa_range = (struct range) {
-+	cxld->config.hpa_range = (struct range) {
- 		.start = base,
- 		.end = base + mock_auto_region_size - 1,
- 	};
-@@ -1258,7 +1254,7 @@ static void mock_init_hdm_type3_cxled(struct cxl_endpoint_decoder *cxled,
- 	int i;
- 
- 	/* Simulate missing cxl_mem.4 configuration */
--	if (hb0 && pdev->id == 4 && cxld->id == 0 && fail_autoassemble) {
-+	if (hb0 && pdev->id == 4 && cxld->config.id == 0 && fail_autoassemble) {
- 		default_mock_decoder(cxld);
- 		return;
- 	}
-@@ -1274,25 +1270,25 @@ static void mock_init_hdm_type3_cxled(struct cxl_endpoint_decoder *cxled,
- 	 * points at a zero-size decoder, exercising the zero-size
- 	 * reservation and poison-by-endpoint code paths.
- 	 */
--	if (cxld->id == 1 || cxld->id == 2) {
-+	if (cxld->config.id == 1 || cxld->config.id == 2) {
- 		size_zero_mock_decoder_ep(cxld, base);
--		port->commit_end = cxld->id;
-+		port->commit_end = cxld->config.id;
- 		WARN_ON_ONCE(!cxld_registry_new(cxld));
- 		return;
- 	}
--	cxld->hpa_range = (struct range) {
-+	cxld->config.hpa_range = (struct range) {
- 		.start = base,
- 		.end = base + mock_auto_region_size - 1,
- 	};
- 
--	cxld->interleave_ways = 2;
--	eig_to_granularity(window->granularity, &cxld->interleave_granularity);
--	cxld->target_type = CXL_DECODER_HOSTONLYMEM;
--	cxld->flags = CXL_DECODER_F_ENABLE;
-+	cxld->config.interleave_ways = 2;
-+	eig_to_granularity(window->granularity, &cxld->config.interleave_granularity);
-+	cxld->config.target_type = CXL_DECODER_HOSTONLYMEM;
-+	cxld->config.flags = CXL_DECODER_F_ENABLE;
- 	cxled->state = CXL_DECODER_STATE_AUTO;
--	port->commit_end = cxld->id;
-+	port->commit_end = cxld->config.id;
- 	devm_cxl_dpa_reserve(cxled, 0,
--			     mock_auto_region_size / cxld->interleave_ways, 0);
-+			     mock_auto_region_size / cxld->config.interleave_ways, 0);
- 	cxld->commit = mock_decoder_commit;
- 	cxld->reset = mock_decoder_reset;
- 
-@@ -1326,19 +1322,19 @@ static void mock_init_hdm_type3_cxled(struct cxl_endpoint_decoder *cxled,
- 			cxlsd->cxld.target_map[0] = dport->port_id;
- 		}
- 		cxld = &cxlsd->cxld;
--		cxld->target_type = CXL_DECODER_HOSTONLYMEM;
--		cxld->flags = CXL_DECODER_F_ENABLE;
-+		cxld->config.target_type = CXL_DECODER_HOSTONLYMEM;
-+		cxld->config.flags = CXL_DECODER_F_ENABLE;
- 		iter->commit_end = 0;
- 		/*
- 		 * Switch targets 2 endpoints, while host bridge targets
- 		 * one root port
- 		 */
- 		if (i == 0)
--			cxld->interleave_ways = 2;
-+			cxld->config.interleave_ways = 2;
- 		else
--			cxld->interleave_ways = 1;
--		cxld->interleave_granularity = 4096;
--		cxld->hpa_range = (struct range) {
-+			cxld->config.interleave_ways = 1;
-+		cxld->config.interleave_granularity = 4096;
-+		cxld->config.hpa_range = (struct range) {
- 			.start = base,
- 			.end = base + mock_auto_region_size - 1,
- 		};
++int cxl_hdm_unpack_decoder(struct cxl_decoder_settings *settings, int id,
++			   u32 ctrl, u64 base, u64 size,
++			   u64 target_or_skip_reg_val)
++{
++	bool committed = FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMITTED, ctrl);
++	enum cxl_decoder_type target_type = 0;
++	int interleave_granularity;
++	int interleave_ways;
++	unsigned long flags = 0;
++	struct range hpa_range;
++	int rc;
++
++	if (!committed)
++		size = 0;
++	if (base == U64_MAX || size == U64_MAX)
++		return -ENXIO;
++
++	hpa_range = (struct range) {
++		.start = base,
++		.end = base + size - 1,
++	};
++
++	if (committed) {
++		flags |= CXL_DECODER_F_ENABLE;
++		if (ctrl & CXL_HDM_DECODER0_CTRL_LOCK)
++			flags |= CXL_DECODER_F_LOCK;
++		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_HOSTONLY, ctrl))
++			target_type = CXL_DECODER_HOSTONLYMEM;
++		else
++			target_type = CXL_DECODER_DEVMEM;
++	}
++
++	rc = eiw_to_ways(FIELD_GET(CXL_HDM_DECODER0_CTRL_IW_MASK, ctrl),
++			 &interleave_ways);
++	if (rc)
++		return rc;
++	rc = eig_to_granularity(FIELD_GET(CXL_HDM_DECODER0_CTRL_IG_MASK, ctrl),
++				&interleave_granularity);
++	if (rc)
++		return rc;
++
++	*settings = (struct cxl_decoder_settings) {
++		.config = {
++			.id = id,
++			.hpa_range = hpa_range,
++			.interleave_ways = interleave_ways,
++			.interleave_granularity = interleave_granularity,
++			.target_type = target_type,
++			.flags = flags,
++		},
++		.target_or_skip_reg_val = target_or_skip_reg_val,
++	};
++
++	return 0;
++}
++EXPORT_SYMBOL_FOR_MODULES(cxl_hdm_unpack_decoder, "cxl_core");
 -- 
 2.43.0
 
