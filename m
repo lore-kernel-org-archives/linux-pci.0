@@ -1,136 +1,121 @@
-Received: from outbound.mr.icloud.com (mr-2006l-snip4-5.eps.apple.com [57.103.70.118])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 226A134CFDE
-	for <linux-pci@vger.kernel.org>; Thu,  1 Oct 2026 07:26:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.70.118
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AE503C3443;
+	Thu,  1 Oct 2026 07:40:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790839575; cv=none; b=LxbsXkbymhu//PqwyU+02h1GSHwzITyZnMYhkOrgpwOKjOFUdGS55upn3xDzogu3aMHqu2DzjsPjGyUp7ZQCrh0zyQMjYn0tftRA0sjc2x0kp46DCC9dfiv8qEn1QPYJQPov/CYtG7uunovnhQs6mTTzDM85FkxUOIzs+I7GkPY=
+	t=1790840415; cv=none; b=QOEZmwrENLLeSR/FmgH1esivSt+c+0q+P8UeOdUV7rmHLHt3tbLSZgU3QEs28WQTqs1Nx7v/CrVM9Jap/WrPqlXfXwZyZEwDBFPxMH3FlzxnIapth/ijbSpqzzclSzY7hTskErdpL0xnETYFHIBDBfQGZdbrP0avFqr7DA9Om/4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790839575; c=relaxed/simple;
-	bh=EiSC9xCqKnvIAKuOiBjEh0p6NdZjrdQ2HK8256nJ+EQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=eXezmbqnmCwouo1/aUuZAGl1ZMNrEnAd4aioQOPbYwQIjb40s2LIH25gi3hd/9QT7bUvPEVooaQLwSN/YNYqij1UrI0KJJvioUvjP3xDD3T/3YSDHEmGjFHBSu56hRQx0lN1hbIvztHYYwioQ+EINqAF18rcjBfSDmUktNtddq0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mac.com; spf=pass smtp.mailfrom=mac.com; dkim=pass (2048-bit key) header.d=mac.com header.i=@mac.com header.b=WpOSdqKE; arc=none smtp.client-ip=57.103.70.118
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mac.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mac.com
+	s=arc-20240116; t=1790840415; c=relaxed/simple;
+	bh=jotN6m5nU8nYPjDMM9WVZMrLbyza1vz8+jUpXvCkUto=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uzNsFMOumod3U9GnMf1XBij/RUh9V3u6dADGpnGh4A+CoPWKeWdiwaGi/AZMdi+Ot9K9Sa4X7BFoDb+XEyhVEoavo7Lkm0/Q0UesUftkrKWL5V2DvwwjdzctJF05PumiMcB29zHsLxNx3k6ntjLRV+CP4ubpndbFHVvXUWvZz0M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TBSZ/pYx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mac.com header.i=@mac.com header.b="WpOSdqKE"
-Received: from outbound.mr.icloud.com (unknown [127.0.0.2])
-	by p00-icloudmta-asmtp-us-west-2a-100-percent-2 (Postfix) with ESMTPS id 7C3B618000BB;
-	Thu, 01 Oct 2026 07:26:02 +0000 (UTC)
-X-ICL-RepId: 01a0f65b-20c5-720c-9417-a0d824ca1830
-X-ICL-Out-Info: HUtFAUMHWwJACUgATUQeDx5WFlZNRAJCTQhPC0MGXAZeCEwFQwVfEhVdRVAERRJdHnkVUg4ZCF0dGR5XUFoKUV5aF15NRQgPRRkQVgFYVl0FTRpcGFkPHB1LVloOWwRHFBcbXAAXG0YCBCMCXwBFAl4JVgEwFw9WTVQZUENUBF9QVBFXUAtZAkIPSQNdBlsFQgxNBkMFUwtCD00eXBoIWwJAF10tWgpRXloXXlMXH0sAXEVaDlsERxQ=
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mac.com; s=1a1hai; t=1790839563; x=1793431563; bh=6G4eOMZqZQmDkWR3Ncw9dFDoql/yjkD69ChFvHs0U5Y=; h=From:To:Subject:Date:Message-ID:MIME-Version:x-icloud-hme; b=WpOSdqKEN+ofS2qQAyi/cs0U2ZFwRulbqlStX4AYzMvsbJFDukvwUAsCHQY9p2URqz8HamdHtgXcFiCxvLl7c6JNfieevWQDur0/3JtrJhHJKC91O7fkMTh055f6R5O25x6AC2WJtgQyzcF2XubUKhvtJG+b/MjtNNcCbDykh3e/ARlH6+EkVhdA2iG0FNZ3CYT+ghffhGoSv5i+4fAStHZMEaDXKRlh/+s0wv7XgiTZ06rP/BqH7ovI2qbXNs2Cs5P+lN26j+RlQ1IlBuf1T2zZOokf1eYzcQahdZiUdAyKezgNwlxTAyJMmWzz9R82IENKMgGQ8aquLi45UXgTGg==
-Received: from telchar.scorpion-armadillo.ts.net (unknown [17.156.200.36])
-	by p00-icloudmta-asmtp-us-west-2a-100-percent-2 (Postfix) with ESMTPSA id CF1F0180013E;
-	Thu, 01 Oct 2026 07:26:00 +0000 (UTC)
-From: Christian Hedin <ciryon@mac.com>
-To: torsten.hilbrich@secunet.com
-Cc: bhelgaas@google.com,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: fix use-after-free in pci_pme_list_scan()
-Date: Thu,  1 Oct 2026 09:25:55 +0200
-Message-ID: <20261001072555.289265-1-ciryon@mac.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <f2e43015-19ca-4e58-9b86-bdd855ff6496@secunet.com>
-References: <f2e43015-19ca-4e58-9b86-bdd855ff6496@secunet.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TBSZ/pYx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 612871F000FF;
+	Thu,  1 Oct 2026 07:40:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790840413;
+	bh=6ktmrJL5cgwV/9yuQLoWQZt4/L51Fhu4UDh2q/A/JtQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=TBSZ/pYx9Gr1/LiCELZfeJ+HPhJ3zTek+MmFh+0d1RoG9dfKhUhtZ4P89JCyHU1WJ
+	 nF7ldQ/4344BGn1BnKTr6nNWLXwhFYVWOx2KZbJoHWG4YhsXpBTKgqcj8Dfnt3OQN6
+	 Z2XaWR9Dwu72L3W+8xdOcU1JtWKfrCACEx9XV4fayFxdj4Kh8N2Eu/E6H8YYvyYZ2s
+	 qErl+UF1ZlpXeVfuG3txG7YbgkYoDTGZ0DfEImQhoQ97ctx4Pkbr8I90r/djB19fDq
+	 hMP+cMzlITZVogcEpCJ8j+/o9R6q7iAzLDczrPoqeyltZRh1Hb3sPjx7qlA0njqX3e
+	 v9LXmBx1NmwDw==
+Date: Thu, 1 Oct 2026 09:40:11 +0200
+From: Thierry Reding <thierry.reding@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linmao Li <lilinmao@kylinos.cn>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Jonathan Hunter <jonathanh@nvidia.com>, linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2] PCI: tegra264: Fix Link Capabilities register offset
+Message-ID: <ar4Nhd_mJ-NmUavQ@orome>
+References: <20260923195719.1933175-2-bhelgaas@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDAxMDAyOSBTYWx0ZWRfX1pfEAn503xyK
- E4CS9VwOm/lGToVcn5NNQWXyDTFzCwyLoLywjO39EIRaeapQlq6T+ibv/ExKOuTt4sqUCjOKcpn
- B5H9kyN/4VAykTF9xX6APbDqQKHJWgfIG7HgKenMbyz8sdzkylk0SkzFrlGxcJBbXew/OpyndCc
- 3gGSCV/xlwg/lVPZbr5cUPes4Rgvb4mwkUjynlhqd+UBNl3Voe5OI5dfIzPeOFDK/KlxSpIY1dR
- Dmk4ybr12qFZbuQ4khPfw1rOXTveR6bRtYiLNd32a/6wzD3+0uVT0LORZNFly0bJxtHU81aGmVq
- tfooHTO44KNB5Ovc97oI9Pb+ZlATyAkRpvz87NVQdx0GdCecaWSBeIO1tqniCY=
-X-Authority-Info-Out: v=2.4 cv=YZ2wJgRf c=1 sm=1 tr=0 ts=6abe0b0b
- cx=c_apl:c_pps:t_out a=9mRn2PO/+PIrVdEbaIuMPg==:117
- a=9mRn2PO/+PIrVdEbaIuMPg==:17 a=660iZSQnnn4A:10 a=x7bEGLp0ZPQA:10
- a=cHkArRZ9ErEA:10 a=VkNPw1HP01LnGYTKEx00:22 a=-ixN8YLanZpH-QonBzoA:9
-X-Proofpoint-GUID: 1QY4AokTlTkxvDoUSy4siSwFmtnewRwA
-X-Proofpoint-ORIG-GUID: 1QY4AokTlTkxvDoUSy4siSwFmtnewRwA
-X-JNJ: AAAAAAAByausczEoitCB9zUDL4asBDMnKqX6Ujq2cn0gNU+2rYr8jBBVIant12jiIxJmwxlw3cEtS3TZjgbOPi3KxdjpbrOVCOiMi9K9F+TH70pTY7MQgfY/w0s1ZtP+NrKIJst4eA4Il8huTlIA9p2H0RQ7SkGjzB4Kr7NcdfNahdLlABURzJmKv1+qCa9NtGgJ+21rmebImoSYDhKlVtT+hLBtfu9yhhpyn5Q3AN+KhvNsSU2Ts+Glxoi8pxLmMpiWc2qhpYBfgWGNiaS/BdXoewIX32bW+u7YzPiGCTLLXsMJ35CTE00kN8Th6MOSdrFTi3nbwRg44kLPgDbjRB56t5L0Lk9Uc1Uvj3TcVGpBu3hUpGN28dFCMsejAtLR2FBiDIvsj8JkeyDvQKV/eQfOItKt9+DlZcR3oBun+8ll6MbLbvu1csju4xVrbKJ9CvjIN8Sw4ShHb1U54ekdG64JMdpuIbPzBTaihEPP0IontJdhYKtZS9xaMWOakaxGFGhOlQJ3QapFXKtKqDHldz/BWiepMY1zSuWJuHN5db2mG/H+CGufj7fK8pHTeYt9LaPkYant3DGefPY7A9AxEexnKUx3XtyKTWfdJ+m+cMhCohZmIbDM4+VupKFk2hnGAxkQfkHiVgvgBIFMr6BBvDMpsgsxt7uv43uaLqxr4mvGDA76D/m7MdwKUe6TJBXKQrDP3CEP/TRcW2p4DLwbz4WE2iNgIHLRWXNwYJixV2S1VRgeCcZ3x9RHxFAfmIo6C+kXF2Z9uAK/1AGzP7Sxm1IBSJWh9sU7rg/ylsGNHdcvYp+wJCA+xus8s2gRIgjs2g6qvzoHxFN1bB4YCRyhFT2ds0q9syNvDoz32WXCGjgDtDbEVy2HtWiBvaIq26vz2EtaWhEjiISklIfQ+t3EMl24zFHtV5ZsfnfupNrM7sr4HyKHqyUJUh7COT6LuJhj/2xxAuxn9ikhw1VGH8LyQEDKQ60QLat
- +b9/dn4DZXsR+TGRQPY/vO7YWAsaLQVdG4hvH/fKBPeIdWoe6C2B+oT/J5ksFuWnWIWrYDSdjsyU4rlSRsNBh4JTYUs8JvFeVwHWhzfOwcNJqKe4yk4x9+Uh9wJKW0Z6wmNrZVZNKiKPLwcYEXQ5ws5Sze/JyZxyapxWryRmvgiPUeKzRIGAi6TWRb2cdDnBbMDcmWYbsnG3nI2vDd63UEkjSq0RFmFu18XEgio8Xmhz3ZIA0eUhNhf52GsztIojksGz9DvmCW1krdL6AEofSbnw8gwbicVOubw==
-X-Apple-Category-Label: Mjg2NTg2Nzg6JGNhdGVnb3J5JF9QZXJzb25hbCw=
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="7igr2kzo3fstsvmx"
+Content-Disposition: inline
+In-Reply-To: <20260923195719.1933175-2-bhelgaas@google.com>
 
-Hi Torsten,
 
-I hit what looks like the same use-after-free on an unpatched, non-PaX
-kernel, so here is a second data point in case it helps the patch along.
+--7igr2kzo3fstsvmx
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v2] PCI: tegra264: Fix Link Capabilities register offset
+MIME-Version: 1.0
 
-Hardware: Framework Laptop 13 (AMD Ryzen AI 300 Series), BIOS 03.05
-Kernel:   7.2.5 (distro build, 7.2.5-3-omarchy), not tainted
-Device:   LG 40WT95UF monitor on USB4, with PCIe and USB tunneled
+On Wed, Sep 23, 2026 at 02:57:20PM -0500, Bjorn Helgaas wrote:
+> The PCI Express Capability begins at 0x48.  Link Capabilities is a 32-bit
+> register at offset 0xc, and Link Status is a 16-bit register at offset
+> 0x12:
+>=20
+>   Link Capabilities is at 0x48 + 0xc  =3D 0x54
+>   Link Status       is at 0x48 + 0x12 =3D 0x5a
+>=20
+> Previously the driver read Link Capabilities with a 16-bit read from
+> XTL_RC_PCIE_CFG_LINK_CAPS (0x56), which incorrectly read just the upper
+> half of the register.  When a hotplug-capable port has no link during
+> probe, tegra264_pcie_icc_set() consequently derives the maximum speed and
+> width from unrelated bits and requests the wrong interconnect bandwidth.
+>=20
+> Correct the Link Capabilities usage by adding a XTL_RC_PCIE_CAP definition
+> for the base of the PCIe Capability, using the existing PCI_EXP_LNKCAP
+> (0xc) and PCI_EXP_LNKSTA (0x12) offsets so they're easily searchable, and
+> reading the entire 32 bits of Link Capabilities.
+>=20
+> Fixes: 01c3c27a0ef6 ("PCI: tegra264: Add Tegra264 support")
+> Based-on-patch-by: Linmao Li <lilinmao@kylinos.cn>
+> Link: https://lore.kernel.org/20260827093919.2825467-1-lilinmao@kylinos.cn
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>=20
+> This fixes a real bug, so I'd like to get this in pci/next for v7.4.  I
+> can't test this though, so need a review and test from somebody with the
+> hardware.
+>=20
+>  drivers/pci/controller/pcie-tegra264.c | 9 ++++-----
+>  1 file changed, 4 insertions(+), 5 deletions(-)
 
-The monitor went into its automatic standby overnight (laptop awake, lid
-closed), which drops the USB4 link and hot-removes the tunneled PCIe
-bridges. In the same second as the removal:
+Sorry for the late reply, I had missed the patch you sent out. I've run
+this on the Jetson AGX Thor DevKit and it still boots fine, all the PCI
+devices show up:
 
-  thunderbolt 0-2: device disconnected
-  pcieport 0000:00:01.1: pciehp: Slot(0): Card not present
-  pci_bus 0000:03: busn_res: [bus 03-21] is released
-  pci_bus 0000:22: busn_res: [bus 22-40] is released
-  pci_bus 0000:41: busn_res: [bus 41-5f] is released
-  pci_bus 0000:02: busn_res: [bus 02-5f] is released
-  BUG: unable to handle page fault for address: 0000075700000060
-  #PF: supervisor read access in kernel mode
-  #PF: error_code(0x0000) - not-present page
-  Oops: Oops: 0000 [#1] SMP NOPTI
-  CPU: 10 UID: 0 PID: 4136500 Comm: kworker/10:1 Not tainted 7.2.5-3-omarchy #1 PREEMPT(full)
-  Workqueue: events_freezable pci_pme_list_scan
-  RIP: 0010:pci_pme_list_scan+0x4e/0x220
-  Code: ... 48 8b 43 10 <4c> 8b 60 38 4d 85 e4 0f 84 b8 00 00 00 ...
-  RAX: 0000075700000028 RBX: ffff8b26f0cca000
-  Call Trace:
-   process_one_work+0x19f/0x370
-   worker_thread+0x1b1/0x330
-   kthread+0xe4/0x120
-   ret_from_fork+0x2bd/0x350
-   ret_from_fork_asm+0x1a/0x30
-  note: kworker/10:1[4136500] exited with irqs disabled
+Tested-by: Thierry Reding <treding@nvidia.com>
 
-It faults on the same load as your trace (bus->self, 0x38 off RAX), with a
-garbage pdev->bus in RAX instead of the 0xfe poison, i.e. the pci_dev at RBX had already been freed and reused.
-Without free poisoning the stale pointer is just whatever landed there,
-which is probably why this is rarely seen.
+Also, the offsets do match what the register documentation says, so:
 
-One thing worth adding to the commit message: without panic_on_oops the
-damage is not limited to the one worker. It dies while holding
-pci_pme_list_mutex, so every later pci_pme_active() blocks forever. Here
-that meant:
+Reviewed-by: Thierry Reding <treding@nvidia.com>
 
-- irq/34-pciehp and several pm workqueue workers stuck in D state, so
-  the monitor's USB and PCIe functions never came back on replug (DP
-  tunnelling still worked).
-- Any config space read that needs a runtime resume hangs unkillably:
+--7igr2kzo3fstsvmx
+Content-Type: application/pgp-signature; name="signature.asc"
 
-    task:lspci  state:D
-     __mutex_lock.constprop.0+0x3e6/0x930
-     pci_pme_active+0x158/0x1f0
-     __pci_enable_wake+0x90/0xc0
-     pci_pm_runtime_resume+0x9a/0x130
-     ...
-     pci_read_config+0x98/0x310
+-----BEGIN PGP SIGNATURE-----
 
-- System suspend failed in a loop for four hours ("Freezing user space
-  processes failed ... 3 tasks refusing to freeze"), and a clean reboot
-  hung as well.
+iQIzBAABCgAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmq+DlsACgkQ3SOs138+
+s6Fxfw/9EWdvJTKrr7EilL2GK28StDkbw65WN0mzF/TbxGhoTelDKY3EKe7IFO3O
+MqSQyPCIHnm7M/RnLxtRfOvBYJwO+jHUySK5YZzKjXyTPld74fP+dr/kcObBD8/R
+VkMD0EeIX6rAxPJK7uAVE/UgWJsQVeR4LFKtjCrnC6BfxRTFqRtJGkDLWCXl3El1
+JKkxbaTndVelF+jiJnXCN2R5WaJm9oAwa40fcDepw6BdX5AZwlcwXok0aTzGX0u5
+a+B9eTqhBx2jJbT2azD5r02tXq67SWgoN/NKhP9yQtqTTD8WQMWEeDlnncE7Isn8
+48AhMb3gnJ2RHnDg6bOEVNvhn9V61dl7hE+w3Uo0gCZyrfbd0TnlTVRYjADauEJR
+wKz1Ete4vNtXezQ/F62wVYEyfGdcq+0OP5pXkV9PZ9iEeKCGsRQlnlCmw5/QTI3S
+EhsLG0KVe8Xh8a/B8qff6stOQ0ywOzbi5mF86appSVqqdRfHAdFwggYn/5zxxgi0
+jHQ6jrEEqwdKpc9AfmN2FE4e1mxQkfAZQMkVBWZYIaEZ3q4UQ3GKlUzXF9uFPpDL
+npzCDicmFepW6RJsNXr/Mvttr84CjTCZY15YYWNyOvuwVUBN/OCL7yp1bQw0nKVp
+UWlhAZut3L+QNwtHBUwJlag2PHfTwe2HaZDTEz2WenDOdVpEOI4=
+=INV7
+-----END PGP SIGNATURE-----
 
-So on a stock kernel a single hot-unplug can leave the machine needing a
-hard power-off, which may be an argument for Cc: stable.
-
-It is a race here: the same boot had two earlier disconnects of the same
-device without an oops.
-
-I can test a v2 on this machine if that is useful, though reproducing may
-take a while given how rarely it fires. Full kernel log available on
-request.
-
-Thanks,
-Christian
+--7igr2kzo3fstsvmx--
