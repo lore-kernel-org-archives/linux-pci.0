@@ -1,178 +1,172 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E57E937F8C1
-	for <linux-pci@vger.kernel.org>; Thu,  1 Oct 2026 01:08:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.133.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790816917; cv=pass; b=hlGr6Oo4CA6lM5xYXmj/J11XEefLvsUdYoR5YMmhZMzhCTxJOzqCjAV4yGhYoKvERK8WrqjH6VLIxiYkcEiYjSNIRhousxjZm72ToXGQ3Fzg8stFLwnBIG+c+Bfm4HCWQGhEeQkLv5HZ54yuy1tb1oOWhD+4WoK8NwKeXnXp3v4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790816917; c=relaxed/simple;
-	bh=EElVO0SyMWfbu0TO/p9IG8++sd29PlCl+ReAKWNQ0Lk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=omcwoUwj9/JSxMf2u5b8c16HrfpR1MMOCCp0i64Wl4GPGPLO/a6mNlw2J56TEMg8mMailGSK0Xks3cEjGiziVq+wKUjlyq4cH64TN72W4/M5/5QXvAUXRb+OYOystzj/kDZNv/HqD+SR1kzgGEsh5z6EjqYmS2MU3FLGQ0K6mmA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=J1qvFaOH; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=MwC5G5N9; arc=pass smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F10B43CEDF
+	for <linux-pci@vger.kernel.org>; Thu,  1 Oct 2026 05:40:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790833252; cv=none; b=r1TSIxDMiq9urrro9GuhtEX6Re6qstFZ4glMFyXMipH+YPGD3Q7+FRAPy8WC32N8iUu/Xy2TIoR9fyvbv8orWmcLkZB0cpWSi/nqaErijMKFWGNeZAIGfC35L4886ReIaj9PWAWOI8Wbhcg7JIi+mehqYkZTNBxRHe5OwXZWjrA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790833252; c=relaxed/simple;
+	bh=lof18EAR8koDW4CmD7Ew8X2SZsJqJVY2ODSNxskcR7o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DhbXoEwVjTDxkWvQ9ghGyNHBdEbt9/zPysM1+3yGDJz3t4mWAL+cfpm6GDMSSsFpV8tgyTMtbtGEg2dUfRz8Gb0F2oHkP1qW0K+0XqKEbsZsOQt2QnpLanVos7VyfmLph518gbUmuvpfMzq8wYnw78GJQ89rnhSTd1BZ/j4wxr4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=FhWbht1q; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="J1qvFaOH";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="MwC5G5N9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1790816911;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=6337Slr26G9fWAkknUzN8X+fyx+rX5+fV3KYKCnIUr0=;
-	b=J1qvFaOH/RPV6CeGVEkyUf0x+N8q3FSzEXHzvl4qkS+YfpkPfau7aPxVWzA20bDMUhVa/J
-	1q9WsuLm2UYTnyOQmBUqIafPOpFDPIMjCb/mWE/IKT2eat4rpICchTlctwme2o07aJclLZ
-	xHcPh8u2aa4MDBJzq2KuPqwNHCBpHFg=
-Received: from mail-dl1-f72.google.com (mail-dl1-f72.google.com
- [74.125.82.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-154-reHsGrNFM5-mYnWDRLdjuQ-1; Wed, 30 Sep 2026 21:08:29 -0400
-X-MC-Unique: reHsGrNFM5-mYnWDRLdjuQ-1
-X-Mimecast-MFC-AGG-ID: reHsGrNFM5-mYnWDRLdjuQ_1790816908
-Received: by mail-dl1-f72.google.com with SMTP id a92af1059eb24-1416f32fe11so5928809c88.0
-        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 18:08:29 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790816908; cv=none;
-        d=google.com; s=arc-20260327;
-        b=XkgEdCiXxheyWNUzH02JZDkXmwxDNbMR4eavsPKtt3C3eLDKaawzTJ4oFPW4JLDkNs
-         3brJ5ZhLjEq1ZE6T3lb2TpJDUOq6gGd/rodB1uj5NblcDy03qt8mwPTpleTn8ZDWYMqd
-         wcsEY9IYM1uWbmCtmXx5jlZASyJiJ6c0R330QtJIKFh1HH1RmllkMQ1eJlC3CfpgHycT
-         zqbFFpsgTDJhS1U46sImtyhfgpdRivW3N35ArEisM4/J85bffHkdwtB90Hry34SjC9+h
-         xbgFonYXm1L8M/LW1Xu3cv9wKe4oB40mc+RReNtcoxuYKQ4x6O2DHxVlpQyEZLUINDGd
-         +dtA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=6337Slr26G9fWAkknUzN8X+fyx+rX5+fV3KYKCnIUr0=;
-        fh=HhBYthnGSWlW2QvAzdg5Y+fHgAyXnrg5EW7aaeNzYpU=;
-        b=shVQOCJyoRiKuxbyH9+gB01I6Zr5rYoiUcAhRGEewH5iGjeWKbjL0TDXHnzs+FdhL+
-         cL5mmlg7cjsZ4lwJ+heYqNQrd0CDEcjYfCzzrPOEDGdqicKEyG6EXVqRCkH0aBeDSj04
-         3uthpt59NPbT1yLVo1b6QKXWwQ7ButZGwPxLTtSJeONV0f+LaoVdhyR7TQ1t0NzBjKny
-         sHrPeQFfMV/7FrMKKVHLcAg2Vpp5279V5nGTBnfKAMNBGDa/WuqSFg7G4mumrqB3ej8T
-         EF+8rQjeJPM79Mkq9KtNmRn/SZCFB3VuJjGfcOhKpqOycRFAtpd7ciff2wqEsp49y4gD
-         joPg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="FhWbht1q"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2d3b445a84fso14105ad.1
+        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 22:40:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1790816908; x=1791421708; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+        d=google.com; s=20251104; t=1790833250; x=1791438050; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=6337Slr26G9fWAkknUzN8X+fyx+rX5+fV3KYKCnIUr0=;
-        b=MwC5G5N9LXKcAvgOKxeK9dd9ij90H4qO5wZCt33ZQLZjkCtV3FvoJYQ97PkJPi21Fj
-         9Nvh4tNtHXnhigUR1/rSaAfsb5pMef/F136zHTonyewH13J/r7qBeC9XON1QONKwsNgJ
-         XkMqUzG8/t+MBR34JJWKiaHVcfqXjhZZauLEGvz8V0Lty9nGlDuDcyUJPEm3CWm5J/Md
-         EDvvBtR+yb32/xRKNi4l7Cei2n8bk6JOamnOn+edPNRTcapPOL1lhS0qjhR2/7DVE1Ex
-         aPBNWV950Vd9IwOMJjwO67m9Irm7DizXxLAUn0U0AU8p14Xy8AzK3AbHGEnOj7kYXi4x
-         f7ag==
+        bh=aS6sOmcWqD+JGmAwtp5t++abYU7vJWrSGj4RsT0KIIw=;
+        b=FhWbht1qX/KFI1WGT+ia1xzLiq4h9MeCHMU9xhM7AksqjeUwDdbCMHINULqGXWidhx
+         Ykr7H7riRCFKzsH9KLhW707rlyC6YM1vEmsQ2YymnoDmp2hsdIyN9BDH1rECJ/k0sPOX
+         JRPSa9Aiwoa0ZODYwf+vhslXzVCbx4zGAEm49cEVa975hWOgNXH8epg32hKisscLyGDr
+         wCtl+LPML4+l5hN+Uj4NeMKkecyPFg9H73IgOObQHCDi7UbGmbel8OyTx/Fi7AouSXZJ
+         ZEjhL5x0Ft8SeukkRpaTm8n9hand3azSpYD3KUjDpJUiEVPhY1+Bpi1aSK2yK+FWmAl5
+         A4Ng==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790816908; x=1791421708;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20260707; t=1790833250; x=1791438050;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=6337Slr26G9fWAkknUzN8X+fyx+rX5+fV3KYKCnIUr0=;
-        b=USm4Cw8MmAAl/Lp8K9tIJ7ogGShtMcIF25HoFrG7/3LEcPQKmqCKAr7ZpQCP882FXP
-         0BLAiolWhsD+SM/A3NOouWvJKIuYuHBkvXlnvOCYGbhJwkGEU4WDp45WZORmqPh35njP
-         KN8iORzgoErS2yIh/JSOyN1q+D83nSTxMDc/dse+pY7+6UX5/NCeB+tMhFKGVXcic4Rx
-         emtxeIrUE7BvPV/yDeP0vfvTHBuWc1OVR4dd21cgzb/fypuBXK1PKisyngUjzEjLn4zc
-         SxOHago3b3xqzeEM2wqQI/tAx3FYdpnKHRGcl5tTtYSgRthCj9Uh2BuWeuJXK0TtSd0Z
-         YqsQ==
-X-Forwarded-Encrypted: i=1; AKwUvBylWRBn3o0aRGoOpgSSwaLFyBsU6tIdqj8CU/3J/ikmC5G7+9gJBtoRCLx2g4JGAhYSwlUVc6u7IaU=@vger.kernel.org
-X-Gm-Message-State: AFuF++lrgFGwOytsa2IymE7TZYTjR7KzApFuq4JOwYagTwj9AArJ1XwV
-	KrtF8Kn62NBAWPzMksiMsqGQWKdeYHqRvKtCWmMoyRL/3BtjNxcELL7izYLmA8vRNhgtYYBMLOh
-	BXTKvDkxY+itMcUHFqY73KiTOAMRzTRM4oyzhGmEYgBTWUcSyNZgFaC/o3TuLyIkpxwDBSStZeK
-	Tz0SjJm4T/4xZ/bhvi7G1PnkQGqHezkULQMfNk
-X-Gm-Gg: AYBFou1i16So5ip0iUojp0et7Thni7njJ7ZaiJUIrpeQ13g0yUbnLHhuWRsQFZRdbAh
-	+TWTTiQG3XnWmV7/dLlKHsqxJ6qORwmVeQK/cvW2T7dZFXuZXBOa5Fg7vkR1Vhx2q9qUdVx6PVl
-	cPRtodhL2J/vt5+zuUgruPTLPc6qALAkACu9pUcIyXBuVvEbYcwRs4IE2mZJPadFgTF8u1sIb/v
-	L0npIqFzDxuzxv5
-X-Received: by 2002:a05:7022:607:b0:13d:19da:9370 with SMTP id a92af1059eb24-14d3214813amr3682610c88.17.1790816907998;
-        Wed, 30 Sep 2026 18:08:27 -0700 (PDT)
-X-Received: by 2002:a05:7022:607:b0:13d:19da:9370 with SMTP id
- a92af1059eb24-14d3214813amr3682563c88.17.1790816907221; Wed, 30 Sep 2026
- 18:08:27 -0700 (PDT)
+        bh=aS6sOmcWqD+JGmAwtp5t++abYU7vJWrSGj4RsT0KIIw=;
+        b=Tin0Nv1W0d0+mwnyl+9jcHKKTL8FkzeTXwIb8JM4WzwLRTc2GQ8l5Eds5vTKe9Ew5/
+         C8PxNJUFzXicTubaPOSBbTEXyzq8k2wK20AGgjMfA8rO+J+EAMrZbJhS2gMFi97lWbQ5
+         uv/yZ1J31oDEgIodKoxDjv7SyW3+CaDgIkJpSjQ0NNd5sARJ6wKdAchAMCA3OnGPyeYx
+         w+vtIa7b4kVOgLHbG1IPMZIZIIqMmltp3dOxgC58VNWCfuS2kLQPWcoWfTylFKP+IdlN
+         Pc5VoPDjWIcUs5/CnL/Xh88vNYpUCafDSZjlrKFHE7o4LpT0EIIxLeYERWttm9rPn2ok
+         Wxfg==
+X-Forwarded-Encrypted: i=1; AKwUvBwtUpqxXRYU303YSmhbrl8owcE3LMSMPV3ZNanwELXU7h7lw8XSrUj9MMf6+MzeKmrJfWmv0RTnWWA=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKtGmGg2Ts0pX/6DOGIkfMJqW7GFEy9ONCArjHK50cKT1wZDb+x
+	tRowXVqMCgQyKiRvpAcC9DSZnp2BNyYidR35/ajpJ3Xv4ADkQY1WXOuPTsWYFkj9iQ==
+X-Gm-Gg: AYBFou2vitMFx4omuPg+2M6e7/H+UZnrC2HXltTz2/i6v94lQltDKNaYp/g/kmOEgP+
+	mGXmJAmKjnXhD10p7UgVH/Oj/PVnuhiJZ+jj+Jb1Ysh6lauB2QTLhW4+gSatr/9WvXWR7PnBlWr
+	Yrxjf73A+wiJSP+Nwcr3ZgkiXB62OjIwAjr+K2EG3M1DdROGHdqua5kK109R9lTVaCIDukzr1Ae
+	uoLrRQXds+etI3YKj/tzU7phtPooEgpfHIWrdjtNjx8ntWC7Av+pZydKtmPXLRWTLDwCLLhkmH7
+	sz+yflCGwB9qE39mW0s1tTbRKYKReXTaOmCNr+Ln4IZ8K49Fj2AZRuyXpDmPHzgrsQ7Oz6lnFlr
+	zRsEhZ+bR5VwUYahnnps39YJfhwrrPHUpiTcaCoxMKmZh5ncf4s82IEtUz9d5pauANKeGyxCpNF
+	IuR8FFm7kq5KMhlVznwPjoxKHzRST42ofS5+OrqOh7pFAZQH0MU5ulQTc0VkMSVcXw4XpKKz9OG
+	GtgTT0QQT8zjwTsBhOEepP593DKXmmzSRvU
+X-Received: by 2002:a17:903:1acc:b0:2c9:bd54:cf with SMTP id d9443c01a7336-2e301d71be7mr3155715ad.4.1790833249336;
+        Wed, 30 Sep 2026 22:40:49 -0700 (PDT)
+Received: from google.com (105.211.142.34.bc.googleusercontent.com. [34.142.211.105])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e300b6d7a1sm5294465ad.76.2026.09.30.22.40.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 30 Sep 2026 22:40:48 -0700 (PDT)
+Date: Thu, 1 Oct 2026 05:40:41 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: Nicolin Chen <nicolinc@nvidia.com>
+Cc: iommu@lists.linux.dev, Will Deacon <will@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>, Robin Murphy <robin.murphy@arm.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Mostafa Saleh <smostafa@google.com>,
+	Daniel Mentz <danielmentz@google.com>,
+	Ashish Mhetre <amhetre@nvidia.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Thomas Gleixner <tglx@kernel.org>, Radu Rendec <radu@rendec.net>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, rafael@kernel.org,
+	Danilo Krummrich <dakr@kernel.org>, driver-core@lists.linux.dev
+Subject: Re: [PATCH v11 11/16] iommu/arm-smmu-v3: Add CMDQ_PROD_STOP_FLAG to
+ gate CMDQ submissions
+Message-ID: <ar3yWUmi8E0k37Ml@google.com>
+References: <20260929034510.2023173-1-praan@google.com>
+ <20260929034510.2023173-12-praan@google.com>
+ <ar1yNtr7Kp2OTcDd@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260922071807.2533884-1-airlied@gmail.com> <20260928140028.02900e68@shazbot.org>
-In-Reply-To: <20260928140028.02900e68@shazbot.org>
-From: David Airlie <airlied@redhat.com>
-Date: Thu, 1 Oct 2026 11:08:15 +1000
-X-Gm-Features: AclHuK8H40xGZ7LDm4tWEaoZ7Fx41p0eMmMGmCD_ZHFdFpJFjKlkMOkwot6pi94
-Message-ID: <CAMwc25oCKJaYaUOt32-xegXOjLbWMpk2RAASyZDj1ooh_41hnQ@mail.gmail.com>
-Subject: Re: [PATCH] pci/vgaarb: pass a data pointer to be used in the decode
- callback (v2)
-To: Alex Williamson <alex@shazbot.org>
-Cc: Dave Airlie <airlied@gmail.com>, dri-devel@lists.freedesktop.org, 
-	linux-pci@vger.kernel.org, kvm@vger.kernel.org, 
-	Jason Gunthorpe <jgg@ziepe.ca>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Rodrigo Vivi <rodrigo.vivi@intel.com>, Alex Deucher <alexander.deucher@amd.com>, 
-	"Simon Song (SW-GPU)" <xinmengs@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ar1yNtr7Kp2OTcDd@nvidia.com>
 
-On Tue, Sep 29, 2026 at 6:06=E2=80=AFAM Alex Williamson <alex@shazbot.org> =
-wrote:
->
-> On Tue, 22 Sep 2026 17:18:07 +1000
-> Dave Airlie <airlied@gmail.com> wrote:
->
-> > From: Dave Airlie <airlied@redhat.com>
-> >
-> > This changes the vgaarb client API so that the user can pass a
-> > private data pointer into the register that will get used in
-> > the decode callback.
-> >
-> > This allows a bunch of pdev conversions in the drivers, and lets
-> > some future vfio cleanups be nicer.
-> >
-> > I'd like to merge this via the drm next tree but also fine with
-> > it going via pci.
-> >
-> > Signed-off-by: Dave Airlie <airlied@redhat.com>
-> > Cc: Alex Williamson <alex@shazbot.org>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Rodrigo Vivi <rodrigo.vivi@intel.com>
-> > Cc: Alex Deucher <alexander.deucher@amd.com>
-> > ---
-> > v2: fix loongson (spotted by sashiko)
-> > ---
-> >  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |  6 +++---
-> >  drivers/gpu/drm/i915/display/intel_vga.c   |  7 ++++---
-> >  drivers/gpu/drm/loongson/lsdc_drv.c        |  4 ++--
-> >  drivers/gpu/drm/nouveau/nouveau_vga.c      |  6 +++---
-> >  drivers/gpu/drm/radeon/radeon_device.c     |  7 +++----
-> >  drivers/pci/vgaarb.c                       | 13 +++++++++----
-> >  drivers/vfio/pci/vfio_pci_core.c           |  9 +++++----
-> >  include/linux/vgaarb.h                     |  8 +++++---
-> >  8 files changed, 34 insertions(+), 26 deletions(-)
->
->
-> Acked-by: Alex Williamson <alex@shazbot.org>
->
-> Preemptively, could this get merged via a topic branch that we could
-> share in case further drvdata cleanup arrives in vfio-pci this cycle?
->
-> I'm imagining this might also be a good time to push vgaarb
-> registration out of vfio-pci-core as well.  Thanks,
->
+On Wed, Sep 30, 2026 at 01:33:58PM -0700, Nicolin Chen wrote:
+> On Tue, Sep 29, 2026 at 03:45:05AM +0000, Pranjal Shrivastava wrote:
+> > @@ -726,13 +727,42 @@ int __arm_smmu_cmdq_issue_cmdlist(struct arm_smmu_device *smmu,
+> >  	do {
+> >  		u64 old;
+> >  
+> > +		/*
+> > +		 * If the SMMU is suspended/suspending, any new CMDs are elided.
+> > +		 * This loop is the Point of Commitment. If we haven't cmpxchg'd
+> > +		 * our new indices yet, we can safely bail. Once the indices are
+> > +		 * committed, we MUST write valid commands to those slots to
+> > +		 * avoid indefinite polling in the drain function.
+> > +		 */
+> > +		if (Q_STOP(llq.prod)) {
+> > +			local_irq_restore(flags);
+> > +			return 0;
+> > +		}
+> 
+> Sashiko pointed out this:
+> "
+> Can this early return cause memory corruption by silently dropping ATC
+> invalidations?
+> 
+> When the SMMU suspends, Q_STOP(llq.prod) becomes true. If a driver or
+> background thread then calls dma_unmap() to free a buffer while a PCIe
+> endpoint (with ATS enabled) is suspended to a state like D0, the SMMU
+> driver will observe the stop flag here in __arm_smmu_cmdq_issue_cmdlist().
+> 
+> By bailing out and returning 0 (success) without actually submitting the
+> CMDQ_OP_ATC_INV command to the hardware, the IOMMU core is misled into
+> freeing the memory while the PCIe endpoint's Address Translation Cache
+> (ATC) retains the stale translation. When the PCI device resumes, or if
+> it issues a TLP while in D0, it could use the stale ATC entry to access
+> the now-freed memory, bypassing IOMMU protections.
+> 
+> Are we assuming endpoint drivers clear their own ATC or that a hardware
+> reset handles it? Client endpoint drivers typically lack an API to
+> manually clear the ATC, and SMMU hardware resets do not broadcast ATC
+> invalidations to endpoints.
+> "
+> 
+> We may get away from the TLB maintenance. But ATC can be the case
+> broken by the stop flag?
+> 
 
-Thanks Alex and Bjorn,
+Not really, I guess Sashiko missed the comment in a later patch. This
+was discussed with Jason in v9 [1].
 
-Okay I've cleaned up the last few bits from Bjorn, added lines and
-created a drm topic branch
+The key thing is that ATC_INVs can't be issued by the time we set this
+flag anyway.. if we're in the suspend callback, the PCIe EP is already
+suspended, so none of the ATC invalidation TLPs would be responded to.
 
-https://gitlab.freedesktop.org/drm/kernel topic/pci-vgaarb-rework
+I'd addressed this in the RPM patch with a comment right above this check:
 
-I'll send a PR merge this into drm-next and you can work off it as
-well if you need to.
+         * Note that eliding ATC invalidations (CMDQ_OP_ATC_INV) is safe
+         * because client PCIe endpoints are guaranteed to be suspended
+         * (via device links) before the SMMU is suspended. With the PCIe
+         * links in a low-power state, no new TLPs can be transmitted.
+         * It is strictly the responsibility of the client/endpoint driver
+         * to quiesce DMA and ensure that the ATC state is cleared across
+         * power state transitions.
 
-Dave.
+i.e. we only start eliding once *all* consumers are RPM suspended, so
+the "endpoint in D0" scenario can't happen.. and a suspended PCIe
+function shouldn't be issuing translated requests anyway.
 
+So we can't issue ATC_INVs during suspend (the EP is already down), nor
+during resume (the SMMU resumes *before* the EP is made active). The EP
+can't use its ATC while suspended, and if it loses power/resets on the
+way back to D0 (from D3cold, or D3hot with No_Soft_Reset=0), it comes 
+back with an empty ATC.. same assumption the PCI reset path makes today
+(pci_dev_reset_iommu_prepare()).
+
+I can add a pointer in this patch's comment to the RPM patch to make
+that clearer.
+
+[1] https://lore.kernel.org/all/20260826134757.GK3325090@nvidia.com/
+
+Thanks,
+Praan
