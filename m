@@ -1,53 +1,52 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90DD43CB8E6;
-	Thu,  1 Oct 2026 14:36:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 466B2394498;
+	Thu,  1 Oct 2026 14:37:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790865406; cv=none; b=r7ME5x/NLTcu9W9bA+xM437MhLae83j/3pS1Ob4sRaPilzz+kvxN3WjQ+GGfKSTn9uADU2i/3uVtCDAvLx6TytOC+HTYwDGc1yXqCaI+m2L0rZgwN0+gqhfvcpx3WUjbFVdWDJUyerWdDENFX5+Hs9LBVQ6pdlUl4TGnC+aiXIY=
+	t=1790865437; cv=none; b=MWPs8o0UWBP4bQHg+/GLQKO+dUnfYY8lRWozGAjdPGnNI6nXyb21LQKgi2aRC6xVlil6afzGtayLfc/W1WdicvCbNDm6U95jUCQ160pdjbS4XEav8lWi+xOICzgoTF7woaDxN5+6CZyBQTPi1wTfTLZezorsbLz3lGsKqVEcNus=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790865406; c=relaxed/simple;
-	bh=DsT9jGtyXUN23nX5Fc+zKuwTHmOy8VSuBrdGl6ej58g=;
+	s=arc-20240116; t=1790865437; c=relaxed/simple;
+	bh=6BjYxq1CZvxwAl/7Re+gT6DM0tZI86U3T4kIInpe5og=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=P5NNb5M8wXadaxvT6AVehZQDUUj9SLktd3pD/02SUSjxHfqAL85DErJzj3n66tNLmTYj4Vrreu0Jaldx/H+zsBTsKqudHiQ4eu1NB09u2CE8y2CxlFGgbv0zm/JbLgtBf9PGhLvLydIg0DRKlLEzK36ZhPtxdY2Wu4wZakFU2qc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k5OM7LSH; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Ww5rhrKikKm0SIsg9tRk8shzma/lAqB0qw2GgEVvUPQ8G6fHoHZDHglydremj5zHUMTgYTCjvgv651wVDP0faHeAnIIqwQulUmbl2cXmm3preqW/art0luD5KvSGRWqfvSvwoa32iwftk9n24H35i6gRdmNNzowV2Z2kzMnSXcY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hPQofxiG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k5OM7LSH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BBDD1F00898;
-	Thu,  1 Oct 2026 14:36:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hPQofxiG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D77D1F00898;
+	Thu,  1 Oct 2026 14:37:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790865401;
-	bh=DsT9jGtyXUN23nX5Fc+zKuwTHmOy8VSuBrdGl6ej58g=;
+	s=k20260515; t=1790865432;
+	bh=6BjYxq1CZvxwAl/7Re+gT6DM0tZI86U3T4kIInpe5og=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=k5OM7LSH0+h7ZVUVC/l+s5cJ7+g5hAgUwFXf578csfLMFjyWu+81h2eG309c0ZpL0
-	 GyYzDW+3Awxm8g8elIuJFRYX84keSEYFfR+rdpafMKYOaUv8r1m4ePy2219cMD8KQr
-	 CrjjiUgyUCsa/DI0G7Ic4nlte4PkAcqnKyW/XfRy0seft3yEcWiG3GqDpQUa9uoFYj
-	 d88BSafPUJvaiK6QzLNvmONsJsfbxLlJthtU+gUdkET1Cg+XOAMxfdJlMBFgq38Ri+
-	 TFryUO5fNtuVHhdtBbluLM+xLog6f8cYRg/KpIaeba3AC5czKzxOsQ+4dK8uvT+VVe
-	 PpcceJ44MRUZA==
+	b=hPQofxiGuxz8fdO+6jUinnO3yC7MnnXeuI7N21y5txTDhPRwsARl2V2kVcbxRhJTs
+	 QamwCquYnlTyMZ9iepRUei3Iz6sDbESLflVkQAqbxQSg5k5sKo+9awULwvZV7L2r/j
+	 UVTLdH2WOL97H2sBiLn/rcLpeT/aqdTRLeIJk4Ywke8FG1QaYF0LTmSaUJY0PyDBDm
+	 0O5mvSxA68yXNu2rAdLoBiHbQJABKlorT4f0/IRYivKR/mdBHllDSLFLbgE8IohRUt
+	 DDUpJCzPCngMyF4OPDb+E4cvXadJzQrUY9wcJnh6Nuor2KieNy5CV10JBZsscOq4Gb
+	 /jdwGVxk60WSg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v12 03/10] pinctrl: cs42l43: Use fw_devlink_set_device()
+Subject: Re: [PATCH v12 04/10] cxl/test: Use device_set_node()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Herve Codina" <herve.codina@bootlin.com>
 Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
-In-Reply-To: <20261001142815.277550-4-herve.codina@bootlin.com>
+In-Reply-To: <20261001142815.277550-5-herve.codina@bootlin.com>
 References: <20261001142815.277550-1-herve.codina@bootlin.com>
- <20261001142815.277550-4-herve.codina@bootlin.com>
+ <20261001142815.277550-5-herve.codina@bootlin.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 01 Oct 2026 14:36:40 +0000
-Message-Id: <20261001143641.5BBDD1F00898@smtp.kernel.org>
+Date: Thu, 01 Oct 2026 14:37:11 +0000
+Message-Id: <20261001143712.2D77D1F00898@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> The code set directly fwnode->dev field.
+> The code set directly dev->fwnode.
 >=20
-> Use the dedicated fw_devlink_set_device() helper to perform this
-> operation.
+> Use the dedicated helper to perform this operation.
 >=20
 > Signed-off-by: Herve Codina <herve.codina@bootlin.com>
 
@@ -55,5 +54,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261001142815.2775=
-50-1-herve.codina@bootlin.com?part=3D3
+50-1-herve.codina@bootlin.com?part=3D4
 
