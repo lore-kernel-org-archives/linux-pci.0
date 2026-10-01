@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19D55492E39;
-	Thu,  1 Oct 2026 11:56:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 865B14B7A46;
+	Thu,  1 Oct 2026 11:56:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790855811; cv=none; b=AlAiIbFR7p7JTsZO1NSy5/HeK60KmgV2lXHIFpVzZASDGF30AGMzSPpAy7jMTVlJU6Sx50OCdzcwY+AjA0Oub82pkTr1+453PoDSMWrYkDce3zEBzD9ObL8AmqBFrya0Z8XxAivNoBNQqoeD6NVfcs0vegbcZ/412CzRwNQh4Ww=
+	t=1790855815; cv=none; b=PaZnqpmDo/vVeIctFi3d/hoMfbbEd6vruMNPG5dWH7BDXhkSgAZKn9NELX4pKERb70kI3EPjxFrPYLUrLQtm2KVmikXfGHOrRCtcNjpipdrYVxpSweGjznIjf1/fgkcBZ6k5e2jRngiv+HSpccUDNNXukxC48Q5mFM5uyd+TnM4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790855811; c=relaxed/simple;
-	bh=etqo77/wb200IJhPYwJ38QEX11S+N78fuQUw3WkNViU=;
+	s=arc-20240116; t=1790855815; c=relaxed/simple;
+	bh=mXkfwVMSTG/O8xES3e+cilNTPUL6vj5Tm7w9qm/T15c=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BxcsuE9TQmOBfplj81OKIeJ2LoZPsl4eZrs//WA8gae28Iq7D6MyP7JDbjdhIMNJcVx82u32ZXPVuMpIQcgEbrR2w9cchdvhKZB/s2KkURiLMtlQMAO93i1Xmvd/KSymOFiiAuQ8ezzbZS/D+fwWx+kbjhTXAUD0n+muPcaKYwU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B/8ODXVx; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=B/dLpVUmtMSneE7UITrwH5EyS8PvIPwYLO0dh8Ww6a0VmvafE0bsa4P3ZxQsUbu3htM9JDj7ymRB7HTn+LhXZT8vbac7KLjJIQfIhyjT73E34PqagSiXSoOetFJdsd8mHfOEG7+bBm7XomhNxoeH+DJsW0kLT9/5iRM9F2Jaorc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YFsK0+VK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B/8ODXVx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 757C51F00898;
-	Thu,  1 Oct 2026 11:56:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YFsK0+VK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4A961F0089A;
+	Thu,  1 Oct 2026 11:56:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790855800;
-	bh=VSroph5KfrbOgXhBe4i8ShTpfFGH7n/ALmNTQPHgr5E=;
+	s=k20260515; t=1790855808;
+	bh=1ffECzzDMF9N/V+IW068tuIKbzvCCrI+xf0c3ifH81I=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=B/8ODXVxBAT9btyLOVdSYtbJd9fKo+TQ6Tbfmu7Dys7VyHkO4BBPsqFsabHobFeWL
-	 N7ATrXv++ITxuCqtggiEqB+pbmQVrjMXqksQ70icKygkpGfesqO6/U94GW4UiJqTE9
-	 mKVu7ZkRbTbsbB2sTWujUTYFZ+wVm8FUdz4syY7+C8H30U9ScKnO1xIzLHiwmyyBow
-	 Atoxpo82T7NJhgDzmgCgtBvs5g9Oba+6ZJkN6Lw3eaMBiOioFkx9Mki95BFdARv9qr
-	 CnxaGbDaNkxF/1n/paJK296FKU/P8GHSr4dfxGhLbSAQ3CWFrq2jFZox3nAG6m0p8n
-	 kFZMK3TKg9qgg==
+	b=YFsK0+VKEXganTCL4uFtKxjL0tKHK9HQELCBPFQW+B64RunZ5cwIcdl5VSbLjyyk9
+	 hp7q/QePiL603BPldDm1amKxlv0cnggedDe4/APPdWo1clWkf4+KkjqU4UH4zqie9v
+	 +0Njoz3shhOG6aN3TofI90r0T827NXVZM6m1MbX5nV9TshyQp8t7qUJRjR5LifiM8a
+	 I1aZSzw+Xk6nn3sR7gVgYFgtuop4hUYkuwJ1kxb6PN1DDiyu7mjD8FiS7IxapSQn0e
+	 JMYDzd7ZCBO5wwZdcLxDLK687Uu6Ifrc4wgdFotJA1T3R3EH64D8Ky/Pu1FcE+9cZB
+	 li2w1ubTvh3bg==
 From: Leon Romanovsky <leon@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Logan Gunthorpe <logang@deltatee.com>,
@@ -55,9 +55,9 @@ Cc: linux-pci@vger.kernel.org,
 	Shuah Khan <skhan@linuxfoundation.org>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: [PATCH v9 14/18] PCI: Add KUnit coverage for ACS isolation checks
-Date: Thu,  1 Oct 2026 14:55:22 +0300
-Message-ID: <20261001-fix-p2p-acs-v4-0-v9-14-1a8e0f50ddd9@nvidia.com>
+Subject: [PATCH v9 16/18] PCI/P2PDMA: Let a client declare that it selects ATS per mapping
+Date: Thu,  1 Oct 2026 14:55:24 +0300
+Message-ID: <20261001-fix-p2p-acs-v4-0-v9-16-1a8e0f50ddd9@nvidia.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261001-fix-p2p-acs-v4-0-v9-0-1a8e0f50ddd9@nvidia.com>
 References: <20261001-fix-p2p-acs-v4-0-v9-0-1a8e0f50ddd9@nvidia.com>
@@ -73,211 +73,90 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-Direct Translated P2P does not weaken IOMMU isolation because a Translated
-Request carries an address supplied by the IOMMU. Config-space read
-failures, however, leave ACS state unknown and must not report isolation.
+The PCIe ATS Enable bit covers the whole device, so P2PDMA cannot tell
+from it whether a client will translate a given address. Most devices
+translate any address once ATS is enabled, but some choose ATS per DMA
+mapping and can still use bus addresses for the rest.
 
-Exercise both cases with fake config-space operations. Also cover missing
-and unrequested controls and a missing ACS capability.
+Add pcim_p2pdma_set_ats_per_mapping() so the driver of such a device can
+declare that before P2PDMA starts treating clients with ATS enabled as
+translating everything. Keep it in the device's P2PDMA state, which
+already ends with the driver binding.
 
-Tested-by: Tushar Dave <tdave@nvidia.com>
+Reviewed-by: Thomas Hellström <thomas.hellstrom@linux.intel.com>
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/pci/pci.c          |   4 +-
- drivers/pci/pci.h          |   1 +
- drivers/pci/pci_acs_test.c | 138 +++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 142 insertions(+), 1 deletion(-)
+ drivers/pci/p2pdma.c       | 27 +++++++++++++++++++++++++++
+ include/linux/pci-p2pdma.h |  4 ++++
+ 2 files changed, 31 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f7d94ecf9157..4a9ab3882aac 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3578,7 +3578,8 @@ void pci_configure_ari(struct pci_dev *dev)
- 	}
- }
- 
--static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
-+VISIBLE_IF_KUNIT
-+bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
- {
- 	int pos;
- 	u16 ctrl;
-@@ -3598,6 +3599,7 @@ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
- 		return false;
- 	return (ctrl & acs_flags) == acs_flags;
- }
-+EXPORT_SYMBOL_IF_KUNIT(pci_acs_flags_enabled);
- 
- /**
-  * pci_acs_enabled - test ACS against required flags for a given device
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 812a48afdfee..a4a07f31f744 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -1131,6 +1131,7 @@ enum pci_acs_p2pdma_state {
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index c1e9d43bded2..126e28d2a5dd 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -26,6 +26,7 @@
+ struct pci_p2pdma {
+ 	struct gen_pool *pool;
+ 	bool p2pmem_published;
++	bool ats_per_mapping;
+ 	struct xarray map_types;
+ 	struct p2pdma_provider mem[PCI_STD_NUM_BARS];
  };
- 
- #if IS_ENABLED(CONFIG_KUNIT)
-+bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags);
- enum pci_acs_p2pdma_state pci_acs_p2pdma_request(u16 ctrl,
- 						unsigned int tlp_flags);
- enum pci_acs_p2pdma_state pci_acs_p2pdma_completion(u16 ctrl,
-diff --git a/drivers/pci/pci_acs_test.c b/drivers/pci/pci_acs_test.c
-index 7f4f9cc04bfb..6a2cd38d968f 100644
---- a/drivers/pci/pci_acs_test.c
-+++ b/drivers/pci/pci_acs_test.c
-@@ -102,6 +102,140 @@ static void pci_acs_p2pdma_completion_test(struct kunit *test)
- 			c->expect);
+@@ -1568,6 +1569,32 @@ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
  }
+ EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
  
-+/* Flags an IOMMU asks for; see REQ_ACS_FLAGS in drivers/iommu/iommu.c. */
-+#define ACS_REQ_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
-+#define ACS_ALL_CAPS	(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR | PCI_ACS_CR | \
-+			 PCI_ACS_UF | PCI_ACS_DT)
-+#define ACS_TEST_CAP	0x100
-+
-+struct acs_ctrl_cfg {
-+	unsigned int devfn;
-+	u16 cap;	/* Offset where the ACS capability responds */
-+	u16 ctrl;
-+	bool fail_read;
-+};
-+
-+static int acs_ctrl_read(struct pci_bus *bus, unsigned int devfn,
-+			 int where, int size, u32 *val)
++/**
++ * pcim_p2pdma_set_ats_per_mapping - Declare per-mapping ATS for a client
++ * @pdev: PCI device that initiates peer-to-peer DMA
++ *
++ * Declare that @pdev issues Translated Requests only for the DMA mappings its
++ * driver sets up to use ATS, rather than for any address once ATS is enabled.
++ * P2PDMA then routes this client's Requests with the Address Type each query
++ * asks about, rather than the one its ATS Enable bit implies.
++ */
++void pcim_p2pdma_set_ats_per_mapping(struct pci_dev *pdev)
 +{
-+	struct acs_ctrl_cfg *cfg = bus->sysdata;
++	struct pci_p2pdma *p2p;
 +
-+	*val = 0;
-+	if (cfg->fail_read)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
++	p2p = rcu_dereference_protected(pdev->p2pdma, 1);
++	if (!p2p)
++		/*
++		 * ats_per_mapping is a performance optimization,
++		 * if pcim_p2pdma_init() didn't set pdev->p2pdma pointer
++		 * for some reason, let's simply use ATS global settings.
++		 */
++		return;
 +
-+	if (devfn == cfg->devfn && size == 2 &&
-+	    where == cfg->cap + PCI_ACS_CTRL)
-+		*val = cfg->ctrl;
-+	return PCIBIOS_SUCCESSFUL;
++	p2p->ats_per_mapping = true;
 +}
++EXPORT_SYMBOL_GPL(pcim_p2pdma_set_ats_per_mapping);
 +
-+static int acs_ctrl_write(struct pci_bus *bus, unsigned int devfn,
-+			  int where, int size, u32 val)
+ /**
+  * pci_p2pdma_map_type_tlp - Determine the mapping type for P2PDMA transfers
+  * @provider: P2PDMA provider structure
+diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
+index dd17501ba1b6..ce389e18d023 100644
+--- a/include/linux/pci-p2pdma.h
++++ b/include/linux/pci-p2pdma.h
+@@ -82,6 +82,7 @@ struct scatterlist *pci_p2pmem_alloc_sgl(struct pci_dev *pdev,
+ 					 unsigned int *nents, u32 length);
+ void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl);
+ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
++void pcim_p2pdma_set_ats_per_mapping(struct pci_dev *pdev);
+ int pci_p2pdma_enable_store(const char *page, struct pci_dev **p2p_dev,
+ 			    bool *use_p2pdma);
+ ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
+@@ -138,6 +139,9 @@ static inline void pci_p2pmem_free_sgl(struct pci_dev *pdev,
+ static inline void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+ {
+ }
++static inline void pcim_p2pdma_set_ats_per_mapping(struct pci_dev *pdev)
 +{
-+	return PCIBIOS_SUCCESSFUL;
 +}
-+
-+static struct pci_ops acs_ctrl_ops = {
-+	.read	= acs_ctrl_read,
-+	.write	= acs_ctrl_write,
-+};
-+
-+struct acs_isolation_case {
-+	const char *desc;
-+	u16 ctrl;
-+	u16 req;
-+	bool expect;
-+};
-+
-+static const struct acs_isolation_case acs_isolation_cases[] = {
-+	{ "all_enabled", ACS_REQ_FLAGS, ACS_REQ_FLAGS, true },
-+	/* Translated Requests remain isolated by their IOMMU translation. */
-+	{ "dt", ACS_REQ_FLAGS | PCI_ACS_DT, ACS_REQ_FLAGS, true },
-+	{ "rr_not_enabled", PCI_ACS_SV | PCI_ACS_CR | PCI_ACS_UF,
-+	  ACS_REQ_FLAGS, false },
-+	{ "rr_not_required", PCI_ACS_SV | PCI_ACS_CR | PCI_ACS_UF,
-+	  PCI_ACS_SV | PCI_ACS_CR | PCI_ACS_UF, true },
-+};
-+
-+static void acs_isolation_desc(const struct acs_isolation_case *c, char *desc)
-+{
-+	strscpy(desc, c->desc, KUNIT_PARAM_DESC_SIZE);
-+}
-+
-+KUNIT_ARRAY_PARAM(acs_isolation, acs_isolation_cases, acs_isolation_desc);
-+
-+static void pci_acs_flags_enabled_test(struct kunit *test)
-+{
-+	const struct acs_isolation_case *c = test->param_value;
-+	struct acs_ctrl_cfg cfg = {
-+		.devfn = PCI_DEVFN(0, 0),
-+		.cap = ACS_TEST_CAP,
-+		.ctrl = c->ctrl,
-+	};
-+	struct pci_bus *bus = kunit_kzalloc(test, sizeof(*bus), GFP_KERNEL);
-+	struct pci_dev *pdev = kunit_kzalloc(test, sizeof(*pdev), GFP_KERNEL);
-+
-+	KUNIT_ASSERT_NOT_NULL(test, bus);
-+	KUNIT_ASSERT_NOT_NULL(test, pdev);
-+
-+	bus->ops = &acs_ctrl_ops;
-+	bus->sysdata = &cfg;
-+
-+	pdev->bus = bus;
-+	pdev->devfn = cfg.devfn;
-+	pdev->acs_cap = ACS_TEST_CAP;
-+	pdev->acs_capabilities = ACS_ALL_CAPS;
-+
-+	KUNIT_EXPECT_EQ(test, pci_acs_flags_enabled(pdev, c->req), c->expect);
-+}
-+
-+static bool acs_isolated(struct kunit *test, struct acs_ctrl_cfg *cfg,
-+			 u16 acs_cap, u16 acs_flags)
-+{
-+	struct pci_bus *bus = kunit_kzalloc(test, sizeof(*bus), GFP_KERNEL);
-+	struct pci_dev *pdev = kunit_kzalloc(test, sizeof(*pdev), GFP_KERNEL);
-+
-+	KUNIT_ASSERT_NOT_NULL(test, bus);
-+	KUNIT_ASSERT_NOT_NULL(test, pdev);
-+
-+	bus->ops = &acs_ctrl_ops;
-+	bus->sysdata = cfg;
-+
-+	pdev->bus = bus;
-+	pdev->devfn = cfg->devfn;
-+	pdev->acs_cap = acs_cap;
-+	pdev->acs_capabilities = ACS_ALL_CAPS;
-+
-+	return pci_acs_flags_enabled(pdev, acs_flags);
-+}
-+
-+static void pci_acs_flags_no_cap_test(struct kunit *test)
-+{
-+	struct acs_ctrl_cfg cfg = {
-+		.devfn = PCI_DEVFN(0, 0),
-+		.cap = 0,
-+		.ctrl = ACS_REQ_FLAGS,
-+	};
-+
-+	KUNIT_EXPECT_FALSE(test, acs_isolated(test, &cfg, 0, ACS_REQ_FLAGS));
-+}
-+
-+static void pci_acs_flags_read_fails_test(struct kunit *test)
-+{
-+	u16 no_rr = ACS_REQ_FLAGS & ~PCI_ACS_RR;
-+	struct acs_ctrl_cfg cfg = {
-+		.devfn = PCI_DEVFN(0, 0),
-+		.cap = ACS_TEST_CAP,
-+		.ctrl = ACS_REQ_FLAGS,
-+	};
-+
-+	KUNIT_EXPECT_TRUE(test, acs_isolated(test, &cfg, ACS_TEST_CAP, no_rr));
-+
-+	cfg.fail_read = true;
-+	KUNIT_EXPECT_FALSE(test, acs_isolated(test, &cfg, ACS_TEST_CAP, no_rr));
-+}
-+
- /*
-  * Drive calc_map_type_and_dist() over a fabricated PCIe fabric matching the
-  * canonical topology of two devices below one switch:
-@@ -569,6 +703,10 @@ static struct kunit_case pci_acs_test_cases[] = {
- 			 acs_request_gen_params),
- 	KUNIT_CASE_PARAM(pci_acs_p2pdma_completion_test,
- 			 acs_completion_gen_params),
-+	KUNIT_CASE_PARAM(pci_acs_flags_enabled_test,
-+			 acs_isolation_gen_params),
-+	KUNIT_CASE(pci_acs_flags_no_cap_test),
-+	KUNIT_CASE(pci_acs_flags_read_fails_test),
- 	KUNIT_CASE(acs_walk_bus_addr_test),
- 	KUNIT_CASE(acs_walk_request_redirect_test),
- 	KUNIT_CASE(acs_walk_completion_redirect_test),
+ static inline int pci_p2pdma_enable_store(const char *page,
+ 		struct pci_dev **p2p_dev, bool *use_p2pdma)
+ {
 
 -- 
 2.55.0
