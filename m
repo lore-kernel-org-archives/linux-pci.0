@@ -1,70 +1,41 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from outbound.mr.icloud.com (mr-2006l-snip4-5.eps.apple.com [57.103.70.118])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01B41385D9D
-	for <linux-pci@vger.kernel.org>; Thu,  1 Oct 2026 07:20:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 226A134CFDE
+	for <linux-pci@vger.kernel.org>; Thu,  1 Oct 2026 07:26:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.70.118
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790839214; cv=none; b=KfepfvxcSUq6/PXB9zFXHb1tszpVXmHiAOhwTpJO/cBNTMAMN4b/8BEzti59EBAEO9i89de8vB7jIlV+poX6HXXBwjG6NQi8rD53T/Z4LwWsvnrWfAqa63MIWgN3fNLRwUjYJ/ENNIgeBMdm5p13LeEUzkvKAz+/pOVQWqBj1R0=
+	t=1790839575; cv=none; b=LxbsXkbymhu//PqwyU+02h1GSHwzITyZnMYhkOrgpwOKjOFUdGS55upn3xDzogu3aMHqu2DzjsPjGyUp7ZQCrh0zyQMjYn0tftRA0sjc2x0kp46DCC9dfiv8qEn1QPYJQPov/CYtG7uunovnhQs6mTTzDM85FkxUOIzs+I7GkPY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790839214; c=relaxed/simple;
-	bh=v9FOpcXK4LkHcbJyyNWDWuCMQhtIwmwjXV3fOKhmq0I=;
+	s=arc-20240116; t=1790839575; c=relaxed/simple;
+	bh=EiSC9xCqKnvIAKuOiBjEh0p6NdZjrdQ2HK8256nJ+EQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FwiB9IesNb/J/0XikXxQpO+D8uEIph4ZffDI9McJIJ0By8LqKIZkoHKdGiWh26QQz9vvpLW9Ly50fULgf6TLBslUSinHemWb+H+130R24sisTxq4iav+tMuhlaYma5F6gV3s3WVZIxenfbH95pazz66ERCJJG7ubDDdpfJnl5yQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AoKSCW20; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 MIME-Version; b=eXezmbqnmCwouo1/aUuZAGl1ZMNrEnAd4aioQOPbYwQIjb40s2LIH25gi3hd/9QT7bUvPEVooaQLwSN/YNYqij1UrI0KJJvioUvjP3xDD3T/3YSDHEmGjFHBSu56hRQx0lN1hbIvztHYYwioQ+EINqAF18rcjBfSDmUktNtddq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mac.com; spf=pass smtp.mailfrom=mac.com; dkim=pass (2048-bit key) header.d=mac.com header.i=@mac.com header.b=WpOSdqKE; arc=none smtp.client-ip=57.103.70.118
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mac.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mac.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AoKSCW20"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1790839201;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=7Bmie9JTdC7GvOREgQKIaVbNDMTF41K5ZHDK/CLSZFA=;
-	b=AoKSCW20aonn1KKtxn7woWmGc9J//YznCjIyNCR+q+YH/pnd1E1k2Ssq3B/mfp4X0SCR9P
-	YI8B/xwRQYKAOXDy77VY4XI5o6U2wAo+dzQjjQ5KFRma/P87sRSAAW6j08HJMEZJGaFMeX
-	zkNT3bNgOdvOKU6j+XhvOPVOZG+sbcc=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-361-3KcQEm1XMWOnIp_ceFAq8Q-1; Thu,
- 01 Oct 2026 03:19:55 -0400
-X-MC-Unique: 3KcQEm1XMWOnIp_ceFAq8Q-1
-X-Mimecast-MFC-AGG-ID: 3KcQEm1XMWOnIp_ceFAq8Q_1790839193
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 502561953977;
-	Thu,  1 Oct 2026 07:19:52 +0000 (UTC)
-Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 59D061956089;
-	Thu,  1 Oct 2026 07:19:47 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: jgg@ziepe.ca
-Cc: alex@shazbot.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	bhelgaas@google.com,
-	jjohnson@kernel.org,
-	johannes@sipsolutions.net,
-	jtornosm@redhat.com,
-	kevin.tian@intel.com,
-	kvm@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=mac.com header.i=@mac.com header.b="WpOSdqKE"
+Received: from outbound.mr.icloud.com (unknown [127.0.0.2])
+	by p00-icloudmta-asmtp-us-west-2a-100-percent-2 (Postfix) with ESMTPS id 7C3B618000BB;
+	Thu, 01 Oct 2026 07:26:02 +0000 (UTC)
+X-ICL-RepId: 01a0f65b-20c5-720c-9417-a0d824ca1830
+X-ICL-Out-Info: HUtFAUMHWwJACUgATUQeDx5WFlZNRAJCTQhPC0MGXAZeCEwFQwVfEhVdRVAERRJdHnkVUg4ZCF0dGR5XUFoKUV5aF15NRQgPRRkQVgFYVl0FTRpcGFkPHB1LVloOWwRHFBcbXAAXG0YCBCMCXwBFAl4JVgEwFw9WTVQZUENUBF9QVBFXUAtZAkIPSQNdBlsFQgxNBkMFUwtCD00eXBoIWwJAF10tWgpRXloXXlMXH0sAXEVaDlsERxQ=
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mac.com; s=1a1hai; t=1790839563; x=1793431563; bh=6G4eOMZqZQmDkWR3Ncw9dFDoql/yjkD69ChFvHs0U5Y=; h=From:To:Subject:Date:Message-ID:MIME-Version:x-icloud-hme; b=WpOSdqKEN+ofS2qQAyi/cs0U2ZFwRulbqlStX4AYzMvsbJFDukvwUAsCHQY9p2URqz8HamdHtgXcFiCxvLl7c6JNfieevWQDur0/3JtrJhHJKC91O7fkMTh055f6R5O25x6AC2WJtgQyzcF2XubUKhvtJG+b/MjtNNcCbDykh3e/ARlH6+EkVhdA2iG0FNZ3CYT+ghffhGoSv5i+4fAStHZMEaDXKRlh/+s0wv7XgiTZ06rP/BqH7ovI2qbXNs2Cs5P+lN26j+RlQ1IlBuf1T2zZOokf1eYzcQahdZiUdAyKezgNwlxTAyJMmWzz9R82IENKMgGQ8aquLi45UXgTGg==
+Received: from telchar.scorpion-armadillo.ts.net (unknown [17.156.200.36])
+	by p00-icloudmta-asmtp-us-west-2a-100-percent-2 (Postfix) with ESMTPSA id CF1F0180013E;
+	Thu, 01 Oct 2026 07:26:00 +0000 (UTC)
+From: Christian Hedin <ciryon@mac.com>
+To: torsten.hilbrich@secunet.com
+Cc: bhelgaas@google.com,
 	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	mani@kernel.org,
-	skolothumtho@nvidia.com,
-	yishaih@nvidia.com
-Subject: Re: [PATCH 3/7] vfio/pci: Add qcom-vfio-pci variant driver
-Date: Thu,  1 Oct 2026 09:19:45 +0200
-Message-ID: <20261001071945.83116-1-jtornosm@redhat.com>
-In-Reply-To: <20260930151229.GR163130@ziepe.ca>
-References: <20260930151229.GR163130@ziepe.ca>
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: fix use-after-free in pci_pme_list_scan()
+Date: Thu,  1 Oct 2026 09:25:55 +0200
+Message-ID: <20261001072555.289265-1-ciryon@mac.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <f2e43015-19ca-4e58-9b86-bdd855ff6496@secunet.com>
+References: <f2e43015-19ca-4e58-9b86-bdd855ff6496@secunet.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -72,74 +43,94 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDAxMDAyOSBTYWx0ZWRfX1pfEAn503xyK
+ E4CS9VwOm/lGToVcn5NNQWXyDTFzCwyLoLywjO39EIRaeapQlq6T+ibv/ExKOuTt4sqUCjOKcpn
+ B5H9kyN/4VAykTF9xX6APbDqQKHJWgfIG7HgKenMbyz8sdzkylk0SkzFrlGxcJBbXew/OpyndCc
+ 3gGSCV/xlwg/lVPZbr5cUPes4Rgvb4mwkUjynlhqd+UBNl3Voe5OI5dfIzPeOFDK/KlxSpIY1dR
+ Dmk4ybr12qFZbuQ4khPfw1rOXTveR6bRtYiLNd32a/6wzD3+0uVT0LORZNFly0bJxtHU81aGmVq
+ tfooHTO44KNB5Ovc97oI9Pb+ZlATyAkRpvz87NVQdx0GdCecaWSBeIO1tqniCY=
+X-Authority-Info-Out: v=2.4 cv=YZ2wJgRf c=1 sm=1 tr=0 ts=6abe0b0b
+ cx=c_apl:c_pps:t_out a=9mRn2PO/+PIrVdEbaIuMPg==:117
+ a=9mRn2PO/+PIrVdEbaIuMPg==:17 a=660iZSQnnn4A:10 a=x7bEGLp0ZPQA:10
+ a=cHkArRZ9ErEA:10 a=VkNPw1HP01LnGYTKEx00:22 a=-ixN8YLanZpH-QonBzoA:9
+X-Proofpoint-GUID: 1QY4AokTlTkxvDoUSy4siSwFmtnewRwA
+X-Proofpoint-ORIG-GUID: 1QY4AokTlTkxvDoUSy4siSwFmtnewRwA
+X-JNJ: AAAAAAAByausczEoitCB9zUDL4asBDMnKqX6Ujq2cn0gNU+2rYr8jBBVIant12jiIxJmwxlw3cEtS3TZjgbOPi3KxdjpbrOVCOiMi9K9F+TH70pTY7MQgfY/w0s1ZtP+NrKIJst4eA4Il8huTlIA9p2H0RQ7SkGjzB4Kr7NcdfNahdLlABURzJmKv1+qCa9NtGgJ+21rmebImoSYDhKlVtT+hLBtfu9yhhpyn5Q3AN+KhvNsSU2Ts+Glxoi8pxLmMpiWc2qhpYBfgWGNiaS/BdXoewIX32bW+u7YzPiGCTLLXsMJ35CTE00kN8Th6MOSdrFTi3nbwRg44kLPgDbjRB56t5L0Lk9Uc1Uvj3TcVGpBu3hUpGN28dFCMsejAtLR2FBiDIvsj8JkeyDvQKV/eQfOItKt9+DlZcR3oBun+8ll6MbLbvu1csju4xVrbKJ9CvjIN8Sw4ShHb1U54ekdG64JMdpuIbPzBTaihEPP0IontJdhYKtZS9xaMWOakaxGFGhOlQJ3QapFXKtKqDHldz/BWiepMY1zSuWJuHN5db2mG/H+CGufj7fK8pHTeYt9LaPkYant3DGefPY7A9AxEexnKUx3XtyKTWfdJ+m+cMhCohZmIbDM4+VupKFk2hnGAxkQfkHiVgvgBIFMr6BBvDMpsgsxt7uv43uaLqxr4mvGDA76D/m7MdwKUe6TJBXKQrDP3CEP/TRcW2p4DLwbz4WE2iNgIHLRWXNwYJixV2S1VRgeCcZ3x9RHxFAfmIo6C+kXF2Z9uAK/1AGzP7Sxm1IBSJWh9sU7rg/ylsGNHdcvYp+wJCA+xus8s2gRIgjs2g6qvzoHxFN1bB4YCRyhFT2ds0q9syNvDoz32WXCGjgDtDbEVy2HtWiBvaIq26vz2EtaWhEjiISklIfQ+t3EMl24zFHtV5ZsfnfupNrM7sr4HyKHqyUJUh7COT6LuJhj/2xxAuxn9ikhw1VGH8LyQEDKQ60QLat
+ +b9/dn4DZXsR+TGRQPY/vO7YWAsaLQVdG4hvH/fKBPeIdWoe6C2B+oT/J5ksFuWnWIWrYDSdjsyU4rlSRsNBh4JTYUs8JvFeVwHWhzfOwcNJqKe4yk4x9+Uh9wJKW0Z6wmNrZVZNKiKPLwcYEXQ5ws5Sze/JyZxyapxWryRmvgiPUeKzRIGAi6TWRb2cdDnBbMDcmWYbsnG3nI2vDd63UEkjSq0RFmFu18XEgio8Xmhz3ZIA0eUhNhf52GsztIojksGz9DvmCW1krdL6AEofSbnw8gwbicVOubw==
+X-Apple-Category-Label: Mjg2NTg2Nzg6JGNhdGVnb3J5JF9QZXJzb25hbCw=
 
-Hi Jason,
+Hi Torsten,
 
-Thank you for the review.
+I hit what looks like the same use-after-free on an unpatched, non-PaX
+kernel, so here is a second data point in case it helps the patch along.
 
-You're right that the commit message should better explain the current
-driver behavior. The flow today is:
+Hardware: Framework Laptop 13 (AMD Ryzen AI 300 Series), BIOS 03.05
+Kernel:   7.2.5 (distro build, 7.2.5-3-omarchy), not tainted
+Device:   LG 40WT95UF monitor on USB4, with PCIe and USB tunneled
 
-1. Linux allocates MSI-X vectors (standard PCI MSI-X table)
-2. The Qualcomm firmware has its own interrupt controller with
-   private registers that need to be programmed with MSI addr/data
-3. The ath11k/ath12k driver extracts the addr/data from the MSI
-   descriptor and programs the firmware's private registers
-4. In a VM, the driver only sees virtual (IOVA) addr/data, but
-   the firmware's private writes bypass the IOMMU, so they need
-   the physical host values
+The monitor went into its automatic standby overnight (laptop awake, lid
+closed), which drops the USB4 link and hot-removes the tunneled PCIe
+bridges. In the same second as the removal:
 
-I'll improve the commit message.
+  thunderbolt 0-2: device disconnected
+  pcieport 0000:00:01.1: pciehp: Slot(0): Card not present
+  pci_bus 0000:03: busn_res: [bus 03-21] is released
+  pci_bus 0000:22: busn_res: [bus 22-40] is released
+  pci_bus 0000:41: busn_res: [bus 41-5f] is released
+  pci_bus 0000:02: busn_res: [bus 02-5f] is released
+  BUG: unable to handle page fault for address: 0000075700000060
+  #PF: supervisor read access in kernel mode
+  #PF: error_code(0x0000) - not-present page
+  Oops: Oops: 0000 [#1] SMP NOPTI
+  CPU: 10 UID: 0 PID: 4136500 Comm: kworker/10:1 Not tainted 7.2.5-3-omarchy #1 PREEMPT(full)
+  Workqueue: events_freezable pci_pme_list_scan
+  RIP: 0010:pci_pme_list_scan+0x4e/0x220
+  Code: ... 48 8b 43 10 <4c> 8b 60 38 4d 85 e4 0f 84 b8 00 00 00 ...
+  RAX: 0000075700000028 RBX: ffff8b26f0cca000
+  Call Trace:
+   process_one_work+0x19f/0x370
+   worker_thread+0x1b1/0x330
+   kthread+0xe4/0x120
+   ret_from_fork+0x2bd/0x350
+   ret_from_fork_asm+0x1a/0x30
+  note: kworker/10:1[4136500] exited with irqs disabled
 
-Regarding platform_device_msi_init_and_alloc_irqs(), I agree that
-moving the driver to device MSI domains would be cleaner on the
-driver side. However, even with that change, I think the VM problem
-remains exactly the same: the device MSI domain in the VM would
-allocate virtual addr/data pairs, and the firmware's private interrupt
-controller still needs the physical host values. The problem is not
-how the driver allocates MSI vectors, but that the firmware writes
-to its own registers bypassing the IOMMU.
+It faults on the same load as your trace (bus->self, 0x38 off RAX), with a
+garbage pdev->bus in RAX instead of the 0xfe poison, i.e. the pci_dev at RBX had already been freed and reused.
+Without free poisoning the stale pointer is just whatever landed there,
+which is probably why this is rarely seen.
 
-Also, the VFIO variant driver scheme would not fully break if the
-driver moved to device MSI domains. The variant driver caches host
-MSI values from the MSI descriptor, regardless of the allocation
-method. The hook point may need adaptation, but the fundamental
-approach (host caches physical values, VM reads them) remains valid.
+One thing worth adding to the commit message: without panic_on_oops the
+damage is not limited to the one worker. It dies while holding
+pci_pme_list_mutex, so every later pci_pme_active() blocks forever. Here
+that meant:
 
-Regarding the hypercall idea for device MSI domains, I think that
-would be an interesting direction worth exploring as a generic
-solution, but that's a multi-subsystem effort that will take time to
-design and land. If there is any existing work or design discussion
-in this direction, I'd be happy to look into it and contribute.
-In the meantime, the VFIO variant driver provides an immediate path
-for users with deployed hardware, using an established kernel
-pattern. For now, it could coexist and be replaced later on when
-everything is ready.
+- irq/34-pciehp and several pm workqueue workers stuck in D state, so
+  the monitor's USB and PCIe functions never came back on replug (DP
+  tunnelling still worked).
+- Any config space read that needs a runtime resume hangs unkillably:
 
-I completely agree that this could theoretically affect any device
-with private MSI registers. However, in practice, I'm only aware of
-this specific behavior in Qualcomm ath11k/ath12k firmware, where the
-device's interrupt controller requires the host physical MSI
-addresses to be programmed directly. I haven't seen this in other
-devices, which is why I think a device-specific approach seems
-appropriate, and the VFIO variant driver pattern fits well for this,
-following the same pattern as mlx5-vfio-pci and nvgrace-gpu for
-their own device-specific needs. I'd be happy to incorporate any
-ideas or suggestions to improve the approach, make it acceptable,
-and allow finally to use these devices from VMs.
+    task:lspci  state:D
+     __mutex_lock.constprop.0+0x3e6/0x930
+     pci_pme_active+0x158/0x1f0
+     __pci_enable_wake+0x90/0xc0
+     pci_pm_runtime_resume+0x9a/0x130
+     ...
+     pci_read_config+0x98/0x310
 
-It's also worth noting that the PCI reset support for these devices
-has already landed in linux-next (commit 290153d46d1a "PCI: Add
-device-specific reset for Qualcomm devices") [1], solving the
-device reset path for VFIO passthrough. This MSI series is the
-remaining piece, with both in place, these Qualcomm WiFi devices
-would be fully operational in VMs for the first time.
+- System suspend failed in a loop for four hours ("Freezing user space
+  processes failed ... 3 tasks refusing to freeze"), and a clean reboot
+  hung as well.
 
-[1] https://lore.kernel.org/all/20260721081301.205374-1-jtornosm@redhat.com/
+So on a stock kernel a single hot-unplug can leave the machine needing a
+hard power-off, which may be an argument for Cc: stable.
 
-Thanks
+It is a race here: the same boot had two earlier disconnects of the same
+device without an oops.
 
-Best regards
-Jose Ignacio
+I can test a v2 on this machine if that is useful, though reproducing may
+take a while given how rarely it fires. Full kernel log available on
+request.
 
+Thanks,
+Christian
