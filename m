@@ -1,137 +1,178 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CA27485CE6;
-	Wed, 30 Sep 2026 23:22:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790810541; cv=none; b=U7RKq+p2KpXYm4CDXm0OfqzO3qcuwsoN6QvrKGx+lIu9ZKVcgU4/oPDkqcnOg19dgGBgqlyjFxKNAUuHvSfMz+MbDF8jqxUpg2PTlRSJjZDmmd62EubaPBvdgL5aql9LvHi88xtAGB03bkJGzivgJtEl/OXtIDxTH5HIStkzSZk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790810541; c=relaxed/simple;
-	bh=U8RDGfOn+t68iG0Wq66H3y3WLPr+1Hc4Ul2owVTW1go=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=ggsa7Ps+jblAGqUHH0tBHKJoCN24erW9ddHIlLLgtx6B3/VfcIcXzoq8XHbgIJBWZgQhUES41fNjTP365G2qewMcb3i4Ep3LB+RWjeHIhPfRCY5ns1st3EYbpg7ZjCdMsL/GY0M9GUvXOJhRH7QBPhhiW1zUTGL90e8I2KzeYgc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZV07zrBP; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E57E937F8C1
+	for <linux-pci@vger.kernel.org>; Thu,  1 Oct 2026 01:08:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.133.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790816917; cv=pass; b=hlGr6Oo4CA6lM5xYXmj/J11XEefLvsUdYoR5YMmhZMzhCTxJOzqCjAV4yGhYoKvERK8WrqjH6VLIxiYkcEiYjSNIRhousxjZm72ToXGQ3Fzg8stFLwnBIG+c+Bfm4HCWQGhEeQkLv5HZ54yuy1tb1oOWhD+4WoK8NwKeXnXp3v4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790816917; c=relaxed/simple;
+	bh=EElVO0SyMWfbu0TO/p9IG8++sd29PlCl+ReAKWNQ0Lk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=omcwoUwj9/JSxMf2u5b8c16HrfpR1MMOCCp0i64Wl4GPGPLO/a6mNlw2J56TEMg8mMailGSK0Xks3cEjGiziVq+wKUjlyq4cH64TN72W4/M5/5QXvAUXRb+OYOystzj/kDZNv/HqD+SR1kzgGEsh5z6EjqYmS2MU3FLGQ0K6mmA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=J1qvFaOH; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=MwC5G5N9; arc=pass smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZV07zrBP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8826E1F000FF;
-	Wed, 30 Sep 2026 23:22:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790810535;
-	bh=K3u0kJIZ8utzgpR3jmBh/sLWmgc71QGkAzChJQvdqJA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=ZV07zrBPGpAyBiXEQxi3wfcaDA0wC76apsZpOWavdrGkNOULKisKjHB7/xvy7dNxm
-	 mDjqoEfB6Wnbis6LUchAC8NLfE3ogG1bWLIoU0dKLOkdi7rMooGhqQ1Q+bVggvXGS7
-	 /dY1OUtJaW8n0OiOLzd3GDFSZv/ovUoOGwLH6ZHFFnGE0GFdSkiQV9cpZwOPvgiiKM
-	 hdhXz7M7aWWZnRAXT6rkR8wkt8cUG8fw0yXcJBja3+wi6k56kJi4IkS7j6Khu4kCh9
-	 iXVtv4bKCnK6E0rp+jlNRPMDXmf8tQTCuXyVmQR5hPhIWzb20qQPzKa6UIsnIYnaOY
-	 aN1k1EJlu+h8g==
-Date: Wed, 30 Sep 2026 18:22:14 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Stefan Roese <stefan.roese@mailbox.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	=?utf-8?B?SMOla29u?= Bugge <haakon.bugge@oracle.com>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Subject: Re: [PATCH 1/2] PCI: Write RCB only when it changes
-Message-ID: <20260930232214.GA2654517@bhelgaas>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="J1qvFaOH";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="MwC5G5N9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790816911;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=6337Slr26G9fWAkknUzN8X+fyx+rX5+fV3KYKCnIUr0=;
+	b=J1qvFaOH/RPV6CeGVEkyUf0x+N8q3FSzEXHzvl4qkS+YfpkPfau7aPxVWzA20bDMUhVa/J
+	1q9WsuLm2UYTnyOQmBUqIafPOpFDPIMjCb/mWE/IKT2eat4rpICchTlctwme2o07aJclLZ
+	xHcPh8u2aa4MDBJzq2KuPqwNHCBpHFg=
+Received: from mail-dl1-f72.google.com (mail-dl1-f72.google.com
+ [74.125.82.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-154-reHsGrNFM5-mYnWDRLdjuQ-1; Wed, 30 Sep 2026 21:08:29 -0400
+X-MC-Unique: reHsGrNFM5-mYnWDRLdjuQ-1
+X-Mimecast-MFC-AGG-ID: reHsGrNFM5-mYnWDRLdjuQ_1790816908
+Received: by mail-dl1-f72.google.com with SMTP id a92af1059eb24-1416f32fe11so5928809c88.0
+        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2026 18:08:29 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790816908; cv=none;
+        d=google.com; s=arc-20260327;
+        b=XkgEdCiXxheyWNUzH02JZDkXmwxDNbMR4eavsPKtt3C3eLDKaawzTJ4oFPW4JLDkNs
+         3brJ5ZhLjEq1ZE6T3lb2TpJDUOq6gGd/rodB1uj5NblcDy03qt8mwPTpleTn8ZDWYMqd
+         wcsEY9IYM1uWbmCtmXx5jlZASyJiJ6c0R330QtJIKFh1HH1RmllkMQ1eJlC3CfpgHycT
+         zqbFFpsgTDJhS1U46sImtyhfgpdRivW3N35ArEisM4/J85bffHkdwtB90Hry34SjC9+h
+         xbgFonYXm1L8M/LW1Xu3cv9wKe4oB40mc+RReNtcoxuYKQ4x6O2DHxVlpQyEZLUINDGd
+         +dtA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=6337Slr26G9fWAkknUzN8X+fyx+rX5+fV3KYKCnIUr0=;
+        fh=HhBYthnGSWlW2QvAzdg5Y+fHgAyXnrg5EW7aaeNzYpU=;
+        b=shVQOCJyoRiKuxbyH9+gB01I6Zr5rYoiUcAhRGEewH5iGjeWKbjL0TDXHnzs+FdhL+
+         cL5mmlg7cjsZ4lwJ+heYqNQrd0CDEcjYfCzzrPOEDGdqicKEyG6EXVqRCkH0aBeDSj04
+         3uthpt59NPbT1yLVo1b6QKXWwQ7ButZGwPxLTtSJeONV0f+LaoVdhyR7TQ1t0NzBjKny
+         sHrPeQFfMV/7FrMKKVHLcAg2Vpp5279V5nGTBnfKAMNBGDa/WuqSFg7G4mumrqB3ej8T
+         EF+8rQjeJPM79Mkq9KtNmRn/SZCFB3VuJjGfcOhKpqOycRFAtpd7ciff2wqEsp49y4gD
+         joPg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1790816908; x=1791421708; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=6337Slr26G9fWAkknUzN8X+fyx+rX5+fV3KYKCnIUr0=;
+        b=MwC5G5N9LXKcAvgOKxeK9dd9ij90H4qO5wZCt33ZQLZjkCtV3FvoJYQ97PkJPi21Fj
+         9Nvh4tNtHXnhigUR1/rSaAfsb5pMef/F136zHTonyewH13J/r7qBeC9XON1QONKwsNgJ
+         XkMqUzG8/t+MBR34JJWKiaHVcfqXjhZZauLEGvz8V0Lty9nGlDuDcyUJPEm3CWm5J/Md
+         EDvvBtR+yb32/xRKNi4l7Cei2n8bk6JOamnOn+edPNRTcapPOL1lhS0qjhR2/7DVE1Ex
+         aPBNWV950Vd9IwOMJjwO67m9Irm7DizXxLAUn0U0AU8p14Xy8AzK3AbHGEnOj7kYXi4x
+         f7ag==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790816908; x=1791421708;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=6337Slr26G9fWAkknUzN8X+fyx+rX5+fV3KYKCnIUr0=;
+        b=USm4Cw8MmAAl/Lp8K9tIJ7ogGShtMcIF25HoFrG7/3LEcPQKmqCKAr7ZpQCP882FXP
+         0BLAiolWhsD+SM/A3NOouWvJKIuYuHBkvXlnvOCYGbhJwkGEU4WDp45WZORmqPh35njP
+         KN8iORzgoErS2yIh/JSOyN1q+D83nSTxMDc/dse+pY7+6UX5/NCeB+tMhFKGVXcic4Rx
+         emtxeIrUE7BvPV/yDeP0vfvTHBuWc1OVR4dd21cgzb/fypuBXK1PKisyngUjzEjLn4zc
+         SxOHago3b3xqzeEM2wqQI/tAx3FYdpnKHRGcl5tTtYSgRthCj9Uh2BuWeuJXK0TtSd0Z
+         YqsQ==
+X-Forwarded-Encrypted: i=1; AKwUvBylWRBn3o0aRGoOpgSSwaLFyBsU6tIdqj8CU/3J/ikmC5G7+9gJBtoRCLx2g4JGAhYSwlUVc6u7IaU=@vger.kernel.org
+X-Gm-Message-State: AFuF++lrgFGwOytsa2IymE7TZYTjR7KzApFuq4JOwYagTwj9AArJ1XwV
+	KrtF8Kn62NBAWPzMksiMsqGQWKdeYHqRvKtCWmMoyRL/3BtjNxcELL7izYLmA8vRNhgtYYBMLOh
+	BXTKvDkxY+itMcUHFqY73KiTOAMRzTRM4oyzhGmEYgBTWUcSyNZgFaC/o3TuLyIkpxwDBSStZeK
+	Tz0SjJm4T/4xZ/bhvi7G1PnkQGqHezkULQMfNk
+X-Gm-Gg: AYBFou1i16So5ip0iUojp0et7Thni7njJ7ZaiJUIrpeQ13g0yUbnLHhuWRsQFZRdbAh
+	+TWTTiQG3XnWmV7/dLlKHsqxJ6qORwmVeQK/cvW2T7dZFXuZXBOa5Fg7vkR1Vhx2q9qUdVx6PVl
+	cPRtodhL2J/vt5+zuUgruPTLPc6qALAkACu9pUcIyXBuVvEbYcwRs4IE2mZJPadFgTF8u1sIb/v
+	L0npIqFzDxuzxv5
+X-Received: by 2002:a05:7022:607:b0:13d:19da:9370 with SMTP id a92af1059eb24-14d3214813amr3682610c88.17.1790816907998;
+        Wed, 30 Sep 2026 18:08:27 -0700 (PDT)
+X-Received: by 2002:a05:7022:607:b0:13d:19da:9370 with SMTP id
+ a92af1059eb24-14d3214813amr3682563c88.17.1790816907221; Wed, 30 Sep 2026
+ 18:08:27 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260930144650.3701516-2-stefan.roese@mailbox.org>
+References: <20260922071807.2533884-1-airlied@gmail.com> <20260928140028.02900e68@shazbot.org>
+In-Reply-To: <20260928140028.02900e68@shazbot.org>
+From: David Airlie <airlied@redhat.com>
+Date: Thu, 1 Oct 2026 11:08:15 +1000
+X-Gm-Features: AclHuK8H40xGZ7LDm4tWEaoZ7Fx41p0eMmMGmCD_ZHFdFpJFjKlkMOkwot6pi94
+Message-ID: <CAMwc25oCKJaYaUOt32-xegXOjLbWMpk2RAASyZDj1ooh_41hnQ@mail.gmail.com>
+Subject: Re: [PATCH] pci/vgaarb: pass a data pointer to be used in the decode
+ callback (v2)
+To: Alex Williamson <alex@shazbot.org>
+Cc: Dave Airlie <airlied@gmail.com>, dri-devel@lists.freedesktop.org, 
+	linux-pci@vger.kernel.org, kvm@vger.kernel.org, 
+	Jason Gunthorpe <jgg@ziepe.ca>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Rodrigo Vivi <rodrigo.vivi@intel.com>, Alex Deucher <alexander.deucher@amd.com>, 
+	"Simon Song (SW-GPU)" <xinmengs@nvidia.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Sep 30, 2026 at 04:46:49PM +0200, Stefan Roese wrote:
-> pci_configure_rcb() does a read-modify-write of the Link Control
-> register of every endpoint at enumeration, even when RCB already has
-> the right value. Some devices react to any write of this register.
-> 
-> The Renesas uPD720201 xHCI (1912:0014) comes out of reset with ASPM L0s
-> and L1 enabled in Link Control. On a link whose Root Port supports no
-> ASPM, nothing else writes that register before the driver loads, and
-> the chip clears ASPM Control itself during the firmware download. After
-> a host write, even of the unchanged value 0x0003, it no longer does
-> so. ASPM stays enabled, and the first access to the xHCI BAR runs into
-> PCIe completion timeouts that hang the system.
+On Tue, Sep 29, 2026 at 6:06=E2=80=AFAM Alex Williamson <alex@shazbot.org> =
+wrote:
+>
+> On Tue, 22 Sep 2026 17:18:07 +1000
+> Dave Airlie <airlied@gmail.com> wrote:
+>
+> > From: Dave Airlie <airlied@redhat.com>
+> >
+> > This changes the vgaarb client API so that the user can pass a
+> > private data pointer into the register that will get used in
+> > the decode callback.
+> >
+> > This allows a bunch of pdev conversions in the drivers, and lets
+> > some future vfio cleanups be nicer.
+> >
+> > I'd like to merge this via the drm next tree but also fine with
+> > it going via pci.
+> >
+> > Signed-off-by: Dave Airlie <airlied@redhat.com>
+> > Cc: Alex Williamson <alex@shazbot.org>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Rodrigo Vivi <rodrigo.vivi@intel.com>
+> > Cc: Alex Deucher <alexander.deucher@amd.com>
+> > ---
+> > v2: fix loongson (spotted by sashiko)
+> > ---
+> >  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |  6 +++---
+> >  drivers/gpu/drm/i915/display/intel_vga.c   |  7 ++++---
+> >  drivers/gpu/drm/loongson/lsdc_drv.c        |  4 ++--
+> >  drivers/gpu/drm/nouveau/nouveau_vga.c      |  6 +++---
+> >  drivers/gpu/drm/radeon/radeon_device.c     |  7 +++----
+> >  drivers/pci/vgaarb.c                       | 13 +++++++++----
+> >  drivers/vfio/pci/vfio_pci_core.c           |  9 +++++----
+> >  include/linux/vgaarb.h                     |  8 +++++---
+> >  8 files changed, 34 insertions(+), 26 deletions(-)
+>
+>
+> Acked-by: Alex Williamson <alex@shazbot.org>
+>
+> Preemptively, could this get merged via a topic branch that we could
+> share in case further drvdata cleanup arrives in vfio-pci this cycle?
+>
+> I'm imagining this might also be a good time to push vgaarb
+> registration out of vfio-pci-core as well.  Thanks,
+>
 
-In "After a host write, even of the unchanged value 0x0003, it no
-longer does so", what are you saying it no longer does?
+Thanks Alex and Bjorn,
 
-Are you saying the chip no longer clears ASPM Control during firmware
-download?
+Okay I've cleaned up the last few bits from Bjorn, added lines and
+created a drm topic branch
 
-The PCIe Mini Card CEM and M.2 specs both say L0s and L1 should be
-enabled by default, so I guess it makes sense that they're set when
-coming out of reset.
+https://gitlab.freedesktop.org/drm/kernel topic/pci-vgaarb-rework
 
-But PCIe r7.0, sec 5.4.1.4, says the result is undefined if software
-enables L0s when the other end of the link doesn't support it, and I
-guess writing 0x0003 (ASPM L0s and L1 enabled) counts as enabling L0s,
-and we certainly got undefined results.
+I'll send a PR merge this into drm-next and you can work off it as
+well if you need to.
 
-> Seen on an AMD Versal board (CPM Root Port without ASPM support): the
-> hang bisects to this commit, reverting it fixes it, and on a kernel
-> without it a single setpci write of the unchanged value reproduces it.
-> 
-> Read Link Control first and write it only when RCB has to change.
-> 
-> Fixes: 1a6845aaa6de ("PCI: Initialize RCB from pci_configure_device()")
-> Cc: stable@vger.kernel.org
-> Assisted-by: Claude:claude-opus-5-5
-> Signed-off-by: Stefan Roese <stefan.roese@mailbox.org>
-> ---
->  drivers/pci/probe.c | 17 ++++++++++++-----
->  1 file changed, 12 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 721daf5c5184..35e794df3be4 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2426,7 +2426,7 @@ static void pci_configure_serr(struct pci_dev *dev)
->  static void pci_configure_rcb(struct pci_dev *dev)
->  {
->  	struct pci_dev *rp;
-> -	u16 rp_lnkctl;
-> +	u16 rp_lnkctl, lnkctl, rcb;
->  
->  	/*
->  	 * Per PCIe r7.0, sec 7.5.3.7, RCB is only meaningful in Root Ports
-> @@ -2448,10 +2448,17 @@ static void pci_configure_rcb(struct pci_dev *dev)
->  		return;
->  
->  	pcie_capability_read_word(rp, PCI_EXP_LNKCTL, &rp_lnkctl);
-> -	pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
-> -					   PCI_EXP_LNKCTL_RCB,
-> -					   (rp_lnkctl & PCI_EXP_LNKCTL_RCB) ?
-> -					   PCI_EXP_LNKCTL_RCB : 0);
-> +	rcb = rp_lnkctl & PCI_EXP_LNKCTL_RCB;
-> +
-> +	/*
-> +	 * Write Link Control only when RCB actually changes. Some devices
-> +	 * react to any write of this register, even one with an unchanged
-> +	 * value.
-> +	 */
-> +	pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &lnkctl);
-> +	if ((lnkctl & PCI_EXP_LNKCTL_RCB) != rcb)
-> +		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
-> +						   PCI_EXP_LNKCTL_RCB, rcb);
+Dave.
 
-What if we just did this:
-
-  if (rp_lnkctl & PCI_EXP_LNKCTL_RCB)
-    pcie_capability_set_word(dev, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_RCB);
-
-I don't know if it's ever necessary to *clear* RCB.  If RCB is set in
-an Endpoint when it's not set in the Root Port, that would be a
-firmware configuration error.
-
-Either way, it's ugly magic to avoid the ASPM Control write here based
-on the unrelated RCB settings.  But avoiding the read/modify/write is
-probably worth doing just from a performance point of view.
