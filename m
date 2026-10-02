@@ -1,169 +1,224 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB83B495531
-	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 13:48:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AA8C3F9F3C;
+	Fri,  2 Oct 2026 14:05:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790948883; cv=none; b=loGbpiZxCAySud9dauq1+t7axnOqaS8m123LPcogzVg40k2fn8wpTRVHAN5aYo/qzZb2G10UB4aP8/hmdL6+vw+/JZXSIpnR41S90J6IIQWC6DUPNhvXd17qhkXQMmKM3D7MhN/spvvx+qoMN/yxW3Ix7aRDqwPOaf/HZqQB1jY=
+	t=1790949926; cv=none; b=oml66BDHdDG7RaOtFUSs2g3MvmEIjpp6R+wo/B/tXFPNaFTp9NIAon613XTWe8WORxtulW5pklHrSNj6S7/u7xh/THbUK9/lST9QJdMYB1K+QiRpQ0Bx8igftbwxrMVGTXW/Wl8W5/wySi0gWJOilik/g328KD8IbJz4DzJTenc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790948883; c=relaxed/simple;
-	bh=ZdaMnhg0+U5nMFJz6GrDRt3qR1lCDZwhfTCkgtyg/Y0=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=OtYMrgzJkKQr8uGmvlzhFXyK0xLxyx4ZxSM22vtpA2FC7SJWydoW9ld+vQvAhzJECkhAXD5pugTp093FJJp4wC/5JtSKh+lI5dX6pWWbB1Kw830bbPxMjfPLoRoJc3qH2Qqyb1Q5CFdYMoTTOgb6RBjXZ02Ts2JRN/mvXs5tST0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lcWAsXr8; arc=none smtp.client-ip=192.198.163.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1790949926; c=relaxed/simple;
+	bh=1vxcTXuBCxqXwoQBIzmW3rqlvuTa07ZNaVeUtHOifdM=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=QGpXFjEK6Ys5ufnCbKTY33oR0r2vAbH5xrFiaGHOTMZquMTDJ7GcZZJvvIehfyXbKGPN/7ng5S4V0yNWzN9g1H6INPOeuupAVynXPoagV3uKhUXtX4xpzeawTHmvn2MWig9+icblupIkgnF1Tz5oP3o8nk4hZSgKJlo+ptd070A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=dZhb3mgq; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lcWAsXr8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790948881; x=1822484881;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=ZdaMnhg0+U5nMFJz6GrDRt3qR1lCDZwhfTCkgtyg/Y0=;
-  b=lcWAsXr8h3CR0hBNCnFB68RVEvDBYS9hFUM5j7DKSCa0WZlRvzEv6u/B
-   NbsrLe/h8CP+rmlvRayeSMJZyKd0PRZTYzdV4Dq4JrkOSSzixiuBovlA5
-   ltipX6tK+OQd+G0j7ooTeOh9RNRjB0iqkEnlbO0/P5Ke8vDWc0+PyIuZu
-   /JJUn8VcdUMJS6q5uSXoxCnWCX4B8H5Y7Cls+X6+dVtogLirOVheGKWEB
-   d7kCqE49/hpdsxNbXGnP2TPlupdzes3D781y5Ck0gX8+pNlZed4OVw0Bj
-   7Yyka4VDGLsMh0UfAGDJfavzGpjplc0uvewLum+0b2lzXFdHOHDviJBH9
-   g==;
-X-CSE-ConnectionGUID: ApXS9r62Tvau4AcfoGIBhg==
-X-CSE-MsgGUID: feKKJQy6TTOb8j+QIe7XPQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11923"; a="90614437"
-X-IronPort-AV: E=Sophos;i="6.27,136,1787036400"; 
-   d="scan'208";a="90614437"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2026 06:48:00 -0700
-X-CSE-ConnectionGUID: ctyVlKXYQW+fbD2DLGHEsA==
-X-CSE-MsgGUID: HNxBVGcoSF+IUM9ikHUQNw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,136,1787036400"; 
-   d="scan'208";a="272656601"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.243])
-  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2026 06:47:58 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Fri, 2 Oct 2026 16:47:54 +0300 (EEST)
-To: sashiko-reviews@lists.linux.dev
-cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 7/7] PCI/quirks: Avoid certain address on Genoa
- systems
-In-Reply-To: <20261002114833.679371F000FF@smtp.kernel.org>
-Message-ID: <27be560c-4b69-bc39-f362-bd77b217d7c5@linux.intel.com>
-References: <20261002113319.6652-1-ilpo.jarvinen@linux.intel.com> <20261002113319.6652-8-ilpo.jarvinen@linux.intel.com> <20261002114833.679371F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="dZhb3mgq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
+	s=201707; t=1790949882;
+	bh=BAoZsisDnlY0LO+TduzgC6g/Q+8iWDR6OcyZyRZyWNU=;
+	h=Subject:From:In-Reply-To:Date:Cc:References:To:From;
+	b=dZhb3mgqrZGt9We8M7wy4kUi8RDLqBxp+dSeqrnGinNUgE3cp2JCb5g25ZszfRS0/
+	 3OQomL/ZZan98v95D1OLV91MUwsfSec3jzmKoviInvLYlqlKacVZT1GiqhK32xg9XR
+	 gYdceKx7LwwI51NMR/g3I6NMROCse5XRMAc6lO2lI/OSDbXiiZzAhaLAQYS2a4Ke0A
+	 k9lQIs+pvIsTnYyw+8whPYPvnv2FsL8YH1Qw6gKWEds1EM/YtypDZhAZe2jXUa76IP
+	 6WR91iWgzB5042mky/irVF1YtzY5eNSasK1Oy8mRFJw3jgAHLLqRe91tmGqdx21OnK
+	 Z+tWDurs/SNEw==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4hx9Wh1Pvtz4w1l;
+	Sat, 03 Oct 2026 00:04:31 +1000 (AEST)
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-515967273-1790948874=:1156"
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.600.51.1.1\))
+Subject: Re: [PATCH v7 0/9] vfio/pci: Add mmap() for DMABUFs
+From: Matt Evans <matt@ozlabs.org>
+In-Reply-To: <20261001153834.4a2528a2@shazbot.org>
+Date: Fri, 2 Oct 2026 15:04:49 +0100
+Cc: Leon Romanovsky <leon@kernel.org>,
+ Jason Gunthorpe <jgg@nvidia.com>,
+ Alex Mastro <amastro@fb.com>,
+ =?utf-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Logan Gunthorpe <logang@deltatee.com>,
+ Kevin Tian <kevin.tian@intel.com>,
+ Pranjal Shrivastava <praan@google.com>,
+ Longfang Liu <liulongfang@huawei.com>,
+ Mahmoud Adam <mngyadam@amazon.de>,
+ David Matlack <dmatlack@google.com>,
+ =?utf-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
+ Sumit Semwal <sumit.semwal@linaro.org>,
+ Ankit Agrawal <ankita@nvidia.com>,
+ Alistair Popple <apopple@nvidia.com>,
+ Vivek Kasireddy <vivek.kasireddy@intel.com>,
+ linux-kernel@vger.kernel.org,
+ linux-media@vger.kernel.org,
+ dri-devel@lists.freedesktop.org,
+ linaro-mm-sig@lists.linaro.org,
+ kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org,
+ Manish Honap <mhonap@nvidia.com>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <A758FB87-95D3-4CE4-87C8-C50FF0ACE026@ozlabs.org>
+References: <20260924152159.49702-1-matt@ozlabs.org>
+ <20261001153834.4a2528a2@shazbot.org>
+To: Alex Williamson <alex@shazbot.org>
+X-Mailer: Apple Mail (2.3864.600.51.1.1)
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hi Alex,
 
---8323328-515967273-1790948874=:1156
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-
-On Fri, 2 Oct 2026, sashiko-bot@kernel.org wrote:
-
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
-e(s) to consider:
-> - [High] pci/quirks: skipped workaround and UAF on rescan due to dangling=
- resource pointer
-> --
+> On 1 Oct 2026, at 22:38, Alex Williamson <alex@shazbot.org> wrote:
 >=20
-> commit 988b9fe1c0d1202ac7629ed0f5250a0381f61b90
-> Author: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
+> On Thu, 24 Sep 2026 16:21:43 +0100
+> Matt Evans <matt@ozlabs.org> wrote:
+>> Dear Reviewers,
+>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>>=20
+>> Along the way several related issues came up that warrant more
+>> eyes, and I'd be grateful for your input:
+>>=20
+>> 1. If VFIO fd is opened O_RDONLY, it currently can't be mmap()ed
+>>   (because PROT_WRITE is rejected in do_mmap(), and PROT_READ alone
+>>   drops the VM_SHARED so VFIO's mmap rejects it).  BUT it seems we
+>>   can export a DMABUF from it, and then pass the resulting fd around
+>>   for P2P writes.
+>>=20
+>>   I don't know if this is intentional/relied on/a known limitation,
+>>   or a bug?
 >=20
-> PCI/quirks: Avoid certain address on Genoa systems
+> Seems like a bug.  In practice it's probably not very meaningful, the
+> user can still potentially change the device power state and trigger a
+> reset, but being able to source a writable dmabuf to a region on the
+> device fd that isn't itself writable seems semantically wrong.
 >=20
-> This commit addresses a 64kB iomem black hole on Genoa systems that cause=
-s
-> reads to return ~0 and blocks overlapping BARs from working. It reserves =
+>>   a) We could reject export w/ -EPERM unless the device fd's f_mode
+>>      has O_RDWR, to reflect the RW abilities of P2P
+>=20
+> This seems sufficient...
+
+Thanks, I=E2=80=99ll take a look then.  I should=E2=80=99ve said this is =
+cdev-centric=20
+(an explicit open O_RDONLY), as VFIO_GROUP_GET_DEVICE_FD always
+generates the fd with RDWR perms.  The path from container/group open
+through to device fd generation and then export is similarly=20
+semantically weird, but maybe less clear on effort vs benefit to fix.
+
+So, for cdev open it looks like some plumbing, and that it won=E2=80=99t=20=
+
+conflict with this series, so I can look at that separately.
+
+>>   If we agree it's a bug, I want to do this fix (a), as we can now
+>>   export a DMABUF RW from an O_RDONLY device fd and then succeed to
+>>   mmap() the DMABUF with RW.  (That said, even with an O_RDONLY
+>>   device fd, the device state can still be changed/reset.  But it
+>>   feels cleaner to prevent export for a O_RDONLY device fd, and match
+>>   the device fd mmap() behaviour.)
+>>=20
+>>   In future, we could consider finer-grained RD/WR if there's a
+>>   future goal to tie DMABUF permissions to, say, iommufd
+>>   IOMMU_READ/IOMMU_WRITE permissions:
+>>=20
+>>   b) Instead of just failing if !O_RDWR, we could limit the
+>>      get_dma_buf.open_flags to the VFIO device fd's f_mode, such as:
+>>=20
+>>       VFIO device fd perms:    Export flags:           Result:
+>>       O_RDWR                   O_RDWR, O_RDONLY        OK
+>>       O_RDONLY                 O_RDONLY                OK
+>>       O_RDONLY                 O_RDWR                  -EPERM
+>>       O_WRONLY                 * -EPERM
+>>       *                  O_WRONLY                -EPERM
+>>=20
+>>     (Skipping WRONLY because a PROT_WRITE-only mmap() won't work,
+>>      though it probably should be included for P2P.)
+>=20
+> Certainly more complete, but I'm not sure there's a use case here that
+> really warrants the effort.
+>=20
+> Another angle to the dmabuf permissions is the region permissions
+> themselves.  We don't currently hit this since we're only exporting =
+PCI
+> BARs, but for instance Manish wants to protect the HDM decoder range =
+in
+> the vfio-cxl series[1].  Again, there's probably a simple solution to
+> simply consult the excluded ranges list, added in that series, and
+> reject dmabuf exports overlapping it.  I don't expect any action item
+> for this series though.
+
+Interesting, thanks.  Reading.
+
+> =
+[1]https://lore.kernel.org/all/20260916183540.3813685-1-mhonap@nvidia.com/=
+
+>=20
+>> 2. The mmap fault handler takes a bunch of locks non-interruptibly,
+>>   and potentially depends on a lot of DMABUF-related activities
+>>   completing.  I'd had a go at converting them to
+>>   interruptible/killable forms, but that revealed there seems to be a
+>>   wider issue if move/revoke doesn't complete in a timely fashion
+>>   (due to buggy importers).  Where I got to was that just updating
+>>   the fault handler won't fix the user experience of an unkillable
+>>   task, and move()/revocation will need thought too.  I don't intend
+>>   to fix this here but wanted to start discussion so we can address
+>>   it in a follow up.  There's now a dependency between mmap_lock in
+>>   the fault handler and the DMABUF resv (which might take a while to
+>>   resolve), though revocation will be rare in practice.
+>>=20
+>> 3. vfio_basic_config_write() has an error path if
+>>   vfio_default_config_write() fails that releases memory_lock but
+>>   doesn't un-revoke BARs in the case of PCI_COMMAND.MSE being
+>>   cleared.  When can the write fail, in practice, perhaps surprise
+>>   removal?
+>>=20
+>>   The effect on this series would be: a write of MSE=3D0 revokes =
+BARs,
+>>   vconfig[PCI_COMMAND]'s MSE becomes 0, but if the physical write
+>>   fails then the physical MSE remains 1 and BAR VMAs stay revoked.
+>>=20
+>>   This seemed a mess; fixing isn't as simple as un-revoking on the
+>>   error path since vfio_default_config_write() has already trampled
+>>   vconfig so that'd need unwinding.  It felt like a catastrophic
+>>   scenario where BARs staying revoked isn't a bad outcome, but want
+>>   to hear your experience of the likelihood of this issue.
+>=20
+> Our vfio-pci story around surprise removal and DPC is pretty weak, I'm
+> hoping that some of our parallel error handling work will shut down =
 the
-> problematic space via a bridge quirk.
->=20
-> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=3D222074
->=20
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index de9bbccda21fd..5483b47d8d544 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
->=20
-> [ ... ]
->=20
-> > +static struct resource black_hole_res =3D DEFINE_RES_MEM_NAMED(0x9c000=
-000, SZ_64K,
-> > +=09=09=09=09=09=09=09     "reserved");
-> > +
-> > +static void genoa_iomem_black_hole(struct pci_dev *dev)
-> > +{
-> > +=09struct resource *r;
-> > +
-> > +=09pci_bus_for_each_resource(dev->bus, r) {
-> > +=09=09if (!r || !r->flags || !resource_assigned(r))
-> > +=09=09=09continue;
-> > +
-> > +=09=09if (!__resource_contains_unbound(r, &black_hole_res))
-> > +=09=09=09continue;
-> > +
-> > +=09=09if (resource_assigned(&black_hole_res))
-> > +=09=09=09pci_dbg(dev, "iomem black hole workaround already applied\n")=
-;
->=20
-> [Severity: High]
-> Can this lead to a use-after-free and cause the workaround to be skipped =
-on
-> rescan?
->=20
-> During the first probe, insert_resource() sets black_hole_res.parent to t=
-he
-> dynamically allocated host bridge window. If the PCI bridge is subsequent=
-ly
-> removed, the bridge's resources are released and freed.
->=20
-> However, release_resource() unlinks the parent but does not clear the par=
-ent
-> pointers of child resources. Because black_hole_res is statically allocat=
-ed,
-> its parent pointer is left dangling.
->
-> When the bus is rescanned, resource_assigned(&black_hole_res) evaluates t=
-o
-> true due to the dangling parent pointer. The code erroneously logs "alrea=
-dy
-> applied" and skips inserting the reservation into the new bridge window.
->
-> This leaves the new window unprotected, allowing subsequent BAR allocatio=
-ns
-> to fall into the 0x9c000000 black hole.
+> device when this occurs.  For now, leaving the dmabuf revoked seems
+> like a reasonable thing to do.  In practice, I don't really see this
+> coming up other than in testing surprise removal of NVMe drives.
 
-Before sending this, I did test removing the PCI devices all the way to=20
-the Root Complex (RC included) and the black hole marker weathered the=20
-storm just fine.
+OK, cheers.
 
-I suppose if I'd proceed removing something from further up (something=20
-ACPI side?), the scenario might actually occur but why would anyone want=20
-to do that?
+(Maybe a couple of these bullets are ~rhetorical, just to get a =E2=80=9Ck=
+nown
+wrinkle=E2=80=9D searchable somewhere.)
 
-I think this goes to the territory where root has many ways to shoot=20
-oneself's own foot...
-
---=20
- i.
-=20
-> > +=09=09else if (!insert_resource(r, &black_hole_res))
-> > +=09=09=09pci_info(dev, "iomem black hole workaround enabled\n");
-> > +=09=09else
-> > +=09=09=09pci_dbg(dev, "iomem black hole workaround add failed\n");
-> > +=09=09return;
-> > +=09}
-> > +}
-> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, 0x14ab, genoa_iomem_black_=
-hole);
+>> 4. The exchange of a VFIO fd mmap()'s vma->vm_file with an implicitly
+>>   created DMABUF's file has implications on LSM.  For example, an
+>>   mmap will be checked against the policy for a VFIO fd, but a
+>>   subsequent mprotect() relates to the policy of the DMABUF file
+>>   (which is anon/unique to the mapping).  This is pretty confusing.
 >=20
->=20
---8323328-515967273-1790948874=:1156--
+> Maybe I'm not seeing the issue, but this seems like correct behavior =
+to
+> me.  Policy decisions are made at creation time and later changing
+> protections on one object doesn't affect the other.  Thanks,
+
+I think this is a change in behaviour re LSM rule, should anyone have
+applied any to VFIO in any fine-grained way, so just flagging that.
+
+I=E2=80=99ll send v8 shortly, resolving Christian=E2=80=99s request.  As =
+ever, thanks
+for the input!
+
+
+Matt
+
