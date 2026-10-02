@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A82544A41F
-	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 11:17:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A990463B8D
+	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 11:18:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790939856; cv=none; b=CQW873BopBHg+4PiBeGFR5AhhtA0OdjGUt/8+9XAzzhwLCkhRcuASLS894v2A8LLVGkcHOcYCqXe0GTAZG5CXe4rgc5FPtQTJsyq+lwCNqDm1t+Nk4bM7Mej+MxdJG5t9gVrs2G76Nm3CRfo+LVDFp2nH9pEvQtUYPgcyhxgbUw=
+	t=1790939922; cv=none; b=jBHgZyv2EtwuuVdJmDudIssRWSOWa93aSUWhXcD+dzyfAmn7pfCb8NyJkxKdDjiVoJt0JyyNSayz//bSItf/LUDbbbZV7c0I3lz3neQx6D2cYYb5cI3Zf3nZ/ugfH7vu8aSDqBqW+a1GeGmhPPwvbEfVXXNx97f3X62gM0SANV0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790939856; c=relaxed/simple;
-	bh=viohaJu2YuX/lw3MbMG4NT8J6/e7Q403+ZcEBW7kw3I=;
+	s=arc-20240116; t=1790939922; c=relaxed/simple;
+	bh=6ZX4Bg4U0z4ynr4D2nsJvMlTXVT0Njuvr9sM9pConnc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=aIAiRfsJ/elCndFTebsqoRht2QauNeoZeMWnWJFL15DRWVMzSTaILPSe67SuA/MCIBjekJjEwHBBWySwy3O6xVCOn3R3xTxbMnZgQ5IT92pQVOmAAccpQse60xS+alX5pjg0PW31I/8hLvowixRHM32FnsK6+iHLvd3oOJ+RGHo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eV6rNFvF; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=PsAA6aMA1F8KKhXmBO1MfRr1HxdwuPjhMUCPz0tstjih2IKe0TBLlxBk+1jCEPmkNUWyFOtcyRsHbODOYbNWhakFGNOgpf6FwlOU9mX4GsAa6DZOJuBCLiY7MwVL+yCOeC7zmBMxeREEx6SviVHkZdqmmWdIniNZZoqnSqdo8Pw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Am+JFMF2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eV6rNFvF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D382A1F000FF;
-	Fri,  2 Oct 2026 11:17:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Am+JFMF2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 976A21F000FF;
+	Fri,  2 Oct 2026 11:18:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790939855;
-	bh=viohaJu2YuX/lw3MbMG4NT8J6/e7Q403+ZcEBW7kw3I=;
+	s=k20260515; t=1790939920;
+	bh=GxFOH5g6F+VcWEVkbe9eo4aYC4WvPrcI8dq+F2NxzQE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=eV6rNFvFFtDNXTt4kTi4NFgfmXzeWeSfHZaJF7CyNo4DZZnGMMRHZAdoaEkI8UQ/d
-	 RhtgIDRQ3gOxuZfCYkJVkZsKXUslNBsYOjhq7O30Dua31eSrroGHPFgA2DOpB8iOAb
-	 Ntxu08XuXQPhySDjkQ1n2irrTseehJRJ8p5pF/VaTHdlPCnLJLvaThT4G/SpOXdKAN
-	 nA2DcjqkRoS9keja3NOeQzYMiuaetkTKMkm5dWbBrNMM97vzg+wDaPTriuI3yLnHM3
-	 GQ9I2sZjTTSGZVnoFNFH6dK7vqRmb2uBORl8uIG+hEmWiWZvwuwCsSiKmceov6zzqd
-	 cynwyDaTEAUrg==
+	b=Am+JFMF2rBGouScydhV9y1oP/V8JYoVnx9pKDOPn00eLvidRBo6nLLsCxdYS9OyTq
+	 O0rBm1KrYNnFnJl/Y+vJoKg2fa4dEvTbT7TTbtWQw9mOAI0H7Cnv86YvzELpo/qAkj
+	 eNgNianKmdlZ1iT1/xPfImuRiUnCAwXYTzd9eUoAXyYWA0pwnCN/cUesfkZ3aDvhKb
+	 ibmmlMCS15sWifi6DhqoxzpwRTFGeulfDtv3Dagd/iNjYP9Gj83CrmWTiP7DMv60xm
+	 pdP+Mvdox8GPXZwTh8+QKKu/0EUXuTt2eW88oXFoBk2LUB7kMzBw6X7yIpl83DjuJQ
+	 vqXRUyNNyHsWg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 4/9] PCI: rzg3s-host: Drop nop instructions
+Subject: Re: [PATCH v5 2/9] PCI: rzg3s-host: Fix runtime PM handling in the
+ NOIRQ suspend/resume phase
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Claudiu Beznea" <claudiu.beznea@kernel.org>
-Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
-In-Reply-To: <20261002110935.2004349-5-claudiu.beznea@kernel.org>
+Cc: linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
+In-Reply-To: <20261002110935.2004349-3-claudiu.beznea@kernel.org>
 References: <20261002110935.2004349-1-claudiu.beznea@kernel.org>
- <20261002110935.2004349-5-claudiu.beznea@kernel.org>
+ <20261002110935.2004349-3-claudiu.beznea@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 02 Oct 2026 11:17:34 +0000
-Message-Id: <20261002111734.D382A1F000FF@smtp.kernel.org>
+Date: Fri, 02 Oct 2026 11:18:40 +0000
+Message-Id: <20261002111840.976A21F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,12 +47,22 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 > From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 >=20
-> On the RZ/G3S PCIe IP variant (which is similar to those used on the
-> RZ/G3E, RZ/V2H, and RZ/V2N SoCs), access to the PCIe Type 1 registers
-> requires setting the PCI_PERM.CFG_HWINIT_EN bit. Since this bit is not
-> set on the code paths where rzg3s_pcie_set_max_link_speed() is called,
-> the writes to PCI_EXP_LNKCTL2.TLS are nops. Drop them.
+> The runtime PM documentation states the following:
+> - During system suspend, pm_runtime_get_noresume() is called for every
+>   device right before executing the subsystem-level .prepare() callback
+>   (in device_prepare()). In addition, the PM core disables runtime PM for
+>   every device right before executing the subsystem-level .suspend_late()
+>   callback (in device_suspend_late()).
+> - During system resume, pm_runtime_enable() is called for every device
+>   right after executing the subsystem-level .resume_early() callback (in
+>   device_resume_early()), and pm_runtime_put() is called right after
+>   executing the subsystem-level .complete() callback (in
+>   device_complete()).
 >=20
+> The driver's .suspend_noirq() callback is invoked after .suspend_late(),
+> [ ... ]
+> Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
+> Cc: stable@vger.kernel.org
 > Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 > Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 > Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
@@ -60,5 +71,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261002110935.2004=
-349-1-claudiu.beznea@kernel.org?part=3D4
+349-1-claudiu.beznea@kernel.org?part=3D2
 
