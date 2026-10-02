@@ -1,91 +1,82 @@
-Received: from mail-dl2-f41.google.com (mail-dl2-f41.google.com [74.125.229.169])
+Received: from mail-dy2-f41.google.com (mail-dy2-f41.google.com [74.125.229.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B20764FB9C8
-	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 16:47:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7238E502573
+	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 17:10:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790959674; cv=none; b=G+Dwke3qP/QU43/B+RST2Oaln3YW1zJI2RvAdYP+Fv7xs76Oxu5GlruBc8c+R/u3tR4hCdm+Bo1mglfux+cEdhbyE8VggCDrXjTCdZ14BmbQigOFnhYFHiXJdyoYA4wPsWHPVj1nSk5vGJM00ggM5lgo/oX7zrdtqzaeKiO4Llw=
+	t=1790961057; cv=none; b=AxlyNeSskZIM/THPDlV0XNUSAYIj6VnhjGHe7cfSc6Uh9drxNBTF9X52qgtl6RLKq1lSvM8iongqTeC0azh8GF07KhGuZ9GSZeY3M+7SkItERJ+bV3yEFPJwHaulyqpkxAvo1qnwxxjADHb6/vyr3CRtSKxxuIGiV+ZXVZPgpQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790959674; c=relaxed/simple;
-	bh=GfLGRzNdrUQtKcYv331zMoj3Gl5JEVaaZYE2NszLXF8=;
+	s=arc-20240116; t=1790961057; c=relaxed/simple;
+	bh=mrxPXIId1qTShZKGlHGgNQz6PnSRa6+MIliC3LYulx4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=B3dPvFNCUtlReajoRXKoUojq24rCfkMy7OdHC4cdmEmgwLdFM0YfRYSmt8N1k0DUDatC0kJazzOMjaOuwiZKRCrryck8JujogWGwR+0Sxc8F26OpUt9RQBj5bRVZYhG5v4ipcMsw8MZg41uLKEGokFnSx6edZRTZJ+khysLRbsg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=NFLU+lFN; arc=none smtp.client-ip=74.125.229.169
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZNSqz0NHTQ1lgZt64XTj8AlGufE8Sh5wwdjqkb/joN2ifQsLkIo0a/VPBwhFw0DXddJ8rnX7HAtOG6GlpUfcTVtm5KtXG2NShgEYzDEAnYSlVdd1IFmxYcY0J0f+CrTYw8lvrskLgO7ELrG36/qQJGcC57BExVO3lifoPWGiHrM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=jIsrR6ZC; arc=none smtp.client-ip=74.125.229.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="NFLU+lFN"
-Received: by mail-dl2-f41.google.com with SMTP id a92af1059eb24-149d5ec8e96so2220045c88.3
-        for <linux-pci@vger.kernel.org>; Fri, 02 Oct 2026 09:47:51 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="jIsrR6ZC"
+Received: by mail-dy2-f41.google.com with SMTP id 5a478bee46e88-344447f9c3dso4748660eec.0
+        for <linux-pci@vger.kernel.org>; Fri, 02 Oct 2026 10:10:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1790959670; x=1791564470; darn=vger.kernel.org;
+        d=ziepe.ca; s=google; t=1790961048; x=1791565848; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=M8FgFfsrFu7NaKoGhtbGJNDz2Gwi+BLzqOzLKsff8ag=;
-        b=NFLU+lFNR6hO9d50Zwufb2z/NzoVmMAl14UGet0DeHq6a5obEDMoeHrWveApPng8wK
-         L2Aij0Dx+ZGh0ym+MwiBe1srkNL/sI1GV9WK5XVo0f3J+lwdC3OvgRaAhhNVtU6l2nvt
-         B6ToeVUaI6qo6hX30dPKw0+GBYyOQogyDgC9whYikB2FevRCPhsVr6YXwhw7ukTasVMT
-         hxYSWPZRHZgwUCu/GQ/9ixGiq3aJr5RyLwiAKfDFZjSOPXYgBSPaYKHjvR5pR6NdpaI0
-         5xCQImOjoE25lHcIU0TwuhGlY2timDR7pPpxdf92aWoY4f3tA0AsrX4cfbGpBKiIVsyt
-         +0Jw==
+        bh=BgakvInNsjTIuwI/HruggHJb8c52XKSKFB4qu//ilyk=;
+        b=jIsrR6ZCYoXUg62SeoHiJ6U1qQmTUvfmHWogxM0qjQgpdxTBR38CREigK8nBVg837B
+         KemCEloefIFs0d6V2TsfLG+gXof4Lczn1A3R8NHqVJVEIGVHb/IebK+RpIye8M3zMs8i
+         YTJWrFKclhx7CxJS5QL7+5f//INbWiK4y09jMHkcmwqjDq7GovOeOKTKri8BnYz4SJ/F
+         Wb6KjoEp6g56AjVLR/e/dFRyT7rfM39Ade1CK3Dx+VZ1t0EdbRskxub4VkpZ+yFH9FCS
+         4N5joGr5LsAuBrkxXGtJbCwSMI+3e4PJkLhKF7HnXpwKcgm3GyDvhTJqShefFqKWZr60
+         C7mQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790959670; x=1791564470;
+        d=1e100.net; s=20260707; t=1790961048; x=1791565848;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=M8FgFfsrFu7NaKoGhtbGJNDz2Gwi+BLzqOzLKsff8ag=;
-        b=cUtdd6Gyr1Y6tf183X4wVsYrJITkIYdVCy9ALlB/fOOPhXjDPtBNaFL/W7S+rYSYW/
-         0SDfx8dM4dtYnE9s4gYRgFWBHxfCeZSB80LokxsaNw1Rjm9/jtxEd/FiM14COwYYoDrF
-         Omh63VwveXA+AzdCRSSlFHYlwfYXqCXMSofjIJyURfhn/mbDCxlBOLq1YthxKmw0dDRg
-         VIy9lL0c0WH6IzvXXcv1CJo2snPwGz96KXQd3ytFtd3FKO9FQ7IcHtOKphVRli/gWKIU
-         5cPcBpffpqOwDcsp8yz2ORUG9miVA2wX5SMQO7JMML8UCMirbkNF5/6OqcYNovhQ6HNc
-         ZTTQ==
-X-Forwarded-Encrypted: i=1; AKwUvBx6o+Ny2V38/owTDKfjZNIUbAmCzFOceguaSTdxHP9iBABBMO+4VYKhJyS2ymzNCT07vjEcADZIpy0=@vger.kernel.org
-X-Gm-Message-State: AFuF++l2ESjgGPf78ioYCcXgRw3qIemY8zrqFvqxTkQ9pkcglgMRcs9J
-	CXPjTe/SoqP/WSJQPgxlNX05t7Lfjhi8eA1FRYcHgrTM6RQYHt55FrZc6sGF2cx4vyA=
-X-Gm-Gg: AYBFou2bC/WKPpF/VrxmYSkyzBKtLrFUORd7845dSwmwtQ2LeDV14cZLwd2IxEJJHHm
-	aB/q24m4GFX1/aS16JhrB1o2NouXHaIZQGXnmTFUCocUqpgFEnqA2SjBD2FJvYOXabrw/ehPedY
-	iNrss1+kuGF4phm36JSfRwRbQEX3afXYzltmfJ1W38Tlq2Cn/2BvPoBFhXg0innLl2VES/Y4GT+
-	MWFkgJzHNbEXmZRKADPG8rYkzuLjXznzbt8q/QEIOHj8jopVx4kGQf17XxsvPA3tUpb0ChNzHjT
-	FVcXoDdvfxHFPk9ic2NbTHyn6WlU9wRWAAoaUQNq3YR+eBsmLypGBsJKlXQAbg+iZCwH0f/5vQo
-	r+qAeQkB7Wcdz1tpt0G1SQDySsTGn6phRX0pYgPep04gyBPiALTRZHCIGsfmSj7svwNRBmxyxRX
-	lMdQZbg6opPQw9/HZz6DkcNpRGZMIxe8iN+ujMwHhXsgr7
-X-Received: by 2002:a05:7022:5f1c:b0:146:852d:60b7 with SMTP id a92af1059eb24-1508932185fmr1788544c88.8.1790959670092;
-        Fri, 02 Oct 2026 09:47:50 -0700 (PDT)
+        bh=BgakvInNsjTIuwI/HruggHJb8c52XKSKFB4qu//ilyk=;
+        b=26HcTuUriulxda8wDLj4sUUt/aNRkiHcuTpJy/lgUKjSF8LkcDzUOueL5PNIDq7yjJ
+         7E0MqNmc/ZI3RaNSUiGijn4q2OA6+YUgr2ezMqQTz3u3Oy1kcMXotS1KTnegO+zRLS/G
+         98XXwS7WFKpHTbYxVnSdOZZtweUp4pOr0WPQB7/JBBZ4z+Zk/eQVT0RP9RcJNOQ6rC8K
+         HyeujI5Wm8jClSNYSaVq65jj3B/ZnkvrbmPfjxnesrAdxaMI1UiL2woxEIntVvKTVz5q
+         Pbc1uzn2YTft9r8kWanrXOjCkWSzAPCsBDf8JlE54UO7m2DvngGJFIHojSyc3C778RoW
+         8PtA==
+X-Forwarded-Encrypted: i=1; AKwUvBzDDcc7CeIaXHK4bPAQWig7mXB+icCgPdTq85NirrcyzfDUbhkusVHOF/DM7PwLtcVjHJk+2I/jw2U=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKZxtlKhA3wx9POwhtFVRWD41eYTa8dbRfR92DpQb+w3tq3PtpN
+	mZDPUgp6DoetizN38IMf+c/qZg7/29s8ou+1aktUBAesnEIR8tuaiLefYdCGye8R3IA=
+X-Gm-Gg: AYBFou28+hLOtPMR3a1M21HoN+bj1+6zGF9yKSfhqVSdKBNubg3ynI4Tohuz797DQN5
+	h/+MJ51iEYYj+2uhHUbeKePH0DJzYnpDpsHfMgOOAuiLxbqW8JAyerVV9T5jI2ZD5nHOFLVTv90
+	tVPViVbGoi7U2CioPSCIIbQQUpSgGa/mEw4P1vyFAImA+HgW2IvOuYmR2FIhU9LpdJiwxN14mXs
+	d8ao3bqKOQLUktwmX5D6oeCv2gLccHXP62IsPs34XTzqs6FVq8pJavattPQe/doDGkl2WqZL1SO
+	cb8M2UF7KAhJ79xMXGzvyIz+GwT+zwM4LLQnSL3lSnEDwI19Eqf+yZHDJrZ5y3fn1YzIbVppZoJ
+	xmiUECFE963VhGJW8+jO8XPRa/8uZ20dGTM43e9GMDu8opKgq5N6l50MGm3Kyvs/QUEGhG0KIAL
+	SwGLDKi8AUEavENM/bC9uq6y7Z6dzn5rHsSYL6DDArUAYj
+X-Received: by 2002:a05:7300:e5c2:b0:34b:b410:9352 with SMTP id 5a478bee46e88-34f14f18c8cmr3725477eec.1.1790961048034;
+        Fri, 02 Oct 2026 10:10:48 -0700 (PDT)
 Received: from ziepe.ca ([130.41.10.202])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-14f45fee0afsm8489793c88.5.2026.10.02.09.47.49
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3510850f86bsm4509703eec.11.2026.10.02.10.10.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 02 Oct 2026 09:47:49 -0700 (PDT)
+        Fri, 02 Oct 2026 10:10:47 -0700 (PDT)
 Received: from jgg by wakko with local (Exim 4.97)
 	(envelope-from <jgg@ziepe.ca>)
-	id 1xCgQG-000000008FP-19Pb;
-	Fri, 02 Oct 2026 13:47:48 -0300
-Date: Fri, 2 Oct 2026 13:47:48 -0300
+	id 1xCgmU-00000000BiY-09Yw;
+	Fri, 02 Oct 2026 14:10:46 -0300
+Date: Fri, 2 Oct 2026 14:10:46 -0300
 From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Nicolin Chen <nicolinc@nvidia.com>
-Cc: Pranjal Shrivastava <praan@google.com>, iommu@lists.linux.dev,
-	Will Deacon <will@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Mostafa Saleh <smostafa@google.com>,
-	Daniel Mentz <danielmentz@google.com>,
-	Ashish Mhetre <amhetre@nvidia.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Thomas Gleixner <tglx@kernel.org>, Radu Rendec <radu@rendec.net>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, rafael@kernel.org,
-	Danilo Krummrich <dakr@kernel.org>, driver-core@lists.linux.dev
-Subject: Re: [PATCH v11 11/16] iommu/arm-smmu-v3: Add CMDQ_PROD_STOP_FLAG to
- gate CMDQ submissions
-Message-ID: <20261002164748.GD3481470@ziepe.ca>
-References: <20260929034510.2023173-1-praan@google.com>
- <20260929034510.2023173-12-praan@google.com>
- <ar1yNtr7Kp2OTcDd@nvidia.com>
- <ar3yWUmi8E0k37Ml@google.com>
- <ar6gY9grmdMZcN/M@nvidia.com>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: alex@shazbot.org, ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org, bhelgaas@google.com,
+	jjohnson@kernel.org, johannes@sipsolutions.net,
+	kevin.tian@intel.com, kvm@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+	mani@kernel.org, skolothumtho@nvidia.com, yishaih@nvidia.com
+Subject: Re: [PATCH 3/7] vfio/pci: Add qcom-vfio-pci variant driver
+Message-ID: <20261002171046.GA32083@ziepe.ca>
+References: <20260930151229.GR163130@ziepe.ca>
+ <20261001071945.83116-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -94,33 +85,61 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ar6gY9grmdMZcN/M@nvidia.com>
+In-Reply-To: <20261001071945.83116-1-jtornosm@redhat.com>
 
-On Thu, Oct 01, 2026 at 11:03:15AM -0700, Nicolin Chen wrote:
+On Thu, Oct 01, 2026 at 09:19:45AM +0200, Jose Ignacio Tornos Martinez wrote:
 
-> > So we can't issue ATC_INVs during suspend (the EP is already down), nor
-> > during resume (the SMMU resumes *before* the EP is made active). The EP
-> > can't use its ATC while suspended, and if it loses power/resets on the
-> > way back to D0 (from D3cold, or D3hot with No_Soft_Reset=0), it comes 
-> > back with an empty ATC.. same assumption the PCI reset path makes today
-> > (pci_dev_reset_iommu_prepare()).
-> 
-> In that case, would the STOP flag be too late? It's only set in
-> the middle of the SMMU suspend. So, an ATC command (via doamin
-> invalidation) might be issued prior to the Point of Commitment,
-> which will be timed out due to the unresponding EP?
+> Regarding platform_device_msi_init_and_alloc_irqs(), I agree that
+> moving the driver to device MSI domains would be cleaner on the
+> driver side. However, even with that change, I think the VM problem
+> remains exactly the same: the device MSI domain in the VM would
+> allocate virtual addr/data pairs, and the firmware's private interrupt
+> controller still needs the physical host values.
 
-How can you ever fix that?
+Yes, I'm not saying it fixes the problem..
 
-How does power management really work, is it expected that the end
-device is already quieted by its driver?
+> Also, the VFIO variant driver scheme would not fully break if the
+> driver moved to device MSI domains. The variant driver caches host
+> MSI values from the MSI descriptor, regardless of the allocation
+> method. The hook point may need adaptation, but the fundamental
+> approach (host caches physical values, VM reads them) remains valid.
 
-Could the first step in power management install a blocked STE? Then
-we don't have to worry about ATC desync and that automatically stops
-generating new ATC invalidations if we go and detact the domains too
+It breaks because VFIO will only cache *actual* MSI-X table entries,
+it does not have visibility into anything that
+platform_device_msi_init_and_alloc_irqs()
 
-Maybe I'm wondering if power management should involve the core code
-so it detaches all the domains from the device, setups up blocking and
-then the iommu itself could power ofF?
+The only reason this works for you at all is because the driver
+hackily copies the vectors from the real MSI-X table so it can look in
+the "cache" to find their true physical versions.
+
+Which is my general objection, I would like to see the driver to use
+platform_device_msi_init_and_alloc_irqs() and don't want to get stuck
+unable to do that because it would break this.
+
+> Regarding the hypercall idea for device MSI domains, I think that
+> would be an interesting direction worth exploring as a generic
+> solution, but that's a multi-subsystem effort that will take time to
+> design and land.
+
+Yes, but it does actually solve the problem in all its forms..
+
+> I completely agree that this could theoretically affect any device
+> with private MSI registers. However, in practice, I'm only aware of
+> this specific behavior in Qualcomm ath11k/ath12k firmware, where the
+> device's interrupt controller requires the host physical MSI
+> addresses to be programmed directly. 
+
+Everyone else seems to know this stuff doesn't work for
+virtualization and doesn't try to do something like that.
+
+> It's also worth noting that the PCI reset support for these devices
+> has already landed in linux-next (commit 290153d46d1a "PCI: Add
+> device-specific reset for Qualcomm devices") [1], solving the
+> device reset path for VFIO passthrough. This MSI series is the
+> remaining piece, with both in place, these Qualcomm WiFi devices
+> would be fully operational in VMs for the first time.
+
+Why do people care so much about this? I always thought it was a bit
+odd?
 
 Jason
