@@ -1,378 +1,128 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 393F744C66B;
-	Fri,  2 Oct 2026 21:18:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5F5346AA9C;
+	Fri,  2 Oct 2026 21:41:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790975934; cv=none; b=aEbPw++JcDG3DibBFxSlddaBAel0O4w8UA/TWbDx8GsVNefXL04r8Wza/eI0OxvPtu9AGxLeAS4hLSnTZxce4iqwJF9eXVX1SSzLvQSHJxhPD4R21I8CgjSbiwCmD4I/wBwP1nz5fZEp7OmNH8rLF4juU55Kve429ZiwZwKT81w=
+	t=1790977262; cv=none; b=sMSzZd2lnYenoyYF395BDHROvKTcfHZ4QWBEQpiMhPsqcir6w/Wt7lY7qNMidDH+adGQnrNV39j/ZxgIc/d8ayVS3axGrKKet+5tdhQdMf3k7griFLq1cDZpNkyfkLKXU/sCo38xf+iZqHw+oQt5QmqAcH/v9xHVfRjWczxmd9M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790975934; c=relaxed/simple;
-	bh=mnviJEsBEBJ33sBTEoXf8T8uCo89gsjyJO9aAFmHhlM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WxFj3iyYmgWzo5J7wYNNfoJaPctxSKTtDQe+HIP103iW7Q5C0h2GbXzKrBsq38sqzpql9Jrqds3Y0w0QGNLCmDHlgwIqnpmvIWohfiEdohdKzwsPRNy/OPxLpGIIhYQaFL4a2HaZeCP2buQ6Ybz1KAyXE/69YgeQwa0GEh6GpqU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FEYAd7nx; arc=none smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1790977262; c=relaxed/simple;
+	bh=Jo/5dugZh4Ny+wdhiWvf9iwKHvuRL9KA6JlWJlTgqFY=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=ecZXFHxmtbRLw4UoP7ez82RYnOypFabyv9WObiitZZqD5ZZd3wHobrCKff79BGQw2B0hOYhckQq5XJbevj6NtizE7GQs8eCzAbGtOxxcJv+jSBgoaCpgH2E29jFXlMbEym5uKGn4EgUdSmezSus7/PODs6mouqSaXIi9912/90o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QLeXmgTD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FEYAd7nx"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790975930; x=1822511930;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=mnviJEsBEBJ33sBTEoXf8T8uCo89gsjyJO9aAFmHhlM=;
-  b=FEYAd7nxoQkW852KX647MPas1Vg65DWgGNbkgcchBKChkNWTVrATwA10
-   taaxNHv87h6TGsse9/O+yUEVlwJjEh4qMN4cLJH663Ufw167Kx6n7HZzu
-   MdPRZ/OHAlP/v8Xkk4BqB35aWtygwSxH7yT0bbPeO5/HifwUtTYtuzDGX
-   qLY/Uucu91hYOPwz4Hqp+WU5heyjvQzmmp8dIzIBmyhJz9/x91OKEvDB7
-   U1pDcHaQ21ozYDKVjb1hkwkssm8t4O/AvvVw54F8/eVbVpI1Ezk6BOXRG
-   IGW0iJE88kuyf8Mf4Yc5dZRO4R3x005BiTtyE0/yDnA6N4s755VcF0NbS
-   g==;
-X-CSE-ConnectionGUID: a5GC2n1fQtSNkym1p+CO+g==
-X-CSE-MsgGUID: ys/Sy+wqQdOAuanSYncatQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11923"; a="101077498"
-X-IronPort-AV: E=Sophos;i="6.27,136,1787036400"; 
-   d="scan'208";a="101077498"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2026 14:18:44 -0700
-X-CSE-ConnectionGUID: aZxkWPVXTn6gGZ0tNG52cw==
-X-CSE-MsgGUID: VDR+Kgs/QFK6X225nFPMMQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,136,1787036400"; 
-   d="scan'208";a="274987383"
-Received: from skuppusw-desk2.jf.intel.com ([10.165.154.101])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2026 14:18:44 -0700
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rafael@kernel.org,
-	lukas@wunner.de,
-	terry.bowman@amd.com,
-	kanie@linux.alibaba.com,
-	olof@lixom.net
-Subject: [PATCH v15 3/4] PCI/ACPI: Centralize pcie_ports_native checking
-Date: Fri,  2 Oct 2026 14:18:27 -0700
-Message-ID: <20261002211828.1293177-4-sathyanarayanan.kuppuswamy@linux.intel.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261002211828.1293177-1-sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <20261002211828.1293177-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QLeXmgTD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 093F71F000FF;
+	Fri,  2 Oct 2026 21:40:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790977260;
+	bh=61/R3wV1NWOE7HoqVebj9mBBmgNaHG+WOnm/3sC4cmQ=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=QLeXmgTDJEE8p5eWTzIXSvYXsfvtao+l8O8886gPdU1izn35ejFHcWBvDWnftjgDw
+	 ZxiJvtS1vONSgMAEkyW0mOlyURTGbgSjHJmpKwbfQ5NsVblwokR3GXK5u7ff//bVL6
+	 mp9IiYPz+CmRPKkF4c754VWqF5xLjibG8VtpoQVu8Sf/BzmHHfTUukmPdmfFStm5iz
+	 4TSRk9l1CBq54U+4nwwnqkKrmG2Vef2V1GChyQjuWaJ7JxLi7JgQVxU1TI2dntf3Li
+	 tPQhO8cho59LNs5j6EegyuBt3w9L4GjFadc1h2kcML6BaiShNUh58so/5IER2kHC8N
+	 j7LQiwQDB//hg==
+Date: Fri, 2 Oct 2026 16:40:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>,
+	Alex Williamson <alex@shazbot.org>
+Cc: bhelgaas@google.com, mani@kernel.org, jjohnson@kernel.org,
+	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org, ath12k@lists.infradead.org,
+	mhi@lists.linux.dev, linux-kernel@vger.kernel.org,
+	Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH v14 0/2] PCI: Add device-specific reset for Qualcomm
+ devices
+Message-ID: <20261002214058.GA284603@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260917071651.14174-1-jtornosm@redhat.com>
 
-If the user booted with "pcie_ports=native", we take control of the PCIe
-port services unconditionally, regardless of what _OSC says.
+[cc->to: Alex, +cc Jason]
 
-Centralize the testing of pcie_ports_native in acpi_pci_root_create(),
-where we interpret the _OSC results, so other places only have to check
-host_bridge->native_X and we don't have to sprinkle tests of
-pcie_ports_native everywhere.
+On Thu, Sep 17, 2026 at 09:16:49AM +0200, Jose Ignacio Tornos Martinez wrote:
+> Some Qualcomm PCIe devices (WCN6855, WCN7850 WLAN; SDX62/SDX65 modems)
+> lack working reset methods for VFIO passthrough scenarios. These devices
+> have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
+> broken bus reset (addressed by quirk_no_bus_reset, merged for v7.2).
 
-Rather than overriding the host_bridge->native_X flags after the fact,
-fold "pcie_ports=native" into the _OSC control mask we evaluate, i.e.,
-proceed as though the platform had granted control of the port services.
-That way there is a single mechanism deciding each native_X flag, and we
-can report exactly which features we are overriding _OSC for instead of
-just noting that we are overriding something:
+Specifically, 6a4f64c3a3ad ("PCI: Avoid SBR for Qualcomm
+WCN6855/WCN7850 WiFi, SDX62/SDX65 modems").  I don't know what the
+behavior was prior to that commit.  I suppose it was something
+obvious?
 
-  acpi PNP0A08:00: _OSC: OS forcing control ("pcie_ports=native") of [PCIeHotplug PME AER DPC]
+> VFIO attempts to reset devices on every reassignment:
+> - For the listed modems, without a proper reset capability, these devices
+> never successfully initialize even on first VM assignment.
+> - For the listed WLAN devices, without a working reset method, the attempt
+> fails. On clean VM shutdown, the guest driver properly deinitializes the
+> device via .shutdown/.remove callbacks, leaving it in a usable state despite
+> the failed reset. However, on unclean VM termination (crash, force-off), the
+> guest driver callbacks are not triggered, the device remains in an undefined
+> state (DMA active, interrupts enabled, etc.), and without a working reset it
+> cannot be reused.
 
-Forcing host_bridge->native_aer also restores DPC service binding under
-"pcie_ports=native", which regressed in commit 97ca178c899d ("PCI/DPC:
-Allow DPC on all Downstream Ports when OS controls AER").  That commit
-replaced the AER service test in get_port_device_capability() with
-host->native_aer, so DPC stayed off when host_bridge->native_aer was not
-set.
+So IIUC, prior to these patches, these devices were functional when
+passed through to several successive guests as long as the guests shut
+down cleanly, but the resets done by VFIO didn't work, so the host
+couldn't enforce isolation between those guests.
 
-This also extends "pcie_ports=native" to host_bridge->native_dpc, which
-had no pcie_ports_native fallback before.  That effect is narrow.
-native_dpc is only consumed by pci_dpc_recovered(), where with
-CONFIG_PCIE_EDR=n it previously gave up immediately and now lets pciehp
-wait for DPC recovery before treating a Link Down as a hotplug event.
+If true, I propose updating the commit logs to emphasize the lack of
+isolation and de-emphasize the VM clean shutdown vs crash behavior,
+e.g.:
 
-Fold "pcie_ports=dpc-native" into the control mask the same way, so
-host_bridge->native_dpc reflects it as well, with the same narrow
-effect on pci_dpc_recovered().  Move the pcie_ports_dpc_native
-declaration to <linux/pci.h> so acpi_pci_root_create() can test it.
+  Resets of this device always failed prior to this commit, so VFIO on
+  the host could not enforce isolation between successive passthrough
+  users.
 
-host_bridge->native_ltr is deliberately not forced.  "pcie_ports="
-controls PCIe port services and LTR is not one.  There is no
-PCIE_PORT_SERVICE_LTR, and native_ltr is only used by
-pci_configure_ltr() to enable ASPM L1.2, so forcing it would be an ASPM
-policy decision users did not ask for.
+  If a guest driver deinitialized the device, it may have been
+  functional if passed through to a subsequent guest, despite the lack
+  of isolation.  Otherwise the device may have been left in an
+  undefined state (e.g., DMA and interrupts active) and unusable.
 
-SHPC hotplug is left alone for a simpler reason: SHPC is a conventional
-PCI feature rather than a PCIe one, so "pcie_ports=" has no bearing on
-it.
+It would also be great to have Alex's ack here.
 
-Fixes: 97ca178c899d ("PCI/DPC: Allow DPC on all Downstream Ports when OS controls AER")
-Closes: https://lore.kernel.org/linux-pci/20260901064554.2178688-1-kanie@linux.alibaba.com/
-[bhelgaas: commit log, rework OSC_PCIE_PORT_SERVICE_CONTROLS, logging]
-Link: https://lore.kernel.org/r/bc87c9e675118960949043a832bed86bc22becbd.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Rafael J. Wysocki (Intel) <rafael@kernel.org> # ACPI core
-Reviewed-by: Guixin Liu <kanie@linux.alibaba.com>
----
-Changes since v14
-
- * Fold "pcie_ports=dpc-native" into the _OSC control mask as well, so
-   host_bridge->native_dpc and the "OS native features" line reflect it.
-   Moved the pcie_ports_dpc_native declaration to <linux/pci.h>.
-   (Bjorn Helgaas)
- * Picked up Guixin's Reviewed-by.
-
-v14 posting
-https://lore.kernel.org/r/20260922204548.3884906-1-sathyanarayanan.kuppuswamy@linux.intel.com
-
-Changes since v13
-
- * Added the Fixes: tag for 97ca178c899d. (Guixin Liu)
- * Reworded the commit log (Sashiko AI review).
- * No code change. Picked up Rafael's Acked-by.
-
-v13 posting
-https://lore.kernel.org/r/20260919162655.3499010-1-sathyanarayanan.kuppuswamy@linux.intel.com
-
- drivers/acpi/pci_root.c           | 43 ++++++++++++++++++++++++++++++-
- drivers/pci/hotplug/pciehp_core.c |  2 +-
- drivers/pci/pci-acpi.c            |  3 ---
- drivers/pci/pcie/aer.c            |  6 ++---
- drivers/pci/pcie/aer_cxl_rch.c    |  2 +-
- drivers/pci/pcie/err.c            |  2 +-
- drivers/pci/pcie/portdrv.c        |  6 ++---
- drivers/pci/pcie/portdrv.h        |  2 --
- include/linux/pci.h               |  2 ++
- 9 files changed, 53 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 756dc2f055f5..a1a9c06012f8 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -999,6 +999,19 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
- 			flag = 0;		\
- 	} while (0)
- 
-+#define FLAG(x)		((x) ? '+' : '-')
-+
-+/*
-+ * _OSC control bits for the features implemented by the PCIe port driver,
-+ * i.e., the ones "pcie_ports=native" applies to.  LTR and SHPC hotplug are
-+ * negotiated via _OSC as well, but they are not portdrv services, so
-+ * "pcie_ports=" has no bearing on them.
-+ */
-+#define OSC_PCIE_PORT_SERVICE_CONTROLS	(OSC_PCI_EXPRESS_NATIVE_HP_CONTROL | \
-+					 OSC_PCI_EXPRESS_PME_CONTROL | \
-+					 OSC_PCI_EXPRESS_AER_CONTROL | \
-+					 OSC_PCI_EXPRESS_DPC_CONTROL)
-+
- struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 				     struct acpi_pci_root_ops *ops,
- 				     struct acpi_pci_root_info *info,
-@@ -1009,7 +1022,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 	int node = acpi_get_node(device->handle);
- 	struct pci_bus *bus;
- 	struct pci_host_bridge *host_bridge;
--	u32 ctrl, ext_ctrl;
-+	u32 ctrl, ext_ctrl, override = 0;
- 
- 	info->root = root;
- 	info->bridge = device;
-@@ -1039,6 +1052,26 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 	ctrl = root->osc_control_set;
- 	ext_ctrl = root->osc_ext_control_set;
- 
-+	/*
-+	 * If the user specified "pcie_ports=native", use the PCIe port
-+	 * services regardless of what _OSC says, i.e., proceed as though the
-+	 * platform had granted us control of them.  "pcie_ports=dpc-native"
-+	 * does the same for DPC alone.  This may conflict with firmware that
-+	 * expects to own those features.
-+	 */
-+	if (pcie_ports_native)
-+		override = OSC_PCIE_PORT_SERVICE_CONTROLS & ~ctrl;
-+	else if (pcie_ports_dpc_native)
-+		override = OSC_PCI_EXPRESS_DPC_CONTROL & ~ctrl;
-+
-+	if (override) {
-+		decode_osc_control(root, pcie_ports_native ?
-+				   "OS forcing control (\"pcie_ports=native\") of" :
-+				   "OS forcing control (\"pcie_ports=dpc-native\") of",
-+				   override);
-+		ctrl |= override;
-+	}
-+
- 	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_NATIVE_HP_CONTROL,
- 		  host_bridge->native_pcie_hotplug);
- 	OSC_OWNER(ctrl, OSC_PCI_SHPC_NATIVE_HP_CONTROL,
-@@ -1051,6 +1084,14 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 	OSC_OWNER(ext_ctrl, OSC_CXL_ERROR_REPORTING_CONTROL,
- 		  host_bridge->native_cxl_error);
- 
-+	dev_info(&root->device->dev, "OS native features: SHPCHotplug%c PCIeHotplug%c PME%c AER%c DPC%c LTR%c\n",
-+		 FLAG(host_bridge->native_shpc_hotplug),
-+		 FLAG(host_bridge->native_pcie_hotplug),
-+		 FLAG(host_bridge->native_pme),
-+		 FLAG(host_bridge->native_aer),
-+		 FLAG(host_bridge->native_dpc),
-+		 FLAG(host_bridge->native_ltr));
-+
- 	acpi_dev_power_up_children_with_adr(device);
- 
- 	pci_scan_child_bus(bus);
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 2cafd3b26f34..b42829cf1377 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -258,7 +258,7 @@ static bool pme_is_native(struct pcie_device *dev)
- 	const struct pci_host_bridge *host;
- 
- 	host = pci_find_host_bridge(dev->port->bus);
--	return pcie_ports_native || host->native_pme;
-+	return host->native_pme;
- }
- 
- static void pciehp_disable_interrupt(struct pcie_device *dev)
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 42d545edd7fa..1150f2fbabf4 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -812,9 +812,6 @@ bool pciehp_is_native(struct pci_dev *bridge)
- 	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE))
- 		return false;
- 
--	if (pcie_ports_native)
--		return true;
--
- 	host = pci_find_host_bridge(bridge->bus);
- 	return host->native_pcie_hotplug;
- }
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index d8dcd238fda1..e84dd686582a 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -260,7 +260,7 @@ int pcie_aer_is_native(struct pci_dev *dev)
- 	if (!dev->aer_cap)
- 		return 0;
- 
--	return pcie_ports_native || host->native_aer;
-+	return host->native_aer;
- }
- EXPORT_SYMBOL_NS_GPL(pcie_aer_is_native, "CXL");
- 
-@@ -1847,7 +1847,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- 	 */
- 	aer = root ? root->aer_cap : 0;
- 
--	if ((host->native_aer || pcie_ports_native) && aer)
-+	if (host->native_aer && aer)
- 		aer_disable_irq(root);
- 
- 	if (type == PCI_EXP_TYPE_RC_EC || type == PCI_EXP_TYPE_RC_END) {
-@@ -1862,7 +1862,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- 			pci_is_root_bus(dev->bus) ? "Root" : "Downstream", rc);
- 	}
- 
--	if ((host->native_aer || pcie_ports_native) && aer) {
-+	if (host->native_aer && aer) {
- 		/* Clear Root Error Status */
- 		pci_read_config_dword(root, aer + PCI_ERR_ROOT_STATUS, &reg32);
- 		pci_write_config_dword(root, aer + PCI_ERR_ROOT_STATUS, reg32);
-diff --git a/drivers/pci/pcie/aer_cxl_rch.c b/drivers/pci/pcie/aer_cxl_rch.c
-index e471eefec9c4..b480dad8bbf4 100644
---- a/drivers/pci/pcie/aer_cxl_rch.c
-+++ b/drivers/pci/pcie/aer_cxl_rch.c
-@@ -31,7 +31,7 @@ static bool cxl_error_is_native(struct pci_dev *dev)
- {
- 	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
- 
--	return (pcie_ports_native || host->native_aer);
-+	return host->native_aer;
- }
- 
- static int cxl_rch_handle_error_iter(struct pci_dev *dev, void *data)
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index d77403d8855b..1a7fc71c79d8 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -273,7 +273,7 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 	 * it is responsible for clearing this status.  In that case, the
- 	 * signaling device may not even be visible to the OS.
- 	 */
--	if (host->native_aer || pcie_ports_native) {
-+	if (host->native_aer) {
- 		pcie_clear_device_status(dev);
- 		pci_aer_clear_nonfatal_status(dev);
- 	}
-diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-index a9cbfc1d2bc7..32fc623dd410 100644
---- a/drivers/pci/pcie/portdrv.c
-+++ b/drivers/pci/pcie/portdrv.c
-@@ -223,7 +223,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	if (dev->is_pciehp &&
- 	    (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
- 	     pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) &&
--	    (pcie_ports_native || host->native_pcie_hotplug)) {
-+	    host->native_pcie_hotplug) {
- 		services |= PCIE_PORT_SERVICE_HP;
- 
- 		/*
-@@ -240,14 +240,14 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	if ((pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
-              pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC) &&
- 	    dev->aer_cap && pci_aer_available() &&
--	    (pcie_ports_native || host->native_aer))
-+	    host->native_aer)
- 		services |= PCIE_PORT_SERVICE_AER;
- #endif
- 
- 	/* Root Ports and Root Complex Event Collectors may generate PMEs */
- 	if ((pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
- 	     pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC) &&
--	    (pcie_ports_native || host->native_pme)) {
-+	    host->native_pme) {
- 		services |= PCIE_PORT_SERVICE_PME;
- 
- 		/*
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index cc58bf2f2c84..e1b6a8af6f71 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -25,8 +25,6 @@
- 
- #define PCIE_PORT_DEVICE_MAXSERVICES   5
- 
--extern bool pcie_ports_dpc_native;
--
- #ifdef CONFIG_PCIEAER
- int pcie_aer_init(void);
- #else
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d31a8d107b1e..f3e9c6c9c5e0 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1915,12 +1915,14 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
- #ifdef CONFIG_PCIEPORTBUS
- extern bool pcie_ports_disabled;
- extern bool pcie_ports_native;
-+extern bool pcie_ports_dpc_native;
- 
- int pcie_set_target_speed(struct pci_dev *port, enum pci_bus_speed speed_req,
- 			  bool use_lt);
- #else
- #define pcie_ports_disabled	true
- #define pcie_ports_native	false
-+#define pcie_ports_dpc_native	false
- 
- static inline int pcie_set_target_speed(struct pci_dev *port,
- 					enum pci_bus_speed speed_req,
--- 
-2.43.0
-
+> Add device-specific reset methods using BAR-space hardware reset registers
+> that exist in these devices:
+> 
+>   Patch 1: SDX62/SDX65 modem reset via MHI SoC reset
+>   Patch 2: WCN6855/WCN7850 WLAN reset via SoC global reset
+> 
+> These are true hardware reset mechanisms (not power management or firmware
+> error recovery), providing proper device reset for VFIO scenarios.
+> 
+> Testing shows stable operation over 100+ VM crash/reset cycles. Device-
+> specific reset is position #1 in the reset hierarchy, so these devices
+> will use hardware reset as their primary reset method.
+> 
+> Jose Ignacio Tornos Martinez (2):
+>   PCI: Add device-specific reset for Qualcomm SDX62/SDX65 modems
+>   PCI: Add device-specific reset for Qualcomm WCN6855/WCN7850 WLAN
+> 
+>  drivers/pci/quirks.c | 116 +++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 116 insertions(+)
+> 
+> ---
+> v14: Address Bjorn Helgaas feedback:
+>   - Split WLAN and modem resets into two separate patches
+>   - Clarify commit message for WLAN devices: VFIO resets on every
+>     reassignment, clean shutdown leaves device in usable state via
+>     driver callbacks, but unclean termination is where the lack of reset
+>     is critical
+>   - No code changes from v13, only patch split and commit message
+>     clarification (Mani's Reviewed-by retained)
+> v13: https://lore.kernel.org/all/20260915223634.GA878346@bhelgaas/
+> 
+> --
+> 2.54.0
+> 
