@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 421D4488223
-	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 11:25:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C70CC489886
+	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 11:25:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790940320; cv=none; b=mw4Nlwd8YuKhK5IyxvqbyhcvERqYbz4OYxbxFdWvE5SisvRxoGMpLFvr1TDU2CwRuvStk3KRh1MWOmE1zqSbJB5dS8FBku2aWbpbVDxwmSBZHc5j72Ah9493vOGMcLwGz0nKOGZLyL0Jz9em83jc0jj3hwSuCiIZYWsxIszyRO4=
+	t=1790940321; cv=none; b=QIy6z1iYSH+ZxvaYEGMzyJ/YcTK0Wi7+Uu6QMqnoV5xD0xnEZp7GSIGqqWwxaPDKdTOwVGSKcVC006mPrc2Zd6MJI92ejCCFcvQKQp3xH3DXtPR1BtXknjIX8OwnMwxpzUu5uXkpeEIX/DBFjPhZFF8F/rRF2wpU0ItYI4jNZZM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790940320; c=relaxed/simple;
-	bh=HsRMpAn4DmpzKZU08Hr2rZTWZDDXaRSfsgQHvDhXwQE=;
+	s=arc-20240116; t=1790940321; c=relaxed/simple;
+	bh=YtaewfYGIjS9QSXUnXB9H7qFrrKUGzUCyWhBsB+H0WE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DUflm2T/ax0yEbTZXHHbtKoYsUKxMS5WKeXyveZu7eAZuuzToJsY+2/ZLvD+ttYXECIN7Llb119Q71vGrvlAkqyWI125AX1pUA8l7ZEPJmi8xknqAiEi70XZ1etq2lBkrqacyvggwaBtx6EA/CbwndJsg+ktpOVYrGPYYnRFZTI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J/+yVIj/; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Q5vrUBy1mjXch3DfLoC7jDm2cBiO9CyCHVD/PEZh/7kjq1b8qHk04FTRJZRkLg00QI6heQiMxkBNdfNQxkVHAWU/KwYE7I2A0CW84TGkIKA8DOWtcPRGizBOdpd/nLqIjzSczDpb5gijguWlxli6WTbtbl2p3J/N+5WShgeRt20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K2pJhL4f; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J/+yVIj/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DD401F000FF;
-	Fri,  2 Oct 2026 11:25:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K2pJhL4f"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6082F1F00893;
+	Fri,  2 Oct 2026 11:25:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790940318;
-	bh=ebUhQsceJdzHs0odoG1tRYv2HFeKZAjucFx/4h1XbAM=;
+	s=k20260515; t=1790940319;
+	bh=nhoPYqn+VCzD75IrE+1ejxw7Q4DQsn9QigOsPlbx0Ks=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=J/+yVIj/mIrFMiyFMlb4TpDhqBOI/nyLvlNoQtVMfZLOxuIywMn0meMZz1YSBTI3f
-	 Cv8aSNi/vYRG7wOzcH7mcH8Elf/pL/t7OV0VelGW4aQYdvr8cNqVjVIUaKN0vKLvlD
-	 SxGocxa1nMk2XreEf7vf60rXFS3RlaNrE4rP6DXRGKAS3i0BftbJdhIie83CfaarHo
-	 q2pzSs9DL/xG2bWnuIYBRVextiBQVEIunaNjeaDm/EhZz9Po6WPfRJHszadQ9D+xHw
-	 Go8ivZi8kwu52XfkdqL1El1sbn67gRoia9E5K3HYRbmYQafEOqeYPtGXuMJuG2F5Rh
-	 gfacPGY2/4jBA==
+	b=K2pJhL4fYiq8NilBXA2QcRAjthk6+R9y+d69EeFbLtqJYBxMuWlRXthzPWdAMxcZQ
+	 H/XGqiWNEFHP0Gbq2w1QruivWuW4MqXaIiuuCwetsyKUqm7RDyUyJaRguWfBJwYdb4
+	 hYrTJJNifYYTcKAki20cSsABCMI5J6+Qzm6UG8h1eBaPXbnpSBJCeUjK/dOjZb9+qG
+	 wdU2B0OQGuk8E3toGH2UPNEjYt1EXs8xum3TSkdDFyaNXoX9efuHgCJyDDf8ioxH06
+	 +mHrr4lg8ogthOBySCPi58L6bwOfBAafzNOxiQ7V3SULtZisb+vvliYWeBuwcakvk0
+	 XzWFmUYuzjCIg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 9/9] PCI: rzg3s-host: Add bridge::reset_root_port()
+Subject: Re: [PATCH v5 8/9] PCI: rzg3s-host: Re-enumerate the bus on PCIe
+ link-state changes
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Claudiu Beznea" <claudiu.beznea@kernel.org>
-Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
-In-Reply-To: <20261002110935.2004349-10-claudiu.beznea@kernel.org>
+Cc: linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
+In-Reply-To: <20261002110935.2004349-9-claudiu.beznea@kernel.org>
 References: <20261002110935.2004349-1-claudiu.beznea@kernel.org>
- <20261002110935.2004349-10-claudiu.beznea@kernel.org>
+ <20261002110935.2004349-9-claudiu.beznea@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 02 Oct 2026 11:25:18 +0000
-Message-Id: <20261002112518.9DD401F000FF@smtp.kernel.org>
+Date: Fri, 02 Oct 2026 11:25:19 +0000
+Message-Id: <20261002112519.6082F1F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,160 +47,145 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-- [High] pci: rzg3s: INTx/MSI mask state loss due to stale register snapshot
-- [High] pci: rzg3s: fatal unpowered MMIO access in PM notifier after reset=
- failure
-- [High] pci: rzg3s: lockless iteration over bus->devices causes list corru=
-ption
-- [Medium] pci: rzg3s: missing I/O flush allows IRQs to fire after synchron=
-ize_irq
+- [High] PCI: deadlock during hibernation due to unhandled PM notifiers
+- [High] PCI: probe succeeds with uninitialized controller on DT error
+- [High] PCI: NULL pointer dereference if event IRQ fires before root bus c=
+reation
+- [Medium] PCI: ghost devices left on bus if link bounces during suspend
 --
 
-commit c5ffdc83b56df877b7b137c1229cfe9487c3fb34
-Author: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-Subject: PCI: rzg3s-host: Add bridge::reset_root_port()
+commit e916ae87086b955078f323f09316792067184bfe
+Author: John Madieu <john.madieu.xa@bp.renesas.com>
+Subject: PCI: rzg3s-host: Re-enumerate the bus on PCIe link-state changes
 
-This commit adds a reset_root_port() callback for the rzg3s-host bridge.
-It introduces the started boolean to track the controller state and prevents
-double start/stop from breaking reference counters. It also updates the link
-event and power management notifier paths to handle the interrupts correctl=
-y.
+This commit adds support for reacting to link-state changes by handling
+the DL_UpDown signal on RZ/G3 and RZ/V2 PCIe controllers. It introduces
+a link event interrupt, hotplug-like logic, and PM notifiers to serialize
+with device suspend/resume.
 
 > diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/contr=
 oller/pcie-rzg3s-host.c
-> index 78e783928b9dc..eea215818633b 100644
+> index 3b62b1be5b2a1..78e783928b9dc 100644
 > --- a/drivers/pci/controller/pcie-rzg3s-host.c
 > +++ b/drivers/pci/controller/pcie-rzg3s-host.c
 [ ... ]
-> @@ -1115,6 +1117,11 @@ static void rzg3s_pcie_link_event(struct rzg3s_pci=
-e_host *host)
-> =20
->  		dev_info(host->dev, "PCIe link down, removing devices\n");
-> =20
-> +		for_each_pci_bridge(dev, bridge->bus) {
-> +			if (pci_pcie_type(dev) =3D=3D PCI_EXP_TYPE_ROOT_PORT)
-> +				pci_host_handle_link_down(dev);
-> +		}
-> +
->  		pci_lock_rescan_remove();
-
-[Severity: High]
-Is it safe to iterate over bus->devices without holding the PCI
-rescan/remove lock?
-
-It looks like concurrent modifications to the list from sysfs rescan or
-hotplug events could cause list corruption or a use-after-free. The
-necessary lock is correctly taken immediately after this loop for the remov=
-al
-step, but appears to be omitted for this iteration.
-
-[ ... ]
-> @@ -1956,6 +1974,64 @@ static int rzg3s_pcie_host_start(struct rzg3s_pcie=
-_host *host)
+> @@ -1095,6 +1103,98 @@ static int rzg3s_pcie_set_max_link_speed(struct rz=
+g3s_pcie_host *host)
 >  	return ret;
 >  }
 > =20
-> +static int rzg3s_pcie_host_reset_root_port(struct pci_host_bridge *bridg=
-e,
-> +					   struct pci_dev *pdev)
+> +static void rzg3s_pcie_link_event(struct rzg3s_pcie_host *host)
 > +{
-> +	struct rzg3s_pcie_host *host =3D pci_host_bridge_priv(bridge);
-> +	unsigned long flags;
-> +	u32 irqs;
-> +	int ret;
+> +	struct pci_host_bridge *bridge =3D pci_host_bridge_from_priv(host);
+> +	struct pci_bus *bus =3D bridge->bus;
+> +	u32 val;
 > +
-> +	/* Mask link up/down interrupts. */
-> +	writel(0, host->axi + RZG3S_PCI_PEIE0);
+> +	val =3D readl_relaxed(host->axi + RZG3S_PCI_PCSTAT1);
+> +	if (val & RZG3S_PCI_PCSTAT1_DL_DOWN_STS) {
+> +		struct pci_dev *dev, *tmp;
 > +
-> +	/* Mask INTx and MSI interrupts. */
-> +	raw_spin_lock_irqsave(&host->hw_lock, flags);
-> +	irqs =3D readl(host->axi + RZG3S_PCI_PINTRCVIE);
-> +	writel(0, host->axi + RZG3S_PCI_PINTRCVIE);
-> +	raw_spin_unlock_irqrestore(&host->hw_lock, flags);
+> +		dev_info(host->dev, "PCIe link down, removing devices\n");
 > +
-> +	/*
-> +	 * Make sure the next operations are not disturbed by any pending
-> +	 * IRQs.
-> +	 */
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		synchronize_irq(host->msi.irq);
+> +		pci_lock_rescan_remove();
+> +		list_for_each_entry_safe_reverse(dev, tmp, &bus->devices,
+
+[Severity: High]
+The event IRQ is requested and enabled in rzg3s_pcie_host_setup() before
+bridge->bus is allocated by pci_host_probe().
+
+If the hardware generates a spurious interrupt during this narrow window,
+bridge->bus could be NULL when this handler runs.
+
+Will this dereference a NULL pointer?
+
+> +						 bus_list)
+> +			pci_stop_and_remove_bus_device(dev);
+> +		pci_unlock_rescan_remove();
+> +	} else {
+> +		struct pci_bus *child;
+> +		int ret;
+> +
+> +		dev_info(host->dev, "PCIe link up, rescanning bus\n");
 
 [Severity: Medium]
-Does the posted write to the interrupt mask register need to be flushed
-with a dummy read before calling synchronize_irq()?
+On resume, the PM notifier wakes the IRQ thread.
 
-Without a read-back to ensure the mask has reached the physical hardware, t=
-he
-controller might still emit an interrupt while synchronize_irq() runs,
-potentially creating a race window where the handler crashes when the
-controller clocks are subsequently cut in rzg3s_pcie_host_stop().
+If the link is currently up, it seems this branch is taken and rescans the =
+bus
+without removing the old devices that might have been hot-swapped while the
+link was down.
 
-> +	for (unsigned int i =3D 0; i < PCI_NUM_INTX; i++)
-> +		synchronize_irq(host->intx_irqs[i]);
-> +
-> +	ret =3D rzg3s_pcie_host_stop(host);
-> +	if (ret) {
-> +		dev_err(host->dev, "Failed to stop the host!\n");
-> +		goto unmask_irqs;
-> +	}
-> +
-> +	ret =3D rzg3s_pcie_host_start(host, false);
-> +	if (ret) {
-> +		dev_err(host->dev, "Failed to start the host!\n");
-> +
-> +		/*
-> +		 * Don't unmask IRQs. We are in a bad state here and we
-> +		 * can recover only through a suspend/resume cycle. Just
-> +		 * return and preserve the stop state.
-> +		 */
-> +		return ret;
-> +	}
-> +
-> +unmask_irqs:
-> +	/* Unmask INTx and MSI interrupts. */
-> +	raw_spin_lock_irqsave(&host->hw_lock, flags);
-> +	writel_relaxed(irqs, host->axi + RZG3S_PCI_PINTRCVIE);
-> +	raw_spin_unlock_irqrestore(&host->hw_lock, flags);
+Could this leave ghost devices on the bus if the link goes down and comes b=
+ack
+up while the system is suspended?
 
-[Severity: High]
-Could this unconditional restore overwrite mask changes made by concurrent
-INTx mask/unmask operations?
-
-Since hw_lock was dropped earlier to wait for IRQs and execute the
-controller stop/start sequence, any intermediate updates to the register by
-other drivers dynamically masking or unmasking their IRQs might be
-permanently lost here when the old snapshot is restored.
-
-> +
-> +	/* Unmask link up/down interrupts. */
-> +	writel_relaxed(RZG3S_PCI_PEIE0_DL_UPDOWN, host->axi + RZG3S_PCI_PEIE0);
-> +
-> +	host->started =3D true;
-> +
-> +	return ret;
-> +}
 [ ... ]
-> @@ -2036,6 +2112,7 @@ static int rzg3s_pcie_pm_notifier(struct notifier_b=
-lock *nb,
->  	case PM_SUSPEND_PREPARE:
->  		/* Disable link up/down interrupts. */
->  		disable_irq(host->event_irq);
-> +		writel_relaxed(0, host->axi + RZG3S_PCI_PEIE0);
+> @@ -1723,8 +1838,14 @@ rzg3s_pcie_host_setup(struct rzg3s_pcie_host *host,
+> =20
+>  	ret =3D rzg3s_pcie_host_init(host);
+>  	if (ret) {
+> -		dev_err_probe(dev, ret, "Failed to initialize the HW!\n");
+> -		goto teardown_irqdomain;
+> +		if (ret !=3D -ENODEV) {
+> +			dev_err_probe(dev, ret,
+> +				      "Failed to initialize the HW!\n");
+> +			goto teardown_irqdomain;
+> +		}
+> +
+> +		/* Link is down: hotplug via DL_UpDown will recover. */
+> +		return 0;
 
 [Severity: High]
-Could this write cause a synchronous external abort if the controller is
-currently unpowered?
+If a mandatory resource is missing, such as resource_list_first_type()
+returning NULL in rzg3s_pcie_config_init(), it returns -ENODEV.
 
-If rzg3s_pcie_host_start() fails inside rzg3s_pcie_host_reset_root_port(),
-the function intentionally returns early, leaving host->started false and
-the controller in reset with clocks disabled. A subsequent system suspend
-would unconditionally hit this AXI write, which might hang the bus since
-the target peripheral is held in reset.
+This would be caught here as a safe link-down state and return success,
+potentially leaving the controller uninitialized.
 
->  		break;
+Does this pattern mask genuine configuration errors?
+
+[ ... ]
+> @@ -1905,6 +2026,31 @@ static void rzv2h_pcie_release_lanes(void *data)
+>  	rzv2h_num_total_lanes -=3D host->num_lanes;
+>  }
 > =20
->  	case PM_POST_SUSPEND:
+> +static int rzg3s_pcie_pm_notifier(struct notifier_block *nb,
+> +				  unsigned long action, void *data)
+> +{
+> +	struct rzg3s_pcie_host *host =3D container_of(nb, struct rzg3s_pcie_hos=
+t,
+> +						    pm_nb);
+> +
+> +	switch (action) {
+> +	case PM_SUSPEND_PREPARE:
+> +		/* Disable link up/down interrupts. */
+> +		disable_irq(host->event_irq);
+> +		break;
+
+[Severity: High]
+The switch statement only handles PM_SUSPEND_PREPARE and PM_POST_SUSPEND,
+completely omitting PM_HIBERNATION_PREPARE and PM_RESTORE_PREPARE.
+
+If a link event occurs during hibernation transitions, the threaded interru=
+pt
+could attempt to acquire the same lock the PM core is holding.
+
+Can this missing hibernation support open a window for a deadlock?
+
+> +
+> +	case PM_POST_SUSPEND:
+> +		/* Enable link up/down interrupts and force link re-scan. */
+> +		writel_relaxed(RZG3S_PCI_PEIE0_DL_UPDOWN,
+> +			       host->axi + RZG3S_PCI_PEIE0);
+> +		WRITE_ONCE(host->link_rescan, true);
+> +		enable_irq(host->event_irq);
+> +		irq_wake_thread(host->event_irq, host);
+> +		break;
+> +	}
+> +
+> +	return NOTIFY_DONE;
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261002110935.2004=
-349-1-claudiu.beznea@kernel.org?part=3D9
+349-1-claudiu.beznea@kernel.org?part=3D8
