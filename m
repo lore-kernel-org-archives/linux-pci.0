@@ -1,191 +1,157 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C70CC489886
-	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 11:25:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 097A2370AE5;
+	Fri,  2 Oct 2026 11:33:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790940321; cv=none; b=QIy6z1iYSH+ZxvaYEGMzyJ/YcTK0Wi7+Uu6QMqnoV5xD0xnEZp7GSIGqqWwxaPDKdTOwVGSKcVC006mPrc2Zd6MJI92ejCCFcvQKQp3xH3DXtPR1BtXknjIX8OwnMwxpzUu5uXkpeEIX/DBFjPhZFF8F/rRF2wpU0ItYI4jNZZM=
+	t=1790940824; cv=none; b=MZgWB9ELQaWv985cnvTpcPgnp7WoQKNgfiQsiU3iIKjeK91EgOi/19XVIGEJi6ZE6xPQrX8vMkfVXcchBrVxguFn9S/ETrrwSIDTT9XMMsdf4JmHMKEgMB0gyl/tS70oY/c2/lnPTaqRR3rtvy8Tk0ztKh8nxYBTHIwnUeNSiQs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790940321; c=relaxed/simple;
-	bh=YtaewfYGIjS9QSXUnXB9H7qFrrKUGzUCyWhBsB+H0WE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Q5vrUBy1mjXch3DfLoC7jDm2cBiO9CyCHVD/PEZh/7kjq1b8qHk04FTRJZRkLg00QI6heQiMxkBNdfNQxkVHAWU/KwYE7I2A0CW84TGkIKA8DOWtcPRGizBOdpd/nLqIjzSczDpb5gijguWlxli6WTbtbl2p3J/N+5WShgeRt20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K2pJhL4f; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790940824; c=relaxed/simple;
+	bh=r6CWrnw1f0smbbNB2XTiSi9XyKGkwRBcnBzHu61b+Jc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=kBRg4NWHKJydIPpKy9Co3erIVbOyySqmjVAnPVaT6b4Z4xlabzvQ/5SLKfhZSaNkev6+u5qKW2TdkLZo4scMXWCECTy0Kbdi5rV0RRLyxzylgHoX/Tf4jYUi3C5hTDviwZbdBgFuU8epiXE7ylLIWBdY1EzKAzdS0GntxW/QEZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Qygi6DRo; arc=none smtp.client-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K2pJhL4f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6082F1F00893;
-	Fri,  2 Oct 2026 11:25:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790940319;
-	bh=nhoPYqn+VCzD75IrE+1ejxw7Q4DQsn9QigOsPlbx0Ks=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=K2pJhL4fYiq8NilBXA2QcRAjthk6+R9y+d69EeFbLtqJYBxMuWlRXthzPWdAMxcZQ
-	 H/XGqiWNEFHP0Gbq2w1QruivWuW4MqXaIiuuCwetsyKUqm7RDyUyJaRguWfBJwYdb4
-	 hYrTJJNifYYTcKAki20cSsABCMI5J6+Qzm6UG8h1eBaPXbnpSBJCeUjK/dOjZb9+qG
-	 wdU2B0OQGuk8E3toGH2UPNEjYt1EXs8xum3TSkdDFyaNXoX9efuHgCJyDDf8ioxH06
-	 +mHrr4lg8ogthOBySCPi58L6bwOfBAafzNOxiQ7V3SULtZisb+vvliYWeBuwcakvk0
-	 XzWFmUYuzjCIg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 8/9] PCI: rzg3s-host: Re-enumerate the bus on PCIe
- link-state changes
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Claudiu Beznea" <claudiu.beznea@kernel.org>
-Cc: linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
-In-Reply-To: <20261002110935.2004349-9-claudiu.beznea@kernel.org>
-References: <20261002110935.2004349-1-claudiu.beznea@kernel.org>
- <20261002110935.2004349-9-claudiu.beznea@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 02 Oct 2026 11:25:19 +0000
-Message-Id: <20261002112519.6082F1F00893@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Qygi6DRo"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1790940821; x=1822476821;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=r6CWrnw1f0smbbNB2XTiSi9XyKGkwRBcnBzHu61b+Jc=;
+  b=Qygi6DRolfr3N5fl/McmsFddC8UVQU1/0IJDfDXDIqUTovV4YJwoHITO
+   EqK/2rXSkWW4WyT5okK2AIHKkav6en1fFsVTEcITT8SHs5amKpdSKKA1Y
+   kbYS5ITmxJ+v+aBZIwMXtzSYigzDsGrfnyglNwhNOoJvmpW0NyulJ8RRb
+   Iw5s0m8czabzDr8pJuid7VagnOUMCC26dPpqTblgIn4hW+MLo1FL/v5AJ
+   FLFb+awxX5g63k4ONTItEZoCKUi4MDnU0pB0OBsZQpcoqj8lF6RjxKAHH
+   c+s1I872h42NfMjFFg6Mssl+rr1XRuYIUuwn2ZFiQEjcjRjJ93s0s1NDM
+   g==;
+X-CSE-ConnectionGUID: Q/mTwLSFQdKkTPSLo/MyHg==
+X-CSE-MsgGUID: 4c1SZ0hqTNWs9qMEFKd/kQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11922"; a="90659710"
+X-IronPort-AV: E=Sophos;i="6.27,136,1787036400"; 
+   d="scan'208";a="90659710"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2026 04:33:40 -0700
+X-CSE-ConnectionGUID: JXJvfIbcSu2ddzLzrYktsQ==
+X-CSE-MsgGUID: MByScocJQ0ys5fR2n4Mhkw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,136,1787036400"; 
+   d="scan'208";a="279969436"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.243])
+  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2026 04:33:35 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
+	Nikolas Joshua Britton <nbritton@exabit.io>,
+	Geramy Loveless <gloveless@jqluv.com>,
+	Eric Auger <eauger@redhat.com>,
+	Alexey Fomenko <alexey.fomenko@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Rob Herring <robh@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+Cc: linux-kernel@vger.kernel.org,
+	Bradley Morgan <brads@mainlining.org>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH v2 0/7] PCI: Resource placement algorithm fixes
+Date: Fri,  2 Oct 2026 14:33:08 +0300
+Message-ID: <20261002113319.6652-1-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [High] PCI: deadlock during hibernation due to unhandled PM notifiers
-- [High] PCI: probe succeeds with uninitialized controller on DT error
-- [High] PCI: NULL pointer dereference if event IRQ fires before root bus c=
-reation
-- [Medium] PCI: ghost devices left on bus if link bounces during suspend
---
+Hi,
 
-commit e916ae87086b955078f323f09316792067184bfe
-Author: John Madieu <john.madieu.xa@bp.renesas.com>
-Subject: PCI: rzg3s-host: Re-enumerate the bus on PCIe link-state changes
+This series generalizes resource placement algorithm. The commit
+9036bd0efcb6 ("PCI: Align head space better") special cased one
+composite resource remainder case to fix a regression (in a long chain
+of regression fixes). Unfortunately, it introduced another regression
+(or a few, to be more accurate).
 
-This commit adds support for reacting to link-state changes by handling
-the DL_UpDown signal on RZ/G3 and RZ/V2 PCIe controllers. It introduces
-a link event interrupt, hotplug-like logic, and PM notifiers to serialize
-with device suspend/resume.
+Instead of building more special tricks, generalize the PCI resource
+placement algorithm so it returns placements that gives better chances
+for the greedy assignment algorithm to find suitable space for
+subsequent assignments.
 
-> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/contr=
-oller/pcie-rzg3s-host.c
-> index 3b62b1be5b2a1..78e783928b9dc 100644
-> --- a/drivers/pci/controller/pcie-rzg3s-host.c
-> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-[ ... ]
-> @@ -1095,6 +1103,98 @@ static int rzg3s_pcie_set_max_link_speed(struct rz=
-g3s_pcie_host *host)
->  	return ret;
->  }
-> =20
-> +static void rzg3s_pcie_link_event(struct rzg3s_pcie_host *host)
-> +{
-> +	struct pci_host_bridge *bridge =3D pci_host_bridge_from_priv(host);
-> +	struct pci_bus *bus =3D bridge->bus;
-> +	u32 val;
-> +
-> +	val =3D readl_relaxed(host->axi + RZG3S_PCI_PCSTAT1);
-> +	if (val & RZG3S_PCI_PCSTAT1_DL_DOWN_STS) {
-> +		struct pci_dev *dev, *tmp;
-> +
-> +		dev_info(host->dev, "PCIe link down, removing devices\n");
-> +
-> +		pci_lock_rescan_remove();
-> +		list_for_each_entry_safe_reverse(dev, tmp, &bus->devices,
+In short words, the new approach tries to find a placement for the
+current resource that blocks as little of the free space range as
+possible, considering both alignment and continuous free span of the
+remaining free space.
 
-[Severity: High]
-The event IRQ is requested and enabled in rzg3s_pcie_host_setup() before
-bridge->bus is allocated by pci_host_probe().
+In addition, the series corrects composite resource sizing to account
+for gaps that have to be added due to alignment constaints and
+remainder space not fully connecting (filling space all the way to
+the bridge window align).
 
-If the hardware generates a spurious interrupt during this narrow window,
-bridge->bus could be NULL when this handler runs.
+More detailed explanations in the patches themselves.
 
-Will this dereference a NULL pointer?
+Unfortunately, this also causes yet another regression due to shuffling
+resources around, even if the resulting arrangement seems just as valid
+as any other. The workaround quirk is in the last patch.
 
-> +						 bus_list)
-> +			pci_stop_and_remove_bus_device(dev);
-> +		pci_unlock_rescan_remove();
-> +	} else {
-> +		struct pci_bus *child;
-> +		int ret;
-> +
-> +		dev_info(host->dev, "PCIe link up, rescanning bus\n");
+I find it likely that after this series the resources are packed tight
+enough to solve also
+  https://bugzilla.kernel.org/show_bug.cgi?id=220016
+from more than a year back but that remains to be seen (if we can still
+get the reporter to test it).
 
-[Severity: Medium]
-On resume, the PM notifier wakes the IRQ thread.
 
-If the link is currently up, it seems this branch is taken and rescans the =
-bus
-without removing the old devices that might have been hot-swapped while the
-link was down.
+I've another series coming up to improve pci=resource_alignment locking
+as I realized the current approach allows parameter change to race with
+the fitting and assignment algorithm.
 
-Could this leave ghost devices on the bus if the link goes down and comes b=
-ack
-up while the system is suspended?
+v2:
+- Add patch to cleanup parisc debug print (do dyndbg conversion)
+- Add patch to prevent remainder tricks when alignment override is used
+  (found by sashiko)
+- Do not use PCIBIOS_MIN_IO/MEM but 1U as min align. The former seem
+  address space lower bounds even if parisc arch code misleadingly
+  uses them for ALIGN() call.
+- Fix res->end + 1 overflow case (found by sashiko)
+- Tweak debug print formatting
+- Reworked the iomem black hole quirk (now based on the bridge)
 
-[ ... ]
-> @@ -1723,8 +1838,14 @@ rzg3s_pcie_host_setup(struct rzg3s_pcie_host *host,
-> =20
->  	ret =3D rzg3s_pcie_host_init(host);
->  	if (ret) {
-> -		dev_err_probe(dev, ret, "Failed to initialize the HW!\n");
-> -		goto teardown_irqdomain;
-> +		if (ret !=3D -ENODEV) {
-> +			dev_err_probe(dev, ret,
-> +				      "Failed to initialize the HW!\n");
-> +			goto teardown_irqdomain;
-> +		}
-> +
-> +		/* Link is down: hotplug via DL_UpDown will recover. */
-> +		return 0;
+Ilpo Järvinen (7):
+  resource: Mark free space assigned
+  PCI/parisc: Clean up resource debug print & use dynamic debug
+  PCI: Honor alignment overrides
+  PCI: Fix nesting windows with remainder at the left edge
+  PCI: Place resources to either edge of the window
+  PCI: Fix composite resource sizing
+  PCI/quirks: Avoid certain address on Genoa systems
 
-[Severity: High]
-If a mandatory resource is missing, such as resource_list_first_type()
-returning NULL in rzg3s_pcie_config_init(), it returns -ENODEV.
+ arch/alpha/kernel/pci.c          |   3 +-
+ arch/arm/kernel/bios32.c         |   5 +-
+ arch/m68k/kernel/pcibios.c       |   4 +-
+ arch/mips/pci/pci-generic.c      |   5 +-
+ arch/mips/pci/pci-legacy.c       |   5 +-
+ arch/parisc/kernel/pci.c         |  20 +--
+ arch/powerpc/kernel/pci-common.c |   5 +-
+ arch/sh/drivers/pci/pci.c        |   5 +-
+ arch/x86/pci/i386.c              |   5 +-
+ arch/xtensa/kernel/pci.c         |   5 +-
+ drivers/char/agp/intel-gtt.c     |   5 +-
+ drivers/gpu/drm/i915/i915_gmch.c |   5 +-
+ drivers/pci/pci.c                |   5 +-
+ drivers/pci/pci.h                |   4 +
+ drivers/pci/quirks.c             |  35 +++++
+ drivers/pci/setup-bus.c          |  83 ++++++++++-
+ drivers/pci/setup-res.c          | 227 +++++++++++++++++++++++++++----
+ include/linux/pci.h              |  27 +++-
+ kernel/resource.c                |   1 +
+ 19 files changed, 385 insertions(+), 69 deletions(-)
 
-This would be caught here as a safe link-down state and return success,
-potentially leaving the controller uninitialized.
 
-Does this pattern mask genuine configuration errors?
+base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
+-- 
+2.47.3
 
-[ ... ]
-> @@ -1905,6 +2026,31 @@ static void rzv2h_pcie_release_lanes(void *data)
->  	rzv2h_num_total_lanes -=3D host->num_lanes;
->  }
-> =20
-> +static int rzg3s_pcie_pm_notifier(struct notifier_block *nb,
-> +				  unsigned long action, void *data)
-> +{
-> +	struct rzg3s_pcie_host *host =3D container_of(nb, struct rzg3s_pcie_hos=
-t,
-> +						    pm_nb);
-> +
-> +	switch (action) {
-> +	case PM_SUSPEND_PREPARE:
-> +		/* Disable link up/down interrupts. */
-> +		disable_irq(host->event_irq);
-> +		break;
-
-[Severity: High]
-The switch statement only handles PM_SUSPEND_PREPARE and PM_POST_SUSPEND,
-completely omitting PM_HIBERNATION_PREPARE and PM_RESTORE_PREPARE.
-
-If a link event occurs during hibernation transitions, the threaded interru=
-pt
-could attempt to acquire the same lock the PM core is holding.
-
-Can this missing hibernation support open a window for a deadlock?
-
-> +
-> +	case PM_POST_SUSPEND:
-> +		/* Enable link up/down interrupts and force link re-scan. */
-> +		writel_relaxed(RZG3S_PCI_PEIE0_DL_UPDOWN,
-> +			       host->axi + RZG3S_PCI_PEIE0);
-> +		WRITE_ONCE(host->link_rescan, true);
-> +		enable_irq(host->event_irq);
-> +		irq_wake_thread(host->event_irq, host);
-> +		break;
-> +	}
-> +
-> +	return NOTIFY_DONE;
-> +}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261002110935.2004=
-349-1-claudiu.beznea@kernel.org?part=3D8
