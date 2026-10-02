@@ -1,58 +1,58 @@
 Received: from mx08-001d1705.pphosted.com (mx08-001d1705.pphosted.com [185.183.30.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8475F3EB7F4
-	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 19:36:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C80B361DCB
+	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 19:54:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.183.30.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790969797; cv=none; b=BovFbEB7gT5DrAAq2wPcg64tYCU5lWgVczdFSJufZ+TQp4r0OssweLl1smHnp0Jd7SX0RHoB6xKwdLDFGtb/i28UA0K5Zu5UrL8nD6ZLhmYLvMGOcz95o8OD5IBHG1duEeLf1AgDfXjYVmOwISLSqirOak3yKx/2zhybmMxtVSQ=
+	t=1790970879; cv=none; b=iDz4jCS4msNqfFRl5QEQU1O9jVaBb92+zBHp3kIFKrLINv54YE2P/bupIIgWW1+23S7Y7u4s+RT5Bj+KIdAbCBqII5bLZFlCMpoTTdsyeP5cGN2Oq3E7grIOLZy7aPbh/8WWkt8LnlrlxJ4yN4wNR7ahbCQDzO+/Mm0LEXKs9yI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790969797; c=relaxed/simple;
-	bh=OUGr0HHZy0HzpOaMZv6rZGcyBaiTk3jqp9lR48LpTkM=;
+	s=arc-20240116; t=1790970879; c=relaxed/simple;
+	bh=JQTOYv5NYU7Flv/P6OLy9R9hGbe2CLPr3I902KcC7Pk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dj0cZ5j5APY77/8JnDlY9Fb1ZPIh7SHuFbkdW91eXUFK/RlSatKv+1ny7/ARHzKB3i1udPavt5lx8J9yJUObo0V2WBdgWQE/7bTCL8Ptc+UVfW45drngxOVFnQ/gBDKqCcbGcA9VIP1waMsw7jjUixnHWPpe6IE+L+cRiLeGetY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sony.com; spf=pass smtp.mailfrom=sony.com; dkim=pass (2048-bit key) header.d=sony.com header.i=@sony.com header.b=bKKfheXt; arc=none smtp.client-ip=185.183.30.70
+	 MIME-Version; b=qcLsqC0bk7yi3yuIvYfXBdkWGMHTmUWdbXlWKXcTgIpSAFExYifA8o+Ts7HsX5YIjXG66HOZ3f1CdWD6Yqo3Odt9DAIgfEXcYwLSBqX1aRiUIXhHoMvNeTxykF97vZhWH1Bwgwu8YxvYc5fQIawaJ9fGaRMR/fe5KuvB8C5pxS0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sony.com; spf=pass smtp.mailfrom=sony.com; dkim=pass (2048-bit key) header.d=sony.com header.i=@sony.com header.b=NvS2oz4g; arc=none smtp.client-ip=185.183.30.70
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sony.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sony.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sony.com header.i=@sony.com header.b="bKKfheXt"
-Received: from pps.filterd (m0209323.ppops.net [127.0.0.1])
-	by mx08-001d1705.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 692JRfoA1637708;
-	Fri, 2 Oct 2026 19:31:24 GMT
+	dkim=pass (2048-bit key) header.d=sony.com header.i=@sony.com header.b="NvS2oz4g"
+Received: from pps.filterd (m0209319.ppops.net [127.0.0.1])
+	by mx08-001d1705.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 692JR5OM1287666;
+	Fri, 2 Oct 2026 19:31:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sony.com; h=cc
 	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=p1; bh=GR+pI+0DJh6hhxBPV8
-	d0uWm8zweWnIqHS2S4KXgM9o8=; b=bKKfheXtQQ7q1T3Qm5E5WKVxdxizmRKTdb
-	Ib25DDxpgpUmrBqtGKIBzXhhUAkx2r+vU+uwBgEm7hAMnN42RGB8hEDzciT6AtTl
-	c50OouqdqmOdbJTJwWAzXz+1T758KcCcbGf91mf3SioTYS0eEZMEtr17/Zc+khxQ
-	5F/NZnEkUdgtgIhHMV5Mm2uqbAEyYdZ/+N37iuDU/p/rGgtpLl2ljwgXSYmRhehf
-	jZFTL6beW6WgCqBVCrqdtAz0kqwkHt9C8sEHgvzRJLoSAPhSfX3Zh/0xIEkIY8Cw
-	kXw3q1UhZj4PI24zVX7ByCAJwg2vjXtGRgGlDG1mnFwuoXUyvoPQ==
-Received: from sgppsem01v.sg.gdce.sony.com.sg ([121.100.43.221])
-	by mx08-001d1705.pphosted.com (PPS) with ESMTPS id 4gx5cwfxx1-1
+	:mime-version:references:subject:to; s=p1; bh=s2Ll5dPYDtlVoPq2tW
+	OW5wrKj5y61TaFmI9Z1wTykBY=; b=NvS2oz4gVX8NythBDJdOU9juq8544QUkov
+	+2Ot9EgGlpKfD6hepVgo34tw2qg28AyAhg9zWSY03H/1ORJHGf3zpy1jDE9JyFS3
+	e8/pK+5Jdvmyigwa80iAMLJNKh24qT4pKKx/HQwB7xTOOA1/c3C332AEkhDHwvKr
+	RfzuyyreecHsWaWPh5AxYu75idP1AIi2r7IqIfqiQmdvOXC8ivVzXbfrzZXBaVCl
+	KPAzbXKbFXNKwUXv5Ap8xf+r7LdTp3pPjcHajVjqvbNxy4KAskSKAkcm7ETcQUAT
+	rF7g0YhEdxxKHHsEfRFKksefeS/FJi+VzouN8gg+WCpyFU2n4MzA==
+Received: from usculxsnt01v.am.sony.com (usculxsnt01v.am.sony.com [160.33.194.232])
+	by mx08-001d1705.pphosted.com (PPS) with ESMTPS id 4gx6epywed-1
 	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
-	Fri, 02 Oct 2026 19:31:24 +0000 (GMT)
-Received: from pps.filterd (SGPPSEM01v.sg.gdce.sony.com.sg [127.0.0.1])
-	by SGPPSEM01v.sg.gdce.sony.com.sg (8.18.1.11/8.18.1.11) with ESMTP id 692JBlkV1674029;
-	Fri, 2 Oct 2026 19:31:21 GMT
+	Fri, 02 Oct 2026 19:31:17 +0000 (GMT)
+Received: from pps.filterd (USCULXSNT01v.am.sony.com [127.0.0.1])
+	by USCULXSNT01v.am.sony.com (8.18.1.11/8.18.1.11) with ESMTP id 692JN4RE3823563;
+	Fri, 2 Oct 2026 19:31:16 GMT
 Received: from usculxsnt13v.am.sony.com ([146.215.230.187])
-	by SGPPSEM01v.sg.gdce.sony.com.sg (PPS) with ESMTPS id 4gx74j0xqp-1
+	by USCULXSNT01v.am.sony.com (PPS) with ESMTPS id 4gx5ae9a89-1
 	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Fri, 02 Oct 2026 19:31:21 +0000 (GMT)
+	Fri, 02 Oct 2026 19:31:16 +0000 (GMT)
 Received: from pps.filterd (USCULXSNT13v.am.sony.com [127.0.0.1])
-	by USCULXSNT13v.am.sony.com (8.18.1.11/8.18.1.11) with ESMTP id 692J942s1761800;
-	Fri, 2 Oct 2026 19:31:18 GMT
+	by USCULXSNT13v.am.sony.com (8.18.1.11/8.18.1.11) with ESMTP id 692J942r1761800;
+	Fri, 2 Oct 2026 19:31:16 GMT
 Received: from us842f57abef3e.eu.sony.com ([10.10.10.214])
-	by USCULXSNT13v.am.sony.com (PPS) with ESMTPS id 4gx5afe81c-3
+	by USCULXSNT13v.am.sony.com (PPS) with ESMTPS id 4gx5afe81c-2
 	(version=TLSv1.3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256 verify=NOT);
-	Fri, 02 Oct 2026 19:31:18 +0000 (GMT)
+	Fri, 02 Oct 2026 19:31:16 +0000 (GMT)
 From: Maciej Grochowski <maciej.grochowski@sony.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
 Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
         Jonathan Corbet <corbet@lwn.net>
-Subject: [RFC PATCH 2/2] PCI: Allow pci=hpreserve= to reserve bus numbers for a hotplug bridge
-Date: Fri,  2 Oct 2026 21:31:11 +0200
-Message-ID: <20261002193111.51637-3-maciej.grochowski@sony.com>
+Subject: [RFC PATCH 1/2] PCI: Add pci=hpreserve= to reserve memory windows for a hotplug bridge
+Date: Fri,  2 Oct 2026 21:31:10 +0200
+Message-ID: <20261002193111.51637-2-maciej.grochowski@sony.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20261002193111.51637-1-maciej.grochowski@sony.com>
 References: <20261002193111.51637-1-maciej.grochowski@sony.com>
@@ -63,236 +63,338 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Sony-BusinessRelay-GUID: jDvRJ451U7vC3cDZVTGmDQY56j12i9hU
+X-Sony-BusinessRelay-GUID: sWsOduFvKczEIhZ7vm_eoKG6Q-4Ai0bz
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-10-02_05,2026-10-02_02,2025-10-01_01
-X-Sony-EdgeRelay-GUID: wM3x_IgcAAGBsl4Z6O_DzIy09dT2wl7c
+X-Sony-EdgeRelay-GUID: EdHhVk2CGi_wQ0VyRGSBGF2KR6borvmr
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-10-02_05,2026-10-02_02,2025-10-01_01
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDAyMDA3NyBTYWx0ZWRfX+w3kCYZwvntj
- cRINV+8Jla+vitF6kHyVJO8yQ3oG1q5+XKX4U7UXeQzCAbFIzKBY1D3ApOqrcR5NRw+C2IiNGMA
- jPCywUQXaDIHOyezrqRteyz4bt65sFet/cBO/4JVszX1lvLvwV15hJWjM0XRMw02g0I/mSAE63e
- e83QPb1X7ES6oBaizp5mDiCfsHIqyoF3SJGCBZB+wcS0fvK8QSlGNuKZoh0dwMOvA5PXW3E7wQO
- sLkSkZhjU3Zq+jKMSqWkgw6mx7OLKL41Zq9K4ohaoPVUa5JdbzQvOXHZpbRzCdXAMfDYg3dkWoB
- VVb+zBylsRoZNRkhJ8ZmPJjBdLhvov3doWpZJqv/crymLXZ1xDKEFH5C96sNVB4nS69Ex+Lfs3I
- mRqtHXr5Izt1GO9HN6p4oVH+d7iGIMtkg4qsBmdoCDpOgwnxXrWv41X7OofD5tjs0uszCBBAP7M
- YrpSmWhIr+BCdHL68hw==
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDAyMDA3NyBTYWx0ZWRfXxlcEl+ryCc7P
- Rj3Ly23G1kKan83QK9DsLH4kpCOde+XIuZVHDD/gM4DCz+rfu6wmfAJX+D2ch1wcXB1ZazotWQr
- oPzAC1w2iwy4LPB5s8LTZoLCebP5ivC6t0WcedpirjsTCTMyLNOk
-X-Authority-Analysis: v=2.4 cv=QbXzLcbv c=1 sm=1 tr=0 ts=6ac0068c cx=c_pps
- a=5iEaAFJ3UIynSlflvg1n/g==:117 a=5iEaAFJ3UIynSlflvg1n/g==:17
+X-Proofpoint-GUID: XTvJ-mgPv-5qfqbNtuvaBI0RnmHsAKlR
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDAyMDA3NyBTYWx0ZWRfX2cgjZGp2msyj
+ Uzaafn8l9PYXMHnjOYqA9ieVFrhwrIb9C0tv5vLAf1X0/hR7M+Zyuw9lb9xAvJqgrv2/l4l9cK6
+ iCuXssSi3Wu1aqC3w5QH6Hhmq8yk15maOrK+R0Kb64Gm/ac9+wUV
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDAyMDA3NyBTYWx0ZWRfX1MoWng0a+eKt
+ keDsWDFs4PlJ6+aO+ilgrR76nufuZpR5AUyLGQViSa3TPlEji8K7lESeFaZDaEhEEzwZ+mrm1oL
+ 2Hi1MWVqleURcm4amZLb7TflqV/NvZSoy4gYU6bEP3Gbkiy8xKlg6Vbau5bZQ0CQ05tkNnIFfoh
+ CcsxQr3tzh8qgKFyYbDiNP9N7T4oLy8T1OlBK6xcjjyQNMGCMEpUbF3IL7z7Jvg7P+IkBX/uPYF
+ a48SgwEmPhBs5cR2Q/gcqxb6a2o7qNPXRqA945253PX4udrAurqdYE15e3XzPOw1IByLGf6xgQU
+ jDo02FJNE6nk7ENVw3D+/w/kadBFXSOjlXpASyPAxmpbw7Cy6h0vHjBGXYnIGqngy+jpSMqmzOU
+ GQhOjMDY32RUH334CU/fujoll5EoIXI8lqLtZc1ovJ1BfiJEpVTIwkIpnW0r5mXQFh3pgHZLG+l
+ z9TwncpWE5DyTVz7Oxw==
+X-Proofpoint-ORIG-GUID: XTvJ-mgPv-5qfqbNtuvaBI0RnmHsAKlR
+X-Authority-Analysis: v=2.4 cv=L92I0OT8 c=1 sm=1 tr=0 ts=6ac00686 cx=c_pps
+ a=+By/qi0JbgTNrI/GZhIcbg==:117 a=+By/qi0JbgTNrI/GZhIcbg==:17
  a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=KAb5x4SsHD3PzxGk7EmX:22
- a=dNm3KQjjYUbhztXjLiFs:22 a=z6gsHLkEAAAA:8 a=sZtm-H0M5STMBRONTHkA:9
-X-Proofpoint-ORIG-GUID: vZB64hbQkdXgn1TV08mFNIF4_nvc0FAX
-X-Proofpoint-GUID: vZB64hbQkdXgn1TV08mFNIF4_nvc0FAX
-X-Sony-Outbound-GUID: vZB64hbQkdXgn1TV08mFNIF4_nvc0FAX
+ a=6Vn1QVPt8UGdu3r8PAnt:22 a=z6gsHLkEAAAA:8 a=GAkUACBVjk-fT7zvbOsA:9
+X-Sony-Outbound-GUID: XTvJ-mgPv-5qfqbNtuvaBI0RnmHsAKlR
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-10-02_05,2026-10-02_02,2025-10-01_01
 
-When the kernel assigns bus numbers to the bridges on a bus,
-pci_scan_child_bus_extend() divides the spare bus numbers equally
-between the hotplug bridges.  A switch that appears behind one of them
-later cannot use more than that share.
+A hotplug bridge is sized for the devices that are present when its
+windows are sized, plus the optional hpmmiosize/hpmmioprefsize space.
+Some topologies have devices that are known to appear later.  After a
+reset of a two-level PCIe switch hierarchy, for example, pciehp
+re-enumerates the upstream switch before the link to the nested switch
+is back up, so the downstream port leading to the nested switch is
+sized with nothing below it.  When the nested switch appears, its BARs
+do not fit.
 
-After a hard reset of the top-level switch of a two-level
-Microchip PM50052 hierarchy on v7.3-rc2, the 15 spare bus numbers below
-the upstream port are split 3/3/3/3/3 between its five hotplug
-downstream ports, leaving 82:03.0 with [bus 8c-8e].  The nested switch
-that comes back behind it needs 11 (its upstream port's bus, its
-internal bus and nine downstream ports), so part of it is unusable:
+On a two-level Microchip PM50052 (Switchtec PFX) hierarchy whose nested
+switch has an NTB function with a 1 GiB prefetchable BAR, a hard reset
+of the top-level switch on v7.3-rc2 leaves downstream port 82:03.0
+with a 206 MiB prefetchable window, an equal share of its
+parent's window.  The nested switch returns about 0.6 s later and
+fails:
 
-  pci 0000:8c:00.0: devices behind bridge are unusable because [bus 8d-96] cannot be assigned for them
+  pci 0000:8c:00.1: BAR 2 [mem size 0x40000000 64bit pref]: can't assign; no space
+  switchtec 0000:8c:00.1: probe with driver switchtec failed with error -16
 
-hpbussize does not help: it applies to every hotplug bridge, so it
-cannot give one port 11 bus numbers without asking the same for its
-four siblings.
+The global hpmmioprefsize cannot express this.  It applies to every
+hotplug bridge, it is optional space that is dropped when it does not
+fit, and it has no alignment.  Here the root port window is 1036 MiB:
+exactly the 1 GiB + 4 MiB + 4 MiB of the nested switch plus the 4 MiB
+BAR of the top switch's management function.  Only one port may get
+the space, and it has to be 1 GiB aligned.
 
-Add a "bus=" key to pci=hpreserve=.  A reserved hotplug bridge gets the
-number of bus numbers it asks for, counted like hpbussize, and the
-other hotplug bridges on the bus share what is left.  With "bus=11" on
-82:03.0 the split above becomes 1/1/1/11/1.  If fewer bus numbers are
-left than requested, the bridge gets what is left and a warning is
-logged.
+Add "pci=hpreserve=<reservation>@<pci_dev>[; ...]" to request a minimum
+size and alignment for the memory windows of specific hotplug bridges,
+using the usual device specification.  A full path is more robust than
+a bare BDF when downstream bus numbers change.  pbus_size_mem() folds
+the reservation into the required size and alignment of the window,
+so it is assigned like the resources of a device already present below
+the bridge.  The runtime distribution of spare space can shrink only
+the optional part, leaving the required reservation intact.
 
-Without the parameter the distribution is unchanged.
+Without the parameter nothing changes.
 
 Tested-by: Maciej Grochowski <maciej.grochowski@sony.com>
 Signed-off-by: Maciej Grochowski <maciej.grochowski@sony.com>
 ---
- .../admin-guide/kernel-parameters.txt         | 18 ++++--
- drivers/pci/pci.c                             |  2 +
- drivers/pci/pci.h                             |  3 +
- drivers/pci/probe.c                           | 58 +++++++++++++++++--
- 4 files changed, 72 insertions(+), 9 deletions(-)
+ .../admin-guide/kernel-parameters.txt         |  34 ++++++
+ drivers/pci/pci.c                             | 106 ++++++++++++++++++
+ drivers/pci/pci.h                             |  19 ++++
+ drivers/pci/setup-bus.c                       |  33 ++++++
+ 4 files changed, 192 insertions(+)
 
 diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 19b98e22b10e..fea5f1bb455f 100644
+index 33cd30996e47..19b98e22b10e 100644
 --- a/Documentation/admin-guide/kernel-parameters.txt
 +++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -5251,6 +5251,14 @@ Kernel parameters
- 				present below the bridge.
- 				Only hotplug bridges are affected.
- 				Keys:
-+				  bus=nn	Number of bus numbers for the
-+					buses below the bridge, counted like
-+					hpbussize.  When the kernel distributes
-+					spare bus numbers between the hotplug
-+					bridges on a bus, e.g. when a switch is
-+					hot-added, the reserved bridge gets its
-+					reservation first and the others share
-+					what is left.
- 				  mmio=nn[KMG]	Minimum size of the
- 					non-prefetchable memory window.
- 				  mmioalign=nn[KMG]  Minimum alignment of
-@@ -5261,11 +5269,11 @@ Kernel parameters
- 					of the prefetchable memory window.
- 				Alignments must be powers of two.  For
- 				example,
--				  pci=hpreserve=mmiopref=1032M:mmioprefalign=1G@0000:80:01.1/00.0/03.0
--				reserves a 1 GiB-aligned 1032 MiB
--				prefetchable window below the downstream
--				port at devfn 03.0 of the switch behind root
--				port 0000:80:01.1.
-+				  pci=hpreserve=bus=11:mmiopref=1032M:mmioprefalign=1G@0000:80:01.1/00.0/03.0
-+				reserves 11 bus numbers and a 1 GiB-aligned
-+				1032 MiB prefetchable window below the
-+				downstream port at devfn 03.0 of the switch
-+				behind root port 0000:80:01.1.
+@@ -5232,6 +5232,40 @@ Kernel parameters
+ 		hpbussize=nn	The minimum amount of additional bus numbers
+ 				reserved for buses below a hotplug bridge.
+ 				Default is 1.
++		hpreserve=
++				Format:
++				<reservation>@<pci_dev>[; ...]
++				where <reservation> is one or more of
++				<key>=<value> separated by colons.
++				Reserve resources for the hotplug bridges
++				specified (in the format described above)
++				for devices that are not present yet, e.g.
++				a switch that is expected behind the bridge
++				but whose link comes up only after the
++				bridge windows have been sized.  Unlike
++				hpmmiosize and hpmmioprefsize, which add
++				optional space that is dropped if it does
++				not fit, the reservation is required space:
++				the bridge window is sized to include it,
++				like the resources of devices already
++				present below the bridge.
++				Only hotplug bridges are affected.
++				Keys:
++				  mmio=nn[KMG]	Minimum size of the
++					non-prefetchable memory window.
++				  mmioalign=nn[KMG]  Minimum alignment of
++					the non-prefetchable memory window.
++				  mmiopref=nn[KMG]  Minimum size of the
++					prefetchable memory window.
++				  mmioprefalign=nn[KMG]  Minimum alignment
++					of the prefetchable memory window.
++				Alignments must be powers of two.  For
++				example,
++				  pci=hpreserve=mmiopref=1032M:mmioprefalign=1G@0000:80:01.1/00.0/03.0
++				reserves a 1 GiB-aligned 1032 MiB
++				prefetchable window below the downstream
++				port at devfn 03.0 of the switch behind root
++				port 0000:80:01.1.
  		realloc=	Enable/disable reallocating PCI bridge resources
  				if allocations done by BIOS are too small to
  				accommodate resources required by all child
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f6922cf0d96e..81123789f66b 100644
+index b2879a6be5f8..f6922cf0d96e 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -454,6 +454,8 @@ static const char *pci_parse_hotplug_reserve(const char *p,
- 			res->mmio_pref_size = val;
- 		else if (pci_hotplug_reserve_key(p, len, "mmioprefalign"))
- 			res->mmio_pref_align = val;
-+		else if (pci_hotplug_reserve_key(p, len, "bus") && val <= 0xff)
-+			res->buses = val;
- 		else
- 			return NULL;
+@@ -412,6 +412,109 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
+ 	return 1;
+ }
  
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 5003d2c71200..56efd486cccd 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -412,6 +412,8 @@ extern unsigned long pci_hotplug_bus_size;
- 
- /**
-  * struct pci_hotplug_reserve - resources reserved for a hotplug bridge
-+ * @buses: bus numbers for the hierarchy below the bridge, including its
-+ *	   secondary bus
-  * @mmio_size: minimum size of the non-prefetchable memory window
-  * @mmio_align: minimum alignment of the non-prefetchable memory window
-  * @mmio_pref_size: minimum size of the prefetchable memory window
-@@ -420,6 +422,7 @@ extern unsigned long pci_hotplug_bus_size;
-  * Requested with "pci=hpreserve=".  A value of zero means no reservation.
-  */
- struct pci_hotplug_reserve {
-+	unsigned int buses;
- 	resource_size_t mmio_size;
- 	resource_size_t mmio_align;
- 	resource_size_t mmio_pref_size;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 27008e2ea5af..086b7a549c27 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -3081,10 +3081,22 @@ void __weak pcibios_fixup_bus(struct pci_bus *bus)
-  * equally between hotplug-capable bridges to allow future extension of the
-  * hierarchy.
-  */
-+static unsigned int pci_hotplug_reserved_buses(struct pci_dev *bridge)
++/*
++ * "pci=hpreserve=<reservation>@<pci_dev>[; ...]", set in pci_setup() and
++ * copied in pci_realloc_setup_params().
++ */
++static const char *hotplug_reserve_param;
++
++static bool pci_hotplug_reserve_key(const char *p, size_t len, const char *key)
 +{
-+	struct pci_hotplug_reserve res;
-+
-+	if (!pci_get_hotplug_reserve(bridge, &res))
-+		return 0;
-+
-+	return res.buses;
++	return strlen(key) == len && !strncmp(p, key, len);
 +}
 +
- static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- 					      unsigned int available_buses)
- {
- 	unsigned int used_buses, normal_bridges = 0, hotplug_bridges = 0;
-+	unsigned int reserved_bridges = 0, reserved_buses = 0;
-+	unsigned int hotplug_share = 0;
- 	unsigned int start = bus->busn_res.start;
- 	unsigned int devnr, cmax, max = start;
- 	struct pci_dev *dev;
-@@ -3115,12 +3127,28 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- 	 * buses between hotplug bridges.
- 	 */
- 	for_each_pci_bridge(dev, bus) {
--		if (dev->is_hotplug_bridge)
-+		if (dev->is_hotplug_bridge) {
-+			unsigned int reserved = pci_hotplug_reserved_buses(dev);
++/*
++ * Parse one "<key>=<value>[:<key>=<value>]*@" reservation into @res.
++ * Returns a pointer to the device specification following the '@', or
++ * NULL if the reservation cannot be parsed.
++ */
++static const char *pci_parse_hotplug_reserve(const char *p,
++					     struct pci_hotplug_reserve *res)
++{
++	unsigned long long val;
++	size_t len;
++	char *end;
 +
- 			hotplug_bridges++;
--		else
-+			if (reserved) {
-+				reserved_bridges++;
-+				reserved_buses += reserved;
-+			}
-+		} else {
- 			normal_bridges++;
++	memset(res, 0, sizeof(*res));
++
++	for (;;) {
++		len = strcspn(p, "=:@;");
++		if (p[len] != '=')
++			return NULL;
++
++		val = memparse(p + len + 1, &end);
++		if (end == p + len + 1)
++			return NULL;
++
++		if (pci_hotplug_reserve_key(p, len, "mmio"))
++			res->mmio_size = val;
++		else if (pci_hotplug_reserve_key(p, len, "mmioalign"))
++			res->mmio_align = val;
++		else if (pci_hotplug_reserve_key(p, len, "mmiopref"))
++			res->mmio_pref_size = val;
++		else if (pci_hotplug_reserve_key(p, len, "mmioprefalign"))
++			res->mmio_pref_align = val;
++		else
++			return NULL;
++
++		p = end + 1;
++		if (*end == '@')
++			break;
++		if (*end != ':')
++			return NULL;
++	}
++
++	if ((res->mmio_align && !is_power_of_2(res->mmio_align)) ||
++	    (res->mmio_pref_align && !is_power_of_2(res->mmio_pref_align)))
++		return NULL;
++
++	return p;
++}
++
++/**
++ * pci_get_hotplug_reserve - get the resources reserved for a hotplug bridge
++ * @bridge: the bridge
++ * @res: filled in with the reservation for @bridge
++ *
++ * Look up @bridge in the "pci=hpreserve=" kernel parameter.  Only hotplug
++ * bridges are considered.
++ *
++ * Return: true if a reservation was requested for @bridge.
++ */
++bool pci_get_hotplug_reserve(struct pci_dev *bridge,
++			     struct pci_hotplug_reserve *res)
++{
++	const char *p = hotplug_reserve_param;
++	int ret;
++
++	if (!p || !bridge->is_hotplug_bridge)
++		return false;
++
++	while (*p) {
++		p = pci_parse_hotplug_reserve(p, res);
++		if (!p) {
++			pr_err_once("PCI: Can't parse hpreserve parameter\n");
++			return false;
 +		}
- 	}
++
++		ret = pci_dev_str_match(bridge, p, &p);
++		if (ret == 1)
++			return true;
++		if (ret < 0) {
++			pr_err_once("PCI: Can't parse hpreserve parameter\n");
++			return false;
++		}
++
++		if (*p != ';' && *p != ',') {
++			/* End of param or invalid format */
++			break;
++		}
++		p++;
++	}
++
++	return false;
++}
++
+ static u8 __pci_find_next_cap(struct pci_bus *bus, unsigned int devfn,
+ 			      u8 pos, int cap)
+ {
+@@ -6840,6 +6943,8 @@ static int __init pci_setup(char *str)
+ 					simple_strtoul(str + 10, &str, 0);
+ 				if (pci_hotplug_bus_size > 0xff)
+ 					pci_hotplug_bus_size = DEFAULT_HOTPLUG_BUS_SIZE;
++			} else if (!strncmp(str, "hpreserve=", 10)) {
++				hotplug_reserve_param = str + 10;
+ 			} else if (!strncmp(str, "pcie_bus_tune_off", 17)) {
+ 				pcie_bus_config = PCIE_BUS_TUNE_OFF;
+ 			} else if (!strncmp(str, "pcie_bus_safe", 13)) {
+@@ -6879,6 +6984,7 @@ static int __init pci_realloc_setup_params(void)
+ 					   GFP_KERNEL);
+ 	disable_acs_redir_param = kstrdup(disable_acs_redir_param, GFP_KERNEL);
+ 	config_acs_param = kstrdup(config_acs_param, GFP_KERNEL);
++	hotplug_reserve_param = kstrdup(hotplug_reserve_param, GFP_KERNEL);
  
-+	/*
-+	 * Hotplug bridges with a "pci=hpreserve=" bus reservation get the
-+	 * number of buses they asked for; the others share what is left.
-+	 */
-+	if (hotplug_bridges > reserved_bridges &&
-+	    available_buses > reserved_buses)
-+		hotplug_share = (available_buses - reserved_buses) /
-+				(hotplug_bridges - reserved_bridges);
-+
- 	/*
- 	 * Scan bridges that are already configured. We don't touch them
- 	 * unless they are misconfigured (which will be done in the second
-@@ -3152,12 +3180,34 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- 			 */
- 			buses = available_buses;
- 		} else if (dev->is_hotplug_bridge) {
-+			unsigned int reserved = pci_hotplug_reserved_buses(dev);
-+
- 			/*
- 			 * Distribute the extra buses between hotplug
- 			 * bridges if any.
- 			 */
--			buses = available_buses / hotplug_bridges;
--			buses = min(buses, available_buses - used_buses + 1);
-+			if (!reserved) {
-+				buses = hotplug_share;
-+				buses = min(buses, available_buses - used_buses + 1);
-+			} else {
-+				/* used_buses already includes this bridge's bus */
-+				buses = available_buses + 1 > used_buses ?
-+					available_buses + 1 - used_buses : 0;
-+				buses = min(buses, reserved);
-+			}
-+
-+			/* Bridges configured in the first pass keep their buses */
-+			if (reserved && !dev->subordinate) {
-+				/* The secondary bus is allocated even for 0 */
-+				unsigned int granted = max(buses, 1U);
-+
-+				if (granted < reserved)
-+					pci_warn(dev, "only %u of %u reserved bus numbers available\n",
-+						 granted, reserved);
-+				else
-+					pci_info(dev, "reserving %u bus numbers\n",
-+						 granted);
-+			}
- 		}
+ 	return 0;
+ }
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index ba3c3fddddc2..5003d2c71200 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -410,6 +410,25 @@ extern unsigned long pci_hotplug_mmio_size;
+ extern unsigned long pci_hotplug_mmio_pref_size;
+ extern unsigned long pci_hotplug_bus_size;
  
- 		cmax = max;
++/**
++ * struct pci_hotplug_reserve - resources reserved for a hotplug bridge
++ * @mmio_size: minimum size of the non-prefetchable memory window
++ * @mmio_align: minimum alignment of the non-prefetchable memory window
++ * @mmio_pref_size: minimum size of the prefetchable memory window
++ * @mmio_pref_align: minimum alignment of the prefetchable memory window
++ *
++ * Requested with "pci=hpreserve=".  A value of zero means no reservation.
++ */
++struct pci_hotplug_reserve {
++	resource_size_t mmio_size;
++	resource_size_t mmio_align;
++	resource_size_t mmio_pref_size;
++	resource_size_t mmio_pref_align;
++};
++
++bool pci_get_hotplug_reserve(struct pci_dev *bridge,
++			     struct pci_hotplug_reserve *res);
++
+ static inline bool pci_is_cardbus_bridge(struct pci_dev *dev)
+ {
+ 	return dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index e8c94aa1d3c1..105bf8694cdc 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1258,6 +1258,38 @@ static bool pbus_size_mem_optional(struct pci_dev *dev, int resno,
+ 	return true;
+ }
+ 
++/*
++ * Apply a "pci=hpreserve=" reservation to the memory window @b_res of the
++ * bridge leading to @bus.  Unlike the hpmmiosize/hpmmioprefsize space, the
++ * reservation is sized as required space, so it is in place before the
++ * devices that need it appear behind the bridge.
++ */
++static void pbus_size_mem_reserve(struct pci_bus *bus, struct resource *b_res,
++				  resource_size_t *size,
++				  resource_size_t *min_align)
++{
++	bool pref = b_res->flags & IORESOURCE_PREFETCH;
++	struct pci_hotplug_reserve res;
++	resource_size_t rsize, ralign;
++
++	if (!bus->self || !pci_get_hotplug_reserve(bus->self, &res))
++		return;
++
++	rsize = pref ? res.mmio_pref_size : res.mmio_size;
++	ralign = pref ? res.mmio_pref_align : res.mmio_align;
++	if (rsize <= *size && ralign <= *min_align)
++		return;
++
++	*size = max(*size, rsize);
++	if (!*size)
++		return;
++	*min_align = max(*min_align, ralign);
++
++	pci_info(bus->self, "bridge window to %pR: reserving %s size %#llx align %#llx\n",
++		 &bus->busn_res, pref ? "prefetchable" : "non-prefetchable",
++		 (unsigned long long)*size, (unsigned long long)*min_align);
++}
++
+ /**
+  * pbus_size_mem() - Size the memory window of a given bus
+  *
+@@ -1349,6 +1381,7 @@ static void pbus_size_mem(struct pci_bus *bus, struct resource *b_res,
+ 	win_align = pci_min_window_alignment(bus, b_res->flags);
+ 	min_align = calculate_head_align(aligns, max_order);
+ 	min_align = max(min_align, win_align);
++	pbus_size_mem_reserve(bus, b_res, &size, &min_align);
+ 	size0 = calculate_memsize(size, realloc_head ? 0 : add_size,
+ 				  0, win_align);
+ 
 -- 
 2.47.3
