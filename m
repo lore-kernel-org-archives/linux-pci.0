@@ -1,52 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B48CD30D402;
-	Fri,  2 Oct 2026 22:55:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E35E3CAE8F;
+	Fri,  2 Oct 2026 23:03:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790981746; cv=none; b=tBhp+uvufkvmjEs6bZvIG33hlMnHyRnuULu8kJGXm8qqiX1C+pIUvRlRchGJrXsh+bS322jWt83sU/ufImR0oN0gO1ofDMbf3+h1RoUX07ToGxQXUjW01u/kUfUB0sFP9LlA9xszogLRLJc+J9FxS7F2BoWmiwchQGhizcaIbCA=
+	t=1790982210; cv=none; b=Zfkk9CfBKmwLNkjc0wfDYDLwfdIXA15dQWRFnfBwtYMTV8uRWHZa2VA5nHcbKJbCe8BHXZUJga3Hy0K2Hclh/9PyZq94pyECuGBWgMrwJ2upuZ9Z8rTWSTuFgGxsNjkGLfzK5PdEJpN0b7HEqkCvhJ4h3AapE3k0emy4caGL5Kg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790981746; c=relaxed/simple;
-	bh=WbrsyDuRwNJTwRcqSweZTFhGhy6Jwp0TcI1mJDP0/xQ=;
+	s=arc-20240116; t=1790982210; c=relaxed/simple;
+	bh=tkWvSOfumEV/X5/gizi21lDoOGcOq5p0tOMkQFiL9aM=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=jvT6amAbeg2L8x+Y7kgA09uOCTHzcT7H+gSSGi0IDWhToarM2G7xiLF3OhBTW183fUSxTYSDLDiZ00CVOr1faAeoaXTc329ryvoqtAmFwhqjfuQ9Hm7aiK0olwdEu8l6cQzc86rhJg3PW53exfKsXzVdaLyKbAk5Qixp7rNtEcs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R7mgiFXK; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=ImfkTXe3pldxGAz9brLWRSJPu/B0POmuwYCFYpGYEgFCMR6+fMttAn+4OWtv9jEgeLJCNJlF/0oWpnRBcRPTULGnq3LqSRIUInNHojjMRntsnirk/QCjxklY1khyHd6clkR6U/SXIAFZooKRVV/+enUBEY9a9lR5VPloAuWkdrM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q8L6jpPQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R7mgiFXK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3799E1F000FF;
-	Fri,  2 Oct 2026 22:55:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q8L6jpPQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D39F81F000FF;
+	Fri,  2 Oct 2026 23:03:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790981745;
-	bh=XOjEC8uyWbqD359x8ka20z4mQO4Yg0kZahphsxZmvs0=;
+	s=k20260515; t=1790982209;
+	bh=GlKl0n4h+SRDG0bZhe9Pdd1zeVrtxnOk7XdqNbUxb6c=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=R7mgiFXKy++R6GgEPFPaHrS51wx6MPgzAu9gjhXmJ4d/e1U+MjoTrh0NpZE1EkFyj
-	 imZ0ybz654P4TN9chsmB/dCfngz7OhRtayg6AXwa7ttfz5qedYZa1CUk4Yx076Kz5y
-	 hmKgjatvC26TgqA06C4agSG/nst5p1BE/oYd1f6irNeKim+f5JMUtT+OcB9Fws/z1m
-	 zx2CsEfThX2ApsWeQk3OBIPOLBXvTjfNIfzSuMhQS0Xdwtk0AYpvKfCS/jztMJxQZ7
-	 ynXIU/igwz9woyKegxKuXY1W9WhzDa17uDQyCMgX5p4sYag9fJ357B92ynt6AiOzkV
-	 7abl2rK/wmwaA==
-Date: Fri, 2 Oct 2026 17:55:43 -0500
+	b=Q8L6jpPQtXLZ8K5NCaIVrl3IqINLwbM2biCNWgxQC1oKxpsIkYe/8+ljxDi4v3B8H
+	 2Nxy6Ykb0VT/Qw1rhBm40hckJVPuYTmuUpA4N2o7jry+AQuT9Cb37PoGu923Es7Rz5
+	 2KC9HeSTx1kxqJPb16RSJ+X6gH2EKTAwfMwQDo3JMRO/tWoeD9U1K+v8rOQSH4eaOs
+	 jhdQ5SgrtVAkBVVqgCvBUHm4qzL5IK5iZaOOaIou0ajV7tYig1U7RpP3lSFIT2eyoz
+	 4PeFBUEaRG3ufaOmNXysCViOy87h+8KScfVQE7Kppjeg9qzH94sGNurkA8Q8cWXSVL
+	 W8KjOPGPfjEDQ==
+Date: Fri, 2 Oct 2026 18:03:27 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+To: Shawn Guo <shengchao.guo@oss.qualcomm.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
 	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Nirmal Patel <nirmal.patel@linux.intel.com>,
-	Jonathan Derrick <jonathan.derrick@linux.dev>,
-	Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
-	ath11k@lists.infradead.org, ath10k@lists.infradead.org,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-	Qiang Yu <qiang.yu@oss.qualcomm.com>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>
-Subject: Re: [PATCH v3 3/8] PCI/ASPM: Transition the device to D0 (if
- required) when enabling ASPM link states
-Message-ID: <20261002225543.GA374513@bhelgaas>
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Qiang Yu <qiang.yu@oss.qualcomm.com>, linux-pci@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: qcom: Disable ASPM L0s for SA8775P
+Message-ID: <20261002230327.GA381812@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -55,134 +45,62 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260708-pci-aspm-fix-v3-3-6bd72451746e@kernel.org>
+In-Reply-To: <20260419093934.1223027-1-shengchao.guo@oss.qualcomm.com>
 
-[+cc Rafael because I'm not a power management user]
-
-On Wed, Jul 08, 2026 at 04:30:17PM +0200, Manivannan Sadhasivam wrote:
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+On Sun, Apr 19, 2026 at 05:39:34PM +0800, Shawn Guo wrote:
+> Commit f5cd8a929c82 ("PCI: dwc: Remove MSI/MSIX capability for Root Port
+> if iMSI-RX is used as MSI controller") removed MSI/MSI-X capabilities
+> from the Root Port on platforms using iMSI-RX (including SA8775P, which
+> has no msi-parent/msi-map in DT).  This causes PME and AER service
+> drivers to fall back from MSI to INTx.
 > 
-> Per PCIe spec r6.0, sec 5.5.4:
+> With INTx-based PME active, the QCN9100 modem endpoint sends PME messages
+> during D-state transitions early in boot.  The level-triggered INTx
+> assertion coincides with ASPM L0s exit sequencing on SA8775P hardware,
+> causing Data Link Layer Replay Timer Timeout errors on both sides of the
+> link.
 > 
-> "If setting either or both of the enable bits for PCI-PM L1 PM Substates,
-> both ports must be configured as described in this section while in D0."
+> [   13.069528] pcieport 0000:00:00.0: PME: Signaling with IRQ 332
+> [   13.082436] pcieport 0000:00:00.0: AER: enabled with IRQ 332
+> [   13.082447] pcieport 0000:00:00.0: AER: Correctable error message received from 0000:01:00.0
+> [   13.101347] pci 0000:01:00.0: PCIe Bus Error: severity=Correctable, type=Data Link Layer, (Transmitter ID)
+> [   13.111281] pci 0000:01:00.0:   device [17cb:1103] error status/mask=00001000/0000e000
+> [   13.111284] pci 0000:01:00.0:    [12] Timeout
+> [   13.111313] pcieport 0000:00:00.0: AER: Multiple Correctable error message received from 0000:01:00.0
+> [   13.130512] pcieport 0000:00:00.0: PCIe Bus Error: severity=Correctable, type=Data Link Layer, (Transmitter ID)
+> [   13.130514] pcieport 0000:00:00.0:   device [17cb:0115] error status/mask=00001000/0000e000
+> [   13.130516] pcieport 0000:00:00.0:    [12] Timeout
 > 
-> Currently, the callers of pci_enable_link_state_locked() (vmd, pcie-qcom)
-> transition the device to D0 themselves before enabling the link state. But
-> this is easy to get wrong and has to be duplicated by every caller.
+> Fix the PCIe regression on SA8775P/Lemans platform by adding no_l0s = true
+> to cfg_1_34_0 for SA8775P, so that PCI_EXP_LNKCAP_ASPM_L0S is cleared from
+> the Root Port and ASPM L0s is prevented from being negotiated.
 > 
-> Move the D0 transition into the shared __pci_enable_link_state() helper so
-> that all three APIs pci_enable_link_state(), pci_enable_link_state_locked()
-> and pci_force_enable_link_state() perform it, and only when the PCI-PM L1
-> PM Substates are getting enabled.
-> 
-> Now that the helper handles the transition, drop the redundant D0 transition
-> from the vmd and pcie-qcom callers.
-> 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> Fixes: f5cd8a929c82 ("PCI: dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI controller")
+> Assisted-by: Claude:claude-4-6-sonnet
+> Signed-off-by: Shawn Guo <shengchao.guo@oss.qualcomm.com>
 > ---
->  drivers/pci/controller/dwc/pcie-qcom.c |  5 -----
->  drivers/pci/controller/vmd.c           |  5 -----
->  drivers/pci/pcie/aspm.c                | 23 +++++++++++++++++------
->  3 files changed, 17 insertions(+), 16 deletions(-)
+>  drivers/pci/controller/dwc/pcie-qcom.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
 > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index d8eb52857f69..45f4caeb0814 100644
+> index af6bf5cce65b..6a14b5091338 100644
 > --- a/drivers/pci/controller/dwc/pcie-qcom.c
 > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -1085,11 +1085,6 @@ static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
->  
->  static int qcom_pcie_enable_aspm(struct pci_dev *pdev, void *userdata)
->  {
-> -	/*
-> -	 * Downstream devices need to be in D0 state before enabling PCI PM
-> -	 * substates.
-> -	 */
-> -	pci_set_power_state_locked(pdev, PCI_D0);
->  	pci_enable_link_state_locked(pdev, PCIE_LINK_STATE_ALL);
->  
->  	return 0;
-> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-> index d4ae250d4bc6..20597d2cf66e 100644
-> --- a/drivers/pci/controller/vmd.c
-> +++ b/drivers/pci/controller/vmd.c
-> @@ -762,11 +762,6 @@ static int vmd_pm_enable_quirk(struct pci_dev *pdev, void *userdata)
->  	pci_info(pdev, "VMD: Default LTR value set by driver\n");
->  
->  out_state_change:
-> -	/*
-> -	 * Ensure devices are in D0 before enabling PCI-PM L1 PM Substates, per
-> -	 * PCIe r6.0, sec 5.5.4.
-> -	 */
-> -	pci_set_power_state_locked(pdev, PCI_D0);
->  	pci_enable_link_state_locked(pdev, PCIE_LINK_STATE_ALL);
->  	return 0;
->  }
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index c04fb71de91c..6d6862fd2ebb 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -1524,6 +1524,17 @@ static int __pci_enable_link_state(struct pci_dev *pdev, int state, bool locked,
->  		return -EPERM;
->  	}
->  
-> +	/*
-> +	 * Ensure the device is in D0 before enabling PCI-PM L1 PM Substates, per
-> +	 * PCIe r6.0, sec 5.5.4.
-> +	 */
-> +	if (state & PCIE_LINK_STATE_L1_SS_PCIPM) {
-> +		if (locked)
-> +			pci_set_power_state_locked(pdev, PCI_D0);
-> +		else
-> +			pci_set_power_state(pdev, PCI_D0);
-> +	}
+> @@ -1473,6 +1473,7 @@ static const struct qcom_pcie_cfg cfg_1_9_0 = {
+>  static const struct qcom_pcie_cfg cfg_1_34_0 = {
+>  	.ops = &ops_1_9_0,
+>  	.override_no_snoop = true,
+> +	.no_l0s = true,
 
-I think it's a great thing to get the power state management out of
-the callers of pci_enable_link_state().
+Internal sashiko review suggests that possibly a similar fix should be
+applied to pcie-qcom-ep, since this chip can also be operated in
+endpoint mode.
 
-But shouldn't we really have done this with pm_runtime_get_sync() and
-a corresponding pci_runtime_put()?  Setting the power state with
-pci_set_power_state() feels like it's too low-level and possibly racy
-for use like this.
+Just a heads-up; you can evaluate and decide.
 
->  	if (!locked)
->  		down_read(&pci_bus_sem);
->  	mutex_lock(&aspm_lock);
-> @@ -1550,8 +1561,8 @@ static int __pci_enable_link_state(struct pci_dev *pdev, int state, bool locked,
->   * touch the LNKCTL register. Also note that this does not enable states
->   * disabled by pci_disable_link_state(). Return 0 or a negative errno.
->   *
-> - * Note: Ensure devices are in D0 before enabling PCI-PM L1 PM Substates, per
-> - * PCIe r6.0, sec 5.5.4.
-> + * Note: The device will be transitioned to D0 state if the PCI-PM L1 Substates
-> + * are getting enabled.
->   *
->   * @pdev: PCI device
->   * @state: Mask of ASPM link states to enable
-> @@ -1569,8 +1580,8 @@ EXPORT_SYMBOL(pci_enable_link_state);
->   * can't touch the LNKCTL register. Also note that this does not enable states
->   * disabled by pci_disable_link_state(). Return 0 or a negative errno.
->   *
-> - * Note: Ensure devices are in D0 before enabling PCI-PM L1 PM Substates, per
-> - * PCIe r6.0, sec 5.5.4.
-> + * Note: The device will be transitioned to D0 state if the PCI-PM L1 Substates
-> + * are getting enabled.
->   *
->   * @pdev: PCI device
->   * @state: Mask of ASPM link states to enable
-> @@ -1600,8 +1611,8 @@ EXPORT_SYMBOL(pci_enable_link_state_locked);
->   * Note that if the BIOS didn't grant ASPM control to the OS, this does nothing
->   * because we can't touch the LNKCTL register.
->   *
-> - * Note: Ensure devices are in D0 before enabling PCI-PM L1 PM Substates, per
-> - * PCIe r6.0, sec 5.5.4.
-> + * Note: The device will be transitioned to D0 state if the PCI-PM L1 Substates
-> + * are getting enabled.
->   *
->   * Return: 0 on success, a negative errno otherwise.
->   */
-> 
+>  };
+>  
+>  static const struct qcom_pcie_cfg cfg_2_1_0 = {
 > -- 
 > 2.43.0
-> 
 > 
