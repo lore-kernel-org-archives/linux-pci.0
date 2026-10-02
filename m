@@ -1,60 +1,75 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E8CD477E22
-	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 09:14:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B40A7470456
+	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 09:18:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790932487; cv=none; b=MEXS43xxl4tx8KSV/mxMZNoRNC4Yq8ZLiKUUlU0eFEH6zgoYW84SzDfDATYv37HesZZfOSFv9Rcn6No7UsMROzi+3nX0mXL2pvO6QHAdqa7/0rGMtwug4pO3zR5EJ2iAm2iOaCwTmlrODG8PUQBf05Lc7ve53+oSSHv88fWT/V4=
+	t=1790932737; cv=none; b=s6iw9TCXGWayZ4O2KcRna2ptgsCv5O0Dguang1rkjVVPXMy/y3Rds7KNdPDtSc17nvXrOxB38wY9wgtKgDGS5yLp7aDRs1ElYBX4SOKXoqFLJ72uTahZdtJGJ38/rxDJhiq8vSjFjgpNg3k/av0NrR8MpDerWPN7VODyqEYdayA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790932487; c=relaxed/simple;
-	bh=M3tCDN5wg/rW2tWDaS0DsWEJnyJdRcTCdPIQrvBzZ9g=;
+	s=arc-20240116; t=1790932737; c=relaxed/simple;
+	bh=zQL2EPvMfmomBsZEsdKKjBntQy2iyaPiZB2OcBDEMU0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=pZLModMS1C7iMhPtmB47957mTixEna5az3PyPGo1AC7aGyvFrbiUrz9xj7+rFIuhJWn0tBMKnaejzH+pAmkEf3z7iCRBa3E0eFoOj18m/qLdMd8b8cUwwxY26Zn0Tv+yQMzqIqS+0WUldndDyImWNzFxCapI1Bt4r2U5Fm8csnc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gnrr6H7Q; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=kheZEIfP0+T7ibPXdMMtUv+itXwGXrtV52j3cloKFJiMfXmLx7FH3arLDkWzbxOIs7e/prjIb7SQCU4S8qdA/e1KijOPgUSfHrInchNe+Q3hIHccTRXg3Cl6TVSGwF8FPP4Y/l4fytiS3UYK3jd5AIlUZC0NdAWrbno57VkowxA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GiMJsSAj; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gnrr6H7Q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 820BD1F000FF;
-	Fri,  2 Oct 2026 09:14:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GiMJsSAj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55CD51F00898;
+	Fri,  2 Oct 2026 09:18:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790932485;
-	bh=M3tCDN5wg/rW2tWDaS0DsWEJnyJdRcTCdPIQrvBzZ9g=;
+	s=k20260515; t=1790932736;
+	bh=zQL2EPvMfmomBsZEsdKKjBntQy2iyaPiZB2OcBDEMU0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Gnrr6H7QKZcRMAy8ArLNXhetN8MmeHo7TguuH6vpp3EIdanIOSH5nNgFJjr2XG/OT
-	 n+rS6bIy/NqMOkMg+zf0+AlCyaagSzn2Oe2TYJaPt5CwBpz9Mb8Uueh8OOc6H0k9oI
-	 bzvKY8WEqvphZZJo8icfvHlu24fVtLHE9MMlMhMQCYx034IPmwA2O6O2HoxpN0ybST
-	 BPsKOsocm77gVvdoZ1Igl+S2bh4dqBE62FVol1IGYOsa+BSpfueZypnUzz5Cq8B5Tj
-	 YKY2wDx7QzKIZM8DeglXkydro9/BguE05V8I64Rn50Xpl+TzRtzROiuVSO6XlHdlTg
-	 jS7CYSFRAyn+Q==
+	b=GiMJsSAjsiQHUGrFWLm4Vk3V7Emt1XgpIoaScbyLnGGqy+S6DFBy+AmeJnlIt8vF9
+	 sNYMbtcsPFDLO0vKnp2fI6QuTeL5S7AlgEKLvHjMCZyrEa8n8oPtW3Hn9gW9irfvYO
+	 H4thFBCyflQeufudnhGhcW+7d6GbSJJAkPFw5E8z65DhwIpwFRuXnjD/pCNQvbwKKL
+	 h0ifs09nouoFCcfCG5ae1Dk176ktVXhgsgWIgrSu1lKmmQRloVlaATqb7XDRZR2uem
+	 rzZiwQB1EIBgihwFpvwnfEIolzwRZAUX9L6TYOz8KHwTO+de3Jey3QYUX6scjXhW1u
+	 7024MDHfVq8QQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: dwc: Correct PCIE_DW_PLAT_EP reference in Kconfig
- help
+Subject: Re: [PATCH v2 2/2] PCI: Set RCB only when the Root Port has it set
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "LECOINTRE Philippe" <philippe.lecointre@thalesgroup.com>
+To: "Stefan Roese" <stefan.roese@mailbox.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <305ef70ecadb4db9aa42c66607240aba@thalesgroup.com>
-References: <305ef70ecadb4db9aa42c66607240aba@thalesgroup.com>
+In-Reply-To: <20261002091029.2225203-3-stefan.roese@mailbox.org>
+References: <20261002091029.2225203-1-stefan.roese@mailbox.org>
+ <20261002091029.2225203-3-stefan.roese@mailbox.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 02 Oct 2026 09:14:45 +0000
-Message-Id: <20261002091445.820BD1F000FF@smtp.kernel.org>
+Date: Fri, 02 Oct 2026 09:18:55 +0000
+Message-Id: <20261002091856.55CD51F00898@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> The Kconfig help text for PCIE_DW_PLAT_HOST and PCIE_DW_PLAT_EP
-> incorrectly refers to PCI_DW_PLAT_EP.
+> pci_configure_rcb() read-modify-writes Link Control of every endpoint
+> at enumeration, also when RCB is clear in the Root Port and there is
+> nothing to set. Not writing a register that has nothing to change is
+> justified on its own, but the write-back of the other Link Control bits
+> also has side effects on some devices: the Renesas uPD720201 xHCI
+> (1912:0014) comes out of reset with ASPM L0s and L1 enabled and stops
+> clearing them itself once Link Control has been written. On a link
+> whose Root Port supports no ASPM, the previous patch clears them, but
+> it does not run with pcie_aspm=3Doff or CONFIG_PCIEASPM=3Dn. There the
+> first access to the xHCI BAR runs into completion timeouts that hang
+> the system.
 >=20
-> Replace the typo with the correct symbol name, PCIE_DW_PLAT_EP, so the
-> help text matches the actual Kconfig option.
+> RCB may only be set in an endpoint if it is set in the Root Port, so
+> there is no need to ever clear it here; an endpoint with RCB set
+> below a Root Port without it is a firmware configuration error. Only
+> set RCB, and only when the Root Port has it set.
 >=20
-> Signed-off-by: Philippe Lecointre <philippe.lecointre@thalesgroup.com>
+> Fixes: 1a6845aaa6de ("PCI: Initialize RCB from pci_configure_device()")
+> Cc: stable@vger.kernel.org
+> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> Assisted-by: Claude:claude-opus-5-5
+> Signed-off-by: Stefan Roese <stefan.roese@mailbox.org>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/305ef70ecadb4db9aa4=
-2c66607240aba@thalesgroup.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261002091029.2225=
+203-1-stefan.roese@mailbox.org?part=3D2
 
