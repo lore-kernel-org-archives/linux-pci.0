@@ -1,82 +1,58 @@
-Received: from mail-dy2-f41.google.com (mail-dy2-f41.google.com [74.125.229.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7238E502573
-	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 17:10:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD37539FCB4;
+	Fri,  2 Oct 2026 17:54:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790961057; cv=none; b=AxlyNeSskZIM/THPDlV0XNUSAYIj6VnhjGHe7cfSc6Uh9drxNBTF9X52qgtl6RLKq1lSvM8iongqTeC0azh8GF07KhGuZ9GSZeY3M+7SkItERJ+bV3yEFPJwHaulyqpkxAvo1qnwxxjADHb6/vyr3CRtSKxxuIGiV+ZXVZPgpQU=
+	t=1790963655; cv=none; b=f1+aFCF1t3RnQtTUiw+fd5xE41vuCi8duVw3yjIxjN1eZCT4fWj5PJDB5ocIyFtcUt2uU1eHN4y0qR57iBdi2/Xc7GjVL6g6BzT0pDvrnav81A/pqsTTwkVZBS2k1HCSMEJf91PCjOEfnMzXZx7DZEQfOQzvTsRfqhwTN26Bh/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790961057; c=relaxed/simple;
-	bh=mrxPXIId1qTShZKGlHGgNQz6PnSRa6+MIliC3LYulx4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZNSqz0NHTQ1lgZt64XTj8AlGufE8Sh5wwdjqkb/joN2ifQsLkIo0a/VPBwhFw0DXddJ8rnX7HAtOG6GlpUfcTVtm5KtXG2NShgEYzDEAnYSlVdd1IFmxYcY0J0f+CrTYw8lvrskLgO7ELrG36/qQJGcC57BExVO3lifoPWGiHrM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=jIsrR6ZC; arc=none smtp.client-ip=74.125.229.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1790963655; c=relaxed/simple;
+	bh=8DwmR3QPWq2aIx1EENnXmgaGS7X8c2DZC2/tGoJZFLs=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=t64KeI9vHEorhusKlsbidegDQh8bpIjTOKKGjm/S64k6mKZFnfTo5Ts/QVBOF2uaFoyQbmHCLzEPPcNzF0gWNAyXlnwJ+PjZfHsZsOt7ABOPZ4b9AchGyfzfaBp7Y1DjeGfTYiZKGn0I8QZ6Tpydst0xdPqnOJoWbNIeoQSd9TM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OaQX0v6k; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="jIsrR6ZC"
-Received: by mail-dy2-f41.google.com with SMTP id 5a478bee46e88-344447f9c3dso4748660eec.0
-        for <linux-pci@vger.kernel.org>; Fri, 02 Oct 2026 10:10:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1790961048; x=1791565848; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=BgakvInNsjTIuwI/HruggHJb8c52XKSKFB4qu//ilyk=;
-        b=jIsrR6ZCYoXUg62SeoHiJ6U1qQmTUvfmHWogxM0qjQgpdxTBR38CREigK8nBVg837B
-         KemCEloefIFs0d6V2TsfLG+gXof4Lczn1A3R8NHqVJVEIGVHb/IebK+RpIye8M3zMs8i
-         YTJWrFKclhx7CxJS5QL7+5f//INbWiK4y09jMHkcmwqjDq7GovOeOKTKri8BnYz4SJ/F
-         Wb6KjoEp6g56AjVLR/e/dFRyT7rfM39Ade1CK3Dx+VZ1t0EdbRskxub4VkpZ+yFH9FCS
-         4N5joGr5LsAuBrkxXGtJbCwSMI+3e4PJkLhKF7HnXpwKcgm3GyDvhTJqShefFqKWZr60
-         C7mQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790961048; x=1791565848;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=BgakvInNsjTIuwI/HruggHJb8c52XKSKFB4qu//ilyk=;
-        b=26HcTuUriulxda8wDLj4sUUt/aNRkiHcuTpJy/lgUKjSF8LkcDzUOueL5PNIDq7yjJ
-         7E0MqNmc/ZI3RaNSUiGijn4q2OA6+YUgr2ezMqQTz3u3Oy1kcMXotS1KTnegO+zRLS/G
-         98XXwS7WFKpHTbYxVnSdOZZtweUp4pOr0WPQB7/JBBZ4z+Zk/eQVT0RP9RcJNOQ6rC8K
-         HyeujI5Wm8jClSNYSaVq65jj3B/ZnkvrbmPfjxnesrAdxaMI1UiL2woxEIntVvKTVz5q
-         Pbc1uzn2YTft9r8kWanrXOjCkWSzAPCsBDf8JlE54UO7m2DvngGJFIHojSyc3C778RoW
-         8PtA==
-X-Forwarded-Encrypted: i=1; AKwUvBzDDcc7CeIaXHK4bPAQWig7mXB+icCgPdTq85NirrcyzfDUbhkusVHOF/DM7PwLtcVjHJk+2I/jw2U=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKZxtlKhA3wx9POwhtFVRWD41eYTa8dbRfR92DpQb+w3tq3PtpN
-	mZDPUgp6DoetizN38IMf+c/qZg7/29s8ou+1aktUBAesnEIR8tuaiLefYdCGye8R3IA=
-X-Gm-Gg: AYBFou28+hLOtPMR3a1M21HoN+bj1+6zGF9yKSfhqVSdKBNubg3ynI4Tohuz797DQN5
-	h/+MJ51iEYYj+2uhHUbeKePH0DJzYnpDpsHfMgOOAuiLxbqW8JAyerVV9T5jI2ZD5nHOFLVTv90
-	tVPViVbGoi7U2CioPSCIIbQQUpSgGa/mEw4P1vyFAImA+HgW2IvOuYmR2FIhU9LpdJiwxN14mXs
-	d8ao3bqKOQLUktwmX5D6oeCv2gLccHXP62IsPs34XTzqs6FVq8pJavattPQe/doDGkl2WqZL1SO
-	cb8M2UF7KAhJ79xMXGzvyIz+GwT+zwM4LLQnSL3lSnEDwI19Eqf+yZHDJrZ5y3fn1YzIbVppZoJ
-	xmiUECFE963VhGJW8+jO8XPRa/8uZ20dGTM43e9GMDu8opKgq5N6l50MGm3Kyvs/QUEGhG0KIAL
-	SwGLDKi8AUEavENM/bC9uq6y7Z6dzn5rHsSYL6DDArUAYj
-X-Received: by 2002:a05:7300:e5c2:b0:34b:b410:9352 with SMTP id 5a478bee46e88-34f14f18c8cmr3725477eec.1.1790961048034;
-        Fri, 02 Oct 2026 10:10:48 -0700 (PDT)
-Received: from ziepe.ca ([130.41.10.202])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3510850f86bsm4509703eec.11.2026.10.02.10.10.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 02 Oct 2026 10:10:47 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xCgmU-00000000BiY-09Yw;
-	Fri, 02 Oct 2026 14:10:46 -0300
-Date: Fri, 2 Oct 2026 14:10:46 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: alex@shazbot.org, ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org, bhelgaas@google.com,
-	jjohnson@kernel.org, johannes@sipsolutions.net,
-	kevin.tian@intel.com, kvm@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-	mani@kernel.org, skolothumtho@nvidia.com, yishaih@nvidia.com
-Subject: Re: [PATCH 3/7] vfio/pci: Add qcom-vfio-pci variant driver
-Message-ID: <20261002171046.GA32083@ziepe.ca>
-References: <20260930151229.GR163130@ziepe.ca>
- <20261001071945.83116-1-jtornosm@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OaQX0v6k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B69651F000FF;
+	Fri,  2 Oct 2026 17:54:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790963647;
+	bh=lJQ9Gplsx3lzpZf7hARcJLh1Lg+Xkv5pYVo4U6+hpjE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=OaQX0v6kxIrXswgXLZqXC0lUrFRhkiHIogk34PDzu5nFOj00eKMJYn06NUCD9B5AG
+	 Jps6tCNjtzs5B4OO8V4Eu91DDQjlJl1wILQVuxzv+z3EZamIhcEbtThmCcUH6EU2bU
+	 quXtkuydqXaRov9s0DYAvzRH3TtbGUmtM65U/llbRl15iJnzVTFOzc1tGWhC5l/ENS
+	 ELi5Inl6wc7JPLbqaujVovKLZ6mBLX0hp3+M26gbjhixwybqvQNCFItpJIPuYeIGkA
+	 /aOf0XGxQup/sExsOGmAbwkOcNg7rEz4JHIYewH9YsK+7zdpFR7FH400vx9HdAzGnb
+	 83pE/6r5+VW1Q==
+Date: Fri, 2 Oct 2026 12:54:05 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
+	Linus Walleij <linusw@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Michael Walle <mwalle@kernel.org>, Alex Elder <elder@riscstar.com>,
+	Daniel Thompson <daniel@riscstar.com>,
+	Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-gpio@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+	Abel Vesa <abel.vesa@oss.qualcomm.com>
+Subject: Re: [PATCH v5 0/5] PCI/pwrctrl: tc9563: Introduce support for
+ embedded GPIO controller
+Message-ID: <20261002175405.GA189401@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -85,61 +61,63 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261001071945.83116-1-jtornosm@redhat.com>
+In-Reply-To: <20260923204350.GA1939701@bhelgaas>
 
-On Thu, Oct 01, 2026 at 09:19:45AM +0200, Jose Ignacio Tornos Martinez wrote:
+[cc->to: Bjorn A for arm64 DTS, Linus, Bart for immutable branch question]
 
-> Regarding platform_device_msi_init_and_alloc_irqs(), I agree that
-> moving the driver to device MSI domains would be cleaner on the
-> driver side. However, even with that change, I think the VM problem
-> remains exactly the same: the device MSI domain in the VM would
-> allocate virtual addr/data pairs, and the firmware's private interrupt
-> controller still needs the physical host values.
+On Wed, Sep 23, 2026 at 03:43:50PM -0500, Bjorn Helgaas wrote:
+> On Wed, Sep 09, 2026 at 04:55:52PM +0200, Lorenzo Bianconi wrote:
+> > The TC9563 embeds a GPIO controller currently used for per-port reset
+> > signals.
+> > Add a driver for the GPIO controller embedded in the Toshiba TC9563 PCIe
+> > switch providing 37 GPIO lines. The controller is registered as an auxiliary
+> > device by the TC9563 power controller driver and accessed through the same
+> > i2c device.
+> > Please note this series is based on pwrctrl upstream branch.
+> ...
 
-Yes, I'm not saying it fixes the problem..
+> > ---
+> > Alex Elder (1):
+> >       gpio: tc9563: Add support for the embedded GPIO controller
+> > 
+> > Lorenzo Bianconi (4):
+> >       dt-bindings: PCI: toshiba,tc9563: Document embedded GPIO controller
+> >       PCI/pwrctrl: tc9563: Add GPIO auxiliary device support
+> >       PCI/pwrctrl: tc9563: Switch per-port reset to GPIO descriptor API
+> >       arm64: dts: qcom: qcs6490-rb3gen2: Enable TC9563 embedded GPIO controller
+> > 
+> >  .../devicetree/bindings/pci/toshiba,tc9563.yaml    |  14 +-
+> >  arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts       |   7 +-
+> >  drivers/gpio/Kconfig                               |  11 ++
+> >  drivers/gpio/Makefile                              |   1 +
+> >  drivers/gpio/gpio-tc9563.c                         |  99 +++++++++++++
+> >  drivers/pci/pwrctrl/Kconfig                        |   1 +
+> >  drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c           | 165 +++++++++++++++++++--
+> >  include/linux/soc/qcom/tc9563.h                    |  19 +++
+> >  8 files changed, 300 insertions(+), 17 deletions(-)
+> > ---
+> > base-commit: 028f86457e822ab9de5b0d6d23efddc1b8b54ae1
+> > change-id: 20260731-pci-tc9563-aux-66a29d438f60
+> 
+> Applied on pci/pwrctrl for v7.4, thank you!
 
-> Also, the VFIO variant driver scheme would not fully break if the
-> driver moved to device MSI domains. The variant driver caches host
-> MSI values from the MSI descriptor, regardless of the allocation
-> method. The hook point may need adaptation, but the fundamental
-> approach (host caches physical values, VM reads them) remains valid.
+I had applied the arch/arm64 DTS change:
 
-It breaks because VFIO will only cache *actual* MSI-X table entries,
-it does not have visibility into anything that
-platform_device_msi_init_and_alloc_irqs()
+  arm64: dts: qcom: qcs6490-rb3gen2: Enable TC9563 embedded GPIO controller
 
-The only reason this works for you at all is because the driver
-hackily copies the vectors from the real MSI-X table so it can look in
-the "cache" to find their true physical versions.
+on pci/pwrctrl, but I think that was a mistake because that should be
+handled by Bjorn Andersson instead.
 
-Which is my general objection, I would like to see the driver to use
-platform_device_msi_init_and_alloc_irqs() and don't want to get stuck
-unable to do that because it would break this.
+What I would *like* to do is rework the pci/pwrctrl branch to drop
+patch 5/5 (the arch/arm64 DTS change) and reorder the Alex's new gpio
+driver first so it's not in the middle of the tc9563 DT and driver
+updates:
 
-> Regarding the hypercall idea for device MSI domains, I think that
-> would be an interesting direction worth exploring as a generic
-> solution, but that's a multi-subsystem effort that will take time to
-> design and land.
+  gpio: tc9563: Add support for the embedded GPIO controller
+  dt-bindings: PCI: toshiba,tc9563: Document embedded GPIO controller
+  PCI/pwrctrl: tc9563: Add GPIO auxiliary device support
+  PCI/pwrctrl: tc9563: Switch per-port reset to GPIO descriptor API
 
-Yes, but it does actually solve the problem in all its forms..
-
-> I completely agree that this could theoretically affect any device
-> with private MSI registers. However, in practice, I'm only aware of
-> this specific behavior in Qualcomm ath11k/ath12k firmware, where the
-> device's interrupt controller requires the host physical MSI
-> addresses to be programmed directly. 
-
-Everyone else seems to know this stuff doesn't work for
-virtualization and doesn't try to do something like that.
-
-> It's also worth noting that the PCI reset support for these devices
-> has already landed in linux-next (commit 290153d46d1a "PCI: Add
-> device-specific reset for Qualcomm devices") [1], solving the
-> device reset path for VFIO passthrough. This MSI series is the
-> remaining piece, with both in place, these Qualcomm WiFi devices
-> would be fully operational in VMs for the first time.
-
-Why do people care so much about this? I always thought it was a bit
-odd?
-
-Jason
+But I don't want to break anybody who assumed pci/pwrctrl was
+immutable and pulled it in already, e.g., to the GPIO tree.  Would
+this rework break anybody?
