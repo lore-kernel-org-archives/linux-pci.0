@@ -1,123 +1,113 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8064D357CE0
-	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 23:39:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B46C7322C88;
+	Fri,  2 Oct 2026 23:47:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790984388; cv=none; b=mHuQYJqJGxOObymSZfsOMYKNREdPhPXNeEZz0X4qUYE9K4v1g6bhmjz8r6kUU+p06dQlmlGLGl484xa3KJEnNkCXZY66TiX/wDJW93Y77w3ngv0bl7HQiHFbXteS58ZxoFR0jUTLXTmcG5ToKI77IS6z+1hVFc8JIqTUADeUkWQ=
+	t=1790984872; cv=none; b=exWdxld2uzsU0+Qi+Qp4mJOex96+KYaA4X2AFHHSheD3xSHRj78cxYLroIMPJ1J9pzV3v54dh08eZCGJ5xGrSNEIxtOyReD5KylEgnSDzKmBYZ/Q8bVuevVMkSuBvAk11keQywqnl8z65E74FWqRGYRVV1k20gZYm6KrcKw6WVE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790984388; c=relaxed/simple;
-	bh=NAFk/xfQo2MgkGAPIKUO30ii93hV4/iqSpYcf0X2Zts=;
+	s=arc-20240116; t=1790984872; c=relaxed/simple;
+	bh=PvstLQce3TC1gPzev1tDM+Cp+11UbN16I70iVrQ8qNc=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=DBMKJO7rSDg82nBr0TrFobfRdt+UZJIq+DGKuGnMHgCIcqXY7YYIHtjJTh0+KDoUahXcMpoQNXD/fyINIWvIiSha4AIVPUTW0rlDUlqBpcmbBMCEYuh/tqhU9ygwQX51phNePYq15m+m2vtoUbawWk2Dlvm0l8aNivNzZffhOpQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CEOYXd9y; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=ezjq/YCSOz3fuSfXMdF0IXd1GnRQzpXY44fSY8QGE4H8q4v/tTo81CCx53c9ufMBHFvTxJjw6Yp/Vm3ET/dtX74MAKlq+627AxyLaARCt567B/MxyaR1K7Fy10XHrDBQtO/qUTVO76hzHacJEmIMM7XkdOka4pD4eGDurYGnIuc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PRabq4VU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CEOYXd9y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D58841F00893;
-	Fri,  2 Oct 2026 23:39:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PRabq4VU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0362B1F000FF;
+	Fri,  2 Oct 2026 23:47:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790984387;
-	bh=2F9PM14gbO/JmqJbFmB0qxBlVb6KOCBrfWS4oqVBhpU=;
+	s=k20260515; t=1790984871;
+	bh=mN4BUccomOxQP6dbLy3uvQNSnAAqcoTSVXqAPXIymNY=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=CEOYXd9ydMm151azfENtOP96RpUuf/G8x/7YY7LRbScsOU9/xEXGFx8ltpG8F/3fY
-	 wQ3wUC6WnkD9XutfhcG31IEBYM7FCUf3kfUErfW+rKSYkWTnkpFpVO+JSu1iDTKMVe
-	 6E2likWy2SrsgPjYVFOSBOhbOzz2RPK4ecoY71G+HhzERWlHcOWavefP+B0bpy1xkT
-	 WD2WguvFougIbwkoPTU6/vGip5qDJhnspOF/LO5b5xjIkXed9lP/SvvShx571aOu/K
-	 8XdQ5e+agFkD7dBYU81dkjiPaKLt8l0OUAuKlhIFF1mhcT4WbXQG5KDtxkJduOVFLp
-	 qipXMH6MDi60g==
-Date: Fri, 2 Oct 2026 18:39:45 -0500
+	b=PRabq4VU4ZLHFbxtawTgO6RXWIeLXb6I4LbdyVZboLOfbiCesxv0UKv8vK1UIytj1
+	 wXmTfmTN1Bu1A7mkDrT1Z8OK5IVtSYeeaYlp8UJUa/nVXBAcTTByRRI3zpknkCtAyy
+	 y7ukLW4ydY6pn1zVUQmxQkLoCJi4oNdForZ0I1xz1dVX1L+rX1k7cmYd21/4KLwjkg
+	 /uaZ54lo+pyKodDxeYdvVbzeC5NCiEr2EBkxGlHTsSP7pbRhpjEsWEdg1S39TiNziT
+	 JmYpQP8SbG/27yiI1AP8MMJ7YKil7aeLBo+xEpAiBy1sYi16BcGx3oOdwvHOocSYsI
+	 vy3G8KKEPXPmQ==
+Date: Fri, 2 Oct 2026 18:47:49 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ryder Lee <ryder.lee@mediatek.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-	Jianjun Wang <jianjun.wang@mediatek.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: mediatek: fix W=1 snpringf warnings
-Message-ID: <20261002233945.GA406594@bhelgaas>
+To: Alex Williamson <alex@shazbot.org>
+Cc: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, bhelgaas@google.com,
+	mani@kernel.org, jjohnson@kernel.org, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org, mhi@lists.linux.dev,
+	linux-kernel@vger.kernel.org, Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH v14 0/2] PCI: Add device-specific reset for Qualcomm
+ devices
+Message-ID: <20261002234749.GA411439@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <b835e360b42c5e0994f9301a34dbdf140a8d3ef5.1772493898.git.ryder.lee@mediatek.com>
+In-Reply-To: <20261002170949.59c3d47a@shazbot.org>
 
-On Mon, Mar 02, 2026 at 05:46:48PM -0800, Ryder Lee wrote:
-> Fix the following errors in W=1 builds.
+On Fri, Oct 02, 2026 at 05:09:49PM -0600, Alex Williamson wrote:
+> On Fri, 2 Oct 2026 16:40:58 -0500
+> Bjorn Helgaas <helgaas@kernel.org> wrote:
 > 
->   $ make W=1 drivers/pci/controller/pcie-mediatek.o
->     CALL    scripts/checksyscalls.sh
->     DESCEND objtool
->     INSTALL libsubcmd_headers
->     CC      drivers/pci/controller/pcie-mediatek.o
->   drivers/pci/controller/pcie-mediatek.c: In function ‘mtk_pcie_parse_port’:
->   drivers/pci/controller/pcie-mediatek.c:963:43: error: ‘%d’ directive output may be truncated writing between 1 and 10 bytes into a region of size 6 [-Werror=format-truncation=]
->     963 |         snprintf(name, sizeof(name), "port%d", slot);
-> 	|                                           ^~
->   drivers/pci/controller/pcie-mediatek.c:963:38: note: directive argument in the range [0, 2147483647]
->     963 |         snprintf(name, sizeof(name), "port%d", slot);
-> 	|                                      ^~~~~~~~
->   drivers/pci/controller/pcie-mediatek.c:963:9: note: ‘snprintf’ output between 6 and 15 bytes into a destination of size 10
->     963 |         snprintf(name, sizeof(name), "port%d", slot);
-> 	|         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> ...
+> > [cc->to: Alex, +cc Jason]
+> > 
+> > On Thu, Sep 17, 2026 at 09:16:49AM +0200, Jose Ignacio Tornos Martinez wrote:
+> > > Some Qualcomm PCIe devices (WCN6855, WCN7850 WLAN; SDX62/SDX65 modems)
+> > > lack working reset methods for VFIO passthrough scenarios. These devices
+> > > have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
+> > > broken bus reset (addressed by quirk_no_bus_reset, merged for v7.2).  
+> > 
+> > Specifically, 6a4f64c3a3ad ("PCI: Avoid SBR for Qualcomm
+> > WCN6855/WCN7850 WiFi, SDX62/SDX65 modems").  I don't know what the
+> > behavior was prior to that commit.  I suppose it was something
+> > obvious?
+> > 
+> > > VFIO attempts to reset devices on every reassignment:
+> > > - For the listed modems, without a proper reset capability, these devices
+> > > never successfully initialize even on first VM assignment.
+> > > - For the listed WLAN devices, without a working reset method, the attempt
+> > > fails. On clean VM shutdown, the guest driver properly deinitializes the
+> > > device via .shutdown/.remove callbacks, leaving it in a usable state despite
+> > > the failed reset. However, on unclean VM termination (crash, force-off), the
+> > > guest driver callbacks are not triggered, the device remains in an undefined
+> > > state (DMA active, interrupts enabled, etc.), and without a working reset it
+> > > cannot be reused.  
+> > 
+> > So IIUC, prior to these patches, these devices were functional when
+> > passed through to several successive guests as long as the guests shut
+> > down cleanly, but the resets done by VFIO didn't work, so the host
+> > couldn't enforce isolation between those guests.
+> > 
+> > If true, I propose updating the commit logs to emphasize the lack of
+> > isolation and de-emphasize the VM clean shutdown vs crash behavior,
+> > e.g.:
+> > 
+> >   Resets of this device always failed prior to this commit, so VFIO on
+> >   the host could not enforce isolation between successive passthrough
+> >   users.
+> > 
+> >   If a guest driver deinitialized the device, it may have been
+> >   functional if passed through to a subsequent guest, despite the lack
+> >   of isolation.  Otherwise the device may have been left in an
+> >   undefined state (e.g., DMA and interrupts active) and unusable.
+> > 
+> > It would also be great to have Alex's ack here.
+> 
+> Yes, aiui it's an isolation and repeatability issue.  In fact, without
+> knowing what's actually stored in the hardware, I'd suspect it's more
+> the latter and the testing proves that.  Mani is really the one
+> vouching for it from the hardware, isolation perspective.
+> 
+> Standard reset methods have never worked on these devices and that's
+> now evident by the quirks that disable them for these devices.  This
+> fills the remaining gap by providing device specific resets for the same
+> hardware.
+> 
+> Both patches should properly reference the quirk_no_bus_reset commit,
+> but otherwise these look correct, afaict.
+> 
+> Acked-by: Alex Williamson <alex@shazbot.org>
 
-> +++ b/drivers/pci/controller/pcie-mediatek.c
-> @@ -953,7 +953,7 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
->  	struct mtk_pcie_port *port;
->  	struct device *dev = pcie->dev;
->  	struct platform_device *pdev = to_platform_device(dev);
-> -	char name[10];
-> +	char name[20];
->  	int err;
-
-FYI, from internal Sashiko review while backporting this:
-
-[Severity: High]
-This is a pre-existing issue, but looking at the error paths around port
-parsing, is there a missing IRQ teardown that could lead to a use-after-free
-or resource leak?
-
-When mtk_pcie_parse_port() successfully parses a port, mtk_pcie_setup_irq()
-allocates an IRQ domain and registers a chained IRQ handler that keeps a
-pointer to the port struct.
-
-If a subsequent initialization step fails, such as parsing another port in
-mtk_pcie_setup() or pci_host_probe() failing in mtk_pcie_probe(), the probe
-function aborts and returns an error:
-
-mtk_pcie_setup() {
-    ...
-    err = mtk_pcie_parse_port(pcie, child, slot);
-    if (err)
-        return err;
-    ...
-}
-
-The error paths, such as the put_resources label in mtk_pcie_probe() which
-calls mtk_pcie_put_resources(), will free the memory of the port struct but
-fail to unregister the chained IRQ handler or remove the IRQ domain.
-
-Because of this, a freed port pointer remains registered as the handler data.
-If the shared interrupt fires, could mtk_pcie_intr_handler() dereference this
-freed pointer and crash?
-
-Additionally, if platform_get_irq() fails in mtk_pcie_setup_irq(), it looks
-like the function returns an error without destroying the just-created
-port->irq_domain:
-
-mtk_pcie_setup_irq() {
-    ...
-    if (port->irq < 0)
-        return port->irq;
-    ...
-}
-
-Would it be appropriate to add proper teardown functions to these error paths
-to unregister the handlers and clean up the domains?
+Thanks, Alex!
