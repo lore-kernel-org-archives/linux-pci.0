@@ -1,177 +1,153 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B78354570F4
-	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 21:11:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F8EA3D3CF4;
+	Fri,  2 Oct 2026 21:18:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790975514; cv=none; b=q9PQsC2ocgjNnBjLTztYsX2y+qH0SOGSd4/O+naK5U9y2Mr00knV1eQM9BjUihP/zuPFK7lF3MCjpeT1NyGyGqCy5qTrsFsVRD3DSUzJge+biZNhBeE+d4OzjJmLupV2DfS+YA2dgj90Rqx7J/Kvo4tLB2teWVxNVCwipDixEVg=
+	t=1790975926; cv=none; b=Gr2YMRDFwC+5tQYxkCFs2AgVpwvXkYQHh6uLCw6ckfzdsxgYCrjGqYTALTA/RhQdo9bSwbMgS1SaOcOKo4yoyZyAyIMDVfaGqOKtnWtOyFAMYIWvE/gTgH5XelxlT7u4IDNO8kSQhCurbhjeMjsTzNEBguptTKtqv2phH9fXHkE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790975514; c=relaxed/simple;
-	bh=iOrHGz64z0wKTg4YNpqTI/tUIfNY75DEXU5oPmbSSps=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=en34zs2cbJh0hmiaYllubiQ+mOAjfxfy9pEFNhi7YQbypH8sFbpdT2jv8KR5EzKybcIoFE7zcrErRW+hEuVRZUEJ44X0jCizLvmDK8lZX7Jx3RBwN9GcMhmloHuQ2KDfwyOZHlfh5mZwd+zE1IgMBcQcC9FzNJPoMk3qyfaVILM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=q6G0Hr+g; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1790975926; c=relaxed/simple;
+	bh=71ldRLoJxjL7OqgffoArTrgFUxA2+EIxJ+3Jv9AIx58=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XYFe1+pGPjHGiwd38BgtV0WXjdFTjExudkMdGMZX/oo1a+K0SijkjwKqFe+vOZFqMugfq4K/sVqIsjSowxr6h5E0+YlTldK80MSwoTns+ZBgpJ+LdN+EkVbMYUkPIdl6pIHxO5bggOIaL9hN3gWFi5zyVPFwuK9s7b22huRPAJ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Sx6Xlpzd; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="q6G0Hr+g"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2d3b445a84fso20525ad.1
-        for <linux-pci@vger.kernel.org>; Fri, 02 Oct 2026 14:11:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790975507; x=1791580307; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=aTAI7MYZpbnU/agtQxfkMDXpGe2YnzBKn6e+VLjrcQs=;
-        b=q6G0Hr+gsATNOiGjgjZRfqLksZ4xHC5t2jrdNJJO6ojpxul1Ku5ET1K5Kn5JUoCowC
-         m1GCDYXHnEwwrBUNTvJFbKdq5IoFBzxfizrRHTS88ajTMR9IAoOvzJphsZJwRMMHdKcT
-         9aMTlSHBWP4xP9IH4jXf/xrJcFsy5UjmNZ4m+mIIsv2ZbAfEUbQ8nRzFQlyY5pxzU27V
-         jygdSNGVj9cXX6qSXOtsmcFfIwLq/TiM+JppfYy/7VOQZLsiW5WvbleJVRqpMXHGER+n
-         ZRTJFkbqgzb75Cw3yRfRLpdaKRa8UkJ3UprjlMBoIqxo/QslMF4PI5cz/EQwAU4s1pBw
-         +8kw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790975507; x=1791580307;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=aTAI7MYZpbnU/agtQxfkMDXpGe2YnzBKn6e+VLjrcQs=;
-        b=wx8vpyWayrCMoqKOoWGtlk3OroIQmK5zkqmp24AZEIRwlC++Ww1fZT/S7IWbgUb+8x
-         h9dK7c+c4Z6Uqgb6cAd9RFscYnGhH4Z0G6tKjhUlBhmxVA2NCKwRez3IRmw66IIkpgFp
-         hnTzcQPXPuBbToqKHr4scrM8o2MokIfUxo6B0z1BWk5Ka5sMi3iXfrZ2iTWgQUcQbYfB
-         PayIMcWajYhtk69pf2Mx4cqI+lsZo5khRGA77D1cwrUl+nms4NAJruOeJ6T7PMTuu9KM
-         1+Ph4BeLhsyTGcWrUuqjrREX0sobcBReqhHCUxbbi70VmbYjwLrSfb98Fl3xe+U+vT3I
-         T6lg==
-X-Forwarded-Encrypted: i=1; AKwUvBwg47rD4H5vVEQgeov+ncJ4pPxFwVcPvZ8E7yatupIMa8r1pDHrmWLTuTiOBiVC7osPdAH5hTMz79U=@vger.kernel.org
-X-Gm-Message-State: AFq9FYISFFtEcTitTe+hmTyLIX7SQulM0pO91yyHap+0JccgKLfDukah
-	QloZCZa2Gl8JFtEGcXMgsmlzaUGAGwVsaqPJfWeygVVloM9uFRuG0IPCaBlnzxPrOg==
-X-Gm-Gg: AYBFou2y+GbDI4I2d3gn/OKmxan6UGzkcHb3jfoaHWk/QnQotr/cGRNv3fQng46edyj
-	NG1JmdTHvXLhafHpDh6zoXnbj4b8Gn9/ybItWMblgP12x2/Rk7GaSuPi810dsjTXIhvG64Yv9Ra
-	8ow8iWX1KcjhyZ9/+Oa8dE96QiKa6sihX5ItH+QJI4Ri5dZuNobvUVVCaTNYStuJ+86LaZW7v4s
-	1GaPoqLb6xcQmmedyj4HvqQs3ulNQGdPof8mqvGuw49saYF+ZXygm9Zb6AvpTf40nG3YNzAtmom
-	jihS/sMGuiqlimA3DzsZKwa9kgGJqx3j/NafxdwbOV/UicYXR5df4BkyDjvf8vn/vpQHOj+YBq0
-	lg93wQ57qgS25URSKSZaaQo6RfS1TFdKXKcm5jcOKD+7ERr58gdKLmCNUPHwxO9siJJAKQCqtB5
-	0Fw8lodcStMnvhDH+/c2Sz+vhs4eaA4lLaCJmsQjPfJGR7+HF4+av7Owq340TUC9Nt3TGhoottB
-	i1mysvtW4Mfm33n2mvcwrkRf190OL0BTQm/
-X-Received: by 2002:a17:903:b8c:b0:2bd:3bfd:74f1 with SMTP id d9443c01a7336-2e53091f83bmr1274215ad.2.1790975506423;
-        Fri, 02 Oct 2026 14:11:46 -0700 (PDT)
-Received: from google.com (105.211.142.34.bc.googleusercontent.com. [34.142.211.105])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a78e497230sm39218a91.11.2026.10.02.14.11.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 02 Oct 2026 14:11:45 -0700 (PDT)
-Date: Fri, 2 Oct 2026 21:11:39 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Nicolin Chen <nicolinc@nvidia.com>, iommu@lists.linux.dev,
-	Will Deacon <will@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Mostafa Saleh <smostafa@google.com>,
-	Daniel Mentz <danielmentz@google.com>,
-	Ashish Mhetre <amhetre@nvidia.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Thomas Gleixner <tglx@kernel.org>, Radu Rendec <radu@rendec.net>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Sx6Xlpzd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1790975925; x=1822511925;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=71ldRLoJxjL7OqgffoArTrgFUxA2+EIxJ+3Jv9AIx58=;
+  b=Sx6XlpzdAg3d173vmln7Bsu3DWGzdy8SPX408vhtQOos4RGb/SFx7y+F
+   HL9KtjwJDn3Qzpa5U5KgY72LW4I1WYLsvajqreRxVPHkdNJgCdu+zK5AF
+   k+IpDGN3eB3qOE5A49JVUMheF+QqavVcV0SGn98ZrSQnTf1S7Gl8qVHz6
+   WDjQqf3p64Ygl4GHtnFnqkBVxcXBYErsLgHrzvwlo4hIxqznajKkNPCDJ
+   6noUhAR7bLCD6bbOKK3oBXUEbNjMoXwEeupAdE2ihqLnlgKI0AD+wDhHs
+   bllxqy9KyrC4Cz278B4sf5NeEEMty2kOYgnLJWSwQog1nzCyDjo6gFxpv
+   g==;
+X-CSE-ConnectionGUID: vcyTuDKhS2qlMAZWvhukjw==
+X-CSE-MsgGUID: UiU2qbW2ThC66C5/BLKjFw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11923"; a="101077477"
+X-IronPort-AV: E=Sophos;i="6.27,136,1787036400"; 
+   d="scan'208";a="101077477"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2026 14:18:44 -0700
+X-CSE-ConnectionGUID: xPIxSpAJQgyjfd8rVXEksQ==
+X-CSE-MsgGUID: SF/iMmAlTDymqkiVli3HnA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,136,1787036400"; 
+   d="scan'208";a="274987380"
+Received: from skuppusw-desk2.jf.intel.com ([10.165.154.101])
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2026 14:18:43 -0700
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, rafael@kernel.org,
-	Danilo Krummrich <dakr@kernel.org>, driver-core@lists.linux.dev
-Subject: Re: [PATCH v11 11/16] iommu/arm-smmu-v3: Add CMDQ_PROD_STOP_FLAG to
- gate CMDQ submissions
-Message-ID: <asAeCz_rmpe5hbsh@google.com>
-References: <20260929034510.2023173-1-praan@google.com>
- <20260929034510.2023173-12-praan@google.com>
- <ar1yNtr7Kp2OTcDd@nvidia.com>
- <ar3yWUmi8E0k37Ml@google.com>
- <ar6gY9grmdMZcN/M@nvidia.com>
- <20261002164748.GD3481470@ziepe.ca>
+	rafael@kernel.org,
+	lukas@wunner.de,
+	terry.bowman@amd.com,
+	kanie@linux.alibaba.com,
+	olof@lixom.net
+Subject: [PATCH v15 0/4] Simplify PCIe native ownership
+Date: Fri,  2 Oct 2026 14:18:24 -0700
+Message-ID: <20261002211828.1293177-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261002164748.GD3481470@ziepe.ca>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Oct 02, 2026 at 01:47:48PM -0300, Jason Gunthorpe wrote:
-> On Thu, Oct 01, 2026 at 11:03:15AM -0700, Nicolin Chen wrote:
-> 
-> > > So we can't issue ATC_INVs during suspend (the EP is already down), nor
-> > > during resume (the SMMU resumes *before* the EP is made active). The EP
-> > > can't use its ATC while suspended, and if it loses power/resets on the
-> > > way back to D0 (from D3cold, or D3hot with No_Soft_Reset=0), it comes 
-> > > back with an empty ATC.. same assumption the PCI reset path makes today
-> > > (pci_dev_reset_iommu_prepare()).
-> > 
-> > In that case, would the STOP flag be too late? It's only set in
-> > the middle of the SMMU suspend. So, an ATC command (via doamin
-> > invalidation) might be issued prior to the Point of Commitment,
-> > which will be timed out due to the unresponding EP?
-> 
-> How can you ever fix that?
+This revives Bjorn's v12 from November 2020, rebased onto v7.3-rc3.
 
-The unfortunate reality is that this gap exists in the kernel even
-today.. upstream SMMUv3 has no RPM, so it's always on, while the EPs can
-runtime suspend independently. So an ATC_INV can already be issued to
-an EP that has suspended. I'd argue RPM improves this slightly, since
-once the STOP flag is set everything is elided, so the window closes at
-SMMU suspend instead of never.
+  https://lore.kernel.org/all/20201126011816.711106-1-helgaas@kernel.org/
 
-> 
-> How does power management really work, is it expected that the end
-> device is already quieted by its driver?
-> 
+The goal is unchanged.  Decide who owns each PCIe port service in one
+place, when we interpret the _OSC results in acpi_pci_root_create(), so
+that everywhere else only has to look at host_bridge->native_X.  For AER
+specifically, host_bridge->native_aer becomes the single answer to the
+question "may Linux touch the AER Capability?".  Today callers each have
+to remember to also test pcie_ports_native and pci_aer_available().
 
-Yes, power management would topo-sort all dependencies and invoke
-suspend callbacks accordingly, i.e. in our case the suspend callbacks of
-all SMMU clients would be called before the SMMU's suspend callback.
+I posted v11.  Bjorn took it over at v12, split the _OSC changes in two
+and deferred the "pcie_ports=dpc-native" work.  The v12 review comments
+were agreed but never respun, and the series stalled.  v13 was that
+respin.
 
-> Could the first step in power management install a blocked STE? Then
-> we don't have to worry about ATC desync and that automatically stops
-> generating new ATC invalidations if we go and detact the domains too
-> 
+  https://lore.kernel.org/r/cover.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com [v11]
 
-Partially.. at SMMU suspend we set GBPA to abort and clear SMMUEN, so
-nothing gets through while the SMMU is off. But that's global and only
-happens after all EPs are down, it doesn't stop ATC_INVs in the window
-Nicolin pointed out.
+Bjorn suggested reviving it in response to Guixin Liu's report that
+"pcie_ports=native" no longer enables DPC.  The DPC service binds on
+host_bridge->native_aer, and that flag did not reflect the command line,
+so DPC stayed off when firmware retained AER control.  Patch 3 fixes it
+by making the flag reflect it.
 
-One way to ensure the ATC state is relying on the PCIe spec to lose ATC
-content during D0 entry from D3cold, or D3hot with No_Soft_Reset=0). 
+  https://lore.kernel.org/linux-pci/20260901064554.2178688-1-kanie@linux.alibaba.com/
 
-Another way to enforce this, is to *somehow* ask the endpoint drivers
-disable ATS during *their* suspend, i.e. in the EP's driver's suspend
-they could call pci_disable_ats or a better suited helper from pci core
-and the in the pm_resume / rpm_resume they could call it's equivalent 
-pci_enable_ats, counterpart ensuring a clean ATS state. Or maybe the 
-pci_dev_reset_iommu_prepare/done() pair (with slight refactoring) in EP's
-suspend/resume?
+Patch 3 has a side effect worth calling out.  drivers/cxl/core/ras.c did
+not exist in 2020 and tests host_bridge->native_aer with no
+pcie_ports_native fallback, so it has been quietly ignoring
+"pcie_ports=native".  Centralizing the check fixes that.
 
-I could mention this explicitly in some comments or dev_warn if any of
-the masters have ATS state as ON during suspend?
+Binding the DPC service on host_bridge->native_dpc, rather than on
+native_aer, is left for a separate patch on top of Lukas's series that
+removes the DPC/AER dependency, as agreed with Bjorn.  That change
+alters behavior, so it does not belong in this cleanup.
 
-LMK what you guys think of that?
+  https://lore.kernel.org/r/cover.1790531238.git.lukas@wunner.de
+  https://lore.kernel.org/r/20261001221408.GA2731929@bhelgaas
 
-> Maybe I'm wondering if power management should involve the core code
-> so it detaches all the domains from the device, setups up blocking and
-> then the iommu itself could power ofF?
+Changes since v14:
+  * Patch 3: fold "pcie_ports=dpc-native" into the _OSC control mask as
+    well, so host_bridge->native_dpc and the "OS native features" line
+    reflect it (Bjorn).
+  * Picked up Guixin's Reviewed-by on patch 3.
 
-I'm slightly against the blocking domain attach because it's a
-reasonable ask for the client drivers to be able to dma_map / unmap when
-they're suspended, given that most of the modern IOMMU state is
-in-memory and the only HW state is some sort of TLB/ATC maintenance. We
-can map/unmap when the IOMMU is off and just ensure a clean cache state.
+v14 posting
+https://lore.kernel.org/r/20260922204548.3884906-1-sathyanarayanan.kuppuswamy@linux.intel.com
 
-Drivers often want to pre-map everything, power ON just to run their
-workload, power off and then unmap. 
+Changes since v13:
+  * Lukas suggested dropping AER cap check fix (patch 1 of v13). He has
+    a series underway to fix it cleanly (removing DPC/AER dependency).
+    So dropped the patch as suggested.
+    https://lore.kernel.org/r/aq95LGUHL-pnmTlr@wunner.de
+  * Addressed use of IS_ENABLED(CONFIG_PCIEPORTBUS) instead of #ifdef
+    (Lukas).
+  * Added Fixes tag in patch 3 (Guixin Liu).
+  * Added Acks from Rafael.
 
-That said, I agree it would be nice to have the core code handle power
-management, which can be one of the next steps. (it would be complicated
-to see how or what each IOMMU might have to handle for power mangement
-in a generic way). 
+v13 posting
+https://lore.kernel.org/r/20260919162655.3499010-1-sathyanarayanan.kuppuswamy@linux.intel.com
 
-> Jason
+Bjorn Helgaas (1):
+  PCI: Centralize pci_aer_available() checking
 
-Thanks,
-Praan
+Kuppuswamy Sathyanarayanan (3):
+  PCI: Assume control of portdrv-related features only when portdrv
+    enabled
+  PCI/ACPI: Tidy _OSC control bit checking
+  PCI/ACPI: Centralize pcie_ports_native checking
+
+ drivers/acpi/pci_root.c           | 78 +++++++++++++++++++++++++------
+ drivers/pci/hotplug/pciehp_core.c |  2 +-
+ drivers/pci/pci-acpi.c            |  3 --
+ drivers/pci/pcie/aer.c            |  6 +--
+ drivers/pci/pcie/aer_cxl_rch.c    |  2 +-
+ drivers/pci/pcie/err.c            |  2 +-
+ drivers/pci/pcie/portdrv.c        |  7 ++-
+ drivers/pci/pcie/portdrv.h        |  2 -
+ drivers/pci/probe.c               | 10 ++--
+ include/linux/pci.h               |  2 +
+ 10 files changed, 80 insertions(+), 34 deletions(-)
+
+
+base-commit: fd73f4a6659897191fa0d40695fe370925dd3780
+-- 
+2.43.0
+
