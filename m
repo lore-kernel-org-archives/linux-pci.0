@@ -1,116 +1,123 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C938B2EF653;
-	Fri,  2 Oct 2026 23:32:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8064D357CE0
+	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 23:39:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790983952; cv=none; b=J6dvsk6QvM+al9KuU1x2IGn9wTzz+FOZ6yOq6WMvPa04zOWQYoy/8tWzrF5bXsccVmxKpVfZCyf2cWoCFsyI1Apxj7FnLU9Zq8CFKP2u8UrE07rrrd5k4sV+qByUtHX1RDHbBUOqEBSpQdaJ7/yjFPXdZFMgxEo8CAJHfHv8nk0=
+	t=1790984388; cv=none; b=mHuQYJqJGxOObymSZfsOMYKNREdPhPXNeEZz0X4qUYE9K4v1g6bhmjz8r6kUU+p06dQlmlGLGl484xa3KJEnNkCXZY66TiX/wDJW93Y77w3ngv0bl7HQiHFbXteS58ZxoFR0jUTLXTmcG5ToKI77IS6z+1hVFc8JIqTUADeUkWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790983952; c=relaxed/simple;
-	bh=9MkzpLv2tCyGVvGtMcaieTLlp3KYsJzOyjcIx83v8V8=;
+	s=arc-20240116; t=1790984388; c=relaxed/simple;
+	bh=NAFk/xfQo2MgkGAPIKUO30ii93hV4/iqSpYcf0X2Zts=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=ZlUPXge6JBarjmZnWL2G5Qm8TdGUvizoQnEUNuPtJiOtA7Lar4LGpcy0ucFIVcbXaEp28s1DjOInIaDhTnEJULK/kN0AxYWpjr4E60L7rsSekvmWwb3Xe9aC9JTaGUbHHx7NHtaAB/C1qK0mptbI/o9RAQlzeGbW+ly+M08oPl0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NgHp3jMO; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=DBMKJO7rSDg82nBr0TrFobfRdt+UZJIq+DGKuGnMHgCIcqXY7YYIHtjJTh0+KDoUahXcMpoQNXD/fyINIWvIiSha4AIVPUTW0rlDUlqBpcmbBMCEYuh/tqhU9ygwQX51phNePYq15m+m2vtoUbawWk2Dlvm0l8aNivNzZffhOpQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CEOYXd9y; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NgHp3jMO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41E8E1F008BD;
-	Fri,  2 Oct 2026 23:32:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CEOYXd9y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D58841F00893;
+	Fri,  2 Oct 2026 23:39:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790983950;
-	bh=hkp4GpLvaZLV90kqDlezg/z7sFUUPzjkt6KiMpkqyXQ=;
+	s=k20260515; t=1790984387;
+	bh=2F9PM14gbO/JmqJbFmB0qxBlVb6KOCBrfWS4oqVBhpU=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=NgHp3jMOHzjentqXjcWAie69SstGeLGmBAUcJ4epAssn5YFUuFSoQr5AMiHL+7zpp
-	 QZ9POZ5t07San8sLmhiL4B3HhjmnAkqpgFTUUlDJGiSS1IhileM5TPfNyMCFcI3upC
-	 wxouGWRv4PDt490EwhnyXO+arQh22NsLXE9h6HKJGayyEqCRXnLzHU14mbWopmEK5L
-	 wMECpB9dGAwQ2SlSp4XNQ3/e0ig77FBeNrp5i3kQbCf3hITc3y7fPD4t293wk74QK9
-	 5h9JwZl9s8A4m2+RZ1/ib9URDMMipuZARTTpB0VeMqcLcTxU7th1YKjDNGwxeglYO+
-	 01bRubhH2jA6A==
-Date: Fri, 2 Oct 2026 18:32:29 -0500
+	b=CEOYXd9ydMm151azfENtOP96RpUuf/G8x/7YY7LRbScsOU9/xEXGFx8ltpG8F/3fY
+	 wQ3wUC6WnkD9XutfhcG31IEBYM7FCUf3kfUErfW+rKSYkWTnkpFpVO+JSu1iDTKMVe
+	 6E2likWy2SrsgPjYVFOSBOhbOzz2RPK4ecoY71G+HhzERWlHcOWavefP+B0bpy1xkT
+	 WD2WguvFougIbwkoPTU6/vGip5qDJhnspOF/LO5b5xjIkXed9lP/SvvShx571aOu/K
+	 8XdQ5e+agFkD7dBYU81dkjiPaKLt8l0OUAuKlhIFF1mhcT4WbXQG5KDtxkJduOVFLp
+	 qipXMH6MDi60g==
+Date: Fri, 2 Oct 2026 18:39:45 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Prabhakar <prabhakar.csengg@gmail.com>
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+To: Ryder Lee <ryder.lee@mediatek.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+	Jianjun Wang <jianjun.wang@mediatek.com>,
 	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
 	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Biju Das <biju.das.jz@bp.renesas.com>,
-	Fabrizio Castro <fabrizio.castro.jz@renesas.com>,
-	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: Re: [PATCH v2] PCI: rcar-host: Remove unused LIST_HEAD(res)
-Message-ID: <20261002233229.GA401322@bhelgaas>
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: mediatek: fix W=1 snpringf warnings
+Message-ID: <20261002233945.GA406594@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260521091256.15737-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <b835e360b42c5e0994f9301a34dbdf140a8d3ef5.1772493898.git.ryder.lee@mediatek.com>
 
-On Thu, May 21, 2026 at 10:12:56AM +0100, Prabhakar wrote:
-> From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+On Mon, Mar 02, 2026 at 05:46:48PM -0800, Ryder Lee wrote:
+> Fix the following errors in W=1 builds.
 > 
-> Remove the unused LIST_HEAD(res) declaration from rcar_pcie_hw_enable().
-> 
-> The macro instantiation defines an unused 'struct list_head res' variable,
-> which conflicts with a valid resource loop-local 'struct resource *res'
-> declaration further down in the function, triggering a compiler variable
-> shadowing warning:
-> 
-> drivers/pci/controller/pcie-rcar-host.c:357:34: warning: declaration of 'res' shadows a previous local [-Wshadow]
-> 357 |                  struct resource *res = win->res;
-> 
-> Fixes: ce351636c67f75a9 ("PCI: rcar: Add suspend/resume")
-> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-> ---
-> v1->v2:
-> - Updated the commit message to include the warning.
-> - Added the Fixes tag.
-> - Added Reviewed-by tags for Geert and Marek.
-> ---
->  drivers/pci/controller/pcie-rcar-host.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-rcar-host.c b/drivers/pci/controller/pcie-rcar-host.c
-> index 213028052aa5..cd9171eebc28 100644
-> --- a/drivers/pci/controller/pcie-rcar-host.c
-> +++ b/drivers/pci/controller/pcie-rcar-host.c
-> @@ -346,7 +346,6 @@ static void rcar_pcie_hw_enable(struct rcar_pcie_host *host)
->  	struct rcar_pcie *pcie = &host->pcie;
->  	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
->  	struct resource_entry *win;
-> -	LIST_HEAD(res);
->  	int i = 0;
+>   $ make W=1 drivers/pci/controller/pcie-mediatek.o
+>     CALL    scripts/checksyscalls.sh
+>     DESCEND objtool
+>     INSTALL libsubcmd_headers
+>     CC      drivers/pci/controller/pcie-mediatek.o
+>   drivers/pci/controller/pcie-mediatek.c: In function ‘mtk_pcie_parse_port’:
+>   drivers/pci/controller/pcie-mediatek.c:963:43: error: ‘%d’ directive output may be truncated writing between 1 and 10 bytes into a region of size 6 [-Werror=format-truncation=]
+>     963 |         snprintf(name, sizeof(name), "port%d", slot);
+> 	|                                           ^~
+>   drivers/pci/controller/pcie-mediatek.c:963:38: note: directive argument in the range [0, 2147483647]
+>     963 |         snprintf(name, sizeof(name), "port%d", slot);
+> 	|                                      ^~~~~~~~
+>   drivers/pci/controller/pcie-mediatek.c:963:9: note: ‘snprintf’ output between 6 and 15 bytes into a destination of size 10
+>     963 |         snprintf(name, sizeof(name), "port%d", slot);
+> 	|         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> ...
 
-Internal Sashiko feedback while backporting this patch:
+> +++ b/drivers/pci/controller/pcie-mediatek.c
+> @@ -953,7 +953,7 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
+>  	struct mtk_pcie_port *port;
+>  	struct device *dev = pcie->dev;
+>  	struct platform_device *pdev = to_platform_device(dev);
+> -	char name[10];
+> +	char name[20];
+>  	int err;
+
+FYI, from internal Sashiko review while backporting this:
 
 [Severity: High]
-This is a pre-existing issue, but does this function lack bounds checking
-for the outbound window index 'i' when configuring PCI resources?
+This is a pre-existing issue, but looking at the error paths around port
+parsing, is there a missing IRQ teardown that could lead to a use-after-free
+or resource leak?
 
-Looking at the loop just below this hunk in rcar_pcie_hw_enable():
+When mtk_pcie_parse_port() successfully parses a port, mtk_pcie_setup_irq()
+allocates an IRQ domain and registers a chained IRQ handler that keeps a
+pointer to the port struct.
 
-	resource_list_for_each_entry(win, &bridge->windows) {
-		...
-		switch (resource_type(res)) {
-		case IORESOURCE_IO:
-		case IORESOURCE_MEM:
-			rcar_pcie_set_outbound(pcie, i, win);
-			i++;
-			break;
-		}
-	}
+If a subsequent initialization step fails, such as parsing another port in
+mtk_pcie_setup() or pci_host_probe() failing in mtk_pcie_probe(), the probe
+function aborts and returns an error:
 
-If the device tree populates bridge->windows with more ranges than the
-supported outbound window limit (RCAR_PCI_MAX_RESOURCES, which is 4), it
-appears 'i' could exceed the limit. Could this result in an out-of-bounds
-hardware register write during the calculation of the register offset in
-rcar_pcie_set_outbound()?
+mtk_pcie_setup() {
+    ...
+    err = mtk_pcie_parse_port(pcie, child, slot);
+    if (err)
+        return err;
+    ...
+}
+
+The error paths, such as the put_resources label in mtk_pcie_probe() which
+calls mtk_pcie_put_resources(), will free the memory of the port struct but
+fail to unregister the chained IRQ handler or remove the IRQ domain.
+
+Because of this, a freed port pointer remains registered as the handler data.
+If the shared interrupt fires, could mtk_pcie_intr_handler() dereference this
+freed pointer and crash?
+
+Additionally, if platform_get_irq() fails in mtk_pcie_setup_irq(), it looks
+like the function returns an error without destroying the just-created
+port->irq_domain:
+
+mtk_pcie_setup_irq() {
+    ...
+    if (port->irq < 0)
+        return port->irq;
+    ...
+}
+
+Would it be appropriate to add proper teardown functions to these error paths
+to unregister the handlers and clean up the domains?
