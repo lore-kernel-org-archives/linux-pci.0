@@ -1,170 +1,163 @@
-Received: from mail-qv1-f46.google.com (mail-qv1-f46.google.com [209.85.219.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx07-001d1705.pphosted.com (mx07-001d1705.pphosted.com [185.132.183.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 610F43CB57D
-	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 19:18:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99EDF1C2324
+	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 19:31:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.132.183.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790968720; cv=none; b=jYCb+0TanL/qACBxWWhABUppQLrviwkobg3GNv5BAT635cGdnd/1eNqPfstqIyRk5Xg6TVZEZPcdAZvHBpnx6zjQ5ffxX05Y/OUmp44xxxurN5G95ysaS2lG+XhO36v+u3COaXJJJW3UsBjJA+YbS7phqEB/wwZdKOZTTMcumC8=
+	t=1790969497; cv=none; b=TEJUqDasZb0bbLGQ7XSR2PVqvWIO3TfAChFl27cEMjvd24feCmXhdMNwPY2AQtstpfS8E2d7kjWkQjYW0qrJnKhDYxympBbZWYHgMdlciJlPPKs1UQ75d+7tfPCU3APPV83tT7b8BTDJiLDtgZ6he8y8Qg8YCFc+AsYqio5Mzqw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790968720; c=relaxed/simple;
-	bh=jsedZLxYBjeRK5DRFBlUwUDOw3C1t+5s3b7lh0/hqDA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kxnYa05nyDB0xzaSdvrYM4XTt6M2vrX7UGqmZ+xFwqfQWYcs83dK2WWyaqli5mPOe89GWMKWRmYamc1sczgOFwbr2uCJDOxXv5zvk1cwOq0sPpFuScReCLfXWRsvVuZT070R+6bRDuKRFAoewjUKQFNmwE6iYmMFVgV6lB6XN0c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=eghDmcSR; arc=none smtp.client-ip=209.85.219.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
+	s=arc-20240116; t=1790969497; c=relaxed/simple;
+	bh=LTGCTC54hdIZr1mBEC/sqjRyyfWeDcRkhFrHVPxz4U0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WVA3DnsQ7N9NKHBe/cK5x9KX/Q+Pa7HQuXLptdTCrBc07Wjm7zELztVkCwC1DP4cevD66ZePWwZF78qscyi5eQEfGTlttR9UZ/4qZB5neTIP7qK7H02ZY+VujdDD65fbEhy0L7+cICnx7vOAmu21vAx0XWIEZemSVkgFMYbzCPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sony.com; spf=pass smtp.mailfrom=sony.com; dkim=pass (2048-bit key) header.d=sony.com header.i=@sony.com header.b=YD4YQ0Ad; arc=none smtp.client-ip=185.132.183.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sony.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sony.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="eghDmcSR"
-Received: by mail-qv1-f46.google.com with SMTP id 6a1803df08f44-9178d514951so775196d6.0
-        for <linux-pci@vger.kernel.org>; Fri, 02 Oct 2026 12:18:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1790968717; x=1791573517; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=K2WGxmgiqbuVWGrMMN7M+HLRy0CqkeslBWbdjt3ajek=;
-        b=eghDmcSRsR6MOItEQd6AKVUmnUtisYNWkhZU9z5cL/DTj8jualhQcRwk33Y9a6UdOp
-         tvXhwTjgyzCx0fzgVXbzdFi5tecJ4g8j+Ch603SxboaDbbIBjWtQ94+hOLawY0Oepn6M
-         gE0DHnHjVDcGbpp1TuPQ32XLwMZKMlVEoFpPMmU3jr2BN3Cj5zSXZLeDt8BGe5XqD3ch
-         Eoeo//GZIU3j9xx4jYjKhOYCPnzOaXAPM+mHc+fWtMxgQkQiHOG/i5By/Xl4OSS8EZhJ
-         FnvaUi62c8p7ZGrWmAb5hpds+Zmkg+wkBfOHxZy/EtLcFLEvNCGBtGIUDAGso76DNv6w
-         gPIQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790968717; x=1791573517;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=K2WGxmgiqbuVWGrMMN7M+HLRy0CqkeslBWbdjt3ajek=;
-        b=Sa6k3zT7FTTrM+Do+aIJxIL4jE6NPtzf9qCiPEjPXWhdWExpM6Lr9WppcgATLlkoEq
-         U0aFSUOT06pehLy/YApS8QlMbk5uua3bsRxFt8MCy3WD3TLlKazW3phFZAFN/wJUmy04
-         Nb2bdhet13rjKy3MGvCrNcERLWtosJIRb3HfEiMhHZJDUXAXyg08ijWHOP4Yd+5uNRqP
-         krG1i/FELWFNpI0w3S0GvrHHCmmxtAaX6jheqpeg54K02byzGxc7889qoJjAM5+BzHaR
-         qAePikrCDWAL8S80GJ1+qemfNKRMKCcB72TeYxQzPMaZ0PVwnDDYXo4wAzrWOnPM4Ggs
-         3pmQ==
-X-Forwarded-Encrypted: i=1; AKwUvByCpWHrLiZEXkgg07LpQa1cc2lAF0wzUSZdafLBWLA15rJhRn6IUW2H2zC1/BSScak2zPJzqdYlwqo=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLdADAwO2wiYRiU2lpyz8rWPH/KyopcDpKHQPGUan/wVqMGWx5W
-	h7RviNB0djjDR8FGvXKdM6tKSG0hoLoeE2EePLtAFNbVCSrl0L9oOaxywvDFSSk+uGk7H0v0o7M
-	QUubKlhs=
-X-Gm-Gg: AYBFou1MpWKAvwgMI/sMtvLPnztSKNxh08+ezFEN/e5zOcihl8299MwtmWVMVNmvyh5
-	NbUb98QDaTYl6vwnsZE1GLiNbujTjnfzRMXnx2D5OYO9cwhlmkvmy1Xk6+8dpgKl4ajt/NQyinr
-	ryl6mI8ENnNLeOGWIDZXAoeju48+ZyoJXj9M1isL8aF38E4VWvR0KnmwwaXcnE9UkD0roIJ5M1y
-	oDDL3VarCCY9CumqPUzzFCWYXLia1FoT0SSUZhpCztZmLERi9jiSBt+L9GOuQjPemoiyXIjXurr
-	1SIOUPDQ8Ax1ilE3PswDG5odGD3OD05Xp2ox24Ow9GtnAEjow6qdZi9y2qJ2Uz4sf+gssaypzBN
-	q4aiEC3ybOuYFjeTUbH0TA7ftMnmfILQTnnwIMYKRyF9iwlH4MISBiDIe9/LPFSU4mzrBDIluxl
-	kyxfg4xlYDlmf3mRTSlcfRfAVMblTfHeyyVkG7Akmn8vHeNk/muTTwTjbxjzWegckidh2qkzn/s
-	uq+k+6tNQk=
-X-Received: by 2002:a05:6214:3019:b0:917:a92a:fd59 with SMTP id 6a1803df08f44-9195d1da497mr5054326d6.37.1790968717042;
-        Fri, 02 Oct 2026 12:18:37 -0700 (PDT)
-Received: from [172.22.22.28] ([73.62.185.64])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-917e0b67167sm27020566d6.21.2026.10.02.12.18.35
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 02 Oct 2026 12:18:36 -0700 (PDT)
-Message-ID: <6cad75b3-c4fb-486f-82a2-6613c4dffe32@riscstar.com>
-Date: Fri, 2 Oct 2026 14:18:34 -0500
+	dkim=pass (2048-bit key) header.d=sony.com header.i=@sony.com header.b="YD4YQ0Ad"
+Received: from pps.filterd (m0209328.ppops.net [127.0.0.1])
+	by mx08-001d1705.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 692J7mKt3467515;
+	Fri, 2 Oct 2026 19:31:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sony.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=p1; bh=T+b5Bnv++kA4uMPiW+niVnbe5CYZpvaoJc4K7n599m
+	M=; b=YD4YQ0AdvBQOW/nuP+jI9TK08FZ8ROSWVucWAoUlrAFhjadKWuiH7Hajr1
+	kAyFxrFWnx/GPH36y80GPhitiQN1nu4iHbnZWirlxgl3UCkIEG/yJBduUSbaMZ42
+	N4Ju+w0d7JOfFiutvONEDWDV0nGjb8aarwy0E9oJDLHQHymh/BOXPr4ryK0n0YOz
+	0f2VUuMLjK4SWBJ49Cp7bALGqkTTxh+n4XwOpdx2IhNGwvfPGjWcNclORs4S8rsG
+	7unzLPceG9Q9fzM6xOey/ctjOC/+JOMsCGFfidk/WByLWRSwezbG4Z7VanyKrCjT
+	7pn5UJrwOPMti9IrMSYWGdhRLqsA==
+Received: from sgppsea02v.sg.gdce.sony.com.sg ([121.100.43.226])
+	by mx08-001d1705.pphosted.com (PPS) with ESMTPS id 4gx77h0g9k-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
+	Fri, 02 Oct 2026 19:31:19 +0000 (GMT)
+Received: from pps.filterd (SGPPSEA02v.sg.gdce.sony.com.sg [127.0.0.1])
+	by SGPPSEA02v.sg.gdce.sony.com.sg (8.18.1.11/8.18.1.11) with ESMTP id 692JA6Ub1656282;
+	Fri, 2 Oct 2026 19:31:17 GMT
+Received: from usculxsnt13v.am.sony.com ([146.215.230.187])
+	by SGPPSEA02v.sg.gdce.sony.com.sg (PPS) with ESMTPS id 4gx74j0yaj-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Fri, 02 Oct 2026 19:31:17 +0000 (GMT)
+Received: from pps.filterd (USCULXSNT13v.am.sony.com [127.0.0.1])
+	by USCULXSNT13v.am.sony.com (8.18.1.11/8.18.1.11) with ESMTP id 692J942q1761800;
+	Fri, 2 Oct 2026 19:31:14 GMT
+Received: from us842f57abef3e.eu.sony.com ([10.10.10.214])
+	by USCULXSNT13v.am.sony.com (PPS) with ESMTPS id 4gx5afe81c-1
+	(version=TLSv1.3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256 verify=NOT);
+	Fri, 02 Oct 2026 19:31:14 +0000 (GMT)
+From: Maciej Grochowski <maciej.grochowski@sony.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Jonathan Corbet <corbet@lwn.net>
+Subject: [RFC PATCH 0/2] PCI: Reserve resources for a delayed hotplug subtree
+Date: Fri,  2 Oct 2026 21:31:09 +0200
+Message-ID: <20261002193111.51637-1-maciej.grochowski@sony.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 0/5] PCI/pwrctrl: tc9563: Introduce support for
- embedded GPIO controller
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>,
- Bjorn Andersson <andersson@kernel.org>,
- Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
- Linus Walleij <linusw@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
- Bartosz Golaszewski <brgl@kernel.org>, Konrad Dybcio
- <konradybcio@kernel.org>, Michael Walle <mwalle@kernel.org>,
- Daniel Thompson <daniel@riscstar.com>,
- Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>,
- linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
- linux-gpio@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
- Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
- Abel Vesa <abel.vesa@oss.qualcomm.com>
-References: <20261002175405.GA189401@bhelgaas>
-Content-Language: en-US
-From: Alex Elder <elder@riscstar.com>
-In-Reply-To: <20261002175405.GA189401@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Sony-BusinessRelay-GUID: 4O2BXBdQdMwVEo400rgDQ9mKauBPHAxx
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-02_05,2026-10-02_02,2025-10-01_01
+X-Sony-EdgeRelay-GUID: owdxwTqk05rGbMdKw9vII70c2MqFGwjz
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-02_05,2026-10-02_02,2025-10-01_01
+X-Proofpoint-GUID: 72ad3kLu7SraXTWZPPUcOxXZRWwsboDT
+X-Proofpoint-ORIG-GUID: 72ad3kLu7SraXTWZPPUcOxXZRWwsboDT
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDAyMDA3NyBTYWx0ZWRfX7WUsYiC0mBXm
+ 7CDaO6mNP0E4Inuz8Vvwx/gjNMVtDiBg9wgdFjjBPaFgVflxMp9w/MBwkYao70wJ9QFBwjyLiP7
+ vL38f8LlVn1TUqqDOS29/R/5fuNINsXRSx4fau+z78eNebE6HY1Z
+X-Authority-Analysis: v=2.4 cv=cdpHPXDM c=1 sm=1 tr=0 ts=6ac00687 cx=c_pps
+ a=6mgWUpd4vGE96FGw1JXD8A==:117 a=6mgWUpd4vGE96FGw1JXD8A==:17
+ a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=KAb5x4SsHD3PzxGk7EmX:22
+ a=jHItnBwsj8f3cr25iGAb:22 a=twwIdXyZLhAGH-z1IiAA:9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDAyMDA3NyBTYWx0ZWRfX3wY3c5MABJMg
+ FwFjDQzEOJiszI+vXqvs/xa/tF9ripJo35oNgkBwODRoZGy9oGCwu5DtTMI04Mm+PTPPOhJ2lA/
+ c71vSPyII8ILP9Fruz7/8FhTn1r00bryClfeoLyTpifLlGLkKURTBL73ftYBqcoS/UjLezcqt9F
+ PAgnQwTBDypLH6ZYaegf16RcBDyceIUVp0EwF2YmADcOexz4zBaRFgu5mEMzKNp8dOh2n8G/R1V
+ goXHq96wqloOkNfNom8DN331xxqCIzOd+C9IyziwZMDST0XHypaRYYP/RnmZAccmqn/zNb/bM5f
+ w5LKIriaPA/OGAnr71X6ka1YaF68dEjdKt1kfGxKDamRr/d6B+2RZvihq8VC48FTv33RNaBvdQA
+ P8tBU2mpcQv5puOMs52btR2zGR1+lLBPaGvjKLkZ/bDldXofz7DF9vR2DAZjfz3gXTEGwnAhBHw
+ 6W/sc46ZswZIQq4Wvww==
+X-Sony-Outbound-GUID: 72ad3kLu7SraXTWZPPUcOxXZRWwsboDT
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-02_05,2026-10-02_02,2025-10-01_01
 
-On 10/2/26 12:54 PM, Bjorn Helgaas wrote:
-> [cc->to: Bjorn A for arm64 DTS, Linus, Bart for immutable branch question]
-> 
-> On Wed, Sep 23, 2026 at 03:43:50PM -0500, Bjorn Helgaas wrote:
->> On Wed, Sep 09, 2026 at 04:55:52PM +0200, Lorenzo Bianconi wrote:
->>> The TC9563 embeds a GPIO controller currently used for per-port reset
->>> signals.
->>> Add a driver for the GPIO controller embedded in the Toshiba TC9563 PCIe
->>> switch providing 37 GPIO lines. The controller is registered as an auxiliary
->>> device by the TC9563 power controller driver and accessed through the same
->>> i2c device.
->>> Please note this series is based on pwrctrl upstream branch.
->> ...
-> 
->>> ---
->>> Alex Elder (1):
->>>        gpio: tc9563: Add support for the embedded GPIO controller
->>>
->>> Lorenzo Bianconi (4):
->>>        dt-bindings: PCI: toshiba,tc9563: Document embedded GPIO controller
->>>        PCI/pwrctrl: tc9563: Add GPIO auxiliary device support
->>>        PCI/pwrctrl: tc9563: Switch per-port reset to GPIO descriptor API
->>>        arm64: dts: qcom: qcs6490-rb3gen2: Enable TC9563 embedded GPIO controller
->>>
->>>   .../devicetree/bindings/pci/toshiba,tc9563.yaml    |  14 +-
->>>   arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts       |   7 +-
->>>   drivers/gpio/Kconfig                               |  11 ++
->>>   drivers/gpio/Makefile                              |   1 +
->>>   drivers/gpio/gpio-tc9563.c                         |  99 +++++++++++++
->>>   drivers/pci/pwrctrl/Kconfig                        |   1 +
->>>   drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c           | 165 +++++++++++++++++++--
->>>   include/linux/soc/qcom/tc9563.h                    |  19 +++
->>>   8 files changed, 300 insertions(+), 17 deletions(-)
->>> ---
->>> base-commit: 028f86457e822ab9de5b0d6d23efddc1b8b54ae1
->>> change-id: 20260731-pci-tc9563-aux-66a29d438f60
->>
->> Applied on pci/pwrctrl for v7.4, thank you!
-> 
-> I had applied the arch/arm64 DTS change:
-> 
->    arm64: dts: qcom: qcs6490-rb3gen2: Enable TC9563 embedded GPIO controller
-> 
-> on pci/pwrctrl, but I think that was a mistake because that should be
-> handled by Bjorn Andersson instead.
+On a two-level Microchip PM50052 (Switchtec PFX) hierarchy, a hard reset
+of the top switch removes both switches from the PCI tree.  The top
+switch returns before the nested switch, so pciehp enumerates its five
+hotplug downstream ports while they are empty.  The port leading to the
+nested switch receives three bus numbers and a roughly 206 MiB
+prefetchable window.  When the nested switch appears, it needs eleven
+bus numbers and a 1 GiB-aligned 1032 MiB window for its NTB BARs.  The
+missing resources leave part of the hierarchy unusable and the nested
+switchtec function cannot bind.
 
-I'm only responding to this to provide slightly more explanation
-about what you want to do.  Resetting pci/pwrctrl has no effect
-on me.
-> What I would *like* to do is rework the pci/pwrctrl branch to drop
-> patch 5/5 (the arch/arm64 DTS change) and reorder the Alex's new gpio
-> driver first so it's not in the middle of the tc9563 DT and driver
-> updates:
+Switches from other vendors can encounter the same resource shortfall
+when a child appears after its parent hotplug port is numbered and
+sized, if the child's requirements exceed that allocation.
 
-Currently, the dt-bindings commit is before the gpio commit (and
-followed by the two pwrctrl commits).  You want to reorder the
-first two, as below.
+These patches explore pci=hpreserve= to specify minimum resources for a
+selected hotplug bridge while its child is absent.  Patch 1 reserves
+memory window size and alignment; patch 2 reserves bus numbers before
+the remaining bus numbers are divided among sibling hotplug ports.  The
+path form tolerates downstream bus renumbering.  With no parameter, the
+existing allocation policy is unchanged.
 
-					-Alex
+On a v7.3-rc2 based kernel with both patches and
+  pci=hpreserve=bus=11:mmiopref=1032M:mmioprefalign=1G@0000:80:01.1/00.0/03.0
+we tested a cold boot, two top-switch hard resets, and one nested-switch
+hard reset on the two-level system.  After each reset, the nested port
+retained its eleven bus numbers and aligned 1032 MiB window, the 1 GiB
+NTB BAR was assigned, and both switchtec devices responded to MRPC.
 
->    gpio: tc9563: Add support for the embedded GPIO controller
->    dt-bindings: PCI: toshiba,tc9563: Document embedded GPIO controller
->    PCI/pwrctrl: tc9563: Add GPIO auxiliary device support
->    PCI/pwrctrl: tc9563: Switch per-port reset to GPIO descriptor API
-> 
-> But I don't want to break anybody who assumed pci/pwrctrl was
-> immutable and pulled it in already, e.g., to the GPIO tree.  Would
-> this rework break anybody?
+We are posting this RFC now because the failure affects our PCIe hotplug
+infrastructure.  The two-level pciehp test shows that a per-bridge
+reservation can preserve one delayed subtree.  With three or more
+switch layers that return at different times, this implementation
+appears to require a reservation at each port sized while empty, and
+each ancestor must retain enough bus numbers and aligned memory space
+for the eventual subtree.  We have not tested that case.
+
+Consider a larger layout with three top-level switches, each feeding
+six second-level switches with eight NTB functions apiece.  If their
+child links return late, the current syntax could need 18 full
+path-specific entries, plus entries for delayed ancestors.  The NTB
+BARs affect the resources required per bridge, not the entry count.
+Matching by device ID could shorten a homogeneous case, but risks
+reserving resources on same-ID ports without delayed children.
+
+One possible extension, not implemented here, would let several
+explicit paths with the same requirements share one reservation, e.g.
+<reservation>@<path1>;@<path2>.  Would that make a kernel command-line
+interface practical, or should firmware, platform data, or a PCI core
+policy describe the expected resources?  We welcome feedback on the
+interface as well as on the underlying hotplug allocation problem.
+
+Bus-number reservation is not yet honored on a plain pci_rescan_bus()
+path; the hardware test above exercises pciehp.  A separate allocator
+retry releases a sibling bridge window on this system.  This series
+does not address that issue.
+
+Maciej Grochowski (2):
+  PCI: Add pci=hpreserve= to reserve memory windows for a hotplug bridge
+  PCI: Allow pci=hpreserve= to reserve bus numbers for a hotplug bridge
+
+ .../admin-guide/kernel-parameters.txt         |  42 +++++++
+ drivers/pci/pci.c                             | 108 ++++++++++++++++++
+ drivers/pci/pci.h                             |  22 ++++
+ drivers/pci/probe.c                           |  58 +++++++++-
+ drivers/pci/setup-bus.c                       |  33 ++++++
+ 5 files changed, 259 insertions(+), 4 deletions(-)
+
+
+base-commit: 5225b8eec4c9bb21aecff6295fab6346a3c3738e
+-- 
+2.47.3
