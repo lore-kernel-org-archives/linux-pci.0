@@ -1,174 +1,188 @@
-Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013067.outbound.protection.outlook.com [40.93.201.67])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk2-f38.google.com (mail-qk2-f38.google.com [74.125.230.230])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BC172D0C92;
-	Fri,  2 Oct 2026 14:51:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.67
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790952682; cv=fail; b=OP0Nf6oBcRlfbMJPYKO/+J1+FXlPEvSFWkF/B+q2ZXbiGv7KxdWNTG37uN3hehot4S4oXt6aY74Pe2bxNAbVzUlaL/M5gyBcNSOE2hG04gJxWDcxoDrFo6DjbsuB+j+fKSy5OMvhoMoYi2sMRHtr1e98u0gUIVyMQKJKvKzTnng=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790952682; c=relaxed/simple;
-	bh=JjqFBBYgpGXFW33xIkhlWnGrrOhUwloBLdnGRJiWSS8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=PM6R6mg+Y/57ZH3nQVIG0OvOn2Nukm+Ny395H3/VlQm++iM7fDD1I0zLCWv2/+ptLkHi+ybFIxto+op8N2sRz5ph/2NpaZECAMuZFgOou2fLfog34bMIS+3mYlohPcYxg6eIWEm9xd9bctVLcjzO1wtvZmcoPzemGGj2OH52x4A=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=inl573lx; arc=fail smtp.client-ip=40.93.201.67
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E4F84E13E0
+	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 16:24:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.230
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790958259; cv=none; b=CyNHKeRgCY6B/3hsNLDQcMhjrMNG8PWKTUYtE1x3Oi6JzKKv04SLwzxFLGWxeCha2RGz6JqV16tuRt88vTlFGHdLQO/htlGWFt+Abjj5yZolVI7DiDNnldgl6oO/UAMoiA6B64xqhSh7MuU+pFugyvubz6W1DvqhvFHblnJ0mqo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790958259; c=relaxed/simple;
+	bh=Em9YSoXBwFPJOOXkkk+kejVq9hjQu0Hx9vnOhF72eXw=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=nWAm7d/ktZ+If+Q0wUekiheoiDNMioD4mO0cRlIbeeU28vwQa3Vt58oIbvH++PmqY5OW9BHim1uBrYabx/0KabTpyUrroszLKkpTCnEa/ZFRVkfJZ1KKxGA9b3Q5tHH0LrGgrQc54lteF3BHgtva6xItwgMm7kM4HSSz7epBM9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=M8qR7Aur; arc=none smtp.client-ip=74.125.230.230
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="inl573lx"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=M36lFFnc/45hzIXLFZ//xiyazW5opAUAhNCGnLwcI2FiXqcBzFEnYYFuA20RqvGPJUb3eMmJ4MxS0pVNUaI3sscPJbxMr9uDasAwctBvUkh6xqAmQHC9gMA406bjnfkwyoNpQfU4/2vk1jiYrsS4WVZN5neirPWtJ28UP3NeNSeamlkFKHiRyg9DkfyFDwiFb7SVy1C848xLBfWzBRlB6uBX9EnpJ7/+VZYXZzT42FgBxFtmwLpzQRGTnVZaEql+W1RaUjIYPWRTrYLjQxhtNOxxocpLLFJu2Y8Jjls4Mz6UoQ1F+Vhphx1QGFUhxn52+7hX+s4iaVK5Z3VbfbZ+VA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/+/JACs6VWzkJy7PSj7+l2nHHFgpx9QbYRpEIsfkSjQ=;
- b=fy7XZbVBg3b1PUOTzBTlCslQxUG8mSdx7WI54QtIrL9EgbF54QOnD2cxX6YqnwuoKYW4kkk0KKYJQq153nZDnwwwJ98T1YyXiRK+5elcyg/ittvcbu2l6KhCBkGtIM0ZjVnwSwrssAsC5cVZEtEmjQDT1bfwWTS24pI7sOMDK8itIWmv9V6W4SJZn9b8+DM427elRZURzW9o9ARkHUq8E5UZH1J+Hs3e5oRaF8UrXUJbqQVsaOlWu06pNhv/OZpPMdBIpz+SD0kX85h1Kgu2v3M72DTP5M6ZjRURxJvwgH5+5kxDe8/tnMqgYKi4ndsD2b2nIHbAQdl+mzpPDidnLA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/+/JACs6VWzkJy7PSj7+l2nHHFgpx9QbYRpEIsfkSjQ=;
- b=inl573lxxDwXVvqiOls+u7QQHKRodFTF/hVshZYkmyHaaFfKiIMwmKfrwAqBDryF8wot+H09XV4KdzS0ylJLH48BNGY9eOihCd+3RAYY1F5DS/3eEHkJSy1huwVULaN9/uHREI/YQqoUxD0xz/S0OnJgznPW0DnVWFWaOkmlJIMvcr/O9Hhfy1zm6MIdelAN2kUOFN0wuCtKwvTRZeebZXSJYUMAEVzOptbSkBi0Eyp6uud2+ejUKj7B5Dwrw+sK4hwHa7ybM84ZGO3fbRvD7TGovFJiGwrR/7jSdpsc15CaWgwjXr6V3RK9I90AFeKEJWN/v3uXcsZdBrnR3kOwIg==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CHBPR12MB731189.namprd12.prod.outlook.com
- (2603:10b6:610:33d::12) by DM4PR12MB7744.namprd12.prod.outlook.com
- (2603:10b6:8:100::14) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.16; Fri, 2 Oct
- 2026 14:51:10 +0000
-Received: from CHBPR12MB731189.namprd12.prod.outlook.com
- ([fe80::b0e5:123d:fe06:e10d]) by CHBPR12MB731189.namprd12.prod.outlook.com
- ([fe80::b0e5:123d:fe06:e10d%6]) with mapi id 15.21.0472.016; Fri, 2 Oct 2026
- 14:51:09 +0000
-Date: Fri, 2 Oct 2026 11:51:08 -0300
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: Alex Williamson <alex@shazbot.org>
-Cc: Matt Evans <matt@ozlabs.org>, Leon Romanovsky <leon@kernel.org>,
-	Alex Mastro <amastro@fb.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Longfang Liu <liulongfang@huawei.com>,
-	Mahmoud Adam <mngyadam@amazon.de>,
-	David Matlack <dmatlack@google.com>,
-	=?utf-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-	Manish Honap <mhonap@nvidia.com>
-Subject: Re: [PATCH v7 0/9] vfio/pci: Add mmap() for DMABUFs
-Message-ID: <20261002145108.GU1616761@nvidia.com>
-References: <20260924152159.49702-1-matt@ozlabs.org>
- <20261001153834.4a2528a2@shazbot.org>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261001153834.4a2528a2@shazbot.org>
-X-ClientProxiedBy: DM6PR03CA0075.namprd03.prod.outlook.com
- (2603:10b6:5:333::8) To CHBPR12MB731189.namprd12.prod.outlook.com
- (2603:10b6:610:33d::12)
+	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="M8qR7Aur"
+Received: by mail-qk2-f38.google.com with SMTP id d75a77b69052e-5337ecb5b48so30097411cf.3
+        for <linux-pci@vger.kernel.org>; Fri, 02 Oct 2026 09:24:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1790958255; x=1791563055; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :references:cc:to:from:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=kvLqfhY0ukuw4SdFaafcEp7mq0hCjeNOKgF1sxMSOZI=;
+        b=M8qR7AurJc3hUmhB2ze/+wKn6T1tRXpma/jwWDhaUaWd8XvMOTiQO01CBWSU7LnKFx
+         30DbMdNcHbPo+az7zdmq+OhTWJUT/jRsdnlWDVXwUBaXg2D09KoCw2ltvld3Q3MJS4Nb
+         /ZIPWzUMDB+GumdG3OiDkHvm7jrOk+KGEUBZ1JYFLatPve/X7x0ZLfEGldDSn4qcCPpt
+         ooYoLg+OadNeXF4YCWXZiNqdVONxmaXezbOaadxXQfGPlRbjJ1Z+QyMDtfPfYpofBRnC
+         KUX6D7m1OwTw/XLdQcJpOqI3b6Ldls6mT4PmTZ6OSZvjf9/f4ZTexaNhwrFPmcaYfU6D
+         f5Vg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790958255; x=1791563055;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :references:cc:to:from:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=kvLqfhY0ukuw4SdFaafcEp7mq0hCjeNOKgF1sxMSOZI=;
+        b=2sJocrRJM9irWi0+5pipJ1QmJR2VuuwjEBKwW7dQ5gmcQa0QfCCLZWojMVO7AhuTb1
+         0zUqoDLqWptXn5qW4ABXAGTMGex5cO9I5v/jSSP/dtxFYPP7hKJGbidgENmeK5ywnOY/
+         L9PnxSBCD5QiR8s8bNpO1NqQsT2mJZ1rY0HpJEVYsxN7m75M14NUbyD8uxfT4yY7faaK
+         vFvkXEkS6Gc/GLrGK5ORUwfc1zoxumzAJmNX1UhoqrFuAMjv55b56RgLQoi4LRPj1hTB
+         o81yYTE1Urw4BtzEylRzQQJRfR8Lrza63e7JGB6OrR6sHC2nCKIky02WeVfRhxfN/Waq
+         WRhw==
+X-Forwarded-Encrypted: i=1; AKwUvBwW53JMSEv+S5u/qGnCt8HlZVycLTf9DTgu5jHl1FL5xrVgoO6nAJT6cU4e56EXuA3yYv/n4rYsYG0=@vger.kernel.org
+X-Gm-Message-State: AFuF++n32TLRUpSBtBpLISboj+pgktPMPO9+rqxW7UYVS8Fv+sGZZQ0W
+	o6T86JDybOhFqr4VQoapOjuTc88asGdCpAzvqTRqC2juej+FCfDy65QcEIn9kPIi9ig=
+X-Gm-Gg: AYBFou0pScBm2ZMoGilQzKTrL347u+OFwusEomvLp5z5/RAtrIorJZQtzWxrT2T1u4t
+	22ATcM3tG237PY6AGLn8mssF4O54iZDJI0dqg6AvzBGHmsT1MLl5+jH44ykXTaZkQN7z5+BGYfy
+	Fh2a5YBJwKqsqe3/WBzuWavS1C3oIHdlzT1JHI45gBi4MTJn4JxMx8oTzrO39vThZTGfPZ0CXiG
+	gDKnZsTkaWsmApfaq3w1dqTrS083lq3pE304GuRFRSL6w0DvrQ8q3Y4mDgnulIzw3ci0DaQN1lJ
+	W9VWWK0Qr0Lq3SfMGz8OPxZnhcvsOTEKo1S6M72EUNEfyOQXCb5O+QkNPJJuFBq9p0+61C6JdyF
+	5LkXOd1ubF11egFNEgZu9mLytRTREHlWoBx63QxSY3YN+SIQbYgLY1MpQ2ByCixxpSuUqcU2Chb
+	zCNK3jYcV7m8hJvvcZcwwm/Uz7jHmrdPYJYy3JCE9xQ22A+O+gSmtbQJGiK2DA00pgQL2Ryso=
+X-Received: by 2002:a05:622a:1244:b0:533:9686:a051 with SMTP id d75a77b69052e-533cba41c4fmr52681091cf.21.1790958255002;
+        Fri, 02 Oct 2026 09:24:15 -0700 (PDT)
+Received: from [172.22.22.28] ([73.62.185.64])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-53398bdd010sm30887341cf.19.2026.10.02.09.24.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 02 Oct 2026 09:24:14 -0700 (PDT)
+Message-ID: <a8141ee4-00a8-4059-8784-6b3fde26243b@riscstar.com>
+Date: Fri, 2 Oct 2026 11:24:12 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CHBPR12MB731189:EE_|DM4PR12MB7744:EE_
-X-MS-Office365-Filtering-Correlation-Id: 789cbe2e-7e9c-4a15-72ea-08df2094986f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|1800799024|366016|23010399003|10067099003|56012099006|11063799006|4143699003|6133799003|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	PvnPe1Wwpstlfl8SRK7j6hrHoCJZJPhOti0O/VrAO2ql3rXp2J4D+aUaRghzUQUJenWq73hpoQ2Iw0v+XeM/yhp+WZs33hz7GI2jmiQQtIkBrK1RlvunAlLbkL00BHytx7vysuLqERpeAJz/Of2yRW5WS8fx6khmIdDoVNVgZRnx/yZgsH6FG1k+nuFtZAUGrkHeqGaJMj/L/JlbU/6wVs7OT+paJnuWtTFFEMb5Ke71CWV09yExmi/YkhkRidZsgILoslNZNlSv4yb3TTvpd1wcCqSDU4vEbSyHNZAyKcXJ4Fp1BBMURsA//SGYkEeE23qVP+C9eyyyoo1n9VyMTkl6gwVx7pZ7WgcFOgTRBmTbk8iBvG/ZQeoo2XMi+6n7SrlQArrRKKpzHrqDVGkXLojJEDq+bp0tjht48odDfNyl1XbiFIFeJQIweXgCZnk5ZHugAooqF9WU9ASLJKwgGYVeSuHkL/OAXXEWWuVqRN5wiR4uBAo1PuLDSIsfij9vKAODooPDl3AMwVmP4n2RWmrciQTqDJHeOAc9Qs16vBOVXRZAfQPOYeIT4GqvWJK3eolernFs+MJPRTy0yWrnABqF7/lW2Lpy2y/9gUq7zYuPw9JLz3xUyh4rHiC/83SkartyFxPzmFR9uXFWsdjyZ7UYsoIHnfdg56SynwgzZtM=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CHBPR12MB731189.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(1800799024)(366016)(23010399003)(10067099003)(56012099006)(11063799006)(4143699003)(6133799003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?n9JH8NHwXVqgiVbof3qoRgpO8tX4koSDlcrlzAIFNJdqd3QqYOH501oRG9lA?=
- =?us-ascii?Q?BS+IH/6ZQdh4uRfmF4wSP65UzMFVe96vRNj3HhsMi0WVXIyTqPPKI/9gEyaf?=
- =?us-ascii?Q?3riulgzyoIpqjj0y8BVw05IOf8GnGabFrO6pmGizckU/msxWNVte9+ChhOyD?=
- =?us-ascii?Q?BtD7sO1uNsBJGblVzxoqz05rw9ZjIq/MKW63KxRfiim/uZNu9CTFqY7JHKvq?=
- =?us-ascii?Q?ayWRA/703VB85PveReO6M1CJP949xXm47puNk66SkexmhipY6a7WXzBFpU+d?=
- =?us-ascii?Q?YaByDuwD7vGtU4xDGjJXjOxk6Sp50ONdvIzN4GldyE3CbyTAThgPatb32fXq?=
- =?us-ascii?Q?09neXxO+kjqJ8Yd0fdJUqUhjS90CJ0l0WC8aW2x30eya+4iXuW7AIf6ZCDb3?=
- =?us-ascii?Q?OgVfxHtv1h0Cxus26Yv+ul9EFIgVNWNVonteKgTWaW/SPkh3h0wcspjDvLJO?=
- =?us-ascii?Q?x5eP5AiIG3Soct8kSL2Smso2bz2lV16SeeRwaqwdNKBprn9KV0XNcAU+C2w4?=
- =?us-ascii?Q?cpNjq/mbujmXXg7m7kj5WI8uZH8Tb7OO7SGYd24qxzuXmJjww3eBqLd7gjBk?=
- =?us-ascii?Q?J8yqyTqDxI1PHMkRPNxrSLJbKRTD/eUNs01Wurtd1Zml8VER+vmafYmIVPJX?=
- =?us-ascii?Q?vv2mgtMnoUdYgfm+XFu8s8hPNz4JGReCk3Uj84pAAWIS7cOyX/PELh0HmZv7?=
- =?us-ascii?Q?UqoHsC804fNH9IGX+jNU7n12Cr5cFHxMtHQltG+KWlNKna+/Sa5kNuulucSh?=
- =?us-ascii?Q?tkgV83NN61FIUzSrfs2LM82gz70Fxqxs39Iv8q7mnTiFav+yxm+XVZbJNe7h?=
- =?us-ascii?Q?hhaYHXhqMrXT5Sa/AUtliV1tNrnKwwI8ZR4KhxNSkhxSwEb8iExfVvlp7uKP?=
- =?us-ascii?Q?5UF830WLnfJ/BXPdBM9f/Gfpaua0v2EuJnn+Ljz8uGijxGZTy+CP1AFvmOYX?=
- =?us-ascii?Q?dpDMUFIFKo62zZSn5G3f5DVw2YceI4Zd34khFyEfnlE7Z+oA4rG5Oucl/phM?=
- =?us-ascii?Q?EAEYzX9TMGA3Jr8WV7ipxShN5hWDmNOeBhzP/umlP6mwCVGd8vLJnxRV9Sxd?=
- =?us-ascii?Q?9ahwMK5I3gSgY+W7U/oqawml/OoAcghwo+kJR/+IFt75NMN0tTf4OHz2g6P+?=
- =?us-ascii?Q?xsxZy1oq/A9j+tzcDbbl1MdANWmu4QjUuvNTUW6oeRfIX5ScvcKyMvsssERA?=
- =?us-ascii?Q?RSc7H2JJov2Ojcnq6/5JITRiOewtO6kNICdWbjACokptIPAZ4Ro6zJSfMROu?=
- =?us-ascii?Q?vECuaFhiBQ/Y/YtPvQ+nDf2HFYnitWr6tRQ/9digJbTHTTIS2K3fBXZedV8Z?=
- =?us-ascii?Q?Ctv+CimHCnOGo5MAeJCVwiOIvWMj/CFEXoBb48WnARo7sC8JcMi9J7ao52H0?=
- =?us-ascii?Q?C4DG6TU5M+4TAaudZ0zb3PAGLF+qKv7AcrM0o+67/mG3CJRi1/SIjFJcsx3Y?=
- =?us-ascii?Q?265aNVEKsvssxnzpTDrOCQUEtyCt1XN70JOhTJ1l0qKr2g2QwIIAuE+iTe0H?=
- =?us-ascii?Q?t9rW5KJ60PVSPIYuqTh6cUglAFk8EsGX3wucZy2I037SLuuIb1XvDsBlyqyh?=
- =?us-ascii?Q?TZWyOhV9WAKGbxBm9WB2OEn9M5luh8yPQKfLNRe+eSPRKfhi5R3lHMkM7Fj1?=
- =?us-ascii?Q?Tl6P2DPT09D2n62XlwWqcqVLkRnpcJ+0VnbGmS9k982LNIiOv9Oh+xYckeU5?=
- =?us-ascii?Q?pRjz354Y8zqDCEym5X6vT28pYcdLEUzy/z51rrmeBao8rb2I?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 789cbe2e-7e9c-4a15-72ea-08df2094986f
-X-MS-Exchange-CrossTenant-AuthSource: CHBPR12MB731189.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Oct 2026 14:51:09.6676
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 6oLkrp3FNsawpPVnYcePwFEU4h4ZeAwK7OIKRBfd2HkP8voLl9iQzFWBjqsjBZIM
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB7744
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 0/3] PCI: of: update endpoint ranges dynamically
+From: Alex Elder <elder@riscstar.com>
+To: bhelgaas@google.com
+Cc: lizhi.hou@amd.com, herve.codina@bootlin.com, andrea.porta@suse.com,
+ daniel@riscstar.com, mohdayaa@qti.qualcomm.com, lbiancon@qti.qualcomm.com,
+ mani@kernel.org, robh@kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260924222444.1351466-1-elder@riscstar.com>
+Content-Language: en-US
+In-Reply-To: <20260924222444.1351466-1-elder@riscstar.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, Oct 01, 2026 at 03:38:34PM -0600, Alex Williamson wrote:
-> On Thu, 24 Sep 2026 16:21:43 +0100
-> Matt Evans <matt@ozlabs.org> wrote:
-> > Dear Reviewers,
-> > ===============
-> > 
-> > Along the way several related issues came up that warrant more
-> > eyes, and I'd be grateful for your input:
-> > 
-> > 1. If VFIO fd is opened O_RDONLY, it currently can't be mmap()ed
-> >    (because PROT_WRITE is rejected in do_mmap(), and PROT_READ alone
-> >    drops the VM_SHARED so VFIO's mmap rejects it).  BUT it seems we
-> >    can export a DMABUF from it, and then pass the resulting fd around
-> >    for P2P writes.
-> > 
-> >    I don't know if this is intentional/relied on/a known limitation,
-> >    or a bug?
+On 9/24/26 5:24 PM, Alex Elder wrote:
+> A PCI endpoint bus is a devicetree construct that allows a PCI
+> endpoint (function) to have sub-devices defined that are accessible
+> in an SoC via the PCI endpoint's BARs.  Such a bus is represented as
+> a devicetree sub-node for a PCI function having the name "pci-ep-bus".
+> There can be one or more pci-ep-bus nodes.
 > 
-> Seems like a bug.  In practice it's probably not very meaningful, the
-> user can still potentially change the device power state and trigger a
-> reset, but being able to source a writable dmabuf to a region on the
-> device fd that isn't itself writable seems semantically wrong.
-
-I'm shocked O_RDONLY even did *anything*, I never expected this.
-
-IMHO with these kinds of cdev's we shouldn't do anything in response
-to O_RDONLY. If the core code does something then fine, but I don't
-think we should try to define a semantic what "Read only vfio" even
-should mean.
-
-> >    a) We could reject export w/ -EPERM unless the device fd's f_mode
-> >       has O_RDWR, to reflect the RW abilities of P2P
+> A PCI function with a pci-ep-bus devicetree node must also define
+> "#address-cells", "#size-cells", and "ranges" properties, to specify
+> how endpoint bus addresses are translated to the PCI parent bus.
 > 
-> This seems sufficient...
+> An endpoint bus address has three cells; the first indicates which of
+> the function's BARs the address is associated with, and the other two
+> specify a 64-bit (2 cell) offset within the BAR's region.
+> 
+> BAR base addresses are determined dynamically by the PCI enumeration
+> process, so generally it's not possible to include them in a static
+> devicetree file.  When this addressing scheme was introduced, this
+> was not a problem because the devicetree content was generated
+> dynamically--after booting--based on the information (including BAR
+> addresses) available following PCI enumeration.
 
-+1
+The PCI endpoint bus model implements an addressing scheme that
+allows sub-devices to specify addresses relative to the base of
+an endpoint BAR.  This avoids needing to know the address assigned
+to the BAR, which cannot be known until runtime.
 
-Jason
+For users (such as the LAN966x) that rely on dynamically-created
+devicetree nodes for PCI endpoints, the generated ranges property
+already incorporates the assigned addresses.
+
+However if a PCI endpoint is defined in devicetree statically (as
+in the case for the Toshiba TC9564), its ranges property must get 
+updated at runtime to reflect the addresses assigned by the PCI 
+enumeration process.
+
+The TC9564 requires the functionality provided by this series
+for it to be able to use the PCI endpoint bus model.
+
+   ==> Would someone please consider and comment on this change?
+
+It reuses the code that generates the ranges property for
+dynamically-created devicetree nodes, to ensure that the
+static and dynamic cases are consistent.
+
+Thank you.
+
+					-Alex
+
+> It is possible (and in some cases, necessary) to define the devicetree
+> nodes that represent PCI devices ahead of time, in a statically-defined
+> devicetree file.  In order to support the PCI endpoint bus model in this
+> case it is necessary to dynamically update the static devicetree so that
+> the BAR base addresses assigned during enumeration are reflected in the
+> endpoint's "ranges" property.
+> 
+> This series implements that dynamic update, leveraging the same code
+> used to create the "ranges" property when PCI_DYNAMIC_OF_NODES is
+> enabled.  The first patch makes an argument to of_pci_get_addr_flags()
+> optional.  The second patch separates the code that dynamically builds
+> the property value into a helper function, and the last arranges for a
+> statically-defined devicetree node for a PCI endpoint to have its
+> "ranges" property updated (if it includes a "pci-ep-bus" sub-node)..
+> 
+> 					-Alex
+> 
+> Note: this series is built upon these patches:
+>    https://lore.kernel.org/lkml/20260924150222.1179235-5-elder@riscstar.com/
+> 
+> The entire series (based on v7.3-rc4 and including those prerequisites)
+> is available here:
+>    https://github.com/riscstar/linux/tree/outgoing/dynamic_ranges-v3
+> 
+> Between version 2 and version 3:
+> - The ranges property for a PCI endpoint with an existing devicetree node
+>    is only updated if its ranges property has an empty value (i.e., it is
+>    "ranges;", or is not defined)
+> 
+> Version 2 is available here:
+>    https://lore.kernel.org/lkml/20260910021919.3421449-1-elder@riscstar.com/
+> 
+> Between version 1 and version 2:
+> - Included the first patch (which was previously posted in a different
+>    series)
+> - Modified the last patch so the ranges property is updated only for
+>    PCI endpoints having at least one "pci-ep-bus" node
+> - Rebased on v7.3-rc2 (and the prerequisite series)
+> 
+> Version 1 is available here:
+>    https://lore.kernel.org/lkml/20260813220717.1394644-1-elder@riscstar.com/
+> 
+> 
+> Alex Elder (3):
+>    PCI: of: make a flags argument optional
+>    PCI: of: introduce of_pci_build_prop_ranges()
+>    PCI: of: introduce of_pci_update_endpoint_node_ranges()
+> 
+>   drivers/pci/of.c          |  94 +++++++++++++++++++++++---
+>   drivers/pci/of_property.c | 137 +++++++++++++++++++++++++-------------
+>   drivers/pci/pci.h         |   1 +
+>   3 files changed, 178 insertions(+), 54 deletions(-)
+> 
+> 
+> base-commit: 6ba8359b84d69a07d508693551ed3f661d838e9f
+
