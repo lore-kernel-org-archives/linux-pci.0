@@ -1,106 +1,213 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from fhigh-a6-smtp.messagingengine.com (fhigh-a6-smtp.messagingengine.com [103.168.172.157])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E35E3CAE8F;
-	Fri,  2 Oct 2026 23:03:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2C893EFD07
+	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 23:09:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790982210; cv=none; b=Zfkk9CfBKmwLNkjc0wfDYDLwfdIXA15dQWRFnfBwtYMTV8uRWHZa2VA5nHcbKJbCe8BHXZUJga3Hy0K2Hclh/9PyZq94pyECuGBWgMrwJ2upuZ9Z8rTWSTuFgGxsNjkGLfzK5PdEJpN0b7HEqkCvhJ4h3AapE3k0emy4caGL5Kg=
+	t=1790982597; cv=none; b=bkpNHyU+AWGk26gO89fuXsgLCNuS3Jwrwqlww3IFB1oNkYyAkdCweq4dm/PY80K196FWggAALTwwJoQI2CLaW0GU6S/iBfaaOsYwBxKDtvigQxEN0rOihXbooxdRSMDrpgOgqEXcCPZVNoZ2zEx3jw9RL5vyF19cIHmbBilEYBY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790982210; c=relaxed/simple;
-	bh=tkWvSOfumEV/X5/gizi21lDoOGcOq5p0tOMkQFiL9aM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=ImfkTXe3pldxGAz9brLWRSJPu/B0POmuwYCFYpGYEgFCMR6+fMttAn+4OWtv9jEgeLJCNJlF/0oWpnRBcRPTULGnq3LqSRIUInNHojjMRntsnirk/QCjxklY1khyHd6clkR6U/SXIAFZooKRVV/+enUBEY9a9lR5VPloAuWkdrM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q8L6jpPQ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790982597; c=relaxed/simple;
+	bh=QK12jZccLedIx3puWsmURa+Mnz+5+QlcZ+mqSy18S2w=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=i+k5TVZ0bbMvHRGnQsXKKiNaZuk7HQBfzGCSW3JzsMueg3HkxZYUmjMtt4x7ss5kSanaBHi+VyPYEXvoyp2vfMuLEtEHY4FE4xPmHw+TjCDe/FQ0gDLSBxhpDlixuxEzshEE4MKlTWf2T3OIqyncXjXL9P6L8Jb89RoerWDEnqU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=1w5Noen7; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=X02e8j4u; arc=none smtp.client-ip=103.168.172.157
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q8L6jpPQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D39F81F000FF;
-	Fri,  2 Oct 2026 23:03:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790982209;
-	bh=GlKl0n4h+SRDG0bZhe9Pdd1zeVrtxnOk7XdqNbUxb6c=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=Q8L6jpPQtXLZ8K5NCaIVrl3IqINLwbM2biCNWgxQC1oKxpsIkYe/8+ljxDi4v3B8H
-	 2Nxy6Ykb0VT/Qw1rhBm40hckJVPuYTmuUpA4N2o7jry+AQuT9Cb37PoGu923Es7Rz5
-	 2KC9HeSTx1kxqJPb16RSJ+X6gH2EKTAwfMwQDo3JMRO/tWoeD9U1K+v8rOQSH4eaOs
-	 jhdQ5SgrtVAkBVVqgCvBUHm4qzL5IK5iZaOOaIou0ajV7tYig1U7RpP3lSFIT2eyoz
-	 4PeFBUEaRG3ufaOmNXysCViOy87h+8KScfVQE7Kppjeg9qzH94sGNurkA8Q8cWXSVL
-	 W8KjOPGPfjEDQ==
-Date: Fri, 2 Oct 2026 18:03:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Guo <shengchao.guo@oss.qualcomm.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Qiang Yu <qiang.yu@oss.qualcomm.com>, linux-pci@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: qcom: Disable ASPM L0s for SA8775P
-Message-ID: <20261002230327.GA381812@bhelgaas>
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="1w5Noen7";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="X02e8j4u"
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id CD87914000F3
+	for <linux-pci@vger.kernel.org>; Fri,  2 Oct 2026 19:09:53 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-01.internal (MEProxy); Fri, 02 Oct 2026 19:09:53 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1790982593;
+	 x=1791068993; bh=/UxR25uWpM984v5kU8eNOhtzi69zPCfAweq3mLv2gYU=; b=
+	1w5Noen7uOLbH/esYU+XaygzFvfL14KebIWOx8cfbS1coU2lIgSgxescrrYF2C0x
+	AVIYAgDPm5FVIpsxvAv9nyqhmPB/0P5nZSWX+B1I/keUFYRyuomRb7CaLnUDdziu
+	LVzwFaQn58iUF4vFkjAUg3G4w9MPm3xsPmhr7bfXPLdlv9m91JCI3u1R7EO3iAll
+	t0lC51MAvLKjX2pXY+snQwOM32P90QMVM82qhpmsHm6kYIOGEcqJSDiwEfOOkbMA
+	FU4D1zsIoyc1TjY/fXMEaSnrLXeEkJESO8lN4mo9h1aiwLS1J1E4zjP9pZ/zZOgC
+	V5Qh1SuuIvNwxMatfVYOZQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1790982593; x=
+	1791068993; bh=/UxR25uWpM984v5kU8eNOhtzi69zPCfAweq3mLv2gYU=; b=X
+	02e8j4u5dGXA3jm2Wpb3+ON/KicSbg2Wlkrc3XrVgCTm9MxGSQw+NnifV+tkqldf
+	SGoXEUkuvLStTvnfPOS5vZ9igDxqXO/nBcLGrvNqYCpISY7Ss4fIlEoVz8nHN/IO
+	gThAqcu0M0Tmsf3SY8xxxnH2VYTjeZOPHj8YFLbDNbhNBRUUn5yLfEDlh/A6PbNv
+	PTRL7hN2zUuZwMMxKMuTedM9XkPk/EyqcglD9H4Bs5T7LpzmmmGgfgIbnnsqZxGf
+	XXBxRWw8l2LZjE0UofGz5Sp/YzRY4RREvSch6OgIIh1vdrE4b/G5yVtTvZSdmOqD
+	c6gw0Q8mYTaz+g7nRf0rg==
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-06;
+	repo=github.com/dkim2wg/interop; date=2026-09-30; sw=lmtpprox;
+	action=sign d=shazbot.org a=rsa-sha256;
+DKIM2-Signature: i=1; m=1; t=1790982593; d=shazbot.org;
+	mf=PGFsZXhAc2hhemJvdC5vcmc+;
+	rt=PGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc+;
+	s=fm1:rsa-sha256:Wx7fAlv8xdq7p1Zvgg7XMocltKQhSemG5CM7B7hioZlOJfi
+	6LKxveaJvh9CLB6ExrYdSJh2P2Cfk+fFvIhtlAM+NOLi/1vkIORS0D505o3fwr6l
+	i5cpgrz5h9+BzhxQfyYq/3NkN0JTm8G3bPPMBvWiUMlbLdPjoscZLmoqg+zB1NOe
+	5lMkd4thX6NyZC/ouloszcSW8B6tk0hGrabpDE9dWUDfr6EjiPFNzjrGKQShh5Ef
+	wo2imrko8gn0gR5qqyjzBZJjw3SrNqOlaLdsvbGRKka+hN8+C1CbskVlXuNTCPnJ
+	wAcxj6hs9gpaJ0Geu1TisTful/Rbaq0bpKMyyOQ==;
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-06;
+	repo=github.com/dkim2wg/interop; date=2026-09-30; sw=lmtpprox;
+	action=mi-m=1; hc=12;
+	hn=cc,content-transfer-encoding,content-type,date,feedback-id,
+	from,in-reply-to,message-id,mime-version,references,subject,to;
+Message-Instance: m=1; h=sha256:SSOOM2bBfRc8S7PzpEaZvqUaqLe06UbPJoujimjiPug=:QK12jZccLedIx3puWsmURa+Mnz+5+QlcZ+mqSy18S2w=;
+X-ME-Sender: <xms:wTnAasW6xuG7Y4fBHRRXWYqBz9C558IQPlr2DBSHe5y3W3Rie3Kwfg>
+    <xme:wTnAagLDJE8h8m5WEvxXD76lvoaGU9Ln7JaYPS-jxteDHh1XZIc5HsZd28xp5XNn0
+    hTO6ILO2KA3_Z_XsUzAGbg57Ix9-KztseJIcuA5GEhmhQyKfd9dtxo>
+X-ME-Received: <xmr:wTnAaktnLh5XFHcCkFA1aYD_bLErD2i71T23wliERFCINsJ7ikXNZSfk0QZTGg>
+X-ME-Proxy-Cause: dmFkZTG2demwP3RbOPVfbzFvVn3o14zaLPORCEz0kFecatwO4dqPywF0iI4P1elJRTYhbP
+    UMttM0KAT5tUxpnf2pUHShtYc1+A6Y43HbO/4tTTbhGF3glTyq82CfSi+j2jPWq+8jBRaN
+    PnEzkXQUsJ37tQ9STPTtlTt48b+JO2zlVc0z0QaToZJDr488fn3oXEhlJWgqaJCztmadUH
+    RyIwXFz/CV4dX4U4zlyJwhgDQ4J+8/OW+rCJP1sR8E6RnswFnuDvD6DdqSFNt+vtc/7bRU
+    Kz2q9+eorQMRRJ5r+miFne7VHXyJ9H3EaLX79lxOjc+ffH8fphwIWlNROMkrAI+pExIYRw
+    tzaYvvDo7jfFrmgoAxARPMCOSkov5nLcICf5ogTusyUKkQfCIJajIxOjeXyc8Ozh5wm6Il
+    XCklIGbNwg2YBc8/sIdfOMqgz3IVec7bwi7lo4su57VVikILk6QcUSNx18CNCqqRROyrFI
+    lRoQq8ehkjuNlBNR4EcunAvee45Ki68vFBRfw/LgXq8wU8aaEcl2uePnBvBd8tlMr1a2/R
+    z7HoIIXWcw7EyN0DS8r1KGf85p4GZzs70hwnw5ud+XUcuQa1xqgf88bKf73E4nbiA4Oaaa
+    GJRYk51yADdKCyuqfxK/dpfX+tVCgPe6gCrtI5X8Y/CrMMST4kfkwln0l0og
+X-ME-Proxy: <xmx:wTnAat3ckw5bYiaj_sMFQ7otJUuu5hspag_HARnNQfJRQBmUXK9eWg>
+    <xmx:wTnAakMp25Ef1l4yVBw4NJRVkPV2VPG8qIN61M8yM5M0prHSsJrvLA>
+    <xmx:wTnAalXYW6zR4lLJ8KbYyBM7TcrctpM2qTkUdXJA3JIRtgAeBVduCw>
+    <xmx:wTnAahYamrjbxnzm-8CgHJ0rPnLBRiXd_uC3nC8e_BrIAKn7fZa0Fg>
+    <xmx:wTnAavYtdcFaKuHeGai4H--OdYyC15OmyZAIH0-csTXLzRpkUnSj2j8X>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
+ 2 Oct 2026 19:09:51 -0400 (EDT)
+Date: Fri, 2 Oct 2026 17:09:49 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, bhelgaas@google.com,
+ mani@kernel.org, jjohnson@kernel.org, linux-pci@vger.kernel.org,
+ linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+ ath12k@lists.infradead.org, mhi@lists.linux.dev,
+ linux-kernel@vger.kernel.org, Jason Gunthorpe <jgg@ziepe.ca>,
+ alex@shazbot.org
+Subject: Re: [PATCH v14 0/2] PCI: Add device-specific reset for Qualcomm
+ devices
+Message-ID: <20261002170949.59c3d47a@shazbot.org>
+In-Reply-To: <20261002214058.GA284603@bhelgaas>
+References: <20260917071651.14174-1-jtornosm@redhat.com>
+	<20261002214058.GA284603@bhelgaas>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260419093934.1223027-1-shengchao.guo@oss.qualcomm.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Sun, Apr 19, 2026 at 05:39:34PM +0800, Shawn Guo wrote:
-> Commit f5cd8a929c82 ("PCI: dwc: Remove MSI/MSIX capability for Root Port
-> if iMSI-RX is used as MSI controller") removed MSI/MSI-X capabilities
-> from the Root Port on platforms using iMSI-RX (including SA8775P, which
-> has no msi-parent/msi-map in DT).  This causes PME and AER service
-> drivers to fall back from MSI to INTx.
-> 
-> With INTx-based PME active, the QCN9100 modem endpoint sends PME messages
-> during D-state transitions early in boot.  The level-triggered INTx
-> assertion coincides with ASPM L0s exit sequencing on SA8775P hardware,
-> causing Data Link Layer Replay Timer Timeout errors on both sides of the
-> link.
-> 
-> [   13.069528] pcieport 0000:00:00.0: PME: Signaling with IRQ 332
-> [   13.082436] pcieport 0000:00:00.0: AER: enabled with IRQ 332
-> [   13.082447] pcieport 0000:00:00.0: AER: Correctable error message received from 0000:01:00.0
-> [   13.101347] pci 0000:01:00.0: PCIe Bus Error: severity=Correctable, type=Data Link Layer, (Transmitter ID)
-> [   13.111281] pci 0000:01:00.0:   device [17cb:1103] error status/mask=00001000/0000e000
-> [   13.111284] pci 0000:01:00.0:    [12] Timeout
-> [   13.111313] pcieport 0000:00:00.0: AER: Multiple Correctable error message received from 0000:01:00.0
-> [   13.130512] pcieport 0000:00:00.0: PCIe Bus Error: severity=Correctable, type=Data Link Layer, (Transmitter ID)
-> [   13.130514] pcieport 0000:00:00.0:   device [17cb:0115] error status/mask=00001000/0000e000
-> [   13.130516] pcieport 0000:00:00.0:    [12] Timeout
-> 
-> Fix the PCIe regression on SA8775P/Lemans platform by adding no_l0s = true
-> to cfg_1_34_0 for SA8775P, so that PCI_EXP_LNKCAP_ASPM_L0S is cleared from
-> the Root Port and ASPM L0s is prevented from being negotiated.
-> 
-> Fixes: f5cd8a929c82 ("PCI: dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI controller")
-> Assisted-by: Claude:claude-4-6-sonnet
-> Signed-off-by: Shawn Guo <shengchao.guo@oss.qualcomm.com>
-> ---
->  drivers/pci/controller/dwc/pcie-qcom.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index af6bf5cce65b..6a14b5091338 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -1473,6 +1473,7 @@ static const struct qcom_pcie_cfg cfg_1_9_0 = {
->  static const struct qcom_pcie_cfg cfg_1_34_0 = {
->  	.ops = &ops_1_9_0,
->  	.override_no_snoop = true,
-> +	.no_l0s = true,
+On Fri, 2 Oct 2026 16:40:58 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-Internal sashiko review suggests that possibly a similar fix should be
-applied to pcie-qcom-ep, since this chip can also be operated in
-endpoint mode.
-
-Just a heads-up; you can evaluate and decide.
-
->  };
->  
->  static const struct qcom_pcie_cfg cfg_2_1_0 = {
-> -- 
-> 2.43.0
+> [cc->to: Alex, +cc Jason]
 > 
+> On Thu, Sep 17, 2026 at 09:16:49AM +0200, Jose Ignacio Tornos Martinez wrote:
+> > Some Qualcomm PCIe devices (WCN6855, WCN7850 WLAN; SDX62/SDX65 modems)
+> > lack working reset methods for VFIO passthrough scenarios. These devices
+> > have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
+> > broken bus reset (addressed by quirk_no_bus_reset, merged for v7.2).  
+> 
+> Specifically, 6a4f64c3a3ad ("PCI: Avoid SBR for Qualcomm
+> WCN6855/WCN7850 WiFi, SDX62/SDX65 modems").  I don't know what the
+> behavior was prior to that commit.  I suppose it was something
+> obvious?
+> 
+> > VFIO attempts to reset devices on every reassignment:
+> > - For the listed modems, without a proper reset capability, these devices
+> > never successfully initialize even on first VM assignment.
+> > - For the listed WLAN devices, without a working reset method, the attempt
+> > fails. On clean VM shutdown, the guest driver properly deinitializes the
+> > device via .shutdown/.remove callbacks, leaving it in a usable state despite
+> > the failed reset. However, on unclean VM termination (crash, force-off), the
+> > guest driver callbacks are not triggered, the device remains in an undefined
+> > state (DMA active, interrupts enabled, etc.), and without a working reset it
+> > cannot be reused.  
+> 
+> So IIUC, prior to these patches, these devices were functional when
+> passed through to several successive guests as long as the guests shut
+> down cleanly, but the resets done by VFIO didn't work, so the host
+> couldn't enforce isolation between those guests.
+> 
+> If true, I propose updating the commit logs to emphasize the lack of
+> isolation and de-emphasize the VM clean shutdown vs crash behavior,
+> e.g.:
+> 
+>   Resets of this device always failed prior to this commit, so VFIO on
+>   the host could not enforce isolation between successive passthrough
+>   users.
+> 
+>   If a guest driver deinitialized the device, it may have been
+>   functional if passed through to a subsequent guest, despite the lack
+>   of isolation.  Otherwise the device may have been left in an
+>   undefined state (e.g., DMA and interrupts active) and unusable.
+> 
+> It would also be great to have Alex's ack here.
+
+Yes, aiui it's an isolation and repeatability issue.  In fact, without
+knowing what's actually stored in the hardware, I'd suspect it's more
+the latter and the testing proves that.  Mani is really the one
+vouching for it from the hardware, isolation perspective.
+
+Standard reset methods have never worked on these devices and that's
+now evident by the quirks that disable them for these devices.  This
+fills the remaining gap by providing device specific resets for the same
+hardware.
+
+Both patches should properly reference the quirk_no_bus_reset commit,
+but otherwise these look correct, afaict.
+
+Acked-by: Alex Williamson <alex@shazbot.org>
+
+Thanks,
+Alex
+ 
+> > Add device-specific reset methods using BAR-space hardware reset registers
+> > that exist in these devices:
+> > 
+> >   Patch 1: SDX62/SDX65 modem reset via MHI SoC reset
+> >   Patch 2: WCN6855/WCN7850 WLAN reset via SoC global reset
+> > 
+> > These are true hardware reset mechanisms (not power management or firmware
+> > error recovery), providing proper device reset for VFIO scenarios.
+> > 
+> > Testing shows stable operation over 100+ VM crash/reset cycles. Device-
+> > specific reset is position #1 in the reset hierarchy, so these devices
+> > will use hardware reset as their primary reset method.
+> > 
+> > Jose Ignacio Tornos Martinez (2):
+> >   PCI: Add device-specific reset for Qualcomm SDX62/SDX65 modems
+> >   PCI: Add device-specific reset for Qualcomm WCN6855/WCN7850 WLAN
+> > 
+> >  drivers/pci/quirks.c | 116 +++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 116 insertions(+)
+> > 
+> > ---
+> > v14: Address Bjorn Helgaas feedback:
+> >   - Split WLAN and modem resets into two separate patches
+> >   - Clarify commit message for WLAN devices: VFIO resets on every
+> >     reassignment, clean shutdown leaves device in usable state via
+> >     driver callbacks, but unclean termination is where the lack of reset
+> >     is critical
+> >   - No code changes from v13, only patch split and commit message
+> >     clarification (Mani's Reviewed-by retained)
+> > v13: https://lore.kernel.org/all/20260915223634.GA878346@bhelgaas/
+> > 
+> > --
+> > 2.54.0
+> >   
+
