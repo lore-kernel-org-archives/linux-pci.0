@@ -1,54 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44B1B4CEE45;
-	Fri,  2 Oct 2026 16:28:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 884A64F5E09;
+	Fri,  2 Oct 2026 16:34:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790958505; cv=none; b=du8KvlbShBMNJ7Y/FHcbyZZqXqoem7elwHljtpkBCJJ7OW0COwmgLQ+3yn2mrAPwkT/f2ZjqzX5wogvwDEULFXb+YCuHS+mFjqHsK2tVjP9/DAoMRmIrF6GAcwKXAPMFRs6QnSwqEEX5e/dpKovvsuO1I2ION+owgnyB7Hn82sE=
+	t=1790958876; cv=none; b=QoFit1cvWp5eGf35qC4jY/f6RMusa75skaGt5uLlI75kXYJUQDg+krsy0j17caSA1RPNKtTEBA2L1ykqEcD9KXPa1o4ldKtABigmghxuQE50XV8a7q++sqFgFTfFF095zQJbfntlHChCmDkVu3/Mf+A/vIL+n+wpiKdwRtWzZnY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790958505; c=relaxed/simple;
-	bh=7BmkuLFZ5pN7GP0XreCEjI9N/iJqsFycBXAUvhcqTJo=;
+	s=arc-20240116; t=1790958876; c=relaxed/simple;
+	bh=snvUQh4yi0AXgl5L8ejjqrb+PJaQypt6hAx1cf01EZM=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=NOViHkya/nMv87+BK2izLjvQ3RLtqeMJZs8yXIFjd3gLqAdiXakv9pe4G9PmaX6oS2INsDqBD9SYtveK1KdWlv8DoiQzm0jELadW+HFqd+BDtTyydE1j8fZvusHB6r0afVGfRUHAeSx17u9Ua0xOtVM0lXiorY27VBacgt9GRVE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LoyA6D7O; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition; b=PbB0MydsFCA/Cr1yE65B4A1PeLeS8uOJjHuD6NGlG3fsCajDDqxjMYfrpXS6o22nwpyCNilKkDZDr5gyWkDV9hTTrR3TRdkfaodMB61wtqGSFUiQrV1OzxxeENMziyUIr3xIdRbiEiGMeNrJok4vVUWI2zu6j1zqWdIl0y++cFg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=maQQ026M; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LoyA6D7O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA1131F000FF;
-	Fri,  2 Oct 2026 16:28:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="maQQ026M"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0EF141F000FF;
+	Fri,  2 Oct 2026 16:34:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790958503;
-	bh=mvElZZI+CeG4IxR+qpAqQMv0MhCUAS7GHtlXGfa/VvA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=LoyA6D7OdQ8C6lV81NVZS0Jv3tm+IliOpCGg3Sgcq6yzI7KbOD0jZFBi3+tPFlMkW
-	 ai9VFPcPAwsHj1ofV8liuvPNt8j9+wXEiypBdEYiAELaEgvMzCxKvEnxGfc38ln2oM
-	 3fz74075MNhAOfl+rQ3/UfDeSNbFR1CiuntRDC6zRnuocCyCXPYWxDHNc6vSWwH5P9
-	 2RocJpQHh3FW51feBum3TbJnk9QV+hl+SVUrPwhBldki0PBq/w2Zxr3PUbUrYeVqAt
-	 mmDtrL/PHN7r4u6zvk3wl3V7mISSjaOE953p7FApbyWzGotN568r9S6JmZPLWZ8Qz3
-	 A3pSfvisT37ww==
-Date: Fri, 2 Oct 2026 11:28:22 -0500
+	s=k20260515; t=1790958875;
+	bh=Wo+zKTpYMWd/TMUaOJGuksdk/SRzka2Tj1wP5j1KCNQ=;
+	h=Date:From:To:Cc:Subject;
+	b=maQQ026MpNvDhFARJuWpZngmcAOmnZGMmv6+uV4X3pxJ3xUEUm5L0u61iAfBUxYGN
+	 X8H1HsvsLLoEtnboFgHtg3VCAp1mBlBI0oW94GSSOM5/XoFN89H6b6k93gMYrU7m5E
+	 DO98YzdoP60IdM0eFaxdXHeozRJ+TXJ9I0hQIO0nsuoBjWRZLCfLcNd/XBy9NRwpMm
+	 ddLjbJyRVZFfWD2qDwbWHNZPxMkPbGy1TeN7++9WyR2Sq/s1f9DFc7uhK/e12TgrJz
+	 F9i0upl2RZaY7iG+5Nc1V3hfvLNT68JFQhQgbn1J1TuAjAnLPJIubtee1z6dO2lmdm
+	 tBURaJwz6d/mg==
+Date: Fri, 2 Oct 2026 11:34:33 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Jani Nikula <jani.nikula@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	intel-gfx@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-staging@lists.linux.dev, linux-pci@vger.kernel.org,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-	Hans de Goede <hansg@kernel.org>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Andy Shevchenko <andy@kernel.org>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Sakari Ailus <sakari.ailus@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v1 1/1] media: Consolidate AtomISP v2 PCI IDs in the
- pci_ids.h
-Message-ID: <20261002162822.GA103095@bhelgaas>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Nikola Prica <nikola.prica@amd.com>,
+	Gerd Bayer <gbayer@linux.ibm.com>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	Alexander Schmidt <alexs@linux.ibm.com>,
+	Jay Cornwall <Jay.Cornwall@amd.com>,
+	Felix Kuehling <Felix.Kuehling@amd.com>
+Subject: [GIT PULL] PCI fixes for v7.3
+Message-ID: <20261002163433.GA117980@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -57,141 +49,27 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261002094813.856439-1-andriy.shevchenko@linux.intel.com>
 
-On Fri, Oct 02, 2026 at 11:43:43AM +0200, Andy Shevchenko wrote:
-> We have a few drivers using same pair of the PCI IDs across the kernel and
-> there seems more to go, consolidate AtomISP v2 PCI IDs in pci_ids.h database.
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+The following changes since commit cee9395acd8043be0644b25c34bfa86623f2b935:
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com> # pci_ids.h
+  Linux 7.3-rc1 (2026-08-30 13:34:40 -0700)
 
-> ---
-> 
-> Assuming that media subsystem is the main beneficiary I think it is the best
-> to route it via that tree. For others (i915, PCI, PDx86), please Ack if you
-> are agree.
-> 
->  drivers/gpu/drm/i915/display/intel_display_power.c   |  6 +++---
->  drivers/platform/x86/intel/atomisp2/pm.c             |  6 +++---
->  drivers/staging/media/atomisp/pci/atomisp_internal.h |  2 --
->  drivers/staging/media/atomisp/pci/atomisp_v4l2.c     | 10 +++++-----
->  include/linux/pci_ids.h                              |  2 ++
->  5 files changed, 13 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/gpu/drm/i915/display/intel_display_power.c b/drivers/gpu/drm/i915/display/intel_display_power.c
-> index 2e534ddb7347..ee2c59b72b4a 100644
-> --- a/drivers/gpu/drm/i915/display/intel_display_power.c
-> +++ b/drivers/gpu/drm/i915/display/intel_display_power.c
-> @@ -2086,9 +2086,9 @@ static void assert_ved_power_gated(struct intel_display *display)
->  static void assert_isp_power_gated(struct intel_display *display)
->  {
->  	static const struct pci_device_id isp_ids[] = {
-> -		{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x0f38)},
-> -		{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x22b8)},
-> -		{}
-> +		{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ISP_BYT) },
-> +		{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ISP_BSW) },
-> +		{ }
->  	};
->  
->  	drm_WARN(display->drm, !pci_dev_present(isp_ids) &&
-> diff --git a/drivers/platform/x86/intel/atomisp2/pm.c b/drivers/platform/x86/intel/atomisp2/pm.c
-> index ad1f99140962..f3dee0e58f62 100644
-> --- a/drivers/platform/x86/intel/atomisp2/pm.c
-> +++ b/drivers/platform/x86/intel/atomisp2/pm.c
-> @@ -121,9 +121,9 @@ static UNIVERSAL_DEV_PM_OPS(isp_pm_ops, isp_pci_suspend,
->  			    isp_pci_resume, NULL);
->  
->  static const struct pci_device_id isp_id_table[] = {
-> -	{ PCI_VDEVICE(INTEL, 0x0f38), },
-> -	{ PCI_VDEVICE(INTEL, 0x22b8), },
-> -	{ 0, }
-> +	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ISP_BYT) },
-> +	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ISP_BSW) },
-> +	{ }
->  };
->  MODULE_DEVICE_TABLE(pci, isp_id_table);
->  
-> diff --git a/drivers/staging/media/atomisp/pci/atomisp_internal.h b/drivers/staging/media/atomisp/pci/atomisp_internal.h
-> index 5a69580b8251..1a05fc331557 100644
-> --- a/drivers/staging/media/atomisp/pci/atomisp_internal.h
-> +++ b/drivers/staging/media/atomisp/pci/atomisp_internal.h
-> @@ -37,7 +37,6 @@
->  	(((isp)->media_dev.hw_revision & ATOMISP_HW_REVISION_MASK) == \
->  	 ((rev) << ATOMISP_HW_REVISION_SHIFT))
->  
-> -#define ATOMISP_PCI_DEVICE_SOC_BYT	0x0f38
->  /* MRFLD with 0x1178: ISP freq can burst to 457MHz */
->  #define ATOMISP_PCI_DEVICE_SOC_MRFLD	0x1178
->  /* MRFLD with 0x1179: max ISP freq limited to 400MHz */
-> @@ -45,7 +44,6 @@
->  /* MRFLD with 0x117a: max ISP freq is 400MHz and max freq at Vmin is 200MHz */
->  #define ATOMISP_PCI_DEVICE_SOC_MRFLD_117A	0x117a
->  #define ATOMISP_PCI_DEVICE_SOC_ANN	0x1478
-> -#define ATOMISP_PCI_DEVICE_SOC_CHT	0x22b8
->  
->  #define ATOMISP_PCI_REV_MRFLD_A0_MAX	0
->  #define ATOMISP_PCI_REV_BYT_A0_MAX	4
-> diff --git a/drivers/staging/media/atomisp/pci/atomisp_v4l2.c b/drivers/staging/media/atomisp/pci/atomisp_v4l2.c
-> index 476fe143a591..ab8727a806bf 100644
-> --- a/drivers/staging/media/atomisp/pci/atomisp_v4l2.c
-> +++ b/drivers/staging/media/atomisp/pci/atomisp_v4l2.c
-> @@ -1239,7 +1239,7 @@ static int atomisp_pci_probe(struct pci_dev *pdev, const struct pci_device_id *i
->  		}
->  		isp->hpll_freq = HPLL_FREQ_1600MHZ;
->  		break;
-> -	case ATOMISP_PCI_DEVICE_SOC_BYT:
-> +	case PCI_DEVICE_ID_INTEL_ISP_BYT:
->  		isp->media_dev.hw_revision =
->  		    (ATOMISP_HW_REVISION_ISP2400
->  		     << ATOMISP_HW_REVISION_SHIFT) |
-> @@ -1284,7 +1284,7 @@ static int atomisp_pci_probe(struct pci_dev *pdev, const struct pci_device_id *i
->  		isp->dfs = &dfs_config_merr;
->  		isp->hpll_freq = HPLL_FREQ_1600MHZ;
->  		break;
-> -	case ATOMISP_PCI_DEVICE_SOC_CHT:
-> +	case PCI_DEVICE_ID_INTEL_ISP_BSW:
->  		isp->media_dev.hw_revision = (ATOMISP_HW_REVISION_ISP2401
->  						 << ATOMISP_HW_REVISION_SHIFT);
->  		isp->media_dev.hw_revision |= pdev->revision < 2 ?
-> @@ -1487,12 +1487,12 @@ static const struct pci_device_id atomisp_pci_tbl[] = {
->  	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, ATOMISP_PCI_DEVICE_SOC_MRFLD_1179)},
->  	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, ATOMISP_PCI_DEVICE_SOC_MRFLD_117A)},
->  	/* Baytrail */
-> -	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, ATOMISP_PCI_DEVICE_SOC_BYT)},
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ISP_BYT) },
->  	/* Anniedale (Merrifield+ / Moorefield) */
->  	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, ATOMISP_PCI_DEVICE_SOC_ANN)},
->  	/* Cherrytrail */
-> -	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, ATOMISP_PCI_DEVICE_SOC_CHT)},
-> -	{0,}
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ISP_BSW) },
-> +	{ }
->  };
->  MODULE_DEVICE_TABLE(pci, atomisp_pci_tbl);
->  
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 63774ae2bf71..0693e4532a68 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2732,6 +2732,7 @@
->  #define PCI_DEVICE_ID_INTEL_HDA_HSW_3	0x0d0c
->  #define PCI_DEVICE_ID_INTEL_HDA_BYT	0x0f04
->  #define PCI_DEVICE_ID_INTEL_SST_BYT	0x0f28
-> +#define PCI_DEVICE_ID_INTEL_ISP_BYT	0x0f38
->  #define PCI_DEVICE_ID_INTEL_8257X_SOL	0x1062
->  #define PCI_DEVICE_ID_INTEL_82573E_SOL	0x1085
->  #define PCI_DEVICE_ID_INTEL_82573L_SOL	0x108f
-> @@ -2787,6 +2788,7 @@
->  #define PCI_DEVICE_ID_INTEL_VMD_201D	0x201d
->  #define PCI_DEVICE_ID_INTEL_HDA_BSW	0x2284
->  #define PCI_DEVICE_ID_INTEL_SST_BSW	0x22a8
-> +#define PCI_DEVICE_ID_INTEL_ISP_BSW	0x22b8
->  #define PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MIN	0x2310
->  #define PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MAX	0x231f
->  #define PCI_DEVICE_ID_INTEL_82801AA_0	0x2410
-> -- 
-> 2.50.1
-> 
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v7.3-fixes-3
+
+for you to fetch changes up to 40cce45b921f7930886bcba43069edc579725457:
+
+  PCI: Accept AtomicOps already enabled by the hypervisor (2026-10-02 11:21:28 -0500)
+
+----------------------------------------------------------------
+
+  - Allow driver to use AtomicOps if already enabled by hypervisor; fixes
+    regression when Root Port is not visible in a guest (Nikola Prica)
+
+----------------------------------------------------------------
+Nikola Prica (1):
+      PCI: Accept AtomicOps already enabled by the hypervisor
+
+ drivers/pci/pci.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
