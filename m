@@ -1,76 +1,95 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5B17389E05
-	for <linux-pci@vger.kernel.org>; Sat,  3 Oct 2026 09:20:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86A7F3E95AB;
+	Sat,  3 Oct 2026 09:36:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791019211; cv=none; b=KJKZjUQr6aIr6S07ZZhH6b36uRQs09uVywtlkB/R2Zrcy/xwajstTZhsWGwyqXyAqOToaVHf3/O+tnZ3/tWgGrac75tc8v2ex7JS4mA6++smsnl70ENCihESRpg+OkDuOrwwHujD6IraSomJ6DY42T2nsSccGF2fk+EluDATctk=
+	t=1791020215; cv=none; b=VkMxvO6jNTKMSYnHWEpTuKmqieNj2/M+RtPI1WZDvCQgd99nRuE6FeLONFkRx0xCZ+oIpAAZKOfQ3J9uUC9JJnifpO1KaC1jrGm9G0WsmIK8JDdjl5WNj2HwoHTkNdj2WzjEaDpuJpqGC9Itm82CoFnlRQFXtREpPdiwmBhrDjc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791019211; c=relaxed/simple;
-	bh=AaSV1eUxpcIVigkO5zKuZQWOKCxnJiCy1nP8Qtw4Xb8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Kw+JvKdT8H+0LGwdCoqRKs+74THYhBpP8mEmioJoRkjrs9oV2vhnbtNYuog4AYBHaL/PlLoBCQJgbAgab0Ts0B0Gu36ovnRovjGGImZBV+m59aRl6Y4UTmpahbaQ0aLd2WTDomP6dvLVP/32Zr9zBHXnYIJd8R81MOUFoE86FNI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ceRBT754; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791020215; c=relaxed/simple;
+	bh=Lvh14d+K7+iwAtZBey497VqhsCfcv9BKvhPddlpp/tk=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=MnC9lLFGkV7NPU57ZpCci+kpLQkP0IeBw5iMLhLdt/9X76vw2UCwx9aO2Uu81SIk7EuVgw3KneR6nuRQfucZ2gIdfttH2QwQa+adT4W5v+0KXerTcetxDhtwMCsR2c4KMG9dhNz9DXLHYdlfpd0hSjLAgtbts+gv1ciPZWo0q5k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=efutRHNo; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ceRBT754"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB17A1F0089B;
-	Sat,  3 Oct 2026 09:20:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="efutRHNo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD3E91F0089C;
+	Sat,  3 Oct 2026 09:36:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791019209;
-	bh=AaSV1eUxpcIVigkO5zKuZQWOKCxnJiCy1nP8Qtw4Xb8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ceRBT754G+ODknIgosWuGp5E5RlEjCxxcEI+/j6JAiIIMFsmYOW0JzEyQXWgHMCSJ
-	 qJavYYWNyu1uXfHhVvK+qJ3Dd/GJ6oCI9uNUVaZDY3fBxuR67iPZnrQmlQdMSaH95Y
-	 PaB20c8Ydm8/4r/CLrKAQewqyw9SX1Mlnw3RjatlfKvhx595LZwXK3n46qnAYV2Y6W
-	 7s7aH32ZKeWDa6KfBvNS5UfNeJgH/LkQJQPuoL4ov8BVusGeK2pxfcZ8mTdtklICQg
-	 yrwCArGkqUhWJwPLrEtsG27y8KJFXMPNM9WQWPb+7vlNGml0XtGoeMHusy7TYn206l
-	 hbtw44scWDoIA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] power: sequencing: qcom-wcn: power off WLAN at probe
-Reply-To: sashiko-reviews@lists.linux.dev
-To: Franz <franzelfranzel@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261003091451.4727-1-franzelfranzel@gmail.com>
-References: <CAPjyS8dY0Q_o3XmFjuKZZsjhzhoSNL+ZGJtw5cQt8HiV3sUtxA@mail.gmail.com>
- <20261003091451.4727-1-franzelfranzel@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 03 Oct 2026 09:20:09 +0000
-Message-Id: <20261003092009.AB17A1F0089B@smtp.kernel.org>
+	s=k20260515; t=1791020207;
+	bh=7gzunmSexxFvSdO6CQV0V+cHSmsOwsggeZ65H1G6LVE=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=efutRHNo0mXv5gXDnQ+tGbE2ad864zg/a2diiPhhWdEfMCEwsuqaPXvoClgWYGCVp
+	 6ILdp5yvGRPUQ9zL3Jv7GkWz4nPWiDq0rT4X5gypSY4TICE1Fu5R33WrKSVcdjKEEF
+	 IS56BN+2WSPbCXLHVT8jmkDFMrue3LKo1Plc7Jc1hgQBXIRMy0OCIkcCDVyIXjCuzX
+	 2X1E6jVXkN3gR/gthKJy3LU2A3C4qwA+EYYRna+d+K7GwAzPM9tyYDlCzaxKLwQ/EB
+	 7efH6Tj7VHZJXQtnMJYW5ntIgCov554NZhVnJ7csTx/UR+c/Tn8wV2FSa5V1kXUsey
+	 roebiVLoEaSmA==
+From: Vinod Koul <vkoul@kernel.org>
+To: Neil Armstrong <neil.armstrong@linaro.org>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Bjorn Andersson <andersson@kernel.org>, 
+ Maxime Chevallier <maxime.chevallier@bootlin.com>, 
+ Philipp Zabel <p.zabel@pengutronix.de>, 
+ Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: shengchao.guo@oss.qualcomm.com, linux-arm-msm@vger.kernel.org, 
+ linux-phy@lists.infradead.org, devicetree@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>, 
+ Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
+ Qiang Yu <qiang.yu@oss.qualcomm.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+In-Reply-To: <20260921-nord-v4-0-ed05c6e09240@oss.qualcomm.com>
+References: <20260921-nord-v4-0-ed05c6e09240@oss.qualcomm.com>
+Subject: Re: (subset) [PATCH v4 0/6] Add PCIe support for Qualcomm Nord
+ platform
+Message-Id: <179102020242.199361.10760570551982756754.b4-ty@kernel.org>
+Date: Sat, 03 Oct 2026 11:36:42 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
 
-> The WLAN enable GPIO is requested with GPIOD_ASIS and then kept at its
-> current level, so that a WLAN module left powered on by the firmware is
-> not switched off. The FIXME explains why: toggling it would take the
-> PCIe link down, and the controller driver could not recover from that.
->=20
-> That reasoning held while the PCIe link was trained before the
-> sequencer probed. Since commit b921aa3f8dec ("PCI/pwrctrl: Switch to
-> pwrctrl create, power on/off, destroy APIs"), qcom_pcie_host_init()
-> powers the endpoint through pwrctrl before it starts link training, and
-> defers until the pwrctrl driver is bound. That driver cannot bind
-> before this sequencer has probed. Power-on therefore always comes
-> before link training, and keeping the firmware state is now harmful.
->=20
-> On the Microsoft Surface Pro 11 (X1E80100), the WCN7850 sits on a
-> PCIe port without a PERST# GPIO. While pci-pwrctrl-pwrseq is not yet
-> [ ... ]
-> Fixes: b921aa3f8dec ("PCI/pwrctrl: Switch to pwrctrl create, power on/off=
-, destroy APIs")
-> Cc: stable@vger.kernel.org
-> Assisted-by: Claude:claude-opus-5-5
-> Closes: https://lore.kernel.org/all/CAPjyS8dY0Q_o3XmFjuKZZsjhzhoSNL+ZGJtw=
-5cQt8HiV3sUtxA@mail.gmail.com/
-> Signed-off-by: Franz <franzelfranzel@gmail.com>
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+On Mon, 21 Sep 2026 11:07:08 +0530, Krishna Chaitanya Chundru wrote:
+> This series adds PCIe support for the Qualcomm Nord (SA8797P) platform.
+> 
+> Nord has a single Gen5-capable QMP PCIe PHY block split into four
+> independently-clocked and independently-resettable ports (A/B/C/D).
+> Firmware selects the active lane topology at boot via a TCSR
+> configuration register, and the same PHY block can appear as a single
+> x16 port, x8+x8, x8+x4+x4, or x8+x4+x2+x2 depending on that mode. This
+> is similar in spirit to the Glymur multi-PHY support already posted,
+> except Nord's PHY registers are programmed by Linux rather than by
+> firmware, so this series adds the PLL, TXRXZ, PCS and PCS-lane init
+> tables along with the power-up/power-down/soft-reset sequencing needed
+> to bring each port up.
+> 
+> [...]
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261003091451.4727=
--1-franzelfranzel@gmail.com?part=3D1
+Applied, thanks!
+
+[1/6] dt-bindings: phy: qcom: add Nord QMP PCIe PHY binding
+      commit: 1a60038589285eec5b345f1da05ba04a185b8db5
+[4/6] phy: qcom: qmp: Move qphy_setbits/clrbits/checkbits to common header
+      commit: 63cfcae23b2b4ca43994d507f5f04cba0306dd5a
+[5/6] phy: qcom: qmp-pcie: Refactor common multiphy handling
+      commit: 6dd77bf6a10d0eb9ed17f5b6093b3511052084db
+[6/6] phy: qcom: qmp-pcie: Add Nord Gen5x16 PCIe multi-PHY support
+      commit: e397c8507e362a29ecfb4aef38b408f2de731526
+
+Best regards,
+-- 
+~Vinod
+
 
