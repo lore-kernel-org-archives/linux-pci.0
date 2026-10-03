@@ -1,92 +1,94 @@
-Received: from mail-dl2-f27.google.com (mail-dl2-f27.google.com [74.125.229.155])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E07939CCF0
-	for <linux-pci@vger.kernel.org>; Sat,  3 Oct 2026 22:37:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.155
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD8FD1CAA6D;
+	Sat,  3 Oct 2026 23:41:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791067042; cv=none; b=W1I2QEvIPxwgX+h1VuzkBHrZZO8xlT7iaLyy/MKY+oBmNiPfwhBFnbLLG4Rsd1HznKkxyMqICfpJoGvuqtKXQET1dUHluwqjLecKzdE4mzn/mRfz9/s3JLsOTeXoc0olxbaa/mnkkfibCuUoW9dAyNC0AfzlAqNXpLTensc3X80=
+	t=1791070883; cv=none; b=jotXoK7eWD5B2R9kScSQk8CdKLUuIlGd13vDJ2DYxNQA2GQexdoO1U/xK4P1xDPqWzIhr+LtVgsqPTXbBLVErE6qrfUFMwFHx7O/b4n1r5CZznrC4+kAS+350Cz/HG7Sb10AYSUtL0TvN+Iv7dp0Cu1syCNzvhabyn6ZXW3Jh9E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791067042; c=relaxed/simple;
-	bh=kz9Gv08Ifi67EI1jeifT4K+itNfN1SXPlehL2hJ15qc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HOH/6R3F9NuEU2skPMYmm4vLxSFvmvpRllEZttUwOGKT91HWn6mSvu1rqavyFJNb4D4CzwzFl4od3aUBE7QlmcHDL/dDOAkwwshjkmnjALo2aJLShMJFoUTf5baUgedFqQ4UfW9/bjjwtZ91tn2fET1XDKuq6mpfANOFZWIeYY4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mzYGMJqY; arc=none smtp.client-ip=74.125.229.155
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791070883; c=relaxed/simple;
+	bh=JzcdNhA9dgc2pAMmd9xsUKEjf2dQNxNy+tMgpgJUd+g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=etkbU5fgsJ3B5GLqqnIV0M62pwvm9AvQnLG2aBGsqWZDKjXeh46SRdLEoDFlPLo+KMdq/c7D1b978UZ/72EngdiN6rRp6/VY5Gi4I99Pmy3IZunslEbLbdveBS45nGUZ5Ux8ZZFxXiDsjPHPGs0h/NHdhyRCFw+cO7pSG4vwbDM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=P+E7Ac1C; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mzYGMJqY"
-Received: by mail-dl2-f27.google.com with SMTP id a92af1059eb24-151af368f59so23051c88.1
-        for <linux-pci@vger.kernel.org>; Sat, 03 Oct 2026 15:37:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791067040; x=1791671840; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=kz9Gv08Ifi67EI1jeifT4K+itNfN1SXPlehL2hJ15qc=;
-        b=mzYGMJqYcmhDURPdRu67LBEZ+o1PfXPH4pe1/jxtzAuCR6d9HhiPdJw9H138nYYOqt
-         ccp4KsbuOPug02leV3wC9moW0ffXBzfIKDRhTBQ2C+tVmBrrUp2UDrtbL05in+458glc
-         HSTbvsCUKByBuqhOvunudS0z/3TtLV0lNxNNlWztd5lgsc7/dzGt8kw3R8OZSGYVH5dA
-         Zy5LQNhpd7jhDclG2z4tzdPHDTJOFOGRqdphdtFk/GLUdkxDMTmcqyx/QeiDOPPHzYot
-         p25t2E3aw5WyjV6TPEsRAoyH5fYtjVmmMoNHlpRpri6/2AK6lqgZL7yGwccqc3IzFNlz
-         16Ug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791067040; x=1791671840;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=kz9Gv08Ifi67EI1jeifT4K+itNfN1SXPlehL2hJ15qc=;
-        b=E98UZ0WKqu9J1ZfgesEm8BTGDH+vJvQ76yWPRhg9n/stPLn7OSC0AwpJolr999yKPd
-         DQNf72vwg4f8Xtb23NprOshPFSivIw6SliETHYAMzUPCmoX9dv1qvOirloIvq6YyB7pY
-         XydFpALBeVxRuaMRDKsSJCcWq4psEuROd8w5nn6oK1kDN/WiWo9KwLI0Ccswgen0cayL
-         Mmkxniy0QU8UTzrH2XckZuAPTJt3kyMGeFzBa7P5QGUWc3OfELqntoyjKPWHrn6HQCRz
-         8Wb3EZLKWvdKP5vuBTji6xeHgflIIrBPYiHE1JG6zIQDfBq94DCwT/BBa9jv+E8sBI32
-         ajLw==
-X-Forwarded-Encrypted: i=1; AKwUvBzi6r3CiDJmYbRE1cp+SQWycj30YrXWHUrxHUCdtslFJgvVz2DN1VigEeD3VLZ7i/qhfkdVxNhFbqI=@vger.kernel.org
-X-Gm-Message-State: AFuF++kIXjvMm0o1c8bzmvNT7jA5QMXpjEk06VyFSsymN3P6qcOFZUFW
-	H75fRlCc+08erP8pe8SLlLwK5JgCgnuKXER03SIoUwyqT4brh7wHQtBu
-X-Gm-Gg: AYBFou3848NiZURQt2LQ5izS+CPgUyLu2x82FrrBe2MUiNn+idgcpv+o0x0MTUExcF3
-	RI/P9HOSySofog058z+K5GJK5/7up2oPA9WHXBhPfs2X0H24wI772RyOblJuOSarkz/W6EyKpr5
-	/INHuSqY8w6IZU+hFC3XeeLb//FSWqDYDAtgi+7wBnMvY0zAFWhz9RL/igl9QQMkqG+4Vb2gDz5
-	m6Ofmns2if46auHOfWPVp4wXv4xBBhgv4ztGGp52dQzEt4Su7hqLQiz69ZHGFxHlatAq/EmM9sA
-	WJyBEkxdXp2IaKjJ9SF+3Xe6YztHjm7GH825JJMk+lrRnrxETJhYIugVDeEYOoq1n9dRKoYtnZF
-	rJ5aqzsahd0RCP9bBkd2s51aHZWcJoCBKJ8GQtlcC83WV9tfxLWakulcsd9KZCAGwKggqhwJ8mw
-	vuyPdvqj15uHLXq7i8wGyd/p2m+9dLohgML0aIYo44Kdb7Jd82ivoaHCkSaNYzkNSJ3rczZF8ES
-	tp2EcKLZPbU8L71oHAJB60ELu9mAqYVIPR9p7ElQ6iVhVVRVVPZhhAEkMtZKAEJtIXI01xDGBtJ
-	e0Wv7DEULs9TBp3t9Q==
-X-Received: by 2002:a05:701b:2516:b0:144:ff51:2d73 with SMTP id a92af1059eb24-14f5b11e751mr11364239c88.2.1791067040090;
-        Sat, 03 Oct 2026 15:37:20 -0700 (PDT)
-Received: from cachyos-aura ([45.112.148.98])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-151fa751693sm21283370c88.2.2026.10.03.15.37.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 03 Oct 2026 15:37:19 -0700 (PDT)
-From: Navon John Lukose <navonjohnlukose@gmail.com>
-To: miriam.rachel.korenblit@intel.com,
-	linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	helgaas@kernel.org,
-	ilpo.jarvinen@linux.intel.com,
-	emmanuel.grumbach@intel.com,
-	nika@nikableh.moe,
-	mpearson-lenovo@squebb.ca,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH wireless v3 0/4] wifi: iwlwifi: recover the BE200 after D3cold removes its power
-Date: Sun,  4 Oct 2026 04:07:12 +0530
-Message-ID: <20261003223712.14003-1-navonjohnlukose@gmail.com>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <cover.1789333511.git.navonjohnlukose@gmail.com>
-References: <cover.1789333511.git.navonjohnlukose@gmail.com>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="P+E7Ac1C"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519MLKEM768 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4hy2Gj3wYFzMlQ3;
+	Sun, 04 Oct 2026 01:41:17 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1791070877;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=uIlJHVEGh5kzX0noBcr6PpjpGDqtjT/k1rGi+S0zRaU=;
+	b=P+E7Ac1Cku77Fb+ajFnLk30FWjr2io9OfNbVrJRapHazFTl0Wg6cEdEO8B8ggi7s0CHClO
+	KKZGcT2RSJP2FW8yODt2TCsRXZjsGogLcX/dbiAZX5Cfxwcy1FRtwgbSPckl4swIYFC5t3
+	LtZ4QhFD7P+XsBry52XpyMlPDgTleUMAfJio2u8MM2DBUNLF8jz4u2ouwBfDHKmuKE4J2u
+	50NUVMZxwvRtsaoSR9SOeTyFlkW3JtYUdBKGT/n84aEN7wnhE5kL4DnosjnjlQ7dwR/NAy
+	FCQVG4nsp4gfAC67CJAgV8lLJ6VG6HRZXvbT7k4LKqYarHNl9uMA0SKx1GDf3Q==
+Message-ID: <0c5c60ea-1fc7-4f00-baff-065f24407240@mailbox.org>
+Date: Sun, 4 Oct 2026 01:41:13 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 07/15] PCI: rcar-gen4: Separate hardware setup from
+ resource acquisition
+To: Koichiro Den <den@valinux.co.jp>,
+ Marek Vasut <marek.vasut+renesas@mailbox.org>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski
+ <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Magnus Damm <magnus.damm@gmail.com>, Jingoo Han <jingoohan1@gmail.com>
+Cc: Philipp Zabel <p.zabel@pengutronix.de>, Frank Li <Frank.Li@nxp.com>,
+ Niklas Cassel <cassel@kernel.org>, Wilfred Mallawa
+ <wilfred.mallawa@wdc.com>, Serge Semin <fancer.lancer@gmail.com>,
+ linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260928165230.3397664-1-den@valinux.co.jp>
+ <20260928165230.3397664-8-den@valinux.co.jp>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <20260928165230.3397664-8-den@valinux.co.jp>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MBO-RS-META: n631pmnpzzfmtyjhbq86qwjh7b51mxzg
+X-MBO-RS-ID: 7394f732334200d3720
 
-Hi Miri,
+On 9/28/26 6:52 PM, Koichiro Den wrote:
+> Factor out the hardware setup needed by Root Port recovery into helpers.
+> Recovery needs to reset and restore the controller while keeping its
+> clocks enabled and the Gen5 PHY initialized.
+> 
+> - From rcar_gen4_pcie_common_init(), extract the power reset and mode
+>    setup. Leave clock enabling and Application/Local reset control in
+>    common_init(), so recovery can keep the APP registers accessible.
+> 
+> - From the V4H/V4M and Gen5 .init() callbacks, extract the SoC-specific
+>    register setup. This allows recovery to restore those settings without
+>    taking another clock or PHY initialization reference.
+> 
+> - From rcar_gen4_pcie_host_init(), extract the Root Port register setup
+>    and PERST# release. Both paths need this host-specific sequence after
+>    the per-SoC initialization or reset.
+> 
+> No functional changes.
+> 
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
 
-Ping on this series. It is still needed on 7.2.8: when _PR3 removes
-the card's rail in s2idle, BE200 (and others) comes back reading all
-ones and Wi-Fi stays down until reboot.
+Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
