@@ -1,127 +1,139 @@
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.174])
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 361CF3B6367;
-	Sun,  4 Oct 2026 15:40:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A546236E498;
+	Sun,  4 Oct 2026 15:45:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791128415; cv=none; b=g00u0Db3Pf9jtkQrG4uvfayT3uwFxOc+VmcGN4I9P9klck1alqiPcyQEv2ITHW5Q98b3qvqtqP23m6bhvdjzHdWjViMqEE3h+qDKJooFYsKjqS7BTAgIEWVK8JgAo1dX6mu15U79J7pYtBhT7xQPypHzG5pWm03sNYC2qps/PIk=
+	t=1791128703; cv=none; b=S5UOx+kU0w0EJQam+N13XkPagZQdpGfrqOTDADDZ86Sqd+LuI8LON0FFvyJuCy5ghMmcCMig7DQlyXb4o/qtTd/mg1eEcu1HH25EzoX8fzHglTGy3eFmkDb0j1Cr9MRkEJHWLQbxPx1pkxRsifhWBPoC6366qMvjcLFZeDMNmRo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791128415; c=relaxed/simple;
-	bh=lei9XIb4M52i6TBsv4VscPx1kB1vzfi2NNHv46kjUpo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UZPk7jpjOBhKA1abx+1n7SRaMxouCmDHhbhrMV2Pe5T0bF6eC6vZutIJ3M1kxsC1Xg+xSk7RPs4UjkzQwJ3vAx28EwY5+0BNFmIF53dYL6Aca4JyrO3bABuKG1RIgc0KpdrXeAMV75Eo2QE55DuO261FbApwu3uXmLkwUrfhcIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=KRK3Aa8s; arc=none smtp.client-ip=188.68.63.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	s=arc-20240116; t=1791128703; c=relaxed/simple;
+	bh=6VExMatIpNaJGFvg0DCb2B+ps2eCBCtSzNT7we71dIQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LmEhFULe7lx2yHNWyPfLARTqNAHLM2Pdk7ughVSV1uCmH03gTZh1NI2CNp/L48uT/iqTgpUd8pizjFQOnCmBav0WSWSWIiEIV7pDV9IdbUbWoxPOntwBBxOelxZP9eLvx2slWJB1qPUBWPG9HlkEx025zTe7e4TiZz2DCQpgh7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=fail (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=IlQhKE7N reason="signature verification failed"; arc=none smtp.client-ip=65.109.113.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="KRK3Aa8s"
-Received: from mors-relay8204.netcup.net (localhost [127.0.0.1])
-	by mors-relay8204.netcup.net (Postfix) with ESMTPS id 4hyRKf2tLPz8g5c;
-	Sun,  4 Oct 2026 15:30:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
-	s=key2; t=1791127814;
-	bh=lei9XIb4M52i6TBsv4VscPx1kB1vzfi2NNHv46kjUpo=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=KRK3Aa8sRYbCbCq1G1XvwlHbNsBbfAmvSK/1YXrBPWGCoBG9JitEnWCXcKYSm9SN1
-	 lmeUIULdxyMWENfMpfKildMGAWRFt5ywzdVSzPXos/8qs2CDvrxmzqJfqCNGADuYuO
-	 1klsc5Xs6sHKger7S8q6wArDck5YKHV0ncftPQErmu/BZ+vofehyRhSEJMTKdcKzDT
-	 DNaN0H7jOZNgb6xRif1mkCO7tCQmG7fXuoWuXR/xMkAKjMWFqsn02hSETv/Q9xJJCG
-	 gcAo0P7FjvET9xwtrrNvO3bi5lWprYreIqZJDG4KoZpKpgf6CC5hYjbAk+yCsQEkQ1
-	 LHI67EPIbKV2w==
-Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
-	by mors-relay8204.netcup.net (Postfix) with ESMTPS id 4hyRK82NCQz8fFB;
-	Sun,  4 Oct 2026 15:29:48 +0000 (UTC)
-Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	dkim=fail reason="signature verification failed" (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="IlQhKE7N"
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id B97BA40E01B4;
+	Sun,  4 Oct 2026 15:44:57 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=fail (4096-bit key)
+	reason="fail (body has been altered)" header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id 4yVDCcEjaToe; Sun,  4 Oct 2026 15:44:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+	t=1791128687; bh=BAFSbCkTz3nxD5ued70ACeS8eONsJiVPIwxaE2QsvxI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=IlQhKE7NqzscRABDcEzeyhmIzVq8MC8yvIQMrUrW53Q274J9L6B6knzmuW3pZ38pu
+	 8859asSzPvZgqVTUqvEKQ7URvKv6XPxLhj/mz38ttmoBecy4/zSGju+2Nz5qUJXe8f
+	 i4XdMMZvyKRoegpj8PCnC4sCAZ/hSM4K4l+vK19kitcroBeqBaNZcRS7rE+5qQ/qca
+	 VZr05vjYM1ZBcKva9g4FrxhOohNWmBh4aoCdOaz0cU32v2YtzZr+E4UuBTpe1f1CRq
+	 8YuWoD4ygMImRagaZRB+yUeuvUVITW40dz1rbODO24jHjDr8bx9oqzOJuXo5wzgq4v
+	 ZVwudH79v3GwjLBpJ564Z+M5/pLCB8KPlEQiU+wImeLEgFodG8hP4KvpXApv+Tk7Bb
+	 zVapcRNpftOAVRs9Zfqk3I2MasL7vTJt6tpoFJ6pi+0cyY+HI/m2ew264MX2BqPwKk
+	 EimAPxc6scGfSgMCqX6VQhuYhQlum+NpDsRsWDFcnfNVUCv+v1g5kNpKABb+CI3fLQ
+	 4BmHkaNv/H8DJJOR5hVwTP2SMlM9Soq0OwYsywaa4QNyu8DZ6Kqppu8Pj0rqH92SCe
+	 z+6rbxF3bZfQ4sUS1wZDRwXwHBnPjQtA5svqoEs+kZxWLb1luKZEMQqdAwm8J14wgv
+	 Urk+o8xX3u7QaRfdocHT72CM=
+Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::3a])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
 	(No client certificate requested)
-	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4hyRK72G8Rz8svb;
-	Sun,  4 Oct 2026 17:29:46 +0200 (CEST)
-Received: from [10.200.136.123] (unknown [213.235.133.113])
-	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 7E7485F9B7;
-	Sun,  4 Oct 2026 17:29:41 +0200 (CEST)
-Authentication-Results: mxe9fb;
-        spf=pass (sender IP is 213.235.133.113) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[10.200.136.123]
-Received-SPF: pass (mxe9fb: connection is authenticated)
-Message-ID: <22e0563e-afcd-44f5-9d87-f0b2a637038e@leemhuis.info>
-Date: Sun, 4 Oct 2026 17:29:39 +0200
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id D2FE340E015B;
+	Sun,  4 Oct 2026 15:44:32 +0000 (UTC)
+Date: Sun, 4 Oct 2026 08:44:28 -0700
+From: Borislav Petkov <bp@alien8.de>
+To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
+Cc: Maciej Grochowski <Maciej.Grochowski@sony.com>,
+	Nikolas Joshua Britton <nbritton@exabit.io>,
+	Geramy Loveless <gloveless@jqluv.com>,
+	Eric Auger <eauger@redhat.com>,
+	Alexey Fomenko <alexey.fomenko@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	linux-kernel@vger.kernel.org, Bradley Morgan <brads@mainlining.org>,
+	Mario Limonciello <mario.limonciello@amd.com>
+Subject: Re: [PATCH v2 7/7] PCI/quirks: Avoid certain address on Genoa systems
+Message-ID: <20261004154428.GAasJ0XCWdso81YdwH@fat_crate.local>
+References: <20261002113319.6652-1-ilpo.jarvinen@linux.intel.com>
+ <20261002113319.6652-8-ilpo.jarvinen@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: PCI: failed link retraining quirk costs 1 s per empty AMD
- Promontory 21 port
-To: Tomasz Bojanowski <tomasz@bojanowski.me>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: "Maciej W. Rozycki" <macro@orcam.me.uk>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- Andreas Wild <andiwild@gmail.com>, linux-kernel@vger.kernel.org,
- Linux kernel regressions list <regressions@lists.linux.dev>
-References: <20260923191357.7410-1-tomasz@bojanowski.me>
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-Content-Language: de-DE, en-US
-In-Reply-To: <20260923191357.7410-1-tomasz@bojanowski.me>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-PPP-Message-ID: <179112778259.802426.18123040059643894221@mxe9fb.netcup.net>
-X-Rspamd-Server: rspamd-worker-8404
-X-Rspamd-Queue-Id: 7E7485F9B7
-X-NC-CID: Q44MKV0GqKUBMV2sqV18DJ4/uqgfKdP/CLwerjGyDH1lO/S8ENY=
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20261002113319.6652-8-ilpo.jarvinen@linux.intel.com>
+Content-Transfer-Encoding: quoted-printable
 
-On 9/23/26 21:13, Tomasz Bojanowski wrote:
-> 
-> On an AMD AM5 desktop the pcie_failed_link_retrain() quirk fires on
-> two empty downstream ports of the chipset switch and adds 2 s to every
-> boot.  This seems to be a different case from the one addressed by
-> "PCI: Skip Target Speed quirk on clamped ports with no link" [1]: here
-> the Target Link Speed is not clamped, so that patch does not return
-> early and the LBMS branch is taken instead.
+On Fri, Oct 02, 2026 at 02:33:15PM +0300, Ilpo J=C3=A4rvinen wrote:
+> While testing the resource placement changes, tests hit a case where
+> igb fails to probe when BAR 0 is placed at 0x9c000000:
+>=20
+>    90000000-9cffffff : PCI Bus 0000:a0
+>   -  90000000-902fffff : PCI Bus 0000:a1
+>   -    90000000-900fffff : 0000:a1:00.0
+>   -      90000000-900fffff : igb
+>   -    90100000-901fffff : 0000:a1:00.0
+>   -    90200000-90203fff : 0000:a1:00.0
+>   -      90200000-90203fff : igb
+>   +  9be00000-9c0fffff : PCI Bus 0000:a1
+>   +    9be00000-9befffff : 0000:a1:00.0
+>   +    9bf00000-9bf03fff : 0000:a1:00.0
+>   +    9c000000-9c0fffff : 0000:a1:00.0
+>      9c100000-9c17ffff : amd_iommu
+>      9c180000-9c1803ff : IOAPIC 8
+>=20
+>   -       Region 0: Memory at 90000000 (32-bit, non-prefetchable) [size=
+=3D1M]
+>   -       Region 3: Memory at 90200000 (32-bit, non-prefetchable) [size=
+=3D16K]
+>   -       Expansion ROM at 90100000 [disabled] [size=3D1M]
+>   +       Region 0: Memory at 9c000000 (32-bit, non-prefetchable) [size=
+=3D1M]
+>   +       Region 3: Memory at 9bf00000 (32-bit, non-prefetchable) [size=
+=3D16K]
+>   +       Expansion ROM at 9be00000 [disabled] [size=3D1M]
+>=20
+> igb 0000:a1:00.0 0000:a1:00.0 (uninitialized): PCIe link lost
+> ------------[ cut here ]------------
+> igb: Failed to read reg 0x18!
+> WARNING: drivers/net/ethernet/intel/igb/igb_main.c:724 at igb_rd32.cold=
++0x3c/0x4f [igb], CPU#32: kworker/32:1/706
+> ...
+>  igb_get_invariants_82575+0xff/0xf00 [igb]
+>  igb_probe+0x3c8/0x1190 [igb]
+>  local_pci_probe+0x3b/0x80
+>=20
+> It turns out there is a 64kB iomem black hole at 9c000000 that returns
 
-Hmm, nobody replied afaics (or did I miss something), so it seems nobody
-has an idea what's wrong here. So I guess you need to perform a git
-bisection.
+Can we please debug that "It turns out" thing and try to find out what re=
+ally
+is going on here.
 
-Ciao, Thorsten
-> Hardware: MSI MAG B850M MORTAR WIFI (MS-7E61), BIOS 1.A68 09/07/2026,
-> AMD Promontory 21 switch, downstream ports [1022:43f5].  Nothing is
-> connected behind 06:00.0 or 06:08.0.
-> 
-> Seen on Fedora kernels 7.2.5, 7.2.6 and 7.2.7 (33 boots, every time).
-> The same two messages were already present on openSUSE 7.1.x kernels
-> on this machine in July, so this is not new in 7.2.
-> 
->   [    0.248171] pci 0000:06:00.0: broken device, retraining non-functional downstream link at 2.5GT/s
->   [    1.248035] pci 0000:06:00.0: retraining failed
->   [    1.248972] pci 0000:06:08.0: broken device, retraining non-functional downstream link at 2.5GT/s
->   [    2.248036] pci 0000:06:08.0: retraining failed
-> 
-> Port state after boot (06:08.0 is the same except Width x2 in LnkCap):
-> 
->   LnkCap:  Port #0, Speed 16GT/s, Width x4, ASPM L1, Exit Latency L1 <32us
->   LnkSta:  Speed 2.5GT/s, Width x1
->            TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
->   SltCap:  AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
->   LnkCtl2: Target Link Speed: 16GT/s
-> 
-> Since the message is printed, DLLLA was clear and pcie_lbms_seen() was
-> true when the quirk ran from pci_device_add(), before bwctrl is bound,
-> so the LBMS bit itself must have been set on a port with nothing behind
-> it.  The kerneldoc above the quirk expects both bits to be clear on an
-> unconnected port, which this chipset does not seem to honour.
-> BWMgmt- after boot is expected, as bwctrl clears LBMS when it binds.
-> 
-> Each port then waits PCIE_LINK_RETRAIN_TIMEOUT_MS before the error path
-> restores the original 16GT/s target.  With this chipset used on many
-> AM5 boards, other systems may well lose 1 s per empty chipset port too.
-> 
-> Let me know if any other information would be useful.
-> 
-> [1] https://lore.kernel.org/all/20260801201244.4421-1-andiwild@gmail.com/
-> 
-> Thanks,
-> Tomasz Bojanowski
+Can you pls explain what your machine looks like so that we can try to
+reproduce it and see what's going on?
 
+Does it have latest BIOS, microcode, etc etc? If it doesn't, can you upgr=
+ade
+and try again?
+
+I guess dmesg, hwinfo, kernel .config would be good starters, privately i=
+s
+fine too.
+
+Thx.
+
+--=20
+Regards/Gruss,
+    Boris.
+
+https://people.kernel.org/tglx/notes-about-netiquette
