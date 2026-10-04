@@ -1,139 +1,140 @@
-Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A546236E498;
-	Sun,  4 Oct 2026 15:45:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E41A3C3F58;
+	Sun,  4 Oct 2026 16:15:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791128703; cv=none; b=S5UOx+kU0w0EJQam+N13XkPagZQdpGfrqOTDADDZ86Sqd+LuI8LON0FFvyJuCy5ghMmcCMig7DQlyXb4o/qtTd/mg1eEcu1HH25EzoX8fzHglTGy3eFmkDb0j1Cr9MRkEJHWLQbxPx1pkxRsifhWBPoC6366qMvjcLFZeDMNmRo=
+	t=1791130507; cv=none; b=vEvzs+i2WZjguwgqDg2Az/1zuhbsM7jZ/1l3P6ozonpoFXUUG2neOHd5ZeLYghkdj4mUyDe4S9Fq8Nn9WBTJPlUXUxI1f2ncvMVJ2UkTNxB5oeDxaZtW3ipS5QSiDT6OenGFTlSgSgWs6dPhAHnU0NzYaGf17kbhwBfSlWa80PQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791128703; c=relaxed/simple;
-	bh=6VExMatIpNaJGFvg0DCb2B+ps2eCBCtSzNT7we71dIQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LmEhFULe7lx2yHNWyPfLARTqNAHLM2Pdk7ughVSV1uCmH03gTZh1NI2CNp/L48uT/iqTgpUd8pizjFQOnCmBav0WSWSWIiEIV7pDV9IdbUbWoxPOntwBBxOelxZP9eLvx2slWJB1qPUBWPG9HlkEx025zTe7e4TiZz2DCQpgh7I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=fail (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=IlQhKE7N reason="signature verification failed"; arc=none smtp.client-ip=65.109.113.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
+	s=arc-20240116; t=1791130507; c=relaxed/simple;
+	bh=/yGUGyC3n9bAKXHBC260Zvhh5Il0MXZUZkwKdT2YcHg=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=PSc9pM7hnIaVS2SjgijsmsFxg6e7vkJnmj4K3/hHR/7dTT8yx2R/v/8E4schWFTnjMXercQZoKaS3dsc49ZrzaXbM25u1w3C35jcWrcbY9fjiCCgWVMs5g4IFRoLjZ0i5UjTIEALD3Yna3C1sTMIwkMR6vyV73y3zp4b9ovD4AE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UACW3ZXp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="IlQhKE7N"
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id B97BA40E01B4;
-	Sun,  4 Oct 2026 15:44:57 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
-Authentication-Results: mail.alien8.de (amavisd-new); dkim=fail (4096-bit key)
-	reason="fail (body has been altered)" header.d=alien8.de
-Received: from mail.alien8.de ([127.0.0.1])
-	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id 4yVDCcEjaToe; Sun,  4 Oct 2026 15:44:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
-	t=1791128687; bh=BAFSbCkTz3nxD5ued70ACeS8eONsJiVPIwxaE2QsvxI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IlQhKE7NqzscRABDcEzeyhmIzVq8MC8yvIQMrUrW53Q274J9L6B6knzmuW3pZ38pu
-	 8859asSzPvZgqVTUqvEKQ7URvKv6XPxLhj/mz38ttmoBecy4/zSGju+2Nz5qUJXe8f
-	 i4XdMMZvyKRoegpj8PCnC4sCAZ/hSM4K4l+vK19kitcroBeqBaNZcRS7rE+5qQ/qca
-	 VZr05vjYM1ZBcKva9g4FrxhOohNWmBh4aoCdOaz0cU32v2YtzZr+E4UuBTpe1f1CRq
-	 8YuWoD4ygMImRagaZRB+yUeuvUVITW40dz1rbODO24jHjDr8bx9oqzOJuXo5wzgq4v
-	 ZVwudH79v3GwjLBpJ564Z+M5/pLCB8KPlEQiU+wImeLEgFodG8hP4KvpXApv+Tk7Bb
-	 zVapcRNpftOAVRs9Zfqk3I2MasL7vTJt6tpoFJ6pi+0cyY+HI/m2ew264MX2BqPwKk
-	 EimAPxc6scGfSgMCqX6VQhuYhQlum+NpDsRsWDFcnfNVUCv+v1g5kNpKABb+CI3fLQ
-	 4BmHkaNv/H8DJJOR5hVwTP2SMlM9Soq0OwYsywaa4QNyu8DZ6Kqppu8Pj0rqH92SCe
-	 z+6rbxF3bZfQ4sUS1wZDRwXwHBnPjQtA5svqoEs+kZxWLb1luKZEMQqdAwm8J14wgv
-	 Urk+o8xX3u7QaRfdocHT72CM=
-Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::3a])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id D2FE340E015B;
-	Sun,  4 Oct 2026 15:44:32 +0000 (UTC)
-Date: Sun, 4 Oct 2026 08:44:28 -0700
-From: Borislav Petkov <bp@alien8.de>
-To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
-Cc: Maciej Grochowski <Maciej.Grochowski@sony.com>,
-	Nikolas Joshua Britton <nbritton@exabit.io>,
-	Geramy Loveless <gloveless@jqluv.com>,
-	Eric Auger <eauger@redhat.com>,
-	Alexey Fomenko <alexey.fomenko@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	linux-kernel@vger.kernel.org, Bradley Morgan <brads@mainlining.org>,
-	Mario Limonciello <mario.limonciello@amd.com>
-Subject: Re: [PATCH v2 7/7] PCI/quirks: Avoid certain address on Genoa systems
-Message-ID: <20261004154428.GAasJ0XCWdso81YdwH@fat_crate.local>
-References: <20261002113319.6652-1-ilpo.jarvinen@linux.intel.com>
- <20261002113319.6652-8-ilpo.jarvinen@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UACW3ZXp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CFC21F000FF;
+	Sun,  4 Oct 2026 16:15:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791130505;
+	bh=xwilz9F0BDYfB9INM/Mvr1+p43J++RbCj0DvXe+hqfQ=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=UACW3ZXptEAw4xKmFMNeTan7/0xU3c7FM0fD+MbLrZF9gtl0SicNbm2UERQwkBVtr
+	 tzohNYjF1AjlooksDosn06J7QPYjMYTt7PfMjnbYv7nv4hjDr7N6YzV8CytN/KKTy6
+	 vBxdj+Db9pZ93tbyJiFC8zrmYku6GAPRzYe3J/U0EerafzbbARq8hWCdIR2uPzZN5e
+	 e3cmqzsI5u5oxiFnCWnfFSBnqlV0SFO+Xv7xps4XP2gUMg49WGxjDdYX60UC7OqHwB
+	 ClbEvKOHfO0KdkrmAUHMKXKbIux6o/x+PoEAsrYpplvrb3LOsgMyHVmAH7HHXyedEN
+	 /rVVb2Vqvf+bw==
+Date: Sun, 4 Oct 2026 17:14:59 +0100
+From: Jonathan Cameron <jic23@kernel.org>
+To: Donggeun Yoo <donggeunyoo.kernel@gmail.com>
+Cc: bhelgaas@google.com, alistair@alistair23.me, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v2] PCI/DOE: Fix double free of a duplicate feature's
+ sysfs name
+Message-ID: <20261004171459.706c8e0d@jic23-hlaptop>
+In-Reply-To: <20261003102221.59894-1-donggeunyoo.kernel@gmail.com>
+References: <20261003102221.59894-1-donggeunyoo.kernel@gmail.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20261002113319.6652-8-ilpo.jarvinen@linux.intel.com>
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Fri, Oct 02, 2026 at 02:33:15PM +0300, Ilpo J=C3=A4rvinen wrote:
-> While testing the resource placement changes, tests hit a case where
-> igb fails to probe when BAR 0 is placed at 0x9c000000:
->=20
->    90000000-9cffffff : PCI Bus 0000:a0
->   -  90000000-902fffff : PCI Bus 0000:a1
->   -    90000000-900fffff : 0000:a1:00.0
->   -      90000000-900fffff : igb
->   -    90100000-901fffff : 0000:a1:00.0
->   -    90200000-90203fff : 0000:a1:00.0
->   -      90200000-90203fff : igb
->   +  9be00000-9c0fffff : PCI Bus 0000:a1
->   +    9be00000-9befffff : 0000:a1:00.0
->   +    9bf00000-9bf03fff : 0000:a1:00.0
->   +    9c000000-9c0fffff : 0000:a1:00.0
->      9c100000-9c17ffff : amd_iommu
->      9c180000-9c1803ff : IOAPIC 8
->=20
->   -       Region 0: Memory at 90000000 (32-bit, non-prefetchable) [size=
-=3D1M]
->   -       Region 3: Memory at 90200000 (32-bit, non-prefetchable) [size=
-=3D16K]
->   -       Expansion ROM at 90100000 [disabled] [size=3D1M]
->   +       Region 0: Memory at 9c000000 (32-bit, non-prefetchable) [size=
-=3D1M]
->   +       Region 3: Memory at 9bf00000 (32-bit, non-prefetchable) [size=
-=3D16K]
->   +       Expansion ROM at 9be00000 [disabled] [size=3D1M]
->=20
-> igb 0000:a1:00.0 0000:a1:00.0 (uninitialized): PCIe link lost
-> ------------[ cut here ]------------
-> igb: Failed to read reg 0x18!
-> WARNING: drivers/net/ethernet/intel/igb/igb_main.c:724 at igb_rd32.cold=
-+0x3c/0x4f [igb], CPU#32: kworker/32:1/706
-> ...
->  igb_get_invariants_82575+0xff/0xf00 [igb]
->  igb_probe+0x3c8/0x1190 [igb]
->  local_pci_probe+0x3b/0x80
->=20
-> It turns out there is a 64kB iomem black hole at 9c000000 that returns
+On Sat,  3 Oct 2026 19:22:21 +0900
+Donggeun Yoo <donggeunyoo.kernel@gmail.com> wrote:
 
-Can we please debug that "It turns out" thing and try to find out what re=
-ally
-is going on here.
+> When a DOE feature is reported twice, sysfs_add_file_to_group() fails
+> with -EEXIST for the second copy and pci_doe_sysfs_feature_populate()
+> frees that attribute's name, but leaves the pointer in place.
+> pci_doe_sysfs_feature_remove() frees every name again when the device
+> is removed, or when a later feature fails to register, so the name is
+> freed twice:
+> 
+>   BUG: KASAN: double-free in pci_doe_sysfs_feature_remove+0x117/0x1b0
+>   Call Trace:
+>    kfree+0x11a/0x420
+>    pci_doe_sysfs_feature_remove+0x117/0x1b0
+>    pci_doe_sysfs_teardown+0x90/0xf0
+>    pci_remove_bus_device+0x128/0x2e0
+>    pci_stop_and_remove_bus_device_locked+0x1d/0x30
+>    remove_store+0xd2/0xf0
+> 
+> Clear the pointer after freeing the name.
+> 
+> Fixes: 2311ab1820fe ("PCI/DOE: Expose DOE features via sysfs")
+> Cc: stable@vger.kernel.org
+> Suggested-by: Alistair Francis <alistair@alistair23.me>
+> Assisted-by: LLM
+> Signed-off-by: Donggeun Yoo <donggeunyoo.kernel@gmail.com>
 
-Can you pls explain what your machine looks like so that we can try to
-reproduce it and see what's going on?
+> ---
+> Changes in v2:
+> - Keep freeing the duplicate's name in pci_doe_sysfs_feature_populate()
+>   and clear the pointer, instead of leaving it to
+>   pci_doe_sysfs_feature_remove() (Alistair Francis)
+> 
+> v1: https://lore.kernel.org/all/20260928035035.252394-1-donggeunyoo.kernel@gmail.com/
+> 
+> Tested under QEMU (q35, cxl-type3, KASAN) on 72d3fcf802c4. The device
+> reports its CDAT feature once, so a test-only change either registers
+> its DOE capability as a second mailbox or inserts the feature N extra
+> times into one:
+> 
+>   case                                   before           after
+>   no duplicate, remove                   no report        no report
+>   no duplicate, a name fails at probe    no report        no report
+>   two mailboxes, remove                  double free      no report
 
-Does it have latest BIOS, microcode, etc etc? If it doesn't, can you upgr=
-ade
-and try again?
+This one and related are valid cases that real hardware might well do.
 
-I guess dmesg, hwinfo, kernel .config would be good starters, privately i=
-s
-fine too.
+>   two mailboxes, 3 remove/rescan cycles  3 double frees   no report
+>   3 duplicates in one mailbox, remove    3 double frees   no report
+>   2 duplicates, a later name fails,      2 double frees   no report
+>     probed twice
+So this one is a hardware bug I think.  I guess maybe the DOE spec
+may not strictly say you can't do this (I'm on wrong computer
+so haven't checked) but it would be very odd.
 
-Thx.
+Overall I'm never keen on code that relies on an error path to smooth
+over a valid condition.  We can't deduplicate in the xarrays for the
+multimailbox case unless we do a combine of the xarrays and use
+that instead for the registration.
 
---=20
-Regards/Gruss,
-    Boris.
+That route would be a rather heavy weight fix though so I guess I don't mind
+this one that much.
 
-https://people.kernel.org/tglx/notes-about-netiquette
+So argued myself around to this approach.
+Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
+
+
+
+
+> 
+> The doe_features listing is the same before and after in every case.
+> 
+>  drivers/pci/doe.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
+> index ac95b1d2d9997..6b5d9ba8e9697 100644
+> --- a/drivers/pci/doe.c
+> +++ b/drivers/pci/doe.c
+> @@ -208,8 +208,9 @@ static int pci_doe_sysfs_feature_populate(struct pci_dev *pdev,
+>  				pci_warn(pdev, "Failed adding %s to sysfs group\n",
+>  					 attrs[i].attr.name);
+>  				goto fail;
+> -			} else
+> -				kfree(attrs[i].attr.name);
+> +			}
+> +			kfree(attrs[i].attr.name);
+> +			attrs[i].attr.name = NULL;
+>  		}
+>  	}
+>  
+
