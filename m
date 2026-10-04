@@ -1,262 +1,131 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC9B4440A09
-	for <linux-pci@vger.kernel.org>; Sun,  4 Oct 2026 12:22:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 475EF392823
+	for <linux-pci@vger.kernel.org>; Sun,  4 Oct 2026 14:57:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791116567; cv=none; b=KhXESumbH3WHJGeVwXzSp+l7PeA2XkjaSnL6Ca8J848SCoAOTYJyq/PDuDp8/q3pFWDWXn1o+GJ4p8VPehkzx0ZYyDXsjLrIQsJOmAAAnW6dXsvuOqvL9NWSTuxvoo94pwx/QRKrJjaOTm9j5nOUrdKDy+0EJ8tu7xt/5EeHTLE=
+	t=1791125846; cv=none; b=M0Z4f906YcPLnp1C3kKhL5qlv5Xy4qGJEJ4d2tAtPyfwL6aAWhwn6T93LTQtffr8MEZOY+A5pooJ40PZKLu3wr6e0EkE0S4lOXByj02gBrSjGjBqEAeSwlh+9PISnQKmTT4bxYFJZLqy7mvrmQDwGrmTD/54f5DRb9sDHGpX/E4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791116567; c=relaxed/simple;
-	bh=rpUKhneFtSqv81B0jsJ4mP0f4DeWRGkzANsXVMq638c=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CDjhLJDTQiylRdtnJ4DdpfI4lexvnoJ+s0indIbOTttZWuKer+OC7If9HbLtkt/IVWZewEm0VaGQIVP8F89Ism0zrnU5rH14q3evMMnFFJ8doegYDDvIAoiBuDcci2bqhpBMSaMxI+KzvGbG+oI+adTNees2V+iGTDrPY0zNgmY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d8+h2Hm7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791125846; c=relaxed/simple;
+	bh=jKRDeQWHATNQKguOq+DACJaAb5fWymP47mTILZgh/pw=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=XJjrC0gcfULCNGdskjCcK9w91y2YlCvv0MMyoXYklGmYay0wk649R2FICbPtE6ETWtqoB7iCt3oIlmt90IJKudPGDkNvXSB71g/iEz/ZGJ8qUqYpBx1yEL55GhYtUsUyqI6gAfFfLzNzKKFMx/SPQO4TRBYq51sMV7v4d6Fab9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cfW+upAc; arc=none smtp.client-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d8+h2Hm7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98EFB1F00898;
-	Sun,  4 Oct 2026 12:22:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791116565;
-	bh=pHYAuJtDwaIPGPmPKx7vPpEvcMcEWZ0SsYQ8CsxPw3M=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=d8+h2Hm70U/C3bYjUByUbf1Kl3th0kZzBse2Le4LVlDh3AlAuinM6w3CLatoSFTil
-	 gpiVxL6xMYUSzwb/e02qIF3atjTJhTe2HzJxW4trTzS9CbYMItwg7nPySkBOW/FmSZ
-	 sw8PMg0owmJ515Rzf13hA89dgTSKr2sz6jw+87TlA8Yqrln5PqhsqscFpN7mFphQr8
-	 wFf7Q353fAR6z+JGEy4htOofuQ8U81RsCfO/OYcA/7OU3Mv26mHyqOWXCCPrjsKIZj
-	 X3AUP1/EKPPUiBjBy++PCbmVdnFwHBTBC8UWoxxV6sNsSpINpmvtQ0VwSa2LG1pwXC
-	 6JG2tHRVHKFgQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 8/9] rust: pci: add SR-IOV enable and disable
- callbacks
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Zhi Wang" <zhiw@nvidia.com>
-Cc: ojeda@kernel.org, gary@garyguo.net, linux-pci@vger.kernel.org
-In-Reply-To: <20261004120732.1045629-9-zhiw@nvidia.com>
-References: <20261004120732.1045629-1-zhiw@nvidia.com>
- <20261004120732.1045629-9-zhiw@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 04 Oct 2026 12:22:44 +0000
-Message-Id: <20261004122245.98EFB1F00898@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cfW+upAc"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1791125842; x=1822661842;
+  h=date:from:to:cc:subject:message-id;
+  bh=jKRDeQWHATNQKguOq+DACJaAb5fWymP47mTILZgh/pw=;
+  b=cfW+upAcXHqbFQ+F1gGuO3j2tXvLajngenslrTaO/9p1//V+vVMcUB39
+   4+/PlD8hhNbWpUjh7x/rXRu3NTR1GoKdW4BCZ/Zp8Ok+sNzj9DYACH1FM
+   kfMuy6OGwkhJfd5Q00iR4QiEqE4HTCw5wYgaiopXWu+29RYFGTPPUgNpN
+   PfpPjnkayxQe0hyWR68uj+INRr7VeeP7QfQa969/K0IFkas73CwXKXZAi
+   JtEVPGp/hd0NpPERI12DUZfAhLt23c1qDaim/AxwBSbjo02TBi182bI+D
+   GGEiSNbLyOdxjeW3Dlkge1rjdQqCKdcQcBw/iEeutrK6yEPMOx83GvgSa
+   Q==;
+X-CSE-ConnectionGUID: CkjSettlS5mAU5jNv/NEXQ==
+X-CSE-MsgGUID: lnyFIRScSeyN30r9vfG9JA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11925"; a="94524592"
+X-IronPort-AV: E=Sophos;i="6.27,139,1787036400"; 
+   d="scan'208";a="94524592"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2026 07:57:18 -0700
+X-CSE-ConnectionGUID: ww61SwTSSHGfFlJVdNpdkw==
+X-CSE-MsgGUID: AYkCI+9SRoCWIdNc5Jnbqw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,139,1787036400"; 
+   d="scan'208";a="284698988"
+Received: from lkp-server01.sh.intel.com (HELO 462990a40a85) ([10.239.97.150])
+  by fmviesa005.fm.intel.com with ESMTP; 04 Oct 2026 07:57:16 -0700
+Received: from kbuild by 462990a40a85 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xDNeL-00000000Uoj-3IxK;
+	Sun, 04 Oct 2026 14:57:13 +0000
+Date: Sun, 04 Oct 2026 22:56:54 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+ linux-pci@vger.kernel.org
+Subject: [pci:next 20/29]
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c:307:30: error: use of undeclared
+ identifier 'PCIE_PORT_LANE_SKEW'
+Message-ID: <202610042255.a8dle5HM-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] rust: pci: unsound lifetime unification in sriov callbacks allows =
-token escaping
-- [Low] rust: pci: missing #[inline] on small abstraction functions
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+head:   372b7a0d9c7c0cb724b259db9d39c785ad9dec74
+commit: 9bab7146bd9ef2700f42d705d8e01d7d95362d0f [20/29] Merge branch 'pci/controller/dwc-rcar-gen4'
+config: arm64-allmodconfig (https://download.01.org/0day-ci/archive/20261004/202610042255.a8dle5HM-lkp@intel.com/config)
+compiler: clang version 24.0.0git (https://github.com/llvm/llvm-project 5f609f950d2e80addf5566623013db68394334db)
+rustc: rustc 1.96.0 (ac68faa20 2026-05-25)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261004/202610042255.a8dle5HM-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202610042255.a8dle5HM-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> drivers/pci/controller/dwc/pcie-rcar-gen4.c:307:30: error: use of undeclared identifier 'PCIE_PORT_LANE_SKEW'
+     307 |         val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
+         |                                     ^~~~~~~~~~~~~~~~~~~
+   drivers/pci/controller/dwc/pcie-rcar-gen4.c:311:25: error: use of undeclared identifier 'PCIE_PORT_LANE_SKEW'
+     311 |         dw_pcie_writel_dbi(dw, PCIE_PORT_LANE_SKEW, val);
+         |                                ^~~~~~~~~~~~~~~~~~~
+   drivers/pci/controller/dwc/pcie-rcar-gen4.c:338:30: error: use of undeclared identifier 'PCIE_PORT_LANE_SKEW'
+     338 |         val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
+         |                                     ^~~~~~~~~~~~~~~~~~~
+   drivers/pci/controller/dwc/pcie-rcar-gen4.c:342:25: error: use of undeclared identifier 'PCIE_PORT_LANE_SKEW'
+     342 |         dw_pcie_writel_dbi(dw, PCIE_PORT_LANE_SKEW, val);
+         |                                ^~~~~~~~~~~~~~~~~~~
+   4 errors generated.
+
+
+vim +/PCIE_PORT_LANE_SKEW +307 drivers/pci/controller/dwc/pcie-rcar-gen4.c
+
+0d0c551011df45 Yoshihiro Shimoda 2023-10-18  294  
+eeeb72fab4a569 Marek Vasut       2026-09-21  295  static int rcar_gen4_v4h_v4m_pcie_init(struct rcar_gen4_pcie *rcar)
+eeeb72fab4a569 Marek Vasut       2026-09-21  296  {
+eeeb72fab4a569 Marek Vasut       2026-09-21  297  	struct dw_pcie *dw = &rcar->dw;
+eeeb72fab4a569 Marek Vasut       2026-09-21  298  	u32 val;
+eeeb72fab4a569 Marek Vasut       2026-09-21  299  	int ret;
+eeeb72fab4a569 Marek Vasut       2026-09-21  300  
+eeeb72fab4a569 Marek Vasut       2026-09-21  301  	/* R-Car Gen4 common initialization. */
+eeeb72fab4a569 Marek Vasut       2026-09-21  302  	ret = rcar_gen4_pcie_common_init(rcar);
+eeeb72fab4a569 Marek Vasut       2026-09-21  303  	if (ret)
+eeeb72fab4a569 Marek Vasut       2026-09-21  304  		return ret;
+eeeb72fab4a569 Marek Vasut       2026-09-21  305  
+eeeb72fab4a569 Marek Vasut       2026-09-21  306  	/* R-Car V4H and V4M specific additional initialization. */
+eeeb72fab4a569 Marek Vasut       2026-09-21 @307  	val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
+eeeb72fab4a569 Marek Vasut       2026-09-21  308  	val &= ~PORT_LANE_SKEW_INSERT_MASK;
+eeeb72fab4a569 Marek Vasut       2026-09-21  309  	if (dw->num_lanes < 4)
+eeeb72fab4a569 Marek Vasut       2026-09-21  310  		val |= BIT(6);
+eeeb72fab4a569 Marek Vasut       2026-09-21  311  	dw_pcie_writel_dbi(dw, PCIE_PORT_LANE_SKEW, val);
+eeeb72fab4a569 Marek Vasut       2026-09-21  312  
+eeeb72fab4a569 Marek Vasut       2026-09-21  313  	val = readl(rcar->base + PCIEPWRMNGCTRL);
+eeeb72fab4a569 Marek Vasut       2026-09-21  314  	val |= APP_CLK_REQ_N | APP_CLK_PM_EN;
+eeeb72fab4a569 Marek Vasut       2026-09-21  315  	writel(val, rcar->base + PCIEPWRMNGCTRL);
+eeeb72fab4a569 Marek Vasut       2026-09-21  316  
+eeeb72fab4a569 Marek Vasut       2026-09-21  317  	return 0;
+eeeb72fab4a569 Marek Vasut       2026-09-21  318  }
+eeeb72fab4a569 Marek Vasut       2026-09-21  319  
+
+:::::: The code at line 307 was first introduced by commit
+:::::: eeeb72fab4a569c1cc547c9bf220c808dd37f83d PCI: rcar-gen4: Rework .additional_common_init() into .init()
+
+:::::: TO: Marek Vasut <marek.vasut+renesas@mailbox.org>
+:::::: CC: Bjorn Helgaas <bhelgaas@google.com>
+
 --
-
-commit 953cc4a950356a2c3c6e81d99e604484bd175fb4
-Author: Peter Colberg <peter@colberg.org>
-
-rust: pci: add SR-IOV enable and disable callbacks
-
-Allow Rust PCI drivers to configure SR-IOV through sriov_numvfs.
-Split the C configure callback into sriov_enable() and sriov_disable(),
-passing pinned driver data and a token for the requested operation.
-Require drivers to implement both callbacks together.
-
-> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-> index 7486c51799659..f4f92d79bac4b 100644
-> --- a/rust/kernel/pci.rs
-> +++ b/rust/kernel/pci.rs
-[ ... ]
-> @@ -341,6 +351,87 @@ fn probe<'bound>(
->      fn unbind<'bound>(dev: &'bound Device<device::Core<'_>>, this: Pin<&=
-Self::Data<'bound>>) {
->          let _ =3D (dev, this);
->      }
-> +
-> +    /// Enables Single Root I/O Virtualization (SR-IOV) for a PF.
-[ ... ]
-> +    #[cfg(CONFIG_PCI_IOV)]
-> +    fn sriov_enable<'a>(
-> +        dev: &'a Device<device::Core<'_>>,
-> +        data: Pin<&Self::Data<'a>>,
-> +        token: SriovEnable<'a>,
-> +    ) -> Result<SriovEnabled<'a>> {
-
-[Severity: Low]
-Should this default trait method be annotated with #[inline]? According to =
-the
-Rust subsystem guidelines, small functions or functions forwarding to C
-bindings in the kernel abstraction crate should be inlined.
-
-[Severity: High]
-Does this signature allow a driver to escape the SriovEnabled token?
-
-By unifying the lifetime 'a across the data parameter and the token paramet=
-er,
-it appears a driver could safely store the short-lived token inside its
-long-lived Data structure.
-
-If this happens, could the driver dereference a dangling Device reference
-when the data is dropped during device unbind, leading to a use-after-free?
-
-Would separating the lifetimes fix this, as shown below?
-
-    fn sriov_enable<'a, 'b>(
-        dev: &'a Device<device::Core<'_>>,
-        data: Pin<&Self::Data<'b>>,
-        token: SriovEnable<'a>,
-    ) -> Result<SriovEnabled<'a>> {
-
-> +        let _ =3D (dev, data, token);
-> +        build_error!(crate::error::VTABLE_DEFAULT_ERROR)
-> +    }
-> +
-> +    /// Disables all VFs of a PF in response to a userspace request.
-[ ... ]
-> +    #[cfg(CONFIG_PCI_IOV)]
-> +    fn sriov_disable<'a>(
-> +        dev: &'a Device<device::Core<'_>>,
-> +        data: Pin<&Self::Data<'a>>,
-> +        token: SriovDisable<'a>,
-> +    ) -> Result {
-
-[Severity: High]
-As with sriov_enable(), does unifying the lifetime 'a here allow the
-driver to improperly escape the short-lived token into its Data structure?
-
-Should the data parameter use a separate lifetime 'b to prevent this
-soundness issue?
-
-> +        let _ =3D (dev, data, token);
-> +        build_error!(crate::error::VTABLE_DEFAULT_ERROR)
-> +    }
->  }
-> =20
->  /// The PCI device representation.
-> diff --git a/rust/kernel/pci/iov.rs b/rust/kernel/pci/iov.rs
-> index 449f1e9b12fda..24d1770226c32 100644
-> --- a/rust/kernel/pci/iov.rs
-> +++ b/rust/kernel/pci/iov.rs
-[ ... ]
-> @@ -100,7 +107,7 @@ pub fn num_vfs(&self) -> u16 {
-
-[Severity: Low]
-Should the SriovEnable::num_vfs getter be annotated with #[inline] to ensure
-the optimizer can properly inline it?
-
->      ///
->      /// VF drivers can probe before this method returns, so the PF resou=
-rces they access must
->      /// already be initialized. The returned guard disables the VFs if s=
-ubsequent setup fails.
-> -    /// Return it from `sriov_enable()` to leave the VFs enabled on call=
-back success.
-> +    /// Return it from [`Driver::sriov_enable()`] to leave the VFs enabl=
-ed on callback success.
->      pub fn enable(self, num_vfs: u16) -> Result<SriovEnabled<'a>> {
->          if num_vfs =3D=3D 0 || num_vfs > self.num_vfs {
->              return Err(EINVAL);
-> @@ -120,14 +127,13 @@ pub fn enable(self, num_vfs: u16) -> Result<SriovEn=
-abled<'a>> {
->      }
->  }
-> =20
-> -/// Enabled VFs awaiting successful completion of `sriov_enable()`.
-> +/// Enabled VFs awaiting successful completion of [`Driver::sriov_enable=
-()`].
->  pub struct SriovEnabled<'a> {
->      pdev: &'a Device<device::CoreInternal<'a>>,
->      num_vfs: u16,
->  }
-> =20
->  impl SriovEnabled<'_> {
-> -    #[expect(dead_code)]
->      fn disarm(self) -> u16 {
-
-[Severity: Low]
-Should this trivial abstraction function be annotated with #[inline]?
-
->          ManuallyDrop::new(self).num_vfs
->      }
-[ ... ]
-> @@ -139,7 +145,7 @@ fn drop(&mut self) {
->      }
->  }
-> =20
-> -/// Permission to disable VFs during a driver's `sriov_disable()` callba=
-ck.
-> +/// Permission to disable VFs during a driver's [`Driver::sriov_disable(=
-)`] callback.
->  ///
->  /// The PCI adapter creates this token for the PF being configured. It c=
-annot be cloned or sent
->  /// to another thread, and its lifetime is restricted to the callback. D=
-ropping the token does
-> @@ -157,6 +163,37 @@ pub fn disable(self) {
-
-[Severity: Low]
-Should this small wrapper forwarding to a C binding be annotated with
-#[inline]?
-
->      }
->  }
-> =20
-> +impl<T: Driver> Adapter<T> {
-> +    pub(super) extern "C" fn sriov_configure_callback(
-> +        pdev: *mut bindings::pci_dev,
-> +        nr_virtfn: c_int,
-> +    ) -> c_int {
-> +        // SAFETY: The PCI core calls this through the PF-only `sriov_nu=
-mvfs` sysfs attribute,
-> +        // with a valid `struct pci_dev` and while holding the device lo=
-ck.
-> +        //
-> +        // INVARIANT: `pdev` is valid for the duration of `sriov_configu=
-re_callback()`.
-> +        let pdev =3D unsafe { &*pdev.cast::<Device<device::CoreInternal<=
-'_>>>() };
-> +
-> +        // SAFETY: `sriov_configure` is called only after a successful p=
-robe and before unbind, so
-> +        // the stored pointer has type `T::Data<'_>` and remains valid t=
-hroughout this callback.
-> +        let data =3D unsafe { pdev.as_ref().drvdata_borrow::<T::Data<'_>=
->() };
-
-[Severity: High]
-Does this unsafe cast combined with the unified lifetime in sriov_enable
-and sriov_disable create a soundness hole?
-
-Because drvdata_borrow performs an unchecked raw pointer cast, the compiler
-infers the anonymous lifetime as the short callback lifetime 'a required by
-the trait signatures. This circumvents variance rules and casts the origina=
-lly
-'bound data to T::Data<'a>.
-
-If the lifetimes are separated in the trait definition, would that prevent =
-the
-compiler from allowing a short-lived token to be stored in the long-lived
-driver data?
-
-> +
-> +        from_result(|| {
-> +            if nr_virtfn =3D=3D 0 {
-> +                T::sriov_disable(pdev, data, SriovDisable { pdev })?;
-> +                if pdev.num_vf() !=3D 0 {
-> +                    return Err(EBUSY);
-> +                }
-> +                Ok(0)
-> +            } else {
-> +                let num_vfs =3D u16::try_from(nr_virtfn).map_err(|_| EIN=
-VAL)?;
-> +                let enabled =3D T::sriov_enable(pdev, data, SriovEnable =
-{ pdev, num_vfs })?;
-> +                Ok(enabled.disarm().into())
-> +            }
-> +        })
-> +    }
-> +}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261004120732.1045=
-629-1-zhiw@nvidia.com?part=3D8
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
