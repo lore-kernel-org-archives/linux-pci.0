@@ -1,131 +1,127 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 475EF392823
-	for <linux-pci@vger.kernel.org>; Sun,  4 Oct 2026 14:57:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 361CF3B6367;
+	Sun,  4 Oct 2026 15:40:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791125846; cv=none; b=M0Z4f906YcPLnp1C3kKhL5qlv5Xy4qGJEJ4d2tAtPyfwL6aAWhwn6T93LTQtffr8MEZOY+A5pooJ40PZKLu3wr6e0EkE0S4lOXByj02gBrSjGjBqEAeSwlh+9PISnQKmTT4bxYFJZLqy7mvrmQDwGrmTD/54f5DRb9sDHGpX/E4=
+	t=1791128415; cv=none; b=g00u0Db3Pf9jtkQrG4uvfayT3uwFxOc+VmcGN4I9P9klck1alqiPcyQEv2ITHW5Q98b3qvqtqP23m6bhvdjzHdWjViMqEE3h+qDKJooFYsKjqS7BTAgIEWVK8JgAo1dX6mu15U79J7pYtBhT7xQPypHzG5pWm03sNYC2qps/PIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791125846; c=relaxed/simple;
-	bh=jKRDeQWHATNQKguOq+DACJaAb5fWymP47mTILZgh/pw=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=XJjrC0gcfULCNGdskjCcK9w91y2YlCvv0MMyoXYklGmYay0wk649R2FICbPtE6ETWtqoB7iCt3oIlmt90IJKudPGDkNvXSB71g/iEz/ZGJ8qUqYpBx1yEL55GhYtUsUyqI6gAfFfLzNzKKFMx/SPQO4TRBYq51sMV7v4d6Fab9Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cfW+upAc; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1791128415; c=relaxed/simple;
+	bh=lei9XIb4M52i6TBsv4VscPx1kB1vzfi2NNHv46kjUpo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=UZPk7jpjOBhKA1abx+1n7SRaMxouCmDHhbhrMV2Pe5T0bF6eC6vZutIJ3M1kxsC1Xg+xSk7RPs4UjkzQwJ3vAx28EwY5+0BNFmIF53dYL6Aca4JyrO3bABuKG1RIgc0KpdrXeAMV75Eo2QE55DuO261FbApwu3uXmLkwUrfhcIU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=KRK3Aa8s; arc=none smtp.client-ip=188.68.63.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cfW+upAc"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791125842; x=1822661842;
-  h=date:from:to:cc:subject:message-id;
-  bh=jKRDeQWHATNQKguOq+DACJaAb5fWymP47mTILZgh/pw=;
-  b=cfW+upAcXHqbFQ+F1gGuO3j2tXvLajngenslrTaO/9p1//V+vVMcUB39
-   4+/PlD8hhNbWpUjh7x/rXRu3NTR1GoKdW4BCZ/Zp8Ok+sNzj9DYACH1FM
-   kfMuy6OGwkhJfd5Q00iR4QiEqE4HTCw5wYgaiopXWu+29RYFGTPPUgNpN
-   PfpPjnkayxQe0hyWR68uj+INRr7VeeP7QfQa969/K0IFkas73CwXKXZAi
-   JtEVPGp/hd0NpPERI12DUZfAhLt23c1qDaim/AxwBSbjo02TBi182bI+D
-   GGEiSNbLyOdxjeW3Dlkge1rjdQqCKdcQcBw/iEeutrK6yEPMOx83GvgSa
-   Q==;
-X-CSE-ConnectionGUID: CkjSettlS5mAU5jNv/NEXQ==
-X-CSE-MsgGUID: lnyFIRScSeyN30r9vfG9JA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11925"; a="94524592"
-X-IronPort-AV: E=Sophos;i="6.27,139,1787036400"; 
-   d="scan'208";a="94524592"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2026 07:57:18 -0700
-X-CSE-ConnectionGUID: ww61SwTSSHGfFlJVdNpdkw==
-X-CSE-MsgGUID: AYkCI+9SRoCWIdNc5Jnbqw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,139,1787036400"; 
-   d="scan'208";a="284698988"
-Received: from lkp-server01.sh.intel.com (HELO 462990a40a85) ([10.239.97.150])
-  by fmviesa005.fm.intel.com with ESMTP; 04 Oct 2026 07:57:16 -0700
-Received: from kbuild by 462990a40a85 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xDNeL-00000000Uoj-3IxK;
-	Sun, 04 Oct 2026 14:57:13 +0000
-Date: Sun, 04 Oct 2026 22:56:54 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
- linux-pci@vger.kernel.org
-Subject: [pci:next 20/29]
- drivers/pci/controller/dwc/pcie-rcar-gen4.c:307:30: error: use of undeclared
- identifier 'PCIE_PORT_LANE_SKEW'
-Message-ID: <202610042255.a8dle5HM-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="KRK3Aa8s"
+Received: from mors-relay8204.netcup.net (localhost [127.0.0.1])
+	by mors-relay8204.netcup.net (Postfix) with ESMTPS id 4hyRKf2tLPz8g5c;
+	Sun,  4 Oct 2026 15:30:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1791127814;
+	bh=lei9XIb4M52i6TBsv4VscPx1kB1vzfi2NNHv46kjUpo=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=KRK3Aa8sRYbCbCq1G1XvwlHbNsBbfAmvSK/1YXrBPWGCoBG9JitEnWCXcKYSm9SN1
+	 lmeUIULdxyMWENfMpfKildMGAWRFt5ywzdVSzPXos/8qs2CDvrxmzqJfqCNGADuYuO
+	 1klsc5Xs6sHKger7S8q6wArDck5YKHV0ncftPQErmu/BZ+vofehyRhSEJMTKdcKzDT
+	 DNaN0H7jOZNgb6xRif1mkCO7tCQmG7fXuoWuXR/xMkAKjMWFqsn02hSETv/Q9xJJCG
+	 gcAo0P7FjvET9xwtrrNvO3bi5lWprYreIqZJDG4KoZpKpgf6CC5hYjbAk+yCsQEkQ1
+	 LHI67EPIbKV2w==
+Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
+	by mors-relay8204.netcup.net (Postfix) with ESMTPS id 4hyRK82NCQz8fFB;
+	Sun,  4 Oct 2026 15:29:48 +0000 (UTC)
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4hyRK72G8Rz8svb;
+	Sun,  4 Oct 2026 17:29:46 +0200 (CEST)
+Received: from [10.200.136.123] (unknown [213.235.133.113])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 7E7485F9B7;
+	Sun,  4 Oct 2026 17:29:41 +0200 (CEST)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 213.235.133.113) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[10.200.136.123]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <22e0563e-afcd-44f5-9d87-f0b2a637038e@leemhuis.info>
+Date: Sun, 4 Oct 2026 17:29:39 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: PCI: failed link retraining quirk costs 1 s per empty AMD
+ Promontory 21 port
+To: Tomasz Bojanowski <tomasz@bojanowski.me>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: "Maciej W. Rozycki" <macro@orcam.me.uk>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ Andreas Wild <andiwild@gmail.com>, linux-kernel@vger.kernel.org,
+ Linux kernel regressions list <regressions@lists.linux.dev>
+References: <20260923191357.7410-1-tomasz@bojanowski.me>
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Content-Language: de-DE, en-US
+In-Reply-To: <20260923191357.7410-1-tomasz@bojanowski.me>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-PPP-Message-ID: <179112778259.802426.18123040059643894221@mxe9fb.netcup.net>
+X-Rspamd-Server: rspamd-worker-8404
+X-Rspamd-Queue-Id: 7E7485F9B7
+X-NC-CID: Q44MKV0GqKUBMV2sqV18DJ4/uqgfKdP/CLwerjGyDH1lO/S8ENY=
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-head:   372b7a0d9c7c0cb724b259db9d39c785ad9dec74
-commit: 9bab7146bd9ef2700f42d705d8e01d7d95362d0f [20/29] Merge branch 'pci/controller/dwc-rcar-gen4'
-config: arm64-allmodconfig (https://download.01.org/0day-ci/archive/20261004/202610042255.a8dle5HM-lkp@intel.com/config)
-compiler: clang version 24.0.0git (https://github.com/llvm/llvm-project 5f609f950d2e80addf5566623013db68394334db)
-rustc: rustc 1.96.0 (ac68faa20 2026-05-25)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261004/202610042255.a8dle5HM-lkp@intel.com/reproduce)
+On 9/23/26 21:13, Tomasz Bojanowski wrote:
+> 
+> On an AMD AM5 desktop the pcie_failed_link_retrain() quirk fires on
+> two empty downstream ports of the chipset switch and adds 2 s to every
+> boot.  This seems to be a different case from the one addressed by
+> "PCI: Skip Target Speed quirk on clamped ports with no link" [1]: here
+> the Target Link Speed is not clamped, so that patch does not return
+> early and the LBMS branch is taken instead.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202610042255.a8dle5HM-lkp@intel.com/
+Hmm, nobody replied afaics (or did I miss something), so it seems nobody
+has an idea what's wrong here. So I guess you need to perform a git
+bisection.
 
-All errors (new ones prefixed by >>):
+Ciao, Thorsten
+> Hardware: MSI MAG B850M MORTAR WIFI (MS-7E61), BIOS 1.A68 09/07/2026,
+> AMD Promontory 21 switch, downstream ports [1022:43f5].  Nothing is
+> connected behind 06:00.0 or 06:08.0.
+> 
+> Seen on Fedora kernels 7.2.5, 7.2.6 and 7.2.7 (33 boots, every time).
+> The same two messages were already present on openSUSE 7.1.x kernels
+> on this machine in July, so this is not new in 7.2.
+> 
+>   [    0.248171] pci 0000:06:00.0: broken device, retraining non-functional downstream link at 2.5GT/s
+>   [    1.248035] pci 0000:06:00.0: retraining failed
+>   [    1.248972] pci 0000:06:08.0: broken device, retraining non-functional downstream link at 2.5GT/s
+>   [    2.248036] pci 0000:06:08.0: retraining failed
+> 
+> Port state after boot (06:08.0 is the same except Width x2 in LnkCap):
+> 
+>   LnkCap:  Port #0, Speed 16GT/s, Width x4, ASPM L1, Exit Latency L1 <32us
+>   LnkSta:  Speed 2.5GT/s, Width x1
+>            TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>   SltCap:  AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
+>   LnkCtl2: Target Link Speed: 16GT/s
+> 
+> Since the message is printed, DLLLA was clear and pcie_lbms_seen() was
+> true when the quirk ran from pci_device_add(), before bwctrl is bound,
+> so the LBMS bit itself must have been set on a port with nothing behind
+> it.  The kerneldoc above the quirk expects both bits to be clear on an
+> unconnected port, which this chipset does not seem to honour.
+> BWMgmt- after boot is expected, as bwctrl clears LBMS when it binds.
+> 
+> Each port then waits PCIE_LINK_RETRAIN_TIMEOUT_MS before the error path
+> restores the original 16GT/s target.  With this chipset used on many
+> AM5 boards, other systems may well lose 1 s per empty chipset port too.
+> 
+> Let me know if any other information would be useful.
+> 
+> [1] https://lore.kernel.org/all/20260801201244.4421-1-andiwild@gmail.com/
+> 
+> Thanks,
+> Tomasz Bojanowski
 
->> drivers/pci/controller/dwc/pcie-rcar-gen4.c:307:30: error: use of undeclared identifier 'PCIE_PORT_LANE_SKEW'
-     307 |         val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
-         |                                     ^~~~~~~~~~~~~~~~~~~
-   drivers/pci/controller/dwc/pcie-rcar-gen4.c:311:25: error: use of undeclared identifier 'PCIE_PORT_LANE_SKEW'
-     311 |         dw_pcie_writel_dbi(dw, PCIE_PORT_LANE_SKEW, val);
-         |                                ^~~~~~~~~~~~~~~~~~~
-   drivers/pci/controller/dwc/pcie-rcar-gen4.c:338:30: error: use of undeclared identifier 'PCIE_PORT_LANE_SKEW'
-     338 |         val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
-         |                                     ^~~~~~~~~~~~~~~~~~~
-   drivers/pci/controller/dwc/pcie-rcar-gen4.c:342:25: error: use of undeclared identifier 'PCIE_PORT_LANE_SKEW'
-     342 |         dw_pcie_writel_dbi(dw, PCIE_PORT_LANE_SKEW, val);
-         |                                ^~~~~~~~~~~~~~~~~~~
-   4 errors generated.
-
-
-vim +/PCIE_PORT_LANE_SKEW +307 drivers/pci/controller/dwc/pcie-rcar-gen4.c
-
-0d0c551011df45 Yoshihiro Shimoda 2023-10-18  294  
-eeeb72fab4a569 Marek Vasut       2026-09-21  295  static int rcar_gen4_v4h_v4m_pcie_init(struct rcar_gen4_pcie *rcar)
-eeeb72fab4a569 Marek Vasut       2026-09-21  296  {
-eeeb72fab4a569 Marek Vasut       2026-09-21  297  	struct dw_pcie *dw = &rcar->dw;
-eeeb72fab4a569 Marek Vasut       2026-09-21  298  	u32 val;
-eeeb72fab4a569 Marek Vasut       2026-09-21  299  	int ret;
-eeeb72fab4a569 Marek Vasut       2026-09-21  300  
-eeeb72fab4a569 Marek Vasut       2026-09-21  301  	/* R-Car Gen4 common initialization. */
-eeeb72fab4a569 Marek Vasut       2026-09-21  302  	ret = rcar_gen4_pcie_common_init(rcar);
-eeeb72fab4a569 Marek Vasut       2026-09-21  303  	if (ret)
-eeeb72fab4a569 Marek Vasut       2026-09-21  304  		return ret;
-eeeb72fab4a569 Marek Vasut       2026-09-21  305  
-eeeb72fab4a569 Marek Vasut       2026-09-21  306  	/* R-Car V4H and V4M specific additional initialization. */
-eeeb72fab4a569 Marek Vasut       2026-09-21 @307  	val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
-eeeb72fab4a569 Marek Vasut       2026-09-21  308  	val &= ~PORT_LANE_SKEW_INSERT_MASK;
-eeeb72fab4a569 Marek Vasut       2026-09-21  309  	if (dw->num_lanes < 4)
-eeeb72fab4a569 Marek Vasut       2026-09-21  310  		val |= BIT(6);
-eeeb72fab4a569 Marek Vasut       2026-09-21  311  	dw_pcie_writel_dbi(dw, PCIE_PORT_LANE_SKEW, val);
-eeeb72fab4a569 Marek Vasut       2026-09-21  312  
-eeeb72fab4a569 Marek Vasut       2026-09-21  313  	val = readl(rcar->base + PCIEPWRMNGCTRL);
-eeeb72fab4a569 Marek Vasut       2026-09-21  314  	val |= APP_CLK_REQ_N | APP_CLK_PM_EN;
-eeeb72fab4a569 Marek Vasut       2026-09-21  315  	writel(val, rcar->base + PCIEPWRMNGCTRL);
-eeeb72fab4a569 Marek Vasut       2026-09-21  316  
-eeeb72fab4a569 Marek Vasut       2026-09-21  317  	return 0;
-eeeb72fab4a569 Marek Vasut       2026-09-21  318  }
-eeeb72fab4a569 Marek Vasut       2026-09-21  319  
-
-:::::: The code at line 307 was first introduced by commit
-:::::: eeeb72fab4a569c1cc547c9bf220c808dd37f83d PCI: rcar-gen4: Rework .additional_common_init() into .init()
-
-:::::: TO: Marek Vasut <marek.vasut+renesas@mailbox.org>
-:::::: CC: Bjorn Helgaas <bhelgaas@google.com>
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
