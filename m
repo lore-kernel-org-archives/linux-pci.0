@@ -1,28 +1,28 @@
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010028.outbound.protection.outlook.com [52.101.61.28])
+Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011040.outbound.protection.outlook.com [40.93.194.40])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFA9F21FF29;
-	Sun,  4 Oct 2026 12:08:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.28
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44B6F43DEA5;
+	Sun,  4 Oct 2026 12:09:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.194.40
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791115741; cv=fail; b=Lki3bJN6PphJLsJ2FrA7DOl2ouZu6s1dQ1Q1tu5U0I1G5ifTnF0Undkh362QmifvYh/hrOapkB63cN+a+kop+7UxnZ6eAfmv5JatLhLD9DJmaw905A2anR+63hw9uU8O1u04Coa/3n16FjSCpqmQ8474w/zL9SXt/e84Vd7q1ho=
+	t=1791115744; cv=fail; b=hhX2gsxckKlMKTpeb85hSolU81oIIPMgqHgMw04JJg0Rybr1VAkKs5/X7Pgr+QofH7Im+vPKH8IiCrByliX2ZBlW7WLF1ofF8Gs9xrsbhjmHC2z6HO0QOuPThca0LexYZeK8JAGvtNj+cBj1PlBpnkqTz66Xz9lB+WMZQ6wQUro=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791115741; c=relaxed/simple;
-	bh=Op6rrgZ7dQwsOp1BTnoAFOkVFO8WvRPxLt+Xm+hiIWQ=;
+	s=arc-20240116; t=1791115744; c=relaxed/simple;
+	bh=nVFzxdDBCotK5FtA95L4O0AgNKICdDHmU1TJ0lSLapo=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eM+1XIwTBTtjz33c6N5Mfy2Qvm3DaPETwe/H2qxO7spZ+II2or9wlS9Ga8iQBt8ZFy3+pkO6v4yiDYFlYCLaykRu+8qgyL+zjR0lgh9r4MrSYgf4b/upV1sPzVaZQstJSkUsAEv/d4zpKWjvljov9ESLPO6m6XAMETJniwcbRaw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=osIViCF4; arc=fail smtp.client-ip=52.101.61.28
+	 MIME-Version:Content-Type; b=olxqpVJT29+tc4HaZ6bPPa30XVrCkat35ErsutNCinPKuURMGE575c8Bd+H4LxdmJA+MmiffagJrTbXgdINU96wAQRZg8/OqnRkGhiiQmw0qQXJEOeXVquBhfOOJHQZ2VqxtStUf91OVPNINTV7p04iBRzJIHWK+HcRydtHwBE4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=P5LSgqmN; arc=fail smtp.client-ip=40.93.194.40
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="osIViCF4"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="P5LSgqmN"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=yQYb0wUeq3piEQtln0ITdWqm90tZJNGoSjO2FWIWEOeQLqTzR438XpzSkVPI/LX+deES6S+dtdlIQhkyQYp9KNneBPwEiForw2AfIqvi5Qr9LNTYxw0YZ8ype9fZeFCYvri1MbGii1zE5lfpiasbGd9w5fZcVPKf8TvrG2Gfdzvun6OIkUFUkVfYVEaWCYw5JTNq27u2SB2Hk/iVSuLQOE5sNQxpIeY6lz54F+PAaV+UfatQTMHHkiFJvVDD0DAeDk1hZyW1+r3UC03e4H39kyF++1M4jqKIxf/Gm5dLDjjDX+TcCkmA6k78pmo0qbvSjMphbg4VxRYcTOX8ffNfJg==
+ b=TE82Mb9sYJ1E2uV3/hALXpgEWYoSAQYJaErAB+JZ022dp8Ojj27dGZvgzdbghwcneKmUHKrUMyx2VfgiTc9kzBPnkhd0DQQpGXdEQ2RJhdoarxw1XkJn/v1wGMpowWlyMEBrcvezDK/+F7O6bVJ9paVrayZAsq97r+B7R05euqb/26MIjD1woqr6EkWRZclwnnVydXFbokfzQRRxCeMZXvoNYCchOIlIPBBAwcVf3qYNUSv1PuS687vfOpy4lxMir1/VIE69/GiRe9W0kLc6wWRRAXAGMTDOsqbRR8jNxFFsMgyA4l2Hnmhdq8DHcoW7iB4MLH3ndLogY1onaVI9bw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kAAEYSrGnUosULBKROCJXlIPk58qT0cTHkeGgDP3kOY=;
- b=k/QQgmyUXwz+ZdZhVnO6styrBhp/YnjeSfU+SdEe78dsu6aPBl1YE5r05qBXjDybGzki8yagPlpdQayxO79xaPLm3S/9Y1OO7shNLjsYVxf2w5xOTpPplQQzaz2KGQmAgfn4C+yYmdxNbuv6illTh9bE/blV8w3rE6CGqVxzqnpEyLcua3VoT2jMaF6dI94hcluLN2Urjt20T9fmqoy/CJPVBbnSKqReeZAzpQOPcRv4YcLU38qSoOUFEyNOgvm+Ds30eZR2p8jtpO7OaUyKoxB5AB0NKIJs7Zyk9wFAzr7gAVP05Tcz4+rSS2YWFzEmI4QJ1c+mr3A2qil55G1U1Q==
+ bh=9cK4auv+JQ+vNWCisawUcgzSosY7BDBrkVV5WUQXSIc=;
+ b=Gj+MSSdApyDdwrfoEJYIxBPfHV8InXAV7ajm2SZ46shitwX9rn58yCxJ2PMx4J91T6xCgWx31GkJHoRkndiMyPHUcuY8v0LWfW6NYZSKP5l7fY4GsE/qUIclLu8pO2uuyhUVU3DpWXbha3SO2Ui3/HU9U2bkaS0gh4ZeEc/iLOFINd6L3r7PuJTuUuYv5aYS3ChU571zlEHLN8TS37lDZbY7Y3G8QceWJ4vDkosOIq4z+oJ7rxjpNHV66/lxQ1dcG+6CgekGYJUxLlOPKoKe907qliAN2vt9bYqqrDlHUWsioQdp8tioqLpBTNm77why/g8rRR7a70gskURmKVb5Yg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.160) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -30,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kAAEYSrGnUosULBKROCJXlIPk58qT0cTHkeGgDP3kOY=;
- b=osIViCF4HczegA1p+VPwbPkz6o4K96Ol1gl2PMyfdaOTpj4arKprLwqX0nh4wuY7eXgxh4ohIW/K+APt8wE7rz7UnSX1Fnz6XCPboi57gzzLLOqnAWkECR2lqqGADXynHSNSQllaQj9WsMSVIkU2avtGtPghu/fAwOcfhCULTtFqhr1IQdxAC1V6Z6aYEB8VnahJUTEdXJ+1OUsa3oLEHt46MvfEIGQ2+nr9BkbToml8igNaoPoZA8u7AkTcxaqGHce4VX9XViKzMhl9rgjukDQNIpsI/bOOzazgzqWlEIl+ROXaovy5e/Yrmp+7bTVI33qhYNqZa5KKrGtENRjc8A==
-Received: from BN0PR03CA0051.namprd03.prod.outlook.com (2603:10b6:408:e7::26)
- by PH8PR12MB7208.namprd12.prod.outlook.com (2603:10b6:510:224::7) with
+ bh=9cK4auv+JQ+vNWCisawUcgzSosY7BDBrkVV5WUQXSIc=;
+ b=P5LSgqmN2wQx5afSb8Nnw7mhfg0GbmW9DXjiD267q+eZyE3D90WG16lGm51YWnood0LR0vlXv2csvTvOj87R0ADw3aqTBjNAKlEaHBErorJvJMTQ8FcVnLHXeO3RWTWBe8oc6bHy0ibLdTVdOGt2lfhPDof+qNIr7fF4fYb8zvrGhDWtjwmar7mGj4ooE0/UomyZKlcXunKL6xKnCEgEnpvQ9DDtuYQu3y5tNktn51CqjrUVYGPMIkFUK3TAAf7Uf8HfBM7U3xNkKmXf7srMoWplYZEfD5FGSQWPnObsIy3KZ05IQ9Le7Ks5QS3aP/ypiN7ejfofctNa1uAgyve6lQ==
+Received: from BN9PR03CA0435.namprd03.prod.outlook.com (2603:10b6:408:113::20)
+ by DM4PR12MB8523.namprd12.prod.outlook.com (2603:10b6:8:18e::13) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.20; Sun, 4 Oct
- 2026 12:08:10 +0000
-Received: from BN2PEPF000044A5.namprd04.prod.outlook.com
- (2603:10b6:408:e7:cafe::3a) by BN0PR03CA0051.outlook.office365.com
- (2603:10b6:408:e7::26) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.15; Sun, 4 Oct
+ 2026 12:08:53 +0000
+Received: from BN2PEPF000044A6.namprd04.prod.outlook.com
+ (2603:10b6:408:113:cafe::a4) by BN9PR03CA0435.outlook.office365.com
+ (2603:10b6:408:113::20) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.21.472.20 via Frontend Transport; Sun, 4
- Oct 2026 12:08:10 +0000
+ Oct 2026 12:08:53 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -49,20 +49,20 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.117.160 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.117.160) by
- BN2PEPF000044A5.mail.protection.outlook.com (10.167.243.104) with Microsoft
+ BN2PEPF000044A6.mail.protection.outlook.com (10.167.243.100) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.472.14 via Frontend Transport; Sun, 4 Oct 2026 12:08:10 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ 15.21.472.14 via Frontend Transport; Sun, 4 Oct 2026 12:08:53 +0000
+Received: from rnnvmail203.nvidia.com (10.129.68.9) by mail.nvidia.com
  (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Sun, 4 Oct
- 2026 05:07:55 -0700
-Received: from rnnvmail204.nvidia.com (10.129.68.6) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
+ 2026 05:08:37 -0700
+Received: from rnnvmail204.nvidia.com (10.129.68.6) by rnnvmail203.nvidia.com
+ (10.129.68.9) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Sun, 4 Oct
- 2026 05:07:54 -0700
+ 2026 05:08:37 -0700
 Received: from inno-dell.home (10.127.8.11) by mail.nvidia.com (10.129.68.6)
  with Microsoft SMTP Server id 15.2.2562.49 via Frontend Transport; Sun, 4 Oct
- 2026 05:07:47 -0700
+ 2026 05:08:30 -0700
 From: Zhi Wang <zhiw@nvidia.com>
 To: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>
@@ -76,9 +76,9 @@ CC: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
 	<jhubbard@nvidia.com>, <zhiwang@kernel.org>, <jgg@nvidia.com>,
 	<alex@shazbot.org>, Peter Colberg <peter@colberg.org>, Zhi Wang
 	<zhiw@nvidia.com>
-Subject: [PATCH v4 2/9] rust: pci: add vtable attribute to pci::Driver trait
-Date: Sun, 4 Oct 2026 15:07:23 +0300
-Message-ID: <20261004120732.1045629-3-zhiw@nvidia.com>
+Subject: [PATCH v4 8/9] rust: pci: add SR-IOV enable and disable callbacks
+Date: Sun, 4 Oct 2026 15:07:29 +0300
+Message-ID: <20261004120732.1045629-9-zhiw@nvidia.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261004120732.1045629-1-zhiw@nvidia.com>
 References: <20261004120732.1045629-1-zhiw@nvidia.com>
@@ -93,116 +93,276 @@ Content-Type: text/plain
 X-NV-OnPremToCloud: ExternallySecured
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN2PEPF000044A5:EE_|PH8PR12MB7208:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4ff026bb-1c4c-4a84-a1d8-08df22102895
+X-MS-TrafficTypeDiagnostic: BN2PEPF000044A6:EE_|DM4PR12MB8523:EE_
+X-MS-Office365-Filtering-Correlation-Id: dae13dda-8af2-4ce5-b456-08df22104253
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|23010399003|1800799024|36860700016|7416014|376014|22082099003|18002099003|10067099003|56012099006|11063799006;
+	BCL:0;ARA:13230040|82310400026|36860700016|376014|7416014|23010399003|1800799024|18002099003|22082099003|13003099007|11063799006|10067099003|5023799004|56012099006|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	WMGuhdMkba/Qhb24NmianVWxUcP+Y3b1L/zyQ1g/bEU6B1mEWmnY+rTJ+gDMdYvYfPoLr4yD47YH73YKcJQA5R3Wqk/oiaEm5vj5fuueUne+OLEQD9C87N2Vz9DBA0svQJUrev7d9NJzctODpkXnMOzRLkv3/iqAe8yUZy6JY5zoa4BSdp0BxUTb4M0fr7JYbnr0XvtLALvF8i0Oo2xUj27/x7WIR7Y5zusVhDq0uGbx5QRSQpNxYQMY7ptTHp2W6HRfEy5YKb6pWm1eFpRJ3eIXoSyez5E5DZvOPp8EXczYTvJSYcoMNDll8UywAnHN3SZLjKYcDsLjepXyflp47VoDCoLxCkZ05poGLXjVtNmAV00vHKs3lgPVBO6M4jcvo0juonkd5xCNUQ+4bs5+FPmnN5gav9uRT3mizD1QdSVWj+y84OO134u+LbxDVIz8ROoLxXGQSWNGgFCEqvQMZFbL64onFPDtK4yFgMguMzJn7f4/M8ZmomyMdCPOdTW7Q7GbWH0f9gLiAuNPo2eBFxsGX9ejNZKBoUo2p2yn2snRbV81pD88ZF+SmQVYJbvvlje57wtH4TnxUSzaqvgB2ZYfasKpJ3fSWu5ussD8TtRbUyDVNFaaA3tCvm8MikK/L+/w3iL4hRAP/bFCl+fa1E8Peg/RKoUvCbsjuPTmTGYXlr1xV74ngkJShp0WbJt7LLvSpxQpC4qG26njFtyQ1g==
+	XEBaOM6EQKcVgrFoPSkeIKjhAPhoAeNTx/wYfRKXkPYKdk94gWfg72JLEpi+kwRMkIaiii8NbfIYrgzG9+7SgHzfghU7bQoCAJgoN+lCZs5YDPOsue6q+V4W6b4FMiL2EA/DTX48OLnuh1CZLQ57e/QAnu+lruQxHaq4CQDvq217tqn8QSKWXecRG0gcYP6B6OVxFLXEjDC11ge7p7q9wemOAyF/9vN4HGAvDzNHGrjF60C1M0PtIC9OkLTjE5uCZY8XF/RsMAqycx0MzimXN/c/MDHdClxnrbBx1b8Pz5+ZkZRMExIvF2ItiaOgzWn+1RhhM0uD9kntUZUeDj2YFeuoGkNCete9Cv0Ru5x/Bf9skyGMhvQCXhz5tpCHvOkqbn/2L355kgB/Wme95qEWvD7/pcc4qEn4c5tOksoyU2ajyH95YlhAhRS879IoD3JduG8ZO8btgyJE6/9mOpvumNse7XT4ZjoSw1Yf5BnFYn3czJmYVZmxtdKcqFO+zzI8qf/sM/hMA8v1pjEIPKpzVj0pinX9ht/LUWVMIEQpxBq9vKfiXwZgDrj4tjrH6v3qT6jOLn3+Zy57Cxfq40pNsSeDamAPppDcQ01u7SeIMNmKf5prQaNsUtgBC7AqTkI5RsMNi2L3d6Is53FlERsN70hsLU3WDxSMI8hA+skGWPSgUSZHHEv9hKwQVHAL0j4P7vtvH8rNAMbnK/xx+fTY2A==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(23010399003)(1800799024)(36860700016)(7416014)(376014)(22082099003)(18002099003)(10067099003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(36860700016)(376014)(7416014)(23010399003)(1800799024)(18002099003)(22082099003)(13003099007)(11063799006)(10067099003)(5023799004)(56012099006)(6133799003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	mV0n11mHOwqikaOeCI1+R+PpHM18el0TTKSO4k1y2tAaiztsARDvQQgjCLfUhriN5tA37WbvWQoCcsOI91StwyPREp/NFPCQoRIx54BgLRz+BXzJXCv79kn8wdD4r6LXDdKlxukJrSOX33+wZBxWEX4NzsevcFoPKVLdZIbB70oNWw2zYvbGxgwD69BfDfZYQ8FnsYVwKAeVduKEndG2O4kuWc6wUxGu/MwX4voDv2b9Or+Shn96+wBTpPDz0g+L4s//hZ+9hEUMqoWcbv5Rvtyyffua7KY2fDhu2ggcXnapjnu3LaLDv1JSqhv9rmV5beo2j97w8bHmHzmdVYx+D2/G93XW11zaNv99kb1f+UCI8rsoOqycM0lkTe+W62QEQCnMJBpBKdRE1QlpcX0gXxnccrBOB1k9C913iy7yDR2ZK7G9IJKZj03dMQi+jKXe
+	ul8AF9wbeisZFM9cXCjktg4y3+dgJ3qqanZYCF+h1zqeRCGfUhMfMm/ikLttPeg2i8txqKhDebA+27gi/i1or1xRtGyin0GlupvGkHUUoE9wyKI0UOn75CCNkyzGThbaAoWIvc+n6iiGM+jLXP02T9YV7wZsjxjTcFfyirW1QNkvDgEUrE9CHyiXYZyADtyl0D/PdBsmqLmgvtYtuGqwWuP9n+Dxfqru2rc92FZrv9gie177m4Hft3imUyugHMNJRQzeQe3UOy44c4MlX+1SoCUE0Hwi4TQVFlD2YWV3BlsGgjPtcgXy+UT9aqpHedash/zsSfjaCi/98/S3f7UgoeY3IfknHdUHmnOp3+Iv9IK3/lbXGao8U5/RN+hCbrRqa0QmdbyTphAp/Gy/BDxBuZApTIsxEfRi1VcaNeSDvVsMIcuEfw1J4SOealqIAoAd
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Oct 2026 12:08:10.3800
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Oct 2026 12:08:53.5669
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4ff026bb-1c4c-4a84-a1d8-08df22102895
+X-MS-Exchange-CrossTenant-Network-Message-Id: dae13dda-8af2-4ce5-b456-08df22104253
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BN2PEPF000044A5.namprd04.prod.outlook.com
+	BN2PEPF000044A6.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB7208
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB8523
 
 From: Peter Colberg <peter@colberg.org>
 
-Add the #[vtable] attribute to pci::Driver and its implementations to
-support the optional sriov_enable() and sriov_disable() callbacks
-introduced later in this series.
+Allow Rust PCI drivers to configure SR-IOV through sriov_numvfs.
+Split the C configure callback into sriov_enable() and sriov_disable(),
+passing pinned driver data and a token for the requested operation.
+Require drivers to implement both callbacks together.
+
+Return the enabled guard's VF count on success and disarm its rollback.
+On a disable request, verify that the driver has removed all VFs before
+reporting success. VfRegistration handles VF removal during PF teardown;
+these callbacks only handle explicit configuration requests.
+
+The PCI core invokes sriov_configure only through the PF-only
+sriov_numvfs sysfs attribute, so no extra PF role check is needed.
 
 Suggested-by: Danilo Krummrich <dakr@kernel.org>
 Signed-off-by: Peter Colberg <peter@colberg.org>
 Signed-off-by: Zhi Wang <zhiw@nvidia.com>
 ---
- drivers/gpu/nova-core/driver.rs       | 1 +
- rust/kernel/pci.rs                    | 2 ++
- samples/rust/rust_dma.rs              | 1 +
- samples/rust/rust_driver_auxiliary.rs | 1 +
- samples/rust/rust_driver_pci.rs       | 1 +
- 5 files changed, 6 insertions(+)
+ rust/kernel/pci.rs     | 91 ++++++++++++++++++++++++++++++++++++++++++
+ rust/kernel/pci/iov.rs | 51 +++++++++++++++++++----
+ 2 files changed, 135 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/gpu/nova-core/driver.rs b/drivers/gpu/nova-core/driver.rs
-index cf3534dd47d4..47a599c9ea4f 100644
---- a/drivers/gpu/nova-core/driver.rs
-+++ b/drivers/gpu/nova-core/driver.rs
-@@ -63,6 +63,7 @@ pub(crate) struct NovaCore<'bound> {
-     ]
- );
- 
-+#[vtable]
- impl pci::Driver for NovaCoreDriver {
-     type IdInfo = ();
-     type Data<'bound> = NovaCore<'bound>;
 diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-index b11a1d32c5db..dcb0cdd0d426 100644
+index 7486c5179965..f4f92d79bac4 100644
 --- a/rust/kernel/pci.rs
 +++ b/rust/kernel/pci.rs
-@@ -274,6 +274,7 @@ macro_rules! pci_device_table {
- ///     ]
- /// );
- ///
-+/// #[vtable]
- /// impl pci::Driver for MyDriver {
- ///     type IdInfo = ();
- ///     type Data<'bound> = Self;
-@@ -289,6 +290,7 @@ macro_rules! pci_device_table {
- ///```
- /// Drivers must implement this trait in order to get a PCI driver registered. Please refer to the
- /// `Adapter` documentation for an example.
-+#[vtable]
- pub trait Driver {
-     /// The type holding information about each device id supported by the driver.
-     // TODO: Use `associated_type_defaults` once stabilized:
-diff --git a/samples/rust/rust_dma.rs b/samples/rust/rust_dma.rs
-index ffb693544673..804d55a63005 100644
---- a/samples/rust/rust_dma.rs
-+++ b/samples/rust/rust_dma.rs
-@@ -69,6 +69,7 @@ unsafe impl kernel::transmute::FromBytes for MyStruct {}
-     [(pci::DeviceId::from_id(pci::Vendor::REDHAT, 0x5), ())]
- );
+@@ -87,12 +87,22 @@ unsafe fn register(
+         name: &'static CStr,
+         module: &'static ThisModule,
+     ) -> Result {
++        #[cfg(CONFIG_PCI_IOV)]
++        build_assert!(
++            T::HAS_SRIOV_ENABLE == T::HAS_SRIOV_DISABLE,
++            "PCI drivers must implement both sriov_enable and sriov_disable"
++        );
++
+         // SAFETY: It's safe to set the fields of `struct pci_driver` on initialization.
+         unsafe {
+             (*pdrv.get()).name = name.as_char_ptr();
+             (*pdrv.get()).probe = Some(Self::probe_callback);
+             (*pdrv.get()).remove = Some(Self::remove_callback);
+             (*pdrv.get()).id_table = T::ID_TABLE.as_ptr();
++            #[cfg(CONFIG_PCI_IOV)]
++            if T::HAS_SRIOV_ENABLE {
++                (*pdrv.get()).sriov_configure = Some(Self::sriov_configure_callback);
++            }
+         }
  
-+#[vtable]
- impl pci::Driver for DmaSampleDriver {
-     type IdInfo = ();
-     type Data<'bound> = DmaSampleData<'bound>;
-diff --git a/samples/rust/rust_driver_auxiliary.rs b/samples/rust/rust_driver_auxiliary.rs
-index 0bee16faecc6..6cff9bf8c80c 100644
---- a/samples/rust/rust_driver_auxiliary.rs
-+++ b/samples/rust/rust_driver_auxiliary.rs
-@@ -90,6 +90,7 @@ struct ParentData<'bound> {
-     [(pci::DeviceId::from_id(pci::Vendor::REDHAT, 0x5), ())]
- );
+         // SAFETY: `pdrv` is guaranteed to be a valid `DriverType`.
+@@ -341,6 +351,87 @@ fn probe<'bound>(
+     fn unbind<'bound>(dev: &'bound Device<device::Core<'_>>, this: Pin<&Self::Data<'bound>>) {
+         let _ = (dev, this);
+     }
++
++    /// Enables Single Root I/O Virtualization (SR-IOV) for a PF.
++    ///
++    /// Called when userspace writes a nonzero VF count to `sriov_numvfs`. The token carries the
++    /// requested count and permission to enable VFs on this PF. Return the guard obtained from
++    /// [`SriovEnable::enable()`] after completing setup; dropping it rolls back the enable.
++    ///
++    /// The PF must own a [`VfRegistration`] before enabling VFs. That registration disables
++    /// SR-IOV when the driver data is destroyed, while resources needed by VF drivers remain live.
++    /// Implement this callback and [`Self::sriov_disable()`] together, or implement neither.
++    ///
++    /// See [PCI Express I/O Virtualization].
++    ///
++    /// [PCI Express I/O Virtualization]: https://docs.kernel.org/PCI/pci-iov-howto.html
++    ///
++    /// # Examples
++    ///
++    /// ```
++    /// # use kernel::{
++    /// #     device::Core,
++    /// #     pci,
++    /// #     prelude::*, //
++    /// # };
++    /// # struct Data;
++    /// fn sriov_enable<'a>(
++    ///     _dev: &'a pci::Device<Core<'_>>,
++    ///     _data: Pin<&Data>,
++    ///     token: pci::SriovEnable<'a>,
++    /// ) -> Result<pci::SriovEnabled<'a>> {
++    ///     let num_vfs = token.num_vfs();
++    ///     let enabled = token.enable(num_vfs)?;
++    ///     // Complete any additional setup before returning the guard.
++    ///     Ok(enabled)
++    /// }
++    /// ```
++    #[cfg(CONFIG_PCI_IOV)]
++    fn sriov_enable<'a>(
++        dev: &'a Device<device::Core<'_>>,
++        data: Pin<&Self::Data<'a>>,
++        token: SriovEnable<'a>,
++    ) -> Result<SriovEnabled<'a>> {
++        let _ = (dev, data, token);
++        build_error!(crate::error::VTABLE_DEFAULT_ERROR)
++    }
++
++    /// Disables all VFs of a PF in response to a userspace request.
++    ///
++    /// Called when userspace writes zero to `sriov_numvfs`. Call [`SriovDisable::disable()`]
++    /// while resources used by VF drivers are still available. Returning an error before calling
++    /// it leaves the VFs enabled. Returning success requires that all VFs have been disabled.
++    ///
++    /// This callback is not invoked during PF unbind; [`VfRegistration`] owns that teardown.
++    /// Implement this callback and [`Self::sriov_enable()`] together, or implement neither.
++    ///
++    /// # Examples
++    ///
++    /// ```
++    /// # use kernel::{
++    /// #     device::Core,
++    /// #     pci,
++    /// #     prelude::*, //
++    /// # };
++    /// # struct Data;
++    /// fn sriov_disable<'a>(
++    ///     _dev: &'a pci::Device<Core<'_>>,
++    ///     _data: Pin<&Data>,
++    ///     token: pci::SriovDisable<'a>,
++    /// ) -> Result {
++    ///     token.disable();
++    ///     Ok(())
++    /// }
++    /// ```
++    #[cfg(CONFIG_PCI_IOV)]
++    fn sriov_disable<'a>(
++        dev: &'a Device<device::Core<'_>>,
++        data: Pin<&Self::Data<'a>>,
++        token: SriovDisable<'a>,
++    ) -> Result {
++        let _ = (dev, data, token);
++        build_error!(crate::error::VTABLE_DEFAULT_ERROR)
++    }
+ }
  
-+#[vtable]
- impl pci::Driver for ParentDriver {
-     type IdInfo = ();
-     type Data<'bound> = ParentData<'bound>;
-diff --git a/samples/rust/rust_driver_pci.rs b/samples/rust/rust_driver_pci.rs
-index 13b035a95756..50c8709739c6 100644
---- a/samples/rust/rust_driver_pci.rs
-+++ b/samples/rust/rust_driver_pci.rs
-@@ -139,6 +139,7 @@ fn config_space(pdev: &pci::Device<Bound>) {
+ /// The PCI device representation.
+diff --git a/rust/kernel/pci/iov.rs b/rust/kernel/pci/iov.rs
+index 449f1e9b12fd..24d1770226c3 100644
+--- a/rust/kernel/pci/iov.rs
++++ b/rust/kernel/pci/iov.rs
+@@ -2,12 +2,19 @@
+ 
+ //! Abstractions for PCI Single Root I/O Virtualization (SR-IOV) drivers.
+ 
+-use super::Device;
++use super::{
++    Adapter,
++    Device,
++    Driver, //
++};
+ 
+ use crate::{
+     bindings,
+     device,
+-    error::to_result,
++    error::{
++        from_result,
++        to_result, //
++    },
+     prelude::*,
+     types::{
+         CovariantForLt,
+@@ -71,7 +78,7 @@ pub(crate) fn disable_sriov(&self) {
      }
  }
  
-+#[vtable]
- impl pci::Driver for SampleDriver {
-     type IdInfo = TestIndex;
-     type Data<'bound> = SampleDriverData<'bound>;
+-/// Permission to enable VFs during a driver's `sriov_enable()` callback.
++/// Permission to enable VFs during a driver's [`Driver::sriov_enable()`] callback.
+ ///
+ /// The PCI adapter creates this token for the PF being configured. It cannot be cloned or sent
+ /// to another thread, and its lifetime is restricted to the callback. Enabling VFs consumes it.
+@@ -100,7 +107,7 @@ pub fn num_vfs(&self) -> u16 {
+     ///
+     /// VF drivers can probe before this method returns, so the PF resources they access must
+     /// already be initialized. The returned guard disables the VFs if subsequent setup fails.
+-    /// Return it from `sriov_enable()` to leave the VFs enabled on callback success.
++    /// Return it from [`Driver::sriov_enable()`] to leave the VFs enabled on callback success.
+     pub fn enable(self, num_vfs: u16) -> Result<SriovEnabled<'a>> {
+         if num_vfs == 0 || num_vfs > self.num_vfs {
+             return Err(EINVAL);
+@@ -120,14 +127,13 @@ pub fn enable(self, num_vfs: u16) -> Result<SriovEnabled<'a>> {
+     }
+ }
+ 
+-/// Enabled VFs awaiting successful completion of `sriov_enable()`.
++/// Enabled VFs awaiting successful completion of [`Driver::sriov_enable()`].
+ pub struct SriovEnabled<'a> {
+     pdev: &'a Device<device::CoreInternal<'a>>,
+     num_vfs: u16,
+ }
+ 
+ impl SriovEnabled<'_> {
+-    #[expect(dead_code)]
+     fn disarm(self) -> u16 {
+         ManuallyDrop::new(self).num_vfs
+     }
+@@ -139,7 +145,7 @@ fn drop(&mut self) {
+     }
+ }
+ 
+-/// Permission to disable VFs during a driver's `sriov_disable()` callback.
++/// Permission to disable VFs during a driver's [`Driver::sriov_disable()`] callback.
+ ///
+ /// The PCI adapter creates this token for the PF being configured. It cannot be cloned or sent
+ /// to another thread, and its lifetime is restricted to the callback. Dropping the token does
+@@ -157,6 +163,37 @@ pub fn disable(self) {
+     }
+ }
+ 
++impl<T: Driver> Adapter<T> {
++    pub(super) extern "C" fn sriov_configure_callback(
++        pdev: *mut bindings::pci_dev,
++        nr_virtfn: c_int,
++    ) -> c_int {
++        // SAFETY: The PCI core calls this through the PF-only `sriov_numvfs` sysfs attribute,
++        // with a valid `struct pci_dev` and while holding the device lock.
++        //
++        // INVARIANT: `pdev` is valid for the duration of `sriov_configure_callback()`.
++        let pdev = unsafe { &*pdev.cast::<Device<device::CoreInternal<'_>>>() };
++
++        // SAFETY: `sriov_configure` is called only after a successful probe and before unbind, so
++        // the stored pointer has type `T::Data<'_>` and remains valid throughout this callback.
++        let data = unsafe { pdev.as_ref().drvdata_borrow::<T::Data<'_>>() };
++
++        from_result(|| {
++            if nr_virtfn == 0 {
++                T::sriov_disable(pdev, data, SriovDisable { pdev })?;
++                if pdev.num_vf() != 0 {
++                    return Err(EBUSY);
++                }
++                Ok(0)
++            } else {
++                let num_vfs = u16::try_from(nr_virtfn).map_err(|_| EINVAL)?;
++                let enabled = T::sriov_enable(pdev, data, SriovEnable { pdev, num_vfs })?;
++                Ok(enabled.disarm().into())
++            }
++        })
++    }
++}
++
+ /// Wrapper for VF registration data stored inside a [`VfRegistration`].
+ ///
+ /// Stores a [`TypeId`] header (derived from `F`) followed by the pinned data,
 -- 
 2.53.0
 
