@@ -1,57 +1,58 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D45153FFD
-	for <linux-pci@vger.kernel.org>; Sun,  4 Oct 2026 05:03:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4B142AD35
+	for <linux-pci@vger.kernel.org>; Sun,  4 Oct 2026 05:30:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791090234; cv=none; b=UHTByclVIlj1qJwgx2nr12qDVUEi/zCl0Ruo5dazoLf373qCeXW2gfwyr2qZnWfp58spl86j/TQbL7De34WZOCg1l0f9oBAuMhxYFs4DEdKhdTsVHfuT2hJj+mFK03lmISAnrSLTEzRWWzl0kMedysE/UsG+MBX7A5F+8iogLvY=
+	t=1791091856; cv=none; b=QU1ExGAafh6L2QK8NS7DNeTNmxng+nr1Nw1rseJvOqS+JZnlRlXhQy9RfAKUbo3QKBETl9r7Ke/T1xrsJgizKLceerM8ILZEUdeNqEQHPgo9lw2cj+IzCnOX+kfVJUCTzkE4Dol4PTmpn4GlHrS3j6FnLb+ep/VZyW9wmxXZdBE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791090234; c=relaxed/simple;
-	bh=O/0SkGkJRbDUgNs70dqHmFxqMckQAW7A4cvR5sEeCV8=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=LXxysAwq8X6nNP2F/+9NxVx80sxdM2rs4sISfJ/H6WqPfL0gJ8dQmJaumX/2OfsksU+A9aY7OqmOR0VJDxYo1CJ9FCw/I2RNqL6+Z91bil21DJLhqwbH8ks2zpWxxytdXBUz6JobU7hIMZePt/U3uIT9HN8h9JHle5BXycwndN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FZemQkwR; arc=none smtp.client-ip=198.175.65.14
+	s=arc-20240116; t=1791091856; c=relaxed/simple;
+	bh=7Gb7MGKqBO+2KqqtILC8TFqZYMH+WPssjmPaUD16WyA=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=BsEBK6GQ4lQ4OMXUTJAAJ/6ccXiMc03ogolCIEbFUcqbsh0u3oqq9G608A8n1iDrC038Z4+5Q31dG3xa7/z1b5q1rfBYVSkzU2SKc/O2vn1fkmDjNK9XggWxxw+Xt1qFDdRHfSCN/Eypepfv4e4ecP9krqbwPubtlIPS+hr+29U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=O7u9j774; arc=none smtp.client-ip=192.198.163.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FZemQkwR"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="O7u9j774"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791090232; x=1822626232;
+  t=1791091853; x=1822627853;
   h=date:from:to:cc:subject:message-id;
-  bh=O/0SkGkJRbDUgNs70dqHmFxqMckQAW7A4cvR5sEeCV8=;
-  b=FZemQkwR6WAFYVa5libiecjhjZ76/hT30ErABFq+apZPblcBYVbO+pWh
-   2cYq3++Ri+E++aPO2VB/EpryL7F5IzrVxatGGiCO9fOr2oSvWN9Ibhki+
-   KI6NTXHAPRtfFX7XvD3JSXsEFlTzh2aywzBO9jM/vz0SufKMQEGU6jB3n
-   rjjkJdPLDe31CoVsgvuFEd3N3MVp57YC+yCbnHtlJl9PiSP2YiutFVKJp
-   Eww9LySXvSBPbE8Zo4naGCMM1KZ2P7NYIhCCLcQosJlg7KzyGZTUM8x8F
-   zRgMvEpXfnJ28jX8IFLLJdR2Jc3iVhdTUfU+vAcDokuR9IpHjg+q3xKDO
+  bh=7Gb7MGKqBO+2KqqtILC8TFqZYMH+WPssjmPaUD16WyA=;
+  b=O7u9j774VSiSXEgvzv1j/Z3OlszJT6UwbnB/e5QiCQf/xtHwG9UVY0tL
+   AGj9aHqky/KKpyk5Qn35rzb/Os1HCgdyEhC+z2julpuMMZk3IIUGJOfXf
+   A4vAiO7CI093ewHzFR6MyLJ7+g61gfpl/v82NHijw7KvxKZj9cF7/IsUJ
+   L8rgZKPCgQOjslEvcUsGWZGKqAk8tNcTwR6IgTC04d8VXKd8MBUAUZJvs
+   xHbZzo+eD1lh7lIAHAlLW3FtKTIduPESiB7sBCNRbvPncUcRl9k6F5MQK
+   7PZoxSY2THHsy66bA7CVhFRxMBa3UbMOK/VbjK/8UbtTLR3G94/n1OqRy
    A==;
-X-CSE-ConnectionGUID: n4JpeshbQ0CUvtYFL2fFWQ==
-X-CSE-MsgGUID: wwYCIPB2SkyMmZZh0w4IAw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11924"; a="94672071"
+X-CSE-ConnectionGUID: XqDCxRH4TmeE8tvKdAiJ0w==
+X-CSE-MsgGUID: RUtqahOnQTahDC44V9stJQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11924"; a="91660329"
 X-IronPort-AV: E=Sophos;i="6.27,138,1787036400"; 
-   d="scan'208";a="94672071"
-Received: from fmviesa011.fm.intel.com ([10.60.135.151])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Oct 2026 22:03:51 -0700
-X-CSE-ConnectionGUID: yC/XYUmYQqCdBv2IeCL9wQ==
-X-CSE-MsgGUID: GQUm3v60RpijKKGWeXhU9Q==
+   d="scan'208";a="91660329"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Oct 2026 22:30:52 -0700
+X-CSE-ConnectionGUID: 8P1PlRmISG+AVw07E3TW4g==
+X-CSE-MsgGUID: B34Vu2kRRe28CiFdtDIk9w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,138,1787036400"; 
-   d="scan'208";a="634165"
+   d="scan'208";a="276625771"
 Received: from lkp-server01.sh.intel.com (HELO 462990a40a85) ([10.239.97.150])
-  by fmviesa011.fm.intel.com with ESMTP; 03 Oct 2026 22:03:50 -0700
+  by orviesa009.jf.intel.com with ESMTP; 03 Oct 2026 22:30:50 -0700
 Received: from kbuild by 462990a40a85 with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1xDEO3-00000000UUt-16h5;
-	Sun, 04 Oct 2026 05:03:47 +0000
-Date: Sun, 04 Oct 2026 13:02:51 +0800
+	id 1xDEoC-00000000UVp-1rGP;
+	Sun, 04 Oct 2026 05:30:48 +0000
+Date: Sun, 04 Oct 2026 13:30:21 +0800
 From: kernel test robot <lkp@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:pwrctrl] BUILD SUCCESS
- d0103519d4fec56132f6d6f074ee04cd4af2627d
-Message-ID: <202610041348.YLMliWpU-lkp@intel.com>
+Cc: oe-kbuild-all@lists.linux.dev, linux-pci@vger.kernel.org
+Subject: [pci:next 20/29]
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c:307:37: error:
+ 'PCIE_PORT_LANE_SKEW' undeclared; did you mean 'PORT_LANE_SKEW'?
+Message-ID: <202610041359.Iv8zjxRh-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,285 +60,67 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git pwrctrl
-branch HEAD: d0103519d4fec56132f6d6f074ee04cd4af2627d  PCI/pwrctrl: generic: Fix leaking array from of_regulator_bulk_get_all()
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+head:   372b7a0d9c7c0cb724b259db9d39c785ad9dec74
+commit: 9bab7146bd9ef2700f42d705d8e01d7d95362d0f [20/29] Merge branch 'pci/controller/dwc-rcar-gen4'
+config: arm64-defconfig (https://download.01.org/0day-ci/archive/20261004/202610041359.Iv8zjxRh-lkp@intel.com/config)
+compiler: aarch64-linux-gcc (GCC) 16.1.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261004/202610041359.Iv8zjxRh-lkp@intel.com/reproduce)
 
-elapsed time: 1411m
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202610041359.Iv8zjxRh-lkp@intel.com/
 
-configs tested: 267
-configs skipped: 2
+All errors (new ones prefixed by >>):
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+   drivers/pci/controller/dwc/pcie-rcar-gen4.c: In function 'rcar_gen4_v4h_v4m_pcie_init':
+>> drivers/pci/controller/dwc/pcie-rcar-gen4.c:307:37: error: 'PCIE_PORT_LANE_SKEW' undeclared (first use in this function); did you mean 'PORT_LANE_SKEW'?
+     307 |         val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
+         |                                     ^~~~~~~~~~~~~~~~~~~
+         |                                     PORT_LANE_SKEW
+   drivers/pci/controller/dwc/pcie-rcar-gen4.c:307:37: note: each undeclared identifier is reported only once for each function it appears in
+   drivers/pci/controller/dwc/pcie-rcar-gen4.c: In function 'rcar_gen5_pcie_init':
+   drivers/pci/controller/dwc/pcie-rcar-gen4.c:338:37: error: 'PCIE_PORT_LANE_SKEW' undeclared (first use in this function); did you mean 'PORT_LANE_SKEW'?
+     338 |         val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
+         |                                     ^~~~~~~~~~~~~~~~~~~
+         |                                     PORT_LANE_SKEW
 
-tested configs:
-alpha                              allnoconfig    gcc-16.1.0
-alpha                             allyesconfig    gcc-16.1.0
-alpha                                defconfig    gcc-16.1.0
-arc                               alldefconfig    clang-24
-arc                               allmodconfig    clang-24
-arc                                allnoconfig    gcc-16.1.0
-arc                               allyesconfig    clang-24
-arc                                  defconfig    gcc-16.1.0
-arc                  nsimosci_hs_smp_defconfig    gcc-16.1.0
-arc                   randconfig-1000-20261003    clang-17
-arc                   randconfig-1000-20261004    clang-22
-arc                   randconfig-1001-20261003    clang-17
-arc                   randconfig-1001-20261004    clang-22
-arm                                allnoconfig    gcc-16.1.0
-arm                               allyesconfig    clang-24
-arm                           collie_defconfig    clang-24
-arm                                  defconfig    gcc-16.1.0
-arm                           ixp4xx_defconfig    clang-24
-arm                       jornada720_defconfig    clang-24
-arm                          nhk8815_defconfig    clang-24
-arm                              pxa_defconfig    clang-24
-arm                             qcom_defconfig    gcc-16.1.0
-arm                   randconfig-1000-20261003    clang-17
-arm                   randconfig-1000-20261004    clang-22
-arm                   randconfig-1001-20261003    clang-17
-arm                   randconfig-1001-20261004    clang-22
-arm                   randconfig-1002-20261003    clang-17
-arm                   randconfig-1002-20261004    clang-22
-arm                   randconfig-1003-20261003    clang-17
-arm                   randconfig-1003-20261004    clang-22
-arm                          s3c6400_defconfig    gcc-16.1.0
-arm                          socfpga_defconfig    clang-24
-arm                     vt8500_v6_v7_defconfig    gcc-16.1.0
-arm64                             allmodconfig    clang-24
-arm64                              allnoconfig    gcc-16.1.0
-arm64                                defconfig    gcc-16.1.0
-arm64                                defconfig    gcc-16.1.0
-arm64                 randconfig-1000-20261003    gcc-9.5.0
-arm64                 randconfig-1000-20261004    gcc-16.1.0
-arm64                 randconfig-1001-20261003    gcc-9.5.0
-arm64                 randconfig-1001-20261004    gcc-16.1.0
-arm64                 randconfig-1002-20261003    gcc-9.5.0
-arm64                 randconfig-1002-20261004    gcc-16.1.0
-arm64                 randconfig-1003-20261003    gcc-9.5.0
-arm64                 randconfig-1003-20261004    gcc-16.1.0
-csky                              allmodconfig    gcc-16.1.0
-csky                               allnoconfig    gcc-16.1.0
-csky                                 defconfig    gcc-16.1.0
-csky                  randconfig-1000-20261003    gcc-9.5.0
-csky                  randconfig-1000-20261004    gcc-16.1.0
-csky                  randconfig-1001-20261003    gcc-9.5.0
-csky                  randconfig-1001-20261004    gcc-16.1.0
-hexagon                           allmodconfig    gcc-16.1.0
-hexagon                            allnoconfig    gcc-16.1.0
-hexagon                              defconfig    gcc-16.1.0
-hexagon               randconfig-1000-20261003    gcc-16.1.0
-hexagon               randconfig-1000-20261004    gcc-16.1.0
-hexagon               randconfig-1001-20261003    gcc-16.1.0
-hexagon               randconfig-1001-20261004    gcc-16.1.0
-i386                              allmodconfig    clang-22
-i386                               allnoconfig    gcc-16.1.0
-i386                              allyesconfig    clang-22
-i386        buildonly-randconfig-1000-20261003    gcc-14
-i386        buildonly-randconfig-1000-20261004    clang-22
-i386        buildonly-randconfig-1001-20261003    gcc-14
-i386        buildonly-randconfig-1001-20261004    clang-22
-i386        buildonly-randconfig-1002-20261003    gcc-14
-i386        buildonly-randconfig-1002-20261004    clang-22
-i386        buildonly-randconfig-1003-20261003    gcc-14
-i386        buildonly-randconfig-1003-20261004    clang-22
-i386        buildonly-randconfig-1004-20261003    gcc-14
-i386        buildonly-randconfig-1004-20261004    clang-22
-i386        buildonly-randconfig-1005-20261003    gcc-14
-i386        buildonly-randconfig-1005-20261004    clang-22
-i386                                 defconfig    gcc-16.1.0
-i386                  randconfig-1000-20261003    gcc-14
-i386                  randconfig-1000-20261004    gcc-14
-i386                  randconfig-1001-20261003    gcc-14
-i386                  randconfig-1001-20261004    gcc-14
-i386                  randconfig-1002-20261003    gcc-14
-i386                  randconfig-1002-20261004    gcc-14
-i386                  randconfig-1003-20261003    gcc-14
-i386                  randconfig-1003-20261004    gcc-14
-i386                  randconfig-1004-20261003    gcc-14
-i386                  randconfig-1004-20261004    gcc-14
-i386                  randconfig-1005-20261003    gcc-14
-i386                  randconfig-1005-20261004    gcc-14
-i386                  randconfig-1006-20261003    gcc-14
-i386                  randconfig-1006-20261004    gcc-14
-i386                  randconfig-1007-20261003    gcc-14
-i386                  randconfig-1007-20261004    clang-22
-i386                  randconfig-1008-20261003    gcc-14
-i386                  randconfig-1008-20261004    clang-22
-i386                  randconfig-1009-20261003    gcc-14
-i386                  randconfig-1009-20261004    clang-22
-i386                  randconfig-1010-20261003    gcc-14
-i386                  randconfig-1010-20261004    clang-22
-i386                  randconfig-1011-20261003    gcc-14
-i386                  randconfig-1011-20261004    clang-22
-i386                  randconfig-1012-20261003    gcc-14
-i386                  randconfig-1012-20261004    clang-22
-i386                  randconfig-1013-20261003    gcc-14
-i386                  randconfig-1013-20261004    clang-22
-loongarch                         allmodconfig    clang-24
-loongarch                          allnoconfig    gcc-16.1.0
-loongarch                            defconfig    clang-24
-loongarch             randconfig-1000-20261003    gcc-16.1.0
-loongarch             randconfig-1000-20261004    gcc-16.1.0
-loongarch             randconfig-1001-20261003    gcc-16.1.0
-loongarch             randconfig-1001-20261004    gcc-16.1.0
-m68k                              allmodconfig    gcc-16.1.0
-m68k                               allnoconfig    gcc-16.1.0
-m68k                              allyesconfig    clang-24
-m68k                          apollo_defconfig    gcc-16.1.0
-m68k                                 defconfig    clang-24
-microblaze                         allnoconfig    gcc-16.1.0
-microblaze                        allyesconfig    gcc-16.1.0
-microblaze                           defconfig    clang-24
-mips                              allmodconfig    gcc-16.1.0
-mips                               allnoconfig    gcc-16.1.0
-mips                              allyesconfig    gcc-16.1.0
-mips                           eyeq6_defconfig    gcc-16.1.0
-mips                            ip32_defconfig    gcc-16.1.0
-mips                 malta_qemu_32r6_defconfig    gcc-16.1.0
-nios2                             allmodconfig    clang-20
-nios2                              allnoconfig    clang-24
-nios2                                defconfig    clang-24
-nios2                 randconfig-1000-20261003    gcc-16.1.0
-nios2                 randconfig-1000-20261004    gcc-16.1.0
-nios2                 randconfig-1001-20261003    gcc-16.1.0
-nios2                 randconfig-1001-20261004    gcc-16.1.0
-openrisc                          allmodconfig    clang-20
-openrisc                           allnoconfig    clang-24
-openrisc                             defconfig    gcc-16.1.0
-parisc                            allmodconfig    gcc-16.1.0
-parisc                             allnoconfig    clang-24
-parisc                            allyesconfig    clang-17
-parisc                               defconfig    gcc-16.1.0
-parisc                 generic-32bit_defconfig    gcc-16.1.0
-parisc                randconfig-1000-20261003    gcc-11.5.0
-parisc                randconfig-1000-20261004    gcc-12.5.0
-parisc                randconfig-1001-20261003    gcc-11.5.0
-parisc                randconfig-1001-20261004    gcc-12.5.0
-parisc64                          alldefconfig    gcc-16.1.0
-parisc64                             defconfig    clang-24
-powerpc                           allmodconfig    gcc-16.1.0
-powerpc                            allnoconfig    clang-24
-powerpc                      kmeter1_defconfig    gcc-16.1.0
-powerpc                      powernv_defconfig    clang-24
-powerpc               randconfig-1000-20261003    gcc-11.5.0
-powerpc               randconfig-1000-20261004    gcc-12.5.0
-powerpc               randconfig-1001-20261003    gcc-11.5.0
-powerpc               randconfig-1001-20261004    gcc-12.5.0
-powerpc64             randconfig-1000-20261003    gcc-11.5.0
-powerpc64             randconfig-1000-20261004    gcc-12.5.0
-powerpc64             randconfig-1001-20261003    gcc-11.5.0
-powerpc64             randconfig-1001-20261004    gcc-12.5.0
-riscv                             allmodconfig    clang-24
-riscv                              allnoconfig    clang-24
-riscv                             allyesconfig    clang-24
-riscv                                defconfig    gcc-16.1.0
-riscv                 randconfig-1000-20261003    gcc-12.5.0
-riscv                 randconfig-1000-20261004    gcc-11.5.0
-riscv                 randconfig-1001-20261003    gcc-12.5.0
-riscv                 randconfig-1001-20261004    gcc-11.5.0
-s390                              allmodconfig    clang-17
-s390                               allnoconfig    clang-24
-s390                              allyesconfig    gcc-16.1.0
-s390                                 defconfig    gcc-16.1.0
-s390                  randconfig-1000-20261003    gcc-12.5.0
-s390                  randconfig-1000-20261004    gcc-11.5.0
-s390                  randconfig-1001-20261003    gcc-12.5.0
-s390                  randconfig-1001-20261004    gcc-11.5.0
-sh                                allmodconfig    gcc-16.1.0
-sh                                 allnoconfig    clang-24
-sh                                allyesconfig    clang-17
-sh                                   defconfig    gcc-14
-sh                    randconfig-1000-20261003    gcc-12.5.0
-sh                    randconfig-1000-20261004    gcc-11.5.0
-sh                    randconfig-1001-20261003    gcc-12.5.0
-sh                    randconfig-1001-20261004    gcc-11.5.0
-sh                            se7724_defconfig    gcc-16.1.0
-sh                      sh7710voipgw_defconfig    gcc-16.1.0
-sh                         sh7785lcr_defconfig    gcc-16.1.0
-sparc                             alldefconfig    gcc-16.1.0
-sparc                              allnoconfig    clang-24
-sparc                                defconfig    gcc-16.1.0
-sparc                 randconfig-1000-20261003    clang-17
-sparc                 randconfig-1000-20261004    gcc-14
-sparc                 randconfig-1001-20261003    clang-17
-sparc                 randconfig-1001-20261004    gcc-14
-sparc64                           allmodconfig    clang-20
-sparc64                              defconfig    gcc-14
-sparc64               randconfig-1000-20261003    clang-17
-sparc64               randconfig-1000-20261004    gcc-14
-sparc64               randconfig-1001-20261003    clang-17
-sparc64               randconfig-1001-20261004    gcc-14
-um                                allmodconfig    clang-17
-um                                 allnoconfig    clang-24
-um                                allyesconfig    gcc-16.1.0
-um                                   defconfig    gcc-14
-um                              i386_defconfig    gcc-14
-um                    randconfig-1000-20261003    clang-17
-um                    randconfig-1000-20261004    gcc-14
-um                    randconfig-1001-20261003    clang-17
-um                    randconfig-1001-20261004    gcc-14
-um                            x86_64_defconfig    gcc-14
-x86_64                            allmodconfig    clang-22
-x86_64                             allnoconfig    clang-24
-x86_64                            allyesconfig    clang-22
-x86_64      buildonly-randconfig-1000-20261003    clang-22
-x86_64      buildonly-randconfig-1000-20261004    gcc-14
-x86_64      buildonly-randconfig-1001-20261003    clang-22
-x86_64      buildonly-randconfig-1001-20261004    gcc-14
-x86_64      buildonly-randconfig-1002-20261003    clang-22
-x86_64      buildonly-randconfig-1002-20261004    gcc-14
-x86_64      buildonly-randconfig-1003-20261003    clang-22
-x86_64      buildonly-randconfig-1003-20261004    gcc-14
-x86_64      buildonly-randconfig-1004-20261003    clang-22
-x86_64      buildonly-randconfig-1004-20261004    gcc-14
-x86_64      buildonly-randconfig-1005-20261003    clang-22
-x86_64      buildonly-randconfig-1005-20261004    gcc-14
-x86_64                               defconfig    gcc-14
-x86_64                                   kexec    clang-22
-x86_64                randconfig-1000-20261003    clang-22
-x86_64                randconfig-1000-20261004    gcc-14
-x86_64                randconfig-1001-20261003    clang-22
-x86_64                randconfig-1001-20261004    gcc-14
-x86_64                randconfig-1002-20261003    clang-22
-x86_64                randconfig-1002-20261004    gcc-14
-x86_64                randconfig-1003-20261003    clang-22
-x86_64                randconfig-1003-20261004    gcc-14
-x86_64                randconfig-1004-20261003    clang-22
-x86_64                randconfig-1004-20261004    gcc-14
-x86_64                randconfig-1005-20261003    clang-22
-x86_64                randconfig-1005-20261004    gcc-14
-x86_64                randconfig-1006-20261003    clang-22
-x86_64                randconfig-1006-20261004    clang-22
-x86_64                randconfig-1007-20261003    clang-22
-x86_64                randconfig-1007-20261004    clang-22
-x86_64                randconfig-1008-20261003    clang-22
-x86_64                randconfig-1008-20261004    clang-22
-x86_64                randconfig-1009-20261003    clang-22
-x86_64                randconfig-1009-20261004    clang-22
-x86_64                randconfig-1010-20261003    clang-22
-x86_64                randconfig-1010-20261004    clang-22
-x86_64                randconfig-1011-20261003    clang-22
-x86_64                randconfig-1011-20261004    clang-22
-x86_64                randconfig-1012-20261003    clang-22
-x86_64                randconfig-1013-20261003    clang-22
-x86_64                randconfig-1014-20261003    clang-22
-x86_64                randconfig-1015-20261003    clang-22
-x86_64                randconfig-1016-20261003    clang-22
-x86_64                randconfig-1017-20261003    clang-22
-x86_64                                rhel-9.4    clang-22
-x86_64                            rhel-9.4-bpf    gcc-14
-x86_64                           rhel-9.4-func    clang-22
-x86_64                     rhel-9.4-kselftests    clang-22
-x86_64                          rhel-9.4-kunit    gcc-14
-x86_64                            rhel-9.4-ltp    gcc-14
-x86_64                           rhel-9.4-rust    clang-22
-xtensa                             allnoconfig    clang-24
-xtensa                            allyesconfig    clang-20
-xtensa                randconfig-1000-20261003    clang-17
-xtensa                randconfig-1000-20261004    gcc-14
-xtensa                randconfig-1001-20261003    clang-17
-xtensa                randconfig-1001-20261004    gcc-14
+
+vim +307 drivers/pci/controller/dwc/pcie-rcar-gen4.c
+
+0d0c551011df45 Yoshihiro Shimoda 2023-10-18  294  
+eeeb72fab4a569 Marek Vasut       2026-09-21  295  static int rcar_gen4_v4h_v4m_pcie_init(struct rcar_gen4_pcie *rcar)
+eeeb72fab4a569 Marek Vasut       2026-09-21  296  {
+eeeb72fab4a569 Marek Vasut       2026-09-21  297  	struct dw_pcie *dw = &rcar->dw;
+eeeb72fab4a569 Marek Vasut       2026-09-21  298  	u32 val;
+eeeb72fab4a569 Marek Vasut       2026-09-21  299  	int ret;
+eeeb72fab4a569 Marek Vasut       2026-09-21  300  
+eeeb72fab4a569 Marek Vasut       2026-09-21  301  	/* R-Car Gen4 common initialization. */
+eeeb72fab4a569 Marek Vasut       2026-09-21  302  	ret = rcar_gen4_pcie_common_init(rcar);
+eeeb72fab4a569 Marek Vasut       2026-09-21  303  	if (ret)
+eeeb72fab4a569 Marek Vasut       2026-09-21  304  		return ret;
+eeeb72fab4a569 Marek Vasut       2026-09-21  305  
+eeeb72fab4a569 Marek Vasut       2026-09-21  306  	/* R-Car V4H and V4M specific additional initialization. */
+eeeb72fab4a569 Marek Vasut       2026-09-21 @307  	val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
+eeeb72fab4a569 Marek Vasut       2026-09-21  308  	val &= ~PORT_LANE_SKEW_INSERT_MASK;
+eeeb72fab4a569 Marek Vasut       2026-09-21  309  	if (dw->num_lanes < 4)
+eeeb72fab4a569 Marek Vasut       2026-09-21  310  		val |= BIT(6);
+eeeb72fab4a569 Marek Vasut       2026-09-21  311  	dw_pcie_writel_dbi(dw, PCIE_PORT_LANE_SKEW, val);
+eeeb72fab4a569 Marek Vasut       2026-09-21  312  
+eeeb72fab4a569 Marek Vasut       2026-09-21  313  	val = readl(rcar->base + PCIEPWRMNGCTRL);
+eeeb72fab4a569 Marek Vasut       2026-09-21  314  	val |= APP_CLK_REQ_N | APP_CLK_PM_EN;
+eeeb72fab4a569 Marek Vasut       2026-09-21  315  	writel(val, rcar->base + PCIEPWRMNGCTRL);
+eeeb72fab4a569 Marek Vasut       2026-09-21  316  
+eeeb72fab4a569 Marek Vasut       2026-09-21  317  	return 0;
+eeeb72fab4a569 Marek Vasut       2026-09-21  318  }
+eeeb72fab4a569 Marek Vasut       2026-09-21  319  
+
+:::::: The code at line 307 was first introduced by commit
+:::::: eeeb72fab4a569c1cc547c9bf220c808dd37f83d PCI: rcar-gen4: Rework .additional_common_init() into .init()
+
+:::::: TO: Marek Vasut <marek.vasut+renesas@mailbox.org>
+:::::: CC: Bjorn Helgaas <bhelgaas@google.com>
 
 --
 0-DAY CI Kernel Test Service
