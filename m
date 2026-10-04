@@ -1,140 +1,101 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E41A3C3F58;
-	Sun,  4 Oct 2026 16:15:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED4B73CFF7F;
+	Sun,  4 Oct 2026 16:50:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791130507; cv=none; b=vEvzs+i2WZjguwgqDg2Az/1zuhbsM7jZ/1l3P6ozonpoFXUUG2neOHd5ZeLYghkdj4mUyDe4S9Fq8Nn9WBTJPlUXUxI1f2ncvMVJ2UkTNxB5oeDxaZtW3ipS5QSiDT6OenGFTlSgSgWs6dPhAHnU0NzYaGf17kbhwBfSlWa80PQ=
+	t=1791132660; cv=none; b=lGAOEb+nfIHbsYvEgsgncHaqtAKFJWLB2KnUkrkh8vVjeJ3wrCV7VVVanhlWZSiKkkfzX1GbpKzbJ/mIDni7acRFrG/Yd2JA1OWTuj66E2K225p0sg8i3v1O7YrJqJsbORXBli5ZoQ8Tuh8KkF/VXgAmOtnYIzXexlofkqQ+9EA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791130507; c=relaxed/simple;
-	bh=/yGUGyC3n9bAKXHBC260Zvhh5Il0MXZUZkwKdT2YcHg=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PSc9pM7hnIaVS2SjgijsmsFxg6e7vkJnmj4K3/hHR/7dTT8yx2R/v/8E4schWFTnjMXercQZoKaS3dsc49ZrzaXbM25u1w3C35jcWrcbY9fjiCCgWVMs5g4IFRoLjZ0i5UjTIEALD3Yna3C1sTMIwkMR6vyV73y3zp4b9ovD4AE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UACW3ZXp; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791132660; c=relaxed/simple;
+	bh=JCidIUm3sRlD3jhIDoJa818+BU7UPZsl4HFTzapC/Og=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Sru5PUIRHj7CAfBFllR06b485AthESmPrsgdQIoWbcJTxMiX6AYFuzVV2QazV1d2irnUzDceSWPRfM26wpNDV47bzzG5wk7fJAS5esjLpAEJr5iL3sxeLgetO4HFmDyAtluMiERwrgRSb/FRm2AcXdcCkHXHLcSitVHZiQ/biWc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=haSH8Acg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UACW3ZXp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CFC21F000FF;
-	Sun,  4 Oct 2026 16:15:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="haSH8Acg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF3CC1F00893;
+	Sun,  4 Oct 2026 16:50:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791130505;
-	bh=xwilz9F0BDYfB9INM/Mvr1+p43J++RbCj0DvXe+hqfQ=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=UACW3ZXptEAw4xKmFMNeTan7/0xU3c7FM0fD+MbLrZF9gtl0SicNbm2UERQwkBVtr
-	 tzohNYjF1AjlooksDosn06J7QPYjMYTt7PfMjnbYv7nv4hjDr7N6YzV8CytN/KKTy6
-	 vBxdj+Db9pZ93tbyJiFC8zrmYku6GAPRzYe3J/U0EerafzbbARq8hWCdIR2uPzZN5e
-	 e3cmqzsI5u5oxiFnCWnfFSBnqlV0SFO+Xv7xps4XP2gUMg49WGxjDdYX60UC7OqHwB
-	 ClbEvKOHfO0KdkrmAUHMKXKbIux6o/x+PoEAsrYpplvrb3LOsgMyHVmAH7HHXyedEN
-	 /rVVb2Vqvf+bw==
-Date: Sun, 4 Oct 2026 17:14:59 +0100
-From: Jonathan Cameron <jic23@kernel.org>
-To: Donggeun Yoo <donggeunyoo.kernel@gmail.com>
-Cc: bhelgaas@google.com, alistair@alistair23.me, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v2] PCI/DOE: Fix double free of a duplicate feature's
- sysfs name
-Message-ID: <20261004171459.706c8e0d@jic23-hlaptop>
-In-Reply-To: <20261003102221.59894-1-donggeunyoo.kernel@gmail.com>
-References: <20261003102221.59894-1-donggeunyoo.kernel@gmail.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	s=k20260515; t=1791132658;
+	bh=LP2fMzrU0K8D7zvaOGjEP0wUd36Gy0Q43v1N1nD45Hk=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=haSH8Acg1QJNOZMgF+ewqo0gnPt34E2RXBCcsBvNhEw9QH7PFmJA9Ea0GPo7PZZGg
+	 PH5konCHCpj6esW6lh/gaEDccb+/zsISKmrH6I2Z8GVRdcSXCqE/rummn87cHwRZbu
+	 F9Bryn5C2povyRiuKjqqSle2fc0+9EBHqWPGSeS+eZwiRlcg/kYkWcUdlC4YiRW5Y0
+	 mLrWJ/yg7XAFFYNaeZzD7Mdjh8Cb1kvLudpD71Cj4qjZ0kbwaoNX8TCnpmnuyC9m2B
+	 znaheuZy8If/AkTOjQ88hWvyBNJvVv435bZMcggB3/VKeq5H/1MIjxr2RK4JhMAmcA
+	 mZBFkqX00Z9bg==
+From: Will Deacon <will@kernel.org>
+To: robin.murphy@arm.com,
+	Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Nicolin Chen <nicolinc@nvidia.com>
+Cc: catalin.marinas@arm.com,
+	mark.rutland@arm.com,
+	kernel-team@android.com,
+	Will Deacon <will@kernel.org>,
+	joro@8bytes.org,
+	bhelgaas@google.com,
+	praan@google.com,
+	kevin.tian@intel.com,
+	kees@kernel.org,
+	smostafa@google.com,
+	baolu.lu@linux.intel.com,
+	Jean-Philippe Brucker <jpb@kernel.org>,
+	Eric Auger <eric.auger@redhat.com>,
+	linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	skaestle@nvidia.com,
+	mmarrid@nvidia.com,
+	skolothumtho@nvidia.com,
+	bbiber@nvidia.com,
+	harsha.v@oss.qualcomm.com
+Subject: Re: [PATCH v5 00/15] iommu/arm-smmu-v3: Add PRI support
+Date: Sun,  4 Oct 2026 17:50:42 +0100
+Message-ID: <179112969067.2365011.2400275632382171863.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <cover.1789446520.git.nicolinc@nvidia.com>
+References: <cover.1789446520.git.nicolinc@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
-On Sat,  3 Oct 2026 19:22:21 +0900
-Donggeun Yoo <donggeunyoo.kernel@gmail.com> wrote:
-
-> When a DOE feature is reported twice, sysfs_add_file_to_group() fails
-> with -EEXIST for the second copy and pci_doe_sysfs_feature_populate()
-> frees that attribute's name, but leaves the pointer in place.
-> pci_doe_sysfs_feature_remove() frees every name again when the device
-> is removed, or when a later feature fails to register, so the name is
-> freed twice:
+On Tue, 15 Sep 2026 09:38:12 -0700, Nicolin Chen wrote:
+> The SMMUv3 driver doesn't handle events on the PRI queue or respond to IOPF
+> faults. This series adds the missing pieces, using the IOPF infrastructure,
+> to convert PRI page requests into iopf_faults and issue CMDQ_OP_PRI_RESP.
 > 
->   BUG: KASAN: double-free in pci_doe_sysfs_feature_remove+0x117/0x1b0
->   Call Trace:
->    kfree+0x11a/0x420
->    pci_doe_sysfs_feature_remove+0x117/0x1b0
->    pci_doe_sysfs_teardown+0x90/0xf0
->    pci_remove_bus_device+0x128/0x2e0
->    pci_stop_and_remove_bus_device_locked+0x1d/0x30
->    remove_store+0xd2/0xf0
+> The iopf_queue_flush_dev() contract requires the driver to first drain the
+> hardware PRI queue and synchronize using a threaded IRQ handler before the
+> IOPF software flush. This drove the additional commits compared to v1:
+>  - arm_smmu_wait_for_queue_drained() drains the hardware queue by counting
+>    the entries that the threaded IRQ handler consumes
+>  - arm_smmu_attach_release() moves the teardown outside the global lock
+>  - synchronize_irq() closes the gap before the final flush
 > 
-> Clear the pointer after freeing the name.
-> 
-> Fixes: 2311ab1820fe ("PCI/DOE: Expose DOE features via sysfs")
-> Cc: stable@vger.kernel.org
-> Suggested-by: Alistair Francis <alistair@alistair23.me>
-> Assisted-by: LLM
-> Signed-off-by: Donggeun Yoo <donggeunyoo.kernel@gmail.com>
+> [...]
 
-> ---
-> Changes in v2:
-> - Keep freeing the duplicate's name in pci_doe_sysfs_feature_populate()
->   and clear the pointer, instead of leaving it to
->   pci_doe_sysfs_feature_remove() (Alistair Francis)
-> 
-> v1: https://lore.kernel.org/all/20260928035035.252394-1-donggeunyoo.kernel@gmail.com/
-> 
-> Tested under QEMU (q35, cxl-type3, KASAN) on 72d3fcf802c4. The device
-> reports its CDAT feature once, so a test-only change either registers
-> its DOE capability as a second mailbox or inserts the feature N extra
-> times into one:
-> 
->   case                                   before           after
->   no duplicate, remove                   no report        no report
->   no duplicate, a name fails at probe    no report        no report
->   two mailboxes, remove                  double free      no report
+Applied first three to iommu (arm/smmu/updates), thanks!
 
-This one and related are valid cases that real hardware might well do.
+[01/15] iommu/arm-smmu-v3: Disable the impl before disabling the SMMU on shutdown
+        https://git.kernel.org/iommu/c/ab0dbf411ace
+[02/15] iommu/arm-smmu-v3: Add arm_smmu_attach_release()
+        https://git.kernel.org/iommu/c/580bbfcdcd2e
+[03/15] iommu/arm-smmu-v3: Add Q_POS() macro
+        https://git.kernel.org/iommu/c/02b5c4639bcd
 
->   two mailboxes, 3 remove/rescan cycles  3 double frees   no report
->   3 duplicates in one mailbox, remove    3 double frees   no report
->   2 duplicates, a later name fails,      2 double frees   no report
->     probed twice
-So this one is a hardware bug I think.  I guess maybe the DOE spec
-may not strictly say you can't do this (I'm on wrong computer
-so haven't checked) but it would be very odd.
+Cheers,
+-- 
+Will
 
-Overall I'm never keen on code that relies on an error path to smooth
-over a valid condition.  We can't deduplicate in the xarrays for the
-multimailbox case unless we do a combine of the xarrays and use
-that instead for the registration.
-
-That route would be a rather heavy weight fix though so I guess I don't mind
-this one that much.
-
-So argued myself around to this approach.
-Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
-
-
-
-
-> 
-> The doe_features listing is the same before and after in every case.
-> 
->  drivers/pci/doe.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
-> index ac95b1d2d9997..6b5d9ba8e9697 100644
-> --- a/drivers/pci/doe.c
-> +++ b/drivers/pci/doe.c
-> @@ -208,8 +208,9 @@ static int pci_doe_sysfs_feature_populate(struct pci_dev *pdev,
->  				pci_warn(pdev, "Failed adding %s to sysfs group\n",
->  					 attrs[i].attr.name);
->  				goto fail;
-> -			} else
-> -				kfree(attrs[i].attr.name);
-> +			}
-> +			kfree(attrs[i].attr.name);
-> +			attrs[i].attr.name = NULL;
->  		}
->  	}
->  
-
+https://fixes.arm64.dev
+https://next.arm64.dev
+https://will.arm64.dev
