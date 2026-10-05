@@ -1,138 +1,144 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F472414429;
-	Mon,  5 Oct 2026 23:27:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F0B8421259;
+	Mon,  5 Oct 2026 23:37:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791242864; cv=none; b=tWoR7xAmjnlzmorMpMtCuwAKjys5GYDbesli5bVDA0w836y62tm1YvFchz8OmASxe5czcQP292lRnWKYpqlcBJcPWImL6YO/IVKWD0OKEx1l8K7EUngNvFNczbRex1csWY6vS0SCiCJLpVrmLMtgEhUJYbsAmaYQw86N5wlW1kU=
+	t=1791243481; cv=none; b=dk2xq6pjw2/tEwj86itR0hVaz2zW9TS66O7Dx0TtuxItJcnD+GaAQk1LVIyXP3KCkc1pw9HCenGNbS/TQ9rGvw268k2xfjxI+hrmdpyAKiFTx5fHqy72jaBlfuFdCdYjmGYuKzrZMSQ7lgmyTSiscWtKw3uJ0LGwld8AtuWJw5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791242864; c=relaxed/simple;
-	bh=aqd8VHRPmQFr5U5I96XinvyJq20NLchrRFnsZ7zEQTw=;
+	s=arc-20240116; t=1791243481; c=relaxed/simple;
+	bh=wHhFpuZX54/313lqoel9OUyPQIGXxcFUhf5FAjdR2Qo=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=LStPNeXEynd1xRjdclrJivryQS6h13u1jOHf6NoVgWQnoNlAIpEOd60VZ+zn69lGRKqfXfLG16Xl+we2bf4QnXsNe6DgNIgNiPRjC9Xz0kV1wes/QeUvolshE0kWzRSMfbM2r5TZ2iIBnk/D9KwitS+HdNJhE+00nqtEr1nxi+k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ccLkwZLA; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=D9Xwui4rQHqPLu12IpigbNCVN6N/N4fq++CFnX6xZiL30J8NvyKMXU4fKfWKQTVdP4MC40HmR/42yAtccJ6NnI1EtLhebQTAdkhSTY5ApzAyoE0V0mKqvhhrbU9nr/3dW10fH8ZLbsnqolZgA397utASdbqnBY9mVnm7rgy1qOU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oVafL/jF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ccLkwZLA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1465D1F000FF;
-	Mon,  5 Oct 2026 23:27:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oVafL/jF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DF151F000FF;
+	Mon,  5 Oct 2026 23:37:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791242863;
-	bh=Hk4nSN1n4Iw0XZzBtZze8RtRb2pN/Wq0d66Aae2ZiSw=;
+	s=k20260515; t=1791243479;
+	bh=F9mj9hBOR4INL/J0dw4RHuFc+zlALPDdCwtt8rXEwx4=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=ccLkwZLA+vTQJQtDHAKltez1/rs2YjIt2DogLykXHRJR1+ec7JqgCf+/nT/X5vRHE
-	 s3uC9M/V0irEkuq+u6Zy1U8i1TfCnjP8WdmeDVBnTLvaIXPiPf2v8R1K0kdfOcQOth
-	 X6EXMeQn/GSoDCIouuh2Rdx1MACjFGq8WA41nshZIBXlOUFqz/wdHoO+L5rGQ06ywr
-	 c8L9mDwkIFkpdaQygCj5MXOvO0OJcwXOoBb26+HeYLlzovSV/fhlzeGf3YPV1bj1ZU
-	 5n7gl2JT1lLIX+Bvha1vznbLwH5U4GuoUl+lEwZOxs8SiL4FPTaC5CbahZ1PGsZj8M
-	 DLj31WvfBh0hA==
-Date: Mon, 5 Oct 2026 18:27:42 -0500
+	b=oVafL/jF7wbNV8UIs9FpvDi7Q24YuKgnGDwngw1i7TpMYQq6KjEomG+s21lza/nYs
+	 KfHiTikEFtwfozV0j3MOGC6NBGuz2dHMHXaw21Ae5dxHtmRxZtmJ2PHDFQpcRNT6nh
+	 Kja2MveAf51QPd7G+apbw2fajqK6FojV4WEUPzcM/pjeHRaCRASko1ELi2zMDvKSMQ
+	 I9r4oICbQVlzMQyRxvDHCO2Zns7d87s4zYo3HSyzPEbyoNtAF4MLRT2yZkab8QYm3L
+	 R+eXCOs71vZAgLtorZlk2w4zB22xuBfrWKkpZ9AGkPlF2zENaunLXZ8TsKLqXr3z20
+	 NlDDc1TapaLjA==
+Date: Mon, 5 Oct 2026 18:37:58 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Priyank Rathod <rathodpriyank@google.com>
-Cc: Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver O'Halloran <oohall@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
-	Stefan Roese <stefan.roese@mailbox.org>,
-	Keith Busch <kbusch@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI/AER: Fix struct pci_dev reference leak in
- aer_process_err_devices()
-Message-ID: <20261005232742.GA645076@bhelgaas>
+To: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Cc: linux-pci@vger.kernel.org,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH] PCI: rcar-host: Validate IO/MEM resource count in DT
+ ranges property
+Message-ID: <20261005233758.GA646371@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260918-fix-aer-refcount-leak-v2-1-bdd1ff1c35a9@google.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261003073701.354551-1-marek.vasut+renesas@mailbox.org>
 
-On Fri, Sep 18, 2026 at 05:24:48PM +0000, Priyank Rathod wrote:
-> When an AER error occurs, candidate error-source devices are added to
-> e_info->dev[] by add_error_device(), which takes a reference with
-> pci_dev_get().
+On Sat, Oct 03, 2026 at 09:35:59AM +0200, Marek Vasut wrote:
+> The R-Car Gen3 PCIEC controller supports up to 4 memory area mappings.
+> Count the IO and MEM ranges described in DT 'ranges' property of the
+> controller DT node, and in case there are more than 4, refuse to probe
+> the controller driver, because such DT does not describe valid hardware
+> configuration. Do the IO and MEM counting early to avoid controller
+> configuration rollback in case of failure.
 > 
-> A device can be recorded without any error status being present: the
-> Requester ID fast path in is_error_source(),
-> 
-> 	if (e_info->id == pci_dev_id(dev))
-> 		return true;
-> 
-> matches purely on the ID reported by the Root Port and returns true
-> without reading the device's AER status registers.
-> 
-> In aer_process_err_devices(), handle_error_source() is called only if
-> aer_get_device_error_info() returns non-zero, i.e. only if an unmasked
-> error status bit is actually set. It returns 0 if the device has become
-> inaccessible (status and mask both read as all ones, so
-> status & ~mask == 0) or if no unmasked status bit is set.
-> 
-> Because handle_error_source() was responsible for calling pci_dev_put(),
-> skipping it permanently leaks the reference taken in add_error_device().
-> 
-> Decouple reference lifetime from error handling by moving pci_dev_put()
-> out of handle_error_source() and into the aer_process_err_devices() loop,
-> so every recorded device is put exactly once.
-> 
-> handle_error_source() is static and aer_process_err_devices() is its only
-> caller, so no other path is affected.
-> 
-> Fixes: 60271ab044a5 ("PCI/AER: Take reference on error devices")
-> Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
-
-Applied to pci/aer for v7.4, thanks!
-
+> Fixes: 5d2917d469fa ("PCI: rcar: Convert to DT resource parsing API")
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 > ---
-> Changes in v2:
-> - Corrected Fixes tag from 1ab4a3c80508 to 60271ab044a5 ("PCI/AER: Take
->   reference on error devices"), which added both the pci_dev_get() in
->   add_error_device() and the conditionally-reached pci_dev_put() in
->   handle_error_source(). Thanks to Lukas Wunner for catching this.
-> - Removed the speculative topology list from the commit message. As Lukas
->   pointed out, error reporting is not enabled on devices without an AER
->   capability (pcie_aer_is_native() bails on !dev->aer_cap), so the
->   dev->aer_cap == 0 reasoning was wrong and is gone.
-> - Explained instead why a device with no error status can be present in
->   e_info->dev[]: the Requester ID fast path in is_error_source() matches
->   on e_info->id alone, without reading any AER status register.
-> - Added a Fixes tag; the imbalance dates back to v4.20. I have not added
->   Cc: stable, since you indicated the path is an unlikely corner case -
->   happy to add it if you think it is warranted.
-> - Cc: Keith Busch and Sinan Kaya, author and reviewer of 60271ab044a5.
-> - Rebased onto v7.3-rc3+ (f259f446f519); applies cleanly to pci/next as well.
-> - Link to v1: https://lore.kernel.org/r/20260830-fix-aer-refcount-leak-v1-1-64e1013add12@google.com
+> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+> Cc: Magnus Damm <magnus.damm@gmail.com>
+> Cc: Manivannan Sadhasivam <mani@kernel.org>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-renesas-soc@vger.kernel.org
 > ---
->  drivers/pci/pcie/aer.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/pci/controller/pcie-rcar-host.c | 31 +++++++++++++++++++++++++
+>  1 file changed, 31 insertions(+)
 > 
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index d8dcd238fda1..bc761410d56d 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -1340,7 +1340,6 @@ static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
+> diff --git a/drivers/pci/controller/pcie-rcar-host.c b/drivers/pci/controller/pcie-rcar-host.c
+> index cd9171eebc289..4bcc8c3051ac4 100644
+> --- a/drivers/pci/controller/pcie-rcar-host.c
+> +++ b/drivers/pci/controller/pcie-rcar-host.c
+> @@ -341,6 +341,32 @@ static void rcar_pcie_force_speedup(struct rcar_pcie *pcie)
+>  		 (macsr & LINK_SPEED) == LINK_SPEED_5_0GTS ? "5" : "2.5");
+>  }
+>  
+> +static int rcar_pcie_validate_resource_count(struct rcar_pcie_host *host)
+> +{
+> +	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
+> +	struct rcar_pcie *pcie = &host->pcie;
+> +	struct resource_entry *win;
+> +	int i = 0;
+> +
+> +	resource_list_for_each_entry(win, &bridge->windows) {
+> +		struct resource *res = win->res;
+> +		unsigned long type = resource_type(res);
+> +
+> +		if (!res->flags)
+> +			continue;
+> +
+> +		if (type == IORESOURCE_IO || type == IORESOURCE_MEM)
+> +			i++;
+> +
+> +		if (i > RCAR_PCI_MAX_RESOURCES)
+> +			return dev_err_probe(pcie->dev, -ENOSPC,
+> +					     "Too many IO/MEM entries in DT 'ranges' property, limit is %d\n",
+> +					     RCAR_PCI_MAX_RESOURCES);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static void rcar_pcie_hw_enable(struct rcar_pcie_host *host)
 >  {
->  	cxl_rch_handle_error(dev, info);
->  	pci_aer_handle_error(dev, info);
-> -	pci_dev_put(dev);
->  }
+>  	struct rcar_pcie *pcie = &host->pcie;
+> @@ -947,6 +973,11 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>  	host = pci_host_bridge_priv(bridge);
+>  	pcie = &host->pcie;
+>  	pcie->dev = dev;
+> +
+> +	err = rcar_pcie_validate_resource_count(host);
+> +	if (err)
+> +		return err;
+
+I guess you did this here to avoid rolling back controller config, but
+the code would be a lot more readable if it checked the index at the
+point where it might exceed the array bound, e.g., (I think) in
+rcar_pcie_set_outbound().
+
+This is for an invalid DT, which is unlikely.  What if
+rcar_pcie_set_outbound() just printed a warning and ignored any excess
+windows?
+
+>  	platform_set_drvdata(pdev, host);
 >  
->  #ifdef CONFIG_ACPI_APEI_PCIEAER
-> @@ -1518,6 +1517,7 @@ static inline void aer_process_err_devices(struct aer_err_info *e_info)
->  	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
->  		if (aer_get_device_error_info(e_info, i))
->  			handle_error_source(e_info->dev[i], e_info);
-> +		pci_dev_put(e_info->dev[i]);
->  	}
->  }
->  
-> 
-> ---
-> base-commit: a077be4fde21ee6e751fa70eb641ef5d9bf2fc48
-> change-id: 20260830-fix-aer-refcount-leak-6378f84d62ba
-> 
-> Best regards,
+>  	for (i = 0; i < ARRAY_SIZE(rcar_pcie_supplies); i++) {
 > -- 
-> Priyank Rathod <rathodpriyank@google.com>
+> 2.53.0
 > 
