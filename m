@@ -1,118 +1,451 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail.mainlining.org (mail.mainlining.org [5.75.144.95])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D62E44C66A
-	for <linux-pci@vger.kernel.org>; Mon,  5 Oct 2026 11:07:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D0C14779AA;
+	Mon,  5 Oct 2026 11:18:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.75.144.95
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791198463; cv=none; b=VIg0S6uuj0/i2OhSowpBxeeSLhMY9pEDGV3S46CpyQTr6aHRWZagrjTihI6ZeKzsI6eLOueNHRtG+xg4rNzFz76nxODqWwn5RXUyBjpg2OypGiWgzx3xVNlnAmcUaDEyykzSVTTX1gZ9/rUr+0G1Olj66KZQvKz+cnVvZ4YLJPk=
+	t=1791199120; cv=none; b=N+ZukQvRO54qWX1RWze2igcO2KcxDEYU/hwgvMHhOQTTqqAXTMVnHmdIfP4BPuod87IU+oPPRLMxWLvomBMOmIEit8d6wuhct5TKxDp4YpwSADLVn5uMXz/5ZguitLUrmsOUWu1yZPmHjdDgGQv4Uf6153vSju0pFNmlww4SdLE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791198463; c=relaxed/simple;
-	bh=IRUuvaYY8t3wppiIM8W20lZkN+NOuEMbqlB5qyPJ7tI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=juoEQIeVMIta8cFggwtXvA6oLcVzRxlGdnotVBk464InHZ6yYjb0a0Y3z/dwIcj58BUa/nYm9gg+2F6In7JVnju6E40hx6jy6qRQJVue41FlojybG2Q8A4NgOth/9x92WSa57HhqyqKUKmImvESnI/myAVRFQq6mV2afZ8yiER4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SkECahpq; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791199120; c=relaxed/simple;
+	bh=8IUrosC6W/xobqKOSM43nQ6GGRlHLOM590t73UTw3kQ=;
+	h=Date:From:To:CC:Subject:In-Reply-To:Message-ID:MIME-Version:
+	 Content-Type; b=GZKpXgiJmWlnq3kMYg5S95bg76Hr7Bf5MH1W0po0m7hoDdxurnBPNXtG6J93b3YG0/rGOnli+0meiKOiY20pBOy4BHZU3vI0rSiMuP9spVLyrd5YthShrGxlXlpTqkereqaJz7TmHLfVL8HXpC65mMEtnm6OpLCSyu7LXO4yKhk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mainlining.org; spf=pass smtp.mailfrom=mainlining.org; dkim=pass (2048-bit key) header.d=mainlining.org header.i=@mainlining.org header.b=r9gUI9KX; dkim=permerror (0-bit key) header.d=mainlining.org header.i=@mainlining.org header.b=/nyhSE7B; arc=none smtp.client-ip=5.75.144.95
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mainlining.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mainlining.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SkECahpq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D53A31F00893;
-	Mon,  5 Oct 2026 11:07:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791198462;
-	bh=ShkZQcIw9+oQ9g4ADqDRwdH5QLOfr6Wsa63P2aaNwus=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SkECahpqri5fRBo/iEQs87CPJRF3dNOiBlfXqKTO6Tqd4bzPbrpyfmnQJVc/Lf1D/
-	 WIiTWR6Nl5TzNYxxD+5AaWkRG+vvgrEkBIKi/MiUTO38DkMZrkUdws42iRjEw4ul1+
-	 sba5c0BUac0l1FtoQX1xBIaimaEVw6SlYPz+W0ROQvfR7DTjPeWX7N6pp9zwFSDpRI
-	 O9d58HxVq0ROoC9zv+e8/6m/rUe76DM+wGWGCoerJLQgwgEN9Jd2zsL9UGPyUKCYjd
-	 Ysk8m3UG3fZfN10SGJ8J0zjye/4RAhHV39ouIZaKoYmTfOjCrCldwXO846X7Ac6fKU
-	 B3AmGY9XVL84g==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v15 1/2] PCI: Add device-specific reset for Qualcomm
- SDX62/SDX65 modems
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261005105436.83962-2-jtornosm@redhat.com>
-References: <20261005105436.83962-1-jtornosm@redhat.com>
- <20261005105436.83962-2-jtornosm@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 05 Oct 2026 11:07:41 +0000
-Message-Id: <20261005110741.D53A31F00893@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=mainlining.org header.i=@mainlining.org header.b="r9gUI9KX";
+	dkim=permerror (0-bit key) header.d=mainlining.org header.i=@mainlining.org header.b="/nyhSE7B"
+DKIM-Signature: v=1; a=rsa-sha256; s=202507r; d=mainlining.org; c=relaxed/relaxed;
+	h=Message-ID:Subject:To:From:Date; t=1791199069; bh=VG7SijGObD/mat/VETltwvm
+	0Dx4PXid4IbEr+4FUyqI=; b=r9gUI9KX2eL/TJVGF6WsGdcg/iaTiFZHq6ag42CNAbYTvuwXSb
+	TtmgWJjGZCecv1w9c2Uw1BUqno1Eh4J2fWtltVlxw7mxNm2d2uqlorES4BjmWUv5G73nWnn7vkr
+	HWT6VnbBZRCRKJm8tl5V2WpbAiy7W9NkJPtt/pdcYJ4+dqZxFyYddPOcQgAHG8xlFdwCN6fKuKj
+	IRY7W07+jitQhvAgGDYhxd3L95ad119qQzRkwjv0QZ5woKFHdeqh/HZaLZZRTYSicjlO/IpLzxH
+	k/JmYwAllcYOVNeW2xDp/vRF3NtUITF1rnktV+FsySt29tf54/SNYctecDiSoNLDJzg==;
+DKIM-Signature: v=1; a=ed25519-sha256; s=202507e; d=mainlining.org; c=relaxed/relaxed;
+	h=Message-ID:Subject:To:From:Date; t=1791199069; bh=VG7SijGObD/mat/VETltwvm
+	0Dx4PXid4IbEr+4FUyqI=; b=/nyhSE7B0ZhVRn6DBgUhbKCZMAqNUSBYtdzNE6VHZh7MCJwVwd
+	q9sQUBPwyC5dyO/9G2XhS5wD5LxfPptTtfAQ==;
+Date: Mon, 05 Oct 2026 12:17:49 +0100
+From: Bradley Morgan <brads@mainlining.org>
+To: ankita@nvidia.com
+CC: Smita.KoralahalliChannabasappa@amd.com, aik@amd.com,
+ alison.schofield@intel.com, andriy.shevchenko@linux.intel.com,
+ aneesh.kumar@kernel.org, bhelgaas@google.com, dave.jiang@intel.com,
+ dave@stgolabs.net, icheng@nvidia.com, ilpo.jarvinen@linux.intel.com,
+ iweiny@kernel.org, jgg@nvidia.com, jic23@kernel.org,
+ linux-coco@lists.linux.dev, linux-cxl@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ ming.li@zohomail.com, smadhavan@nvidia.com, vishal.l.verma@intel.com,
+ yilun.xu@linux.intel.com
+Subject: Re: [RFC PATCH 1/4] PCI/TSM: Create MMIO descriptors via TDISP Report
+In-Reply-To: <20261005070252.84810-2-ankita@nvidia.com>
+Message-ID: <317D506F-8079-4776-8EBC-2BA1A7535BC9@mainlining.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] pci: restoring PCI_COMMAND enables memory decode with 0-initialize=
-d BARs
---
+On 5 October 2026 08:02:49 BST, Ankit Agrawal <ankita@nvidia.com> wrote:
+>After pci_tsm_bind() and pci_tsm_lock() the low level TSM driver is
+>expected to populate the TDISP GET_DEVICE_INTERFACE_REPORT response
+>payload for the device.
+>
+>Add pci_tsm_mmio_alloc()/pci_tsm_mmio_free() to parse that report into
+>a set of encrypted MMIO ranges, and pci_tsm_mmio_setup()/
+>pci_tsm_mmio_teardown() to mark those ranges as encrypted in iomem via
+>a new encrypted_iomem_resource tree (IORES_DESC_ENCRYPTED). With those
+>descriptors the TSM driver can use pci_tsm_mmio_setup() to inform
+>ioremap() how to map the device per the device expectations. The VM
+>is expected to validate the interface with the relying party before
+>accepting the device for operation.
+>
+>pci_tsm_mmio_alloc() also recovers the obfuscated starting address for
+>each encrypted MMIO range, since the VM is never disclosed the HPA
+>that correlates to the GPA of the device's MMIO. The obfuscated
+>address is BAR aligned.
+>
+>Based on an original patch by Aneesh Kumar K.V [1], and cherry-picked
+>from Dan Williams' upstream commit [2]. Major functional differences
+>from Dan's posting is due to the lack of evidence-store infrastructure
+>yet (device_evidence / DEVICE_EVIDENCE_TYPE_REPORT). The
+>pci_tsm_mmio_alloc() takes the raw report bytes directly from the caller
+>instead of pulling them from a device evidence store.
+>
+>Link: https://lore.kernel.org/linux-coco/20251117140007.122062-8-aneesh.kumar@kernel.org/ [1]
+>Link: https://lore.kernel.org/all/20260705220819.2472765-15-djbw@kernel.org/ [2]
 
-commit 760a69f51b8830cd55e316a784f0c3e65a321b72
-Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+LGTM from a kernel/resource.c standpoint:
 
-PCI: Add device-specific reset for Qualcomm SDX62/SDX65 modems
+Reviewed-by: Bradley Morgan <brads@mainlining.org> # kernel/
 
-This commit introduces a device-specific hardware reset mechanism for Qualc=
-omm=20
-SDX62/SDX65 modems. It uses a sequence of writes to BAR0 MHI SoC reset=20
-registers to properly initialize the devices for VFIO passthrough.
 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index de9bbccda21fd..e72af7d2c7755 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-[ ... ]
-> @@ -4230,6 +4230,45 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev=
-, bool probe)
-[ ... ]
-> +static int reset_qualcomm_modem(struct pci_dev *pdev, bool probe)
-> +{
-> +	void __iomem *bar;
-> +	u16 cmd;
-> +
-> +	if (probe)
-> +		return 0;
-> +
-> +	if (pdev->current_state !=3D PCI_D0)
-> +		return -EINVAL;
-> +
-> +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> +	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
-> +
-> +	bar =3D pci_iomap(pdev, 0, 0);
-> +	if (!bar) {
-> +		pci_write_config_word(pdev, PCI_COMMAND, cmd);
-> +		return -ENODEV;
-> +	}
-> +
-> +	iowrite32(MHI_SOC_RESET_REQ, bar + MHI_SOC_RESET_REQ_OFFSET);
-> +	ioread32(bar + MHI_SOC_RESET_REQ_OFFSET);
-> +
-> +	/* Be sure device reset has been executed */
-> +	msleep(2000);
-> +
-> +	pci_iounmap(pdev, bar);
-> +	pci_write_config_word(pdev, PCI_COMMAND, cmd);
+>
+>Signed-off-by: Ankit Agrawal <ankita@nvidia.com>
+>Assisted-by: Claude:sonnet-5
+>---
+> drivers/pci/tsm.c       | 236 ++++++++++++++++++++++++++++++++++++++++
+> include/linux/ioport.h  |   2 +
+> include/linux/pci-tsm.h |  33 ++++++
+> kernel/resource.c       |   8 ++
+> 4 files changed, 279 insertions(+)
+>
+>diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
+>index 5fdcd7f2e820..c8cfe89b6224 100644
+>--- a/drivers/pci/tsm.c
+>+++ b/drivers/pci/tsm.c
+>@@ -9,11 +9,16 @@
+> #define dev_fmt(fmt) "PCI/TSM: " fmt
+> 
+> #include <linux/bitfield.h>
+>+#include <linux/overflow.h>
+> #include <linux/pci.h>
+> #include <linux/pci-doe.h>
+> #include <linux/pci-tsm.h>
+>+#include <linux/range.h>
+>+#include <linux/sizes.h>
+>+#include <linux/slab.h>
+> #include <linux/sysfs.h>
+> #include <linux/tsm.h>
+>+#include <linux/unaligned.h>
+> #include <linux/xarray.h>
+> #include "pci.h"
+> 
+>@@ -898,3 +903,234 @@ int pci_tsm_doe_transfer(struct pci_dev *pdev, u8 type, const void *req,
+> 		       resp, resp_sz);
+> }
+> EXPORT_SYMBOL_GPL(pci_tsm_doe_transfer);
+>+
+>+static void mmio_teardown(struct pci_tsm_mmio *mmio, int nr)
+>+{
+>+	while (nr--) {
+>+		struct resource *res = pci_tsm_mmio_resource(mmio, nr);
+>+
+>+		/*
+>+		 * Entries past the point where pci_tsm_mmio_setup() stopped
+>+		 * (or that were never run through setup() at all, e.g. a
+>+		 * caller that only wants the resolved range from
+>+		 * pci_tsm_mmio_alloc()) were never insert_resource()'d, so
+>+		 * res->parent is NULL. remove_resource() dereferences
+>+		 * res->parent unconditionally.
+>+		 */
+>+		if (res->parent)
+>+			remove_resource(res);
+>+	}
+>+}
+>+
+>+/**
+>+ * pci_tsm_mmio_setup() - mark device MMIO as encrypted in iomem
+>+ * @pdev: device owner of MMIO resources
+>+ * @mmio: container of an array of resources to mark encrypted
+>+ */
+>+int pci_tsm_mmio_setup(struct pci_dev *pdev, struct pci_tsm_mmio *mmio)
+>+{
+>+	int i;
+>+
+>+	device_lock_assert(&pdev->dev);
+>+	if (pdev->dev.driver)
+>+		return -EBUSY;
+>+
+>+	for (i = 0; i < mmio->nr; i++) {
+>+		struct resource *res = pci_tsm_mmio_resource(mmio, i);
+>+		int j;
+>+
+>+		if (resource_size(res) == 0 || !(res->flags & IORESOURCE_MEM))
+>+			break;
+>+
+>+		/* Only require the caller to set the range, init remainder */
+>+		*res = DEFINE_RES_NAMED_DESC(res->start, resource_size(res),
+>+					     pci_name(pdev), IORESOURCE_MEM,
+>+					     IORES_DESC_ENCRYPTED);
+>+
+>+		for (j = 0; j < PCI_NUM_RESOURCES; j++)
+>+			if (resource_contains(pci_resource_n(pdev, j), res))
+>+				break;
+>+
+>+		/* Request is outside of device MMIO */
+>+		if (j >= PCI_NUM_RESOURCES)
+>+			break;
+>+
+>+		if (insert_resource(&encrypted_iomem_resource, res) != 0)
+>+			break;
+>+	}
+>+
+>+	if (i >= mmio->nr)
+>+		return 0;
+>+
+>+	mmio_teardown(mmio, i);
+>+
+>+	return -EINVAL;
+>+}
+>+EXPORT_SYMBOL_GPL(pci_tsm_mmio_setup);
+>+
+>+void pci_tsm_mmio_teardown(struct pci_tsm_mmio *mmio)
+>+{
+>+	mmio_teardown(mmio, mmio->nr);
+>+}
+>+EXPORT_SYMBOL_GPL(pci_tsm_mmio_teardown);
+>+
+>+/*
+>+ * PCIe ECN TEE Device Interface Security Protocol (TDISP)
+>+ *
+>+ * Device Interface Report data object layout as defined by PCIe r7.0 section
+>+ * 11.3.11
+>+ */
+>+#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_TABLE BIT(0)
+>+#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_PBA BIT(1)
+>+#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_NON_TEE BIT(2)
+>+#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_UPDATABLE BIT(3)
+>+#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_RANGE_ID GENMASK(31, 16)
+>+
+>+/* An interface report 'pfn' is 4K in size */
+>+struct pci_tsm_devif_mmio {
+>+	__le64 phys;
+>+	__le32 nr_pfns;
+>+	__le32 attributes;
+>+};
+>+
+>+struct pci_tsm_devif_report {
+>+	__le16 interface_info;
+>+	__le16 reserved;
+>+	__le16 msi_x_message_control;
+>+	__le16 lnr_control;
+>+	__le32 tph_control;
+>+	__le32 mmio_range_count;
+>+	struct pci_tsm_devif_mmio mmio[];
+>+};
+>+
+>+/**
+>+ * pci_tsm_mmio_alloc() - allocate encrypted MMIO range descriptor
+>+ * @pdev: device owner of MMIO ranges
+>+ * @report: raw TDISP Device Interface Report bytes (PCIe r7.0 section
+>+ *	    11.3.11), e.g. as returned by GET_DEVICE_INTERFACE_REPORT
+>+ * @report_len: length of @report in bytes
+>+ *
+>+ * Return: the encrypted MMIO range descriptor on success, NULL on failure
+>+ *
+>+ * Unlike upstream, @report is supplied directly by the caller rather than
+>+ * pulled from a device evidence store, which this tree does not yet have.
+>+ */
+>+struct pci_tsm_mmio *pci_tsm_mmio_alloc(struct pci_dev *pdev,
+>+					const void *report, size_t report_len)
+>+{
+>+	const struct pci_tsm_devif_report *devif_report = report;
+>+	u64 reporting_bar_base, last_reporting_end;
+>+	u32 mmio_range_count;
+>+	int last_bar = -1;
+>+	int i;
+>+
+>+	if (report_len < sizeof(*devif_report))
+>+		return NULL;
+>+
+>+	mmio_range_count = __le32_to_cpu(devif_report->mmio_range_count);
+>+
+>+	/* check that the report is self-consistent on mmio entries */
+>+	if (report_len < struct_size(devif_report, mmio, mmio_range_count))
+>+		return NULL;
+>+
+>+	/* create pci_tsm_mmio descriptors from the report data */
+>+	struct pci_tsm_mmio *mmio __free(kfree) =
+>+		kzalloc_flex(*mmio, mmio, mmio_range_count);
+>+	if (!mmio)
+>+		return NULL;
+>+
+>+	for (i = 0; i < mmio_range_count; i++) {
+>+		u64 range_off;
+>+		struct range range;
+>+		const struct pci_tsm_devif_mmio *mmio_data = &devif_report->mmio[i];
+>+		struct pci_tsm_mmio_entry *entry =
+>+			pci_tsm_mmio_entry(mmio, mmio->nr);
+>+		u64 tsm_offset = __le64_to_cpu(mmio_data->phys);
+>+		u64 size = (u64)__le32_to_cpu(mmio_data->nr_pfns) * SZ_4K;
+>+		u32 attr = __le32_to_cpu(mmio_data->attributes);
+>+		int bar = FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_RANGE_ID,
+>+				    attr);
+>+
+>+		if (bar >= PCI_STD_NUM_BARS ||
+>+		    !(pci_resource_flags(pdev, bar) & IORESOURCE_MEM) ||
+>+		    (pci_resource_flags(pdev, bar) & IORESOURCE_UNSET)) {
+>+			pci_dbg(pdev, "Invalid reporting bar ID %d\n", bar);
+>+			return NULL;
+>+		}
+>+
+>+		if (last_bar > bar) {
+>+			pci_dbg(pdev, "Reporting bar ID not in ascending order\n");
+>+			return NULL;
+>+		}
+>+
+>+		if (last_bar < bar) {
+>+			resource_size_t mask = pci_resource_len(pdev, bar) - 1;
+>+
+>+			/* Transition to a new bar */
+>+			last_bar = bar;
+>+
+>+			/*
+>+			 * Determine the obfuscated base of the BAR. BAR
+>+			 * offsets are never obfuscated.
+>+			 */
+>+			reporting_bar_base = tsm_offset & ~mask;
+>+		} else if (tsm_offset < last_reporting_end) {
+>+			pci_dbg(pdev, "Reporting ranges within BAR not in ascending order\n");
+>+			return NULL;
+>+		}
+>+
+>+		/* Per spec the tsm_offset never results in overflow / underflow */
+>+		last_reporting_end = tsm_offset + size;
+>+		if (last_reporting_end < tsm_offset) {
+>+			pci_dbg(pdev, "Reporting range overflow\n");
+>+			return NULL;
+>+		}
+>+
+>+		range_off = tsm_offset - reporting_bar_base;
+>+		if (pci_resource_len(pdev, bar) < range_off + size) {
+>+			pci_dbg(pdev, "Reporting range larger than BAR size\n");
+>+			return NULL;
+>+		}
+>+
+>+		range.start = pci_resource_start(pdev, bar) + range_off;
+>+		range.end = range.start + size - 1;
+>+
+>+		/* Only record the TEE ranges for later consideration by ioremap() */
+>+		if (FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_NON_TEE,
+>+			      attr)) {
+>+			pci_dbg(pdev, "Skipping non-TEE range, BAR%d %pra\n",
+>+				bar, &range);
+>+			continue;
+>+		}
+>+
+>+		entry->res.start = range.start;
+>+		entry->res.end = range.end;
+>+		entry->res.flags = IORESOURCE_MEM;
+>+		entry->tsm_offset = tsm_offset;
+>+		mmio->nr++;
+>+	}
+>+
+>+	return_ptr(mmio);
+>+}
+>+EXPORT_SYMBOL_GPL(pci_tsm_mmio_alloc);
+>+
+>+/**
+>+ * pci_tsm_mmio_free() - free a pci_tsm_mmio instance
+>+ * @pdev: device owner of MMIO ranges
+>+ * @mmio: instance to free
+>+ *
+>+ * Returns 0 if @mmio was idle on entry, -EBUSY otherwise
+>+ */
+>+int pci_tsm_mmio_free(struct pci_dev *pdev, struct pci_tsm_mmio *mmio)
+>+{
+>+	for (int i = 0; i < mmio->nr; i++) {
+>+		struct resource *res = pci_tsm_mmio_resource(mmio, i);
+>+
+>+		if (dev_WARN_ONCE(&pdev->dev, resource_assigned(res),
+>+				  "MMIO resource still assigned %pr\n", res))
+>+			return -EBUSY;
+>+	}
+>+	kfree(mmio);
+>+	return 0;
+>+}
+>+EXPORT_SYMBOL_GPL(pci_tsm_mmio_free);
+>diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+>index f7930b3dfd0a..122f1eefb4b9 100644
+>--- a/include/linux/ioport.h
+>+++ b/include/linux/ioport.h
+>@@ -144,6 +144,7 @@ enum {
+> 	IORES_DESC_RESERVED			= 7,
+> 	IORES_DESC_SOFT_RESERVED		= 8,
+> 	IORES_DESC_CXL				= 9,
+>+	IORES_DESC_ENCRYPTED			= 10,
+> };
+> 
+> /*
+>@@ -240,6 +241,7 @@ struct resource_constraint {
+> extern struct resource ioport_resource;
+> extern struct resource iomem_resource;
+> extern struct resource soft_reserve_resource;
+>+extern struct resource encrypted_iomem_resource;
+> 
+> extern struct resource *request_resource_conflict(struct resource *root,
+> struct resource *new);
+> extern int request_resource(struct resource *root, struct resource *new);
+>diff --git a/include/linux/pci-tsm.h b/include/linux/pci-tsm.h
+>index a6435aba03f9..e54ad057fa8e 100644
+>--- a/include/linux/pci-tsm.h
+>+++ b/include/linux/pci-tsm.h
+>@@ -199,6 +199,34 @@ enum pci_tsm_req_scope {
+> 	PCI_TSM_REQ_DEBUG_WRITE = 3,
+> };
+> 
+>+/**
+>+ * struct pci_tsm_mmio_entry - an encrypted MMIO range
+>+ * @res: MMIO address range (typically Guest Physical Address, GPA)
+>+ * @tsm_offset: Host Physical Address, HPA obfuscation offset added by the TSM.
+>+ *		Translates report addresses to GPA.
+>+ */
+>+struct pci_tsm_mmio_entry {
+>+	struct resource res;
+>+	u64 tsm_offset;
+>+};
+>+
+>+struct pci_tsm_mmio {
+>+	int nr;
+>+	struct pci_tsm_mmio_entry mmio[];
+>+};
+>+
+>+static inline struct pci_tsm_mmio_entry *
+>+pci_tsm_mmio_entry(struct pci_tsm_mmio *mmio, int idx)
+>+{
+>+	return &mmio->mmio[idx];
+>+}
+>+
+>+static inline struct resource *pci_tsm_mmio_resource(struct pci_tsm_mmio *mmio,
+>+						     int idx)
+>+{
+>+	return &mmio->mmio[idx].res;
+>+}
+>+
+> #ifdef CONFIG_PCI_TSM
+> int pci_tsm_register(struct tsm_dev *tsm_dev);
+> void pci_tsm_unregister(struct tsm_dev *tsm_dev);
+>@@ -216,6 +244,11 @@ void pci_tsm_tdi_constructor(struct pci_dev *pdev, struct pci_tdi *tdi,
+> ssize_t pci_tsm_guest_req(struct pci_dev *pdev, enum pci_tsm_req_scope
+> scope,
+> 			  sockptr_t req_in, size_t in_len, sockptr_t req_out,
+> 			  size_t out_len, u64 *tsm_code);
+>+int pci_tsm_mmio_setup(struct pci_dev *pdev, struct pci_tsm_mmio *mmio);
+>+void pci_tsm_mmio_teardown(struct pci_tsm_mmio *mmio);
+>+struct pci_tsm_mmio *pci_tsm_mmio_alloc(struct pci_dev *pdev,
+>+					const void *report, size_t report_len);
+>+int pci_tsm_mmio_free(struct pci_dev *pdev, struct pci_tsm_mmio *mmio);
+> #else
+> static inline int pci_tsm_register(struct tsm_dev *tsm_dev)
+> {
+>diff --git a/kernel/resource.c b/kernel/resource.c
+>index cfc1a00e86aa..5500f7828b2d 100644
+>--- a/kernel/resource.c
+>+++ b/kernel/resource.c
+>@@ -56,6 +56,14 @@ struct resource soft_reserve_resource = {
+> 	.flags	= IORESOURCE_MEM,
+> };
+> 
+>+struct resource encrypted_iomem_resource = {
+>+	.name	= "Encrypted MMIO",
+>+	.start	= 0,
+>+	.end	= -1,
+>+	.desc	= IORES_DESC_ENCRYPTED,
+>+	.flags	= IORESOURCE_MEM,
+>+};
+>+
+> static DEFINE_RWLOCK(resource_lock);
+> 
+> /*
+>
 
-[Severity: High]
-Could restoring PCI_COMMAND here cause a system address conflict?
-
-If the saved cmd originally had the PCI_COMMAND_MEMORY bit set (for example,
-when called from a path like Xen PCIBACK's pcistub_reset_device_state),
-writing it back immediately enables memory decode. Because the hardware res=
-et
-has just occurred, the device's BARs will have been cleared to 0.
-
-Does this create a risk of silent memory corruption by allowing the device =
-to
-claim physical address 0 before the PCI core has a chance to restore the BA=
-Rs
-properly in pci_restore_config_space()?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261005105436.8396=
-2-1-jtornosm@redhat.com?part=3D1
+--- Thanks!
+"I'm not a very positive person" - Linus torvalds
