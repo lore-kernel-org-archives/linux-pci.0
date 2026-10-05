@@ -1,198 +1,104 @@
-Received: from fhigh-a7-smtp.messagingengine.com (fhigh-a7-smtp.messagingengine.com [103.168.172.158])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 190344C14E8
-	for <linux-pci@vger.kernel.org>; Mon,  5 Oct 2026 16:20:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.158
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A87BD313E36;
+	Mon,  5 Oct 2026 16:41:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791217227; cv=none; b=Ile4oPXmBEkFICPJ971YEQ0vRWnnS+3Glh37/j8hFZEbZAC3G8nGKJxsgb05zRc3rjL/istLSaO97uSqSe/p+WBLIW2auRCf9Lwor2GxxhssriZN3P2/8hzK0K1b49dKnjURNsC0mDaxa28J2gp8nn3b15Y++n2+Au5Z7+bt6ZQ=
+	t=1791218504; cv=none; b=lQelC+a5pOt9Q6hBYUZalkjGNoqU7s6erOLmtblwvSOHEWE0aZgY9HUFmCn0gxOvvYadXT5XwG1VeAC7EQ5i3BfznfQxM5QdaluE/8FHd9sRlc4PP25uRySY7gvbG3ZIIYqFfZ8EJoM+BJIo4C+wklMK0g5W4znjs/SqrLYAzIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791217227; c=relaxed/simple;
-	bh=O9lBSXMX8ZJn6NCV7Qo+OyrqttL2Cz+ZVuV4r4U4v7w=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=OZpfB/nKt+fA1lHSneXpsJKe4tEorbysISNzqf132oEOE4JZywqLGloLpHxEHU6dTCiSA/n42Y8NaN4ot96MJogadmadtwLXSwaXAk5jFlrYwhmqT4mS7uv8V3RmA8tbqDUcCHPVMHgeW9DEsjZkDVqkvSgfOkLAdx1a9G3tNE8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alistair23.me; spf=pass smtp.mailfrom=alistair23.me; dkim=pass (2048-bit key) header.d=alistair23.me header.i=@alistair23.me header.b=mIgou8xm; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=A9ahTLT0; arc=none smtp.client-ip=103.168.172.158
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alistair23.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alistair23.me
+	s=arc-20240116; t=1791218504; c=relaxed/simple;
+	bh=+X2OntxrMTq2KSrF/FK1TbUaOawdn0FYEbaeGy3cIa8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=bk/ekS7blznSbsrS59suNtJBpd4B8kuKpDksrDi8BkSViGMmN8xWIAB0w/Sh1QSKv3bCuGa7mPYcm4HI1fYuFD+w2SpkNdVJK8Osah/skvFFRzLAJ2/HKMRhyy2qCapQ58C8UjtJZkyYCQ3wa4oFk+ZTmzOkoyzluuO1YutNy2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hmEars6e; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=alistair23.me header.i=@alistair23.me header.b="mIgou8xm";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="A9ahTLT0"
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 33CC51400190
-	for <linux-pci@vger.kernel.org>; Mon,  5 Oct 2026 12:20:24 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-05.internal (MEProxy); Mon, 05 Oct 2026 12:20:24 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alistair23.me;
-	 h=cc:cc:content-transfer-encoding:content-type:content-type
-	:date:date:from:from:in-reply-to:in-reply-to:message-id
-	:mime-version:references:reply-to:subject:subject:to:to; s=fm2;
-	 t=1791217224; x=1791303624; bh=7fMFCyfAKjqs4FLoFtn1JpAUKI3aqzrN
-	/pKxZJGObMQ=; b=mIgou8xmRmQnWl1jG2bYSBVWn5upPWkEFbyGutYEjl5wadYH
-	4FHLz2titj2IMGoyV0KV1h1hdvPX2xvGf9b5IrDASAT5WYHepCHnB2aHDhdYclLu
-	v+0hmMlweoI2PTFmA+iKG1U1opfeuTgh07OvOV2VhVxFxvBMMlGHdzdnGotDTioT
-	FO7XZpGFcg931e1Bb+hhf5yYhNicElYEteA48EgBbI3GBubQEsv9374cJKj9HXJ1
-	0Iufk+knAMgDZvWoz0NrYfnEWo7rNgfsskNF3QjWsaKNgFB6Pllt90TALwOMV1Ts
-	ZrTA0njpkikg67lztwbMncDYusJhLQSiaaFeOQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1791217224; x=
-	1791303624; bh=7fMFCyfAKjqs4FLoFtn1JpAUKI3aqzrN/pKxZJGObMQ=; b=A
-	9ahTLT0YDH561qtE/GIYgQ+NSbR5rJR0pQl+EnOvX690+Cr9N7XESXE1PK8EY4Kj
-	m1iTIA4aahWpdlZI3UhIfGw4Arjugokc27nNq6bIzH4kulfcKaEcMawGMqLxAmKz
-	OrzOqzRP4AbJiQNGS3euz1eaypFDooCgRzpdr8TTN4/uDvb0sFop50gmtAxIFa//
-	mFLlT/R7UfSCpFvpxp/gVFk4WgIGTH3nlJHFqsuftMNsNIUfmgIMMttdq3QAI7Ee
-	OVxTJh02Rie51Q1iz7+uqxA0XhI9GoERN0cZuGxURmVz9jS+SGvFsBG8JrzpGC+v
-	Dl8Ouf52epzsJefcsnPsQ==
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-06;
-	repo=github.com/dkim2wg/interop; date=2026-09-30; sw=lmtpprox;
-	action=sign d=alistair23.me a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1791217224; d=alistair23.me;
-	mf=PGFsaXN0YWlyQGFsaXN0YWlyMjMubWU+;
-	rt=PGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc+;
-	s=fm2:rsa-sha256:ZfUQ5OMjwbJuLjw9/IJlkJmSJlQETOD6vxL0rztheRZHZ0R
-	ZmPTLT8ASi5mckj49AErR6/rZyHFGnD3MzxNxmTwlXcFRAi0Cs4wHTyKUzrDFVvW
-	uIKzsa7C1w8r+RkycRuWdCuN7BabMTP8lAIbhYoHGHAu86EHRLbrooIlAWCuP22F
-	O8MM2vE0NWAUVsweiK9u+rnXjyJhksSVwBmKoe8Ca8Ih9vUf8aTsBi/cDy2m9yYi
-	OIirY95vseuloyLg/MJmcK6qc2qTeeIAAOoupKzfViWCLsA10AxFGJizjFUXSnEL
-	fKM8Wcgo+J2Y85qEtnJ8nttiyHFVn0VAJ24Pw9A==;
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-06;
-	repo=github.com/dkim2wg/interop; date=2026-09-30; sw=lmtpprox;
-	action=mi-m=1; hc=13;
-	hn=cc,content-transfer-encoding,content-type,date,feedback-id,
-	from,in-reply-to,message-id,mime-version,references,subject,to,
-	user-agent;
-Message-Instance: m=1; h=sha256:Ym0n0XQ7xg5cI/IqpJPTITJX+PX/w+HnRNia046nXas=:O9lBSXMX8ZJn6NCV7Qo+OyrqttL2Cz+ZVuV4r4U4v7w=;
-X-ME-Sender: <xms:SM7Dar7ievLkTtpdlDBGpuKCO1fCLQ8MFhg4KE_puh6pQuVJQNzttA>
-    <xme:SM7Dar1dYQABq6kh58KEo5z2Ys1ZTmqyVBDRhMvNt8W3XfCGciGUHq2CB_uLWjZNw
-    R8MEm3OO5qz-2zwnIIAVZLS3h9Wvykw3nWQ2WF02qgUAPGCORQkGv4>
-X-ME-Received: <xmr:SM7Dahcu8QHq9AyB_CaaBg6XR76Jpl6WgBAzCLquTc7ZDbaglInN0NWW8osjQXg31E0i>
-X-ME-Proxy-Cause: dmFkZTG2GWtYYlVMtomge/gx37ag7n9csUJSdjArruSeSXk4B76Is1uGN33Q4siC5LZeA/
-    gpym4yBZDbw9thPZ3JMFMRVZHbf0TzGnowwyAEDzdUvCCoXHDrd6+yB9fkPXr3nEzG8UOq
-    UhELnnypi/+b+WK0xiakK7QQEZp3Cqksc8fxvd6Frio6YW/guM4cEGVhJIOpZm9r3/6tWW
-    mdZyuWylNVbnxUf78cgJTlbQgBQq6FGYBPucqr4ZzHIYLy+5mDL4xwcJL7JemuFHrTzFxz
-    D/+63kw+u/7B3bpa1h6Bl55RGIZPZXDZAdC4hj3NLY40iT/y0Ha1yhZoNtpCCJtXMZwxSU
-    XJ5GwoLuJX+ONXYoMoLrWjxYcb1D4zT4SwWbt7ytyRkWoUrRviWDmswzkPLvNKqWM3yyQM
-    3y/iEK8bbQtPswvk6NMLsd70x5e9hLvlmhOZQRGh3Di8US7pVOsKMO/5vQV73UUdicblwt
-    cqF7/Flx+NSv06H+Wx8JocLHjOLCPE0GjejPDh3jiFxW71vvWTuoobYMDa3T4G2TBJkF4T
-    nGxLX5J1HXu9cwfvw9zzIm881uFC1ibN/dd+g/RHfFCaMb2oKlakb8s8VFuTVhknGyKq0p
-    GwOtxGa/dh8d4jCuX0J3suzTt4n7D0G5oEhKyG0Aqm+5gAW044LEgtlVWShA
-X-ME-Proxy: <xmx:SM7DahdOG_GLINh14KzgXm6l3tIjj0tAVvaPhmTm9YlDFnIe9m7LrA>
-    <xmx:SM7DaszFQAvBS3U-t0QgsRUaR5bU4kfTrhPxtQK795lWctFTRDek-g>
-    <xmx:SM7Dag_uCMtBYB2d_oOfAgvTupMx8BDw4NRdvL7Iu05ZEnX_pQAZ5w>
-    <xmx:SM7DasiqNziRHLqQGinGgGIxZPQhZ7bghcWeFjPWROlMLAnz7kBWig>
-    <xmx:SM7DarIal5lvns-HZNW50xcxkCG2YuGL0_AXXE5osmr9goCqgdzkhFcT>
-Feedback-ID: ifd214418:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 5 Oct 2026 12:20:23 -0400 (EDT)
-Message-ID: <53f642cf76a2b6c405bebd254afc6d37255af749.camel@alistair23.me>
-Subject: Re: [PATCH v2] PCI/DOE: Fix double free of a duplicate feature's
- sysfs name
-From: Alistair <alistair@alistair23.me>
-To: Donggeun Yoo <donggeunyoo.kernel@gmail.com>, bhelgaas@google.com
-Cc: jic23@kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, 	stable@vger.kernel.org
-Date: Tue, 06 Oct 2026 02:20:22 +1000
-In-Reply-To: <20261003102221.59894-1-donggeunyoo.kernel@gmail.com>
-References: <20261003102221.59894-1-donggeunyoo.kernel@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.62.0 (by Flathub.org) 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hmEars6e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0E841F000FF;
+	Mon,  5 Oct 2026 16:41:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791218503;
+	bh=ACSssUGKie/5eVZn/j7clwXvC4MTmISK/f7AzHTT/3A=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=hmEars6ew5+YbrRD+7XLCHSA9cc1J3iBUUrqtEQ7cEbqkGUIC2ch7qbL8VmiPjUQT
+	 XlduUY3JUBTpbVMnZx+7LLH9rETL1YIlR+PwqK2+x1iNA60y3QJ4+sYhvWVFhBKm0i
+	 MEkiWKRHfQVXfTW82ZNrJ2R3AfKVdKuHLEdmL7FMpxQVwIkoWT8vPUEOnPLnPCHTjw
+	 8Pv+aQmncE1OfyyDaAqYzTbv96s/SCAZh/SviCUvZCmltKHAA0rm0ksnofutqgH2SX
+	 cMokhwVuYDjTOFpUKbQSD8k1vKLUskl58yfzGvTyHX+hRbLxdtTqLglJgZEw8KmJZq
+	 DwXOhjqIy9FZQ==
+Date: Mon, 5 Oct 2026 11:41:41 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: bhelgaas@google.com, alex@shazbot.org, mani@kernel.org,
+	jjohnson@kernel.org, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org, mhi@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v15 0/2] PCI: Add device-specific reset for Qualcomm
+ devices
+Message-ID: <20261005164141.GA574887@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261005105436.83962-1-jtornosm@redhat.com>
 
-On Sat, 2026-10-03 at 19:22 +0900, Donggeun Yoo wrote:
-> When a DOE feature is reported twice, sysfs_add_file_to_group() fails
-> with -EEXIST for the second copy and pci_doe_sysfs_feature_populate()
-> frees that attribute's name, but leaves the pointer in place.
-> pci_doe_sysfs_feature_remove() frees every name again when the device
-> is removed, or when a later feature fails to register, so the name is
-> freed twice:
->=20
-> =C2=A0 BUG: KASAN: double-free in pci_doe_sysfs_feature_remove+0x117/0x1b=
-0
-> =C2=A0 Call Trace:
-> =C2=A0=C2=A0 kfree+0x11a/0x420
-> =C2=A0=C2=A0 pci_doe_sysfs_feature_remove+0x117/0x1b0
-> =C2=A0=C2=A0 pci_doe_sysfs_teardown+0x90/0xf0
-> =C2=A0=C2=A0 pci_remove_bus_device+0x128/0x2e0
-> =C2=A0=C2=A0 pci_stop_and_remove_bus_device_locked+0x1d/0x30
-> =C2=A0=C2=A0 remove_store+0xd2/0xf0
->=20
-> Clear the pointer after freeing the name.
->=20
-> Fixes: 2311ab1820fe ("PCI/DOE: Expose DOE features via sysfs")
-> Cc: stable@vger.kernel.org
-> Suggested-by: Alistair Francis <alistair@alistair23.me>
-> Assisted-by: LLM
-> Signed-off-by: Donggeun Yoo <donggeunyoo.kernel@gmail.com>
+On Mon, Oct 05, 2026 at 12:54:34PM +0200, Jose Ignacio Tornos Martinez wrote:
+> Some Qualcomm PCIe devices (WCN6855, WCN7850 WLAN; SDX62/SDX65 modems)
+> lack working reset methods for VFIO passthrough scenarios. These devices
+> have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
+> broken bus reset.
+> 
+> Standard reset methods were already disabled for these devices by commit
+> 6a4f64c3a3ad ("PCI: Avoid SBR for Qualcomm WCN6855/WCN7850 WiFi,
+> SDX62/SDX65 modems") because they were not working (quirk_no_bus_reset).
+> 
+> VFIO attempts to reset devices on every reassignment:
+> - For the listed modems, without a proper reset capability, these devices
+> never successfully initialize even on first VM assignment.
+> - For the listed WLAN devices, without a working reset method, the attempt
+> fails. On clean VM shutdown, the guest driver properly deinitializes the
+> device via .shutdown/.remove callbacks, leaving it in a usable state despite
+> the failed reset. However, on unclean VM termination (crash, force-off), the
+> guest driver callbacks are not triggered, the device remains in an undefined
+> state (DMA active, interrupts enabled, etc.), and without a working reset it
+> cannot be reused.
+> 
+> Add device-specific reset methods using BAR-space hardware reset registers
+> that exist in these devices:
+> 
+>   Patch 1: SDX62/SDX65 modem reset via MHI SoC reset
+>   Patch 2: WCN6855/WCN7850 WLAN reset via SoC global reset
+> 
+> These are true hardware reset mechanisms (not power management or firmware
+> error recovery), providing proper device reset for VFIO scenarios, allowing
+> to enforce isolation between successive passthrough users.
+> 
+> Testing shows stable operation over 100+ VM crash/reset cycles. Device-
+> specific reset is position #1 in the reset hierarchy, so these devices
+> will use hardware reset as their primary reset method.
+> 
+> Jose Ignacio Tornos Martinez (2):
+>   PCI: Add device-specific reset for Qualcomm SDX62/SDX65 modems
+>   PCI: Add device-specific reset for Qualcomm WCN6855/WCN7850 WLAN
+> 
+>  drivers/pci/quirks.c | 116 +++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 116 insertions(+)
 
-Reviewed-by: Alistair Francis <alistair@alistair23.me>
-
-Alistair
+Applied to pci/reset for v7.4, thanks!
 
 > ---
-> Changes in v2:
-> - Keep freeing the duplicate's name in
-> pci_doe_sysfs_feature_populate()
-> =C2=A0 and clear the pointer, instead of leaving it to
-> =C2=A0 pci_doe_sysfs_feature_remove() (Alistair Francis)
->=20
-> v1:
-> https://lore.kernel.org/all/20260928035035.252394-1-donggeunyoo.kernel@gm=
-ail.com/
->=20
-> Tested under QEMU (q35, cxl-type3, KASAN) on 72d3fcf802c4. The device
-> reports its CDAT feature once, so a test-only change either registers
-> its DOE capability as a second mailbox or inserts the feature N extra
-> times into one:
->=20
-> =C2=A0 case=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 befor=
-e=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 after
-> =C2=A0 no duplicate, remove=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 no report=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 no report
-> =C2=A0 no duplicate, a name fails at probe=C2=A0=C2=A0=C2=A0 no report=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 no report
-> =C2=A0 two mailboxes, remove=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 double free=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 no report
-> =C2=A0 two mailboxes, 3 remove/rescan cycles=C2=A0 3 double frees=C2=A0=
-=C2=A0 no report
-> =C2=A0 3 duplicates in one mailbox, remove=C2=A0=C2=A0=C2=A0 3 double fre=
-es=C2=A0=C2=A0 no report
-> =C2=A0 2 duplicates, a later name fails,=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 2 =
-double frees=C2=A0=C2=A0 no report
-> =C2=A0=C2=A0=C2=A0 probed twice
->=20
-> The doe_features listing is the same before and after in every case.
->=20
-> =C2=A0drivers/pci/doe.c | 5 +++--
-> =C2=A01 file changed, 3 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
-> index ac95b1d2d9997..6b5d9ba8e9697 100644
-> --- a/drivers/pci/doe.c
-> +++ b/drivers/pci/doe.c
-> @@ -208,8 +208,9 @@ static int pci_doe_sysfs_feature_populate(struct
-> pci_dev *pdev,
-> =C2=A0				pci_warn(pdev, "Failed adding %s to
-> sysfs group\n",
-> =C2=A0					 attrs[i].attr.name);
-> =C2=A0				goto fail;
-> -			} else
-> -				kfree(attrs[i].attr.name);
-> +			}
-> +			kfree(attrs[i].attr.name);
-> +			attrs[i].attr.name =3D NULL;
-> =C2=A0		}
-> =C2=A0	}
-> =C2=A0
+> v15: Address Bjorn Helgaas feedback:
+>   - Explain the relationship with 6a4f64c3a3ad ("PCI: Avoid SBR for Qualcomm
+>     WCN6855/WCN7850 WiFi, SDX62/SDX65 modems") and previous status.
+>   - No code changes from v14, only commit message clarifications (Mani's
+>     Reviewed-by and Alex's Acked-by retained)
+> v14: https://lore.kernel.org/all/20260917071651.14174-1-jtornosm@redhat.com/
+> 
+> --
+> 2.54.0
+> 
