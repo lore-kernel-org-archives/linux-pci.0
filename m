@@ -1,119 +1,134 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BAFD3769EA;
-	Mon,  5 Oct 2026 12:37:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6F46471D1C
+	for <linux-pci@vger.kernel.org>; Mon,  5 Oct 2026 12:42:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791203847; cv=none; b=Oih0Ef8B8OsAzYrgre80WWvbl/Y61vm+baRCCD0/3CeTNA4LYzDvv3VSA9drAZvMwwYd4W5tQzmznQMhWFlBOgxk0B2mcrn7cm+DJGFO2lLQUiTkgqEKnabExfFIDJiqNbDzBJj0q15qIFTXcq4s1I4TE0ye/HhHDK6iphH1/Tg=
+	t=1791204122; cv=none; b=dVmykNlazPWzQlKoqxge8jCMgP47si7x4y+6GTcTCHImg08a099M8oeNma5PaKjzQcCN31/cS+NBKI9w9yQKSrW6WNdPTvdy8dnt0HfknnyoNYJDvaLoWDNIWKXtpckkD5Dqpox4CrPlhg/CImwo5TEkpuH4iZBIQX272IuwUU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791203847; c=relaxed/simple;
-	bh=l3OphedaPcqUbDa9OVB2ReALwEZdKEOpw+CJKoXknAw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=UDKpiP81nGbFihOWrEnFNzcnD8/GD0MSk0Pfw4sn8mESvztlNxv3f1VwOhNp6IQXOALOWv4dKJyLEJKwDsGG0SBQlsehNHTYhmOeTuN7xUglursk0DwVD/CqtleV4NNBOUYoNBJ+FwtUGwOMRtw0aNoalA2YsiOWoa/m7X/JrSQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E23osBtG; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791204122; c=relaxed/simple;
+	bh=FB+arrFjBGrAlUmQqtf4EI5iCQwOgK1EVKfXkbU9/y4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=liFcd4iWKAG8X/5W7DPJAkGhN4C7oUzmS14FjRGcxrNqUqszjhhkAVpCbBk70UEbRJv2kfuC6wMR24qcSjeWyJ7gK3Zq38tdrrynB1eCWgxe5R+Q1x2xfaejJN/eOv8cHWKL0VSsw7HVfFgMGes20DifCOwICiISSp4Cz1EAt0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SiJWDRnv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E23osBtG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBA401F000FF;
-	Mon,  5 Oct 2026 12:37:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SiJWDRnv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 493DE1F000FF;
+	Mon,  5 Oct 2026 12:41:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791203845;
-	bh=MWazUpUjiLdplpch4e2o6Zo6l4w3El+exbH9m71l7Rc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=E23osBtGfk5uZQ1RZJFoXjHPTU0B+uYH3JM8zNsFoulRUouG3nizLo/30BUwKZerv
-	 gWA2Lw+tV5oOuPLdk6nTe2UUu9mmAcuDpefo+jUy2773A6lLJcSqUQMEc4E6JMsB02
-	 k6nYI0L8bTLCoihFpTPANC4WG1PCNa2h29LNT9ORiJHnPTZvKuzAEqB/rUQFTCpSPJ
-	 kAmH/uoN9mN/DLY9Cn5BQcABS1IXgYYFhf2V1DiQHsVTdHCmT108o4dtEcr5LYGme2
-	 kVcNElADzT+en8ECU9Q9FYyUFAJp8gNi0iuMvfgP3AhtvOjw+XSX6oAhb0cyGdVrL6
-	 F6jAuLYsdifKA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 8/8] arm64: dts: qcom: monaco-arduino-monza: Add
- QCA2066 M.2 WiFi/BT support
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Loic Poulain" <loic.poulain@oss.qualcomm.com>
-Cc: devicetree@vger.kernel.org, conor+dt@kernel.org, linux-pci@vger.kernel.org, robh@kernel.org
-In-Reply-To: <20261005-monza-wireless-v7-8-5a6de7662dcb@oss.qualcomm.com>
-References: <20261005-monza-wireless-v7-0-5a6de7662dcb@oss.qualcomm.com>
- <20261005-monza-wireless-v7-8-5a6de7662dcb@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 05 Oct 2026 12:37:24 +0000
-Message-Id: <20261005123724.DBA401F000FF@smtp.kernel.org>
+	s=k20260515; t=1791204121;
+	bh=nzUTkMGw2FUAW6LuwD/ZNDODRpqoHDAQwQFc1CjSYPg=;
+	h=From:To:Cc:Subject:Date;
+	b=SiJWDRnvdHzX5L6j68vY9lMX0NVa03XwvfSvzf9ju2puAsQL5sjT2lbkHuEvJw9P0
+	 jiW+mSmxbW4acqy/D1vZXZJsI9ri3fXUKKyOrCQh4PJvSVmn19hhHRR7tiFxK9q2rm
+	 K/XOJ02by9haIwWOkBm3a1EjV1WfktXnv/CIzMQBcJArea24vvJvy1E13ZMsdutB+C
+	 WseB7a3CSe1yZGKa7IxufovwcxV6I3WO+RNhZP7NadDWUIf+BTRINAQnCl027+jsHl
+	 66DUjOsMW7Cn8pc/7w14/maEAWMPc0kP6Tw9CNl0jguVMdvXlP1rKF4J327D/88QuE
+	 8sbuOPjsxCzaQ==
+From: Niklas Cassel <cassel@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	Frank Li <Frank.Li@nxp.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-rockchip@lists.infradead.org
+Subject: [PATCH] PCI: Update saved Max Payload Size in pcie_set_mps()
+Date: Mon,  5 Oct 2026 14:41:55 +0200
+Message-ID: <20261005124154.2190628-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3263; i=cassel@kernel.org; h=from:subject; bh=FB+arrFjBGrAlUmQqtf4EI5iCQwOgK1EVKfXkbU9/y4=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLIOzxayd460vzbjx9cSf+9520VljzBufGFU6Vrdoj2Fy 8t8kTFnRykLgxgXg6yYIovvD5f9xd3uU44r3rGBmcPKBDKEgYtTACZiG8rIMC2H+Zzy91Wxb2va tS3aNmSWV5wIcau1/rJy56Udhdt2bmdk+ObpJiHfI3Q8YqLC7I0Ryy1uzKybetzn15FJue+aLN/ cZgAA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Low] dts: qcom: missing clocks property in wireless-lga-connector
-- [Low] dts: qcom: invalid bus-range property for downstream PCI bridge
---
+pcie_set_mps() changes the Max Payload Size (MPS) in the Device Control
+register but leaves the copy saved by pci_save_state() alone, so the next
+pci_restore_state() puts back the old value.
 
-commit 29a5722958bd298370461ff6846d50f2a2e13fa0
-Author: Loic Poulain <loic.poulain@oss.qualcomm.com>
+The PCI core does change the MPS of devices whose state has already been
+saved: pci_configure_mps() reduces a Root Port's MPS when a device with a
+smaller MPS Supported is hot-added directly below it (commit 9f0e89359775
+("PCI: Match Root Port's MPS to endpoint's MPSS as necessary")), and with
+"pci=pcie_bus_safe", pcie_bus_configure_settings() can do the same when
+pciehp calls it after a hot-add.  The Root Port's state was saved when it
+was added and again when portdrv probed it.
 
-arm64: dts: qcom: monaco-arduino-monza: Add QCA2066 M.2 WiFi/BT support
+Since commit 3fc686d550f6 ("PCI/ERR: Add support for resetting the Root
+Ports in a platform-specific way"), pcibios_reset_secondary_bus() restores
+that saved state, without saving it first, after host->reset_root_port()
+has reset the Root Port, e.g. during AER recovery or on Link Down with the
+qcom and Rockchip DWC drivers.  The Root Port then goes back to the old,
+larger MPS while the device below it is restored to the smaller one, so
+the Root Port may send TLPs that the device treats as Malformed.
 
-This commit adds support for the QCA2066 WiFi/Bluetooth module on the
-Arduino VENTUNO Q board. It introduces a wireless-lga-connector node and a
-downstream pcie port to enable the M.2 slot power sequencer.
+Update the saved copy of Device Control when pcie_set_mps() changes the
+MPS, like commit 909f7bf9b080 ("PCI: Update saved_config_space upon
+resource assignment") does for BARs.
 
-> diff --git a/arch/arm64/boot/dts/qcom/monaco-arduino-monza.dts b/arch/arm=
-64/boot/dts/qcom/monaco-arduino-monza.dts
-> index 940a03732eefc..f24a87bd7cbf6 100644
-> --- a/arch/arm64/boot/dts/qcom/monaco-arduino-monza.dts
-> +++ b/arch/arm64/boot/dts/qcom/monaco-arduino-monza.dts
-> @@ -178,6 +178,40 @@ vreg_nvme: regulator-3p3-m2 {
->  		enable-active-high;
->  		startup-delay-us =3D <20000>;
->  	};
-> +
-> +	wireless-lga-connector {
-> +		compatible =3D "qcom,pcie-m2-1418-lga-connector",
-> +			     "pcie-m2-e-connector";
-> +		vpcie3v3-supply =3D <&vdc_3v3>;
-> +		vpcie1v8-supply =3D <&vdc_1v8>;
-> +		w-disable1-gpios =3D <&tlmm 56 GPIO_ACTIVE_LOW>;
-> +		w-disable2-gpios =3D <&tlmm 55 GPIO_ACTIVE_LOW>;
+Fixes: 3fc686d550f6 ("PCI/ERR: Add support for resetting the Root Ports in a platform-specific way")
+Assisted-by: LLM
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+This fix was originally sent out as part of my RFC series:
+https://lore.kernel.org/linux-pci/20260930145017.1356088-6-cassel@kernel.org/
 
-[Severity: Low]
-Is the clocks property missing here in the wireless-lga-connector node for
-the M.2 SUSCLK routing?
+But sending this fix as a separate patch, as the fix is really unrelated
+to the rest of the series, so it could be picked up independently.
 
-The clocks property is defined in the pcie-m2-e-connector binding and was
-previously included in the legacy bluetooth node, but appears to have been
-dropped during the transition to the new node. Because sleep_clk is a fixed
-clock that is physically always running on this platform, the omission caus=
-es
-no functional regression, but the Device Tree hardware description seems
-incomplete without the SUSCLK routing.
+ drivers/pci/pci.c | 24 +++++++++++++++++++++++-
+ 1 file changed, 23 insertions(+), 1 deletion(-)
 
-[ ... ]
-> @@ -541,6 +575,22 @@ pcie@0,0 {
->  		ranges;
->  		reg =3D <0x010000 0x00 0x00 0x00 0x00>;
-> =20
-> +		pcie@1,0 {
-> +			#address-cells =3D <3>;
-> +			#size-cells =3D <2>;
-> +			device_type =3D "pci";
-> +			compatible =3D "pciclass,0604";
-> +			bus-range =3D <0x00 0xff>;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8cc6a89130b5..f3b82eb7bfaf 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1736,6 +1736,24 @@ static void pci_restore_pcie_state(struct pci_dev *dev)
+ 	pcie_capability_write_word(dev, PCI_EXP_SLTCTL2, cap[i++]);
+ }
+ 
++/*
++ * Update the saved copy of the Device Control register after changing it, so
++ * that pci_restore_state() doesn't put back a stale value.  Device Control is
++ * the first register saved by pci_save_pcie_state().
++ */
++static void pcie_update_saved_devctl(struct pci_dev *dev, u16 clear, u16 set)
++{
++	struct pci_cap_saved_state *save_state;
++	u16 *devctl;
++
++	save_state = pci_find_saved_cap(dev, PCI_CAP_ID_EXP);
++	if (!save_state)
++		return;
++
++	devctl = (u16 *)&save_state->cap.data[0];
++	*devctl = (*devctl & ~clear) | set;
++}
++
+ static int pci_save_pcix_state(struct pci_dev *dev)
+ {
+ 	int pos;
+@@ -5983,8 +6001,12 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+ 
+ 	ret = pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
+ 						  PCI_EXP_DEVCTL_PAYLOAD, v);
++	if (ret)
++		return pcibios_err_to_errno(ret);
+ 
+-	return pcibios_err_to_errno(ret);
++	pcie_update_saved_devctl(dev, PCI_EXP_DEVCTL_PAYLOAD, v);
++
++	return 0;
+ }
+ EXPORT_SYMBOL(pcie_set_mps);
+ 
+-- 
+2.55.0
 
-[Severity: Low]
-Does this bus-range property in the pcie@1,0 node define an invalid
-secondary bus?
-
-The bus-range property claims the downstream bridge's secondary bus is 0,
-which violates PCI numbering rules since its primary bus is 2 (encoded in
-the reg property as 0x020800).
-
-The Linux PCI core dynamically reassigns invalid topologies for downstream
-bridges, preventing functional breakage. However, specifying a topologically
-invalid bus range in the DT seems to be an error.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261005-monza-wire=
-less-v7-0-5a6de7662dcb@oss.qualcomm.com?part=3D8
