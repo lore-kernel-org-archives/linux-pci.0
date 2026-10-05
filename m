@@ -1,126 +1,204 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7B52484258
-	for <linux-pci@vger.kernel.org>; Mon,  5 Oct 2026 13:40:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14A15489FBC;
+	Mon,  5 Oct 2026 13:50:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791207656; cv=none; b=kRmHw2QqwRBpTy4jOUetiuXRd3bdYP3MMyPSODyvivxsiAEj/NdrR8a6tW1y+ylU8n3yPJrZ4B6/uo0EnIdlDMTIlKbg8WiY4uv+SR2Gblmw5uywkQ9OtL0sU332A+f98joxbBO7NDgxw+xjGNrFVlMwbFQHVYRgAhkEwB6tVLg=
+	t=1791208221; cv=none; b=sShrxyP/5+X4f/B2XGNQ+fZPUc5JRex3Pph7dRnfmit2CwKUs1g6RwTEKggXP2y9LzWAARFT4F8qrDMUmbXL3GQ4Y6BeIjQGtxfouKULiJ3FR5DnBHMUoM5NIomMD2NyOzi7r4SKW+Esfa57Y9isLIGgYhn+FldvgTVfEfg4QrU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791207656; c=relaxed/simple;
-	bh=NDBT1n2HGadYXacNrePd5CoTQGGeyWn0jRGpPWeEQXk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=fyyZomcnZfKzAcodmPLDfiAdJr+srGg1JmoOLyE0iUXPhaA2b4r8TWoS9qGHUV0PfpeQ1vG7Xh/sXicFSA4fXh2yf0tZMP0sarI5fgdpLQgynmbdQV0V6L4bbVFJAvLB9hP1rusdQstgLIUg6M7MKQzMiAPgYDrMkuFxHxqkkHo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C+NBPHsm; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791208221; c=relaxed/simple;
+	bh=KAF0mqBkm1MJkTKpXFoxayuFG+fjQ7NhTfOvUk3j+CU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=a5ustYeyqdw1rkmIbz6abgpApALT0BsRhpLteZkby5w3c9i7Ejyf91FjJ30C6x3JXP0gaMwisQDS4g85oO38M5rUWtS0oTNYRjWvrgqH0LMbNAwiePbDxyT+8i0o6DGBMA9DY9/hFsT0kS5Lym69eLolmTL/2Yc7QoZVXOF08NM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dpl45RMe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C+NBPHsm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 394DE1F000FF;
-	Mon,  5 Oct 2026 13:40:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dpl45RMe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4AEA1F000FF;
+	Mon,  5 Oct 2026 13:50:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791207654;
-	bh=lKl3Ljul/ZphJvyh3q0/DW/hseCYQU1LMD5kbXUshq8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=C+NBPHsmNBiK0oaN4cNtAHDPQUfHqnsVuFdkgd1E9Q5xAzyKdQkwCjSbGP53P7uJD
-	 pTI4XJeOTXXu5TtFNPnq9T6anSJ0fMESPOos4uGuVm4tmY/SdHXe4Uk+V9ZYxJppjj
-	 ey+ErVtfBv1OQvVBQ5mWEQJroOs6zeqe/vG1IxPqgF5mGJXTBW1DkhBrPi7iRD0gng
-	 gkLkBE9QDdrrXqJYS68Lmhh6S8Odq02HTnzNXHxVM9cCR7ezxXBrm5k28W0Irraaz6
-	 MPKlgOfQIWN4koZNZWEPkRGLXXdrvoX2NGO5FuqoaSElD5/wUjhc7QBqFytzxDylhn
-	 veOBbbDDFMNAg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] xen/pcifront: check that an AER callback exists before
- calling it
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261005133019.284053-1-yhlee@isslab.korea.ac.kr>
-References: <20261005133019.284053-1-yhlee@isslab.korea.ac.kr>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 05 Oct 2026 13:40:53 +0000
-Message-Id: <20261005134054.394DE1F000FF@smtp.kernel.org>
+	s=k20260515; t=1791208218;
+	bh=zxskwQj+IRAHV+Byj+TN6+uofwLjQQPlJVRyyQu77iQ=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=dpl45RMecHihKXarc63chFVjEXSpU6OLmXT453T7CZWX2Gg9gNIgZrcg7Jq6XsT6i
+	 8TsGBljFSi9s5yDi0rUCUhn5abv+mzT23JoFbHYIyIetaz9q6u2COsrFxFrU53VwMo
+	 dWhKPR4FaO4tj209glKxSSVUm6Q8evmftaQ/Kn4A/Z87GLNwLIHKlC7BFwv73L+Y1l
+	 rdBSUJ+waymn8bxfKly3CvRMM78nvZc+BoN0GXyQL6X1GQw4d2FJSFHlJmRq8Sf4vS
+	 ip1MrsIxuObhTVBP2820KyrmF1hEFHE6Q+PaPztjdQZ+WjsDvCEx1uQszXTKOOefbF
+	 w+0gZK9SExU3g==
+Message-ID: <a6279445-3a48-4a2a-975e-545fad3f5733@kernel.org>
+Date: Mon, 5 Oct 2026 16:50:15 +0300
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 8/9] PCI: rzg3s-host: Re-enumerate the bus on PCIe
+ link-state changes
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
+References: <20261002110935.2004349-1-claudiu.beznea@kernel.org>
+ <20261002110935.2004349-9-claudiu.beznea@kernel.org>
+ <20261002112519.6082F1F00893@smtp.kernel.org>
+Content-Language: en-US
+From: Claudiu Beznea <claudiu.beznea@kernel.org>
+In-Reply-To: <20261002112519.6082F1F00893@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] pci: returning PCI_ERS_RESULT_NONE for missing AER callbacks kills=
- VM
---
 
-commit fe0aa6b512c4c3fcc950e0b0317c794634341eab
-Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 
-xen/pcifront: check that an AER callback exists before calling it
+On 10/2/26 14:25, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 4 potential issue(s) to consider:
+> - [High] PCI: deadlock during hibernation due to unhandled PM notifiers
+> - [High] PCI: probe succeeds with uninitialized controller on DT error
+> - [High] PCI: NULL pointer dereference if event IRQ fires before root bus creation
+> - [Medium] PCI: ghost devices left on bus if link bounces during suspend
+> --
+> 
+> commit e916ae87086b955078f323f09316792067184bfe
+> Author: John Madieu <john.madieu.xa@bp.renesas.com>
+> Subject: PCI: rzg3s-host: Re-enumerate the bus on PCIe link-state changes
+> 
+> This commit adds support for reacting to link-state changes by handling
+> the DL_UpDown signal on RZ/G3 and RZ/V2 PCIe controllers. It introduces
+> a link event interrupt, hotplug-like logic, and PM notifiers to serialize
+> with device suspend/resume.
+> 
+>> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+>> index 3b62b1be5b2a1..78e783928b9dc 100644
+>> --- a/drivers/pci/controller/pcie-rzg3s-host.c
+>> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
+> [ ... ]
+>> @@ -1095,6 +1103,98 @@ static int rzg3s_pcie_set_max_link_speed(struct rzg3s_pcie_host *host)
+>>   	return ret;
+>>   }
+>>   
+>> +static void rzg3s_pcie_link_event(struct rzg3s_pcie_host *host)
+>> +{
+>> +	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
+>> +	struct pci_bus *bus = bridge->bus;
+>> +	u32 val;
+>> +
+>> +	val = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT1);
+>> +	if (val & RZG3S_PCI_PCSTAT1_DL_DOWN_STS) {
+>> +		struct pci_dev *dev, *tmp;
+>> +
+>> +		dev_info(host->dev, "PCIe link down, removing devices\n");
+>> +
+>> +		pci_lock_rescan_remove();
+>> +		list_for_each_entry_safe_reverse(dev, tmp, &bus->devices,
+> 
+> [Severity: High]
+> The event IRQ is requested and enabled in rzg3s_pcie_host_setup() before
+> bridge->bus is allocated by pci_host_probe().
+> 
+> If the hardware generates a spurious interrupt during this narrow window,
+> bridge->bus could be NULL when this handler runs.
+> 
+> Will this dereference a NULL pointer?
 
-This commit adds NULL checks before invoking AER callbacks like mmio_enable=
-d,
-slot_reset, and resume in pcifront_common_process(). If a callback is
-missing, the code now breaks out of the switch and defaults to returning
-PCI_ERS_RESULT_NONE.
+That shouldn't happen. The initialization masks the link interrupt at controller 
+level. The interrupt is unmasked at the controller level only at the end of the 
+probe, after bridge->bus becomes valid.
 
-> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> index cffc32d660327..490913676f244 100644
-> --- a/drivers/pci/xen-pcifront.c
-> +++ b/drivers/pci/xen-pcifront.c
-> @@ -599,12 +599,17 @@ static pci_ers_result_t pcifront_common_process(int=
- cmd,
->  		case XEN_PCI_OP_aer_detected:
->  			return pdrv->err_handler->error_detected(pcidev, state);
->  		case XEN_PCI_OP_aer_mmio:
-> -			return pdrv->err_handler->mmio_enabled(pcidev);
-> +			if (pdrv->err_handler->mmio_enabled)
-> +				return pdrv->err_handler->mmio_enabled(pcidev);
-> +			break;
->  		case XEN_PCI_OP_aer_slotreset:
-> -			return pdrv->err_handler->slot_reset(pcidev);
-> +			if (pdrv->err_handler->slot_reset)
-> +				return pdrv->err_handler->slot_reset(pcidev);
-> +			break;
+> 
+>> +						 bus_list)
+>> +			pci_stop_and_remove_bus_device(dev);
+>> +		pci_unlock_rescan_remove();
+>> +	} else {
+>> +		struct pci_bus *child;
+>> +		int ret;
+>> +
+>> +		dev_info(host->dev, "PCIe link up, rescanning bus\n");
+> 
+> [Severity: Medium]
+> On resume, the PM notifier wakes the IRQ thread.
+> 
+> If the link is currently up, it seems this branch is taken and rescans the bus
+> without removing the old devices that might have been hot-swapped while the
+> link was down.
+> 
+> Could this leave ghost devices on the bus if the link goes down and comes back
+> up while the system is suspended?
 
-[Severity: High]
-Does breaking out of the switch here when a callback is missing cause the
-guest VM to be forcefully terminated by the host backend?
+Yes, it could. I'll update it in a similar way it is done in pciehp_core.c
 
-If the code breaks out of the switch, pcifront_common_process() falls
-through and returns PCI_ERS_RESULT_NONE.
 
-In the host backend, functions like xen_pcibk_mmio_enabled() and
-xen_pcibk_slot_reset() strictly treat PCI_ERS_RESULT_NONE as a fatal
-condition:
+> 
+> [ ... ]
+>> @@ -1723,8 +1838,14 @@ rzg3s_pcie_host_setup(struct rzg3s_pcie_host *host,
+>>   
+>>   	ret = rzg3s_pcie_host_init(host);
+>>   	if (ret) {
+>> -		dev_err_probe(dev, ret, "Failed to initialize the HW!\n");
+>> -		goto teardown_irqdomain;
+>> +		if (ret != -ENODEV) {
+>> +			dev_err_probe(dev, ret,
+>> +				      "Failed to initialize the HW!\n");
+>> +			goto teardown_irqdomain;
+>> +		}
+>> +
+>> +		/* Link is down: hotplug via DL_UpDown will recover. */
+>> +		return 0;
+> 
+> [Severity: High]
+> If a mandatory resource is missing, such as resource_list_first_type()
+> returning NULL in rzg3s_pcie_config_init(), it returns -ENODEV.
+> 
+> This would be caught here as a safe link-down state and return success,
+> potentially leaving the controller uninitialized.
+> 
+> Does this pattern mask genuine configuration errors?
 
-drivers/xen/xen-pciback/pci_stub.c:xen_pcibk_mmio_enabled() {
-    ...
-    if (result =3D=3D PCI_ERS_RESULT_NONE ||
-        result =3D=3D PCI_ERS_RESULT_DISCONNECT) {
-        dev_dbg(&dev->dev,
-            "No AER mmio_enabled service or disconnected!\n");
-        kill_domain_by_device(psdev);
-    }
-    ...
-}
 
-The standard PCI core defaults to PCI_ERS_RESULT_RECOVERED when these
-callbacks are missing. Could xen-pcifront return a success status to allow
-recovery to proceed, rather than returning PCI_ERS_RESULT_NONE which leads
-to killing the domain?
+That is valid. I'll update it.
 
-While this patch replaces a guest NULL pointer dereference with a
-host-initiated VM kill, changing the mechanism, it appears to fail to fix
-the underlying guest death.
+> 
+> [ ... ]
+>> @@ -1905,6 +2026,31 @@ static void rzv2h_pcie_release_lanes(void *data)
+>>   	rzv2h_num_total_lanes -= host->num_lanes;
+>>   }
+>>   
+>> +static int rzg3s_pcie_pm_notifier(struct notifier_block *nb,
+>> +				  unsigned long action, void *data)
+>> +{
+>> +	struct rzg3s_pcie_host *host = container_of(nb, struct rzg3s_pcie_host,
+>> +						    pm_nb);
+>> +
+>> +	switch (action) {
+>> +	case PM_SUSPEND_PREPARE:
+>> +		/* Disable link up/down interrupts. */
+>> +		disable_irq(host->event_irq);
+>> +		break;
+> 
+> [Severity: High]
+> The switch statement only handles PM_SUSPEND_PREPARE and PM_POST_SUSPEND,
+> completely omitting PM_HIBERNATION_PREPARE and PM_RESTORE_PREPARE.
+> 
+> If a link event occurs during hibernation transitions, the threaded interrupt
+> could attempt to acquire the same lock the PM core is holding.
+> 
+> Can this missing hibernation support open a window for a deadlock?
 
->  		case XEN_PCI_OP_aer_resume:
-> -			pdrv->err_handler->resume(pcidev);
-> -			return PCI_ERS_RESULT_NONE;
-> +			if (pdrv->err_handler->resume)
-> +				pdrv->err_handler->resume(pcidev);
-> +			break;
->  		default:
->  			dev_err(&pdev->xdev->dev,
->  				"bad request in aer recovery operation!\n");
+The hibernation wasn't treated since it is currently unavailable on any of the 
+SoCs supporting this driver.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261005133019.2840=
-53-1-yhlee@isslab.korea.ac.kr?part=3D1
+> 
+>> +
+>> +	case PM_POST_SUSPEND:
+>> +		/* Enable link up/down interrupts and force link re-scan. */
+>> +		writel_relaxed(RZG3S_PCI_PEIE0_DL_UPDOWN,
+>> +			       host->axi + RZG3S_PCI_PEIE0);
+>> +		WRITE_ONCE(host->link_rescan, true);
+>> +		enable_irq(host->event_irq);
+>> +		irq_wake_thread(host->event_irq, host);
+>> +		break;
+>> +	}
+>> +
+>> +	return NOTIFY_DONE;
+>> +}
+> 
+
