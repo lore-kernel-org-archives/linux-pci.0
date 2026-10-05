@@ -1,206 +1,344 @@
-Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021094.outbound.protection.outlook.com [52.101.125.94])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej2-f12.google.com (mail-ej2-f12.google.com [74.125.228.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDAA02F0680;
-	Mon,  5 Oct 2026 17:12:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.125.94
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 690A931D367
+	for <linux-pci@vger.kernel.org>; Mon,  5 Oct 2026 17:54:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.228.140
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791220325; cv=fail; b=HCQ7kirawsFhFaxgmWyaRRtrvSzB3RdH6aPx0k3NLllgvQCZNwJU71U0uSlEmUZiZmMS8OryV5ojgtUCTGt0IZqALP2TspEleD4H0MxCjk+o038t2xhGPpz91ikeNiTMrF1wBItTcchzJrpSe0FV54YSwR5W35q23cYPmCoDXsU=
+	t=1791222851; cv=pass; b=FsOXhAWC4NZ0kt7v4zV3/qE5Eotet2AfnReAuH3FcCD2DfhdYnjSa7XGh+ikPBk4zar6+lsIstPx5jBc3+9lMdzLYRHmdHCMdwYmDRoqOASI0TCHzVoYvvy7SOGBhw513mqbZvpVhzq5WU2nRr3hp/0RznxCGbHspVdAFWzgdvY=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791220325; c=relaxed/simple;
-	bh=15VkQGjMj6NHwCkjlaJE6dxrmiXexWS40y4nYxgDqi0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=O37macIQL+tMiWZOuq3TwOqCbMOJUpzvz6x3DUp7VmFjkH/1N+GoaarT93Jd4qYWuwgYD6QqfAJ7boCh4bSIsmdVufzftWE4bJzcK0UyTzMb/OMr+A0EjxObTkWCIzBLWXmKRLORZj0tskWE+NEGNbymdQZlYSredUFVMndeu5Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=MStQCown; arc=fail smtp.client-ip=52.101.125.94
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	s=arc-20240116; t=1791222851; c=relaxed/simple;
+	bh=oeiHp/KTwJO4QacRK6gvRDvsAn2DVttHJkCeINCCYPk=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=gz/2bxVPx4Ex/JyrXCDlj2cmFeIQne7J4jJ/1kxbYPe/7CVjH40LurhozlT/uDAxzpH1vffK/LvD6Fk9pKiaAkqyTZ2IThG6U3VPwMXQzA7agThNT8/NMbraAZ9lSbL2Dz2yVr5ErRo20DU954PZWlg+FogTeoXz1TBZFpgTXj0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=skrRp4N1; arc=pass smtp.client-ip=74.125.228.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="MStQCown"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=n9HVYbfkdmyDISacQ858AOd2rOcDt2QXQmsFLOs4z16mpvcI2yQ1lO1AoWHIpRT2sS/uHBXx9F1iN/osEIwUZhKgh4yBL97xNFBzODkcq+lS7FLCohqvG/uJRCgtBMZcA9Qg+qqKqnLNWzYXJ/iO6iliNrDcb+NGhbJxBglZafuUtZlXh9iO54EjB2vhntcr1u1Kp8Eo0PIy4u37VH7LFydxJHP2zDBzHHijZ+PgiXNFTxtoJOwMhFjW6ijzGcQJIniWYXDiorBtW1VYl2GnEfbnvAyKAm1BKP/G99WZRDrJ12ujPAg4l7IZgM/dBMJA0VWCODn9+woqzQLSMsck9w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ishS5DoktF1HyTvJ4eQawrmeWZ2n0FFi8SyESmBm7wA=;
- b=Uy5jxXBvr8muX1yCo77/pB7AOIbcIlygR+Zgnae+5jpIGgXkNEJOpiLv8GLcoL28gU97whAiNdnbVs1QRLQNngNFyYYXJwtR2CTY0/UwuFHxgEuZvBXEeKRXa8yHZiA+bRvkQWlARYtbgMsM3aR8i2NBLaBBCQNsATwjfOSU3gqcEBXmOAPB8TWf5Sq2S+bNlJ2qwtfvFG4Bw46H5VKfxPS9bo64wEyuJIrtN33nMrT/axhGg+Z6iokGno7iGtKCvU+H/npLQYLaQNbvJma4kS2hwNBm4iCFTljMdlblPiMNyNh9UQ4uIXFcJeuMJOVVnICNXvVtFIBQLyhGgrIy1A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ishS5DoktF1HyTvJ4eQawrmeWZ2n0FFi8SyESmBm7wA=;
- b=MStQCownvC5DsbqYTFGPfpwaE1K6LkO22b+udO76hTMqGTUrMSmqfVkuX2CIh++K+47pSpP9eJnqUgG+Mh3hZDLEtjzJTw2qFlZGnr1sTZzTv+1UGKS1pNB77xV1LSc/CcVPaxmrEKA338kGCJ6T5OI/L9KhxvvNTiNoaV/ZwBg=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:325::11)
- by TYRP286MB5578.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:18a::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.20; Mon, 5 Oct
- 2026 17:12:00 +0000
-Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
- ([fe80::cce5:2aa8:53f9:dba9]) by TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
- ([fe80::cce5:2aa8:53f9:dba9%5]) with mapi id 15.21.0472.016; Mon, 5 Oct 2026
- 17:12:00 +0000
-Date: Tue, 6 Oct 2026 02:11:59 +0900
-From: Koichiro Den <den@valinux.co.jp>
-To: Marek Vasut <marek.vasut@mailbox.org>
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>, 
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, 
-	Jingoo Han <jingoohan1@gmail.com>, Philipp Zabel <p.zabel@pengutronix.de>, 
-	Frank Li <Frank.Li@nxp.com>, Niklas Cassel <cassel@kernel.org>, 
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>, Serge Semin <fancer.lancer@gmail.com>, linux-pci@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 15/15] arm64: dts: renesas: r8a779f0: Describe the
- PCIe AER interrupts
-Message-ID: <mtczl7e3tlwt26gj56wmvfeotuvd63dfpsmazo3yg4sqstyuhn@omeidmdgauzz>
-References: <20260928165230.3397664-1-den@valinux.co.jp>
- <20260928165230.3397664-16-den@valinux.co.jp>
- <d9ffb9f3-ad89-4912-b863-637c838196cb@mailbox.org>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d9ffb9f3-ad89-4912-b863-637c838196cb@mailbox.org>
-X-ClientProxiedBy: TY6P301CA0015.JPNP301.PROD.OUTLOOK.COM
- (2603:1096:405:3bf::14) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:325::11)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="skrRp4N1"
+Received: by mail-ej2-f12.google.com with SMTP id a640c23a62f3a-c29703cb796so308591566b.2
+        for <linux-pci@vger.kernel.org>; Mon, 05 Oct 2026 10:54:09 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791222847; cv=none;
+        d=google.com; s=arc-20260327;
+        b=fX9z1sQbXpkVQfimvYooMcADOM4i+euXZ6ywpQ+p08YXeayGC5+4bqR8PQ1/tZz+Yc
+         tWztOtsplH5Xr7HF2HWLM3PTKRjKccsLKDR0f5IpBMo9ORNI4eiigz6qxQNlWYDkFzXj
+         52sDJiQwOEMEXMuOedby3b14C4XdL8Ufz5k1JMYkKRdO+UX75+yMFLRRjpk/mjOfYIo/
+         AKjkOXF2YdWAVRroZlnEwnNJCvESl1iLWT+8RwQ4/T6CHl1ijuUX5tvWR4e4LWvGncFg
+         r69rNURza11O4ihrSF8KOUuQDa1whM7qg2UsC3P9iatggvYQB7uH53TzhSK8MO0HPVS2
+         LesQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=rufYfABK5UKmdjHYuYOKSM2AVE49bISrbMG52hK0RDc=;
+        fh=c6UZfEaxe5FWo2bunruNy2Xqg9hAtjPQfHgmIaXvpj0=;
+        b=ZFpUK24ABali426/JvqiDPEXloiNjUfAHfcC0IhJXLDSNqwFrTSx+OnRUHzApSZgrh
+         +wSIBYCsd7s1GlvwbaM/CzxnxJ1KUoZhOZATIS9lZIJbwPsuDB2Ym+W4aEO4kTZit7qp
+         PH3d7momO0efZC8hc9Di+pjRHkiNquRpn6fuNE3ffUhUe5ttV80wCxW+5s/ZNljA8oDI
+         4Xy8bAg/2FWRJm1qQpFuqM7I7cM3N4RqpK6737XT41zWnS/LwazJHWw8kdR+5Me5cxtV
+         +n9rsq/my4ubko9psP2yilG8GcJwvb1HYt2nRDNiuO+j4zMgXav/sUHIVKQ5PPGbiCYF
+         k/3Q==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791222847; x=1791827647; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=rufYfABK5UKmdjHYuYOKSM2AVE49bISrbMG52hK0RDc=;
+        b=skrRp4N120E2Dx2S+qbAFAHYp62hs8dto01ECdk5dqqusqlJgVm5XIsEof0Plm5+J4
+         N37ZOfKWuyBixDBTZRdoZi+pn6ByTMyaS1Sin6iY9ehr3Y+DMkfH4h3bHTJcfyOgp6aK
+         UBqSWtDmkWJIC7Ygr877kVJgkoxB1/Lx6aSyyp/tOp5v3D/BzJvlHMJ12GI+vWR3l4A/
+         B8+JLoDTgN4lFVjxl8Kq98zgKuSg0cohqXIVCH7zH9fp7j5Dn5b56Nmi0/qJCvRFxwmC
+         YPyPiKQXVc6dOS2sTzHwAS7yNt46rLGFWqeQNTsOhH68l7BGNvNMyIaUFRGgxTDiay79
+         0k8w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791222847; x=1791827647;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=rufYfABK5UKmdjHYuYOKSM2AVE49bISrbMG52hK0RDc=;
+        b=oL16g4gAXxTHTL2uYgCrIO9+9YJXsD6bHYpttVWRDBnkVIwf3odpK1HpXPDsq9SfJD
+         84TCyoslY7WYxcfRB1d71xNH4e+JfxFMUn2e6mZ+uuGjW5nuQtja6ZihhW9p60PMKGAV
+         VJU5ez2fmp7yxjdTN5GcN/e7Mze++0LMaR7KnYGt/9BUpPwCtl45j6KwvsS5h6uhm8my
+         g9GvpIcl170Ec16Vofo5/TgfcJje9yGvwuKnFr43xxA18KXvNVT5w/z8+EQAzALWjoS5
+         1WbP7TNPZg50BB5al27Uhr/XV5Jf9gmzpq4LtAt3gAomX+WdP/mIK3j2bSSC6regsl3V
+         lYug==
+X-Gm-Message-State: AFq9FYKfkcxeNDdm6+2/7VefXpeY0RGLxLCQoGuuGBwbRWhOQvMJgpM8
+	BaoCcu2hA5AdARoghjxC/tCYG4ZIjlBpoR5U0KIy+7yYCOpZk24heKpVHRSsldIet3fE7yE19rt
+	KZCdl6viYdos0ufidaZPfdMw0GucY9to=
+X-Gm-Gg: AYBFou1eTGuw4JLqL4+Dl6w185z2MS28qjmd2MLwHr0YvSoXnnWvXL9J10CAjtf01z/
+	YluqgrwKmW//na0/cd4So/a+joSgRVstU5oBNR/CYkFWOtjLX3Fc3ctlC6L3ngpPaCjkTwQN52H
+	qJIV/ovfeM5deo23/n2xpzSEJMTegPD6euyLfaX/Gzrp3lFAkmE+5z18JEH6JDTTX2meG1LX853
+	8X6ldWhi2WmVe7fjUtfj9XvdSJeEGBUF+dMlzm1jr0TCTUAYbxV7CMdlHgz0h5iuqZp1cN25kt3
+	x9IBJPYb87zHHd/9LgVl1y03pXMtnAge4EoUac66zwDJZtRmggnHioE8th0AucJg52w12uLlZfU
+	ekDoA3fak86NXBrjK0//7fpoLw2sdxpEdeY+t2kBA7YsJ/qMYP43y84c0GvKhXRz0Ynm8l3vvyn
+	aZVB3LGlKrYVbuJWJBE3om
+X-Received: by 2002:a17:907:c785:b0:c29:609a:be6 with SMTP id
+ a640c23a62f3a-c2e4b00c1a6mr988906466b.40.1791222847227; Mon, 05 Oct 2026
+ 10:54:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB6866:EE_|TYRP286MB5578:EE_
-X-MS-Office365-Filtering-Correlation-Id: 22572714-0335-4469-bfbe-08df2303c488
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|366016|10070799003|23010399003|1800799024|10067099003|56012099006|4143699003|18002099003|22082099003|27256017;
-X-Microsoft-Antispam-Message-Info:
-	ux2o1c1O/JEICYw9pjHVpGxZqvlFdZ8WXCDBXjjsDZ658Gbx93FreMYGuNXYuHPO/WFSE5SJOkDX0PUqs7JgNqjmIq1raeA5pLjXgCdqCyOjbIcsX06JPVtekjDd5Md7myCbgCbdo3H3N3LYmUDe/inSoRUNzbrhrbikBe5j2bi1G3M642CXDT3/2Jsy6VJQ8lK/N8qygnilx/pIoX4eUWSI1Dy5BV7Wt768mknSHeIMASZn53K2C5enKfB4ABhYFsnHikDXolMw/wSxT61Vzjlu3ck1NyNE52zVW+Orne1JZKmDtT/nCjhkPsfRK6xPZFhYWJhmzTFmjaDkY/P5PWLD8GvJ0n9iJnDhTMfb9SSIrtA+PM1TGSa8dbdGsJ3O1uaLLXQHrax3wOaHKlSrSwhpYeT+Qguif95M//YuYAOROQOmOmsKX8w7PLi4gzqCH/eOca4/1HBhrq83KC8PRgsYqvHtlQ83V8PznZBuUho/GBd8gvz7/qFZEjiZWzLV2lXspPmxoxvDJ/VrnknNR5ainT3ZwhgU11RihyqgZ57OX83q5ayck6XYKZW3B8nm5yjZHJuDa2Bri5PPbUw3PMWg8Sh9ybO9rEjN486qibWog7HXxESnsC1x3ZBpABkEK2uc1UNqQLtka7v1B8U/QoaxcLeHW78r+63+r6xWGwGVBptUlYgKxp0jispJM/8xN+Owg9Wd7cTHPmtANoYiZg==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(10070799003)(23010399003)(1800799024)(10067099003)(56012099006)(4143699003)(18002099003)(22082099003)(27256017);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?G7U8On8SiyOO5EZ0bBfJu3yE/yu7m4gLL3SK1nebuGL5wvBO5XAy6batHTjA?=
- =?us-ascii?Q?Ay/QF+CU/hR1t4Jp/xLgRjWcaA1ToABYuwiODqozH6JnjLjavdWIF42dqP1f?=
- =?us-ascii?Q?ftzXQTOpHjBooLKcB9nDWd4QKcpUvBSNHhPu6WBzPOlSLLq7Rpd5BkYxxCnm?=
- =?us-ascii?Q?z/tA9kp2nYsBV0TruGfXaOZe2/JksPu6X1flXMKG3YWsFba0+16r8A1uXmLe?=
- =?us-ascii?Q?anKTbX4uWb1c/ZzA/7k/dJbIwKDJm9nYYa5KplMb9H14+f2OParkvsCwyQHP?=
- =?us-ascii?Q?vddJkfSx7Xy6Zvg2yTxBSF7WdoZoDkgc8uq5LrHGCaPZnmvcJ8Ya2QB5Pkc3?=
- =?us-ascii?Q?HucCBIDvIbZ4CbAjL4W0Ac1a20tpbFZ1R2n+5cOW3efTuwNouvr6Wj79zkus?=
- =?us-ascii?Q?DkerC+dnC3g/fnyNyzZEij64cTxWPr9rd8K44qtgqUggw1T8VJ0mWM9x7VrN?=
- =?us-ascii?Q?O2cDBiKmzwYN1XZNADoy+2/LfFwEoCGfF2wgBXXBXDhalU+D+FGWxqOeA4Rv?=
- =?us-ascii?Q?nyRzxyVFjZkawsufzBvpp+4SIZjMdC2giGvcc0d22/73pURSN9zm68xrY/Gk?=
- =?us-ascii?Q?23YMxZgAKdzmPsDBR3J3SgnfdPyAPYSePkuUS1LOT9Z4UPlf6tACc8QKeR8Y?=
- =?us-ascii?Q?naREJyh7gC0QE03lS6JUAIqZYe+lTG/6rb+FGRTgW+9yjAmEeMm9rJDlSGqr?=
- =?us-ascii?Q?pOZSXpxRHGsvjj4vxv+aH+duUairFEzQrnVTlaHj7VFb7uoAhpdmUmZ/VbtH?=
- =?us-ascii?Q?KLKFCSfymV2dt6cvbmob2b097zFHBxhAMG2vqMosjOnkXcpZ3QwadeVDz9LZ?=
- =?us-ascii?Q?ubNhFFLsrrRLzgdWm3YLqXzFE0FRXEv9ACRV1p/zJ3dtCV2DLHwcHzlzkZc7?=
- =?us-ascii?Q?jji7amxcqRyxWR3WWeoUaFxTwEhisrdIkzfR6/dAUE7cGMpcAwqAHI/QJbFZ?=
- =?us-ascii?Q?ZrSyl0YoR7CpCT1xrq9N6EYCUB1VrANFRUFkVfVeTbG3PnlnT84S7WtWK8TB?=
- =?us-ascii?Q?FC+41aI/V0TK6DKmvVmbqn20Vh3m7jsjCRpZU1CGyL605im4k8uVb4ceANhi?=
- =?us-ascii?Q?f2YLak+Ma4Ev6xyzYqkQazkiIuUj3dRDGHvhAozgoFi6b1ERvXBcX5P09/jZ?=
- =?us-ascii?Q?reltNmK4PB5nVbE39MArzI1rngCBRwnq/PooBBIp/J5I+t7Qj0by9jmuKRlj?=
- =?us-ascii?Q?0YZ8a5QoCiqkzPlAOMb1TLa4QAIvAI7EcXMD3W0UbTMppSFnLXfjj1ZdFIuJ?=
- =?us-ascii?Q?Myz9rnaUD9WFEgvbzPzjsGmp3scDoW2ojUh6X6n7ghsn7zRq6XpubQlYlCb7?=
- =?us-ascii?Q?47adBkpSd2CRWG8qIxFvBYytrqt1BLBLhlP8sA7JrkRlCAlFdV3B3PpwN9fK?=
- =?us-ascii?Q?OszPA0rqX0XtsuKqcG+7lMWjYJ1qOp5Ca+RQwk1OnBhruJdHmYl4FiIAVVtk?=
- =?us-ascii?Q?cUuDZs7KFrEOOrxzku2o0byeDCJPnEH0qO8m607OI8swzeb2PVPBjGLFac2d?=
- =?us-ascii?Q?uBIA56SMTt5YookRXRTt1Gs1voWFZsfe6iqSNEwifJlKhlGIfryUKCCM/CiM?=
- =?us-ascii?Q?cIT+HluW8pssrCxmLC8Aolk6TXxhWPRNFnt4XtwT17EJfjTw7VmmZ6X4U9LW?=
- =?us-ascii?Q?skrEpwSZHbWs/8/imvsdZH+kItzbMefK28jKKSzp4qxgRzjXV5BaFSmRibhw?=
- =?us-ascii?Q?UZUYpN3BBdZcK4+VLEZKPhbbk+jCJ97ibMSfpcVC8lFOxDqX5W+UJeh+ycdS?=
- =?us-ascii?Q?383ZIHKV6o8+EqUqC/ZM4XYAD3G3LCEQUydu6VIXDBPVCw6lPUq4?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 22572714-0335-4469-bfbe-08df2303c488
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Oct 2026 17:11:59.9773
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: gREsjXKrUmaoIECiq+VGfMHu7cJrMpnl/Z5gaYyrAFtU/jq2eEXcnxgUpIS5snko8Uk060CYWjX3vPg+dnebcw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYRP286MB5578
+From: "Perlow, Jason" <jperlow@gmail.com>
+Date: Mon, 5 Oct 2026 13:53:55 -0400
+X-Gm-Features: AclHuK-786zF4ENB_sM-58clbMTGhe-HLv-miexpx8ux--fasyD2B84Tt70Y40A
+Message-ID: <CABZrw2HcaOh3DHTJtxU5dXrb3Vg19scr6+qR-xe_+R7rME35_Q@mail.gmail.com>
+Subject: [REGRESSION] PCI/AER: MacBookPro16,1 powers off ~20 s after boot
+To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	regressions@lists.linux.dev, Aditya Garg <aditya.garg@linux.dev>
+Content-Type: text/plain; charset="UTF-8"
 
-On Sat, Oct 03, 2026 at 10:00:13PM +0200, Marek Vasut wrote:
-> On 9/28/26 6:52 PM, Koichiro Den wrote:
-> > The PCIe controllers report Root Port AER notifications through
-> > intreq_pci0_lperr (SPI 421) and intreq_pci1_lperr (SPI 428),
-> > respectively, separately from the integrated MSI receiver interrupts.
-> > Describe these interrupts with the "aer" name so the controller driver
-> > can use them for Root Port error reporting.
-> > 
-> > Append the new interrupts to preserve the existing interrupt indices.
-> > 
-> > Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-> > Signed-off-by: Koichiro Den <den@valinux.co.jp>
+Hi Lukas, Bjorn,
 
-Hi Marek,
+Since commit eddba19b8b5f ("PCI/AER: Support Advisory Non-Fatal
+Errors"), first in v7.3-rc1, an Apple MacBookPro16,1 (T2 chip) loses
+power 17 to 24 s after boot. v7.2.9 is fine; v7.3-rc5 and v7.3-rc6 are
+not. Bisection lands on that commit, and v7.3-rc6 with only that
+commit reverted no longer powers off. aer.c has not changed since, as
+of v7.3-rc6-3, so I expect it is still unfixed; I did not find an
+existing report.
 
-> Please also feel free to add this patch for R-Car V4H (performed cover
-> letter tests 2 and 3 on Retronix Sparrow Hawk)
-> 
-> diff --git a/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
-> b/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
-> index 5284923b6cef7..8342d3c6f9881 100644
-> --- a/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
-> +++ b/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
-> @@ -801,8 +801,9 @@ pciec0: pcie@e65d0000 {
->                         interrupts = <GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
->                                      <GIC_SPI 450 IRQ_TYPE_LEVEL_HIGH>,
->                                      <GIC_SPI 451 IRQ_TYPE_LEVEL_HIGH>,
-> -                                    <GIC_SPI 455 IRQ_TYPE_LEVEL_HIGH>;
-> -                       interrupt-names = "msi", "dma", "sft_ce", "app";
-> +                                    <GIC_SPI 455 IRQ_TYPE_LEVEL_HIGH>,
-> +                                    <GIC_SPI 454 IRQ_TYPE_LEVEL_HIGH>;
-> +                       interrupt-names = "msi", "dma", "sft_ce", "app",
-> "aer";
->                         clocks = <&cpg CPG_MOD 624>, <&pcie0_clkref>;
->                         clock-names = "core", "ref";
->                         power-domains = <&sysc R8A779G0_PD_ALWAYS_ON>;
-> @@ -850,8 +851,9 @@ pciec1: pcie@e65d8000 {
->                         interrupts = <GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
->                                      <GIC_SPI 457 IRQ_TYPE_LEVEL_HIGH>,
->                                      <GIC_SPI 458 IRQ_TYPE_LEVEL_HIGH>,
-> -                                    <GIC_SPI 462 IRQ_TYPE_LEVEL_HIGH>;
-> -                       interrupt-names = "msi", "dma", "sft_ce", "app";
-> +                                    <GIC_SPI 462 IRQ_TYPE_LEVEL_HIGH>,
-> +                                    <GIC_SPI 461 IRQ_TYPE_LEVEL_HIGH>;
-> +                       interrupt-names = "msi", "dma", "sft_ce", "app",
-> "aer";
->                         clocks = <&cpg CPG_MOD 625>, <&pcie1_clkref>;
->                         clock-names = "core", "ref";
->                         power-domains = <&sysc R8A779G0_PD_ALWAYS_ON>;
-> 
-> And a matching patch for R-Car V4M (boot tested, but the board has no PCIe
-> device plugged into the slot)
-> 
-> diff --git a/arch/arm64/boot/dts/renesas/r8a779h0.dtsi
-> b/arch/arm64/boot/dts/renesas/r8a779h0.dtsi
-> index 5f9223a0f4468..a377aab3c8be0 100644
-> --- a/arch/arm64/boot/dts/renesas/r8a779h0.dtsi
-> +++ b/arch/arm64/boot/dts/renesas/r8a779h0.dtsi
-> @@ -683,8 +683,9 @@ pciec0: pcie@e65d0000 {
->                         interrupts = <GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
->                                      <GIC_SPI 450 IRQ_TYPE_LEVEL_HIGH>,
->                                      <GIC_SPI 451 IRQ_TYPE_LEVEL_HIGH>,
-> -                                    <GIC_SPI 455 IRQ_TYPE_LEVEL_HIGH>;
-> -                       interrupt-names = "msi", "dma", "sft_ce", "app";
-> +                                    <GIC_SPI 455 IRQ_TYPE_LEVEL_HIGH>,
-> +                                    <GIC_SPI 454 IRQ_TYPE_LEVEL_HIGH>;
-> +                       interrupt-names = "msi", "dma", "sft_ce", "app",
-> "aer";
->                         clocks = <&cpg CPG_MOD 624>, <&pcie0_clkref>;
->                         clock-names = "core", "ref";
->                         power-domains = <&sysc R8A779H0_PD_A2PCIPHY>;
+Hardware
+--------
 
-Thanks! I'll add them as two separate patches in v3, with your Suggested-by.
+MacBookPro16,1 with an AMD Navi 14 dGPU and the Apple T2. The bisect
+machine has a Core i7-9750H; a second unit of the same model, used for
+cross-checks, has a Core i9-9980HK. I have not tested any other T2
+model. The internal SSD, the T2 and the audio device are functions of
+one Apple PCIe device behind root port 00:1b.0:
 
-Best regards
-Koichiro Den
+  04:00.0 Apple ANS2 NVMe          [106b:2005]
+  04:00.1 Apple T2 Bridge          [106b:1801]
+  04:00.2 Apple T2 Secure Enclave  [106b:1802]
+  04:00.3 Apple Audio Device       [106b:1803]
+
+Symptom
+-------
+
+The machine powers off abruptly 17 to 24 s after boot. There is no
+shutdown sequence; the previous boot's journal simply ends. Nothing is
+logged beforehand: no AER message, no oops, no lockup, no thermal
+event. The T2 controls power on these machines, so I assume (but
+cannot show) that the T2/SMC removes power.
+
+Bisect
+------
+
+v7.2.9 good, v7.3-rc5 bad. Vanilla mainline trees, no out-of-tree
+patches in the kernel image, CONFIG_PCIEAER=y,
+CONFIG_ACPI_APEI_GHES=y, kernel messages captured over the network.
+19 steps, 4 skipped because those trees oops early for an unrelated
+reason (the ones I looked at were in thunderbolt icm_probe at about
+5 s). Good boots were watched for 55.8 to 69.7 s; bad boots stopped
+logging between 17.9 and 24.1 s. The complete history, every commit
+tested and every result, is in Appendix B, and the exact method in
+Appendix A. The result:
+
+  # first bad commit: [eddba19b8b5f] PCI/AER: Support Advisory
+  # Non-Fatal Errors
+
+Revert test, v7.3-rc6, same config:
+
+  v7.3-rc6 unmodified:            powers off at 16.7 s
+  only eddba19b8b5f reverted:     survives the full 64 s capture
+
+With that revert on top of 7.3.0-rc6 plus the out-of-tree t2linux
+series (one kernel image, built once), a normal desktop runs on both
+MacBookPro16,1 units: the second one has been up for more than 45
+minutes, and the bisect machine ran sessions of 32 and 22 minutes.
+For completeness: the bisect machine once lost power after about 10
+minutes while I was manually switching the display mux and powering
+off the AMD GPU, which I do not expect the firmware to support. I
+have not established the cause and have no evidence either way on
+whether it is related.
+
+Which devices are affected
+--------------------------
+
+On v7.2.9, where the Advisory Non-Fatal Error bit is still masked, the
+Correctable Error Status register has AdvNonFatalErr latched on
+exactly these functions, with every Uncorrectable Error Status
+register clear:
+
+  04:00.0 04:00.1 04:00.2 04:00.3  (the Apple device above)
+  01:00.0 AMD Navi 10 XL PCIe switch upstream port [1002:1478]
+
+The pattern is identical on both MacBookPro16,1 units (same model, so
+this says nothing about other T2 models). The Titan Ridge 4C bridges
+and NHI on the same machine do not have the bit set.
+These devices report the advisory bit without any matching
+Uncorrectable Error status, which looks like the "non-compliant
+products" case the commit message mentions.
+
+Only one of the two machines was used for the bisect and the
+power-off tests above. I have not yet booted an unreverted 7.3 kernel
+on the second one, so I cannot yet say that the power-off reproduces
+there.
+
+Control: an ASUS ROG Zephyrus M15 GU502LV (i7-10750H, RTX 2060, no
+T2) has the same bit latched on its NVIDIA TU106 functions
+[10de:10f9, 10de:1ada, 10de:1adb] and on Titan Ridge 2C [8086:15e7,
+8086:15e8, 8086:15e9]. It ran a 7.3.0-rc6 build with the commit
+applied (plus the t2linux series) for more than 15 hours without a
+problem, and the same reverted kernel image as above also runs on it
+normally. So unmasking the bit is not harmful in general; something
+specific to the T2 platform is.
+
+What I do not know
+------------------
+
+Which device triggers the power-off, and why. My guess, and it is
+only a guess: treating a possible Advisory Non-Fatal Error as
+non-Advisory and recovering through the uncorrectable path resets or
+disturbs a T2 function, and the T2 then powers the machine down. I
+intend to build a diagnostic kernel that can leave the bit masked per
+device to find out which one.
+
+Possibly related, different symptom: "PCI/portdev: Disable AER for
+Titan Ridge 4C 2018" (Atharva Tiwari, January 2026) concerned AER
+warnings on T2 iMacs.
+
+What I am asking
+----------------
+
+Which direction would you prefer: a revert, or a quirk that keeps
+Advisory Non-Fatal Errors masked on the affected Apple functions (and
+possibly the AMD switch port)? The t2linux project carries a revert
+for now: https://github.com/t2linux/linux-t2-patches/pull/70
+
+I can test patches on real hardware and can provide full lspci -vvv
+output, the complete bisect log and the captured boot logs.
+
+#regzbot introduced: eddba19b8b5f76d57424ee328a68fd495c5db857
+
+Thanks,
+Jason Perlow
+
+
+APPENDIX A - METHOD
+
+Machine: one MacBookPro16,1 for every boot below, running a Debian
+trixie userland from its internal SSD. The distribution's 7.2.9 kernel
+was the default boot entry between tests.
+
+Build: git bisect in a clone of torvalds/linux (git.kernel.org). Each
+candidate was built on a separate x86-64 build host (16 threads, gcc
+15.2.0, binutils 2.46) with the same recipe:
+
+  cp bisect-trimmed.config .config
+  make olddefconfig
+  make -j10 bindeb-pkg LOCALVERSION=-bisN-vanilla-rc0 \
+       KDEB_PKGVERSION=<release>-1
+
+bisect-trimmed.config is a 7.3.0-rc5 configuration trimmed to build
+quickly (2068 options built in, 204 modules). It has CONFIG_PCIEAER=y,
+CONFIG_PCIE_DPC=y, CONFIG_PCIEASPM=y, CONFIG_ACPI_APEI=y and
+CONFIG_ACPI_APEI_GHES=y. The same file was used for all 19 steps and
+for both v7.3-rc6 tests. No out-of-tree patches were applied to the
+kernel. The release strings come from each tree's Makefile, so commits
+on 7.2-based topic branches show as 7.2.0.
+
+Boot: the .deb packages were installed on the laptop and booted through
+a one-shot rEFInd entry; the default entry stayed the stable kernel.
+Kernel command line for every test boot:
+
+  console=tty0 ignore_loglevel keep_bootcon initcall_debug
+  printk.time=1 log_buf_len=16M panic=0 fbcon=font:TER16x32
+  systemd.show_status=1 systemd.unit=multi-user.target
+  modprobe.blacklist=sbs,sbshc
+  systemd.mask=ncz-usb2-rescan.service
+  systemd.wants=ncz-netlog.service
+
+(plus the root= options). So there was no graphical session. sbs and
+sbshc are the ACPI smart battery drivers; ncz-usb2-rescan is an
+unrelated distribution boot workaround. Steps 13 to 19 and the two
+v7.3-rc6 tests also had module_blacklist=thunderbolt,t2thunderbolt,
+added after the early oopses (in thunderbolt icm_probe, at about 5 s)
+had cost several skipped steps. Steps 1 to 12 ran with Thunderbolt
+enabled.
+
+Capture: a small userspace unit (ncz-netlog.service) streams /dev/kmsg
+and the journal over TCP to a second machine from early multi-user
+boot, so captures begin at roughly 10 s of uptime. Each capture file
+records the uptime of its last line.
+
+Verdicts:
+  good: the machine kept running and logging past the point where bad
+        kernels die (the cut always came before 25 s).
+  bad:  the capture stops before 45 s, the machine stays unreachable
+        for at least 60 s, and the next boot's journal shows the
+        previous boot ending with no clean shutdown.
+  skip: a kernel oops or panic in the capture or the previous boot's
+        journal.
+
+After a cut the laptop does not restart by itself, so it was powered
+on by hand and booted the stable kernel; the verdict was then confirmed
+from the previous boot's journal.
+
+Caveats:
+  - One machine was used for the bisect and for the power-off tests.
+  - No desktop session was running.
+  - sbs/sbshc were blocked on every boot, and Thunderbolt from step 13
+    on.
+  - The laptop was powered from, and networked through, a Thunderbolt
+    dock during the bisect. An earlier test of a T2-patched
+    7.3.0-rc5 kernel with the dock unplugged also lost power, but I
+    did not repeat the bisect undocked.
+  - Out-of-tree DKMS modules for the T2 hardware (t2smc, t2gmux,
+    t2smp, t2thunderbolt) were installed for these kernels and may
+    have been loaded, which would taint them. An earlier test with
+    those modules blocked still lost power.
+  - Step 12 ran 816 s before an unrelated oops, so it did not show
+    the cut and was treated as a skip rather than as good; this does
+    not change the result.
+  - The device that triggers the cut is not identified.
+
+APPENDIX B - FULL BISECT HISTORY
+
+Good: v7.2.9 (5fce161649b4). Bad: v7.3-rc5 (72d3fcf802c4). The first
+commit tested is the merge base, "Linux 7.2". Observed = uptime of the
+last line captured. Results: 8 good, 7 bad, 4 skip.
+
+ #  commit        result observed   subject
+ 1  8d3ae59288f1  good   55.8 s     Linux 7.2
+ 2  56ea4e86832d  good   67.7 s     nstree: check listing permission
+                                    before taking a namespace ref
+ 3  93e4b3076b5f  bad    24.1 s     Merge tag 'char-misc-7.3-rc1'
+ 4  21bd0802cd3f  good   60.1 s     Merge tag 'for-linus' (rdma)
+ 5  0b0e645ed2c8  bad    22.9 s     Merge tag 'auxdisplay-v7.3-1'
+ 6  e5f92606156a  good   69.5 s     Merge tag 'mm-nonmm-stable-2026-08-
+                                    22-16-57'
+ 7  b6b019a1d9b9  good   69.2 s     Merge tag 'parisc-for-7.3-rc1'
+ 8  b130a2caf5d3  skip   oops 5.3 s Merge branch
+                                    'pci/controller/tegra264'
+ 9  455b454c87bb  good   69.0 s     i3c: mipi-i3c-hci: Add support for
+                                    AMD_PT I3C controller
+10  9bb52aa1972d  skip   oops 5.5 s Merge branch
+                                    'pci/controller/dwc-meson'
+11  b4b07fb82b9e  skip   oops 5.3 s Merge branch 'pci/wake'
+12  651fb94aaf24  skip   oops 816 s alpha/PCI: Fix I/O port accessor
+                                    argument order in
+                                    pci_legacy_write()
+13  625ae0ff41e5  bad    19.9 s     Merge branch 'pci/dt-binding'
+14  9f91b2b716a0  bad    19.1 s     Merge branch 'pci/procfs'
+15  ea55835bc538  bad    23.3 s     Merge branch 'pci/dpc'
+16  d358e9ad15c2  bad    22.3 s     Merge branch 'pci/aer'
+17  8446e1147f65  good   69.7 s     PCI/AER: Deduplicate logging of
+                                    Error Source Identification
+18  f141f74c45c6  good   67.6 s     PCI/AER: Move retrieval of FEP and
+                                    TLP Log into helper
+19  eddba19b8b5f  bad    17.9 s     PCI/AER: Support Advisory
+                                    Non-Fatal Errors
+
+Full hashes of the decisive steps:
+  eddba19b8b5f76d57424ee328a68fd495c5db857  (first bad)
+  f141f74c45c6f774eebdb7e45bd609be5122bfa8  (last good before it)
+  8446e1147f65563d374ffa54dc3ba81adb1342c5
+
+The v7.3-rc6 tests (a90ee4305c4a) used the same recipe and command line:
+unmodified, power off at 16.7 s; with only eddba19b8b5f reverted,
+survived the full 64 s capture.
+
+-- 
+Jason
