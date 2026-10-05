@@ -1,276 +1,382 @@
-Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010060.outbound.protection.outlook.com [40.93.198.60])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C319374721;
-	Mon,  5 Oct 2026 07:03:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.60
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791183835; cv=fail; b=VgTQFAAokWR/srIweSaIS7nKbkocXZH8ag9kIQjEMI67rfY9g/GHco5WVDqwlkCHTuIdS7Yc2D64seAK30uMK1+ZzmZ9kp1LlCT9wIs5mLUL2BEzU0xENbAafTmxQYtwQmpNUmEFUW6ha/+JIi5rRwth73HhZnvwNjbrF9ZQR5Y=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791183835; c=relaxed/simple;
-	bh=6YVFgDKjpB32oDKr93MuEb9P2RHrLX1NkvrowuzNQG0=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=t60RRftWE2XOcBGiCBXpGscSC8MbuSNss8sUNciNsejelAVe1qUBPnaK8DL+B4pDQLsXaOEMOxJ2VvgMQ25a+A6msQz+Ejpv9gUo5lBSj854vGYp4ylky+g65DJXpXhtpWktiELbdI+zu4B48IjNAsnxM3YEfys0aMkgUFSkQlM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=snD9H5cK; arc=fail smtp.client-ip=40.93.198.60
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0590D403138
+	for <linux-pci@vger.kernel.org>; Mon,  5 Oct 2026 08:40:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791189613; cv=none; b=B5JUQgNfZ+tgCg1GWNDuUoAULTYi0wz1rWchv4/RAGgBfauGrqCwhdu7LTPvieH27IqtSHB909CrHw/gxS+vOWSHkS5+NSARthUmAqeqSJ+CVn1D3f6+jFb4IYLuuDcSKA+d/JUtKRiiQb4Tga00IU0b+oRCLNGSgiLSaOVUhtc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791189613; c=relaxed/simple;
+	bh=/4JyXmJp5XbHU3LYpvNBld08XtWbsEKJAIer+p6IHRU=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=u81fiopTg6LyjsNA/JcxXfke017c/rj9Kz0p1BQ72Au5lGb6w5sTPhK9TPgubVFi7fFOLz/0sF9kr+bYTD+NlX3FQE9XyZkZLIThmSw0UCIyJcIXBxuj9ByKum6GQ8A8hxA6i5ZoLFiLt9gKkl0CPLDyph+dCwJjNZOd8nGchEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WUXAkrQv; arc=none smtp.client-ip=192.198.163.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="snD9H5cK"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=UyTRdbgiYAawvsc4hV1u+GYtN8gWyzUjjO1oLxEpFXEpiIVspGpw6Itp2Fw2ciw1HooR07Wd5ugC6pGVxivW+/EV3N9PorfBsUaEmuQO0SR4GebIIZ5bkBr0gV4HkNZ34aiIkz55HyotM6d7aGFKWC4JdTsBv6AEy+aa6H/MOZVTEtMEfhjc6P+YsVsdCclN8HLFMRa9uPof6MjdEXxfOe1D9rN6i2vrhBguQGJgYzToxO7p9rbmhqvwP6HqGwcw7g0JvCUZE/U6M8C1/HGX8AmzOiruBl4kCCSIuiFhWF7Lz7XX7CXEV51oXbdrDaDzODVseK0scUcfpqivCllgFQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Bk4jN7DxI0XK2wRetl9w+Hjh1ExSTtRc9AuiVPSwMyk=;
- b=hwuveHl0+3yECPHwejcVmu1WoX/5Ua1sStNawXQzZ9m4+T2IKORdr0PRvGZJID05D6k/qBU9zNKJ6QJ5hdZxxnZNY7zw8XFFzAd8xpeFXouH5uWGyxFV5IHFgxWCWMn+O4PivwfKBEqZLt3BjunUYUgG11TSdO6okhiWHDw8wbxHTBplr3Z4RDi4y3hw9jkq4NvdGgU2r5uuxdHiMk8Y4X39BWczIz854LouXhTak6OOGTb16V/lvFIyAPGLNIW6CPdJQEAPlX3rzL3ur+AP8IbM+bNESiacAGTKwyvvl/4IzP5ge9D4r8Y6g3BlvDY/r+tzZ9wdjlEhuRazKVY9Kw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Bk4jN7DxI0XK2wRetl9w+Hjh1ExSTtRc9AuiVPSwMyk=;
- b=snD9H5cK/AA9RtfF3wRj6fRnFlIkPKTqYJuHI4wV6IkZ6n4/REtyLqb2R2aZTanTG/y2yTebpjeGo95TCwht9M/ujEjZXPLjCP9W45uZM6f0el2pK+62rS3UTTxSJZNm6Rj7yx8aiEGnJ+NL9/2Xcmzy34ndV5TCf8ScGHDgmd5lpxNdMS4ah0SMswO0ecT+1PDfKBtkmHy4bvkGed9tw0u7VWwp8Oyx2+jLot1/0LbVH0rLfv+13zc2QMbPAPKK19LZt2/hzkghla3/YrKLwBu0fUapX9A1ZzRBBbOcT8Lw5GHoVyxFwSnLKz1qy+1tusB4NTAqjum/Tn3STYyWIQ==
-Received: from BN9PR03CA0754.namprd03.prod.outlook.com (2603:10b6:408:13a::9)
- by CH3PR12MB8457.namprd12.prod.outlook.com (2603:10b6:610:154::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.26; Mon, 5 Oct
- 2026 07:03:45 +0000
-Received: from LV8PEPF0000006B.namprd03.prod.outlook.com
- (2603:10b6:408:13a:cafe::3b) by BN9PR03CA0754.outlook.office365.com
- (2603:10b6:408:13a::9) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.472.20 via Frontend Transport; Mon, 5
- Oct 2026 07:03:45 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- LV8PEPF0000006B.mail.protection.outlook.com (10.167.248.40) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.472.14 via Frontend Transport; Mon, 5 Oct 2026 07:03:45 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Mon, 5 Oct
- 2026 00:03:27 -0700
-Received: from NV-9TMPJL3.nvidia.com (10.126.231.37) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Mon, 5 Oct
- 2026 00:03:22 -0700
-From: Ankit Agrawal <ankita@nvidia.com>
-To: <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <dave@stgolabs.net>, <jic23@kernel.org>, <dave.jiang@intel.com>,
-	<alison.schofield@intel.com>, <vishal.l.verma@intel.com>, <jgg@nvidia.com>,
-	<aneesh.kumar@kernel.org>, <aik@amd.com>, <yilun.xu@linux.intel.com>,
-	<iweiny@kernel.org>, <ming.li@zohomail.com>, <icheng@nvidia.com>,
-	<bhelgaas@google.com>, <smadhavan@nvidia.com>, <ankita@nvidia.com>,
-	<ilpo.jarvinen@linux.intel.com>, <Smita.KoralahalliChannabasappa@amd.com>,
-	<andriy.shevchenko@linux.intel.com>, <linux-coco@lists.linux.dev>
-Subject: [RFC PATCH 4/4] PCI/TSM: Support multiple coherent ranges via coh_idx
-Date: Mon, 5 Oct 2026 09:02:52 +0200
-Message-ID: <20261005070252.84810-5-ankita@nvidia.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261005070252.84810-1-ankita@nvidia.com>
-References: <20261005070252.84810-1-ankita@nvidia.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WUXAkrQv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1791189605; x=1822725605;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=/4JyXmJp5XbHU3LYpvNBld08XtWbsEKJAIer+p6IHRU=;
+  b=WUXAkrQvEHD1Sa/qOtTUvy1VqlXrRzpJQfHvg5A9FBDPnILnpDr/iFMX
+   UZEkJ2bPqnjJszbDHCnxSz+y9EZzDF0g0jnfxEz+ZcaLBSBuqJdSxCFvU
+   raRP9Bp9v9u2DD7gd+o7sRwdRSUWMassBeJwg9WLeHS+7F+DQ8iciHBRC
+   6K5I9FFyYiwNhg0N1I18R9x0Tc7neooUokbVJiGyyWrySuT/HMyxvkhzK
+   Jm83y5Fi8Ahr/Hy3PGbGRDYaAyek7Yl7urpLQbEdAwtWcLmwlan9lgw0W
+   DXjlead/7hzw9ZYX7SdaeacxSwtqtwzID2IuhRPnbITU/Jlsuq2edsPS8
+   A==;
+X-CSE-ConnectionGUID: GptRret1TESMaWxaOJ9pNQ==
+X-CSE-MsgGUID: DyFRVg1xTWmw9XPkdCLNhQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11925"; a="103226064"
+X-IronPort-AV: E=Sophos;i="6.27,141,1787036400"; 
+   d="scan'208";a="103226064"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2026 01:40:01 -0700
+X-CSE-ConnectionGUID: gFndz9htSp+R/juTz0XpNA==
+X-CSE-MsgGUID: c89japQuRhmqWYJBa025bQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,141,1787036400"; 
+   d="scan'208";a="274568941"
+Received: from pgcooper-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.245.199])
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2026 01:39:59 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Mon, 5 Oct 2026 11:39:53 +0300 (EEST)
+To: Maciej Grochowski <maciej.grochowski@sony.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+    Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [RFC PATCH 1/2] PCI: Add pci=hpreserve= to reserve memory windows
+ for a hotplug bridge
+In-Reply-To: <20261002193111.51637-2-maciej.grochowski@sony.com>
+Message-ID: <8b41ee8a-8138-cfe7-8e58-19de2f1baee9@linux.intel.com>
+References: <20261002193111.51637-1-maciej.grochowski@sony.com> <20261002193111.51637-2-maciej.grochowski@sony.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV8PEPF0000006B:EE_|CH3PR12MB8457:EE_
-X-MS-Office365-Filtering-Correlation-Id: 71fb85aa-7a46-45f4-a801-08df22aecc33
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|23010399003|7416014|376014|36860700016|82310400026|11063799006|5023799004|56012099006|10067099003|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	U6m3qa83G86e3jgKbKZ4xTnmRBvbiYnY1WCXliSebPb6MfHq8KkX88REx20LrFwMhotRsp4p4VwLRoz39gfgemYSbi+QarbZxaMzJ1zsnJ2a9MkM+u8xxQg7aJscK6o1QSeYgLsOVAsoqe55lx3C8y26/+ybEUivRMByzcliI+BeDG08o6eMq1YB6yD7MHKpYOgY5QYDxKTnFcwxB2AeKPvc/CHksGzegtHmjGQALhRwsF2jIhoGRcB9x3uMesymgpE4YZvwv9utIg9lCpwvMeV0wynOmVZ3VeIrY/GfOINcy6MfhbaPVM+Hez6xW+uWOh8ID59mNvxbPNHpKaFSIJepsP4HwejxX+bwgfT7R81gC7DD5zl88uTDpjmhQUJ/Jo7+D7AA1+IjBLjFNLw8sLjdA3IJiy0msbtKeYmEYy8oTd1DLm6k6cxGR1l8AtdnjXuuneOFG/sT4eh6GwZ39hMhLT6SEUfA9RlpRLSjbxoL99UrJpCl+KgK9JABVSFwXyyNaXZkoxIU3C11YLAnRWHzSyhmE2OJWEgBPpGnczNmFRbVDWppD6llYtAB1AJqpBhhSqMq0pjowWarWKoGhknM7z97jPbBln7PMeNFAZpfMGf74YQu3Iq8zYgc+5itinX/4IjCQvQgCQZNY2y2EA1F73GvAIDNaA1u/Y9MUxF/jCG0JlrP21uYx6MDSI0iB5j9zi4Z5IYPftg+CqJQOw==
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(7416014)(376014)(36860700016)(82310400026)(11063799006)(5023799004)(56012099006)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	KiOit5pW3ywKAsIpXbXa/LR8oDfUyBrpGYZKJ7ACw2LDSDsdvVqFw6xK3wlJBOFdOUmGL2vVK8afFxNNVbVAXf3nhQmK6WDlXnSAwW7B6gE5qwbcgem+Qm640TFAz4XqoPautcynBmFEV/yIq/Z+ibiD6MvMiYIx/XbAYvzrOrxcmgyrm3FIu/JIaoTKM5ItT/t93dOR2SeT3CtsHrIdjCfZzwXJoWnrwqllcftyg7j6LsDmYXeiLT4js3bIMjY9MxT1DADkj91wcnWX3r9Abz3q/B3+7cMbZhFp1cnP/0FUrUvMzvUzHfcjojeswazFRFzoWmIk3mZYI+Ff7AZff0Lwe6qfjTs4Cagh1hGCAtGleWMIoJrirNRazMedDC9ajJ0deHKsPlBxdYOo03D+xi9T+3ZtCCIMpcA+9bzSmzBKfarsF+6fuNzlbH+7VXkT
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Oct 2026 07:03:45.3606
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 71fb85aa-7a46-45f4-a801-08df22aecc33
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	LV8PEPF0000006B.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8457
+Content-Type: text/plain; charset=US-ASCII
 
-Devices with multiple decoders can report more than one coherent
-window in a single interface report. Generalize the single
-0xffff sentinel into a small id space:
-PCI_TSM_DEVIF_REPORT_MMIO_RANGE_ID_TO_COH_IDX() treats any range id in
-the top PCI_CXL_MAX_COHERENT_RANGES values (counting down from ~0) as
-a coherent range index coh_idx. This keeps id 0xffff (~0) backward
-compatible with the single-range case (coh_idx 0) while allowing ~1,
-~2, and so on for additional windows.
+On Fri, 2 Oct 2026, Maciej Grochowski wrote:
 
-Only id 0xffff (~0) is spec-defined: Arm RME System Architecture
-(DEN0129) section B2.3.5.2 reserves range ID 0xFFFF for a device's
-region range. ~1, ~2, and so on are this tree's own extension of that
-idea, invented to cover multi-range reporting.
+> A hotplug bridge is sized for the devices that are present when its
+> windows are sized, plus the optional hpmmiosize/hpmmioprefsize space.
+> Some topologies have devices that are known to appear later.  After a
+> reset of a two-level PCIe switch hierarchy, for example, pciehp
+> re-enumerates the upstream switch before the link to the nested switch
+> is back up, so the downstream port leading to the nested switch is
+> sized with nothing below it.  When the nested switch appears, its BARs
+> do not fit.
+> 
+> On a two-level Microchip PM50052 (Switchtec PFX) hierarchy whose nested
+> switch has an NTB function with a 1 GiB prefetchable BAR, a hard reset
+> of the top-level switch on v7.3-rc2 leaves downstream port 82:03.0
+> with a 206 MiB prefetchable window, an equal share of its
+> parent's window.  The nested switch returns about 0.6 s later and
+> fails:
+> 
+>   pci 0000:8c:00.1: BAR 2 [mem size 0x40000000 64bit pref]: can't assign; no space
+>   switchtec 0000:8c:00.1: probe with driver switchtec failed with error -16
+> 
+> The global hpmmioprefsize cannot express this.  It applies to every
+> hotplug bridge, it is optional space that is dropped when it does not
+> fit, and it has no alignment.  Here the root port window is 1036 MiB:
+> exactly the 1 GiB + 4 MiB + 4 MiB of the nested switch plus the 4 MiB
+> BAR of the top switch's management function.  Only one port may get
+> the space, and it has to be 1 GiB aligned.
+> 
+> Add "pci=hpreserve=<reservation>@<pci_dev>[; ...]" to request a minimum
 
-Use coh_idx through pci_tsm_coherent_range() to select the coh_idx
-entry of pdev->coh_resource[], the precommitted-decoder snapshot and
-relax pci_tsm_mmio_alloc() to accept more than one coherent region.
-The coherent-range entries follow all BAR entries in the report
-and allow multiple trailing coherent ranges.
+Hi,
 
-Signed-off-by: Ankit Agrawal <ankita@nvidia.com>
-Assisted-by: Claude:sonnet-5
----
- drivers/pci/tsm.c | 78 ++++++++++++++++++++++++++++-------------------
- 1 file changed, 46 insertions(+), 32 deletions(-)
+Why is this a new parameter instead of adding the per device functionality 
+into hpmmio{,pref}size=x ?
 
-diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
-index 1d736b606a7c..b4f18a7c7187 100644
---- a/drivers/pci/tsm.c
-+++ b/drivers/pci/tsm.c
-@@ -1031,7 +1031,14 @@ EXPORT_SYMBOL_GPL(pci_tsm_mmio_teardown);
- #define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_NON_TEE BIT(2)
- #define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_UPDATABLE BIT(3)
- #define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_RANGE_ID GENMASK(31, 16)
--#define PCI_TSM_DEVIF_REPORT_MMIO_RANGE_ID_COHERENT 0xffff
-+
-+/*
-+ * Only id ~0 (0xffff) is spec-defined (Arm RME DEN0129 section B2.3.5.2);
-+ * ~1, ~2, etc. extend it for multi-range reporting: id ~N selects coherent
-+ * window N, keeping coherent ids disjoint from BAR ids
-+ * (0..PCI_STD_NUM_BARS-1) without a separate flag.
-+ */
-+#define PCI_TSM_DEVIF_REPORT_MMIO_RANGE_ID_TO_COH_IDX(id) ((u16)~(id))
- 
- /* An interface report 'pfn' is 4K in size */
- struct pci_tsm_devif_mmio {
-@@ -1052,37 +1059,39 @@ struct pci_tsm_devif_report {
- 
- #ifdef CONFIG_CXL_RESET
- /*
-- * pci_tsm_coherent_range() - resolve the device's coherent CXL window
-+ * pci_tsm_coherent_range() - resolve the device coherent CXL window
-  * @pdev: device owner of the reported ranges
-+ * @coh_idx: which coherent range to resolve, per
-+ *	     %PCI_TSM_DEVIF_REPORT_MMIO_RANGE_ID_TO_COH_IDX()
-  * @out_base: host physical (guest IPA) base of the coherent window
-  * @out_size: size of the coherent window
-  *
-- * The coherent range carries no BAR number, so its address comes from
-- * pdev->coh_resource[], a pre-driver-bind snapshot of committed CXL HDM
-- * decoders.
-+ * Each @coh_idx names one of the device coherent (CXL) windows. It carries
-+ * no BAR number and so its address comes from pdev->coh_resource[@coh_idx],
-+ * which is a snapshot of committed CXL HDM decoders regions.
-  *
-- * Return: 0 with *@out_base / *@out_size set from the first populated entry,
-- * or -ENODEV if no entry is populated.
-+ * Return: 0 with *@out_base / *@out_size set, or -ENODEV if @coh_idx is out
-+ * of range or has no populated coh_resource[] entry.
-  */
--static int pci_tsm_coherent_range(struct pci_dev *pdev, u64 *out_base,
--				  u64 *out_size)
-+static int pci_tsm_coherent_range(struct pci_dev *pdev, unsigned int coh_idx,
-+				  u64 *out_base, u64 *out_size)
- {
--	for (int i = 0; i < PCI_CXL_MAX_COHERENT_RANGES; i++) {
--		struct resource *res = &pdev->coh_resource[i];
-+	struct resource *res;
- 
--		if (!(res->flags & IORESOURCE_MEM))
--			continue;
-+	if (coh_idx >= PCI_CXL_MAX_COHERENT_RANGES)
-+		return -ENODEV;
- 
--		*out_base = res->start;
--		*out_size = resource_size(res);
--		return 0;
--	}
-+	res = &pdev->coh_resource[coh_idx];
-+	if (!(res->flags & IORESOURCE_MEM))
-+		return -ENODEV;
- 
--	return -ENODEV;
-+	*out_base = res->start;
-+	*out_size = resource_size(res);
-+	return 0;
- }
- #else
--static int pci_tsm_coherent_range(struct pci_dev *pdev, u64 *out_base,
--				  u64 *out_size)
-+static int pci_tsm_coherent_range(struct pci_dev *pdev, unsigned int coh_idx,
-+				  u64 *out_base, u64 *out_size)
- {
- 	return -ENODEV;
- }
-@@ -1107,6 +1116,7 @@ struct pci_tsm_mmio *pci_tsm_mmio_alloc(struct pci_dev *pdev,
- 	u64 reporting_bar_base, last_reporting_end;
- 	u32 mmio_range_count;
- 	int last_bar = -1;
-+	bool seen_coherent = false;
- 	int i;
- 
- 	if (report_len < sizeof(*devif_report))
-@@ -1135,28 +1145,32 @@ struct pci_tsm_mmio *pci_tsm_mmio_alloc(struct pci_dev *pdev,
- 		u32 attr = __le32_to_cpu(mmio_data->attributes);
- 		int bar = FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_RANGE_ID,
- 				    attr);
--		bool coherent =
--			bar == PCI_TSM_DEVIF_REPORT_MMIO_RANGE_ID_COHERENT;
-+		unsigned int coh_idx =
-+			PCI_TSM_DEVIF_REPORT_MMIO_RANGE_ID_TO_COH_IDX(bar);
-+		bool coherent = coh_idx < PCI_CXL_MAX_COHERENT_RANGES;
- 
- 		if (coherent) {
--			if (i != mmio_range_count - 1) {
--				pci_dbg(pdev, "Coherent reporting range is not last\n");
--				return NULL;
--			}
-+			seen_coherent = true;
- 
- 			/*
--			 * No BAR names the coherent range, so fail closed if
--			 * neither a CXL region nor a committed HDM decoder
--			 * resolves its address.
-+			 * Fail closed if pdev->coh_resource[coh_idx] isn't
-+			 * populated: nothing else in the report identifies
-+			 * the window's address.
- 			 */
--			if (pci_tsm_coherent_range(pdev, &range_base,
-+			if (pci_tsm_coherent_range(pdev, coh_idx, &range_base,
- 						   &range_len)) {
--				pci_dbg(pdev, "No CXL region or committed HDM decoder for coherent reporting range\n");
-+				pci_dbg(pdev, "No populated coh_resource[] entry for coherent range %u\n",
-+					coh_idx);
- 				return NULL;
- 			}
- 
--			/* Coherent range is last and not part of the BAR sequence. */
-+			/* Coherent ranges are not part of the BAR sequence. */
- 		} else {
-+			if (seen_coherent) {
-+				pci_dbg(pdev, "BAR reporting range follows a coherent range\n");
-+				return NULL;
-+			}
-+
- 			if (bar >= PCI_STD_NUM_BARS ||
- 			    !(pci_resource_flags(pdev, bar) & IORESOURCE_MEM) ||
- 			    (pci_resource_flags(pdev, bar) & IORESOURCE_UNSET)) {
+> size and alignment for the memory windows of specific hotplug bridges,
+> using the usual device specification.  A full path is more robust than
+> a bare BDF when downstream bus numbers change.  pbus_size_mem() folds
+> the reservation into the required size and alignment of the window,
+> so it is assigned like the resources of a device already present below
+> the bridge.  The runtime distribution of spare space can shrink only
+> the optional part, leaving the required reservation intact.
+> 
+> Without the parameter nothing changes.
+> 
+> Tested-by: Maciej Grochowski <maciej.grochowski@sony.com>
+
+The usual assumption the patch submitter has actually tested the patch so 
+normal custom is to not include self tested-bys.
+
 -- 
-2.43.0
+ i.
 
+> Signed-off-by: Maciej Grochowski <maciej.grochowski@sony.com>
+> ---
+>  .../admin-guide/kernel-parameters.txt         |  34 ++++++
+>  drivers/pci/pci.c                             | 106 ++++++++++++++++++
+>  drivers/pci/pci.h                             |  19 ++++
+>  drivers/pci/setup-bus.c                       |  33 ++++++
+>  4 files changed, 192 insertions(+)
+> 
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index 33cd30996e47..19b98e22b10e 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -5232,6 +5232,40 @@ Kernel parameters
+>  		hpbussize=nn	The minimum amount of additional bus numbers
+>  				reserved for buses below a hotplug bridge.
+>  				Default is 1.
+> +		hpreserve=
+> +				Format:
+> +				<reservation>@<pci_dev>[; ...]
+> +				where <reservation> is one or more of
+> +				<key>=<value> separated by colons.
+> +				Reserve resources for the hotplug bridges
+> +				specified (in the format described above)
+> +				for devices that are not present yet, e.g.
+> +				a switch that is expected behind the bridge
+> +				but whose link comes up only after the
+> +				bridge windows have been sized.  Unlike
+> +				hpmmiosize and hpmmioprefsize, which add
+> +				optional space that is dropped if it does
+> +				not fit, the reservation is required space:
+> +				the bridge window is sized to include it,
+> +				like the resources of devices already
+> +				present below the bridge.
+> +				Only hotplug bridges are affected.
+> +				Keys:
+> +				  mmio=nn[KMG]	Minimum size of the
+> +					non-prefetchable memory window.
+> +				  mmioalign=nn[KMG]  Minimum alignment of
+> +					the non-prefetchable memory window.
+> +				  mmiopref=nn[KMG]  Minimum size of the
+> +					prefetchable memory window.
+> +				  mmioprefalign=nn[KMG]  Minimum alignment
+> +					of the prefetchable memory window.
+> +				Alignments must be powers of two.  For
+> +				example,
+> +				  pci=hpreserve=mmiopref=1032M:mmioprefalign=1G@0000:80:01.1/00.0/03.0
+> +				reserves a 1 GiB-aligned 1032 MiB
+> +				prefetchable window below the downstream
+> +				port at devfn 03.0 of the switch behind root
+> +				port 0000:80:01.1.
+>  		realloc=	Enable/disable reallocating PCI bridge resources
+>  				if allocations done by BIOS are too small to
+>  				accommodate resources required by all child
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b2879a6be5f8..f6922cf0d96e 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -412,6 +412,109 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
+>  	return 1;
+>  }
+>  
+> +/*
+> + * "pci=hpreserve=<reservation>@<pci_dev>[; ...]", set in pci_setup() and
+> + * copied in pci_realloc_setup_params().
+> + */
+> +static const char *hotplug_reserve_param;
+> +
+> +static bool pci_hotplug_reserve_key(const char *p, size_t len, const char *key)
+> +{
+> +	return strlen(key) == len && !strncmp(p, key, len);
+> +}
+> +
+> +/*
+> + * Parse one "<key>=<value>[:<key>=<value>]*@" reservation into @res.
+> + * Returns a pointer to the device specification following the '@', or
+> + * NULL if the reservation cannot be parsed.
+> + */
+> +static const char *pci_parse_hotplug_reserve(const char *p,
+> +					     struct pci_hotplug_reserve *res)
+> +{
+> +	unsigned long long val;
+> +	size_t len;
+> +	char *end;
+> +
+> +	memset(res, 0, sizeof(*res));
+> +
+> +	for (;;) {
+> +		len = strcspn(p, "=:@;");
+> +		if (p[len] != '=')
+> +			return NULL;
+> +
+> +		val = memparse(p + len + 1, &end);
+> +		if (end == p + len + 1)
+> +			return NULL;
+> +
+> +		if (pci_hotplug_reserve_key(p, len, "mmio"))
+> +			res->mmio_size = val;
+> +		else if (pci_hotplug_reserve_key(p, len, "mmioalign"))
+> +			res->mmio_align = val;
+> +		else if (pci_hotplug_reserve_key(p, len, "mmiopref"))
+> +			res->mmio_pref_size = val;
+> +		else if (pci_hotplug_reserve_key(p, len, "mmioprefalign"))
+> +			res->mmio_pref_align = val;
+> +		else
+> +			return NULL;
+> +
+> +		p = end + 1;
+> +		if (*end == '@')
+> +			break;
+> +		if (*end != ':')
+> +			return NULL;
+> +	}
+> +
+> +	if ((res->mmio_align && !is_power_of_2(res->mmio_align)) ||
+> +	    (res->mmio_pref_align && !is_power_of_2(res->mmio_pref_align)))
+> +		return NULL;
+> +
+> +	return p;
+> +}
+> +
+> +/**
+> + * pci_get_hotplug_reserve - get the resources reserved for a hotplug bridge
+> + * @bridge: the bridge
+> + * @res: filled in with the reservation for @bridge
+> + *
+> + * Look up @bridge in the "pci=hpreserve=" kernel parameter.  Only hotplug
+> + * bridges are considered.
+> + *
+> + * Return: true if a reservation was requested for @bridge.
+> + */
+> +bool pci_get_hotplug_reserve(struct pci_dev *bridge,
+> +			     struct pci_hotplug_reserve *res)
+> +{
+> +	const char *p = hotplug_reserve_param;
+> +	int ret;
+> +
+> +	if (!p || !bridge->is_hotplug_bridge)
+> +		return false;
+> +
+> +	while (*p) {
+> +		p = pci_parse_hotplug_reserve(p, res);
+> +		if (!p) {
+> +			pr_err_once("PCI: Can't parse hpreserve parameter\n");
+> +			return false;
+> +		}
+> +
+> +		ret = pci_dev_str_match(bridge, p, &p);
+> +		if (ret == 1)
+> +			return true;
+> +		if (ret < 0) {
+> +			pr_err_once("PCI: Can't parse hpreserve parameter\n");
+> +			return false;
+> +		}
+> +
+> +		if (*p != ';' && *p != ',') {
+> +			/* End of param or invalid format */
+> +			break;
+> +		}
+> +		p++;
+> +	}
+> +
+> +	return false;
+> +}
+> +
+>  static u8 __pci_find_next_cap(struct pci_bus *bus, unsigned int devfn,
+>  			      u8 pos, int cap)
+>  {
+> @@ -6840,6 +6943,8 @@ static int __init pci_setup(char *str)
+>  					simple_strtoul(str + 10, &str, 0);
+>  				if (pci_hotplug_bus_size > 0xff)
+>  					pci_hotplug_bus_size = DEFAULT_HOTPLUG_BUS_SIZE;
+> +			} else if (!strncmp(str, "hpreserve=", 10)) {
+> +				hotplug_reserve_param = str + 10;
+>  			} else if (!strncmp(str, "pcie_bus_tune_off", 17)) {
+>  				pcie_bus_config = PCIE_BUS_TUNE_OFF;
+>  			} else if (!strncmp(str, "pcie_bus_safe", 13)) {
+> @@ -6879,6 +6984,7 @@ static int __init pci_realloc_setup_params(void)
+>  					   GFP_KERNEL);
+>  	disable_acs_redir_param = kstrdup(disable_acs_redir_param, GFP_KERNEL);
+>  	config_acs_param = kstrdup(config_acs_param, GFP_KERNEL);
+> +	hotplug_reserve_param = kstrdup(hotplug_reserve_param, GFP_KERNEL);
+>  
+>  	return 0;
+>  }
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index ba3c3fddddc2..5003d2c71200 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -410,6 +410,25 @@ extern unsigned long pci_hotplug_mmio_size;
+>  extern unsigned long pci_hotplug_mmio_pref_size;
+>  extern unsigned long pci_hotplug_bus_size;
+>  
+> +/**
+> + * struct pci_hotplug_reserve - resources reserved for a hotplug bridge
+> + * @mmio_size: minimum size of the non-prefetchable memory window
+> + * @mmio_align: minimum alignment of the non-prefetchable memory window
+> + * @mmio_pref_size: minimum size of the prefetchable memory window
+> + * @mmio_pref_align: minimum alignment of the prefetchable memory window
+> + *
+> + * Requested with "pci=hpreserve=".  A value of zero means no reservation.
+> + */
+> +struct pci_hotplug_reserve {
+> +	resource_size_t mmio_size;
+> +	resource_size_t mmio_align;
+> +	resource_size_t mmio_pref_size;
+> +	resource_size_t mmio_pref_align;
+> +};
+> +
+> +bool pci_get_hotplug_reserve(struct pci_dev *bridge,
+> +			     struct pci_hotplug_reserve *res);
+> +
+>  static inline bool pci_is_cardbus_bridge(struct pci_dev *dev)
+>  {
+>  	return dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index e8c94aa1d3c1..105bf8694cdc 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1258,6 +1258,38 @@ static bool pbus_size_mem_optional(struct pci_dev *dev, int resno,
+>  	return true;
+>  }
+>  
+> +/*
+> + * Apply a "pci=hpreserve=" reservation to the memory window @b_res of the
+> + * bridge leading to @bus.  Unlike the hpmmiosize/hpmmioprefsize space, the
+> + * reservation is sized as required space, so it is in place before the
+> + * devices that need it appear behind the bridge.
+> + */
+> +static void pbus_size_mem_reserve(struct pci_bus *bus, struct resource *b_res,
+> +				  resource_size_t *size,
+> +				  resource_size_t *min_align)
+> +{
+> +	bool pref = b_res->flags & IORESOURCE_PREFETCH;
+> +	struct pci_hotplug_reserve res;
+> +	resource_size_t rsize, ralign;
+> +
+> +	if (!bus->self || !pci_get_hotplug_reserve(bus->self, &res))
+> +		return;
+> +
+> +	rsize = pref ? res.mmio_pref_size : res.mmio_size;
+> +	ralign = pref ? res.mmio_pref_align : res.mmio_align;
+> +	if (rsize <= *size && ralign <= *min_align)
+> +		return;
+> +
+> +	*size = max(*size, rsize);
+> +	if (!*size)
+> +		return;
+> +	*min_align = max(*min_align, ralign);
+> +
+> +	pci_info(bus->self, "bridge window to %pR: reserving %s size %#llx align %#llx\n",
+> +		 &bus->busn_res, pref ? "prefetchable" : "non-prefetchable",
+> +		 (unsigned long long)*size, (unsigned long long)*min_align);
+> +}
+> +
+>  /**
+>   * pbus_size_mem() - Size the memory window of a given bus
+>   *
+> @@ -1349,6 +1381,7 @@ static void pbus_size_mem(struct pci_bus *bus, struct resource *b_res,
+>  	win_align = pci_min_window_alignment(bus, b_res->flags);
+>  	min_align = calculate_head_align(aligns, max_order);
+>  	min_align = max(min_align, win_align);
+> +	pbus_size_mem_reserve(bus, b_res, &size, &min_align);
+>  	size0 = calculate_memsize(size, realloc_head ? 0 : add_size,
+>  				  0, win_align);
+>  
+> 
