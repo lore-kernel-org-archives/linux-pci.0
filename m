@@ -1,144 +1,311 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F0B8421259;
-	Mon,  5 Oct 2026 23:37:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 548B745563A;
+	Mon,  5 Oct 2026 23:39:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791243481; cv=none; b=dk2xq6pjw2/tEwj86itR0hVaz2zW9TS66O7Dx0TtuxItJcnD+GaAQk1LVIyXP3KCkc1pw9HCenGNbS/TQ9rGvw268k2xfjxI+hrmdpyAKiFTx5fHqy72jaBlfuFdCdYjmGYuKzrZMSQ7lgmyTSiscWtKw3uJ0LGwld8AtuWJw5E=
+	t=1791243599; cv=none; b=MZkd67KoNd9u5qjkmLnNHgC49D4wtoJVdq3sRX+buAoaRzff/T7vPA91xH8vI738v5f+QmwJ/cfeN7LOyK6nKM8dchv2kd5i+5v3tLdsym43ijV8QWo/L8Y4rUV6hOIvzlj/fdlossMuWxMA37eATw28Gb8wGwyf1M0L0d0Nw20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791243481; c=relaxed/simple;
-	bh=wHhFpuZX54/313lqoel9OUyPQIGXxcFUhf5FAjdR2Qo=;
+	s=arc-20240116; t=1791243599; c=relaxed/simple;
+	bh=GpF0i/FJN2rPF8w5W5/ZXftb4l48uhx5xGPr6J2c4Wg=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=D9Xwui4rQHqPLu12IpigbNCVN6N/N4fq++CFnX6xZiL30J8NvyKMXU4fKfWKQTVdP4MC40HmR/42yAtccJ6NnI1EtLhebQTAdkhSTY5ApzAyoE0V0mKqvhhrbU9nr/3dW10fH8ZLbsnqolZgA397utASdbqnBY9mVnm7rgy1qOU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oVafL/jF; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=f6unt+hNa3gIEXqZ+8KNOPv0KVBHLFdFQ8xKzvTqwNC/rcFxWaC3RKlak5BINqOFQoBQNNOKpuiXelhkV5e1GTlZi4q+weQB9g+omE7rKEEDOty+1ERXJl5cIQ1ukSe9Nq7jjz8U+SJZiKWUh2GdGlTMgapQcTfXwGA4n8oJqI0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RV3YvlF7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oVafL/jF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DF151F000FF;
-	Mon,  5 Oct 2026 23:37:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RV3YvlF7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61B211F000FF;
+	Mon,  5 Oct 2026 23:39:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791243479;
-	bh=F9mj9hBOR4INL/J0dw4RHuFc+zlALPDdCwtt8rXEwx4=;
+	s=k20260515; t=1791243596;
+	bh=n2FeCcTUwln+ThglsluSIuBuud4m/NWKFhzd5XpTQMc=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=oVafL/jF7wbNV8UIs9FpvDi7Q24YuKgnGDwngw1i7TpMYQq6KjEomG+s21lza/nYs
-	 KfHiTikEFtwfozV0j3MOGC6NBGuz2dHMHXaw21Ae5dxHtmRxZtmJ2PHDFQpcRNT6nh
-	 Kja2MveAf51QPd7G+apbw2fajqK6FojV4WEUPzcM/pjeHRaCRASko1ELi2zMDvKSMQ
-	 I9r4oICbQVlzMQyRxvDHCO2Zns7d87s4zYo3HSyzPEbyoNtAF4MLRT2yZkab8QYm3L
-	 R+eXCOs71vZAgLtorZlk2w4zB22xuBfrWKkpZ9AGkPlF2zENaunLXZ8TsKLqXr3z20
-	 NlDDc1TapaLjA==
-Date: Mon, 5 Oct 2026 18:37:58 -0500
+	b=RV3YvlF7yDrEXMVAouuqa8zfo4sK4LagpqVYoc8IMB+Z5C0g78yUpFsDNfkmJFmbv
+	 FF5cRFaHO1OMmXwVz8XedmG5MXn7/SdZlJm7gBzcEpgo2iCF5E8x2IEJ8+2tZ5QUFf
+	 zdJCG7xgVQgk+TL97ojpR3wlS3qZPQu+Y8rSL5qULyVyJeujbtFMyQXG3b6hA5uBqR
+	 nvMjQSckZXeD7LS3SOte036RJwYtg4woENHSuS+dOwa9qQTq28vmZvD021IW3JkdAq
+	 ptXvn545oMzIlO6eVzCDU5L5Haa3fo9nwyGbexLse2Cbo2lhrs32fNxu1N5GCx2ma3
+	 hOlZwTrCEJrQw==
+Date: Mon, 5 Oct 2026 18:39:55 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marek Vasut <marek.vasut+renesas@mailbox.org>
-Cc: linux-pci@vger.kernel.org,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+To: Rickey Bartlett <subtexel@gmail.com>
+Cc: Nirmal Patel <nirmal.patel@linux.intel.com>,
+	Jonathan Derrick <jonathan.derrick@linux.dev>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar-host: Validate IO/MEM resource count in DT
- ranges property
-Message-ID: <20261005233758.GA646371@bhelgaas>
+	Krzysztof Wilczynski <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kai-Heng Feng <kai.heng.feng@canonical.com>,
+	Keith Busch <kbusch@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: vmd: Flush initiator posted writes before demuxing
+ interrupts on Meteor Lake
+Message-ID: <20261005233955.GA647215@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261003073701.354551-1-marek.vasut+renesas@mailbox.org>
+In-Reply-To: <CAAqcVzyiXr3GvzgpL_Cwh9W5EwLOZTowa-Fj5=7LGGiyhnY6yQ@mail.gmail.com>
 
-On Sat, Oct 03, 2026 at 09:35:59AM +0200, Marek Vasut wrote:
-> The R-Car Gen3 PCIEC controller supports up to 4 memory area mappings.
-> Count the IO and MEM ranges described in DT 'ranges' property of the
-> controller DT node, and in case there are more than 4, refuse to probe
-> the controller driver, because such DT does not describe valid hardware
-> configuration. Do the IO and MEM counting early to avoid controller
-> configuration rollback in case of failure.
+On Fri, Oct 02, 2026 at 11:40:22PM -0400, Rickey Bartlett wrote:
+> Bjorn,
 > 
-> Fixes: 5d2917d469fa ("PCI: rcar: Convert to DT resource parsing API")
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-> ---
-> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> Cc: Magnus Damm <magnus.damm@gmail.com>
-> Cc: Manivannan Sadhasivam <mani@kernel.org>
-> Cc: Rob Herring <robh@kernel.org>
-> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-renesas-soc@vger.kernel.org
-> ---
->  drivers/pci/controller/pcie-rcar-host.c | 31 +++++++++++++++++++++++++
->  1 file changed, 31 insertions(+)
+> Thanks for catching that. The September 3 patch you linked is the intended
+> reference for [1]. The message ID in my original link was incorrect.
 > 
-> diff --git a/drivers/pci/controller/pcie-rcar-host.c b/drivers/pci/controller/pcie-rcar-host.c
-> index cd9171eebc289..4bcc8c3051ac4 100644
-> --- a/drivers/pci/controller/pcie-rcar-host.c
-> +++ b/drivers/pci/controller/pcie-rcar-host.c
-> @@ -341,6 +341,32 @@ static void rcar_pcie_force_speedup(struct rcar_pcie *pcie)
->  		 (macsr & LINK_SPEED) == LINK_SPEED_5_0GTS ? "5" : "2.5");
->  }
->  
-> +static int rcar_pcie_validate_resource_count(struct rcar_pcie_host *host)
-> +{
-> +	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
-> +	struct rcar_pcie *pcie = &host->pcie;
-> +	struct resource_entry *win;
-> +	int i = 0;
-> +
-> +	resource_list_for_each_entry(win, &bridge->windows) {
-> +		struct resource *res = win->res;
-> +		unsigned long type = resource_type(res);
-> +
-> +		if (!res->flags)
-> +			continue;
-> +
-> +		if (type == IORESOURCE_IO || type == IORESOURCE_MEM)
-> +			i++;
-> +
-> +		if (i > RCAR_PCI_MAX_RESOURCES)
-> +			return dev_err_probe(pcie->dev, -ENOSPC,
-> +					     "Too many IO/MEM entries in DT 'ranges' property, limit is %d\n",
-> +					     RCAR_PCI_MAX_RESOURCES);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static void rcar_pcie_hw_enable(struct rcar_pcie_host *host)
->  {
->  	struct rcar_pcie *pcie = &host->pcie;
-> @@ -947,6 +973,11 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  	host = pci_host_bridge_priv(bridge);
->  	pcie = &host->pcie;
->  	pcie->dev = dev;
-> +
-> +	err = rcar_pcie_validate_resource_count(host);
-> +	if (err)
-> +		return err;
-
-I guess you did this here to avoid rolling back controller config, but
-the code would be a lot more readable if it checked the index at the
-point where it might exceed the array bound, e.g., (I think) in
-rcar_pcie_set_outbound().
-
-This is for an invalid DT, which is unlikely.  What if
-rcar_pcie_set_outbound() just printed a warning and ignored any excess
-windows?
-
->  	platform_set_drvdata(pdev, host);
->  
->  	for (i = 0; i < ARRAY_SIZE(rcar_pcie_supplies); i++) {
-> -- 
-> 2.53.0
+> Please use these references in the commit message:
 > 
+> [1] https://lore.kernel.org/all/20240903025544.286223-1-kai.heng.feng@canonical.com/
+> 
+> [2] https://lore.kernel.org/all/20240913111142.4cgrmirofhhgrbqm@thinkpad/
+
+Fixed, thanks!
+
+> On Thu, 01 Oct 2026 12:08:16 -0500, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Mon, Aug 24, 2026 at 09:32:20PM -0700, Rickey Bartlett wrote:
+> > > Meteor Lake VMD (8086:7d0b) is affected by erratum MTL016: the VMD can
+> > > signal its MSI before the posted writes carrying a child device's DMA
+> > > data have landed in memory. vmd_irq() then demuxes to the child handler
+> > > while the child's completion queue is not yet coherent, so the handler
+> > > observes no completion and returns without consuming it. The I/O is
+> > > only recovered when the block layer timeout expires and polls the queue:
+> > >
+> > >   nvme nvme0: I/O tag 253 (50fd) QID 1 timeout, completion polled
+> > >
+> > > The practical effect is therefore not a lost I/O but a 30 second stall
+> > > of the entire storage stack, repeated under any sustained read load.
+> > >
+> > > This was originally diagnosed and fixed by Kai-Heng Feng in September
+> > > 2024 [1]. That patch used udelay(4); Keith Busch objected that the delay
+> > > is merely a side effect of the read, and that flushing the pending
+> > > device-to-host writes is what the erratum actually requires. Kai-Heng
+> > > agreed to respin with a dummy register read. The thread then stalled on
+> > > an open question from Manivannan Sadhasivam [2]: whether the read must
+> > > target the child device (the "MSI initiator" named by the erratum)
+> > > rather than the VMD, and whether the workaround belongs in the NVMe
+> > > driver instead. No revision followed, and the erratum has remained
+> > > unmitigated in mainline since.
+> > >
+> > > This implements the flush read Keith asked for, and answers the open
+> > > question empirically: the read MUST complete at the initiating child
+> > > device. A read of the VMD's own config BAR was tried first and does not
+> > > help - it terminates at the VMD and never traverses the downstream
+> > > link, so it does not order against the child's posted writes (measured:
+> > > timeout rate unchanged). Reading the initiator's config space does
+> > > order correctly: per PCIe ordering rules the read completion cannot
+> > > pass the device's earlier posted writes, so returning from the read
+> > > guarantees the completion queue entry is visible.
+> > >
+> > > The initiator's config address is captured per-IRQ at MSI allocation
+> > > time from the requesting device, so the hot path adds one config read
+> > > only on affected parts, and only for vectors owned by a child device.
+> > > The read is serialized with cfg_lock like all other VMD config access.
+> > > No NVMe driver change is needed.
+> > >
+> > > Measured on a Dell Pro Max 14 MC14250 (Meteor Lake, VMD 8086:7d0b,
+> > > KIOXIA BG6 512GB, 7.0.0-30-generic). The drive is healthy (46C, 0 media
+> > > errors, 2% used) and ASPM is disabled on the link with all L1 substates
+> > > off, so neither ASPM nor APST is involved.
+> > >
+> > > Dropping caches and reading 3000 shared libraries, measuring
+> > > /proc/pressure/io "full" (every task on the system blocked on I/O),
+> > > with nvme_core.io_timeout=5:
+> > >
+> > >   unpatched:      round 1  wall 37.4s   full I/O stall 32.6s   timeouts 0
+> > >                   round 2  wall 30.6s   full I/O stall 28.7s   timeouts 1
+> > >                   round 3  wall 30.3s   full I/O stall 27.4s   timeouts 1
+> > >
+> > >   VMD-BAR read:   round 1  wall 44.8s   full I/O stall 38.6s   timeouts 8
+> > >   (insufficient)  round 2  wall 234.8s  full I/O stall 207.9s  timeouts 37
+> > >                   round 3  wall 3.6s    full I/O stall 0.8s    timeouts 0
+> > >
+> > >   this patch:     round 1  wall 3.6s    full I/O stall 1.3s    timeouts 0
+> > >                   round 2  wall 3.6s    full I/O stall 1.3s    timeouts 0
+> > >                   round 3  wall 3.6s    full I/O stall 1.4s    timeouts 0
+> > >
+> > > Before any workaround, 208 seconds of total-system I/O stall
+> > > accumulated in the first 13 minutes of uptime, roughly 27% of wall
+> > > clock. Userspace experiences this as GUI applications taking 30-60+
+> > > seconds to start while throughput between stalls looks entirely normal
+> > > (1.9 GB/s QD1) - which is what makes the fault easy to misattribute to
+> > > ASPM or to the drive.
+> > >
+> > > [1] https://lore.kernel.org/all/20240909082657.19660-1-kai.heng.feng@canonical.com/
+> >
+> > This link doesn't work.  Do you have a corrected one?  Maybe it was a
+> > followup to this one:
+> >
+> >   https://lore.kernel.org/all/20240903025544.286223-1-kai.heng.feng@canonical.com/
+> >
+> > > [2] https://lkml.iu.edu/hypermail/linux/kernel/2409.1/08047.html
+> >
+> > And this appears to be the email at
+> > https://lore.kernel.org/all/20240913111142.4cgrmirofhhgrbqm@thinkpad/
+> >
+> > Prefer lore.kernel.org over lkml.iu.edu because lore doesn't depend on
+> > non-kernel.org resources.
+> >
+> > > Reported-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> > > Suggested-by: Keith Busch <kbusch@kernel.org>
+> > > Assisted-by: Claude:claude-opus-5
+> > > Signed-off-by: Rickey Bartlett <subtexel@gmail.com>
+> > > ---
+> > > This revives the MTL016 workaround that Kai-Heng Feng posted in September
+> > > 2024 [1]. To be clear about the provenance: the diagnosis and the fix are
+> > > his. Intel confirmed the silicon bug in that thread. What is new here is
+> > > the implementation Keith asked for, and the measurements needed to close
+> > > the question the thread ended on.
+> > >
+> > > That thread stalled on one unanswered point - whether the flush read has
+> > > to target the NVMe child device, the "MSI initiator" named in the erratum,
+> > > or whether the VMD's own register is enough, and whether the workaround
+> > > belongs in the NVMe driver at all. Nobody had hardware in front of them to
+> > > settle it, and the discussion stopped there. It has been two years, the
+> > > erratum is still unmitigated in mainline, and every affected machine has
+> > > been stalling that whole time.
+> > >
+> > > I have the hardware, so here is the answer: the read must complete at
+> > > the NVMe child device - the "MSI initiator" named in the erratum -
+> > > exactly as Manivannan suspected. I first tried reading the VMD's own
+> > > config BAR; it does not help (measured, numbers in the commit message:
+> > > timeout rate was unchanged). A read that terminates at the VMD never
+> > > traverses the downstream link, so PCIe ordering gives no guarantee
+> > > about the child's posted writes. Reading the initiator's config space
+> > > closes the race. The workaround still lives in the VMD driver rather
+> > > than the NVMe driver: the VMD is the broken component, the initiator
+> > > address is captured generically per-IRQ at MSI allocation time, and no
+> > > NVMe-specific knowledge is needed.
+> > >
+> > > Measurements are in the commit message.
+> > >
+> > >  drivers/pci/controller/vmd.c | 52 ++++++++++++++++++++++++++++++++++--
+> > >  1 file changed, 50 insertions(+), 2 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> > > index 241023e..e45ef8c 100644
+> > > --- a/drivers/pci/controller/vmd.c
+> > > +++ b/drivers/pci/controller/vmd.c
+> > > @@ -92,6 +92,22 @@ enum vmd_features {
+> > >  	 * referred to as MEMBAR2 or MSI-X BAR.
+> > >  	 */
+> > >  	VMD_FEAT_USE_BIOS_INFO		= (1 << 6),
+> > > +
+> > > +	/*
+> > > +	 * Meteor Lake VMD (device ID 0x7d0b) is affected by erratum MTL016:
+> > > +	 * the VMD may signal its MSI before the posted writes that carry the
+> > > +	 * child device's DMA data have landed in memory.  The demuxed handler
+> > > +	 * then runs against a not-yet-coherent completion queue and misses the
+> > > +	 * completion entirely, so the I/O is only recovered when the block
+> > > +	 * layer timeout fires and polls the queue ("timeout, completion
+> > > +	 * polled").  Intel's documented workaround is to issue a dummy read
+> > > +	 * to the MSI initiator (the child device) before handling the
+> > > +	 * interrupt: the read completion cannot pass the device's earlier
+> > > +	 * posted writes, so it pulls them into memory per PCIe ordering
+> > > +	 * rules.  A read that terminates at the VMD itself does not order
+> > > +	 * against the child's writes and is not sufficient (measured).
+> > > +	 */
+> > > +	VMD_FEAT_INTERRUPT_QUIRK	= (1 << 7),
+> > >  };
+> > >
+> > >  #define VMD_BIOS_PM_QUIRK_LTR	0x1003	/* 3145728 ns */
+> > > @@ -114,6 +130,9 @@ static DEFINE_RAW_SPINLOCK(list_lock);
+> > >   * @irq:	back pointer to parent.
+> > >   * @enabled:	true if driver enabled IRQ
+> > >   * @virq:	the virtual IRQ value provided to the requesting driver.
+> > > + * @flush_addr:	config space address of the initiating device, read before
+> > > + *		demuxing to flush its posted writes (MTL016); NULL if the
+> > > + *		VMD is not affected.
+> > >   *
+> > >   * Every MSI/MSI-X IRQ requested for a device in a VMD domain will be mapped to
+> > >   * a VMD IRQ using this structure.
+> > > @@ -123,8 +142,14 @@ struct vmd_irq {
+> > >  	struct vmd_irq_list	*irq;
+> > >  	bool			enabled;
+> > >  	unsigned int		virq;
+> > > +	void __iomem		*flush_addr;
+> > >  };
+> > >
+> > > +struct vmd_dev;
+> > > +
+> > > +static void __iomem *vmd_cfg_addr(struct vmd_dev *vmd, struct pci_bus *bus,
+> > > +				  unsigned int devfn, int reg, int len);
+> > > +
+> > >  /**
+> > >   * struct vmd_irq_list - list of driver requested IRQs mapping to a VMD vector
+> > >   * @irq_list:	the list of irq's the VMD one demuxes to.
+> > > @@ -132,12 +157,15 @@ struct vmd_irq {
+> > >   * @count:	number of child IRQs assigned to this vector; used to track
+> > >   *		sharing.
+> > >   * @virq:	The underlying VMD Linux interrupt number
+> > > + * @vmd:	back pointer to the owning VMD device; serializes the MTL016
+> > > + *		flush read against other config space access.
+> > >   */
+> > >  struct vmd_irq_list {
+> > >  	struct list_head	irq_list;
+> > >  	struct srcu_struct	srcu;
+> > >  	unsigned int		count;
+> > >  	unsigned int		virq;
+> > > +	struct vmd_dev		*vmd;
+> > >  };
+> > >
+> > >  struct vmd_dev {
+> > > @@ -295,6 +323,13 @@ static int vmd_msi_alloc(struct irq_domain *domain, unsigned int virq,
+> > >  		INIT_LIST_HEAD(&vmdirq->node);
+> > >  		vmdirq->irq = vmd_next_irq(vmd, desc);
+> > >  		vmdirq->virq = virq + i;
+> > > +		if (vmd->features & VMD_FEAT_INTERRUPT_QUIRK) {
+> > > +			struct pci_dev *pdev = msi_desc_to_pci_dev(desc);
+> > > +
+> > > +			vmdirq->flush_addr = vmd_cfg_addr(vmd, pdev->bus,
+> > > +							  pdev->devfn,
+> > > +							  PCI_VENDOR_ID, 2);
+> > > +		}
+> > >
+> > >  		irq_domain_set_info(domain, virq + i, vmdirq->irq->virq,
+> > >  				    &vmd_msi_controller, vmdirq,
+> > > @@ -756,8 +791,20 @@ static irqreturn_t vmd_irq(int irq, void *data)
+> > >  	int idx;
+> > >
+> > >  	idx = srcu_read_lock(&irqs->srcu);
+> > > -	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node)
+> > > +	list_for_each_entry_rcu(vmdirq, &irqs->irq_list, node) {
+> > > +		/*
+> > > +		 * MTL016: the MSI may have outrun the initiating device's
+> > > +		 * posted writes (e.g. its NVMe completion entry).  A read
+> > > +		 * that completes at the initiator flushes them, so the
+> > > +		 * demuxed handler observes a coherent completion queue.
+> > > +		 * The value is discarded; only the ordering matters.
+> > > +		 */
+> > > +		if (vmdirq->flush_addr) {
+> > > +			guard(raw_spinlock)(&irqs->vmd->cfg_lock);
+> > > +			readw(vmdirq->flush_addr);
+> > > +		}
+> > >  		generic_handle_irq(vmdirq->virq);
+> > > +	}
+> > >  	srcu_read_unlock(&irqs->srcu, idx);
+> > >
+> > >  	return IRQ_HANDLED;
+> > > @@ -788,6 +835,7 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
+> > >  			return err;
+> > >
+> > >  		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
+> > > +		vmd->irqs[i].vmd = vmd;
+> > >  		vmd->irqs[i].virq = pci_irq_vector(dev, i);
+> > >  		err = devm_request_irq(&dev->dev, vmd->irqs[i].virq,
+> > >  				       vmd_irq, IRQF_NO_THREAD,
+> > > @@ -1250,7 +1298,7 @@ static const struct pci_device_id vmd_ids[] = {
+> > >  	{PCI_VDEVICE(INTEL, 0xa77f),
+> > >  		.driver_data = VMD_FEATS_CLIENT,},
+> > >  	{PCI_VDEVICE(INTEL, 0x7d0b),
+> > > -		.driver_data = VMD_FEATS_CLIENT,},
+> > > +		.driver_data = VMD_FEATS_CLIENT | VMD_FEAT_INTERRUPT_QUIRK,},
+> > >  	{PCI_VDEVICE(INTEL, 0xad0b),
+> > >  		.driver_data = VMD_FEATS_CLIENT,},
+> > >  	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_VMD_9A0B),
+> > > --
+> > > 2.53.0
+> > >
