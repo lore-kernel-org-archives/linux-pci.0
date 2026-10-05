@@ -1,264 +1,359 @@
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C81A37B022
-	for <linux-pci@vger.kernel.org>; Mon,  5 Oct 2026 21:33:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.153.30
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791236013; cv=fail; b=CjgyBdwvN+cs2SAfBK6X7Q/BhoXfDteGxTqQ4VI+G7QwXWWwcWyZpBTyBgTb6ntvh9WSEYMjgn/V29MLIbhdLrDAtY5+GMCZ7P1Uf8C4AOhhxfcFRk93Rb/VPnxttgByukpGrzb4QhWxdA85rfoemIxcdciR1UXInQ2ady1FNGQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791236013; c=relaxed/simple;
-	bh=02rMi0qsTZ9CbaagY46AZKm77SKpI+WpH1O1AK0qNxs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=A3xgla8aTGMsxVHHSQzIH7TZNGUjAZA/3kSJboOBkKHoBLEJLsT6DlHAAtdcVVuCLlzyU40X5bjVYpwLtJtSgDa307lIgmPZSCNlsonXdGISRwT+bSo9gqoUJjbJ2Vp2Zy4s05mSevIWnYxyaksJHb6J6JsKpHCsaqY5wF1Fehg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=ZM6DHvvK; arc=fail smtp.client-ip=67.231.153.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F14A419FDA;
+	Mon,  5 Oct 2026 21:42:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791236547; cv=none; b=QYd8lrb2TD9V+Iem6ca4dIUbwgJKLs/Nv93Rqz50pET2i1WIUW+ilCDbtH5va1bDDFr1chh8jTil9ox0zarcPvH5RE2vOt9Icnr3r4FvUJKyAtbtibvIU1XdIKcYXWad1dg3eCcWP/TWi/iSYSYRcvQk4Giq8AMDwBjH+45SXts=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791236547; c=relaxed/simple;
+	bh=TJGYwwxs1o+Ljf1Rslw7l/MAKRm7QDSew5GqbuJ8Ilw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=grlA5P+0feNDefpq9fBd4W0tV4YA5tLtVbdwUOQPtJSenL2uAvKGx+TkaK/YekUmI4yTrgR5aZ1i+xR1l7qBOaldLs886ayfHKOJB296OeyRNYz5aUtoHKOGAssunLk8ncV4qtwfxAiJ4/evefbwCPsrvUR3Hh1JZUlQ+p74FFY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=l2SEv17h; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="ZM6DHvvK"
-Received: from pps.filterd (m0089730.ppops.net [127.0.0.1])
-	by m0089730.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 695IDAYp1866521
-	for <linux-pci@vger.kernel.org>; Mon, 5 Oct 2026 14:33:30 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	pps82601-s2048-2026-q3; bh=DoTDLnxWo+vyBFg2XZXFvqT0SQiCp8iD3nRLl
-	DuEKK0=; b=ZM6DHvvKxW2/pC1CNOsB1mPJd6PbhZ1d+WNZzXdBrKg698H4Z/JQ5
-	r0k6m6sXmm6aWVzw4PcxIIMpG4KSIKqnAh1JWHxjY4yBbDpwkBvZq8yHY7XYROJW
-	qECJPI6+JWo1ArTnAp5BS2i4q4B0I/v7dabXmzWUc6u58Pz8j/TId07ZUViW5zwE
-	rMwqm7hZdQ2V3Sg7Xx8zTKqtozkoj7nU3DgmRjKjsh4kBdBlB3eL0I+cq4EJADOU
-	4PNzyETYw5o3jQ81IXaTVRrgBpiJ5jVYjWecv1q3ldplR7E9Ohpr5tKJ5mNX7TUu
-	8iYh9fuqG8hTKmdAxXx+qEfUjDlqrbhhA==
-Received: from mail-ot1-f72.google.com (mail-ot1-f72.google.com [209.85.210.72])
-	by m0089730.ppops.net (PPS) with ESMTPS id 4h2w6r0v4u-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 05 Oct 2026 14:33:29 -0700 (PDT)
-Received: by mail-ot1-f72.google.com with SMTP id 46e09a7af769-81447a16061so4979422a34.3
-        for <linux-pci@vger.kernel.org>; Mon, 05 Oct 2026 14:33:29 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791236009; cv=none;
-        d=google.com; s=arc-20260327;
-        b=pxNvs84lT3H9nXBfZRaCF4pSpcQIBUu5y3+akAx/5gTL0x2NhQKV6f29Fn6Fxf6d05
-         octiI7Qcw80smd56QY9mpYPoPkeWNrcgPpk6suvU6Na2p0rFfm8XWuBVA27vFSMBgJtW
-         RNRkjka7tb/xz+Qc4Vs4spkUaxLRd+ClfAPvMaX/42h6dd+ILSv1UUhkMbvw6oWlP+41
-         fGtZ2GgKHo1l4+QtrB1o3AbDSC9Y5iKJ4V5jUoP/ecczHY234GAyxdUhMDdXmmIdpMjS
-         DNlCI6wlTcEcucQxAk9y8qF6vxAevq1EP9bnqycmo5TMPcj8gM7FEBIKV84IOlRMfqc7
-         UbHA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version;
-        bh=ghbzX0NgXdNhpA6B0OeBfQfvRP9XoL8GQxYtfbQBaKM=;
-        fh=nNlerwqGMBhGys9rJIZQra4Iu3xNc0AO+V2vISRnSDs=;
-        b=hkXOejHm9Cv5bGsE47PMY3tedK2QOgNFJImkZcjAoysaIeWZi9r9EpDBjd4L4YFMzl
-         A4LYxhyjHeverhXCSp8nS3cEpJKV3iovmlW76HmkI64bcy7cm7AAC1ZZi67Dmzv2FxpW
-         82m1pwzkzZlIbK1Fg5NbqKPSZbpxWJgcC3xOC9fXIbTVIgOPfroKNM7EKYr1+KmbYTbG
-         7RWOOxNe6/PAp0kIoqgJrM8XAKKnvCMQhdNJd0pXIOp8Czpa62hSLsRRdmfEjO7mC8Oz
-         2jUvlFJ2dZDIPdpnpCAeeCcZv3Bo3Vmp1EhI+8mSMIsE2E83d/JJB3fBKdYslylYOIYw
-         L6GA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791236009; x=1791840809;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ghbzX0NgXdNhpA6B0OeBfQfvRP9XoL8GQxYtfbQBaKM=;
-        b=PQhZjfyrzrGnNHz0MvFrTIihW71kulN3fW1PVdcBwhL778W2QMfUaxsLmu4mU1iPrI
-         ByDC+LC3bl5KcJSQG3ckmCMCMJ79PLNAxe2IQueozuFGzpfw0E43hCKuI/l10PcvopIG
-         UBDnh+CiysOuIw2Ica2GmkSxDCL++bQG1rB0SteIjq5P0ycsFZ/8M3GnRN5eBeR6L9wD
-         yIpqJJ+GYbLo6LhCgbSmRyo8CbLPaZzxi5YQYIsl29Qr0KFUYD5vW6ep+g1MZ0VR5kZp
-         hw86J52cIZ8PYmMKCc/DJEbE0/sUeJMTLS4vPlxqK2r2hZxPuuR5mLbP8RVWWf5lWGJU
-         I4FA==
-X-Forwarded-Encrypted: i=1; AKwUvByKLFVfyMlX/p6pOJCWdQ2+uWQKesPNk7DsUshRN0Di52QVw6D1nUcROYoA1l6sUzlRThY0a5CaHmE=@vger.kernel.org
-X-Gm-Message-State: AFuF++krEOAmJmgyDTMizIpryQV95Be5AnxjQuJ0u6ZlVELkPhCnv6eZ
-	+2RDt8d+yKK6trIC4p2Ahm4a64MaxD6gnxAMUH5+Mlhd2omC4pG5LuD5JgQNDcZMMbg0wveOc+c
-	XDgFl/dMNlMgVf1SxaCgbzUiXeZ1cBGQ3Khbv9wLWTgkAeljTTuhlRBTwjIrb0PwFIrfkr0y+S7
-	gBri24qHUib8N9cu2E+yqNrp/S/QKhbKOANDU=
-X-Gm-Gg: AYBFou1Q1PNtiR9H6Z6GpP4JveFl87If8bxQX6v4AKbF/ZaKzwuYkr8x4Hev8KVSE7D
-	mUyE7IrRZmk+6JN0hi+isummUwWVFgOw4/U87uXOJ6rsGsSen79ejl5qbCnTj9O02vhxc0Vuxh5
-	eQuVwwp6Tt05pKLtjGcV5Rjtv0d/+KQKp+tzsuwxHW5UnQAuA5G4D8V3A3eLIazncKsc+P9XOd
-X-Received: by 2002:a05:6830:67d8:b0:81e:bb4b:2324 with SMTP id 46e09a7af769-82285c55c03mr11907160a34.26.1791236009030;
-        Mon, 05 Oct 2026 14:33:29 -0700 (PDT)
-X-Received: by 2002:a05:6830:67d8:b0:81e:bb4b:2324 with SMTP id
- 46e09a7af769-82285c55c03mr11907148a34.26.1791236008493; Mon, 05 Oct 2026
- 14:33:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="l2SEv17h"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1791236546; x=1822772546;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=TJGYwwxs1o+Ljf1Rslw7l/MAKRm7QDSew5GqbuJ8Ilw=;
+  b=l2SEv17h6IFnCQ9xZ8avTUH/oyxc+yZpPY1Bj8/kX7P/lH6rBiT9HTi/
+   t5NIwAM+gwpsslK9Bqfq22zOVcqxWIhzNWUqcFvVLYyd4iED3HCLM1NzZ
+   kWfGfN6BN4ptXVIkxEcROPWHo9hvHMOp9Z5y2pGs9LCOSM4QjqKmSS8L5
+   91b+BS0cgLegNNIwDjmfBFmlywkb5gbm2KYbZadyKRfML54AoXP3MXlHa
+   Ks4rXvGneXiSJoDw2iMfFWvFFE7l65mGGfVRTEENpbT4OnVDpZTH8xa8Q
+   D2oDUS5k44IDAPTzNYfIz9SOkjzBbj7h+Z3O8OZeqhzow6duO9Nnv4OeF
+   Q==;
+X-CSE-ConnectionGUID: FAIZHsPpSbOFqiXpj3PlOQ==
+X-CSE-MsgGUID: j3AN6WOqR6KpoekKReartg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11926"; a="91054671"
+X-IronPort-AV: E=Sophos;i="6.27,142,1787036400"; 
+   d="scan'208";a="91054671"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2026 14:42:25 -0700
+X-CSE-ConnectionGUID: kJce0kABTfGHogVUGQrWOA==
+X-CSE-MsgGUID: 1c+57GCoRGiyp3/K5tjNag==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,142,1787036400"; 
+   d="scan'208";a="304870582"
+Received: from jjgreens-desk24.amr.corp.intel.com (HELO [10.125.108.109]) ([10.125.108.109])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2026 14:42:23 -0700
+Message-ID: <e55268cc-5b70-4109-b7b4-bbbaca7b13ea@intel.com>
+Date: Mon, 5 Oct 2026 14:42:22 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260731211601.3033906-1-zhipingz@meta.com> <20260731211601.3033906-6-zhipingz@meta.com>
- <f4ff7ced-63b6-42e6-8e01-9f01d2e59843@huawei.com> <CAH3zFs24esHCGA=wPrkiH8oKQCv7SnOwcBbkMxrOEvOVtwstYg@mail.gmail.com>
- <20260924233058.GA163130@ziepe.ca> <CAH3zFs2rhg6-b-pVDps1V8LsM4Dn48t4J4LFVyKOZtT4axdY=Q@mail.gmail.com>
- <20260928172939.GK163130@ziepe.ca> <CAH3zFs1mCujYjB=5ywo+huAjPJZQoe9u7NM4evNRYr5_ZQbcXQ@mail.gmail.com>
- <20260930121349.GD3401365@unreal>
-In-Reply-To: <20260930121349.GD3401365@unreal>
-From: Zhiping Zhang <zhipingz@meta.com>
-Date: Mon, 5 Oct 2026 14:33:17 -0700
-X-Gm-Features: AclHuK9wPVFlctf6gP5X6sNuMnv1YN3Hk2l0PdMFBVaYzDmHBABydld70Lp-gj0
-Message-ID: <CAH3zFs0-5yZzquCAS+RA=jerok3fikWs+hJMnp_91D37ccFtUw@mail.gmail.com>
-Subject: Re: [PATCH v13 5/5] RDMA/mlx5: get tph for p2p access when
- registering dma-buf mr
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, fengchengwen <fengchengwen@huawei.com>,
-        Michael Guralnik <michaelgur@nvidia.com>,
-        Sumit Semwal <sumit.semwal@linaro.org>,
-        Christian Konig <christian.koenig@amd.com>,
-        Alex Williamson <alex@shazbot.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, kvm@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, Alistair Popple <apopple@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDA1MDA4NCBTYWx0ZWRfX1HvMCcIbDB8N
- BAwdY964d4wOv4mmn5kDiTE1W7ZXxVpmK4YR1z4dc+mlYuFL93eyDm7YZTc0xwUzY6rjSad4Yvr
- SIwzWR1QELgH0Ih1qeZQru07pVe4lE8=
-X-Authority-Analysis: v=2.4 cv=IPiXmQvG c=1 sm=1 tr=0 ts=6ac417a9 cx=c_pps
- a=+3WqYijBVYhDct2f5Fivkw==:117 a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10
- a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=855S8uPTkML1Oy45N9_h:22
- a=VwQbUJbxAAAA:8 a=Ikd4Dj_1AAAA:8 a=9jRdOu3wAAAA:8 a=m_M2Mm9OkLXPgJTOvGkA:9
- a=QEXdDO2ut3YA:10 a=ZE6KLimJVUuLrTuGpvhn:22
-X-Proofpoint-ORIG-GUID: GMtyJieWX6fAVTfhWW1u9h3mxZqNY_i4
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDA1MDA4NCBTYWx0ZWRfX3vRkSB2yrkNS
- BZBbAZBlDOUpFTsylFDtMomaRSWvapcuHGZkNoH2htuh0VlNyt4xMRB/JttgKWiGabmhlSZrhdX
- hmotg7YINuWkuRKPgg/6pftpqGVKVKKtL+rPxmoTccVdjmhjWQAbRzG5iAz6g3EPioIz0BeXELG
- tuQ8EbTvSGtZkyLNy/5NX5FJy6livw6mZQPw8kc6Vcwy9hp4Nc5RXNG0MZmNTmXs1Idd0BKARSi
- YgtgnAYKGS5Gx1hmeyVJrSebhCGTJAZvp6LJeP0/DN/yXoIBQAwDQAevkXVBeq3y67HKx3IFM/Y
- dPM9HzB1lRjVq/atNZkWjOpn0CIeFUCpAbKHN20PL3HGzHX28XssB7j6B8uoQNHGH0uJ874buLa
- kIsOaUOcSTNKTX/KIBx7key+MQAeloR0qqpFMhh2t9U56czY8GwZpEnV2oxUbv7pQ/XJJyMIgEv
- HScMlL90lHXvGw3Hf0w==
-X-Proofpoint-GUID: GMtyJieWX6fAVTfhWW1u9h3mxZqNY_i4
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-05_05,2026-10-05_01,2025-10-01_01
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v14 06/16] cxl: Move HDM decoder helpers to built-in
+ resource code
+To: Srirangan Madhavan <smadhavan@nvidia.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
+ Ira Weiny <ira.weiny@intel.com>, Jonathan Cameron <jic23@kernel.org>,
+ Vishal Verma <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
+ alwilliamson@nvidia.com,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
+ Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
+ Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org
+References: <20261001092227.3004747-1-smadhavan@nvidia.com>
+ <20261001092227.3004747-7-smadhavan@nvidia.com>
+From: Dave Jiang <dave.jiang@intel.com>
+Content-Language: en-US
+In-Reply-To: <20261001092227.3004747-7-smadhavan@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi Leon,
 
-Sure, I'm happy to explain the TPH side. I see you've set the dma-buf
-patches aside for now, so I'll just put the requirement on record
-rather than ask for a particular API.
 
-On the mlx5 ODP path the mkey must exist before the first dma-buf
-mapping, and its ST index and PH are fixed at creation. It's the same
-ordering problem you have with ATS. At that point mlx5 needs the ST/PH
-tuple and an answer to Jason's question, whether its traffic to the
-buffer is routed directly (PCI_P2PDMA_MAP_BUS_ADDR) rather than
-through the host bridge. What mlx5 needs there is the answer, not the
-exporter's p2pdma_provider. Wherever the route gets computed is fine,
-as long as the result comes back for mlx5's own attachment.
+On 10/1/26 2:22 AM, Srirangan Madhavan wrote:
+> Move the refactored HDM programming helpers and cxl_rwsem from hdm.c to
+> resource.c. Build resource.o under CONFIG_CXL_RESET so the helpers are
+> available to built-in PCI code when CXL_BUS is modular. Export only the
+> symbols used by cxl_core.
+> 
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> ---
+>  drivers/cxl/Kconfig         |   4 ++
+>  drivers/cxl/core/Makefile   |   1 +
+>  drivers/cxl/core/hdm.c      |  93 -------------------------------
+>  drivers/cxl/core/resource.c | 106 ++++++++++++++++++++++++++++++++++++
+>  4 files changed, 111 insertions(+), 93 deletions(-)
+>  create mode 100644 drivers/cxl/core/resource.c
+> 
+> diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
+> index 80aeb0d556bd..0cd704670735 100644
+> --- a/drivers/cxl/Kconfig
+> +++ b/drivers/cxl/Kconfig
+> @@ -6,6 +6,7 @@ menuconfig CXL_BUS
+>  	select FW_UPLOAD
+>  	select PCI_DOE
+>  	select FIRMWARE_TABLE
+> +	select CXL_RESET
+>  	select NUMA_KEEP_MEMINFO if NUMA_MEMBLKS
+>  	select FWCTL if CXL_FEATURES
+>  	help
+> @@ -244,3 +245,6 @@ config CXL_ATL
+>  	depends on ACPI_PRMT && AMD_NB
+>  
+>  endif
+> +
+> +config CXL_RESET
+> +	bool
 
-In my earlier reply to Jason I said a later attach doesn't change an
-existing importer's route. Christian pointed out in the patch 16
-thread that it can, because the exporter only commits the access path
-when the mapping is created. I was wrong there. The mlx5 patch
-re-queries the ST/PH under dmabuf->resv after each
-ib_umem_dmabuf_map_pages() and fails the fault if it changed; with
-vfio-pci the tuple only changes if the device owner sets a new one.
-The route check belongs in the same two places, which I think is close
-to what Thomas suggested.
+Can you add a comment here for this and say something like CXL_RESET can't be 'n' when CXL_BUS is active? There are things that should always build in resource.o and later regs.o that will be under the CXL_RESET symbol with this series.
 
-Alistair, adding you for visibility since you're picking up the
-mapping-type work after LPC. mlx5 TPH would be the second user of
-whatever lands there. I'm happy to help: I can implement the TPH side
-on top of it and test on a CX-8 and a peer endpoint behind a PCIe
-switch, including analyzer captures of the TLPs, or I can take on a
-piece of the work if that's useful.
+DJ
 
-Thanks,
-Zhiping
+> diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
+> index ce7213818d3c..30470799e059 100644
+> --- a/drivers/cxl/core/Makefile
+> +++ b/drivers/cxl/core/Makefile
+> @@ -1,5 +1,6 @@
+>  # SPDX-License-Identifier: GPL-2.0
+>  obj-$(CONFIG_CXL_BUS) += cxl_core.o
+> +obj-$(CONFIG_CXL_RESET) += resource.o
+>  obj-$(CONFIG_CXL_SUSPEND) += suspend.o
+>  
+>  ccflags-y += -I$(srctree)/drivers/cxl
+> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
+> index d3f21dfda146..629e3420ad0b 100644
+> --- a/drivers/cxl/core/hdm.c
+> +++ b/drivers/cxl/core/hdm.c
+> @@ -16,11 +16,6 @@
+>   * for enumerating these registers and capabilities.
+>   */
+>  
+> -struct cxl_rwsem cxl_rwsem = {
+> -	.region = __RWSEM_INITIALIZER(cxl_rwsem.region),
+> -	.dpa = __RWSEM_INITIALIZER(cxl_rwsem.dpa),
+> -};
+> -
+>  static int add_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld)
+>  {
+>  	int rc;
+> @@ -707,35 +702,6 @@ int cxl_dpa_alloc(struct cxl_endpoint_decoder *cxled, u64 size)
+>  	return devm_add_action_or_reset(&port->dev, cxl_dpa_release, cxled);
+>  }
+>  
+> -static void cxld_set_interleave(struct cxl_decoder_config *config, u32 *ctrl)
+> -{
+> -	u16 eig;
+> -	u8 eiw;
+> -
+> -	/*
+> -	 * Input validation ensures these warns never fire, but otherwise
+> -	 * suppress unititalized variable usage warnings.
+> -	 */
+> -	if (WARN_ONCE(ways_to_eiw(config->interleave_ways, &eiw),
+> -		      "invalid interleave_ways: %d\n", config->interleave_ways))
+> -		return;
+> -	if (WARN_ONCE(granularity_to_eig(config->interleave_granularity, &eig),
+> -		      "invalid interleave_granularity: %d\n",
+> -		      config->interleave_granularity))
+> -		return;
+> -
+> -	u32p_replace_bits(ctrl, eig, CXL_HDM_DECODER0_CTRL_IG_MASK);
+> -	u32p_replace_bits(ctrl, eiw, CXL_HDM_DECODER0_CTRL_IW_MASK);
+> -	*ctrl |= CXL_HDM_DECODER0_CTRL_COMMIT;
+> -}
+> -
+> -static void cxld_set_type(struct cxl_decoder_config *config, u32 *ctrl)
+> -{
+> -	u32p_replace_bits(ctrl,
+> -			  !!(config->target_type == CXL_DECODER_HOSTONLYMEM),
+> -			  CXL_HDM_DECODER0_CTRL_HOSTONLY);
+> -}
+> -
+>  static void cxlsd_set_targets(struct cxl_switch_decoder *cxlsd, u64 *tgt)
+>  {
+>  	struct cxl_dport **t = &cxlsd->target[0];
+> @@ -758,65 +724,6 @@ static void cxlsd_set_targets(struct cxl_switch_decoder *cxlsd, u64 *tgt)
+>  		*tgt |= FIELD_PREP(GENMASK_ULL(63, 56), t[7]->port_id);
+>  }
+>  
+> -/*
+> - * Per CXL 2.0 8.2.5.12.20 Committing Decoder Programming, hardware must set
+> - * committed or error within 10ms, but just be generous with 20ms to account for
+> - * clock skew and other marginal behavior
+> - */
+> -#define COMMIT_TIMEOUT_MS 20
+> -int cxld_await_commit(void __iomem *hdm, int id)
+> -{
+> -	u32 ctrl;
+> -	int i;
+> -
+> -	for (i = 0; i < COMMIT_TIMEOUT_MS; i++) {
+> -		ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> -		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMIT_ERROR, ctrl)) {
+> -			ctrl &= ~CXL_HDM_DECODER0_CTRL_COMMIT;
+> -			writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> -			return -EIO;
+> -		}
+> -		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMITTED, ctrl))
+> -			return 0;
+> -		fsleep(1000);
+> -	}
+> -
+> -	return -ETIMEDOUT;
+> -}
+> -
+> -static void setup_hw_decoder(void __iomem *hdm,
+> -			     struct cxl_decoder_settings *settings)
+> -{
+> -	struct cxl_decoder_config *config = &settings->config;
+> -	int id = config->id;
+> -	u64 target_or_skip_reg_val;
+> -	u64 base, size;
+> -	u32 ctrl;
+> -
+> -	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> -	cxld_set_interleave(config, &ctrl);
+> -	cxld_set_type(config, &ctrl);
+> -	base = config->hpa_range.start;
+> -	size = range_len(&config->hpa_range);
+> -	target_or_skip_reg_val = settings->target_or_skip_reg_val;
+> -
+> -	writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
+> -	writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
+> -	writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id));
+> -	writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
+> -	/* Target-list and endpoint-skip registers alias the same slot. */
+> -	writel(upper_32_bits(target_or_skip_reg_val), hdm + CXL_HDM_DECODER0_TL_HIGH(id));
+> -	writel(lower_32_bits(target_or_skip_reg_val), hdm + CXL_HDM_DECODER0_TL_LOW(id));
+> -
+> -	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> -}
+> -
+> -void cxl_commit_start(void __iomem *hdm, struct cxl_decoder_settings *settings)
+> -{
+> -	lockdep_assert_held(&cxl_rwsem.dpa);
+> -	setup_hw_decoder(hdm, settings);
+> -}
+> -
+>  /*
+>   * Endpoint skip and switch targets have different owners. Keep that state with
+>   * its owning type and flatten it only into a transient register-programming
+> diff --git a/drivers/cxl/core/resource.c b/drivers/cxl/core/resource.c
+> new file mode 100644
+> index 000000000000..ff027cb89e57
+> --- /dev/null
+> +++ b/drivers/cxl/core/resource.c
+> @@ -0,0 +1,106 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/* Copyright (c) 2026 NVIDIA Corporation & Affiliates */
+> +#include <linux/delay.h>
+> +#include <linux/bug.h>
+> +#include <linux/errno.h>
+> +#include <linux/export.h>
+> +#include <linux/kernel.h>
+> +
+> +#include "cxl.h"
+> +#include "core.h"
+> +
+> +struct cxl_rwsem cxl_rwsem = {
+> +	.region = __RWSEM_INITIALIZER(cxl_rwsem.region),
+> +	.dpa = __RWSEM_INITIALIZER(cxl_rwsem.dpa),
+> +};
+> +EXPORT_SYMBOL_FOR_MODULES(cxl_rwsem, "cxl_core");
+> +
+> +static void cxld_set_interleave(struct cxl_decoder_config *config, u32 *ctrl)
+> +{
+> +	u16 eig;
+> +	u8 eiw;
+> +
+> +	/*
+> +	 * Input validation ensures these warns never fire, but otherwise
+> +	 * suppress unititalized variable usage warnings.
+> +	 */
+> +	if (WARN_ONCE(ways_to_eiw(config->interleave_ways, &eiw),
+> +		      "invalid interleave_ways: %d\n", config->interleave_ways))
+> +		return;
+> +	if (WARN_ONCE(granularity_to_eig(config->interleave_granularity, &eig),
+> +		      "invalid interleave_granularity: %d\n",
+> +		      config->interleave_granularity))
+> +		return;
+> +
+> +	u32p_replace_bits(ctrl, eig, CXL_HDM_DECODER0_CTRL_IG_MASK);
+> +	u32p_replace_bits(ctrl, eiw, CXL_HDM_DECODER0_CTRL_IW_MASK);
+> +	*ctrl |= CXL_HDM_DECODER0_CTRL_COMMIT;
+> +}
+> +
+> +static void cxld_set_type(struct cxl_decoder_config *config, u32 *ctrl)
+> +{
+> +	u32p_replace_bits(ctrl,
+> +			  !!(config->target_type == CXL_DECODER_HOSTONLYMEM),
+> +			  CXL_HDM_DECODER0_CTRL_HOSTONLY);
+> +}
+> +
+> +/*
+> + * Per CXL 2.0 8.2.5.12.20 Committing Decoder Programming, hardware must set
+> + * committed or error within 10ms, but just be generous with 20ms to account for
+> + * clock skew and other marginal behavior
+> + */
+> +#define COMMIT_TIMEOUT_MS 20
+> +int cxld_await_commit(void __iomem *hdm, int id)
+> +{
+> +	u32 ctrl;
+> +	int i;
+> +
+> +	for (i = 0; i < COMMIT_TIMEOUT_MS; i++) {
+> +		ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMIT_ERROR, ctrl)) {
+> +			ctrl &= ~CXL_HDM_DECODER0_CTRL_COMMIT;
+> +			writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +			return -EIO;
+> +		}
+> +		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMITTED, ctrl))
+> +			return 0;
+> +		fsleep(1000);
+> +	}
+> +
+> +	return -ETIMEDOUT;
+> +}
+> +EXPORT_SYMBOL_FOR_MODULES(cxld_await_commit, "cxl_core");
+> +
+> +static void setup_hw_decoder(void __iomem *hdm,
+> +			     struct cxl_decoder_settings *settings)
+> +{
+> +	struct cxl_decoder_config *config = &settings->config;
+> +	int id = config->id;
+> +	u64 target_or_skip_reg_val;
+> +	u64 base, size;
+> +	u32 ctrl;
+> +
+> +	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +	cxld_set_interleave(config, &ctrl);
+> +	cxld_set_type(config, &ctrl);
+> +	base = config->hpa_range.start;
+> +	size = range_len(&config->hpa_range);
+> +	target_or_skip_reg_val = settings->target_or_skip_reg_val;
+> +
+> +	writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
+> +	writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
+> +	writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id));
+> +	writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
+> +	/* Target-list and endpoint-skip registers alias the same slot. */
+> +	writel(upper_32_bits(target_or_skip_reg_val), hdm + CXL_HDM_DECODER0_TL_HIGH(id));
+> +	writel(lower_32_bits(target_or_skip_reg_val), hdm + CXL_HDM_DECODER0_TL_LOW(id));
+> +
+> +	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +}
+> +
+> +void cxl_commit_start(void __iomem *hdm, struct cxl_decoder_settings *settings)
+> +{
+> +	lockdep_assert_held(&cxl_rwsem.dpa);
+> +	setup_hw_decoder(hdm, settings);
+> +}
+> +EXPORT_SYMBOL_FOR_MODULES(cxl_commit_start, "cxl_core");
 
-On Wed, Sep 30, 2026 at 5:13=E2=80=AFAM Leon Romanovsky <leon@kernel.org> w=
-rote:
->
-> >
-> On Mon, Sep 28, 2026 at 02:47:46PM -0700, Zhiping Zhang wrote:
-> > On Mon, Sep 28, 2026 at 10:30=E2=80=AFAM Jason Gunthorpe <jgg@ziepe.ca>=
- wrote:
-> > >
-> > > >
-> > > On Thu, Sep 24, 2026 at 11:17:57PM -0700, Zhiping Zhang wrote:
-> > > > On Thu, Sep 24, 2026 at 4:31=E2=80=AFPM Jason Gunthorpe <jgg@ziepe.=
-ca> wrote:
-> > > > >
-> > > > > >
-> > > > > On Wed, Sep 23, 2026 at 11:24:56PM -0700, Zhiping Zhang wrote:
-> > > > > > I don't think this belongs in the importer. Every in-tree dma-b=
-uf
-> > > > > > caller of pci_p2pdma_distance() is the exporter, in its .attach,
-> > > > > > clearing attach->peer2peer -- amdgpu_dma_buf.c, xe_dma_buf.c,
-> > > > > > habanalabs memory.c. There is no importer-side caller.
-> > > > >
-> > > > > Right, and they shouldn't be doing that, but it still has to be
-> > > > > checked that the st is going directly to the peer device not the =
-host
-> > > > > bridge. Not using the distance, but by the PCI_P2PDMA_MAP_BUS_ADDR
-> > > > > indication.
-> > > > >
-> > > > > I fear you will need some of Leon's series to make that happen.
-> > > > >
-> > > > > So probably the proposed change to dmabuf ops is far too simple.
-> > > > >
-> > > > > Jason
-> > > >
-> > > > Hi Jason,
-> > > >
-> > > > Thanks for the comments.
-> > > >
-> > > > Agreed -- the tag should not be handed out unless the routing is
-> > > > PCI_P2PDMA_MAP_BUS_ADDR. That can be enforced conservatively on 7.3
-> > > > with two changes. I can fold both into patch 4.
-> > > > ```
-> > > > In drivers/pci/p2pdma.c, make pci_p2pdma_map_type() callable from
-> > > > tristate VFIO_PCI_CORE:
-> > > >
-> > > >     EXPORT_SYMBOL_GPL(pci_p2pdma_map_type);
-> > >
-> > > No, that's been rejected several times already.
-> > >
-> > > > and in drivers/vfio/pci/vfio_pci_dmabuf.c,
-> > > > vfio_pci_dma_buf_get_pci_tph() gains:
-> > > >
-> > > >     struct dma_buf_attachment *attach;
-> > > >
-> > > >     if (list_empty(&dmabuf->attachments))
-> > > >         return -EOPNOTSUPP;
-> > > >
-> > > >     list_for_each_entry(attach, &dmabuf->attachments, node)
-> > > >         if (pci_p2pdma_map_type(priv->provider, attach->dev) !=3D
-> > > >             PCI_P2PDMA_MAP_BUS_ADDR)
-> > > >                 return -EOPNOTSUPP;
-> > > > ```
-> > >
-> > > Also no, this has to be done via PCI_P2PDMA_MAP_BUS_ADDR which also
-> > > enforces putting the determination in the right place in the code
-> > > flow..
-> > >
-> > > > Two properties are worth stating explicitly:
-> > >
-> > > Ah! AI!
-> > >
-> > > Jason
-> >
-> > Thanks Jason, I see what you meant by Leon's series now:
-> >   https://lore.kernel.org/all/20260928-fix-p2p-acs-v4-0-v8-0-404453b9c4=
-35@nvidia.com/
-> >
-> > Looking at v8, it seems patches 1-4 can stay functionally unchanged,
-> > while patch 5 uses dma_buf_p2pdma_map_type() on its own attachment for
-> > both the initial TPH query and revalidation. Is that what you expect?
-> >
-> > If so, would you prefer that I wait for Leon's series and rebase the
-> > whole stack on it, or split the series so patches 1-4 can land first
-> > and patch 5 follows after Leon's series?
->
-> I would like you to join me there and explain to Christian why the
-> importer needs access to the exporter's internals.
->
-> You are already second user for the same functionally.
->
-> Thanks
->
-> >
-> > Thanks,
-> > Zhiping
