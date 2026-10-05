@@ -1,48 +1,48 @@
-Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11021072.outbound.protection.outlook.com [40.107.74.72])
+Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020084.outbound.protection.outlook.com [52.101.229.84])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EC3930B50D;
-	Mon,  5 Oct 2026 17:05:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A5B1214A84;
+	Mon,  5 Oct 2026 17:09:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.84
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791219912; cv=fail; b=JrCdCj3q+D/3FrIlhwi7UFDTAgAjFfYz5HZgfByfbjSZ/AAAtZOfL+2xgR0pvqzQYtTLy30XDienNueY0LeSNiOFB/UqNxQOqOY/rfTbeveKUqvtidgfo3/BHMkSmUN9tyWxlTs3vW61QZickNwsKCj4fvdEXVKtlhPnxb5A3gA=
+	t=1791220181; cv=fail; b=m0EHLwOPKsIAgPjZfvpZS/CKS6c67t74nBUOBi5f6WaJd9l2UaTxO/GPkDwnXph2iBbM047/QlxCZoDZ/RDbwBUycVb/uJv2KJVjA58BjAMnvLgUdGlHvHI/VM/xWrbF9ZpGTl2vxNvQpsOj48gy0eGZqQH+ynNOJiV/02jdnVk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791219912; c=relaxed/simple;
-	bh=FISGhnQrk7hEpSTXQr2EHlhR4cm+Q8FGnYD958aw/cU=;
+	s=arc-20240116; t=1791220181; c=relaxed/simple;
+	bh=Xxgyzn0fVPBXIqbwsa5qZRrEJhvrQib6ceHKqivNb08=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=f1PBKYei5zWC91C3TqqqGiZILoRnxr8Lq0fdLqG/UC0bUC6lKtxykhkLZHPOGTovqWTRozEOytf67tLh/Pgm4xJ88QwL97U1wZhaMr9+CeqSTQvR4hwa3YvKkTcUWg+wJOkq28E3+uwM9F5UPeAwtcohreiPNAEdoQ8wTCYYB1M=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=uTn1fnhj; arc=fail smtp.client-ip=40.107.74.72
+	 Content-Disposition:In-Reply-To:MIME-Version; b=TlZiwQq/WWLH1h58ifnt91dAAl0l9jloSsTdUzlNMYFpjHyJ8/BdSbctrK6g55NlH423ZbxYrobAwhxOPjzZMulxDsiG13xtg8GMjDP4/vnV+MME6eUw0StzbjkHMzSRCClQDQTSNlw5d+IQx2RcKVA5gcy4oNv8AQ9uxfIgsb8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=YQG6W+qY; arc=fail smtp.client-ip=52.101.229.84
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="uTn1fnhj"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="YQG6W+qY"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Pokyqyy0+EMAeb5GQq3MsMmBGN0ZDWYk3DsMlSrKGci79YzZ6Cg6g1AxsR0Xv5yxHmLC2MYZcfvDHJw2hQoRFJ4yt/2UALYzO72H+2YdmCskgGwkoC7Fjz0YhYDujifReFGIHCTAPLfr1BMMhPuOi3dCh6bbeH/sZlw6T7uH/rHAe+blBOxQoYwfhZkQ6MPSWl/WLS+Kk03tg3Ynn+PWlc+ODTq3u9tYiai1XrhWozzPaSPK9a6X29KUa4CB1vUeibwtHq7i1l00kML+SoVg3tWInf5csEWRfYvULAUgyRZ8TYWrfh6MlRGOPOLmJmuPyk/AXY8UwBR2s2nfAe2pJg==
+ b=Af7Ul7Jr4lJvI9X2++ND5bSjKg/kf/1kO1o/gGrlSZzPY8q7CYjHESDf2vAOLxpSCOfFUk43LLVaMrr3d1a5DE+C2jH10rtjIPvC6z4gPZVgMrPRDEKxmiDP9A6KoDMlhx/ci1RRwEEeQAJD9RzxpnUp4i0vMly2n07NFnMy9XaaVyr/ctvQVIvWd/rmpPF773KCnDQK5oglyy/I5n9HbXMBV5lVCx68FYp6cVGRHkulBx+L/QxwQDnX73G41wJRPviiTiWQeP7cpQLZmtIJAHMoLY4co3Utko5XFnzVvydF7gBKvRY9WKvMarB4yZAZ3PNGzNsiM8FmrmRpjyxK+Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=M+InXs4NZwxrvMK6JLaDIOoD3GWgtB6TGGJqaLAle2g=;
- b=iYuuArcJd5Uc1sysrdhGHQMN1JUexyDvdjULxiPRCLeY4bcitHnRzwTQKw/0mdNZ7jqW7Pxi9pjTHHetocJC+hL1NTHtRwvCscM99KKkXDPaMntv6snN7fMIH8ZyQp56A7/oyWCzv5FwOliWuujUlb0u02O5EaJ6/hVZCLGEmtKmM7Yv9KmfKic//N6NpDTeVODM7tNMavMGL1Iziqr8TosUZ+ZNsUwediqO9Xz1acvDhZxXHtzZCKjkeXRvsEkg2c0HviNbHixTcHtsgdYP56kHi4Vrb5KAvS7aqdpCFuY7Nuc/qa07NHXJY/1/utSHRZ2/jRWUWMPAa7SogZjpCw==
+ bh=VvogN+cZgD0Ut7uGrC+sD1CHQA5FkhCUaTuoOpiDxDs=;
+ b=SrMu3reqX4acksy5Sdu5eaPX6Kupn0IqP5jwqEKt6Xjf2mBQTOYJkbe5bOJzjsf6yBJL/NlTwg/1FInJ2KuW3FHGBabhGuAAYc1ZQYNH0eEm7N0ZkBttlBPU7wwkPSYJVVRmGmsyTPzUZ9TCCRR6TvIJjZxCqbXNsQNSlDmRDB+JBHmt45269TPDEOBlsbPcAnQM+B4MvnEj2jteg3WNMVGVgdXnevgrhThvSpHF+LaSxO61JbsfKpGXJu4F5fYHeOZKOzzlrwL4G4SOktw+wepLuRe7SymKDHkdlDbwAqKHGiGKOBHFFYlWzyI0rBbdH3QiEcrrMRFftt11Kw6MYA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
  header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=M+InXs4NZwxrvMK6JLaDIOoD3GWgtB6TGGJqaLAle2g=;
- b=uTn1fnhjRE20RmabUOMrI1JWyFnKRBMrEcj819fxj+cXHyTOxjZJbAXQJ51uyEgTwJ3HKH8j1r6JpoffouT0kn08432S3nabbvg7iGJTDpeRvDhYKit6GENScJZkKoPBHmvV7jixcHaQxfep8ToN5i2WzjoEdEe8VrJ50X9LHkg=
+ bh=VvogN+cZgD0Ut7uGrC+sD1CHQA5FkhCUaTuoOpiDxDs=;
+ b=YQG6W+qYIFFNLmGIKlRMKdBVU63lR85jRxgJooWi7Q6H13OkuT/clOCse8MKAVzc81FJ138L4Bee5kF74zyvg7yfUuu1sZWwocvz9IMWWR7OP+R/GXwawswXSM4fbpFMlXC2Ii/XExTp9xnmO+Eo5gcnP3ZkCyXjxSyO4OnGFbc=
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=valinux.co.jp;
 Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:325::11)
  by TYRP286MB5578.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:18a::9) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.20; Mon, 5 Oct
- 2026 17:05:05 +0000
+ 2026 17:09:36 +0000
 Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  ([fe80::cce5:2aa8:53f9:dba9]) by TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  ([fe80::cce5:2aa8:53f9:dba9%5]) with mapi id 15.21.0472.016; Mon, 5 Oct 2026
- 17:05:05 +0000
-Date: Tue, 6 Oct 2026 02:05:03 +0900
+ 17:09:36 +0000
+Date: Tue, 6 Oct 2026 02:09:35 +0900
 From: Koichiro Den <den@valinux.co.jp>
 To: Marek Vasut <marek.vasut@mailbox.org>
 Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>, 
@@ -55,16 +55,17 @@ Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	Frank Li <Frank.Li@nxp.com>, Niklas Cassel <cassel@kernel.org>, 
 	Wilfred Mallawa <wilfred.mallawa@wdc.com>, Serge Semin <fancer.lancer@gmail.com>, linux-pci@vger.kernel.org, 
 	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 10/15] PCI: rcar-gen4: Take over the iMSI-RX interrupt
-Message-ID: <bzonjl57inv2yr25bwn5nihjnrsxdswr44qom4raupdjtcwhao@333ri5yg6bil>
+Subject: Re: [PATCH v2 14/15] PCI: rcar-gen4: Route Root Port PME and
+ bandwidth notifications
+Message-ID: <b2hq2ucxaksk4rbq772kmb2zexuu5c5dtp7jpxl6bcxavhr3ux@exkiplvch3vi>
 References: <20260928165230.3397664-1-den@valinux.co.jp>
- <20260928165230.3397664-11-den@valinux.co.jp>
- <da9c10df-63af-4cf8-ad3a-084dd249cf21@mailbox.org>
+ <20260928165230.3397664-15-den@valinux.co.jp>
+ <9035b113-c53c-40a0-906f-0fe280d7d762@mailbox.org>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <da9c10df-63af-4cf8-ad3a-084dd249cf21@mailbox.org>
-X-ClientProxiedBy: TYCPR01CA0193.jpnprd01.prod.outlook.com
- (2603:1096:400:2b0::12) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+In-Reply-To: <9035b113-c53c-40a0-906f-0fe280d7d762@mailbox.org>
+X-ClientProxiedBy: TY6P301CA0014.JPNP301.PROD.OUTLOOK.COM
+ (2603:1096:405:3be::19) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  (2603:1096:405:325::11)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -74,170 +75,96 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: TY7P286MB6866:EE_|TYRP286MB5578:EE_
-X-MS-Office365-Filtering-Correlation-Id: b56dc865-78ec-4a2e-8427-08df2302cd78
+X-MS-Office365-Filtering-Correlation-Id: 2c5770a4-ee62-43ec-7ebc-08df23036ec9
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|366016|10070799003|23010399003|1800799024|10067099003|56012099006|4143699003|5023799004|18002099003|22082099003;
+	BCL:0;ARA:13230040|7416014|376014|366016|10070799003|23010399003|1800799024|10067099003|56012099006|4143699003|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	nD2Q3P7GsNc+ce5Z8wqA2p3bhEz+FS+UGrhQay9ejf0aFRaFugVqrhAuC5w8qHnIheeRuUwoUlba/H9OvI3wIO1DAPGoUmZwWkBZ4m2aF83X6t0Fa585i1+YTB9PRLc4SRm50kgl91Xh/bDpRSuXy6cNStkcv+unen1W/3qzsdB/mhZrDC5Stz8FltnblxdDBNsPCSIrFMqF2tqk7rjKZ6ebOG1eNVzi9f5skmjKjUJZ+Tuf0r5LvKPRZWL/Rtp5mZiRf6fxkz5JUsIpgG7qUo/3Mdkjr3BkYseQtSpzwQT1KAUHEl15gGUV/FJJJTkaTuhkEIJuLU4dyOh/kq0NvYqyUJkJAgYJ0FTxNzxB0zT2ERTi5upNjklX7zp/OHTvQu68JSSxY51fMLrWgRNhPf1mEGDYH26tEHDF0yiQclUOLWx3GOZYiGwe3SRo6tLOKHw2XRxadEVoGSTH1+8cK/9Gqfd2gfqxzR45WcGUtRfSMr+/vW0svQpZNDmsGI3d02Hs7jN00jj+kVNb5pf7L1twJhK8P1IgH1pwRAeovhSxmITCuinlzyLNNfGE+z/F0v91XvD0rUMUlY1PBNJW4319LJ9oB8hvkfaWw8erMou0YwvmFUBYZI9KotTeRRzx
+	S0503SHkHt8XXDfsJt+xR9KjOOmnm765TOt246Er/V/t0butZ8H2QlApHlCpcxcBQexUF1PBotbaFluBvobT+D+/2NFALck9kOwcdxYEiZxsslOVESlBCSg6JtLkCFcl9WBBB3Sh4w5lcyNp031OJ7mf8zjwLzUF97dJGwHAGBQ7hcYQg8YVGEdiGO2lfnuwz7/xk4WtV+CAr+euwXjJirXLP9tN/kSj0M/y9fpv5UOxccuQGYwRkxh3aHa5xftGHv3BpNAWuPxfe+nxbMKcS3W+cjFmJtcUnxmsmuRexlX9xTL1UavBUf5b9YkH6vG/YKMPPXsB3sZ0rZZ5Dd+8/z4WCJR6TWp8q4qIGO5xbA/Dk0LozdNkUle0lswoZGQVOgiCWFG0vix+2215a498wrl2lETCWnIBk4vKALKFMVMqsZZIPfIXb5o8h+qFqkYBKvpL5Kcs0PwoXiJKZhV+JIfrQU7XYU+6zHjwLDyRxjBWkx6k2+PPq2DpizsmBj/IsswmuL1JKubYk1khtd3iwIziiGT+GaUILfNBbG1B0ydYWx2T6KE5LA+6utORstFAbGHwBfiDO5Y35vfeOtJ6ZRQEeeSz2zOo9jWYHDW9WdO9G9tW3PAafmqDQxk9sLJJpCC3ZhgShcBLYLmne0fQj1YlZohLxjX+tiFjSboUT0A=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(10070799003)(23010399003)(1800799024)(10067099003)(56012099006)(4143699003)(5023799004)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(10070799003)(23010399003)(1800799024)(10067099003)(56012099006)(4143699003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?rVXP98IofAgBDQKFPOs2cmxA9ce9/28WfUciKrNvw3LYYtRnfajighp/g1op?=
- =?us-ascii?Q?1+cSaF3T7XSQp49ezNfyyvp9/az9iTgXA3xWo/lGzHqTr9l9MUYWRSF00eTY?=
- =?us-ascii?Q?DZcAgqmX5NyoTBwWjRDZOvJxnBH+x8bu0g7hRHqM+EyRpoXC0xCe2w3fgg59?=
- =?us-ascii?Q?mUcCEaFowUxW9uCIHk8OdsqqeOwirW73r1KNugObHJOtCF/M9Po80EhEwLnA?=
- =?us-ascii?Q?XAOSUMOtYj3wFWZe1xntBPxa/pC/aAOJaSvQht4D/Auk/Dkh77C+U7eV4DAa?=
- =?us-ascii?Q?yFTH/5A/bSy0twdfRL5Lw62Wr9L8qyaYeoSX7fVVupaP6qgCcZpqS40khuZ8?=
- =?us-ascii?Q?nlXuXFTw4/fAgIUON7BMe/cxOGhjkBmvARcNsbylggfk+6en17aX13/Z7dy2?=
- =?us-ascii?Q?PYUynXz3tTb0Rwsruh8Kf+0cOXjdCqsBKPUo49aIumX8Z46MVapb66LgzxWv?=
- =?us-ascii?Q?MSPQFad6gml4I1Le9g69GloAw0Um+S5caD//IhNQJOQjeeXvHGKwfHJKzYkq?=
- =?us-ascii?Q?+c3v5BaOH4Cx+p5R89WoBU3uyP7PUWOzk241NFDOBtX6bU80QPbCcrJZTk+6?=
- =?us-ascii?Q?ORXOoOrjPkYbfhUKW9yp7o5Npy+xHa8zFbwsv2nc8QaSXTvM41wDhTUkzW8h?=
- =?us-ascii?Q?PEXgeXxfI2c7pueVu3R2KYJPNQu+Do82uhQcF3c+C/zn8c12zs0s41LwTJD9?=
- =?us-ascii?Q?CHWnhvt6Q7HuE8njQMwavDPlLDlp6Z8MZwkm/EC1xaCE6UjPL9o4KJ4P1FEH?=
- =?us-ascii?Q?wv3xW7o4zokxVQ/497/e8zz0VFg/uy7brCxQp1jX/3PbiNFUiXEZ1HgEM69Q?=
- =?us-ascii?Q?rZMjRz+Az2TT30MzDhZA7RW+OV3pN8/Q4xJS2EMWbsUkloKpkbplO62wfamn?=
- =?us-ascii?Q?SAgoXJSbvFpO7xXUTwmS9F1wXntaoTwEz9kBnjgtlpyj4foELyv1kF8kWnN3?=
- =?us-ascii?Q?KnPZ3RX7+01an2WpN//ZxIUqgjEpSoDKcekGtbCQnu+uSShxLRm4x4rKb0kC?=
- =?us-ascii?Q?3pmJkuMZFm+aWgLSQxsEwfMq1HvyYVXqYWTBkOQr5u4lF8Y2pPof6BJN9S3M?=
- =?us-ascii?Q?l5bKwuzYduo0vv9E9RDz6qcKFXgv7JyDefEqz2oYNKI3NqaP3lTYdEn0CWQ+?=
- =?us-ascii?Q?A9DdInm5Vfn+W4i88WDRkiVCyihJzwxlg2Qpc88cLZ7/LsXQmQ6JOJM8qX1Q?=
- =?us-ascii?Q?2wnEqrUEyH5T0TCaEDKmr3tp8N+VPjeeRfLuHNuY90VWeCWXJibWIhVatDpb?=
- =?us-ascii?Q?SjAWe7FPVnoDMqOOTomtrBVZ8SwDg7DK/ABknwSyCcNU3Bde7ViJfIE3hf7S?=
- =?us-ascii?Q?PUVpBAoHITzMQa5EBhC2I0wZVbWSEwfCgGFL5E+jIEJj4NHHVjxBgKZY+/d2?=
- =?us-ascii?Q?QNhM3X0rnXllwKG3ROTLiSDJi5tb5rWOxK5M+K3JMgXSWSdDKv3YkeBBiyOV?=
- =?us-ascii?Q?6A01EXffQBtmDQsc6qsJTLFoUE4ZJMC2NV/AzycbqAU6Owh9M4hNI44S31iX?=
- =?us-ascii?Q?40OgpAomgwStJ6veX29gRLudLEeClk7w3ymMahdzC2dhUTNOwojedWaMy1Kh?=
- =?us-ascii?Q?QrmUkxkgApin0auJr0mirWef6UCF0fQDiETNeeqss68+OoqB7KKqRY7Z5bQ1?=
- =?us-ascii?Q?BW+Op1elUR6utZTbX5JGnkiup6hNLiHY8ly2ldyTb4oTxevgQThYNOf3HrEN?=
- =?us-ascii?Q?xw9X1LgU16ekm3pOe7Kdo6LAp4QZp5nEDRSe70Px7Le2XAz71pGXtulO9w9M?=
- =?us-ascii?Q?d9JcypnUHpQdNBplUAcF2zudQWXB7OQRGgDpNuNcuZMuUD+yIP4O?=
+	=?us-ascii?Q?s+06w5XflzXlyKiVisqFKWPGO51j1cu0A0Mp3HAlf5CMoBNi5KCHG6D0mIoe?=
+ =?us-ascii?Q?0s9T52nT8UbQPfAzfWlyvIt7GTZUZKyOBV2jfQKWpaFlS7Izd4ztsq4jqnSH?=
+ =?us-ascii?Q?Asv7vbY5jP2YGMOz4z3X3ESYPgmI5h+WxmHKzQ5w4URcUjLukc070WP2gzHb?=
+ =?us-ascii?Q?+dyBKkXySUoFihrDn5QoawO4AiizsvnuKVqCDYKAv0s0zsVz7iLUTIhhhekt?=
+ =?us-ascii?Q?yQdwYMfeW6nw6hYEOfa4Y1qV0EWe1BsN90hJkphUSfqVm/3Id85ZqqGEhx3O?=
+ =?us-ascii?Q?UPLNPUWOd6ABSTDSSUmLNFEifkVGHmgTRJMB6M9sYFTUDVT7dSSDgj3jipPP?=
+ =?us-ascii?Q?fGCT3CnZQ/+uKVk1SqGtw5w1lg2Jm3StunsF/71MSjvGBB2M/5U2fzUCJf/k?=
+ =?us-ascii?Q?hkuNHUo2ZKzZ4d5AaiF6PsGG7lsPDQ9aoj88TA/0MH5kuHIhyHgA+1TcXlvj?=
+ =?us-ascii?Q?0LHLXFTKBBV2eABBIb+wyrt5U/YTNS0EODfvg4ubOGzS97HImCGp05amYyAJ?=
+ =?us-ascii?Q?VPVxx+Q2CuUZF4y6CY2pElvIVDIZmkQEKDqSgmSfjFI/IaoBHInIsKWo8fn8?=
+ =?us-ascii?Q?+4gXvSonPf+dnwi53S1NsZN3vBmALjIkZ0ejJBzWphk9KI7/TkZwtPXlPfFM?=
+ =?us-ascii?Q?czwiC14W9ld4xFx44XtzMgnqT2Js4mloB92wQlvVsrBMh+A74bYFFBJwIECL?=
+ =?us-ascii?Q?ECGBEf02uTqKzChxrf3nfnEBGFUIHZnuYGKTc8hUxvyEf6LmpJgIlRyo+OUM?=
+ =?us-ascii?Q?UEIPLfum4w1tzoGEbJLzSBtHJeGWqr9gvPGbgUWQhcHDr0OUGGqikHCYtIyw?=
+ =?us-ascii?Q?eTXrlMpaRSK4AQr1OnVQ7Qgu3h2lBvALFCdBdldahrHeUa45Vgsrbx94Mb1m?=
+ =?us-ascii?Q?CCpm5kTxxJO0mXIxVPw915PPMKeYbyRPrvLbc9bMKfWQy/pDh0riu5XewscZ?=
+ =?us-ascii?Q?etqSAvFNnEhaqsyIi9hMak/6v+cAoEfQU6Azw5WobnHPzM71JNFPGZd9nMUO?=
+ =?us-ascii?Q?AQEwkjSZSsJ8ddYoxslyr08dRVBMFZWGAdE46I08WeSRW5YajtmG3AefXNSR?=
+ =?us-ascii?Q?46/rPrZ3gi38pEkP8T39q5kTSsJLhSzbQ/6OHbzPsgpBIXJ6eQiOwUIMXKXo?=
+ =?us-ascii?Q?6WyKvM1XDRAmOanujL2gpEwpa0nN/cjOGzfZ2v6chQvrTDV0cAL+yJZqHc4s?=
+ =?us-ascii?Q?eHgJE7K9YyV5ZIISHOhBIB+xNgvFive3OGcl0dKPLZBOzBLtLZRrq0dmp7/N?=
+ =?us-ascii?Q?ZxBC/wXSr02DDwr7Exe2JVOG9c85TLKkQ4oL388cpDlNgZmoLdkEwVPmI+wO?=
+ =?us-ascii?Q?hNWhWLglTLjvxj9Tz9Yb07nxbelnJqK9PuttIYgEVAc0T4Y7byDAXjsvp1K4?=
+ =?us-ascii?Q?+PtqYetWnxl9KbPqSp7i0BZgtq5xuM5EwJL4vlt4H7sAWhChJZ02YfOL6BYk?=
+ =?us-ascii?Q?pdGbrlZfaphyytj2QU9EyCL1DQ8j1+SIaPJHdlwo1QOape+xE6VnJOo2lSCY?=
+ =?us-ascii?Q?OU8+Z5uW0tDReNODwisH4+7TsNwVX4bOcQEr0BWOfdeFP03Q5R81l/nonIFP?=
+ =?us-ascii?Q?XUCcnsOEom2qPf0iPCPC3y26/65O3ry6x3C+eQ3I38DMry/RyY8i9HiPvVi/?=
+ =?us-ascii?Q?D4FVZl13ePCUtt/HiiGkqmIGc7lJPZFE7k8DUydHM7pFihIGzZQ9H3T7zFuk?=
+ =?us-ascii?Q?251kPpTUFb+3Q3ZrP1x8QwGyMUZMTo4WbPJ+7JIlYlR9o1W8hJIl/TNdQLmf?=
+ =?us-ascii?Q?W++7x1c8hU0j1nLYUCYM2EkSL6Km+qTt2SGsgEbSkps0RztHbT7p?=
 X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: b56dc865-78ec-4a2e-8427-08df2302cd78
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2c5770a4-ee62-43ec-7ebc-08df23036ec9
 X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Oct 2026 17:05:05.5070
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Oct 2026 17:09:36.1602
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: +fJsAB/1Z4bXBk9FKLGgzu0vrZTD0ZhquEaHPHHez7H6YIFV7KqPBkHOJNyFQWNwC0m5nWqTPv8vWAjL3kAAFA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: 0FPZXwBHg0aL89V4ONe/CrlHqvaZ5/R39WjNh4Fz1Yuv1BbkgfoXim1N8gmloy6xfbSFrxZvBcOhdPFTzQYGBQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYRP286MB5578
 
-On Sun, Oct 04, 2026 at 02:53:27AM +0200, Marek Vasut wrote:
+On Sun, Oct 04, 2026 at 06:40:20AM +0200, Marek Vasut wrote:
 > On 9/28/26 6:52 PM, Koichiro Den wrote:
 > 
 > [...]
 > 
-> > @@ -724,6 +773,9 @@ static void rcar_gen4_pcie_quiesce_irqs(struct rcar_gen4_pcie *rcar)
-> >   		rcar->reinit_pending = true;
-> >   		rcar_gen4_pcie_app_irq_sync_locked(rcar);
-> >   	}
-> > +
-> > +	/* The MSI status lives in DBI; keep the handler away during the reset. */
+> > @@ -753,12 +766,12 @@ static irqreturn_t rcar_gen4_pcie_msi_irq_handler(int irq, void *data)
+> >   	status = readl(rcar->base + PCIEINTSTS0) &
+> >   		 readl(rcar->base + PCIEINTSTS0EN);
+> > -	if (!(status & MSI_CTRL_INT))
+> > -		return IRQ_NONE;
+> > +	if (status & MSI_CTRL_INT)
+> > +		dw_handle_msi_irq(&rcar->dw.pp);
+> > +	if (status & RP_SUB_MASK)
+> > +		rcar_gen4_pcie_rp_irq_dispatch(rcar);
+> > -	dw_handle_msi_irq(&rcar->dw.pp);
+> > -
+> > -	return IRQ_HANDLED;
+> > +	return status & (MSI_CTRL_INT | RP_SUB_MASK) ? IRQ_HANDLED : IRQ_NONE;
 > 
-> Would it make sense to add lockdep_assert_held(&rcar->reset_lock) here, to
-> make it clear that this IRQ disable is protected by the reset lock ?
-
-The reset_lock is going away in v3, per my reply at:
-https://lore.kernel.org/r/eivzz4zumuu32zrycw6wpt3orzk2dvlzuvj34krmbhjf7a3a6u@ccvu2nkupzid/
-These helpers are reached from reset_root_port(), which the core serializes as I
-wrote in the above link, and from .init()/.deinit() during probe/remove and
-suspend/resume, where no reset can be in flight. Sorry for the noise.
-
+> Only a small nitpick, please don't use the ternary operator, readability
+> suffers, please do:
 > 
-> > +	disable_irq(rcar->msi_irq);
-> >   }
-> >   static void rcar_gen4_pcie_resume_irqs(struct rcar_gen4_pcie *rcar,
-> > @@ -733,6 +785,8 @@ static void rcar_gen4_pcie_resume_irqs(struct rcar_gen4_pcie *rcar,
-> >   		rcar->reinit_pending = !recovered;
-> >   		rcar_gen4_pcie_app_irq_sync_locked(rcar);
-> >   	}
-> > +
+> "
+> if (status & (MSI_CTRL_INT | RP_SUB_MASK))
+>   return IRQ_HANDLED;
 > 
-> Would it make sense to add lockdep_assert_held(&rcar->reset_lock) here, to
-> make it clear that this IRQ enable is protected by the reset lock ?
+> return IRQ_NONE;
+> "
 
-ditto.
-
-> 
-> > +	enable_irq(rcar->msi_irq);
-> >   }
-> >   /*
-> > @@ -804,11 +858,17 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
-> >   	ret = rcar_gen4_pcie_host_setup(pp);
-> >   	if (ret)
-> > -		goto err;
-> > +		goto err_deinit;
-> > +
-> > +	ret = rcar_gen4_pcie_msi_irq_init(rcar);
-> 
-> Would it make sense to acquire the IRQ a bit earlier, so you could avoid
-> rcar_gen4_pcie_host_perst_assert(pp, true); in the fail path ?
-> 
-> I think if the MSI acquisition fails, perst signal would pulse (rapid
-> sequence of deassert and assert), and that could be avoided.
-
-Good point, thanks. I agree that such a pulse is possible.
-
-However, if we simply move the request earlier within .init(), before
-deasserting PERST#, request_irq() would enable the line right away before the
-controller is configured, and since .init()/.deinit() are also reused for
-suspend/resume, keeping the request in .init() means freeing and re-requesting
-the IRQ on every sleep cycle.
-
-So for v3, I'm planning to move the request out of .init() entirely and into
-probe, using IRQF_NO_AUTOEN. That way:
-- The request happens before touching clocks, resets or PERST#, so a failure
-  bails out before the hardware is touched.
-- .init() only needs to enable the IRQ once the controller is set up, which
-  cannot fail.
-- The registration stays intact across suspend/resume, so .deinit() simply
-  disables the IRQ and .init() re-enables it.
-
-.. That said, this may well be what you had in mind in the first place. If so,
-apologies for the detour.
-
-> 
-> > +	if (ret)
-> > +		goto err_assert_perst;
-> >   	return 0;
-> > -err:
-> > +err_assert_perst:
-> > +	rcar_gen4_pcie_host_perst_assert(pp, true);
-> > +err_deinit:
-> >   	rcar->drvdata->deinit(rcar);
-> >   	return ret;
-> >   }
-> > @@ -818,6 +878,9 @@ static void rcar_gen4_pcie_host_deinit(struct dw_pcie_rp *pp)
-> >   	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
-> >   	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-> > +	/* Stop the handler before asserting reset and disabling the clocks. */
-> > +	free_irq(rcar->msi_irq, rcar);
-> > +
-> >   	rcar_gen4_pcie_host_perst_assert(pp, true);
-> >   	rcar->drvdata->deinit(rcar);
-> Shouldn't the IRQ be released only after reset is asserted and clock are
-> stopped , otherwise it might accidentally fire and cause unhandled IRQ event
-> ?
-
-That would be a concern with a shared line, where the remaining handlers would
-see spurious interrupts. This one is requested exclusively, so free_irq()
-removes the last action and shuts the line down, ie. it is masked at the GIC
-from then on, and nothing the controller does afterwards reaches a handler.
-
-The order matters the other way round. The handler reads the APP status and, for
-MSIs, DBI, so it must not run once the reset is asserted and the clocks are off,
-or it would hang. That is why the handler is stopped first.
-
-With the v3 plan above this becomes: .deinit() calls disable_irq(), which also
-waits for a running handler to finish, before asserting the reset (again fine
-because the line is ours alone), and the registration itself is released by
-devres at driver detach, ie. only after the controller is down. I believe both
-concerns will be eliminated by that design in v3.
+Will update in v3. Thanks for the review!
 
 Best regards,
 Koichiro Den
+
+> 
+> with that fixed,
+> 
+> Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+> 
+> Thank you !
