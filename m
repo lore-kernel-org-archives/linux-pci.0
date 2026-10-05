@@ -1,70 +1,74 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11010069.outbound.protection.outlook.com [52.101.229.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 836C547CC64
-	for <linux-pci@vger.kernel.org>; Mon,  5 Oct 2026 11:01:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791198105; cv=none; b=s5xzdN2opuOmvJAjBE01IgASOkmDTfToQuZdsknjYxSVPKKSSEfinCHBGy2slZFWbdmwvBc3G+q/x4XTzbVoV2/v86glFElr9/S4d6jAmQTWn8SF1WHkU9vyLqG8cieProSf/LNjRDOtfLIQ9qn9dWVCEFwCqk/+UoNng2wXW8s=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791198105; c=relaxed/simple;
-	bh=VAKmTovVzb87d5A8hUeHQhkh9HG4yeL7dyz+l+PJrmo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CuDTRwhmeK27RsHG6OepKxEDSbKL0ezqRWagwaDZG/x1zTz4QKJE4iVOxe2XnLLZ+kiXu7LJudrziaYcKYyY5rW05taSaKrKqaboBaMN2fyP3eEu8vMMBz4w1cAcBo+bbVbTTym4JAA16Bhs7EasPxBfO4kIadBKcjq3Kcj64NY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gCt6UKg4; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDA0347CA81;
+	Mon,  5 Oct 2026 11:02:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.69
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791198163; cv=fail; b=ZyE1SImCKZGeuMJPis+74/UiaQLj7OrfbhnjMwcrwIsIUAzXDcliYiGh6lVbft+TQaifc/KM9FkDNEr9ww2xUIiRz+9WnDhxPHiwk8KzA5dP4QDiEueWHvH+gSQwlSeOO5xbIdtBRXuJ35BJvgDpAiXK+TniWPmqO6mzHY8kFQQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791198163; c=relaxed/simple;
+	bh=1Atrb+0V3MLH0RZxRF9qgYpTdygfJr9MXSyVR8C7dps=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=WNtLTNFAao4Ori3Ylos74ZvpvrbA+l954lPDf6jvUkUMDpqK/Nx51FyE5C9qH7GuBxMP2o6Ueur+qdWjIfiFdyOmY+4AHQdQduyKLD3pSsZ+4AqqOe6yVf7wP5yrvo/DCundogu7L8Q7oUbIsgtfCU+dtC3gXrfUWKdswaEtatA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; dkim=pass (1024-bit key) header.d=renesas.com header.i=@renesas.com header.b=ValvWFw3; arc=fail smtp.client-ip=52.101.229.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gCt6UKg4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1791198102;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=VAKmTovVzb87d5A8hUeHQhkh9HG4yeL7dyz+l+PJrmo=;
-	b=gCt6UKg4MyEPKLtVb4PMp0Q2tPtr7DnlwBbdCy/nScQEuDDHE8Bm/fyYJJBlLLUS4aXaPm
-	5x0CE9G65U4Noqi6JLaszqyF8fTFlidLRYzdXLjeVZmXJRdlt8++uyyonFkwuJCKBC/W77
-	OeD33uC7TxqSyFFyxdUj2YavmOdnP4c=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-76-uq9_KcWuNnGBqTT2Pu5KUw-1; Mon,
- 05 Oct 2026 07:01:39 -0400
-X-MC-Unique: uq9_KcWuNnGBqTT2Pu5KUw-1
-X-Mimecast-MFC-AGG-ID: uq9_KcWuNnGBqTT2Pu5KUw_1791198096
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8B6521801220;
-	Mon,  5 Oct 2026 11:01:36 +0000 (UTC)
-Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet03.pony-001.prod.iad2.dc.redhat.com [10.2.32.114])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A51F23001D2A;
-	Mon,  5 Oct 2026 11:01:32 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: jgg@ziepe.ca
-Cc: alex@shazbot.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	bhelgaas@google.com,
-	jjohnson@kernel.org,
-	johannes@sipsolutions.net,
-	jtornosm@redhat.com,
-	kevin.tian@intel.com,
-	kvm@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
+	dkim=pass (1024-bit key) header.d=renesas.com header.i=@renesas.com header.b="ValvWFw3"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Bg3orlaZAGOYff2tsnqdTvQvurqb5sPhFPWpbeGolFM2yeIIVkd2Js2uf6m4Qw7afszqAem43VoHn0r4v5XJDwN4g1yHu+orrUvmead6e3wrceroNwj6QPNTxHUiyRLoCHABHHgRcOFKPz5F7MO4kfSskCdCP8HJEpse7XP0MQ86jmwzi695PCt/w0IAbpl35xzhvDiM67CWystcXRBFb0j2KTuKUEpUOUsAL0LuFFYM1p5Bw+FTfa7Xp/RhUUpxA0Vm2hNs8l/mOpraqykgLMkthIyC/eVZv0ANW64/3Fhs/xnstYm9j4VPbnmC23mrvlg70RUwSLD8NG78N6GZWg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Y/fcYpNLjBEpECwB+4aEqXY8kUy21PFM0EvC6Hu4l3E=;
+ b=uQRn8cIrAVJu7yaFYTZiCcNjL7Kc+tTIg9gMHwHMx79bfCEe5lZv9vD6yXtEocsI9UmKY9d6icaVtTd6zC/WOTMUENWHJEJbqJG2FUQF9EVkCmyZX05cZaprlWfTXXq0PnZGqUvh/bd6BgJZrw5sbS1/xksDdcQebSlXN0WcVdUuksoKnhmsXJ9hdT7rpO+yWqi6woKDBXIkZ6sasMPPmn8MVtopHKOulIFYBuz1KLdn6spqw1u3uanlaJRb/GuYz+O4jDYR+FLrGGvgFDAbG4bLbUUScWkjwrVakGK5ftWuhv5H4p0yr19PtsF8hgG1113/cGd9q6GY5CqkyzftEQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 8.62.32.50) smtp.rcpttodomain=bp.renesas.com smtp.mailfrom=renesas.com;
+ dmarc=pass (p=none sp=none pct=100) action=none header.from=renesas.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=renesas.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Y/fcYpNLjBEpECwB+4aEqXY8kUy21PFM0EvC6Hu4l3E=;
+ b=ValvWFw3E/tE8bCNkB49FxBVzw+cixHnAiDcMC1LTRFsg9w7bUPJZxJR1rv60SkRmhl4irbhjcrA1k71KXEWEP3WCJFAf/96pbbFDTZhbYYfk002FA+aEweEmaE3kWUam/GyiyhfpdOc1hX55jXGdvtg6rWqndyloJYOqAlruXU=
+Received: from OS7P301CA0026.JPNP301.PROD.OUTLOOK.COM (2603:1096:604:26b::8)
+ by TYWPR01MB9939.jpnprd01.prod.outlook.com (2603:1096:400:237::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.20; Mon, 5 Oct
+ 2026 11:02:36 +0000
+Received: from OS1PEPF0000D214.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:604:26b:cafe::41) by OS7P301CA0026.outlook.office365.com
+ (2603:1096:604:26b::8) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.472.20 via Frontend Transport; Mon, 5
+ Oct 2026 11:02:36 +0000
+X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
+ is 8.62.32.50) smtp.mailfrom=renesas.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=renesas.com;
+Received-SPF: Pass (protection.outlook.com: domain of renesas.com designates
+ 8.62.32.50 as permitted sender) receiver=protection.outlook.com;
+ client-ip=8.62.32.50; helo=ejcrelay004p.adwin.renesas.com; pr=E
+Received: from ejcrelay004p.adwin.renesas.com (8.62.32.50) by
+ OS1PEPF0000D214.mail.protection.outlook.com (10.167.240.21) with Microsoft
+ SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id 15.21.472.14
+ via Frontend Transport; Mon, 5 Oct 2026 11:02:36 +0000
+Received: from vm01.adwin.renesas.com (unknown [10.226.93.89])
+	by ejcrelay004p.adwin.renesas.com (Postfix) with ESMTP id 88F263000204;
+	Mon,  5 Oct 2026 20:02:33 +0900 (JST)
+From: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+To: claudiu.beznea.uj@bp.renesas.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
 	mani@kernel.org,
-	skolothumtho@nvidia.com,
-	yishaih@nvidia.com
-Subject: Re: [PATCH 3/7] vfio/pci: Add qcom-vfio-pci variant driver
-Date: Mon,  5 Oct 2026 13:01:31 +0200
-Message-ID: <20261005110131.84545-1-jtornosm@redhat.com>
-In-Reply-To: <20261002171046.GA32083@ziepe.ca>
-References: <20261002171046.GA32083@ziepe.ca>
+	robh@kernel.org,
+	bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Subject: [PATCH] PCI: rzg3s-host: Fix NVMe resume errors after s2idle
+Date: Mon,  5 Oct 2026 11:02:24 +0000
+Message-ID: <20261005110224.17160-1-ovidiu.panait.rb@renesas.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -72,81 +76,84 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: OS1PEPF0000D214:EE_|TYWPR01MB9939:EE_
+Content-Type: text/plain
+X-MS-Office365-Filtering-Correlation-Id: d5d85191-c9cd-485c-f5ed-08df22d02a56
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|376014|23010399003|36860700016|1800799024|10067099003|56012099006|6133799003|11063799006|5023799004|13003099007|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	41EUybhImkW8ApQ/J2Fm1gKOoe8ocu0xyBcd0z/qRRDH4fST4yViUzWGnBGW3DAv7GypYCTzRHMur7J1LfIyKV+/H++/+fCuyHqNtptgljX9znYqzc7nt8hPhSNU4NhG//lz/+4wC9SBwKC2Nlk39avblTc/657I06ctAPO0CRN0FkAZcQihAncY01KdXP2ATDSwQuFFH+qbfZTbS3juoJFgm8sYxcyOwlTXO3WG6OfnSCgIeth3rL/JkPdvX+/jGA6cnZydt9XguVqSc7DcZl7cAiQje2ETSV6/gpjUurrPaslG9mfLoaWviB2whGZOQg3GTvRTmU7VsqFU8DXN9a18sKy2csQLmmvBq4CiaIJ76NHHBri0PTiOs7QmJp3FBPNTc2644w+moxMBtY9A+SjiUlSDbryfGFqgE2CN7gBdmbuRpXAFMP6apahMgeNBU1LJtuq4xb7IqFZGLD6goQA5E0ib570Mr8PjqZCN33pk6Hwv4nMzINgHw9qGyfA9QZ9EjhjiO2z/uISI68cCBub55a7sMtjifkvfFx4HKkMSVBo+Gm+3zyv9FV2LZ19Ls/l81GvfFVn3fPhY5pTaC35Mwb7Vz1BZkGEn0V2jPGkvlh1l0p03DmOjee41HdNQYKa369TLzMEk8YEKHuXkYhh3iUnkHm9ueXA5yKAqic/NnAuNvGcnyVbC6WhHZL+pubyXjt8g8XLo0nwmAaoBLQ==
+X-Forefront-Antispam-Report:
+	CIP:8.62.32.50;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:ejcrelay004p.adwin.renesas.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(376014)(23010399003)(36860700016)(1800799024)(10067099003)(56012099006)(6133799003)(11063799006)(5023799004)(13003099007)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	nsWMpbCTpZCrS6tZ4WIix6IuFCoQsoQttBhtUI9S8al0NsoASFnl8IdpyXlbVYGwrCcyGYLyczbdegF7C4r7uy5e0OCVOU1jmwdl17fJcU5xh9KBydyhS79UY0zbxDsmMk8BGR2uqMsumaIOKfdwj0bxvNup6QeENCypnZ0MjMkSdImKptlqWR6qwRlwKyx1iAOv681KPL/2funvcCDT5IGCEOT4HtYxKJWrRXy+UUQHi+jPgFMc6+TNIpYejLcHSwRLHMif6UeHi7kITVb32c/FUHlkHHGeLPVLqnWeMMPT9+LRw85pQRj5tTxFSReKZl7SnJyyzhagPmlek40KDOmoQgeQ4jPp9/1ylzn9TiTojoliEoPZ8Py/T3jxUdUuXON52OYzaPzFx3XiSSvDmr5cAFbQenKye8duzR/Gdyvl9ylLezk6IHFQASukFXH8
+X-OriginatorOrg: renesas.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Oct 2026 11:02:36.8167
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: d5d85191-c9cd-485c-f5ed-08df22d02a56
+X-MS-Exchange-CrossTenant-Id: 53d82571-da19-47e4-9cb4-625a166a4a2a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=53d82571-da19-47e4-9cb4-625a166a4a2a;Ip=[8.62.32.50];Helo=[ejcrelay004p.adwin.renesas.com]
+X-MS-Exchange-CrossTenant-AuthSource: OS1PEPF0000D214.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYWPR01MB9939
 
-Hi Jason,
+On the Renesas RZ/V2H platform, when ASPM is enabled, resuming from s2idle
+with an NVMe SSD connected fails with:
 
-Thanks for the follow-up.
+  nvme nvme0: I/O tag 27 (001b) opcode 0x9 (Admin Cmd) QID 0 timeout, reset controller
+  nvme nvme0: Disabling device after reset failure: -19
 
-> It breaks because VFIO will only cache *actual* MSI-X table entries,
-> it does not have visibility into anything that
-> platform_device_msi_init_and_alloc_irqs()
+This happens because during s2idle, when ASPM is enabled, nvme_suspend()
+does not shut the drive down. It leaves it in D0, puts it in its lowest
+NVMe power state, so that resume only has to restore the previous power
+state instead of a full reinitialization. This assumes the drive keeps
+its context over the suspend.
 
-You're right, the current hook is on SET_IRQS which is tied to standard
-PCI MSI allocation. If the driver moved to device MSI domains, this specific
-hook would stop working.
+However, rzg3s_pcie_suspend_noirq() doesn't take this into account and
+it always powers down the controller and asserts the controller resets,
+including PERST#. That resets the drive, and the command the NVMe driver
+sends on resume never completes.
 
-However, and I was referring to this, the variant driver is a
-self-contained module, it doesn't prevent anyone from moving
-ath11k/ath12k to device MSI domains. If that work happens, the
-variant driver can be adapted to hook the new allocation path, or
-replaced entirely.
+To fix this, similar to the dwc driver, use
+pci_host_common_d3cold_possible() to check if the controller should be
+powered down and keep the controller running otherwise. Do this only for
+s2idle, as deep sleep could power off the SoC and neither the power domain
+nor the driver will restore the controller clocks and resets on resume.
 
-> The only reason this works for you at all is because the driver
-> hackily copies the vectors from the real MSI-X table so it can look in
-> the "cache" to find their true physical versions.
->
-> Which is my general objection, I would like to see the driver to use
-> platform_device_msi_init_and_alloc_irqs() and don't want to get stuck
-> unable to do that because it would break this.
+Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+---
+Note: this fix depends on the following series:
+https://lore.kernel.org/all/20261002110935.2004349-1-claudiu.beznea@kernel.org/
 
-I understand the concern, but I haven't seen any active work on
-moving ath11k/ath12k to device MSI domains, and the VM problem would
-remain exactly the same after that move (as you acknowledged). It would
-mean waiting for a refactoring that has no active work or timeline yet,
-while users remain without a working solution.
+ drivers/pci/controller/pcie-rzg3s-host.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-> Yes, but it does actually solve the problem in all its forms..
-
-From my research, there is currently no existing work on device
-MSI domain virtualization in KVM. Building it would require
-coordinated changes across multiple subsystems (KVM, QEMU, VFIO,
-IRQ core, guest drivers, arch code) and several maintainer trees,
-and there is no KVM hypercall that bridges to VFIO, so the
-architecture would need to be designed from scratch.
-
-In the meantime, the variant driver provides an immediate solution
-using an established kernel pattern, for users with deployed hardware.
-It can coexist and be replaced when a generic mechanism arrives.
-
-That said, I'm open to restructuring the current approach as a more
-generic VFIO mechanism for exposing host-side device metadata to VM
-guests, where MSI address caching would be one quirk type rather than
-a Qualcomm-specific driver. This way the framework would be reusable
-for any device with similar needs. Would that direction be more
-acceptable as an intermediate step?
-
-> Everyone else seems to know this stuff doesn't work for
-> virtualization and doesn't try to do something like that.
-
-The firmware is what it is, and the hardware is deployed. The kernel
-regularly supports devices with non-ideal firmware designs through
-quirks and device-specific drivers, and this is what I am trying to
-do with the VFIO variant driver pattern (as it was previously done
-for other drivers).
-
-> Why do people care so much about this? I always thought it was a bit
-> odd?
-
-WiFi passthrough to VMs is useful for network function virtualization,
-security isolation (running the wireless stack in a separate VM),
-edge computing, and development/testing environments. These are real
-use cases with real users who have this hardware deployed today.
-Qualcomm wireless cards are widely deployed, perform well, and could be
-actively used in these scenarios.
-
-Thanks
-
-Best regards
-Jose Ignacio
+diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+index eea215818633..9fc1a5a4bed8 100644
+--- a/drivers/pci/controller/pcie-rzg3s-host.c
++++ b/drivers/pci/controller/pcie-rzg3s-host.c
+@@ -2272,6 +2272,14 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+ {
+ 	struct rzg3s_pcie_host *host = dev_get_drvdata(dev);
++	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
++	bool pme_capable;
++
++	if (!pm_suspend_via_firmware() &&
++	    !pci_host_common_d3cold_possible(bridge, &pme_capable)) {
++		device_set_awake_path(dev);
++		return 0;
++	}
+ 
+ 	return rzg3s_pcie_host_stop(host);
+ }
+-- 
+2.34.1
 
