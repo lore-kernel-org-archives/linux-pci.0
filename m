@@ -1,190 +1,160 @@
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E14E8496D48
-	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 16:11:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE0AA49C4A3
+	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 16:11:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791303085; cv=none; b=lCOKpKMXgb0Oyxv6nDlcqwDKmM+RuUJWsYMuhSBlFTMjvVhmv34EATDdBKQUxmJajvavXHxOYZgnfklI3HghWzfJOVpwdQa7j8YBG7Jny6FW87UWqFImiwCA2DZY+5d3/bAZ70Tvr1E1WXB2IQJVs9VUgSfiSTh4If5MtSp8wOg=
+	t=1791303112; cv=none; b=atIdxWATjxyKkLjM1p57aTdbryBdI0cNk3Pq7/gj1iY3P2hyXgYJI7jMY5AGv6iRpSY8EKNRJg4N69OguKEt0oz8pwyhUAeDXgWUDujjOk7mBlvFmZDhtC2nIygF1Tvy4jYl2HkhwCgf3lXNyaSibwGaOeOpce6paVPv9kqSgcM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791303085; c=relaxed/simple;
-	bh=YBZe+C652Mt5wiOMYN6vWBMlwUCAKX2q0sKMcb9Ax9Q=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=Y+s9hq0BipVEvH+SnucmXUgVVzqXWFrmzeQtpmvP+yYMY/e6i8XTA7VWxEzSADn4RgvEDHnNVhRWmVL8HmhbpHUhpyTeTqeNjWIPOw9GBIKbi+C6sW+UgU7+pTXVIdL8AwgwhcAhaLaDwdwaCWHQ4+qWhruzKbR7nIe3/BIrU6U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=FsYspK57; arc=none smtp.client-ip=209.85.214.198
+	s=arc-20240116; t=1791303112; c=relaxed/simple;
+	bh=gx2iDOZ2r4lzRV7BDEcamG2oHP9rEjFLyQFQcTeg7P8=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=oeLmNWol3yOozSdaxfv5Sv7t9BHbimrRvTU/DeYK1A7F0/KeVzFmbZDtZG0NQzjollxk9Wo2+CMVmW4Kgk0mFsMwynzS+pQ0wXMJWYMG8bxJK+zcnWPC3jtkCsDPbA9PCPjtE91zHKDg5W8bl4hwriFPKfrUUvadx722SSboyrw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=jrY2aUKf; arc=none smtp.client-ip=209.85.214.200
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="FsYspK57"
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2e2d3a3ff86so44571785ad.0
-        for <linux-pci@vger.kernel.org>; Tue, 06 Oct 2026 09:11:23 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="jrY2aUKf"
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2e594a90232so31133865ad.2
+        for <linux-pci@vger.kernel.org>; Tue, 06 Oct 2026 09:11:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1791303083; x=1791907883; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=F7fiIy44pA40Qzblb6RujesfpZqXOXl3zixxZTEALtM=;
-        b=FsYspK57tzzrJJC4RirtYlchoJ8fPye1U2yVXrz2a88Dnj6hC0lfThCZNTOODnDpS6
-         oyuIT/soZb8RI/9OTio9fHmMW4N/1Z2sLjOxga+iA2k7HmhhseWKyOHKCqhhECQEBtA2
-         EXqSduwuqE3wW/+PKDuw2NJLvtZbwkraZMNOD1PU8Q+tPbpAIWzjkmY0zds8GVMW4+bC
-         jDPz/1lrL50anR/odDOJ97LlrVQEtvoerYIElZSjyZvsx/YcjyRK0QBY6BbUHLoYuwy9
-         zeeecb735TGZQHNjy/yz/0OgQII2kvs5VXMW6sqvj9KkxZoGxxzdGwYzdwyWL9VzInfJ
-         I9WA==
+        d=google.com; s=20251104; t=1791303110; x=1791907910; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=mjMt+KUzuNcKjCA07JDkaeow92GRj5gNqogfhdzmarM=;
+        b=jrY2aUKfOBt22ThXCVtHNVc6eWyPHaUHDBCgF/F+7tqHhjMmJ/Ol4+/C0UOtpiLTsE
+         u+6NNLSBsKTtk+5MBTXsJqH22s0m5rDlq4mnWb675KiTW+jPFdE5PgTR8b4UHRgxIAeE
+         s3eeo482usVhs5pJkzw3lOOfYgGussqx6xlNHGOA+ZSp3YiwjVZ9mFhWAnJubZBBV74N
+         2yGOD1wFcht58FUaPInp+cdGGixI+MPt2nBaSYANHU6Hk5yoRU5O8ql+jWlfUeyCrF7e
+         B8gNLV0hFMYScpkVNbv5m0I1YzU3l7B53Xrh37FcYVJ0HOffdIH7TNXUdFsC04fUzwbm
+         34rQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791303083; x=1791907883;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date
+        d=1e100.net; s=20260707; t=1791303110; x=1791907910;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=F7fiIy44pA40Qzblb6RujesfpZqXOXl3zixxZTEALtM=;
-        b=KhSU6xOGgtiKVJ5I/czOY7L+IH3+9zml4xzqwAzTCcZ+U2fb/qni5Q/eHjg0Yqja7K
-         rvAXFQZvIZbVzWPbMO0Mau10I9tqy7NtuI6Tfi6484c6sC24/dRj4gNmEv8yFIywr4Si
-         QmJadjwF2pTRKyuS7MEDYZPohAwL3lul5yXjZY9Lyp3bQ/7bT0TeioWGM41Favd8QSGo
-         mogJ26ZchWY6J1ONX8sdavMrAG5swi1rtnaBxpvcfnMeq+lBGD0vu38rFEMxc19RaLli
-         E6x+LyK5zNp+1DLIFu9aLJSSWasI/kDdHnv4wyKJudi+mdmLsdGaJ/Zoc25nDJoBzTr+
-         wMxA==
-X-Forwarded-Encrypted: i=1; AKwUvBwLYFNmUzNYeLHsxsVlJQmDFi9Kx5CIRTTkAFxIW/gwen6xFwMuHhN9Sh/XVsLjYbFee1pmHRYjfp4=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKNnRjxZQ1S8ilZa+RANWKXDvRukIlnKHdZRGuH1pIMxUNjxnaU
-	Ql1X2NM+imBTz5G0L+3J6cl35bMcFvQj/CH9W0WFj7FnEp294AMCNp5ll1lArSQMJC2OVmcGW9e
-	NANRFyq3hnO/6F0aQw5ObNa/XdHvt3fAo5g==
-X-Received: from pltf6.prod.google.com ([2002:a17:902:74c6:b0:2e5:c07f:b4c2])
+        bh=mjMt+KUzuNcKjCA07JDkaeow92GRj5gNqogfhdzmarM=;
+        b=B8CBNVuXhIz3W4omFKhigjpTuka9XvnqjHyL51PibgSX4E59My+ENRaQRUPWsLMCvF
+         HUBK3CQ07d4gH4N2WKHzq3WhVAwXO8Y6PFSFp2I82Yj6f77LLyTuXPFLn4RfL758NYJ/
+         oYtMrSSRMk0eoUfTBN9KkEpKRNAipiWNr4fKeXtZudyD7UrRCCf/gVkssbpcxSQrlMeQ
+         pDxYpEgs9wAMcg0ITvpjyIuMSSbP5BxaYbqLcVyqCaehb5Dc1alcQpdym1Poii+d61qh
+         OT+wQkH85o0FTYKsVQAZSQgLX+ea6AXh0MNOmWgcv8jrzfDKiJg/HMx25jlfxK7oRfQD
+         1gcw==
+X-Forwarded-Encrypted: i=1; AKwUvBwQLkuUuCaGrdrirA5+gPLNGBBk2biVjojVv3JBUdoLyfK9dWhMNUYLqOnxoo4NHvSx1+dJIvTeV9M=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKtqCWekazxt05ctoVfxvtX/inSETKGg4dyIX1ZBhBK+6Ub5GDI
+	OqCRVwbpUF7u+e65eo7CROktnhlN5qY/1BqrH6puMmltW8ew2rZq1cjsuh9qD+tucgr40rua4Hx
+	TV9TBGK20AUxZvvT3pVc8kZwiV+ylBwgwzw==
+X-Received: from plblm13.prod.google.com ([2002:a17:903:298d:b0:2e5:b835:73bd])
  (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:903:41c8:b0:2db:3b35:1ac6 with SMTP id d9443c01a7336-2e5dccf67aamr16741525ad.5.1791303082968;
- Tue, 06 Oct 2026 09:11:22 -0700 (PDT)
-Date: Tue,  6 Oct 2026 16:11:22 +0000
-In-Reply-To: <03f0fedb-beeb-369a-47dc-e7ddc3b27aef@linux.intel.com>
+ 2002:a17:902:d584:b0:2e2:d8f7:9f54 with SMTP id d9443c01a7336-2e5dcd8f1b0mr14137025ad.19.1791303109716;
+ Tue, 06 Oct 2026 09:11:49 -0700 (PDT)
+Date: Tue, 06 Oct 2026 16:11:48 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-References: <20260831-pcie-link-endpoints-v1-1-32c2fd893e9e@google.com> <03f0fedb-beeb-369a-47dc-e7ddc3b27aef@linux.intel.com>
-X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
-Message-ID: <20261006161122.921339-1-rathodpriyank@google.com>
-Subject: Re: [PATCH] PCI: Add pcie_get_link_endpoints() helper
+X-B4-Tracking: v=1; b=H4sIAMQdxWoC/43NTQ6CMBCG4auQrh3TP5C68h7GBbQDTMSWUEM0h
+ rtb2BijMS7fL5lnHiziSBjZPnuwESeKFHwKvcmY7SrfIpBLzSSXBS+VgMESQk/+DOjdEMhfI5h
+ diYJzlztesHQ5jNjQbVWPp9QdxWsY7+uTSSzrb28SIEBJKxtXGoUGD20IbY9bGy5sASf5QgzX3 xEJHETR2FpxUSnUH4j6A1EJ0bWpjKidrlX+hszz/AQx96+AQQEAAA==
+X-Change-Id: 20260831-pcie-link-endpoints-978e100d5d06
+X-Mailer: b4 0.14.3
+Message-ID: <20261006-pcie-link-endpoints-v4-0-ad5398c4260c@google.com>
+Subject: [PATCH v4 0/2] PCI: Add Lane Margining at the Receiver debugfs interface
 From: Priyank Rathod <rathodpriyank@google.com>
-To: "=?UTF-8?q?Ilpo=20J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org, 
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "=?utf-8?q?Ilpo_J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, Lukas Wunner <lukas@wunner.de>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Shuah Khan <shuah@kernel.org>, Randy Dunlap <rdunlap@infradead.org>, linux-pci@vger.kernel.org, 
+	linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Priyank Rathod <rathodpriyank@google.com>
+Content-Type: text/plain; charset="utf-8"
 
-On Tue, 1 Sep 2026, Ilpo J=C3=A4rvinen wrote:
-> On Mon, 31 Aug 2026, Priyank Rathod wrote:
->
-> >   - ASPM (drivers/pci/pcie/aspm.c): pcie_aspm_get_link(),
-> >     alloc_pcie_link_state(), and pci_configure_ltr() resolve parent
-> >     bridges and subordinate function 0.
->
-> This is not the full picture. The aspm driver has to write the same confi=
-g
-> to all functions (except L1SS that is only in func 0).
+Lane Margining at the Receiver lets software move the sampling point of
+a receiver in time or in voltage while the link stays up, and read back
+the errors the receiver sees, to find out how much margin a link running
+at 16.0 GT/s or faster has.  pcilmr in pciutils does this today by
+writing the capability registers directly from user space.
 
-Hi Ilpo,
+This series adds a debugfs interface for it.  The kernel sets the link
+up for margining and puts it back afterwards:
 
-Sorry for the slow reply, and for posting LMR v3 before answering this.
+  - ASPM is turned off for the session with the existing ASPM API,
+    Hardware Autonomous Width/Speed Disable are set on both ends, and
+    both ends are kept runtime resumed.  All of this is undone when
+    the session ends or either end of the link is removed.
+  - Before each margining command, the link is checked against the
+    state the session started in.
+  - User space selects the receiver and the steps; the kernel does not
+    run sweeps or interpret results.
 
-You're right. The helper only returns Function 0, which isn't what the
-ASPM driver needs, so I shouldn't have listed it as a user.
+Patch 1 adds the interface and its documentation, patch 2 a kselftest.
 
-> >   - Precision Time Measurement (drivers/pci/pcie/ptm.c):
-> >     pci_upstream_ptm() traverses pci_upstream_bridge() to validate
-> >     upstream link partner capabilities.
->
-> This looks something entirely different, and it's pure get (a certain)
-> device upstream, not the get-my-link-partner query.
+The only PCI core changes are the init/exit hooks in probe.c and
+remove.c and their prototypes in drivers/pci/pci.h.  aspm.c, pci.c and
+include/linux/pci.h are not changed.
 
-Agreed, PTM comes off the list.
+Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
+---
+Changes in v4:
+- Drop the exported pcie_get_link_endpoints(); the partner lookup is
+  private to margin.c (Ilpo).
+- Drop pci_aspm_inhibit() and all aspm.c changes.  Use
+  pcie_aspm_enabled(), pci_disable_link_state() and
+  pci_force_enable_link_state(), call neither when no ASPM state is
+  enabled, and restore Clock PM when CLKREQ# was enabled.  ASPM Control
+  is checked on both ends before each command.  The remaining
+  differences after a session are documented.
+- Remove the MSampleMultipleReceivers capability bit.
+- One receiver per session, selected with a port-level 'receiver'
+  file.  A session starts with receiver 1 on a Downstream Port and 6
+  below it, as pcilmr does; receiver 0 is not used for margining.
+- Add a per-lane 'status' file with the step response and error count,
+  and a 'port' file with the Margining Port bits.  Stop writing
+  Margining Port Status.
+- Locking: take both device locks with pci_dev_trylock() only while a
+  session starts or stops, require both ends to be added, and make no
+  runtime PM calls under the LMR locks.
+- End sessions from pci_lmr_exit() for either end of the link.
+- Commands fail with -EIO after a system suspend.
+- Move debugfs to pcie_lmr_<device> at the debugfs root.
+- Keep per-device state in margin.c instead of struct pci_dev.
+- Split the selftest into its own patch, rename it pcie_lmr, use KTAP,
+  and only start a session on the port named by PCIE_LMR_DEV.
+- Refer to registers by name instead of specification section numbers.
+- Link to v3: https://lore.kernel.org/r/20260904-pcie-link-endpoints-v3-0-4b9a91bd4b35@google.com
 
-> >   - PCIe Link Retrain (drivers/pci/pci.c): pcie_retrain_link() and
-> >     pcie_update_link_speed() coordinate link retraining from the
-> >     Downstream Port across the subordinate bus.
->
-> I don't entirely agree with this assessment. pcie_retrain_link() is given
-> a downstream port, mere looking into ->subordinate doesn't constitute as =
-a
-> need for having access to the struct of the other end of the link.
+Changes in v3:
+- Link to v2: https://lore.kernel.org/r/20260904-pcie-link-endpoints-v2-0-16fcb301a3e4@google.com
 
-Agreed, that one goes too.
+Changes in v2:
+- Link to v1: https://lore.kernel.org/r/20260831-pcie-link-endpoints-v1-1-32c2fd893e9e@google.com
 
-> >   - AER/DPC Recovery (drivers/pci/pcie/err.c): pcie_do_recovery()
-> >     identifies the parent bridge via pci_upstream_bridge() to trigger
-> >     secondary bus reset and broadcast driver recovery callbacks.
->
-> This seems to have some validity, though it must cover RCiEPs.
+---
+Priyank Rathod (2):
+      PCI/LMR: Add Lane Margining at the Receiver debugfs interface
+      selftests/pcie_lmr: Add tests for the Lane Margining debugfs interface
 
-The helper doesn't handle RCiEPs, and I don't have a patch converting
-err.c, so I'll drop it as well.
+ Documentation/PCI/index.rst                  |    1 +
+ Documentation/PCI/pcie-lmr.rst               |  162 +++
+ MAINTAINERS                                  |    8 +
+ drivers/pci/pci.h                            |    8 +
+ drivers/pci/pcie/Kconfig                     |   11 +
+ drivers/pci/pcie/Makefile                    |    1 +
+ drivers/pci/pcie/margin.c                    | 1590 ++++++++++++++++++++++++++
+ drivers/pci/probe.c                          |    1 +
+ drivers/pci/remove.c                         |    1 +
+ include/uapi/linux/pci_regs.h                |   18 +
+ tools/testing/selftests/Makefile             |    1 +
+ tools/testing/selftests/pcie_lmr/Makefile    |    3 +
+ tools/testing/selftests/pcie_lmr/pcie_lmr.sh |  304 +++++
+ 13 files changed, 2109 insertions(+)
+---
+base-commit: 1ee0e2a03ac539c90fd9b8a644ae983a2216b58c
+change-id: 20260831-pcie-link-endpoints-978e100d5d06
 
-That leaves LMR as the only user, so for v4 I dropped the exported
-helper and kept the lookup private to margin.c. LMR only needs
-Function 0 on the Upstream Port side (pcilmr makes the same
-assumption).
+Best regards,
+-- 
+Priyank Rathod <rathodpriyank@google.com>
 
-On v7 you said you'd like to avoid duplicating what the ASPM driver
-does. If you'd rather have a shared helper in the PCI core, I can do
-that as a separate series that also converts aspm.c, so it has a
-second user from the start. Let me know which you prefer.
-
-> > +		*upstream_port =3D pdev->subordinate ?
-> > +			pci_dev_get(list_first_entry_or_null(&pdev->subordinate->devices,
-> > +							     struct pci_dev, bus_list)) : NULL;
->
-> Too much is crammed into one statement.
->
-> > +	} else {
-> > +		*downstream_port =3D pci_upstream_bridge(pdev);
-> > +		*upstream_port =3D pdev;
->
-> Why complicate things with the unbalance?
-
-Both were fixed in the copy in LMR v3 (patch 1/3), which takes a
-reference on both ends. This code goes away in v4 anyway.
-
-On ASPM, since you asked about it on v6 and v7: v4 drops
-pci_aspm_inhibit() and doesn't change aspm.c. It uses the existing
-API the way ath10k, ath11k and ath12k do: save with
-pcie_aspm_enabled(), call pci_disable_link_state() before margining
-and pci_force_enable_link_state() afterwards. Reading aspm.c, that
-round trip doesn't restore everything, so v4 adds a few things in
-margin.c:
-
- - If pcie_aspm_enabled() returns 0 (firmware left ASPM off,
-   pcie_aspm=3Doff, or the "performance" policy), v4 calls neither
-   function.
- - It disables only the states pcie_aspm_enabled() reported, not
-   PCIE_LINK_STATE_ASPM_ALL, so the restore clears the same
-   aspm_disable bits (except the L1 substates, see below).
- - __pci_enable_link_state() sets clkpm_default from
-   PCIE_LINK_STATE_CLKPM, which pcie_aspm_enabled() never reports, so
-   with the default policy the restore would turn Clock PM off. v4
-   adds PCIE_LINK_STATE_CLKPM to the restore mask if CLKREQ_EN was
-   set at the start. The ath drivers hit this too.
- - It reads ASPM Control in Link Control on both ends (read-only) at
-   the start and before each margining command, and fails with -EBUSY
-   if it's set. That covers firmware-enabled ASPM with pcie_aspm=3Doff,
-   and ASPM coming back on mid-session through the link/*_aspm sysfs
-   files or another driver calling pci_force_enable_link_state().
-
-The rest is documented in pcie-lmr.rst:
-
- - If another driver disables a state that LMR also disabled, the
-   restore turns it back on.
- - aspm_default ends up as the saved set.
- - Disabling L1 also disables the L1 substates, so substates that
-   were off at the start stay disabled.
- - Without OS control of ASPM, the disable works but the restore
-   returns -EPERM, so ASPM stays off until reboot.
-
-Counting disables per state in aspm.c, as you suggested on v7, would
-fix most of these, but v4 doesn't depend on it.
-
-v3 also brought back the MSampleMultipleReceivers bit that you couldn't
-find in r7.0 on v5. That was my mistake, and v4 removes it. Some
-section numbers in v3 were wrong too (Link Control 2, for one), so v4
-refers to registers and fields by name instead of section numbers, and
-keeps comments within 80 columns.
-
-Thanks,
-Priyank
