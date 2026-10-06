@@ -1,118 +1,133 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-95.mta1.migadu.com [95.215.58.95])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 811A4372B41
-	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 08:03:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D2A43E3C4D
+	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 08:31:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.95
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791273808; cv=none; b=EQf5Y2vfxf73X1l4Gc/2ad2yJjnWcloVhYTg0pHJW+9nyVYhwo1Y1yw94zdmtrb+kP+WqjAQHWnTnHP+E/bPCiCcKiAPrymhKkcSrRgSD+R6C88qJUihv9DDKhzv/k5x61Vp5JSzZ0lRqLzUop9E1MlPyBOFMvYfh0yVitAa4No=
+	t=1791275513; cv=none; b=rBRsALSd3lzfwI1zrMg23hQWwwodBEl0libEPsWK24dW5yNl6mF0lIMSlzJaM7D3Mc7Lk1NgBbaCgA5TjfLR0Zco9cXQ/k+KTrFbh4fz5CYDowTDHcGFfiZuWByElV8pPFJ8lL+1kT72sAFGmYofry+kxoGHs2LxXwaitD4vy9M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791273808; c=relaxed/simple;
-	bh=nPvPw7A9YAIxMjZ4/b6RvdHVeDmDsPUX45cjSQ90p/0=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=JlUu9+xTR5PmPNcj2+TXuzILO9nhoUSs/DMPdhwKkjkxqvdxPWJY0OADenUEZNGIOL5unGEursv5KL046+Okf3qWMgozfOyaeHjmRMZ2lkcmq8bQ2sgDah2CRaQYyKLl02Ppej0KeQC4iLEHrEDwnnkwZMou2Ez14PaUAYnV3fI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CaNa3tt4; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791275513; c=relaxed/simple;
+	bh=mrxxhjgfLG4fO8TQooJhD2gAhvLlp5A6uxEF95+CYjc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fbS041Pen27lS1aLm4ruySKJOq66dwgxRH0eyRaSVbXG3ifs7SVT0AdEfU/eR0e3PHX0QGqlhzH9kmA5FStY+mgEo8wo0OXmquxV95toWH7dQaqTfY8M91o3TXm19wEmpT7jCUqSuy+phcgtlQkr8K+JNsiFs6fE4vfLopJAhnk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=F3fxBX5Q; arc=none smtp.client-ip=95.215.58.95
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CaNa3tt4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8A091F0089D
-	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 08:03:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791273800;
-	bh=r+KgD9DoUrWu5arzVLlDs3fSXX52ocXw8x+r8c9Z1cw=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=CaNa3tt4uTwfPlcLhPdln6QJYXq+DP9tyPKPke9OHd/6cACMGxqPmf28yD9Hdupgg
-	 MfloJhes60g10D4cKYMXig6Llvow7IQBSVlg0Ng9S4ESqVnANgTwhUWFedjRzGdy1A
-	 yQjini86leUZHV3bHOjvrVtwVX74DMIS/UqSbCkPDdFg1CZsN+1L7w6lhkK3QwRe1t
-	 q82nXvzKMwgZajTmrtvhGR+vGSA8/URn6WxKXigKDM0xUTXRCRDh2DssmEu7HNLV1X
-	 iRQdEtgPlbszuE59FOYYJat3v4+3RHRBSxw0A7vqomOc4bceJtLwr/DDCIs+p4/V+C
-	 x8JQptANGSq5g==
-Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-5b8f5e2ce5eso312919e87.0
-        for <linux-pci@vger.kernel.org>; Tue, 06 Oct 2026 01:03:20 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBxJwMcKxGlVr+VnuGZYBd3t7UIBH6mhBxckNSGraY+oGBGMMvhJKDhYce7hFGG2ESg3ZevNFpJu+es=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKmy8JHtCbRNPhZw7mh4MRJBRU9hzISVl1/IWW4fE2ofOFijAJU
-	QZRU8YsR0lXiyj82efGMK7vqSoZkfSAf5QKCda4oFJavr5yIqRGSZRt/ESFz+V7y+22tq6NCqA+
-	QQcv3dE21ggud/Orppc52FIp/zjRx8mobyiUmbMzubg==
-X-Received: by 2002:a05:6512:683:b0:5bb:a4ba:8ded with SMTP id
- 2adb3069b0e04-5bccc718dd2mr276015e87.44.1791273799477; Tue, 06 Oct 2026
- 01:03:19 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Tue, 6 Oct 2026 11:03:17 +0300
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Tue, 6 Oct 2026 11:03:17 +0300
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20261004165124.4277-1-franzelfranzel@gmail.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="F3fxBX5Q"
+X-Envelope-To: linux-pci@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=mrxxhjgfLG4fO8TQooJhD2gAhvLlp5A6uxEF95+CYjc=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791275508; v=1; x=1791880308;
+ b=F3fxBX5Qaatpwc5AtyFCybTIC+AVKzDEbOqtvVyHSF3CfhmezLC2xv4ThtuMgYusdc1I51Nd
+ 6a1oFMt15C0MZNtZ95fVzRiFDdq4gOSYrexmKLqF/gHwetHdyANnGalpltxEVg51ABYSXtIsK3R
+ zWvKiljteDDRSbMI8Ueh/pMc=
+X-Envelope-To: linux-pci@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 6aed73ae62c501ef;
+	Tue, 06 Oct 2026 08:31:48 +0000
+X-Mizu-Trace-ID: 6aed73ae62c501ef
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <2a7a97cc-7ad0-4e6f-845a-dd841d36079b@linux.dev>
+Date: Tue, 6 Oct 2026 14:01:52 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20261004165124.4277-1-franzelfranzel@gmail.com>
-Date: Tue, 6 Oct 2026 11:03:17 +0300
-X-Gmail-Original-Message-ID: <CAMRc=Mf_szZhsZEB8pmZkGh5pB6AEims68rc1tXE=XGAcMuEvg@mail.gmail.com>
-X-Gm-Features: AclHuK9nmK19llwqJ_oPdR-YeWv5o1OfhU6oMZraAD3H4lY4H8sCG9gdf0YepLk
-Message-ID: <CAMRc=Mf_szZhsZEB8pmZkGh5pB6AEims68rc1tXE=XGAcMuEvg@mail.gmail.com>
-Subject: Re: [PATCH v2] power: sequencing: qcom-wcn: power off WLAN at probe
-To: Manivannan Sadhasivam <mani@kernel.org>, =?UTF-8?Q?Fran=C3=A7ois_Roux?= <franzelfranzel@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, linux-pm@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	regressions@lists.linux.dev, linux-kernel@vger.kernel.org, 
-	stable@vger.kernel.org, Bartosz Golaszewski <brgl@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [REGRESSION] PCI/AER: MacBookPro16,1 powers off ~20 s after boot
+To: Lukas Wunner <lukas@wunner.de>, "Perlow, Jason" <jperlow@gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ regressions@lists.linux.dev, Alex Deucher <alexdeucher@gmail.com>
+References: <CABZrw2HcaOh3DHTJtxU5dXrb3Vg19scr6+qR-xe_+R7rME35_Q@mail.gmail.com>
+ <20261005231914.GA639967@bhelgaas>
+ <CABZrw2F=pOOq7+puKohtYMihYqWCevCFc7rkAOETW4T5Nf4n8Q@mail.gmail.com>
+ <asRjch1fMBslk07D@wunner.de>
+Content-Language: en-US
+From: Aditya Garg <aditya.garg@linux.dev>
+In-Reply-To: <asRjch1fMBslk07D@wunner.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Sun, 4 Oct 2026 18:51:24 +0200, "Fran=C3=A7ois Roux"
-<franzelfranzel@gmail.com> said:
-> The WLAN enable GPIO is requested with GPIOD_ASIS and then kept at its
-> current level, so that a WLAN module left powered on by the firmware is
-> not switched off. The FIXME explains why: toggling it would take the
-> PCIe link down, and the controller driver could not recover from that.
->
-> That reasoning held while the PCIe link was trained before the
-> sequencer probed. Since commit b921aa3f8dec ("PCI/pwrctrl: Switch to
-> pwrctrl create, power on/off, destroy APIs"), qcom_pcie_host_init()
-> powers the endpoint through pwrctrl before it starts link training, and
-> defers until the pwrctrl driver is bound. That driver cannot bind
-> before this sequencer has probed. Power-on therefore always comes
-> before link training, and keeping the firmware state is now harmful.
->
-> On the Microsoft Surface Pro 11 (X1E80100), the WCN7850 sits on a
-> PCIe port without a PERST# GPIO. While pci-pwrctrl-pwrseq is not yet
-> bound, the host init is deferred about ten times, and each attempt
-> powers the PHY and controller back down. The later power-on only sets
-> a GPIO that is already high, so the chip is never reset and the link
-> never comes up:
->
->   qcom-pcie 1c08000.pcie: Device found, but not active
->
-> The endpoint is not enumerated and ath12k never probes. Bluetooth on
-> the same chip fails too ("QCA Failed to send TLV segment (-110)").
->
-> Request the GPIO as GPIOD_OUT_LOW. The chip is then off when the
-> sequencer probes, and pwrctrl powers it up cleanly right before link
-> training. Drop the FIXME and the code that preserved the firmware
-> state.
->
-> Tested on a Surface Pro 11:
->  - b921aa3f8dec plus a one-line version of this change: endpoint
->    enumerated at 2.4 s, ath12k and Bluetooth working.
->  - next-20260929 plus this patch: "PCIe Gen.3 x2 link up" at 3.4 s,
->    ath12k and Bluetooth working, Wi-Fi connected.
-> Without the change, neither kernel enumerates the endpoint.
->
-> The culprit was found by bisecting v6.17..v7.1, with the DTB and
-> .config held constant.
->
-> Fixes: b921aa3f8dec ("PCI/pwrctrl: Switch to pwrctrl create, power on/off=
-, destroy APIs")
-> Closes: https://lore.kernel.org/all/CAPjyS8dY0Q_o3XmFjuKZZsjhzhoSNL+ZGJtw=
-5cQt8HiV3sUtxA@mail.gmail.com/
-> Cc: stable@vger.kernel.org
-> Assisted-by: LLM
-> Signed-off-by: Fran=C3=A7ois Roux <franzelfranzel@gmail.com>
-> ---
 
-Mani: this looks good to me, any objections to me queuing it for v7.3?
 
-Bart
+On 06-10-2026 08:26 am, Lukas Wunner wrote:
+> On Mon, Oct 05, 2026 at 08:17:12PM -0400, Perlow, Jason wrote:
+>>>> My guess, and it is
+>>>> only a guess: treating a possible Advisory Non-Fatal Error as
+>>>> non-Advisory and recovering through the uncorrectable path resets or
+>>>> disturbs a T2 function, and the T2 then powers the machine down.
+> 
+> Advisory Non-Fatal Errors aren't handled through the Uncorrectable
+> Error code path.  The kernel just reports and clears the errors.
+> 
+> And if the device has a driver and that driver implements the
+> ->cor_error_detected callback() in struct pci_error_handlers,
+> that callback is invoked.  (Currently only the CXL driver
+> implements the callback.)
+> 
+>>   masked only on 04:00.2 (Apple T2 Secure Enclave, 106b:1802):
+>>       stays up (120 s)
+> [...]
+>> So here the trigger is unmasking Advisory Non-Fatal Errors on that
+>> one function.
+> 
+> That's quite unexpected.  Maybe there's a bug in the PCIe IP which
+> Apple used for the T2 Secure Enclave device (which I believe is a
+> fully-fledged arm64 CPU with a PCIe port in Endpoint mode).
+> 
+> Another explanation might be that there's a watchdog on the T2 device
+> which monitors its Config Space and triggers a poweroff whenever
+> some suspicious register mutation is detected.  I'm just guessing
+> here because this is really weird.
+> 
+> macOS likely never unmasks the bit and so they never saw this during
+> validation testing.  Is the T2 device visible on Windows?  If it is,
+> it seems Windows doesn't support and unmask Advisory Non-Fatal Errors
+> either.
+
+T2 device is visible on Windows as well as "System Device"
+
+PS C:\Users\Aditya> Get-PnpDevice -Class 'System' -PresentOnly | Where-Object {$_.InstanceId -like "*PCI*"} | Format-Table -AutoSize FriendlyName, InstanceId
+
+FriendlyName                                                                              InstanceId
+------------                                                                              ----------
+Intel(R) Xeon(R) E3 - 1200/1500 v5/6th Gen Intel(R) Core(TM) PCIe Controller (x4) - 1909  PCI\VEN_8086&DEV_1909&SUBSYS_72708086&REV_07\3&11583659&0&0A
+Intel(R) PCI Express Root Port #1 - A338                                                  PCI\VEN_8086&DEV_A338&SUBSYS_72708086&REV_F0\3&11583659&0&E0
+Intel(R) Serial IO UART Host Controller - A328                                            PCI\VEN_8086&DEV_A328&SUBSYS_72708086&REV_10\3&11583659&0&F0
+AMD PCI Express Upstream Switch Port                                                      PCI\VEN_1002&DEV_1478&SUBSYS_00000000&REV_43\4&D48CA2C&0&0008
+Intel(R) PCI Express Root Port #17 - A340                                                 PCI\VEN_8086&DEV_A340&SUBSYS_72708086&REV_F0\3&11583659&0&D8
+Intel(R) Xeon(R) E3 - 1200/1500 v5/6th Gen Intel(R) Core(TM) PCIe Controller (x8) - 1905  PCI\VEN_8086&DEV_1905&SUBSYS_72708086&REV_07\3&11583659&0&09
+Intel(R) LPC Controller/eSPI Controller - A313                                            PCI\VEN_8086&DEV_A313&SUBSYS_72708086&REV_10\3&11583659&0&F8
+High Definition Audio Bus                                                                 PCI\VEN_1002&DEV_AB38&SUBSYS_AB381002&REV_00\6&16883A51&0&01000008
+Intel(R) SPI (flash) Controller - A324                                                    PCI\VEN_8086&DEV_A324&SUBSYS_72708086&REV_10\3&11583659&0&FD
+System Device                                                                             PCI\VEN_106B&DEV_1802&SUBSYS_1802106B&REV_01\4&3AC8FC3&0&02D8
+Intel(R) Host Bridge/DRAM Registers - 3EC4                                                PCI\VEN_8086&DEV_3EC4&SUBSYS_72708086&REV_07\3&11583659&0&00
+Intel(R) Management Engine Interface #1                                                   PCI\VEN_8086&DEV_A360&SUBSYS_72708086&REV_10\3&11583659&0&B0
+AMD PCI Express Downstream Switch Port                                                    PCI\VEN_1002&DEV_1479&SUBSYS_14791002&REV_00\5&130BE3BB&0&000008
+Intel(R) Thermal Subsystem - A379                                                         PCI\VEN_8086&DEV_A379&SUBSYS_72708086&REV_10\3&11583659&0&90
+Apple USB Virtual Host Controller                                                         PCI\VEN_106B&DEV_1801&SUBSYS_1801106B&REV_01\4&3AC8FC3&0&01D8
+PCI standard RAM Controller                                                               PCI\VEN_8086&DEV_A36F&SUBSYS_00000000&REV_10\3&11583659&0&A2
+Intel(R) SMBus - A323                                                                     PCI\VEN_8086&DEV_A323&SUBSYS_72708086&REV_10\3&11583659&0&FC
+Intel(R) Xeon(R) E3 - 1200/1500 v5/6th Gen Intel(R) Core(TM) PCIe Controller (x16) - 1901 PCI\VEN_8086&DEV_1901&SUBSYS_72708086&REV_07\3&11583659&0&08
+
+> 
+>> Would you accept a quirk that keeps the bit masked on Apple
+>> 106b:1802?
+> [...]
+>> I am happy to write and test that, or any other patch you
+>> would like tried on this machine, and I can send lspci -vvv and the
+>> journals.
+> 
+> A quirk does sound like the only possible solution.  However I'd
+> really like to see lspci and dmesg output with the bit unmasked
+> shortly before poweroff to get a full understanding.
+> 
+> Thanks!
+> 
+> Lukas
+
