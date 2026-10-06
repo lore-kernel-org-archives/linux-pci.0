@@ -1,56 +1,56 @@
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21AB73BBFC5
-	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 23:33:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2FE93CB8FF
+	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 23:33:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791329592; cv=none; b=GnaHmsMYsdvyfkaEqsX7d4rypbTdtZec8zVT0R6dgvlIvu1/j5YbXRDwYMue/ZRsniJDmbWtBL64sHSCvbgbcvAR68yN61CcZ5bBzwYkEEoIWE9/0j9RpGoJWklTrAXHdZG8W/9mi4QcSl0KUBMdzsI1NhX/CvZvArZGZBu0AlE=
+	t=1791329592; cv=none; b=I2KgpOTNH+aF0viUlVhoAm42l6T6VypBDkMn28LnnIwhf0GmNa8o6+egrndwjd/Vp9doYn6huXjhs6yArictx3zhgqkmlV4EcTK51caziA5RgcsFBFHUie+e8iOUAz2/I4yk/vryhREihT37F2ncU0/kfYME+SwWjl9eHJSueCY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791329592; c=relaxed/simple;
-	bh=6do5GILneM2SelSiDGSkhgGo9BTvgOAIY7d7Bg1SjQ8=;
+	bh=sO4V+mmMkoqTrK6MLwAhaqkX0oKHVcQnX7+V9fGm6nY=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=HLFxp5jt1o6Fj9cjLbh+aK0ENN1PyK6g6Rw9qAJ7byGJvHMA9+ClPifzmYGTKXKXyy8rAELTTQrdgRZolpW4POk8Vk59m8GOoaMNFxLDg4Jj5bolvZTqDDZSgp0++AMLWj8tNU8ERqHwfQULJ7rb8R5lxOJf3hhKpYSWQx3DdTg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=MnEnWh2f; arc=none smtp.client-ip=209.85.215.197
+	 To:Cc:Content-Type; b=eUBSDxi8SF46Qbc01KV/9lcj2HYE1KYaXntVA3SK0/H1rD5+6opLvOibvJ7R1mXP75H39lB3S0xwG69j6i1JNbVNnARn2zFq0AiA05egIWg6GL9U3RvKJe8MYAHDs/SNfm0TQQ9qwekU2t3XdGc8Q5qtQq3+yWdRRnJ9UvUVlTo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Mpwqp7Ku; arc=none smtp.client-ip=209.85.215.198
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="MnEnWh2f"
-Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-cb11535e6a1so1735336a12.0
-        for <linux-pci@vger.kernel.org>; Tue, 06 Oct 2026 16:33:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Mpwqp7Ku"
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cc7e6720b31so1957493a12.3
+        for <linux-pci@vger.kernel.org>; Tue, 06 Oct 2026 16:33:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1791329588; x=1791934388; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1791329586; x=1791934386; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Uzjnm4DC8/yngbTXbJn1X0a1+gZkIVZaTLffWNrxWJE=;
-        b=MnEnWh2fR6g1/Zzg1XlOWgScAw+AQt1DDv2dqPeh/wfRdCXRJ4kPh3e2uOOe1gVAc6
-         uSRyBWI2PLCHM3h7GjbPRSAg/QCv2P1Ly34zAkdXv85tyZSuY881wgoeU9FxTVRLu3qo
-         yfVgXbpIbOY5gdxNLIwsGKen3+CKHErb2JfKlFF+AEx9fHcOt2Vbz8eLV9gQ6duWctaW
-         ujoR4ERDLpk8dZIu+CP1LYUt0lNoI3dG2kj3JBcjvdfejJ5an520et1SL1kTqQkyT4Ue
-         Hkc1H/WySsePnInMCowfSCQWij7R4pcg/Aq8yv7WZaFKqsZ0tDSk/b4QMXjCjGBQvKFq
-         ajzQ==
+        bh=gyP5xcuYu0NQ5k80I+kpxgtI7BT6olGWju1QlyYfpFs=;
+        b=Mpwqp7KukfMikiS+swA8wjfHyUcIFZjm9xjm3Bo1KThdlK/xdbZEg+I7REmSWM9pPN
+         UjWNPq+KtADBetqoygnzCW4FkpeszE67WmywgyXso6a24jCpLsIhciaxMIOpygjAiVQT
+         BsepKDs0Ma7cBFflvMg7RrSwxVXQulQa79Aljqswqd+7QbTRoj/uWbA7bLUFscAHYIH7
+         BCYwa+CCS2vFXKaGdrwOqKqtA4qxrlwTr5KAl4uANS0rwzlIUG2TqyCxJPg7wPEpO3Yl
+         hFZLuXsTiaBFGhCcuofMt/j327NtJs0Axje56vYkM9Zhsd4WLVaFM5RcJm/M8/+J4EO3
+         Z7Dg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791329588; x=1791934388;
+        d=1e100.net; s=20260707; t=1791329586; x=1791934386;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Uzjnm4DC8/yngbTXbJn1X0a1+gZkIVZaTLffWNrxWJE=;
-        b=yBUn2SRAo48O9S98s2wJxfSCHix+6/2qvARXE30wELVVT8cYd+fLHXdJOYh0Fttb1t
-         KCtA3nfmgDpN6wKWVNr2BT+M+XK2M7TnUN8g8YzyE9ssIAfsgHGuLPC8F8nvLzW9HkYD
-         XU1218Dwa9PSehKc4oRSHw5DNBLdij+1zEr2hnpJDMBoFmAgG/puwBsRFgHr7NPzNcsJ
-         rbuIorJGQwH793JW/Cf+QKBcwKY/uPSQcY8Gxn+BEPdaIYnDfhN+ILaaJKbciOyABbF4
-         zVOUchgHnDcleo+W12ZCWIocQD0JA6IdQvH6E2s6k71p0t0kq8m8C3ULLRu11+BbVNMU
-         BByQ==
-X-Forwarded-Encrypted: i=1; AKwUvByOCRuafxHA45N5Ia7zmPXZsVjXIwpXgJPXmAuyjmMKTL4YV131oSXNgInEG639Uk1QQDAN+T0YONw=@vger.kernel.org
-X-Gm-Message-State: AFuF++nZHJFVdibU3zrQ6b5FLjnGA+19jcb3ICuKAPmANZn38PmGYpH7
-	vNl6mqgaIuWNSbys7OYA2r+x0uh1+oUaC9MisCi64dX8TSNSZwjRrghuJIfINTNN3PM+M3MWQrI
-	bXg==
-X-Received: from pgbd18-n1.prod.google.com ([2002:a05:6a02:64d2:10b0:cc7:b263:342e])
- (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a21:484:b0:3de:247d:73de
- with SMTP id adf61e73a8af0-3e133fffe0bmr404483637.19.1791329588288; Tue, 06
- Oct 2026 16:33:08 -0700 (PDT)
-Date: Tue,  6 Oct 2026 23:32:45 +0000
+        bh=gyP5xcuYu0NQ5k80I+kpxgtI7BT6olGWju1QlyYfpFs=;
+        b=SR3Z8eVGD/X5qYtZrrgKCC+WKjcUGtueMJyCWplPXW+gpbT1ynkpYrsKjD1zpLUmVz
+         ueNIGnqJ/p22u64f9eLFwQ4oMyEFGr2TLhOPJBASOnik8XSf8C89zKRQF4jOxdinpeSN
+         3VW/GZOhUptD691mEwEEiar9Xhh0to02QQDkS6OfYOO0qWpu5kSO3VYvt7ItKUKfeuFa
+         9JNFh4mwahYh7ShG4jVEvhuRAbRbWBi1WJqZb9v6hDgYV/VHhyWGBG41goTCMsAqwNuc
+         xRYQ0mTTj8Rf8Ika3d8ySbRPn36eElJ5cVHg4XmDGILyF5vL4x5/LB6H8Avmn56KoWVD
+         ppGQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxSgUsgbsYwvbeYEJDg/EYaCrcH1oXaPiwL5BQjXCNQxy9v9k9SL1W+e5R+ZkVw0OQRQfKXqEbHLfw=@vger.kernel.org
+X-Gm-Message-State: AFq9FYIBJsdfxhJfGk3yZJPAU7c4rNf3J6fRp7zyGxPKfojQqyTa8otZ
+	Zs+FOV8n8vFwBLbI6OL2nP547Mv5l6avDuFvC9eIkOFc3xF2CdYgMtLUFUx5RKZyRqlDYfCKvTx
+	W5A==
+X-Received: from pgbj19-n2.prod.google.com ([2002:a05:6a02:61d3:20b0:cca:d6f4:95b5])
+ (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90a:d445:b0:3a4:bbb9:e912
+ with SMTP id 98e67ed59e1d1-3a8a192992dmr481876a91.23.1791329585866; Tue, 06
+ Oct 2026 16:33:05 -0700 (PDT)
+Date: Tue,  6 Oct 2026 23:32:44 +0000
 In-Reply-To: <20261006233248.705086-1-praan@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -60,8 +60,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20261006233248.705086-1-praan@google.com>
 X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
-Message-ID: <20261006233248.705086-6-praan@google.com>
-Subject: [RFC PATCH v1 5/8] nfs: tag READ/WRITE RPCs carrying P2PDMA pages
+Message-ID: <20261006233248.705086-5-praan@google.com>
+Subject: [RFC PATCH v1 4/8] xprtrdma: return -EREMOTEIO on P2PDMA map failure
 From: Pranjal Shrivastava <praan@google.com>
 To: linux-nfs@vger.kernel.org, Trond Myklebust <trondmy@kernel.org>, 
 	Anna Schumaker <anna@kernel.org>
@@ -73,131 +73,59 @@ Cc: Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, linux-kernel
 	Pranjal Shrivastava <praan@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-A transport must know when an RPC's payload pages are P2PDMA memory,
-so it can move them by DMA or refuse the RPC.
-
-Check each page as nfs_generic_pgio() builds the page array, and
-record the result in nfs_pgio_args. The READ and WRITE encoders of
-every NFS version then set XDRBUF_P2PDMA on the buffer holding the
-payload.
-
-Additionally, avoid using READ_PLUS when the pages are P2PDMA memory.
+ib_dma_map_sg() returns 0 on any failure, so frwr_map() cannot tell
+why a mapping failed and reports -EIO. Use ib_dma_map_sgtable_attrs()
+instead, which returns the reason. Pass up -EREMOTEIO, which means
+the device cannot reach the P2PDMA memory, so the RPC fails with the
+same error as other P2PDMA refusals. Every other mapping failure
+still returns -EIO.
 
 Signed-off-by: Pranjal Shrivastava <praan@google.com>
 ---
- fs/nfs/nfs2xdr.c        | 4 ++++
- fs/nfs/nfs3xdr.c        | 4 ++++
- fs/nfs/nfs4proc.c       | 3 +++
- fs/nfs/nfs4xdr.c        | 4 ++++
- fs/nfs/pagelist.c       | 2 ++
- include/linux/nfs_xdr.h | 1 +
- 6 files changed, 18 insertions(+)
+ net/sunrpc/xprtrdma/frwr_ops.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/fs/nfs/nfs2xdr.c b/fs/nfs/nfs2xdr.c
-index 9eff09158518..5a8f2eccd068 100644
---- a/fs/nfs/nfs2xdr.c
-+++ b/fs/nfs/nfs2xdr.c
-@@ -628,6 +628,8 @@ static void nfs2_xdr_enc_readargs(struct rpc_rqst *req,
- 	rpc_prepare_reply_pages(req, args->pages, args->pgbase, args->count,
- 				NFS_readres_sz - NFS_pagepad_sz);
- 	req->rq_rcv_buf.flags |= XDRBUF_READ;
-+	if (args->p2pdma)
-+		req->rq_rcv_buf.flags |= XDRBUF_P2PDMA;
- }
+diff --git a/net/sunrpc/xprtrdma/frwr_ops.c b/net/sunrpc/xprtrdma/frwr_ops.c
+index e83cef19e656..a55d5e11c0e2 100644
+--- a/net/sunrpc/xprtrdma/frwr_ops.c
++++ b/net/sunrpc/xprtrdma/frwr_ops.c
+@@ -293,7 +293,8 @@ int frwr_map(struct rpcrdma_xprt *r_xprt,
+ 	bool sg_gaps = ep->re_mrtype == IB_MR_TYPE_SG_GAPS;
+ 	unsigned int max_depth = ep->re_max_fr_depth;
+ 	struct ib_reg_wr *reg_wr;
+-	int i, n, dma_nents;
++	struct sg_table sgt;
++	int i, n, dma_nents, ret;
+ 	struct ib_mr *ibmr;
+ 	u8 key;
  
- /*
-@@ -668,6 +670,8 @@ static void nfs2_xdr_enc_writeargs(struct rpc_rqst *req,
+@@ -381,10 +382,13 @@ int frwr_map(struct rpcrdma_xprt *r_xprt,
+ 	mr->mr_dir = rpcrdma_data_dir(writing);
+ 	mr->mr_nents = i;
  
- 	encode_writeargs(xdr, args);
- 	xdr->buf->flags |= XDRBUF_WRITE;
-+	if (args->p2pdma)
-+		xdr->buf->flags |= XDRBUF_P2PDMA;
- }
+-	dma_nents = ib_dma_map_sg(ep->re_id->device, mr->mr_sg, mr->mr_nents,
+-				  mr->mr_dir);
+-	if (!dma_nents)
++	/* Unlike ib_dma_map_sg(), this reports why a mapping failed */
++	sgt.sgl = mr->mr_sg;
++	sgt.orig_nents = mr->mr_nents;
++	ret = ib_dma_map_sgtable_attrs(ep->re_id->device, &sgt, mr->mr_dir, 0);
++	if (ret || !sgt.nents)
+ 		goto out_dmamap_err;
++	dma_nents = sgt.nents;
+ 	mr->mr_device = ep->re_id->device;
  
- /*
-diff --git a/fs/nfs/nfs3xdr.c b/fs/nfs/nfs3xdr.c
-index e745e78faab0..e39c58883a2a 100644
---- a/fs/nfs/nfs3xdr.c
-+++ b/fs/nfs/nfs3xdr.c
-@@ -946,6 +946,8 @@ static void nfs3_xdr_enc_read3args(struct rpc_rqst *req,
- 	rpc_prepare_reply_pages(req, args->pages, args->pgbase,
- 				args->count, replen);
- 	req->rq_rcv_buf.flags |= XDRBUF_READ;
-+	if (args->p2pdma)
-+		req->rq_rcv_buf.flags |= XDRBUF_P2PDMA;
- }
+ 	ibmr = mr->mr_ibmr;
+@@ -413,7 +417,8 @@ int frwr_map(struct rpcrdma_xprt *r_xprt,
  
- /*
-@@ -988,6 +990,8 @@ static void nfs3_xdr_enc_write3args(struct rpc_rqst *req,
+ out_dmamap_err:
+ 	trace_xprtrdma_frwr_sgerr(mr, i);
+-	return -EIO;
++	/* Return -EREMOTEIO if the device cannot reach the P2PDMA memory */
++	return ret == -EREMOTEIO ? ret : -EIO;
  
- 	encode_write3args(xdr, args);
- 	xdr->buf->flags |= XDRBUF_WRITE;
-+	if (args->p2pdma)
-+		xdr->buf->flags |= XDRBUF_P2PDMA;
- }
- 
- /*
-diff --git a/fs/nfs/nfs4proc.c b/fs/nfs/nfs4proc.c
-index beb659744760..443079f5adc9 100644
---- a/fs/nfs/nfs4proc.c
-+++ b/fs/nfs/nfs4proc.c
-@@ -5721,6 +5721,9 @@ static int nfs4_read_done(struct rpc_task *task, struct nfs_pgio_header *hdr)
- static bool nfs42_read_plus_support(struct nfs_pgio_header *hdr,
- 				    struct rpc_message *msg)
- {
-+	/* P2PDMA payloads move only by DMA */
-+	if (hdr->args.p2pdma)
-+		return false;
- 	/* Note: We don't use READ_PLUS with pNFS yet */
- 	if (nfs_server_capable(hdr->inode, NFS_CAP_READ_PLUS) && !hdr->ds_clp) {
- 		msg->rpc_proc = &nfs4_procedures[NFSPROC4_CLNT_READ_PLUS];
-diff --git a/fs/nfs/nfs4xdr.c b/fs/nfs/nfs4xdr.c
-index 8b3d96b4a0f0..04765b56de28 100644
---- a/fs/nfs/nfs4xdr.c
-+++ b/fs/nfs/nfs4xdr.c
-@@ -2621,6 +2621,8 @@ static void nfs4_xdr_enc_read(struct rpc_rqst *req, struct xdr_stream *xdr,
- 	rpc_prepare_reply_pages(req, args->pages, args->pgbase,
- 				args->count, hdr.replen - pagepad_maxsz);
- 	req->rq_rcv_buf.flags |= XDRBUF_READ;
-+	if (args->p2pdma)
-+		req->rq_rcv_buf.flags |= XDRBUF_P2PDMA;
- 	encode_nops(&hdr);
- }
- 
-@@ -2686,6 +2688,8 @@ static void nfs4_xdr_enc_write(struct rpc_rqst *req, struct xdr_stream *xdr,
- 	encode_putfh(xdr, args->fh, &hdr);
- 	encode_write(xdr, args, &hdr);
- 	req->rq_snd_buf.flags |= XDRBUF_WRITE;
-+	if (args->p2pdma)
-+		req->rq_snd_buf.flags |= XDRBUF_P2PDMA;
- 	if (args->bitmask)
- 		encode_getfattr(xdr, args->bitmask, &hdr);
- 	encode_nops(&hdr);
-diff --git a/fs/nfs/pagelist.c b/fs/nfs/pagelist.c
-index 71f0ce2bc4ea..3ec4e1e5fe1f 100644
---- a/fs/nfs/pagelist.c
-+++ b/fs/nfs/pagelist.c
-@@ -970,6 +970,8 @@ int nfs_generic_pgio(struct nfs_pageio_descriptor *desc,
- 				if (pageused > pagecount)
- 					goto full;
- 				*pages++ = last_page = page;
-+				if (is_pci_p2pdma_page(page))
-+					hdr->args.p2pdma = true;
- 			}
- 		}
- 	}
-diff --git a/include/linux/nfs_xdr.h b/include/linux/nfs_xdr.h
-index c0e29b4dfa62..85cdee107559 100644
---- a/include/linux/nfs_xdr.h
-+++ b/include/linux/nfs_xdr.h
-@@ -685,6 +685,7 @@ struct nfs_pgio_args {
- 	__u32			count;
- 	unsigned int		pgbase;
- 	struct page **		pages;
-+	bool			p2pdma;		/* pages include P2PDMA memory */
- 	union {
- 		unsigned int		replen;			/* used by read */
- 		struct {
+ out_mapmr_err:
+ 	trace_xprtrdma_frwr_maperr(mr, n);
 -- 
 2.56.0.rc1.315.gc6ed9934b7-goog
 
