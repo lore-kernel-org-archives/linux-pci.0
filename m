@@ -1,118 +1,141 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F7D23B1008
-	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 21:10:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8DA0381E9A;
+	Tue,  6 Oct 2026 21:22:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791321022; cv=none; b=SvNRBUCG6PTtTQNqMiSZuFQJvLYpkJI3NjOOgDS1Q5N8CnXzn8wdjPFlsEKhtkyDRnj2O58W18XWlfcaQ3lE5D37SD/2FuYOQ/dmQG5q/aKCbbZtqnAab/n6sJW7yxiSxr6Si9agVPct5cL9NNF4aDzlYxapTf9UvDYTmXhrt5Y=
+	t=1791321755; cv=none; b=cVyvIk1IbVQ77+SxMLkqkFrbTHuTU6gFt+y15/inRj7P2ucAAGM8sr0HZgF/zgGloQMhBq9KTZ9bHfGmOZe3VIUCskwEE8XvByo3zFxIKX8ne26uarunk4Px+RMbN+2+60YNr2UcdpgOboMaKWNky7DZjqYHNvh0BumglFWApjo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791321022; c=relaxed/simple;
-	bh=B7TFy6V3wENsn5H2UVU1IlkUzqzf8kBLLcgBJsd2jCU=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=Jokek1KXKQ8IeiBuxhZfDhIxb1B5BfmePtuYzJqpNI0M2/HukH1zK8q8n8WVH7YpnALLLsobTq5rUBE1M+OE2NGYfW0e63YQ7qNDI8FlVRAzV8q/y5VRsenzy/1ufbhtOslNGx2yco2gzCdYMX+wNsqfObSUdtyqXimv38fKQhQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HoeI44r7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791321755; c=relaxed/simple;
+	bh=UeWBVlgJFWojhkJi+cd+n88622HpQCq8j9HuKrvES4M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DaPPXRKRhcagY44wN6ZCC9eFeBVTPN32d1uGnr+rSusY5Eo6vNFNUaaFUsiPF59weuCPdAH1ctqzifXFqVAqCJVZCCfGVcrqpQV2YC/drp6vFAqAb05R7mhuQuZvTshUogK3Sp0NPOnL18rSrerMHSTHKFijRGVUNw51lyJsRaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KvV0Av2l; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HoeI44r7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1D861F0089B;
-	Tue,  6 Oct 2026 21:10:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KvV0Av2l"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1CD81F0089B;
+	Tue,  6 Oct 2026 21:22:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791321021;
-	bh=SqF08VykghEh8U+A8wtqkQSrcyMvcfrXV1sVVu9G30c=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HoeI44r71RSNXO6D2oS98NXeQU41cTrRwZ3BjyhpL/1YXup03JOm7bxg623qycYYz
-	 QuZpFddyoviuQgiXVEEHfZxWPhLMJliBkK69HCiIm8dv808DxSw0w6JUVuF7sOFZTU
-	 2ZKnb5Uu/QNrNTveAL6E+JmoM92gyl1+u/qlbm0Jq7d6+kTNYaGmc1qouUQfHDTobL
-	 oEYkuAdpF15JKWG0gAspzc9J4jlXmG8juCfBr5X05pfTbL8Bqgb/Urw67uLS2JTXRv
-	 o7F2pp+Bqq4RkbOhbKNLTDve2aoRwcjn8MlNdANHIcyAKC3xnWLR6kdCSiCXc/Z7cU
-	 fVJRHoKWjkpTg==
-Message-ID: <sashiko-outbox-162450@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 1/2] PCI/LMR: Add Lane Margining at the Receiver
- debugfs interface
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Priyank Rathod" <rathodpriyank@google.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261006-pcie-link-endpoints-v6-1-154d71657d32@google.com>
-References: <20261006-pcie-link-endpoints-v6-0-154d71657d32@google.com>
- <20261006-pcie-link-endpoints-v6-1-154d71657d32@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 06 Oct 2026 21:10:20 +0000
+	s=k20260515; t=1791321753;
+	bh=BHt0ynO7I/zLJYGK8yKQoBOgVQqwbnoeMI9XKYPGhZ8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=KvV0Av2l/BYipbielqVo1Hyj4bJeeM7HGyU39j9dAPfaL+IYSRbUyJpFZqBmUFH4m
+	 Iy8n49/p8+UuyPdQS8LlMRIL11B7wCiu4qwYsz6rz6zarzCAsz16fTIvmh5kjR4ybk
+	 B20SXYNPmvS0vHuV3fAKnmiJlgHazmy77ClTfX1c4RJWTUTdgJyYOwZbiCmR3yJB6e
+	 XkDvFtp9+a5Q2RIZPKWFJQWRBW7E7SNKl0OMsmOkQpY7I3/5NfHiBam8pkvRFbgIAt
+	 p1WHLcet3/VbzM8Wj/vBG/VHG6ISunfiQkAnGa5ygzm2vTOeDUgRYEkMlnfgkBOD1N
+	 +51VW8dry+vZA==
+Date: Wed, 7 Oct 2026 00:22:27 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
+	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
+	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>
+Subject: Re: [PATCH v9 00/18] PCI/P2PDMA: Route peer-to-peer DMA by TLP class
+Message-ID: <20261006212227.GB7822@unreal>
+References: <20261001-fix-p2p-acs-v4-0-v9-0-1a8e0f50ddd9@nvidia.com>
+ <20261006192955.GA703309@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261006192955.GA703309@bhelgaas>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Medium] pci/lmr: pci_lmr_no_cmd() fails due to U16_MAX strict match agai=
-nst Usage Model bit
-- [Low] pci/lmr: Format string mismatch passing promoted int to %lu specifi=
-er
---
+On Tue, Oct 06, 2026 at 02:29:55PM -0500, Bjorn Helgaas wrote:
+> On Thu, Oct 01, 2026 at 02:55:08PM +0300, Leon Romanovsky wrote:
+> > PCI P2PDMA applies Request and Completion Redirect throughout both paths.
+> > This misclassifies asymmetric and nested switches, and reports one answer
+> > for every kind of TLP.
+> > 
+> > Three ACS controls act on TLP attributes the client chooses rather than
+> > on the topology: Translation Blocking and Direct Translated P2P act on
+> > a Request's Address Type, and Completion Redirect skips Completions carrying
+> > Relaxed Ordering.
+> > 
+> > Evaluate each direction at the path divergence, decide every class from the
+> > one walk, and treat a client with ATS enabled as translating unless its
+> > driver declares per-mapping ATS.
+> > 
+> > This completes the P2PDMA side; dma-buf and mlx5 follow separately.
+> > ...
+> 
+> > Leon Romanovsky (18):
+> >       PCI/P2PDMA: Document the TLP attribute assumptions
+> >       PCI/P2PDMA: Derive routing from directional ACS controls
+> >       PCI: Reject unreadable ACS controls in isolation checks
+> >       PCI/P2PDMA: Evaluate ACS controls at the path divergence
+> >       PCI/P2PDMA: Document directional ACS routing
+> >       PCI/P2PDMA: Collect the path's ACS controls before deciding
+> >       PCI/P2PDMA: Answer routing per TLP class
+> >       PCI/P2PDMA: Route Relaxed Ordering Completions directly
+> >       PCI/P2PDMA: Reject Translated Requests blocked by Translation Blocking
+> >       PCI/P2PDMA: Route Translated Requests under Direct Translated P2P
+> >       PCI/P2PDMA: Log detailed ACS routing diagnostics
+> >       PCI/P2PDMA: Add KUnit tests for the ACS routing decisions
+> >       PCI/P2PDMA: Test the ACS P2P routing walk
+> >       PCI: Add KUnit coverage for ACS isolation checks
+> >       PCI/P2PDMA: Document TLP-class routing
+> >       PCI/P2PDMA: Let a client declare that it selects ATS per mapping
+> >       PCI/P2PDMA: Evaluate the ATS path for clients with ATS enabled
+> >       PCI/P2PDMA: Test the routing of clients with ATS enabled
+> > 
+> >  Documentation/admin-guide/kernel-parameters.txt |  15 +-
+> >  Documentation/driver-api/pci/p2pdma.rst         |  80 +++
+> >  drivers/pci/Kconfig                             |  15 +
+> >  drivers/pci/Makefile                            |   1 +
+> >  drivers/pci/p2pdma.c                            | 719 ++++++++++++++++++--
+> >  drivers/pci/pci.c                               |   7 +-
+> >  drivers/pci/pci.h                               |  58 ++
+> >  drivers/pci/pci_acs_test.c                      | 860 ++++++++++++++++++++++++
+> >  drivers/pci/quirks.c                            |   6 +-
+> >  include/linux/pci-p2pdma.h                      |  12 +-
+> >  10 files changed, 1687 insertions(+), 86 deletions(-)
+> > ---
+> > base-commit: 08dbfad3f5040f5bdb6c529da20d6d4e81fefd72
+> > change-id: 20260821-fix-p2p-acs-v4-0-e72455e3a261
+> > prerequisite-message-id: <20260830-batch-p2p-fixes-v1-0-5044e8dfbe2e@nvidia.com>
+> > prerequisite-patch-id: 6b25c7fcf164cdfc14e9fac5b908d97fcf6509d7
+> > prerequisite-patch-id: 0d083c281001365aae4b35544cf28891a6ab9a96
+> > prerequisite-patch-id: bfd9dabf271f3cc9a3a61f46387d20c20311363d
+> > prerequisite-patch-id: fad0275efc722830fc591509506c0a5e4f581073
+> > prerequisite-patch-id: 0c83bee688fec1f6d1564654df7c630fa6a4a978
+> 
+> This seems like material for the PCI tree, but I'm not sure how to
+> apply it.  It doesn't apply cleanly on the current pci/p2pdma
+> (https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/log/?h=p2pdma),
+> which does contain your series from
+> 20260830-batch-p2p-fixes-v1-0-5044e8dfbe2e@nvidia.com.
+> 
+> I could probably fix the conflicts but I don't know why there should
+> be conflicts, since the only commits on pci/p2pdma other than yours
+> are a few trivial allow-list updates.
 
-commit 0a41b591425afa70cf540096078e9a59a614786c
-Author: Priyank Rathod <rathodpriyank@google.com>
+So maybe this is related to these trivial updates, my series was based
+on the clean p2pdma branch:
+https://git.kernel.org/pub/scm/linux/kernel/git/leon/linux-rdma.git/log/?h=fix-p2p-acs-v9
 
-PCI/LMR: Add Lane Margining at the Receiver debugfs interface
+Thanks
 
-Lane Margining at the Receiver moves the sampling point of a receiver
-away from its normal setting, in time or in voltage, while the link
-stays up, and reports the errors the receiver sees.
-
-> diff --git a/drivers/pci/pcie/margin.c b/drivers/pci/pcie/margin.c
-> new file mode 100644
-> --- /dev/null
-> +++ b/drivers/pci/pcie/margin.c
-[ ... ]
-> +static int pci_lmr_no_cmd(struct pci_lmr_port *port, unsigned int lane)
-> +{
-> +	u16 cmd =3D pci_lmr_word(0, LMR_TYPE_NO_CMD, LMR_NO_CMD);
-> +
-> +	return pci_lmr_write_wait(port, lane, cmd, U16_MAX, NULL);
-
-[Severity: Medium]
-Will this wait timeout unconditionally?
-
-Looking at pci_lmr_write_wait() in drivers/pci/pcie/margin.c, it uses the
-U16_MAX mask to wait for the lane status to exactly match cmd. However, the
-command encodes bit 6 (Usage Model) as 0, while hardware that supports
-margining will always set this read-only bit to 1, as defined in
-include/uapi/linux/pci_regs.h:
-
-#define  PCI_LMR_LANE_USAGE        0x0040    /* Usage Model */
-
-This seems like it would cause the exact match condition to permanently fai=
-l,
-leading to a timeout for all margining operations.
-
-> +}
-[ ... ]
-> +static int status_show(struct seq_file *s, void *unused)
-> +{
-[ ... ]
-> +	seq_printf(s, "%s %s %lu\n",
-> +		   type =3D=3D LMR_TYPE_TIMING ? "timing" : "voltage",
-> +		   pci_lmr_step_status[FIELD_GET(LMR_STEP_STATUS, payload)],
-> +		   FIELD_GET(LMR_STEP_ERR_COUNT, payload));
-
-[Severity: Low]
-Does this seq_printf() call result in undefined behavior on 64-bit
-architectures?
-
-In status_show() within drivers/pci/pcie/margin.c, the payload variable
-is a u8, and FIELD_GET() evaluates to a u8, which the varargs of seq_printf=
-()
-promote to a 32-bit int. However, the format specifier %lu demands an 8-byte
-unsigned long. Reading 8 bytes for a 4-byte argument can produce garbage
-output or undefined behavior.
-
-> +
-> +	return 0;
-> +}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261006-pcie-link-=
-endpoints-v6-0-154d71657d32@google.com?part=3D1
+> 
+> Bjorn
