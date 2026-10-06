@@ -1,112 +1,167 @@
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F07A46AA95
-	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 17:34:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 115F24A2A50
+	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 17:34:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791308057; cv=none; b=DWrGl0i9L7AiCe/vPEQR77HY1iOqoJ/v514EZuTp+ZLKb/xyl/RmJqioBOlLyp2j6T9Npo5Ysx+BuWuWa9cH7tmOMEgvkNnczM3bXi/NKHxn8+Q9L2PAQFevjlmVCp+yEPdTcYXdPJIInwHt/plhrIpIEbMAZQYeJZMCP/MIOyo=
+	t=1791308062; cv=none; b=UYfApsSDB9tuxtfcXWiGscUDOFqnuqTjEqPwXPTeXFrP/mwo6sR8e2mC4d69tgl18jaXnG0fyqR/IWGQhMEjp+sKuwiWeK2y2si3+5XX3dFGZRTFxEguJZZlWVNO2CUEgrN+LVu0sS0u0u6v3f2LzfiVcNitbvv4DZD5Tl/JuP0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791308057; c=relaxed/simple;
-	bh=UQg2/5CHu7O1x5BAjQ3xuuPFjSNU3U6/KG90m4SUe0Y=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=h3aGHh4tYJIXTqTOYMv1k2zX4DRBnGGP18BDhppZ3BeQzCdx8e7ZWdZlqnNZuvBRZkWSCD9hA6FibKFbC83W0Y352DxQqJLw3TwxuwHFyoR1Lp9JK4sSE7hwJhbw2iQ89bqgIWnVLxSBd5ang84c4A+Uitr+pFbFd/5OPNhZlaE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=PsHe4hmL; arc=none smtp.client-ip=209.85.214.200
+	s=arc-20240116; t=1791308062; c=relaxed/simple;
+	bh=6fokGtlocNvOTSB0Dhtrnq9A4Ao/nK05Q/BkT2zJ2E4=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=i5x7Ijc9TmW/0ib/mbm54bKs6j5inClHzQF6KL4aGfVpBWLhxuwA+YUsaEQqUH0eozRgtZ6bui2597QTnw59NQXNkWMEFL1/f77i6hFhrdnvirCbnNHtV9jao3YK+a/mrnkdg/PJTeiQi6isd8rMxwhf5k+QMNyY6ogWgf2H0+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=TGzwgmnH; arc=none smtp.client-ip=209.85.216.71
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="PsHe4hmL"
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2df8d1e91c9so56260575ad.0
-        for <linux-pci@vger.kernel.org>; Tue, 06 Oct 2026 10:34:16 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="TGzwgmnH"
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-3a0be20102fso3039804a91.0
+        for <linux-pci@vger.kernel.org>; Tue, 06 Oct 2026 10:34:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1791308056; x=1791912856; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=yUt4FoYtKMqRJhdW7eHbQsmX20bJY/aY8hH3stNtQxg=;
-        b=PsHe4hmL8GhB0X9j+0tGTO+7V6MrCYnDl447+WT6xoU5i8eMM1Aa46zbDOw/AkfE6j
-         2BRGVzp9QOrjt6c1q61s5l6gLiybF4OAQyV3akwNbtuHnExNWfzffnu8uzGmzR+phuF+
-         H7QbXC+AnTWAeIEWZk80rYTNcAq8VVO+QcZdjik/9iM8yxpYmFQzTAb41zgYCYLRF1va
-         OyrOQqy7HueYXjFgayIYSmBxrZkAIp/WDzXnmJnv0ZpMl45N4Ez1/k7n8NbtoCEWVaUW
-         ptt8e6a5Vjg+ut8GDa4mLBjuPSQAvt/USczKSSu4M0lUCMXtcLloW9W2vAzJssPz/r34
-         7ICg==
+        d=google.com; s=20251104; t=1791308058; x=1791912858; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=KjRlU2sZPuqprObDce5lyxEs4dRztB7t0cNy/bHqEEM=;
+        b=TGzwgmnHvbRuLcjiWB692Ngmqo/gJFfANCSSs8gwcz5/5W7urkYpmnOBw5ypJBH9Tt
+         rgjFM22zhmH/jd02QCHxtKRA7hwxB9BdoCJO7Ggy7Fidvx6w5oradhKim+0q6wGN5xDe
+         dXlOueNV3QqeBnZh6aEGO7TQyK2kJc9QqzdHU6oTej+FG7KgCQHvUF3VZnx+JThqdK12
+         xisA6grVhMuGLRULv6yZ0sqhJ6gmhFmm2nI5BqiqwT9+xqWS1RlkOirurfap1IBxTljb
+         AjZIFXA27QcfWg8/xaEyMx0x5TiwD+WOxdd0LTkR1rIcW5isAEgR7T3owOV/wPr2dC+K
+         2Prg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791308056; x=1791912856;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=yUt4FoYtKMqRJhdW7eHbQsmX20bJY/aY8hH3stNtQxg=;
-        b=oYdDVIbHHQ7zLXvlFjUQIGmkgBh5NwWQEUiwBYe/pJDE80AUl4nlEVBXCXtfqpxyl9
-         GSU3WWQS26/E2AAIME9wNaIVbRdb8FGWHZfeo3JHJoOZjUmq+9QPWrUL73LrXKgi2THl
-         Too0ms0ErSjkiCWNsn47iPyO3ewH4f7CSWpp5JkS5bn5dRagTOiaSVBY4jJsjhSOTl3P
-         py9OcIsGA1uENaql7U8LkEk/u+wUkEcD5SmhCLelG3vbIFz4Bq1tMVJry7JVotdtFSqw
-         uOBfB+7EyynRi54S1Y49u/DetgC/nOk0AY6pNjmacGLx929PSQjYZW5AkMz8mrJiDfTC
-         rKEA==
-X-Forwarded-Encrypted: i=1; AKwUvBzJY9eZ0C2EMEqHGWmdtzWyIW9XkE4TjvN9rSPKY6O79O5EQEBUvZ8lbOrZSNsE8z9qGfrUi5y7LC8=@vger.kernel.org
-X-Gm-Message-State: AFuF++lJ8AprMWK5p7MYlXQjRMDIGNkhZV/4qrtDotqsgyMAPQrGdeJs
-	ggHh5Hd6q2SnYex7opIC1qPPrd6UxvzcpGuySWNxV0p5A07g8fxA1JY21cajI3M13P7sqqYkjVQ
-	xYhrNn8mDlW/e4DnhSQ4HBnTp9VEpXmXntw==
-X-Received: from plk3.prod.google.com ([2002:a17:902:e9c3:b0:2e2:b496:e205])
+        d=1e100.net; s=20260707; t=1791308058; x=1791912858;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=KjRlU2sZPuqprObDce5lyxEs4dRztB7t0cNy/bHqEEM=;
+        b=P0+Eh3u/FVfyu6MBPEqQ8+H2IvIRpnIbQmviwhtiU2vQf7QsMEXkKeBhSujvoTrwmI
+         c1dozlpX13MyXX4vjQfM1fSYal17WYldsTkWVRatsMXhbGXAJqyePFE9WwZeftVOjX/k
+         sqmW6qw/TKBOLg0rtx8nzREdDpL7IUsquA/sMm6dJcmmdepFXDcaj0Pc0EympGz+rZnp
+         /V0AoUNxdFEFTQ54peRRaLlU0TCmTuN4+MrjjuNjUPEOMTHk/l+Xf2yvypAc9G4ogjXk
+         JQzyFMnhE35r7aQNXvXr+F5g1c7QqoV5BSFT4arTI1lWYyH1QSP5HLApRwRpaOY/zD/c
+         PEPA==
+X-Forwarded-Encrypted: i=1; AKwUvBwXfsHDW3nm3AXe/DzFJ9AsBLTwirqDPuW+7thuBGSQj0uILurgwQafy3MqBMN+ThvwIEeMugK+swc=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJZptFZ//66bnmXa/J9Pn4uRX/N8TQefY/IG/VXwq83SRrh5ouT
+	zmXMTKwbRruzuFzvJ4tbFc0DIa5EqKKEJXjbAiWyrQslEJg4F4CirdIOii4dmFW9/9TApWx6I44
+	Yk9TQZ408lTP5tchQgYmitg49ktBZMr0riQ==
+X-Received: from pggj21.prod.google.com ([2002:a63:cf15:0:b0:cc7:e6e5:e624])
  (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:903:1b67:b0:2dd:c100:a5e1 with SMTP id d9443c01a7336-2e60054441emr1089695ad.53.1791308055474;
- Tue, 06 Oct 2026 10:34:15 -0700 (PDT)
-Date: Tue,  6 Oct 2026 17:34:15 +0000
-In-Reply-To: <sashiko-outbox-162260@kernel.org>
+ 2002:a17:90a:1117:b0:3a0:97ba:cc05 with SMTP id 98e67ed59e1d1-3a799bd3f13mr6179238a91.22.1791308057981;
+ Tue, 06 Oct 2026 10:34:17 -0700 (PDT)
+Date: Tue, 06 Oct 2026 17:34:16 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-References: <20261006-pcie-link-endpoints-v4-0-ad5398c4260c@google.com>
- <20261006-pcie-link-endpoints-v4-2-ad5398c4260c@google.com> <sashiko-outbox-162260@kernel.org>
-X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
-Message-ID: <20261006173415.1002265-1-rathodpriyank@google.com>
-Subject: Re: [PATCH v4 2/2] selftests/pcie_lmr: Add tests for the Lane
- Margining debugfs interface
+X-B4-Tracking: v=1; b=H4sIABgxxWoC/43QQQrCMBAF0KtI1o4kmbQ2rryHuGiTaR3UpDRSF
+ OndjS4UUcTl/zDvw1xFooEpidXsKgYaOXEMORTzmXC7OnQE7HMWWupSVqigd0xw4LAHCr6PHE4
+ J7LIiJaUvvCxFvuwHavn8UDfbnHecTnG4PEZGdW9/e6MCBaidbn1lkSytuxi7Ay1cPIo7OOoXY
+ qX5jmiQoMrWNShVjWQ+EPwDwYyYxtZWNd40WHwg5onkD5TfEZOR2hdoK2fymHtDpmm6AQ9InIa GAQAA
+X-Change-Id: 20260831-pcie-link-endpoints-978e100d5d06
+X-Mailer: b4 0.14.3
+Message-ID: <20261006-pcie-link-endpoints-v5-0-c1e73235746b@google.com>
+Subject: [PATCH v5 0/2] PCI: Add Lane Margining at the Receiver debugfs interface
 From: Priyank Rathod <rathodpriyank@google.com>
-To: sashiko-bot@kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: "=?UTF-8?q?Ilpo=20J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, Lukas Wunner <lukas@wunner.de>, 
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "=?utf-8?q?Ilpo_J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, Lukas Wunner <lukas@wunner.de>, 
 	Manivannan Sadhasivam <mani@kernel.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
 	Shuah Khan <shuah@kernel.org>, Randy Dunlap <rdunlap@infradead.org>, linux-pci@vger.kernel.org, 
 	linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+	linux-kernel@vger.kernel.org, Priyank Rathod <rathodpriyank@google.com>
+Content-Type: text/plain; charset="utf-8"
 
-On Tue, 6 Oct 2026, sashiko-bot@kernel.org wrote:
-> > +	up=$([ "$rx" = 6 ] && echo "$dev" || echo "$partner")
-> > +	after="$(link_regs "$dev") $(link_regs "$partner")"
-> > +	if [ -z "${before// }" ]; then
-> > +		ktap_test_skip "$dev: setpci not found"
-> > +	elif [ -n "$up" ] && [ ! -d "/sys/bus/pci/devices/$up/link" ]; then
-> > +		ktap_test_skip "$dev: no OS ASPM control on link"
-> 
-> [Severity: Medium]
-> Is it possible that the logic for identifying the upstream port is reversed?
-> 
-> In active_tests(), the variable up is assigned using the receiver type.
-> If rx=6, dev is the Endpoint device, so up becomes the Endpoint.
-> If rx=1, dev is the Downstream Port, meaning partner is the Endpoint,
-> so up still evaluates to the Endpoint device.
-> 
-> Because up always evaluates to the Endpoint device instead of the
-> Downstream Port, the check for the sysfs link directory will always fail,
-> as that directory is only present on the Downstream Port. Will this cause
-> the test to unconditionally skip the final LNKCTL restoration checks?
+Lane Margining at the Receiver lets software move the sampling point of
+a receiver in time or in voltage while the link stays up, and read back
+the errors the receiver sees, to find out how much margin a link running
+at 16.0 GT/s or faster has.  pcilmr in pciutils does this today by
+writing the capability registers directly from user space.
 
-For human reviewers: this is a false positive.
+This series adds a debugfs interface for it.  The kernel sets the link
+up for margining and puts it back afterwards:
 
-In PCIe terminology, the Upstream Port ('up', receiver 6) is the child
-device below the Downstream Port (an Endpoint or Switch Upstream Port).
-In drivers/pci/pcie/aspm.c, aspm_ctrl_attrs_are_visible() looks up the
-link via pcie_aspm_get_link(pdev), which reads
-pci_upstream_bridge(pdev)->link_state.  So the sysfs 'link/' directory
-is attached to the child device below the Downstream Port (receiver 6),
-not to the Downstream Port itself.
+  - ASPM is turned off for the session with the existing ASPM API,
+    Hardware Autonomous Width/Speed Disable are set on both ends, and
+    both ends are kept runtime resumed.  All of this is undone when
+    the session ends or either end of the link is removed.
+  - Before each margining command, the link is checked against the
+    state the session started in.
+  - User space selects the receiver and the steps; the kernel does not
+    run sweeps or interpret results.
 
-To avoid any confusion over the variable name 'up', I'll send v5 with
-'up' renamed to 'child' and a comment explaining the sysfs 'link/'
-lookup.
+Patch 1 adds the interface and its documentation, patch 2 a kselftest.
 
-Thanks,
-Priyank
+The only PCI core changes are the init/exit hooks in probe.c and
+remove.c and their prototypes in drivers/pci/pci.h.  aspm.c, pci.c and
+include/linux/pci.h are not changed.
+
+Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
+---
+Changes in v5:
+- Clarify in pcie_lmr.sh that the sysfs 'link/' directory is on the
+  child device (PCIe Upstream Port, receiver 6) via
+  pcie_aspm_get_link(), and rename 'up' to 'child'.
+- Link to v4: https://lore.kernel.org/r/20261006-pcie-link-endpoints-v4-0-ad5398c4260c@google.com
+
+Changes in v4:
+- Drop the exported pcie_get_link_endpoints(); the partner lookup is
+  private to margin.c (Ilpo).
+- Drop pci_aspm_inhibit() and all aspm.c changes.  Use
+  pcie_aspm_enabled(), pci_disable_link_state() and
+  pci_force_enable_link_state(), call neither when no ASPM state is
+  enabled, and restore Clock PM when CLKREQ# was enabled.  ASPM Control
+  is checked on both ends before each command.  The remaining
+  differences after a session are documented.
+- Remove the MSampleMultipleReceivers capability bit.
+- One receiver per session, selected with a port-level 'receiver'
+  file.  A session starts with receiver 1 on a Downstream Port and 6
+  below it, as pcilmr does; receiver 0 is not used for margining.
+- Add a per-lane 'status' file with the step response and error count,
+  and a 'port' file with the Margining Port bits.  Stop writing
+  Margining Port Status.
+- Locking: take both device locks with pci_dev_trylock() only while a
+  session starts or stops, require both ends to be added, and make no
+  runtime PM calls under the LMR locks.
+- End sessions from pci_lmr_exit() for either end of the link.
+- Commands fail with -EIO after a system suspend.
+- Move debugfs to pcie_lmr_<device> at the debugfs root.
+- Keep per-device state in margin.c instead of struct pci_dev.
+- Split the selftest into its own patch, rename it pcie_lmr, use KTAP,
+  and only start a session on the port named by PCIE_LMR_DEV.
+- Refer to registers by name instead of specification section numbers.
+- Link to v3: https://lore.kernel.org/r/20260904-pcie-link-endpoints-v3-0-4b9a91bd4b35@google.com
+
+Changes in v3:
+- Link to v2: https://lore.kernel.org/r/20260904-pcie-link-endpoints-v2-0-16fcb301a3e4@google.com
+
+Changes in v2:
+- Link to v1: https://lore.kernel.org/r/20260831-pcie-link-endpoints-v1-1-32c2fd893e9e@google.com
+
+---
+Priyank Rathod (2):
+      PCI/LMR: Add Lane Margining at the Receiver debugfs interface
+      selftests/pcie_lmr: Add tests for the Lane Margining debugfs interface
+
+ Documentation/PCI/index.rst                  |    1 +
+ Documentation/PCI/pcie-lmr.rst               |  162 +++
+ MAINTAINERS                                  |    8 +
+ drivers/pci/pci.h                            |    8 +
+ drivers/pci/pcie/Kconfig                     |   11 +
+ drivers/pci/pcie/Makefile                    |    1 +
+ drivers/pci/pcie/margin.c                    | 1590 ++++++++++++++++++++++++++
+ drivers/pci/probe.c                          |    1 +
+ drivers/pci/remove.c                         |    1 +
+ include/uapi/linux/pci_regs.h                |   18 +
+ tools/testing/selftests/Makefile             |    1 +
+ tools/testing/selftests/pcie_lmr/Makefile    |    3 +
+ tools/testing/selftests/pcie_lmr/pcie_lmr.sh |  311 +++++
+ 13 files changed, 2116 insertions(+)
+---
+base-commit: 1ee0e2a03ac539c90fd9b8a644ae983a2216b58c
+change-id: 20260831-pcie-link-endpoints-978e100d5d06
+
+Best regards,
+-- 
+Priyank Rathod <rathodpriyank@google.com>
+
