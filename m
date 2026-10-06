@@ -1,115 +1,190 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27C5E49C4DF;
-	Tue,  6 Oct 2026 15:54:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E14E8496D48
+	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 16:11:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791302089; cv=none; b=VKwDAUZ6l27V1yXuwjQ/g3zdySXILyU8bUCVdi3lRvzRH0SpaNesAxfsftgZ0L60jLTklOOqlal9Ud26T7D6LGQ28NyrxTUateysQOAF7IvC9pePJNNGPNugHGeQdS9tUMAelKVYLL7J4YC6xHQSotdchz8jGHPpGBwhp0Ux5Hk=
+	t=1791303085; cv=none; b=lCOKpKMXgb0Oyxv6nDlcqwDKmM+RuUJWsYMuhSBlFTMjvVhmv34EATDdBKQUxmJajvavXHxOYZgnfklI3HghWzfJOVpwdQa7j8YBG7Jny6FW87UWqFImiwCA2DZY+5d3/bAZ70Tvr1E1WXB2IQJVs9VUgSfiSTh4If5MtSp8wOg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791302089; c=relaxed/simple;
-	bh=vYDzEwXZ1IV+3fpCFqnbA405TlaexK4ROIl/0m07UgM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=fGAuwgqS3Y2gbQm4zYVjEB4JDQ4iKfx39ycxmZDE6nHvrf7d6XCzZvDzpSphYSem1kNfj30zl3/H6dbt42bWUhb6P7StuHEgqptoT6OLp5W1sfD3EnH3OFsjh+6m+YGalxSTd+ZFMK5A4cU3P1NgmYu7fKGFRvMhCPiHB3aJcvQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kmnqSnp8; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791303085; c=relaxed/simple;
+	bh=YBZe+C652Mt5wiOMYN6vWBMlwUCAKX2q0sKMcb9Ax9Q=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=Y+s9hq0BipVEvH+SnucmXUgVVzqXWFrmzeQtpmvP+yYMY/e6i8XTA7VWxEzSADn4RgvEDHnNVhRWmVL8HmhbpHUhpyTeTqeNjWIPOw9GBIKbi+C6sW+UgU7+pTXVIdL8AwgwhcAhaLaDwdwaCWHQ4+qWhruzKbR7nIe3/BIrU6U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=FsYspK57; arc=none smtp.client-ip=209.85.214.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kmnqSnp8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 832FE1F0089B;
-	Tue,  6 Oct 2026 15:54:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791302087;
-	bh=clRq7rLolI7UK6CY7Y84Un2wUkXIEjH+9LwAXBd+654=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=kmnqSnp8AQWKgKdWrXoR3wDP+wjZUfn0pa14Qbsbq0r/YRFOUxfueCxsdsEknVCXS
-	 t7PP0lZ60nZVeVas9F+t2Vfv5o2EPyNvh2FhdIqQilg6Zh2lHGXbDkPTowRhjGmder
-	 z8oDV+mQ8xqoyLn7+5SUpvn6xTr/npXpvaWIPXEJeOMumGmQV4CNCbJWcj74piLf2t
-	 iKdg4RCQQPts16smNQbEtxsGsVa0akn/c0KWEkXDHjMetIynK0hp6K/npScVIlNyKo
-	 mwc97d3hDfTvfazgVZx+atdqMV2MlxNiB1/Xf4caiVOm7ghajAcl3q/Y4e3VJD+Ct8
-	 ClVrQlwJl7IhQ==
-Date: Tue, 6 Oct 2026 10:54:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-Cc: jgross@suse.com, sstabellini@kernel.org, oleksandr_tyshchenko@epam.com,
-	bhelgaas@google.com, jbeulich@suse.com, konrad.wilk@oracle.com,
-	xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v2] xen/pcifront: check that an AER callback exists
- before calling it
-Message-ID: <20261006155446.GA684274@bhelgaas>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="FsYspK57"
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2e2d3a3ff86so44571785ad.0
+        for <linux-pci@vger.kernel.org>; Tue, 06 Oct 2026 09:11:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1791303083; x=1791907883; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:references:mime-version:in-reply-to:date:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=F7fiIy44pA40Qzblb6RujesfpZqXOXl3zixxZTEALtM=;
+        b=FsYspK57tzzrJJC4RirtYlchoJ8fPye1U2yVXrz2a88Dnj6hC0lfThCZNTOODnDpS6
+         oyuIT/soZb8RI/9OTio9fHmMW4N/1Z2sLjOxga+iA2k7HmhhseWKyOHKCqhhECQEBtA2
+         EXqSduwuqE3wW/+PKDuw2NJLvtZbwkraZMNOD1PU8Q+tPbpAIWzjkmY0zds8GVMW4+bC
+         jDPz/1lrL50anR/odDOJ97LlrVQEtvoerYIElZSjyZvsx/YcjyRK0QBY6BbUHLoYuwy9
+         zeeecb735TGZQHNjy/yz/0OgQII2kvs5VXMW6sqvj9KkxZoGxxzdGwYzdwyWL9VzInfJ
+         I9WA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791303083; x=1791907883;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:references:mime-version:in-reply-to:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=F7fiIy44pA40Qzblb6RujesfpZqXOXl3zixxZTEALtM=;
+        b=KhSU6xOGgtiKVJ5I/czOY7L+IH3+9zml4xzqwAzTCcZ+U2fb/qni5Q/eHjg0Yqja7K
+         rvAXFQZvIZbVzWPbMO0Mau10I9tqy7NtuI6Tfi6484c6sC24/dRj4gNmEv8yFIywr4Si
+         QmJadjwF2pTRKyuS7MEDYZPohAwL3lul5yXjZY9Lyp3bQ/7bT0TeioWGM41Favd8QSGo
+         mogJ26ZchWY6J1ONX8sdavMrAG5swi1rtnaBxpvcfnMeq+lBGD0vu38rFEMxc19RaLli
+         E6x+LyK5zNp+1DLIFu9aLJSSWasI/kDdHnv4wyKJudi+mdmLsdGaJ/Zoc25nDJoBzTr+
+         wMxA==
+X-Forwarded-Encrypted: i=1; AKwUvBwLYFNmUzNYeLHsxsVlJQmDFi9Kx5CIRTTkAFxIW/gwen6xFwMuHhN9Sh/XVsLjYbFee1pmHRYjfp4=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKNnRjxZQ1S8ilZa+RANWKXDvRukIlnKHdZRGuH1pIMxUNjxnaU
+	Ql1X2NM+imBTz5G0L+3J6cl35bMcFvQj/CH9W0WFj7FnEp294AMCNp5ll1lArSQMJC2OVmcGW9e
+	NANRFyq3hnO/6F0aQw5ObNa/XdHvt3fAo5g==
+X-Received: from pltf6.prod.google.com ([2002:a17:902:74c6:b0:2e5:c07f:b4c2])
+ (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:903:41c8:b0:2db:3b35:1ac6 with SMTP id d9443c01a7336-2e5dccf67aamr16741525ad.5.1791303082968;
+ Tue, 06 Oct 2026 09:11:22 -0700 (PDT)
+Date: Tue,  6 Oct 2026 16:11:22 +0000
+In-Reply-To: <03f0fedb-beeb-369a-47dc-e7ddc3b27aef@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261006023443.338194-1-yhlee@isslab.korea.ac.kr>
+Mime-Version: 1.0
+References: <20260831-pcie-link-endpoints-v1-1-32c2fd893e9e@google.com> <03f0fedb-beeb-369a-47dc-e7ddc3b27aef@linux.intel.com>
+X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
+Message-ID: <20261006161122.921339-1-rathodpriyank@google.com>
+Subject: Re: [PATCH] PCI: Add pcie_get_link_endpoints() helper
+From: Priyank Rathod <rathodpriyank@google.com>
+To: "=?UTF-8?q?Ilpo=20J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org, 
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Oct 06, 2026 at 11:34:43AM +0900, Yehyeong Lee wrote:
-> pcifront_common_process() handles an AER request from the backend by
-> dispatching on aer_op.cmd to the bound driver's PCI error handler.  It
-> only checks that err_handler and err_handler->error_detected are present,
-> then for the mmio_enabled, slot_reset and resume commands it calls the
-> corresponding callback unconditionally.  Those three callbacks are
-> optional -- the PCI core NULL-checks each of them individually before
-> use -- and many drivers (for example igb, igc, ice and ixgbevf) install
-> error_detected without all of them.
-> 
-> aer_op.cmd comes from the shared ring, so a malicious or buggy backend
-> can send XEN_PCI_OP_aer_mmio (or _slotreset/_resume) for a device whose
-> driver leaves that callback NULL and make the frontend call through a
-> NULL pointer, crashing the guest.
-> 
-> Check each callback before calling it.  When mmio_enabled or slot_reset is
-> absent, return PCI_ERS_RESULT_RECOVERED so recovery proceeds, as the PCI
-> core does for a missing callback; returning PCI_ERS_RESULT_NONE would
-> instead make xen-pciback tear the guest domain down.
-> 
-> Fixes: 956a9202cd12 ("xen-pcifront: Xen PCI frontend driver.")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+On Tue, 1 Sep 2026, Ilpo J=C3=A4rvinen wrote:
+> On Mon, 31 Aug 2026, Priyank Rathod wrote:
+>
+> >   - ASPM (drivers/pci/pcie/aspm.c): pcie_aspm_get_link(),
+> >     alloc_pcie_link_state(), and pci_configure_ltr() resolve parent
+> >     bridges and subordinate function 0.
+>
+> This is not the full picture. The aspm driver has to write the same confi=
+g
+> to all functions (except L1SS that is only in func 0).
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Hi Ilpo,
 
-> ---
-> v2: return PCI_ERS_RESULT_RECOVERED for an absent mmio_enabled/slot_reset
->     instead of PCI_ERS_RESULT_NONE, which xen-pciback treats as fatal and
->     uses to tear the domain down.  (Bjorn acked v1; the ack is dropped here
->     because v2 changes the value returned for an absent callback.)
-> v1: https://lore.kernel.org/all/20261005133019.284053-1-yhlee@isslab.korea.ac.kr/
-> 
-> There is an in-flight fix for a refcount leak in this same function
-> ("xen/pcifront: Fix PCI device reference leak in AER handling"); this
-> change is orthogonal and applies in either order.
-> 
->  drivers/pci/xen-pcifront.c | 11 ++++++++---
->  1 file changed, 8 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> index cffc32d660327..5c6f7796d204a 100644
-> --- a/drivers/pci/xen-pcifront.c
-> +++ b/drivers/pci/xen-pcifront.c
-> @@ -599,11 +599,16 @@ static pci_ers_result_t pcifront_common_process(int cmd,
->  		case XEN_PCI_OP_aer_detected:
->  			return pdrv->err_handler->error_detected(pcidev, state);
->  		case XEN_PCI_OP_aer_mmio:
-> -			return pdrv->err_handler->mmio_enabled(pcidev);
-> +			if (pdrv->err_handler->mmio_enabled)
-> +				return pdrv->err_handler->mmio_enabled(pcidev);
-> +			return PCI_ERS_RESULT_RECOVERED;
->  		case XEN_PCI_OP_aer_slotreset:
-> -			return pdrv->err_handler->slot_reset(pcidev);
-> +			if (pdrv->err_handler->slot_reset)
-> +				return pdrv->err_handler->slot_reset(pcidev);
-> +			return PCI_ERS_RESULT_RECOVERED;
->  		case XEN_PCI_OP_aer_resume:
-> -			pdrv->err_handler->resume(pcidev);
-> +			if (pdrv->err_handler->resume)
-> +				pdrv->err_handler->resume(pcidev);
->  			return PCI_ERS_RESULT_NONE;
->  		default:
->  			dev_err(&pdev->xdev->dev,
-> -- 
-> 2.43.0
-> 
+Sorry for the slow reply, and for posting LMR v3 before answering this.
+
+You're right. The helper only returns Function 0, which isn't what the
+ASPM driver needs, so I shouldn't have listed it as a user.
+
+> >   - Precision Time Measurement (drivers/pci/pcie/ptm.c):
+> >     pci_upstream_ptm() traverses pci_upstream_bridge() to validate
+> >     upstream link partner capabilities.
+>
+> This looks something entirely different, and it's pure get (a certain)
+> device upstream, not the get-my-link-partner query.
+
+Agreed, PTM comes off the list.
+
+> >   - PCIe Link Retrain (drivers/pci/pci.c): pcie_retrain_link() and
+> >     pcie_update_link_speed() coordinate link retraining from the
+> >     Downstream Port across the subordinate bus.
+>
+> I don't entirely agree with this assessment. pcie_retrain_link() is given
+> a downstream port, mere looking into ->subordinate doesn't constitute as =
+a
+> need for having access to the struct of the other end of the link.
+
+Agreed, that one goes too.
+
+> >   - AER/DPC Recovery (drivers/pci/pcie/err.c): pcie_do_recovery()
+> >     identifies the parent bridge via pci_upstream_bridge() to trigger
+> >     secondary bus reset and broadcast driver recovery callbacks.
+>
+> This seems to have some validity, though it must cover RCiEPs.
+
+The helper doesn't handle RCiEPs, and I don't have a patch converting
+err.c, so I'll drop it as well.
+
+That leaves LMR as the only user, so for v4 I dropped the exported
+helper and kept the lookup private to margin.c. LMR only needs
+Function 0 on the Upstream Port side (pcilmr makes the same
+assumption).
+
+On v7 you said you'd like to avoid duplicating what the ASPM driver
+does. If you'd rather have a shared helper in the PCI core, I can do
+that as a separate series that also converts aspm.c, so it has a
+second user from the start. Let me know which you prefer.
+
+> > +		*upstream_port =3D pdev->subordinate ?
+> > +			pci_dev_get(list_first_entry_or_null(&pdev->subordinate->devices,
+> > +							     struct pci_dev, bus_list)) : NULL;
+>
+> Too much is crammed into one statement.
+>
+> > +	} else {
+> > +		*downstream_port =3D pci_upstream_bridge(pdev);
+> > +		*upstream_port =3D pdev;
+>
+> Why complicate things with the unbalance?
+
+Both were fixed in the copy in LMR v3 (patch 1/3), which takes a
+reference on both ends. This code goes away in v4 anyway.
+
+On ASPM, since you asked about it on v6 and v7: v4 drops
+pci_aspm_inhibit() and doesn't change aspm.c. It uses the existing
+API the way ath10k, ath11k and ath12k do: save with
+pcie_aspm_enabled(), call pci_disable_link_state() before margining
+and pci_force_enable_link_state() afterwards. Reading aspm.c, that
+round trip doesn't restore everything, so v4 adds a few things in
+margin.c:
+
+ - If pcie_aspm_enabled() returns 0 (firmware left ASPM off,
+   pcie_aspm=3Doff, or the "performance" policy), v4 calls neither
+   function.
+ - It disables only the states pcie_aspm_enabled() reported, not
+   PCIE_LINK_STATE_ASPM_ALL, so the restore clears the same
+   aspm_disable bits (except the L1 substates, see below).
+ - __pci_enable_link_state() sets clkpm_default from
+   PCIE_LINK_STATE_CLKPM, which pcie_aspm_enabled() never reports, so
+   with the default policy the restore would turn Clock PM off. v4
+   adds PCIE_LINK_STATE_CLKPM to the restore mask if CLKREQ_EN was
+   set at the start. The ath drivers hit this too.
+ - It reads ASPM Control in Link Control on both ends (read-only) at
+   the start and before each margining command, and fails with -EBUSY
+   if it's set. That covers firmware-enabled ASPM with pcie_aspm=3Doff,
+   and ASPM coming back on mid-session through the link/*_aspm sysfs
+   files or another driver calling pci_force_enable_link_state().
+
+The rest is documented in pcie-lmr.rst:
+
+ - If another driver disables a state that LMR also disabled, the
+   restore turns it back on.
+ - aspm_default ends up as the saved set.
+ - Disabling L1 also disables the L1 substates, so substates that
+   were off at the start stay disabled.
+ - Without OS control of ASPM, the disable works but the restore
+   returns -EPERM, so ASPM stays off until reboot.
+
+Counting disables per state in aspm.c, as you suggested on v7, would
+fix most of these, but v4 doesn't depend on it.
+
+v3 also brought back the MSampleMultipleReceivers bit that you couldn't
+find in r7.0 on v5. That was my mistake, and v4 removes it. Some
+section numbers in v3 were wrong too (Link Control 2, for one), so v4
+refers to registers and fields by name instead of section numbers, and
+keeps comments within 80 columns.
+
+Thanks,
+Priyank
