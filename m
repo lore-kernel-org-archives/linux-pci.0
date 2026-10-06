@@ -1,174 +1,211 @@
-Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011058.outbound.protection.outlook.com [52.101.52.58])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 349A746D57D;
-	Tue,  6 Oct 2026 14:37:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.58
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8039843FD1F
+	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 15:01:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.47
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791297454; cv=fail; b=j5U098IsDgAgpNo7N3SWBAzhGbEc8+8mEA+lmKiAU1H4b3jBaa5xduB3HMEc8Zn1weM96r9NZEDHp0r5FRVfRGX6Ja814MYfyStUH4ZOdW85NS9N9nl2z8Ba3oFPIISnTHfGWF/SSLZL1Iejp7aW6JzbUnR9uixcY4sQc+ZcVEE=
+	t=1791298874; cv=pass; b=F6nDP92U0gmFuES0E0yL2ElKp0e2tNFxp8RqmpCFoNwjLhtdjvmhOldCgIF70gzLWZ3lIi1i5EbDLEamf8KN4AFPKeB/jpeXwPSNO22tMgk5su3KvbC4mFJ9D8ZHVnPQ5FI/KUROw98JnaM+SRJazQdVU7hncQkydnq8lILg3qk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791297454; c=relaxed/simple;
-	bh=TxT5YdXptfZI9cyjHS7tb4N0bLPtcK3+riJAFvGrYlA=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=OdDD1WObU7ijSGZ7axHrZCP6oXYdTPYJdGJul6maK05KQq8eMMhRHuC3ONyZs2ZSnlwaQ4tog0ujHY/kuLwLYGF7uc7z0H+V3whnOaGvAJ6ZE5J9CiFrDWwatq4mtMKNpxVFoV4jtvFOADm9fOEcDE0udgBj7fvKMfHb2OXJUVg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=WTTQ36fR; arc=fail smtp.client-ip=52.101.52.58
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	s=arc-20240116; t=1791298874; c=relaxed/simple;
+	bh=z0NbjY3hb65QgHF3JTWDHVs8sB4ltcgs7siabYrSJxk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=sQSgnzfdBHK9jDJ19kxjt9ZZw8VdTDR2+dof5rZ+yugviPPCZHN9AaQ2Ni8qmMKIKziI5ChThGGSNWFBB62AFPjl1ZE1SrXUbluRyIuIN/Kg5V/8BWUclb/qO2qGOyFqL7J0Gc3AltVlPDhU6/jt2SCrdzcLR+TheBltdkSBwbM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=pnYnsB00; arc=pass smtp.client-ip=209.85.218.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="WTTQ36fR"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=X+2BNFZIqX5tRTHV6zdAeDR+E0fAwCJejADGPQw2RNVuCM33cU99+le/dtgBxz5xAThsDp1Pv5FLoGNS4bEfDRR7eTwdcvneMaC9XCFpQ9YMha64+hhURIaipjSr9Jg5XS0HrmA5fNE1Hxypu55bu7CZNH71Zmz1gjXffYuJnhNVRwWFpfyPgFWSnCfqPf1vFbAgc2Z/IS6VQ00wLh4GUK2bMRZAJcbc05fi2n8JRXq4rYmsQN1hXE6sRQzLaM05jUArC6quw9pLgTiRD2sJ29vQvFcaGPvjip4iRP1gF3C7dGvaK0CT7IQw70Kn6rRxeJSg15ZydeRdgPUqcqf2Hg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=KPSwPRvFlVMhFV8P4l7kLQGoFjpY58YolgBv5kWVDdI=;
- b=tgmOd7hCga0TpXFwzsRAI+lLnxogciL2MhU94lHbd3a1uFkPEsQnwlRBJzYmTAKSFUfuHkMf5DAP058hQn43kFLvvBLYsaLR0WWsuTpJiubhA2fWrvOdxI/IM/mwR96WPjqu2y0SfUqOdKX8shTMGODTrrwViHOtMN5i9BW6XGu06o+f741JX3UoGbYrGsjEU3S1psMmkZkOEjHh29k7djpY+u4KWASRdi+c6g0wT5WYzLeiaAgRwXrVdTa2elp+LEdED3vSkTiXFnOBfrY1rs5CIvx8hb5fqAsUtmnpM6387omXvGPk2jW+Gr9LpU79qkpBHTkmuzY3nq8GHv7Itg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KPSwPRvFlVMhFV8P4l7kLQGoFjpY58YolgBv5kWVDdI=;
- b=WTTQ36fRqdJq2a/j596h3OqclKiIPuvgOelfh9nWVvsLlFTQVf2/KRpMeD5KK5NOo0FZZ+oJn+WopBDkSrJ3+dMCzqOMEOokZUBcMm7uvF1w83b0G6Y6XZs8YIifp+2EJD2tiZkG7yZfRQE7Fsj0KetjR6HHw8/0ZTwWhQhqD7s=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com (2603:10b6:510:1cb::21)
- by DS0PR12MB8526.namprd12.prod.outlook.com (2603:10b6:8:163::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.20; Tue, 6 Oct
- 2026 14:37:24 +0000
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000]) by PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000%7]) with mapi id 15.21.0472.016; Tue, 6 Oct 2026
- 14:37:24 +0000
-Message-ID: <051b667e-eaa9-4ad8-86ce-1a326a612284@amd.com>
-Date: Tue, 6 Oct 2026 09:37:21 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [BUG] PCI/USB4: AMD Phoenix 1022:14ef runtime suspend prevents
- JHL9480 downstream enumeration
-To: "Kovacs, Alexander" <Alexander.Kovacs@amd.com>,
- Freeman Z <SHD-ISAC@outlook.com>,
- Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "westeri@kernel.org" <westeri@kernel.org>,
- "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
- "YehezkelShB@gmail.com" <yehezkelshb@gmail.com>,
- "rafael@kernel.org" <rafael@kernel.org>,
- "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
- "S, Sanath" <Sanath.S@amd.com>,
- "Natikar, Basavaraj" <Basavaraj.Natikar@amd.com>,
- "Martinez, Juan" <Juan.Martinez@amd.com>,
- "Chia-Lin Kao (AceLan)" <acelan.kao@canonical.com>
-References: <f8b929da-b4ae-48ae-9667-3eb93aa0a4bd@amd.com>
- <20260925115041.GX106095@black.igk.intel.com>
- <5d065dcb-a4b9-4e9d-aeee-8a9bd1d875d7@amd.com>
- <TYCPR01MB10927F1B586DACDC97FFB606A96802@TYCPR01MB10927.jpnprd01.prod.outlook.com>
- <7822cb02-f32b-4f02-ba65-4b90ebc42ce8@amd.com>
- <TYCPR01MB109279CDE9AAF47B40FD1770996802@TYCPR01MB10927.jpnprd01.prod.outlook.com>
- <DS7PR12MB9550D1A8CB397E8C7FF0C7D69C8A2@DS7PR12MB9550.namprd12.prod.outlook.com>
- <TYCPR01MB109276162440B6A8CC34DEC73968A2@TYCPR01MB10927.jpnprd01.prod.outlook.com>
- <BL4PR12MB953383C9C73C9715FB9C5A339C962@BL4PR12MB9533.namprd12.prod.outlook.com>
- <TYCPR01MB1092779F2FA9CE76D5A76E4C396962@TYCPR01MB10927.jpnprd01.prod.outlook.com>
- <BL4PR12MB9533056AD6DE8C89370D6F6E9C962@BL4PR12MB9533.namprd12.prod.outlook.com>
- <TYCPR01MB10927C563CDDD5216CDFCD4D696962@TYCPR01MB10927.jpnprd01.prod.outlook.com>
- <DS7PR12MB9550E85CCAED9C8C0D19DCA79C952@DS7PR12MB9550.namprd12.prod.outlook.com>
-Content-Language: en-US
-From: Mario Limonciello <mario.limonciello@amd.com>
-In-Reply-To: <DS7PR12MB9550E85CCAED9C8C0D19DCA79C952@DS7PR12MB9550.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: CH2PR18CA0049.namprd18.prod.outlook.com
- (2603:10b6:610:55::29) To PH8PR12MB6914.namprd12.prod.outlook.com
- (2603:10b6:510:1cb::21)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pnYnsB00"
+Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-c2e8e738ae0so103516866b.1
+        for <linux-pci@vger.kernel.org>; Tue, 06 Oct 2026 08:01:11 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791298870; cv=none;
+        d=google.com; s=arc-20260327;
+        b=XAipL8t6fYNQC0USOF9vZJb4row0t74073IRBbr4jTY0puOCRa63JOAga+fwruFAAf
+         5x14Ll/i25cjiy2jFMXopByqqCX6Edop/sD6ig4mpjodCVhh5P/D0qXLFBTLJc2GLOhf
+         G1+XB5aHavw0mI5skjm2Apco/WzdFTHl/7dHsQJQdXUfMzLCMp0QE2jUI7DPCXW1F/5g
+         m5LoPAPS2A7RtFzR3QDgkr8r48kGKE94uKV4ZqQE8X52rPGGV6ea8j/9T5JvzQDcn6GJ
+         M9ajLP3e04AoaMsf1mw9JBT7XKt8EPx2j0OOEgKJOjIhvXP8ThZIlnPEYSspAZzaxvwz
+         gCSg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=poE/AoMSO13XM0pW8fLOnNeMoWk6Qs7dHNHQLFRI0xs=;
+        fh=rdt33enCtsXRN9J5IIxDi44UV+OO0gXTCsH1xyhBK/k=;
+        b=eBiuygIHT0rMcNz2rpbj/SFNB67AGonRrgFHNWXdecfR9HubGsve+crA94oaFv3tYg
+         ToQKEVwI1X3au+rbXRTelz9Ou/2TC7Z1J2lH/KkZASH650LvE1MFKAdwYxX62mdSdKHD
+         mD0ubp+G/DrxfI781CH6bgfTrz3cIFxfcr2PT0jp4KIAxyzaAboH+pZZADd8CG4MPtH7
+         FbEAfVkISJX9NdZWtEfrQavqz5PIhUl4tqTzbC1bbCuxK7REvg+YdQSBli4HodFHgg9r
+         phAtn/eAkY9PY//PBWTrmMNwfkiQgWt7iDOzXUyxibPbiJ6/6esh8hu7sWOzLB2FJo7/
+         2B0Q==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791298870; x=1791903670; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=poE/AoMSO13XM0pW8fLOnNeMoWk6Qs7dHNHQLFRI0xs=;
+        b=pnYnsB00t5PvZf4O9XAH7SFW94Dl6HdGdOKBcc2cXh27IcoLCBP85HtQqS9Mj9UOFC
+         uhZI2BRz0evRDbAe2aMkXdo1XB/590nFlP6khhTfI3ZuSk6EefAOsocvKxsnuKDKEUGW
+         DT9xdNYRQWBxfxrCH8POzIk6roMQV83HOreYAOVfaPEM91pXWYF/wu4TxC31W+JmUONi
+         bY5Pb5P8BltHsl/VH/ndf0Cw14pk48z2WvcLPt44kw0QV9U6Cya3WZVAKYelWCDhqQlw
+         QfbCCE07isyYWWbOX25v2PPauVG5Uidm6cNhZGpWCTy85pWoxZrELB96ZOb/7Ls5ZozR
+         JK1A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791298870; x=1791903670;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=poE/AoMSO13XM0pW8fLOnNeMoWk6Qs7dHNHQLFRI0xs=;
+        b=p2ywllKZbthOWzSguKI0ecGZ9R7+dlK00VzGVh5jFkLBSP+qn8yDYYEYqe6fo+TrmU
+         cegYP31/BP8L371W714v3pnnYj+6S+NMdGpD/DiXan+zejNjXWu64aT0j1Soedswf1Ho
+         AjshCTCGtNhyezJ+NZubd8Uh2dCrmyJ8nLwaWms0i8bnl3o9F/FtYSBwsSk74uOO4bEz
+         5juaw28TeqjfRSOA5FlkCdTxWNUkBJiGKL1fdk9HCyTo7sGR913RJpNoPdiRsTDk3MPu
+         btSB+l8NxhtE9/TLoAgTff56VBaXS7YWvC0Z8LRrB4U4ABNnISW68Tl9IWWZjJfJYTMC
+         XicA==
+X-Forwarded-Encrypted: i=1; AKwUvBxDrRAMFb9vxEwhOoZz7p11wq7crIM6gJ04rHjuEePNHbDecupBssZfpeHUmv6RQp6jSM+o9gSprEo=@vger.kernel.org
+X-Gm-Message-State: AFuF++l3hwMC9Lb7j0fUODOa1U78m0/h8sMMNOewvANaIBoRHGI/ZJqO
+	Z6AQgUYHn2UML/fuLz14JYvy7v5EWJGVxHBtVwsi9YzyQXWFlgnbdtqRiq0/y8pnNPY8oGL6Ou2
+	npb8zouL3jq46q4GFcDol8nQ/DG1RboU=
+X-Gm-Gg: AYBFou0OtsYgZbXE/vLBW0d5cjRLvF+1BNwVtEjp0jNqQUhMn+oAJ/R75HZWvmzfPhM
+	WhKVzi+vwFodiAf4vcF9kQfHBlRWILAMyhbm7rLW8NKsvifCkVUKrxBBfXxvq0wG2HQd3QK1tL3
+	x4vsRDl4kNU55na2BxnbPprfcWW+6N3ATtqPcijzSamjUYj8UMVW8MRvoArdDnC6hPhwLVz2yRY
+	CX+p+IpAwcCnW2nP0ItL1Tva/HVY1U3hoVYX+NVk1GkGq1NKkfz3hUoh/DCBjmOwH64Xak9CXuo
+	mAD9JHuEKnjxmYwzVwc6ayxx4Hx8/Z6oJdPdLyUHWtqUvTaokUqZebXL8Y5hzfGoIaB/hnzUAeQ
+	VV5HD/zo7WFU9VeSl+BQmT2TWZRJ3a3/yi41zNf1ohUMVZrNFt5K+MsByE7bkPd3N51lSL/6WqO
+	ooLbmfCF7omocxOfTxYY0A
+X-Received: by 2002:a17:907:9618:b0:c2e:49b4:ab8c with SMTP id
+ a640c23a62f3a-c3169f86340mr164162466b.14.1791298869485; Tue, 06 Oct 2026
+ 08:01:09 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR12MB6914:EE_|DS0PR12MB8526:EE_
-X-MS-Office365-Filtering-Correlation-Id: ed315226-8b79-4507-7891-08df23b755f9
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|23010399003|7416014|366016|1800799024|22082099003|18002099003|10067099003|4143699003|56012099006|11063799006;
-X-Microsoft-Antispam-Message-Info:
-	gTJt5LFPRFlvS7ltQ34QC2wUYRNVzsxkn1tsvmJl2yqeZBUHQqg2Aamzpd1/f8hZav5XLAHCDZThlNys/vnHMQWtgUtFkI2LlIzuJ+cYBhhYFza3K074DJcfbkPO4qFu2bjYUvkVZD8ZMiSyx6ztbBOnMQZJ92zk4QlRjFLQy72ccLGeFtqXudg+jtDBnlA64BFQkdnsnygI8Z/6YvP7Ru8spCacyM6myI41IwbKjaa9TDVRwq2d/r8mG5a+tMKJy/ss/KcTGk/vLIq2gX0UjbvA8VZWMyYL+Pm+GAAFR6lgGUepSs+gop4JvhgmP6hQ3qe+AwYomf9gDSLkF/Uz+kTBMPlA7f8zu2rm5IJEzEbdayCVOp4lOqOlei4fsJNanSE/rjASsRzDPmshh1jnmiaH0I5Zd+EAJXi1XfDZBeDswPs3cBn9hJqdLYvBBOgKss/veMlNqylWPl1qEhUAUhotqgK87Vecx6R7HhYseYhO5oWtko47pmmqjcRU2NsxWu+pm+MdoNktsITbqWfOXqLy5GDg0txywEcS23ztoKZUeoGndztvv6H92sdsnbpPUcBbZxKKnu342fiBvcXQI9on+8eo7hr0FIyfHDJ/Qql4ulNuzt/dAHfJNPUiTTmbktvSkVSkckdZHUWabm9ewElscUVBU7vMF/8CHoH02t8=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR12MB6914.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(7416014)(366016)(1800799024)(22082099003)(18002099003)(10067099003)(4143699003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?Z3JPOURJS0hZaWxtMkhsYktyQXkrTXZaNFZHekJVbUtmNDNETi9oWm9CV0tH?=
- =?utf-8?B?bkU0ZlhJOUNOVkN5RXJpamY4YXdHUXoxdTJTNm5aaGxGMkwxNzVwclNxYUwz?=
- =?utf-8?B?T01KV1JwV3Z3amhXTURhZExrTW13aHBpZG4rSGtWNzM0czhUQTg3MUZFclRP?=
- =?utf-8?B?K0Uzd0RNRWh1c3NFUUJRcnNGaGhZODRDQVFNTFFQcmZzSGI0SXVRMVpjSmpI?=
- =?utf-8?B?VjlHZDZDV2RFNHdPZGplamJ3cFRwTHJvWUtJMDFub2NyMElOZXdFK0dTck1H?=
- =?utf-8?B?N0tENFR5UjNWVjlGQUZ0Q0xiYnUrcllzMUR1UEpzY2dQMEhSTGNnVHRBZ0xN?=
- =?utf-8?B?WWJNdFNBMVUyWGR6U2piTFpOck5TNEYrWVhSUUVYRUpHdnpWZ1krNS9TMktv?=
- =?utf-8?B?TUVoNlZFcWJvTmJna09pdWdhRXhGcGQ1WWZWTENYRXVzd1dMaEdKdEhLZWFz?=
- =?utf-8?B?V3dRWWovU2xpZXhtOWVIS0lTdVhYazNsMFREbHYwbUY3TmYwZG40VjZ2ZHQ5?=
- =?utf-8?B?ZEQ4ZGkvNTAxTnB4dWZaWUtiZEZsN1pSbkNKTzRsT1lSaWNsR3RlMElCTXNk?=
- =?utf-8?B?cVVTbVdHSDNETXBEbzNpTVl1UXlwVm1ZMHFJOEZ4WmZWanFFcTlHYVJ4S2Ev?=
- =?utf-8?B?VXJ0a2VrOGt3M21KS3BmbUtLenFpTGFWM1Z4VzBTOWZPbm5abWNIMnh3a1Uy?=
- =?utf-8?B?YmNSbVlXQUpMMHBrV2VkdWowdVZESElaTUJGeDJ2MmduNjhmWnlTMFRxREZH?=
- =?utf-8?B?N2pvT2d3QWRFa29PSnpKMGxxNy9pOU5kSGVydXRuSC9iUjB0dVhZUWg3TDM0?=
- =?utf-8?B?bFdRU3ZQK3VJenh6STFyVDBWTk5LS3JueWM0T054TEEzNWF6OCt2TzdEQkZP?=
- =?utf-8?B?WUpCeS8walQ5THRMbDY3V3FLTGdMS3d3UHArUzVmT2Zvd0ZNTk1qUWQxQ05V?=
- =?utf-8?B?Q2V5VTdmOVpMOFZXUE50RVdaMm5JbDdBRTIyS0NIa1lzUmRmUSt1VkN2NkVQ?=
- =?utf-8?B?czNsck4rNHdzRVZRWFJkSlpNNWlOVUgxYmdib1h6M0NUWU1aMlI1Ym5qZ25y?=
- =?utf-8?B?MXdURmtqL2xCSzZDNnhIQUdNL0RCNVBMdnpjU2Jtc3JUT0lwQWNpUGVSK1RZ?=
- =?utf-8?B?Rk5hb2s1cTkyM2FGNEhncWRMZUVLSzRKNURlT1BSMlFiOHlEWDV3RWZBZitP?=
- =?utf-8?B?RkJBSG0yOTVkV0o1elVBTUdETG1NdzhIWEtNYXludCtxbEZXYVdMMS80a085?=
- =?utf-8?B?WWJhVFozL1l1cWgxWXFBMHR0T2JqdFdxV1hOOWVQTm4wVWdEempCVU1jWkZ6?=
- =?utf-8?B?a2RZOUN2RGpXTG5rTzh2WXA4U252VzhVSnFJeGNTdjg5MzVLaURRZXgzUXg2?=
- =?utf-8?B?U3kzVnBFYkF1UVpJM2RqRHhtQ3VGckFyRnNSMGZxelZiVFlnVXM5Tm0zRDY3?=
- =?utf-8?B?MGxNck90aVFhYkxiYytQdmpWKzZDU25oblUxaDVsb1BoeVFtaFl5Ny9xTVpq?=
- =?utf-8?B?d2dBMjRtWUJXdGRnSjhncVpKZHVZVzVBSGdZVXp6MFFMTVA5eGw3ZWhFWC9D?=
- =?utf-8?B?VDhLaVk5MS9CM2tYbGVSY2N6bldMZXlhdzV0VWF4eGxFMExmSjUycjVYdnB0?=
- =?utf-8?B?S09SdndsUHpYbE8wNFZrYnE2WmVuVzlLZDUyODhEVGlGSVNaQVlmcjFvRjhT?=
- =?utf-8?B?ODViZTdMME12Z004VTBwRis0clNhY1dTSVFNS1RJQmVSRlZLYlNMcmdXeDkz?=
- =?utf-8?B?L1R5MEhkbHJtaWJmaFJRaFlDYXdIRWoxN0gwNHRaUE9GcWJqVyt3YlNCY20v?=
- =?utf-8?B?NWdEWWpDUjVSUlRURXpPSlZ1SUkyR1g3RlAwWSs4SEVHL2htZlY4MTRPRnFZ?=
- =?utf-8?B?UlUrcXhGelpoQWF0NU9QY1NKV2p6ZCtXcy9tcSs2NHdkZTNWbUtNb2Y2OWRK?=
- =?utf-8?B?V0hGK0JMSGdvbis3YThGbTRpd0tUZ2gwUFhMMHdtZVorUjRTT0lrR0d2L2RM?=
- =?utf-8?B?K2ZnMmNHdS9NOTdsR1NsQm43RHBGOWJKRkZPRkNqNjRBUm5vczJBQytwREll?=
- =?utf-8?B?UGxiTHk4N1NQbVJBK2tLcDFjV1FsVStiMW5uSWNTN3FvN0dwVnRRMjBISWpG?=
- =?utf-8?B?N0c5Zmp6VmZnOEUyMnBFUmJHTXRFSGhPOEhURnFPVlNOWnJ2QzRxNFdOc0VT?=
- =?utf-8?B?YVR5MlRvWXAzS0lLZzE0TjdkejdWNkExTW12dXl0RWR1bmZGQ0lwblVGQy8x?=
- =?utf-8?B?MDgwRGR0SHlQWjBjNFREbDJxVDhKZzZRUlZuUFJKWDRTeHR6Rk5BZ0xUNnI2?=
- =?utf-8?Q?oJJsE0APLGlVAxnJO8?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ed315226-8b79-4507-7891-08df23b755f9
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR12MB6914.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Oct 2026 14:37:23.9742
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: d+MjJsq1Afhsk8EuIapjgeQJc5VK6nFJxukymZnHUhxsWUEXSl1PWljm7/xmNomcve+kENDuBVZWJav6NHytlQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB8526
+References: <CABZrw2HcaOh3DHTJtxU5dXrb3Vg19scr6+qR-xe_+R7rME35_Q@mail.gmail.com>
+ <20261005231914.GA639967@bhelgaas> <CABZrw2F=pOOq7+puKohtYMihYqWCevCFc7rkAOETW4T5Nf4n8Q@mail.gmail.com>
+ <asRjch1fMBslk07D@wunner.de> <2a7a97cc-7ad0-4e6f-845a-dd841d36079b@linux.dev> <asTDCW28kKBfKAVs@wunner.de>
+In-Reply-To: <asTDCW28kKBfKAVs@wunner.de>
+From: "Perlow, Jason" <jperlow@gmail.com>
+Date: Tue, 6 Oct 2026 11:00:58 -0400
+X-Gm-Features: AclHuK__dVMPtlbG_nW0AT2uQ9jcKaXMGxE8ey6R9y5x6f-QHJqrNDrofO4pLOI
+Message-ID: <CABZrw2Ht3f8nJU7bJezSMuVWfrejV0HzqzRPA=ibQYPc9dGKoA@mail.gmail.com>
+Subject: Re: [REGRESSION] PCI/AER: MacBookPro16,1 powers off ~20 s after boot
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Aditya Garg <aditya.garg@linux.dev>, Bjorn Helgaas <helgaas@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, regressions@lists.linux.dev, 
+	Alex Deucher <alexdeucher@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 10/6/26 09:33, Kovacs, Alexander wrote:
-> AMD General
-> 
-> Freeman,
-> 
-> Ok, regarding the 00:03.1 device, I am seeing that it is misnamed in the tables.
-> 
-> BIOS Bug Report: Thunderbolt/USB4 tunnel port `_DSD` misnamed `XDSD` (00:03.1 / NHI0 path)
-> 
-> But that more than like does not have any bearing on the root dock enumeration issue...
-> 
-> I am unable to create a case where I can replicate your fail on my test system yet.
-> 
-_DSD -> XDSD is a strategy I've seen employed when someone wants to pick 
-up reference code but has a difference in their design (for example they 
-don't have a retimer connected to the second USB4 router and disabled 
-the IP.
+Hi Lukas,
 
-I don't know for sure; but my guess this is a strategy to avoid 
-technical debt and mistakes when merging future reference code versions.
+On Tue, Oct 6, 2026, Lukas Wunner wrote:
+> Advisory Non-Fatal Errors aren't handled through the Uncorrectable
+> Error code path. The kernel just reports and clears the errors.
+
+Thanks, that corrects my guess. My first mail and my follow-up
+("a second, separate way for eddba19b8b5f to hurt a platform")
+assumed the uncorrectable recovery path. Please disregard that
+reasoning. What my tests show is only this: with the bit unmasked on
+04:00.2 (106b:1802) the machine powers off at 14 to 24 s, and with it
+masked there only, it stays up (120 s). I do not know which action
+causes it.
+
+> A quirk does sound like the only possible solution. However I'd
+> really like to see lspci and dmesg output with the bit unmasked
+> shortly before poweroff to get a full understanding.
+
+Understood. I am preparing a capture that survives the power cut:
+
+ - kernel messages streamed over the network, as before;
+ - a loop on a second machine over ssh that reads, every 200 ms or
+   so, the Correctable Error Status and Mask and the Uncorrectable
+   Error Status of 04:00.2 (and of the root port 00:1b.0) with
+   setpci, and logs them until the connection drops;
+ - lspci -vvv of the whole tree taken right before the bit is
+   unmasked.
+
+The ssh session was still answering at about 16 s in my earlier
+runs, so I expect to get several samples before the cut.
+
+I would also like to split two possible causes with the diagnostic
+kernel, if you agree they are worth separating:
+
+ 1. the config write that clears the mask bit on that function;
+ 2. the report-and-clear that follows when an ERR_COR message
+    arrives (the status write on that function).
+
+Case 1 can be tested by unmasking but never touching the status
+register on 04:00.2, case 2 by leaving it masked and clearing the
+status once at boot. Tell me if you would rather have a different
+split.
+
+Aditya: thank you for the Windows listing. It shows 106b:1802 as a
+"System Device" there, which tells us it is enumerated but not
+whether Windows touches the mask.
+
+One small point, Lukas, in case it matters for the Windows check:
+the Advisory Non-Fatal Error mask bit (bit 13) is in the
+Correctable Error Mask register (offset 0x14 in the AER capability),
+not the Uncorrectable Error Mask register. The status bit is in
+Correctable Error Status (offset 0x10).
+
+On the form of the quirk: I will go with whichever you prefer, a
+flag in the PCI core that pci_aer_init() honors, or a
+device-specific DECLARE_PCI_FIXUP_EARLY for 106b:1802 only. The AMD
+switch port 01:00.0 is not involved in my tests, so I would keep it
+out. I will not send a patch before the capture above.
+
+Thanks,
+Jason
+
+
+On Tue, Oct 6, 2026 at 5:44=E2=80=AFAM Lukas Wunner <lukas@wunner.de> wrote=
+:
+>
+> On Tue, Oct 06, 2026 at 02:01:52PM +0530, Aditya Garg wrote:
+> > On 06-10-2026 08:26 am, Lukas Wunner wrote:
+> > > On Mon, Oct 05, 2026 at 08:17:12PM -0400, Perlow, Jason wrote:
+> > > >   masked only on 04:00.2 (Apple T2 Secure Enclave, 106b:1802):
+> > > >       stays up (120 s)
+> > > [...]
+> > > > So here the trigger is unmasking Advisory Non-Fatal Errors on that
+> > > > one function.
+> > >
+> > > That's quite unexpected.  Maybe there's a bug in the PCIe IP which
+> > > Apple used for the T2 Secure Enclave device (which I believe is a
+> > > fully-fledged arm64 CPU with a PCIe port in Endpoint mode).
+> [...]
+> > > macOS likely never unmasks the bit and so they never saw this during
+> > > validation testing.  Is the T2 device visible on Windows?  If it is,
+> > > it seems Windows doesn't support and unmask Advisory Non-Fatal Errors
+> > > either.
+> >
+> > T2 device is visible on Windows as well as "System Device"
+>
+> It looks like lspci is also available as a Windows binary:
+>
+> https://github.com/pciutils/pciutils/releases/tag/v3.15.0
+> https://eternallybored.org/misc/pciutils/
+>
+> Could you double-check whether it unmasks Advisory Non-Fatal Errors
+> in the Uncorrectable Error Mask Register, on the T2 or any other device?
+>
+> Thanks!
+>
+> Lukas
+
+
+
+--=20
+Jason Perlow | Argonaut Media Communications
+
+Voice/Text  (954) 242-3484 | jperlow@gmail.com | Blog: techbroiler.net
+Read my Tech and Food Industry articles: https://linktr.ee/jperlow
+Bluesky: https://bsky.app/profile/jperlow.bsky.social
+
+Need to schedule a meeting with me? https://bit.ly/3y8P3Gp
