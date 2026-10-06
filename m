@@ -1,56 +1,56 @@
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5713469836
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BACD3E5EDB
 	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 20:59:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.200
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791320356; cv=none; b=ENqubBfKBqjHtSR9yUBHbLIgnVMF+Leur3i+qC5FwG1YByY+6kX4yen41DzbmzaJ2AM5rsZYe9XCZ8NOtQciOck/vEsW/tdbyoiq9nMhe8mezNJ797LQHpc1BYVJ1JxUNAACtZeLtQFzDggo22YkL4prKIXl0cMgVxGI/g8FW1U=
+	t=1791320358; cv=none; b=Nb4RgQCtmHpF3q3eF0lAGTkCPPMYcfU3yFOyP+SkEQjGrNYIZCWmPLsZesnIcHBxQ+5qJ3r0WcHTiWb4vTg54B1mmYMYNTiuPqWJD8cJjePMaBHZwYstexmWRTMrR+yxPWPecATeQ9h7lgvji2nJBX61JXpWMgR0ROzPX7Sv1vc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791320356; c=relaxed/simple;
-	bh=E6p5hDyEcb/evbuCuTEvlW3QsWVwyKCNi8xTI4lnTSU=;
+	s=arc-20240116; t=1791320358; c=relaxed/simple;
+	bh=WnYKdHYc3FOV0y+Pbco1s/IHs7zolpodxGP92KhOoMM=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=ZqMPKak/a2dSa9wumE75GWLzAm+/xPrmhGWYPi0OvYCqpokpRO9INqFuC5P5XEEPUefKPM9J/TQ+KFawiKUTWundxCtHDgI27xHar2xeFtHy4YyM1h971YtzTrl78W1BmEUNgS0+ZZkDAsx9VhRkrXu4ib99alSB5ta5/OAdImc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=LPR0YrsF; arc=none smtp.client-ip=209.85.214.200
+	 To:Cc:Content-Type; b=PExspZYI9L6PHVCSY06sLgmgX6ARvUlqgOQxkvmJqiuq0ifnpzYkExJUwGCrYZfgYuF/jUzDzRiKVKamY6PGaQan2YHOe7F+mCxVLGa2Aid119GDEWUSKkoSNaqX/KQVWhl31zeqQ440choCvLaovOQCYK2HCtc2f/Eb1q5bMEw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=P23ayGLw; arc=none smtp.client-ip=209.85.216.71
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="LPR0YrsF"
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2dc7337e2a7so33751385ad.0
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="P23ayGLw"
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-39533bb224cso3963230a91.3
         for <linux-pci@vger.kernel.org>; Tue, 06 Oct 2026 13:59:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1791320353; x=1791925153; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1791320352; x=1791925152; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=HG62I2p2CxfGwfX3N9jmMwCvcJysG4daa43AA6XWvac=;
-        b=LPR0YrsFR/nP/+7dgPH99xPv/iufbuserwwItbHBgS7i+DJ5Q4lby/7Mog8B9Hhwlo
-         ZmbCQmNTxons9r/biN1gvzYSDOE/td6n2CqpCjDi+inQbVid035TD8gujvim7cU4P9JR
-         i+Fh3pTTCXdZsWFSNLNtTlY1w6Ac117UcRjbrjR/WByX8Mt2v08+gJb0xAEZ+TEs1M6t
-         lOI4HjkjKjAZ9LLJ9YGClE3NLHivtceYaWTBgGaqLDMxDhSZyOHReOuM3c+C/11ZqHrm
-         RopCOL+9AfvEJb3aKGD33J2ehDkgWXJiH6qs4NhREpd2dMx6pHNW25AL8nTBR6/GM+6N
-         qEaw==
+        bh=v/j3G6ehifmBFqPsEskkujPSrueZSK/qEA401O1nW/c=;
+        b=P23ayGLw2+r2d1BzwJtNA2BxkB7B+rUkWdo5H8LLnenpUiNB6Xba0nFo0RRUpv5oD5
+         M2rT7NrIHO+6pIK8wON+7orydXJaAlHSL5D8jCcLrZ3GonXk3bXRGTbG2GOQQkjgwDUp
+         FNHXIL45cYyDv/D9q13sF8VVm4B/m3MOg0rVPm1dBANj1HL8JOR2P0peyYcHLYdbtZ4d
+         QNc9UFsHDvhA8Ys1a0lCt/VOOiGl5FdSeNbor98JR3gCZ6n/dM9shlgHiN2TwCSI5fEd
+         2gmDI1iBZGhj0FqQZm8r/RJvLibedFnqLEC6DgsbsnNO3PsIurJeJ+GAV0bik53MMiuE
+         X7iw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791320353; x=1791925153;
+        d=1e100.net; s=20260707; t=1791320352; x=1791925152;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=HG62I2p2CxfGwfX3N9jmMwCvcJysG4daa43AA6XWvac=;
-        b=P/94UZqh4FmhwOM5MqLQUv6n0JJTzh7Dl9vuQV+tSjOPDwuI05SCCcTCn1qpZKufZ9
-         yZM2ybxofJM6RGdO9IQSTLX4kbmuX56mf07rdB3NM3Y9o3c+9QTPJrL20azMWlxhlT9B
-         94k/+y/rQmBus7ctCBs2o0BOBtzTDrT3O26PB95VfhHJySPQXeh5HnVdo9oAyPKUG6aJ
-         qoWvSxeThprOlO5HEgzKD+9vq9UJkJ/eETcxak1rKig/JcjnQ0LlboPGc1HbPubEWTu0
-         dLGV/egbZWdtY0xym9CrF8J5dBo+5TT0Jm3u64O/+ED1m1xJOPo9sa/HeqAlWVb3XxIW
-         A/Sw==
-X-Forwarded-Encrypted: i=1; AKwUvByUaGiw7++ygbbXE6bO4SbFpHSuarvJPUfk/A5yKM1+OE4IUPptYYWMATlZaLKxhvgXio6O4jKrFHg=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKmOF49LcXSD4sAka0YXN+fQQG7vDb9hNVTT4Ojx1MAarbnobxc
-	2HP+hl/WIyG/1h1nC0FTKBWA8vp80iZyioxMwSek+eUHyzHhLmhRKgrbN9ItUY4xfPgFEe4DwQk
-	2y9t5FYSR+iXxxI5+CdY5CsUJSfVZAM0CNg==
-X-Received: from plhd13.prod.google.com ([2002:a17:903:230d:b0:2df:8053:e258])
+        bh=v/j3G6ehifmBFqPsEskkujPSrueZSK/qEA401O1nW/c=;
+        b=0kr4KhUCiuKf5QUkulVgkOQ0gtPqKki8urtIx2Z3HPvzw0eEJ/pVZ8Mt0MlEzPZJVM
+         VAWvqJxACCuqXyGDpva0rgYp9ppTwdxHNqWxgFVYzOy9fAhWpxCPNU+GhN6SiYK18+lK
+         aGd2UnBoYMoSlpsvSPIhZVut1K6v3+t6wmaPPEJW5u+Zhd/bZ39NJdPHwarybthBwvzM
+         8wjNOvm6EaXS4OPXrzVZf5Tl/Wmo4rUs4GAQ7pLmVQJm41+LImDrHqQGLlBIN6ZSxwBG
+         RAdAGi4jKZhM+tsPmOEEvEaurCab25oEADaAcSHCgotneuTKOW2LgYXsMV990kNRjUpE
+         lkVQ==
+X-Forwarded-Encrypted: i=1; AKwUvBycyOpfsoctDanSTY5CqwZ9dnBtXrvsf4xEaWN8nono1uYHAcCChCY67ZNrDy8M2X5lCTtv5uXg560=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJrpZVUroK2tx+kDUHdt3dGUz9rH3QiAn+PfUiFeOKvlntfM2P4
+	G14D5yqO9P7Lzm+nkI75HnL8EDrOSG87v8DAcBnfIuwS/IF6XIp0z2AW/hfxuV0uC64KqvBb0vY
+	bWz5/oi1yIwjQpJlQUACkwKYh7af3XcA5og==
+X-Received: from pjyt3.prod.google.com ([2002:a17:90a:e503:b0:3a8:5d51:7b2b])
  (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:903:4b4b:b0:2df:81d0:7c40 with SMTP id d9443c01a7336-2e60059e5b2mr4788275ad.55.1791320352994;
+ 2002:a17:90b:3c8c:b0:3a8:97cd:6736 with SMTP id 98e67ed59e1d1-3a8a19b96camr273422a91.25.1791320352128;
  Tue, 06 Oct 2026 13:59:12 -0700 (PDT)
-Date: Tue, 06 Oct 2026 20:59:11 +0000
+Date: Tue, 06 Oct 2026 20:59:10 +0000
 In-Reply-To: <20261006-pcie-link-endpoints-v6-0-154d71657d32@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -60,9 +60,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20261006-pcie-link-endpoints-v6-0-154d71657d32@google.com>
 X-Mailer: b4 0.14.3
-Message-ID: <20261006-pcie-link-endpoints-v6-2-154d71657d32@google.com>
-Subject: [PATCH v6 2/2] selftests/pcie_lmr: Add tests for the Lane Margining
- debugfs interface
+Message-ID: <20261006-pcie-link-endpoints-v6-1-154d71657d32@google.com>
+Subject: [PATCH v6 1/2] PCI/LMR: Add Lane Margining at the Receiver debugfs interface
 From: Priyank Rathod <rathodpriyank@google.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: "=?utf-8?q?Ilpo_J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, Lukas Wunner <lukas@wunner.de>, 
@@ -72,376 +71,1972 @@ Cc: "=?utf-8?q?Ilpo_J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, Lukas Wunn
 	linux-kernel@vger.kernel.org, Priyank Rathod <rathodpriyank@google.com>
 Content-Type: text/plain; charset="utf-8"
 
-Add a KTAP test for the Lane Margining at the Receiver debugfs
-interface.
+Lane Margining at the Receiver moves the sampling point of a receiver
+away from its normal setting, in time or in voltage, while the link
+stays up, and reports the errors the receiver sees.  It is available
+on links running at 16.0 GT/s or faster, through the Lane Margining at
+the Receiver Extended Capability.
 
-By default it only runs checks that do not start a margining session,
-on every pcie_lmr_* directory: the files exist, malformed input is
-rejected, and commands fail with ENOTCONN without a session.
+Add a debugfs directory, pcie_lmr_<device>, for each Downstream Port
+and each Function 0 below a Downstream Port that has the capability.
 
-If PCIE_LMR_DEV names a port, it also starts a session on that link,
-checks the receiver and step bounds the receiver reports, and checks
-that Link Control and Link Control 2 of both ends are the same after
-the session as before it.
+Writing 1 to 'enable' starts a margining session on the link.  ASPM is
+turned off with pci_disable_link_state(), Hardware Autonomous Width
+Disable and Hardware Autonomous Speed Disable are set on both ends,
+both ends are kept runtime resumed, and the port's Margining Ready bit
+is awaited.  Writing 0, or removing either end of the link, ends the
+session and undoes these steps.  Only one session can be active on a
+link.
+
+During a session, 'receiver' selects the receiver, laneN/margin_timing
+and laneN/margin_voltage issue Step Margin commands, laneN/caps shows
+the parameters the receiver reports, and laneN/status shows the
+response to the last step command, including the error count.  Before
+each command, the link is checked against the state the session
+started in: speed, width, Margining Ready, ASPM still off, and no
+system suspend since.
+
+The kernel does not run margining sweeps or interpret the results;
+that is left to user space.
 
 Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
 ---
- MAINTAINERS                                  |   1 +
- tools/testing/selftests/Makefile             |   1 +
- tools/testing/selftests/pcie_lmr/Makefile    |   3 +
- tools/testing/selftests/pcie_lmr/pcie_lmr.sh | 311 +++++++++++++++++++++++++++
- 4 files changed, 316 insertions(+)
+ Documentation/PCI/index.rst    |    1 +
+ Documentation/PCI/pcie-lmr.rst |  162 ++++
+ MAINTAINERS                    |    7 +
+ drivers/pci/pci.h              |    8 +
+ drivers/pci/pcie/Kconfig       |   11 +
+ drivers/pci/pcie/Makefile      |    1 +
+ drivers/pci/pcie/margin.c      | 1609 ++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/probe.c            |    1 +
+ drivers/pci/remove.c           |    1 +
+ include/uapi/linux/pci_regs.h  |   18 +
+ 10 files changed, 1819 insertions(+)
 
+diff --git a/Documentation/PCI/index.rst b/Documentation/PCI/index.rst
+index 5d720d2a415e..9170c98cbf3f 100644
+--- a/Documentation/PCI/index.rst
++++ b/Documentation/PCI/index.rst
+@@ -20,3 +20,4 @@ PCI Bus Subsystem
+    controller/index
+    boot-interrupts
+    tph
++   pcie-lmr
+diff --git a/Documentation/PCI/pcie-lmr.rst b/Documentation/PCI/pcie-lmr.rst
+new file mode 100644
+index 000000000000..760a30862674
+--- /dev/null
++++ b/Documentation/PCI/pcie-lmr.rst
+@@ -0,0 +1,162 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++====================================
++PCIe Lane Margining at the Receiver
++====================================
++
++Lane Margining at the Receiver lets software move the sampling point of a
++receiver away from its normal setting, in time or in voltage, while the link
++stays up, and read back the number of errors the receiver sees.  It is
++available on links running at 16.0 GT/s or faster, through the Lane Margining
++at the Receiver Extended Capability.
++
++With ``CONFIG_PCIE_LMR``, the kernel exposes the margining commands of each
++port that has the capability in debugfs.  The kernel does not run margining
++sweeps or interpret results; user-space tools do that.
++
++debugfs layout
++==============
++
++There is one directory per port that has the capability::
++
++  /sys/kernel/debug/pcie_lmr_<domain:bus:dev.fn>/
++      enable
++      receiver
++      port
++      lane0/
++          caps
++          margin_timing
++          margin_voltage
++          status
++      lane1/
++      ...
++
++The capability is used on Downstream Ports, and on Function 0 of the device
++below a Downstream Port.  There is one ``laneN`` directory for each lane of
++the port's Maximum Link Width.
++
++``enable``
++  Write 1 to start a margining session on the link, 0 to end it.  Both are
++  accepted when the port is already in that state.  Reads return 1 while a
++  session started on this port is active, and 0 otherwise.
++
++  Starting a session turns off the ASPM states that are enabled on the link,
++  sets Hardware Autonomous Width Disable and Hardware Autonomous Speed Disable
++  on both ends, keeps both ends runtime resumed, and waits for Margining
++  Ready.  Ending the session undoes these steps and returns every lane that
++  was margined to normal settings.
++
++  Only one session can be active on a link at a time.  A session is ended by
++  writing 0 to ``enable`` in the directory where it was started.
++
++``receiver``
++  The Receiver Number (1 to 6) that commands are sent to.  A Downstream Port
++  reaches receiver 1 (its own receiver) and, when retimers are present,
++  receivers 2 and 3 for the first retimer and 4 and 5 for the second.
++  Function 0 below a Downstream Port reaches only receiver 6 (its own
++  receiver).  A session starts with receiver 1 or 6.  Selecting another
++  receiver first returns the lanes margined by the current one to normal
++  settings.
++
++``port``
++  Margining Port Capabilities and Status bits: ``uses_driver_software``,
++  ``margining_ready`` and ``software_ready``.  This file can be read without a
++  session.
++
++``laneN/caps``
++  The parameters the selected receiver reports for the lane, one ``key:
++  value`` pair per line.  The values are read from the receiver the first time
++  the file is read or a step is written in a session, and again after the
++  receiver changes.  ``max_lanes`` is the number of lanes that can be margined
++  at the same time.
++
++``laneN/margin_timing``, ``laneN/margin_voltage``
++  Write a number of steps to move the sampling point of the selected receiver
++  on this lane.  Negative values move left or down and are accepted only when
++  the receiver supports independent left/right timing or up/down voltage
++  margining.  Writing 0 returns the lane to normal settings; because that
++  clears both offsets, the other offset is then applied again.  Reads return
++  the offset that was last applied.
++
++``laneN/status``
++  The receiver's response to the last step command on this lane, as
++  ``<timing|voltage> <setup|margining|too_many_errors|nak> <error count>``,
++  or ``idle`` when the last command was not a step command.  Reading this
++  file does not send a command.
++
++All files are only accessible to root.
++
++Example
++=======
++
++Measure one timing step to the right on lane 0, from a Downstream Port::
++
++  # cd /sys/kernel/debug/pcie_lmr_0000:00:01.1
++  # echo 1 > enable
++  # cat lane0/caps
++  receiver: 1
++  ...
++  # echo 1 > lane0/margin_timing
++  # sleep 1; cat lane0/status
++  timing margining 0
++  # echo 0 > lane0/margin_timing
++  # echo 0 > enable
++
++Errors
++======
++
++Reads and writes return these errors in addition to the usual parsing errors:
++
++=================  ===========================================================
++``-ENOTCONN``      No session is active on this port.
++``-EBUSY``         Another session is active on the link, the port or its
++                   link partner is being probed, removed or reset (try again),
++                   too many lanes are margined already, or ASPM was found
++                   enabled on the link.
++``-ENODEV``        The link partner is missing or was removed, or the device
++                   does not respond.
++``-ENOLINK``       The link is down.
++``-EOPNOTSUPP``    The link runs below 16.0 GT/s, the receiver does not
++                   support voltage margining, or it answered a step command
++                   with a NAK.
++``-ERANGE``        The step count is larger than the receiver supports.
++``-EINVAL``        A negative step that the receiver does not support, or a
++                   receiver number that is not reachable from this port.
++``-EIO``           The receiver reported too many errors immediately on a step
++                   command and was returned to normal settings, or the link
++                   changed speed or width, lost Margining Ready, or went
++                   through system suspend since the session started.
++``-ETIMEDOUT``     Margining Software Ready is not set, Margining Ready was
++                   not set within the timeout, or the receiver did not respond
++                   to a command (for example on an inactive lane).
++=================  ===========================================================
++
++Limitations
++===========
++
++- ASPM is turned off and back on with ``pci_disable_link_state()`` and
++  ``pci_force_enable_link_state()``, like drivers that need ASPM off for a
++  while.  This round trip is not exact:
++
++  - If another driver disables an ASPM state during a session, ending the
++    session turns it back on.
++  - The ASPM default for the link becomes the set of states that were enabled
++    when the session started.
++  - Disabling L1 also disables the L1 substates, so substates that were
++    disabled at the start stay disabled.
++  - Without OS control of ASPM, the states are turned off but cannot be turned
++    back on, and stay off until reboot.
++
++  If nothing was enabled when the session started, the ASPM API is not called
++  at all.  Before each command the ASPM Control field of both ends is checked,
++  so a session does not continue if ASPM was turned back on, for example
++  through the ``link/*_aspm`` files in sysfs.
++
++- Receivers lose their margining state over system suspend.  Commands on a
++  session that was active before a suspend fail with ``-EIO``.
++
++- One receiver is margined at a time.  The error count limit is the
++  receiver's default; the kernel does not set it.
++
++- Another program writing the Lane Margining registers directly, such as
++  ``pcilmr`` or ``setpci``, will interfere with a session.
 diff --git a/MAINTAINERS b/MAINTAINERS
-index cc0fdf2ff7e9..fc8c362c5d22 100644
+index 8df569bbf3a9..cc0fdf2ff7e9 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -21298,6 +21298,7 @@ L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/PCI/pcie-lmr.rst
- F:	drivers/pci/pcie/margin.c
-+F:	tools/testing/selftests/pcie_lmr/
+@@ -21292,6 +21292,13 @@ F:	Documentation/devicetree/bindings/pci/qcom,sa8255p-pcie-ep.yaml
+ F:	drivers/pci/controller/dwc/pcie-qcom-common.c
+ F:	drivers/pci/controller/dwc/pcie-qcom-ep.c
  
++PCIE LANE MARGINING AT THE RECEIVER (LMR)
++M:	Priyank Rathod <rathodpriyank@google.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/PCI/pcie-lmr.rst
++F:	drivers/pci/pcie/margin.c
++
  PCMCIA SUBSYSTEM
  M:	Dominik Brodowski <linux@dominikbrodowski.net>
-diff --git a/tools/testing/selftests/Makefile b/tools/testing/selftests/Makefile
-index 2d960626750e..c92465d3d0b5 100644
---- a/tools/testing/selftests/Makefile
-+++ b/tools/testing/selftests/Makefile
-@@ -93,6 +93,7 @@ TARGETS += net/tcp_ao
- TARGETS += nolibc
- TARGETS += pci_endpoint
- TARGETS += pcie_bwctrl
-+TARGETS += pcie_lmr
- TARGETS += perf_events
- TARGETS += pidfd
- TARGETS += pid_namespace
-diff --git a/tools/testing/selftests/pcie_lmr/Makefile b/tools/testing/selftests/pcie_lmr/Makefile
+ S:	Odd Fixes
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index a002fe1a3f4c..363f065c8af2 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -772,6 +772,14 @@ static inline void pci_tsm_init(struct pci_dev *pdev) { }
+ static inline void pci_tsm_destroy(struct pci_dev *pdev) { }
+ #endif
+ 
++#ifdef CONFIG_PCIE_LMR
++void pci_lmr_init(struct pci_dev *dev);
++void pci_lmr_exit(struct pci_dev *dev);
++#else
++static inline void pci_lmr_init(struct pci_dev *dev) { }
++static inline void pci_lmr_exit(struct pci_dev *dev) { }
++#endif
++
+ /**
+  * pci_dev_set_io_state - Set the new error state if possible.
+  *
+diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+index 207c2deae35f..b307460fa97c 100644
+--- a/drivers/pci/pcie/Kconfig
++++ b/drivers/pci/pcie/Kconfig
+@@ -146,3 +146,14 @@ config PCIE_EDR
+ 	  the PCI Firmware Specification r3.2.  Enable this if you want to
+ 	  support hybrid DPC model which uses both firmware and OS to
+ 	  implement DPC.
++
++config PCIE_LMR
++	bool "PCI Express Lane Margining at the Receiver support"
++	depends on PCIEASPM && DEBUG_FS
++	help
++	  This option exposes the Lane Margining at the Receiver Extended
++	  Capability in debugfs (see Documentation/PCI/pcie-lmr.rst), so
++	  that user space can measure the timing and voltage margin of
++	  links running at 16.0 GT/s or faster.
++
++	  If unsure, say N.
+diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
+index b0b43a18c304..f7216f6a3bac 100644
+--- a/drivers/pci/pcie/Makefile
++++ b/drivers/pci/pcie/Makefile
+@@ -14,3 +14,4 @@ obj-$(CONFIG_PCIE_PME)		+= pme.o
+ obj-$(CONFIG_PCIE_DPC)		+= dpc.o
+ obj-$(CONFIG_PCIE_PTM)		+= ptm.o
+ obj-$(CONFIG_PCIE_EDR)		+= edr.o
++obj-$(CONFIG_PCIE_LMR)		+= margin.o
+diff --git a/drivers/pci/pcie/margin.c b/drivers/pci/pcie/margin.c
 new file mode 100644
-index 000000000000..101c90e7ee9e
+index 000000000000..3e6bb32d99c4
 --- /dev/null
-+++ b/tools/testing/selftests/pcie_lmr/Makefile
-@@ -0,0 +1,3 @@
-+# SPDX-License-Identifier: GPL-2.0
-+TEST_PROGS = pcie_lmr.sh
-+include ../lib.mk
-diff --git a/tools/testing/selftests/pcie_lmr/pcie_lmr.sh b/tools/testing/selftests/pcie_lmr/pcie_lmr.sh
-new file mode 100755
-index 000000000000..9e5d16d098fd
---- /dev/null
-+++ b/tools/testing/selftests/pcie_lmr/pcie_lmr.sh
-@@ -0,0 +1,311 @@
-+#!/bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+#
-+# Tests for the PCIe Lane Margining at the Receiver debugfs interface
-+# (Documentation/PCI/pcie-lmr.rst).
-+#
-+# By default only checks that do not start a margining session are run,
-+# on every port that has a pcie_lmr_* directory.  To also run a session
-+# on one link, name a port with the capability:
-+#
-+#   PCIE_LMR_DEV=0000:00:01.1 ./pcie_lmr.sh
-+#
-+# The link runs with ASPM off for the duration of that test; do not
-+# point it at a link that is in use for something important.
++++ b/drivers/pci/pcie/margin.c
+@@ -0,0 +1,1609 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * PCIe Lane Margining at the Receiver
++ *
++ * Copyright (C) 2026 Google LLC
++ * Author: Priyank Rathod <rathodpriyank@google.com>
++ *
++ * Lane Margining at the Receiver moves the sampling point of a receiver
++ * away from its normal setting, in time or in voltage, while the link
++ * stays up, and reports the errors the receiver sees.  It is available
++ * on links running at 16.0 GT/s or faster.
++ *
++ * This file exposes the margining commands of the Lane Margining at the
++ * Receiver Extended Capability in debugfs, one directory per port that
++ * has the capability.  It does not run sweeps or interpret results;
++ * that is left to user space.
++ *
++ * Commands always go through the capability of the port that owns the
++ * debugfs directory.  Receiver 1 (the Downstream Port) and the retimer
++ * receivers 2-5 are reached through the Downstream Port, and receiver 6
++ * (the Upstream Port) through Function 0 of the device below it.  A
++ * session selects one receiver, and only one session can be active on a
++ * link at a time.
++ *
++ * Locking, outermost first:
++ *
++ *   device_lock() of both ends of the link, with pci_dev_trylock(),
++ *   only while a session is started or stopped
++ *     port->lock, one port at a time
++ *       pci_lmr_mutex (leaf lock)
++ *       pci_bus_sem (read) -> aspm_lock -> pcie_cap_lock in the ASPM API
++ *
++ * pci_lmr_find_partner() and runtime PM calls are made outside all of
++ * the locks above.  port->state is changed only with both port->lock
++ * and pci_lmr_mutex held, so holding either one is enough to read it.
++ */
 +
-+DIR="$(dirname "$(readlink -f "$0")")"
-+source "$DIR"/../kselftest/ktap_helpers.sh
++#include <linux/atomic.h>
++#include <linux/bitfield.h>
++#include <linux/cleanup.h>
++#include <linux/debugfs.h>
++#include <linux/iopoll.h>
++#include <linux/kref.h>
++#include <linux/kstrtox.h>
++#include <linux/limits.h>
++#include <linux/list.h>
++#include <linux/math.h>
++#include <linux/minmax.h>
++#include <linux/mutex.h>
++#include <linux/notifier.h>
++#include <linux/overflow.h>
++#include <linux/pci.h>
++#include <linux/pm_runtime.h>
++#include <linux/reboot.h>
++#include <linux/rwsem.h>
++#include <linux/seq_file.h>
++#include <linux/slab.h>
++#include <linux/sprintf.h>
++#include <linux/suspend.h>
 +
-+DEBUGFS=/sys/kernel/debug
-+export LC_ALL=C
++#include "../pci.h"
 +
-+# Like ktap_test_result, but passes arguments that contain spaces intact
-+check()
++/* Margin Type values in Margining Lane Control and Status */
++#define LMR_TYPE_REPORT		1	/* Access Retimer/Receiver parameters */
++#define LMR_TYPE_SET		2	/* Set margining parameters */
++#define LMR_TYPE_TIMING		3	/* Step Margin Timing */
++#define LMR_TYPE_VOLTAGE	4	/* Step Margin Voltage */
++#define LMR_TYPE_NO_CMD		7	/* No Command */
++
++/* Margin Payload values for LMR_TYPE_REPORT */
++#define LMR_REPORT_CAPS		0x88	/* Margin Control Capabilities */
++#define LMR_REPORT_VOLT_STEPS	0x89	/* MNumVoltageSteps */
++#define LMR_REPORT_TIM_STEPS	0x8a	/* MNumTimingSteps */
++#define LMR_REPORT_TIM_OFFSET	0x8b	/* MMaxTimingOffset */
++#define LMR_REPORT_VOLT_OFFSET	0x8c	/* MMaxVoltageOffset */
++#define LMR_REPORT_MAX_LANES	0x90	/* MMaxLanes */
++
++/* Margin Payload values for LMR_TYPE_SET and LMR_TYPE_NO_CMD */
++#define LMR_SET_NORMAL		0x0f	/* Go to Normal Settings */
++#define LMR_NO_CMD		0x9c	/* No Command */
++
++/* Report Margin Control Capabilities response */
++#define LMR_CAP_VOLTAGE		BIT(0)	/* MVoltageSupported */
++#define LMR_CAP_IND_UP_DOWN	BIT(1)	/* MIndUpDownVoltage */
++#define LMR_CAP_IND_LEFT_RIGHT	BIT(2)	/* MIndLeftRightTiming */
++#define LMR_CAP_SAMPLE_RATE	BIT(3)	/* MSampleReportingMethod */
++#define LMR_CAP_IND_ERR_SAMPLER	BIT(4)	/* MIndErrorSampler */
++
++/* Fields of the other Report responses */
++#define LMR_RPT_TIM_STEPS	GENMASK(5, 0)
++#define LMR_RPT_VOLT_STEPS	GENMASK(6, 0)
++#define LMR_RPT_OFFSET		GENMASK(6, 0)
++#define LMR_RPT_MAX_LANES	GENMASK(4, 0)
++
++/* Step Margin command payload */
++#define LMR_STEP_TIM		GENMASK(5, 0)
++#define LMR_STEP_TIM_LEFT	BIT(6)
++#define LMR_STEP_VOLT		GENMASK(6, 0)
++#define LMR_STEP_VOLT_DOWN	BIT(7)
++
++/* Step Margin response payload */
++#define LMR_STEP_ERR_COUNT	GENMASK(5, 0)
++#define LMR_STEP_STATUS		GENMASK(7, 6)
++#define  LMR_STEP_TOO_MANY_ERR	0
++#define  LMR_STEP_SETUP		1
++#define  LMR_STEP_MARGINING	2
++#define  LMR_STEP_NAK		3
++
++#define LMR_RX_DP		1	/* Downstream Port receiver */
++#define LMR_RX_UP		6	/* Upstream Port receiver */
++
++#define LMR_MAX_WIDTH		32
++#define LMR_POLL_US		1000
++#define LMR_TIMEOUT_US		(100 * USEC_PER_MSEC)
++
++/**
++ * struct pci_lmr_rx - Parameters reported by the selected receiver
++ * @valid: The fields below were read after the receiver was selected
++ * @caps: Report Margin Control Capabilities response
++ * @timing_steps: MNumTimingSteps
++ * @max_timing_offset: MMaxTimingOffset
++ * @voltage_steps: MNumVoltageSteps
++ * @max_voltage_offset: MMaxVoltageOffset
++ * @max_lanes: Number of lanes that can be margined at once (MMaxLanes + 1)
++ */
++struct pci_lmr_rx {
++	bool valid;
++	u8 caps;
++	u8 timing_steps;
++	u8 max_timing_offset;
++	u8 voltage_steps;
++	u8 max_voltage_offset;
++	u8 max_lanes;
++};
++
++/**
++ * struct pci_lmr_lane - One lane of a margining port
++ * @port: Port the lane belongs to
++ * @lane: Lane number
++ * @touched: A step command was issued since the receiver was selected
++ * @timing: Current timing offset in steps, negative to the left
++ * @voltage: Current voltage offset in steps, negative down
++ * @rx: Receiver parameters for this lane
++ */
++struct pci_lmr_lane {
++	struct pci_lmr_port *port;
++	unsigned int lane;
++	bool touched;
++	int timing;
++	int voltage;
++	struct pci_lmr_rx rx;
++};
++
++enum pci_lmr_state {
++	LMR_IDLE,
++	LMR_STARTING,
++	LMR_ACTIVE,
++};
++
++/**
++ * struct pci_lmr_port - A port that has the Lane Margining capability
++ * @node: Entry in pci_lmr_ports
++ * @kref: Reference count on this struct
++ * @dev: Device that has the capability
++ * @dport: Downstream Port of the link; @dev itself on the Downstream Port side
++ * @cap: Offset of the capability
++ * @downstream: @dev is the Downstream Port of its link
++ * @dir: debugfs directory
++ * @lock: Serializes margining commands and protects the session fields
++ * @state: Session state; see the locking notes at the top of the file
++ * @partner: Other end of the link while a session is up (holds a reference)
++ * @receiver: Receiver selected for the session
++ * @retimers: Number of retimers detected when the session started
++ * @lnksta: Speed and width fields of the Downstream Port's Link Status
++ * @aspm: ASPM states that were enabled when the session started
++ * @clkpm: CLKREQ# was enabled when the session started
++ * @dp_hawd: HAWD bit of the Downstream Port's Link Control at session start
++ * @dp_hasd: HASD bit of the Downstream Port's Link Control 2 at session start
++ * @up_hawd: HAWD bit of the Upstream Port's Link Control at session start
++ * @up_hasd: HASD bit of the Upstream Port's Link Control 2 at session start
++ * @pm_gen: Value of pci_lmr_pm_gen when the session started
++ * @nr_lanes: Maximum Link Width of @dev
++ * @lanes: Per-lane state
++ */
++struct pci_lmr_port {
++	struct list_head node;
++	struct kref kref;
++	struct pci_dev *dev;
++	struct pci_dev *dport;
++	u16 cap;
++	bool downstream;
++	struct dentry *dir;
++	struct mutex lock;		/* See the kernel-doc above */
++	enum pci_lmr_state state;
++	struct pci_dev *partner;
++	u8 receiver;
++	u8 retimers;
++	u16 lnksta;
++	u32 aspm;
++	bool clkpm;
++	u16 dp_hawd;
++	u16 dp_hasd;
++	u16 up_hawd;
++	u16 up_hasd;
++	unsigned int pm_gen;
++	unsigned int nr_lanes;
++	struct pci_lmr_lane lanes[] __counted_by(nr_lanes);
++};
++
++static DEFINE_MUTEX(pci_lmr_mutex);
++static LIST_HEAD(pci_lmr_ports);	/* Protected by pci_lmr_mutex */
++static bool pci_lmr_rebooting;		/* Protected by pci_lmr_mutex */
++static atomic_t pci_lmr_pm_gen = ATOMIC_INIT(0);
++
++/* The two ends of the link; only valid while @port->partner is set */
++static struct pci_dev *pci_lmr_dp(struct pci_lmr_port *port)
 +{
-+	local desc="$1"
++	return port->downstream ? port->dev : port->partner;
++}
 +
-+	shift
-+	if "$@"; then
-+		ktap_test_pass "$desc"
++static struct pci_dev *pci_lmr_up(struct pci_lmr_port *port)
++{
++	return port->downstream ? port->partner : port->dev;
++}
++
++static u8 pci_lmr_default_rx(struct pci_lmr_port *port)
++{
++	return port->downstream ? LMR_RX_DP : LMR_RX_UP;
++}
++
++static u16 pci_lmr_lane_sts(struct pci_lmr_port *port, unsigned int lane)
++{
++	int pos = port->cap + PCI_LMR_LANE_STS + lane * PCI_LMR_LANE_STRIDE;
++	u16 sts;
++
++	if (pci_read_config_word(port->dev, pos, &sts))
++		return (u16)PCI_ERROR_RESPONSE;
++
++	return sts;
++}
++
++/*
++ * Write @cmd to Margining Lane Control and wait until the bits of
++ * Margining Lane Status selected by @match are equal to those of @cmd.
++ */
++static int pci_lmr_write_wait(struct pci_lmr_port *port, unsigned int lane,
++			      u16 cmd, u16 match, u16 *sts)
++{
++	int pos = port->cap + PCI_LMR_LANE_CTRL + lane * PCI_LMR_LANE_STRIDE;
++	u16 val;
++	int ret;
++
++	ret = pci_write_config_word(port->dev, pos, cmd);
++	if (ret)
++		return pcibios_err_to_errno(ret);
++
++	ret = read_poll_timeout(pci_lmr_lane_sts, val,
++				PCI_POSSIBLE_ERROR(val) ||
++				(val & match) == (cmd & match),
++				LMR_POLL_US, LMR_TIMEOUT_US, false, port, lane);
++	if (PCI_POSSIBLE_ERROR(val))
++		return -ENODEV;
++	if (ret)
++		return ret;
++
++	if (sts)
++		*sts = val;
++
++	return 0;
++}
++
++static u16 pci_lmr_word(u8 rx, u8 type, u8 payload)
++{
++	return FIELD_PREP(PCI_LMR_LANE_RX, rx) |
++	       FIELD_PREP(PCI_LMR_LANE_TYPE, type) |
++	       FIELD_PREP(PCI_LMR_LANE_PAYLOAD, payload);
++}
++
++static int pci_lmr_no_cmd(struct pci_lmr_port *port, unsigned int lane)
++{
++	u16 cmd = pci_lmr_word(0, LMR_TYPE_NO_CMD, LMR_NO_CMD);
++
++	return pci_lmr_write_wait(port, lane, cmd, U16_MAX, NULL);
++}
++
++/*
++ * Send one command to the selected receiver on @lane and return the
++ * payload of its response.  A No Command is written first, as pcilmr
++ * does, so the response cannot be confused with the one to an earlier
++ * command.
++ */
++static int pci_lmr_cmd(struct pci_lmr_port *port, unsigned int lane,
++		       u8 type, u8 payload, u8 *resp)
++{
++	u16 cmd, match, sts;
++	int ret;
++
++	lockdep_assert_held(&port->lock);
++
++	ret = pci_lmr_no_cmd(port, lane);
++	if (ret)
++		return ret;
++
++	cmd = pci_lmr_word(port->receiver, type, payload);
++	match = PCI_LMR_LANE_RX | PCI_LMR_LANE_TYPE;
++	if (type == LMR_TYPE_SET)
++		match |= PCI_LMR_LANE_PAYLOAD;
++
++	ret = pci_lmr_write_wait(port, lane, cmd, match, &sts);
++	if (ret)
++		return ret;
++
++	if (resp)
++		*resp = FIELD_GET(PCI_LMR_LANE_PAYLOAD, sts);
++
++	return 0;
++}
++
++/* Go to Normal Settings returns both the timing and the voltage offset to 0 */
++static int pci_lmr_go_normal(struct pci_lmr_lane *l)
++{
++	int ret;
++
++	ret = pci_lmr_cmd(l->port, l->lane, LMR_TYPE_SET, LMR_SET_NORMAL, NULL);
++	if (ret)
++		return ret;
++
++	l->timing = 0;
++	l->voltage = 0;
++
++	return pci_lmr_no_cmd(l->port, l->lane);
++}
++
++/* Return the lanes that may still be margined to normal settings */
++static int pci_lmr_reset_lanes(struct pci_lmr_port *port)
++{
++	unsigned int i;
++	int ret, err = 0;
++
++	for (i = 0; i < port->nr_lanes; i++) {
++		struct pci_lmr_lane *l = &port->lanes[i];
++
++		if (!l->touched)
++			continue;
++
++		ret = pci_lmr_go_normal(l);
++		if (!ret) {
++			l->touched = false;
++			continue;
++		}
++
++		err = err ?: ret;
++		if (ret == -ENODEV)
++			break;
++		pci_warn(port->dev, "LMR: failed to reset lane %u (%d)\n",
++			 i, ret);
++	}
++
++	return err;
++}
++
++static void pci_lmr_forget_rx(struct pci_lmr_port *port)
++{
++	unsigned int i;
++
++	for (i = 0; i < port->nr_lanes; i++) {
++		port->lanes[i].touched = false;
++		port->lanes[i].timing = 0;
++		port->lanes[i].voltage = 0;
++		port->lanes[i].rx.valid = false;
++	}
++}
++
++static int pci_lmr_report(struct pci_lmr_lane *l, u8 payload, u8 *val)
++{
++	return pci_lmr_cmd(l->port, l->lane, LMR_TYPE_REPORT, payload, val);
++}
++
++static int pci_lmr_get_rx(struct pci_lmr_lane *l)
++{
++	struct pci_lmr_rx rx = {};
++	u8 val;
++	int ret;
++
++	if (l->rx.valid)
++		return 0;
++
++	ret = pci_lmr_report(l, LMR_REPORT_CAPS, &rx.caps);
++	if (ret)
++		return ret;
++
++	ret = pci_lmr_report(l, LMR_REPORT_TIM_STEPS, &val);
++	if (ret)
++		return ret;
++	rx.timing_steps = FIELD_GET(LMR_RPT_TIM_STEPS, val);
++
++	ret = pci_lmr_report(l, LMR_REPORT_TIM_OFFSET, &val);
++	if (ret)
++		return ret;
++	rx.max_timing_offset = FIELD_GET(LMR_RPT_OFFSET, val);
++
++	if (rx.caps & LMR_CAP_VOLTAGE) {
++		ret = pci_lmr_report(l, LMR_REPORT_VOLT_STEPS, &val);
++		if (ret)
++			return ret;
++		rx.voltage_steps = FIELD_GET(LMR_RPT_VOLT_STEPS, val);
++
++		ret = pci_lmr_report(l, LMR_REPORT_VOLT_OFFSET, &val);
++		if (ret)
++			return ret;
++		rx.max_voltage_offset = FIELD_GET(LMR_RPT_OFFSET, val);
++	}
++
++	ret = pci_lmr_report(l, LMR_REPORT_MAX_LANES, &val);
++	if (ret)
++		return ret;
++	rx.max_lanes = FIELD_GET(LMR_RPT_MAX_LANES, val) + 1;
++
++	ret = pci_lmr_no_cmd(l->port, l->lane);
++	if (ret)
++		return ret;
++
++	rx.valid = true;
++	l->rx = rx;
++
++	return 0;
++}
++
++/*
++ * Before each margining command, check that the link is still in the
++ * state the session was set up in.
++ */
++static int pci_lmr_check(struct pci_lmr_port *port)
++{
++	struct pci_dev *dp, *up;
++	u16 dp_ctl, up_ctl, lnksta, sts;
++
++	lockdep_assert_held(&port->lock);
++
++	if (port->state != LMR_ACTIVE)
++		return -ENOTCONN;
++
++	dp = pci_lmr_dp(port);
++	up = pci_lmr_up(port);
++	if (!pci_dev_is_added(port->partner) ||
++	    pci_dev_is_disconnected(dp) || pci_dev_is_disconnected(up))
++		return -ENODEV;
++
++	/* Margining state is lost over system suspend */
++	if (atomic_read(&pci_lmr_pm_gen) != port->pm_gen)
++		return -EIO;
++
++	if (pcie_capability_read_word(dp, PCI_EXP_LNKCTL, &dp_ctl) ||
++	    pcie_capability_read_word(up, PCI_EXP_LNKCTL, &up_ctl) ||
++	    pcie_capability_read_word(dp, PCI_EXP_LNKSTA, &lnksta) ||
++	    pci_read_config_word(port->dev, port->cap + PCI_LMR_PORT_STS, &sts))
++		return -ENODEV;
++
++	if (PCI_POSSIBLE_ERROR(dp_ctl) || PCI_POSSIBLE_ERROR(up_ctl) ||
++	    PCI_POSSIBLE_ERROR(lnksta) || PCI_POSSIBLE_ERROR(sts))
++		return -ENODEV;
++
++	/* ASPM was turned back on, e.g. through sysfs */
++	if ((dp_ctl | up_ctl) & PCI_EXP_LNKCTL_ASPMC)
++		return -EBUSY;
++
++	if ((lnksta & (PCI_EXP_LNKSTA_CLS | PCI_EXP_LNKSTA_NLW)) !=
++	    port->lnksta)
++		return -EIO;
++
++	if (!(sts & PCI_LMR_PORT_STS_MARGIN_READY))
++		return -EIO;
++
++	return 0;
++}
++
++static bool pci_lmr_margined(struct pci_lmr_lane *l)
++{
++	return l->timing || l->voltage;
++}
++
++/*
++ * A receiver that reaches its error limit while dwelling on a step stops
++ * margining and returns to normal settings on its own.  Check for that
++ * before using the recorded offsets.
++ */
++static int pci_lmr_sync_lane(struct pci_lmr_lane *l)
++{
++	struct pci_lmr_port *port = l->port;
++	u8 type, payload;
++	u16 sts;
++
++	if (!pci_lmr_margined(l))
++		return 0;
++
++	sts = pci_lmr_lane_sts(port, l->lane);
++	if (PCI_POSSIBLE_ERROR(sts))
++		return -ENODEV;
++
++	type = FIELD_GET(PCI_LMR_LANE_TYPE, sts);
++	payload = FIELD_GET(PCI_LMR_LANE_PAYLOAD, sts);
++	if (FIELD_GET(PCI_LMR_LANE_RX, sts) == port->receiver &&
++	    (type == LMR_TYPE_TIMING || type == LMR_TYPE_VOLTAGE) &&
++	    FIELD_GET(LMR_STEP_STATUS, payload) == LMR_STEP_TOO_MANY_ERR)
++		return pci_lmr_go_normal(l);
++
++	return 0;
++}
++
++/*
++ * The receiver limits how many lanes can be margined at once.  Count
++ * the lanes that are margined now and use the smallest limit any of
++ * them, or @l, reported.
++ */
++static int pci_lmr_lane_limit(struct pci_lmr_lane *l)
++{
++	struct pci_lmr_port *port = l->port;
++	unsigned int i, count = 0, limit = l->rx.max_lanes;
++	int ret;
++
++	for (i = 0; i < port->nr_lanes; i++) {
++		struct pci_lmr_lane *o = &port->lanes[i];
++
++		if (o == l)
++			continue;
++
++		ret = pci_lmr_sync_lane(o);
++		if (ret)
++			return ret;
++
++		if (!pci_lmr_margined(o))
++			continue;
++
++		count++;
++		limit = min(limit, o->rx.max_lanes);
++	}
++
++	return count + 1 > limit ? -EBUSY : 0;
++}
++
++static int pci_lmr_check_steps(struct pci_lmr_lane *l, bool timing, int steps)
++{
++	struct pci_lmr_rx *rx = &l->rx;
++	unsigned int max;
++	bool ind;
++
++	if (timing) {
++		max = rx->timing_steps;
++		ind = rx->caps & LMR_CAP_IND_LEFT_RIGHT;
++	} else {
++		if (!(rx->caps & LMR_CAP_VOLTAGE))
++			return -EOPNOTSUPP;
++		max = rx->voltage_steps;
++		ind = rx->caps & LMR_CAP_IND_UP_DOWN;
++	}
++
++	if (steps < 0 && !ind)
++		return -EINVAL;
++
++	if (steps < -(int)max || steps > (int)max)
++		return -ERANGE;
++
++	return 0;
++}
++
++/*
++ * Issue a Step Margin command with a non-zero offset.  A NAK leaves the
++ * receiver as it was.  When the receiver reports too many errors, it is
++ * sent to normal settings, so that software and hardware agree.
++ */
++static int pci_lmr_send_step(struct pci_lmr_lane *l, bool timing, int steps)
++{
++	unsigned int mag = abs(steps);
++	u8 type, payload, resp;
++	int ret;
++
++	if (timing) {
++		type = LMR_TYPE_TIMING;
++		payload = FIELD_PREP(LMR_STEP_TIM, mag);
++		if (steps < 0)
++			payload |= LMR_STEP_TIM_LEFT;
++	} else {
++		type = LMR_TYPE_VOLTAGE;
++		payload = FIELD_PREP(LMR_STEP_VOLT, mag);
++		if (steps < 0)
++			payload |= LMR_STEP_VOLT_DOWN;
++	}
++
++	l->touched = true;
++	ret = pci_lmr_cmd(l->port, l->lane, type, payload, &resp);
++	if (ret)
++		return ret;
++
++	switch (FIELD_GET(LMR_STEP_STATUS, resp)) {
++	case LMR_STEP_NAK:
++		return -EOPNOTSUPP;
++	case LMR_STEP_TOO_MANY_ERR:
++		ret = pci_lmr_go_normal(l);
++		return ret ?: -EIO;
++	default:
++		break;
++	}
++
++	if (timing)
++		l->timing = steps;
 +	else
-+		ktap_test_fail "$desc"
-+	fi
++		l->voltage = steps;
++
++	return 0;
 +}
 +
-+# write_expect <file> <value> <expected>
-+# <expected> is "ok" or the strerror() text of the expected error.
-+write_expect()
++static int pci_lmr_step(struct pci_lmr_lane *l, bool timing, int steps)
 +{
-+	local file="$1" val="$2" want="$3" err
++	struct pci_lmr_port *port = l->port;
++	int other, ret;
 +
-+	err=$( { printf '%s' "$val" > "$file"; } 2>&1 )
-+	if [ $? -eq 0 ]; then
-+		[ "$want" = "ok" ]
-+		return
-+	fi
-+	[ "$want" != "ok" ] && [[ "$err" == *"$want"* ]]
++	ret = pci_lmr_check(port);
++	if (ret)
++		return ret;
++
++	ret = pci_lmr_get_rx(l);
++	if (ret)
++		return ret;
++
++	ret = pci_lmr_check_steps(l, timing, steps);
++	if (ret)
++		return ret;
++
++	ret = pci_lmr_sync_lane(l);
++	if (ret)
++		return ret;
++
++	if (steps) {
++		if (!pci_lmr_margined(l)) {
++			ret = pci_lmr_lane_limit(l);
++			if (ret)
++				return ret;
++		}
++		return pci_lmr_send_step(l, timing, steps);
++	}
++
++	/*
++	 * A Step Margin command with a payload of 0 does not move the
++	 * receiver back.  Go to Normal Settings does, but for both offsets,
++	 * so the other offset has to be applied again afterwards.
++	 */
++	other = timing ? l->voltage : l->timing;
++	ret = pci_lmr_go_normal(l);
++	if (ret)
++		return ret;
++
++	if (other)
++		return pci_lmr_send_step(l, !timing, other);
++
++	return 0;
 +}
 +
-+# read_expect <file> <expected>, like write_expect
-+read_expect()
++static void pci_lmr_aspm_restore(struct pci_lmr_port *port)
 +{
-+	local file="$1" want="$2" err
++	int state = port->aspm;
 +
-+	err=$( { cat "$file" > /dev/null; } 2>&1 )
-+	if [ $? -eq 0 ]; then
-+		[ "$want" = "ok" ]
-+		return
-+	fi
-+	[ "$want" != "ok" ] && [[ "$err" == *"$want"* ]]
++	if (!state)
++		return;
++
++	if (port->clkpm)
++		state |= PCIE_LINK_STATE_CLKPM;
++
++	pci_force_enable_link_state(pci_lmr_up(port), state);
 +}
 +
-+# caps_get <port dir> <key>
-+caps_get()
++/*
++ * Turn off the ASPM states that are enabled on the link, using the
++ * same calls as drivers that need ASPM off for a while.  Clock PM is
++ * not passed to pci_disable_link_state(), because nothing but the sysfs
++ * clkpm file clears a Clock PM disable again.  pcie_aspm_enabled() does
++ * not report Clock PM, so it is added back on restore if CLKREQ# was
++ * enabled.
++ */
++static int pci_lmr_aspm_off(struct pci_lmr_port *port)
 +{
-+	sed -n "s/^$2: //p" "$1/lane0/caps"
++	struct pci_dev *dp = pci_lmr_dp(port), *up = pci_lmr_up(port);
++	u16 dp_ctl, up_ctl;
++	int ret;
++
++	ret = pcie_capability_read_word(up, PCI_EXP_LNKCTL, &up_ctl);
++	if (ret || PCI_POSSIBLE_ERROR(up_ctl))
++		return -ENODEV;
++
++	port->clkpm = up_ctl & PCI_EXP_LNKCTL_CLKREQ_EN;
++	port->aspm = pcie_aspm_enabled(up);
++	if (port->aspm) {
++		ret = pci_disable_link_state(up, port->aspm);
++		if (ret)
++			return ret;
++	}
++
++	/* ASPM may also have been left on by firmware */
++	if (pcie_capability_read_word(dp, PCI_EXP_LNKCTL, &dp_ctl) ||
++	    pcie_capability_read_word(up, PCI_EXP_LNKCTL, &up_ctl) ||
++	    PCI_POSSIBLE_ERROR(dp_ctl) || PCI_POSSIBLE_ERROR(up_ctl)) {
++		ret = -ENODEV;
++		goto restore;
++	}
++
++	if ((dp_ctl | up_ctl) & PCI_EXP_LNKCTL_ASPMC) {
++		ret = -EBUSY;
++		goto restore;
++	}
++
++	return 0;
++
++restore:
++	pci_lmr_aspm_restore(port);
++	return ret;
 +}
 +
-+check_layout()
++/*
++ * Hardware must not change the link speed or width on its own while a
++ * receiver is margined.  Set HAWD and HASD on both ends, the Upstream
++ * Port first, and restore them in the opposite order.
++ */
++static int pci_lmr_autonomous_off(struct pci_lmr_port *port)
 +{
-+	local d="$1" f
++	struct pci_dev *dp = pci_lmr_dp(port), *up = pci_lmr_up(port);
++	u16 dp_ctl, dp_ctl2, up_ctl, up_ctl2;
 +
-+	for f in enable receiver port lane0/caps lane0/margin_timing \
-+		 lane0/margin_voltage lane0/status; do
-+		[ -e "$d/$f" ] || return 1
-+	done
++	if (pcie_capability_read_word(dp, PCI_EXP_LNKCTL, &dp_ctl) ||
++	    pcie_capability_read_word(dp, PCI_EXP_LNKCTL2, &dp_ctl2) ||
++	    pcie_capability_read_word(up, PCI_EXP_LNKCTL, &up_ctl) ||
++	    pcie_capability_read_word(up, PCI_EXP_LNKCTL2, &up_ctl2))
++		return -ENODEV;
++
++	if (PCI_POSSIBLE_ERROR(dp_ctl) || PCI_POSSIBLE_ERROR(dp_ctl2) ||
++	    PCI_POSSIBLE_ERROR(up_ctl) || PCI_POSSIBLE_ERROR(up_ctl2))
++		return -ENODEV;
++
++	port->dp_hawd = dp_ctl & PCI_EXP_LNKCTL_HAWD;
++	port->dp_hasd = dp_ctl2 & PCI_EXP_LNKCTL2_HASD;
++	port->up_hawd = up_ctl & PCI_EXP_LNKCTL_HAWD;
++	port->up_hasd = up_ctl2 & PCI_EXP_LNKCTL2_HASD;
++
++	pcie_capability_set_word(up, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_HAWD);
++	pcie_capability_set_word(up, PCI_EXP_LNKCTL2, PCI_EXP_LNKCTL2_HASD);
++	pcie_capability_set_word(dp, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_HAWD);
++	pcie_capability_set_word(dp, PCI_EXP_LNKCTL2, PCI_EXP_LNKCTL2_HASD);
++
++	return 0;
 +}
 +
-+check_port_file()
++static void pci_lmr_autonomous_restore(struct pci_lmr_port *port)
 +{
-+	local out
++	struct pci_dev *dp = pci_lmr_dp(port), *up = pci_lmr_up(port);
 +
-+	out=$(cat "$1/port") || return 1
-+	[[ "$out" == *"uses_driver_software: "[01]* ]] &&
-+	[[ "$out" == *"margining_ready: "[01]* ]] &&
-+	[[ "$out" == *"software_ready: "[01]* ]]
++	if (!pci_dev_is_disconnected(dp)) {
++		pcie_capability_clear_and_set_word(dp, PCI_EXP_LNKCTL,
++						   PCI_EXP_LNKCTL_HAWD,
++						   port->dp_hawd);
++		pcie_capability_clear_and_set_word(dp, PCI_EXP_LNKCTL2,
++						   PCI_EXP_LNKCTL2_HASD,
++						   port->dp_hasd);
++	}
++
++	if (!pci_dev_is_disconnected(up)) {
++		pcie_capability_clear_and_set_word(up, PCI_EXP_LNKCTL,
++						   PCI_EXP_LNKCTL_HAWD,
++						   port->up_hawd);
++		pcie_capability_clear_and_set_word(up, PCI_EXP_LNKCTL2,
++						   PCI_EXP_LNKCTL2_HASD,
++						   port->up_hasd);
++	}
 +}
 +
-+PASSIVE_TESTS=9
-+
-+# Checks that never start a session
-+passive_tests()
++static u16 pci_lmr_port_sts(struct pci_lmr_port *port)
 +{
-+	local d="$1" n i
++	u16 sts;
 +
-+	n=$(basename "$d")
++	if (pci_read_config_word(port->dev, port->cap + PCI_LMR_PORT_STS, &sts))
++		return (u16)PCI_ERROR_RESPONSE;
 +
-+	check "$n: files present" check_layout "$d"
-+	check "$n: port file readable" check_port_file "$d"
-+
-+	if [ "$(cat "$d/enable" 2>/dev/null)" != "0" ]; then
-+		for i in $(seq 3 $PASSIVE_TESTS); do
-+			ktap_test_skip "$n: session active, test $i skipped"
-+		done
-+		return
-+	fi
-+
-+	check "$n: enable rejects '2'" \
-+		write_expect "$d/enable" 2 "Invalid argument"
-+	check "$n: enable rejects 'x'" \
-+		write_expect "$d/enable" x "Invalid argument"
-+	check "$n: enable=0 without a session is accepted" \
-+		write_expect "$d/enable" 0 ok
-+	check "$n: margin_timing rejects 'abc'" \
-+		write_expect "$d/lane0/margin_timing" abc "Invalid argument"
-+	check "$n: margin_timing needs a session" \
-+		write_expect "$d/lane0/margin_timing" 1 \
-+		"Transport endpoint is not connected"
-+	check "$n: caps needs a session" \
-+		read_expect "$d/lane0/caps" "Transport endpoint is not connected"
-+	check "$n: receiver needs a session" \
-+		write_expect "$d/receiver" 1 "Transport endpoint is not connected"
++	return sts;
 +}
 +
-+ACTIVE_TESTS=14
-+
-+# Print the device at the other end of the link of PCI device $1.
-+# Receiver 6 is the child device (PCIe Upstream Port) below the Downstream
-+# Port; receiver 1 is the Downstream Port (parent bridge).
-+partner_of()
++static int pci_lmr_wait_ready(struct pci_lmr_port *port)
 +{
-+	local sys=/sys/bus/pci/devices/$1 rx c
++	u16 sts;
++	int ret;
 +
-+	rx=$(cat "$DEBUGFS/pcie_lmr_$1/receiver" 2> /dev/null)
-+	if [ "$rx" = 6 ]; then
-+		basename "$(dirname "$(readlink -f "$sys")")"
-+		return
-+	fi
-+	for c in "$sys"/[0-9a-fA-F]*:??:??.0; do
-+		[ -e "$c/config" ] && { basename "$c"; return; }
-+	done
++	ret = read_poll_timeout(pci_lmr_port_sts, sts,
++				PCI_POSSIBLE_ERROR(sts) ||
++				(sts & PCI_LMR_PORT_STS_MARGIN_READY),
++				LMR_POLL_US, LMR_TIMEOUT_US, false, port);
++	if (PCI_POSSIBLE_ERROR(sts))
++		return -ENODEV;
++
++	return ret;
 +}
 +
-+# Link Control and Link Control 2 of PCI device $1, or nothing
-+link_regs()
++/* Read the link state the session depends on, from the Downstream Port */
++static int pci_lmr_read_link(struct pci_lmr_port *port)
 +{
-+	[ -n "$1" ] && command -v setpci > /dev/null || return
-+	setpci -s "$1" CAP_EXP+10.w CAP_EXP+30.w 2> /dev/null | paste -sd ' '
++	struct pci_dev *dp = pci_lmr_dp(port);
++	u16 lnksta, lnksta2;
++
++	if (pcie_capability_read_word(dp, PCI_EXP_LNKSTA, &lnksta) ||
++	    pcie_capability_read_word(dp, PCI_EXP_LNKSTA2, &lnksta2) ||
++	    PCI_POSSIBLE_ERROR(lnksta) || PCI_POSSIBLE_ERROR(lnksta2))
++		return -ENODEV;
++
++	if (!FIELD_GET(PCI_EXP_LNKSTA_NLW, lnksta))
++		return -ENOLINK;
++
++	/* Lane Margining at the Receiver is defined for 16.0 GT/s and up */
++	if ((lnksta & PCI_EXP_LNKSTA_CLS) < PCI_EXP_LNKSTA_CLS_16_0GB)
++		return -EOPNOTSUPP;
++
++	port->lnksta = lnksta & (PCI_EXP_LNKSTA_CLS | PCI_EXP_LNKSTA_NLW);
++	port->retimers = !!(lnksta2 & PCI_EXP_LNKSTA2_RETIMER) +
++			 !!(lnksta2 & PCI_EXP_LNKSTA2_2RETIMERS);
++
++	return 0;
 +}
 +
-+check_bad_rx()
++/*
++ * Find the device at the other end of the link and take a reference.
++ * On the Downstream Port side that is Function 0 on the secondary bus.
++ * The bus is looked up on the parent's list of child buses instead of
++ * through ->subordinate, which is cleared only after the bus has been
++ * removed from that list.
++ */
++static struct pci_dev *pci_lmr_find_partner(struct pci_lmr_port *port)
 +{
-+	write_expect "$1/receiver" 0 "Invalid argument" &&
-+	write_expect "$1/receiver" 7 "Invalid argument"
++	struct pci_dev *dev = port->dev, *partner = NULL, *pdev;
++	struct pci_bus *bus;
++
++	if (!port->downstream)
++		return pci_dev_get(port->dport);
++
++	guard(rwsem_read)(&pci_bus_sem);
++	list_for_each_entry(bus, &dev->bus->children, node) {
++		if (bus->self != dev)
++			continue;
++		list_for_each_entry(pdev, &bus->devices, bus_list) {
++			if (pdev->devfn == 0) {
++				partner = pci_dev_get(pdev);
++				break;
++			}
++		}
++		break;
++	}
++
++	return partner;
 +}
 +
-+check_step_roundtrip()
++/* Set up both ends of the link for margining */
++static int pci_lmr_setup(struct pci_lmr_port *port)
 +{
-+	write_expect "$1/lane0/margin_timing" 1 ok &&
-+	[[ "$(cat "$1/lane0/status")" == timing* ]] &&
-+	write_expect "$1/lane0/margin_timing" 0 ok &&
-+	test "$(cat "$1/lane0/margin_timing")" = 0 &&
-+	test "$(cat "$1/lane0/status")" = idle
++	u16 cap, sts;
++	int ret;
++
++	ret = pci_lmr_read_link(port);
++	if (ret)
++		return ret;
++
++	if (pci_read_config_word(port->dev, port->cap + PCI_LMR_PORT_CAP,
++				 &cap) ||
++	    pci_read_config_word(port->dev, port->cap + PCI_LMR_PORT_STS,
++				 &sts) ||
++	    PCI_POSSIBLE_ERROR(cap) || PCI_POSSIBLE_ERROR(sts))
++		return -ENODEV;
++
++	if ((cap & PCI_LMR_PORT_CAP_USES_SW_READY) &&
++	    !(sts & PCI_LMR_PORT_STS_SW_READY))
++		return -ETIMEDOUT;
++
++	ret = pci_lmr_aspm_off(port);
++	if (ret)
++		return ret;
++
++	ret = pci_lmr_autonomous_off(port);
++	if (ret)
++		goto aspm;
++
++	ret = pci_lmr_wait_ready(port);
++	if (ret)
++		goto autonomous;
++
++	return 0;
++
++autonomous:
++	pci_lmr_autonomous_restore(port);
++aspm:
++	pci_lmr_aspm_restore(port);
++	return ret;
 +}
 +
-+check_end_session()
++static void pci_lmr_set_state(struct pci_lmr_port *port,
++			      enum pci_lmr_state state)
 +{
-+	write_expect "$1/enable" 0 ok &&
-+	test "$(cat "$1/enable")" = 0
++	lockdep_assert_held(&port->lock);
++	lockdep_assert_held(&pci_lmr_mutex);
++
++	port->state = state;
 +}
 +
-+stop_session()
++/* Claim the link for @port; another session on it gives -EBUSY */
++static int pci_lmr_claim(struct pci_lmr_port *port, struct pci_dev *partner)
 +{
-+	[ -n "$ACTIVE_DIR" ] && echo 0 > "$ACTIVE_DIR/enable" 2> /dev/null
++	struct pci_lmr_port *p;
++
++	guard(mutex)(&port->lock);
++	guard(mutex)(&pci_lmr_mutex);
++
++	if (pci_lmr_rebooting || port->state != LMR_IDLE)
++		return -EBUSY;
++
++	list_for_each_entry(p, &pci_lmr_ports, node)
++		if (p->dport == port->dport && p->state != LMR_IDLE)
++			return -EBUSY;
++
++	/*
++	 * Removal clears the added flag before it takes the device lock,
++	 * and runs pci_lmr_exit() after that.  Both device locks are held
++	 * here, so neither end can reach pci_lmr_exit() until the session
++	 * is either running or abandoned.
++	 */
++	if (!pci_dev_is_added(port->dev) || !pci_dev_is_added(partner))
++		return -ENODEV;
++
++	port->partner = partner;
++	pci_lmr_set_state(port, LMR_STARTING);
++
++	return 0;
 +}
 +
-+skip_rest()
++static void pci_lmr_unclaim(struct pci_lmr_port *port)
 +{
-+	while [ "$KTAP_TESTNO" -le "$KSFT_NUM_TESTS" ]; do
-+		ktap_test_skip "$1"
-+	done
++	guard(mutex)(&port->lock);
++	guard(mutex)(&pci_lmr_mutex);
++
++	port->partner = NULL;
++	pci_lmr_set_state(port, LMR_IDLE);
 +}
 +
-+active_tests()
++static int pci_lmr_activate(struct pci_lmr_port *port)
 +{
-+	local dev="$1" d="$DEBUGFS/pcie_lmr_$1" partner before after
-+	local rx steps child
++	int ret;
 +
-+	partner=$(partner_of "$dev")
-+	if [ -z "$partner" ]; then
-+		ktap_test_fail "$dev: start a session"
-+		skip_rest "$dev: no link partner"
-+		return
-+	fi
-+	before="$(link_regs "$dev") $(link_regs "$partner")"
++	guard(mutex)(&port->lock);
 +
-+	ACTIVE_DIR="$d"
-+	trap stop_session EXIT INT TERM
++	port->receiver = pci_lmr_default_rx(port);
++	port->pm_gen = atomic_read(&pci_lmr_pm_gen);
++	pci_lmr_forget_rx(port);
 +
-+	if ! write_expect "$d/enable" 1 ok; then
-+		ktap_test_fail "$dev: start a session"
-+		skip_rest "$dev: no session"
-+		return
-+	fi
-+	ktap_test_pass "$dev: start a session"
++	ret = pci_lmr_setup(port);
++	if (ret)
++		return ret;
 +
-+	check "$dev: enable=1 again is accepted" \
-+		write_expect "$d/enable" 1 ok
-+	check "$dev: enable reads 1" \
-+		test "$(cat "$d/enable")" = 1
++	guard(mutex)(&pci_lmr_mutex);
++	pci_lmr_set_state(port, LMR_ACTIVE);
 +
-+	if [ -n "$partner" ] && [ -d "$DEBUGFS/pcie_lmr_$partner" ]; then
-+		check "$dev: partner port rejects a second session" \
-+			write_expect "$DEBUGFS/pcie_lmr_$partner/enable" 1 \
-+			"Device or resource busy"
-+	else
-+		ktap_test_skip "$dev: partner has no pcie_lmr directory"
-+	fi
-+
-+	rx=$(cat "$d/receiver")
-+	check "$dev: default receiver is 1 or 6" \
-+		test "$rx" = 1 -o "$rx" = 6
-+	check "$dev: receiver 0 and 7 are rejected" \
-+		check_bad_rx "$d"
-+	check "$dev: receiver 256 is rejected" \
-+		write_expect "$d/receiver" 256 "Numerical result out of range"
-+
-+	steps=$(caps_get "$d" timing_steps)
-+	check "$dev: caps reports timing_steps" \
-+		test -n "$steps"
-+	check "$dev: timing step above timing_steps is rejected" \
-+		write_expect "$d/lane0/margin_timing" $((steps + 1)) \
-+		"Numerical result out of range"
-+
-+	if [ "${steps:-0}" -ge 1 ]; then
-+		check "$dev: timing step 1 then 0" \
-+			check_step_roundtrip "$d"
-+	else
-+		ktap_test_skip "$dev: receiver reports no timing steps"
-+	fi
-+
-+	if [ "$(caps_get "$d" independent_left_right_timing)" = 0 ]; then
-+		check "$dev: negative timing step is rejected" \
-+			write_expect "$d/lane0/margin_timing" -1 "Invalid argument"
-+	else
-+		ktap_test_skip "$dev: receiver supports left/right timing"
-+	fi
-+
-+	if [ "$(caps_get "$d" voltage_supported)" = 0 ]; then
-+		check "$dev: voltage step is rejected" \
-+			write_expect "$d/lane0/margin_voltage" 1 \
-+			"Operation not supported"
-+	else
-+		ktap_test_skip "$dev: receiver supports voltage margining"
-+	fi
-+
-+	if check_end_session "$d"; then
-+		ktap_test_pass "$dev: end the session"
-+		ACTIVE_DIR=
-+	else
-+		ktap_test_fail "$dev: end the session"
-+	fi
-+
-+	# In drivers/pci/pcie/aspm.c, aspm_ctrl_attrs_are_visible() uses
-+	# pcie_aspm_get_link(pdev) -> pci_upstream_bridge(pdev)->link_state,
-+	# so the sysfs 'link/' directory is attached to the child device
-+	# below the Downstream Port (the PCIe Upstream Port, receiver 6),
-+	# not to the Downstream Port itself.
-+	child=$([ "$rx" = 6 ] && echo "$dev" || echo "$partner")
-+	after="$(link_regs "$dev") $(link_regs "$partner")"
-+	if [ -z "${before// }" ]; then
-+		ktap_test_skip "$dev: setpci not found"
-+	elif [ -n "$child" ] && [ ! -d "/sys/bus/pci/devices/$child/link" ]; then
-+		ktap_test_skip "$dev: no OS ASPM control on link"
-+	else
-+		check "$dev: LNKCTL and LNKCTL2 restored on both ends" \
-+			test "$before" = "$after"
-+	fi
++	return 0;
 +}
 +
-+ktap_print_header
++static int pci_lmr_start(struct pci_lmr_port *port)
++{
++	struct pci_dev *partner, *dp, *up;
++	int ret;
 +
-+if [ "$(id -u)" -ne 0 ]; then
-+	ktap_skip_all "must be run as root"
-+	exit "$KSFT_SKIP"
-+fi
++	partner = pci_lmr_find_partner(port);
++	if (!partner)
++		return -ENODEV;
 +
-+mountpoint -q "$DEBUGFS" || mount -t debugfs none "$DEBUGFS" 2> /dev/null
++	dp = port->downstream ? port->dev : partner;
++	up = port->downstream ? partner : port->dev;
 +
-+ports=("$DEBUGFS"/pcie_lmr_*)
-+if [ ! -d "${ports[0]}" ]; then
-+	ktap_skip_all "no pcie_lmr_* directories in debugfs"
-+	exit "$KSFT_SKIP"
-+fi
++	ret = pm_runtime_resume_and_get(&dp->dev);
++	if (ret)
++		goto put_partner;
++	ret = pm_runtime_resume_and_get(&up->dev);
++	if (ret)
++		goto put_dp;
 +
-+if [ -n "$PCIE_LMR_DEV" ] && [ ! -d "$DEBUGFS/pcie_lmr_$PCIE_LMR_DEV" ]; then
-+	ktap_exit_fail_msg "no pcie_lmr directory for $PCIE_LMR_DEV"
-+fi
++	/*
++	 * Probe, remove and reset hold the device lock and may wait for a
++	 * lock taken further down this path, so never wait for it here.
++	 */
++	ret = -EBUSY;
++	if (!pci_dev_trylock(dp))
++		goto put_up;
++	if (!pci_dev_trylock(up))
++		goto unlock_dp;
 +
-+plan=$(( ${#ports[@]} * PASSIVE_TESTS ))
-+[ -n "$PCIE_LMR_DEV" ] && plan=$((plan + ACTIVE_TESTS))
-+ktap_set_plan "$plan"
++	ret = pci_lmr_claim(port, partner);
++	if (ret)
++		goto unlock;
 +
-+for d in "${ports[@]}"; do
-+	passive_tests "$d"
-+done
++	ret = pci_lmr_activate(port);
++	if (ret)
++		goto unclaim;
 +
-+if [ -n "$PCIE_LMR_DEV" ]; then
-+	active_tests "$PCIE_LMR_DEV"
-+fi
++	pci_dev_unlock(up);
++	pci_dev_unlock(dp);
 +
-+ktap_finished
++	/* The session keeps the partner reference and runtime PM usage */
++	return 0;
++
++unclaim:
++	pci_lmr_unclaim(port);
++unlock:
++	pci_dev_unlock(up);
++unlock_dp:
++	pci_dev_unlock(dp);
++put_up:
++	pm_runtime_put_sync(&up->dev);
++put_dp:
++	pm_runtime_put_sync(&dp->dev);
++put_partner:
++	pci_dev_put(partner);
++	return ret;
++}
++
++/*
++ * End the session on @port and return its partner, whose reference and
++ * runtime PM usage the caller drops.  When one end of the link is being
++ * removed, the ASPM state of the link is left alone: the link state is
++ * about to be freed.
++ */
++static struct pci_dev *pci_lmr_teardown(struct pci_lmr_port *port)
++{
++	struct pci_dev *partner = port->partner;
++	bool removing;
++
++	lockdep_assert_held(&port->lock);
++
++	if (port->state != LMR_ACTIVE)
++		return NULL;
++
++	removing = !pci_dev_is_added(port->dev) || !pci_dev_is_added(partner);
++
++	if (!pci_dev_is_disconnected(port->dev))
++		pci_lmr_reset_lanes(port);
++	pci_lmr_autonomous_restore(port);
++	if (!removing)
++		pci_lmr_aspm_restore(port);
++
++	pci_lmr_forget_rx(port);
++	scoped_guard(mutex, &pci_lmr_mutex) {
++		port->partner = NULL;
++		pci_lmr_set_state(port, LMR_IDLE);
++	}
++
++	return partner;
++}
++
++static void pci_lmr_release(struct pci_lmr_port *port, struct pci_dev *partner)
++{
++	pm_runtime_put_sync(&partner->dev);
++	pm_runtime_put_sync(&port->dev->dev);
++	pci_dev_put(partner);
++}
++
++static int pci_lmr_get_active_partner(struct pci_lmr_port *port,
++				      struct pci_dev **partner)
++{
++	guard(mutex)(&port->lock);
++
++	if (port->state == LMR_IDLE) {
++		*partner = NULL;
++		return 0;
++	}
++	if (port->state != LMR_ACTIVE)
++		return -EBUSY;
++
++	*partner = pci_dev_get(port->partner);
++	return 0;
++}
++
++static struct pci_dev *pci_lmr_teardown_if_partner(struct pci_lmr_port *port,
++						   struct pci_dev *partner)
++{
++	guard(mutex)(&port->lock);
++
++	/* The session may have ended, or been replaced, meanwhile */
++	if (port->partner != partner)
++		return NULL;
++
++	return pci_lmr_teardown(port);
++}
++
++static int pci_lmr_stop(struct pci_lmr_port *port)
++{
++	struct pci_dev *partner, *dp, *up, *ended;
++	int ret;
++
++	ret = pci_lmr_get_active_partner(port, &partner);
++	if (ret || !partner)
++		return ret;
++
++	dp = port->downstream ? port->dev : partner;
++	up = port->downstream ? partner : port->dev;
++
++	ret = -EBUSY;
++	if (!pci_dev_trylock(dp))
++		goto put;
++	if (!pci_dev_trylock(up))
++		goto unlock_dp;
++
++	ended = pci_lmr_teardown_if_partner(port, partner);
++	if (ended)
++		pci_lmr_release(port, ended);
++	ret = 0;
++
++	pci_dev_unlock(up);
++unlock_dp:
++	pci_dev_unlock(dp);
++put:
++	pci_dev_put(partner);
++	return ret;
++}
++
++static void pci_lmr_port_free(struct kref *kref)
++{
++	struct pci_lmr_port *port = container_of(kref, struct pci_lmr_port, kref);
++
++	mutex_destroy(&port->lock);
++	kfree(port);
++}
++
++static void pci_lmr_port_put(struct pci_lmr_port *port)
++{
++	kref_put(&port->kref, pci_lmr_port_free);
++}
++
++static struct pci_lmr_port *pci_lmr_find_port(struct pci_dev *dev)
++{
++	struct pci_lmr_port *port;
++
++	lockdep_assert_held(&pci_lmr_mutex);
++
++	list_for_each_entry(port, &pci_lmr_ports, node)
++		if (port->dev == dev)
++			return port;
++
++	return NULL;
++}
++
++/*
++ * Find an active session, involving @dev at either end of its link or
++ * on any port if @dev is NULL, and return its port with a reference.
++ */
++static struct pci_lmr_port *pci_lmr_find_session(struct pci_dev *dev)
++{
++	struct pci_lmr_port *port;
++
++	lockdep_assert_held(&pci_lmr_mutex);
++
++	list_for_each_entry(port, &pci_lmr_ports, node) {
++		if (port->state != LMR_ACTIVE)
++			continue;
++		if (!dev || port->dev == dev || port->partner == dev) {
++			kref_get(&port->kref);
++			return port;
++		}
++	}
++
++	return NULL;
++}
++
++static void pci_lmr_end_sessions(struct pci_dev *dev)
++{
++	struct pci_lmr_port *p;
++	struct pci_dev *ended;
++
++	for (;;) {
++		scoped_guard(mutex, &pci_lmr_mutex)
++			p = pci_lmr_find_session(dev);
++		if (!p)
++			break;
++
++		scoped_guard(mutex, &p->lock)
++			ended = pci_lmr_teardown(p);
++		if (ended)
++			pci_lmr_release(p, ended);
++		pci_lmr_port_put(p);
++	}
++}
++
++/**
++ * pci_lmr_exit - End margining on a device that is being removed
++ * @dev: PCI device
++ *
++ * Called from pci_destroy_dev() for every device.  Removes the debugfs
++ * directory of @dev, waiting for file operations in progress, and ends
++ * every session that involves @dev, whichever end of the link hosts it.
++ */
++void pci_lmr_exit(struct pci_dev *dev)
++{
++	struct pci_lmr_port *port;
++
++	scoped_guard(mutex, &pci_lmr_mutex)
++		port = pci_lmr_find_port(dev);
++
++	if (port)
++		debugfs_remove(port->dir);
++
++	pci_lmr_end_sessions(dev);
++
++	if (!port)
++		return;
++
++	scoped_guard(mutex, &pci_lmr_mutex)
++		list_del(&port->node);
++	pci_lmr_port_put(port);
++}
++
++static int enable_show(struct seq_file *s, void *unused)
++{
++	struct pci_lmr_port *port = s->private;
++
++	guard(mutex)(&port->lock);
++	seq_printf(s, "%d\n", port->state == LMR_ACTIVE);
++
++	return 0;
++}
++
++static ssize_t enable_write(struct file *file, const char __user *ubuf,
++			    size_t count, loff_t *ppos)
++{
++	struct seq_file *s = file->private_data;
++	struct pci_lmr_port *port = s->private;
++	bool enable;
++	int ret;
++
++	ret = kstrtobool_from_user(ubuf, count, &enable);
++	if (ret)
++		return ret;
++
++	if (enable) {
++		scoped_guard(mutex, &port->lock)
++			if (port->state == LMR_ACTIVE)
++				return count;
++		ret = pci_lmr_start(port);
++	} else {
++		ret = pci_lmr_stop(port);
++	}
++
++	return ret ?: count;
++}
++DEFINE_SHOW_STORE_ATTRIBUTE(enable);
++
++static int receiver_show(struct seq_file *s, void *unused)
++{
++	struct pci_lmr_port *port = s->private;
++
++	guard(mutex)(&port->lock);
++	seq_printf(s, "%u\n", port->state == LMR_ACTIVE ? port->receiver :
++		   pci_lmr_default_rx(port));
++
++	return 0;
++}
++
++static bool pci_lmr_rx_valid(struct pci_lmr_port *port, u8 rx)
++{
++	if (!port->downstream)
++		return rx == LMR_RX_UP;
++
++	/* Each retimer has two receivers, numbered from 2 */
++	return rx >= LMR_RX_DP && rx <= LMR_RX_DP + 2 * port->retimers;
++}
++
++static ssize_t receiver_write(struct file *file, const char __user *ubuf,
++			      size_t count, loff_t *ppos)
++{
++	struct seq_file *s = file->private_data;
++	struct pci_lmr_port *port = s->private;
++	u8 rx;
++	int ret;
++
++	ret = kstrtou8_from_user(ubuf, count, 10, &rx);
++	if (ret)
++		return ret;
++
++	guard(mutex)(&port->lock);
++
++	ret = pci_lmr_check(port);
++	if (ret)
++		return ret;
++
++	if (!pci_lmr_rx_valid(port, rx))
++		return -EINVAL;
++
++	if (rx == port->receiver)
++		return count;
++
++	/* Leave no lane margined by the old receiver */
++	ret = pci_lmr_reset_lanes(port);
++	if (ret)
++		return ret;
++
++	pci_lmr_forget_rx(port);
++	port->receiver = rx;
++
++	return count;
++}
++DEFINE_SHOW_STORE_ATTRIBUTE(receiver);
++
++static int port_show(struct seq_file *s, void *unused)
++{
++	struct pci_lmr_port *port = s->private;
++	struct pci_dev *dev = port->dev;
++	u16 cap, sts;
++	int ret;
++
++	ret = pm_runtime_resume_and_get(&dev->dev);
++	if (ret)
++		return ret;
++
++	if (pci_read_config_word(dev, port->cap + PCI_LMR_PORT_CAP, &cap) ||
++	    pci_read_config_word(dev, port->cap + PCI_LMR_PORT_STS, &sts) ||
++	    PCI_POSSIBLE_ERROR(cap) || PCI_POSSIBLE_ERROR(sts))
++		ret = -ENODEV;
++
++	pm_runtime_put(&dev->dev);
++	if (ret)
++		return ret;
++
++	seq_printf(s, "uses_driver_software: %d\n",
++		   !!(cap & PCI_LMR_PORT_CAP_USES_SW_READY));
++	seq_printf(s, "margining_ready: %d\n",
++		   !!(sts & PCI_LMR_PORT_STS_MARGIN_READY));
++	seq_printf(s, "software_ready: %d\n",
++		   !!(sts & PCI_LMR_PORT_STS_SW_READY));
++
++	return 0;
++}
++DEFINE_SHOW_ATTRIBUTE(port);
++
++static int caps_show(struct seq_file *s, void *unused)
++{
++	struct pci_lmr_lane *l = s->private;
++	struct pci_lmr_port *port = l->port;
++	struct pci_lmr_rx *rx = &l->rx;
++	int ret;
++
++	guard(mutex)(&port->lock);
++
++	ret = pci_lmr_check(port);
++	if (ret)
++		return ret;
++
++	ret = pci_lmr_get_rx(l);
++	if (ret)
++		return ret;
++
++	seq_printf(s, "receiver: %u\n", port->receiver);
++	seq_printf(s, "capabilities: %#04x\n", rx->caps);
++	seq_printf(s, "voltage_supported: %d\n",
++		   !!(rx->caps & LMR_CAP_VOLTAGE));
++	seq_printf(s, "independent_up_down_voltage: %d\n",
++		   !!(rx->caps & LMR_CAP_IND_UP_DOWN));
++	seq_printf(s, "independent_left_right_timing: %d\n",
++		   !!(rx->caps & LMR_CAP_IND_LEFT_RIGHT));
++	seq_printf(s, "sample_reporting_method: %s\n",
++		   rx->caps & LMR_CAP_SAMPLE_RATE ? "rate" : "count");
++	seq_printf(s, "independent_error_sampler: %d\n",
++		   !!(rx->caps & LMR_CAP_IND_ERR_SAMPLER));
++	seq_printf(s, "timing_steps: %u\n", rx->timing_steps);
++	seq_printf(s, "max_timing_offset: %u\n", rx->max_timing_offset);
++	seq_printf(s, "voltage_steps: %u\n", rx->voltage_steps);
++	seq_printf(s, "max_voltage_offset: %u\n", rx->max_voltage_offset);
++	seq_printf(s, "max_lanes: %u\n", rx->max_lanes);
++
++	return 0;
++}
++DEFINE_SHOW_ATTRIBUTE(caps);
++
++static ssize_t pci_lmr_step_write(struct file *file, const char __user *ubuf,
++				  size_t count, bool timing)
++{
++	struct seq_file *s = file->private_data;
++	struct pci_lmr_lane *l = s->private;
++	int steps, ret;
++
++	ret = kstrtoint_from_user(ubuf, count, 10, &steps);
++	if (ret)
++		return ret;
++
++	guard(mutex)(&l->port->lock);
++
++	ret = pci_lmr_step(l, timing, steps);
++
++	return ret ?: count;
++}
++
++static int margin_timing_show(struct seq_file *s, void *unused)
++{
++	struct pci_lmr_lane *l = s->private;
++
++	guard(mutex)(&l->port->lock);
++	seq_printf(s, "%d\n", l->timing);
++
++	return 0;
++}
++
++static ssize_t margin_timing_write(struct file *file, const char __user *ubuf,
++				   size_t count, loff_t *ppos)
++{
++	return pci_lmr_step_write(file, ubuf, count, true);
++}
++DEFINE_SHOW_STORE_ATTRIBUTE(margin_timing);
++
++static int margin_voltage_show(struct seq_file *s, void *unused)
++{
++	struct pci_lmr_lane *l = s->private;
++
++	guard(mutex)(&l->port->lock);
++	seq_printf(s, "%d\n", l->voltage);
++
++	return 0;
++}
++
++static ssize_t margin_voltage_write(struct file *file, const char __user *ubuf,
++				    size_t count, loff_t *ppos)
++{
++	return pci_lmr_step_write(file, ubuf, count, false);
++}
++DEFINE_SHOW_STORE_ATTRIBUTE(margin_voltage);
++
++static const char * const pci_lmr_step_status[] = {
++	[LMR_STEP_TOO_MANY_ERR]	= "too_many_errors",
++	[LMR_STEP_SETUP]	= "setup",
++	[LMR_STEP_MARGINING]	= "margining",
++	[LMR_STEP_NAK]		= "nak",
++};
++
++/* Show the receiver's response to the last step command, if any */
++static int status_show(struct seq_file *s, void *unused)
++{
++	struct pci_lmr_lane *l = s->private;
++	struct pci_lmr_port *port = l->port;
++	u8 type, payload;
++	u16 sts;
++
++	guard(mutex)(&port->lock);
++
++	if (port->state != LMR_ACTIVE)
++		return -ENOTCONN;
++
++	if (atomic_read(&pci_lmr_pm_gen) != port->pm_gen)
++		return -EIO;
++
++	sts = pci_lmr_lane_sts(port, l->lane);
++	if (PCI_POSSIBLE_ERROR(sts))
++		return -ENODEV;
++
++	type = FIELD_GET(PCI_LMR_LANE_TYPE, sts);
++	payload = FIELD_GET(PCI_LMR_LANE_PAYLOAD, sts);
++	if (FIELD_GET(PCI_LMR_LANE_RX, sts) != port->receiver ||
++	    (type != LMR_TYPE_TIMING && type != LMR_TYPE_VOLTAGE)) {
++		seq_puts(s, "idle\n");
++		return 0;
++	}
++
++	seq_printf(s, "%s %s %lu\n",
++		   type == LMR_TYPE_TIMING ? "timing" : "voltage",
++		   pci_lmr_step_status[FIELD_GET(LMR_STEP_STATUS, payload)],
++		   FIELD_GET(LMR_STEP_ERR_COUNT, payload));
++
++	return 0;
++}
++DEFINE_SHOW_ATTRIBUTE(status);
++
++static void pci_lmr_debugfs_init(struct pci_lmr_port *port)
++{
++	char name[32];
++	unsigned int i;
++
++	snprintf(name, sizeof(name), "pcie_lmr_%s", pci_name(port->dev));
++	port->dir = debugfs_create_dir(name, NULL);
++
++	debugfs_create_file("enable", 0600, port->dir, port, &enable_fops);
++	debugfs_create_file("receiver", 0600, port->dir, port, &receiver_fops);
++	debugfs_create_file("port", 0400, port->dir, port, &port_fops);
++
++	for (i = 0; i < port->nr_lanes; i++) {
++		struct pci_lmr_lane *l = &port->lanes[i];
++		struct dentry *dir;
++
++		snprintf(name, sizeof(name), "lane%u", i);
++		dir = debugfs_create_dir(name, port->dir);
++
++		debugfs_create_file("caps", 0400, dir, l, &caps_fops);
++		debugfs_create_file("margin_timing", 0600, dir, l,
++				    &margin_timing_fops);
++		debugfs_create_file("margin_voltage", 0600, dir, l,
++				    &margin_voltage_fops);
++		debugfs_create_file("status", 0400, dir, l, &status_fops);
++	}
++}
++
++/**
++ * pci_lmr_init - Set up margining for a device that has the capability
++ * @dev: PCI device
++ *
++ * The capability is used on Downstream Ports and on Function 0 of the
++ * device below a Downstream Port.
++ */
++void pci_lmr_init(struct pci_dev *dev)
++{
++	struct pci_lmr_port *port;
++	struct pci_dev *dport;
++	unsigned int i, width;
++	u32 lnkcap;
++	u16 cap;
++
++	if (!pci_is_pcie(dev) || dev->is_virtfn)
++		return;
++
++	if (pcie_downstream_port(dev)) {
++		dport = dev;
++	} else {
++		if (dev->devfn != 0)
++			return;
++		dport = pci_upstream_bridge(dev);
++		if (!dport || !pci_is_pcie(dport) ||
++		    !pcie_downstream_port(dport))
++			return;
++	}
++
++	cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_LMR);
++	if (!cap)
++		return;
++
++	if (pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap))
++		return;
++
++	width = FIELD_GET(PCI_EXP_LNKCAP_MLW, lnkcap);
++	if (!width || width > LMR_MAX_WIDTH)
++		return;
++
++	port = kzalloc(struct_size(port, lanes, width), GFP_KERNEL);
++	if (!port)
++		return;
++
++	port->nr_lanes = width;
++	kref_init(&port->kref);
++	port->dev = dev;
++	port->dport = dport;
++	port->cap = cap;
++	port->downstream = dport == dev;
++	mutex_init(&port->lock);
++	for (i = 0; i < width; i++) {
++		port->lanes[i].port = port;
++		port->lanes[i].lane = i;
++	}
++
++	pci_lmr_debugfs_init(port);
++
++	guard(mutex)(&pci_lmr_mutex);
++	list_add_tail(&port->node, &pci_lmr_ports);
++}
++
++/*
++ * Receivers lose their margining state over system suspend.  Commands
++ * on a session that was active before a suspend fail with -EIO, and the
++ * session has to be stopped and started again.
++ */
++static int pci_lmr_pm_notify(struct notifier_block *nb, unsigned long action,
++			     void *data)
++{
++	switch (action) {
++	case PM_SUSPEND_PREPARE:
++	case PM_HIBERNATION_PREPARE:
++	case PM_POST_SUSPEND:
++	case PM_POST_HIBERNATION:
++	case PM_POST_RESTORE:
++		atomic_inc(&pci_lmr_pm_gen);
++		break;
++	}
++
++	return NOTIFY_DONE;
++}
++
++static struct notifier_block pci_lmr_pm_nb = {
++	.notifier_call = pci_lmr_pm_notify,
++};
++
++/* End active margining sessions before reboot or kexec */
++static int pci_lmr_reboot_notify(struct notifier_block *nb,
++				 unsigned long action, void *data)
++{
++	scoped_guard(mutex, &pci_lmr_mutex)
++		pci_lmr_rebooting = true;
++
++	pci_lmr_end_sessions(NULL);
++
++	return NOTIFY_DONE;
++}
++
++static struct notifier_block pci_lmr_reboot_nb = {
++	.notifier_call = pci_lmr_reboot_notify,
++};
++
++static int __init pci_lmr_pm_init(void)
++{
++	register_reboot_notifier(&pci_lmr_reboot_nb);
++	return register_pm_notifier(&pci_lmr_pm_nb);
++}
++late_initcall(pci_lmr_pm_init);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 721daf5c5184..62c1db3a1d32 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2679,6 +2679,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_rebar_init(dev);		/* Resizable BAR */
+ 	pci_dev3_init(dev);		/* Device 3 capabilities */
+ 	pci_ide_init(dev);		/* Link Integrity and Data Encryption */
++	pci_lmr_init(dev);		/* Lane Margining at the Receiver */
+ 
+ 	pcie_report_downtraining(dev);
+ 	pci_init_reset_methods(dev);
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index e711ac1d4e38..c858386beff3 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -37,6 +37,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
+ 	platform_pci_remove_wake(dev);
+ 	pci_doe_sysfs_teardown(dev);
+ 	pci_npem_remove(dev);
++	pci_lmr_exit(dev);
+ 
+ 	/*
+ 	 * While device is in D0 drop the device from TSM link operations
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index facaa324bd86..47daa1cebe0e 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -711,6 +711,8 @@
+ #define  PCI_EXP_LNKCTL2_TX_MARGIN	0x0380 /* Transmit Margin */
+ #define  PCI_EXP_LNKCTL2_HASD		0x0020 /* HW Autonomous Speed Disable */
+ #define PCI_EXP_LNKSTA2		0x32	/* Link Status 2 */
++#define  PCI_EXP_LNKSTA2_RETIMER	0x0040 /* Retimer Presence Detected */
++#define  PCI_EXP_LNKSTA2_2RETIMERS	0x0080 /* Two Retimers Presence Detected */
+ #define  PCI_EXP_LNKSTA2_FLIT		0x0400 /* Flit Mode Status */
+ #define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	0x34	/* end of v2 EPs w/ link */
+ #define PCI_EXP_SLTCAP2		0x34	/* Slot Capabilities 2 */
+@@ -757,6 +759,7 @@
+ #define PCI_EXT_CAP_ID_VF_REBAR 0x24	/* VF Resizable BAR */
+ #define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
+ #define PCI_EXT_CAP_ID_PL_16GT	0x26	/* Physical Layer 16.0 GT/s */
++#define PCI_EXT_CAP_ID_LMR	0x27	/* Lane Margining at the Receiver */
+ #define PCI_EXT_CAP_ID_NPEM	0x29	/* Native PCIe Enclosure Management */
+ #define PCI_EXT_CAP_ID_PL_32GT  0x2A    /* Physical Layer 32.0 GT/s */
+ #define PCI_EXT_CAP_ID_DOE	0x2E	/* Data Object Exchange */
+@@ -1181,6 +1184,21 @@
+ #define  PCI_PL_16GT_LE_CTRL_USP_TX_PRESET_MASK		0x000000F0
+ #define  PCI_PL_16GT_LE_CTRL_USP_TX_PRESET_SHIFT	4
+ 
++/* Lane Margining at the Receiver */
++#define PCI_LMR_PORT_CAP		0x04	/* Port Capabilities */
++#define  PCI_LMR_PORT_CAP_USES_SW_READY	0x0001	/* Uses Driver Software */
++#define PCI_LMR_PORT_STS		0x06	/* Port Status */
++#define  PCI_LMR_PORT_STS_MARGIN_READY	0x0001	/* Margining Ready */
++#define  PCI_LMR_PORT_STS_SW_READY	0x0002	/* Margining Software Ready */
++#define PCI_LMR_LANE_CTRL		0x08	/* Lane Control, lane 0 */
++#define PCI_LMR_LANE_STS		0x0a	/* Lane Status, lane 0 */
++#define PCI_LMR_LANE_STRIDE		4	/* Lane N at +4*N */
++/* Fields of both Margining Lane Control and Margining Lane Status */
++#define  PCI_LMR_LANE_RX		0x0007	/* Receiver Number */
++#define  PCI_LMR_LANE_TYPE		0x0038	/* Margin Type */
++#define  PCI_LMR_LANE_USAGE		0x0040	/* Usage Model */
++#define  PCI_LMR_LANE_PAYLOAD		0xff00	/* Margin Payload */
++
+ /* Physical Layer 32.0 GT/s */
+ #define PCI_PL_32GT_LE_CTRL	0x20	/* Lane Equalization Control Register */
+ 
 
 -- 
 2.56.0.rc1.315.gc6ed9934b7-goog
