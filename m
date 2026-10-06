@@ -1,57 +1,40 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8DA0381E9A;
-	Tue,  6 Oct 2026 21:22:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C89833D1CD7;
+	Tue,  6 Oct 2026 21:28:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791321755; cv=none; b=cVyvIk1IbVQ77+SxMLkqkFrbTHuTU6gFt+y15/inRj7P2ucAAGM8sr0HZgF/zgGloQMhBq9KTZ9bHfGmOZe3VIUCskwEE8XvByo3zFxIKX8ne26uarunk4Px+RMbN+2+60YNr2UcdpgOboMaKWNky7DZjqYHNvh0BumglFWApjo=
+	t=1791322115; cv=none; b=ojfrpRCSk/b4WmvoGguSBZSJFoHenzH5drx5dOd9GrpvaE7Dfg/H6jS/Mi5yr9igkVQ+GAjNeQrDwq0m2qtvtsvsVS7LlbufsNHIYk7EFuSrqsrflkEIguIcLA+LzmuoF6K+zxDMBkH83qqMsbe37JDwAkSOMlOLIIqtBqLyx/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791321755; c=relaxed/simple;
-	bh=UeWBVlgJFWojhkJi+cd+n88622HpQCq8j9HuKrvES4M=;
+	s=arc-20240116; t=1791322115; c=relaxed/simple;
+	bh=172AY1LtbJ9WzIpzs71jiNNlhd1CxbpWXlAYp+Gs8ss=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DaPPXRKRhcagY44wN6ZCC9eFeBVTPN32d1uGnr+rSusY5Eo6vNFNUaaFUsiPF59weuCPdAH1ctqzifXFqVAqCJVZCCfGVcrqpQV2YC/drp6vFAqAb05R7mhuQuZvTshUogK3Sp0NPOnL18rSrerMHSTHKFijRGVUNw51lyJsRaU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KvV0Av2l; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KvV0Av2l"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1CD81F0089B;
-	Tue,  6 Oct 2026 21:22:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791321753;
-	bh=BHt0ynO7I/zLJYGK8yKQoBOgVQqwbnoeMI9XKYPGhZ8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=KvV0Av2l/BYipbielqVo1Hyj4bJeeM7HGyU39j9dAPfaL+IYSRbUyJpFZqBmUFH4m
-	 Iy8n49/p8+UuyPdQS8LlMRIL11B7wCiu4qwYsz6rz6zarzCAsz16fTIvmh5kjR4ybk
-	 B20SXYNPmvS0vHuV3fAKnmiJlgHazmy77ClTfX1c4RJWTUTdgJyYOwZbiCmR3yJB6e
-	 XkDvFtp9+a5Q2RIZPKWFJQWRBW7E7SNKl0OMsmOkQpY7I3/5NfHiBam8pkvRFbgIAt
-	 p1WHLcet3/VbzM8Wj/vBG/VHG6ISunfiQkAnGa5ygzm2vTOeDUgRYEkMlnfgkBOD1N
-	 +51VW8dry+vZA==
-Date: Wed, 7 Oct 2026 00:22:27 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
-	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: Re: [PATCH v9 00/18] PCI/P2PDMA: Route peer-to-peer DMA by TLP class
-Message-ID: <20261006212227.GB7822@unreal>
-References: <20261001-fix-p2p-acs-v4-0-v9-0-1a8e0f50ddd9@nvidia.com>
- <20261006192955.GA703309@bhelgaas>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Bh4una6+yMGsWuX9n749nr31IQPqFrriMH/rRI7Qm92zSEtFq9qLYeLTRiWoFnlEAoNjtWqsHIG9iHai5AVXBkNSQgK/jjhSJGPsEy12FvyRZzM0EXjKTu4Km3QcOi4GxcZW7gcOyCkxC9u+zd3lGEPrgWOKTevF2kd6yaWAzhE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id 05AA710606;
+	Tue, 06 Oct 2026 23:19:11 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id CEC7960F5533; Tue,  6 Oct 2026 23:19:10 +0200 (CEST)
+Date: Tue, 6 Oct 2026 23:19:10 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Alex Deucher <alexdeucher@gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, "Perlow, Jason" <jperlow@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, regressions@lists.linux.dev,
+	Aditya Garg <aditya.garg@linux.dev>
+Subject: Re: [REGRESSION] PCI/AER: MacBookPro16,1 powers off ~20 s after boot
+Message-ID: <asVlzjaUFAoowH-r@wunner.de>
+References: <CABZrw2HcaOh3DHTJtxU5dXrb3Vg19scr6+qR-xe_+R7rME35_Q@mail.gmail.com>
+ <20261005231914.GA639967@bhelgaas>
+ <CADnq5_O2TWeWEE1NsuCVvtWLKWyOiJHChPGP9CN4Zu=hvs+jmA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -60,82 +43,29 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261006192955.GA703309@bhelgaas>
+In-Reply-To: <CADnq5_O2TWeWEE1NsuCVvtWLKWyOiJHChPGP9CN4Zu=hvs+jmA@mail.gmail.com>
 
-On Tue, Oct 06, 2026 at 02:29:55PM -0500, Bjorn Helgaas wrote:
-> On Thu, Oct 01, 2026 at 02:55:08PM +0300, Leon Romanovsky wrote:
-> > PCI P2PDMA applies Request and Completion Redirect throughout both paths.
-> > This misclassifies asymmetric and nested switches, and reports one answer
-> > for every kind of TLP.
-> > 
-> > Three ACS controls act on TLP attributes the client chooses rather than
-> > on the topology: Translation Blocking and Direct Translated P2P act on
-> > a Request's Address Type, and Completion Redirect skips Completions carrying
-> > Relaxed Ordering.
-> > 
-> > Evaluate each direction at the path divergence, decide every class from the
-> > one walk, and treat a client with ATS enabled as translating unless its
-> > driver declares per-mapping ATS.
-> > 
-> > This completes the P2PDMA side; dma-buf and mlx5 follow separately.
-> > ...
+On Tue, Oct 06, 2026 at 12:37:18PM -0400, Alex Deucher wrote:
+> On Mon, Oct 5, 2026 at 7:19 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > Alex reported something similar at
+> > https://bugzilla.kernel.org/show_bug.cgi?id=222095.
 > 
-> > Leon Romanovsky (18):
-> >       PCI/P2PDMA: Document the TLP attribute assumptions
-> >       PCI/P2PDMA: Derive routing from directional ACS controls
-> >       PCI: Reject unreadable ACS controls in isolation checks
-> >       PCI/P2PDMA: Evaluate ACS controls at the path divergence
-> >       PCI/P2PDMA: Document directional ACS routing
-> >       PCI/P2PDMA: Collect the path's ACS controls before deciding
-> >       PCI/P2PDMA: Answer routing per TLP class
-> >       PCI/P2PDMA: Route Relaxed Ordering Completions directly
-> >       PCI/P2PDMA: Reject Translated Requests blocked by Translation Blocking
-> >       PCI/P2PDMA: Route Translated Requests under Direct Translated P2P
-> >       PCI/P2PDMA: Log detailed ACS routing diagnostics
-> >       PCI/P2PDMA: Add KUnit tests for the ACS routing decisions
-> >       PCI/P2PDMA: Test the ACS P2P routing walk
-> >       PCI: Add KUnit coverage for ACS isolation checks
-> >       PCI/P2PDMA: Document TLP-class routing
-> >       PCI/P2PDMA: Let a client declare that it selects ATS per mapping
-> >       PCI/P2PDMA: Evaluate the ATS path for clients with ATS enabled
-> >       PCI/P2PDMA: Test the routing of clients with ATS enabled
-> > 
-> >  Documentation/admin-guide/kernel-parameters.txt |  15 +-
-> >  Documentation/driver-api/pci/p2pdma.rst         |  80 +++
-> >  drivers/pci/Kconfig                             |  15 +
-> >  drivers/pci/Makefile                            |   1 +
-> >  drivers/pci/p2pdma.c                            | 719 ++++++++++++++++++--
-> >  drivers/pci/pci.c                               |   7 +-
-> >  drivers/pci/pci.h                               |  58 ++
-> >  drivers/pci/pci_acs_test.c                      | 860 ++++++++++++++++++++++++
-> >  drivers/pci/quirks.c                            |   6 +-
-> >  include/linux/pci-p2pdma.h                      |  12 +-
-> >  10 files changed, 1687 insertions(+), 86 deletions(-)
-> > ---
-> > base-commit: 08dbfad3f5040f5bdb6c529da20d6d4e81fefd72
-> > change-id: 20260821-fix-p2p-acs-v4-0-e72455e3a261
-> > prerequisite-message-id: <20260830-batch-p2p-fixes-v1-0-5044e8dfbe2e@nvidia.com>
-> > prerequisite-patch-id: 6b25c7fcf164cdfc14e9fac5b908d97fcf6509d7
-> > prerequisite-patch-id: 0d083c281001365aae4b35544cf28891a6ab9a96
-> > prerequisite-patch-id: bfd9dabf271f3cc9a3a61f46387d20c20311363d
-> > prerequisite-patch-id: fad0275efc722830fc591509506c0a5e4f581073
-> > prerequisite-patch-id: 0c83bee688fec1f6d1564654df7c630fa6a4a978
-> 
-> This seems like material for the PCI tree, but I'm not sure how to
-> apply it.  It doesn't apply cleanly on the current pci/p2pdma
-> (https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/log/?h=p2pdma),
-> which does contain your series from
-> 20260830-batch-p2p-fixes-v1-0-5044e8dfbe2e@nvidia.com.
-> 
-> I could probably fix the conflicts but I don't know why there should
-> be conflicts, since the only commits on pci/p2pdma other than yours
-> are a few trivial allow-list updates.
+> Lukas' patches fixes some boards, but unfortunately, I'm still seeing
+> failures on others.  Reverting the patch fixes those failures.  I've
+> updated the ticket.
 
-So maybe this is related to these trivial updates, my series was based
-on the clean p2pdma branch:
-https://git.kernel.org/pub/scm/linux/kernel/git/leon/linux-rdma.git/log/?h=fix-p2p-acs-v9
+I've added an analysis of the dmesg output as well as a patch.
+It looks like the BIOS is raising a false alarm in that it signals
+a Fatal Error even though the Uncorrectable Error Status register is
+blank.  The patch causes such events to be reported, but otherwise
+ignored (i.e. no recovery is attempted for a false alarm).
 
-Thanks
+Newly enabled functionality like Advisory Non-Fatal Errors causes
+BIOS code paths to be exercised which likely haven't been tested
+by firmware validation folks, hence the fallout.  However I believe
+ultimately we *want* to see those errors being reported because they
+may point to BIOS issues which flew under the radar so far.
 
-> 
-> Bjorn
+Thanks,
+
+Lukas
