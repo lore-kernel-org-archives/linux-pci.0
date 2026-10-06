@@ -1,149 +1,118 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6376E30ACF0;
-	Tue,  6 Oct 2026 05:48:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 811A4372B41
+	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 08:03:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791265715; cv=none; b=hrgIfWth0eSyWsEnTXAslPSqOllxSghj4zEfdI53WaOmutXezuI8GnMo13YPWiolvW9xnFz4MCM7JiHw9gx0W0GZP8+oV4HP/bePzNxOZxRIBAX3FsC2Km5IB0Pt1rR69hUXyp76NB1BVFE6P7EUfaioLDVs1HQUxC7bZzeDG3Y=
+	t=1791273808; cv=none; b=EQf5Y2vfxf73X1l4Gc/2ad2yJjnWcloVhYTg0pHJW+9nyVYhwo1Y1yw94zdmtrb+kP+WqjAQHWnTnHP+E/bPCiCcKiAPrymhKkcSrRgSD+R6C88qJUihv9DDKhzv/k5x61Vp5JSzZ0lRqLzUop9E1MlPyBOFMvYfh0yVitAa4No=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791265715; c=relaxed/simple;
-	bh=bWFHcT3cQnXUfVn+E4GPd6ugdQHGNoy+3sAGbounbAc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uVuzFFGBOzSYM+h5K6saAT46LvWORakGsAp9GCQOvI42ZMfACT7yYjwDTunwNcyeHDBk3HPAm9q8+7hwDfUovcsCfvG9Esw7j1MkkIwqAWK1vbkPvo0N2dFlgWlfA+Eq5xz5cUp/KEFjBsF6uYi1RjvuqPOGBqoHXtqe4mNOvr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=tzbPh0+T; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1791273808; c=relaxed/simple;
+	bh=nPvPw7A9YAIxMjZ4/b6RvdHVeDmDsPUX45cjSQ90p/0=;
+	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=JlUu9+xTR5PmPNcj2+TXuzILO9nhoUSs/DMPdhwKkjkxqvdxPWJY0OADenUEZNGIOL5unGEursv5KL046+Okf3qWMgozfOyaeHjmRMZ2lkcmq8bQ2sgDah2CRaQYyKLl02Ppej0KeQC4iLEHrEDwnnkwZMou2Ez14PaUAYnV3fI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CaNa3tt4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="tzbPh0+T"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519MLKEM768 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4hzQKM56kzz8twZ;
-	Tue, 06 Oct 2026 07:48:23 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1791265703;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=K/f9oCJzacuOtCMgIQ2RlyGSpR3oGeLxyRwyU9u3vJo=;
-	b=tzbPh0+TlNHJvmbQrUpGcz8Skkdq2EJqWqcDif/G3wj3HvVi5QLw6BNFgM+cfj1OCbZXfO
-	4v3U6JUw+86VZ7E7t2w2ErJVNrVnWvEGlwvEbH1wIU94vhQwKxi3wrV6F6dD/kx6qm6Wr5
-	sTbWz2W1mfprRrlf8A8IQ5uhuM+ll4ZPqT5Eu8Wzru2ckQA96Wnm2ayiOxbaQmuw+Cq8xK
-	nl/c8fDozTdRQjFNyAmBNCBdKizc8PwI2IK2AKnfX9cE7a75DNQ/0InH3JyAniZNkoO2VH
-	itbWCNXfibhPE2e8xwKPrbM4JS7vLofePYnAPL2h8WmIikMFo9maiqIjhjZlkw==
-Message-ID: <f4ca9c43-aaf8-4c15-9b29-363414779e41@mailbox.org>
-Date: Tue, 6 Oct 2026 07:20:11 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CaNa3tt4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8A091F0089D
+	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 08:03:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791273800;
+	bh=r+KgD9DoUrWu5arzVLlDs3fSXX52ocXw8x+r8c9Z1cw=;
+	h=From:In-Reply-To:References:Date:Subject:To:Cc;
+	b=CaNa3tt4uTwfPlcLhPdln6QJYXq+DP9tyPKPke9OHd/6cACMGxqPmf28yD9Hdupgg
+	 MfloJhes60g10D4cKYMXig6Llvow7IQBSVlg0Ng9S4ESqVnANgTwhUWFedjRzGdy1A
+	 yQjini86leUZHV3bHOjvrVtwVX74DMIS/UqSbCkPDdFg1CZsN+1L7w6lhkK3QwRe1t
+	 q82nXvzKMwgZajTmrtvhGR+vGSA8/URn6WxKXigKDM0xUTXRCRDh2DssmEu7HNLV1X
+	 iRQdEtgPlbszuE59FOYYJat3v4+3RHRBSxw0A7vqomOc4bceJtLwr/DDCIs+p4/V+C
+	 x8JQptANGSq5g==
+Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-5b8f5e2ce5eso312919e87.0
+        for <linux-pci@vger.kernel.org>; Tue, 06 Oct 2026 01:03:20 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBxJwMcKxGlVr+VnuGZYBd3t7UIBH6mhBxckNSGraY+oGBGMMvhJKDhYce7hFGG2ESg3ZevNFpJu+es=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKmy8JHtCbRNPhZw7mh4MRJBRU9hzISVl1/IWW4fE2ofOFijAJU
+	QZRU8YsR0lXiyj82efGMK7vqSoZkfSAf5QKCda4oFJavr5yIqRGSZRt/ESFz+V7y+22tq6NCqA+
+	QQcv3dE21ggud/Orppc52FIp/zjRx8mobyiUmbMzubg==
+X-Received: by 2002:a05:6512:683:b0:5bb:a4ba:8ded with SMTP id
+ 2adb3069b0e04-5bccc718dd2mr276015e87.44.1791273799477; Tue, 06 Oct 2026
+ 01:03:19 -0700 (PDT)
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Tue, 6 Oct 2026 11:03:17 +0300
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Tue, 6 Oct 2026 11:03:17 +0300
+From: Bartosz Golaszewski <brgl@kernel.org>
+In-Reply-To: <20261004165124.4277-1-franzelfranzel@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 15/15] arm64: dts: renesas: r8a779f0: Describe the PCIe
- AER interrupts
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski
- <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Magnus Damm <magnus.damm@gmail.com>, Jingoo Han <jingoohan1@gmail.com>,
- Philipp Zabel <p.zabel@pengutronix.de>, Frank Li <Frank.Li@nxp.com>,
- Niklas Cassel <cassel@kernel.org>, Wilfred Mallawa
- <wilfred.mallawa@wdc.com>, Serge Semin <fancer.lancer@gmail.com>,
- linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260928165230.3397664-1-den@valinux.co.jp>
- <20260928165230.3397664-16-den@valinux.co.jp>
- <d9ffb9f3-ad89-4912-b863-637c838196cb@mailbox.org>
- <mtczl7e3tlwt26gj56wmvfeotuvd63dfpsmazo3yg4sqstyuhn@omeidmdgauzz>
-Content-Language: en-US
-From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <mtczl7e3tlwt26gj56wmvfeotuvd63dfpsmazo3yg4sqstyuhn@omeidmdgauzz>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MBO-RS-META: f7xtbstsca31pjg4c6b7uatdib6i1qhp
-X-MBO-RS-ID: da55d30359b515db82d
+References: <20261004165124.4277-1-franzelfranzel@gmail.com>
+Date: Tue, 6 Oct 2026 11:03:17 +0300
+X-Gmail-Original-Message-ID: <CAMRc=Mf_szZhsZEB8pmZkGh5pB6AEims68rc1tXE=XGAcMuEvg@mail.gmail.com>
+X-Gm-Features: AclHuK9nmK19llwqJ_oPdR-YeWv5o1OfhU6oMZraAD3H4lY4H8sCG9gdf0YepLk
+Message-ID: <CAMRc=Mf_szZhsZEB8pmZkGh5pB6AEims68rc1tXE=XGAcMuEvg@mail.gmail.com>
+Subject: Re: [PATCH v2] power: sequencing: qcom-wcn: power off WLAN at probe
+To: Manivannan Sadhasivam <mani@kernel.org>, =?UTF-8?Q?Fran=C3=A7ois_Roux?= <franzelfranzel@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, linux-pm@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	regressions@lists.linux.dev, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org, Bartosz Golaszewski <brgl@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 10/5/26 7:11 PM, Koichiro Den wrote:
-> On Sat, Oct 03, 2026 at 10:00:13PM +0200, Marek Vasut wrote:
->> On 9/28/26 6:52 PM, Koichiro Den wrote:
->>> The PCIe controllers report Root Port AER notifications through
->>> intreq_pci0_lperr (SPI 421) and intreq_pci1_lperr (SPI 428),
->>> respectively, separately from the integrated MSI receiver interrupts.
->>> Describe these interrupts with the "aer" name so the controller driver
->>> can use them for Root Port error reporting.
->>>
->>> Append the new interrupts to preserve the existing interrupt indices.
->>>
->>> Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
->>> Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> 
-> Hi Marek,
-> 
->> Please also feel free to add this patch for R-Car V4H (performed cover
->> letter tests 2 and 3 on Retronix Sparrow Hawk)
->>
->> diff --git a/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
->> b/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
->> index 5284923b6cef7..8342d3c6f9881 100644
->> --- a/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
->> +++ b/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
->> @@ -801,8 +801,9 @@ pciec0: pcie@e65d0000 {
->>                          interrupts = <GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
->>                                       <GIC_SPI 450 IRQ_TYPE_LEVEL_HIGH>,
->>                                       <GIC_SPI 451 IRQ_TYPE_LEVEL_HIGH>,
->> -                                    <GIC_SPI 455 IRQ_TYPE_LEVEL_HIGH>;
->> -                       interrupt-names = "msi", "dma", "sft_ce", "app";
->> +                                    <GIC_SPI 455 IRQ_TYPE_LEVEL_HIGH>,
->> +                                    <GIC_SPI 454 IRQ_TYPE_LEVEL_HIGH>;
->> +                       interrupt-names = "msi", "dma", "sft_ce", "app",
->> "aer";
->>                          clocks = <&cpg CPG_MOD 624>, <&pcie0_clkref>;
->>                          clock-names = "core", "ref";
->>                          power-domains = <&sysc R8A779G0_PD_ALWAYS_ON>;
->> @@ -850,8 +851,9 @@ pciec1: pcie@e65d8000 {
->>                          interrupts = <GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
->>                                       <GIC_SPI 457 IRQ_TYPE_LEVEL_HIGH>,
->>                                       <GIC_SPI 458 IRQ_TYPE_LEVEL_HIGH>,
->> -                                    <GIC_SPI 462 IRQ_TYPE_LEVEL_HIGH>;
->> -                       interrupt-names = "msi", "dma", "sft_ce", "app";
->> +                                    <GIC_SPI 462 IRQ_TYPE_LEVEL_HIGH>,
->> +                                    <GIC_SPI 461 IRQ_TYPE_LEVEL_HIGH>;
->> +                       interrupt-names = "msi", "dma", "sft_ce", "app",
->> "aer";
->>                          clocks = <&cpg CPG_MOD 625>, <&pcie1_clkref>;
->>                          clock-names = "core", "ref";
->>                          power-domains = <&sysc R8A779G0_PD_ALWAYS_ON>;
->>
->> And a matching patch for R-Car V4M (boot tested, but the board has no PCIe
->> device plugged into the slot)
->>
->> diff --git a/arch/arm64/boot/dts/renesas/r8a779h0.dtsi
->> b/arch/arm64/boot/dts/renesas/r8a779h0.dtsi
->> index 5f9223a0f4468..a377aab3c8be0 100644
->> --- a/arch/arm64/boot/dts/renesas/r8a779h0.dtsi
->> +++ b/arch/arm64/boot/dts/renesas/r8a779h0.dtsi
->> @@ -683,8 +683,9 @@ pciec0: pcie@e65d0000 {
->>                          interrupts = <GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
->>                                       <GIC_SPI 450 IRQ_TYPE_LEVEL_HIGH>,
->>                                       <GIC_SPI 451 IRQ_TYPE_LEVEL_HIGH>,
->> -                                    <GIC_SPI 455 IRQ_TYPE_LEVEL_HIGH>;
->> -                       interrupt-names = "msi", "dma", "sft_ce", "app";
->> +                                    <GIC_SPI 455 IRQ_TYPE_LEVEL_HIGH>,
->> +                                    <GIC_SPI 454 IRQ_TYPE_LEVEL_HIGH>;
->> +                       interrupt-names = "msi", "dma", "sft_ce", "app",
->> "aer";
->>                          clocks = <&cpg CPG_MOD 624>, <&pcie0_clkref>;
->>                          clock-names = "core", "ref";
->>                          power-domains = <&sysc R8A779H0_PD_A2PCIPHY>;
-> 
-> Thanks! I'll add them as two separate patches in v3, with your Suggested-by.
-Thank you !
+On Sun, 4 Oct 2026 18:51:24 +0200, "Fran=C3=A7ois Roux"
+<franzelfranzel@gmail.com> said:
+> The WLAN enable GPIO is requested with GPIOD_ASIS and then kept at its
+> current level, so that a WLAN module left powered on by the firmware is
+> not switched off. The FIXME explains why: toggling it would take the
+> PCIe link down, and the controller driver could not recover from that.
+>
+> That reasoning held while the PCIe link was trained before the
+> sequencer probed. Since commit b921aa3f8dec ("PCI/pwrctrl: Switch to
+> pwrctrl create, power on/off, destroy APIs"), qcom_pcie_host_init()
+> powers the endpoint through pwrctrl before it starts link training, and
+> defers until the pwrctrl driver is bound. That driver cannot bind
+> before this sequencer has probed. Power-on therefore always comes
+> before link training, and keeping the firmware state is now harmful.
+>
+> On the Microsoft Surface Pro 11 (X1E80100), the WCN7850 sits on a
+> PCIe port without a PERST# GPIO. While pci-pwrctrl-pwrseq is not yet
+> bound, the host init is deferred about ten times, and each attempt
+> powers the PHY and controller back down. The later power-on only sets
+> a GPIO that is already high, so the chip is never reset and the link
+> never comes up:
+>
+>   qcom-pcie 1c08000.pcie: Device found, but not active
+>
+> The endpoint is not enumerated and ath12k never probes. Bluetooth on
+> the same chip fails too ("QCA Failed to send TLV segment (-110)").
+>
+> Request the GPIO as GPIOD_OUT_LOW. The chip is then off when the
+> sequencer probes, and pwrctrl powers it up cleanly right before link
+> training. Drop the FIXME and the code that preserved the firmware
+> state.
+>
+> Tested on a Surface Pro 11:
+>  - b921aa3f8dec plus a one-line version of this change: endpoint
+>    enumerated at 2.4 s, ath12k and Bluetooth working.
+>  - next-20260929 plus this patch: "PCIe Gen.3 x2 link up" at 3.4 s,
+>    ath12k and Bluetooth working, Wi-Fi connected.
+> Without the change, neither kernel enumerates the endpoint.
+>
+> The culprit was found by bisecting v6.17..v7.1, with the DTB and
+> .config held constant.
+>
+> Fixes: b921aa3f8dec ("PCI/pwrctrl: Switch to pwrctrl create, power on/off=
+, destroy APIs")
+> Closes: https://lore.kernel.org/all/CAPjyS8dY0Q_o3XmFjuKZZsjhzhoSNL+ZGJtw=
+5cQt8HiV3sUtxA@mail.gmail.com/
+> Cc: stable@vger.kernel.org
+> Assisted-by: LLM
+> Signed-off-by: Fran=C3=A7ois Roux <franzelfranzel@gmail.com>
+> ---
+
+Mani: this looks good to me, any objections to me queuing it for v7.3?
+
+Bart
