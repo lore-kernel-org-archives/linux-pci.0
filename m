@@ -1,77 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AE0E25B0BD;
-	Tue,  6 Oct 2026 19:45:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57D63270575;
+	Tue,  6 Oct 2026 19:48:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791315950; cv=none; b=p0uf9gF1s0cZR5qpFVcpU3Te0/J5H97ccf7rAtxl/F++TnNuzg1llRLLRhKmd/0fDJ/94E1YLf648JrkCXzXxEzGzGYVnnKYJ0AEXG7npVeqcH9RSKbls2yI57xj+vn4JnZ6rWqEPTAdXhEUSWpBOcrse7eNuCglUFgid/ZdBE4=
+	t=1791316106; cv=none; b=ZsuurnyfTYCvnW4pALgw4gNfzTT7F742M7QSXtYLDTL52BXOR63eekTI0SA1hJD6tkAoeMavRbXxwtliLQ7TwKQwAiyK3ZqRR7m9Jce4JRiKWc758D8LUp5wZByW58JIf8/ImbPYyNVqN57na+6T4eAdoLHzH+Do5dYtJ7Qcn5g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791315950; c=relaxed/simple;
-	bh=ciYOT+zr5zS2pzXoXjTgZzNbWEmLCg6C2Olumsg/j8c=;
+	s=arc-20240116; t=1791316106; c=relaxed/simple;
+	bh=nj3394WSvWjO9Ky7954FHH86JHXjkxYr/8u2g+5vpKk=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=C1uLFUhzKf6d9BC5qCWCRF+jx41UdmzihaqSPSe84n6eZWee3W8/jeSow7ddV/SMurSkEzoG9fCENMuUPW+8Ds8wOvfKJneCSCxO19AljAbDSqC6tahZGgRnxvkF4vPXvLwQeyC9gHuUOiyEy7By9VKDC+9GoKARXZP2IzqQDB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MLUwSEiJ; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=nWK/4Ql/S+itNilCmj2r87Kp6yPDYiPTA6xaAR1jAUbbqB9LLOn4a53vScPk6HJ8B+GY1wQNSZIwb31OX10alYclwOYBzKvMgIK6ERY0uk0lFZOOj820IZItrm8NAoI8KBvyKkPykIvr0nPPce3KToT7qjA4PT9jUytsTzf8xRY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IfUD5+IL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MLUwSEiJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6C3F1F0089B;
-	Tue,  6 Oct 2026 19:45:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IfUD5+IL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6EC21F0089B;
+	Tue,  6 Oct 2026 19:48:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791315949;
-	bh=0661RnsWRH8/eKZEMOCrA6mRAS/L40yAyutfVcaJQt0=;
+	s=k20260515; t=1791316105;
+	bh=nj3394WSvWjO9Ky7954FHH86JHXjkxYr/8u2g+5vpKk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=MLUwSEiJTy/IVDPhpfMSdYRvT53pPhN6fCGosLf9iNpWa9oXDDon6JLyoJdL88JDa
-	 KNefEzFN1cTVFGxBAJX4kNUkqufPO71uKu0gcO+6q6FIftXUy5ZHvAppkgUsXiG3O2
-	 oEHan7EJ90nLLt4jWc4WDk0CT4OVt5Uy+rpT5O3p34mu35k94HrS8WLDaXzOn9ijAh
-	 n8bCa2+rCJqwglGdJpJFQtURDcYJCgOHiSKTM4dRpjwMPrCVj+i4GQIA2Y2LYTDxZK
-	 A4jw5ywI63A1aP0F3mlqC/eJ00pwZDbMc2sx+Ji9t25O1BGtQJfZNlF87tCyy5UwRq
-	 Czv3IXjUzUYTA==
-Message-ID: <sashiko-outbox-162410@kernel.org>
+	b=IfUD5+ILpXR8vcSwuOemGZnhdR3JjELT1mUp7xcj34PsVUVCydWbTQqFRqtFd6TeG
+	 j8HHLnFgdSwInF9cWc2K6Xt6hsvP6uX6TRAaNRc5YrHu71WHIjQdDhUbBRYcdsSrYx
+	 VWfb/VMF1jwBdj3S0bgnDekUV94ZNflsFGxi3mLP5RW1AG9HMqeLS/WkKKdw8iauRl
+	 MfJX4qMiuHOkpjR3a/0KpwzIj+Lj50sAocHlR/w10cUwl476apV9YfNmPymcZK7mpF
+	 XgIGKBXNdddb6qeYh8/BHCTmPFJVUKm4HAcfuXnWfsGL+vkLV1hkfiJTtwgVA6je+Y
+	 QluY72l5ftxvQ==
+Message-ID: <sashiko-outbox-162411@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 9/9] vfio/pci: Revoke a DMABUF on request from
- userspace
+Subject: Re: [PATCH v8 4/9] vfio/pci: Add a helper to look up PFNs for
+ DMABUFs
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Matt Evans" <matt@ozlabs.org>
-Cc: linux-pci@vger.kernel.org, media-ci@linuxtv.org, dri-devel@lists.freedesktop.org, kvm@vger.kernel.org
-In-Reply-To: <20261006193643.76330-10-matt@ozlabs.org>
+Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, media-ci@linuxtv.org, kvm@vger.kernel.org
+In-Reply-To: <20261006193643.76330-5-matt@ozlabs.org>
 References: <20261006193643.76330-1-matt@ozlabs.org>
- <20261006193643.76330-10-matt@ozlabs.org>
+ <20261006193643.76330-5-matt@ozlabs.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 06 Oct 2026 19:45:48 +0000
+Date: Tue, 06 Oct 2026 19:48:24 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Replace the VFIO exporter's priv->revoked flag with a status enum of
-> OK, REVOKED, and DEAD.  OK and REVOKED are equivalent to the existing
-> flag, which tracks whether invalidate_mappings & unmap has occurred
-> and whether attach/map are permitted.
+> Add vfio_pci_dma_buf_find_pfn(), which a VMA fault handler can use to
+> find a PFN.
 >=20
-> The DMABUF is marked DEAD in response to a new VFIO feature
-> VFIO_DEVICE_FEATURE_DMA_BUF_REVOKE.  This passes a DMABUF by fd and
-> requests that the DMABUF is immediately revoked.  On success, it's
-> guaranteed that PTEs are zapped, imports have been cleanly unmapped,
-> and that the buffer can never be mapped/attached or mmap()ed anymore.
-> Existing VFIO move semantics could permit a buffer to be mapped again
-> in future (e.g. revoke/unrevoke around a reset), but the DEAD state
-> can never become OK again.
+> This supports multi-range DMABUFs, which typically would be used to
+> represent scattered spans but might even represent overlapping or
+> aliasing spans of PFNs.
 >=20
-> This enables a userspace driver process to securely reclaim VFIO PCI
-> BAR resources previously delegated to a subordinate process.  Using
-> the new ioctl, the userspace driver process can ensure that resources
-> are inaccessible when the subordinate is deemed "done".  The
-> originally-exported DMABUF becomes unusable, and BAR resources can
-> then be safely re-exported for use elsewhere.
+> Because this is intended to be used in vfio_pci_core.c, we also need
+> to expose the struct vfio_pci_dma_buf in the vfio_pci_priv.h header.
 >=20
-> Refactor the revocation code out of vfio_pci_dma_buf_move() to a
-> function common to move and the new feature request path.  This
-> function calls dma_buf_invalidate_mappings() and
-> dma_resv_wait_timeout() only on the revoke path
-> (vfio_pci_dma_buf_move() originally called them for both revoke and,
-> unnecessarily, for un-revoke).
+> This move also adds a new member, vma_pgoff_adjust; this is consumed
+> by vfio_pci_dma_buf_find_pfn(), but will be set in a future commit.
+> Add it now to reduce the number of functions touched by later commits.
 >=20
 > Signed-off-by: Matt Evans <matt@ozlabs.org>
 
@@ -79,5 +65,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261006193643.7633=
-0-1-matt@ozlabs.org?part=3D9
+0-1-matt@ozlabs.org?part=3D4
 
