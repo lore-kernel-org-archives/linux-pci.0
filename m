@@ -1,164 +1,125 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f44.google.com (mail-dl1-f44.google.com [74.125.82.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C86037C119;
-	Tue,  6 Oct 2026 18:38:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791311938; cv=none; b=SLH6UnofbWYIn7n63/wg3Zr8cAFgKGlP5BwKqFR8cjOEXoWyjH3UclOaqtgys6dMKXXAzkI6u03l1/bQIfeApESJ4ZI3UnLHIcRUliYPjWtvc393Qr0qpGxlL16U9duMlsWWS+YG54m65+fpSInOCZy273G4HAnfQY0QuQxRUAU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791311938; c=relaxed/simple;
-	bh=TyYf3EzK7sY1y1ad2dQjjY/1dF1vcwiNqCIEmpIw8iU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SWnLrWcDKs7KedTUL92AEjNzcx5zPkknZmTQ66omjCOWOQx/0sYlfJ0z7gCvtS0s8RDg9/JHJtZYzkjyn0f3wcHVx+NiMkJ9MNSKPoECotm5Fr6eP03gGni29RL36k/ap6woSwki99ztYHm5ysq77JbYqZAyfxTNlUcptwaXQRo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TF88qEH0; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12EE837C119
+	for <linux-pci@vger.kernel.org>; Tue,  6 Oct 2026 18:41:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.44
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791312116; cv=pass; b=iHwvdunaGWE4EHcP2VB+4uDiUZCVB5+72GGi5FINfCZSipHCNvrU2TgUlyql/PLuUckDv9AfA6xSsmRWoCa9+6s+xLoqLinp9ktSGwejCy54MPhnmj2jAXR8rDv7JEDnYo2cHGTZOfL4qh+O5+lAm8BAu07AvVMLn4gr9uoeT3A=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791312116; c=relaxed/simple;
+	bh=MpAzFgxVWCMOvK7jjl5NbxEMkYdvU1eQNoXVbITb2nA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=l5TpBngj/qpesEhctBtGuqIJ+qfI+7AwaWcUKxfh0Ph3qtUi+PDmbH0GXmzNTvJMmTgeYXwiwjhw3j8oG+GDLfoBQ92oWrcyqGJIjxU7JoYm7mhXXVqXoTFPR4MkOfApZT++2J6WPn6o1ThDzAOSnbSwanjRDO1gxhLadaOF0+0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=D6uV6t5c; arc=pass smtp.client-ip=74.125.82.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TF88qEH0"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791311937; x=1822847937;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=TyYf3EzK7sY1y1ad2dQjjY/1dF1vcwiNqCIEmpIw8iU=;
-  b=TF88qEH0r1BM8jbitLG3RL0MinRo/aSlsfcImN7V+0u0UwaUe1FiwsK/
-   QkASeeFehiKSP/6IpAnIU9E43dQhsrjtUY18vegmHIGex0Hyu2iO533yN
-   qiZeEe0FrwMyorx0s99kaoMMQhrp4Ay8LDz4RPBpGKvO82mJ+Wq/1pUAd
-   uo3Ik885BaJ/twC5QafhgDS48RY4XjtCU0Ir6gOgr83sDwnnEyMy+FZtf
-   YgvLUyOPpwxOHkFa9EjzNzVOOQZjspNJqbv5zdaGHzWvnyafzw0cWmTGg
-   l8nSJ7AaKo4W9up9kVuRdxoG3eu+2FmXRPxZ+4BnmIit6hYlJieVbDcyx
-   w==;
-X-CSE-ConnectionGUID: lwdO/McYR8uZwzUyZP18KA==
-X-CSE-MsgGUID: qkDExm35TX+O+XqvAbeFKA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11927"; a="69214"
-X-IronPort-AV: E=Sophos;i="6.27,143,1787036400"; 
-   d="scan'208";a="69214"
-Received: from fmviesa013.fm.intel.com ([10.60.135.153])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Oct 2026 11:38:56 -0700
-X-CSE-ConnectionGUID: qqAJ+EmmTfKKHAXe/R7oWg==
-X-CSE-MsgGUID: 87Po+9FmQBW5J2xAfRmiVg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,143,1787036400"; 
-   d="scan'208";a="1245081"
-Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.80.90]) ([10.24.80.90])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Oct 2026 11:38:56 -0700
-Message-ID: <8e8b494e-4dcd-4313-9658-b1fbb0ea2b9e@linux.intel.com>
-Date: Tue, 6 Oct 2026 11:38:55 -0700
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="D6uV6t5c"
+Received: by mail-dl1-f44.google.com with SMTP id a92af1059eb24-144e1b6d52cso1227c88.1
+        for <linux-pci@vger.kernel.org>; Tue, 06 Oct 2026 11:41:51 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791312110; cv=none;
+        d=google.com; s=arc-20260327;
+        b=OWtxQu7kkWLpi7prJcBCD/PPVI/pYrcpwlbP6JNEuF5oajYsvqw977CMXEoesdunM1
+         iSOPpjYeieJo0M0gx82L3An8vJODCGrGqOI4AxrG7SQzwZigumYPpYjyUV1r84MA7EtV
+         eIYUNBxcJid7YqpTnyfaVI2sSemW09sftFXO9vLDXn/UoSW/xjUvfPe05pl5FkesRjQe
+         iWTjo2v11m2v1ZEqtffhHFAwJxWpp14b/yhBCnQxd5E/uHXpxyew86guw4XIXF6iCJYZ
+         veAEpCr0C15FJoEKuQqmZF7cH2x7k4h3cKJxagEFaUrJnW/FB9HtaQ3EZ88QU60bold3
+         CI6g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=7ndOBpyUVrvLUL8/BucAq7YTN0AfiGwI+dPlm0Y1IOo=;
+        fh=CoUeb+Yg1S6TMsNJcz3GsWUDiLIs7AWDt8Nj3nKkWe4=;
+        b=nBr7YI9CpNjL9f9tmqx/9NzdzT6tSnw1Gd6Te0/GAlHcZJ9O67OEMcTWc/ojo9LBJA
+         bwUuLX+QyruBNLd7yZcAKBXTY5Mc3WoZsOPxb0W1ewyVIaAJW1p5PEtCp7AtZDW8FyST
+         IbIDf4diMdj54CL3WpAOJV8uTt+Yn9Arm09dNxWj4TN0z3kNgRe6irAXmMjmanljEr5F
+         BZZkwLQD+rjYLhXHTWE4Zhyteq4jmHLt9mvuu00FJT7dgALs7YvQwMWH3XKXMZ84pNyL
+         DKxCMWc5KDp8LvTLWJ7K+31/bIQP++OJkgnQDY33dGW1qiVQetWgPhxyDqFhwocGRhlU
+         cR0g==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1791312110; x=1791916910; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=7ndOBpyUVrvLUL8/BucAq7YTN0AfiGwI+dPlm0Y1IOo=;
+        b=D6uV6t5cxilTp1Chf4NYnLBewK6R7vOxuEO1LWRldrmlSaiUTlna2YczJ1QTNJMIvY
+         7El3vroNyPVvrG+7wjJZyFgaamUB5UkaXsWiM3nE60rakNg0qunxyoaQ2CdbgcWUuY8P
+         hamDVJLYuZPZqauhpItsZF6X+ejgclt/xSyd+FzrkznN8YiEEUsq1fyKcDf/pCzgrnUJ
+         nImAI/7JEnJonvn2+/qgEbk+ui5C9Vw/snV1SGQmre57vIfglz2eCqgV7GlkZ6BJq2BC
+         G497kaAIEIQTWgLrTqXd/nn2GimjJE1OmuMCXmPRiN4LbNJ/JfHOYtrpg2JsRdA/Xag+
+         s39w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791312110; x=1791916910;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=7ndOBpyUVrvLUL8/BucAq7YTN0AfiGwI+dPlm0Y1IOo=;
+        b=01oF5zZMTsdrXDA0CEP3SMfKTE5lXbrx3IDnrk7cDMp7+/1Lbfg/TesLx8/Uv3ydSu
+         nX4sINOLzfkmpGO4584H5CV/l0zRLDSo9O2/6u5VizLlHP1JR5PEi8WFKYy+5NAe5u+B
+         7QRJPIlfHoothNAhdaPLRBmhwBzVjQ91d03nItemVPpJRFVgKRvouvhokMdD0rse+Gy6
+         J05iNdGUm9vALCJ1A5dAxQjhmVEdEkUk1E0Blf/K2s0jkIRUqssK0AHNhTBLWPB6pJbb
+         5TpuxTwpTff7jQkhDp+FAmTn9zqo8wYby6Gysojjqj4RAc3Ewue4XzMVcXsSfubbqAgb
+         TkfA==
+X-Forwarded-Encrypted: i=1; AKwUvBxhByraK8FmaZKx2217Iq2vyO75EVwZER3B6IoaG/1hXK9JCe969pIH8G8+odRPxbnTjhDOwnNuE2M=@vger.kernel.org
+X-Gm-Message-State: AFuF++m6sCAL97SsoNUl9f76bMCm3YKhdifhaDGlsXflmEMjQ+X8ZkuY
+	OhaNvWxM/5SCUZhQ9s/KE7ADepqXGxs/9bdSAY4Cem7G5T4T3ef7nxAYLtaBlZdtFRU43Fpfqrc
+	1z3UFnd5xKOhk5XvEVHbVX2jYhSieNIJ44Hw8sUc=
+X-Gm-Gg: AYBFou3Wl0d1JsYLNr8lmEcat65QJZ31NulbgXNdj6p19SFAaT3NXVGMXNJ2eCvx9Wz
+	9Opm9SShV5vU5WQ15kilkTpungmPLN+MUbZrE8h4PeQVDdEKTsJoN1JIAnRx076eQTrfHuXyY+K
+	GgybTVdW0pNXmOamB9rBqdId4mIQ7EoI22VZCj/5xGPffFE0pWK9pOC/4Fq+SzkbK0UoeNEPbgq
+	JfflqVLjZqAojlS8e5r/DCqvTg/Sy8l0mUcaJLHEb7KrOvIbqlKX/c5rkDbCo2xakAMEyNhYwpz
+	kbN03FrWEdhTkYM0uMaJ5n5TD42UQ3JgYrzlXfLFeHb9CKVlP8gEV79XHV0M9Zpkbt+PfwP6LUo
+	4TTOsAE4sr/LAULSlaXUVQA9j9iG/YHfjtofs
+X-Received: by 2002:a05:7022:28b:10b0:138:38c7:6adb with SMTP id
+ a92af1059eb24-15df40d24b7mr384153c88.7.1791312109409; Tue, 06 Oct 2026
+ 11:41:49 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v15 0/4] Simplify PCIe native ownership
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, rafael@kernel.org,
- lukas@wunner.de, terry.bowman@amd.com, kanie@linux.alibaba.com,
- olof@lixom.net
-References: <20261006175118.GA695965@bhelgaas>
-Content-Language: en-US
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <20261006175118.GA695965@bhelgaas>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20260924173501.856380-1-dmatlack@google.com> <20260924173501.856380-3-dmatlack@google.com>
+In-Reply-To: <20260924173501.856380-3-dmatlack@google.com>
+From: Josh Hilke <jrhilke@google.com>
+Date: Tue, 6 Oct 2026 11:41:38 -0700
+X-Gm-Features: AclHuK9FyS0I6QMmX8Zk3xjrz1tbTyWGWZU5DOqGZ_KGJ50pE4yWQNuil68MSKM
+Message-ID: <CAAdrzjt51Rduf556+BjDb6-M2mfDEgnTsbxTO3JHn70uu7sr5w@mail.gmail.com>
+Subject: Re: [PATCH 02/15] PCI: Add an offset-indexed store for saved
+ capability registers
+To: David Matlack <dmatlack@google.com>, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Jason Gunthorpe <jgg@nvidia.com>, Josh Hilke <jrhilke@google.com>, Lukas Wunner <lukas@wunner.de>, 
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>, "Oliver O'Halloran" <oohall@gmail.com>, 
+	Pasha Tatashin <pasha.tatashin@soleen.com>, Pratyush Yadav <pratyush@kernel.org>, 
+	Samiullah Khawaja <skhawaja@google.com>, Vipin Sharma <vipinsh@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Bjorn,
+On Thu, Sep 24, 2026 at 10:34 AM David Matlack <dmatlack@google.com> wrote:
+>   - Each capability allocates its own buffer, at nine call sites (plus
+>     one hand-built by a quirk) that can each fail independently. Four of
+>     them (AER, DPC, PTM, TPH) ignore the failure
 
-On 10/6/2026 10:51 AM, Bjorn Helgaas wrote:
-> On Fri, Oct 02, 2026 at 02:18:24PM -0700, Kuppuswamy Sathyanarayanan wrote:
->> This revives Bjorn's v12 from November 2020, rebased onto v7.3-rc3.
->>
->>   https://lore.kernel.org/all/20201126011816.711106-1-helgaas@kernel.org/
->>
->> The goal is unchanged.  Decide who owns each PCIe port service in one
->> place, when we interpret the _OSC results in acpi_pci_root_create(), so
->> that everywhere else only has to look at host_bridge->native_X.  For AER
->> specifically, host_bridge->native_aer becomes the single answer to the
->> question "may Linux touch the AER Capability?".  Today callers each have
->> to remember to also test pcie_ports_native and pci_aer_available().
->>
->> I posted v11.  Bjorn took it over at v12, split the _OSC changes in two
->> and deferred the "pcie_ports=dpc-native" work.  The v12 review comments
->> were agreed but never respun, and the series stalled.  v13 was that
->> respin.
->>
->>   https://lore.kernel.org/r/cover.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com [v11]
->>
->> Bjorn suggested reviving it in response to Guixin Liu's report that
->> "pcie_ports=native" no longer enables DPC.  The DPC service binds on
->> host_bridge->native_aer, and that flag did not reflect the command line,
->> so DPC stayed off when firmware retained AER control.  Patch 3 fixes it
->> by making the flag reflect it.
->>
->>   https://lore.kernel.org/linux-pci/20260901064554.2178688-1-kanie@linux.alibaba.com/
->>
->> Patch 3 has a side effect worth calling out.  drivers/cxl/core/ras.c did
->> not exist in 2020 and tests host_bridge->native_aer with no
->> pcie_ports_native fallback, so it has been quietly ignoring
->> "pcie_ports=native".  Centralizing the check fixes that.
->>
->> Binding the DPC service on host_bridge->native_dpc, rather than on
->> native_aer, is left for a separate patch on top of Lukas's series that
->> removes the DPC/AER dependency, as agreed with Bjorn.  That change
->> alters behavior, so it does not belong in this cleanup.
->>
->>   https://lore.kernel.org/r/cover.1790531238.git.lukas@wunner.de
->>   https://lore.kernel.org/r/20261001221408.GA2731929@bhelgaas
->>
->> Changes since v14:
->>   * Patch 3: fold "pcie_ports=dpc-native" into the _OSC control mask as
->>     well, so host_bridge->native_dpc and the "OS native features" line
->>     reflect it (Bjorn).
->>   * Picked up Guixin's Reviewed-by on patch 3.
->>
->> v14 posting
->> https://lore.kernel.org/r/20260922204548.3884906-1-sathyanarayanan.kuppuswamy@linux.intel.com
->>
->> Changes since v13:
->>   * Lukas suggested dropping AER cap check fix (patch 1 of v13). He has
->>     a series underway to fix it cleanly (removing DPC/AER dependency).
->>     So dropped the patch as suggested.
->>     https://lore.kernel.org/r/aq95LGUHL-pnmTlr@wunner.de
->>   * Addressed use of IS_ENABLED(CONFIG_PCIEPORTBUS) instead of #ifdef
->>     (Lukas).
->>   * Added Fixes tag in patch 3 (Guixin Liu).
->>   * Added Acks from Rafael.
->>
->> v13 posting
->> https://lore.kernel.org/r/20260919162655.3499010-1-sathyanarayanan.kuppuswamy@linux.intel.com
->>
->> Bjorn Helgaas (1):
->>   PCI: Centralize pci_aer_available() checking
->>
->> Kuppuswamy Sathyanarayanan (3):
->>   PCI: Assume control of portdrv-related features only when portdrv
->>     enabled
->>   PCI/ACPI: Tidy _OSC control bit checking
->>   PCI/ACPI: Centralize pcie_ports_native checking
->>
->>  drivers/acpi/pci_root.c           | 78 +++++++++++++++++++++++++------
->>  drivers/pci/hotplug/pciehp_core.c |  2 +-
->>  drivers/pci/pci-acpi.c            |  3 --
->>  drivers/pci/pcie/aer.c            |  6 +--
->>  drivers/pci/pcie/aer_cxl_rch.c    |  2 +-
->>  drivers/pci/pcie/err.c            |  2 +-
->>  drivers/pci/pcie/portdrv.c        |  7 ++-
->>  drivers/pci/pcie/portdrv.h        |  2 -
->>  drivers/pci/probe.c               | 10 ++--
->>  include/linux/pci.h               |  2 +
->>  10 files changed, 80 insertions(+), 34 deletions(-)
-> 
-> I put the first three patches on pci/portdrv for v7.4, thanks!
-> 
-> I deferred the last ("PCI: Centralize pci_aer_available() checking")
-> while we sort out the MSI/AER question, but I want to make sure we get
-> the rest in v7.4.
+ After patch 1, DPC reports the failure with pci_err(), so at this
+point only AER, PTM and TPH ignore it.
 
-Thanks for picking it up.
--- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+> +     *val = dword >> (8 * (off & (sizeof(u32) - 1)));
 
+[...]
+
+> +     unsigned int shift = 8 * (off & (sizeof(u32) - 1));
+
+Nit: please put this shift in one small helper so the two copies can't
+drift.
+
+- Josh Hilke
+
+
+
+
+
+- Josh Hilke
