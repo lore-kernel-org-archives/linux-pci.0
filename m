@@ -1,44 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 758913D5668;
-	Wed,  7 Oct 2026 20:51:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F4E93A8736;
+	Wed,  7 Oct 2026 21:01:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791406320; cv=none; b=tsr5KDwz90uec5lOdR3FaJBeWCLgw+dtA/chb5kiUcSrT93CjKR9zJSrav80NNG0gCqOsAZMgrH5HiXPrzO845x+5woOoScUxXD6WnxU05W6DyVBBWBTKp2nRjnUGL74pMEebvEQN3ANveSFsLiPoYligh38nMzJRiRbD6mXElA=
+	t=1791406875; cv=none; b=aIGFIrCzBITav70s29vQX4kzhPtdC2/wwb51hv7bwZRh9mUp4/++YSQCyk0o03PontenNCh+Mw54jdyMY73UuqzXv+dYO7rtojUNQ/tr632DJUXikpxuITIgde+CJiDN+vPcGVK03FrQqzLR44n5CIo+y6jnDoQ1F/c5GKgiPFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791406320; c=relaxed/simple;
-	bh=uE95pd9jNyT4IQ51oKOVY0v6aW9zfGaxhYG3gVlOryo=;
+	s=arc-20240116; t=1791406875; c=relaxed/simple;
+	bh=++JAg6n5WWw/0s0UJ+aaZybr9nVpCSgjfM9E3JC/k2Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=Eg+HMbrgnzrNN3V4on7eWDWRoMBVALWYH1Xve8WNkLF/YamAdfGs1LDabqpQ/1FJAbWa6gMkjbJqVgZMYOlA4Dm2IZU4rYx8YRsmz6oJX6ReW0xsPArRR1pgOwTOwlsY8t1HnY/tixkJzb7XgNyqJrfH2ZqwbtAFSfcOhBTkL/s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IKXAOZGW; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=sDUjMyS8qyYGhzJlL3pj7S/gS21h9s5KldfSsKqLvXHllD1l0jLjoQI1OXBDmcdPgprlfc3azVmPNioLpIBZPvdQHSwZBwXmeDs79vQd2Ggsejsy/q2yoVuSqy1bGcMxCQxNsl5XuBD7bXq/SqUDng7p0ALyF2PhKXvfA/17kq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hjjiUvXK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IKXAOZGW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAC7D1F000FF;
-	Wed,  7 Oct 2026 20:51:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hjjiUvXK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D0921F000FF;
+	Wed,  7 Oct 2026 21:01:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791406319;
-	bh=fSnkBBtzKq/ulj3XKnVf2ZgADiUGXEZk9M5NXU7fseM=;
+	s=k20260515; t=1791406873;
+	bh=PUk1RoUh5fgwSQayemPlpxSccIqVOskNjlRRgN0DgPo=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=IKXAOZGWImOprSYjFPyZq9KhE00T3p7ZpFQnQ3ir8VU9gWoM7P/ahuoWtnOkTvKwL
-	 RJcWYU07frr/5y7NBToxVkH51krGl+5sP+nlgOMz/t/eBZpdGn7rP5G+0SxQnKd0to
-	 EZvIaW1RgN3jPWc60DRYPW8mCuyDBD0ivozWADICHIMSiSvN5v1Jd4nQmDKtw48Ayx
-	 pqD5m0aqj7raRfrSN5nyMpl5S/P8kb1VA32WFiA6q6KOGkbwtm58a/tnXt/nsB0zUT
-	 Kfy+EHk+ouhxtbUiS77iD2VTcyfr0zg4WaW1gUSYBkg2eDx+sWS6pXwjk6ffAaWcJ2
-	 AhFMUh6TjVYxw==
-Date: Wed, 7 Oct 2026 15:51:57 -0500
+	b=hjjiUvXKEhFW2AAZQTT2b+PiA/oEfqsNvI/zjYMTrbHvIydw5JG95HhvCZdmBt6L6
+	 F1o44jxY24fAVbI9L8pM/XHC1WHUzLi4g0n4A1fFbCp+/zc3dY1jEXFZvuLFcD8V3k
+	 EqywJ/3v4dBVwB2WlgL7hxILRBTBGyb0t9BX/+EqUW6xDlGzaJDZYYMWWk7TR2fMfc
+	 nXhnuB1VEFBnwkg2l88U3F5v6yZjEzFiyvVgUYrmDB9mKju+dAwSPOMahzJlb2BDBB
+	 P1lYfZZg5WeEya+FS7AXO4705acJniU4QXpRc70Q3jW1NdUXOJLs2jK1pc6BXBtKMT
+	 1NyEgX+82H9yg==
+Date: Wed, 7 Oct 2026 16:01:12 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Janusz Krzysztofik <janusz.krzysztofik@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	intel-gfx@lists.freedesktop.org,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Andi Shyti <andi.shyti@linux.intel.com>,
-	Krzysztof Karas <krzysztof.karas@intel.com>,
-	Sebastian Brzezinka <sebastian.brzezinka@intel.com>,
-	Krzysztof Niemiec <krzysztof.niemiec@intel.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: Disable not supported reset methods on DG1 0x4905
-Message-ID: <20261007205157.GA786789@bhelgaas>
+To: Priyank Rathod <rathodpriyank@google.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Shuah Khan <shuah@kernel.org>, Randy Dunlap <rdunlap@infradead.org>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 0/2] PCI: Add Lane Margining at the Receiver debugfs
+ interface
+Message-ID: <20261007210112.GA787166@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,65 +49,80 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260907090249.1348552-2-janusz.krzysztofik@linux.intel.com>
+In-Reply-To: <20261006-pcie-link-endpoints-v6-0-154d71657d32@google.com>
 
-On Mon, Sep 07, 2026 at 10:59:18AM +0200, Janusz Krzysztofik wrote:
-> DRM CI consistently reports failing device reset attempts on Intel DG1
-> discrete graphics adapters.  Manual reproduction attempts allowed to
-> narrow down the scope of that problem to a specific revision of that
-> hardware, SKU 8086:4905.  It has been confirmed that both reset methods
-> claimed by the device, i.e., flr and bus, suffer from that issue.
+On Tue, Oct 06, 2026 at 08:59:09PM +0000, Priyank Rathod wrote:
+> Lane Margining at the Receiver lets software move the sampling point of
+> a receiver in time or in voltage while the link stays up, and read back
+> the errors the receiver sees, to find out how much margin a link running
+> at 16.0 GT/s or faster has.  pcilmr in pciutils does this today by
+> writing the capability registers directly from user space.
 > 
-> Since consecutively failing device resets may lead to system hangs,
-> disable both useless reset methods.  A respective CI test will then be
-> skipped instead of aborting whole CI jobs.
+> This series adds a debugfs interface for it.  The kernel sets the link
+> up for margining and puts it back afterwards:
 > 
-> Suggested-by: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
-> Closes: https://gitlab.freedesktop.org/drm/i915/kernel/-/work_items/11814
-> Reviewed-by: Andi Shyti <andi.shyti@linux.intel.com>
-> Reviewed-by: Krzysztof Karas <krzysztof.karas@intel.com>
-> Signed-off-by: Janusz Krzysztofik <janusz.krzysztofik@linux.intel.com>
-
-Applied to pci/reset for v7.4, thanks!
-
+>   - ASPM is turned off for the session with the existing ASPM API,
+>     Hardware Autonomous Width/Speed Disable are set on both ends, and
+>     both ends are kept runtime resumed.  All of this is undone when
+>     the session ends or either end of the link is removed.
+>   - Before each margining command, the link is checked against the
+>     state the session started in.
+>   - User space selects the receiver and the steps; the kernel does not
+>     run sweeps or interpret results.
+> 
+> Patch 1 adds the interface and its documentation, patch 2 a kselftest.
+> 
+> The only PCI core changes are the init/exit hooks in probe.c and
+> remove.c and their prototypes in drivers/pci/pci.h.  aspm.c, pci.c and
+> include/linux/pci.h are not changed.
+> 
+> Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
 > ---
-> v2: Fix commit description wording (Andi)
->   - add Suggested-by: tag missing from v1,
->   - add collected Reviewed-by: tags.
+> Changes in v6:
+> - Add a kref on struct pci_lmr_port and use pci_lmr_end_sessions() in
+>   pci_lmr_reboot_notify() so reboot/kexec waits for in-flight commands
+>   outside pci_lmr_mutex (preserving the port->lock -> pci_lmr_mutex lock
+>   order) instead of skipping ports on mutex_trylock() failure.
+> - Link to v5: https://lore.kernel.org/r/20261006-pcie-link-endpoints-v5-0-c1e73235746b@google.com
+
+These reposts (v4, v5, and v6 within four hours) are a little bit too
+fast.  The pace suggests this isn't fully baked yet, and it's too much
+for reviewers to assimilate.
+
+> Changes in v5:
+> - Clarify in pcie_lmr.sh why the sysfs 'link/' check targets receiver 6
+>   (and rename 'up' to 'child'): in PCIe terminology the Upstream Port
+>   (receiver 6) is the child device below the Downstream Port, and in
+>   drivers/pci/pcie/aspm.c aspm_ctrl_attrs_are_visible() looks up the
+>   link via pcie_aspm_get_link(pdev) -> pci_upstream_bridge(pdev)->link_state,
+>   so '/sys/bus/pci/devices/<dev>/link/' is attached to the child device
+>   below the Downstream Port, not to the Downstream Port itself.
+> - Link to v4: https://lore.kernel.org/r/20261006-pcie-link-endpoints-v4-0-ad5398c4260c@google.com
 > 
->  drivers/pci/quirks.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index de9bbccda21fd..e55475374c6fd 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3811,6 +3811,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TI, 0xb005, quirk_no_bus_reset);
->   */
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1164, quirk_no_bus_reset);
->  
-> +/* Intel DG1 0x4905 may not recover from bus reset */
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4905, quirk_no_bus_reset);
-> +
->  static void quirk_no_pm_reset(struct pci_dev *dev)
->  {
->  	/*
-> @@ -5597,6 +5600,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
->   * AMD Neural Processing Unit 0x1502 0x17f0
->   * Intel 82579LM Gigabit Ethernet Controller 0x1502
->   * Intel 82579V Gigabit Ethernet Controller 0x1503
-> + * Intel DG1 Discrete Graphics Adapter 0x4905
->   * Mediatek MT7922 802.11ax PCI Express Wireless Network Adapter
->   * Mediatek MT7925 802.11be PCI Express Wireless Network Adapter
->   */
-> @@ -5612,6 +5616,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1502, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x17f0, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x4905, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x0616, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x7925, quirk_no_flr);
->  
-> -- 
-> 2.54.0
-> 
+> Changes in v4:
+> - Drop the exported pcie_get_link_endpoints(); the partner lookup is
+>   private to margin.c (Ilpo).
+> - Drop pci_aspm_inhibit() and all aspm.c changes.  Use
+>   pcie_aspm_enabled(), pci_disable_link_state() and
+>   pci_force_enable_link_state(), call neither when no ASPM state is
+>   enabled, and restore Clock PM when CLKREQ# was enabled.  ASPM Control
+>   is checked on both ends before each command.  The remaining
+>   differences after a session are documented.
+> - Remove the MSampleMultipleReceivers capability bit.
+> - One receiver per session, selected with a port-level 'receiver'
+>   file.  A session starts with receiver 1 on a Downstream Port and 6
+>   below it, as pcilmr does; receiver 0 is not used for margining.
+> - Add a per-lane 'status' file with the step response and error count,
+>   and a 'port' file with the Margining Port bits.  Stop writing
+>   Margining Port Status.
+> - Locking: take both device locks with pci_dev_trylock() only while a
+>   session starts or stops, require both ends to be added, and make no
+>   runtime PM calls under the LMR locks.
+> - End sessions from pci_lmr_exit() for either end of the link.
+> - Commands fail with -EIO after a system suspend.
+> - Move debugfs to pcie_lmr_<device> at the debugfs root.
+> - Keep per-device state in margin.c instead of struct pci_dev.
+> - Split the selftest into its own patch, rename it pcie_lmr, use KTAP,
+>   and only start a session on the port named by PCIE_LMR_DEV.
+> - Refer to registers by name instead of specification section numbers.
+> ...
