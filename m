@@ -1,126 +1,111 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10FCF45D90A;
-	Tue,  6 Oct 2026 23:51:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 253A3347BD4;
+	Wed,  7 Oct 2026 05:37:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791330699; cv=none; b=WyM9v+akN4jnOvOKmUCBn1GFjE/X0WZ4IgWjkF20CmNSCanD7f6F5qINlH0+MAokG208FbTCMpggVyKvvvFwo2fc8uNZRXii2ekO75f/dIvH1Un0q0Xt9gOJdVTm3uzo/UBpuiNKwwxSoXXP3/IgOom/keDs0qjPf0dW+c4S19w=
+	t=1791351430; cv=none; b=tghL/5FVInESzXfxzl7qW4iWuA87diEXyBhc4lEc8z3AI7tGJ/Bc92l7fof1somTJvLuokpACu9hKBmBnUqbUBgKkjgcRWpmhFSNm9GDZW6oIs/vJxTMVPM+xgijgWUFlP+7vzVUQo+y4IbPUwVR4tfGDLI0sW62jaRoVyu7YGs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791330699; c=relaxed/simple;
-	bh=3hUbVCztv1hYEM6wjkEyDGTyPpgI0uE9D9WXleIrXXI=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=grVLCnLLfp0blexJx+Zp8WVCKofKZ/e7VfOeGtlye7D1nvvfKCEXeZmNtuL64mb5d693mjLCxAF9/fJmGCcR1LMoL3mXWHkjyxO6ryJcpPSQb8rzaTUi0PF6xn4vP5jxmZAd6wylYdyMhVzplsJVpVq0DW0nuKEjNzsW/MG6TRY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f182rh10; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791351430; c=relaxed/simple;
+	bh=YUEF36lohVn++/a1MgPSbr0QkpLsQ4/6zzWsufvCZEM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hoZun5wTiNK9DWMurIIkUqjX1aryTUfnQKUlvR1zjeCK1TEAJc1aJY1uMMTi6w5eTKwZPHi333lHTXcY9GBZn6qmal7QNNYoh+6x1V5igs3LrtlhaCIkc7/DHfptd52Nf/oysEdMDo811nSqJWhCqRGaNofLSWmC+a5ctk7Thho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A/74R4Na; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f182rh10"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C87C1F0089B;
-	Tue,  6 Oct 2026 23:51:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A/74R4Na"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2BBBD1F0089B;
+	Wed,  7 Oct 2026 05:37:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791330697;
-	bh=T5fEJovPsoCfP5P+FXv4U7qjHPT68sKbk0R51K6ii7M=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=f182rh103XM6R0hz4Tps9Q6Csl2cT7UIdegA7GvOeNN7R9YaFA2IEQt/nmOOk7MHH
-	 BNS9BM8zIilThfi4NrccOwFzYeEEI453zGIlYWsmT9QKomKDx1w3zbZp2i3HjcCEbd
-	 7CUlscOkOClPQD/howpAlCJ8az7wiTcrZAlz55pUT/DATXM0mBaezQscpqGEcugrpo
-	 Hab7sMjwXzJtAkKmywrBajq3wugy7kq6G3hUzZg8Ylc4S/K+N/qhX0ZL5kF9CIacQC
-	 78gyCjRYiyj1rgpqgyRXnOVrlP9vI8xw0RuOLX06ucqjIdXXkhXr40yY6X4R/m/bcV
-	 HQAulhOQrQIpg==
-Message-ID: <sashiko-outbox-162530@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH v1 7/8] nfs: allow LOCALIO for P2PDMA pages only as
- aligned direct I/O
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Pranjal Shrivastava" <praan@google.com>
-Cc: linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, "Jeff
- Layton" <jlayton@kernel.org>, "Anna Schumaker" <anna@kernel.org>
-In-Reply-To: <20261006233248.705086-8-praan@google.com>
-References: <20261006233248.705086-1-praan@google.com>
- <20261006233248.705086-8-praan@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 06 Oct 2026 23:51:36 +0000
+	s=k20260515; t=1791351428;
+	bh=tcSxhOiDrp3UQQKkfUKaBm9Y3n2G1K7iOTeVkE1Aipk=;
+	h=From:To:Cc:Subject:Date;
+	b=A/74R4NaKVGFHIHsgQ8GvofUVsKiOCpxInv65lfAjDpnYl0kXpfe/oA2pYmwuurK9
+	 3/Tvl8Zfj5xvVc/80y/deA1a1w5o98x44EpCsI/dtH5qoZvbVjkNgKZjhntSNXNq3G
+	 78M7MdxoPm6sO0/bBQG2MTcj/Ogsqzg3N4AtpgmXNMxqaAOIT479C6l+FufCviIsdN
+	 sy2wsC3Ly1yVgNtM27ZSU8ucNjo2haTKDfGuGgzFVeHkguUL0yB/hdLHHeP2TdEshu
+	 tRte9V8NUgCTtBzDl9o/4Cn+rJbe1bBlKBhsMFfZupmsOxV3UB5HB7/T13ufDUlCwF
+	 xsjNAGPHIbLCg==
+From: Claudiu Beznea <claudiu.beznea@kernel.org>
+To: lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	p.zabel@pengutronix.de
+Cc: claudiu.beznea@tuxon.dev,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Subject: [PATCH v6 0/9] PCI: rzg3s-host: Add PCIe hotplug support
+Date: Wed,  7 Oct 2026 08:36:36 +0300
+Message-ID: <20261007053645.1391545-1-claudiu.beznea@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] mm: memory and refcount leak in nfs_local_doio() on initialization=
- failure
---
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 
-commit 9173ddb2cde9be449dc0867c1db4182cfbf16690
-Author: Pranjal Shrivastava <praan@google.com>
+Hi,
 
-nfs: allow LOCALIO for P2PDMA pages only as aligned direct I/O
-   =20
-LOCALIO hands READs and WRITEs to the local filesystem, which can take
-P2PDMA pages only if its disk can DMA to them. Use LOCALIO for such I/O
-only if the filesystem's block device supports P2PDMA. Otherwise send a
-regular READ or WRITE RPC, as if LOCALIO were off.
+Series adds hotplug support for the rzg3s-host driver. This is a
+continuation of the series John posted initially at [1]. Along with it,
+prerequisites fixes and cleanup patches were added.
 
-[ ... ]
+Thank you,
+Claudiu
 
-> diff --git a/fs/nfs/pagelist.c b/fs/nfs/pagelist.c
-> index ec535ed3051d4..2d1d07c460fd4 100644
-> --- a/fs/nfs/pagelist.c
-> +++ b/fs/nfs/pagelist.c
-> @@ -1023,6 +1023,9 @@ static int nfs_generic_pg_pgios(struct nfs_pageio_d=
-escriptor *desc)
->  					  &hdr->args.context->nfl,
->  					  hdr->args.context->mode);
-> =20
-> +		if (localio && hdr->args.p2pdma)
-> +			localio =3D nfs_local_p2pdma_check(localio);
-> +
->  		if (NFS_SERVER(hdr->inode)->nfs_client->cl_minorversion)
->  			task_flags =3D RPC_TASK_MOVEABLE;
->  		ret =3D nfs_initiate_pgio(NFS_CLIENT(hdr->inode),
->  					hdr,
->  					hdr->cred,
->  					NFS_PROTO(hdr->inode),
->  					desc->pg_rpc_callops,
->  					desc->pg_ioflags,
->  					RPC_TASK_CRED_NOREF | task_flags,
->  					localio);
+Changes in v6:
+- addressed review comments as follows:
+- added patch 7/9 ("PCI: rzg3s-host: Add helper to wait for link up")
+- adopted the approach from pciehp and saved DSN of the connected
+  device and, based on it, take decision if the bus devices need to be
+  removed + rescanned
+- in case of link up and !list_empty(&bus->devices) remove first the
+  devices from the bus and re-scan (adopted the approach from pciehp)
+- with the new approach cleared the link IRQ (before enabling it) in
+  probe, and resume paths
 
-[Severity: High]
-Does this code leak the localio reference and the nfs_pgio_header on
-initialization failure?
+Changes in v5:
+- collected tags
+- added patch 3/9 ("PCI: rzg3s-host: Select PCI_HOST_COMMON")
+- addressed sashiko review comments (detailed in individual patches)
 
-The localio reference is created here and passed down. On error return from
-nfs_initiate_pgio() -> nfs_local_doio(), this caller does not drop the
-reference, nor does it have access to the requests bound to the leaked hdr.
+Changes in v4:
+- simplified comments in patch 2/8
+- kept only DL_UpDown changes in patch 7/8
+- added patch 8/8 for the .reset_root_port() support
 
-If nfs_local_iocb_init() fails (e.g. -ENOMEM) or !hdr->args.count evaluates
-to true, nfs_local_doio() returns early:
+Changes in v3:
+- added patches 1-6
+- re-worked patch 7 to use struct pci_host_bridge::reset_root_port() API
 
-fs/nfs/localio.c:nfs_local_doio() {
-    ...
-	if (!hdr->args.count)
-		return 0;
+[1] https://lore.kernel.org/all/20260630141720.3938514-1-john.madieu.xa@bp.renesas.com/
 
-	iocb =3D nfs_local_iocb_init(hdr, localio);
-	if (IS_ERR(iocb))
-		return PTR_ERR(iocb);
-    ...
-}
+Claudiu Beznea (8):
+  PCI: rzg3s-host: Follow hardware manual clock/reset initialization
+    order
+  PCI: rzg3s-host: Fix runtime PM handling in the NOIRQ suspend/resume
+    phase
+  PCI: rzg3s-host: Drop nop instructions
+  PCI: rzg3s-host: Move host configuration code together
+  PCI: rzg3s-host: Move suspend/resume code into dedicated functions
+  PCI: rzg3s-host: Move IRQ domain setup code
+  PCI: rzg3s-host: Add helper to wait for link up
+  PCI: rzg3s-host: Add bridge::reset_root_port()
 
-In these early return paths, it looks like the nfsd_file reference (localio)
-is leaked because nfs_local_file_put(localio) is not called.
+John Madieu (1):
+  PCI: rzg3s-host: Re-enumerate the bus on PCIe link-state changes
 
-Furthermore, call_ops->rpc_release(hdr) is never invoked. Because the
-requests (nfs_page structs) were already moved to hdr->pages in the caller
-(nfs_generic_pgio), the nfs_pgio_header and all attached pages seem to be
-permanently leaked, potentially resulting in hung processes waiting on page
-writeback/read and memory depletion.
+ drivers/pci/controller/Kconfig           |   1 +
+ drivers/pci/controller/pcie-rzg3s-host.c | 952 ++++++++++++++++-------
+ 2 files changed, 673 insertions(+), 280 deletions(-)
 
-By comparison, nfs_local_commit() correctly invokes
-nfs_local_release_commit_data() to clean up on its allocation failure.
+-- 
+2.43.0
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261006233248.7050=
-86-1-praan@google.com?part=3D7
