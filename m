@@ -1,261 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-81.mta0.migadu.com [91.218.175.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC5F23D3CF2;
-	Wed,  7 Oct 2026 06:32:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C73623515EF
+	for <linux-pci@vger.kernel.org>; Wed,  7 Oct 2026 06:46:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791354752; cv=none; b=Bhxgfio3wtsUABhaabVdkjfqlqh2TJCMYjEoURkfU2LDMbCwGd2gdFQXfOP4fysuVKgTIWLdetIwx6loZPSihg7xIVr9T6s47f0biC8DrsPMbXhAzTr6j4olexQje8yTFCM6Zwxzl7fkzlvYiRx5xeun1ocLdzp1fM4VJ5s+h64=
+	t=1791355568; cv=none; b=Y3tOzf/z96b0BF1uJuOPRmHVkdl5K+uTPEyf7dpy7JhkTu6GVLY9nCfdPJJbLZppMtnKAYaVID5hPLFLuCYVYdiMk+docJ1PqPg16JZJW97ZxOCtCSL2Xe1+GGPRyO+KuZX3uNMXa2JpjjaZaqRV7KkJjp58O8ElkAU9TWZFbP0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791354752; c=relaxed/simple;
-	bh=vK02Arew/xoK/SEhK+ZOF9gf1+RD+J2G1rphi2B2vFo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=H//l0cbaJOnya+D/AA/9sqkMV3H4QqTozb4pJsDBlWt7Kvl6bYkh+qziWrHbnJdJ3T/m4L+OQlpl0RyyFUR4OaflypBdD6qrxpI6FAHlvFGAuz4QnI48DNhCpKpjgIiWWQbh5EE9zihuaVs9WF+3612EhCH5rSHi/spqrKbwzgc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JsS3Dv1k; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791355568; c=relaxed/simple;
+	bh=XWhmaHnF0F5r9vJ5hEE64oYYoigOB38AGVvirhYDhug=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=BIAp8pNuTygicNEG5ABpSGl20MSRpKn+5L7RfeOUHz8D4DlqYCtekYoUwWGiv/KdxhVGrX5VzAFkeJ4D0x6eMkxPjgQ99PPDLg90EA9G+EGWph1AhcVSJcikR2caYTN6D05bi9tQZcdCjqCQffCVR3L+vxVCBaMD5P31AfFB2sw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=oi3RI7FV; arc=none smtp.client-ip=91.218.175.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JsS3Dv1k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D0E41F0089C;
-	Wed,  7 Oct 2026 06:32:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791354750;
-	bh=l2L4StRud6VKnWJLizrYPJpAWtLjtw/B6kHwcJg+Mm0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=JsS3Dv1kRWzQotpwuewh//UeSyfmkPJJkE+mwKLwFO4G5FdMIONZZ7Ahkd5MZ60hI
-	 7m6CXy/QS4j/6BaYrlxzDg0PgvvF8tG0WR1rr03foPSIElWbzRJqEbeJNZnG1hX9mv
-	 LTrHS+Lc+AS1wOrNiXTu821Dl11fHMWlY4CVf1JbvYlY05OFcFmSX1JSEFeYbGY/Je
-	 /bWNpYvx0lRvsWmmez92yyYm8uZB5FDe0H615VR7sk182sVK0KMvzlwfS0lIGjWgV2
-	 gx99D6OTKYXV3lBZlVs0bmUuC6Aj2UnZN/xUifsdb/0/db3t6IUDZi3uI9KxR/nhWd
-	 V3q25hUqVfVzA==
-Date: Wed, 7 Oct 2026 09:32:27 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
-	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: Re: [PATCH v9 02/18] PCI/P2PDMA: Derive routing from directional ACS
- controls
-Message-ID: <20261007063227.GC7822@unreal>
-References: <20261001-fix-p2p-acs-v4-0-v9-2-1a8e0f50ddd9@nvidia.com>
- <20261006204947.GA708098@bhelgaas>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="oi3RI7FV"
+X-Envelope-To: linux-pci@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=XWhmaHnF0F5r9vJ5hEE64oYYoigOB38AGVvirhYDhug=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791355564; v=1; x=1791960364;
+ b=oi3RI7FVJkZWDUap7jtEai8vsRQtW+KxNX2t8JUTVGXpm3A10L1sbrajGyMV2ufVx3BbzZXa
+ MDn51/CVTbJwFK/c7gVoSWcGGyljhX6QL6l9beBuHIQQVf4iomP7jVuUA1F6dydUDOAEzG0QQxK
+ a0x8xGQxiqM9QFT3e3PPwIzs=
+X-Envelope-To: linux-pci@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id bc316fb24836bdeb;
+	Wed, 07 Oct 2026 03:23:49 +0000
+X-Mizu-Trace-ID: bc316fb24836bdeb
+X-Migadu-Flow: FLOW_OUT
+Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-5bcc04c71f5so4615e87.0
+        for <linux-pci@vger.kernel.org>; Tue, 06 Oct 2026 20:23:45 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBx1drFuzN3igmFfP5QSq2lCGUl3nPxu4B/RAQ/KKNYuAAiUDEnNVDYnefpw7eDFhmntLXbt1WqJjlI=@vger.kernel.org
+X-Gm-Message-State: AFq9FYIVwBDkot1NnkgTjqe+Xh3HwMVITbMGXGJ8d8ggN6mbv9CzJzN/
+	QTk9ofQP6YCL9idnqj26YjwHoHtbbR3PnU0mVvBEGNtKLRY8+jemwBZaqAKtWLYUAVcN1bK74VJ
+	qP4gJj+ZdipZEyOxLPoLMJfQNWR0Tey+zy6HDkDxZ
+X-Received: by 2002:a05:6512:608c:b0:5b8:caec:cc77 with SMTP id
+ 2adb3069b0e04-5bcca64059fmr230164e87.7.1791343424648; Tue, 06 Oct 2026
+ 20:23:44 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261006204947.GA708098@bhelgaas>
+References: <20260923180703.3901185-1-fuad.tabba@linux.dev>
+In-Reply-To: <20260923180703.3901185-1-fuad.tabba@linux.dev>
+From: Fuad Tabba <fuad.tabba@linux.dev>
+Date: Wed, 7 Oct 2026 05:23:07 +0200
+X-Gmail-Original-Message-ID: <CA+EHjTyUqTzkGErfkvXeUJOpKwmO6AOxwFtUB_-Gtqo756WOvA@mail.gmail.com>
+X-Gm-Features: AclHuK-Cmy6M2r-yI92GOlGoRqwijpnzBsQ4122ICX5yj9Fnvw3oxKt091GVXUU
+Message-ID: <CA+EHjTyUqTzkGErfkvXeUJOpKwmO6AOxwFtUB_-Gtqo756WOvA@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: iproc: Use __free(device_node) in iproc_pcie_msi_enable()
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Rob Herring <robh@kernel.org>, Ray Jui <rjui@broadcom.com>, 
+	Scott Branden <sbranden@broadcom.com>, bcm-kernel-feedback-list@broadcom.com, 
+	Marek Vasut <marek.vasut+renesas@mailbox.org>, 
+	Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>, linux-pci@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+	Will Deacon <will@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, Oct 06, 2026 at 03:49:47PM -0500, Bjorn Helgaas wrote:
-> On Thu, Oct 01, 2026 at 02:55:10PM +0300, Leon Romanovsky wrote:
-> > From: Leon Romanovsky <leonro@nvidia.com>
-> > 
-> > pci_bridge_has_acs_redir() treats Request and Completion Redirect as
-> > interchangeable. On asymmetric fabrics, a control for only the reverse TLP
-> > direction can unnecessarily force P2PDMA through the host bridge.
-> 
-> Does "the reverse TLP direction" refer to Completions?
+Hi,
 
-In general, the P2P code treats TLPs flowing from device A to device B the
-same as TLPs flowing from device B to device A.
+Gentle ping on this one.
 
-However, in the context of this commit message, yes: completions flow in the
-opposite direction from the device's perspective.
-
-> 
-> > Evaluate Request Redirect for client Requests and Completion Redirect for
-> > provider read Completions. Continue treating enabled Egress Control
-> > conservatively as a Request redirect.
-> 
-> Completion Redirect is intended to avoid ordering rule violations
-> between Completions and Requests when Requests are redirected (PCIe
-> r7.0, sec 6.12.1.1).  I assume this patch preserves the ordering rule,
-> but does the commit log need to say something about that?  I don't
-> know enough about P2P DMA for it to be obvious to me.
-
-I don't think so, i didn't change anything related to ordering.
-
-> 
-> Not really a question for this series, but p2pdma.c and p2pdma.rst
-> refer to "clients" and "providers", neither of which are mentioned in
-> the PCIe spec.  In this case it sounds like a client is a Requester
-> and a provider is a Completer in spec terms.  Is that always the case?
-> If so, "client" and "provider" in this paragraph are not adding any
-> information.
-> 
-> If "client" is not the same concept as "Requester" and "provider" not
-> the same as "Completer", maybe p2pdma.rst could explain the
-> difference?
-
-Client vs. provider are actual target vs. initiator. They express the
-device role in the flow.
-
-Thanks
-
-> 
-> > Fixes: 52916982af48 ("PCI/P2PDMA: Support peer-to-peer memory")
-> > Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-> > Tested-by: Tushar Dave <tdave@nvidia.com>
-> > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
-> > ---
-> >  drivers/pci/p2pdma.c | 75 ++++++++++++++++++++++++++++++++++++++++------------
-> >  1 file changed, 58 insertions(+), 17 deletions(-)
-> > 
-> > diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> > index 4e4d2df17a45..12612b82d80d 100644
-> > --- a/drivers/pci/p2pdma.c
-> > +++ b/drivers/pci/p2pdma.c
-> > @@ -21,6 +21,8 @@
-> >  #include <linux/seq_buf.h>
-> >  #include <linux/xarray.h>
-> >  
-> > +#include "pci.h"
-> > +
-> >  struct pci_p2pdma {
-> >  	struct gen_pool *pool;
-> >  	bool p2pmem_published;
-> > @@ -490,26 +492,56 @@ static struct pci_dev *find_parent_pci_dev(struct device *dev)
-> >  	return NULL;
-> >  }
-> >  
-> > +enum pci_acs_p2pdma_state {
-> > +	PCI_ACS_P2PDMA_DIRECT,
-> > +	PCI_ACS_P2PDMA_REDIRECT,
-> > +};
-> > +
-> >  /*
-> > - * Check if a PCI bridge has its ACS redirection bits set to redirect P2P
-> > - * TLPs upstream via ACS. Returns 1 if the packets will be redirected
-> > - * upstream, 0 otherwise.
-> > + * Decide how a peer-to-peer Request at an ACS-capable ingress port routes,
-> > + * from that port's ACS Control register.
-> > + *
-> > + * Linux does not read the Egress Control Vector, so Egress Control is treated
-> > + * conservatively as a redirect. Per PCIe r7.0 Table 6-11 the outcomes it
-> > + * selects are a direct route and an ACS Violation, and neither one lets peer
-> > + * bus addressing be assumed.
-> >   */
-> > -static int pci_bridge_has_acs_redir(struct pci_dev *pdev)
-> > +static enum pci_acs_p2pdma_state
-> > +pci_acs_p2pdma_request(u16 ctrl)
-> >  {
-> > -	int pos;
-> > -	u16 ctrl;
-> > +	return ctrl & (PCI_ACS_RR | PCI_ACS_EC) ?
-> > +		PCI_ACS_P2PDMA_REDIRECT : PCI_ACS_P2PDMA_DIRECT;
-> > +}
-> >  
-> > -	pos = pdev->acs_cap;
-> > -	if (!pos)
-> > -		return 0;
-> > +/*
-> > + * Decide how a peer-to-peer Completion at an ACS-capable ingress port routes.
-> > + * PCIe r7.0 sec 6.12.1.1: no ACS control other than P2P Completion Redirect
-> > + * affects a Completion.
-> > + */
-> > +static enum pci_acs_p2pdma_state
-> > +pci_acs_p2pdma_completion(u16 ctrl)
-> > +{
-> > +	return ctrl & PCI_ACS_CR ? PCI_ACS_P2PDMA_REDIRECT :
-> > +				   PCI_ACS_P2PDMA_DIRECT;
-> > +}
-> >  
-> > -	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
-> > +/*
-> > + * Read @pdev's ACS Control register. A device without an ACS capability has
-> > + * no peer-to-peer controls at all, which routes the same as having them all
-> > + * clear. Returns false when the register is present but cannot be read; @ctrl
-> > + * is then meaningless.
-> > + */
-> > +static bool pci_acs_p2pdma_ctrl(struct pci_dev *pdev, u16 *ctrl)
-> > +{
-> > +	int pos;
-> >  
-> > -	if (ctrl & (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC))
-> > -		return 1;
-> > +	pos = pdev->acs_cap;
-> > +	if (!pos) {
-> > +		*ctrl = 0;
-> > +		return true;
-> > +	}
-> >  
-> > -	return 0;
-> > +	return !pci_read_config_word(pdev, pos + PCI_ACS_CTRL, ctrl);
-> >  }
-> >  
-> >  static void seq_buf_print_bus_devfn(struct seq_buf *buf, struct pci_dev *pdev)
-> > @@ -698,6 +730,10 @@ static unsigned long map_types_idx(struct pci_dev *client)
-> >   * then to Device B. The mapping type returned depends on the ACS
-> >   * redirection setting of the ports along the path.
-> >   *
-> > + * The client initiates Requests to provider memory. Check Request Redirect
-> > + * on the client path and Completion Redirect for read Completions on the
-> > + * provider path.
-> > + *
-> >   * If ACS redirect is set on any port in the path, traffic between the
-> >   * devices will go through the host bridge, so return
-> >   * PCI_P2PDMA_MAP_THRU_HOST_BRIDGE; otherwise return
-> > @@ -721,6 +757,7 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
-> >  	int dist_a = 0;
-> >  	int dist_b = 0;
-> >  	char buf[128];
-> > +	u16 ctrl;
-> >  
-> >  	seq_buf_init(&acs_list, buf, sizeof(buf));
-> >  
-> > @@ -732,7 +769,9 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
-> >  	while (a) {
-> >  		dist_b = 0;
-> >  
-> > -		if (pci_bridge_has_acs_redir(a)) {
-> > +		if (!pci_acs_p2pdma_ctrl(a, &ctrl) ||
-> > +		    pci_acs_p2pdma_completion(ctrl) ==
-> > +			    PCI_ACS_P2PDMA_REDIRECT) {
-> >  			seq_buf_print_bus_devfn(&acs_list, a);
-> >  			acs_cnt++;
-> >  		}
-> > @@ -761,7 +800,9 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
-> >  		if (a == bb)
-> >  			break;
-> >  
-> > -		if (pci_bridge_has_acs_redir(bb)) {
-> > +		if (!pci_acs_p2pdma_ctrl(bb, &ctrl) ||
-> > +		    pci_acs_p2pdma_request(ctrl) ==
-> > +			    PCI_ACS_P2PDMA_REDIRECT) {
-> >  			seq_buf_print_bus_devfn(&acs_list, bb);
-> >  			acs_cnt++;
-> >  		}
-> > @@ -1109,10 +1150,10 @@ EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
-> >  /**
-> >   * pci_p2pdma_map_type - Determine the mapping type for P2PDMA transfers
-> >   * @provider: P2PDMA provider structure
-> > - * @dev: Target device for the transfer
-> > + * @dev: Client device that initiates the transfer
-> >   *
-> >   * Determines how peer-to-peer DMA transfers should be mapped between
-> > - * the provider and the target device. The mapping type indicates whether
-> > + * the provider and the client device. The mapping type indicates whether
-> >   * the transfer can be done directly through PCI switches or must go
-> >   * through the host bridge.
-> >   */
-> > 
-> > -- 
-> > 2.55.0
-> > 
+Cheers,
+/fuad
