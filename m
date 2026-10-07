@@ -1,43 +1,43 @@
-Received: from sender5-pp-o94.zoho.com (sender5-pp-o94.zoho.com [165.173.182.94])
+Received: from sender6-pp-o94.zoho.com (sender6-pp-o94.zoho.com [165.173.180.94])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E6033B3C1F;
-	Wed,  7 Oct 2026 12:22:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=165.173.182.94
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B253B4746BA;
+	Wed,  7 Oct 2026 12:30:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=165.173.180.94
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791375760; cv=pass; b=h8iUCGJgJdQ336RVfSKt/y84fzuFT7kUYmwi6vgPV1+HOezwgJHH+CTkD0jng7zbQxGNHjYOtzu4HEtAW7lnurZlYXKbSCcbizuonk0IAc1n+POSLAFfUBPmnwYuMBbPJEIP20HjFznBeKNTHqzNDlBsldAgAHCpC5vgtUyMT9U=
+	t=1791376224; cv=pass; b=ciWf/1jIrUfd8XilYWkGl/+j6T3IgSUQz+Z8QzCKegBu6qB8Vl1T3XuVZpS/vE8Hkv1UowBusRJrdMrVPLrGRcqSYtSWiGxz06mv7gsMBQBHmRWOtlWqOzxAFJRwG5dymHxKPYcdGvE4/vtF3/4elHBsqWb7+K2saiZcOBVhDJ0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791375760; c=relaxed/simple;
-	bh=5Hu7k3zor8Y0oaxsc5i78N1awXT+GQwHIa9Znf6Wu+4=;
+	s=arc-20240116; t=1791376224; c=relaxed/simple;
+	bh=2YmTwrPprp+eP4w2noKc5/nxe09isVqPOLh+GN4kr+Q=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZUIUXkqa7uQHYlYmm1FVSjyZbfp8JAaW9KPrfjmRHgtCLP9QoX40TfOS6P4A/S4pJMnOD8qLGl8ZIaSCgouRalsWY4d8CK8v5DgRfzemlnN4VQmx2tyca/iVus2mhfQoOhcs+x2UAMdLdJSC8B2bNZvfhKuQr+OsZK+AnAxIRXU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com; spf=pass smtp.mailfrom=zohomail.com; dkim=pass (1024-bit key) header.d=zohomail.com header.i=ming.li@zohomail.com header.b=NyNxBEep; arc=pass smtp.client-ip=165.173.182.94
+	 In-Reply-To:Content-Type; b=If44DCeTDoqEhC9dJaf7Ezlpf3RfR+banivqUocoZ5OQr+SJjSnS9UIyiMEeuJpaDdYjJldlNzd30oDtPgBynhFCelgCIRNBVgfeDxjAVp1LxCqB0jvPFQa7gtBY17oVJlItCI5UdcIlHLgYlzkKtFVRKY7RcHzv69J0ext7df0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com; spf=pass smtp.mailfrom=zohomail.com; dkim=pass (1024-bit key) header.d=zohomail.com header.i=ming.li@zohomail.com header.b=RNBDwlx7; arc=pass smtp.client-ip=165.173.180.94
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zohomail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=zohomail.com header.i=ming.li@zohomail.com header.b="NyNxBEep"
-ARC-Seal: i=1; a=rsa-sha256; t=1791375741; cv=none; 
+	dkim=pass (1024-bit key) header.d=zohomail.com header.i=ming.li@zohomail.com header.b="RNBDwlx7"
+ARC-Seal: i=1; a=rsa-sha256; t=1791376203; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=ae66PRcMLrO4V8kRLZLDcKWgQMdLohkasluzHz6OC3/J+Frx17aj9b0X7RSTOsEbY1FGavVXr12RIgYGNmI5Recy27bpNdjahtGtGP3WiLhZoLrZZ8ySB0NJvlse9zWpEFXMUZ+YxgEi0MJ91CsDERHUvn4jZ2oHAbpZVHmGz6w=
+	b=awF1gKmo9vqF0dE+zVeVfut7cEGQBFOMCs/uTn+gqS6d0iM9nWhouKDs4yKRTS5C+8tEBhDHVSEVLRnHYeY48iFA8PDk/mcdm5fJPhrYzY+0D3jMa90osB2tKH+IhNSlrsyuvWz/uYlNYUGysn3TL9hIIvePEpermOYPefWkdGU=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1791375741; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=kWUH5zCnwtHKT9DajdHooYjxbLxwc75pG2nsy2b/FaQ=; 
-	b=Yzl2gUuxKLbK/pPdYMogUcQPVJwSWxIUJvSFaMLxGs9MQ+DCG0pO1y7+Br6O5VbNvL2iJ+EoasgcdUWIUff1F0BLF1UxI7Uk5X+L1yj3Zw/sws0cuAFXoEaa7TmnN1JJOZu1MokzIbMJUaTjDbnUN/l6D/mSX4+3sTB7f9wRoBs=
+	t=1791376203; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=WuaR6SwNLswFyflkkWn+8kga4fm9ihedFdgFP+68sjw=; 
+	b=IJ7dbRWLg3apXLfsLr2hiON5PWKSJficPArTPa9X7VGb9VyQne+k7VMZQOkadMHfMIlXvEIomYL4LTo+0sW/gSWMnj58SEaGUoli57kpNRiiEFLVFdruTAe/s0ghiqEBzroOw7J/mgH5ln9aU59CusuG/ROgRSa4Rd5pycXv5Ho=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=zohomail.com;
 	spf=pass  smtp.mailfrom=ming.li@zohomail.com;
 	dmarc=pass header.from=<ming.li@zohomail.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1791375741;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1791376203;
 	s=zm2022; d=zohomail.com; i=ming.li@zohomail.com;
 	h=Message-ID:Date:Date:MIME-Version:Subject:Subject:To:To:Cc:Cc:From:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:Feedback-ID:Message-Id:Reply-To;
-	bh=kWUH5zCnwtHKT9DajdHooYjxbLxwc75pG2nsy2b/FaQ=;
-	b=NyNxBEepNGx7dDQmV+4mgPHNbkV8krL7gUZEz0D42t63fhpWzNzMWwLsqjAIqjfB
-	4H+HqTKBg4cJ6iCkfTVfmm6n3XzT0XEvl8uqYo2Qio/3yrf14NI6aDLbisib3WrHPBv
-	/yv8aQFOSQThUKYyvrjtWQvyYMTOIMCEVpfWtX4A=
-Received: by smtp.zohomail.com with SMTPS id 1791375740669490.5174696368306;
-	Wed, 7 Oct 2026 05:22:20 -0700 (PDT)
-Message-ID: <4d2c765a-0d77-49f9-8e6e-4d80137df513@zohomail.com>
-Date: Wed, 7 Oct 2026 20:22:12 +0800
+	bh=WuaR6SwNLswFyflkkWn+8kga4fm9ihedFdgFP+68sjw=;
+	b=RNBDwlx7xgxxRwExerTXiykVmdddeR6DV/WTSDegC6DE262/8qtdUUSpmOxcLx7E
+	9ErJlbALtmBn8VU2MCqWGGDC47sfTJe3ZylnnvUPkLw+pt9mX1LYJh46Jws1ICs0cBj
+	gWk488EHgnK9JEQvpgsK0/nkqV+zjWXBufv27V78=
+Received: by smtp.zohomail.com with SMTPS id 1791376202063656.6378742924468;
+	Wed, 7 Oct 2026 05:30:02 -0700 (PDT)
+Message-ID: <cd9b6a2d-8240-4e4c-8729-f4eb86f8df5c@zohomail.com>
+Date: Wed, 7 Oct 2026 20:29:54 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,7 +45,7 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v14 02/16] cxl: Share CXL port upstream PCI device lookup
+Subject: Re: [PATCH v14 03/16] cxl: Move decoder declarations to shared header
 To: Srirangan Madhavan <smadhavan@nvidia.com>,
  Alison Schofield <alison.schofield@intel.com>,
  Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
@@ -61,149 +61,138 @@ Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
  linux-tegra@vger.kernel.org,
  Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
 References: <20261001092227.3004747-1-smadhavan@nvidia.com>
- <20261001092227.3004747-3-smadhavan@nvidia.com>
+ <20261001092227.3004747-4-smadhavan@nvidia.com>
 From: Li Ming <ming.li@zohomail.com>
-In-Reply-To: <20261001092227.3004747-3-smadhavan@nvidia.com>
+In-Reply-To: <20261001092227.3004747-4-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Feedback-ID: zu08011227bd73bd4de56559d6cf118e6a000083ad411aff8fb21b81e6504122147652043bead2f787d0c34e:ZohoMail
+Feedback-ID: zu080112273f74bd0c6011bebc539a44d60000c9c65a8adc82e506d68e3e299ae00fb8826674117c6d90b350:ZohoMail
 X-Zoho-CM-AccountID: abd763e7b9fa23acf4f42a44f9876d2d993e05abdb9290f9ccb1008c977bf7f0
 X-ZohoMailClient: External
 
 
 在 2026/10/1 17:22, Srirangan Madhavan 写道:
-> read_cdat_data() resolves a CXL port's upstream device to its backing PCI
-> device. HDM cache updates need the same mapping.
->
-> Factor the lookup into cxl_port_get_uport_pci_dev() and return a referenced
-> PCI device to make caller ownership explicit.
+> Move the common decoder declarations to include/cxl/cxl.h for use by
+> shared decoder settings. Preserve their layout and documentation.
 >
 > Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
 > Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
 > Reviewed-by: Dave Jiang <dave.jiang@intel.com>
-
 Reviewed-by: Li Ming <ming.li@zohomail.com>
 
-
-pci.h provides a __free() based cleanup function for pci_dev_put().
-
-I think you can use "struct pci_dev *pdev __free(pci_dev_put) = 
-cxl_port_get_uport_pci_dev(port);" and drop all pci_dev_put() below.
-
 > ---
->   drivers/cxl/core/core.h |  1 +
->   drivers/cxl/core/pci.c  | 19 +++++--------------
->   drivers/cxl/core/port.c | 26 ++++++++++++++++++++++++++
->   3 files changed, 32 insertions(+), 14 deletions(-)
+>   drivers/cxl/cxl.h | 37 -------------------------------------
+>   include/cxl/cxl.h | 41 ++++++++++++++++++++++++++++++++++++++++-
+>   2 files changed, 40 insertions(+), 38 deletions(-)
 >
-> diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
-> index 35eaf636adc9..983d7690c3a5 100644
-> --- a/drivers/cxl/core/core.h
-> +++ b/drivers/cxl/core/core.h
-> @@ -157,6 +157,7 @@ long cxl_pci_get_latency(struct pci_dev *pdev);
->   int cxl_pci_get_bandwidth(struct pci_dev *pdev, struct access_coordinate *c);
->   int cxl_port_get_switch_dport_bandwidth(struct cxl_port *port,
->   					struct access_coordinate *c);
-> +struct pci_dev *cxl_port_get_uport_pci_dev(struct cxl_port *port);
+> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+> index 9e0500d56866..44ff3334648c 100644
+> --- a/drivers/cxl/cxl.h
+> +++ b/drivers/cxl/cxl.h
+> @@ -264,45 +264,8 @@ int cxl_dport_map_rcd_linkcap(struct pci_dev *pdev, struct cxl_dport *dport);
+>   #define CXL_DECODER_F_NORMALIZED_ADDRESSING BIT(6)
+>   #define CXL_DECODER_F_RESET_MASK (CXL_DECODER_F_ENABLE | CXL_DECODER_F_LOCK)
 >   
->   static inline struct device *port_to_host(struct cxl_port *port)
->   {
-> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-> index 9d807c1a002c..99c8b02d42e5 100644
-> --- a/drivers/cxl/core/pci.c
-> +++ b/drivers/cxl/core/pci.c
-> @@ -564,26 +564,13 @@ static unsigned char cdat_checksum(void *buf, size_t size)
->    */
->   void read_cdat_data(struct cxl_port *port)
->   {
-> -	struct device *uport = port->uport_dev;
-> +	struct pci_dev *pdev = cxl_port_get_uport_pci_dev(port);
->   	struct device *dev = &port->dev;
->   	struct pci_doe_mb *doe_mb;
-> -	struct pci_dev *pdev = NULL;
-> -	struct cxl_memdev *cxlmd;
->   	struct cdat_doe_rsp *buf;
->   	size_t table_length, length;
->   	int rc;
->   
-> -	if (is_cxl_memdev(uport)) {
-> -		struct device *host;
+> -enum cxl_decoder_type {
+> -	CXL_DECODER_DEVMEM = 2,
+> -	CXL_DECODER_HOSTONLYMEM = 3,
+> -};
 > -
-> -		cxlmd = to_cxl_memdev(uport);
-> -		host = cxlmd->dev.parent;
-> -		if (dev_is_pci(host))
-> -			pdev = to_pci_dev(host);
-> -	} else if (dev_is_pci(uport)) {
-> -		pdev = to_pci_dev(uport);
-> -	}
+> -#define CXL_DECODER_MAX_INTERLEAVE 16
 > -
->   	if (!pdev)
->   		return;
+>   #define CXL_QOS_CLASS_INVALID -1
 >   
-> @@ -591,6 +578,7 @@ void read_cdat_data(struct cxl_port *port)
->   				      CXL_DOE_PROTOCOL_TABLE_ACCESS);
->   	if (!doe_mb) {
->   		dev_dbg(dev, "No CDAT mailbox\n");
-> +		pci_dev_put(pdev);
->   		return;
->   	}
->   
-> @@ -598,6 +586,7 @@ void read_cdat_data(struct cxl_port *port)
->   
->   	if (cxl_cdat_get_length(dev, doe_mb, &length)) {
->   		dev_dbg(dev, "No CDAT length\n");
-> +		pci_dev_put(pdev);
->   		return;
->   	}
->   
-> @@ -625,11 +614,13 @@ void read_cdat_data(struct cxl_port *port)
->   	port->cdat.table = buf->data;
->   	port->cdat.length = length;
->   
-> +	pci_dev_put(pdev);
->   	return;
->   err:
->   	/* Don't leave table data allocated on error */
->   	devm_kfree(dev, buf);
->   	dev_err(dev, "Failed to read/validate CDAT.\n");
-> +	pci_dev_put(pdev);
->   }
->   EXPORT_SYMBOL_NS_GPL(read_cdat_data, "CXL");
->   
-> diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
-> index 625e4aa427db..5dc2815d82d8 100644
-> --- a/drivers/cxl/core/port.c
-> +++ b/drivers/cxl/core/port.c
-> @@ -34,6 +34,32 @@
->   static DEFINE_IDA(cxl_port_ida);
->   static DEFINE_XARRAY(cxl_root_buses);
->   
-> +/**
-> + * cxl_port_get_uport_pci_dev - get the PCI device for a port's upstream device
-> + * @port: CXL port to map to a PCI device
-> + *
-> + * Return: A referenced PCI device, or NULL if the upstream device is not PCI.
-> + * The caller must release the returned reference with pci_dev_put().
-> + */
-> +struct pci_dev *cxl_port_get_uport_pci_dev(struct cxl_port *port)
-> +{
-> +	struct device *uport = port->uport_dev;
-> +	struct device *host;
-> +
-> +	if (is_cxl_memdev(uport)) {
-> +		struct cxl_memdev *cxlmd = to_cxl_memdev(uport);
-> +
-> +		host = cxlmd->dev.parent;
-> +	} else {
-> +		host = uport;
-> +	}
-> +
-> +	if (!host || !dev_is_pci(host))
-> +		return NULL;
-> +
-> +	return pci_dev_get(to_pci_dev(host));
-> +}
-> +
+> -/**
+> - * struct cxl_decoder - Common CXL HDM Decoder Attributes
+> - * @dev: this decoder's device
+> - * @id: kernel device name id
+> - * @hpa_range: Host physical address range mapped by this decoder
+> - * @interleave_ways: number of cxl_dports in this decode
+> - * @interleave_granularity: data stride per dport
+> - * @target_type: accelerator vs expander (type2 vs type3) selector
+> - * @region: currently assigned region for this decoder
+> - * @flags: memory type capabilities and locking
+> - * @target_map: cached copy of hardware port-id list, available at init
+> - *              before all @dport objects have been instantiated. While
+> - *              dport id is 8bit, CFMWS interleave targets are 32bits.
+> - * @commit: device/decoder-type specific callback to commit settings to hw
+> - * @reset: device/decoder-type specific callback to reset hw settings
+> -*/
+> -struct cxl_decoder {
+> -	struct device dev;
+> -	int id;
+> -	struct range hpa_range;
+> -	int interleave_ways;
+> -	int interleave_granularity;
+> -	enum cxl_decoder_type target_type;
+> -	struct cxl_region *region;
+> -	unsigned long flags;
+> -	u32 target_map[CXL_DECODER_MAX_INTERLEAVE];
+> -	int (*commit)(struct cxl_decoder *cxld);
+> -	void (*reset)(struct cxl_decoder *cxld);
+> -};
+> -
 >   /*
->    * The terminal device in PCI is NULL and @platform_bus
->    * for platform devices (for cxl_test)
+>    * Track whether this decoder is free for userspace provisioning, reserved for
+>    * region autodiscovery, whether it is started connecting (awaiting other
+> diff --git a/include/cxl/cxl.h b/include/cxl/cxl.h
+> index 802b143de83d..69941f7fdb76 100644
+> --- a/include/cxl/cxl.h
+> +++ b/include/cxl/cxl.h
+> @@ -5,8 +5,10 @@
+>   #ifndef __CXL_CXL_H__
+>   #define __CXL_CXL_H__
+>   
+> +#include <linux/device.h>
+>   #include <linux/node.h>
+>   #include <linux/ioport.h>
+> +#include <linux/range.h>
+>   #include <cxl/mailbox.h>
+>   
+>   /**
+> @@ -23,7 +25,44 @@ enum cxl_devtype {
+>   	CXL_DEVTYPE_CLASSMEM,
+>   };
+>   
+> -struct device;
+> +struct cxl_region;
+> +
+> +enum cxl_decoder_type {
+> +	CXL_DECODER_DEVMEM = 2,
+> +	CXL_DECODER_HOSTONLYMEM = 3,
+> +};
+> +
+> +#define CXL_DECODER_MAX_INTERLEAVE 16
+> +
+> +/**
+> + * struct cxl_decoder - Common CXL HDM Decoder Attributes
+> + * @dev: this decoder's device
+> + * @id: kernel device name id
+> + * @hpa_range: Host physical address range mapped by this decoder
+> + * @interleave_ways: number of cxl_dports in this decode
+> + * @interleave_granularity: data stride per dport
+> + * @target_type: accelerator vs expander (type2 vs type3) selector
+> + * @region: currently assigned region for this decoder
+> + * @flags: memory type capabilities and locking
+> + * @target_map: cached copy of hardware port-id list, available at init
+> + *              before all @dport objects have been instantiated. While
+> + *              dport id is 8bit, CFMWS interleave targets are 32bits.
+> + * @commit: device/decoder-type specific callback to commit settings to hw
+> + * @reset: device/decoder-type specific callback to reset hw settings
+> +*/
+> +struct cxl_decoder {
+> +	struct device dev;
+> +	int id;
+> +	struct range hpa_range;
+> +	int interleave_ways;
+> +	int interleave_granularity;
+> +	enum cxl_decoder_type target_type;
+> +	struct cxl_region *region;
+> +	unsigned long flags;
+> +	u32 target_map[CXL_DECODER_MAX_INTERLEAVE];
+> +	int (*commit)(struct cxl_decoder *cxld);
+> +	void (*reset)(struct cxl_decoder *cxld);
+> +};
+>   
+>   /*
+>    * Using struct_group() allows for per register-block-type helper routines,
