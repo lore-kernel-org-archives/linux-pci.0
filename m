@@ -1,36 +1,38 @@
-Received: from mta0.migadu.com (out-30.mta0.migadu.com [91.218.175.30])
+Received: from mta1.migadu.com (out-148.mta1.migadu.com [95.215.58.148])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 232C93B52E1
-	for <linux-pci@vger.kernel.org>; Wed,  7 Oct 2026 06:57:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6803B4973B0
+	for <linux-pci@vger.kernel.org>; Wed,  7 Oct 2026 09:12:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.148
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791356277; cv=none; b=NdZbguauQQJGFsEYmjDPfRVzi8RLWSt2X4orRleYPz6t7uHBSYH65tlxioEhGuR06ZIx9mqfh9S+C66+jbrrJabpfUK1adv8Tm5XUfHvliajywRCjzf6c32108YMBnLCskU9srHnp6bdeVlBU8i7H0z/v6LUl1gk/ZB9uZHdiGE=
+	t=1791364401; cv=none; b=tkbPFvuSGAuDryM28WEBn2ermgyax8CQkOpzNE6PSls1t3M5SdSoMx16FGyt3T6po2b0R6f++nobD23pSqvaZXPJmA6bB+/UCPQmHbBqEG+MSsaG/OXhH4mFPc15L7kvtMp/kDVNZr8kZNhiRCm+7IUdYnngiLYfNzqEfjGTWMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791356277; c=relaxed/simple;
-	bh=bgvAnuDBKrah+1oAtquFA8au46xffNkrUC44ySLVSKM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KBZpUM0Y+1Da4i8gauVTGtCwab8XcHwtaw8zCvyvvCq8f2n48oSkNziwlF4pxCTtVeoKHYoycs4DVwgJXKbuZJFyCjz+zrdI7Q29qJIirSGExnzRQxkXUFBCDrLcaCS+EQDHl0BZHEcFjC093FYn6PkeEOY+Y8MpQaLhmsgb9Pg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=B0YWh+Nd; arc=none smtp.client-ip=91.218.175.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1791364401; c=relaxed/simple;
+	bh=J/y1H3eemnVhW06Ctyt4QVgncGhn8rhFQ+PbyfP1y1s=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=S6+s6mfzM/aXDnD6OKWWKnWvxYZJxpl5k/0DqzRKVHrohg5XLSTrhXhLA7dMpWdul2ck8kvoGoIDa6U1WKnXuM6UZUoF4TyzVvTSoGB67sJTBPYK0l3RQP+Dh8MbpyG2japT/e4VtGQQraQZde+30QX661bLIbbVCB0PeVY5Tag=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=packett.cool; spf=pass smtp.mailfrom=packett.cool; dkim=pass (2048-bit key) header.d=packett.cool header.i=@packett.cool header.b=WSXf2K+i; arc=none smtp.client-ip=95.215.58.148
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=packett.cool
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=packett.cool
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="B0YWh+Nd"
+	dkim=pass (2048-bit key) header.d=packett.cool header.i=@packett.cool header.b="WSXf2K+i"
 X-Envelope-To: linux-pci@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=bgvAnuDBKrah+1oAtquFA8au46xffNkrUC44ySLVSKM=;
- c=simple/simple; d=linux.dev;
+DKIM-Signature: a=rsa-sha256; bh=J/y1H3eemnVhW06Ctyt4QVgncGhn8rhFQ+PbyfP1y1s=;
+ c=simple/simple; d=packett.cool;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791356274; v=1; x=1791961074;
- b=B0YWh+Ndi+A8YaD6Nm8Dak/ypGH07WrnsNbMOPO8eXSg34VGg/uR1d12ff8VhvP41Oeql1S1
- burcC77iHtgwiCvmfNyfAwlSSAKtq99OlXu4pDHz4yD8PrWzh9Xl9dh2Jk12P2LaEMu+/do/mpg
- 74GGU7KbFeihOaOv9hxO0+0c=
+ t=1791364317; v=1; x=1791969117;
+ b=WSXf2K+iKIh5YaG3PRhpGVMraaQQAIY4ki1QDlOPo8iuLm4vWNWSn85nl83I0ALRnvG3LUSR
+ 9mVG5hWRfyuqzhLNj131c7uduqmVcPfnGqU+Jg564y9i5wiwgdhxADIDCPvYwCsGLrggN1hfXZn
+ ZuQ1dP5XDqeTJJ6iFVVvKE8tE4Bob6YY0D8vVNMU4MlkTCj6e8RYw+rU3oc91uHvDVaXjz86nfC
+ /hXoKEYPPYE41GsmIeDNZPPlU6oMcitde1mMxXQ19etRAPCTp4mxh2LJMLS5bSvc+zYTcT38Z+7
+ 1RjopnvZtUzOUe9yaP2Hb6PC+mlmrwSH5enxhaZmQcf7g==
 X-Envelope-To: linux-pci@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 81353408bb37fdb6;
-	Wed, 07 Oct 2026 05:42:35 +0000
-X-Mizu-Trace-ID: 81353408bb37fdb6
+Received: by smtp.migadu.com with ESMTPS id 7d4030431edfb94a;
+	Wed, 07 Oct 2026 09:11:57 +0000
+X-Mizu-Trace-ID: 7d4030431edfb94a
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <9866b263-ab09-4609-8885-62b68049bc33@linux.dev>
-Date: Wed, 7 Oct 2026 11:12:33 +0530
+Message-ID: <f189cfc2-c36a-4bf5-bac7-36ddb15cc7a4@packett.cool>
+Date: Wed, 7 Oct 2026 06:11:46 -0300
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -38,56 +40,150 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [REGRESSION] PCI/AER: MacBookPro16,1 powers off ~20 s after boot
-To: Lukas Wunner <lukas@wunner.de>
-Cc: "Perlow, Jason" <jperlow@gmail.com>, Bjorn Helgaas <helgaas@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, regressions@lists.linux.dev,
- Alex Deucher <alexdeucher@gmail.com>
-References: <CABZrw2HcaOh3DHTJtxU5dXrb3Vg19scr6+qR-xe_+R7rME35_Q@mail.gmail.com>
- <20261005231914.GA639967@bhelgaas>
- <CABZrw2F=pOOq7+puKohtYMihYqWCevCFc7rkAOETW4T5Nf4n8Q@mail.gmail.com>
- <asRjch1fMBslk07D@wunner.de> <2a7a97cc-7ad0-4e6f-845a-dd841d36079b@linux.dev>
- <asTDCW28kKBfKAVs@wunner.de>
+From: Val Packett <val@packett.cool>
+Subject: Re: [PATCH v5 1/6] PCI/bwctrl: Set host bridge OPP and optionally
+ disable ASPM around link retraining
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Lorenzo Pieralisi
+ <lpieralisi@kernel.org>, Rob Herring <robh@kernel.org>,
+ Jeff Johnson <jjohnson@kernel.org>, Bartosz Golaszewski <brgl@bgdev.pl>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, mhi@lists.linux.dev,
+ linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+ qiang.yu@oss.qualcomm.com
+References: <20260819-bwscale-v5-0-6dea79786b37@oss.qualcomm.com>
+ <20260819-bwscale-v5-1-6dea79786b37@oss.qualcomm.com>
 Content-Language: en-US
-From: Aditya Garg <aditya.garg@linux.dev>
-In-Reply-To: <asTDCW28kKBfKAVs@wunner.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20260819-bwscale-v5-1-6dea79786b37@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
 
+On 8/19/26 10:25 AM, Krishna Chaitanya Chundru wrote:
+> PCIe host bridge controllers may need their operating point raised before
+> retraining to a higher link speed so that hardware resources (e.g., RPMh
+> votes on Qualcomm platforms) are available at the requested data rate.
+> After retraining, the operating point must be updated to reflect the
+> actual negotiated speed.
+>
+> Add pcie_set_opp() to look up an OPP on the host bridge parent device
+> using a key of (per-lane frequency in kHz, LNKCTL2 Target Link Speed
+> level).  Keying by generation rather than total bandwidth lets OPP tables
+> remain width-independent.
+>
+> In pcie_set_target_speed(), call pcie_set_opp() before retraining only
+> when upscaling (speed_req > cur_bus_speed), since only raising the
+> operating point requires pre-staging hardware.  After retraining, call
+> pcie_set_opp() unconditionally with the actual cur_bus_speed to settle
+> the votes.  Both calls are skipped for downstream ports of PCIe switches,
+> as those are outside the host controller's scope.
+>
+> Some controllers also require ASPM to be disabled around link retraining.
+> Add a disable_aspm_for_retrain flag to pci_host_bridge; when set,
+> pcie_set_target_speed() saves the child device's ASPM state, disables all
+> ASPM link states before retraining, and restores them afterward.
+>
+> Signed-off-by: Krishna Chaitanya Chundru<krishna.chundru@oss.qualcomm.com>
+> ---
+> [..]
+> @@ -176,6 +231,12 @@ int pcie_set_target_speed(struct pci_dev *port, enum pci_bus_speed speed_req,
+>   	    !list_empty(&bus->devices))
+>   		ret = -EAGAIN;
+>   
+> +	if (bus && is_rootbus && host) {
+> +		if (child && host->disable_aspm_for_retrain)
+> +			pci_enable_link_state_locked(child, aspm_state);
+> +		pcie_set_opp(port, host, bus->cur_bus_speed);
+> +	}
+> +
+>   	return ret;
+>   }
 
-On 06-10-2026 03:14 pm, Lukas Wunner wrote:
-> On Tue, Oct 06, 2026 at 02:01:52PM +0530, Aditya Garg wrote:
->> On 06-10-2026 08:26 am, Lukas Wunner wrote:
->>> On Mon, Oct 05, 2026 at 08:17:12PM -0400, Perlow, Jason wrote:
->>>>   masked only on 04:00.2 (Apple T2 Secure Enclave, 106b:1802):
->>>>       stays up (120 s)
->>> [...]
->>>> So here the trigger is unmasking Advisory Non-Fatal Errors on that
->>>> one function.
->>>
->>> That's quite unexpected.  Maybe there's a bug in the PCIe IP which
->>> Apple used for the T2 Secure Enclave device (which I believe is a
->>> fully-fledged arm64 CPU with a PCIe port in Endpoint mode).
-> [...]
->>> macOS likely never unmasks the bit and so they never saw this during
->>> validation testing.  Is the T2 device visible on Windows?  If it is,
->>> it seems Windows doesn't support and unmask Advisory Non-Fatal Errors
->>> either.
->>
->> T2 device is visible on Windows as well as "System Device"
-> 
-> It looks like lspci is also available as a Windows binary:
-> 
-> https://github.com/pciutils/pciutils/releases/tag/v3.15.0
-> https://eternallybored.org/misc/pciutils/
-> 
-> Could you double-check whether it unmasks Advisory Non-Fatal Errors
-> in the Uncorrectable Error Mask Register, on the T2 or any other device?
+ASPM is not actually reenabled here:
 
-The Windows build seems to be too old> 
-> Thanks!
-> 
-> Lukas
+LnkCap: Port #0, Speed 16GT/s, Width x4, ASPM L1, Exit Latency L1 <8us
+         ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp+
+LnkCtl: ASPM Disabled; RCB 128 bytes, LnkDisable- CommClk+
+         ExtSynch+ ClockPM- AutWidDis- BWInt- AutBWInt- FltModeDis-
+LnkSta: Speed 2.5GT/s (downgraded), Width x4
+         TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+
+
+Because as the comment for pci_enable_link_state(_locked) says, "note 
+that this does not enable states disabled by pci_disable_link_state(). 
+Use pci_force_enable_link_state() for that"!
+
+This needs something like:
+
+
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 4bad311dc7..c54f2658e0 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -1709,6 +1709,12 @@
+  }
+  EXPORT_SYMBOL(pci_force_enable_link_state);
+
++int pci_force_enable_link_state_locked(struct pci_dev *pdev, int state)
++{
++    return __pci_enable_link_state(pdev, state, true, true);
++}
++EXPORT_SYMBOL(pci_force_enable_link_state_locked);
++
+  void pcie_aspm_remove_cap(struct pci_dev *pdev, u32 lnkcap)
+  {
+      if (lnkcap & PCI_EXP_LNKCAP_ASPM_L0S)
+diff --git a/drivers/pci/pcie/bwctrl.c b/drivers/pci/pcie/bwctrl.c
+index 623731b96c..530b9047a0 100644
+--- a/drivers/pci/pcie/bwctrl.c
++++ b/drivers/pci/pcie/bwctrl.c
+@@ -211,7 +211,7 @@
+
+      if (bus && is_rootbus && host) {
+          if (child && host->disable_aspm_for_retrain)
+-            pci_enable_link_state_locked(child, aspm_state);
++            pci_force_enable_link_state_locked(child, aspm_state);
+          pcie_set_opp(port, host, bus->cur_bus_speed);
+      }
+
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 9f20bae6d7..59d7b67c9d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1960,6 +1960,7 @@
+  int pci_enable_link_state(struct pci_dev *pdev, int state);
+  int pci_enable_link_state_locked(struct pci_dev *pdev, int state);
+  int pci_force_enable_link_state(struct pci_dev *pdev, int state);
++int pci_force_enable_link_state_locked(struct pci_dev *pdev, int state);
+  void pcie_no_aspm(void);
+  bool pcie_aspm_support_enabled(void);
+  u32 pcie_aspm_enabled(struct pci_dev *pdev);
+@@ -1974,6 +1975,8 @@
+  { return 0; }
+  static inline int pci_force_enable_link_state(struct pci_dev *pdev, 
+int state)
+  { return 0; }
++static inline int pci_force_enable_link_state_locked(struct pci_dev 
+*pdev, int state)
++{ return 0; }
+  static inline void pcie_no_aspm(void) { }
+  static inline bool pcie_aspm_support_enabled(void) { return false; }
+  static inline u32 pcie_aspm_enabled(struct pci_dev *pdev) { return 0; }
+
+(the addition of the new force+locked variant should go as a separate 
+commit, but well)
+
+With that,
+
+Tested-by: Val Packett <val@packett.cool> # x1e80100-dell-latitude-7455
+
+Well, tested without that too, but losing ASPM is not good :)
+
+
+Thanks,
+~val
 
