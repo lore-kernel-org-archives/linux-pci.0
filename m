@@ -1,43 +1,43 @@
 Received: from sender5-pp-o94.zoho.com (sender5-pp-o94.zoho.com [165.173.182.94])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A09A49CF42;
-	Wed,  7 Oct 2026 12:08:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E6033B3C1F;
+	Wed,  7 Oct 2026 12:22:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=165.173.182.94
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791374907; cv=pass; b=GeaBMEVyDwKwr/82ZPG94XsOy4cqdWMElNvax6fRitpBEwfg5Qc77+qqEAkSSjWBAtSd5q5ZR1C7CEyFz4xmF2dqjf2MuQ7QSZfDInYlkgPca3sdeDTBxI6QVL9eYvpRVhMBu34S4BiXPiqfw9FnU7auc/CT4N6Kpb0eNk9GEU8=
+	t=1791375760; cv=pass; b=h8iUCGJgJdQ336RVfSKt/y84fzuFT7kUYmwi6vgPV1+HOezwgJHH+CTkD0jng7zbQxGNHjYOtzu4HEtAW7lnurZlYXKbSCcbizuonk0IAc1n+POSLAFfUBPmnwYuMBbPJEIP20HjFznBeKNTHqzNDlBsldAgAHCpC5vgtUyMT9U=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791374907; c=relaxed/simple;
-	bh=KRN5aUoBT6yvcY7O4JyYd5G1G6gDhqkgVMCgSeJbvNM=;
+	s=arc-20240116; t=1791375760; c=relaxed/simple;
+	bh=5Hu7k3zor8Y0oaxsc5i78N1awXT+GQwHIa9Znf6Wu+4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mwvM/wSG3u8snmqaLTOktRqD9FfxyvdFXlmR/EvcInLkwrGZnTv3Gird4UsiXvSgtT30HK6oBO+DIGf4nfNiugDaygO+E1PiZgELOkj+S/z2etEn8pXjArycTsFYwOju6+0SS1aE93Vm+EQ1hQcmhMylg829ZiK/4M3dNdNTfKw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com; spf=pass smtp.mailfrom=zohomail.com; dkim=pass (1024-bit key) header.d=zohomail.com header.i=ming.li@zohomail.com header.b=ZY3ITvKg; arc=pass smtp.client-ip=165.173.182.94
+	 In-Reply-To:Content-Type; b=ZUIUXkqa7uQHYlYmm1FVSjyZbfp8JAaW9KPrfjmRHgtCLP9QoX40TfOS6P4A/S4pJMnOD8qLGl8ZIaSCgouRalsWY4d8CK8v5DgRfzemlnN4VQmx2tyca/iVus2mhfQoOhcs+x2UAMdLdJSC8B2bNZvfhKuQr+OsZK+AnAxIRXU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com; spf=pass smtp.mailfrom=zohomail.com; dkim=pass (1024-bit key) header.d=zohomail.com header.i=ming.li@zohomail.com header.b=NyNxBEep; arc=pass smtp.client-ip=165.173.182.94
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zohomail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=zohomail.com header.i=ming.li@zohomail.com header.b="ZY3ITvKg"
-ARC-Seal: i=1; a=rsa-sha256; t=1791374876; cv=none; 
+	dkim=pass (1024-bit key) header.d=zohomail.com header.i=ming.li@zohomail.com header.b="NyNxBEep"
+ARC-Seal: i=1; a=rsa-sha256; t=1791375741; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=HQtt+hGOtkINnmmSqfuJv66DQNPtui0WTpXLacyuGkwaxKoVoDzC+2664uOhmmfshqG0/LGB94vBSHg5hv2oF/us6E+nmSm/DlZyy0YyGHbsGSD/O/UfbY/uIyje5bvvjxsrjDzE0KoouPgL3pvrGZCtuVFkR22s5X20S0XNW1k=
+	b=ae66PRcMLrO4V8kRLZLDcKWgQMdLohkasluzHz6OC3/J+Frx17aj9b0X7RSTOsEbY1FGavVXr12RIgYGNmI5Recy27bpNdjahtGtGP3WiLhZoLrZZ8ySB0NJvlse9zWpEFXMUZ+YxgEi0MJ91CsDERHUvn4jZ2oHAbpZVHmGz6w=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1791374876; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=YDK+eVt9z7jRcDCuoLKKEPAz6CTTIjzqCw6nYaxWFUo=; 
-	b=DyD7RTtmF5YMYtuRiolLCpZDT2xv2BQ8hFeOHWU5Dsr/nVoNPoexdJyo4f40d35VYyG8534opljdjS3WNeBEbtAliG2CM1oZSDNejzdXneuEKilQOd/SMCElrOh4OPRaDi8oKE93hcYah9igUjf4mfZc49WjGoLdhIF/awkxygc=
+	t=1791375741; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=kWUH5zCnwtHKT9DajdHooYjxbLxwc75pG2nsy2b/FaQ=; 
+	b=Yzl2gUuxKLbK/pPdYMogUcQPVJwSWxIUJvSFaMLxGs9MQ+DCG0pO1y7+Br6O5VbNvL2iJ+EoasgcdUWIUff1F0BLF1UxI7Uk5X+L1yj3Zw/sws0cuAFXoEaa7TmnN1JJOZu1MokzIbMJUaTjDbnUN/l6D/mSX4+3sTB7f9wRoBs=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=zohomail.com;
 	spf=pass  smtp.mailfrom=ming.li@zohomail.com;
 	dmarc=pass header.from=<ming.li@zohomail.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1791374876;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1791375741;
 	s=zm2022; d=zohomail.com; i=ming.li@zohomail.com;
 	h=Message-ID:Date:Date:MIME-Version:Subject:Subject:To:To:Cc:Cc:From:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:Feedback-ID:Message-Id:Reply-To;
-	bh=YDK+eVt9z7jRcDCuoLKKEPAz6CTTIjzqCw6nYaxWFUo=;
-	b=ZY3ITvKgdmfAjd2WVOLOK6GSg2cSyewIJRVmd2ft1tdpPuqmbonRZR0+GxhAkgiE
-	AmCECSovVs9IMOKcDBgJbFDkSw80ibnoH+XEaJ08DYHqEYqiO0FDB/aidyYUfHI4cJu
-	KFmP2LpSdDTTy3FVHOXpCGiANaKmeRqLaCxti3MI=
-Received: by smtp.zohomail.com with SMTPS id 1791374874789244.05969337523243;
-	Wed, 7 Oct 2026 05:07:54 -0700 (PDT)
-Message-ID: <fb3dd8b9-438c-4cca-9811-6bc47efee873@zohomail.com>
-Date: Wed, 7 Oct 2026 20:07:47 +0800
+	bh=kWUH5zCnwtHKT9DajdHooYjxbLxwc75pG2nsy2b/FaQ=;
+	b=NyNxBEepNGx7dDQmV+4mgPHNbkV8krL7gUZEz0D42t63fhpWzNzMWwLsqjAIqjfB
+	4H+HqTKBg4cJ6iCkfTVfmm6n3XzT0XEvl8uqYo2Qio/3yrf14NI6aDLbisib3WrHPBv
+	/yv8aQFOSQThUKYyvrjtWQvyYMTOIMCEVpfWtX4A=
+Received: by smtp.zohomail.com with SMTPS id 1791375740669490.5174696368306;
+	Wed, 7 Oct 2026 05:22:20 -0700 (PDT)
+Message-ID: <4d2c765a-0d77-49f9-8e6e-4d80137df513@zohomail.com>
+Date: Wed, 7 Oct 2026 20:22:12 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,8 +45,7 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v14 01/16] cxl: Drop stale decoder interleave limit
- comment
+Subject: Re: [PATCH v14 02/16] cxl: Share CXL port upstream PCI device lookup
 To: Srirangan Madhavan <smadhavan@nvidia.com>,
  Alison Schofield <alison.schofield@intel.com>,
  Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
@@ -62,46 +61,149 @@ Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
  linux-tegra@vger.kernel.org,
  Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
 References: <20261001092227.3004747-1-smadhavan@nvidia.com>
- <20261001092227.3004747-2-smadhavan@nvidia.com>
+ <20261001092227.3004747-3-smadhavan@nvidia.com>
 From: Li Ming <ming.li@zohomail.com>
-In-Reply-To: <20261001092227.3004747-2-smadhavan@nvidia.com>
+In-Reply-To: <20261001092227.3004747-3-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Feedback-ID: zu080112270568025c6b11d8de7c4fec200000de64e2ac7ec75c8a0427ea90bee38664b83f6ba0a7c3c9653f:ZohoMail
+Feedback-ID: zu08011227bd73bd4de56559d6cf118e6a000083ad411aff8fb21b81e6504122147652043bead2f787d0c34e:ZohoMail
 X-Zoho-CM-AccountID: abd763e7b9fa23acf4f42a44f9876d2d993e05abdb9290f9ccb1008c977bf7f0
 X-ZohoMailClient: External
 
 
 在 2026/10/1 17:22, Srirangan Madhavan 写道:
-> CXL 2.0 added 16-way memory interleaving, making the comment that the
-> specification supports only 8-way interleaving stale. Remove the comment
-> without changing CXL_DECODER_MAX_INTERLEAVE.
+> read_cdat_data() resolves a CXL port's upstream device to its backing PCI
+> device. HDM cache updates need the same mapping.
 >
-> Suggested-by: Jonathan Cameron <jic23@kernel.org>
-> Link: https://lore.kernel.org/linux-cxl/20260912003057.3db9335c@jic23-hlaptop/
+> Factor the lookup into cxl_port_get_uport_pci_dev() and return a referenced
+> PCI device to make caller ownership explicit.
+>
 > Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
 > Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
 > Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+
 Reviewed-by: Li Ming <ming.li@zohomail.com>
 
+
+pci.h provides a __free() based cleanup function for pci_dev_put().
+
+I think you can use "struct pci_dev *pdev __free(pci_dev_put) = 
+cxl_port_get_uport_pci_dev(port);" and drop all pci_dev_put() below.
+
 > ---
->   drivers/cxl/cxl.h | 4 ----
->   1 file changed, 4 deletions(-)
+>   drivers/cxl/core/core.h |  1 +
+>   drivers/cxl/core/pci.c  | 19 +++++--------------
+>   drivers/cxl/core/port.c | 26 ++++++++++++++++++++++++++
+>   3 files changed, 32 insertions(+), 14 deletions(-)
 >
-> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-> index 3ef0810ab86b..9e0500d56866 100644
-> --- a/drivers/cxl/cxl.h
-> +++ b/drivers/cxl/cxl.h
-> @@ -269,10 +269,6 @@ enum cxl_decoder_type {
->   	CXL_DECODER_HOSTONLYMEM = 3,
->   };
+> diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
+> index 35eaf636adc9..983d7690c3a5 100644
+> --- a/drivers/cxl/core/core.h
+> +++ b/drivers/cxl/core/core.h
+> @@ -157,6 +157,7 @@ long cxl_pci_get_latency(struct pci_dev *pdev);
+>   int cxl_pci_get_bandwidth(struct pci_dev *pdev, struct access_coordinate *c);
+>   int cxl_port_get_switch_dport_bandwidth(struct cxl_port *port,
+>   					struct access_coordinate *c);
+> +struct pci_dev *cxl_port_get_uport_pci_dev(struct cxl_port *port);
 >   
-> -/*
-> - * Current specification goes up to 8, double that seems a reasonable
-> - * software max for the foreseeable future
-> - */
->   #define CXL_DECODER_MAX_INTERLEAVE 16
+>   static inline struct device *port_to_host(struct cxl_port *port)
+>   {
+> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
+> index 9d807c1a002c..99c8b02d42e5 100644
+> --- a/drivers/cxl/core/pci.c
+> +++ b/drivers/cxl/core/pci.c
+> @@ -564,26 +564,13 @@ static unsigned char cdat_checksum(void *buf, size_t size)
+>    */
+>   void read_cdat_data(struct cxl_port *port)
+>   {
+> -	struct device *uport = port->uport_dev;
+> +	struct pci_dev *pdev = cxl_port_get_uport_pci_dev(port);
+>   	struct device *dev = &port->dev;
+>   	struct pci_doe_mb *doe_mb;
+> -	struct pci_dev *pdev = NULL;
+> -	struct cxl_memdev *cxlmd;
+>   	struct cdat_doe_rsp *buf;
+>   	size_t table_length, length;
+>   	int rc;
 >   
->   #define CXL_QOS_CLASS_INVALID -1
->
-> base-commit: fef22d37d47043b63e4007f2f5fe762fa21fae0c
+> -	if (is_cxl_memdev(uport)) {
+> -		struct device *host;
+> -
+> -		cxlmd = to_cxl_memdev(uport);
+> -		host = cxlmd->dev.parent;
+> -		if (dev_is_pci(host))
+> -			pdev = to_pci_dev(host);
+> -	} else if (dev_is_pci(uport)) {
+> -		pdev = to_pci_dev(uport);
+> -	}
+> -
+>   	if (!pdev)
+>   		return;
+>   
+> @@ -591,6 +578,7 @@ void read_cdat_data(struct cxl_port *port)
+>   				      CXL_DOE_PROTOCOL_TABLE_ACCESS);
+>   	if (!doe_mb) {
+>   		dev_dbg(dev, "No CDAT mailbox\n");
+> +		pci_dev_put(pdev);
+>   		return;
+>   	}
+>   
+> @@ -598,6 +586,7 @@ void read_cdat_data(struct cxl_port *port)
+>   
+>   	if (cxl_cdat_get_length(dev, doe_mb, &length)) {
+>   		dev_dbg(dev, "No CDAT length\n");
+> +		pci_dev_put(pdev);
+>   		return;
+>   	}
+>   
+> @@ -625,11 +614,13 @@ void read_cdat_data(struct cxl_port *port)
+>   	port->cdat.table = buf->data;
+>   	port->cdat.length = length;
+>   
+> +	pci_dev_put(pdev);
+>   	return;
+>   err:
+>   	/* Don't leave table data allocated on error */
+>   	devm_kfree(dev, buf);
+>   	dev_err(dev, "Failed to read/validate CDAT.\n");
+> +	pci_dev_put(pdev);
+>   }
+>   EXPORT_SYMBOL_NS_GPL(read_cdat_data, "CXL");
+>   
+> diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
+> index 625e4aa427db..5dc2815d82d8 100644
+> --- a/drivers/cxl/core/port.c
+> +++ b/drivers/cxl/core/port.c
+> @@ -34,6 +34,32 @@
+>   static DEFINE_IDA(cxl_port_ida);
+>   static DEFINE_XARRAY(cxl_root_buses);
+>   
+> +/**
+> + * cxl_port_get_uport_pci_dev - get the PCI device for a port's upstream device
+> + * @port: CXL port to map to a PCI device
+> + *
+> + * Return: A referenced PCI device, or NULL if the upstream device is not PCI.
+> + * The caller must release the returned reference with pci_dev_put().
+> + */
+> +struct pci_dev *cxl_port_get_uport_pci_dev(struct cxl_port *port)
+> +{
+> +	struct device *uport = port->uport_dev;
+> +	struct device *host;
+> +
+> +	if (is_cxl_memdev(uport)) {
+> +		struct cxl_memdev *cxlmd = to_cxl_memdev(uport);
+> +
+> +		host = cxlmd->dev.parent;
+> +	} else {
+> +		host = uport;
+> +	}
+> +
+> +	if (!host || !dev_is_pci(host))
+> +		return NULL;
+> +
+> +	return pci_dev_get(to_pci_dev(host));
+> +}
+> +
+>   /*
+>    * The terminal device in PCI is NULL and @platform_bus
+>    * for platform devices (for cxl_test)
