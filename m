@@ -1,45 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DD3C41228D;
-	Wed,  7 Oct 2026 20:46:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 758913D5668;
+	Wed,  7 Oct 2026 20:51:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791406001; cv=none; b=LZE63ojcqGAAozegyAFz4EeM0eZzrpjbGsjqi+fmqQRmFhcvc4kJm0OR1qeRo5+38uLWEAM+JSsREViHHpo/cybI2TRhnERLZSXXLBkUIU1CSms7xa0EsCI0pLKPJRgnxdnErZeI9ThBa931GFGyqL+v1eAOGJOrYCyh6wP6Wa8=
+	t=1791406320; cv=none; b=tsr5KDwz90uec5lOdR3FaJBeWCLgw+dtA/chb5kiUcSrT93CjKR9zJSrav80NNG0gCqOsAZMgrH5HiXPrzO845x+5woOoScUxXD6WnxU05W6DyVBBWBTKp2nRjnUGL74pMEebvEQN3ANveSFsLiPoYligh38nMzJRiRbD6mXElA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791406001; c=relaxed/simple;
-	bh=gTwxBYTl+pHDh47KmeB80cZ5j+8y40mfAwfHJkEeusQ=;
+	s=arc-20240116; t=1791406320; c=relaxed/simple;
+	bh=uE95pd9jNyT4IQ51oKOVY0v6aW9zfGaxhYG3gVlOryo=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=OY6y1C633zZE6ERsMYIOADY+RkJNI8tqsQuQ0hGoXpkskYHImWUoBwt1K/WBsA5HW1VarBPQCjKPn4lBKaUudMbg8mhRx+v8fJ2E8J2pIG9zOoDeO5fPWaKB0/G2IoJ4MR26zqRlF89IjqywNsceraNEDX/ZI/+OnDfuHfA3HYE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FzRBCnbt; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=Eg+HMbrgnzrNN3V4on7eWDWRoMBVALWYH1Xve8WNkLF/YamAdfGs1LDabqpQ/1FJAbWa6gMkjbJqVgZMYOlA4Dm2IZU4rYx8YRsmz6oJX6ReW0xsPArRR1pgOwTOwlsY8t1HnY/tixkJzb7XgNyqJrfH2ZqwbtAFSfcOhBTkL/s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IKXAOZGW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FzRBCnbt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDCAF1F000FF;
-	Wed,  7 Oct 2026 20:46:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IKXAOZGW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAC7D1F000FF;
+	Wed,  7 Oct 2026 20:51:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791406000;
-	bh=34+KA6aRWlauHcZvLDUgRaDFa7lnmvJ3bU3k1UoQnyI=;
+	s=k20260515; t=1791406319;
+	bh=fSnkBBtzKq/ulj3XKnVf2ZgADiUGXEZk9M5NXU7fseM=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=FzRBCnbtC0AKOKMea5+7ceoLBzxC2dnl/kOVAzt1S7RLQCqRjqFMXtgWt7tIYdSpb
-	 6x7JbayU+CuijLwxk+tz4spqSmMx7xaOeJSH5MQIj+V7aUuiHycsXvGu6Ejv84AtDp
-	 HuOtoqVu6YTvbgos6i7xvhdRXYPupAQss+HOfC1RE9Xk6tkxMjysz4oNsC71h646Eu
-	 +70F0hNf884qLjJZRVnQC6SyfY6ZmSty10KgLZiN/Ije7ViaMk4HoB0sWmNISHY0G7
-	 xTk14UNoMWcsGHX+dEeU317Q7eyYQ6cgqOjbXY/3N91aR2OuvoeuNv1Er9zYvaVy/X
-	 me2ov68d1q96w==
-Date: Wed, 7 Oct 2026 15:46:38 -0500
+	b=IKXAOZGWImOprSYjFPyZq9KhE00T3p7ZpFQnQ3ir8VU9gWoM7P/ahuoWtnOkTvKwL
+	 RJcWYU07frr/5y7NBToxVkH51krGl+5sP+nlgOMz/t/eBZpdGn7rP5G+0SxQnKd0to
+	 EZvIaW1RgN3jPWc60DRYPW8mCuyDBD0ivozWADICHIMSiSvN5v1Jd4nQmDKtw48Ayx
+	 pqD5m0aqj7raRfrSN5nyMpl5S/P8kb1VA32WFiA6q6KOGkbwtm58a/tnXt/nsB0zUT
+	 Kfy+EHk+ouhxtbUiS77iD2VTcyfr0zg4WaW1gUSYBkg2eDx+sWS6pXwjk6ffAaWcJ2
+	 AhFMUh6TjVYxw==
+Date: Wed, 7 Oct 2026 15:51:57 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: phucduc.bui@gmail.com
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, kwilczynski@kernel.org,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Thierry Reding <thierry.reding@kernel.org>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Vidya Sagar <vidyas@nvidia.com>,
-	Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-	Niklas Cassel <cassel@kernel.org>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: tegra194: use dev_err_probe() for PERST GPIO
-Message-ID: <20261007204638.GA785135@bhelgaas>
+To: Janusz Krzysztofik <janusz.krzysztofik@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	intel-gfx@lists.freedesktop.org,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Andi Shyti <andi.shyti@linux.intel.com>,
+	Krzysztof Karas <krzysztof.karas@intel.com>,
+	Sebastian Brzezinka <sebastian.brzezinka@intel.com>,
+	Krzysztof Niemiec <krzysztof.niemiec@intel.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: Disable not supported reset methods on DG1 0x4905
+Message-ID: <20261007205157.GA786789@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,55 +47,65 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261007104847.507776-1-phucduc.bui@gmail.com>
+In-Reply-To: <20260907090249.1348552-2-janusz.krzysztofik@linux.intel.com>
 
-On Wed, Oct 07, 2026 at 05:48:46PM +0700, phucduc.bui@gmail.com wrote:
-> From: bui duc phuc <phucduc.bui@gmail.com>
+On Mon, Sep 07, 2026 at 10:59:18AM +0200, Janusz Krzysztofik wrote:
+> DRM CI consistently reports failing device reset attempts on Intel DG1
+> discrete graphics adapters.  Manual reproduction attempts allowed to
+> narrow down the scope of that problem to a specific revision of that
+> hardware, SKU 8086:4905.  It has been confirmed that both reset methods
+> claimed by the device, i.e., flr and bus, suffer from that issue.
 > 
-> Use dev_err_probe() when getting the PERST GPIO to simplify error
-> handling and properly handle -EPROBE_DEFER.
+> Since consecutively failing device resets may lead to system hangs,
+> disable both useless reset methods.  A respective CI test will then be
+> skipped instead of aborting whole CI jobs.
 > 
-> Signed-off-by: bui duc phuc <phucduc.bui@gmail.com>
+> Suggested-by: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
+> Closes: https://gitlab.freedesktop.org/drm/i915/kernel/-/work_items/11814
+> Reviewed-by: Andi Shyti <andi.shyti@linux.intel.com>
+> Reviewed-by: Krzysztof Karas <krzysztof.karas@intel.com>
+> Signed-off-by: Janusz Krzysztofik <janusz.krzysztofik@linux.intel.com>
 
-For future posts, please match the subject line capitalization style:
-
-  PCI: tegra194: Use ...
-
-And style as "PERST#" in the subject, commit log, and dmesg text to
-match spec usage.
-
-No need to repost just for this; we can tweak these when applying.
+Applied to pci/reset for v7.4, thanks!
 
 > ---
->  drivers/pci/controller/dwc/pcie-tegra194.c | 15 +++------------
->  1 file changed, 3 insertions(+), 12 deletions(-)
+> v2: Fix commit description wording (Andi)
+>   - add Suggested-by: tag missing from v1,
+>   - add collected Reviewed-by: tags.
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-> index 63a0f56cad8e..767e11216196 100644
-> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
-> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> @@ -1200,18 +1200,9 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
+>  drivers/pci/quirks.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index de9bbccda21fd..e55475374c6fd 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3811,6 +3811,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TI, 0xb005, quirk_no_bus_reset);
+>   */
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1164, quirk_no_bus_reset);
 >  
->  	/* Endpoint mode specific DT entries */
->  	pcie->pex_rst_gpiod = devm_gpiod_get(pcie->dev, "reset", GPIOD_IN);
-> -	if (IS_ERR(pcie->pex_rst_gpiod)) {
-> -		int err = PTR_ERR(pcie->pex_rst_gpiod);
-> -		const char *level = KERN_ERR;
-> -
-> -		if (err == -EPROBE_DEFER)
-> -			level = KERN_DEBUG;
-> -
-> -		dev_printk(level, pcie->dev,
-> -			   dev_fmt("Failed to get PERST GPIO: %d\n"),
-> -			   err);
-> -		return err;
-> -	}
-> +	if (IS_ERR(pcie->pex_rst_gpiod))
-> +		return dev_err_probe(pcie->dev, PTR_ERR(pcie->pex_rst_gpiod),
-> +				     "Failed to get PERST GPIO\n");
+> +/* Intel DG1 0x4905 may not recover from bus reset */
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4905, quirk_no_bus_reset);
+> +
+>  static void quirk_no_pm_reset(struct pci_dev *dev)
+>  {
+>  	/*
+> @@ -5597,6 +5600,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
+>   * AMD Neural Processing Unit 0x1502 0x17f0
+>   * Intel 82579LM Gigabit Ethernet Controller 0x1502
+>   * Intel 82579V Gigabit Ethernet Controller 0x1503
+> + * Intel DG1 Discrete Graphics Adapter 0x4905
+>   * Mediatek MT7922 802.11ax PCI Express Wireless Network Adapter
+>   * Mediatek MT7925 802.11be PCI Express Wireless Network Adapter
+>   */
+> @@ -5612,6 +5616,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1502, quirk_no_flr);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x17f0, quirk_no_flr);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x4905, quirk_no_flr);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x0616, quirk_no_flr);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x7925, quirk_no_flr);
 >  
->  	pcie->pex_refclk_sel_gpiod = devm_gpiod_get_optional(pcie->dev,
->  							     "nvidia,refclk-select",
 > -- 
-> 2.43.0
+> 2.54.0
 > 
