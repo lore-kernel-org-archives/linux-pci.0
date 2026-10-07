@@ -1,158 +1,172 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013020.outbound.protection.outlook.com [40.93.201.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B510A390214;
-	Wed,  7 Oct 2026 09:51:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791366705; cv=none; b=ietk8LQcoxHYtnQoF1h3qFtlsboahWzcXzb7WtPqMCuOxQAi/MIwFBx2bzRqZzABHaKcWwXD+2tUmmhM8fpmdRcQU9b4YwxfUZFZYrVYuniMIdAvVToR4qSBpFPrs6vBXz4yP3JgdVzbneQPd/McelOIuypltUSttGa932BMdG0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791366705; c=relaxed/simple;
-	bh=mt+iq0lWCHzQfDYrfrlqEtd5P+ap0Q2mMhBWwH5H8S8=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=p+wFIY/jAIXqp4wS353DZOBHkMazlSFB5JG3tDxlf5ApJGg+CCqinr/SIwHov4OJ9B5493Uu3CRIDiOjbwvpcV0I0Ktt/VRtoEZVTlgUIPB6faOzJqw0GSGyk9DSu6eIqBw5zTxGn/B493BTWw5m6NlklcU/D7cNkO7+e5Ey3GQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fpAlJq6W; arc=none smtp.client-ip=198.175.65.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A2F54718E5;
+	Wed,  7 Oct 2026 10:02:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.20
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791367341; cv=fail; b=U+6HxC3LO68b8g2iLKM3fMf8ebvLxQJhNDxDgZLv68ofVjFf4PzJm6xqSLnDWuOKQjULELlkUZWLRpUAuQJABiY6KBcuVqKBgqpCMXAAnNun203dItWnsGqaHOMqdVDq+PZ4CRx/DsfuIQ1GOVAZvqjAnih6mbk6lf7DydBJsWM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791367341; c=relaxed/simple;
+	bh=feDKcoeYRht+YPXGC8U7Zdx3mIu9paaDryhMtD7uUrE=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=VJeTtyMc4+QGzpue7zuKNu2NGaMvzpcsglWt4J9EnHWIn+Xnwg1NYh4yc5HlNmYxkyA/WD8/iD+ihimbIRAz4S2SG82SkbDQX1Ck/WgxCznVJRjPxKetefOPh0w/JCMgWaUZ3KdpRPmkqGzTYEpiTj6T7CgqIxMh4JW/5riiQdw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=2wZqv+yG; arc=fail smtp.client-ip=40.93.201.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fpAlJq6W"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791366696; x=1822902696;
-  h=message-id:subject:from:to:cc:date:in-reply-to:
-   references:content-transfer-encoding:mime-version;
-  bh=mt+iq0lWCHzQfDYrfrlqEtd5P+ap0Q2mMhBWwH5H8S8=;
-  b=fpAlJq6WPD60vdmA7BB6BK03MIDlY3CiVYRnCaEAtXZxSGSlnCUm3236
-   be+dmS/nuQ8BWlCNTrGTr1tmpCCWZ1bx6Y54OKlY6vIjyN16PtNnWlVqP
-   j+W60QhDysAMzxpNUJaRcYFtDOfOsS7hg98fYgzZR8+i8jwbqXXXlqnJ9
-   cBcxcsEgF2xKeRe1/C4/tKbyPBT7FbO9adc7UoDjL0cTJ2cJTyPt9FBAJ
-   o5V5dIiccO4ETWTYDFwr8+6Tn37sYo40xBeSBpRGnsTP5xL/Nu//pRNUo
-   XShoxTadaciqe5ZqOQmFpomKxeaBMZieuVCUiwL+fm3kU0cWPK3bYG/vn
-   A==;
-X-CSE-ConnectionGUID: 3ihVVxCORFyRukF5NM3tDA==
-X-CSE-MsgGUID: RBHmERA0RKagm9pe2oyM0g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11927"; a="5199"
-X-IronPort-AV: E=Sophos;i="6.27,144,1787036400"; 
-   d="scan'208";a="5199"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Oct 2026 02:51:35 -0700
-X-CSE-ConnectionGUID: kaBsrKAkS+yZ1OBMmGXWjQ==
-X-CSE-MsgGUID: MGf0vOAkRRiC1Xg2PU0PqA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,144,1787036400"; 
-   d="scan'208";a="285490563"
-Received: from jkrzyszt-mobl2.ger.corp.intel.com ([10.245.246.150])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Oct 2026 02:51:32 -0700
-Message-ID: <1c9905719331e6229d0f8eb197f547dc060052fc.camel@linux.intel.com>
-Subject: Re: [PATCH v2] PCI: Disable not supported reset methods on DG1
- 0x4905
-From: Janusz Krzysztofik <janusz.krzysztofik@linux.intel.com>
-To: Ville =?ISO-8859-1?Q?Syrj=E4l=E4?= <ville.syrjala@linux.intel.com>, 
- Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, intel-gfx@lists.freedesktop.org, Joonas
- Lahtinen	 <joonas.lahtinen@linux.intel.com>, Andi Shyti
- <andi.shyti@linux.intel.com>,  Krzysztof Karas <krzysztof.karas@intel.com>,
- Sebastian Brzezinka <sebastian.brzezinka@intel.com>, Krzysztof Niemiec
- <krzysztof.niemiec@intel.com>, linux-kernel@vger.kernel.org
-Date: Wed, 07 Oct 2026 11:51:29 +0200
-In-Reply-To: <ap_nbJWGXWTI8ARq@intel.com>
-References: <20260907090249.1348552-2-janusz.krzysztofik@linux.intel.com>
-	 <ap_nbJWGXWTI8ARq@intel.com>
-Organization: Intel Technology Poland sp. z o.o. - ul. Slowackiego 173,
- 80-298 Gdansk - KRS 101882 - NIP 957-07-52-316
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="2wZqv+yG"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Q4FohJrYAuVUqjkcBSXXO04/Lo4dtywQSEDFAnuWkVgd2GPnHgsjYK07PQBvWAKVDLz7UjOB9dEWOMO7G6QMVYzXGTwV+jfHmcSHSQpUqpoXVLOdLzYI81xP8mWRXxtjdlAMaOoAArJjJ4J3FhImrKHEgvZDXf2JVz8r6YDkZvzUf5jZGAEf/ufsAduotjkhakMYdg45VKFcZr1YutwgQP+lAQi3ifVrtMRNoO+KpLu12ZqCOGRGqpKF9W9MWEUAS0o/gPLBR+yIwudmGEwAuHQy7RIq8ZhUwmnehfYAf5tiEASvlQD1juW3sZkpSGef4IEPmt6ZNKklo5h1a4vR0A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=3jJ/NJdN+1uoP2QC7EmgISsdSWJAOKEzz4IC1n+cs6g=;
+ b=DhkYpkmMBzjAqDvTXriwc40QkxU+Y5noiHxJGODPeGILsfutHo2yL2zVNN2NZ55cKCVHq+GBnL4w/POmFY6/k0yCih09ya+IzMwoaRhj/4wtC0ha2UYJzlhveEopcbum/PGSTg+UUrn19XqghK4+HtzBKf6W1kEjJnlM6qRE90llYt9Z94AtyTR1maMpxPiMR6U+5i9TFqW3Q1IWC4liDG5PI1qNlrGADzk3mC2/iFUVHZBeoTSrIPQP/217fxbFEjkiUB271dfKN04CtjDJ947sfbjwBZIXJ44wvSH6ICy3s7czEo+/8e6RyTZdfKjRl9baVyi9ueXdlQU/89axjA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3jJ/NJdN+1uoP2QC7EmgISsdSWJAOKEzz4IC1n+cs6g=;
+ b=2wZqv+yGb53wlxuj/uxdlfVDpDzGi4umPmMblpIcJrsXDLx0rhJ4QFBSShDVvVeTT/S5ZB1f4u/gaD6TsoccD33Sul+RSn3im1BPan5WGWgehH1PyLIbW8PgTwU7XbTgRRKJPTU4fJvo5O6UfXgOx2MllSeTfZi+6D8kbeFXU1A=
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from PH7PR12MB9076.namprd12.prod.outlook.com (2603:10b6:510:2f6::21)
+ by LV2PR12MB903269.namprd12.prod.outlook.com (2603:10b6:408:40f::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.496.15; Wed, 7 Oct
+ 2026 10:02:08 +0000
+Received: from PH7PR12MB9076.namprd12.prod.outlook.com
+ ([fe80::c295:127b:4e18:6053]) by PH7PR12MB9076.namprd12.prod.outlook.com
+ ([fe80::c295:127b:4e18:6053%5]) with mapi id 15.21.0451.026; Wed, 7 Oct 2026
+ 10:02:07 +0000
+Message-ID: <dd91c653-3637-4014-90a4-93bd50932db6@amd.com>
+Date: Wed, 7 Oct 2026 15:31:59 +0530
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/2] dmaengine: dw-edma: Sort Register Field Macros by
+ Bit Position
+To: Vinod Koul <vkoul@kernel.org>
+Cc: mani@kernel.org, frank.li@kernel.org, den@valinux.co.jp,
+ dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, michal.simek@amd.com, devverma@amd.com
+References: <20260917103050.1020982-1-devverma@amd.com>
+ <20260917103050.1020982-2-devverma@amd.com> <asOx6y7hiVrEUNGa@parshuram>
+Content-Language: en-US
+From: "Verma, Devendra" <devverma@amd.com>
+In-Reply-To: <asOx6y7hiVrEUNGa@parshuram>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: PN2PR01CA0241.INDPRD01.PROD.OUTLOOK.COM
+ (2603:1096:c01:21a::12) To PH7PR12MB9076.namprd12.prod.outlook.com
+ (2603:10b6:510:2f6::21)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH7PR12MB9076:EE_|LV2PR12MB903269:EE_
+X-MS-Office365-Filtering-Correlation-Id: 07ec3a71-3840-4ef3-4ffd-08df245a0b74
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|1800799024|23010399003|366016|22082099003|18002099003|10067099003|4143699003|11063799006|56012099006;
+X-Microsoft-Antispam-Message-Info:
+	xHXgp27Ft2MGYP2/fZOYrH4V92wy/nj5lpPrtL9NOk7fOKmIO7xgZJ8PSZk35BJR4Awu2yrMgTd91aDMb3EhiFTVpKin/2iz1n6P8op97UDpbWPG6cVPo6U2k/occcZqvAApgpFNFYqD2bPbvy7ddVz1Mfq1TGMKnlxqghQd1PLwX7/nyAwy/4fyIpPzyqQfjI9QopVpU2lQbySgx4ZUKM8XKEd71JoPp86amKH2oSYppc/EYNtAVfFql29wIRe3OYZxDnTiU7ECGHZccEGu2EC5w0dA+43UMyuy1oAZ9egeVPSfGQ3ZcjBSbUHWERKMo4IqvzcHT64Y3Hf8Zlr/MwXriP/IJBHCD9+KqrBiIoWKTAmmgbgRyn2uU7yWOwy/rRbkWSz+eOcD2E4/qTb3RKDUj9MEIPJi4MsS+HH9wu3R1Y8ZPhnIDk9sHKfFvhjDOZNwp8enwxNZxrM1hBy1bt/PlNGgcxJaKVD4QvCtWwP8cTUHIb53FtLBa1O+c1kdc5FCULwA9SbOd6gVdu8WNqT5kjNb7ipDeDh6Y52CXWxKgikNrR/8h6AM0ntnd6QKXh4Awedz52MtGfTxKtYwD+res6XAGU00cVyRC7qi2WSWdbdvd4EUCu41Kgx4lTihMB9VBjVSMrSgH9VDhcRE5A==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR12MB9076.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(23010399003)(366016)(22082099003)(18002099003)(10067099003)(4143699003)(11063799006)(56012099006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?UkR4THNwN0ZOUUczSFFvS205L2krWEpiVzNCQ0pqR1BWekRCNm9OaVI4R1ZW?=
+ =?utf-8?B?UjJKL2tTdDdCY1c1WStmT0JwQi96VXBsU3cwRzRqc2FiWFU0SzNmc29ta3Vn?=
+ =?utf-8?B?NFBNZ1AvVklkTEJSUVZmMnFaSDBvdEFuUTVUN3JxU1dGN2xMZDg2ZFpRVHdw?=
+ =?utf-8?B?dHpEelVxcVArc3hFWGw5V0ZDdXkrOXVqWlhIckgrWk82VGdvVzNEQWZVMlMr?=
+ =?utf-8?B?aEVycmZNc1dISTJEWGN3TjYvWW5URFdtOXMzQ0pyZUwxWk5VTHdEKzFneGNa?=
+ =?utf-8?B?L2h6YXFlb056WkdmZU1uUVJOQ1hIK2Iya0dHVHVYUnpxVUlFTE42ZHVwaGhn?=
+ =?utf-8?B?eGIzaXBURklEQ1BPTC91UUgxdEFGcFNQOFNxdXMwYzJHSElsVGFEdzRvZWo2?=
+ =?utf-8?B?UThBdVRXR1Urb3Buejh5TDhRS0ptR01TMXo0dEFDNzdpdVdsNDBjdzN5K2NK?=
+ =?utf-8?B?ZEQxRVBmYUJoaFN5V1hNQ2JnVmpCSUdhdWt0VWk1MnkwelNYMkJLSFdJTzFW?=
+ =?utf-8?B?OExGSk5LUjF2TEJvQkVKbmNyOUtJaDBqZW1oR3hHN25ZWTN5eFZ2NEVKV1g1?=
+ =?utf-8?B?a0laSjVsU2QyMGZQUkV2aExJaTlLQjlXR1h4YjdSVUFYSkNQWlZBTmdWUVFD?=
+ =?utf-8?B?NXRkSzJyZ1FUTnFmZi81NXBGQUc2N1B0RUNST2F6cXdQV1RuRG95UER5Z0dS?=
+ =?utf-8?B?OFUwWTNaQlRuazZCWS9Tb2tONjIzK2pNN0pWZDN3V25UaTlOSFZ5aDRydzdx?=
+ =?utf-8?B?ckRwNHFEWm4wWkQvRElwWm9mWTJjaFQ3eURUL1Qwc1g3cGEyUkZiY3A3ME43?=
+ =?utf-8?B?WkRoN0hqVmxwS3JKNUk3T3N1UlkvK0wvbkhZVWlIcWlZRDZTaDdSUERLTVVJ?=
+ =?utf-8?B?Wld5dEQ4MWlteVVYTmNkNThmNUNYU09LaUhicmFidjM0UXRsWXNISjFHcitp?=
+ =?utf-8?B?QzhnZkp4dVFZK0ZSTGNWelVseERxS2RkYTNxNlpXQm50eEh6d0ROYzd4Sk9S?=
+ =?utf-8?B?TDQvUURSamdlRmI3QTQ2T3dOdFRnVTVxZG9SVHpHL0lSWXFWRjJqOFprTVJs?=
+ =?utf-8?B?NndZNEJYK1NObC9Pa2VwbGttTjJURjZZSk5KVnBvMFBpcEg5RUN5d1VhN3lw?=
+ =?utf-8?B?YWp1d2lwRyt3dWl5TjRuVE5lUW4weXRWYUJEdUY3R09GbnU3SVFjdFE1MFNr?=
+ =?utf-8?B?RmFvOEJjbUUreGNUbGdudENPaDhmVmY2cTVpZzNKbnNJNFovV2ZTZzI0RkM1?=
+ =?utf-8?B?OFZrQ1VGYnl6V1lJY2tJNW56OXU4QmdGckQ3RTE2a0dVTDNOS0ZUZis5ZVMy?=
+ =?utf-8?B?Y3B0ejI2OHh6S1JJMHRGaVY2YjNFd25TK1ViMW5LUXkwQnI0LzlDbjNBODN6?=
+ =?utf-8?B?ZmVJM1g1eTIzZTIzSDBQbmF6S0ZRVEF3dXQ4eEJiVkVvMEYwN0YwaUdXYVdG?=
+ =?utf-8?B?QzhXQW82dmxBOXNWRFRSQWh6R1FGMWJHM0wvdGs4K0k3Tjl0Qm5VQ3hXQ3A4?=
+ =?utf-8?B?U0FtTEFidUc1R1dtbDFBczV4akdKcjZUV3RLMXRuTnpuS25xQThybGJCWkVT?=
+ =?utf-8?B?bWhNNlJxc0llNEE5cXR1WFRPOElTRlloMGRndXNuS3N5VXlMWE41eG0rdTU5?=
+ =?utf-8?B?QUxRN2ovc3U1aVFPSmtoN0gxV1VTOXFCN2dkZzZvcy84THd5SlZqN3JESGFk?=
+ =?utf-8?B?MFZpeGhDYlVQUzZDZS9ZVUJaR0RCaC9YWFhKR0dteUFQeS90MWpBQWRjWVVT?=
+ =?utf-8?B?Zk5mK2haaS8rQ21OT0IyY0twZDVVcThPcVBRdlhNY3pEQ05sbEovUXM3aU1l?=
+ =?utf-8?B?eGZpbjlYaC9EU1RkQ1ZlTmZydGkvaGNseFZ3TjVRUkFkK0VXZ2FpUURrcFV0?=
+ =?utf-8?B?UE9NSzZjMTNNQkhrUXkrMVlCMHExQTN4NlJ5L1owZTZxUHhhTm1MUDRCVXdN?=
+ =?utf-8?B?Z2s1RHlza0ZZMHBOTy9PRUxCWjV6NTlZNDlpZmJLY3JpSGp4U3JZV3c3YUx4?=
+ =?utf-8?B?Z2t1b0NYRHFnUnErSnpVMEpKMXdYQjRYOFp0REJWRjNSRDA4R1VxQmxRREk4?=
+ =?utf-8?B?cEE1S0h0MjBTOGg1b2hGWVA4K1JVNXFMdFhsbmRwNmZHNGpYc1FxQjJZcWxJ?=
+ =?utf-8?B?RWlnR0JqSjZpdFhHQjZQY1VuNUdYWHpNWTZSRVMxZHc5ck5SRXRyQVNNOTVN?=
+ =?utf-8?B?Mmc2S0tDUXFlMEU2YnM3RWVYN0Uwczl1dzFFUmVSRVBJZ1R4VTJScGZCL1dn?=
+ =?utf-8?B?Q3JQeXFsT1orRVB0ZmZsaTVibFZRQytBUU53b3pYREhJczBoTFhSd0pzdHlI?=
+ =?utf-8?B?c3c2VG5FRHVkdHZUTmRMcDR5K2xPMFB1ZEpLV2poa1E2ZTlhZURXdz09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 07ec3a71-3840-4ef3-4ffd-08df245a0b74
+X-MS-Exchange-CrossTenant-AuthSource: PH7PR12MB9076.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Oct 2026 10:02:07.2749
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: ZgEhA1uVChQCbNH0oB65lH6qxDCnee4RFc/U8FZDLclPG8h/Libs7FvvR4yxo3/R4CXSL23h7fpNFaj1iiXGWA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV2PR12MB903269
 
-Hi Ville, Bjorn,
+On 05-Oct-26 19:49, Vinod Koul wrote:
+> On 17-09-26, 16:00, Devendra K Verma wrote:
+>> Sort register field macros by bit position to improve readability.
+>> No functional change.
+> 
+> This fails on current code and needs a bit more sorting.
+> 
 
-On Tue, 2026-09-08 at 13:46 +0300, Ville Syrj=C3=A4l=C3=A4 wrote:
-> On Mon, Sep 07, 2026 at 10:59:18AM +0200, Janusz Krzysztofik wrote:
-> > DRM CI consistently reports failing device reset attempts on Intel DG1
-> > discrete graphics adapters.  Manual reproduction attempts allowed to
-> > narrow down the scope of that problem to a specific revision of that
-> > hardware, SKU 8086:4905.  It has been confirmed that both reset methods
-> > claimed by the device, i.e., flr and bus, suffer from that issue.
->=20
-> IIRC the documented workaround for the issue is some kind of magic
-> register write after the FLR to unblock some internal state machine,
-> but the CPU isn't allowed to do that write and instead it has to be
-> performed by the GuC. That means we'd somehow have to reinitialize
-> the GuC very early after the FLR, which sounds rather difficult.
+I will sort it out and resend the patch after re-basing.
+Thank you!
 
-@Ville, thank you for providing details of the mentioned workaround (off-
-list).  I can see that workaround already included in GuC firmware, =C2=A0
-however, it doesn't fix the issue I'm trying to address here.  Then,=C2=A0
-disabling problematic PCI reset methods on the affected SKU, as proposed,=
-=C2=A0
-seems the only feasible solution left, I believe.
+-Devendra
 
-@Bjorn, can you please get back to this patch and push it forward?
+>>
+>> Signed-off-by: Devendra K Verma <devverma@amd.com>
+>> ---
+>> Changes in v1:
+>>     o Corrected heading and body as per reviewer's suggestion
+>> ---
+>>   drivers/dma/dw-edma/dw-edma-pcie.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+>> index 9f237ba916de..006dea7d6322 100644
+>> --- a/drivers/dma/dw-edma/dw-edma-pcie.c
+>> +++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+>> @@ -31,8 +31,8 @@
+>>   
+>>   #define DW_PCIE_XILINX_MDB_VSEC_DMA_ID		0x6
+>>   #define DW_PCIE_XILINX_MDB_VSEC_ID		0x20
+>> -#define DW_PCIE_XILINX_MDB_VSEC_DMA_BAR		GENMASK(10, 8)
+>>   #define DW_PCIE_XILINX_MDB_VSEC_DMA_MAP		GENMASK(2, 0)
+>> +#define DW_PCIE_XILINX_MDB_VSEC_DMA_BAR		GENMASK(10, 8)
+>>   #define DW_PCIE_XILINX_MDB_VSEC_DMA_WR_CH	GENMASK(9, 0)
+>>   #define DW_PCIE_XILINX_MDB_VSEC_DMA_RD_CH	GENMASK(25, 16)
+>>   
+>> -- 
+>> 2.43.0
+> 
 
-Thanks,
-Janusz
-
-
->=20
-> >=20
-> > Since consecutively failing device resets may lead to system hangs,
-> > disable both useless reset methods.  A respective CI test will then be
-> > skipped instead of aborting whole CI jobs.
-> >=20
-> > Suggested-by: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
-> > Closes: https://gitlab.freedesktop.org/drm/i915/kernel/-/work_items/118=
-14
-> > Reviewed-by: Andi Shyti <andi.shyti@linux.intel.com>
-> > Reviewed-by: Krzysztof Karas <krzysztof.karas@intel.com>
-> > Signed-off-by: Janusz Krzysztofik <janusz.krzysztofik@linux.intel.com>
-> > ---
-> > v2: Fix commit description wording (Andi)
-> >   - add Suggested-by: tag missing from v1,
-> >   - add collected Reviewed-by: tags.
-> >=20
-> >  drivers/pci/quirks.c | 5 +++++
-> >  1 file changed, 5 insertions(+)
-> >=20
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index de9bbccda21fd..e55475374c6fd 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -3811,6 +3811,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TI, 0xb005=
-, quirk_no_bus_reset);
-> >   */
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1164, quirk_no_bus_r=
-eset);
-> > =20
-> > +/* Intel DG1 0x4905 may not recover from bus reset */
-> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4905, quirk_no_bus_res=
-et);
-> > +
-> >  static void quirk_no_pm_reset(struct pci_dev *dev)
-> >  {
-> >  	/*
-> > @@ -5597,6 +5600,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x44=
-3, quirk_intel_qat_vf_cap);
-> >   * AMD Neural Processing Unit 0x1502 0x17f0
-> >   * Intel 82579LM Gigabit Ethernet Controller 0x1502
-> >   * Intel 82579V Gigabit Ethernet Controller 0x1503
-> > + * Intel DG1 Discrete Graphics Adapter 0x4905
-> >   * Mediatek MT7922 802.11ax PCI Express Wireless Network Adapter
-> >   * Mediatek MT7925 802.11be PCI Express Wireless Network Adapter
-> >   */
-> > @@ -5612,6 +5616,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1502=
-, quirk_no_flr);
-> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x17f0, quirk_no_flr);
-> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
-> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
-> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x4905, quirk_no_flr);
-> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x0616, quirk_no_flr);
-> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x7925, quirk_no_flr);
-> > =20
-> > --=20
-> > 2.54.0
