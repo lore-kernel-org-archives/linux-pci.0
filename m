@@ -1,150 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from sender5-pp-o94.zoho.com (sender5-pp-o94.zoho.com [165.173.182.94])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B2CE4534AD;
-	Wed,  7 Oct 2026 11:31:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791372715; cv=none; b=nzIvUzOreqH594Xabtfye8IJZyjzZ2cKb/mEVYXedr+qJRxsFakijmQko/WTWijHjHID9WfzRPq2RpiTxUP+vQxAD8AawiyTBPvM7DNppnZDxsaVS70WErYQNEfQLBIEj2FYaQKykvNaB+a63e0s0vBVLn1pTbBdRMzVccW78VU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791372715; c=relaxed/simple;
-	bh=rdAatqRx/H+z1DGz0KSj0GARhUoGmygYSsIZPvWiIr4=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=ifHkjR3CIFQ5HollEMPbVoVKyr2KzKmS6m96N4YIdCgQqLkjBI/hfcO9z3wT9l6rOLhspInuRmWxj20411IvtIMyLw1jm25ZmFE3XfRn6TY+PgtPnKM0H/D/NwRGxLBOgpEwYyXyO5CDF1/R4YQCM5kjUlbCYlIm4ovIQ8pEwQ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a4g53Oqo; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A09A49CF42;
+	Wed,  7 Oct 2026 12:08:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=165.173.182.94
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791374907; cv=pass; b=GeaBMEVyDwKwr/82ZPG94XsOy4cqdWMElNvax6fRitpBEwfg5Qc77+qqEAkSSjWBAtSd5q5ZR1C7CEyFz4xmF2dqjf2MuQ7QSZfDInYlkgPca3sdeDTBxI6QVL9eYvpRVhMBu34S4BiXPiqfw9FnU7auc/CT4N6Kpb0eNk9GEU8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791374907; c=relaxed/simple;
+	bh=KRN5aUoBT6yvcY7O4JyYd5G1G6gDhqkgVMCgSeJbvNM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=mwvM/wSG3u8snmqaLTOktRqD9FfxyvdFXlmR/EvcInLkwrGZnTv3Gird4UsiXvSgtT30HK6oBO+DIGf4nfNiugDaygO+E1PiZgELOkj+S/z2etEn8pXjArycTsFYwOju6+0SS1aE93Vm+EQ1hQcmhMylg829ZiK/4M3dNdNTfKw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com; spf=pass smtp.mailfrom=zohomail.com; dkim=pass (1024-bit key) header.d=zohomail.com header.i=ming.li@zohomail.com header.b=ZY3ITvKg; arc=pass smtp.client-ip=165.173.182.94
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zohomail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a4g53Oqo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 734551F0089B;
-	Wed,  7 Oct 2026 11:31:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791372697;
-	bh=Zh2Z9eMDzLLM/mnhB0kR2U8FWPmYZDiC/akWXoko2MI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=a4g53OqoEdPogyxv5cSD3kb3ZWOELARzSSSNDblKciRHB6zNzfGrRAdff7b07NR5D
-	 bxAbx6NqswKP3cfnn65pu64Krhg43YkJ6bHoLZ4A8AKBmcHOyy4B2ua56HB/EziKwL
-	 uWcysDUBAl/lvTdLr3S1oDVM/C6pzqvYbwlWqabvfOGUqCwyx978TUoy+lQGS4Ac+K
-	 o7YYMM7tBllaeVNFRL+OuDOVVJhLn4z/UXxG++MA5nq/QGnsUIkQknbdF19Ka8dHZu
-	 Z1esAl4BCMogg/wKurS5dKXUzEBMSHhs8II6zlw0xn5D4xcDEEw53sz/MGDjuDSU/z
-	 ct56KEDXPqLjQ==
-Date: Wed, 7 Oct 2026 06:31:36 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
-	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: Re: [PATCH v9 00/18] PCI/P2PDMA: Route peer-to-peer DMA by TLP class
-Message-ID: <20261007113136.GA755180@bhelgaas>
+	dkim=pass (1024-bit key) header.d=zohomail.com header.i=ming.li@zohomail.com header.b="ZY3ITvKg"
+ARC-Seal: i=1; a=rsa-sha256; t=1791374876; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=HQtt+hGOtkINnmmSqfuJv66DQNPtui0WTpXLacyuGkwaxKoVoDzC+2664uOhmmfshqG0/LGB94vBSHg5hv2oF/us6E+nmSm/DlZyy0YyGHbsGSD/O/UfbY/uIyje5bvvjxsrjDzE0KoouPgL3pvrGZCtuVFkR22s5X20S0XNW1k=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1791374876; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=YDK+eVt9z7jRcDCuoLKKEPAz6CTTIjzqCw6nYaxWFUo=; 
+	b=DyD7RTtmF5YMYtuRiolLCpZDT2xv2BQ8hFeOHWU5Dsr/nVoNPoexdJyo4f40d35VYyG8534opljdjS3WNeBEbtAliG2CM1oZSDNejzdXneuEKilQOd/SMCElrOh4OPRaDi8oKE93hcYah9igUjf4mfZc49WjGoLdhIF/awkxygc=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=zohomail.com;
+	spf=pass  smtp.mailfrom=ming.li@zohomail.com;
+	dmarc=pass header.from=<ming.li@zohomail.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1791374876;
+	s=zm2022; d=zohomail.com; i=ming.li@zohomail.com;
+	h=Message-ID:Date:Date:MIME-Version:Subject:Subject:To:To:Cc:Cc:From:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:Feedback-ID:Message-Id:Reply-To;
+	bh=YDK+eVt9z7jRcDCuoLKKEPAz6CTTIjzqCw6nYaxWFUo=;
+	b=ZY3ITvKgdmfAjd2WVOLOK6GSg2cSyewIJRVmd2ft1tdpPuqmbonRZR0+GxhAkgiE
+	AmCECSovVs9IMOKcDBgJbFDkSw80ibnoH+XEaJ08DYHqEYqiO0FDB/aidyYUfHI4cJu
+	KFmP2LpSdDTTy3FVHOXpCGiANaKmeRqLaCxti3MI=
+Received: by smtp.zohomail.com with SMTPS id 1791374874789244.05969337523243;
+	Wed, 7 Oct 2026 05:07:54 -0700 (PDT)
+Message-ID: <fb3dd8b9-438c-4cca-9811-6bc47efee873@zohomail.com>
+Date: Wed, 7 Oct 2026 20:07:47 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261007105409.GE7822@unreal>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v14 01/16] cxl: Drop stale decoder interleave limit
+ comment
+To: Srirangan Madhavan <smadhavan@nvidia.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
+ Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>,
+ Jonathan Cameron <jic23@kernel.org>, Vishal Verma
+ <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
+ alwilliamson@nvidia.com,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
+ Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
+ Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org,
+ Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
+References: <20261001092227.3004747-1-smadhavan@nvidia.com>
+ <20261001092227.3004747-2-smadhavan@nvidia.com>
+From: Li Ming <ming.li@zohomail.com>
+In-Reply-To: <20261001092227.3004747-2-smadhavan@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Feedback-ID: zu080112270568025c6b11d8de7c4fec200000de64e2ac7ec75c8a0427ea90bee38664b83f6ba0a7c3c9653f:ZohoMail
+X-Zoho-CM-AccountID: abd763e7b9fa23acf4f42a44f9876d2d993e05abdb9290f9ccb1008c977bf7f0
+X-ZohoMailClient: External
 
-On Wed, Oct 07, 2026 at 01:54:09PM +0300, Leon Romanovsky wrote:
-> On Wed, Oct 07, 2026 at 01:56:44AM -0500, Bjorn Helgaas wrote:
-> > On Tue, Oct 06, 2026 at 04:36:50PM -0500, Bjorn Helgaas wrote:
-> > > On Wed, Oct 07, 2026 at 12:22:27AM +0300, Leon Romanovsky wrote:
-> > > > On Tue, Oct 06, 2026 at 02:29:55PM -0500, Bjorn Helgaas wrote:
-> > > > > On Thu, Oct 01, 2026 at 02:55:08PM +0300, Leon Romanovsky wrote:
-> > > > > > PCI P2PDMA applies Request and Completion Redirect throughout both paths.
-> > > > > > This misclassifies asymmetric and nested switches, and reports one answer
-> > > > > > for every kind of TLP.
-> > > > > > 
-> > > > > > Three ACS controls act on TLP attributes the client chooses rather than
-> > > > > > on the topology: Translation Blocking and Direct Translated P2P act on
-> > > > > > a Request's Address Type, and Completion Redirect skips Completions carrying
-> > > > > > Relaxed Ordering.
-> > > > > > 
-> > > > > > Evaluate each direction at the path divergence, decide every class from the
-> > > > > > one walk, and treat a client with ATS enabled as translating unless its
-> > > > > > driver declares per-mapping ATS.
-> > > > > > 
-> > > > > > This completes the P2PDMA side; dma-buf and mlx5 follow separately.
-> > > > > > ...
-> > > > > 
-> > > > > > Leon Romanovsky (18):
-> > > > > >       PCI/P2PDMA: Document the TLP attribute assumptions
-> > > > > >       PCI/P2PDMA: Derive routing from directional ACS controls
-> > > > > >       PCI: Reject unreadable ACS controls in isolation checks
-> > > > > >       PCI/P2PDMA: Evaluate ACS controls at the path divergence
-> > > > > >       PCI/P2PDMA: Document directional ACS routing
-> > > > > >       PCI/P2PDMA: Collect the path's ACS controls before deciding
-> > > > > >       PCI/P2PDMA: Answer routing per TLP class
-> > > > > >       PCI/P2PDMA: Route Relaxed Ordering Completions directly
-> > > > > >       PCI/P2PDMA: Reject Translated Requests blocked by Translation Blocking
-> > > > > >       PCI/P2PDMA: Route Translated Requests under Direct Translated P2P
-> > > > > >       PCI/P2PDMA: Log detailed ACS routing diagnostics
-> > > > > >       PCI/P2PDMA: Add KUnit tests for the ACS routing decisions
-> > > > > >       PCI/P2PDMA: Test the ACS P2P routing walk
-> > > > > >       PCI: Add KUnit coverage for ACS isolation checks
-> > > > > >       PCI/P2PDMA: Document TLP-class routing
-> > > > > >       PCI/P2PDMA: Let a client declare that it selects ATS per mapping
-> > > > > >       PCI/P2PDMA: Evaluate the ATS path for clients with ATS enabled
-> > > > > >       PCI/P2PDMA: Test the routing of clients with ATS enabled
-> > > > > > 
-> > > > > >  Documentation/admin-guide/kernel-parameters.txt |  15 +-
-> > > > > >  Documentation/driver-api/pci/p2pdma.rst         |  80 +++
-> > > > > >  drivers/pci/Kconfig                             |  15 +
-> > > > > >  drivers/pci/Makefile                            |   1 +
-> > > > > >  drivers/pci/p2pdma.c                            | 719 ++++++++++++++++++--
-> > > > > >  drivers/pci/pci.c                               |   7 +-
-> > > > > >  drivers/pci/pci.h                               |  58 ++
-> > > > > >  drivers/pci/pci_acs_test.c                      | 860 ++++++++++++++++++++++++
-> > > > > >  drivers/pci/quirks.c                            |   6 +-
-> > > > > >  include/linux/pci-p2pdma.h                      |  12 +-
-> > > > > >  10 files changed, 1687 insertions(+), 86 deletions(-)
-> > > > > > ---
-> > > > > > base-commit: 08dbfad3f5040f5bdb6c529da20d6d4e81fefd72
-> > > > > > change-id: 20260821-fix-p2p-acs-v4-0-e72455e3a261
-> > > > > > prerequisite-message-id: <20260830-batch-p2p-fixes-v1-0-5044e8dfbe2e@nvidia.com>
-> > > > > > prerequisite-patch-id: 6b25c7fcf164cdfc14e9fac5b908d97fcf6509d7
-> > > > > > prerequisite-patch-id: 0d083c281001365aae4b35544cf28891a6ab9a96
-> > > > > > prerequisite-patch-id: bfd9dabf271f3cc9a3a61f46387d20c20311363d
-> > > > > > prerequisite-patch-id: fad0275efc722830fc591509506c0a5e4f581073
-> > > > > > prerequisite-patch-id: 0c83bee688fec1f6d1564654df7c630fa6a4a978
-> > > > > 
-> > > > > This seems like material for the PCI tree, but I'm not sure how to
-> > > > > apply it.  It doesn't apply cleanly on the current pci/p2pdma
-> > > > > (https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/log/?h=p2pdma),
-> > > > > which does contain your series from
-> > > > > 20260830-batch-p2p-fixes-v1-0-5044e8dfbe2e@nvidia.com.
-> > > > > 
-> > > > > I could probably fix the conflicts but I don't know why there should
-> > > > > be conflicts, since the only commits on pci/p2pdma other than yours
-> > > > > are a few trivial allow-list updates.
-> > > > 
-> > > > So maybe this is related to these trivial updates, my series was based
-> > > > on the clean p2pdma branch:
-> > > > https://git.kernel.org/pub/scm/linux/kernel/git/leon/linux-rdma.git/log/?h=fix-p2p-acs-v9
-> > > 
-> > > Ah, yeah, it must be the allow-list additions that I have but you
-> > > don't.  I wouldn't have thought the offsets would have been a problem.
-> > 
-> > It applies fine if I move the Haswell and Alibaba allowlist patches t
-> > to the end so the base matches fix-p2p-acs-v9, thanks.
-> 
-> Bjorn,
-> 
-> It is unclear to me if I should to resend.
 
-No need.
+在 2026/10/1 17:22, Srirangan Madhavan 写道:
+> CXL 2.0 added 16-way memory interleaving, making the comment that the
+> specification supports only 8-way interleaving stale. Remove the comment
+> without changing CXL_DECODER_MAX_INTERLEAVE.
+>
+> Suggested-by: Jonathan Cameron <jic23@kernel.org>
+> Link: https://lore.kernel.org/linux-cxl/20260912003057.3db9335c@jic23-hlaptop/
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
+> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+Reviewed-by: Li Ming <ming.li@zohomail.com>
+
+> ---
+>   drivers/cxl/cxl.h | 4 ----
+>   1 file changed, 4 deletions(-)
+>
+> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+> index 3ef0810ab86b..9e0500d56866 100644
+> --- a/drivers/cxl/cxl.h
+> +++ b/drivers/cxl/cxl.h
+> @@ -269,10 +269,6 @@ enum cxl_decoder_type {
+>   	CXL_DECODER_HOSTONLYMEM = 3,
+>   };
+>   
+> -/*
+> - * Current specification goes up to 8, double that seems a reasonable
+> - * software max for the foreseeable future
+> - */
+>   #define CXL_DECODER_MAX_INTERLEAVE 16
+>   
+>   #define CXL_QOS_CLASS_INVALID -1
+>
+> base-commit: fef22d37d47043b63e4007f2f5fe762fa21fae0c
