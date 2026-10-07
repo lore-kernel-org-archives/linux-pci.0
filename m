@@ -1,136 +1,90 @@
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5978F49A3B7
-	for <linux-pci@vger.kernel.org>; Wed,  7 Oct 2026 10:49:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C48749DB98;
+	Wed,  7 Oct 2026 10:51:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791370192; cv=none; b=MYFtdHpKWZgQ8g5FgC4c67AFzyZRTjhvx6Ob44JncsBuCcijG66HrFjjc/bGUzAgYxLxGHmLUl+qE053X+IAt9NfeSL5/yslL8bzszK4ztJZk8hRzHtP6QiWn/ThyrimwjVoCOUqIz9FdPNTXJ3gE6JybebNxsde3FLse13xuCM=
+	t=1791370297; cv=none; b=ucWu3TH6emHWLUlXYtwnWp3VkVxiz2jL/jmZuDwTOCuZMq7S5Yeze5k4oYjmvDZhq0ggvXIebE24E1QN+hsUDs4YU3f3WTB8F7RVbrprfWaSd8LagMs44xWhg4fx5xwwZt3pmgSPk6MZKa/JvvAfR7hNPGjRWPJ9v1UiAFbq6ic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791370192; c=relaxed/simple;
-	bh=5B1H9FA7mZy/gFbNTlCD7iwhPS8Ucq4yIS3VU3Z7Aio=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=K8NjuPdVeybuZzaEsk3nOIHJJ+pRRscfOFco3ph6NMHLNyy7n6mJ6Z0uGCS9dCaHeG2OyqmNihHcPvvV0U7RGzin6aj2c+qoV1neRbWKPFKFHSrpAsQSKoOCBtFOhfa9t/KQrNPqh0TbxIhW7pgyqoivcHX6ttqmOlsY0oih2Is=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KMGUdK1O; arc=none smtp.client-ip=209.85.215.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791370297; c=relaxed/simple;
+	bh=J+DFMDnlZ3G9MVUQd4T8u6HsYYM3KMhWI8aLB4phSgE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PzVNRhsRYQNCFQIdiVId3n9sffvqzy3o8S4F62py5bEHvA+WaNm3oB5Y62t/5ph3qs96S/QybuapxvNT/WMalF1JISmBLo6GMmg85UY+zYg+t/F+lePzXgUaadZZf32jeIx4TJ5mWlScHETkQYRsxg4axc8shRok1nbBSz1GAr0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aB0CPojg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KMGUdK1O"
-Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-ccce6d9abfeso1137302a12.1
-        for <linux-pci@vger.kernel.org>; Wed, 07 Oct 2026 03:49:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791370143; x=1791974943; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=KiCqXelSwhsxxAotTgryiWxi3hHYLhT7SYQdblGbV2w=;
-        b=KMGUdK1OpSDMw4BfTyYR8pEniuILqLBYG2dGQWn1ANmOUfrDDq89hdYnoCcnhi9Znz
-         PG9LnDcm1TJws9+lVP2aoRrL4Yi43fLCrjub1WcWf11N3Uw4eoEUH6PxEbLw/4ArcEab
-         vjMsBdA1jh1fBWEChxRjjOzeilpf5J+jvEFIP9QfMyHy8/Bel+dewyxSg6Q5708Pv5IR
-         8CzF4nQUXtoCQN738tnATSgXsvc9XQatrGhdgexLyAkErW+lOl1uD0fqp8s8gNY073ki
-         YDpJhnvLCQBACCWJRFVK08EivOSxqvAjLKUTeP/4GnvzKkhwHifLjgauGQXNKEaXJgFB
-         IAiA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791370143; x=1791974943;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=KiCqXelSwhsxxAotTgryiWxi3hHYLhT7SYQdblGbV2w=;
-        b=nBP6Qn5ZFWuCnGH9WyG49oSpUI9w7vYY93+uE5p8wx4XSMz2oRRtM1lBWVGoAPiDrO
-         MgrsYDljVla7vLUrXx4mNygObOo37b8Z/69H0+P1vJrHCB6rdhV2rBCS/i/QKGnuTpDA
-         oUAxSnl/bHF7BKAzvHOIAAIOqIhMLd58RciEazWCQnbpJZeShA3frtKmIYxY0EiE8d+T
-         iMNt4jT9Uv/s7gVw+GeMWxR8FKTLk+mOXITsaStJTomOodjkigBpUehb7A/RXHkBOLhT
-         QWFCoTmGXJEPXevfzca6eumyO5qTobtlrYc9qYuQ6dXzSaxuKVxrLSbd2Fha/tDKyrp7
-         947w==
-X-Forwarded-Encrypted: i=1; AKwUvBzUj7/voVimO4E4Ascl3IdBJ/Tyz7n3YWywm5+nzl4nIEB5neOUDpNrCMbTIK+3dglOd6MMsX+IgjM=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKwMBddXSs+wKejYkofxknxl+vtwt6FcdQDI9lSY8Hl3m4UYaj3
-	Nob0q03OKRGAoODul0KmcRBKBqSJSBuHuGQpYV5iP1Pmyfd7zEImV2SN
-X-Gm-Gg: AYBFou2sbTqlfiXi+XLW+SIYhNgWAI0veAXjckv7/QyJ1yCUk644vHadpnZ+z+OW8Yk
-	7v9rC1bumG3hdW5GG5I1k1WWZTC9iqALJjDAMZuESRHRsHN6Ig+5sdIhERSgoAFd8kdT/VNU2fP
-	Gd6Jw+xwF94ZadDfjl/e2YEm5AEO4/KCHHhVY4LHhrAS9gBQ/0YvHEVhVj+sTCLXSBAZaZKsBpS
-	VCD+lOJoHwsqMAlqduGw1Ch2fWYxxCanwxBrUruSM3aROFy/bOj0+N7vRe2TBueEGYgQMkTVdTV
-	1+0N201p72A92R/0ODSNB0spPFhTrc8+/TNcZHAFRsGDnsXWtM8efYV5lgxsPbh0V4hQcEOFZ4w
-	0HXGq+KA4OshapaC1Y/NcWUP5Bpcv+gd1/Fm8nX97FATf6pbodxBAdNuuRn6XKg37/OpC4Lz31x
-	sbFBCV70HZ+bffA/KKa5xYDzm8GoirjS2fYMjcfJlH+jJThmpmyf+UzOvlL0o5dBUKAKooUOIJc
-	8MVq8zxS1KD9fXBELBUOTDVuVhBC/zcgah6S+oSszLdu/HuePW42WoWfy0CBi1SAQ6+BHum5PAT
-	z7oyZEkiwwAY0w==
-X-Received: by 2002:a17:90b:3c04:b0:3a0:a83d:dd0c with SMTP id 98e67ed59e1d1-3a8a08514e6mr1600840a91.17.1791370143411;
-        Wed, 07 Oct 2026 03:49:03 -0700 (PDT)
-Received: from phuc-desktop.. ([183.91.15.56])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a85afe9ef9sm9119961a91.12.2026.10.07.03.48.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Oct 2026 03:49:03 -0700 (PDT)
-From: phucduc.bui@gmail.com
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	kwilczynski@kernel.org,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thierry Reding <thierry.reding@kernel.org>,
-	Jonathan Hunter <jonathanh@nvidia.com>
-Cc: Vidya Sagar <vidyas@nvidia.com>,
-	Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	bui duc phuc <phucduc.bui@gmail.com>
-Subject: [PATCH 2/2] PCI: tegra194: propagate REFCLK select GPIO errors
-Date: Wed,  7 Oct 2026 17:48:47 +0700
-Message-ID: <20261007104847.507776-2-phucduc.bui@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261007104847.507776-1-phucduc.bui@gmail.com>
-References: <20261007104847.507776-1-phucduc.bui@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aB0CPojg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84D201F0089B;
+	Wed,  7 Oct 2026 10:51:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791370268;
+	bh=weSi5GskMQcEeS2NiW1uUS0DljvEtWiOygax9Ns7zp8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=aB0CPojga/mp5PJnUHNynUO3VHoezNfPEjLWND7BpXC8J4A+Z4VctOV0EybFyiCXA
+	 LlYp+FK1nbqf0as+ZbN6Tco7T6z4qAB/edMjNHhgXQLk3WDy3+/9RYGLamn/UHJ+Pp
+	 ZvLlvcbTDFnXxNsYhj+fHc24kE1SenB9XFzDFjNDvZ5EQI6v5LFoC1yibaRNzuHplB
+	 nBKlna6sthqpyLF2Tss+WOBkeYgO+5N12aegqpOwKWgyeVLO4QbzHaORjfSK8R82Rm
+	 mx+WM6PP8z8AH0dvvVRwbAyph4bkrTOMGqFmFAVWepY6r/5+2/mVscuFGz5Re0tPOD
+	 1k9ZJmr0mZRvw==
+Date: Wed, 7 Oct 2026 13:51:04 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
+	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
+	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>
+Subject: Re: [PATCH v9 04/18] PCI/P2PDMA: Evaluate ACS controls at the path
+ divergence
+Message-ID: <20261007105104.GD7822@unreal>
+References: <20261001-fix-p2p-acs-v4-0-v9-4-1a8e0f50ddd9@nvidia.com>
+ <20261006210848.GA712422@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261006210848.GA712422@bhelgaas>
 
-From: bui duc phuc <phucduc.bui@gmail.com>
+On Tue, Oct 06, 2026 at 04:08:48PM -0500, Bjorn Helgaas wrote:
+> On Thu, Oct 01, 2026 at 02:55:12PM +0300, Leon Romanovsky wrote:
+> > From: Leon Romanovsky <leonro@nvidia.com>
+> > 
+> > ACS redirect controls choose between peer and upstream routes only at the
+> > path divergence. Applying them below that point rejects valid nested
+> > topologies because traffic already has only an upstream route.
+> 
+> I guess the point here is that prior to this patch,
+> calc_map_type_and_dist() returned PCI_P2PDMA_MAP_NOT_SUPPORTED in a
+> case where it didn't need to?  Can you include an example to make this
+> concrete?
 
-devm_gpiod_get_optional() returns NULL when the optional GPIO is not
-present, but may return -EPROBE_DEFER or other errors.
+One possible example I had in mind while preparing the presentation [1] was
+ability to connect devices to different switches. Despite devices and switches
+support P2P, but from the P2P subsystem's point of view, traffic between them
+was not P2P (see slide 4).
 
-The current code treats GPIO lookup errors as if the GPIO were not
-present.
+This support will become even more important when we reach the point of
+enabling P2P inside a VM. It will allow us to hide the underlying PCI
+topology from the VM.
 
-Check the return value and propagate errors from the REFCLK select GPIO
-lookup.
+Thanks
 
-Signed-off-by: bui duc phuc <phucduc.bui@gmail.com>
----
- drivers/pci/controller/dwc/pcie-tegra194.c | 15 +++------------
- 1 file changed, 3 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index 767e11216196..5ebe01f72833 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -1207,18 +1207,9 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
- 	pcie->pex_refclk_sel_gpiod = devm_gpiod_get_optional(pcie->dev,
- 							     "nvidia,refclk-select",
- 							     GPIOD_OUT_HIGH);
--	if (IS_ERR(pcie->pex_refclk_sel_gpiod)) {
--		int err = PTR_ERR(pcie->pex_refclk_sel_gpiod);
--		const char *level = KERN_ERR;
--
--		if (err == -EPROBE_DEFER)
--			level = KERN_DEBUG;
--
--		dev_printk(level, pcie->dev,
--			   dev_fmt("Failed to get REFCLK select GPIOs: %d\n"),
--			   err);
--		pcie->pex_refclk_sel_gpiod = NULL;
--	}
-+	if (IS_ERR(pcie->pex_refclk_sel_gpiod))
-+		return dev_err_probe(pcie->dev, PTR_ERR(pcie->pex_refclk_sel_gpiod),
-+				     "Failed to get REFCLK select GPIOs\n");
- 
- 	return 0;
- }
--- 
-2.43.0
-
+[1] http://lpc.events/event/20/contributions/2508/
