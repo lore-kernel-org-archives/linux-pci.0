@@ -1,392 +1,186 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ADEE4B8284;
-	Wed,  7 Oct 2026 16:23:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0962F3E5EDB;
+	Wed,  7 Oct 2026 16:58:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791390234; cv=none; b=LFyXoQBNU8U3APFTXCycDrAqK048Fighrm5KktDcvYklaJiiAtpr7hVgkYpIBK7ng9+0ayB3IwZpRJwWDOxCzidgQQ7CqqkguE5lqE1KZElbmidRTJbdjAIDsJQwhmNhr3hfFoPeI0nUdbbKiiU71zXikK4lj5ibw0KKy6VOefA=
+	t=1791392330; cv=none; b=FN+2yd2rMxHnauFq/OERU0s82c2qZLp1P9zEbFZU42yAXG+tPgyMJhWj+GMyyaeIiVmAJ/DZAj3Ya8TQ3VdQmKX5soaGdTEvighqNECoRXKdtpNcV0SS3NeGGnzey8S5TI4QteaNkr6NBogZ6PPindKpnCJSshf9q/W1T05jQVw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791390234; c=relaxed/simple;
-	bh=NbzfAfTQ2HOCmRIt9lfBabMi46nnpBo978V2SSaBRe4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iMPPmKlySrNJcawDBLQmGFmAuKrC/sDsK6Wa+4wSSnmVTdlalt7LMdURVPUlrn0EtxFnl3xH+q1kArGPdjbi5HjvJjfOd1Rw38mVop3gE7FD8HJeaOHEEhBJR0iQQcwOl0r8mtM7IsQObXG1gjFU5nkX5FNGmO3nPciOYQruvus=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=PdioGLS+; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1791392330; c=relaxed/simple;
+	bh=LXj48tPcJM1i99kjG1AbXXh92VCh2wY/HQfGrFbZiyc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=t1zs7x6pBoKNAiYd1W9vwmXXHMHXoyp6Nxk3xXd6KVDG3AA3utZhDIF0zL4C7FJlJ+aoOjURNmZfJrl5GTCVXwueoiN7DYF7H0KFdHZxCIPyv9TwH/IhelpqeSolVSyElxmdx0QvuhbCVGklzqcihfwWSzUQ6tZGIk+jnXnm6JE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=c0NtgML/; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="PdioGLS+"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="c0NtgML/"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791390232; x=1822926232;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=NbzfAfTQ2HOCmRIt9lfBabMi46nnpBo978V2SSaBRe4=;
-  b=PdioGLS+MeiYQz8Vi+U7hc9JVSA/wlceyFQ/9LxavTdkrFrvXHreA6Ve
-   DyO6vY35SqlY/c9m+TEgZP042z8B/KCvuSnnl4wjqg5Hxb+OAW+7p6Vyr
-   yP9o6CWuk3yAqS9BGYeFSJESaTS4p7edeqx/9PEkfNOyIuEg+52Y8cFjJ
-   z6pD/FjUsPHtojjNUv3jpF+XX0/8C0B1ECbX6TIiirQ+/vSiosBJZ34pv
-   wJRrFed48CDLjbNVH/t1Cp+qPEuzxFgbjOO9yQbBI64UNl8b1gEvx3ms1
-   m4CVme6XSql/baNpkQ9PmkbzfMTnl0dNx8e2Gj+cJR4+ch9MHrd69y3nC
+  t=1791392328; x=1822928328;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=LXj48tPcJM1i99kjG1AbXXh92VCh2wY/HQfGrFbZiyc=;
+  b=c0NtgML/kHYCGwPG1geo8sC7kyOrNdJ9BnN57hCAcs9e9SI1PFcrl+80
+   C8FiDehEtBIkj1rfuUqihdEFrKiMWMOJdWROP0IFdUr27NjJ4G9z2Oeiq
+   VmRSrNp9klcOUvWlHNU9w358KMQW9Gb1ZoT6cIWbtkwn6opC7Ua/o3OZz
+   z73guUwpmOwadSqQKlE8zX8qwzBPphYKigUOJEO1HIetruBSAlRy9Iy5Q
+   Uw7Fo8Ke/y64BOxPMpLToUAqfblrG/QBpsUx9gsDKNSm16gvVRuTlVZ2C
+   ylJnTzTcw8m8H/tvi3OTseDWFe8tvKH7N8Qr0wWBUDtfuoAvjR+uE6kcb
    w==;
-X-CSE-ConnectionGUID: jZe2ipsJS+mWEvS5FmD9rg==
-X-CSE-MsgGUID: 32l9xD/RTMmmzcWy5v8M1g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11928"; a="40730"
+X-CSE-ConnectionGUID: SSqDTC5VSremMuIZQqbE0Q==
+X-CSE-MsgGUID: dxK/ABRuQY6a3DcI6i+e6g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11928"; a="263213"
 X-IronPort-AV: E=Sophos;i="6.27,144,1787036400"; 
-   d="scan'208";a="40730"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Oct 2026 09:23:51 -0700
-X-CSE-ConnectionGUID: pFASbOdlTf2I7OTYFMB0VA==
-X-CSE-MsgGUID: 8bdnIb1XQ9yahO1GxI3fLA==
+   d="scan'208";a="263213"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Oct 2026 09:58:47 -0700
+X-CSE-ConnectionGUID: bnXnWEp3SlG9wOFiQfiRNQ==
+X-CSE-MsgGUID: +q8U9VafTcusBhy0zM6gCg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,144,1787036400"; 
-   d="scan'208";a="82638"
-Received: from gmitchel-mobl2.amr.corp.intel.com (HELO [10.125.108.247]) ([10.125.108.247])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Oct 2026 09:23:49 -0700
-Message-ID: <e8ee0949-90b9-4572-869d-61b4073c568d@intel.com>
-Date: Wed, 7 Oct 2026 09:23:47 -0700
+   d="scan'208";a="306958465"
+Received: from skuppusw-desk2.jf.intel.com ([10.165.154.101])
+  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Oct 2026 09:58:47 -0700
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J . Wysocki" <rafael@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>,
+	Len Brown <lenb@kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/4] PCI/EDR: Remove CONFIG_PCIE_EDR
+Date: Wed,  7 Oct 2026 09:58:37 -0700
+Message-ID: <20261007165840.1604136-2-sathyanarayanan.kuppuswamy@linux.intel.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261007165840.1604136-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+References: <20261007165840.1604136-1-sathyanarayanan.kuppuswamy@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v14 05/16] cxl: Introduce reusable HDM decoder settings
-To: Li Ming <ming.li@zohomail.com>, Srirangan Madhavan
- <smadhavan@nvidia.com>, Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
- Ira Weiny <ira.weiny@intel.com>, Jonathan Cameron <jic23@kernel.org>,
- Vishal Verma <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
- alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20261001092227.3004747-1-smadhavan@nvidia.com>
- <20261001092227.3004747-6-smadhavan@nvidia.com>
- <60dbd245-0b16-4c4b-8350-26570916ede0@intel.com>
- <12dff52f-61fb-4796-afa9-0e7a8f74452d@zohomail.com>
-From: Dave Jiang <dave.jiang@intel.com>
-Content-Language: en-US
-In-Reply-To: <12dff52f-61fb-4796-afa9-0e7a8f74452d@zohomail.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
+Error Disconnect Recover (EDR) is the ACPI half of the hybrid DPC model,
+where firmware owns DPC and notifies the OS of containment events.
 
+CONFIG_PCIE_EDR made EDR optional on top of CONFIG_PCIE_DPC.  This adds
+another knob to the decision to request DPC control in _OSC.  The OS
+requests DPC control only if it also supports EDR, so with
+CONFIG_PCIE_EDR=n it never requests DPC control.  There is little reason
+to build DPC without EDR on ACPI systems.
 
-On 10/7/26 6:12 AM, Li Ming wrote:
-> 
-> 在 2026/10/3 03:59, Dave Jiang 写道:
->>
->> On 10/1/26 2:22 AM, Srirangan Madhavan wrote:
->>> Represent HDM programming state with struct cxl_decoder_settings and pass
->>> it to the commit helpers. Keep endpoint skip and switch targets with their
->>> owning types and flatten them only into transient programming settings.
->>> Place flags with the programming state and leave runtime region ownership
->>> outside the snapshot.
->>>
->>> Separate commit initiation from completion waiting so reset restoration
->>> can reuse register programming without changing normal DPA-lock policy.
->>>
->>> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
->>> ---
->>>   drivers/cxl/core/core.h |  3 ++
->>>   drivers/cxl/core/hdm.c  | 82 ++++++++++++++++++++++++++---------------
->>>   include/cxl/cxl.h       | 10 +++++
->>>   3 files changed, 66 insertions(+), 29 deletions(-)
->>>
->>> diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
->>> index 983d7690c3a5..a3fddb2bed63 100644
->>> --- a/drivers/cxl/core/core.h
->>> +++ b/drivers/cxl/core/core.h
->>> @@ -139,6 +139,9 @@ struct cxl_rwsem {
->>>     extern struct cxl_rwsem cxl_rwsem;
->>>   +void cxl_commit_start(void __iomem *hdm, struct cxl_decoder_settings *settings);
->>> +int cxld_await_commit(void __iomem *hdm, int id);
->>> +
->>>   int cxl_memdev_init(void);
->>>   void cxl_memdev_exit(void);
->>>   void cxl_mbox_init(void);
->>> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
->>> index 9e05032a5426..d3f21dfda146 100644
->>> --- a/drivers/cxl/core/hdm.c
->>> +++ b/drivers/cxl/core/hdm.c
->>> @@ -707,7 +707,7 @@ int cxl_dpa_alloc(struct cxl_endpoint_decoder *cxled, u64 size)
->>>       return devm_add_action_or_reset(&port->dev, cxl_dpa_release, cxled);
->>>   }
->>>   -static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
->>> +static void cxld_set_interleave(struct cxl_decoder_config *config, u32 *ctrl)
->>>   {
->>>       u16 eig;
->>>       u8 eiw;
->>> @@ -716,12 +716,12 @@ static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
->>>        * Input validation ensures these warns never fire, but otherwise
->>>        * suppress unititalized variable usage warnings.
->>>        */
->>> -    if (WARN_ONCE(ways_to_eiw(cxld->config.interleave_ways, &eiw),
->>> -              "invalid interleave_ways: %d\n", cxld->config.interleave_ways))
->>> +    if (WARN_ONCE(ways_to_eiw(config->interleave_ways, &eiw),
->>> +              "invalid interleave_ways: %d\n", config->interleave_ways))
->>>           return;
->>> -    if (WARN_ONCE(granularity_to_eig(cxld->config.interleave_granularity, &eig),
->>> +    if (WARN_ONCE(granularity_to_eig(config->interleave_granularity, &eig),
->>>                 "invalid interleave_granularity: %d\n",
->>> -              cxld->config.interleave_granularity))
->>> +              config->interleave_granularity))
->>>           return;
->>>         u32p_replace_bits(ctrl, eig, CXL_HDM_DECODER0_CTRL_IG_MASK);
->>> @@ -729,10 +729,10 @@ static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
->>>       *ctrl |= CXL_HDM_DECODER0_CTRL_COMMIT;
->>>   }
->>>   -static void cxld_set_type(struct cxl_decoder *cxld, u32 *ctrl)
->>> +static void cxld_set_type(struct cxl_decoder_config *config, u32 *ctrl)
->>>   {
->>>       u32p_replace_bits(ctrl,
->>> -              !!(cxld->config.target_type == CXL_DECODER_HOSTONLYMEM),
->>> +              !!(config->target_type == CXL_DECODER_HOSTONLYMEM),
->>>                 CXL_HDM_DECODER0_CTRL_HOSTONLY);
->>>   }
->>>   @@ -764,7 +764,7 @@ static void cxlsd_set_targets(struct cxl_switch_decoder *cxlsd, u64 *tgt)
->>>    * clock skew and other marginal behavior
->>>    */
->>>   #define COMMIT_TIMEOUT_MS 20
->>> -static int cxld_await_commit(void __iomem *hdm, int id)
->>> +int cxld_await_commit(void __iomem *hdm, int id)
->>>   {
->>>       u32 ctrl;
->>>       int i;
->>> @@ -784,45 +784,66 @@ static int cxld_await_commit(void __iomem *hdm, int id)
->>>       return -ETIMEDOUT;
->>>   }
->>>   -static void setup_hw_decoder(struct cxl_decoder *cxld, void __iomem *hdm)
->>> +static void setup_hw_decoder(void __iomem *hdm,
->>> +                 struct cxl_decoder_settings *settings)
->> settings is replacing cxld, I would prefer that as the first parameter
->>
->>>   {
->>> -    int id = cxld->config.id;
->>> +    struct cxl_decoder_config *config = &settings->config;
->>> +    int id = config->id;
->>> +    u64 target_or_skip_reg_val;
->>>       u64 base, size;
->>>       u32 ctrl;
->>>   -    /* common decoder settings */
->>> -    ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(cxld->config.id));
->>> -    cxld_set_interleave(cxld, &ctrl);
->>> -    cxld_set_type(cxld, &ctrl);
->>> -    base = cxld->config.hpa_range.start;
->>> -    size = range_len(&cxld->config.hpa_range);
->>> +    ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
->>> +    cxld_set_interleave(config, &ctrl);
->>> +    cxld_set_type(config, &ctrl);
->>> +    base = config->hpa_range.start;
->>> +    size = range_len(&config->hpa_range);
->>> +    target_or_skip_reg_val = settings->target_or_skip_reg_val;
->>>         writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
->>>       writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
->>>       writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id));
->>>       writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
->>> +    /* Target-list and endpoint-skip registers alias the same slot. */
->>> +    writel(upper_32_bits(target_or_skip_reg_val), hdm + CXL_HDM_DECODER0_TL_HIGH(id));
->>> +    writel(lower_32_bits(target_or_skip_reg_val), hdm + CXL_HDM_DECODER0_TL_LOW(id));
->>> +
->>> +    writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
->>> +}
->>> +
->>> +void cxl_commit_start(void __iomem *hdm, struct cxl_decoder_settings *settings)
->>> +{
->>> +    lockdep_assert_held(&cxl_rwsem.dpa);
->>> +    setup_hw_decoder(hdm, settings);
->>> +}
->>> +
->>> +/*
->>> + * Endpoint skip and switch targets have different owners. Keep that state with
->>> + * its owning type and flatten it only into a transient register-programming
->>> + * snapshot.
->>> + */
->>> +static void cxl_decoder_snapshot(struct cxl_decoder *cxld,
->>> +                 struct cxl_decoder_settings *settings)
->>> +{
->>> +    lockdep_assert_held(&cxl_rwsem.dpa);
->>> +
->>> +    *settings = (struct cxl_decoder_settings) {
->>> +        .config = cxld->config,
->>> +    };
->>>         if (is_switch_decoder(&cxld->dev)) {
->>>           struct cxl_switch_decoder *cxlsd =
->>>               to_cxl_switch_decoder(&cxld->dev);
->>> -        void __iomem *tl_hi = hdm + CXL_HDM_DECODER0_TL_HIGH(id);
->>> -        void __iomem *tl_lo = hdm + CXL_HDM_DECODER0_TL_LOW(id);
->>>           u64 targets;
->>>             cxlsd_set_targets(cxlsd, &targets);
->>> -        writel(upper_32_bits(targets), tl_hi);
->>> -        writel(lower_32_bits(targets), tl_lo);
->>> +        settings->target_or_skip_reg_val = targets;
->>>       } else {
->>>           struct cxl_endpoint_decoder *cxled =
->>>               to_cxl_endpoint_decoder(&cxld->dev);
->>> -        void __iomem *sk_hi = hdm + CXL_HDM_DECODER0_SKIP_HIGH(id);
->>> -        void __iomem *sk_lo = hdm + CXL_HDM_DECODER0_SKIP_LOW(id);
->>>   -        writel(upper_32_bits(cxled->skip), sk_hi);
->>> -        writel(lower_32_bits(cxled->skip), sk_lo);
->>> +        settings->target_or_skip_reg_val = cxled->skip;
->>>       }
->>> -
->>> -    writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
->>>   }
->>>     static int cxl_decoder_commit(struct cxl_decoder *cxld)
->>> @@ -830,6 +851,7 @@ static int cxl_decoder_commit(struct cxl_decoder *cxld)
->>>       struct cxl_port *port = to_cxl_port(cxld->dev.parent);
->>>       struct cxl_hdm *cxlhdm = dev_get_drvdata(&port->dev);
->>>       void __iomem *hdm = cxlhdm->regs.hdm_decoder;
->>> +    struct cxl_decoder_settings settings;
->>>       int id = cxld->config.id, rc;
->>>         if (cxld->config.flags & CXL_DECODER_F_ENABLE)
->>> @@ -862,10 +884,12 @@ static int cxl_decoder_commit(struct cxl_decoder *cxld)
->>>           }
->>>       }
->>>   -    scoped_guard(rwsem_read, &cxl_rwsem.dpa)
->>> -        setup_hw_decoder(cxld, hdm);
->>> +    scoped_guard(rwsem_read, &cxl_rwsem.dpa) {
->>> +        cxl_decoder_snapshot(cxld, &settings);
->>> +        cxl_commit_start(hdm, &settings);
->>> +    }
->>>   -    rc = cxld_await_commit(hdm, cxld->config.id);
->>> +    rc = cxld_await_commit(hdm, settings.config.id);
->>>       if (rc) {
->>>           dev_dbg(&port->dev, "%s: error %d committing decoder\n",
->>>               dev_name(&cxld->dev), rc);
->>> diff --git a/include/cxl/cxl.h b/include/cxl/cxl.h
->>> index 237b31d54249..67c81be47fbb 100644
->>> --- a/include/cxl/cxl.h
->>> +++ b/include/cxl/cxl.h
->>> @@ -72,6 +72,16 @@ struct cxl_decoder {
->>>       void (*reset)(struct cxl_decoder *cxld);
->>>   };
->>>   +/**
->>> + * struct cxl_decoder_settings - CXL HDM decoder programming snapshot
->>> + * @config: common decoder configuration
->>> + * @target_or_skip_reg_val: switch target list or endpoint skip register value
->>> + */
->>> +struct cxl_decoder_settings {
->>> +    struct cxl_decoder_config config;
->>> +    u64 target_or_skip_reg_val;
->> Single variable contains multiple meanings gets confusing and messy when they are different values depending on context.
->>
->> How about something like:
->>
->> struct cxl_endpoint_decoder_settings {
->>     struct cxl_decoder_config config;
->>     u64 skips;
->> };
->>
->> /* resource.c: common to both decoder types */
->> static u32 cxl_hdm_write_range(void __iomem *hdm,
->>                               const struct cxl_decoder_config *config)
->> {
->>        int id = config->id;
->>        u64 base = config->hpa_range.start;
->>        u64 size = range_len(&config->hpa_range);
->>        u32 ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
->>
->>        cxld_set_interleave(config, &ctrl);
->>        cxld_set_type(config, &ctrl);
->>        writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id))
->>        writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
->>        writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id))
->>        writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
->>        return ctrl;
->> }
->>
->> void cxl_commit_start_endpoint(void __iomem *hdm,
->>                               const struct cxl_endpoint_decoder_settings *s)
->> {
->>        int id = s->config.id;
->>        u32 ctrl;
->>
->>        lockdep_assert_held(&cxl_rwsem.dpa);
->>        ctrl = cxl_hdm_write_range(hdm, &s->config);
->>        writel(upper_32_bits(s->skip), hdm + CXL_HDM_DECODER0_SKIP_HIGH(id));
->>        writel(lower_32_bits(s->skip), hdm + CXL_HDM_DECODER0_SKIP_LOW(id));
->>        writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
->> }
->>
->> void cxl_commit_start_switch(void __iomem *hdm,
->>                             const struct cxl_decoder_config *config,
->>                             u64 targets)
->> {
->>        int id = config->id;
->>        u32 ctrl;
->>
->>        lockdep_assert_held(&cxl_rwsem.dpa);
->>        ctrl = cxl_hdm_write_range(hdm, config);
->>        writel(upper_32_bits(targets), hdm + CXL_HDM_DECODER0_TL_HIGH(id));
->>        writel(lower_32_bits(targets), hdm + CXL_HDM_DECODER0_TL_LOW(id));
->>        writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
->> }
->>
->> /* hdm.c: cxl_decoder_commit() */
->> scoped_guard(rwsem_read, &cxl_rwsem.dpa) {
->>        if (is_switch_decoder(&cxld->dev)) {
->>                struct cxl_switch_decoder *cxlsd =
->>                        to_cxl_switch_decoder(&cxld->dev);
->>                u64 targets;
->>
->>                cxlsd_set_targets(cxlsd, &targets);
->>                cxl_commit_start_switch(hdm, &cxld->config, targets);
->>        } else {
->>                struct cxl_endpoint_decoder *cxled =
->>                        to_cxl_endpoint_decoder(&cxld->dev);
->>                struct cxl_endpoint_decoder_settings s = {
->>                        .config = cxld->config,
->>                        .skip = cxled->skip,
->>                };
->>
->>                cxl_commit_start_endpoint(hdm, &s);
->>        }
->> }
-> 
-> Hi Dave,
-> 
-> 
-> I think cxl_decoder_snapshot() also needs this struct cxl_decoder_settings to store current value of switch/endpoint decoder registers.
-> 
-> But your implementation only defines a struct cxl_endpoint_decoder_settings, I suppose that we also need a struct cxl_switch_decoder_settings?
-> 
-> 
-> How about using a union in struct cxl_decoder_settings, I think it can resolve the "Single variable with multiple meanings" issue you mentioned. like that
-> 
-> struct cxl_decoder_settings {
-> 
->     struct cxl_decoder_config config;
-> 
->     union {
-> 
->         u64 targets;    // used for switch decoders
-> 
->         u64 skips;        // used for endpoint decoders
-> 
->     };
-> 
-> };
-> 
+Remove the option and build edr.c whenever CONFIG_PCIE_DPC and
+CONFIG_ACPI are both enabled.
 
-That was my first thought, but it does not look like the switch decoders need it at the moment. I had LLM do a refactor and this [1] is what it looks like. See if you agree.
+Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+---
+ drivers/acpi/pci_root.c   | 6 +++---
+ drivers/pci/pcie/Kconfig  | 9 ---------
+ drivers/pci/pcie/Makefile | 5 ++++-
+ drivers/pci/pcie/dpc.c    | 5 +++--
+ include/linux/pci-acpi.h  | 4 ++--
+ 5 files changed, 12 insertions(+), 17 deletions(-)
 
-[1]: https://git.kernel.org/pub/scm/linux/kernel/git/djiang/linux.git/log/?h=cxl-type2-reset
-
-DJ
-
-> 
-> Ming
-> 
->>
->>> +};
->>> +
->>>   /*
->>>    * Using struct_group() allows for per register-block-type helper routines,
->>>    * without requiring block-type agnostic code to include the prefix.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index a1a9c06012f8..b0e0b33e3254 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -438,7 +438,7 @@ static u32 calculate_support(void)
+ 		support |= OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT;
+ 	if (pci_msi_enabled())
+ 		support |= OSC_PCI_MSI_SUPPORT;
+-	if (IS_ENABLED(CONFIG_PCIE_EDR))
++	if (IS_ENABLED(CONFIG_PCIE_DPC))
+ 		support |= OSC_PCI_EDR_SUPPORT;
+ 
+ 	return support;
+@@ -515,9 +515,9 @@ static u32 calculate_control(void)
+ 	 * Per the Downstream Port Containment Related Enhancements ECN to
+ 	 * the PCI Firmware Spec, r3.2, sec 4.5.1, table 4-5,
+ 	 * OSC_PCI_EXPRESS_DPC_CONTROL indicates the OS supports both DPC
+-	 * and EDR.
++	 * and EDR.  EDR is always built with DPC on ACPI systems.
+ 	 */
+-	if (IS_ENABLED(CONFIG_PCIE_DPC) && IS_ENABLED(CONFIG_PCIE_EDR))
++	if (IS_ENABLED(CONFIG_PCIE_DPC))
+ 		control |= OSC_PCI_EXPRESS_DPC_CONTROL;
+ 
+ 	return control;
+diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+index 207c2deae35f..de4ea33b4524 100644
+--- a/drivers/pci/pcie/Kconfig
++++ b/drivers/pci/pcie/Kconfig
+@@ -137,12 +137,3 @@ config PCIE_PTM
+ 	  This is only useful if you have devices that support PTM, but it
+ 	  is safe to enable even if you don't.
+ 
+-config PCIE_EDR
+-	bool "PCI Express Error Disconnect Recover support"
+-	depends on PCIE_DPC && ACPI
+-	help
+-	  This option adds Error Disconnect Recover support as specified
+-	  in the Downstream Port Containment Related Enhancements ECN to
+-	  the PCI Firmware Specification r3.2.  Enable this if you want to
+-	  support hybrid DPC model which uses both firmware and OS to
+-	  implement DPC.
+diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
+index b0b43a18c304..46b24311f659 100644
+--- a/drivers/pci/pcie/Makefile
++++ b/drivers/pci/pcie/Makefile
+@@ -13,4 +13,7 @@ obj-$(CONFIG_PCIEAER_INJECT)	+= aer_inject.o
+ obj-$(CONFIG_PCIE_PME)		+= pme.o
+ obj-$(CONFIG_PCIE_DPC)		+= dpc.o
+ obj-$(CONFIG_PCIE_PTM)		+= ptm.o
+-obj-$(CONFIG_PCIE_EDR)		+= edr.o
++
++ifdef CONFIG_ACPI
++obj-$(CONFIG_PCIE_DPC)		+= edr.o
++endif
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index fdea3db61a4a..b4fb45ca559d 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -109,10 +109,11 @@ bool pci_dpc_recovered(struct pci_dev *pdev)
+ 
+ 	/*
+ 	 * Synchronization between hotplug and DPC is not supported
+-	 * if DPC is owned by firmware and EDR is not enabled.
++	 * if DPC is owned by firmware and there is no EDR, i.e., on
++	 * non-ACPI systems.
+ 	 */
+ 	host = pci_find_host_bridge(pdev->bus);
+-	if (!host->native_dpc && !IS_ENABLED(CONFIG_PCIE_EDR))
++	if (!host->native_dpc && !IS_ENABLED(CONFIG_ACPI))
+ 		return false;
+ 
+ 	/*
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index c0c54baadf04..9715351c0d51 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -123,13 +123,13 @@ extern const guid_t pci_acpi_dsm_guid;
+ #define DSM_PCI_POWER_ON_RESET_DELAY		0x08
+ #define DSM_PCI_DEVICE_READINESS_DURATIONS	0x09
+ 
+-#ifdef CONFIG_PCIE_EDR
++#ifdef CONFIG_PCIE_DPC
+ void pci_acpi_add_edr_notifier(struct pci_dev *pdev);
+ void pci_acpi_remove_edr_notifier(struct pci_dev *pdev);
+ #else
+ static inline void pci_acpi_add_edr_notifier(struct pci_dev *pdev) { }
+ static inline void pci_acpi_remove_edr_notifier(struct pci_dev *pdev) { }
+-#endif /* CONFIG_PCIE_EDR */
++#endif /* CONFIG_PCIE_DPC */
+ 
+ int pci_acpi_set_companion_lookup_hook(struct acpi_device *(*func)(struct pci_dev *));
+ void pci_acpi_clear_companion_lookup_hook(void);
+-- 
+2.43.0
 
