@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C26254704A;
-	Thu,  8 Oct 2026 06:00:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC9B02D2385;
+	Thu,  8 Oct 2026 06:00:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791439234; cv=none; b=t8rmmrMaA65vOzxdCfAiNUSiVYPzRZGFgMTWpcni9Vo7GZX5qF8yN+HMxuOtCn7DSkrm8wps+kfAJ5nckl8GOGR5oSYqhJXA4KGcGP6+oMJzc0HGuVubPdO/DtD/fv9X35OpQpnw+eog7HbXZxozyDicl2rAqNOVcIbiICIu8bE=
+	t=1791439243; cv=none; b=BgON6G/aER6ZyMmryICUUpKEdjdN38OFWFv8OVn4lftezXsTWCdeylJ9do+gxYxQ5Kt/laxpYaT3R4M11mIrS1bp8F0DsG9LdsuMPtGVERUJIS7sFfOC9Qaj4jhO2vzv0s0v/EYVpZC4+4rxiBPWFrW5dRiCmJP6QFYprFxNsbM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791439234; c=relaxed/simple;
-	bh=a1pw/P8Pmpkc4/sya8wZ0Nv6kBW0ruYgkp/ifPoOQJk=;
+	s=arc-20240116; t=1791439243; c=relaxed/simple;
+	bh=cBC0FqXNk7JOGpZPen1LBK9FyO7uDvEsPZhZBGyiVY0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ETNccCqCv3/+cJRJ9Upjg5n+Ix2w7ClNR6bLE0ig37p1x4wo5tRjXkNsufWIEUSx3yZ+hc151JWkOQbL9OpZ/68JSbh6J1CZvl+AuFmaKjmg8u0NlmPdM3F1ayJWAr4RwFtR6ydKJQjubw0j0SiESVooTJikHwYUBTHiIP83VWE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KQ0uCr3L; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=igehFTOtzpUpZKD6JVfKv8z9FNRWJA0xFduLINiBuwsPk/YN5t0sV7hViqGvK4xdFT6FYX76S8xx/TBFkhCi2r0fuVMna96lA7ZkxTIxNJXhvIDAZGKwKidf+PWSWqO73rVBrdV179goMg6vHQfBf6V5a1BsGaVNrUkHoTbsbFw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K2Ch799H; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KQ0uCr3L"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 124841F000FF;
-	Thu,  8 Oct 2026 06:00:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K2Ch799H"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 831EA1F00893;
+	Thu,  8 Oct 2026 06:00:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791439232;
-	bh=5QMxcDy++DYkjJXJYZyvIubChEwATxZs066mDelscVg=;
+	s=k20260515; t=1791439242;
+	bh=j8n6g3nvcngcoPNN0SShwUlJQijtEN4srpNypdC6xYc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=KQ0uCr3L3qdrwU76AqE7Yax2GKQ5TBVNbUqKyWl6e11lgT1BRT+w9mFT1WZsiMpJA
-	 iFdb1B7BMWnXopu7JN0QzFAZm3QT51V8USyWK/hdQt4RpD3RlCoc3ESjolneLIT+py
-	 a0l2Cla6XReu0i+VXbj0sQlaWfyj2HVcqgk9vPDYed7yuYtXS281pwpXO52SAv+1uk
-	 +qQhkCcu9PQ58JhKpqZfIVUNp1QrSU4x8NRaEIJLHUdfRBnmIFclD0KmSBHfPY+XUy
-	 CDxdJxBeBW1KCjoKx+J30KMJy3wVHEBaou6v+l6mrxZIPDjo4wilkf7KpWwehb1aO3
-	 FfklXGdLqGCeg==
+	b=K2Ch799HZwbqwWIM+wx6F/RkeqpyhwFzaBY98zxVNueSZvM0YFzvM2WiyZlkZ0Q+i
+	 cISPlJQDEvZGRQ5buwJTP3Pj5hLQpWId9+xIIiItTEtEEXQEik5hzAe19Z08mSGTd+
+	 JXY4I5fNMJOxZYmRKCKZKUUlW22H+r2+zBKroijjqkmmN+UBjRd8zyps0e7e8BYKU5
+	 9If/PocKm+Zor/sx7e6ev7lJhuWCKMWStWEA4v4HWse+1R+61wx527b/pVOVh4PN8j
+	 8W/iaE+w4TrhR3eqdRezxjPSISwcjWICSFUCQFsiILAPdvXql0N1NNqDQelkfFCOuc
+	 srll11Lo2kzMQ==
 From: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
 To: iommu@lists.linux.dev
 Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
@@ -61,9 +61,9 @@ Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
 	Steffen Eiden <seiden@linux.ibm.com>,
 	Sean Christopherson <seanjc@google.com>,
 	Janosch Frank <frankja@linux.ibm.com>
-Subject: [PATCH v7 02/16] KVM: Add file back-pointer to struct kvm
-Date: Thu,  8 Oct 2026 11:29:41 +0530
-Message-ID: <20261008055955.4014342-3-aneesh.kumar@kernel.org>
+Subject: [PATCH v7 03/16] KVM: x86: Use file_to_kvm_x86() in SEV
+Date: Thu,  8 Oct 2026 11:29:42 +0530
+Message-ID: <20261008055955.4014342-4-aneesh.kumar@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261008055955.4014342-1-aneesh.kumar@kernel.org>
 References: <20261008055955.4014342-1-aneesh.kumar@kernel.org>
@@ -77,60 +77,47 @@ Content-Transfer-Encoding: 8bit
 
 From: Steffen Eiden <seiden@linux.ibm.com>
 
-Add kvm->file as a no-reference back-pointer to the VM file in struct
-kvm. The pointer is set at VM creation time and cleared under
-WRITE_ONCE() in kvm_vm_release() before the file is freed.
-Callers storing the file must take their own reference.
+Use the new arch-namespaced helper instead of open-coding the file check
+and private_data cast separately.
 
-Co-developed-by: Sean Christopherson <seanjc@google.com>
-Signed-off-by: Sean Christopherson <seanjc@google.com>
+Suggested-by: Sean Christopherson <seanjc@google.com>
 Signed-off-by: Steffen Eiden <seiden@linux.ibm.com>
 Acked-by: Sean Christopherson <seanjc@google.com>
 Acked-by: Janosch Frank <frankja@linux.ibm.com>
 ---
- include/linux/kvm_host.h | 6 ++++++
- virt/kvm/kvm_main.c      | 4 ++++
- 2 files changed, 10 insertions(+)
+ arch/x86/kvm/svm/sev.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/kvm_host.h b/include/linux/kvm_host.h
-index bc3abfde8393..3c5a389361c6 100644
---- a/include/linux/kvm_host.h
-+++ b/include/linux/kvm_host.h
-@@ -784,6 +784,12 @@ struct kvm {
- 	 * kvm_swap_active_memslots().
- 	 */
- 	struct mutex slots_arch_lock;
-+	/*
-+	 * Back-reference to the VM file for subsystems (e.g., VFIO). Holds no
-+	 * reference to avoid pinning the VM. Callers storing the file must
-+	 * take their own reference.
-+	 */
-+	struct file *file;
- 	struct mm_struct *mm; /* userspace tied to this vm */
- 	unsigned long nr_memslot_pages;
- 	/* The two memslot sets - active and inactive (per address space) */
-diff --git a/virt/kvm/kvm_main.c b/virt/kvm/kvm_main.c
-index 07fc874a38e1..8e49ea809528 100644
---- a/virt/kvm/kvm_main.c
-+++ b/virt/kvm/kvm_main.c
-@@ -1352,6 +1352,8 @@ static int kvm_vm_release(struct inode *inode, struct file *filp)
+diff --git a/arch/x86/kvm/svm/sev.c b/arch/x86/kvm/svm/sev.c
+index 63eb2155a774..db7ed11e9056 100644
+--- a/arch/x86/kvm/svm/sev.c
++++ b/arch/x86/kvm/svm/sev.c
+@@ -2151,10 +2151,10 @@ int sev_vm_move_enc_context_from(struct kvm *kvm, unsigned int source_fd)
+ 	if (fd_empty(f))
+ 		return -EBADF;
  
- 	kvm_irqfd_release(kvm);
+-	if (!file_is_kvm(fd_file(f)))
++	source_kvm = file_to_kvm_x86(fd_file(f));
++	if (!source_kvm)
+ 		return -EBADF;
  
-+	WRITE_ONCE(kvm->file, NULL);
-+
- 	kvm_put_kvm(kvm);
- 	return 0;
- }
-@@ -5555,6 +5557,8 @@ static int kvm_dev_ioctl_create_vm(unsigned long type)
- 		goto put_kvm;
- 	}
+-	source_kvm = fd_file(f)->private_data;
+ 	ret = sev_lock_two_vms(kvm, source_kvm);
+ 	if (ret)
+ 		return ret;
+@@ -2876,10 +2876,10 @@ int sev_vm_copy_enc_context_from(struct kvm *kvm, unsigned int source_fd)
+ 	if (fd_empty(f))
+ 		return -EBADF;
  
-+	kvm->file = file;
-+
- 	/*
- 	 * Don't call kvm_put_kvm anymore at this point; file->f_op is
- 	 * already set, with ->release() being kvm_vm_release().  In error
+-	if (!file_is_kvm(fd_file(f)))
++	source_kvm = file_to_kvm_x86(fd_file(f));
++	if (!source_kvm)
+ 		return -EBADF;
+ 
+-	source_kvm = fd_file(f)->private_data;
+ 	ret = sev_lock_two_vms(kvm, source_kvm);
+ 	if (ret)
+ 		return ret;
 -- 
 2.43.0
 
