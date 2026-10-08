@@ -1,45 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC74143F0B9;
-	Thu,  8 Oct 2026 22:58:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 789F135AC00;
+	Thu,  8 Oct 2026 23:17:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791500308; cv=none; b=RG72O1GhOXPArDjr45pzjaKzEO7pvFkZ08pVc73usHa47S9AN7bg/qo5zx0nW9ZH/5rsRT8Fg4Hk9iC8V8jA6OPl+qYW0tcbGmagTi2fCTgzyx0Bx4c95WhhWDNcy4GpPgnZ2UM+mypagXkWEKF6JUr0Lkkv6ioinxRKdo0GDMs=
+	t=1791501467; cv=none; b=S3rwVJBu+Q9FnrK1VtLiTBWRFRz6iOr6z0DfR5ocGwDi3gTyhxQVUxltbaZczmSCK3IlHPjiXHOIRdiS8+VSkYuqSjzl0HSCbmsLGU9keja/zWlDrCd1L89kiSOxGXyHFR8uwRidXg7P2Vz4U+JiayHokvxUk1Ut8hFLHAg1Opc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791500308; c=relaxed/simple;
-	bh=6ledDbc1icilumrn67YZWHjzbO7jiGjL9Pj7pGrbcPo=;
+	s=arc-20240116; t=1791501467; c=relaxed/simple;
+	bh=UZzmpaebYk3m6FnMDIYJ8kPFleAPjeYkNTgC/dfxOKQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=BfpmGH1+2vOA736JpfikYdhssYoYwWHpQ4DwPrWvweYCbhKrKOtOQ8JK1/w1UHkZKHxtaWpCJjwiqbORj+Io1a6dHNY8vEUNs4aJwh4nj4to3O0W4KkwBMGTqvAjrrdI1yQfqGonb6DgjyjUZrD2Qvaxq5MJBDyFVutbVX2OJnA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FruiToyY; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=CPNR9otp/UiTg7pfUej0H6/sf0wIWlICjB8gmGYn480LcZdOqV6QO1uZCvA7enonraWBuEDE709tL7kdbVTS683fGEzSPUqG5nsrhzI0OhzYqH5DZhbHBrLkcPbegKon4w0RI1WaFr6603DNA6FuZkpkrFmDlL9QjEWYg1CllMs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VYg+tCJw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FruiToyY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10F651F000FF;
-	Thu,  8 Oct 2026 22:58:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VYg+tCJw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE16F1F000FF;
+	Thu,  8 Oct 2026 23:17:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791500307;
-	bh=6qFEzIPBySpVPhDEQgfALvqJAxbUkX21t+O7OuW7n9g=;
+	s=k20260515; t=1791501466;
+	bh=0IQmUC4rybmSNfoRGU0HNL2L1MjjPpMUfkXm4Z+aTqk=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=FruiToyYmvanYv5jz0I4XZ7bEgfjpl2JMb/0viK6RMrm3xNjzBG1c4z5aO8SIr0lq
-	 8tkFJNjZN1cOj6+kEgDiRIQ9PRtGnHKAeZi9FH095RYZEQlRmsxrVpWUPSSMOS2cFg
-	 yezNTJoOc8wUwRPuBnU9q3idXT9l+Z9e4wgRnz7oiE/R5RZk4IWdCC14dMIX/Y+SpF
-	 f8tna4qUxgMwO6qh8iGu38wUos4/pVz5SV8VKIcS730gP8tMWtTfTCCocd2ot/NB/i
-	 yDmqP7NyZ2mm6yBZLncMhNjWgh5uS7q/Pxf3o+DK9zIVy/sszTpPX5Fn8gkYmwyowZ
-	 Riqb3pKU1Y1YA==
-Date: Thu, 8 Oct 2026 17:58:25 -0500
+	b=VYg+tCJwuM4sSDuiz03IMDTgiRzoInWXwTI1krJMdhjNc3qaMObmESR+LGugqND0+
+	 MhYdOEYXp8PfV+Gx73D2jArXQjJ6I4HGeX5iLl2QUs62shorU8PHnEM7BSAqhZ5ivp
+	 /W5lcROGgz09fMMpEMlQE+ZDnOUPAjR+NuGwe9YHWp917Lr/T0FO9ExagsOp0YpgTT
+	 FaPioV9mv0nbp3aBL6eTVI48Kd4DNgXh7Mco9khUEzcWfPGS55JhOmX86DfzAGaij2
+	 RqlnA+7x0QYHth3VpZctzczPox96QSM9YtyfbmJCor2EPTypHTVH+mISAFAHzu5kUT
+	 9cL4nQCQl+E1g==
+Date: Thu, 8 Oct 2026 18:17:44 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Francisco =?utf-8?B?QmVsdHLDoW4gTWlsbGFsw6lu?= <fbeltranmillalen@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lukas Wunner <lukas@wunner.de>, Farhan Ali <alifm@linux.ibm.com>,
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
 	Andreas Noever <andreas.noever@gmail.com>,
 	Mika Westerberg <westeri@kernel.org>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>
-Subject: Re: [PATCH v2 2/3] PCI/PM: Do not save the config space of an
- inaccessible device
-Message-ID: <20261008225825.GA936610@bhelgaas>
+	Yehezkel Bernat <YehezkelShB@gmail.com>,
+	Lukas Wunner <lukas@wunner.de>, linux-usb@vger.kernel.org
+Subject: Re: [PATCH] PCI: Extend Apple Thunderbolt power quirk to Alpine Ridge
+Message-ID: <20261008231744.GA938694@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,150 +46,208 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260930141914.6678-3-fbeltranmillalen@gmail.com>
+In-Reply-To: <20260924132815.24430-1-fbeltranmillalen@gmail.com>
 
-[+cc Lukas, Farhan, Andreas, Mika, Yehezkel]
+[+cc Andreas (author of 1df5172c5c25 ("PCI: Suspend/resume quirks for
+Apple thunderbolt"), Mika, Yehezkel, Lukas, linux-usb]
 
-On Wed, Sep 30, 2026 at 11:19:13AM -0300, Francisco Beltrán Millalén wrote:
-> pci_save_state() reads the standard header into dev->saved_config_space
-> and marks it valid without checking that the device answered.  If the
-> device is not accessible, every read returns all ones, the previous
-> snapshot is overwritten, and pci_restore_state() writes the all-ones
-> values back once the device answers again.  On a bridge that sets every
-> writable bit of the Bridge Control register, Secondary Bus Reset
-> included, and sets the primary, secondary and subordinate bus numbers
-> to 0xff, which cuts off everything below it.
+On Thu, Sep 24, 2026 at 10:28:15AM -0300, Francisco Beltrán Millalén wrote:
+> On Macs with an Alpine Ridge Thunderbolt 3 controller, suspending to RAM
+> with anything plugged into a USB-C port leaves the PCIe link between the
+> root port and the controller's upstream bridge permanently untrained on
+> resume.  The link does not merely fall back to a lower speed: it never
+> starts.  On a MacBookPro14,3 the root port reports
 > 
-> On a MacBookPro14,3 this happens to the upstream bridge of a
-> Thunderbolt controller that drops off the bus while the system is
-> suspending: after resume the bridge answers again, but with bus numbers
-> ff/ff/ff and Secondary Bus Reset asserted, and the xHCI controllers
-> behind it are removed.
-
-Apparently this is a reproducible issue on MacBookPro14,3.  That makes
-me a little hesitant because we're not actually dealing with the fact
-that the Thunderbolt controller isn't responsive during suspend.
-
-It seems worthwhile to me to skip pci_save_state() if the device isn't
-accessible, but I don't think it's a real solution to whatever is
-going on with Thunderbolt, and I don't think we should mention it here
-as though it is.
-
-> Commit e18d1abc3bff ("PCI: Avoid saving config space state if
-> inaccessible") added pci_dev_config_accessible() and checks it before a
-> reset.  Check it in pci_save_state() itself, so that system suspend,
-> where the state is saved by pci_pm_suspend_noirq() or by a driver's
-> suspend_noirq callback, is covered as well.  pci_dev_config_accessible()
-> reads the Command and Status registers rather than the Vendor and Device
-> IDs, which always read as all ones on SR-IOV VFs.
+>   LnkSta:  Speed 2.5GT/s, Width x0
+>   LnkSta2: EqualizationComplete- EqualizationPhase1- Phase2- Phase3-
 > 
-> Check again after reading, as the device may become inaccessible in the
-> meantime, and only then replace the previous snapshot of the header and
-> set state_saved.  The capabilities are saved straight into their own
-> buffers and are not covered by the second check, and both checks are
-> racy, as pci_dev_config_accessible() notes.
+> with no correctable, non-fatal or fatal errors logged, and the link
+> training state machine stuck at its first state.  Both Thunderbolt
+> controllers, both integrated xHCIs and all four USB-C ports are lost
+> until reboot.  Measured 15 failures out of 15 with a device attached,
+> against 5 successes out of 5 with the ports empty; it follows the device,
+> not the port, and affects either controller.
 > 
-> If the device is not accessible, return -EIO and leave state_saved as it
-> was.
+> Nothing recovers the link afterwards: neither the firmware's own eleven
+> retrain attempts, nor a secondary bus reset, nor bringing the controller
+> out of L2, nor cutting its power entirely once the link is already down.
 > 
-> Assisted-by: LLM
+> macOS does not hit this because it powers the controller down on the way
+> into suspend.  Its AppleThunderboltNHIType3 driver calls SXFP() from
+> lateSleep, and the firmware of the affected machines defines exactly that
+> method: SXIO, SXLV, XRPE and XRIN, used by the drivers for older
+> controllers, are not present at all.
+> 
+> quirk_apple_poweroff_thunderbolt() already does this for Cactus Ridge, so
+> extend it rather than adding a second one.  Alpine Ridge needs only
+> SXFP(0); keying the short sequence off the device ID as well as off the
+> absence of SXIO/SXLV keeps Cactus Ridge behaviour unchanged.
+> 
+> It does need a different hook, though.  Cactus Ridge is handled as late
+> as possible, in the upstream bridge's suspend_noirq.  For Alpine Ridge
+> that does not prevent the failure: by the time the fixup runs there, the
+> bridges of both switches have already become inaccessible --
+> pci_save_state() on them has failed -- and the link still does not come
+> up on resume.  Hooking the
+> fixup one phase earlier, while every device below the switch is still in
+> D0, makes the branch resume intact.  That also matches where macOS does
+> it: SXFP() is called from lateSleep, ahead of the PCI teardown rather
+> than in the middle of it.
+> 
+> The earlier hook needs one extra guard.  pci_fixup_suspend also runs from
+> pci_pm_runtime_suspend(), and pm_suspend_via_firmware() does not
+> distinguish the two cases: PM_SUSPEND_FLAG_FW_SUSPEND is only cleared at
+> the beginning of the next system suspend, so it reads as set while the
+> system is running again.  Without pm_suspend_in_progress() the
+> controller would be powered down under a runtime-suspending bridge.
+> Cactus Ridge is unaffected, as pci_fixup_suspend_late has no runtime
+> counterpart, so the check is confined to the Alpine Ridge branch.
+> 
+> I cannot say with certainty what the platform does in between, only what
+> is observed: suspend_noirq is too late and suspend_late works, on 7 out
+> of 7 cycles.  For what it is worth, the firmware's own power protocol
+> does not appear to be involved: the ACPI methods that drop the rails are
+> all guarded on variables that only RTPC() ever writes, RTPC() is called
+> by macOS and never by Linux, and those variables still read as set after
+> several suspend/resume cycles on Linux.
+> 
+> With this, the branch comes back intact across suspend with a device
+> attached: both upstream bridges enumerate, the link comes up at 8 GT/s
+> x4 with equalisation complete, and USB devices are re-enumerated at
+> SuperSpeed by the integrated xHCI instead of falling back to the 2.0 path
+> wired straight to the PCH.  Twelve suspend/resume cycles in a single boot
+> without a failure -- six of them with a USB 3 SSD attached across the
+> suspend, one with it plugged in while suspended, and including lid-close
+> and idle-triggered suspends -- against fifteen failures out of fifteen
+> without the quirk.
+> 
+> Trade-off worth stating: cutting power to the controller also removes its
+> ability to wake the machine, so plugging something into a USB-C port no
+> longer wakes it from suspend.  Measured: with the machine suspended for
+> 89 seconds, plugging the SSD into a free USB-C port did not wake it, and
+> the device was enumerated 0.3 s after the machine was woken by opening
+> the lid.  Opening the lid, the power button and the
+> internal keyboard (which is not behind these controllers) are unaffected,
+> and hotplug detection while the machine is awake is unaffected as well.
+> Gating the quirk on device_may_wakeup() would disable it outright on the
+> affected machines, so it is not conditional on that.
+> 
+> Cutting power a phase earlier has one visible consequence worth spelling
+> out, since the Cactus Ridge hook does not have it: devices below the
+> switch reach their own suspend_noirq after the controller is already
+> off, so pci_save_state() on them fails.  In practice this is limited to
+> the integrated xHCI of a branch with nothing plugged in: with a device
+> attached on one side only that side stays accessible, and with both sides
+> empty both xHCIs report it -- and xhci-hcd handles it as the
+> ordinary "root hub lost power or was reset" path and reinitialises the
+> controller on resume; the branch comes back complete.  It is also
+> strictly less than what happens without the quirk, where the whole
+> branch, bridges included, goes inaccessible instead of a single
+> endpoint.  It is also cleaner with
+> 
+>   https://lore.kernel.org/linux-pci/20260924124221.12374-1-fbeltranmillalen@gmail.com/
+> 
+> applied, which stops pci_save_state() from storing all-ones and marking
+> the state as saved when the device is already gone.  That series and this
+> quirk were developed together on the same machine: the series keeps the
+> resume from writing garbage back, and this patch keeps the controller
+> from disappearing in the first place.  Neither depends on the other to
+> build or to be correct.
+> 
+> Notes and limitations:
+> 
+>   * Only the 4C bridge (8086:1578) is added.  The 2C variant very likely
+>     needs the same treatment but I have no hardware to test it on, so I
+>     am not declaring it.
+>   * Tested only with USB devices behind the controller's integrated
+>     xHCI, not with a real Thunderbolt device.
+>   * Depends on the platform suspending via firmware (mem_sleep=deep);
+>     pm_suspend_via_firmware() already guards this.
+>   * pm_suspend_in_progress() is false during hibernation, so unlike the
+>     Cactus Ridge path this does not run on hibernate.  I have no way to
+>     test that path on this machine (the hibernate targets are masked),
+>     and leaving it out is the conservative choice.
+> 
+> Tested on 6.18.49 on a MacBookPro14,3.
+
+Thanks for all this detail.  I think it's too much for a commit log,
+but it would be good to have it after the "---" where it's in the
+email but not the git commit.  This is easily accessible via the
+"Link: https://patch.msgid.link/" tag that we add when applying.
+
 > Signed-off-by: Francisco Beltrán Millalén <fbeltranmillalen@gmail.com>
 > ---
-> v2:
-> - Use pci_dev_config_accessible() instead of reading the Vendor ID,
->   which always reads as all ones on SR-IOV VFs: v1 refused to save the
->   state of every VF.  In the v1 thread I said I would use
->   pci_device_is_present(), but for a VF that checks the PF and cannot
->   tell whether the VF itself answers.
-> - Do the second check after saving the capabilities, and set
->   state_saved only if both checks pass.
-> - The bus numbers are set to 0xff, not cleared.
-> 
->  drivers/pci/pci.c |   53 +++++++++++++++++++++++++++++++++++++----------------
->  1 file changed, 37 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b2879a6be..94de99d31 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1776,31 +1776,52 @@ static void pci_restore_pcix_state(struct pci_dev *dev)
->   * pci_save_state - save the PCI configuration space of a device before
->   *		    suspending
->   * @dev: PCI device that we're dealing with
-> + *
-> + * If the config space of @dev is not accessible, nothing is saved and the
-> + * previous snapshot of the standard header is kept, as writing back the
-> + * all-ones values read from such a device would corrupt it once it is
-> + * accessible again.
-> + *
-> + * Return: 0 on success, -EIO if @dev is not accessible, or another
-> + * negative errno if a capability could not be saved.
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3879,7 +3879,7 @@
 >   */
->  int pci_save_state(struct pci_dev *dev)
+>  static void quirk_apple_poweroff_thunderbolt(struct pci_dev *dev)
 >  {
-> -	int i;
-> +	u32 config[16];
-> +	int i, ret;
-> +
-> +	if (!pci_dev_config_accessible(dev, "save state"))
-> +		return -EIO;
-
-Maybe we should remove the check in pci_dev_save_and_disable() and
-make it check the return value of pci_save_state()?  I don't think
-checking twice adds anything.
-
->  	/* XXX: 100% dword access ok here? */
->  	for (i = 0; i < 16; i++) {
-> -		pci_read_config_dword(dev, i * 4, &dev->saved_config_space[i]);
-> -		pci_dbg(dev, "save config %#04x: %#010x\n",
-> -			i * 4, dev->saved_config_space[i]);
-> +		pci_read_config_dword(dev, i * 4, &config[i]);
-> +		pci_dbg(dev, "save config %#04x: %#010x\n", i * 4, config[i]);
->  	}
-> -	dev->state_saved = true;
+> -	acpi_handle bridge, SXIO, SXFP, SXLV;
+> +	acpi_handle bridge, SXIO = NULL, SXFP = NULL, SXLV = NULL;
 >  
-> -	i = pci_save_pcie_state(dev);
-> -	if (i != 0)
-> -		return i;
-> +	ret = pci_save_pcie_state(dev);
-> +	if (!ret)
-> +		ret = pci_save_pcix_state(dev);
-> +	if (!ret) {
-> +		pci_save_dpc_state(dev);
-> +		pci_save_aer_state(dev);
-> +		pci_save_ptm_state(dev);
-> +		pci_save_tph_state(dev);
-> +		ret = pci_save_vc_state(dev);
-> +	}
+>  	if (!x86_apple_machine)
+>  		return;
+> @@ -3906,8 +3906,34 @@
+>  	 * associated ACPI methods. This implicitly checks that we are at
+>  	 * the right bridge.
+>  	 */
+> +	if (ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXFP", &SXFP)))
+> +		return;
 > +
 > +	/*
-> +	 * The device may have become inaccessible while it was being read.
-> +	 * Keep the previous header snapshot in that case.  The capabilities
-> +	 * are saved directly into their buffers, so they are not protected.
+> +	 * Alpine Ridge uses a shorter sequence: macOS' AppleThunderboltNHIType3
+> +	 * calls only SXFP() from its lateSleep handler, and the firmware of the
+> +	 * affected machines does not even define SXIO or SXLV.  Keying this off
+> +	 * the device ID as well keeps the longer sequence for Cactus Ridge.
 > +	 */
-> +	if (!pci_dev_config_accessible(dev, "save state"))
-> +		return -EIO;
+> +	if (dev->device == PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_BRIDGE) {
+> +		/*
+> +		 * Unlike the suspend_late fixup used for Cactus Ridge, the
+> +		 * suspend fixup also runs on runtime suspend, and
+> +		 * pm_suspend_via_firmware() is not enough to tell the two
+> +		 * apart: that flag is only cleared at the beginning of the
+> +		 * next system suspend, so it stays set while the system is
+> +		 * running again.  Without this check the controller would be
+> +		 * powered down under a runtime-suspending bridge.
+> +		 */
+> +		if (!pm_suspend_in_progress())
+> +			return;
+> +
+> +		pci_info(dev, "quirk: cutting power to Thunderbolt controller...\n");
+> +		acpi_execute_simple_method(SXFP, NULL, 0);
+> +		return;
+> +	}
+> +
+>  	if (ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXIO", &SXIO))
+> -	    || ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXFP", &SXFP))
+>  	    || ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXLV", &SXLV)))
+>  		return;
+>  	pci_info(dev, "quirk: cutting power to Thunderbolt controller...\n");
+> @@ -3923,6 +3949,22 @@
+>  DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL,
+>  			       PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
+>  			       quirk_apple_poweroff_thunderbolt);
+> +
+> +/*
+> + * Alpine Ridge needs the opposite of the above: SXFP() has to run while the
+> + * switch is still up, not once it is being torn down.
+> + *
+> + * Hooked at suspend_noirq like Cactus Ridge it does not prevent the failure:
+> + * by the time the upstream bridge is reached, the bridges of both switches have
+> + * already become inaccessible -- pci_save_state() on them fails -- and the link
+> + * still does not come up on resume.  Hooked one phase earlier, while every device below the
+> + * switch is still in D0, the branch resumes intact.  That is also where macOS
+> + * does it: AppleThunderboltNHIType3 calls SXFP() from lateSleep, ahead of the
+> + * PCI teardown rather than in the middle of it.
 
-I bet we get 99% of the usefulness here by just adding the first
-accessibility check above.
+Wrap these to fit in 80 columns like the rest of the file.  Ideally 75
+or so; that allows minor changes and typo fixes without overflowing.
 
-This second check only helps if the device becomes inaccessible during
-the tiny window while we're saving its state, and I'm not sure that
-the extra complexity here and being able to restore a valid config
-header with junk in the capabilities is really a benefit.
-
-> -	i = pci_save_pcix_state(dev);
-> -	if (i != 0)
-> -		return i;
-> +	memcpy(dev->saved_config_space, config, sizeof(config));
-> +	dev->state_saved = true;
+> + */
+> +DECLARE_PCI_FIXUP_SUSPEND(PCI_VENDOR_ID_INTEL,
+> +			  PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_BRIDGE,
+> +			  quirk_apple_poweroff_thunderbolt);
+>  #endif
 >  
-> -	pci_save_dpc_state(dev);
-> -	pci_save_aer_state(dev);
-> -	pci_save_ptm_state(dev);
-> -	pci_save_tph_state(dev);
-> -	return pci_save_vc_state(dev);
-> +	return ret;
->  }
->  EXPORT_SYMBOL(pci_save_state);
->  
+>  /*
