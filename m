@@ -1,42 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 789F135AC00;
-	Thu,  8 Oct 2026 23:17:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A13AB364EB2;
+	Thu,  8 Oct 2026 23:29:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791501467; cv=none; b=S3rwVJBu+Q9FnrK1VtLiTBWRFRz6iOr6z0DfR5ocGwDi3gTyhxQVUxltbaZczmSCK3IlHPjiXHOIRdiS8+VSkYuqSjzl0HSCbmsLGU9keja/zWlDrCd1L89kiSOxGXyHFR8uwRidXg7P2Vz4U+JiayHokvxUk1Ut8hFLHAg1Opc=
+	t=1791502155; cv=none; b=YfLc+kOgpL/uKAsFsuOQfa3JQMiwwgcpTHP5Ubey30axDGdooscFer+2r1ZW1Rg4WhqjUwRIppI8K6gTOlU3dKYubCfrYTIVOi3p1DuELZKNxorlTE3+B706z6VU1fpmwNAaOv2TMybOPDJDqmS0ifOgxquSxD32QKfbCdENEYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791501467; c=relaxed/simple;
-	bh=UZzmpaebYk3m6FnMDIYJ8kPFleAPjeYkNTgC/dfxOKQ=;
+	s=arc-20240116; t=1791502155; c=relaxed/simple;
+	bh=DAtdyRwAmVz4SjXPJjh/cQOiY0fPuVX/i36Eo1ZKfiI=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=CPNR9otp/UiTg7pfUej0H6/sf0wIWlICjB8gmGYn480LcZdOqV6QO1uZCvA7enonraWBuEDE709tL7kdbVTS683fGEzSPUqG5nsrhzI0OhzYqH5DZhbHBrLkcPbegKon4w0RI1WaFr6603DNA6FuZkpkrFmDlL9QjEWYg1CllMs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VYg+tCJw; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=kBfNvKx2trh3zn1frgDELnvXImI8hLGgGRSM/Ev8DAnJNElNE8jtWywkSwLIC2FR0LSc2J+5Yd7Q+Ys9/3CVsd3dsx/0GuS3kF2WX/CZLh6Y6tBQFtZ9+m8qtli++71s6pLzwdOSFmzoNGxIw6CgHezhwgTbgGKqu7sMaHlXPgg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I3q7B99t; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VYg+tCJw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE16F1F000FF;
-	Thu,  8 Oct 2026 23:17:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I3q7B99t"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E9BD1F000FF;
+	Thu,  8 Oct 2026 23:29:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791501466;
-	bh=0IQmUC4rybmSNfoRGU0HNL2L1MjjPpMUfkXm4Z+aTqk=;
+	s=k20260515; t=1791502154;
+	bh=Ts+cEh9XJnlZdfjN2hdl+FRuRgOhRs788AdZMXx3O6g=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=VYg+tCJwuM4sSDuiz03IMDTgiRzoInWXwTI1krJMdhjNc3qaMObmESR+LGugqND0+
-	 MhYdOEYXp8PfV+Gx73D2jArXQjJ6I4HGeX5iLl2QUs62shorU8PHnEM7BSAqhZ5ivp
-	 /W5lcROGgz09fMMpEMlQE+ZDnOUPAjR+NuGwe9YHWp917Lr/T0FO9ExagsOp0YpgTT
-	 FaPioV9mv0nbp3aBL6eTVI48Kd4DNgXh7Mco9khUEzcWfPGS55JhOmX86DfzAGaij2
-	 RqlnA+7x0QYHth3VpZctzczPox96QSM9YtyfbmJCor2EPTypHTVH+mISAFAHzu5kUT
-	 9cL4nQCQl+E1g==
-Date: Thu, 8 Oct 2026 18:17:44 -0500
+	b=I3q7B99tllw7LSLon9/At9Vu7MHrdpTYoh285t5CSmHiGhHZlSYD3NHcg2zCjvZoL
+	 kKcXpdVjnKrjyws3zyXtQD3AflEfZIEQdJ+KyNae+kyDNUPaO+UFZf8/vCe0NQIz2i
+	 GOGthldRhh9cB9G7AfyAm510GsBeyO/0izFreIwxKHiMMJpfTMLDSsB5w13i8I7rmj
+	 HQFDqAob92DteoZJlIEYZk7YzM5yk1+LWShf/qOJfcRLHn7qXH2gRaY2YSOdz6wx1k
+	 8I3EbRfXysmezEAFrfZuBQEJ3aW62W8seCoo68Val1JSY/kcvzJdNV+LfEKPYujBYU
+	 cZ1vJl1KZejUA==
+Date: Thu, 8 Oct 2026 18:29:12 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Francisco =?utf-8?B?QmVsdHLDoW4gTWlsbGFsw6lu?= <fbeltranmillalen@gmail.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
+Cc: rafael@kernel.org, bhelgaas@google.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, lenb@kernel.org,
+	linux-kernel@vger.kernel.org, Darrell Gum <d@rrell.co>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
 	Andreas Noever <andreas.noever@gmail.com>,
 	Mika Westerberg <westeri@kernel.org>,
 	Yehezkel Bernat <YehezkelShB@gmail.com>,
 	Lukas Wunner <lukas@wunner.de>, linux-usb@vger.kernel.org
-Subject: Re: [PATCH] PCI: Extend Apple Thunderbolt power quirk to Alpine Ridge
-Message-ID: <20261008231744.GA938694@bhelgaas>
+Subject: Re: [PATCH] ACPI: PCI: take native PME control on Apple machines
+Message-ID: <20261008232912.GA940274@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,208 +48,114 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260924132815.24430-1-fbeltranmillalen@gmail.com>
+In-Reply-To: <20260924132859.24751-1-fbeltranmillalen@gmail.com>
 
-[+cc Andreas (author of 1df5172c5c25 ("PCI: Suspend/resume quirks for
-Apple thunderbolt"), Mika, Yehezkel, Lukas, linux-usb]
+[+cc Matthew (author of 7bc5a2bad0b8), Darrell, Andreas, Mika,
+Yehezkel, Lukas, linux-usb]
 
-On Thu, Sep 24, 2026 at 10:28:15AM -0300, Francisco Beltrán Millalén wrote:
-> On Macs with an Alpine Ridge Thunderbolt 3 controller, suspending to RAM
-> with anything plugged into a USB-C port leaves the PCIe link between the
-> root port and the controller's upstream bridge permanently untrained on
-> resume.  The link does not merely fall back to a lower speed: it never
-> starts.  On a MacBookPro14,3 the root port reports
-> 
->   LnkSta:  Speed 2.5GT/s, Width x0
->   LnkSta2: EqualizationComplete- EqualizationPhase1- Phase2- Phase3-
-> 
-> with no correctable, non-fatal or fatal errors logged, and the link
-> training state machine stuck at its first state.  Both Thunderbolt
-> controllers, both integrated xHCIs and all four USB-C ports are lost
-> until reboot.  Measured 15 failures out of 15 with a device attached,
-> against 5 successes out of 5 with the ports empty; it follows the device,
-> not the port, and affects either controller.
-> 
-> Nothing recovers the link afterwards: neither the firmware's own eleven
-> retrain attempts, nor a secondary bus reset, nor bringing the controller
-> out of L2, nor cutting its power entirely once the link is already down.
-> 
-> macOS does not hit this because it powers the controller down on the way
-> into suspend.  Its AppleThunderboltNHIType3 driver calls SXFP() from
-> lateSleep, and the firmware of the affected machines defines exactly that
-> method: SXIO, SXLV, XRPE and XRIN, used by the drivers for older
-> controllers, are not present at all.
-> 
-> quirk_apple_poweroff_thunderbolt() already does this for Cactus Ridge, so
-> extend it rather than adding a second one.  Alpine Ridge needs only
-> SXFP(0); keying the short sequence off the device ID as well as off the
-> absence of SXIO/SXLV keeps Cactus Ridge behaviour unchanged.
-> 
-> It does need a different hook, though.  Cactus Ridge is handled as late
-> as possible, in the upstream bridge's suspend_noirq.  For Alpine Ridge
-> that does not prevent the failure: by the time the fixup runs there, the
-> bridges of both switches have already become inaccessible --
-> pci_save_state() on them has failed -- and the link still does not come
-> up on resume.  Hooking the
-> fixup one phase earlier, while every device below the switch is still in
-> D0, makes the branch resume intact.  That also matches where macOS does
-> it: SXFP() is called from lateSleep, ahead of the PCI teardown rather
-> than in the middle of it.
-> 
-> The earlier hook needs one extra guard.  pci_fixup_suspend also runs from
-> pci_pm_runtime_suspend(), and pm_suspend_via_firmware() does not
-> distinguish the two cases: PM_SUSPEND_FLAG_FW_SUSPEND is only cleared at
-> the beginning of the next system suspend, so it reads as set while the
-> system is running again.  Without pm_suspend_in_progress() the
-> controller would be powered down under a runtime-suspending bridge.
-> Cactus Ridge is unaffected, as pci_fixup_suspend_late has no runtime
-> counterpart, so the check is confined to the Alpine Ridge branch.
-> 
-> I cannot say with certainty what the platform does in between, only what
-> is observed: suspend_noirq is too late and suspend_late works, on 7 out
-> of 7 cycles.  For what it is worth, the firmware's own power protocol
-> does not appear to be involved: the ACPI methods that drop the rails are
-> all guarded on variables that only RTPC() ever writes, RTPC() is called
-> by macOS and never by Linux, and those variables still read as set after
-> several suspend/resume cycles on Linux.
-> 
-> With this, the branch comes back intact across suspend with a device
-> attached: both upstream bridges enumerate, the link comes up at 8 GT/s
-> x4 with equalisation complete, and USB devices are re-enumerated at
-> SuperSpeed by the integrated xHCI instead of falling back to the 2.0 path
-> wired straight to the PCH.  Twelve suspend/resume cycles in a single boot
-> without a failure -- six of them with a USB 3 SSD attached across the
-> suspend, one with it plugged in while suspended, and including lid-close
-> and idle-triggered suspends -- against fifteen failures out of fifteen
-> without the quirk.
-> 
-> Trade-off worth stating: cutting power to the controller also removes its
-> ability to wake the machine, so plugging something into a USB-C port no
-> longer wakes it from suspend.  Measured: with the machine suspended for
-> 89 seconds, plugging the SSD into a free USB-C port did not wake it, and
-> the device was enumerated 0.3 s after the machine was woken by opening
-> the lid.  Opening the lid, the power button and the
-> internal keyboard (which is not behind these controllers) are unaffected,
-> and hotplug detection while the machine is awake is unaffected as well.
-> Gating the quirk on device_may_wakeup() would disable it outright on the
-> affected machines, so it is not conditional on that.
-> 
-> Cutting power a phase earlier has one visible consequence worth spelling
-> out, since the Cactus Ridge hook does not have it: devices below the
-> switch reach their own suspend_noirq after the controller is already
-> off, so pci_save_state() on them fails.  In practice this is limited to
-> the integrated xHCI of a branch with nothing plugged in: with a device
-> attached on one side only that side stays accessible, and with both sides
-> empty both xHCIs report it -- and xhci-hcd handles it as the
-> ordinary "root hub lost power or was reset" path and reinitialises the
-> controller on resume; the branch comes back complete.  It is also
-> strictly less than what happens without the quirk, where the whole
-> branch, bridges included, goes inaccessible instead of a single
-> endpoint.  It is also cleaner with
-> 
->   https://lore.kernel.org/linux-pci/20260924124221.12374-1-fbeltranmillalen@gmail.com/
-> 
-> applied, which stops pci_save_state() from storing all-ones and marking
-> the state as saved when the device is already gone.  That series and this
-> quirk were developed together on the same machine: the series keeps the
-> resume from writing garbage back, and this patch keeps the controller
-> from disappearing in the first place.  Neither depends on the other to
-> build or to be correct.
-> 
-> Notes and limitations:
-> 
->   * Only the 4C bridge (8086:1578) is added.  The 2C variant very likely
->     needs the same treatment but I have no hardware to test it on, so I
->     am not declaring it.
->   * Tested only with USB devices behind the controller's integrated
->     xHCI, not with a real Thunderbolt device.
->   * Depends on the platform suspending via firmware (mem_sleep=deep);
->     pm_suspend_via_firmware() already guards this.
->   * pm_suspend_in_progress() is false during hibernation, so unlike the
->     Cactus Ridge path this does not run on hibernate.  I have no way to
->     test that path on this machine (the hibernate targets are masked),
->     and leaving it out is the conservative choice.
-> 
-> Tested on 6.18.49 on a MacBookPro14,3.
+On Thu, Sep 24, 2026 at 10:28:59AM -0300, Francisco Beltrán Millalén wrote:
+> Since commit 7bc5a2bad0b8 ("ACPI: Support _OSI("Darwin") correctly")
+> negotiate_os_control() skips the _OSC handshake on Apple machines and
+> hardcodes the set of features the OS takes over, because those firmwares
+> return failure once _OSI("Darwin") has been acknowledged.  The hardcoded
+> set is ~OSC_PCI_EXPRESS_PME_CONTROL, i.e. everything except PME.  No
+> reason was given for leaving PME out.
 
-Thanks for all this detail.  I think it's too much for a commit log,
-but it would be good to have it after the "---" where it's in the
-email but not the git commit.  This is easily accessible via the
-"Link: https://patch.msgid.link/" tag that we add when applying.
+It's clear there *was* a reason, but I don't know either.  Maybe
+Matthew will remember?
 
+> The result is that host_bridge->native_pme stays 0, so portdrv never
+> registers the PME service for any root port.  A PCIe device that
+> runtime suspends still arms PME# (the PCI core enables it because
+> pci_dev_run_wake() only looks at capability), asserts it when it needs
+> attention, and is never resumed: no service handles the root port
+> interrupt, and the polling fallback in pci_pme_list_scan() skips the
+> device whenever the bridge above it is runtime suspended, which is
+> exactly when the device itself is suspended.
+> 
+> On a MacBookPro14,3 this silently breaks USB-C hotplug.  Both xHCI
+> controllers sit inside the Thunderbolt (Alpine Ridge) switches and
+> runtime suspend to D3hot when idle, together with their parent
+> bridges.  Plugging a SuperSpeed device in is then never noticed:
+> 
+>   0000:7d:00.0 suspended, PMCSR 0x8103 (D3hot, PME_En=1, PME_Status=1)
+>   ... no kernel message at all, for minutes ...
+> 
+> The device only appears once something else resumes the controller,
+> which makes it look intermittent.  The firmware on this machine does not
+> handle PME on behalf of the OS either: XHC2/XHC3 declare _PRW returning
+> GPE 0x6D, that GPE is enabled and has never fired, and its _L6D handler
+> notifies PWRB, XHC1 and HDEF only - never XHC2 or XHC3.
+> 
+> With PME control taken, the root port PME interrupt is serviced and the
+> controller is resumed as soon as something is plugged in.
+> 
+> Use calculate_control() for the assumed set rather than open coding it:
+> that is by definition the set that would have been requested, it drops a
+> magic constant, and on a kernel built without some of those features it
+> no longer claims control of services the OS cannot provide.
+> 
+> Note this also makes pme_is_native() true for pciehp (drivers/pci/
+> hotplug/pciehp_core.c), so hotplug ports now disable their interrupt
+> across suspend and clear spurious events on resume, as they do on every
+> non-Apple machine.  x86_apple_machine covers Macs back to 2006, so this
+> reaches models that were never tested with native PME.
+> 
+> Tested on a MacBookPro14,3, 6.18.49, with a USB 3.1 SATA enclosure:
+> 
+>   - before: plugged in at 09:20 with 0000:7d:00.0 runtime suspended, still
+>     invisible at 09:21 with PME_Status latched at 1; only appeared when
+>     0000:7d:00.0 was forced to power/control=on.
+>   - with pcie_ports=native (which reaches the same code path in
+>     get_port_device_capability()): pcie_pme bound to 5 root ports, and the
+>     same enclosure enumerated in the same second it was plugged in, 66 s
+>     after the controller had suspended, with nothing forced.
+>   - with this patch, nothing forced: pcie_pme bound to 5 root ports and the
+>     _OSC line now reads "OS assumes control of [PCIeHotplug SHPCHotplug PME
+>     AER PCIeCapability LTR DPC]".  The enclosure was unplugged at 20:42:13,
+>     0000:7d:00.0 runtime suspended to D3hot, and on plugging it back in at
+>     20:43:06 (53 s later) the root port took a PME interrupt and the device
+>     enumerated in the same second.
+>   - wifi, internal keyboard, touchbar and audio all came up; 66 warnings
+>     and 45 errors during boot, against 65/43 on the distribution kernel.
+> 
+> One rough edge, reproducible on both boots: the port driver logs
+> "PME: Spurious native interrupt!" right before the device is resumed.
+> pcie_pme_handle_request() falls back to pcie_pme_walk_bus() when the root
+> port reports its own requester ID without PCI_PM_CTRL_PME_STATUS set, and
+> that walk skips PCIe devices, so the xHCI is never attributed.  The device
+> is still resumed and the wakeup works, but attributing PMEs from PCIe
+> devices behind a switch looks like a separate shortcoming; it is not
+> addressed here.
+> 
+> Boot with pcie_ports=native also showed no new AER/DPC activity and
+> slightly fewer warnings than a boot without it, so taking the remaining
+> control bit does not appear to disturb anything else on this machine.
+> 
+> Fixes: 7bc5a2bad0b8 ("ACPI: Support _OSI("Darwin") correctly")
 > Signed-off-by: Francisco Beltrán Millalén <fbeltranmillalen@gmail.com>
+
+I don't object from a PCI standpoint, but Rafael generally takes care
+of acpi/pci_root.c.  I would again suggest putting some of the commit
+log detail below "---" and relying on the https://patch.msgid.link/
+tag Rafael adds.
+
 > ---
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3879,7 +3879,7 @@
->   */
->  static void quirk_apple_poweroff_thunderbolt(struct pci_dev *dev)
->  {
-> -	acpi_handle bridge, SXIO, SXFP, SXLV;
-> +	acpi_handle bridge, SXIO = NULL, SXFP = NULL, SXLV = NULL;
->  
->  	if (!x86_apple_machine)
->  		return;
-> @@ -3906,8 +3906,34 @@
->  	 * associated ACPI methods. This implicitly checks that we are at
->  	 * the right bridge.
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -568,9 +568,14 @@
+>  	 * Apple always return failure on _OSC calls when _OSI("Darwin") has
+>  	 * been called successfully. We know the feature set supported by the
+>  	 * platform, so avoid calling _OSC at all
+> +	 *
+> +	 * Assume control of the same features that would have been requested,
+> +	 * PCIe PME included.  Leaving PME out disables the PME service for
+> +	 * every root port, and nothing takes over: a device that runtime
+> +	 * suspends asserts PME# and is never resumed.
 >  	 */
-> +	if (ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXFP", &SXFP)))
-> +		return;
-> +
-> +	/*
-> +	 * Alpine Ridge uses a shorter sequence: macOS' AppleThunderboltNHIType3
-> +	 * calls only SXFP() from its lateSleep handler, and the firmware of the
-> +	 * affected machines does not even define SXIO or SXLV.  Keying this off
-> +	 * the device ID as well keeps the longer sequence for Cactus Ridge.
-> +	 */
-> +	if (dev->device == PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_BRIDGE) {
-> +		/*
-> +		 * Unlike the suspend_late fixup used for Cactus Ridge, the
-> +		 * suspend fixup also runs on runtime suspend, and
-> +		 * pm_suspend_via_firmware() is not enough to tell the two
-> +		 * apart: that flag is only cleared at the beginning of the
-> +		 * next system suspend, so it stays set while the system is
-> +		 * running again.  Without this check the controller would be
-> +		 * powered down under a runtime-suspending bridge.
-> +		 */
-> +		if (!pm_suspend_in_progress())
-> +			return;
-> +
-> +		pci_info(dev, "quirk: cutting power to Thunderbolt controller...\n");
-> +		acpi_execute_simple_method(SXFP, NULL, 0);
-> +		return;
-> +	}
-> +
->  	if (ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXIO", &SXIO))
-> -	    || ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXFP", &SXFP))
->  	    || ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXLV", &SXLV)))
+>  	if (x86_apple_machine) {
+> -		root->osc_control_set = ~OSC_PCI_EXPRESS_PME_CONTROL;
+> +		root->osc_control_set = calculate_control();
+>  		decode_osc_control(root, "OS assumes control of",
+>  				   root->osc_control_set);
 >  		return;
->  	pci_info(dev, "quirk: cutting power to Thunderbolt controller...\n");
-> @@ -3923,6 +3949,22 @@
->  DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL,
->  			       PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
->  			       quirk_apple_poweroff_thunderbolt);
-> +
-> +/*
-> + * Alpine Ridge needs the opposite of the above: SXFP() has to run while the
-> + * switch is still up, not once it is being torn down.
-> + *
-> + * Hooked at suspend_noirq like Cactus Ridge it does not prevent the failure:
-> + * by the time the upstream bridge is reached, the bridges of both switches have
-> + * already become inaccessible -- pci_save_state() on them fails -- and the link
-> + * still does not come up on resume.  Hooked one phase earlier, while every device below the
-> + * switch is still in D0, the branch resumes intact.  That is also where macOS
-> + * does it: AppleThunderboltNHIType3 calls SXFP() from lateSleep, ahead of the
-> + * PCI teardown rather than in the middle of it.
-
-Wrap these to fit in 80 columns like the rest of the file.  Ideally 75
-or so; that allows minor changes and typo fixes without overflowing.
-
-> + */
-> +DECLARE_PCI_FIXUP_SUSPEND(PCI_VENDOR_ID_INTEL,
-> +			  PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_BRIDGE,
-> +			  quirk_apple_poweroff_thunderbolt);
->  #endif
->  
->  /*
