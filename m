@@ -1,129 +1,70 @@
-Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
+Received: from mail-06.mail-europe.com (mail-06.mail-europe.com [85.9.210.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2497949B1FB
-	for <linux-pci@vger.kernel.org>; Thu,  8 Oct 2026 12:34:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6E8248E0DF;
+	Thu,  8 Oct 2026 12:41:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.9.210.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791462854; cv=none; b=VppX2U2TQ6ZNOBY3uD0b8XxotDA7E23BIjU4WIK9MetsWpgfbxia+o9WjbD/W8MhX2xj5WutLQOiMgc2a3yej5O5uwfmI4ZxafMNJWYydgW+peDnxZm+31tADnglR76bPOVfS2+jBlpRSxxJZuqqxRHWQBOmr5ITddVq5fx/oOA=
+	t=1791463288; cv=none; b=q9kawRBR1QH3QxJCdXppX61dyMuGxdqSoiuUNLnx6qf8rlrIXZAPNMF5Ec1W66NeDxK5ufUHIaTUijIIld9VevbErCgAhaYJGCseq603A3lKE8lQZoQgW56pH/obmDn/g51XwBi2K569O98moDSB9E3HIwxnnO3iFr7BatIoFGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791462854; c=relaxed/simple;
-	bh=sJo6rVlMb2RS5RdSzBUeVKp0+RRwdbdERu8KplLf4hA=;
-	h=Message-ID:From:Date:Subject:To:Cc; b=qKrG1P/44ZU7JEEfiVJp9O9HLthd2v0YxvjVPRaab0SR6RLN6CQQ6KNEl+UZQTUKB1g5jGsVyjjSHXeTP9OQ1WvygEo5mTeipg4C1FvX5Nqfc/njd36wm5uqtna3H/bLa0TrVTD2uO9Sl3WYaJBnuwdy3Ai6S/EefHIBPHADZTM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout1.hostsharing.net (Postfix) with ESMTPS id 12987390;
-	Thu, 08 Oct 2026 14:26:02 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 0BE12609B7A5; Thu,  8 Oct 2026 14:26:02 +0200 (CEST)
-Message-ID: <0552ed277e40a288e0157af799257ee6ec722534.1791460615.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Thu, 8 Oct 2026 14:26:00 +0200
-Subject: [PATCH for-linus] PCI/AER: Skip error recovery on false alarms
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc: "Mahesh J Salgaonkar" <mahesh@linux.ibm.com>, Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org, Alex Deucher <alexdeucher@gmail.com>, Christian Koenig <christian.koenig@amd.com>, Vitaly Prosyak <vitaly.prosyak@amd.com>, amd-gfx@lists.freedesktop.org, Aditya Garg <aditya.garg@linux.dev>, Jason Perlow <jperlow@gmail.com>
+	s=arc-20240116; t=1791463288; c=relaxed/simple;
+	bh=pAN1Hu/IgJg9pp21jQlzsrS9fZUvzUEWWSwlguTguFw=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=AY0aLcdZb/R2+V5qjTSSY5elyW2H19mZeffkOrnTwv54jowxB5Xd8ZbzhaJoCWUzii1zCHi0DtrZyE4dcY7V+ifIEyGjXgBLlab6lz9D57ptB9BLcNVssHY5vjZTmYLnRJl3jTP3p7M+TDUTFJP2dowCZdvA7mfP+lAXU4vAs3g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me; spf=pass smtp.mailfrom=pm.me; dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b=sBg2uco6; arc=none smtp.client-ip=85.9.210.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pm.me
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b="sBg2uco6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pm.me;
+	s=protonmail3; t=1791463281; x=1791722481;
+	bh=pAN1Hu/IgJg9pp21jQlzsrS9fZUvzUEWWSwlguTguFw=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=sBg2uco60tDYkZIT/pbScYHrGUKjN+oDZoGuCo6D+QHPaciBg9dtKUSi/P5zJZyDS
+	 2+89OIXi6b+8wSErm1fn+Jx2F2HAI38yDsmgWFTJG36hNzBSJVJeUD7zadpf9Qs2ks
+	 F6r96fBNkLgZp2Mcb6JlD5gWkLLbTljRcjuk+AeL/rm7S1DhVN6shuTYVRBJV74aMN
+	 4CXElH9VdmOv/LyXzPWV3DWdh5OI+1aML5AUuCYW/9Ti3D7FAaE0oK3tYRKd9oLvPy
+	 UpOSFfVuUyWL5sLhuJrQEKd5Ff57HeKhQVnvFuzrV9VeG4j1htaV1b6kUE/fuCcUyr
+	 yFGb9KZULcq2Q==
+Date: Thu, 08 Oct 2026 12:41:18 +0000
+To: Qiang Yu <qiang.yu@oss.qualcomm.com>, Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+From: Birk Skyum <birk.skyum@pm.me>
+Cc: mani@kernel.org, linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Subject: Re: X1E80100 USB4 PCI0 MSI-X routing under EL1/Gunyah
+Message-ID: <179146327547.21465.818931382318963045@pm.me>
+In-Reply-To: <179145909457.22346.16055361038608923365@pm.me>
+References: <g7V4kc2AO9xogkH0h-XHDvPbjDXcnS11cp1q3hv0X96KPW-zed6V79HUJY5BFA4pBWUE-p2MBYCeDcjWwUGBIU2hXjDpodiWaxB38obe8RE=@pm.me> <arEjxhvfIFGGo9O9@hu-qianyu-lv.qualcomm.com> <C8SBDdV0hyOxs4G2FfZBHt4_1PSRVoxaNFSmy_riJk91MhqFMRAt30lpxdyniPMLWnc5Ph93lS0R1nCkVbuV941UrNmWyPNbDER9zIHlrJg=@pm.me> <7PyP8TPDWSo4VXsNVgDQREx6MqiqQWWL_BsssgI4SBuA9jkR707AGw5AVnm6k1OgH6F2n6Y6QAxah6ZRtKpjZfIKOiOngog3eeLFXIXXf44=@pm.me> <179145909457.22346.16055361038608923365@pm.me>
+Feedback-ID: 21326998:user:proton
+X-Pm-Message-ID: da726e5c9b2edd5ffbae10b72cb9fa3e3b020ee4
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Alex is seeing a probe failure of the amdgpu driver after the Root Port
-above an AMD Navi10 GPU has been reset.  The reset was performed to
-recover from a Firmware First reported Fatal Error.
+Hi Qiang, Konrad,
 
-However all status registers in the Root Port's AER Extended Capability
-are blank, so apparently the platform firmware raised a false alarm.
+A correction to my mail from earlier today. Releasing the tunnel reset
+is only half of it.
 
-The issue is only occurring since commit eddba19b8b5f ("PCI/AER: Support
-Advisory Non-Fatal Errors").  It looks like enabling Advisory Non-Fatal
-Errors causes code paths to be exercised in platform firmware which
-were never validated before.
+gcc_usb4_0_gdsc also sticks at off, with the same GDSCR 0x6822f800, if
+it went off with gcc_usb4_0_phy_sys_clk_src (0x9f0e4) on input 2.
+clk_regmap_phy_mux_ops leaves it there when gcc_usb4_0_sys_clk is gated,
+and gcc-glymur lists input 2 of that selector as the PHY's PCIe pipe
+clock.
 
-Skip error recovery on false alarms, i.e. if no unmasked errors were
-actually signaled.
+With the selector moved to 0 before the power-off and the tunnel reset
+released, the router restarted three times in one boot, and a drive
+connected afterwards.
 
-Note that this will also skip recovery if both the Status and Mask
-registers are "all ones", as would be the case for inaccessible devices.
-However that seems justified because it would imply either a hot-unplug
-event or a Surprise Down Error further up in the hierarchy.  Interfering
-with recovery from that seems uncalled for.
+Konrad, the selector part is mainline code, so your driver may hit it
+too.
 
-Fixes: eddba19b8b5f ("PCI/AER: Support Advisory Non-Fatal Errors")
-Reported-by: Alex Deucher <alexander.deucher@amd.com>
-Tested-by: Alex Deucher <alexander.deucher@amd.com>
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=222095
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- When applied to pci/for-linus, this will cause a conflict during the
- merge window with a commit queued on pci/aer, d4c842c3af5b ("PCI/AER:
- Fix memory leak in aer_recover_work_func() when pci_dev is missing").
- 
- To resolve the conflict, change "if (pdev)" to "if (pdev && err)"
- and move the pci_dev_put() out of the if-clause (so that it gets
- called if pdev != NULL but err == 0).
- 
- If this is all too complicated and/or late, I can respin on top of
- pci/aer or v7.4-rc1.
- 
- drivers/pci/pcie/aer.c | 22 ++++++++++++++++------
- 1 file changed, 16 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index d8dcd238fda1..922a726a52a5 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1360,8 +1360,10 @@ static DEFINE_KFIFO(aer_recover_ring, struct aer_recover_entry,
- 
- static void aer_recover_work_func(struct work_struct *work)
- {
-+	struct aer_capability_regs *regs;
- 	struct aer_recover_entry entry;
- 	struct pci_dev *pdev;
-+	u32 err;
- 
- 	while (kfifo_get(&aer_recover_ring, &entry)) {
- 		pdev = pci_get_domain_bus_and_slot(entry.domain, entry.bus,
-@@ -1375,6 +1377,12 @@ static void aer_recover_work_func(struct work_struct *work)
- 		}
- 		pci_print_aer(pdev, entry.severity, entry.regs);
- 
-+		regs = entry.regs;
-+		if (entry.severity == AER_CORRECTABLE)
-+			err = regs->cor_status & ~regs->cor_mask;
-+		else
-+			err = regs->uncor_status & ~regs->uncor_mask;
-+
- 		/*
- 		 * Memory for aer_capability_regs(entry.regs) is being
- 		 * allocated from the ghes_estatus_pool to protect it from
-@@ -1385,12 +1393,14 @@ static void aer_recover_work_func(struct work_struct *work)
- 		ghes_estatus_pool_region_free((unsigned long)entry.regs,
- 					    sizeof(struct aer_capability_regs));
- 
--		if (entry.severity == AER_NONFATAL)
--			pcie_do_recovery(pdev, pci_channel_io_normal,
--					 aer_root_reset);
--		else if (entry.severity == AER_FATAL)
--			pcie_do_recovery(pdev, pci_channel_io_frozen,
--					 aer_root_reset);
-+		if (err) {
-+			if (entry.severity == AER_NONFATAL)
-+				pcie_do_recovery(pdev, pci_channel_io_normal,
-+						 aer_root_reset);
-+			else if (entry.severity == AER_FATAL)
-+				pcie_do_recovery(pdev, pci_channel_io_frozen,
-+						 aer_root_reset);
-+		}
- 		pci_dev_put(pdev);
- 	}
- }
--- 
-2.53.0
+Thanks,
+Birk
 
