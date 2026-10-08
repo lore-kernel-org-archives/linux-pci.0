@@ -1,212 +1,172 @@
-Received: from mail-dl1-f45.google.com (mail-dl1-f45.google.com [74.125.82.45])
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D1E44B4864
-	for <linux-pci@vger.kernel.org>; Thu,  8 Oct 2026 15:19:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791472789; cv=pass; b=tQhdFfA8JlfrSju/O1G/sBO+kUcdnUWxEvgRawIVp9PUHXEM5Z1G8IiOIZSicNv5FvTwhlcgOkXV/xUG0Hs3RlUEUjylmqp9EyO5bbRNZH6/lWrzWFOoRRRvKXGszpwRv8avrkNIfZhbw3H4DQZLlaESUaiziXiqUUkejMoRnxM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791472789; c=relaxed/simple;
-	bh=ztcG0kPL6O4kjt/PCXEoRW6KYzq3S3ux0BJDUx9xpug=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=tFAYf2ei+AVQ76cXepU+DHReTX5nJiwyJKp+8lEHAR3YTzszqNWhgo7ElKHUO/6PedG6jGesxZU/BQaTlcmlFlziq++PX70bp3Z53JBLCDwoFfbTe3YkOBb+0nFltt5ICyV2a5ClMDAaWOWMEnTSgR68TZ83VuR+7qLtz6cHpDs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nx6ZRbqd; arc=pass smtp.client-ip=74.125.82.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 922BE4E430F
+	for <linux-pci@vger.kernel.org>; Thu,  8 Oct 2026 15:42:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791474136; cv=none; b=blv0qlsYA2MVaPNUwZv+6qfBeU7e28KANYKwUPqO5N+cKRbpR8Kh4FfcET3+sU+5fY+KGMw4/tDHBQBFqeoX9eUn3jov+sLFWdNSIdQgoDDDYhGuzR6GgYDPrtwxdcYNv9reYs/JXd1dRMDhDDBkv/pEHwOG46pM3pb3lDqpjJs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791474136; c=relaxed/simple;
+	bh=gg/wCoeJJkeYRFieCpa1JYJtn2aW+4Wg6mPD5tGmwAM=;
+	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=e9DkNO43d+SNozMDxGXOcc5+WsAcRvOynD+69CemCWMPSO1btNOKrlGAvqqQtEeYf3oruZGNfi+rqYWl1f7QOMrwRwc+qf8DXEZR+kHq8QzkXP7rTd0ZLEAJ74ftOWksR7hQb488vMYb9y25lpATH2RZVeKXrUfsdnUAXKKxc2k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Rw87p5Nl; arc=none smtp.client-ip=209.85.128.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nx6ZRbqd"
-Received: by mail-dl1-f45.google.com with SMTP id a92af1059eb24-150b2fbd784so56922c88.0
-        for <linux-pci@vger.kernel.org>; Thu, 08 Oct 2026 08:19:35 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791472774; cv=none;
-        d=google.com; s=arc-20260327;
-        b=eyJYYVeKcCNLKM26d4uJHiEhvTstM2cK8Lnz5iZlmTJR2dsny8nTw6tWUqB0zIp6Eb
-         us7ueL8tlgXTi/QDh7RuYIgBa9mhnmmCiKqROPONDgcMrK4VF15GWcdTCxMe3Tyo3/hE
-         7dlSqzXYGzQl873r3ft5sCQ4M1640ytM+MxXigcQxav1C5TpuzO5lOkCOFsHCBTO86Xa
-         jKZr8rmAvBO7eI29kTwT4TtcZxczi6rempYeeZlf7/3DFACCGZolKIHLX7L6xzH/+8YN
-         0vVGvM5DQ3Jx/dQcfA8XVYv/zk964hAXXrb3QamSrHhzU+kyx8HZbr1rIfi15U8FGQKe
-         5ToQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=npfelcdpyTnvOtpnktEjaeVdPI171st1+yAn0CtmD5k=;
-        fh=C3ag4zmXC33uFoujLDRQH/bFYOZs5gkO3ad9Jha59YY=;
-        b=RjSjWqmnf8mU/EcFtr9ybnW03Z11pGc3FMUV1Jf/PB80t0r1TPPYZEDD5+GSMUCkhI
-         1KQS7bTCNS552eP/zr8ZipSFjxlsUsVIppIg5M2r4l4bGtoDV17cFnacjPzNZTXyjNxH
-         aTAX4EjQaldjIGC4arY5w8GOvEusKad38aU5cf4lhTBweUte53DKVMv1kjMzXa7ke+a1
-         aQKnAaM0A5GHf/k+kk29h7x3wHOiCUtIQlcUHpVKshsFeY72kc2tqPS19fFE1JTyuL0y
-         oYflN39lP6ein3Q4IMmf1XqGiuLPRcnoX1oKjj4WKSwlr/yViz40nTndlIMOY/PqdxzU
-         ZkfQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Rw87p5Nl"
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-4a018dc1f98so27220825e9.3
+        for <linux-pci@vger.kernel.org>; Thu, 08 Oct 2026 08:42:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791472774; x=1792077574; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+        d=suse.com; s=google; t=1791474133; x=1792078933; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:date:from:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=npfelcdpyTnvOtpnktEjaeVdPI171st1+yAn0CtmD5k=;
-        b=nx6ZRbqdCGHSU31wABvd1GQfIjbPwIcscL0M/N0Wzs31mNKojQfo5MbAZzp6AzIp0k
-         UHjfaFdf2y1Z/uZqNJM4N9hWZVStRuDxSz8S9ElYIFSq3rwC+Tyy+vHZLpMjt9uIvgKG
-         MaZQHANnzkOLB2dgaIE9uvlbW+smFz42PLMDU+GK8r8RFkQFMUacrMUfHyoWMhLU5Awa
-         67fi7HQ/Zcd52w9NPg5goYpmIvSArnoHicHVz64DWa4eUKB8FBGeAPHAp6m3LO0jgh4k
-         ic/VjhRk2snpqsxiOMPnogYGYCL/P8M9hd86gzBtO7U1yNV0oTiQxG9dPPpm9g2GSr16
-         m0WQ==
+        bh=ZEL2zNgqtY5R53b/Ga9fAl62FJSzRCZqrvx35PwejXs=;
+        b=Rw87p5NlSOfaAHnIYB/bSCE37Sm79XrdvEod7dwprBaOmUO9WC6UPUHX9/9BCPTvnw
+         WcVQPznE9QUimJXBs5Vw0dN8IOePkbj6mqwHcd3IiYPIVMZO98vPABetle/OLLam3yHX
+         Bk89GUwaSmMxtlykpoi2WoUqaC4MmVLPlIk8LVPRYTjFSM0hZ3od5tCslgHeSeFhZQGA
+         pCEhlGh9WDXOk8PIUfATKOJgQ4GExadWAeas+j6/2G/9Ga8y11RWJL4BcUgz4AAZnTwi
+         Xq74lDaxYCzp4S2hBljp/MQYOt+quT3wvDAp5H4tr/hAv/7En6DMrnh+L9uTzQ4JZ+t5
+         iVeQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791472774; x=1792077574;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20260707; t=1791474133; x=1792078933;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=npfelcdpyTnvOtpnktEjaeVdPI171st1+yAn0CtmD5k=;
-        b=lCKZFOLw2/psYkINBzIIibv/WPCzJj94KSMCiixOtJDLuODhLdpbKce4Mz1zbqdB58
-         YoqzSFBVu5m6ary1jXD8G+2llh0devy3ehEyEiSvW9rdxAFdNFRvJb8AofKVnEVKymje
-         93VBvFAjci6dPcfUe4AB2wMcgJGNTL+BmCj67CQ/3szOsvGUwb2cfw2assOPQRbfQl2v
-         Eh0XgbRjZom/otM0tRKjbYbemDxOFQDN17mDSHBIA71iaH7EPD5s9FWC1ykl8TMuZLbI
-         oVCzU63oxivhh7hlKyjmgGkOmI2Mu2tRikF230pAdQPRW7PDHwGPTaQfIxp53HPa92kO
-         jGAw==
-X-Forwarded-Encrypted: i=1; AKwUvBzC2D+dBl5z/jTTSBtsvXfy5l6wTvXeLF+qGLCe3Figwo8t0rVvo02lcy54PI5uECdEUuDv4+9PH4g=@vger.kernel.org
-X-Gm-Message-State: AFuF++k0oxXs+x1sWdb/qvDPmVv9wQvoUwb8m/JbvTm1eBA0Qs8rg65s
-	XosJQ7TPIIVruw8+r+dPfOlulXrutZJx1/3KI026cizwqci3uA344+n2eupWbvIyvgViuCxfBFw
-	wQdXsRFgHs6g3UJT91B9dIDKbpaizD/M=
-X-Gm-Gg: AYBFou20v/ZTLWuopwXIhIgmFhKRV9V7rZxYppNH8wVaRVt/BtMPVivyh3rs4RL/mvP
-	knAcxBAYaRmuihsXnMbMhKMQaPrcT4q5UDjoryk2MstAevWmD2t+mUg0Y6GQaKIbdqOkROxVJp6
-	2fL8ux1v9c4NdQR5cvF4xHZLuPzayKP3Z7sXBfHlnqj1qrnkwbgHqiOBYOdEuX3gl0nW5WQj5mA
-	i3SpKXDnp72pivUT72OGkS+hTHUtHP2yws00JQrLRS8oqGS2lb6D8hFOvDcMCIej2myoto2JvL7
-	wcAy9buP3vZODPqY6bIU1MgsC8360ZQhRxjHvr5BvszCwI19wHRvqJcU4GjOM30JTJK0ITlpkf+
-	af2kuLYrzcwBfH3rHeKR9daiQpF7DyZdLKuSxUnIC8A==
-X-Received: by 2002:a05:7022:1505:b0:12d:c389:ae54 with SMTP id
- a92af1059eb24-1658abf47cfmr6616040c88.2.1791472774454; Thu, 08 Oct 2026
- 08:19:34 -0700 (PDT)
+        bh=ZEL2zNgqtY5R53b/Ga9fAl62FJSzRCZqrvx35PwejXs=;
+        b=whMBiVTSrn6nSvgEmLVZu/rgO55qmRHFRUjQRUW5Asbep3Tp7Dc+YYNKenmcjE4qb6
+         dn3mSSxuec4xwPS2b7hlsndEBvBaEPoU3fSvTX9DdlmP9yDwR7gMqn93PYS8oEdGb2lN
+         Sp3wrQ6NRHZmU7zl2Sr7uveng8WxjspOff8QyttELNu2dC2Qxm+kWYLtksI3lBGMxWRu
+         Qxm3KZU08VrmzI9Np9DvzhjHWYbW5ubfq7rxukxO/yQ7f8Wj7zWO3MuAhq36CdzhoQhA
+         VtlSnqRkc8XDJoPVauFHE8wRdhXsNsxfTDZFt3cX97ulK/i3tOPsYrtnzvbiN55u5jSu
+         kBzg==
+X-Forwarded-Encrypted: i=1; AKwUvBwMUz+ZHgOGNkgEdsSXIePL38IPdiwDV4R4PWbPRc/Ikw6/Zi6GiQ7+Jyjxf5v53mbBjTHmUt2HxDc=@vger.kernel.org
+X-Gm-Message-State: AFuF++nMEiOAFv/g+6vw3fMpFUDaEW6MgVpElRyzGSkXVTqCV2XDYQvH
+	tznnVq/PtTYL1S1glD7aGsmUKTGiTipO4RoV9nFLv3sA3WEbY+xabtyXatpzitBXZds=
+X-Gm-Gg: AYBFou2DmmlcscXT03Rtpvv6z6afXFpXWlEQhj1QudJkhE9rQLfCSCgybqY/sWAW8zT
+	cer0ZlmtdvWNE35bjxUTgDwD1AghKJExjtgRU8fy+At4xy7wYAx+48I3fqKGM/ScY81B78MCabZ
+	pI8hfvMGmy9S3E9Qryq39Kcm4gISpfibxSljca8VYnwq8s9UoP10xh8Nzk9kqPJalYFazJrPllD
+	t7YNCksj6oGLEdCbmRDd/WsFPBgMkWFqiFaXDmFRQz4a6ilHtAqQFJ1/a4CD4m6qUJvgK7Eicto
+	xmTb96fqd6paxiarawKEarLmDnkUd6/g+0TqZBlk7u10tvES5w9vctBhdYQawN5p6aEggpqpLPe
+	5e/40kxK6xUuKxDTzov8fxaB7uY6GNu21o0fRjcIrTu52ymK0HCvGVY5kq7PIKz0md8XHqUaSOY
+	nsdwZPP2JoK436fR0WsPKqpn92CfIjyVx3bSZJ1hBHiZ2HVfDw5c1bhrQhvYdw8lCdmo0LA4W2H
+	zlGE8oj
+X-Received: by 2002:a05:600c:45d5:b0:4a1:88de:9e8b with SMTP id 5b1f17b1804b1-4a188de9ea4mr25538755e9.5.1791474132743;
+        Thu, 08 Oct 2026 08:42:12 -0700 (PDT)
+Received: from localhost ([195.94.150.116])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48db650fd9asm239323f8f.15.2026.10.08.08.42.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 08 Oct 2026 08:42:12 -0700 (PDT)
+From: Andrea della Porta <andrea.porta@suse.com>
+X-Google-Original-From: Andrea della Porta <aporta@suse.de>
+Date: Thu, 8 Oct 2026 17:45:58 +0200
+To: Alex Elder <elder@riscstar.com>
+Cc: bhelgaas@google.com, lizhi.hou@amd.com, herve.codina@bootlin.com,
+	andrea.porta@suse.com, daniel@riscstar.com,
+	mohdayaa@qti.qualcomm.com, lbiancon@qti.qualcomm.com,
+	mani@kernel.org, robh@kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 0/3] PCI: of: update endpoint ranges dynamically
+Message-ID: <ase6toUhGn0XD0v9@apocalypse>
+References: <20260924222444.1351466-1-elder@riscstar.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <0552ed277e40a288e0157af799257ee6ec722534.1791460615.git.lukas@wunner.de>
-In-Reply-To: <0552ed277e40a288e0157af799257ee6ec722534.1791460615.git.lukas@wunner.de>
-From: Alex Deucher <alexdeucher@gmail.com>
-Date: Thu, 8 Oct 2026 11:19:22 -0400
-X-Gm-Features: AclHuK8eqqZZwcxfnGYDRIjGfmIuea5RApPlIzK4ZWhRJY1bOeK92MqHIl3h3To
-Message-ID: <CADnq5_PVD6G_VMepJ3mAz=60vM1PHtun51Kccxyz9sdBsx_7wA@mail.gmail.com>
-Subject: Re: [PATCH for-linus] PCI/AER: Skip error recovery on false alarms
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, 
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>, Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org, 
-	Christian Koenig <christian.koenig@amd.com>, Vitaly Prosyak <vitaly.prosyak@amd.com>, 
-	amd-gfx@lists.freedesktop.org, Aditya Garg <aditya.garg@linux.dev>, 
-	Jason Perlow <jperlow@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260924222444.1351466-1-elder@riscstar.com>
 
-On Thu, Oct 8, 2026 at 8:26=E2=80=AFAM Lukas Wunner <lukas@wunner.de> wrote=
-:
->
-> Alex is seeing a probe failure of the amdgpu driver after the Root Port
-> above an AMD Navi10 GPU has been reset.  The reset was performed to
-> recover from a Firmware First reported Fatal Error.
->
-> However all status registers in the Root Port's AER Extended Capability
-> are blank, so apparently the platform firmware raised a false alarm.
->
-> The issue is only occurring since commit eddba19b8b5f ("PCI/AER: Support
-> Advisory Non-Fatal Errors").  It looks like enabling Advisory Non-Fatal
-> Errors causes code paths to be exercised in platform firmware which
-> were never validated before.
->
-> Skip error recovery on false alarms, i.e. if no unmasked errors were
-> actually signaled.
->
-> Note that this will also skip recovery if both the Status and Mask
-> registers are "all ones", as would be the case for inaccessible devices.
-> However that seems justified because it would imply either a hot-unplug
-> event or a Surprise Down Error further up in the hierarchy.  Interfering
-> with recovery from that seems uncalled for.
->
-> Fixes: eddba19b8b5f ("PCI/AER: Support Advisory Non-Fatal Errors")
-> Reported-by: Alex Deucher <alexander.deucher@amd.com>
-> Tested-by: Alex Deucher <alexander.deucher@amd.com>
+Hi Alex,
 
-FWIW, I only tested this patch in conjunction with the other two
-patches you had posted on the ticket.  I haven't tried just this patch
-alone.
-
-Alex
-
-> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=3D222095
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
->  When applied to pci/for-linus, this will cause a conflict during the
->  merge window with a commit queued on pci/aer, d4c842c3af5b ("PCI/AER:
->  Fix memory leak in aer_recover_work_func() when pci_dev is missing").
->
->  To resolve the conflict, change "if (pdev)" to "if (pdev && err)"
->  and move the pci_dev_put() out of the if-clause (so that it gets
->  called if pdev !=3D NULL but err =3D=3D 0).
->
->  If this is all too complicated and/or late, I can respin on top of
->  pci/aer or v7.4-rc1.
->
->  drivers/pci/pcie/aer.c | 22 ++++++++++++++++------
->  1 file changed, 16 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index d8dcd238fda1..922a726a52a5 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -1360,8 +1360,10 @@ static DEFINE_KFIFO(aer_recover_ring, struct aer_r=
-ecover_entry,
->
->  static void aer_recover_work_func(struct work_struct *work)
->  {
-> +       struct aer_capability_regs *regs;
->         struct aer_recover_entry entry;
->         struct pci_dev *pdev;
-> +       u32 err;
->
->         while (kfifo_get(&aer_recover_ring, &entry)) {
->                 pdev =3D pci_get_domain_bus_and_slot(entry.domain, entry.=
-bus,
-> @@ -1375,6 +1377,12 @@ static void aer_recover_work_func(struct work_stru=
-ct *work)
->                 }
->                 pci_print_aer(pdev, entry.severity, entry.regs);
->
-> +               regs =3D entry.regs;
-> +               if (entry.severity =3D=3D AER_CORRECTABLE)
-> +                       err =3D regs->cor_status & ~regs->cor_mask;
-> +               else
-> +                       err =3D regs->uncor_status & ~regs->uncor_mask;
-> +
->                 /*
->                  * Memory for aer_capability_regs(entry.regs) is being
->                  * allocated from the ghes_estatus_pool to protect it fro=
-m
-> @@ -1385,12 +1393,14 @@ static void aer_recover_work_func(struct work_str=
-uct *work)
->                 ghes_estatus_pool_region_free((unsigned long)entry.regs,
->                                             sizeof(struct aer_capability_=
-regs));
->
-> -               if (entry.severity =3D=3D AER_NONFATAL)
-> -                       pcie_do_recovery(pdev, pci_channel_io_normal,
-> -                                        aer_root_reset);
-> -               else if (entry.severity =3D=3D AER_FATAL)
-> -                       pcie_do_recovery(pdev, pci_channel_io_frozen,
-> -                                        aer_root_reset);
-> +               if (err) {
-> +                       if (entry.severity =3D=3D AER_NONFATAL)
-> +                               pcie_do_recovery(pdev, pci_channel_io_nor=
-mal,
-> +                                                aer_root_reset);
-> +                       else if (entry.severity =3D=3D AER_FATAL)
-> +                               pcie_do_recovery(pdev, pci_channel_io_fro=
-zen,
-> +                                                aer_root_reset);
-> +               }
->                 pci_dev_put(pdev);
->         }
->  }
-> --
+On 17:24 Thu 24 Sep     , Alex Elder wrote:
+> A PCI endpoint bus is a devicetree construct that allows a PCI
+> endpoint (function) to have sub-devices defined that are accessible
+> in an SoC via the PCI endpoint's BARs.  Such a bus is represented as
+> a devicetree sub-node for a PCI function having the name "pci-ep-bus".
+> There can be one or more pci-ep-bus nodes.
+> 
+> A PCI function with a pci-ep-bus devicetree node must also define
+> "#address-cells", "#size-cells", and "ranges" properties, to specify
+> how endpoint bus addresses are translated to the PCI parent bus.
+> 
+> An endpoint bus address has three cells; the first indicates which of
+> the function's BARs the address is associated with, and the other two
+> specify a 64-bit (2 cell) offset within the BAR's region.
+> 
+> BAR base addresses are determined dynamically by the PCI enumeration
+> process, so generally it's not possible to include them in a static
+> devicetree file.  When this addressing scheme was introduced, this
+> was not a problem because the devicetree content was generated
+> dynamically--after booting--based on the information (including BAR
+> addresses) available following PCI enumeration.
+> 
+> It is possible (and in some cases, necessary) to define the devicetree
+> nodes that represent PCI devices ahead of time, in a statically-defined
+> devicetree file.  In order to support the PCI endpoint bus model in this
+> case it is necessary to dynamically update the static devicetree so that
+> the BAR base addresses assigned during enumeration are reflected in the
+> endpoint's "ranges" property.
+> 
+> This series implements that dynamic update, leveraging the same code
+> used to create the "ranges" property when PCI_DYNAMIC_OF_NODES is
+> enabled.  The first patch makes an argument to of_pci_get_addr_flags()
+> optional.  The second patch separates the code that dynamically builds
+> the property value into a helper function, and the last arranges for a
+> statically-defined devicetree node for a PCI endpoint to have its
+> "ranges" property updated (if it includes a "pci-ep-bus" sub-node)..
+> 
+> 					-Alex
+> 
+> Note: this series is built upon these patches:
+>   https://lore.kernel.org/lkml/20260924150222.1179235-5-elder@riscstar.com/
+> 
+> The entire series (based on v7.3-rc4 and including those prerequisites)
+> is available here:
+>   https://github.com/riscstar/linux/tree/outgoing/dynamic_ranges-v3
+> 
+> Between version 2 and version 3:
+> - The ranges property for a PCI endpoint with an existing devicetree node
+>   is only updated if its ranges property has an empty value (i.e., it is
+>   "ranges;", or is not defined)
+> 
+> Version 2 is available here:
+>   https://lore.kernel.org/lkml/20260910021919.3421449-1-elder@riscstar.com/
+> 
+> Between version 1 and version 2:
+> - Included the first patch (which was previously posted in a different
+>   series)
+> - Modified the last patch so the ranges property is updated only for
+>   PCI endpoints having at least one "pci-ep-bus" node
+> - Rebased on v7.3-rc2 (and the prerequisite series)
+> 
+> Version 1 is available here:
+>   https://lore.kernel.org/lkml/20260813220717.1394644-1-elder@riscstar.com/
+> 
+> 
+> Alex Elder (3):
+>   PCI: of: make a flags argument optional
+>   PCI: of: introduce of_pci_build_prop_ranges()
+>   PCI: of: introduce of_pci_update_endpoint_node_ranges()
+> 
+>  drivers/pci/of.c          |  94 +++++++++++++++++++++++---
+>  drivers/pci/of_property.c | 137 +++++++++++++++++++++++++-------------
+>  drivers/pci/pci.h         |   1 +
+>  3 files changed, 178 insertions(+), 54 deletions(-)
+> 
+> 
+> base-commit: 6ba8359b84d69a07d508693551ed3f661d838e9f
+> -- 
 > 2.53.0
 >
+
+After a quick test, it seems that it's not working out of the
+box on my RPi5. Let me investigate a bit to see what's wrong.
+
+Many thanks,
+Andrea
