@@ -1,42 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59790423780;
-	Thu,  8 Oct 2026 22:34:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC74143F0B9;
+	Thu,  8 Oct 2026 22:58:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791498854; cv=none; b=DyB0LaZkVzdEQyYnrSzaYh6+qxS0pRefZigqmgDyRgYxm1G/ZLkCb0aQtd9kraTVW7Albkj7JTTcJ73ncczgjn1r87b0wJ/hueeaiaJn9A7PcpYY6Jukv9CgwMxOpdd1s7bWdEQSlFipnTET4lD96hJ42msRxoqwAdnJXL0Qk5M=
+	t=1791500308; cv=none; b=RG72O1GhOXPArDjr45pzjaKzEO7pvFkZ08pVc73usHa47S9AN7bg/qo5zx0nW9ZH/5rsRT8Fg4Hk9iC8V8jA6OPl+qYW0tcbGmagTi2fCTgzyx0Bx4c95WhhWDNcy4GpPgnZ2UM+mypagXkWEKF6JUr0Lkkv6ioinxRKdo0GDMs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791498854; c=relaxed/simple;
-	bh=4hIJRGLLPzLtSOW0/8kSMLsp7D/XXVMxYMO2f9MpE7k=;
+	s=arc-20240116; t=1791500308; c=relaxed/simple;
+	bh=6ledDbc1icilumrn67YZWHjzbO7jiGjL9Pj7pGrbcPo=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=H+YvbpjqHHKm0MsXUCytV9du+SwVpflJlRioS2N+Nrsq7UPCH8EVdBAhd41e91wJ+vLQfFlp9u7L48wCLjQ0lxiYlBwkiKeKlRliQ/XYYTXpQFK8ndu1C0pzu5AHVc1XaSrahoyL6uiZfOj2WexZn8HusCeIKnOj/yd2i7gb7y4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QnTrG3hr; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=BfpmGH1+2vOA736JpfikYdhssYoYwWHpQ4DwPrWvweYCbhKrKOtOQ8JK1/w1UHkZKHxtaWpCJjwiqbORj+Io1a6dHNY8vEUNs4aJwh4nj4to3O0W4KkwBMGTqvAjrrdI1yQfqGonb6DgjyjUZrD2Qvaxq5MJBDyFVutbVX2OJnA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FruiToyY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QnTrG3hr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0A531F000FF;
-	Thu,  8 Oct 2026 22:34:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FruiToyY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10F651F000FF;
+	Thu,  8 Oct 2026 22:58:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791498853;
-	bh=I/yFTg6piSWv92WJrEO4ckrAJ5KFZUODUUE7rV07bsQ=;
+	s=k20260515; t=1791500307;
+	bh=6qFEzIPBySpVPhDEQgfALvqJAxbUkX21t+O7OuW7n9g=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=QnTrG3hriGCuKAjqPXXfaPBGqoaYV5xGUDBQHGvw43r03S1MevQZdd4xbkSzOf+cD
-	 9fwupJSvSI+so7Q/P7XLbq/tInff9Z2waDmBbXpXGCJgvXfwp6sl8ww2oa7URZy1LL
-	 szZkQfv6mjfNhnvhyHmMJReyJekhrI0D7k1pEM82Ji5svllft+PmYwHWnS51wzzuTZ
-	 GgHDbTbh54cpkI/qETJWkkouvPKs8dlwRMOwWYumNSA/T/5xc4z8OpWxP5s9iXr50S
-	 muwYWslsslqd4Ctbfu1jIViHSBxKDqMfICv70xfejJ5AqzR20cjyggKe/UUU86xmYI
-	 7/UsASAewlFyQ==
-Date: Thu, 8 Oct 2026 17:34:11 -0500
+	b=FruiToyYmvanYv5jz0I4XZ7bEgfjpl2JMb/0viK6RMrm3xNjzBG1c4z5aO8SIr0lq
+	 8tkFJNjZN1cOj6+kEgDiRIQ9PRtGnHKAeZi9FH095RYZEQlRmsxrVpWUPSSMOS2cFg
+	 yezNTJoOc8wUwRPuBnU9q3idXT9l+Z9e4wgRnz7oiE/R5RZk4IWdCC14dMIX/Y+SpF
+	 f8tna4qUxgMwO6qh8iGu38wUos4/pVz5SV8VKIcS730gP8tMWtTfTCCocd2ot/NB/i
+	 yDmqP7NyZ2mm6yBZLncMhNjWgh5uS7q/Pxf3o+DK9zIVy/sszTpPX5Fn8gkYmwyowZ
+	 Riqb3pKU1Y1YA==
+Date: Thu, 8 Oct 2026 17:58:25 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Francisco =?utf-8?B?QmVsdHLDoW4gTWlsbGFsw6lu?= <fbeltranmillalen@gmail.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	Alan Stern <stern@rowland.harvard.edu>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v2 0/3] PCI/PM: Do not save the config space of an
+	Lukas Wunner <lukas@wunner.de>, Farhan Ali <alifm@linux.ibm.com>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Mika Westerberg <westeri@kernel.org>,
+	Yehezkel Bernat <YehezkelShB@gmail.com>
+Subject: Re: [PATCH v2 2/3] PCI/PM: Do not save the config space of an
  inaccessible device
-Message-ID: <20261008223411.GA935963@bhelgaas>
+Message-ID: <20261008225825.GA936610@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,99 +49,150 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260930141914.6678-1-fbeltranmillalen@gmail.com>
+In-Reply-To: <20260930141914.6678-3-fbeltranmillalen@gmail.com>
 
-[+cc Lukas]
+[+cc Lukas, Farhan, Andreas, Mika, Yehezkel]
 
-On Wed, Sep 30, 2026 at 11:19:11AM -0300, Francisco Beltrán Millalén wrote:
-> When a PCI device becomes inaccessible while the system is suspending,
-> pci_save_state() stores all ones over its saved config space, and
-> pci_restore_state() writes that back on resume to a device that answers
-> again.  On a MacBookPro14,3 this happens to the upstream bridge of a
-> Thunderbolt 3 controller that drops off the bus while the system is
-> suspending: after resume the bridge has bus numbers ff/ff/ff and
-> Secondary Bus Reset asserted, and the xHCI controllers behind it are
-> removed.  Resume also waits about 65 seconds for a device behind a dead
-> bridge, because an all-ones Link Status reads as an active link.
+On Wed, Sep 30, 2026 at 11:19:13AM -0300, Francisco Beltrán Millalén wrote:
+> pci_save_state() reads the standard header into dev->saved_config_space
+> and marks it valid without checking that the device answered.  If the
+> device is not accessible, every read returns all ones, the previous
+> snapshot is overwritten, and pci_restore_state() writes the all-ones
+> values back once the device answers again.  On a bridge that sets every
+> writable bit of the Bridge Control register, Secondary Bus Reset
+> included, and sets the primary, secondary and subordinate bus numbers
+> to 0xff, which cuts off everything below it.
 > 
-> Patch 2 makes pci_save_state() refuse to save an inaccessible device,
-> using pci_dev_config_accessible() from commit e18d1abc3bff ("PCI: Avoid
-> saving config space state if inaccessible"), so that system suspend is
-> covered and not only resets.  Patch 1 prepares the USB PCI HCD for it;
-> without patch 1, patch 2 makes pci_pm_suspend_noirq() warn.  Patch 3
-> stops the link wait code from taking an all-ones Link Status for an
-> active link.
-> 
-> Patch 1 touches drivers/usb.  Bjorn, if you take the series, it would
-> need an ack from Greg or Alan.
+> On a MacBookPro14,3 this happens to the upstream bridge of a
+> Thunderbolt controller that drops off the bus while the system is
+> suspending: after resume the bridge answers again, but with bus numbers
+> ff/ff/ff and Secondary Bus Reset asserted, and the xHCI controllers
+> behind it are removed.
 
-If it would be safe to apply patches 2 and 3 without patch 1, I could
-go ahead and do that.
+Apparently this is a reproducible issue on MacBookPro14,3.  That makes
+me a little hesitant because we're not actually dealing with the fact
+that the Thunderbolt controller isn't responsive during suspend.
 
-Patch 2 returns errors from pci_save_state() in more cases, but
-hcd_pci_suspend_noirq() doesn't check for errors anyway, so I think
-it's would be no worse off it we applied patch 2 without patch 1.
+It seems worthwhile to me to skip pci_save_state() if the device isn't
+accessible, but I don't think it's a real solution to whatever is
+going on with Thunderbolt, and I don't think we should mention it here
+as though it is.
 
-And patch 3 looks like it's probably safe by itself independent of the
-others.
+> Commit e18d1abc3bff ("PCI: Avoid saving config space state if
+> inaccessible") added pci_dev_config_accessible() and checks it before a
+> reset.  Check it in pci_save_state() itself, so that system suspend,
+> where the state is saved by pci_pm_suspend_noirq() or by a driver's
+> suspend_noirq callback, is covered as well.  pci_dev_config_accessible()
+> reads the Command and Status registers rather than the Vendor and Device
+> IDs, which always read as all ones on SR-IOV VFs.
+> 
+> Check again after reading, as the device may become inaccessible in the
+> meantime, and only then replace the previous snapshot of the header and
+> set state_saved.  The capabilities are saved straight into their own
+> buffers and are not covered by the second check, and both checks are
+> racy, as pci_dev_config_accessible() notes.
+> 
+> If the device is not accessible, return -EIO and leave state_saved as it
+> was.
+> 
+> Assisted-by: LLM
+> Signed-off-by: Francisco Beltrán Millalén <fbeltranmillalen@gmail.com>
+> ---
+> v2:
+> - Use pci_dev_config_accessible() instead of reading the Vendor ID,
+>   which always reads as all ones on SR-IOV VFs: v1 refused to save the
+>   state of every VF.  In the v1 thread I said I would use
+>   pci_device_is_present(), but for a VF that checks the PF and cannot
+>   tell whether the VF itself answers.
+> - Do the second check after saving the capabilities, and set
+>   state_saved only if both checks pass.
+> - The bus numbers are set to 0xff, not cleared.
+> 
+>  drivers/pci/pci.c |   53 +++++++++++++++++++++++++++++++++++++----------------
+>  1 file changed, 37 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b2879a6be..94de99d31 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1776,31 +1776,52 @@ static void pci_restore_pcix_state(struct pci_dev *dev)
+>   * pci_save_state - save the PCI configuration space of a device before
+>   *		    suspending
+>   * @dev: PCI device that we're dealing with
+> + *
+> + * If the config space of @dev is not accessible, nothing is saved and the
+> + * previous snapshot of the standard header is kept, as writing back the
+> + * all-ones values read from such a device would corrupt it once it is
+> + * accessible again.
+> + *
+> + * Return: 0 on success, -EIO if @dev is not accessible, or another
+> + * negative errno if a capability could not be saved.
+>   */
+>  int pci_save_state(struct pci_dev *dev)
+>  {
+> -	int i;
+> +	u32 config[16];
+> +	int i, ret;
+> +
+> +	if (!pci_dev_config_accessible(dev, "save state"))
+> +		return -EIO;
 
-> Changes since v1:
-> - v1 2/4 and 3/4 took an all-ones Vendor and Device ID to mean that the
->   device was inaccessible, but that is always the case for SR-IOV VFs,
->   so they broke saving and restoring VFs (as I said in reply to v1).
->   2/3 now uses pci_dev_config_accessible(), which reads the Command and
->   Status registers.
-> - Dropped v1 3/4 ("PCI/PM: Do not restore a config space snapshot that
->   is all ones"): it would never restore a VF, and it did not protect
->   what it claimed to, as pci_restore_state() restores the PCIe
->   capability state before the standard header.
-> - 1/3: rewrote the commit message and moved the wakeup handling for a
->   dead root hub ahead of the early return.  Alan's Acked-by is dropped.
-> - 2/3: the second accessibility check now runs after the capabilities
->   are saved, and state_saved is only set if both checks pass.
-> - 3/3: also cover pcie_wait_for_link_status().
-> - The v1 cover letter spoke of an earlier version; that version was
->   never posted.
-> - Based on pci/next.
-> 
-> v1: https://lore.kernel.org/all/20260924124221.12374-1-fbeltranmillalen@gmail.com/
-> 
-> Testing:
-> On a MacBookPro14,3 (two Alpine Ridge controllers), v6.18.49 with
-> e18d1abc3bff backported and this series, S3 entered by closing the lid
-> (158 s asleep), a USB disk on one controller and nothing on the other:
-> 
-> - In pci_pm_suspend_noirq() the bridges of both controllers, including
->   the upstream bridge 04:00.0, were inaccessible and their state was not
->   saved ("Device config space inaccessible; unable to save state").
-> - On resume the controller with nothing attached came back: 04:00.0
->   kept bus numbers 04/05/79 and Bridge Control 0x0002, the link came up
->   at 8 GT/s and its xHCI controller resumed.  Before the series the same
->   bridge came back with ff/ff/ff and Bridge Control 0x005f (Secondary
->   Bus Reset asserted), and both xHCI controllers were removed.
-> - The controller with the disk did not come back (its link does not
->   train, which is a separate problem); resume waited 1 s for its xHCI
->   controller instead of 65 s.
-> - No "State of device not saved" warning.
-> 
-> With the separate Alpine Ridge quirk applied, the xHCI controllers of an
-> empty controller are inaccessible in hcd_pci_suspend_noirq(); four S3
-> cycles went through patch 1 without warnings and everything resumed.
-> 
-> When the machine wakes up again after a few seconds (with the lid open
-> it does, after about 3.5 s), the empty controller does not come back
-> either, with v1 as with v2, so there is nothing for the series to
-> preserve.  The "1 of 2 controllers instead of 0 of 2" in the v1 cover
-> letter holds only for the longer sleeps.
-> 
-> I have no SR-IOV hardware, so the VF case is untested, and the machine
-> never reaches the pcie_wait_for_link_status() change.
-> 
-> Francisco Beltrán Millalén (3):
->   usb: hcd-pci: Honour pci_save_state() failure
->   PCI/PM: Do not save the config space of an inaccessible device
->   PCI: Do not mistake an absent device for an active link
-> 
->  drivers/pci/pci.c          | 69 ++++++++++++++++++++++++++------------
->  drivers/usb/core/hcd-pci.c | 15 +++++++--
->  2 files changed, 61 insertions(+), 23 deletions(-)
+Maybe we should remove the check in pci_dev_save_and_disable() and
+make it check the return value of pci_save_state()?  I don't think
+checking twice adds anything.
+
+>  	/* XXX: 100% dword access ok here? */
+>  	for (i = 0; i < 16; i++) {
+> -		pci_read_config_dword(dev, i * 4, &dev->saved_config_space[i]);
+> -		pci_dbg(dev, "save config %#04x: %#010x\n",
+> -			i * 4, dev->saved_config_space[i]);
+> +		pci_read_config_dword(dev, i * 4, &config[i]);
+> +		pci_dbg(dev, "save config %#04x: %#010x\n", i * 4, config[i]);
+>  	}
+> -	dev->state_saved = true;
+>  
+> -	i = pci_save_pcie_state(dev);
+> -	if (i != 0)
+> -		return i;
+> +	ret = pci_save_pcie_state(dev);
+> +	if (!ret)
+> +		ret = pci_save_pcix_state(dev);
+> +	if (!ret) {
+> +		pci_save_dpc_state(dev);
+> +		pci_save_aer_state(dev);
+> +		pci_save_ptm_state(dev);
+> +		pci_save_tph_state(dev);
+> +		ret = pci_save_vc_state(dev);
+> +	}
+> +
+> +	/*
+> +	 * The device may have become inaccessible while it was being read.
+> +	 * Keep the previous header snapshot in that case.  The capabilities
+> +	 * are saved directly into their buffers, so they are not protected.
+> +	 */
+> +	if (!pci_dev_config_accessible(dev, "save state"))
+> +		return -EIO;
+
+I bet we get 99% of the usefulness here by just adding the first
+accessibility check above.
+
+This second check only helps if the device becomes inaccessible during
+the tiny window while we're saving its state, and I'm not sure that
+the extra complexity here and being able to restore a valid config
+header with junk in the capabilities is really a benefit.
+
+> -	i = pci_save_pcix_state(dev);
+> -	if (i != 0)
+> -		return i;
+> +	memcpy(dev->saved_config_space, config, sizeof(config));
+> +	dev->state_saved = true;
+>  
+> -	pci_save_dpc_state(dev);
+> -	pci_save_aer_state(dev);
+> -	pci_save_ptm_state(dev);
+> -	pci_save_tph_state(dev);
+> -	return pci_save_vc_state(dev);
+> +	return ret;
+>  }
+>  EXPORT_SYMBOL(pci_save_state);
+>  
