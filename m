@@ -1,117 +1,98 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B0F2D3A3E73;
-	Thu,  8 Oct 2026 16:42:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D860A3AE184
+	for <linux-pci@vger.kernel.org>; Thu,  8 Oct 2026 17:09:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791477750; cv=none; b=DiQahmE5c+/9oJ5YTSx0vWii+mDt9R0iliGuoi6qhfrvyaGnRPVMEyoYRHIYy2hLoGpFAGp0dgQiCOdJp0KrkzayFzpW+Kiu4IbmXExr+Hme9qTnCtPLsfbhYjqoHkHKQV4jw+JT0ty3xxqin7GzMlgwc93gne1Pfm8Fruuo4WU=
+	t=1791479351; cv=none; b=I+OkZiIaUuK1TC8kQqFQZQ1zx9Uo2ZysZxsJnQocTSNCyR04Pw/ierZwmtwkezxX71t4CEGp6FjwUVYCQUmUCoMqyFhG2qyf7TLlCC+rm9Lv1dsMXgWQkoRjzsWRisnbN3neiM4QercUju9jpT7LPB7CbDkw9r1KBFlf+3H+mt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791477750; c=relaxed/simple;
-	bh=7mvuGWTaFOWJp1wnSmxCGFTK8yaJ6uwg08XxlyeCyKo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uzDJSUtZASsNwbU1NTNxz/3hcl/Jsi4kelyHnngow9OcRCV+BOTYn+S0Pkd9yemVTx/Ohz0FcH+7zvfn9jLSeFvbQ429OIZz/8dUTblyAht8YLU6K5NfSeCpyyCFANg86Bg8R7tL1ENPl9z1YCZ6KNYxmeNr9nXlTzpuB/rMWXE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=iEZgnBHl; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="iEZgnBHl"
-Received: from eahariha-devbox.5bhznamrcrmeznzvghz2s0u2eh.xx.internal.cloudapp.net (unknown [20.114.54.184])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 25BB820B7166;
-	Thu,  8 Oct 2026 09:41:30 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 25BB820B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1791477690;
-	bh=RrdGR8+5+7JD9zLubC3R5Nrwx3f6rQnHI7MHAeeFjZE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=iEZgnBHlg1T1yn8CZKhtuBx45f1+HQol4iZG3iM7TQiQXiFIlmf21T9mvH4xgbgRy
-	 qUB/J1fkHFphCRL55R8CWqDa4i5ZPlrg3EWE4PLqdRgqrJtOfmoZ39QDPhyiFLR0uK
-	 JIx2GA3l12I4vaoXbAFUVMUa5oGTMjpbEw8yJcIw=
-From: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-To: jeffbarnes@linux.microsoft.com
-Cc: Frank.li@oss.nxp.com,
-	Zhiqiang.Hou@nxp.com,
-	bhelgaas@google.com,
-	imx@lists.linux.dev,
-	kwilczynski@kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	lpieralisi@kernel.org,
-	mani@kernel.org,
-	minghuan.Lian@nxp.com,
-	mingkai.hu@nxp.com,
-	robh@kernel.org,
-	roy.zang@nxp.com,
-	Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-Subject: [PATCH v2] Revert "PCI: layerscape: Change default error response behavior"
-Date: Thu,  8 Oct 2026 16:42:02 +0000
-Message-ID: <20261008164202.64477-1-easwar.hariharan@linux.microsoft.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261001153323.1965074-1-jeffbarnes@linux.microsoft.com>
-References: <20261001153323.1965074-1-jeffbarnes@linux.microsoft.com>
+	s=arc-20240116; t=1791479351; c=relaxed/simple;
+	bh=kv9wzFu9Ywr2xAXUF3OMxIjNvvKzE1ULw6QFrZ0unr0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bWvxWqF7QpOppLGuOtRic8knGNX653JFEsbTO3p0nRcNad2mgiK9JH8SnYvgTAlvdALWvn3Iz73kTRi53NlPW3vtjCNubc8cTPauQ50a3vI2FjwnL28GJ0bw3ZJCsiATFwA3pdVO96sCgqDAbIVIxL573mfEopfFTlVvCrqUcXs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id 5554CC37;
+	Thu, 08 Oct 2026 19:09:00 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 3333560CF5D2; Thu,  8 Oct 2026 19:09:00 +0200 (CEST)
+Date: Thu, 8 Oct 2026 19:09:00 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Alex Deucher <alexdeucher@gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org,
+	Christian Koenig <christian.koenig@amd.com>,
+	Vitaly Prosyak <vitaly.prosyak@amd.com>,
+	amd-gfx@lists.freedesktop.org, Aditya Garg <aditya.garg@linux.dev>,
+	Jason Perlow <jperlow@gmail.com>
+Subject: Re: [PATCH for-linus] PCI/AER: Skip error recovery on false alarms
+Message-ID: <asfOLOMCKt2ZxrJv@wunner.de>
+References: <0552ed277e40a288e0157af799257ee6ec722534.1791460615.git.lukas@wunner.de>
+ <CADnq5_PVD6G_VMepJ3mAz=60vM1PHtun51Kccxyz9sdBsx_7wA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CADnq5_PVD6G_VMepJ3mAz=60vM1PHtun51Kccxyz9sdBsx_7wA@mail.gmail.com>
 
-> This reverts commit 84d897d69938
-> ("PCI: layerscape: Change default error response behavior").
+On Thu, Oct 08, 2026 at 11:19:22AM -0400, Alex Deucher wrote:
+> On Thu, Oct 8, 2026 at 8:26???AM Lukas Wunner <lukas@wunner.de> wrote:
+> > Alex is seeing a probe failure of the amdgpu driver after the Root Port
+> > above an AMD Navi10 GPU has been reset.  The reset was performed to
+> > recover from a Firmware First reported Fatal Error.
+> >
+> > However all status registers in the Root Port's AER Extended Capability
+> > are blank, so apparently the platform firmware raised a false alarm.
+[...]
+> > Skip error recovery on false alarms, i.e. if no unmasked errors were
+> > actually signaled.
+[...]
+> > Fixes: eddba19b8b5f ("PCI/AER: Support Advisory Non-Fatal Errors")
+> > Reported-by: Alex Deucher <alexander.deucher@amd.com>
+> > Tested-by: Alex Deucher <alexander.deucher@amd.com>
 > 
-> The Layerscape PCIe driver programs the DesignWare
-> AMBA_ERROR_RESPONSE_DEFAULT register at offset 0x8d0 with 0x9401.
-> 
-> For AXI, the documented default with AMBA_ERROR_RESPONSE_GLOBAL cleared
-> returns OKAY with all-ones data for errors on non-posted requests.
-> Setting AMBA_ERROR_RESPONSE_GLOBAL causes an AXI error response instead,
-> with AMBA_ERROR_RESPONSE_MAP selecting SLVERR or DECERR for individual
-> PCIe completion errors.
-> 
-> The value 0x9401 sets AMBA_ERROR_RESPONSE_GLOBAL and maps Unsupported
-> Request, Completer Abort, and Completion Timeout to SLVERR.
-> 
-> A PCI configuration access can race with the link going down after
-> dw_pcie_other_conf_map_bus() checks the link but before
-> pci_generic_config_read() performs the MMIO access. If the transaction
-> results in a Completion Timeout, the Layerscape error response setting
-> propagates it to AXI as SLVERR, resulting in an asynchronous SError and
-> kernel panic.
-> 
+> FWIW, I only tested this patch in conjunction with the other two
+> patches you had posted on the ticket.  I haven't tried just this patch
+> alone.
 
-Could you bring back the kernel panic backtrace from v1?
+This patch alone should avoid the issues you're seeing both
+on the Vega20 system (the first one you reported in the bugzilla) and
+on the Navi10 system (the second one).
 
-With that,
+On both systems, the BIOS is signaling a Fatal Error via Firmware First
+error handling even though the error status registers are blank.
 
-Reviewed-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
+The Vega20 log says that error recovery failed because no driver was
+bound to the GPU.  The two additional patches you tested with avoid this
+error message because they change error recovery to tolerate unbound
+devices.  But by not attempting recovery on false alarms in the first
+place, it becomes irrelevant whether the device is bound.
 
-> Reproduce the race by obtaining the configuration-space mapping while
-> the link is up, then disabling the link from another CPU immediately
-> before performing the MMIO configuration read.
-> 
-> With the error response override enabled, the overlapping configuration
-> read results in an asynchronous SError and kernel panic. With the
-> DesignWare default behavior restored, the same test returns 0xffffffff.
-> AER reports a non-fatal Completion Timeout, and no SError or kernel
-> panic occurs.
-> 
-> Restore the documented DesignWare default error response behavior so a
-> failed non-posted PCIe transaction does not become a fatal AXI error.
-> 
-> Fixes: 84d897d69938 ("PCI: layerscape: Change default error response behavior")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Jeff Barnes <jeffbarnes@linux.microsoft.com>
-> 
-> Changes in v2:
-> - Change the subject to identify this as a revert, as requested by
->   Frank Li.
-> - Document the DesignWare AMBA_ERROR_RESPONSE_DEFAULT behavior and
->   decode the 0x9401 setting used by Layerscape.
-> - Clarify that the setting propagates Completion Timeout as AXI SLVERR
->   rather than causing the underlying PCIe transaction failure.
->
-> ---
-> drivers/pci/controller/dwc/pci-layerscape.c | 12 ------------
-> 1 file changed, 12 deletions(-)
+I had skimmed the log after your initial report, saw the message about
+recovery failing for unbound devices and hence pointed you to the
+patches which tolerate unbound devices on error recovery.
+
+Then on closer inspection of the logs I realized that the error status
+registers are completely blank, so the error reported by firmware is
+bogus and attempting recovery is pointless.
+
+For native error handling (i.e. not Firmware First), we already check
+whether "status & ~mask" is zero in aer_get_device_error_info() and
+skip recovery if so.  This patch aligns Firmware First error handling
+with native error handling in that regard.
+
+Thanks,
+
+Lukas
