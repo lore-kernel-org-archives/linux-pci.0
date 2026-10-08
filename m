@@ -1,64 +1,81 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A72453BFAEE;
-	Thu,  8 Oct 2026 06:08:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9933D3BFAFC;
+	Thu,  8 Oct 2026 06:10:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791439706; cv=none; b=s0TKnB5qMwj7t1WSR0m7NEtWufVEJSc/LAdj4rrHVijEtx2mfjRdEaGH4Q8yjKAmdUQvvkBDsRl/OrCVduo6Mg5QXJS4kwONkuX4qr19kzisTJCPIv/v+ToSIfiBc2hEuZmFE1fdDTb4oxqduJYEmu+eacdee0dbKRl6gxsxoC8=
+	t=1791439810; cv=none; b=JM10AhZepuOnqKTCLA8tuGVm1v/X07onoWa85xKsf8D27jHJ7dAJIWeMaKONOfqsvOzyOb0scWXwo4wtHksyJxQyz9wccDXApZlaLfaB9BTyFffUeC3WYampV7Wc/o06GoysLpzHZfZqlH8Ov8TjrEr/pjrph/vAw0zZKqOYb2g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791439706; c=relaxed/simple;
-	bh=NszX61rqW8G2YtvPqlmTKMEBqGdpYZ/UzKVtOUDwL58=;
+	s=arc-20240116; t=1791439810; c=relaxed/simple;
+	bh=Q6R5s/d4NXbI+k9kZu6LTkA7hmnnhfWvTFjcoF3hWLk=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=URrT4339nBiAeaNNq9WIdzw4qBY6lRBzSuDet2+a+OdisxVuWgaC3fZRSf9YUbSkut1WWI5raW3uWvB5iCdH/bQPvy/3tf2cP1jNh7LR6h9robd2xqtCjBOGSKGuV46bG5UG/snc5nW6H3X5uuxdUHwGCCCw0QOrR2Drk5x7YRI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FVDUZjH0; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=nlWy+QrGDWLhtETR/3GCg2nsDaV0pr1PEUeWGlX7+HHMcN4Jvt1U5HLeBqudsLdU5r7W+pcjqH9oNewrRjevIn/4dvrFpnBJc3CgjBb5U1TEJSECJ1L2pQxcmMr/0U384wC7V5cybAb8ZIuT09XToxMAeQcgfMHOS/TsWK4xoHY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QHVfeH1+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FVDUZjH0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BBF01F0089B;
-	Thu,  8 Oct 2026 06:08:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QHVfeH1+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CC161F000FF;
+	Thu,  8 Oct 2026 06:10:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791439705;
-	bh=NszX61rqW8G2YtvPqlmTKMEBqGdpYZ/UzKVtOUDwL58=;
+	s=k20260515; t=1791439806;
+	bh=Q6R5s/d4NXbI+k9kZu6LTkA7hmnnhfWvTFjcoF3hWLk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=FVDUZjH0FptI3X2LbnR+mdmx38gXyj1QgLJSrk1j8bSCIAkYTY8MoYjA1gUTNd0Wp
-	 8M87KATKgMgh1816MXbi344nKJvZ2otEFboqgBZS7c2xzK3ISQ9q0X9Iiy9ifq8j6l
-	 VY0QTyNWtKUpo+p8+J0Rq6qIDlac5rWsW7S0B67sA/0oZDkWHDT3WGT4TnH0vYNfmH
-	 /BCUcCajbkIYHM8f+DOuHkZwOCGv0+JLc1MB/V1Sq3etYwW6v1Rlf3b9yNuE5tYxlw
-	 +xcJZ6SRPiuBWov7W1ngpsdcLt2uhj5aUnIdDqdk6eZfgsPll7tXCMBzXfP79cTK8C
-	 OUcwUlQLENMmg==
-Message-ID: <sashiko-outbox-163659@kernel.org>
+	b=QHVfeH1+QnYCMBzHifFRzQBxrKHSpQGYZ4Ui5SlMwvMJ2Z7Qn/gdyY3E4XigL+6if
+	 qghdGKaYnJ+KSKheDuCFZoh7kicypRGeK7iMCZM22VYnNUYlMKzQoA00Xbm3x0E8Ao
+	 4v03T0nS9C+/CuEkMmEpt66LmE9Znl8o9kus3Y8wGSPbONv0F77DSCYYpUoAX0N+j/
+	 Mrh6EjHWh5Y8OnzPNuK9ffFS7z2mG5A5h4CnUeNc22p4P2OLphc8P4RKV7N8oKXW+O
+	 zvG/MqGUsM+4DyuFzIT7UOSXf9D3S2SBUqje0fWWYIz9ar3BZpalFe40jyDSZwZ1tu
+	 PxfT1ujXkUAHA==
+Message-ID: <sashiko-outbox-163663@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 05/16] KVM: Restrict kvm_get_kvm/kvm_put_kvm export
- to internal KVM modules
+Subject: Re: [PATCH v7 10/16] iommufd: Add the vdevice TSM request ioctl
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?QW5lZXNoIEt1bWFyIEsuViAoQXJtKQ==?= <aneesh.kumar@kernel.org>
 Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20261008055955.4014342-6-aneesh.kumar@kernel.org>
+In-Reply-To: <20261008055955.4014342-11-aneesh.kumar@kernel.org>
 References: <20261008055955.4014342-1-aneesh.kumar@kernel.org>
- <20261008055955.4014342-6-aneesh.kumar@kernel.org>
+ <20261008055955.4014342-11-aneesh.kumar@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 08 Oct 2026 06:08:24 +0000
+Date: Thu, 08 Oct 2026 06:10:05 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> From: Steffen Eiden <seiden@linux.ibm.com>
+> A VMM needs to forward guest-originated TSM commands to the TSM
+> implementation managing an assigned device. The IOMMUFD vdevice
+> identifies that device within its vIOMMU and provides the appropriate
+> dispatch point.
 >=20
-> Switch kvm_get_kvm, kvm_get_kvm_safe, and kvm_put_kvm from
-> EXPORT_SYMBOL_GPL to EXPORT_SYMBOL_FOR_KVM_INTERNAL. These symbols are
-> now only used within KVM itself. No external module needs them now that
-> VFIO uses file-based reference counting. Remove the corresponding
-> exemptions from the x86 KVM Makefile exports check.
+> Add IOMMU_VDEVICE_TSM_REQ to send an opaque request to a vdevice and
+> optionally return a response. Define common operation and guest
+> architecture identifiers for CCA, SEV and TDX requests.
 >=20
-> Suggested-by: Sean Christopherson <seanjc@google.com>
-> Signed-off-by: Steffen Eiden <seiden@linux.ibm.com>
+> Let vdevice providers declare the TVM architecture and supported operatio=
+ns
+> in a u64 mask. Check these capabilities before dispatch. Define a
+> one-past-last operation value and assert that every operation fits in the
+> mask; reject out-of-range userspace values before indexing it.
+>=20
+> The ioctl return value reports errors or the number of unused buffer byte=
+s,
+> while tsm_code carries the TSM-specific result. Use userspace pointers for
+> the internal request and response buffers, and u32 lengths matching the
+> UAPI. Reject lengths above INT_MAX so successful residues fit in the
+> ioctl's int return value.
+>=20
+> Cc: jgg@ziepe.ca
+> Cc: kevin.tian@intel.com
+> Cc: joro@8bytes.org
+> Cc: will@kernel.org
+> Cc: robin.murphy@arm.com
+> Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261008055955.4014=
-342-1-aneesh.kumar@kernel.org?part=3D5
+342-1-aneesh.kumar@kernel.org?part=3D10
 
