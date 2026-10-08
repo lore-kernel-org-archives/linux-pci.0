@@ -1,118 +1,78 @@
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-244116.protonmail.ch (mail-244116.protonmail.ch [109.224.244.116])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A3B43BE172
-	for <linux-pci@vger.kernel.org>; Thu,  8 Oct 2026 11:08:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.43
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791457715; cv=pass; b=OlkryXndVIfQnGXcn5r+kco3fUUOSrGpJGNf1YtLIUVAzGtUNR8Gn/udi/MERwPkpFQBTOKLL5nLpdYwd5hracCl9EeR8LwrHGfXCVIRzQacC5W0nARpprfNeV/aLc0iN1nI1rbsUV30osZn6gru9EjM/aX6DLVHNbAPR0kb0HA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791457715; c=relaxed/simple;
-	bh=tS8GOr7rQWkYMwitY30VlxqC6IwwevxTL76E8/wWKyg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=hhtuU6+X8dPUl+MQP/chyRIlVNNp5MW3oKFMbVfSqeBN++UqRJDmLuu8Rs/9TnsKFtIaEOLxUesPbX6dELeOlZVZToDdxD28KtJzqHxj/WSv+vw3cour9kW9lx3d0ua/dAtsnzHLVJ/Hk/G8fpVi4zhFB08LqxjI5pKryC/bR28=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CK0aaaSS; arc=pass smtp.client-ip=209.85.216.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8688B46AA8F
+	for <linux-pci@vger.kernel.org>; Thu,  8 Oct 2026 11:31:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.224.244.116
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791459112; cv=none; b=uk19Mm29obW8pZnDTAZ8f/eqALwdaaryWRM8NMnXZToNB0jkFZ8frgcrFSR7Sq0th1Jj68XttOIz0yhuWM34LFgVC2RJlzv1+bYcIHnyIysP7+DnLPVRzX6VYrO7kfW9V3/dRc9UNb6g/sutvEFzskYGFmRY6pVaD7X2i+m4/dE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791459112; c=relaxed/simple;
+	bh=ZPob/8urWcAS4DZwufW6N99yingRZNKmpXDfGBrAdh8=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=jyKxvThYF8Ou9Oo/ZmH1QqZ7ZUbkwkU6v86MSCy6fleXR+8YC9klCOFo2mLJmmTXoTbal/NfFOr0IhabLzj0d8gfjb/xGCmti8tE1v/KdzURoKmsKDM4V5dp+7n96iDUl76tW/wU9EYRR04yezFI1oi4XNXmEflXstMwclWJi0U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me; spf=pass smtp.mailfrom=pm.me; dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b=UgcQZ0MH; arc=none smtp.client-ip=109.224.244.116
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pm.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CK0aaaSS"
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-3a49623b865so3174959a91.0
-        for <linux-pci@vger.kernel.org>; Thu, 08 Oct 2026 04:08:34 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791457713; cv=none;
-        d=google.com; s=arc-20260327;
-        b=PVuAU2a7rAW1diYps9kWYxBFyI6BlXsCdneILQ+PK/lee611ZN3XYxls1z8XABYIO8
-         K8F7DQud86rlYkcQDmkhqsQNaWJ00AH8WiXBfxgp1oKaFg6MqdWgQl9TM1q9VlgZBA/s
-         HoYS2ek1VsILvFRbG7s6Ujumv8gpzSZzT9fN02A8nmoAghhIy4735O/lwBxwlw8DLKMV
-         caVUlIuF7UH3Sx0xL03MkIoChNuWFf8AAlSu8TQyl+1tT1DsThG5J1tMfAGeBayCvukH
-         GU+i3iPmTz5pauXg6XfjFpfSdJ9cK5SwUJt1xbrT3DGsw/zmlcx2D9S5Hk3SXrOGL6NQ
-         754w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=B38Tn5bOZ4ypk6OTVOr1ifEvTd0RxYUIpSKcn2uioac=;
-        fh=Zsy/fsWMkMzdzlTBCgu7kh/scK22GKVsKvVZHg9UPnU=;
-        b=NqOid0vBkeSLqCqIOkJHiFggiT2YJwzksi68zw3St9EFrez7cuvJIWZ5lEjGwKceOe
-         YSLuFYfR/eSg6vgJIvWm2bVdIZ1yICurvUmWQVmpuqdqrJmTDTpS2OFm0C7u4lZ6SS8D
-         EVMpP3ObibydVF1iL+7um5sKPT8QQYRZdxOysjRe3g4ojkEBSq6zD6qG8OAtnlbDAJ8X
-         0vzo3HgGVj7GqR8gm6sqUZloSf2IqtEDJOIu9Mj3hzRO5QtJsHb75pDTjOKhRlyJa3hR
-         7aXmlU79aBSgxAraWeE74xJZC+QeIiCUDv+T1mNNt3Ye0i5/u5RcV8ydwEugDojIzm4a
-         LE4Q==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791457713; x=1792062513; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=B38Tn5bOZ4ypk6OTVOr1ifEvTd0RxYUIpSKcn2uioac=;
-        b=CK0aaaSS95cFam8fOvFIAL03LolLwH9M92v2paGpuvzZWVLGifDh5pelUa4fX8M2Vl
-         EmGlcUcUI1xtwYtUxU+4W+dLbIOPmIPePnpWkSJ1wNgmStzopQa+Zserq9TXeh+bXQya
-         1Urn/ymmiMSIPXlC97tJvP3LRbZKcEaaJd5kAPa/aM6MhnDkLcGqjD4mWiRXH5tPbpr/
-         22vNHaBvvj0TNMecngRyslMw2fymouAe9cR7ddFAqSM84UflBxTS9UiRZlmjz1uIugUS
-         R2IFl9nzG9sgz6i6fey9cFbklIdM2vLeZ7QpHzyig2iJcAbESUF7gaZMhGS4txGD9IJo
-         8+Yg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791457713; x=1792062513;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=B38Tn5bOZ4ypk6OTVOr1ifEvTd0RxYUIpSKcn2uioac=;
-        b=olsm0XHBccT5MLp9ozO2aG9B8Xl1b77ErnECAIJBCbJWE68cn118rqUz86cMDA6ufk
-         inS/bRUOeN0JlOaBDzuTGHb6+b+8AqsDEcHlnypn96S35VwmAWxdJBHGTUMHxC6cIn5L
-         Jk4gjCUK4OhjBWAUePy9YjbFvTu9x5uewEMl3mzoEitWjivPFB8MA/Z6kOcFL5zNnT+Z
-         iW1mWdD4QloRZ47PcO28Sr+PKa/tGnYEEBiJEh3QlWMasBxPKH/nHO1VgumirIU1dbxe
-         aRVvD1s916sfo75VQnoQOEPzurDGlfFuHCLKYZqVtjQMtuBwKJjwpT09fNvN2wyCqcmv
-         bcIA==
-X-Forwarded-Encrypted: i=1; AKwUvBz3WrR9zlUuo3gudNvRInrgM4XE4HodspBRFsiap0XjuR3V7TArRcQhLceTpC+rVgJp9okrY/NH5rQ=@vger.kernel.org
-X-Gm-Message-State: AFq9FYK9J44Jrlpaci7Q0r+s68r+2+4Acir9d1P+4W3MxhSzcR+Z1eSe
-	v8plE3L5bsZugiX1hzpc92gQ4AjLz/HWaUScWI7Moz927MX4Yd0zsogl21daZmVDm7yqlqiiW9V
-	h69vTimBIW64ZCjVI17nePAZp7Xb58Ag=
-X-Gm-Gg: AYBFou2khojQ0U4DMAkukSEalBDzu2FqsYOOSgr8Wkss4NKH1YCNtyidJF5mYxj/XTB
-	cSPl5oHXuiH0Z8fvBT0UIknIDPn3ZXgqmypA927/BY821uzkXf0xF0eHKBeP52ZCUD3NBPU4zRQ
-	49E94HvuZ/Oa2WJ1aRZmiWSDDdANfxpGUeeESWm8u7huMjQ33eEbsmHR+Ol4Kyag1vWOL5qYn2n
-	HD/orzufGYasRQyRFeGABzRRv+PCOF/WeLOpywQ4hxkiNS+dk65ekHwHBbfJza00VPIcDWPdbia
-	yjVQOdr+TTnuV21/OqnddvaXwv+eI2dWO9pfelGBV9p7tohEjEU/X+o2THf22ZSOdkNAeynEog3
-	X2RdGIqFLFnTPhahQGr5kNRrNh7cg0c2ntX5dCLKMxgovx9B5+NHX7DI1D3AevgIBLxY=
-X-Received: by 2002:a17:90a:282:b0:3a0:d651:3957 with SMTP id
- 98e67ed59e1d1-3a8a1c7201dmr2864732a91.35.1791457713546; Thu, 08 Oct 2026
- 04:08:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b="UgcQZ0MH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pm.me;
+	s=protonmail3; t=1791459102; x=1791718302;
+	bh=ZPob/8urWcAS4DZwufW6N99yingRZNKmpXDfGBrAdh8=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=UgcQZ0MHIXsuwjLDaTD0s7mXVt7iemSfmovCzGq5Cfofc1p+bnIO67JAiHjPz5IkN
+	 FIVQSszwLnnM/JrCRFnPSPc6TY64Inapd4DyTC0z+jhFlMmCpFHWFqNMVlL1wtS18b
+	 sWlmdDryUF3t9ngRZghi4IBHi5Su+gZYGmWTcPISe73eOKM8h+hALsGJsuo9f4wMri
+	 sxB3t8+ZucJr2AoA1lB41qXZ/Mft0bqIk+d4XYZ0BLyt9I2Sq06F7siuqjeQsvFA9b
+	 qT4gL8Vn3flxr9b+I0HxnN5UUerA/N5UBaQO2TrGTHSVOUwfK+80Zi7n5wmPCdQfzL
+	 XzTnSQh3S/vYA==
+Date: Thu, 08 Oct 2026 11:31:37 +0000
+To: Qiang Yu <qiang.yu@oss.qualcomm.com>, Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+From: Birk Skyum <birk.skyum@pm.me>
+Cc: mani@kernel.org, linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Subject: Re: X1E80100 USB4 PCI0 MSI-X routing under EL1/Gunyah
+Message-ID: <179145909457.22346.16055361038608923365@pm.me>
+In-Reply-To: <7PyP8TPDWSo4VXsNVgDQREx6MqiqQWWL_BsssgI4SBuA9jkR707AGw5AVnm6k1OgH6F2n6Y6QAxah6ZRtKpjZfIKOiOngog3eeLFXIXXf44=@pm.me>
+References: <g7V4kc2AO9xogkH0h-XHDvPbjDXcnS11cp1q3hv0X96KPW-zed6V79HUJY5BFA4pBWUE-p2MBYCeDcjWwUGBIU2hXjDpodiWaxB38obe8RE=@pm.me> <arEjxhvfIFGGo9O9@hu-qianyu-lv.qualcomm.com> <C8SBDdV0hyOxs4G2FfZBHt4_1PSRVoxaNFSmy_riJk91MhqFMRAt30lpxdyniPMLWnc5Ph93lS0R1nCkVbuV941UrNmWyPNbDER9zIHlrJg=@pm.me> <7PyP8TPDWSo4VXsNVgDQREx6MqiqQWWL_BsssgI4SBuA9jkR707AGw5AVnm6k1OgH6F2n6Y6QAxah6ZRtKpjZfIKOiOngog3eeLFXIXXf44=@pm.me>
+Feedback-ID: 21326998:user:proton
+X-Pm-Message-ID: 2adc6f2c4fa8288e3ae1880a86ce779b9ee18472
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20261007104847.507776-1-phucduc.bui@gmail.com> <20261007204638.GA785135@bhelgaas>
-In-Reply-To: <20261007204638.GA785135@bhelgaas>
-From: Bui Duc Phuc <phucduc.bui@gmail.com>
-Date: Thu, 8 Oct 2026 18:08:22 +0700
-X-Gm-Features: AclHuK8M_me3PRP7AsYK3GSu3gkXR1O-K2dV5c57zcLYGodZRRQeb5VUpUwH-0g
-Message-ID: <CAABR9nGNoaO-CmTcRvXuMMmGbVSWybKZVBRRZmzQCab_N1EzZA@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: tegra194: use dev_err_probe() for PERST GPIO
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, kwilczynski@kernel.org, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Thierry Reding <thierry.reding@kernel.org>, Jonathan Hunter <jonathanh@nvidia.com>, 
-	Vidya Sagar <vidyas@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>, 
-	Niklas Cassel <cassel@kernel.org>, linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Hi Bjorn,
+Hi Qiang, Konrad,
 
->
-> For future posts, please match the subject line capitalization style:
->
->   PCI: tegra194: Use ...
->
-> And style as "PERST#" in the subject, commit log, and dmesg text to
-> match spec usage.
->
-> No need to repost just for this; we can tweak these when applying.
->
+I can answer my own question about gcc_usb4_0_gdsc from 23 September.
 
-Thanks for the review and for pointing this out.
-I'll keep these style details in mind for future posts.
+The domain does not power up while GCC_PCIE_0_TUNNEL_BCR (GCC offset
+0xa0000) is asserted. With that reset held, GDSCR stops at 0x6822f800
+and CFG_GDSCR at 0x050e0000, and the GDSC driver reports "status stuck
+at 'off'". With it released before the power-on, the same power-on
+completes (0xf822f800 and 0x04070000). I ran both on the same kernel on
+the Yoga Slim 7x, after the same router stop and ten seconds with the
+domain off.
 
-Best regards,
-Phuc
+Our stop asserted the tunnel reset when it released the tunnel's PCIe
+controller and left it asserted, and the next start asked for the
+router's domain before releasing it. The router's own resets were not
+involved: GCC_USB4_0_BCR and the eleven USB4_0 MISC resets were all
+released in the failing case.
+
+Konrad, this may matter for the ordering in your driver. If the tunnel
+RC's reset is held across a router power-down, for example over suspend,
+the router's GDSC will not come back until it is released.
+
+With the order fixed, the router powers down and restarts repeatedly in
+one boot, and a drive connects afterwards. The deep suspend hang after a
+router restart that I mentioned is still there.
+
+Thanks,
+Birk
+
