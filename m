@@ -1,133 +1,114 @@
-Received: from mta0.migadu.com (out-1.mta0.migadu.com [91.218.175.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sendmail.purelymail.com (sendmail.purelymail.com [34.202.193.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A78BA4A33F5
-	for <linux-pci@vger.kernel.org>; Wed,  7 Oct 2026 22:58:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D503E555
+	for <linux-pci@vger.kernel.org>; Thu,  8 Oct 2026 01:03:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=34.202.193.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791413896; cv=none; b=d+fPKAE/uR+b9b5nOwmXm0aTNcaeI1V0XED7yqr0W8XnLn6uRKEhGiqSFQOfkQvCh570L1O09KRwgk25/xhyDUrOwkJBTko90A0WYQu/zqD4uRVmRUiFZYlA3+JioudfQ3RNsQqzV+W1M8la22IUB99iExtzr1iCZIK7XAQ+tcE=
+	t=1791421395; cv=none; b=ctFxMt5pczP9heCKmPSr4PMpUpFGBICWzTXQjgSh0wUJlYrqqAFyaJNHbjJF+W31daK9Ag40mbVfge6npFl9jey0dekNtCKG2gcXLc+CGshTnIMMQoN6a0LSyMmxVJDV6ROhBze16D/Gu5xKQ8Kc+3z8sKKzd0p8PJEIEdgjdv8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791413896; c=relaxed/simple;
-	bh=RAGAIJgpd+yNXgc/pjpoo393pq4WyBOz0tuS3p6kpL0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LzUfIOhp9HENO8TAcHvYMKhTBQP6KhzaLNLz9UFIj2P4xjl2bpSg8wBHsQxTEgqgYEKTkrzX94AmShTYnvCmOcIzxzMvhHeOn5tgHUpqnzUwZC4ebJvxnH1G0Al56viTr+NZajToGsXnwfWj+Xe+2v9KbEBCAQ6H1tYcbAkyHDs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=packett.cool; spf=pass smtp.mailfrom=packett.cool; dkim=pass (2048-bit key) header.d=packett.cool header.i=@packett.cool header.b=Enkh/caw; arc=none smtp.client-ip=91.218.175.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=packett.cool
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=packett.cool
+	s=arc-20240116; t=1791421395; c=relaxed/simple;
+	bh=uYJqgRQMNqjO9fDlybvOX/wW4tELzzggjrclOgU1PCg=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:From:To:
+	 References:In-Reply-To; b=f+k0Q90VIs9iq3bYxkwEWWBfkmbBpONNkoCGct5KY5GJ8fq5kLyKKo6F1zmHwCeqVjJMYAOre4m53DyagTp+t/9Xd8z2CyMbRp/SjfAW9s2w3gvAdgBg/nsSa7Q7nrWwUOG9vcLaZQovYSnokM2Z13/ylcfGZbLdq4HgfvjZ4Fc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rcpassos.me; spf=pass smtp.mailfrom=rcpassos.me; dkim=pass (2048-bit key) header.d=rcpassos.me header.i=@rcpassos.me header.b=lZDqTYzU; dkim=pass (2048-bit key) header.d=purelymail.com header.i=@purelymail.com header.b=Guva4A3n; arc=none smtp.client-ip=34.202.193.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rcpassos.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rcpassos.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=packett.cool header.i=@packett.cool header.b="Enkh/caw"
-X-Envelope-To: linux-pci@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=RAGAIJgpd+yNXgc/pjpoo393pq4WyBOz0tuS3p6kpL0=;
- c=simple/simple; d=packett.cool;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791413891; v=1; x=1792018691;
- b=Enkh/cawuU5PU1rr2dWSpr2BD/GDAPKF6LBdp0eSiqWA6kaB7MhMzSdRfipIoUvs8PWbpW5M
- VI7gNulmwDN5+VwZ41Hx/0dHdKUYUUnnfcIgG98igSpbu31Cn6FncMxI5hym1TTPIljRwtnAuvC
- s4dW/idZHCp7CWVa8mNylRI2GiOKdGsQXiNVBLtbNqShSGI0lftbrEaDFJ2K3yFpjrJFpUdPjWQ
- Vb5arhfUfsBHdkx9x2ikZVRl4/KmyqV9Wo1Q3udTBCYN73B/+SYVzeBeZTodSwyLWD9Zco0fWVK
- Zv4zPzJuMAXML6d7pcaNY8Taj36Y6fVrE/bj22O3xUXKw==
-X-Envelope-To: linux-pci@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 66b877c89b98a8fd;
-	Wed, 07 Oct 2026 22:58:01 +0000
-X-Mizu-Trace-ID: 66b877c89b98a8fd
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <bc7730e4-8b47-4c2b-84ef-277749f2aab8@packett.cool>
-Date: Wed, 7 Oct 2026 19:57:54 -0300
+	dkim=pass (2048-bit key) header.d=rcpassos.me header.i=@rcpassos.me header.b="lZDqTYzU";
+	dkim=pass (2048-bit key) header.d=purelymail.com header.i=@purelymail.com header.b="Guva4A3n"
+DKIM-Signature: a=rsa-sha256; b=lZDqTYzUDXcZM+5CvFD/0vDiVLjvVCiyj++h7LxnWRLCrSLY+ci8O0SXPFhqhJZH2pubKL+fT0JL40lcPRYuiw9b5P3q417NPHf6WSXL1geqwoYnC7SwFICOzJcS/KM/I/VVUdziHd0UuWpXwoA3fG+KELyTQ9m71D2lNk2pLbkEiuyeGLfssBrHrDnthaEUjcj0e1fDzxf2UYr/S+m4p4aE/33Fs3HNt4IKy9AJqocGo9FrDTqpuU2PvnfN7KjMtkArVdAML99t8Mfr09EGcG1NcWYSik2nJ0DllM3My4H9yJ2vQg9OS1K4ndyj2o24+N63RQlglUBm2OtJ4NUrfA==; s=purelymail2; d=rcpassos.me; v=1; bh=uYJqgRQMNqjO9fDlybvOX/wW4tELzzggjrclOgU1PCg=; h=Received:Date:Subject:From:To;
+DKIM-Signature: a=rsa-sha256; b=Guva4A3nrgkppc37/i9m+24/WqBV7hTEnm+W8dk7qCGw7dGYFZYcz57LBjqN2l7cZWNlp7XNwTHAQvGj+tKtFYlX9WzlzYd5uwOdYmiFxf66s6KCjOX5twmK1A2SYIvBA6jrtlUpM6KP5hjw2V/nqZQf+nBz0iNi+fMYTCHDpVUH6Afg1VvGTnWIRBcenROox9iU44O0I5+EDXLCHVGeSWUxaQ7Xo2qUlJYOJ8i5pG5LjOItz4f3QUOHCLdsNpOx1ZUdb/PP5ZBkGVfAwMLyi4Xoy09eSkTaOK03bwzBmP9hgxILnDHTX3LNN+JM5hzQuXiu0GbNJd+3sQdFmztcjw==; s=purelymail2; d=purelymail.com; v=1; bh=uYJqgRQMNqjO9fDlybvOX/wW4tELzzggjrclOgU1PCg=; h=Feedback-ID:Received:Date:Subject:From:To;
+Feedback-ID: 45355:7809:null:purelymail
+X-Pm-Original-To: linux-pci@vger.kernel.org
+Authentication-Results: purelymail.com; auth=pass
+Received: by smtp.purelymail.com (Purelymail SMTP) with ESMTPSA id 1860935098;
+          (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
+          Thu, 08 Oct 2026 01:02:40 +0000 (UTC)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 5/8] Bluetooth: hci_qca: Support QCA2066 on M.2
- connector via pwrseq
-To: Loic Poulain <loic.poulain@oss.qualcomm.com>,
- Manivannan Sadhasivam <mani@kernel.org>,
- Bartosz Golaszewski <brgl@kernel.org>, Marcel Holtmann
- <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
- Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- linux-bluetooth@vger.kernel.org, devicetree@vger.kernel.org,
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
- Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
- Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-References: <20261005-monza-wireless-v7-0-5a6de7662dcb@oss.qualcomm.com>
- <20261005-monza-wireless-v7-5-5a6de7662dcb@oss.qualcomm.com>
-Content-Language: en-US
-From: Val Packett <val@packett.cool>
-In-Reply-To: <20261005-monza-wireless-v7-5-5a6de7662dcb@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 07 Oct 2026 22:02:59 -0300
+Message-Id: <DLZ1VOR6LJVU.Y08CXZ0T39KM@rcpassos.me>
+Subject: Re: [PATCH wireless v3 0/4] wifi: iwlwifi: recover the BE200 after
+ D3cold removes its power
+Cc: <johannes@sipsolutions.net>, <helgaas@kernel.org>,
+ <ilpo.jarvinen@linux.intel.com>, <emmanuel.grumbach@intel.com>,
+ <nika@nikableh.moe>, <mpearson-lenovo@squebb.ca>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: "Rafael Passos" <rafael@rcpassos.me>
+To: "Navon John Lukose" <navonjohnlukose@gmail.com>,
+ <miriam.rachel.korenblit@intel.com>, <linux-wireless@vger.kernel.org>
+X-Mailer: aerc 0.22.0
+References: <cover.1789333511.git.navonjohnlukose@gmail.com>
+In-Reply-To: <cover.1789333511.git.navonjohnlukose@gmail.com>
+
+Hi, I've been testing this patchset for almost two days, with good results.
+I applied it on top of mainline (7.3-rc6).
+
+I was having issues with my new company laptop for a few weeks.
+A Dell Pro 14 Plus PB14250, with BE200 Series Wi-Fi 7 (00:14.3)
+
+Tested-by: Rafael Passos <rafael@rcpassos.me>
 
 
-On 10/5/26 9:21 AM, Loic Poulain wrote:
-> For QCA2066 (and other QCA chips) on M.2 connectors, the UART enable is
-> controlled by the W_DISABLE2# signal managed by the pcie-m2 power sequencer
-> rather than a dedicated BT enable GPIO.
->
-> When the serdev controller has an OF graph (indicating it is connected to
-> an M.2 connector), acquire the 'uart' pwrseq target from the connector's
-> power sequencer and use it to control BT power instead of the bt-enable
-> GPIO. This is factored out into qca_serdev_get_m2_pwrseq().
->
-> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-> Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-> Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-> Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
-> ---
->   drivers/bluetooth/hci_qca.c | 47 +++++++++++++++++++++++++++++++++++----------
->   1 file changed, 37 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
-> index 1d27ff98034ba99d0783e48db5c605f3b31117ea..b6ec1a57248e2cf4bd138898ffc5cad45b1b4a8b 100644
-> --- a/drivers/bluetooth/hci_qca.c
-> +++ b/drivers/bluetooth/hci_qca.c
-> @@ -1875,6 +1875,9 @@ static int qca_power_on(struct hci_dev *hdev)
->   			/* Controller needs time to bootup. */
->   			msleep(150);
->   		}
-> +
-> +		if (qcadev->bt_power.pwrseq)
-> +			pwrseq_power_on(qcadev->bt_power.pwrseq);
->   	}
->   
->   	clear_bit(QCA_BT_OFF, &qca->flags);
-> @@ -2396,6 +2399,34 @@ static int qca_init_regulators(struct qca_power *qca,
->   	return 0;
->   }
->   
-> +static void qca_serdev_put_pwrseq(void *data)
-> +{
-> +	pwrseq_put(data);
-> +}
-> +
-> +static int qca_serdev_get_m2_pwrseq(struct qca_serdev *qcadev)
-> +{
-> +	struct serdev_device *serdev = qcadev->serdev_hu.serdev;
-> +	struct pwrseq_desc *pwrseq;
-> +
-> +	if (!of_graph_is_present(dev_of_node(&serdev->ctrl->dev)))
-> +		return 0;
-Seems like of_graph_is_present does *not* return false for the existing 
-(non-connector) setup which is currently used in all the laptop device 
-trees..
-> +
-> +	/* The pwrseq is looked up on the serdev controller (which holds the
-> +	 * OF graph to the M.2 connector), but its lifetime must follow this
-> +	 * serdev consumer device, not the controller. So acquire it with the
-> +	 * non-devres pwrseq_get() and release it via a devres action bound to
-> +	 * &serdev->dev instead of using devm_pwrseq_get(&serdev->ctrl->dev).
-> +	 */
-> +	pwrseq = pwrseq_get(&serdev->ctrl->dev, "uart");
-> +	if (IS_ERR(pwrseq))
-> +		return PTR_ERR(pwrseq);
-> [..]
+More details below:
 
-So this returns EPROBE_DEFER and bluetooth gets deferred forever :(
+Before, this would loop for usually long times, or until I reloaded the
+driver:
+```
+[  349.794606] wlp0s20f3: disconnect from AP $AP_MAC for new auth to $MAC
+[  349.899518] wlp0s20f3: authenticate with $MAC (local address=3D$LOCAL_MA=
+C)
+[  349.900258] wlp0s20f3: send auth to $MAC (try 1/3)
+[  351.906522] wlp0s20f3: send auth to $MAC (try 2/3)
+[  353.922497] wlp0s20f3: send auth to $MAC (try 3/3)
+[  354.900727] wlp0s20f3: aborting authentication with $MAC by local choice=
+ (Reason: 3=3DDEAUTH_LEAVING)
+```
 
-~val
+With the patches applied, I still got a few disconnects, but they were
+imperceptible. I only know abour them because I was keeping an eye on my
+logs (AKA `dmesg -w | rg 'wlp|iwl|auth|reason' `).
 
+Example disconnection log with the patchset applied:
+```
+[ 341.720214] wlp0s20f3: disconnect from AP $AP_MAC for new auth to $MAC
+[ 341.802793] wlp0s20f3: authenticate with $MAC (local address=3D$LOCAL_MAC=
+)
+[ 341.803277] wlp0s20f3: send auth to $MAC (try 1/3)
+[ 343.820077] wlp0s20f3: send auth to $MAC (try 2/3)
+[ 345.832125] wlp0s20f3: send auth to $MAC (try 3/3)
+[ 346.803865] wlp0s20f3: aborting authentication with $MAC by local choice =
+(Reason: 3=3DDEAUTH_LEAVING)
+[ 350.389895] wlp0s20f3: authenticate with $AP_MAC (local address=3D$LOCAL_=
+MAC)
+[ 350.390412] wlp0s20f3: send auth to $AP_MAC (try 1/3)
+[ 350.396872] wlp0s20f3: authenticated
+[ 350.400017] wlp0s20f3: associate with $AP_MAC (try 1/3)
+[ 350.413168] wlp0s20f3: RX AssocResp from $AP_MAC (capab=3D0x1111 status=
+=3D0 aid=3D5)
+[ 350.414412] wlp0s20f3: associated
+[ 350.441020] wlp0s20f3: Limiting TX power to 36 (36 - 0) dBm as advertised=
+ by $AP_MAC
+```
+
+Before finding this patchset, I also tried a few options from forums:
+Running plain mainline 7.3.0-rc6,
+
+disabling d3cold with udev rules,
+# disabling WiFi 7
+options iwlwifi disable_11be=3D1
+# Disabling Power Saving on BE200 wifi
+options iwlmld power_scheme=3D1
+options iwlwifi power_save=3D0 uapsd_disable=3D1
+
+Also tried connecting to a WiFi 2 only ssid (with "IOT friendly" options).
+
+Thanks,
+Rafael Passos
