@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73CDB3CF1F2;
-	Fri,  9 Oct 2026 11:41:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ED3A4D09F6;
+	Fri,  9 Oct 2026 11:42:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791546118; cv=none; b=ApzhCv/oCGvKFXI2JBM4MkQQrn5zmzkRJ2Jh4XazKwxXG0GdsYlzJ1aIUFjYnd0ri+VaceZLWtkxHcdcNB3K03I3Axge2PLhU95+GQf8w6uLENzJYAwFRoZ+CuYImWYmwhsdmPMCajauCvbTZ5eiKrW7gH/OT5Myw/AplVCNkO4=
+	t=1791546151; cv=none; b=HSeVlAummYJtwBwrZ3pjaAt3bJDU3hk44n3oYXeZ64e0CWNs43cJuArQxKTbym9EPSMnK0TXnG5i5DuIKlgLkkKrHVr6S208bIZSTeoOpcZsr7SUg7y/p3lRcx85R0d/qe8iHmX/wP+mYJ4ZLowT7xX6TgTOkX1H+9VoNayMd/c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791546118; c=relaxed/simple;
-	bh=s2K7f19kPNEjxBg6xyW7B+Zcm5HQHtRpR9zS7zMrTT8=;
+	s=arc-20240116; t=1791546151; c=relaxed/simple;
+	bh=SiDD6wYgmm7rgJEyyrD+Bv8XDtgENm3l2fUSJ/PRw9o=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uXFD9Crg+UWLN44LUO3U+xElWfctP1N79BYh5qy0S4OpQzdzaL6uBdCh7G2UcR4VCS08lpfaEIAQ8C7uI+k47TNQru3KaZi3iv/rYQdtclvLKg2e1ajRGppqSPt2vNNKBdcAEWcixZw+VICkISDu1YwBXy5Qmb/XtcOOM3KxdlI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AhZRCR2G; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=buNKPZPBPihg3Ac5BitKXNRXbC/E+87Yjb8/CQmH/zjmuPdkJsrzT4k6R/aLMbQut9wh7iSGrTrSwinme3Z8cuwMIbDyZN1pW34W84nYwuTmRMYb4xwj75FbPvctIhhPt+l4uYBhziBV7QWSq70J61iUiLTz0RD6NDS02rkQGyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W3RHEniS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AhZRCR2G"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E41D1F00893;
-	Fri,  9 Oct 2026 11:41:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W3RHEniS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF6A01F00893;
+	Fri,  9 Oct 2026 11:42:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791546111;
-	bh=kZ03PGi5IJmAQN8tSWlHSDbeCc5ja0BkUfUbILLNAHc=;
+	s=k20260515; t=1791546141;
+	bh=U/dpDhVn3KmXi1hz+tH9Iaeu01NQ6vXF/8vWoL2decY=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=AhZRCR2GTJ0XLlVyWFqaze+yW/ZUAPWRyy/XePuzppd5ReOQLkDoB0q5p5ss+YdIj
-	 wVXay557gykBI1+3CyALbq43tiq54rLgSpIG7141C1RbX6DUrKVOMxUX9th5O+N38t
-	 nTLtMf6NgxWZ/sdGRFQzpL+75aGRmrkqjlPLbuK0RZCHxEdVKyxWnfrgrfLjTZ8Raj
-	 0XqdU6tvKHTBgb9Z5uRNnvxlgfHWn6tRQnqKs0I0To3oXgS7PXkBtCDs0F3jtrBzsY
-	 B9xAMBQ9WQ3lTyU43WWcGAIsFXik8rP5xNoiOK14UZ6ie8w/d9uJkH5pk1yR/J1N3o
-	 WnzyvP4vBLMnQ==
-Message-ID: <9a2f4dd8-c300-4ec7-b45c-a9f7df4d0bd3@kernel.org>
-Date: Fri, 9 Oct 2026 13:41:39 +0200
+	b=W3RHEniSbOiiNFrzW63aZ2RuFJl2ie54Z5HyzcbTZ5G6+ylZfKz15vezR9fkzRWhb
+	 cUJ/VoxRaDJXZfJmD+WzgS82N5g174kCrH8/tHnJJl2MduD7obVsyB0Ok6wCXkiA7N
+	 BBlYOYDtDkIq/++leWdJq1vav/HdhKwVwvmbopfuIx+jvCImJIqNqheF5qRGZpEjcs
+	 r7dfKXPWNKaiBSV7os7IV2PzxlMg1ZCA9HO9c+TSDHXq8iGWid6WtwvII+RIbzGG8k
+	 nWg4RL+mo3uGE4d17SJMpGTCtDFFFPujehTLu9hG8q2qavlucgPoY4yHn6wShWy727
+	 2T8sMVGEc/W/Q==
+Message-ID: <cd97e6ab-eac0-4482-8b85-455ac8730241@kernel.org>
+Date: Fri, 9 Oct 2026 13:42:11 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/4] dt-bindings: display: bridge: simple: document
- Chrontel CH7218A
+Subject: Re: [PATCH v2 3/4] dt-bindings: arm: qcom: document Radxa Dragon Q8B
 To: Xilin Wu <sophon@radxa.com>, Bjorn Helgaas <bhelgaas@google.com>,
  Andrzej Hajda <andrzej.hajda@intel.com>,
  Neil Armstrong <neil.armstrong@linaro.org>, Robert Foss <rfoss@kernel.org>,
@@ -58,7 +57,7 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  <krzysztof.kozlowski@oss.qualcomm.com>,
  Daniele Briguglio <hello@superkali.me>
 References: <20261009-q8b-dts-v2-0-eda11e5dea8b@radxa.com>
- <20261009-q8b-dts-v2-1-eda11e5dea8b@radxa.com>
+ <20261009-q8b-dts-v2-3-eda11e5dea8b@radxa.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -104,24 +103,23 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  K9bCVaboTA2T77QYkRcRJYSsO1alGX0ome/hMLD1daXlkrNUp1HWa3K4iytLRXjCSIorWiGs
  n+q3krnpXu3TFkA8qtOFZMdnIiFuiq1yLT8hptsV5xh1TA2nsVvSYiaCr3q4s4BKjS/KrLDb
  qoxzw8ISjdUp4pA85vb6YLCmb39NgidD+7PmAr65lBNveIFynTgsja1rRQ4=
-In-Reply-To: <20261009-q8b-dts-v2-1-eda11e5dea8b@radxa.com>
+In-Reply-To: <20261009-q8b-dts-v2-3-eda11e5dea8b@radxa.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 09/10/2026 09:55, Xilin Wu wrote:
-> The Chrontel CH7218A is a DisplayPort 1.4 to HDMI 2.1 protocol converter.
+> The Radxa Dragon Q8B is a single-board computer based on the Qualcomm
+> SC8280XP platform.
 > 
-> The device contains an embedded microcontroller and on-chip flash. It
-> automatically boots its firmware and requires no host-side configuration
-> for the on-board use case, so it can be represented by the simple bridge
-> binding.
-> 
-> Document the chrontel,ch7218a compatible.
+> Document its radxa,dragon-q8b compatible.
 > 
 > Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 > Tested-by: Daniele Briguglio <hello@superkali.me>
 
-Drop the tag, not true.
+Fake test, drop tag.
+
+Why is this so problem to provide the tag ONLY to the patches which were
+ actually tested?
 
 Best regards,
 Krzysztof
