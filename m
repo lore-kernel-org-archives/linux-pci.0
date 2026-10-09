@@ -1,31 +1,31 @@
-Received: from smtpbgsg1.qq.com (smtpbgsg1.qq.com [54.254.200.92])
+Received: from smtpbgau2.qq.com (smtpbgau2.qq.com [54.206.34.216])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F6503D0C07;
-	Fri,  9 Oct 2026 07:56:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.254.200.92
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A917147206A;
+	Fri,  9 Oct 2026 07:56:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.206.34.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791532610; cv=none; b=OOfZSr/C3J24CMEiKIuUNMlDpcwQ2YhNvfT5L26Dd6CbV6v+PoJO5B6fKMciWIbZ1G6Iq+e9ZwOyDvh+dZYgNQEkT8Yj38W3D5oUE42A8giQxKZvxyo1qF2W0l7s75abTQ0LwBeH2b/jRQ0hj4dXUg1ELH/JYlmHHXQc0mwmWNU=
+	t=1791532614; cv=none; b=Z1UTs2OQgLoPFFSavYb3+dAnf3TK+L6E4r8ZvvPbB7JogUbBQHnAnHhd/Dd0dMyiVW85O97FXjyVvgcahxA5lqxuIzje4gIwqHs51Qx315OJIH+OAP3mIa7Fw0PNhZlFHA6DSlnHTRqZC78lnPAyqX02wRIzA8Dc21XPfxU02Os=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791532610; c=relaxed/simple;
-	bh=+V4J4jb5Aj7TY9xO/xX782sZxUDJGWTEX8LeDQ4fkho=;
+	s=arc-20240116; t=1791532614; c=relaxed/simple;
+	bh=/D8P3kABTsKmzN3/LTDLick9fibyBw396ut558wJNKc=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=RblevmYNLuH10/+6NFodVxnl+SMzE5FGNOypjaPvtb5Q7uOaoxSHx3S+fw8ahyZeVBWC31kHoVNZdNldzbRMWxf4AzM8q45Hy8YL8+tkFYR2sYQpMNkvv5maDRTCtM//bvysp33t2JVlU1VaI0fKmjSB7hsp49BGA/Y1cr+KtfE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com; spf=pass smtp.mailfrom=radxa.com; arc=none smtp.client-ip=54.254.200.92
+	 In-Reply-To:To:Cc; b=QR39IJVXnG7ha0SNnFiT/1czohu670enacekUgiItvfaINV9rZWkbOzgbg22W4P0kKRPOxktQ8KpOm5tfDU+M2J6zhmXSXQSN2j8xeuGGU5XmF/0QyH+SoK1IIod1F76GlQrKlHrOdJkqX9AwuK9FOpskU0hzhrPQuCEzL1AYMQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com; spf=pass smtp.mailfrom=radxa.com; arc=none smtp.client-ip=54.206.34.216
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=radxa.com
-X-QQ-mid: zesmtpip2t1791532534t173164c0
-X-QQ-Originating-IP: BuEVl1c8H95NpE4oXHOC/UUST0zQ5tlQaJLw7XoHYz8=
+X-QQ-mid: zesmtpip2t1791532530tbb4c4c53
+X-QQ-Originating-IP: 9/NgJElDi7wbagJh8pJMPJTdUCHLgUpjdwvUfflcCS0=
 Received: from [192.168.30.32] ( [localhost])
 	by bizesmtp.qq.com (ESMTP) with 
-	id ; Fri, 09 Oct 2026 15:55:31 +0800 (CST)
+	id ; Fri, 09 Oct 2026 15:55:27 +0800 (CST)
 X-QQ-SSF: 0000000000000000000000000000000
 X-QQ-GoodBg: 0
-X-BIZMAIL-ID: 5870349108209219683
-EX-QQ-RecipientCnt: 32
+X-BIZMAIL-ID: 13704991742146090228
+EX-QQ-RecipientCnt: 31
 From: Xilin Wu <sophon@radxa.com>
-Date: Fri, 09 Oct 2026 15:55:08 +0800
-Subject: [PATCH v2 3/4] dt-bindings: arm: qcom: document Radxa Dragon Q8B
+Date: Fri, 09 Oct 2026 15:55:07 +0800
+Subject: [PATCH v2 2/4] drm/bridge: simple: add Chrontel CH7218A
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -34,7 +34,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261009-q8b-dts-v2-3-eda11e5dea8b@radxa.com>
+Message-Id: <20261009-q8b-dts-v2-2-eda11e5dea8b@radxa.com>
 References: <20261009-q8b-dts-v2-0-eda11e5dea8b@radxa.com>
 In-Reply-To: <20261009-q8b-dts-v2-0-eda11e5dea8b@radxa.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, 
@@ -55,63 +55,66 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-arm-msm@vger.kernel.org, linux-gpio@vger.kernel.org, 
  Stephen Chen <stephen@radxa.com>, Junhao Xie <bigfoot@radxa.com>, 
  dragon@radxa.com, Xilin Wu <sophon@radxa.com>, 
- Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>, 
  Daniele Briguglio <hello@superkali.me>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=910; i=sophon@radxa.com;
- h=from:subject:message-id; bh=+V4J4jb5Aj7TY9xO/xX782sZxUDJGWTEX8LeDQ4fkho=;
- b=owGbwMvMwCVmdFg0fe08Iz/G02pJDFkn5j678tLO/c7n2Lsx+oaL5/RW9WpUalzP1nHiVMqpn
- el+V1S9o5SFQYyLQVZMkUUhnmEue2XutadipXowc1iZQIYwcHEKwERsHjH89/m89f5x/yg/3i0x
- hjvMLr5bvOD0G/MXy3iPqL7/s8xi9QGGv3LLfKy/brJkmvvkpT5jsu7fgwc33THc09py2uTqOdV
- Pa/gB
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1079; i=sophon@radxa.com;
+ h=from:subject:message-id; bh=/D8P3kABTsKmzN3/LTDLick9fibyBw396ut558wJNKc=;
+ b=owGbwMvMwCVmdFg0fe08Iz/G02pJDFkn5j69eUdZ13FWwI1AsUeNCWtOvhHq6rBjd7LdLLbw7
+ p17eX61HaUsDGJcDLJiiiwK8Qxz2Stzrz0VK9WDmcPKBDKEgYtTACbS/oyR4aTLgdCD5+9abY3x
+ 2utuvefpTiXrMD7XKTZ50ds+TTGemsHwv1B228oEs/mM8TfyKoUfq0fwMuu9mLd0rluN0IMI571
+ rGAE=
 X-Developer-Key: i=sophon@radxa.com; a=openpgp;
  fpr=205F009D07796DD6E516752E32C31567AD9E324E
 X-QQ-SENDSIZE: 520
 Feedback-ID: zesmtpip:radxa.com:qybglogicsvrsz:qybglogicsvrsz3b-0
-X-QQ-XMAILINFO: M472cMQbILHLcyXJxjtfAmjsXD5/IDODG+gUL2dbesiHgasEEhuhcVFE
-	uxl/tGxQ4AXz2Hi7YKE8XU20hKlvZdQzpbfax5Miem1/cPbJt3OAYH03ejTqk8ZqAytlZVr
-	XUBWdVDCNiXUdlDhYGra3ssKme6hSCq2HU8mlpU7GEmwyNIikl78hibvTLtXEpBFqpqgNUy
-	7gGydc9kI6zLxGnC3oB5LUwcGMNivYw1WZEp8Leq5A0MH22t3cvuh72iMOoMD59c/jO3tdn
-	TU9LG78gxOqX6q+/c7Q39TzFVN+0VVzZ7CZP9/NZ6o9XU2KjGwvgrZol6E6kbTnrPN26FHo
-	qhwrqe4ehDoxQLYFb4w3ij2yhPcfn11HrqQO+9FOQF3dSq/MThJ0KU5CA4T17SoQ4MHZyks
-	CtlT6LRH656+nxhkUxnAML4z10BcCdLrkzvRRmJSUMSo7GHKfkX5fhoy5hgMuD8bLCCSPkg
-	FRZcnJouEttkN9JnQVFoX3xQei3RU+AajrbuO9jcm+LsfLhawK5sMJ5c0sozkm3RJ6mjo14
-	CBn8AzTOyySvaKX5b71ZOhtNn6ojyv0/wM85sxvzVvQLCnP00M5wJwGlrJIlLVbKm73x0Pd
-	eMz4kZKi7x+cAiTLZ53lu+74YUr6CzXfVuYavc6OYmMHt7rSfkQrTJ1rtn6ztgJvdCk0jUT
-	gDBYtII/cXvSy/7ef7RCAOFvkqyFl9T7WDdVSPG7qvVYBYooQWhe+xyKbtb5vrexE6Tqtyr
-	7ZFWbtPPZCQMc1QJIrRc2iUB4HIyKVmmdpShCFrHZmXvMx2weSWlkg+yT/XaG8MFg4BZXpW
-	81uo4HMPYAjKIGH+rI0xT0T7V45zXzE4MNUhAdNAmUvyWgV2b/5GDTwwzINEVAW0VMpL/QM
-	5Hg6zetQHYxPJdwAdaVIOb3nyG8xBLfOseYheM6mNOtS0OIKtB2glWXL5+BXKvCY/sPg9YB
-	y4zLXbtdCPnW4G6LVoY+3UmuC5xFdbKlVU4C2Juv10WvVXfhYaK6Dnt6L8UDx1wrxMnR1ln
-	y8Wbpj8xX+lYKLfwQJLX2eoob2MrKAZgEVQVy+YIq3ZmcV+8lXo9kXCmnlis0At4iVOqt6h
-	8JiUbmgPE5OVKdT12ZO6jPn2wfRJgDqpQ==
-X-QQ-XMRINFO: OD9hHCdaPRBwH5bRRRw8tsiH4UAatJqXfg==
+X-QQ-XMAILINFO: OfG5xWeEWeTyluFtlaAwzXrtEkJBHzXv/aqH6dM2uhsboD4/Lc9kZ+Tz
+	I4gr4FiEFJzt7n/SQ8Vgngj5QTAzBpCSxijHDnfqQ/AnIpGRxhivoXJRLAgdqSkx8Rq+zh9
+	huxE0zT5fTrSSersX7jiovZYhz/m2aYx8UN4zUH1D/YQ01E8J16BJot7isDfEPp6HtZ4Kr1
+	jOLmqlCQzZ3zx8WWsjQJ26OqCmzQRnnrjtnYlmtzrXDoM6S4CxPbqFdmTKWkCCXbuWJ4nGu
+	C4DQhB37E6Eyr6EcJxECseBdAoTtUPhJvBFhQQ3GmZ2FClaiBP6qILfebprnNvmwR1AJkE6
+	KpdYnpbccbHC8NRyWAXcjWSOj98CmADO2O8xCEKNsXVdAAdPaxZFeLoPuUp6TrEacGcDaPq
+	bAqncYOV37h4u7LjSpkP9dcOyXSKEdvXHKD/787c+tdhVD1EOhrjm0h36VyTXABAxR6y6UJ
+	RrrTFhp624YTnfmT0+i42fYU0tB3hRKMMUwHP7hQocAACGrDZBsLhTlrn21UGXaO3RCiT6b
+	5ahh5cHEEbgme7EUObg2mQZKUsllWGFy/2CFT7x2XUv7k7ZOBHyk3+TQ4uoH8fsfbvCSxDl
+	5o/gCAFqAb42jtYAfILeKkcB7yYRblnHl6x29CYzdI7lwxGwD3Nlu/AxTY8ylFx7wHJPs8V
+	KIH1/9kHyrGIoC/vhuWjfYudT0DLQkLfaAWxpct9mQlhxldoXWKi7hEPHVb+c842OAULmEJ
+	u7jT1L6HjnCzMX3oaUx3wdvnW3YigPw4unQc5zZpCdqyGzkFttuahw6Xgo0G0vwgfP6oy86
+	T7E0Q2aHd0vVmZ5lqhx8KaU5/v+PDWSq+uCL3OmA375al6r9Re0IlJuCgD0L1x5ZDrcgFB0
+	wyI0Cvj/STFL9BadyF9p32FHT3GQjZjqzjDT9aMXG1FpJFa6imQte/IWVBE81L67osxN5qK
+	Zg6LftUqHtBo2zqP7gbQclxYRSdAFnRC2R2XYv7u2zut9CQ2ugUZZpsEGWx4/e+qMEZpLVx
+	jRHJ3LCLsi/LI5CMsWYUvXJ7DEcYxkyAYj9Dt1g6zIOGgm0tj16oXJL7FPHWViNB2JC8OVC
+	Fzvp7DGLtkBf86kzx09KMQ=
+X-QQ-XMRINFO: MPJ6Tf5t3I/ylTmHUqvI8+Wpn+Gzalws3A==
 X-QQ-RECHKSPAM: 0
 
-The Radxa Dragon Q8B is a single-board computer based on the Qualcomm
-SC8280XP platform.
+The Chrontel CH7218A automatically boots its embedded firmware and
+operates without host-side configuration.
 
-Document its radxa,dragon-q8b compatible.
+Add the CH7218A to the simple bridge driver and expose its output as an
+HDMI Type-A connector.
 
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 Tested-by: Daniele Briguglio <hello@superkali.me>
 Signed-off-by: Xilin Wu <sophon@radxa.com>
 ---
- Documentation/devicetree/bindings/arm/qcom.yaml | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/gpu/drm/bridge/simple-bridge.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/arm/qcom.yaml b/Documentation/devicetree/bindings/arm/qcom.yaml
-index ff8a35df7862..4341bb04f912 100644
---- a/Documentation/devicetree/bindings/arm/qcom.yaml
-+++ b/Documentation/devicetree/bindings/arm/qcom.yaml
-@@ -902,6 +902,7 @@ properties:
-               - microsoft,blackrock
-               - qcom,sc8280xp-crd
-               - qcom,sc8280xp-qrd
-+              - radxa,dragon-q8b
-           - const: qcom,sc8280xp
- 
-       - items:
+diff --git a/drivers/gpu/drm/bridge/simple-bridge.c b/drivers/gpu/drm/bridge/simple-bridge.c
+index 3fba7002322e..fab793fb12b5 100644
+--- a/drivers/gpu/drm/bridge/simple-bridge.c
++++ b/drivers/gpu/drm/bridge/simple-bridge.c
+@@ -275,6 +275,11 @@ static const struct of_device_id simple_bridge_match[] = {
+ 		.data = &(const struct simple_bridge_info) {
+ 			.connector_type = DRM_MODE_CONNECTOR_HDMIA,
+ 		},
++	}, {
++		.compatible = "chrontel,ch7218a",
++		.data = &(const struct simple_bridge_info) {
++			.connector_type = DRM_MODE_CONNECTOR_HDMIA,
++		},
+ 	}, {
+ 		.compatible = "mstar,tsumu88adt3-lf-1",
+ 		.data = &(const struct simple_bridge_info) {
 
 -- 
 2.56.0
