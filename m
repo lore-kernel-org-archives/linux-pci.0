@@ -1,253 +1,173 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FBE84E433C
-	for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2026 16:40:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A68F7392C46;
+	Fri,  9 Oct 2026 16:50:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.11
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791564023; cv=pass; b=sGZYTH9XIeUAUgSQcbL90tZypNvzqYbd+j+ZzntAv4s5IRzvtyfOFbHWMn957Y9p+HS1w14fuMRfnJlfk8m9YrcE3l1R9w1djjiXLU1fV9YSv9L+sGGHmYaagemtWrE81PNZjGCgIxd/YK/IPt8Z0jejG4EFReupEN9M7/Xdef8=
+	t=1791564607; cv=fail; b=C7un6HY1NAafCCKZK6957lt9k4QxIDdEL5QyrMcMbR5l/WAQFZnw9kZipQ4UtpKjG+icXmuaN59NAeLr3gGfEzqWsik5PArPftNkQrDIZRgi+yDGBvm9QBrfaZDBAHQgm5I3KKEEbyQLI6C+9ajy6DK0Htx3bnM+IwqeayHzCGc=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791564023; c=relaxed/simple;
-	bh=O8BZgU9vbT9VzKGigoj0YhIQo4ixHDL264tHQrF7gDU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=YyktgCeJZ+fDQO+73tn4f+dG7ut2+U/iKc2CqDZvbJHFdTJgBbTNd6TRyZ1wTsK9VoZG/zTaM5Es7YEfRjnXz7gKpmLq3bsQqzee5e+0xItrOVPml5jFCdeNz2ajSdp5RLfPEgWhT3IRj6zY+baf7kAjBiyCbSxHTpXAuA6JyZk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=BzVoZ3gE; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=fBs2swyv; arc=pass smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1791564607; c=relaxed/simple;
+	bh=g15IqstgtkIxprpknYR/RhxXhd49C69FCQxpXqNA4Hg=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=lq1LlBfxHxComqGP6xni3IP9KxxU8GHAIxwgfaLZp9o6WnywAO88tIn8pUzgXTO/W1+QEIbK9k0PQSenGusS6N0DEdrPQLe/3lUHte9naH2GfutJ5AFjtxJEj/6OHflF78dMUTdSEPhLe66EQxUGVIFpy7S2ebcSbiy3cean7EU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=e1QIIEeg; arc=fail smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="BzVoZ3gE";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="fBs2swyv"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 699GbDXl2018462
-	for <linux-pci@vger.kernel.org>; Fri, 9 Oct 2026 16:40:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	03cV0/SHCir8TBf41ccHk0p543FbvOFeT/DumSE7PMQ=; b=BzVoZ3gENy1gF6ye
-	qYehjQ26tYEkKPZmjWraQwf4erIChnc9V+zoKmw5bLBu/exRPi7Q4fQrYx3ftdoI
-	K41uJG5h4TUThUzDcLqOKWXAZRWXwdyxHqyKdtPeGgIVQxaUQwckq2o981X/uk2P
-	QMvc/NRZdN2sNRQIqMu8j4KW6cwuGjwHBGdUi9xWWEK47GmlC/04OS94KmujDl68
-	iH6EB+Ce1KfP0MgEASzew9nXIUkc2wFJsB/uRNB50GfOwmEsXqfgSgZ4/uku8L/w
-	x3X6Yb+LnS4+2cNJR5+V/SpJgJwA4Wlr/PtgkwG7jY4hYmBeF3Rc2nYg0s4dRhAk
-	35WfOQ==
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com [209.85.222.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h71f1rqet-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2026 16:40:19 +0000 (GMT)
-Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-93ea9ea9d13so364279985a.0
-        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2026 09:40:19 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791564019; cv=none;
-        d=google.com; s=arc-20260327;
-        b=HLpuJOhhKwJg8z5+sETVQexIZnowFoftk22ZiQbvZtY9G98dKUg8pjebMD0izDfQfA
-         XPD/kOfh3HeOYF+TwMs2Oja90R7WYoUibVuTmS7zE5q2iOEv2FktjF1Src+kEGyKwxXD
-         j2k4SJ5Rvhq77nzL7lDNeRSHEHWrq4WK3pDokMvm5IyP2+qhIVJ+zzKqkJI5BkyrO3jn
-         Hyn7CefLVZBPZb/ESSsn/GBPy+zzANE9nL1QctaXtgmYkXudX4CfZWIytWufpXcPsX+c
-         Gn9xIZgy56kQav+7IqCr9+hwlY2ui0QKCAy6HW6nQkYn0QlsLr8t6fnuaad/wf6CnYu0
-         DhuA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=03cV0/SHCir8TBf41ccHk0p543FbvOFeT/DumSE7PMQ=;
-        fh=4Z8g9AymjXrmhuv6Ax9MnOqsTRH+nXJdjUzrDAJzPYc=;
-        b=LgYKKZyDkT8X3IWZAkgX4TreCKpS4delEkl5m3wuog8va/l4rrQrdHkk4CL+/NdJ5E
-         6VKmqjkOj0MhY3qJMBlmmFmUjA/6Q9bEwcKLpObjuaNi3MkPBWksEeEgdpczF8g46gOZ
-         MvdNeFATAtgum0SNnk34qvV8vDPjva1xxa6IbbOfg8sd8gGyZXKvxLpJ6MEC9bIsdzRe
-         OCOkHJ8eeMBMxtb5iDd60AAfQDegJeXHkSmiV5QoFdXUN+uLpX9dTLCSf2q1iffG9kyk
-         Mlz68JWHosvP9DsDWRN1S3XUzp9IrBTc1oJkywXG0hZH8FcNngZ1SbTSXSKUtzMlcHcc
-         gZVw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1791564019; x=1792168819; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=03cV0/SHCir8TBf41ccHk0p543FbvOFeT/DumSE7PMQ=;
-        b=fBs2swyvZBOfk2KVO5FEc04xYgLuhAZMmXCuuPsSJu9J0LoO1mXm+ZSW/ovI6u/zmD
-         NeHYZrYGip/ndFzhL3P7Wh1nTOAjaRQ/aYrzrMpUBQMmHJYdekLLzFBkUQz1YO20dyLR
-         ACK2jkA1gg8UJc1d0JFdFAKSYHui4ICO4aHWYjcqdvr35QdJlCji6o94e/Dl0oBizIeu
-         2uJYW2swCJcxv4o+fi+prOewV1nTP/ErPYml8l26JmmvKLoTyhHmblZXuIMeDaRF+Aw+
-         4wTM1HxkgegNyl7wZF5hU+0xHPKINBQr966bKVbFCD1M7tTfWIykR1iKPW8tjczMgdpF
-         s+EQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791564019; x=1792168819;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=03cV0/SHCir8TBf41ccHk0p543FbvOFeT/DumSE7PMQ=;
-        b=A1a7/XpxTeib6NFV02Tv0/2Xem8v9mam+KXrTBAs4gyuWUnJyJ5rhuR7aHeMMoh0nu
-         FvMEeff6exBYGMGA1z4GogweJgLWeGAatj/dNY1lGADgBkEC+zBC1RSV9tYVCuh8830V
-         jIGECaCGjpQLUHmxCzzO6hqSg/iupcvjFXi88mHXEFuKI3xGBxIGuEC+Erjii/6acp+G
-         DyoXspOh1NEvtf+6FAmptrgqHb9eWhrPzGFFkTeHeFNkP7BoW76rYEXy9seRMlRXGFQW
-         HsbdQYACxpzszsh+j4a64lDWnq1/eN21/MbvxcvOdptndNuNyoPmedWnzP32FpFaWPyT
-         28yQ==
-X-Forwarded-Encrypted: i=1; AKwUvByf0p2bHV7KIdwYpHpkB2lPuIxfEPCUzYME7EiU+DB4oTqhdGpTF7gpsbzowity4N/Bk6uWl6rTs2w=@vger.kernel.org
-X-Gm-Message-State: AFuF++mNfYL2YZ0unXZHqzgZzPlCS0K1/7tX0cAjxz5ZL8mqH1MBG4zE
-	64Hcs4qT+xoStdkcMyfIwL3t3ow5vCJfWok/hk7cvYkK1gOmw7CHD1DBLCuScKWMC9PnUVNE9c0
-	mece8GVf1iJlJmLnw36rSqTWlh3ZmeCYbgogrbsvA0k8P/GVIiVjzLP3JKDDhF5KwX5JPCzmMmV
-	55c8tW2YASsqgTdk29UJkuUuNuV7+5MhOJbmdMJpRF24s972YTfF0Atw==
-X-Gm-Gg: AYBFou0lIiB3c3xSdXTHkAm3MvSbUtybnPo7ImIc9Hkv78Zfy1skKIa5BzE5+7AxC4e
-	YveigAqwxe1wkJezJRSeTeJ7HLuhSFPa6Q6oXYr9nzmHUVg8KxWyz0m/UX+6BQL1c2K/fMGeKl5
-	OoIZD7oE+KDkfA9WaHIDgRemmZehNF+zkr4o1LAji6fci8NtmIqDzS/QOKJvHMOlBpvS/XpN9bE
-	UOUN4QU9x0RTSg/9mVqcYAby1d1orGbmbGjSWpvWvfT0dyo7uHXCav5GsMaqLeapM+aLpFgkiC+
-X-Received: by 2002:a05:620a:269a:b0:939:13a7:70f0 with SMTP id af79cd13be357-93ebd0c260amr388805485a.5.1791564018693;
-        Fri, 09 Oct 2026 09:40:18 -0700 (PDT)
-X-Received: by 2002:a05:620a:269a:b0:939:13a7:70f0 with SMTP id
- af79cd13be357-93ebd0c260amr388800385a.5.1791564018141; Fri, 09 Oct 2026
- 09:40:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="e1QIIEeg"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1791564606; x=1823100606;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=g15IqstgtkIxprpknYR/RhxXhd49C69FCQxpXqNA4Hg=;
+  b=e1QIIEeg58gH9hbJcGNGIJq31gxCqvIz9RUEZR3cR03Hv83s5tBNDX6j
+   6x5zy93pzhpfEf86EMtea87Kk0G3xd9mdamsoJnRDruzWw7fezw7tbB8W
+   xzi0e7ucpU1uAVSPyzz6grTnUxV9CTevQwYHfuu1bPYvV6XpZ3i2iK54s
+   DUrbQdMKvsrnrieTL6VybpihKod2MXeosZg2KTE3nFoZcXThG0ML1HuV1
+   JvfGTalMicGCcQmTzFWgWLyLZaxsJwPDhfKCOWTgdEhlMBWTdm5JOz+dD
+   1jyd9pir/zVT7f34EgZTDSRaF3l7elQdrADyOp5t16cPHC7MBtwqJ9yvx
+   w==;
+X-CSE-ConnectionGUID: D/9+CeVOQouwj4n0xLJd+g==
+X-CSE-MsgGUID: zpYWtzz9SG6qmDBsurx5nw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11930"; a="268570"
+X-IronPort-AV: E=Sophos;i="6.27,148,1787036400"; 
+   d="scan'208";a="268570"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2026 09:50:05 -0700
+X-CSE-ConnectionGUID: 486lrmGlT2yfk/TQMJXcGg==
+X-CSE-MsgGUID: kgw1Yy4GSmGTGJ5q3Tgo6A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,148,1787036400"; 
+   d="scan'208";a="318390"
+Received: from fmsmsx901.amr.corp.intel.com ([10.18.126.90])
+  by orviesa001.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2026 09:50:05 -0700
+Received: from FMSMSX901.amr.corp.intel.com (10.18.126.90) by
+ fmsmsx901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Fri, 9 Oct 2026 09:50:04 -0700
+Received: from fmsedg902.ED.cps.intel.com (10.1.192.144) by
+ FMSMSX901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49 via Frontend Transport; Fri, 9 Oct 2026 09:50:04 -0700
+Received: from BN8PR05CU002.outbound.protection.outlook.com (52.101.57.60) by
+ edgegateway.intel.com (192.55.55.82) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Fri, 9 Oct 2026 09:50:04 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=ttEiobKMTfNfAqO5jRe0rItydAVKN9qsotZHlDbyBHjOoN6p8iUJHBuGJI3txsOmiWsibYT8GhZD/bOpgvXao21Lkwkhya770ecmCUsdr3Y37ndG52zRyLADB+nQosKsMdzzNjmZ5VTaZZ5l6yNeybAY1p913wrM97LhJhZ7MImy/8v81XxR1/qKkgxE+Y5aN5K6JIe98PuDQw1YVYFVu6R0U2zknH3z3twehnic5DCzuV9F7z+3Xgdz7EwYcW28nrc1V/UhMJeym1iwapweb4kuz06UJcG1HYXJ6MBFr4DF6XanniokT/+a1yxSFYWO1OuU+8CWBHfBrjJaPnvZbQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=g15IqstgtkIxprpknYR/RhxXhd49C69FCQxpXqNA4Hg=;
+ b=sBVGyAo9YacC7/IIGXJRUchFoaYE+DXlH0dWitGNptlQaqf9egqEkzu9Rl0r0rmR9ebM/1LoaC7g0s5zczZARdE0vNfnWzqJULawrD6Ia6zaFtj/LuRSc0isk8JKKUSsyaZSPPcSEC9NBXoh6LDPmg4GwChs1d64rTnL3v2phJvkRfpOTnEKecIHQCXLju0GNIhftdE5RKyZilZgqNiGh0Vs1RXSVRUmJuMom2j+U+I0JQ30C4pQ7d22b87oynoSROFbyiYB/y7xv1I8KySJ+4TWHqhy8lmgu0DCwXw8mKj+8yenpXF+qtvfFAT0OANHGZzGQ8BZyzD4MfkpCB2RHQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from LV2PR11MB6070.namprd11.prod.outlook.com (2603:10b6:408:179::22)
+ by PH7PR11MB7025.namprd11.prod.outlook.com (2603:10b6:510:208::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.496.17; Fri, 9 Oct
+ 2026 16:49:58 +0000
+Received: from LV2PR11MB6070.namprd11.prod.outlook.com
+ ([fe80::4c84:af62:dc60:fd9]) by LV2PR11MB6070.namprd11.prod.outlook.com
+ ([fe80::4c84:af62:dc60:fd9%5]) with mapi id 15.21.0496.015; Fri, 9 Oct 2026
+ 16:49:58 +0000
+From: "Popov, Pavel E" <pavel.e.popov@intel.com>
+To: Logan Gunthorpe <logang@deltatee.com>, Bjorn Helgaas <bhelgaas@google.com>
+CC: Jim Chow <jim.chow@broadcom.com>, Radu Rugina <radu.rugina@broadcom.com>,
+	Alexey Makhalov <alexey.makhalov@broadcom.com>,
+	"bcm-kernel-feedback-list@broadcom.com"
+	<bcm-kernel-feedback-list@broadcom.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 1/2] PCI/P2PDMA: Allow P2PDMA in VMware guests on Intel
+ hosts
+Thread-Topic: [PATCH 1/2] PCI/P2PDMA: Allow P2PDMA in VMware guests on Intel
+ hosts
+Thread-Index: AQHdWASb0EIL+J0ZIUasS7OKh5t0E7b1aRgAgAAC8VA=
+Date: Fri, 9 Oct 2026 16:49:58 +0000
+Message-ID: <LV2PR11MB6070C7674957111187A8D68AB2922@LV2PR11MB6070.namprd11.prod.outlook.com>
+References: <20261009154034.82321-1-pavel.e.popov@intel.com>
+ <20261009154034.82321-2-pavel.e.popov@intel.com>
+ <91b08b3e-49dd-434e-a439-b3453c5ec3f3@deltatee.com>
+In-Reply-To: <91b08b3e-49dd-434e-a439-b3453c5ec3f3@deltatee.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: LV2PR11MB6070:EE_|PH7PR11MB7025:EE_
+x-ms-office365-filtering-correlation-id: 9e13fa2e-e606-4dd5-9887-08df26255a5b
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|366016|376014|23010399003|38070700021|4143699003|56012099006|11063799006|18002099003|22082099003|10067099003;
+x-microsoft-antispam-message-info: QDmVeoSTbS8qhGPJxQkC40lVpLlQzrs9FytjMoT5YGGfr9lw+PqXk5Nmn0hk8KXOgPPLN/U6gu4qAuFwvroYgIakfK1a6SB0e2MzMAQncgG38/izUYirOx4yTfgc2Z9MdU3M5dHgBclITFOObXu6NSiaaNEKjnkOOY4nTvMc18q758c26DeEgUFUc1G1SggYliiXXveJScFY/SJPuDZ/y1A03RJnA9j37Z/TnRjyhR10yevp2SKTXR8nQnmflBpuVD19JtHXURBpWXuXiZZsnCZ7VyxqGPrDQ/WSNQqVmfck2Qu8JbGSetY3Mrep+zOfEDLN7qBDYi2T/wv2IQzFKIQISCm2Dgz6WdRBevWklp7BhwCZVJy4CLLpeaWnqJFlm9lj7kqqJC2JDzDYa/Pl/mvQ4m5K32hVhgXXAlV8gua1p+nkjzydA+sH4SN64IXHMRp/F50Ea22S2DIgWV4ssjlGX5aRRqgXtEIgzG0uD0upWQfL6XJanT1VEcSUuXpYwbHl1w3rVTPY20Mh9azrWDBJ0bt2SQfWzUZ17YRa43T/Cfx+c6nNHs25/k8SrJDQOq/X6XUvwlz0WVsOe5TwtsVyDw8WAA0FxGZOJC9PAVP05AEhYf6BYBFvy/0kbk7SUN3eJJkjt/J1rncyRsS9Izox/kj0fowfiBB/GwX31m6qEH+f0Dmiu8ecO/YESJjf8mgl56NxUd7T11MoD00I4VAUvQXY/4ruyheEVwVX56c=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV2PR11MB6070.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(23010399003)(38070700021)(4143699003)(56012099006)(11063799006)(18002099003)(22082099003)(10067099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?ZFp1UjFvWHpzRkJra1RtRUNLS20wWUxlbXVYYlQ0MzNNaWlsdyt5aTFScFFT?=
+ =?utf-8?B?YTlrSzU0VGxydnhxRWpUeS9XalpvNGgrZEo5RytKN3JralhhdGVjaEV0ZVR2?=
+ =?utf-8?B?WFB3SVlwQUZNREw5M1hPYUtwMUxUZ1h2S1VkTWtNeTFFUi8vRG5ieHB0c2RI?=
+ =?utf-8?B?RlEvdzRHRzJodTFyM3dKTDMrSXZVZTlSU3JKbXF2L0hzRGVGZW96Mmx6Zk5i?=
+ =?utf-8?B?L252anpxaVNnQ3Nldkltd1MvL0VjM2FhM1hSMnpySEJnblFZUVNlVmVBMkR3?=
+ =?utf-8?B?c1UreldZSFlzS084TTZEbjQyWG1WbENqbkpXMlFMMUVaN1ZyaUQ5QXlYMjBW?=
+ =?utf-8?B?MXVrbjRWSWt0UGp4Y0drZFpGQytrRDdZZ05EMVFmRmI0RTV5OGJQVUpNK2c4?=
+ =?utf-8?B?T24yNGpKbGc0VWFCRmJFMjRYMVAxM0lTZCtXYXdlRDlvd2FJVG9jY0xTZkM1?=
+ =?utf-8?B?RUJXV0liZjIwZDc4UkI4WjVqdWVvQlVPL0VXWHhBc1QwNjlUMkJiY3lKZ1NL?=
+ =?utf-8?B?M0IrS3JkRkVuQ09KWjdGbHlkVlpvSVdWaFJxVFMrcWdnTC9ob1o5WUN3VWEw?=
+ =?utf-8?B?Z1R6TnZtaHpRa3pLYjYzc0w2R1ZTZ2d5bStqbVg2bDhueXl0VmpLSDB6bUFx?=
+ =?utf-8?B?SHNqRHRrWm12RnpoNHJVK3k5dEpqUmdTT2IyVm9aY1RMdm5xa2ZUMVZtZ1c2?=
+ =?utf-8?B?ZlIyQnFXSkNLRnNOdmNmQ1hNczBwTXloUnFZblM1clJrcytXZmFjVG01K0NX?=
+ =?utf-8?B?VEdPSmY5VEdqUWF3emhmeXJDN1FBQVpwZHVtd0hYVVlIYlRjd2lkT0EyMUI1?=
+ =?utf-8?B?OUNLeGJRWXdVR2w2Vmhzdjhmak9aRHc1aDFFWkNZdnFBRFFXbEFKVXY3U09F?=
+ =?utf-8?B?YlpNV0cyK0FZMHJhUTIyVmtRcWVFeWUrRU5wd0M4RVYwV0xmZk1JVFdxOVFG?=
+ =?utf-8?B?eDNJVEJmd21uclVjWkZMQW5Jck9wSE5yQnlYV0hTYVRKWktHdnhnRGRtRHdX?=
+ =?utf-8?B?SlEvMWprUjVvNFFBek5Jd1VTZkJrd1A0T09iMnRLeTBHNm9VNG55b2c3dkwv?=
+ =?utf-8?B?QzVaUnZKR2JUdDVsOUxGdXZNendsV0lRemp3dkNHTmVLZjIvcWdiaXh5dUpL?=
+ =?utf-8?B?MVJ3QWszQkdnalNvdlQrZHpzcDluR3dpb1Y0TjJrOFhHams4OTFVTy82cmhL?=
+ =?utf-8?B?VVFxSnBOUUhPajAxMk1hZXZIcjNncU53Tzg5V2hReXVpZHQ3U0xqQVhPN2x1?=
+ =?utf-8?B?THg1VlpiMVFpYko0RkptUzU0ZzVzWnNBRlhVWnBXVWVIemFtaGtzUjZqYjVM?=
+ =?utf-8?B?eHlsQy90TTVWUUxUVm15amdGRytlZWhPaUdsTDRkUWZjQk9vRnY3RnQzZ1c2?=
+ =?utf-8?B?NWtRWnJZcDZxUy9jL1hTMENYeWFLc2dXWE8wWjA5Y2lwbzF2S3FtSDR3TEdl?=
+ =?utf-8?B?VDZQSFBnQ1pJOEttbUtvUFlRTDQ3b1lud3AxdjBJNi9hU0E4NlVTUVZqM3Ew?=
+ =?utf-8?B?TGViSi83Vm84MnU3WWVkV3NiUjVOK3c0ZVlCUG5sblY3c1JmbENGeFIwbHRE?=
+ =?utf-8?B?Sm42TFpTU0IweG1VQWh2UXpSOGJ4ODI1QWw0a2tyc2dWNTRkUVhiWm5MYVFG?=
+ =?utf-8?B?dFlsZ3dOVFJpWDhjbFBxMGFQandiOXBSYS94QXlIWitwYkp3b1pDZCtsM0Zp?=
+ =?utf-8?B?L1F1RmV6SjFFdGZjc1JmbFc2aVpDOXhZYUVmY2pCUnRabE9UVlpnbEZlT3pI?=
+ =?utf-8?B?QktuODBhenQ4RlR6VFFHMFZGRkFaUjhhU3BuSE9sM3dZSVF6WXZXbGxISnlZ?=
+ =?utf-8?B?VDlLUFdsU08vaFQ5d3QwWURMeDk2di8vbGdvbjJjM09wdG5xM3hYMUxRYm5V?=
+ =?utf-8?B?dXd5L0JHQXlaeGYyMjAxWnhDWUhuUU4xN1dDTkV1bUVTNnJrcnF4TGtEWEVW?=
+ =?utf-8?B?cHpaajM4di96V2Z6eW8xZmVmYkI3YXJ1dDZ4YTVQWnE2Ym4rTUVyR3ZSNHZj?=
+ =?utf-8?B?M3RBM0Q2SEphczhLK1NQRkMvbmNEaWdqaTFuREd4NnF5aTdvQ283MDdabGF6?=
+ =?utf-8?B?VTRocmF4Si9udk1odFFvRzlVTTBQd0tFeWpCTUpsZ3VCait4aEQyK1M5OFVz?=
+ =?utf-8?B?L2I5aGY4dVRNMTlNR04wQXJndmplRFZneG9GS0IwVWFSZ3BQcGJXUEVoRGdm?=
+ =?utf-8?B?OUw3dUYyc09vZGdFU05KU2dPTkZpZTFLM0xSSlh4NmdQTFdkNWtkMU1INUEz?=
+ =?utf-8?B?NEpzbmp1b3hYVWxxY0d3T0ZaZHI3OWs5ZUFvLyswWk40Rm9PdDR0MTRwYUQ4?=
+ =?utf-8?B?Wm4xdVVISFJzVXdzcWl3NmlYQlR5M0pVcEliSk5LeHViMS94ZnNWdz09?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20261005-monza-wireless-v7-0-5a6de7662dcb@oss.qualcomm.com>
- <20261005-monza-wireless-v7-5-5a6de7662dcb@oss.qualcomm.com> <bc7730e4-8b47-4c2b-84ef-277749f2aab8@packett.cool>
-In-Reply-To: <bc7730e4-8b47-4c2b-84ef-277749f2aab8@packett.cool>
-From: Loic Poulain <loic.poulain@oss.qualcomm.com>
-Date: Fri, 9 Oct 2026 18:40:06 +0200
-X-Gm-Features: AclHuK9ldJgKtc_xURMW1e6eF51wDo8WFdbnPxmGKItG6GLqTwM1Bp8vW5CtXNc
-Message-ID: <CAFEp6-3Mt-CCJEz=RAJUh6pxH-Ssgkqfx3QQfyzvS9HwzFp9QQ@mail.gmail.com>
-Subject: Re: [PATCH v7 5/8] Bluetooth: hci_qca: Support QCA2066 on M.2
- connector via pwrseq
-To: Val Packett <val@packett.cool>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-        Bartosz Golaszewski <brgl@kernel.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-        Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-GUID: vUxNV6FYowEoNYUjAQpcta80V2xAJ4BI
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDA5MDA2NiBTYWx0ZWRfX2sCJdgkaypLp
- tE4TZOoe3py9/KiBSsQ/KzoV7x2T4pM56jc3nj/RmcnXHwBwsvsDYf2P+8CZAVsmjWmMMzdZbkg
- 35zx2zEdpaPRCLPDuHRPzR8w64Ibykg=
-X-Proofpoint-ORIG-GUID: vUxNV6FYowEoNYUjAQpcta80V2xAJ4BI
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDA5MDA2NiBTYWx0ZWRfX1bvnPoUNZYO9
- edrU4bbmIGYBLg5xD+XJoGW5KU7d0GBYxrBVc9OxdpNPjX9V7WZJucC6kZ2i+s92c3CWxSQYmny
- SqpT4p0abzNWH7W7Ve9FYnkWLG+M0P8bQYMk4NqQZNbbqtaOufvBUAFWPrTQir9Au+kFwGNKAT+
- y4IQ2uMr8/Sw+lZKfMRDs5U1w4HaGN8mg3Ho9WowBYTeXnMXkYCYyz1wuGSt3GNOnpNE2n9z9hd
- rrUdVfclhK5Dba1eper6vs8RUL6g1WA3yCRU6eME3jiAG8xFkwvPBlt4RbDiAHHQNKWOdHX8tsL
- woxK87mq8n2jMWxp7Iqd/Wa/hqa08tjTdGbOU23Lyz8WFdRgbICA/8jktH0bNh4Y5/Vf9Uskat7
- rzxL5xcT2u1mOre5iqgr1gvekQA1acrWvcFA1vjTcG8v7ZliHLUyIUi8lFDMHJvRkLwZI8ctZpe
- ik+ZIYBCvu4KBP232rw==
-X-Authority-Analysis: v=2.4 cv=YIUKWhGx c=1 sm=1 tr=0 ts=6ac918f3 cx=c_pps
- a=50t2pK5VMbmlHzFWWp8p/g==:117 a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10
- a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=ZpdpYltYx_vBUK5n70dp:22 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
- a=Zz9X-WFLHu0qX2yPYA4A:9 a=QEXdDO2ut3YA:10 a=IoWCM6iH3mJn3m4BftBB:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-09_04,2026-10-09_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 malwarescore=0 adultscore=0 bulkscore=0 impostorscore=0
- phishscore=0 spamscore=0 clxscore=1015 suspectscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610020000 definitions=main-2610090066
+X-Exchange-RoutingPolicyChecked: rni5u6AE6Vyj29sQ/Y9MGYREPngJM7P9KUZFHBtkripNLR5/4Ac5lBygPKHONYc65mxXIXKn7a7B6C/xk0p885FUueXFN2NfFun5cYovDWy8vCO4IGX5MJaZxVtlEVX7TUzvCV2ABONyeStZPmBHbdO18nvt4+R7I2Y8IZ40gnFFiia7gQqlN5rYTVfMGPLEpPrU21UP4e8geLrtAqQZPSfOduJKLFSxNmZO7WJ14yTRq9vz70i98G8GEF1OD+ct+ug+7gQTqAl/xwY0UfgJKD0zqrYQZ2G8XTu9NWnmfnsqv/IEzZ2pwS8ShLEqnivt7S2AixNSdUWMZKJm5wgpPQ==
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: LV2PR11MB6070.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9e13fa2e-e606-4dd5-9887-08df26255a5b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Oct 2026 16:49:58.0903
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 40ZVRzvb738xqcQo0Iv7qH7JCBA02wFyU2a1OPEVRxLhKZLp8QapHaZyVmICzsHOo/Kb+vskhMfRt1C/4/4nUQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR11MB7025
+X-OriginatorOrg: intel.com
 
-Hi Val,
-
-On Thu, Oct 8, 2026 at 12:58=E2=80=AFAM Val Packett <val@packett.cool> wrot=
-e:
->
->
-> On 10/5/26 9:21 AM, Loic Poulain wrote:
-> > For QCA2066 (and other QCA chips) on M.2 connectors, the UART enable is
-> > controlled by the W_DISABLE2# signal managed by the pcie-m2 power seque=
-ncer
-> > rather than a dedicated BT enable GPIO.
-> >
-> > When the serdev controller has an OF graph (indicating it is connected =
-to
-> > an M.2 connector), acquire the 'uart' pwrseq target from the connector'=
-s
-> > power sequencer and use it to control BT power instead of the bt-enable
-> > GPIO. This is factored out into qca_serdev_get_m2_pwrseq().
-> >
-> > Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-> > Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-> > Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-> > Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
-> > ---
-> >   drivers/bluetooth/hci_qca.c | 47 +++++++++++++++++++++++++++++++++++-=
----------
-> >   1 file changed, 37 insertions(+), 10 deletions(-)
-> >
-> > diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
-> > index 1d27ff98034ba99d0783e48db5c605f3b31117ea..b6ec1a57248e2cf4bd13889=
-8ffc5cad45b1b4a8b 100644
-> > --- a/drivers/bluetooth/hci_qca.c
-> > +++ b/drivers/bluetooth/hci_qca.c
-> > @@ -1875,6 +1875,9 @@ static int qca_power_on(struct hci_dev *hdev)
-> >                       /* Controller needs time to bootup. */
-> >                       msleep(150);
-> >               }
-> > +
-> > +             if (qcadev->bt_power.pwrseq)
-> > +                     pwrseq_power_on(qcadev->bt_power.pwrseq);
-> >       }
-> >
-> >       clear_bit(QCA_BT_OFF, &qca->flags);
-> > @@ -2396,6 +2399,34 @@ static int qca_init_regulators(struct qca_power =
-*qca,
-> >       return 0;
-> >   }
-> >
-> > +static void qca_serdev_put_pwrseq(void *data)
-> > +{
-> > +     pwrseq_put(data);
-> > +}
-> > +
-> > +static int qca_serdev_get_m2_pwrseq(struct qca_serdev *qcadev)
-> > +{
-> > +     struct serdev_device *serdev =3D qcadev->serdev_hu.serdev;
-> > +     struct pwrseq_desc *pwrseq;
-> > +
-> > +     if (!of_graph_is_present(dev_of_node(&serdev->ctrl->dev)))
-> > +             return 0;
-> Seems like of_graph_is_present does *not* return false for the existing
-> (non-connector) setup which is currently used in all the laptop device
-> trees..
-
-If I understand the issue correctly, this can only occur when a UART
-'port' is left unconnected, in which case the failure is legitimate.
-The laptop device trees should be fixed accordingly, either by
-connecting the port to the corresponding M.2 device or by using the
-usual Bluetooth UART child-node approach. I don't see this issue in
-mainline.
-
-Regards,
-Loic
-
-
-> > +
-> > +     /* The pwrseq is looked up on the serdev controller (which holds =
-the
-> > +      * OF graph to the M.2 connector), but its lifetime must follow t=
-his
-> > +      * serdev consumer device, not the controller. So acquire it with=
- the
-> > +      * non-devres pwrseq_get() and release it via a devres action bou=
-nd to
-> > +      * &serdev->dev instead of using devm_pwrseq_get(&serdev->ctrl->d=
-ev).
-> > +      */
-> > +     pwrseq =3D pwrseq_get(&serdev->ctrl->dev, "uart");
-> > +     if (IS_ERR(pwrseq))
-> > +             return PTR_ERR(pwrseq);
-> > [..]
->
-> So this returns EPROBE_DEFER and bluetooth gets deferred forever :(
->
-> ~val
->
+PiBUaGUgY2hhbmdlcyBzZWVtIGZpbmUsIGJ1dCBvbmUgbWlub3Igbml0IGZyb20gbWUuIENhbiB3
+ZSBhdm9pZCBwdXR0aW5nDQo+IHRoZSAjaWZkZWZzIGluc2lkZSB0aGUgZnVuY3Rpb24/DQoNClN1
+cmUsIHdpbGwgZG8gaW4gdjIuIFRoYW5rcyBmb3IgdGhlIHJldmlldy4NCg==
