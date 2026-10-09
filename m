@@ -1,216 +1,174 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 758B254704A;
-	Fri,  9 Oct 2026 08:23:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70D8C3D34B3
+	for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2026 08:29:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791534218; cv=none; b=ME0+cw5mXb151h7Pu1WFVIZgnZ7u4bOyLkGzkrUO8Gz3mFSlY7idwJRbiXrV9Up7SrLh9QyMlLpsZjWYGT78lxDDiU1A6z12qSWG9JvmDSW9TTLXn2cwl7ditmGh6hximES652NXxel531kaPDYUaKLuzfpVi5NQ3/mn6zDqFb8=
+	t=1791534564; cv=none; b=AlabDYrIjGr7/p2C2lS4A/wew0H1rUZ3h4EP2j5FxPFrGwOrct90dsEu5RLezFQmFC9PHK51L6UHeNpt0Nmox0TDWTaJ1vTRuHXmd7BX44bTEe/at4PVFrEiyt5DsKvXQY3/x62dXhqacZ6p3GbhVFPGEAL83uVG9yQVq5gycpc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791534218; c=relaxed/simple;
-	bh=gggIcvDi1Kamka+2Wr5Uq30ugAZ8LZFnnxuWabjVRdA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UsZyJGaUxS4frv96Ez87gZlSNcvFVaQVNIEMpgeHxIBW2m8O1io/XJlDKv/YCOjx0oG7EDbmXfV2BZ5rqFnWViEUVu9VFXZiK0WQ5+fnqpeOMlwN4wjPZ5g197a/ezZrcW1QoVSi6PHrCNuq+fX1GTomgo9Zz8U3Xb3tO45X+/Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 983F021B63;
-	Fri,  9 Oct 2026 08:23:35 +0000 (UTC)
-Authentication-Results: smtp-out1.suse.de;
-	none
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 375B61368B;
-	Fri,  9 Oct 2026 08:23:35 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id Az2LAYekyGqwFAAAD6G6ig
-	(envelope-from <jgross@suse.com>); Fri, 09 Oct 2026 08:23:35 +0000
-Message-ID: <90cc2e5c-8e45-46bb-8a06-d80be43cb36c@suse.com>
-Date: Fri, 9 Oct 2026 10:23:34 +0200
+	s=arc-20240116; t=1791534564; c=relaxed/simple;
+	bh=JwCvDd5YzyK7COQjFOilO+tgzZeBuXPZW2kTiC91m14=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=nQg0l52prXm+0p+yQgXFJ75iLOO7fRRCLKuuIPEmoZE+AuUxMLvGtQPxJHakx2Ip3uD78HgbGNgOY60C/F086Bqwjh3wNOMzPQVh34vANiwYVyaNzcufPDqB8Xjdk0CMMlwe0F7rA5+Z03jLfR0lBd6TjNLeFuUPBmO58pdMcRI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hvDTc0BZ; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=PexE9nYK; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hvDTc0BZ";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="PexE9nYK"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6998KHBw906834
+	for <linux-pci@vger.kernel.org>; Fri, 9 Oct 2026 08:29:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	7Lfj6oSCKPER8z+P3DkIH58XgLvSuXtrBMTqgQC09sw=; b=hvDTc0BZhw3sQkyr
+	kLrYI23ohlUDBErsLIm4Af6CvSE/HSU6Ze/XKZtwOFHdtozaz07r4vOQEGgSpLSM
+	fM3UxiWrzFOzhvtFi4USRX4T5juE3F5TUm1lLWcW7+mTVOGEryu8DTbB0rPycUox
+	fBvVu6pw3x2ngMbQVyTINZAgAB8LXoiyObkKrR60JchD4F5+uhN2EjIPaRKB7r45
+	99qRoPVpNWMxxg/A2r9x8XBMU8lnna90ekEihJHWRNg8OzO6ypfoIqOqeP2AGqQh
+	MuUgB62Mck2892KtG0Xk9W6Qr+828c6clEvBBimRvJ8AUyCl2Fxau0ksjPoaqDBn
+	szWIww==
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com [209.85.222.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h6fmqtsee-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2026 08:29:22 +0000 (GMT)
+Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-93cb98809caso902952985a.1
+        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2026 01:29:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1791534562; x=1792139362; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=7Lfj6oSCKPER8z+P3DkIH58XgLvSuXtrBMTqgQC09sw=;
+        b=PexE9nYKFlqrUr90a1+bqh5ZRfideJCGxqXv7qn4Hob3irfhjLgcGld2ps4+hHra4F
+         7qAshmc8+voiwooKzqpPKfiE3pKATWozVs3YowoiUjUnFjv/rWS07Lb3/lxrb6CPItky
+         eMJC2a8MI8sZdNW61A6g3nsVHAPGCegnYQkKP9eppcY6qeby6oqgeDOtpdbfB+lRb2fI
+         00H7HNYxqz6kXdznvtuqy3pnm/HXVraKysadt7/dncOTZ1KkbqhzQ0wwcAjsp2rFzhF/
+         4sxjhBGmlG/8+ejGvNdkCqWveV0Z2sJYRn/JOHF3XgHdk/igpyaO4x/PyFXyUx7ZzSbE
+         hLNg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791534562; x=1792139362;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=7Lfj6oSCKPER8z+P3DkIH58XgLvSuXtrBMTqgQC09sw=;
+        b=VFll5HnzCTK//uFydRNm9dTSIcuy+CduWiwgCTNHaWiHzEgtkegSf/GCcwDKLwAHEQ
+         AXLsTSr+ZdvzWQkEEBJNd34alIr4Ge8M6U1xg8Bv08MPPj7231myxVFSGoo8kZ6Vmh3c
+         hrJgOrqEkDdH8vJJBGo6CL1/MT/11eeGNueffPdehwHXWTVXjCFZKfrr8FVnrcvL+XUj
+         6y8m6CbfvM5oYDBbrmxYCsjvNNAlRbq2b8YUolqR7M776REi90YKnDVdBRDQ5mxuKdZO
+         7RDodpREEazAtpV9DgFlb9TNh6Za+xv6BIDx3xQNyEj3Z3ChCtg4Hm4EHKQAb2IpEEOH
+         Ft7g==
+X-Gm-Message-State: AFuF++mv314RmEM4LOW9qCSaqyHV3ccorbbVq777AVS8PZGbcx5tEOzZ
+	1MuBPmE4l9Gitd1XtQnYJb6MWtzlhUABFH/RtlTV/2yxUpQQoS8kJwzHwC6eqjIJRyrEpOUmbwx
+	MoALU1it9gAAIo5rCPASZjKj39GLRuSseNlT4Auqazz4dAXV0hIdtYaR6FE27oIE=
+X-Gm-Gg: AYBFou3DfbDQIOXZ2r8zV9nsCMeW3DcQGTDvmZJmvlv/vZpSppZ549AWq0koNv8iT4G
+	ga6R93AkwYadTMWxJUPpEt2qm4F2C5ss+OSA+6e4kdnGsV1xV7/R+F1evyf67EFHx5PA2gq1FDT
+	VuLUq+ZXUiOJz3g3qYXJYIXtZ41y5HHt8eWrcD/8T8T0nH1wODmug3tn02ZeWC0/phnku+x1aL7
+	AOhzc+fr4enrNUlAQ2CSQVW+aTFLj293oiWG/S98xU2YgOFqdSd/7a7N1ptSLIKh8As7mVZiqqX
+	VYqWJCbQpDeV0A02j4F9iNOgZB/OEajtpsxblZI0XTxfuuMUoIRXwjD/FlfreSpxCDfbtv9liHN
+	XUcZYZ16TwW6QQBpKxsboT663RnhLmg7LrjajMIoIi/B0zm6mX0OHAMVJXZP6mH8djLIOoohCR2
+	toBgkz7C2gU6Gj
+X-Received: by 2002:a05:620a:8088:b0:93e:c12c:f11a with SMTP id af79cd13be357-93ec12d0581mr47266885a.70.1791534561618;
+        Fri, 09 Oct 2026 01:29:21 -0700 (PDT)
+X-Received: by 2002:a05:620a:8088:b0:93e:c12c:f11a with SMTP id af79cd13be357-93ec12d0581mr47264385a.70.1791534561145;
+        Fri, 09 Oct 2026 01:29:21 -0700 (PDT)
+Received: from umbar.lan (2001-14ba-a073-af00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a073:af00:264b:feff:fe8b:be8a])
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3a9c3caab0asm4295171fa.18.2026.10.09.01.29.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 09 Oct 2026 01:29:19 -0700 (PDT)
+From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Andrzej Hajda <andrzej.hajda@intel.com>,
+        Neil Armstrong <neil.armstrong@linaro.org>,
+        Robert Foss <rfoss@kernel.org>,
+        Laurent Pinchart <Laurent.pinchart@ideasonboard.com>,
+        Jonas Karlman <jonas@kwiboo.se>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        Luca Ceresoli <luca.ceresoli@bootlin.com>,
+        David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        Maxime Ripard <mripard@kernel.org>,
+        Thomas Zimmermann <tzimmermann@suse.de>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Bartosz Golaszewski <brgl@kernel.org>,
+        Linus Walleij <linusw@kernel.org>, Xilin Wu <sophon@radxa.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, devicetree@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-gpio@vger.kernel.org,
+        Stephen Chen <stephen@radxa.com>, Junhao Xie <bigfoot@radxa.com>,
+        dragon@radxa.com,
+        Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
+        Daniele Briguglio <hello@superkali.me>
+In-Reply-To: <20261009-q8b-dts-v2-0-eda11e5dea8b@radxa.com>
+References: <20261009-q8b-dts-v2-0-eda11e5dea8b@radxa.com>
+Subject: Re: (subset) [PATCH v2 0/4] arm64: dts: qcom: Add support for
+ Radxa Dragon Q8B
+Message-Id: <179153455955.2970577.14103639336377928226.b4-ty@b4>
+Date: Fri, 09 Oct 2026 11:29:19 +0300
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xen/pcifront: Fix PCI device reference leak in
- pcifront_common_process()
-To: Wentao Liang <vulab@iscas.ac.cn>, bhelgaas@google.com
-Cc: boris.ostrovsky@oracle.com, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, oleksandr_tyshchenko@epam.com,
- sstabellini@kernel.org, u.kleine-koenig@pengutronix.de,
- xen-devel@lists.xenproject.org, stable@vger.kernel.org
-References: <20260917132944.2153421-1-vulab@iscas.ac.cn>
-Content-Language: en-US
-From: Juergen Gross <jgross@suse.com>
-Autocrypt: addr=jgross@suse.com; keydata=
- xsBNBFOMcBYBCACgGjqjoGvbEouQZw/ToiBg9W98AlM2QHV+iNHsEs7kxWhKMjrioyspZKOB
- ycWxw3ie3j9uvg9EOB3aN4xiTv4qbnGiTr3oJhkB1gsb6ToJQZ8uxGq2kaV2KL9650I1SJve
- dYm8Of8Zd621lSmoKOwlNClALZNew72NjJLEzTalU1OdT7/i1TXkH09XSSI8mEQ/ouNcMvIJ
- NwQpd369y9bfIhWUiVXEK7MlRgUG6MvIj6Y3Am/BBLUVbDa4+gmzDC9ezlZkTZG2t14zWPvx
- XP3FAp2pkW0xqG7/377qptDmrk42GlSKN4z76ELnLxussxc7I2hx18NUcbP8+uty4bMxABEB
- AAHNH0p1ZXJnZW4gR3Jvc3MgPGpncm9zc0BzdXNlLmNvbT7CwHkEEwECACMFAlOMcK8CGwMH
- CwkIBwMCAQYVCAIJCgsEFgIDAQIeAQIXgAAKCRCw3p3WKL8TL8eZB/9G0juS/kDY9LhEXseh
- mE9U+iA1VsLhgDqVbsOtZ/S14LRFHczNd/Lqkn7souCSoyWsBs3/wO+OjPvxf7m+Ef+sMtr0
- G5lCWEWa9wa0IXx5HRPW/ScL+e4AVUbL7rurYMfwCzco+7TfjhMEOkC+va5gzi1KrErgNRHH
- kg3PhlnRY0Udyqx++UYkAsN4TQuEhNN32MvN0Np3WlBJOgKcuXpIElmMM5f1BBzJSKBkW0Jc
- Wy3h2Wy912vHKpPV/Xv7ZwVJ27v7KcuZcErtptDevAljxJtE7aJG6WiBzm+v9EswyWxwMCIO
- RoVBYuiocc51872tRGywc03xaQydB+9R7BHPzsBNBFOMcBYBCADLMfoA44MwGOB9YT1V4KCy
- vAfd7E0BTfaAurbG+Olacciz3yd09QOmejFZC6AnoykydyvTFLAWYcSCdISMr88COmmCbJzn
- sHAogjexXiif6ANUUlHpjxlHCCcELmZUzomNDnEOTxZFeWMTFF9Rf2k2F0Tl4E5kmsNGgtSa
- aMO0rNZoOEiD/7UfPP3dfh8JCQ1VtUUsQtT1sxos8Eb/HmriJhnaTZ7Hp3jtgTVkV0ybpgFg
- w6WMaRkrBh17mV0z2ajjmabB7SJxcouSkR0hcpNl4oM74d2/VqoW4BxxxOD1FcNCObCELfIS
- auZx+XT6s+CE7Qi/c44ibBMR7hyjdzWbABEBAAHCwF8EGAECAAkFAlOMcBYCGwwACgkQsN6d
- 1ii/Ey9D+Af/WFr3q+bg/8v5tCknCtn92d5lyYTBNt7xgWzDZX8G6/pngzKyWfedArllp0Pn
- fgIXtMNV+3t8Li1Tg843EXkP7+2+CQ98MB8XvvPLYAfW8nNDV85TyVgWlldNcgdv7nn1Sq8g
- HwB2BHdIAkYce3hEoDQXt/mKlgEGsLpzJcnLKimtPXQQy9TxUaLBe9PInPd+Ohix0XOlY+Uk
- QFEx50Ki3rSDl2Zt2tnkNYKUCvTJq7jvOlaPd6d/W0tZqpyy7KVay+K4aMobDsodB3dvEAs6
- ScCnh03dDAFgIq5nsB11j3KPKdVoPlfucX2c7kGNH+LUMbzqV6beIENfNexkOfxHfw==
-In-Reply-To: <20260917132944.2153421-1-vulab@iscas.ac.cn>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------mMsoEsECVXshZ3a54icb6Ldr"
-X-Rspamd-Pre-Result: action=no action;
-	module=Unknown lua;
-	unknown reason
-X-Spam-Flag: NO
-X-Spam-Level: 
-X-Rspamd-Pre-Result: action=no action;
-	module=Unknown lua;
-	unknown reason
-X-Spamd-Result: default: False [0.00 / 50.00]
-X-Spam-Score: 0.00
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15.2
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDA5MDAzMiBTYWx0ZWRfX7fDXZNfDeZo+
+ AhKwyKnf0b8DUxEpdqQaQg/5euQKVa0D7e38/8JP5F+SZEXWCxPMB3ax9fmTSqpMk7YHr6rl+kG
+ bNW1wH2iIf9eVinORvJkdh8I5rLzR38=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDA5MDAzMiBTYWx0ZWRfX2ZO/bc3OsupI
+ z1nU0bJwmYUiZx5rjegG3u/Ka4AFJ3o4x+w5Z4WmoQfgMFuqvlVnraUuo5LgxOsGsouEnt9mFpE
+ iwys2JZL+aGxRAmNy2zHq6KfruZ7UYf5Y835b4TXJF4F6Q6eH8EiQkbyDFSdVrQwA6ddjiUbuw5
+ s3QraekfxKSt5WSmkncj/PpRvpze+YLgI/9931J1SXsPPWtegWGVBZJrcG0oJGC2qgUxlvfIyQj
+ h0tEBFTtyDALtiLVhxb6/lNUH6vd9oBUl7lOa+GQOGF+BmcqT/XWqqMkzTtT1skJM+Q2AP5Vhkg
+ iUbAHCuAMY0TIcaqsItAH3nJ9LO51h2iltPDrCF1WAj46DvClEBnVVWYjnsYyJoIz/0V45Qztb3
+ QP9xbgZPG3aCR658idKt0jRbH72m37ttKWXL0X9c2H+JX5z3Aol2rEGFeZGI38mgXulxEPsQtyV
+ H8LJnW+/we2EqjQAEiw==
+X-Proofpoint-GUID: G-QbAHdrQYWpA-XY3qj_eHdRCeeOUzdy
+X-Proofpoint-ORIG-GUID: G-QbAHdrQYWpA-XY3qj_eHdRCeeOUzdy
+X-Authority-Analysis: v=2.4 cv=IqCL47/g c=1 sm=1 tr=0 ts=6ac8a5e2 cx=c_pps
+ a=qKBjSQ1v91RyAK45QCPf5w==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22 a=qk-nXHHSopyJew9tVzIA:9
+ a=QEXdDO2ut3YA:10 a=NFOGd7dJGGMPyQGDc5-O:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-09_03,2026-10-08_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 phishscore=0 bulkscore=0 clxscore=1011 suspectscore=0
+ adultscore=0 impostorscore=0 priorityscore=1501 lowpriorityscore=0
+ spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2610020000
+ definitions=main-2610090032
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------mMsoEsECVXshZ3a54icb6Ldr
-Content-Type: multipart/mixed; boundary="------------gXANajgOhKNMZShjzPUCU41g";
- protected-headers="v1"
-From: Juergen Gross <jgross@suse.com>
-To: Wentao Liang <vulab@iscas.ac.cn>, bhelgaas@google.com
-Cc: boris.ostrovsky@oracle.com, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, oleksandr_tyshchenko@epam.com,
- sstabellini@kernel.org, u.kleine-koenig@pengutronix.de,
- xen-devel@lists.xenproject.org, stable@vger.kernel.org
-Message-ID: <90cc2e5c-8e45-46bb-8a06-d80be43cb36c@suse.com>
-Subject: Re: [PATCH] xen/pcifront: Fix PCI device reference leak in
- pcifront_common_process()
-References: <20260917132944.2153421-1-vulab@iscas.ac.cn>
-In-Reply-To: <20260917132944.2153421-1-vulab@iscas.ac.cn>
+On Fri, 09 Oct 2026 15:55:05 +0800, Xilin Wu wrote:
+> The Radxa Dragon Q8B is a single-board computer based on the Qualcomm
+> Snapdragon 8cx Gen 3 (SC8280XP) platform.
+> 
+> The board provides UFS and microSD storage, two M.2 M-key slots, an M.2
+> E-key slot, a QPS615/TC9563 PCIe switch, USB Type-C ports with DisplayPort
+> alternate mode, USB Type-A ports, HDMI 2.1 output, headset audio and
+> a 40-pin expansion header.
+> 
+> [...]
 
---------------gXANajgOhKNMZShjzPUCU41g
-Content-Type: multipart/mixed; boundary="------------LvJtMZGI3ErSL3r97uVzAYoM"
+Applied to drm-misc-next, thanks!
 
---------------LvJtMZGI3ErSL3r97uVzAYoM
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+[1/4] dt-bindings: display: bridge: simple: document Chrontel CH7218A
+      commit: 377682cf917027396211426c509cae5785305ba8
+[2/4] drm/bridge: simple: add Chrontel CH7218A
+      commit: f146c6086b792cb2c6b3ce5106f0cce62e408df8
 
-T24gMTcuMDkuMjYgMTU6MjksIFdlbnRhbyBMaWFuZyB3cm90ZToNCj4gcGNpZnJvbnRfY29t
-bW9uX3Byb2Nlc3MoKSBnZXRzIGEgcmVmZXJlbmNlIHRvIHRoZSBQQ0kgZGV2aWNlIHdpdGgN
-Cj4gcGNpX2dldF9kb21haW5fYnVzX2FuZF9zbG90KCkgYW5kIG9ubHkgZHJvcHMgaXQgb24g
-dGhlIGVhcmx5IGVycm9yDQo+IHBhdGguICBSZXR1cm5pbmcgZGlyZWN0bHkgZnJvbSB0aGUg
-QUVSIGhhbmRsZXIgc3dpdGNoIGluc3RlYWQgb2YNCj4gcmVjb3JkaW5nIHRoZSByZXN1bHQg
-YW5kIGZhbGxpbmcgdGhyb3VnaCB0byB0aGUgY29tbW9uDQo+IHBjaV9kZXZfcHV0KHBjaWRl
-dikgbGVha3MgdGhlIHJlZmVyZW5jZSBvbiBldmVyeSBzdWNjZXNzZnVsIGNhbGwuDQo+IA0K
-PiBDb2xsZWN0IHRoZSBoYW5kbGVyIHJlc3VsdCBpbiBhIHZhcmlhYmxlIGFuZCBkcm9wIHRo
-ZSByZWZlcmVuY2Ugb24gdGhlDQo+IHNpbmdsZSBleGl0IHBhdGggYWdhaW4uDQo+IA0KPiBG
-aXhlczogMzRhYjMxNmQ3Mjg3ICgieGVuL3BjaWZyb250OiBEcm9wIHBjaWZyb250X2NvbW1v
-bl9wcm9jZXNzKCkgdGVzdHMgb2YgcGNpZGV2LCBwZHJ2IikNCj4gQ2M6IHN0YWJsZUB2Z2Vy
-Lmtlcm5lbC5vcmcNCj4gU2lnbmVkLW9mZi1ieTogV2VudGFvIExpYW5nIDx2dWxhYkBpc2Nh
-cy5hYy5jbj4NCg0KUmV2aWV3ZWQtYnk6IEp1ZXJnZW4gR3Jvc3MgPGpncm9zc0BzdXNlLmNv
-bT4NCg0KDQpKdWVyZ2VuDQo=
---------------LvJtMZGI3ErSL3r97uVzAYoM
-Content-Type: application/pgp-keys; name="OpenPGP_0xB0DE9DD628BF132F.asc"
-Content-Disposition: attachment; filename="OpenPGP_0xB0DE9DD628BF132F.asc"
-Content-Description: OpenPGP public key
-Content-Transfer-Encoding: quoted-printable
+Best regards,
+-- 
+With best wishes
+Dmitry
 
------BEGIN PGP PUBLIC KEY BLOCK-----
 
-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
-kt+z4drzFUyEjLM1vVvIMjkUoJs=3D
-=3DeeAB
------END PGP PUBLIC KEY BLOCK-----
-
---------------LvJtMZGI3ErSL3r97uVzAYoM--
-
---------------gXANajgOhKNMZShjzPUCU41g--
-
---------------mMsoEsECVXshZ3a54icb6Ldr
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmrIpIYFAwAAAAAACgkQsN6d1ii/Ey/m
-3wgAjglIjBSKYXaGC2w43B7mNrPNirCK2TyXTOfygAaZnRdil6ktJl4XE6HZL7jVQlJJV2vg8/82
-SU7YQ/qvEylJPAp8yRe1xZnZnT0LigKEqi7b5g9wbhZqHtETYDPfLQhno8QsUQ6M/GktcfQoOOau
-cJSoxGX11eu+6Ux9BOD2upjnIgJkMucH+Xh/t26EyCyo/FDnWXqM4cw9PDG4bZA0kFf37oWq3Hmd
-bIMF2tFS+UeRi7HZ3DgvcTo4Btn96ekscxNSkTD+fyZC7SehN9YbMATBS4ImXv/JzEs8lP7jI6/F
-bCAn2vnK3sxf+x8JziwytIKbsTqe9Hz+BA5IbGw2Pw==
-=gIOM
------END PGP SIGNATURE-----
-
---------------mMsoEsECVXshZ3a54icb6Ldr--
