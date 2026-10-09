@@ -1,122 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 889943ACA79;
-	Fri,  9 Oct 2026 21:25:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7D6439448F;
+	Fri,  9 Oct 2026 21:49:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791581132; cv=none; b=JMt14c9LOU4YYACaKR4KncdZ9Citmm8qXWBvxcyZx/e8czxCYxRQAVVuzxg0tMMQPS08QlvufUJRwaD/j81RcQN0TFwINFlaPBrwejpUAkYilJza7078qwusz42T1ZLf70kQBIlQlOw5jY9pIyacTAouq99r0f1RVk55YJmEmL0=
+	t=1791582597; cv=none; b=UAnO4r4jo3UkRyzP3ge8e7obu8za0HOxHxlVEsnmjuW2yI183b5NkqSoM1ENceM2YeLU3BCvdfUBcV8OuxhpEaX/RJ4WIzo4BH6ddYH9csk12DdLenbipehctQef/pX2z1dPi4EdvrBeymKwXZRlqYq8N1fYi29/1KACjDtpK0E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791581132; c=relaxed/simple;
-	bh=GF/hRzdkM9oax0sZXclZWhkf4iXukA8CEAEnC9FsvDk=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=eAtzM1i6K74vhsFGD8N87tvUi5CRroGRjSuWmyC2gN6coxxkD5wZz9k0AbXLSMiCByeqiuAI39V6+1sCDixehNlPnKXE05O2n+AZO3P7JNBkl2aJuMotenkaueoFrSU7uOjQP9iC8A+LF/yh4GdUSNpG7UxUTKLz5pO2xx9xVFs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WcemQ2uf; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791582597; c=relaxed/simple;
+	bh=Kt+EaokHc+LBIbHph85M7DOGw9QfF7g48tkUbB+t8xE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=SL4Q3Lu2c4Abl7J3krvyZ8gk9igK9ZiX04Q90Gmls9QK9Z1U1FnzCFY01gRQ+uoaN26U5HMEDoRQ9q67LZoTDajkjWPOzwKTOcKEDdSsESmULMCbO3dTncD7x3jXy1GdUyToubPOaLNiZB/DaNbESBDkM79GUXSd5ufGlJZO+C0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IaHK+gqp; arc=none smtp.client-ip=192.198.163.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WcemQ2uf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDE131F000FF;
-	Fri,  9 Oct 2026 21:25:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791581131;
-	bh=Eujz6jCIPcMtVIbI/r2x9LxmPOalmVXRMT3jQiwiujM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=WcemQ2uf8ZGV3AkLlRVZbS0E1GNbGivMKVOJND5MaLSxczqCk4S0v1vr1tKo7uLX3
-	 X/cJ6wq9H/jVTMl32jw6Cj8wRaL551Vg0nVo4OsrSgGwz0roZJo7mSdjNf4rOmsaGo
-	 sNJj7+cCOfZdFb371B9JYg5TzZcnTkR6gzBvmQWIuBni5zPtOQHuW640QAInYCYCsC
-	 dMhHWiz9fVnI1YqEjo5Bm/A19lj4p6dJsQd++HlcD3Cv5Vx7jJkkl4cb7XZTR8HqCI
-	 U3WDzBUUqY9xyraIbghVQVKNQspifHsDCIeoFL3b0/NDIULtnR9A9d6CZmPYSFg+QB
-	 qnoCgjBxq7Mmw==
-Date: Fri, 9 Oct 2026 16:25:29 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
-	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: Re: [PATCH v9 07/18] PCI/P2PDMA: Answer routing per TLP class
-Message-ID: <20261009212529.GA1086940@bhelgaas>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IaHK+gqp"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1791582596; x=1823118596;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=Kt+EaokHc+LBIbHph85M7DOGw9QfF7g48tkUbB+t8xE=;
+  b=IaHK+gqpju0ZcCFbMn031lmgQriYSLlVj3wEa58i/cPhXJ8/4d+LQMd3
+   iO/Z+k6p3lLf3AsqOPAG56/8Bo4b/ipwfc3Ta/vNn8ZkQWcU2iKNYMaNo
+   cAioPTuUSZvD3F+4gC4M5w+3wYBih5dR9CmqOjEWTrgMsLovnHRoeZf2J
+   0wGrY3HJ9vVps4Y0lP6Jzzgrh9gqqba77gFVFj5TKqhUa58uW95+IM1bt
+   jbhdWPYyLalukYNrPV6f3duwy/3G4q0QFEq1vDX/VY2dYjVtiafeIWL/x
+   xLsNNaX967LRFghYOPtrLAJ01hoGf4LIGhOr3XPOzaXgsq5Z/d1sCFH5s
+   A==;
+X-CSE-ConnectionGUID: 11K7ypCgSP2w+7h13QLUQw==
+X-CSE-MsgGUID: s9d9B+EjRKaBBTAGCW6N8w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11930"; a="293049"
+X-IronPort-AV: E=Sophos;i="6.27,149,1787036400"; 
+   d="scan'208";a="293049"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2026 14:49:55 -0700
+X-CSE-ConnectionGUID: WVV4S8U2QieUEAL/iMtc1w==
+X-CSE-MsgGUID: cAOWbxIBQ4W5fBa4CZ0hXw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,149,1787036400"; 
+   d="scan'208";a="501412"
+Received: from ssimmeri-mobl2.amr.corp.intel.com (HELO [10.125.109.123]) ([10.125.109.123])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2026 14:49:54 -0700
+Message-ID: <af00b5c8-76af-499c-b8ba-0a2f51398c2a@intel.com>
+Date: Fri, 9 Oct 2026 14:49:52 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261001-fix-p2p-acs-v4-0-v9-7-1a8e0f50ddd9@nvidia.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/3] cxl: Fix link latency calculations and QTG latency
+ units
+To: Koichiro Den <den@valinux.co.jp>, Davidlohr Bueso <dave@stgolabs.net>,
+ Jonathan Cameron <jic23@kernel.org>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>, Dan Williams <djbw@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ira Weiny <iweiny@kernel.org>, Li Ming <ming.li@zohomail.com>,
+ Richard Cheng <icheng@nvidia.com>, Terry Bowman <terry.bowman@amd.com>,
+ Alejandro Lucero <alucerop@amd.com>, linux-cxl@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+References: <20261009045452.1107921-1-den@valinux.co.jp>
+From: Dave Jiang <dave.jiang@intel.com>
+Content-Language: en-US
+In-Reply-To: <20261009045452.1107921-1-den@valinux.co.jp>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, Oct 01, 2026 at 02:55:15PM +0300, Leon Romanovsky wrote:
-> From: Leon Romanovsky <leonro@nvidia.com>
+
+
+On 10/8/26 9:54 PM, Koichiro Den wrote:
+> Hi,
 > 
-> calc_map_type_and_dist() returns one mapping type per provider and client,
-> valid only for strictly ordered Requests carrying an Untranslated address.
-> Clients that use Relaxed Ordering or ATS cannot ask what the fabric would
-> do with their traffic.
+> This small series intends to correct the FlitLatency portion of the link
+> latency calculation, as per Intel CXL Type 3 Memory Device Software
+> Guide 1.1, and restore picosecond latency units for the QTG _DSM input.
 > 
-> Add enum pci_p2pdma_tlp_flags to name a class and pci_p2pdma_map_type_tlp()
-> to ask about one. The topology walk and the ACS Control reads do not depend
-> on the class, so decide all of them from the one walk and cache them
-> together, four bits each. Every class still answers alike; the controls
-> that tell them apart come next.
+> The first two issues were found while debugging a QEMU guest. The third
+> issue was spotted while looking through the code that uses the coord
+> values. I haven't tested it on real hardware.
 > 
-> Tested-by: Tushar Dave <tdave@nvidia.com>
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
-> ---
->  drivers/pci/p2pdma.c | 159 +++++++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 128 insertions(+), 31 deletions(-)
+> Best regards,
+> Koichiro Den
 > 
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index 841c86be31bb..43e225cc5735 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-> @@ -492,6 +492,33 @@ static struct pci_dev *find_parent_pci_dev(struct device *dev)
->  	return NULL;
->  }
->  
-> +/**
-> + * enum pci_p2pdma_tlp_flags - Properties of the TLPs a client will issue
-> + *
-> + * These describe the traffic rather than the topology, and select which ACS
-> + * controls apply along the peer-to-peer path. A value of 0 means strictly
-> + * ordered Requests carrying an Untranslated address.
-> + *
-> + * @PCI_P2PDMA_TLP_TRANSLATED: Requests carry an ATS Translated address. PCIe
-> + *	r7.0 sec 6.12.3 routes those to the peer regardless of ACS P2P Request
-> + *	Redirect and ACS P2P Egress Control wherever ACS Direct Translated P2P
-> + *	is enabled.
-> + * @PCI_P2PDMA_TLP_RELAXED_CPL: The provider returns Completions with the
-> + *	Relaxed Ordering attribute set. PCIe r7.0 sec 6.12.1.1 never redirects
-> + *	those, so ACS P2P Completion Redirect does not gate the path. The
-> + *	Completer chooses this attribute and the specification does not require
-> + *	it to copy Relaxed Ordering from the Request into the Completion, so a
-> + *	caller passing this flag asserts that its provider does.
+> 
+> Koichiro Den (3):
+>   cxl/port: Convert PCIe link latency to nanoseconds
+>   cxl: Account for link width in latency calculation
+>   cxl/acpi: Convert QTG _DSM latencies to picoseconds
+> 
+>  drivers/cxl/acpi.c      | 10 ++++++++--
+>  drivers/cxl/core/pci.c  | 22 ++++++++--------------
+>  drivers/cxl/core/port.c |  3 +++
+>  drivers/pci/pci.c       | 23 ++++++++++++++++++-----
+>  include/linux/pci.h     |  2 +-
+>  5 files changed, 38 insertions(+), 22 deletions(-)
+> 
+> 
+> base-commit: 71392a644e88c6bb921cdf12cb2b00adec070fe4
 
-It doesn't sound right to me that Completers choose the attribute.  I
-thought *Requesters* chose the RO attribute based on their design
-(knowledge about which transactions require strong ordering) and their
-Enable Relaxed Ordering bit.  Sec 2.2.9.1 says:
+Applied to cxl/next:
+2658c66a5efb
+db4503d4575c
+16440d6e4bf1
 
-  - Completion headers must supply the same values for the Attribute
-    as were supplied in the header of the corresponding Request,
-    except as explicitly allowed:
-
-    - when IDO is used (see § Section 2.2.6.4)
-
-    - when RO is used in a Translation Completion (see § Section
-      10.2.3)
