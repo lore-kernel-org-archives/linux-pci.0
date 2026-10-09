@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ED3A4D09F6;
-	Fri,  9 Oct 2026 11:42:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E9244DA9AC;
+	Fri,  9 Oct 2026 11:43:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791546151; cv=none; b=HSeVlAummYJtwBwrZ3pjaAt3bJDU3hk44n3oYXeZ64e0CWNs43cJuArQxKTbym9EPSMnK0TXnG5i5DuIKlgLkkKrHVr6S208bIZSTeoOpcZsr7SUg7y/p3lRcx85R0d/qe8iHmX/wP+mYJ4ZLowT7xX6TgTOkX1H+9VoNayMd/c=
+	t=1791546211; cv=none; b=gTjfsniEraOlNkb0Tw9sKYBUO8dtFz4uiQCtwuKVhEDY4fnxqFOcRez5PS5bee/va4ULc7t0raOAesHRGa82qgTUGPtI7VbowkDMlxfT1N12KwYX2+xth5hUx6HsNX0gsYFnPTjszcTfuYOZ/8Pto0vy3UxfxphgnmlkSOUms0E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791546151; c=relaxed/simple;
-	bh=SiDD6wYgmm7rgJEyyrD+Bv8XDtgENm3l2fUSJ/PRw9o=;
+	s=arc-20240116; t=1791546211; c=relaxed/simple;
+	bh=pJTK58zAmjDfhwIbFJdxlYqFa8gxhsBGASxcrE44yLE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=buNKPZPBPihg3Ac5BitKXNRXbC/E+87Yjb8/CQmH/zjmuPdkJsrzT4k6R/aLMbQut9wh7iSGrTrSwinme3Z8cuwMIbDyZN1pW34W84nYwuTmRMYb4xwj75FbPvctIhhPt+l4uYBhziBV7QWSq70J61iUiLTz0RD6NDS02rkQGyI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W3RHEniS; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=MAmEd2pYWD+m5yCEqRKf3BspTS7J+4+bIBefApYoAKEXaWUvXJklPScLiYK8mhFr8YB+AiGMy/p2+a1yn9tqSfO/4T5IHjug17t9dSzcAwkNPLqkLzVDrjNJnnvjwlzREY1+0OKZ1frUtwv/Wz6LWGUgvgtuijjQW+wcvp9nAB8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D1eL6w6E; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W3RHEniS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF6A01F00893;
-	Fri,  9 Oct 2026 11:42:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D1eL6w6E"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 990401F000FF;
+	Fri,  9 Oct 2026 11:43:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791546141;
-	bh=U/dpDhVn3KmXi1hz+tH9Iaeu01NQ6vXF/8vWoL2decY=;
+	s=k20260515; t=1791546200;
+	bh=CpEZlDsRDuWenxcVgqGImJd26hAtuDMO57pjc3sZvDA=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=W3RHEniSbOiiNFrzW63aZ2RuFJl2ie54Z5HyzcbTZ5G6+ylZfKz15vezR9fkzRWhb
-	 cUJ/VoxRaDJXZfJmD+WzgS82N5g174kCrH8/tHnJJl2MduD7obVsyB0Ok6wCXkiA7N
-	 BBlYOYDtDkIq/++leWdJq1vav/HdhKwVwvmbopfuIx+jvCImJIqNqheF5qRGZpEjcs
-	 r7dfKXPWNKaiBSV7os7IV2PzxlMg1ZCA9HO9c+TSDHXq8iGWid6WtwvII+RIbzGG8k
-	 nWg4RL+mo3uGE4d17SJMpGTCtDFFFPujehTLu9hG8q2qavlucgPoY4yHn6wShWy727
-	 2T8sMVGEc/W/Q==
-Message-ID: <cd97e6ab-eac0-4482-8b85-455ac8730241@kernel.org>
-Date: Fri, 9 Oct 2026 13:42:11 +0200
+	b=D1eL6w6Ewdr6llyTH4fAbb8hCyFLsOSKaLbrXG209Y1k/pmbDbwi6+HhvQZEnddfv
+	 ozhgqIAZPEJiYixReahW0E5j5paGGbV175wO5N0/2qMKx3icHiuOPsyYXPPJS/PDGD
+	 7O3rKXjf8R3Fb2Zj3IDfyYyEvaVylAPPRdpibqcld4DiywBWyC3NeCk8iJ98EZvdH8
+	 pxwSahZW5Y7TUwRoT0kSnbHmwd5EgIGvkWb7Uiz6jn5t3n8Dv2hYfwx1QEEU0vOBoW
+	 A8KAHkqPFemwxUmaYpBpwCxyJN72FWr7gCMN/SwHyFcMD6oeN0X/No8SJAzwbx6W2E
+	 Ve2mqwlmxiPEQ==
+Message-ID: <b8cc8683-d114-48c8-af60-ecd8e16bdf46@kernel.org>
+Date: Fri, 9 Oct 2026 13:43:09 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -35,10 +35,12 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/4] dt-bindings: arm: qcom: document Radxa Dragon Q8B
-To: Xilin Wu <sophon@radxa.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Andrzej Hajda <andrzej.hajda@intel.com>,
- Neil Armstrong <neil.armstrong@linaro.org>, Robert Foss <rfoss@kernel.org>,
+Subject: Re: (subset) [PATCH v2 0/4] arm64: dts: qcom: Add support for Radxa
+ Dragon Q8B
+To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Andrzej Hajda
+ <andrzej.hajda@intel.com>, Neil Armstrong <neil.armstrong@linaro.org>,
+ Robert Foss <rfoss@kernel.org>,
  Laurent Pinchart <Laurent.pinchart@ideasonboard.com>,
  Jonas Karlman <jonas@kwiboo.se>, Jernej Skrabec <jernej.skrabec@gmail.com>,
  Luca Ceresoli <luca.ceresoli@bootlin.com>, David Airlie <airlied@gmail.com>,
@@ -48,7 +50,8 @@ To: Xilin Wu <sophon@radxa.com>, Bjorn Helgaas <bhelgaas@google.com>,
  Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
  Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
  Konrad Dybcio <konradybcio@kernel.org>, Bartosz Golaszewski
- <brgl@kernel.org>, Linus Walleij <linusw@kernel.org>
+ <brgl@kernel.org>, Linus Walleij <linusw@kernel.org>,
+ Xilin Wu <sophon@radxa.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  dri-devel@lists.freedesktop.org, devicetree@vger.kernel.org,
  linux-arm-msm@vger.kernel.org, linux-gpio@vger.kernel.org,
@@ -57,7 +60,7 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  <krzysztof.kozlowski@oss.qualcomm.com>,
  Daniele Briguglio <hello@superkali.me>
 References: <20261009-q8b-dts-v2-0-eda11e5dea8b@radxa.com>
- <20261009-q8b-dts-v2-3-eda11e5dea8b@radxa.com>
+ <179153455955.2970577.14103639336377928226.b4-ty@b4>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -103,23 +106,29 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  K9bCVaboTA2T77QYkRcRJYSsO1alGX0ome/hMLD1daXlkrNUp1HWa3K4iytLRXjCSIorWiGs
  n+q3krnpXu3TFkA8qtOFZMdnIiFuiq1yLT8hptsV5xh1TA2nsVvSYiaCr3q4s4BKjS/KrLDb
  qoxzw8ISjdUp4pA85vb6YLCmb39NgidD+7PmAr65lBNveIFynTgsja1rRQ4=
-In-Reply-To: <20261009-q8b-dts-v2-3-eda11e5dea8b@radxa.com>
+In-Reply-To: <179153455955.2970577.14103639336377928226.b4-ty@b4>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 09/10/2026 09:55, Xilin Wu wrote:
-> The Radxa Dragon Q8B is a single-board computer based on the Qualcomm
-> SC8280XP platform.
+On 09/10/2026 10:29, Dmitry Baryshkov wrote:
+> On Fri, 09 Oct 2026 15:55:05 +0800, Xilin Wu wrote:
+>> The Radxa Dragon Q8B is a single-board computer based on the Qualcomm
+>> Snapdragon 8cx Gen 3 (SC8280XP) platform.
+>>
+>> The board provides UFS and microSD storage, two M.2 M-key slots, an M.2
+>> E-key slot, a QPS615/TC9563 PCIe switch, USB Type-C ports with DisplayPort
+>> alternate mode, USB Type-A ports, HDMI 2.1 output, headset audio and
+>> a 40-pin expansion header.
+>>
+>> [...]
 > 
-> Document its radxa,dragon-q8b compatible.
+> Applied to drm-misc-next, thanks!
 > 
-> Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-> Tested-by: Daniele Briguglio <hello@superkali.me>
+> [1/4] dt-bindings: display: bridge: simple: document Chrontel CH7218A
+>       commit: 377682cf917027396211426c509cae5785305ba8
 
-Fake test, drop tag.
-
-Why is this so problem to provide the tag ONLY to the patches which were
- actually tested?
+So the fake tag gets applied. Having 12 minutes to respond to this
+posting is NOT enough.
 
 Best regards,
 Krzysztof
