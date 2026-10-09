@@ -1,44 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8F144E4321
-	for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2026 15:07:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1DC6457E7A;
+	Fri,  9 Oct 2026 15:09:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791558447; cv=none; b=Goo7v7mw4bHthaY7lpUTcMdxMU7WmuxfwnuY8sUhx9EEEMvQFDf/dkoaULZN1dFc5NmYzrXBcqLb73dmIDnEzwOL7Z7jgoFcMPVMUh99JZjSiCZ4J5HbmVsJ14i+B8I8elHzMKtqfoq1SQC815wCRnbqyPmomljp0mL9WqF73xw=
+	t=1791558574; cv=none; b=HR/B4wmfpRhkAUDR53ZVGjXSsRTk6N/tETQ5h6hb6+ENGAS7lXNMlc4F5YlZi0uR6pY9/Zb5GeHH4fdhTzsR7+RXAaZagfrZhH0OhgJz9wVTUGDbUSBv1R8mDmvHi2GAH+ujUEqQirtbto5050slFbbcF9pqI6YybxjpMZrDViI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791558447; c=relaxed/simple;
-	bh=ZuxcWByt5PfLNAq2PnoD47cez4OD0up5HhK49HaXrpc=;
+	s=arc-20240116; t=1791558574; c=relaxed/simple;
+	bh=3ZHtsVhckn9fRoblbC1iHEhRp+UvpLMNLCDjAncW8wI=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=UpEzxlqQq5IbxldUIhd45mdbqaqUxhsFBOKISziptByYYB/8fshqQ4n0EC4SBmjHIurp1dKAiytKKsa0BR8YAd/gPHHOxhtkW39P0ykQ0/Sdvw7YBMe/J8troqk1pss+h/XIzcq86OcgDaQPsXsnRBrJYDPzLdHAoj6qLplGCG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C/aRiNmV; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=bMhJxMItdQlWdYFeMw6UqsqPdAYrQAXB6j8OvsyJ7HBGd7dwXkFZ5T7yKzVJ+oh+0imidpDnkf32DFBwC0X6R/IynaMGtrdJRG+m4i8fPTAVMESfUXiTSyHbhRvgzhFs/xiUAF0TB7S5SQN1WhejemMTlMHcf9r2sGHXW7DoMIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sl0pXThs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C/aRiNmV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B53C1F00893;
-	Fri,  9 Oct 2026 15:07:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sl0pXThs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 659091F000FF;
+	Fri,  9 Oct 2026 15:09:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791558445;
-	bh=Yc4wezejOuATtX+/xD62oIcWyMlHYCGQf4E0gpjKHZg=;
+	s=k20260515; t=1791558572;
+	bh=/QeZ0yqQGSY+Sd45pKd4C1KhZgWw8oPZUiyILj5JSKc=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=C/aRiNmVkNEuBLKRmeE6ewObnb27+Vw3S+hbRtFUJQqlzChgB/xrPXH+JASEb9dOz
-	 wxfwRKzmIFjMyRwkcGb5WlHQ7YwFeXCqCjR0OvFgxL9qbwdY9gDjPlnvDVPovlgppc
-	 EzCnIE6GsNyWGHDiNHcGfkAanpsFUhA5xMnBNbCutl34iycb4lwmpc6vrlv3+Aycrc
-	 8Ac9fhtwz4hYm8tyCjNNPm20Z9a3QBAHuu71k/X34pZZom6WaMy1/u6xEf6HyiKjD8
-	 EhoL4njP4J9Fh9hC3rKxA0MsO8o3r7p1cmuGg1vvFu8wAB4qMnzc0fCK+TLuXsbQ/d
-	 HrRCkVAAtjjJQ==
-Date: Fri, 9 Oct 2026 10:07:24 -0500
+	b=Sl0pXThs0FM2f+1VRAJJwTdbwTmzbPSP4HGM84Bee4tQWO6vGlsI/VCmmNlobQP+8
+	 ME7Yh2B4Hh/HeKTiipJ9KusdyPkwsAjoEyzYRvYUPcSJer72hMzSCl9eFU3MNaZiTr
+	 3Gm0LxOh5OHdDN8tm94ucmx0Jaj9MijwFrmbDc1kG3fQ82iazDfuQXFeXbBlQzycnD
+	 OnuxMhGoDf8ATdoh/Rynyp/p/0WPEIbX9MzlP9JJxjLUi9oSjLSa5wQOq4BSuJOkXc
+	 EXVyCdnuBzD0FLkN4ve8mM5WLhxiS3QbMDf/kjfJQWI73eIu8CBwInSOSba8lcJnGL
+	 e3WHHeJjPjIxg==
+Date: Fri, 9 Oct 2026 10:09:31 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Christian Koenig <christian.koenig@amd.com>,
-	Vitaly Prosyak <vitaly.prosyak@amd.com>,
-	amd-gfx@lists.freedesktop.org, Aditya Garg <aditya.garg@linux.dev>,
-	Jason Perlow <jperlow@gmail.com>,
-	Thorsten Leemhuis <regressions@leemhuis.info>
-Subject: Re: [PATCH for-linus] PCI/AER: Skip error recovery on false alarms
-Message-ID: <20261009150724.GA974326@bhelgaas>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Dave Jiang <dave.jiang@intel.com>, Davidlohr Bueso <dave@stgolabs.net>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dan Williams <djbw@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Ira Weiny <iweiny@kernel.org>, Li Ming <ming.li@zohomail.com>,
+	Richard Cheng <icheng@nvidia.com>,
+	Terry Bowman <terry.bowman@amd.com>,
+	Alejandro Lucero <alucerop@amd.com>, linux-cxl@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/3] cxl: Account for link width in latency calculation
+Message-ID: <20261009150931.GA974538@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,49 +49,132 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ash0Rn78gwlQ87Fg@wunner.de>
+In-Reply-To: <20261009045452.1107921-3-den@valinux.co.jp>
 
-On Fri, Oct 09, 2026 at 06:57:42AM +0200, Lukas Wunner wrote:
-> On Thu, Oct 08, 2026 at 02:17:05PM -0500, Bjorn Helgaas wrote:
-> > On Thu, Oct 08, 2026 at 02:26:00PM +0200, Lukas Wunner wrote:
-> > > Alex is seeing a probe failure of the amdgpu driver after the Root Port
-> > > above an AMD Navi10 GPU has been reset.  The reset was performed to
-> > > recover from a Firmware First reported Fatal Error.
-> > > 
-> > > However all status registers in the Root Port's AER Extended Capability
-> > > are blank, so apparently the platform firmware raised a false alarm.
-> [...]
-> > > Skip error recovery on false alarms, i.e. if no unmasked errors were
-> > > actually signaled.
-> [...]
-> > Applied to pci/for-linus for v7.3, thanks!
-> [...]
-> > If we're confident that this also fixes the MacBookPro16,1 power-off
-> > issue reported by Jason (it would be ideal if you could test this,
-> > Jason), maybe it's ok to keep eddba19b8b5f plus this patch for v7.3.
-> > If so, I'd like to add Jason's Reported-by and link.
-> > 
-> > But if we're not sure whether this fixes the MacBookPro16,1 power-off
-> > issue, I think we'll have to revert eddba19b8b5f for v7.3, then squash
-> > it with this fix and try again for v7.4.
+On Fri, Oct 09, 2026 at 01:54:51PM +0900, Koichiro Den wrote:
+> cxl_pci_get_latency() derives bandwidth from the per-lane speed returned
+> by pcie_link_speed_mbps(), ignoring the negotiated link width. This
+> overestimates the FlitLatency contribution for multi-lane links.
+> Sections 2.11.3 and 2.11.4 of the Intel CXL Memory Device Software Guide
+> describe the link bandwidth as the product of the negotiated speed and
+> width.
 > 
-> Apple products with a T2 Secure Enclave will require a separate patch
-> which avoids enabling Advisory Non-Fatal Errors on this particular device.
-> A quirk, in other words.
+> Replace pcie_link_speed_mbps() with pcie_link_bandwidth_mbps() and
+> migrate both CXL callers (the only users of the API). The new helper
+> obtains speed and width from a single Link Status read. The CXL
+> bandwidth calculation no longer needs a separate width read and
+> multiplication.
 > 
-> I think the firmware on the T2 is upgradable in principle, but Apple isn't
-> going to do us the favor to fix it.  So we don't have any other option
-> than keeping a blacklist for ANFE-incompatible devices, with the T2 being
-> the first device on that blacklist and maybe others to follow.
+> While at it, make error handling more robust by converting PCI config
+> read errors to negative errno values and checking for zero bandwidth
+> before calculating latency.
 > 
-> I was going to work on this for the remainder of the week, but if you feel
-> the feature needs another cycle to mature, I have no objections to
-> reverting eddba19b8b5f for v7.3 and re-applying it together with the two
-> required fixes to pci/aer.  (The two required fixes being the one for Alex
-> and the one for the T2.)
+> Fixes: 4d07a05397c8 ("cxl: Calculate and store PCI link latency for the downstream ports")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
 
-OK, it sounds like two separate issues needing two separate patches to
-fix.  So I think I'll ask Linus to pull this fix today and watch for
-the quirk next week.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# pci/pci.c
 
-Bjorn
+> ---
+>  drivers/cxl/core/pci.c | 22 ++++++++--------------
+>  drivers/pci/pci.c      | 23 ++++++++++++++++++-----
+>  include/linux/pci.h    |  2 +-
+>  3 files changed, 27 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
+> index 43b9b7afff29..8b52621ffea1 100644
+> --- a/drivers/cxl/core/pci.c
+> +++ b/drivers/cxl/core/pci.c
+> @@ -660,8 +660,8 @@ long cxl_pci_get_latency(struct pci_dev *pdev)
+>  {
+>  	long bw;
+>  
+> -	bw = pcie_link_speed_mbps(pdev);
+> -	if (bw < 0)
+> +	bw = pcie_link_bandwidth_mbps(pdev);
+> +	if (bw <= 0)
+>  		return 0;
+>  	bw /= BITS_PER_BYTE;
+>  
+> @@ -765,18 +765,12 @@ EXPORT_SYMBOL_NS_GPL(cxl_pci_setup_regs, "CXL");
+>  
+>  int cxl_pci_get_bandwidth(struct pci_dev *pdev, struct access_coordinate *c)
+>  {
+> -	int speed, bw;
+> -	u16 lnksta;
+> -	u32 width;
+> -
+> -	speed = pcie_link_speed_mbps(pdev);
+> -	if (speed < 0)
+> -		return speed;
+> -	speed /= BITS_PER_BYTE;
+> -
+> -	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnksta);
+> -	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, lnksta);
+> -	bw = speed * width;
+> +	int bw;
+> +
+> +	bw = pcie_link_bandwidth_mbps(pdev);
+> +	if (bw < 0)
+> +		return bw;
+> +	bw /= BITS_PER_BYTE;
+>  
+>  	for (int i = 0; i < ACCESS_COORDINATE_MAX; i++) {
+>  		c[i].read_bandwidth = bw;
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b2879a6be5f8..aa3d180de56e 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5980,18 +5980,31 @@ static enum pci_bus_speed to_pcie_link_speed(u16 lnksta)
+>  	return pcie_link_speed[FIELD_GET(PCI_EXP_LNKSTA_CLS, lnksta)];
+>  }
+>  
+> -int pcie_link_speed_mbps(struct pci_dev *pdev)
+> +/**
+> + * pcie_link_bandwidth_mbps - get the current bandwidth of a single PCIe link
+> + * @pdev: PCI device to query
+> + *
+> + * The bandwidth includes all negotiated lanes and does not account for
+> + * encoding overhead. A negotiated width of zero gives zero bandwidth.
+> + *
+> + * Return: Bandwidth in Mb/s, or a negative errno on failure.
+> + */
+> +int pcie_link_bandwidth_mbps(struct pci_dev *pdev)
+>  {
+>  	u16 lnksta;
+> -	int err;
+> +	int speed, err;
+>  
+>  	err = pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnksta);
+>  	if (err)
+> -		return err;
+> +		return pcibios_err_to_errno(err);
+> +
+> +	speed = pcie_dev_speed_mbps(to_pcie_link_speed(lnksta));
+> +	if (speed < 0)
+> +		return speed;
+>  
+> -	return pcie_dev_speed_mbps(to_pcie_link_speed(lnksta));
+> +	return speed * FIELD_GET(PCI_EXP_LNKSTA_NLW, lnksta);
+>  }
+> -EXPORT_SYMBOL(pcie_link_speed_mbps);
+> +EXPORT_SYMBOL(pcie_link_bandwidth_mbps);
+>  
+>  /**
+>   * pcie_bandwidth_available - determine minimum link settings of a PCIe
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index d31a8d107b1e..bbfb0b98ff46 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1477,7 +1477,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+>  u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+>  			     enum pci_bus_speed *speed,
+>  			     enum pcie_link_width *width);
+> -int pcie_link_speed_mbps(struct pci_dev *pdev);
+> +int pcie_link_bandwidth_mbps(struct pci_dev *pdev);
+>  void pcie_print_link_status(struct pci_dev *dev);
+>  int pcie_reset_flr(struct pci_dev *dev, bool probe);
+>  int pcie_flr(struct pci_dev *dev);
+> -- 
+> 2.51.0
+> 
