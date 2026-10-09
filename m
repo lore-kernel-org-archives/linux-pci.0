@@ -1,45 +1,45 @@
-Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011070.outbound.protection.outlook.com [52.101.52.70])
+Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013014.outbound.protection.outlook.com [40.107.201.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFD5D3DCDBC;
-	Fri,  9 Oct 2026 06:14:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C67533F12E1;
+	Fri,  9 Oct 2026 06:14:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.14
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791526444; cv=fail; b=bcAa1qUoKmOwgwwgtAu7+JXVTJq3KXZlYxDjCVB3PmjEaLr8ZHZEXsZ5ajm7qUNQmIE9Qgf78cjYfAxmx4Z2I2circOrXc1p4RorQZy5cJpzEonegDHGMEUuFKsEsa9truotwZRf1O57Ye9lf99UYIXAwvZFce0iUAl50Kgb1eE=
+	t=1791526457; cv=fail; b=Olcu99TBEigdmbSYGyns5+6Poxq/p/Gp7aeVUJX6PiGOVGEC67wxoe0jJ21szp/WlZb4eKxQhR1+iB23IoQx9xxZ9TOibWd3Am7L7XUi+stdKImBAOTWKBIiM4fARggaqwfdo7syxvxu808FOi1IoAUEgoz60yJk9AsHU2f6JdY=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791526444; c=relaxed/simple;
-	bh=jnCeObq6kJ6RfFUUBSNGBmHRK8TAYup1GS2LL/N2iCM=;
+	s=arc-20240116; t=1791526457; c=relaxed/simple;
+	bh=qB1CBvHBjixRMV/IgKRUpBGDYFyr4jg6tVjXm3zZVYQ=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=vA2+jToheqdekEqW4i5bMMTxuOI7p3XMwoif/K4WTBHBbgoY8P6ccosaf290g7FKME8Fpj6k+fQc/ih6GVU1npoXX8K8aXDUxdWO5N6ZOG10JyIvIw+wgIQ45vvrnm/V52vvEN/B/27KvTw43eqjjqhNvEIeNpTU3Ek6ql2EIGo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=NtkX47+Y; arc=fail smtp.client-ip=52.101.52.70
+	 Content-Type:MIME-Version; b=bzYExaGV3KZgCDa3AtuZrbxCcxoDbr4l5KhArH2vn68Ypg6QfR/9Htjg7i+LTTdkQxhW9Zbmex3thA5Qcl4v+Sx8gcaDOet/30EW2DjQ5iNPDaWpUvVWCYH3soGejaVGFmulRUtRCe0XvKo8MXBiF0sIWCBv5Gbb0+aEsev6Au0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=NitYLw+e; arc=fail smtp.client-ip=40.107.201.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="NtkX47+Y"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="NitYLw+e"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=qTv5uS80Lgx08W1OJfik1Hn+7sDOxXlpG2buTBc2mjQWP5XQdt0cP3GhpArVh3AZQosSJ//4LmvbcDdDrzOZzA9Vac2H5XcVMi41HsJHbM95y9sII9KL4OpBBXHgdROOp7C22MiNMGLRjQo8rp4jZULNtc64sqylzz0O9bH9ngWlTfPR33Tdxkfvd1D3z02PD7ftsprcqGcwQbBDBuHlIIT5dfvtlDduenE1qxAohi1XI3QtsfiU45K7whYSi6Xzv4NgvHCG08UfGSbJV6HkUyRvznmfickGIFgdnNfg/PKLOyxkBpCfaqLkUGTo4PPkh2up/QV7/61Ia5oOQfovag==
+ b=MsWi5mAaru2i07rcRpffJPDk6pzWSVaEaR1kKUDHmVZPUsx5O9J3xylGTSduhA8U2JUp968XAmc7oMYpRhDtPk300L5LztatXu0lQS1o9TJG0B76bJ8ZXjS0cuYGo3aNVL83ks+BVtFs9JMRBL5lta2Mm4vXEEDf0OCQ97AgE14gWdxnjRYIheh04C8kMPZwbsPtAWVI0xJvZVcDRvMIQLgR4dFCrK7R1ZAQWLhpHcvYccOKq9hMxZGAoCWMIM5LxI6Pn88RRaUb7gs8+dXKN4K6YAeUyUy4vYfXwu0h/hg0F0aLhA77kp/6TO3s3LE15PYRCPR+LImvzmVKERN8xA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=inoOQxbG9I2B4H3hRLhJt9FOwUSyJRTKhGNyoqre4+A=;
- b=LQk+OM6JpqRfPsFb5rkA3/YXpQQLm4W2PN8ijKYm6CZ1OnsBW34h2IXhBvR6DQbJhXV9dZdTsWGOrTz2q6d4dGtOdsr9mN6pJwgIubNtu3G7JmP9RYG/Q8bV+3f9C3Ah6ijoA3LWG7xuil0G3KSkoECAjWKMw/iXYxNhxEI//+l056IbuX0nZ1IGyrodCIFcXKI9rD1ut/0EshdP7vTTevS4cXGaMYY0fHjw5wVy+wlRQbvFAUF/bOjhWQxFH8zFN4edDd5K6Xz/xV8559wGOdIxHAOfnsRIfowQGbdE3X8uezzfzvyUVbcm8wVaGnu70evD3VF6bM7R3HzeKnfFow==
+ bh=A+3NRBQ//k3Z/Gk27aYYKRbrl7tQ3tmz0hRW3hOycko=;
+ b=aVEtog98iFR9HQygINKFII0bkf9HxfWzMtWRV2Y+lLg5K6bvezc5gsF8UZIOm/M0ZJ+UTpT70WcFtPgKOTn3LZfjhWoaeFAmVOcFUrg1WPUs0y/xqE+qjnlMa2py/HkEUffcWIfPhPpYiJu9z2hzvdNHsjr8HMjse/ewGoegz3PdWEm8JQMD8XqAmS1UnOfl6OV0f12vQBDN4PpjGhUmsAK4t7YHHoyNTc74WdG1fjwctyrX70ugvwebVF6p5F4gAVHSD4/lMrt/ZHI5eyRaLGkHyRfYnubHgRgnqF7EkRpqzgdwGOtU2MwKkqnx/xQJPoIO07NLjUl6RHk4cJ2EcA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=inoOQxbG9I2B4H3hRLhJt9FOwUSyJRTKhGNyoqre4+A=;
- b=NtkX47+YEx1fWSczJj8s6vuYQjOiM461kdf3NxSKQ75SqD377zyCSoGWiuzUSJhu4cSyJSF/HuMevkpP64f8TWDn7J9q9XwGTNjBGojDK0WM35S6a+Jz6O2S+Pd8XjAcHWgSecT2wgDzzRJeKH8OxAq3BkedrN2rTvDMevHzDxxbCYjrRyOrT5PapzZCffG7iPpyIgpOHebCyLP5YwZGboSCyE/kyQN55sX4IGwBUQ/qJbZeOh18Vz54SUv4+75RAgU2uDxtM8S9mXQX9pnXGMFYmVBOItnuS6XnpDUBTp5i8Ll1lTcufNHgBsG9AwpDRCG6LRh7ICBlzHGvHMQMsQ==
+ bh=A+3NRBQ//k3Z/Gk27aYYKRbrl7tQ3tmz0hRW3hOycko=;
+ b=NitYLw+e10i/ivC9/mfmFLCciKt+VVZ6EdYu3xYZkbiNlohHhL1Jb0cTIAt1e9CDuMfpHGftPEY/GiFi6FjHHQ6mQ4UHSdwxZ0tdpAeCTWatfsrUDUbu9Kogr81r3SCc3W0cilG/B0ICCtOFtTpxBXSwKnGTB7AcmLP552SOUu5vUWlWhE5ec7CYwkbCpmJLnEW/Z+yKposo5Od8ZXU0hNXRmfB0CcMv69Jcuo13fWe65mWEPpnZ8QJNyrUV014a+vXf1GPcYhhT18xj8uK9PyI3eCueJTQfGEi1oR6W6WdQsLKFihinKx7oGiiWlKtMIDKpMqWI6qNkpbdILRlQJA==
 Received: from IA1PR12MB9030.namprd12.prod.outlook.com (2603:10b6:208:3f2::22)
  by CH3PR12MB8912.namprd12.prod.outlook.com (2603:10b6:610:169::15) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.496.17; Fri, 9 Oct
- 2026 06:13:55 +0000
+ 2026 06:14:09 +0000
 Received: from IA1PR12MB9030.namprd12.prod.outlook.com
  ([fe80::2c1d:ed27:b53a:97d2]) by IA1PR12MB9030.namprd12.prod.outlook.com
  ([fe80::2c1d:ed27:b53a:97d2%7]) with mapi id 15.21.0496.015; Fri, 9 Oct 2026
- 06:13:55 +0000
+ 06:14:09 +0000
 From: Manish Honap <mhonap@nvidia.com>
 To: Jonathan Cameron <jic23@kernel.org>
 CC: "alex@shazbot.org" <alex@shazbot.org>, "jgg@ziepe.ca" <jgg@ziepe.ca>,
@@ -64,18 +64,18 @@ CC: "alex@shazbot.org" <alex@shazbot.org>, "jgg@ziepe.ca" <jgg@ziepe.ca>,
 	<linux-pci@vger.kernel.org>, "linux-kselftest@vger.kernel.org"
 	<linux-kselftest@vger.kernel.org>, "linux-hardening@vger.kernel.org"
 	<linux-hardening@vger.kernel.org>, Manish Honap <mhonap@nvidia.com>
-Subject: RE: [PATCH v5 02/27] cxl/regs: Let a BAR-owning driver own the
- component register block
-Thread-Topic: [PATCH v5 02/27] cxl/regs: Let a BAR-owning driver own the
- component register block
-Thread-Index: AQHdRgpbgu0n5Oq/vE6kVwOoySVb3bbZ2X+AgBrtx8A=
-Date: Fri, 9 Oct 2026 06:13:55 +0000
+Subject: RE: [PATCH v5 03/27] cxl: Move component register defines to
+ uapi/cxl/cxl_regs.h
+Thread-Topic: [PATCH v5 03/27] cxl: Move component register defines to
+ uapi/cxl/cxl_regs.h
+Thread-Index: AQHdRgpghYTEeQxGakyqixU7lrfeILbZ24KAgBrtPcA=
+Date: Fri, 9 Oct 2026 06:14:09 +0000
 Message-ID:
- <IA1PR12MB9030A2A75B4B9C6A0DCAE597BD922@IA1PR12MB9030.namprd12.prod.outlook.com>
+ <IA1PR12MB90307DB2BCB490E890713148BD922@IA1PR12MB9030.namprd12.prod.outlook.com>
 References: <20260916183540.3813685-1-mhonap@nvidia.com>
-	<20260916183540.3813685-3-mhonap@nvidia.com>
- <20260922023629.68336bd1@jic23-hlaptop>
-In-Reply-To: <20260922023629.68336bd1@jic23-hlaptop>
+	<20260916183540.3813685-4-mhonap@nvidia.com>
+ <20260922024341.7aecc867@jic23-hlaptop>
+In-Reply-To: <20260922024341.7aecc867@jic23-hlaptop>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach:
@@ -84,46 +84,46 @@ authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 x-ms-publictraffictype: Email
 x-ms-traffictypediagnostic: IA1PR12MB9030:EE_|CH3PR12MB8912:EE_
-x-ms-office365-filtering-correlation-id: bd02bd0f-f4fe-4a1f-425a-08df25cc7fbc
+x-ms-office365-filtering-correlation-id: 03f2cc1b-64ea-41f9-d277-08df25cc8804
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam:
- BCL:0;ARA:13230040|23010399003|366016|1800799024|376014|7416014|18002099003|22082099003|10067099003|38070700021|11063799006|4143699003|56012099006;
+ BCL:0;ARA:13230040|23010399003|366016|1800799024|376014|7416014|6133799003|18002099003|22082099003|10067099003|38070700021|11063799006|4143699003|56012099006;
 x-microsoft-antispam-message-info:
- CnrB8JXwiOkMWT4L6aJrk91LcJb74oQe2s0+gTW1k8OcPVbZIZE2bp475A48PybZY0Ct7eNWKnAsm3n/cO3XCVvXPydDzUnKjED8LHYwOuspisa32QXyeCi1O1dZnPAlSTQJpNTlp21I/t+3jpSSzwbROaLFOOx415owp/NId5vRQvFx4705BnipqOaUvah/aC+YzY5wpJSkJemgcWEfBlaBOSdNr6/8yqDB/vsrGlCTDp/4J3spyIpuAt6szDcJM7yRwUTPhjp9R76FO38pAbS4/2BKy4Z7HbIvvD/XMJqF1kA40bXOt6nu4d7og8qm4I/b2Y1fFj0d0AWr0rxJ6qwUR/33I6bigC+Usfc1fqLwl9jNOzEVhkFeDJSEBFloS6J5O3tvyM1A4Ptnc49+jKuTFE/jJolIq9NXWMy0pj1mN6CUc9yw++0iY76cE5rgA7W+S7O2mVKZHQTuNaFS5kNRNprSdkkwhGYuo0VvcYFNVNGxmBm3jdBr4gF2/21G/AbRG9ghBquHPtATy/pkUWLH14t39YQQjcNugsw77ulcGcIdzuuirHPMDDAymtlMoi5YiQ8oGymVgiP4gGAeCUgxbWbUQTDO0lmkyRHjqbMujhRG77VHmsXkGdBvbwA/DXCB+6ImjMdFOs+F7wZGp+T7LKIOOiUb5G6729K2+D5DjzWg50kOQzx5D3dGtgYE2O9iPYj3xtGWWKIILj1bsE6BcgbiEAVM2Gl92Qcyums=
+ 4JnJsJfLmmw9bNze5aPfJ4ZBLT0J0sy0iNI7KD6u93v6+Fi9QRfb90mQUcPiWkVdLfPmpGb+MJP7oSsnwPZex1lMBswoff33Vbiu5rW5p4vKdEi0yie2i7k3ocXMXODKCCfNd/Kooav7lq/tYU8TF8TPMHe3UozvYTzLWOx8QpWlNi60deh5q3fi0WAga9kx6PLrbxlv1GKlOREueIRjszvlxR6hYVIw328OrB6PlBoLRHKvYCK3wanSyAEfLeaYBuwjB2TeWuVnkuGcCe+UWKZR4dsEgHcH3m0tu8Y2GnsSLVLaM76h+5NVSefxSLEX9kB3ldOtDeqJ4lTj10c0Ukwi3SVg8c7uCF+65xKDUIyrg+wNJJMyFj9F/STgRnoEYtxZbiGfU52hX+812wU1sMrr/KYNy43eSAKGzJxof7bCy9ND0/BWLpI/9va8QVnSNl1BD49nyOd4CSE97Ws+BZdo+NBAsLSh76BpzSybfrs6TdQuTMriHly243Uj3KMuF7RYsXLXlh7if/JwK7tGCq6Pzcdi3Oz1lpMGWOdt0ZCirFxR/MlVOCJpdbMcxKZyOan4TvDhIFQQDkSLmxd9Aod54lnszd4cYqbQuwrfrCf057gQV1VRJ6UWJ9rLEtYNwrCu/INlzJkey8NnYsKK0stW/sPcRZBEyaBWn5BUWWDqLBT3QAjby3LxXP0oGL4AXD5Mh0AD0QrDzcyiYlNunIAzcpLOIKRQjzbhjcqzZw8=
 x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR12MB9030.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(1800799024)(376014)(7416014)(18002099003)(22082099003)(10067099003)(38070700021)(11063799006)(4143699003)(56012099006);DIR:OUT;SFP:1101;
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR12MB9030.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(1800799024)(376014)(7416014)(6133799003)(18002099003)(22082099003)(10067099003)(38070700021)(11063799006)(4143699003)(56012099006);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
 x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?RoouvYwrUbAptFj+B1FnwtrUSjdFIkJwRkl/Yb5l9YSa1d7Ne+XxzUTlXy0A?=
- =?us-ascii?Q?pZ1c+7WJLjBtZx3Ub+A3dos1c7O4BUiNMp/x0EN9/0jGguNYt2SWc+C3rkvr?=
- =?us-ascii?Q?fdfHWm9Y1aKCAqoPlo42e3q9HR69hsoM4CD3jaMLBfNli0lhOU6X4g/DAQ1A?=
- =?us-ascii?Q?ouyAJ1wbbyOuU4pJYShiCz/dpCrS5nA1sp0FX4Hh5HnFgO8ISqMEE1jqwOmq?=
- =?us-ascii?Q?SIEfa/9jGYc4NcxCAKmiaQnG5Y9XbleDqcmlwY0oWQAJDo/9BnpKu+SCRedq?=
- =?us-ascii?Q?M7qYckHgyT0DrWgHGPSrm/kRgziDaP32kHEJ6WXhLom0z3F9o0KatA70VQw6?=
- =?us-ascii?Q?VxBIiYSAWl8tsYAz8+QBhns38gTM/m95/VYAvfrc1tiumpD4oIA1FP5FuW8i?=
- =?us-ascii?Q?Gs/TgMGwW3Xy5m5jzIvC+2NFdeRYO4niABSYOuskFFNsQBr2g+dDbuIeY7cK?=
- =?us-ascii?Q?KfMcAZ7llKgsiPKOEtK+hZ33iliX7Qxuly/1EMf27SZDK/NvpFxvm3PGQa/+?=
- =?us-ascii?Q?b32PlBlunCkWT8tuvMByeVVKTpco3O3jduJlvxZx0Lm8fsgOKt4nc21b4nqK?=
- =?us-ascii?Q?05dzaU97Siw2uQ+YHU73q9aEMK7umB+dfP0vEJK10FeUrY/mE+F0962ZBX39?=
- =?us-ascii?Q?5jG/TLjKUH/tjrPLBiYhA5w8HLFR5oLw+RNgghNYIlcWaad8A3b1ZjR0mJNO?=
- =?us-ascii?Q?yr6yUW8qWBA6Hf8G+VbSL3MjE2swxfsPidckxZOXOfwyB3mKNQ0QENm/Vw5z?=
- =?us-ascii?Q?ZepGSIx7hUJm20Q+sSIEIo4LT25vUvgnqMMDO8P7SoL40O1AP5HegGIe4LW3?=
- =?us-ascii?Q?hQzJtmpiYOMYAiD6vpiTzT69DtICYRPIDYljNMDz0trBDRiEC6UPqiB19ck1?=
- =?us-ascii?Q?EYIObwmXfFLtFciwlnV5d+eIjIKjVg4WQZHFy2AUAbdBMF8R/wuhDRXMfEv+?=
- =?us-ascii?Q?JnwkEvqMufDuykRY7Q1W2eA31pBf0P8h18CTS03ed5a+srWhRn3MSGKFwP+f?=
- =?us-ascii?Q?/s7ig64lV4GSACTAQ3/aefp6IjtmPmc9h8d7dcFZrHfR9vPAGL5OJstIaiKv?=
- =?us-ascii?Q?sjgNJPQXBKe3fhFtTlby5CG+XsaCGFV12F2jtQGcn3QNWTpU/4s8/kWrXDLF?=
- =?us-ascii?Q?CnvTKju9yLdr3ITt+uGjA/TdLirl8W2fFBZtQyRi9owkGSmmEFp8rfQD+wqB?=
- =?us-ascii?Q?z11d+A6cFRImm4DJWwsGJAo5AixxYDBAIAHSFMvULi8GJRLWFK5zhU70kA3F?=
- =?us-ascii?Q?HDdap4buh+HX7kw3MSnsUIeglcCgnxPO9arOxZJRFGq5criOGBz2fVqBLLcF?=
- =?us-ascii?Q?pM7VGp0FXvf/QCn+aK97tHOwrQzyFomweTgmKdNrVr7Slu22z4J6Boy+uyHA?=
- =?us-ascii?Q?tPPftQG97wY6Q1hwypLcn2bumEIvs4Bd56mFrRgz2QFqo/smhkTbeKhVhIct?=
- =?us-ascii?Q?2WBcMl4VsjFhl6ZWofTMsc9zlDrlAnINLBEagAzHWIB737A6RJt7QeymiR8y?=
- =?us-ascii?Q?m6rSLJzySqUIZZ63DcMkBnpzZGvsjNTVLr8j3b1bPVDlO82nkFb/9FqjreFE?=
- =?us-ascii?Q?VtwbUPpnyUTDWwr+FvmEBK2G3Uk2WnfttkBOeX6OE4w289aRvSypuvB9UaH1?=
- =?us-ascii?Q?/havLtfMeDFcUgeP7iC41rCUV83xXiG4dtyudHKrhXOymuZDTsQEYIlBrd5i?=
- =?us-ascii?Q?bsOk+mGmVmKD0hGIewIrRL4lxHkFjARWjfzwU42FB5TY/QwS?=
+ =?us-ascii?Q?FJKfYcfLAg4taohuIL51zb2jEOlEaCNQiuFIjNWCAK2ep2BP5yVCEB+0S8ol?=
+ =?us-ascii?Q?v8KxuoqDnW41OadceMq2Ae5q8Zb1e7Doj+jnCIl/0JSERyRlY2iIl2BuJL+/?=
+ =?us-ascii?Q?2gXT09ZhWB5m+2pZBJnEddvzGkKBMkHVy02nLcNFEb1bmed0/JDggf2fwxRe?=
+ =?us-ascii?Q?Jk3uEFWfoS4FpJCs89cAjbnqc4hVsaSx7R/h7oPz5xP+bsAXQQq8QDLssk5y?=
+ =?us-ascii?Q?huqUijgOBt1IePZNEdBNJU0iU+PZHJrVqfKTZB+H+UzCMpsceArld8b3Fgwc?=
+ =?us-ascii?Q?n5uNIBNURsujWonWvCMMG5WZ9+4UcRb+R4k/dcAWr/GRkemkghkyNk2agbn6?=
+ =?us-ascii?Q?CMFf/d5zFmAyvaK/6kHLlyvXTm+NJ03w9eU/LlDiO+MPsswk48llgIZqmSX9?=
+ =?us-ascii?Q?dQdh9PdJkVOkPRSrHzz2KHbnoVrkT0CyaDTu321yc8q9mFIzpIRATY7ucUSi?=
+ =?us-ascii?Q?2RfTlTElktV0A+YPFezu0g0vzglaykmbfV8NABVmYKrTYMHE9dsQr9JDjkEm?=
+ =?us-ascii?Q?De2HVcEgIhKQrARLvHW3eLkU/eacV+zqNMTJH08qLmqX1NCZ03zsFIcKBcbT?=
+ =?us-ascii?Q?uX74l1IkEXJRztlzT7yCGXYT4WO4SgTSMw+8ygxSHesIa1kbgC8G76PhB4eg?=
+ =?us-ascii?Q?BReUscgVZY1EcD2N7xjF5NPrLS3/TqPo/SqQ8N+ApZhtYvzX9oKzvqn6OdcA?=
+ =?us-ascii?Q?sPs11ISUQ8fZMAC1N5CCjGyuu6KPI2mxAVx+MIx6mEDX1GIioXJ+PMJvNe/5?=
+ =?us-ascii?Q?Q03GmRdZgmAtmG6HZfwl3Dh4M9+YxpRm+ofcm/CR7yvBtwX6CZSjHNVikvIS?=
+ =?us-ascii?Q?hxzvzwReqOPnutmvhauuFSw/RjEmxJxM96j3VrNEGAMNX5gSoKhBuoQeLJ9c?=
+ =?us-ascii?Q?pu13hChXp1J4813BdWSF4F7F1iurzecrIvrJbFA8OwcWJPscFc1Rlr0b0kzt?=
+ =?us-ascii?Q?FaDOmi79swy3hCuJsAJ2dTE9rd0tsR+46Cv37JELmadZvwPFw6qoqqnIzRZx?=
+ =?us-ascii?Q?LIbLiMWvhU6TLAOo/1/9bhA9ZaRSzlHiomtfmfQTKAk2dUylOhhkz8IJ3cH/?=
+ =?us-ascii?Q?1bpovMk+tHNsxKBXlNdymFKB4TMUZmDN9HxQ3qLgdsrVjAV8sc3+0JUmeoz4?=
+ =?us-ascii?Q?RSZEp7zVEq/jHxQ3B83WJuD6XAkZLhUfPPgglP2rDN4u7APglpYp2JEgXcmw?=
+ =?us-ascii?Q?GR1uFS6RU0Nvh87dMRJb02jddXtlazTb9j0e5XCSDOqeI7PERIAIBIaKDiSm?=
+ =?us-ascii?Q?ShI5SnrfdcZ47YW5D/LDGsTX+jbvcl1XPN8FLILJvYbClsIVCZ1414r+eEAI?=
+ =?us-ascii?Q?tH1REa6m2/O44haOpIB62Q29+YHJtNujystvPyaO9rpiJJUfPC6Tlalk9D05?=
+ =?us-ascii?Q?wZPEggviape7LExTbxV2u/U0vpNNPfswcl/FVdspZakdJAdyOloGr+IK0zH8?=
+ =?us-ascii?Q?ZVEJzKu21yBHvxi+ukToFRxhNo9kiejM3sNDEW9pTDzFU8P33u47nmt8OTWq?=
+ =?us-ascii?Q?srYHpHur1xcYzWUj6xnH0xtHShms0/sIiwVYU/veCBg8c0xndBW9+7ax2Ki7?=
+ =?us-ascii?Q?zes4vOaiLA4aKx22wfaXXn+tY9M8A+O1ejCtwkz2fjZpynW8iam08eIwDGpX?=
+ =?us-ascii?Q?ymVtYciePZTTMTlq5imRn4Y5CoqAjoeWv31pFhixneG/6BiqRHOIJgu/k2sE?=
+ =?us-ascii?Q?L9YEX4KjaXo5/bD7GkatfduqK9NMx2H88/MO7ZZJWaEej6PV?=
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
@@ -135,19 +135,19 @@ MIME-Version: 1.0
 X-OriginatorOrg: Nvidia.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: IA1PR12MB9030.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bd02bd0f-f4fe-4a1f-425a-08df25cc7fbc
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Oct 2026 06:13:55.6468
+X-MS-Exchange-CrossTenant-Network-Message-Id: 03f2cc1b-64ea-41f9-d277-08df25cc8804
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Oct 2026 06:14:09.5161
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: vKCcburMudlGNsarmEPe95+yX0ZAs7b8V/44JYcygpcN8u/DWo84UwJTLtWYP85GnSWdoseuXsMcf/M0nEPGcQ==
+X-MS-Exchange-CrossTenant-userprincipalname: t9NfdAT3D0yt/9ScrBfkpJmcT5bw/thH+1/qZHssOd/a/hh/QYgWW11TJNOsaDTkbRM46YKHV1ZuFBsm3EQNdQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8912
 
 
 > -----Original Message-----
 > From: Jonathan Cameron <jic23@kernel.org>
-> Sent: Tuesday, September 22, 2026 7:06 AM
+> Sent: Tuesday, September 22, 2026 7:14 AM
 > To: Manish Honap <mhonap@nvidia.com>
 > Cc: alex@shazbot.org; jgg@ziepe.ca; Ankit Agrawal <ankita@nvidia.com>;
 > dave.jiang@intel.com; alejandro.lucero-palau@amd.com; Srirangan
@@ -162,117 +162,39 @@ X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8912
 > doc@vger.kernel.org; linux-kernel@vger.kernel.org; kvm@vger.kernel.org;
 > linux-cxl@vger.kernel.org; linux-pci@vger.kernel.org; linux-
 > kselftest@vger.kernel.org; linux-hardening@vger.kernel.org
-> Subject: Re: [PATCH v5 02/27] cxl/regs: Let a BAR-owning driver own the
-> component register block
+> Subject: Re: [PATCH v5 03/27] cxl: Move component register defines to
+> uapi/cxl/cxl_regs.h
 >=20
 > External email: Use caution opening links or attachments
 >=20
 >=20
-> On Thu, 17 Sep 2026 00:05:15 +0530
+> On Thu, 17 Sep 2026 00:05:16 +0530
 > <mhonap@nvidia.com> wrote:
 >=20
 > > From: Manish Honap <mhonap@nvidia.com>
 > >
-> > cxl_map_component_regs() claims each mapped sub-block with
-> > devm_request_mem_region(). A driver that already requested the whole
-> > component register BAR, such as vfio-cxl, would then collide with that
-> > claim and fail to map the HDM decoder and RAS blocks.
+> > The CXL component and HDM decoder register layout is spec-defined and
+> > is needed by a userspace consumer that cannot include the private
+> > drivers/cxl/cxl.h
 > >
-> > Add cxl_reg_map_add_owned_resource() so such a driver records the
-> > resource it already owns on the register map, and skip the sub-block
-> > request when the block falls within an owned resource.
+> > The vfio-cxl selftest
+> > (tools/testing/selftests/vfio/vfio_cxl_type2_test.c) builds against
+> > installed uapi headers only. Move those defines to a new uapi header,
+> > the way PCI register offsets live in uapi pci_regs.h, and include it
+> > from drivers/cxl/cxl.h so existing in-kernel users are unchanged.
+> >
+> > No functional change; the GENMASK and BIT forms are written as plain
+> > values as a uapi header requirement.
 >=20
-> This seems a slightly odd intermediate point.
+> I thought we'd fixed that these days...  And indeed we have see
+> include/uapi/linux/bits.h for __GENMASK() and include/uapi/linux/const.h =
+for
+> _BITUL()
 >=20
-> The assumption is that if owned the whole bar is owned - hence only handl=
-e
-> one owned region (no check if there is already one set?) yet the code wil=
-l try to
-> map it if we get a request for something outside of the region mapped (wh=
-ich
-> can't exist).
->=20
-> This all makes me a little nervous.
->=20
+> Both are in use in pci_regs.h for instance.
 
-Agreed; current model is to have one owned resource - the whole component r=
-egister
-BAR and I will enforce this in v6.
-1. Helper is going to be renamed to cxl_reg_map_set_owned_resource and it w=
-ill
-   return -EBUSY when resource is already set.
-2. cxl_map_component_regs will fail with -ENXIO when a block of an owned ma=
-p lies
-  outside the owned resource.
-
-> >
-> > Assisted-by: LLM
-> > Signed-off-by: Manish Honap <mhonap@nvidia.com>
-> > ---
-> >  drivers/cxl/core/regs.c | 17 +++++++++++++++--
-> >  include/cxl/cxl.h       |  2 ++
-> >  include/cxl/pci.h       |  3 +++
-> >  3 files changed, 20 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/cxl/core/regs.c b/drivers/cxl/core/regs.c index
-> > d79550dbb484..58a7c5cafb45 100644
-> > --- a/drivers/cxl/core/regs.c
-> > +++ b/drivers/cxl/core/regs.c
-> > @@ -216,6 +216,13 @@ void __iomem *devm_cxl_iomap_block(struct
-> device
-> > *dev, resource_size_t addr,  }
-> > EXPORT_SYMBOL_NS_GPL(devm_cxl_iomap_block, "CXL");
-> >
-> > +void cxl_reg_map_add_owned_resource(struct cxl_register_map *map,
-> > +                                 struct resource *res) {
-> > +     map->owned =3D res;
->=20
-> As above, I think this needs a sanity check that a future driver author d=
-oesn't
-> think they can just add lots of these.
-> Absolute minimum is add some Docs.
-
-Yes, I will add the documentation.
+Thank you. I think I missed these. I will update the file and the commit me=
+ssage accordingly.
 
 >=20
-> > +}
-> > +EXPORT_SYMBOL_NS_GPL(cxl_reg_map_add_owned_resource, "CXL");
-> > +
-> >  int cxl_map_component_regs(const struct cxl_register_map *map,
-> >                          struct cxl_component_regs *regs,
-> >                          unsigned long map_mask) @@ -234,6 +241,7 @@
-> > int cxl_map_component_regs(const struct cxl_register_map *map,
-> >               struct mapinfo *mi =3D &mapinfo[i];
-> >               resource_size_t addr;
-> >               resource_size_t length;
-> > +             struct resource res;
-> >
-> >               if (!mi->rmap->valid)
-> >                       continue;
-> > @@ -241,8 +249,13 @@ int cxl_map_component_regs(const struct
-> cxl_register_map *map,
-> >                       continue;
-> >               addr =3D map->resource + mi->rmap->offset;
-> >               length =3D mi->rmap->size;
-> > -             *(mi->addr) =3D devm_cxl_iomap_block(host, addr, length);
-> > -             if (!*(mi->addr))
-> > +             res =3D DEFINE_RES_MEM(addr, length);
-> > +
-> > +             if (map->owned && resource_contains(map->owned, &res))
->=20
-> If assumption is whole bar or none, should we just fail if map->owned is =
-true
-> but the resource contains fails?
-
-Yes, agreed; I will also add this.
-
->=20
-> > +                     *mi->addr =3D devm_cxl_ioremap_block(host, addr, =
-length);
-> > +             else
-> > +                     *mi->addr =3D devm_cxl_iomap_block(host, addr, le=
-ngth);
-> > +             if (!*mi->addr)
-> >                       return -ENOMEM;
-> >       }
-> >
+> Jonathan
