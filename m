@@ -1,43 +1,55 @@
-Received: from mail-24417.protonmail.ch (mail-24417.protonmail.ch [109.224.244.17])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44EBF3BF660;
-	Fri,  9 Oct 2026 21:08:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.224.244.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 889943ACA79;
+	Fri,  9 Oct 2026 21:25:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791580087; cv=none; b=q8z6wwblavEipc3Kt56vxsTkhqj4bBFLh4HnpRq4RzR6Lc7Aq0WsgVIChrf6AlaaJoEJZbr6IT37MsGFzaRH3pPbOMZsyBRWwKARf0LWhGX3lQ5TTdl+dj4KoZggkw4F+O11C5SdYcavxbzf+Vr5mG2FKuHWzFEXCFHAPnm8OXk=
+	t=1791581132; cv=none; b=JMt14c9LOU4YYACaKR4KncdZ9Citmm8qXWBvxcyZx/e8czxCYxRQAVVuzxg0tMMQPS08QlvufUJRwaD/j81RcQN0TFwINFlaPBrwejpUAkYilJza7078qwusz42T1ZLf70kQBIlQlOw5jY9pIyacTAouq99r0f1RVk55YJmEmL0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791580087; c=relaxed/simple;
-	bh=5sMHZk4Hc88OhXhjJkqjDNeV6rinFGuPqsbkYItAWz0=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jGWbDiXmDXqsE04KPhsLEcLGh0JCiLGz00LvQDBw+5meDB1nqQLTxtTwfBMJpnk5n/LfUBAOAPlMM1c4aCabaRjh2oGAmMfP3EE7ImcMS0OCCKHfoIWJK+2Yz8TNCZ6K/zKIeolqMJpzzsXAiqwkY6fi0z/DumHzz9Zy9toqIAc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me; spf=pass smtp.mailfrom=pm.me; dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b=EcgIALZD; arc=none smtp.client-ip=109.224.244.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pm.me
+	s=arc-20240116; t=1791581132; c=relaxed/simple;
+	bh=GF/hRzdkM9oax0sZXclZWhkf4iXukA8CEAEnC9FsvDk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=eAtzM1i6K74vhsFGD8N87tvUi5CRroGRjSuWmyC2gN6coxxkD5wZz9k0AbXLSMiCByeqiuAI39V6+1sCDixehNlPnKXE05O2n+AZO3P7JNBkl2aJuMotenkaueoFrSU7uOjQP9iC8A+LF/yh4GdUSNpG7UxUTKLz5pO2xx9xVFs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WcemQ2uf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b="EcgIALZD"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pm.me;
-	s=protonmail3; t=1791580076; x=1791839276;
-	bh=8mepSe62s0ugerwpFuXic0aCmj871cPqnta8q4WTVwc=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=EcgIALZDakrxXNkCM/5aUw8DLoDg4bDNi/NqhDKyCh7SYpJN+NswgIxAPS/SJhsVc
-	 yKuSiRTw6+bDTvXRsZyupu2Ech353t/irzazx6llMjKcJDMC8+yzONohxNFucrOM++
-	 TQwjiggKgiATDwYUCARn/jXfbLvYmgTbPPNVJohBJTR70rBuWe8cxZg8vuQbIBKFU7
-	 JoBhf7jLZf/rlVGGGb2VnnwYmW038rqL9kSzpzt7+FF1HyyKgTw/L0pZe3uErLpO+i
-	 a7zAlJgrHp7mAH9/c2qrGJ1iMDkLIUddcmGq1CPtCKAEugdpx2ZqlrJhLUzSuOqXez
-	 ZcvQ2OT2isp5A==
-Date: Fri, 09 Oct 2026 21:07:53 +0000
-To: sashiko-bot@kernel.org
-From: Birk Skyum <birk.skyum@pm.me>
-Cc: Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, =?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH] PCI: dwc: Power the controller down when hibernating
-Message-ID: <179158007085.33373.10495486250879471249@pm.me>
-In-Reply-To: <sashiko-outbox-166041@kernel.org>
-References: <179157746908.73485.2343672865542690797@pm.me> <sashiko-outbox-166041@kernel.org>
-Feedback-ID: 21326998:user:proton
-X-Pm-Message-ID: 97b4da40f43a418c58b48886561281d9e2d8eeff
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WcemQ2uf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDE131F000FF;
+	Fri,  9 Oct 2026 21:25:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791581131;
+	bh=Eujz6jCIPcMtVIbI/r2x9LxmPOalmVXRMT3jQiwiujM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=WcemQ2uf8ZGV3AkLlRVZbS0E1GNbGivMKVOJND5MaLSxczqCk4S0v1vr1tKo7uLX3
+	 X/cJ6wq9H/jVTMl32jw6Cj8wRaL551Vg0nVo4OsrSgGwz0roZJo7mSdjNf4rOmsaGo
+	 sNJj7+cCOfZdFb371B9JYg5TzZcnTkR6gzBvmQWIuBni5zPtOQHuW640QAInYCYCsC
+	 dMhHWiz9fVnI1YqEjo5Bm/A19lj4p6dJsQd++HlcD3Cv5Vx7jJkkl4cb7XZTR8HqCI
+	 U3WDzBUUqY9xyraIbghVQVKNQspifHsDCIeoFL3b0/NDIULtnR9A9d6CZmPYSFg+QB
+	 qnoCgjBxq7Mmw==
+Date: Fri, 9 Oct 2026 16:25:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
+	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
+	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>
+Subject: Re: [PATCH v9 07/18] PCI/P2PDMA: Answer routing per TLP class
+Message-ID: <20261009212529.GA1086940@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,45 +57,66 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261001-fix-p2p-acs-v4-0-v9-7-1a8e0f50ddd9@nvidia.com>
 
-> Does this short-circuiting && operator cause issues during hibernation?
-> [...]
-> Since pme_capable is unconditionally false, pci_pwrctrl_power_off_devices=
-()
-> will force cutting auxiliary power.
+On Thu, Oct 01, 2026 at 02:55:15PM +0300, Leon Romanovsky wrote:
+> From: Leon Romanovsky <leonro@nvidia.com>
+> 
+> calc_map_type_and_dist() returns one mapping type per provider and client,
+> valid only for strictly ordered Requests carrying an Untranslated address.
+> Clients that use Relaxed Ordering or ATS cannot ask what the fabric would
+> do with their traffic.
+> 
+> Add enum pci_p2pdma_tlp_flags to name a class and pci_p2pdma_map_type_tlp()
+> to ask about one. The topology walk and the ACS Control reads do not depend
+> on the class, so decide all of them from the one walk and cache them
+> together, four bits each. Every class still answers alike; the controls
+> that tell them apart come next.
+> 
+> Tested-by: Tushar Dave <tdave@nvidia.com>
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+> ---
+>  drivers/pci/p2pdma.c | 159 +++++++++++++++++++++++++++++++++++++++++----------
+>  1 file changed, 128 insertions(+), 31 deletions(-)
+> 
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index 841c86be31bb..43e225cc5735 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -492,6 +492,33 @@ static struct pci_dev *find_parent_pci_dev(struct device *dev)
+>  	return NULL;
+>  }
+>  
+> +/**
+> + * enum pci_p2pdma_tlp_flags - Properties of the TLPs a client will issue
+> + *
+> + * These describe the traffic rather than the topology, and select which ACS
+> + * controls apply along the peer-to-peer path. A value of 0 means strictly
+> + * ordered Requests carrying an Untranslated address.
+> + *
+> + * @PCI_P2PDMA_TLP_TRANSLATED: Requests carry an ATS Translated address. PCIe
+> + *	r7.0 sec 6.12.3 routes those to the peer regardless of ACS P2P Request
+> + *	Redirect and ACS P2P Egress Control wherever ACS Direct Translated P2P
+> + *	is enabled.
+> + * @PCI_P2PDMA_TLP_RELAXED_CPL: The provider returns Completions with the
+> + *	Relaxed Ordering attribute set. PCIe r7.0 sec 6.12.1.1 never redirects
+> + *	those, so ACS P2P Completion Redirect does not gate the path. The
+> + *	Completer chooses this attribute and the specification does not require
+> + *	it to copy Relaxed Ordering from the Request into the Completion, so a
+> + *	caller passing this flag asserts that its provider does.
 
-That part is right. At poweroff_noirq the devices are in D3hot, the
-helper would have reported PME from D3cold, and with this patch a
-wake-enabled device loses its power anyway. In v2 I will call the
-helper first and ignore only its verdict, not its PME result:
+It doesn't sound right to me that Completers choose the attribute.  I
+thought *Requesters* chose the RO attribute based on their design
+(knowledge about which transactions require strong ordering) and their
+Enable Relaxed Ordering bit.  Sec 2.2.9.1 says:
 
-=09if (!pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable) &&
-=09    pm_suspend_in_progress())
-=09=09return 0;
+  - Completion headers must supply the same values for the Attribute
+    as were supplied in the header of the corresponding Request,
+    except as explicitly allowed:
 
-At freeze_noirq the devices are in D0, so the helper stops at the first
-one and pme_capable stays false, which is what the image needs. I ran
-this version on the Yoga Slim 7x before writing, and a hibernation with
-a power-off resumes as it does with v1.
+    - when IDO is used (see § Section 2.2.6.4)
 
-> wipes endpoint hardware state during the freeze phase, violating the
-> core PM contract that thaw operates on preserved hardware state.
-
-The reset between freeze and thaw is real, and it is the price of this
-approach. pci_pm_thaw_noirq() returns the device to D0 and restores its
-config space before the driver's thaw runs, so that much is covered,
-and a driver whose thaw is its resume copes. NVMe did here. A driver
-with a lighter thaw that expects the device's own state to be intact
-would not.
-
-I did it at freeze because I do not see how to do it at restore. The
-image says the clocks, regulators and PHY of the controller are on, so
-restore_noirq cannot bring them up without first taking them down, and
-that means writing to a PHY that may have no power, the same kind of
-access that resets the machine today. If there is a way to do this on
-the restore side, or if it belongs in pcie-qcom only, I would rather do
-that.
-
-I will hold v2 until a maintainer has had a look.
-
+    - when RO is used in a Translation Completion (see § Section
+      10.2.3)
