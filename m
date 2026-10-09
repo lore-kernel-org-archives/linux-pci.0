@@ -1,36 +1,36 @@
 Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020085.outbound.protection.outlook.com [52.101.228.85])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA34B3BBA08;
-	Fri,  9 Oct 2026 04:55:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4AE33DA7DB;
+	Fri,  9 Oct 2026 04:55:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.85
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791521709; cv=fail; b=ZebMgXvUSn9pEyjblGmpELaBONuG46C6qdlndE+zP+hwHYzaqvCTjb2CDeMQd5qtTBftxtzfl/unkDpYMS3iKrZaJiZ7wijX70BYCrKOGCY3RB9CBnuxcTUmHeVAOyr68EhIFEyQIRjGI1Uld45RNZPE9cZTgMzBCXk3vKd4sjE=
+	t=1791521711; cv=fail; b=RvcwIpybT528vCSBRwB/Qz6bDpmPLtAjq8I1IR9qGllmaGHOfU9E+Ht5g61vHUHR4yxWqrsfoZWIrhEF1q78ZrH2BFbgi7j2dhyOnJisNjd5cwQekqst7urlYSMJnBKAP0Lk0ILjC2eLAsjzJ2UMP3F8H7o8EIFJfdtQExbHr+w=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791521709; c=relaxed/simple;
-	bh=z87uuzue6oCS6+WhNP2x7CuBTiZSI2t5g+DYRgIbZBw=;
+	s=arc-20240116; t=1791521711; c=relaxed/simple;
+	bh=4erfnXx7WqyWY3h7XTimZuNBALGdZuxBA0xp4GTTCc4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=KT8stmTBR5dJxBHvng0Gp958t6RZr3ZPgFbbyxSxf++PWhUKXiFFNQaZWThRPf89YPGSRvIta2B01zDLj6XqF5PlEfBj/lGtXd+G3qnpN0Ic2WATVoHD4O4UaRaugiVYscjaclwDiAuCnWFNbCaqgumDgMGdHc6Hhy29ZaQ91q0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=NqB2Fl74; arc=fail smtp.client-ip=52.101.228.85
+	 Content-Type:MIME-Version; b=kKDnL4t7SpDXjOjP+wT4GuphgjtMjTVfQdw+Sb7Mc6RweCMAr4jkjVyXSJdyZruIEslwGGSAs4NVGX0uiXRTtzQtQCvPVS1HnWd0cDy34KFjS3GDK95/mjBBS4CT8KTIto8ZIMOc3UDQp6n+7NTWhU8QhHe/y6aP3VHslwAS6LQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=RIBcN0Hp; arc=fail smtp.client-ip=52.101.228.85
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="NqB2Fl74"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="RIBcN0Hp"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=eq+YIngMNw5jCEnXcv7Ozk4TU7kUXSnmlKzOA0xUXGoO1POo8EBTAANfG1yB/tU9tQfgKIVcdskL5lUN+t5axrXv9CKI4gB2PG+Rsyt8ZN06c29onVd9bzCBvKAq1X04c9t0OkTrvAonfn9PMhOOpieluPLYE1+LrbIj3g6ysic9hNKLp6jyZMUVTIuguORi8UwaCpKVGr5l/Zz16XQ+DY4L+3yLPNY2b8R4BHaWWe4y13Gp2O+YL0K4ICZ0nZGeu0T94jMd6tlJ64iqkPdfd6wssc02Luz/egv1gbpeyHIkxBeN/vi8ESXgHlmhDrT1x9JZZHKDCFR9zeKoJ54N8A==
+ b=UQEO4hcbJtCKWWSwy4+rRBc3cZAJaP7ZE/pxwzEwRsKg2k+9ao3BdVJSBEWwl/iP5HrLKYPNgGFAKVmltsOfneoU+nOJCyMATZ1RLVVtaogwo3uSJ2YU0X/+ERwhaW/m0LcDI88Ymb58va4I5c2fmVwliYdFnlPm/NIM7MhmZkueYC5QQMXJngWs07RttDZEgkhFT6iVEtFbBAJ56OHyPcCdmrjHiagoEpGcPUvCNTky39ugEQvEThXGzIklAnTK+SO/BnWEcpL+EAhPXUmeHYYjhSW4W7swWjevZGeM9rMcwb40zGJbps0wKQJRzRmpFdijdMbuusy9okVxlcgLmw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qddKPouX7xPqwQrkMelPbfTRAUQ87yI+6IPbzWr+kiQ=;
- b=xmz9/MA9RQI12u/1rf0gwVq4RQZOI9+N0yfQOJnQdmH0H2vIKMepMhx+mAydywDYqDtW0aCzNgL+xBadYMW+0bmbv9v7GrVxQz1EO7VB0OYonV+WsSGCsplz5iYkAEgO/AsK/9zEIp/1mo25LbeGLANHvYzJn5DDak6eZzNR1cCiLCF/m0XLyUstUPNZ8vpN/Ob3VyfDmPrxfWvxNVY3pkWzb5xjOzziw9n2xLfq023csCla+0AGmNV1+qu5cYrvGlenAjFIQnGSH+WdSINiMrZdJh+V38Tkctii2meL5bfxSBi3/JeshwO+2mG5Mg9bocqoCsmThHQUy716oyV7Yg==
+ bh=I7KTbo2C0/xY34mZ0kt3bOa0LXo3m+6moWzqtjq79oQ=;
+ b=qII6f56d8zLgjjCb5gKvpsnO9v81X80SANa/zpdwBpMLjzm9wXHith3L433Kx4nOtlhJlbXqnnzhu5xzsc2hRTAgITxOB/RxV7E8ewQ3iIy3dWcRFSoh6neTqOCPTf8bIXg6WqMpWUIOMT2/c7SDnyUOsQDaSLg1UwMyhuIlL0bDiEs2rH5NXqKnlzOkNCrQoz/Oj3JDzXciicXbZgDdM8D9Nok0UW/ZjkWVum+EYD5RNr5ieZQ3EsuuoeUKWItyJRIAtY6C7YfvMCpci6Yls0aXiysWJZ64d/MP1caCrSCdLFSZcmPj1CN4nP82fiNL+v64WnfMh+zjuee/AhYqyQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
  header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qddKPouX7xPqwQrkMelPbfTRAUQ87yI+6IPbzWr+kiQ=;
- b=NqB2Fl74L4dfKEw2F8mApajBYIKposCekVlwRRvKRshC8fEBj05xfGjs6+l6SmIb9maSArfSfG7EFCHH+UAFQIgwNjVbc5Mw+OTkTOO/ZF7x7bl779PV6HhQUbXTiLGnRcXtEUJyaFZajOqwnJKutzXx/rM24B2NKHTZAuRPY8k=
+ bh=I7KTbo2C0/xY34mZ0kt3bOa0LXo3m+6moWzqtjq79oQ=;
+ b=RIBcN0Hp6GZq5v35HluA1CuxHCJkWsDUuxM0e1bJXrOJ6wrv8hqvByKBCa9XH04Wcv0vFb7GRVp9LLjXGFikbYh/lIyQxFKrAJ6eFuwagEYhnckF4Lv0zJBc3TEFEy6rTXLU37lumtn1sI4Wokcu5xOjCABmlFiWC4t/L3U23WY=
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=valinux.co.jp;
 Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:325::11)
@@ -58,16 +58,16 @@ Cc: Ira Weiny <iweiny@kernel.org>,
 	linux-cxl@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: [PATCH 1/3] cxl/port: Convert PCIe link latency to nanoseconds
-Date: Fri,  9 Oct 2026 13:54:50 +0900
-Message-ID: <20261009045452.1107921-2-den@valinux.co.jp>
+Subject: [PATCH 2/3] cxl: Account for link width in latency calculation
+Date: Fri,  9 Oct 2026 13:54:51 +0900
+Message-ID: <20261009045452.1107921-3-den@valinux.co.jp>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20261009045452.1107921-1-den@valinux.co.jp>
 References: <20261009045452.1107921-1-den@valinux.co.jp>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: TYCPR01CA0126.jpnprd01.prod.outlook.com
- (2603:1096:400:26d::6) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+X-ClientProxiedBy: TY6P301CA0032.JPNP301.PROD.OUTLOOK.COM
+ (2603:1096:405:3ba::12) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  (2603:1096:405:325::11)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -77,93 +77,179 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: TY7P286MB6866:EE_|TYWP286MB3079:EE_
-X-MS-Office365-Filtering-Correlation-Id: af7b89a9-0a0b-465c-7103-08df25c17b65
+X-MS-Office365-Filtering-Correlation-Id: 4ee010ee-5dd9-4e16-1ce5-08df25c17be4
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|10070799003|7416014|376014|23010399003|366016|1800799024|56012099006|10067099003|18002099003|22082099003;
+	BCL:0;ARA:13230040|10070799003|7416014|376014|23010399003|366016|1800799024|56012099006|10067099003|18002099003|22082099003|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	/jnIT3bl6KKJJiBko2Ws1VjRAe1BUSDELZsEaPBkSg4IfMfYxZw/5BG8GC+t52R+GLtp0V8FmJ+lufeHNRpFujZFbMK5vcpGKqxchbCcnLD09R/YqKUR9Zn5290IwCdJdDHQd0I4s5Wrfu2sbS51mSOib7xDJAM8QqsMMMM45JROp+BfJL1jABGne+P/J3saEyardCA9Aa4bPimMrMpuCJT4jxu1YWYpkvlnpMJ8nXfTM03j9/Qhp7NGLxZ4tIqQSDKmqbfWBnUL5i6nrzkmK8mWaqoehipAUJszrLt9G5sn8WOegS1dIxWt4h4tc5xZxTc1w+L81kPzfrtC9cPlpoEm914sFVIwkgPVJhlSh4zJ463fVgSOiE1YFi97rDwiSggUVaHMC5jiggr61zWsWoyDS70+ynXU7fWazStQT3g/pSZB8mPVjf99zyphfBViLFzt24dLVsA8iab6Ts1rPv1dew53MQ4IQ70iRpcu0J/kE0de6ctepcP2QdqE9RMRt/nEaWurnLuzQOWX/O8kheSBcwYtFLXhHEuT5C4qLuAE+ek9rqM0Aek/yBehBduE1B6GyaTBaggzQqf31mILapkiFvepynx7zxjuaATH9TO9GDQJFFcR3kVTHvISgvM71TEM78lCwjtxqkh5b1nni1JXf/a+G26J1udLm4BhY3g=
+	Aj/Hu4G2erxO/obS2eAWbDvbn1VVexRGyG4wPNJI126YMPuhlRh7L0F5gNE0VBGPDmnQtfMn7Xhx39e3UedOyFxYbwBGEY9IKfszerCReK1gzDtXGm5LQRbvpY1N930dQS3MLtcyV65653WSJ80aF7GNRRKxGP4tNYUhuEms54Y4uv+qDE+kp4ydIjDbZSexN252MSCw3uLkjNn9T6ROE3gW+mjdQttQv7+dvj1Pc07xHX+1buBhynJK17XYlRwaUGZayT7Jgod04rybEKpw4GLOHn8bvKVs6Dk+OkhlpQFH65sbHpdCMRwdEzZDnU8eZJCbX77Gy56FlWG1A49wtBp6v6XOgIBwTDoOuxtjDo2Qy39vxZvetd7lPF7psb5G8kuvkD/2DtDn8fcospXajPPkuWXlYsqJntIeBXTfgb8FEYmRG/pnoEKAlBwq8NbyvCLDRKZDu2W3XRyWtH8YR5gC8dCup4ymQM6ZYygh3/SdDpVlCh2wSQSEsUhczQPZERWjz+Jx+zKOb5bJ4sfLuIkGDrPi+o9shRwmzFXHTdTJPdk0sjuJ4aFAR+zNZLTiK/G+V/bj4Mwdz0tBywTzXvHYnvaJ5GKxxt2nTJmbPi8ap+FzXaJMDOC193EYwu1kHd8aPmd5a6pnN0g3/RDt7S/w1DSlTAremWEPx/yU1ts=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(7416014)(376014)(23010399003)(366016)(1800799024)(56012099006)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(7416014)(376014)(23010399003)(366016)(1800799024)(56012099006)(10067099003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?qWGggguKsUS0OIb4SX30r+IxmMZD1jf6NFOWRn+/UyMRvdW+4mNqfjpmvry7?=
- =?us-ascii?Q?dnNwDcWbEr+VsL/80i2GA1CacmEE3V8gCk4DyDllQChfKuuj4+Pa2LKNeGnv?=
- =?us-ascii?Q?u6vvlbE8tq8XSE3nbzQ3zAgT5derRcPN8dOa+nOYcxbjte3JMvd61V05uTST?=
- =?us-ascii?Q?QoakAX+mN6i4pNPX1v44nlh+JkL5NsAstcx17/dntNdLfOHu5o7CbOmZDQ6k?=
- =?us-ascii?Q?RSF1mA1KktFVl4zDsQpRbYFTdShQ5f/z1jLX17DpeD9kIWFARWyST/LRm4Qm?=
- =?us-ascii?Q?mf91+YVcuQbNZ/NEtex8mXA/GkghJd7fkYF6rAmZytjrApGCGQkDHIYFrUsT?=
- =?us-ascii?Q?Rgeb9kosrEWrMY0DQsFoQKoafGO1e3i6uyOE6k0ojPA61bF6ALz8+d8B0e6o?=
- =?us-ascii?Q?eEeIkSTpOh5pnmS3L5/D/zweCOudhuAJvgsq2iTNsd//jLB93uG759OeUAuZ?=
- =?us-ascii?Q?TznNj4AnRhn5H/5ZRDBpteJWgFgGadoISiS65oWOWP9ttk/hFEFEMehujJCq?=
- =?us-ascii?Q?FdTAPsiWKB4AU6letO8uN8Aia+dfFZBDKD2RpoBT4Qd4smZud006UcncgTJb?=
- =?us-ascii?Q?5IiNpVbgXFOmfogK7aXIoiHc4ktDUm0SJX66Ig2TtNrIIDHBTC+we0uCLvZY?=
- =?us-ascii?Q?T6wxCJZQjMhbWE0yrgUDnms91uwiinrWtNOLlV6jx9x9mZlZieiiFTtmJ+K9?=
- =?us-ascii?Q?YZeAubShb4M5CwhN6rzai37TZRWrOU+Kq5aGhJsiZ2nHDyc10mGmLpXcsxtY?=
- =?us-ascii?Q?myKsQIJjx+VXorAI7mwD7giNIFyjguZVLShAnza/xgBjnP2VpF74mLlazxIR?=
- =?us-ascii?Q?UasDGTqfF2LnPRTaLa/aWSywSnh1yqPO/FN/lswNA/3HsCI1iJKZsS531Dvz?=
- =?us-ascii?Q?UGb0s2g6o6WHjI18R5AlfhaJDGvZoZTwfX/S8TiAsPXJWgBOu7Rs+ajaXuT7?=
- =?us-ascii?Q?CQnvDdxfF4ZzjcnNzyEOyHQGNaxvXWux1n0/60iybr2JzQub4dCo/td/4AzZ?=
- =?us-ascii?Q?QnJlm4utjESmTqgLDIBG2k0aTU7+3wDaHuRzVUra+UipmJFzy8NvCwqoSwMA?=
- =?us-ascii?Q?iI9jElUgIWO7zLz4DO+hWDgx5tvxOtCew/aOArdErJ4WO7EQyeerm0bgzar6?=
- =?us-ascii?Q?FPrruVa1E4AnxW6GYQbwDxStkxNOPj1PxKxHCNDraCFbqYeurDMOekYTYlV5?=
- =?us-ascii?Q?o9Rsu0YJ3UACQ0JnZRIPtUlkq3hewNK/K5oICqmOKcxnhZrMi87hK+1TaMrT?=
- =?us-ascii?Q?3lwNOCSze1YMScK/1LQ7PTRz1GCsVwmUCQdIXda4aubwHgLTdxBmOnEMyY+Y?=
- =?us-ascii?Q?4LqANpDqNJ14TvjJRPg5iZm6QYCceVjEhpOHwsIKEWFYrWI5aqy9FERoTD/M?=
- =?us-ascii?Q?VP1tE6HlVPhS1XRaaCDr5GFK09rmhksDjBpxrWg7D8jm7pKs1RsqVd2lcVdq?=
- =?us-ascii?Q?VJrSQQ+P7vSzqyJabSTtqnd2ahcZIE/99kL1AZMoAHjjogFI00OiKoHq/m50?=
- =?us-ascii?Q?Jo4fdf7vXeeq85vdwP248a7E+5VpzqUSeZljlo3VrbfePqnwRUNU5UeeAXl7?=
- =?us-ascii?Q?P5yG5lqefjWTKHYhoadLfbop5XS886AzxjqleohdlEzBJl7qfSAA4U+tJOuR?=
- =?us-ascii?Q?lmxYcmydsFvGbomk89vr6EPW2WXpsGBAaNxMbbkBLRuTJdvXNIvFiMkC7K5N?=
- =?us-ascii?Q?lo3J4YtAtdsHcAFtzA6WcqZYwDZzv5QniGJENMPapkLe2dLmJNWUGpa91j1/?=
- =?us-ascii?Q?KKUTLaRk6k4IsWYackdxJpittpXqUPrb1B01hB46pHgR7ssdPu8O?=
+	=?us-ascii?Q?hJFH4Uqa0k0E6fSn63AaT6kTbfoi/hubVfhREIJCZ5bherHxwCu5LG/f8AwL?=
+ =?us-ascii?Q?GfZi00yvmc0m/GrtGcXEYObaW0FCyiYy0BRT0UsqLBeBEvh3FigH7GhPWl7a?=
+ =?us-ascii?Q?SeiuFb4uKZZPhpgK+zTZ487D+LDLjtZ9jGy+Q12YGf5XcFRpmkJbU0Kcsif+?=
+ =?us-ascii?Q?Bq3xnDAwZCTxOQM7ZM8/45Z8wM7Vs0H9Z+uudsJcN9d5ngBFNHJg7CscZahe?=
+ =?us-ascii?Q?RD/uHv1Lzn9JhDoZqlYlCHTY7TIPGgcmAc3pEBWkh4g1kUqja/wOfyNSHjHS?=
+ =?us-ascii?Q?H6iwmMMTxUDjEtVz5/33dACmQ2yZM43ROAclroWCBE9XKnEap3wS6/o/h1tk?=
+ =?us-ascii?Q?vf5dVolvJdkJzG5zpBJM3Eu/ZWtUblaGmPp7vsDezmrXNjWaD0x6HTkymwXH?=
+ =?us-ascii?Q?aDmS+hFDaXpODMkjBx5tksRZt75w2VzQ7A7y2JlleRJ2WNC7a/lnrH41TjGj?=
+ =?us-ascii?Q?YxqSAcrBR0u3UoLMlbaIuud+sQ8aLca72CGiUhgxD7sj7GhVy7iBLQEPgzoo?=
+ =?us-ascii?Q?g5Dz2eWinANPqsrYPJ5QrBiZ9dnO3c4fbVP+AHtgXBWxBX1G9O0LEK2yQsUJ?=
+ =?us-ascii?Q?/k7hKswHlEWuJ5oGhYHfmoBxtOJSEbK0tW7N1WEIuY9AAU22uzH+roL3ss2T?=
+ =?us-ascii?Q?mnaHiTNFcySEJfagXoB6I29v2b83uEn0KuciKoGeOvsPDTCochMQM0QfBn77?=
+ =?us-ascii?Q?1o/IpGhotN3vV1Ldu2YOP4NrBAJOpE7P/XZgyfxqvKqjlZ3HQp8XTbMXmno3?=
+ =?us-ascii?Q?jY2mvmiLxU0pxmPywKvnPZ1uY8XBvuvSbeqpI+Uf8bWjZZ7A+QTnpqhA/V60?=
+ =?us-ascii?Q?ypir9crRQItV1kIvZciel8P9Vf4VO4cwOJFkeBeaLmj28ad8MYeiosO5uMi8?=
+ =?us-ascii?Q?GzmqFwr5VELs1psEW9w4hgHBiqUS3aWkqgoZtxRY+4+9ApHe3dIfpmD+puK7?=
+ =?us-ascii?Q?Ix9lUa7HPzYKNyUnu635Al2NToasTqeUiZy4MtHsVqUuvERNXEztS9n9uvRm?=
+ =?us-ascii?Q?ObhpHJ6E67UUWkPqbG+XUHqExklV3xvBY/1RM1N8+EDaYDtaEtNvGydQsDl0?=
+ =?us-ascii?Q?FGxawLjxZsl8zhweHy3PNz91imow+pcXCGTwxLSojgCJcspn1Bf6u43xp5rA?=
+ =?us-ascii?Q?ZKFwhZsC3wRm8Wqlz3Zvip8mdJmjvu5hWxo39S4Ro3ZIM+Mi91RXSbN6AvuV?=
+ =?us-ascii?Q?rdUCWhSecnm2loIzm5lvYPHri2dHVN7xWYff3A9okWbrvynHfQypG4Fag5NN?=
+ =?us-ascii?Q?3o8jOLgbnd8k0cU3paTYHlrNGdvlSN046ZwDFDEz5s2ll4+hO8uNL2/D1jIP?=
+ =?us-ascii?Q?m7qynhGvXcioeT8IUdvGaKapgnBxmPqfMnCHBkEc22iszoDt5ZyMjCXgZaL8?=
+ =?us-ascii?Q?mz6E03zQpx7mF/AjsPY7NObxBsA3QaYSCq4gH3UwplYQ3sBH6C4D6ttwTFcn?=
+ =?us-ascii?Q?H5TIiejx4Ljuo4ctjig72Wy/4QSAauyvbzUunHEX6m3qVVejIfsAxhxIPZEw?=
+ =?us-ascii?Q?Zlrc/xatL4aEQMVTO6RBScmP6Ee0EAF2oqcoqJE5ESdgY9MLCNRcGDnUAj9Q?=
+ =?us-ascii?Q?GhPh4Djyznq+YUv7IcO2xKm2lGj0CC9ezK6maBXAkaanueVCPVuq5TuiP0mC?=
+ =?us-ascii?Q?RfavIvdQan1jqDvx58Vp0XzPzZCJHBBABD7+uLPLh/05lnJd5BrIo0KfB6/6?=
+ =?us-ascii?Q?Es0JoO4yCRK6AzNvIROzXUYK6VE5MsrThWEcGimnAUcAVfeZdXlj3dHDwMXv?=
+ =?us-ascii?Q?s6njKwUkK6gyDA3PqHepmAzPiU80BAIusfBKIwrhsNW9RN+BaKqX?=
 X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: af7b89a9-0a0b-465c-7103-08df25c17b65
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4ee010ee-5dd9-4e16-1ce5-08df25c17be4
 X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Oct 2026 04:55:03.9728
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Oct 2026 04:55:04.8413
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: L2KsxO8qpgB96sq8VDVcuVaJto+RIbMmAdk8ZEvLij/mZ1AAzCd6nkCIVfk3VTenj78dhbpUzzuO2ToR/KzBRw==
+X-MS-Exchange-CrossTenant-UserPrincipalName: cfHOdKBEgchLy/3ovlrsZYZsMQWRlaHDaziti1LStP1CZ6n/YKvYFerZuqWEMZT7D8lWUooAFzyPLYD3CsY44A==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYWP286MB3079
 
-Commit 51293c565cf4 ("cxl: Fix incorrect region perf data calculation")
-converted CDAT latencies to nanoseconds and removed the conversion in
-cxl_region_perf_data_calculate(), but left PCIe link latencies in
-picoseconds.
+cxl_pci_get_latency() derives bandwidth from the per-lane speed returned
+by pcie_link_speed_mbps(), ignoring the negotiated link width. This
+overestimates the FlitLatency contribution for multi-lane links.
+Sections 2.11.3 and 2.11.4 of the Intel CXL Memory Device Software Guide
+describe the link bandwidth as the product of the negotiated speed and
+width.
 
-This inflates the FlitLatency contribution to region and node latencies
-by a factor of 1000, exposing incorrect values in sysfs. The resulting
-abstract distances can incorrectly reverse the memory tier ordering of
-nodes.
+Replace pcie_link_speed_mbps() with pcie_link_bandwidth_mbps() and
+migrate both CXL callers (the only users of the API). The new helper
+obtains speed and width from a single Link Status read. The CXL
+bandwidth calculation no longer needs a separate width read and
+multiplication.
 
-Convert the FlitLatency contribution to nanoseconds before adding it to
-the access coordinates, rounding up as cdat_normalize() does.
+While at it, make error handling more robust by converting PCI config
+read errors to negative errno values and checking for zero bandwidth
+before calculating latency.
 
-Fixes: 51293c565cf4 ("cxl: Fix incorrect region perf data calculation")
+Fixes: 4d07a05397c8 ("cxl: Calculate and store PCI link latency for the downstream ports")
 Cc: stable@vger.kernel.org
 Signed-off-by: Koichiro Den <den@valinux.co.jp>
 ---
- drivers/cxl/core/port.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/cxl/core/pci.c | 22 ++++++++--------------
+ drivers/pci/pci.c      | 23 ++++++++++++++++++-----
+ include/linux/pci.h    |  2 +-
+ 3 files changed, 27 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
-index 6024bc9c1376..08d9a7b8855c 100644
---- a/drivers/cxl/core/port.c
-+++ b/drivers/cxl/core/port.c
-@@ -2339,6 +2339,9 @@ EXPORT_SYMBOL_NS_GPL(schedule_cxl_memdev_detach, "CXL");
- 
- static void add_latency(struct access_coordinate *c, long latency)
+diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
+index 43b9b7afff29..8b52621ffea1 100644
+--- a/drivers/cxl/core/pci.c
++++ b/drivers/cxl/core/pci.c
+@@ -660,8 +660,8 @@ long cxl_pci_get_latency(struct pci_dev *pdev)
  {
-+	/* Convert link latency from picoseconds to nanoseconds. */
-+	latency = DIV_ROUND_UP(latency, 1000);
+ 	long bw;
+ 
+-	bw = pcie_link_speed_mbps(pdev);
+-	if (bw < 0)
++	bw = pcie_link_bandwidth_mbps(pdev);
++	if (bw <= 0)
+ 		return 0;
+ 	bw /= BITS_PER_BYTE;
+ 
+@@ -765,18 +765,12 @@ EXPORT_SYMBOL_NS_GPL(cxl_pci_setup_regs, "CXL");
+ 
+ int cxl_pci_get_bandwidth(struct pci_dev *pdev, struct access_coordinate *c)
+ {
+-	int speed, bw;
+-	u16 lnksta;
+-	u32 width;
+-
+-	speed = pcie_link_speed_mbps(pdev);
+-	if (speed < 0)
+-		return speed;
+-	speed /= BITS_PER_BYTE;
+-
+-	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnksta);
+-	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, lnksta);
+-	bw = speed * width;
++	int bw;
 +
++	bw = pcie_link_bandwidth_mbps(pdev);
++	if (bw < 0)
++		return bw;
++	bw /= BITS_PER_BYTE;
+ 
  	for (int i = 0; i < ACCESS_COORDINATE_MAX; i++) {
- 		c[i].write_latency += latency;
- 		c[i].read_latency += latency;
+ 		c[i].read_bandwidth = bw;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b2879a6be5f8..aa3d180de56e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5980,18 +5980,31 @@ static enum pci_bus_speed to_pcie_link_speed(u16 lnksta)
+ 	return pcie_link_speed[FIELD_GET(PCI_EXP_LNKSTA_CLS, lnksta)];
+ }
+ 
+-int pcie_link_speed_mbps(struct pci_dev *pdev)
++/**
++ * pcie_link_bandwidth_mbps - get the current bandwidth of a single PCIe link
++ * @pdev: PCI device to query
++ *
++ * The bandwidth includes all negotiated lanes and does not account for
++ * encoding overhead. A negotiated width of zero gives zero bandwidth.
++ *
++ * Return: Bandwidth in Mb/s, or a negative errno on failure.
++ */
++int pcie_link_bandwidth_mbps(struct pci_dev *pdev)
+ {
+ 	u16 lnksta;
+-	int err;
++	int speed, err;
+ 
+ 	err = pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnksta);
+ 	if (err)
+-		return err;
++		return pcibios_err_to_errno(err);
++
++	speed = pcie_dev_speed_mbps(to_pcie_link_speed(lnksta));
++	if (speed < 0)
++		return speed;
+ 
+-	return pcie_dev_speed_mbps(to_pcie_link_speed(lnksta));
++	return speed * FIELD_GET(PCI_EXP_LNKSTA_NLW, lnksta);
+ }
+-EXPORT_SYMBOL(pcie_link_speed_mbps);
++EXPORT_SYMBOL(pcie_link_bandwidth_mbps);
+ 
+ /**
+  * pcie_bandwidth_available - determine minimum link settings of a PCIe
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d31a8d107b1e..bbfb0b98ff46 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1477,7 +1477,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+ 			     enum pci_bus_speed *speed,
+ 			     enum pcie_link_width *width);
+-int pcie_link_speed_mbps(struct pci_dev *pdev);
++int pcie_link_bandwidth_mbps(struct pci_dev *pdev);
+ void pcie_print_link_status(struct pci_dev *dev);
+ int pcie_reset_flr(struct pci_dev *dev, bool probe);
+ int pcie_flr(struct pci_dev *dev);
 -- 
 2.51.0
 
