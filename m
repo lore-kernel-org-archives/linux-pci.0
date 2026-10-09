@@ -1,117 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail-24417.protonmail.ch (mail-24417.protonmail.ch [109.224.244.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A20145D905
-	for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2026 20:36:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44EBF3BF660;
+	Fri,  9 Oct 2026 21:08:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.224.244.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791578168; cv=none; b=HTJrC8/6gNEjpxwXHK1X7AoXd/X80HOxgB2mKxUf6Ev3QUbpdR5biLIQmnujn6oI3WZq/olALpT1AIlo/du/U7aeuOJ0+zpY4U28RkDqv5LyTGAn2IzuCywPL0+xtnu/Zdjqu+paj4es2cOYQegeEocU8EAIggtnDkp2e0/W2og=
+	t=1791580087; cv=none; b=q8z6wwblavEipc3Kt56vxsTkhqj4bBFLh4HnpRq4RzR6Lc7Aq0WsgVIChrf6AlaaJoEJZbr6IT37MsGFzaRH3pPbOMZsyBRWwKARf0LWhGX3lQ5TTdl+dj4KoZggkw4F+O11C5SdYcavxbzf+Vr5mG2FKuHWzFEXCFHAPnm8OXk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791578168; c=relaxed/simple;
-	bh=4OjNd/CDf7B6zjmz68OHEpXtsQesU1en+oVNHuLSJPA=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=sIERGr0+5RiSg8j6H+NLISvkevGVMktQZ2+IR2F6Le8ecopCRX2XeUsEzApCLnnZTHl4osgQ0O+tIty8oA60WiuLOkXopMsSQdEq5IkBfrNQQ1+D47KzAVDjHO8AwVXncu3tSQHwoaD/jT56cTgkw4g6M6OcAXSAAkRID+f0KiY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=No7Nc9jn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791580087; c=relaxed/simple;
+	bh=5sMHZk4Hc88OhXhjJkqjDNeV6rinFGuPqsbkYItAWz0=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=jGWbDiXmDXqsE04KPhsLEcLGh0JCiLGz00LvQDBw+5meDB1nqQLTxtTwfBMJpnk5n/LfUBAOAPlMM1c4aCabaRjh2oGAmMfP3EE7ImcMS0OCCKHfoIWJK+2Yz8TNCZ6K/zKIeolqMJpzzsXAiqwkY6fi0z/DumHzz9Zy9toqIAc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me; spf=pass smtp.mailfrom=pm.me; dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b=EcgIALZD; arc=none smtp.client-ip=109.224.244.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pm.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="No7Nc9jn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EEE671F000FF;
-	Fri,  9 Oct 2026 20:36:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791578167;
-	bh=7/yG1JxYZ+lQ8qG3WmhImnuiPmcli+17gdnvoECJyQ0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=No7Nc9jnlNuNCyDv+khz/bLGP8YZCCQi2smLQbfch7ooFdjs8rSKLNh5igt1FfB3o
-	 Zic8ObAp/65hcKNH+MfXMVHByQNkvVr54Sy/dgI55lM+e83yV1/q6Wx1K/FeisD2up
-	 SXWwSIcH7bT76qCbVfowXzgab92PDn0lJaXDnSaQgZg1TJZ1IeVOUO81Sy0YjwJuyC
-	 ZstTve6e9acrtdi3s/majCBm7JqvdRJdWiR5rnRM5tGgD1go8+q5/NRHl6xQN6WExO
-	 bCRTRlKfgTJW9NLSii8AEL9kXNpfXP1CLHT41nfQ6AnVifj6zgvXCvbqHJmavvGxCo
-	 FFJoRJNcQsoLg==
-Message-ID: <sashiko-outbox-166041@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH] PCI: dwc: Power the controller down when
- hibernating
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Birk Skyum" <birk.skyum@pm.me>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <179157746908.73485.2343672865542690797@pm.me>
-References: <179157746908.73485.2343672865542690797@pm.me>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 09 Oct 2026 20:36:06 +0000
+	dkim=pass (2048-bit key) header.d=pm.me header.i=@pm.me header.b="EcgIALZD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pm.me;
+	s=protonmail3; t=1791580076; x=1791839276;
+	bh=8mepSe62s0ugerwpFuXic0aCmj871cPqnta8q4WTVwc=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=EcgIALZDakrxXNkCM/5aUw8DLoDg4bDNi/NqhDKyCh7SYpJN+NswgIxAPS/SJhsVc
+	 yKuSiRTw6+bDTvXRsZyupu2Ech353t/irzazx6llMjKcJDMC8+yzONohxNFucrOM++
+	 TQwjiggKgiATDwYUCARn/jXfbLvYmgTbPPNVJohBJTR70rBuWe8cxZg8vuQbIBKFU7
+	 JoBhf7jLZf/rlVGGGb2VnnwYmW038rqL9kSzpzt7+FF1HyyKgTw/L0pZe3uErLpO+i
+	 a7zAlJgrHp7mAH9/c2qrGJ1iMDkLIUddcmGq1CPtCKAEugdpx2ZqlrJhLUzSuOqXez
+	 ZcvQ2OT2isp5A==
+Date: Fri, 09 Oct 2026 21:07:53 +0000
+To: sashiko-bot@kernel.org
+From: Birk Skyum <birk.skyum@pm.me>
+Cc: Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, =?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH] PCI: dwc: Power the controller down when hibernating
+Message-ID: <179158007085.33373.10495486250879471249@pm.me>
+In-Reply-To: <sashiko-outbox-166041@kernel.org>
+References: <179157746908.73485.2343672865542690797@pm.me> <sashiko-outbox-166041@kernel.org>
+Feedback-ID: 21326998:user:proton
+X-Pm-Message-ID: 97b4da40f43a418c58b48886561281d9e2d8eeff
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] pci: hibernation S4 WOL and thaw broken by short-circuited D3cold =
-check
---
+> Does this short-circuiting && operator cause issues during hibernation?
+> [...]
+> Since pme_capable is unconditionally false, pci_pwrctrl_power_off_devices=
+()
+> will force cutting auxiliary power.
 
-commit fefc3f1865b9c97f0642e5cbcd08bb6b0f27167f
-Author: Birk Skyum <birk.skyum@pm.me>
+That part is right. At poweroff_noirq the devices are in D3hot, the
+helper would have reported PME from D3cold, and with this patch a
+wake-enabled device loses its power anyway. In v2 I will call the
+helper first and ignore only its verdict, not its PME result:
 
-PCI: dwc: Power the controller down when hibernating
+=09if (!pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable) &&
+=09    pm_suspend_in_progress())
+=09=09return 0;
 
-This commit modifies dw_pcie_suspend_noirq() to power down the controller
-during hibernation by checking pm_suspend_in_progress(). This ensures that a
-hibernation image resumed after a power cycle does not crash when the kernel
-reads uninitialized DBI registers.
+At freeze_noirq the devices are in D0, so the helper stops at the first
+one and pme_capable stays false, which is what the image needs. I ran
+this version on the Yoga Slim 7x before writing, and a hibernation with
+a power-off resumes as it does with v1.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/=
-pci/controller/dwc/pcie-designware-host.c
-> index 77aa79ef0ccf8..458e4c6e798b0 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-[ ... ]
-> @@ -1231,7 +1232,14 @@ int dw_pcie_suspend_noirq(struct dw_pcie *pci)
->  	if (!dw_pcie_link_up(pci))
->  		goto stop_link;
-> =20
-> -	if (!pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable))
-> +	/*
-> +	 * Leaving the controller powered is only safe if it keeps its state
-> +	 * until resume. A hibernation image is resumed after a power cycle, by
-> +	 * a kernel that may not have brought this controller up, so only a
-> +	 * suspend may leave it powered.
-> +	 */
-> +	if (pm_suspend_in_progress() &&
-> +	    !pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable))
->  		return 0;
+> wipes endpoint hardware state during the freeze phase, violating the
+> core PM contract that thaw operates on preserved hardware state.
 
-[Severity: High]
-Does this short-circuiting && operator cause issues during hibernation?
+The reset between freeze and thaw is real, and it is the price of this
+approach. pci_pm_thaw_noirq() returns the device to D0 and restores its
+config space before the driver's thaw runs, so that much is covered,
+and a driver whose thaw is its resume copes. NVMe did here. A driver
+with a lighter thaw that expects the device's own state to be intact
+would not.
 
-During hibernation phases (poweroff_noirq and freeze_noirq),
-pm_suspend_in_progress() returns false. This causes the && operator to
-short-circuit, skipping the call to pci_host_common_d3cold_possible().
+I did it at freeze because I do not see how to do it at restore. The
+image says the clocks, regulators and PHY of the controller are on, so
+restore_noirq cannot bring them up without first taking them down, and
+that means writing to a PHY that may have no power, the same kind of
+access that resets the machine today. If there is a way to do this on
+the restore side, or if it belongs in pcie-qcom only, I would rather do
+that.
 
-Because of this, pme_capable remains at its default uninitialized value of
-false. Later in dw_pcie_suspend_noirq(), pci->pp.skip_pwrctrl_off is assign=
-ed
-the value of pme_capable:
+I will hold v2 until a maintainer has had a look.
 
-stop_link:
-	...
-	pci->pp.skip_pwrctrl_off =3D pme_capable;
-	dw_pcie_stop_link(pci);
-
-Since pme_capable is unconditionally false, pci_pwrctrl_power_off_devices()
-will force cutting auxiliary power.=20
-
-This completely breaks S4 Wake-on-LAN and wipes endpoint hardware state dur=
-ing
-the freeze phase, violating the core PM contract that thaw operates on pres=
-erved
-hardware state. Endpoints lacking D3cold support will crash or fail to resu=
-me
-during the thaw phase.
-
-> =20
->  	if (pci->pp.ops->pme_turn_off) {
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/179157746908.73485.=
-2343672865542690797@pm.me?part=3D1
