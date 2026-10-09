@@ -1,134 +1,104 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 546A8357D12;
-	Fri,  9 Oct 2026 15:30:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3891F4EA38E;
+	Fri,  9 Oct 2026 15:40:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791559832; cv=none; b=jLe+hx6aJRTWA/TTQZFDP92J9/vF/zZ28ofuy+pUQttKVutg5rheC/Hw3yQBEjeefRJr6UZmVyShQSk/0SAMXLe77sfyfp3TO0O9+UXgI5fOat9jWBr4F2YU6dzrBhNaXRcvQPwkNeMAxjaF/1TN5zShlSp15ogcHAWPWnv8dM8=
+	t=1791560442; cv=none; b=tzN2ZU4TTyrBbSdNfNPlAhPB2W2sCnKlr0jplrWr/XuKlYOGf4BipHS+mLzP5P5jENU0CVtgw8ABnvDl+HtWrJbvgFsTz/APrzPC1gXx+849BeDuaEpZ4JMRXDTR9KDGyP2pbnbCrVTLiaSv3se4bvdSEcTxNyMJF3riYpTraO0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791559832; c=relaxed/simple;
-	bh=kJYp86t3XD5Y/WycqZT8+N9YJNJK5fpZc31PNQj4kzA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=AeB2BUiU0NTQunPeD+7znmNYywGiCWptyEPnVBXm4rcad5FVpP2a2h/FnLuvs0Dav2z6uTy/HRvOOcOYane+kPoObBJC9+HfrNLUtroKk9um/AmTDmNirFXC/8qSxO8wn4cyaFENnVrHNPVJEspD+MYX/CVVP6xL57VZlZGz1bU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Biy9CZ9j; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791560442; c=relaxed/simple;
+	bh=5Vq6IrczwMUOvnUlXtS8IFHOzGnqSb2ysDfVsCAyk4M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Jkw5FtFX3PMsiGgMj5cMTIfNMYiarsvCjqs3hK4z8xFDhP/3gp10uKo7dZrHO9nt9uGh5SyNwRlRYywePYXMpjIiZIynMfcu4F/GMmOnUkXhbA3l5Tk4o4hGmGrEWujt44bmFVmqeeAXyWUJAmt4bIP22QCcGO7IYZoyWnlEm9o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=A8ZUYKz1; arc=none smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Biy9CZ9j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D787B1F00893;
-	Fri,  9 Oct 2026 15:30:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791559830;
-	bh=xW4BiiVxHX+na2fdTITtMf2MnenCzpd+Yk0eYGZGJpw=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=Biy9CZ9jF2ThfnXS+ffDzhE9qcB4aEpeOzjXbia1eiLsOPzDKmQx29jHdE6pQukLL
-	 DRuf1NC7eRpUUqkuwEJAVAaUVmFALESxcnUanN5eG8+fiv5UoRvFCEaMBa2ZHMOoaM
-	 I2mVRIj06+SYZfgX9rQ8+PDcP+DRhq4yV7Y9+EQ0rYYfy0hNHV4tKeytTReaVVAUfG
-	 UonDnii3kl29BIj9AX9acdj3jZRXgH7pJf2HnaiATx/hB1uFkwkQ7UsZXh8YDXnQg/
-	 Yui1kELvC8pFq0xefEcD6FOuS7sOL4NE6JNZZFQ+cyn3oMopvUJAlRaG7yfja1zoM2
-	 Ml+U1QmlIfr/A==
-Date: Fri, 9 Oct 2026 10:30:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: mathias.nyman@intel.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, linux-usb@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3] usb: xhci-pci: Add TUSB73x0 definitions
-Message-ID: <20261009153028.GA976394@bhelgaas>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="A8ZUYKz1"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1791560438; x=1823096438;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=5Vq6IrczwMUOvnUlXtS8IFHOzGnqSb2ysDfVsCAyk4M=;
+  b=A8ZUYKz1+9bnZ6VwvaywCtTTx2FJplkG1vlVJuiveyZbQyxtXt1UCgAk
+   N49A28++3JFhD0cgf2YtA1VIAI36zbaACXYV+8SmQbFFppVeJ0FJIuRTv
+   DXJAvehJJGRg03fvNFEwfUQ2dbI7NiK8pGHI+qzzKTXY1rS9ezINl/IfE
+   II9yGgAqBS+SuQq7LsTiMP+bFpi3N44DRGsYXb53mEB5Q2bes9kWn8FgP
+   HF947P0xJdYq/SMNDt0Kt/BJp6p41zKY3kHX4FGa99wJGHDO17s6L0xt9
+   NzmFZ91EFenrkZu4oCBNX1T+HbPyMoru9EtqHvCLe217HhGUC29jh2gdp
+   w==;
+X-CSE-ConnectionGUID: PSTrZqNGTpyhB4FfI26QSg==
+X-CSE-MsgGUID: xrUemD0GQg+NW7wDPZNMXg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11930"; a="255197"
+X-IronPort-AV: E=Sophos;i="6.27,148,1787036400"; 
+   d="scan'208";a="255197"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2026 08:40:37 -0700
+X-CSE-ConnectionGUID: jrdAMVPYRl+JroZ+T3j0MA==
+X-CSE-MsgGUID: DvmFJIAEQ/Wlq1GF6Uzamg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,148,1787036400"; 
+   d="scan'208";a="674637"
+Received: from pavel-dev.sc.intel.com (HELO pepopov-mobl2.amr.corp.intel.com) ([10.3.206.11])
+  by fmviesa008.fm.intel.com with ESMTP; 09 Oct 2026 08:40:35 -0700
+From: Pavel Popov <pavel.e.popov@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>
+Cc: pavel.e.popov@intel.com,
+	Jim Chow <jim.chow@broadcom.com>,
+	Radu Rugina <radu.rugina@broadcom.com>,
+	Alexey Makhalov <alexey.makhalov@broadcom.com>,
+	Wei Liu <wei.liu@kernel.org>,
+	Michael Kelley <mhklinux@outlook.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Leon Romanovsky <leonro@nvidia.com>,
+	Nathan Ciobanu <nathan.d.ciobanu@linux.intel.com>,
+	bcm-kernel-feedback-list@broadcom.com,
+	virtualization@lists.linux.dev,
+	linux-hyperv@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 0/2] PCI/P2PDMA: Allow P2PDMA in VMware and Hyper-V guests on Intel hosts
+Date: Fri,  9 Oct 2026 08:40:32 -0700
+Message-ID: <20261009154034.82321-1-pavel.e.popov@intel.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261009125154.266435-1-festevam@gmail.com>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Oct 09, 2026 at 09:51:54AM -0300, Fabio Estevam wrote:
-> Instead of hard-coding the TUSB73X0 PCI ID, USB_CTRL register address
-> and the PWRON_POLARITY, introduce definitions for them to make the code
-> easier to read.
-> 
-> No functional change.
-> 
-> Signed-off-by: Fabio Estevam <festevam@gmail.com>
+VMware and Hyper-V expose passthrough devices to guest VMs without an
+explicit host bridge device. Consequently, host_bridge_whitelist()
+cannot automatically identify the underlying host bridge structure,
+causing Peer-to-Peer DMA (P2PDMA) requests to be rejected unless the
+device IDs are explicitly listed in pci_p2pdma_whitelist[]. To enable
+P2PDMA support in virtualized environments on Intel hosts, this series
+introduces hypervisor_supports_p2pdma().
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# pci_ids.h
+Although alternative P2PDMA mechanisms are in development [1], their
+adoption timeline in hypervisors remains uncertain. This solution
+addresses the immediate need to support both new and existing
+hypervisor deployments.
 
-> ---
-> Changes since v2:
-> - Move the TUSB73x0 PCI device ID to the shared PCI ID header and use it
->   in pci-quirks.c too, as suggested by Sashiko.
-> 
-> Changes since v1:
-> - None. Only sent it as a standalone patch instead of part
->   of a series.
-> 
->  drivers/usb/host/pci-quirks.c | 3 ++-
->  drivers/usb/host/xhci-pci.c   | 9 +++++++--
->  include/linux/pci_ids.h       | 1 +
->  3 files changed, 10 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
-> index ba158d63bb8b..f670e7aab984 100644
-> --- a/drivers/usb/host/pci-quirks.c
-> +++ b/drivers/usb/host/pci-quirks.c
-> @@ -1189,7 +1189,8 @@ static void quirk_usb_handoff_xhci(struct pci_dev *pdev)
->  	val = readl(base + ext_cap_offset);
->  
->  	/* Auto handoff never worked for these devices. Force it and continue */
-> -	if ((pdev->vendor == PCI_VENDOR_ID_TI && pdev->device == 0x8241) ||
-> +	if ((pdev->vendor == PCI_VENDOR_ID_TI &&
-> +	     pdev->device == PCI_DEVICE_ID_TI_TUSB73X0) ||
->  			(pdev->vendor == PCI_VENDOR_ID_RENESAS
->  			 && pdev->device == 0x0014)) {
->  		val = (val | XHCI_HC_OS_OWNED) & ~XHCI_HC_BIOS_OWNED;
-> diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
-> index a8889081ae82..54b76e2bddd2 100644
-> --- a/drivers/usb/host/xhci-pci.c
-> +++ b/drivers/usb/host/xhci-pci.c
-> @@ -28,6 +28,9 @@
->  #define SPARSE_DISABLE_BIT	17
->  #define SPARSE_CNTL_ENABLE	0xC12C
->  
-> +#define TUSB73X0_USB_CTRL			0xe0
-> +#define TUSB73X0_PWRON_POLARITY			BIT(22)
-> +
->  /* Device for a quirk */
->  #define PCI_VENDOR_ID_FRESCO_LOGIC		0x1b73
->  #define PCI_DEVICE_ID_FRESCO_LOGIC_PDK		0x1000
-> @@ -479,7 +482,8 @@ static void xhci_pci_quirks(struct device *dev, struct xhci_hcd *xhci)
->  	    pdev->device == PCI_DEVICE_ID_ASMEDIA_3042_XHCI)
->  		xhci->quirks |= XHCI_RESET_ON_RESUME;
->  
-> -	if (pdev->vendor == PCI_VENDOR_ID_TI && pdev->device == 0x8241)
-> +	if (pdev->vendor == PCI_VENDOR_ID_TI &&
-> +	    pdev->device == PCI_DEVICE_ID_TI_TUSB73X0)
->  		xhci->quirks |= XHCI_LIMIT_ENDPOINT_INTERVAL_7;
->  
->  	if ((pdev->vendor == PCI_VENDOR_ID_BROADCOM ||
-> @@ -678,7 +682,8 @@ int xhci_pci_common_probe(struct pci_dev *dev, const struct pci_device_id *id)
->  	dma_set_max_seg_size(&dev->dev, UINT_MAX);
->  
->  	if (device_property_read_bool(&dev->dev, "ti,pwron-active-high"))
-> -		pci_clear_and_set_config_dword(dev, 0xE0, 0, 1 << 22);
-> +		pci_clear_and_set_config_dword(dev, TUSB73X0_USB_CTRL, 0,
-> +					       TUSB73X0_PWRON_POLARITY);
->  
->  	return 0;
->  
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 0693e4532a68..030c86dd6d67 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -889,6 +889,7 @@
->  #define PCI_DEVICE_ID_TI_XX12		0x8039
->  #define PCI_DEVICE_ID_TI_XX12_FM	0x803b
->  #define PCI_DEVICE_ID_TI_XIO2000A	0x8231
-> +#define PCI_DEVICE_ID_TI_TUSB73X0	0x8241
->  #define PCI_DEVICE_ID_TI_1130		0xac12
->  #define PCI_DEVICE_ID_TI_1031		0xac13
->  #define PCI_DEVICE_ID_TI_1131		0xac15
-> -- 
-> 2.43.0
-> 
+The patches are organized by hypervisor for clarity. While the primary
+focus is VMware, a corresponding Hyper-V patch addresses the same
+pattern and is included for maintainer consideration.
+
+[1] https://lore.kernel.org/r/20260812-hmat-p2p-v1-0-75ac41380585@nvidia.com
+
+Pavel Popov (2):
+  PCI/P2PDMA: Allow P2PDMA in VMware guests on Intel hosts
+  PCI/P2PDMA: Allow P2PDMA in Hyper-V guests on Intel hosts
+
+ drivers/pci/p2pdma.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+
+base-commit: 6c377d19d4a5116d9bec5203aa3c6c11523e7898
+-- 
+2.53.0
+
