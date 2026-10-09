@@ -1,150 +1,125 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f173.google.com (mail-dy1-f173.google.com [74.125.82.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F35B4E1C60;
-	Fri,  9 Oct 2026 12:01:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ABB13AD522
+	for <linux-pci@vger.kernel.org>; Fri,  9 Oct 2026 12:14:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791547310; cv=none; b=BgKbXW+rgOSI4t1f/pCEzcEMvNDaWoHAL6cHWuekHmoj05xOgPQZss/WWH3us+JvcJ/gllTbEqpWpOqpb+tynERjMc8rdrTA+t0UXFAiwwOP6VfjbiuzW0b1UH6+wLZUApLd6VcGygU/gH1Mk55NQLi90cZ3/TX3vRbrv7jABRo=
+	t=1791548077; cv=none; b=qZGbwHA2uj8IqG4TarbLMOZTYKj/t7+VC+JvBDoGwIl8emy+sl57dez87wUvzPS2Jf2iVISw04CC//YsaEC2NSWSyoUATOzQizFHN3LaFBb/uAAKP3YgdCU7dHhEuHWnTto3WPpq83p4GkMxyKZi+dNiKJFUa3QH3KPZsi8KmnU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791547310; c=relaxed/simple;
-	bh=qmfY4qX6AqQUEI5YpwWh4TpNNyCv4is+uyS6k/CPcxg=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=cqO0xypWRQ35jfSlgw0MzhVBqhfLvlj24qrMg891u82FsOkzY6nnURzx0+aQOD5jJPSm3tmIxKdqmgcOr3JfhYwNfa7X4VbyJcvCv9ZqnQs+O/J2ye/gpZUjpCaWJKaURIRWq19yl24W8/3HEqI2TLIeENjU5a4ySspLTG4K4ws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=B7M0PkTy; arc=none smtp.client-ip=198.175.65.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1791548077; c=relaxed/simple;
+	bh=0wp4vMpTTbKxmOcrBbd4LZZUzPZPjqMgHGJhHKYOOwI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=BhM+47QvMjqVGsV57+fv2FMOgrnq2AkP9zEGAzAbmGSI/2mOnBPuxqakA2ksnr4wEpn4CeQZ5JcSOdONGPQpGS9SBn9dEJgffMWW3/dn0hBPCOsyazMXqK/2grsYN9ia4KtvQMquzFgA//TBQyin9K5Ug9Ypv+gKnmiRliTCYCk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z9nmZpe4; arc=none smtp.client-ip=74.125.82.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="B7M0PkTy"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791547306; x=1823083306;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version:content-id;
-  bh=qmfY4qX6AqQUEI5YpwWh4TpNNyCv4is+uyS6k/CPcxg=;
-  b=B7M0PkTy8JaKaB565dUCvCHs5YOf2Of7J+ftop+N2v4Sf5elkoVZXCCS
-   Hh5ijK4Tz5rqyjBApgw35gc7J3I20MJdtN8y9gvkC1ON75Xq01K129b9H
-   8ql1P+wgqX3Mbx72HWJ7scRHWSaFykEnJPUkm8W5zoRMlLeoifYFd5c4I
-   EwSsiPNKfqX1PzqtG8U0QqNnDJHqgBV6MELWTgC22Rf7OauC5zwGkvpf0
-   K3+ZaKGITRsratmdc8Y/8rTwjHGu1AVTuKkVo1g/Lg5ByGnyqy9Va7l6W
-   jZLRCtfDA6ptIyBW1qQzrI/whENfic1NYcS9Xi6Go+MbxN1/ZpDhYJejc
-   w==;
-X-CSE-ConnectionGUID: 34U4oMRNRmSQUnl7KskWCQ==
-X-CSE-MsgGUID: coNHuXC1QK+FsV65fRB7Yg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11929"; a="229421"
-X-IronPort-AV: E=Sophos;i="6.27,148,1787036400"; 
-   d="scan'208";a="229421"
-Received: from fmviesa011.fm.intel.com ([10.60.135.151])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2026 05:01:45 -0700
-X-CSE-ConnectionGUID: Teap6Jq7Ss6bF5Ba5IcMHw==
-X-CSE-MsgGUID: JkkCKXQPTeqxywp4VTTYXA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,148,1787036400"; 
-   d="scan'208";a="2123354"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.39])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2026 05:01:41 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Fri, 9 Oct 2026 15:01:37 +0300 (EEST)
-To: Borislav Petkov <bp@alien8.de>
-cc: Maciej Grochowski <Maciej.Grochowski@sony.com>, 
-    Nikolas Joshua Britton <nbritton@exabit.io>, 
-    Geramy Loveless <gloveless@jqluv.com>, Eric Auger <eauger@redhat.com>, 
-    Alexey Fomenko <alexey.fomenko@intel.com>, 
-    Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-    Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, 
-    Rob Herring <robh@kernel.org>, 
-    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kw@linux.com>, 
-    LKML <linux-kernel@vger.kernel.org>, Bradley Morgan <brads@mainlining.org>, 
-    Mario Limonciello <mario.limonciello@amd.com>
-Subject: Re: [PATCH v2 7/7] PCI/quirks: Avoid certain address on Genoa
- systems
-In-Reply-To: <20261004154428.GAasJ0XCWdso81YdwH@fat_crate.local>
-Message-ID: <2b4985b1-064f-552d-0803-f285779b5dba@linux.intel.com>
-References: <20261002113319.6652-1-ilpo.jarvinen@linux.intel.com> <20261002113319.6652-8-ilpo.jarvinen@linux.intel.com> <20261004154428.GAasJ0XCWdso81YdwH@fat_crate.local>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z9nmZpe4"
+Received: by mail-dy1-f173.google.com with SMTP id 5a478bee46e88-351767ef18cso3149140eec.1
+        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2026 05:14:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791548067; x=1792152867; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=a1/r00KwLC71l7qD8SlMXbKms6f/x3lGEnJZwDjSrz8=;
+        b=Z9nmZpe4CrdMXiwTD8nj+ROgWtOqY0nySjUqKYHV10R6zGopaxoyIgPED7KYucoePl
+         xaM6O8nyG2MsLaFaeXXX7HQICqDHsx1XzlavOp51nPPMwP1JQCr355/nYaaC70heC9FC
+         vNm2jpr3KJl55hrZCmL8YDkz4MhiMhYaPA2aw2E7nFqWVIUg290H3XyGFlvjcxVdhn5Y
+         eQAnuNyVNMkmsRksYbjr97vIQCPg5WSRzO9XBYdGyIGd+lHZ7uA0/SSKZ75q4aFGgc8r
+         nsfv/lm4kuE8MF7WjhdikAk6AU3U0RN+hOGQmAzPhDYWd/PZtQn0E9t7i4Qw55ms5bDP
+         urQg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791548067; x=1792152867;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=a1/r00KwLC71l7qD8SlMXbKms6f/x3lGEnJZwDjSrz8=;
+        b=xmXT66476ia/cDtu4NVUs8/fadhJCjl/GxGL8EKBj0nPcgYDM2qFwd92pgEmwRNsnV
+         fKFLA7X0b4qMIpZ13auQKTyCBPE/zFLbLr+dWlpFrmcGHEH0gX4mGm3u5iyx/fklODlJ
+         2v/HoRlwQXju/hBxn6b9fOX9KomeQkJfB9T3bn9TxRTzVPMyjn+wEq8LZBzBcn1Gw9RP
+         lJtYk85oElxj3zCJnTT3adHVNaaLYZWwMWQXTGvToVtHTrjGnzjzBazed4OM6zLFvOH8
+         wgW0AUhFR0xX+7YkjssT198xmSzn0Bdsf1mfwyQ7ZkuB1dcQVFLsfJsKiVUShVvIu9Ww
+         7IUA==
+X-Forwarded-Encrypted: i=1; AKwUvBxYd5WDeDQNL+HNulwin0A3Cld/b1NlORtCGisZ4N4XiG23Jnkv+gRtjvvh2dUNsQ4Hj928RhyIsVE=@vger.kernel.org
+X-Gm-Message-State: AFuF++kdhXJccsywfPxp+ZxBsi+NhDSnKJuDaphmDFfVSuJ7DRSZxNpW
+	oFQtJvzYuwhc7GqojdEJUzPtQRKgb8p/bp3AnOWWz3fgdZcfBqdQ+a6YLZV9z8iJ
+X-Gm-Gg: AYBFou0UWhqfCd9BtQEsSK29qA20E8zSjBdE/R1yoIpgag1/AsVTGxT9u2Qe4z06rex
+	gheGATtyj7dDecRZZvc+G3Qal8hK3lloO4jSRB5gHd8O/qD3fLgJ0cwVWckNCAF3iBAQ9KksyhG
+	FFm1sWO0FZDnnGtThIFJJXCXpyC+ecaFUUi8itFX5ueSBFJ58mkMy4hrCqUmyhiUxrb5WHaH1jI
+	JaUqPR3SV7HW3+HADM2t0zlatcX96uVynrgk5q4vvG+l9awxyQs6owX3z9oMrbeoeXiFlPAuv+O
+	5jSxkpWgjJmkNbfnKkFCpI6jNwUFlWt/Bw91WnVjI++koy6BiXbVj7lk/FQbSgdUs5qamGUkoaN
+	C+zFAUCX0aZul7mvHz9jkfX+OlLbAh9F/y/qAxf7g+P0C5Q7wuJF/4xB1H+Iw/iAxkh4s69/0Vt
+	TPcUMPOjFy0okyQZLe8Uy/Qk1noSRbrgtE/EJO9aUWWlUO8ds7KW7s75EiufWM7R90AtPLqdfyi
+	5GjcSkf
+X-Received: by 2002:a05:7301:4b09:b0:351:2958:1740 with SMTP id 5a478bee46e88-3537e088bf1mr2376765eec.37.1791548066814;
+        Fri, 09 Oct 2026 05:14:26 -0700 (PDT)
+Received: from maclinux ([2803:c600:9110:8ba5:1c75:eeaa:b22f:20dc])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3537ca1ba7esm6895458eec.7.2026.10.09.05.14.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 09 Oct 2026 05:14:26 -0700 (PDT)
+From: =?UTF-8?q?Francisco=20Beltr=C3=A1n=20Millal=C3=A9n?= <fbeltranmillalen@gmail.com>
+To: mjg59@srcf.ucam.org
+Cc: helgaas@kernel.org,
+	rafael@kernel.org,
+	bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	lenb@kernel.org,
+	linux-kernel@vger.kernel.org,
+	d@rrell.co,
+	andreas.noever@gmail.com,
+	westeri@kernel.org,
+	YehezkelShB@gmail.com,
+	lukas@wunner.de,
+	linux-usb@vger.kernel.org
+Subject: Re: [PATCH] ACPI: PCI: take native PME control on Apple machines
+Date: Fri,  9 Oct 2026 09:14:13 -0300
+Message-ID: <20261009121413.23538-1-fbeltranmillalen@gmail.com>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <asikbIuZUZsgmU52@srcf.ucam.org>
+References: <asikbIuZUZsgmU52@srcf.ucam.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323328-363935522-1791289612=:3116"
-Content-ID: <e6241b11-6da0-c274-ef17-a1f71b937c92@linux.intel.com>
+Content-Transfer-Encoding: 8bit
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hi Matthew,
 
---8323328-363935522-1791289612=:3116
-Content-Type: text/plain; CHARSET=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-ID: <2ed94c43-ec6e-14e6-0d57-88009ffbba85@linux.intel.com>
+Thanks for going back that far, and for the explanation.
 
-On Sun, 4 Oct 2026, Borislav Petkov wrote:
+On Fri, Oct 09, 2026 at 01:23:08AM -0700, Matthew Garrett wrote:
+> I /think/ this was the set of parameters that my machine would hand over
+> via _OSC if we hadn't called _OSI("Darwin") - but it was over a decade
+> ago so I can't promise that's the case. I think this probably needs to
+> be tested on some older machines as well just to ensure there's no weird
+> breakage as a result, but if PME is actually hooked up and there's no
+> SMM managing it instead I think that's fine.
 
-> On Fri, Oct 02, 2026 at 02:33:15PM +0300, Ilpo J=E4rvinen wrote:
-> > While testing the resource placement changes, tests hit a case where
-> > igb fails to probe when BAR 0 is placed at 0x9c000000:
-> >=20
-> >    90000000-9cffffff : PCI Bus 0000:a0
-> >   -  90000000-902fffff : PCI Bus 0000:a1
-> >   -    90000000-900fffff : 0000:a1:00.0
-> >   -      90000000-900fffff : igb
-> >   -    90100000-901fffff : 0000:a1:00.0
-> >   -    90200000-90203fff : 0000:a1:00.0
-> >   -      90200000-90203fff : igb
-> >   +  9be00000-9c0fffff : PCI Bus 0000:a1
-> >   +    9be00000-9befffff : 0000:a1:00.0
-> >   +    9bf00000-9bf03fff : 0000:a1:00.0
-> >   +    9c000000-9c0fffff : 0000:a1:00.0
-> >      9c100000-9c17ffff : amd_iommu
-> >      9c180000-9c1803ff : IOAPIC 8
-> >=20
-> >   -       Region 0: Memory at 90000000 (32-bit, non-prefetchable) [size=
-=3D1M]
-> >   -       Region 3: Memory at 90200000 (32-bit, non-prefetchable) [size=
-=3D16K]
-> >   -       Expansion ROM at 90100000 [disabled] [size=3D1M]
-> >   +       Region 0: Memory at 9c000000 (32-bit, non-prefetchable) [size=
-=3D1M]
-> >   +       Region 3: Memory at 9bf00000 (32-bit, non-prefetchable) [size=
-=3D16K]
-> >   +       Expansion ROM at 9be00000 [disabled] [size=3D1M]
-> >=20
-> > igb 0000:a1:00.0 0000:a1:00.0 (uninitialized): PCIe link lost
-> > ------------[ cut here ]------------
-> > igb: Failed to read reg 0x18!
-> > WARNING: drivers/net/ethernet/intel/igb/igb_main.c:724 at igb_rd32.cold=
-+0x3c/0x4f [igb], CPU#32: kworker/32:1/706
-> > ...
-> >  igb_get_invariants_82575+0xff/0xf00 [igb]
-> >  igb_probe+0x3c8/0x1190 [igb]
-> >  local_pci_probe+0x3b/0x80
-> >=20
-> > It turns out there is a 64kB iomem black hole at 9c000000 that returns
->=20
-> Can we please debug that "It turns out" thing and try to find out what re=
-ally
-> is going on here.
->=20
-> Can you pls explain what your machine looks like so that we can try to
-> reproduce it and see what's going on?
+On the MacBookPro14,3 both conditions seem to hold.  With the patch, the
+root port takes the PME interrupt as soon as a device is plugged in, and
+the controller is resumed in the same second.  Without it, nothing picks
+the event up: the controller stays suspended for over a minute with
+PME_Status set, the GPE the firmware declares for those two xHCI
+controllers never fires, and its handler doesn't notify them anyway.  I
+can't look at SMM directly, but if the firmware were handling the event
+itself, the controller would have been woken without the patch, and it
+never was.  Darrell saw the same fix on his MacBookPro14,3.
 
-It's Poweredge R6625. AFAIK, there's nothing fancy on it, just the I210=20
-added. (I don't admin it but can just run large-scale validation tests on=
-=20
-it so I could have gaps in my knowledge).
+You're right that older Macs should be tested, and I don't have any: the
+patch has only run on my machine and Darrell's, both MacBookPro14,3.
+Two things make me think the risk is small.  Handling PME natively
+doesn't turn off the firmware's own wake path, so if an older Mac does
+use a GPE for this, that keeps working.  The only side effect I would
+expect is the PME driver logging "Spurious native interrupt".  And on
+these machines the kernel already takes over hotplug and AER without
+asking the firmware, so PME would be treated the same way as the rest.
+If anyone on Cc has an older Mac and can try it, I'd be glad to hear how
+it goes.
 
-> Does it have latest BIOS, microcode, etc etc? If it doesn't, can you upgr=
-ade
-> and try again?
-
-BIOS was updated to the latest and the problem persists.
-
-> I guess dmesg, hwinfo, kernel .config would be good starters, privately i=
-s
-> fine too.
-
-dmesg is in the ticket, I added config there.
-
---=20
- i.
---8323328-363935522-1791289612=:3116--
+Thanks again,
+Francisco
