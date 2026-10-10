@@ -1,74 +1,61 @@
-Received: from mail-dy1-f182.google.com (mail-dy1-f182.google.com [74.125.82.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8028C36B920
-	for <linux-pci@vger.kernel.org>; Sat, 10 Oct 2026 05:33:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE5C537F319;
+	Sat, 10 Oct 2026 08:43:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791610384; cv=none; b=TorlMP8jI9UlIZaQRvWHm+lFHzn4TLI2C0YsZAu0zdY8sRgiySOFePXnrGc/V3cQcdnlnLM0zDF82n2GIZo5lBSCNzQLtZR6UIKwZAwZpzIKp6ero4mkK4T8549TdZ3U6deONbbK/XKSNoyysoRHGPdpOFNMMUATbwMl7sDBi44=
+	t=1791621828; cv=none; b=Iet6/PQiImA0NUlGphp7ZtEtrrAxrnlWVOwZEDTTvRmkOWZ8FZzcY+3qtipMgs+s2+u0jyqoSQnKV8ucWcuEAJMHeL524QT28W5WnY/kxT7gz9ZiJK0neP7Nzvu6mFjFYamcJGtBfHg7xFBAGvSGZM7zzCeGAVz7EtBSg8CXmnE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791610384; c=relaxed/simple;
-	bh=yeIQ8TRjgRbRQMf5UrSZlwvBG/+dQ7PyXTiJE1M0g7s=;
+	s=arc-20240116; t=1791621828; c=relaxed/simple;
+	bh=htob2w2OihWwsimbkfqGmyw+ABRCSI6vnSUhFAcytos=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NeZHKbFXrf80AtnpKRHp0wilHR2obbPLJJBKgs9pOU+jTzaLxC4tfUid6qAqtwDrHAo3Mlm3HNSGOMrM2MbDb6MTHIteAsmhXsAPKoQJVejwDYyc9fV3wE7OpdPqx7EFqr8jDA8XjWRnzsp2RRFV/DGTP8EQjtA8yiIkVliddH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=feg0arTH; arc=none smtp.client-ip=74.125.82.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=MRqjrwtUGARsTjw/hzkM4Ea+jYLnk6+N4VuAiRNpmXiKor4nrU6RxizPvjN6rUyqSBY8vtqfEqgn/PryUE1t7iVnA+9hT4uVil5Eqo7JuXZbXS+H69pTn6b+3tG5LTBqNFtA/Tn3muOIPsD3/lsYI8JU45mo3joCdD5CKzRu8io=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gjJGCDC+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="feg0arTH"
-Received: by mail-dy1-f182.google.com with SMTP id 5a478bee46e88-33bf40b0c8bso1020950eec.0
-        for <linux-pci@vger.kernel.org>; Fri, 09 Oct 2026 22:33:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791610382; x=1792215182; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=0YaahGgbfxRXflDpE/1apDkepLaLGSdKFw9q3edQJhI=;
-        b=feg0arTHZjFyHCYiFUAf31kZSEcAg3sR4n1QT6ifHg0q5dwJ+I3/AiRcW4OLlM9tQO
-         psmHA6Ecd0iToAQLcoV8ZDjdiRdyKONWqHEj0eGfEUcDhE3wnAMSn//fKg46Yi6JHmVy
-         UDMA4097VYPQmqhkQUx/21WkxBRm8Q176aGCm9zBDI28npyx1L3XaE8wiWz1OqGE20wk
-         1U8FJ+o+T53P9nDoY/K1FQ6StC9RpkmDQG1OUBgG2u0vH5bKFsyDtRQ3KYsUHz+auJIo
-         sMD94sLS3TmnBdzhIFAX8w5XFKaS+D40okKv9eD23fP0kFhtI94GbYj+jErdboY2Gtug
-         X0YQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791610382; x=1792215182;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=0YaahGgbfxRXflDpE/1apDkepLaLGSdKFw9q3edQJhI=;
-        b=VL1DASWTQJTEEbYyc6vnV+ms8SxUpVNqgjj7wdMP41TX+xMs+LGx/IZMTH2NoqAQSu
-         b9pQhSGYEzLfq0cPS+KsjfE5nlGbL2smfRuInGsCxyuGcnaEtCumwmmW2aDCLYc78lqC
-         Q8jSDXOQXM87xDLRjpTzBYzCvXgnb+VkbignEiu6Awhyb5rD0LRdFM2Rd74hySAwNEee
-         F9Oiw2fjRJ1rMEv9LbwXANtNnJXZxziY/G5GQcyHK1mn/qYS/rGFv8WAZbH2RAosJdMq
-         DeIMWFugOdRdS31RsiI9yGYgchHrZhDjAE2FIKLY2tI/MWw0rXRla2vieSYdqcTG+/++
-         l0bg==
-X-Forwarded-Encrypted: i=1; AKwUvBw0UyU69L109NUXVHqJJeYzGx22aAy72/C67EF+f2KNOTNPqY/vjySOfya1D5yZss1wovRYfQmmFGQ=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJvkjFN4+nWIlV/8VOJ3dUAIGGqqQKeTYpHj8+O5HIxivmoJhAv
-	GcGDqbO+P7repKCP7CmI9jfP9JgVnhbhaSS8bj8jkOIpTYIUEkAnFQnS
-X-Gm-Gg: AYBFou3HzvM+CkfPqLwnFCMgDT/FAXp3QiZ1eZuH3VabVupB51801Ms3vo/Vsxdsj2U
-	rzgQRSJF4opJfGLS53et68fLEySUW8kd6ea7ICkP3XQiduAWHBf4jvCe3AxaoBtOicCGBqdBelf
-	msXHZmOXbGzO5xV42rV6X9oFoz5290MNtNvBYkH/BCozBQl5RzmDTjaDoymHN+cYKRrB3VcyvDF
-	UEIm4VX07MFdgBSHZFcX4zhj6KRKapyidJcnO9TqASqg1EhbPBae1Y5hlWKu6PZ4UWICfI1TOQ1
-	ga3lUGsAIuYuziNisN2a9egZaIa/7bH7oUOJL/CXUbVfYvoqNVyCNE+xA/W/O283cMNBQUZQX2J
-	B03Z+4ysRvRO2crfs2IevS4drB5VfBKeKNCumi5DaN2VWDIdXH2e7MJdE6RMZ8NiLqK0FbwZJP6
-	WRwHBHQsqudJOq050pOxApxREbYrer8YOO6FmkF1Hw9nNgOrUYfgzapxfZwyA0qX1SiSQGAiHzE
-	D/RYxJA8Ov9tsQ=
-X-Received: by 2002:a05:7300:aca5:b0:358:1f59:48c9 with SMTP id 5a478bee46e88-3581f594a27mr2495399eec.24.1791610382039;
-        Fri, 09 Oct 2026 22:33:02 -0700 (PDT)
-Received: from kernel ([45.251.35.97])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-354a52463casm8634256eec.22.2026.10.09.22.32.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Oct 2026 22:33:01 -0700 (PDT)
-Date: Sat, 10 Oct 2026 11:02:55 +0530
-From: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
-To: bhelgaas@google.com, alex@shazbot.org
-Cc: skhan@linuxfoundation.org, jkoolstra@xs4all.nl,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: quirks: Fix out-of-bounds MMIO read in
- nvme_disable_and_flr()
-Message-ID: <asnOB-It_udVEw06@kernel>
-References: <20260903164615.5744-1-raizudeen.kerneldev@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gjJGCDC+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB5161F000FF;
+	Sat, 10 Oct 2026 08:43:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791621824;
+	bh=EMhRMdEboRulS299sQmhaXW+YI7ZYoe1z6XHEW4vJjs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=gjJGCDC+KFlQQ26bxZqDLXuKbl4aNueNBLvuMQMHUN4tKQ0Ex3Ln42ZwAoFIzAPhW
+	 4n4luK6SIuM55oNlIsJpZApLqeE2TcNDmj4froU2AjsK2W0MfdHtxRKsZbuLyGEhnX
+	 czgWTxN73f/MgPDW8s24C0QrAl37lsiYNUj/m8LXdd5+OhLL8P7eUCdXlTir4zjR/4
+	 3G8vXsxdlEo9OJKIS0nL8mr+1S4xUHANWrW4NdhdvZo3BcyyovSeBrZAkVJx0QEFNe
+	 Q2xtPUfHiVmAES+sUYYsLsnH/jsVgcxjYijX4aOkIZNR+jDTVqPHrlfovDe3tAClzu
+	 2CHSoRoF4KnIw==
+Date: Sat, 10 Oct 2026 10:43:32 +0200
+From: Mike Rapoport <rppt@kernel.org>
+To: David Matlack <dmatlack@google.com>
+Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-pci@vger.kernel.org,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Josh Hilke <jrhilke@google.com>,
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+	Parav Pandit <parav@nvidia.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
+	Yi Liu <yi.l.liu@intel.com>
+Subject: Re: [PATCH v9 01/13] PCI: liveupdate: Set up FLB handler for the PCI
+ core
+Message-ID: <asn6tKL72RXItqMD@kernel.org>
+References: <20260918200640.887030-1-dmatlack@google.com>
+ <20260918200640.887030-2-dmatlack@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -77,55 +64,126 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260903164615.5744-1-raizudeen.kerneldev@gmail.com>
+In-Reply-To: <20260918200640.887030-2-dmatlack@google.com>
 
-On Thu, Sep 03, 2026 at 10:16:15PM +0530, Mohamad Raizudeen wrote:
-> In nvme_disable_and_flr(), the PCI bar is mapped using
-> NVME_REG_CC + sizeof(cfg) which is (0x14 + 4 = 0x18 bytes)
-> 
-> However, the function later reads the controller status from
-> NVME_REG_CSTS - offset 0x1C, which is outside the mapped 0x18 byte
-> boundary. This violates the API contract.
-> 
-> Fix this by increasing the mapping size to include NVME_REG_CSTS. Also
-> change sizeof(cfg) to sizeof(u32) to make the intent clearer.
-> 
-> Fixes: ffb0863426eb9 ("PCI: Disable Samsung SM961/PM961 NVMe before FLR")
-> Signed-off-by: Mohamad Raizudeen <raizudeen.kerneldev@gmail.com>
-> ---
-> Changes in v3:
-> - Changed sizeof(cfg) to sizeof(u32) to decouple it from the mapping
->   size as suggested by Alex Williamson.
-> - Updated the commit message to use "violates the API contract" instead
->   of "undefined behavior" to avoid overstating the risk.
-> 
-> Link for v1: https://lore.kernel.org/all/20260817092448.4395-1-raizudeen.kerneldev@gmail.com/T/
-> Link for v2: https://lore.kernel.org/all/20260903040049.5460-1-raizudeen.kerneldev@gmail.com/T/
-> 
->  drivers/pci/quirks.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index b09f27f7846f..06436a96db30 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4090,7 +4090,7 @@ static int nvme_disable_and_flr(struct pci_dev *dev, bool probe)
->  	if (probe)
->  		return 0;
->  
-> -	bar = pci_iomap(dev, 0, NVME_REG_CC + sizeof(cfg));
-> +	bar = pci_iomap(dev, 0, NVME_REG_CSTS + sizeof(u32));
->  	if (!bar)
->  		return -ENOTTY;
->  
-> -- 
-> 2.53.0
->
+Hi David,
 
-Gentle ping on this patch. It received a Reviewed-by from Alex a month
-ago, but I didn't see it queued or applied in the PCI tree yet. Just
-wanted to check if there is anything else needed from my side, or if it
-is pending for the next merge window.
+On Fri, Sep 18, 2026 at 08:06:27PM +0000, David Matlack wrote:
+> Set up a File-Lifecycle-Bound (FLB) handler so that the PCI core can
+> preserve its own state across a Live Update kexec.
+> 
+> Preserving a PCI device across kexec requires preserving two independent
+> sets of state:
+> 
+>  - Driver state, e.g. everything vfio-pci needs so that userspace can
+>    keep using the device in the new kernel. The driver preserves this
+>    itself and the PCI core is not involved.
+> 
+>  - PCI core state, e.g. which devices are preserved, so that the new
+>    kernel knows not to disturb them while they are still running and
+>    doing DMA. That is what this commit adds, serialized into struct
+>    pci_ser.
+ 
+...
 
-Thanks,
-Mohamad Raizudeen
+> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> new file mode 100644
+> index 000000000000..66dbee0bd3cf
+> --- /dev/null
+> +++ b/drivers/pci/liveupdate.c
+> @@ -0,0 +1,206 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +
+> +/*
+> + * Copyright (c) 2026, Google LLC.
+> + * David Matlack <dmatlack@google.com>
+> + */
+> +
+> +/**
+> + * DOC: PCI Live Update
+> + *
+> + * The PCI subsystem participates in the Live Update process to enable drivers
+> + * to preserve their PCI devices across kexec.
+> + *
+> + * Preserving a device requires preserving two independent sets of state: the
+> + * driver's own state, which the driver preserves with no involvement from the
+> + * PCI core, and the PCI core's state about the device, which the next kernel
+> + * needs so that enumeration does not disturb a device that is still running.
+> + * This file implements the latter.
+
+This does not look good in html docs :(
+
+> + *
+> + * :ref:`FLB <flb>` Data
+> + * =====================
+> + *
+> + * Userspace decides which devices are preserved, using :ref:`LUO <luo>` file
+> + * preservation: a driver exposes a file that represents a single PCI device,
+> + * and userspace preserves the device with
+> + * ``ioctl(LIVEUPDATE_SESSION_PRESERVE_FD)`` on that file. Binding preservation
+> + * to a file gives it proper lifecycle management, e.g. the preservation is
+> + * undone if userspace cancels it or goes away. How a driver exposes that file
+> + * is up to the driver and invisible to the PCI core (vfio-pci variant drivers,
+> + * the first intended use-case, use their per-device cdev).
+> + *
+> + * LUO only knows that a file was preserved; it does not know that the file
+> + * represents a PCI device. Drivers therefore register their
+> + * struct liveupdate_file_handler with the PCI core:
+> + *
+> + *  * ``pci_liveupdate_register_flb(driver_file_handler)``
+> + *  * ``pci_liveupdate_unregister_flb(driver_file_handler)``
+> + *
+> + * LUO then refcounts the PCI core's FLB against the files preserved by that
+
+Please spell out reference count
+
+> + * handler, and that refcount drives the lifetime of struct pci_ser:
+
+           and here too  ^
+
+> + * pci_flb_preserve() allocates and preserves it when the first file is
+> + * preserved, and pci_flb_unpreserve() frees it when the last file is
+> + * unpreserved. In the next kernel, pci_flb_retrieve() hands the PCI core the
+> + * struct pci_ser built by the previous kernel, whenever the PCI core asks for
+> + * it (e.g. during enumeration), and pci_flb_finish() frees it once the PCI
+> + * core is done with it.
+
+...
+
+> diff --git a/include/linux/kho/abi/pci.h b/include/linux/kho/abi/pci.h
+> new file mode 100644
+> index 000000000000..4096e3cd3324
+> --- /dev/null
+> +++ b/include/linux/kho/abi/pci.h
+> @@ -0,0 +1,65 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +
+> +/*
+> + * Copyright (c) 2026, Google LLC.
+> + * David Matlack <dmatlack@google.com>
+> + */
+> +
+> +#ifndef _LINUX_KHO_ABI_PCI_H
+> +#define _LINUX_KHO_ABI_PCI_H
+> +
+> +#include <linux/bug.h>
+> +#include <linux/compiler.h>
+> +#include <linux/types.h>
+> +
+> +/**
+> + * DOC: PCI File-Lifecycle Bound (FLB) Live Update ABI
+> + *
+> + * This header defines the ABI for preserving core PCI state across kexec using
+
+This does not look nice in html docs either :(
+
+> + * Live Update File-Lifecycle Bound (FLB) data.
+> + *
+> + * This interface is a contract. Any modification to any of the serialization
+> + * structs defined here constitutes a breaking change. Such changes require
+> + * incrementing the version number in the PCI_LUO_FLB_VERSION number.
+> + */
+
+-- 
+Sincerely yours,
+Mike.
