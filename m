@@ -1,139 +1,70 @@
-Received: from mta0.migadu.com (out-91.mta0.migadu.com [91.218.175.91])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95B3130DD22
-	for <linux-pci@vger.kernel.org>; Sat, 10 Oct 2026 17:23:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.91
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4DF230DD22
+	for <linux-pci@vger.kernel.org>; Sat, 10 Oct 2026 17:28:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791653019; cv=none; b=gPnkajUD3d2fpuMsvTkXR8kwnYkC4tOsss3HDTI7xWq4CiOrEHIo0jp75nrASn01a1UdPiIB6UiFezHiywsSWgsq5d3QmxWytgdJKo5NFfuOg6W5s0OGyAu0e4DpFsViwWryJuQxmaITRHofJHhHbNNwz5yzl6NH0qPcbktP7kw=
+	t=1791653337; cv=none; b=iyoNPnWwPwOiwm9PetOWyHZuPNUxKylwPWOqyXdDFnxaVGtKo1ByFCFAF79LzOXgCanJ9NnLkUw0/mGjp/tj+625gBlR+WeOUuOLXKW3L2QUr9d40QVGtA6O6SqGNF28Lm0TN4LAImq85m2IjT3PpSGzgI2pbCQXr61H0b0J7Uw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791653019; c=relaxed/simple;
-	bh=+bmvvBpu1/q/Geae+t+01frY+TdKdwgirUCbYdQH1rA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EkGkMjcP/DgmhY6D0w0m3xNv4HMY8aRK5SnnCu+aClQqx2YbW1ikcCTtf36NvOegDEzQM2XNln4a+2XSnqtLEbr3/jkfgKHZXQLzg5HHb3eRHwnluX/CGuuXkxkLPEFWaNfW2LA/jxXqY1rozI+lAIILEeDfCOb5AE4RftAyv9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=TRteJdZm; arc=none smtp.client-ip=91.218.175.91
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1791653337; c=relaxed/simple;
+	bh=hLveaNtpDt9qcUlIXEC1UxssK4Fl3axksGW2+7Ie4WU=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=bop4qIo7hJX5+7jUalcqRX6fMHDqxnlO9KIx6hZ/W+L7bCWuIHir1IohrHm+/52QUQhexh5c5l1INAJl35Ez2bxTkPsGMf97bRVZqQrploBoq5J/ZcAMnepeAt8uK2xCRb7rCG8STYepXe2ToalgxNjF41tzB63jkSGXGgF6xHo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M9ylZi+P; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="TRteJdZm"
-X-Envelope-To: linux-pci@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=+bmvvBpu1/q/Geae+t+01frY+TdKdwgirUCbYdQH1rA=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791653013; v=1; x=1792257813;
- b=TRteJdZmwpfJ4EcwFpABSaWPVOfeCo/QuS4taHIhelBi+6M7OrBOFjOh9NogT60DIKFlybu4
- UbbvQoK2mnwyZ/yddVOByFj94k9TpJAuWXYm512HP/QocfQmA5eo/fUPA/cmmW5gJo5ibz8Pfb/
- AqgFT85oKd63OXWRi30wwYtk=
-X-Envelope-To: linux-pci@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 84d4c3e66e47ae57;
-	Sat, 10 Oct 2026 17:23:33 +0000
-X-Mizu-Trace-ID: 84d4c3e66e47ae57
-X-Migadu-Flow: FLOW_OUT
-From: Aditya Garg <aditya.garg@linux.dev>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci@vger.kernel.org
-Cc: Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver OHalloran <oohall@gmail.com>,
-	linuxppc-dev@lists.ozlabs.org,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Christian Koenig <christian.koenig@amd.com>,
-	Vitaly Prosyak <vitaly.prosyak@amd.com>,
-	amd-gfx@lists.freedesktop.org,
-	Lukas Wunner <lukas@wunner.de>,
-	Jason Perlow <jperlow@gmail.com>
-Subject: [PATCH for-linus] PCI/AER: Skip unmasking Advisory Non-Fatal Errors on T2 SEP
-Date: Sat, 10 Oct 2026 22:53:01 +0530
-Message-ID: <20261010172301.12764-1-aditya.garg@linux.dev>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M9ylZi+P"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27C701F000FF;
+	Sat, 10 Oct 2026 17:28:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791653336;
+	bh=hLveaNtpDt9qcUlIXEC1UxssK4Fl3axksGW2+7Ie4WU=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=M9ylZi+P0Jw4S8Kwoo4ozKMNi0avOOuNUHol5P4bHPz6gAHqDQMQzH8q7QMT09XhE
+	 IaUVEMvsEOInA/1maThNstJL1Uquhh2K8Zc38FFYL3J/u8hTVIwaKQtxkPuhHImNlL
+	 KqruT1Y+IGAxtpn0/dZ1ygX2mNRLMN6B9uLxRFgHkPfM6/hTms4u6PEvLpN3ysgFuY
+	 rxwmugbnbKeBPWz4EkiY+eq166Kia0WZ/OuEfnxw1jbPSnOa2Sa/vV2Ah2bdzrL6hs
+	 zKpJI60Ok0ElaHISrj0L7brY1efLzrPSVbU+AIDYunB7GZLYZcjjBKA8dn1SDuPAPv
+	 bKsoY8S65xuww==
+Message-ID: <sashiko-outbox-166774@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH for-linus] PCI/AER: Skip unmasking Advisory Non-Fatal
+ Errors on T2 SEP
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Aditya Garg" <aditya.garg@linux.dev>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261010172301.12764-1-aditya.garg@linux.dev>
+References: <20261010172301.12764-1-aditya.garg@linux.dev>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 10 Oct 2026 17:28:55 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Jason reported that since commit eddba19b8b5f ("PCI/AER: Support Advisory
-Non-Fatal Errors"), the Macs with Apple T2 Security Chip were powering
-off a few seconds after every boot. He also found the PCI Device
-106b:1802, which corresponds to the Apple T2 Secure Enclave Processor was
-misbehaving and the most likely reason is that the device is ANFE
-incompatible due to Apple's custom hardware.
+> Jason reported that since commit eddba19b8b5f ("PCI/AER: Support Advisory
+> Non-Fatal Errors"), the Macs with Apple T2 Security Chip were powering
+> off a few seconds after every boot. He also found the PCI Device
+> 106b:1802, which corresponds to the Apple T2 Secure Enclave Processor was
+> misbehaving and the most likely reason is that the device is ANFE
+> incompatible due to Apple's custom hardware.
+>=20
+> Since its highly unlikely that Apple will release a firmware update to
+> support ANFE, introduce a quirk as suggested by Lukas to blacklist the T2
+> SEP from ANFE.
+>=20
+> Fixes: eddba19b8b5f ("PCI/AER: Support Advisory Non-Fatal Errors")
+> Reported-by: Jason Perlow <jperlow@gmail.com>
+> Tested-by: Jason Perlow <jperlow@gmail.com>
+> Closes: https://lore.kernel.org/linux-pci/CABZrw2HcaOh3DHTJtxU5dXrb3Vg19s=
+cr6+qR-xe_+R7rME35_Q@mail.gmail.com/
+> Signed-off-by: Aditya Garg <aditya.garg@linux.dev>
 
-Since its highly unlikely that Apple will release a firmware update to
-support ANFE, introduce a quirk as suggested by Lukas to blacklist the T2
-SEP from ANFE.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-Fixes: eddba19b8b5f ("PCI/AER: Support Advisory Non-Fatal Errors")
-Reported-by: Jason Perlow <jperlow@gmail.com>
-Tested-by: Jason Perlow <jperlow@gmail.com>
-Closes: https://lore.kernel.org/linux-pci/CABZrw2HcaOh3DHTJtxU5dXrb3Vg19scr6+qR-xe_+R7rME35_Q@mail.gmail.com/
-Signed-off-by: Aditya Garg <aditya.garg@linux.dev>
----
- drivers/pci/pcie/aer.c  |  3 ++-
- drivers/pci/quirks.c    | 12 ++++++++++++
- include/linux/pci.h     |  1 +
- include/linux/pci_ids.h |  1 +
- 4 files changed, 16 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 922a726a5..cab195f7c 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -428,7 +428,8 @@ void pci_aer_init(struct pci_dev *dev)
- 	 * Advisory Non-Fatal Errors are masked by default (PCIe r7.0, sec
- 	 * 7.8.4.6).
- 	 */
--	if (pcie_aer_is_native(dev) && dev->devcap & PCI_EXP_DEVCAP_RBER)
-+	if (pcie_aer_is_native(dev) && dev->devcap & PCI_EXP_DEVCAP_RBER &&
-+		!dev->no_aer_anfe)
- 		pci_clear_and_set_config_dword(dev,
- 					       dev->aer_cap + PCI_ERR_COR_MASK,
- 					       PCI_ERR_COR_ADV_NFAT, 0);
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index de9bbccda..acca89532 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -6422,4 +6422,16 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
-+
-+/*
-+ * Unmasking Advisory Non-Fatal Errors on Apple T2 Secure Enclave
-+ * processor leads to the Mac shutting down spontaneously. Avoid
-+ * doing that.
-+ */
-+static void quirk_no_aer_anfe(struct pci_dev *dev)
-+{
-+	dev->no_aer_anfe = 1;
-+}
-+
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_T2_SEP, quirk_no_aer_anfe);
- #endif
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d31a8d107..83ffa5058 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -514,6 +514,7 @@ struct pci_dev {
- 	unsigned int	rom_bar_overlap:1;	/* ROM BAR disable broken */
- 	unsigned int	rom_attr_enabled:1;	/* Display of ROM attribute enabled? */
- 	unsigned int	non_mappable_bars:1;	/* BARs can't be mapped by CPU or peers */
-+	unsigned int	no_aer_anfe:1;		/* Don't unmask Advisory Non-Fatal Errors */
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
- 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 63774ae2b..103024f74 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1007,6 +1007,7 @@
- #define PCI_DEVICE_ID_APPLE_IPID2_FW	0x006a
- #define PCI_DEVICE_ID_APPLE_IPID2_GMAC	0x006b
- #define PCI_DEVICE_ID_APPLE_TIGON3	0x1645
-+#define PCI_DEVICE_ID_APPLE_T2_SEP	0x1802
- 
- #define PCI_VENDOR_ID_YAMAHA		0x1073
- #define PCI_DEVICE_ID_YAMAHA_724	0x0004
--- 
-2.55.0
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261010172301.1276=
+4-1-aditya.garg@linux.dev?part=3D1
 
