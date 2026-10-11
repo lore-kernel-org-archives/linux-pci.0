@@ -1,100 +1,106 @@
-Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4771B2F3C10;
-	Sun, 11 Oct 2026 15:27:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D7FE345EA7;
+	Sun, 11 Oct 2026 16:32:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791732451; cv=none; b=Bkh7FBxigxy2NdOkcvfQpM39aBQlEJP6abBid7Eu9bVmjW/HRz5G+0WpTUnk+uwYcq9JdD0hWnBX0tG9D8nClwp/cLP/R6/gLzoa+oGrQ+C2jHyTfn++DOINzf8eoeP5UdWrNpIYJ4XYRrtYpqbT9hjOlKhfDN7xr9kQbv3B6no=
+	t=1791736380; cv=none; b=hO7nCurEyahifIA+C9aZW5hLgwdskiE1baH3gBjE0gCtdDPM7AAo5y7IpBXOmgkDiqR+JfvlL+vjBr+hxH7WLv/FFBw6JnqWQCMtJ2C240/QNbuOyFArYDZjYA2Y7LnDSLEi110b+O+DrpkxhmwPdo2DBMqD3H1xw8Ah2AcpbgE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791732451; c=relaxed/simple;
-	bh=3w9kcLVMlLXG4AJK0NQ/APm043LQ4Wp5TxCV1yK9bws=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=l7UwjfICvx9VzesTQrqB+56mlXyoSXPSziKlFUcHWxbsdoYSge9EuIomhb6mMsSPR0zyIliRh4vPEP/EGq2Ir2dig2xIpsKcKMQbOu4SiLOw54tYu+r6W6XY9W2NhcBxnFujuqXbI8SRR3E4q42FaGSJEKiMGokw3/26AvT2YYA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	s=arc-20240116; t=1791736380; c=relaxed/simple;
+	bh=/cuBUaquJ2a07DhLKJpcdd1MlzI9nlDsrijVzpfKbC4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NpkBrncybfYMREPMtVPJ4VzdbFSUJ90t2Q2DZIe8o35fwUK0sdZlDg2w2Nl6ftuG4lTsQ1KsosIwBfAXL21y/7nBQQGLVjYUfsgWYrscsGeknm1c7t241AU9X+J0Vc6WAmMEM09pZLwHtAIPAeUW0fPi9tI04BRKhW670fbXg4g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=aaNevFrD; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="aaNevFrD"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout1.hostsharing.net (Postfix) with ESMTPS id 1F7171A22;
-	Sun, 11 Oct 2026 17:27:21 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id EB4066107905; Sun, 11 Oct 2026 17:27:20 +0200 (CEST)
-Date: Sun, 11 Oct 2026 17:27:20 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Krittikun Wongnin <krittikunwongnin@gmail.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	"Rafael J. Wysocki" <rafael@kernel.org>, linux-acpi@vger.kernel.org
-Subject: Re: [RESEND] PCI: NVIDIA GeForce MX230 (10de:1d11) falls off the bus
- right after "Enabling HDA controller" quirk on Acer Aspire A515-53G
-Message-ID: <asuq2JLh5ExyJP1I@wunner.de>
-References: <CADS-TgDQ1G8vrTQLJeQ3RTBVFTyMe0C+5p2=UBKS=EFCDFuaxw@mail.gmail.com>
- <asskafIxufz8abQa@wunner.de>
- <CADS-TgDakQUvB8Sy3zpGrYMiv_pGEaQ_m9KcsmTSD+4XqJEo5Q@mail.gmail.com>
+	 key-exchange X25519MLKEM768 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4j2mNk3YZ4zMlD7;
+	Sun, 11 Oct 2026 18:32:54 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1791736374;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=sYYycMqiVoFa/In0q5D6DkIyhVz7l1DSpsMozbaO9Mk=;
+	b=aaNevFrDBY4/BnVUFn3fce1d8/Lf6xGMO9mu0Cw0hk/Zf+tBpOwRdcU9haHXw9glnp3yiT
+	sJEW+mhr6FNbsHz7om9i0npoTfRaH7Qw9kdKKaJqGn6tkh8rRW47D2iad12hmbdGWEDguO
+	YqKEdtaANLVchnxf3Pczbi4CnUIMoT23UgxTEffbu2EO5vEi0ccskgnlXzLP27SkEUM38a
+	g0LO041FEujMHf/YTHyNcDYj1wt28NYkf37Ybz6epl82mvERuOw1txSrvS15c8fuEGmGKg
+	4ryzN54AqPx5kYBGQdYIVKb/8jjgUxTSIKA/4Hp7FI3E6oT6RhwFSF2gw8NPvw==
+From: Alexander Gruhlke <gruhlke@mailbox.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lukas Wunner <lukas@wunner.de>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Alex Williamson <alex@shazbot.org>,
+	Hui Wang <hui.wang@canonical.com>,
+	Linux-Fan <info@masysma.net>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	regressions@lists.linux.dev,
+	Alexander Gruhlke <gruhlke@mailbox.org>
+Subject: [PATCH v2 0/2] PCI: Wait after FLR for devices that don't honor Immediate Readiness
+Date: Sun, 11 Oct 2026 18:32:47 +0200
+Message-ID: <20261011163249.18479-1-gruhlke@mailbox.org>
+X-Mailer: git-send-email 2.56.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CADS-TgDakQUvB8Sy3zpGrYMiv_pGEaQ_m9KcsmTSD+4XqJEo5Q@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+X-MBO-RS-META: wcbrptn7dtw79cc8dsx9thu4bp6dbs79
+X-MBO-RS-ID: 84e71635b72763824ef
 
-[cc += Rafael, linux-acpi; start o thread is here:
-https://lore.kernel.org/r/CADS-TgDQ1G8vrTQLJeQ3RTBVFTyMe0C+5p2=UBKS=EFCDFuaxw@mail.gmail.com/
-]
+Since v7.2, VFIO passthrough of a Samsung 990 PRO NVMe [144d:a80c] fails
+on the second VM start, and the device is inaccessible until reboot.  The
+drive advertises Immediate Readiness but returns ~0 for up to 7 ms after
+FLR, so since 10baa9b4df40 ("PCI: Drop unnecessary retries when restoring
+BARs") the config restore after FLR is lost.
 
-On Sun, Oct 11, 2026 at 06:10:59PM +0700, Krittikun Wongnin wrote:
-> I then looked at what else runs in that window. Right after the ACPI
-> bus scan, acpi_scan_init() calls acpi_turn_off_unused_power_resources().
-> The root port above the GPU has two power resources:
-> 
->   \_SB_.PCI0.RP05.PC01  resource_in_use=1
->   \_SB_.PCI0.RP05.PCRP  resource_in_use=0
-> 
-> and the firmware's second definitions of RP05._PR0/_PR2/_PR3/_S0W fail
-> to load with AE_ALREADY_EXISTS (see my first mail). My guess is that
-> those failed objects are what reference PCRP, so the kernel thinks it
-> is unused and turns it off, cutting power to the dGPU. This looks very
-> similar to the existing THUNDEROBOT ZERO entry in
-> dmi_leave_unused_power_resources_on.
-> 
-> Adding this machine to that DMI table fixes it. The GPU stays on the
-> bus, the HDA quirk runs normally, and the nvidia driver works
-> (nvidia-smi shows the MX230 with 2048 MiB):
-[...]
-> --- a/drivers/acpi/power.c
-> +++ b/drivers/acpi/power.c
-> @@ -1048,6 +1048,17 @@
->   }
-> 
->   },
-> + {
-> + /*
-> + * Acer Aspire A515-53G: duplicate RP05 _PR0/_PR3 in firmware
-> + * leaves power resource 'PCRP' unreferenced, so it is shut
-> + * down on initialization and the NVIDIA dGPU falls off the bus.
-> + */
-> + .matches = {
-> + DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-> + DMI_MATCH(DMI_PRODUCT_NAME, "Aspire A515-53G"),
-> + },
-> + },
->   {}
->  };
+Patch 1 ignores Immediate Readiness on that drive.  A 990 EVO Plus
+[144d:a80d] reports the same errors [1], but it isn't confirmed to
+advertise Immediate Readiness, so it's not included.
 
-The whitespace got mangled in the patch, but otherwise it looks
-sane to me.  Please go ahead and submit it to the ACPI subsystem.
+Patch 2 is independent and keeps pci_dev_wait() from treating ~0 as
+ready with RRS Software Visibility, which also affects the Intel
+[8086:0a54] in the open d591f6804e7e regression.  Hui, Linux-Fan: testing
+patch 2 on that drive would be appreciated.
 
-You may want to double-check with e.g. powertop or an external
-powermeter that the power resource is still disabled when the
-dGPU is not in use as otherwise you'd see dramatically worse
-battery life.
+Tested on v7.2.9 (Ryzen 9 7950X, X670E, drive firmware 1B2QJXD7): with
+patch 1, three VM starts in a row work, and every FLR reports "ready 0ms
+after FLR".  After updating the drive to firmware 8B2QJXD7, it still
+advertises Immediate Readiness but responds right after FLR, and plain
+v7.2.9 works, so only older firmware is affected.
 
-Thanks,
+Patch 2 in this form is only tested for regressions, as the drive no
+longer shows the problem.  v1's variant, which read the Command register,
+was tested against it, and the drive's Vendor ID read ~0 while it wasn't
+ready.  Applies to pci/next.
 
-Lukas
+Changes since v1:
+- Replace the pcie_flr() change with a quirk for the 990 PRO (Lukas)
+- pci_dev_wait(): check the Vendor ID for ~0 except on VFs instead of
+  reading the Command register, and "may return" in the comment (Lukas)
+- Swap the patch order, as the quirk alone fixes the regression
+
+v1: https://lore.kernel.org/r/20261010160529.27974-1-gruhlke@mailbox.org
+
+[1] https://bbs.archlinux.org/viewtopic.php?id=314833
+
+Alexander Gruhlke (2):
+  PCI: Ignore Immediate Readiness on Samsung 990 PRO NVMe
+  PCI: Don't treat ~0 as ready in pci_dev_wait() with RRS SV
+
+ drivers/pci/pci.c    |  8 +++++---
+ drivers/pci/quirks.c | 11 +++++++++++
+ 2 files changed, 16 insertions(+), 3 deletions(-)
+
+-- 
+2.56.0
+
