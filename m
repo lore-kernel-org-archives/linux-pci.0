@@ -1,104 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18EA034EF0C
-	for <linux-pci@vger.kernel.org>; Sun, 11 Oct 2026 16:41:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 031F233DEE9;
+	Sun, 11 Oct 2026 16:50:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791736906; cv=none; b=Pi7wAhnKO1hs/Kvje0mDLT0YAuBk0ZeEXyRidyj97+Wkicl0dBVl62FqG/GKUmFbPzl/HiT1sJuTVXoujdWS9NdRauLASiFUxyh5IzuW1OMq40iCm0NQ/jWqTS9YuI+dQ1p0Pwa8UIB2xhS/MtEbhdvacJb+lpjYCaCE/ElnE8c=
+	t=1791737402; cv=none; b=FkNTYsmO3D712x3AIWlW40HKSTliHlpih4iARN7HbKRp6dj6s5/yFGbFWr67ARKQDC4fGb5W0TRkb2UvSmNLyuiO1Si8gqH1am32yCyHgvj/zZ0AuD9AbJM3gDH7eYtHRqM8lV12awlZfIxxr6+Zk2RbhziPeHJgIP7S4TcOEYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791736906; c=relaxed/simple;
-	bh=rpen4ATHsCv26ufvg3jJ3MqhTGOAzgLWNI6W9dz8WrM=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=IuLUOPXXp8hdO53vCRoqKAHoDT1aowvJoJbx1ZFJAgQ6m/5wZHd/T6gh2zYtXw1NwDjYNzpOb8Ui5ZhfMvIVxPPbNwDgJ8Lpp2UnAF5f0qpaYNQrHuWzilAASpZaagy20MbLCezqBR0mY2S0ITD3R7nPwyCS9nUCM54uAc17JZo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ETqUbr32; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791737402; c=relaxed/simple;
+	bh=jW7qFfYaPTIHT7+WxIP915i4+xod11JStOTHqdJWPv0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=GmC4WkG4faHZz8WzR7xJfozl0+xSO9yySF02HaA0NIG2/hUMsBdyn6L3dugB7xDUqcnmUKS4USLnK+AlqoYtZ0BA0d30lH9ZMbDX44gb2exz546GDR5rSQ8I1+DxndvJEJ3vnyDAJUgjacrgPqJ3ed5uva81BNJPp3fuy9mcPaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=U1OkwTPq; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ETqUbr32"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73D3F1F0089B;
-	Sun, 11 Oct 2026 16:41:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791736902;
-	bh=iaUudTsWXAVoWvAM6rBeMly7P9/8YeIJwJEV90QE0ko=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ETqUbr326FB7+kHQmfTLjDLZjuKq/wr69SEz1jpIrZ12eLgzxXSEm6/kxRyT/5FZh
-	 s3SDEzl3p0bz4/JDs6aLXpYwuJ03lgybUwBNrDC5v1Pm7S598h3fUb9xY2cYOAd0iZ
-	 Ewo+/iYA3u5JxVAbwbXjS9/nHkl2FKuVnfcNTfonh2GxX9BPg8YGJ+l0hw5ClPGuz+
-	 oWzm3Nm3yYubSdGuXZMz6jqk97HmCaXlASy/1yDdyjML9Sh9rQfXX4UYQrj1Lk1JB1
-	 Ti24hBFIh5mkxRNhSF28wedBdhPvsYt5OJm6B7F+HBZsYOE5ADsdA1HMtmJhSOtqFe
-	 M2W1q4a0TVUsg==
-Message-ID: <sashiko-outbox-167316@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/2] PCI: Don't treat ~0 as ready in pci_dev_wait()
- with RRS SV
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Alexander Gruhlke" <gruhlke@mailbox.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261011163249.18479-3-gruhlke@mailbox.org>
-References: <20261011163249.18479-1-gruhlke@mailbox.org>
- <20261011163249.18479-3-gruhlke@mailbox.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 11 Oct 2026 16:41:42 +0000
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="U1OkwTPq"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519MLKEM768 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4j2mmP2mB6z8trS;
+	Sun, 11 Oct 2026 18:49:57 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1791737397;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=puqRLr73K8ZyLUEwINqfs9xudJKVr1Yd0xT41SauKfg=;
+	b=U1OkwTPqH6PFLKaXtlM8xyOnVRkAo5fXVV+DVNW1QKsKfJiSsu9fiE3/6BY/ox6OYyzdX4
+	o77VT3nHCV+TcRxNySHRPUoDxnRo4+I7inv27lGXaxeAkxqsQ09EU+eLdcdvCx2IHPmsGB
+	bktRyX7JxAcDOT81JVZZ/UE+Gy8tuQyttfid7g2v8QJPLkj3rwTvIcfeSa6iVCHS2DCZVF
+	smEpctgFXUsPqbrMfj/7sx7L5u80TO+5Y/2GvPP61KBQQTUKqe1hC3heYtm8kvT/1sraml
+	Ic6pmWw1Mrnjy1bsIMd8ruVYeR9PnVvK1iAYQDdD9PpNeBQIe/5tJt7EgdsFgg==
+From: Alexander Gruhlke <gruhlke@mailbox.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Alex Williamson <alex@shazbot.org>,
+	Hui Wang <hui.wang@canonical.com>,
+	Linux-Fan <info@masysma.net>,
+	sashiko-bot@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	regressions@lists.linux.dev
+Subject: Re: [PATCH v2 2/2] PCI: Don't treat ~0 as ready in pci_dev_wait() with RRS SV
+Date: Sun, 11 Oct 2026 18:49:55 +0200
+Message-ID: <20261011164955.24425-1-gruhlke@mailbox.org>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <sashiko-outbox-167316@kernel.org>
+References: <sashiko-outbox-167316@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-MBO-RS-META: y8hkoyuzkrqiqn6k5jqgrw4wzckfp7zm
+X-MBO-RS-ID: 90b6639bb35dd80443b
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] pci: premature wait termination for VFs returning ~0 under RRS SV
---
+On Sun, Oct 11, 2026 at 04:41:42PM +0000, sashiko-bot@kernel.org wrote:
+> Does this cause pci_dev_wait() to exit prematurely for Virtual Functions
+> (VFs) that return ~0 under Configuration RRS Software Visibility?
 
-commit 3101a5ea075ba619cd03d971d4a538bf4788ec75
-Author: Alexander Gruhlke <gruhlke@mailbox.org>
+Yes, but that's the current behavior for all devices; the patch only
+changes it for non-VFs.
 
-PCI: Don't treat ~0 as ready in pci_dev_wait() with RRS SV
+VFs could be covered by reading the Command register when the Vendor ID
+reads ~0 and waiting while that is ~0, too.  Devices that are ready would
+still need only one read.
 
-With RRS Software Visibility, pci_dev_wait() considers a device ready as
-soon as reading the Vendor ID doesn't return the RRS value.  Devices
-aren't required to respond with RRS while they aren't ready, so the read
-may return ~0 and pci_dev_wait() stops waiting too early.
+Lukas, Bjorn: should I do that in v3, or keep the current form?
 
-Link: https://lore.kernel.org/r/20250611101442.387378-1-hui.wang@canonical.=
-com
-
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index aa39b4dd45aea..cf429f64bce0f 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-[ ... ]
-> @@ -1331,7 +1332,8 @@ static int pci_dev_wait(struct pci_dev *dev, char *=
-reset_type, int timeout)
-> =20
->  		if (root && root->config_rrs_sv) {
->  			pci_read_config_dword(dev, PCI_VENDOR_ID, &id);
-> -			if (!pci_bus_rrs_vendor_id(id))
-> +			if (!pci_bus_rrs_vendor_id(id) &&
-> +			    (!PCI_POSSIBLE_ERROR(id) || dev->is_virtfn))
->  				break;
-
-[Severity: Medium]
-Does this cause pci_dev_wait() to exit prematurely for Virtual Functions
-(VFs) that return ~0 under Configuration RRS Software Visibility?
-
-If a VF is not yet ready, its config space might return ~0 (for example, due
-to a Request Timeout) instead of the RRS value. The dev->is_virtfn check
-causes the wait loop to terminate immediately upon seeing ~0. This seems to
-allow unready VFs to appear ready, defeating the reset delay.
-
-Callers might then attempt to initialize the unready VF, leading to config
-read/write failures or even triggering PCIe AERs if the unready VF later
-responds with RRS to non-Vendor-ID accesses.
-
-While VFs architecturally return ~0 for Vendor ID when they are ready, poll=
-ing
-PCI_COMMAND when the Vendor ID returns ~0 (as done in the non-RRS SV path
-below) could resolve this without exiting prematurely.
-
->  		} else {
->  			pci_read_config_dword(dev, PCI_COMMAND, &id);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261011163249.1847=
-9-1-gruhlke@mailbox.org?part=3D2
+Thanks,
+Alexander
