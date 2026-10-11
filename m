@@ -1,135 +1,110 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81BAA3E171E
-	for <linux-pci@vger.kernel.org>; Sun, 11 Oct 2026 06:32:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF5801F09AD
+	for <linux-pci@vger.kernel.org>; Sun, 11 Oct 2026 07:16:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791700342; cv=none; b=hjvGWylCKYfYzCRkVYWPIjq0+QluzY7rG7xto+BMxPIqoa9D0gHarglqh24wrAQdrdwBwyyryrDZmUc1s8Ce8XcAyANuGbdRVn99GwshZylKZuZQSnS3T7PUsKverugMxL+H744qnwy+t2GFRAFjYPUeImeUt35aI7kQZVx3s/4=
+	t=1791702976; cv=none; b=car9piwsey3/qmh9pyuWZHSRJCP6lMfNUoA5pLNy+1ImtYs6AGRPGgIug2ZKSMNpvKkrZJczIau1aqouHU7WHMHzMHqOzoYIZ+O6WV28BzA0O3bjS5S5TtGlXwFy/L3rgqSiRRhwCQ1pF+V4e75u3Ws2fXEJJ/4jc2DWq4qxmBU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791700342; c=relaxed/simple;
-	bh=+1EKumLLM0yydrlYEykW9gU3C+PSS2ko0hjEWumo2ps=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ctLulPS6HNA0R4qTuU9mDBjideG0K2RLb0zTwGxzrxAOvV9NfPN+cOOerYjEfqQ7ObWSO5zFxrvBrQSyexgELm+Lz0VSl92sZVKPZba3O/oUzSae5T7uR8XEmrZFurqrB9lJ+/OBqHf5ro3wu/fL3h931BbT6fJF5uop6NZwtoU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lPEDi0fm; arc=none smtp.client-ip=209.85.128.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791702976; c=relaxed/simple;
+	bh=PzvB1EwVk3or1HqITSMtRhTjeLIcTgxEXoe1+Vds78c=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=osHlKhwBLvPvCFIKiNzPuI93fi6HIQs541wm591hx7XAN9uLJuJC/9t4G+5k5o/0EfI+L1FAfLhBHln6wnfAlOC0zc2bl0890Bo+2rdvqJHZM6km50ZMGRa0BvlliaHVeZv+rjejP4DEsR5F4yf6tYnr5hjIwOTLABN3wZP/8JA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BuajmlSR; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lPEDi0fm"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-4a02753c04fso4506265e9.3
-        for <linux-pci@vger.kernel.org>; Sat, 10 Oct 2026 23:32:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791700339; x=1792305139; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=KHnv3RyK6B3mY8+dpKdxgwL8T80d95Zy3h96qwK+OUY=;
-        b=lPEDi0fmBg4tcRhhpmmP2WyFme9JwgkjoXg+UZTrtNtagxW6PqJrf+qEr23Jk3dJU+
-         mGWY4OCXVOfVenjEDZ+Vl4ioCxeNEoFUtR1jTFeRdHS4z9SIkI1vVSe3R/ScOQm+fWVG
-         gQbvFg+jmN7YdDzncNxU3d/ILkVyfDnVTi8hurOdHgqWfny+89DPVdoecFsK5EMB7Nb1
-         GzzOKVwDB/hun7qlIw1bu+UOSpuIo7IHwZug0d39P2AR8BO+hxOa/9cvqZFdubpspDgB
-         BxVmnk8iYvGxqmPDd0D7lUJYODUDF6VOZLql0ukGyrZfAWLqXVmpszHzuJJ8+qB96Z94
-         NL/Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791700339; x=1792305139;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=KHnv3RyK6B3mY8+dpKdxgwL8T80d95Zy3h96qwK+OUY=;
-        b=E5UysSzHwpHNi8bxeQdmib7kb5g5OCYdiKqPIjorHidE5FQU7DDXKcp1Hwa8jLAtji
-         mwlNH9K8apgTEfORvpRJEKt1ZnVbaIsneKmIcCnI6Q5FOLfAGPokG95VXucnwxS1GSwu
-         0Pqf0dR0v71zkIGAINsiESghsT47s85eKtE4P1XZ1Nyr760MP7I6P3UYHDTvpFjZCXYN
-         pEBo1qgtdXeVkjZKteZihhkmBM19D9YkRrhzELqnsplkMx2VgN0d/cXPIZPmIItWQphh
-         BVYcoSYTcBM/uV+ouv/AUMeyEf6IqRf4CHx78gzXAlyvX4W+6QxBILpVQcLfIJMQiM58
-         7/Dw==
-X-Forwarded-Encrypted: i=1; AKwUvByLoTpW/ugpvSvISjBWwFDurtWVEWheez6PU3YECeHY4KEBT791sbBWS7JSfvb8ccj47r7bsynTUTM=@vger.kernel.org
-X-Gm-Message-State: AFq9FYIutR0dqBcSAtc4tYRyew3e+yI9vRCQWeMyrvQvjyuVATNSX1Db
-	7+auqYdguHELuuGWbNCeypQk7ey7yCiTLaPBqv7w5BjI40V7DUpymcfJ
-X-Gm-Gg: AYBFou3WppwAVKyCz27rax7iBlvXC/wcLNq7hcCNiMu54RBHfx/ZQzXGhkBqKITJnDT
-	bYkHAChpXkWHVf8XwZqoBln1XvVAdT+qUDVJiSI5VLrO6zOT3cfsY005CbxI9thb+oiT2jNrLl3
-	xMHSCdz6bpcj4f6doWmxoGNplOhwHCWMBSBs6djrA1N0fdND8r4htbLQm4zgdLp9Req+18+AO1a
-	jw5TRmjs6rW8kwoay0FeF1M/qBEKUmzMipG0dMXGbwxaIFqRFQQj2ofSAinmoNeek0xfeU9mh6E
-	uIIGnVUiVv8IQ8VyFdSx0hxCNtO0lW0YodSevu2+yzv2IXjz0oCBV2Vvc7Hz1cnCw9WaLoQ0YzM
-	B0Ms7MvLQzSNT5x1A9vIplR4Cso++V1ibg2uWzQbS4D5qHAB/WZhKLoMjL+V5XJr0vvYd7hNVmP
-	aARMX5UPvIYwgzqkT5oAuKwp/LvXTaU1LhYPVfnfhVg9RHsaBXQD+BQL3imh2srxLZX9Zag4wlD
-	angEeu6bw==
-X-Received: by 2002:a05:600c:3f0c:b0:4a0:1723:2d8e with SMTP id 5b1f17b1804b1-4a18e44691emr129270315e9.2.1791700338567;
-        Sat, 10 Oct 2026 23:32:18 -0700 (PDT)
-Received: from foxbook (bez186.neoplus.adsl.tpnet.pl. [83.28.37.186])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a197c465b4sm58340845e9.3.2026.10.10.23.32.17
-        (version=TLS1_2 cipher=AES128-SHA bits=128/128);
-        Sat, 10 Oct 2026 23:32:18 -0700 (PDT)
-Date: Sun, 11 Oct 2026 08:32:13 +0200
-From: Michal Pecio <michal.pecio@gmail.com>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: mathias.nyman@intel.com, gregkh@linuxfoundation.org,
- bhelgaas@google.com, linux-usb@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Babu Moger
- <babu.moger@oracle.com>, Babu Moger <babu.moger@amd.com>
-Subject: Re: [PATCH v3] usb: xhci-pci: Add TUSB73x0 definitions
-Message-ID: <20261011083213.1486acaa.michal.pecio@gmail.com>
-In-Reply-To: <20261009125154.266435-1-festevam@gmail.com>
-References: <20261009125154.266435-1-festevam@gmail.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BuajmlSR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1791702973;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PzvB1EwVk3or1HqITSMtRhTjeLIcTgxEXoe1+Vds78c=;
+	b=BuajmlSRqOP0ah3Ru5h1vxX8IHgSqoSale6IG6y+VMFz89UoMW8FBuSNtxJmHgykwJ7oSK
+	Df8ULV1fSZm9RDg1cHTIjZQcO4Qx/im6zWCGGdGb46LZOqawjc3MKlOEwpllxcTuyktxHn
+	44gPDi6gAo5T9opYwIT1lM2o8QrzBZI=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-662-Uwdb19imN0-BjwPTsuoBQQ-1; Sun,
+ 11 Oct 2026 07:16:11 +0000
+X-MC-Unique: Uwdb19imN0-BjwPTsuoBQQ-1
+X-Mimecast-MFC-AGG-ID: Uwdb19imN0-BjwPTsuoBQQ_1791702970
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3B19E1800611;
+	Sun, 11 Oct 2026 07:16:10 +0000 (UTC)
+Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet03.pony-001.prod.iad2.dc.redhat.com [10.2.32.114])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 7A415180034F;
+	Sun, 11 Oct 2026 07:16:08 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: sashiko-bot@kernel.org
+Cc: jtornosm@redhat.com,
+	kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	sashiko-reviews@lists.linux.dev
+Subject: Re: [PATCH 1/7] PCI: Add pci_find_free_ext_cap_offset() helper
+Date: Sun, 11 Oct 2026 09:16:06 +0200
+Message-ID: <20261011071606.506908-1-jtornosm@redhat.com>
+In-Reply-To: <20260930142127.9BE351F000FF@smtp.kernel.org>
+References: <20260930142127.9BE351F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On Fri,  9 Oct 2026 09:51:54 -0300, Fabio Estevam wrote:
-> Instead of hard-coding the TUSB73X0 PCI ID, USB_CTRL register address
-> and the PWRON_POLARITY, introduce definitions for them to make the code
-> easier to read.
-> 
-> No functional change.
-> 
-> Signed-off-by: Fabio Estevam <festevam@gmail.com>
-> ---
-> Changes since v2:
-> - Move the TUSB73x0 PCI device ID to the shared PCI ID header and use it
->   in pci-quirks.c too, as suggested by Sashiko.
-> 
-> Changes since v1:
-> - None. Only sent it as a standalone patch instead of part
->   of a series.
-> 
->  drivers/usb/host/pci-quirks.c | 3 ++-
->  drivers/usb/host/xhci-pci.c   | 9 +++++++--
->  include/linux/pci_ids.h       | 1 +
->  3 files changed, 10 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
-> index ba158d63bb8b..f670e7aab984 100644
-> --- a/drivers/usb/host/pci-quirks.c
-> +++ b/drivers/usb/host/pci-quirks.c
-> @@ -1189,7 +1189,8 @@ static void quirk_usb_handoff_xhci(struct pci_dev *pdev)
->  	val = readl(base + ext_cap_offset);
->  
->  	/* Auto handoff never worked for these devices. Force it and continue */
-> -	if ((pdev->vendor == PCI_VENDOR_ID_TI && pdev->device == 0x8241) ||
-> +	if ((pdev->vendor == PCI_VENDOR_ID_TI &&
-> +	     pdev->device == PCI_DEVICE_ID_TI_TUSB73X0) ||
+> [Severity: High]
+> Could this loop indefinitely if a malicious or buggy PCI device presents an
+> extended capability chain where the next pointer points backwards or forms
+> a cycle? It looks like this traversal lacks the Time-To-Live (TTL) limit
+> that is present in other helpers like pci_find_next_ext_capability().
 
-You mentioned working with TUSB7340 before. Was there any board
-firmware involved which made use of this chip before the OS?
+Added TTL matching pci_find_next_ext_capability() pattern to prevent
+infinite loops on malformed capability chains.
 
-I'm looking for someone who can tell whether this line should be
-touched at all or deleted. It was added by c289d0eff3d5a, which
-is very suspicious - it mentions "cards" (like in "PCIe expansion
-cards") and adds two IDs in one go. I feel it could be a BIOS bug
-affecting all cards and no problem with those chips.
+> [Severity: High]
+> Is a hardcoded 64 bytes always sufficient here? Some standard capabilities
+> are larger than 64 bytes (for example, AER is 72 bytes, and VSEC/DVSEC can
+> be up to 4KB). If the device's last extended capability exceeds 64 bytes,
+> would this offset fall inside the bounds of the active capability and lead
+> to data corruption when written?
 
-[Adding the author in case he remembers what happened there.]
+Replaced the hardcoded 64-byte offset with zero-scan approach: walk the
+capability chain to find the highest used position, then scan for
+contiguous zeroed space. This correctly handles capabilities of any
+size.
 
-For example, can a PCIe card raise SMI interrupts? AFAIK it can't.
-But if a BIOS thinks otherwise, and enables "SMI on OS ownership
-request", it will never learn about our request, so the handoff
-times out and falls into the "forced" branch. Or the BIOS may not
-rely on this but poll the card, and then "forget" about polling.
+> [Severity: High]
+> Can this subtraction result in an integer underflow?
+>
+> If the last capability starts near the end of the configuration space such
+> that free_offset exceeds PCI_CFG_SPACE_EXP_SIZE (4096), the subtraction
+> would yield a negative integer. Because size is a size_t, wouldn't the
+> negative integer be implicitly promoted to a very large unsigned value,
+> bypassing this capacity check and returning an out-of-bounds offset?
 
-Regards,
-Michal
+Fixed by using bounded loop iteration with explicit comparisons instead
+of subtraction.
+
+> [Severity: Medium]
+> Because this offset is returned without reserving the space in the
+> capability chain, could multiple callers receive the exact same offset?
+> This stateless allocation appears like it might cause multiple subsystems
+> or quirks to overwrite each other's data at the same offset.
+
+The function now returns the first suitable zeroed region found, no
+hardcoded assumptions about capability sizes. In practice, only one
+caller (qcom-vfio-pci) uses this for a given device, so collisions
+cannot occur.
+
+Will send v2 with these fixes.
+
