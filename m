@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31592225A38;
-	Sun, 11 Oct 2026 02:24:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6250F225A38;
+	Sun, 11 Oct 2026 02:25:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791685491; cv=none; b=jOTvPGFBAF8NxcM/t8j5B2B9B+chYPfYXvuQD0Xti6xPdZ1GnwgcMpzkBHQQ9Bcc8LQ40NtcDV82CaplRYOPqbH7F/1bxPmOqF26x9pGuyGxsMajmdIbZ+oy9gcijscjnCN+dWXthjToZVlwjtRVY38rLRADxnx+eoQCAuaRH7w=
+	t=1791685507; cv=none; b=SCKXoo+4adZKIJR/j16DgcVA/RoAly1NJ7KnuwggRkPTacv7b9AGztGwQEaCSXDdJsRg3LCu5xLH8H1k5yVAm13SH74M1b+41+lNqYkR7ovlJz1z11szjT7aTeB7s9DKEpJ5IE0bWVB9Q/w+enH5hIbX4NdLH8pTimxQO+fHIsA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791685491; c=relaxed/simple;
-	bh=MRFMJyYyp7eY4lbVfsYu/cKCMoJfY+hReJI6dPcdaAQ=;
+	s=arc-20240116; t=1791685507; c=relaxed/simple;
+	bh=wSb5IUBOdcU8yATmKit2M4Y/85syzXkGyv7HX9iiCU8=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=ags9GCm6CmO4bmSZOnPdEf3nbdTAiD80NZhcdqe1d3rYUKkELH3c/kkRCJBm3eKLfReo8QSWpb+6Qiqq+UnoTHyB9U5UI0l3GFQybCcaCVxOavnJ35A2BlZJ0lFTuFw1qS4rvrU1sf/bUYeCr2ana99V0KVEpfkHfkiJm3nxlOg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bbqO/99O; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=CyWymH/Wz1cUWku32EaoTcm/EHbdtpgV7PpmRgbZYpDdWFK4g/fpiD48p2/aoGRcmAv0JFb2gejymOONrOOR/njJJyS23sfPX1dW1jhs4KSADhUcnsUhya/lcyTNwFHx3rlR6b4On1vq9BL7xCCLo34KAgtK8sUfpoXwCaxeYTM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mJpMgfGB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bbqO/99O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C961F1F000FF;
-	Sun, 11 Oct 2026 02:24:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mJpMgfGB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A966B1F000FF;
+	Sun, 11 Oct 2026 02:25:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791685490;
-	bh=qgPlWbd6618WaVaGI+7Ot7N9Qh68FrbqDmfxDn+DqU4=;
+	s=k20260515; t=1791685506;
+	bh=Ubc62XHeJBXunDdpp+0BCjXhuNw0IiBtKNplN7dDA4w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bbqO/99OZ3nlrWm6VTCvt5lDqX12HzuS6dHRX6luMzAJ/FNpLiYHaD+VRyaHKemMi
-	 CGJ7PUMdfzT+2HGOZZmlnA1fYm6r4OGxo7bxVMzzYYqZEtBK+ftA3Jc0n7PFVv6lG6
-	 CXEyvOfyj3eFHoG06MeZn7ZD8HKov2Yq0ASlJTcewzFn2cCthZxi3tiuAPzRR71RvG
-	 KoYnC8qagQKJrlg7FvBsCvcfBEi0N9WlQ+fmE0dYs/UH7tamS5phbVAF5NspM9VMSZ
-	 lw3pHLZ70v7LEhdGUGn2eGJmsm+u2UIv69oyvuxWPnA36dGTSBirQ/QtmSJ3F22yCY
-	 6G9t+7kpPHVuQ==
-Message-ID: <sashiko-outbox-166974@kernel.org>
+	b=mJpMgfGBa/xjERU4P/I78X7bImWs6ptIxiUdYkR5sipazy2bnccJZWaNmpg5NeRdU
+	 N0VOzjhkmPF0n2tR3cAnDeW6r/EUj/9uA61/i5SAoxvF+QOsDOZcMKXFN/lDsZyceN
+	 pDrg67LDpWCEtjrrd7bfsZXnW25y3XxP/p9N8Ssao6r2GaBjN68JG3rmm3VYT+/gU6
+	 L+H5o+F2XIv2bg0QdNVv37Zl5QotKnJI8j+AK/NpEugvs6uv3YCQZuPfpxujbdSW+6
+	 DrCVLpsjFhKnsEcCLjSJgkxl1pdzfW+AwB5IkvvyCt5PjQBTJ81Xs71fTyr8JCRdNp
+	 dcNE9z3L1XF5Q==
+Message-ID: <sashiko-outbox-166975@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v15 15/16] PCI/CXL: Restore CXL state after CXL bus
- reset
+Subject: Re: [PATCH v15 10/16] PCI/CXL: Add CXL Device Reset sequencing
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Srirangan Madhavan" <smadhavan@nvidia.com>
-Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20261011021422.3428136-16-smadhavan@nvidia.com>
+Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
+In-Reply-To: <20261011021422.3428136-11-smadhavan@nvidia.com>
 References: <20261011021422.3428136-1-smadhavan@nvidia.com>
- <20261011021422.3428136-16-smadhavan@nvidia.com>
+ <20261011021422.3428136-11-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 11 Oct 2026 02:24:49 +0000
+Date: Sun, 11 Oct 2026 02:25:05 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,66 +46,72 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] pci: cxl_reset_bus_function() incorrectly bypasses SBR topology =
-checks on probe
+- [Medium] pci: CXL reset timeout silently clamped to 20s, invalidating 100=
+s capability
 --
 
-commit 3639cffcefe2a45e59bbab7de2628286c4acba6c
+commit 40437b091280a3bac8200508563fab32b5d72e62
 Author: Srirangan Madhavan <smadhavan@nvidia.com>
-Subject: PCI/CXL: Restore CXL state after CXL bus reset
 
-This commit restores CXL state after a successful cxl_bus reset while IOMMU
-exclusion remains active. It allocates HDM state storage ahead of a bus
-reset, restoring the PCI configuration first so HDM MMIO is accessible.
+PCI/CXL: Add CXL Device Reset sequencing
+
+This commit implements CXL Device Reset for eligible Type 2 devices. It
+introduces functions to disable CXL.cache, initiate reset with Memory
+Clear, and wait for completion.
 
 Link: https://git.kernel.org/pub/scm/linux/kernel/git/djiang/linux.git/comm=
-it/?id=3Db93f0c8e67b198a63786fd3721b7177ab9df60be
+it/?id=3D04f8f84816d724f8b47f4d47a77916ac37c63a49
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b58a6a6133119..cecf8e681e69b 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5014,6 +5014,7 @@ static int pci_reset_bus_function(struct pci_dev *d=
-ev, bool probe)
-> =20
->  static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
->  {
-> +	struct cxl_hdm_info *snapshot __free(kfree) =3D NULL;
+> diff --git a/drivers/pci/cxl.c b/drivers/pci/cxl.c
+> index 471b57391593e..9eb13adf0daa3 100644
+> --- a/drivers/pci/cxl.c
+> +++ b/drivers/pci/cxl.c
+
+[ ... ]
+
+> +static int cxl_reset_wait_done(struct pci_dev *pdev, int dvsec, u16 cap)
+> +{
+> +	unsigned long deadline;
+> +	u32 timeout_ms;
+> +	u16 status2;
+> +	int idx, rc;
+> +
+> +	idx =3D FIELD_GET(PCI_DVSEC_CXL_RST_TIMEOUT, cap);
+> +	if (idx >=3D ARRAY_SIZE(cxl_reset_timeout_ms)) {
+> +		pci_warn(pdev,
+> +			 "unknown CXL reset timeout encoding %d; using %u ms\n",
+> +			 idx, CXL_RESET_MAX_WAIT_MS);
+> +		idx =3D ARRAY_SIZE(cxl_reset_timeout_ms) - 1;
+> +	}
+> +
+> +	/* Allow one retry after the mandatory 100 ms quiet period. */
+> +	timeout_ms =3D clamp_t(u32, cxl_reset_timeout_ms[idx],
+> +			     CXL_RESET_RRS_WAIT_MS + CXL_RESET_STATUS_POLL_MS,
+> +			     CXL_RESET_MAX_WAIT_MS);
 
 [Severity: Medium]
-Does this function incorrectly bypass the topology and hardware constraints
-checked in pci_reset_bus_function() when probe is true?
+Does this clamp_t() logic unintentionally override the 100-second=20
+capability?
 
-For reference, the code in cxl_reset_bus_function() returns early for probe=
-s:
+The CXL 4.0 specification defines reset timeout encodings up to 100 seconds=
+,=20
+and the array cxl_reset_timeout_ms correctly defines 100,000 ms at index 4.=
+=20
+However, the timeout calculation explicitly applies clamp_t() with a=20
+hardcoded upper bound of CXL_RESET_MAX_WAIT_MS, which is defined as 20,000=
+=20
+(20 seconds).
 
-	if (probe)
-		return 0;
+When a device legitimately advertises a 100-second wait requirement via=20
+capability encodings, this silent truncation to 20 seconds could cause=20
+reset operations for compliant devices to prematurely fail with -ETIMEDOUT.
 
-The pci_dev_reset_methods subsystem uses the probe argument to query whether
-a specific reset method is supported and safe for a given device topology. =
-By
-returning 0 unconditionally when probe is true, the call to
-pci_reset_bus_function() located further down is skipped.
-
-Because pci_reset_bus_function() enforces critical constraints, such as
-checking if SBR is enabled and ensuring the device is the only device on the
-secondary bus, bypassing these checks during probe can cause the kernel to
-falsely advertise the cxl_bus reset method via sysfs for devices that share=
- a
-bus or have SBR masked.=20
-
-If this occurs, when userspace attempts the reset, it will deterministically
-fail with -ENOTTY during the actual execution phase, breaking the API contr=
-act
-of the probe step.
-
->  	struct pci_dev *bridge;
->  	u16 dvsec, reg, val;
->  	int rc;
+> +	msleep(CXL_RESET_RRS_WAIT_MS);
+> +	deadline =3D jiffies + msecs_to_jiffies(timeout_ms -
+> +					      CXL_RESET_RRS_WAIT_MS);
 
 [ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261011021422.3428=
-136-1-smadhavan@nvidia.com?part=3D15
+136-1-smadhavan@nvidia.com?part=3D10
