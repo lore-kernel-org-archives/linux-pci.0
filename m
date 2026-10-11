@@ -1,37 +1,39 @@
-Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D7FE345EA7;
-	Sun, 11 Oct 2026 16:32:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDFC433A9F3;
+	Sun, 11 Oct 2026 16:32:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791736380; cv=none; b=hO7nCurEyahifIA+C9aZW5hLgwdskiE1baH3gBjE0gCtdDPM7AAo5y7IpBXOmgkDiqR+JfvlL+vjBr+hxH7WLv/FFBw6JnqWQCMtJ2C240/QNbuOyFArYDZjYA2Y7LnDSLEi110b+O+DrpkxhmwPdo2DBMqD3H1xw8Ah2AcpbgE=
+	t=1791736382; cv=none; b=i3FNULrxqaM7Gu7NpwD8rrN3/BhDhHxh+Fk2zr6gADjsMOPAfjDtpNupZey5oBPAKTLY+knehjAui5WfkCOxh0NaDhZk+cOrRsubkElOV2M60q4RE4BG7X+t/MkSjjFtOynLyYM/s+ZMoC30PW/K/tLEOiD2gf4o/reiKVATnzQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791736380; c=relaxed/simple;
-	bh=/cuBUaquJ2a07DhLKJpcdd1MlzI9nlDsrijVzpfKbC4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NpkBrncybfYMREPMtVPJ4VzdbFSUJ90t2Q2DZIe8o35fwUK0sdZlDg2w2Nl6ftuG4lTsQ1KsosIwBfAXL21y/7nBQQGLVjYUfsgWYrscsGeknm1c7t241AU9X+J0Vc6WAmMEM09pZLwHtAIPAeUW0fPi9tI04BRKhW670fbXg4g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=aaNevFrD; arc=none smtp.client-ip=80.241.56.172
+	s=arc-20240116; t=1791736382; c=relaxed/simple;
+	bh=dUo2m5gk+GlS5pV3bYwmC3MVOWrIbj2LnwDi2wkGG8M=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=rYifb0EyCLBWyX3lS/jDW3uHMtKnTyT0+wcLn8TfeuQY4s7wP7QfOmII/SgAvJsZxJDaSv9xVp8jfhF4DwMZuZrTkxiUJ1uh79MpW+Yf8GSYfz1zMAJJ0lv8yC7JXZAiSMSE9yCVHSDtU3NPT2z5JS8gPJbLJiagh6SzG5MCVC0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=ZiU/1/kf; arc=none smtp.client-ip=80.241.56.151
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="aaNevFrD"
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="ZiU/1/kf"
 Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519MLKEM768 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4j2mNk3YZ4zMlD7;
-	Sun, 11 Oct 2026 18:32:54 +0200 (CEST)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4j2mNl6sQSz8t5N;
+	Sun, 11 Oct 2026 18:32:55 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1791736374;
+	t=1791736375;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=sYYycMqiVoFa/In0q5D6DkIyhVz7l1DSpsMozbaO9Mk=;
-	b=aaNevFrDBY4/BnVUFn3fce1d8/Lf6xGMO9mu0Cw0hk/Zf+tBpOwRdcU9haHXw9glnp3yiT
-	sJEW+mhr6FNbsHz7om9i0npoTfRaH7Qw9kdKKaJqGn6tkh8rRW47D2iad12hmbdGWEDguO
-	YqKEdtaANLVchnxf3Pczbi4CnUIMoT23UgxTEffbu2EO5vEi0ccskgnlXzLP27SkEUM38a
-	g0LO041FEujMHf/YTHyNcDYj1wt28NYkf37Ybz6epl82mvERuOw1txSrvS15c8fuEGmGKg
-	4ryzN54AqPx5kYBGQdYIVKb/8jjgUxTSIKA/4Hp7FI3E6oT6RhwFSF2gw8NPvw==
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=tXkjnXUU+A8iMJWWfiXN7NNTGFPmHduyaxMXTJYmC1Q=;
+	b=ZiU/1/kffm3NfmA+qzU/aawv1VislbMysnPADU2W8mxnrNPNwnDmMR7Ln4bZapDIGZvDuk
+	xmEopPKOvE0qoYzLoeyr5ociVMOBF1T3a/6D7iN2eYtp8cqmEl8oESu4GGuv249oZ3cCwT
+	cu0U1rHrIHg9cuW8icdX9Av9P/fOBkXWeOTYMzkx65aDx5CmwA+Qn1zL9Q7KgCo1FOz9QW
+	WvGhntCzOkRn2t+k0oboS2koOkgJDDo8ACgxJd4FdzZSEVr1QZkBZRFMYU38lB7I28TN/M
+	b22xSVCmMNSgzVBq8f1lD3D4TXwZsTZCLsjDV2tNbjRTZHCTgc3To3lFMTeWjA==
 From: Alexander Gruhlke <gruhlke@mailbox.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Lukas Wunner <lukas@wunner.de>,
@@ -43,10 +45,12 @@ Cc: Lukas Wunner <lukas@wunner.de>,
 	linux-kernel@vger.kernel.org,
 	regressions@lists.linux.dev,
 	Alexander Gruhlke <gruhlke@mailbox.org>
-Subject: [PATCH v2 0/2] PCI: Wait after FLR for devices that don't honor Immediate Readiness
-Date: Sun, 11 Oct 2026 18:32:47 +0200
-Message-ID: <20261011163249.18479-1-gruhlke@mailbox.org>
+Subject: [PATCH v2 1/2] PCI: Ignore Immediate Readiness on Samsung 990 PRO NVMe
+Date: Sun, 11 Oct 2026 18:32:48 +0200
+Message-ID: <20261011163249.18479-2-gruhlke@mailbox.org>
 X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261011163249.18479-1-gruhlke@mailbox.org>
+References: <20261011163249.18479-1-gruhlke@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -54,53 +58,51 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MBO-RS-META: wcbrptn7dtw79cc8dsx9thu4bp6dbs79
-X-MBO-RS-ID: 84e71635b72763824ef
+X-MBO-RS-META: h4uup36wf164mdpgbgmumet5of5wae55
+X-MBO-RS-ID: ae8421e972b8714a85c
 
-Since v7.2, VFIO passthrough of a Samsung 990 PRO NVMe [144d:a80c] fails
-on the second VM start, and the device is inaccessible until reboot.  The
-drive advertises Immediate Readiness but returns ~0 for up to 7 ms after
-FLR, so since 10baa9b4df40 ("PCI: Drop unnecessary retries when restoring
-BARs") the config restore after FLR is lost.
+The Samsung 990 PRO [144d:a80c] advertises Immediate Readiness, so
+pcie_flr() doesn't wait after FLR, but the drive returns ~0 for up to
+7 ms.  Since commit 10baa9b4df40 ("PCI: Drop unnecessary retries when
+restoring BARs"), the config restore after FLR is lost, which breaks
+VFIO passthrough of the drive.  Firmware 8B2QJXD7 responds right after
+FLR, but older firmware such as 1B2QJXD7 doesn't, and the firmware
+version isn't visible here.
 
-Patch 1 ignores Immediate Readiness on that drive.  A 990 EVO Plus
-[144d:a80d] reports the same errors [1], but it isn't confirmed to
-advertise Immediate Readiness, so it's not included.
+Ignore Immediate Readiness on this device, so pcie_flr() waits.
 
-Patch 2 is independent and keeps pci_dev_wait() from treating ~0 as
-ready with RRS Software Visibility, which also affects the Intel
-[8086:0a54] in the open d591f6804e7e regression.  Hui, Linux-Fan: testing
-patch 2 on that drive would be appreciated.
-
-Tested on v7.2.9 (Ryzen 9 7950X, X670E, drive firmware 1B2QJXD7): with
-patch 1, three VM starts in a row work, and every FLR reports "ready 0ms
-after FLR".  After updating the drive to firmware 8B2QJXD7, it still
-advertises Immediate Readiness but responds right after FLR, and plain
-v7.2.9 works, so only older firmware is affected.
-
-Patch 2 in this form is only tested for regressions, as the drive no
-longer shows the problem.  v1's variant, which read the Command register,
-was tested against it, and the drive's Vendor ID read ~0 while it wasn't
-ready.  Applies to pci/next.
-
-Changes since v1:
-- Replace the pcie_flr() change with a quirk for the 990 PRO (Lukas)
-- pci_dev_wait(): check the Vendor ID for ~0 except on VFs instead of
-  reading the Command register, and "may return" in the comment (Lukas)
-- Swap the patch order, as the quirk alone fixes the regression
-
-v1: https://lore.kernel.org/r/20261010160529.27974-1-gruhlke@mailbox.org
-
-[1] https://bbs.archlinux.org/viewtopic.php?id=314833
-
-Alexander Gruhlke (2):
-  PCI: Ignore Immediate Readiness on Samsung 990 PRO NVMe
-  PCI: Don't treat ~0 as ready in pci_dev_wait() with RRS SV
-
- drivers/pci/pci.c    |  8 +++++---
+Fixes: 10baa9b4df40 ("PCI: Drop unnecessary retries when restoring BARs")
+Link: https://bbs.archlinux.org/viewtopic.php?id=314833
+Link: https://lore.kernel.org/r/20261010160529.27974-1-gruhlke@mailbox.org
+Suggested-by: Lukas Wunner <lukas@wunner.de>
+Assisted-by: Claude:claude-opus-5-5
+Signed-off-by: Alexander Gruhlke <gruhlke@mailbox.org>
+---
  drivers/pci/quirks.c | 11 +++++++++++
- 2 files changed, 16 insertions(+), 3 deletions(-)
+ 1 file changed, 11 insertions(+)
 
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 0500d5fd4f..e8597d1209 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5623,6 +5623,17 @@ static void quirk_no_flr_snet(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SOLIDRUN, 0x1000, quirk_no_flr_snet);
+ 
++/* Samsung 990 PRO advertises Immediate Readiness, but isn't ready after FLR */
++static void quirk_no_imm_ready(struct pci_dev *dev)
++{
++	if (!dev->imm_ready)
++		return;
++
++	pci_info(dev, "Ignoring incorrectly advertised Immediate Readiness support\n");
++	dev->imm_ready = 0;
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SAMSUNG, 0xa80c, quirk_no_imm_ready);
++
+ static void quirk_no_ext_tags(struct pci_dev *pdev)
+ {
+ 	struct pci_host_bridge *bridge = pci_find_host_bridge(pdev->bus);
 -- 
 2.56.0
 
