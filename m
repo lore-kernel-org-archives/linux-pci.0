@@ -1,70 +1,104 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99A19331A4C
-	for <linux-pci@vger.kernel.org>; Sun, 11 Oct 2026 16:39:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18EA034EF0C
+	for <linux-pci@vger.kernel.org>; Sun, 11 Oct 2026 16:41:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791736772; cv=none; b=KD8t6FbK4pfWEKXw9n6mCxY3CA+2ifj+SdZYZnOVz2v424aEI3QRz+DaYnKDgYaEs7XUQD5J92eTbDxn2PFZXOOTIs3+uww5ZuCRMoPwg6eUu+mKs6mHPSLN5ktnYxzZgjKiKdLSPgxJaxG8vNKc7FT1YT32HzZV/NGlaJIpgMc=
+	t=1791736906; cv=none; b=Pi7wAhnKO1hs/Kvje0mDLT0YAuBk0ZeEXyRidyj97+Wkicl0dBVl62FqG/GKUmFbPzl/HiT1sJuTVXoujdWS9NdRauLASiFUxyh5IzuW1OMq40iCm0NQ/jWqTS9YuI+dQ1p0Pwa8UIB2xhS/MtEbhdvacJb+lpjYCaCE/ElnE8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791736772; c=relaxed/simple;
-	bh=AEVwFXbKCGw98vtyOXn6N8YZqJTY/o7vCFBJsxFZeFQ=;
+	s=arc-20240116; t=1791736906; c=relaxed/simple;
+	bh=rpen4ATHsCv26ufvg3jJ3MqhTGOAzgLWNI6W9dz8WrM=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=rB2On2381U1SP5AmrXABtJfSbofnCoS9MAmnEgHAvs6m/GBZphfG7VsAcuTflJhhD6xijmK7fe0JQfKhQ27iktIPik1J0Hk1538FKCchjjWt5YO9T3p5cLRyBXbIYtb6GVk1sL4lxWwlkbc2ExBfdPZyNZqqjgqIjq4X9d0nUAE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HJeKNr6y; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=IuLUOPXXp8hdO53vCRoqKAHoDT1aowvJoJbx1ZFJAgQ6m/5wZHd/T6gh2zYtXw1NwDjYNzpOb8Ui5ZhfMvIVxPPbNwDgJ8Lpp2UnAF5f0qpaYNQrHuWzilAASpZaagy20MbLCezqBR0mY2S0ITD3R7nPwyCS9nUCM54uAc17JZo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ETqUbr32; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HJeKNr6y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A8101F0089B;
-	Sun, 11 Oct 2026 16:39:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ETqUbr32"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73D3F1F0089B;
+	Sun, 11 Oct 2026 16:41:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791736771;
-	bh=OBysh6YaVpdpNTgmyYBs+pLEVASqN4pL/OaefqwneaA=;
+	s=k20260515; t=1791736902;
+	bh=iaUudTsWXAVoWvAM6rBeMly7P9/8YeIJwJEV90QE0ko=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HJeKNr6yujC9ouAsUNDia7NsGjJd3oQ3oGrY0sCbctHpX9fPlSezg7bCSX/btwGR6
-	 b7I102j5GJrTOIeejCj5+GobF6PgqCEWDdHkNNJK0fGZY+gEoI8Rc+gS+fczEao/ea
-	 x21C5fFa6mZZ57RXuq50tMF1PcpQo21/XduKfhLq3c7Jux21MpDvHJxyRZxhIlSkAm
-	 1Rwuj7bnouL41c++RgahazUi+XFQ+1sv1flEDRkdEC81mK0+m5oxHoCk1YoH8tQl+u
-	 a+zTmBSczfYqGzZyZ7f2okEb3HbfA/E0vYlZbRy5G1wnRwIqm3UvVlRjOFLzrcCnt8
-	 h7WQHWUgum7Yw==
-Message-ID: <sashiko-outbox-167315@kernel.org>
+	b=ETqUbr326FB7+kHQmfTLjDLZjuKq/wr69SEz1jpIrZ12eLgzxXSEm6/kxRyT/5FZh
+	 s3SDEzl3p0bz4/JDs6aLXpYwuJ03lgybUwBNrDC5v1Pm7S598h3fUb9xY2cYOAd0iZ
+	 Ewo+/iYA3u5JxVAbwbXjS9/nHkl2FKuVnfcNTfonh2GxX9BPg8YGJ+l0hw5ClPGuz+
+	 oWzm3Nm3yYubSdGuXZMz6jqk97HmCaXlASy/1yDdyjML9Sh9rQfXX4UYQrj1Lk1JB1
+	 Ti24hBFIh5mkxRNhSF28wedBdhPvsYt5OJm6B7F+HBZsYOE5ADsdA1HMtmJhSOtqFe
+	 M2W1q4a0TVUsg==
+Message-ID: <sashiko-outbox-167316@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 1/2] PCI: Ignore Immediate Readiness on Samsung 990
- PRO NVMe
+Subject: Re: [PATCH v2 2/2] PCI: Don't treat ~0 as ready in pci_dev_wait()
+ with RRS SV
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Alexander Gruhlke" <gruhlke@mailbox.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261011163249.18479-2-gruhlke@mailbox.org>
+In-Reply-To: <20261011163249.18479-3-gruhlke@mailbox.org>
 References: <20261011163249.18479-1-gruhlke@mailbox.org>
- <20261011163249.18479-2-gruhlke@mailbox.org>
+ <20261011163249.18479-3-gruhlke@mailbox.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 11 Oct 2026 16:39:30 +0000
+Date: Sun, 11 Oct 2026 16:41:42 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> The Samsung 990 PRO [144d:a80c] advertises Immediate Readiness, so
-> pcie_flr() doesn't wait after FLR, but the drive returns ~0 for up to
-> 7 ms.  Since commit 10baa9b4df40 ("PCI: Drop unnecessary retries when
-> restoring BARs"), the config restore after FLR is lost, which breaks
-> VFIO passthrough of the drive.  Firmware 8B2QJXD7 responds right after
-> FLR, but older firmware such as 1B2QJXD7 doesn't, and the firmware
-> version isn't visible here.
->=20
-> Ignore Immediate Readiness on this device, so pcie_flr() waits.
->=20
-> Fixes: 10baa9b4df40 ("PCI: Drop unnecessary retries when restoring BARs")
-> Link: https://bbs.archlinux.org/viewtopic.php?id=3D314833
-> Link: https://lore.kernel.org/r/20261010160529.27974-1-gruhlke@mailbox.org
-> Suggested-by: Lukas Wunner <lukas@wunner.de>
-> Assisted-by: Claude:claude-opus-5-5
-> Signed-off-by: Alexander Gruhlke <gruhlke@mailbox.org>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] pci: premature wait termination for VFs returning ~0 under RRS SV
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+commit 3101a5ea075ba619cd03d971d4a538bf4788ec75
+Author: Alexander Gruhlke <gruhlke@mailbox.org>
+
+PCI: Don't treat ~0 as ready in pci_dev_wait() with RRS SV
+
+With RRS Software Visibility, pci_dev_wait() considers a device ready as
+soon as reading the Vendor ID doesn't return the RRS value.  Devices
+aren't required to respond with RRS while they aren't ready, so the read
+may return ~0 and pci_dev_wait() stops waiting too early.
+
+Link: https://lore.kernel.org/r/20250611101442.387378-1-hui.wang@canonical.=
+com
+
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index aa39b4dd45aea..cf429f64bce0f 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+[ ... ]
+> @@ -1331,7 +1332,8 @@ static int pci_dev_wait(struct pci_dev *dev, char *=
+reset_type, int timeout)
+> =20
+>  		if (root && root->config_rrs_sv) {
+>  			pci_read_config_dword(dev, PCI_VENDOR_ID, &id);
+> -			if (!pci_bus_rrs_vendor_id(id))
+> +			if (!pci_bus_rrs_vendor_id(id) &&
+> +			    (!PCI_POSSIBLE_ERROR(id) || dev->is_virtfn))
+>  				break;
+
+[Severity: Medium]
+Does this cause pci_dev_wait() to exit prematurely for Virtual Functions
+(VFs) that return ~0 under Configuration RRS Software Visibility?
+
+If a VF is not yet ready, its config space might return ~0 (for example, due
+to a Request Timeout) instead of the RRS value. The dev->is_virtfn check
+causes the wait loop to terminate immediately upon seeing ~0. This seems to
+allow unready VFs to appear ready, defeating the reset delay.
+
+Callers might then attempt to initialize the unready VF, leading to config
+read/write failures or even triggering PCIe AERs if the unready VF later
+responds with RRS to non-Vendor-ID accesses.
+
+While VFs architecturally return ~0 for Vendor ID when they are ready, poll=
+ing
+PCI_COMMAND when the Vendor ID returns ~0 (as done in the non-RRS SV path
+below) could resolve this without exiting prematurely.
+
+>  		} else {
+>  			pci_read_config_dword(dev, PCI_COMMAND, &id);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261011163249.1847=
-9-1-gruhlke@mailbox.org?part=3D1
-
+9-1-gruhlke@mailbox.org?part=3D2
