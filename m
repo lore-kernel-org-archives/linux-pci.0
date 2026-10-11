@@ -1,131 +1,135 @@
-Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6B143D9DB9;
-	Sun, 11 Oct 2026 06:03:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=92.121.34.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81BAA3E171E
+	for <linux-pci@vger.kernel.org>; Sun, 11 Oct 2026 06:32:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791698612; cv=none; b=iv0gZAWVzGuJcj22dI839vLY+5LQ2rEZFKKdT8NGStsWbfNy6Su73t1U5xrlb9EcnFq0w9kWfliYMHR6ROzIHBAB5zfpHQ3Fk7cKEoda09Kj6xrZLq2VNgtiHpWz0cFotXqqO8brwsF0wd8+TWgJMKPEwoUYqO9qo5iQM8gCbZU=
+	t=1791700342; cv=none; b=hjvGWylCKYfYzCRkVYWPIjq0+QluzY7rG7xto+BMxPIqoa9D0gHarglqh24wrAQdrdwBwyyryrDZmUc1s8Ce8XcAyANuGbdRVn99GwshZylKZuZQSnS3T7PUsKverugMxL+H744qnwy+t2GFRAFjYPUeImeUt35aI7kQZVx3s/4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791698612; c=relaxed/simple;
-	bh=bJmutYSfU12J9m42/ZAR2XzxhB6aUUDLS/p13FCHDDQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sgT9NjZsNJ7DHKn0NM2O/IKDAbhYvhp2GRprjmn/j9OAY+U86kFJqacB0irfiyRX/2KyxlM3d6twpzOJxWX64liwW/8rErlbhafurEm6LIpfADxglbiq83S0cTR8T11P1JmYB/QXZg944daODLH5PQLfmdLcGu/knGMJFk165Z4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; arc=none smtp.client-ip=92.121.34.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-	by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id D45D01A00B4;
-	Sun, 11 Oct 2026 08:03:27 +0200 (CEST)
-Received: from inva024.eu-rdc02.nxp.com (inva024.eu-rdc02.nxp.com [134.27.226.22])
-	by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id B25C61A0031;
-	Sun, 11 Oct 2026 08:03:27 +0200 (CEST)
-Received: from lsv051416.swis.nl-cdc01.nxp.com (lsv051416.swis.nl-cdc01.nxp.com [10.168.48.122])
-	by inva024.eu-rdc02.nxp.com (Postfix) with ESMTP id 29BEC20301;
-	Sun, 11 Oct 2026 08:03:27 +0200 (CEST)
-Date: Sun, 11 Oct 2026 08:03:27 +0200
-From: Jan Petrous <jan.petrous@oss.nxp.com>
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: Ciprian Marian Costea <ciprianmarian.costea@oss.nxp.com>,
-	NXP S32 Linux Team <s32@nxp.com>, Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ghennadi Procopciuc <ghennadi.procopciuc@nxp.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bogdan Hamciuc <bogdan.hamciuc@nxp.com>,
-	Ionut Vicovan <ionut.vicovan@nxp.com>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Clark Wang <xiaoning.wang@nxp.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Maxime Chevallier <maxime.chevallier@bootlin.com>,
-	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-	Alexandre Torgue <alexandre.torgue@foss.st.com>,
-	Chester Lin <chester62515@gmail.com>,
-	Matthias Brugger <mbrugger@suse.com>,
-	Ghennadi Procopciuc <ghennadi.procopciuc@oss.nxp.com>,
-	Frank Li <Frank.Li@nxp.com>, Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>,
-	Richard Cochran <richardcochran@gmail.com>,
-	linux-arm-kernel@lists.infradead.org, linux-phy@lists.infradead.org,
-	netdev@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-	imx@lists.linux.dev, linux-pci@vger.kernel.org,
-	linux-stm32@st-md-mailman.stormreply.com,
-	Vincent Guittot <vincent.guittot@linaro.org>
-Subject: Re: [PATCH RFC v3 04/12] net: pcs: add NXP SerDes XPCS shared core
-Message-ID: <assmr2PH8064/pJn@lsv051416.swis.nl-cdc01.nxp.com>
-References: <20260919-s32g_serdes-v3-0-9d68868c1e89@oss.nxp.com>
- <20260919-s32g_serdes-v3-4-9d68868c1e89@oss.nxp.com>
- <07c5ed86-755a-4094-b45a-6316d10f4515@lunn.ch>
+	s=arc-20240116; t=1791700342; c=relaxed/simple;
+	bh=+1EKumLLM0yydrlYEykW9gU3C+PSS2ko0hjEWumo2ps=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ctLulPS6HNA0R4qTuU9mDBjideG0K2RLb0zTwGxzrxAOvV9NfPN+cOOerYjEfqQ7ObWSO5zFxrvBrQSyexgELm+Lz0VSl92sZVKPZba3O/oUzSae5T7uR8XEmrZFurqrB9lJ+/OBqHf5ro3wu/fL3h931BbT6fJF5uop6NZwtoU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lPEDi0fm; arc=none smtp.client-ip=209.85.128.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lPEDi0fm"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-4a02753c04fso4506265e9.3
+        for <linux-pci@vger.kernel.org>; Sat, 10 Oct 2026 23:32:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791700339; x=1792305139; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=KHnv3RyK6B3mY8+dpKdxgwL8T80d95Zy3h96qwK+OUY=;
+        b=lPEDi0fmBg4tcRhhpmmP2WyFme9JwgkjoXg+UZTrtNtagxW6PqJrf+qEr23Jk3dJU+
+         mGWY4OCXVOfVenjEDZ+Vl4ioCxeNEoFUtR1jTFeRdHS4z9SIkI1vVSe3R/ScOQm+fWVG
+         gQbvFg+jmN7YdDzncNxU3d/ILkVyfDnVTi8hurOdHgqWfny+89DPVdoecFsK5EMB7Nb1
+         GzzOKVwDB/hun7qlIw1bu+UOSpuIo7IHwZug0d39P2AR8BO+hxOa/9cvqZFdubpspDgB
+         BxVmnk8iYvGxqmPDd0D7lUJYODUDF6VOZLql0ukGyrZfAWLqXVmpszHzuJJ8+qB96Z94
+         NL/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791700339; x=1792305139;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=KHnv3RyK6B3mY8+dpKdxgwL8T80d95Zy3h96qwK+OUY=;
+        b=E5UysSzHwpHNi8bxeQdmib7kb5g5OCYdiKqPIjorHidE5FQU7DDXKcp1Hwa8jLAtji
+         mwlNH9K8apgTEfORvpRJEKt1ZnVbaIsneKmIcCnI6Q5FOLfAGPokG95VXucnwxS1GSwu
+         0Pqf0dR0v71zkIGAINsiESghsT47s85eKtE4P1XZ1Nyr760MP7I6P3UYHDTvpFjZCXYN
+         pEBo1qgtdXeVkjZKteZihhkmBM19D9YkRrhzELqnsplkMx2VgN0d/cXPIZPmIItWQphh
+         BVYcoSYTcBM/uV+ouv/AUMeyEf6IqRf4CHx78gzXAlyvX4W+6QxBILpVQcLfIJMQiM58
+         7/Dw==
+X-Forwarded-Encrypted: i=1; AKwUvByLoTpW/ugpvSvISjBWwFDurtWVEWheez6PU3YECeHY4KEBT791sbBWS7JSfvb8ccj47r7bsynTUTM=@vger.kernel.org
+X-Gm-Message-State: AFq9FYIutR0dqBcSAtc4tYRyew3e+yI9vRCQWeMyrvQvjyuVATNSX1Db
+	7+auqYdguHELuuGWbNCeypQk7ey7yCiTLaPBqv7w5BjI40V7DUpymcfJ
+X-Gm-Gg: AYBFou3WppwAVKyCz27rax7iBlvXC/wcLNq7hcCNiMu54RBHfx/ZQzXGhkBqKITJnDT
+	bYkHAChpXkWHVf8XwZqoBln1XvVAdT+qUDVJiSI5VLrO6zOT3cfsY005CbxI9thb+oiT2jNrLl3
+	xMHSCdz6bpcj4f6doWmxoGNplOhwHCWMBSBs6djrA1N0fdND8r4htbLQm4zgdLp9Req+18+AO1a
+	jw5TRmjs6rW8kwoay0FeF1M/qBEKUmzMipG0dMXGbwxaIFqRFQQj2ofSAinmoNeek0xfeU9mh6E
+	uIIGnVUiVv8IQ8VyFdSx0hxCNtO0lW0YodSevu2+yzv2IXjz0oCBV2Vvc7Hz1cnCw9WaLoQ0YzM
+	B0Ms7MvLQzSNT5x1A9vIplR4Cso++V1ibg2uWzQbS4D5qHAB/WZhKLoMjL+V5XJr0vvYd7hNVmP
+	aARMX5UPvIYwgzqkT5oAuKwp/LvXTaU1LhYPVfnfhVg9RHsaBXQD+BQL3imh2srxLZX9Zag4wlD
+	angEeu6bw==
+X-Received: by 2002:a05:600c:3f0c:b0:4a0:1723:2d8e with SMTP id 5b1f17b1804b1-4a18e44691emr129270315e9.2.1791700338567;
+        Sat, 10 Oct 2026 23:32:18 -0700 (PDT)
+Received: from foxbook (bez186.neoplus.adsl.tpnet.pl. [83.28.37.186])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a197c465b4sm58340845e9.3.2026.10.10.23.32.17
+        (version=TLS1_2 cipher=AES128-SHA bits=128/128);
+        Sat, 10 Oct 2026 23:32:18 -0700 (PDT)
+Date: Sun, 11 Oct 2026 08:32:13 +0200
+From: Michal Pecio <michal.pecio@gmail.com>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: mathias.nyman@intel.com, gregkh@linuxfoundation.org,
+ bhelgaas@google.com, linux-usb@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Babu Moger
+ <babu.moger@oracle.com>, Babu Moger <babu.moger@amd.com>
+Subject: Re: [PATCH v3] usb: xhci-pci: Add TUSB73x0 definitions
+Message-ID: <20261011083213.1486acaa.michal.pecio@gmail.com>
+In-Reply-To: <20261009125154.266435-1-festevam@gmail.com>
+References: <20261009125154.266435-1-festevam@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <07c5ed86-755a-4094-b45a-6316d10f4515@lunn.ch>
-X-Virus-Scanned: ClamAV using ClamSMTP
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Sun, Sep 20, 2026 at 08:39:26PM +0200, Andrew Lunn wrote:
-> On Sat, Sep 19, 2026 at 08:54:32AM +0200, Jan Petrous via B4 Relay wrote:
-> > From: Clark Wang <xiaoning.wang@nxp.com>
-> > 
-> > The SerDes subsystems found on NXP S32G and i.MX SoCs integrate a
-> > Synopsys DesignWare Ethernet XPCS and an Ethernet PHY (PMA) with an
-> > identical register layout. Only the register transport differs: indirect
-> > memory mapped access on S32G, Clause 45 MDIO on i.MX.
-> > 
-> > Add a transport agnostic phylink PCS core which operates on regmaps
-> > provided by the platform glue.
+On Fri,  9 Oct 2026 09:51:54 -0300, Fabio Estevam wrote:
+> Instead of hard-coding the TUSB73X0 PCI ID, USB_CTRL register address
+> and the PWRON_POLARITY, introduce definitions for them to make the code
+> easier to read.
 > 
-> What is not transport agnostic with the current code.
+> No functional change.
 > 
-> Think carefully about that, before you answer.
+> Signed-off-by: Fabio Estevam <festevam@gmail.com>
+> ---
+> Changes since v2:
+> - Move the TUSB73x0 PCI device ID to the shared PCI ID header and use it
+>   in pci-quirks.c too, as suggested by Sashiko.
 > 
+> Changes since v1:
+> - None. Only sent it as a standalone patch instead of part
+>   of a series.
+> 
+>  drivers/usb/host/pci-quirks.c | 3 ++-
+>  drivers/usb/host/xhci-pci.c   | 9 +++++++--
+>  include/linux/pci_ids.h       | 1 +
+>  3 files changed, 10 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
+> index ba158d63bb8b..f670e7aab984 100644
+> --- a/drivers/usb/host/pci-quirks.c
+> +++ b/drivers/usb/host/pci-quirks.c
+> @@ -1189,7 +1189,8 @@ static void quirk_usb_handoff_xhci(struct pci_dev *pdev)
+>  	val = readl(base + ext_cap_offset);
+>  
+>  	/* Auto handoff never worked for these devices. Force it and continue */
+> -	if ((pdev->vendor == PCI_VENDOR_ID_TI && pdev->device == 0x8241) ||
+> +	if ((pdev->vendor == PCI_VENDOR_ID_TI &&
+> +	     pdev->device == PCI_DEVICE_ID_TI_TUSB73X0) ||
 
-Ok, got it, pcs-xpcs only reaches the hardware through mdiodev_c45_*(), so
-whatever sits behind the mii_bus is the transport. pcs-xpcs-plat already
-puts the DW indirect MMIO viewport behind one, sja1105 and txgbe put
-their own register access behind one, and on i.MX the XPCS is on plain
-Clause 45 MDIO in the first place. The claim in the commit message was
-wrong, and with it the justification for a second core.
+You mentioned working with TUSB7340 before. Was there any board
+firmware involved which made use of this chip before the OS?
 
-For the next version I will drop this patch and move S32G onto
-pcs-xpcs. The SerDes PHY driver registers a mii_bus per XPCS instance
-over the existing indirect accessor and creates the PCS with
-xpcs_create_pcs_mdiodev(). The S32G PMA sequence becomes a
-dw_xpcs_compat .pma_config keyed on an S32G PMA ID, the same way the
-SJA1110 and TXGBE ones are.
+I'm looking for someone who can tell whether this line should be
+touched at all or deleted. It was added by c289d0eff3d5a, which
+is very suspicious - it mentions "cards" (like in "PCIe expansion
+cards") and adds two IDs in one go. I feel it could be a BIOS bug
+affecting all cards and no problem with those chips.
 
-That leaves two things S32G needs from pcs-xpcs, neither of which is
-about the transport:
+[Adding the author in case he remembers what happened there.]
 
- - skipping the generic soft reset. The vendor reset
-   (VR_MII_DIG_CTRL1.VR_RST) is part of an ordered bring-up of both
-   XPCS instances, which the SerDes PHY driver owns because the PMA is
-   shared with the PCIe lane. The PMA ID check that already clears
-   need_reset for TXGBE and FBNIC would cover it.
+For example, can a PCIe card raise SMI interrupts? AFAIK it can't.
+But if a BIOS thinks otherwise, and enables "SMI on OS ownership
+request", it will never learn about our request, so the handoff
+times out and falls into the "forced" branch. Or the BIOS may not
+rely on this but poll the card, and then "forget" about polling.
 
- - no EEE. S32G3 does not implement VR_MII_EEE_MCTRL0/1, so
-   pcs_enable_eee/pcs_disable_eee must not touch them.
-
-Both will be separate small patches against pcs-xpcs so they can be
-judged on their own.
-
-Thanks,
-Jan
+Regards,
+Michal
