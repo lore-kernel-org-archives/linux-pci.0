@@ -1,56 +1,36 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3899F3A759D;
-	Sun, 11 Oct 2026 05:47:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26E412C15A0
+	for <linux-pci@vger.kernel.org>; Sun, 11 Oct 2026 05:53:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791697627; cv=none; b=mhLsCAHp4tm8Ai0vK+kX2zk55+ABolErsmjMyL8N5qru+M62cRvRDf868qBMrKevYFkAnLxg45J26k0/zFRrROIA62ugUF4fKwG5jfHRVV6vDJ+aogKAtT+eoIA3IdwphdJCCSCw65jEtotls16i9CkwMi4lP5uHIJYCY4HsaXk=
+	t=1791698032; cv=none; b=rT3frivH32G1UvvK/7oe5xw2pGb1YfAOE1uRneY0ClHmTBKlit6mqs7FVIPh22TwYT0BZ8k6u4WPeKLw36oKO+lxw6TDFkqWF8Y5uPF0k66ChJnpIU57vydpmemjXrdDhQnnKKzYmplt4+ubfNDrxZanLd/hA0OrRlKEQl3fvCc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791697627; c=relaxed/simple;
-	bh=3VNnIGVBv9EL0BAqLp7Vak8V4WA/96/zgoDpeAl9MhY=;
+	s=arc-20240116; t=1791698032; c=relaxed/simple;
+	bh=528pqHjrUjmHctwU0mLzUYV/y78CAep7MG9fr4gHLVA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lIjQBPjRjsDA6lIuw9kLi15CacmDd0Bd+d4upY7rcvsV0Wv2mm9OclbEv/r9X89y47+a5URg5WYSJfX7jYh9cvWcXHjPDEFxk50ktFaPQfMCHKeKGg+QRTj1J57hHN7MXcd9tpSmKBOMk3PCWyM58VAdsHaJtshueW68ICKKhKw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ktbtfv6T; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ktbtfv6T"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D4141F0089B;
-	Sun, 11 Oct 2026 05:47:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791697625;
-	bh=V26Y85Vt2vGB2apj7LD4RMbjX6GtqdMPTO8AtJrxgxY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Ktbtfv6TUq5tx7CgLuP550bk8DrnLJRr0QNnhGWxbJEUPy3STpWo71Ce1u0DEW6bu
-	 asV3ptTx4SWo+afU+TN/wUIRni+1g38rNtNZkLOKWNg/sXjb/4caDeFDMSpe3ggflW
-	 Qw2OesF5eRno/VVJ52Yiv0IeR6klp/mBC/5BAnQo5KqMM0R2V9l3Nss7gv/5OzfdnE
-	 zqxic6xSIgMQgkzTBhi/ymM0/9/qLr0uwXhjoWhlvF7SpBhVQZ99Jo7T5Kg6aompXw
-	 MW7mC2xvb8+H9kcoy8OcKnrhmV+HTHqlzEMmanf9p29/eU1LbpYakmeUrBXLNOI4Yr
-	 9M5WpWt94CjlQ==
-Date: Sun, 11 Oct 2026 08:47:00 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: "Popov, Pavel E" <pavel.e.popov@intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Jim Chow <jim.chow@broadcom.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Radu Rugina <radu.rugina@broadcom.com>,
-	Alexey Makhalov <alexey.makhalov@broadcom.com>,
-	Wei Liu <wei.liu@kernel.org>, Michael Kelley <mhklinux@outlook.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Nathan Ciobanu <nathan.d.ciobanu@linux.intel.com>,
-	"bcm-kernel-feedback-list@broadcom.com" <bcm-kernel-feedback-list@broadcom.com>,
-	"virtualization@lists.linux.dev" <virtualization@lists.linux.dev>,
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 0/2] PCI/P2PDMA: Allow P2PDMA in VMware and Hyper-V
- guests on Intel hosts
-Message-ID: <20261011054700.GF11438@unreal>
-References: <20261009154034.82321-1-pavel.e.popov@intel.com>
- <20261009165833.GA991924@bhelgaas>
- <20261009180847.GD11438@unreal>
- <LV2PR11MB6070D3FCBC3EAED4FA0191EFB2922@LV2PR11MB6070.namprd11.prod.outlook.com>
- <20261009184923.GE11438@unreal>
- <LV2PR11MB60707DAD12BFBEAB681463B7B2922@LV2PR11MB6070.namprd11.prod.outlook.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=B1vmSaUuTDN37YQtdvrmjT1LvkrQrQqKrb8AoVGQ8IPXD10/jgjObjbWnekIu00EtOEX9R1ic8JN2Ke7YriKt3mapC80WjtOobpUEBBRWpE39It+CiZH8zubIXczzILPTJuXC5QrhB6X2kdDkTBzocSOlTYHf268TKV+xpLh+j0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id DA3C7684E;
+	Sun, 11 Oct 2026 07:53:45 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 945936107914; Sun, 11 Oct 2026 07:53:45 +0200 (CEST)
+Date: Sun, 11 Oct 2026 07:53:45 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Krittikun Wongnin <krittikunwongnin@gmail.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [RESEND] PCI: NVIDIA GeForce MX230 (10de:1d11) falls off the bus
+ right after "Enabling HDA controller" quirk on Acer Aspire A515-53G
+Message-ID: <asskafIxufz8abQa@wunner.de>
+References: <CADS-TgDQ1G8vrTQLJeQ3RTBVFTyMe0C+5p2=UBKS=EFCDFuaxw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -59,29 +39,54 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <LV2PR11MB60707DAD12BFBEAB681463B7B2922@LV2PR11MB6070.namprd11.prod.outlook.com>
+In-Reply-To: <CADS-TgDQ1G8vrTQLJeQ3RTBVFTyMe0C+5p2=UBKS=EFCDFuaxw@mail.gmail.com>
 
-On Fri, Oct 09, 2026 at 07:13:31PM +0000, Popov, Pavel E wrote:
-> Leon,
-> 
-> Understood on all points, and I agree HMAT is the proper fix. We discussed
-> it with Lukas Wunner as well. Exposing HMAT is on the hypervisor side; Jim
-> Chow from VMware can speak to their plans. Even once HMAT lands in Linux,
-> it only helps guests after the hypervisors add support for it.
-> 
-> The key point for us is that today there is no path at all for
-> passthrough devices on VMware or Hyper-V, and that is what this patch
-> addresses. We reviewed it with VMware and aligned on this approach for the
-> guest in the meantime.
+On Sun, Oct 11, 2026 at 10:03:11AM +0700, Krittikun Wongnin wrote:
+> On an Acer Aspire A515-53G (Intel Whiskey Lake + NVIDIA GeForce MX230,
+> Optimus), the discrete GPU becomes inaccessible within ~15 ms of being
+> enumerated at boot, immediately after quirk_nvidia_hda() logs
+> "Enabling HDA controller". From then on, config space reads return all
+> ones and no driver can use the device.
 
-This does not change the fact that the patch causes unpredictable behavior for
-P2P devices in the guest. Sometimes it works; other times, devices that
-previously worked may be classified as P2P-capable and will stop.
+That's unusual, I don't recall seeing any other report about
+such behavior.
 
-> 
-> Is there anything you would recommend to make the series acceptable as an
-> interim?
+> - I have not yet built a kernel with quirk_nvidia_hda() disabled to
+>   prove the quirk is the trigger. I plan to do this and will report
+>   the result. The 4.15 test differs from 7.1 in many ways besides the
+>   quirk.
 
-Help Lukas and Mahesh succeed in their work.
+Below is a small debug patch to avoid the write to 0x488 and also
+print the current value of the register to dmesg.  Does it help?
 
-Thanks
+> If the quirk is the cause, would a DMI- or subsystem-ID-based exclusion
+> (Acer 1025:130f), or skipping the quirk for class 0x0302 devices that
+> report no HDA codec, be acceptable? I am happy to test patches and
+> provide full dmesg, lspci -vvv (as root), and acpidump output.
+
+Yes, output of "lspci -vvvxxxx" would be appreciated.
+
+Let's first try to find the root cause before thinking about possible
+solutions.
+
+Thanks,
+
+Lukas
+
+-- >8 --
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index de9bbcc..51d3b65 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5863,8 +5863,8 @@ static void quirk_nvidia_hda(struct pci_dev *gpu)
+ 	if (val & BIT(25))
+ 		return;
+ 
+-	pci_info(gpu, "Enabling HDA controller\n");
+-	pci_write_config_dword(gpu, 0x488, val | BIT(25));
++	pci_info(gpu, "Enabling HDA controller %#x -> %#x\n", val, val | BIT(25));
++	// pci_write_config_dword(gpu, 0x488, val | BIT(25));
+ 
+ 	/* The GPU becomes a multi-function device when the HDA is enabled */
+ 	pci_read_config_byte(gpu, PCI_HEADER_TYPE, &hdr_type);
