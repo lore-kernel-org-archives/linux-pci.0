@@ -1,172 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02AE9397694;
-	Mon, 12 Oct 2026 09:38:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791797883; cv=none; b=O/pv1z3nzZTan6Xg12qWaglXqB1TQYbbqyM2C7R07VpArRawX2I0pgQ/M8Q8xXkEOdBFH6P+X5cgeM3I75Qfs+Pa59IgExDacLD2ZAUfB0Ge576tt5ElSrKifvZ5QtXoQtBBCaqiWV1BcpqLt53m7MvV9PkrNR1Yfc4VdqoYFZE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791797883; c=relaxed/simple;
-	bh=/qeI+mcky6POL+dlz67XlDlJlP/m1BDsglDrCc5muCs=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=rZdJ1/cU5tZHt71ZVJN3b0bOIb/d2k06ZE88rbaEbGQIygwTyL3wHc3kCTwwIpMcsIYnI/ysoqVepkHIcPqQjT/Q8oxXAEYkj9s5Yiq2XRiIPBbQCnsUoz6bVS7zQHX4EV844trci0+g1gW1jr5DpOqAghyIk6expYIwqwaPJO8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JVUsClFs; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B4C64322F1
+	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 09:39:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.170
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791797951; cv=pass; b=j3+cSI98CVGX6pyZirw+B25bWXi8p+7I/65nDSotPrK8MkykEUix3tyFpvLWbmZbHUWx1ZktMHxo39vb0r9qQIa4hRYIt2QVmyVrjGrdM+09UxmFQEMyS7UuRpkt5JPte3lBcq0xrXeRSYDm121Lfx5npmVKhrK2lrW90gtkNW0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791797951; c=relaxed/simple;
+	bh=p4eOAQSRydUrFhv9tfWYY8SfGm5O1qYqWKsd24mVNSU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=UoUgTokRiKh8pYO1HLAyuzn3KGF7xnyxoS4IyK9JvGw3LWAsxSX+guNEPf0YwskepUx197/kgVRjOy98AV7ee/UqGhbINUkcGm4x2IZFiKoqaE79ZEUYA2k7IAoAB8zqWhpOuc/5k0/oG2L8y8JaYHVNHQi5TOIsGCfJ0+YOFzU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QDIELTuC; arc=pass smtp.client-ip=209.85.210.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JVUsClFs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2418B1F0089B;
-	Mon, 12 Oct 2026 09:37:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791797881;
-	bh=0C26uGtxqGDVfiyGSgCVeY4+duEFxvfuAlVAP2wPEcs=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=JVUsClFsxTuCO4Jmd/9nLXrOUsWXPkEOYrHSWzLp38vEwjWv6WeveWcOoSAiqD+B7
-	 iX7iS8E2mZWedWmZdX7CIAkLrcRPOWzzHNhK9PviT4ai91qeuWwwwH9FH+yDgS4Hwh
-	 v0AKgicoMJ5QsJxyFN5cBUoNcPr/dx0KskoGKRVv7sD+PjZ+dC54aPEEtzPXT3PnZC
-	 hE2jzEmeYQrptnVWB6sNTpEh+EUjWI2HrWgpnoFqJ5wSn5WJKETtmGBXWr5zTQq8ve
-	 6irzeFMcu1iQTEpLcu9SeEKi23bSH4YEnt2UX60BwUeND8Pnj3R8PTJcAO5JTJWcBI
-	 O+0nwsD7XMWMg==
-X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
-From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-To: sashiko-reviews@lists.linux.dev, iommu@lists.linux.dev,
-	Jason Gunthorpe <jgg@nvidia.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v7 13/16] iommufd/viommu: Select vIOMMU operations
- before allocation
-In-Reply-To: <sashiko-outbox-163690@kernel.org>
-References: <20261008055955.4014342-1-aneesh.kumar@kernel.org>
- <20261008055955.4014342-14-aneesh.kumar@kernel.org>
- <sashiko-outbox-163690@kernel.org>
-Date: Mon, 12 Oct 2026 15:07:57 +0530
-Message-ID: <yq5azewj45u2.fsf@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QDIELTuC"
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-85377c8bc96so622476b3a.3
+        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 02:39:10 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791797950; cv=none;
+        d=google.com; s=arc-20260327;
+        b=QVluesgelTRU5s6tfW/6IX07ZAM6PNNvxTXqjg9rnrbMw6bTXSIgYKm8LZHaFj6v8K
+         UF0gVqgi+fttf1ZmA+3f8WLRI/vN1ploWnHzcsIwUvCjyCibia+HgRD0nigRX06RyV9M
+         JLBChvjOuRQMlUVZEx3vywEfEcQd8ksjuB7izqi39UPlhvxvgrdXxqVvQzqB1wKbHLrZ
+         JBJwRR9BvmxS+ASoraxovrEWzQaBYkeY1+9NHZP/dbZHSCYUGRG9eAjUnkdBwYcXXpKD
+         UWFmF+05WCNGvig3IfHnis4pmzU5Rlxj+EyW58rNXRTR79zFEYW+sQQxgsp2n+WxX5H6
+         1Q9w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=p4eOAQSRydUrFhv9tfWYY8SfGm5O1qYqWKsd24mVNSU=;
+        fh=fifV8evSxvWeLgqiziglnegrzSdYKtpXppwNHm9M/+A=;
+        b=rd1QwxDt5S+GSLz4GjWtYsQzUCnp3+3rhtlbwrt17oq6tyavNPyAHu7IXGHWZp0kGo
+         wG4c82/ukuNHzt/9r70sTWQlfTRTSxdlafEU4sV9nH+dNaSi3OGyQdeyOs0ZiEdqhxHL
+         nT9L6n9Z2ORpKRKED/7KyJWtUehTHEid2FHltCFHewdhubeAwQimoqBoL0BlXI/vY4Op
+         66aIenP9h+opsOGDq9DBOblsBM+9tdb+AOZcqW615gc/JKuPYyPGMGJGybLBT7tneTlf
+         Cp+VDZSaOpQ/jIrQkdmTEZ9n65h2CuvT2keQcSjK8FkGMsavYBQQBq5VlIEl10875eG8
+         17Nw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791797950; x=1792402750; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=p4eOAQSRydUrFhv9tfWYY8SfGm5O1qYqWKsd24mVNSU=;
+        b=QDIELTuC5xO9kvbzF8LipXyAjMFAA/thp46hctNbpAoIVySoJL1TautjHxBObhj9ZO
+         dPl+oI3ABiYOTSeTtnC/JdPJWxY4QdUWSxGhj3WEuQxW+/84NFUr1AA1UuUuAAjFnSmC
+         M/iH/Dg5eaaMBnsDQraXKFeJsRKokIi2QXFKgjtlqgnrHqG0945ijTqx0vK5twWN6Uu9
+         Nk4107QhwT9SC1oi8/l924nXEZRm/Eewq3X7DHZ/c0r6oZWc+TEpffbUailJbmuwYwaU
+         cOTD/h3RaujQSO6lcMp+G9QfyyGs9IHye0xDpMSY9amNNp+mzzaaSDhmpi90xtn/Apbu
+         NCiQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791797950; x=1792402750;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=p4eOAQSRydUrFhv9tfWYY8SfGm5O1qYqWKsd24mVNSU=;
+        b=eKUeDqvYzBGGwUBN4CYErr/XweJ6YX2s0w4cdVKI3vwyV3VapT40wI4esGUSPizRE3
+         GfJG6GBybAYhf0KcsIEwmmQwJ01mKKCsmWSS4sY/JvGMAzdsH27dq43XSdac+UAkyV0e
+         oc1WzF3QWKQRyVLAN7lHEYUpsfRP8yMoYHF9Pws74cwTW+oARMt8IS/Ta+QmHQ11B3nQ
+         X9uvl5cR+X2EbqTCMaZ+9UylZpF8Jdb7Jtbpo1AmzoULqGHS3qnrlyeLgrV+TKyuwUM9
+         Qda5NnLPVq0WHPj2raW4zRI0SuGnc6ccI9t8j5m0/8q/O5hoiLWt5YaeXbNr3uryyP5T
+         pEYA==
+X-Forwarded-Encrypted: i=1; AKwUvBw0j72F39ljktq6bN5Bj8JfZa7JF/T8pcxYYRJS9ogfB5xAhiZhhEc08o5tHnJNDcszD5P65Ymu4Zo=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJpac0VewWzKmylZneZ1dQa/37Is1PRMmXjhhpoojFC2ra0gw82
+	HmKxGXCJsVkH+P38CabS4dklxdZIAgSEp2BM1aIbuKtFmQb2SucUifKt2dhB9Gue+DlCimgHM/R
+	f/NR5TdrJyyJVXjOtGWLrAwrV9TEeV7I=
+X-Gm-Gg: AYBFou3dfgBbHBoW0Zb2+arai8iBxHvOAen1d+E6H5EDxqSzRvUIL3XRJgND/eXPIxj
+	0mkehN5SkbvBM5Q0QVhDfNhwiamAwohAWVaZ6Iu0r+xNdM7OKVcgrcQGwrUJh7UuNwvs9VvrSiE
+	bbve56rNwp4yfyf2tDePnLYjyyId9r9vwR3DXRuR1GGfeNSw5Y5BR9KsCo35dnomLTQ3s34S66S
+	BHf2drLWnlg9a27ISJT+hQcD2FyL3LRFtrSBfkbYIPbhWhBgW4NYewbwx8dEk9MQOZt+ioK/EHK
+	WATTgvaicsSoA1TdfdXUSdgAo8Ykm/7fQfQCgzytighwihbJPqA5s0Q1pjnivHPY8fXyitjcN2C
+	dUKBDm2vZOsGYPq/36IXElzGnRMpnOiJqfZxWdJAE3YqklJdD7lHQ9eixRdCwHHEhn/M1+SR3W6
+	x5CQ==
+X-Received: by 2002:a05:6a00:1f06:b0:888:85a:6201 with SMTP id
+ d2e1a72fcca58-897c653b01amr8233897b3a.13.1791797949637; Mon, 12 Oct 2026
+ 02:39:09 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20261007104847.507776-1-phucduc.bui@gmail.com>
+ <20261007204638.GA785135@bhelgaas> <CAABR9nGNoaO-CmTcRvXuMMmGbVSWybKZVBRRZmzQCab_N1EzZA@mail.gmail.com>
+ <126200fa-49e0-449a-afac-cc08f4a9ecf3@nvidia.com>
+In-Reply-To: <126200fa-49e0-449a-afac-cc08f4a9ecf3@nvidia.com>
+From: Bui Duc Phuc <phucduc.bui@gmail.com>
+Date: Mon, 12 Oct 2026 16:38:57 +0700
+X-Gm-Features: AclHuK83I9LwnM2vO4kCLQ6Jq_5C8DsyXc8yQBXyQkkqIo_gLuZ6KKPGtYL1lwQ
+Message-ID: <CAABR9nG0rXrtyMuuWOhK-zA0XNsMENuy73fXiq1RhH=GBapFkQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: tegra194: use dev_err_probe() for PERST GPIO
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, kwilczynski@kernel.org, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Thierry Reding <thierry.reding@kernel.org>, Jonathan Hunter <jonathanh@nvidia.com>, 
+	Vidya Sagar <vidyas@nvidia.com>, Niklas Cassel <cassel@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-sashiko-bot@kernel.org writes:
+Hi Manikanta,
 
-> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
-> - [Critical] iommu: type confusion in iommufd_viommu_alloc_ioctl() parent domain
-> - [High] iommu: dead code because amd_iommu_alloc_domain_nested is not assigned
-> - [Low] iommu: missing viommu_type validation in amd_iommufd_get_viommu_ops
-> --
->
-> commit ea74b8b169fc38edaee15fa883c362684ddec72d
-> Author: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
-> Subject: iommufd/viommu: Select vIOMMU operations before allocation
->
-> This commit introduces a new get_viommu_ops callback to select vIOMMU
-> operations based on the device and requested type before allocation. It
-> moves the size and initialization callbacks into iommufd_viommu_ops and
-> converts multiple physical IOMMU drivers to use the new interface.
->
->> diff --git a/drivers/iommu/amd/iommufd.c b/drivers/iommu/amd/iommufd.c
->> index 52300b867c1f2..c1e132382adc7 100644
->> --- a/drivers/iommu/amd/iommufd.c
->> +++ b/drivers/iommu/amd/iommufd.c
->> @@ -32,13 +32,21 @@ void *amd_iommufd_hw_info(struct device *dev, u32 *length, enum iommu_hw_info_ty
->>  	return hwinfo;
->>  }
->>  
->> -size_t amd_iommufd_get_viommu_size(struct device *dev, enum iommu_viommu_type viommu_type)
->> +static size_t amd_iommufd_get_viommu_size(struct device *dev,
->> +		enum iommu_viommu_type viommu_type)
->>  {
->>  	return VIOMMU_STRUCT_SIZE(struct amd_iommu_viommu, core);
->>  }
->>  
->> -int amd_iommufd_viommu_init(struct iommufd_viommu *viommu, struct iommu_domain *parent,
->> -			    const struct iommu_user_data *user_data)
->> +const struct iommufd_viommu_ops *
->> +amd_iommufd_get_viommu_ops(struct device *dev, enum iommu_viommu_type viommu_type)
->> +{
->> +	return &amd_viommu_ops;
->> +}
->
-> [Severity: Low]
-> Does this function need to validate the requested viommu_type?
->
-> Currently, amd_iommufd_get_viommu_ops() unconditionally returns the ops
-> structure without checking the type argument. If a user requests an arbitrary
-> type like IOMMU_VIOMMU_TYPE_ARM_SMMUV3 on an AMD device, the core iommufd
-> framework might track the vIOMMU under a mismatched architectural type
-> identifier.
->
-> The ARM and selftest backends appear to validate this argument against their
-> supported hardware types before returning the operations.
->
-> [ ... ]
+> With the subject line capitalization and "PERST#" style fixes,
+> Reviewed-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 >
 
-No vIOMMU type has been added for any IOMMU other than Arm. The
-documentation also considers IOMMU_VIOMMU_TYPE_DEFAULT reserved.
+Thanks for the review. I'll send v2 shortly.
 
->> @@ -73,5 +79,7 @@ static void amd_iommufd_viommu_destroy(struct iommufd_viommu *viommu)
->>   * struct iommufd_viommu_ops - vIOMMU specific operations
->>   */
->>  static const struct iommufd_viommu_ops amd_viommu_ops = {
->> +	.get_viommu_size = amd_iommufd_get_viommu_size,
->> +	.viommu_init = amd_iommufd_viommu_init,
->>  	.destroy = amd_iommufd_viommu_destroy,
->>  };
->
-> [Severity: High]
-> Is the alloc_domain_nested callback missing from this operations structure?
->
-> The commit message and comments in amd_iommu_alloc_domain_nested() indicate
-> it should be assigned to the viommu operations. However, it is omitted here.
->
-> If a user attempts to allocate an AMD nested domain using IOMMU_HWPT_ALLOC,
-> won't the core framework reject it with -EOPNOTSUPP because
-> viommu->ops->alloc_domain_nested is NULL?
->
-
-It is unclear whether nested domain support is fully integrated for AMD.
-I see amd_iommu_alloc_domain_nested(), but cannot find any callers.
-
->> diff --git a/drivers/iommu/iommufd/viommu.c b/drivers/iommu/iommufd/viommu.c
->> index f3d5b5a7eb4a4..e95138ae71d5b 100644
->> --- a/drivers/iommu/iommufd/viommu.c
->> +++ b/drivers/iommu/iommufd/viommu.c
-> [ ... ]
->> @@ -103,16 +105,12 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd *ucmd)
->>  	 */
->>  	viommu->iommu_dev = iommu_dev;
->>  
->> -	rc = ops->viommu_init(viommu, hwpt_paging->common.domain,
->> +	rc = ops->viommu_init(viommu, idev->dev,
->> +			      hwpt_paging->common.domain,
->>  			      user_data.len ? &user_data : NULL);
->
-> [Severity: Critical]
-> Is there a missing check to ensure the domain is owned by the same driver
-> before passing it to viommu_init?
->
-
-
-The viommu_init callback needs to perform this check. For example, the
-Arm implementation does:
-
-	ret = arm_smmu_validate_parent(smmu, parent_domain);
-	if (ret)
-		return ret;
-
-
-
-> In iommufd_viommu_alloc_ioctl(), hwpt_paging->common.domain is passed directly
-> to the device driver's viommu_init callback. Unlike in
-> iommufd_hw_pagetable_alloc() which checks if parent->common.domain->owner
-> matches the ops, this check appears to be omitted here.
->
-> If a user allocates a paging HWPT for a mock device, and then calls
-> IOMMU_VIOMMU_ALLOC passing an AMD device ID but the mock HWPT ID, could the
-> receiving driver blindly cast the mismatched domain? For instance, AMD's
-> viommu_init uses to_pdomain() on the parent domain. This looks like it could
-> lead to type confusion and out-of-bounds accesses on the domain structure.
->
-
--aneesh
+Best regards,
+Phuc
