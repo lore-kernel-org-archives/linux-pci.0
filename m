@@ -1,54 +1,95 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 637DE393DF1;
-	Mon, 12 Oct 2026 06:27:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF8FB42FCDB
+	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 06:32:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791786439; cv=none; b=GmyxvWZg4Sj5qRN2L7gRw+4rSRPveeNlPbD+hqZU5SkJSzMNYe+2yJNKYAKz71+9tZ9SCJvz4Yi7IOZ/H5++Y2WVfh8kr3k1a2ow2arSFH0OpHeE7Mt0dv4/g0mc/5EkdVdBYv4bS6eosZfCiCXzeZbzE7y02+TkcuNGxzlMRVM=
+	t=1791786733; cv=none; b=orjnzoKkRO2/aTc1HtElHVuRFxk7R9Ib9xOEbC9Sywb7qvHZ1pGqTV9zGzAI2UU4w0Bj5b0bXA7Zo477jq5CdqblXUEDnIZnak9VkfD6W8XCnJqpWgytvJrY2lSZmD3hfzI7/bejfDNBt8clj4zBF2VWJyoGBE8q9yHQWVibX6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791786439; c=relaxed/simple;
-	bh=yWb5bwltfss4zISB8mgE9EbcfqTnGziOD4w5WerLJi8=;
+	s=arc-20240116; t=1791786733; c=relaxed/simple;
+	bh=tENbZxj8x84FWy71pM4HuVmaBmcMtNWDj9k1DKSO0Nw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BwOCshda8UQ+TupuYMm2E2Qd9fI8reuOYUOWTmtaeRLk5G/P4AH9CTo6Jb85b8CNRQr3S4NVjVALO1+n8Nyk4lAQfA9BCC4SZMIQrZoyhZ6mc0QOdw4WpynMxsl8qZugZvdXpLXgvq4h1k3fNKP7rjdupZkk62oTvUEXGChIQj0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JIsYZJYD; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=j+2tPr1GRdApq1OTtoDrGeErl79iEUXu+a3X23+0jnCcfPBocB6wVZvFdixr/lCqQG5ldHWAKRER1UgpELgjK0UinK4c/01ExDUeQ5wsVPYQPZ+Cn1CkkBfQGdR/rDW4DVoQ/XeBUhjnKAiScVQCY7K2bGpS/XgGXDz6lXaz5UQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dsA7rmps; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=omyGDFMl; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JIsYZJYD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 509791F0089B;
-	Mon, 12 Oct 2026 06:27:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791786438;
-	bh=3CseviqKwc3wAzIvwt9NHYniqDq3QffXVJkcA0Kx9js=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=JIsYZJYDCoFa3Pon8+Oc1DTFqd09qDtMwHcMf/lV4SARJXBu2x5tNlQmbxr8lqnwF
-	 nLnbZPBn9oeKRTreqP74ML7MemI/rTwrQRnagjtkhiZVw1ugPeNb6SQKgpgLYMiJHp
-	 sPSgtAdu6NymWXLHJ38MHt3Avxfm6A9Gd3NHsgIbgURJY7UFxQD2TKXIA46P1QRutL
-	 t+CcwG6rOX/1ojcKfvGmgmTVx+Qpq8k0BCt1gurJO/Sd7jBssGjMekZIGmPZQgeS8L
-	 0I3Bs8jjFwy21xDzbQLGM+WUS7YLDuq5fCJxKsmRe+iYSd6BCRhB59PE/TU3bEM98m
-	 dspDIcYK5+axw==
-Date: Mon, 12 Oct 2026 09:27:13 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: Matt Evans <matt@ozlabs.org>
-Cc: Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@nvidia.com>,
-	Alex Mastro <amastro@fb.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Longfang Liu <liulongfang@huawei.com>,
-	Mahmoud Adam <mngyadam@amazon.de>,
-	David Matlack <dmatlack@google.com>,
-	=?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v8 3/9] dma-buf: Provide dma_buf_set_name()
-Message-ID: <20261012062713.GE27033@unreal>
-References: <20261006193643.76330-1-matt@ozlabs.org>
- <20261006193643.76330-4-matt@ozlabs.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dsA7rmps";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="omyGDFMl"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1791786729;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pVOdwmTWzYvfW0SGKkVsVq1r+w5aCgXDqeyllZ+wJl0=;
+	b=dsA7rmps+Mg84HZwSKB5Vj7zmAXii9fvAZHOET6lrknJ6SNqU+UWe8GunXL6Vzhd0lVUn/
+	sZmP44UifX4Dfe88L9zc2awcnqatYeuTQum855cs98YBDWUDQWm0I7WLu0RqmcRYc0bDe0
+	VZZp3UMzqdhWS2TLL1ITrBAIyJdq7Sw=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-690-jfFGtWQVNnWN_KD22tZvOQ-1; Mon, 12 Oct 2026 06:32:08 +0000
+X-MC-Unique: jfFGtWQVNnWN_KD22tZvOQ-1
+X-Mimecast-MFC-AGG-ID: jfFGtWQVNnWN_KD22tZvOQ_1791786727
+Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-4994d67d0e3so10785255e9.2
+        for <linux-pci@vger.kernel.org>; Sun, 11 Oct 2026 23:32:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1791786727; x=1792391527; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=pVOdwmTWzYvfW0SGKkVsVq1r+w5aCgXDqeyllZ+wJl0=;
+        b=omyGDFMlxSLuJdUxi1XPfjCiopZEx8l2LAG35zOHjr45foSMhJfXKAoYwa8QCzW3FJ
+         nX78Q59m9ZohbHgFe2B1m5jy3hiGUTwf7p5dHx96YRG9Img3el6If7RV6Ay7WCPbqpLb
+         PWKgkbPl27F6U9/HMQNgYWHTm88mfB9Ww70Z9lwDvT/wkEtSmF9kizUt1QLEndArVTGz
+         k61ToXnhm5Smp4OFgi/dspVGkVZb5B93l/EWEcquwkDYWq5j2bj5/1hlFItT/YOBUuGK
+         gYW9Xs+T1TRix+kZlw/8hR1gb9Dq1h7rOeQMJdqDBeMsZqqKJ8nfJS7rVfw2QKqczt2j
+         AUXQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791786727; x=1792391527;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=pVOdwmTWzYvfW0SGKkVsVq1r+w5aCgXDqeyllZ+wJl0=;
+        b=uhdgmNCqUVHZ7UCkZ5+sItPbJQ19rQtsb16AFGuS3/x6Vg6VxDZiP+2+ovJwwkUbtM
+         CviXMIGXu10rlyjoebGQHav4E3UzGxBbyBTQp88LHSK+LtlRdvLDbv9+L9GsO2pMWski
+         zli8hQOTeH7iN3LfQtXLu2ueuromcKnR9gpSZTWCUYfP/nTQtBPFGGPFNa1OSyqutmUg
+         kcwtMBaqy1bX0vcv3gMrg0H77sPAU5CJM3MiEBLd9fjvUJx3CVFJdf2BAL72WQ3C02L3
+         R0xciFuhVzeiygIbId9YEfdVQrN+q9hGeEDMqKiZ+R75S3rE59seWgBw/Ib6Dzpfm6IV
+         F3PA==
+X-Forwarded-Encrypted: i=1; AKwUvBz7AWHhOLw4/lCWkpTiyvswq1tMb2pHetJhjZMhQ3fQREi2381tP43iR0AOJ0Jq/+CBLVWDvn/1WVU=@vger.kernel.org
+X-Gm-Message-State: AFq9FYK3VmDPy0KHOE+FjTiWP6ZJx+SxH2JffFltV2WasSaHeYxRr7tZ
+	wBrDBYOfBL+6Tjxo1ghYvVMZKXNCWivaxgZUfVT1KN0WlxQCyw6Vx+5oAzKPkvECzl/PVOy9hV6
+	VLdxBWDM4gkmELza1pqRgYwW1MdcAwXlpPGVeD7N3hV2Dcf57dd0dSMBlCiA+RRCnLQrylMAu
+X-Gm-Gg: AYBFou2hCvKvf+hYRevGiCpC4lW0x8fBw3x2WKn3xDDL3aTFoSnnrj7huQ2BDIe2uOR
+	weWX1RccgHKEG961dm2p/Luzv4idI9JQzc/5sQoqjCYCpWvwXoiJnF9uyfUcy6t2l8Wtv7/u4wd
+	3Wd0OhG0qW4rtZUOmLyUSoavCcWT4OADCmBZQ1o5v3kDRPPJ2bPoKLFhobN+FFc8JUSIc3zfDeX
+	T7taLn0avfDQEXf96RTi3VDVnxhgVsJlENaZA2NbudgaCO+rCyf3YB6INJXg/FTihD9mVF6CDdp
+	Sq8S7tpgDTeSTd/TKBb8PcKiifeU8k2t67+H/D2KrCQm6KOW71OYJFCbldS6rlHmFTocTg==
+X-Received: by 2002:a05:600c:37cc:b0:4a0:23f:8b0d with SMTP id 5b1f17b1804b1-4a18e44396cmr168060385e9.2.1791786726487;
+        Sun, 11 Oct 2026 23:32:06 -0700 (PDT)
+X-Received: by 2002:a05:600c:37cc:b0:4a0:23f:8b0d with SMTP id 5b1f17b1804b1-4a18e44396cmr168059515e9.2.1791786725760;
+        Sun, 11 Oct 2026 23:32:05 -0700 (PDT)
+Received: from redhat.com ([2a0d:6fc0:3fd7:5300:3d6b:52a4:a23f:9d0b])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a18beacd2csm288036475e9.14.2026.10.11.23.32.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 11 Oct 2026 23:32:05 -0700 (PDT)
+Date: Mon, 12 Oct 2026 02:32:02 -0400
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Abhin Parekadan Jose <abhinjoses@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Shuai Xue <xueshuai@linux.alibaba.com>, Kees Cook <kees@kernel.org>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RFC v4 0/5] PCI: pciehp: Report surprise removal during
+ safe removal
+Message-ID: <20261012022556-mutt-send-email-mst@kernel.org>
+References: <20260927182017.938565-1-abhinjoses@gmail.com>
+ <asxylqif72Lcldx1@home-desktop>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -57,74 +98,199 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261006193643.76330-4-matt@ozlabs.org>
+In-Reply-To: <asxylqif72Lcldx1@home-desktop>
 
-On Tue, Oct 06, 2026 at 08:36:31PM +0100, Matt Evans wrote:
-> Allow exporters to set the name of buffers, during export or for
-> subsequent updates.  This is useful to express buffer-specific debug
-> information, indicate state particular to the exporter's usage, etc.
-> Only exporters and userspace are expected to set names; it isn't
-> sensible for importers to do it.
+On Mon, Oct 12, 2026 at 07:39:34AM +0200, Abhin Parekadan Jose wrote:
+> Gentle ping on this RFC.
 > 
-> Originally, the static dma_buf_set_name() was used for
-> DMA_BUF_SET_NAME ioctls, taking a __user string parameter.  Export
-> this function as a generic set-name helper, taking a kernel-allocated
-> string.  The SET_NAME ioctls now locally duplicate the __user string,
-> and use the new function to set the name.
+> Lukas, Bjorn, could you let me know whether the general direction is
+> acceptable before I work on a non-RFC version? Any comments on the
+> approach would help.
 > 
-> Signed-off-by: Matt Evans <matt@ozlabs.org>
-> ---
->  drivers/dma-buf/dma-buf.c | 84 +++++++++++++++++++++++++--------------
->  include/linux/dma-buf.h   | 16 +++++---
->  2 files changed, 64 insertions(+), 36 deletions(-)
+> Thanks,
+> Abhin
 
-<...>
+I'd say, complete the picture. acpi,shpc,polling...
 
-> @@ -577,8 +549,19 @@ static long dma_buf_ioctl(struct file *file,
->  		return ret;
->  
->  	case DMA_BUF_SET_NAME_A:
-> -	case DMA_BUF_SET_NAME_B:
-> -		return dma_buf_set_name(dmabuf, (const char __user *)arg);
-> +	case DMA_BUF_SET_NAME_B: {
-> +		char *name = strndup_user((const char __user *)arg,
-> +					  DMA_BUF_NAME_LEN);
-> +
-> +		if (IS_ERR(name))
-> +			return PTR_ERR(name);
-> +
-> +		ret = dma_buf_set_name(dmabuf, name);
-> +		if (ret)
-> +			kfree(name);
+Maybe think about how this interacts with pci_ignore_hotplug
+(seems to weirdly check presence then ignore)?
 
-<...>
+And test with virtio not with edu.
 
-> +int dma_buf_set_name(struct dma_buf *dmabuf, char *name)
-> +{
-> +	if (!name)
-> +		return -EINVAL;
-> +
-> +	/* dmabuffs_dname() won't use the string if the length
-> +	 * (including terminator) exceeds DMA_BUF_NAME_LEN:
-> +	 */
-> +	if (strlen(name) >= DMA_BUF_NAME_LEN)
-> +		return -E2BIG;
+> On Sun, Sep 27, 2026 at 06:20:11PM +0000, Abhin Parekadan Jose wrote:
+> > If a safe removal is already in progress when the device is surprise
+> > removed, pciehp cannot report the disconnect [1]. The removal blocks
+> > waiting on a device interrupt or status read, and pciehp's IRQ thread is
+> > single-threaded and is itself executing that removal, so it never runs
+> > again to report the device gone. The removal hangs indefinitely.
+> > 
+> > pciehp_isr() does run while the IRQ thread is blocked, but pciehp_ist()
+> > must ignore link and presence changes caused by Secondary Bus Reset or
+> > DPC, and telling those apart takes seconds which cannot be spent in
+> > hardirq.
+> > 
+> > Patch 4 does not do that work in hardirq. pciehp_isr() only checks
+> > whether the card is present or the link is active, and defers the rest
+> > to a work item in process context. The work item does not need to know
+> > why the link changed, only whether the card is gone: it waits for DPC
+> > recovery or a Secondary Bus Reset in progress to complete, then checks
+> > again under reset_lock, and if the card is absent and the link is down
+> > marks the devices below disconnected, which schedules the driver's
+> > disconnect work from patch 1. pciehp_ist() is unchanged and
+> > remains the only consumer of the one-shot flags PCI_DPC_RECOVERED and
+> > PCI_LINK_CHANGED, which tell it whether a link change can be ignored.
+> > 
+> > Patches:
+> > 
+> >   1/5 Michael's "PCI: Report surprise removal event" from his RFC v5,
+> >       which adds disconnect_work_enable and pdev->disconnect_work.
+> >       Changed to serialize disconnect_work_enable with a per-device
+> >       spinlock.
+> > 
+> >   2/5 Add pci_hp_wait_link_change(), which awaits a Secondary Bus Reset
+> >       in progress without consuming PCI_LINK_CHANGED.
+> > 
+> >   3/5 Add pci_dpc_wait_recovery(), which awaits DPC recovery without
+> >       consuming PCI_DPC_RECOVERED.
+> > 
+> >   4/5 The pciehp change. Adds disconnect_work to struct controller,
+> >       scheduled from pciehp_isr() on PDC or DLLSC when neither Presence
+> >       Detect State nor Data Link Layer Link Active indicates a card.
 
-BTW, in-kernel APIs generally avoid defensive programming, since it adds
-overhead for checks that callers are expected to perform. The caller is
-responsible for ensuring that the name is valid.
 
-Unless you're writing code specifically for out-of-tree use, which is
-also contrary to kernel rules.
+how about including the virtio patch? seems more relevant than
+fooling around with edu.
 
-Thanks
+> >   5/5 A POC driver for the QEMU edu device that blocks in remove()
+> >       waiting for an interrupt, standing in for del_gendisk() stuck in
+> >       blk_mq_freeze_queue_wait(). Not for merge -- included so the
+> >       hang can be reproduced.
+> > 
+> > Changes since RFC v3 [5]:
+> > 
+> >   - 5/5: Reinitialize the completion in remove() before requesting the
+> >     delayed interrupt, so that an earlier completion cannot let remove()
+> >     return while the interrupt is still pending. (Sashiko)
+> >   - 1/5 to 4/5: No changes.
+> > 
+> > Changes since RFC v2 [4]:
+> > 
+> >   - 1/5: Protect disconnect_work_enable with a per-device spinlock, held
+> >     while testing it and scheduling the work, instead of lockless
+> >     accesses and barriers.  pci_dev_set_disconnected() could otherwise
+> >     test the flag, get preempted, and queue the work while a newly bound
+> >     driver re-initializes it.  With the lock, cancel_work_sync() is
+> >     sufficient again, so go back to it from disable_work_sync().
+> >     (Sashiko)
+> >   - 2/5: Test PCI_LINK_CHANGING with test_bit_acquire(), so that the
+> >     caller's subsequent accesses are ordered after the end of the code
+> >     section even if wait_event() returns without sleeping. (Sashiko)
+> >   - 3/5, 4/5, 5/5: No changes.
+> > 
+> > Changes since RFC v1 [2]:
+> > 
+> >   - 1/5: Use disable_work_sync() instead of cancel_work_sync() in
+> >     pci_clear_disconnect_work(), so that a racing schedule_work() cannot
+> >     queue the work after remove() has returned. (Sashiko)
+> >   - 2/5, 3/5: New.
+> >   - 4/5: Drop schedule_notification_work(); pci_dev_set_disconnected()
+> >     schedules the driver's disconnect work for all callers again.
+> >     (Michael)
+> >   - 4/5: Don't consume PCI_DPC_RECOVERED and PCI_LINK_CHANGED in the
+> >     work item.  In v1 it ran the same spurious link change test as
+> >     pciehp_ist(), and whichever ran first took the flags, so pciehp_ist()
+> >     could tear down a device that was only reset. (Sashiko)
+> >   - 4/5: Check presence with pciehp_card_present_or_link_active() in
+> >     both pciehp_isr() and the work item, as pciehp_ist() does, so that a
+> >     port with Presence Detect State hardwired to zero is not mistaken
+> >     for an empty slot.
+> >   - 4/5: Return early from the work item if pciehp_ist() has already
+> >     taken the pending events, and treat a read error of the presence
+> >     check as "not present". (Sashiko)
+> >   - 4/5: In pciehp_isr(), check presence before dropping the runtime PM
+> >     reference on the port's parent.  In the work item, take a runtime PM
+> >     reference and check presence under reset_lock, since a slot reset
+> >     may make Presence Detect State and Link Active flap.
+> >   - 5/5: Build only with CONFIG_EDU_SRPOC, which depends on PCI; don't
+> >     claim the interrupt when the device reads all ones; clear bus
+> >     mastering on teardown. (Sashiko)
+> > 
+> > Testing
+> > 
+> > Reproducing this needs QEMU changes, since neither device_del nor the
+> > attention button produces a true surprise removal.  A branch with both
+> > is here [3]:
+> > 
+> >   - a delayed-IRQ register on the edu device (BAR0 0x30, write N ms)
+> >   - a pcie_surprise_del monitor command that drops the device and
+> >     generates PDC=1, DLLSC=1, PDS=0
+> > 
+> > Both tests use:
+> > 
+> >   ./qemu-system-aarch64 -machine virt,gic-version=3 -cpu cortex-a57 \
+> >     -m 512 -smp 2 -kernel Image -initrd initramfs.cpio.gz \
+> >     -device pcie-root-port,id=rp1,chassis=1,slot=1 \
+> >     -device edu,bus=rp1,id=edu0 -append "console=ttyAMA0 rdinit=/init" \
+> >     -nographic -monitor unix:/tmp/qemu-mon.sock,server,nowait
+> > 
+> >   and need a guest kernel with CONFIG_EDU_SRPOC=y.
+> > 
+> > Test 1 (Hang in remove() on a user thread, then surprise removal):
+> > 
+> >   guest# echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove &
+> >   host$  echo "pcie_surprise_del edu0" | socat - unix-connect:/tmp/qemu-mon.sock
+> > 
+> >   This is the case patch 1 solves on its own: pciehp's IRQ thread is
+> >   free and handles the removal.
+> > 
+> > Test 2 (Hang in remove() on pciehp's IRQ thread, then surprise removal):
+> > 
+> >   guest# echo 0 > /sys/bus/pci/slots/1/power &
+> >   host$  echo "pcie_surprise_del edu0" | socat - unix-connect:/tmp/qemu-mon.sock
+> > 
+> >   Without patch 4 the safe removal does not return until the delayed
+> >   interrupt fires 600 s later.  With it,
+> >   pciehp_isr() schedules ctrl->disconnect_work, which marks the device
+> >   disconnected; the POC driver's disconnect work completes the wait and
+> >   remove() proceeds.
+> > 
+> > Open questions
+> > 
+> >   - Is this a viable approach?
+> > 
+> > [1] https://lore.kernel.org/all/aHlZE18kPuHuDtTT@wunner.de/
+> > [2] https://lore.kernel.org/all/20260905183905.997833-1-abhinjoses@gmail.com/
+> > [3] https://gitlab.com/abhinkop/qemu/-/commits/suprise-removal
+> > [4] https://lore.kernel.org/all/20260927165459.829900-1-abhinjoses@gmail.com/
+> > [5] https://lore.kernel.org/all/20260927175203.928270-1-abhinjoses@gmail.com/
+> > 
+> > Assisted-by: LLM
+> > 
+> > Abhin Parekadan Jose (4):
+> >   PCI: pciehp: Add pci_hp_wait_link_change()
+> >   PCI/DPC: Add pci_dpc_wait_recovery()
+> >   PCI: pciehp: Report surprise removal from pciehp_isr()
+> >   misc: Add edu_srpoc surprise removal POC driver
+> > 
+> > Michael S. Tsirkin (1):
+> >   PCI: Report surprise removal event
+> > 
+> >  drivers/misc/Kconfig                   |  11 ++
+> >  drivers/misc/Makefile                  |   1 +
+> >  drivers/misc/edu_srpoc.c               | 172 +++++++++++++++++++++++++
+> >  drivers/pci/hotplug/pci_hotplug_core.c |  21 ++-
+> >  drivers/pci/hotplug/pciehp.h           |   1 +
+> >  drivers/pci/hotplug/pciehp_hpc.c       |  67 ++++++++++
+> >  drivers/pci/pci.h                      |  10 ++
+> >  drivers/pci/pcie/dpc.c                 |  54 ++++++--
+> >  drivers/pci/probe.c                    |   1 +
+> >  include/linux/pci.h                    |  57 ++++++++
+> >  10 files changed, 381 insertions(+), 14 deletions(-)
+> >  create mode 100644 drivers/misc/edu_srpoc.c
+> > 
+> > 
+> > base-commit: fd179f8a05be3ccae366b9b96e176b51fbe54aab
+> > --
+> > 2.51.1
+> > 
 
-> +
-> +	spin_lock(&dmabuf->name_lock);
-> +	kfree(dmabuf->name);
-> +	dmabuf->name = name;
-> +	spin_unlock(&dmabuf->name_lock);
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_NS_GPL(dma_buf_set_name, "DMA_BUF");
