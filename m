@@ -1,44 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79C344E50BB
-	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 20:14:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E41DB1A9F96;
+	Mon, 12 Oct 2026 20:19:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791836076; cv=none; b=LOKfAaUWVTogUyIJ9gBTXAwtMS0EosNdICJb72mXqEAfEIbsh4oN2WePB9BhLLWT2OOSxyKH3JbRMowO7F2ZiKgA0+JVHiRAteToqNA4N7mR+qDhGuiAFdRd+0QM7D8iqpbgO4Vt3R+PCVSZQ5pAxIADYjDBhl2gKnp5nLxiGbM=
+	t=1791836354; cv=none; b=qeCWk/ibC8M3CqL23povNc12CK31OY5HkntjbMfV+u7SSjneY1hSacBcNm187N7b2llVOqAMQA/l2quhNTih3ujGNmwya7U9TtdOhzk8t6PtrepQEVVTI9SgPVfx/q/ZE10DpO/4Cg3u0hIz+fqheriLYj08PLFqUZXl3Ath1lo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791836076; c=relaxed/simple;
-	bh=y1PtnVc6RUyKJJp04DpaInfLkN2L7b/1Ikc4fqqfnGE=;
+	s=arc-20240116; t=1791836354; c=relaxed/simple;
+	bh=qU4s39QXYGF6y387WXktHtZDr51vM9T/ExPWCcqhXy0=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=U9NaQw/GznTqG4wWEpAB8KRpGPqkm0xyOOUJ9SExQffsYHmSJHnJX3T6s+ufuSQDE50XP8Yk87S9cd+CBppnrOhnY50G/BCfG8dJU0mhkEEeDUMo85J171uIuyuiZ85wnAXcXffLNoTZV/YshiYOCO8z9e90eBK9r9Wtgdacgag=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F11sptdM; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=dMOyfj9LYPgNbRiesyDTHM5f5vfYVWzuUM6WEP6ehoQwzLWI/O78VhmHmDoIrKThFfvSRMiRpoR58xo1s73HAXD6eNkj3f9MiBJE0GVcJuBIzXZFTZhir10u2gtv4hT9hbf+Ng31TTKkMOJBcoy+/OFwju4MRPXecv4ygDbpXQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PdPnoYHq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F11sptdM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE3811F0089B;
-	Mon, 12 Oct 2026 20:14:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PdPnoYHq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B4851F0089B;
+	Mon, 12 Oct 2026 20:19:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791836070;
-	bh=Yx1thZO4xaGAVViZWj+N8Em6w5rlQ/Osf1vZQ5BH4j4=;
+	s=k20260515; t=1791836352;
+	bh=f9BkgVVYBdq6Ts9SUFvsw/7XFAECAP2nrcXtcKnMv2E=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=F11sptdMftzjUb+31V2WdEi2rv3+DWHvmksPNN6y3j11bNoPN6B0ffWjvy/c7STqd
-	 YGl5JAs1zkgoqpFWRdjLiyG6Kf/ueGVh/04awWsKMfOC5iKUiK2frTgDLa1sgkOSdv
-	 rOCNxs2BbW7cy3Nn6L7Q7ZACMjywUWBsti71dXZEcppi5dgjqZ7D8xWnK+/R0e96Fg
-	 IUsYAnItXCBwgAp3vQNlbeihLocEOubhgEZwR+5HubbphT0K+hy8bW32lHzMn5RTDB
-	 m7Y9NBkj8wUXkA5PiE2WC0GID4GzrF4+oNafnc339TFj0dQiNdZZcDfFYuBhETYGLd
-	 4l0o7mrmtKEAQ==
-Date: Mon, 12 Oct 2026 15:14:28 -0500
+	b=PdPnoYHqZnuCaHu+l29sLiHgVnChMLNTvXt+WIP/DYueKP+44Z6Jt5gCgou/RFFlY
+	 YsQ6jAsyoB4TnXdybb9yeBkzRvGB77ZvX1n6N23a6bCMH9cO5Cp9LpWEjc3bp+OMsm
+	 bmKJlz8PoR9bu1G5SvWzYuu1fHh+T03ZSGWUsK+BtNPHBaP7Wt7SOqkWd6veSacjAO
+	 cDeKKJz8GQjvjICy3CLqU+SN7FNKVYW/pUXPIlyUZxZ5YzowzwGlKf2xWioWJAudVm
+	 6P2xtamffQ+jhr+8ADNFkhTetins4X5SQLdi3bCCowwuYAP3rAjIm7VQf8E7ODqNfT
+	 hmavqpwSVbcuA==
+Date: Mon, 12 Oct 2026 15:19:10 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Aditya Garg <aditya.garg@linux.dev>
-Cc: linux-pci@vger.kernel.org, Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Christian Koenig <christian.koenig@amd.com>,
-	Vitaly Prosyak <vitaly.prosyak@amd.com>,
-	amd-gfx@lists.freedesktop.org, Lukas Wunner <lukas@wunner.de>,
-	Jason Perlow <jperlow@gmail.com>
-Subject: Re: [PATCH for-linus] PCI/AER: Skip unmasking Advisory Non-Fatal
- Errors on T2 SEP
-Message-ID: <20261012201428.GA1377196@bhelgaas>
+To: Varsh Satti <varsh@varram.me>
+Cc: Rickey Bartlett <subtexel@gmail.com>,
+	Nirmal Patel <nirmal.patel@linux.intel.com>,
+	Jonathan Derrick <jonathan.derrick@linux.dev>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof Wilczynski <kwilczynski@kernel.org>,
+	Kai-Heng Feng <kai.heng.feng@canonical.com>,
+	Keith Busch <kbusch@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: vmd: Flush initiator posted writes before demuxing
+ interrupts on Meteor Lake
+Message-ID: <20261012201910.GA1379657@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,110 +49,41 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261012192933.GA1358008@bhelgaas>
+In-Reply-To: <20261012194011.48215-1-varsh@varram.me>
 
-On Mon, Oct 12, 2026 at 02:29:33PM -0500, Bjorn Helgaas wrote:
-> On Sat, Oct 10, 2026 at 10:53:01PM +0530, Aditya Garg wrote:
-> > Jason reported that since commit eddba19b8b5f ("PCI/AER: Support Advisory
-> > Non-Fatal Errors"), the Macs with Apple T2 Security Chip were powering
-> > off a few seconds after every boot. He also found the PCI Device
-> > 106b:1802, which corresponds to the Apple T2 Secure Enclave Processor was
-> > misbehaving and the most likely reason is that the device is ANFE
-> > incompatible due to Apple's custom hardware.
-> > 
-> > Since its highly unlikely that Apple will release a firmware update to
-> > support ANFE, introduce a quirk as suggested by Lukas to blacklist the T2
-> > SEP from ANFE.
-> > 
-> > Fixes: eddba19b8b5f ("PCI/AER: Support Advisory Non-Fatal Errors")
-> > Reported-by: Jason Perlow <jperlow@gmail.com>
-> > Tested-by: Jason Perlow <jperlow@gmail.com>
-> > Closes: https://lore.kernel.org/linux-pci/CABZrw2HcaOh3DHTJtxU5dXrb3Vg19scr6+qR-xe_+R7rME35_Q@mail.gmail.com/
-> > Signed-off-by: Aditya Garg <aditya.garg@linux.dev>
+On Mon, Oct 12, 2026 at 02:40:11PM -0500, Varsh Satti wrote:
+> On Mon, Aug 24, 2026 at 09:32:20PM -0700, Rickey Bartlett wrote:
+> > Meteor Lake VMD (8086:7d0b) is affected by erratum MTL016: the VMD can
+> > signal its MSI before the posted writes carrying a child device's DMA
+> > data have landed in memory.
 > 
-> Applied to pci/for-linus for v7.3, thank you!
+> Arrow Lake-H is affected too. It uses the same VMD device ID
+> (8086:7d0b), so the existing match already covers it.
+> 
+> Hardware: ASUS ROG Zephyrus G16 GU605CP (BIOS GU605CP.307), Core Ultra 9
+> 285H, with a WD PC SN5000S (firmware 34230100) as the only device behind
+> the VMD.
+> 
+> Without the patch, on 7.2.9, I got 13 "timeout, completion polled"
+> events in about an hour of desktop use. Each one froze the desktop for
+> up to 30 seconds. Disabling APST and ASPM
+> (nvme_core.default_ps_max_latency_us=0 pcie_aspm=off) did not help: I
+> still got 7 in a 10 minute boot.
+> 
+> With the patch backported to 7.2.9, there were no timeouts in 13+ hours
+> of normal use (~340k reads). Average read latency went from 77 ms to
+> 0.49 ms. Apart from context, the only change the backport needed was
+> adding struct vmd_dev::features, which 7.2 doesn't have.
+> 
+> Since this fixes 30 second stalls on laptops that are already shipping,
+> would it be suitable for stable?
 
-Replaced by Jason's very similar but slightly earlier patch at
-https://patch.msgid.link/CABZrw2H+3yt2Y7xiq6OyAWaJM7P9ox-2nJxoQuJMwoJHLgi+YQ@mail.gmail.com/
+Yes, I think so.  I added stable tags to both:
 
-> I aligned the "!dev->no_aer_anfe" test as Lukas suggested and took a
-> stab at the "misbehaving" comment:
-> 
->   Jason reported that since commit eddba19b8b5f ("PCI/AER: Support Advisory
->   Non-Fatal Errors"), the Macs with Apple T2 Security Chip were powering off
->   a few seconds after every boot. He also found that the power-off only
->   happens when Advisory Non-Fatal Errors are unmasked on the PCI Device
->   106b:1802, the Apple T2 Secure Enclave Processor.
-> 
-> I'll be happy to revise this if we can make it clearer or more
-> specific.
-> 
-> > ---
-> >  drivers/pci/pcie/aer.c  |  3 ++-
-> >  drivers/pci/quirks.c    | 12 ++++++++++++
-> >  include/linux/pci.h     |  1 +
-> >  include/linux/pci_ids.h |  1 +
-> >  4 files changed, 16 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> > index 922a726a5..cab195f7c 100644
-> > --- a/drivers/pci/pcie/aer.c
-> > +++ b/drivers/pci/pcie/aer.c
-> > @@ -428,7 +428,8 @@ void pci_aer_init(struct pci_dev *dev)
-> >  	 * Advisory Non-Fatal Errors are masked by default (PCIe r7.0, sec
-> >  	 * 7.8.4.6).
-> >  	 */
-> > -	if (pcie_aer_is_native(dev) && dev->devcap & PCI_EXP_DEVCAP_RBER)
-> > +	if (pcie_aer_is_native(dev) && dev->devcap & PCI_EXP_DEVCAP_RBER &&
-> > +		!dev->no_aer_anfe)
-> >  		pci_clear_and_set_config_dword(dev,
-> >  					       dev->aer_cap + PCI_ERR_COR_MASK,
-> >  					       PCI_ERR_COR_ADV_NFAT, 0);
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index de9bbccda..acca89532 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -6422,4 +6422,16 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
-> >  }
-> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
-> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
-> > +
-> > +/*
-> > + * Unmasking Advisory Non-Fatal Errors on Apple T2 Secure Enclave
-> > + * processor leads to the Mac shutting down spontaneously. Avoid
-> > + * doing that.
-> > + */
-> > +static void quirk_no_aer_anfe(struct pci_dev *dev)
-> > +{
-> > +	dev->no_aer_anfe = 1;
-> > +}
-> > +
-> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_T2_SEP, quirk_no_aer_anfe);
-> >  #endif
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index d31a8d107..83ffa5058 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -514,6 +514,7 @@ struct pci_dev {
-> >  	unsigned int	rom_bar_overlap:1;	/* ROM BAR disable broken */
-> >  	unsigned int	rom_attr_enabled:1;	/* Display of ROM attribute enabled? */
-> >  	unsigned int	non_mappable_bars:1;	/* BARs can't be mapped by CPU or peers */
-> > +	unsigned int	no_aer_anfe:1;		/* Don't unmask Advisory Non-Fatal Errors */
-> >  	pci_dev_flags_t dev_flags;
-> >  	atomic_t	enable_cnt;	/* pci_enable_device has been called */
-> >  
-> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> > index 63774ae2b..103024f74 100644
-> > --- a/include/linux/pci_ids.h
-> > +++ b/include/linux/pci_ids.h
-> > @@ -1007,6 +1007,7 @@
-> >  #define PCI_DEVICE_ID_APPLE_IPID2_FW	0x006a
-> >  #define PCI_DEVICE_ID_APPLE_IPID2_GMAC	0x006b
-> >  #define PCI_DEVICE_ID_APPLE_TIGON3	0x1645
-> > +#define PCI_DEVICE_ID_APPLE_T2_SEP	0x1802
-> >  
-> >  #define PCI_VENDOR_ID_YAMAHA		0x1073
-> >  #define PCI_DEVICE_ID_YAMAHA_724	0x0004
-> > -- 
-> > 2.55.0
-> > 
+  6fc5bcb43436 ("PCI: vmd: Flush DMA writes before handling MSI on Meteor Lake")
+  78b25e75d082 ("PCI: vmd: Flush DMA writes before handling MSI on Arrow Lake")
+
+The 8086:7d0b Arrow Lake-H ID is actually covered by the Meteor Lake
+patch.
+
+> Tested-by: Varsh Satti <varsh@varram.me>
