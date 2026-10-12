@@ -1,110 +1,159 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A834348C7C;
-	Mon, 12 Oct 2026 11:02:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F0B2417D86
+	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 11:36:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791802930; cv=none; b=RpEgxO8+f+Mhc9jRcHA0zM1vPLWEFQzfONlI9bGAiDJGp1jau9k8rg83AyFsoD/r1CaKNCr/LL210RCw3Sgs4MwtYBX3VXW/+Oq3XpVvYX5U2Gi+FgcO5CzlYnLe2ROs4INAtxGRt/Yj3NqB/LuZZNHLJJPiGy2JJK3FISFyEk4=
+	t=1791804984; cv=none; b=P0MpVePd5SLZ0U5E02IzukaL9AmXpwkjyeIWiLr1ctkyOzLEmMQ7oy8h3W9dJl8dgT/b0q76vLzRapaodBv5nqLKT/xnAWJf6SMFKi9vJYaPifrlQGu77KVj+vHNVZ6DSjfE/YL9F2QXt74yioGgdpDAtr7X1uPsoc1eoO5L2yk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791802930; c=relaxed/simple;
-	bh=aj+gYybFQdwaLzcOujCEl6Ayb88eLjuLhCdZZHUlOxE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AlEfr70YbN7dYy3XSTgFaTV+vCxOsMYZFigqOzhbzyG9TrgyMbAiqy0MNFaO1jOwvSpRGjnOSGg2oEfEU6Cp1sVwYtALHO+Y5Xs0s1kqOjIU4g8BaV/LdXAigQRK3NWfI1ATViyARkryRfXYs4eWYVM9JORkzIL6/M2FeR1Ufaw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BtvBiCKV; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791804984; c=relaxed/simple;
+	bh=FjmnLFlfVj86Z4Lsk90TGlztgG6qCa0yTtWjTAvBckg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=A50eXH+hN9+DZgQgyEhYJibr04K8yLY9syA9VZTSRIDLHzwbtH2qCwBYQOIBuNzfvrTSgUS6DHL/g038j8jOxAOzWZI6rnABFf34jrQ/FauVqajmqB7SzOlMrlXcH6FiRefX5eje8AV8vA++lJIbDWO6Zebhd6LZVqUl1U/W6JM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kAiFJ275; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BtvBiCKV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1728B1F0089B;
-	Mon, 12 Oct 2026 11:02:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kAiFJ275"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A676D1F008A6
+	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 11:36:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791802929;
-	bh=MAfYAMjPNeKmn70tZ8yJzw3w1YF8t8B5YaHyVdbC17s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=BtvBiCKVAPhg4YheaU0NRTp6NmOfBz71i/2zIRP+ixQZlDRLqv9KZ2Et0goaQhFpF
-	 1adHNcrWs0a7uEmFieyjjaBhTuH/edNCuGf5KUXuHN+d31KNWCXCjrDUDy/uY8IDLj
-	 ao5nVaaGaM3ZuU2zQAZKdppFM3eRolLpwvA45qAEDycS2m7tXyRi46Kzr4N+vK83o0
-	 krr9G8jYOmbF3ozKel1ofXEIzfyqphTOx0GaT0Id1f0N61X9eRhy9mKzsF/zW5S4mF
-	 sUDGOczGxsWpKhIstJfvyoiyO8ynN0redIjjsgQeIiEyNg9T4Pyqk0CnbhM/lWgwV3
-	 vkCX5+ikp0/xg==
-Date: Mon, 12 Oct 2026 14:02:05 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
-	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: Re: [PATCH v9 01/18] PCI/P2PDMA: Document the TLP attribute
- assumptions
-Message-ID: <20261012110205.GD219304@unreal>
-References: <20261001-fix-p2p-acs-v4-0-v9-1-1a8e0f50ddd9@nvidia.com>
- <20261007201257.GA781492@bhelgaas>
+	s=k20260515; t=1791804982;
+	bh=ky47BzJ//yKIcUY2PnOFYEc1XjY4/LJ0O9+7vqs3eic=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=kAiFJ275iQlKj/focLD/sUso6BSO7tjIuitoVCaDDHZ8kO5DgcHFnwqnwZ0AoQLpc
+	 PsWRuXwlfh3KvN5X29TmNPgGNN3blV21ra1yRTlqaLnS3L2k7y8NPU3G/xCbdGE/8Q
+	 HpIULSU9vFj7rbqVoMaoMr6cbSaxZem0uFro5y+nqMih6Sa3KyoWI/MX86q+tOQJfV
+	 Hz/9InoUrFxRXms0HvMvSwBZnQVbt8Y7Ta8bAXrAUanYKYjaJ8wf41GBXOIn9MrQ4V
+	 W2cLvqlmjN/kvLe87GjZH8MTY96oxqcNGFsVnvje4ke9Z98t/o4xd9YBpLFkdYDvZb
+	 +A81bukWrnqEA==
+Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-5ba3ac592faso181616e87.0
+        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 04:36:22 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBy6N5L4VI8kta0EPlXx1RGT9rMFoxbwo3XNHIPiM3iAW9IM8LIMewgcMw0v/zcfT0HCS5saUEMlqcw=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJtPFXVyXiLs0FoD322EtTZC3wes/7QquH9bar7RDlq7lCzELNC
+	Leg4zhs75xMgYZAu+gMfeXfP8MecXYSeUhSQ79L0u9iiUBtOyCdr9h2SA1MlLT2Ha9CmEHDvMcy
+	6YIdkwroW66zUJ8hcdM2bFpTAtaJfc1k=
+X-Received: by 2002:a05:6512:3047:b0:5b8:f564:16f9 with SMTP id
+ 2adb3069b0e04-5bcde6b8e70mr3320947e87.19.1791804980924; Mon, 12 Oct 2026
+ 04:36:20 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261007201257.GA781492@bhelgaas>
+References: <20261012104645.975190-1-keng-yu.lin@hpe.com>
+In-Reply-To: <20261012104645.975190-1-keng-yu.lin@hpe.com>
+From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
+Date: Mon, 12 Oct 2026 13:34:15 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0iGhqaF1m-Vc2xdXQXj_BxPFFWCBTP=Ypg_gWQEqWkNfg@mail.gmail.com>
+X-Gm-Features: AclHuK8-y1dZbNQ0Rqfa3EbBgnELKusG9hIe29WvVNPE4Ch78O9H6Nl3kpfHVzQ
+Message-ID: <CAJZ5v0iGhqaF1m-Vc2xdXQXj_BxPFFWCBTP=Ypg_gWQEqWkNfg@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI/PM: Restore BARs after powering up during enumeration
+To: Keng-Yu Lin <keng-yu.lin@hpe.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Mario Limonciello <mario.limonciello@amd.com>, rafael@kernel.org, 
+	Matthew Ruffell <matthew.ruffell@canonical.com>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, andy.liang@hpe.com, david.chang@hpe.com, 
+	s.collins@hpe.com, jenifer.golmitz@hpe.com, pravallika.kamma@hpe.com, 
+	zhen-dong.lai@hpe.com, zachary.pabor-ext@hpe.com, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Oct 07, 2026 at 03:12:57PM -0500, Bjorn Helgaas wrote:
-> On Thu, Oct 01, 2026 at 02:55:09PM +0300, Leon Romanovsky wrote:
-> > From: Leon Romanovsky <leonro@nvidia.com>
-> > 
-> > P2PDMA selects a mapping without receiving the Request's ordering or
-> > Address Type attributes. Its ACS handles only strictly ordered Requests
-> > carrying an Untranslated address.
-> > 
-> > Document that the result is not defined for Relaxed Ordering or
-> > ATS-translated Requests because those TLP attributes can select different
-> > routes through the fabric.
-> > 
-> > Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-> > Tested-by: Tushar Dave <tdave@nvidia.com>
-> > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
-> > ---
-> >  Documentation/driver-api/pci/p2pdma.rst | 7 +++++++
-> >  1 file changed, 7 insertions(+)
-> > 
-> > diff --git a/Documentation/driver-api/pci/p2pdma.rst b/Documentation/driver-api/pci/p2pdma.rst
-> > index 63cff9e4d2c9..80f8fec9b0e9 100644
-> > --- a/Documentation/driver-api/pci/p2pdma.rst
-> > +++ b/Documentation/driver-api/pci/p2pdma.rst
-> > @@ -15,6 +15,13 @@ then based on the ACS settings the transaction can route entirely within
-> >  the PCIe hierarchy and never reach the root port. The kernel will evaluate
-> >  the PCIe topology and always permit P2P in these well-defined cases.
-> >  
-> > +This evaluation assumes clients issue strictly ordered Requests carrying an
-> > +Untranslated address. Its result is not defined when clients use Relaxed
-> > +Ordering or issue ATS-translated Requests because those TLP attributes can
-> > +select different routes through the fabric. Unless ACS Translation Blocking
-> > +is enabled, a Port with ACS Direct Translated P2P enabled routes a
-> > +Translated Request directly to the peer regardless of the redirect controls.
-> 
-> This whole paragraph is removed later in the series, so kudos for
-> documenting the current state before it changes :)
+On Mon, Oct 12, 2026 at 12:47=E2=80=AFPM Keng-Yu Lin <keng-yu.lin@hpe.com> =
+wrote:
+>
+> Commit 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when
+> initializing") added pci_pm_power_up_and_verify_state() to pci_pm_init().
+> The helper ignores pci_power_up()'s return value indicating that BARs
+> need restoring.  Its resume callers restore saved configuration
+> afterwards; pci_pm_init() does not.
+>
+> D3hot-to-D0 may reset a device and lose its BARs (PCI PM 1.2, sec 5.4.1).
+> After enumeration powers it up, pci_enable_device() reads D0 and skips
+> the full power-up path.  Previously, a device still in D3hot at enable
+> time took that path, including BAR restoration.
+>
+> On AMD Venice SP7, two AMD xHCI controllers [1022:17d2] are in runtime
+> D3hot with No_Soft_Reset clear before kdump.  Diagnostic reads on
+> v7.3-rc6-37 show the following for 0000:01:00.4 in the crash kernel:
+>
+>                                    PMCSR      BAR0
+>   before the platform power call   0003       f4100004
+>   after the platform power call    0003       f4100004
+>   after native D0 power-up         0000       00000004
+>
+> The upper BAR DWORD stays zero.  pci_power_up() returns 1, but the BAR
+> address remains zero while dev->resource[0] still contains 0xf4100000.
+> Without BAR restoration, the last console messages are around:
+>
+>   pci 0000:01:00.4: enabling device (0000 -> 0002)
+>
+> Restoring both controllers' BARs gives matching readbacks and allows
+> kdump to save a vmcore and reboot.  An AMD Turin xHCI [1022:1557] shows
+> the same BAR loss; restoring its BAR also allows kdump to complete.
+>
+> Use pci_set_full_power_state() in pci_pm_init() to power up the device
+> and restore its BARs when needed.  It already checks the native power
+> state before restoring and updates ASPM when link state is present.
+> Leave pci_pm_power_up_and_verify_state() unchanged for the resume
+> callers, which restore saved configuration afterwards.
+>
+> Read the initial power state first, as pci_enable_device_flags() does.
 
-This may be a leftover from the prerequisite fixes you merged. I'll keep it
-in the series for historical context. :)
+Is this really necessary or even useful before pci_set_full_power_state()?
 
-> 
-> Unrelated to anything in this series, but this doc mentions
-> "p2p_provider", which doesn't exist.  Should it be "p2pdma_provider"?
+pci_power_up() updates dev->current_state regardless of its previous
+value AFAICS.
 
-Yes.
+> Otherwise, PCI_UNKNOWN can request a BAR restore even for devices
+> already in D0.  Keep the final pci_update_current_state() call so the
+> final cached state still accounts for platform power and failed config
+> reads.
+>
+> Suggested-by: Mario Limonciello <mario.limonciello@amd.com>
+> Fixes: 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when initializi=
+ng")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Keng-Yu Lin <keng-yu.lin@hpe.com>
+> ---
+>
+> Changes in v2:
+> - Use pci_set_full_power_state() in pci_pm_init(), following Mario's
+>   suggestion to reuse the existing BAR restore code.
+> - Leave the shared resume helper and its interface unchanged.
+> - Keep the initial state readback and the final platform-aware refresh.
+>
+> Unlike v1, BAR restoration uses the full helper's native PMCSR check.
+> It also updates ASPM when link state exists.
+>
+> Tested v2 with kdump on both systems.  Normal boots made no BAR writes
+> from this path.  The crash kernels wrote only the cleared xHCI BARs:
+> two on Venice SP7 and one on Turin.  All readbacks matched.  kdump saved
+> 2.53 GB and 1.10 GB vmcores respectively before rebooting.
+>
+> v1: https://lore.kernel.org/r/20261008133708.947908-1-keng-yu.lin@hpe.com=
+/
+> Review: https://lore.kernel.org/r/04f5463b-f123-4079-9286-06a241976d3a@am=
+d.com/
+>
+>  drivers/pci/pci.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8cc6a89130b5..d3a5871e1b36 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3255,7 +3255,9 @@ void pci_pm_init(struct pci_dev *dev)
+>         }
+>
+>  poweron:
+> -       pci_pm_power_up_and_verify_state(dev);
+> +       pci_update_current_state(dev, dev->current_state);
+> +       pci_set_full_power_state(dev, false);
+> +       pci_update_current_state(dev, PCI_D0);
+>         pm_runtime_forbid(&dev->dev);
+>
+>         /*
+>
+> base-commit: 7b63ef2d55f24519e7e9e5f4d15dbea03f126e40
+> --
+> 2.43.0
