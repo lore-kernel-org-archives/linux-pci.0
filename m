@@ -1,68 +1,68 @@
-Received: from mail-dl1-f70.google.com (mail-dl1-f70.google.com [74.125.82.70])
+Received: from mail-dl1-f72.google.com (mail-dl1-f72.google.com [74.125.82.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDA314BFE73
-	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 17:37:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB3904C14E3
+	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 17:37:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791826636; cv=none; b=BPMwXStSeF8AJ964lwIIOwBe3gs1QWoiJ3D8ich6svMkXxqcJbSnqy7OIjziyJtYJJrGlZ7u+T9Y+5DOLAPI/gCQGJSHI7uE50OF/i0zwNKCXABa4uc1N+NdZkaITCCO9U7etZeY8H9qjM6MqM0OQkePkoJph/2fVfBQ4Osh/hU=
+	t=1791826640; cv=none; b=cmwaUV+Bl+rd9Adyi0s8aPnXash+pjw8jtqPTQI7pOTqhwhPS0550zdvprdWqyAXnSK31Q6lzV3Yh10ziID1w9JhzvTmemXbSMJpyIlG8TUmN99tGi5pNPD1UKUwOoPFu1Xiq3I0tI0spy6ZeV3/FhPehyx0z2+43hD2MWRyWmQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791826636; c=relaxed/simple;
-	bh=amIZJmBUUXhxDcR5QOQmEoD744URbvQuc8n+Jm98AYE=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=PeYtiEt5bEnRi16LapJobIiEYmSJQm5eVULVghb5vHIv8txxeRli2/qhcnCcMVzhy0ipOHzwi847aSqTW8salMJmtYrGh1mz/2mkJuzAXiLAE4Y01X+7/EdtsrMsdt8JKnGDXbeNc0YuySaRBlsGFzL+jVWwtd8ia3vgNVVYrb4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=rokl3HEO; arc=none smtp.client-ip=74.125.82.70
+	s=arc-20240116; t=1791826640; c=relaxed/simple;
+	bh=cA5ql/XR6JqNlf3SvvIsEWILcBgBMOsF9SoMX6bQIHM=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=qzhgjU27YiwPYdmFrCgfsshlEALlfAaSdtAD3uOSw0MbEGtv0nvI7WqkSWXz7EizYpVD9Gx9bl3CUD1vq4r149euQgIvX/8ckmTa0PKeQUa00mgREjdV4vrGfYb36/z7tdIdMrFsAaPUAbkcCm7BZ1LYaehrUg5o2Npo09Dp3ok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=KjcVtNYh; arc=none smtp.client-ip=74.125.82.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="rokl3HEO"
-Received: by mail-dl1-f70.google.com with SMTP id a92af1059eb24-147be78cd56so8778795c88.1
-        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 10:37:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="KjcVtNYh"
+Received: by mail-dl1-f72.google.com with SMTP id a92af1059eb24-147be78cd56so8778943c88.1
+        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 10:37:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1791826633; x=1792431433; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=OtXuplYhHKC1prNv7+Ztcv/iUX/n6tMeDLdrOYA/GqQ=;
-        b=rokl3HEOavbOJda9GmUMwWJ7jyvKG9jvZZUuQbcrfJUamc7IRaZH5sojYGOgh0+Qrm
-         zdganloQhdU/PbwBDYakgW9dVrYfEYng0kzMdNe1RYEopjJ3rJPqx5BK6Rc5TfrOf1nd
-         PxUmkW6lZOuJjKDNf/OmQbOnZSrpSpECtL4yFIK4TETvXkeejzO181po1P3CbE3SS0K2
-         8z/cn/wma82nDaIVls+YmbFqowPPK5FsQ/7SlOztHygE8XZpNtHCqgj0FCopJdIONYt/
-         ch9IdOJ4F+kZlDsfOQmcwu1n0wWltva5g9g5voCkQXKfbDdZdP/H9ARRkmaU4tXRams2
-         mESg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791826633; x=1792431433;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=google.com; s=20251104; t=1791826637; x=1792431437; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=OtXuplYhHKC1prNv7+Ztcv/iUX/n6tMeDLdrOYA/GqQ=;
-        b=JJPIX42NqzUaiS6P2dr9S3dT/ef8UxIdX/serHxc6JfT5V8WnFusoDcMkhfSvPeTtm
-         HqNIKC1DYlsrjQ9Ryqk/RPJOtM8s60fRoVokUzbl2Xk+n0k1jcuAph7LhAvr7+/FOjMe
-         ImgwXED2TCTHHRKunSIgI8e6GlP4Exg2Qb0GKDDGrYvaZscmCaYD4PNxqbepAg4fc+Ku
-         9Ij2Sa4e8by7y2CVXdoGuRWHS1ezyO/QPOje88W35nQAjtqGdj6j5tRMD7X9FTul4uAX
-         +vHkb50nzPrz+4RiirG7X35KTBiqhc+9rXYJ5RCRKoEpFkFWZg6E8eXS3v3rR+9zTJiu
-         ZWZw==
-X-Forwarded-Encrypted: i=1; AKwUvBxZo9ZUMAyS0P3oQLGVkNX9I/XBHH7pxwlyvPTtJjnH+KAWGFehPYUWL8tx4Eo9141azmGPnSBVzjg=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKmmc9aza6RqEhAoUYrN8AejQvSgUzvLDfg3BDpOKagI1WieIBb
-	sMpXt5fJfq3tFTZWNwnxr4qmzXW6TjMaLUfMO34zUxizxzA/xWuP6Iq1yer4grDRGvSkl6cCo5m
-	4hO8NPU1KYL9SvQGfl+ZrOl78ULN6fcTGNw==
-X-Received: from dly17-n2.prod.google.com ([2002:a05:701b:2051:20b0:15d:8925:57c3])
+        bh=Y2E4ICHZ6BY/kuadXLF27hd+uoiPywgDuvYz3U2kHDE=;
+        b=KjcVtNYhyw+248Lc13NYTLQvFDCxXJ0xx4j2CTIVEWkbiUFn4SFgbMriIHq7WKf836
+         9Rgk9ZnMfFn18fAzjJuInqQBwBg4K/A8o8t3Yuri2B7VcEm7jIx2MhwsVSpWY0pkvEtv
+         hZmQlLNcxu/ZlWpihLm9LtW24lCmRW90UxWNmA09nznP+tKC+B2ER6pEU7R0EjNeWkm2
+         rlYIEm4prmUxOQbIJe5aJcVwAbgdFAU91+gtm4BY5yVEi4R//1lNhfMV+BXI+zjcd5K5
+         bmlaBp1jrScOqRt2aMdg7VI3Wixw6I/dX+Ylx2GGhzGjAxohwKLVR5scGYXj55KLWjhX
+         ZeUA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791826637; x=1792431437;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Y2E4ICHZ6BY/kuadXLF27hd+uoiPywgDuvYz3U2kHDE=;
+        b=sLd6TOkTo1JgtDjsiM/hm3ma1ZxJ3+7m1se3eLiP2iqai4OsXnWv/3UdJjOMW4k+Ik
+         gqVOasnoQ0K4BIxKQkR8Vb1gGsaJNpkvdbW/Yo0KdFyp4VdkOY2dLNKq19POPvQR7DGV
+         6dEyORceQvmHJ3mLdAi4EZ0vUj3ZvO9S4/Nxnqju81KU2oiqktgQ+s2aABMqVfF7ffp0
+         15t9TA5h83nosWVG5khkIJCSTcOwkNxiQsS4a9UOT/CS0lu7mLI4EuKrDrMpIjDCFv2S
+         HQYrjN00sHwNJiKOEg1+yTZRhPxRIibpVwJjBym+N350zxPlttvVWNgKrp7TTBn95Eb1
+         RJFQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzBhsdQ6ukrxPMsBrhsvkIAoEln2w9uhjTNgamB3hl+b1ne+Z89ZsVB64pCF7irD5E23PrTf8z+xh4=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJ8a8/XUSY4krMpoPXp3co5NwshD1qgyl2Sd7cuTz12AZDQswaP
+	OB0/T5zK7S7wQKxkaUbGZbi7m+axuTEcFlCNSNUqIkCOdywogiYbqnZ1WGCIfsiKO7yGNwhs7Vo
+	p2mCfPeVjtzuauZNzP5RfbRoohmd7M8F87w==
+X-Received: from dly16-n1.prod.google.com ([2002:a05:701b:2050:10b0:143:7b2d:7e10])
  (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:701a:c901:b0:143:26cf:8617 with SMTP id a92af1059eb24-16a6337f340mr14948670c88.25.1791826632397;
- Mon, 12 Oct 2026 10:37:12 -0700 (PDT)
-Date: Mon, 12 Oct 2026 10:36:34 -0700
+ 2002:a05:7022:3b85:b0:163:cc63:ecee with SMTP id a92af1059eb24-16a65c03d19mr15772118c88.45.1791826636580;
+ Mon, 12 Oct 2026 10:37:16 -0700 (PDT)
+Date: Mon, 12 Oct 2026 10:36:36 -0700
+In-Reply-To: <20261012-pcie-link-endpoints-v7-0-36aba9c91f10@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-B4-Tracking: v=1; b=H4sIAKIazWoC/43QTWrDMBAF4KsEraui0ejHyqr3KFnY0tgRTSVjB
- ZMSfPfKWbQUh+LlG5jvwbuzQlOkwo6HO5tojiXmVIN9OTB/btNAPIaamRTSiAaBjz4Sv8T0wSm
- FMcd0LdzZhkCIoIMwrH6OE/Xx9lDfTzWfY7nm6etRMsN6/d+bgQNH6WUfGofk6G3IebjQq8+fb
- AVn+Ys4oZ4jkgsOpvcdCmiR1AbBHQhWRHWuddAF1aHeIOoHqQuY54iqSBs0usarWuY3iN6B6Ip 4IIsStVWm2yBmB2LWTbQKFoy2AeUfZFmWbxUt2xIQAgAA
-X-Change-Id: 20260831-pcie-link-endpoints-978e100d5d06
+References: <20261012-pcie-link-endpoints-v7-0-36aba9c91f10@google.com>
 X-Mailer: b4 0.14.3
-Message-ID: <20261012-pcie-link-endpoints-v7-0-36aba9c91f10@google.com>
-Subject: [PATCH v7 0/2] PCI: Add Lane Margining at the Receiver debugfs interface
+Message-ID: <20261012-pcie-link-endpoints-v7-2-36aba9c91f10@google.com>
+Subject: [PATCH v7 2/2] selftests/pcie_lmr: Add tests for the Lane Margining
+ debugfs interface
 From: Priyank Rathod <rathodpriyank@google.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: "=?utf-8?q?Ilpo_J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, Lukas Wunner <lukas@wunner.de>, 
@@ -72,164 +72,454 @@ Cc: "=?utf-8?q?Ilpo_J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, Lukas Wunn
 	linux-kernel@vger.kernel.org, Priyank Rathod <rathodpriyank@google.com>
 Content-Type: text/plain; charset="utf-8"
 
-Lane Margining at the Receiver lets software move the sampling point of
-a receiver in time or in voltage while the link stays up, and read back
-the errors the receiver sees, to find out how much margin a link running
-at 16.0 GT/s or faster has.  pcilmr in pciutils does this today by
-writing the capability registers directly from user space.
+Add a KTAP test for the Lane Margining at the Receiver debugfs
+interface.
 
-This series adds a debugfs interface for it.  The kernel sets the link
-up for margining and puts it back afterwards:
+By default it only runs checks that do not start a margining session,
+on every pcie_lmr_* directory: the files exist, malformed input is
+rejected, and commands fail with ENOTCONN without a session.
 
-  - ASPM is turned off for the session with the existing ASPM API,
-    Hardware Autonomous Width/Speed Disable are set on both ends, and
-    both ends are kept runtime resumed.  All of this is undone when
-    the session ends or either end of the link is removed.
-  - Before each margining command, the link is checked against the
-    state the session started in.
-  - User space selects the receiver and the steps; the kernel does not
-    run sweeps or interpret results.
-
-Patch 1 adds the interface and its documentation, patch 2 a kselftest.
-
-The only PCI core changes are the init/exit hooks in probe.c and
-remove.c and their prototypes in drivers/pci/pci.h.  aspm.c, pci.c and
-include/linux/pci.h are not changed.
+If PCIE_LMR_DEV names a port, it also starts a session on that link,
+checks the receiver and step bounds the receiver reports, discovers and
+tests any retimer receivers on the link when run on a Downstream Port,
+and checks that Link Control and Link Control 2 of both ends are the
+same after the session as before it.
 
 Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
 ---
-Note on the v4, v5, and v6 reposts on Oct 6:
-Apologies for posting v4, v5, and v6 within a four-hour window.  The
-root cause was that I was inside an automated AI review-and-fix loop and
-reacted immediately to each incremental sashiko-bot report on the
-mailing list instead of running the full local Sashiko review pass first
-and batching all updates into a single revision:
+ MAINTAINERS                                  |   1 +
+ tools/testing/selftests/Makefile             |   1 +
+ tools/testing/selftests/pcie_lmr/Makefile    |   3 +
+ tools/testing/selftests/pcie_lmr/pcie_lmr.sh | 387 +++++++++++++++++++++++++++
+ 4 files changed, 392 insertions(+)
 
-  1. v4 (16:09 UTC) reworked the series into two patches, dropping
-     pcie_get_link_endpoints() and pci_aspm_inhibit() per Ilpo's review.
-  2. v5 (17:35 UTC) was sent after the sashiko-bot AI review flagged
-     'up=$([ "$rx" = 6 ] && echo "$dev" || echo "$partner")' in
-     pcie_lmr.sh as a bug, claiming that the sysfs 'link/' ASPM
-     attributes live on the Downstream Port (Root Port / Switch
-     Downstream Port) and that 'up' resolved to the Endpoint instead.
-     That AI review finding was a false positive:
-       - In PCIe specification terminology, the Upstream Port is
-         receiver 6 (the port on the child device facing upstream
-         toward the Root Complex, i.e. the Endpoint or Switch Upstream
-         Port), while receiver 1 is the Downstream Port.
-       - In drivers/pci/pcie/aspm.c, aspm_ctrl_attrs_are_visible()
-         calls pcie_aspm_get_link(pdev), which looks up
-         pci_upstream_bridge(pdev)->link_state.  For a Downstream Port,
-         pci_upstream_bridge() is NULL (on a Root Port) or points to
-         the parent switch's Upstream Port, so the sysfs 'link/'
-         directory for the link is registered on the child device below
-         the Downstream Port (receiver 6), exactly as v4 had written.
-     Even though the v4 logic was right, I renamed 'up' to 'child' and
-     added an explicit comment in v5 explaining both the PCIe port
-     terminology and pcie_aspm_get_link() so that the Sashiko review
-     would pass cleanly and human reviewers would not hit the same
-     ambiguity.
-  3. v6 (20:59 UTC) was sent after sashiko-bot flagged on v5 that
-     pci_lmr_reboot_notify() used mutex_trylock(&port->lock) under
-     pci_lmr_mutex and could skip resetting a port if a debugfs command
-     was in flight during reboot/kexec.  Even though user space is
-     normally frozen before reboot notifiers run, I fixed it properly
-     by adding a kref on struct pci_lmr_port and pci_lmr_end_sessions()
-     so reboot/kexec waits for p->lock outside pci_lmr_mutex and passes
-     Sashiko with zero issues.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index cc0fdf2ff7e9..fc8c362c5d22 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -21298,6 +21298,7 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/PCI/pcie-lmr.rst
+ F:	drivers/pci/pcie/margin.c
++F:	tools/testing/selftests/pcie_lmr/
+ 
+ PCMCIA SUBSYSTEM
+ M:	Dominik Brodowski <linux@dominikbrodowski.net>
+diff --git a/tools/testing/selftests/Makefile b/tools/testing/selftests/Makefile
+index 2d960626750e..c92465d3d0b5 100644
+--- a/tools/testing/selftests/Makefile
++++ b/tools/testing/selftests/Makefile
+@@ -93,6 +93,7 @@ TARGETS += net/tcp_ao
+ TARGETS += nolibc
+ TARGETS += pci_endpoint
+ TARGETS += pcie_bwctrl
++TARGETS += pcie_lmr
+ TARGETS += perf_events
+ TARGETS += pidfd
+ TARGETS += pid_namespace
+diff --git a/tools/testing/selftests/pcie_lmr/Makefile b/tools/testing/selftests/pcie_lmr/Makefile
+new file mode 100644
+index 000000000000..101c90e7ee9e
+--- /dev/null
++++ b/tools/testing/selftests/pcie_lmr/Makefile
+@@ -0,0 +1,3 @@
++# SPDX-License-Identifier: GPL-2.0
++TEST_PROGS = pcie_lmr.sh
++include ../lib.mk
+diff --git a/tools/testing/selftests/pcie_lmr/pcie_lmr.sh b/tools/testing/selftests/pcie_lmr/pcie_lmr.sh
+new file mode 100755
+index 000000000000..3bc05ed29f76
+--- /dev/null
++++ b/tools/testing/selftests/pcie_lmr/pcie_lmr.sh
+@@ -0,0 +1,387 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0
++#
++# Tests for the PCIe Lane Margining at the Receiver debugfs interface
++# (Documentation/PCI/pcie-lmr.rst).
++#
++# By default only checks that do not start a margining session are run,
++# on every port that has a pcie_lmr_* directory.  To also run a session
++# on one link, name a port with the capability:
++#
++#   PCIE_LMR_DEV=0000:00:01.1 ./pcie_lmr.sh
++#
++# The link runs with ASPM off for the duration of that test; do not
++# point it at a link that is in use for something important.
++
++DIR="$(dirname "$(readlink -f "$0")")"
++source "$DIR"/../kselftest/ktap_helpers.sh
++
++DEBUGFS=/sys/kernel/debug
++export LC_ALL=C
++
++# Like ktap_test_result, but passes arguments that contain spaces intact
++check()
++{
++	local desc="$1"
++
++	shift
++	if "$@"; then
++		ktap_test_pass "$desc"
++	else
++		ktap_test_fail "$desc"
++	fi
++}
++
++# write_expect <file> <value> <expected>
++# <expected> is "ok" or the strerror() text of the expected error.
++write_expect()
++{
++	local file="$1" val="$2" want="$3" err
++
++	err=$( { printf '%s' "$val" > "$file"; } 2>&1 )
++	if [ $? -eq 0 ]; then
++		[ "$want" = "ok" ]
++		return
++	fi
++	[ "$want" != "ok" ] && [[ "$err" == *"$want"* ]]
++}
++
++# read_expect <file> <expected>, like write_expect
++read_expect()
++{
++	local file="$1" want="$2" err
++
++	err=$( { cat "$file" > /dev/null; } 2>&1 )
++	if [ $? -eq 0 ]; then
++		[ "$want" = "ok" ]
++		return
++	fi
++	[ "$want" != "ok" ] && [[ "$err" == *"$want"* ]]
++}
++
++# caps_get <port dir> <key>
++caps_get()
++{
++	sed -n "s/^$2: //p" "$1/lane0/caps"
++}
++
++check_layout()
++{
++	local d="$1" f
++
++	for f in enable receiver port lane0/caps lane0/margin_timing \
++		 lane0/margin_voltage lane0/status; do
++		[ -e "$d/$f" ] || return 1
++	done
++}
++
++check_port_file()
++{
++	local out
++
++	out=$(cat "$1/port") || return 1
++	[[ "$out" == *"uses_driver_software: "[01]* ]] &&
++	[[ "$out" == *"margining_ready: "[01]* ]] &&
++	[[ "$out" == *"software_ready: "[01]* ]]
++}
++
++PASSIVE_TESTS=9
++
++# Checks that never start a session
++passive_tests()
++{
++	local d="$1" n i
++
++	n=$(basename "$d")
++
++	check "$n: files present" check_layout "$d"
++	check "$n: port file readable" check_port_file "$d"
++
++	if [ "$(cat "$d/enable" 2>/dev/null)" != "0" ]; then
++		for i in $(seq 3 $PASSIVE_TESTS); do
++			ktap_test_skip "$n: session active, test $i skipped"
++		done
++		return
++	fi
++
++	check "$n: enable rejects '2'" \
++		write_expect "$d/enable" 2 "Invalid argument"
++	check "$n: enable rejects 'x'" \
++		write_expect "$d/enable" x "Invalid argument"
++	check "$n: enable=0 without a session is accepted" \
++		write_expect "$d/enable" 0 ok
++	check "$n: margin_timing rejects 'abc'" \
++		write_expect "$d/lane0/margin_timing" abc "Invalid argument"
++	check "$n: margin_timing needs a session" \
++		write_expect "$d/lane0/margin_timing" 1 \
++		"Transport endpoint is not connected"
++	check "$n: caps needs a session" \
++		read_expect "$d/lane0/caps" "Transport endpoint is not connected"
++	check "$n: receiver needs a session" \
++		write_expect "$d/receiver" 1 "Transport endpoint is not connected"
++}
++
++ACTIVE_TESTS=15
++
++# Print the device at the other end of the link of PCI device $1.
++# Receiver 6 is the child device (PCIe Upstream Port) below the Downstream
++# Port; receiver 1 is the Downstream Port (parent bridge).
++partner_of()
++{
++	local sys=/sys/bus/pci/devices/$1 rx c
++
++	rx=$(cat "$DEBUGFS/pcie_lmr_$1/receiver" 2> /dev/null)
++	if [ "$rx" = 6 ]; then
++		basename "$(dirname "$(readlink -f "$sys")")"
++		return
++	fi
++	for c in "$sys"/[0-9a-fA-F]*:??:??.0; do
++		[ -e "$c/config" ] && { basename "$c"; return; }
++	done
++}
++
++# Link Control and Link Control 2 of PCI device $1, or nothing
++link_regs()
++{
++	[ -n "$1" ] && command -v setpci > /dev/null || return
++	setpci -s "$1" CAP_EXP+10.w CAP_EXP+30.w 2> /dev/null | paste -sd ' '
++}
++
++check_bad_rx()
++{
++	local d="$1" rx="$2" r
++
++	write_expect "$d/receiver" 0 "Invalid argument" || return 1
++	write_expect "$d/receiver" 7 "Invalid argument" || return 1
++	if [ "$rx" = 1 ]; then
++		write_expect "$d/receiver" 6 "Invalid argument"
++		return
++	fi
++	for r in 1 2 3 4 5; do
++		write_expect "$d/receiver" "$r" "Invalid argument" || return 1
++	done
++}
++
++check_step_roundtrip()
++{
++	write_expect "$1/lane0/margin_timing" 1 ok &&
++	[[ "$(cat "$1/lane0/status")" == timing* ]] &&
++	write_expect "$1/lane0/margin_timing" 0 ok &&
++	test "$(cat "$1/lane0/margin_timing")" = 0 &&
++	test "$(cat "$1/lane0/status")" = idle
++}
++
++# Highest valid receiver number on Downstream Port $1 (debugfs dir $2):
++# 1 with no retimers, 3 with one retimer, 5 with two retimers.
++retimer_max_rx()
++{
++	local dev="$1" d="$2" lnksta2 retimers
++
++	if command -v setpci > /dev/null; then
++		lnksta2=$(setpci -s "$dev" CAP_EXP+32.w 2> /dev/null)
++		if [ -n "$lnksta2" ]; then
++			retimers=$(( ((0x$lnksta2 & 0x40) != 0) +
++				     ((0x$lnksta2 & 0x80) != 0) ))
++			echo $((1 + 2 * retimers))
++			return
++		fi
++	fi
++	if write_expect "$d/receiver" 4 ok; then
++		echo 5
++	elif write_expect "$d/receiver" 2 ok; then
++		echo 3
++	else
++		echo 1
++	fi
++}
++
++check_one_retimer_rx()
++{
++	local d="$1" r="$2" rsteps
++
++	write_expect "$d/receiver" "$r" ok &&
++	test "$(cat "$d/receiver")" = "$r" &&
++	test "$(caps_get "$d" receiver)" = "$r" || return 1
++
++	rsteps=$(caps_get "$d" timing_steps)
++	[ -n "$rsteps" ] || return 1
++	if [ "$rsteps" -ge 1 ]; then
++		check_step_roundtrip "$d" || return 1
++	fi
++}
++
++# Discover retimers on Downstream Port $1 (debugfs dir $2) and test each
++# retimer receiver (2 and 3 for the first retimer, 4 and 5 for the second),
++# while verifying that absent retimer receivers are rejected.
++check_retimers()
++{
++	local dev="$1" d="$2" max_rx r rc=0
++
++	max_rx=$(retimer_max_rx "$dev" "$d")
++	for r in 2 3 4 5; do
++		if [ "$r" -le "$max_rx" ]; then
++			check_one_retimer_rx "$d" "$r" || { rc=1; break; }
++		else
++			write_expect "$d/receiver" "$r" \
++				"Invalid argument" || { rc=1; break; }
++		fi
++	done
++	write_expect "$d/receiver" 1 ok &&
++	test "$(cat "$d/receiver")" = 1 &&
++	return "$rc"
++}
++
++check_end_session()
++{
++	write_expect "$1/enable" 0 ok &&
++	test "$(cat "$1/enable")" = 0
++}
++
++stop_session()
++{
++	[ -n "$ACTIVE_DIR" ] && echo 0 > "$ACTIVE_DIR/enable" 2> /dev/null
++}
++
++skip_rest()
++{
++	while [ "$KTAP_TESTNO" -le "$KSFT_NUM_TESTS" ]; do
++		ktap_test_skip "$1"
++	done
++}
++
++active_tests()
++{
++	local dev="$1" d="$DEBUGFS/pcie_lmr_$1" partner before after
++	local rx steps child
++
++	partner=$(partner_of "$dev")
++	if [ -z "$partner" ]; then
++		ktap_test_fail "$dev: start a session"
++		skip_rest "$dev: no link partner"
++		return
++	fi
++	before="$(link_regs "$dev") $(link_regs "$partner")"
++
++	ACTIVE_DIR="$d"
++	trap stop_session EXIT INT TERM
++
++	if ! write_expect "$d/enable" 1 ok; then
++		ktap_test_fail "$dev: start a session"
++		skip_rest "$dev: no session"
++		return
++	fi
++	ktap_test_pass "$dev: start a session"
++
++	check "$dev: enable=1 again is accepted" \
++		write_expect "$d/enable" 1 ok
++	check "$dev: enable reads 1" \
++		test "$(cat "$d/enable")" = 1
++
++	if [ -n "$partner" ] && [ -d "$DEBUGFS/pcie_lmr_$partner" ]; then
++		check "$dev: partner port rejects a second session" \
++			write_expect "$DEBUGFS/pcie_lmr_$partner/enable" 1 \
++			"Device or resource busy"
++	else
++		ktap_test_skip "$dev: partner has no pcie_lmr directory"
++	fi
++
++	rx=$(cat "$d/receiver")
++	check "$dev: default receiver is 1 or 6" \
++		test "$rx" = 1 -o "$rx" = 6
++	check "$dev: unreachable receivers are rejected" \
++		check_bad_rx "$d" "$rx"
++	check "$dev: receiver 256 is rejected" \
++		write_expect "$d/receiver" 256 "Numerical result out of range"
++
++	steps=$(caps_get "$d" timing_steps)
++	check "$dev: caps reports timing_steps" \
++		test -n "$steps"
++	check "$dev: timing step above timing_steps is rejected" \
++		write_expect "$d/lane0/margin_timing" $((steps + 1)) \
++		"Numerical result out of range"
++
++	if [ "${steps:-0}" -ge 1 ]; then
++		check "$dev: timing step 1 then 0" \
++			check_step_roundtrip "$d"
++	else
++		ktap_test_skip "$dev: receiver reports no timing steps"
++	fi
++
++	if [ "$(caps_get "$d" independent_left_right_timing)" = 0 ]; then
++		check "$dev: negative timing step is rejected" \
++			write_expect "$d/lane0/margin_timing" -1 "Invalid argument"
++	else
++		ktap_test_skip "$dev: receiver supports left/right timing"
++	fi
++
++	if [ "$(caps_get "$d" voltage_supported)" = 0 ]; then
++		check "$dev: voltage step is rejected" \
++			write_expect "$d/lane0/margin_voltage" 1 \
++			"Operation not supported"
++	else
++		ktap_test_skip "$dev: receiver supports voltage margining"
++	fi
++
++	if [ "$rx" = 1 ]; then
++		check "$dev: retimer receivers" \
++			check_retimers "$dev" "$d"
++	else
++		ktap_test_skip "$dev: retimers are margined from the Downstream Port"
++	fi
++
++	if check_end_session "$d"; then
++		ktap_test_pass "$dev: end the session"
++		ACTIVE_DIR=
++	else
++		ktap_test_fail "$dev: end the session"
++	fi
++
++	# In drivers/pci/pcie/aspm.c, aspm_ctrl_attrs_are_visible() uses
++	# pcie_aspm_get_link(pdev) -> pci_upstream_bridge(pdev)->link_state,
++	# so the sysfs 'link/' directory is attached to the child device
++	# below the Downstream Port (the PCIe Upstream Port, receiver 6),
++	# not to the Downstream Port itself.
++	child=$([ "$rx" = 6 ] && echo "$dev" || echo "$partner")
++	after="$(link_regs "$dev") $(link_regs "$partner")"
++	if [ -z "${before// }" ]; then
++		ktap_test_skip "$dev: setpci not found"
++	elif [ -n "$child" ] && [ ! -d "/sys/bus/pci/devices/$child/link" ]; then
++		ktap_test_skip "$dev: no OS ASPM control on link"
++	else
++		check "$dev: LNKCTL and LNKCTL2 restored on both ends" \
++			test "$before" = "$after"
++	fi
++}
++
++ktap_print_header
++
++if [ "$(id -u)" -ne 0 ]; then
++	ktap_skip_all "must be run as root"
++	exit "$KSFT_SKIP"
++fi
++
++mountpoint -q "$DEBUGFS" || mount -t debugfs none "$DEBUGFS" 2> /dev/null
++
++ports=("$DEBUGFS"/pcie_lmr_*)
++if [ ! -d "${ports[0]}" ]; then
++	ktap_skip_all "no pcie_lmr_* directories in debugfs"
++	exit "$KSFT_SKIP"
++fi
++
++if [ -n "$PCIE_LMR_DEV" ] && [ ! -d "$DEBUGFS/pcie_lmr_$PCIE_LMR_DEV" ]; then
++	ktap_exit_fail_msg "no pcie_lmr directory for $PCIE_LMR_DEV"
++fi
++
++plan=$(( ${#ports[@]} * PASSIVE_TESTS ))
++[ -n "$PCIE_LMR_DEV" ] && plan=$((plan + ACTIVE_TESTS))
++ktap_set_plan "$plan"
++
++for d in "${ports[@]}"; do
++	passive_tests "$d"
++done
++
++if [ -n "$PCIE_LMR_DEV" ]; then
++	active_tests "$PCIE_LMR_DEV"
++fi
++
++ktap_finished
 
-Changes in v7:
-- Replace the 3-state enum pci_lmr_state with bool active, hold
-  port->lock across pci_lmr_activate() while re-checking
-  pci_dev_is_added() on both ends under pci_lmr_mutex when marking a
-  session active, unify pci_lmr_stop() with pci_lmr_end_sessions(), and
-  hold pci_dev_get() references on port->dev and port->dport until
-  pci_lmr_port_free().
-- Match PCI_LMR_LANE_RX | PCI_LMR_LANE_TYPE | PCI_LMR_LANE_PAYLOAD in
-  pci_lmr_no_cmd() instead of U16_MAX, and format the error count in
-  status_show() with %u and an explicit unsigned int cast.
-- In pcie_lmr.sh, check all unreachable receiver numbers for the port
-  type and, on a Downstream Port, discover any retimers on the link
-  (receivers 2..5 via LNKSTA2), test caps and a timing step 1 -> 0
-  round-trip on each present retimer receiver, and verify that absent
-  retimer receivers are rejected with -EINVAL.
-- Link to v6: https://lore.kernel.org/r/20261006-pcie-link-endpoints-v6-0-154d71657d32@google.com
-
-Changes in v6:
-- Add a kref on struct pci_lmr_port and use pci_lmr_end_sessions() in
-  pci_lmr_reboot_notify() so reboot/kexec waits for in-flight commands
-  outside pci_lmr_mutex (preserving the port->lock -> pci_lmr_mutex lock
-  order) instead of skipping ports on mutex_trylock() failure.
-- Link to v5: https://lore.kernel.org/r/20261006-pcie-link-endpoints-v5-0-c1e73235746b@google.com
-
-Changes in v5:
-- Clarify in pcie_lmr.sh why the sysfs 'link/' check targets receiver 6
-  (and rename 'up' to 'child'): in PCIe terminology the Upstream Port
-  (receiver 6) is the child device below the Downstream Port, and in
-  drivers/pci/pcie/aspm.c aspm_ctrl_attrs_are_visible() looks up the
-  link via pcie_aspm_get_link(pdev) -> pci_upstream_bridge(pdev)->link_state,
-  so '/sys/bus/pci/devices/<dev>/link/' is attached to the child device
-  below the Downstream Port, not to the Downstream Port itself.
-- Link to v4: https://lore.kernel.org/r/20261006-pcie-link-endpoints-v4-0-ad5398c4260c@google.com
-
-Changes in v4:
-- Drop the exported pcie_get_link_endpoints(); the partner lookup is
-  private to margin.c (Ilpo).
-- Drop pci_aspm_inhibit() and all aspm.c changes.  Use
-  pcie_aspm_enabled(), pci_disable_link_state() and
-  pci_force_enable_link_state(), call neither when no ASPM state is
-  enabled, and restore Clock PM when CLKREQ# was enabled.  ASPM Control
-  is checked on both ends before each command.  The remaining
-  differences after a session are documented.
-- Remove the MSampleMultipleReceivers capability bit.
-- One receiver per session, selected with a port-level 'receiver'
-  file.  A session starts with receiver 1 on a Downstream Port and 6
-  below it, as pcilmr does; receiver 0 is not used for margining.
-- Add a per-lane 'status' file with the step response and error count,
-  and a per-port 'port' file with the Margining Port bits.  Stop writing
-  Margining Port Status.
-- Locking: take both device locks with pci_dev_trylock() only while a
-  session starts or stops, require both ends to be added, and make no
-  runtime PM calls under the LMR locks.
-- End sessions from pci_lmr_exit() for either end of the link.
-- Commands fail with -EIO after a system suspend.
-- Move debugfs to pcie_lmr_<device> at the debugfs root.
-- Keep per-device state in margin.c instead of struct pci_dev.
-- Split the selftest into its own patch, rename it pcie_lmr, use KTAP,
-  and only start a session on the port named by PCIE_LMR_DEV.
-- Refer to registers by name instead of specification section numbers.
-- Link to v3: https://lore.kernel.org/r/20260904-pcie-link-endpoints-v3-0-4b9a91bd4b35@google.com
-
-Changes in v3:
-- Link to v2: https://lore.kernel.org/r/20260904-pcie-link-endpoints-v2-0-16fcb301a3e4@google.com
-
-Changes in v2:
-- Link to v1: https://lore.kernel.org/r/20260831-pcie-link-endpoints-v1-1-32c2fd893e9e@google.com
-
----
-Priyank Rathod (2):
-      PCI/LMR: Add Lane Margining at the Receiver debugfs interface
-      selftests/pcie_lmr: Add tests for the Lane Margining debugfs interface
-
- Documentation/PCI/index.rst                  |    1 +
- Documentation/PCI/pcie-lmr.rst               |  162 +++
- MAINTAINERS                                  |    8 +
- drivers/pci/pci.h                            |    8 +
- drivers/pci/pcie/Kconfig                     |   11 +
- drivers/pci/pcie/Makefile                    |    1 +
- drivers/pci/pcie/margin.c                    | 1551 ++++++++++++++++++++++++++
- drivers/pci/probe.c                          |    1 +
- drivers/pci/remove.c                         |    1 +
- include/uapi/linux/pci_regs.h                |   18 +
- tools/testing/selftests/Makefile             |    1 +
- tools/testing/selftests/pcie_lmr/Makefile    |    3 +
- tools/testing/selftests/pcie_lmr/pcie_lmr.sh |  387 +++++++
- 13 files changed, 2153 insertions(+)
----
-base-commit: 591d89f23a7cbc668579521513c7f53b0968754c
-change-id: 20260831-pcie-link-endpoints-978e100d5d06
-
-Best regards,
 -- 
-Priyank Rathod <rathodpriyank@google.com>
+2.56.0.385.gd3acb90ef8-goog
 
