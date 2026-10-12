@@ -1,159 +1,144 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com [209.85.208.71])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F0B2417D86
-	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 11:36:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB0513ACF00
+	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 11:42:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791804984; cv=none; b=P0MpVePd5SLZ0U5E02IzukaL9AmXpwkjyeIWiLr1ctkyOzLEmMQ7oy8h3W9dJl8dgT/b0q76vLzRapaodBv5nqLKT/xnAWJf6SMFKi9vJYaPifrlQGu77KVj+vHNVZ6DSjfE/YL9F2QXt74yioGgdpDAtr7X1uPsoc1eoO5L2yk=
+	t=1791805342; cv=none; b=rmdj8PEibMSoimRQZLkoM7NQWsCGeK43qR7MCehIgVJ2xK6SG/VY/qmf8J4on2vidhSHSbXLY7soWYszRqR54PR1RCicA1DhjUh2w2feE6xCxkaDDTlvdGJWE73UdAm5pJmmj0TsmfKsPBjOul2o+CWV61nAB9PZe5TdZkbRIdU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791804984; c=relaxed/simple;
-	bh=FjmnLFlfVj86Z4Lsk90TGlztgG6qCa0yTtWjTAvBckg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=A50eXH+hN9+DZgQgyEhYJibr04K8yLY9syA9VZTSRIDLHzwbtH2qCwBYQOIBuNzfvrTSgUS6DHL/g038j8jOxAOzWZI6rnABFf34jrQ/FauVqajmqB7SzOlMrlXcH6FiRefX5eje8AV8vA++lJIbDWO6Zebhd6LZVqUl1U/W6JM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kAiFJ275; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791805342; c=relaxed/simple;
+	bh=VKI97pXXbDOPAdJtvmTPkLbLkX30Qa+ghl895QoxYZc=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=QS3phI/TXqCYTUe2yPi4zXRuRI96SWHZ2xrUDMB4sRlOY3wYFKXhH52DwT0gD0f7+EV8xZOpFxBlUDoCwCkmDNdSdj2V5WNefLO+5l+IhufgOP45n37Bvk43TaviJIIaGODIBICZ35PMfbAS3IBu0g93qRR5pmDJI2ZmG0+7bcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--mclapinski.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=gvW+AzwV; arc=none smtp.client-ip=209.85.208.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--mclapinski.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kAiFJ275"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A676D1F008A6
-	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 11:36:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791804982;
-	bh=ky47BzJ//yKIcUY2PnOFYEc1XjY4/LJ0O9+7vqs3eic=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=kAiFJ275iQlKj/focLD/sUso6BSO7tjIuitoVCaDDHZ8kO5DgcHFnwqnwZ0AoQLpc
-	 PsWRuXwlfh3KvN5X29TmNPgGNN3blV21ra1yRTlqaLnS3L2k7y8NPU3G/xCbdGE/8Q
-	 HpIULSU9vFj7rbqVoMaoMr6cbSaxZem0uFro5y+nqMih6Sa3KyoWI/MX86q+tOQJfV
-	 Hz/9InoUrFxRXms0HvMvSwBZnQVbt8Y7Ta8bAXrAUanYKYjaJ8wf41GBXOIn9MrQ4V
-	 W2cLvqlmjN/kvLe87GjZH8MTY96oxqcNGFsVnvje4ke9Z98t/o4xd9YBpLFkdYDvZb
-	 +A81bukWrnqEA==
-Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-5ba3ac592faso181616e87.0
-        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 04:36:22 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBy6N5L4VI8kta0EPlXx1RGT9rMFoxbwo3XNHIPiM3iAW9IM8LIMewgcMw0v/zcfT0HCS5saUEMlqcw=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJtPFXVyXiLs0FoD322EtTZC3wes/7QquH9bar7RDlq7lCzELNC
-	Leg4zhs75xMgYZAu+gMfeXfP8MecXYSeUhSQ79L0u9iiUBtOyCdr9h2SA1MlLT2Ha9CmEHDvMcy
-	6YIdkwroW66zUJ8hcdM2bFpTAtaJfc1k=
-X-Received: by 2002:a05:6512:3047:b0:5b8:f564:16f9 with SMTP id
- 2adb3069b0e04-5bcde6b8e70mr3320947e87.19.1791804980924; Mon, 12 Oct 2026
- 04:36:20 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="gvW+AzwV"
+Received: by mail-ed1-f71.google.com with SMTP id 4fb4d7f45d1cf-6b1b5ea276bso1269610a12.2
+        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 04:42:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1791805339; x=1792410139; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=g+XeNA9wYZ+w0/rnkp+EWuJy/8oZE7v6bL2HMqqjnD8=;
+        b=gvW+AzwVyFZ8wnvJ5TfFai6m9hi4XTNoXxWNffvrh6/hTtXNg6SSYFwA14VWb3mrL9
+         AhOA4dwHBOOJx08UqqDG0yc8pmaTynzl9rul3DpUjmc+ozJ/shymOHoTA1zawyW3fqyD
+         e1EPbeRXbsoYWhwj3WuDRn6wqxbqz7wpAE2kPM6mFKrGoIDnzPnQgSEOD1XNVvs70o1C
+         MLa/95c1b5MB2kNede+UxNGGXrx+FHsyTOTcT30vk/d2C4TJIaGQ/gy2KD2yDifnjqoA
+         9UlxVyPXmgdJDr+SXyyp6epZyGhzgJduM2FEK5ZBAFsu6sypnVr98D8G6x1L7ELih+19
+         m4dQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791805339; x=1792410139;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=g+XeNA9wYZ+w0/rnkp+EWuJy/8oZE7v6bL2HMqqjnD8=;
+        b=t0DT+Pon9J3/8mx4hgHNubcyeyHgVESXHnvD1W5eXOiNG/P5xb9JTEi1uhoEVG/pNx
+         64IoVWy6HErr2KX9TOgFy0j0iW023WkgAVuKF1x9l+daMc12YZldaA/5kwqN7L3Kq99x
+         sEUeXZLrPEtMuHukJW+7bRmrap02obqaUtc1CtigVooEwPYk3fJ2/Kb8KPPOWLxpwGjD
+         6Tiyu918X5/kho0rBjOhJNHohvB/feCZqWpo1rjb+eWbGIJ6n4QkCuIZytynjQwIWeIt
+         dv3kEyQffkwfmKf7FWb5cedbW5gFYZxZNWtO66pwELXuShsJHW6qTCPYzCgDqzpuWUyX
+         kn8w==
+X-Forwarded-Encrypted: i=1; AKwUvBz8RXyhPiIKt9fjLUFeI8fVyPP3NNawhSZx41rj2fQ/x0OphTReVEIwYTn/g+1UrJ+Lw79RNmorxZ8=@vger.kernel.org
+X-Gm-Message-State: AFq9FYL51Cgzu2DKKF11+hW+5QDz8TuOF3++yPNb/zRAWkBBlqNgdygW
+	eYvEGyb07LZBbF8SOz2wsWu+yBD/tUk34mt+O+s5+bM3BSF7C77pFnLORIfJXbfNz51crreXAQl
+	KERAFqFP8HWCmewjlJMRrRw==
+X-Received: from edl6-n2.prod.google.com ([2002:a05:6402:4246:20b0:6aa:e587:e1c1])
+ (user=mclapinski job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6402:4341:b0:6a7:ee56:814b with SMTP id 4fb4d7f45d1cf-6b17c27a61bmr7787882a12.25.1791805338876;
+ Mon, 12 Oct 2026 04:42:18 -0700 (PDT)
+Date: Mon, 12 Oct 2026 13:42:13 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20261012104645.975190-1-keng-yu.lin@hpe.com>
-In-Reply-To: <20261012104645.975190-1-keng-yu.lin@hpe.com>
-From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
-Date: Mon, 12 Oct 2026 13:34:15 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0iGhqaF1m-Vc2xdXQXj_BxPFFWCBTP=Ypg_gWQEqWkNfg@mail.gmail.com>
-X-Gm-Features: AclHuK8-y1dZbNQ0Rqfa3EbBgnELKusG9hIe29WvVNPE4Ch78O9H6Nl3kpfHVzQ
-Message-ID: <CAJZ5v0iGhqaF1m-Vc2xdXQXj_BxPFFWCBTP=Ypg_gWQEqWkNfg@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI/PM: Restore BARs after powering up during enumeration
-To: Keng-Yu Lin <keng-yu.lin@hpe.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Mario Limonciello <mario.limonciello@amd.com>, rafael@kernel.org, 
-	Matthew Ruffell <matthew.ruffell@canonical.com>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, andy.liang@hpe.com, david.chang@hpe.com, 
-	s.collins@hpe.com, jenifer.golmitz@hpe.com, pravallika.kamma@hpe.com, 
-	zhen-dong.lai@hpe.com, zachary.pabor-ext@hpe.com, stable@vger.kernel.org
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.56.0.385.gd3acb90ef8-goog
+Message-ID: <20261012114213.1757207-1-mclapinski@google.com>
+Subject: [PATCH RESEND] PCI/DOE: Poll briefly for a response before sleeping
+From: Michal Clapinski <mclapinski@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org, 
+	David Matlack <dmatlack@google.com>, Pasha Tatashin <pasha.tatashin@soleen.com>, 
+	Michal Clapinski <mclapinski@google.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, Oct 12, 2026 at 12:47=E2=80=AFPM Keng-Yu Lin <keng-yu.lin@hpe.com> =
-wrote:
->
-> Commit 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when
-> initializing") added pci_pm_power_up_and_verify_state() to pci_pm_init().
-> The helper ignores pci_power_up()'s return value indicating that BARs
-> need restoring.  Its resume callers restore saved configuration
-> afterwards; pci_pm_init() does not.
->
-> D3hot-to-D0 may reset a device and lose its BARs (PCI PM 1.2, sec 5.4.1).
-> After enumeration powers it up, pci_enable_device() reads D0 and skips
-> the full power-up path.  Previously, a device still in D3hot at enable
-> time took that path, including BAR restoration.
->
-> On AMD Venice SP7, two AMD xHCI controllers [1022:17d2] are in runtime
-> D3hot with No_Soft_Reset clear before kdump.  Diagnostic reads on
-> v7.3-rc6-37 show the following for 0000:01:00.4 in the crash kernel:
->
->                                    PMCSR      BAR0
->   before the platform power call   0003       f4100004
->   after the platform power call    0003       f4100004
->   after native D0 power-up         0000       00000004
->
-> The upper BAR DWORD stays zero.  pci_power_up() returns 1, but the BAR
-> address remains zero while dev->resource[0] still contains 0xf4100000.
-> Without BAR restoration, the last console messages are around:
->
->   pci 0000:01:00.4: enabling device (0000 -> 0002)
->
-> Restoring both controllers' BARs gives matching readbacks and allows
-> kdump to save a vmcore and reboot.  An AMD Turin xHCI [1022:1557] shows
-> the same BAR loss; restoring its BAR also allows kdump to complete.
->
-> Use pci_set_full_power_state() in pci_pm_init() to power up the device
-> and restore its BARs when needed.  It already checks the native power
-> state before restoring and updates ASPM when link state is present.
-> Leave pci_pm_power_up_and_verify_state() unchanged for the resume
-> callers, which restore saved configuration afterwards.
->
-> Read the initial power state first, as pci_enable_device_flags() does.
+doe_statemachine_work() waits for a response by sleeping
+PCI_DOE_POLL_INTERVAL (PCI_DOE_TIMEOUT / 128) between status reads,
+which is 7 ms at HZ=1000 and 4 ms at HZ=250. Exchanges are served from
+the device's local mailbox logic and typically complete within tens of
+microseconds, so nearly all of that sleep is wasted. Every DOE-capable
+endpoint pays it once per supported feature during enumeration.
 
-Is this really necessary or even useful before pci_set_full_power_state()?
+Poll with usleep_range(20, 50) for the first ~2 ms before falling back
+to the jiffies-based wait. On an Intel Emerald Rapids system, time spent
+in pci_device_add() for a DOE-capable endpoint drops from 41.8 ms to
+14.0 ms.
 
-pci_power_up() updates dev->current_state regardless of its previous
-value AFAICS.
+Signed-off-by: Michal Clapinski <mclapinski@google.com>
+---
+I was asked if I can do this with interrupts instead. I don't see a way
+to do that during device enumeration that won't collide with the
+drivers.
+---
+ drivers/pci/doe.c | 28 +++++++++++++++++++++++-----
+ 1 file changed, 23 insertions(+), 5 deletions(-)
 
-> Otherwise, PCI_UNKNOWN can request a BAR restore even for devices
-> already in D0.  Keep the final pci_update_current_state() call so the
-> final cached state still accounts for platform power and failed config
-> reads.
->
-> Suggested-by: Mario Limonciello <mario.limonciello@amd.com>
-> Fixes: 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when initializi=
-ng")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Keng-Yu Lin <keng-yu.lin@hpe.com>
-> ---
->
-> Changes in v2:
-> - Use pci_set_full_power_state() in pci_pm_init(), following Mario's
->   suggestion to reuse the existing BAR restore code.
-> - Leave the shared resume helper and its interface unchanged.
-> - Keep the initial state readback and the final platform-aware refresh.
->
-> Unlike v1, BAR restoration uses the full helper's native PMCSR check.
-> It also updates ASPM when link state exists.
->
-> Tested v2 with kdump on both systems.  Normal boots made no BAR writes
-> from this path.  The crash kernels wrote only the cleared xHCI BARs:
-> two on Venice SP7 and one on Turin.  All readbacks matched.  kdump saved
-> 2.53 GB and 1.10 GB vmcores respectively before rebooting.
->
-> v1: https://lore.kernel.org/r/20261008133708.947908-1-keng-yu.lin@hpe.com=
-/
-> Review: https://lore.kernel.org/r/04f5463b-f123-4079-9286-06a241976d3a@am=
-d.com/
->
->  drivers/pci/pci.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8cc6a89130b5..d3a5871e1b36 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3255,7 +3255,9 @@ void pci_pm_init(struct pci_dev *dev)
->         }
->
->  poweron:
-> -       pci_pm_power_up_and_verify_state(dev);
-> +       pci_update_current_state(dev, dev->current_state);
-> +       pci_set_full_power_state(dev, false);
-> +       pci_update_current_state(dev, PCI_D0);
->         pm_runtime_forbid(&dev->dev);
->
->         /*
->
-> base-commit: 7b63ef2d55f24519e7e9e5f4d15dbea03f126e40
-> --
-> 2.43.0
+diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
+index 6b5d9ba8e969..5e93d78a1a97 100644
+--- a/drivers/pci/doe.c
++++ b/drivers/pci/doe.c
+@@ -27,6 +27,9 @@
+ /* Timeout of 1 second from 6.30.2 Operation, PCI Spec r6.0 */
+ #define PCI_DOE_TIMEOUT HZ
+ #define PCI_DOE_POLL_INTERVAL	(PCI_DOE_TIMEOUT / 128)
++#define PCI_DOE_POLL_FAST_MIN_US	20
++#define PCI_DOE_POLL_FAST_MAX_US	50
++#define PCI_DOE_POLL_FAST_TRIES		40
+ 
+ #define PCI_DOE_FLAG_CANCEL	0
+ #define PCI_DOE_FLAG_DEAD	1
+@@ -487,7 +490,7 @@ static void doe_statemachine_work(struct work_struct *work)
+ 	int offset = doe_mb->cap_offset;
+ 	unsigned long timeout_jiffies;
+ 	u32 val;
+-	int rc;
++	int rc, tries = 0;
+ 
+ 	if (test_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags)) {
+ 		signal_task_complete(task, -EIO);
+@@ -525,10 +528,25 @@ static void doe_statemachine_work(struct work_struct *work)
+ 			signal_task_abort(task, -EIO);
+ 			return;
+ 		}
+-		rc = pci_doe_wait(doe_mb, PCI_DOE_POLL_INTERVAL);
+-		if (rc) {
+-			signal_task_abort(task, rc);
+-			return;
++		/*
++		 * Exchanges are served from the device's local mailbox
++		 * logic and usually complete in tens of microseconds, far
++		 * below the jiffies granularity of PCI_DOE_POLL_INTERVAL.
++		 * Poll for up to ~2 ms before falling back to it.
++		 */
++		if (tries++ < PCI_DOE_POLL_FAST_TRIES) {
++			if (test_bit(PCI_DOE_FLAG_CANCEL, &doe_mb->flags)) {
++				signal_task_abort(task, -EIO);
++				return;
++			}
++			usleep_range(PCI_DOE_POLL_FAST_MIN_US,
++				     PCI_DOE_POLL_FAST_MAX_US);
++		} else {
++			rc = pci_doe_wait(doe_mb, PCI_DOE_POLL_INTERVAL);
++			if (rc) {
++				signal_task_abort(task, rc);
++				return;
++			}
+ 		}
+ 		goto retry_resp;
+ 	}
+-- 
+2.56.0.385.gd3acb90ef8-goog
+
