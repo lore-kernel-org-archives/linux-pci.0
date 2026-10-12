@@ -1,241 +1,242 @@
-Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013062.outbound.protection.outlook.com [40.107.201.62])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1DAF372EC0;
-	Mon, 12 Oct 2026 17:09:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.62
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F7A24BD0F1
+	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 17:27:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.45
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791824964; cv=fail; b=TRHjyMrwei87P1lLYbvYprc4u0ohOyxtE/BYASxVwu6SdROTA7DN90iqX7us7SHTC9dlSR6QwCcShYF3TKRQGENWGIFznIiz0A3RTO3LioZ7XUzwP74v8foigvCYojrYQ+guubMjrTvISvTvb41sHbFdKLpNNCcANMc//OqIKp4=
+	t=1791826074; cv=pass; b=mwT+eAy2UNpyPPtrklwiRDpAhF7YeO67+eszQt3m/35xaARSW3FItDNE0+rleDzOd2Ip/6dcVvP9d5RPBZRRUYXKCNIW3TzqSOl+yVJAHy2Qolq63gFC8zBN2gyMwV+//BEr0oU76ADgAlNCMKU2HaXxEh7uljhecbYZDmAfdes=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791824964; c=relaxed/simple;
-	bh=RnuBUNqzuZr8KwwWaUrLOdH6lB0ePsNaTH9aynIlass=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=jNsLu5Rp1U5qkS0/k52A1O/9RKb11+wOYwhw/v3mX243rcFm8o43z1GvtS3ch8upXgB1AsE89v7Q6A0d7A08rXzMEasUQcjO5wIhoi+jVr92GKqniuExCWKZ9mx1ktDJ+MRwyMc+lxMwYgiv35KTROrAvstL/4o4CqhjDC8Out0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=e8HBBF4M; arc=fail smtp.client-ip=40.107.201.62
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	s=arc-20240116; t=1791826074; c=relaxed/simple;
+	bh=ixcvxfw6JuRgsZ4xESMIS6I3nEqDDX4qbcHLQVtaIaY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=fOX6HYkJ7q9B4MQmkbUerbyRwqlJUjaUlcD/4gRNjjGunV2VOC6zF2pAdgtPt6a+DBywV84yszgELIM/X8DKqi39VQu4ZK2iYv4d0V907vaTay49RE7QCpOYMuHTerzqZMPCSn1mWhk3xPdWLRQv307eRoxZnmjL99p2PGa/xqM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FMxZ02yj; arc=pass smtp.client-ip=209.85.218.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="e8HBBF4M"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=atM/Lc5Z6CouNdWMLXVbIGgowpaVDwQoBYm8Epv3JElDIH8qVZwPuSAeU0Ex4JKZIxXpQwE+Qx89DdcGz2tiJgJ68AWD7uI5Wz8D4979U7hbvIvsq5Qztpff80ItXeDa/lXhnG38gZXSuxEgYkfwnO9UQIqfChic5tgbHLCyuQMx6fqUOzNO/FOIYibMo2dwQfpdXBBoylM/dgHbmvFe1+qt6WBvmUbeJTVfN2cLzxkej9VYy8Pse0l9k6Wwg5JA1f3c5DWsbAzG2GH7ky8dAxfGmHTDKb5skXk0sMoqz4u4ErZOKSC27s9sob7Fl4IkrbgKyPDCPasfIDEG8ECcnQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=a78GyJlxxsVMzxzYrHbGSQyGFFR7+Vw8kmc/8FmBqFs=;
- b=rEeL7ldhqkyO1SuT+hvUnCqYLsm3UmDgjAf5YObh9wk18l1+r7pnNT9T4dO47lB3O94eGqbGqETbV3NyfVovmgUUGrWUHkD9/hXUMMyv+vnwDZzpJUKrmLxtOcXkAlsvqpRQOU7DTPirHJHMMzQsW/EcfFOUqXYbJpDjVFBlD0rags1QasO/vVEIs3PDP+QMozpikyI9oO7o28YRbOdmwM315M2pRwLh/RqBQc+X31z+MtEwn9QOLxwrMp/EZPYZv95u3gsbMUfIlao0IlaoXFrS/LgMBS9TLRkA6tMaOShwb1/o9yuTT0xPHWtZ4mdJXNWuLQE5TJVhqxp+9Mz6Qg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=a78GyJlxxsVMzxzYrHbGSQyGFFR7+Vw8kmc/8FmBqFs=;
- b=e8HBBF4MFmQvf9O4/QCcPA+aLnYsot+N9jEsplRiII54kdBFnND1O2+4fZaxix+z5Ym4YsFS1iI5AvKpasQOvDHRFgW4Fq2LnV88y+0bKvMMlyJsLX94DfrwWqsbcGSBxx59eNvBzqKBLQEqh4THmUltmyIxJ7L02GPtUMW+Dyk=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com (2603:10b6:510:1cb::21)
- by BL1PR12MB5803.namprd12.prod.outlook.com (2603:10b6:208:393::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.496.21; Mon, 12 Oct
- 2026 17:09:15 +0000
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000]) by PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000%7]) with mapi id 15.21.0496.020; Mon, 12 Oct 2026
- 17:09:14 +0000
-Message-ID: <642c49e1-7d47-44fd-b597-e5ff0877bb56@amd.com>
-Date: Mon, 12 Oct 2026 12:09:11 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] PCI/PM: Restore BARs after powering up during
- enumeration
-Content-Language: en-US
-To: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>,
- Keng-Yu Lin <keng-yu.lin@hpe.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- Matthew Ruffell <matthew.ruffell@canonical.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, andy.liang@hpe.com, david.chang@hpe.com,
- s.collins@hpe.com, jenifer.golmitz@hpe.com, pravallika.kamma@hpe.com,
- zhen-dong.lai@hpe.com, zachary.pabor-ext@hpe.com, stable@vger.kernel.org
-References: <20261012104645.975190-1-keng-yu.lin@hpe.com>
- <CAJZ5v0iGhqaF1m-Vc2xdXQXj_BxPFFWCBTP=Ypg_gWQEqWkNfg@mail.gmail.com>
-From: Mario Limonciello <mario.limonciello@amd.com>
-In-Reply-To: <CAJZ5v0iGhqaF1m-Vc2xdXQXj_BxPFFWCBTP=Ypg_gWQEqWkNfg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: CH2PR18CA0030.namprd18.prod.outlook.com
- (2603:10b6:610:4f::40) To PH8PR12MB6914.namprd12.prod.outlook.com
- (2603:10b6:510:1cb::21)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FMxZ02yj"
+Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-c29c6a3930bso267752266b.3
+        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 10:27:50 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791826069; cv=none;
+        d=google.com; s=arc-20260327;
+        b=QxiSkSMsIfc46ZS/mInZkckUzjTMTw4C+SXuHRrFEs9k/G2Fi36MhRhdAZOPgQ1EVs
+         gSHVoGC3lJPdNHZmkTtcPoRaDVV7kOXf4GRIMjTZ4ZEwnkjd+G4LvY+JAQLu8sO346Zz
+         QMUEB0t1Q+i01Wihr7Jnkm9uZ6m9yRAcqbKFuYTaO1dcjExwUlhdLpBKjn2FiUWjvfmi
+         VAgaWpdkFFb8hpw4IEvgw6v6TczutxGDNEs72pAC8pVFMOdXUGG5OKktBfHilCQtvpLm
+         oGCxFDGY4DAR2jWpAEA42emHUDvmFKFX5gLrs5Ou7LbAhYz7EfKX9D5T7ZN9rBvB0rv7
+         VDOQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=OtJOsVO1K2acZAU4qcatnAuGrI6UgGvUj/f3n1t6+og=;
+        fh=UaHSrk+DWCGk8tApTv3P+RXASmmglj1D8bkcJ1WtnL8=;
+        b=drfl6r/ep0NxkosprwDG5wJooJ2VptsZSfaxRYlVIyOG9ZKdP6MaG0fmF67sQlHaT5
+         eEiPZsenBSrDT+D/iNKmLg/UZVIMNZ79N5bOjjUYYJlE0XBLoHBE/6GHHgUT80w+x4yE
+         l1FMXhttbzYHEv6D+I3cKlldGTbzAbQSVMGozr6xNREr8EiVgbvIiBn5KO10TCWM1nf2
+         YEFb6f9wrRkX1BZmGbwSNuqiNNMZUCSI5NPdKXV8PmP53wKkEGV21HUv75M42lJuk/A3
+         rTzgmTdUmT9YwuU7xOOfMbSroc9ma3/uUBpqC5R4C6T9NeZGmtsvmfec0RpYRBVKzr5m
+         LLwg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791826069; x=1792430869; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=OtJOsVO1K2acZAU4qcatnAuGrI6UgGvUj/f3n1t6+og=;
+        b=FMxZ02yjkS/+8mnJtVGEx6kiX75q1BBnnTa/09CZZ3pj7UNf0YQ24kbVE+1A1QVNQB
+         MWywY9qwODp0u5ghALQvloxDEmnvnQtPg28zalbAfUJbsMFAyqzQDFeWAPL+rYuQAzQg
+         IgkF4woS79HFyrgnvdy3KeKl9GIUwj/Bdb5AJEPzGKPTul0vy5eJqRRoJ/lTdJOTO1hO
+         u4QlIZd5WVDXy+cXf4lOESYd2WqvEj636zsEu/NIT5jFj8ZU+wVa2NyejNayyroBSXRX
+         XDETjTsMITxQxR/3OvZP+LSngeW7AYfHr3RaD3YguUc5/hTmTNe6G2vPutd9frNcl7UY
+         /mbA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791826069; x=1792430869;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=OtJOsVO1K2acZAU4qcatnAuGrI6UgGvUj/f3n1t6+og=;
+        b=NsSYY1Ef4Pl0B1mPxp7Mp9TmULb71ycVI875lOTI7gBL/xa93ViVAB48sY5KXfhlUj
+         icl7pVmTSIkhebCx1iHtBRqr6gEChsILa7H0r4Kw0kCBzE6H25YLfD1+10fu/HfOJHqz
+         WhQ7ZuB3lYjWojY2/nYwhCahhOKq369KGGrGTONYhHf4GVnAC/l62EdFwayeq0/12pWr
+         Bz408haAKOSjR+MQNM8haZBzBrLktpm45rHikBsfGtC2mdVqGHP5H4CQHLjeuBMcxPtm
+         F6FNDxEJIcVIndiid2YBHRthuMXiPWZa+8yLGblmchHH1qvBx2EDolRiCRAQxW+/qA76
+         fG7Q==
+X-Forwarded-Encrypted: i=1; AKwUvBywwSWUM0OUMyuUoE2peQ8hPCVlQqbTX/lctZ1SQO5mgm9WpSKac5JoCcv7VkhOSjh6ZNnRgQBbH1Q=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJpi3rUMi+aXGBecmFZIiQSUtbhS2dUIlc3Iw64pjR/zJzhu/qf
+	H+LrL7bfsPpIxq9AH6zrjXVUHRMhQYQ2RjucTUDBYoeLPvUEPLO8OhUqFeGs7ClzlGL68CCKU9F
+	qvycMoCwpyZs12+Q2CfsJZ41wZCoLbU8=
+X-Gm-Gg: AYBFou1nXZN8kSqc+w2Zz9n4LtYY4yTPVltdpBXoEJ7EGxeWHjczpcrPwR0YH+1T91c
+	27fcAfohK86caZcCBEBWfJ5Y3hkUfE5ZRztH0ZAA2bK6j5vy3trBocutoEJJrBHzKVQrztrLjXM
+	2n6ZAnfIxAr1snfbNwEY9OWpt++78oB8iUQFvfhJlMU8XT4c9ASSHYs4a38LAakhVC8yerXurSh
+	lwg0+bKkh+CF47f0MLSJQrjj6sXrhmB6rfKaNhTyPwN1qpNqovaa8d3979WEWPtVSksVJxWXlTu
+	f7ano1gXzQjX7a34Osf38sPfbkFYtieO34IqqdyN/4EnaUCB3cgnL1wJ0I3QzRPIJRZ8o0apTf9
+	hZbQMj7v9w4/arsWGhdWfVJRv/Rxt5jYzmUGGYh2UN68/qERnjwtuiTGJKf4n4iPP5kkiSnHQ+T
+	1Y2yLmsik8peQL7BR6jYMowA==
+X-Received: by 2002:a17:907:1c89:b0:c2e:2d8c:4585 with SMTP id
+ a640c23a62f3a-c31a9fdb266mr1030063566b.36.1791826068900; Mon, 12 Oct 2026
+ 10:27:48 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR12MB6914:EE_|BL1PR12MB5803:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7bbb265f-642a-4134-775e-08df28838aed
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|23010399003|56012099006|11063799006|4143699003|261009221727099003|261009223027099003|261009223327099003|261009221227099003|261009220027099003|10067099003|18002099003|22082099003|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	aAgLSaWoyrVTHDRMAOQASkF2xmMUMTQynEPisY9kBoDBqW+A7mB+b45KK4i797klYbSFnqqbeu+TpoKc/BIwRbGnP/AEDz8y5rHBOfIjKl/FVFkayBzUdVyiu5ZpVcd0sme8fP1h3XmKUAl5yzjgQjQfLMTW4UaiReYqUaHHWCxjjgviaXfrbra5ykvHg0AJCFMWdc8D1qVo44qA63lthzW9B/xd42sRrAKwCxMOMUdMpLbAozDnpV2KTfibdAi6dsr0QQpQv13+5uoWSZbdGbzXRFLut5KzT1WAkBGB1m6xd6Mnhh6tZUpZzISaqvuHQ2d5Z/BVlfiXsyZqoWM4qPdLlWQPdDE3sdS37ZzAAT2WPpzHWCpc674EFkm8UGvmN4MfS+8iP9MueHAYstJEyeUrXkEZqukDtaEaCWqAA7hL/nHx2UvTK+KFGHAR477GbMpIEMc60Wyf773+FFXbiOsRtZrNT6yZtSQm3y6lo/yZhRjIG9fDqdR8bEBTxbvYjsVl2SXmxeqerwIlKhg20Jmr3x+5E4Zq3dTHSvgiNPt0YTKUJtsDcWqf/26YhTeWqJIkyDM9DowumcpKwYX7f1S3HEu3R5MP165ssPY7PkeB5XHRPfHwysyxv5g1sRBw
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR12MB6914.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(23010399003)(56012099006)(11063799006)(4143699003)(261009221727099003)(261009223027099003)(261009223327099003)(261009221227099003)(261009220027099003)(10067099003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?RWV2QVpEUDJkcVhYc2txLzd4emZNSG9PTnlnL3lDRis4M3FETVllV1hnVmtY?=
- =?utf-8?B?dnFnTnc2cmJoQ3NvUzdnZUVvQ2cvKzFoNDRybG1DZ1ZFdW1vcVROY25BU1Ir?=
- =?utf-8?B?WkVtdlBkdXlDZXZ5WXlHNG9ZVmh4ek1jYllYcVJkZDBTVithL3c0bEJGL1M0?=
- =?utf-8?B?ZWZXdjFySFFzakk3RWM0eUpuZGw1Wi92anBSMjFXbURtV25aL1VyVVVlRDc3?=
- =?utf-8?B?TUl3TjhmbWVCSmFLNEM3YU9tR2lNNlFMeFhCOXF3SUQyWWR6TGNFTnQvVHBX?=
- =?utf-8?B?TzBtRTJGalR5NGNnL2k5bTdkbTl5OTlieFNZdHlUL0dObGk1SnUzZUJZSXVR?=
- =?utf-8?B?eWplWDE3Qm9wTU1vZ0hnM1VRS2VYN2FWWlQyNnc3KzdLWE0xUDE0YkowVTkr?=
- =?utf-8?B?TlY0bmFRUXh0MWo0SjUzU0NXOXRBQTNhbjVSSnhRVlFxWkxKTERIeFFFVmpU?=
- =?utf-8?B?OVV5MVNVM2pQSTZ2TFNVMTVkenZmdTZraklhN0x5QVlmY3hDRXU3ekdhTHpl?=
- =?utf-8?B?S1BrWWdqdzRZN0VsNEgzWFVOQVFzcFExQjJVZjhpZ3A1VEZSZllncHdNckw5?=
- =?utf-8?B?SXJ2RFlDQkxxUlEvYzB1YnY1bmw1YjgxdEQ4b0NvWkRodjQvb0JqaWRSSGhQ?=
- =?utf-8?B?WFplWVlUUFFLcllSa3U1NjA1eTNMUDBHVmc3Qi96SmlCM2tQazRJaWpIL1hB?=
- =?utf-8?B?NWV1eEtCK1Rkc3J0eHhmbzJ5ektueDAxc1BBbHBhSlIzZ3RKaEFXbm5WWkVx?=
- =?utf-8?B?T0tsenlLMUF4NkhOYzFpOGR5V2IxVUxnUDJQbHZnSGhBQUd6TnRhQnladXVQ?=
- =?utf-8?B?YTVRUEpHOUFUMURqNVZKUkgvL0lHUW1ra2lwaTBEa1FZNERScEs3OGxQUms2?=
- =?utf-8?B?d2VmT09yWTJWcmtVdnVOajFJWnVGUnIwUTdoUjFCQkhPYlV4am04NEdZcGFq?=
- =?utf-8?B?WC9TYUg4bjlvWlNxNnFEeDZTemVvUVlJU29aclkybko4YzFMdzlDcHlua2Mz?=
- =?utf-8?B?RWdKQVV1TVplZEJmbVhSbEgvalpsZFFFQTBKUnhnUEVyWHdjNTRFd2VQbytF?=
- =?utf-8?B?WUowMmw5eW9oWWRFSGxTQ3Q5cTIzY0toZVc1blIvT28zK1ZKY3ZSL3dUUWRF?=
- =?utf-8?B?aTRESi9lejdRSjh3dWNQejBmeHJVREVHbldVdm5zTUxjc3ZjRTZxYllhRWxn?=
- =?utf-8?B?N213bWtxR3NqODlLWnIyR3ZEYzZBODU5U2IveGVIWnBtYlpueldOUVdzYnpy?=
- =?utf-8?B?eTlnUnRTaHU3MEI3VGg3NmZoeEVPWGQzd2NPdjM5RTYyeVl4R2trZTNyS0NB?=
- =?utf-8?B?ajVnQzRMVEYvblR0NC9yVGp1S3J6WGhXQWZaaTg2dUlzUUk1bml0OUtVQ3Zw?=
- =?utf-8?B?TDVnWW91T3Bma09CejlMNjRFeXJLNXl6RDFja0dtVkRrYnl0K2p5dW5FMVc4?=
- =?utf-8?B?YTdKMkRsWmxXV3NRTkdxNFFETkJZQ29KQVJDUHdkc2RxeVo4ZmhMQldxUlJs?=
- =?utf-8?B?V3NMbWFPbC9ZS2gvTHNjUkdhZWVBSVEyWnpCRFUzaTM3MVBobkxNbGtKb2NS?=
- =?utf-8?B?MWMvM2J1WjlzZlhmekFoVDBnZ2JIb29keWNyVkQvVllKSEV5Mm1ueVFMK1Fo?=
- =?utf-8?B?OCtldmc2b3hMRmxWMmJNbDFybDJka3lLbS9xRHhWWjI0MzdxRk84UWd2eFVr?=
- =?utf-8?B?MUlPR1c2ZTVvRnAzbzRtR0tIS090Qk1xZnp4TkNkTEE3T2lxWnpHRGhiZ2RR?=
- =?utf-8?B?QmdXcGc0RVp3SWRRTkFMT3FPK1E2U1F6cGZjVE9SVlJyZWMxdnBqSm9Yd0Nz?=
- =?utf-8?B?ZG1vd2ZpcUNWM1lwMWREM3VHNXpNL3hWa0J1ZTNWVEgyQ2w5RXpIblZrbHVr?=
- =?utf-8?B?Nk5Tc1dNK0lVS0lJdzNDOU9iRGZNVG1PMkxnV0NlT3dZMDR0djhRTnkxYkZQ?=
- =?utf-8?B?WUFsVHl3UldXL3hFTVlxRTBGWmxDNnp6TmpvNlR1S0hpdEpVRTFaTlQ2VkRy?=
- =?utf-8?B?bnYwN09mS25pOVJDcWtGV2kwcHI0Zm8wTjNmM2REQzRDSkVSVGd4WDlZcEVK?=
- =?utf-8?B?K0RpWHlBMXJzWDdpMFYyM1hnc3BWU1RjVWYzcWFabmdrbEJyOEx6UlNEV0pD?=
- =?utf-8?B?M2VhWmJ4SFovZmtWTzErVVJlRXUrQmV4c0J5UXl4UmttaHE3ditqWXRDRmov?=
- =?utf-8?B?YU1SZzNJaWUwZFgyS0FhbjVWYlQvTVFoVVdHVFVVV3puRFNOaFdrZU10d3Vw?=
- =?utf-8?B?bHpmeWRYdlNtdHhBNFYrRTIydnNxL2N4eENNdmo1UlA0aXJRMUdleVRJTlEz?=
- =?utf-8?Q?SUNwKhxZP54HfvIpVh?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7bbb265f-642a-4134-775e-08df28838aed
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR12MB6914.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Oct 2026 17:09:14.8576
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: kJnU5J98JIpSqdOwR0v1LODGEag+JPzSSSr+4nxrZOE4sKTce6GuO0aKnZ+H3MrLWBlOjz9Wyhi8OvqLfSyGZQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR12MB5803
+References: <CABZrw2EfeChvuWDJ_hiwr9Oh_QpyrfZKLq_-jOxkzZH=fr575Q@mail.gmail.com>
+In-Reply-To: <CABZrw2EfeChvuWDJ_hiwr9Oh_QpyrfZKLq_-jOxkzZH=fr575Q@mail.gmail.com>
+From: "Perlow, Jason" <jperlow@gmail.com>
+Date: Mon, 12 Oct 2026 13:27:37 -0400
+X-Gm-Features: AclHuK_bqLyPVGQ-mr7n1NMFfYWUOt-_0I21LZphufLfVxtdEishkHylWbha0rs
+Message-ID: <CABZrw2H0ArT0nJdMGe5zXZOrfxD79NZc84PZVfCPmWzUfvyhRg@mail.gmail.com>
+Subject: Re: PCI/AER: MacBookPro16,1 test results with Apple SEP ANFE quirk
+To: Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>
+Cc: Aditya Garg <aditya.garg@linux.dev>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, 
+	"Oliver O'Halloran" <oohall@gmail.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Bjorn, Lukas,
+
+Follow-up to my October 10 report. I have now tested the quirk on v7.3-rc7,
+which already contains 79c168e2aa95 ("PCI/AER: Skip error recovery on false
+alarms").
+
+Kernel: v7.3-rc7 (24a19b953e2a) with the Apple T2 patch stack and the SEP A=
+NFE
+quirk. The quirk is an EARLY fixup on Apple [106b:1802] that sets a per-dev=
+ice
+flag, so pci_aer_init() leaves ANFE masked on that one function. ANFE handl=
+ing
+is unchanged everywhere else. There is no global revert of eddba19b8b5f in
+this kernel.
+
+Systems: two MacBookPro16,1 (Core i7-9750H and Core i9-9980HK), freshly
+installed on this kernel.
+
+Results, both machines:
+
+  - Boots to the graphical session, confirmed on the panel (not only by
+    service state).
+  - Suspend and resume complete with the session intact.
+  - Cold boot from power off works (both machines).
+  - 2 hour idle soak: no AER, GHES or MCE report, oops, BUG or call trace i=
+n
+    the journal.
+  - Read-only config space check of the correctable error mask:
+        04:00.2 [106b:1802]  0x00006000   (ANFE, bit 13, masked)
+        04:00.0 / .1 / .3    0x00004000   (ANFE unmasked)
+
+Controls: an ASUS GU502LV and an Intel Arrow Lake desktop boot the same ker=
+nel
+with no SEP device present. The quirk does nothing there and nothing regres=
+ses.
+
+Limits: two units of one model. No AER error injection, kexec or other T2
+models. The test kernel was built with gcc 16.2; the release kernel I compa=
+red
+against used gcc 14. The quirk matches on vendor/device ID, which the T2 te=
+am
+says is the same on all T2 models, not on DMI. I still do not know why
+unmasking ANFE on this function powers the machine off; the quirk is a
+targeted workaround, not an explanation.
+
+
+On Fri, Oct 9, 2026 at 11:49=E2=80=AFPM Perlow, Jason <jperlow@gmail.com> w=
+rote:
+>
+> Bjorn, Lukas,
+>
+> I have tested the Apple SEP ANFE quirk together with Lukas's false-alarm
+> recovery fix on two MacBookPro16,1 systems. Both stayed up for over two
+> hours after booting the candidate kernel. The patch is being prepared
+> against pci/for-linus at 79c168e2aa957ed0054c93db17caba653b95e377.
+>
+> The candidate retains eddba19b8b5f ("PCI/AER: Support Advisory Non-Fatal
+> Errors"), adds 79c168e2aa95 ("PCI/AER: Skip error recovery on false
+> alarms"), and leaves the ANFE mask unchanged only on the Apple T2 Secure
+> Enclave Processor [106b:1802]. The global ANFE revert is absent from the
+> test kernel. The per-device flag approach follows Aditya's earlier
+> proposal, with an EARLY fixup so the flag is set before pci_aer_init().
+>
+> The test systems are:
+>
+>   MEDUSA:  MacBookPro16,1, Core i7-9750H
+>   CHIMERA: MacBookPro16,1, Core i9-9980HK
+>
+> Both ran 7.3.0-rc6-6-t2-edge-apple-sep-anfe-test, confirmed by uname and
+> the kernel banner in each current boot journal. At the 23:24 EDT check
+> on October 9, MEDUSA had 2 hours 22 minutes uptime and Chimera had
+> 2 hours 21 minutes. Their boot IDs were unchanged from the initial
+> successful candidate boots. graphical.target and the display manager
+> were active on both, and neither had failed systemd units.
+>
+> Read-only config-space checks gave the same results on both systems:
+>
+>   Function                    Correctable error mask
+>   Apple SEP, 04:00.2           0x00006000
+>   Apple function, 04:00.0      0x00004000
+>   Apple function, 04:00.1      0x00004000
+>   AMD GPU, 03:00.0             0x00000000
+>
+> ANFE bit 13 is therefore masked on the SEP and unmasked on the other
+> observed functions. No config-register writes were used in these checks.
+> The implementation matches vendor/device ID, not these bus addresses.
+>
+> Neither candidate boot journal contains an AER/GHES report, kernel
+> panic, oops, BUG or call trace. Neither recorded additional kernel
+> messages after the initial 21:04 checks through the 23:24 check.
+>
+> The earlier Wunner-only candidate booted on MEDUSA but then powered off,
+> as I reported on October 8. Its retained journal ended before that event;
+> there was no recorded shutdown sequence or panic. The cause of the power
+> loss is still unknown, and this quirk does not establish a firmware
+> mechanism. The combined candidate has not reproduced that symptom within
+> the observed interval.
+>
+> There are remaining boot warnings unrelated to the reported AER symptom:
+> ACPI duplicate-table/method errors, AMD SDMA fence fallback warnings,
+> HID rotation probe failures, and Broadcom P2P failures. Chimera also logs
+> CPU 0 machine-check records in banks 12 and 13. These warning categories,
+> including the same machine-check status/address records, appear in the
+> previous boot logs. I am retaining them as separate follow-up issues.
+>
+> This was a v7.3-rc6 test build with the existing T2 driver/patch stack,
+> using Debian Forky GCC 16.2 and binutils 2.47. It was not a vanilla
+> upstream kernel or an identical-toolchain comparison to the older GCC 14
+> release image. Artifact checksums, exact source/provenance, config checks=
+,
+> t2gmux/t2smc builds and imported-symbol CRC checks passed. A generic
+> KVM/OVMF boot also passed; the hardware observations above come from the
+> two physical systems, not KVM.
+>
+> The T2 team reports that [106b:1802] identifies the SEP across T2 models,
+> but this report covers only these two MacBookPro16,1 machines. I have not
+> tested other T2 models, power-off/cold-start, suspend/resume, reset, kexe=
+c
+> or deliberate AER error injection. Physical confirmation of the rendered
+> GUI is not included in this report; desktop service state was checked
+> remotely. The existing release/rescue boot files were preserved.
+>
+> The patch (enclosed) leaves other ANFE handling enabled and is idempotent=
+ across
+> repeated fixup/AER initialization. Please review it as a targeted workaro=
+und
+> for the MacBookPro16,1 regression, with the testing limits above.
+> I also have a zip file with all logs/evidence if needed.
+>
+> Thanks,
+> Jason
 
 
 
-On 10/12/26 06:34, Rafael J. Wysocki (Intel) wrote:
-> On Mon, Oct 12, 2026 at 12:47 PM Keng-Yu Lin <keng-yu.lin@hpe.com> wrote:
->>
->> Commit 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when
->> initializing") added pci_pm_power_up_and_verify_state() to pci_pm_init().
->> The helper ignores pci_power_up()'s return value indicating that BARs
->> need restoring.  Its resume callers restore saved configuration
->> afterwards; pci_pm_init() does not.
->>
->> D3hot-to-D0 may reset a device and lose its BARs (PCI PM 1.2, sec 5.4.1).
->> After enumeration powers it up, pci_enable_device() reads D0 and skips
->> the full power-up path.  Previously, a device still in D3hot at enable
->> time took that path, including BAR restoration.
->>
->> On AMD Venice SP7, two AMD xHCI controllers [1022:17d2] are in runtime
->> D3hot with No_Soft_Reset clear before kdump.  Diagnostic reads on
->> v7.3-rc6-37 show the following for 0000:01:00.4 in the crash kernel:
->>
->>                                     PMCSR      BAR0
->>    before the platform power call   0003       f4100004
->>    after the platform power call    0003       f4100004
->>    after native D0 power-up         0000       00000004
->>
->> The upper BAR DWORD stays zero.  pci_power_up() returns 1, but the BAR
->> address remains zero while dev->resource[0] still contains 0xf4100000.
->> Without BAR restoration, the last console messages are around:
->>
->>    pci 0000:01:00.4: enabling device (0000 -> 0002)
->>
->> Restoring both controllers' BARs gives matching readbacks and allows
->> kdump to save a vmcore and reboot.  An AMD Turin xHCI [1022:1557] shows
->> the same BAR loss; restoring its BAR also allows kdump to complete.
->>
->> Use pci_set_full_power_state() in pci_pm_init() to power up the device
->> and restore its BARs when needed.  It already checks the native power
->> state before restoring and updates ASPM when link state is present.
->> Leave pci_pm_power_up_and_verify_state() unchanged for the resume
->> callers, which restore saved configuration afterwards.
->>
->> Read the initial power state first, as pci_enable_device_flags() does.
-> 
-> Is this really necessary or even useful before pci_set_full_power_state()?
-> 
-> pci_power_up() updates dev->current_state regardless of its previous
-> value AFAICS.
-> 
+--=20
+Jason Perlow | Argonaut Media Communications
 
-To add to this comment; I would expect that if it's an ACPI device that 
-it is currently in ACPI_STATE_UNKNOWN at the time this function is 
-called.  So it should be a no-op for those devices.
+Voice/Text  (954) 242-3484 | jperlow@gmail.com | Blog: techbroiler.net
+Read my Tech and Food Industry articles: https://linktr.ee/jperlow
+Bluesky: https://bsky.app/profile/jperlow.bsky.social
 
-I'd say you can just update current state since you're forcing it to D0.
-
->> Otherwise, PCI_UNKNOWN can request a BAR restore even for devices
->> already in D0.  Keep the final pci_update_current_state() call so the
->> final cached state still accounts for platform power and failed config
->> reads.
->>
->> Suggested-by: Mario Limonciello <mario.limonciello@amd.com>
->> Fixes: 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when initializing")
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Keng-Yu Lin <keng-yu.lin@hpe.com>
->> ---
->>
->> Changes in v2:
->> - Use pci_set_full_power_state() in pci_pm_init(), following Mario's
->>    suggestion to reuse the existing BAR restore code.
->> - Leave the shared resume helper and its interface unchanged.
->> - Keep the initial state readback and the final platform-aware refresh.
->>
->> Unlike v1, BAR restoration uses the full helper's native PMCSR check.
->> It also updates ASPM when link state exists.
->>
->> Tested v2 with kdump on both systems.  Normal boots made no BAR writes
->> from this path.  The crash kernels wrote only the cleared xHCI BARs:
->> two on Venice SP7 and one on Turin.  All readbacks matched.  kdump saved
->> 2.53 GB and 1.10 GB vmcores respectively before rebooting.
->>
->> v1: https://lore.kernel.org/r/20261008133708.947908-1-keng-yu.lin@hpe.com/
->> Review: https://lore.kernel.org/r/04f5463b-f123-4079-9286-06a241976d3a@amd.com/
->>
->>   drivers/pci/pci.c | 4 +++-
->>   1 file changed, 3 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 8cc6a89130b5..d3a5871e1b36 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -3255,7 +3255,9 @@ void pci_pm_init(struct pci_dev *dev)
->>          }
->>
->>   poweron:
->> -       pci_pm_power_up_and_verify_state(dev);
->> +       pci_update_current_state(dev, dev->current_state);
->> +       pci_set_full_power_state(dev, false);
->> +       pci_update_current_state(dev, PCI_D0);
->>          pm_runtime_forbid(&dev->dev);
->>
->>          /*
->>
->> base-commit: 7b63ef2d55f24519e7e9e5f4d15dbea03f126e40
->> --
->> 2.43.0
-
+Need to schedule a meeting with me? https://bit.ly/3y8P3Gp
