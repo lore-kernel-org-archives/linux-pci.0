@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D0BD45D921;
-	Mon, 12 Oct 2026 09:15:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02AE9397694;
+	Mon, 12 Oct 2026 09:38:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791796504; cv=none; b=REjcrLSEZ5ts++oqoQisSGkM7wgmwsXpZcoti32foEKAGdMx6GanCJxZDTyGWQSWwcmElxl3cibs4UiPoq8EcYVfOel87ySGFhsCiqOUBQExSiq2iNDER45nSiRuqVMTAORyC99WAE/7B+WPTO9VwDay89wwtMGZvUQ4Jja/61I=
+	t=1791797883; cv=none; b=O/pv1z3nzZTan6Xg12qWaglXqB1TQYbbqyM2C7R07VpArRawX2I0pgQ/M8Q8xXkEOdBFH6P+X5cgeM3I75Qfs+Pa59IgExDacLD2ZAUfB0Ge576tt5ElSrKifvZ5QtXoQtBBCaqiWV1BcpqLt53m7MvV9PkrNR1Yfc4VdqoYFZE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791796504; c=relaxed/simple;
-	bh=wa/y7uAKyiAHBNtIYD1dmzBcK/WRQvA5lG8dWR2sAmI=;
+	s=arc-20240116; t=1791797883; c=relaxed/simple;
+	bh=/qeI+mcky6POL+dlz67XlDlJlP/m1BDsglDrCc5muCs=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=YKqxHWeilr/KxcOFS91fmpReDZUnObzyagg5EQCqE5bDGA2+goFxgm7g5ABx/paWmTP71cgMijbk0kKN0K+5oNjKWXh/Bw2Tikt7d/+U7KJeKlRjWYNWeR8W+vJSNa3YdGT5h90M/3xpBNF6MPMaNa6tvFhyyq1M3m4JFfknn0A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UIcx3XSK; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=rZdJ1/cU5tZHt71ZVJN3b0bOIb/d2k06ZE88rbaEbGQIygwTyL3wHc3kCTwwIpMcsIYnI/ysoqVepkHIcPqQjT/Q8oxXAEYkj9s5Yiq2XRiIPBbQCnsUoz6bVS7zQHX4EV844trci0+g1gW1jr5DpOqAghyIk6expYIwqwaPJO8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JVUsClFs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UIcx3XSK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71BFA1F0089C;
-	Mon, 12 Oct 2026 09:15:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JVUsClFs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2418B1F0089B;
+	Mon, 12 Oct 2026 09:37:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791796503;
-	bh=dJfud/jMsdkOXHAbu78ikuLmB6vnTo/8gDUfonWvO84=;
+	s=k20260515; t=1791797881;
+	bh=0C26uGtxqGDVfiyGSgCVeY4+duEFxvfuAlVAP2wPEcs=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=UIcx3XSK40mYNy5nI/NyJ98yCPrLiu1xI/Ss2K7xZBBsrO53Ou001C3KtsENUp53y
-	 Dx9Q7NT+qraEAT/j2uYG/7Ex98D8Zfi6CsWiaklCSHoGrA9eTlDafiJrTzo9mZ5moS
-	 KVyNPdez6g2ePXwZ2OhudbLrrWgcPvuaCPXJN1duWnWm+alUdbAHHODq3f0WPnBwzl
-	 juC4B9vjrvN7lWHykshR1GQXtJsm5fxLhkHqrmx5fPJULQXnKe8lkie7E83UfsUC5W
-	 rmhddJZ2eKjkv3ZD8Kdg2J++psYi5pz/b8OLUq4YlYmAqn/sPLpCqW/5R6O9KaOKCI
-	 RTW5U/lLDfDbQ==
+	b=JVUsClFsxTuCO4Jmd/9nLXrOUsWXPkEOYrHSWzLp38vEwjWv6WeveWcOoSAiqD+B7
+	 iX7iS8E2mZWedWmZdX7CIAkLrcRPOWzzHNhK9PviT4ai91qeuWwwwH9FH+yDgS4Hwh
+	 v0AKgicoMJ5QsJxyFN5cBUoNcPr/dx0KskoGKRVv7sD+PjZ+dC54aPEEtzPXT3PnZC
+	 hE2jzEmeYQrptnVWB6sNTpEh+EUjWI2HrWgpnoFqJ5wSn5WJKETtmGBXWr5zTQq8ve
+	 6irzeFMcu1iQTEpLcu9SeEKi23bSH4YEnt2UX60BwUeND8Pnj3R8PTJcAO5JTJWcBI
+	 O+0nwsD7XMWMg==
 X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
 From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-To: sashiko-reviews@lists.linux.dev, linux-coco@lists.linux.dev,
+To: sashiko-reviews@lists.linux.dev, iommu@lists.linux.dev,
 	Jason Gunthorpe <jgg@nvidia.com>
 Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v7 09/16] tsm: Remove the device from lookup before PCI
- teardown
-In-Reply-To: <sashiko-outbox-163673@kernel.org>
+Subject: Re: [PATCH v7 13/16] iommufd/viommu: Select vIOMMU operations
+ before allocation
+In-Reply-To: <sashiko-outbox-163690@kernel.org>
 References: <20261008055955.4014342-1-aneesh.kumar@kernel.org>
- <20261008055955.4014342-10-aneesh.kumar@kernel.org>
- <sashiko-outbox-163673@kernel.org>
-Date: Mon, 12 Oct 2026 14:44:58 +0530
-Message-ID: <yq5a33ub5lgt.fsf@kernel.org>
+ <20261008055955.4014342-14-aneesh.kumar@kernel.org>
+ <sashiko-outbox-163690@kernel.org>
+Date: Mon, 12 Oct 2026 15:07:57 +0530
+Message-ID: <yq5azewj45u2.fsf@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,88 +49,124 @@ Content-Type: text/plain
 
 sashiko-bot@kernel.org writes:
 
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Medium] tsm: race in tsm_register() error path leads to UAF and NULL pointer deref
+> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
+> - [Critical] iommu: type confusion in iommufd_viommu_alloc_ioctl() parent domain
+> - [High] iommu: dead code because amd_iommu_alloc_domain_nested is not assigned
+> - [Low] iommu: missing viommu_type validation in amd_iommufd_get_viommu_ops
 > --
 >
-> commit f9b77b7469552ae6078c3a47333908a88eec2474
+> commit ea74b8b169fc38edaee15fa883c362684ddec72d
 > Author: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
+> Subject: iommufd/viommu: Select vIOMMU operations before allocation
 >
-> tsm: Remove the device from lookup before PCI teardown
+> This commit introduces a new get_viommu_ops callback to select vIOMMU
+> operations based on the device and requested type before allocation. It
+> moves the size and initialization callbacks into iommufd_viommu_ops and
+> converts multiple physical IOMMU drivers to use the new interface.
 >
-> This commit modifies the teardown flow to remove the TSM device from
-> lookup before tearing down the PCI state. It also adjusts the setup
-> flow in tsm_register() to handle PCI registration failures differently.
->
->> diff --git a/drivers/virt/coco/tsm-core.c b/drivers/virt/coco/tsm-core.c
->> --- a/drivers/virt/coco/tsm-core.c
->> +++ b/drivers/virt/coco/tsm-core.c
->> @@ -56,26 +56,25 @@ static struct tsm_dev *alloc_tsm_dev(struct device *parent)
-> [ ... ]
->> -static struct tsm_dev *tsm_register_pci_or_reset(struct tsm_dev *tsm_dev,
->> -						 struct pci_tsm_ops *pci_ops)
->> +static int tsm_register_pci(struct tsm_dev *tsm_dev, struct pci_tsm_ops *pci_ops)
->>  {
-> [ ... ]
->>  	tsm_dev->pci_ops = pci_ops;
->>  	rc = pci_tsm_register(tsm_dev);
->>  	if (rc) {
->> +		tsm_dev->pci_ops = NULL;
->
-> [Severity: Medium]
-> Does this unprotected write to tsm_dev->pci_ops introduce a race condition?
->
-> If pci_tsm_register() returns an error early (e.g. if a driver incorrectly 
-> provides both link_ops and devsec_ops, returning -EINVAL before acquiring 
-> pci_tsm_rwsem), a concurrent userspace write to the connect sysfs attribute 
-> might trigger connect_store().
->
-> If connect_store() evaluates is_link_tsm() concurrently, this lockless 
-> assignment to NULL on the error path could cause the compiler to reload the 
-> pointer after the NULL check. Could this lead to a NULL pointer dereference 
-> when accessing ->link_ops.probe?
->
->>  		dev_err(tsm_dev->dev.parent,
->>  			"PCI/TSM registration failure: %d\n", rc);
->> -		device_unregister(&tsm_dev->dev);
->> -		return ERR_PTR(rc);
->> +		return rc;
->>  	}
-> [ ... ]
->> @@ -96,15 +95,22 @@ struct tsm_dev *tsm_register(struct device *parent, struct pci_tsm_ops *pci_ops)
->>  	if (rc)
->>  		return ERR_PTR(rc);
->>  
->> -	return tsm_register_pci_or_reset(no_free_ptr(tsm_dev), pci_ops);
->> +	rc = tsm_register_pci(tsm_dev, pci_ops);
->> +	if (rc) {
->> +		device_del(dev);
->
-> [Severity: Medium]
-> Can this error path lead to a use-after-free if PCI registration fails?
->
-> Since device_add() is called prior to tsm_register_pci() in tsm_register(), 
-> the device is already exposed via class_find_device(). If a concurrent 
-> connect_store() finds the device and proceeds to pci_tsm_connect() before 
-> this error path cleans it up, it will attach the PCI context to tsm_dev.
->
-> When this error path calls device_del() and returns, the __free(put_tsm_dev) 
-> guard at the top of tsm_register() will drop the primary reference to 
-> tsm_dev, freeing its memory.
->
-> Because the attached PCI context stores the pointer without taking an 
-> additional device reference, wouldn't this leave a dangling pointer in the 
-> PCI context, resulting in a use-after-free on subsequent accesses?
->
->> +		return ERR_PTR(rc);
->> +	}
->> +	return no_free_ptr(tsm_dev);
+>> diff --git a/drivers/iommu/amd/iommufd.c b/drivers/iommu/amd/iommufd.c
+>> index 52300b867c1f2..c1e132382adc7 100644
+>> --- a/drivers/iommu/amd/iommufd.c
+>> +++ b/drivers/iommu/amd/iommufd.c
+>> @@ -32,13 +32,21 @@ void *amd_iommufd_hw_info(struct device *dev, u32 *length, enum iommu_hw_info_ty
+>>  	return hwinfo;
 >>  }
+>>  
+>> -size_t amd_iommufd_get_viommu_size(struct device *dev, enum iommu_viommu_type viommu_type)
+>> +static size_t amd_iommufd_get_viommu_size(struct device *dev,
+>> +		enum iommu_viommu_type viommu_type)
+>>  {
+>>  	return VIOMMU_STRUCT_SIZE(struct amd_iommu_viommu, core);
+>>  }
+>>  
+>> -int amd_iommufd_viommu_init(struct iommufd_viommu *viommu, struct iommu_domain *parent,
+>> -			    const struct iommu_user_data *user_data)
+>> +const struct iommufd_viommu_ops *
+>> +amd_iommufd_get_viommu_ops(struct device *dev, enum iommu_viommu_type viommu_type)
+>> +{
+>> +	return &amd_viommu_ops;
+>> +}
+>
+> [Severity: Low]
+> Does this function need to validate the requested viommu_type?
+>
+> Currently, amd_iommufd_get_viommu_ops() unconditionally returns the ops
+> structure without checking the type argument. If a user requests an arbitrary
+> type like IOMMU_VIOMMU_TYPE_ARM_SMMUV3 on an AMD device, the core iommufd
+> framework might track the vIOMMU under a mismatched architectural type
+> identifier.
+>
+> The ARM and selftest backends appear to validate this argument against their
+> supported hardware types before returning the operations.
+>
+> [ ... ]
+>
+
+No vIOMMU type has been added for any IOMMU other than Arm. The
+documentation also considers IOMMU_VIOMMU_TYPE_DEFAULT reserved.
+
+>> @@ -73,5 +79,7 @@ static void amd_iommufd_viommu_destroy(struct iommufd_viommu *viommu)
+>>   * struct iommufd_viommu_ops - vIOMMU specific operations
+>>   */
+>>  static const struct iommufd_viommu_ops amd_viommu_ops = {
+>> +	.get_viommu_size = amd_iommufd_get_viommu_size,
+>> +	.viommu_init = amd_iommufd_viommu_init,
+>>  	.destroy = amd_iommufd_viommu_destroy,
+>>  };
+>
+> [Severity: High]
+> Is the alloc_domain_nested callback missing from this operations structure?
+>
+> The commit message and comments in amd_iommu_alloc_domain_nested() indicate
+> it should be assigned to the viommu operations. However, it is omitted here.
+>
+> If a user attempts to allocate an AMD nested domain using IOMMU_HWPT_ALLOC,
+> won't the core framework reject it with -EOPNOTSUPP because
+> viommu->ops->alloc_domain_nested is NULL?
+>
+
+It is unclear whether nested domain support is fully integrated for AMD.
+I see amd_iommu_alloc_domain_nested(), but cannot find any callers.
+
+>> diff --git a/drivers/iommu/iommufd/viommu.c b/drivers/iommu/iommufd/viommu.c
+>> index f3d5b5a7eb4a4..e95138ae71d5b 100644
+>> --- a/drivers/iommu/iommufd/viommu.c
+>> +++ b/drivers/iommu/iommufd/viommu.c
+> [ ... ]
+>> @@ -103,16 +105,12 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd *ucmd)
+>>  	 */
+>>  	viommu->iommu_dev = iommu_dev;
+>>  
+>> -	rc = ops->viommu_init(viommu, hwpt_paging->common.domain,
+>> +	rc = ops->viommu_init(viommu, idev->dev,
+>> +			      hwpt_paging->common.domain,
+>>  			      user_data.len ? &user_data : NULL);
+>
+> [Severity: Critical]
+> Is there a missing check to ensure the domain is owned by the same driver
+> before passing it to viommu_init?
+>
 
 
-I think this problem already exists upstream. We should delay
-device_add() until PCI/TSM registration succeeds. The kobject event
-should also be emitted after device_add(). I will add the fix as a
-separate patch.
+The viommu_init callback needs to perform this check. For example, the
+Arm implementation does:
+
+	ret = arm_smmu_validate_parent(smmu, parent_domain);
+	if (ret)
+		return ret;
+
+
+
+> In iommufd_viommu_alloc_ioctl(), hwpt_paging->common.domain is passed directly
+> to the device driver's viommu_init callback. Unlike in
+> iommufd_hw_pagetable_alloc() which checks if parent->common.domain->owner
+> matches the ops, this check appears to be omitted here.
+>
+> If a user allocates a paging HWPT for a mock device, and then calls
+> IOMMU_VIOMMU_ALLOC passing an AMD device ID but the mock HWPT ID, could the
+> receiving driver blindly cast the mismatched domain? For instance, AMD's
+> viommu_init uses to_pdomain() on the parent domain. This looks like it could
+> lead to type confusion and out-of-bounds accesses on the domain structure.
+>
 
 -aneesh
