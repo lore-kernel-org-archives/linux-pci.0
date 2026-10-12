@@ -1,91 +1,112 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1920F49BD89
-	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 15:37:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24A714A5EB4;
+	Mon, 12 Oct 2026 16:22:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791819439; cv=none; b=aRUStALCBw5PKwjW+nPFWLsxuCmsruYssHUWmMOQO4g8iY6oaYelBBepYEw+WoCSr5pdo+wl09xYjreif9JSp0/R7VwlcedYqg6KpoJRMJeZ0O5GQP/lmId1N7vkC7QGF5v2hjNhBpA3Zq70Y1P9mQ0cv+4RTHT/+fr8kngX8kw=
+	t=1791822153; cv=none; b=WyBaaX2ak+M51w5avu+aw90EoLHA76iCbtZKLdcIpA9OMhfkuVfQcGwWr0PNnau2FfgfT/gReTTuRvBxyJYTjgXn8UMfNPM1c79IG4KD6tGCCWGwwcF5r4ixeO7/mMo8xf/XEfIIzGuQTVf2uTz69wiD/NpHt9KoupyOzueRbK8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791819439; c=relaxed/simple;
-	bh=Ny6CnJcMREGWOqOHnwVu++VYZE8mUIUwqMU0hWC+Llw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=QDjR5b745SM+HEkJ7W4eV6TM4YX4lKuh9wFmgd+I5Lervr53h6mA1QTyOhhxlTrvsM69TZgDs6WmP4495cELcjNYh5JvQegtv6NnaLXnPkJ6PHvBwy1zyegC+JTjdw8SNg86ia3CtC5jkyVBkJy4LkXtgQIxGITwHeGx0bMO6ZE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FnV4OwTk; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791822153; c=relaxed/simple;
+	bh=bElcF85UnTsPsK3JmZkckN1qWbGReCw8cJlM4YW08SY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fzPRugMJYl4x4CZbIL1MPnUqOqv0SOsyWX8/PCw3Tpgl2ezeMC0qlx3GII83Gz+PKq1T8R0ukD2TmlK8408dinxfXH2J6l0W83TUpYlUw3TzVeXJdJJ80wbW4Ayhn9rhtTVQWetg1Db+21WnlMKIYHdCdIuyhrWvWSEQkhL6pz0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=glTKqFKR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FnV4OwTk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B28701F0089D
-	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 15:37:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="glTKqFKR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E50551F0089C;
+	Mon, 12 Oct 2026 16:22:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791819437;
-	bh=0LtWcDpcoANXJxp8BUzLrX4nuAiYWSXUb2UN4CsRl44=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=FnV4OwTkZA/UNOS5Ux4gh2FK0Pqev8vsp2jMe/kCyc0LAycKwKRjIOP/dmsMCl/Uk
-	 xI/S3z7UvSkvHPrE9BKs8TfHLfuxE/lQQ3eJooU5E0U+8vBoDnuj7K/E/djyTtbZlI
-	 0EJSdzRxP64LUpDt/K0SdHckNJOr1gxQmFeeZjdOFgkv5n+t4lJis3K8NkyucUSkkN
-	 dmMyS55Fm9znnm8c0pcjjqTHYX1enVN88XVTpvCOYFMSJNuZ2Ruwqhu2xD5tkJpeQi
-	 00AqKHvOvAtlmUnjuw5G7mo/bpytNYAppPwvQxgr9RHAWZlkA56W48uHhG4sELbzjf
-	 mXF4N8abeSmLQ==
-Received: by mail-lf1-f43.google.com with SMTP id 2adb3069b0e04-5bccb867d6fso1356629e87.0
-        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 08:37:17 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBy3CS0+8yV6l15XuzdbBORiDX+FGtSljRlp8aW4SNKeMuMqzWtQ7UoTr1gO7lO0Nj4bPkYjHDeb/GA=@vger.kernel.org
-X-Gm-Message-State: AFq9FYL6GJfVbLQy2KjzyuZF50V+pTNWljwtqmXmKIEA5uxNW6LGQVpu
-	TilEcP4fW+FWDA3JAmNAyXGUEngOMXmO7LsLbpxiGyA4qSAiRjEyZoxrf4i/kn/rq9ZU++tKoiu
-	GUN9h/5q+sBrQIhm9jQcTTIuYuJ7D/UQ=
-X-Received: by 2002:a05:6512:1592:b0:5bc:b5ea:94b2 with SMTP id
- 2adb3069b0e04-5bcde8db1damr3599793e87.59.1791819436162; Mon, 12 Oct 2026
- 08:37:16 -0700 (PDT)
+	s=k20260515; t=1791822151;
+	bh=ujVlQVHq5JIQ0O1pcio2HBL6zzvo1/h8W5FdQ/HFDtw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=glTKqFKRA/lzgraEST5OyD7TVH8Xu3LxK2obpvhfPcMC2356ApAlxVAqGTyQHyst9
+	 c+pqw6cXo9IyynvNGf5J37T19hoWN7POrnGTk4nDaZcZRBkrUuskNuzdsPiJvBR8Jn
+	 gsnZw54RYV3AiCfWvHdZteUzpVtVIEZrfcpTSbQDCbJWiMoqKcjOiUOHbjh5GKZqnV
+	 urziov9pq42Hl5VVkY6b3hlUddeazbr+pQmtAWCinw4hVHXZcOeMjv7by+zdygmrV3
+	 8FuN25QV6QGVhfmOonKOWdEtu/+5Q8I7j3MTczT+pBPtFFiBrH51mXKM41Fraiou+j
+	 lf6TUYTo/ODkg==
+Date: Mon, 12 Oct 2026 21:52:23 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bartosz Golaszewski <brgl@kernel.org>
+Cc: =?utf-8?B?RnJhbsOnb2lz?= Roux <franzelfranzel@gmail.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+	linux-pm@vger.kernel.org, linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	regressions@lists.linux.dev, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v2] power: sequencing: qcom-wcn: power off WLAN at probe
+Message-ID: <as0JBsiiR1T94Adj@debian>
+References: <20261004165124.4277-1-franzelfranzel@gmail.com>
+ <CAMRc=Mf_szZhsZEB8pmZkGh5pB6AEims68rc1tXE=XGAcMuEvg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260925155846.2381956-1-yaojiale02@163.com>
-In-Reply-To: <20260925155846.2381956-1-yaojiale02@163.com>
-From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
-Date: Mon, 12 Oct 2026 17:35:11 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0hjijTBTcUWW_esn414CNenNuBN9Viv+boqYX=fSnuQpw@mail.gmail.com>
-X-Gm-Features: AclHuK_MhwdXrrCVuVtKNaYGnMohUwJfio5uZBGpMkVRF1pokHTd6KvPAgrMm3U
-Message-ID: <CAJZ5v0hjijTBTcUWW_esn414CNenNuBN9Viv+boqYX=fSnuQpw@mail.gmail.com>
-Subject: Re: [PATCH] ACPI: PCI: link: clear driver_data before free
-To: Jiale Yao <yaojiale02@163.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, Pavel Machek <pavel@suse.cz>, linux-pci@vger.kernel.org, 
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAMRc=Mf_szZhsZEB8pmZkGh5pB6AEims68rc1tXE=XGAcMuEvg@mail.gmail.com>
 
-On Fri, Sep 25, 2026 at 5:59=E2=80=AFPM Jiale Yao <yaojiale02@163.com> wrot=
-e:
->
-> acpi_pci_link_remove() frees the link object without clearing the ACPI
-> device's driver_data pointer. The ACPI device survives hot-removal and
-> can later be retrieved by acpi_fetch_acpi_dev(), leaving callers with a
-> dangling pointer.
->
-> Clear driver_data before freeing the link.
->
-> Fixes: db89b4f0dbab ("ACPI: catch calls of acpi_driver_data on pointer of=
- wrong type")
-> Signed-off-by: Jiale Yao <yaojiale02@163.com>
-> ---
->  drivers/acpi/pci_link.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> index e6ed13aee48d..84bfcdf242dd 100644
-> --- a/drivers/acpi/pci_link.c
-> +++ b/drivers/acpi/pci_link.c
-> @@ -787,6 +787,7 @@ static void acpi_pci_link_remove(struct acpi_device *=
-device)
->         list_del(&link->list);
->         mutex_unlock(&acpi_link_lock);
->
-> +       device->driver_data =3D NULL;
->         kfree(link);
->  }
->
-> --
+On Tue, Oct 06, 2026 at 11:03:17AM +0300, Bartosz Golaszewski wrote:
+> On Sun, 4 Oct 2026 18:51:24 +0200, "François Roux"
+> <franzelfranzel@gmail.com> said:
+> > The WLAN enable GPIO is requested with GPIOD_ASIS and then kept at its
+> > current level, so that a WLAN module left powered on by the firmware is
+> > not switched off. The FIXME explains why: toggling it would take the
+> > PCIe link down, and the controller driver could not recover from that.
+> >
+> > That reasoning held while the PCIe link was trained before the
+> > sequencer probed. Since commit b921aa3f8dec ("PCI/pwrctrl: Switch to
+> > pwrctrl create, power on/off, destroy APIs"), qcom_pcie_host_init()
+> > powers the endpoint through pwrctrl before it starts link training, and
+> > defers until the pwrctrl driver is bound. That driver cannot bind
+> > before this sequencer has probed. Power-on therefore always comes
+> > before link training, and keeping the firmware state is now harmful.
+> >
+> > On the Microsoft Surface Pro 11 (X1E80100), the WCN7850 sits on a
+> > PCIe port without a PERST# GPIO. While pci-pwrctrl-pwrseq is not yet
+> > bound, the host init is deferred about ten times, and each attempt
+> > powers the PHY and controller back down. The later power-on only sets
+> > a GPIO that is already high, so the chip is never reset and the link
+> > never comes up:
+> >
+> >   qcom-pcie 1c08000.pcie: Device found, but not active
+> >
+> > The endpoint is not enumerated and ath12k never probes. Bluetooth on
+> > the same chip fails too ("QCA Failed to send TLV segment (-110)").
+> >
+> > Request the GPIO as GPIOD_OUT_LOW. The chip is then off when the
+> > sequencer probes, and pwrctrl powers it up cleanly right before link
+> > training. Drop the FIXME and the code that preserved the firmware
+> > state.
+> >
+> > Tested on a Surface Pro 11:
+> >  - b921aa3f8dec plus a one-line version of this change: endpoint
+> >    enumerated at 2.4 s, ath12k and Bluetooth working.
+> >  - next-20260929 plus this patch: "PCIe Gen.3 x2 link up" at 3.4 s,
+> >    ath12k and Bluetooth working, Wi-Fi connected.
+> > Without the change, neither kernel enumerates the endpoint.
+> >
+> > The culprit was found by bisecting v6.17..v7.1, with the DTB and
+> > .config held constant.
+> >
+> > Fixes: b921aa3f8dec ("PCI/pwrctrl: Switch to pwrctrl create, power on/off, destroy APIs")
+> > Closes: https://lore.kernel.org/all/CAPjyS8dY0Q_o3XmFjuKZZsjhzhoSNL+ZGJtw5cQt8HiV3sUtxA@mail.gmail.com/
+> > Cc: stable@vger.kernel.org
+> > Assisted-by: LLM
+> > Signed-off-by: François Roux <franzelfranzel@gmail.com>
+> > ---
+> 
+> Mani: this looks good to me, any objections to me queuing it for v7.3?
+> 
 
-Applied as 7.4 material, thanks!
+No objections from me. As the commit message stated clearly, we no longer need
+to rely on firmware configured state.
+
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
