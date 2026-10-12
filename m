@@ -1,75 +1,112 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 033544DA9C3
-	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 21:08:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EBA94DA9AA;
+	Mon, 12 Oct 2026 21:34:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791839322; cv=none; b=sZzzT0ZGQdvWVbUEM5mtK6XEe5Xt9nZp7kjuQxVFgfL71JO6TCW9w2qRCJBrptQ6W+SVgVXOhT8FH0junnD/khhQZwaS6lANV4uN+MGYQKXuXV72V0iYVeTcLHwul5oUleETK9buTIYdqMBwkFzNOuqMraSZaF19gA8ppjacOO4=
+	t=1791840890; cv=none; b=GFWSNgqpEnwkWoIGCb/Qes+4UBcY+3eIhOg9jPzh6JAcHE7wdFEHLcZRCHjCmQxVAFE30oktRfUAOtxk/0fXxvRpmwONdynaBC8LHrSG+Zaciqjp0WgLbamVC4zltGOafwlsOgQ1Id0ETlhVWua1116fX4kbzUOEVXDSql/aCrE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791839322; c=relaxed/simple;
-	bh=B2ENGoJu1g1MSxhR/tK9qyGkxuSNdboM8O8w/rUUNac=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=EL+ygZtYNWjbn+s9jZWoNlmkLrHkSV7clrlmMmEJIur0fFNKv9vgriyFX435V1Qb1zVV8G0TFjj9BDtihhvjORQaKDbpXzI22dSHqAYT22Stg5Gf363Bk62y8TeV9PLf7zs7J1tq/Pe1BYvYxG1IbxlE8YnIkIUZmFSve5gLQYE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b41l2/xl; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791840890; c=relaxed/simple;
+	bh=2rYQqctxIJ2NAfH8d5iXblRfcvOqUMnrMip1eofojvk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=ZSyTMYmJ45xcWN2SDEBi89YMEBwokuqGNu+s8h/km3IiEWuT2ntYvii0AtBzvEfdJIdEgivkHpI1jhYQRrq6oRddTPhHyc48D/wjs5QBReA9/1bh0W17U/Our0Fxpi2uQQyM0ooPP/HhHBkgAUlig1HXkin+4plC93FoJLMlPEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HENcQPzl; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b41l2/xl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93A231F008A1;
-	Mon, 12 Oct 2026 21:08:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HENcQPzl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C4411F008A1;
+	Mon, 12 Oct 2026 21:34:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791839321;
-	bh=28fzzSRJBsrSXyU/LSX8b/Q13VIxBfsZi6U4FLNOf4w=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=b41l2/xlPFOJJoup8186P6XQodYzMWrEE3/P6OjmtOASk6XMJnCs+YM6ya9ZKst9s
-	 HxnB2Lua63b+gG27dXK/XwFIdOVbaeE0Xxa9kaSucwanuEwaqaci9SZz9XXsBnQtal
-	 5jpAh7sK/gbhFw+UiwwEuzflYi+ALrQiKaFjxi8jNUxaPAkUpmbA4zjgkFXW2elNsA
-	 Aw3At94K+mTrRS0kXD7Spt9hXgVQcB+b1b/2inggFoH6LhywAqlQQ2oXcad/tXUpHU
-	 rMS4JpEwXl+sVGoS1/19u+vee3TNHscmv0hqh2hfxB+7OqQ+kIjoqvvElN7Mk33ZGt
-	 vxf/+cxqc5a+w==
-Message-ID: <sashiko-outbox-168608@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] PCI/AER: Make aer_mask_override effective for
- injected errors
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Priyank Rathod" <rathodpriyank@google.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261012-fix-aer-mask-override-v1-1-49a0d7aeaea0@google.com>
-References: <20261012-fix-aer-mask-override-v1-0-49a0d7aeaea0@google.com>
- <20261012-fix-aer-mask-override-v1-1-49a0d7aeaea0@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 12 Oct 2026 21:08:41 +0000
+	s=k20260515; t=1791840888;
+	bh=+k/A8cNCSgFkxc2tpT06bk4634W3QnFn4AnLpYa6IdI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=HENcQPzl2lLQKWet8buJsvIU9gf4FXwjfIYCelfQDQPmPjJxz3KqOpYdwDZudafVZ
+	 Z3o1JqQOOZuYRCXPTmeBItGIj1dAX59mnCWc+gKqNyNkhZwsiqbIqYM8O2o9ZpB2e+
+	 wuuHRN9/wzrfpZfnfuT6IrfkNiYm7UtP+tlbdGQspPluyy03NXuhyH7QHXmwiSo2P9
+	 6DFwu/IAwnPSwde3a9dEyKgYmO6M32OMcppRRsMW5f4fdeqX51bd24gWO2IcZSY4BI
+	 dPrpJefJv6B7EK0qC8cOH/fZlaVeW2L1EVM4PKniM8V/vWcBj16QqQmlo1hwOJynt2
+	 pgw6vk/SA8FTQ==
+Date: Mon, 12 Oct 2026 16:34:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Imre Kaloz <kaloz@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Andreas Larsson <andreas@gaisler.com>, sparclinux@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Srinath Mannam <srinath.mannam@broadcom.com>,
+	Michael Chan <michael.chan@broadcom.com>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Vikas Gupta <vikas.gupta@broadcom.com>
+Subject: Re: [PATCH] PCI: Avoid D3 on PLX PEX 8532/8533/8548 downstream ports
+Message-ID: <20261012213447.GA1392402@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260927105609.8813-1-kaloz@kernel.org>
 
-> The aer_mask_override module parameter of aer_inject is meant to allow
-> injecting errors that the device masks in PCI_ERR_COR_MASK or
-> PCI_ERR_UNCOR_MASK.  It does not work for Correctable or Non-Fatal
-> errors, nor for Fatal errors on Root Ports and Downstream Ports,
-> because the modified masks are restored before the AER driver reads
-> them.
->=20
-> aer_inject() writes the modified masks to hardware and restores them
-> from cor_mask_orig/uncor_mask_orig right after inject_lock is released,
-> before irq_inject_interrupt() is even called.  The injected error is
-> consumed asynchronously by the threaded handler aer_isr(), whose
-> helpers is_error_source(), aer_get_device_error_info() and
-> aer_get_anfe_status() read the Mask registers.  Those reads go through
-> the emulated config space, but find_pci_config_dword() does not
-> intercept PCI_ERR_COR_MASK/PCI_ERR_UNCOR_MASK, so they return the
-> [ ... ]
-> masked in PCI_ERR_UNCOR_MASK after aer_inject has been unloaded; with
-> the read-side emulation alone it ended up unmasked.
->=20
-> Fixes: 457d9d088b02 ("PCI: aer-inject: Override PCIe AER Mask Registers")
-> Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
+[+cc several Broadcom folks, help with possible switch erratum]
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+On Sun, Sep 27, 2026 at 12:56:09PM +0200, Imre Kaloz wrote:
+> Runtime PM suspends an idle downstream port of a PLX/Broadcom PEX
+> 8532/8533/8548 switch to D3hot, but that takes the whole switch down
+> with it: any device behind another port of the same switch then
+> faults with a fatal bus error on its next access, e.g. mptsas probe
+> on a Sun Ultra 45.
+> 
+> This surfaced on sparc64 once commit a5fb3ff63287 ("PCI: Allow PCI
+> bridges to go to D3Hot on all non-x86") let bridges enter D3hot. Keep
+> these downstream ports out of D3 by setting PCI_DEV_FLAGS_NO_D3.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261012-fix-aer-ma=
-sk-override-v1-0-49a0d7aeaea0@google.com?part=3D1
+I don't really have any objection to this, but I am concerned that
+this quirk only applies to a few specific devices, but
+https://admin.pci-ids.ucw.cz/read/PC/10b5 shows a TON of
+similar-looking switches that I assume have the same behavior, so
+this may be just the tip of the iceberg.
 
+> Fixes: a5fb3ff63287 ("PCI: Allow PCI bridges to go to D3Hot on all non-x86")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Imre Kaloz <kaloz@kernel.org>
+> ---
+>  drivers/pci/quirks.c | 18 ++++++++++++++++++
+>  1 file changed, 18 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index de9bbccda21f..a3c9250182a6 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2381,6 +2381,24 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9050,
+>  DECLARE_PCI_FIXUP_HEADER(0x1402, 0x2000, quirk_plx_pci9050);
+>  DECLARE_PCI_FIXUP_HEADER(0x1402, 0x2600, quirk_plx_pci9050);
+>  
+> +/*
+> + * An idle downstream port of a PLX/Broadcom PEX 8532/8533/8548 switch
+> + * autosuspends into D3hot, and that takes the whole switch down with
+> + * it -- any device behind another port of the same switch then sees a
+> + * fatal, non-recoverable bus fault on its next access. Keep these
+> + * ports out of D3 entirely.
+> + */
+> +static void quirk_plx_pex_no_d3(struct pci_dev *dev)
+> +{
+> +	if (pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
+> +		dev->dev_flags |= PCI_DEV_FLAGS_NO_D3;
+> +		pci_info(dev, "avoiding D3 on this downstream port\n");
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_PLX, 0x8532, quirk_plx_pex_no_d3);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_PLX, 0x8533, quirk_plx_pex_no_d3);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_PLX, 0x8548, quirk_plx_pex_no_d3);
+> +
+>  static void quirk_netmos(struct pci_dev *dev)
+>  {
+>  	unsigned int num_parallel = (dev->subsystem_device & 0xf0) >> 4;
+> 
+> base-commit: fe2ec83746e501645709761605c2464a44fd2929
+> -- 
+> 2.47.3
+> 
