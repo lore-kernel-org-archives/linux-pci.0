@@ -1,159 +1,245 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C2B0379C5E
-	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 13:36:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791812180; cv=none; b=ZxkLM4ijxwgqwXUyWhp8dTu7NahlLpiFo0whllDyGEQGdiWiLNhLWsixjTGGUkypt8eunQGbRD9RlNFOFpQqky22Nf9XLXKuqRi5ySQ72p8W+U7SS3V5Yd5uS3LCZo0PD7DwLGcLTzUjOttsPZa1eYICHtTPQUA668d4FfxQ2co=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791812180; c=relaxed/simple;
-	bh=wZLW2XdypAhHvwo+GHAiZC6sjIcx7C3BCwY22tUge+E=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CRuChZFiUq9eXXZSxA4DgL36ipgaS/ufIHpzbIqcqaUtAzr9s+yL84nfack1WxglrvXq0NJT2nwCwm8M7FkyY93DlVugC3y9q1F9wxhjCt85Z+VURPHj94Ttpgf8Uf5q4F2NNZH1Lq4nRIzjAPIa9HiOWqdyLlq0hp2ldcL+68E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=YWTnGaxX; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ktQSWEab; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45E4E357D0D;
+	Mon, 12 Oct 2026 14:26:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.18
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791815212; cv=fail; b=qvcRQbON4GZkaWbbc/lYxmrqQ+NZnaeaRIhY6dFwUClK04pTI4/0kSz//zqsjYaa0/UyOVHzOYqQWhc+OPUsPudRe7GRITJ6SRpCXYMGLwpSTQK8DrMGaLJODvV9sbUsVpHPkjokJxKrZTK3/44OH7Xpa5fYGGAu1747nIrGCdM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791815212; c=relaxed/simple;
+	bh=z12Qpmyp8Zr5Pfg4x04b4aVI32pqADyYABjcqkZfIKw=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=PML8RDFbT/WqKhd1VNz87dnLy0z+WiXWaBHDTSS5CJvKUqI5esPdMdnLSdxXcpOpmmEYlfaEEDyn8JvrBfc0QkmdCbIqunpef3ecDMoDgV6pfu5M5JvD8KgFLmaiWENfb86mr8DGjfvEoy8dneT+CbmAAzX4wPZVLqnoRY3T7XI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HGNUk2a6; arc=fail smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="YWTnGaxX";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ktQSWEab"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69CC0ePQ2679983
-	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 13:36:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	mX36Oh0ldjKH64bRULghbP9zkZHVCst58P7qBcvJdOc=; b=YWTnGaxXDF7dV0Xz
-	fJ5z0RlKpai35YN/BfCDko0TuA8fMf5HQtijMWL+Lh8mhNWnzkF6aJB+y7aw2pCU
-	HguhYficpp5M4Ef3UGOfu4z9o0PlpTOAL3RfJuTGMvwOhJf8QWCmSgLF/6aiDiGt
-	wjaCvUhAhsN77vShkA77lIDQTuLB0HjPmlHZ2cfdlJ5f6n8q+SkXibBg0er3bTNI
-	0hxNbdsENvG/1sIek8XxLio3dVfJHTaq4WxdppLcFiSpbUhaVvOyrZzX9UQ2H4SZ
-	Kxl9ow01N54pH3b5BUSaHB05JR0jYf5KtOz/uRTVp50F1XJnKpGjsbfJ7Lz9bl0W
-	TzMekw==
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com [209.85.222.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4h8sd1t5s9-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 13:36:18 +0000 (GMT)
-Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-93cb6391e89so415362885a.1
-        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 06:36:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1791812177; x=1792416977; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=mX36Oh0ldjKH64bRULghbP9zkZHVCst58P7qBcvJdOc=;
-        b=ktQSWEabWEh+SH2VlhixfFhx+7yhrguA/JhZKkgrKwCx2jGFYYvXIWpKTWzZd5F679
-         Klmk4f2LGnjrfmNDCZm918KrK7hksYoHfKD0806l8u/zbUWxOottI2QbSXaLPiqAl0l6
-         5qJNu4W6OmUGBVGneJ/WaGfNSsPdsgIT8A+hdCz+3mot3ENKK64+DrGqGjoL9DEpEXZj
-         w7ADCehEpP9e9/u78ng+AzYYJoCdCa5ycHP/6I4lpWJ5cVwln/HWmT/JSKR94VcHKxSR
-         b1fiOvQo7SQ6svtPX/LG/qKlxcqtfQyXMG/XxdiwIHOQTZnMgDkINqnmB7bM4g9/xJYU
-         hKvg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791812177; x=1792416977;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=mX36Oh0ldjKH64bRULghbP9zkZHVCst58P7qBcvJdOc=;
-        b=bt7hyxpeyzLuP3P2TfHOPqHQS7UfLApHHBzi6DzIIUccJJ5e7cwEDlmbfUtfAMqBov
-         MqTmRa29h7e4OfTu4LEWp5xB1bbP2pxMOqRJU5NnNF5XUjYtKRpVI9hiF3ytqlsIYoeg
-         xNn0IwMBiJKE6gmRFZmKOFQT0TFNcZKjvakm+Hky06CtyCVIkMLgA8cMcyRafk/wITal
-         yZSH4v5bCxu3PGd6Jm/CPDWZ1BarLY4/fkibw/1zpcvBz63yeIuG1UC4xRVjb86stkFQ
-         DuLyKumHCLu9XHW3dHfJnDfdgpYXkn8lhK0Si3PhZkZcFIKdqTGvu//nLrDyS39nn3dn
-         n7Zg==
-X-Forwarded-Encrypted: i=1; AKwUvByaW0t530/cTmSKgbObLc3kg6DeeqUX9erSDINFQ7gAzLRGoGKCPbCI0WQBuMbLBxNZ/hg2Al1I5vQ=@vger.kernel.org
-X-Gm-Message-State: AFq9FYInXmA+CcasvSEO6fxL7UHqgOgsbGf3l5PqPGjY6lFIw+WnlAUE
-	OKBHt1NZ+gFEIB5sazl62/YdpSeE6xPAOFziDqipkLCHQTrFnCQ6iOcURL4ZkxY/N+PXco4CTCx
-	+1dNfzxyGBiXdFxQY/JbklN7ozapPDQYx9FHGQ6JnbFirSbB49zEQ4pUNAW6/Jwk=
-X-Gm-Gg: AYBFou1wEamxCk1FDc9IJryOQVd8p4guYirehxXhAbhejcx0+ByklZY3VW8DnyVI+nO
-	dpn9vOCUUBS2Mi0FNJjLRDQdTY7fphJEA16Fm7mP84w6xiN/uTrsgscDyjiliWB/kMIrjOiF39L
-	Rr2r2y14EZ62EwyoIqjJueMaG1Pc7z/nXi7YmpAbWLNEWfiPGRpvKH0SHnTtMYutit4a65e7mOD
-	zGzA4zNcK38li/R87j/ZxaB7LCxKUpn4VQG9z7DJgZ84WJ4Amree5mcaQStoi4KeM9Zw7D5eTGi
-	s0EfTczYja6kiNJ0D/7k0mjz1sE+3ALe/9ZjI0pD1mOOZw/3lC2/4ixu6QgtXpjG/MFMemAB67V
-	Iqor1f7JNjw14qnIgQJeJiil4C1s=
-X-Received: by 2002:a05:620a:17a3:b0:93e:84e5:3c66 with SMTP id af79cd13be357-93ebd21ffd0mr1649956685a.40.1791812177488;
-        Mon, 12 Oct 2026 06:36:17 -0700 (PDT)
-X-Received: by 2002:a05:620a:17a3:b0:93e:84e5:3c66 with SMTP id af79cd13be357-93ebd21ffd0mr1649950785a.40.1791812176979;
-        Mon, 12 Oct 2026 06:36:16 -0700 (PDT)
-Received: from brgl-qcom.home ([2a01:cb1d:dc:7e00:8916:7b9b:97a2:6c96])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a19c8244edsm121124535e9.2.2026.10.12.06.36.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Oct 2026 06:36:16 -0700 (PDT)
-From: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-To: Bartosz Golaszewski <brgl@kernel.org>,
-        =?UTF-8?q?Fran=C3=A7ois=20Roux?= <franzelfranzel@gmail.com>
-Cc: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-        linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, regressions@lists.linux.dev,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v2] power: sequencing: qcom-wcn: power off WLAN at probe
-Date: Mon, 12 Oct 2026 15:36:13 +0200
-Message-ID: <179181217126.5143.7104145391205542787.b4-ty@oss.qualcomm.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261004165124.4277-1-franzelfranzel@gmail.com>
-References: <20261004165124.4277-1-franzelfranzel@gmail.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HGNUk2a6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1791815210; x=1823351210;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=z12Qpmyp8Zr5Pfg4x04b4aVI32pqADyYABjcqkZfIKw=;
+  b=HGNUk2a69ztUX1w/bP6Ket8J94n1Vj1srErptQH9DxY69dFONLK2HT7e
+   b/qu2jGTF9/lHBJLlXgPfVvgNr1cBKxQSg24EQ5gEN+DW8p1eEJfnDiw7
+   EdS8JnYvw1l8UEpErfONkeR1FXWJLuao6RH0bel+AvJNQyyz/Ivo2fSJp
+   o+PGuvBdUyn+EwZQtWvCywCAmXhnx0G4ZZiaRLI0OBAU4Blyk2d9hZjKE
+   8Dw5vk2Qc1MVZzwky32F0i7Ho2KfCv5BWpV/1iBZeeePFTGShRJH2AgU5
+   4HLIBxQ2ff9vLBJPCnfEpA/cOVpJSGXsWdOiDGQc+joTcThIUAFeaWjUE
+   A==;
+X-CSE-ConnectionGUID: 1Y/heTeUTuWU6wjg2hQaJA==
+X-CSE-MsgGUID: Dr5xBXjiRs2G+lokDSnb1g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11933"; a="537556"
+X-IronPort-AV: E=Sophos;i="6.27,153,1787036400"; 
+   d="scan'208";a="537556"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Oct 2026 07:26:49 -0700
+X-CSE-ConnectionGUID: GGFFkhVISaexfv5h7sMb6g==
+X-CSE-MsgGUID: GMHC6o5ER1aoK7lWzxiaOw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,153,1787036400"; 
+   d="scan'208";a="1229299"
+Received: from fmsmsx902.amr.corp.intel.com ([10.18.126.91])
+  by fmviesa007.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Oct 2026 07:26:49 -0700
+Received: from FMSMSX901.amr.corp.intel.com (10.18.126.90) by
+ fmsmsx902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Mon, 12 Oct 2026 07:26:49 -0700
+Received: from fmsedg902.ED.cps.intel.com (10.1.192.144) by
+ FMSMSX901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49 via Frontend Transport; Mon, 12 Oct 2026 07:26:49 -0700
+Received: from PH0PR06CU001.outbound.protection.outlook.com (40.107.208.42) by
+ edgegateway.intel.com (192.55.55.82) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Mon, 12 Oct 2026 07:26:48 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Ei1wsPIcd/ABt0wzhxla/UB1M4iw9i6Rmk6YMkCWr1Y49eBLqnS2054USp8urNz/FyWB7Y9ITksrJ2GX/PfoJ3RGqKYFHfawxq+RBwLq9iZGs3HrK3Cy4kx+AS7aUPqENDcKeWprNzcZFFyDbzy+Mp/qa74Zrzp0iPqGOOm2Hig9luiiUEIe6lzyYuCVnd2qn4avutL+XFQ3ki9u2uIunA3YaeAA4dS54O34BaKA1W3c+8IBqv/5PeEgtB6ya1f2l0ePoDNOxezofQLxwz7TPeleWBpj4QYaxUT23eKByDjRDZNrD9NHew2+ej4gZNNmNFdPhzs6ptov/b6eeXJWlg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=z12Qpmyp8Zr5Pfg4x04b4aVI32pqADyYABjcqkZfIKw=;
+ b=lkBtCsifwgjsfdH0sfRSluZwYoWAIRN02ciKZl/AI77ODTxdcmVnKxxCfoUJBwv3iAMgPvJr7LwsQPMt6bgGV1kJtVMpeVTDkHlziRbPr3PChwJCBEb4x9IqsoA2Gktlyc8WwgEqhOHolojX/JM27e1hRxWdfCcZ6n6Gq8qqFEJb5rp3uIkWUVZpjRfQeX0DUhIkIVIXHEIkkt4VLu/IOddpiGJjNo1ZwGQQKAPYpt06qD8mcCL2SgJSNGy6jAi0VZiJ3b5XJfB8NSm9f1oa6FNW0zPvjUJum7QAComarhz9GEl2xpHLgq/ZE/6dPHTIDtLgM9eI7mu2Od2x2XpteQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from LV2PR11MB6070.namprd11.prod.outlook.com (2603:10b6:408:179::22)
+ by LV1PR11MB8791.namprd11.prod.outlook.com (2603:10b6:408:2b2::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.496.20; Mon, 12 Oct
+ 2026 14:26:46 +0000
+Received: from LV2PR11MB6070.namprd11.prod.outlook.com
+ ([fe80::4c84:af62:dc60:fd9]) by LV2PR11MB6070.namprd11.prod.outlook.com
+ ([fe80::4c84:af62:dc60:fd9%5]) with mapi id 15.21.0496.020; Mon, 12 Oct 2026
+ 14:26:44 +0000
+From: "Popov, Pavel E" <pavel.e.popov@intel.com>
+To: Leon Romanovsky <leon@kernel.org>
+CC: Bjorn Helgaas <helgaas@kernel.org>, Jim Chow <jim.chow@broadcom.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>,
+	Radu Rugina <radu.rugina@broadcom.com>, Alexey Makhalov
+	<alexey.makhalov@broadcom.com>, Wei Liu <wei.liu@kernel.org>, Michael Kelley
+	<mhklinux@outlook.com>, Lukas Wunner <lukas@wunner.de>, Nathan Ciobanu
+	<nathan.d.ciobanu@linux.intel.com>, "bcm-kernel-feedback-list@broadcom.com"
+	<bcm-kernel-feedback-list@broadcom.com>, "virtualization@lists.linux.dev"
+	<virtualization@lists.linux.dev>, "linux-hyperv@vger.kernel.org"
+	<linux-hyperv@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 0/2] PCI/P2PDMA: Allow P2PDMA in VMware and Hyper-V guests
+ on Intel hosts
+Thread-Topic: [PATCH 0/2] PCI/P2PDMA: Allow P2PDMA in VMware and Hyper-V
+ guests on Intel hosts
+Thread-Index: AQHdWASZkl/0se0hWEKzOo9DW5a5oLb1bsyAgAATn4CAAAJWMIAACQKAgAAB5iCAAkgrAIACGMTQ
+Date: Mon, 12 Oct 2026 14:26:43 +0000
+Message-ID: <LV2PR11MB60708F76EB7D6E5A40E82853B29F2@LV2PR11MB6070.namprd11.prod.outlook.com>
+References: <20261009154034.82321-1-pavel.e.popov@intel.com>
+ <20261009165833.GA991924@bhelgaas> <20261009180847.GD11438@unreal>
+ <LV2PR11MB6070D3FCBC3EAED4FA0191EFB2922@LV2PR11MB6070.namprd11.prod.outlook.com>
+ <20261009184923.GE11438@unreal>
+ <LV2PR11MB60707DAD12BFBEAB681463B7B2922@LV2PR11MB6070.namprd11.prod.outlook.com>
+ <20261011054700.GF11438@unreal>
+In-Reply-To: <20261011054700.GF11438@unreal>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: LV2PR11MB6070:EE_|LV1PR11MB8791:EE_
+x-ms-office365-filtering-correlation-id: 461224f3-ecd9-4795-0775-08df286cd735
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|23010399003|1800799024|7416014|376014|366016|6133799003|10067099003|22082099003|18002099003|38070700021|11063799006|4143699003|56012099006|5023799004;
+x-microsoft-antispam-message-info: 7k2TXzaTWE0Rrj/g9qtRAmhlhskjqTpYZDEesmPxb/uCPEj+9U8y1CmVfMqQj68FWUmsdS2465bVQFM88C/rtwgxOjcPzQjvabk+wRf5ilDrmejjsIESCud8ewM/3sJKxtsaFIfsIWBOPThvBEtZRQ1HzMt8RIpfYiKTmG1s4ptbKCe0HrLvX8rWhTpJgxaH9+JqtXYtWHP/5bjroYI3aO58jqys5BSwpjBZ3cVvTN181xyp4Kq4QlVtiESKo9ya5PZZ5v6BAItWEcA//Jk5FqXw3p6bIbonJttAHsXmLlNX06ZfWJ44tbobz+h0OPBqOWDCAlxXLlu7VIuc5Hi3CAqmBpGENmNsKC3zqx5/VgUBrswFxB/fpc+muXhVKu1yyl6nqlolTOWy8/h6SFzyPfe83+z5+b6kVbbKpnPkF0lhuB4up8LeRh3kB8sysMZduP7rgEvz+ZauHJCMukCZju9/E67MSbXc76Nyh102KTkdY0Xj1SVoouT/Jqy7h94I/pmpHrmZ3SmkjbmyiI3OSG5l1ARKg/ttjo0gL0sAHIOTVqJvDIBhEACLs3PLirplW8TGOLm5tMr5ZyzC84WFyI8CLuu3vPScYB6HVuIXO5iD+nYT3Kjyct4b4kDfWsJi20PxJrQrLT7d4kqNjGZifLkijQKHOvHb/3BCN4YBamnrw6U4hjDnMyYzlZi2pDhGyrBkwlgbBpmdcyp2md8nQw==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV2PR11MB6070.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(7416014)(376014)(366016)(6133799003)(10067099003)(22082099003)(18002099003)(38070700021)(11063799006)(4143699003)(56012099006)(5023799004);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?optuB7qXM/fVma+D5wfYW31DLeYTmoIA3M39Y8lKKyjxwEftRj3H7lk/wtew?=
+ =?us-ascii?Q?8HuPPOfkDVTVwUjmCafpOxjVy5To/aJ35BW9HPRxGqwHc5myZTjy+0ucdlCP?=
+ =?us-ascii?Q?5Uqm6UmSe+l58e1K4xQ27IjDgguEyssC4vhjknfOdReBQHuEcM6rWU2l5Lqw?=
+ =?us-ascii?Q?/TLg4pgcb9sqCOAbDicCY64j+NjUqkupryCqbtgEvR+THtwudECTKwDAwrL7?=
+ =?us-ascii?Q?IInWyM6s8WCI6XJUsFqigtccjeNfVpv2QHV7yHvBIOd2zVCS+EBFSbawFY/c?=
+ =?us-ascii?Q?5360qy1I53njXniMu8OJ1zJ0PIuwoydUM0d6dLfi+uDfoJrCBi3uvNUimLab?=
+ =?us-ascii?Q?2psoezhleERZ8ix1ib25G5BTVwbM6GzJPRqWBNyPbLMZV34ZaVlE/tb6TpgY?=
+ =?us-ascii?Q?4L48FusDDIz0pgNxRNkdxCaBN15JybtEDx7uFfhYqYNlgAWdixViEwVKQX41?=
+ =?us-ascii?Q?XXtwdZq52YWhzT45FfbWDJAxD/pBtVN3FWg/Fspa0DOXiEhi0VKaj6cTPOB1?=
+ =?us-ascii?Q?mXSAO9/M7SEXKLR1O3SGTFAQDv52fR13m0ko8fhPNowOj6NzZj2tjsg2nSyO?=
+ =?us-ascii?Q?bmr+JPKyo9Cs79LvWGs4bsIHKlJMqdKdaeakOWEADU6TLZzzY37AI4ikNwq/?=
+ =?us-ascii?Q?RR5GI6KTkcC8CEZezxX8MfPmWOQd46lgr1tELH2YRQVW/FafklakA5QpEvzv?=
+ =?us-ascii?Q?oMxCszc+o3ms+eptkggpEhqU0bwXfl456uPe6Ud+I2OSy5Z5j8qcUF2+ETBx?=
+ =?us-ascii?Q?j7iEbqhWZpjfkFsYMBiN1/bhJCzbLJg2QM3HOK2GV3lMr09zAjR1JCuorR/F?=
+ =?us-ascii?Q?rA6FdrewZnn00UyLWdSZx9RD9BtBTxpzs4aNWk+KPfVHHocptN2bqKWo4I9o?=
+ =?us-ascii?Q?KXyMsv9HH31pXM9g150ZOpr0lp3lmLszWyp1qAQkBxHYU7GdNU/3PSpDOrQD?=
+ =?us-ascii?Q?GI422dhg7jJlx8jV/P6/bk6THMeyzX0R/zLnpQ10Hoqsff4CW+TTsUe3+zY6?=
+ =?us-ascii?Q?vEpc1EbAExKTRoklG5GhpZcp3SZ5yedZaINamfi/2e3q6FESCK8WgBn4a3G0?=
+ =?us-ascii?Q?laaTiyK1LaS40dfBdGuyvar2FfFENa87k4xuYZ2U/x+pbXdtWQyWpaDLnj+h?=
+ =?us-ascii?Q?NUe/UR1WC6NUNSwRv5AzYnc8wlysqsrIGqQBzEjibmg6QCKnQ7te4SnAwWbO?=
+ =?us-ascii?Q?qHX9beSckp25aAmhZGqIhoXcDIim5/APVM5gpjZNEESzQsEjHkJTMRNu6eoH?=
+ =?us-ascii?Q?+3BznQA9dO+MmofO0O3213p7+iQ6UEDB0BwCsf2Np7OsUJ1KlzXTN+XaTdA+?=
+ =?us-ascii?Q?SyxbWoKAUY3nwLzShCQdd+gH2XF2qP4xu281prgtgkBHF6h6BcmP3LQLXVuU?=
+ =?us-ascii?Q?c9UiB+WXTS9vximMuEVS4hpvyDtjOc5cFieTqPELN6wr8XRaOfo8cuyN5ABf?=
+ =?us-ascii?Q?3ShnSTVdUk6JI0vmw0xpPzJSxXbTJzKu+7dX4Qwy140Tv0O44a8M4bVmdY08?=
+ =?us-ascii?Q?mswa69WC/vu0UKfOyJ36HejrvYPbu56rKjf/ip7DxqqxO5komrMl6IDK1sHz?=
+ =?us-ascii?Q?jz/zEUkob2M6W5OffQ+UK8U0I5WT1YxJ1XvSHvd0AGbpNudu5v3RbObHj0gc?=
+ =?us-ascii?Q?3UKlQN5SK+m9njdchU4sMphkJx7c1IPWtWw9UsFM9nRloX6WZZ9dLMLifQ5a?=
+ =?us-ascii?Q?csv5GPTYbCwytLAGY+8wAgQUF+RyldBZfzrtknifv+o0yVty5CmTwFOV2TSy?=
+ =?us-ascii?Q?Q+gI+wRVPA=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: FzpF4BDUDrASuYTaW3YTFlmoMz8sHEz-
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDEyMDA1NCBTYWx0ZWRfX4YHoDAtncyLz
- Ug8QcasQMPy4jPyG0nVq50+MiJXs5tajSSTxccWXUk+5DOFyLzZrGTPGUg6fOyV955BGIHUcH3m
- ZnViysy9/78ncIdc9a0Md/a35/VD45Y=
-X-Authority-Analysis: v=2.4 cv=QtHLTlyd c=1 sm=1 tr=0 ts=6acce252 cx=c_pps
- a=hnmNkyzTK/kJ09Xio7VxxA==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22 a=VwQbUJbxAAAA:8
- a=EUspDBNiAAAA:8 a=R6-RoArAaa4DRIP8ZZgA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=PEH46H7Ffwr30OY-TuGO:22
-X-Proofpoint-GUID: FzpF4BDUDrASuYTaW3YTFlmoMz8sHEz-
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDEyMDA1NCBTYWx0ZWRfX3iirBAlEL5XZ
- 3uPQeCeUoKBjLf3E2+5Ev5WDQe1PxutxrIcYCIHBtF+KGvWOK3N21RAr5KBfhZZ0yoVOHAkiVGJ
- CkzQ+OeEKSY+D1W1IPkFHUWPs/+Io9Ia6SiNa3Ajr3XMqMtqbEzzuryjX0Lh/8vKlS/YQAy9ysP
- R1UHCOXc/ZsTwEM57Oxx3DOYEkilu+J4+CsrD8FemOprkXLjwkIerKa/+bxXUwjXN5+eCl6U9ie
- 0nXzw/4k4jrGPiU7t+zFkVbn7XYnL7fizM/a6hmfiArsHdSoqlyCAWKdcp/R73ulhWX8lUlZCpB
- /dGm7iJl6E8U//awa6E3A8JcTXck8e3i4AeyUkWtDI7IrFjfmPd2LGdyiUkcVJPYRE+JMleYpf0
- kExYezvsz3GhGsM4YtmSUz19MFtvberTiTpFdUK3AQYV4ElvWHpo/BGRk4jrKT7lDt5VIAamJO+
- xzEdA/Cu6CGBg1k4RJA==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-12_04,2026-10-09_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 malwarescore=0 bulkscore=0 clxscore=1015
- lowpriorityscore=0 suspectscore=0 impostorscore=0 phishscore=0 adultscore=0
- spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2610080000
- definitions=main-2610120054
+X-Exchange-RoutingPolicyChecked: AnQ4eTWxUsUn7yJY1To5lMz9dLmSgrzZu3ij2bQYafsPUK4FlAWcvWxzR+QkCnWWNyPqie916D86ViVyHsT5zXnPc+NurW4L9fN3UVE6rvNpmheaP3kqsvrCXH6wnjJS/5Ot6Vl/y/y2sM2oI4GkkBNq1OS17BeEsY5BJ3tm98u8Vo1g7nfq6Iuz8ZvknN1EfgUmQQHO0LOx1p2jBRFtYO8yCaEc97yp9VvOAkra7M/rsYmMaSc8gOi1SB7V1I3xDmXY61SRv/fWvJmZAlEDk96IggUMUJfEBC78aRs5bI41EKs7u1pI2YyWu8sGlOr5vP9WNGM3GSjABYBn2fZuvQ==
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: LV2PR11MB6070.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 461224f3-ecd9-4795-0775-08df286cd735
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Oct 2026 14:26:44.1770
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: veHehkaH3OsJe3SoqhC4q5JUeHx5wZ8RM43n4dX0zBqnlfqZVHEvOeLkXDFg3fKYe2GZsUwUPPHlfcJ2Ac3bOw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV1PR11MB8791
+X-OriginatorOrg: intel.com
 
+To be clear about what is at stake: this series is what enables P2PDMA
+in VMware and Hyper-V guests on Intel hosts. The assumption that the
+hypervisor can simply be fixed to emit HMAT is Linux-centric. It holds
+for KVM/QEMU, which is open source and where anyone can add HMAT support.
+ESXi and Hyper-V are proprietary, so only VMware and Microsoft can add
+it, and until they do, this series is the only path for guests on those
+hypervisors.
 
-On Sun, 04 Oct 2026 18:51:24 +0200, François Roux wrote:
-> The WLAN enable GPIO is requested with GPIOD_ASIS and then kept at its
-> current level, so that a WLAN module left powered on by the firmware is
-> not switched off. The FIXME explains why: toggling it would take the
-> PCIe link down, and the controller driver could not recover from that.
-> 
-> That reasoning held while the PCIe link was trained before the
-> sequencer probed. Since commit b921aa3f8dec ("PCI/pwrctrl: Switch to
-> pwrctrl create, power on/off, destroy APIs"), qcom_pcie_host_init()
-> powers the endpoint through pwrctrl before it starts link training, and
-> defers until the pwrctrl driver is bound. That driver cannot bind
-> before this sequencer has probed. Power-on therefore always comes
-> before link training, and keeping the firmware state is now harmful.
-> 
-> [...]
+> This does not change the fact that the patch causes unpredictable
+> behavior for P2P devices in the guest. Sometimes it works; other times,
+> devices that previously worked may be classified as P2P-capable and
+> will stop.
 
-Applied, thanks!
+Nothing "previously worked" here. Before this patch, P2PDMA was refused
+for every passthrough device pair in VMware and Hyper-V guests on Intel
+hosts, except Intel QAT/DSA/IAA, whose own Device IDs happen to be in
+the allowlist. Those keep working unchanged, so there is no working
+configuration that could regress. And the check is deterministic: it
+depends on the CPU model and the hypervisor type, nothing else. The same
+guest on the same host gets the same answer every time.
 
-[1/1] power: sequencing: qcom-wcn: power off WLAN at probe
-      https://git.kernel.org/brgl/c/dbd674ccf30f66f5eccf637964a93910df8dbf84
+> Help Lukas and Mahesh succeed in their work.
 
-Best regards,
--- 
-Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+I'd like to, but the blocker for guests is on the hypervisor side. A
+guest only benefits from HMAT once ESXi or Hyper-V emits it, and that is
+VMware's and Microsoft's code, outside the control of Intel or the kernel
+community. The kernel cannot make them ship it; what it can do is provide
+this fallback. When your HMAT-based detection lands, it should be
+consulted first and this check only when no HMAT is present, so on any
+hypervisor that emits HMAT your code is what runs and this one is never
+reached.
+
+> -----Original Message-----
+> From: Leon Romanovsky <leon@kernel.org>
+> Sent: Saturday, October 10, 2026 10:47 PM
+> To: Popov, Pavel E <pavel.e.popov@intel.com>
+> Cc: Bjorn Helgaas <helgaas@kernel.org>; Jim Chow <jim.chow@broadcom.com>;
+> Bjorn Helgaas <bhelgaas@google.com>; Logan Gunthorpe
+> <logang@deltatee.com>; Radu Rugina <radu.rugina@broadcom.com>; Alexey
+> Makhalov <alexey.makhalov@broadcom.com>; Wei Liu <wei.liu@kernel.org>;
+> Michael Kelley <mhklinux@outlook.com>; Lukas Wunner <lukas@wunner.de>;
+> Nathan Ciobanu <nathan.d.ciobanu@linux.intel.com>; bcm-kernel-feedback-
+> list@broadcom.com; virtualization@lists.linux.dev; linux-hyperv@vger.kern=
+el.org;
+> linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: Re: [PATCH 0/2] PCI/P2PDMA: Allow P2PDMA in VMware and Hyper-V
+> guests on Intel hosts
+>=20
+> On Fri, Oct 09, 2026 at 07:13:31PM +0000, Popov, Pavel E wrote:
+> > Leon,
+> >
+> > Understood on all points, and I agree HMAT is the proper fix. We
+> > discussed it with Lukas Wunner as well. Exposing HMAT is on the
+> > hypervisor side; Jim Chow from VMware can speak to their plans. Even
+> > once HMAT lands in Linux, it only helps guests after the hypervisors ad=
+d support
+> for it.
+> >
+> > The key point for us is that today there is no path at all for
+> > passthrough devices on VMware or Hyper-V, and that is what this patch
+> > addresses. We reviewed it with VMware and aligned on this approach for
+> > the guest in the meantime.
+>=20
+> This does not change the fact that the patch causes unpredictable behavio=
+r for
+> P2P devices in the guest. Sometimes it works; other times, devices that p=
+reviously
+> worked may be classified as P2P-capable and will stop.
+>=20
+> >
+> > Is there anything you would recommend to make the series acceptable as
+> > an interim?
+>=20
+> Help Lukas and Mahesh succeed in their work.
+>=20
+> Thanks
