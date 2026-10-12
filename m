@@ -1,86 +1,91 @@
-Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04D09492187
-	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 14:48:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97B2249158B;
+	Mon, 12 Oct 2026 14:50:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791816519; cv=none; b=K96KFWH5TUaFizyT+8EJx5nOg0RNaCZsG7bzV4uPYSP5+g4uFpmfrdPYo1thhQ0iSX1no+T3Ti9rdqucctDH4dEcMvXwPbEEnHqp+EyMY6SH2wccp0fvhr9zPYmAdklpaMSeN4uuL9Fl5UwsACrIBOpk2x+EcyCBeFiesU0MqaQ=
+	t=1791816645; cv=none; b=cUu7a9861PR379syi6hu8MJw4UCFfZN4PIntXGRxdBkz6IRTsMdIVDoZBjnRc94dENuxQ7JcdxIZMyeEMq8BMO5apP6HmH6TW7zw2ExPfdl7TNKmBaG6ZTb8UAjEyasvXCJrHDMn2G0M+7ML4EurtCsUdcybgJQogVJMA1d/+GA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791816519; c=relaxed/simple;
-	bh=PMfChKFNMXJzKzjmxiF7G9lPkPYxthEBjqQbKUTksMA=;
+	s=arc-20240116; t=1791816645; c=relaxed/simple;
+	bh=9/a4GtDSJgIKnq+PHDcdGLyfvIsIi6jNZ2Wj3gemz9U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=s1pQ1hYhpV69Lq58kSuoEgoQyeIhq7sxUZeI8yIuK29mStKgN2iJHc3a8rbR8fZyCxMUm3t/E7Y2Q7zHtHGtvsEDgDFLAnJHNpU+BACPkqjie8zUdQAfEOaEyFGbCqRHcmmXrivTPmTZREK1jKSCdwjegeq+9URQI4t4hOzQ0qI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=a18EyQSR; arc=none smtp.client-ip=209.85.160.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	 Content-Type:Content-Disposition:In-Reply-To; b=NQzhjjs5dshyYTqcKmBbGUOtDapLHBDy+1+EgM59CJuAGD/Hl+8cA3nu8k1fCWJSahQ4BjiTcVWHfFmgvK/NR7MUgeTmYKjQqsFfpNtgpcfn7hANiWH3388yW4ZJ7nMFL7kPPWn06pw9JoLddgUNhh5sPZc4XjPs8lKa461pnIM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IEgrSBYa; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="a18EyQSR"
-Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-53391022dc0so23034751cf.2
-        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 07:48:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1791816517; x=1792421317; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=PMfChKFNMXJzKzjmxiF7G9lPkPYxthEBjqQbKUTksMA=;
-        b=a18EyQSRv8P0iZVz2cFyE4nGgHoZsQEXyx8UJuHZjpdM+7Qf5SQhhP2xNWAH0VYzQf
-         /hoTlApssge3VsQ/ughGQGY0EAl62gOiNulQUtPZtIib5tqYAnuOwBaIFP2jom9NqxZs
-         Js7D3KhLF4ajJ3qghgQYaFLUYxdFUOYcU8NGDBSHwvQLHuHt9cmGCYRlNuetRRfZ8cBx
-         q41L4B7/xbYzABJqwB1ksDueQgP+fEt/7CCxbNCqmetPUJk8paMF210jlmlyzh2TH+i0
-         IYmXPXhqQploSSM8bOgX4etNpNXQAiPb3ki2WHim7bolH4+nLgdpLKyQW/5qIdwwO02t
-         h5Wg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791816517; x=1792421317;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=PMfChKFNMXJzKzjmxiF7G9lPkPYxthEBjqQbKUTksMA=;
-        b=xXpfhgfQb6/p5SmaZ4CIQwWBdJe5YYmmANnml/Dmq6zcI1OcZJ+hUHM07iaE20ZerA
-         5uSjrT/VtuJDGd7yosPfJn+cUBW43f4uFVfpID7yyzUAoLNxpFZopZxeBIgSVGOGxPXb
-         MubP3Mzd8nFRkSxjTchkYSL+KhtSf03ZgNypwwIB8HR6/huV9pu3hm8mGEY0ms39dFNu
-         F7XRN0se63Jp2kIsELOonubuKa8dxr8i1c7GY5oEYHpmh2xp45XsUMTssF/k0j86NlE+
-         6zdxjCmX/ZQkAGew3qY0RBDQe9izP+7uZGtWz5Bp/3CDMiRTZekPUs4VjtiQJwlviIDr
-         1y6w==
-X-Forwarded-Encrypted: i=1; AKwUvBxN2uQ9Z3GpN+JsJbuTVI6qaL7TOxYHyKR6v1E5QuLLZ8ra1eJRZl+SEIQwVQILYzoqJTWPOja3IfQ=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLwur/qATs1yrdpmzhZFEibcv+n1HOUc/TThm2NcUDxW9NKKEFo
-	099DvdPXzxFeYWE7do+pznVJm6MLd3LimSIHNsc5ccLV8VmMb8a+1zcOeTYQYw/I0x1MxBoMfdi
-	0nxvw
-X-Gm-Gg: AYBFou17Fzh9BEovb2jqGAmTJImKyF34OKW0IzCaGGfDF+9qhZH5E7sVW9KzvvTP1a3
-	JA3s7Rj+dXpgiK6NsG4f737MCdGJWYFX4bOW9/2FwNOpu+5/FLb/ajTXy/qRQpnv8QFxFqB0+ZL
-	yEObglzDASt8qBQvUleA/agCWCzL1OMm8C2BfVMca8ioA/m2a8l3y7WpiHMP642ad/byaAz+JCT
-	ksgZCAAXZcd+T50BxUJt7DLgDQtzumKPoElcSoG5mv4ry0WnfPw/yk/SXR2xPX56JysHZcbFnr1
-	4+94zlbNQ7Q9Gr+zTGg876KsnWjnUIy/swCwRJtuMBfNvAFMvowRSmwHyV2XA4+a7dh9JVBywNN
-	yiNNtV5NsE1qoT0RcfOR/kd2cKcpcEuhHBrNhIrRxC4du/0hltmSYFjhtnaOs4OF0IjchtNjrxP
-	OkDlL8NecYkMfLCh/yX10yow1eROmCq88vUeLP9rf5W9z1s9KaaHsgeuAhZWwJHuv2R3+IF6R+8
-	XYWsrlpXhEk0KWdBUqSjQhEmOUqqnsK4kB9/uBSMA==
-X-Received: by 2002:a05:622a:4d93:b0:534:b7d1:cd1c with SMTP id d75a77b69052e-5359f498f75mr175097251cf.8.1791816516771;
-        Mon, 12 Oct 2026 07:48:36 -0700 (PDT)
-Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5359b6fa173sm80625631cf.7.2026.10.12.07.48.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Oct 2026 07:48:36 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xGHKN-00000006Snm-0vE4;
-	Mon, 12 Oct 2026 11:48:35 -0300
-Date: Mon, 12 Oct 2026 11:48:35 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Cc: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, alex@shazbot.org,
-	bhelgaas@google.com, jjohnson@kernel.org, johannes@sipsolutions.net,
-	mani@kernel.org, yishaih@nvidia.com, skolothumtho@nvidia.com,
-	kevin.tian@intel.com, linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org, ath12k@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
-	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
-Subject: Re: [PATCH v2 0/7] Enable Qualcomm WiFi PCIe passthrough to VMs
-Message-ID: <20261012144835.GG14213@ziepe.ca>
-References: <20261011074514.515894-1-jtornosm@redhat.com>
- <b1a3f755-19e3-407e-b8f8-b494de83f59a@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IEgrSBYa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B89281F0089C;
+	Mon, 12 Oct 2026 14:50:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791816644;
+	bh=OnMHe5dXcqTc5v2OsRfJDhhba3wwXmp+sAVt9h94tR0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=IEgrSBYa/Cu+FGu4IXUohks7fiOVrMl9oGd+cC+cRLt9nk90c/LtRrC7OsVEzeL+p
+	 3oGtXt1PSVmvO5piuRlp/6/wWGZgVS/9tgDt2GlrT1yLGtZCgprfX93EN3Ctk40gQj
+	 B0gEsbCNQ/nES4hllcCOWhff8viaq8woPbX/YMeq8ZoVVrLgAKt5zPw3+OEl8TJXMa
+	 vdQv/eWb5ff8mPSpM2gucGm944UHJCgoZbKtScc430qd+bC2IWX4Exa3pqzRvNoVpq
+	 Ny1cW9DMGtkImCRHkpesBAHqEJtQgy3WyGjXPcKeabIAO+GKxLgFYRdIH/uJstc87H
+	 4QtB/XrJFdb+g==
+Received: from phl-compute-03.internal (phl-compute-03.internal [10.202.2.43])
+	by mailfauth.phl.internal (Postfix) with ESMTP id D38D1F40068;
+	Mon, 12 Oct 2026 10:50:42 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-03.internal (MEProxy); Mon, 12 Oct 2026 10:50:42 -0400
+X-ME-Sender: <xms:wvPMalFsBQ5YGdMWYxVa6QIC6pwu3hgFyIeNuTALRvJVjxkuyrJgrA>
+    <xme:wvPMah08Q6gQDvvS_7OH7WF3E-VxJwfYsa7kzUjbYoObG75N-J8-N8gjS0ylYmABP
+    J6suPrHXr9eQRiGx90oUzkKsCDqM2sha2vMa_8PX93FSFocl8aEF6qa>
+X-ME-Received: <xmr:wvPMatO8AidNv5JLhkEME9vBnyml-fYf5xZ1-1IBKx_4wZqV6Ia58fxStaN3l1NaItcQBHsv6Ym7OlC7jKb1Y7v8kGnsn-I5>
+X-ME-Proxy-Cause: dmFkZTEJ5fBHj3ZE/whec/dIgXoSMWDPDe2NuyMizwmDQk/pueXv6evpgNyw+I0Gh43Blh
+    I4M5VA/i04E9vIzksBOxpmPwjlx+0vm2O2jxHpWuotQr4QwBx4yhEnwv+0mco2N3V4OfBV
+    OPWz8IZGDF95dze9i4BTU4aBJuuvecc9JQNmYbcrkJYmmm2ClQQ3sraLBQA48WMMkX2d6a
+    J0KuEGF9necxhBEPOwCVcnIMeQQXK8Q2sowCEW3buLPpNvH32Mi72AamY9MoCuq5ox2Zrs
+    MDPWJl7tyMKyQshVplGIwG5Apx3g9vll4Gq1dBpJIZqoEEBS4rAkzG6cfbcufE4f2KcVk7
+    Zldf/7Kd7FSM2K/X12Ueg4V8KTDSIeTVmkjFYSh40aNl+drp/RQHzR/AbMpyOI7AN48Dn5
+    zH4HoZyu87c1wq+Y52RNHFKEgu3BKA4aaVkvCaC1NmvW1My6uL3L1OajS9q1eJp6Onbm/8
+    wqi8sXsjwUXzOLGULteWtBfJHnbrQEcPxJgZnfai6Kz95WKBchi2w1DApgvxyq+AjhF0A2
+    NjJheitzwRdMC9fMKeMfivLmvjcD+Og8yohp36aa+GUjkPUGfCsjvefBaaPWRPz/9rfruZ
+    puexGXL6DWvqgTblOIa7An7ElJgeYcZtJ8Sm9i7JFqx9PmkCQoovNTsKqjdQ
+X-ME-Proxy: <xmx:wvPMapIBBW5SbsC8JiFGzTK9dBpoP3MaYgptSA_ZmlQzS7DSbICuJA>
+    <xmx:wvPMama40GNRYSWZsOkXRKP0DT6q_gKHQraof0tpCyyvjS2ck3tBxQ>
+    <xmx:wvPMaql6tbQoRjHODBnohohMXHzjeuOJWUYE20iP2pkD8B5lsZ4hpQ>
+    <xmx:wvPMahb6_4NO-FoZFtW8IZotsYU3HyFaCC9jtCEZiOae-PtwWh7qaw>
+    <xmx:wvPMaiDDQEs0VWbkA0JfY8yhf0_bYuH6TfAhV4b8rB53QiAr4lbZ8GIy>
+Feedback-ID: i8dbe485b:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 12 Oct 2026 10:50:41 -0400 (EDT)
+Date: Mon, 12 Oct 2026 07:50:40 -0700
+From: Boqun Feng <boqun@kernel.org>
+To: Markus Probst <markus.probst@posteo.de>
+Cc: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Dave Ertman <david.m.ertman@intel.com>,
+	Leon Romanovsky <leon@kernel.org>, Miguel Ojeda <ojeda@kernel.org>,
+	Alex Gaynor <alex.gaynor@gmail.com>, Gary Guo <gary@garyguo.net>,
+	=?iso-8859-1?Q?Bj=F6rn?= Roy Baron <bjorn3_gh@protonmail.com>,
+	Benno Lossin <lossin@kernel.org>,
+	Andreas Hindborg <a.hindborg@kernel.org>,
+	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
+	Danilo Krummrich <dakr@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof =?iso-8859-1?Q?Wilczy=B4nski?= <kwilczynski@kernel.org>,
+	Daniel Almeida <daniel.almeida@collabora.com>,
+	Tamir Duberstein <tamird@kernel.org>,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Onur =?iso-8859-1?Q?=D6zkan?= <work@onurozkan.dev>,
+	Ira Weiny <iweiny@kernel.org>, rust-for-linux@vger.kernel.org,
+	linux-leds@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: leds: KCSAN report
+Message-ID: <aszzwEPkfPjAYNLQ@tardis.local>
+References: <20260930-rust_leds-v26-0-83837331020e@posteo.de>
+ <20260930-rust_leds-v26-3-83837331020e@posteo.de>
+ <ask31EX01lSL9QJ9@tardis.local>
+ <81e1aa92ebc389468eb6f493393a1c58a79373e7.camel@posteo.de>
+ <aslB3lFUKpMEWOiM@tardis.local>
+ <7174e1f95dcbeb8802d9e9c9715afa32784f0c20.camel@posteo.de>
+ <aslJ1ISONL9ojP-3@tardis.local>
+ <1c414e776b56ae215d2d07b73a384ed4542c963e.camel@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -89,17 +94,217 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b1a3f755-19e3-407e-b8f8-b494de83f59a@oss.qualcomm.com>
+In-Reply-To: <1c414e776b56ae215d2d07b73a384ed4542c963e.camel@posteo.de>
 
-On Sun, Oct 11, 2026 at 11:22:26AM -0700, Jeff Johnson wrote:
+On Fri, Oct 09, 2026 at 10:11:20PM +0000, Markus Probst wrote:
+> On Fri, 2026-10-09 at 13:08 -0700, Boqun Feng wrote:
+> > On Fri, Oct 09, 2026 at 07:59:02PM +0000, Markus Probst wrote:
+> > [..]
+> > > > > > > +/// The multicolor sub led info representation.
+> > > > > > > +///
+> > > > > > > +/// This structure represents the Rust abstraction for a C `struct mc_subled`.
+> > > > > > > +#[repr(C)]
+> > > > > > > +#[derive(Debug)]
+> > > > > > > +#[non_exhaustive]
+> > > > > > > +pub struct MultiColorSubLed {
+> > > > > > > +    /// The color of the sub led
+> > > > > > > +    pub color: Color,
+> > > > > > > +    brightness: UnsafeCell<u32>,
+> > > > > > > +    intensity: UnsafeCell<u32>,
+> > > > > > 
+> > > > > > These should be `Atomic<u32>`, or am I missing something here? Using
+> > > > > > `Atomic<u32>` should resolve sashiko's comment on this patch.
+> > > > > Snippet of the `Atomic::from_ptr` rustdoc:
+> > > > > 
+> > > > > "
+> > > > > For the duration of 'a, other accesses to *ptr must not cause data
+> > > > > races (defined by LKMM) against atomic operations on the returned
+> > > > > reference. Note that if all other accesses are atomic, then this safety
+> > > > > requirement is trivially fulfilled.
+> > > > > "
+> > > > > 
+> > > > > This safety requirement is likely not met if I see this correctly,
+> > > > > because the led subsystem does not use atomic accesses.
+> > > > > 
+> > > > 
+> > > > Then the C side has a data race that needs some fix (or they use
+> > > > READ_ONCE() or WRITE_ONCE() which are *atomic* to avoid the data race).
+> > > They don't use READ_ONCE or WRITE_ONCE.
+> > > 
+> > > Writes to "intensity" can happen at anytime by `multi_intensity_store`.
+> > > It does lock the `led_access` mutex on write. It is not locked on read
+> > > and `grep "READ_ONCE" -r drivers/leds/` has no matches in drivers
+> > > either.
+> > > 
+> > 
+> > I wonder whether KCSAN will report an issue of this (w/o
+> > CONFIG_KCSAN_ASSUME_PLAIN_WRITES_ATOMIC).
+> First of all, thats a pretty noticable performance impact on desktop
+> here. Gotta recompile my kernel very soon.
+> 
 
-> Thank you for providing this level of detail in your cover letter. I've raised
-> this issue with the engineering team in the past, but I've once again raised
-> the issue with your in-depth analysis.
+:) Yes, but it helps find data races. In general, it should run in a
+test environment.
 
-The main issue here is the driver can't use a normal MSI-X in the
-normal MSI-X table.
+> Second of all, it does.
+> (Also like every second reports with something else, e.g. vfs, tty,
+> _find_next_bit, btrfs and more).
+> 
+> Reproduced with:
+> - Software to write random values to "multi_intensity":
+> https://gist.github.com/0xIO32/2ec10e7521fc80e96f700e1f6fe219c4
+> - Self-written low-quality multicolor led driver (to not overload real
+> led hardware for this test)
+> https://gist.github.com/0xIO32/1b46b8965a9d52f6e3ec5355c1f054a7
+> - the timer led trigger with delay_on = 1 and delay_off = 1 has been
+> enabled, so there is concurrent access.
+> 
+> Tainted because nvidia drivers, external module: v4l2loopback.
+> Gentoo Kernel, running on desktop. Its on 6.18, but as far as I know,
+> this logic hasn't changed (and fixed would be backported).
+> 
 
-"private" MSI registers don't work for virtualization.
+Right, so generally, this data races should be fixed (via marked
+accesses [1]). See also [2].
 
-Jason
+In practice whether these need to be fixed usually depends on the
+maintainers, and back to my original point, we should at least make Rust
+side "data race free" if C side can be treated as "data race free".
+
+[1]: tools/memory-model/Documentation/access-marking.txt
+[2]: tools/memory-model/Documentation/explanation.txt (Section 25. PLAIN
+     ACCESS AND DATA RACES).
+
+Regards,
+Boqun
+
+> [  273.080793] Reported by Kernel Concurrency Sanitizer on:
+> [  273.080805] CPU: 1 UID: 0 PID: 4070 Comm: write_intensity Tainted: P
+> O        6.18.54 #1 PREEMPT(lazy)
+> [  273.080826] Tainted: [P]=PROPRIETARY_MODULE, [O]=OOT_MODULE
+> [  273.080836] Hardware name: Micro-Star International Co., Ltd. MS-
+> 7C56/MPG B550 GAMING PLUS (MS-7C56), BIOS 1.K0 09/02/2025
+> [  273.080847]
+> ==================================================================
+> [  275.913835]
+> ==================================================================
+> [  275.913855] BUG: KCSAN: data-race in led_mc_calc_color_components /
+> multi_intensity_store
+> 
+> [  275.913883] write to 0xffff8a84e71d1c70 of 4 bytes by task 4067 on
+> cpu 8:
+> [  275.913896]  multi_intensity_store+0x1a4/0x2b0
+> [  275.913912]  dev_attr_store+0x41/0x60
+> [  275.913931]  sysfs_kf_write+0x192/0x1d0
+> [  275.913948]  kernfs_fop_write_iter+0x1cb/0x400
+> [  275.913964]  vfs_write+0x5ad/0x650
+> [  275.913977]  __x64_sys_pwrite64+0xaf/0x100
+> [  275.913992]  x64_sys_call+0x206c/0x24c0
+> [  275.914006]  do_syscall_64+0x89/0x390
+> [  275.914022]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> 
+> [  275.914043] read to 0xffff8a84e71d1c70 of 4 bytes by interrupt on
+> cpu 3:
+> [  275.914056]  led_mc_calc_color_components+0x87/0xf0
+> [  275.914072]  led_set_brightness_nopm+0x2f/0xd0
+> [  275.914093]  led_timer_function+0x1f5/0x2c0
+> [  275.914106]  call_timer_fn+0x32/0x1e0
+> [  275.914126]  __run_timer_base+0x7b3/0x980
+> [  275.914146]  run_timer_softirq+0x31/0x60
+> [  275.914166]  handle_softirqs+0x157/0x400
+> [  275.914181]  __irq_exit_rcu+0xb9/0x200
+> [  275.914195]  sysvec_apic_timer_interrupt+0x7a/0x90
+> [  275.914212]  asm_sysvec_apic_timer_interrupt+0x1a/0x20
+> [  275.914228]  osq_lock+0x121/0x260
+> [  275.914246]  __mutex_lock+0x172/0xf70
+> [  275.914261]  __mutex_lock_slowpath+0xf/0x20
+> [  275.914278]  mutex_lock+0x9f/0xb0
+> [  275.914293]  kernfs_fop_write_iter+0x11b/0x400
+> [  275.914310]  vfs_write+0x5ad/0x650
+> [  275.914322]  __x64_sys_pwrite64+0xaf/0x100
+> [  275.914337]  x64_sys_call+0x206c/0x24c0
+> [  275.914351]  do_syscall_64+0x89/0x390
+> [  275.914367]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> 
+> [  275.914389] value changed: 0x000000f8 -> 0x00000034
+> 
+> Thanks
+> - Markus Probst
+> 
+> > 
+> > > Writes to "brightness" are on the C-side handled by the driver by
+> > > calling `led_mc_calc_color_components`. This rust abstraction always
+> > > calles it in `brightness_set_callback`. So on the C-side, this at least
+> > > is less of an issue, as writes and reads are controlled by the C
+> > > driver.
+> > > 
+> > 
+> > Thank you for taking a look into this.
+> > 
+> > > > 
+> > > > The general rule is: if C side has a data race, they should fix it, if C
+> > > > side doesn't care ("the compiler should not data race on this code"),
+> > > > then the Rust side treat it as atomic operations. This is the only way
+> > > > to better code regarding data races.
+> > > It probably should use WRITE_ONCE and READ_ONCE, but it also shouldn't
+> > > create any issues if its not used. There is no load tearing on a 32-bit
+> > > integer and memory ordering is not required. Not sure if its worth the
+> > 
+> > I think some people would disagree with you on "no load tearing"
+> > (because data race = UB = anything can happen), but..
+> > 
+> > > trouble changing every existing multicolor led driver.
+> > > 
+> > 
+> > I agree it's probably not worth doing this at the moment.
+> > 
+> > > > 
+> > > > > Ofc, this function won't be used, but I think given that the same
+> > > > > struct is also accessed by the C-side, it should also apply here.
+> > > > > 
+> > > > > Like Sashiko suggests, "core::ptr::read_volatile()" might be a better
+> > > > > option to prevent certain compiler optimizations.
+> > > > > 
+> > > > 
+> > > > No, please don't over-use read_volatile(). The reason that READ_ONCE()
+> > > > and WRITE_ONCE() are safe to use for synchronization is because
+> > > > semantics-wise they are atomic on certain types (if aligned), and the
+> > > > them being volatile is just an implementation detail.
+> > > Ok.
+> > > 
+> > > I will need to make .get_mut() const for this.
+> > > 
+> > 
+> > Sounds good to me.
+> > 
+> > Regards,
+> > Boqun
+> > 
+> > > > 
+> > > > Regards,
+> > > > Boqun
+> > > 
+> > > Thanks
+> > > - Markus Probst
+> > > 
+> > > > 
+> > > > > Thanks
+> > > > > - Markus Probst
+> > > > > 
+> > > > > > 
+> > > > > > Regards,
+> > > > > > Boqun
+> > > > > > 
+> > > > > > > +    /// The maximum supported intensity value.
+> > > > > > > +    ///
+> > > > > > > +    /// If None the maximum intensity equals to [`LedOps::MAX_BRIGHTNESS`].
+> > > > > > > +    pub max_intensity: Option<NonZero<u32>>,
+> > > > > > > +    /// Arbitrary data for the driver to store.
+> > > > > > > +    pub channel: u32,
+> > > > > > > +}
+> > > > > > > +
+> > > > > > [...]
+> > > > 
+> > 
+
+
