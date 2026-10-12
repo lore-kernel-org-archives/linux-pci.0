@@ -1,250 +1,298 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013043.outbound.protection.outlook.com [40.107.159.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92D963BF68D;
-	Mon, 12 Oct 2026 18:57:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.43
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791831455; cv=fail; b=SlOacJdYUE+xU3EHD4DxhOAXmGSDULJmLtifRjSc4Mbc763HsF5OPKOYycuiFNTeFcNgG2e/mQvDnn5mQKAJmxPHjrnPOxhVUWG5pl/PaHHAlhxJzTDuFjHx5Fs13pXFeOITxs2RpKspdZb21lP8i9zkGhd1mZjZogBxLIsdDag=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791831455; c=relaxed/simple;
-	bh=8aoBkvC24CFew4jkVYtaxQ7pkDPT0SkCRtFBARGQ/Q8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=LzshR9WGKL8YpHgSuToJlAqcuVo/1V0FLQZ5qfi59UAhVhUmqbZxIRk2GDLG18F/Dao/Yyyh9VfAzh0EcPCe2sgI0O5dffVT4hsBNDWkd+tL+3IKrHumu9AXcn3jGFDdRCX1TKvoy7FH4+tKeWY7h8zftYjD0mpUofUDX5Ixk1I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=dF61N3eR; arc=fail smtp.client-ip=40.107.159.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72A53374E5A
+	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 18:59:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791831580; cv=none; b=G4x8K3nM+z8X6SQuaTHfrmdZUtvuwQ/26lQEQ5e1Bc5N22pmf1Tkf4MhXalnUsIOlmcCfuMKviiHee0gMjDKSry8RjZ1svOAj6fmH9UVYO3Fwb8hTG6LV+CqIDUduc+bPj/iVLgKLpKYfJxpPFZpw97klZx4ENp6Vcwdt9OfdMU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791831580; c=relaxed/simple;
+	bh=6DqW02/vrz8bXpSLRnxcsXZWEoAOlr9DZIU8XTfUZjE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rBb7SAKYdoiEcXVboqEYIhzcKiAVXP/EG4Pv2QFM59wlxGwH77ccq9SwlVJRS4m+MPS9hmejBMTnuL02VbUulC/Q+HPIjTGMxGOuK54b3HoOEIValbTNCy/bfNSsdA0P5pGYrDmviD1ey0wBm+LpKZcWCvOIONRAGs1du0j9+ZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=tKMRA9KV; arc=none smtp.client-ip=209.85.221.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="dF61N3eR"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=rIaTUUMzonHDVLr0Oz4B9SCJGx54mYUIoIzmH3EC0gcCfid65d3EZxtxPcNQOQlHn5s9f6PuZhcddnz4K3GwmbxPfLEUOgfKpC0wCWNJgZTfgPXMk/1U53EL2wCoy2QoD7DhlEGZP8Q3MLe/0hmHZNLl+WdLQnxk3vKInuUJwCJTkLGqGE9TyT53s9lSRCB1BHmERs415zbOwguNuRHjrgzV4gg8uOnMpV//RZPSwLLgY5iXpIzXJ8irW0G5COt0bPL1foSzey2MB7HwODfBWd46jQoyIXpxda0PhEXC+KvGJNGJ+vm9APGKkAGQQYBtvrj9ysK7I6bBsZuIOjgnhw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=XoNllUW7CTk+++4zMr3EcYbkhL9HNDNyLR8lS4lh4Qc=;
- b=vuQaIK10U4EFvaKbkab8v2bMMiksYD4t9AUnVDbIDa4QV4nHd5+2s10jdNL9s+dsQauRTIFUrYfEIlr63YHK9Ee5LY/IRGgsVejFZ/88pazizB9ZOP1acU5ro8Mbhc0R9J9F7uYeDYdfc90APwZNkP4AuqMeT0vSh6TJ6yJRsaF5S/0Z/PjJZZiR6h1f8c7GOVhkbtjgbwCWzqphqnhjgG6K7eUzTI6vJ/wj7gok2RZqXyuRj8byS2nPJRymaVhM9RZfFwFt2GOGVbkxHXdHMzKTMzy85+8lQ6YX1DNoJhjaBSjnIv390MDds/VE9bo1MXn2URGNyZuKm+uuEDx++Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XoNllUW7CTk+++4zMr3EcYbkhL9HNDNyLR8lS4lh4Qc=;
- b=dF61N3eRvq1SHMJ8g/sPbCjMXH4vBs2EjvLKoQHD3CTxZJ4ErRv7KCdqDbNOxrVsmm/OlL6CXW6DXfOWTMXoEayJqqztUs78Tb4tFf90TJLcchRilSfpN4Lgk120CCDS5YTdbAca3deXgrxDx6enzlxMgG2AbvJ23BDEBoV0UZIcC48sObVGVRQFLDjy9oEDsI2KIaclwxFqgVowkif0b54+M+jTt7Q6zxROECx/gxvgDBvlLmDl56mphBeV8ewqTXDNjXzsJPB5IpNqIiIa7Jme6u7FErHw+2ld25z1/nJoSStIcsUy4mDGL6KFvuem64EiQUTy3WJ4PuF03SEP4w==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by GVXPR04MB12127.eurprd04.prod.outlook.com (2603:10a6:150:313::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.496.23; Mon, 12 Oct
- 2026 18:57:29 +0000
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0496.021; Mon, 12 Oct 2026
- 18:57:28 +0000
-Date: Mon, 12 Oct 2026 13:57:13 -0500
-From: Frank Li <Frank.li@oss.nxp.com>
-To: jan.petrous@oss.nxp.com
-Cc: Ciprian Marian Costea <ciprianmarian.costea@oss.nxp.com>,
-	NXP S32 Linux Team <s32@nxp.com>, Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ghennadi Procopciuc <ghennadi.procopciuc@nxp.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bogdan Hamciuc <bogdan.hamciuc@nxp.com>,
-	Ionut Vicovan <ionut.vicovan@nxp.com>, Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Clark Wang <xiaoning.wang@nxp.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Maxime Chevallier <maxime.chevallier@bootlin.com>,
-	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-	Alexandre Torgue <alexandre.torgue@foss.st.com>,
-	Chester Lin <chester62515@gmail.com>,
-	Matthias Brugger <mbrugger@suse.com>,
-	Ghennadi Procopciuc <ghennadi.procopciuc@oss.nxp.com>,
-	Frank Li <Frank.Li@nxp.com>, Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>,
-	Richard Cochran <richardcochran@gmail.com>,
-	linux-arm-kernel@lists.infradead.org, linux-phy@lists.infradead.org,
-	netdev@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-	imx@lists.linux.dev, linux-pci@vger.kernel.org,
-	linux-stm32@st-md-mailman.stormreply.com,
-	Vincent Guittot <vincent.guittot@linaro.org>
-Subject: Re: [PATCH RFC v3 01/12] dt-bindings: phy: Add NXP S32G SerDes
- subsystem
-Message-ID: <as0tiQwquNkdlF2i@SMW015318>
-References: <20260919-s32g_serdes-v3-0-9d68868c1e89@oss.nxp.com>
- <20260919-s32g_serdes-v3-1-9d68868c1e89@oss.nxp.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260919-s32g_serdes-v3-1-9d68868c1e89@oss.nxp.com>
-X-ClientProxiedBy: PH8PR07CA0008.namprd07.prod.outlook.com
- (2603:10b6:510:2cd::16) To GV2PR04MB11799.eurprd04.prod.outlook.com
- (2603:10a6:150:2cf::9)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tKMRA9KV"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-48b0946c2c2so1296509f8f.3
+        for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 11:59:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791831577; x=1792436377; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=YHE/SGYcUV1OUJwt26eXa2xg6GrIMfRUdwuOqUARZ48=;
+        b=tKMRA9KVzRCfYNOibrHGh0+62a7kiumAJSR9nEkip9vs4xBojbGRqOqGwQBCzE/Hw+
+         VwmhKWf7Z6do0Eq04RkfCAG+F3iXyDVxsVGeBnX/M4F/ghs7sKTEDXpMFv4Cjet69V8H
+         QV+FhLekqX571S+3Pf3K86/QulCQGm6FhzTQGisqRvoB4RXvE3qvUc/I9osPhCzrMBPk
+         k6jg83Z7yQcV52gpzDO5D/cL4F88ex8jtvtSZSt7oxt9esv87BGKIoCIwYQdAhu91SzJ
+         SMVkhusU7Ce1kUcSOUAOE5QEqN4lBQdjXv+Gjnd7i3wHbRve/q60eoHBZxdQAanaMvkf
+         bm4w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791831577; x=1792436377;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=YHE/SGYcUV1OUJwt26eXa2xg6GrIMfRUdwuOqUARZ48=;
+        b=a9bJNJEdz0cyqBi1lGoEgrTEWJ0ZADj3JRBfJNQTZvZj+26xYeJGiHXzTLejRakUOC
+         ggTtM6vFfx5mfqTa5w/uZvwMnL36imUI3P8wy7QtBYJNoK50m+zu7MDulFUck0hUbsib
+         T9WHeUFqt7srpxabA4FA9DQoZW6SNTwL2zqE1jOLajKXHF5M1HEIXTLHXgL/hPl8BFuI
+         VLFtGnUdY8kc89pbM2hVpsTzPauzV/gx3EiqnICTBX275oqoM4uMH97GBKRJNGU4wCQH
+         sEB5I3e3iJfO8cmdF5CxqN0dHrvx8kdbJ6ERdNVO+ECQeNFY3fJXpc/7GelkDrFfbD0t
+         XwVA==
+X-Forwarded-Encrypted: i=1; AKwUvBwGslpvn5mP+/dl0dzXsx+I0KeEwxQvvQ0Q1cxcCar2vzO43RcAdwp7wK86yWMpDz674Fe+Ku5Tnsg=@vger.kernel.org
+X-Gm-Message-State: AFq9FYI0SYc10k1kzSvRLsDDeEw6u488LUHM4FkOxsMY1yEceVs+fXEL
+	uXEx3mLEpwrTvEWgnb+OWUtgKA1LwP7ixDAy6Z3Lu1s6XgJXgSOK8kTQ
+X-Gm-Gg: AYBFou0WQKgqw0DsVBoh+aOZnh5885PJAUlJ8QHEXFVb7hrZ69gfmIA6574qsgdVPNt
+	3pU86x9Np+Ls6DX+fB3Pv0A8tQ1nvJm//BBIbrOKFg+QadQBtHbmGCO969k/WiirkFeCavDZAro
+	JfAQ1Kb5AI8N/Y+X7Z/0dXoGVG6O8MpcT1CFkOUTYgOchPghanbD5If1CCMawW8PzSq+6k7Da/w
+	9kLQoQ7eq01a9t+ahXuoSm9d8zBnjOIEJ29G9/UDhNQTBnFGl8MC25bSXP88W1V5yTLLcEj9AqO
+	Gu+3FZy7YeksObexJI1tCXypA/eavlP/e7c/WgZl5ENKwLQwpEstncy/55Bj6E9EQ9OC/34W+y7
+	eSGBrr+Y3Qfg2b0TuhyzuY2nsDCZPwJ8g5lNmhO0jINUBBA22sS6LxN7/WL+ZjD7zKc/ywHCtp9
+	GZubSFxUUfHlS/vB7VgEZiG00hqyFtVG91qoonOQK7RrzzQIVwrN32A9R2iviYbj1YGE8DY/QrW
+	AFRQGWD3JZOyb3BUIcXgkSVxV2MaN5Jc4hNt/AOevrAjUMPOjzgt+nal30ubnqoJw==
+X-Received: by 2002:a05:6000:4818:b0:48a:ffcc:5b50 with SMTP id ffacd0b85a97d-48dbace8c04mr18035952f8f.40.1791831576447;
+        Mon, 12 Oct 2026 11:59:36 -0700 (PDT)
+Received: from home-desktop (dynamic-002-214-019-128.2.214.pool.telefonica.de. [2.214.19.128])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48de0ab5262sm871105f8f.22.2026.10.12.11.59.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Oct 2026 11:59:36 -0700 (PDT)
+Date: Mon, 12 Oct 2026 20:59:33 +0200
+From: Abhin Parekadan Jose <abhinjoses@gmail.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	Shuai Xue <xueshuai@linux.alibaba.com>, Kees Cook <kees@kernel.org>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RFC v4 0/5] PCI: pciehp: Report surprise removal during
+ safe removal
+Message-ID: <as0uFfzw83f9aPpn@home-desktop>
+References: <20260927182017.938565-1-abhinjoses@gmail.com>
+ <asxylqif72Lcldx1@home-desktop>
+ <20261012022556-mutt-send-email-mst@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|GVXPR04MB12127:EE_
-X-MS-Office365-Filtering-Correlation-Id: 61c7c23b-725e-42e8-63a9-08df2892a98e
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|1800799024|19092799006|7416014|376014|366016|10067099003|3023799007|261009223027099003|11063799006|4143699003|6133799003|18002099003|22082099003|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	jn0rNHYiU0xmm3bTmxaOLhMAciomECXzcP4F1816TZbVzQXbZNYb3cyKldhUW3M/jDQqlIaFm11coQ7YqKU7KngamkYMMuMwRT8jzTmtij+JoFdJMgHhB+OVAu4oWvw2Hi/TieX3xym+3if/zd2LSECNhbbEml8fShQFtWMRLpOKMZOcpm7zenAmjo9Ur71iwHXYr57CblCT2wqinXgJA6ArRAi8bpELDTVGhZWuZQmCDJlaGARQfbQzkELTfhVdFnBHdfvQSAlxqhilmmZ+SXzbgxCmPNINX6fEAjMKgvoiyaUFQAM2dtT4GL6nM/h0ZaW9WE0JRRYVsc0vBaVS3sNQgMILX4mgeatv5EVqc4xE0skNbPjIuPpOE8a/DpbcWLKQZtfaIj2pSxEiok2BcEiXpMIP1ZCQL8LPNSmsY6/qTpFjyQvynC69uXV3jV5x/TLDjfkk1dMjSTFIanZ76ynoFXBfeWVHXxc7d6ouV5EfTtLucBXqc4h+s3jtvZwPjPjgEZUreOeMjtLRpYhbt2Nyl6YruQ69qqRqOj24o05cYY8MDn5EoX966paiLiVowYUl9QAU/HIaKSMlVbd8Ulge8xF5YLCp8GuFko0pzHXonQsappzaWwLZ/XzYE1QM
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(19092799006)(7416014)(376014)(366016)(10067099003)(3023799007)(261009223027099003)(11063799006)(4143699003)(6133799003)(18002099003)(22082099003)(56012099006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?YKJi4WFoUp5gOr3oyCpSnPzlaQuY8lkDLZkOVJhokxwFj8mwO/9OzbUnvKD9?=
- =?us-ascii?Q?RYahCkTVkqh2tlDIya1PE7Lha3rH3fPmvmHzb9rD6Pmk7Bwnybrcwn6WPzZK?=
- =?us-ascii?Q?iY6tZh8bWrUr9ZZs2hHsVYrs/U2yddiVjzWWgGMx+83el1SkeJE17RGaFzou?=
- =?us-ascii?Q?fcHkb5Jq5wMm7iaReZDiHWfhIiytr34MAiW4zkUntYOjShf76Mx6TJ2D+9bi?=
- =?us-ascii?Q?7ha60OVX82zPgsxsHFKcFt782GoguGTwp1jhQHCBcTD6HR1PiuNWQhzsIHZ3?=
- =?us-ascii?Q?QKGAqDJ1Cumus9e3fg5nM9vJgRlNxIqGTzG/8UVMS297oAIoIKlHKhP4pLKa?=
- =?us-ascii?Q?+8Rn1v3BYa8E7dV84TmjMTSZpLt3HkHzh/obwafAuGP0FbpVMyfalGqiC7Rc?=
- =?us-ascii?Q?CasDBjGfE1IrC4nmwpxYkE6gI/NmEv9vtvAPe3EqroUHtbV3YAk5nDQwJOQp?=
- =?us-ascii?Q?i1XqoC8+uU9Z9CS+asJlaGoYqsxP0j16g4KDQaVM0nPd4czE8cNJaAkJAnV5?=
- =?us-ascii?Q?0Nl6a1J34C83g7s4r4NGP0e71TmuLBlFTYrpUbtz03TLYh35QdBoke4otyHC?=
- =?us-ascii?Q?0xRobQMATw4fAyCcD9+71gUuWV0ZyuiOb96SyXakt8QqWks1WVchYvccUZWl?=
- =?us-ascii?Q?VNhKdx8yTfbbWMTeODrHrbRKmyzDsSAc5CARD+Z72J71tUlYuKni/Q/DU0rH?=
- =?us-ascii?Q?5+18RQIKFYsTQK3rJAsZmrwqhbxTqZ4HFJ6fCg6LDqAyKTU6HjuwjA2r2Brr?=
- =?us-ascii?Q?0lX3ZpGOYBTdTrNqzZPb+Vt2LXw5RnavCubZFLsXQzknAST5KnCCzi19s7su?=
- =?us-ascii?Q?dN68qelelKrr0RNdh9i/a/2IQ9w2S3rbgIvaSq/tSQlaKmSJpGdOrMF0t9/b?=
- =?us-ascii?Q?J5ro10q+qk0jjtD5LrZLFvis1VBZUQJi711shNdTQ2WmnHeglcpByBxWDuj7?=
- =?us-ascii?Q?hRlIVMJaQWk6mvDcdtg6/4ixMpCXZTjjv0oKvhR3oS21AU1GPlZ1bgkp60IR?=
- =?us-ascii?Q?zNISyoo0rt728KTvWlytqVt8KyDzn/EReCl1FerieC8pF22X0HrN7UyGXa3q?=
- =?us-ascii?Q?qLqajkArAiXWjiO/dxPd24Oe/g/+xjzUO+qMS2ltoW2WaRUe4POpiqME/Xhy?=
- =?us-ascii?Q?Xkb1Ryk8UVpkLtDk3h4mgTfEETh4O8TvQy9WrmGISGWc4WxxgrjcJWyCbJ9E?=
- =?us-ascii?Q?0fxNKFTkD5lpa8XQVD5plgjSR1aZC0pJHkrz4Y5J08WQKisKJbitrEW9cqvx?=
- =?us-ascii?Q?pZhQr7c2swPl8B6BnXGu2cHHAv5Z83OPVQZhp/GDDLj8fZedLKbF7FF2EyKK?=
- =?us-ascii?Q?Yhs/eJx0cU1MvJ4YI31fx0JzBM1N8LvkyTlKkPh/g8z0rE8QRQDC6bi3j8oJ?=
- =?us-ascii?Q?RVxVeQlCYecVHrKvXQ7OpLhHFtmxM5eZ4IqqEOXNvSFmOBZvlIoeY9AI/Ecs?=
- =?us-ascii?Q?MQgEm9rFXuXdAXkaDIx1zDCOfDp/a1qIOp4tsN3kGynzFGhOruH3Or0j0Pqt?=
- =?us-ascii?Q?n1GxTP8Tf0C6xv36ssrIGpkSfD2r8VAAHyGE+nxxblJoYG5k2Ubxoclojw34?=
- =?us-ascii?Q?/ytce/OKrflR/hIL5Lcar6+XYxjoTiAVHfyJMrVj9utT1dUY1S5hKu94EHXN?=
- =?us-ascii?Q?Vad000YflBPjAo9lcT3OBU1JrRAEZGIWfRNDYAC42TN0TuEsq63ElFP6DUi6?=
- =?us-ascii?Q?gfQBL50TjEwnEvinVNeSIMxDcXQualntn5Cvrmnv0r0IaNV0wAwWrS6NKhHk?=
- =?us-ascii?Q?FeuJLYh6MPC7J+HMbLBbfMAmuSe+FuJZuI9bRjIIDwro6uBVZlpc?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 61c7c23b-725e-42e8-63a9-08df2892a98e
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Oct 2026 18:57:28.8305
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: fTvgtFMGjFveliSMjFEKPBLLuQmbNSvnj6FwJ8DvRPuNQE8FSdd2n1pDvRBU4I0Kne1R2aB7vk7LbdjbGdUxkhKri6ZroMJ5Kl1zG0fkscRscAWM/VCAFE7VBbdoA8gx
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVXPR04MB12127
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261012022556-mutt-send-email-mst@kernel.org>
 
-On Sat, Sep 19, 2026 at 08:54:29AM +0200, Jan Petrous via B4 Relay wrote:
-> [You don't often get email from devnull+jan.petrous.oss.nxp.com@kernel.org. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
+On Mon, Oct 12, 2026 at 02:32:02AM -0400, Michael S. Tsirkin wrote:
+> On Mon, Oct 12, 2026 at 07:39:34AM +0200, Abhin Parekadan Jose wrote:
+> > Gentle ping on this RFC.
+> >
+> > Lukas, Bjorn, could you let me know whether the general direction is
+> > acceptable before I work on a non-RFC version? Any comments on the
+> > approach would help.
+> >
+> > Thanks,
+> > Abhin
 >
-> From: "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
->
-> The S32G SerDes subsystem multiplexes two lanes between a PCIe PHY and
-> two DesignWare XPCS instances. Describe it with one node per SerDes and
-> one child node per lane.
->
-> Compared to the previous revision, the vendor nxp,sys-mode property is
-> removed: the SS_RW_REG_0[SUBSYS_MODE] value is fully derivable from the
-> child-node lane mux and the XPCS instance routing (nxp,xpcs-instance).
-> Each working mode described here has a unique lane mux, so the mode is
-> a pure function of the child nodes. The reference-clock rate is
-> validated against the derived mode; it is not used to select it.
->
-> The 3.125 Gbit/s working modes are deliberately not described yet.
-> Distinguishing them from the 1.25 Gbit/s dual-XPCS mode requires a
-> per-lane 2500BASE-X capability that this binding does not express, and
-> the reference clock does not distinguish them either - both accept 100
-> or 125 MHz. They are added by the 2500BASE-X follow-up.
->
-> Only the PCIe lane child gets '#phy-cells'. An XPCS lane is not a
-> generic PHY provider; the Ethernet controller references it through the
-> standard pcs-handle property instead.
+> I'd say, complete the picture. acpi,shpc,polling...
 
-Is it possible Ether controller use standard phy interface? of use standard
-pcs-handle to phy convertion
-
-pcs-handle = <&pcs>
-
-pcs: pcs = {
-	compatible = "pcs-to-phy";
-	phys = <&phy ...>;
-}
+Ok.
 
 >
-> S32G2 and S32G3 use distinct compatibles without fallback because the
-> full reference-manual mode tables differ per SoC and per SerDes
-> instance.
+> Maybe think about how this interacts with pci_ignore_hotplug
+> (seems to weirdly check presence then ignore)?
+
+Yeah, the order is wrong in v4. The presence read should come after
+the `ignore_hotplug` check. Will fix.
+(Need to still find out why this was introduced. Looks like only the GPU drivers
+use it.)
+
 >
-> Co-developed-by: Vincent Guittot <vincent.guittot@linaro.org>
-> Signed-off-by: Vincent Guittot <vincent.guittot@linaro.org>
-> Signed-off-by: Jan Petrous (OSS) <jan.petrous@oss.nxp.com>
-> ---
->  .../devicetree/bindings/phy/nxp,s32g-serdes.yaml   | 258 +++++++++++++++++++++
->  1 file changed, 258 insertions(+)
+> And test with virtio not with edu.
+
+Bjorn had asked me to keep this puerly PCI[1], So I had decoupled it from the
+virtio changes. I could post another series with those changes with a dependecy
+to this series.
+
+[1] https://lore.kernel.org/all/20260826194815.GA1552818@bhelgaas/
+
 >
-> diff --git a/Documentation/devicetree/bindings/phy/nxp,s32g-serdes.yaml b/Documentation/devicetree/bindings/phy/nxp,s32g-serdes.yaml
-> new file mode 100644
-> index 000000000000..6343d01bfde4
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/phy/nxp,s32g-serdes.yaml
-> @@ -0,0 +1,258 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/phy/nxp,s32g-serdes.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: NXP S32G2xxx/S32G3xxx SerDes PHY subsystem
-> +
-> +maintainers:
-> +  - Ghennadi Procopciuc <ghennadi.procopciuc@nxp.com>
-> +  - Jan Petrous <jan.petrous@oss.nxp.com>
-> +
-> +description: |
-> +  The SerDes subsystem multiplexes two SerDes lanes between one PCIe
-> +  controller PHY and two Synopsys DesignWare XPCS (Ethernet PCS) instances,
-> +  behind a shared 2-lane combo PHY. The active routing is selected by the
-> +  SS_RW_REG_0[SUBSYS_MODE] field.
-> +
-> +  Reference-manual working modes described by this binding:
-> +
-> +  Mode  Lane0   Lane1   PHY refclk (MHz)  Description
-> +  ------------------------------------------------------------
-> +  0     PCIe    PCIe    100               PCIe x2
-> +  1     PCIe    XPCS0   100               PCIe x1 + SGMII
-> +  2     PCIe    XPCS1   100               PCIe x1 + SGMII
-> +  3     XPCS0   XPCS1   100 or 125        dual SGMII, 1.25 Gbit/s
-> +
-> +  Which Ethernet MAC an XPCS instance feeds is fixed by the SoC integration
-> +  and differs per SoC and per SerDes instance - on S32G3 SerDes_0, XPCS0
-> +  feeds GMAC0 and XPCS1 feeds PFE_MAC2, while on SerDes_1 the same two
-> +  instances feed PFE_MAC0 and PFE_MAC1. That mapping is a property of the
-> +  SoC, not of this binding, and is resolved by the driver.
-
-Roughly look like use argument is little bit better
-
-<&phys PHY_MODE instance(0/1)>;
-
-Frank
+> > On Sun, Sep 27, 2026 at 06:20:11PM +0000, Abhin Parekadan Jose wrote:
+> > > If a safe removal is already in progress when the device is surprise
+> > > removed, pciehp cannot report the disconnect [1]. The removal blocks
+> > > waiting on a device interrupt or status read, and pciehp's IRQ thread is
+> > > single-threaded and is itself executing that removal, so it never runs
+> > > again to report the device gone. The removal hangs indefinitely.
+> > >
+> > > pciehp_isr() does run while the IRQ thread is blocked, but pciehp_ist()
+> > > must ignore link and presence changes caused by Secondary Bus Reset or
+> > > DPC, and telling those apart takes seconds which cannot be spent in
+> > > hardirq.
+> > >
+> > > Patch 4 does not do that work in hardirq. pciehp_isr() only checks
+> > > whether the card is present or the link is active, and defers the rest
+> > > to a work item in process context. The work item does not need to know
+> > > why the link changed, only whether the card is gone: it waits for DPC
+> > > recovery or a Secondary Bus Reset in progress to complete, then checks
+> > > again under reset_lock, and if the card is absent and the link is down
+> > > marks the devices below disconnected, which schedules the driver's
+> > > disconnect work from patch 1. pciehp_ist() is unchanged and
+> > > remains the only consumer of the one-shot flags PCI_DPC_RECOVERED and
+> > > PCI_LINK_CHANGED, which tell it whether a link change can be ignored.
+> > >
+> > > Patches:
+> > >
+> > >   1/5 Michael's "PCI: Report surprise removal event" from his RFC v5,
+> > >       which adds disconnect_work_enable and pdev->disconnect_work.
+> > >       Changed to serialize disconnect_work_enable with a per-device
+> > >       spinlock.
+> > >
+> > >   2/5 Add pci_hp_wait_link_change(), which awaits a Secondary Bus Reset
+> > >       in progress without consuming PCI_LINK_CHANGED.
+> > >
+> > >   3/5 Add pci_dpc_wait_recovery(), which awaits DPC recovery without
+> > >       consuming PCI_DPC_RECOVERED.
+> > >
+> > >   4/5 The pciehp change. Adds disconnect_work to struct controller,
+> > >       scheduled from pciehp_isr() on PDC or DLLSC when neither Presence
+> > >       Detect State nor Data Link Layer Link Active indicates a card.
+>
+>
+> how about including the virtio patch? seems more relevant than
+> fooling around with edu.
+>
+> > >   5/5 A POC driver for the QEMU edu device that blocks in remove()
+> > >       waiting for an interrupt, standing in for del_gendisk() stuck in
+> > >       blk_mq_freeze_queue_wait(). Not for merge -- included so the
+> > >       hang can be reproduced.
+> > >
+> > > Changes since RFC v3 [5]:
+> > >
+> > >   - 5/5: Reinitialize the completion in remove() before requesting the
+> > >     delayed interrupt, so that an earlier completion cannot let remove()
+> > >     return while the interrupt is still pending. (Sashiko)
+> > >   - 1/5 to 4/5: No changes.
+> > >
+> > > Changes since RFC v2 [4]:
+> > >
+> > >   - 1/5: Protect disconnect_work_enable with a per-device spinlock, held
+> > >     while testing it and scheduling the work, instead of lockless
+> > >     accesses and barriers.  pci_dev_set_disconnected() could otherwise
+> > >     test the flag, get preempted, and queue the work while a newly bound
+> > >     driver re-initializes it.  With the lock, cancel_work_sync() is
+> > >     sufficient again, so go back to it from disable_work_sync().
+> > >     (Sashiko)
+> > >   - 2/5: Test PCI_LINK_CHANGING with test_bit_acquire(), so that the
+> > >     caller's subsequent accesses are ordered after the end of the code
+> > >     section even if wait_event() returns without sleeping. (Sashiko)
+> > >   - 3/5, 4/5, 5/5: No changes.
+> > >
+> > > Changes since RFC v1 [2]:
+> > >
+> > >   - 1/5: Use disable_work_sync() instead of cancel_work_sync() in
+> > >     pci_clear_disconnect_work(), so that a racing schedule_work() cannot
+> > >     queue the work after remove() has returned. (Sashiko)
+> > >   - 2/5, 3/5: New.
+> > >   - 4/5: Drop schedule_notification_work(); pci_dev_set_disconnected()
+> > >     schedules the driver's disconnect work for all callers again.
+> > >     (Michael)
+> > >   - 4/5: Don't consume PCI_DPC_RECOVERED and PCI_LINK_CHANGED in the
+> > >     work item.  In v1 it ran the same spurious link change test as
+> > >     pciehp_ist(), and whichever ran first took the flags, so pciehp_ist()
+> > >     could tear down a device that was only reset. (Sashiko)
+> > >   - 4/5: Check presence with pciehp_card_present_or_link_active() in
+> > >     both pciehp_isr() and the work item, as pciehp_ist() does, so that a
+> > >     port with Presence Detect State hardwired to zero is not mistaken
+> > >     for an empty slot.
+> > >   - 4/5: Return early from the work item if pciehp_ist() has already
+> > >     taken the pending events, and treat a read error of the presence
+> > >     check as "not present". (Sashiko)
+> > >   - 4/5: In pciehp_isr(), check presence before dropping the runtime PM
+> > >     reference on the port's parent.  In the work item, take a runtime PM
+> > >     reference and check presence under reset_lock, since a slot reset
+> > >     may make Presence Detect State and Link Active flap.
+> > >   - 5/5: Build only with CONFIG_EDU_SRPOC, which depends on PCI; don't
+> > >     claim the interrupt when the device reads all ones; clear bus
+> > >     mastering on teardown. (Sashiko)
+> > >
+> > > Testing
+> > >
+> > > Reproducing this needs QEMU changes, since neither device_del nor the
+> > > attention button produces a true surprise removal.  A branch with both
+> > > is here [3]:
+> > >
+> > >   - a delayed-IRQ register on the edu device (BAR0 0x30, write N ms)
+> > >   - a pcie_surprise_del monitor command that drops the device and
+> > >     generates PDC=1, DLLSC=1, PDS=0
+> > >
+> > > Both tests use:
+> > >
+> > >   ./qemu-system-aarch64 -machine virt,gic-version=3 -cpu cortex-a57 \
+> > >     -m 512 -smp 2 -kernel Image -initrd initramfs.cpio.gz \
+> > >     -device pcie-root-port,id=rp1,chassis=1,slot=1 \
+> > >     -device edu,bus=rp1,id=edu0 -append "console=ttyAMA0 rdinit=/init" \
+> > >     -nographic -monitor unix:/tmp/qemu-mon.sock,server,nowait
+> > >
+> > >   and need a guest kernel with CONFIG_EDU_SRPOC=y.
+> > >
+> > > Test 1 (Hang in remove() on a user thread, then surprise removal):
+> > >
+> > >   guest# echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove &
+> > >   host$  echo "pcie_surprise_del edu0" | socat - unix-connect:/tmp/qemu-mon.sock
+> > >
+> > >   This is the case patch 1 solves on its own: pciehp's IRQ thread is
+> > >   free and handles the removal.
+> > >
+> > > Test 2 (Hang in remove() on pciehp's IRQ thread, then surprise removal):
+> > >
+> > >   guest# echo 0 > /sys/bus/pci/slots/1/power &
+> > >   host$  echo "pcie_surprise_del edu0" | socat - unix-connect:/tmp/qemu-mon.sock
+> > >
+> > >   Without patch 4 the safe removal does not return until the delayed
+> > >   interrupt fires 600 s later.  With it,
+> > >   pciehp_isr() schedules ctrl->disconnect_work, which marks the device
+> > >   disconnected; the POC driver's disconnect work completes the wait and
+> > >   remove() proceeds.
+> > >
+> > > Open questions
+> > >
+> > >   - Is this a viable approach?
+> > >
+> > > [1] https://lore.kernel.org/all/aHlZE18kPuHuDtTT@wunner.de/
+> > > [2] https://lore.kernel.org/all/20260905183905.997833-1-abhinjoses@gmail.com/
+> > > [3] https://gitlab.com/abhinkop/qemu/-/commits/suprise-removal
+> > > [4] https://lore.kernel.org/all/20260927165459.829900-1-abhinjoses@gmail.com/
+> > > [5] https://lore.kernel.org/all/20260927175203.928270-1-abhinjoses@gmail.com/
+> > >
+> > > Assisted-by: LLM
+> > >
+> > > Abhin Parekadan Jose (4):
+> > >   PCI: pciehp: Add pci_hp_wait_link_change()
+> > >   PCI/DPC: Add pci_dpc_wait_recovery()
+> > >   PCI: pciehp: Report surprise removal from pciehp_isr()
+> > >   misc: Add edu_srpoc surprise removal POC driver
+> > >
+> > > Michael S. Tsirkin (1):
+> > >   PCI: Report surprise removal event
+> > >
+> > >  drivers/misc/Kconfig                   |  11 ++
+> > >  drivers/misc/Makefile                  |   1 +
+> > >  drivers/misc/edu_srpoc.c               | 172 +++++++++++++++++++++++++
+> > >  drivers/pci/hotplug/pci_hotplug_core.c |  21 ++-
+> > >  drivers/pci/hotplug/pciehp.h           |   1 +
+> > >  drivers/pci/hotplug/pciehp_hpc.c       |  67 ++++++++++
+> > >  drivers/pci/pci.h                      |  10 ++
+> > >  drivers/pci/pcie/dpc.c                 |  54 ++++++--
+> > >  drivers/pci/probe.c                    |   1 +
+> > >  include/linux/pci.h                    |  57 ++++++++
+> > >  10 files changed, 381 insertions(+), 14 deletions(-)
+> > >  create mode 100644 drivers/misc/edu_srpoc.c
+> > >
+> > >
+> > > base-commit: fd179f8a05be3ccae366b9b96e176b51fbe54aab
+> > > --
+> > > 2.51.1
+> > >
+>
