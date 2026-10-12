@@ -1,115 +1,72 @@
-Received: from smtpout-03.galae.net (smtpout-03.galae.net [185.246.85.4])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20E7249B1E9;
-	Mon, 12 Oct 2026 15:18:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.85.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A688149A3D8;
+	Mon, 12 Oct 2026 15:29:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791818298; cv=none; b=E6q7Ymq8LNLN+TennyItrg2Rl2wc3z57tFuTR+7HhqIMf2CA+vIviquFnTLaKoTW+BKOKZL5Dm9DXptHSr5erHizOUs+Uruz8JgLO7Wi4x8/19Gf7tlvhSWPXsywi6cl2wlMlcmR9chps8UEPyxQqhtBFiAXwUEZwcd55Rao7JM=
+	t=1791818996; cv=none; b=MH1bE15POLsC8xKm53A28Nqcyhj2PoBJAwMB6hr63gHSZ9YT2JnNUb0O3Q6yQw/0bUiabAjo8FwxnPoXeH571PkCRFwqJmxMFt25hixGcEBm0YBEB/wON6ugt+hMYN0AfCJAU1sHCOmEo/PhxWNSadTEzwxUaOqmctdcK5CIGw0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791818298; c=relaxed/simple;
-	bh=XfWNez3TZElIw3B+tobB5BSrfbaynnFmNqa9anO7WiM=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RWrwsatgSFgriEDRsvDbNuGPhjuAxAudG1cQ7/cG4QpM2Zm+fEA4HtNnOfzfKat6PQ5uGSDpIC6BOfx6a8CyWozNK65MGNOP/b4kcsq1cJ5mIlRim469gk6xN8lKdkqfR5QeNW4UTRkfiBz4C+BcBU4ff+87fb2srvSgcS44k4I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=NaT5xHHm; arc=none smtp.client-ip=185.246.85.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1791818996; c=relaxed/simple;
+	bh=0l2CDdgfCczICn074vu7xLpOmJtO/6AWxdrFKmbQs1Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EKuJ2Z3BRZ3dbHJGBszrDWLZ+1kEqKwbHGPL67xffdwA9ePgODw8ixBnMxsxmyj//YxkCRUXJfQaaWH5iPrM8cRdqk47IrOFyYnYzn8+K+WWu2QN6WiWimvo107K3HTrTPZEdO2xrRgwV/iaM9yifCWA2zHlXHXqOY71T5dNYrQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A0HbSVms; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="NaT5xHHm"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-03.galae.net (Postfix) with ESMTPS id 5E6524E411FD;
-	Mon, 12 Oct 2026 15:18:14 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 2AAB8601A6;
-	Mon, 12 Oct 2026 15:18:14 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 18BF511D70160;
-	Mon, 12 Oct 2026 17:18:11 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1791818293; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=eAuhjWIHoJ+lPcsgkZ9ZICB7wFWD1mA0dcHUmJgisnU=;
-	b=NaT5xHHmP2CFGmBmICiFg9ybAxPj/PSjEf+8dyYCGN/bt+MFaZpNChQ0CboqttpSI/6CPT
-	ZqUZOBnQEuTJY29iWGNzquJkKva5xNVZ2r3twYEj+vBDMqkbPGv32Y8Rca4UdwdqE17vLP
-	fAV5uwSFul/8+hsakgDL0nYEwN0L17Rq34e2d8QZ9ZG7+ABclARY2zwmoKaXwcMvsXy+5C
-	mBv0nemTTMII4PqUYlpGhf8x519W6BCLP+u6w5C6jkz6VcnnhK8ujuz6f/KninMGIln++q
-	/ZSzAPXBh8rFFPKhIwWH0g3We/uQIY9+sXWKW5VTElHIZWKOVvpIi2gUkD9iLg==
-Date: Mon, 12 Oct 2026 17:18:11 +0200
-From: Herve Codina <herve.codina@bootlin.com>
-To: sashiko-bot@kernel.org
-Cc: sashiko-reviews@lists.linux.dev, linux-gpio@vger.kernel.org,
- linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v13 08/10] PCI: of: Set fwnode device of newly created
- PCI device nodes
-Message-ID: <20261012171811.50f6cb9f@bootlin.com>
-In-Reply-To: <sashiko-outbox-168281@kernel.org>
-References: <20261012142826.159178-1-herve.codina@bootlin.com>
-	<20261012142826.159178-9-herve.codina@bootlin.com>
-	<sashiko-outbox-168281@kernel.org>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A0HbSVms"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DC781F0089C;
+	Mon, 12 Oct 2026 15:29:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791818995;
+	bh=QGxvx/QLjnMgsM111662/b6rObFKZJ15uWxYClEgMlk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=A0HbSVmsS8vh1ArDa0XSbplLZ3Ud2mOasHZSp4FvYB8guvesdMTxXJ3G+VTQ4CRmn
+	 csQDD2a+LcLiYC8xLdYgiQKQIiDVEJIAnlTF3ZoVlhzEJ0ygoTXW0y0GEwF3+QUYF5
+	 +LodW0DR834sLv56x6LHoyGvkONDrbHLHvAkI/NEexGVjdELaE12xsYqixROTwPswV
+	 bDHUAXZKMzQeQsjjsvBmifcLGZ7y2CyX4qoPd2dTp57IrtPAimPNaYOypf70xdPr2i
+	 /bgGSMrKn46Nmt5y6t+Xaq94HHDqHez82u94z/5o1jDhubMI0K+CgBX3aNIjUMo4oa
+	 gckCrWkKwLxPQ==
+Date: Mon, 12 Oct 2026 20:59:46 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Qiang Yu <qiang.yu@oss.qualcomm.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Vinod Koul <vkoul@kernel.org>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, Philipp Zabel <p.zabel@pengutronix.de>, 
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-phy@lists.infradead.org
+Subject: Re: [PATCH 2/4] PCI: qcom-ep: Move PHY init and drive PHY reset to
+ align with HPG
+Message-ID: <asz8xQuxSiIgFCm1@debian>
+References: <20260915-align_pcie_init_sequence_0916-v1-0-0b2195836f30@oss.qualcomm.com>
+ <20260915-align_pcie_init_sequence_0916-v1-2-0b2195836f30@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
+In-Reply-To: <20260915-align_pcie_init_sequence_0916-v1-2-0b2195836f30@oss.qualcomm.com>
 
-On Mon, 12 Oct 2026 14:44:48 +0000
-sashiko-bot@kernel.org wrote:
+On Tue, Sep 15, 2026 at 11:04:22PM -0700, Qiang Yu wrote:
+> HPG requires the GDSC to be powered up and all PHY/controller clocks
+> enabled before the controller's core reset and the PHY's reset are toggled
+> together as one atomic group, with PARF_DEVICE_TYPE set right after that
+> reset group, same as the RC-mode change.
+> 
+> Move phy_init() ahead of the controller's own clock enable, and fold
+> phy_reset() into the core reset assert/deassert. phy_power_on() keeps
+> running afterwards. Also move the PARF_DEVICE_TYPE write out of
+> qcom_pcie_perst_deassert() to right after the reset group, in
+> qcom_pcie_enable_resources().
+> 
 
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [High] base: TOCTOU data race and UAF on fwnode->dev access
-> --
-> 
-> commit dc94be607770b564614555ac56ea83f070fa3dd4
-> Author: Herve Codina <herve.codina@bootlin.com>
-> 
-> PCI: of: Set fwnode device of newly created PCI device nodes
-> 
-> Device-tree node can be created when CONFIG_PCI_DYNAMIC_OF_NODES. Those
-> nodes are created and filled based on PCI core information but the
-> fwnode device field is not set.
-> 
-> > diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> > index 29b63a9090ae3..8914bfa25dc11 100644
-> > --- a/drivers/pci/of.c
-> > +++ b/drivers/pci/of.c
-> > @@ -736,6 +736,7 @@ void of_pci_remove_node(struct pci_dev *pdev)
-> >  	if (!np || !of_node_check_flag(np, OF_DYNAMIC))
-> >  		return;
-> >  
-> > +	fw_devlink_set_device(&np->fwnode, NULL);  
-> 
-> [Severity: High]
-> Does this locklessly clear the fwnode device while another traversal might be
-> reading it?
-> 
-> If a PCI device is concurrently removed while a driver is being bound to
-> another device on the same system, of_pci_remove_node() clears fwnode->dev
-> locklessly here.
-> 
-> Concurrently, __fw_devlink_pickup_dangling_consumers() in drivers/base/core.c
-> can traverse the fwnode tree and read it locklessly:
-> 
-> 	if (fwnode->dev && fwnode->dev->bus)
-> 		return;
+Sashiko pointed out that PARF_DEVICE_TYPE change is not present in this patch.
 
-I don't think so.
+- Mani
 
-__fw_devlink_pickup_dangling_consumers() can look at fwnode->dev but those
-fwnode->dev are not in the same branch in the tree as the one where the fwnode
-being modified is located.
-
-I don't see any cases where __fw_devlink_pickup_dangling_consumers() can
-reach our fwnode.
-
-In other word I don't see any race condition on my side and so I will not try
-to fix that point except if this "potential" issue is confirmed by other people.
-Indeed, I could be wrong in my analysis but without further details, I don't
-think the issue reported here can happen.
-
-Best regards,
-Hervé
+-- 
+மணிவண்ணன் சதாசிவம்
