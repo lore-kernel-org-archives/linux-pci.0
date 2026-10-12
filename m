@@ -1,244 +1,302 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 169A651CF56;
-	Tue, 13 Oct 2026 17:42:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 308534F5E09
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 17:49:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.171.202.116
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791913382; cv=none; b=UuIcf96UocKAY+lx3YGjn7ge+TzDDFTNiGY8nbtNMYXmizhMRjv9e1pei1bgSqa0DK2MiMZlO4TYessuyMpfNB1ykhX+0be6KV1/MoUuc1c2C3NdEs7TJB3XhPBNlyI2WvFUTDNRaLgF4OThIWm94LzpBG3/GYzI5hMUq3S4Nj4=
+	t=1791913773; cv=none; b=PuzlIM+gcrBosb58swenQ8M+2unguP/fDKC8AKjENvGjlD+V5hcUG62hbha6avDZl/mAbVeo9Gg8jfuRTgAsZ2i8RtZzM9MCeBHIwKSqswYQlISQp9991PEnxzhaaF2nxUs9W9KSNgt7+snzX/HHUL6h95LFD3qwHd772mII0Xo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791913382; c=relaxed/simple;
-	bh=OFAfkLArIISQMtIBXs88GvQjJ68ib8glSTZMngiiQEQ=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=FEtKSeCYeZQFr2UnJ9KAwWoDEwg3akinq/G9QYNUd1Vz4TgtDKIhrV0RZu6lAstExRl1Lv2q5wLWyCSLhKx7uwPncxAAacK3XVvXrfs9WvyelqFbNKEntQZs3W1bQjWNkFhGZWGfp4Y1Rf/nZ6cSA79t2vXAORRY85yizcBfrs0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dcRHtIlk; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1791913773; c=relaxed/simple;
+	bh=coh97i91GMzxgaGzGrlbpw70oGHkJw68wM+Zt07XG1w=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=pvtq2U3BdlIGuQZ/pRFWMu5bdzNRtuHkxwgvL7trlqLvGeiE5rY/8NFRwfuaFsiwKZxWbky+tpJepZ0N9vzZpPNrCxeh8pN+z+3pn4BepzbJxUwtzyYH8yUikr25Oqe/s0GIzxrLYiS4QL5HHYE3+N8vqRYWXP9/jHUtzTshBTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=N+jYOieE; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=Wkzof3rD; arc=none smtp.client-ip=185.171.202.116
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dcRHtIlk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791913380; x=1823449380;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version:content-id;
-  bh=OFAfkLArIISQMtIBXs88GvQjJ68ib8glSTZMngiiQEQ=;
-  b=dcRHtIlkyLFTYXUpFOTuI+9QUKm6UkI9CWe3DHEsg1456Z8zaaryiqZu
-   fRupBKafJzCff+z+8/J1VxU4NWfice/ko4s2G1fraujEQNe9IDiKfPPWb
-   QGiruk/YMX2auRbStvPaTPKdUw7tpn4anHLPxho0OnZoDcNwa5MmpagK9
-   z3DdnBXYSovzgxgSO6KIfHTJIzShsdwJJScjldLRjtAe11D0vFWlOLK69
-   c52dTsGHrC2oI5K9QrN1zH/Ilh/rjDf/wXY5Q6SP1X6XZnr52uUPJAoDf
-   jWqZ/HtjzFHiSJWtIfF9G5cUWlVcANAcqRKCH3xaLqB+MNVRjS9QB7gn+
-   A==;
-X-CSE-ConnectionGUID: PZgINpXmTRqYooepVux1YQ==
-X-CSE-MsgGUID: qhoh2UouRJCWwW5rZoLf5g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11934"; a="743342"
-X-IronPort-AV: E=Sophos;i="6.27,156,1787036400"; 
-   d="scan'208";a="743342"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2026 10:42:59 -0700
-X-CSE-ConnectionGUID: mJakSm3RTfqxHKqqjVFQSA==
-X-CSE-MsgGUID: yytLjkP+Ssuq5WYE6NXFSw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,156,1787036400"; 
-   d="scan'208";a="1581795"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.106])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2026 10:42:54 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Tue, 13 Oct 2026 20:42:51 +0300 (EEST)
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Manivannan Sadhasivam <mani@kernel.org>, 
-    Bjorn Helgaas <bhelgaas@google.com>, 
-    Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>, 
-    Rob Herring <robh@kernel.org>, Nirmal Patel <nirmal.patel@linux.intel.com>, 
-    Jonathan Derrick <jonathan.derrick@linux.dev>, 
-    Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org, 
-    LKML <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org, 
-    linux-wireless@vger.kernel.org, ath12k@lists.infradead.org, 
-    ath11k@lists.infradead.org, ath10k@lists.infradead.org, 
-    Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
-    Qiang Yu <qiang.yu@oss.qualcomm.com>, 
-    Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Subject: Re: [PATCH v3 2/8] PCI/ASPM: Add pci_force_enable_link_state() API
-In-Reply-To: <20261013163107.GA1522779@bhelgaas>
-Message-ID: <2517d322-9e5d-5b81-aa67-56705879be74@linux.intel.com>
-References: <20261013163107.GA1522779@bhelgaas>
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="N+jYOieE";
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="Wkzof3rD"
+Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
+	by smtpout-04.galae.net (Postfix) with ESMTPS id B98A3C653F9
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 17:50:22 +0000 (UTC)
+Received: from mail.galae.net (mail.galae.net [212.83.136.155])
+	by smtpout-01.galae.net (Postfix) with ESMTPS id 22B5460362
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 17:49:27 +0000 (UTC)
+Received: by mail.galae.net (Postcow, from userid 0)
+	id A194711D7159B; Tue, 13 Oct 2026 19:48:21 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
+	t=1791913766; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding; bh=wUOs5uXVmY1mRqqy3/QemKBbWww+Uoitwg1gZJXQ6Tg=;
+	b=N+jYOieE4YhouuGgFk3xdPsaBUoOEkzgw6c83E1eMq6SnWFSTUwiC8TjzaQASXlWgWxUz5
+	R7j2q2pfJ029vfG16dY3qcFX6PFjC+YPiKdMdgXwUG75FI0L0FLrsBotCl0O7p6CXQzr94
+	ucwaaoGo2hAQrF1idWUEFy8yehsMHnlcZNLueaYuzn1XB6CxZ/K5LHToyrxhlvxCSCWxqN
+	YAbR6fmgkZqgAWyhl057Jq62AUXycH5aYRfoM65xUzSbKpc44N/R/au4TgTVFxT2aKDyHR
+	kfmIRvZU73l/IOqHyaHlAbkaTxUM6EEvY5MNMwHDF2y4+82DLJYJ5agSefQUXw==
+Authentication-Results: mail.galae.net;
+	none
+Received: from mail.galae.net ([172.22.1.253])
+	by 9e7fea892943 with LMTP
+	id +DDUG6XuzGof6hAAtaWaaQ
+	(envelope-from <herve.codina@bootlin.com>)
+	for <herve.codina@bootlin.com>; Mon, 12 Oct 2026 16:28:53 +0200
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id E780111D70508;
+	Mon, 12 Oct 2026 16:28:34 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
+	t=1791815330; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding; bh=wUOs5uXVmY1mRqqy3/QemKBbWww+Uoitwg1gZJXQ6Tg=;
+	b=Wkzof3rD5kKIsOEnRGDp7BVqKeR2NLQY2ze9BkjKCjB5QmBIA++Z9+Y6MhDw8UAa35Svg5
+	7Ukcj+YB9/Qpx93I4NVY6Lm+YpRxajp1iVVOLDfgmdrwy2SX2D0UuNP+BBo84Yu36ngRYo
+	lZohkHjBtsxFR1rmVtCl+jhIGH9Z3PqPSyeAMdBja3kfu8lEvSnTgyevgnY+yHVEUwrGtJ
+	CsgPL9tpndp1sOi4EgOyif9Bs2F2VkeprFPZ4X8bAP28Zz4fWnWgWbBYcfwNxKn3OBdai/
+	7KhMuBb7CqhWVMStvYFupmc3rDQYDoX7D0uVfzCk65jFcbDVngqIf6eiJDpuvg==
+From: Herve Codina <herve.codina@bootlin.com>
+To: Richard Cheng <icheng@nvidia.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Rob Herring <robh@kernel.org>,
+	Saravana Kannan <saravanak@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Charles Keepax <ckeepax@opensource.cirrus.com>,
+	Richard Fitzgerald <rf@opensource.cirrus.com>,
+	David Rhodes <david.rhodes@cirrus.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Daniel Scally <djrscally@gmail.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sakari Ailus <sakari.ailus@linux.intel.com>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dan Williams <djbw@kernel.org>,
+	Ira Weiny <iweiny@kernel.org>,
+	Li Ming <ming.li@zohomail.com>,
+	Herve Codina <herve.codina@bootlin.com>,
+	Lizhi Hou <lizhi.hou@amd.com>
+Cc: driver-core@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	patches@opensource.cirrus.com,
+	linux-gpio@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-cxl@vger.kernel.org,
+	Allan Nielsen <allan.nielsen@microchip.com>,
+	Horatiu Vultur <horatiu.vultur@microchip.com>,
+	Daniel Machon <daniel.machon@microchip.com>,
+	Steen Hegelund <steen.hegelund@microchip.com>,
+	Luca Ceresoli <luca.ceresoli@bootlin.com>,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: [PATCH v13 00/10] lan966x pci device: Add support for SFPs, PCI part
+Date: Mon, 12 Oct 2026 16:28:14 +0200
+Message-ID: <20261012142826.159178-1-herve.codina@bootlin.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323328-2133506109-1791910896=:21507"
-Content-ID: <26a95089-31f0-9c7c-e696-b88359198360@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Last-TLS-Session-Version: TLSv1.3
+X-Last-TLS-Session-Version: None
+X-Rspamd-Queue-Id: A194711D7159B
+X-Spamd-Result: default: False [-1.38 / 30.00];
+	BAYES_HAM(-3.38)[94.10%];
+	MID_CONTAINS_FROM(1.00)[];
+	DATE_IN_PAST(1.00)[27];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_NO_TLS_LAST(0.10)[];
+	PREVIOUSLY_DELIVERED(0.00)[herve.codina@bootlin.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	BCC(0.00)[];
+	DKIM_SIGNED(0.00)[bootlin.com:s=dkim];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FORWARDED(0.00)[herve.codina@bootlin.com];
+	RCPT_COUNT_TWELVE(0.00)[42];
+	TO_MATCH_ENVRCPT_SOME(0.00)[];
+	FREEMAIL_TO(0.00)[nvidia.com,lunn.ch,kernel.org,linuxfoundation.org,google.com,opensource.cirrus.com,cirrus.com,linux.intel.com,gmail.com,stgolabs.net,intel.com,zohomail.com,bootlin.com,amd.com];
+	TO_DN_SOME(0.00)[];
+	RECEIVED_HELO_LOCALHOST(0.00)[];
+	URIBL_BLOCKED(0.00)[localhost:rdns,localhost:helo,bootlin.com:mid];
+	FROM_HAS_DN(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	NEURAL_HAM(-0.00)[-1.000];
+	FROM_EQ_ENVFROM(0.00)[];
+	MAILCOW_DOMAIN_HEADER_FROM(0.00)[bootlin.com]
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hi,
 
---8323328-2133506109-1791910896=:21507
-Content-Type: text/plain; CHARSET=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-ID: <c9ae739a-d76a-a4da-d400-ab79af0b37d5@linux.intel.com>
+Previously, I sent a big picture series adding support for SFP ports
+available on the LAN966x PCI device [0].
 
-On Tue, 13 Oct 2026, Bjorn Helgaas wrote:
-> On Tue, Oct 13, 2026 at 02:41:32PM +0300, Ilpo J=E4rvinen wrote:
-> > On Mon, 12 Oct 2026, Bjorn Helgaas wrote:
-> > > On Wed, Jul 08, 2026 at 04:30:16PM +0200, Manivannan Sadhasivam wrote=
-:
-> > > > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com=
->
-> > > >=20
-> > > > pci_enable_link_state() and pci_enable_link_state_locked() APIs onl=
-y enable
-> > > > the ASPM states that were not previously disabled via
-> > > > pci_disable_link_state*() API or blacklisted during init (e.g. the =
-pre-1.1
-> > > > device blacklist, which is only meant to be overridden with
-> > > > 'pcie_aspm=3Dforce'). This is an intentional behavior as these APIs=
- must not
-> > > > silently re-enable states that were deliberately disabled, since do=
-ing so
-> > > > could enable ASPM on a link where it is known to be unsafe.
-> > >=20
-> > > I think this is saying that many uses of pci_disable_link_state() are
-> > > to avoid hardware errata, i.e., these are basically quirks, and we
-> > > should *never* enable those ASPM states.
-> > >=20
-> > > > However, some drivers (e.g. the atheros WLAN drivers) save the curr=
-ently
-> > > > enabled ASPM states, disable all ASPM states before firmware downlo=
-ad, and
-> > > > then try to restore exactly the states that were enabled before. Re=
-storing
-> > > > those states requires re-enabling states that were just disabled vi=
-a
-> > > > pci_disable_link_state() API. But, this cannot be achieved using th=
-e
-> > > > existing APIs.
-> > >=20
-> > > This sounds like it's also for hardware errata: if ASPM works
-> > > correctly, there's no need to disable it during firmware download.  I
-> > > think this is *only* the atheros drivers, isn't it?  I didn't see any
-> > > others.
-> >=20
-> > There are more that should use disable/enable API. In addition ath*, I =
-had=20
-> > also these in my unfinished series:
-> >=20
-> >   brcmfmac
-> >   ib-hfi1
-> >   rtlwifi
-> >   rtsx
-> >   r8169
->=20
-> Thanks for those pointers!
->=20
-> > > > Hence, add pci_force_enable_link_state() API for such callers. Unli=
-ke
-> > > > pci_enable_link_state(), it re-enables the requested states even if=
- they
-> > > > were previously disabled via pci_disable_link_state() or disabled d=
-uring
-> > > > init. The caller is therefore responsible for only enabling states =
-the
-> > > > device actually supports, typically the ones previously reported by
-> > > > pcie_aspm_enabled().
-> > >=20
-> > > The problem is that pci_enable_link_state() cannot enable things that
-> > > were disabled by pci_disable_link_state().  They're not symmetric,
-> > > which violates the caller's expectation.
-> >=20
-> > Yes.
-> >=20
-> > This patch seems to come with my Suggested-by but what I suggested (and=
-=20
-> > had a patch for) was to make disable/enable proper symmetric pairs beca=
-use=20
-> > it is very trappy otherwise. If something else is needed in addition, t=
-hat=20
-> > should be named differently like Bjorn also seems to suggest (however s=
-ee=20
-> > my alternative suggestion below).
-> >=20
-> > I renamed the current pci_enable_link_state() to=20
-> > pci_set_default_link_state() in my own attempt to get room for adding t=
-he=20
-> > symmetric pair.
->=20
-> We might need new names for pci_enable_link_state(),
-> pci_disable_link_state(), and the quirk thing.  If we keep the same
-> names, I think it will be pretty complicated to manage the changing
-> semantics when backporting driver changes that use them.
+In this series patches touch several parts and sub-system in the kernel.
+Reviews have be done and it makes sense to split the series and send
+parts separately.
 
-I'm not good at picking names, but yes, reusing a name in the same=20
-kernel cycle using the same signature is asking for trouble.
+This current series is the extraction of patches related to issues in
+the PCI subsystem. It has to be seen as a continuation of the big
+picture series but related to this specific core part.
 
-> > > Instead of adding pci_force_enable_link_state(), I think we should ad=
-d
-> > > a new interface for the *quirk* behavior that permanently disables
-> > > states.  Then pci_enable_link_state() and pci_disable_link_state()
-> > > could be made symmetric.
-> >=20
-> > My suggestion is to make the disables/enables counted per state which=
-=20
-> > would allow parallel sources of disables to function without clashing.
->=20
-> By parallel sources, are you thinking of sysfs and driver calls?  If
-> locking would be sufficient I think that would end up being simpler.
->
-> But maybe the issue is these devices where we think ASPM breakage only
-> happens in certain circumstances, e.g., firmware download, so we want
-> to keep states disabled for that period.  Then I guess locking inside
-> the enable/disable doesn't prevent sysfs from enabling those states
-> during that period.
+Patches 1 to 6 introduce and use fw_devlink_set_device() in already
+existing code. No functional change but the introduction of the
+fw_devlink_set_device() wrapper.
 
-There are (at least) these sources:
+Patch 7 avoids a dangling pointer.
 
-- quirks (disable only)
-- hw has ASPM related problem at certain phase of operation
-- sysfs
-- lane margining (the proposed patch)
+Patches 8 and 9 fix fw_devlink issues specific to PCI and the
+device-tree nodes created during enumeration.
 
-I don't think locks can really solve this well as the sources seem largely=
-=20
-independent from each other and are not necessarily short-lived periods=20
-(one could perhaps say some cases occur early enough the other sources don'=
-t=20
-matter but there are still enough sources even with that considered so=20
-that disable/enable pair could overlap, potentially leading to unwanted=20
-enable of a state).
+Patch 10 avoids the usage of np->data and adds guards to prevent
+incorrect nodes removal.
 
-IIRC, L0p was also incompatible with ASPM states. But it could be HW is=20
-fine with both being configure at the same point of time (I've not checked=
-=20
-the spec with that in mind).
+[0] https://lore.kernel.org/all/20260325143555.451852-1-herve.codina@bootlin.com/
 
-> > Disable quirks could simply not have the pairing enable, no special=20
-> > interface needed.
->=20
-> I'm not sure what this looks like to the caller.  A parameter that
-> says whether to count the disable?
+Best regards,
+Hervé
 
-A quirk would just makes pci_disable_link_state(pdev, PCIE_LINK_STATE_L1)=
-=20
-call (or whatever that ends up being called if a new name is selected),=20
-which increases disabled counter for L1 state. As there's no pairing=20
-enable, L1 cannot be enabled anymore by anything.
+Changes:
 
-Only if the particular state disable counter is 0, the ASPM driver allows=
-=20
-enabling that state or the other states depending on that state.
+v12 -> v13
+  v12: https://lore.kernel.org/all/20261001142815.277550-1-herve.codina@bootlin.com/
 
+  - Patches 1 to 9
+    No changes
 
-Sysfs accessors need to keep an additional bit per state to not request=20
-multiple disables/enables for a single state. The rest of the sources have=
-=20
-it naturally from their operation and pairing disable/enable calls.
+  - Patch 10
+    Split a test condition into two distinct checks as suggested by
+    Andy. No functional change but readability improvement. Split done
+    in both of_pci_remove_node() and of_pci_remove_host_bridge_node().
 
-> I think having a different function name would be helpfully
-> descriptive because permanently removing an advertised capability is
-> different from temporarily disabling a feature.
+v11 -> v12
+  v11: https://lore.kernel.org/all/20260909080114.591938-1-herve.codina@bootlin.com/
 
---=20
- i.
---8323328-2133506109-1791910896=:21507--
+  - Patches 1 to 7
+    Add 'Reviewed-by: Bartosz Golaszewski'
+
+  - Patches 8 and 9
+    No changes
+
+  - Patch 10
+    Add a NULL check for the retrieved OF node in removal functions to
+    avoid any NULL pointer dereferences.
+    Robustify the guard setting cset to NULL after freeing it.
+    Those issues have been reported by Shashiko:
+    https://lore.kernel.org/all/20260909081755.444E91F00A3A@smtp.kernel.org/
+
+v10 -> v11
+  v10: https://lore.kernel.org/all/20260717145147.823749-1-herve.codina@bootlin.com/
+
+  Rebase on top of v7.3-rc1
+
+  - Patches 1 to 5
+    Add 'Reviewed-by: Richard Cheng'
+
+  - Patches 6, 7 and 8
+    Add 'Reviewed-by: Richard Cheng'
+    Add 'Acked-by: Manivannan Sadhasivam'
+
+  - Patch 9
+    Add 'Reviewed-by: Richard Cheng'
+
+  - Patch 10
+    Rework removing np->data usage in the PCI devicetree node creation
+    and removal.
+
+v9 -> v10
+  v9: https://lore.kernel.org/all/20260708100302.517792-1-herve.codina@bootlin.com/
+
+  - Patches 1 to 6
+    No changes
+
+  - Patch 7
+    Clear fwnode->dev also on error path.
+
+  - Patch 8
+    Clear fwnode->dev also on error path.
+
+  - Patch 9
+    No changes
+
+  - Patch 10 (New patch in v10)
+    Guard against node removal with incorrect np->data.
+
+v8 -> v9
+  v8: https://lore.kernel.org/all/20260630102804.413563-1-herve.codina@bootlin.com/
+
+  - Patch 7 (new patch in v9)
+    Clear fwnode->dev during root bridge node removal (avoid a dangling
+    pointer).
+
+  - Patch 8 (patch 7 in v8)
+    Clear fwnode->dev during PCI device node removal.
+
+v7 -> v8
+  v7: https://lore.kernel.org/all/20260511155930.34604-1-herve.codina@bootlin.com/
+
+  Rebase on top of v7.2-rc1
+
+  - patches 4 and 5
+    Add 'Reviewed-by: Andy Shevchenko'
+
+  - Other Patches
+    No other changes
+
+v6 -> v7
+
+  Rebase on top of v7.1-rc1
+
+  - Patch 1
+     Add Cc stable. Needed for patches 11 and 12
+
+  - Patches 2 to 5
+    No changes
+
+  - Patch 6
+     Add Cc stable. Needed for patch 13
+     Add 'Acked-by: Bjorn Helgaas'
+
+  - Patch 7
+     Fix a typo in commit log
+     Add Fixes tag + Cc stable
+     Add 'Acked-by: Bjorn Helgaas'
+
+  - Patch 8
+     Add Fixes tag + Cc stable
+     Add 'Acked-by: Bjorn Helgaas'
+Older iterations:
+  Patches 6 to 13 in the big picture series
+  https://lore.kernel.org/all/20260325143555.451852-1-herve.codina@bootlin.com/
+
+Herve Codina (10):
+  driver core: fw_devlink: Introduce fw_devlink_set_device()
+  drivers: core: Use fw_devlink_set_device()
+  pinctrl: cs42l43: Use fw_devlink_set_device()
+  cxl/test: Use device_set_node()
+  cxl/test: Use fw_devlink_set_device()
+  PCI: of: Use fw_devlink_set_device()
+  PCI: of: Clear fwnode->dev during root bridge node removal and error
+    path
+  PCI: of: Set fwnode device of newly created PCI device nodes
+  PCI: of: Remove fwnode_dev_initialized() call for a PCI root bridge
+    node
+  PCI: of: Avoid np->data usage for the node changeset
+
+ drivers/base/core.c                      |  4 +-
+ drivers/pci/of.c                         | 52 ++++++++++++++++--------
+ drivers/pinctrl/cirrus/pinctrl-cs42l43.c |  2 +-
+ include/linux/fwnode.h                   |  6 +++
+ include/linux/pci.h                      | 11 +++++
+ tools/testing/cxl/test/cxl.c             |  4 +-
+ 6 files changed, 58 insertions(+), 21 deletions(-)
+
+-- 
+2.55.0
+
