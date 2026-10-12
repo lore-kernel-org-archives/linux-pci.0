@@ -1,130 +1,124 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F57D3A544C
-	for <linux-pci@vger.kernel.org>; Mon, 12 Oct 2026 11:51:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECE4E47A0A9;
+	Mon, 12 Oct 2026 11:54:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791805873; cv=none; b=cHS9KYyO8o6CoZ5ZQbrP91WWSrVEDigUfMMYkZZuppZQHnPeBwrgBXwsh4ILexQUIHpR93H0nmqQcBMhSWf9gW2N0992ufQW9swq3GeWM9kNMRvPp1tuX/p8i9BLOJkjS3uaYkX1yT4PDDCK9WIMTIS36x8R+OOmASTy24/gezo=
+	t=1791806043; cv=none; b=CbXEkp5qC3lKyzeruGSVgpIIR2QV7PASZtMaT4YWcLr9nABGO1f49wQM8ccRiuOHv8Szma9T463oLfJMbcOPr/XpJJ5/4PZ5EFSl6IHm94vcsKl5V1KqHJ9rr5rc2kIt+Lc3jApPfez/GVxEpcg1ws9g0c0RX3bN/QlncT2iDIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791805873; c=relaxed/simple;
-	bh=QcIHzaXp2uzNr9ApQo6Zm4iwowhE/oJ5oO3RhN3cJBc=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=WGoR1WHtNESxsXWte0N1M9zEPoB/ln+HSCJhR5w4NmXjLUFvNAKimQ7CkIYz8R/vVDVqXjSIRnQRr9XYvSpb5ri+1mnSE2QEXvJziRjNLvf3HrQcONdowj5uz3bssbDnyzaCkuMW7hR9OTMuBsXANQXpR/gTi2r3aY0D/lrEF5E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=joEDxKdu; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791806043; c=relaxed/simple;
+	bh=7E+GF5kjGv0Kl1i14e8nS/OkhBLJ7pvzgMyWdkcJex4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eR/8N2ZoKpztGFMsaYaQGh61kkTxtq1J+6sSMkYaPjLOoSOBLirq87B+SuzVFLWhLshSS1LXPtmuqN66sgJqZPMEkL0Wze4KLuuGMSV2ZGWqEIan2OG4WPt6sod52bTdaKDK6XuXm/O+A2SADxI4Nv3RoA5rEnfob3rw405aSxU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YTjyZQxU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="joEDxKdu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81C551F0089C;
-	Mon, 12 Oct 2026 11:51:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YTjyZQxU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EE711F0089C;
+	Mon, 12 Oct 2026 11:54:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791805871;
-	bh=OpsiNYvKctFHfHgnoRWHYD3Ibq7FUkWTYjZbJlhITMI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=joEDxKduAc6q6bii4ucrT0uA8QiEUgUXOpfk3q04MCaEsbsR/fgbSB9trdgX2rd76
-	 UF/xanI4ejENSOw8f9smnAqYzJ7/xLnVhguuDKhWlCE4Csqc3UPRrwj8k0WX/OsOtD
-	 TbCbzZWkf+papiNyMV6AecxPZXew0/EYmchYbm15f4gVxSC3qYHc0AkbD3kBdaWoaA
-	 JhSqfm3CU9zZpFlfXd1lMTTbkCYeiliXnjYn4jE8rYH/IiVHbwj4l5qJIpZv+Us10i
-	 sy1F6Km4LFHD5EzZVuFmDFveOf4XIoyFer6EgCgDb8u4sNDJyUn0SReC5s3NpGwND6
-	 nMISFKkMYz4pg==
-Message-ID: <sashiko-outbox-168028@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND] PCI/DOE: Poll briefly for a response before
- sleeping
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Michal Clapinski" <mclapinski@google.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261012114213.1757207-1-mclapinski@google.com>
-References: <20261012114213.1757207-1-mclapinski@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 12 Oct 2026 11:51:11 +0000
+	s=k20260515; t=1791806041;
+	bh=L5F7alszsmDfB3EkWEEFqNG+2UIF92exyXNav5WLshs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=YTjyZQxU5kgwLmeBS5kpBan2T0OOA/aNoilYZZYSeAEqPizzQWLlgzSj77PprWvPs
+	 goIZjR0RlaxlCm/U92AGxYW8AZF6PBaRLpm/SL2jDzzPXYLvA0jU3La6Rp1KwxQP+m
+	 FUCkWnCZMEmX/VrB08wLvgUE8BsqSH0+byuJlgyxC0KI7ERRMZUw0yVJbG8i4UtcqW
+	 1YQrEIhClieQiHct5I46908MxmS0TNkFXwqacorlvdxWI0WVHJiOwXomhx6Jx9wDYg
+	 MJSnd1gfkZsYPpIiO9tZT15vZuOdPGviwnrV0oHnLuIDFa+pp7VI4/xck3GiUHpmD7
+	 xt5cmmviCoeow==
+Date: Mon, 12 Oct 2026 14:53:57 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
+	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
+	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>
+Subject: Re: [PATCH v9 10/18] PCI/P2PDMA: Route Translated Requests under
+ Direct Translated P2P
+Message-ID: <20261012115357.GE219304@unreal>
+References: <20261001-fix-p2p-acs-v4-0-v9-10-1a8e0f50ddd9@nvidia.com>
+ <20261006222845.GA720627@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261006222845.GA720627@bhelgaas>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] pci/doe: CPU busy loop when HZ=3D100 due to PCI_DOE_POLL_INTERVA=
-L=3D0
---
+On Tue, Oct 06, 2026 at 05:28:45PM -0500, Bjorn Helgaas wrote:
+> On Thu, Oct 01, 2026 at 02:55:18PM +0300, Leon Romanovsky wrote:
+> > From: Leon Romanovsky <leonro@nvidia.com>
+> > 
+> > A Downstream Port with ACS Direct Translated P2P enabled routes a Request
+> > whose Address Type is Translated "to the peer Egress Port without
+> > redirection, regardless of ACS P2P Request Redirect and ACS P2P Egress
+> > Control", per PCIe r7.0 sec 6.12.3. P2PDMA assumes every Request carries an
+> > Untranslated address, so it sends an ATS client through the host bridge
+> > even where the fabric would route it straight to the peer.
+> 
+> "sends an ATS client through the host bridge" -- I assume this really
+> means "we told the caller that Requests would be routed through the
+> host bridge" when in reality they wouldn't?  I don't think this
+> actually changes any routing in the fabric, does it?
 
-commit 16e5277536bbca37386848082d18257e2ffa71dd
-Author: Michal Clapinski <mclapinski@google.com>
+I'd say it does. Before this patch, we didn't return `bus_address` here nor
+took the P2P path.
 
-PCI/DOE: Poll briefly for a response before sleeping
+Thanks
 
-doe_statemachine_work() waits for a response by sleeping
-PCI_DOE_POLL_INTERVAL (PCI_DOE_TIMEOUT / 128) between status reads,
-which is 7 ms at HZ=3D1000 and 4 ms at HZ=3D250. Exchanges are served from
-the device's local mailbox logic and typically complete within tens of
-microseconds, so nearly all of that sleep is wasted. Every DOE-capable
-endpoint pays it once per supported feature during enumeration.
-
-> diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
-> index 6b5d9ba8e9697..5e93d78a1a97e 100644
-> --- a/drivers/pci/doe.c
-> +++ b/drivers/pci/doe.c
-> @@ -27,6 +27,9 @@
->  /* Timeout of 1 second from 6.30.2 Operation, PCI Spec r6.0 */
->  #define PCI_DOE_TIMEOUT HZ
->  #define PCI_DOE_POLL_INTERVAL	(PCI_DOE_TIMEOUT / 128)
-
-[Severity: Medium]
-When HZ=3D100, does this integer division truncate to 0?
-
-If PCI_DOE_POLL_INTERVAL evaluates to 0, it permanently breaks the fallback
-sleep mechanism.
-
-> +#define PCI_DOE_POLL_FAST_MIN_US	20
-> +#define PCI_DOE_POLL_FAST_MAX_US	50
-> +#define PCI_DOE_POLL_FAST_TRIES		40
-
-[ ... ]
-
-> @@ -525,10 +528,25 @@ static void doe_statemachine_work(struct work_struc=
-t *work)
->  			signal_task_abort(task, -EIO);
->  			return;
->  		}
-> -		rc =3D pci_doe_wait(doe_mb, PCI_DOE_POLL_INTERVAL);
-> -		if (rc) {
-> -			signal_task_abort(task, rc);
-> -			return;
-> +		/*
-> +		 * Exchanges are served from the device's local mailbox
-> +		 * logic and usually complete in tens of microseconds, far
-> +		 * below the jiffies granularity of PCI_DOE_POLL_INTERVAL.
-> +		 * Poll for up to ~2 ms before falling back to it.
-> +		 */
-> +		if (tries++ < PCI_DOE_POLL_FAST_TRIES) {
-> +			if (test_bit(PCI_DOE_FLAG_CANCEL, &doe_mb->flags)) {
-> +				signal_task_abort(task, -EIO);
-> +				return;
-> +			}
-> +			usleep_range(PCI_DOE_POLL_FAST_MIN_US,
-> +				     PCI_DOE_POLL_FAST_MAX_US);
-> +		} else {
-> +			rc =3D pci_doe_wait(doe_mb, PCI_DOE_POLL_INTERVAL);
-
-[Severity: Medium]
-Does passing 0 to this wait function when HZ=3D100 trigger a tight spin bug
-instead of yielding the CPU?
-
-Since wait_event_timeout() immediately returns without sleeping when the
-timeout is 0, this regression results in a tight CPU busy loop spinning over
-pci_read_config_dword() continuously for up to 1 second during enumeration
-for affected hardware.
-
-> +			if (rc) {
-> +				signal_task_abort(task, rc);
-> +				return;
-> +			}
->  		}
->  		goto retry_resp;
->  	}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261012114213.1757=
-207-1-mclapinski@google.com?part=3D1
+> 
+> So essentially we told the caller that P2P between A and B was, e.g.,
+> 5 hops when it was really only 2?
+> 
+> > Add PCI_P2PDMA_TLP_TRANSLATED and consult Direct Translated P2P for the
+> > Requests it describes.
+> > 
+> > Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+> > Tested-by: Tushar Dave <tdave@nvidia.com>
+> > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+> > ---
+> >  drivers/pci/p2pdma.c | 9 +++++++++
+> >  1 file changed, 9 insertions(+)
+> > 
+> > diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> > index 569a74de3b3a..3fd2cb8d16f0 100644
+> > --- a/drivers/pci/p2pdma.c
+> > +++ b/drivers/pci/p2pdma.c
+> > @@ -548,6 +548,15 @@ pci_acs_p2pdma_request(u16 ctrl, unsigned int tlp_flags)
+> >  		 */
+> >  		if (ctrl & PCI_ACS_TB)
+> >  			return PCI_ACS_P2PDMA_BLOCKED;
+> > +
+> > +		/*
+> > +		 * PCIe r7.0 sec 6.12.3: ACS Direct Translated P2P routes a
+> > +		 * Request carrying a Translated address to the peer "without
+> > +		 * redirection, regardless of ACS P2P Request Redirect and ACS
+> > +		 * P2P Egress Control settings".
+> > +		 */
+> > +		if (ctrl & PCI_ACS_DT)
+> > +			return PCI_ACS_P2PDMA_DIRECT;
+> >  	}
+> >  
+> >  	return ctrl & (PCI_ACS_RR | PCI_ACS_EC) ?
+> > 
+> > -- 
+> > 2.55.0
+> > 
