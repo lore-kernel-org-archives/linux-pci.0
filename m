@@ -1,259 +1,256 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFC473A7839
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 07:45:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791877554; cv=none; b=Axg2P+3wf4Hmxezr62NA4T6u/o89enQPY1WT1lS3buJKS4qHuAX8TCh23eRTJWyGbc+6Tl8HWWa2C2hw7hYxU9aEJNj9GBQCzPCxRZOTuawPoDU6Y07tYqoLNCyNF/EdsUiocPpETgkeYebXtN8rlGcHNV0Gzy/MQsfvaQiIgkY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791877554; c=relaxed/simple;
-	bh=y5sr2Bhb4pM+iMfNN0Gwd79+2WTisPplpJL6T9c5vh8=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=dMFbJ205KslwONiXVVOK1A1PdgwP3VLZuuAc4gShbRdFhNeoxIt+Gk9oftQjY1NWiVyIrprO77UN80oqSDrtngw8Dm4+20yXFALBdrihaOibCXaUN6dhfaBKyelVMMei7j5d9TODQDsvH2rk3ZO/RCeXnY/s2lTYQQ6vkNdwtGs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e5qJfJS4; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED6273905F0
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 08:48:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.48
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791881283; cv=pass; b=mMmA/yfvSydcQgSuGK2AkhqA1ebWdt6s1rjjm7M9cHo/PHwNyLzfHFwFQmWmD5+baU2Zd4w+ApB08H1OAwXCZ6NRl7UYUDlWp0jsLf+pKcVIs1IwwKyDWntXnqUMfDu1xC3yGPoXoPRrBU5ZspbVOEnuFznnEUmGhBHoaexOdA8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791881283; c=relaxed/simple;
+	bh=CLDYnK6SJJppn6ruFYkJBkFq1xs1TunxHWw8XvTRdp0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=sgF2sC+gATM23GPvkHFJPZx2F3tX1I7+wvquKRekBFP3a41CpTmOFXwW+reUiXve3BlivZ1gCySimhEXkhM4SkRmxryf4w65DCUQx8rIMqxNeNfIXnJIWBSeK7Y8VNyk8vemUknL+uGpLTBiSQe/7upl3Oi4NtlI1ZELJ5DqISk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nearthlab.com; spf=pass smtp.mailfrom=nearthlab.com; dkim=pass (1024-bit key) header.d=nearthlab.com header.i=@nearthlab.com header.b=kXrNiLzh; arc=pass smtp.client-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nearthlab.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nearthlab.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e5qJfJS4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 312921F00898
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 07:45:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791877552;
-	bh=B9UoYBH3g4mUi6LX44VoMZRFlNLZSY6SOC8ciIqZuU0=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject;
-	b=e5qJfJS4CQz3jaXwJKubNQ+wV4Q8qke8xqhX/xSTBP0P53AC1CW8aFfprU/E1Iqvt
-	 demiPN2qzNfGB8KCFQSJieHEz1uYcEiNqndbMpGtMrJL7ROYi1HTFxcsJHELTVnDFM
-	 bjv2UPvQfGUJD2sJn/gcQvAyAPnXCi5ao/0fNtDpQI8ul0MGTKGoqSiY/dS3luj2qg
-	 qXaMq4A3lKA+CLOFif8+35f825SnDHmeSuEyooqgG28mGWMaaE+bDJSdV9iTKsQ2Sm
-	 JrJBwad8G5WhUa+b4bwPkcQ0DwA8BJyPdphyksMqbHZ8keFXaUPskvMshCvthMV2Dy
-	 Tu/CYeBXjNIEg==
-Received: from ams-compute-02.internal (ams-compute-02.internal [10.64.2.62])
-	by mailfauth.ams.internal (Postfix) with ESMTP id 87F3F198004A;
-	Tue, 13 Oct 2026 03:45:50 -0400 (EDT)
-Received: from ams-imap-11 ([10.64.2.31])
-  by ams-compute-02.internal (MEProxy); Tue, 13 Oct 2026 03:45:50 -0400
-X-ME-Sender: <xms:rOHNat6o3Ig8m0_WWtoxK0-0uwDfFLyByUmZKy5qm5vVKdQRmizuLA>
-    <xme:rOHNalsu4pFahhwb40J1NX799LMVTVBQ14SyMvmLvrjVIsAZrxo4s3YlRFCacEuc_
-    bKUQKmNUr1iyoh4l4FQIA7oxpyOQZx0nbo_3N2QcqsMWZN-BwS4rvzy0w>
-X-ME-Proxy-Cause: dmFkZTEuRNCJZuisoHttjXKwnGmGMRJcV7S8D38QDDsVOnpdPG9l6OkdaZvbmX1QMRNZLW
-    XxAuZxaxyz+vm0lSmRxpCXrbjWVwufj2oUfC2xFg2u4KZu7IvfshvrWpDbKIb0EmrsuFtB
-    vcAJNcBmMR3DN04VWwGQtay5T9/xpqY7KYNM0SLvUa2nKAQ/lju7TncIOYaII5WIPrWkDp
-    DkIVebes73/8+/Vqh4OqFys27seJdLPxBqJJoRyfR/Gc2EsFwM2i3sSZc6RGsY3anigqMt
-    7RKRvZx7u8hNOFfgAba77vrY+J1kxzwJU7jYRPwS8CSFULoI2laAaYblhxP2JHlX5wfqmS
-    1RPzPLWYlmE8SyYy090lgHvYFUk4ORgFnCteUc82EnKxYlrWl6gUTCYe4n10/yb660RPcD
-    xm9QpHqAtJbx8E0yyD7fo1CGPXDeQwSJfQGzTKEPUX/HxLjvR3ccXuu+WzKbGxLBZub/cS
-    w4CP8qkx3wfkbvoTjQpnKrJqu0WqFOQPFLh6Q7so6CeAKjcthGoIoKnyKccLjOERW1h/lL
-    HUrFr1YBbO6yDtAjq7Jh71YOnp5Oqv/sM6b0GsffvyFsiSsW6Ec6Prv5Em/A8SGClGsylR
-    a96mAzy7tQG0EJKL9M4hp2NA9pQcmbRoIobft20iAmDfQGhwitmuNaJmlrPA
-X-ME-Proxy: <xmx:ruHNageaNEIinbj-zL3npUqKEHuDFwTaykldQgmU-_2fwmvHS-5lbg>
-    <xmx:ruHNakfjCYIWlSrXZwe4rjgbzK6vCadEQySSJq2pLePzO3vtaWRuGA>
-    <xmx:ruHNajxrH0Oqjwkb7N0picdjRNeejK-etsYwfqIb1_4M9miiCUQitA>
-    <xmx:ruHNar_-t0BklNKBiS-nrC5TkoY9vfcbg8r4LEZb23nz1AbzLSG5Eg>
-    <xmx:ruHNarjl_56fNCNuPtL5qqkqQvDyxupm9kIBfEAIgCfjfvjbA17apVBX>
-Feedback-ID: ice86485a:Fastmail
-Received: by mailuser.ams.internal (Postfix, from userid 501)
-	id E0A96F80090; Tue, 13 Oct 2026 03:45:48 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (1024-bit key) header.d=nearthlab.com header.i=@nearthlab.com header.b="kXrNiLzh"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3a80d1c98f5so1531165a91.0
+        for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 01:48:01 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791881281; cv=none;
+        d=google.com; s=arc-20260327;
+        b=YIkuRv609VxyWBxyOaFo2KNznhDi67hV+jDCRHU+rtc+k8e7PkHiJ/giOvaIi2rzhu
+         IwN/i3ZrrJA+mWj795gqvPEW0g7Du2O+hCDOBh/eN0hvbjSO+lOiSwskkDU4jgPOzJ48
+         Rjmbf6RxeCZiftL+l6RgfcOW0CQkuf9RVOjsBQj6phX+MmFaHlYLYII7UCWXsQD5mo1Y
+         NVNr4hRkoPl1TS0fmDXzqmsisQnMk9XX05qpWZe9dbg17WIb7COhYpuOUQ7UJZ1gCRqI
+         AG9HNvbmVemQqnE6+NbKJ/BqVMpT4YvUa/V2FTfCIqLNH9emfDgAAYhs7xem+kHrPpXd
+         2tXg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=rzNVaT90GYZEug/T1ZLZlSqiBeontwDSLfIxns+H/So=;
+        fh=Z9HRlaOLTd36n+4c9Hno0RzqoMx+/4k4xR+xB0IhbeY=;
+        b=NcAv2HuNADn3Uz6dLWs+ab1pNQwVVetJ8hDzV6dIfOlNrrdaU5a8lDry77cJhC5Rs3
+         dZGNOd49Y683G0MKDMuuo2YvM402ZULPF9w3JvRVh7OSVaVy4eLPL9eJPuWiwBEH23/2
+         qMLl8UQJd50By2XoWwZGhULxQqjpYPUpJU5T/CnYj+JlR8b52ddmh9xVtgZn1pGocqrY
+         K/kgLbdRS5Z5UCOxMAeo2V8aJ/WDYk6MFrjk8j9oObcCho1Aqqekqo0N3wIcN8rtTpEl
+         8f74FQlbt7BrTFVPs5y7cfhssl5GMfW15PZK+A+i5ZbUyScTzpiR7wn1CJmN195iAqLC
+         hUcw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=nearthlab.com; s=google; t=1791881281; x=1792486081; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=rzNVaT90GYZEug/T1ZLZlSqiBeontwDSLfIxns+H/So=;
+        b=kXrNiLzh0PnIgjxOsK3cc8dYdJIdDsyOHw6NTjXS68McRrAuBat6n3Ooj5aprup66u
+         LbZvXRddhOKoF9diZwwmaYmvREe4l2YE/1zEMBFx3NvmIyAj1IyzWgjwPZ/DKGsAsCTT
+         gssSCHrRFrByDrdpJE33mpfa9mdK2T/k75Ia0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791881281; x=1792486081;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=rzNVaT90GYZEug/T1ZLZlSqiBeontwDSLfIxns+H/So=;
+        b=OcxRgKWzT/d1IriqCb5ySxc4pu3L60EK81CVUzSqVKl9XbTfE9LT8sSR/dgZDq0I5q
+         QW9F0pGx4LtbSrLKO0fzxMOvANfdPSGmtXp8Zd/g/PqzN/aDUEzkQ14Mfm7sPTNjmec/
+         YGzUZi+ts7u0AmmmH1CrDiXSGY35z+D6Yj9dI4TgT/yVswU5Qk48a7m/wc6lO95qvykp
+         7/DJFO5OrEDeRpk2uidflTTrIsGiuRB9rkp7pO9fI6JXrrCAPbAGumLOBRR8jmo46tGt
+         NzwaXEufjmsBA9hBSllzKIOlyhwBm15+QoL/+mkYM1zPkZfiaNDYWF9hfwUVFcuCVx5q
+         xt3w==
+X-Forwarded-Encrypted: i=1; AKwUvBxq97kWMzJYHEEeo/WcYPD6X7csguYnhg/6/bW9fYP4dE3PbInVksxbn8ZBxIVitmIrQz5WWUVqffg=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKc9rgpROiAJz7Mc2tas4yzy91lyBzVW1aABnr2G0TKlfPs6yBW
+	yy/rMf2JH7VyC8119554U2fDxnbBWvGM5H+DAWRu9z/R6FvwGW6u2bCDLprto+UO2irq2MaBOvk
+	8/jDte7woDbu8eaYKfiXXsd93QQOxS+TatwKdl/4HzA==
+X-Gm-Gg: AYBFou34+v4TJHeBzZONOPPY5n2HhYcQDrpFNVmeXswac3CjE6UZwB14RIY6JJT2iEn
+	UawhL/2g6NIGj6al9K2mSm7DNs6Q1+1+pYt2rMhUfmYRiBERU18jf2XORPn82TQrRlknnW9C+l/
+	Z4Ab7qZrB2SsESYcSFaw7N1Uq6tAerP1yf0+l/hshV749Oy1kRufZmh37sZYISA6bBxULIqYLQ5
+	mdiZsw88kB1+l6NvjJlqYulwjt627nQA8lxUjK3z1iWVOc8bZL5A8m682N7r3mqf/QCwi7h5X64
+	+SXql/JFncagYtBelkM9xJuO5MiaeY/wEUD4qF0muE9O6FsPrWPPMEPx
+X-Received: by 2002:a17:90a:d006:b0:3a7:bf13:6007 with SMTP id
+ 98e67ed59e1d1-3ab3a9128c8mr9969201a91.14.1791881281048; Tue, 13 Oct 2026
+ 01:48:01 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Tue, 13 Oct 2026 09:45:27 +0200
-From: "Ard Biesheuvel" <ardb@kernel.org>
-To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- "Ard Biesheuvel" <ardb+git@google.com>
-Cc: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
- "Bjorn Helgaas" <bhelgaas@google.com>,
- "Lorenzo Pieralisi" <lpieralisi@kernel.org>
-Message-Id: <5369bc85-a9af-429c-871a-0995d8f609f9@app.fastmail.com>
-In-Reply-To: <ac7686c7-9446-1f38-bc85-67556f0f6137@linux.intel.com>
-References: <20260930103036.248989-4-ardb+git@google.com>
- <20260930103036.248989-6-ardb+git@google.com>
- <ac7686c7-9446-1f38-bc85-67556f0f6137@linux.intel.com>
-Subject: Re: [PATCH v3 2/2] PCI: Allow 64-bit non-prefetchable BARs in prefetchable
- windows
-Content-Type: text/plain; charset=utf-8
+References: <871pa9gqy0.ffs@fw13> <20261012214737.GA1400495@bhelgaas>
+In-Reply-To: <20261012214737.GA1400495@bhelgaas>
+From: =?UTF-8?B?SGFuIC8g7ZWc7IOB7JqwU2FuZ3dvbw==?= <sangwoo.han@nearthlab.com>
+Date: Tue, 13 Oct 2026 17:47:49 +0900
+X-Gm-Features: AclHuK_m5ccTa8frqqq3Xr7dirm-kMGsCwAMeH37wK9ea3ERtMGi0K_ixLEeTqU
+Message-ID: <CAFg7d9becn9_=ZzNwQ7bSBBNid28t_RnofL-Vb1cZVHVHxS9fw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: brcmstb: Reserve only the MSI vectors that are
+ handed out
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Thomas Gleixner <tglx@kernel.org>, jim2101024@gmail.com, florian.fainelli@broadcom.com, 
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
+	bhelgaas@google.com, bcm-kernel-feedback-list@broadcom.com, robh@kernel.org, 
+	linux-pci@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, 
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+	Inochi Amaoto <inochiama@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi Ilpo,
+Hi Bjorn, Thomas,
 
-On Thu, 8 Oct 2026, at 19:52, Ilpo J=C3=A4rvinen wrote:
-> On Wed, 30 Sep 2026, Ard Biesheuvel wrote:
+> > Good. Can you please retest with the updated patch?
 >
->> From: Ard Biesheuvel <ardb@kernel.org>
->>=20
->> The non-prefetchable memory window of a PCI-to-PCI bridge can only
->> decode 32-bit addresses, and so non-prefetchable BARs of devices belo=
-w a
->> bridge can only be allocated from the part of the host bridge memory
->> space below 4 GB. This is the case even for 64-bit BARs, which could
->> easily be placed above 4 GB if there was a bridge window to put them =
-in,
->> and on many platforms, 32-bit addressable MMIO space is scarce.
->>=20
->> The PCIe spec addresses this in the implementation note "Additional
->> Guidance on the Prefetchable Bit in Memory Space BARs" (PCIe r7.0, sec
->> 7.5.1.2.1): on PCIe, setting the Prefetchable bit of a BAR still perm=
-its
->> correct operation even if the range has read side effects or cannot
->> tolerate write merging, as long as the entire path from the host to t=
-he
->> device is PCIe, given that PCIe Memory Reads always carry an explicit
->> length, and PCIe Switches never prefetch or merge writes. The same
->> reasoning applies when it is the OS that places a non-prefetchable BAR
->> in a prefetchable bridge window: PCIe Root Ports and Switch Ports
->> forward requests that hit either window in exactly the same way. Henc=
-e,
->> the prefetchable window of a PCIe Root Port or Switch Port, which may=
- be
->> 64-bit, can serve as a 64-bit window for non-prefetchable BARs too. [=
-0]
->>=20
->> So add pci_bus_placement_flags(), which returns the flags of a resour=
-ce
->> on a given bus with IORESOURCE_PREFETCH set if it is a 64-bit
->> non-prefetchable memory resource, the bus is not a root bus, all brid=
-ges
->> between the bus and the root bus are PCIe Root Ports or PCIe Switch
->> Ports, and the host bridge has no prefetchable memory window, but does
->> have one that extends above 4 GB in PCI bus address space. [1]
->>=20
->> Evaluate the conditions on the bridges and the host bridge only once
->> per bus, when it is added, and record the result in a new bus flag,
->> PCI_BUS_FLAGS_NO_NP_BARS_IN_P_WINDOWS: pci_register_host_bridge() sets
->> it on the root bus if the host bridge does not qualify, child buses
->> inherit it, and pci_alloc_child_bus() sets it on the secondary bus of
->> any bridge that is not a PCIe Root Port or Switch Port.
->>=20
->> Use pci_bus_placement_flags() wherever the resource allocator decides
->> which bridge window a device resource (including an SR-IOV VF BAR)
->> belongs in:
->>=20
->> - in pbus_select_window_for_type(), which is used when sizing bridge
->>   windows, and when releasing them to retry failed assignments or to
->>   resize a BAR;
->> - when allocating the resource in __pci_assign_resource(), by passing
->>   its result to __pci_bus_alloc_resource();
->> - when claiming a resource assigned by firmware, in
->>   pci_find_parent_resource();
->> - when deciding which assigned resources to release after a failed
->>   assignment, and which failures are relevant to a resized BAR.
->>=20
->> As a result, an eligible 64-bit non-prefetchable BAR is handled exact=
-ly
->> like a 64-bit prefetchable BAR: it is placed in the prefetchable wind=
-ow
->> of the upstream bridge, which may be above 4 GB, and allocation falls
->> back to the non-prefetchable window if the prefetchable one has no
->> space. [2]
->>=20
->> 32-bit BARs are not affected, and neither are bridge windows, as only
->> prefetchable bridge windows can be 64-bit. Devices below conventional
->> PCI or CardBus bridges, below PCIe to PCI/PCI-X bridges (in either
->> direction), or below host bridges that have a prefetchable window or =
-no
->> window above 4 GB are not affected either, and neither are devices on=
- a
->> root bus, as there is no prefetchable window for their BARs to go to.
->>=20
->> [0] This reasoning does not extend to the host bridge, though: how it
->>     treats the windows that firmware describes as prefetchable is
->>     platform specific. For instance, the V3 Semiconductor V360EPC
->>     (pci-v3-semi) enables prefetching for its prefetchable window, the
->>     MPC52xx uses Memory Read Multiple for it, and Freescale PCI/PCIe
->>     host bridges (fsl_pci) enable relaxed ordering for it. However, if
->>     the host bridge has no prefetchable windows at all (as appears to=
- be
->>     the case on many x86 PCs), all prefetchable bridge windows are
->>     carved out of its non-prefetchable windows, and so the host bridge
->>     does not treat them any differently.
->>=20
->> [1] Placing non-prefetchable BARs in prefetchable bridge windows only
->>     helps if one of those non-prefetchable host bridge windows extends
->>     above 4 GB. Otherwise, the prefetchable bridge windows end up bel=
-ow
->>     4 GB as well, and BARs would merely move between two bridge windo=
-ws
->>     that are carved out of the same 32-bit space.
->>=20
->> [2] Note that this only concerns where a BAR is placed. How it is map=
-ped
->>     is decided by the driver and by the attributes of the BAR itself
->>     (e.g., pci_iomap_wc() and the sysfs resource<N>_wc files only hon=
-our
->>     IORESOURCE_PREFETCH on the BAR), and this change does not modify =
+> Sangwoo, any update on this?
+
+Sorry for the silence.
+
+I have not been able to retest yet. I have several work items on a
+tight schedule right now, and I am currently working on a different
+board for another project, so I cannot get to this at the moment.
+
+For the KASAN slab-out-of-bounds report, I will follow up within
+October.
+
+For the retest with the updated patch, I cannot give a date right now.
+I am sorry about that.
+
+Thanks,
+Sangwoo
+
+2026=EB=85=84 10=EC=9B=94 13=EC=9D=BC (=ED=99=94) =EC=98=A4=EC=A0=84 6:47, =
+Bjorn Helgaas <helgaas@kernel.org>=EB=8B=98=EC=9D=B4 =EC=9E=91=EC=84=B1:
+>
+> On Thu, Oct 01, 2026 at 09:29:27PM +0200, Thomas Gleixner wrote:
+> > On Mon, Sep 21 2026 at 18:05, Han / =ED=95=9C=EC=83=81=EC=9A=B0Sangwoo =
+wrote:
+> > > I tested Thomas's patch on the same hardware setup with the 5-vector
+> > > MSI endpoint. The patch was applied as posted on top of 6.12.93
+> > > (rpi-6.12.y).
+> > >
+> > > With the patch applied:
+> > >
+> > > - The MSI base hwirq remained at 0x8 across 200 driver reload cycles.
+> > > - The driver got all 5 requested vectors on every cycle, with no
+> > > single-MSI fallback. Multiple Message Enable remained at 8.
+> > > - The brcmstb inner-domain mapping returned to baseline after each
+> > > unload/reload, with 12 mapped while the driver was loaded and 4 after
+> > > unload.
+> > > - A kprobe showed one allocation of 8 vectors followed by eight
+> > > single-vector frees, with nothing left over.
+> >
+> > 8 single vector frees?
+> >
+> > Seems I got something wrong there verus the bulk free. Updated patch
+> > below.
+> >
+> > > The MSI vector exhaustion issue I originally observed no longer
+> > > reproduces with the patch.
+> >
+> > Good. Can you please retest with the updated patch?
+>
+> Sangwoo, any update on this?
+>
+> I don't see this patch in linux-next (next-20261012), so I don't think
+> this will be fixed for v7.4 unless something moves it ahead.
+>
+> > > I also observed a KASAN report with managed affinity. Using a small
+> > > out-of-tree test module bound to the same endpoint and requesting 1..=
+3
+> > > vectors with PCI_IRQ_MSI | PCI_IRQ_AFFINITY, a request for 3 vectors
+> > > resulted in:
+> > >
+> > > BUG: KASAN: slab-out-of-bounds in __irq_alloc_descs+0x158/0x460
+> > >
+> > > Requests for 5 and 7 vectors were capped to 4 on this 4-CPU system an=
+d
+> > > did not trigger the report. I have not checked this against the
+> > > unpatched kernel yet, so I cannot tell whether it is related to the
+> > > patch.
+> >
+> > Any updates on that? Also please provide the source for that test.
+> >
+> > Thanks,
+> >
+> >         tglx
+> > ---
+> > --- a/kernel/irq/irqdomain.c
+> > +++ b/kernel/irq/irqdomain.c
+> > @@ -1610,6 +1610,17 @@ static void irq_domain_free_irqs_hierarc
+> >       if (!domain->ops->free)
+> >               return;
+> >
+> > +     /*
+> > +      * MSI device domains are capable of bulk free.
+> > +      *
+> > +      * CHECKME: Are all MSI parent domains capable?
+> > +      */
+> > +     if (domain->flags & (IRQ_DOMAIN_FLAG_MSI_DEVICE | IRQ_DOMAIN_FLAG=
+_MSI_PARENT)) {
+> > +             if (irq_domain_get_irq_data(domain, irq_base))
+> > +                     domain->ops->free(domain, irq_base, nr_irqs);
+> > +             return;
+> > +     }
+> > +
+> >       for (i =3D 0; i < nr_irqs; i++) {
+> >               if (irq_domain_get_irq_data(domain, irq_base + i))
+> >                       domain->ops->free(domain, irq_base + i, 1);
+> > --- a/kernel/irq/msi.c
+> > +++ b/kernel/irq/msi.c
+> > @@ -1333,20 +1333,28 @@ static int __msi_domain_alloc_irqs(struc
+> >
+> >               ops->set_desc(&arg, desc);
+> >
+> > -             virq =3D __irq_domain_alloc_irqs(domain, -1, desc->nvec_u=
+sed,
+> > +             /* Make sure a MULTI-MSI allocation is power of two */
+> > +             unsigned int nvec_aligned =3D roundup_pow_of_two(desc->nv=
+ec_used);
+> > +
+> > +             virq =3D __irq_domain_alloc_irqs(domain, -1, nvec_aligned=
+,
+> >                                              dev_to_node(dev), &arg, fa=
+lse,
+> >                                              desc->affinity);
+> >               if (virq < 0)
+> >                       return msi_handle_pci_fail(domain, desc, allocate=
+d);
+> >
+> > -             for (i =3D 0; i < desc->nvec_used; i++) {
+> > +             for (i =3D 0; i < nvec_aligned; i++) {
+> >                       irq_set_msi_desc_off(virq, i, desc);
+> >                       irq_debugfs_copy_devname(virq + i, dev);
+> >                       ret =3D msi_init_virq(domain, virq + i, vflags);
+> >                       if (ret)
+> >                               return ret;
+> >               }
+> > +
+> >               if (info->flags & MSI_FLAG_DEV_SYSFS) {
+> > +                     /*
+> > +                      * This only exposes desc->nvec_used and ignores =
 the
->>     flags of any BAR.)
->>=20
->> Assisted-by: LLM
->> Signed-off-by: Ard Biesheuvel <ardb@kernel.org>
->> ---
->> Tested on QEMU arm64 'virt' (DT, all resources assigned by Linux) with
->> a qemu-xhci below a Root Port, an NVMe below a Switch, a qemu-xhci
->> below a PCIe-to-PCI bridge and another qemu-xhci on the root bus: the
->> 64-bit non-prefetchable BARs of the first two (and of the PCIe-to-PCI
->> bridge itself) move from the 32-bit non-prefetchable windows into the
->> 64-bit prefetchable windows above 4 GB, while the others stay where
->> they were. When the 64-bit host bridge window is marked prefetchable
->> in the DT, or removed from it, all resources are assigned exactly as
->> without this patch. Both drivers work, also after hot removal and
->> rescan of the endpoints and of the Switch. Also tested on QEMU x86_64
->> q35 with SeaBIOS, which assigns all resources itself: the firmware
->> assignment is claimed as before, and after hot removal and rescan, the
->> eligible BARs are placed in the prefetchable windows.
->
-> Hi again,
->
-> I think I now mostly understand the remaining problems, both relate to=20
-> multipass resource assignment logic. First of all this seems required =
-as=20
-> well:
->
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index b662cbeda51e..b5fdcb10d45a 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -2206,8 +2206,10 @@ static void pci_prepare_next_assign_round(struc=
-t=20
-> list_head *fail_head,
->  	list_for_each_entry(fail_res, fail_head, list) {
->  		struct pci_bus *bus =3D fail_res->dev->bus;
->  		struct resource *b_win;
-> +		unsigned long flags;
->=20
-> -		b_win =3D pbus_select_window_for_type(bus, fail_res->flags);
-> +		flags =3D pci_bus_placement_flags(bus, fail_res->flags);
-> +		b_win =3D pbus_select_window_for_type(bus, flags);
->  		if (!b_win)
->  			continue;
->  		pci_bus_release_bridge_resources(bus, b_win, rel_type);
->
-> In addition, pci_bus_release_bridge_resources() ->=20
-> pci_bridge_release_resources() -> release_child_resources() may releas=
-e=20
-> additional resources, some of which may be assigned to a different bri=
-dge=20
-> window by FW than where kernel will try to put them in the next pass. =
-If=20
-> there are no failed resources for that other bridge window in the fail=20
-> list, the other bridge window is not released and thus doesn't get siz=
-ed=20
-> properly.
->
-> Likely, the best course of action would be to wrap release_child_resou=
-rces()
-> with PCI level equivalent (it would improve printing as well as then t=
-he=20
-> resources are properly annotated with the device information).
->
-> That would also likely make it possible to avoid tearing down resource=
-s=20
-> that are in use by some endpoint driver (which was recently reported t=
-o=20
-> occur, during hotplug IIRC).
->
-> I hope this helps.
->
-
-Thanks a lot. I will get back to this shortly, I hope.
+> > +                      * overallocated MULTI-MSI ones.
+> > +                      */
+> >                       ret =3D msi_sysfs_populate_desc(dev, desc);
+> >                       if (ret)
+> >                               return ret;
+> > @@ -1610,13 +1618,15 @@ static void __msi_domain_free_irqs(struc
+> >                       continue;
+> >
+> >               /* Make sure all interrupts are deactivated */
+> > -             for (i =3D 0; i < desc->nvec_used; i++) {
+> > +             unsigned int nvec_aligned =3D roundup_pow_of_two(desc->nv=
+ec_used);
+> > +
+> > +             for (i =3D 0; i < nvec_aligned; i++) {
+> >                       irqd =3D irq_domain_get_irq_data(domain, desc->ir=
+q + i);
+> >                       if (irqd && irqd_is_activated(irqd))
+> >                               irq_domain_deactivate_irq(irqd);
+> >               }
+> >
+> > -             irq_domain_free_irqs(desc->irq, desc->nvec_used);
+> > +             irq_domain_free_irqs(desc->irq, nvec_aligned);
+> >               if (info->flags & MSI_FLAG_DEV_SYSFS)
+> >                       msi_sysfs_remove_desc(dev, desc);
+> >               desc->irq =3D 0;
