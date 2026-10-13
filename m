@@ -1,166 +1,98 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 098E65187F2;
-	Tue, 13 Oct 2026 14:26:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E150C51814B;
+	Tue, 13 Oct 2026 14:26:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791901611; cv=none; b=ZfGNX9RxW5dtxh40W1Lsd+ALeA/AVWnEx4p1+SRmxSZ4FOoJibFczGFNmYs9XD6IA7oNkayY1/GpqItBtC9cej55ggM3aXAXS2b4Tg9owi1mZ1Dlhs36oh5yTCvDOrjlBEhr0OkAbhXRgdi82hWqav2TOq1zwhKoxHQQR2t24FY=
+	t=1791901614; cv=none; b=t/BHeGtZ3aDOn2t87hyJ1D8FjIuQMEfuesZT3qK89MRC8+vpC8dSmocowgmMuvn13zZEe1wHNrmbtCKpDzqhA6Qudyo8HhRtQo9zTVDf+77isb5XScKiSX06wTiPI2g+f9B4TtUEpS6rxw1OFXt65EQz7OP4xm4JEFV77b5Z8hY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791901611; c=relaxed/simple;
-	bh=Zm7YvLjSd928d55gJQhk1qII9rpJSTPjLjNHslHAa1M=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LLts/z5ZPXHPfrUbWZ0XktrzqA9oKSFf3ZEoRKlaqND7UX/mHiOakVQ57PsEGG5AsAkUnXedBJMxSEi+ecATYh4uJfy0ReFpoXk/ae5oUat/2AoHSYYcA8iN5LWYVmHrru2jnJMuRqkxJ26QGvo2W5Q1xFcwQbudh13auGcrAqs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OBufTWZr; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791901614; c=relaxed/simple;
+	bh=XfZVuH37TjJbVLTM/jEvSNl35LQfRki5rmhJIud0Ta0=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=W22b3GDrs2wJr2fAAyV3PK9zi0blscSclNyffSYbSfJicAuhCWkTWp52+uEc6mjMJ05de6VpVybUezhfFuHxex3Tw/hzP6OhSSLFYST9J60P62Doi30CStIMEr4MXO4An9rJ5l+AlCQhxXuSl9Hp/CCveWNIV0svv5iJYSDEeXU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M84dz03/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OBufTWZr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C13521F0089C;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M84dz03/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67CAC1F000FF;
 	Tue, 13 Oct 2026 14:26:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791901609;
-	bh=G6+HXzTIsdMXUDkB87K1SqwkQ8xKxvMiZmAMjtsCQwY=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=OBufTWZrlibOe040ffQmM69yRylTDpkUoxGTJVtEhDmWx+4LCP+4Yg5ltBb7UcZTS
-	 Jy08ZMZVYk/HkcG8EwYDtLR96JATNGtZZpfGT8k/eq/g6Jss6LO6fS0jkunGihzrFl
-	 HyVvHTxNS+GNu7/xgJt58UjBFAexZ5+vzHL0VT+16bPvrkZnwFqyC46DfT5TIpoj8Q
-	 /0T6YW2Z6b64iz/te9Uq+7qi8DZpE+EfQpxLeUl9WG2iLlAGl331JithROmKCSanW6
-	 7bCXOPX7Ig1o/+DkQ8EEp0WYsH26NWoaU41xYFX4ASoL9HwVHZKuC7Tl/1kunRVSKl
-	 qk+I1qbzogTPg==
-From: Leon Romanovsky <leon@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Leon Romanovsky <leon@kernel.org>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	=?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
-	=?utf-8?q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	iommu@lists.linux.dev,
-	Tushar Dave <tdave@nvidia.com>,
-	linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	linaro-mm-sig@lists.linaro.org,
-	linux-rdma@vger.kernel.org,
-	kvm@vger.kernel.org,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>,
-	Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: [PATCH v11 17/19] PCI/P2PDMA: Let a client declare that it selects ATS per mapping
-Date: Tue, 13 Oct 2026 17:25:25 +0300
-Message-ID: <20261013-fix-p2p-acs-v4-0-v11-17-72cf8c96e617@nvidia.com>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261013-fix-p2p-acs-v4-0-v11-0-72cf8c96e617@nvidia.com>
-References: <20261013-fix-p2p-acs-v4-0-v11-0-72cf8c96e617@nvidia.com>
+	s=k20260515; t=1791901613;
+	bh=Vu9GFTSwpA+ThnhYFOK02kJtnNFAzU/CFrFuq53MJ60=;
+	h=Date:From:To:cc:Subject:In-Reply-To:References;
+	b=M84dz03/ue983O1uOEriK2mgDcd8I0/vK6Wc4QCEqLcvOhVeUdQBHbaY2nuLf+iK/
+	 XxomRz5py81Ziy9sUEwpXdILr5KvWnvev6t8n7wyw6HkYDK5aoD9KRd8XOOKyvX3rj
+	 GQFYmV+CPCyD+120q7nulE5M9oTcSmjPo88uleWGa83Add7aiqXDFuoeLEX3yUaA9S
+	 V+djX8SDohHXmxu8z+AnJ5ZG5HwMWSwG5XpFun/GHc15TVd3t9wsuZzZ8nS7MEADwm
+	 HOxyxVw/pZ2GfT7d272Ud9GtVDy+bRNWC3M6hvF9U06Dh/vTYKKi+J8Vj14Yq62tZS
+	 EtCRK0fPHxjPg==
+Date: Tue, 13 Oct 2026 16:25:46 +0200 (CEST)
+From: Imre Kaloz <kaloz@kernel.org>
+To: Niklas Cassel <cassel@kernel.org>
+cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
+    linux-mips@vger.kernel.org, linux-kernel@vger.kernel.org, 
+    Lee Jones <lee@kernel.org>, 
+    Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+    Jiri Slaby <jirislaby@kernel.org>, mfd@lists.linux.dev, 
+    linux-serial@vger.kernel.org, 
+    Alexandre Belloni <alexandre.belloni@bootlin.com>, 
+    linux-rtc@vger.kernel.org, Andrew Lunn <andrew+netdev@lunn.ch>, 
+    "David S. Miller" <davem@davemloft.net>, 
+    Eric Dumazet <edumazet@kernel.org>, Jakub Kicinski <kuba@kernel.org>, 
+    Paolo Abeni <pabeni@redhat.com>, netdev@vger.kernel.org, 
+    Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org, 
+    Pavel Machek <pavel@kernel.org>, linux-leds@vger.kernel.org, 
+    Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+    Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 00/53] MIPS: SGI-IP27: add support for the IP35 (Bedrock
+ hub) machines
+In-Reply-To: <as4zsLZvV411ooEv@ryzen>
+Message-ID: <24d821f4-63ff-aa35-a36f-a72046fe59a7@kernel.org>
+References: <cover.1791890466.git.kaloz@kernel.org> <as4zsLZvV411ooEv@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Mailer: b4 0.15-dev-18f8f
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/mixed; boundary="8323329-1641235930-1791901553=:27186"
 
-From: Leon Romanovsky <leonro@nvidia.com>
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-The PCIe ATS Enable bit covers the whole device, so P2PDMA cannot tell
-from it whether a client will translate a given address. Most devices
-translate any address once ATS is enabled, but some choose ATS per DMA
-mapping and can still use bus addresses for the rest.
+--8323329-1641235930-1791901553=:27186
+Content-Type: text/plain; charset=ISO-8859-7; format=flowed
+Content-Transfer-Encoding: 8BIT
 
-Add pcim_p2pdma_set_ats_per_mapping() so the driver of such a device can
-declare that before P2PDMA starts treating clients with ATS enabled as
-translating everything. Keep it in the device's P2PDMA state, which
-already ends with the driver binding.
+Hello Niklas,
 
-Reviewed-by: Thomas Hellstr√∂m <thomas.hellstrom@linux.intel.com>
-Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
----
- drivers/pci/p2pdma.c       | 30 ++++++++++++++++++++++++++++++
- include/linux/pci-p2pdma.h |  4 ++++
- 2 files changed, 34 insertions(+)
+On Tue, 13 Oct 2026, Niklas Cassel wrote:
 
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 6a05a5019daf..144314ab5fae 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -26,6 +26,7 @@
- struct pci_p2pdma {
- 	struct gen_pool *pool;
- 	bool p2pmem_published;
-+	bool ats_per_mapping;
- 	struct xarray map_types;
- 	struct p2pdma_provider mem[PCI_STD_NUM_BARS];
- };
-@@ -1750,6 +1751,35 @@ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
- }
- EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
- 
-+/**
-+ * pcim_p2pdma_set_ats_per_mapping - Declare per-mapping ATS for a client
-+ * @pdev: PCI device that initiates peer-to-peer DMA
-+ *
-+ * Declare that @pdev issues Translated Requests only for the DMA mappings its
-+ * driver sets up to use ATS, rather than for any address once ATS is enabled.
-+ * P2PDMA then routes this client's Requests with the Address Type each query
-+ * asks about, rather than the one its ATS Enable bit implies.
-+ *
-+ * Call it once pcim_p2pdma_init() has succeeded. Without P2PDMA state the
-+ * declaration is dropped and the ATS Enable bit keeps deciding.
-+ */
-+void pcim_p2pdma_set_ats_per_mapping(struct pci_dev *pdev)
-+{
-+	struct pci_p2pdma *p2p;
-+
-+	p2p = rcu_dereference_protected(pdev->p2pdma, 1);
-+	if (!p2p)
-+		/*
-+		 * ats_per_mapping is a performance optimization,
-+		 * if pcim_p2pdma_init() didn't set pdev->p2pdma pointer
-+		 * for some reason, let's simply use ATS global settings.
-+		 */
-+		return;
-+
-+	p2p->ats_per_mapping = true;
-+}
-+EXPORT_SYMBOL_GPL(pcim_p2pdma_set_ats_per_mapping);
-+
- /**
-  * pci_p2pdma_map_type_tlp - Determine the mapping type for P2PDMA transfers
-  * @provider: P2PDMA provider structure
-diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
-index dd17501ba1b6..ce389e18d023 100644
---- a/include/linux/pci-p2pdma.h
-+++ b/include/linux/pci-p2pdma.h
-@@ -82,6 +82,7 @@ struct scatterlist *pci_p2pmem_alloc_sgl(struct pci_dev *pdev,
- 					 unsigned int *nents, u32 length);
- void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl);
- void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
-+void pcim_p2pdma_set_ats_per_mapping(struct pci_dev *pdev);
- int pci_p2pdma_enable_store(const char *page, struct pci_dev **p2p_dev,
- 			    bool *use_p2pdma);
- ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
-@@ -138,6 +139,9 @@ static inline void pci_p2pmem_free_sgl(struct pci_dev *pdev,
- static inline void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
- {
- }
-+static inline void pcim_p2pdma_set_ats_per_mapping(struct pci_dev *pdev)
-+{
-+}
- static inline int pci_p2pdma_enable_store(const char *page,
- 		struct pci_dev **p2p_dev, bool *use_p2pdma)
- {
+> Hello Imre,
+>
+> This series is rather large.
+>
+> I would recommend you to submit a minimal patch series
+> to get the basic support for your new board, such that
+> it can boot with a ramdisk and serial console.
+>
+> Then in the next cycle, send separate series for ata,
+> net, leds, mfc, rtc, etc.
 
--- 
-2.55.0
+Hi Niklas,
 
+Thanks for having a look. I checked what the minimum is: 31 of the 53 
+patches (1, 6-24, 26-29, 31-36 and 39) boot a Tezro to a ramdisk with a 
+serial console. Two mfd/ioc3 patches have to be part of that, as they 
+provide the console UARTs (31 for IOC4 on the Tezro, 36 for the IOC3 on 
+the Fuel). The rest separates cleanly into follow-ups: the remaining 
+Bridge fixes (2-5), ioc3-eth (25, 38), rtc (30), the IO8 serial IRQs (37), 
+machine identification and the Odyssey widget (40-44), ata (45-47, 49), 
+the defconfig refresh (48) and the LEDs (50-53).
+
+I¢ll wait for Thomas to say whether he prefers it split that way for v3.
+
+
+Thanks,
+Imre
+--8323329-1641235930-1791901553=:27186--
