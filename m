@@ -1,48 +1,48 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA05C3E557D;
-	Tue, 13 Oct 2026 13:10:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70C3C1A7264;
+	Tue, 13 Oct 2026 13:11:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791897052; cv=none; b=f7cnw720ISuJJDyFaRlCSivJbrM4KfAH3z0GaIitmjm1a1ls/sYLxzeNSsi7OCv3bcrNDbvNMOzxYuNr/agPYtF3PrGTEUOfCJerpj7Y3vrOmIMXxQa+xxNk03ERW1m2aHHsvpKltd8HoiSomzQiu1xmAyReOvnLXYwzwVbtrpI=
+	t=1791897064; cv=none; b=Joi73GFNBMgVx7NVcUXxN3g8GbqgcPD4sd8dmB0nHEdcF8XQfEzreMmdPsN10q0/gFXWpl4rWIF93DRNe3nSyv/VmhQTw9UDe/jn6xEB6Iu9B2gOmqLNdGKX2zs6SY8/oeEmUt5m+eqYrR1FpoqcXArKVf+fzJHAkRirY+9aAic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791897052; c=relaxed/simple;
-	bh=aHO/wtsdKgMmgb1QKzP2MniCa5nDtyZQbmVvebQgn1k=;
+	s=arc-20240116; t=1791897064; c=relaxed/simple;
+	bh=Ur/g/teufR3/Mt8OOOf3yUeB+T34vUXjDKjhhXwPFls=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CSDQwWpfYdsRWTwdKmj+yPvcVUNXim+/xI+BWd6s6emYzBZ9dk0zoJsJWb0SG5DUju78QVSFqCj6A9x0z3x5yJT4+bGbbAujJ9Wjty2HIV9Vn4P7nT3iPyVnCoJBRmWI9b37i1skLppwWA8wS1+kPaMqILE3CDnUrhICHROB3Jg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LDICR6sS; arc=none smtp.client-ip=192.198.163.15
+	 MIME-Version:Content-Type; b=EjytXTmKkW/I67HHcPOkM1TQe4Y/RYWUUY1Rnqw0NBvJ9aozSJmwVswQ39NE+QAjb1G2eXbytCTTfOAjqIpSlBKl3nW5nRi9NawSGSmqTAUdmcSvYhF+UscdHX+shJSigAJvlSmsl2801DbDtQYyw76cVcwKQnDCJgRP5BRiFZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EafDCwry; arc=none smtp.client-ip=192.198.163.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LDICR6sS"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EafDCwry"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791897051; x=1823433051;
+  t=1791897064; x=1823433064;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=aHO/wtsdKgMmgb1QKzP2MniCa5nDtyZQbmVvebQgn1k=;
-  b=LDICR6sStyb502VmeX9Iq5SJUUMCvZE7VYi5H78Xp3vKk/LrDR0xpG9L
-   S4aVta+rQoFPsvqdCi7Z7wr5FLjWCxkzhX1Fs9Msf+TvM5U0FoGFnVFHB
-   mRtJcKBmVaLoOXUaJiZDwLyShB7Hd0C+qMQzXt0TlKcEYt5teeGPmg7yG
-   Rqv2i1gX2ML73gfVs0iVNxTpashiI5e7AtscIyqwHJXJrEynX08uIRyGH
-   L1DYRlIx54birGdFQ48QEJyufooQudaAjVDRxxkqikxrqKljvBexONKf1
-   xBMxRS7rEIs59xBjKjKZedvb8zxELs4nsqTJZzg5WWiZKKK6N8Z+UrPd4
-   w==;
-X-CSE-ConnectionGUID: ArJPqKUSTeSjoHH87m77Qw==
-X-CSE-MsgGUID: 6APHGKdzTxyu4s4NO8N1xQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11933"; a="630370"
+  bh=Ur/g/teufR3/Mt8OOOf3yUeB+T34vUXjDKjhhXwPFls=;
+  b=EafDCwryCwQyazWUW/I8yIaLKWcLDm4+8IDVocPGt5OWNbMxpMtPg1jt
+   5J0tCKXkyq/wux2fH+VdwId2r01qv7SCDt9FMpvVudwWzswnk/nUVYEsb
+   uAZRlk1SVeEjDAcINuH6wKskjPUKiMMONYQgzV8J6975tdVdmkCh7scmQ
+   TGxuiFlpM5RqSUEsSM8P5ZGNEPS/f2vWmXXJ0pi9AUwBnbjpeIMK2z+4G
+   AAvrxbYFgYZTRrePlPgWqsZWQJSRPMlv93rdV5jtYYWAyDDzBHbxlQI9q
+   Dzpc4OzXHZTe5cVcdlFzZszOTRZompf1vGzm93v22FLJRk5W+U001st78
+   Q==;
+X-CSE-ConnectionGUID: ddsBIKhpR+KnqVVXV7BA2w==
+X-CSE-MsgGUID: J01R5obwQk+U5nwdT7r4eA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11933"; a="630383"
 X-IronPort-AV: E=Sophos;i="6.27,155,1787036400"; 
-   d="scan'208";a="630370"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2026 06:10:51 -0700
-X-CSE-ConnectionGUID: 5shIhWNqTFy+3gu//+Q9RA==
-X-CSE-MsgGUID: HPgkYAD9QXGTAC8Wtf0hWw==
+   d="scan'208";a="630383"
+Received: from fmviesa011.fm.intel.com ([10.60.135.151])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2026 06:11:03 -0700
+X-CSE-ConnectionGUID: n6UnDdtnRSWYPBOA7IkJug==
+X-CSE-MsgGUID: ohrzBwgAQ6u6M8xKydlE7w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,155,1787036400"; 
-   d="scan'208";a="1085006"
+   d="scan'208";a="3006272"
 Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.106])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2026 06:10:46 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2026 06:10:59 -0700
 From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
 	Nikolas Joshua Britton <nbritton@exabit.io>,
@@ -54,12 +54,12 @@ To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
 	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	Rob Herring <robh@kernel.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
 	linux-kernel@vger.kernel.org
-Cc: Bradley Morgan <brads@mainlining.org>
-Subject: [PATCH v3 4/8] PCI: Fix nesting windows with remainder at the left edge
-Date: Tue, 13 Oct 2026 16:09:38 +0300
-Message-ID: <20261013130948.6231-5-ilpo.jarvinen@linux.intel.com>
+Cc: Bradley Morgan <brads@mainlining.org>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH v3 5/8] linux/log2.h: Add 64-bit roundup/down_pow_of_two64() variants
+Date: Tue, 13 Oct 2026 16:09:39 +0300
+Message-ID: <20261013130948.6231-6-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261013130948.6231-1-ilpo.jarvinen@linux.intel.com>
 References: <20261013130948.6231-1-ilpo.jarvinen@linux.intel.com>
@@ -72,174 +72,111 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-If a bridge window has its non-aligning remainder at the left edge of
-the window, assigning a nested bridge window of same size will fail
-because resource side code will only allow starting a candicate range
-from an aligning address. In such case, aligned address is somewhere in
-the middle, not at the left edge of the window. Since the entire
-available space is required for full-sized nested bridge window,
-resource side code rejects the free space.
+Generic sounding roundup_pow_of_two() and rounddown_pow_of_two() are
+internally based on fls() that limits types to unsigned long. The type
+limitation is unexpected and undocumented.
 
-To solve this problem, PCI side code has to bypass the resource side
-alignment code by giving a smaller alignment and must check the
-aligment requirement itself. This allows resource side code to consider
-the entire available space as candidate to fit the required size.
+Worse yet, the typing seems also inconsistent between
+__builtin_constant_p() and __roundup/down_pow_of_two() branches, the
+former using full 64-bit size and the latter truncating type.
 
-Wrap pcibios_align_resource() with PCI core function that performs the
-alignment checks and left edge recalculation if needed. As the
-alignment given for the resource side code is artificially small, the
-real alignment has to be passed through alignf_data.
+The most sensible way seems to be eventually changing types such that
+the return type for roundup/down_pow_of_two() is same as input but it
+requires auditing all the existing callers that have mixed input/output
+types.
 
-Fixes: 9036bd0efcb6 ("PCI: Align head space better")
-Tested-by: Nikolas Joshua Britton <nbritton@exabit.io>
+As a stop gap solution, add roundup/down_pow_of_two64() that do not
+unexpectedly truncate 64-bit input.
+
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
+ include/linux/log2.h | 52 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
 
-I've not seen a report about this problem (thus no log quotes) but with
-nested thunderbolt topologies it seems well within realms of possibility
-of occurring.
----
- drivers/pci/setup-res.c | 60 +++++++++++++++++++++++++++++++++++++----
- include/linux/pci.h     |  1 +
- 2 files changed, 56 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 441a62807719..2ca3784aa323 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -13,6 +13,8 @@
-  *	     Resource sorting
-  */
- 
-+#include <linux/align.h>
-+#include <linux/bug.h>
- #include <linux/kernel.h>
- #include <linux/export.h>
- #include <linux/pci.h>
-@@ -260,6 +262,12 @@ resource_size_t pci_resource_alignment(const struct pci_dev *dev,
- 	return resource_alignment(res);
+diff --git a/include/linux/log2.h b/include/linux/log2.h
+index e17ceb32e0c9..a5c8416d0382 100644
+--- a/include/linux/log2.h
++++ b/include/linux/log2.h
+@@ -57,6 +57,16 @@ unsigned long __roundup_pow_of_two(unsigned long n)
+ 	return 1UL << fls_long(n - 1);
  }
  
-+static resource_size_t pci_resreq_remainder(resource_size_t size,
-+					    resource_size_t align)
++/**
++ * __roundup_pow_of_two64() - round up to nearest power of two
++ * @n: value to round up
++ */
++static inline __attribute__((const))
++u64 __roundup_pow_of_two64(u64 n)
 +{
-+	return size - ALIGN_DOWN(size, align);
++	return 1UL << fls64(n - 1);
 +}
 +
- /*
-  * For mem bridge windows, try to relocate tail remainder space to space
-  * before res->start if there's enough free space there. This enables
-@@ -280,10 +288,17 @@ resource_size_t pci_align_resource(struct pci_resreq_data *rr,
- 	if (rr->user_align)
- 		return res->start;
- 
--	if (IS_ALIGNED(size, align))
-+	remainder = pci_resreq_remainder(size, align);
-+	if (!remainder)
-+		return res->start;
-+
-+	/*
-+	 * Size constraints forced an early start move in
-+	 * pci_check_and_align_resource()?
-+	 */
-+	if (!IS_ALIGNED(res->start, align))
- 		return res->start;
- 
--	remainder = size - ALIGN_DOWN(size, align);
- 	/* Don't mess with size that doesn't align with window size granularity */
- 	if (!IS_ALIGNED(remainder, pci_min_window_alignment(dev->bus, res->flags)))
- 		return res->start;
-@@ -315,6 +330,33 @@ resource_size_t __weak pcibios_align_resource(void *data,
- 	return pci_align_resource(rr, res, empty_res, size, align);
+ /**
+  * __rounddown_pow_of_two() - round down to nearest power of two
+  * @n: value to round down
+@@ -67,6 +77,16 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
+ 	return 1UL << (fls_long(n) - 1);
  }
  
-+static resource_size_t pci_resreq_check(void *data,
-+					const struct resource *res,
-+					const struct resource *empty_res,
-+					resource_size_t size,
-+					resource_size_t min_align)
++/**
++ * __rounddown_pow_of_two64() - round down to nearest power of two
++ * @n: value to round down
++ */
++static inline __attribute__((const))
++u64 __rounddown_pow_of_two64(u64 n)
 +{
-+	struct pci_resreq_data *rr = data;
-+	resource_size_t align = rr->real_align;
-+	resource_size_t remainder, start;
-+	struct resource tmp = *res;
-+
-+	if (res->flags & IORESOURCE_MEM && !IS_ALIGNED(res->start, align)) {
-+		resource_set_range(&tmp, ALIGN(res->start, align), size);
-+		if (!__resource_contains_unbound(empty_res, &tmp)) {
-+			remainder = pci_resreq_remainder(size, align);
-+			resource_set_range(&tmp, tmp.start - remainder, size);
-+			if (!__resource_contains_unbound(empty_res, &tmp))
-+				return tmp.start;	/* caller skips range */
-+		}
-+	}
-+
-+	start = pcibios_align_resource(rr, &tmp, empty_res, size, align);
-+	WARN_ON_ONCE(!IS_ALIGNED(start, min_align));
-+
-+	return start;
++	return 1UL << (fls64(n) - 1);
 +}
 +
- static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 		int resno, resource_size_t size, resource_size_t align)
- {
-@@ -324,9 +366,17 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	int ret;
+ /**
+  * const_ilog2 - log base 2 of 32-bit or a 64-bit constant unsigned value
+  * @n: parameter
+@@ -163,6 +183,23 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
+ 	__ilog2_u64(n)			\
+  )
  
- 	pci_init_pci_resreq_data(&rr, dev);
-+	rr.real_align = align;
- 
- 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
- 
-+	if (!rr.user_align &&
-+	    (res->flags & IORESOURCE_MEM) && pci_resreq_remainder(size, align)) {
-+		align = 1U;
-+		if (pci_resource_is_bridge_win(resno))
-+			align = pci_min_window_alignment(bus, res->flags);
-+	}
++/**
++ * roundup_pow_of_two64 - round the given value up to nearest power of two
++ * @n: parameter
++ *
++ * round the given value up to the nearest power of two
++ * - the result is undefined when n == 0
++ * - this can be used to initialise global variables from constant data
++ */
++#define roundup_pow_of_two64(n)			\
++(						\
++	__builtin_constant_p(n) ? (		\
++		((n) == 1) ? 1 :		\
++		(1UL << (ilog2((n) - 1) + 1))	\
++				   ) :		\
++	__roundup_pow_of_two64(n)		\
++ )
 +
- 	/*
- 	 * First, try exact prefetching match.  Even if a 64-bit
- 	 * prefetchable bridge window is below 4GB, we can't put a 32-bit
-@@ -336,7 +386,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 */
- 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
- 				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
--				     pcibios_align_resource, &rr);
-+				     pci_resreq_check, &rr);
- 	if (ret == 0)
- 		return 0;
+ /**
+  * roundup_pow_of_two - round the given value up to nearest power of two
+  * @n: parameter
+@@ -180,6 +217,21 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
+ 	__roundup_pow_of_two(n)			\
+  )
  
-@@ -348,7 +398,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
- 					     IORESOURCE_PREFETCH,
--					     pcibios_align_resource, &rr);
-+					     pci_resreq_check, &rr);
- 		if (ret == 0)
- 			return 0;
- 	}
-@@ -361,7 +411,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 */
- 	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
--					     pcibios_align_resource, &rr);
-+					     pci_resreq_check, &rr);
- 
- 	return ret;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ea7d75871269..d7b431c1ac0d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1226,6 +1226,7 @@ char *pcibios_setup(char *str);
- struct pci_resreq_data {
- 	struct pci_dev *dev;
- 	resource_size_t user_align;
-+	resource_size_t real_align;
- };
- 
- resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
++/**
++ * rounddown_pow_of_two64 - round the given value down to nearest power of two
++ * @n: parameter
++ *
++ * round the given value down to the nearest power of two
++ * - the result is undefined when n == 0
++ * - this can be used to initialise global variables from constant data
++ */
++#define rounddown_pow_of_two64(n)		\
++(						\
++	__builtin_constant_p(n) ? (		\
++		(1UL << ilog2(n))) :		\
++	__rounddown_pow_of_two64(n)		\
++ )
++
+ /**
+  * rounddown_pow_of_two - round the given value down to nearest power of two
+  * @n: parameter
 -- 
 2.47.3
 
