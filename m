@@ -1,134 +1,120 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 487665012B7
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 16:56:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20AFD5208C3
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 16:59:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791910610; cv=none; b=IdCYJzHlRrSnPIIAqrCWQoCPtyszTYJz5oeJbvAK7kPIEJLuYtU77dhgIrRgicd6un+92sPX5gID0uHOktprpMSdYZSWKRSdVK2p3/4YfBY/wzYB7LqZryXcBVfSVZ5jffZuG4FUMTfepNI46dKcJ+yNS4X3KDiFwagYpvPEp5M=
+	t=1791910764; cv=none; b=YZAoCyd73q2ZrRMX/+HpMztmXk9OAasGalkCy26s2niof8uFC9Ks+ty49ukuBiaEcTDm/3pD97dmnMRO9f5TPnroJ8eK+U/g60kIv8ciINhp+M420Cw15IcKJOMPvxTywSIOFZV8K5D3TYIDavnjZSYk9htHepB3Yk70m6DJCgA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791910610; c=relaxed/simple;
-	bh=YYJTbwy0HtrIEhdzcWsomzA4nphoQkU7Pn2YJRhRN3E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RTrO4/LLN/g5a/L/Gu4UAuxS6tIrM9Z5lWcrAPcPP5VyiJKjK9vlnupCB5GIHoFF68PhyrSu7CF8dpVSW+CwA9OTVpWc/oDl+wUVscSPk51gtkarlf0C/erJs4J1Kidz4+9zra6g3pozVLQbLjIl9VOaGIpyUMk/FZMsxD7FCS4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=VumbfEqy; arc=none smtp.client-ip=209.85.214.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1791910764; c=relaxed/simple;
+	bh=Em0J4kFPQkpc6DtvJOpGf2IR0VZFxoTRpJ6JXd5k4yw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=lZfPjYxFFtz0YN+TUhHb4cX1rqwIUA/ebV0QRV5df3NjKTi+uFeBqb70Hie4/UX2lRBFUbaDBQseqjBz2jmgYUM/3CMPWIzb8dma5zRrj6DJF3j+B8Z9g6L3MUJfJFGwQsxxH3fI4duEpXGjcbWN1QXNMbmKaomW5OrFOQymfOc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NnY9OryH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="VumbfEqy"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2e61ac64ec3so28080855ad.2
-        for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 09:56:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1791910609; x=1792515409; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Di8aE6KdoZOnEQFh34NIGAtRDEHWCfZKwuwkHlmj2kM=;
-        b=VumbfEqyGQY2UNEEboHXzpsTnpGqHs3tq+0945RKHiuarSR/zkubn69noQDyfLWbDc
-         KrR4VahBvsthB42AV99hCeF9aznl9IL1VQrvytZjqphMYDUnZ45HX1YJ3ErSrSCF68Nh
-         ljeWb215dftVD3xYbuPbkld2zCq6MNfzrvXnf/VoKrSt17Xy+RCG0xmgwKOJTwj+1HJF
-         igV9cwu7N2C0uJW3fVyMW/x6hAmDF/EBIFoR3KGidWS2B8OPDZ5lRJRQpjlKYl2qvbDg
-         d9qaO0PnOhrHd4wc/6xwT9tqZbxnxvkGXcnl4H5HRyimcOEuIAbTRMC9ytwnlPQtHD3i
-         usuQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791910609; x=1792515409;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Di8aE6KdoZOnEQFh34NIGAtRDEHWCfZKwuwkHlmj2kM=;
-        b=p76Iz8i7QTE4XH0wveZzJIbUyz3V+pd2snkmWhU5KSJTihhMug6APuBAqAum8hfi7+
-         RHcB/RWazO43Ax74EA0dqR9dUllswAd0mMkFdT+cLzFu1XLGoFJy5fV6KRZOTP6taj/k
-         Vc5f0+K8+GcnqRPEF+FhJfkk8NL6USs1gBnr3sBGrS458yOGwkR5eGQJfnK32TyJ3HYt
-         Zsl+yjlB2m5ijXJPrVvhJUUurBpsPZbectcU+UYYSwRv2DHc1hEh0XYUwyga8yGXmWV4
-         fVB2Gy2x3M9r4sWCR7WnLrdWOp6+KejG3TBT7L7rBBF71KW8qFEBZEa92hVgeHV93bcl
-         gS8A==
-X-Forwarded-Encrypted: i=1; AKwUvBzkjgINMQJCS/UTvU/FQzvlGExs9DL++YPhYk3QUQuGxtrVB/3kv590u+XO87uaFTNM/KcNvAURpl4=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJCVpeBdEQmBmkEfm4G0E84LmKOuV8GdOPq9cn+S7mMVDo1tnHA
-	obSzv8S6Jgf4zWFhMXP2WsyYGRJ702Odo9poGMBdRQJ/3DY0pv6KTqZr+sPj6j6O3g==
-X-Gm-Gg: AYBFou3MZF6T2AjfQnk3wdBJh/60PW3EGseqjiSR7ixIU1tgEaSZFWwdr5bbwoz4pqM
-	VMsJ7UiFs3SUlbewn2fOjcSFd6r7rIsmLGK9GNkrDSrOaTyku2H0TEmCjvVGveOWyZCohk50rVi
-	NcddeHH551uxvn2uWBwD9pYV+okeox7FDuy245l0zPbeOa21GY43CapQIcjMTrhealADb/rlbAk
-	d6TIhnpNbtQL+DEVXHjhv9+49bqIqe/CyH1tXNadoDbU3zT4UnPhJvRwSLuOsx+9izoMl0lo7Yi
-	c0O08+Qez25Kknwm5ZTHaDzavjfHBuLrEqZlnIRHl58BPpT5yTZxt/PiaDwN01xa3q3AOGZqm+B
-	sk8gpk+J9kWRhkEN/XOLrh8yBhI34i1w5i5/zy+NBrgMoVT3t4YTlvhC+sPcbhmWQh2P13b0anm
-	A1jlke1YHeQmmkDISNMZXTm+0qke4x1/8NQhDI8YOAJ0A2cpW0rjAisE0Qyu8p89A6g/VgoRu5l
-	2JzBlSUY/xaYbSVKG3Tb6y0FAd1waixkRE=
-X-Received: by 2002:a17:902:f612:b0:2e7:c821:3789 with SMTP id d9443c01a7336-2e842ce1b19mr106967855ad.43.1791910607036;
-        Tue, 13 Oct 2026 09:56:47 -0700 (PDT)
-Received: from google.com (64.75.127.34.bc.googleusercontent.com. [34.127.75.64])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e841a04012sm60860835ad.1.2026.10.13.09.56.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Oct 2026 09:56:46 -0700 (PDT)
-Date: Tue, 13 Oct 2026 16:56:42 +0000
-From: David Matlack <dmatlack@google.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: kexec@lists.infradead.org, linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v10 03/13] PCI: liveupdate: Track incoming preserved PCI
- devices
-Message-ID: <as5iyt9-8btokzCo@google.com>
-References: <20261013162529.1928093-1-dmatlack@google.com>
- <20261013162529.1928093-4-dmatlack@google.com>
- <sashiko-outbox-170133@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NnY9OryH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEE7E1F0089D
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 16:59:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791910762;
+	bh=N1+Y8UcbV3j4gztto6Wz9a9MFiofJ01PDbTLcnyXQoY=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=NnY9OryHtHJIel8UNv5f+AGAi81aEBCtoARkeyf0ziaFlyzh4VtDnXtHwi49nICP6
+	 NVuN5bMhuwtBOvlEqdxAVdF/CLjEQCrxrPrSXkEvE2sAjQDMa8LcLJhZZqGdM4CnFx
+	 GY0L3LlDtpceVmsjbk4Bx9PV4S7tzCi9PmFDIL5DG3iW4wpAzA9r/9HiIT4zBm/m4N
+	 8viphVEmp7UMLUMACskdV7NVh6hc8CWYNKJ3CR0CG1ELz6tHKA1Y4FrIwdiwrD10WL
+	 hGbAxhlPgA/1Ua7RsqtYfAsqh/F/F9l0hJuf5HH720Ff4o4K1Ux+Z3iUlW0JwJUaUh
+	 +gk85jfYy2a7g==
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-5ba3ac592faso1670204e87.0
+        for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 09:59:22 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvByZgylnynvqAmSyJvq32tIXr1SsuIYwm+TlJCmBMpZPbsl4BZ80Q5QRyPSp9jLAY2gd24+ST8W0c6Q=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKkFRNEFj2xjbywX8j7od0IywaMi0ZWvm3RlTLd9Po2EJKRwWeR
+	Cg//OVsHgEkEOSe3Z0/1+flishwaJS/l6Fc1M0eBXsYrDbggNmlNu/cxKQzy2mAjYE2wE0vBruf
+	E50nFUXUcJ+RBoPP4VLp/AxcabvMdrEM=
+X-Received: by 2002:a05:6512:304a:b0:5bc:d39d:9b38 with SMTP id
+ 2adb3069b0e04-5bcde6c4cacmr4486252e87.32.1791910761041; Tue, 13 Oct 2026
+ 09:59:21 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <sashiko-outbox-170133@kernel.org>
+References: <20261012104645.975190-1-keng-yu.lin@hpe.com> <CAJZ5v0iGhqaF1m-Vc2xdXQXj_BxPFFWCBTP=Ypg_gWQEqWkNfg@mail.gmail.com>
+ <642c49e1-7d47-44fd-b597-e5ff0877bb56@amd.com> <20261013060957.1023448-1-keng-yu.lin@hpe.com>
+ <CAJZ5v0hndk_ck1hcgWXyGX=OHmbfbhKsrJQsNQF9DQrucRNMDw@mail.gmail.com>
+ <d11aa70c-4753-4a28-9955-990c45649677@amd.com> <CAJZ5v0h2-S=Yf84LveK=36AkeutJxj5qYzVXnjhAnawi097x0g@mail.gmail.com>
+In-Reply-To: <CAJZ5v0h2-S=Yf84LveK=36AkeutJxj5qYzVXnjhAnawi097x0g@mail.gmail.com>
+From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
+Date: Tue, 13 Oct 2026 18:57:15 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0ie2AvCbdv8-zkpYzHLcTwUPUj+=WWOQjDAPmSepSAQPg@mail.gmail.com>
+X-Gm-Features: AclHuK-kpBBJjgT_J-9UdGMEksfS5T7DW_cr_Uqhmch-I8vSerRUvLqL95_av1o
+Message-ID: <CAJZ5v0ie2AvCbdv8-zkpYzHLcTwUPUj+=WWOQjDAPmSepSAQPg@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI/PM: Restore BARs after powering up during enumeration
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Keng-Yu Lin <keng-yu.lin@hpe.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Matthew Ruffell <matthew.ruffell@canonical.com>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, andy.liang@hpe.com, david.chang@hpe.com, 
+	s.collins@hpe.com, jenifer.golmitz@hpe.com, pravallika.kamma@hpe.com, 
+	zhen-dong.lai@hpe.com, zachary.pabor-ext@hpe.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 2026-10-13 04:40 PM, sashiko-bot@kernel.org wrote:
-> > +    if (READ_ONCE(dev->liveupdate.incoming))
-> > +        pci_WARN(dev, 1, "Destroying incoming-preserved device!\n");
+On Tue, Oct 13, 2026 at 5:52=E2=80=AFPM Rafael J. Wysocki (Intel)
+<rafael@kernel.org> wrote:
 >
-> [Severity: High]
-> Does this code risk silent memory corruption by only warning instead of
-> panicking?
+> On Tue, Oct 13, 2026 at 5:41=E2=80=AFPM Mario Limonciello
+> <mario.limonciello@amd.com> wrote:
+> >
+> >
+> >
+> > On 10/13/26 10:23, Rafael J. Wysocki (Intel) wrote:
+> > > On Tue, Oct 13, 2026 at 8:10=E2=80=AFAM Keng-Yu Lin <keng-yu.lin@hpe.=
+com> wrote:
+> > >>
+> > >> Hi Rafael, Mario,
+> > >>
+> > >> The initial read is not needed to fix the reported D3hot-to-D0
+> > >> failure. I added it to avoid extra BAR writes on devices already
+> > >> in D0.
+> > >>
+> > >> pci_power_up() does update current_state, but need_restore is
+> > >> calculated before that update. The check includes:
+> > >>
+> > >>          dev->current_state >=3D PCI_D3hot
+> > >>
+> > >> For an initially unknown device with PMCSR reporting D0 and
+> > >> No_Soft_Reset clear, this still requests a BAR restore. Reading
+> > >> the state first avoids that request, although the final
+> > >> current_state is D0 either way.
+> > >
+> > > Fair enough, but if the device is in D0 already, it need not be
+> > > powered up, so if you make a point to update the power state upfront,
+> > > you may as well skip the power up if the outcome is D0.
+> >
+> > It actually does need to have all the ACPI calls that happen as part of
+> > the D0 transition though like _REG.
 >
-> When an incoming preserved device is destroyed, it is dropped from the
-> kernel's resource tracking. However, the device may still be live and
-> performing DMA if it was handed over by the previous kernel.
-
-The device is not dropped from tracking. Its struct pci_dev_ser stays
-in the incoming FLB with a non-zero refcount, so if the device is
-enumerated again it is treated as incoming-preserved again, and if it
-never finishes, pci_check_all_devices_finished() still catches it. Bus
-numbers also cannot be reassigned, since the preserved upstream bridges
-keep theirs.
-
-As for MMIO resources such as BAR locations, they are not preserved
-today. That will be handled in a future series.
-
-> > +        pci_liveupdate_cleanup_device(dev);
+> Good point.
 >
-> [Severity: High]
-> Can an incoming preserved device that fails enumeration here cause a resource
-> conflict?
+> This basically means that the upfront power state check belongs to the
+> logic to determine whether or not to restore the BARs which should be
+> part of pci_power_up().
+>
+> So now the question is, if this upfront power state check is done, is
+> it still useful to read PMCSR after calling
+> platform_pci_set_power_state() in pci_power_up()?
 
-A preserved device coming back with an unknown header type means the
-hardware is probably broken. The PCI core cannot manage the device
-either way, its state stays in the incoming FLB, and its upstream
-bridges keep their bus numbers. I don't think it's necessary to panick
-the entire host in this scenario.
+Or what about using the following sequence:
+
+pci_update_current_state(dev, PCI_UNKNOWN);
+if (dev->current_state =3D=3D PCI_D0) {
+        /* No need to do a full power-up, just sync-up the platform state. =
+*/
+        platform_pci_set_power_state(dev, PCI_D0);
+} else {
+        /* Power up the device and restore BARs if necessary. */
+        pci_set_full_power_state(dev, false);
+}
+pci_update_current_state(dev, PCI_D0);
