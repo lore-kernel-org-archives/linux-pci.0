@@ -1,48 +1,48 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BBBB4F4028;
-	Tue, 13 Oct 2026 13:11:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AB654F4028;
+	Tue, 13 Oct 2026 13:11:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791897085; cv=none; b=Q9KmTgZYOI+oKIGCGoqhodvxzcDN/sLk3/sOHKktc+TU47UjMEilJA/mxdodzzDYOrA7uz0jDt9FQfWs4ewuL5aw4o87H7Kk0vDSAw3d15rPm3rnsJm5JuFlDoai0x/nABp7GQPdISeBNKpC/vLEYymbNIiiNI7ZLjna1nj4IIs=
+	t=1791897096; cv=none; b=bsbGfMuhGbdzK6KpkpoxG5q9QC7I1wqcEMSDRx0yEyAI5b0Wn7nmnS1RNS3jczGH5zoy4s5GkQci8+TuIn+WzJbNGylr0pA34Ev7bMnZ7msCQBsbUaOocdcJWY675XIQaEHPkTrlzW8sofcrTDN8BLDywi4wQshQXoMyT7AJgEA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791897085; c=relaxed/simple;
-	bh=p1HXJDgQRHqibBiKPSwVGUh4hSAocx7qJsryn8NTUcU=;
+	s=arc-20240116; t=1791897096; c=relaxed/simple;
+	bh=ZZITAiBaaQqy3ghN86ef/wybnGbKCy2GxZY4/xKbIo4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pyJlxUHt+o/zVs2b9QPgdu56e+aCNw3QWiWB8QoIOl6ifiUb4uhyKZ0ybquxOA/D/zgs5Ef5ukwBd0N1uh1O8kjkxV++MZ466NqHF10c6U2b+PHvlWmcWkFvI50WRUUb9JxRykEmmbKtcnShjaTYdXYloM8NxbJ7NmsQ0MDkUzY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Tw6Bd8+1; arc=none smtp.client-ip=198.175.65.14
+	 MIME-Version:Content-Type; b=HxE955xWCZyFaFANalOCwsPzrj+VJZ3eG0pZx6Xk7iJ79NQpi9lw2gW1RmItqfLprbyDqAiCj/Y4LUoDZfdEsy4R/JhXGku07mGy39KWn7SRPpBSBZaur++nVJZcMbJTOxkIGSUS3GrmUcDF7FoIZnpVNZ6gSLXIl1eGSZTFORQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DbyxAM0+; arc=none smtp.client-ip=198.175.65.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Tw6Bd8+1"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DbyxAM0+"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791897084; x=1823433084;
+  t=1791897094; x=1823433094;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=p1HXJDgQRHqibBiKPSwVGUh4hSAocx7qJsryn8NTUcU=;
-  b=Tw6Bd8+1euGqySE/cJeZo/PWaBiGSElNQXRTNYrEHiFk8u9mTK3IN4Nt
-   mcXWaJbTo+UxAzgiOU2d5dt2DoTScKX58c9T6eyoektLJiGZDnQYE4mag
-   vSkbq9QdrdRxHXTSbVsKBoJsIWlzv1GAWAcbfmVhhyMVutZIg2L4svQ1Q
-   lXfHAEM2zz4wMgdefMqAbyFuk5Xd4fEqRovVh1cOPqrU7svKp0quF8qrQ
-   ZQSCZrO9oOlA+rs1ad81apaCXIFAWARTK6fwKxLSfORAW8LmsLU8YtZ8T
-   GpEPjQs24drIAkUvk/CQzc+abKVyG3P6ws6Ixg46+l8Ll5zPW4VCZ7LTj
-   Q==;
-X-CSE-ConnectionGUID: xqi2ETP5R0O2AoNsYiQz3A==
-X-CSE-MsgGUID: uUzGHbPFTqmNCMmWDPWNfQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11933"; a="499487"
+  bh=ZZITAiBaaQqy3ghN86ef/wybnGbKCy2GxZY4/xKbIo4=;
+  b=DbyxAM0+Q5Y6oEvPdFxkTDtpBD6kzXZp3NMPYsHdWaWPPILcHS/Le0/4
+   hw0n7j4vBFL2b0rTmD6TuRJbPadw3DL4H/Ob9I2K+CUMmji4iKEHbUeTE
+   qlelWNyP6ZaxERg3EjyhFQvKGH4pU1go91wgDi6pj9+6cGzqUwY5neki1
+   Ou0p5OdHKftDgpNOczg4tabSAbijLdbmqXulh+HKZtuuw6HfzSR0irzR+
+   vR9tb+HBNQF38zT66OY6z4+OH40pvYWGrUsKHam3PEzjJtUFjCyZqfKE8
+   Gwel5biMG/JXvPxaJ23KErWwhapzafFc8J9h/mv1K2hLAm5cqnBi4FP74
+   g==;
+X-CSE-ConnectionGUID: BKGLhaRMRNKTWU+DeuRLhg==
+X-CSE-MsgGUID: Y5TEelHSS5mUMvyEOztU1A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11933"; a="614479"
 X-IronPort-AV: E=Sophos;i="6.27,155,1787036400"; 
-   d="scan'208";a="499487"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2026 06:11:24 -0700
-X-CSE-ConnectionGUID: VJIOZxiyTjGPWARG45JHbA==
-X-CSE-MsgGUID: pizr/UxlRbitzw+kI6OGZA==
+   d="scan'208";a="614479"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2026 06:11:34 -0700
+X-CSE-ConnectionGUID: 6VBpCap3SwSq17gCFNNCQw==
+X-CSE-MsgGUID: 2wV9QJoWTFKJVAw9y1h1Kg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,155,1787036400"; 
-   d="scan'208";a="1485224"
+   d="scan'208";a="1248129"
 Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.106])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2026 06:11:18 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2026 06:11:28 -0700
 From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
 	Nikolas Joshua Britton <nbritton@exabit.io>,
@@ -54,12 +54,19 @@ To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
 	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	Rob Herring <robh@kernel.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	linux-kernel@vger.kernel.org
-Cc: Bradley Morgan <brads@mainlining.org>
-Subject: [PATCH v3 7/8] PCI: Fix composite resource sizing
-Date: Tue, 13 Oct 2026 16:09:41 +0300
-Message-ID: <20261013130948.6231-8-ilpo.jarvinen@linux.intel.com>
+Cc: Bradley Morgan <brads@mainlining.org>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Mario Limonciello <mario.limonciello@amd.com>
+Subject: [PATCH v3 8/8] PCI/quirks: Avoid certain address on Genoa systems
+Date: Tue, 13 Oct 2026 16:09:42 +0300
+Message-ID: <20261013130948.6231-9-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261013130948.6231-1-ilpo.jarvinen@linux.intel.com>
 References: <20261013130948.6231-1-ilpo.jarvinen@linux.intel.com>
@@ -72,164 +79,108 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-The bridge window sizing algorithm aims to pack child resources back to
-back. With multiple composite child resources whose sizes do not align
-to the calculated minimal alignment for the bridge window, back-to-back
-placement may not be possible. The non-aligning remainder placement is
-limited because it must be adjacent to the rest of the composite
-resource.
+While testing the resource placement changes, tests hit a case where
+igb fails to probe when BAR 0 is placed at 0x9c000000:
 
-Effectively, two remainder parts may be placed into the same align
-sized block, but sum of their size might not match align. In such case,
-a gap is required to meet the alignment requirement of both resources.
+   90000000-9cffffff : PCI Bus 0000:a0
+  -  90000000-902fffff : PCI Bus 0000:a1
+  -    90000000-900fffff : 0000:a1:00.0
+  -      90000000-900fffff : igb
+  -    90100000-901fffff : 0000:a1:00.0
+  -    90200000-90203fff : 0000:a1:00.0
+  -      90200000-90203fff : igb
+  +  9be00000-9c0fffff : PCI Bus 0000:a1
+  +    9be00000-9befffff : 0000:a1:00.0
+  +    9bf00000-9bf03fff : 0000:a1:00.0
+  +    9c000000-9c0fffff : 0000:a1:00.0
+     9c100000-9c17ffff : amd_iommu
+     9c180000-9c1803ff : IOAPIC 8
 
-Add bridge window gap size calculator. Basic rules:
+  -       Region 0: Memory at 90000000 (32-bit, non-prefetchable) [size=1M]
+  -       Region 3: Memory at 90200000 (32-bit, non-prefetchable) [size=16K]
+  -       Expansion ROM at 90100000 [disabled] [size=1M]
+  +       Region 0: Memory at 9c000000 (32-bit, non-prefetchable) [size=1M]
+  +       Region 3: Memory at 9bf00000 (32-bit, non-prefetchable) [size=16K]
+  +       Expansion ROM at 9be00000 [disabled] [size=1M]
 
-1) Gaps are only necessary if there is more than one non-aligning
-   composite resource within a single bridge window.
+igb 0000:a1:00.0 0000:a1:00.0 (uninitialized): PCIe link lost
+------------[ cut here ]------------
+igb: Failed to read reg 0x18!
+WARNING: drivers/net/ethernet/intel/igb/igb_main.c:724 at igb_rd32.cold+0x3c/0x4f [igb], CPU#32: kworker/32:1/706
+...
+ igb_get_invariants_82575+0xff/0xf00 [igb]
+ igb_probe+0x3c8/0x1190 [igb]
+ local_pci_probe+0x3b/0x80
 
-2) If there are only two remainder parts that amount to less than align
-   together, the required gap is the difference of align and the sum of
-   remainder sizes.
+It turns out there is a 64kB iomem black hole at 9c000000 that returns
+~0 and this is where igb's BAR 0 resides. If another BAR of the same
+card is placed into that address, it is similarly black holed.
 
-3) On other cases, round each remainder part to align to get the gap
-   size. Sometimes, smaller size may be possible but due to how sizing
-   and assignment are made in different phases, it is not always
-   possible to predict where each resource is assigned. Thus, the
-   sizing has to play safe.
+Mark the problematic 64kB range reserved using a quirk bound to the
+bridge found in the problematic system.
 
-The gap is calculated based on the minimal alignment for the bridge
-window, which may be different for the case with only required
-resources and the case with optional resources.
-
-Fixes: 9036bd0efcb6 ("PCI: Align head space better")
-Reported-by: Bjorn Helgaas <bhelgaas@google.com>
-Tested-by: Bjorn Helgaas <bhelgaas@google.com>
-Reported-by: Nikolas Joshua Britton <nbritton@exabit.io>
-Tested-by: Nikolas Joshua Britton <nbritton@exabit.io>
-Link: https://lore.kernel.org/linux-pci/20260903063124.9316-1-nbritton@exabit.io/
-Reported-by: Maciej Grochowski <Maciej.Grochowski@sony.com>
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=222074
+Suggested-by: Mario Limonciello <mario.limonciello@amd.com>
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- drivers/pci/setup-bus.c | 84 +++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 81 insertions(+), 3 deletions(-)
+Cc: Borislav Petkov <bp@alien8.de>
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7ca0e9f4ffb6..2980b499ef75 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1164,6 +1164,79 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
- 	return min_align;
- }
+As an alternative to this, I've also tested reverting the commit
+07eab0901ede ("efi/x86: Remove EfiMemoryMappedIO from E820 map") and
+that also resolves the issue by retaining "9c000000-9cffffff : Reserved"
+entry in the resource tree.
+
+---
+ arch/x86/pci/fixup.c | 36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
+
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index b301c6c8df75..cc463bf492b6 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -822,6 +822,42 @@ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1571, pci_amd_enable_64bit_bar);
+ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x15b1, pci_amd_enable_64bit_bar);
+ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1601, pci_amd_enable_64bit_bar);
  
 +/*
-+ * Bridge window gap size calculator.
++ * TODO: Remove when/if root cause is found.
 + *
-+ * Calculates gap (empty space) necessary because of non-aligning composite
-+ * resources (VF BARs, bridge windows).
++ * Genoa appears to have a 64kB iomem black hole starting at 0x9c000000
++ * address for which all reads return ~0 blocking an overlapping BAR from
++ * working.
 + *
-+ * Rules:
-+ *
-+ * 1) Gaps are only necessary if there is more than one non-aligning
-+ *    composite resource within a single bridge window.
-+ *
-+ * 2) If there are only two remainder parts that amount to less than win_align
-+ *    together, the required gap is the difference of win_align and the sum of
-+ *    remainder sizes.
-+ *
-+ * 3) On other cases, round each remainder part to win_align to get the gap
-+ *    size. Sometimes, tighter packing might be possible but due to how
-+ *    sizing and assignment are made in different phases, it is not always
-+ *    possible to predict where each resource is assigned. Thus, the sizing
-+ *    has to play safe even if it may overestimate in some cases.
++ * Work around the problem by reserving the space prior to making any iomem
++ * allocations that could overlap with the black hole.
 + */
-+static resource_size_t calculate_win_gap_size(struct pci_bus *bus,
-+					      struct resource *b_res,
-+					      resource_size_t win_align,
-+					      bool optional,
-+					      struct list_head *realloc_head)
++static struct resource genoa_black_hole = DEFINE_RES_MEM_NAMED(0x9c000000,
++							       SZ_64K,
++							       "reserved");
++
++static void genoa_iomem_black_hole(struct pci_dev *dev)
 +{
-+	resource_size_t safe_gap = 0, remainders = 0;
-+	unsigned int nonaligning = 0;
-+	struct pci_dev *dev;
++	struct resource *r;
 +
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		struct resource *r;
-+		int i;
++	pci_bus_for_each_resource(dev->bus, r) {
++		if (!r || !r->flags || !resource_assigned(r))
++			continue;
 +
-+		pci_dev_for_each_resource(dev, r, i) {
-+			resource_size_t r_size, remainder, aligning;
++		if (!__resource_contains_unbound(r, &genoa_black_hole))
++			continue;
 +
-+			if (!pdev_resources_assignable(dev) ||
-+			    !pdev_resource_should_fit(dev, r))
-+				continue;
-+			if (b_res != pbus_select_window(bus, r))
-+				continue;
-+
-+			if (!optional && pci_resource_is_optional(dev, i))
-+				continue;
-+
-+			r_size = resource_size(r);
-+			if (realloc_head && optional)
-+				r_size += get_res_add_size(realloc_head, r);
-+			if (r_size <= win_align)
-+				continue;
-+
-+			aligning = ALIGN_DOWN(r_size, win_align);
-+			remainder = r_size - aligning;
-+			if (!remainder)
-+				continue;
-+
-+			nonaligning++;
-+			remainders += remainder;
-+			safe_gap += win_align - remainder;
-+		}
++		if (resource_assigned(&genoa_black_hole))
++			pci_dbg(dev, "iomem black hole workaround already applied\n");
++		else if (!insert_resource(r, &genoa_black_hole))
++			pci_info(dev, "iomem black hole workaround enabled\n");
++		else
++			pci_dbg(dev, "iomem black hole workaround add failed\n");
++		return;
 +	}
-+
-+	if (nonaligning == 2 && (remainders <= win_align))
-+		return win_align - remainders;
-+
-+	if (nonaligning >= 2)
-+		return safe_gap;
-+
-+	return 0;
 +}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, 0x14ab, genoa_iomem_black_hole);
 +
- /*
-  * Calculate bridge window head alignment that leaves no gaps in between
-  * resources.
-@@ -1281,6 +1354,7 @@ static void pbus_size_mem(struct pci_bus *bus, struct resource *b_res,
- 	int order, max_order;
- 	resource_size_t children_add_size = 0;
- 	resource_size_t add_align = 0;
-+	resource_size_t gap_size;
- 
- 	if (!b_res)
- 		return;
-@@ -1345,7 +1419,9 @@ static void pbus_size_mem(struct pci_bus *bus, struct resource *b_res,
- 	win_align = pci_min_window_alignment(bus, b_res->flags);
- 	min_align = calculate_head_align(aligns, max_order);
- 	min_align = max(min_align, win_align);
--	size0 = calculate_memsize(size, realloc_head ? 0 : add_size,
-+	gap_size = calculate_win_gap_size(bus, b_res, min_align, !realloc_head,
-+					  realloc_head);
-+	size0 = calculate_memsize(size + gap_size, realloc_head ? 0 : add_size,
- 				  0, win_align);
- 
- 	if (size0) {
-@@ -1355,8 +1431,10 @@ static void pbus_size_mem(struct pci_bus *bus, struct resource *b_res,
- 
- 	if (realloc_head && (add_size > 0 || children_add_size > 0)) {
- 		add_align = max(min_align, add_align);
--		size1 = calculate_memsize(size, add_size, children_add_size,
--					  win_align);
-+		gap_size = calculate_win_gap_size(bus, b_res, add_align, true,
-+						  realloc_head);
-+		size1 = calculate_memsize(size + gap_size, add_size,
-+					  children_add_size, win_align);
- 	}
- 
- 	if (!size0 && !size1) {
+ #define RS690_LOWER_TOP_OF_DRAM2	0x30
+ #define RS690_LOWER_TOP_OF_DRAM2_VALID	0x1
+ #define RS690_UPPER_TOP_OF_DRAM2	0x31
 -- 
 2.47.3
 
