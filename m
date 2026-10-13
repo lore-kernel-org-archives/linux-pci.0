@@ -1,198 +1,296 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B39E556B9F;
-	Tue, 13 Oct 2026 22:04:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A79773932F7
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 22:06:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791929090; cv=none; b=A55WDMmvcpDe1ZABYD4Iqn2aKqyyzy4gpGhvv6NhemiDPQnIsYGO2uyaPNsQHAr9y9UPWVRyZOKyZxamENDmVMMDfaTs4dKAocQENFXtJGUefD5jERQUYzI2j6S4N0VqFdivErUYjdHL61lIEtZ0gVEC63QCFsI+hg/ZhQtT3/o=
+	t=1791929189; cv=none; b=uvPI3ZWyhMK0fej6DuUSvalRRmuYB5ZL6cxTjzaPhoBSbafaCFqX2I6bs9/aQM1LcqZYtVJgA5LuVC7UP/9vnEgQHdY+ACTShIFwCv14E9IChEOwO+ZmmS9EZqY5NLaw5Avr7T4l+KvV8NuOh/cC1LVcEDIhsG1NZDT9XlxNex8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791929090; c=relaxed/simple;
-	bh=WJ0PsKJJ9GEZOIwNf+k33/yd+qdg96T2bbsHymMmrfQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MQLJNI21nery8nimZwElBsmMKdsuQeXiGTEqabXGn9vcRaAnji8zJIw4p2piOdH2MBURqURetS5c9QgKtIPD0GqBWJLzIF1ITeat+ru8DHHtKnOJMlEDKnKriCgMDHvHKRUSOxmiANNlaDnTRQIzED6qlvQy3wb1xVMFSIG4Zrs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BN+4oJ02; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791929189; c=relaxed/simple;
+	bh=R4mw4YXqKd2LrDQg5vzz7Mwn/J4jo8bx27rr5OcWF+Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nD/I76t5Ws9rbzaL/SpkX5W8GIRO9aS3E7XmKqSzvvjo2h0Svgg08yzqbrBfZxLlij50MO9MVXdu7JHZyNPv0gHxj8RWLVyrIpkYZdZ+LG0ZaAZbRPqauRcsRlyhGQkZEeu3OAFD2MxL2wM/5EZVBhyPuxoWLTaUSpZSoa7maE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=ING3eLxQ; arc=none smtp.client-ip=209.85.160.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BN+4oJ02"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D4091F00898;
-	Tue, 13 Oct 2026 22:04:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791929088;
-	bh=jCSgEGxqrKkW4tQWVEb2obBRfbgXfhgd/LNbZr68fQU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=BN+4oJ02D0ywdFvJsLoN0AZeasbdwaRZALns4Gp/E/6dhp55FMwxlEzqXc+pCNpBI
-	 MNFDdBozSYdFJthvwqSaj3pYp5kCj2qoUqGg/HnMK5qTvsRuCmDN7P8uT3INiiK/5l
-	 hlLthbK7AYGAYMhLopqCs9HIah7cJ2TuzAti7DRNNXHLTJLNz8Oso++Tunh77hXnPG
-	 J6RPHdJ7twpeE2saZHosSMCLXuPglg37Q30BevonXhotN696a/3ge1JGUPslGNVvJz
-	 pomKqU4e/OALAW2hwmT24001gqKte1QSQ4VGGH6m8PWYw4RjuR8JYXzYWGWlXZa0e1
-	 /bMC7kJCgp6nQ==
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Semih Baskan <strst.gs@gmail.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Florian Fainelli <florian.fainelli@broadcom.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rosen Penev <rosenp@gmail.com>,
-	Rani Hod <rani.hod@gmail.com>,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v4 2/2] PCI: iproc: Use the EROM outbound window on BCMA
-Date: Tue, 13 Oct 2026 17:04:21 -0500
-Message-ID: <20261013220421.1588051-3-bhelgaas@google.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261013220421.1588051-1-bhelgaas@google.com>
-References: <20261013220421.1588051-1-bhelgaas@google.com>
+	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="ING3eLxQ"
+Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-53504882980so41740321cf.2
+        for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 15:06:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1791929186; x=1792533986; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=umQgXj7ysEV3zD1fFGyj23U4O8i1rJgqwEHTF6H4HNg=;
+        b=ING3eLxQT2U9JnsicqETxyH7Q0tI63R4vz+m+DAcDZmj6dSU0d3M5u4FJXmtumPoF5
+         uN07hSI7sdDWf8TZD7QYkHiB8UC936qKjP67pwBIbDmD4WdJ8z9Hz2DBI7DRG8gtl5fF
+         sKd8Y+CCK4ay/keEe7KmYo5SoavAyglFzbirsJ2VToWgmVY0j3u+sxjyVjwZlOxF5HYI
+         BVK+sKtwNoA8FWnYdPuLY05ZjJ1gJt8bwjnoH9lYqq6cT1Kdd2IgAP+FXKwd51XONsa/
+         YKp/4bxF8w5Evv7qDsunbLli1IIbFbB/4cSM7utJJN8PIKinp8ObDxewy0f6yMoeQUP5
+         +a1Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791929186; x=1792533986;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=umQgXj7ysEV3zD1fFGyj23U4O8i1rJgqwEHTF6H4HNg=;
+        b=s3UwoFz1loq7F3ikaiSaeTqdE9xXLuCvEg8Z5wfcU6Z1ho10GZAHnloI+TY/maOEM3
+         V2EEqRHoPETD6VT2Ocnbx2rq0nwkljuCobAAj8IVT8ESZHD2qfuBVfq0Ne+gUn1x7u0Y
+         Js0Diek0NnIrQRLPswlNV0Q4oAooTUPoeRvBF+8924S/8QWnPmlUrZF/otsDxHoFA3Ov
+         SlQ8cuxRlGr/+cYrlqz78kGciM4accFhvZzvhnKF/nhVK2QAUQay2e6rcxk7GL6avMRl
+         RmfLjpwvaXhJZz30uhzcI41bPfk5NzhWCFTyGkWGtHtHFztxx01vMPPD6jErA2H09yz6
+         DhxA==
+X-Forwarded-Encrypted: i=1; AKwUvByo5ElfTHkHqELa2OOBv6DRsNwD1rtSSli8oR4Q0j5XAdtypcJb9AWPgWy+CEbhTEQOxhoPiNo+Pmo=@vger.kernel.org
+X-Gm-Message-State: AFq9FYIccjuv/JQX8aZirzHHIpJtF2JwpAMAYIlr4Tl/u/ZUrP3bfIOM
+	RE6vlS0JJSjISYnOBrWI0yinOZCPpnQBZ1K2xOUfBqUiI0s/LmY31Jx+qPxF3IuayVI=
+X-Gm-Gg: AYBFou1U94CLISba0ueYMAR79Vj7Faq/lQxj+AOd/zheKTF0fgf8lpPFqIIcSnnsdni
+	7e0+y1ZG55N8QxdNFrhektCdGb6YsvwJXtnCWI9W2T8ARqpY5MhuUFaRP6SbSpj8W0zaVdmRsjh
+	P299rEK5B3ZK0igVyt/9piCT9AiRm07MmxLMfQ57gdJTN0T87UBRm/OthLSZg2jIaT0A5fEbEj4
+	ip87ByGBELr3qQgyI6IUpviKobR4HkNvD2YFBAZnWUP4UxYjB2vyeFAwJUgihqYuA6rFzHpNL/H
+	mTf5vmhgVBCtvdcLkvnnGhCIXgsXr4JdaOAhvMQOIfNl17e8Oz0iMKp26RybRcCppN1zZVWUghQ
+	sSt8UMYdMPoMZYVl50c/ioqvl8Q65Q0Et6JjimZceDfl468trTXhNNLgcz+HubLVqcHPv2DVDS0
+	GnLrkPtB6R1qTk7oI3ZLvk6ngwcroh1rGjY1BPoxvkDCOks9vWfYiB3A+BqCxVlstD0wnlCzg=
+X-Received: by 2002:a05:622a:4086:b0:535:231d:653e with SMTP id d75a77b69052e-5359fb8efc9mr209706161cf.45.1791929186563;
+        Tue, 13 Oct 2026 15:06:26 -0700 (PDT)
+Received: from [172.22.22.28] ([73.62.185.64])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5359b6fa173sm111107631cf.7.2026.10.13.15.06.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 13 Oct 2026 15:06:26 -0700 (PDT)
+Message-ID: <8c0afe7c-a5dc-49a0-a413-1e572d69129d@riscstar.com>
+Date: Tue, 13 Oct 2026 17:06:24 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 2/3] PCI: of: introduce of_pci_build_prop_ranges()
+To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: bhelgaas@google.com, lizhi.hou@amd.com, herve.codina@bootlin.com,
+ andrea.porta@suse.com, daniel@riscstar.com, mohdayaa@qti.qualcomm.com,
+ lbiancon@qti.qualcomm.com, mani@kernel.org, robh@kernel.org,
+ linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+References: <20260924222444.1351466-1-elder@riscstar.com>
+ <20260924222444.1351466-3-elder@riscstar.com>
+ <00eb50b8-20dd-3079-7bcf-7e30a9ff3b20@linux.intel.com>
+Content-Language: en-US
+From: Alex Elder <elder@riscstar.com>
+In-Reply-To: <00eb50b8-20dd-3079-7bcf-7e30a9ff3b20@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-The PCIe outbound window base on Northstar depends on the PCIe Gen2 core
-revision. Revision 0x01 uses 0x08000000, 0x40000000 and 0x48000000 for
-controllers 0 to 2, while revision 0x07 (NS-B0) uses 0x08000000,
-0x20000000 and 0x28000000. Broadcom's own driver branches on the core
-revision for exactly this reason.
+On 10/9/26 5:43 AM, Ilpo Järvinen wrote:
+> On Thu, 24 Sep 2026, Alex Elder wrote:
+> 
+>> Move the bulk of what happens inside of_pci_prop_ranges() into
+>> a helper function that builds up the value to be passed to
+>> of_changeset_add_prop_u32_array().
+>>
+>> This helper will be used in the next commit to build the ranges
+>> property for a statically-defined PCI endpoint devicetree node
+>> when it has a "pci-ep-bus" sub-node.
+>>
+>> Signed-off-by: Alex Elder <elder@riscstar.com>
 
-bcm-ns.dtsi is shared by every Northstar SoC, so it cannot carry a value
-that is correct on both. Commit 767012397976 ("ARM: dts: BCM5301X:
-Describe PCIe controllers fully") gave the controllers a ranges property.
-The commit shipped in v7.1.
+Thanks for your review.  As I comment below, I'll add the
+#includes you mention, to ensure the symbols used aren't
+declared by accident.
 
-With that property present, two things go wrong with this driver:
+You commented on patch 3/3 too, but I'll respond here:
+you suggested adding an include, and I'll fix that in
+version 4 of this series.
+>> ---
+>>   drivers/pci/of_property.c | 129 +++++++++++++++++++++++++-------------
+>>   1 file changed, 86 insertions(+), 43 deletions(-)
+>>
+>> diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
+>> index a6c0cca986bdc..9f30b3c09a730 100644
+>> --- a/drivers/pci/of_property.c
+>> +++ b/drivers/pci/of_property.c
+>> @@ -102,57 +102,100 @@ static int of_pci_prop_bus_range(struct pci_dev *pdev,
+>>   					       ARRAY_SIZE(bus_range));
+>>   }
+>>   
+>> +/*
+>> + * Build a "ranges" property value that defines the mapping between
+>> + * child and parent PCI address space for each of the given PCI
+>> + * device's resources.
+>> + *
+>> + * Returns a dynamically allocated array of u32 devicetree cells, or
+>> + * a null pointer if allocation fails.  The cell array is built as a
+>> + * of_pci_prop_ranges structure consisting of 8 32-bit cells in host
+>> + * byte order.  It is suitable for use as the value of a PCI device
+>> + * node "ranges" property passed to of_changeset_add_prop_u32_array().
+>> + * The total number of cells in the array is returned in *count.
+>> + *
+>> + * Caller is responsible for ensuring the returned pointer gets freed.
+>> + */
+>> +static u32 *of_pci_build_prop_ranges(struct pci_dev *pdev, u32 *count)
+>> +{
+>> +	bool bridge_device = pci_is_bridge(pdev);
+>> +	struct of_pci_range_entry *entries;
+>> +	struct of_pci_range_entry *ep;
+>> +	u32 resource_count = 0;
+>> +	struct resource *res;
+>> +	u32 first;
+>> +	u32 num;
+>> +	u32 i;
+>> +
+>> +	if (bridge_device) {
+>> +		first = PCI_BRIDGE_RESOURCES;
+>> +		num = PCI_BRIDGE_RESOURCE_NUM;
+>> +	} else {
+>> +		first = PCI_STD_RESOURCES;
+>> +		num = PCI_STD_NUM_BARS;
+>> +	}
+>> +
+>> +	/* First count how many resources will get a range property */
+>> +	res = &pdev->resource[first];
+> 
+> pci_resource_n()
 
-  1) devm_pci_alloc_host_bridge() parses those ranges and requests them,
-     then this driver adds its own window and requests the whole list a
-     second time, so every controller fails to probe with -EBUSY.
+That's better.  I'll use that.
 
-  2) The DT window itself is only correct on core revision 0x07. On
-     revision 0x01 it points at an address the hardware does not decode,
-     and the first MMIO access to a BAR takes an imprecise external abort.
+> 
+>> +	for (i = 0; i < num; i++, res++)
+>> +		if (resource_size(res) && !of_pci_get_addr_flags(res, NULL))
+> 
+> + ioport.h
+> 
+> (I know you're mostly moving code around in this change so these missing
+> includes are a pre-existing problem but it would be nice to finally add
+> them.)
 
-The enumeration ROM reports the correct base for the revision actually
-present, and bcma already provides it as addr_s[0].
+I'll gladly add this and the others you mention below.  I like
+to include whatever I need but I currently only do that by
+manually scanning through (and fixing it when there's a warning).
+> 
+>> +			resource_count++;
+>> +
+>> +	entries = kzalloc_objs(*entries, resource_count);
+> 
+> include
+> 
+>> +	if (!entries)
+>> +		return NULL;
+>> +
+>> +	ep = entries;
+>> +	res = &pdev->resource[first];
+> 
+> pci_resource_n()
+> 
+>> +	for (i = 0; i < num; i++, res++) {
+>> +		u64 size = resource_size(res);
+>> +		u32 flags;
+>> +
+>> +		if (!size || of_pci_get_addr_flags(res, &flags))
+>> +			continue;
+>> +
+>> +		/* Record the size in the range entry */
+> 
+>> +		ep->size[0] = upper_32_bits(size);
+>> +		ep->size[1] = lower_32_bits(size);
+> 
+> include.
+> 
+>> +
+>> +		/* Record the parent bus address from the resource */
+>> +		of_pci_set_address(pdev, ep->parent_addr,
+>> +				   pci_bus_address(pdev, first + i),
+>> +				   flags, false);
+>> +
+>> +		/*
+>> +		 * For a bridge device, the child address matches the
+>> +		 * parent address (including its flags cell).  For an
+>> +		 * endpoint device, the (flags) cell contains the BAR
+>> +		 * number, and the two address cells are zero.
+>> +		 */
+>> +		if (bridge_device)
+>> +			memcpy(ep->child_addr, ep->parent_addr,
+>> +			       sizeof(ep->child_addr));
+>> +		else
+>> +			ep->child_addr[0] = i;
+>> +
+>> +		ep++;
+>> +	}
+>> +	*count = resource_count * sizeof(*ep) / sizeof(u32);
+>> +
+>> +	return (u32 *)entries;
+>> +}
+>> +
+>>   static int of_pci_prop_ranges(struct pci_dev *pdev, struct of_changeset *ocs,
+>>   			      struct device_node *np)
+>>   {
+>>   	struct of_pci_range_entry *rp;
+>> -	struct resource *res;
+>> -	int i, j, ret;
+>> -	u32 flags, num;
+>> -	u64 val64;
+>> +	u32 *value;
+>> +	u32 count;
+>> +	int ret;
+>>   
+>> -	if (pci_is_bridge(pdev)) {
+>> -		num = PCI_BRIDGE_RESOURCE_NUM;
+>> -		res = &pdev->resource[PCI_BRIDGE_RESOURCES];
+>> -	} else {
+>> -		num = PCI_STD_NUM_BARS;
+>> -		res = &pdev->resource[PCI_STD_RESOURCES];
+>> -	}
+>> -
+>> -	rp = kzalloc_objs(*rp, num);
+>> -	if (!rp)
+>> +	value = of_pci_build_prop_ranges(pdev, &count);
+>> +	if (!value)
+>>   		return -ENOMEM;
+>>   
+>> -	for (i = 0, j = 0; j < num; j++) {
+>> -		if (!resource_size(&res[j]))
+>> -			continue;
+>> +	ret = of_changeset_add_prop_u32_array(ocs, np, "ranges", value, count);
+>>   
+>> -		if (of_pci_get_addr_flags(&res[j], &flags))
+>> -			continue;
+>> -
+>> -		val64 = pci_bus_address(pdev, &res[j] - pdev->resource);
+>> -		of_pci_set_address(pdev, rp[i].parent_addr, val64, flags,
+>> -				   false);
+>> -		if (pci_is_bridge(pdev)) {
+>> -			memcpy(rp[i].child_addr, rp[i].parent_addr,
+>> -			       sizeof(rp[i].child_addr));
+>> -		} else {
+>> -			/*
+>> -			 * For endpoint device, the lower 64-bits of child
+>> -			 * address is always zero.
+>> -			 */
+>> -			rp[i].child_addr[0] = j;
+>> -		}
+>> -
+>> -		val64 = resource_size(&res[j]);
+>> -		rp[i].size[0] = upper_32_bits(val64);
+>> -		rp[i].size[1] = lower_32_bits(val64);
+>> -
+>> -		i++;
+>> -	}
+>> -
+>> -	ret = of_changeset_add_prop_u32_array(ocs, np, "ranges", (u32 *)rp,
+>> -					      i * sizeof(*rp) / sizeof(u32));
+>>   	kfree(rp);
+> 
+> Isn't totally rp unused now so this frees with an uninitialized value?
 
-To solve 1), use pci_alloc_host_bridge() directly to avoid the request of
-all the DT resources done in pci_parse_request_of_pci_ranges(). Instead,
-request the memory window from the EROM.
+Wow, you're right.  This line needs to go too.
 
-To solve 2), parse the memory resources from DT and emit a warning if it
-describes a window that doesn't match the window from the EROM.  The
-mismatch means the devicetree describes a window the hardware does not
-decode, and that should be fixed in the dts rather than ignored silently.
+					-Alex
 
-The driver is correct whether or not the DT describes a window.
 
-The same commit also added compatible = "brcm,iproc-pcie", so these
-nodes now match pcie-iproc-platform. With CONFIG_PCIE_IPROC_PLATFORM
-enabled, which is the default on ARCH_BCM_IPROC, that driver binds them
-first and this driver's probe fails inside devm_pci_alloc_host_bridge().
-This commit fixes the configurations where the BCMA driver is the one in
-use; OpenWrt builds that way, with PCIE_IPROC_PLATFORM disabled. The
-platform path takes the DT window as-is and has the same wrong address
-on core revision 0x01, so that side needs a devicetree fix either way.
-
-Fixes: 767012397976 ("ARM: dts: BCM5301X: Describe PCIe controllers fully")
-
-Based on:
-  https://patch.msgid.link/20260807160526.379-1-strst.gs@gmail.com
-  https://patch.msgid.link/20260912043626.437-1-strst.gs@gmail.com
----
- drivers/pci/controller/pcie-iproc-bcma.c | 40 ++++++++++++++++++++++--
- 1 file changed, 37 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/controller/pcie-iproc-bcma.c b/drivers/pci/controller/pcie-iproc-bcma.c
-index 593418c2bc3a..1e258cd8fed4 100644
---- a/drivers/pci/controller/pcie-iproc-bcma.c
-+++ b/drivers/pci/controller/pcie-iproc-bcma.c
-@@ -11,7 +11,9 @@
- #include <linux/phy/phy.h>
- #include <linux/bcma/bcma.h>
- #include <linux/ioport.h>
-+#include <linux/of_address.h>
- 
-+#include "../pci.h"
- #include "pcie-iproc.h"
- 
- 
-@@ -31,6 +33,29 @@ static int iproc_bcma_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- 	return bcma_core_irq(bdev, 5);
- }
- 
-+static void iproc_bcma_pcie_check_dt_window(struct iproc_pcie *pcie)
-+{
-+	struct device_node *np = pcie->dev->of_node;
-+	struct of_pci_range_parser parser;
-+	struct of_pci_range range;
-+	struct resource res;
-+
-+	if (!np || of_pci_range_parser_init(&parser, np))
-+		return;
-+
-+	for_each_of_pci_range(&parser, &range) {
-+		if ((range.flags & IORESOURCE_TYPE_BITS) != IORESOURCE_MEM)
-+			continue;
-+
-+		if (of_pci_range_to_resource(&range, np, &res))
-+			continue;
-+
-+		if (res.start != pcie->mem.start || res.end != pcie->mem.end)
-+			dev_warn(pcie->dev, "DT window %pR does not match EROM window %pR, using EROM\n",
-+				 &res, &pcie->mem);
-+	}
-+}
-+
- static int iproc_bcma_pcie_probe(struct bcma_device *bdev)
- {
- 	struct device *dev = &bdev->dev;
-@@ -38,10 +63,20 @@ static int iproc_bcma_pcie_probe(struct bcma_device *bdev)
- 	struct pci_host_bridge *bridge;
- 	int ret;
- 
--	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
-+	bridge = pci_alloc_host_bridge(sizeof(*pcie));
- 	if (!bridge)
- 		return -ENOMEM;
- 
-+	bridge->dev.parent = dev;
-+
-+	ret = devm_add_action_or_reset(dev, devm_pci_alloc_host_bridge_release,
-+				       bridge);
-+	if (ret)
-+		return -ENOMEM;
-+
-+	bridge->swizzle_irq = pci_common_swizzle;
-+	bridge->map_irq = iproc_bcma_pcie_map_irq;
-+
- 	pcie = pci_host_bridge_priv(bridge);
- 
- 	pcie->dev = dev;
-@@ -59,13 +94,12 @@ static int iproc_bcma_pcie_probe(struct bcma_device *bdev)
- 	pcie->mem.end = bdev->addr_s[0] + SZ_128M - 1;
- 	pcie->mem.name = "PCIe MEM space";
- 	pcie->mem.flags = IORESOURCE_MEM;
-+	iproc_bcma_pcie_check_dt_window(pcie);
- 	pci_add_resource(&bridge->windows, &pcie->mem);
- 	ret = devm_request_pci_bus_resources(dev, &bridge->windows);
- 	if (ret)
- 		return ret;
- 
--	bridge->map_irq = iproc_bcma_pcie_map_irq;
--
- 	bcma_set_drvdata(bdev, pcie);
- 
- 	return iproc_pcie_setup(pcie, &bridge->windows);
--- 
-2.53.0
+>>   
+>>   	return ret;
+>>
+> 
 
