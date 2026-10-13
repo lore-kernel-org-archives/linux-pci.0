@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8621340417;
-	Tue, 13 Oct 2026 17:31:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 770F5522698;
+	Tue, 13 Oct 2026 17:36:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791912698; cv=none; b=j+tu/q6QfK83+6gfrjjXWS91No410qkg9RTtDqOPfJd58oQXwUI4ElnIk/SAiFPHwbxnuGKwReT/feqk56iZ/kUCtoTVCUe5DlKBdQPHHtzEOnIIhsNDda4yWJ5ezwz+W0zH0rjRgHGTK1GwGnrtOSW8ZAm4+/E5QBstCtLUmMY=
+	t=1791912999; cv=none; b=JAWmAqynpAw17iRWJvjvohufPi0L7wdGOy8ll9Wuy7YHkZEQrAQSuAZI2JydvYl2yHEhkqVD5Hx1mokT80XFoYiWVA6yuPtHnaJDZLd8+naURu6Sthc3hTnukh+o3IEnQh/mu0HZCVoLAbToentORff5YjuTF0jjGq5Yi/vj3Uc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791912698; c=relaxed/simple;
-	bh=sECM7/KBFpScFHSC/sEOxRcyil3uarzd9RUU7Zeyc5o=;
+	s=arc-20240116; t=1791912999; c=relaxed/simple;
+	bh=cOmsE9Aa3q99k/VZfCPyuKtQLSO0LoXPs0Gh+wJvIAA=;
 	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=k5ILDgFt9YCGXhmYFOStnLS2Ncio2cjuefEono9ZGtuDzHJko5ts/spfX9NOrpOGJq27ziNnlDnkdk2dJZt8+mpJm3GfMG1smYmVn8lZvfHVghpZyo0LEYxvwkFv3wqM3mFWzEA9U8UaCkpA1faSHdCckcBoWPDbl0Q0UrtgLhI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A8e7KvJH; arc=none smtp.client-ip=100.103.45.18
+	 References:Date:Message-Id; b=Wm7c5z3ydGnR8SR4T7pcC5OFrzCUq01avTERPX1/Ajl5g/CWY6bmG5Ft0kIJ1SdQBGBvI5i/9B635258NQSbIFr3INEbRJOXr4eb18PSQ3U+pbgdcmkKQNGPm5DI2wttfVQ125NuKtpnEtC+VQxvcpyxOPuiTb1MS9cd4SMOr4M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m2p3ukm4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A8e7KvJH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D01E91F000FF;
-	Tue, 13 Oct 2026 17:31:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m2p3ukm4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C995C1F000FF;
+	Tue, 13 Oct 2026 17:36:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791912697;
-	bh=XHKvPJxtOUe89VmDsqkmUm9POoFOuKBVafdlaQIcGVE=;
+	s=k20260515; t=1791912998;
+	bh=cOmsE9Aa3q99k/VZfCPyuKtQLSO0LoXPs0Gh+wJvIAA=;
 	h=Subject:From:To:Cc:In-Reply-To:References:Date;
-	b=A8e7KvJHDPjWetHiC45tXKu6DgRn2R9/Fi3zyt1eYV+vaIef17ec+TB7oamk9o2yP
-	 Kz1eDq3I3e94inordlmeMtKpf99yPQTqbY9XzdTXCogYvZMSN+U5KAA1WiFvZ0FTTF
-	 XriyxG0pVV4hG3FuCzekqqJgs2lLZElmtdb6XuYFNiJRh2n/9z9Fl25x558URDauly
-	 SL+aZ6+aAs1c5qtijehAFuLHA8eZvQQyXv5yTS5espatyyTP/0zDacJ4WItNZL+++l
-	 Nc0CG9w/98QYBpWpFPNGp2m0Jr+NVOPmaFUMMCLnLMGO4/TFr+9PeJt0n0P9ZBX+7B
-	 5Fe/tJ+ax26EA==
+	b=m2p3ukm4+70hK1qYhYpfgeQbdmu8dutlVS+8J/34b8uW3dNiED7HBsPsUauI4JJ7I
+	 dldaOic+tkyyq30TpezJCwkxnHxldLiF2ByiAU92DF7aiBcAdrQCkeT3UevoJomBbj
+	 Shgc4ri+FWsXqj9kbX+TF50TiUMGG6rocf9JHVeFaAkvFH87VShAg0Ap2mEi3Nq7j5
+	 OOu63FR5hPp7qtQkBtHKmVez5ZInOZVnx3wBKzcRcEtY6pXh/zSsmSlb59GMeTWhmK
+	 TU9A88qgGg3XwPNTqvy+rPkxd/0ULem4nhznA3t7mG2yZcYbTmb7jmMi+pFlD824px
+	 B+QdQATd/PHNw==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -34,71 +34,39 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v6 08/10] PCI: dw-rockchip: Set broken L1SS resume flag
+Subject: Re: [PATCH v6 09/10] PCI: dw-rockchip: Add system PM support
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Sebastian Reichel <sebastian.reichel@collabora.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, 
- Philipp Zabel <p.zabel@pengutronix.de>, Jingoo Han <jingoohan1@gmail.com>, 
- Shawn Lin <shawn.lin@rock-chips.com>, Liam Girdwood <lgirdwood@gmail.com>, 
- Mark Brown <broonie@kernel.org>, 
- "Yury Norov (NVIDIA)" <yury.norov@gmail.com>, 
- Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
- Alexey Charkov <alchark@flipper.net>, linux-pci@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, 
- linux-kernel@vger.kernel.org, kernel@collabora.com
-In-Reply-To: <20260908-rockchip-pcie-system-suspend-v6-8-fbabcca9921b@collabora.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: Sebastian Reichel <sebastian.reichel@collabora.com>, 
+ linux-pci@vger.kernel.org
+In-Reply-To: <20260908151212.08E201F00A3A@smtp.kernel.org>
 References: <20260908-rockchip-pcie-system-suspend-v6-0-fbabcca9921b@collabora.com>
- <20260908-rockchip-pcie-system-suspend-v6-8-fbabcca9921b@collabora.com>
-Date: Tue, 13 Oct 2026 23:01:26 +0530
-Message-Id: <179191268696.12828.12282510519182218823.b4-reply@b4>
+ <20260908-rockchip-pcie-system-suspend-v6-9-fbabcca9921b@collabora.com>
+ <20260908151212.08E201F00A3A@smtp.kernel.org>
+Date: Tue, 13 Oct 2026 23:06:32 +0530
+Message-Id: <179191299286.12828.2351526742198636358.b4-reply@b4>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1487; i=mani@kernel.org;
- h=from:subject:message-id; bh=sECM7/KBFpScFHSC/sEOxRcyil3uarzd9RUU7Zeyc5o=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqzmrxbGKarqI/Q7fz3/e7A2/n23V+EU8Dis+QA
- DRqwIdT222JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCas5q8QAKCRBVnxHm/pHO
- 9StMB/9t742KOafibx5/hcaZnnnDfkKBK6ODJNOTNS+zB5XOmgSqbqLfEynB/EaXH7Z1IVSesF5
- JcO/kJVggvuUWjtG+Bz7pq3s/tWpHaBxVAXoWuoKPnzmZQUAxKIs9OySekQtCeEv2jIssn1+lTY
- KlTKniY+QRLln2AfEHM6pjaYKbkpeZS5bKg5jeWKpCBAZGmDgrP0xDuf9dtI0jPuHRFLj9glYb5
- F7nYF1s5WgEouqemlBHXoBFYsw76/UKAXjSO00Rp9rQo2/HndAffJbpqdn0wqbYG62fw9CxE/+E
- 1Zj5tn15AtSsua4cVxmMS67MPLmYSJpc6j36ta1eNVRTUPvg
+X-Developer-Signature: v=1; a=openpgp-sha256; l=932; i=mani@kernel.org;
+ h=from:subject:message-id; bh=cOmsE9Aa3q99k/VZfCPyuKtQLSO0LoXPs0Gh+wJvIAA=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqzmwjib0lZPntW57vauq/BJngiFoG8aM2nhp7j
+ fAUnyyQXBGJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCas5sIwAKCRBVnxHm/pHO
+ 9ZrACACnxHgfgAQRxyJu9hT9A6LqsjxcLpYjxFn23rTblWbLTmNA+30PzQXeyx4jFxtnSOqdj7X
+ /33Rc1DfJgd0NyJ7oQEZFR9f55E6lYiezzTodRFl/k0iyLRfoPS0LIHNDH19OMs0spG+XrdI8y9
+ HK1oQzVp2s0zHfjIVw+PwZJI8Qvt6AmNkpDkwUm2EYin6dQ7IL7oG4Q7MxQoUTuFxULhJgE1maB
+ +q2iV1zXtmVhBNWFtreVbmi/DB2O1osW2AWNxS8gpRtgVoXogSPU3imsnSky75OB5e39PcV29rh
+ YupRUjT444UB0kupSoiX+If5luPUtv/x7MB8nbXAv5YdYspi
 X-Developer-Key: i=mani@kernel.org; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-On 2026-09-08 16:51 +0200, Sebastian Reichel wrote:
-> Setup the broken_l1ss_resume flag, so that pci_suspend_retains_context()
-> returns false on the Rockchip platform allowing PCIe peripheral device
-> drivers to act upon.
-> 
-> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
-> ---
->  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> index 17530507e41b..47d9cab909bc 100644
-> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> @@ -458,6 +458,21 @@ static int rockchip_pcie_host_init(struct dw_pcie_rp *pp)
->  	return 0;
->  }
->  
-> +static void rockchip_pcie_host_post_init(struct dw_pcie_rp *pp)
-> +{
-> +	/*
-> +	 * During system suspend, the Rockchip RC driver effectively powers off
-> +	 * the controller. If the link is in L1SS and the endpoint asserts
-> +	 * CLKREQ# to exit L1SS, the time required to wake the system and
-> +	 * restore the PHY/REFCLK may exceed the L1SS exit timing
-> +	 * (L10_REFCLK_ON + T_COMMONMODE), resulting in Link Down (LDn) and a
-> +	 * reset of the endpoint. Set this flag to indicate this limitation to
-> +	 * client drivers so that they can avoid relying on device state being
-> +	 * preserved during system suspend.
-> +	 */
+On 2026-09-08 15:12 +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 5 potential issue(s) to consider:
+> - [High] System resume unconditionally re-initializes the host, leaking the existing IRQ domain and breaking legacy INTx interrupts while executing invalid GFP_KERNEL allocations in an atomic context.
+> - [High] The PM operations `rockchip_pcie_suspend` and `rockchip_pcie_resume` are registered as `noirq` callbacks but call functions that can sleep.
+> - [High] Missing check for the return value of reset_control_deassert() in rockchip_pcie_resume().
+> - [Medium] Missing `reset_control_assert` in the error handling path of `rockchip_pcie_resume`.
+> - [Medium] The order of initializing and tearing down the regulator, PHY, and clocks in system PM callbacks contradicts the proven sequence used during driver probe.
 
-This comment is redundant, please drop.
+Lot of valid issues. Please take a look.
 
 - Mani
 
