@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D135A51B16B
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 16:40:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4CC151B16B
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 16:41:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791909659; cv=none; b=n+PiKAv2SueK3WY+JQtKuVIasAldsLe/NNEkSczlN811Ft1PZDQrAII52teqFk2ctwE3X6Cp5MHsEKKMahCjd/Ruu70nfp55cHJp3U42fM+19F/Qki12guWlW7BKwXKHtXg56dBnhewPf0Ow7xBNgubGV+5TnJI201EYulzLx90=
+	t=1791909676; cv=none; b=Kxbc5mAc15Ql4nGnMAXr4aqu9cbhyxTByVmnMfwQorCL9OiD2Ue7CYEbNnlb57Tk/qCvS4ZPoDd+KPLE3gG2aWl347x5g7CxWnunx2mPzBrRXnqcTwTiBm98TsoJq7dMQhvwYpH9n8h73IU558/3LKSsQy1IjPrqqmNrClUBsyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791909659; c=relaxed/simple;
-	bh=vU9iDpTw6BhQUXTMuwZ7IfGm84e7qgJyw7tFxT1/9fE=;
+	s=arc-20240116; t=1791909676; c=relaxed/simple;
+	bh=T2nnygMGiS+OTPVQ1KV9X8esySyXmHnUBkUStAXevB0=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=u1BWK4knOw4xg2X4fyNwBctd3qY5hFd3d6RnujPzzXW4G067tbJVT/ksxkOP9RtydBD/iRez6FT6ub/PQFQY6g0MFxM7zY58CgV0Sj3btDzCHJVndytNZ/CeWQ8bWWR5rF8xVd13L7tzjB7Jq/PFClrluoHv6dnEVtdk6i65BhE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RMRtbK7U; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=OnUylVqKz+M+3NWSxJMCxYK8LZ9q1nInXSfKR+AQpPXdY2mW/OAwd6fRpoUtpTI4j6+O+4mAyHj/YTR4Q54vnMEgIQh4kV+LAfIrFn3gaoeWA35cuXR9eMIk7FJ2irEQxxU3cuMryP4j92EX0bbSLJF0GPn3tTaJ1rJqGXoinbU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GnHEuHMq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RMRtbK7U"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72D411F00893;
-	Tue, 13 Oct 2026 16:40:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GnHEuHMq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 435531F000FF;
+	Tue, 13 Oct 2026 16:41:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791909658;
-	bh=vU9iDpTw6BhQUXTMuwZ7IfGm84e7qgJyw7tFxT1/9fE=;
+	s=k20260515; t=1791909675;
+	bh=T2nnygMGiS+OTPVQ1KV9X8esySyXmHnUBkUStAXevB0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RMRtbK7UcA5SdLsEX5/pelGjDR8F208CZNPjIkSj/2ZD27wPtooimHoiVmLTs12hs
-	 a/w1aTYGmNzA3jcEPaUEUV/ma5629qBG2Mevvul8O37z2AgvliDBxQmqEW6cWlMTe8
-	 tKuKjH5aPQ7ryVQ+SimIKlN1p0e8YBI4aSZBZVJRpwe6DnkHwLZiy2oHr7K/Eoqa4Y
-	 v7jZc1Oy+klAOVHcK0hvCRhJDjYXe9mUVcCrsBI4Wl30XrKQrgwZ1ubnrePlyyGBMV
-	 OalTqaR83FYwW1I5lHOFRT/BaPR8HZ/yX50GtNUTo8pco2//wEoGJsVoYoWbAvmTdP
-	 4+xxTiVqNRXMQ==
-Message-ID: <sashiko-outbox-170134@kernel.org>
+	b=GnHEuHMqUqdQ1JCsl2TlxtUExzLRFfPdASmc7EytQYxnTWNR738e3jZYeMr84qMi7
+	 ogetP/Wl/nw7h8WVRsNd11PItvz807Cg7cjYu3oflf0Rbb7T0AlZyc1nLpXXylNCNZ
+	 C+KeevpAWQJuLv+oqWYeRfIWRVKq9/3TeQ7KbsEt9M7xsuWsBNm2ALgcy1TkGqI32Z
+	 By/NftrthbT1MYTl7gzRHHTxghXdktkhhYSboxXF+0ORcuDmwtxiWnfQhUA4VEkzAh
+	 cufqDVwIuMklPcemtZKYgQtEyum+P+MlIQkbgoYc9k3aPl7RNzpqxO2XeMDmJjpFeh
+	 lJRHaIj9Y5/HA==
+Message-ID: <sashiko-outbox-170136@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 10/13] PCI: liveupdate: Adopt ARI Forwarding Enable
- on preserved bridges
+Subject: Re: [PATCH v10 02/13] PCI: liveupdate: Track outgoing preserved PCI
+ devices
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "David Matlack" <dmatlack@google.com>, kexec@lists.infradead.org, linux-pci@vger.kernel.org
 Cc: "Adithya Jayachandran" <ajayachandra@nvidia.com>, "Alexander Graf" <graf@amazon.com>, "Alex
@@ -43,34 +43,44 @@ Cc: "Adithya Jayachandran" <ajayachandra@nvidia.com>, "Alexander Graf" <graf@ama
  Mahameed" <saeedm@nvidia.com>, "Samiullah Khawaja" <skhawaja@google.com>, "Shuah
  Khan" <skhan@linuxfoundation.org>, "Vipin Sharma" <vipinsh@google.com>, "William
  Tu" <witu@nvidia.com>, "Yi Liu" <yi.l.liu@intel.com>
-In-Reply-To: <20261013162529.1928093-11-dmatlack@google.com>
+In-Reply-To: <20261013162529.1928093-3-dmatlack@google.com>
 References: <20261013162529.1928093-1-dmatlack@google.com>
- <20261013162529.1928093-11-dmatlack@google.com>
+ <20261013162529.1928093-3-dmatlack@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 13 Oct 2026 16:40:57 +0000
+Date: Tue, 13 Oct 2026 16:41:13 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Adopt the ARI Forwarding Enable bit on preserved bridges and update
-> pci_dev->ari_enabled accordingly during a Live Update. This ensures that
-> the preserved devices on the bridge's secondary bus can be identified
-> with the same expanded 8-bit function number after a Live Update.
+> Add APIs to allow drivers to notify the PCI core of which devices are
+> being preserved across a Live Update for the next kernel, i.e.
+> "outgoing" devices.
 >=20
-> pci_liveupdate_adopt_ari() updates the bridge's ari_enabled the same way,
-> and from the same context, as pci_configure_ari() already does when it
-> enables or disables ARI Forwarding on the bridge.
+> Drivers must notify the PCI core when devices are preserved so that the
+> PCI core can update its FLB data (struct pci_ser) and track the list of
+> outgoing devices. pci_liveupdate_preserve() notifies the PCI core that a
+> device must be preserved across Live Update. pci_liveupdate_unpreserve()
+> reverses this (cancels the preservation of the device).
 >=20
-> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+> This tracking ensures the PCI core is fully aware of which devices may
+> need special handling during shutdown and kexec, and so the list of
+> preserved devices can be handed off to the next kernel.
+>=20
+> For now, the API only supports preserving non-VF devices on a root bus
+> (not behind an PCI-to-PCI bridges).
+>=20
 > Reviewed-by: Pranjal Shrivastava <praan@google.com>
+> Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com>
+> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+> Reviewed-by: Samiullah Khawaja <skhawaja@google.com>
 > Signed-off-by: David Matlack <dmatlack@google.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013162529.1928=
-093-1-dmatlack@google.com?part=3D10
+093-1-dmatlack@google.com?part=3D2
 
