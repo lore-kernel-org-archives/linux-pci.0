@@ -1,172 +1,144 @@
-Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f182.google.com (mail-lj1-f182.google.com [209.85.208.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C70CB3E5595
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 17:51:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.171.202.116
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791913862; cv=none; b=WeTMM5QuK3F7F2MuRluO46GbpvBK1ysyuPVWgOKqdae3cE7new0m1YEoDJxZsYGfD8lM/FEE4HFKBED38WQvZUNG3HU4pIJecXzpDKm3hOgwz0T/s8sB+JK2inO6wQKJJBQDEQohrS6gYGQTSYFikvGTpL2yJ1/qStpAXmD1xt8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791913862; c=relaxed/simple;
-	bh=gMNtK/0YjzbUiWPTlVbcnx+RZMHYxHe3zyVfcHByLZ4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qyYmkupix4LjCqlOi/QYLh+9VuWqJ2h3pXFOq8Tjlo85okW5G2ljTIWUPc5qjcjznfJfNhNTPXWp95kMMMFeLQzRFPV7j5iiiNfSJuIO+V5mmT18H/Ewzeaq/72MtfxgwxII7dW1v1n15B64bNdMd/JGKnw8OMth0CGTyqOwtcg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=vPrBJHiK; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=clnpTkrb; arc=none smtp.client-ip=185.171.202.116
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83C71531610
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 18:11:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.182
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791915097; cv=pass; b=nN0vGl5iOvz2MC7MH0vwG0c1u2V/gnYOnhcWDCzFvHG2uLQfp0z5w65izLmAhAuogbhfZZOtarYaQxp4ZZ6k8Lcgwhhk9x6G353Y6NxZwErnCNyrVtL4sa7KKq0rxPWf+0bKRdCs/QfuveIJLj4lZ7nMmvlpt5z7xDDvIfopR5E=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791915097; c=relaxed/simple;
+	bh=Nx/Ht7WbeWj9w+mc12q4UZvwSJdIOI1LylC3CvF+snE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=gFuNoLuuSOkx8KSkHaXgF/lFfAQm5iydWZeCmNV0ctbibIoMbrEBJvI+VR1qEboGZc3wJVeAn2nJOhv/zVFL63TyMlZP36Bd/qYJjQBXsYID++G0ykEBDQ+KgecUrBYu9kF5ClvlS1giwtwH3N8sfryrGyawGgUfI3Il7XCTM3E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FWkVCbBK; arc=pass smtp.client-ip=209.85.208.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="vPrBJHiK";
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="clnpTkrb"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-04.galae.net (Postfix) with ESMTPS id CE569C653FB
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 17:51:54 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 38EBD60362
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 17:50:59 +0000 (UTC)
-Received: by mail.galae.net (Postcow, from userid 0)
-	id A865B11D7183E; Tue, 13 Oct 2026 19:48:48 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1791913858; h=from:subject:date:message-id:to:cc:mime-version:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=+ChnyDkFUv0fqgvepwYYsoR4k2/DprmHV3Gvk8JzTTc=;
-	b=vPrBJHiKnFwQk5M42+sYh3IFiiAuyoJH1L25yCSb4IYxxFXcvOVVMSWQysBj88X5DPBo63
-	jShyr1WSg6OT7Pt9GrQBwxMUj2kPDkTDRBsJ/70l5DM9OY8r0Ry5V9Oh3RMyvw6VC3334z
-	63NQjuOJ94aD6rnUHKUSiiYoKmYBIo9ngef4xfM3qk+50z5ns91UV/rneZPBblM6Idabvo
-	o7zwd5xj4zk/vJz/QX8ZokxgndxQWcEAjmtersmbW/W5ehkEI5LwCLBVgPDXzI7tRr8/y+
-	05l0qgzGrN/f8DQMA0wlayEEb9DrjNKcxoDrDGPOyezlNzeY/H3Qi1mtxO494g==
-Authentication-Results: mail.galae.net;
-	none
-Received: from mail.galae.net ([172.22.1.253])
-	by 9e7fea892943 with LMTP
-	id aL93AdDuzGpsHhEAtaWaaQ
-	(envelope-from <herve.codina@bootlin.com>)
-	for <herve.codina@bootlin.com>; Mon, 12 Oct 2026 16:29:36 +0200
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id A812811D70508;
-	Mon, 12 Oct 2026 16:29:27 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1791815372; h=from:subject:date:message-id:to:cc:mime-version:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=+ChnyDkFUv0fqgvepwYYsoR4k2/DprmHV3Gvk8JzTTc=;
-	b=clnpTkrb9ux+68cvnotT8l/KdiVYfLjFygknOBdqlfrxUo5yqEZ2Nwrnba7Xxby/Shyqtf
-	n01M7smWgdnfcRbHlJsXvIgJIIFDsAxq5rF7G9YbpXDXiw2khAKxtdBEJ6NppJqswxg6Fn
-	DUt8rhuk0sa6D5Ny5+hRiKvGF5tmv2NZnLak0TjzZ/oRMtH1TZtm+Fpi66UNqkI4pVp2yf
-	ifGpKp/jEPapsegLs101d5LR8Pew1Sk+oE8BBf7yobvm3GKWO09hWcsh9ZU72btcd/c2xG
-	ZA47T6qAvIe23tFTf1cBV9v0F45x9AYzZyOinpBEoqYAaaMJyX2Fgl/6hovMjg==
-From: Herve Codina <herve.codina@bootlin.com>
-To: Richard Cheng <icheng@nvidia.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Rob Herring <robh@kernel.org>,
-	Saravana Kannan <saravanak@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Charles Keepax <ckeepax@opensource.cirrus.com>,
-	Richard Fitzgerald <rf@opensource.cirrus.com>,
-	David Rhodes <david.rhodes@cirrus.com>,
-	Linus Walleij <linusw@kernel.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Daniel Scally <djrscally@gmail.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sakari Ailus <sakari.ailus@linux.intel.com>,
-	Bartosz Golaszewski <brgl@kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	Jonathan Cameron <jic23@kernel.org>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Dan Williams <djbw@kernel.org>,
-	Ira Weiny <iweiny@kernel.org>,
-	Li Ming <ming.li@zohomail.com>,
-	Herve Codina <herve.codina@bootlin.com>,
-	Lizhi Hou <lizhi.hou@amd.com>
-Cc: driver-core@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	patches@opensource.cirrus.com,
-	linux-gpio@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-cxl@vger.kernel.org,
-	Allan Nielsen <allan.nielsen@microchip.com>,
-	Horatiu Vultur <horatiu.vultur@microchip.com>,
-	Daniel Machon <daniel.machon@microchip.com>,
-	Steen Hegelund <steen.hegelund@microchip.com>,
-	Luca Ceresoli <luca.ceresoli@bootlin.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: [PATCH v13 05/10] cxl/test: Use fw_devlink_set_device()
-Date: Mon, 12 Oct 2026 16:28:19 +0200
-Message-ID: <20261012142826.159178-6-herve.codina@bootlin.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261012142826.159178-1-herve.codina@bootlin.com>
-References: <20261012142826.159178-1-herve.codina@bootlin.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FWkVCbBK"
+Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-3a75f960be3so2653981fa.2
+        for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 11:11:34 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791915092; cv=none;
+        d=google.com; s=arc-20260327;
+        b=M6rbHVZkKpjJDrWN43hRQlx/kBHYZ4BlLJ9SqSdcPMxS0CF1WTJRM8Rc2LChHg0yVc
+         MZGsqaoeT/Qv8p13EaGp4IDhf26lXeKtQL5m+eadLoS8Ktm+vb5V2HGaPaUsFO1N1uUY
+         pDIVAv12nHZK/m63ECcgoe1XB0XOD9WIXVshigm3KzOXsZqeuQA8Syn5YRoRilMtifYX
+         PCHU05YketWSD2UlC023AlgpAHxaPJo/QA4Os3yfYucuDawkB+QYu5TwyRRB/gfWPNpM
+         TendD4Fe1Q9VbGsAtwT5jRmkB1O8yOAZuzd9qZP/9UV7SYqguOfVgs3JDspaEWM2QvKl
+         pdLw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=Tc1zp/jsWqF51CNIfkZYVDsfG54HgePDR513djZlTcM=;
+        fh=R/RDhVG/Jhx1u51XtBb/iPFZbQ2CZhbta9Ievgpva8c=;
+        b=Z/3HB8FBRH0KCXs1wKVK70h7xEoXl+v7szrGETZSUX0689VicuTyQPJBR9R7GUsyWQ
+         Lz8wwK8NCFD2v0cUrmKJT6ScQkfGiezptdZnGQ2bN7N8Lw3ho2LlXnhx01rDac4tYRvu
+         IbtAZzaj/ov6EWKDsVFOmwdrBc5Kj8wuXe+92eIoOOsQ3DmMHk8Bx0YwSe6WOH6T7h4h
+         3m9RrBSqffjfazLRxJNtljS0rLLvTz3t8ru5ZXxuFTsYU/pRK+Z4IDNa7bKBQsWXEikI
+         25gbtFSJvNaphaI3EqHDJk5SAleBp0JALcJ66V7A/ODD+vjGYhYxY+i9ALDYVzhPPosG
+         a0EA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791915092; x=1792519892; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Tc1zp/jsWqF51CNIfkZYVDsfG54HgePDR513djZlTcM=;
+        b=FWkVCbBK0jrN4ebBhcwZtp8DtYvZUna0hRejCVerpEUup2Jv545NTBW+Ipzdb3vXoM
+         zUOHjJyWMiudlMCV03m3RENYNIS3lQv3OcpoBrAd7sji8h4OoycI3EGNIFzkylb1LvnQ
+         SFCnwdKfYBqjphih88JDBP+h2uGOuEfQaxfHTM5v2/fe/yrHo3mIH0kHAp6o9i7FqyUw
+         EMfsuKu8k+1b8Wor7PSl83Vsxgq1mdzZJheoh+paZN6el0dsGvYKa45jg3K9zIturQ4n
+         wGdF68Jxfe4nlNiFElnBKn5CAJV91LF/KTZiC3keQLEMVm2AaCvQcZIN4DjLT8KMenMj
+         bHGQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791915092; x=1792519892;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Tc1zp/jsWqF51CNIfkZYVDsfG54HgePDR513djZlTcM=;
+        b=NqU2pW57WsD778aaaVZXKu/CbzNm613rX9v8+cWe7H3lEENkuGmewpA5YtOKADHPuX
+         V2z+lnD51VccWcxf9xKwFFlaTl5oZTW/zfABJaU0Ri8NLwIE+Ki5ENeI84Q0evtgfsGG
+         uqtEXm1alwwZM0wLj0en+QRMzpH4emibOya9fmC1TXuOc8Dyk9J0H9IY0mr7m87tLG0c
+         +54o2cBl1QwMAaRqq+pq3h7Jl/VRtvspd/mv5y8pfrakbYFlXiMvQ+BmXck1dI23KmaX
+         QShS0qZnMkyYww5iZ0T/e4nwRogQzHui+oEfsjc7Q/R+xjM5Dc3rQ6Rm7Lg1D70U9jTG
+         zUjw==
+X-Forwarded-Encrypted: i=1; AKwUvBxBRvH9/iT5z5x+qp9CcFysrkZHMEcxEfMgRlRs9StpAcHAosAqkg9NAeZEwV8tkWoyDv5eCyiN7qE=@vger.kernel.org
+X-Gm-Message-State: AFq9FYK8HRM5Endq+3z8Nvhn0toHoFMkqPx1EWanAEgue3lCBm6ptqyG
+	kEZbqRdZd1CFRvH192ey4s3lr23iK86R2pHp87gF/snchxPt9ibpDB+OHdBmvMH3x2AY+rElqcp
+	pKdgwxDAHz1YUV2NOdPQjjDwTmenhkZU=
+X-Gm-Gg: AYBFou190yJ2QPD6ymL5Hf1FBH5mALK17M4QThEbnWqyZ9e6KIDLZsS0X70lktP49B5
+	0AsBbE2GL+hIkgr7uLhe+ThCbzPq2b4V/8kBzVELvlPWGQ5ZS2FflqgPe0aIxLi0vvOoRCMjqsA
+	fnPvijKa3aXYfQE25YmBmoUZVxc65ClU5uIA9ahBR8iQROBZrVBs4qpZZUOHCCQkb7YIHU6t5/n
+	WzIplT5Pp046U5DVPmUc4nDCzcneDX7Ya/XVS0WXcZcmXTczk9Qpm+pnYfoXGXDLJtVpW4av3Ru
+	PEgG69pLkM3GAywYkdQWmHtg1CGK02A1692elcqw1l9ZwAgsvyL1H2Rx
+X-Received: by 2002:a05:651c:1542:b0:3a6:692d:b7ed with SMTP id
+ 38308e7fff4ca-3a9c539343dmr36125771fa.20.1791915092239; Tue, 13 Oct 2026
+ 11:11:32 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
-X-Last-TLS-Session-Version: None
-X-Rspamd-Queue-Id: A865B11D7183E
-X-Spamd-Result: default: False [2.46 / 30.00];
-	DATE_IN_PAST(1.00)[27];
-	MID_CONTAINS_FROM(1.00)[];
-	R_MISSING_CHARSET(0.50)[];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_NO_TLS_LAST(0.10)[];
-	BAYES_HAM(-0.04)[53.32%];
-	PREVIOUSLY_DELIVERED(0.00)[herve.codina@bootlin.com];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	BCC(0.00)[];
-	NEURAL_HAM(-0.00)[-1.000];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FORWARDED(0.00)[herve.codina@bootlin.com];
-	RCPT_COUNT_TWELVE(0.00)[44];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	DKIM_SIGNED(0.00)[bootlin.com:s=dkim];
-	TO_DN_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	URIBL_BLOCKED(0.00)[localhost:rdns,localhost:helo,fwnode.dev:url,intel.com:email,qualcomm.com:email,huawei.com:email,bootlin.com:mid,bootlin.com:email,nvidia.com:email];
-	FREEMAIL_TO(0.00)[nvidia.com,lunn.ch,kernel.org,linuxfoundation.org,google.com,opensource.cirrus.com,cirrus.com,linux.intel.com,gmail.com,stgolabs.net,intel.com,zohomail.com,bootlin.com,amd.com];
-	FROM_EQ_ENVFROM(0.00)[];
-	RECEIVED_HELO_LOCALHOST(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	MAILCOW_DOMAIN_HEADER_FROM(0.00)[bootlin.com]
+References: <cover.1781622998.git.geraldogabriel@gmail.com> <179189927768.12828.5970294502454132706.b4-ty@b4>
+In-Reply-To: <179189927768.12828.5970294502454132706.b4-ty@b4>
+From: Geraldo Nascimento <geraldogabriel@gmail.com>
+Date: Tue, 13 Oct 2026 15:11:20 -0300
+X-Gm-Features: AclHuK9xQdtHZz7WlG4Kf2RJqiboP4WJrJZBrkr8E7ZdVfvIdA54iitY7tUbJH4
+Message-ID: <CAEsQvctXV4zga6Rn+6=Q1zmEmMjDV-83VTWP-b2gWy4Bfdz_1Q@mail.gmail.com>
+Subject: Re: [PATCH v7 0/3] PCI: rockchip: 5.0 GT/s speed discouraged by Rockchip
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>, Dragan Simic <dsimic@manjaro.org>, 
+	linux-rockchip@lists.infradead.org, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The code set directly fwnode.dev field.
+Hi Mani,
 
-Use the dedicated fw_devlink_set_device() helper to perform this
-operation.
+On Tue, Oct 13, 2026 at 10:48=E2=80=AFAM Manivannan Sadhasivam <mani@kernel=
+.org> wrote:
+>
+>
+> On Tue, 16 Jun 2026 12:24:48 -0300, Geraldo Nascimento wrote:
+> > PCI: rockchip: 5.0 GT/s speed discouraged by Rockchip
+> >
+> > Dragan Simic already had warned me of potential issues with 5.0 GT/s
+> > speed operation in Rockchip PCIe. However, in recent interactions
+> > with Shawn Lin from Rockchip it came to my attention there's grave
+> > danger in the unknown errata regarding 5.0 GT/s operational speed
+> > of their PCIe core, including data loss.
+> >
+> > [...]
+>
+> Applied, thanks!
 
-Signed-off-by: Herve Codina <herve.codina@bootlin.com>
-Reviewed-by: Dave Jiang <dave.jiang@intel.com>
-Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Reviewed-by: Richard Cheng <icheng@nvidia.com>
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
----
- tools/testing/cxl/test/cxl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thank you Mani, that was an important drop.
 
-diff --git a/tools/testing/cxl/test/cxl.c b/tools/testing/cxl/test/cxl.c
-index 547ebc97bf59..e21e45fe1572 100644
---- a/tools/testing/cxl/test/cxl.c
-+++ b/tools/testing/cxl/test/cxl.c
-@@ -1678,7 +1678,7 @@ static void mock_companion(struct acpi_device *adev, struct device *dev)
- 	device_initialize(&adev->dev);
- 	fwnode_init(&adev->fwnode, NULL);
- 	device_set_node(dev, &adev->fwnode);
--	adev->fwnode.dev = dev;
-+	fw_devlink_set_device(&adev->fwnode, dev);
- }
- 
- #ifndef SZ_64G
--- 
-2.55.0
+It's a little strange I guess to have patches that were Reported-by
+and then Reviewed-by the same people. But in this case Dragan
+and Shawn deserve all the credit, I'm just the person who dropped
+some code.
 
+Regards,
+Geraldo Nascimento
+
+>
+> [1/3] PCI: rockchip-ep: do not attempt 5.0 GT/s retraining
+>       commit: 39f89dde0a76b229df7eb356aaf6f444b4f8a636
+> [2/3] PCI: rockchip-host: do not attempt 5.0 GT/s retraining
+>       commit: 5988a53f5bf758b2d41cb6e0832c19b9692c76d2
+> [3/3] PCI: rockchip: drive at 2.5 GT/s, error other speeds
+>       commit: 62843031ca1f11d1b8e90e7f558c1b3c4cd77184
+>
+> Best regards,
+> --
+> =E0=AE=AE=E0=AE=A3=E0=AE=BF=E0=AE=B5=E0=AE=A3=E0=AF=8D=E0=AE=A3=E0=AE=A9=
+=E0=AF=8D =E0=AE=9A=E0=AE=A4=E0=AE=BE=E0=AE=9A=E0=AE=BF=E0=AE=B5=E0=AE=AE=
+=E0=AF=8D
+>
+>
