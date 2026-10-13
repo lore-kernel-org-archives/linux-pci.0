@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59E5B5540AE
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 22:11:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 556D6538D72
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 22:13:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791929488; cv=none; b=pL0Q9uQ9/cqcqCBg/JbUc4HLyrHRrBB9DOYEO43IlqSLwfqRfIs7fZjnMf8JQ/4+Be62EwBHWCRgtOPaIUzEFx6ABYLVJqt9o5P80K/D+G7RBv0amQm32Szg6oz3J25j/BjV0BUE9IXf6QeUaHwDeCzjt6iOcWByIVHLxekHqA4=
+	t=1791929610; cv=none; b=fF8+SpMD2Piya4NjYH+F/z63IgdCDTU4A3JwkySk1dPXbMbHFP8hsy8Ee1AVCi6TRaI4RPknlp/yLWgywDu4cgXKE6zJuYAcUz0P4emCyaCNZUtMFB+pThK5Ut3PObgcvEreDYKSVelM2Pn6/2sAs+D569q33z6En83arvvG1mw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791929488; c=relaxed/simple;
-	bh=VJ0KPVLyZkOA+J4DyefRzuYzQayUCNe80UL3+iG19Po=;
+	s=arc-20240116; t=1791929610; c=relaxed/simple;
+	bh=If74zKh22I0Qt46x68K9vV9UXeZ8a8rW2J7nn4Ucf78=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=gEOdMhypIxtlmYHqYV2TMR+OhgHyG/O7nRncJcD1Xf2ttjyOXP40GdpocGNF5vG7BdUUxZG8ID+geczEqWTJCj5OK4YxNdoAJeABD+YGGmt4/dDLR2vBCgclJHSskWSOT7kbo+38FzvsMPP1vWo9wlU9qShW8KC8b7QLaPSK/O4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IMLVhjPx; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=cWwiOFYsxangq+Mtae9ujhAwSK3rZv8cAZgMCxErqm/MKWemVnrTgAkTZ1PVh8YWpLDhHqtHSNEJ7UeacCUoprPmVR5Q5MYjL2dKihPQ9vOVa1h7ZznG3CNGR64eJq26aeh3YTeI0aSQoixR9itJij4maQOf8Jhxt1AH5N39D5Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P4YthmHT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IMLVhjPx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D03701F000FF;
-	Tue, 13 Oct 2026 22:11:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P4YthmHT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C66721F000FF;
+	Tue, 13 Oct 2026 22:13:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791929486;
-	bh=4tbrLCXq4TjLHeNydsugIyb9yBq7x3BhXuQf2aPb0B4=;
+	s=k20260515; t=1791929608;
+	bh=2dnsixepM/aUA/K4IQWJ7o/vLZhGAdTScRb72cgUDOQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IMLVhjPxb83y5uhXNtTIdWuj79keZ4tNbYO/iBAyYADg7ze1dutf7EKGG+6EEtxzV
-	 8IDV9aHa/NRiwjArEAaHE3yY/EYCflo85dkOwX10mpoBlngXlZlAKXd1iw9P6LoFA1
-	 FzJIByflE322BS6r4LT7tbr8LCXVamvqjPCSJ9l0PoayRG0P12vnPO1oe6YPYgpLOr
-	 QVBiGdd4g58FuW14FfOF5yhDhg3vWUajap/6jeUJQaDN8ktnFABtap9EIiyb+sY9wQ
-	 d3YKwp+Rib/Lo7xdz4oU727O2k9dr1isl1LdRSUD6hdratjeLjUiRWAtY2N0If+SBA
-	 sN5otlae5+fDg==
-Message-ID: <sashiko-outbox-170561@kernel.org>
+	b=P4YthmHTKUXjGkpcvtjxHnenk4tCZd8o0CENEurQLWb1hlWc7eIH4WmA1/t6xSV89
+	 tumDn/1PHAp1eGaklql6wTTf+n7x7flE1W2qOLfmdlGHz+HJeOmYbwqR41XHvSZ2st
+	 RytUkYwMADbNqGWXZmopNNKZiM0mOfGKjF+7jHYklCYOj5a/uaQWgBC8Sbv+IKQOX9
+	 OtxvShCZ4dDj9Iqu1a1iGz9JVX6KMPx/+6sRb/X/NWZIyATEhPuinBMcbCLjVRO9+y
+	 bBwlLswZFuO33CIVo0/XPKIk+vH/t1K8BRoGmtWxAG5CvmYA0Zq1vbC36qsL+CY3DK
+	 ddlbZwHY4aQUw==
+Message-ID: <sashiko-outbox-170563@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 1/2] PCI: Expose devm_pci_alloc_host_bridge_release()
+Subject: Re: [PATCH v4 2/2] PCI: iproc: Use the EROM outbound window on BCMA
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Bjorn Helgaas" <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261013220421.1588051-2-bhelgaas@google.com>
+In-Reply-To: <20261013220421.1588051-3-bhelgaas@google.com>
 References: <20261013220421.1588051-1-bhelgaas@google.com>
- <20261013220421.1588051-2-bhelgaas@google.com>
+ <20261013220421.1588051-3-bhelgaas@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 13 Oct 2026 22:11:26 +0000
+Date: Tue, 13 Oct 2026 22:13:28 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,46 +46,57 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] Missing EXPORT_SYMBOL for devm_pci_alloc_host_bridge_release()
+- [Low] pci: Module build failure due to unexported devm_pci_alloc_host_bri=
+dge_release
 --
 
-commit 3991d0ede1a56c908c8b226f72de68fc49a12993
+commit c2644cb699f7409a55741efcebcc09fcf3cf19bd
 Author: Bjorn Helgaas <helgaas@kernel.org>
 
-PCI: Expose devm_pci_alloc_host_bridge_release()
+PCI: iproc: Use the EROM outbound window on BCMA
 
-This commit exposes devm_pci_alloc_host_bridge_release() so drivers can
-avoid device tree parts by calling pci_alloc_host_bridge() directly and
-adding the devm release function manually.
+This commit updates the BCMA driver to request the memory window from the
+EROM rather than relying on the device tree ranges. It directly uses
+pci_alloc_host_bridge() to avoid requesting all DT resources and adds
+validation to warn on window mismatches.
 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ea6e77ecfd3f5..b4f781f423a35 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -699,7 +699,7 @@ struct pci_host_bridge *pci_alloc_host_bridge(size_t =
-priv)
->  }
->  EXPORT_SYMBOL(pci_alloc_host_bridge);
+Link: https://patch.msgid.link/20260807160526.379-1-strst.gs@gmail.com
+Link: https://patch.msgid.link/20260912043626.437-1-strst.gs@gmail.com
+
+> diff --git a/drivers/pci/controller/pcie-iproc-bcma.c b/drivers/pci/contr=
+oller/pcie-iproc-bcma.c
+> index 593418c2bc3aa..1e258cd8fed4f 100644
+> --- a/drivers/pci/controller/pcie-iproc-bcma.c
+> +++ b/drivers/pci/controller/pcie-iproc-bcma.c
+[ ... ]
+> @@ -38,10 +63,20 @@ static int iproc_bcma_pcie_probe(struct bcma_device *=
+bdev)
+>  	struct pci_host_bridge *bridge;
+>  	int ret;
 > =20
-> -static void devm_pci_alloc_host_bridge_release(void *data)
-> +void devm_pci_alloc_host_bridge_release(void *data)
+> -	bridge =3D devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
+> +	bridge =3D pci_alloc_host_bridge(sizeof(*pcie));
+>  	if (!bridge)
+>  		return -ENOMEM;
+> =20
+> +	bridge->dev.parent =3D dev;
+> +
+> +	ret =3D devm_add_action_or_reset(dev, devm_pci_alloc_host_bridge_releas=
+e,
+> +				       bridge);
 
 [Severity: Low]
-Does this function need an EXPORT_SYMBOL() or EXPORT_SYMBOL_GPL()
-declaration?
+Will this cause a build failure when the driver is configured as a
+loadable module?
 
-Because devm_pci_alloc_host_bridge_release() is defined in the built-in
-PCI subsystem but lacks an export, it cannot be linked by external
-modules.
+The symbol devm_pci_alloc_host_bridge_release is defined internally within
+drivers/pci/probe.c but doesn't appear to be exported via EXPORT_SYMBOL()
+or EXPORT_SYMBOL_GPL(). Does directly referencing it here in
+iproc_bcma_pcie_probe() lead to an undefined reference error during
+the linker stage?
 
-Compiling a host controller driver utilizing this devres action
-(like drivers/pci/controller/pcie-iproc-bcma.c) as a loadable kernel module
-will result in a modpost linker error for an undefined symbol.
-
->  {
->  	pci_free_host_bridge(data);
->  }
+[ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013220421.1588=
-051-1-bhelgaas@google.com?part=3D1
+051-1-bhelgaas@google.com?part=3D2
