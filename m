@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2B224F4036
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 16:35:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69B4151CF48
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 16:35:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791909308; cv=none; b=FwVM/WaVIynF02EmRduTGbMINb0PAQg7osANdUjf2aSU8ZtGPN+brR8SfvJl7cMDvLJmr36+BqG4netmnf7iqBVvrmPi9k+jZ62vzlS60eS2PUvkOTanCT+iPkbprikqOa97M5ietOLG0Q7YwEa4mmG+ykA4b1TJM/2zWU2jFg0=
+	t=1791909319; cv=none; b=s8u0L4xqj4e+oNZyk6QCycM5pxPgKjA/DwUi69cEVQRPP66djulQkdmbOU4m8ESZFOyVzC3C96hlnO8nGWZmDAN3/I2emHT9TJgtGbDRFyEiPAYVbM/SLD9POnqtCyGV20XMSf7mhN85B6Fee9+FFNfjS13Uv51qlsEcwRt8qFs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791909308; c=relaxed/simple;
-	bh=PN+r4VLMhssQCrNV6XPUOMNympjbdTpFLc59Vq+ieEo=;
+	s=arc-20240116; t=1791909319; c=relaxed/simple;
+	bh=R7gj9m/FD1mgTkDzBdhndXdlIsFcIw/1hHYIcldmcrY=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=U0wCZWQw8nHweO72oM3nbAxmG1sV1Yqh4IFCMli6mkenI7NpXqL3SuGK88+zzOkh2A1+UbPygJKSHDKl9PA7iDgU5QA5E5qBhO1RNCZVxBl/iCTFC/cx+9wNpum2eeS74JaIRfrZbpunBIqNjPQIJUy4mCPjN7XWFZ/kuezPO6I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=igwWydtP; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=jNAR+aE4TyW3X6eMBVqAHlh4ZAyiYHu1FBx4K+xzOkWMB0Wtz9qStoqLRObCtNC9vzlF8xzbY692zDQ2gKzfYexyp/yw3deRrNbeJcSIBtil9no5EqRAtlfrwZKSNYkJ4H7kBubH72nj31uEFWUvsWcCclyI7vMNguwmqf8KPYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lrMPQS+d; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="igwWydtP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36DE31F000FF;
-	Tue, 13 Oct 2026 16:35:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lrMPQS+d"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1889F1F000FF;
+	Tue, 13 Oct 2026 16:35:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791909306;
-	bh=PN+r4VLMhssQCrNV6XPUOMNympjbdTpFLc59Vq+ieEo=;
+	s=k20260515; t=1791909318;
+	bh=Mca5pzhulPTOJF1qTtDVM/rwKG3e1fXxRzAruQlixIg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=igwWydtP9/RJQDJe8CvfELwrsPK91rw9lgxOoWUSEDo2uGjP5nFxSTefsCkr+437D
-	 ThvtAfJOs1wlCkUB7uWlJ95QrPNO+JMEmvT8fP7kn8LoGAetn2I9vUaDWBwn1dldC/
-	 Q2PUIECgt4yJP2sGQUPHHwqeV3kCi0NMe10Kka4lNvrp9lbNyeBgl03Xzfig8+mWVU
-	 s4IJB18EH1hmTJYoKftGr1cchTn0zcDJJf3BJVYl4AVsqeS2s0BZcqO6gbHRQsB5gB
-	 lKpCEpib0iMxGkholpfyROWwC/GFufO37z54hFaoAQNrIYSxkcgvX304iyXdIeqPlK
-	 iTkLzhw68nwYw==
-Message-ID: <sashiko-outbox-170122@kernel.org>
+	b=lrMPQS+dkKJNGtNNp46iaPbj3wmoiRvQMd5tprm3pfWR6BW1QbGhyKAdKqjbMBChP
+	 qxKqowID10XpBQopeg5UezBGf8VASwroS+RMkLL5o8ce49+my48nYiqCGlUIMZ/yLv
+	 EBfYyHJugGWrB/dqoANIs4tMPBm90PkBwJNYnnyZkujh8Ofj6sFgyfIVlYICAMpEZx
+	 xF3TnreY1CiJ87Z1W1/2gqy1jmGvLj0w4RMcK3pL2C6ZhDMSZHCcSCfVYT6/CAhUSY
+	 hyKbmYIiaIVnNmefWz4P4yobbq0/rtUPuzX/E1ZHnHOFtp7otJtmIpczqxVRKtp+2q
+	 zlTxWMEd4qB5Q==
+Message-ID: <sashiko-outbox-170123@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 08/13] PCI: Save and restore the ACS Control
- register and Egress Control Vector
+Subject: Re: [PATCH v10 12/13] PCI: liveupdate: Do not disable bus mastering
+ on preserved devices during kexec
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "David Matlack" <dmatlack@google.com>, kexec@lists.infradead.org, linux-pci@vger.kernel.org
 Cc: "Adithya Jayachandran" <ajayachandra@nvidia.com>, "Alexander Graf" <graf@amazon.com>, "Alex
@@ -43,43 +43,42 @@ Cc: "Adithya Jayachandran" <ajayachandra@nvidia.com>, "Alexander Graf" <graf@ama
  Mahameed" <saeedm@nvidia.com>, "Samiullah Khawaja" <skhawaja@google.com>, "Shuah
  Khan" <skhan@linuxfoundation.org>, "Vipin Sharma" <vipinsh@google.com>, "William
  Tu" <witu@nvidia.com>, "Yi Liu" <yi.l.liu@intel.com>
-In-Reply-To: <20261013162529.1928093-9-dmatlack@google.com>
+In-Reply-To: <20261013162529.1928093-13-dmatlack@google.com>
 References: <20261013162529.1928093-1-dmatlack@google.com>
- <20261013162529.1928093-9-dmatlack@google.com>
+ <20261013162529.1928093-13-dmatlack@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 13 Oct 2026 16:35:04 +0000
+Date: Tue, 13 Oct 2026 16:35:16 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Save the ACS Control register and the ACS Egress Control Vector in
-> pci_save_state() and write them back in pci_restore_state(), instead of
-> recomputing the ACS controls from scratch with pci_enable_acs().
+> Do not disable bus mastering on outgoing preserved devices during
+> pci_device_shutdown() for kexec.
 >=20
-> This makes ACS symmetric with the rest of a device's saved state. Today
-> pci_save_state() ignores ACS entirely and pci_restore_state() re-enables
-> the ACS controls from the kernel's current ACS policy. As a result, a
-> device can come out of a reset with different ACS controls than it went
-> in with, e.g. any controls programmed outside of pci_enable_acs() are
-> silently dropped.
+> Preserved devices must be allowed to perform memory transactions during
+> a Live Update to ensure continuous operation.  Clearing the bus
+> mastering bit would prevent these devices from issuing any memory
+> requests while the new kernel boots.
 >=20
-> Notably, this prepares the kernel to be able to adopt the ACS controls
-> established by a previous kernel across a Live Update rather than
-> assigning new ones through pci_enable_acs().
+> Because bridges upstream of preserved endpoint devices are also
+> automatically preserved, this change also avoids clearing bus mastering
+> on them. This is critical because clearing bus mastering on an upstream
+> bridge prevents the bridge from forwarding memory requests upstream (i.e.
+> it would prevent the endpoint device from accessing system RAM and doing
+> peer-to-peer transactions with devices not downstream of the bridge).
 >=20
-> [ ... ]
-> configuring ACS from scratch for them. Do the same for devices that have
-> no saved ACS state at all.
->=20
-> Assisted-by: LLM
+> Reviewed-by: Pranjal Shrivastava <praan@google.com>
+> Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com>
+> Reviewed-by: Samiullah Khawaja <skhawaja@google.com>
+> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
 > Signed-off-by: David Matlack <dmatlack@google.com>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013162529.1928=
-093-1-dmatlack@google.com?part=3D8
+093-1-dmatlack@google.com?part=3D12
 
