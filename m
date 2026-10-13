@@ -1,127 +1,127 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 073334A49AF
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 20:23:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7235A5452A0;
+	Tue, 13 Oct 2026 21:00:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791923022; cv=none; b=c9RWLDFQtl+BrcOxadeVJ08S+kfJmDKb6aigGVThxd7O1LoAYkoEu6HY4g8BtMOzLrN1WE2BRE/uN2BETTd6MmAjcPE+lEPGcQ6F2udCUSDyvfsP2cjZvIOuz/3K2crA/3tKBewnHp55E1BVn4hNAfriF9F9Nw4UzWjq/qenx78=
+	t=1791925253; cv=none; b=Wa0z4FB5Mml5uDe+xYZEZcokoONUCcRzzPvwSyt1geiFPCk1RD/Go27X7IGhDXjqlXdnDmqXQhWT5HiAdyQGW2JCqzBler5Cx3o4AyTvy75hAQTORb8tDUs8CYzT2joIYySXvGgHPaesyqU/K1oQ8UU5H5HrCqQuS8Ykz2A9JZo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791923022; c=relaxed/simple;
-	bh=ZYssVvOLssJhjrFkX8qCPZmLqCg36BIR/YUUnjvmaus=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=gcxm0VGOITNC0EpXPx6/3iCa+XkbiqW5uvmyY+VTyrNChnEMXJBwC9+ESrG+TAX2SNlLrNCGakSmb0Ho906bff8CLvavtzqdTRe/U+Jvu99MWer/INzo6qgm81NqYCzQx+99aJO9JooB3YaClQlnqlSQoduF4hDvccpteIapRCU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VxEwQDdQ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791925253; c=relaxed/simple;
+	bh=d1n5rtMRFSkov/Jat5z6yxh7sPCeCASqFmvPurp7Ob4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GY15uat0DfFk5Qq02z+bCOdOjg7IJRKqV5vX0Z9HyOwe/K+v22SKZhyYAXbBrnRMCq1YKW3gYEvWTu6lePjtt2iDdBk3DLjYoXq3GGKbWln6dJ2eiBfpdEBRkTAx6E+HRWSDQb8g0sweafJpi7fLMlxIPU++uFcgCPc/b7/RjqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FfSoUrws; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VxEwQDdQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACC5E1F000FF;
-	Tue, 13 Oct 2026 20:23:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FfSoUrws"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 847491F000FF;
+	Tue, 13 Oct 2026 21:00:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791923020;
-	bh=LUvVnkhDtwGe2j/q7lc4hVDfBNH+53y0e9jMWDu92PA=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VxEwQDdQlJWP4zkPI17htmJwG5b7psakS5J5s1mNu1YeD/KMLHSn4Ehr27C+fTidI
-	 8EcNwgnKkE0PgpI3fTjWHDVw2zgjy+FTjpNEDkY2fU3/ayVTmaOondAeAF+O7FGJgw
-	 qviAJLaR56yTFdRpuQMoXy7gClwpH4Qriyt5dxFAmdHvGoSFFuZCp/hxI4qBEOk2Sk
-	 EhMcVT6h+UHDEe8PAWwyce+m8Stm+e0COrUx+99BmAWIKJTfeTnohy7nkQlBK5+bKr
-	 EOzO3lhBnINGbekFu0IWJedySjHQAYjNeFRLG/ZUtMlXeXItAfEIS0ctO27rvlahq0
-	 7/pxmkdfASKxg==
-Message-ID: <sashiko-outbox-170453@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI/AER: Add a kernel parameter to skip the reset
- during AER recovery
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sunny Feng" <sunnfeng@amazon.com>
+	s=k20260515; t=1791925252;
+	bh=Zr0j98oZUTk+CQ5hg8gqJ3FDcthzN01fo7cNQzUKDa8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=FfSoUrwsDZYSrs9df+DhHndiC85y5+LLGO0Np/JxxVxEQGorOI8AiTl4/6jIdABLy
+	 htWCWBt/2TLE+3JB43hVuTAb7Gf866iDXyL+01ct6ECQyIFzGUswx7sDFfWuDCCTLU
+	 SHd1+aIJujIdUq5SXUAcNwuyoZls9xzofVXK1waM7UtdjlvTzEm1ncNh5O+t4GXTub
+	 ErqDbVD/IksmHOeOxyRwzHuw0TFC8MLgMxryUuQE+xQJCOfRZYvklAr9CcMhRKjber
+	 ggx3VjSTYP00LH6zAMmsrAuW4bW12ZL+jGmYFQ43ArOxrgL/RqAvmZDf78+cPDhRnw
+	 73A6SCtqkdwhw==
+Date: Tue, 13 Oct 2026 23:00:43 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: sashiko-reviews@lists.linux.dev
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261013201045.33806-1-sunnfeng@amazon.com>
-References: <20261013201045.33806-1-sunnfeng@amazon.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 13 Oct 2026 20:23:40 +0000
+Subject: Re: [PATCH] PCI: Update saved Max Read Request Size in
+ pcie_set_readrq()
+Message-ID: <as6b-w_aqSC8pqkK@ryzen>
+References: <20261013195307.181647-2-cassel@kernel.org>
+ <sashiko-outbox-170438@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <sashiko-outbox-170438@kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] pci/aer: interrupt storm when skipping AER reset
---
+On Tue, Oct 13, 2026 at 08:05:19PM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [Medium] pci: Data race in pcie_set_readrq() corrupts hardware and saved state
+> --
+> 
+> commit 5cff2e9dcd50378ba11b9189a892c4623d8503cd
+> Author: Niklas Cassel <cassel@kernel.org>
+> 
+> PCI: Update saved Max Read Request Size in pcie_set_readrq()
+> 
+> This commit updates pcie_set_readrq() to also modify the kernel's saved copy
+> of the Device Control register when changing the Max Read Request Size. This
+> ensures that pci_restore_state() restores the intended MRRS value after a
+> device reset or error recovery.
+> 
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -5944,8 +5944,12 @@ int pcie_set_readrq(struct pci_dev *dev, int rq)
+> >  
+> >  	ret = pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
+> >  						  PCI_EXP_DEVCTL_READRQ, v);
+> > +	if (ret)
+> > +		return pcibios_err_to_errno(ret);
+> >  
+> > -	return pcibios_err_to_errno(ret);
+> > +	pcie_update_saved_devctl(dev, PCI_EXP_DEVCTL_READRQ, v);
+> 
+> [Severity: Medium]
+> Can this introduce a data race when called concurrently?
+> 
+> Looking at the newly added pcie_update_saved_devctl(), it performs an
+> unlocked read-modify-write on the saved state memory:
+> 
+> drivers/pci/pci.c:pcie_update_saved_devctl() {
+>         ...
+>         devctl = (u16 *)&save_state->cap.data[0];
+>         *devctl = (*devctl & ~clear) | set;
+> }
+> 
+> Both the hardware register write via pcie_capability_clear_and_set_word()
+> (which drops to the unlocked variant for PCI_EXP_DEVCTL) and this new state
+> update appear to happen without synchronization.
+> 
+> Concurrent access seems possible via VFIO, which allows parallel lockless
+> pwrite() calls to the PCI Express capability region. This routes through:
+> 
+> vfio_device_fops_write()
+>   vfio_pci_core_write()
+>     vfio_exp_config_write()
+>       pcie_set_readrq()
+> 
+> Could concurrent user-space writes corrupt both the hardware register and the
+> cached state memory, causing pci_restore_state() to mistakenly restore
+> invalid state later?
 
-commit fe869440b3515f272e9e500d4db9fdb37085a98f
-Author: Sunny Feng <sunnfeng@amazon.com>
+No.  As far as I can tell, concurrent pcie_set_readrq() calls on the
+same device are only possible via VFIO, when user space races config
+writes to Device Control of its own device.  That path already does
+unlocked read-modify-writes of the same register in
+vfio_default_config_write(), and pcie_cap_lock does not cover Device
+Control, so that race is not new.
 
-PCI/AER: Add a kernel parameter to skip the reset during AER recovery
+pcie_update_saved_devctl() only modifies the MRRS field of the saved
+copy, with an aligned 16-bit store, so the worst case is that the saved
+MRRS is the value of the other racing write, which also passed the
+checks in pcie_set_readrq().  The saved state cannot become invalid.
+Also, vfio-pci never restores the live saved state without first saving
+it or loading its own stored copy.
 
-This patch introduces a "pci=3Derror_reset_disable=3D" kernel parameter to =
-skip
-resetting specific PCI devices during AER recovery. This allows the devices
-to remain in their errored state so diagnostics can be collected, while
-still re-enabling Root Port interrupts.
+The already queued patch "PCI: Update saved Max Payload Size in
+pcie_set_mps()" is not affected: VFIO virtualizes MPS and never calls
+pcie_set_mps(), and all other callers run during enumeration or from a
+driver's probe().
 
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index c376c3adbefd2..1f403f0f5d258 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
+So I don't think either patch needs additional locking.
 
-[ ... ]
 
-> @@ -1872,7 +1883,21 @@ static pci_ers_result_t aer_root_reset(struct pci_=
-dev *dev)
->  	if (host->native_aer && aer)
->  		aer_disable_irq(root);
-> =20
-> -	if (type =3D=3D PCI_EXP_TYPE_RC_EC || type =3D=3D PCI_EXP_TYPE_RC_END) {
-> +	/*
-> +	 * Leave the devices in the state the error left them in if one of
-> +	 * them is listed in the error_reset_disable parameter, so their
-> +	 * diagnostics can be collected before they are recovered.
-> +	 */
-> +	if (dev->subordinate)
-> +		pci_walk_bus(dev->subordinate, aer_check_error_reset_disabled,
-> +			     &reset_disabled);
-> +	else
-> +		aer_check_error_reset_disabled(dev, &reset_disabled);
-> +
-> +	if (reset_disabled) {
-> +		rc =3D -ECANCELED;
-> +		pci_info(dev, "not reset, error_reset_disable matches a device below\n=
-");
-
-[Severity: High]
-Could this cause an interrupt storm if a device is skipped from AER reset?
-
-When a device is skipped via the error_reset_disable parameter, it is left
-in a broken state with its Uncorrectable Error Status asserted.
-
-Later in aer_root_reset(), the code unconditionally clears the Root Error
-Status and re-enables Root Port AER interrupts via aer_enable_irq(root).
-
-According to the PCIe Base Specification Rev 6.0, Section 6.2.4.2
-(Multiple Error Handling), a device is allowed to generate additional Error
-Messages for subsequent errors of the same type even if the status bit is
-already set.
-
-If the un-reset device continues generating errors (for example, due to a
-degraded link or ongoing background DMA), the Root Port will continually
-receive messages and fire interrupts.
-
-Since the aer_irq() ISR clears the Root Error Status and returns even when
-the event queue is full:
-
-drivers/pci/pcie/aer.c:aer_irq() {
-    ...
-    pci_write_config_dword(rp, aer + PCI_ERR_ROOT_STATUS, e_src.status);
-
-    if (!kfifo_put(&rpc->aer_fifo, e_src))
-        return IRQ_HANDLED;
-    ...
-}
-
-Will this lead to an infinite hard interrupt storm loop, potentially
-causing a denial of service?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013201045.3380=
-6-1-sunnfeng@amazon.com?part=3D1
+Kind regards,
+Niklas
