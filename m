@@ -1,69 +1,149 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6D2A4FD786;
-	Tue, 13 Oct 2026 14:37:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C51B50129F;
+	Tue, 13 Oct 2026 14:37:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=92.121.34.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791902244; cv=none; b=UCJrq/E6dHWPBop0lt3AuTS+gQgUlKU/ji2SOx/fbQ/Ev9P0PeEZ+YC8ZQd9xtTqCxTAox+twy0Jvn/gMNzAplBa7THxaSiyjze+GV0r/iCrvtaXmldnC/VgDZ5VUW0thGpMf93YKmnJqszuIQ7cQiIhKPmb2H3T7rKP7JM4soI=
+	t=1791902251; cv=none; b=NjMrzsouwy2wZKnqq+d5WlGniUxYNKg/9FhxG++YXUXJs8Gm46W+DcMcbzhYMa2lnrdi+6Ui1KPC1haP72j0oD8wWb2I1RnmqXwYeJPLbWBKEBSN8Buk/G+IFHtMMrlODvSdhcr1xEfy8tkOYcChozH4+cZSTubqABGUwC9Nw58=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791902244; c=relaxed/simple;
-	bh=srwRfKAoR6YpkflcEpZLczSLvongqpS5is8g/Xy2fwM=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=DfYzEhydO8ing+L6OqSghwXM8Jjnq//rITnvg632cOqz0RiDyUhGn3ZOTwHAsYX/1HjfeVHaj2g2T5N0ujUfaBVxkttlbpLTsubunZoQMYTzi8KoVPMAhO1V+Nsim1nazPIEPDsRbg0TQlyCFkMBn9q38+PKglzLFgJKR0GgYjU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ES7jc5Jc; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ES7jc5Jc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47AD11F000FF;
-	Tue, 13 Oct 2026 14:37:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791902243;
-	bh=srwRfKAoR6YpkflcEpZLczSLvongqpS5is8g/Xy2fwM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ES7jc5JcFJZgInlk70TyvoHyzHfWSIUbnm6K7MFcG+u0Blb0XmEBHBgNHOD4JRJ3u
-	 gUSuVSjReNesaWzrNXvI/4/oWSIzcsaEViC2DaEACCFjUoSSA6WngVVNPw8VuK6gHi
-	 ANEuGbUgE3jsbpiPcg9jcHc6THWiTfNe0kf6fI/6A3ryJWAxq1TjzrSr2fegdIcNwk
-	 Jvx7Uo8nxeYbndPzbB5S3qx5oksK8iod0aHW7/K6FYnoILKMjHrZpXVRBBBQY4UEky
-	 O6LNIgqTK3w8H5bDBwwXPnl+tbS5M1IESiQN7tGsVzs0B+0uzF67/ewao68qgL9+Mq
-	 Uwy4P/2TS5zEw==
-Message-ID: <sashiko-outbox-169922@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v11 04/19] PCI: Reject unreadable ACS controls in
- isolation checks
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Leon Romanovsky" <leon@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org
-In-Reply-To: <20261013-fix-p2p-acs-v4-0-v11-4-72cf8c96e617@nvidia.com>
-References: <20261013-fix-p2p-acs-v4-0-v11-0-72cf8c96e617@nvidia.com>
- <20261013-fix-p2p-acs-v4-0-v11-4-72cf8c96e617@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 13 Oct 2026 14:37:22 +0000
+	s=arc-20240116; t=1791902251; c=relaxed/simple;
+	bh=5jKPCpzP3ydgQqLnqgc6m8dhumkZpBBD4O7fxHqz170=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=c+2yvPjwrrOJGDeOy5+7E6AcAqQEfDOPojfllLvOGxnYXgZYhSZSy1UPXFMWYtAtK2JqP1ul6JisMb9QbNDrfqG80rkbIAaWeb87GgK6oFlJFWd0fRN/ZPr3ugXSDKwAVWmn/Ke0AOtv9JGwBXKV3lcVMjFZ8vL45bKq6KVUQCo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; arc=none smtp.client-ip=92.121.34.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+	by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id EC50A1A01A5;
+	Tue, 13 Oct 2026 16:37:21 +0200 (CEST)
+Received: from inva024.eu-rdc02.nxp.com (inva024.eu-rdc02.nxp.com [134.27.226.22])
+	by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id C89A01A00E9;
+	Tue, 13 Oct 2026 16:37:21 +0200 (CEST)
+Received: from lsv051416.swis.nl-cdc01.nxp.com (lsv051416.swis.nl-cdc01.nxp.com [10.168.48.122])
+	by inva024.eu-rdc02.nxp.com (Postfix) with ESMTP id 516EE202DA;
+	Tue, 13 Oct 2026 16:37:21 +0200 (CEST)
+Date: Tue, 13 Oct 2026 16:37:21 +0200
+From: Jan Petrous <jan.petrous@oss.nxp.com>
+To: Frank Li <Frank.li@oss.nxp.com>
+Cc: Ciprian Marian Costea <ciprianmarian.costea@oss.nxp.com>,
+	NXP S32 Linux Team <s32@nxp.com>, Vinod Koul <vkoul@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ghennadi Procopciuc <ghennadi.procopciuc@nxp.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bogdan Hamciuc <bogdan.hamciuc@nxp.com>,
+	Ionut Vicovan <ionut.vicovan@nxp.com>, Andrew Lunn <andrew@lunn.ch>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	Clark Wang <xiaoning.wang@nxp.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Maxime Chevallier <maxime.chevallier@bootlin.com>,
+	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+	Alexandre Torgue <alexandre.torgue@foss.st.com>,
+	Chester Lin <chester62515@gmail.com>,
+	Matthias Brugger <mbrugger@suse.com>,
+	Ghennadi Procopciuc <ghennadi.procopciuc@oss.nxp.com>,
+	Frank Li <Frank.Li@nxp.com>, Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	Richard Cochran <richardcochran@gmail.com>,
+	linux-arm-kernel@lists.infradead.org, linux-phy@lists.infradead.org,
+	netdev@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+	imx@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-stm32@st-md-mailman.stormreply.com,
+	Vincent Guittot <vincent.guittot@linaro.org>
+Subject: Re: [PATCH RFC v3 03/12] dt-bindings: PCI: nxp,s32g-pcie: Fix SerDes
+ PHY phandle in example
+Message-ID: <as5CIYxKJTra4hqM@lsv051416.swis.nl-cdc01.nxp.com>
+References: <20260919-s32g_serdes-v3-0-9d68868c1e89@oss.nxp.com>
+ <20260919-s32g_serdes-v3-3-9d68868c1e89@oss.nxp.com>
+ <as0qORxP0Roh9ktO@SMW015318>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <as0qORxP0Roh9ktO@SMW015318>
+X-Virus-Scanned: ClamAV using ClamSMTP
 
-> From: Leon Romanovsky <leonro@nvidia.com>
->=20
-> pci_acs_flags_enabled() and the Intel SPT PCH quirk use ACS registers
-> without checking config-space read errors. A failed read may leave control
-> state indeterminate yet allow the device to satisfy requested isolation
-> controls. So can a read that returns all ones with a successful status,
-> which is what a device that does not answer usually produces.
->=20
-> Return false when either ACS capability or control state cannot be read
-> or reads as all ones, which neither register can legitimately hold. An
-> unknown state cannot prove isolation.
->=20
-> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-> Tested-by: Tushar Dave <tdave@nvidia.com>
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+On Mon, Oct 12, 2026 at 01:43:05PM -0500, Frank Li wrote:
+> On Sat, Sep 19, 2026 at 08:54:31AM +0200, Jan Petrous via B4 Relay wrote:
+> > [You don't often get email from devnull+jan.petrous.oss.nxp.com@kernel.org. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
+> >
+> > From: "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
+> >
+> > The example references the SerDes PHY as
+> >
+> >   phys = <&serdes0 PHY_TYPE_PCIE 0 0>;
+> >
+> > i.e. the SerDes node itself with three PHY cells. That does not match
+> > the SerDes binding: the per-lane child node is the generic PHY
+> > provider and carries '#phy-cells = <0>', while the SerDes node itself
+> > has no '#phy-cells' at all.
+> >
+> > Point the example at the PCIe lane child instead, which is also what
+> > the S32G3 board device trees use. The dt-bindings/phy/phy.h include is
+> > dropped along with the now-unused PHY_TYPE_PCIE constant.
+> >
+> > The schema itself is unchanged; 'phys: maxItems: 1' already describes
+> > the corrected form.
+> >
+> > Signed-off-by: Jan Petrous (OSS) <jan.petrous@oss.nxp.com>
+> > ---
+> >  Documentation/devicetree/bindings/pci/nxp,s32g-pcie.yaml | 3 +--
+> >  1 file changed, 1 insertion(+), 2 deletions(-)
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/nxp,s32g-pcie.yaml b/Documentation/devicetree/bindings/pci/nxp,s32g-pcie.yaml
+> > index 66a050028278..29323e50bd8b 100644
+> > --- a/Documentation/devicetree/bindings/pci/nxp,s32g-pcie.yaml
+> > +++ b/Documentation/devicetree/bindings/pci/nxp,s32g-pcie.yaml
+> > @@ -82,7 +82,6 @@ unevaluatedProperties: false
+> >  examples:
+> >    - |
+> >      #include <dt-bindings/interrupt-controller/arm-gic.h>
+> > -    #include <dt-bindings/phy/phy.h>
+> >
+> >      bus {
+> >          #address-cells = <2>;
+> > @@ -124,7 +123,7 @@ examples:
+> >                  ranges;
+> >
+> >                  device_type = "pci";
+> > -                phys = <&serdes0 PHY_TYPE_PCIE 0 0>;
+> > +                phys = <&serdes0_pcie0>;
+> 
+> I don't think it fix somethings. The "serdes0" just a label, point to
+> provider, which is not neccsary that "#phy-cells" is 0.
+> 
+> Examples just show need how many phys and don't care about phy provider's
+> arguments
+> 
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+The example validates either way, agreed. The three cells are the
+'#phy-cells = <3>' of the downstream nxp,s32cc-serdes binding, which
+was never posted upstream; patch 1 is the only SerDes binding for S32G
+and has no three-cell provider. I would rather have the example match
+it.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013-fix-p2p-ac=
-s-v4-0-v11-0-72cf8c96e617@nvidia.com?part=3D4
+The form depends on the outcome of your patch 1 comment, so I will
+keep this patch in sync with that. If you prefer the phys line
+untouched, I can drop it and keep only the ranges fix v4 adds here.
 
+BR.
+/Jan
