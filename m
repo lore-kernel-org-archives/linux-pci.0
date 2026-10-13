@@ -1,160 +1,238 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 323054398F1;
-	Tue, 13 Oct 2026 17:18:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 362F12D94B5;
+	Tue, 13 Oct 2026 17:26:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791911931; cv=none; b=uTPkKuKk8eAwJzMIulICBvENohjrQI0RfL9IZg2xDN9ngZANQrSoHsea+GE8RrCqY5Oy9RD9rx3d8bikxKEUCAqry24O0YGKf7EAhYzP1bQKj3adM9JkUhKFXbWxrbTlFPozeGS+iaBGDOQAqDPTkjL1mntOaioF/NdTykwFYGc=
+	t=1791912417; cv=none; b=sbH/1rpMSFpmwIsHQ3L+o4LljyTcF3cbUHbn2GKhNae5C/LMkiQtEOMbUo6R7obcy8A0DeTr39rdpBe2bEGcRrC+bWgunI/L23eUfmnIDm6qjRZilmgQgBdT8JQBNaE/FaPNtlOIkZyitX2KC4qEC3ZXocS5v7Y1KMcvcKMOCs4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791911931; c=relaxed/simple;
-	bh=8PqwQUWFfVghebMz9z1kAMapTMuwsHDaGj4XEMNSP/g=;
-	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=GjwqxHHsmsc2B/vka1IYJV4edO0D+3sslbyf+AOASwF+yZ94lHgP6xmN1owlFLQYbINrWiGcTJAEd5XoeZKRk/9ngtV/4VbTUtcj161i56G4fZOEYsOoc6QHb3n1yklZioIpkUzEQUPZlZE5D2bSgnoqtDpLQsNNQkcPZItM5yI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AG1e9nLS; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791912417; c=relaxed/simple;
+	bh=bzOfiZ575E4TvgMwJfErqW3q9RXm8And3Sk6/Gr0Zd8=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=YF0Io9G1G/wx2xHh3jgei/xawsb/Jm4lZAHxOXtlJFBT+8aAhpNrIYpYAcA61VOy+8F6TIZY6We4qGKQ3CWWHCc9xsLwbXtZErrzXzHqZhfjRcgSdgohAv2mkbdn1vWThkLKLpEWvzfCArJoOYp1XQL//06me0LuULCQ6Y1pLM8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=a2BOZcsC; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AG1e9nLS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D5171F000FF;
-	Tue, 13 Oct 2026 17:18:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791911930;
-	bh=DaV//0Jk7M97S39ZwsdcpB+1W9eqYBvkzOhD9k9vV/Q=;
-	h=Subject:From:To:Cc:In-Reply-To:References:Date;
-	b=AG1e9nLS8EsscB3nsQDaKaav0BROgOxE4YMbZIEyin08r6IfwPk6dWyZ/uhBrq7YN
-	 T6kpponQVJYJO6i4I3RPki1uJoLIHSjxliRKuskb5ELUNP2RA+/TAZ1hEqmUHkSaVL
-	 69WCaYKkE3kQt/8Z+9VOWwo5jPT+/sSdDvsBopCC/dxLm6ubz0ZwCvZlrDfqEM65tD
-	 rjNhyaB5K2WUIZP+tqvUL+LkQs+M3BWe+rZFY7cfzoiRNInpvIEHz3ogPRAgIPkaCA
-	 dwaPWpHd/du9EVs2J/4wtCzlLu+/oiNuibtVoJCnZtPHHs5j0xSZgDr8fWcjaP/mwk
-	 U6Alldl4Q8fjQ==
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="a2BOZcsC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1791912416; x=1823448416;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version:content-id;
+  bh=bzOfiZ575E4TvgMwJfErqW3q9RXm8And3Sk6/Gr0Zd8=;
+  b=a2BOZcsCpdFzxQtQktUXn+JRztk/spOP6DzbmtKeQFvm3gfS6UGpoPIO
+   u6/l3Bqpq3Uqf0S/GkCTKFlLVtBvN8M8oYjS456mNGycUvxSeZl9xo8gS
+   jhxM+6UwBqZIptq+10XmO+pJVBOMfaXyEqg2Tg1V/oEwjDEgKg6QgM7rc
+   Ey+lcNlQkxNseTu7v4tBuNK5qnfcV9bY9XSY5M4oCgxkuR/CqwIr2yiXl
+   l179f33NOaPQDQ81PkmagzwGwH2p/NIL4/Vz9ZherJbYn0J7Qa+RWodN1
+   LmIfIQF16hwABQfTATA34GjEqGz7x+zOINg3kGXxQZJa0kWS+M6+T5oin
+   g==;
+X-CSE-ConnectionGUID: bXG4N1+FR72GL1q+uaWgCQ==
+X-CSE-MsgGUID: 3UMSGxUOR2KAtZrsE7Uq2w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11934"; a="533640"
+X-IronPort-AV: E=Sophos;i="6.27,156,1787036400"; 
+   d="scan'208";a="533640"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2026 10:26:55 -0700
+X-CSE-ConnectionGUID: K86+1HiET+6zIsBuUT++WQ==
+X-CSE-MsgGUID: 930I2P0bQSiVu1vgGGqfCg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,156,1787036400"; 
+   d="scan'208";a="1137991"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.106])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2026 10:26:48 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Tue, 13 Oct 2026 20:26:44 +0300 (EEST)
+To: Mario Limonciello <mario.limonciello@amd.com>
+cc: Maciej Grochowski <Maciej.Grochowski@sony.com>, 
+    Nikolas Joshua Britton <nbritton@exabit.io>, 
+    Geramy Loveless <gloveless@jqluv.com>, Eric Auger <eauger@redhat.com>, 
+    Alexey Fomenko <alexey.fomenko@intel.com>, 
+    Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+    Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, 
+    Rob Herring <robh@kernel.org>, 
+    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kw@linux.com>, 
+    Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
+    Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, 
+    x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>, 
+    LKML <linux-kernel@vger.kernel.org>, Bradley Morgan <brads@mainlining.org>
+Subject: Re: [PATCH v3 8/8] PCI/quirks: Avoid certain address on Genoa
+ systems
+In-Reply-To: <ed19c161-9703-4967-997a-b9054e92a216@amd.com>
+Message-ID: <01b571a9-06ae-076e-95f4-0851a90d0c44@linux.intel.com>
+References: <20261013130948.6231-1-ilpo.jarvinen@linux.intel.com> <20261013130948.6231-9-ilpo.jarvinen@linux.intel.com> <e3895e35-a0a2-4c32-8ebb-f726a8c8caae@amd.com> <ed19c161-9703-4967-997a-b9054e92a216@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2] pci: designware: Set DMA_BYPASS bit in outbound
- IATU CTRL2 register
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, 
- Sumit Kumar <sumit.kumar@oss.qualcomm.com>, 
- Jingoo Han <jingoohan1@gmail.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <aqbahGslz11TWIRo@fedora>
-References: <20260908-dma_bypass-v2-1-c3c81d408c0c@oss.qualcomm.com>
- <aqAk6nXECt239c2g@ryzen>
- <4nxyshx26bl5r7jjjnghsyz7k63lah6zx77cuea37mziww7kb4@iij5g3om67ub>
- <aqbahGslz11TWIRo@fedora>
-Date: Tue, 13 Oct 2026 22:48:37 +0530
-Message-Id: <179191191767.12828.2752703637384946037.b4-reply@b4>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3630; i=mani@kernel.org;
- h=from:subject:message-id; bh=8PqwQUWFfVghebMz9z1kAMapTMuwsHDaGj4XEMNSP/g=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqzmfwFAMrCKxMOcbMcmBoP8ps9UP1Dl0MH8zRD
- pGaqapdwcyJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCas5n8AAKCRBVnxHm/pHO
- 9TjrCACSD2GVH5IhWwVcX2Aah6BHGKLKFKchRjtkdA0G4pH30dmKrOUrjAnr/V6phBL4BxTLRfo
- QFycM0pq8LznSstG41qv3P/mPhggml9dw3PFaoX/E8ezgfxZ+/Qn2TW8YmkuAgjvzlm5oMh17wa
- UzHSM2zlQdtmPW6JjxNIUPeTj3pNqDliB3OBSIc9ys1mQWnb2z/Y1OB7mQ5lFIPTo1pPZT4aMup
- IVPmPkAHE8qtemOK1U4epJVnaXANXBPwQl+cqMZk2hE1tmlbD7lCcyNFTewTgc3so2KLKfh5Bw+
- n3xtQDM8BjAGTcDddmfLKhZieRgDWa344fFA73cDocmOZEqB
-X-Developer-Key: i=mani@kernel.org; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
+Content-Type: multipart/mixed; BOUNDARY="8323328-1816090372-1791911231=:21507"
+Content-ID: <e338d973-52cf-3b53-8e18-7749926388a0@linux.intel.com>
 
-On 2026-09-13 19:16 +0200, Niklas Cassel wrote:
-> On Sun, Sep 13, 2026 at 11:35:59AM +0200, Manivannan Sadhasivam wrote:
-> > 
-> > pci_epc_mem_map() is already useless in the eDMA path today. So this patch
-> > doesn't change that.
-> 
-> I'm not sure if useless is the proper word here.
-> Redundant is perhaps a better word.
-> 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-No, it is useless indeed. See below.
+--8323328-1816090372-1791911231=:21507
+Content-Type: text/plain; CHARSET=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-ID: <134bf6f9-3b9c-c361-0006-b02b13d129f7@linux.intel.com>
 
-> 
-> Let me explain using pci-epf-test.c:pci_epf_test_read() as an example:
-> 
-> Without the patch in $subject, on a DWC based platform:
-> 
-> pci_epc_mem_map() will setup an iATU entry, and the eDMA transaction will then
-> be translated using that iATU entry, before being sent out on the PCIe bus.
-> 
+On Tue, 13 Oct 2026, Mario Limonciello wrote:
+> On 10/13/26 12:00, Mario Limonciello wrote:
+> > On 10/13/26 08:09, Ilpo J=E4rvinen wrote:
+> > > While testing the resource placement changes, tests hit a case where
+> > > igb fails to probe when BAR 0 is placed at 0x9c000000:
+> > >=20
+> > > =A0=A0=A0 90000000-9cffffff : PCI Bus 0000:a0
+> > > =A0=A0 -=A0 90000000-902fffff : PCI Bus 0000:a1
+> > > =A0=A0 -=A0=A0=A0 90000000-900fffff : 0000:a1:00.0
+> > > =A0=A0 -=A0=A0=A0=A0=A0 90000000-900fffff : igb
+> > > =A0=A0 -=A0=A0=A0 90100000-901fffff : 0000:a1:00.0
+> > > =A0=A0 -=A0=A0=A0 90200000-90203fff : 0000:a1:00.0
+> > > =A0=A0 -=A0=A0=A0=A0=A0 90200000-90203fff : igb
+> > > =A0=A0 +=A0 9be00000-9c0fffff : PCI Bus 0000:a1
+> > > =A0=A0 +=A0=A0=A0 9be00000-9befffff : 0000:a1:00.0
+> > > =A0=A0 +=A0=A0=A0 9bf00000-9bf03fff : 0000:a1:00.0
+> > > =A0=A0 +=A0=A0=A0 9c000000-9c0fffff : 0000:a1:00.0
+> > > =A0=A0=A0=A0=A0 9c100000-9c17ffff : amd_iommu
+> > > =A0=A0=A0=A0=A0 9c180000-9c1803ff : IOAPIC 8
+> > >=20
+> > > =A0=A0 -=A0=A0=A0=A0=A0=A0 Region 0: Memory at 90000000 (32-bit, non-=
+prefetchable)
+> > > [size=3D1M]
+> > > =A0=A0 -=A0=A0=A0=A0=A0=A0 Region 3: Memory at 90200000 (32-bit, non-=
+prefetchable)
+> > > [size=3D16K]
+> > > =A0=A0 -=A0=A0=A0=A0=A0=A0 Expansion ROM at 90100000 [disabled] [size=
+=3D1M]
+> > > =A0=A0 +=A0=A0=A0=A0=A0=A0 Region 0: Memory at 9c000000 (32-bit, non-=
+prefetchable)
+> > > [size=3D1M]
+> > > =A0=A0 +=A0=A0=A0=A0=A0=A0 Region 3: Memory at 9bf00000 (32-bit, non-=
+prefetchable)
+> > > [size=3D16K]
+> > > =A0=A0 +=A0=A0=A0=A0=A0=A0 Expansion ROM at 9be00000 [disabled] [size=
+=3D1M]
+> > >=20
+> > > igb 0000:a1:00.0 0000:a1:00.0 (uninitialized): PCIe link lost
+> > > ------------[ cut here ]------------
+> > > igb: Failed to read reg 0x18!
+> > > WARNING: drivers/net/ethernet/intel/igb/igb_main.c:724 at
+> > > igb_rd32.cold+0x3c/0x4f [igb], CPU#32: kworker/32:1/706
+> > > ...
+> > > =A0 igb_get_invariants_82575+0xff/0xf00 [igb]
+> > > =A0 igb_probe+0x3c8/0x1190 [igb]
+> > > =A0 local_pci_probe+0x3b/0x80
+> > >=20
+> > > It turns out there is a 64kB iomem black hole at 9c000000 that return=
+s
+> > > ~0 and this is where igb's BAR 0 resides. If another BAR of the same
+> > > card is placed into that address, it is similarly black holed.
+> > >=20
+> > > Mark the problematic 64kB range reserved using a quirk bound to the
+> > > bridge found in the problematic system.
+> > >=20
+> > > Closes: https://bugzilla.kernel.org/show_bug.cgi?id=3D222074
+> > > Suggested-by: Mario Limonciello <mario.limonciello@amd.com>
+> > > Signed-off-by: Ilpo J=E4rvinen <ilpo.jarvinen@linux.intel.com>
+> > > ---
+> > > Cc: Borislav Petkov <bp@alien8.de>
+> > >=20
+> > > As an alternative to this, I've also tested reverting the commit
+> > > 07eab0901ede ("efi/x86: Remove EfiMemoryMappedIO from E820 map") and
+> > > that also resolves the issue by retaining "9c000000-9cffffff : Reserv=
+ed"
+> > > entry in the resource tree.
+> > >=20
+> > > ---
+> > > =A0 arch/x86/pci/fixup.c | 36 ++++++++++++++++++++++++++++++++++++
+> > > =A0 1 file changed, 36 insertions(+)
+> > >=20
+> > > diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> > > index b301c6c8df75..cc463bf492b6 100644
+> > > --- a/arch/x86/pci/fixup.c
+> > > +++ b/arch/x86/pci/fixup.c
+> > > @@ -822,6 +822,42 @@ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x15=
+71,
+> > > pci_amd_enable_64bit_bar);
+> > > =A0 DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x15b1,
+> > > pci_amd_enable_64bit_bar);
+> > > =A0 DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1601,
+> > > pci_amd_enable_64bit_bar);
+> > > +/*
+> > > + * TODO: Remove when/if root cause is found.
+> > > + *
+> > > + * Genoa appears to have a 64kB iomem black hole starting at 0x9c000=
+000
+> > > + * address for which all reads return ~0 blocking an overlapping BAR=
+ from
+> > > + * working.
+> > > + *
+> > > + * Work around the problem by reserving the space prior to making an=
+y
+> > > iomem
+> > > + * allocations that could overlap with the black hole.
+> > > + */
+> > > +static struct resource genoa_black_hole =3D
+> > > DEFINE_RES_MEM_NAMED(0x9c000000,
+> > > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 SZ_64K,
+> > > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 "reserved");
+> > > +
+> > > +static void genoa_iomem_black_hole(struct pci_dev *dev)
+> > > +{
+> > > +=A0=A0=A0 struct resource *r;
+> > > +
+> > > +=A0=A0=A0 pci_bus_for_each_resource(dev->bus, r) {
+> > > +=A0=A0=A0=A0=A0=A0=A0 if (!r || !r->flags || !resource_assigned(r))
+> > > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 continue;
+> > > +
+> > > +=A0=A0=A0=A0=A0=A0=A0 if (!__resource_contains_unbound(r, &genoa_bla=
+ck_hole))
+> > > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 continue;
+> > > +
+> > > +=A0=A0=A0=A0=A0=A0=A0 if (resource_assigned(&genoa_black_hole))
+> > > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 pci_dbg(dev, "iomem black hole wor=
+karound already
+> > > applied\n");
+> > > +=A0=A0=A0=A0=A0=A0=A0 else if (!insert_resource(r, &genoa_black_hole=
+))
+> > > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 pci_info(dev, "iomem black hole wo=
+rkaround enabled\n");
+> > > +=A0=A0=A0=A0=A0=A0=A0 else
+> > > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 pci_dbg(dev, "iomem black hole wor=
+karound add failed\n");
+> > > +=A0=A0=A0=A0=A0=A0=A0 return;
+> > > +=A0=A0=A0 }
+> > > +}
+> > > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, 0x14ab,
+> > > genoa_iomem_black_hole);
+> > > +
+> > > =A0 #define RS690_LOWER_TOP_OF_DRAM2=A0=A0=A0 0x30
+> > > =A0 #define RS690_LOWER_TOP_OF_DRAM2_VALID=A0=A0=A0 0x1
+> > > =A0 #define RS690_UPPER_TOP_OF_DRAM2=A0=A0=A0 0x31
+> >=20
+> > I guess it's good we know the root cause is 07eab0901ede. If we're goin=
+g
+> > down the path of making holes in that we may well put the hole in
+> > efi_remove_e820_mmio() like this (attached).
+>=20
+> I don't really like that though.  If Genoa is affected I would expect ple=
+nty
+> of other machines are too they just haven't been found yet.
 
-No, that's not true. While the pci_epc_mem_map() does setup an iATU entry, eDMA
-transaction doesn't use the mapped address.
+That's what I'm worried as well. My own testing can only cover very little=
+=20
+ground here.
 
-If you look into the eDMA read path:
-	pci_epc_mem_map()
-		-> Allocates map.phys_addr and sets up an iATU entry
-	pci_epf_test_data_transfer()
-		-> dma_local points to address allocated by dma_map_single()
-		   (dma_dst)
-		-> dma_remote points to RC address referenced in src_addr
-		-> These two were passed to dmaengine_prep_config_single()
-		   ignoring the map.phys_addr passed through dma_src parameter.
+> Can we roll back 07eab0901ede and add quirks for the busted machines inst=
+ead?
 
-For eDMA write:
-	pci_epc_mem_map()
-		-> Allocates map.phys_addr and sets up an iATU entry
-	pci_epf_test_data_transfer()
-		-> dma_local points to address allocated by dma_map_single()
-		   (dma_src)
-		-> dma_remote points to RC address referenced in dst_addr
-		-> These two were passed to dmaengine_prep_config_single()
-		   ignoring the map.phys_addr passed through dma_dst parameter.
 
-So essentially, the address used by the eDMA is the raw RC PCIe address, not
-translated by the iATU. In fact, the Designware Databook also doesn't recommend
-setting up the iATU entry for the eDMA path. So the allocated iATU entry is
-useless.
-
-But the issue this patch is trying to address is, if the raw PCI address or the
-dma_map_single address used by the eDMA happens to be present in one of the
-existing iATU mappings, then at that point, the address can get translated
-causing wrong address to be sent over the bus.
-
-> So the iATU entry is actually being used.
-> 
-> 
-> After the patch in $subject, on a DWC based platform:
-> 
-> pci_epc_mem_map() will setup an iATU entry, however, because of the DMA_BYPASS
-> bit, that iATU entry will not be used, and the transaction will be send out on
-> the PCIe bus untranslated.
-> 
-
-This is the current behaviour as well.
-
-> 
-> So I would argue that it is only after this patch that pci_epc_mem_map() will
-> setup an iATU entry that will then never be used.
-> 
-> Yes, I think I understand that you are trying to say that, for DWC based
-> drivers, we could theoretically skip the pci_epc_mem_map() call, and send the
-> transaction untranslated.
-> 
-> My point is that it feels silly to set the DMA_BYPASS bit without also making
-> sure that the pci_epc_mem_map() calls are either removed or (at least for DWC
-> based platforms) modified to not set up an iATU entry in the DMA path in the
-> first place.
-> 
-
-This I agree. But this also needs some careful analysis as other DMA controllers
-other than eDMA might need the mapping. For eDMA, it is also not straightforward
-as we do not pass any 'I'm using DMA' flag to map_addr() callback.
-
-> I am happy that this is getting cleaned up, I just don't like a half cleanup
-> where we, after this commit, will setup+teardown iATU entries that will then
-> never be used for the actual transaction.
-> 
-
-This should be done as a follow-up, not blocking this patch.
-
-- Mani
-
+--=20
+ i.
+--8323328-1816090372-1791911231=:21507--
