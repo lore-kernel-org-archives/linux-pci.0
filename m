@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF546513560
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 16:40:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D135A51B16B
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 16:40:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791909617; cv=none; b=Mq25mUEEttwxNbGe4zo9cprFl/F7OpO76+yUt/Bfw49ZYIZjKQ/AgWYV41cpjwbwuRxLEanuFW/y9HYnX1FuVl/ymUonKGYUEHQDqyAC5X8/Kn99KvDjdn+yu3+uB2csyipevqBWn3OkPAE/DRTHnvqLhNGATUhVpkOdKkcVZdk=
+	t=1791909659; cv=none; b=n+PiKAv2SueK3WY+JQtKuVIasAldsLe/NNEkSczlN811Ft1PZDQrAII52teqFk2ctwE3X6Cp5MHsEKKMahCjd/Ruu70nfp55cHJp3U42fM+19F/Qki12guWlW7BKwXKHtXg56dBnhewPf0Ow7xBNgubGV+5TnJI201EYulzLx90=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791909617; c=relaxed/simple;
-	bh=oRSd3nBArOzl2Jb2s865qqwyoWek83didYijiJxEp4Y=;
+	s=arc-20240116; t=1791909659; c=relaxed/simple;
+	bh=vU9iDpTw6BhQUXTMuwZ7IfGm84e7qgJyw7tFxT1/9fE=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=EF7nuzCkTGM0K10z3MRDNyzyp6yQBuQb/CVF7cLSSWQN6XfhKu4ujilcCEJtArE933yzx0j67P7b3kBFD8K7yJigNqM46NokY//ahDyxWxXXCOd6lUpTWeNgQt53pD6w3AoihfgPfLRRC7gchJ/2gXAwtwoyfncbIC/943JvgwY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YNlQgiKx; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=u1BWK4knOw4xg2X4fyNwBctd3qY5hFd3d6RnujPzzXW4G067tbJVT/ksxkOP9RtydBD/iRez6FT6ub/PQFQY6g0MFxM7zY58CgV0Sj3btDzCHJVndytNZ/CeWQ8bWWR5rF8xVd13L7tzjB7Jq/PFClrluoHv6dnEVtdk6i65BhE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RMRtbK7U; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YNlQgiKx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B5311F000FF;
-	Tue, 13 Oct 2026 16:40:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RMRtbK7U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72D411F00893;
+	Tue, 13 Oct 2026 16:40:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791909616;
-	bh=onpO8lBHEN85iwssSLMsBRvZRHpOY6vwoIhiGQt1cxQ=;
+	s=k20260515; t=1791909658;
+	bh=vU9iDpTw6BhQUXTMuwZ7IfGm84e7qgJyw7tFxT1/9fE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=YNlQgiKxykUdaNxPXZtWG0oxa6IsM144UcaLaPe226qqU1kDRq0XFsgCT7J8vBOUO
-	 Fh9hndQ8L8LhCb5R4U5MjZBiCC8bWfArpNHUSyzQkB5GUs8CoQzrQKj3NQ5uIfHWAO
-	 WYj3uwzbAsIOSJoIuUmGKFNMYlIR9auXBOowlqXqEHcGhXcFl0jUJqOihiPZIB41VJ
-	 rgyY4zHr2lzfxX0J5sv501jtnKKTGD4/jBA051lwE2lX1H+pqpZqTS2dPX3f40pLUy
-	 t++aA/jkfQzHSNhf1bpXr108kA4y2YzNMCYBq0ebTy1wxSuIXVZXeqDejsN6r2w0eR
-	 e3EXbsT51vPwQ==
-Message-ID: <sashiko-outbox-170133@kernel.org>
+	b=RMRtbK7UcA5SdLsEX5/pelGjDR8F208CZNPjIkSj/2ZD27wPtooimHoiVmLTs12hs
+	 a/w1aTYGmNzA3jcEPaUEUV/ma5629qBG2Mevvul8O37z2AgvliDBxQmqEW6cWlMTe8
+	 tKuKjH5aPQ7ryVQ+SimIKlN1p0e8YBI4aSZBZVJRpwe6DnkHwLZiy2oHr7K/Eoqa4Y
+	 v7jZc1Oy+klAOVHcK0hvCRhJDjYXe9mUVcCrsBI4Wl30XrKQrgwZ1ubnrePlyyGBMV
+	 OalTqaR83FYwW1I5lHOFRT/BaPR8HZ/yX50GtNUTo8pco2//wEoGJsVoYoWbAvmTdP
+	 4+xxTiVqNRXMQ==
+Message-ID: <sashiko-outbox-170134@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 03/13] PCI: liveupdate: Track incoming preserved PCI
- devices
+Subject: Re: [PATCH v10 10/13] PCI: liveupdate: Adopt ARI Forwarding Enable
+ on preserved bridges
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "David Matlack" <dmatlack@google.com>, kexec@lists.infradead.org, linux-pci@vger.kernel.org
 Cc: "Adithya Jayachandran" <ajayachandra@nvidia.com>, "Alexander Graf" <graf@amazon.com>, "Alex
@@ -43,90 +43,34 @@ Cc: "Adithya Jayachandran" <ajayachandra@nvidia.com>, "Alexander Graf" <graf@ama
  Mahameed" <saeedm@nvidia.com>, "Samiullah Khawaja" <skhawaja@google.com>, "Shuah
  Khan" <skhan@linuxfoundation.org>, "Vipin Sharma" <vipinsh@google.com>, "William
  Tu" <witu@nvidia.com>, "Yi Liu" <yi.l.liu@intel.com>
-In-Reply-To: <20261013162529.1928093-4-dmatlack@google.com>
+In-Reply-To: <20261013162529.1928093-11-dmatlack@google.com>
 References: <20261013162529.1928093-1-dmatlack@google.com>
- <20261013162529.1928093-4-dmatlack@google.com>
+ <20261013162529.1928093-11-dmatlack@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 13 Oct 2026 16:40:14 +0000
+Date: Tue, 13 Oct 2026 16:40:57 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] pci: liveupdate: silent DMA corruption risk on incoming device cle=
-anup
---
+> Adopt the ARI Forwarding Enable bit on preserved bridges and update
+> pci_dev->ari_enabled accordingly during a Live Update. This ensures that
+> the preserved devices on the bridge's secondary bus can be identified
+> with the same expanded 8-bit function number after a Live Update.
+>=20
+> pci_liveupdate_adopt_ari() updates the bridge's ari_enabled the same way,
+> and from the same context, as pci_configure_ari() already does when it
+> enables or disables ARI Forwarding on the bridge.
+>=20
+> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+> Reviewed-by: Pranjal Shrivastava <praan@google.com>
+> Signed-off-by: David Matlack <dmatlack@google.com>
 
-commit 30099916ad0bce596acb2541018cac55703694d3
-Author: David Matlack <dmatlack@google.com>
-
-PCI: liveupdate: Track incoming preserved PCI devices
-
-This commit adds tracking for incoming preserved PCI devices during Live
-Update. It introduces pci_liveupdate_setup_device() to fetch the serialized
-state from the previous kernel and marks devices as incoming-preserved until
-drivers call pci_liveupdate_finish().
-
-> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> index 22d5d177e104d..a1d9b2b1f9e38 100644
-> --- a/drivers/pci/liveupdate.c
-> +++ b/drivers/pci/liveupdate.c
-[ ... ]
-> @@ -382,7 +599,80 @@ void pci_liveupdate_cleanup_device(struct pci_dev *d=
-ev)
->  	 */
->  	if (READ_ONCE(dev->liveupdate.outgoing))
->  		pci_WARN(dev, 1, "Destroying outgoing-preserved device!\n");
-> +
-> +	if (READ_ONCE(dev->liveupdate.incoming))
-> +		pci_WARN(dev, 1, "Destroying incoming-preserved device!\n");
-
-[Severity: High]
-Does this code risk silent memory corruption by only warning instead of
-panicking?
-
-When an incoming preserved device is destroyed, it is dropped from the
-kernel's resource tracking. However, the device may still be live and
-performing DMA if it was handed over by the previous kernel.
-
-If this only warns, it allows the PCI core to proceed and potentially
-reassign the device's bus numbers and MMIO resources to other devices while
-the original device is still active. Although pci_check_all_devices_finishe=
-d()
-panics at the end of the Live Update session for unfinished devices, there =
-is
-a dangerous window where resource conflicts and DMA corruption can occur.
-
-> +}
-[ ... ]
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 2a37e5d3e8e36..ad7fdf0d56b68 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-[ ... ]
-> @@ -2188,6 +2190,7 @@ int pci_setup_device(struct pci_dev *dev)
->  	default:				    /* unknown header */
->  		pci_err(dev, "unknown header type %02x, ignoring device\n",
->  			dev->hdr_type);
-> +		pci_liveupdate_cleanup_device(dev);
-
-[Severity: High]
-Can an incoming preserved device that fails enumeration here cause a resour=
-ce
-conflict?
-
-If pci_setup_device() encounters an unknown header type for an incoming
-device, it calls pci_liveupdate_cleanup_device() and ignores the device.
-Since the cleanup routine only issues a warning, the live device is dropped
-from tracking but might still be performing DMA.
-
->  		pci_release_of_node(dev);
->  		return -EIO;
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013162529.1928=
-093-1-dmatlack@google.com?part=3D3
+093-1-dmatlack@google.com?part=3D10
+
