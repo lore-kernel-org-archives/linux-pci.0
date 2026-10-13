@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B7EE4AA569;
-	Tue, 13 Oct 2026 22:04:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B39E556B9F;
+	Tue, 13 Oct 2026 22:04:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791929086; cv=none; b=OaEk8wQOabAaMbL8+xwClZ5cwJSouteG2LoUwKIMHimJVyrqrA7B2tcz++UOeUnfP8kt88dfVYO1hcTp4rby7upz2nlXm00c6ZoD50dNCmNmpdFoJndp+H2BMX05TMJjWPcql/UOngM2Pijd5GxgdeiuOnFsWO4iAAlqeKAJy0I=
+	t=1791929090; cv=none; b=A55WDMmvcpDe1ZABYD4Iqn2aKqyyzy4gpGhvv6NhemiDPQnIsYGO2uyaPNsQHAr9y9UPWVRyZOKyZxamENDmVMMDfaTs4dKAocQENFXtJGUefD5jERQUYzI2j6S4N0VqFdivErUYjdHL61lIEtZ0gVEC63QCFsI+hg/ZhQtT3/o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791929086; c=relaxed/simple;
-	bh=HVOXoGGqXAbKyXaSWnQO73VXFtknSn+jRczq2JTRjEk=;
+	s=arc-20240116; t=1791929090; c=relaxed/simple;
+	bh=WJ0PsKJJ9GEZOIwNf+k33/yd+qdg96T2bbsHymMmrfQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pO6cGYaffKMukUEm1ZsbUGI1kyw5DCRgDMqVDhnL9P1XxyVTKIkefAET/MKdaYjx/Bizh89QVsg/wJHqqXcp6GcwgN2hgflZndpacrnFBPL+RR/Ki291ETzIt70F819qAd6AoQos4v7NLjvoz/EHMz4vzG/jk+GKdg86Z+3XfqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mtVDUylQ; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=MQLJNI21nery8nimZwElBsmMKdsuQeXiGTEqabXGn9vcRaAnji8zJIw4p2piOdH2MBURqURetS5c9QgKtIPD0GqBWJLzIF1ITeat+ru8DHHtKnOJMlEDKnKriCgMDHvHKRUSOxmiANNlaDnTRQIzED6qlvQy3wb1xVMFSIG4Zrs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BN+4oJ02; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mtVDUylQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91A9D1F00893;
-	Tue, 13 Oct 2026 22:04:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BN+4oJ02"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D4091F00898;
+	Tue, 13 Oct 2026 22:04:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791929084;
-	bh=tnLWPN74AHBIaLDvOBtrD1EbTBWBcfnhxcDXArDXl2E=;
+	s=k20260515; t=1791929088;
+	bh=jCSgEGxqrKkW4tQWVEb2obBRfbgXfhgd/LNbZr68fQU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=mtVDUylQ1lNJPnFZhMPcXLIn4u86dWSvceE9nvzxhE5YBHr73m2pCRkZRu6RFNDMp
-	 j1dqv0gpnbmxcWx8Rx9dCj/BsRqhzfLROYVpKrKX1Z2NN2+4klYtTJVNQpLPetFekZ
-	 PhpOpF4vWN/P0rnHhYGkRlg6kgHORwRBdc211CGsLSIZ5rOjH07yA0VlBwYStap/tY
-	 FGAAqnE381c4yLjtQFRK4rb6Te2Ej4x3n6qrdeQO/HPwBGV3/HZZ92pfhgg6e/ZDb7
-	 1z7j+gkU1yqw+bO3q4tn8/xDGKHo9D557kmBoOZH6mts0JX7XCsNcsKZswi4xyeVUt
-	 Jalxvqg4duumA==
+	b=BN+4oJ02D0ywdFvJsLoN0AZeasbdwaRZALns4Gp/E/6dhp55FMwxlEzqXc+pCNpBI
+	 MNFDdBozSYdFJthvwqSaj3pYp5kCj2qoUqGg/HnMK5qTvsRuCmDN7P8uT3INiiK/5l
+	 hlLthbK7AYGAYMhLopqCs9HIah7cJ2TuzAti7DRNNXHLTJLNz8Oso++Tunh77hXnPG
+	 J6RPHdJ7twpeE2saZHosSMCLXuPglg37Q30BevonXhotN696a/3ge1JGUPslGNVvJz
+	 pomKqU4e/OALAW2hwmT24001gqKte1QSQ4VGGH6m8PWYw4RjuR8JYXzYWGWlXZa0e1
+	 /bMC7kJCgp6nQ==
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Semih Baskan <strst.gs@gmail.com>
 Cc: Manivannan Sadhasivam <mani@kernel.org>,
@@ -45,9 +45,9 @@ Cc: Manivannan Sadhasivam <mani@kernel.org>,
 	linux-arm-kernel@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v4 1/2] PCI: Expose devm_pci_alloc_host_bridge_release()
-Date: Tue, 13 Oct 2026 17:04:20 -0500
-Message-ID: <20261013220421.1588051-2-bhelgaas@google.com>
+Subject: [PATCH v4 2/2] PCI: iproc: Use the EROM outbound window on BCMA
+Date: Tue, 13 Oct 2026 17:04:21 -0500
+Message-ID: <20261013220421.1588051-3-bhelgaas@google.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261013220421.1588051-1-bhelgaas@google.com>
 References: <20261013220421.1588051-1-bhelgaas@google.com>
@@ -59,46 +59,140 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-devm_pci_alloc_host_bridge() allocates a struct pci_host_bridge and also
-parses device tree resources and claims them.  There are drivers, e.g.,
-pcie-iproc-bcma.c, that need to allocate a pci_host_bridge but do not need
-device tree resources.
+The PCIe outbound window base on Northstar depends on the PCIe Gen2 core
+revision. Revision 0x01 uses 0x08000000, 0x40000000 and 0x48000000 for
+controllers 0 to 2, while revision 0x07 (NS-B0) uses 0x08000000,
+0x20000000 and 0x28000000. Broadcom's own driver branches on the core
+revision for exactly this reason.
 
-Expose devm_pci_alloc_host_bridge_release() so they can avoid the device
-tree parts by calling pci_alloc_host_bridge() directly and adding the devm
-release function manually.
+bcm-ns.dtsi is shared by every Northstar SoC, so it cannot carry a value
+that is correct on both. Commit 767012397976 ("ARM: dts: BCM5301X:
+Describe PCIe controllers fully") gave the controllers a ranges property.
+The commit shipped in v7.1.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+With that property present, two things go wrong with this driver:
+
+  1) devm_pci_alloc_host_bridge() parses those ranges and requests them,
+     then this driver adds its own window and requests the whole list a
+     second time, so every controller fails to probe with -EBUSY.
+
+  2) The DT window itself is only correct on core revision 0x07. On
+     revision 0x01 it points at an address the hardware does not decode,
+     and the first MMIO access to a BAR takes an imprecise external abort.
+
+The enumeration ROM reports the correct base for the revision actually
+present, and bcma already provides it as addr_s[0].
+
+To solve 1), use pci_alloc_host_bridge() directly to avoid the request of
+all the DT resources done in pci_parse_request_of_pci_ranges(). Instead,
+request the memory window from the EROM.
+
+To solve 2), parse the memory resources from DT and emit a warning if it
+describes a window that doesn't match the window from the EROM.  The
+mismatch means the devicetree describes a window the hardware does not
+decode, and that should be fixed in the dts rather than ignored silently.
+
+The driver is correct whether or not the DT describes a window.
+
+The same commit also added compatible = "brcm,iproc-pcie", so these
+nodes now match pcie-iproc-platform. With CONFIG_PCIE_IPROC_PLATFORM
+enabled, which is the default on ARCH_BCM_IPROC, that driver binds them
+first and this driver's probe fails inside devm_pci_alloc_host_bridge().
+This commit fixes the configurations where the BCMA driver is the one in
+use; OpenWrt builds that way, with PCIE_IPROC_PLATFORM disabled. The
+platform path takes the DT window as-is and has the same wrong address
+on core revision 0x01, so that side needs a devicetree fix either way.
+
+Fixes: 767012397976 ("ARM: dts: BCM5301X: Describe PCIe controllers fully")
+
+Based on:
+  https://patch.msgid.link/20260807160526.379-1-strst.gs@gmail.com
+  https://patch.msgid.link/20260912043626.437-1-strst.gs@gmail.com
 ---
- drivers/pci/pci.h   | 1 +
- drivers/pci/probe.c | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ drivers/pci/controller/pcie-iproc-bcma.c | 40 ++++++++++++++++++++++--
+ 1 file changed, 37 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index ba3c3fddddc2..5e21cd29cc7c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -502,6 +502,7 @@ enum pci_bar_type {
- 	pci_bar_mem64,		/* A 64-bit memory BAR */
- };
+diff --git a/drivers/pci/controller/pcie-iproc-bcma.c b/drivers/pci/controller/pcie-iproc-bcma.c
+index 593418c2bc3a..1e258cd8fed4 100644
+--- a/drivers/pci/controller/pcie-iproc-bcma.c
++++ b/drivers/pci/controller/pcie-iproc-bcma.c
+@@ -11,7 +11,9 @@
+ #include <linux/phy/phy.h>
+ #include <linux/bcma/bcma.h>
+ #include <linux/ioport.h>
++#include <linux/of_address.h>
  
-+void devm_pci_alloc_host_bridge_release(void *data);
- struct device *pci_get_host_bridge_device(struct pci_dev *dev);
- void pci_put_host_bridge_device(struct device *dev);
++#include "../pci.h"
+ #include "pcie-iproc.h"
  
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 27008e2ea5af..e214da95ca94 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -696,7 +696,7 @@ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
+ 
+@@ -31,6 +33,29 @@ static int iproc_bcma_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return bcma_core_irq(bdev, 5);
  }
- EXPORT_SYMBOL(pci_alloc_host_bridge);
  
--static void devm_pci_alloc_host_bridge_release(void *data)
-+void devm_pci_alloc_host_bridge_release(void *data)
++static void iproc_bcma_pcie_check_dt_window(struct iproc_pcie *pcie)
++{
++	struct device_node *np = pcie->dev->of_node;
++	struct of_pci_range_parser parser;
++	struct of_pci_range range;
++	struct resource res;
++
++	if (!np || of_pci_range_parser_init(&parser, np))
++		return;
++
++	for_each_of_pci_range(&parser, &range) {
++		if ((range.flags & IORESOURCE_TYPE_BITS) != IORESOURCE_MEM)
++			continue;
++
++		if (of_pci_range_to_resource(&range, np, &res))
++			continue;
++
++		if (res.start != pcie->mem.start || res.end != pcie->mem.end)
++			dev_warn(pcie->dev, "DT window %pR does not match EROM window %pR, using EROM\n",
++				 &res, &pcie->mem);
++	}
++}
++
+ static int iproc_bcma_pcie_probe(struct bcma_device *bdev)
  {
- 	pci_free_host_bridge(data);
- }
+ 	struct device *dev = &bdev->dev;
+@@ -38,10 +63,20 @@ static int iproc_bcma_pcie_probe(struct bcma_device *bdev)
+ 	struct pci_host_bridge *bridge;
+ 	int ret;
+ 
+-	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
++	bridge = pci_alloc_host_bridge(sizeof(*pcie));
+ 	if (!bridge)
+ 		return -ENOMEM;
+ 
++	bridge->dev.parent = dev;
++
++	ret = devm_add_action_or_reset(dev, devm_pci_alloc_host_bridge_release,
++				       bridge);
++	if (ret)
++		return -ENOMEM;
++
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = iproc_bcma_pcie_map_irq;
++
+ 	pcie = pci_host_bridge_priv(bridge);
+ 
+ 	pcie->dev = dev;
+@@ -59,13 +94,12 @@ static int iproc_bcma_pcie_probe(struct bcma_device *bdev)
+ 	pcie->mem.end = bdev->addr_s[0] + SZ_128M - 1;
+ 	pcie->mem.name = "PCIe MEM space";
+ 	pcie->mem.flags = IORESOURCE_MEM;
++	iproc_bcma_pcie_check_dt_window(pcie);
+ 	pci_add_resource(&bridge->windows, &pcie->mem);
+ 	ret = devm_request_pci_bus_resources(dev, &bridge->windows);
+ 	if (ret)
+ 		return ret;
+ 
+-	bridge->map_irq = iproc_bcma_pcie_map_irq;
+-
+ 	bcma_set_drvdata(bdev, pcie);
+ 
+ 	return iproc_pcie_setup(pcie, &bridge->windows);
 -- 
 2.53.0
 
