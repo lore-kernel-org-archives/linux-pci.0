@@ -1,102 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 556D6538D72
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 22:13:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 085EF568FA9
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 22:30:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791929610; cv=none; b=fF8+SpMD2Piya4NjYH+F/z63IgdCDTU4A3JwkySk1dPXbMbHFP8hsy8Ee1AVCi6TRaI4RPknlp/yLWgywDu4cgXKE6zJuYAcUz0P4emCyaCNZUtMFB+pThK5Ut3PObgcvEreDYKSVelM2Pn6/2sAs+D569q33z6En83arvvG1mw=
+	t=1791930654; cv=none; b=Wy5mNGAVCUyo6umaD2PSVt0xIc40/fKpXs2z5PO1/RYkNG+PqsNOPe5KaD+l56D7wMRKbaZPjg/mjUbVuqe48jQ1YMt6yoVAWQmld7VNAKjVJ3LSGlse0SWTh0zKy5GfKHuiYzen3ZVDt2E6hZReWGHqGQBdGtFpMlX+btS5jZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791929610; c=relaxed/simple;
-	bh=If74zKh22I0Qt46x68K9vV9UXeZ8a8rW2J7nn4Ucf78=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=cWwiOFYsxangq+Mtae9ujhAwSK3rZv8cAZgMCxErqm/MKWemVnrTgAkTZ1PVh8YWpLDhHqtHSNEJ7UeacCUoprPmVR5Q5MYjL2dKihPQ9vOVa1h7ZznG3CNGR64eJq26aeh3YTeI0aSQoixR9itJij4maQOf8Jhxt1AH5N39D5Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P4YthmHT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791930654; c=relaxed/simple;
+	bh=paIc3wdkCGaMzVDDLd7bcfCDFTMbuVaWj+iMPTcVHWM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=moO3Wq9KDUIZ0/4QBE1rEL+MEJ/+bK2b1XBiOxJ79/lLzXoxdE/Gt7/wiDtsalxKW3R8uFfdr0d6o2CsjPFPGbGq4z329opClkvYdGWBgVFHwBcS3LTc9CphNAaeL0ZjkTCl1pFnBfeq6NdHkIR3irSRm9PH8C/6EunzVk75rZw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b=wsOrBQWF; arc=none smtp.client-ip=209.85.160.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P4YthmHT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C66721F000FF;
-	Tue, 13 Oct 2026 22:13:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791929608;
-	bh=2dnsixepM/aUA/K4IQWJ7o/vLZhGAdTScRb72cgUDOQ=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=P4YthmHTKUXjGkpcvtjxHnenk4tCZd8o0CENEurQLWb1hlWc7eIH4WmA1/t6xSV89
-	 tumDn/1PHAp1eGaklql6wTTf+n7x7flE1W2qOLfmdlGHz+HJeOmYbwqR41XHvSZ2st
-	 RytUkYwMADbNqGWXZmopNNKZiM0mOfGKjF+7jHYklCYOj5a/uaQWgBC8Sbv+IKQOX9
-	 OtxvShCZ4dDj9Iqu1a1iGz9JVX6KMPx/+6sRb/X/NWZIyATEhPuinBMcbCLjVRO9+y
-	 bBwlLswZFuO33CIVo0/XPKIk+vH/t1K8BRoGmtWxAG5CvmYA0Zq1vbC36qsL+CY3DK
-	 ddlbZwHY4aQUw==
-Message-ID: <sashiko-outbox-170563@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 2/2] PCI: iproc: Use the EROM outbound window on BCMA
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Bjorn Helgaas" <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261013220421.1588051-3-bhelgaas@google.com>
-References: <20261013220421.1588051-1-bhelgaas@google.com>
- <20261013220421.1588051-3-bhelgaas@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 13 Oct 2026 22:13:28 +0000
+	dkim=pass (2048-bit key) header.d=riscstar-com.20251104.gappssmtp.com header.i=@riscstar-com.20251104.gappssmtp.com header.b="wsOrBQWF"
+Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-5339199d8c3so34466031cf.0
+        for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 15:30:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=riscstar-com.20251104.gappssmtp.com; s=20251104; t=1791930650; x=1792535450; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=15UuH/nH7GbuaRGYpdfm5TKB7gfNnyxt98L6IJfHb5g=;
+        b=wsOrBQWF1Io2wpApJXKt0YDCvqRam/KVW1uR0Chf/LbD3NuJHKHidVarSVSLy8TleG
+         100AHIzypZU+WlKhi0ru+KgItIZ0xnFffrFEAx/C/yfraPLSxAM7HA6yyRUP2bFu42ZN
+         2etR1QvxQWLtllJvdLQGAyPJrJqrg/RdWPs6sTMjiu+Y2flUc5+KQ00ac/sdGMX4jQYh
+         UM67bnjlowUXzbFoFkhaDBjwqyrHFwd0CMfhBffGnhSk+zhfHBIqMLiAhze25QOduCHT
+         bVenDUW1OAlG1/ErkWodcosmkYW381Ehg29ODYi9Qer6Tl8gra1jIFtRFGlankLZ1RI0
+         SaEw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791930650; x=1792535450;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=15UuH/nH7GbuaRGYpdfm5TKB7gfNnyxt98L6IJfHb5g=;
+        b=TwRJvnvODDkRtksY/W3p7pfA+ly/1UUoVjI+7J8Ab7xoS/E1u8mBfKznOQTK7E+V4n
+         ENjj8457VYiYPbech1XLHUXZnhGEoQ4Nqc3QGBvlXuTU9oS5ttvc32gIrvMNWVMJb46C
+         d0XyWiOEcWDmH9MaJiAAJiEvSLm3Je8YR9jzXgXqThauW1SkPPP6hiowS8FrYuv6kcfK
+         MiKenKeDjvg00DvzJi9MXtdGHaSsSqA1h+n5B/vKuCtU/oyF70MjExp83zRZO97b3vX4
+         v9tYnBlLYLnK/mZnQvhlyCObuZnhXrLegnxIiftI9UjvJc2oBio7709UDygEdhRXu84T
+         5j5A==
+X-Forwarded-Encrypted: i=1; AKwUvByynWssR7VnZq1CCHXKf9SMXTBuqS3fYrvEqD9G1v5hG0q2BrlTrOFN1MRBUkDRQnrp+NWs3ibZF30=@vger.kernel.org
+X-Gm-Message-State: AFq9FYILk41Pm0pO6XtoPgVBXK6PaBp0UouoYiT5lz1RISomqFyg5LSH
+	Wg++FBC8owPUWiLXVeKH68f7GjF/w2XDtxHWgb/SyIzF4QDkWlfO4TgJjuAWsBzO8sM=
+X-Gm-Gg: AYBFou3rWrrC2I2NB87IiPZ2KqQhn4FPUyFXTGCP4O8XG4aarenzDYsjtVkSQKXpNqt
+	pmEkXO5RrGIeHD0LAlgGQs/VrmuPn4d7nN5QsY3FCtmLaqsGJIlanjteCuaL3q4jP0osnGIPGQW
+	uS3OHk78pvFl+lBcuAU4zVgPNUEDtklCarNyl/I17ROccCCFikQZXa5wA3JWrOPqM24ltc5M0e9
+	4MijCk1JTGqAi3jwJElXacxNtWPR0yJwDg19bQKXDpfZeGIFZi8F8MVqZgjBlTNZdC1BsiPa9mc
+	UmBvQtLdzzGmSkw45LjCfUPqu2FoScl5lk8D5BIBVbHUXH4YkxzIEgRivRtBc9HCLLukL3Ar+7L
+	wRHS1DUdbjq0oXdY9IrvE0JJzm1i49aLd31AXjmrImSvmoUjOW//fYgo316oR1pAaRQfyBn+Oud
+	KyUuZDjd7SGwaL2yfQViDE0ISYbZ4602CwIaIw9ZDQpDUrXCFaYYMUDC/+qPnx3imroPlmREk=
+X-Received: by 2002:a05:622a:110e:b0:535:a5fb:6449 with SMTP id d75a77b69052e-535a5fb69bamr231387611cf.67.1791930649810;
+        Tue, 13 Oct 2026 15:30:49 -0700 (PDT)
+Received: from [172.22.22.28] ([73.62.185.64])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-535d43f09e7sm55712371cf.8.2026.10.13.15.30.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 13 Oct 2026 15:30:49 -0700 (PDT)
+Message-ID: <a8f7eb6c-69d1-468e-b7a4-7481e429c1cc@riscstar.com>
+Date: Tue, 13 Oct 2026 17:30:47 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 0/3] PCI: of: update endpoint ranges dynamically
+To: Andrea della Porta <andrea.porta@suse.com>
+Cc: bhelgaas@google.com, lizhi.hou@amd.com, herve.codina@bootlin.com,
+ daniel@riscstar.com, mohdayaa@qti.qualcomm.com, lbiancon@qti.qualcomm.com,
+ mani@kernel.org, robh@kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260924222444.1351466-1-elder@riscstar.com>
+ <ase6toUhGn0XD0v9@apocalypse>
+ <223c5189-bfda-4c63-b09f-4ebd01bd144a@riscstar.com>
+ <asju_HpgXpIyAFdf@apocalypse>
+Content-Language: en-US
+From: Alex Elder <elder@riscstar.com>
+In-Reply-To: <asju_HpgXpIyAFdf@apocalypse>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] pci: Module build failure due to unexported devm_pci_alloc_host_bri=
-dge_release
---
+On 10/9/26 8:41 AM, Andrea della Porta wrote:
+> Hi Alex,
+> 
+> On 10:55 Thu 08 Oct     , Alex Elder wrote:
+>> On 10/8/26 10:45 AM, Andrea della Porta wrote:
+>>> After a quick test, it seems that it's not working out of the
+>>> box on my RPi5. Let me investigate a bit to see what's wrong.
+> 
+> I stand corrected: it works perfectly. So:
+> 
+> Tested-by: Andrea della Porta <andrea.porta@suse.com>
 
-commit c2644cb699f7409a55741efcebcc09fcf3cf19bd
-Author: Bjorn Helgaas <helgaas@kernel.org>
+Sorry for the delay.  I'll add the above to v4.
 
-PCI: iproc: Use the EROM outbound window on BCMA
+> I think it should even be possible to tweak the static RPi5
+> DT in order to make it work dynamically with your patch. Can
 
-This commit updates the BCMA driver to request the memory window from the
-EROM rather than relying on the device tree ranges. It directly uses
-pci_alloc_host_bridge() to avoid requesting all DT resources and adds
-validation to warn on window mismatches.
+I suspected that your static definitions *happen* to work,
+but I never took the time to confirm that and understand
+why.
 
-Link: https://patch.msgid.link/20260807160526.379-1-strst.gs@gmail.com
-Link: https://patch.msgid.link/20260912043626.437-1-strst.gs@gmail.com
+> you please provide the relevant PCI DT nodes (from PCI controller
+> to pci-ep-bus endpoint) from the output of:
+> 
+> dtc -I fs -O dts /sys/firmware/devicetree/base/
+> 
+> taken on your reference board?
 
-> diff --git a/drivers/pci/controller/pcie-iproc-bcma.c b/drivers/pci/contr=
-oller/pcie-iproc-bcma.c
-> index 593418c2bc3aa..1e258cd8fed4f 100644
-> --- a/drivers/pci/controller/pcie-iproc-bcma.c
-> +++ b/drivers/pci/controller/pcie-iproc-bcma.c
-[ ... ]
-> @@ -38,10 +63,20 @@ static int iproc_bcma_pcie_probe(struct bcma_device *=
-bdev)
->  	struct pci_host_bridge *bridge;
->  	int ret;
-> =20
-> -	bridge =3D devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
-> +	bridge =3D pci_alloc_host_bridge(sizeof(*pcie));
->  	if (!bridge)
->  		return -ENOMEM;
-> =20
-> +	bridge->dev.parent =3D dev;
-> +
-> +	ret =3D devm_add_action_or_reset(dev, devm_pci_alloc_host_bridge_releas=
-e,
-> +				       bridge);
+I'll send you that in a private message.
 
-[Severity: Low]
-Will this cause a build failure when the driver is configured as a
-loadable module?
+Thanks again.
 
-The symbol devm_pci_alloc_host_bridge_release is defined internally within
-drivers/pci/probe.c but doesn't appear to be exported via EXPORT_SYMBOL()
-or EXPORT_SYMBOL_GPL(). Does directly referencing it here in
-iproc_bcma_pcie_probe() lead to an undefined reference error during
-the linker stage?
+					-Alex
 
-[ ... ]
+> 
+> Many thanks for your work,
+> Andrea
+> 
+>>
+>> THANK YOU FOR TESTING THIS!!!
+>>
+>> My hope was that the recent change (to avoid doing any
+>> updating of ranges property unless it was found to be
+>> "empty") would avoid any trouble with the RPi5.
+>>
+>> I'm eager to hear what more you find.  Please let me
+>> know if I can be of any other help.
+>>
+>> 					-Alex
+> 
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013220421.1588=
-051-1-bhelgaas@google.com?part=3D2
