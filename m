@@ -1,261 +1,247 @@
-Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11022089.outbound.protection.outlook.com [52.101.43.89])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7132A3BCD3A;
-	Tue, 13 Oct 2026 14:23:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.89
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791901385; cv=fail; b=NFVlh0nbrNJXgVL6AdsYttFqqbCzf9TyKhoS7dIrtT34dY2sAS28SO4/Pes1WeOL3HhR8OGsoPoKr69q8YRodasfwo7Xtm1uEz0bwv+u9AMpN2ZZA7s9VPo4zxZpmk6YinUW+GAwz7sgrYXu0Djv6It/B2Y8MJWwpeDqnpMrZV8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791901385; c=relaxed/simple;
-	bh=sh28ALTecZ3S/aBgxrbTcv1nyRbZPbTEj1D1AFV1/Jw=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=Te5xH9aJDktHoU3uEferlAzL6nTPV1Bm6C9mlqnvNmbPbB57pO3yBUZ3eEl04qYhVvCX06vnTP27mbpe9hGZfuQx0+c+LPYNnI14i67BJTiYyvc9Qa1DVUrZgAUoHIw7K49d6bJeTwLKVQ3kPn6dW0hRn/5OtFDYUi3xNlLVzs4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=michaelburch.net; spf=pass smtp.mailfrom=trailworks.io; dkim=pass (2048-bit key) header.d=michaelburch.net header.i=@michaelburch.net header.b=NHzuFsk3; arc=fail smtp.client-ip=52.101.43.89
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=michaelburch.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trailworks.io
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 861D63BCD28;
+	Tue, 13 Oct 2026 14:25:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791901539; cv=none; b=ph7ZwFPLDtZca17AyKBE5HmfGiqh35n6YyXSEDUjbmOH2xCh+Kfdwv2XRxaHD8XT3sM4c0NcBMQVFrQ9jAdMZMQXGdbe/1pJEvTI2JsC6l9eHiluIe9O4hCEnDE+lmq+ShZvbiNAA6bkyvBiVr/8q+mc0iudwlNbZoYDDviN7iM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791901539; c=relaxed/simple;
+	bh=woSG3ezPU/HpcNAtstlforMHNxGYAGXrh0pAjfLwREM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=LoxkYeUjFVMOwa/xVP9YMjbBRRPTFUSwdXw7BDZIimVvGbD9GhTsLEYOrKTbZpZ7ZBQlcakKfmWAyjjKmWyoD9vv1enu2ZYF3fDkdJclg80GZT5k4ieD5uTQorx05XQZtQURu5ygYA++Hh7D44QBGqaBRpXI0h7v9EHS0AC/l7Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fp3xQmHm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=michaelburch.net header.i=@michaelburch.net header.b="NHzuFsk3"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=lEswWi2Go9mrHTX7klS6dm0VocO9728H6tdZ7lxk9VndIlMg8/JqmIwTIzNobKg55B2o5IaG6SXRlNAHTs/YDUTWDs7EH4wVQdhJVikLiLmfydjkRynq+tU67EjqPU6Mjx11gsOOeoQM+aBXkhZQ1t0qNK65oGrzMwvmIM0AmEzkfdFvXlZJz/sii4tTmXCT2pYDt3EfNQPhQ2AseG8hSDlOVUXP1DTeZlZ1I4vTVKl43p4+Lm1vTSLacoXdAAMcVL8EF6yOx5gD1NuL638eNLnn1/h5MuUUd49kAqKB3lqvY3+G1zaocdGZQAeC6HG14+ZgcDiWNe2wOftR5p/wkg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=thg9fG52rM50NDtUu7xWYdpMHnTNV/btZXKejMSXb0E=;
- b=BEXkbja9BDa8G0hRGs0imKMENblZ3+ZQrkDL8SGSRAzZLc6NG0e3WsYkjdiP/SKTclOX/e8mwmXjFA+DNDuHYhueU7fXGfW1mVrfNuX4T++3/eeADTKunv4saqZGkzr2SqBaMvxVYj+fgmKrvQCyMnc4nLcFz3dJoNkhAxkBxwcbpMIoK/KC6iU8uIwZd88HRXeF91nSw/NtxpZRmpTmmBRbv6RJQzABHotXShZzhamSrjs6m0REto1o1kQ6u9e2wtHCNK2DDLD8YTB0M7snCHktl/E75feSZ+Ml+WlT5rMxyqXhSVGGFmEqwNYx2Ej4ffYZVTOwxSLS5+4AOvQKpg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=trailworks.io; dmarc=pass action=none
- header.from=michaelburch.net; dkim=pass header.d=michaelburch.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=michaelburch.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=thg9fG52rM50NDtUu7xWYdpMHnTNV/btZXKejMSXb0E=;
- b=NHzuFsk3EeCfZdyjMr+aUL37blB0tUn+dWqkXEJRO6wNJu+oqA4ciHduX0Kx/qy9BNQsJPsIQC8rMCcqiCDF6/PV7emlaqpAQ9ZTNHimb9Y7lqj7Iak3KqM2UFL9KBv5U36EK4dqrQjzu/R6H5r/WavaMOBMp5+JAaBH/HznlGlh0G7heTQzVwZdnnCTumIRE587PJFSz1J21qlipJgu3Lnoqdgtw482YwY/D4lE0RxG7VWMjvMauTahfWrtHygavbojFFQ8yxSC2utJMed1fhZLIVJyGEUYkl/9Ms8bEgkbuwQG9DvnvA+n7+uWmsBxb3QY1I24ZjEw1uRlE09lGQ==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=michaelburch.net;
-Received: from PH7PR01MB8123.prod.exchangelabs.com (2603:10b6:510:2a4::19) by
- DS6PR01MB277206.prod.exchangelabs.com (2603:10b6:8:469::19) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.496.23; Tue, 13 Oct 2026 14:23:01 +0000
-Received: from PH7PR01MB8123.prod.exchangelabs.com
- ([fe80::da98:a31d:73b6:7930]) by PH7PR01MB8123.prod.exchangelabs.com
- ([fe80::da98:a31d:73b6:7930%5]) with mapi id 15.21.0496.015; Tue, 13 Oct 2026
- 14:23:01 +0000
-From: Michael Burch <me@michaelburch.net>
-To: Vinod Koul <vkoul@kernel.org>
-Cc: Neil Armstrong <neil.armstrong@linaro.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-	Qiang Yu <qiang.yu@oss.qualcomm.com>,
-	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-	Abel Vesa <abel.vesa@oss.qualcomm.com>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Hans de Goede <johannes.goede@oss.qualcomm.com>,
-	linux-arm-msm@vger.kernel.org,
-	linux-phy@lists.infradead.org,
-	linux-pci@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fp3xQmHm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D507D1F000FF;
+	Tue, 13 Oct 2026 14:25:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791901538;
+	bh=BjTdMoFaO2CEchYCl9cp1x7qqKnBvpdTbTjUMlMqgVA=;
+	h=From:To:Cc:Subject:Date;
+	b=Fp3xQmHmj8lInW5fszvUA/8NO8UxDy9ieVVG+bfnIUti1PcPxhjFgYiYcTDbed06C
+	 waRCr2jkTTX9tDJC2W92dqecRYF6Mn4AbAMDFyy7UK3v/emGRYOqXm9F20RYFuoqVb
+	 wxPHdQJfYxE3DmDeR7Al26V8LYcB57pDi9aN2/7WMKzd0bzmhAla0y1gwqRgxvotKw
+	 4/0zjYX7g3n7nrfpiGPL04e/QNxLCRpygoWUYi5OFxZ8piqBYboogdq7vRXqfl66Sk
+	 2p/q9BXpV6tkRxgWzD5qTE2f7ptBu6+hlWTIzfpGd8HgF3E3qdgTy+qIsc5xKl6ImK
+	 LPLYKwJT/zWvA==
+From: Leon Romanovsky <leon@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Leon Romanovsky <leon@kernel.org>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	=?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+	=?utf-8?q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>
+Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	regressions@lists.linux.dev
-Subject: [PATCH] Revert "phy: qcom: qmp-pcie: Skip PHY reset if already up"
-Date: Tue, 13 Oct 2026 09:22:49 -0500
-Message-ID: <20261013-qmp-pcie-skip-reset-revert-v1@michaelburch.net>
+	linux-doc@vger.kernel.org,
+	iommu@lists.linux.dev,
+	Tushar Dave <tdave@nvidia.com>,
+	linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	linaro-mm-sig@lists.linaro.org,
+	linux-rdma@vger.kernel.org,
+	kvm@vger.kernel.org,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	Alex Williamson <alex@shazbot.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>
+Subject: [PATCH v11 00/19] PCI/P2PDMA: Route peer-to-peer DMA by TLP class
+Date: Tue, 13 Oct 2026 17:25:08 +0300
+Message-ID: <20261013-fix-p2p-acs-v4-0-v11-0-72cf8c96e617@nvidia.com>
 X-Mailer: git-send-email 2.56.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SA9PR11CA0006.namprd11.prod.outlook.com
- (2603:10b6:806:6e::11) To PH7PR01MB8123.prod.exchangelabs.com
- (2603:10b6:510:2a4::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH7PR01MB8123:EE_|DS6PR01MB277206:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0825bcaf-20bb-403c-faed-08df29357c73
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|366016|1800799024|376014|7416014|6133799003|18002099003|10067099003|3023799007|261009223027099003|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	fZyGF3dm1UdAhY62QN31ZgehEiq1JvvMXnY34Rj2Hd0g1x7OtaBlDg9VTLBIWm0PVa23mR/lfdJY2hiEj3gQYcVJta+XPtTQ2Z+0IoZ2hD5NujUAXrudxABkk8fdCD/FyScufwM6bua6UYVuk99UBw3MplHW1ePMVOr8PlFVzS7sYt8vm8PEFz1boXmm4DM8hHrmkhaFrSeilZGzOdKQgmSJRBX1nIGVlRHmfcNYdk+KB/gScrZqMdL/pCRvZ2QZskAlVi5lbJ2x2kd1luTNtBtMT1XU+z4R6nQVomP/84fz4pEdXf1tBX06XqSCdJwY+xUEHTng+kCtP82cMfAxoHYNCNlrFdinIaA8zQkeuPn8Ze/6Ncl7MA4mpKTEFNgBsTbRbSHZTHbyjLrHS/bkw3h/TFZZPJfNwXSaSAsecbnPlQdmd0IGRtmy6KUWHqgZApbFS2EN+EeGXOPdQdrz29BvV38x/TeHagGQAPZp3Z/guxegphyfqblL4iMfMgKCa+duXYnb0qIQSbZlUPjFaE2HlJufd9CCM7e0DpcQUaJ9y1D6sc82lDJaSOQsaGmkfODvIjFENHpSbfP0Z77XWt0nxfPDKGEye8F1V9Flkqo=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR01MB8123.prod.exchangelabs.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(1800799024)(376014)(7416014)(6133799003)(18002099003)(10067099003)(3023799007)(261009223027099003)(56012099006);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?0KPQsCPe62vfHVH56ZZLxdNyUWaCPlhkHGx6696wGmbu4T+B2zj+aDJJCFUA?=
- =?us-ascii?Q?fnP/e0YSNKcDOd/keJ0BzUunlObFCDdQFWhm60N1vrz4h2h8UDP9q/lmz9gq?=
- =?us-ascii?Q?stGzR96C9+SXmT4miqp67B4VZNhw4toZnb2dtpV1cKAuYukOzFr7UFgom7Pz?=
- =?us-ascii?Q?cRlUs99WJCtBQWmDTGWVq9EyoYnQgWipxjGvq7ATnhhiPFxlCkGEpIZF1LDr?=
- =?us-ascii?Q?3mQB6fInRnMrAxwfLLpfNOYh2oOCti0glBQGpiZ3IrAp1CUjSchoEC/arhXV?=
- =?us-ascii?Q?boTGoWCtl2rkOWNVKcjMwd+OQxn1M86xwNKyEfhIQuBuvw6Iv6J3fjRJJi5E?=
- =?us-ascii?Q?/lSBUmAjXEpgoBMpFEafQ0JZGtlj8tsWnMgESh9S/W1lzEwAt1sZOndiSxto?=
- =?us-ascii?Q?mi7KMXyTnJa1yR5gZ7YhMyjbTkPv1MVUVGsjA9jJF+34W9nedMKKOYIeXMJJ?=
- =?us-ascii?Q?VjjzhoBAe0YDCx9NAAOFGLf1Ow+49hhcy6qDFMXnClPGERNjUYBmI++xCZiM?=
- =?us-ascii?Q?+4zJRRmCLadxrctgYLJT7sSZ7J6ulp05UGuZncWEoqXubYSHGq+8Cmbx8MDO?=
- =?us-ascii?Q?aXXJPH/RGQviEmWKhbWnn6zT850CTpYTW8yjg4sjO/rcKRNjoQ4JGTPgly8Z?=
- =?us-ascii?Q?wG6pj0HiFR3mHwZEDGAKH6FTtXlm1TL/gs/PMoHcVfzbvOKw/DdpM17aqHl/?=
- =?us-ascii?Q?nA1rCD3+bj9Ydk1tYJMDRrpevXNkQ/32oE+mXORxp8PPAPxgYwZGts/oclzi?=
- =?us-ascii?Q?XLIh6SC5yBglquOYLbKvpzhyNg9unVYa1rr22nhVk+eabzbheXwOgw6rLRDa?=
- =?us-ascii?Q?Rt3tUgE3OBFSCC5QzH+wl1ptOBHxR3D6U6+EhazvelgH6V9Dw4Ar6A3ZKiOA?=
- =?us-ascii?Q?HQWgOr5uAAYxIqURDtOv1bhVf7EnVU3ODupeRPXW/zQ/D4ijeCPs0AVCMkFE?=
- =?us-ascii?Q?fUdSh2tH9OYh3eYrtgn9Ha02L4rkC+pHMNQ1qHmNV/go09EpEWUKGctj6UiH?=
- =?us-ascii?Q?G0fQl+OtWdXlJcil5UfuBS+qaWXQqCMFTs3u7RzaqK+C8cTOaCwIc4kSjsG5?=
- =?us-ascii?Q?WhQYNkfqXT1meLRJed7BKoNRSkEO/kcXTyfk6Y/M8NVKaKzb83QUff6svf7q?=
- =?us-ascii?Q?1Px6sqzP6s4Gs+Cqq7jj9kFZ8r7247wuYZGqXnf+Y3NiZyn0VZJVrY14vL3o?=
- =?us-ascii?Q?hBEwkdOG4inYptvlvziMkGKnh7tMCUCYDQYGS8GIpoIjSl8yQGzAODzLd2Mt?=
- =?us-ascii?Q?bLwnOfmnBv9osetn6w2Lni1IuMGZ5yBM0+qPu3Idy0QEqxfo6LoOrYMwfdYR?=
- =?us-ascii?Q?S7uUlyYvczTRDfsVRobCy3x6BNdHwgycsJMx9du2xsO5g2QEqDI256Dw683n?=
- =?us-ascii?Q?2DSzANVKzp5T72b5PwL7NgOVh7aareE597GXP5jkFLoPpfY0KycgTV49/bUR?=
- =?us-ascii?Q?/mpuFfkpAKeZ3PmB1QpWNIfOamWV/9Lk3jG0+4VqP+2gGwzkutj6pCFyhsFg?=
- =?us-ascii?Q?g5KZr8wRM2C0RGvQ4EW669uFE42n7acOfsaVi7vUYNVEwPC5RrJbR/Z5mFfW?=
- =?us-ascii?Q?dK/P2t7CHydxsMRxZExNNI3mi3KRE1+3IEDc4UhW9Kl5wFTqhUxOGLSfV5cs?=
- =?us-ascii?Q?10KtBU9b1DFA3D82iPjtMrE6m+7IbH8D0YwwgAjgunw76e6VJlOssjhV+cJo?=
- =?us-ascii?Q?YWyurgoQe11oiCDC7Tey6+e4/Bhc/R6Mf37MisOqVTupf0nUAcHKeVRuruPy?=
- =?us-ascii?Q?+7p7G3VVGQ=3D=3D?=
-X-OriginatorOrg: michaelburch.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0825bcaf-20bb-403c-faed-08df29357c73
-X-MS-Exchange-CrossTenant-AuthSource: PH7PR01MB8123.prod.exchangelabs.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Oct 2026 14:23:00.9776
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 8256b244-08e6-4df2-b146-877069d9ce10
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: zC8x7zI8C5vGvT1we68MoMMyX0NF3sz5IibtJ0NHQM5hlbDk4+C/MviHMax8/wbNPt5SnP1OH6E5kLwEKhh3fQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS6PR01MB277206
+Content-Type: text/plain; charset="utf-8"
+X-Change-ID: 20260821-fix-p2p-acs-v4-0-e72455e3a261
+X-Mailer: b4 0.15-dev-18f8f
+Content-Transfer-Encoding: 8bit
 
-This reverts commit 910b828b22b7b91054b3bd4be676a017444b0e00.
+PCI P2PDMA applies Request and Completion Redirect throughout both paths.
+This misclassifies asymmetric and nested switches, and reports one answer
+for every kind of TLP.
 
-That commit skips the no-csr reset assert/deassert (and the 200-300us
-settle) whenever the bootloader already brought the PCIe QMP PHY up:
+Three ACS controls act on TLP attributes the Requester chooses rather
+than on the topology: Translation Blocking and Direct Translated P2P act on
+a Request's Address Type, and Completion Redirect skips Completions carrying
+Relaxed Ordering.
 
-  skip_reset = qmp->skip_init &&
-               !qphy_checkbits(pcs, cfg->regs[QPHY_PCS_STATUS],
-                               cfg->phy_status);
+Evaluate each direction at the path divergence, decide every class from the
+one walk, and treat a client with ATS enabled as translating unless its
+driver declares per-mapping ATS.
 
-and states its own assumption explicitly: "This relies on the assumption
-that when skip_init is enabled and the PHY is reported as up, the
-bootloader has already configured the PHY correctly and the link is in a
-usable state."
+This completes the P2PDMA side; dma-buf and mlx5 follow separately.
 
-That assumption does not hold on the Dell XPS 13 9345 (X1E80100).  UEFI
-boots from the NVMe behind pcie6a, so the PHY is always already started
-when Linux takes over, skip_init is true, and the reset is skipped.  The
-link then never retrains and the root port comes up with no endpoint:
-
-  qcom-pcie 1bf8000.pcie: Device found, but not active
-  pci 0006:00:00.0: [17cb:0111] type 01 class 0x060400 PCIe Root Port
-  (no 0006:01:00.0, no nvme at all)
-
-"Device found, but not active" is dw_pcie_wait_for_link() reporting LTSSM
-stuck in POLL.Active/POLL.Compliance -- receiver detected, training never
-completes -- so the machine cannot find its root filesystem and drops to
-a dracut emergency shell.  v7.2 is unaffected because it always performed
-the reset.
-
-The commit was applied on its own as patch 1/4 of "PCI: qcom: Add link
-retention support"; 2/4-4/4 have not landed. Without them,
-qcom_pcie_host_init() still asserts PERST# and resets the controller
-before qcom_pcie_phy_power_on(), so the link is down while
-QPHY_PCS_STATUS still reports the bootloader's state, and the skip's
-precondition never holds. Revert it until the rest of the series lands.
-
-Fixes: 910b828b22b7 ("phy: qcom: qmp-pcie: Skip PHY reset if already up")
-Signed-off-by: Michael Burch <me@michaelburch.net>
+Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
-Reproduced today with Fedora's stock 7.3.0-0.rc7.58 kernel: the NVMe
-never enumerates and boot stops in dracut. It was first seen here on
-the stock 7.3.0-0.rc2 kernel. Every 7.3 build I have made with this
-revert finds the NVMe (Gen4 x4 link up); the latest are v7.3-rc6 based.
-Applying 2/4-4/4 of the original series on top of -rc2 also boots, but
-only with clk_ignore_unused here. This applies to v7.3-rc7 and to
-linux-phy fixes.
+Changes in v11:
+- Applied the client ATS policy in pci_p2pdma_distance_many() too, as
+  local Sashiko pointed out.
+- Read the ATS Enable bit once per query, so the class and the ATS policy
+  always agree.
+- Documented that pcim_p2pdma_set_ats_per_mapping() needs a successful
+  pcim_p2pdma_init().
+- The path diagnostics no longer read ACS Control or the bridge bus range,
+  and they report a failed cache store.
+- Added a KUnit case for Direct Translated P2P without a redirect.
+- Clarified the Relaxed Ordering and diagnostics commit messages.
+- Honored device-specific ACS redirection, such as Zhaoxin Downstream
+  Ports, in a new first patch with a KUnit case, as local Sashiko
+  pointed out. Relaxed Ordering Completions are redirected at such a
+  port too.
+- Clarified in the documentation that a quirk also redirects Relaxed
+  Ordering Completions and that Translation Blocking applies only to
+  upstream Requests, and labelled the ACS routing debug line with its
+  class, as local Sashiko pointed out.
+- Treated ACS registers that read as all ones as unreadable, and named
+  ports that a quirk redirects instead of suggesting
+  pci=disable_acs_redir= for them, as local Sashiko pointed out.
+- Ignored ACS quirks of endpoints, which only describe traffic between
+  their own functions.
+- Link to v10: https://patch.msgid.link/20261012-fix-p2p-acs-v4-0-v10-0-6ffe7b7a4517@nvidia.com
 
-Qiang Yu's "PCI: qcom: Align PHY init sequence with HPG" carries the
-same skip into the new phy_ops::reset. I'm replying there separately.
+Changes in v10:
+- Fixed the Relaxed Ordering description: a Completion carries the
+  attribute of its Request (PCIe r7.0 sec 2.2.9.1).
+- Used the PCIe terms Requester and Completer for TLPs, ACS and ports;
+  client and provider remain for P2PDMA objects.
+- Rebased on pci/p2pdma, which includes the prerequisite P2PDMA fixes.
+- Added a topology example to the path divergence patch.
+- Removed a repeated sentence from the disable_acs_redir documentation.
+- Explained the path divergence in the documentation.
+- Link to v9: https://patch.msgid.link/20261001-fix-p2p-acs-v4-0-v9-0-1a8e0f50ddd9@nvidia.com
 
-#regzbot introduced: 910b828b22b7
+Changes in v9:
+- Removed dmabuf patches for now.
+- Removed mlx5 per-mapping ATS declaration for now; it comes back with
+  the dmabuf patches.
+- Link to v8: https://patch.msgid.link/20260928-fix-p2p-acs-v4-0-v8-0-404453b9c435@nvidia.com
 
- drivers/phy/qualcomm/phy-qcom-qmp-pcie.c | 31 ++++++++----------------
- 1 file changed, 10 insertions(+), 21 deletions(-)
+Changes in v8:
+- Added extra Reviewed-by from Logan.
+- Added patches to take care of ATS per-device vs. per-mapping option
+- Link to v7: https://patch.msgid.link/20260920-fix-p2p-acs-v4-0-v7-0-ca0828ab697c@nvidia.com
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-index da83358c97ea..17c53ae62fac 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-@@ -5677,7 +5677,6 @@ static int qmp_pcie_init(struct phy *phy)
- 	struct qmp_pcie *qmp = phy_get_drvdata(phy);
- 	const struct qmp_phy_cfg *cfg = qmp->cfg;
- 	void __iomem *pcs = qmp->pcs;
--	bool skip_reset;
- 	int ret;
- 
- 	/*
-@@ -5693,9 +5692,6 @@ static int qmp_pcie_init(struct phy *phy)
- 		qphy_checkbits(pcs, cfg->regs[QPHY_START_CTRL], SERDES_START | PCS_START) &&
- 		qphy_checkbits(pcs, cfg->regs[QPHY_PCS_POWER_DOWN_CONTROL], cfg->pwrdn_ctrl);
- 
--	skip_reset = qmp->skip_init && !qphy_checkbits(pcs, cfg->regs[QPHY_PCS_STATUS],
--							    cfg->phy_status);
--
- 	if (!qmp->skip_init && !cfg->tbls.serdes_num) {
- 		dev_err(qmp->dev, "Init sequence not available\n");
- 		return -ENODATA;
-@@ -5719,16 +5715,14 @@ static int qmp_pcie_init(struct phy *phy)
- 		}
- 	}
- 
--	if (!skip_reset) {
--		ret = reset_control_assert(qmp->nocsr_reset);
--		if (ret) {
--			dev_err(qmp->dev, "no-csr reset assert failed\n");
--			goto err_assert_reset;
--		}
--
--		usleep_range(200, 300);
-+	ret = reset_control_assert(qmp->nocsr_reset);
-+	if (ret) {
-+		dev_err(qmp->dev, "no-csr reset assert failed\n");
-+		goto err_assert_reset;
- 	}
- 
-+	usleep_range(200, 300);
-+
- 	if (!qmp->skip_init) {
- 		ret = reset_control_bulk_deassert(cfg->num_resets, qmp->resets);
- 		if (ret) {
-@@ -5777,11 +5771,8 @@ static int qmp_pcie_power_on(struct phy *phy)
- 	void __iomem *pcs = qmp->pcs;
- 	void __iomem *status;
- 	unsigned int mask, val;
--	bool skip_reset;
- 	int ret;
- 
--	skip_reset = qmp->skip_init && !qphy_checkbits(pcs, cfg->regs[QPHY_PCS_STATUS],
--							    cfg->phy_status);
- 	/*
- 	 * Write CSR register for PHY that doesn't support no_csr reset or has not
- 	 * been initialized.
-@@ -5805,12 +5796,10 @@ static int qmp_pcie_power_on(struct phy *phy)
- 	if (ret)
- 		return ret;
- 
--	if (!skip_reset) {
--		ret = reset_control_deassert(qmp->nocsr_reset);
--		if (ret) {
--			dev_err(qmp->dev, "no-csr reset deassert failed\n");
--			goto err_disable_pipe_clk;
--		}
-+	ret = reset_control_deassert(qmp->nocsr_reset);
-+	if (ret) {
-+		dev_err(qmp->dev, "no-csr reset deassert failed\n");
-+		goto err_disable_pipe_clk;
- 	}
- 
- 	if (qmp->skip_init)
+Changes in v7:
+- Removed "Document pdev->p2pdma lifetime rules" patch, it gives nothing
+  after p2pmem fix.
+- Split dmabuf patch.
+- Tushar retested the series, so added his Tested-by.
+- Added Logan's ROB tags and fixed minor documentation issues pointed
+  by him.
+- Link to v6: https://lore.kernel.org/all/20260914-fix-p2p-acs-v4-0-v6-0-5ef07ec9ef06@nvidia.com/
 
-base-commit: 24a19b953e2a3d0ea5a8c4951a0ab8f32720c907
--- 
-2.56.0
+Changes in v6:
+- Changed DMABUF to use callbacks and not directly stored pointer.
+- Link to v5: https://patch.msgid.link/20260910-fix-p2p-acs-v4-0-v5-0-856087f63c0d@nvidia.com
+
+Changes in v5:
+- Rebase on the posted fixes.
+- Dropped tags from changed patches.
+- Remove Egress Control Vector interpretation and coverage.
+- Keep enabled Egress Control conservative as a Request redirect.
+- Use pci_dbg()/dev_dbg() for diagnostics and drop the "debug" prefix.
+- Removed code comments from "Document the pdev->p2pdma lifetime and RCU
+  rules" patch and reduced description to actual lifetime explanation.
+- Added note that Linux assumes that TLPs are in strict-ordering and
+  untranslated.
+- Added code to calculate p2p paths per-TLP type.
+- Converted mlx5 to use that new proposed API.
+- Link to https://patch.msgid.link/20260821-fix-p2p-acs-v4-0-v4-0-94426b96de73@nvidia.com
+
+Changes in v4:
+- Reject ACS Violations and unreadable routing state instead of treating
+  them as host-bridge redirects
+- Added Tested-by tags from Tushar Dave
+- Added support to asymmetric ACS routing
+- Limited redirect checks to the two ports at the path divergence
+- Added standalone ACS routing diagnostics for hardware retesting
+- Dropped " PCI: Account for Direct Translated P2P in ACS isolation checks" patch
+- Link to v3: https://patch.msgid.link/20260811-fix-p2p-acs-v3-0-efc488ee7c03@nvidia.com
+
+Changes in v3:
+- Fixed pci_p2pdma_add_resource() error unwinding
+- Made pdev->p2pdma teardown wait unconditionally for RCU readers
+- Restricted pci_p2pmem_find_many() to pool-backed providers
+- Documented the pdev->p2pdma lifetime and RCU rules
+- Fixed calc_map_type_and_dist() handling of the verbose argument
+- Required the ACS port and target to share a bus before indexing the
+  Egress Control Vector
+- Gave pci_acs_enabled() and pci_acs_path_enabled() a scope, so the ACS
+  Direct Translated P2P rule no longer stops pci_enable_pasid() from
+  enabling PASID
+- Dropped "Report ACS ports when the paths share no upstream bridge":
+  the mapping type cannot change without a shared upstream bridge, so
+  the pci=disable_acs_redir= hint was not actionable there and the ACS
+  walk only cost config space reads
+- Folded the Request Redirect rule into pci_acs_rr_ineffective(), so
+  pci_acs_flags_enabled() and the Intel SPT PCH quirk share one copy
+- Renamed pci_acs_egress_ctrl_set() to pci_acs_egress_ctrl_is_set(), it
+  reads the bit rather than setting it
+- Reworded the blocked-path warning: ACS may also leave the direct route
+  indeterminate rather than blocked
+- Added KUnit coverage for the shared-bus guard, a device with no ACS
+  capability and an unreadable ACS Control register
+- Added the missing Fixes: tags, a second one on the
+  pci_p2pdma_add_resource() unwinding fix (the dangling devres action
+  dates to f58ef9d1d135) and one on the Egress Control isolation change
+- Link to v2: https://patch.msgid.link/20260806-fix-p2p-acs-v2-0-0cec14812965@nvidia.com
+
+Changes in v2:
+- Added Logan's ROB tags
+- Added commas in Documentation patch
+- Link to v1: https://patch.msgid.link/20260802-fix-p2p-acs-v1-0-a7c5eb64fff6@nvidia.com
+
+---
+Leon Romanovsky (19):
+      PCI/P2PDMA: Honor device-specific ACS redirection
+      PCI/P2PDMA: Document the TLP attribute assumptions
+      PCI/P2PDMA: Derive routing from directional ACS controls
+      PCI: Reject unreadable ACS controls in isolation checks
+      PCI/P2PDMA: Evaluate ACS controls at the path divergence
+      PCI/P2PDMA: Document directional ACS routing
+      PCI/P2PDMA: Collect the path's ACS controls before deciding
+      PCI/P2PDMA: Answer routing per TLP class
+      PCI/P2PDMA: Route Relaxed Ordering Completions directly
+      PCI/P2PDMA: Reject Translated Requests blocked by Translation Blocking
+      PCI/P2PDMA: Route Translated Requests under Direct Translated P2P
+      PCI/P2PDMA: Log detailed ACS routing diagnostics
+      PCI/P2PDMA: Add KUnit tests for the ACS routing decisions
+      PCI/P2PDMA: Test the ACS P2P routing walk
+      PCI: Add KUnit coverage for ACS isolation checks
+      PCI/P2PDMA: Document TLP-class routing
+      PCI/P2PDMA: Let a client declare that it selects ATS per mapping
+      PCI/P2PDMA: Evaluate the ATS path for clients with ATS enabled
+      PCI/P2PDMA: Test the routing of clients with ATS enabled
+
+ Documentation/admin-guide/kernel-parameters.txt |   11 +-
+ Documentation/driver-api/pci/p2pdma.rst         |  105 ++
+ drivers/pci/Kconfig                             |   15 +
+ drivers/pci/Makefile                            |    1 +
+ drivers/pci/p2pdma.c                            |  942 +++++++++++++++--
+ drivers/pci/pci.c                               |    8 +-
+ drivers/pci/pci.h                               |   57 ++
+ drivers/pci/pci_acs_test.c                      | 1225 +++++++++++++++++++++++
+ drivers/pci/quirks.c                            |    8 +-
+ include/linux/pci-p2pdma.h                      |   12 +-
+ 10 files changed, 2292 insertions(+), 92 deletions(-)
+---
+base-commit: 36038f0e8377ef316b723d0d85b1510bc64069ab
+change-id: 20260821-fix-p2p-acs-v4-0-e72455e3a261
+
+Best regards,
+--  
+Leon Romanovsky <leonro@nvidia.com>
 
