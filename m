@@ -1,63 +1,84 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B15451B19F
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 22:46:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D59E84A2069
+	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 22:55:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791931586; cv=none; b=Ev3iQrrEKpGXpeSLJV7sgKMtIMFrFYc2ygX14d7YzQSKajPo5m8QHjtcH+a9Lh/pP1wLJkVE8p1jQE1cro5rBiw/sZeAx2PS9U8YjRZjQZ1eGabv/555sq4a5ctQ8crOFDwGMLNMafG8UQkXBZdsomnt7lWfZot0rQ3iSAkmBok=
+	t=1791932123; cv=none; b=L9Paztyu8ALae5Hxmeiqva7b6vHARIBap3EvhkWd/yAVzwYC+TgBW3/eloV5RmdlUfIM97CRm7PaZbc2lqv6BKD9gb5n/9HKpyu4/y8SdCMXfPQcHMRMlFrxL5NNMHK2hoPoEZrPjLwNp0oh6kEx2Cxe7t3x6ft3N5grWrALdFk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791931586; c=relaxed/simple;
-	bh=KVvUOWGPaJf8jqd/2Kk5OJJ03RRY84zfvr1Nsb4SKCE=;
+	s=arc-20240116; t=1791932123; c=relaxed/simple;
+	bh=tyYAIjorRZSRSy2rPgyQz+f/pklzb/w7XsPAJcb1nT0=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=g/6W8jQc0ebrM+PXOk+edPyL5FJa/cFFpdNeDC4wMdrEoyxKSMrMdn2/FG1JbMbZ3bETkNzn9CaciyCR2lD8HcJQ2mzOkCRpNfXXSn+Nr4Llv0cBQ7GhoMaRddr7ZiRAcoBuJRnggN/kNivNTVJK1cLFCpSQw4LWNg7dppaph+A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RVNgVzSZ; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=dK+Ism/1IJg+dbgxlMb7LL5rWjPxpbDQvVtPPkvvLzyzLZXuyW2t1k4jVt3B1lLIgUuZ24b6R3pqddItepjUK1JwL5SubPra+Cb35kmDiUwCyYb8RLXbUnO/vo63GmqVffg5YerGjzbVjb1+Q3NxgvWxZ8W75UvjT7eBeXK436o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f8lT0ZsE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RVNgVzSZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B13361F000FF;
-	Tue, 13 Oct 2026 22:46:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f8lT0ZsE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5986A1F000FF;
+	Tue, 13 Oct 2026 22:55:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791931583;
-	bh=KVvUOWGPaJf8jqd/2Kk5OJJ03RRY84zfvr1Nsb4SKCE=;
+	s=k20260515; t=1791932121;
+	bh=GvifAGKT5zhwUxPdegcj8KN1jZiCQVLGoYsnaHHIWVg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RVNgVzSZRaEuNNuvAqsGQCCPTOAmetnF1WNd72CgfGGYRXWRS+1LCI0VlG+rr89sZ
-	 /htG9BfB/tgiI5XUkGE5LyfM6xqDEDgamqkzP/IhPV8j5CZ3JKaIRuF/fZ/mB5zYuS
-	 5kIPCkKXcVxyNKjNihZ2QC31fsTHcj3xmt1eyBjqMSLIa4vrJesSib6WJkj0Oa1dCM
-	 uBnYbYyx1JuYo1EFuVxJMHpgHgjnGjEKSyYgNNENtalyDr0WGvnNYMc4OeB0vafPS8
-	 w8lT94V2uUKUuzKgqze0H8kYPTadLls5XxkoDx/9sdKvTb+w9GXUUTUjaPYXOk6Qbc
-	 Xi2/SAMlBhRkg==
-Message-ID: <sashiko-outbox-170594@kernel.org>
+	b=f8lT0ZsEA1QHGOPJpZMxLtCx0gV2SBDI/MD7GmEllAnQSYCkIMN1vGZzdMwNSq8hp
+	 z9lNeeOjqsVAlZd670p1bK3PmSdn5hKHaClKQTqhp4JFBuxDx1rRRDYJSxNWxQ/I2l
+	 OfrilsjkBhvg2WlH89qQLMwV9jREEnZS4EOeuDIbYFdzlKEQCf5e1IEd/ABZhDUDpn
+	 rX0WVR34wKwNn9Dhi1cEc4aUM2GjsdAwLD8clt+t9P7DRxyGzClUH6i/bK7zlsSkiV
+	 ZBM3g1mPajxxDCS2PIJVk3qaQIEsQ6/8kuOTGmY5ibSmwlDwsg1+Ied0XMb4qTuj+k
+	 ZBKhNKoHgjBBA==
+Message-ID: <sashiko-outbox-170608@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH 1/3] genirq: Add disable_irq_nowait()
+Subject: Re: [RFC PATCH 3/3] nvme-pci: hybrid irq+polling
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Keith Busch" <kbusch@meta.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261013223543.395054-2-kbusch@meta.com>
+In-Reply-To: <20261013223543.395054-4-kbusch@meta.com>
 References: <20261013223543.395054-1-kbusch@meta.com>
- <20261013223543.395054-2-kbusch@meta.com>
+ <20261013223543.395054-4-kbusch@meta.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 13 Oct 2026 22:46:23 +0000
+Date: Tue, 13 Oct 2026 22:55:20 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> From: Keith Busch <kbusch@kernel.org>
->=20
-> Drivers that switch between interrupt and polled completions don't need
-> to wait for the mask to reach the device; the disabled state already
-> keeps their handler from running and a late interrupt is replayed on
-> enable. Add an optional irq_chip irq_mask_nowait() callback, falling
-> back to irq_mask(), and disable_irq_nowait() to mask through it right
-> away rather than lazily.
->=20
-> Signed-off-by: Keith Busch <kbusch@kernel.org>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] kconfig: BLK_DEV_NVME selects DIMLIB without NET dependency
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+commit a8cd25c467c1c40e704c2bd340830c637e44f89b
+Author: Keith Busch <kbusch@kernel.org>
+
+    nvme-pci: hybrid irq+polling
+
+This commit introduces hybrid irq+polling for nvme-pci using the DIM framew=
+ork
+to adjust completion methods dynamically based on the workload.
+
+> diff --git a/drivers/nvme/host/Kconfig b/drivers/nvme/host/Kconfig
+> index 31974c7dd20c9..184e9ccfde8b2 100644
+> --- a/drivers/nvme/host/Kconfig
+> +++ b/drivers/nvme/host/Kconfig
+> @@ -6,6 +6,8 @@ config BLK_DEV_NVME
+>  	tristate "NVM Express block device"
+>  	depends on PCI && BLOCK
+>  	select NVME_CORE
+> +	select DIMLIB
+
+[Severity: Medium]
+Since DIMLIB is defined in lib/Kconfig with a dependency on NET, does
+unconditionally selecting it here risk Kconfig unmet direct dependency
+warnings and potential build failures on configurations where CONFIG_NET is
+disabled?
+
+> +	select IRQ_POLL
+>  	help
+>  	  The NVM Express driver is for solid state drives directly
+>  	  connected to the PCI or PCI Express bus.  If you know you
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013223543.3950=
-54-1-kbusch@meta.com?part=3D1
-
+54-1-kbusch@meta.com?part=3D3
