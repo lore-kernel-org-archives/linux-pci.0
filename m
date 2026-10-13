@@ -1,230 +1,220 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A52AA53C3C7
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 22:36:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F1B6552954;
+	Tue, 13 Oct 2026 22:40:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791930983; cv=none; b=KGHatOhCJb4QZy8bTNZydi8XWsqQmjeCcY+M6TlrqAn6h9pcc0q5gUMLXGR08hmw9U4Z85Z31V6f9Vy4ZNljoEjME06w1FAYwgGP08lKWiYjmGDvSLzsZBYWiy1yo5El63fKgKJz7cLpKi5V7bPn8LLrgmiN1oCOxTrB8052e1w=
+	t=1791931214; cv=none; b=dSHIcKPiANp8ohSxLp/yXzObyq++8qzZ/PNLo92mB/mKM9caxNNl9VljzVIL1eh27T+Dz60Fw3TQPH+hKyjACIppGkVAYYKXevJM+NGJyebObW2tvBX8GbexXz1NXH9TXXvGTpjstRS6EOtZEgEvQtzjDfQIIfeo26EHlJ/3dfs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791930983; c=relaxed/simple;
-	bh=dGrHkmn75O4txPA2TUSvgrf1Az3p2Wc157ZPXrt7ulI=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=A/+AEonRuQi3AaxeHSf5v110hQNQMoDdZeoPNMlEg8t2ns577OihIvTMnJJMg1Fe2UQ6+4I0Qv3rjbOsB4Hi/z+ME5mhNTxjG24cHqjsOalo+c4jfjKATmpH4f/rWdrfJ3Z5wHcndZ7uGk5CX0vDxcnNwKLZteUC7qSeLYhMKMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=BnAK/aF2; arc=none smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1791931214; c=relaxed/simple;
+	bh=c3bclkdaYAYkik2XSAJu9dks+ranFhZpfgiw0csncl0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=E0Smq0dsO1Vq8xEipzsTzqUHKVBZyloTZuQqaXzdVx24/CQ7+Qna3B0zYa4FNSaly/atGtYTk2aeDaMpSaeloSzE0CRjP/ipSYngQrZPYxgGN2jc9eJ8M1w7Ni59LEaDc7mok2inPVo4MzMdiagCaR4GbFYaIICBk/L5Dm/OL6Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gXDw300I; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="BnAK/aF2"
-Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69DKWlRt1625157
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 15:36:16 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	pps82601-s2048-2026-q3; bh=29WxjFdkcrrKHHzPghLMhnd38n3Qp1IUXwKe6
-	tO1r7g=; b=BnAK/aF2wsV6EEfgrNBxfxx6n3H6ZPvGJP9M7Vvnm2a270Nrdwowr
-	dz5erj/F/Rs0P5AFCNCBD/JaB3voU6g/fkO3SKw8CgHE9qbcC3lctay69sbdY2QW
-	GYQrj1UqiLM04AbbGs6V7FPkeCkKRBoT/tmhpTM+DXcUry1NrVW1LSc0QQ0MK8OV
-	n8jP8j3UDq3GpQcM0OUe5eLxKmY6fnLOTEEPvG1fE26o2KMhBISdFZWmODziAFQv
-	jN19S21zmN8TI3FKlFWdo2xBb3GZE1dsGJKfI9fuA6Y5xRQJQykX0otdWPXGlRRc
-	VcX4k9XwFjftxNl+bgoihYxEJtnrzEiXA==
-Received: from mail.thefacebook.com ([163.114.134.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4h9hc46f0v-11
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 13 Oct 2026 15:36:16 -0700 (PDT)
-Received: from twshared134145.14.frc2.facebook.com (2620:10d:c085:208::f) by
- mail.thefacebook.com (2620:10d:c08b:78::2ac9) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.49; Tue, 13 Oct 2026 22:36:12 +0000
-Received: by devbig197.nha3.facebook.com (Postfix, from userid 544533)
-	id 659352D52CB78; Tue, 13 Oct 2026 15:35:53 -0700 (PDT)
-From: Keith Busch <kbusch@meta.com>
-To: <linux-nvme@lists.infradead.org>
-CC: <hch@lst.de>, <changfengnan@bytedance.com>, <linux-pci@vger.kernel.org>,
-        <tglx@kernel.org>, <namjain@linux.microsoft.com>,
-        Keith Busch
-	<kbusch@kernel.org>
-Subject: [RFC PATCH 1/3] genirq: Add disable_irq_nowait()
-Date: Tue, 13 Oct 2026 15:35:41 -0700
-Message-ID: <20261013223543.395054-2-kbusch@meta.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20261013223543.395054-1-kbusch@meta.com>
-References: <20261013223543.395054-1-kbusch@meta.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gXDw300I"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C0AB1F000FF;
+	Tue, 13 Oct 2026 22:40:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791931212;
+	bh=tLbx/Zh/eFasPZiwnMW0AQj+NwF4tqUAGt+hA0quLV4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=gXDw300IKDgYVOZWsBn+PpBQRDOWf4dQ7NdhtIVJ++NPMzjDG9wMNzxcSsSKMQAqj
+	 NAM/M6zc/+S592Yxpo+cu5duwReyGWQ+3IU/hykAzqRloudPov0T7q1SvtyQjfMa+7
+	 oF8Y29gc5uyIoQrYMEPNJZB/dbwLvfxAEqNuyBnKnawUJjgcliMVG9nRr6EE4NovpI
+	 AoUnPTmkxmfILoFvW+sSjM2VLI9qMsbIiTfYSmH0iomw0Jh5NKGeWze+XxsDR1zFF8
+	 Qw5Tuk82BAKTKs/cUTB6aP+Qrj5b+0UEWkWkeTdANDWW4ElcMCvBXsuvC7hQ4nbeHa
+	 +ZlqAKcX0cgZQ==
+Date: Tue, 13 Oct 2026 17:40:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	Maciej Grochowski <Maciej.Grochowski@sony.com>,
+	Nikolas Joshua Britton <nbritton@exabit.io>,
+	Geramy Loveless <gloveless@jqluv.com>,
+	Eric Auger <eauger@redhat.com>,
+	Alexey Fomenko <alexey.fomenko@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bradley Morgan <brads@mainlining.org>,
+	Hans de Goede <hansg@kernel.org>,
+	Kai-Heng Feng <kaihengf@nvidia.com>,
+	Andy Shevchenko <andriy.shevchenko@intel.com>,
+	linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v3 8/8] PCI/quirks: Avoid certain address on Genoa systems
+Message-ID: <20261013224010.GA1589480@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Authority-Analysis: v=2.4 cv=L86I0OT8 c=1 sm=1 tr=0 ts=6aceb260 cx=c_pps
- a=CB4LiSf2rd0gKozIdrpkBw==:117 a=CB4LiSf2rd0gKozIdrpkBw==:17
- a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
- a=crHB47gyY4rKiduisYu9:22 a=VwQbUJbxAAAA:8 a=6pG0410DK98tSDJBP48A:9
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDEzMDA4OSBTYWx0ZWRfX/0tFLWR1Tv2j
- u6ARSadehT8/1WVnIJ8EHbabWa66whBsf5elD1TS3zvcAYN9HpoC8sjCovXuXAU6TPFEUp23OOF
- 9k22ZlhtxMvYk1tM+cEC1pZO48DM/JI=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDEzMDA4OSBTYWx0ZWRfX+IeZbQbsb0Ru
- A5Ya+NVJ5zptuxSmtDTRFat6qTTND9FKMGO+m4BNRYwRiKjfN2BsvvGBAg0I9e7uLnpWoDegRW8
- m67fMA9W0ONTToGGdt18xu/iEhykjlfk1YhUqgojRUnWrgUcY+OCJLMR9QsRKfYPMSMQ86zClwP
- hKNuyQeMXzdOHh3bqeUuugCYVptK8xaEYmZBU4ObOsCpktMYgk5racl1Ii8zxLV7td+7AirWOt7
- aJBR7gbVByTJ/ZOON2hrnMgZzCqT3f2MWoHPW6dCvsZZxX1H8z2qVhGd3EAcYtkSBZ2r0UGeqBf
- 632SDx2+cnkfmQScsIZn9GReSBlsa595grqgpOoZhTD0c2semX76z3pis8FdzPe/3c5E/JE1kpf
- fDWiXMJ8SFm0yEmGcducCV9LKsTyBdVGjNt9QpW39YHnS4+QF9W2Isbppcp5BpMW3b1w1pd+KLg
- BvY1CqZ0KSTZ9NRXWFQ==
-X-Proofpoint-ORIG-GUID: kMlSvpab58yHJxk0VVPdLMdXtJMJMK0P
-X-Proofpoint-GUID: kMlSvpab58yHJxk0VVPdLMdXtJMJMK0P
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-13_01,2026-10-09_01,2025-10-01_01
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <81b4f4bf-b721-4b5b-8ddf-d040865f02b2@amd.com>
 
-From: Keith Busch <kbusch@kernel.org>
+[+cc Hans, Kai-Heng, Andy, linux-acpi]
 
-Drivers that switch between interrupt and polled completions don't need
-to wait for the mask to reach the device; the disabled state already
-keeps their handler from running and a late interrupt is replayed on
-enable. Add an optional irq_chip irq_mask_nowait() callback, falling
-back to irq_mask(), and disable_irq_nowait() to mask through it right
-away rather than lazily.
+On Tue, Oct 13, 2026 at 01:59:23PM -0500, Mario Limonciello wrote:
+> On 10/13/26 12:26, Ilpo Järvinen wrote:
+> > On Tue, 13 Oct 2026, Mario Limonciello wrote:
+> > > On 10/13/26 12:00, Mario Limonciello wrote:
+> > > > On 10/13/26 08:09, Ilpo Järvinen wrote:
+> > > > > While testing the resource placement changes, tests hit a case where
+> > > > > igb fails to probe when BAR 0 is placed at 0x9c000000:
+> > > > > 
+> > > > >      90000000-9cffffff : PCI Bus 0000:a0
+> > > > >     -  90000000-902fffff : PCI Bus 0000:a1
+> > > > >     -    90000000-900fffff : 0000:a1:00.0
+> > > > >     -      90000000-900fffff : igb
+> > > > >     -    90100000-901fffff : 0000:a1:00.0
+> > > > >     -    90200000-90203fff : 0000:a1:00.0
+> > > > >     -      90200000-90203fff : igb
+> > > > >     +  9be00000-9c0fffff : PCI Bus 0000:a1
+> > > > >     +    9be00000-9befffff : 0000:a1:00.0
+> > > > >     +    9bf00000-9bf03fff : 0000:a1:00.0
+> > > > >     +    9c000000-9c0fffff : 0000:a1:00.0
+> > > > >        9c100000-9c17ffff : amd_iommu
+> > > > >        9c180000-9c1803ff : IOAPIC 8
+> > > > > 
+> > > > >     -       Region 0: Memory at 90000000 (32-bit, non-prefetchable)
+> > > > > [size=1M]
+> > > > >     -       Region 3: Memory at 90200000 (32-bit, non-prefetchable)
+> > > > > [size=16K]
+> > > > >     -       Expansion ROM at 90100000 [disabled] [size=1M]
+> > > > >     +       Region 0: Memory at 9c000000 (32-bit, non-prefetchable)
+> > > > > [size=1M]
+> > > > >     +       Region 3: Memory at 9bf00000 (32-bit, non-prefetchable)
+> > > > > [size=16K]
+> > > > >     +       Expansion ROM at 9be00000 [disabled] [size=1M]
+> > > > > 
+> > > > > igb 0000:a1:00.0 0000:a1:00.0 (uninitialized): PCIe link lost
+> > > > > ------------[ cut here ]------------
+> > > > > igb: Failed to read reg 0x18!
+> > > > > WARNING: drivers/net/ethernet/intel/igb/igb_main.c:724 at
+> > > > > igb_rd32.cold+0x3c/0x4f [igb], CPU#32: kworker/32:1/706
+> > > > > ...
+> > > > >    igb_get_invariants_82575+0xff/0xf00 [igb]
+> > > > >    igb_probe+0x3c8/0x1190 [igb]
+> > > > >    local_pci_probe+0x3b/0x80
+> > > > > 
+> > > > > It turns out there is a 64kB iomem black hole at 9c000000 that returns
+> > > > > ~0 and this is where igb's BAR 0 resides. If another BAR of the same
+> > > > > card is placed into that address, it is similarly black holed.
+> > > > > 
+> > > > > Mark the problematic 64kB range reserved using a quirk bound to the
+> > > > > bridge found in the problematic system.
+> > > > > 
+> > > > > Closes: https://bugzilla.kernel.org/show_bug.cgi?id=222074
+> > > > > Suggested-by: Mario Limonciello <mario.limonciello@amd.com>
+> > > > > Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+> > > > > ---
+> > > > > Cc: Borislav Petkov <bp@alien8.de>
+> > > > > 
+> > > > > As an alternative to this, I've also tested reverting the commit
+> > > > > 07eab0901ede ("efi/x86: Remove EfiMemoryMappedIO from E820 map") and
+> > > > > that also resolves the issue by retaining "9c000000-9cffffff : Reserved"
+> > > > > entry in the resource tree.
+> > > > > 
+> > > > > ---
+> > > > >    arch/x86/pci/fixup.c | 36 ++++++++++++++++++++++++++++++++++++
+> > > > >    1 file changed, 36 insertions(+)
+> > > > > 
+> > > > > diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> > > > > index b301c6c8df75..cc463bf492b6 100644
+> > > > > --- a/arch/x86/pci/fixup.c
+> > > > > +++ b/arch/x86/pci/fixup.c
+> > > > > @@ -822,6 +822,42 @@ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1571,
+> > > > > pci_amd_enable_64bit_bar);
+> > > > >    DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x15b1,
+> > > > > pci_amd_enable_64bit_bar);
+> > > > >    DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1601,
+> > > > > pci_amd_enable_64bit_bar);
+> > > > > +/*
+> > > > > + * TODO: Remove when/if root cause is found.
+> > > > > + *
+> > > > > + * Genoa appears to have a 64kB iomem black hole starting at 0x9c000000
+> > > > > + * address for which all reads return ~0 blocking an overlapping BAR from
+> > > > > + * working.
+> > > > > + *
+> > > > > + * Work around the problem by reserving the space prior to making any
+> > > > > iomem
+> > > > > + * allocations that could overlap with the black hole.
+> > > > > + */
+> > > > > +static struct resource genoa_black_hole =
+> > > > > DEFINE_RES_MEM_NAMED(0x9c000000,
+> > > > > +                                   SZ_64K,
+> > > > > +                                   "reserved");
+> > > > > +
+> > > > > +static void genoa_iomem_black_hole(struct pci_dev *dev)
+> > > > > +{
+> > > > > +    struct resource *r;
+> > > > > +
+> > > > > +    pci_bus_for_each_resource(dev->bus, r) {
+> > > > > +        if (!r || !r->flags || !resource_assigned(r))
+> > > > > +            continue;
+> > > > > +
+> > > > > +        if (!__resource_contains_unbound(r, &genoa_black_hole))
+> > > > > +            continue;
+> > > > > +
+> > > > > +        if (resource_assigned(&genoa_black_hole))
+> > > > > +            pci_dbg(dev, "iomem black hole workaround already
+> > > > > applied\n");
+> > > > > +        else if (!insert_resource(r, &genoa_black_hole))
+> > > > > +            pci_info(dev, "iomem black hole workaround enabled\n");
+> > > > > +        else
+> > > > > +            pci_dbg(dev, "iomem black hole workaround add failed\n");
+> > > > > +        return;
+> > > > > +    }
+> > > > > +}
+> > > > > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, 0x14ab,
+> > > > > genoa_iomem_black_hole);
+> > > > > +
+> > > > >    #define RS690_LOWER_TOP_OF_DRAM2    0x30
+> > > > >    #define RS690_LOWER_TOP_OF_DRAM2_VALID    0x1
+> > > > >    #define RS690_UPPER_TOP_OF_DRAM2    0x31
+> > > > 
+> > > > I guess it's good we know the root cause is 07eab0901ede. If we're going
+> > > > down the path of making holes in that we may well put the hole in
+> > > > efi_remove_e820_mmio() like this (attached).
+> > > 
+> > > I don't really like that though.  If Genoa is affected I would expect plenty
+> > > of other machines are too they just haven't been found yet.
+> > 
+> > That's what I'm worried as well. My own testing can only cover very little
+> > ground here.
+> > 
+> > > Can we roll back 07eab0901ede and add quirks for the busted machines instead?
+> 
+> I had an agent dig through all the reports linked in 07eab0901ede and
+> drafted up what should be the remaining quirks for a revert.
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/superm1/linux.git/log/?h=superm1/genoa-mess
+> 
+> Bjorn, thoughts on this?  I'll send it out if that's the way we want
+> to go (or Ilpo feel free to subsume into your series as it's only
+> really exposed by your series at the moment)
 
-Signed-off-by: Keith Busch <kbusch@kernel.org>
----
- include/linux/interrupt.h |  1 +
- include/linux/irq.h       |  4 ++++
- kernel/irq/chip.c         | 31 +++++++++++++++++++++++++++++++
- kernel/irq/internals.h    |  1 +
- kernel/irq/manage.c       | 21 +++++++++++++++++++++
- 5 files changed, 58 insertions(+)
+I would LOVE it if we can use those patches because it's way less
+magic than 07eab0901ede is.
 
-diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-index 3bf969ad8fe07..d40c992ddb8a1 100644
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -231,6 +231,7 @@ extern void devm_free_irq(struct device *dev, unsigne=
-d int irq, void *dev_id);
-=20
- bool irq_has_action(unsigned int irq);
- extern void disable_irq_nosync(unsigned int irq);
-+extern void disable_irq_nowait(unsigned int irq);
- extern bool disable_hardirq(unsigned int irq);
- extern void disable_irq(unsigned int irq);
- extern void disable_percpu_irq(unsigned int irq);
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index f485369b1b4f7..de095299f20ed 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -455,6 +455,9 @@ static inline irq_hw_number_t irqd_to_hwirq(struct ir=
-q_data *d)
-  * @irq_disable:	disable the interrupt
-  * @irq_ack:		start of a new interrupt
-  * @irq_mask:		mask an interrupt source
-+ * @irq_mask_nowait:	mask an interrupt source without waiting for the
-+ *			hardware to acknowledge it (optional, falls back to
-+ *			@irq_mask)
-  * @irq_mask_ack:	ack and mask an interrupt source
-  * @irq_unmask:		unmask an interrupt source
-  * @irq_eoi:		end of interrupt
-@@ -505,6 +508,7 @@ struct irq_chip {
-=20
- 	void		(*irq_ack)(struct irq_data *data);
- 	void		(*irq_mask)(struct irq_data *data);
-+	void		(*irq_mask_nowait)(struct irq_data *data);
- 	void		(*irq_mask_ack)(struct irq_data *data);
- 	void		(*irq_unmask)(struct irq_data *data);
- 	void		(*irq_eoi)(struct irq_data *data);
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index de754db414d1d..4e76f025b5f68 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -399,6 +399,37 @@ void irq_disable(struct irq_desc *desc)
- 	__irq_disable(desc, irq_settings_disable_unlazy(desc));
- }
-=20
-+static void mask_irq_nowait(struct irq_desc *desc)
-+{
-+	if (irqd_irq_masked(&desc->irq_data))
-+		return;
-+
-+	if (desc->irq_data.chip->irq_mask_nowait) {
-+		desc->irq_data.chip->irq_mask_nowait(&desc->irq_data);
-+		irq_state_set_masked(desc);
-+	} else {
-+		mask_irq(desc);
-+	}
-+}
-+
-+/**
-+ * irq_disable_nowait - Mark interrupt disabled and mask it without wait=
-ing
-+ * @desc:	irq descriptor which should be disabled
-+ *
-+ * Like irq_disable() with lazy disable turned off, but the hardware may
-+ * still deliver an interrupt after this returns. The flow handler deals
-+ * with that the same way it does for a lazily disabled interrupt.
-+ */
-+void irq_disable_nowait(struct irq_desc *desc)
-+{
-+	if (desc->irq_data.chip->irq_disable) {
-+		__irq_disable(desc, true);
-+		return;
-+	}
-+	irq_state_set_disabled(desc);
-+	mask_irq_nowait(desc);
-+}
-+
- void irq_percpu_enable(struct irq_desc *desc, unsigned int cpu)
- {
- 	if (desc->irq_data.chip->irq_enable)
-diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
-index 0ce21dd454047..3ba13932ba831 100644
---- a/kernel/irq/internals.h
-+++ b/kernel/irq/internals.h
-@@ -98,6 +98,7 @@ extern void irq_startup_managed(struct irq_desc *desc);
- extern void irq_shutdown(struct irq_desc *desc);
- extern void irq_shutdown_and_deactivate(struct irq_desc *desc);
- extern void irq_disable(struct irq_desc *desc);
-+extern void irq_disable_nowait(struct irq_desc *desc);
- extern void irq_percpu_enable(struct irq_desc *desc, unsigned int cpu);
- extern void irq_percpu_disable(struct irq_desc *desc, unsigned int cpu);
- extern void mask_irq(struct irq_desc *desc);
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index 57eff26fa646a..7a4d7f1024133 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -705,6 +705,27 @@ void disable_irq_nosync(unsigned int irq)
- }
- EXPORT_SYMBOL(disable_irq_nosync);
-=20
-+/**
-+ * disable_irq_nowait - mask an irq without waiting for the hardware
-+ * @irq: Interrupt to disable
-+ *
-+ * Like disable_irq_nosync(), but masks the interrupt at the chip right =
-away
-+ * instead of lazily, and does not wait for the hardware to acknowledge =
-the
-+ * mask. An interrupt that still arrives is held pending and replayed by
-+ * enable_irq(). Use this when an extra interrupt is cheaper than flushi=
-ng
-+ * the mask, e.g. switching from interrupts to polling.
-+ *
-+ * This function may be called from IRQ context.
-+ */
-+void disable_irq_nowait(unsigned int irq)
-+{
-+	scoped_irqdesc_get_and_buslock(irq, IRQ_GET_DESC_CHECK_GLOBAL) {
-+		if (!scoped_irqdesc->depth++)
-+			irq_disable_nowait(scoped_irqdesc);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(disable_irq_nowait);
-+
- /**
-  * disable_irq - disable an irq and wait for completion
-  * @irq: Interrupt to disable
---=20
-2.52.0
+But I'm frankly terrified to touch it because I'm skeptical that two
+more quirks are enough.  I just expect that whatever strategy BIOS
+uses to build these maps is likely to be used on many models.  I do
+hate 07eab0901ede though, so I would love to see it gone.
 
+I do think the description [1] is overly specific because AFAIK
+there's nothing that connects this to AMD EPYC 9354 or igb other than
+the fact that it was seen there.  It could happen to any PCI device on
+any system with similar memory maps.
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/superm1/linux.git/commit/?h=superm1/genoa-mess&id=0a49c704477153d6597d34b3c6e3141007ff058c
