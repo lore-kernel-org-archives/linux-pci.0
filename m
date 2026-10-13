@@ -1,61 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5D3750EC1D;
-	Tue, 13 Oct 2026 14:30:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAAA44119EE;
+	Tue, 13 Oct 2026 14:32:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791901832; cv=none; b=MtvFagKyRro6q0PO7tnkiZ8Lt1hIlX81T12uD7DmKGzcoiy+2KiVbu56PLXWR+/NR6MapgunbGTZeSzqnsx8kpKccdr6VhwhaEkX7rLypL/YCJkVG0H/KUKxJ5pIFunKNQSCdDTu2Gt22Ekql78P6mWPazbBvINHPBwVXQj4Svo=
+	t=1791901948; cv=none; b=Igc3M5pQy2rCwEf/OLsSbk0No6HSLjSVDemSApU/EzYQJmIRS8NuFpexG5WWDzk3niIbm2FlTOJmmsFRaNoYICrrnUpeCsoBLZItsgNuNQFn0fR1ULzqAdxYWSWVK1InHaEqjpKYpL6PUlLpgiR1ApW2Olp0TCP8QoDURxj89JU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791901832; c=relaxed/simple;
-	bh=3MFLx517Tx7IH5aCfo+sCO/6FlAkqYuYGn0TVyRjYfU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aykpRIMUGi+dEMv6b9A1S/tgb1SWWzL3/5D31dH0m2SX98vzUj4CSUkvGl3x/CpVXWgR9qh64BkkeVgEhGnJ9kk1eXMkoA5EcwI9l+fEUiOvw7eei/ZPF37BtgjYZOPXEBbdM0oLt3IhXesu80qAfbUcKNhc+ieSp+b9hku4ydk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hiw71KUC; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791901948; c=relaxed/simple;
+	bh=DNPGTno8Q9aUNcxBdK1W7jgkWh6emdfjKj31dmKmHVU=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=IKGmPdYT0/AvCapq4Tz12wT8OPlpMpmU3O4m6pw9AHydrHGG3I9upuhL8QCfodCgHpcGfg2LsSzTPHMFbfNRSXIYmE7dH1sUDl1eUCt1fOEzrZ6UaehVvZGhryFJB3ooRyNlJYT8a6pEqmd9+k93QjbHeHRauLbbnqSLhvjEdX4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FL3MrqAC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hiw71KUC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4760A1F000FF;
-	Tue, 13 Oct 2026 14:30:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FL3MrqAC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92F811F00893;
+	Tue, 13 Oct 2026 14:32:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791901831;
-	bh=hxI830Znhf1eUKwsacLAKMMhqO6J1DV7fCznwlmn66w=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Hiw71KUCD5C2iEwNYgLt+yXI6FH0WI37cPXhaL2ETbDFDhy1UnpMV9Gn9UkJkLzP5
-	 D0XNJMDMm2462i7mG4MNsrKXwTWCEauOhGLZQ4r2mfO4c0k04FpMXB12yLHCjbEuh7
-	 eeN37t8v6+P/3BITOJt/H312Rjyn8euIpVh+S/no4+/NYmm4VDY+g6AuN4L0c4HbhW
-	 FYGisIVPSb4umteMt4DMhF1LkGho4dWR7JgGIh7byVaj0DgZcgWstvuW8L9VmBXDa2
-	 7YTfVY6svCQ8WWLNlCiHEIRtFkTsj6rWHrnYNbhU2LlVai1yhk6vfybGo3SkU8xEjf
-	 mu34zuzhamcOQ==
-Date: Tue, 13 Oct 2026 20:00:24 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Frank Li <Frank.li@oss.nxp.com>, Koichiro Den <den@valinux.co.jp>
-Cc: sashiko-reviews@lists.linux.dev, ntb@lists.linux.dev, 
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: endpoint: pci-epf-vntb: Track link state from
- both sides
-Message-ID: <as5AVg7I_A8MwQe3@debian>
-References: <20260904162049.3432464-1-den@valinux.co.jp>
- <20260904163355.165061F00A3D@smtp.kernel.org>
- <mbwka7qsw3gcphdwgl4wdqb3t4dweujrwvoj3rogxhwrpoorfx@3wdhmvi4lgfg>
- <179190161902.12828.6253963189949078339.b4-reply@b4>
+	s=k20260515; t=1791901947;
+	bh=DNPGTno8Q9aUNcxBdK1W7jgkWh6emdfjKj31dmKmHVU=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=FL3MrqACgJjtPGpW/6V/lHjHvaw0rfypmkdxH4iKNv5PPyI6bmMjo63CLeYvQMQgF
+	 9qXP9bvr09cOS/rc4/t9sJVRkGE1tXxgLI6QRoyLjWORUVELxukc814BlIVSSV4VRG
+	 xDtIu72j8/gltmM/imtigUcBbygQ+F0OlygOE5a9d8tveFoRkvj8+S0W8ByNt75iHg
+	 hTU7PL+7Gd5gmlxIS7n0LVLifHZLFkeND8KO1KHdCJrMXw9A7qEyw14m40SI8vMZRC
+	 lFo2rKuFvoWMRVnAR0AkiNcSoGjiXZOMqHLZ7QtHZHcm9tWPhv+l2hfuS2paZPM1dm
+	 JPCxWmZf125WQ==
+Message-ID: <sashiko-outbox-169914@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v11 07/19] PCI/P2PDMA: Collect the path's ACS controls
+ before deciding
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Leon Romanovsky" <leon@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org
+In-Reply-To: <20261013-fix-p2p-acs-v4-0-v11-7-72cf8c96e617@nvidia.com>
+References: <20261013-fix-p2p-acs-v4-0-v11-0-72cf8c96e617@nvidia.com>
+ <20261013-fix-p2p-acs-v4-0-v11-7-72cf8c96e617@nvidia.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 13 Oct 2026 14:32:27 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <179190161902.12828.6253963189949078339.b4-reply@b4>
 
-On Tue, Oct 13, 2026 at 07:56:59PM +0530, Manivannan Sadhasivam wrote:
-> + Frank
-> 
+> From: Leon Romanovsky <leonro@nvidia.com>
+>=20
+> calc_map_type_and_dist() combines ACS reads, routing decisions and
+> diagnostics. Adding decisions for different TLP attributes would duplicate
+> the walk or thread each attribute through its counters.
+>=20
+> Collect the divergence controls, internal-route restrictions and upstream
+> forwarding state in struct pci_p2pdma_acs_path, then decide each direction
+> from it. Keep the existing rule that both directions must route directly
+> for bus addressing, and reject unusable upstream forwarding before
+> considering the host bridge.
+>=20
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 
-Really added Frank now.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-- Mani
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013-fix-p2p-ac=
+s-v4-0-v11-0-72cf8c96e617@nvidia.com?part=3D7
 
--- 
-மணிவண்ணன் சதாசிவம்
