@@ -1,130 +1,144 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47A245349D0
-	for <linux-pci@vger.kernel.org>; Wed, 14 Oct 2026 17:31:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id AF3D852D2C9;
+	Wed, 14 Oct 2026 17:59:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791999070; cv=none; b=FhzczVFxyOmqNTs2YfwYvgc280HH14VZUG8i3Chbh6uYsbRnkV8qBbb3XgqZkVvwfWCXUirR4BSVetZfpazDy9Nza9SeiJdPV2HN2MHWBUizRrZ8u6y3nvSmrhe8M2cBgWZCDjq2zYOAEro/MuOUWo0drhKA1sxDEX9cZNXSNoA=
+	t=1792000771; cv=none; b=GCsWrcQa22t4ZwUtYEYCwLrcY/hclNYD0tinEw8hkFFsMWuNxJmbF5pC/fNftPSp8Cm3ThXJr/vNPxDK5cBJS38nSsZmVF3U/ZVXpbTzbFZkTurP0dD418IfGSOVi+M7SqFCrzp3sYXjq9LT5sLVon4gswB9u6DAOZ7+z1DBOTo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791999070; c=relaxed/simple;
-	bh=XH5YdSaslVVo13fXg5v8Iks7PAimZ9eCsGZ5SQVB0J4=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=UdEu1xkQbussQSygq0gS3Nvy+j3ubOg2g7oNjssivew3Refvy6Itx4DeLfHbIQX8acbgkMtTqpgA/8M+JsZDWtPs59mOnkuhJXFotQmbrwV4ObtVRH51z6ID7Rm8FLVkfopZtP+tw65wLFLJT7uWAdrEU1NP+84IsZbl7ttN7bQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ew9E9YA6; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792000771; c=relaxed/simple;
+	bh=xvrU7+OQe2cN+5nepJqt1T1xTdMTt8Ci1AZBLgoDkjY=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=cGgWihXod2br6w+fExmdNL9u7pnt7MyZBM199/ZQ8XqFxjnCeJ9qJDuB9viS3N2l5cxcOyMLmfWUgO01qAH6fTBUV15Vj2MuczfpryDphLX+Y2tSNdc375HdcNRVKkw/sQzoUTFiBsc0hI/KzsRqebeYAuxgmKbTbXWjXzKhU1I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=axoF8r+6; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ew9E9YA6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 748B41F000C4;
-	Wed, 14 Oct 2026 17:31:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791999067;
-	bh=RYProyi5xNxC6zBZwCH3uv9Z1jW/dCeSE4umfM39R84=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=Ew9E9YA62Gv9M0AW8R0KVP6Iv2ggUxLjrY92VDMPj8bwdHOGNAzvuC3xiynzgK3Vr
-	 CDsgLHyhDz11zSR8EaG8JjGG1LsFm5htvVBi0bVYadhyPq0ppl5yljuQaF/rpt9yS/
-	 iuqFs3rysJ+WbjBU1H3B3R1lxNdVSW5Eosi35f80C/avRVyoKJ7sB/BR5fdlvxD7FN
-	 BEuOMX+tMn/vQdipaTpTUMyoLSpOj9GLCMqMGnVt2SXBbU8BjVSTlDDhvbPo1ZkRM6
-	 bsZQkKK6dEAqmJzVLdn3F8tzpuqjVlk+feF69lTCMCP6ciiZDHzdgygaioUaqpeKxh
-	 WFBfAQe810rNA==
-Date: Wed, 14 Oct 2026 12:31:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <kbusch@meta.com>
-Cc: linux-nvme@lists.infradead.org, hch@lst.de, changfengnan@bytedance.com,
-	linux-pci@vger.kernel.org, tglx@kernel.org,
-	namjain@linux.microsoft.com, Keith Busch <kbusch@kernel.org>,
-	Luigi Rizzo <lrizzo@google.com>
-Subject: Re: [RFC PATCH 2/3] PCI/MSI: Implement irq_mask_nowait() for MSI-x
-Message-ID: <20261014173106.GA1643226@bhelgaas>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="axoF8r+6"
+Received: from localhost (unknown [4.194.122.144])
+	by linux.microsoft.com (Postfix) with ESMTPSA id BE38B20B7166;
+	Wed, 14 Oct 2026 10:59:13 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com BE38B20B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1792000765;
+	bh=w+LHJC/NB4yRzWoWwokMMEzOhdTsVA9ERhh/Ya3fyko=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=axoF8r+6w476cU0VGnnpnAmwmzXLi4bAV8TsfQtae96LkE3UE0UZC6O3c5c/ntdql
+	 eYvWFE3Uu7XqgcwhPPlZBwc4Nr6xACMFBQ+1papQUDT8vJHb9XQBWWus4QC50y/B7E
+	 w0dvyC+VBWj+UHjxKlTKAyFWiS0KwTtKwKFICy9c=
+Date: Wed, 14 Oct 2026 10:59:13 -0700
+From: Jacob Pan <jacob.pan@linux.microsoft.com>
+To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
+Cc: iommu@lists.linux.dev, Alex Williamson <alex@shazbot.org>, Alexey
+ Kardashevskiy <aik@amd.com>, Bjorn Helgaas <bhelgaas@google.com>, Catalin
+ Marinas <catalin.marinas@arm.com>, Jason Gunthorpe <jgg@ziepe.ca>, Joerg
+ Roedel <joro@8bytes.org>, Jonathan Cameron <jic23@kernel.org>, Jonathan
+ Hunter <jonathanh@nvidia.com>, Kevin Tian <kevin.tian@intel.com>, Krishna
+ Reddy <vdumpa@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Nicolin Chen
+ <nicolinc@nvidia.com>, Robin Murphy <robin.murphy@arm.com>, Samuel Ortiz
+ <sameo@rivosinc.com>, Shameer Kolothum
+ <shameerali.kolothum.thodi@huawei.com>, Steven Price
+ <steven.price@arm.com>, Suravee Suthikulpanit
+ <suravee.suthikulpanit@amd.com>, Suzuki K Poulose <suzuki.poulose@arm.com>,
+ Thierry Reding <thierry.reding@kernel.org>, Vasant Hegde
+ <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>, Xu Yilun
+ <yilun.xu@linux.intel.com>, kvm@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-coco@lists.linux.dev,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-tegra@vger.kernel.org, jacob.pan@linux.microsoft.com
+Subject: Re: [PATCH v7 08/16] iommufd/viommu: Keep a reference to the KVM
+ file
+Message-ID: <20261014105913.00001217@linux.microsoft.com>
+In-Reply-To: <20261008055955.4014342-9-aneesh.kumar@kernel.org>
+References: <20261008055955.4014342-1-aneesh.kumar@kernel.org>
+	<20261008055955.4014342-9-aneesh.kumar@kernel.org>
+Organization: LSG
+X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261013223543.395054-3-kbusch@meta.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-[+cc Luigi, cover letter at
-https://lore.kernel.org/all/20261013223543.395054-1-kbusch@meta.com]
+Hi Aneesh,
 
-On Tue, Oct 13, 2026 at 03:35:42PM -0700, Keith Busch wrote:
-> From: Keith Busch <kbusch@kernel.org>
+On Thu,  8 Oct 2026 11:29:47 +0530
+"Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org> wrote:
+
+> From: Nicolin Chen <nicolinc@nvidia.com>
 > 
-> Skip the read-back that flushes the MSI-x mask write. Parent domains
-> that mask on behalf of PCI/MSI continue using their own irq_mask().
+> The TSM vDevice operations need access to the KVM associated with the
+> device's vIOMMU. Save the device's KVM file in the iommufd_viommu
+> when the vIOMMU is allocated, and take a file reference so it remains
+> valid for the lifetime of the vIOMMU.
 > 
-> Signed-off-by: Keith Busch <kbusch@kernel.org>
-
-I assume Thomas will review/ack the pci/msi/ parts.
-
-Cc'd Luigi since I know he's interested in interrupt moderation in
-general.
-
+> Release the reference when the vIOMMU is destroyed.
+> 
+> Based on an original patch by
+> Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
+> 
+> [nicolinc: hold kvm's users_count]
+> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+> [aneesh.kumar: Switch to use kvm_file]
+> Cc: jgg@ziepe.ca
+> Cc: kevin.tian@intel.com
+> Cc: joro@8bytes.org
+> Cc: will@kernel.org
+> Cc: robin.murphy@arm.com
+> Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
 > ---
->  drivers/irqchip/irq-msi-lib.c | 1 +
->  drivers/pci/msi/irqdomain.c   | 6 ++++++
->  drivers/pci/msi/msi.h         | 8 +++++++-
->  3 files changed, 14 insertions(+), 1 deletion(-)
+>  drivers/iommu/iommufd/viommu.c | 5 +++++
+>  include/linux/iommufd.h        | 1 +
+>  2 files changed, 6 insertions(+)
 > 
-> diff --git a/drivers/irqchip/irq-msi-lib.c b/drivers/irqchip/irq-msi-lib.c
-> index 45e0ed3134ce1..bff622b4839aa 100644
-> --- a/drivers/irqchip/irq-msi-lib.c
-> +++ b/drivers/irqchip/irq-msi-lib.c
-> @@ -126,6 +126,7 @@ bool msi_lib_init_dev_msi_info(struct device *dev, struct irq_domain *domain,
->  	 */
->  	if (info->flags & MSI_FLAG_PCI_MSI_MASK_PARENT) {
->  		chip->irq_mask		= irq_chip_mask_parent;
-> +		chip->irq_mask_nowait	= NULL;
->  		chip->irq_unmask	= irq_chip_unmask_parent;
->  	}
+> diff --git a/drivers/iommu/iommufd/viommu.c
+> b/drivers/iommu/iommufd/viommu.c index f7951057a1e5..b7489ed259bd
+> 100644 --- a/drivers/iommu/iommufd/viommu.c
+> +++ b/drivers/iommu/iommufd/viommu.c
+> @@ -1,6 +1,7 @@
+>  // SPDX-License-Identifier: GPL-2.0-only
+>  /* Copyright (c) 2024, NVIDIA CORPORATION & AFFILIATES
+>   */
+> +#include <linux/file.h>
+>  #include "iommufd_private.h"
 >  
-> diff --git a/drivers/pci/msi/irqdomain.c b/drivers/pci/msi/irqdomain.c
-> index 6e65f0f44112e..92a53c2772659 100644
-> --- a/drivers/pci/msi/irqdomain.c
-> +++ b/drivers/pci/msi/irqdomain.c
-> @@ -162,6 +162,11 @@ static void pci_irq_mask_msix(struct irq_data *data)
->  	pci_msix_mask(irq_data_get_msi_desc(data));
+>  void iommufd_viommu_destroy(struct iommufd_object *obj)
+> @@ -11,6 +12,8 @@ void iommufd_viommu_destroy(struct iommufd_object
+> *obj) if (viommu->ops && viommu->ops->destroy)
+>  		viommu->ops->destroy(viommu);
+>  	refcount_dec(&viommu->hwpt->common.obj.users);
+> +	if (viommu->kvm_file)
+> +		fput(viommu->kvm_file);
+>  	xa_destroy(&viommu->vdevs);
 >  }
 >  
-> +static void pci_irq_mask_nowait_msix(struct irq_data *data)
-> +{
-> +	pci_msix_mask_nowait(irq_data_get_msi_desc(data));
-> +}
-> +
->  static void pci_irq_unmask_msix(struct irq_data *data)
->  {
->  	pci_msix_unmask(irq_data_get_msi_desc(data));
-> @@ -182,6 +187,7 @@ static const struct msi_domain_template pci_msix_template = {
->  		.irq_startup		= pci_irq_startup_msix,
->  		.irq_shutdown		= pci_irq_shutdown_msix,
->  		.irq_mask		= pci_irq_mask_msix,
-> +		.irq_mask_nowait	= pci_irq_mask_nowait_msix,
->  		.irq_unmask		= pci_irq_unmask_msix,
->  		.irq_write_msi_msg	= pci_msi_domain_write_msg,
->  		.flags			= IRQCHIP_ONESHOT_SAFE,
-> diff --git a/drivers/pci/msi/msi.h b/drivers/pci/msi/msi.h
-> index 0b420b319f50f..337ff9d9da0ed 100644
-> --- a/drivers/pci/msi/msi.h
-> +++ b/drivers/pci/msi/msi.h
-> @@ -40,10 +40,16 @@ static inline void pci_msix_write_vector_ctrl(struct msi_desc *desc, u32 ctrl)
->  		writel(ctrl, desc_addr + PCI_MSIX_ENTRY_VECTOR_CTRL);
->  }
+> @@ -82,6 +85,8 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd
+> *ucmd) }
 >  
-> -static inline void pci_msix_mask(struct msi_desc *desc)
-> +/* Posted write only: the device may still send an interrupt after return */
-> +static inline void pci_msix_mask_nowait(struct msi_desc *desc)
->  {
->  	desc->pci.msix_ctrl |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
->  	pci_msix_write_vector_ctrl(desc, desc->pci.msix_ctrl);
-> +}
-> +
-> +static inline void pci_msix_mask(struct msi_desc *desc)
-> +{
-> +	pci_msix_mask_nowait(desc);
->  	/* Flush write to device */
->  	readl(desc->pci.mask_base);
->  }
-> -- 
-> 2.52.0
-> 
+>  	xa_init(&viommu->vdevs);
+> +	if (idev->kvm_file)
+> +		viommu->kvm_file = get_file(idev->kvm_file);
+So kvm_file will persist inside viommu even when no more vdevice exists
+under the viommu. In that case, don't we need to check idev->kvm_file
+matches viommu->kvm_file during vdevice allocation?
+
+Otherwise, it appears possible to associate a device belonging to a
+different KVM VM with the existing vIOMMU, no?
+
+>  	viommu->type = cmd->type;
+>  	viommu->ictx = ucmd->ictx;
+>  	viommu->hwpt = hwpt_paging;
+> diff --git a/include/linux/iommufd.h b/include/linux/iommufd.h
+> index 0a0bb4abfbd2..3267717f676d 100644
+> --- a/include/linux/iommufd.h
+> +++ b/include/linux/iommufd.h
+> @@ -103,6 +103,7 @@ struct iommufd_viommu {
+>  	struct iommufd_ctx *ictx;
+>  	struct iommu_device *iommu_dev;
+>  	struct iommufd_hwpt_paging *hwpt;
+> +	struct file *kvm_file;
+>  
+>  	const struct iommufd_viommu_ops *ops;
+>  
