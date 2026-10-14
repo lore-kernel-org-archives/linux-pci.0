@@ -1,268 +1,198 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67DAF315D49;
-	Wed, 14 Oct 2026 10:51:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B37C4F68AD;
+	Wed, 14 Oct 2026 10:59:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791975093; cv=none; b=b8bsu6Gm4wXOUJcnTJK/Zy48FmDcMKmAx9A9xGyXQgN2ZLk5b/uijsvmplzm8B+JYLjGLU2vuiSG1fyy8a6ruzfXZFKQOt+mcgfsqeUpNFmOi5KaODAIWHbXdYju8tmDhQpXzRfcII1lQLr/Ai7qedAixwloeTnYSvumxynG4b4=
+	t=1791975576; cv=none; b=JDQRwr9N+NpXkHY6DjX5b/0rO8DddODxU88SKGMXfaonwnQTyheFmYhQNa+x4pWs1wXyI7UqujjrTizniht8z8VboqjCkUW4kdlFDf6aYMtK5xlBk5onEPVMN8BBBfHuY8k0JQ8PumYrPBXjKoA9L391352iPaO7qhzMi+JH5Kg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791975093; c=relaxed/simple;
-	bh=tIBnYukfrX1OtnxKui+kJv6GihsYmtvyuniBWs6TvSM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QgSaWqjbUvxVWODmvAiJz4whB9oYwGaER/ZX3phYCHGo/AC6GGtXiPellEpMjQnaG5MEZpogRiyZ6sDRjXBBuUXVPitCI2ExvD8lE+xjC4s8+Ge6WoG7N7TAJZ3UODDCYnvkSsNxJZagyOeVNtwHLipRsIEx0ETH/py92W7KGUQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=I7jC5fBX; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="I7jC5fBX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791975091; x=1823511091;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=tIBnYukfrX1OtnxKui+kJv6GihsYmtvyuniBWs6TvSM=;
-  b=I7jC5fBXuvQGmNTtQC05VBnC4Q8HGDckW2Pq+cwT8PeFmiky7b4GDO27
-   ZnGRbcWR35CMK7XbMWIBNqckgBluaVWJ9x7xKvuTZsKqSFEdEj/xSIrX2
-   mj5uX39nQ5S98LwqZQVymV/LAHCHIC4fUFUh/UcyuDvnQhquBvrgcMChj
-   RNXDar59AZCaIGxg1s5JhGkhdWQZie9HsSfl54R8IBvdYh7RwmZc67tPn
-   3AFOAQhga9JKcMd99vZMOj3dM9jiSnpgmuVDrH4VsoFy0ViwnywIC1hUF
-   5TjZGuB/6Lb20jntvC8XKHBJnmwx0lDLb3lXn32nlzvz43ciysq72uw89
-   g==;
-X-CSE-ConnectionGUID: hbqK1StoSke2Ha+qf0PyJQ==
-X-CSE-MsgGUID: rDSGLEvzSzWXvnnGcAkpKg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11934"; a="596672"
-X-IronPort-AV: E=Sophos;i="6.27,157,1787036400"; 
-   d="scan'208";a="596672"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Oct 2026 03:51:30 -0700
-X-CSE-ConnectionGUID: YHkI50bZR36b+6yuwkqGUA==
-X-CSE-MsgGUID: M2u9pm8PSfqah2nFzCcFiA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,157,1787036400"; 
-   d="scan'208";a="1315688"
-Received: from smoticic-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.236])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Oct 2026 03:51:23 -0700
-Date: Wed, 14 Oct 2026 13:51:20 +0300
-From: Andy Shevchenko <andriy.shevchenko@intel.com>
-To: Hans de Goede <hansg@kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Mario Limonciello <mario.limonciello@amd.com>,
-	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Maciej Grochowski <Maciej.Grochowski@sony.com>,
-	Nikolas Joshua Britton <nbritton@exabit.io>,
-	Geramy Loveless <gloveless@jqluv.com>,
-	Eric Auger <eauger@redhat.com>,
-	Alexey Fomenko <alexey.fomenko@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bradley Morgan <brads@mainlining.org>,
-	Kai-Heng Feng <kaihengf@nvidia.com>, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v3 8/8] PCI/quirks: Avoid certain address on Genoa systems
-Message-ID: <as9eqFRuiMgG-fhG@ashevche-desk.local>
-References: <20261013224010.GA1589480@bhelgaas>
- <f823d264-8b9d-422e-bfaf-388957fbc2fa@kernel.org>
+	s=arc-20240116; t=1791975576; c=relaxed/simple;
+	bh=KSF9k092edLku1kkCDS+2NRkgH9zctS3hcszlXKZ9xE=;
+	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
+	 References:Date:Message-Id; b=s83kFcLZQuQA3PNSp+Pr4vcNHWmfbhqGh9tJkAZjS1OaV1oLeL/LH5FqvaVm5lh1UUaQmQGHvy2/TBVqngU9QpS675saYU9jaEjZi9gTLVy7eJAsgNl0AO++l8QDHkpoi5XqC69fQ0NKrARP/5vEnpyzZk/XhQL+CGqImTbfH78=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B44771F000FF;
+	Wed, 14 Oct 2026 10:59:27 +0000 (UTC)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <f823d264-8b9d-422e-bfaf-388957fbc2fa@kernel.org>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] PCI: iproc: Use pci_alloc_host_bridge() on BCMA
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Semih Baskan <strst.gs@gmail.com>, 
+ Manivannan Sadhasivam <mani@kernel.org>, lpieralisi@kernel.org, 
+ kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, 
+ rjui@broadcom.com, sbranden@broadcom.com, 
+ bcm-kernel-feedback-list@broadcom.com, rafal@milecki.pl, zajec5@gmail.com, 
+ florian.fainelli@broadcom.com, arnd@arndb.de, linux-pci@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ rosenp@gmail.com, rani.hod@gmail.com
+In-Reply-To: <20261012181637.GA1313446@bhelgaas>
+References: <20261012181637.GA1313446@bhelgaas>
+Date: Wed, 14 Oct 2026 16:29:18 +0530
+Message-Id: <179197555828.38040.6359970121400952902.b4-reply@b4>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=7862;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=KSF9k092edLku1kkCDS+2NRkgH9zctS3hcszlXKZ9xE=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqz2CJqgbbMoVYwQbKmkJK+1j/ufZW5b9A9T9cm
+ CzX3TZtwIaJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCas9giQAKCRBVnxHm/pHO
+ 9UfPB/45UVgsiHlnB55ICLCA7TTM9QYivpnXhXRhF9kWusLH2XPR8f4qgdXTbB7bRFfROoAiPaq
+ Gaqz1sNnSFpgKo9AJeu2gCpL9N0Dw2FSuTitSlJW/RYb+57rcZYDCdlZrzgBHKTzK+q/hGsVA5e
+ f339kqyrb+9BX8xdwKXw2QirsqVQvi1ScOrK1IBYIRBr5/UzV9HRXhEybQ9nLzlviM5oETEMJ0J
+ 3/4PoICpm+LT/CF4zXARu4wTxtx9dHxfoyWx6GbMGoazfbiJKg8htO1Ck4Sv0n5ZKvxrOFYL+5k
+ 73M2Mm5+r+2jOaTWEVQWn/DCOLgmrt/3SnAdkAGN3IrJK8BJ
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-On Wed, Oct 14, 2026 at 11:34:44AM +0200, Hans de Goede wrote:
-> On 14-Oct-26 00:40, Bjorn Helgaas wrote:
-> > [+cc Hans, Kai-Heng, Andy, linux-acpi]
+On 2026-10-12 13:16 -0500, Bjorn Helgaas wrote:
+> [cc->to: Mani]
+> 
+> On Sat, Sep 12, 2026 at 07:36:26AM +0300, Semih Baskan wrote:
+> > The BCMA driver takes its register base and, since commit 552aa843e4c5
+> > ("PCI: iproc: Use the EROM outbound window on BCMA"), its outbound
+> > window from what bcma read out of the enumeration ROM. It still
+> > allocates its host bridge with devm_pci_alloc_host_bridge(), which since
+> > commit 669cbc708122 ("PCI: Move DT resource setup into
+> > devm_pci_alloc_host_bridge()") parses ranges, dma-ranges and bus-range
+> > from the device's OF node and requests the windows it finds. None of
+> > that reaches the hardware here: need_ob_cfg is only ever set by the
+> > platform driver, so iproc_pcie_setup() never maps the parsed windows,
+> > and the EROM commit above had to throw them away again to keep them
+> > from colliding with its own window.
 > > 
-> > On Tue, Oct 13, 2026 at 01:59:23PM -0500, Mario Limonciello wrote:
-> >> On 10/13/26 12:26, Ilpo Järvinen wrote:
-> >>> On Tue, 13 Oct 2026, Mario Limonciello wrote:
-> >>>> On 10/13/26 12:00, Mario Limonciello wrote:
-> >>>>> On 10/13/26 08:09, Ilpo Järvinen wrote:
-> >>>>>> While testing the resource placement changes, tests hit a case where
-> >>>>>> igb fails to probe when BAR 0 is placed at 0x9c000000:
-> >>>>>>
-> >>>>>>      90000000-9cffffff : PCI Bus 0000:a0
-> >>>>>>     -  90000000-902fffff : PCI Bus 0000:a1
-> >>>>>>     -    90000000-900fffff : 0000:a1:00.0
-> >>>>>>     -      90000000-900fffff : igb
-> >>>>>>     -    90100000-901fffff : 0000:a1:00.0
-> >>>>>>     -    90200000-90203fff : 0000:a1:00.0
-> >>>>>>     -      90200000-90203fff : igb
-> >>>>>>     +  9be00000-9c0fffff : PCI Bus 0000:a1
-> >>>>>>     +    9be00000-9befffff : 0000:a1:00.0
-> >>>>>>     +    9bf00000-9bf03fff : 0000:a1:00.0
-> >>>>>>     +    9c000000-9c0fffff : 0000:a1:00.0
-> >>>>>>        9c100000-9c17ffff : amd_iommu
-> >>>>>>        9c180000-9c1803ff : IOAPIC 8
-> >>>>>>
-> >>>>>>     -       Region 0: Memory at 90000000 (32-bit, non-prefetchable)
-> >>>>>> [size=1M]
-> >>>>>>     -       Region 3: Memory at 90200000 (32-bit, non-prefetchable)
-> >>>>>> [size=16K]
-> >>>>>>     -       Expansion ROM at 90100000 [disabled] [size=1M]
-> >>>>>>     +       Region 0: Memory at 9c000000 (32-bit, non-prefetchable)
-> >>>>>> [size=1M]
-> >>>>>>     +       Region 3: Memory at 9bf00000 (32-bit, non-prefetchable)
-> >>>>>> [size=16K]
-> >>>>>>     +       Expansion ROM at 9be00000 [disabled] [size=1M]
-> >>>>>>
-> >>>>>> igb 0000:a1:00.0 0000:a1:00.0 (uninitialized): PCIe link lost
-> >>>>>> ------------[ cut here ]------------
-> >>>>>> igb: Failed to read reg 0x18!
-> >>>>>> WARNING: drivers/net/ethernet/intel/igb/igb_main.c:724 at
-> >>>>>> igb_rd32.cold+0x3c/0x4f [igb], CPU#32: kworker/32:1/706
-> >>>>>> ...
-> >>>>>>    igb_get_invariants_82575+0xff/0xf00 [igb]
-> >>>>>>    igb_probe+0x3c8/0x1190 [igb]
-> >>>>>>    local_pci_probe+0x3b/0x80
-> >>>>>>
-> >>>>>> It turns out there is a 64kB iomem black hole at 9c000000 that returns
-> >>>>>> ~0 and this is where igb's BAR 0 resides. If another BAR of the same
-> >>>>>> card is placed into that address, it is similarly black holed.
-> >>>>>>
-> >>>>>> Mark the problematic 64kB range reserved using a quirk bound to the
-> >>>>>> bridge found in the problematic system.
-> >>>>>>
-> >>>>>> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=222074
-> >>>>>> Suggested-by: Mario Limonciello <mario.limonciello@amd.com>
-> >>>>>> Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-> >>>>>> ---
-> >>>>>> Cc: Borislav Petkov <bp@alien8.de>
-> >>>>>>
-> >>>>>> As an alternative to this, I've also tested reverting the commit
-> >>>>>> 07eab0901ede ("efi/x86: Remove EfiMemoryMappedIO from E820 map") and
-> >>>>>> that also resolves the issue by retaining "9c000000-9cffffff : Reserved"
-> >>>>>> entry in the resource tree.
-> >>>>>>
-> >>>>>> ---
-> >>>>>>    arch/x86/pci/fixup.c | 36 ++++++++++++++++++++++++++++++++++++
-> >>>>>>    1 file changed, 36 insertions(+)
-> >>>>>>
-> >>>>>> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> >>>>>> index b301c6c8df75..cc463bf492b6 100644
-> >>>>>> --- a/arch/x86/pci/fixup.c
-> >>>>>> +++ b/arch/x86/pci/fixup.c
-> >>>>>> @@ -822,6 +822,42 @@ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1571,
-> >>>>>> pci_amd_enable_64bit_bar);
-> >>>>>>    DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x15b1,
-> >>>>>> pci_amd_enable_64bit_bar);
-> >>>>>>    DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1601,
-> >>>>>> pci_amd_enable_64bit_bar);
-> >>>>>> +/*
-> >>>>>> + * TODO: Remove when/if root cause is found.
-> >>>>>> + *
-> >>>>>> + * Genoa appears to have a 64kB iomem black hole starting at 0x9c000000
-> >>>>>> + * address for which all reads return ~0 blocking an overlapping BAR from
-> >>>>>> + * working.
-> >>>>>> + *
-> >>>>>> + * Work around the problem by reserving the space prior to making any
-> >>>>>> iomem
-> >>>>>> + * allocations that could overlap with the black hole.
-> >>>>>> + */
-> >>>>>> +static struct resource genoa_black_hole =
-> >>>>>> DEFINE_RES_MEM_NAMED(0x9c000000,
-> >>>>>> +                                   SZ_64K,
-> >>>>>> +                                   "reserved");
-> >>>>>> +
-> >>>>>> +static void genoa_iomem_black_hole(struct pci_dev *dev)
-> >>>>>> +{
-> >>>>>> +    struct resource *r;
-> >>>>>> +
-> >>>>>> +    pci_bus_for_each_resource(dev->bus, r) {
-> >>>>>> +        if (!r || !r->flags || !resource_assigned(r))
-> >>>>>> +            continue;
-> >>>>>> +
-> >>>>>> +        if (!__resource_contains_unbound(r, &genoa_black_hole))
-> >>>>>> +            continue;
-> >>>>>> +
-> >>>>>> +        if (resource_assigned(&genoa_black_hole))
-> >>>>>> +            pci_dbg(dev, "iomem black hole workaround already
-> >>>>>> applied\n");
-> >>>>>> +        else if (!insert_resource(r, &genoa_black_hole))
-> >>>>>> +            pci_info(dev, "iomem black hole workaround enabled\n");
-> >>>>>> +        else
-> >>>>>> +            pci_dbg(dev, "iomem black hole workaround add failed\n");
-> >>>>>> +        return;
-> >>>>>> +    }
-> >>>>>> +}
-> >>>>>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, 0x14ab,
-> >>>>>> genoa_iomem_black_hole);
-> >>>>>> +
-> >>>>>>    #define RS690_LOWER_TOP_OF_DRAM2    0x30
-> >>>>>>    #define RS690_LOWER_TOP_OF_DRAM2_VALID    0x1
-> >>>>>>    #define RS690_UPPER_TOP_OF_DRAM2    0x31
-> >>>>>
-> >>>>> I guess it's good we know the root cause is 07eab0901ede. If we're going
-> >>>>> down the path of making holes in that we may well put the hole in
-> >>>>> efi_remove_e820_mmio() like this (attached).
-> >>>>
-> >>>> I don't really like that though.  If Genoa is affected I would expect plenty
-> >>>> of other machines are too they just haven't been found yet.
-> >>>
-> >>> That's what I'm worried as well. My own testing can only cover very little
-> >>> ground here.
-> >>>
-> >>>> Can we roll back 07eab0901ede and add quirks for the busted machines instead?
-> >>
-> >> I had an agent dig through all the reports linked in 07eab0901ede and
-> >> drafted up what should be the remaining quirks for a revert.
-> >>
-> >> https://git.kernel.org/pub/scm/linux/kernel/git/superm1/linux.git/log/?h=superm1/genoa-mess
-> >>
-> >> Bjorn, thoughts on this?  I'll send it out if that's the way we want
-> >> to go (or Ilpo feel free to subsume into your series as it's only
-> >> really exposed by your series at the moment)
+> > Allocate the bridge with pci_alloc_host_bridge() instead, so nothing
+> > from the devicetree is requested or handed to the PCI core, and free it
+> > on the error paths and in remove(). The driver now sets
+> > bridge->dev.parent itself, as devm_pci_alloc_host_bridge() did, since
+> > the wifi nodes under pcie_bridge0 in bcm4709-netgear-r8000.dts are
+> > resolved through the root bus. The window request
+> > moves from devm to request_resource() and release_resource() because
+> > the resource lives inside the bridge allocation and has to be released
+> > before the bridge is freed.
 > > 
-> > I would LOVE it if we can use those patches because it's way less
-> > magic than 07eab0901ede is.
+> > The ranges property is still read, but only to compare. bcm-ns.dtsi
+> > describes the same window for the platform driver, and on core revision
+> > 0x01 it points at an address the hardware does not decode. The warning
+> > from the EROM commit stays for that reason: a wrong dts is visible on
+> > BCMA boots, where nothing else would show it. Without bus-range the
+> > root bus also logs "No busn resource found for root bus, will use
+> > [bus 00-ff]" again, which changes nothing else.
 > > 
-> > But I'm frankly terrified to touch it because I'm skeptical that two
-> > more quirks are enough.  I just expect that whatever strategy BIOS
-> > uses to build these maps is likely to be used on many models.  I do
-> > hate 07eab0901ede though, so I would love to see it gone.
+> > With PCIE_IPROC_PLATFORM and PCIE_IPROC_BCMA both enabled, the platform
+> > driver binds the same nodes first and claims the devicetree window. On
+> > core revision 0x07 that is the EROM window, so this driver's request
+> > still fails and the probe backs out as before. On revision 0x01 the
+> > devicetree window is elsewhere, so this driver now probes as well, next
+> > to a platform driver instance whose window the hardware does not decode.
+> > That instance does not work either; the only difference is that the
+> > second probe is no longer stopped by the collision.
+> > 
+> > Tested on an ASUS RT-N18U (BCM47081, core revision 0x01): the warning
+> > lines are identical to the applied version, /proc/iomem and the
+> > enumerated devices are unchanged.
 > 
-> It has been about 4 years since we came up with 07eab0901ede IIRC we
-> had a huge email thread with a whole bunch of attempts at fixing
-> the issue in a generic manner.
+> What do you think about this, Mani?
 > 
-> IIRC some of those attempts tried to identify the exact problematic
-> issue the quirks try to fix where there is an EFI MMIO reservation
-> covering the entire bridge window.
+> I still don't quite understand the issue with the DT and discovering
+> this via both platform and bcma bus drivers, but we should make
+> progress.
 > 
-> Maybe we can dig through the old thread and see if with the knowledge
-> we have now one of the previous attempts of fixing it from the thread
-> is better?
-> 
-> I agree that needing to go back to quirks is likely going to be painful
-> and break a whole bunch of other systems. IIRC 07eab0901ede fixed
-> a whole bunch of laptops having issues around the time not just
-> the Clevo NL4XLU and Lenovo Yoga C940. But this info might be spread
-> over various bugzilla entries, etc. + some models where likely never
-> reported but just fixed in time for users to not report things.
-> 
-> I also wonder if given we only have this magic black-hole on geneo/zen4
-> if it would not be better to go with Mario's original approach here ?
-> Esp. since Mario's quirk is chipset based where as the other problems
-> seem to be model/product based so that is 1 quirk vs many quirks.
 
-Can we simply change the algo of allocating resources to follow what Windows
-does?
+Sorry for the delay. Vacation + LPC kept me off for some time...
 
--- 
-With Best Regards,
-Andy Shevchenko
+I read through the whole thread, and compared the driver + devicetree. Let me
+try to explain what I understood on this issue.
 
+Before commit 767012397976, every Northstar SoC relied on the
+drivers/pci/controller/pcie-iproc-bcma.c driver to initialize the PCIe
+controllers present in the SoC. This driver only relied on the bcma bus driver
+for probing and getting the Host bridge resources such as MEM range, register
+base address etc... and ignored devicetree. So the devm_pci_alloc_host_bridge()
+call was only allocating the host bridge struct and devm_of_pci_bridge_init()
+ended up being a NOP.
+
+But with the advent of the commit 767012397976, the PCIe nodes present in the
+bcm-ns.dtsi got compatibles and resource properties. Unfortunately, the values
+provided in the resource properties (ranges specifically), only matched the
+BCM47094 SoC. What the author overlooked was, they added these properties to the
+common bcm-ns.dtsi which was included by several other SoCs as well. Typically,
+the resources are only added to the common dtsi when they are common to all SoCs
+inheriting the common dtsi. Otherwise, they get added to the specific SoC dtsi.
+So this started all the issues as the added ranges properties were only valid
+for BCM47094 SoC and not on other SoCs using bcm-ns.dtsi. I believe the author
+was not aware of this incompatibility.
+
+But then there was one more issue that the author of commit 767012397976
+overlooked. When the compatible got added to the PCIe nodes, they got matched
+with the pcie-iproc-platform driver and that driver started driving the PCIe
+controller instead of the existing pcie-iproc-bcma driver. By probe ordering, I
+think the pcie-iproc-platform driver got probed first and it made use of the
+devicetree resources like the ranges property. Since the ranges value matched
+the BCM47094 SoC, the pcie-iproc-platform probed fine and the controllers were
+initialized properly.
+
+But here is the catch, the author must've failed to notice the issue coming from
+pcie-iproc-bcma driver when it tried probing later. When the pcie-iproc-bcma
+driver probed, devm_of_pci_bridge_init() inside devm_pci_alloc_host_bridge()
+would've tried parsing the ranges property again and should've failed with
+-EBUSY as the memory was already mapped by the pcie-iproc-platform driver.
+Either the author didn't notice this or the pcie-iproc-bcma driver could've been
+disabled on their setup.
+
+Now, when the same devicetree was used on other Northstar SoCs like BCM47081,
+BCM4709, the ranges value were invalid and the pcie-iproc-platform driver's
+probe got failed. Then the pcie-iproc-bcma driver also got probed later (it
+should be noted that these two are separate, so platform driver probe doesn't
+affect this bus driver probe), it also ended up parsing the wrong ranges from
+the devicetree. And this is what fixed by the patch from Semih [1] which forced
+the driver to use the ranges from EROM only and ignore devicetree. The reason
+why EROM parsing was added to the brcm driver instead of the platform driver
+was, only the brcm driver got access to the EROM region as it gets populated by
+the brcm bus code.
+
+Even though [1] allowed the PCIe controllers to be working again, it didn't
+prevent the platform driver from probing first and claiming the invalid
+resource. For fixing this specific issue, I think we need two fixes:
+
+1. Override the ranges property in the SoC dtsi with correct values.
+2. Prevent the pcie-iproc-platform driver from probing for the Northstar SoCs
+and just rely on pcie-iproc-bcma driver to initialize the PCIe controllers. This
+can be achieved by the below patch:
+
+diff --git a/drivers/pci/controller/pcie-iproc-platform.c b/drivers/pci/controller/pcie-iproc-platform.c
+index 4c9a0c4bb923..d2237a56dd79 100644
+--- a/drivers/pci/controller/pcie-iproc-platform.c
++++ b/drivers/pci/controller/pcie-iproc-platform.c
+@@ -45,6 +45,9 @@ static int iproc_pltfm_pcie_probe(struct platform_device *pdev)
+        struct pci_host_bridge *bridge;
+        int ret;
+ 
++       if (of_device_is_compatible(np->parent, "brcm,bus-axi"))
++               return -EINVAL;
++
+        bridge = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
+        if (!bridge)
+                return -ENOMEM;
+
+IMO, we need both fixes because, devicetree has to describe the hardware
+properly and we should not have two drivers claiming the same resource.
+
+[1] https://lore.kernel.org/linux-pci/20260807162149.7CC9E1F000E9@smtp.kernel.org
+
+> I *think* that if we squash this patch into 552aa843e4c5 ("PCI: iproc:
+> Use the EROM outbound window on BCMA") and use
+> devm_add_action_or_reset(), it will simplify down to this, which is
+> less intrusive and would need less explanation:
+> 
+
+This LGTM!
+
+- Mani
 
