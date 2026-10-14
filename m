@@ -1,116 +1,119 @@
-Received: from va-2-114.ptr.blmpb.com (va-2-114.ptr.blmpb.com [209.127.231.114])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EB7C3002AB
-	for <linux-pci@vger.kernel.org>; Wed, 14 Oct 2026 07:59:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.114
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A40841A4FD;
+	Wed, 14 Oct 2026 08:11:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791964768; cv=none; b=LX95eOfYBCVGpTvUAbxh+uW+9SaBkgTBHE3aHcDsVHPUcwNsbutHVUMZi0GhADyDv+oSZ5vQmRUY//G8yGTxwhBv+/E5mS/hq2t7s/5NyBxjNNdR11I1/oVsfg97MIdExvxhdf7/wcnCQa37vFbqPcmSs4ZbDnFL5nimjWfJ1ok=
+	t=1791965509; cv=none; b=l9xRavuTSyYuIEutPtLDZ3JN3aFWwqzN8udr42PAH8Rwf+1mwuRHrkYqykBD1qtbTfrGQz3Jd1Ff+zn9nAcn0foNlKxdjHlo/XC/FsvUzkhVRebhnmcoJ1oPAVolmKZifMNvGFnmb1nWIP4p0nQh0rqyUPwdQ7KzBsGY9xJXbCg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791964768; c=relaxed/simple;
-	bh=+4OazdAmgJvSgNZn+vsDa4YoHpBnkBVOiu4vPLVNKKc=;
-	h=To:Date:Message-Id:Cc:From:Subject:Mime-Version:Content-Type:
-	 In-Reply-To:References; b=dUo9/lT5xOJuc/XcH4YVCbwHiLeF+GUsSJIQG2iwC2yF+q+qWe26llWul6ukdX7kSVzfIYkUEfA8A8ZVlDbmJNblJCvjsD3S4UVt2lsuB6TZZvHWTwgHwP6x+Q6crnLStUWxl4HqpfnIOmX7Nz6RgPNBOKvsagwFn1RKNqaRGfk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=j1JWBXs4; arc=none smtp.client-ip=209.127.231.114
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="j1JWBXs4"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1791964754; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=TY/xSqncSuEedRGyadYwHJ/EqM8rGORcOlBn4Wx3l6U=;
- b=j1JWBXs4ix3DWSJBtPB1kvoZVhv+xgllKPKGq8caK3GTDgvuvvTvAYNXXyIdOR7xJ9iO/Q
- r2geFt1keIoOEXKDU334NVl2K0LZyVgFmr4mvpvvDmxKQD02FR7GsGofXuE0aDkP9s1jnr
- Fszd4PJwbtp6rlNSdU/O8s1G2GCPtPJf9DHEud+/yv69AwMu72QvHYRpI6sQcL7smcj+Q9
- dfm+THL9TePwdezhaTjc7oR1tJBFk+WBHKAlQpJJzEkVIPW/7g9YzKse8wgVL4se+Np7pN
- EJHaSCwILX7HdXeNcfI46KnQraAogtcDex2FggGnBXwAVzN4NX0az4oGEbAZEg==
-To: "Keith Busch" <kbusch@meta.com>, <linux-nvme@lists.infradead.org>
-Date: Wed, 14 Oct 2026 15:58:57 +0800
-Message-Id: <5613ca2a-c8c7-4418-b792-5d7ddc903960@bytedance.com>
-User-Agent: Mozilla Thunderbird
-Cc: <hch@lst.de>, <linux-pci@vger.kernel.org>, <tglx@kernel.org>, 
-	<namjain@linux.microsoft.com>, "Keith Busch" <kbusch@kernel.org>
-From: "Fengnan" <changfengnan@bytedance.com>
-Subject: Re: [RFC PATCH 0/3] nvme-pci: dynamic interrupt moderation
+	s=arc-20240116; t=1791965509; c=relaxed/simple;
+	bh=lcEYR/JTtkLEZjqcVWOMktUl3bL+j81cML0UjLIggb0=;
+	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
+	 References:Date:Message-Id; b=kblnwf8n6mhIWSkklSG4djpP6wG7JrMEQypU1qhfTxkP3I54FTgEzb6NZ34H4zmYsX6rjGQY/8hYlZyKPvwW5Esoca1a4b2MZU+0bI60PBjUJLRJsXmBIGB7MIvci9/XGuYw/UIO/XjhIlGq430PMt927RGG/YnBLsONVjUGQaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E93F91F000FF;
+	Wed, 14 Oct 2026 08:11:41 +0000 (UTC)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-X-Lms-Return-Path: <lba+26acf3650+c7f641+vger.kernel.org+changfengnan@bytedance.com>
-In-Reply-To: <20261013223543.395054-1-kbusch@meta.com>
-References: <20261013223543.395054-1-kbusch@meta.com>
-X-Original-From: Fengnan <changfengnan@bytedance.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] PCI: qcom: Ignore -ENODEV after Root Port reset
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+ linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+In-Reply-To: <aqq7j9L76coy65lC@ryzen>
+References: <20260916-topic-pcie_portrec_enodev-v1-1-5dc7bde39552@oss.qualcomm.com>
+ <aqq7j9L76coy65lC@ryzen>
+Date: Wed, 14 Oct 2026 13:41:33 +0530
+Message-Id: <179196549341.38040.17376531957795312265.b4-reply@b4>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2661;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=lcEYR/JTtkLEZjqcVWOMktUl3bL+j81cML0UjLIggb0=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqzzk4Pql9ndteNGrqypwM6422tguj6eZNCecOO
+ gqCyZzo5q2JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCas85OAAKCRBVnxHm/pHO
+ 9YakB/4woOrjwfBKI1iOqc+aUn1RiHtUMvCblm1fNf+4Cch6FEwSKVv3l83me1ZG10jqUxx98bx
+ XsgOT+Wk6iDONfitdGy7aeYbrseljgv8iwGU6rZZLk/+IVXo5hZYR9njDexnnTczTqUFWsFP5Yk
+ Wj3PsUQVhSoJnDt5Xa/t4zqQS2eikte8nTl0wn6enphQEXtMHTQu595XtBR01XtW59p6uAtD8uq
+ /HHEbQVM2/Xinahsk6DgE+/xCvSGw38d57V3GcHrWJjzi9pcUpYlpzUcQa40huEBarSnEN9kjyI
+ kZuA1TXyLF2CO4p9AxbZz7ObSmbYNV2ZN94osDGNyJKOXRed
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-Hi Keith:
+On 2026-09-16 17:53 +0200, Niklas Cassel wrote:
+> Hello Konrad,
+> 
+> On Wed, Sep 16, 2026 at 02:37:49PM +0200, Konrad Dybcio wrote:
+> > Root Port recovery may race with a device hot-unplug. In that case,
+> > dw_pcie_wait_for_link() returns -ENODEV because no device is detected
+> > after the controller has been successfully reset.
+> > 
+> > This is a valid outcome and should not cause Root Port recovery to
+> > fail. Ignore -ENODEV while continuing to propagate other link-training
+> > errors.
+> > 
+> > Assisted-by: LLM
+> > Fixes: 4d88cb82a6d9 ("PCI: qcom: Implement .reset_root_port() and use for link down")
+> > Signed-off-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+> > ---
+> >  drivers/pci/controller/dwc/pcie-qcom.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> > 
+> > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> > index ee63a6ec99de4d07c16b8d6cb68df0d92f822cd8..3d3be9bf798b7c247d69969d6570385b8648123f 100644
+> > --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> > @@ -1880,6 +1880,9 @@ static int qcom_pcie_reset_root_port(struct pci_host_bridge *bridge,
+> >  	qcom_pcie_start_link(pci);
+> >  
+> >  	ret = dw_pcie_wait_for_link(pci);
+> > +	/* This linkdown might have been a hot-unplug */
+> > +	if (ret == -ENODEV)
+> > +		ret = 0;
+> >  	if (ret)
+> >  		return ret;
+> 
+> 
+> I did not know that pcie-qcom supported hotplug.
+> 
+> Last when I was discussing this with Mani, I'm quite sure that he said that
+> it doesn't, see:
+> https://lore.kernel.org/all/20251222064207.3246632-8-cassel@kernel.org/
+> 
 
-I ran some quick tests using your patch on the PS1010 and SN861.=20
-For 4K random reads with QD=3D8, both drives showed a performance drop
-of about 19%.=20
-With QD=3D64/128, there was an improvement of roughly 10=E2=80=9320%.
+That was my understanding at that time as the hotplug command completions were
+getting timedout even though the RP claimed that it supported hotplug:
 
-I think the reason is that the current logic still relies on the QD
-depth to determine whether to switch, but a high QD doesn't necessarily
-mean that using the poll mode will be more efficient.
+pcieport 0001:00:00.0: pciehp: Timeout on hotplug command 0x03c0 (issued 2020 msec ago)
 
-As for DIM, I tried using it based on my V2 patch, but the result was
-that I either had to add several new DIM functions to perform similar
-checks, or I still ended up with a performance regression.
+Then I asked around internally within Qcom and they claimed that nobody tested
+hotplug on Qcom SoCs as the usecases were mostly mobile at that time (soldered
+EPs), so hotplug may not work and we should not claim it to be supported.
 
-Here is detail data=20
-https://docs.google.com/spreadsheets/d/1VOR0xB5yk-z6IMwwRvp8R0yd4k_tMi_wI27=
-Pl-dEQVg/edit?gid=3D789521759#gid=3D789521759
+So I went ahead and disabled hotplug capability of the RPs with:
+a54db86ddc153 ("PCI: qcom: Do not advertise hotplug capability for IPs v2.7.0
+and v1.9.0")
 
-Based on the results, it doesn=E2=80=99t perform as well as my previous pat=
-ch=EF=BC=9A
-https://docs.google.com/spreadsheets/d/1rer4Nl5HHxSO-D3NrrHuHSfpR9s1kLhpLjz=
-h7h7Mbmw/edit?gid=3D875909538#gid=3D875909538
+Then after some time, we started getting form factors with hotpluggable slots
+and when we tested hotplug with the above commit reverted, it actually worked,
+despite the command completion timeouts. So we finally added hotplug capability
+back with:
 
+33a76fc3c3e6 ("PCI: qcom: Advertise Hotplug Slot Capability with no Command
+Completion support")
 
+- Mani
 
-=E5=9C=A8 2026/10/14 06:35, Keith Busch =E5=86=99=E9=81=93:
-> From: Keith Busch <kbusch@kernel.org>
->=20
-> Just adding another nvme hybrid interrupt and polling mechanism to the
-> lists. There's some recent alternatives mentioned in the links below,
-> but I'm trying one last time to leverage the DIM framework. Performance
-> wise, this at least doesn't seem any worse than anything else proposed,
-> though I've only been able to test on mid-level hardware so far.
->=20
-> This one here as some irq prep patches that help some when transitioning
-> from irq to polling for MSI-x enabled NVMe completions. These should be
-> generally applicable, so isn't necessarily tied to how it gets used in
-> the last patch if someone else finds it useful too.
->=20
-> Links:
->=20
->   [1] https://lore.kernel.org/linux-nvme/20261009050556.2817978-1-namjain=
-@linux.microsoft.com/
->=20
->   [2] https://lore.kernel.org/linux-nvme/20260818033846.53790-1-changfeng=
-nan@bytedance.com/
->=20
-> Keith Busch (3):
->   genirq: Add disable_irq_nowait()
->   PCI/MSI: Implement irq_mask_nowait() for MSI-X
->   nvme-pci: hybrid irq+polling
->=20
->  drivers/irqchip/irq-msi-lib.c |   1 +
->  drivers/nvme/host/Kconfig     |   2 +
->  drivers/nvme/host/pci.c       | 624 ++++++++++++++++++++++++++++++++--
->  drivers/nvme/host/trace.c     |   1 +
->  drivers/nvme/host/trace.h     |  26 ++
->  drivers/pci/msi/irqdomain.c   |   6 +
->  drivers/pci/msi/msi.h         |   8 +-
->  include/linux/interrupt.h     |   1 +
->  include/linux/irq.h           |   4 +
->  kernel/irq/chip.c             |  31 ++
->  kernel/irq/internals.h        |   1 +
->  kernel/irq/manage.c           |  21 ++
->  12 files changed, 698 insertions(+), 28 deletions(-)
->
