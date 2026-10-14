@@ -1,47 +1,53 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42F4747FB0E;
-	Wed, 14 Oct 2026 19:36:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99BED483BF1;
+	Wed, 14 Oct 2026 20:14:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792006617; cv=none; b=BJdW+NW2P6AaL9p1mOwLlKyfnK6NUZA+eDroXmXk6FcZJ8AZkWKTKcrlCJ6tU0Uzt+UHokqLI4I4s8XsnXypB4muPI+rBoWbGFSd0xrn2APer8SGWXG6h19mu3Ii2rCHe0t9SpWfSMo+cSTWeUddSV/VnX7YLR63K85uCqBHS+A=
+	t=1792008884; cv=none; b=nnW+BdfeMeKDPLDQDSCS45qTGHkiU7fktfiyuDtiGS/dgPJ6s5EEPiS0JmMl8Y2dZ+zoIhE6XzSxghVXd3+MhCVNosaSk6WQghsH282oVKC3/pLWrfug0+NqCLkC0rB8gJX6TY0Io/K05gCiXcgXTrD8f9VgymrBEma9i6IvRbE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792006617; c=relaxed/simple;
-	bh=1acUDNEMfrMnTEtQ+y38gOMUhY0Pjk+FMS3fFJIeuSM=;
+	s=arc-20240116; t=1792008884; c=relaxed/simple;
+	bh=JvV5JdnuyzJ4jQkmrHhQkymizCMBEISjDN63H/QDHEU=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=XShLX4PhnNRy1aEXdP6sJQ3vN6YreFTjXRZPzK3PGyPEm9AOQXghCxMn2tWUWSY+u2JikRhtRqlXcM5GUzMkwN2//jYACckQigEP9uz0NZnYyiNjAHbtpaJz20zRjRgDkXTDlM0QGwItJGQijshEQEM0Gt5tmgFbv3VvpjIz39I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DVvcvc7U; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition; b=iUwp9kM8MHM9Hsjs/VABO4WhN1U7vIywjZHmpfQ7rFJizJ9hG+luifV7T9llIBAkMuxW+XT90vnIjcSIVqRlGLuPER154BdRwbph37pozqT//2S3DeOYBElyChltx5VamNSv1ftfBjhckaZ4SQS2KCxNIoKZJJ8sZcHO07QzhPM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QX2FLAgy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DVvcvc7U"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 975291F000C4;
-	Wed, 14 Oct 2026 19:36:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QX2FLAgy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AB491F000C4;
+	Wed, 14 Oct 2026 20:14:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792006615;
-	bh=Nwo7fummJ1+6uAUT8/LcA06d2mBN1HNQjSCHgbIgjcU=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=DVvcvc7UX80k12qRiHESe3D5qMFFVXrS38E48C9Buz1YyN3x0yyLjfN8PE2O8obfo
-	 z1EWyL8sTL4Zx59tmp6xOzDVuU7hCj2hbkXdM89M3tJdnXtlc9u49ZO+Lto+g3BsGu
-	 hsyH6xqZqSuHs9uSkr1db02NQdGYUUb5hKuZQNs6e0mShBs1+p9oLvNshC5gBtfnxU
-	 5ICHjv7tO8lQQurcDTA1KP612gBPLumtixcyZjH0oDoeejT+40FVxVkP9zTNGRb27e
-	 QFXad8keYB8IZ/hC1pkcJr6OqlI6NaCTwLEk0M52Cn+ZuieNdgR4uXGSCl8QqcT2Fo
-	 xOB+33S6zENxQ==
-Date: Wed, 14 Oct 2026 14:36:54 -0500
+	s=k20260515; t=1792008883;
+	bh=i3kPv2EnHCuSJTkONfOoKlbv7OJfV/DzN4cTtsaG+7s=;
+	h=Date:From:To:Cc:Subject;
+	b=QX2FLAgyAwNAACG4J/atDWNVOgM1duxzU+cwgZ/o4t+utd/n1VJ99q6OYk+BLOeHG
+	 6KOQfkVx2UiQeInHTw5ePbQNEQcnNO6xQfqGIUhh6J9SNEZz5OKO3UwHLJ9+UHuZYx
+	 Gnbah9qgTEUwliytxHKs1jwjU8F6DoIXBlADu0dZ/ToJgGmM2fMZxOpqKSkIw7hIvP
+	 m37Q6AMK73LIXKip7brd5H6Llw0XNcTV2TTDWg0+78IXW8UZeQvZFgMzQD1AmE2TQ+
+	 eqsi0bOrYkZK0MVT4EiycQwRG4Zo9d9ECk4/KL7Wtqj0ZO2u5Jv7Q6xQOgIfD/2dsu
+	 iCH27PqF3ftXw==
+Date: Wed, 14 Oct 2026 15:14:41 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: vjardin@free.fr
-Cc: Minghuan Lian <minghuan.Lian@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
-	Roy Zang <roy.zang@nxp.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
 	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Ioana Ciornei <ioana.ciornei@nxp.com>,
-	Vladimir Oltean <vladimir.oltean@nxp.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: layerscape: async probe by default
-Message-ID: <20261014193654.GA1656473@bhelgaas>
+	Lukas Wunner <lukas@wunner.de>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver OHalloran <oohall@gmail.com>,
+	Christian Koenig <christian.koenig@amd.com>,
+	Vitaly Prosyak <vitaly.prosyak@amd.com>,
+	amd-gfx@lists.freedesktop.org, Aditya Garg <aditya.garg@linux.dev>,
+	Jason Perlow <jperlow@gmail.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	Diederik de Haas <diederik@cknow-tech.com>,
+	linux-rockchip@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [GIT PULL] PCI fixes for v7.3
+Message-ID: <20261014201441.GA1661922@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,53 +56,40 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260928-for-upstream-pci-layerscape-async-probe-v1-1-76412d887baa@free.fr>
 
-On Mon, Sep 28, 2026 at 03:48:09PM +0200, Vincent Jardin via B4 Relay wrote:
-> From: Vincent Jardin <vjardin@free.fr>
-> 
-> dw_pcie_wait_for_link() polls for up to
->   PCIE_LINK_WAIT_MAX_RETRIES x PCIE_LINK_WAIT_SLEEP_MS (10 x 90 ms)
-> per controller.
-> 
-> The controllers are probed one after the other, so, it leads to slow
-> boot time.
-> 
-> On an LX2160A board with 4 enabled controllers and no link on any
-> of them, ls_pcie_driver_init took almost 4s.
+The following changes since commit cee9395acd8043be0644b25c34bfa86623f2b935:
 
-"ls_pcie_driver_init" doesn't exist; I suppose this means
-dw_pcie_host_init()?
+  Linux 7.3-rc1 (2026-08-30 13:34:40 -0700)
 
-> Probing the 4 in parallel allows to have it down to 1s.
-> 
-> The controllers are independent, other DWC based drivers are already
-> using async probing such as qcom, imx6, s32g, rcar-gen4 or stm32.
-> 
-> Signed-off-by: Vincent Jardin <vjardin@free.fr>
-> ---
->  drivers/pci/controller/dwc/pci-layerscape.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
-> index 14d6ac4fc53f..7f37a0537159 100644
-> --- a/drivers/pci/controller/dwc/pci-layerscape.c
-> +++ b/drivers/pci/controller/dwc/pci-layerscape.c
-> @@ -419,6 +419,7 @@ static struct platform_driver ls_pcie_driver = {
->  		.of_match_table = ls_pcie_of_match,
->  		.suppress_bind_attrs = true,
->  		.pm = &ls_pcie_pm_ops,
-> +		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
->  	},
->  };
->  module_platform_driver(ls_pcie_driver);
-> 
-> ---
-> base-commit: 94e8d4e94266bb9737a5963810a3f9365cb2f39d
-> change-id: 20260928-for-upstream-pci-layerscape-async-probe-084cae5d0907
-> 
-> Best regards,
-> -- 
-> Vincent Jardin <vjardin@free.fr>
-> 
-> 
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v7.3-fixes-5
+
+for you to fetch changes up to 4e9f69d08253471d92bcc46b363fbada06bd59c4:
+
+  PCI: dw-rockchip: Move INTx IRQ setup to probe (2026-10-12 17:01:54 -0500)
+
+----------------------------------------------------------------
+
+  - Leave ANFE masked on Apple T2 Secure Enclave, which fixes spontaneous
+    poweroff regressions on MacBookPro16,1 and likely other models with the
+    T2 caused by new Advisory Non-Fatal Error support (Jason Perlow)
+
+  - Move dw-rockchip INTx IRQ setup from rockchip_pcie_host_init(), where
+    it runs after every reset, to the rockchip_pcie_probe() path to avoid
+    installing new IRQ handler (which causes INTx IRQs to be lost) and
+    leaking an IRQ domain on every reset; fixes a regression added this
+    cycle (Shawn Lin)
+
+----------------------------------------------------------------
+Jason Perlow (1):
+      PCI/AER: Keep ANFE masked on Apple T2 Secure Enclave
+
+Shawn Lin (1):
+      PCI: dw-rockchip: Move INTx IRQ setup to probe
+
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c | 27 +++++++++++++--------------
+ drivers/pci/pcie/aer.c                        |  3 ++-
+ drivers/pci/quirks.c                          | 11 +++++++++++
+ include/linux/pci.h                           |  1 +
+ 4 files changed, 27 insertions(+), 15 deletions(-)
