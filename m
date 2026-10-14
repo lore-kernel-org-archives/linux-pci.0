@@ -1,109 +1,86 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACF36563FCB;
-	Wed, 14 Oct 2026 17:13:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAA78558210;
+	Wed, 14 Oct 2026 17:14:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791998019; cv=none; b=TmR46xWc8hIJ4IvEGpk6as6AVWJeYOYg8cLJu8VpWsiY6Etwq55Di9brtxN1VNpPFgqVivu6gXaX2OGBDv/yeJZ59cyHa+Dk6pFUtsmyvcQfeR/3xXLZnHxEsXmhpdaEogDwa6wsjDnCONL1EVeYc9EP6d417+YYuK6uD9+NTSk=
+	t=1791998083; cv=none; b=FzsQuUgz5ferg5TKrxusmzGfXzIH0yIE7L9N/24+sgZXrfDCaWNh/1xA0vjSlQK+1iKO4N0Ud5EJaRgKdO2nvOKwsYEgByyH1kHndShrnPk18tVzM4M1fiE09AKIxsAsLL9EA30PDtIHXGiB2meqx3IIWXQm0fmqEXQoRN/718k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791998019; c=relaxed/simple;
-	bh=7+/A0LoacZHohjvN4wXEm3+Dk2UyCqNWrHEmAESILnU=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=FV/2GlRM7sZYcHnC3KZNhkcVFOBC45+2c/QKFvEpA/SiAqMMdEhhdeFIr8L+ifQC2u+qexWNqXRqp4R+Q2ImsIhp3NljRrPMUcPp3DZLFTejZuVRR7er9fdgKOIqsgo3rtwYweU4XELQXpO0gtO3eWOW+E5TCOOwK1SEHQCHXoM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X3551b1+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791998083; c=relaxed/simple;
+	bh=GBCkDQ8AL+02BcVG2P+qW6AdE9bXqfUUzCHasNvZcG0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bsqktzhaLox5pyC40gDQD/jQ7qZYjgRwzpnjpbZw4TJIUT8Z+NqChjZZ7Rk18gS1VnzY5x69tVCowr3ZH5sqZyQQE9flsHBfGcBhiKUPCUhrR1JCtsR/3lbik8aVClpfxwtm3XpjqwqTuRGHgJdmTrxt6kFZqGpMbDvQn7k9Yd4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KFXwJ7/e; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X3551b1+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C0391F000C4;
-	Wed, 14 Oct 2026 17:13:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KFXwJ7/e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C69C1F000C4;
+	Wed, 14 Oct 2026 17:14:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791998011;
-	bh=TIXKZ1EmqWU/VUc5XZWDJM5gBsBtYEI+Xauv3IN18ZA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=X3551b1+kerHLKkgoLyynluZRnT89nmMlG9rlmLWW8V9C4QCUneI15E6Pz3rcKqf9
-	 mHnyjzbkFavDjWlFHf3RQCcLasCJq9HAfrPjw3hWkHHxXB/PP60RQaugTlwBPfl59b
-	 pouU/CIq0JT/xXxfgqJ8zi10vGqVshJB/NPqD4ah7IwicwPdAhINXhJbu3uBmxBBWH
-	 0eoTAFzK4Rtfqjsqm1ipr19biNYZmoLMgRC76IWxb4YPVFWDAFGMFWxDgGABfGSWKF
-	 jUMX9Z2ufQqTXjt7hhXt2o9rt+9NtBSFpf0Cr2/CbUP18y1wdK41b5qjpg8KBgtQSP
-	 ipexh62I4hXbQ==
-Date: Wed, 14 Oct 2026 12:13:30 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Stian Halseth <stian@itx.no>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Andreas Larsson <andreas@gaisler.com>, linux-pci@vger.kernel.org,
-	sparclinux@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-kernel@vger.kernel.org,
-	Tony Rodriguez <unixpro1970@gmail.com>
-Subject: Re: [PATCH] PCI: Set supported_speeds in set_pcie_port_type()
-Message-ID: <20261014171330.GA1640628@bhelgaas>
+	s=k20260515; t=1791998081;
+	bh=UosP9kkTOML1KxzD7EFqS7558a32ne/l8IFRfCNRGiI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=KFXwJ7/ehAnJv2ToopZ+B2JhcwuPBVgwHg5Dyk/uBfrcUGwdKvwkcf/6cYQD8uGFq
+	 Svifn6lX8osqJc1EIsr+B8HROp85/HpYh9wvwpVfBJmv2/upLNGzta4iWJzlYjUtun
+	 GXjxcrMi0p89AHznPmXBAXOro2wsXG04asxdomZeUS4mZ4pjBeY8gmxMUI1RpU/DcJ
+	 rg0c5YKSl5/SmcDsLYaGG1lMBqN1ZiKiR5kA9kZNFNrnE3Q3/0Vtbn/WhNdaQG0f3I
+	 9dBXbHJZHi0nAr7oh11Di3B3eEiwO6Wa9DENGIfD9gFxVIKFQHYuM3ePcbqMCnzw+g
+	 lzrDCJRTd65gg==
+Date: Wed, 14 Oct 2026 22:44:32 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Jim Quinlan <james.quinlan@broadcom.com>
+Cc: linux-pci@vger.kernel.org, Nicolas Saenz Julienne <nsaenz@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, linux-arm-kernel@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, 
+	Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH 00/13] PCI: brcmstb: Stop using chip numbers for
+ conditions
+Message-ID: <as-4akoLT9L2c086@debian>
+References: <20260911233541.1650895-1-james.quinlan@broadcom.com>
+ <179197952602.38040.4438252459530233972.b4-ty@b4>
+ <CA+-6iNwE935j4wn4BWxs+t1qh3iRtWb0xNjZ-hRS0j-tkLx8=w@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261007131304.309511-1-stian@itx.no>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CA+-6iNwE935j4wn4BWxs+t1qh3iRtWb0xNjZ-hRS0j-tkLx8=w@mail.gmail.com>
 
-[+cc Tony]
+On Wed, Oct 14, 2026 at 10:45:32AM -0400, Jim Quinlan wrote:
+> On Wed, Oct 14, 2026 at 8:05 AM Manivannan Sadhasivam <mani@kernel.org> wrote:
+> >
+> >
+> > On Fri, 11 Sep 2026 19:35:25 -0400, Jim Quinlan wrote:
+> > > PCI: brcmstb: Stop using chip numbers for conditions
+> > >
+> > > Much of the brcmstb PCIe driver code does (essentially) this:
+> > >
+> > >         if (pcie->chip == 0x1234 || pcie->chip == 0x5678) {
+> > >                 /* ... */
+> > >         }
+> > >
+> > > [...]
+> >
+> > Applied, thanks!
+> 
+> Hi Manivannan,
+> 
+> I apologize for not submitting a V2 promptly -- I thought that only
+> Sashiko was waiting for me :-).
+> I have a V2 series, where 10 V1 commits are unchanged, 3 are modified,
+> and 5 are new.
+> Shall I submit the changed/new commits in a new series since you have
+> applied V1?
+> 
 
-On Wed, Oct 07, 2026 at 03:13:04PM +0200, Stian Halseth wrote:
-> sparc64 and powerpc create PCI devices from the device tree in
-> of_create_pci_dev(), which calls set_pcie_port_type() but not
-> pci_setup_device(). Since d2bd39c0456b, supported_speeds is only set in
-> pci_setup_device(), so it stays 0 for these devices.
-> pcie_get_speed_cap() then returns PCI_SPEED_UNKNOWN, max_link_speed
-> reads "Unknown", and the failed link retraining quirk passes
-> PCI_SPEED_UNKNOWN to pcie_set_target_speed(), which warns on a SPARC
-> T7-1:
-> 
->   WARNING: drivers/pci/pcie/bwctrl.c:125 at pcie_set_target_speed+0x284/0x2e0
-> 
-> Set supported_speeds in set_pcie_port_type(), which all three paths
-> call.
-> 
-> Fixes: d2bd39c0456b ("PCI: Store all PCIe Supported Link Speeds")
-> Closes: https://github.com/sparclinux/issues/issues/109
-> Signed-off-by: Stian Halseth <stian@itx.no>
+Yeah, please do!
 
-Applied with Tony's Tested-by to pci/enumeration for v7.4, thanks!
+- Mani
 
-I added a stable tag since d2bd39c0456b appeared in v6.13.
-
-> ---
-> Tested on a SPARC T7-1: before, max_link_speed reads "Unknown" and the
-> warning above appears with CONFIG_PCIEPORTBUS; after, all 23 PCIe
-> devices report their real speed and the quirk lifts the 2.5GT/s
-> restriction without a warning. Not tested on powerpc.
-> 
->  drivers/pci/probe.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 27008e2ea5afc..52a79b033b069 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1651,6 +1651,8 @@ void set_pcie_port_type(struct pci_dev *pdev)
->  		pdev->aspm_l1_support = 1;
->  #endif
->  
-> +	pdev->supported_speeds = pcie_get_supported_speeds(pdev);
-> +
->  	parent = pci_upstream_bridge(pdev);
->  	if (!parent)
->  		return;
-> @@ -2074,9 +2076,6 @@ int pci_setup_device(struct pci_dev *dev)
->  
->  	set_pcie_untrusted(dev);
->  
-> -	if (pci_is_pcie(dev))
-> -		dev->supported_speeds = pcie_get_supported_speeds(dev);
-> -
->  	/* "Unknown power state" */
->  	dev->current_state = PCI_UNKNOWN;
->  
-> -- 
-> 2.43.0
-> 
+-- 
+மணிவண்ணன் சதாசிவம்
