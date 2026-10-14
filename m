@@ -1,95 +1,206 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58EC446D555;
-	Wed, 14 Oct 2026 06:50:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4369F361960;
+	Wed, 14 Oct 2026 06:52:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791960658; cv=none; b=uJvLyoYppeFkKfxB/b0QaSSs/Rxz1UEAE8pVfjJB9BVfGGoZE54tfWQdKEr5Ex1FT5OStkQMBV4nvix4rOnFHFgDk27lsfHtL96mFo+c3JNmTnnTn3uSKJVqSQT+G4mjtburPHsYiNTtYUf/3U42ElswRYfMLqsgHcz+DC1IkYc=
+	t=1791960781; cv=none; b=g7NjNNbELr/Bp6OL/OZOzOC3mVMO7wHHu7C7cyIsXDN/RqGsOoeLz6D1ZLiDUgpJ2mobm8Q/STbhbEfqlLYWUT4M21JI1TOO64S5/9vS+IHbBmSfUDxYieyBh1V3ed0v9MJm5gR9FndE3BvUshQ1OXGN1rMnC9yOGH+4l2Hqd6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791960658; c=relaxed/simple;
-	bh=RtL5f3/xfkbwf3PgcHK/lFdSYayMDKGyF+DgU7ozY2I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RIdfP4bTVSn2epZBJ9nqzwpUgVRiANi1F1Dqud75Ex6fEC/FKwgh8idshqXEcb3gEcC5qMwaocNetPzbbFj5I/O4LMzKTWdq773xom3FVw2LJGeceZ3Vm7TPQoos+S+1Qfk2FmPoD8XtJo/1M5olzElksHtS0HQEI+30rGvzBl0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QiTD6qvz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791960781; c=relaxed/simple;
+	bh=kvjDjhwBqEIHq59YMfhEgAZVWWGxX4WxE1hAwWgLpfI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=K+8h72rpdOJbFs6FJat32WKHU1UfzA5aaAECgUWmRaG3LsvLO3hJGLkNluDjGxQ+2h657CCtBuGYvhe2GYaJZLmA4MBAmbmN0eK0JZ0KUC6I2mL9zUrXLIxWRKQY045Mum1qqAa4QcUBUxjLVT1Jo25BQRuIQo2kJAzf8iCGUNw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Waj8/XzH; arc=none smtp.client-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QiTD6qvz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED7E61F000FF;
-	Wed, 14 Oct 2026 06:50:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791960655;
-	bh=bV1zn0uXJvtOvThcSa3dCZxRP7Qp0g86hwJjMMOUPco=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=QiTD6qvzbvE2rgpkA4tjnmGVYiZVi8I5Vkvp2eFVw44MBwb94b3fBr8mcJE6Xsf+i
-	 sdI8HB3RxYk8MFFDg9ofDZxxpkT5vmYD7BWLXpz6hW3fxXCpGjYc/pJaigtB95TJWC
-	 Dqc34R6sX/hg8C9RPL4gUjc4sb0S+ykxGVPoSJGZeChOWejQA9Le8RSqM89NIMBCSL
-	 HJhtRvcbnRIMDTzFzGojgCLPWedcFKiO4fG1R3ytySvPQAHn5VYWPCQgaqGK5XRPVi
-	 umihsnuAMfutWFsctHa+o3LVdO+vJaYIAknYhMKaoIaEz4rObJi4xh1ohe0Yu7gSkl
-	 ul5q7jUw8UU8w==
-Date: Wed, 14 Oct 2026 09:50:51 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
-	media-ci@linuxtv.org
-Subject: Re: [PATCH v11 10/19] PCI/P2PDMA: Reject Translated Requests blocked
- by Translation Blocking
-Message-ID: <20261014065051.GV219304@unreal>
-References: <20261013-fix-p2p-acs-v4-0-v11-0-72cf8c96e617@nvidia.com>
- <20261013-fix-p2p-acs-v4-0-v11-10-72cf8c96e617@nvidia.com>
- <sashiko-outbox-169939@kernel.org>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Waj8/XzH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=TnNnbmu9YS7sz+a4d+0CADyh+jpQYkGZAne9eMQmnk4=;
+	b=Waj8/XzHQxCH9EQsDAWp/c31srgUtnbnD764g/uY6O+wrR0ijoUq/NL2PAlOPa
+	MqBoemKPiDALPlGR7UXEcc0h2DJqyGPrJVt0S7pSMDAcjFevzWrJYhy0IqL9+OJ8
+	Sq+o9gPzEbCrZP6479Vc6K2H1dAPue9JznjzFd0Li7nKc=
+Message-ID: <40c740d4-d316-41af-a878-837615947380@163.com>
+Date: Wed, 14 Oct 2026 14:52:37 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <sashiko-outbox-169939@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: dwc: Describe DWC PCIe fields with full masks and
+ FIELD_PREP()
+To: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+ mani@kernel.org, jingoohan1@gmail.com
+Cc: robh@kernel.org, a-garg7@ti.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260930013842.82476-1-18255117159@163.com>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <20260930013842.82476-1-18255117159@163.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:PygvCgDX32G1Js9qKCEUEg--.36534S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW3Jr15Wr4rZFyUGF1ruw1fCrg_yoWxKw13p3
+	W3JaySya1UtFsxuw1Ik3Z5G3W3XrnrArWDX3yv9w1xKFs3Zrn7WF409a95trs7ZFWIqF1U
+	Kr4qy34xWFW5AwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U53kNUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7BZF6GrPJrZ3dAAA3h
 
-On Tue, Oct 13, 2026 at 02:49:05PM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [High] pci/p2pdma: deadlock in calc_map_type_and_dist() due to non-IRQ-safe xa_store()
-> --
-> 
-> commit f019da119f00a99a75cbfe2deec0db131a89232d
-> Author: Leon Romanovsky <leon@kernel.org>
-> 
-> PCI/P2PDMA: Reject Translated Requests blocked by Translation Blocking
->     
-> ACS Translation Blocking rejects upstream Memory Requests with a Translated
-> address before any peer-routing controls apply, per PCIe r7.0 sec 6.12.1.1.
-> P2PDMA ignores that bit and can report a route whose ports reject the
-> Requester's address type.
->     
-> Add PCI_ACS_P2PDMA_BLOCKED and scan the ports traversed by each route. A
-> direct route passes only ports below the divergence; a host-bridge route
-> also passes the common port and its ancestors. Reject the affected class
-> without falling back to another route, and preserve blocking precedence
-> over internal-route restrictions.
-> 
-> > diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> > index 785e4668a2af5..fc4dea28c8606 100644
-> > --- a/drivers/pci/p2pdma.c
-> > +++ b/drivers/pci/p2pdma.c
-> [ ... ]
-> > @@ -1162,6 +1252,11 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
-> >  		}
-> >  	}
-> >  
-> > +	path.tb_on_path = pci_p2pdma_path_blocks_translation(client, a);
-> > +	if (b_child)
-> > +		path.tb_above_divergence =
-> > +			pci_p2pdma_path_blocks_translation(b_child, NULL);
-> > +
-> >  	/*
-> >  	 * The walk and the config reads above serve every class; only the
-> >  	 * decision below depends on the kind of TLP being routed.
-> 
-> [Severity: High]
-> Does xa_store() use an IRQ-safe lock here?
+Hello Mani,
 
-Same, this not-safe path is not taken in current codebase.
+Could you please handle this patch for me? It was suggested by Bjorn 
+last time.
 
-Thanks
+Best regards,
+Hans
+
+
+On 9/30/26 09:38, Hans Zhang wrote:
+> Several DWC PCIe register fields are described with a shift macro next
+> to their mask, or with only a shift and the field width implied by the
+> value written.  Document the field position and width in a single full
+> mask and use FIELD_PREP() to encode it.
+> 
+> No functional change intended.
+> 
+> Signed-off-by: Hans Zhang <18255117159@163.com>
+> ---
+> - Based on the controller/dwc branch.
+> ---
+>   .../pci/controller/dwc/pcie-designware-ep.c   |  2 +-
+>   drivers/pci/controller/dwc/pcie-designware.h  | 12 ++++------
+>   drivers/pci/controller/dwc/pcie-tegra194.c    | 22 +++++++++----------
+>   3 files changed, 16 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> index 0262d85ed390..198823f105c5 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> @@ -1077,7 +1077,7 @@ int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep, u8 func_no,
+>   	if (!ep_func || !ep_func->msix_cap)
+>   		return -EINVAL;
+>   
+> -	msg_data = (func_no << MSIX_DOORBELL_PF_SHIFT) |
+> +	msg_data = FIELD_PREP(MSIX_DOORBELL_PF_MASK, func_no) |
+>   		   (interrupt_num - 1);
+>   
+>   	dw_pcie_writel_dbi(pci, MSIX_DOORBELL, msg_data);
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index aea474ad803c..1ff6ed1f9f0b 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -85,9 +85,7 @@
+>   /* Common Clock N_FTS */
+>   #define  PORT_AFAC_CC_N_FTS(n)		FIELD_PREP(PORT_AFAC_CC_N_FTS_MASK, n)
+>   #define  PORT_AFAC_ENTER_ASPM		BIT(30)		/* ASPM L1 Entry Control */
+> -#define  PORT_AFAC_L0S_ELS		24		/* L0s Entrance Latency shift */
+>   #define  PORT_AFAC_L0S_ELM		GENMASK(26, 24)	/* L0s Entrance Latency mask */
+> -#define  PORT_AFAC_L1_ELS		27		/* L1 Entrance Latency shift */
+>   #define  PORT_AFAC_L1_ELM		GENMASK(29, 27)	/* L1 Entrance Latency mask */
+>   
+>   #define PORT_LINK_CTRL			0x710		/* Port Link Control Register */
+> @@ -161,7 +159,6 @@
+>   #define  GEN3_CTRL_EQ_PHASE_2_3		BIT(9)		/* Equalization Phase 2 and Phase 3 */
+>   #define  GEN3_CTRL_RXEQ_RGRDLESS_RXTS	BIT(13)
+>   #define  GEN3_CTRL_GEN3_EQ_DISABLE	BIT(16)		/* Equalization Disable */
+> -#define  GEN3_CTRL_RATE_SHADOW_SEL_SHIFT 24		/* Rate Shadow Select shift */
+>   #define  GEN3_CTRL_RATE_SHADOW_SEL_MASK	GENMASK(25, 24)	/* Rate Shadow Select mask */
+>   
+>   #define GEN3_EQ_CTRL			0x8A8		/* Gen3 EQ Control */
+> @@ -230,7 +227,7 @@
+>   #define ATU_UPPER_LIMIT			0x020
+>   
+>   #define MSIX_DOORBELL			0x948
+> -#define  MSIX_DOORBELL_PF_SHIFT		24
+> +#define  MSIX_DOORBELL_PF_MASK		GENMASK(28, 24)
+>   
+>   /*
+>    * eDMA CSRs. DW PCIe IP-core v4.70a and older had the eDMA registers accessible
+> @@ -278,15 +275,14 @@
+>   #define RAS_DES_EVENT_COUNTER_CONTROL	0x8
+>   #define EVENT_COUNTER_ALL_CLEAR		0x3
+>   #define EVENT_COUNTER_ENABLE_ALL	0x7
+> -#define EVENT_COUNTER_ENABLE_SHIFT	2
+> -#define EVENT_COUNTER_EVENT_SEL_MASK	GENMASK(7, 0)
+> -#define EVENT_COUNTER_EVENT_SEL_SHIFT	16
+> +#define EVENT_COUNTER_ENABLE_MASK	GENMASK(4, 2)
+> +#define EVENT_COUNTER_EVENT_SEL_MASK	GENMASK(23, 16)
+> +#define EVENT_COUNTER_GROUP_SEL_MASK	GENMASK(27, 24)
+>   #define EVENT_COUNTER_EVENT_Tx_L0S	0x2
+>   #define EVENT_COUNTER_EVENT_Rx_L0S	0x3
+>   #define EVENT_COUNTER_EVENT_L1		0x5
+>   #define EVENT_COUNTER_EVENT_L1_1	0x7
+>   #define EVENT_COUNTER_EVENT_L1_2	0x8
+> -#define EVENT_COUNTER_GROUP_SEL_SHIFT	24
+>   #define EVENT_COUNTER_GROUP_5		0x5
+>   
+>   #define RAS_DES_EVENT_COUNTER_DATA	0xc
+> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+> index 8c610212a180..285a38178da8 100644
+> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+> @@ -622,10 +622,10 @@ static inline u32 event_counter_prog(struct tegra_pcie_dw *pcie, u32 event)
+>   
+>   	val = dw_pcie_readl_dbi(&pcie->pci, pcie->ras_des_cap +
+>   				RAS_DES_EVENT_COUNTER_CONTROL);
+> -	val &= ~(EVENT_COUNTER_EVENT_SEL_MASK << EVENT_COUNTER_EVENT_SEL_SHIFT);
+> -	val |= EVENT_COUNTER_GROUP_5 << EVENT_COUNTER_GROUP_SEL_SHIFT;
+> -	val |= event << EVENT_COUNTER_EVENT_SEL_SHIFT;
+> -	val |= EVENT_COUNTER_ENABLE_ALL << EVENT_COUNTER_ENABLE_SHIFT;
+> +	val &= ~EVENT_COUNTER_EVENT_SEL_MASK;
+> +	val |= FIELD_PREP(EVENT_COUNTER_GROUP_SEL_MASK, EVENT_COUNTER_GROUP_5);
+> +	val |= FIELD_PREP(EVENT_COUNTER_EVENT_SEL_MASK, event);
+> +	val |= FIELD_PREP(EVENT_COUNTER_ENABLE_MASK, EVENT_COUNTER_ENABLE_ALL);
+>   	dw_pcie_writel_dbi(&pcie->pci, pcie->ras_des_cap +
+>   			   RAS_DES_EVENT_COUNTER_CONTROL, val);
+>   	val = dw_pcie_readl_dbi(&pcie->pci, pcie->ras_des_cap +
+> @@ -661,8 +661,8 @@ static int aspm_state_cnt(struct seq_file *s, void *data)
+>   			   EVENT_COUNTER_ALL_CLEAR);
+>   
+>   	/* Re-enable counting */
+> -	val = EVENT_COUNTER_ENABLE_ALL << EVENT_COUNTER_ENABLE_SHIFT;
+> -	val |= EVENT_COUNTER_GROUP_5 << EVENT_COUNTER_GROUP_SEL_SHIFT;
+> +	val = FIELD_PREP(EVENT_COUNTER_ENABLE_MASK, EVENT_COUNTER_ENABLE_ALL);
+> +	val |= FIELD_PREP(EVENT_COUNTER_GROUP_SEL_MASK, EVENT_COUNTER_GROUP_5);
+>   	dw_pcie_writel_dbi(&pcie->pci, pcie->ras_des_cap +
+>   			   RAS_DES_EVENT_COUNTER_CONTROL, val);
+>   
+> @@ -680,8 +680,8 @@ static void init_host_aspm(struct tegra_pcie_dw *pcie)
+>   							PCI_EXT_CAP_ID_VNDR);
+>   
+>   	/* Enable ASPM counters */
+> -	val = EVENT_COUNTER_ENABLE_ALL << EVENT_COUNTER_ENABLE_SHIFT;
+> -	val |= EVENT_COUNTER_GROUP_5 << EVENT_COUNTER_GROUP_SEL_SHIFT;
+> +	val = FIELD_PREP(EVENT_COUNTER_ENABLE_MASK, EVENT_COUNTER_ENABLE_ALL);
+> +	val |= FIELD_PREP(EVENT_COUNTER_GROUP_SEL_MASK, EVENT_COUNTER_GROUP_5);
+>   	dw_pcie_writel_dbi(pci, pcie->ras_des_cap +
+>   			   RAS_DES_EVENT_COUNTER_CONTROL, val);
+>   
+> @@ -715,9 +715,9 @@ static void init_host_aspm(struct tegra_pcie_dw *pcie)
+>   	/* Program L0s and L1 entrance latencies */
+>   	val = dw_pcie_readl_dbi(pci, PORT_AFAC);
+>   	val &= ~PORT_AFAC_L0S_ELM;
+> -	val |= (pcie->aspm_l0s_enter_lat << PORT_AFAC_L0S_ELS);
+> +	val |= FIELD_PREP(PORT_AFAC_L0S_ELM, pcie->aspm_l0s_enter_lat);
+>   	val &= ~PORT_AFAC_L1_ELM;
+> -	val |= (pcie->aspm_l1_enter_lat << PORT_AFAC_L1_ELS);
+> +	val |= FIELD_PREP(PORT_AFAC_L1_ELM, pcie->aspm_l1_enter_lat);
+>   	val |= PORT_AFAC_ENTER_ASPM;
+>   	dw_pcie_writel_dbi(pci, PORT_AFAC, val);
+>   }
+> @@ -881,7 +881,7 @@ static void config_gen3_gen4_eq_presets(struct tegra_pcie_dw *pcie)
+>   
+>   	val = dw_pcie_readl_dbi(pci, GEN3_CTRL);
+>   	val &= ~GEN3_CTRL_RATE_SHADOW_SEL_MASK;
+> -	val |= (0x1 << GEN3_CTRL_RATE_SHADOW_SEL_SHIFT);
+> +	val |= FIELD_PREP(GEN3_CTRL_RATE_SHADOW_SEL_MASK, 0x1);
+>   	dw_pcie_writel_dbi(pci, GEN3_CTRL, val);
+>   
+>   	val = dw_pcie_readl_dbi(pci, GEN3_EQ_CTRL);
+> 
+> base-commit: 4996364a46e738cc455f5fa9b8b09f2f3348bcc9
+
