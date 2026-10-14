@@ -1,76 +1,95 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C05B42DE70D;
-	Wed, 14 Oct 2026 13:22:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEC7D4EFFD2;
+	Wed, 14 Oct 2026 13:23:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791984174; cv=none; b=EvtKcBuTA0qX/vIZxS+QGpzCX7kuORRHEyJ547slP5P3OMHvGTDk45R0NcwXmWOopvRXxUV4MbWibTZRXTMmDJQepVK/RNU9Cdg8BHegP+gvPK1tC0GV4j6Ph8Wai7tTR9AwJptbsLrYZhscjMV3OaQEAR2jhimDFx+WwclvmVg=
+	t=1791984236; cv=none; b=QUje6wPr4lPEuX2o/2oH7R6OtYNcvYBGAMj9jBvNNEyp0S2I5NRV+qoDfs8KOWWTLbFEKsN1tZQOpVtbh6yAuNuQOKZYddSgGxuauv2EZrSEbIgsusSFAQ0KvGWbxJecXOc8O3eSFIUiFlGWkuev2GyX7OfHrtGYmrfXgdEGDyw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791984174; c=relaxed/simple;
-	bh=3LBeTG5JL3ArwbyvVEWmDsxzd9qaDDlWSgw7hLwjfSM=;
-	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=lIBD3Z7IfOiLUD0DmlaG829gTYAyowZRTG2papMOPi/XhfmxeoKkXTSqfMgmlwceNA0S5Wg4WJo+9X+m4RffPuQAukeg+sardJffo2z9Z+3dVXMobFlVVBgFXZ7oyybHsBKZfehNqsrGcF9UwBF1fXh1sAJaDqsPFuaoOj3DauU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB6481F000FF;
-	Wed, 14 Oct 2026 13:22:48 +0000 (UTC)
+	s=arc-20240116; t=1791984236; c=relaxed/simple;
+	bh=1jAEigErQV8jyVaUVruOdi2WmK3q2Uuk/QLlFFuhaFc=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=iQqexi8ZFLKaAnnd2ZV3wQsks6oOMzuyzjNDcIcwxYdfG6v+Vjikugr1/gYI3//+VvmexHrkDwct91xtDETlGVD3pyTiMwAyi2uHXn4IfIZshzhUb1jj0ib57Mc8ZpkybqARJmLcR0f3kfcT1jUJfi2NXOjHOdvUkatjESvG69c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VY1TVQtl; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VY1TVQtl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 885C91F000FF;
+	Wed, 14 Oct 2026 13:23:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791984234;
+	bh=zh7/Ug58+Id/pjTRVFnSqm3xMVxCch1on+6+IzYcFOo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=VY1TVQtlH3RX+/ZXBgKvz5jDQWSl87MupN8zI9hC24rJvxTxwxBJ4XPc3k8kRNP73
+	 BJUQ8gOni1xH2vxvOF7XI7TKoskBT6qkRLbiR7u5xhazxbzMIlK/RpjbBC6lBp+AVj
+	 gkt6iyd/HWLGsXX5bI3inKNXCzcuB81i3Bi01jNQ2FMCvJRHv6Po/8i3vEZIo63f9g
+	 TaU5SxADJQiyj42AB8bP1vly6Wa+mrd/1/KIY4SwlLHCs93QU/imKD1M2mJndebfi4
+	 n+1QmTBNHvqDZ51qsxO3RDQuiAZXeMnp0pXpWcRVh8cP4p/5V/LPvX7YZ/pScmF3an
+	 4AflKGZkey73g==
+Date: Wed, 14 Oct 2026 08:23:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
+	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
+	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>
+Subject: Re: [PATCH v11 00/19] PCI/P2PDMA: Route peer-to-peer DMA by TLP class
+Message-ID: <20261014132353.GA1625948@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH 0/5] PCI: dwc: Clean up RAS-DES and register field
- handling
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- Krzysztof Wilczynski <kwilczynski@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
- Rob Herring <robh@kernel.org>, Thierry Reding <thierry.reding@kernel.org>, 
- Jonathan Hunter <jonathanh@nvidia.com>, Vidya Sagar <vidyas@nvidia.com>, 
- Niklas Cassel <cassel@kernel.org>, linux-kernel@vger.kernel.org, 
- linux-tegra@vger.kernel.org
-In-Reply-To: <20260923071706.1134320-1-mmaddireddy@nvidia.com>
-References: <20260923071706.1134320-1-mmaddireddy@nvidia.com>
-Date: Wed, 14 Oct 2026 18:52:40 +0530
-Message-Id: <179198416084.63727.13083524527951291207.b4-review@b4>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=816;
- i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=3LBeTG5JL3ArwbyvVEWmDsxzd9qaDDlWSgw7hLwjfSM=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqz4InxZf1mKO6/qgBeHrL14+dowMw1JC6PNIcZ
- fnoxBPAbnaJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCas+CJwAKCRBVnxHm/pHO
- 9affB/4ttZ1fLb5BbaJSoG+QfHZRo+OykgU0HH+kEbjqqEsCdrQ64TWJEP/WYje9z2O14kuYgrl
- 4d8Fo5kHlWq4L+jnKjoiU6Pay10APzI9lVlpNDceHaqH/Azgbav/pFs0BFT5Y07Xres5gsF2aS7
- 6tPnl9RC3z/lGtB+xnChlYVPWePut2cgPwqTQWSC6XaRToR2Kz2vplHyte2f/JI2RDaS6INmNr1
- f78w17OgmzZAPQbOqlqfn0cHC5Xpu/2syMQI2agKm1hGVipvHYxYFhUQQpve5v7n+gKKVb0CW3X
- 9pe00iqi02rPDkpi6cU6wOUjov7eo3Oy4UbcHJX3LHAqwAeW
-X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261014065347.GW219304@unreal>
 
-> This series addresses review feedback around register field handling in the
-> DWC PCIe code and the Tegra194 PCIe driver.
+On Wed, Oct 14, 2026 at 09:53:47AM +0300, Leon Romanovsky wrote:
+> On Tue, Oct 13, 2026 at 05:25:08PM +0300, Leon Romanovsky wrote:
+> > PCI P2PDMA applies Request and Completion Redirect throughout both paths.
+> > This misclassifies asymmetric and nested switches, and reports one answer
+> > for every kind of TLP.
+> > 
+> > Three ACS controls act on TLP attributes the Requester chooses rather
+> > than on the topology: Translation Blocking and Direct Translated P2P act on
+> > a Request's Address Type, and Completion Redirect skips Completions carrying
+> > Relaxed Ordering.
+> > 
+> > Evaluate each direction at the path divergence, decide every class from the
+> > one walk, and treat a client with ATS enabled as translating unless its
+> > driver declares per-mapping ATS.
+> > 
+> > This completes the P2PDMA side; dma-buf and mlx5 follow separately.
+> > 
+> > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+> > ---
+> > Changes in v11:
 > 
-> The first patches add shared masks for the RAS-DES event counter fields,
-> convert Tegra194 register programming to FIELD_PREP()/FIELD_MODIFY(), and
-> drop shift macros that become unused after the conversion.  The final
-> patches make Tegra194 use the common RAS-DES selector definitions and
-> consolidate the event counter field definitions in the DWC header.
 > 
-> There should be no functional change intended beyond making the
-> bitfield programming explicit and keeping the shared RAS-DES definitions in
-> one place.
+> Bjorn,
 > 
+> Could you please save me from the AI-bot attack? Every rebase seems to
+> uncover another bizarre pre-existing issue. It never ends.
 
-Series LGTM! Please rebase on top of pci/controller/dwc branch and resend.
+Can you elaborate?  I'm not sure what you'd like me to do here.  I
+don't control the Sashiko reviews, and I thought Sashiko was recently
+changed to put pre-existing issues in a database but not in the email
+responses.
 
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
-
+Bjorn
