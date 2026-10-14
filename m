@@ -1,49 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ED49527583;
-	Wed, 14 Oct 2026 13:34:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A5B35304C5;
+	Wed, 14 Oct 2026 13:36:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791984872; cv=none; b=Meh6n5MtyPcmqKaAbBLfeviaD0WZSHqvp8wlEZ/3aRI3uxsG+pCI9FxfzFhUr385YfvIfgdcYDF+ujCwLtWWX4/sGP0vDSahfba82byW/la92LuDHGpa/KQijypUPcab7LiGjqoVxCtvnF/QRyeP9BZP2enXLg0ggKDAHgrO4F8=
+	t=1791984991; cv=none; b=Ikrxbm2KkqyRy5bI+/rfK7gG6U4alzObowqEv1YVXxKYIKHVtauGsaNCeITcScRe30n8l+zD8JrzYuFVuUxzOH/P5Inw1cuAxLTbTCSuPUuod7SsIZxzyV11MBK8UTg5dFGO6nE8jzC1tgoiDK0JljV+kxwCkNgcYOj+xr6q9S8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791984872; c=relaxed/simple;
-	bh=lEKCRx7hK7j5m6NDEekE2ZI2bUyezmm8XOYLEPhICR8=;
+	s=arc-20240116; t=1791984991; c=relaxed/simple;
+	bh=q6gyLLpwOpTv4wD53GWhRELlUKutlNHW545+PEMzwSA=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=oGyrHV94eFtSVKpXL8UCyyrfSGHSTSwJFxfZW8vIHBKDbB6nXEEYJzsb5oXmHND3yxbU5c1H7kdiTJcwZAGDr9wwzXAGigSlKJAGEAJTGwVxbFFlsxbLsTmDPUSEUa5IMI3PuMHxlaxrf/8ZU3yMhUFMtR2vEXl1g61+j0HtEFk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H6NqJWrb; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=dncb29RME5uwRgb/5Yqgt9kvSr2+SZDeK6Q8K6iWdwYWHlg8frxn842klLFE384bsLI92Isxtl44LOpQbAXua23eYZTYuSRCkhERzUifdQ/cZhoeSoHovM/YeysyqSVIhKyS0q+S1Empa2nkCWxxgQQgWiPhpllQhz1dDz6Us0c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IOPD676B; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H6NqJWrb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2A6F1F0089C;
-	Wed, 14 Oct 2026 13:34:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IOPD676B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AD2C1F000FF;
+	Wed, 14 Oct 2026 13:36:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791984864;
-	bh=XZV9wpLaB7GSx4PtVOFkB/b4sfjtm/46M63tFH45CRE=;
+	s=k20260515; t=1791984987;
+	bh=/Kg+A+xrZdns/Gt1pdYxZtMAWhuUXTyI/p/XIqtBsPU=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=H6NqJWrbi7Q7UOF7JBoq4heJwKmi5w7AjaTmDd58ZIIUNVtOrN2VWklG92FxN2PQV
-	 KYFvWpkK3ajLvCvw92WLcZQE5vZW+auWA1y3ysCoZPeODAXuQod/WKSAa9c0UpXDeY
-	 3/gR/kXCiLH3pP0H1EUhaFk/jTJeipIPiIMl2B6ple+GGz1cH7XfoJ41iNwpQEKboh
-	 ZVzSa2ul5RtabFmxnPDHmBCbEY+NKGutX0l99DzpzhT90o8pDCevIjnitpvrVPptiP
-	 IWIuxJYV+CeYsopFayTEvpgGpAjnW0rzNSBKX55JYZjc+s6mM2RNKuS/QINWvefxCp
-	 Wz19rT3phBcYQ==
+	b=IOPD676Bzqg8w3PuxzHaWtPLz4Fr1BGavAD4ZKepp+VzH02KwLCArkK2JUaJy5VYC
+	 GmztHM30ObE8AOA7cr61nyWpFnePu7d8J3Pks9mbG8Tb1fkZ1FOCX+1hT+zV6IL3Wq
+	 RYZcSCn7zwieXuGT55CchkP8tFFxchV6wQFcHoYf8P+NMSthRHY7V9RwETLF+mwieI
+	 rqQdjhZfKPPDDnVAuRg5fS/cL+dRV/1SKhDEWvSmaRhjaT/wk1X+d0Ly1vCoG7Lu/1
+	 lkS4LaGJfzGirFDwp5wMFysaLGVKAcJy5ssoszF04c6Bcp8X/x/iDClgu6PPu0XgAf
+	 qEeSpJj+3eNbw==
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Semih Baskan <strst.gs@gmail.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+To: Minghuan Lian <minghuan.Lian@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>, 
+ Roy Zang <roy.zang@nxp.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
  =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Rob Herring <robh@kernel.org>, Ray Jui <rjui@broadcom.com>, 
- Scott Branden <sbranden@broadcom.com>, 
- =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>, 
- =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>, 
- Florian Fainelli <florian.fainelli@broadcom.com>, 
- Arnd Bergmann <arnd@arndb.de>, Rosen Penev <rosenp@gmail.com>, 
- Rani Hod <rani.hod@gmail.com>, bcm-kernel-feedback-list@broadcom.com, 
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-In-Reply-To: <20261013220421.1588051-1-bhelgaas@google.com>
-References: <20261013220421.1588051-1-bhelgaas@google.com>
-Subject: Re: [PATCH v4 0/2] PCI: iproc-bcma: Use EROM instead of devicetree
-Message-Id: <179198485820.77319.12457284951144723062.b4-ty@b4>
-Date: Wed, 14 Oct 2026 19:04:18 +0530
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Ioana Ciornei <ioana.ciornei@nxp.com>, 
+ Vladimir Oltean <vladimir.oltean@nxp.com>, Vincent Jardin <vjardin@free.fr>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev, 
+ linux-kernel@vger.kernel.org
+In-Reply-To: <20260928-for-upstream-pci-layerscape-async-probe-v1-1-76412d887baa@free.fr>
+References: <20260928-for-upstream-pci-layerscape-async-probe-v1-1-76412d887baa@free.fr>
+Subject: Re: [PATCH] PCI: layerscape: async probe by default
+Message-Id: <179198497640.63727.7466078377590135207.b4-ty@b4>
+Date: Wed, 14 Oct 2026 19:06:16 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -53,25 +50,27 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=303;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=bIScKkSRWfgKMp5sG5Isx9f9wVbp2+a5UTcxtA0Zz2o=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqz4VV1pY342QQGnH8cFuzx4aa0fkm4cHc0AiK7
+ +xJU8Y3iL6JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCas+FVQAKCRBVnxHm/pHO
+ 9XC+B/0ZHyHZhsScilHuWvjjib7MCUyNylWS37lr4ITYD4lMWo+3rdnEyjgV9vXzxi0hpamuRKq
+ dquWb/DbCBlgT5aenUd7qndALvWtkTK//owK7DqOL/W4q4ElEKL7xqps5nrJghYX/vZtEId+dEl
+ bRjtbwKSiuUZCh19G4f4P4rvwV1UmoBN7wYsWGkH52WEURKKAbPRTjl+Zpc2G8Dn+SLzceMOSK2
+ CTlvecW3mPlO5rSLrxADHJuRiDsZatXJYqtv6wzfmS4Nzb0Q8b3l2bM77KOcBInbRzhTeiEHJo5
+ WucunzBLhRoRKzKTunS3JDCh5K4sVhQ1WmsLA6CdqSodHGKU
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
 
-On Tue, 13 Oct 2026 17:04:19 -0500, Bjorn Helgaas wrote:
-> This is a combination of these two patches:
-> 
->   [PATCH v3] PCI: iproc: Use the EROM outbound window on BCMA
->   https://lore.kernel.org/all/20260807160526.379-1-strst.gs@gmail.com
-> 
->   [PATCH] PCI: iproc: Use pci_alloc_host_bridge() on BCMA
->   https://lore.kernel.org/all/20260912043626.437-1-strst.gs@gmail.com
-> 
-> [...]
+On Mon, 28 Sep 2026 15:48:09 +0200, Vincent Jardin wrote:
+> PCI: layerscape: async probe by default
 
 Applied, thanks!
 
-[1/2] PCI: Expose devm_pci_alloc_host_bridge_release()
-      commit: 4e93e052afad91ad28e8343d3777c1e5ab8c24d2
-[2/2] PCI: iproc: Use the EROM outbound window on BCMA
-      commit: 694a9f52a937f272d8aa6e845765e37118c10e17
+[1/1] PCI: layerscape: async probe by default
+      commit: fd592bcb77f834564e787b8c809fa01f1af81731
 
 Best regards,
 -- 
