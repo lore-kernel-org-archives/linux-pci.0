@@ -1,182 +1,90 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B59BD274650
-	for <linux-pci@vger.kernel.org>; Wed, 14 Oct 2026 05:55:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 580DD1D9A66;
+	Wed, 14 Oct 2026 06:03:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791957311; cv=none; b=QEndub6FR9q6w+b+Oc212ZIYfQMblhK7RWt6otzZZKRk89NIbKL9TE3q80N+ktIWrwcP9w5mMCkAeUPRdFvu5WvJbbbVro3EOzRIESL13f5vYmdh2ddCWv6jYXYp6STNLiz73hG7UXTScJMrvdGHHphTGKCCJs1OAAsyE1yEL+U=
+	t=1791957802; cv=none; b=tdLv1Yh/SMp2nTQYRoNqO/P10G9Lu0KlRW43eCG3e6/HPAMh7lGsbuPXHj7m8x7xu/TwFEItEasnGno/ffG1Qs9khYLJJ+npW7VuTPX201Qkijg2CP1XSkh1t07fy9JGxR3GRYbWyqDDP2YTEyL0otpm+14EHifiq78AaBdzKWM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791957311; c=relaxed/simple;
-	bh=v/XJD0u0mRGrnYfuyBZTGqSJ1wo4h9aPIrP/FnjLRNM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=a1n4vZJk1fcFfHRr5tYrEcmIIzG5XQJgsrxwdDnYuoFrXMyzih4/8MaeSRbtYdHVywbkesRijQHefdYTiAP4y4pGzunWmRe21lQUeCeH9npUK2ee2Fvf7xSgHMj+yuoYsw02cpBESlhtj5PjbDrtRSGqrPJf+Rh7GVza9JqXH+Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FLtn9C0g; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791957802; c=relaxed/simple;
+	bh=4MTLOAA9ntn7SODjZIkNJoO1rqcau6BHexLg21k5OJk=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=HQktNLDpoqupaYkpIKw/RELdVuY4FOMNbbLArjZp30ShG14j8bT1/VGURSjOkKSF+kFw2Hk6O/fOu/UMOP/ATLpPKkDZssSmiH7dqbJO1omlv+QMa/NBQUUeGhpmADRHD93SRlIrcpg6wbkTYfZ7Koey9kmekmYE6gU1lFxnYpA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GMpGHFpH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FLtn9C0g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A48DF1F000FF;
-	Wed, 14 Oct 2026 05:55:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GMpGHFpH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 008FE1F000FF;
+	Wed, 14 Oct 2026 06:03:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791957310;
-	bh=h9yPdE1XiSsicQyy1XxmF2RPe73Zlckr4rKj09LKzjs=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=FLtn9C0goJ/TCVzbkwl7YikGbnMpmyCklY35gBV/qMoZneru/OVRZYmhSt+S1rhfp
-	 l4OpSMNuVw8zvpM4f5sPGH9jpZ0xJMMCtGwGg+bM5z7qnuUZSIlcSYAb4ijgS0TTJ4
-	 kyVj246HsVllG2aFnioxQhSjXNWlGk9Nr+7Bk98ou6RIjxl7sEBE0lUrSGaIc+1+BM
-	 +nZo6QGUg5KAJggmaAyRJIJCKHzjlseLe2qvyLV156efwbCRSZ2cukU4rXX5ZovBfV
-	 TXSOvonEgCJ2H1uQjbb2hvJn7n3q06oFtkGfwxA897yaPN3XsKXHQvPDExClbu0SQN
-	 eI5qAZI5R6APQ==
-Message-ID: <8a8fc5b8-cccf-4849-a0f4-b7878f1de511@kernel.org>
-Date: Wed, 14 Oct 2026 07:55:06 +0200
+	s=k20260515; t=1791957800;
+	bh=s8MfM1mspDM0nFe3fO8QU0AZxJBshy5OE1RZcD39XyA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=GMpGHFpHZg8OK40FDa0Ea/Zn2Al8G4/v+g/4I3M4rIX9F26aHpnUQ4P+QHcaHDVx6
+	 eFUHBalNtPEpZfeGq1Kzf0sDB/hDWkUj836/Ct3cGRgC5stlFmptYXtkm1rTZnXsfH
+	 EeaVwVUQ0Day3PGTkIWI4oWvs6XQ4yGBmrWKDvK8+GtoBkltXXzi2Rf9dJCzl8sJgN
+	 vlAsSMcqkI4tlhJ7oq+xGLFkUeNDqx/ChrlWjVyOXqgb3tabr8EerXm/ZKRdZk7qUb
+	 JbvZ9t13acfimcVhlFcrjVok7b/iVlYQ50p3hKwaff154u5S8r/ALKfRf8wkMPLeJx
+	 32qWTjCjzOcEA==
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Jingoo Han <jingoohan1@gmail.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Xincheng Zhang <zhangxincheng@ultrarisc.com>
+Cc: Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Jia Wang <wangjia@ultrarisc.com>, Niklas Cassel <cassel@kernel.org>, 
+ Frank Li <Frank.Li@kernel.org>, linux-pci@vger.kernel.org, 
+ linux-kernel@vger.kernel.org
+In-Reply-To: <20260905025635.211390-1-zhangxincheng@ultrarisc.com>
+References: <20260905025635.211390-1-zhangxincheng@ultrarisc.com>
+Subject: Re: [PATCH v2 0/2] PCI: dwc: Support large BARs on UltraRISC
+ DP1000
+Message-Id: <179195779048.12828.9922780104352595952.b4-ty@b4>
+Date: Wed, 14 Oct 2026 11:33:10 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI/sysfs: Add lockdown checks to legacy I/O and memory
- handlers
-To: =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>, Kees Cook <kees@kernel.org>,
- Matthew Garrett <mjg59@srcf.ucam.org>, linux-pci@vger.kernel.org
-References: <20260720211541.1509744-1-kwilczynski@kernel.org>
-Content-Language: en-US
-From: Jiri Slaby <jirislaby@kernel.org>
-Autocrypt: addr=jirislaby@kernel.org; keydata=
- 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
-In-Reply-To: <20260720211541.1509744-1-kwilczynski@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=826; i=mani@kernel.org;
+ h=from:subject:message-id; bh=6MjK7eCitBMibi9JJ/uSN3z9cJrlntuBDQZ04qrMuls=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqzxsjXjKyfzsQ5+8R22XSg88fMvhvQxJrgaMGS
+ 29yZ0gTZMmJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCas8bIwAKCRBVnxHm/pHO
+ 9bFPCACYnJ+rs6NlAmWih1CvbVwOlxzQDfuytorFsEaI+zQKSxnPHbqI6Rf8yB2vzyXh52aDMkL
+ E4JQzPBGmJKFmLoN45OFRvkecg7cxD7xM6jP66e3pdqfI6GTcOEs33XzECFciVqKH6Q/uXN88H1
+ ATF1ij5Cyy6gvNV2hy9QoUMcC0zWYCh16oju93hwK82KXJ40AqAvJga0Wd9sBHChjR3hWnCVf4L
+ F801TrVUpxHL2SPFbnK7LU4JmCtm7NEHv2r48nktW7EtLjFrCao1EIijldCTuCiypxwLOov9Mmd
+ gMoaa/pxPfxAVW+T67Lba0hStmXSDSizyaWOkXcIe0hSAJlh
+X-Developer-Key: i=mani@kernel.org; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-Hi,
 
-On 20. 07. 26, 23:15, Krzysztof Wilczyński wrote:
-> Currently, the legacy I/O and memory sysfs handlers do not
-> check security_locked_down(LOCKDOWN_PCI_ACCESS), leaving the
-> legacy_io and legacy_mem files unprotected when the kernel is
-> locked down.
+On Sat, 05 Sep 2026 10:56:33 +0800, Xincheng Zhang wrote:
+> PCI: dwc: Support large BARs on UltraRISC DP1000
 > 
-> Commit eb627e17727e ("PCI: Lock down BAR access when the
-> kernel is locked down") added the check to pci_write_config(),
-> pci_mmap_resource(), and pci_write_resource_io() to prevent
-> userspace from programming DMA-capable hardware that could be
-> used to modify kernel code, but did not cover the legacy
-> handlers.
+> This series lets DWC host drivers skip generic outbound iATU programming
+> for host bridge MEM ranges, which is useful for some compute cards' very
+> large BAR size demand (>100GB).
 > 
-> As a result, root can still write arbitrary I/O ports and map
-> the legacy I/O and memory spaces while the kernel is locked
-> down, which is the same capability the lockdown is meant to
-> remove.
+> DP1000 has 16 outbound iATU windows, and each window can map up to
+> 4GB. This limits its allocatable MEM64 BAR size to 4GB*(16-3)=52GB
+> (-3 for CFG, I/O and MEM32).
 > 
-> Thus, add the same check to pci_write_legacy_io(),
-> pci_mmap_legacy_mem(), and pci_mmap_legacy_io().
-> 
-> These generic handlers cover both architectures that
-> define HAVE_PCI_LEGACY (such as Alpha and PowerPC).
-> 
-> Fixes: eb627e17727e ("PCI: Lock down BAR access when the kernel is locked down")
-> Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
-> ---
->   drivers/pci/pci-sysfs.c | 15 +++++++++++++++
->   1 file changed, 15 insertions(+)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 5ec0b245a69b..c24d9270a7a5 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -913,6 +913,11 @@ static ssize_t pci_write_legacy_io(struct file *filp, struct kobject *kobj,
->   				   char *buf, loff_t off, size_t count)
->   {
->   	struct pci_bus *bus = to_pci_bus(kobj_to_dev(kobj));
-> +	int ret;
-> +
-> +	ret = security_locked_down(LOCKDOWN_PCI_ACCESS);
-> +	if (ret)
-> +		return ret;
->   
->   	/* Only support 1, 2 or 4 byte accesses */
->   	if (count != 1 && count != 2 && count != 4)
+> [...]
 
-This hunk was misapplied AFAICT. The commit 747b9bbbbdfd ("PCI/sysfs: 
-Add lockdown checks to legacy I/O and memory handlers") applies the hunk 
-to __pci_legacy_is_visible() instead.
+Applied, thanks!
 
-Two effects:
-1) pci_write_legacy_io() is still not covered,
-2) with lockdown, __pci_legacy_is_visible() now returns EPERM which 
-should trigger a WARN() in create_files() and it would create the file 
-with 0664 (!), if I am looking correctly (and Claude confirms).
+[1/2] PCI: dwc: Allow drivers to skip MEM outbound iATU setup
+      commit: 35e7ff697f320aa4c0c8cd2f9d0377df307bb34a
+[2/2] PCI: ultrarisc: Skip MEM outbound iATU setup on DP1000
+      commit: e9ad968d240e0d8313d3aac19bd5ef0dad866da1
 
-> @@ -937,6 +942,11 @@ static int pci_mmap_legacy_mem(struct file *filp, struct kobject *kobj,
->   			       struct vm_area_struct *vma)
->   {
->   	struct pci_bus *bus = to_pci_bus(kobj_to_dev(kobj));
-> +	int ret;
-> +
-> +	ret = security_locked_down(LOCKDOWN_PCI_ACCESS);
-> +	if (ret)
-> +		return ret;
->   
->   	return pci_mmap_legacy_page_range(bus, vma, pci_mmap_mem);
->   }
-> @@ -957,6 +967,11 @@ static int pci_mmap_legacy_io(struct file *filp, struct kobject *kobj,
->   			      struct vm_area_struct *vma)
->   {
->   	struct pci_bus *bus = to_pci_bus(kobj_to_dev(kobj));
-> +	int ret;
-> +
-> +	ret = security_locked_down(LOCKDOWN_PCI_ACCESS);
-> +	if (ret)
-> +		return ret;
->   
->   	return pci_mmap_legacy_page_range(bus, vma, pci_mmap_io);
->   }
-
+Best regards,
 -- 
-js
-suse labs
+மணிவண்ணன் சதாசிவம்
+
 
