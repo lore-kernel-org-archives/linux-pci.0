@@ -1,75 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FADB4A5EBA
-	for <linux-pci@vger.kernel.org>; Wed, 14 Oct 2026 07:23:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A9FA44A409;
+	Wed, 14 Oct 2026 07:28:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791962612; cv=none; b=PUDtdmcreZjtDj3CRnu/JHPa/4VAwyGVp2uPeVe6owFJRsl34jqpAgC+kTjOnHpcrDpytEzu6MvDKRulWVUcR+oHESE/AUQw3AiqgaFmpucwHufFjpU5Ybx49qK4kjBlnZ7Kdnfn3dAMgMEHS1lGmb1/r8jfCIdN7skGCvFUX2w=
+	t=1791962882; cv=none; b=mlLdxW1wTe0pbg4iErzXwa9fWMI+57ABWXlY+mAO36Hvb/bbjHf6ZN163U0XNK35DqNb27LubYxQlM3akls6Bl3whrhYK800pdule0S8JNkd9i6WFUmHDxrFnqubOslSDkg3XeWS5aMAbZGoqLyF/D1OQRd8kRUEmPyuTTdnE94=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791962612; c=relaxed/simple;
-	bh=Xk8nokU1Lk36Sv0KyOZtMXEuqS4Yfg7/zt82o3LzDT0=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=A4WnLjVGJM0yFaNcaGfsWSb0vKt+KFredzpZDAw16qqh0/WBuwruXJLjQHjWV7gY66f+AuTrbOQPZYUxh3sVhnXxrGCmpo5qqriFXGjTMMORWfrZF0UtR8d+9HhqLaUq0Q+v7SYH/1YePy9/ZxgVp7HFfJAJM0M8QXyHLeqK1G8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wne1zTvt; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wne1zTvt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 670911F008A1;
-	Wed, 14 Oct 2026 07:23:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791962609;
-	bh=AAigWs1FZhvyk4pr9ANuX0nlWGu4Qwxx5jFD0wPgTxA=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Wne1zTvt76UTmkcCC6PA3OnxgQDbnZ0V/V6xVh8VxEwXal1GC+GtSpyAELbQyLDaq
-	 TXIKmHqBpK+RBehaR/dU6fhPb72fmAm9mjGsqOGJ6nlQUXHBDOFkN39/e7PMrVdBOC
-	 aYkrbIXlr1tFR5jMYJN0f6Yt58ptTVqvylkkhdizos6P6yKsUa/0+JN3LQqt7c/OZi
-	 LEcHqITgvIhEIRIDrsdocAQEsRk2uYTWDzN/8KOTpUKJPrlhnNO7kF68Zs29Ly7PSB
-	 qMV9Dq0e73qFIjUy4QpmllwcC+R/r0EtWWhkxzMKYOwEaSc861HgEN0WV6TWEdTILl
-	 7f0TK0wvqZ5uA==
-Message-ID: <sashiko-outbox-170936@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3] PCI: endpoint: pci-epf-vntb: Track link state from
- both sides
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Koichiro Den" <den@valinux.co.jp>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261014071448.2473208-1-den@valinux.co.jp>
-References: <20261014071448.2473208-1-den@valinux.co.jp>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 14 Oct 2026 07:23:29 +0000
+	s=arc-20240116; t=1791962882; c=relaxed/simple;
+	bh=n3FTo4mK9R/lIGl5C3jeelRqRYzuENdY8tuLlXHAZOc=;
+	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
+	 References:Date:Message-Id; b=vB1QUnbUz+uO1ZfC5JjNmqGHv+KyNqqf03s4gSdYZICfEx0VBBdmv6YsQJIv2+Ek3R+2k9J69KA3FapiX8kjG4xtQ654n4KBq1WhxUuyqnREsPdtSz1w8TJ9KJgVKzR4u3McqS8iZbIe1V3Libqn4j8dW3nyR93G+aFWv299zx8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD0AA1F000FF;
+	Wed, 14 Oct 2026 07:27:55 +0000 (UTC)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH v2] PCI: rockchip: Skip the Tpvperl wait when power is
+ already valid
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: =?utf-8?q?Enrique_Hern=C3=A1ndez_Bello?= <ehbello@gmail.com>
+Cc: shawn.lin@rock-chips.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
+ mani@kernel.org, bhelgaas@google.com, robh@kernel.org, heiko@sntech.de, 
+ dlemoal@kernel.org, linux-pci@vger.kernel.org, 
+ linux-rockchip@lists.infradead.org, linux-arm-kernel@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+In-Reply-To: <20260911211559.207990-1-ehbello@gmail.com>
+References: <20260911211559.207990-1-ehbello@gmail.com>
+Date: Wed, 14 Oct 2026 12:57:47 +0530
+Message-Id: <179196286749.38040.5597453767131590054.b4-reply@b4>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2102;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=n3FTo4mK9R/lIGl5C3jeelRqRYzuENdY8tuLlXHAZOc=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqzy72A6EYqXUa8oem4GQlieL7BdAjqrbq/LHus
+ 95HXXNGgXqJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCas8u9gAKCRBVnxHm/pHO
+ 9VzpB/9GLv7F5DEMWwQ3WZjJLu4Q7SDngruevsqLwGdrOGO7UOVSUAgVdr7yQ57EUHYIaeZF5jp
+ Pl/kg+HBvpSxkjLex1X5MQSkf2u1VGWSk0SZT/0DsNYYQzNE/9oBlSZLEzdCZJeu/+/OyRl6Xyk
+ LCuLsMqwOy+cVpFLHNsNLqxRjcnKBlDyVo+76vBGsF/woWmS9WeFOWS/I9RYFhJ5M2Qjrx0zJEu
+ 4UGxgjsyHy9OhBypKbC/c+0i59rAqfwMZn4NxjTHpwQEkQW1zgafnsKHcXnSdc2zrYqzVA3jBv5
+ CkBZWRKvHxzrhppg5Wu6eG3LH4WUTlgxkkBZoiHvsH+0v0CG
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-> The control-region link status is currently updated only by
-> COMMAND_LINK_UP and COMMAND_LINK_DOWN from the HOST. The virtual
-> NTB link callbacks are empty. Consequently, the HOST can see the link as
-> up before the VHOST has enabled it, and ntb_link_disable() on the VHOST
-> leaves LINK_STATUS_UP set without notifying either NTB client.
->=20
-> ntb_netdev can hide this device-level state bug because ntb_transport uses
-> a separate per-QP LINK_DOWN_FLAG message. Use ntb_tool to observe the
-> device link state directly:
->=20
-> After bringing both sides up, start one waiter on each side:
->=20
->   HOST# echo N > /sys/kernel/debug/ntb_tool/<H-device>/peer0/link_event
->   VHOST# echo N > /sys/kernel/debug/ntb_tool/<V-device>/peer0/link_event
->=20
-> [ ... ]
-> With this patch, peer0/link changes to N on both sides and both waiters
-> return.
->=20
-> Fixes: e35f56bb0330 ("PCI: endpoint: Support NTB transfer between RC and =
-EP")
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+On 2026-09-11 22:15 +0100, Enrique Hernández Bello wrote:
+> Since commit c47f90be4c89 ("PCI: rockchip-host: Fix
+> rockchip_pcie_host_init_port() PERST# handling"), a JMicron JMB585
+> behind an rk3399 root port almost never becomes usable: the link trains
+> normally, but the endpoint's configuration space never answers, so the
+> device is not enumerated. On this controller a configuration read that
+> gets no usable completion is reported as an external abort rather than
+> as an all-ones response, which on arm64 brings the machine down.
+> 
+> The change added an unconditional 100 ms sleep so that PERST# stays
+> asserted for at least Tpvperl after power becomes valid. The wait is
+> performed while PERST# is asserted, so it also extends the reset by
+> 100 ms, and this endpoint does not tolerate the longer assertion.
+> 
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+This is hard to believe. First of all, Tpvperl is the min time specified by the
+CEM spec to allow the power to be stable, not the max. Even if the bootloader
+has already enabled the power supply during boot, it would've taken several
+seconds for the kernel driver to probe and execute this delay of 100ms. But
+claiming that the Endpoint doesn't tolerate this 100ms delay, but still several
+seconds of the boot delay is quite hard to believe.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261014071448.2473=
-208-1-den@valinux.co.jp?part=3D1
+Maybe the issue is with the delay between PERST# assert and deassert? Is the
+PERST# signal polarity on the board DTS correct? We used to see Endpoint
+firmware crashes when the polarity was incorrect and the Endpoint got confused
+with incorrect PERST# sequence.
+
+> Tpvperl is counted from the supplies becoming valid (PCIe CEM r5.1,
+> sec 2.9.2). On boards whose PCIe supplies are always-on -- vcc3v3_pcie
+> on ROCK Pi 4 is regulator-always-on and regulator-boot-on -- power has
+> been valid since boot, seconds before the driver probes, so the
+> requirement is already met and the sleep only lengthens the reset.
+> 
+
+I do agree that the Tpvperl delay is *redundant* if the supplies are already
+enabled by the bootloader. But I do not agree that it causes the Endpoint to not
+respond.
+
+- Mani
 
