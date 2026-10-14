@@ -1,72 +1,80 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A7082F7F05;
-	Wed, 14 Oct 2026 06:18:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4441F6AD4
+	for <linux-pci@vger.kernel.org>; Wed, 14 Oct 2026 06:21:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791958694; cv=none; b=Xf5N4Hu1lpFrlG82OW4l/j8eL51oZWeYKYnbXogv/RFSh8OZgGchG8CYOU+fED0G0rLNx1VOo9rToIiChGY0GqUiy5nOsZ9DmipGDGfNpTRDi/4T/RwfjZWPqy4nV723DzT8vLkWBCLl4G4nhvYw5qYZn84vqLx07F+GBDihCgU=
+	t=1791958919; cv=none; b=tBUx2zly8B0zvePaCAgheelseuaL+leRj5aLdNsP9mjzMW/DcERCjK28unT4cuLNeXLJgg8ufUlSY8euvypTB3EUIPwxYJEz6U9d6JA8x8qWm3gKMgk9Ohe8XRz/hLJOFgh+Mc94ap4I3Bl3feTYVRngQK3R2C2Fn26VbkuPbIM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791958694; c=relaxed/simple;
-	bh=oEADmoE836hlAZcEBWDouWbD9K4iD2YmjpWMGiBvGYk=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Kq+iHwQteEJBncQu4ZWBMtpzoe67baMWMmnGasHun2oT2e6FrK91EJTadY7DMvaVX13y02pWE/y8GdZtwYcYYuER3bA5+WufVmD9vzDj9kWTZli+OIxgAkr9XxZU1txwvcfvzYkLHbvs/0OEHbbTveQW6bKnQXly07tY7u3Dsps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ih1mgQxg; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791958919; c=relaxed/simple;
+	bh=b+lnC8CF23mRbE7EiAz/AWNUgjzXEoQCd1PXF3OjB3w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Tel/hW8hcBu4hJpBWSrnVvTXdMwM7r+KHA6CtyAk2PYISS+8k1xJ/mHWwhQDY4xSpEpujwpjQkejoiqk+EnTsYnazjkUGnFj59Fu0796UlYVDWtABsTIkeEa/ez42inUBSOw4wZQj5u2M+n7tMpyVCGlMt0zm3cHtfbGoroELtU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NQCY+NN1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ih1mgQxg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 839501F000FF;
-	Wed, 14 Oct 2026 06:18:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NQCY+NN1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 815E71F000FF;
+	Wed, 14 Oct 2026 06:21:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791958693;
-	bh=rtBC1pHSBRoNfkLg04+FsjQ67DpR78TWjMRN86dtWx0=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=ih1mgQxg0AIseF1qpsRDlioQoCMpXiSt+CUJwBGJJasG3v+UK4quwhy/u088KYeds
-	 M1ETAOsHqJKO2MzDbdnB7PLqntp7FpG4ZYlk2oBoH8RPYmLyrz8HOKThZffvMobEKM
-	 tO263qncgxThgUqdvK7Cfi0hyu6ehj7VZK1upkGdrEf8k/viNH4jVHbnj6gxVRijLO
-	 VTfCsAF05PckvEzwIRxAio9HTy/kkgJ9GUy+HKXw1b7fajd2DhfpjnGSsoAA7QzGcR
-	 9iPVMynJ1ms5ekAEOPcejCLkVwfNPEval+AeuazBp1rxt3nL10LN8Cc+QsAMqUzzxe
-	 5GKNfPwjDwtcA==
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Jingoo Han <jingoohan1@gmail.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- Sumit Kumar <sumit.kumar@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20260908-dma_bypass-v2-1-c3c81d408c0c@oss.qualcomm.com>
-References: <20260908-dma_bypass-v2-1-c3c81d408c0c@oss.qualcomm.com>
-Subject: Re: [PATCH v2] pci: designware: Set DMA_BYPASS bit in outbound
- IATU CTRL2 register
-Message-Id: <179195869006.48195.11691336797574219194.b4-ty@b4>
-Date: Wed, 14 Oct 2026 11:48:10 +0530
+	s=k20260515; t=1791958917;
+	bh=RpD9UrzTg2yn9JZAZl72vnNutpVGunoo7kphLUU8T1Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=NQCY+NN1UctbmfviEydJTggBelrPSLsiianQW1tCYJDAqoFB35f1eMXXHRKt6orsH
+	 I9WjhnmRUvuFgy6Ok9gb/r3cTluIOSJ3ud3ZqFXR9H8XTqN13yejJYWsp8qZ3J4R4f
+	 sdE72JogYbIQdndihiQys8Bssx+olcaswYQIaPnNKK9BMsUXZ9qkxaFn6rJGb4Q6jZ
+	 Kuvbb+lXxhrovT9mzvXYnOp3NJp2bEDmQjCEnfUTJuTyfYtYa2yoGU1U5MAM4RaI92
+	 +u5LJ4PQS/uSPBZjOfkTzeYjtI19QkBWcv9JNkoD0mlzJRFy3CWa09q8HwDb+A8msv
+	 22AwP8zmI4SIw==
+Date: Wed, 14 Oct 2026 15:21:55 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+To: Jiri Slaby <jirislaby@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Bjorn Helgaas <helgaas@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Kees Cook <kees@kernel.org>, 
+	Matthew Garrett <mjg59@srcf.ucam.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI/sysfs: Add lockdown checks to legacy I/O and memory
+ handlers
+Message-ID: <20261014061710.GA1638248@rocinante>
+References: <20260720211541.1509744-1-kwilczynski@kernel.org>
+ <8a8fc5b8-cccf-4849-a0f4-b7878f1de511@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.16.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8a8fc5b8-cccf-4849-a0f4-b7878f1de511@kernel.org>
 
+Hello,
 
-On Tue, 08 Sep 2026 11:48:22 +0530, Sumit Kumar wrote:
-> An outbound iATU region matches any local (AXI/application-side)
-> address that falls within its Base/Limit window and rewrites it to
-> the PCIe-side address programmed in that region's Target Address
-> Registers before the transaction goes out on the link. This matching
-> does not distinguish CPU-initiated transactions from ones issued by
-> the internal DMA engine (eDMA/HDMA).
+> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> > index 5ec0b245a69b..c24d9270a7a5 100644
+> > --- a/drivers/pci/pci-sysfs.c
+> > +++ b/drivers/pci/pci-sysfs.c
+> > @@ -913,6 +913,11 @@ static ssize_t pci_write_legacy_io(struct file *filp, struct kobject *kobj,
+> >   				   char *buf, loff_t off, size_t count)
+> >   {
+> >   	struct pci_bus *bus = to_pci_bus(kobj_to_dev(kobj));
+> > +	int ret;
+> > +
+> > +	ret = security_locked_down(LOCKDOWN_PCI_ACCESS);
+> > +	if (ret)
+> > +		return ret;
+> >   	/* Only support 1, 2 or 4 byte accesses */
+> >   	if (count != 1 && count != 2 && count != 4)
 > 
-> [...]
+> This hunk was misapplied AFAICT. The commit 747b9bbbbdfd ("PCI/sysfs: Add
+> lockdown checks to legacy I/O and memory handlers") applies the hunk to
+> __pci_legacy_is_visible() instead.
 
-Applied, thanks!
+Yes, sadly it was misapplied.  We found out recently, too.  I will sent
+a patch to correct this a later today.
 
-[1/1] pci: designware: Set DMA_BYPASS bit in outbound IATU CTRL2 register
-      commit: dd93641026434e82378edb3f3697b47c7c83067b
+Thank you for letting us know, Jiri.  Appreciated.
 
-Best regards,
--- 
-மணிவண்ணன் சதாசிவம்
+All the best,
 
-
+	Krzysztof
