@@ -1,45 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B6D64FECFB;
-	Wed, 14 Oct 2026 12:51:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3BC94EB867;
+	Wed, 14 Oct 2026 12:53:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791982353; cv=none; b=gRwitD7qpD1UeSfMp7l+E1bs5PwQPN93WP5MW1vzbN5j//sAoNTXbhywTvuIi1FE4vkSzncLJ1yeHXKt0psXtXhs+h41POAPEG/cgVh3d85GuLaVL26q9pIiY+jRqOcDJkC98x+4H8oEnCOlrrzAnWvOrX4flasFb66Jcd5g0r4=
+	t=1791982416; cv=none; b=I7shW2hZeqqOFR3nkbCuqTuY0tNrqWlxwkg8E6zfJOx9vf+On7bPvxyIpU5PJyTmwqzPNMPSgr0Qmvpyqzbkp7qB48eq+/fXnuYIR3RV+h3bTOXmx5F2aXe1W+14ULmf4ICPPSN394lhn8Z37G550xOShQAyV1ALSR4aa/UZROA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791982353; c=relaxed/simple;
-	bh=j/TF80xOVYgwP8HeOnF4JHrGvLKrytQUjZSJG/rAEp4=;
+	s=arc-20240116; t=1791982416; c=relaxed/simple;
+	bh=eoMK1eSx4TJIAPCo1ybO1vVsJOurRWdkZh5vzifCi5k=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=tYDRJaodb20R4iQvKD/gqcet8SQnVIAgCA6p1WBo4xNoYoJij9VV1iSP8KWtUyPe4gS2skqh1u0Os/PwFksoRk/SmOg6/fq0OLu9jna12qeH9mRnUpXH8Ts3bJ1jfZTjzDHfqtwqsNTuXlBfxsB2dasW14Zi4VLeO5uG81WdTg4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JrcYUc4C; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=ulgd0kXHfckAx+PPPL7X2oiAYSjMbUoQpjWokkvksEyN2lFKzN8ceOlFSXl2yiwKrD1MN5iViUUAqn2HfHOXkQrChmYiS71KQWkcQuyYvTF25VMC5W/KtIDAD5q0DCY9CtSKpL6naIUu/PkZaZDdwZN16hCCt1s/6t/b8C1xrcA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VCjaGPzp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JrcYUc4C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D04F1F00898;
-	Wed, 14 Oct 2026 12:51:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VCjaGPzp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECCE61F00893;
+	Wed, 14 Oct 2026 12:53:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791982294;
-	bh=lsdo6q7iGfLOVSHDjr9LDuzaBark/96QHxSKrnTPcqU=;
+	s=k20260515; t=1791982389;
+	bh=jDT2IFdLA0AhV0qlErCAnYfvnnzPaGbbjaPIVQ+yjTk=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=JrcYUc4CodZD+eRz9ZFidXnb8vujaZPHvG+D1/0Y0HbfuQKsp+BMZKixbKac6HT+m
-	 r0n5SKFFkj5nWx1GIkYaX6K7cdUzXtrEL5gEizpcAuN5E9chhD5n7DFBtVOm8P/796
-	 GIkvwJNwMSL/AxJkBO9GtYDfduY1ip1WCn5EtujxthJuATHJ4H+8kXbEcmo68a4DvF
-	 q8pwkPJUIeYcSgtmlDKtPcCSW4lVu3CkbTcmN9GWFgG9A9Z+e9yTiYGzpqIlf/yxO/
-	 8CM1ZxYSLgbOtlJHYolHNIs3XT5CWrzUnz1jFYeM0N7ZuVxAQpwYer1A+C6W2KiZv7
-	 ++igJ2rYREr4A==
+	b=VCjaGPzpf3DHcN+K6gpqP8SaQaPPn0uKKZ75YU7rUNJHPufg/aWpGB8N+BzngOEcV
+	 vgD2/3EdiLgqOznc+QyLBN2D1KfFmCoYAXa11lEbZ2Lq3QKqQz75NGzanqi9hb2bIS
+	 fzb02m8sAEZMfjl3Slv3pDCJUsgunAxGLYvWgLeYJfEr10rk7eWZK0QoYN7+uros7t
+	 JGqX+qPgqDS5a2QmxTGNGQHQzpfdGwZA+stsQqfFnILH6do8C0SH/C9tOIcFyx8GqI
+	 2tlWjq41QqrrBeNeblv4PhROcohNk7TScSh8Yoo82RRYoIorBU3iAdt96WwfKWPhD9
+	 pY/2Mk9lMuFZg==
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
  =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
  Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
- Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
+ Ayiluri Naga Rashmi <ayiluri.rashmi@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
  linux-kernel@vger.kernel.org, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-In-Reply-To: <20260916-topic-pcie_portrec_enodev-v1-1-5dc7bde39552@oss.qualcomm.com>
-References: <20260916-topic-pcie_portrec_enodev-v1-1-5dc7bde39552@oss.qualcomm.com>
-Subject: Re: [PATCH] PCI: qcom: Ignore -ENODEV after Root Port reset
-Message-Id: <179198228046.63727.14444543407304414177.b4-ty@b4>
-Date: Wed, 14 Oct 2026 18:21:20 +0530
+ Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+ Mrinmay Sarkar <mrinmay.sarkar@oss.qualcomm.com>, 
+ Rama Krishna <rama.krishna@oss.qualcomm.com>, 
+ Nitesh Gupta <nitesh.gupta@oss.qualcomm.com>
+In-Reply-To: <20260917-skipmsi_forlpi-v1-1-14a4932a4311@oss.qualcomm.com>
+References: <20260917-skipmsi_forlpi-v1-1-14a4932a4311@oss.qualcomm.com>
+Subject: Re: [PATCH] PCI: qcom: Skip DWC MSI host initialization when
+ msi-map is present
+Message-Id: <179198237916.63727.13300930430351546653.b4-ty@b4>
+Date: Wed, 14 Oct 2026 18:22:59 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,27 +52,27 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=318;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=364;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=xYIEFRWgAJP3WnnePlvTxvJ0Twen2FCrrbpkfILHtgU=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqz3rN2xNylYKOd1knRNRodV+kc0idLKNOHCgt5
- OuHTgCOd92JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCas96zQAKCRBVnxHm/pHO
- 9eQsB/94/nEaSIbArTJme58EGB46tlfXsuh5k7tjI2uMmTU3ftORFYp6rRkf+uV1xpTFmfRkY7o
- A3sIbFZQuZaDIgkz+rhP6C3cEcv1I4Iq2/2CecVjuKBCwBDnAGrt+8WTK/8uli6KeG6fy+lVNb7
- cVSgpiAAc88733rsPvJmaK1uh4/aPIY7fRexGfRJdIOtpP2w29l8YT8MFwUu6sWI8NM4etgxXdN
- iV76qb3GxvqRBzGlS+6YQQl46qKUOVPyUsrbp7Ud7Eg4BafEMg4eJmpXaMLShqDOYnGcvrUmOTE
- Yb0HaPQGece4ErOHyeb18IOCMLLkjsnjowp10TYdxyLmFJsP
+ bh=8ehoxGKFUmcfRUYVY7S9kKOZbczv0mIlzhFcl5EcS18=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqz3svA/LMAcRKbqMo0UtQM9ocQDxznymMHM4oI
+ Xi5R/kK7VCJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCas97LwAKCRBVnxHm/pHO
+ 9TuXB/0dOPbeYa2/U7QmJPIw4LjbhMHIsy44tCWqn4E8iMu20WGOAIV4yk8XUx1J9UfQgOrRDTW
+ 4d1EaPQ5gkdFJRwbmDmE5/4iRLP2h03REt9Wk/sfOdm0GCnvWtFAb96IToNEThqnN9ouP3Pd8+/
+ c4xSsBNgDi7XxFN66zolKpeuca+bp7Au/ip7vd+pR3lozBe5mAfbp7xIhRZOF12bkRIDVk8oEs2
+ /ZUlzeoOeZReOctFNMoPQmf4dBaca7xro9VLTEPK/NRaGfWXJhBB281WzMowVg4y6+Bd87EwRqe
+ lAnyTz0+BtoypkTpBBwWC77UKs9n4V++7/SjVMER9l/lZSbt
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 
 
-On Wed, 16 Sep 2026 14:37:49 +0200, Konrad Dybcio wrote:
-> PCI: qcom: Ignore -ENODEV after Root Port reset
+On Thu, 17 Sep 2026 16:43:28 +0530, Ayiluri Naga Rashmi wrote:
+> PCI: qcom: Skip DWC MSI host initialization when msi-map is present
 
 Applied, thanks!
 
-[1/1] PCI: qcom: Ignore -ENODEV after Root Port reset
-      commit: 78f27ea27d9870806f51b6f44db7ef6df62f7891
+[1/1] PCI: qcom: Skip DWC MSI host initialization when msi-map is present
+      commit: b41d4c09797a626a555f333c13df5bfaf8e7ebb2
 
 Best regards,
 -- 
