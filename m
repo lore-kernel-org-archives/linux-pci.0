@@ -1,86 +1,131 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D819475351
-	for <linux-pci@vger.kernel.org>; Wed, 14 Oct 2026 21:39:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADAD841DDF2;
+	Wed, 14 Oct 2026 21:52:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792013962; cv=none; b=Bc96r0uDwGy/wQNlbjTgW267dxA3vQs2wD1Mbt4uz8BAR3ShAA5mTcjRFHmz1lRGPyZdK/WTSZ3LVICjU1KvBGCphf3g0kkKtc6vcWtB/rxzcB7Atzg1Fkrph8g8fezZw7KNxadlk+d6XfR4gWonh6oWIICzxyJHwQ1TsWmskQU=
+	t=1792014766; cv=none; b=RFrSznH69aa3kAc9jGuK8zaCrb6p2vckkkSIbh1Hxbir9EjHHO5G1cLIcPq3HaOYVgmZRU8yh+ghDFsVi516XGk+eOKbVd7cWSV5lbqE6ufFjGVCenVdqn8tHavezN1CSDz+kI+pvLlfQWz1j0cv4tx7+SUed4IA5vSZp2eM5LQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792013962; c=relaxed/simple;
-	bh=YZ3USTerO1KVZxlzLH4WWR1OpRpRgNIFQgLPolE8aXw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ekcIsG0JzlCr6iVHbt7fTuC+GKLOCFgnerImCBq8eoncQH6kRlwX/u3hL8+ja7NVBFfVB0w/B9nXNAnOuoO0A7LttuSHkE5E8DyBzE/l7jMV48dHW0PbXiOt/BnxXyXdYwPe/KeRPNJTiFVy8c45wcQFMJvG09nVdA+Y2+1Qo+w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HRCHauSg; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792014766; c=relaxed/simple;
+	bh=pcGZG/1An6tLaK/s5q0+DEOIAUX3Avip0BY70/K6EkQ=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=Hnu/Odv/2wbA1pqM8T6bkal5wGrgIIpFZUyrCokrMueNUERhuY50GxqZlWBc8VV+y3746K5lUI2Ljpa7bFDHky9zHOJH3cFmS8Id/QlCdi46TVjosrYUiKGuK9BJ7yrLZoNnDwnjC0LdvU0VdX31K+50pOd0HbChC/HCYnMhPU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=luFKnl6n; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HRCHauSg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CD451F000C4;
-	Wed, 14 Oct 2026 21:39:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="luFKnl6n"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 888AC1F000C4;
+	Wed, 14 Oct 2026 21:52:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792013960;
-	bh=yfZ/FsY5Zh5zIE98xQp6NV9qIckj8O0+XPOxXg+eC7s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=HRCHauSgwJ/+0LsfAw1SACphQ9Kn9zODj961nCBEGV3/bMZDtKsi2rGRhU7tDMSC4
-	 zXjZTwx6P3bv7dM2sLbW2w2Eu4X7AWVVRSN70mffrQhpCfaBRUhmzmrBnnq1UT3Ad+
-	 sdFqv9lK/4YPubDzF1ZBrTc4iBwKBQVkEhtitkdWCDGeWsoygSExU1/8B8ATIw7fi2
-	 OcjPxIKmVDBMwpeteOneHvhiUVdJcfLqy/A0HC+I0GH7C01JiQvD52c9C2IldfJ8DF
-	 0gK1udx+3M2MAvlbMnvEQqvlFvz68IgsgdXakWqQqMasBApPcyiFKfRnEYjFQvAYVT
-	 g1auJ3Fe/9Uow==
-Date: Wed, 14 Oct 2026 15:39:18 -0600
-From: Keith Busch <kbusch@kernel.org>
-To: Thomas Gleixner <tglx@kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <kbusch@meta.com>,
-	linux-nvme@lists.infradead.org, hch@lst.de,
-	changfengnan@bytedance.com, linux-pci@vger.kernel.org,
-	namjain@linux.microsoft.com, Luigi Rizzo <lrizzo@google.com>
-Subject: Re: [RFC PATCH 2/3] PCI/MSI: Implement irq_mask_nowait() for MSI-x
-Message-ID: <as_2hlWSsMciwCT1@kbusch-mbp>
-References: <20261014173106.GA1643226@bhelgaas>
- <878q40f0oa.ffs@fw13>
+	s=k20260515; t=1792014765;
+	bh=D+IaSM9kT05pfBEWp0Id2Mry8ziv93Bwpy/RvFGwxDY=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=luFKnl6nDaTRwLuUvwfPn1yXToQ2S1HPsjTzNUym0qJ8e7SyIg0KvlS7arhuRzpcy
+	 4PkPpRlwf7D6QFnrWtwK5EzrYITdsqCmxWlo9Q+ebxhM8EnqkgnHWQw4ScGKloCiu7
+	 Fgc4P0Hv9gWPN348FWMNlfdx0gXntEZPzXl3HL0DBLf8pZeLN5avrDd2gJawMMgvRR
+	 gYTbwxoOiYBLLhDsEgnfcoerq+xFhZ3jE8lrgn956m+2dhQA/ghNl6VNgj/xMR43Sw
+	 gyXbFe1TLs3xdr+rRcVimZDKubhrru8kRO9aXspUB+z7OGi8O/RCE+opLw9XqyhE8O
+	 BxLIt38LXIC+A==
+From: Thomas Gleixner <tglx@kernel.org>
+To: Pranjal Shrivastava <praan@google.com>, iommu@lists.linux.dev
+Cc: Will Deacon <will@kernel.org>, Joerg Roedel <joro@8bytes.org>, Robin
+ Murphy <robin.murphy@arm.com>, Jason Gunthorpe <jgg@ziepe.ca>, Mostafa
+ Saleh <smostafa@google.com>, Nicolin Chen <nicolinc@nvidia.com>, Daniel
+ Mentz <danielmentz@google.com>, Ashish Mhetre <amhetre@nvidia.com>,
+ linux-arm-kernel@lists.infradead.org, Radu Rendec <radu@rendec.net>, Bjorn
+ Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, rafael@kernel.org, Danilo Krummrich
+ <dakr@kernel.org>, driver-core@lists.linux.dev, Pranjal Shrivastava
+ <praan@google.com>, sashiko-bot@kernel.org
+Subject: Re: [PATCH v11 07/16] genirq/msi: Cache MSI message in
+ irq_chip_write_msi_msg()
+In-Reply-To: <20260929034510.2023173-8-praan@google.com>
+References: <20260929034510.2023173-1-praan@google.com>
+ <20260929034510.2023173-8-praan@google.com>
+Date: Wed, 14 Oct 2026 23:52:41 +0200
+Message-ID: <875wz4eyqe.ffs@fw13>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <878q40f0oa.ffs@fw13>
+Content-Type: text/plain
 
-On Wed, Oct 14, 2026 at 11:10:45PM +0200, Thomas Gleixner wrote:
-> On Wed, Oct 14 2026 at 12:31, Bjorn Helgaas wrote:
-> >> Skip the read-back that flushes the MSI-x mask write. Parent domains
-> >> that mask on behalf of PCI/MSI continue using their own irq_mask().
-> >> 
-> >> Signed-off-by: Keith Busch <kbusch@kernel.org>
-> >
-> > I assume Thomas will review/ack the pci/msi/ parts.
-> 
-> Yes. I actually suggested that "nowait" mechanism to Keith at LPC.
-> 
-> Though I hate the name of that callback because irq_mask() does not
-> really wait. It guarantees that the mask store has reached the device
-> which means that after that point no further interrupts will be sent by
-> the device (assuming sane hardware). That means it's a synchronous
-> operation which involves flushing the store, so maybe irq_mask_noflush()
-> or irq_mask_async() might be more accurate and descriptive.
+On Tue, Sep 29 2026 at 03:45, Pranjal Shrivastava wrote:
+> Currently, PCI MSI caches the composed MSI message into the MSI
+> descriptor inside __pci_write_msi_msg(), whereas platform MSI and other
+> device MSI domains do not cache the message in the core, forcing
+> individual drivers to manually copy the message into desc->msg if they
+> need to restore it across power transitions.
+>
+> Cache desc->msg in irq_chip_write_msi_msg() before invoking the chip
+> callback so all hierarchical MSI domains automatically record the
+> latest message. Document why the redundant assignment in
+> __pci_write_msi_msg() must remain for direct callers outside the
+> irq_chip hierarchy.
+>
+> Suggested-by: Thomas Gleixner <tglx@kernel.org>
+> Signed-off-by: Pranjal Shrivastava <praan@google.com>
+> ---
+>  drivers/pci/msi/msi.c | 6 ++++++
+>  kernel/irq/msi.c      | 9 +++++++++
+>  2 files changed, 15 insertions(+)
+>
+> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+> index 80a9db417dc8..f7bedc31d486 100644
+> --- a/drivers/pci/msi/msi.c
+> +++ b/drivers/pci/msi/msi.c
+> @@ -257,6 +257,12 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+>  		pci_write_msg_msi(dev, entry, msg);
+>  	}
+>  
+> +	/*
+> +	 * Although irq_chip_write_msi_msg() already caches the message,
+> +	 * keep the assignment here for callers that invoke
+> +	 * __pci_write_msi_msg() or pci_write_msi_msg() directly outside
+> +	 * the irq_chip hierarchy.
+> +	 */
+>  	entry->msg = *msg;
+>  
+>  	if (entry->write_msi_msg)
+> diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+> index fb5f372215bf..df460a574d80 100644
+> --- a/kernel/irq/msi.c
+> +++ b/kernel/irq/msi.c
+> @@ -634,6 +634,15 @@ static unsigned int msi_domain_get_hwsize(struct device *dev, unsigned int domid
+>  static inline void irq_chip_write_msi_msg(struct irq_data *data,
+>  					  struct msi_msg *msg)
+>  {
+> +	struct msi_desc *desc = irq_data_get_msi_desc(data);
+> +
+> +	/*
+> +	 * PCI Multi-MSI shares a single descriptor across all vectors and
+> +	 * the device stores only the base message. Cache the message of the
+> +	 * first interrupt only, so that sub-vectors cannot overwrite it.
+> +	 */
+> +	if (desc->irq == data->irq)
+> +		desc->msg = *msg;
+>  	data->chip->irq_write_msi_msg(data, msg);
+>  }
 
-Right thank you, I misremembered your suggested name. I am totally fine
-with "noflush", and I've made that change in my local branch. I'll just
-wait a bit for any other feedback before the next version.
+Sashiko reported correctly:
 
-> > Cc'd Luigi since I know he's interested in interrupt moderation in
-> > general.
-> 
-> Correct. I'm curious whether the interrupt frequency based moderation
-> mechanism Luigi is proposing does solve the NVME issues as well or can
-> be combined with some device specific hint mechanism.
-> 
-> That said, Luigi's approach should benefit from the "nowait" mechanism
-> as well.
-> 
-> Luigi?
-> 
-> Thanks,
-> 
->         tglx
+> [Severity: Critical]
+> Does this code cause a NULL pointer dereference for domains without an
+> msi_desc object?
+
+So this needs to be:
+
+	if (desc && desc->irq == data->irq)
+		desc->msg = *msg;
+
+Did not think about that, but that also means that this patch was not
+tested on any recent (less than 10 years old) Intel x86 platform or a
+x86 VM exposing HPET...
+
+Thanks,
+
+        tglx
+
