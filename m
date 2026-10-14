@@ -1,262 +1,232 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011055.outbound.protection.outlook.com [52.101.70.55])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8CE653E30A
-	for <linux-pci@vger.kernel.org>; Wed, 14 Oct 2026 14:01:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791986484; cv=none; b=ao/PFPcl0jWmQC6ebwAb6yey/Cn82dJak5dUvjDVobvLjEhF2p6WCf/IJg9Iez8D4Jd2F9BWkgTsaNkcYj4jYZSo+2uMuCtvSD3bps7FbUC7SbHpFQHDhyxeV9OJ91RMZ6E44OYDWQrnEOgH7lAiw1IRG+asVp4F/KMd3XIv+aA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791986484; c=relaxed/simple;
-	bh=RPKjO7r7COV1kj1mEX8DiND3M9FxBEUt2xywURu28N4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BirlmiJV1YQC3HdEHf14BkBIbG3kFohKpbis7lAVUl4ZUxCfXftwKTyl1a2ClcYL0UukrP2/LtEpOyvdygRfPCjNY/rZabXiRghwI3dayRGZCRN4oWoQk51jPsqZSr/YAMF+K0EtZL4ZCjl6g6565uzxzmkWO3INDK/BGadv83o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=e4yUBfWY; arc=none smtp.client-ip=209.85.128.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA00E30E0EE;
+	Wed, 14 Oct 2026 14:07:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.55
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791986838; cv=fail; b=aHfkcpuFKoyIuvWpGmjM7XSpFHB0Q1g7ePly+lVJroI0oPJAJPmwZctj/Q3K1pVuSs44o2aYL43IhC5Qsfuin46yvH/R8+DvsN03pqvrTRGSzGVnGJfwFgTGFQmmhI9wvUGbYq0lV+IAn+bDEzwZR+SX6kjXlCS3CTjDldzIV8s=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791986838; c=relaxed/simple;
+	bh=7Dv4aFaUbSEoMVsAh7qRb1Xbp3WvyJOfmGaB2VRjsR4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=CXRVrZozl6BfuHQSwmyiUo6p8dYykJe/6VWPoE2BIdwMJGIbwiOeNwCfCiqjuGpwBXCs5AGlSFkkrZ1UINz4C4S033Y5wC00Y89jNUerqbC5PR3KACsPXe7ZSumBgjLOvw+p1n7Sgl3+2qN4E89EdQrucv27hnLbfspm3ViDlz4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=SWYvVQH4; arc=fail smtp.client-ip=52.101.70.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="e4yUBfWY"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4a172eb31f0so35527835e9.1
-        for <linux-pci@vger.kernel.org>; Wed, 14 Oct 2026 07:01:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1791986475; x=1792591275; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:autocrypt
-         :content-language:from:references:cc:to:subject:user-agent
-         :mime-version:date:message-id:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=Bl4WvKQr9UWYn7bOh5TWEroVL/3JGDO8W7v/2+U1gfA=;
-        b=e4yUBfWYhNXpF0F0HY5ImzmIfKYO+0wQm+IwqLqgo4YdYGxG12ttYr4YmCR/9iXTCl
-         nj5iV6B3xIqeu24mEbWvedNQjVdV8ZEALCEAjbFXZ9g/zdvW6qknxwUbKiCWMqFuiIZB
-         AK2l0d+q2YOFv4VuUv5IdoE9+3LA662uQ9zKawtVpdKuUgjBuWiJqpKWyqlH9hxnCVvC
-         +71LGZYZqFGi0dV6FaEovYpLNsIQNgaRXlyz8VK3NtMnGniEkq/2RY8Cr2aisH3rGU9S
-         t/a5pM3bwhU5lktLAR8eunjQh/OMSwZ8PtQdzevEE4mBWG4VzL9mselHHE20ztoerq/e
-         k1mQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791986475; x=1792591275;
-        h=content-transfer-encoding:content-type:in-reply-to:autocrypt
-         :content-language:from:references:cc:to:subject:user-agent
-         :mime-version:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=Bl4WvKQr9UWYn7bOh5TWEroVL/3JGDO8W7v/2+U1gfA=;
-        b=N1sVx6ewFAAyyHtuU3n8+Wr2Ihnxo/QjIu4cDWbTqK8JtY7dbt8NIlT6vPIqxfUQ+I
-         JJw/1OBk1dNSGGQc+QO1sUKOwLeCRMYyZOf3fhUWyWn5nEbODSR9qbP0mhCRYR/3HB4z
-         i79XZ/MuyxRkgSZDh3+W0+8AOYPg1LfInPJs4aFFu9tYewl7DjcKmKaWj1GrwgNEQ1Wy
-         g4EIPs4qlWgA7ne0iZ+hJA8Zh4+ZRBb99/Y9foiQhd7u9nI+F/B1GfZnU5Nn3fKOK0Tn
-         /5chq/Ed4TEUzOsYrZGi0DktXrud/81by0sufVB+c/rRFI1UMZ5eJwJn9bR9tdRaE4sf
-         xqeA==
-X-Forwarded-Encrypted: i=1; AKwUvBzYD4EQSYmVfAmmYTwQeF9GriGhEhSf1dnhnS0iLhtrQJxXYXns2DbiojyCnqxa7VdvW3QqdNjmy/8=@vger.kernel.org
-X-Gm-Message-State: AFq9FYK9hgECnwepMPfk1vfavfU5CuHA5vSyh2DnCk+tIKvvsGByM9vT
-	v9VQ6Fch0SkAQUXFUoGaW+dYKF6LPH11bNMSeHrVYpyttsCFrilCuCsGCnZR2RHJU2Q=
-X-Gm-Gg: AYBFou3l35xh5kgxA9bN8I1/MDTIfTzHJUj9bGz8tZeaIcrewnu20L2XYd/RSlRq1cU
-	bfrfsQaqRxIWYKp6kxfBLBpyAS2lnDvckkphUF6CK9Nxailg6qN3GLhvpo1lHb1WEcwLf39G3Q8
-	+odRjBWm5LbbkuizaU6oXo8dU2lX+1OeAU8TPWPXJX9YrOSFjmiIwGE/umGVuut3gDscnmbMKQl
-	y0I3JBCP3HRG0n8bt8KpTDYPrMTRVR3ITk0DKFUJIfjUmcHIWd7OVsK7kTEc7+XOoSrPRBVFMIz
-	eiRzYMLz861o0FsRK9FyWTpKTNGeQe5QNLIh5qDVIMzdcGSmXpB4OOynP+5/wZXUWWoSNpk4xsR
-	zcOclI8FHxlkBq/aKsqdnRN9PvAdV/ufl2/9BBoLnFgSIBfdvLSvNt0mXshm4grE5hW62x2T/6u
-	LXtxRFyMkpKbyHf+cOqqTV0aExTUtMKzm9uqthNIuuZooMNfVHRhBv/fSpXpVDgOlYMVYYHRR5u
-	aAaCp6iKhK7PVY19hqepig=
-X-Received: by 2002:a05:600c:8184:b0:4a0:1c17:4fb2 with SMTP id 5b1f17b1804b1-4a18e4d854cmr283701345e9.31.1791986474223;
-        Wed, 14 Oct 2026 07:01:14 -0700 (PDT)
-Received: from [192.168.0.20] (nborisov.ddns.nbis.net. [185.218.66.243])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1bd07c276sm1997515e9.13.2026.10.14.07.01.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 14 Oct 2026 07:01:10 -0700 (PDT)
-Message-ID: <7605d698-b08c-4fcb-b86b-3f79927fb0d5@suse.com>
-Date: Wed, 14 Oct 2026 17:01:08 +0300
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="SWYvVQH4"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=jMSoqCjAe88K932Sl5LR6L3X1tlAReT+O+kfHcHXNHNMD3EHuN8EZ3qjSiujUyxMw2rg/DuSQG7BKLlHhHhvOxGbN64r1i46xOAOs74EXPE8z6PER9Ls3NBtdaWrV7K9PBImKS1EpJ1MaGqoob5tbgjH5N8V7WiCghuM8Idid3ugTw9Lbs8LUT2T6Nw+gHDsKKCIjbEKLYvZFIxPGTzJXbLR2fBvkSV/c1lJmSyXQhCE7IhdNEJ79iD4auokHiltmAXwn6bBJ6NJaPi+Nf3SAHQvj7BAErUw9bqW+qyYIGEefH4vBsAy/Q7OFsZjtOTm0b75ji/2yZXHu69VZ2cPNw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=0knYD4PTfnrDYj2BE5MqF8qj2rOuMIrCF+0vtLWdKFc=;
+ b=tll7ONcj+LpomYR2epRYoZFUHWC6OA6mR533k8sDO1txuCIyc5x6Z75zYgusUGufYFj878cNItiOuXGOwAQWeRUexUOmfcakiwgIBVXs46oc9VINvbTcOuNgO9+gXlqHvjRY8AlHff1HOZzNRiMI7an46XjkRMaQRtDI2IpMDVic3MSJk/WBrLCjs2buWeQqAKbb+bCF/ibreIrBRr01B3E/HNSradk+WtPhnEouILNAbabbh3WE27kTXijnnxO8x5kzSaxeopPWuHd/o0BN/bIBnuCEsWHeVsN6LNICYmusasnNvr8lepdAmXW8Pvb1YCzs/OVOgdCigEZFgPY90g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0knYD4PTfnrDYj2BE5MqF8qj2rOuMIrCF+0vtLWdKFc=;
+ b=SWYvVQH4eoAuAddExdneEobQ4a0EugisndrylpsKmmSc7lej7SCPAvJN5zTMgnTQIkjNKYYfcYk0tW4OLynWxh8sqk1XaHF0cI3lq/d0Vv9eXQOclmoLefqv7vPo0LKabPxGpHG+uh+kmrpcFPOJNyS2I+yOZIehHr9DvNkfXKRkydO35nxFGEUbuXDTHMXd6/7pSxzLoYErHfh1zqxOtl/0Q6ILFzSngHjFyflEV/EN9Kv0wb7nfmnawisOvoSWkj4KHMCNh7VqfFxd0pdbYULYZKZI+WwEI0birSPCvDiQVLUhX9Ug0bqzTOF0wAC7tvUoTzCavMEGszlZ8WYxDA==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
+ by DUZPR04MB9845.eurprd04.prod.outlook.com (2603:10a6:10:4d8::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.13; Wed, 14 Oct
+ 2026 14:07:04 +0000
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0522.012; Wed, 14 Oct 2026
+ 14:07:03 +0000
+Date: Wed, 14 Oct 2026 09:06:46 -0500
+From: Frank Li <Frank.li@oss.nxp.com>
+To: Jan Petrous <jan.petrous@oss.nxp.com>
+Cc: Ciprian Marian Costea <ciprianmarian.costea@oss.nxp.com>,
+	NXP S32 Linux Team <s32@nxp.com>, Vinod Koul <vkoul@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ghennadi Procopciuc <ghennadi.procopciuc@nxp.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bogdan Hamciuc <bogdan.hamciuc@nxp.com>,
+	Ionut Vicovan <ionut.vicovan@nxp.com>, Andrew Lunn <andrew@lunn.ch>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	Clark Wang <xiaoning.wang@nxp.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Maxime Chevallier <maxime.chevallier@bootlin.com>,
+	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+	Alexandre Torgue <alexandre.torgue@foss.st.com>,
+	Chester Lin <chester62515@gmail.com>,
+	Matthias Brugger <mbrugger@suse.com>,
+	Ghennadi Procopciuc <ghennadi.procopciuc@oss.nxp.com>,
+	Frank Li <Frank.Li@nxp.com>, Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	Richard Cochran <richardcochran@gmail.com>,
+	linux-arm-kernel@lists.infradead.org, linux-phy@lists.infradead.org,
+	netdev@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+	imx@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-stm32@st-md-mailman.stormreply.com,
+	Vincent Guittot <vincent.guittot@linaro.org>
+Subject: Re: [PATCH RFC v3 03/12] dt-bindings: PCI: nxp,s32g-pcie: Fix SerDes
+ PHY phandle in example
+Message-ID: <as-MdloKd-7oJsUU@SMW015318>
+References: <20260919-s32g_serdes-v3-0-9d68868c1e89@oss.nxp.com>
+ <20260919-s32g_serdes-v3-3-9d68868c1e89@oss.nxp.com>
+ <as0qORxP0Roh9ktO@SMW015318>
+ <as5CIYxKJTra4hqM@lsv051416.swis.nl-cdc01.nxp.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <as5CIYxKJTra4hqM@lsv051416.swis.nl-cdc01.nxp.com>
+X-ClientProxiedBy: CY8PR11CA0028.namprd11.prod.outlook.com
+ (2603:10b6:930:4a::14) To GV2PR04MB11799.eurprd04.prod.outlook.com
+ (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 1/4] PCI/TSM: Create MMIO descriptors via TDISP Report
-To: Ankit Agrawal <ankita@nvidia.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: dave@stgolabs.net, jic23@kernel.org, dave.jiang@intel.com,
- alison.schofield@intel.com, vishal.l.verma@intel.com, jgg@nvidia.com,
- aneesh.kumar@kernel.org, aik@amd.com, yilun.xu@linux.intel.com,
- iweiny@kernel.org, ming.li@zohomail.com, icheng@nvidia.com,
- bhelgaas@google.com, smadhavan@nvidia.com, ilpo.jarvinen@linux.intel.com,
- Smita.KoralahalliChannabasappa@amd.com, andriy.shevchenko@linux.intel.com,
- linux-coco@lists.linux.dev
-References: <20261005070252.84810-1-ankita@nvidia.com>
- <20261005070252.84810-2-ankita@nvidia.com>
-From: Nikolay Borisov <nik.borisov@suse.com>
-Content-Language: en-US
-Autocrypt: addr=nik.borisov@suse.com; keydata=
- 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
-In-Reply-To: <20261005070252.84810-2-ankita@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|DUZPR04MB9845:EE_
+X-MS-Office365-Filtering-Correlation-Id: fbf40c06-1bcb-4bd7-61d3-08df29fc6c4b
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|19092799006|23010399003|1800799024|376014|7416014|366016|6133799003|22082099003|10067099003|18002099003|3023799007|11063799006|4143699003|261009223027099003|56012099006;
+X-Microsoft-Antispam-Message-Info:
+	hD40Yb1gfcLxcIVRMcMSkYUq5QeHQJ6LbH8j3c9xDOsM/1a+OEMVbzAEnOJAiwH3ifkHuN4M7Ue9EF9D+m8iXlO+lylwEPkgcIRV7ZFM9hQIMcM37XL3PTsxT+kBpGHDk3Nb1AtjCwi3l2mwGo7lY0tEOZWCKB1/b5CTrjo0vDYLkt1+mYUP55y3DKX4rncF+OugjehtgdTFzpLV9pmVZN/h8l0GfvkeuEIG3rtdWq6NrNB+gjVHqCCPAEr/Sc9sxks/ZOd+XeDuHEeuuXiayx8LTDIdYjMc9lM9x1Mg9TLsWy1p/b01Gsm3flqdQvx8SEmQJY6PhpHd/52fir61Dfk11fbAeD/pEscZIyWQEzkULRysduH0+ufFhpcvF5lJAkalV+tk6lGN7B9k3cVYZ7vKZp3amjeoSCXVuP6GIV7zZBsDVIvQg74B4EvTpflwq4NP/1q+blp1yZAjr4XglSXW+OdAh/lNRPCgYegGij/m/f537KffLwgI5G+WG7VkSntMjeqdO0gPN8CWfeX+rGjfb34KpyGUpk7R1mDYaASxAfObrHHJ1NQc5DCjC1311lKtEFLDEVWpTFbXU+Vhs6uGxK2dCuKLgaTBiNf9XsSyE4rXrsmdpjvJ9ow2VmlMnuoyW2Otywu/cEVB/AsKT/hmxMkvi2qvA9fttrLvaWY=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(23010399003)(1800799024)(376014)(7416014)(366016)(6133799003)(22082099003)(10067099003)(18002099003)(3023799007)(11063799006)(4143699003)(261009223027099003)(56012099006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?E++54nhll/b8CZAKz7RwlzS6+E1LH9Y/VcnKAONgLO8iIzSJh5lcLpgCipzE?=
+ =?us-ascii?Q?fTg+nlHr/ecORHsGrBMSsmDssHkcHxCwI+eejc8pDodE1bjOrcX4GPW99Af4?=
+ =?us-ascii?Q?AsVdYifyBAXVFHNv38BN2Y01gGFiftuYabXNEETrmAkx/0y//mJZ7vyI13KT?=
+ =?us-ascii?Q?zIUgZsZQCIpAp4CHpWUrVQFaLpKS5HfpI7nS3e2qxq0DDwr4LgtufoDd7T51?=
+ =?us-ascii?Q?lpcLFWTR1eT0RSQsR9jUHG9+flq47hTkmvKLC1KQuzkqQCjE/L4Hno2zZvKb?=
+ =?us-ascii?Q?2SeDTD9PHUsBWAummin169UxUtmT8uDECn32/fi3YpjzKvtL6G7fih0r3Dcs?=
+ =?us-ascii?Q?orSnesiBky6HY6d94IOvesIpOpLrjhgNhTeOmq3MCb22zM5wWrylYdh65WYY?=
+ =?us-ascii?Q?haPgkWqTndxf/yfKECQpcVctRdRDl0JBIWg7xXBf3nTwTHgp+0roSFjoGHN3?=
+ =?us-ascii?Q?q+oi8k5w5QEP2bxj7zpiBVkhAuav8kQ8DJIJiBTV+0u1uFioWkKn9QOujKGu?=
+ =?us-ascii?Q?t04pHlp+iYjgXtA0MAuhczXs1YpqoE0UKyLdXo2ypJFsmH1FJ2QeoFErWJOM?=
+ =?us-ascii?Q?SGZOx1MnV8Lex/xkcjmH+I+cWmOjfhGt8zrVErcMMwreZlaxp65pWKUvFi+4?=
+ =?us-ascii?Q?O5hH1bnO4yA5GGAsnqAyFY9LdUyhVEYLuAJs9w/RncDMhp0afN6bT0+0hYar?=
+ =?us-ascii?Q?vMkvg4L2P+S9Go907tA9Y9tkkDyLGUAZ/w2gHrx8LPMe/AKBWCUFJRkSWc3d?=
+ =?us-ascii?Q?U0yU1KKqBRB8HL30I5A6g3SJ8TUfow12oxTNyLtGXXqQU1IfP9edaHFluHpB?=
+ =?us-ascii?Q?rTwfIUN6n7x4jKmi8qng1Wn36s2zKoP9D582MQoXzcX43mfnjRYacs2WS/L6?=
+ =?us-ascii?Q?qtbSFkYU22ELss0zTUuVqvNgP2kkPhJXi9QSHKlKlccpUz6a0uX8h5/8wYLd?=
+ =?us-ascii?Q?OrpnJW6/2vPyCzg5rhnuZMTi4sWleTT2NjVrvCl1ySEZ+m7XzMnT2sOGgTub?=
+ =?us-ascii?Q?d5SdAlNvaVm6uS+Op17XmqhhHhjOXUVvFRJIlz1WugtEGOEFwv1Hi5J4YQQW?=
+ =?us-ascii?Q?ycApmqM7FAcf5xxKOW+HvooZWLlzC8HTuqQxPrAbzxzSAw2c1QeTo3dV9eN2?=
+ =?us-ascii?Q?AMrzmsbkQpIRRI2/2cYTgtzS7Qf26latX3ejkAFiyojmwsXvx5yeiY/WTZZ2?=
+ =?us-ascii?Q?m3gHp1Em5Nia390oI+b6cWOp5Xdkwa277PHZwGxrMqGtd6610JB15WRlhaV7?=
+ =?us-ascii?Q?GlcYXJGEFil8mV0jZdQJgZ33HJbinWBdBZCxaPkBNtzK3IUy0n8uy8hY2s/k?=
+ =?us-ascii?Q?2Hp+aPQ0tBF00HljhH+79E4mpTCmuGd0LnkQ5o4TLxNb0d7zoJgUjLVaI6aV?=
+ =?us-ascii?Q?iqWsOUd/kol8rJ9uqOln6HBjt0O9a3RSNSVuCz8Pmdv9Wz7XtMWr3jxYaJYe?=
+ =?us-ascii?Q?+Kmi+5ASYyjCGYp+yqtV/CWUAWf6cIljco7lvUC+Xfy9Rm9U/Uzmo/L+jF3d?=
+ =?us-ascii?Q?coFhgbNg2KqB9qBrn6RwpQk3qmaWbiSx54N+RPoapE0A8a1onak7su3WExK0?=
+ =?us-ascii?Q?nXFi+dajv91FrT6fB6HakdgGXL2gReQ8oBFiKfbfzcbuCFtXiI3gJUM+mepG?=
+ =?us-ascii?Q?ox1bxmfMdPVlpCNg6qjjUz1T2RuDX5W6Jb4OVwXZnJXe4t17olHcPTwcN5Qx?=
+ =?us-ascii?Q?xu+hFNb9lIkcHRSBGK0jOjiu4NRTdhbDNw9H5hJVVAxTqYgoa0inkWO9z/St?=
+ =?us-ascii?Q?J8Sh9XznSPmrYvXYmJEg0cBaR6CPw1ZsVUFNB7G03OPbLyRxB1Xz?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fbf40c06-1bcb-4bd7-61d3-08df29fc6c4b
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Oct 2026 14:07:03.8337
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: onGrR+0cx0Dm0pJ4FQFXvM0/eJ0xts5dCx8X5xSOLxC93PUNEeFLVCiTFWcNmG9DaVDdKz0lI5n2cttofix6Soq400PqnnVPnY91hzfj1kVAnQ8TD53vaQBBj+ypat4H
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DUZPR04MB9845
 
+On Tue, Oct 13, 2026 at 04:37:21PM +0200, Jan Petrous wrote:
+> On Mon, Oct 12, 2026 at 01:43:05PM -0500, Frank Li wrote:
+> > On Sat, Sep 19, 2026 at 08:54:31AM +0200, Jan Petrous via B4 Relay wrote:
+> > > [You don't often get email from devnull+jan.petrous.oss.nxp.com@kernel.org. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
+> > >
+> > > From: "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
+> > >
+> > > The example references the SerDes PHY as
+> > >
+> > >   phys = <&serdes0 PHY_TYPE_PCIE 0 0>;
+> > >
+> > > i.e. the SerDes node itself with three PHY cells. That does not match
+> > > the SerDes binding: the per-lane child node is the generic PHY
+> > > provider and carries '#phy-cells = <0>', while the SerDes node itself
+> > > has no '#phy-cells' at all.
+> > >
+> > > Point the example at the PCIe lane child instead, which is also what
+> > > the S32G3 board device trees use. The dt-bindings/phy/phy.h include is
+> > > dropped along with the now-unused PHY_TYPE_PCIE constant.
+> > >
+> > > The schema itself is unchanged; 'phys: maxItems: 1' already describes
+> > > the corrected form.
+> > >
+> > > Signed-off-by: Jan Petrous (OSS) <jan.petrous@oss.nxp.com>
+> > > ---
+> > >  Documentation/devicetree/bindings/pci/nxp,s32g-pcie.yaml | 3 +--
+> > >  1 file changed, 1 insertion(+), 2 deletions(-)
+> > >
+> > > diff --git a/Documentation/devicetree/bindings/pci/nxp,s32g-pcie.yaml b/Documentation/devicetree/bindings/pci/nxp,s32g-pcie.yaml
+> > > index 66a050028278..29323e50bd8b 100644
+> > > --- a/Documentation/devicetree/bindings/pci/nxp,s32g-pcie.yaml
+> > > +++ b/Documentation/devicetree/bindings/pci/nxp,s32g-pcie.yaml
+> > > @@ -82,7 +82,6 @@ unevaluatedProperties: false
+> > >  examples:
+> > >    - |
+> > >      #include <dt-bindings/interrupt-controller/arm-gic.h>
+> > > -    #include <dt-bindings/phy/phy.h>
+> > >
+> > >      bus {
+> > >          #address-cells = <2>;
+> > > @@ -124,7 +123,7 @@ examples:
+> > >                  ranges;
+> > >
+> > >                  device_type = "pci";
+> > > -                phys = <&serdes0 PHY_TYPE_PCIE 0 0>;
+> > > +                phys = <&serdes0_pcie0>;
+> >
+> > I don't think it fix somethings. The "serdes0" just a label, point to
+> > provider, which is not neccsary that "#phy-cells" is 0.
+> >
+> > Examples just show need how many phys and don't care about phy provider's
+> > arguments
+> >
+>
+> The example validates either way, agreed. The three cells are the
+> '#phy-cells = <3>' of the downstream nxp,s32cc-serdes binding, which
+> was never posted upstream; patch 1 is the only SerDes binding for S32G
+> and has no three-cell provider. I would rather have the example match
+> it.
+>
+> The form depends on the outcome of your patch 1 comment, so I will
+> keep this patch in sync with that. If you prefer the phys line
+> untouched, I can drop it and keep only the ranges fix v4 adds here.
 
+This patch is not important. suggest drop it.
 
-On 5.10.26 г. 10:02 ч., Ankit Agrawal wrote:
-> After pci_tsm_bind() and pci_tsm_lock() the low level TSM driver is
-> expected to populate the TDISP GET_DEVICE_INTERFACE_REPORT response
-> payload for the device.
-> 
-> Add pci_tsm_mmio_alloc()/pci_tsm_mmio_free() to parse that report into
-> a set of encrypted MMIO ranges, and pci_tsm_mmio_setup()/
-> pci_tsm_mmio_teardown() to mark those ranges as encrypted in iomem via
-> a new encrypted_iomem_resource tree (IORES_DESC_ENCRYPTED). With those
-> descriptors the TSM driver can use pci_tsm_mmio_setup() to inform
-> ioremap() how to map the device per the device expectations. The VM
-> is expected to validate the interface with the relying party before
-> accepting the device for operation.
-> 
-> pci_tsm_mmio_alloc() also recovers the obfuscated starting address for
-> each encrypted MMIO range, since the VM is never disclosed the HPA
-> that correlates to the GPA of the device's MMIO. The obfuscated
-> address is BAR aligned.
-> 
-> Based on an original patch by Aneesh Kumar K.V [1], and cherry-picked
-> from Dan Williams' upstream commit [2]. Major functional differences
-> from Dan's posting is due to the lack of evidence-store infrastructure
-> yet (device_evidence / DEVICE_EVIDENCE_TYPE_REPORT). The
-> pci_tsm_mmio_alloc() takes the raw report bytes directly from the caller
-> instead of pulling them from a device evidence store.
-> 
-> Link: https://lore.kernel.org/linux-coco/20251117140007.122062-8-aneesh.kumar@kernel.org/ [1]
-> Link: https://lore.kernel.org/all/20260705220819.2472765-15-djbw@kernel.org/ [2]
-> 
-> Signed-off-by: Ankit Agrawal <ankita@nvidia.com>
-> Assisted-by: Claude:sonnet-5
-> ---
->   drivers/pci/tsm.c       | 236 ++++++++++++++++++++++++++++++++++++++++
->   include/linux/ioport.h  |   2 +
->   include/linux/pci-tsm.h |  33 ++++++
->   kernel/resource.c       |   8 ++
->   4 files changed, 279 insertions(+)
-> 
-> diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
-> index 5fdcd7f2e820..c8cfe89b6224 100644
-> --- a/drivers/pci/tsm.c
-> +++ b/drivers/pci/tsm.c
-> @@ -9,11 +9,16 @@
->   #define dev_fmt(fmt) "PCI/TSM: " fmt
->   
->   #include <linux/bitfield.h>
-> +#include <linux/overflow.h>
->   #include <linux/pci.h>
->   #include <linux/pci-doe.h>
->   #include <linux/pci-tsm.h>
-> +#include <linux/range.h>
-> +#include <linux/sizes.h>
-> +#include <linux/slab.h>
->   #include <linux/sysfs.h>
->   #include <linux/tsm.h>
-> +#include <linux/unaligned.h>
->   #include <linux/xarray.h>
->   #include "pci.h"
->   
-> @@ -898,3 +903,234 @@ int pci_tsm_doe_transfer(struct pci_dev *pdev, u8 type, const void *req,
->   		       resp, resp_sz);
->   }
->   EXPORT_SYMBOL_GPL(pci_tsm_doe_transfer);
-> +
-> +static void mmio_teardown(struct pci_tsm_mmio *mmio, int nr)
-> +{
-> +	while (nr--) {
-> +		struct resource *res = pci_tsm_mmio_resource(mmio, nr);
-> +
-> +		/*
-> +		 * Entries past the point where pci_tsm_mmio_setup() stopped
-> +		 * (or that were never run through setup() at all, e.g. a
-> +		 * caller that only wants the resolved range from
-> +		 * pci_tsm_mmio_alloc()) were never insert_resource()'d, so
-> +		 * res->parent is NULL. remove_resource() dereferences
-> +		 * res->parent unconditionally.
-> +		 */
-> +		if (res->parent)
-> +			remove_resource(res);
-> +	}
-> +}
-> +
-> +/**
-> + * pci_tsm_mmio_setup() - mark device MMIO as encrypted in iomem
-> + * @pdev: device owner of MMIO resources
-> + * @mmio: container of an array of resources to mark encrypted
-> + */
-> +int pci_tsm_mmio_setup(struct pci_dev *pdev, struct pci_tsm_mmio *mmio)
-> +{
-> +	int i;
-> +
-> +	device_lock_assert(&pdev->dev);
-> +	if (pdev->dev.driver)
-> +		return -EBUSY;
-> +
-> +	for (i = 0; i < mmio->nr; i++) {
-> +		struct resource *res = pci_tsm_mmio_resource(mmio, i);
-> +		int j;
-> +
-> +		if (resource_size(res) == 0 || !(res->flags & IORESOURCE_MEM))
-> +			break;
-> +
-> +		/* Only require the caller to set the range, init remainder */
-> +		*res = DEFINE_RES_NAMED_DESC(res->start, resource_size(res),
-> +					     pci_name(pdev), IORESOURCE_MEM,
-> +					     IORES_DESC_ENCRYPTED);
-> +
-> +		for (j = 0; j < PCI_NUM_RESOURCES; j++)
-> +			if (resource_contains(pci_resource_n(pdev, j), res))
-> +				break;
-> +
-> +		/* Request is outside of device MMIO */
-> +		if (j >= PCI_NUM_RESOURCES)
-> +			break;
-> +
-> +		if (insert_resource(&encrypted_iomem_resource, res) != 0)
-> +			break;
-> +	}
-> +
-> +	if (i >= mmio->nr)
-> +		return 0;
+Frank
 
-Shouldn't this check be if (i == mmio->nr -1 ) i.e all descriptors have 
-been initialized, given the for loop condition i can ever be at most 
-mmio->nr - 1 i.e the actual index of a descriptor?
-
-<snip>
+>
+> BR.
+> /Jan
+>
