@@ -1,130 +1,374 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020117.outbound.protection.outlook.com [52.101.229.117])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 309B745FFB7
-	for <linux-pci@vger.kernel.org>; Wed, 14 Oct 2026 16:23:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791995037; cv=none; b=UUnpy6gD3tBZz9T0ySuRsZa+L2xMVfr/IWa38ukQptgO4dTdqqbicqNIuRWMUY3Ahca3Sgfs5IiJ6FzYq5ustRa7+0TYqdV5AfP2T42EOi6MyVUTVEI9oXadEz3fx39D1FLS7RY7Ofn3YNA2xjDnBYGtApEQTtklDASWNAGRSBg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791995037; c=relaxed/simple;
-	bh=cr0upiaATQA1LERxt8NucOZ1hwb2sg2RFfXOMHbu+38=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=OO94/tF7lw+SqHpwL3hGDUhphZE0MVfhpT07BWx9DXmXmfStRBqAjz5nvO8Ybqf4Z5vz2hC8AlfDtinWKsCDlwl8TaSFLyQRhz/UbDEEjjJQ2H2dfznQAj7b3qOn+CG1c5WJMaZCI+7SQHZtF3TXx9gM0BE1ozPaQ7JSlI5GE0w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cFqQYAZv; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0520C4E36D0;
+	Wed, 14 Oct 2026 16:39:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.117
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791995952; cv=fail; b=qAjyYXU7FWPjx//L0TxbHRmNI2B7XfoZmWmcryANLfdpan+AqAgy08fmz6rb4SnddYZ4etD/0w6ViVnUEJscpzI8TMvGeqTBuzcItPqKDDcnAIqSRdJHkLa0UwnA2KMweBQsXf+4iiC+Ss2DQsaxJcIGswK1mmFRKSzaQMdgOwA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791995952; c=relaxed/simple;
+	bh=7tsJ0p2SOap0szsIJsB4jSxeDvOBJHjQ8d+TAG3QehY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=JlUIPxbEA91sNw3auAMeXfoXtcsNva2vj5l0HvZ7QGkKuCDLlQ1S4615WH+BUP9KZqOZS46gWcw3HlJf+4pY/En3qGsnZCc0TDh8/ZPpGWwaiWHqn6xGK7/K6pDrl3UPpu2Tgj70M50T4/hmYZAHidgyABv4ue7azmtZ74KVsSo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=JDa8Hk3l; arc=fail smtp.client-ip=52.101.229.117
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cFqQYAZv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 900DE1F000C4;
-	Wed, 14 Oct 2026 16:23:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791995034;
-	bh=YZKwDKWpJj1fghE3DAlKDWqQPW93MhHWZCSpuESKBec=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=cFqQYAZvFXkGnAIlkEwHFxrNI6kiHc5Dv7LmhxvCAkBqlXywfHRe2hro/p+GKE7ZM
-	 JVnrbmtJ7BvCf4R+vgR+LBzPlXbnURZCsIXsj2Nsc8hcREehH0luO01wggTwA6zN1W
-	 pXoFzYSK4ec+GliJAa3CLH9l9RHP6stqcp3YUcWBdoJgyintAgyMgZ/ki6Cq20Bxo3
-	 akUypURkYASGFl5r+Hk9WR1/flHVhpX0WYSS5NcKZnLYb2idL+NgxVyqHjeQjIdkBK
-	 QN4cKtoLDkxxC4iFQiIM4VBMrS2+bPwhix0vq1oN9mA+KwvGfJCgoQt9RNDqDk4BtU
-	 qVwkClDBYT1xw==
-Date: Wed, 14 Oct 2026 11:23:53 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
-Cc: Bartosz Golaszewski <brgl@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/pwrctrl: Power off child devices on power-on failure
-Message-ID: <20261014162353.GA1635048@bhelgaas>
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="JDa8Hk3l"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=KwA4qZe88eg+UrNU3nPQ1Gg+ODRzARJZOSmtn/q0OmldWWtMqMGdCoOffq25ooDl2RtLY1FshvhwvB1J5+vHr/Regi21uozHDdjAnsa+ntk29AspE7JL/5kdGZGDcRvS2xgErynWw7CA+lNp0CiKRw2wNXj3A/bBvgwmWO4Rr+7Mz1W1t6+AQruqmuj0S13Qdt7cCPsWyLg0sbIo1Ja6rUOigS7N6BnEcIWhpU6ge+zClR46jIdtzuP66mzbbiOrNFmEfUKg5+JavMpE7V7r/scoNkLnWoHTfGvertCdqF+knOc7ryoB41lHEd3rgXAHi3OuX675iDXWxDcaPWQOjg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=tms0iA7tRX5JCZcRWTsyZZBJuYeyObfyOijevwHRGCo=;
+ b=mksGPrzvMLNeQlnoFKkz7a5d8eiFDNyx7MEZwI9O3DUOABXs6dcPS1U5U/i5T0G4jSKzJ9bDtdlXVhIN0acRrNK3tW5MjKBpS8yccm/GqK+PzMlHgKFxcFBirkKwI5220GE4r7ViDg2//24YBwpQw5U4vL3lFVlB0ldlxsxeukbp6Y9w1edLa9VtljpL5qeQorVTkH2PzFAIJn+Kpe3yPWvE0yi5mPxOFplravfeF+5PzskujfCvBIxu8VJCEKmoRjOMBT/Kgee8KM/CxPfRAjdim6y0Qz0l9Zx6V8MclnheKD14D9rGVh9wYgEoenEDBDDD3z/a7xfYzOQPa1gNpQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tms0iA7tRX5JCZcRWTsyZZBJuYeyObfyOijevwHRGCo=;
+ b=JDa8Hk3l+1lifUrzrifGGMnso2oUWr1IHqGMhQh6MiYD9Q6egUgqW2aykYu023mVu5E7Xp2k64eGzFB/U+k/sdHsB5RDnR04rRzFwHeYUeyW/mPSzs3ntF7vtVLN24vs7mE9xTi1D6ZVycJOm3PQpZ8fBIvgHtbk/KBPWMTJoWg=
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:325::11)
+ by TYYP286MB4406.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:110::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.13; Wed, 14 Oct
+ 2026 16:39:06 +0000
+Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::cce5:2aa8:53f9:dba9]) by TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::cce5:2aa8:53f9:dba9%5]) with mapi id 15.21.0522.012; Wed, 14 Oct 2026
+ 16:39:06 +0000
+Date: Thu, 15 Oct 2026 01:39:05 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Frank Li <Frank.li@oss.nxp.com>, 
+	Manivannan Sadhasivam <mani@kernel.org>
+Cc: Frank Li <Frank.Li@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>, 
+	Allen Hubbe <allenbh@gmail.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Kishon Vijay Abraham I <kishon@kernel.org>, ntb@lists.linux.dev, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4] PCI: endpoint: pci-epf-vntb: Honor MSI-X selection
+Message-ID: <j43nhj3wyu5tocjiots2xm4v2yxtngsxoaafkvxtputxxttw7j@snrzxkr66vkp>
+References: <20261014053256.2378817-1-den@valinux.co.jp>
+ <as-UJX1jD8ZFiBxk@SMW015318>
+ <x53diijgm6cqfjc5rlihi5q2q54nxdbgvs5u3cfxg5zfdo5w4z@hayq2svzwfes>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <x53diijgm6cqfjc5rlihi5q2q54nxdbgvs5u3cfxg5zfdo5w4z@hayq2svzwfes>
+X-ClientProxiedBy: TY4P286CA0048.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:36e::9) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:325::11)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260909-pwrtctl-power-on-rallback-v1-1-412ef996ba27@oss.qualcomm.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB6866:EE_|TYYP286MB4406:EE_
+X-MS-Office365-Filtering-Correlation-Id: 359e0e4b-34cd-440c-6850-08df2a11a9e6
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|366016|1800799024|7416014|376014|23010399003|56012099006|5023799004|4143699003|261009223027099003|22082099003|10067099003|18002099003|6133799003;
+X-Microsoft-Antispam-Message-Info:
+	TJHaIjKyUAFO/pgHNKrJyjjbn9xqC4Cck+AwCSbIi88IeMAcJle9a3qqHoxQqYjv4Q90TMxVDSgwRpb6mGFP4S5qB5mMa8LQfuFcH1EUgJeNTh5Z89yqQh9FdOE+aVTGQmhWxfu/mSNCdacBqQGgsmIlOpWRaVWOp/EJxsIb0k56B6BFJc2THdAiGnzhiVEGa+qKVOI0fDWRwEwRf5gAueHAIKiPNy7EaGfmZh+U+/qAmKEvDvGpMXl3KA5m1rBHsx+HXNTJPuIpdBYX6MeCU3Y69D6KxtfO/RzSdbSBclKS65osAAcRZQKfjygKNl/0UEoKTBxCpIOedFPXubppihydSiXzk5G+U8Kkk+ZZ3V4dSXiqmXT57FueR4CGeFPJZRvJFbBkvlBwlR/Y3h+vRF6bFOJl+b5Q18SxRft29/iM//haPMJYIhYkB4dbjD27VGCG1HPT/Wry9g/HLejPWqKQbbHpokRk/p9VW7RStFNVeXzL7z9MkEcT4EaI8mPiWgZqEnTUynLrDMx90z1+zM4bRwQ6ual0bictk5St97QUoxJ9bnXL6OpH6wxayPimhVo8Z7piWuN+6+XD/Pk/vCUgiD9YwivMmrehyfF0WhJkCgYhRo3w5VijxMR6Ekv1
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(366016)(1800799024)(7416014)(376014)(23010399003)(56012099006)(5023799004)(4143699003)(261009223027099003)(22082099003)(10067099003)(18002099003)(6133799003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?qriuPfrwDH2zRPpqceKpsHnOMhccdvoTR2RvRir28GEaywIYTPpOY5Eaq50X?=
+ =?us-ascii?Q?GlMLXFdnkl60dF3z23MOfS9opIGXHzEM8ixZ1CPKTeMpAFlmPsvID5JOeiHp?=
+ =?us-ascii?Q?BwISuU2vYHCwqVunjIxJtFQxFqFhFuFwOydozN8CRqS7YKf//9wOIiiggGkv?=
+ =?us-ascii?Q?fjjTugHHAkk63KnFkMZ4mwb3U7J1OhETPUYe1gCBW00SiVDyMgh9eVY96NOu?=
+ =?us-ascii?Q?yQ5/0AsT3786fkv0WCnhc3YEgeGWqigCGt1+kccTlCgLmyb8xerO/YqoK6dY?=
+ =?us-ascii?Q?W+Oy3/7HDutDQ1l3kTZUF/ptuM16yzYpGAHGeicgCd1g+LnzPKDaHDNz2Oiq?=
+ =?us-ascii?Q?1YYWK4mHw/SCjHYvDkwlWgLhjAcO5aUpIFAqdSI50+D4n/wtWW1WjTbKiBY6?=
+ =?us-ascii?Q?hPSf/HcK/tOWyEg0QVwirJShumrbrMyk5aks75rG578M1G47UfQLajpxCBne?=
+ =?us-ascii?Q?QVj+GIaOu9wbVvRLJnXl+lP5ni1JH2SjPzoEEolfpvA2DLW2fXWHv98INEEQ?=
+ =?us-ascii?Q?PGT6GPGrW+zub2QGHbcZLR1vsARFTPG1Uq/Z8NgPSpHZNsmLphiM3WzCQWD8?=
+ =?us-ascii?Q?mostHC1Oihme9uVOsrwTmQ74JnNGdIjyMkoy1nhJlNdYSE+SGQtpKOiZKp/S?=
+ =?us-ascii?Q?T/kmDbsVSxmkWrzE6u+dnfgzTgC0qqGacIpuV2xnfO5n7onU8q3rs1rLXS8y?=
+ =?us-ascii?Q?TOvfWTxYXRSagHC6yZxSOUMHGubxy9UPUXH1VXtgLNzO5HmY4vTTvut7esLC?=
+ =?us-ascii?Q?J4qTP6qeORU4BrvJI5hMfvi/1cEePKf+Olbr6hEFIl4FRJL7k/xVmMvnphN0?=
+ =?us-ascii?Q?yGhWlIlhEiaOOqWVx5tH5NiZVxOBmzvor+ds0uIhhX5o9hvHYfzlhlKZsch3?=
+ =?us-ascii?Q?qQWZYxnOnUmLkl2l0jtnx6/zG0/KgFJD55fl0aIuIcQLfj0mMe+eyznZGo9G?=
+ =?us-ascii?Q?GV72EI6362vs6JmMgp4DZgmI26Fn8lIWMSiQb2+sKGPRc+SfiE3Tk6bKFmDr?=
+ =?us-ascii?Q?8tGEVvl9CrMy54KRFQo0k7j0118Ce+TLxm3iuYExbD47uX19z3TIk+jiB/FX?=
+ =?us-ascii?Q?zU4ZA8XqJoKJLaftiYL6VpciZBP037fGvIfOeAKoQt03T2WlHYcc41HeCkrL?=
+ =?us-ascii?Q?YKOGHoDIIqiXlzCh5uscdbAsTeSWUqibYJho34XXMZAqIE9QaA27SV+Wrb4+?=
+ =?us-ascii?Q?/ui/CUEa/yo/1YxQWgUJOwNqFeaPaGwR4p3nhvxQ8nGcWnPKPqmQjjYvyVYn?=
+ =?us-ascii?Q?odp1hHV5ZXEaCYtVt8s2t72zX+XeE2WOJAUIuadfHhB48PoQ7Lh8gyHhkJQo?=
+ =?us-ascii?Q?ccbiYXV+Vc2Cij4p1Eq6ETRTZKBibNl30fF0pkDuAZ950PrF44JvIZWlCJZH?=
+ =?us-ascii?Q?h4f7MOLngbsoM+6DrqFoe3PdYDL7GVXM2w6E/gWu6lgl1KpWiahlKBgQwhWJ?=
+ =?us-ascii?Q?EX2HI0WdHHrlKSXPaMw1Xoev3yJYHkOnZvW2d3NTL4mngyF+QhFmfYBM6W7O?=
+ =?us-ascii?Q?UgNi0xE0Jo2J/ZMqEowSqrWBzgAMv+GTKQhbpKCuGAuDg+gc0mifiglqzj5f?=
+ =?us-ascii?Q?TZ4ZoAsP07XqPFVnbNjGw9ZEOMXa3zGe7rNSFJkqmJAXIjfJ+RzY5P7ufE8j?=
+ =?us-ascii?Q?KDTODL3MCaDOGXOpWeOpTe/hzCE+FyjmVYtIdD1guqZACQ+wSXVjmzYU/ti8?=
+ =?us-ascii?Q?yhJBoQGkjF/myscjd9hWhi47KUtLTQX13vpiCMCVxdezk3pSdl38cm4XlaDg?=
+ =?us-ascii?Q?SdsR7MQr07UXTlypo8exrfnrqcyTesvUfrZhZPsDzKGtQi0qWZk2?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 359e0e4b-34cd-440c-6850-08df2a11a9e6
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Oct 2026 16:39:06.4387
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 8KMjIyXHZTfso+Bfmk9W9yuzEOKyRQTlrwLZZbxnP+KNFMQ2xLCmUjL+iBQRAGX0QaDJ4SS4yFJtjfgSWIoDAg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYYP286MB4406
 
-On Wed, Sep 09, 2026 at 05:28:29PM +0200, Lorenzo Bianconi wrote:
-> pci_pwrctrl_power_on_device() recursively powers on the child nodes
-> of a device before powering on the device itself. If powering on a
-> child fails (e.g. returning -EPROBE_DEFER), the function returned
-> immediately, leaving the sibling children that were already powered
-> on in the same loop iteration enabled.
+On Thu, Oct 15, 2026 at 12:06:34AM +0900, Koichiro Den wrote:
+> On Wed, Oct 14, 2026 at 09:39:33AM -0500, Frank Li wrote:
+> > On Wed, Oct 14, 2026 at 02:32:56PM +0900, Koichiro Den wrote:
+> > > ntb_hw_epf tries MSI-X first and falls back to MSI. It reports the
+> > > result in COMMAND_CONFIGURE_DOORBELL. pci-epf-vntb ignores MSIX_ENABLE,
+> > > configures only MSI, and always raises peer doorbells with PCI_IRQ_MSI.
+> > > When MSI-X is selected, the host does not program MSI, so raising it can
+> > > issue a write to an invalid address. This was observed as IOMMU faults
+> > > on the RC, with no doorbell interrupts delivered.
+> > >
+> > > Configure MSI-X when supported and use the selected type for peer
+> > > doorbells. Allocate the MSI-X Table and PBA in the config BAR and
+> > > configure db_count entries. Use this EPF-owned layout even if the EPC
+> > > has fixed, hardware-owned Table/PBA regions, as pci-epf-test and
+> > > nvmet-pci-epf already do.
+> > >
+> > > Fixes: e35f56bb0330 ("PCI: endpoint: Support NTB transfer between RC and EP")
+> > > Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> > > ---
+> > > Changes since v3:
+> > >   - Reject MSI/MSI-X requests unsupported by the EPC. (Sashiko)
+> > >   - Link to v3: https://lore.kernel.org/r/20260919172021.1055451-1-den@valinux.co.jp/
+> > >
+> > > Changes in v3:
+> > >   - Split out the vNTB MSI-X fix and use an EPF-owned layout. (Niklas)
+> > >     Niklas and I both hit an issue with hardware-owned MSI-X on RK3588:
+> > >     https://lore.kernel.org/r/mmcripxdekhktnn73ikylthajkdnincwu7p2nelcpcqzexpf22@rrmmzr6hfvzf/
+> > >   - Link to v2: https://lore.kernel.org/r/20260830151948.3547577-4-den@valinux.co.jp/
+> > >
+> > >  drivers/pci/endpoint/functions/pci-epf-vntb.c | 63 ++++++++++++++-----
+> > >  1 file changed, 47 insertions(+), 16 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> > > index 07ba338732d4..c30a73c537a0 100644
+> > > --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> > > +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> > > @@ -148,6 +148,7 @@ struct epf_ntb {
+> > >  	u16 vntb_vid;
+> > >
+> > >  	bool linkup;
+> > > +	bool peer_msix;
+> > >
+> > >  	/*
+> > >  	 * True when doorbells are interrupt-driven (MSI or embedded), false
+> > > @@ -155,6 +156,7 @@ struct epf_ntb {
+> > >  	 */
+> > >  	bool msi_doorbell;
+> > >  	u32 spad_size;
+> > > +	u32 msix_table_offset;
+> > >
+> > >  	enum pci_barno epf_ntb_bar[VNTB_BAR_NUM];
+> > >
+> > > @@ -276,6 +278,7 @@ static void epf_ntb_teardown_mw(struct epf_ntb *ntb, u32 mw)
+> > >   */
+> > >  static void epf_ntb_cmd_handler(struct work_struct *work)
+> > >  {
+> > > +	const struct pci_epc_features *epc_features;
+> > >  	struct epf_ntb_ctrl *ctrl;
+> > >  	u32 command, argument;
+> > >  	struct epf_ntb *ntb;
+> > > @@ -308,6 +311,15 @@ static void epf_ntb_cmd_handler(struct work_struct *work)
+> > >
+> > >  	switch (command) {
+> > >  	case COMMAND_CONFIGURE_DOORBELL:
+> > > +		epc_features = pci_epc_get_features(ntb->epf->epc,
+> > > +						    ntb->epf->func_no,
+> > > +						    ntb->epf->vfunc_no);
+> > > +		if (((argument & MSIX_ENABLE) && !epc_features->msix_capable) ||
+> > > +		    (!(argument & MSIX_ENABLE) && !epc_features->msi_capable)) {
+> > > +			ctrl->command_status = COMMAND_STATUS_ERROR;
+> > > +			break;
+> > > +		}
+> > > +		ntb->peer_msix = argument & MSIX_ENABLE;
+> > >  		ctrl->command_status = COMMAND_STATUS_OK;
+> > >  		break;
+> > >  	case COMMAND_TEARDOWN_DOORBELL:
+> > > @@ -451,8 +463,9 @@ static void epf_ntb_config_spad_bar_free(struct epf_ntb *ntb)
+> > >   * @ntb: NTB device that facilitates communication between HOST and VHOST
+> > >   *
+> > >   * Allocate the Local Memory mentioned in the above diagram. The size of
+> > > - * CONFIG REGION is sizeof(struct epf_ntb_ctrl) and size of SCRATCHPAD REGION
+> > > - * is obtained from "spad-count" configfs entry.
+> > > + * CONFIG REGION is sizeof(struct epf_ntb_ctrl), plus space for the MSI-X
+> > > + * Table and PBA if supported. The size of SCRATCHPAD REGION is obtained
+> > > + * from "spad-count" configfs entry.
+> > >   *
+> > >   * Returns: Zero for success, or an error code in case of failure
+> > >   */
+> > > @@ -473,6 +486,12 @@ static int epf_ntb_config_spad_bar_alloc(struct epf_ntb *ntb)
+> > >  	spad_count = ntb->spad_count;
+> > >
+> > >  	ctrl_size = ALIGN(sizeof(struct epf_ntb_ctrl), sizeof(u32));
+> > > +	if (epc_features->msix_capable) {
+> > > +		ntb->msix_table_offset = ALIGN(ctrl_size, 8);
+> > > +		ctrl_size = ntb->msix_table_offset +
+> > > +			    ntb->db_count * PCI_MSIX_ENTRY_SIZE +
+> > > +			    BITS_TO_U64(ntb->db_count) * sizeof(u64);
+> > > +	}
+> > >  	spad_size = 2 * spad_count * sizeof(u32);
+> > >
+> > >  	base = pci_epf_alloc_space(epf, ctrl_size + spad_size,
+> > > @@ -513,12 +532,14 @@ static int epf_ntb_config_spad_bar_alloc(struct epf_ntb *ntb)
+> > >  static int epf_ntb_configure_interrupt(struct epf_ntb *ntb)
+> > >  {
+> > >  	const struct pci_epc_features *epc_features;
+> > > +	struct pci_epf *epf = ntb->epf;
+> > >  	struct device *dev;
+> > >  	int ret;
+> > >
+> > > -	dev = &ntb->epf->dev;
+> > > +	dev = &epf->dev;
+> > >
+> > > -	epc_features = pci_epc_get_features(ntb->epf->epc, ntb->epf->func_no, ntb->epf->vfunc_no);
+> > > +	epc_features = pci_epc_get_features(epf->epc, epf->func_no,
+> > > +					    epf->vfunc_no);
+> > >
+> > >  	if (!(epc_features->msix_capable || epc_features->msi_capable)) {
+> > >  		dev_err(dev, "MSI or MSI-X is required for doorbell\n");
+> > > @@ -532,16 +553,24 @@ static int epf_ntb_configure_interrupt(struct epf_ntb *ntb)
+> > >  	}
+> > >
+> > >  	if (epc_features->msi_capable) {
+> > > -		ret = pci_epc_set_msi(ntb->epf->epc,
+> > > -				      ntb->epf->func_no,
+> > > -				      ntb->epf->vfunc_no,
+> > > -				      16);
+> > > +		ret = pci_epc_set_msi(epf->epc, epf->func_no, epf->vfunc_no, 16);
+> > >  		if (ret) {
+> > >  			dev_err(dev, "MSI configuration failed\n");
+> > >  			return ret;
+> > >  		}
+> > >  	}
+> > 
+> > This part belong code cleanup by local variable epf. Can you move this
+> > part to prepare patch? Or pci_epc_set_msix() use ntb->epf->epc, then
+> > replace all after this patch.
 > 
-> Since probe deferral is a standard boot path, this leads to unbounded
-> regulator and clock enable increments across retries. The error path
-> in pci_pwrctrl_power_on_devices() only powers off the top-level
-> children processed before the failing one and explicitly stops at it,
-> so it can never clean up the siblings leaked deeper in the failed
-> subtree.
+> I remember Bjorn mentioning this clean-up somewhere, and I thought this patch
+> was a good chance to do that. But yeah, it makes sense to split out the
+> clean-up.
 > 
-> Power off the sibling children that were successfully powered on
-> before a child fails, and power off all children if the device's own
-> power_on() fails after its children were already enabled. Switch to a
-> manual child iterator so the failing node can be tracked and its
-> reference released in the error path.
+> > 
+> > >
+> > > +	if (epc_features->msix_capable) {
+> > > +		ret = pci_epc_set_msix(epf->epc, epf->func_no, epf->vfunc_no,
+> > > +				       ntb->db_count,
+> > > +				       ntb->epf_ntb_bar[BAR_CONFIG],
+> > > +				       ntb->msix_table_offset);
+> > > +		if (ret) {
+> > > +			dev_err(dev, "MSI-X configuration failed\n");
+> > > +			return ret;
+> > > +		}
+> > > +	}
+> > > +
+> > >  	return 0;
+> > >  }
+> > >
+> > > @@ -1529,6 +1558,7 @@ static void vntb_epf_peer_db_work(struct work_struct *work)
+> > >  	struct epf_ntb *ntb = container_of(work, struct epf_ntb, peer_db_work);
+> > >  	struct pci_epf *epf = ntb->epf;
+> > >  	unsigned int budget = VNTB_PEER_DB_WORK_BUDGET;
+> > > +	unsigned int irq_type;
+> > >  	u8 func_no, vfunc_no;
+> > >  	unsigned int db_bit;
+> > >  	u32 interrupt_num;
+> > > @@ -1540,6 +1570,7 @@ static void vntb_epf_peer_db_work(struct work_struct *work)
+> > >
+> > >  	func_no = epf->func_no;
+> > >  	vfunc_no = epf->vfunc_no;
+> > > +	irq_type = ntb->peer_msix ? PCI_IRQ_MSIX : PCI_IRQ_MSI;
+> > >
+> > >  	/*
+> > >  	 * Drain doorbells from peer_db_pending in snapshots (atomic64_xchg()).
+> > > @@ -1553,16 +1584,16 @@ static void vntb_epf_peer_db_work(struct work_struct *work)
+> > >
+> > >  		while (db_bits) {
+> > >  			/*
+> > > -			 * pci_epc_raise_irq() for MSI expects a 1-based
+> > > -			 * interrupt number. The first usable doorbell starts
+> > > -			 * at EPF_IRQ_DB_START in the legacy slot layout.
+> > > +			 * pci_epc_raise_irq() expects a 1-based interrupt
+> > > +			 * number for MSI and MSI-X. The first usable doorbell
+> > > +			 * starts at EPF_IRQ_DB_START in the legacy slot layout.
+> > >  			 *
+> > >  			 * Legacy mapping (kept for compatibility):
+> > >  			 *
+> > > -			 *   MSI #1 : link event (reserved)
+> > > -			 *   MSI #2 : unused (historical offset)
+> > > -			 *   MSI #3 : doorbell bit 0 (DB#0)
+> > > -			 *   MSI #4 : doorbell bit 1 (DB#1)
+> > > +			 *   IRQ #1 : link event (reserved)
+> > > +			 *   IRQ #2 : unused (historical offset)
+> > > +			 *   IRQ #3 : doorbell bit 0 (DB#0)
+> > > +			 *   IRQ #4 : doorbell bit 1 (DB#1)
+> > >  			 *   ...
+> > 
+> > Needn't update these comments,  the key information is #n, there are not
+> > big difference between MSI and IRQ.
 > 
-> Fixes: b35cf3b6aa1e ("PCI/pwrctrl: Add APIs to power on/off pwrctrl devices")
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
+> I guess your point is to keep the diff small. Otherwise, I would also be fine
+> with s/MSI/MSI(-X)/. I don't have a strong opinion here, so I'll leave the
+> labels unchanged. I'll send v5.
 
-Applied to pci/pwrctrl for v7.4, thanks!
+(+To: Mani)
 
-> ---
->  drivers/pci/pwrctrl/core.c | 19 +++++++++++++++++--
->  1 file changed, 17 insertions(+), 2 deletions(-)
+BTW, I'm thinking of basing the next revision on [1] (thanks for the review
+there too). This MSI-X fix conflicts with it, and it's not just a textual
+conflict; the new link-event notification also needs to care about the MSI vs
+MSI-X selection.
+
+Since [1] already has your Reviewed-by, I expect it to land in pci/endpoint
+first. Please let me know if you have any objections to adding [1] as a
+dependency.
+
+(vNTB-DMA series [2] also conflicts with these small fixes, so I'm hesitating to
+send its next revision too.)
+
+[1] https://lore.kernel.org/r/20261014071448.2473208-1-den@valinux.co.jp/
+[2] https://lore.kernel.org/r/20261009045949.1109871-1-den@valinux.co.jp/
+
+Best regards,
+Koichiro Den
+
 > 
-> diff --git a/drivers/pci/pwrctrl/core.c b/drivers/pci/pwrctrl/core.c
-> index 10d817aefb09..d29cd506972d 100644
-> --- a/drivers/pci/pwrctrl/core.c
-> +++ b/drivers/pci/pwrctrl/core.c
-> @@ -252,14 +252,16 @@ static int __pci_pwrctrl_power_on_device(struct device *dev)
->  static int pci_pwrctrl_power_on_device(struct device_node *np)
->  {
->  	struct platform_device *pdev;
-> +	struct device_node *child;
->  	int ret = 0;
->  
-> -	for_each_available_child_of_node_scoped(np, child) {
-> +	for_each_available_child_of_node(np, child) {
->  		ret = pci_pwrctrl_power_on_device(child);
->  		if (ret)
-> -			return ret;
-> +			goto err_power_off;
->  	}
->  
-> +	child = NULL;
->  	if (!pci_pwrctrl_is_required(np))
->  		return 0;
->  
-> @@ -279,6 +281,19 @@ static int pci_pwrctrl_power_on_device(struct device_node *np)
->  
->  	platform_device_put(pdev);
->  
-> +	if (ret)
-> +		goto err_power_off;
-> +
-> +	return 0;
-> +
-> +err_power_off:
-> +	for_each_available_child_of_node_scoped(np, tmp) {
-> +		if (tmp == child)
-> +			break;
-> +		pci_pwrctrl_power_off_device(tmp);
-> +	}
-> +	of_node_put(child);
-> +
->  	return ret;
->  }
->  
-> 
-> ---
-> base-commit: 028f86457e822ab9de5b0d6d23efddc1b8b54ae1
-> change-id: 20260908-pwrtctl-power-on-rallback-5c6364b080ce
+> Thanks for the review!
 > 
 > Best regards,
-> -- 
-> Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
+> Koichiro Den
+> 
+> > 
+> > Frank
+> > 
+> > >  			 *
+> > >  			 * Do not change this mapping to avoid breaking
+> > > @@ -1573,7 +1604,7 @@ static void vntb_epf_peer_db_work(struct work_struct *work)
+> > >  			db_bits &= ~BIT_ULL(db_bit);
+> > >
+> > >  			ret = pci_epc_raise_irq(epf->epc, func_no, vfunc_no,
+> > > -						PCI_IRQ_MSI, interrupt_num);
+> > > +						irq_type, interrupt_num);
+> > >  			if (ret)
+> > >  				dev_err(&epf->dev,
+> > >  					"Failed to raise IRQ for interrupt_num %u: %d\n",
+> > >
+> > > base-commit: 5cdbd6d3a3a147fa9975e35f2602cbec9a72a932
+> > > --
+> > > 2.54.0
+> > >
 > 
