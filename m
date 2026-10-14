@@ -1,39 +1,39 @@
 Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A1AB37C90B;
-	Wed, 14 Oct 2026 18:07:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 610F83FA5E4;
+	Wed, 14 Oct 2026 18:25:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792001279; cv=none; b=nbuaUGpenui8bbHfx7CJ8cMIE3/kf68Lg56OnrSPIvITShZZPSyec6I1FHopc4dUpDClzKP97qz4d8sQCCVdH+V9YoYsCCh5C/Cs6c2aIE085d9stNp4Cor52MFQTMNSOR3Vdyc5bfY/wpWsyHsl1ZPLuiX860oYMA5v7bLkaJQ=
+	t=1792002356; cv=none; b=n04A2shcQKhv07vwfGOFvV1SRvY1plpdxrw7rU6Y8rh4BGeUsoSX2k1vhdlJaR5pmitJFDQWdScAucyR0pmtr7BOgaxzd3UNBPcpnspaKIbDncllbidOt7cMmyfhavZssJJ0TDkeHQ7wMgaCkAY3oPM6Eb5VytD5g0QATt0dXJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792001279; c=relaxed/simple;
-	bh=y+Nd+kuMcNDghQJ+k5iJOCUpJlukDHtSE4PiH33+90U=;
+	s=arc-20240116; t=1792002356; c=relaxed/simple;
+	bh=KPdBKjIBiEuL5BghjVzWj/jKPudY6CIm8IerwDmbPHw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HGDvNoB3j8Oxe/L3+fAV8bVgBjcxLmxn0gDREo79xRryXtV3hOwmDfeF65fMs77MS5J14MkEVbrpnzr5Kc19Win5imfhcOkXN83M4NrMjTn1w3Ozc6PWQxS4PzM38UWjQdv8gOIqa+KtdI0r1LtizenEJCI5Wb0rxAIpE9kMNl4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=G3P/Joh8; arc=none smtp.client-ip=150.107.74.76
+	 In-Reply-To:Content-Type; b=Qg2fuDXSclEbSqBU4UwkmLPe9Ky7XB8US8hyzJDl/obCNOxYdktH9Hbzon2o8gKo4fhSOduTub3dRRnxfERlJwoe7HUSEgDFlodHRyRxOPzN4IPR8tHlsxWt/7eOWjL2AL+AQXLlyYwuU7zU2BaYBH04gomVcrDyFdLZzJEMT+c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=tJLtW8zy; arc=none smtp.client-ip=150.107.74.76
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="G3P/Joh8"
+	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="tJLtW8zy"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1792001275;
-	bh=DBsylmieXlH7jN4lQzs3+azlJUaS53ZlHvjnKa/pZyU=;
+	s=201707; t=1792002350;
+	bh=sHgmmvVMprfoOGRefY82u23D8embvuDtkJUdhu4IrFc=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=G3P/Joh8VxsWKZD77wjVjEsdrEuCe0iMj5OoD+01Tc4snAwR0d0ut2CGkYADYIVWO
-	 lVd3paktWgKEkNFfCS04XvlDnw9WXH6ROInP1ff43Unn3dN2s6jGQLj3Y8/CLt/Msk
-	 6hbpzuGQ5lvJQW2Lii1rTzFnibHWD3vW3pHbmjhhaxQFlyt/ui4tRbNU/JPW0mXamJ
-	 lotdYno1jCLuv2jbaY0cSWgxE5d39w0RS+qczN9qArNLXkR96A0igpzLbjtkHtXGdK
-	 pMyiWuQTz9WB/VYpj62fiSVbURyvFTF85lIr7NbPrDnfh1kg8rzS1tKDwltF6piA5I
-	 AN+3ZbullBfyA==
+	b=tJLtW8zyYA7xZPbSgycHPwaPvXJOXBZorLUEAUXc1BI7o/a8xBOvnavMqTw1h0w0G
+	 MSQfcvcGScxH1C1vsTEtKr7ecTG/n+MwM2x7cNBqdtmD2l05jFwCDohnrOwmIjy93J
+	 eSCN1M0GsENTvt/ba6s77GCPlBPCn6RcqLAIbN8MeM93xM/zghkOPXwbfM/SKdiPax
+	 TLl5KzV27028WSymNrOjdm+vAtqjSWQ6oH3EzZPq4vy5n/Hh/lt5GdyE0+3UZGGWY8
+	 +6pUOO9xw+rM0IaZOsad2JbE5A8n8983ND4cS0USm5QnpSaPYVnJlN5y0ZK3zKesFP
+	 xFeAHFRwN751g==
 Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4j4fLr3nYgz4wDf;
-	Thu, 15 Oct 2026 05:07:48 +1100 (AEDT)
-Message-ID: <2d454220-61e1-48e2-8515-112393ffb3ad@ozlabs.org>
-Date: Wed, 14 Oct 2026 19:07:46 +0100
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4j4flW3d1Zz4wCp;
+	Thu, 15 Oct 2026 05:25:43 +1100 (AEDT)
+Message-ID: <a4ee75df-1ee2-4cbd-87c9-5913cb4c4456@ozlabs.org>
+Date: Wed, 14 Oct 2026 19:25:39 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 7/9] vfio/pci: Clean up BAR zap and revocation
+Subject: Re: [PATCH v8 4/9] vfio/pci: Add a helper to look up PFNs for DMABUFs
 Content-Language: en-GB
 To: Alex Williamson <alex@shazbot.org>
 Cc: Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
@@ -57,56 +57,294 @@ Cc: Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
  linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
  linux-pci@vger.kernel.org
 References: <20261006193643.76330-1-matt@ozlabs.org>
- <20261006193643.76330-8-matt@ozlabs.org>
- <20261013171352.1c467040@shazbot.org>
+ <20261006193643.76330-5-matt@ozlabs.org>
+ <20261013171406.7dc8ba03@shazbot.org>
 From: Matt Evans <matt@ozlabs.org>
-In-Reply-To: <20261013171352.1c467040@shazbot.org>
+In-Reply-To: <20261013171406.7dc8ba03@shazbot.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 14/10/2026 00:13, Alex Williamson wrote:
-> On Tue,  6 Oct 2026 20:36:35 +0100
+Hi Alex,
+
+On 14/10/2026 00:14, Alex Williamson wrote:
+> On Tue,  6 Oct 2026 20:36:32 +0100
 > Matt Evans <matt@ozlabs.org> wrote:
->> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
->> index cb0e4865d110..986852b1d44f 100644
->> --- a/drivers/vfio/pci/vfio_pci_core.c
->> +++ b/drivers/vfio/pci/vfio_pci_core.c
->> @@ -1337,13 +1338,18 @@ static int vfio_pci_ioctl_reset(struct vfio_pci_core_device *vdev,
->>   	 * have NoSoftRst-, the reset function can cause the PCI config space
->>   	 * reset without restoring the original state (saved locally in
->>   	 * 'vdev->pm_save').
->> +	 *
->> +	 * The zap is done after making the device accessible in D0,
->> +	 * because a DMABUF importer could access the device as part
->> +	 * of its revocation cleanup.
 > 
-> Nit, s/zap/revoke/
+>> Add vfio_pci_dma_buf_find_pfn(), which a VMA fault handler can use to
+>> find a PFN.
+>>
+>> This supports multi-range DMABUFs, which typically would be used to
+>> represent scattered spans but might even represent overlapping or
+>> aliasing spans of PFNs.
+>>
+>> Because this is intended to be used in vfio_pci_core.c, we also need
+>> to expose the struct vfio_pci_dma_buf in the vfio_pci_priv.h header.
+>>
+>> This move also adds a new member, vma_pgoff_adjust; this is consumed
+>> by vfio_pci_dma_buf_find_pfn(), but will be set in a future commit.
+>> Add it now to reduce the number of functions touched by later commits.
+>>
+>> Signed-off-by: Matt Evans <matt@ozlabs.org>
+>> ---
+>>   drivers/vfio/pci/vfio_pci_dmabuf.c | 166 ++++++++++++++++++++++++++---
+>>   drivers/vfio/pci/vfio_pci_priv.h   |  21 ++++
+>>   2 files changed, 174 insertions(+), 13 deletions(-)
+>>
+>> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
+>> index 847ee5cc78e7..9f10b10fc436 100644
+>> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
+>> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+>> @@ -9,19 +9,6 @@
+>>   
+>>   MODULE_IMPORT_NS("DMA_BUF");
+>>   
+>> -struct vfio_pci_dma_buf {
+>> -	struct dma_buf *dmabuf;
+>> -	struct vfio_pci_core_device *vdev;
+>> -	struct list_head dmabufs_elm;
+>> -	size_t size;
+>> -	struct phys_vec *phys_vec;
+>> -	struct p2pdma_provider *provider;
+>> -	u32 nr_ranges;
+>> -	struct kref kref;
+>> -	struct completion comp;
+>> -	u8 revoked : 1;
+>> -};
+>> -
+>>   static int vfio_pci_dma_buf_attach(struct dma_buf *dmabuf,
+>>   				   struct dma_buf_attachment *attachment)
+>>   {
+>> @@ -106,6 +93,159 @@ static const struct dma_buf_ops vfio_pci_dmabuf_ops = {
+>>   	.release = vfio_pci_dma_buf_release,
+>>   };
+>>   
+>> +int vfio_pci_dma_buf_find_pfn(struct vfio_pci_core_device *vdev,
+>> +			      struct vfio_pci_dma_buf *priv,
+>> +			      struct vm_area_struct *vma,
+>> +			      unsigned long fault_addr,
+>> +			      unsigned int order,
+>> +			      unsigned long *out_pfn)
+>> +{
+>> +	/*
+>> +	 * Given a VMA (start, end, pgoffs) and a fault address,
+>> +	 * search the corresponding DMABUF's phys_vec[] to find the
+>> +	 * range representing the address's offset into the VMA, and
+>> +	 * its PFN.  vdev must be the device that the DMABUF priv was
+>> +	 * exported from; vdev->dmabuf_lock must be held, and priv
+>> +	 * must not be revoked.
+>> +	 *
+>> +	 * The phys_vec[] ranges represent contiguous spans of VAs
+>> +	 * upwards from the buffer offset 0; the actual PFNs might be
+>> +	 * in any order, overlap/alias, etc.  Calculate an offset of
+>> +	 * the desired page given VMA start/pgoff and address, then
+>> +	 * search upwards from 0 to find which span contains it.
+>> +	 *
+>> +	 * On success, a valid PFN for a page sized by 'order' is
+>> +	 * returned into out_pfn.
+>> +	 *
+>> +	 * Failure occurs if:
+>> +	 * - A hugepage would cross the edge of the VMA,
+>> +	 * - A hugepage isn't entirely contained within a range
+>> +	 *   (including where it straddles the boundary between
+>> +	 *   ranges),
+>> +	 * - We find a range, but the final PFN isn't aligned to the
+>> +	 *   requested order.
+>> +	 *
+>> +	 * Upon failure, -ERANGE is returned and the caller is
+>> +	 * expected to try again with a smaller order, which will
+>> +	 * eventually succeed.
+>> +	 *
+>> +	 * It's suboptimal if DMABUFs are created with neighbouring
+>> +	 * ranges that are physically contiguous, since hugepages
+>> +	 * can't straddle range boundaries.  (The construction of the
+>> +	 * ranges should merge them in this case.)
+>> +	 *
+>> +	 * Finally, vma_pgoff_adjust is used with a DMABUF created for
+>> +	 * a VFIO BAR mmap: a BAR mapped with vm_pgoff > 0 creates a
+>> +	 * DMABUF such that byte 0 of the VMA corresponds to byte 0 of
+>> +	 * the DMABUF and byte 'vm_pgoff << PAGE_SHIFT' into the BAR.
+>> +	 * To avoid double-offsetting in this scenario, subtracting
+>> +	 * vma_pgoff_adjust from this (non-zero) vm_pgoff generates
+>> +	 * the effective offset.  This also removes the VFIO region
+>> +	 * index encoded in vm_pgoff for VFIO BAR mmaps.
+>> +	 */
+>> +
+>> +	const unsigned long pagesize = PAGE_SIZE << order;
+>> +	unsigned long vma_off = (vma->vm_pgoff - priv->vma_pgoff_adjust) <<
+>> +				 PAGE_SHIFT;
+>> +	unsigned long rounded_page_addr = ALIGN_DOWN(fault_addr, pagesize);
+>> +	unsigned long rounded_page_end = rounded_page_addr + pagesize;
+>> +	unsigned long fault_offset;
+>> +	unsigned long fault_offset_end;
+>> +	unsigned long range_start_offset = 0;
+>> +	unsigned int i;
+>> +	int ret;
+>> +
+>> +	if (unlikely(!vdev))
+>> +		return -ENODEV;
+>> +
+>> +	/* This prevents the dmabuf revocation state from changing under us */
+>> +	lockdep_assert_held(&vdev->dmabuf_lock);
+>> +
+>> +	if (unlikely(priv->vdev != vdev || priv->revoked))
+>> +		return -ENODEV;
+> 
+> All but the lockdep here smells a bit like the hardening Leon mentions
+> in the previous patch.  There's only one caller of this, we'd segfault
+> there if vdev were NULL and the caller justifies how it knows vdev is
+> not NULL.  vdev is derived from priv->vdev, so the inequality can never
+> be true. 
 
-Doh, done.  Also cleaning up a "zap/revoke" in the 
-vfio_pci_dev_set_hot_reset chunk.
+Well, okay.  And to your point, I'd stated these entry requirements at 
+the start of the comment, and I can't see this fn being (mis)used by any 
+other caller any time soon.  I'll remove them.
 
-Thanks
+> The lockdep annotation is good, but that also indicates the
+> caller is responsible for holding the revocation state stable, which
+> they've already checked.  I won't draw a hard line on these, but they
+> seem a bit pedantic.
 
+I'd added the lockdep annotation (and revocation check) in v6 following 
+your https://lore.kernel.org/all/20260729115210.753ab8ce@shazbot.org/ 
+suggestion.  I'll keep the annotation.  The revoked check isn't strictly 
+necessary (being that unrevoked is stated as a requirement in the 
+comment, and already tested in the caller) so will remove that too.
+
+Cheers,
 
 Matt
 
-
 > 
-> Thanks,
+>> +
+>> +	if (rounded_page_addr < vma->vm_start || rounded_page_end > vma->vm_end) {
+>> +		if (order > 0)
+>> +			return -ERANGE;
+>> +
+>> +		/* A fault address outside of the VMA is absurd. */
+>> +		dev_warn_ratelimited(
+>> +			&vdev->pdev->dev,
+>> +			"Fault addr 0x%lx outside VMA 0x%lx-0x%lx\n",
+>> +			fault_addr, vma->vm_start, vma->vm_end);
+>> +		return -EFAULT;
+>> +	}
+>> +
+>> +	/*
+>> +	 * fault_offset[_end] is the span within the DMABUF
+>> +	 * corresponding to the faulting page:
+>> +	 */
+>> +	if (unlikely(check_add_overflow(rounded_page_addr - vma->vm_start,
+>> +					vma_off, &fault_offset) ||
+>> +		     check_add_overflow(fault_offset, pagesize,
+>> +					&fault_offset_end)))
+>> +		return -EFAULT;
+>> +
+>> +	/*
+>> +	 * Iterate over ranges in the buffer, summing their lengths:
+>> +	 * range_start_offset represents the current range's starting
+>> +	 * offset in the buffer (from 0 upwards).
+>> +	 *
+>> +	 * A failure for order == 0 is unexpected, and triggers a
+>> +	 * fault/warn.
+>> +	 */
+>> +	ret = (order == 0) ? -EFAULT : -ERANGE;
+>> +
+>> +	for (i = 0; i < priv->nr_ranges; i++) {
+>> +		size_t range_len = priv->phys_vec[i].len;
+>> +
+>> +		/* Early exit if range starts after the page end */
+>> +		if (fault_offset_end <= range_start_offset)
+>> +			break;
+>> +
+>> +		if (fault_offset >= range_start_offset &&
+>> +		    fault_offset_end <= range_start_offset + range_len) {
+>> +			/*
+>> +			 * The faulting page is wholly contained
+>> +			 * within the span represented by this range,
+>> +			 * so validate PFN alignment for the order.
+>> +			 * The if() condition ensures the pfn
+>> +			 * arithmetic won't overflow.
+>> +			 */
+>> +			unsigned long pfn =
+>> +				((fault_offset - range_start_offset) +
+>> +				 priv->phys_vec[i].paddr) >> PAGE_SHIFT;
+>> +
+>> +			if (IS_ALIGNED(pfn, 1 << order)) {
+>> +				*out_pfn = pfn;
+>> +				ret = 0;
+>> +			}
+>> +			/*
+>> +			 * Else order > 0; ERANGE retries with smaller
+>> +			 * order
+>> +			 */
+>> +			break;
+>> +		}
+>> +		range_start_offset += range_len;
+>> +	}
+>> +
+>> +	if (order == 0 && ret != 0)
+>> +		/*
+>> +		 * The address fell outside of the span represented by
+>> +		 * the (concatenated) ranges.  As setup of a mapping
+>> +		 * ensures that the VMA is <= the total size of the
+>> +		 * ranges this should never happen.  If it does, warn
+>> +		 * and SIGBUS.
+>> +		 */
+>> +		dev_warn_ratelimited(
+>> +			&vdev->pdev->dev,
+>> +			"No range for addr 0x%lx, order %d: VMA 0x%lx-0x%lx pgoff 0x%lx, %u ranges, size 0x%zx\n",
+>> +			fault_addr, order, vma->vm_start, vma->vm_end,
+>> +			vma->vm_pgoff, priv->nr_ranges, priv->size);
+>> +
+>> +	return ret;
+>> +}
+>> +
+>>   /*
+>>    * This is a temporary "private interconnect" between VFIO DMABUF and iommufd.
+>>    * It allows the two co-operating drivers to exchange the physical address of
+>> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
+>> index 4e7162234a2e..786df3a81d9d 100644
+>> --- a/drivers/vfio/pci/vfio_pci_priv.h
+>> +++ b/drivers/vfio/pci/vfio_pci_priv.h
+>> @@ -23,6 +23,20 @@ struct vfio_pci_ioeventfd {
+>>   	bool			test_mem;
+>>   };
+>>   
+>> +struct vfio_pci_dma_buf {
+>> +	struct dma_buf *dmabuf;
+>> +	struct vfio_pci_core_device *vdev;
+>> +	struct list_head dmabufs_elm;
+>> +	size_t size;
+>> +	struct phys_vec *phys_vec;
+>> +	struct p2pdma_provider *provider;
+>> +	u32 nr_ranges;
+>> +	struct kref kref;
+>> +	struct completion comp;
+>> +	unsigned long vma_pgoff_adjust;
+>> +	u8 revoked : 1;
+>> +};
+>> +
+>>   bool vfio_pci_intx_mask(struct vfio_pci_core_device *vdev);
+>>   void vfio_pci_intx_unmask(struct vfio_pci_core_device *vdev);
+>>   
+>> @@ -123,6 +137,13 @@ static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
+>>   	return (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA;
+>>   }
+>>   
+>> +int vfio_pci_dma_buf_find_pfn(struct vfio_pci_core_device *vdev,
+>> +			      struct vfio_pci_dma_buf *priv,
+>> +			      struct vm_area_struct *vma,
+>> +			      unsigned long address,
+> 
+> Nit, address in the prototype here is fault_addr in the actual function
+> definition.  Thanks,
+> 
 > Alex
 > 
->>   	 */
->>   	vfio_pci_set_power_state(vdev, PCI_D0);
->>   
->> -	vfio_pci_dma_buf_move(vdev, true);
->> +	vfio_pci_revoke_bars(vdev);
+>> +			      unsigned int order,
+>> +			      unsigned long *out_pfn);
 >> +
->>   	ret = pci_try_reset_function(vdev->pdev);
->>   	if (__vfio_pci_memory_enabled(vdev))
->> -		vfio_pci_dma_buf_move(vdev, false);
->> +		vfio_pci_unrevoke_bars(vdev);
->>   	up_write(&vdev->memory_lock);
->>   
->>   	return ret;
+>>   #ifdef CONFIG_VFIO_PCI_DMABUF
+>>   int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+>>   				  struct vfio_device_feature_dma_buf __user *arg,
 > 
 
