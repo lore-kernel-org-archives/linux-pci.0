@@ -1,78 +1,123 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08A8D4EA393
-	for <linux-pci@vger.kernel.org>; Wed, 14 Oct 2026 10:13:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E99F723E334;
+	Wed, 14 Oct 2026 10:46:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791972817; cv=none; b=bj6j+kw95wUvPyLqo6tETshPivu+kFaEEoXUkkUy44N45XFGsGr+hk/TjygNG2kUn3T8eKek4BkoTCJJ+FF54u7pUYcp3piqoairdsYl2M4TQmJGCyd8xI48l66vPzOf0L43AmuDbAvHFJaeSvriaXShqM46Op8oeZE5P9XXHmI=
+	t=1791974812; cv=none; b=PYbahBLRH+dKzuJsKDfmy7dhHaWHEtO+F8kPQb0DLwWoWVv7HzmjwW7rSnpOUWKMUvCZJsNnjL5lT2jwXzGqJKU298bH1SX3NsK7E/tycmYtOZFV5I17kzcC6XVk3aPJ0NaYrCnkL3GIYYb/dO6yG3fMIsAaFgiRi/9NPwvGjRE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791972817; c=relaxed/simple;
-	bh=LYGu52lLTLoXv57TuoQAGVJtHi7ElIVyHfJQgn7ZeSw=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=ilkGlGcVlQX37gzjvjOIANp48Ezb9ynEnGq3cpkVm7n85eyaqMszgctyju6IqK9KkhsGL2+OfMcUWFgN2Mx+P/zKA2sT7ahXKEmX6FHbILEuFv0xUbgVYpIIFKWYGSCS6nJRx3WSqf732LBVwXBnuUQTCeQXt15sA+NrCie18GE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fk/xi1nQ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791974812; c=relaxed/simple;
+	bh=JtG1HONRpZR0jNIXlTzUqB48YC3qE8S+XSP5JTYlG/I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=l6dV8ZXhIUqwQFhryE1StF2B9U2uMrUw/fYN78gScsumG/VWaGATXocR9wfml1onUC6vFPe9wEtqcPHZnWlp0Fdgq8VntCFLj/3R77eVVI3Y47U54qY1TQHEwGHBz5e7fJW8DlrLPbTYMrS61RUJ1/MA/M985rtrPEC4R0QoEVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DgABIDG5; arc=none smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fk/xi1nQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BFB61F00893;
-	Wed, 14 Oct 2026 10:13:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791972815;
-	bh=LYGu52lLTLoXv57TuoQAGVJtHi7ElIVyHfJQgn7ZeSw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Fk/xi1nQJqCuPc/0WAJOSvUCxnhebHgM4Qc5tXETgsizqrLsXmSkQ2CVx8zz2+UVD
-	 ZWztYeuaUSV0pOCdTTFjDOQN2ZnyRAzqRGbpE2qOnCPSgakrVHmFn7e4h/jbhz8oe7
-	 7SyHMjPhenmmfaSnHwycQnMoGrgpynWFiYjyWHhtlvPntctbO8gP7nFG6lhHrqHm+3
-	 MGASuFk58ef2eVjXb/Z/Kksvky8iqYD9FKxmz7xuFvgTbzaUj+vJqkdywBCXFzmdUt
-	 6dN3KQrEh4WEHM6mjQOIU3qqaxC+st1a0KQrWjVfOZ2Scqns0G6MOpdPFrulAH9eY6
-	 GraGyLtkwlb3g==
-Message-ID: <sashiko-outbox-171125@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: altera: Convert root port IRQ to a requested
- handler
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Mahesh Vaidya" <mahesh.vaidya@altera.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261014100723.1643089-1-mahesh.vaidya@altera.com>
-References: <20261014100723.1643089-1-mahesh.vaidya@altera.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 14 Oct 2026 10:13:35 +0000
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DgABIDG5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1791974811; x=1823510811;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=JtG1HONRpZR0jNIXlTzUqB48YC3qE8S+XSP5JTYlG/I=;
+  b=DgABIDG5RtedK3+uUkDXAVIz4SgjyFrCwe6RJUC68atnoKQiMh/tTg3W
+   51uF701l58vcEoIszUjlexTY8J8987E6WLFHN9bVNqdG2utmItF4LnCrL
+   8IQBmOonbITIL6l/j8l9yobdIrOWILwIcrAavyD3IazyFnna7ZzEp7wck
+   Qh7STuILf7q8Y7W4Yks2R+kEFhz0RcMVR752fnzP3amO9Z6cMOicAsYtu
+   Lk45d0qQvj1f5DijlG+DEXVPCAH+Kd8efjhwCWLjG/eJCvdMyCEvon0vv
+   3PtGoYD6qXdb49AZcv8hUqobhwSdEweU1lR/2BUpy0fZerPLhj5uo9+MB
+   A==;
+X-CSE-ConnectionGUID: aYVqDYtIS2aZYILkT+b2Tw==
+X-CSE-MsgGUID: 0xOAwtQBQWiJbmL++bRf/w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11934"; a="823403"
+X-IronPort-AV: E=Sophos;i="6.27,157,1787036400"; 
+   d="scan'208";a="823403"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Oct 2026 03:46:50 -0700
+X-CSE-ConnectionGUID: kGOETs84QuClla25mJZSiw==
+X-CSE-MsgGUID: F4iwqtJkQ2S5LNynjY90DQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,157,1787036400"; 
+   d="scan'208";a="1366374"
+Received: from smoticic-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.236])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Oct 2026 03:46:44 -0700
+Date: Wed, 14 Oct 2026 13:46:42 +0300
+From: Andy Shevchenko <andriy.shevchenko@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Mario Limonciello <mario.limonciello@amd.com>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Maciej Grochowski <Maciej.Grochowski@sony.com>,
+	Nikolas Joshua Britton <nbritton@exabit.io>,
+	Geramy Loveless <gloveless@jqluv.com>,
+	Eric Auger <eauger@redhat.com>,
+	Alexey Fomenko <alexey.fomenko@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bradley Morgan <brads@mainlining.org>,
+	Hans de Goede <hansg@kernel.org>,
+	Kai-Heng Feng <kaihengf@nvidia.com>, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v3 8/8] PCI/quirks: Avoid certain address on Genoa systems
+Message-ID: <as9dkrvJbyMwkKol@ashevche-desk.local>
+References: <81b4f4bf-b721-4b5b-8ddf-d040865f02b2@amd.com>
+ <20261013224010.GA1589480@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261013224010.GA1589480@bhelgaas>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-> altera_pcie_irq_teardown() removes the chained handler before removing
-> the INTx domain. Removing the handler prevents new invocations, but does
-> not wait for one already running on another CPU. Such a handler can
-> therefore access pcie or pcie->irq_domain after they have been freed.
->=20
-> Chained handlers bypass handle_irq_event(), so synchronize_irq() cannot
-> rely on IRQD_IRQ_INPROGRESS and may return without waiting if the parent
-> irqchip does not report IRQCHIP_STATE_ACTIVE.
->=20
-> Convert the chained handler to a requested hard IRQ. Request it only
-> after creating the INTx domain and call free_irq() before removing the
-> domain. free_irq() then synchronizes against any in-flight handler.
->=20
-> Use IRQF_NO_THREAD because generic_handle_domain_irq() requires hardirq
-> context. Use IRQF_NO_SUSPEND to preserve the suspend behavior of the
-> previous chained cascade. Request and free the IRQ explicitly because
-> automatic devres cleanup happens after remove() returns.
->=20
-> Fixes: ec15c4d0d5d2 ("PCI: altera: Allow building as module")
-> Reported-by: Bjorn Helgaas <bhelgaas@google.com>
-> Link: https://lore.kernel.org/linux-pci/20260430204330.3121003-3-mahesh.v=
-aidya@altera.com/
-> Suggested-by: Dinh Nguyen <dinguyen@kernel.org>
-> Assisted-by: ChatGPT:GPT-5
-> Signed-off-by: Mahesh Vaidya <mahesh.vaidya@altera.com>
+On Tue, Oct 13, 2026 at 05:40:10PM -0500, Bjorn Helgaas wrote:
+> [+cc Hans, Kai-Heng, Andy, linux-acpi]
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+If you want my opinion, I think that Mario's quirk series (with the revert of
+the 07eab0901ede) [2] is the way to go. I have not much time to dive into this,
+though. I also have no HW to reproduce either of the problems.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261014100723.1643=
-089-1-mahesh.vaidya@altera.com?part=3D1
+> On Tue, Oct 13, 2026 at 01:59:23PM -0500, Mario Limonciello wrote:
+> > On 10/13/26 12:26, Ilpo Järvinen wrote:
+> > > On Tue, 13 Oct 2026, Mario Limonciello wrote:
+> > > > On 10/13/26 12:00, Mario Limonciello wrote:
+> > > > > On 10/13/26 08:09, Ilpo Järvinen wrote:
+
+[2] https://git.kernel.org/pub/scm/linux/kernel/git/superm1/linux.git/log/?h=superm1/genoa-mess
+
+> > Bjorn, thoughts on this?  I'll send it out if that's the way we want
+> > to go (or Ilpo feel free to subsume into your series as it's only
+> > really exposed by your series at the moment)
+> 
+> I would LOVE it if we can use those patches because it's way less
+> magic than 07eab0901ede is.
+> 
+> But I'm frankly terrified to touch it because I'm skeptical that two
+> more quirks are enough.  I just expect that whatever strategy BIOS
+> uses to build these maps is likely to be used on many models.  I do
+> hate 07eab0901ede though, so I would love to see it gone.
+> 
+> I do think the description [1] is overly specific because AFAIK
+> there's nothing that connects this to AMD EPYC 9354 or igb other than
+> the fact that it was seen there.  It could happen to any PCI device on
+> any system with similar memory maps.
+> 
+> [1] https://git.kernel.org/pub/scm/linux/kernel/git/superm1/linux.git/commit/?h=superm1/genoa-mess&id=0a49c704477153d6597d34b3c6e3141007ff058c
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
 
