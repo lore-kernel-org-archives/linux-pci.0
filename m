@@ -1,206 +1,132 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4369F361960;
-	Wed, 14 Oct 2026 06:52:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 824572FD696;
+	Wed, 14 Oct 2026 06:53:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791960781; cv=none; b=g7NjNNbELr/Bp6OL/OZOzOC3mVMO7wHHu7C7cyIsXDN/RqGsOoeLz6D1ZLiDUgpJ2mobm8Q/STbhbEfqlLYWUT4M21JI1TOO64S5/9vS+IHbBmSfUDxYieyBh1V3ed0v9MJm5gR9FndE3BvUshQ1OXGN1rMnC9yOGH+4l2Hqd6c=
+	t=1791960832; cv=none; b=tULKElxlCB5bzSghcqgFNQXs+q/z0Fwuyp5gAKMpVWG9cpaDiyN/sW24PwJCrjy3JWmkZczDZxWaj+hXm/FbLKNPSJD9B6FVgXtbSjmoGlwAXxJvyNkcdkeoIbAOIj6/cBGiJCfSxI0GHiytkaQ+cQUJpJ7Gay4Ye6Ac9vOc9X8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791960781; c=relaxed/simple;
-	bh=kvjDjhwBqEIHq59YMfhEgAZVWWGxX4WxE1hAwWgLpfI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=K+8h72rpdOJbFs6FJat32WKHU1UfzA5aaAECgUWmRaG3LsvLO3hJGLkNluDjGxQ+2h657CCtBuGYvhe2GYaJZLmA4MBAmbmN0eK0JZ0KUC6I2mL9zUrXLIxWRKQY045Mum1qqAa4QcUBUxjLVT1Jo25BQRuIQo2kJAzf8iCGUNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Waj8/XzH; arc=none smtp.client-ip=220.197.31.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1791960832; c=relaxed/simple;
+	bh=ioauh8jEjcNN0oXjWVsLxXk+ksMjmNDCMR6ErAColhs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Q6sBbwKgGRYVTs3ggXwI80U7zoWwikRkK5efYRtmzawH+8jB4a9z/7U36zbcbg628GTcwiuaStMXiHkqfeneIkaQYDFGVWESj9vc5MywpPSkW7s6ftMJt0pYj8ZSqfHDV66KdSAGKz45Ylxsu26Z79wtDbTYHEcgGOVuXyv+GMI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gQon1WRC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Waj8/XzH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=TnNnbmu9YS7sz+a4d+0CADyh+jpQYkGZAne9eMQmnk4=;
-	b=Waj8/XzHQxCH9EQsDAWp/c31srgUtnbnD764g/uY6O+wrR0ijoUq/NL2PAlOPa
-	MqBoemKPiDALPlGR7UXEcc0h2DJqyGPrJVt0S7pSMDAcjFevzWrJYhy0IqL9+OJ8
-	Sq+o9gPzEbCrZP6479Vc6K2H1dAPue9JznjzFd0Li7nKc=
-Message-ID: <40c740d4-d316-41af-a878-837615947380@163.com>
-Date: Wed, 14 Oct 2026 14:52:37 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gQon1WRC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE8941F000FF;
+	Wed, 14 Oct 2026 06:53:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791960831;
+	bh=wJBG1yc6nHxcLlJB5Xe3WD+42x4ELJs97WwmBWzAW7k=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=gQon1WRCQUKmhwaRgO1mq76qgm8/r+H1pT/Ft/j+xOYOjF5zDwdetwmlHqKvilzq/
+	 KTh3TIak5Mj2bN7plOyk9GGgphftr9mGHc1SnZ8lcICnoRV49QdLjJB/EPSKR9Tf7u
+	 1n6knDThQzYyNOaNuoXKYQnYa+57YmNU6ZjlXvc4qerq9/Rok53HUtyPkv3Zc6bpOv
+	 UGdkuW+v1UQZ4j6q+2vdiNWmTG8zXfAmmm689xz8SK9tHO5tgPK3aHh3zeU+M4aDTk
+	 VI5FQMibAD4k9v+W8953u0FR4ZPzq5V3YlgtAzmJo9S+H12oTh5foLjimVgBPJ+OV/
+	 10Qj5KfCHB5AQ==
+Date: Wed, 14 Oct 2026 09:53:47 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
+	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
+	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>
+Subject: Re: [PATCH v11 00/19] PCI/P2PDMA: Route peer-to-peer DMA by TLP class
+Message-ID: <20261014065347.GW219304@unreal>
+References: <20261013-fix-p2p-acs-v4-0-v11-0-72cf8c96e617@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: dwc: Describe DWC PCIe fields with full masks and
- FIELD_PREP()
-To: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
- mani@kernel.org, jingoohan1@gmail.com
-Cc: robh@kernel.org, a-garg7@ti.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260930013842.82476-1-18255117159@163.com>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20260930013842.82476-1-18255117159@163.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:PygvCgDX32G1Js9qKCEUEg--.36534S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW3Jr15Wr4rZFyUGF1ruw1fCrg_yoWxKw13p3
-	W3JaySya1UtFsxuw1Ik3Z5G3W3XrnrArWDX3yv9w1xKFs3Zrn7WF409a95trs7ZFWIqF1U
-	Kr4qy34xWFW5AwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U53kNUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7BZF6GrPJrZ3dAAA3h
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261013-fix-p2p-acs-v4-0-v11-0-72cf8c96e617@nvidia.com>
 
-Hello Mani,
-
-Could you please handle this patch for me? It was suggested by Bjorn 
-last time.
-
-Best regards,
-Hans
-
-
-On 9/30/26 09:38, Hans Zhang wrote:
-> Several DWC PCIe register fields are described with a shift macro next
-> to their mask, or with only a shift and the field width implied by the
-> value written.  Document the field position and width in a single full
-> mask and use FIELD_PREP() to encode it.
+On Tue, Oct 13, 2026 at 05:25:08PM +0300, Leon Romanovsky wrote:
+> PCI P2PDMA applies Request and Completion Redirect throughout both paths.
+> This misclassifies asymmetric and nested switches, and reports one answer
+> for every kind of TLP.
 > 
-> No functional change intended.
+> Three ACS controls act on TLP attributes the Requester chooses rather
+> than on the topology: Translation Blocking and Direct Translated P2P act on
+> a Request's Address Type, and Completion Redirect skips Completions carrying
+> Relaxed Ordering.
 > 
-> Signed-off-by: Hans Zhang <18255117159@163.com>
+> Evaluate each direction at the path divergence, decide every class from the
+> one walk, and treat a client with ATS enabled as translating unless its
+> driver declares per-mapping ATS.
+> 
+> This completes the P2PDMA side; dma-buf and mlx5 follow separately.
+> 
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 > ---
-> - Based on the controller/dwc branch.
-> ---
->   .../pci/controller/dwc/pcie-designware-ep.c   |  2 +-
->   drivers/pci/controller/dwc/pcie-designware.h  | 12 ++++------
->   drivers/pci/controller/dwc/pcie-tegra194.c    | 22 +++++++++----------
->   3 files changed, 16 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> index 0262d85ed390..198823f105c5 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> @@ -1077,7 +1077,7 @@ int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep, u8 func_no,
->   	if (!ep_func || !ep_func->msix_cap)
->   		return -EINVAL;
->   
-> -	msg_data = (func_no << MSIX_DOORBELL_PF_SHIFT) |
-> +	msg_data = FIELD_PREP(MSIX_DOORBELL_PF_MASK, func_no) |
->   		   (interrupt_num - 1);
->   
->   	dw_pcie_writel_dbi(pci, MSIX_DOORBELL, msg_data);
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index aea474ad803c..1ff6ed1f9f0b 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -85,9 +85,7 @@
->   /* Common Clock N_FTS */
->   #define  PORT_AFAC_CC_N_FTS(n)		FIELD_PREP(PORT_AFAC_CC_N_FTS_MASK, n)
->   #define  PORT_AFAC_ENTER_ASPM		BIT(30)		/* ASPM L1 Entry Control */
-> -#define  PORT_AFAC_L0S_ELS		24		/* L0s Entrance Latency shift */
->   #define  PORT_AFAC_L0S_ELM		GENMASK(26, 24)	/* L0s Entrance Latency mask */
-> -#define  PORT_AFAC_L1_ELS		27		/* L1 Entrance Latency shift */
->   #define  PORT_AFAC_L1_ELM		GENMASK(29, 27)	/* L1 Entrance Latency mask */
->   
->   #define PORT_LINK_CTRL			0x710		/* Port Link Control Register */
-> @@ -161,7 +159,6 @@
->   #define  GEN3_CTRL_EQ_PHASE_2_3		BIT(9)		/* Equalization Phase 2 and Phase 3 */
->   #define  GEN3_CTRL_RXEQ_RGRDLESS_RXTS	BIT(13)
->   #define  GEN3_CTRL_GEN3_EQ_DISABLE	BIT(16)		/* Equalization Disable */
-> -#define  GEN3_CTRL_RATE_SHADOW_SEL_SHIFT 24		/* Rate Shadow Select shift */
->   #define  GEN3_CTRL_RATE_SHADOW_SEL_MASK	GENMASK(25, 24)	/* Rate Shadow Select mask */
->   
->   #define GEN3_EQ_CTRL			0x8A8		/* Gen3 EQ Control */
-> @@ -230,7 +227,7 @@
->   #define ATU_UPPER_LIMIT			0x020
->   
->   #define MSIX_DOORBELL			0x948
-> -#define  MSIX_DOORBELL_PF_SHIFT		24
-> +#define  MSIX_DOORBELL_PF_MASK		GENMASK(28, 24)
->   
->   /*
->    * eDMA CSRs. DW PCIe IP-core v4.70a and older had the eDMA registers accessible
-> @@ -278,15 +275,14 @@
->   #define RAS_DES_EVENT_COUNTER_CONTROL	0x8
->   #define EVENT_COUNTER_ALL_CLEAR		0x3
->   #define EVENT_COUNTER_ENABLE_ALL	0x7
-> -#define EVENT_COUNTER_ENABLE_SHIFT	2
-> -#define EVENT_COUNTER_EVENT_SEL_MASK	GENMASK(7, 0)
-> -#define EVENT_COUNTER_EVENT_SEL_SHIFT	16
-> +#define EVENT_COUNTER_ENABLE_MASK	GENMASK(4, 2)
-> +#define EVENT_COUNTER_EVENT_SEL_MASK	GENMASK(23, 16)
-> +#define EVENT_COUNTER_GROUP_SEL_MASK	GENMASK(27, 24)
->   #define EVENT_COUNTER_EVENT_Tx_L0S	0x2
->   #define EVENT_COUNTER_EVENT_Rx_L0S	0x3
->   #define EVENT_COUNTER_EVENT_L1		0x5
->   #define EVENT_COUNTER_EVENT_L1_1	0x7
->   #define EVENT_COUNTER_EVENT_L1_2	0x8
-> -#define EVENT_COUNTER_GROUP_SEL_SHIFT	24
->   #define EVENT_COUNTER_GROUP_5		0x5
->   
->   #define RAS_DES_EVENT_COUNTER_DATA	0xc
-> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-> index 8c610212a180..285a38178da8 100644
-> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
-> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> @@ -622,10 +622,10 @@ static inline u32 event_counter_prog(struct tegra_pcie_dw *pcie, u32 event)
->   
->   	val = dw_pcie_readl_dbi(&pcie->pci, pcie->ras_des_cap +
->   				RAS_DES_EVENT_COUNTER_CONTROL);
-> -	val &= ~(EVENT_COUNTER_EVENT_SEL_MASK << EVENT_COUNTER_EVENT_SEL_SHIFT);
-> -	val |= EVENT_COUNTER_GROUP_5 << EVENT_COUNTER_GROUP_SEL_SHIFT;
-> -	val |= event << EVENT_COUNTER_EVENT_SEL_SHIFT;
-> -	val |= EVENT_COUNTER_ENABLE_ALL << EVENT_COUNTER_ENABLE_SHIFT;
-> +	val &= ~EVENT_COUNTER_EVENT_SEL_MASK;
-> +	val |= FIELD_PREP(EVENT_COUNTER_GROUP_SEL_MASK, EVENT_COUNTER_GROUP_5);
-> +	val |= FIELD_PREP(EVENT_COUNTER_EVENT_SEL_MASK, event);
-> +	val |= FIELD_PREP(EVENT_COUNTER_ENABLE_MASK, EVENT_COUNTER_ENABLE_ALL);
->   	dw_pcie_writel_dbi(&pcie->pci, pcie->ras_des_cap +
->   			   RAS_DES_EVENT_COUNTER_CONTROL, val);
->   	val = dw_pcie_readl_dbi(&pcie->pci, pcie->ras_des_cap +
-> @@ -661,8 +661,8 @@ static int aspm_state_cnt(struct seq_file *s, void *data)
->   			   EVENT_COUNTER_ALL_CLEAR);
->   
->   	/* Re-enable counting */
-> -	val = EVENT_COUNTER_ENABLE_ALL << EVENT_COUNTER_ENABLE_SHIFT;
-> -	val |= EVENT_COUNTER_GROUP_5 << EVENT_COUNTER_GROUP_SEL_SHIFT;
-> +	val = FIELD_PREP(EVENT_COUNTER_ENABLE_MASK, EVENT_COUNTER_ENABLE_ALL);
-> +	val |= FIELD_PREP(EVENT_COUNTER_GROUP_SEL_MASK, EVENT_COUNTER_GROUP_5);
->   	dw_pcie_writel_dbi(&pcie->pci, pcie->ras_des_cap +
->   			   RAS_DES_EVENT_COUNTER_CONTROL, val);
->   
-> @@ -680,8 +680,8 @@ static void init_host_aspm(struct tegra_pcie_dw *pcie)
->   							PCI_EXT_CAP_ID_VNDR);
->   
->   	/* Enable ASPM counters */
-> -	val = EVENT_COUNTER_ENABLE_ALL << EVENT_COUNTER_ENABLE_SHIFT;
-> -	val |= EVENT_COUNTER_GROUP_5 << EVENT_COUNTER_GROUP_SEL_SHIFT;
-> +	val = FIELD_PREP(EVENT_COUNTER_ENABLE_MASK, EVENT_COUNTER_ENABLE_ALL);
-> +	val |= FIELD_PREP(EVENT_COUNTER_GROUP_SEL_MASK, EVENT_COUNTER_GROUP_5);
->   	dw_pcie_writel_dbi(pci, pcie->ras_des_cap +
->   			   RAS_DES_EVENT_COUNTER_CONTROL, val);
->   
-> @@ -715,9 +715,9 @@ static void init_host_aspm(struct tegra_pcie_dw *pcie)
->   	/* Program L0s and L1 entrance latencies */
->   	val = dw_pcie_readl_dbi(pci, PORT_AFAC);
->   	val &= ~PORT_AFAC_L0S_ELM;
-> -	val |= (pcie->aspm_l0s_enter_lat << PORT_AFAC_L0S_ELS);
-> +	val |= FIELD_PREP(PORT_AFAC_L0S_ELM, pcie->aspm_l0s_enter_lat);
->   	val &= ~PORT_AFAC_L1_ELM;
-> -	val |= (pcie->aspm_l1_enter_lat << PORT_AFAC_L1_ELS);
-> +	val |= FIELD_PREP(PORT_AFAC_L1_ELM, pcie->aspm_l1_enter_lat);
->   	val |= PORT_AFAC_ENTER_ASPM;
->   	dw_pcie_writel_dbi(pci, PORT_AFAC, val);
->   }
-> @@ -881,7 +881,7 @@ static void config_gen3_gen4_eq_presets(struct tegra_pcie_dw *pcie)
->   
->   	val = dw_pcie_readl_dbi(pci, GEN3_CTRL);
->   	val &= ~GEN3_CTRL_RATE_SHADOW_SEL_MASK;
-> -	val |= (0x1 << GEN3_CTRL_RATE_SHADOW_SEL_SHIFT);
-> +	val |= FIELD_PREP(GEN3_CTRL_RATE_SHADOW_SEL_MASK, 0x1);
->   	dw_pcie_writel_dbi(pci, GEN3_CTRL, val);
->   
->   	val = dw_pcie_readl_dbi(pci, GEN3_EQ_CTRL);
-> 
-> base-commit: 4996364a46e738cc455f5fa9b8b09f2f3348bcc9
+> Changes in v11:
 
+
+Bjorn,
+
+Could you please save me from the AI-bot attack? Every rebase seems to
+uncover another bizarre pre-existing issue. It never ends.
+
+Thanks
+
+<...>
+
+> ---
+> Leon Romanovsky (19):
+>       PCI/P2PDMA: Honor device-specific ACS redirection
+>       PCI/P2PDMA: Document the TLP attribute assumptions
+>       PCI/P2PDMA: Derive routing from directional ACS controls
+>       PCI: Reject unreadable ACS controls in isolation checks
+>       PCI/P2PDMA: Evaluate ACS controls at the path divergence
+>       PCI/P2PDMA: Document directional ACS routing
+>       PCI/P2PDMA: Collect the path's ACS controls before deciding
+>       PCI/P2PDMA: Answer routing per TLP class
+>       PCI/P2PDMA: Route Relaxed Ordering Completions directly
+>       PCI/P2PDMA: Reject Translated Requests blocked by Translation Blocking
+>       PCI/P2PDMA: Route Translated Requests under Direct Translated P2P
+>       PCI/P2PDMA: Log detailed ACS routing diagnostics
+>       PCI/P2PDMA: Add KUnit tests for the ACS routing decisions
+>       PCI/P2PDMA: Test the ACS P2P routing walk
+>       PCI: Add KUnit coverage for ACS isolation checks
+>       PCI/P2PDMA: Document TLP-class routing
+>       PCI/P2PDMA: Let a client declare that it selects ATS per mapping
+>       PCI/P2PDMA: Evaluate the ATS path for clients with ATS enabled
+>       PCI/P2PDMA: Test the routing of clients with ATS enabled
+> 
+>  Documentation/admin-guide/kernel-parameters.txt |   11 +-
+>  Documentation/driver-api/pci/p2pdma.rst         |  105 ++
+>  drivers/pci/Kconfig                             |   15 +
+>  drivers/pci/Makefile                            |    1 +
+>  drivers/pci/p2pdma.c                            |  942 +++++++++++++++--
+>  drivers/pci/pci.c                               |    8 +-
+>  drivers/pci/pci.h                               |   57 ++
+>  drivers/pci/pci_acs_test.c                      | 1225 +++++++++++++++++++++++
+>  drivers/pci/quirks.c                            |    8 +-
+>  include/linux/pci-p2pdma.h                      |   12 +-
+>  10 files changed, 2292 insertions(+), 92 deletions(-)
+> ---
+> base-commit: 36038f0e8377ef316b723d0d85b1510bc64069ab
+> change-id: 20260821-fix-p2p-acs-v4-0-e72455e3a261
+> 
+> Best regards,
+> --  
+> Leon Romanovsky <leonro@nvidia.com>
+> 
