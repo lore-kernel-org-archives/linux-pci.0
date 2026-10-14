@@ -1,44 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5721147206F;
-	Wed, 14 Oct 2026 12:12:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FB644E50B1;
+	Wed, 14 Oct 2026 12:20:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791979970; cv=none; b=FFM2jLGYMZwbSrlbLjaNn+8PvAnqsH7mdS8sU2Ogwd5GBhmhYG+7kAwdp6EmJssj+vGTYSmIQ3fSbvVOzGPgb9OIK1kz7UE9JLlrEPTQAM4TuxXfRFvaiM7lF8I1RWZQTNb5gbLNqhBay0C5yTuKqyGkazmbiMvP95mV57Y03ug=
+	t=1791980454; cv=none; b=cGd3P5BmcYT8/8xQ3bs4fyFSuwsQANC8K8p65WqkyjITmguT5gMxwpxdpakklxRRQuiDqHYHRhtGEqgx0twV1I4fN/fdxWVEAvSWaf5xe23HYczXGV2w0J0wxUiuPOERfOcuditGMfwo3J1EU4WZXnDSlVjkpPi58p7RHQDWEiI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791979970; c=relaxed/simple;
-	bh=x7N6XBFp4Y0RlKxogsfKhRyxYH+FFxWI6+Qh928rbeI=;
+	s=arc-20240116; t=1791980454; c=relaxed/simple;
+	bh=PTvTpnzPm4L3mxYDgVkaKKUh9tP86dI4gIqMxAntg9E=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=psYKYhZ/SQGwmk7lEHrkgAIYQ3253djWjNFpfMfNj7pHWzbSXEXevAr36taC29PEJ7vh939cgLcpBBa+g09kmL+gaptUUdWG7Lvenz/GHvPCML5OFbA9NtiSwFMrQiWnYhaiavIcL2vvViWf4LFgxd2u6TTHAD51HsrVB0cyQYc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BZLIhcGb; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=lxfG462lM8jgWEeOS8mugwQ6gE8jIC4QGsEqb0sCyL3RBGvNScqi03HOLcoTw7K+gEWGc2Oew+mGKz6tiI5DdeorFdHcCJ5omjVugtySST3xN3urGKZVBQbsAOGhg0r4LEdK1CTixelsQNaxR/v3cRw0ekNTeuksOm6vteSw2h8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VL4HH5x3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BZLIhcGb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB1821F00893;
-	Wed, 14 Oct 2026 12:12:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VL4HH5x3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4892E1F00893;
+	Wed, 14 Oct 2026 12:20:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791979968;
-	bh=u0/kXwLol77P1UIWOZaXZfvnRJWwEc/Fx9u5zNdyzPc=;
+	s=k20260515; t=1791980452;
+	bh=KZ7TceI9IaLYnqpvKw72rUVqXx6i9v8/OoLAMP1Gma0=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=BZLIhcGbGKV1fsesf/wSm71gyqX5envcYaPqmYBFHgAuldLfHIx+qHL3q4oc/ZYpT
-	 UR+6xFVedLeFGlSYXe+hwMsCsMnorDk0TZ0jNCNcw0TqloNhZ8bLEKYy6xhmQn/q20
-	 1x8TjHMulY4z2j1Gi679Q8i03H2kvVHpWKfQON012Aev9AdiuCbTeyu3Fe6D4szxxA
-	 FlEFsLQcQM3eJ+Jw/N07l72bXJjJF7OVyHtQ5aGBxIMTuw5ak4Kr56H0+qpbjmoA6H
-	 DmVnWgzb5Ug+0Om/EjBpJYRDgcycRY6Z3cXrrK7tvpzdLaGIeHqLT+7ARzSZ+nFaBU
-	 VPhscif4noHVQ==
+	b=VL4HH5x3Keb0hwxqwRnPdTMunlpITFYoOIMj3QvRDrM12abORu4Q9lZnMbAX2KlwP
+	 CgwJIWq2eqdcnzSp0LKFSOndJimG3fg73KtkvYfvkC1FJLWdO75+UISDtycYeII78O
+	 1c8bLscdrkiuul8lLCXmVHoBJGalKFdKLCE1/48/jHU5C0h9OWHCBZCvs7ZGTto6tn
+	 45fAt0aADSaL7MvhbGJiUjhr+0hzr2pll3cI0ZP3eaeJJtSvf7su+Y2vaan7SX/Pup
+	 GRFaaDlEVyOzv1wMisYUyCt5Tqr6RRo7bYEriSMeivUgTQG8kEoVu/3tkxX8PaJWPV
+	 uTqKckvZMwrnQ==
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Richard Zhu <hongxing.zhu@nxp.com>, Rudi Heitbaum <rudi@heitbaum.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>, 
+To: Bjorn Helgaas <bhelgaas@google.com>, 
  Lorenzo Pieralisi <lpieralisi@kernel.org>, 
  =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- imx@lists.linux.dev, linux-kernel@vger.kernel.org, stable@vger.kernel.org
-In-Reply-To: <aqfqE4OLhnN4a1lW@b65e9c1eb12f>
-References: <aqfqE4OLhnN4a1lW@b65e9c1eb12f>
-Subject: Re: [PATCH v2] PCI: imx6: Avoid dereferencing a NULL clock name
-Message-Id: <179197995736.38040.16523239820411551777.b4-ty@b4>
-Date: Wed, 14 Oct 2026 17:42:37 +0530
+ Linmao Li <lilinmao@kylinos.cn>
+Cc: Rob Herring <robh@kernel.org>, Aksh Garg <a-garg7@ti.com>, 
+ Tom Joseph <tjoseph@cadence.com>, Vladimir Oltean <vladimir.oltean@nxp.com>, 
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20260915082826.4135665-1-lilinmao@kylinos.cn>
+References: <20260915082826.4135665-1-lilinmao@kylinos.cn>
+Subject: Re: [PATCH v2] PCI: cadence: Store the core controller in platform
+ drvdata
+Message-Id: <179198044335.38040.14093908660365235919.b4-ty@b4>
+Date: Wed, 14 Oct 2026 17:50:43 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,27 +49,27 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=320;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=338;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=57pibpZHJQ8PNUTQdmsvfInl1FuFWliYpgpnWYMvTOc=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqz3G7KyLfJwopwyubBI2cQyz05Pgfv7a6bBmIO
- GuKeAj9B2GJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCas9xuwAKCRBVnxHm/pHO
- 9f0mB/4hu+0F+duNvinGllK+1Hhv37pnBDPebIMwv3Ligu+r3lGaVU8q1a95LUKPyr/xx5vywU+
- gmIl2GndmGc8dAkpT7O12EbYixW+40Gr+JsRSJzFw0+TCEvzx4ayCDyNwCkSeAfagp0+9BaMKAv
- ZVTWUV5eRNLRDQegH5uUdDFkkVKtccEP5IPPx2/qshCSf/Gcbb67t6gn74cSr/BYAv8PbEdWjjm
- gsGZay4vEcKxNJx3SUVu1J0SQVMqDSUpTHFz/UDzWczyCobEjumElMRTWYgJwS1iietF8hXEc+y
- uX8vzO/ccIIWqJS0GYu31dpFBqTypaSYJq7bpKiZuGrkxY6m
+ bh=OT2ww0GMyuXQKgPnhBHXg+WsU+RSzq8ZpPrCJ2ga2Ao=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqz3OgVGrt4mDT8BW7WoWLWiTHWh5RwJGRZaURT
+ 9dhhKEaoeyJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCas9zoAAKCRBVnxHm/pHO
+ 9f7bB/9chrVcCBZTp1bTthWvyx8axBH0BcFy7Mm852KntXKICpqhne1SuuwqoiMsA3GHlfPJrWr
+ jnmr+f9oufiO/AJOTuM/sGtkJ/A9msSn91FdJ7hmKYqhzRMNopoBviJXZdfEDMSvNCpwC0cBwxJ
+ bcR1mZG6W9YtTUy/U3TO89CoudUGPJINmEOOi98unLMz7v8uXCWoLd07Z3vqXpHWDymp/+i4jPt
+ Xt0l5ErAtLRWeZsdC5d1u7K8/KAgHhgKmrbhRM9Sqiv41v0AH+6GT8hvEaRrM0nxwxVXMsNRIF4
+ fUWcU/9YCbdBgNtLY28Gix77sH2UPl5Qto46f7d6tkTlHCP5
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 
 
-On Mon, 14 Sep 2026 12:35:31 +0000, Rudi Heitbaum wrote:
-> PCI: imx6: Avoid dereferencing a NULL clock name
+On Tue, 15 Sep 2026 16:28:26 +0800, Linmao Li wrote:
+> PCI: cadence: Store the core controller in platform drvdata
 
 Applied, thanks!
 
-[1/1] PCI: imx6: Avoid dereferencing a NULL clock name
-      commit: e6fe37efcde8e7f81581129ef4e57ea158f38e40
+[1/1] PCI: cadence: Store the core controller in platform drvdata
+      commit: eabe6689cd9cae4c39cd7ec188c6f739e8081648
 
 Best regards,
 -- 
