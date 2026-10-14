@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADAD841DDF2;
-	Wed, 14 Oct 2026 21:52:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C34FA38B122;
+	Wed, 14 Oct 2026 21:58:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792014766; cv=none; b=RFrSznH69aa3kAc9jGuK8zaCrb6p2vckkkSIbh1Hxbir9EjHHO5G1cLIcPq3HaOYVgmZRU8yh+ghDFsVi516XGk+eOKbVd7cWSV5lbqE6ufFjGVCenVdqn8tHavezN1CSDz+kI+pvLlfQWz1j0cv4tx7+SUed4IA5vSZp2eM5LQ=
+	t=1792015105; cv=none; b=tKwDijjyBahCVud0SP2kKNGnXaNG7SL3N5u0Y4JheeW3UpmhDp8FLqeGHBJddQfG36KzDV+AVUgGuZ7C9xSYhqldKC8Lvie1CrQE55WUb6e46QJYZJ0hUoL3PCsZelpYejoCyOdFlWU8cOWYUMA6CuYSB1uXrfMEjXzAFOTc8oQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792014766; c=relaxed/simple;
-	bh=pcGZG/1An6tLaK/s5q0+DEOIAUX3Avip0BY70/K6EkQ=;
+	s=arc-20240116; t=1792015105; c=relaxed/simple;
+	bh=brkQDJQNNlxAy/6blY96IdbiPifLKNqDcW8gnFUQaDw=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=Hnu/Odv/2wbA1pqM8T6bkal5wGrgIIpFZUyrCokrMueNUERhuY50GxqZlWBc8VV+y3746K5lUI2Ljpa7bFDHky9zHOJH3cFmS8Id/QlCdi46TVjosrYUiKGuK9BJ7yrLZoNnDwnjC0LdvU0VdX31K+50pOd0HbChC/HCYnMhPU0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=luFKnl6n; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=p2SsNcXBqWXjNJhB5vcP0bh1rXODmEAsHBUK6wOOIZlLynxnnjl/elktLxWiOfJSXeMR5trnNU6B7LD++3k4LfnCnvTQetsf+MpI5rHgEiSR/DMh2XUZLLnrZ4AiSIG/w446Y2AJqjfnIivswgn+07ojDmF8l/ksbgS5PVK1Yl8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gwG6lK1l; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="luFKnl6n"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 888AC1F000C4;
-	Wed, 14 Oct 2026 21:52:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gwG6lK1l"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E44DF1F000C4;
+	Wed, 14 Oct 2026 21:58:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792014765;
-	bh=D+IaSM9kT05pfBEWp0Id2Mry8ziv93Bwpy/RvFGwxDY=;
+	s=k20260515; t=1792015104;
+	bh=JFNoFpngqoFf9NYyppuLv/yxto7jom22R1QvJtAwSYw=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=luFKnl6nDaTRwLuUvwfPn1yXToQ2S1HPsjTzNUym0qJ8e7SyIg0KvlS7arhuRzpcy
-	 4PkPpRlwf7D6QFnrWtwK5EzrYITdsqCmxWlo9Q+ebxhM8EnqkgnHWQw4ScGKloCiu7
-	 Fgc4P0Hv9gWPN348FWMNlfdx0gXntEZPzXl3HL0DBLf8pZeLN5avrDd2gJawMMgvRR
-	 gYTbwxoOiYBLLhDsEgnfcoerq+xFhZ3jE8lrgn956m+2dhQA/ghNl6VNgj/xMR43Sw
-	 gyXbFe1TLs3xdr+rRcVimZDKubhrru8kRO9aXspUB+z7OGi8O/RCE+opLw9XqyhE8O
-	 BxLIt38LXIC+A==
+	b=gwG6lK1l3w4+r6otOEIhBoeVI/BR1VAS43XaS1Y340hNar+VaxyVThvttryMf8o0e
+	 OoU3M7ZhcTV5rZsATNpc4PeBPfNIlr7x3TSzYAfvDWtZ71mkvwxuRneMiR55CytZ9+
+	 EeV5bV+r9T0QU1Ubvvo5kqoNefTcfF+sJsY1b2hr31YNnQuIsyqDDRcT5M7IdEjN2q
+	 URVFhP+zQDlL4ma9zqoJeNFo6j5VQ8FKF9WO011gMBoo4LoMGt7iP0TP96g2H6zp7t
+	 K8JTH9El3wYTlNRkd5o81zobuJEYq8bXOWQbQahiMWOaQ1Lq4bwK38+3khnrQadg/P
+	 AgTIpjUjBnEIA==
 From: Thomas Gleixner <tglx@kernel.org>
 To: Pranjal Shrivastava <praan@google.com>, iommu@lists.linux.dev
 Cc: Will Deacon <will@kernel.org>, Joerg Roedel <joro@8bytes.org>, Robin
@@ -38,13 +38,13 @@ Cc: Will Deacon <will@kernel.org>, Joerg Roedel <joro@8bytes.org>, Robin
  <gregkh@linuxfoundation.org>, rafael@kernel.org, Danilo Krummrich
  <dakr@kernel.org>, driver-core@lists.linux.dev, Pranjal Shrivastava
  <praan@google.com>, sashiko-bot@kernel.org
-Subject: Re: [PATCH v11 07/16] genirq/msi: Cache MSI message in
- irq_chip_write_msi_msg()
-In-Reply-To: <20260929034510.2023173-8-praan@google.com>
+Subject: Re: [PATCH v11 08/16] genirq/msi: Provide
+ msi_device_domain_restore_msi_msgs()
+In-Reply-To: <20260929034510.2023173-9-praan@google.com>
 References: <20260929034510.2023173-1-praan@google.com>
- <20260929034510.2023173-8-praan@google.com>
-Date: Wed, 14 Oct 2026 23:52:41 +0200
-Message-ID: <875wz4eyqe.ffs@fw13>
+ <20260929034510.2023173-9-praan@google.com>
+Date: Wed, 14 Oct 2026 23:58:21 +0200
+Message-ID: <8733u8eygy.ffs@fw13>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -54,78 +54,52 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 On Tue, Sep 29 2026 at 03:45, Pranjal Shrivastava wrote:
-> Currently, PCI MSI caches the composed MSI message into the MSI
-> descriptor inside __pci_write_msi_msg(), whereas platform MSI and other
-> device MSI domains do not cache the message in the core, forcing
-> individual drivers to manually copy the message into desc->msg if they
-> need to restore it across power transitions.
->
-> Cache desc->msg in irq_chip_write_msi_msg() before invoking the chip
-> callback so all hierarchical MSI domains automatically record the
-> latest message. Document why the redundant assignment in
-> __pci_write_msi_msg() must remain for direct callers outside the
-> irq_chip hierarchy.
->
-> Suggested-by: Thomas Gleixner <tglx@kernel.org>
-> Signed-off-by: Pranjal Shrivastava <praan@google.com>
-> ---
->  drivers/pci/msi/msi.c | 6 ++++++
->  kernel/irq/msi.c      | 9 +++++++++
->  2 files changed, 15 insertions(+)
->
-> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
-> index 80a9db417dc8..f7bedc31d486 100644
-> --- a/drivers/pci/msi/msi.c
-> +++ b/drivers/pci/msi/msi.c
-> @@ -257,6 +257,12 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->  		pci_write_msg_msi(dev, entry, msg);
->  	}
->  
-> +	/*
-> +	 * Although irq_chip_write_msi_msg() already caches the message,
-> +	 * keep the assignment here for callers that invoke
-> +	 * __pci_write_msi_msg() or pci_write_msi_msg() directly outside
-> +	 * the irq_chip hierarchy.
-> +	 */
->  	entry->msg = *msg;
->  
->  	if (entry->write_msi_msg)
-> diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-> index fb5f372215bf..df460a574d80 100644
-> --- a/kernel/irq/msi.c
-> +++ b/kernel/irq/msi.c
-> @@ -634,6 +634,15 @@ static unsigned int msi_domain_get_hwsize(struct device *dev, unsigned int domid
->  static inline void irq_chip_write_msi_msg(struct irq_data *data,
->  					  struct msi_msg *msg)
->  {
-> +	struct msi_desc *desc = irq_data_get_msi_desc(data);
+> +void msi_device_domain_restore_msi_msgs(struct device *dev, unsigned int domid)
+> +{
+> +	if (!dev->msi.data)
+> +		return;
 > +
-> +	/*
-> +	 * PCI Multi-MSI shares a single descriptor across all vectors and
-> +	 * the device stores only the base message. Cache the message of the
-> +	 * first interrupt only, so that sub-vectors cannot overwrite it.
-> +	 */
-> +	if (desc->irq == data->irq)
-> +		desc->msg = *msg;
->  	data->chip->irq_write_msi_msg(data, msg);
->  }
+> +	guard(msi_descs_lock)(dev);
+> +	struct irq_domain *domain = msi_get_device_domain(dev, domid);
+> +
+> +	if (!domain || !irq_domain_is_msi_device(domain))
+> +		return;
+> +
+> +	struct xarray *xa = &dev->msi.data->__domains[domid].store;
+> +	struct msi_domain_info *info = domain->host_data;
+> +	struct msi_desc *msi_desc;
+> +	unsigned long idx;
+> +
+> +	xa_for_each_range(xa, idx, msi_desc, 0, info->hwsize - 1) {
+> +		/* Only handle MSI entries which have an interrupt associated */
+> +		if (!msi_desc_match(msi_desc, MSI_DESC_ASSOCIATED))
+> +			continue;
+> +
+> +		scoped_irqdesc_get_and_buslock(msi_desc->irq, 0) {
+> +			struct irq_data *data = irq_desc_get_irq_data(scoped_irqdesc);
+> +			struct msi_msg msg = msi_desc->msg;
+> +
+> +			if (data->chip)
+> +				irq_chip_write_msi_msg(data, &msg);
+> +		}
+> +	}
 
-Sashiko reported correctly:
+In this case sashiko is wrong:
 
 > [Severity: Critical]
-> Does this code cause a NULL pointer dereference for domains without an
-> msi_desc object?
+> Will this result in a NULL pointer dereference in hierarchical IRQ domains?
+> 
+> Since irq_desc_get_irq_data() retrieves the top-level irq_data, data->chip
+> points to the top-level irq_chip. In hierarchical IRQ domains, the top-level
+> irq_chip typically does not implement the irq_write_msi_msg callback.
+> 
+> When this top-level irq_data is passed to irq_chip_write_msi_msg(), it will
+> dereference a NULL function pointer:
 
-So this needs to be:
-
-	if (desc && desc->irq == data->irq)
-		desc->msg = *msg;
-
-Did not think about that, but that also means that this patch was not
-tested on any recent (less than 10 years old) Intel x86 platform or a
-x86 VM exposing HPET...
+All MSI top level (device) domains implement the irq_write_msi_msg()
+callback. That's the whole point of the top level MSI domain as that's
+the one which has access to the device and the associated message store.
 
 Thanks,
 
         tglx
-
