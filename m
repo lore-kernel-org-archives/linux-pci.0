@@ -1,47 +1,47 @@
-Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11021118.outbound.protection.outlook.com [40.107.74.118])
+Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11021109.outbound.protection.outlook.com [40.107.74.109])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09EC23ACF14;
-	Thu, 15 Oct 2026 03:31:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.118
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B04493EA949;
+	Thu, 15 Oct 2026 03:31:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.109
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792035095; cv=fail; b=BA+g8jStbYnox7gSHOgVbBWIzHbs4VCTC8sPZM4hsHDKhMHIe5dJtlcjvzjv9FSIUDNsXvhdEScPgJqNNt9ofANFsoxlt5AHhDBoUL0Vbdh2FVtW8dbQWzyffTKVAdWQLYk0QJXMwl9YSpHIULaQ4ahVNiv+YzB8hkKzaQzOlgc=
+	t=1792035096; cv=fail; b=SzFWhVnyfq9g7URV6ta+gtaDoh1LivDB+Vd0/KTFARSJiCz5BGo7op0vPPQmBGG0xCM2SeEjZVytsDvIpZzf9SF2BFckHPN7zfsBl2n/3Vd6qn/sLu1MtQFs5VLmyknwf0gFDQT/6doXkPRXuf1RlKf8aWcAe1LKMJAzd0oYbAs=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792035095; c=relaxed/simple;
-	bh=wgG+HbAGWz+LjJlG7A/qH07tGcth1IGzXXjIQQ3jymE=;
+	s=arc-20240116; t=1792035096; c=relaxed/simple;
+	bh=Z8tiIZ+c1aR4B9EvhWzpNenn4u7tlEO7TADz3XltWhM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=THWPckVQT5bZJDkPdbfDvyq9ekdzvSYCu9CnPjrjjAQ7+d6bxeDZisx0+HpZd7o7kMbX3zPHEmoQ4LnwPQmcZqV+n4CW+8j7RhR/iY4mITGDPHAIT7nhOfht3/vuNMGBZJgzwL+Utit/InGKAu2MZB6jOLgzzX7GS6sp1T0YH7o=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=RvGQ7V6H; arc=fail smtp.client-ip=40.107.74.118
+	 Content-Type:MIME-Version; b=MTdB01EUd8XissPGoQJz7LEDn51Lv1bdh2E+9FrqN30HH7Rp5mXY8PbtdypLwg9HeAPu3r0i6KKXifhkXN06Y4gjVA8Fll4xmZJJsUc5hxvuaYjVYxVpoqnfEyyz+3HTG/da0QXUM+eYv4dK/MOlNdFJYRauRE2NHJ70/0GK+2g=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=cGQ8uSjx; arc=fail smtp.client-ip=40.107.74.109
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="RvGQ7V6H"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="cGQ8uSjx"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RDCydt6KrzMZ4l5ufaRYL69HiiaA/fCkfr96y+6vzE4YqJlXOBK2moDbfH3f9XzqhFdx1gA1l4cVp+ZnQD0x58b8i+HXt5aZbzXfuZmTWd63IKFgpDqQW2s9+NGmXIJE2yWclM3+Auw0kBQlW5BIorVUGl5HtZCiizrE5c/MEstY61HUFfcwz21s85NQk9h+rqg0/pazE1dbpTA2AJP5565wnfg7ZHq2HifRlM7BFleaffOQFQHDxA4t1sAxW1cndnWNql+fDH3Ot+wOLUc7iDZF1NVniUQhT03h0iDt26sY1q8YCvP1zGC2DI8qDYHNpU6CC4y66e71cCh/N5EofQ==
+ b=zWt0wHRigCWMQ4nGtx6frxyjeNyTNx0rzjeiE8eeJz0b9sNqHI5tfBOjIh3fRk5mEOpGW05uWSvRBPytVPPBk7EVBzdxCej2RmY9I5p3zL16/k8jEpQ+7MGyFLACGgCK6GJqcb9EQ7yVOkpmMPRRtByJikb/rnT6YpMdbj5wGHbmLuh8ChLz3oOud/OYZBkzXo7VKoEGAXhx76k1ODUXcckzEgr10NPv5POrIKRHeb5up3EzW6vRS9wNMTmzmFqEIKkMtWXWd7psMll3T5eCuJdXehM1zw4yv4AQ3dbGSQS8EG+iXQvCo0nD/bzcwN+jLGviY3gKSbHK9aFNn7nUxQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=XhTeofZFj0Qp6q2APTwVIKwiH/d29bGpU2xQwkrHuw0=;
- b=Uj/+7UbHheTGEV+vkxWJGDra9aHL639Zb2pAEW0c2TTquKL6JSpqSiwLVKfwHbzg7WSvhbfYw+IdzBlXXWecSm1JmkINu+t7ldJ5B+C2KjBTqcv3Q2wELvRFYH43n1BDncjBQ4uITD2M1co+bszIluuKANsXbOm7qY0tmbqMr8rDCovBgltqNI1sXMJw+h0TUiJLXlmaSah+XW6x6fzhhAMFKshSch8kpCykh4rVNw+8lfceqVQY5Oq7tTF+thpetFRy55bJDr3n7mTbngdFCKhbyfAmANQl1cu6uQp9/MvBm3JnvI2uGU9AtoMLRMU/LQ2Ac0Dt9D7N5LVOuHLQDw==
+ bh=gHw1b34MNO6s71sppVolAANEZPgTv0MR042MUBeOfyA=;
+ b=jRpbZD0DxofPZvD7wjoHKLlK92QoKrlw0FgVKptXeIB0wExnP0hIaqscC3v/j08A8qIGVDmwGNcTPoZ3fuF8xhA+J5jW3vFOnCviZHt2M46OuEpx1COBuTXIrIb/IoqWmJfByHsdlu8NxN9dd+crU46f1D4bxNRLcan1XT07RxwBvZuBu2PrfmSQ3+1iI1OsX/0AR1Ks70vqbFAsLLHNvlITqHBwiAXUV3q24ABdCsXy/IGHBCz+JE8Fy1A7Go3kYKhkC2iMsaoXKnzoAaJb4uol3B+k14thAd4wsrK6Qw1Thxwb5phcE7qr/BrQf8RlEtU0fnLn9uRsbSUNmNWcGw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
  header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XhTeofZFj0Qp6q2APTwVIKwiH/d29bGpU2xQwkrHuw0=;
- b=RvGQ7V6HrQsOL+kulQlzZBL/ix2c4dPSuMrD4PsJTYQY1XPc22ieIsRDYC6t6WHHII/iPLLD97RUEj9ktDOgcLJbpcX/7OkPAYxCGCgSANC0JSbG+NQARfaK6jmnnY9Yp6HciZ/hx02+CC1Wa20JxpPuUJkuoGBJIC7HmR7Tcpw=
+ bh=gHw1b34MNO6s71sppVolAANEZPgTv0MR042MUBeOfyA=;
+ b=cGQ8uSjxCc2i7UrIdsihjzR0dVbXgYnu2+noAVfDXAMoHUUH1H4PREvDqewg53WJfe/hzK/ilzbqIr2k+iKHNVRRy5LWEy0jGaPL9Ba/R1iA/pLsPeI/xjzqwRqFGbXq4OGW3ttkUhHquOZ2DQf87CPGpImKDD4sU5uWku+37UA=
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=valinux.co.jp;
 Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:325::11)
  by TYWP286MB2699.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:24e::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.13; Thu, 15 Oct
- 2026 03:31:19 +0000
+ 2026 03:31:21 +0000
 Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  ([fe80::cce5:2aa8:53f9:dba9]) by TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  ([fe80::cce5:2aa8:53f9:dba9%5]) with mapi id 15.21.0522.012; Thu, 15 Oct 2026
- 03:31:19 +0000
+ 03:31:21 +0000
 From: Koichiro Den <den@valinux.co.jp>
 To: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	Geert Uytterhoeven <geert+renesas@glider.be>,
@@ -64,16 +64,16 @@ Cc: Philipp Zabel <p.zabel@pengutronix.de>,
 	linux-renesas-soc@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v4 11/18] PCI: rcar-gen4: Take over the iMSI-RX interrupt
-Date: Thu, 15 Oct 2026 12:30:56 +0900
-Message-ID: <20261015033103.3076869-12-den@valinux.co.jp>
+Subject: [PATCH v4 13/18] PCI: dwc: Let glue drivers hide the Root Port MSI capabilities
+Date: Thu, 15 Oct 2026 12:30:58 +0900
+Message-ID: <20261015033103.3076869-14-den@valinux.co.jp>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20261015033103.3076869-1-den@valinux.co.jp>
 References: <20261015033103.3076869-1-den@valinux.co.jp>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: TYCP286CA0091.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:2b4::13) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+X-ClientProxiedBy: TY4P301CA0072.JPNP301.PROD.OUTLOOK.COM
+ (2603:1096:405:36f::19) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  (2603:1096:405:325::11)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -83,247 +83,121 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: TY7P286MB6866:EE_|TYWP286MB2699:EE_
-X-MS-Office365-Filtering-Correlation-Id: ab51d010-f40a-48d8-9bb1-08df2a6cc700
+X-MS-Office365-Filtering-Correlation-Id: ee8ec43a-8743-4da2-bc3e-08df2a6cc808
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|10070799003|1800799024|7416014|366016|376014|6133799003|10067099003|22082099003|18002099003|921020|5023799004|261009223027099003|56012099006;
+	BCL:0;ARA:13230040|23010399003|10070799003|1800799024|7416014|366016|376014|6133799003|10067099003|22082099003|18002099003|921020|261009223027099003|56012099006;
 X-Microsoft-Antispam-Message-Info:
-	cjrJ4iuX0mPgyXeEHN4Bry9zpRah0tDVGbmRz1s7AZmKNmSLzzq4MqCesbayO3OwKzXbWhdYrMpW8WOOwMgICEdIHtsLuWnwY9AX8u/7QPTnYLpCOm/EFK7APYxm4OGJIHS/28QWXaF2tEP2g6YF5sLnxzJVadu8Nx5brVDkLzHpYolJUUE+HNQOYrISwr4wrzwX0nkqtgEheVm60labba3qCYg+YfJ8LMaXJI3v8HVErlH/fd9q/6kXkMvDIb0dcskvRKIZy7FOM4JYHMVvAlOyShszNw2PbTN72eXhAhZuL4y64rKVnDDCDJ4tBWDuWTCbid5CFFX9cNOvBQcFiFQ+OmOUHlnrJyd5mTMoh8e/xDu6gMvoRgwLui4IhrQjiNBwR0hYO/04RdCVDIEQLGSxvwuHEeqcI1HzZhhblY424yRkEsLROg1njuR/94oMdVREYRa3nrHLXdC0x+SMAOADJM891x0gajKxkLvMKPOg3KznroJMnQqsRMvQ9I/xWjVwCKVxe+2pqlO/vvH1RHEq5iC+RYqF1jQj/mlvBUViU+KAHQdWBHaoOZ84cQ5gNhseAGe7LRY5eURGONYv+KJRzph//MfIH5HnzoldguDKN3pFDKc69t2cl8MWSjnEleA64m3XXdMzAGWPk7yUOgHJsSBgoeLjDxHDqnHFNN4uaJ3wjHL99VnNefyXpPwcP8Ts2xjtR/PNnYQwE5/a1w==
+	KnzqO7LMgAAA4JywFF0UFVkADr8fAqjx6C6lkL2x7l/Dzlb8NHyJFo8J+sEX4IseKEAf7uTC+CAg2MUprI9UEsqZIcKQXbBU5DBqH9H1P31AxpeMj/OSBCcxujxqAW9i8q7NP8O3+9yB4vEwSORnJL/BZIq5c/6GmEmVzZieWnn8PFxpdL9sAYe+rv182XVFFQk2Nk3s/Vzi32LhCH9TPxFuqUCrG/XTAEKBugFlZfY/BiES68A/yvkab5Y5ItXJ6AFl9wsuqqMVgIByysj1GHcQMSEirz7JWqwz06GFno5aghym0FD32kpjweohjOJnlE+kQMgY6zI+Mp7JjXcsJTpzxLsYhYS0GHBU9ixWPy8vcvNUgnYWdZ2Qi2aqmXVMiKEXkF+Bn39lDh+Zi+qozwZJuuSbpwwvrya+rpvj8FH3ygwZQEDYS0Va47L72p1NiXcN02D3YoQo+uYYTOyKVM+cK5gIqB2dw8WEMimXo3iphfctD5JnhukG5cP2Ax5GJuh3wvwxOahN8sKDafSc4h64AI9XNu0VkUeW0cwCkGPhsfV/OKuF87MA81TZ6Z5lWF4JyBcwwkYTImPSricuaXTF6yFQUYDjKSQ/lX48oLsv5O0XK8QmVT/yXjepZgFmEQAuT7wbPOyore7VTSUP1J9Nj6L4skB+JQxxLyBWIqwjeOtke8rPCRwiGGVnqgnT/IRM8ueKoyKuWUZC8ebgIw==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(10070799003)(1800799024)(7416014)(366016)(376014)(6133799003)(10067099003)(22082099003)(18002099003)(921020)(5023799004)(261009223027099003)(56012099006);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(10070799003)(1800799024)(7416014)(366016)(376014)(6133799003)(10067099003)(22082099003)(18002099003)(921020)(261009223027099003)(56012099006);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?lWupyTaWOIkUoZbDCGCuO0gBQzFWdc+Vg6UbVIlo/fWh7r8Mcu3Fx6zMbL5g?=
- =?us-ascii?Q?HYyhW4DjQQkrOkkIFnMKj5jNwUaGTIWi/5jrvoY/8wBKB598nG+u3dKTEZ0V?=
- =?us-ascii?Q?QV7mQGKnau1ncjBC4Fc3JV4yBeK33F84GQ8jv4S5SbnehWxlnYmbcsCA9Vnt?=
- =?us-ascii?Q?TYLqEbHB4qCb1hRR/uMBkQnsA0qhS57DWeLLJ4HytEUR6FoyjED0LcaQ/fPk?=
- =?us-ascii?Q?hyEy66zXD+isyMsL8gjjkBeJPn0knVqVVfrm/xVLf31BuFMrFnTCG/yR+Uwl?=
- =?us-ascii?Q?eGD2Y67XH47pIuMmzqkR5215kUOkI2K4bwDut8FerbbKfxUNr8+8YK1jqLys?=
- =?us-ascii?Q?VgsWnNQFw1K/rz2YsVPlXeZLOWaFordVmj19zGsOmYHOzsXJWfgIff5viwSP?=
- =?us-ascii?Q?Y01AFGs/8qAu7mQPxU75Mjr3C5j+BoAArepY3MN3sSuLEag4LiEkCTJQFYwb?=
- =?us-ascii?Q?Gu98qqcE/OLrpPwNaA94CSf3oH1EVqWBwjN6S0Z1zVt6nGFFwS51ag6gKhzM?=
- =?us-ascii?Q?LVTUeCxX7juknIn6EONg4ohsYQo/oBZNXuWKdteZoOY99GpzEWyRvpAQtP1U?=
- =?us-ascii?Q?U0flKKV4FRux1xWZFZ4WFmqD5y5LaZ69QNCtLBAN4KlF33WEXU3LYzDMUa3z?=
- =?us-ascii?Q?IGKSJvDGZSvcQJd3+797dspaNZnK5VDzLYMRMPdwDO5CalwD2Js0neU26aQD?=
- =?us-ascii?Q?3a8S+9DiTcxf/VNV+Y+A69Bg9qxlaIdProjWDGi83lkHVJHQ3UbXbuaunheJ?=
- =?us-ascii?Q?o7wOXpbGLAquNkw+2pDVlFWpRHlHzggvJ0lRCGIko+0QoXYCYcCGO1Ay3C8H?=
- =?us-ascii?Q?G7rfOmE6cPJc8RJ10g1MgNDWPw+wY91tJ93PGirqy0bcPc26qcIZbkU1N9GR?=
- =?us-ascii?Q?63CYwXmnWdsxeDtIg/yiZ9xXIAoNdOFfXJA8cX6HWI2XPCZe79aSckBYJ6RW?=
- =?us-ascii?Q?q2LjFwWWuBpRbNRVDc1VsSK/PhlI3UuRpJ58noJ4pGp3BPKNb0jTPz5QzCNY?=
- =?us-ascii?Q?ldNiyFNVs9IoqC7TolQbmN3oiCaNyw85H43SpA20OyQ7SpG8wScB1ApHiitk?=
- =?us-ascii?Q?v+ZqOU9HnLlnZZTxgBUfylDyj/qrmfAo8KpqYZ66buZo/jhOmw7lf2Zg/7+2?=
- =?us-ascii?Q?Et49lwlzZnIaYRkbLQuH37wFjGv8VD0BkELIG7GCKS60kDIEulGfqT5XBXD2?=
- =?us-ascii?Q?juOj55Et24fq0i2C3i3kDbRwk4+skgJQ1uMl69IRN9N5nQ4VTlu4d2gQZqiv?=
- =?us-ascii?Q?PG9Sx48t4gHWZTQ0EziZlSCXpCMj8TjhobFqeuN+mPCJnKrr/wvbYcr2UkDx?=
- =?us-ascii?Q?29MM/MTwtYy4iwCB5vZ7t39u/ZzMoz6OrxvhBYgwLCLofFGHFswdnriCycjq?=
- =?us-ascii?Q?eYfuoTzr+eOMHpoHRZqzqBxfzNlqE7+EkS/iwXxkxLXnWoyfUe6ifQ9oStJ2?=
- =?us-ascii?Q?0ZUs7MAnI+OydmCHesDE4hUGY1CGgBFurDq37WPC132uJ9JQoEYZ82onrExp?=
- =?us-ascii?Q?t5IIs+0Q2I3kFramOcUdDTjo5Bxb+NrspManA/ZMTxtmPdJEKYNGnVpJ76M/?=
- =?us-ascii?Q?ebdrShH8EYSAoToYGHjPbFlWyNCxaBbU9qmurqpSTsTD7+xpz+xKE9Z6UKOg?=
- =?us-ascii?Q?Bb5I56r2qP8LNuSjfKLs3wYI2TrkdXDgPOFa+GMZdQefOsGDypsCPrSn0skg?=
- =?us-ascii?Q?T7EmROW8ZAco+jHzf6lK7GCWidt11wi0P8tplbPihGiStN0HZ+KEk1YZ1/Tb?=
- =?us-ascii?Q?kNhe5QHbcj4xvk0NW+IbLxLWA5/3hMY7rHXgdqb/r3nwq7EmPCR+?=
+	=?us-ascii?Q?xxSyXkNrnH1KpOgyyuuKp0OF6ctjN+jArU8FqFHvjzCjk09wNJqca/7w3FH7?=
+ =?us-ascii?Q?KnKC/Kt5bN9thCVi/z0KeCKjcfRD/Xmx2DZs4FX2QStdofERADB5IgFdbns2?=
+ =?us-ascii?Q?RMgRsW91WQmvDASbGdigZGiD20lwfCQzMg9WyJvtwO503X8hMGV3QaJjf2Yf?=
+ =?us-ascii?Q?kDlHLHluPZ+s8jSDEpteaYM0iXKIUAdHk3TZwguNZaBT9NSHevf7Z9tjOL06?=
+ =?us-ascii?Q?LIDPOm1yl5RZo8tK777u9B340k0ImHL9QZj3FTqaLpra+zUmAj8zeHk83tVH?=
+ =?us-ascii?Q?1kQysbu69TaOHSxPMdYe+tj7JDo9SD7Mr9ZWxZLLyyDMn4o1Njbs9bRCWCrf?=
+ =?us-ascii?Q?34yFDHpR83vpBcyconHuwDkuXrEELhioLHbcJSpt3vccifiCTA/KgK2pb0Ov?=
+ =?us-ascii?Q?xGhmyKtf4ThwT4HGdb5JptbR4DXdGKBJMq1A6D7zuKfGtfhBlNXQ3Bv5hkWb?=
+ =?us-ascii?Q?faWtQiK3pNniARYfahrjqP94qtlcZL+4K+/7K7icaMW7aPKTcmowhl08kNVI?=
+ =?us-ascii?Q?vBja8Ei+EzYsiEriZFTJqZ8iWGE94Q0g18z3z08zFCJ7JxrwyoRCq1myJzEC?=
+ =?us-ascii?Q?b4CnUeS3/eKJSQo4FgdCloPvNuEeKDq8fAC3iG0QnCgIW/v/2DopeNYRUbvo?=
+ =?us-ascii?Q?25FDeAHclUtQju4+1f3cRZ9JuiYlRmUW93bNFtJ91iXYN9swyS1I2rQk7pE/?=
+ =?us-ascii?Q?qf9nbBuxIH0B+msByO21kloZcWHKT+cmvBKvjpQUhhYo5awKGm1BtF/6vMWv?=
+ =?us-ascii?Q?HxNAc5QlTPJ0YJnmmx4ML16CPjINZk4LitB59wqP3+HnuJzVXBA4OmEDqgXO?=
+ =?us-ascii?Q?gG2MbcZicB6geB2rknGO2WoL94vVGJ2MY0kmMuI8v1cFG5EN+PIUkAOPlhPt?=
+ =?us-ascii?Q?WoWbjE9FC06gpNLTxccmWXEb4SFp2PvbSB9I1iEPxcUXRYsHB+HPO40rIdsd?=
+ =?us-ascii?Q?x9OSZsPe8bjwEwtdqxrklaZWvlbpQMke+N/mXxFBpcEQQqC8ZED/BdrXCC5b?=
+ =?us-ascii?Q?07SUZgGC/FzJSqPITwhm9AomlUFWHRHSX27HGxNX8/zQ9PdIUfAJofFhV64Z?=
+ =?us-ascii?Q?rQ+zfmpGLsmUWx8ypyHO8ZRyIXO+x33I32Ebf5BPOGKQGNClIXmn4RpTXnch?=
+ =?us-ascii?Q?9LRAhZsEVqDO7knROamYSgx9lbk3E7gbx+l65dJy4bj3KCgjda10qNFXIZQN?=
+ =?us-ascii?Q?9hsLVnVRgmZCKfG1QY/N+jsPKFXSwEQ7plib/cyMdBDjIoA7GsI5ZXkOobLT?=
+ =?us-ascii?Q?9PpjCfnIrDHK6j6tm90FxKg7R1egPQ60nA+vxp/M8UH1RaakBaoW7BQEZUXq?=
+ =?us-ascii?Q?NV2+ZpOPEA+t6rJh15vyEHWdqPZfeKYvmRqAAkm+hNbpR0sATSdgSLYTmZE4?=
+ =?us-ascii?Q?5mMYGqvS9mLmndetEzNZrsvgldE+Hc9Nq7w4/hMlzNNYbPjVr6LQeCI9LMSg?=
+ =?us-ascii?Q?gIM1D7iZ+k/nfEBjdl50VWHdL2SkdwbFtOgBOX1WEeCeF8SqOoOZGnUx8Pbh?=
+ =?us-ascii?Q?bsm33Uibuy8CWjT30ZX5u02xxIuVvjfTThD0mQPAl1LG+MTSVySQ/fU54JhG?=
+ =?us-ascii?Q?clDSQCP9sMabFekmnguCMRushQ+Vkysth70iEbjGXKFo5KmIsmMigLCT7xgt?=
+ =?us-ascii?Q?HTxuoDJI1WXpmN5+YjxAa+Z+czG/8OOWzgtzlHeDEwuRdwkTxc7SxuCOgz74?=
+ =?us-ascii?Q?8R0/0uqV7U25uciqYAylNBnkzEmGmefqRZZLrLc0U8UGrISDqPaiU4f9nxb1?=
+ =?us-ascii?Q?C3Op5z22TMLNxjkAQyvDdeb11DJJpAPOLj8aac8Y+MpyGD7bL+G3?=
 X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: ab51d010-f40a-48d8-9bb1-08df2a6cc700
+X-MS-Exchange-CrossTenant-Network-Message-Id: ee8ec43a-8743-4da2-bc3e-08df2a6cc808
 X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Oct 2026 03:31:19.4238
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Oct 2026 03:31:21.1568
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: QFEZCOp8VVHcLVaH1GL0YILfxE7o7lEsmA+u69mvh5ZqkT8wmNzMHZqw29wSNq+dbGpOudIUyDVwZMbMHa9zFg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: 406suaYoXat3hRxVL0QoHsusPPLOewXKD58zA1+L2hkYlLk6h2OSoYcPmUF+eVfsj7pK+8Ct9hsak+fLaxRNYA==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYWP286MB2699
 
-On R-Car Gen4 SoCs, intreq_pcim_sub ("msi") carries more than the
-integrated MSI receiver: the controller's reset requests and the Root
-Port's PME and bandwidth notifications are signalled on the same line,
-and the following patches need to handle them. With the DesignWare core
-owning the line through its chained handler, the driver would have to
-hook into that handler when iMSI-RX is used and request the line itself
-otherwise.
+Commit f5cd8a929c82 ("PCI: dwc: Remove MSI/MSIX capability for Root Port
+if iMSI-RX is used as MSI controller") hides the Root Port MSI/MSI-X
+capabilities when iMSI-RX is the MSI controller, as it cannot receive
+the Root Port's own MSIs.
 
-Instead, request the interrupt in the driver in all configurations and
-set pp->msi_irq[0] to -ENODEV so the core does not install its chained
-handler, as spear13xx, keembay and dra7xx do. The handler demultiplexes
-the MSIs through dw_handle_msi_irq() when the APP block reports
-msi_ctrl_int, in hard IRQ context like the chained handler did. With an
-external MSI controller or pci=nomsi the iMSI-RX is not set up, so keep
-msi_ctrl_int masked, and the handler has nothing to do there yet.
+Some platforms cannot deliver them with an external MSI controller
+either. The DesignWare core signals Root Port interrupts (AER, PME,
+bandwidth, hotplug) as sideband signals on its SII interface and only
+turns them into MSI writes with the optional SII2MSI feature. Otherwise
+it is up to the vendor wrapper. The controller on R-Car Gen4 SoCs
+(DWC 5.20a) appears to lack SII2MSI, and its APP block merely latches
+the signals into status registers wired to platform IRQs, so an MSI
+targeted at the GIC ITS is never sent.
 
-Request the interrupt in probe with IRQF_NO_AUTOEN and enable it at the
-end of .init(), before endpoint drivers can use MSIs from their probe.
-Disable it in .deinit(), before the controller is powered down, and
-around a Root Port reset, as the handler reads the controller registers.
-Suspend and resume go through the same two callbacks.
-
-The DT routes downstream INTx to the same line, but the driver has never
-supported INTx (no INTx domain, INTx enables never set), so requesting
-the line exclusively takes nothing away.
+Add a no_rp_msi flag so glue drivers can request the same INTx fallback
+regardless of the MSI controller in use. It is the counterpart of
+'keep_rp_msi_en' from commit 3a4e8302e72f ("PCI: imx6: Keep Root Port
+MSI capability with iMSI-RX to work around hardware bug"), which keeps
+precedence: that one is needed for endpoint MSIs to work at all, whereas
+hiding the capability only moves the Root Port services to INTx. The
+removal stays in dw_pcie_setup_rc(), which also runs after a Root Port
+reset.
 
 Signed-off-by: Koichiro Den <den@valinux.co.jp>
 ---
 Changes since v3:
   - No changes.
 
- drivers/pci/controller/dwc/pcie-rcar-gen4.c | 79 ++++++++++++++++++++-
- 1 file changed, 78 insertions(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-designware-host.c | 6 ++++--
+ drivers/pci/controller/dwc/pcie-designware.h      | 1 +
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-index 54260e62293b..d51c0fc5ff36 100644
---- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -115,6 +115,8 @@ struct rcar_gen4_pcie {
- 	struct platform_device *pdev;
- 	struct reset_control *perst;
- 	const struct rcar_gen4_pcie_drvdata *drvdata;
-+	/* intreq_pcim_sub ("msi"): iMSI-RX and other controller notifications */
-+	int msi_irq;
- 	/*
- 	 * The controller needs reinitializing; the APP interrupt sources
- 	 * stay masked until a reset succeeds.
-@@ -540,13 +542,14 @@ static int rcar_gen4_pcie_host_msi_addr(struct dw_pcie_rp *pp, u32 *msi_addr)
- 
- static void rcar_gen4_pcie_app_irq_sync_locked(struct rcar_gen4_pcie *rcar)
- {
-+	struct dw_pcie_rp *pp = &rcar->dw.pp;
- 	u32 val;
- 
- 	lockdep_assert_held(&rcar->app_lock);
- 
- 	val = readl(rcar->base + PCIEINTSTS0EN);
- 	val &= ~MSI_CTRL_INT;
--	if (!rcar->reinit_pending && pci_msi_enabled())
-+	if (!rcar->reinit_pending && pp->use_imsi_rx && pci_msi_enabled())
- 		val |= MSI_CTRL_INT;
- 	writel(val, rcar->base + PCIEINTSTS0EN);
- }
-@@ -613,6 +616,54 @@ static int rcar_gen4_pcie_host_msi_init(struct dw_pcie_rp *pp)
- 	return ret;
- }
- 
-+/*
-+ * intreq_pcim_sub carries the iMSI-RX interrupt along with other controller
-+ * notifications, so the driver owns it instead of the DesignWare core (see
-+ * pp->msi_irq[0]) and demultiplexes the MSIs itself.
-+ */
-+static irqreturn_t rcar_gen4_pcie_msi_irq_handler(int irq, void *data)
-+{
-+	struct rcar_gen4_pcie *rcar = data;
-+	u32 status;
-+
-+	status = readl(rcar->base + PCIEINTSTS0) &
-+		 readl(rcar->base + PCIEINTSTS0EN);
-+	if (!(status & MSI_CTRL_INT))
-+		return IRQ_NONE;
-+
-+	dw_handle_msi_irq(&rcar->dw.pp);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static int rcar_gen4_pcie_msi_irq_init(struct rcar_gen4_pcie *rcar)
-+{
-+	struct device *dev = rcar->dw.dev;
-+	int irq, ret;
-+
-+	irq = platform_get_irq_byname(rcar->pdev, "msi");
-+	if (irq < 0)
-+		return irq;
-+
-+	/*
-+	 * Child IRQ flow handlers require local IRQs to be disabled. Keep this
-+	 * handler in hard IRQ context on PREEMPT_RT.
-+	 *
-+	 * Keep the IRQ registered for the lifetime of the driver. .init()
-+	 * enables it once the controller is set up, and .deinit() disables it
-+	 * before the controller is powered down.
-+	 */
-+	ret = devm_request_irq(dev, irq, rcar_gen4_pcie_msi_irq_handler,
-+			       IRQF_NO_THREAD | IRQF_NO_AUTOEN, dev_name(dev),
-+			       rcar);
-+	if (ret)
-+		return dev_err_probe(dev, ret, "Failed to request \"msi\" IRQ\n");
-+
-+	rcar->msi_irq = irq;
-+
-+	return 0;
-+}
-+
- static int rcar_gen4_pcie_enable_device(struct pci_host_bridge *bridge,
- 					struct pci_dev *dev)
- {
-@@ -710,6 +761,9 @@ static void rcar_gen4_pcie_quiesce_irqs(struct rcar_gen4_pcie *rcar)
- 		rcar->reinit_pending = true;
- 		rcar_gen4_pcie_app_irq_sync_locked(rcar);
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 774e1936d999..32e179603cf4 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -1191,9 +1191,11 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
+ 	 * The iMSI-RX module does not support receiving MSI or MSI-X generated
+ 	 * by the Root Port. If iMSI-RX is used as the MSI controller, remove
+ 	 * the MSI and MSI-X capabilities of the Root Port to allow the drivers
+-	 * to fall back to INTx instead.
++	 * to fall back to INTx instead. Glue drivers set no_rp_msi when the
++	 * platform never delivers the Root Port's own MSIs, whatever the MSI
++	 * controller in use.
+ 	 */
+-	if (pp->use_imsi_rx && !pp->keep_rp_msi_en) {
++	if ((pp->use_imsi_rx || pp->no_rp_msi) && !pp->keep_rp_msi_en) {
+ 		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSI);
+ 		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSIX);
  	}
-+
-+	/* The MSI status lives in DBI; keep the handler away during the reset. */
-+	disable_irq(rcar->msi_irq);
- }
- 
- static void rcar_gen4_pcie_resume_irqs(struct rcar_gen4_pcie *rcar,
-@@ -719,6 +773,8 @@ static void rcar_gen4_pcie_resume_irqs(struct rcar_gen4_pcie *rcar,
- 		rcar->reinit_pending = !recovered;
- 		rcar_gen4_pcie_app_irq_sync_locked(rcar);
- 	}
-+
-+	enable_irq(rcar->msi_irq);
- }
- 
- /*
-@@ -796,6 +852,13 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
- 	if (ret)
- 		goto err;
- 
-+	/*
-+	 * Undo IRQF_NO_AUTOEN at probe, or the disable in .deinit() on resume.
-+	 * The iMSI-RX interrupts stay disabled until dw_pcie_setup_rc(), so the
-+	 * handler cannot run before the MSI domain exists.
-+	 */
-+	rcar_gen4_pcie_resume_irqs(rcar, true);
-+
- 	return 0;
- 
- err:
-@@ -808,6 +871,9 @@ static void rcar_gen4_pcie_host_deinit(struct dw_pcie_rp *pp)
- 	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
- 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
- 
-+	/* Stop the handler before asserting reset and disabling the clocks. */
-+	rcar_gen4_pcie_quiesce_irqs(rcar);
-+
- 	rcar_gen4_pcie_host_perst_assert(pp, true);
- 	rcar->drvdata->deinit(rcar);
- }
-@@ -820,15 +886,26 @@ static const struct dw_pcie_host_ops rcar_gen4_pcie_host_ops = {
- static int rcar_gen4_add_dw_pcie_rp(struct rcar_gen4_pcie *rcar)
- {
- 	struct dw_pcie_rp *pp = &rcar->dw.pp;
-+	int ret;
- 
- 	if (!IS_ENABLED(CONFIG_PCIE_RCAR_GEN4_HOST))
- 		return -ENODEV;
- 
- 	raw_spin_lock_init(&rcar->app_lock);
- 
-+	ret = rcar_gen4_pcie_msi_irq_init(rcar);
-+	if (ret)
-+		return ret;
-+
- 	pp->num_vectors = MAX_MSI_IRQS;
- 	/* Reserve an iATU window for the generic PME_Turn_Off implementation. */
- 	pp->use_atu_msg = true;
-+	/*
-+	 * intreq_pcim_sub ("msi") is shared with other controller
-+	 * notifications: the driver requests it itself and demultiplexes the
-+	 * iMSI-RX MSIs from its own handler.
-+	 */
-+	pp->msi_irq[0] = -ENODEV;
- 	pp->ops = &rcar_gen4_pcie_host_ops;
- 
- 	return dw_pcie_host_init(pp);
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 2ce61709b58c..d94116402b74 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -445,6 +445,7 @@ struct dw_pcie_host_ops {
+ struct dw_pcie_rp {
+ 	bool			use_imsi_rx:1;
+ 	bool			keep_rp_msi_en:1;
++	bool			no_rp_msi:1;
+ 	bool			cfg0_io_shared:1;
+ 	u64			cfg0_base;
+ 	void __iomem		*va_cfg0_base;
 -- 
 2.54.0
 
