@@ -1,233 +1,355 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com [209.85.218.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E398F3C553B
-	for <linux-pci@vger.kernel.org>; Thu, 15 Oct 2026 14:45:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792075561; cv=pass; b=YsVjU45oF0Yj98eVmQUIP2sJnHOb2uZhIdeyavdQBq/+r8tCpFtZoTXYD5/4Vnnmeqo3K4YNIuiab7C2r0h2S3kQqIdi1fkZsorE/b4Au0yG32P4cdh41tzOdnGayIh5RCPQadtMUHcDUrq5BsJ5huviYF1cjMvG2ZIPFfH5eYM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792075561; c=relaxed/simple;
-	bh=7kTPqpLAh+L97oFkxfh+4rZx6U3XxL8GE5687Tp1CcA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=tUO79LIPKgapES0qMkRy5sZM8oNcUcWRrwN+/wds1+BwxAif9SOzSongv2dJhDDiQ1o11zWT8lyhLrzFNvzCU8Zltk7tirZwH7eGNDeGZuvb3676/QkWe7w5sbi+3eZpwcZZCW+PBE1GDrDAmW20Yxg9jLSUH2qDmyTEvaP+NTg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gi1KgUkO; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=S8V8/SC1; arc=pass smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28CB7530DF7
+	for <linux-pci@vger.kernel.org>; Thu, 15 Oct 2026 15:07:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.72
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792076860; cv=none; b=DIAcvHb56X33bvKb66BrjkwaJWPXqUKC31gQKTF/E9voyZi7ObrPM17b4hGLBDUds3wpSR/h9UMYk1MH2w8/uIWyTs1Z1tBgZl7u2e0lJPxyzOUw+wzBLg33Ln7WiDhklz5SAINqCi5D2hWDNy/MkqG10Heuh8/KbfoEVszy0wg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792076860; c=relaxed/simple;
+	bh=fDf2TZGggSk/cJ95OW/A1pc9n9A1t6tXqujXvNReYYs=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=iEMcGVSdqo7O5blTAmr62Mvca0ShDa/f806dzIMG1Rf50pTEpf8k+M9pulo1WpnHkfgPUXg7PoUGC4Vg9wDFSQlNPFJy0xBrhLAe5jpDn44SmVOjR2TqhrA14hOmaj7CH8PcHIYHD0wOYJ7AcMsikhDkvASsY4SxfwssxSptCrQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=jvlZSXXD; arc=none smtp.client-ip=209.85.218.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gi1KgUkO";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="S8V8/SC1"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792075557;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kJMrs0BTYtg7WetIITx1Ab2b5lfsKukYxYHcdWEU7D8=;
-	b=gi1KgUkOmHyjx4JuOptS9/41oc5AAtETdurVD2DBvNy72Dt2ijpF6kyG9Wslo/hN+VruOJ
-	r2j6fN9x9lOwJoytwnLSBpJESYblbBhGnkyfAkqBAf+83jiubGwrsBddcnQu8JNbelHi6E
-	3F2umo3KtG4ALprRVvK7EXga/V26cjM=
-Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com
- [209.85.167.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-267-tIT0SdmlNNGs0PJlKvd_PA-1; Thu, 15 Oct 2026 14:45:56 +0000
-X-MC-Unique: tIT0SdmlNNGs0PJlKvd_PA-1
-X-Mimecast-MFC-AGG-ID: tIT0SdmlNNGs0PJlKvd_PA_1792075556
-Received: by mail-oi1-f200.google.com with SMTP id 5614622812f47-4f4612a1a5cso81089b6e.0
-        for <linux-pci@vger.kernel.org>; Thu, 15 Oct 2026 07:45:56 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792075556; cv=none;
-        d=google.com; s=arc-20260327;
-        b=g/1LuG7NPGs0+IIOYn+kOmcxTWYKY9cbL41+2Rgytas5TVQ1BLJJFiJyEjXYxVRNGQ
-         4yA5t5imD+fuRdZLzdWqVy7osp+QKiqiSvipn+oaK27XycX0dK1OW/lk+giD+Sbx2uQo
-         cYXpXdewVKpsQxvu100c+pCC81HIH5kk8NxOA3KpwRXncwKcX9RfJgWYlVpahD9UHiDZ
-         cGDSUfCSLnzX9Mt7flBRl7vNXGn5ina6MtpVhhRwKxzGDASADMzrjKk9yt4GY8kK0OoZ
-         +u8xuVG8cfINi+WvfZYWUjr5bTZkD7pzeP+KyNVCsrGX/O8o3ASIZvSBoNsUjNrKLnHv
-         QdBQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=kJMrs0BTYtg7WetIITx1Ab2b5lfsKukYxYHcdWEU7D8=;
-        fh=LJtStw9T80xQvLmdlHQ6f9qRUV4kG0Rnt41vu2oyvsk=;
-        b=XkRTAO+a6Aop/mKgG//4MOROIy9AhgKSzCB0bajJma5J0OOiHgHwfBnAxAQ8FOiGo2
-         c1D6nVdZCwlNZg9pKYjz3aJSwLKorfdJ6czokbTqjqKwZIEdZrH4I5poujTXZTtzHz34
-         mzoAXhXnyCXUB+e7k8zjlaUXDqkP85eN/hRgmlXvSi6Kj94o5vb3+b1dXvn2WRDfDT2X
-         163FYwd6lAqfgGMkuPg554LO+hOY9/pwKX28r8982cCt1Ng0SGgZy08l9M/ZlkuOx7nY
-         8NQ6u1ItbAqPjax8bF8shf/0ZiPxrELZjo8oYdlE1d/6v1LVffRWHT2QJfJXPZ0z4ox+
-         dKbw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="jvlZSXXD"
+Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-c2e8c76334fso218213366b.1
+        for <linux-pci@vger.kernel.org>; Thu, 15 Oct 2026 08:07:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1792075556; x=1792680356; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=kJMrs0BTYtg7WetIITx1Ab2b5lfsKukYxYHcdWEU7D8=;
-        b=S8V8/SC1KORhzrxzC7R+m/vG29QzYYZGH9wev7JsB2jQEGBYDxeR/NQCRS20SZLAoD
-         dDIFtVK0Ah7Ce34gAQA0RYZnLMKrSkFoGjPLhjxC3yaYAbmDiWPqs4E3wL8og8JhoBds
-         sHGnu67q8AC7ZRJy56IpPpOq6FAfD40Oh+OVQrYwsqBJv/qO/TEdP9nqobURCjGF4Dyx
-         EZyHxBlGg8yfy5SolW/5BeLMxIGcEYLEGXYxY86zD7XbWT8kyywvG6rw7S6w5Rt0ZzPT
-         HsWBC4S1nYHj06DMyI6Gf5/YuRXF0LEgbYL/KRf8FdUzEt05w+tZHiD6tqVizfMejZRp
-         6tqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792075556; x=1792680356;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=google.com; s=20251104; t=1792076856; x=1792681656; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=kJMrs0BTYtg7WetIITx1Ab2b5lfsKukYxYHcdWEU7D8=;
-        b=QwzUODP7pqta19SaHhN/cpZbb2bhXuTVXZUiJcxsV/Rm7kVoo//L7dj+A3l2I9CqVT
-         5m0kmMLfw1NIERG15d8/zsKNM6km9aKMvqjOTcVvGjvDtmm0U1lhgt+GoaYzJJjLURmx
-         /D5BVkj3yztYQ6Ry/SJB4WXii+N2S94mYsxRv9b0LzCQVd7zsEF7gVsSYmYfBegTn7Qv
-         SPaTJIguZhwhfLxb/KDW4RSsw9iqVVYEQtD/K5b8UqmphCKBHGTpRlgMhdFXj1vluxQ1
-         KtDrvdynYhkXhslLfa6CO9VHUOygB9ZcRGiY5qBbhgiGBdyDf+11M37WiCJalyuR0oms
-         QrYA==
-X-Forwarded-Encrypted: i=1; AKwUvBwL0mLsBsZgLnfpwA2FNs36JsNNKAiYbDKcfWzhdfE/Klfmgi9DtlckhMHdcjTacd+MGU7ShFbvnlk=@vger.kernel.org
-X-Gm-Message-State: AFq9FYK4axgKiAyDYoxjGrkiuw/axK2cukbIytPBcJd4SO9kVvvY5OO+
-	GF+Kt0Z91pGhM90E0xsWYkA+N5iNCCxUsq4umX3vYBHgP9u4TpRBWDapvEjA8CJ9q4/huxvBvwt
-	P7zwfudTrbCbiY8RrMUexWWm2oplpOqHaWzpoVydgUt8Grf4lnKApoutavcDOie26LSVtHFiC82
-	YlxPH8C2fWj++P1RS+7YqGEghNdUXqcwdy7pax
-X-Gm-Gg: AYBFou0SXUrlOl85Lc/Yy2+Jxh9FKNcRaSF3yuHUe1yXvZiEc0bWPDl96siCIMK4byU
-	ChzH5ZJK1m3L3j/ZTr+BfmtZGYvxRIanMr4DrW7EuS6yrNn96monjT0KQuhtdDZeCWhWvS4mZqM
-	g81iu8A0s3P1mIgzIuLW8swQkJpDTjLUmjnUaUm0MZdDcHerUuRd+95oSSM4Y0vs8WfQYY1nMvu
-	zQ6O3KSEvpO+p6CWQ==
-X-Received: by 2002:a05:6808:c227:b0:4ca:9850:4dd8 with SMTP id 5614622812f47-536fafdd8ccmr207182b6e.10.1792075555621;
-        Thu, 15 Oct 2026 07:45:55 -0700 (PDT)
-X-Received: by 2002:a05:6808:c227:b0:4ca:9850:4dd8 with SMTP id
- 5614622812f47-536fafdd8ccmr207137b6e.10.1792075555012; Thu, 15 Oct 2026
- 07:45:55 -0700 (PDT)
+        bh=IC5Ct3FOhi968am1MRf06lj4teeqkFZmOqPC0DoSw2E=;
+        b=jvlZSXXDaJMnvN5M/1qLM2kR5pgtx7+vm1zM8j7e7h0/gNcuM7ElfyHPJHRPyFZ+Vw
+         qruYApXrNosta+9u50UN0u8qN8yBnmrHBVagHYKiB5we2N1A4g9zmkxrtgqvSGiMSERC
+         iGvcKQkrVcYziOGoE5n6SfqVnGQsBtvLKRDRHIUYbmoQjZN7bMeZ0Q72I5K15sHqyOoY
+         N7bvfptQbKE7bo+eeQIW1GIjBnF6Mtm89J+FXXxUNNJ+v0urUU2NgtbKynHKeiINOlXl
+         wHaiX0QV4wnuihWvWSiQhoXwkPGaDMdeNtBHZ8feeNGoyA55xOo/jNR8xTL7RAkKsoxw
+         zZMA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792076856; x=1792681656;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=IC5Ct3FOhi968am1MRf06lj4teeqkFZmOqPC0DoSw2E=;
+        b=liQmiaBnWvSvNfsaPQnI7gkDXvA0HGyV14oNgB0LKvLIgCGz2zChNuOXfOylWT4wjW
+         4iADVz1bZ0M2xjSE2mXkVM5JdTAR/VN2nTzfXOIn/7sL1T0msir+w8vucKdMqt9ddu2r
+         MQH/M4Ei2o2Dwkqt8jdTpeP4HxKeIWwUpzEV+pz4KsDcRkb5FAM9C/CyiQkbZRFkG0tL
+         a/pJY1soNycvsjJSYzh3ph5uN5UNGFOa8+LFt40Rt2tm3UQFgvwf2o2wMeQCXH1+I8HJ
+         hPC4HZW5iiSch0R6UttF2srU/uFZcDVpLUtSvUUgz9YUGOGGi8vRgM/939q8VbSZWcgD
+         byPw==
+X-Forwarded-Encrypted: i=1; AKwUvBwpCvRjvpUQPhgposAoPzflm/Z/YRvTdG/OSeV7DCaDcItVUienEWvko+7bGVK2208/i6UlSsl26Ts=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJvw/wLVj8wlBIxaI1Llx/26ctS5oaO2j0j9jE0h61Kb6f3KZNw
+	WeJH+mEdHSp9AMBS4W5hi5yCrx4+fWdYDTbiGctWxD9Rxi/hlIRUhOKFQ/Inq7+yp2117KZOJm5
+	mfDf+mJCwRBo68zsrlQ==
+X-Received: from ejbbq18.prod.google.com ([2002:a17:906:d0d2:b0:c2e:1f38:d81a])
+ (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:907:9615:b0:c24:adf4:5c73 with SMTP id a640c23a62f3a-c31a9a28825mr1772701566b.1.1792076855746;
+ Thu, 15 Oct 2026 08:07:35 -0700 (PDT)
+Date: Thu, 15 Oct 2026 15:07:34 +0000
+In-Reply-To: <2vxzzewfgno2.fsf@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20261015020811.1132314-1-keng-yu.lin@hpe.com> <CAJZ5v0iYieKPAQTDcr+g6o+JHz+kMRqYYmakeBsyn-BxtxQcvw@mail.gmail.com>
-In-Reply-To: <CAJZ5v0iYieKPAQTDcr+g6o+JHz+kMRqYYmakeBsyn-BxtxQcvw@mail.gmail.com>
-From: Desnes Nunes <desnesn@redhat.com>
-Date: Thu, 15 Oct 2026 11:45:43 -0300
-X-Gm-Features: AclHuK_vz2mggd0RcuByATED0GopB3zO_jGEVLBVHom48STilEFyTjbRWniIMTY
-Message-ID: <CACaw+ey8pZb=Vg+FDaK+K=iyho634sgs=G7nm60mooCD=PuVFg@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI/PM: Restore BARs after powering up during enumeration
-To: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
-Cc: Keng-Yu Lin <keng-yu.lin@hpe.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Mario Limonciello <mario.limonciello@amd.com>, Matthew Ruffell <matthew.ruffell@canonical.com>, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	stable@vger.kernel.org, andy.liang@hpe.com, david.chang@hpe.com, 
-	s.collins@hpe.com, jenifer.golmitz@hpe.com, pravallika.kamma@hpe.com, 
-	zhen-dong.lai@hpe.com, zachary.pabor-ext@hpe.com, acelan.kao@canonical.com, 
-	michael.reed@canonical.com, dlee@hpe.com
+Mime-Version: 1.0
+References: <20260903023452.721732-1-loganodell@google.com>
+ <20260903023452.721732-2-loganodell@google.com> <2vxzzewfgno2.fsf@kernel.org>
+Message-ID: <9huzqzhrhuix.fsf@tarunix.c.googlers.com>
+Subject: Re: [RFC PATCH 1/3] luo: Move to feature flags instead of
+ compatibility strings
+From: tarunsahu@google.com
+To: Pratyush Yadav <pratyush@kernel.org>, Logan Odell <loganodell@google.com>
+Cc: arnd@arndb.de, pasha.tatashin@soleen.com, rppt@kernel.org, 
+	pratyush@kernel.org, graf@amazon.com, akpm@linux-foundation.org, 
+	pbonzini@redhat.com, maz@kernel.org, oupton@kernel.org, seanjc@google.com, 
+	bhelgaas@google.com, alex@shazbot.org, jgg@nvidia.com, kevin.tian@intel.com, 
+	dwmw2@infradead.org, baolu.lu@linux.intel.com, joro@8bytes.org, 
+	will@kernel.org, robin.murphy@arm.com, linux-arch@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, kexec@lists.infradead.org, linux-mm@kvack.org, 
+	kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	kvmarm@lists.linux.dev, linux-pci@vger.kernel.org, iommu@lists.linux.dev
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Desnes Nunes <desnesn@redhat.com>
+Pratyush Yadav <pratyush@kernel.org> writes:
 
-
-Desnes Nunes
-
-
-On Thu, Oct 15, 2026 at 11:15=E2=80=AFAM Rafael J. Wysocki (Intel)
-<rafael@kernel.org> wrote:
+> Hi Logan,
 >
-> On Thu, Oct 15, 2026 at 4:08=E2=80=AFAM Keng-Yu Lin <keng-yu.lin@hpe.com>=
- wrote:
-> >
-> > Commit 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when
-> > initializing") added pci_pm_power_up_and_verify_state() to pci_pm_init(=
-).
-> > The helper ignores pci_power_up()'s return value indicating that BARs
-> > need restoring. Its resume callers restore saved configuration
-> > afterwards; pci_pm_init() does not.
-> >
-> > D3hot-to-D0 may reset a device and lose its BARs (PCI PM 1.2, sec 5.4.1=
-).
-> > After enumeration powers it up, pci_enable_device() reads D0 and skips
-> > the full power-up path. Previously, a device still in D3hot at enable
-> > time took that path, including BAR restoration.
-> >
-> > On AMD Venice SP7, two AMD xHCI controllers [1022:17d2] are in runtime
-> > D3hot with No_Soft_Reset clear before kdump. Diagnostic reads on
-> > v7.3-rc6-37 show the following for 0000:01:00.4 in the crash kernel:
-> >
-> >                                    PMCSR      BAR0
-> >   before the platform power call   0003       f4100004
-> >   after the platform power call    0003       f4100004
-> >   after native D0 power-up         0000       00000004
-> >
-> > The upper BAR DWORD stays zero. pci_power_up() returns 1, but the BAR
-> > address remains zero while dev->resource[0] still contains 0xf4100000.
-> > Without BAR restoration, the crash kernel hangs during boot. The
-> > last console output includes:
-> >
-> >   pci 0000:01:00.4: enabling device (0000 -> 0002)
-> >
-> > Restoring both controllers' BARs gives matching readbacks and allows
-> > kdump to save a vmcore and reboot. An AMD Turin xHCI [1022:1557] shows
-> > the same BAR loss; restoring its BAR also allows kdump to complete.
-> >
-> > Read the initial power state first. Otherwise, pci_power_up() may
-> > request a BAR restore based on a cached PCI_UNKNOWN state, even
-> > when the device is already in D0.
-> >
-> > For devices already in D0, only synchronize the platform state so
-> > that ACPI calls such as _REG still run. For other states, use
-> > pci_set_full_power_state() to power up the device and restore BARs
-> > when needed.
-> >
-> > Suggested-by: Mario Limonciello <mario.limonciello@amd.com>
-> > Suggested-by: Rafael J. Wysocki <rafael@kernel.org>
-> > Fixes: 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when initiali=
-zing")
-> > Link: https://lore.kernel.org/r/CAJZ5v0ie2AvCbdv8-zkpYzHLcTwUPUj+=3DWWO=
-QjDAPmSepSAQPg@mail.gmail.com/
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Keng-Yu Lin <keng-yu.lin@hpe.com>
+> On Wed, Sep 02 2026, Logan Odell wrote:
 >
-> Reviewed-by: Rafael J. Wysocki (Intel) <rafael@kernel.org>
+>> Define a 128 byte header that can be used by all live update serialized
+>> structures. In this header, we reserve room for 64 features with
+>> supported, active, and required bits. Update the top level luo struct to
+>> use this instead of compatibility strings. Previous versions of the
+>> struct had smaller sizes, so add a minimum size check to avoid
+>> collisions with older kernels.
+>>
+>> Signed-off-by: Logan Odell <loganodell@google.com>
+>> ---
+>>  include/linux/kho/abi/luo.h  | 74 +++++++++++++++++++++++++++++-------
+>>  kernel/liveupdate/luo_core.c | 44 +++++++++++++--------
+>>  2 files changed, 90 insertions(+), 28 deletions(-)
+>>
+>> diff --git a/include/linux/kho/abi/luo.h b/include/linux/kho/abi/luo.h
+>> index 288076de6d4a..0a7662a0cf9a 100644
+>> --- a/include/linux/kho/abi/luo.h
+>> +++ b/include/linux/kho/abi/luo.h
+>> @@ -13,15 +13,17 @@
+>>   * kernel. The ABI is built upon the Kexec HandOver framework and registers
+>>   * the central `struct luo_ser` via the KHO raw subtree API.
+>>   *
+>> - * This interface is a contract. Any modification to the structure fields,
+>> - * compatible strings, or the layout of the `__packed` serialization
+>> - * structures defined here constitutes a breaking change. Such changes require
+>> - * incrementing the version number in the relevant `_COMPATIBLE` string to
+>> - * prevent a new kernel from misinterpreting data from an old kernel.
+>> + * This interface is a contract. To ensure the stability of moving between
+>> + * kernel versions, any changes to the structures should only be additive
+>> + * and should utilize the feature flags to denote the supported, active, and
+>> + * required status of the feature.
+>> + *
+>> + * Features that are entirely optional can be added with the supported and
+>> + * active flags both asserted, and the required flag cleared. Features that
+>> + * require that the next kernel supports the feature should only be added as
+>> + * supported to allow compatible transition kernels. At a later time, the
+>> + * active and required flag should be asserted.
+>>   *
+>> - * Changes are allowed provided the compatibility version is incremented;
+>> - * however, backward/forward compatibility is only guaranteed for kernels
+>> - * supporting the same ABI version.
+>>   *
+>>   * KHO Structure Overview:
+>>   *   The entire LUO state is encapsulated within a single KHO entry named "LUO".
+>> @@ -30,7 +32,7 @@
+>>   * Serialization Structures:
+>>   *   - struct luo_ser:
+>>   *     The central ABI structure that contains the overall state of the LUO.
+>> - *     It includes the compatibility string, the liveupdate-number, and pointers
+>> + *     It includes the feature flags, the liveupdate-number, and pointers
+>>   *     to sessions and FLBs.
+>>   *
+>>   *   - struct luo_session_ser:
+>> @@ -58,19 +60,65 @@
+>>  #define _LINUX_KHO_ABI_LUO_H
+>>  
+>>  #include <linux/align.h>
+>> +#include <linux/bits.h>
+>>  #include <linux/kho/abi/block.h>
+>>  #include <uapi/linux/liveupdate.h>
+>>  
+>> +/**
+>> + * struct luo_feature_hdr - Feature negotiation and versioning header.
+>> + * @supp:     Bitmask of features supported by the producing subsystem.
+>> + * @req:      Bitmask of features required for safe deserialization by the
+>> + *            receiving subsystem.
 >
-> > ---
-> >
-> > Changes in v3:
-> > - Use Rafael's sequence: sync only the platform state for devices
-> >   already in D0, and use pci_set_full_power_state() otherwise.
-> > - The D0 path no longer runs the full helper's ASPM update.
-> >
-> > Tested with diagnostic prints on AMD Venice SP7 and Turin. Normal
-> > boots made no BAR writes from this path. The crash kernels restored
-> > only the cleared xHCI BARs (two on Venice, one on Turin), with matching
-> > readbacks. Both systems saved a vmcore and rebooted.
-> >
-> > v2: https://lore.kernel.org/r/20261012104645.975190-1-keng-yu.lin@hpe.c=
-om/
-> >
-> >  drivers/pci/pci.c | 10 +++++++++-
-> >  1 file changed, 9 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 8cc6a89130b5..895969fe4520 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -3255,7 +3255,15 @@ void pci_pm_init(struct pci_dev *dev)
-> >         }
-> >
-> >  poweron:
-> > -       pci_pm_power_up_and_verify_state(dev);
-> > +       pci_update_current_state(dev, PCI_UNKNOWN);
-> > +       if (dev->current_state =3D=3D PCI_D0) {
-> > +               /* No need to do a full power-up, just sync-up the plat=
-form state. */
-> > +               platform_pci_set_power_state(dev, PCI_D0);
-> > +       } else {
-> > +               /* Power up the device and restore BARs if necessary. *=
-/
-> > +               pci_set_full_power_state(dev, false);
-> > +       }
-> > +       pci_update_current_state(dev, PCI_D0);
-> >         pm_runtime_forbid(&dev->dev);
-> >
-> >         /*
-> >
-> > base-commit: 7b63ef2d55f24519e7e9e5f4d15dbea03f126e40
-> > --
-> > 2.43.0
+> I think you are mixing two things here: description of the payload and
+> description of the file handler capability.
 >
+> The payload that is handed over via KHO should have the active and
+> required bitmasks only. It doesn't need the supported bitmask, because
+> it doesn't matter what the handler that produced the payload supports.
+> It only matters what fields it populated and which ones are mandatory to
+> understand.
+>
+> Similarly, the description of the file handler can't really describe
+> "active". Because the capabilities are static and the active bits will
+> depend on a specific file.
+>
+> So I reckon we should separate these two. These should be the same bits
+> of course, but expressed in two ways in two different places.
+>
+>> + * @active:   Bitmask of features actually active/used in the serialized payload.
+>> + * @reserved: Reserved for future use.
+>> + *
+>> + * This header can be embedded at the beginning of any serialized structure to
+>> + * provide forward and backward compatibility via feature negotiation across
+>> + * live update.
+>> + */
+>> +struct luo_feature_hdr {
+>> +	u64 supp;
+>> +	u64 req;
+>> +	u64 active;
+>> +	u64 reserved[13];
+>
+> How do you plan to ever use this? Say I want to extend my bitmaps so I do:
+>
+>     struct luo_feature_hdr {
+>     	u64 supp;
+>     	u64 req;
+>     	u64 active;
+>     	u64 supp2;
+>     	u64 req2;
+>     	u64 active2;
+>     	u64 reserved[10];
 
+I thinking this is too spreaded.
+
+We can do somthing like:
+
+struct ABI {
+       u64 size;
+       u64 flags;
+       u64 flags2;
+}
+
+where flags is extended to flags2 if flags MSB bits is 11.
+
+and each flags is formatted like 0b 00 01 11 00 11 10 11 11 00 00 11 ...
+
+each pair represents 0b 1 (required) 1 (active)
+Getting the details of the feature is just bit manipulation, so
+proper macro definition similar to the one this patch has implemented.
+
+
+~Tarun
+
+
+
+>
+> But when I go back to a kernel that doesn't know about supp2, req2,
+> etc., how does it know how to interpret these? How does it know what the
+> values mean?
+>
+> Is your goal only to be able to extend the three types of flags we have?
+> If so, perhaps something like "if bit 63 is set, the flags continue to
+> the next u64"? It is certainly harder for the parser, but seems to at
+> least be extensible. What do you think?
+>
+>> +} __packed;
+>> +
+>> +#define LUO_FEATURE_ACTIVE(s, f)		\
+>> +	do {					\
+>> +		(s)->features.supp |= (u64)(f);	\
+>> +		(s)->features.active |= (u64)(f);	\
+>> +	} while (0)
+>> +#define LUO_FEATURE_SUPPORTED(s, f)	((s)->features.supp |= (u64)(f))
+>> +#define LUO_FEATURE_REQUIRED(s, f)	((s)->features.req |= (u64)(f))
+>> +#define LUO_FEATURE_IS_ACTIVE(s, f)	(!!((s)->features.active & (u64)(f)))
+>> +#define LUO_FEATURE_IS_SUPPORTED(s, f)	(!!((s)->features.supp & (u64)(f)))
+>> +#define LUO_FEATURE_IS_REQUIRED(s, f)	(!!((s)->features.req & (u64)(f)))
+>> +
+>>  /*
+>>   * The LUO state is registered under this KHO entry name.
+>>   */
+>>  #define LUO_KHO_ENTRY_NAME	"LUO"
+>> -#define LUO_ABI_COMPATIBLE	"luo-v5"
+>> -#define LUO_ABI_COMPAT_LEN	ALIGN(sizeof(LUO_ABI_COMPATIBLE), 8)
+>> +
+>> +/*
+>> + * Bits associated with the luo_feature_hdr values.
+>> + */
+>> +#define LUO_FEATURE_NUMBER    BIT_ULL(0)
+>> +#define LUO_FEATURE_SESSIONS  BIT_ULL(1)
+>> +#define LUO_FEATURE_FLBS      BIT_ULL(2)
+>
+> Nit: please give the flags full documentation on their semantics.
+>
+>> +
+>> +#define LUO_CORE_FEATURES_SUPP		(LUO_FEATURE_NUMBER | \
+>> +					 LUO_FEATURE_SESSIONS | \
+>> +					 LUO_FEATURE_FLBS)
+>> +#define LUO_CORE_FEATURES_REQ		(LUO_FEATURE_NUMBER | \
+>> +					 LUO_FEATURE_SESSIONS | \
+>> +					 LUO_FEATURE_FLBS)
+>> +#define LUO_CORE_FEATURES_ACTIVE	(LUO_FEATURE_NUMBER | \
+>> +					 LUO_FEATURE_SESSIONS | \
+>> +					 LUO_FEATURE_FLBS)
+>>  
+>>  /**
+>>   * struct luo_ser - Centralized LUO ABI header.
+>> - * @compatible:     Compatibility string identifying the LUO ABI version.
+>> + * @features:       Bit mask of supported and active features.
+>>   * @liveupdate_num: A counter tracking the number of successful live updates.
+>>   * @sessions_pa:    Physical address of the first session block header.
+>>   * @flbs_pa:        Physical address of the FLB header.
+>> @@ -78,7 +126,7 @@
+>>   * This structure is the root of all preserved LUO state.
+>>   */
+>>  struct luo_ser {
+>> -	char compatible[LUO_ABI_COMPAT_LEN];
+>> +	struct luo_feature_hdr features;
+>
+> Do we still need compatible here? How will we ever do breaking changes
+> if we really need to?
+>
+>>  	u64 liveupdate_num;
+>>  	u64 sessions_pa;
+>>  	u64 flbs_pa;
+>> diff --git a/kernel/liveupdate/luo_core.c b/kernel/liveupdate/luo_core.c
+>> index 1b2bda22902d..6add1ecc463f 100644
+>> --- a/kernel/liveupdate/luo_core.c
+>> +++ b/kernel/liveupdate/luo_core.c
+>> @@ -107,26 +107,37 @@ static int __init luo_early_startup(void)
+>>  		return 0;
+>>  	}
+>>  
+>> -	if (len < sizeof(*luo_ser)) {
+>> -		pr_err("LUO state is too small (%zu < %zu)\n", len, sizeof(*luo_ser));
+>> -		return -EINVAL;
+>> +	luo_ser = phys_to_virt(luo_ser_phys);
+>> +
+>> +	if (len < sizeof(struct luo_feature_hdr)) {
+>> +		pr_err("LUO state is too small (%zu < %zu)\n",
+>> +		       len, sizeof(struct luo_feature_hdr));
+>> +		err = -EINVAL;
+>> +		goto out_free_ser;
+>>  	}
+>>  
+>> -	luo_ser = phys_to_virt(luo_ser_phys);
+>> -	if (strncmp(luo_ser->compatible, LUO_ABI_COMPATIBLE, LUO_ABI_COMPAT_LEN)) {
+>> -		pr_err("LUO state is incompatible with '%s'\n", LUO_ABI_COMPATIBLE);
+>> -		return -EINVAL;
+>> +	if (luo_ser->features.req & ~LUO_CORE_FEATURES_SUPP) {
+>> +		pr_err("Unsupported required LUO feature (req: 0x%llx, supp: 0x%llx)\n",
+>> +		       luo_ser->features.req, (u64)LUO_CORE_FEATURES_SUPP);
+>> +		err = -EOPNOTSUPP;
+>> +		goto out_free_ser;
+>>  	}
+>>  
+>> -	luo_global.liveupdate_num = luo_ser->liveupdate_num;
+>> -	pr_info("Retrieved live update data, liveupdate number: %lld\n",
+>> -		luo_global.liveupdate_num);
+>> +	if (LUO_FEATURE_IS_ACTIVE(luo_ser, LUO_FEATURE_NUMBER)) {
+>> +		luo_global.liveupdate_num = luo_ser->liveupdate_num;
+>> +		pr_info("Retrieved live update data, liveupdate number: %lld\n",
+>> +			luo_global.liveupdate_num);
+>> +	}
+>>  
+>> -	err = luo_session_setup_incoming(luo_ser->sessions_pa);
+>> -	if (err)
+>> -		goto out_free_ser;
+>>  
+>> -	luo_flb_setup_incoming(luo_ser->flbs_pa);
+>> +	if (LUO_FEATURE_IS_ACTIVE(luo_ser, LUO_FEATURE_SESSIONS)) {
+>> +		err = luo_session_setup_incoming(luo_ser->sessions_pa);
+>> +		if (err)
+>> +			goto out_free_ser;
+>> +	}
+>> +
+>> +	if (LUO_FEATURE_IS_ACTIVE(luo_ser, LUO_FEATURE_FLBS))
+>> +		luo_flb_setup_incoming(luo_ser->flbs_pa);
+>>  
+>>  	err = 0;
+>>  
+>> @@ -162,7 +173,10 @@ static int __init luo_state_setup(void)
+>>  		return PTR_ERR(luo_ser);
+>>  	}
+>>  
+>> -	strscpy(luo_ser->compatible, LUO_ABI_COMPATIBLE, sizeof(luo_ser->compatible));
+>> +	luo_ser->features.supp = LUO_CORE_FEATURES_SUPP;
+>> +	luo_ser->features.req = LUO_CORE_FEATURES_REQ;
+>> +	luo_ser->features.active = LUO_CORE_FEATURES_ACTIVE;
+>> +
+>>  	luo_ser->liveupdate_num = luo_global.liveupdate_num + 1;
+>>  
+>>  	luo_session_setup_outgoing(&luo_ser->sessions_pa);
+>
+> -- 
+> Regards,
+> Pratyush Yadav
