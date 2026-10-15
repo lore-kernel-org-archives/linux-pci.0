@@ -1,149 +1,251 @@
-Received: from mx1.white.stw.pengutronix.de (mx1.white.stw.pengutronix.de [185.203.200.13])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D1994349BA;
-	Thu, 15 Oct 2026 08:25:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.203.200.13
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792052746; cv=pass; b=PnDyOuRi4TuvEaNmxj/GzdLH1z1GVzAICxtoqBzU7tZqIBEkZVmF6xhRiz3B4uHF3DepIT9MYw1eoJeCY09kvCGpHSgIE4wgPLIPhUBaSnlAMzQBcYJ4r2ZQhrF/azLGLFSp5izu6fH/KjMcJhIekX1TPD6PM4dAApBjzJpRX9M=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792052746; c=relaxed/simple;
-	bh=BWiRILA9u6x55hHKY43Wo6zyOOW+UbhVhlu+tMVrbGA=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=V32wG/5XR5nTgNA6js097ozJjnegYL1XZZgy87zazvTEvm1HOgaIBlwiY+qfuRA6b3px4+NUl7jq+2TpJY4f8DGzGuMIsrrErNLPNiXPodk/6JpSOQSfwgMh7UNutjqGiC4QypTpsn2FvoXHCsLEoM1QF1p/QHLZZ5SdhYqhOdM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; dkim=pass (2048-bit key) header.d=pengutronix.de header.i=@pengutronix.de header.b=fjAlKxqU; arc=pass smtp.client-ip=185.203.200.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66A5A37A848;
+	Thu, 15 Oct 2026 08:35:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792053338; cv=none; b=Mb82gRiF7QiUkMKhyk4MKfrPE7gbpEetfDUJ+dVXgXZ2+TUQp8n73/QGBCqMskq9vYwRrGV5SPwI5imLuK7cP9yB8pXql/n/eOVxwzrBgad2Kd4ocEOucodPskAdqsyhU8m3f7vBGLlhmq8Z5p36LopX4r15i7Lt3dVLEgoF2VQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792053338; c=relaxed/simple;
+	bh=pVvQ3KKvitHRAPJVAnlZcFqINR1f9Sbt+S8x9HaqwLk=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=WUWy1T9cbr7zL1jy3oeU+qYJ6fi3rzK6sPkUquFVlRpkBQl5OsAR6lIbqZGjAr5/wOIhFOI1wWVd1s289ALnJSjrkosrZHz4vfh+4nGe3jYFFEClWYxEh+CmXaqzoW8WK09u6QffZ1OaI3bg8Z+QztRMYBOYxpbelVMYW3saehQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gTQk9nnC; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pengutronix.de header.i=@pengutronix.de header.b="fjAlKxqU"
-Received: from [IPv6:2a0a:edc0:0:900:1d::4e] (lupine.office.stw.pengutronix.de [IPv6:2a0a:edc0:0:900:1d::4e])
-	(Authenticated sender: pza@pengutronix.de)
-	by mx1.white.stw.pengutronix.de (Postfix) with ESMTPSA id 13CB7202012;
-	Thu, 15 Oct 2026 10:25:41 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pengutronix.de;
-	s=20260414; t=1792052741;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=wrxfajdvFmJtNiWzGN9eypZ6XVjairWUkY35gVPYWFY=;
-	b=fjAlKxqUKEH8jDMC0qtq5+KAH4+tBauqPTL5mgqFtf1eXTbMOYh493KztS3VNdSIxr6Gpm
-	3OyLym75xe3LmZzhue3ZISgGsWRTdl56TTUB3l/bN5pxSjSObR3Bgb1XV0CCH6ZlsqZxdl
-	Q1vqqEy5saF0FFbI9guNa+CkUj3k5fzmt10wXmwsgx8CZuGVv/7kurXmnv6iUP3i04koZ7
-	pA10xsAN69Csf2p8PQwOLHHjpJMgvnf7TlulDBR+ROUR2yCzFifogTk3+V/S1MVbDhv3cd
-	XTyfKHfG9HVAaZJuHkoHGQuB2DxHMtD/2F78oz/T1AV5hZPsteEffP/E6zpmNQ==
-ARC-Seal: i=1; s=20260414; d=pengutronix.de; t=1792052741; a=rsa-sha256;
-	cv=none;
-	b=CT0ayXFWM58Zj9nkLOzhw5fsBgfii9zgnV38JiL/MHcgu5b5GUN0Rb1KK+3920Ffnk4ePs
-	eGJ50jkBCLreOItbCaO5qIfjkh13Jexqo16kWXkxKpEYq0Ft2C5AhTLZGly3pqS3YtB9fc
-	vh4QFalCX2LZphi/XPdpZf/kPF86gfJLkuKuBo29Q3xawIYH/1p+fe299+F3GjsUISVoLd
-	1EeQqsqE6R4AG9HsQhnap03Q06m0oiDdCbBax24eRfTlsVCrzBCYxxwn/DlJmL566O6Cky
-	YXHVNryQonz2XWWog+Il/YcKBBJELPnHOApCghSdFR87nMLoAcq8ShPYJaIB4w==
-ARC-Authentication-Results: i=1;
-	ORIGINATING;
-	auth=pass smtp.auth=pza@pengutronix.de smtp.mailfrom=p.zabel@pengutronix.de
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=pengutronix.de;
-	s=20260414; t=1792052741;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=wrxfajdvFmJtNiWzGN9eypZ6XVjairWUkY35gVPYWFY=;
-	b=VHChhYmOypm0trb/T3G7ioVgQB3Gk+9RkxCOM9hSbJmABlyKnlJMMyZLA286oOH02dFZiM
-	MAsPWPd2+Et6AaLPnrNWgnZqHb5Ohsdk5U9avr5zPYn6GJxjHxxmN2+dbpeO7CA4tFVF8l
-	Y70B0Ol3E/3iBb4CjXW8Xje6tITRAsonYInrkW9ZRcMmJX1LGj0iIca/LBkG0K2rMzp7pp
-	ch7IR3aTtYf8GiVhCFrT6Ldw6m3Lzr5nJ4m1/PBcopUBYeHHmmbJQ29/rgURvxl+KLfVyv
-	TxUUA7+qW9x0jA9rnDvti6tAfSG+bAhx6v3kqD3qbjN3gj50L+iLTFt5GjK+fA==
-Message-ID: <20cc437c1e95aca578ac814c2e0f4f0f3ddd71d4.camel@pengutronix.de>
-Subject: Re: [PATCH v6 09/10] PCI: dw-rockchip: Add system PM support
-From: Philipp Zabel <p.zabel@pengutronix.de>
-To: Sebastian Reichel <sebastian.reichel@collabora.com>, Lorenzo Pieralisi	
- <lpieralisi@kernel.org>, Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?=	
- <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Rob
- Herring	 <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Heiko
- Stuebner	 <heiko@sntech.de>, Jingoo Han <jingoohan1@gmail.com>, Shawn Lin	
- <shawn.lin@rock-chips.com>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown
-	 <broonie@kernel.org>, "Yury Norov (NVIDIA)" <yury.norov@gmail.com>,
- Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-Cc: Alexey Charkov <alchark@flipper.net>, linux-pci@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, 
-	linux-kernel@vger.kernel.org, kernel@collabora.com
-Date: Thu, 15 Oct 2026 10:25:40 +0200
-In-Reply-To: <20260908-rockchip-pcie-system-suspend-v6-9-fbabcca9921b@collabora.com>
-References: 
-	<20260908-rockchip-pcie-system-suspend-v6-0-fbabcca9921b@collabora.com>
-	 <20260908-rockchip-pcie-system-suspend-v6-9-fbabcca9921b@collabora.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2-0+deb13u1 
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gTQk9nnC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1792053332; x=1823589332;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=pVvQ3KKvitHRAPJVAnlZcFqINR1f9Sbt+S8x9HaqwLk=;
+  b=gTQk9nnCI/ab4XVcgBDO29v7wQbnqT65wvP2F8eLxgsiAloI/5qDwrOC
+   X+2wpagSydasvh7Bd6Z6KcR/zsHz7wdvvBQz9aYbWnDHnKOp00lwUCpnI
+   AhCfdaodxDxe1a0OvRjMiWwwY8JFNp/An2T5GKint1SRGE/UVgf2wu4qc
+   0bmjy3ADipDMrO7gnSpS2E57KC1S5MElXE+Exp9w6hjLMADoYbIsQBEvn
+   t27ZrS8FUzapFmKa/tnNpUp0v4QNFW7Af473pyRxB1K8HOYuQiBRUWfTv
+   p6b3dlstvMuTGXnL5qWFq7wrFx/gETvOpTLKXeDk5Sxq5gWorvxDOqZCl
+   g==;
+X-CSE-ConnectionGUID: 0kwF9+SeQTO+FuAEZerxPA==
+X-CSE-MsgGUID: YWOoKuD1S9aJT+Sv/uDaog==
+X-IronPort-AV: E=McAfee;i="6800,10657,11935"; a="818151"
+X-IronPort-AV: E=Sophos;i="6.27,159,1787036400"; 
+   d="scan'208";a="818151"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Oct 2026 01:35:31 -0700
+X-CSE-ConnectionGUID: qY1s9havR7S48f+/BilHog==
+X-CSE-MsgGUID: H3lFISSnTrqQxKgw2Qdl9w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,159,1787036400"; 
+   d="scan'208";a="1699888"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.130])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Oct 2026 01:35:24 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Thu, 15 Oct 2026 11:35:19 +0300 (EEST)
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Manivannan Sadhasivam <mani@kernel.org>, 
+    Bjorn Helgaas <bhelgaas@google.com>, 
+    Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>, 
+    Rob Herring <robh@kernel.org>, Nirmal Patel <nirmal.patel@linux.intel.com>, 
+    Jonathan Derrick <jonathan.derrick@linux.dev>, 
+    Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org, 
+    LKML <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org, 
+    linux-wireless@vger.kernel.org, ath12k@lists.infradead.org, 
+    ath11k@lists.infradead.org, ath10k@lists.infradead.org, 
+    Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+    Qiang Yu <qiang.yu@oss.qualcomm.com>, 
+    Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+    Emmanuel Grumbach <egrumbach@gmail.com>, 
+    Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH v3 0/8] PCI/ASPM: Add pci_force_enable_link_state() API
+ and convert Atheros drivers
+In-Reply-To: <20261014205117.GA1665327@bhelgaas>
+Message-ID: <2ddb1f53-b0bd-abf8-be0f-dc77da8a669e@linux.intel.com>
+References: <20261014205117.GA1665327@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="8323328-606769928-1792053319=:1307"
 
-On Di, 2026-09-08 at 16:51 +0200, Sebastian Reichel wrote:
-> Add system PM support for Rockchip PCIe Designware Controllers.
->=20
-> I've tested this on the Rockchip RK3576 EVB1, the Radxa ROCK 4D
-> and the ArmSom Sige5 boards.
->=20
-> While I haven't experienced any issues, most of my tests have been done
-> without any devices attached (i.e. default board without any extras), so
-> there _might_ still be some problems. As system suspend does not work at
-> all right now, I think it makes sense to get at least the basic
-> configurations working as soon as possible as it will allow us to catch
-> regressions by enabling system suspend in CI systems like KernelCI.
->=20
-> Co-developed-by: Shawn Lin <shawn.lin@rock-chips.com>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
-> ---
->  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 100 ++++++++++++++++++++=
-++++++
->  1 file changed, 100 insertions(+)
->=20
-> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/=
-controller/dwc/pcie-dw-rockchip.c
-> index 47d9cab909bc..e675918ba184 100644
-> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> @@ -120,6 +120,7 @@ struct rockchip_pcie {
-[...]
-> +static int rockchip_pcie_resume(struct device *dev)
-> +{
-> +	struct rockchip_pcie *rockchip =3D dev_get_drvdata(dev);
-> +	struct dw_pcie *pci =3D &rockchip->pci;
-> +	int ret;
-> +
-> +	if (rockchip->data->mode =3D=3D DW_PCIE_EP_TYPE) {
-> +		dev_err(dev, "resume is not supported in EP mode\n");
-> +		return -EOPNOTSUPP;
-> +	}
-> +
-> +	ret =3D clk_bulk_prepare_enable(rockchip->clk_cnt, rockchip->clks);
-> +	if (ret) {
-> +		dev_err(dev, "clock init failed: %d\n", ret);
-> +		return ret;
-> +	}
-> +
-> +	if (rockchip->vpcie3v3) {
-> +		ret =3D regulator_enable(rockchip->vpcie3v3);
-> +		if (ret)
-> +			goto err_disable_clk;
-> +	}
-> +
-> +	ret =3D rockchip_pcie_phy_init(rockchip);
-> +	if (ret) {
-> +		dev_err(dev, "phy init failed: %d\n", ret);
-> +		goto err_disable_regulator;
-> +	}
-> +
-> +	reset_control_deassert(rockchip->rst);
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Missing error handling. This is inconsistent with the existing calls in
-rockchip_pcie_probe() and rockchip_pcie_rc_reset_root_port().
+--8323328-606769928-1792053319=:1307
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-regards
-Philipp
+On Wed, 14 Oct 2026, Bjorn Helgaas wrote:
+
+> [+cc Emmanuel, Matthew]
+>=20
+> On Wed, Jul 08, 2026 at 04:30:14PM +0200, Manivannan Sadhasivam wrote:
+> > Hi,
+> >=20
+> > This series converts the atheros WLAN drivers (ath10k/ath11k/ath12k) to
+> > use the PCI core ASPM APIs for enabling/disabling ASPM instead of writi=
+ng
+> > to the LNKCTL register directly. Touching LNKCTL behind the PCI core's
+> > back leaves the ASPM service driver's view of the link state out of syn=
+c
+> > with the hardware, which is not nice.
+> >=20
+> > The catch is that these drivers save the currently enabled ASPM states,
+> > disable ASPM before firmware download, and restore the saved states
+> > afterwards. pci_enable_link_state() cannot restore states that were
+> > disabled via pci_disable_link_state() or blacklisted during init (like
+> > the pre-1.1 device blacklist, which is only meant to be overridden with
+> > pcie_aspm=3Dforce), and that is intentional. So the save/restore sequen=
+ce
+> > cannot be expressed with the existing APIs.
+> >=20
+> > In v2 I tried to fix this by making pci_enable_link_state*() symmetric
+> > with the disable APIs, but as pointed out during review, that also ends
+> > up overriding the init-time blacklist for every caller (including VMD),
+> > which is not something we want. So instead, this version adds a separat=
+e
+> > pci_force_enable_link_state() API (patch 2) that re-enables the request=
+ed
+> > states unconditionally. The caller is responsible for only asking for
+> > states the device actually supports, and the ath drivers do this by
+> > restoring exactly what pcie_aspm_enabled() reported earlier.
+> >=20
+> > The first five patches touch the PCI core: patch 1 (from Ilpo) makes
+> > pci_disable_link_state() disable ASPM unconditionally, patch 2 adds the
+> > new API, patch 3 moves the D0 transition needed before enabling PCI-PM
+> > L1 PM Substates (PCIe r6.0, sec 5.5.4) into the shared helper and drops
+> > it from the vmd and pcie-qcom callers, patch 4 cleans up the kernel-doc=
+,
+> > and patch 5 makes pcie_aspm_enabled() return the enabled state mask so =
+it
+> > can be used for save/restore. The last three patches convert the ath
+> > drivers.
+> >=20
+> > Testing
+> > =3D=3D=3D=3D=3D=3D=3D
+> >=20
+> > I've tested this series on a Lenovo Thinkpad T14s with WCN7850 (so that=
+'s
+> > just the ath12k driver). Rest of the drivers are compile tested only.
+> >=20
+> > Merging Strategy
+> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> >=20
+> > Even though there is no build dependency between the PCI core and ather=
+os
+> > patches, there is a functional dependency. So I'd recommend creating an
+> > immutable branch with the PCI patches and merging that branch into both
+> > the PCI and linux-wireless trees, and finally merging the atheros patch=
+es
+> > into the linux-wireless tree.
+> >=20
+> > If the immutable branch seems like a hassle, then the PCI core patches
+> > could get merged first and the atheros patches can wait for the next
+> > cycle.
+> >=20
+> > - Mani
+> >=20
+> > Changes in v3:
+> > * Dropped the change that made pci_enable_link_state*() symmetric with =
+the
+> >   disable APIs. Instead added a new pci_force_enable_link_state() API u=
+sed
+> >   only by the ath drivers, so the init-time blacklist stays overridable
+> >   only via pcie_aspm=3Dforce and existing callers like VMD are left
+> >   untouched.
+> > * Fixed the locked path to use pci_set_power_state_locked() for the D0
+> >   transition. The previous version called the non-locked variant, which
+> >   re-acquires pci_bus_sem.
+> > * ath drivers now disable PCIE_LINK_STATE_ASPM_ALL instead of
+> >   PCIE_LINK_STATE_ALL so that CLKPM is preserved and can be restored
+> >   (pcie_aspm_enabled() doesn't report CLKPM).
+> > * Reworked the kernel-doc patch to cover both the enable and disable AP=
+Is
+> >   and reference the new API.
+> > * Rebased on top of v7.2-rc1.
+> >=20
+> > Changes in v2:
+> > * Reworked the pcie_aspm_enabled() API to return the enabled states
+> >   instead of bool and used it to save/restore the ASPM states in ath
+> >   drivers.
+> > * Added a patch from Ilpo to disable ASPM even if BIOS didn't grant
+> >   permission.
+> > * Added the CONFIG_PCIEASPM dependency to ath{10/11/12}k drivers.
+> > * Rebased on top of v6.17-rc1.
+> >=20
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcom=
+m.com>
+> > ---
+> > Ilpo J=C3=A4rvinen (1):
+> >       PCI/ASPM: Always disable ASPM when driver requests it
+>=20
+> I put this first patch on pci/aspm for v7.4 because there seems to be
+> a consensus that it's better to have the ASPM core disable things even
+> if it doesn't technically have control of ASPM, because the
+> alternative is that drivers just do it themselves, also ignoring ASPM
+> ownership concerns.  Having the drivers do it just means the PCI core
+> ASPM support doesn't know what's happening.
+
+Hi,
+
+Can you tweak the opening sentence as it has a small grammar error=20
+("Drivers can controlling") now that it has been altered from my original=
+=20
+wording.
+
+--
+ i.
+
+> I think we should defer the rest of these because I think there's a
+> little room to make the enable/disable/force-enable dance more
+> intuitive for the drivers.  As far as I know, the rest of the series
+> is definite cleanups but doesn't fix any actual functional issues.
+>=20
+> > Manivannan Sadhasivam (7):
+> >       PCI/ASPM: Add pci_force_enable_link_state() API
+> >       PCI/ASPM: Transition the device to D0 (if required) when enabling=
+ ASPM link states
+> >       PCI/ASPM: Improve the kernel-doc for pci_{enable,disable}_link_st=
+ate*() APIs
+> >       PCI/ASPM: Return enabled ASPM states from pcie_aspm_enabled() API
+> >       wifi: ath12k: Use pci_{enable/disable}_link_state() APIs to enabl=
+e/disable ASPM states
+> >       wifi: ath11k: Use pci_{enable/disable}_link_state() APIs to enabl=
+e/disable ASPM states
+> >       wifi: ath10k: Use pci_{enable/disable}_link_state() APIs to enabl=
+e/disable ASPM states
+> >=20
+> >  drivers/net/wireless/ath/ath10k/Kconfig |   2 +-
+> >  drivers/net/wireless/ath/ath10k/pci.c   |  11 +--
+> >  drivers/net/wireless/ath/ath10k/pci.h   |   5 +-
+> >  drivers/net/wireless/ath/ath11k/Kconfig |   2 +-
+> >  drivers/net/wireless/ath/ath11k/pci.c   |  19 +----
+> >  drivers/net/wireless/ath/ath11k/pci.h   |   3 +-
+> >  drivers/net/wireless/ath/ath12k/Kconfig |   2 +-
+> >  drivers/net/wireless/ath/ath12k/pci.c   |  19 +----
+> >  drivers/net/wireless/ath/ath12k/pci.h   |   4 +-
+> >  drivers/pci/controller/dwc/pcie-qcom.c  |   5 --
+> >  drivers/pci/controller/vmd.c            |   5 --
+> >  drivers/pci/pcie/aspm.c                 | 140 ++++++++++++++++++++++++=
+--------
+> >  include/linux/pci.h                     |   7 +-
+> >  13 files changed, 129 insertions(+), 95 deletions(-)
+> > ---
+> > base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
+> > change-id: 20260708-pci-aspm-fix-331826a2cb5d
+> >=20
+> > Best regards,
+> > -- =20
+> > =E0=AE=AE=E0=AE=A3=E0=AE=BF=E0=AE=B5=E0=AE=A3=E0=AF=8D=E0=AE=A3=E0=AE=
+=A9=E0=AF=8D =E0=AE=9A=E0=AE=A4=E0=AE=BE=E0=AE=9A=E0=AE=BF=E0=AE=B5=E0=AE=
+=AE=E0=AF=8D
+> >=20
+> >=20
+>=20
+--8323328-606769928-1792053319=:1307--
