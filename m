@@ -1,229 +1,324 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 521053EAC75;
-	Thu, 15 Oct 2026 13:05:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42791522F19;
+	Thu, 15 Oct 2026 13:34:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792069533; cv=none; b=fzTvipbfVQ4P2yADkk6XCNdPEz0TXCNikosvCWA5fUyGb2Rznk8IeL5WlrCgbIq8d79l+2bhw0Bl/MNZsGIfX3BAGYLHYG5eNNmxAjb3RNfUvSq2EimqsdjV0hb+ALJcwq8yH5SC0a5otGIQPPkuWOQs9AnqKFeKwnk9n63FyqM=
+	t=1792071266; cv=none; b=IC/p+kl8c23d27UJaXHO90cCr3Lzm64ry56pGXRZRlyNDehznVhRs9o7Y/Exy3Wq7ncXGFUzgK/m3npm1ma7Yfrulm/5uBcrLOzJNIkYbQdcwOMXDy6QDY4ToYSdUN1A1JfJJ4ZkNDBKCrKdvhdpdTGll/o0KePiFkaKzZ9pLbs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792069533; c=relaxed/simple;
-	bh=Vs3LFdV2PpweX6VZWrUSchH4IhCedvPobeYdP8Ez3/k=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=i0Z7xMhbV4s+jMctpLcbMlfMOHYiZCX/K5gep9DDW0kyIhW4kewRWcNlDnN8RoV9D+lL7Y5mMyd5+4ZKPinVvrEEpCM+jmebOns2ADFPjH3BD0kzXrQvywvtUXWmMds9Irepl+lWJ+p38SUvikN7BF1tbBKS57REv5By0rz6wws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X11q/hux; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792071266; c=relaxed/simple;
+	bh=GFfwlXk4dK3b3zxTl0gUpnujRtIFeHA2uJP4ogyNGqg=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=rWme5fzdPKqAMT1lFStAwLDMONCOEk68LoBmr6cBcqSGsEBOwmVrfAUh2+Ogj2MvzI9r2QaGL03oLzvg7REH2PABskOIEeJTRza3cVe9b1TlNuW/m8ODNf4abtNboPEt2lYwPYbLQpBmpfm8dylj3jxxV3rZz1nnK7dvl0xg/NY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=T55uzyI0; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X11q/hux"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 916351F000C4;
-	Thu, 15 Oct 2026 13:05:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792069532;
-	bh=Noy49yD8e/Ob4wG2MgzxDSK75qjmJvYApwzUtIvu0QU=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=X11q/huxrkAqwJCmxammjG0KJNkKW/HeV7vwW/AZE/pVPt4r02Y8MELs228K0/yCY
-	 /+HUXERfLkTuOSjrnt/oZ0WlpjAWRdzH/0AyNkiysGhZWcD+btWG0ZGi3IgB8Y3a1s
-	 +S1i6BhGLSMoxQxdZCVvgZ2iwCxrkEk9yxuIKESop73gfhNF9Y0LiK2JkwxnLmx5nm
-	 e6NeKBeY8eX4MVKjA912aq4LlTWdCrk3zgICGY5v5V/GbQlkSUvYxVAe/0iq4cy/MR
-	 nBu9T2bXCvWVziYbkRCLhinBob0P6L5+NrhuTkinqc1qqIkdjaEqwbttACABcjlvBN
-	 w0EuAS2t5oUAw==
-From: Pratyush Yadav <pratyush@kernel.org>
-To: Logan Odell <loganodell@google.com>
-Cc: arnd@arndb.de,  pasha.tatashin@soleen.com,  rppt@kernel.org,
-  pratyush@kernel.org,  graf@amazon.com,  akpm@linux-foundation.org,
-  pbonzini@redhat.com,  maz@kernel.org,  oupton@kernel.org,
-  seanjc@google.com,  bhelgaas@google.com,  alex@shazbot.org,
-  jgg@nvidia.com,  kevin.tian@intel.com,  dwmw2@infradead.org,
-  baolu.lu@linux.intel.com,  joro@8bytes.org,  will@kernel.org,
-  robin.murphy@arm.com,  linux-arch@vger.kernel.org,
-  linux-kernel@vger.kernel.org,  kexec@lists.infradead.org,
-  linux-mm@kvack.org,  kvm@vger.kernel.org,
-  linux-arm-kernel@lists.infradead.org,  kvmarm@lists.linux.dev,
-  linux-pci@vger.kernel.org,  iommu@lists.linux.dev
-Subject: Re: [RFC PATCH 2/3] luo: Export feature support to vmlinux section
-In-Reply-To: <20260903023452.721732-3-loganodell@google.com> (Logan Odell's
-	message of "Wed, 2 Sep 2026 19:34:51 -0700")
-References: <20260903023452.721732-1-loganodell@google.com>
-	<20260903023452.721732-3-loganodell@google.com>
-Date: Thu, 15 Oct 2026 15:05:26 +0200
-Message-ID: <2vxzv773glm1.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="T55uzyI0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1792071264; x=1823607264;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version:content-id;
+  bh=GFfwlXk4dK3b3zxTl0gUpnujRtIFeHA2uJP4ogyNGqg=;
+  b=T55uzyI0+/h/z++RL+eVJzPuNAy1oyaatzILqw29F8LhdIS0E2GuEPkx
+   CS01VFYFrL/F15gxkm75nJH9VYiBElvdu2Wi/EF3DOyeLmS+hX7Gd2OzF
+   FEPQ4Vyzow+3GObJWxCXRPsIn4x4zApn1CEQpvFrBNZV1hn0vicRP9daB
+   iZFQ3xwFINoCjWfl0nQWspcKOZUzF0ylJMPdIm66CBNub2j7UpLyK7q0R
+   eJjslDASrekfXvPx3Z+DCHbu6ErxN0MKdKYXa6pn3P57oAik04nK1KvnZ
+   SczBFUg7eXq0ToBXi/S3kYZY+NxIVq0NDNON1jqOfdp35k9qC68R3WTbc
+   g==;
+X-CSE-ConnectionGUID: q/niEKjlT4qzxDsxyOvWkw==
+X-CSE-MsgGUID: utqCps9cSLGAwhhjI6KPQw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11936"; a="738984"
+X-IronPort-AV: E=Sophos;i="6.27,159,1787036400"; 
+   d="scan'208";a="738984"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Oct 2026 06:34:23 -0700
+X-CSE-ConnectionGUID: 3BNuJ+tSTBaigfDREZfYYg==
+X-CSE-MsgGUID: vcmlCdv0R1Cs57luYtqUjg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,159,1787036400"; 
+   d="scan'208";a="1789473"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.130])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Oct 2026 06:34:16 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Thu, 15 Oct 2026 16:34:11 +0300 (EEST)
+To: Hans de Goede <hansg@kernel.org>
+cc: Bjorn Helgaas <helgaas@kernel.org>, 
+    Mario Limonciello <mario.limonciello@amd.com>, 
+    Maciej Grochowski <Maciej.Grochowski@sony.com>, 
+    Nikolas Joshua Britton <nbritton@exabit.io>, 
+    Geramy Loveless <gloveless@jqluv.com>, Eric Auger <eauger@redhat.com>, 
+    Alexey Fomenko <alexey.fomenko@intel.com>, 
+    Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+    Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, 
+    Rob Herring <robh@kernel.org>, 
+    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kw@linux.com>, 
+    Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
+    Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, 
+    x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>, 
+    LKML <linux-kernel@vger.kernel.org>, Bradley Morgan <brads@mainlining.org>, 
+    Kai-Heng Feng <kaihengf@nvidia.com>, 
+    Andy Shevchenko <andriy.shevchenko@intel.com>, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v3 8/8] PCI/quirks: Avoid certain address on Genoa
+ systems
+In-Reply-To: <f823d264-8b9d-422e-bfaf-388957fbc2fa@kernel.org>
+Message-ID: <b9f0ac77-079c-2383-a572-73ad649af0c8@linux.intel.com>
+References: <20261013224010.GA1589480@bhelgaas> <f823d264-8b9d-422e-bfaf-388957fbc2fa@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/mixed; BOUNDARY="8323328-1009683489-1791971108=:1157"
+Content-ID: <f1b47b45-53df-7840-9868-ec0f6f8832f2@linux.intel.com>
 
-Hi Logan,
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-On Wed, Sep 02 2026, Logan Odell wrote:
+--8323328-1009683489-1791971108=:1157
+Content-Type: text/plain; CHARSET=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-ID: <2da465da-08ff-cbd0-6327-f2f05bbc3e4c@linux.intel.com>
 
-> Create a liveupdate_features section that contains the feature
-> information for a given liveupdate component. Add the LUO component
-> first. These can be compared between two kernels to determine live
-> update compatibility. Features marked as required in the running kernel
-> will need to have that feature marked as supported in the next kernel to
-> be eligible for compatibility.
->
-> Suggested-by: Pratyush Yadav <pratyush@kernel.org>
-> Signed-off-by: Logan Odell <loganodell@google.com>
+On Wed, 14 Oct 2026, Hans de Goede wrote:
 
-I was thinking about this a bit more. We don't really ship the vmlinux
-directly. On x86 it is a PE/COFF image, on arm64 the Image format strips
-ELF information and is a raw binary file.
+> Hi,
+>=20
+> On 14-Oct-26 00:40, Bjorn Helgaas wrote:
+> > [+cc Hans, Kai-Heng, Andy, linux-acpi]
+> >=20
+> > On Tue, Oct 13, 2026 at 01:59:23PM -0500, Mario Limonciello wrote:
+> >> On 10/13/26 12:26, Ilpo J=E4rvinen wrote:
+> >>> On Tue, 13 Oct 2026, Mario Limonciello wrote:
+> >>>> On 10/13/26 12:00, Mario Limonciello wrote:
+> >>>>> On 10/13/26 08:09, Ilpo J=E4rvinen wrote:
+> >>>>>> While testing the resource placement changes, tests hit a case whe=
+re
+> >>>>>> igb fails to probe when BAR 0 is placed at 0x9c000000:
+> >>>>>>
+> >>>>>>  =A0=A0=A0 90000000-9cffffff : PCI Bus 0000:a0
+> >>>>>>  =A0=A0 -=A0 90000000-902fffff : PCI Bus 0000:a1
+> >>>>>>  =A0=A0 -=A0=A0=A0 90000000-900fffff : 0000:a1:00.0
+> >>>>>>  =A0=A0 -=A0=A0=A0=A0=A0 90000000-900fffff : igb
+> >>>>>>  =A0=A0 -=A0=A0=A0 90100000-901fffff : 0000:a1:00.0
+> >>>>>>  =A0=A0 -=A0=A0=A0 90200000-90203fff : 0000:a1:00.0
+> >>>>>>  =A0=A0 -=A0=A0=A0=A0=A0 90200000-90203fff : igb
+> >>>>>>  =A0=A0 +=A0 9be00000-9c0fffff : PCI Bus 0000:a1
+> >>>>>>  =A0=A0 +=A0=A0=A0 9be00000-9befffff : 0000:a1:00.0
+> >>>>>>  =A0=A0 +=A0=A0=A0 9bf00000-9bf03fff : 0000:a1:00.0
+> >>>>>>  =A0=A0 +=A0=A0=A0 9c000000-9c0fffff : 0000:a1:00.0
+> >>>>>>  =A0=A0=A0=A0=A0 9c100000-9c17ffff : amd_iommu
+> >>>>>>  =A0=A0=A0=A0=A0 9c180000-9c1803ff : IOAPIC 8
+> >>>>>>
+> >>>>>>  =A0=A0 -=A0=A0=A0=A0=A0=A0 Region 0: Memory at 90000000 (32-bit, =
+non-prefetchable)
+> >>>>>> [size=3D1M]
+> >>>>>>  =A0=A0 -=A0=A0=A0=A0=A0=A0 Region 3: Memory at 90200000 (32-bit, =
+non-prefetchable)
+> >>>>>> [size=3D16K]
+> >>>>>>  =A0=A0 -=A0=A0=A0=A0=A0=A0 Expansion ROM at 90100000 [disabled] [=
+size=3D1M]
+> >>>>>>  =A0=A0 +=A0=A0=A0=A0=A0=A0 Region 0: Memory at 9c000000 (32-bit, =
+non-prefetchable)
+> >>>>>> [size=3D1M]
+> >>>>>>  =A0=A0 +=A0=A0=A0=A0=A0=A0 Region 3: Memory at 9bf00000 (32-bit, =
+non-prefetchable)
+> >>>>>> [size=3D16K]
+> >>>>>>  =A0=A0 +=A0=A0=A0=A0=A0=A0 Expansion ROM at 9be00000 [disabled] [=
+size=3D1M]
+> >>>>>>
+> >>>>>> igb 0000:a1:00.0 0000:a1:00.0 (uninitialized): PCIe link lost
+> >>>>>> ------------[ cut here ]------------
+> >>>>>> igb: Failed to read reg 0x18!
+> >>>>>> WARNING: drivers/net/ethernet/intel/igb/igb_main.c:724 at
+> >>>>>> igb_rd32.cold+0x3c/0x4f [igb], CPU#32: kworker/32:1/706
+> >>>>>> ...
+> >>>>>>  =A0 igb_get_invariants_82575+0xff/0xf00 [igb]
+> >>>>>>  =A0 igb_probe+0x3c8/0x1190 [igb]
+> >>>>>>  =A0 local_pci_probe+0x3b/0x80
+> >>>>>>
+> >>>>>> It turns out there is a 64kB iomem black hole at 9c000000 that ret=
+urns
+> >>>>>> ~0 and this is where igb's BAR 0 resides. If another BAR of the sa=
+me
+> >>>>>> card is placed into that address, it is similarly black holed.
+> >>>>>>
+> >>>>>> Mark the problematic 64kB range reserved using a quirk bound to th=
+e
+> >>>>>> bridge found in the problematic system.
+> >>>>>>
+> >>>>>> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=3D222074
+> >>>>>> Suggested-by: Mario Limonciello <mario.limonciello@amd.com>
+> >>>>>> Signed-off-by: Ilpo J=E4rvinen <ilpo.jarvinen@linux.intel.com>
+> >>>>>> ---
+> >>>>>> Cc: Borislav Petkov <bp@alien8.de>
+> >>>>>>
+> >>>>>> As an alternative to this, I've also tested reverting the commit
+> >>>>>> 07eab0901ede ("efi/x86: Remove EfiMemoryMappedIO from E820 map") a=
+nd
+> >>>>>> that also resolves the issue by retaining "9c000000-9cffffff : Res=
+erved"
+> >>>>>> entry in the resource tree.
+> >>>>>>
+> >>>>>> ---
+> >>>>>>  =A0 arch/x86/pci/fixup.c | 36 +++++++++++++++++++++++++++++++++++=
++
+> >>>>>>  =A0 1 file changed, 36 insertions(+)
+> >>>>>>
+> >>>>>> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> >>>>>> index b301c6c8df75..cc463bf492b6 100644
+> >>>>>> --- a/arch/x86/pci/fixup.c
+> >>>>>> +++ b/arch/x86/pci/fixup.c
+> >>>>>> @@ -822,6 +822,42 @@ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0=
+x1571,
+> >>>>>> pci_amd_enable_64bit_bar);
+> >>>>>>  =A0 DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x15b1,
+> >>>>>> pci_amd_enable_64bit_bar);
+> >>>>>>  =A0 DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1601,
+> >>>>>> pci_amd_enable_64bit_bar);
+> >>>>>> +/*
+> >>>>>> + * TODO: Remove when/if root cause is found.
+> >>>>>> + *
+> >>>>>> + * Genoa appears to have a 64kB iomem black hole starting at 0x9c=
+000000
+> >>>>>> + * address for which all reads return ~0 blocking an overlapping =
+BAR from
+> >>>>>> + * working.
+> >>>>>> + *
+> >>>>>> + * Work around the problem by reserving the space prior to making=
+ any
+> >>>>>> iomem
+> >>>>>> + * allocations that could overlap with the black hole.
+> >>>>>> + */
+> >>>>>> +static struct resource genoa_black_hole =3D
+> >>>>>> DEFINE_RES_MEM_NAMED(0x9c000000,
+> >>>>>> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 SZ_64K,
+> >>>>>> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 "reserved");
+> >>>>>> +
+> >>>>>> +static void genoa_iomem_black_hole(struct pci_dev *dev)
+> >>>>>> +{
+> >>>>>> +=A0=A0=A0 struct resource *r;
+> >>>>>> +
+> >>>>>> +=A0=A0=A0 pci_bus_for_each_resource(dev->bus, r) {
+> >>>>>> +=A0=A0=A0=A0=A0=A0=A0 if (!r || !r->flags || !resource_assigned(r=
+))
+> >>>>>> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 continue;
+> >>>>>> +
+> >>>>>> +=A0=A0=A0=A0=A0=A0=A0 if (!__resource_contains_unbound(r, &genoa_=
+black_hole))
+> >>>>>> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 continue;
+> >>>>>> +
+> >>>>>> +=A0=A0=A0=A0=A0=A0=A0 if (resource_assigned(&genoa_black_hole))
+> >>>>>> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 pci_dbg(dev, "iomem black hole =
+workaround already
+> >>>>>> applied\n");
+> >>>>>> +=A0=A0=A0=A0=A0=A0=A0 else if (!insert_resource(r, &genoa_black_h=
+ole))
+> >>>>>> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 pci_info(dev, "iomem black hole=
+ workaround enabled\n");
+> >>>>>> +=A0=A0=A0=A0=A0=A0=A0 else
+> >>>>>> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 pci_dbg(dev, "iomem black hole =
+workaround add failed\n");
+> >>>>>> +=A0=A0=A0=A0=A0=A0=A0 return;
+> >>>>>> +=A0=A0=A0 }
+> >>>>>> +}
+> >>>>>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, 0x14ab,
+> >>>>>> genoa_iomem_black_hole);
+> >>>>>> +
+> >>>>>>  =A0 #define RS690_LOWER_TOP_OF_DRAM2=A0=A0=A0 0x30
+> >>>>>>  =A0 #define RS690_LOWER_TOP_OF_DRAM2_VALID=A0=A0=A0 0x1
+> >>>>>>  =A0 #define RS690_UPPER_TOP_OF_DRAM2=A0=A0=A0 0x31
+> >>>>>
+> >>>>> I guess it's good we know the root cause is 07eab0901ede. If we're =
+going
+> >>>>> down the path of making holes in that we may well put the hole in
+> >>>>> efi_remove_e820_mmio() like this (attached).
+> >>>>
+> >>>> I don't really like that though.  If Genoa is affected I would expec=
+t plenty
+> >>>> of other machines are too they just haven't been found yet.
+> >>>
+> >>> That's what I'm worried as well. My own testing can only cover very l=
+ittle
+> >>> ground here.
+> >>>
+> >>>> Can we roll back 07eab0901ede and add quirks for the busted machines=
+ instead?
+> >>
+> >> I had an agent dig through all the reports linked in 07eab0901ede and
+> >> drafted up what should be the remaining quirks for a revert.
+> >>
+> >> https://git.kernel.org/pub/scm/linux/kernel/git/superm1/linux.git/log/=
+?h=3Dsuperm1/genoa-mess
+> >>
+> >> Bjorn, thoughts on this?  I'll send it out if that's the way we want
+> >> to go (or Ilpo feel free to subsume into your series as it's only
+> >> really exposed by your series at the moment)
+> >=20
+> > I would LOVE it if we can use those patches because it's way less
+> > magic than 07eab0901ede is.
+> >=20
+> > But I'm frankly terrified to touch it because I'm skeptical that two
+> > more quirks are enough.  I just expect that whatever strategy BIOS
+> > uses to build these maps is likely to be used on many models.  I do
+> > hate 07eab0901ede though, so I would love to see it gone.
+>=20
+> It has been about 4 years since we came up with 07eab0901ede IIRC we
+> had a huge email thread with a whole bunch of attempts at fixing
+> the issue in a generic manner.
+>=20
+> IIRC some of those attempts tried to identify the exact problematic
+> issue the quirks try to fix where there is an EFI MMIO reservation
+> covering the entire bridge window.
+>=20
+> Maybe we can dig through the old thread and see if with the knowledge
+> we have now one of the previous attempts of fixing it from the thread
+> is better?
+>=20
+> I agree that needing to go back to quirks is likely going to be painful
+> and break a whole bunch of other systems. IIRC 07eab0901ede fixed
+> a whole bunch of laptops having issues around the time not just
+> the Clevo NL4XLU and Lenovo Yoga C940. But this info might be spread
+> over various bugzilla entries, etc. + some models where likely never
+> reported but just fixed in time for users to not report things.
+>=20
+> I also wonder if given we only have this magic black-hole on geneo/zen4
 
-So this information would not be accessible to the kexec loader/luod. So
-perhaps as part of the build we parse the section and output a file with
-the versions? And then it can be packaged with the likes of System.map
-for example?
+That might be because my PCI resource placement series has not (yet) been=
+=20
+tested on that many systems.
 
-> ---
->  include/asm-generic/vmlinux.lds.h | 12 +++++++++++
->  include/linux/kho/abi/luo.h       | 34 +++++++++++++++++++++++++++++++
->  include/linux/liveupdate.h        | 12 +++++++++++
->  kernel/liveupdate/luo_core.c      | 16 +++++++++++++++
->  4 files changed, 74 insertions(+)
->
-> diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-> index 5659f4b5a125..aed4e282a78c 100644
-> --- a/include/asm-generic/vmlinux.lds.h
-> +++ b/include/asm-generic/vmlinux.lds.h
-> @@ -359,6 +359,17 @@
->  #define THERMAL_TABLE(name)
->  #endif
->  
-> +#ifdef CONFIG_LIVEUPDATE
-> +#define LIVEUPDATE_FEATURES						\
-> +	. = ALIGN(8);							\
-> +	.liveupdate_features : AT(ADDR(.liveupdate_features) - LOAD_OFFSET) {	\
-> +		KEEP(*(.liveupdate_sec_hdr))				\
-> +		KEEP(*(.liveupdate_features))				\
-> +	}
-> +#else
-> +#define LIVEUPDATE_FEATURES
-> +#endif
-> +
->  #define KERNEL_DTB()							\
->  	STRUCT_ALIGN();							\
->  	__dtb_start = .;						\
-> @@ -554,6 +565,7 @@
->  	RO_EXCEPTION_TABLE						\
->  	NOTES								\
->  	BTF								\
-> +	LIVEUPDATE_FEATURES						\
->  									\
->  	. = ALIGN((align));						\
->  	__end_rodata = .;
-> diff --git a/include/linux/kho/abi/luo.h b/include/linux/kho/abi/luo.h
-> index 0a7662a0cf9a..5b25e1b48cf5 100644
-> --- a/include/linux/kho/abi/luo.h
-> +++ b/include/linux/kho/abi/luo.h
-> @@ -230,4 +230,38 @@ struct luo_flb_ser {
->  #define LIVEUPDATE_TEST_FLB_COMPATIBLE(i)	"liveupdate-test-flb-v" #i
->  #endif
->  
-> +#define LIVEUPDATE_VER_HDR_MAGIC	0x4c565550 /* 'LVUP' */
-> +#define LIVEUPDATE_VER_HDR_VER		1
-> +
-> +/**
-> + * struct liveupdate_ver_hdr - Header of vmlinux section with version lists
-> + * @magic:     Magic number ('LVUP').
-> + * @version:   Version of the header format.
-> + *
-> + * This struct is the header for the vmlinux section ".liveupdate_features". The
-> + * section contains the list of feature/version entries that the kernel supports.
-> + */
-> +struct liveupdate_ver_hdr {
-> +	u32 magic;
-> +	u32 version;
+I think it's the other way around. While my testing is quite extensive, it=
+=20
+can only cover relatively little ground, but already that was enough to=20
+find one issue. Why should we assume I managed to hit the "only" problem?!=
+=20
+More likely explanation is there are many problematic addresses, enough=20
+for me to stumble on one of them.
 
-Should we do feature flags along with the version to extend in
-backwards-compatible way?
+The new generalized resource placement does have a tendencity to place=20
+resources at the right edge of the window (to keep the left edge available=
+=20
+as it typically provides higher aligning order for the remaining free=20
+space). I expected that to lead us to largely uncharted territory though
+Andy seemed to suggest Windows might actually be using top-down ordering
+for its allocations so it could be that it's better charted than I've
+assumed.
 
-> +} __packed;
-> +
-> +/**
-> + * struct liveupdate_feature_entry - Live update feature/version entry
-> + * @name:       Name of the subsystem or feature ("luo" for core).
-> + * @feat_bytes: Number of bytes covered by supp, req, and active bitmaps (e.g. 8).
-> + * @reserved:   Reserved / padding for alignment.
-> + * @supp:       Bitmask of supported features.
-> + * @req:        Bitmask of required features.
-> + * @active:     Bitmask of active features.
-> + */
+> if it would not be better to go with Mario's original approach here ?
+> Esp. since Mario's quirk is chipset based where as the other problems
+> seem to be model/product based so that is 1 quirk vs many quirks.
 
-How should we model FLB dependencies here? And how do we export FLB
-capabilities?
+I'm somewhat skeptical it will be the only problematic case but it's hard=
+=20
+to guess which case would require more quirks in the end.
 
-> +struct liveupdate_feature_entry {
-> +	char name[LIVEUPDATE_HNDL_COMPAT_LENGTH];
-> +	u32 feat_bytes;
-> +	u32 reserved;
-> +	u64 supp;
-> +	u64 req;
-> +	u64 active;
-> +} __packed;
-> +
->  #endif /* _LINUX_KHO_ABI_LUO_H */
-> diff --git a/include/linux/liveupdate.h b/include/linux/liveupdate.h
-> index 6051abc0612c..e058df23fed1 100644
-> --- a/include/linux/liveupdate.h
-> +++ b/include/linux/liveupdate.h
-> @@ -229,6 +229,16 @@ struct liveupdate_flb {
->  
->  #ifdef CONFIG_LIVEUPDATE
->  
-> +#define LIVEUPDATE_FEATURE_ENTRY(_id, _name, _supp, _req, _active)	\
-> +	static const struct liveupdate_feature_entry __lu_feat_##_id	\
-> +	__used __section(".liveupdate_features") __aligned(8) = {	\
-> +		.name       = _name,					\
-> +		.feat_bytes = sizeof(u64),				\
-> +		.supp       = (_supp),					\
-> +		.req        = (_req),					\
-> +		.active     = (_active),				\
-> +	}
-> +
->  /* Return true if live update orchestrator is enabled */
->  bool liveupdate_enabled(void);
->  
-> @@ -259,6 +269,8 @@ int liveupdate_get_token_outgoing(struct liveupdate_session *s,
->  
->  #else /* CONFIG_LIVEUPDATE */
->  
-> +#define LIVEUPDATE_FEATURE_ENTRY(_id, _name, _supp, _req, _active)
-> +
->  static inline bool liveupdate_enabled(void)
->  {
->  	return false;
-> diff --git a/kernel/liveupdate/luo_core.c b/kernel/liveupdate/luo_core.c
-> index 6add1ecc463f..27413f895174 100644
-> --- a/kernel/liveupdate/luo_core.c
-> +++ b/kernel/liveupdate/luo_core.c
-> @@ -64,6 +64,22 @@
->  #include "kexec_handover_internal.h"
->  #include "luo_internal.h"
->  
-> +/*
-> + * This is the header for the ".liveupdate_features" section in vmlinux.
-> + * The linker makes sure that this header precedes the entries.
-> + */
-> +static const struct liveupdate_ver_hdr ver_hdr
-> +	__used __section(".liveupdate_sec_hdr") __aligned(8) = {
-> +	.magic   = LIVEUPDATE_VER_HDR_MAGIC,
-> +	.version = LIVEUPDATE_VER_HDR_VER,
-> +};
-> +
-> +/* Core LUO features */
-> +LIVEUPDATE_FEATURE_ENTRY(luo_core, "luo",
-> +			 LUO_CORE_FEATURES_SUPP,
-> +			 LUO_CORE_FEATURES_REQ,
-> +			 LUO_CORE_FEATURES_ACTIVE);
-> +
->  static struct {
->  	bool enabled;
->  	struct luo_ser *luo_ser_out;
-
--- 
-Regards,
-Pratyush Yadav
+--=20
+ i.
+--8323328-1009683489-1791971108=:1157--
