@@ -1,67 +1,136 @@
-Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010004.outbound.protection.outlook.com [52.101.201.4])
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013006.outbound.protection.outlook.com [40.93.196.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45F9A45D92B;
-	Thu, 15 Oct 2026 20:25:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3E255650E2;
+	Thu, 15 Oct 2026 20:26:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.6
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792095927; cv=fail; b=SjL3fNJF138XW9wjlDgpQ12Sy3r8wTaWL1InNy7toUyPqC4429gbpuq4fNdebjgKtBK3EmlfoAU6Fq9kOjx8XOUsbUfXs64xXMexuAUQrmG3V8U6aDHWOS47a1KLEcXniKIHAJ03PVv5v16ulmWuYwrsLlQ7XfqjrKd9iGSajVo=
+	t=1792095975; cv=fail; b=atbpFkAXN4NGC5csDFkb7QZ8JBTcw2UzBytaF9DhrrdxOlJG6xLupqg6md6I2/StS9w0pVxX2paP/E9xvekL+SD7Qm/6RRzrcVQPEjl0x5wtSuI4XvUwnvaasu7mblbYqazjrSqd8dNJiYxWvV85vg7U4nkmicyNiSLOhUfFhNI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792095927; c=relaxed/simple;
-	bh=qZhjvwSqjUh7IO/ikXSXzWwYCEHS6GS0unoogFm0NW4=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=eoHH5aHKOFftTbAGGYUNBXTx7M49nnz4HXWbxrf30TSN9AdGVKldwBbm+Z7D1ri6SLwHBxcet6fZlRyeho2cxwvJU/FM6qm3eV194T8hC1jPLw5YiTppxY71hptP7KNLQ/YvlXNFTWjEt8U7XSBnjz1ElSdl1ynB7Q5IY5UvEro=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=GvZXaCxK; arc=fail smtp.client-ip=52.101.201.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+	s=arc-20240116; t=1792095975; c=relaxed/simple;
+	bh=LuiTSuVdUQQyWibfIbLJEOG/uCtmo3B/rJSerNKH93M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=UwUm35CnohwEbze58524c1i11oRkcwVg5eAuW+7z93UP/r6wEIgpO48putfd5SfmIyza44LAYfFPp+AQkMRXIc0Ucz0DpHxWCIgW144jTDPP0Zp14+AgBE/rieaVbgk8Obf3sT/pmxaFKQcikdGYUsr4BzHMcvhvkAY9d+jKRm8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=fail (1024-bit key) header.d=amd.com header.i=@amd.com header.b=1XEZfswB reason="signature verification failed"; arc=fail smtp.client-ip=40.93.196.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="GvZXaCxK"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=amd.com header.i=@amd.com header.b="1XEZfswB"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=r3suzpvhEtJwpCgBP88QnSNZdrkwC1LxLZZXSc1jbeFn5H8QpCj+0FGLJ3TRWuEgi4fjj2g+FvRu9e26jwxes0OVFGuW/bZ56tbb/DQm+scYHgRyhQrk4WpKrfR0rA9wu8PkTm3HLYKzlxcTaHW2wba3T1qrU5PUcYus6aYryY97G+p909ozw9X3vF8shfFU1e/bfgFxY5PQUlZJi1noPpdFeqOwtAvTDPMj4LithaMj1us/A8nTpmBlYWRbUmSGCUilhFJEivdFMGQATTkBGK5EOtbtTG66kWrHL8breW7f+44Baj6EkSittHFxoy4rOxUC410dmDBPwF/S6/TrkQ==
+ b=T3FT+01/u6bliMTPcErBre6bF0mkEGYGd5FVi+ib6JpmtaPDnfyVfCj0UMu7cKjoOfptDUaXHj1HadDZE+RAGoOHmWnG0X6NASRO8UsWACGF242M46ak6tlAvjNs5cjXkXdo7jGTXQ53MSFUPKEWaan0WK54k2N4tE+t0B3M42eh9TCx1Xurz2jhP8SA6m41ha0KxbNPEnELuyv7+KCjtwP1zjk9BAqIPKhbtHao/QhHSHsLPkkA6zvZ4baNv8WYtcu2WwH9kzWvQP/taTSgXGUhFAMyVKBOSZopC/oQGaBh3TKeW8YZNJrEl2Q2yDe7fck+dP7snthc3TU05I0ukg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=8ofcBaSiG9GOvkD3xO2mPodTDI6yWISij+GCvjA/hsY=;
- b=s+PHw3HTCrp621YrunbGKt0H0fsTwBKMpLoaWaomsWZDX1jlKYUPSBJ6xcmOgTbvWbQncsl9kLp5+ncbHaNlqF9H498a+obY+VknjAIEVwkYz2/HNCGR6T26QUa7vtEVBrBvbAo0CM9P54pNwkIs4i2EBPzkEjtn0IQxxp6xohmUDC3XXCszzQQJ3MIn8n38LxIFHyi9IQukOmUne/XFjI3S0yxmQznWsG7NBSHL5fSWTtgV/eDjbI6qZmtiGgrd4Rbx6rxFWCYSIjIfzmbucENn57kdt8vX1gzELJSllqaWd/nyXfrSXrQngrx7PZAh/HMnrhzrulypPZXhJec/1Q==
+ bh=dIhrhRYhWiXVbuVvBbLaM2UZKoe9JP+wgs2TfqwRFiY=;
+ b=tgzvhnelzUlGmOGlmH04oVmlXL5zzsmqZCwdIC1Z+0wWatB+ykAyg4gAUlN4NwPY5xOIFXuWAS/ltQa3fZ4eTS3RVNAE7m+qb7dM5Siq/COU5UmjCC6RObR7SyB8ojQtzISbtVxQYK/Obnhl9yGaZzq4KLhiDxTo2M+o0V2sheGBT+BHgJXYSrKoCHjgf5tI80J4VwB7EM/OXjyHMkfT8JxKAHy24KQ0NYs2DWdvrZpAovkriaJSiBGNkSuxmCmGUpZimhEIWkK/i0BmC+Tq9SNdW++yohaQVxNtxmGG759IZJseoPcbByjiKNgpQ/D4gfJGMDREGbeLn39DiTw6xg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
  header.d=amd.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8ofcBaSiG9GOvkD3xO2mPodTDI6yWISij+GCvjA/hsY=;
- b=GvZXaCxKVjpbLGivaU7OTR6+EK6Atnt+CM+qGuGrA/+CaX+hUAGoJdqaFwC4nGuL/ZX8Z3J6iAOH+7VdJkFqFs2V1rjm3PWj9y4oTCJHLNsoIibqERNwuOj4aIzfhPaY04lyjES27Bb5fJZE/vVqUjjAL2Jug2tVHSty8EPGQNg=
+ bh=dIhrhRYhWiXVbuVvBbLaM2UZKoe9JP+wgs2TfqwRFiY=;
+ b=1XEZfswBtRJsfrFGDbntL3y14D5qm421CEaErP5Wj+Ey213pwy9SYDTjV3veaagb+tlnxXMdn4rUAGmlVLqDHG1cakqumSs4DZrE9xchvmJg9NVtecbu0Jc/MlKYjx2VkU92ht4KW8/EA+ux4dXB2OAWNfzueGMrBaClJpnYJUc=
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com (2603:10b6:510:1cb::21)
- by DS0PR12MB8785.namprd12.prod.outlook.com (2603:10b6:8:14c::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.24; Thu, 15 Oct
- 2026 20:25:21 +0000
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000]) by PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000%7]) with mapi id 15.21.0522.012; Thu, 15 Oct 2026
- 20:25:21 +0000
-Message-ID: <4284d6d4-244d-4d49-bbdb-f1bda89fc1e8@amd.com>
-Date: Thu, 15 Oct 2026 15:25:17 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] drm/amdgpu: Gate VFCT bus fallback on pci=realloc
-Content-Language: en-US
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: alexander.deucher@amd.com, christian.koenig@amd.com, airlied@gmail.com,
- simona@ffwll.ch, bhelgaas@google.com,
- Reza Nikzad Chaleshori <rezanikzadch@gmail.com>,
- amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
- linux-pci@vger.kernel.org, Alex Williamson <alex@shazbot.org>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- Lukas Wunner <lukas@wunner.de>, linux-acpi@vger.kernel.org
-References: <20261015194828.GA1775177@bhelgaas>
-From: Mario Limonciello <mario.limonciello@amd.com>
-In-Reply-To: <20261015194828.GA1775177@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: BN0PR04CA0101.namprd04.prod.outlook.com
- (2603:10b6:408:ec::16) To PH8PR12MB6914.namprd12.prod.outlook.com
- (2603:10b6:510:1cb::21)
+Received: from DM4PR12MB6374.namprd12.prod.outlook.com (2603:10b6:8:a3::18) by
+ DS0PR12MB6631.namprd12.prod.outlook.com (2603:10b6:8:d1::14) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.472.20; Thu, 15 Oct 2026 20:26:05 +0000
+Received: from DM4PR12MB6374.namprd12.prod.outlook.com
+ ([fe80::af35:a7a6:6ca:7fcf]) by DM4PR12MB6374.namprd12.prod.outlook.com
+ ([fe80::af35:a7a6:6ca:7fcf%5]) with mapi id 15.21.0522.011; Thu, 15 Oct 2026
+ 20:26:03 +0000
+Date: Thu, 15 Oct 2026 16:25:45 -0400
+From: Yazen Ghannam <yazen.ghannam@amd.com>
+To: Juergen Gross <jgross@suse.com>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-perf-users@vger.kernel.org, linux-hyperv@vger.kernel.org,
+	kvm@vger.kernel.org, virtualization@lists.linux.dev,
+	linux-edac@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, linux-coco@lists.linux.dev,
+	linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-crypto@vger.kernel.org,
+	linux-gpio@vger.kernel.org, linux-hwmon@vger.kernel.org,
+	linux-mtd@lists.infradead.org, platform-driver-x86@vger.kernel.org,
+	linux-fbdev@vger.kernel.org, Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Arnaldo Carvalho de Melo <acme@kernel.org>,
+	Namhyung Kim <namhyung@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+	Jiri Olsa <jolsa@kernel.org>, Ian Rogers <irogers@google.com>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	James Clark <james.clark@linaro.org>,
+	"K. Y. Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+	Long Li <longli@microsoft.com>,
+	Sean Christopherson <seanjc@google.com>,
+	Paolo Bonzini <pbonzini@redhat.com>,
+	Ajay Kaher <ajay.kaher@broadcom.com>,
+	Alexey Makhalov <alexey.makhalov@broadcom.com>,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	Josh Poimboeuf <jpoimboe@kernel.org>,
+	Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
+	Pu Wen <puwen@hygon.cn>, Tony Luck <tony.luck@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Dave Martin <Dave.Martin@arm.com>,
+	James Morse <james.morse@arm.com>, Babu Moger <babu.moger@amd.com>,
+	Tony W Wang-oc <TonyWWang-oc@zhaoxin.com>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>,
+	Andy Lutomirski <luto@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Pavel Machek <pavel@kernel.org>, Kiryl Shutsemau <kas@kernel.org>,
+	Rick Edgecombe <rick.p.edgecombe@intel.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	Len Brown <lenb@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	David Airlie <airlied@redhat.com>,
+	Olivia Mackall <olivia@selenic.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Huang Rui <ray.huang@amd.com>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Perry Yuan <perry.yuan@amd.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Artem Bityutskiy <artem.bityutskiy@linux.intel.com>,
+	Artem Bityutskiy <dedekind1@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Miquel Raynal <miquel.raynal@bootlin.com>,
+	Richard Weinberger <richard@nod.at>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
+	Ashok Raj <ashok.raj.linux@gmail.com>,
+	Hans de Goede <hansg@kernel.org>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Rajneesh Bhardwaj <irenic.rajneesh@gmail.com>,
+	Xi Pardee <xi.pardee@linux.intel.com>,
+	Daniel Lezcano <daniel.lezcano@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>,
+	Helge Deller <deller@gmx.de>, xen-devel@lists.xenproject.org,
+	linux-geode@lists.infradead.org,
+	Michael Kelley <mhklinux@outlook.com>,
+	Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>
+Subject: Re: [PATCH v4 12/13] treewide: convert rdmsrq() from a macro to an
+ inline function
+Message-ID: <20261015202545.GA1335@yaz-khff2.amd.com>
+References: <20261008071839.2247074-1-jgross@suse.com>
+ <20261008071839.2247074-13-jgross@suse.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261008071839.2247074-13-jgross@suse.com>
+X-ClientProxiedBy: BLAPR03CA0069.namprd03.prod.outlook.com
+ (2603:10b6:208:329::14) To DM4PR12MB6374.namprd12.prod.outlook.com
+ (2603:10b6:8:a3::18)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -69,180 +138,92 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR12MB6914:EE_|DS0PR12MB8785:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4d443704-34f8-4bd9-1216-08df2afa6faf
+X-MS-TrafficTypeDiagnostic: DM4PR12MB6374:EE_|DS0PR12MB6631:EE_
+X-MS-Office365-Filtering-Correlation-Id: a2d1fad7-3215-4308-603c-08df2afa88a8
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|366016|23010399003|7416014|1800799024|260925022911599003|260925021911599003|10067099003|260925021311599003|22082099003|261009223027099003|11063799006|6133799003|56012099006|18002099003;
+	BCL:0;ARA:13230040|376014|7416014|366016|1800799024|23010399003|56012099006|11063799006|4143699003|10067099003|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	JNFDgrAm9lZWpj5oLE2TFRC6uoYpcXhsN9TwoMNbSuDxBdPpsJfJfCKtvbc101D1CeozlnmGcu6fFlDtbFfgEzpAlYqP/YzdOUblJux0aKR8y+TkNXuTkk2LZWN8dh9BQTS5JQHfAZ9E/Tde9mVPec5/l8GrWfpinfhhy7fOVzd7c6InfvdBpTjdI3jCss6q/fYDdgFMxyBGKOtCWA+6QEQO8yNShe0Z3gN6gFMIponkrd7Q6EASoqEF1H7xftE0SuG1S7U+ars8EkWn8E3l8QK82getG62ow8NlyzNO6+IO6xAKAB0WzZswEESfb/DU0NHIGlkpsghnc2NBDL7VSJvXcOVe8W91nYPdssHB75FXg1pOhgCdE4isblxUJNTNO3hzxAQYrhXbmLrnTjmDAyiQ4yfxDJDZgroXmVI9AlVoecZVRUj3K/VhSVPecs0z1hnWw0a9zfs3m6J5wPXHHdcVVZROtOGosbXzmDJNQhTksSCJX6ARqDe46KqTrzMX1H/DQfhBykozOUh5+WrRSWEUHe//D/cYqvk6hgrUIAgkBE2fvprA+sgHKgkW4F9dyo8AXvZNwhrWke+GFKQuc/HsXWzUo31AT9FXqOww4z2yObAQQxqiDX2z3TrwQytY
+	9PfaU+CcBdAhpbx/C/NnJ62bGXvju0n9WXba5N2vYW/Bu8MXDfMOwZXmplw0TWe/Xfy9Ue5H/8Vf0eTVqpjapRKvUGEXzvPOAez22EZCKfNUj+KdHstqtOI5QpR+mSJBbcyQps8Zqll4zN8nRwe1HJ94DcT18X92JboGTixnDlCcRU9ssowbjCQ2KXa2plgNFm2pi3WQdvbO02xHhuZ2JTvnuBWrnkG7FtFsUwaZ+oykNG0zjyDQAAN+2Lrw/7auGMjcahOuw/lc5BqDgM1jPPx6ItQv3sOz5IhbK0FNYK/7Kk/CxJgKFLDYvaHdOACx7nP6cPQdkntMLVjoF8qLFcqKWV0K6F5oNaMP++PUFPnUNzUiOc19az/JMRSW4XgADu3veOrqR8ABBdRB/vRR00C765Nt3rjJDHI3NWPM5RsuVkF6lD1AfxSJNtsM4k0KakJxcl1hBJqnACTytU303aKkaKmZep3mk2OkKKYwxlRmvWIAirFvQdEn3grk6XxesUfWNVFmXfhSs+KUPUp0pplmACDruIBXnGcVTAjNLhTaGEh+ZpVT3BBOSI5tP1gsJH2WclliUW8dG/PXBMLV2QDNypOW5tb4RbstTC0+7VGKht/4TndNa+ivB1OsDDqH6E2L9Nve16nMVimFCfUy1u0ZmvIalfkwb0+NwLUdQh8=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR12MB6914.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(23010399003)(7416014)(1800799024)(260925022911599003)(260925021911599003)(10067099003)(260925021311599003)(22082099003)(261009223027099003)(11063799006)(6133799003)(56012099006)(18002099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR12MB6374.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024)(23010399003)(56012099006)(11063799006)(4143699003)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?T3VKa2gvRGg4dkJzNCtEK1Zwci9FODlMc1BwVGp5R0VrV2drY2xzaXNJUGlQ?=
- =?utf-8?B?dGdmdXdhRVhTQjNTSXRRZTdockVhYjljOHE4L3ozTTI0bU1pZWJjaUM5NjZZ?=
- =?utf-8?B?MmVheTdEbnZPS0VPa0JKdzlTanU4aUxZbWtrY2M1WTJHMkhZclIrbXNwdDdy?=
- =?utf-8?B?dDRkTGlqNVFhNW1qYTgyNDJJWW9zdG4rVHdYM05leWorcW9JS0U5d3ZyWDE1?=
- =?utf-8?B?NDhwbWE5UDh6ejNjZUdaUG5sVENQcnRXbVJPT1pLTnhZZVYzSUZTNlBMSTM5?=
- =?utf-8?B?ZlFJcFQ4OUlOa3JEa2JZMkRISXJxNVJQRE5oenNtQXNDaUlsZ2RQZHFDaWh5?=
- =?utf-8?B?clE0TEcyekhqY3hpYnd6TzQwQmg0V1JENnljYjlDSHg2bUh4LzhWQk45aFkr?=
- =?utf-8?B?K09WeitUNEg4cFhUMk9nelBtbE5CMTZTTk0vTGtYc0FYVEw1VzRER2FZK3Az?=
- =?utf-8?B?ZlcyU2k1eEFNNXRNb2kvNWtEUEdzTE11WVJLbG5FK1huZlpnc2xpWWpidkV0?=
- =?utf-8?B?UVRmSHFwVXlCdkNrZ0I0YjN0ajhFZHFJcVluemk0Z05YUmR0aERPRXN6ZnNi?=
- =?utf-8?B?SCsrUFlRc0gwNGluWnVpNEhTU2ZZMldJdFh2STVFS0xrcmpxNytFTzZlSDFn?=
- =?utf-8?B?dW1wd01DK0pRcFdQNXJNZ0hIK0pObFo2S045eWtoY3JrNjFKYU4wRmFYYXVZ?=
- =?utf-8?B?NVZRZXFRbzMyQi85eTFCaEdCenNuVjg4Z2ZTTFliQ0ZDZHdSOTVWUXVHMnI3?=
- =?utf-8?B?cDdxZ1kxdkd0RUU5VG5RR1o0UXBweEdJcjh4d0lZYlVQZTJtUDlrQS9FdGxF?=
- =?utf-8?B?U2tLT21QRWVwZ1JoMDJhWnhBVEhPcUxXdW1sSGhIVm1WSzBjZVJzR0dkM2Vt?=
- =?utf-8?B?MUtkMENHaHVSQ0I3ckQwM2FLQWtMOGVVby9CRU1wTmgxZC9yYy9TUE1hbFl3?=
- =?utf-8?B?bEpLRyt1cW5nMDZLeHZwU2FueFVUK3JERjVUVXNuWHlRd1B3cTJWeEtuMDR0?=
- =?utf-8?B?dEdLUUdNSXNxTGZmemxqeG8xVndDLzBEN1JvNnRpZWowQkVWaVFSM2ZWVUJl?=
- =?utf-8?B?Tlk1cWd5QmROTzg4RXFpQ1dYeS96aStsNzJ2MWh4MDFlSG9JSUxhc2hVcWlu?=
- =?utf-8?B?dGxiY2pScnFuRENTaTNScWZNRXRreUl0R1JmeDZpUGYyZmJRSG81NlZETFdG?=
- =?utf-8?B?Q1JWYnBhdS96WE1ibVBaNFZrOW8ySjVFL0p6bDM0dU1vbkFSWVd3TUI2WWdB?=
- =?utf-8?B?QThuUDNiQmR6RkVhSy80aTlKL0xKSFdpVkFDUXY3bll4NmJmZ1ZjKzBVY1Y2?=
- =?utf-8?B?YUZLR3F2YUF2dUpNTTA1RzVMMi95NWRjVFd4d1U0OXRCTzk2SEd1UG5hWk9E?=
- =?utf-8?B?dEs1Zkt3ZG92TEtyMGJVSWRLZ0xiaGxjRnhvOUVlald3MFdIeWFpaU91aWo1?=
- =?utf-8?B?aEx3NWRkRTRCL0V1MGlCMDhnNDVsRjd0ZFYvdUZKR1l0c2pJK2ZPRzN2eU81?=
- =?utf-8?B?QmdSQk95TmtPaVdlVFcvRFpHOTNxQ1h2L0VoZ3Z4WkxOeWxRb050eGF1d1ZM?=
- =?utf-8?B?eUNPUW9WeSsxVXFsL1YwZGpCeVRjTWZ3WVBjc3BQelo0RHRKNFRBVkxWSEhH?=
- =?utf-8?B?ZTlNSTlyNzkrdnlPaEVTTkw5VmsrN1BoUSs4WnRJMVdqRldhL0hrY2E4Y3V4?=
- =?utf-8?B?azdPRHlGNmNuTlMrSFhGeUozam94WXY2U0RBWDNGRjlFb3JMdGtaWHMxTmJM?=
- =?utf-8?B?ckNMcDNueENJa3hHTkZiZFU2bXZaR1Z3TVd4ODZOcURwc3ZxRkxMbnBiQ0pY?=
- =?utf-8?B?aWcrYzZpdEU3T1VGQ3JBSTAvR2tqRi95UmcrWXorVEU2WUVmZzA3SGlkWDh4?=
- =?utf-8?B?WXZDZlpkNGZuZ2xWNHNsWFBuQVorUitIMXUzTHE2ZDBXL1EzOVhZQ1pXTkxN?=
- =?utf-8?B?eWRSaWFlNkFZQ1pTbDd0M21YK0dINGxjK3VHeDVSMVV3bXZIalJlMHQ2TlRW?=
- =?utf-8?B?cXRPZ2xucndVSnJzeitzeWlneDN4YmtUb1FKaEc0aE9SbkJBT2loVFdVVUFI?=
- =?utf-8?B?Ym5KMWcyWS85aW5hSlpQZEQzNkk1dWNoaTR3MW5oT2RwNHlqVW9aNzFRWUs2?=
- =?utf-8?B?ZzAxUHcyUjFsTUhpUjdnQ1lWa1lTTlFabnM3aGMwaWl4WHRQWlBjRU5LNXht?=
- =?utf-8?B?VEIzT3YzdGsrZFpheS9yY0ZxK0dyMVBqM0tsaDNQeWVxQkNwZ2h4c2JIZExY?=
- =?utf-8?B?WU9oSFlldUxxOFptUzBTZ3EwMGREaDM1S3BCU09ka1RpSU5sZklwb0ZBL1o0?=
- =?utf-8?B?YnRxdVJua2M3WVhEMHBNakNWcXc3VzZveE0ybTNNR3FtYnBFSW9Fdz09?=
+	=?iso-8859-1?Q?BeRIkSzZ8/fzyvoZWeb8eHGmHpJKuigV4R+vAkaFv49Fn23fQylbI0uNN3?=
+ =?iso-8859-1?Q?fpDbggTObTiE5LxUHsG6d8QJh3CcDhsPgn64Dgga5DSrUqZ6dbs8yVEbcy?=
+ =?iso-8859-1?Q?ToVhD7HSifFwpcnK0MYPy1IVry4tYn8lZA+J5joSdVH5SLfUDBwBy2eRSL?=
+ =?iso-8859-1?Q?K3/cQIWz6AvC/PE6dHLxW2qN9QZkcXl5xRCYGwOOm0nmL4XWqFFwfpqw5s?=
+ =?iso-8859-1?Q?OFFJbnp2KGlkbrws4YGlB2KUHjNch7UxIp/F2dS+fcLG5vfxg10ih3stde?=
+ =?iso-8859-1?Q?9Rq5vvxfjFzCn80wcuPnc1PPlrxxKWTLXeAd9RoKN3tuOVJjYv8scS+hTZ?=
+ =?iso-8859-1?Q?AcHWbhAHu7fcc2s7xp7uv8/nFOIDvqDw3XEyyrCrfu2IqSdL+FjhCUK68G?=
+ =?iso-8859-1?Q?thi5VN46zxhXIQ1/KMiOXpU7DNwt3b/piu+Adc3ss93lPVFcKAhsYnRn8y?=
+ =?iso-8859-1?Q?uPzLtPD2LKdq8ZqIRzMpaQW7lcK9GkQWBVzet8hs2hXdVIjkFdnmLq2Gny?=
+ =?iso-8859-1?Q?UGRXokDl88LB83pnRC4r/sgmi40WAemQKGdfqQSbbfGUHLpiW1U+uycR9B?=
+ =?iso-8859-1?Q?fYHure4O+uiw1/yS83SyJy1V8kLEOqJaArZsTyWw4+uxiVZ516EVhYhPJ1?=
+ =?iso-8859-1?Q?QXrlO+gWLkVMXswJDkj4yvFLfMdCr6Uiv+T74uBUr2+CpW4w/qTmx01W09?=
+ =?iso-8859-1?Q?uUhHaKqUBWWckgGA3s4twzSbkVwY1XW3KoUdOmhyiUIOM4byrb94SqE/+D?=
+ =?iso-8859-1?Q?8rKoYkE44C3qslEnt724cf7x5vOEJMrrKtNIOwOuOGYu4xitLUzSWMWhmF?=
+ =?iso-8859-1?Q?y7H08UTdyS7NtXNPUQMD5vkoi5GFPXkZk3R8MHkvwf1mOMunuyFb3dfmz0?=
+ =?iso-8859-1?Q?/3RWD8iDcN9nSnfX+hqhmvnGY7woHILu1WaeLQtFYthZBcAqExmDQHdcAe?=
+ =?iso-8859-1?Q?iGYIwBWVXmZJMY3+OcOJYdDd2Dx1eAZR8hHTkL/AeSjpXIJbtaYHOuuAV/?=
+ =?iso-8859-1?Q?ZU1GpbrTW8G4MnZOtmvpaq9Nk4oIHU5b8k1R6X+mKm9d2PGEAcwRmk5B62?=
+ =?iso-8859-1?Q?bfKAeoS9/JLRLjPB/We6a9uBmgdTnuqUHA/fm986f+qDBWeKlLaresnAVn?=
+ =?iso-8859-1?Q?nVqOCuMGAtfhUIPQ7HDtpSgSR21Pcf/kd9eoeU/4Ptfn6DmmtZtK3hnqU5?=
+ =?iso-8859-1?Q?7/pHXY2XbCeaV1TtTjAH86iTgQibYp1oTs+F+oYxlHwqZvRYj9s7SqOQXe?=
+ =?iso-8859-1?Q?Wtl/Xf1PQ+3l6TY2YE2ggKOHL2M/tTnlynRy7gp+JyNsfYFZTqcQRSQXkx?=
+ =?iso-8859-1?Q?pCow6V0A+3Uy5Cqeqo22bL9lVuvFQf98hqLQ/+bE5JZ5ucE/3KtBdoMpeS?=
+ =?iso-8859-1?Q?FeVwfdPdamV6QbZXYQZHGtiReIicPhpwDksBlun1d45pzFgd+Froj1hqna?=
+ =?iso-8859-1?Q?cDYR72jzbwcneD9UJ6FUscCJtZeqTzOygeRGZBShzSpySFrMAsEjYu1nOz?=
+ =?iso-8859-1?Q?A1rB3vGau4ZoahVFx9LU1uQLzTS7HvLOVvAjaehCF1ji5AktbPY/GSnT3x?=
+ =?iso-8859-1?Q?zrCbMeAEp4Q8zg4XraJk5DPwTcMXzl2UVoNmRpWuxsnWq371TSpnr5vu+q?=
+ =?iso-8859-1?Q?ypy5jxoGKbUorHrN37EcT51lmFSM82PJ82WFVza/E/UxMEe/JlP7aI1JjK?=
+ =?iso-8859-1?Q?2I4dtR0PH5kUuPw/llVJQLtxQ6V4v+94mObLpL75Fe+kyTbXKb1ddeCCsB?=
+ =?iso-8859-1?Q?xqy8C6ss8VmSAr7ycWz5vykeg04hgUq2wZX5Ykm2C6bDSO?=
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4d443704-34f8-4bd9-1216-08df2afa6faf
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR12MB6914.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a2d1fad7-3215-4308-603c-08df2afa88a8
+X-MS-Exchange-CrossTenant-AuthSource: DM4PR12MB6374.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Oct 2026 20:25:21.5896
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Oct 2026 20:26:03.4850
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: FztyKrPtpZGJAEBELrPHIwp/3QRwU8G1dDzDsoG8zsdCQGQYz9SNZWpQxyPREabYymq/C9xUiDgtDWBY+k9iXA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB8785
+X-MS-Exchange-CrossTenant-UserPrincipalName: 1ffK53pvKIyCwXArrXQKNXAfnhDhCV5QTGz8DhqUVx69qv5dR5B5maC+lw5XHl4AfIutq0lizPx9oZqw6dFEMw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6631
 
-
-
-On 10/15/26 14:48, Bjorn Helgaas wrote:
-> [+cc Alex, Ilpo, Lukas, linux-acpi]
+On Thu, Oct 08, 2026 at 09:18:38AM +0200, Juergen Gross wrote:
+> Today rdmsrq() is a macro using its second parameter as the target for
+> storing the read MSR value.
 > 
-> On Thu, Oct 15, 2026 at 07:48:42AM -0500, Mario Limonciello wrote:
->> The soft filter system introduced by commit 11c141672045f ("drm/amdgpu:
->> Fix VFCT bus number matching with soft filter") has a deficiency that
->> it won't work when there are multiple GPUs of the exact same model.
->>
->> As it was introduced specifically to help the case of pci=realloc, gate
->> it to only run when that's in use.
->>
->> Fixes: 11c141672045f ("drm/amdgpu: Fix VFCT bus number matching with soft filter")
->> Reported-by: Reza Nikzad Chaleshori <rezanikzadch@gmail.com>
->> Closes: https://lore.kernel.org/amd-gfx/20261014080523.186533-1-rezanikzadch@gmail.com/
->> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
->> ---
->>   drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c | 15 ++++++++-------
->>   drivers/pci/setup-bus.c                  |  5 +++++
->>   include/linux/pci.h                      |  1 +
->>   3 files changed, 14 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
->> index 08ed1eb695586..75af9a59671ae 100644
->> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
->> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
->> @@ -384,12 +384,10 @@ static bool amdgpu_read_disabled_bios(struct amdgpu_device *adev)
->>    * @vhdr: VFCT image header to check
->>    *
->>    * VFCT entries contain the PCI bus number as recorded during BIOS POST.
->> - * On systems where the kernel renumbers PCI buses (e.g. pci=realloc or
->> - * resource conflicts), the runtime bus number may differ from the POST
->> - * value.  Match by device identity (vendor + device + function) and use
->> - * the bus number as a preference: exact bus match is preferred, but when
->> - * the bus numbers disagree we accept the entry if the device identity
->> - * matches.
->> + * On systems where the user requested PCI resource reallocation, the
->> + * runtime bus number may differ from the POST value. Match by device
->> + * identity (vendor + device + function), but only treat the bus number as
->> + * a preference when pci=realloc was explicitly requested.
+> Convert rdmsrq() to an inline function returning the MSR value.
 > 
-> This is a generic problem, isn't it?
+> The users have been converted using the following semantic patch:
 > 
-> I think any table from firmware that has PCI bus numbers in it could
-> trip over issues like this.  Seems like we need a more generic
-> solution.
+>   // Options: --include-headers
 > 
-
-Yeah; it's a generic issue which was triggered by pci=realloc which is 
-why I did a soft filter in 11c141672045f.
-
-But this causes problems when you have two (or more) of the exact same 
-device.  You might match the wrong thing.
-
->>    *
->>    * Returns: 0 on match, -ENODEV on no match
->>    */
->> @@ -409,7 +407,10 @@ static int amdgpu_acpi_vfct_match(struct amdgpu_device *adev,
->>   	if (vhdr->PCIBus == adev->pdev->bus->number)
->>   		return 0;
->>   
->> -	/* Bus mismatch but device identity matches (PCI renumbering case) */
->> +	/* Allow bus renumbering only when the user requested pci=realloc. */
->> +	if (!pci_realloc_enabled_by_user())
->> +		return -ENODEV;
->> +
->>   	dev_notice(adev->dev,
->>   		   "VFCT bus number mismatch: table %u != runtime %u, matching by device identity (vendor 0x%04x device 0x%04x)\n",
->>   		   vhdr->PCIBus, adev->pdev->bus->number,
->> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->> index ed16ef7c26fa7..d9450585082c0 100644
->> --- a/drivers/pci/setup-bus.c
->> +++ b/drivers/pci/setup-bus.c
->> @@ -1799,6 +1799,11 @@ static bool pci_realloc_enabled(enum enable_type enable)
->>   	return enable >= user_enabled;
->>   }
->>   
->> +bool pci_realloc_enabled_by_user(void)
->> +{
->> +	return pci_realloc_enable == user_enabled;
->> +}
+>   virtual patch
+>   virtual report
 > 
-> I don't like this.  I think the same bus renumbering can happen in the
-> "auto_enabled" case, and I don't think we set pci_realloc_enable in
-> that case.
+>   @@
+>   expression msr, val;
+>   @@
+>   (
+>   - rdmsrq(msr,val)
+>   + val = rdmsrq(msr)
+>   )
 > 
-> But more generally, I think ultimately the PCI core should be able to
-> reassign bus numbers arbitrarily to accommodate hotplugs (given the
-> appropriate driver support to tolerate that, of course).
-> 
+> Signed-off-by: Juergen Gross <jgross@suse.com>
+> Acked-by: Damien Le Moal <dlemoal@kernel.org>      # ATA
+> Reviewed-by: Michael Kelley <mhklinux@outlook.com> # Hyper-V
+> Acked-by: Rafael J. Wysocki (Intel) <rafael@kernel.org> # ACPI, cpufreq, powercap, thermal
+> Acked-by: Sean Christopherson <seanjc@google.com>
+> Acked-by: Reinette Chatre <reinette.chatre@intel.com> # resctrl
+> Reviewed-by: Zhongqiu Han <zhongqiu.han@oss.qualcomm.com> # cpufreq
+> Acked-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>		# pdx86
+> ---
 
-Could we keep track of the original perhaps?  Then drivers can know what 
-it was reassigned from?
+Reviewed-by: Yazen Ghannam <yazen.ghannam@amd.com> # mce, amd64_edac
 
->>   #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
->>   static int iov_resources_unassigned(struct pci_dev *dev, void *data)
->>   {
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index d31a8d107b1ef..844734da9250f 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -610,6 +610,7 @@ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
->>   }
->>   
->>   struct pci_dev *pci_alloc_dev(struct pci_bus *bus);
->> +bool pci_realloc_enabled_by_user(void);
->>   
->>   #define	to_pci_dev(n) container_of(n, struct pci_dev, dev)
->>   #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
->> -- 
->> 2.43.0
->>
-
+Thanks,
+Yazen
