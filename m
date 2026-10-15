@@ -1,475 +1,167 @@
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11021109.outbound.protection.outlook.com [40.107.74.109])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DF343E3140
-	for <linux-pci@vger.kernel.org>; Thu, 15 Oct 2026 03:06:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63D1F32D0F5;
+	Thu, 15 Oct 2026 03:31:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.109
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792033594; cv=pass; b=IlturH4rsNKC/5YXKBsT9luHcGZyUZhhJp5USvB7eiXxv0KGrTBxWqkrlcENOiNIbvShu0a2IsNQKhw01j7l2VyyQ1/3fCEZo+RN488JwFhr1SDxRXmrljjnO/JjKPiIFcfZR1U7c3ZEMsagotaxsl42+NogvRsDUn4MFh8RR9w=
+	t=1792035076; cv=fail; b=Z2LyAgrod1J+tyNczSr2f4zTzL1kR3OZrj6NoDrbYfW8E2ZFOXnqBtZ9ItFrtj9B3Pp5IqPHrUmLmyNIzb+5TI8k5a079LOLU0mttjTkbKOkD60Rw7RgIzeYgkK39c6Dtt1uCohxAv5vc9bVhvPIVCVLLN2Pmhi43dkPcEexieM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792033594; c=relaxed/simple;
-	bh=a/6f4QF1Wsww9ttIAYJYc9lLbaHe4jO/w79IMMKFNWg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=EYYQVq7AOnOvBEdPb4L9FPKUddBZanw87Qxb7P+KHb3AOO5dAkIMNj5D0F7tUPVGkChFpAVzFLYqy2jDGQTtMFh+oNzR2EuMVCQskQs9eoCt5T0cBavjHBWyn///0tJfi2Qq4+aYD24M/tFKZ98UJHqgeTAGqfeQjnGAIb7ru1A=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lnC6fRcK; arc=pass smtp.client-ip=209.85.208.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1792035076; c=relaxed/simple;
+	bh=AejOEdkyTt3FOWUsNT6+1+BzTpF+i7j7LicIp3ij3ZM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=R5dL8UE0ONmptwWbBrG/nKormAqyCBWKBbKC0mGyAHHoE/nRElL40HhG/bToSx3u5t7RJeOpQB6ReguWMJ7uvHSbE4AkxUe3OZJJWDRhNNK0WiyXmkX5FjMe98LzE5rKOGJUkV7nhZwoeR3rIyJch59b+f7nzBu9HJfmL0SIhyE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=aihLmum8; arc=fail smtp.client-ip=40.107.74.109
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lnC6fRcK"
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-6ae27f06c2fso2991797a12.3
-        for <linux-pci@vger.kernel.org>; Wed, 14 Oct 2026 20:06:32 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792033590; cv=none;
-        d=google.com; s=arc-20260327;
-        b=S4myfu9mue7B/kyd51Dop9yaSpsW0wnAhza9JsVFL8FKVohHU35FqP7oqqgVtHmHx+
-         lsWmoHa3u37irZ2bjsQRlofXzpFTPebSjm57eocs/eAURGV7tp+u1H1N6s7ABCJzGYo7
-         obPqxdamTLyFtoEuuuRMBQc+etTPW+Sn0+GtyfaUiZoswjGHmh0CF9lnku4MUk1oEa68
-         oZddE6xCloJt0WnM4p+avPFNrnlGI9/kfRTOg/VnPHSP2uf4Cnikr7OPWpe2SH7Lr7ec
-         9/DPDUmlybWYtoOfXwLLs99hoSnksA5GGGXWG2H/vQAGDwwJC2V5swQS6va5zFthErA4
-         6tnQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=+dvlObEQLQudKXYWPDBhDHwG3kWaespOtx9QvaoDVJs=;
-        fh=pu51PcdwpcCd5COVqcUjgO4Wrs4tcvSQUSDuzTz9OgY=;
-        b=lKBRALj/0nnJoTQJSvO+Ldm2cmow8Xfp/zW1VwE5996RWQ9sM/XjqZYBjSZv1VqWEQ
-         9YOJC4s/ftHe+zVRxoRT59GW0ekYOAcDYATV4UoBDW4Z36cXpHbz8/mg9o/8hrZeuEEO
-         pcataaaq1mPRaRM6YAYTQ2AncdLdM1y8NPXN2UUwdIqAA2hgkREo2fRtVifuoB7r5Grr
-         DHQSF7XCV2wwI0CbWybfLMtqxtfsIXi4hYfsJuV1aFI3YNb8caAGHQAO2wCmcRIV725Z
-         Oi8cK13SH7BGyFkEO9oH6lY/6ZNsLZI4wgVM0reKXKDKp2lZuARRJbJn6D6+nvXnyi7g
-         Jcdw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792033590; x=1792638390; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=+dvlObEQLQudKXYWPDBhDHwG3kWaespOtx9QvaoDVJs=;
-        b=lnC6fRcKpTml7l4+wwdWnuUnrCwhPhuSUR5PuEhTWEp3H4d098V1NXv+1xOsGgoDeu
-         SUf/XYdvyGUU2DUchE3TQFGeXzgBYWtIRN5BTQbtEnCY5IQ6jF1hQY/VXPRxuDzSXHpH
-         auQVT1Z07Gvac4NchPjV0DKzchfrjhTKemjkZQRSlJIJmvgPk+afqvMDr23Nz7ol/m3u
-         GIig0txhMVOAnzsj6zKJ7oAYqkafGbDML92v1uaNyng1uQOr83fxAdRznH1c6NZdfbwz
-         NqJe2Yjm3HyAmDd7eugsJo4mLO3T2G38RzhJ8AOIKspMXSTbUTxf8nOHNZ7+aNXCKOCC
-         PWZQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792033590; x=1792638390;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=+dvlObEQLQudKXYWPDBhDHwG3kWaespOtx9QvaoDVJs=;
-        b=N2kAPKBK7misHjYQcMdOyy1TIoV0kEwU1v3ZJGPFkSWEFpcIHfavcd5g83g0TkT/6m
-         kO+TozdJmu5psv9iXoz1jLkVWJrti39ilOnAizE/rMIbt6QlsfLEaFLNtZ1giZWYkn5n
-         o1RMCrYYs1qXlchDopYemNC40GkiURkhdqY13WhZ6tFOoTVof1HDwepIc1x3UZlmKnYK
-         kim3DsWTj22m7ao/dQ/o060MciJapLTeCPsAfDGyw9AYIvHTpdxBT+R1DSmAFpFbPTYZ
-         RkWZMr3MTmM3hImaFZ5BG1JjgEUF+SdyPUmTzH+grq6Hym7344LVLu+aBvvIeReC+YXC
-         T3WA==
-X-Forwarded-Encrypted: i=1; AKwUvByq1U6gAZzXSFufSwguSxKMj6e76BMqnAHJrUqVTyC7HVV0tc/McC4Ff1WRKfZrWK6N7TKICmxsRec=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKY/NNaXtaUtO1pDUIxNQy1bWDXNGkCCbYK6UturFGMFuDWG71N
-	ld1CTdEkU14tG3NwPIupg817z+PUQ0CLAvLznZGzeq215haC9CBwXiiDofhA9hR8GUsYNwwS5wA
-	/qK8YhINZkIxmvWNKP3Yh5912BsO8zUM=
-X-Gm-Gg: AYBFou1LNXaQ0C7buYfNoVEFkxXeyVZU2IekgmwAYSPue0JzA5cYDw3a2e16KCpybxu
-	uT7XomDEQPempfhKSz9oKgRJwgiSGYm87DVCRji/Aa0IIZsKT8kOSRiCgqJJOgCssrHHn4J/zYe
-	aDp1OSQ6BW1VtkA2fuZQpdkIV/FdVcVnrclOplv6cf6/2vIT8MJr6jElPZJfyQN5W4SvciCt7P0
-	06EM0tbsAMc7Yt9Y4VbUW4JquYJySdcedkBGQ4zWSTDTrzHmi1CwccFVnSbYErDYHljmVxywQIs
-	rE2PTuwsQ2Zml1hoVEehlcHGFA/pUqOzt115GXg6R/DMmhxB7YiorNRz6vxiSKFJ/AlYbJUH14M
-	JJ5OB2bmiZQ==
-X-Received: by 2002:a05:6402:2115:b0:6a9:f88d:c092 with SMTP id
- 4fb4d7f45d1cf-6b17c164de5mr14448573a12.0.1792033590058; Wed, 14 Oct 2026
- 20:06:30 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="aihLmum8"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Ox/d8QDpFB8Iu44O1JCOOoHgcsPi0wXq548FXAsPBaLbZoUVDE/Sticn5W0/PKFeQn9xADSOnN6wqWGNh6TaUzkhZtmnuVjzv+w/jGCDV/UG/B1B9KXFNYvwiURrecFknSIgykq6uZkndZofro/KlyPDRAFIAHQKs+X8Yx0IebrJ0WNysO1UowPm1cmv+95eb/SZavZJ74DWCy2shl/hXHdMkS76gDW9BXy1i9fa2UpZoB0r65nQ26Tvo1iFYFIw3hm7UzTHZ27Y/MEV+tPBuf7gh6bsqYllZKSR7aSoLTh+aeW2g5Z80Mp17kN8Ru1IJIoJNNsUxABcT0BzH0OF9Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=kcJ+HB1qtczVfdS6u7X7TkCrX7CANWVt9uLN/89rxqk=;
+ b=o0IBj8HLCkHq4YtRUcfQ5WcUAP6Vfx2wEwxUAXyVHr4dbXTXeP1ejranZ81JKhb3es2eSeBkiKI1SzB932arxjkJ5Xs/ORlBXPyQwObKVmwtRXuBs6eihJpTdzUZt/OAvDJZEUfFIKHKYG8VP2/YsHykAs8nUwWbz3JQNIxXXIy+egCWLMg7KWNgTxB6scPUkRbs0dq8YN85aZuHuwX1ttNxQICYu6oNj77PJLbu2BM26XuuxtuXoPMEJy19Xr4/sXMlmZxOn9FORZtpUJDfNeQs+SZy2ZrQvpdke2nImC0GpKzqVdViS4zWUxFXXE66YE9S5fmLXTUwXIhZr/hiWw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=kcJ+HB1qtczVfdS6u7X7TkCrX7CANWVt9uLN/89rxqk=;
+ b=aihLmum8QPKt24qB+J+VdA2zYhrJBA2swk5gA7h6MsbRYZvm2XUcqlMSzAylX1kiVQktSjp/Yx+JsdQ/R98o3+2UPPT1Ge2M77AJY0PoK/gBBAcu20uuaOnG6NGfy4j0ChBe6OEajT8YPCd5IKxy3Xa1qC8FJh9FeuNzDSrRaDs=
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:325::11)
+ by TYWP286MB2699.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:24e::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.13; Thu, 15 Oct
+ 2026 03:31:10 +0000
+Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::cce5:2aa8:53f9:dba9]) by TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::cce5:2aa8:53f9:dba9%5]) with mapi id 15.21.0522.012; Thu, 15 Oct 2026
+ 03:31:10 +0000
+From: Koichiro Den <den@valinux.co.jp>
+To: Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>
+Cc: Philipp Zabel <p.zabel@pengutronix.de>,
+	Frank Li <Frank.Li@nxp.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+	Serge Semin <fancer.lancer@gmail.com>,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v4 01/18] PCI: dwc: Add Renesas to the RAS DES VSEC list
+Date: Thu, 15 Oct 2026 12:30:46 +0900
+Message-ID: <20261015033103.3076869-2-den@valinux.co.jp>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20261015033103.3076869-1-den@valinux.co.jp>
+References: <20261015033103.3076869-1-den@valinux.co.jp>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: TY4P286CA0073.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:36d::16) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:325::11)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260928011123.450800-1-alistair.francis@wdc.com>
- <20260928011123.450800-11-alistair.francis@wdc.com> <DM4NT7TFX4X9.1GFI128LI5ZQ4@nvidia.com>
-In-Reply-To: <DM4NT7TFX4X9.1GFI128LI5ZQ4@nvidia.com>
-From: Alistair Francis <alistair23@gmail.com>
-Date: Thu, 15 Oct 2026 13:06:01 +1000
-X-Gm-Features: AclHuK_848dEWLvQB2EkuYfPoUwZxvDK0SarfXUUCm147LPc2u1MU8LpiLVD7tI
-Message-ID: <CAKmqyKNEup=x+bwmPD_8x0s4ssPkqFnQtSGqJ_82z9oDP=A6cA@mail.gmail.com>
-Subject: Re: [PATCH v4 10/22] lib: rspdm: Initial commit of Rust SPDM
-To: Alexandre Courbot <acourbot@nvidia.com>
-Cc: lukas@wunner.de, linux-cxl@vger.kernel.org, akpm@linux-foundation.org, 
-	Jonathan.Cameron@huawei.com, rust-for-linux@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, jic23@kernel.org, bhelgaas@google.com, 
-	alistair@alistair23.me, djbw@kernel.org, linux-pci@vger.kernel.org, 
-	wilfred.mallawa@wdc.com, a.hindborg@kernel.org, gregkh@linuxfoundation.org, 
-	alex.gaynor@gmail.com, aliceryhl@google.com, benno.lossin@proton.me, 
-	boqun.feng@gmail.com, bjorn3_gh@protonmail.com, tmgross@umich.edu, 
-	gary@garyguo.net, ojeda@kernel.org, 
-	Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB6866:EE_|TYWP286MB2699:EE_
+X-MS-Office365-Filtering-Correlation-Id: 39aa2bf4-cb37-43f4-02d7-08df2a6cc1b1
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|10070799003|1800799024|7416014|366016|376014|10067099003|22082099003|18002099003|921020|261009223027099003|56012099006;
+X-Microsoft-Antispam-Message-Info:
+	EBZa7BBSCxqPa0vjd8Tjbs3fvyqXLIRPr8LaRDZSQvm5ihkk6QA47BkSsjQ3xmzgii875tRxNPBhVe0ux9PUN1h+L7mZEZ8AB/JbXLLcPMWB3wyOqtCySMQUgBVRgMXseC/VHiRxkdEw+ZeVQ5KfTL22kqhqMiluUsxC/SN4VRkPcpiSOiDZt9URVUi/fZBrQxCUE/j3t9LOvA0pfM5PA2v+SyBa/UhXXYxzVyDIS34gF4jhi/DT2XGnDfiTXLUu7bd1rVrdhUnzK8XYXvuyJ01ZXQfv0JA2mflXlaMn0l/BXYjSxZBCiablIXJw52VPqmg1EfgvcUqGcGJQmaO/EdUnKg87H6mxLvzA3gOAVtw15C0qg2HDqHzimaDPURbt4LfAnPf6Wf2XMIDUOm3qdP2hXqX3Gp2YKyZWnM7W5gQ0EodSHElt4Lt8RotIyksN5AcPMAjWleHEh9nu7s3n1XbuJ6otta1wY5nV8QDon/EiNQs+DKxt0Ba/kpcIlq8Pwrv3a/QUU3rDLtWo36tfJLfjBmX0iruC0fkdl+W3d497e/j7j04Yy2Z1uEETbF84bhVuNNfMSUup2rHW+iT4CgPnTHBAgkgO8qBqXSJTRs0I1cONwgChmGml9CwYrsxhuW/1MYMCBt2D7//8Zr8wfCDTNzuogpD1kwYY+OuhWDQpAw6pvX36YBOinKPeG67meQq6S76hpjY91xl6SbBqEw==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(10070799003)(1800799024)(7416014)(366016)(376014)(10067099003)(22082099003)(18002099003)(921020)(261009223027099003)(56012099006);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?EWPEOvh0LVpQ4CRiv+TnyVYU33H2djYGcH9um2R453ozH0DvMKRRL90Rxvkq?=
+ =?us-ascii?Q?7Q3KqJ0Rxxm2Sg/uifOvqYs/4VGmcq93zGo/3Qqa0KO02RXAneiZtivYX1HQ?=
+ =?us-ascii?Q?Olc0tS5qwLAH8P8d3dSVPnene9L1HFxZoJ7/AIP9yK9J9aa9BC6AXi6q+GAE?=
+ =?us-ascii?Q?SxhCmwZGzhTSiyt0FV560zvxUjg293iRiiOQtGqr5VKxSSWYRZTWfnBBY5wI?=
+ =?us-ascii?Q?6y8nB6LGI03BIjWcE2ClLl2lRIpdRPPWozsbe6Ezk+HBPI6Apw2CjH8MXOr1?=
+ =?us-ascii?Q?lJCgKo/rQYGl9pd6K9sLB1R7itJbLyKFxR8u7L3VWU4ZMRTicnuxMDViAkyF?=
+ =?us-ascii?Q?YpzW0CMzdUDBV/xyNjedEbDde5KBknq1nCOKgx0rn0eBYPn/9HUvj7yUTHgT?=
+ =?us-ascii?Q?WOTQL9tdfFAZr8c6SjZp6vhApyNGYaDylL6h0BvEzyCX6Kx5FMwguwpKmlzO?=
+ =?us-ascii?Q?+JND7ZsgLFUdD6R7vhE4C6zsnCfG0XbwE4WtEmTDVS/GAPNdbFMIMz6j/Zjv?=
+ =?us-ascii?Q?wtyllgvtUOqYb8VXudKswLjjvjQLHH3EXQmKZQgZc0nT+zUPlmxkBK/Bv5sQ?=
+ =?us-ascii?Q?MjPvVjlLUIbMN/Sf4IqDn+7CtemvcGam4KDCimo2yAE5D84cLYjbIEnB3XRy?=
+ =?us-ascii?Q?y50u29J0GLLPd/lNG+iabq0iEUhJ5LO0gLSg2bK8dx1RGS1IIhTVdcIvLNNT?=
+ =?us-ascii?Q?sQq8H0Qab6shW3fmWGwm9z55E1vKHxttxDxzFIFrpOar/7tQAPJ2z/wdmkTM?=
+ =?us-ascii?Q?nHHIsx8Qpilk/MhKEYjd86V0cqfeiVBuKEU4kcF7YPSPGW5k6DXVSjHQgHJm?=
+ =?us-ascii?Q?Ur/JG8ZmyeIqZ/G1yLge/JBp203h0KRZYTnWIvLpDQ+VNroW9/njFlxtGJbU?=
+ =?us-ascii?Q?/rviSo6wn1yQ3HMpefwjbg9lHz5I/XkI7JyKS0ERIhskXeWyEtHuMSmWQ+fQ?=
+ =?us-ascii?Q?f3KfBAjVk75ugZpxKflkrKx6ZEM+AjVtnD385JqdkS1xU4fE+wfux5Q9HrMI?=
+ =?us-ascii?Q?eFti+Ebz+V0D1u9IcAjnE0lfq/kMPCO+yMTbEhFb3u0IB2BHOsvQfyHWhVdQ?=
+ =?us-ascii?Q?4gzKdbvWj20oRMl6yvY6a4yGFJkqT0B55GwTHGC+s0rK1uMITMhnOLWlb+3X?=
+ =?us-ascii?Q?MFvZF6VWEBhsBRgsPjqwdMWjeByg57aTCorDXwvMkHOB+KxQPz6E5VM3Tk0b?=
+ =?us-ascii?Q?8hs74UlJntsepbkQFQ+7y9Hcv6Pw1yU5rM3b0v5D44iXK8jFbmCnf2Pi5/O4?=
+ =?us-ascii?Q?IMtBKSNyFZYMqRHeQMlEv3DjWCZxHVVvW/anN0DCKEDNgvkfpewGFLRnrFDi?=
+ =?us-ascii?Q?CqqdWiWp0kJgTke5k6OLInPktd/H51Q7NMhKsBLGx/ZdQqfw4jh4R7dTaUC1?=
+ =?us-ascii?Q?hCmaDj0+62YqPUFYQjbBE5Egbs45JfDiVm81yhOsVSXfqfWhMyfMAadVcHZn?=
+ =?us-ascii?Q?M2WfdjdGXGxMIze+4mdv7moccmbt8a0UpFap1OuRHDieOBLczhtXWBhsX9t+?=
+ =?us-ascii?Q?pSX0XmvXM3C3LDmf44WBx9Rb/8dBib26sLxBb5ylXh+d/cT9X/F0hWmhlmwM?=
+ =?us-ascii?Q?poU96DsYuKvWardkVXYK4CmSTkOQnO1wehXDt8U7yvAcdIh7PQINqHA8YO/z?=
+ =?us-ascii?Q?x/ZHh2tGLkcJp5/5m8FzSVBlJnrdj/6C+iK7hhkcCl9AlYW8juUcGUT/CQ5+?=
+ =?us-ascii?Q?6uaxDJ4RVp46/4iIjsoT3+WXhI5vzP6Mne/mN4NuxinQY7P+w1PVsdXGysNQ?=
+ =?us-ascii?Q?WlGbL2V+vIuLqcr1cqCniSwJhKV8AdbWesKivkGXoXYardiwBfzg?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 39aa2bf4-cb37-43f4-02d7-08df2a6cc1b1
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Oct 2026 03:31:10.5143
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: qoc8MJedxXjV39+mCQdUQ94rhxjwiiMFfVe7V9GlZfXkH/kwpLgXVOMnayS2RE4dimKSXfcMoA8sBtyEVcUEEg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYWP286MB2699
 
-On Thu, Oct 15, 2026 at 1:17=E2=80=AFAM Alexandre Courbot <acourbot@nvidia.=
-com> wrote:
->
-> On Mon Sep 28, 2026 at 10:11 AM JST, alistair23 wrote:
-> > From: Alistair Francis <alistair@alistair23.me>
-> >
-> > This is the initial commit of the Rust SPDM library.
->
-> This commit message deserves to be a bit more verbose. :)
->
-> <...>
-> > diff --git a/lib/rspdm/consts.rs b/lib/rspdm/consts.rs
-> > new file mode 100644
-> > index 000000000000..9709f51849d7
-> > --- /dev/null
-> > +++ b/lib/rspdm/consts.rs
-> > @@ -0,0 +1,92 @@
-> > +// SPDX-License-Identifier: GPL-2.0
-> > +
-> > +// Copyright (C) 2026 Western Digital
-> > +
-> > +//! Constants used by the library
-> > +//!
-> > +//! Rust implementation of the DMTF Security Protocol and Data Model (=
-SPDM)
-> > +//! <https://www.dmtf.org/dsp/DSP0274>
-> > +
-> > +use kernel::error::{code::EINVAL, Error};
->
-> This can just be `use kernel::prelude::*;`.
->
-> > +
-> > +// SPDM versions supported by this implementation
-> > +pub(crate) const SPDM_VER_10: u8 =3D 0x10;
-> > +
-> > +pub(crate) const SPDM_MIN_VER: u8 =3D SPDM_VER_10;
-> > +
-> > +#[allow(dead_code)]
-> > +pub(crate) const SPDM_REQ: u8 =3D 0x80;
-> > +#[allow(dead_code)]
-> > +pub(crate) const SPDM_ERROR: u8 =3D 0x7f;
-> > +
-> > +#[derive(Clone, Copy)]
-> > +#[repr(u8)]
-> > +pub(crate) enum SpdmErrorCode {
->
-> This is in `consts.rs` but is not a const... Actually everything in this
-> module looks like it should be in `lib.rs`, and by doing so you could
-> also remove the `pub(crate)` visibility.
->
-> <...>
-> > diff --git a/lib/rspdm/lib.rs b/lib/rspdm/lib.rs
-> > new file mode 100644
-> > index 000000000000..1010bd38df6d
-> > --- /dev/null
-> > +++ b/lib/rspdm/lib.rs
-> > @@ -0,0 +1,96 @@
-> > +// SPDX-License-Identifier: GPL-2.0
-> > +
-> > +// Copyright (C) 2026 Western Digital
-> > +
-> > +//! Top level library for SPDM
-> > +//!
-> > +//! Rust implementation of the DMTF Security Protocol and Data Model (=
-SPDM)
-> > +//! <https://www.dmtf.org/dsp/DSP0274>
-> > +//!
-> > +//! Top level library, including C compatible public functions to be c=
-alled
-> > +//! from other subsytems.
-> > +
-> > +use crate::bindings::{
-> > +    spdm_state,
-> > +    EPROTONOSUPPORT, //
-> > +};
-> > +use core::ffi::{
-> > +    c_int,
-> > +    c_void, //
-> > +};
-> > +use core::ptr;
-> > +use kernel::prelude::*;
-> > +use kernel::{
-> > +    alloc::flags,
-> > +    bindings,
-> > +    new_mutex,
-> > +    sync::Mutex,
-> > +    types::ForeignOwnable, //
-> > +};
-> > +
-> > +use crate::state::SpdmState;
-> > +
-> > +const __LOG_PREFIX: &[u8] =3D b"spdm\0";
-> > +
-> > +mod consts;
-> > +mod state;
-> > +mod validator;
-> > +
-> > +/// spdm_create() - Allocate SPDM session
-> > +///
-> > +/// `dev`: Responder device
-> > +/// `transport`: Transport function to perform one message exchange
-> > +/// `transport_priv`: Transport private data
-> > +/// `transport_sz`: Maximum message size the transport is capable of (=
-in bytes)
-> > +/// `validate`: Function to validate additional leaf certificate requi=
-rements
-> > +///  (optional, may be %NULL)
-> > +///
-> > +/// Return a pointer to the allocated SPDM session state or NULL on er=
-ror.
->
-> The commenting style is a bit all over the place in this series,
-> sometimes using the Rust style, sometimes the C kernel style, sometimes
-> apparently something else.
->
-> For Rust items, please follow the Rustdoc style. These functions though
-> are the C FFI interface though, so they are useful to the C callers and
-> as such I think their documentation belongs to the interface file (i.e.
-> `include/linux/spdm.h`).
->
-> <...>
-> > diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
-> > new file mode 100644
-> > index 000000000000..c894cf30bb87
-> > --- /dev/null
-> > +++ b/lib/rspdm/state.rs
-> > @@ -0,0 +1,241 @@
-> > +// SPDX-License-Identifier: GPL-2.0
-> > +
-> > +// Copyright (C) 2026 Western Digital
-> > +
-> > +//! The `SpdmState` struct and implementation.
-> > +//!
-> > +//! Rust implementation of the DMTF Security Protocol and Data Model (=
-SPDM)
-> > +//! <https://www.dmtf.org/dsp/DSP0274>
-> > +
-> > +use core::ffi::c_void;
-> > +use kernel::prelude::*;
-> > +use kernel::{
-> > +    bindings,
-> > +    error::{
-> > +        code::EINVAL,
-> > +        to_result,
-> > +        Error, //
-> > +    },
-> > +    validate::Untrusted,
-> > +};
-> > +
-> > +use crate::consts::{
-> > +    SpdmErrorCode,
-> > +    SPDM_ERROR,
-> > +    SPDM_MIN_VER,
-> > +    SPDM_REQ, //
-> > +};
-> > +use crate::validator::{
-> > +    SpdmErrorRsp,
-> > +    SpdmHeader, //
-> > +};
-> > +
-> > +/// The current SPDM session state for a device.
-> > +///
-> > +/// Concurrent access is serialised by wrapping the whole struct in a
-> > +/// `Mutex<SpdmState>` at the FFI boundary, so `spdm_authenticate()` c=
-allers
-> > +/// run one at a time and the locked `&mut SpdmState` is the only way =
-to
-> > +/// reach the inner fields.
-> > +///
-> > +/// `dev`: Responder device.  Used for error reporting and passed to @=
-transport.
-> > +/// `transport`: Transport function to perform one message exchange.
-> > +/// `transport_priv`: Transport private data.
-> > +/// `transport_sz`: Maximum message size the transport is capable of (=
-in bytes).
-> > +///  Used as DataTransferSize in GET_CAPABILITIES exchange.
-> > +/// `validate`: Function to validate additional leaf certificate requi=
-rements.
-> > +///
-> > +/// `version`: Maximum common supported version of requester and respo=
-nder.
-> > +///  Negotiated during GET_VERSION exchange.
->
-> Field documentation should be their own doccomments before each
-> individual field (see [1] for an example and general good practices when
-> writing Rust doccomments).
->
-> [1] https://doc.rust-lang.org/rust-by-example/meta/doc.html
->
-> > +#[expect(dead_code)]
-> > +pub(crate) struct SpdmState {
-> > +    pub(crate) dev: *mut bindings::device,
->
-> This makes me very nervous. I see this is passed to C callbacks. We need
-> to maintain the guarantee that the device still exists, so an
-> `ARef<Device>`, from which you obtain a pointer to pass to the C
-> callbacks, should be the minimum here. Does the device also need to be
-> bound? Looking at `drivers/pci/cma.c` it seems to be. Then this needs to
-> be a `&Device<Bound>`, with a lifetime to `SpdmState` so callers only
-> use it while the device is bound.
+The Root Port on R-Car Gen4 SoCs (DWC 5.20a) carries the RAS DES capability
+with the stock DesignWare VSEC ID (0x02, rev 4), but vendor ID 0x1912 is
+not in dwc_pcie_rasdes_vsec_ids[]. Add Renesas to the list.
 
-Good point, I have converted this to use a `&Device<Bound>`
+Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Signed-off-by: Koichiro Den <den@valinux.co.jp>
+---
+Changes since v3:
+  - No changes.
 
->
-> Just storing a C pointer and passing it whenever a function needs it
-> cancels the purpose of using Rust and make the safety requirements of
-> the callback you pass it to impossible to guarantee, as nothing enforces
-> that the device still exists or is in a valid state when they are
-> invoked.
->
-> > +    pub(crate) transport: bindings::spdm_transport,
-> > +    pub(crate) transport_priv: *mut c_void,
->
-> Here I also suspect we want to define some kind of ownership model for
-> the private data instead of hoping that the pointer is still valid when
-> we use it.
+ include/linux/pcie-dwc.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Any ideas here? It's just a pointer that we pass back to C when
-calling the `transport_function()`, I'm not clear on what we could do
-to ensure it's still valid.
+diff --git a/include/linux/pcie-dwc.h b/include/linux/pcie-dwc.h
+index 097e806c714c..e5693895dbd5 100644
+--- a/include/linux/pcie-dwc.h
++++ b/include/linux/pcie-dwc.h
+@@ -38,6 +38,8 @@ static const struct dwc_pcie_vsec_id dwc_pcie_rasdes_vsec_ids[] = {
+ 	  .vsec_id = 0x02, .vsec_rev = 0x4 },
+ 	{ .vendor_id = PCI_VENDOR_ID_LECARC,
+ 	  .vsec_id = 0x02, .vsec_rev = 0x4 },
++	{ .vendor_id = PCI_VENDOR_ID_RENESAS,
++	  .vsec_id = 0x02, .vsec_rev = 0x4 },
+ 	{}
+ };
+ 
+-- 
+2.54.0
 
->
-> > +    pub(crate) transport_sz: u32,
-> > +    pub(crate) validate: bindings::spdm_validate,
-> > +
-> > +    // Negotiated state
-> > +    pub(crate) version: u8,
-> > +}
-> > +
-> > +impl SpdmState {
-> > +    pub(crate) fn new(
-> > +        dev: *mut bindings::device,
-> > +        transport: bindings::spdm_transport,
-> > +        transport_priv: *mut c_void,
-> > +        transport_sz: u32,
-> > +        validate: bindings::spdm_validate,
-> > +    ) -> Self {
-> > +        SpdmState {
-> > +            dev,
-> > +            transport,
-> > +            transport_priv,
-> > +            transport_sz,
-> > +            validate,
-> > +            version: SPDM_MIN_VER,
-> > +        }
-> > +    }
-> > +
-> > +    #[allow(dead_code)]
-> > +    fn spdm_err(&self, rsp: &SpdmErrorRsp) -> Result<(), Error> {
->
-> `&self` is never used - this should probably be a method of
-> `SpdmErrorRsp`.
->
-> > +        match rsp.error_code {
-> > +            SpdmErrorCode::InvalidRequest =3D> {
-> > +                pr_err!("Invalid request\n");
-> > +                Err(EINVAL)
-> > +            }
-> > +            SpdmErrorCode::InvalidSession =3D> {
-> > +                if rsp.version =3D=3D 0x11 {
-> > +                    pr_err!("Invalid session {:#x}\n", rsp.error_data)=
-;
-> > +                    Err(EINVAL)
-> > +                } else {
-> > +                    pr_err!("Undefined error {:#x}\n", rsp.error_code)=
-;
-> > +                    Err(EINVAL)
-> > +                }
-> > +            }
-> > +            SpdmErrorCode::Busy =3D> {
-> > +                pr_err!("Busy\n");
-> > +                Err(EBUSY)
-> > +            }
-> > +            SpdmErrorCode::UnexpectedRequest =3D> {
-> > +                pr_err!("Unexpected request\n");
-> > +                Err(EINVAL)
->
-> These blocks are getting repetitive. Instead you can implement `Debug`
-> on `SpdmErrorCode` and `From<SpdmErrorCode> for Error`, and get rid of
-> this method entirely as callers will be able to print the error directly
-> and have it automatically converted to the kernel error type.
->
-> <...>
-> > +    /// Start a SPDM exchange
-> > +    ///
-> > +    /// The data in `request_buf` is sent to the device and the respon=
-se is
-> > +    /// stored in `response_buf`.
-> > +    #[allow(dead_code)]
-> > +    pub(crate) fn spdm_exchange(
-> > +        &self,
-> > +        request_buf: &mut [u8],
->
-> This shouldn't need to be mutable?
-
-Nope, it doesn't need to be. That's just leftover from earlier versions.
-
->
-> > +impl<'a, 'c> Validate<'c, Untrusted<&'a [u8]>> for SpdmHeader {
-> > +    type Err =3D Error;
-> > +
-> > +    type Context =3D &'c SpdmState;
-> > +
-> > +    fn validate(unvalidated: &[u8], _context: &'c SpdmState) -> Result=
-<Self, Self::Err> {
-> > +        Ok(SpdmHeader {
-> > +            version: *unvalidated.get(0).ok_or(EIO)?,
-> > +            code: *unvalidated.get(1).ok_or(EIO)?,
-> > +            param1: *unvalidated.get(2).ok_or(EIO)?,
-> > +            param2: *unvalidated.get(3).ok_or(EIO)?,
-> > +        })
->
-> Here you will definitely want to leverage zerocopy's `FromBytes` trait.
-
-I was hoping not too actually.
-
-The SPDM responses are a bit complex. For example NegotiateAlgsRsp has
-multiple dynamically sized arrays, and the fields change based on the
-version.
-
-Using zerocopy means we need packed structs and even then I'm not
-clear on how we can handle the KVec<u32> or even the
-KVec<RespAlgStruct> nicley.
-
-The current approach has the obvious downside of copying the data, but
-as the data is pretty small in the scheme of things and not part of a
-hot path, I think the tradeoff of copying the data with much cleaner
-and easier to understand code is worth it.
-
-Maybe in the future zerocopy could be a performance improvement, but I
-think right now it's a large complexity overhead in this case.
-
-Note that obviously SpdmHeader is not complex, but I think they should
-all follow the same pattern.
-
-Alistair
-
->
-> > +    }
-> > +}
-> > +
-> > +#[expect(dead_code)]
-> > +pub(crate) struct SpdmErrorRsp {
-> > +    pub(crate) version: u8,
-> > +    /// This will always be SPDM_ERROR (0x7F)
-> > +    pub(crate) code: u8,
-> > +    pub(crate) error_code: SpdmErrorCode,
-> > +    pub(crate) error_data: u8,
-> > +}
-> > +
-> > +impl<'a, 'c> Validate<'c, Untrusted<&'a [u8]>> for SpdmErrorRsp {
-> > +    type Err =3D Error;
-> > +
-> > +    type Context =3D &'c SpdmState;
-> > +
-> > +    fn validate(unvalidated: &[u8], _context: &'c SpdmState) -> Result=
-<Self, Self::Err> {
-> > +        Ok(SpdmErrorRsp {
-> > +            version: *unvalidated.get(0).ok_or(EIO)?,
-> > +            code: *unvalidated.get(1).ok_or(EIO)?,
-> > +            // `try_from` rejects unknown `SpdmErrorCode` discriminant=
-s.
-> > +            error_code: SpdmErrorCode::try_from(*unvalidated.get(2).ok=
-_or(EIO)?)?,
-> > +            error_data: *unvalidated.get(3).ok_or(EIO)?,
-> > +        })
-> > +    }
->
-> Same here.
