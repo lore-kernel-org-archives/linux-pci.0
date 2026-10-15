@@ -1,145 +1,252 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3E9D45A2A1;
-	Thu, 15 Oct 2026 06:14:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A65BF381B0A
+	for <linux-pci@vger.kernel.org>; Thu, 15 Oct 2026 06:35:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792044904; cv=none; b=Pj5dS4wiSa0Pwkdeqpqkbk9i9MtYIdVD3Jw4FN/cU5cMifqD3l85ZDm1clUPpCzphK9en0rhspDahiLbh2leQKd0wJbGAP4mYZghoYscBKsrEMrbi1ioU/3+aPuhcMuZmvbe7yeGkYekUtAW21Gb4T2nMNf/gvHS0/vITNPjZ7I=
+	t=1792046135; cv=none; b=jroUWnq8bTrB/WJzZFMediSI3mqrf+UQtIKWrI/NS42E4tI6POQnIRn8RlfLgLqxvmpx/aGCxIfvW5Qonf3JqtASpYqLno2It0DwgP8sXLBMv+CwJUeKxJ6Zps0xM8p0n1YTuxWrx2ErIkwqQf3IomGY0W5fwm7Zoc7tJht2T6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792044904; c=relaxed/simple;
-	bh=XIGQtc0nxl/MiokhJ0fJd7jgcwn5lvIzsOryZJvTbuM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k6PIYcw0FZ+CI1ae4+/KjhkWxb+ZoQNZOx0u6Ez+x2ElHeWHd78N9FXgcdlkLV/spxh6oQHTEKPFHPbGhDObyXWDB40sZzV4E8IUgx2NIswqSzpqZJqOw4JdGqYO4+o2Z7785T/Of82Q6s+iAMh2YrbyxveP3lD1tWtoRHOXkiw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hl5Mab5H; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792046135; c=relaxed/simple;
+	bh=4nKjcbZSnjrChSpeKta1voOn2m58JNQXAxd6tAU1AkI=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=qxVN05L56MLHofYkXRwSbarxDD8taUBL2Ls/F7sOc3kg7eFwVj8VTIRImZ7cuuzXQM3FzQFTOC1qpojhBIhq9KoAfukE9uOCFTpiiKAW+ZwJFzvjC1IWRsATN9CbSo1IxmqUTRb8+VC6cJ49iFdn6wBbkROoeO+x4aHdNlJFFOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GvPxJ4+R; arc=none smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hl5Mab5H"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26B4E1F000C4;
-	Thu, 15 Oct 2026 06:14:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792044895;
-	bh=HygPXKO+CTvFvIzIIs/gh6L0EH0ITjygWDQP0BB8/BY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=hl5Mab5HTpBPyVU8UrvpvorClS3ysudNcU6k9yVzegqrQ6owIEChvmGzTR/lVhI61
-	 GrCE8CDNvFBA0cXmsS28AXBuVLMOUVwB5C5YN3O/CJUK6tpIasPpQfxcxje2Xh+sRz
-	 KfaqKEas8yl4kS6aztbayznoUScbHBeYV0f/Wcc3yXKUMdGPihC6xlSalwcRSs3rco
-	 Vor4+8RKcOfnNdwgDqM7KkFnvtgx8Uyptzn8uPtNjoMhhGR9njyNBpDYvjAmOcOdLS
-	 pclxCp2NojI0AVTIOJuun0n7boMVASN3LhGos23uEh4KXRKETq5rCskJ6nuYNRTeyq
-	 6mujSiy5YP7hA==
-Date: Thu, 15 Oct 2026 11:44:46 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Frank Li <Frank.Li@kernel.org>, Jon Mason <jdmason@kudzu.us>, 
-	Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, ntb@lists.linux.dev, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: endpoint: pci-epf-vntb: Track link state from
- both sides
-Message-ID: <atBuBPXKlQJLnBXL@debian>
-References: <20261014071448.2473208-1-den@valinux.co.jp>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GvPxJ4+R"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1792046133; x=1823582133;
+  h=date:from:to:cc:subject:message-id;
+  bh=4nKjcbZSnjrChSpeKta1voOn2m58JNQXAxd6tAU1AkI=;
+  b=GvPxJ4+RLUsppYhpvcN3p4P03bbZ3l2jHs9RWpsvrNgrKp4M9B4TBhnb
+   vRbtAVI086Dg4O8tQxI9EUjBcLpd5SvL1yogzepc2bCai4SsySLvlZ6qX
+   nLsx8qKAiSp0+AQ3Ixz/52XOKfJBKQ8o/0huPUuSnL10zZrKosSNv52r+
+   NRilkoMttBHX20ZTjG53elWUvOp59gAIeJAzfSqhACXi21TwF5yMXeoen
+   XMbHo5+AdzAzT6kYOn9KKFOEjKb0s3o7YNlFmDS1JasG+Dz4NL9LYBRo0
+   KH/RJUBRiOv+DFdafS468Sq/eZ1JJ01ByhPJgYbujHUlD34UNmXz6KCPf
+   A==;
+X-CSE-ConnectionGUID: QzblOdI9SXmeLY85SjUSCQ==
+X-CSE-MsgGUID: kxEj7fbpSNuMZVsAmrwARA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11935"; a="703610"
+X-IronPort-AV: E=Sophos;i="6.27,159,1787036400"; 
+   d="scan'208";a="703610"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Oct 2026 23:35:33 -0700
+X-CSE-ConnectionGUID: GPblRjSbS6esYvQkJgc0Cg==
+X-CSE-MsgGUID: KOZ0xKrDRtmS954tFBKIhA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,159,1787036400"; 
+   d="scan'208";a="1531081"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by orviesa008.jf.intel.com with ESMTP; 14 Oct 2026 23:35:31 -0700
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xHF3o-00000000Fwg-0vVl;
+	Thu, 15 Oct 2026 06:35:28 +0000
+Date: Thu, 15 Oct 2026 14:34:57 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:reset] BUILD SUCCESS
+ ea3f3a39c3fcea8922d3935af91c96e71df543b9
+Message-ID: <202610151455.iqjgDv8O-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261014071448.2473208-1-den@valinux.co.jp>
 
-On Wed, Oct 14, 2026 at 04:14:48PM +0900, Koichiro Den wrote:
-> The control-region link status is currently updated only by
-> COMMAND_LINK_UP and COMMAND_LINK_DOWN from the HOST. The virtual
-> NTB link callbacks are empty. Consequently, the HOST can see the link as
-> up before the VHOST has enabled it, and ntb_link_disable() on the VHOST
-> leaves LINK_STATUS_UP set without notifying either NTB client.
-> 
-> ntb_netdev can hide this device-level state bug because ntb_transport uses
-> a separate per-QP LINK_DOWN_FLAG message. Use ntb_tool to observe the
-> device link state directly:
-> 
-> After bringing both sides up, start one waiter on each side:
-> 
->   HOST# echo N > /sys/kernel/debug/ntb_tool/<H-device>/peer0/link_event
->   VHOST# echo N > /sys/kernel/debug/ntb_tool/<V-device>/peer0/link_event
-> 
-> While both waiters are blocked, disable the link on the VHOST:
-> 
->   VHOST# echo N > /sys/kernel/debug/ntb_tool/<V-device>/link
-> 
-> Without this patch, the link-disable command succeeds, but peer0/link
-> remains Y on both sides and neither waiter returns.
-> 
-> Track HOST and VHOST enablement separately and report the effective link
-> as up only when both sides have enabled it, as pci-epf-ntb does for its
-> two physical hosts. Both NTB clients observe this effective state, so
-> notify both sides only when it changes, including the side whose request
-> completes the transition. Serialize the two paths because HOST commands
-> run from delayed work while the VHOST callbacks may run concurrently.
-> 
-> With this patch, peer0/link changes to N on both sides and both waiters
-> return.
-> 
-> Fixes: e35f56bb0330 ("PCI: endpoint: Support NTB transfer between RC and EP")
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> ---
-> Changes in v3:
->   - Rebase onto the latest pci/endpoint.
->   - Drop redundant dma_wmb(). (Frank)
->   - Retest using ntb_tool.
->   - Link to v2: https://lore.kernel.org/r/20260904162049.3432464-1-den@valinux.co.jp/
-> 
->  drivers/pci/endpoint/functions/pci-epf-vntb.c | 90 +++++++++++++++----
->  1 file changed, 73 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> index 07ba338732d4..a11f9260ee86 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> @@ -41,6 +41,7 @@
->  #include <linux/delay.h>
->  #include <linux/io.h>
->  #include <linux/module.h>
-> +#include <linux/mutex.h>
->  #include <linux/slab.h>
->  
->  #include <linux/pci-ep-msi.h>
-> @@ -147,7 +148,10 @@ struct epf_ntb {
->  	u16 vntb_pid;
->  	u16 vntb_vid;
->  
-> -	bool linkup;
-> +	/* Serialize HOST and VHOST link state changes. */
-> +	struct mutex link_lock;
-> +	bool host_linkup;
-> +	bool vhost_linkup;
->  
->  	/*
->  	 * True when doorbells are interrupt-driven (MSI or embedded), false
-> @@ -183,24 +187,54 @@ static struct pci_epf_header epf_ntb_header = {
->  	.interrupt_pin	= PCI_INTERRUPT_INTA,
->  };
->  
-> +static void epf_ntb_update_link(struct epf_ntb *ntb)
-> +{
-> +	u16 link_status = READ_ONCE(ntb->reg->link_status);
-> +
-> +	/* The link is usable only after both sides have enabled it. */
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git reset
+branch HEAD: ea3f3a39c3fcea8922d3935af91c96e71df543b9  PCI: Don't treat ~0 as ready in pci_dev_wait() with RRS SV
 
-I see a bit of ambiguity here and it is confusing. This comment says that both
-host and vhost has to enable the link first. Yet, the variables are named as
-'{host/vhost}_linkup'. Also, the functions setting these variables are named
-as:
+elapsed time: 2255m
 
-	epf_ntb_link_up()
-	vntb_epf_set_link() 
+configs tested: 175
+configs skipped: 4
 
-Even though these two are doing the same thing but on different side, these two
-functions are not symmetric. This needs to be fixed up.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-- Mani
+tested configs:
+alpha                              allnoconfig    gcc-16.1.0
+alpha                             allyesconfig    gcc-16.1.0
+alpha                                defconfig    gcc-16.1.0
+arc                               allmodconfig    clang-24
+arc                                allnoconfig    gcc-16.1.0
+arc                               allyesconfig    clang-24
+arc                                  defconfig    gcc-16.1.0
+arm                                allnoconfig    gcc-16.1.0
+arm                               allyesconfig    clang-24
+arm                      am200epdkit_defconfig    gcc-16.1.0
+arm                      davinci_all_defconfig    clang-24
+arm                                  defconfig    gcc-16.1.0
+arm                       jornada720_defconfig    clang-24
+arm                          mv78xx0_defconfig    gcc-16.1.0
+arm                              mxs_defconfig    gcc-16.1.0
+arm                          s3c6400_defconfig    clang-24
+arm                          socfpga_defconfig    gcc-16.1.0
+arm                            u8500_defconfig    clang-24
+arm                         vexpress_defconfig    gcc-16.1.0
+arm64                             allmodconfig    clang-24
+arm64                              allnoconfig    gcc-16.1.0
+arm64                                defconfig    gcc-16.1.0
+arm64                 randconfig-1000-20261015    gcc-8.5.0
+arm64                 randconfig-1001-20261015    gcc-8.5.0
+arm64                 randconfig-1002-20261015    gcc-8.5.0
+arm64                 randconfig-1003-20261015    gcc-8.5.0
+csky                              allmodconfig    gcc-16.1.0
+csky                               allnoconfig    gcc-16.1.0
+csky                                 defconfig    gcc-16.1.0
+csky                  randconfig-1000-20261015    gcc-8.5.0
+csky                  randconfig-1001-20261015    gcc-8.5.0
+hexagon                           allmodconfig    gcc-16.1.0
+hexagon                            allnoconfig    gcc-16.1.0
+hexagon                              defconfig    gcc-16.1.0
+hexagon               randconfig-1000-20261015    clang-24
+hexagon               randconfig-1001-20261015    clang-24
+i386                              allmodconfig    clang-22
+i386                               allnoconfig    gcc-16.1.0
+i386                              allyesconfig    clang-22
+i386        buildonly-randconfig-1000-20261015    gcc-14
+i386        buildonly-randconfig-1001-20261015    gcc-14
+i386        buildonly-randconfig-1002-20261015    gcc-14
+i386        buildonly-randconfig-1003-20261015    gcc-14
+i386        buildonly-randconfig-1004-20261015    gcc-14
+i386        buildonly-randconfig-1005-20261015    gcc-14
+i386                                 defconfig    gcc-16.1.0
+i386                  randconfig-1000-20261015    gcc-14
+i386                  randconfig-1001-20261015    gcc-14
+i386                  randconfig-1002-20261015    gcc-14
+i386                  randconfig-1003-20261015    gcc-14
+i386                  randconfig-1004-20261015    gcc-14
+i386                  randconfig-1005-20261015    gcc-14
+i386                  randconfig-1006-20261015    gcc-14
+i386                  randconfig-1007-20261015    clang-22
+i386                  randconfig-1008-20261015    clang-22
+i386                  randconfig-1009-20261015    clang-22
+i386                  randconfig-1010-20261015    clang-22
+i386                  randconfig-1011-20261015    clang-22
+i386                  randconfig-1012-20261015    clang-22
+i386                  randconfig-1013-20261015    clang-22
+loongarch                         allmodconfig    clang-24
+loongarch                          allnoconfig    gcc-16.1.0
+loongarch                            defconfig    clang-24
+loongarch                 loongson64_defconfig    clang-24
+loongarch             randconfig-1000-20261015    clang-24
+loongarch             randconfig-1001-20261015    clang-24
+m68k                              allmodconfig    gcc-16.1.0
+m68k                               allnoconfig    gcc-16.1.0
+m68k                              allyesconfig    clang-24
+m68k                                 defconfig    clang-24
+m68k                        m5208evb_defconfig    gcc-16.1.0
+microblaze                         allnoconfig    gcc-16.1.0
+microblaze                        allyesconfig    gcc-16.1.0
+microblaze                           defconfig    clang-24
+mips                              allmodconfig    gcc-16.1.0
+mips                               allnoconfig    gcc-16.1.0
+mips                              allyesconfig    gcc-16.1.0
+mips                        bmips_be_defconfig    gcc-16.1.0
+nios2                             allmodconfig    clang-20
+nios2                              allnoconfig    clang-24
+nios2                                defconfig    clang-24
+nios2                 randconfig-1000-20261015    clang-24
+nios2                 randconfig-1001-20261015    clang-24
+openrisc                          allmodconfig    clang-20
+openrisc                           allnoconfig    clang-24
+openrisc                             defconfig    gcc-16.1.0
+parisc                            allmodconfig    gcc-16.1.0
+parisc                             allnoconfig    clang-24
+parisc                            allyesconfig    clang-17
+parisc                               defconfig    gcc-16.1.0
+parisc                randconfig-1000-20261015    gcc-8.5.0
+parisc                randconfig-1001-20261015    gcc-8.5.0
+parisc64                             defconfig    clang-24
+powerpc                           allmodconfig    gcc-16.1.0
+powerpc                            allnoconfig    clang-24
+powerpc                         cell_defconfig    clang-24
+powerpc               randconfig-1000-20261015    gcc-8.5.0
+powerpc               randconfig-1001-20261015    gcc-8.5.0
+powerpc                      tqm8540_defconfig    clang-24
+powerpc64             randconfig-1000-20261015    gcc-8.5.0
+powerpc64             randconfig-1001-20261015    gcc-8.5.0
+riscv                             allmodconfig    clang-24
+riscv                              allnoconfig    clang-24
+riscv                             allyesconfig    clang-24
+riscv                                defconfig    gcc-16.1.0
+riscv                 randconfig-1000-20261015    gcc-11.5.0
+riscv                 randconfig-1001-20261015    gcc-11.5.0
+s390                              allmodconfig    clang-17
+s390                               allnoconfig    clang-24
+s390                              allyesconfig    gcc-16.1.0
+s390                                 defconfig    gcc-16.1.0
+s390                  randconfig-1000-20261015    gcc-11.5.0
+s390                  randconfig-1001-20261015    gcc-11.5.0
+sh                                allmodconfig    gcc-16.1.0
+sh                                 allnoconfig    clang-24
+sh                                allyesconfig    clang-17
+sh                          ap325rxa_defconfig    clang-24
+sh                                   defconfig    gcc-14
+sh                    randconfig-1000-20261015    gcc-11.5.0
+sh                    randconfig-1001-20261015    gcc-11.5.0
+sh                         sh7763rdp_defconfig    gcc-16.1.0
+sparc                              allnoconfig    clang-24
+sparc                                defconfig    gcc-16.1.0
+sparc                 randconfig-1000-20261015    gcc-8.5.0
+sparc                 randconfig-1001-20261015    gcc-8.5.0
+sparc64                           allmodconfig    clang-20
+sparc64                              defconfig    gcc-14
+sparc64               randconfig-1000-20261015    gcc-8.5.0
+sparc64               randconfig-1001-20261015    gcc-8.5.0
+um                                allmodconfig    clang-17
+um                                 allnoconfig    clang-24
+um                                allyesconfig    gcc-16.1.0
+um                                   defconfig    gcc-14
+um                              i386_defconfig    gcc-14
+um                    randconfig-1000-20261015    gcc-8.5.0
+um                    randconfig-1001-20261015    gcc-8.5.0
+um                            x86_64_defconfig    gcc-14
+x86_64                             allnoconfig    clang-24
+x86_64      buildonly-randconfig-1000-20261015    gcc-14
+x86_64      buildonly-randconfig-1001-20261015    gcc-14
+x86_64      buildonly-randconfig-1002-20261015    gcc-14
+x86_64      buildonly-randconfig-1003-20261015    gcc-14
+x86_64      buildonly-randconfig-1004-20261015    gcc-14
+x86_64      buildonly-randconfig-1005-20261015    gcc-14
+x86_64                               defconfig    gcc-14
+x86_64                                   kexec    clang-22
+x86_64                randconfig-1000-20261015    gcc-14
+x86_64                randconfig-1001-20261015    gcc-14
+x86_64                randconfig-1002-20261015    gcc-14
+x86_64                randconfig-1003-20261015    gcc-14
+x86_64                randconfig-1004-20261015    gcc-14
+x86_64                randconfig-1005-20261015    gcc-14
+x86_64                randconfig-1006-20261015    gcc-14
+x86_64                randconfig-1007-20261015    gcc-14
+x86_64                randconfig-1008-20261015    gcc-14
+x86_64                randconfig-1009-20261015    gcc-14
+x86_64                randconfig-1010-20261015    gcc-14
+x86_64                randconfig-1011-20261015    gcc-14
+x86_64                randconfig-1012-20261015    gcc-13
+x86_64                randconfig-1013-20261015    gcc-13
+x86_64                randconfig-1014-20261015    gcc-13
+x86_64                randconfig-1015-20261015    gcc-13
+x86_64                randconfig-1016-20261015    gcc-13
+x86_64                randconfig-1017-20261015    gcc-13
+x86_64                                rhel-9.4    clang-22
+x86_64                            rhel-9.4-bpf    gcc-14
+x86_64                           rhel-9.4-func    clang-22
+x86_64                     rhel-9.4-kselftests    clang-22
+x86_64                          rhel-9.4-kunit    gcc-14
+x86_64                            rhel-9.4-ltp    gcc-14
+x86_64                           rhel-9.4-rust    clang-22
+xtensa                             allnoconfig    clang-24
+xtensa                            allyesconfig    clang-20
+xtensa                randconfig-1000-20261015    gcc-8.5.0
+xtensa                randconfig-1001-20261015    gcc-8.5.0
 
--- 
-மணிவண்ணன் சதாசிவம்
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
