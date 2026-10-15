@@ -1,44 +1,44 @@
-Received: from sender5-op-o11.zoho.com (sender5-op-o11.zoho.com [165.173.182.11])
+Received: from sender6-op-o11.zoho.com (sender6-op-o11.zoho.com [165.173.180.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3882152843E;
-	Thu, 15 Oct 2026 12:40:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=165.173.182.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1457497B96;
+	Thu, 15 Oct 2026 12:40:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=165.173.180.11
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792068012; cv=pass; b=uWKK2ji63jT/OVk3TSHfjDBmRGyjMHVE3V5xo3fFVphB1mAVhuApqtgL030BcE4vEVFto+lLYl//My5kmoYC3rulZ+P8SRYEgRtmRtE/8bNVRkQEOOcAJk7YaEwjr2/I+viJM03bJHx5ZIjEgXZm+ucnyLJhq7ZZaPsln+nk8XI=
+	t=1792068026; cv=pass; b=m3W2kDf6EhqTMP5EN5osjGHryM0KgA0SjhF24kJ3Wgh49zwN+WqaAIPn6a7jKnM+9O/dq5PNrcrsbT+/nYTJ0bQOlrponxtoLB1QWgbYqsL/w78rBtxsRp/22nCBklzl2Qe8v1ZKQF5d+pp/2oKXGE3tyV3NkxD0Y5D+5u/RSac=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792068012; c=relaxed/simple;
-	bh=xKDG9h3H2MbSH2iEn+dK0pAfPuRHgdctbefS9til6rA=;
+	s=arc-20240116; t=1792068026; c=relaxed/simple;
+	bh=yKp8E6nC9w04l/mekaViVdwdgvxUGi+7n4/D2986peA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=cJm8VaZ8nrgDFUUsxDxBhWsanVLENUmSi3hw8EiNwbN3L9K//TTvFRRYl4SS7ugjCXsbw7a7p5CDF8q2qOvct+/5GFtZm4UsRqFN1e5dUeRCCHXF5ytwjgzzOIT163+YvkL0Q6sRzh33hGhfnFttzEKqje0Qyuekm3dHkcEao+k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=GL1gIXDV; arc=pass smtp.client-ip=165.173.182.11
+	 In-Reply-To:To:Cc; b=FmDvAXxHYHjQ2a9jh/nBz72mniRDDX8e8ldOyARUub7zQkPpo6YKeltpK8MxcKHxK65ne40/mFgcVUBoD42lEHI8QP8luC3pec66T8IpDAVFQga1il/ZyMYdSksGv7T+KAzk2tYHNpl/eXc+VPgAxJwKHBKwyGnrRNsfaqTIZsA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=JAhD4p9Y; arc=pass smtp.client-ip=165.173.180.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="GL1gIXDV"
-ARC-Seal: i=1; a=rsa-sha256; t=1792067982; cv=none; 
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="JAhD4p9Y"
+ARC-Seal: i=1; a=rsa-sha256; t=1792067992; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=DyhMRqkKihZ1A/Hb4y+nXQwSWXaopISfNqtV+LgAuERUTiCfmotaMwYAOSUfEHvyN/kfnFsnVcyX8alRtOfzzNapgKDEU8s49JsXipCoJCuJjH0nv6isozUAjScH2u0PtyKNBPwiq8yCbG3/fMAJZc2JvpYlwwNqxurRUGi4wZw=
+	b=i58BRpbrnpqvtcNbC1i7LqNi/QoFYdJ0WQh6PF01d214je4F+9C/2/BUN8QKWvsm9W/MkeH5gWbldx0hGZaXTtPvaQyVPJfR+gyF2RUO/JtSwKyY7gTZ6TmtZwsxQQw9XiqfX/smot5XHnEKMq6E71opb8TT5aNoYnkqeBgvFbk=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1792067982; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=RAurlbvYi1gTpRSGoDogqwNyUvcm3XilGc7GqT+POP0=; 
-	b=lbPLOlyGRWhxfex7N5jKJpq7PNq57D8EN58/OFPNJATcLbiv1isfhAyWgpGqJCOiKb81XLjiAjIeFWt4XTew/Te3TZ0YH0t6vxAnh5nZJGtTXybeAYh+/PYRjcsVFe53S3QyE/hB/w17tQnk4N7s4JLl9BggVX/bcl4zS5FvIM4=
+	t=1792067992; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=TEFbSXr8ncrZ1dmHLc4vUbYu+X3AJk5I+ihgStVMv4U=; 
+	b=fO4YmgEdlNoPzpN7a9wKaleaJhHA6Aih1fE9Ry6vrHIBa7lyX0np4pOVhZwoRUZobpqwWlrrVZqg2maqVNsJwrVYM67SATUuLDv3LKJFDdrBuw6m3lRTez1q2v7my77MOSIPP+Kf/ppauIeKqHIjXFp5ZrWzbq5CzsyvmXa5tVc=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=collabora.com;
 	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
 	dmarc=pass header.from=<daniel.almeida@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1792067982;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1792067992;
 	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
 	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:In-Reply-To:To:To:Cc:Cc:Reply-To;
-	bh=RAurlbvYi1gTpRSGoDogqwNyUvcm3XilGc7GqT+POP0=;
-	b=GL1gIXDVs3w6KtTRdWBxnhpMv+Fz9cg4ttaHi2h04g92IEzmp74vdmVI2re+93Au
-	zLEsu1XDWvfBPX5h+9M8YgAWhSc5lzXgKncKRyEuKtwNcxAcZYD7jEXw808UJp85RfM
-	5oPw9NWFSKFrrYKbhIkpAeSkgWbKTXNuHp0kCrGg=
-Received: by smtp.zohomail.com with SMTPS id 1792067980479943.4807218210801;
-	Thu, 15 Oct 2026 05:39:40 -0700 (PDT)
+	bh=TEFbSXr8ncrZ1dmHLc4vUbYu+X3AJk5I+ihgStVMv4U=;
+	b=JAhD4p9Y01Gs7U+Orx0P6+SoiyDZdeRVi+cmpECX7uHqBzx8A+Elf6unUIU855vr
+	3nO0nMMCIs+ynjNHNMw+xKhZy0Bbp9iUe9R9w30DgLfeJsnFlIdj5IM826RLwGirA4Q
+	n5ayFOXbl9/06RHsVMETx/FTY0+pM40TPobcB/uU=
+Received: by smtp.zohomail.com with SMTPS id 1792067990607904.8150282045541;
+	Thu, 15 Oct 2026 05:39:50 -0700 (PDT)
 From: Daniel Almeida <daniel.almeida@collabora.com>
-Date: Thu, 15 Oct 2026 09:39:08 -0300
-Subject: [PATCH 4/7] rust: io: project primitive accessors directly
+Date: Thu, 15 Oct 2026 09:39:10 -0300
+Subject: [PATCH 6/7] rust: io: register: add `#[ro]` and `#[wo]` attributes
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,7 +47,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261015-io-access-modes-v1-4-93611b84b5e3@collabora.com>
+Message-Id: <20261015-io-access-modes-v1-6-93611b84b5e3@collabora.com>
 References: <20261015-io-access-modes-v1-0-93611b84b5e3@collabora.com>
 In-Reply-To: <20261015-io-access-modes-v1-0-93611b84b5e3@collabora.com>
 To: Danilo Krummrich <dakr@kernel.org>, 
@@ -70,181 +70,190 @@ Cc: driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org,
 X-Mailer: b4 0.15.2
 X-ZohoMailClient: External
 
-The primitive accessors, `read8` to `write64` and their `try_` variants,
-pass their offset as an `IoLoc` to the generic `read`, `write`,
-`try_read` and `try_write`, which project the view to that location and
-then call `read_val` or `write_val`. Commit 147b41ba23d6 ("rust: io: use
-generic read/write accessors for primitive accesses") made them do so to
-reduce the number of unsafe blocks.
+`register!` gives every register a location with the `ReadWrite` access
+mode, so any register can be read, written and updated, including the
+ones the hardware defines as read-only or write-only.
 
-Since commit e0454ec1220c ("rust: io: use view types instead of
-addresses for `Io`"), projecting to an offset is safe. Thus, have the
-primitive accessors project with `io_view` and `io_view_assert` and call
-`read_val` or `write_val` themselves. The bounds checks are the same.
+Add the `#[ro]` and `#[wo]` attributes, which make the macro use the
+`ReadOnly` or `WriteOnly` mode instead: in the register's `OffsetLoc`
+for fixed registers, and as `RegisterArray::Access` for arrays. Reading
+a write-only register, or writing or updating a read-only one, then does
+not compile. An alias does not inherit the mode of the register it
+aliases. Add an example to the `register!` documentation.
 
-This prepares for access modes on I/O locations, added in a following
-patch, which make the bounds of the generic methods depend on the mode
-of the location. The primitive accessors keep their current bounds.
-
-No functional change intended.
+The tyr driver uses the attributes in a following patch.
 
 Signed-off-by: Daniel Almeida <daniel.almeida@collabora.com>
 ---
- rust/kernel/io.rs | 36 ++++++++++++++++++++----------------
- 1 file changed, 20 insertions(+), 16 deletions(-)
+ rust/kernel/io/register.rs | 53 ++++++++++++++++++++++++++++++++++++++++++++++
+ rust/macros/io/register.rs | 35 ++++++++++++++++++++++++------
+ 2 files changed, 82 insertions(+), 6 deletions(-)
 
-diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-index 03af0590b0f4..4be8c761c556 100644
---- a/rust/kernel/io.rs
-+++ b/rust/kernel/io.rs
-@@ -760,7 +760,7 @@ fn try_read8(self, offset: usize) -> Result<u8>
-         usize: IoLoc<Self::Target, u8>,
-         Self::Backend: IoReadable<u8>,
-     {
--        self.try_read(offset)
-+        Ok(io_view::<_, u8>(self, offset)?.read_val())
+diff --git a/rust/kernel/io/register.rs b/rust/kernel/io/register.rs
+index 9218dc66017b..5c0188947879 100644
+--- a/rust/kernel/io/register.rs
++++ b/rust/kernel/io/register.rs
+@@ -147,6 +147,13 @@ impl<Base: ?Sized, T> OffsetLoc<Base, T> {
+     pub const fn new(offset: usize) -> Self {
+         Self(offset, PhantomData)
      }
++}
++
++impl<Base: ?Sized, T, A> OffsetLoc<Base, T, A> {
++    #[inline]
++    pub const fn with_access(offset: usize) -> Self {
++        Self(offset, PhantomData)
++    }
  
-     /// Fallible 16-bit read with runtime bounds check.
-@@ -770,7 +770,7 @@ fn try_read16(self, offset: usize) -> Result<u16>
-         usize: IoLoc<Self::Target, u16>,
-         Self::Backend: IoReadable<u16>,
-     {
--        self.try_read(offset)
-+        Ok(io_view::<_, u16>(self, offset)?.read_val())
-     }
+     #[inline]
+     pub const fn const_offset(self) -> usize {
+@@ -596,6 +603,52 @@ pub const fn element_alias_offset<Base: ?Sized, Alias: RegisterArray<Base = Base
+ /// io_project!(io, build: CPU0).write_reg(CPU_CTL::zeroed());
+ /// # }
+ /// ```
++///
++/// ## Access modes
++///
++/// Registers are read-write unless declared with the `#[ro]` (read-only) or `#[wo]` (write-only)
++/// attribute. Reading a write-only register, or writing or updating a read-only one, does not
++/// compile:
++///
++/// ```no_run
++/// use kernel::io::{
++///     register,
++///     Io,
++///     Region,
++/// };
++/// # use kernel::io::Mmio;
++///
++/// register! {
++///     base: Region<0x1000>;
++///
++///     #[ro]
++///     pub R1(u32) @ 0x0 {
++///         31:0 value;
++///     }
++///
++///     #[wo]
++///     pub R2(u32) @ 0x4 {
++///         31:0 value;
++///     }
++///
++///     #[ro]
++///     pub R3: u8 @ 0x8;
++/// }
++///
++/// # fn test(io: Mmio<'_, Region<0x1000>>) {
++/// let r1 = io.read(R1);
++/// let r3 = io.read(R3);
++/// io.write_reg(R2::zeroed());
++///
++/// // Neither of these compiles.
++/// // io.write_reg(r1);
++/// // io.read(R2);
++/// # }
++/// ```
++///
++/// The mode applies to accesses through the register's location only. An alias is read-write
++/// unless declared `#[ro]` or `#[wo]` itself, and the register's offset can still be accessed
++/// directly through the I/O region.
+ #[macro_export]
+ macro_rules! register {
+     ($($tt:tt)*) => {
+diff --git a/rust/macros/io/register.rs b/rust/macros/io/register.rs
+index 2d92c7f41447..171a4c1f96b4 100644
+--- a/rust/macros/io/register.rs
++++ b/rust/macros/io/register.rs
+@@ -63,6 +63,7 @@ struct Reg {
+     attrs: Vec<Attribute>,
+     vis: Visibility,
+     name: Ident,
++    access: Type,
+     unique: bool,
+     ty: Type,
+     array: Option<RegArrayDef>,
+@@ -72,7 +73,26 @@ struct Reg {
  
-     /// Fallible 32-bit read with runtime bounds check.
-@@ -780,7 +780,7 @@ fn try_read32(self, offset: usize) -> Result<u32>
-         usize: IoLoc<Self::Target, u32>,
-         Self::Backend: IoReadable<u32>,
-     {
--        self.try_read(offset)
-+        Ok(io_view::<_, u32>(self, offset)?.read_val())
-     }
+ impl Parse for Reg {
+     fn parse(input: syn::parse::ParseStream<'_>) -> Result<Self> {
+-        let attrs = input.call(Attribute::parse_outer)?;
++        let mut attrs = input.call(Attribute::parse_outer)?;
++        let modes = attrs
++            .extract_if(.., |attr| {
++                attr.path().is_ident("ro") || attr.path().is_ident("wo")
++            })
++            .collect::<Vec<_>>();
++        if let Some(attr) = modes.get(1) {
++            Err(Error::new_spanned(
++                attr,
++                "only one of `#[ro]` and `#[wo]` can be specified",
++            ))?
++        }
++        let access = match modes.first() {
++            None => parse_quote!(::kernel::io::access::ReadWrite),
++            Some(attr) if attr.path().is_ident("ro") => {
++                parse_quote!(::kernel::io::access::ReadOnly)
++            }
++            Some(_) => parse_quote!(::kernel::io::access::WriteOnly),
++        };
++
+         let vis = input.parse()?;
+         let name = input.parse()?;
  
-     /// Fallible 64-bit read with runtime bounds check.
-@@ -790,7 +790,7 @@ fn try_read64(self, offset: usize) -> Result<u64>
-         usize: IoLoc<Self::Target, u64>,
-         Self::Backend: IoReadable<u64>,
-     {
--        self.try_read(offset)
-+        Ok(io_view::<_, u64>(self, offset)?.read_val())
-     }
+@@ -161,6 +181,7 @@ fn parse(input: syn::parse::ParseStream<'_>) -> Result<Self> {
+             attrs,
+             vis,
+             name,
++            access,
+             unique,
+             ty,
+             array,
+@@ -205,6 +226,7 @@ pub(crate) fn register(def: RegDef) -> Result<TokenStream> {
+             attrs,
+             vis,
+             name,
++            access,
+             unique,
+             ty,
+             array,
+@@ -220,7 +242,7 @@ pub(crate) fn register(def: RegDef) -> Result<TokenStream> {
+             RegOffset::Fixed { offset } => quote!(#offset),
+             RegOffset::Alias { alias } => {
+                 quote_spanned!(alias.span().resolved_at(span) =>
+-                    ::kernel::io::register::OffsetLoc::<#base, _>::const_offset(#alias)
++                    ::kernel::io::register::OffsetLoc::<#base, _, _>::const_offset(#alias)
+                 )
+             }
+             RegOffset::ElementAlias { alias, idx } => {
+@@ -246,15 +268,16 @@ pub(crate) fn register(def: RegDef) -> Result<TokenStream> {
+                 if unique {
+                     outputs.extend(quote!(
+                         impl ::kernel::io::register::FixedIoLoc<#base> for #ty {
+-                            type Location = ::kernel::io::register::OffsetLoc<#base, #ty>;
++                            type Location = ::kernel::io::register::OffsetLoc<#base, #ty, #access>;
+                             const LOCATION: Self::Location = #name;
+                         }
+                     ))
+                 }
  
-     /// Fallible 8-bit write with runtime bounds check.
-@@ -800,7 +800,8 @@ fn try_write8(self, value: u8, offset: usize) -> Result
-         usize: IoLoc<Self::Target, u8>,
-         Self::Backend: IoWritable<u8>,
-     {
--        self.try_write(offset, value)
-+        io_view::<_, u8>(self, offset)?.write_val(value);
-+        Ok(())
-     }
+                 outputs.extend(quote_spanned!(span =>
+-                    #(#attrs)* #vis const #name: ::kernel::io::register::OffsetLoc<#base, #ty> =
+-                        ::kernel::io::register::OffsetLoc::new(#offset);
++                    #(#attrs)* #vis const #name:
++                        ::kernel::io::register::OffsetLoc<#base, #ty, #access> =
++                        ::kernel::io::register::OffsetLoc::with_access(#offset);
+                 ));
+             }
  
-     /// Fallible 16-bit write with runtime bounds check.
-@@ -810,7 +811,8 @@ fn try_write16(self, value: u16, offset: usize) -> Result
-         usize: IoLoc<Self::Target, u16>,
-         Self::Backend: IoWritable<u16>,
-     {
--        self.try_write(offset, value)
-+        io_view::<_, u16>(self, offset)?.write_val(value);
-+        Ok(())
-     }
+@@ -283,7 +306,7 @@ impl ::kernel::io::register::Array for #name {}
  
-     /// Fallible 32-bit write with runtime bounds check.
-@@ -820,7 +822,8 @@ fn try_write32(self, value: u32, offset: usize) -> Result
-         usize: IoLoc<Self::Target, u32>,
-         Self::Backend: IoWritable<u32>,
-     {
--        self.try_write(offset, value)
-+        io_view::<_, u32>(self, offset)?.write_val(value);
-+        Ok(())
-     }
- 
-     /// Fallible 64-bit write with runtime bounds check.
-@@ -830,7 +833,8 @@ fn try_write64(self, value: u64, offset: usize) -> Result
-         usize: IoLoc<Self::Target, u64>,
-         Self::Backend: IoWritable<u64>,
-     {
--        self.try_write(offset, value)
-+        io_view::<_, u64>(self, offset)?.write_val(value);
-+        Ok(())
-     }
- 
-     /// Infallible 8-bit read with compile-time bounds check.
-@@ -842,7 +846,7 @@ fn read8(self, offset: usize) -> u8
-         usize: IoLoc<Self::Target, u8>,
-         Self::Backend: IoReadable<u8>,
-     {
--        self.read(offset)
-+        io_view_assert::<_, u8>(self, offset).read_val()
-     }
- 
-     /// Infallible 16-bit read with compile-time bounds check.
-@@ -854,7 +858,7 @@ fn read16(self, offset: usize) -> u16
-         usize: IoLoc<Self::Target, u16>,
-         Self::Backend: IoReadable<u16>,
-     {
--        self.read(offset)
-+        io_view_assert::<_, u16>(self, offset).read_val()
-     }
- 
-     /// Infallible 32-bit read with compile-time bounds check.
-@@ -866,7 +870,7 @@ fn read32(self, offset: usize) -> u32
-         usize: IoLoc<Self::Target, u32>,
-         Self::Backend: IoReadable<u32>,
-     {
--        self.read(offset)
-+        io_view_assert::<_, u32>(self, offset).read_val()
-     }
- 
-     /// Infallible 64-bit read with compile-time bounds check.
-@@ -878,7 +882,7 @@ fn read64(self, offset: usize) -> u64
-         usize: IoLoc<Self::Target, u64>,
-         Self::Backend: IoReadable<u64>,
-     {
--        self.read(offset)
-+        io_view_assert::<_, u64>(self, offset).read_val()
-     }
- 
-     /// Infallible 8-bit write with compile-time bounds check.
-@@ -890,7 +894,7 @@ fn write8(self, value: u8, offset: usize)
-         usize: IoLoc<Self::Target, u8>,
-         Self::Backend: IoWritable<u8>,
-     {
--        self.write(offset, value)
-+        io_view_assert::<_, u8>(self, offset).write_val(value)
-     }
- 
-     /// Infallible 16-bit write with compile-time bounds check.
-@@ -902,7 +906,7 @@ fn write16(self, value: u16, offset: usize)
-         usize: IoLoc<Self::Target, u16>,
-         Self::Backend: IoWritable<u16>,
-     {
--        self.write(offset, value)
-+        io_view_assert::<_, u16>(self, offset).write_val(value)
-     }
- 
-     /// Infallible 32-bit write with compile-time bounds check.
-@@ -914,7 +918,7 @@ fn write32(self, value: u32, offset: usize)
-         usize: IoLoc<Self::Target, u32>,
-         Self::Backend: IoWritable<u32>,
-     {
--        self.write(offset, value)
-+        io_view_assert::<_, u32>(self, offset).write_val(value)
-     }
- 
-     /// Infallible 64-bit write with compile-time bounds check.
-@@ -926,7 +930,7 @@ fn write64(self, value: u64, offset: usize)
-         usize: IoLoc<Self::Target, u64>,
-         Self::Backend: IoWritable<u64>,
-     {
--        self.write(offset, value)
-+        io_view_assert::<_, u64>(self, offset).write_val(value)
-     }
- 
-     /// Generic fallible read with runtime bounds check.
+                     impl ::kernel::io::register::RegisterArray for #name {
+                         type Base = #base;
+-                        type Access = ::kernel::io::access::ReadWrite;
++                        type Access = #access;
+                         const OFFSET: usize = #offset;
+                         const SIZE: usize = #size;
+                         const STRIDE: usize = #stride;
 
 -- 
 2.56.0
