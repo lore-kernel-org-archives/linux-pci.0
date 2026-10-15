@@ -1,49 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37F10556B8A;
-	Thu, 15 Oct 2026 20:45:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA38F3E0C7B;
+	Thu, 15 Oct 2026 20:53:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792097154; cv=none; b=czdyZyvcFV3mj7/CZrtb41HL6xx26T9S4Wrsz54htRZxDtnLktfeIR+CqaS5eMAajxRjrmMWpfSS07cGYUBtW8N2AsEDVm1JV3MG0ec5OiPIVCxdzbEYn7ae7AUvbGvUlU8QXbl6pl/dq+XBM4SgVt7g/NzrixgtL/fDbftk7+U=
+	t=1792097602; cv=none; b=VKNI3FXMAigYtNTjJEVPqZ4A+XGO/MFcRnDwOF8I5euG9hrcV1mLsZNNc35vG7fo2En7YUXCtkJWoby272j7JWHYRgfNzX5ZQHUk1B0/8l0nIKAN/7YF35jd2cMUDU9J2vR3zs1ZnkZw2CGv75XZVzLn9Im0x9SRozHBhRkol6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792097154; c=relaxed/simple;
-	bh=QGTlqUDYf6+dQWXvdOmPKU6UZQPh6NYY+Iaw7R+EOWA=;
+	s=arc-20240116; t=1792097602; c=relaxed/simple;
+	bh=YfQQPy5+MOxkqE+FfiEMBzPHvjFlAZtpQKu1vGl9G4Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=u8bS1IAQJvYx36640OLK/YgDNh7+yFaqtUQ1yVeOM4bMwTzN+gU9JKVIsr5gW+lu555ASAL1hEUr0Su/HbRBhuqY5v9EKJ87lE81M/YensF6tsGxbU6qrNdwP5m3i/Qh+JROwkAe9nc2Ka3fj612PX9HRE5CeKu/I20qXSnN4mg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ax2S36Dh; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=FjLqSZ9eE74Aw9rN4eEZrUZsXtp8TJmmA3bDtCYExAPZF7CQJT27b3yHPtpwcMjkL/zU7Bzwboe0Jyq9a1f7ca1mr7Bj7FvedxK1VojQCLVnQhAnfdWrvBJbqpqFE6MryRmh7AgeFkJGctgmAATaP0pLRYCeujN8ieu5HNm9TX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MUNo+W4x; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ax2S36Dh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B655F1F000C4;
-	Thu, 15 Oct 2026 20:45:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MUNo+W4x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4330D1F000C4;
+	Thu, 15 Oct 2026 20:53:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792097150;
-	bh=JI8cos0DeBZwqgU3xgKQTheXjtcLPhmJEiAcd1ht54c=;
+	s=k20260515; t=1792097599;
+	bh=DgJhMXN5DzbvRdGl3zbFIawwZe9+pLSMJLF/xU/9aBg=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=ax2S36DhvUA8wOkFm9CYDx04QXNVvIwoMel2dK5m9srQ0Ek8mVfYd92X8iS+rCPt9
-	 Tc7lhO6qisGJd0cSRW2jNB3X2yHspyE4+FLLQ4ZQ2Pfbl4nmC7ru2N81vUqQ/7FKeB
-	 KMsyTOFmCbu2jdTAlKAvdzmbCyMvx0aIyMKPv8q4lHGJnBXQtW9vot86pXNrw5iaER
-	 3LCEJKhgjMdQX5O6mnwIZNZq0b7nx5Bi9DNgq8BQycHtadTBGsjXXznnBZU6lK475F
-	 nf1V+cKuxVobIcf1jZr4ZzL72H5GxQ4x0Hwu/+s3nXi3s9DhBC+MSCUfMAWGSp/N08
-	 15rPgAFj5j2FA==
-Date: Thu, 15 Oct 2026 15:45:49 -0500
+	b=MUNo+W4x9ntN4iUT6HDl5GBQzZEXYNePIVqHdk32XICteBVzAi4WwdC+NTmsNcLau
+	 3L2GEx45Eh7E5C3hk3zgXZ9AjIMxzaP/5+T+N+EZFm/bUeXbusRHf2PertFSbt94vY
+	 7lNa+tv+uunC4wNIywkh1UCntx9npQrYKi8XCNsnlq4YUUYj35lZ4Rs6kEV+g328+b
+	 oiR+9Hef1WOr61nzp2YZP9elPnCUKiBF8Ih1ZWja5Vek8QN+Ut1cr8IaNV47Dbu2Ut
+	 WL/eILLrK51q2N495yMNzyTLkOz3R/2ykxJ1eQlCyGneCmo2BzrGLysq02J6+I/lGU
+	 HkxQ92LTt2hUQ==
+Date: Thu, 15 Oct 2026 15:53:18 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Florian Fainelli <florian.fainelli@broadcom.com>
-Cc: Semih Baskan <strst.gs@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, Rosen Penev <rosenp@gmail.com>,
-	Rani Hod <rani.hod@gmail.com>,
-	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v4 0/2] PCI: iproc-bcma: Use EROM instead of devicetree
-Message-ID: <20261015204549.GA1796999@bhelgaas>
+To: Keng-Yu Lin <keng-yu.lin@hpe.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Matthew Ruffell <matthew.ruffell@canonical.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, andy.liang@hpe.com, david.chang@hpe.com,
+	s.collins@hpe.com, jenifer.golmitz@hpe.com,
+	pravallika.kamma@hpe.com, zhen-dong.lai@hpe.com,
+	zachary.pabor-ext@hpe.com, acelan.kao@canonical.com,
+	michael.reed@canonical.com, desnesn@redhat.com, dlee@hpe.com
+Subject: Re: [PATCH v3] PCI/PM: Restore BARs after powering up during
+ enumeration
+Message-ID: <20261015205318.GA1799241@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,71 +50,97 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f7cf09c5-dba1-4501-b93e-ce4ad555edeb@broadcom.com>
+In-Reply-To: <20261015020811.1132314-1-keng-yu.lin@hpe.com>
 
-On Thu, Oct 15, 2026 at 12:10:22PM -0700, Florian Fainelli wrote:
-> On 10/15/26 11:51, Semih Baskan wrote:
-> > > Humm, this is not materially different for me before/after applying tihs
-> > > patch and unfortunately but here is what I am getting with these two
-> > > patches applied on top of Linus' master at
-> > > 0fcb05b72344f40806cbe810de8872f1698bf053:
-> > [...]
-> > > Unhandled fault: external abort on non-linefetch (0x1008) at 0xc896df40
-> > [...]
-> > > r3 : c896df40  r2 : 0000ffff  r1 : 00000f40  r0 : c1ce1a00
-> > [...]
-> > >    pci_host_probe from iproc_pcie_setup+0x8a0/0xd94
-> > >    iproc_pcie_setup from iproc_pltfm_pcie_probe+0x10c/0x1d4
-> > 
-> > The series only changes the pcie-iproc-bcma path, and this kernel probes
-> > the controller with pcie-iproc-platform, so the patches do not run here.
+On Thu, Oct 15, 2026 at 10:08:11AM +0800, Keng-Yu Lin wrote:
+> Commit 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when
+> initializing") added pci_pm_power_up_and_verify_state() to pci_pm_init().
+> The helper ignores pci_power_up()'s return value indicating that BARs
+> need restoring. Its resume callers restore saved configuration
+> afterwards; pci_pm_init() does not.
 > 
-> Yes, clearly not enough coffee, thank you Semih.
+> D3hot-to-D0 may reset a device and lose its BARs (PCI PM 1.2, sec 5.4.1).
+> After enumeration powers it up, pci_enable_device() reads D0 and skips
+> the full power-up path. Previously, a device still in D3hot at enable
+> time took that path, including BAR restoration.
 > 
-> > I think the abort is the read of APB_ERR_EN at offset 0xf40 (r1). I
-> > measured the same on an RT-N18U (core revision 0x01) in September: the
-> > platform-only kernel does not come up, and with this one line it boots
-> > and enumerates the BCM4360 [1]:
-> > 
-> > --- a/drivers/pci/controller/pcie-iproc.c
-> > +++ b/drivers/pci/controller/pcie-iproc.c
-> > @@ -1388,7 +1388,7 @@
-> >           break;
-> >       case IPROC_PCIE_PAXB:
-> >           regs = iproc_pcie_reg_paxb;
-> > -        pcie->has_apb_err_disable = true;
-> > +        pcie->has_apb_err_disable = false;
-> >           if (pcie->need_ob_cfg) {
-> >               pcie->ob_map = paxb_ob_map;
-> >               pcie->ob.nr_windows = ARRAY_SIZE(paxb_ob_map);
+> On AMD Venice SP7, two AMD xHCI controllers [1022:17d2] are in runtime
+> D3hot with No_Soft_Reset clear before kdump. Diagnostic reads on
+> v7.3-rc6-37 show the following for 0000:01:00.4 in the crash kernel:
 > 
-> Yes that works for me, and I was able to establish the last working baseline
-> was v7.0 which did not include 76701239797698b620f2b7ec713fe08ef50ee664
-> ("ARM: dts: BCM5301X: Describe PCIe controllers fully"), whereas v7.1 and
-> onwards crashes unless your patch is applied.
+>                                    PMCSR      BAR0
+>   before the platform power call   0003       f4100004
+>   after the platform power call    0003       f4100004
+>   after native D0 power-up         0000       00000004
+> 
+> The upper BAR DWORD stays zero. pci_power_up() returns 1, but the BAR
+> address remains zero while dev->resource[0] still contains 0xf4100000.
+> Without BAR restoration, the crash kernel hangs during boot. The
+> last console output includes:
+> 
+>   pci 0000:01:00.4: enabling device (0000 -> 0002)
+> 
+> Restoring both controllers' BARs gives matching readbacks and allows
+> kdump to save a vmcore and reboot. An AMD Turin xHCI [1022:1557] shows
+> the same BAR loss; restoring its BAR also allows kdump to complete.
+> 
+> Read the initial power state first. Otherwise, pci_power_up() may
+> request a BAR restore based on a cached PCI_UNKNOWN state, even
+> when the device is already in D0.
+> 
+> For devices already in D0, only synchronize the platform state so
+> that ACPI calls such as _REG still run. For other states, use
+> pci_set_full_power_state() to power up the device and restore BARs
+> when needed.
+> 
+> Suggested-by: Mario Limonciello <mario.limonciello@amd.com>
+> Suggested-by: Rafael J. Wysocki <rafael@kernel.org>
+> Fixes: 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when initializing")
+> Link: https://lore.kernel.org/r/CAJZ5v0ie2AvCbdv8-zkpYzHLcTwUPUj+=WWOQjDAPmSepSAQPg@mail.gmail.com/
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Keng-Yu Lin <keng-yu.lin@hpe.com>
 
-I assume this means
-https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=controller/iproc-bcma&id=9850907ee1dd4376c09c4129e0adbe3b39d191b7
-is ok after all?
+Applied to pci/pm for v7.4, thanks!
 
-I do think it's unexpected that the kernel would panic even if the
-correct driver hasn't been loaded.
-
-If we don't have the right driver for the PCI controller, ideally the
-wrong driver's .probe() method wouldn't be called at all, and if it
-*is* called, its .probe() should fail gracefully.
-
-The kernel shouldn't panic until it fails to find a root filesystem.
-
-> Also, the good thing is that my local test bed has been resurrected and will
-> be more regularly testing now.
+> ---
 > 
-> > 
-> > [1] https://lore.kernel.org/all/CAAsRjRnV-RTddO6h2XCUz2N5pB0pS8i_-_2XRcD=WOTA7AAFZQ@mail.gmail.com/
-> > 
-> > Best regards,
-> > Semih
+> Changes in v3:
+> - Use Rafael's sequence: sync only the platform state for devices
+>   already in D0, and use pci_set_full_power_state() otherwise.
+> - The D0 path no longer runs the full helper's ASPM update.
 > 
+> Tested with diagnostic prints on AMD Venice SP7 and Turin. Normal
+> boots made no BAR writes from this path. The crash kernels restored
+> only the cleared xHCI BARs (two on Venice, one on Turin), with matching
+> readbacks. Both systems saved a vmcore and rebooted.
 > 
+> v2: https://lore.kernel.org/r/20261012104645.975190-1-keng-yu.lin@hpe.com/
+> 
+>  drivers/pci/pci.c | 10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8cc6a89130b5..895969fe4520 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3255,7 +3255,15 @@ void pci_pm_init(struct pci_dev *dev)
+>  	}
+>  
+>  poweron:
+> -	pci_pm_power_up_and_verify_state(dev);
+> +	pci_update_current_state(dev, PCI_UNKNOWN);
+> +	if (dev->current_state == PCI_D0) {
+> +		/* No need to do a full power-up, just sync-up the platform state. */
+> +		platform_pci_set_power_state(dev, PCI_D0);
+> +	} else {
+> +		/* Power up the device and restore BARs if necessary. */
+> +		pci_set_full_power_state(dev, false);
+> +	}
+> +	pci_update_current_state(dev, PCI_D0);
+>  	pm_runtime_forbid(&dev->dev);
+>  
+>  	/*
+> 
+> base-commit: 7b63ef2d55f24519e7e9e5f4d15dbea03f126e40
 > -- 
-> Florian
+> 2.43.0
