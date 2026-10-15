@@ -1,39 +1,43 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 12F7E53ECF7;
-	Thu, 15 Oct 2026 15:35:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5477B3AB27B;
+	Thu, 15 Oct 2026 16:11:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792078519; cv=none; b=LnzvsZQE5e2jJowCfXn2dZL6HAekuHXI1/14e5QH3qibyDOTGwqieyVJhQBw3uN1bbXUFn+gxWB4HpgXDoJIMNtgVxxkdU0/rXdcinkL6Ow9FVzNUHwuwPvRlCtwcLdTbRmzZgHGSK/2+a6f3TJM0mzvOowDTTnNqVBd9cz8G4A=
+	t=1792080715; cv=none; b=B3MhDQqiXMq31aarESQBmTxRK9uXzMPcp98TRS9e7fzdJJWI3Ss/FWGUr8K3hR4gj9Q9+6IPd0K3UdEieZMOHm/fGwnzK62b55OD9k0mSPWffV9jdlZ44jd5v2X4PtvvWb/rFRzU9MhBDfni5DVnYha2ZB2C6iAjeRRQstB6+A4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792078519; c=relaxed/simple;
-	bh=aRv5lp/2W6G64TtRKpcOOro7Y5+YvO7ASgp7/tcHRQQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=E/ase5nWBSS8dyE4gcQ14WuuLDQmzsl4Hd1ldw/3PFEhhxz96jsPkymx3oOfKToFHUXyyunPw8IKXUQMmM7BWFjIH3ULAIOF+K2mBjx2FKQvvpE701W7VOFR++Zkeepb5QxYyWD6LtlK6/hyrEYrEgv+1JyufbNnICy0uBoZAm4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=mVGA2nNe; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1792080715; c=relaxed/simple;
+	bh=SAXqArEKNIwn4SpiJD1Tvi8fx9gMwRSxuDcz94KjoiU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=YG7hu72UIBDkWgq5P2PBcsoEoXlcIpffFWSx3k35VbdtD65diAj9e4P/kfNLk4HSjaxIQldDIgp7ZjDEO2R0HgNhENLGcTXCcpa6SqsSFBSxSz0WDOH3gt/mQJr3N9rGCczlDRqGfqxSQEgvHNFzQj6XTtMe9vbfedsUVI3iXUQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UpsT6wAR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="mVGA2nNe"
-Received: by linux.microsoft.com (Postfix, from userid 1127)
-	id 5F69B20B7166; Thu, 15 Oct 2026 08:35:03 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 5F69B20B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1792078503;
-	bh=dNgC2fFe8I25KQ/wSozZG2LGP7y+X3JFgFWpP03891s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mVGA2nNevaEowW9MzZEDHeumderKWg5yN3HNuE/TLnnJM8fwtV+RQQty218X8UmwN
-	 PFH2+STPY7Co0nqXLNqAnIASPatKs6JxvxqtTktVcd+kzFU9iLqzcagHg8/SRYiVsy
-	 nMVuKIR5hewZgC9KDFnGZJdXb1vBMoUD62QFW6ig=
-Date: Thu, 15 Oct 2026 08:35:03 -0700
-From: Saurabh Singh Sengar <ssengar@linux.microsoft.com>
-To: mhklinux@outlook.com
-Cc: rafael@kernel.org, lenb@kernel.org, bhelgaas@google.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org
-Subject: Re: [PATCH 1/1] PCI/ACPI: Remove Hyper-V special case in
- pcibios_root_bridge_prepare()
-Message-ID: <atDyp8zWELnsyLE+@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
-References: <20260929181056.4746-1-mhklinux@outlook.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UpsT6wAR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B3F81F000C8;
+	Thu, 15 Oct 2026 16:11:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792080704;
+	bh=IQdbaoSFRXekS2+4DLUGE6FHzrR2CGuPVAwdUkAu3YQ=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=UpsT6wARceG13wnq0H7X9ChGl1BOrF8IHp8eLtETtcIBgpsBcnnSz629dxAaDE7DR
+	 h++uWbxieyBAQ+bsTZvr5th92BnUf+g9jlALyrQL8Rg8uzhsVzDFr4gOH87j1Gf2aK
+	 Ltte609X2BGeKajTqPVAjLiRoanSvhcj9qHYps9/UoPSzBPuMipPjeH+xQX96pLwmc
+	 li4uVUkziHXYTAXaV/lq7g77+lRE+tnpkzYM1vi7haoJSytEBwEtJX2BLPvXFUi9GK
+	 ODleAqm8HMfGSUC6nWYbeEMuCr2gvU4vLX17mrilfkLr4bxrViD8nWQzYrpQm8y2OF
+	 Xb1dvh+Yfcz+Q==
+Date: Thu, 15 Oct 2026 11:11:43 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexander Gruhlke <gruhlke@mailbox.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Alex Williamson <alex@shazbot.org>,
+	Hui Wang <hui.wang@canonical.com>, Linux-Fan <info@masysma.net>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	regressions@lists.linux.dev
+Subject: Re: [PATCH v3 0/2] PCI: Wait after FLR for devices that don't honor
+ Immediate Readiness
+Message-ID: <20261015161143.GA1772020@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,58 +46,62 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260929181056.4746-1-mhklinux@outlook.com>
+In-Reply-To: <20261012222331.GA1411603@bhelgaas>
 
-On Tue, Sep 29, 2026 at 11:10:56AM -0700, Michael Kelley wrote:
-> pcibios_root_bridge_prepare() currently has code to handle Hyper-V
-> guest root bridges with the sysdata parent field set to NULL. While
-> this special case existed when commit 7d40c0f70d92 ("arm64: PCI:
-> Support root bridge preparation for Hyper-V") was accepted, more
-> recent commit 8d21732475c6 ("PCI: hv: Propagate coherence from VMbus
-> device to PCI device") always sets the sysdata parent field to a
-> non-NULL value.
+On Mon, Oct 12, 2026 at 05:23:31PM -0500, Bjorn Helgaas wrote:
+> On Sun, Oct 11, 2026 at 09:01:43PM +0200, Alexander Gruhlke wrote:
+> > Since v7.2, VFIO passthrough of a Samsung 990 PRO NVMe [144d:a80c] fails
+> > on the second VM start, and the device is inaccessible until reboot.  The
+> > drive advertises Immediate Readiness but returns ~0 for up to 7 ms after
+> > FLR, so since 10baa9b4df40 ("PCI: Drop unnecessary retries when restoring
+> > BARs") the config restore after FLR is lost.
+> > 
+> > Patch 1 ignores Immediate Readiness on that drive.  Firmware 8B2QJXD7
+> > fixes it, but the Revision ID and Subsystem ID don't change, so the
+> > quirk can't tell firmware versions apart.  A 990 EVO Plus [144d:a80d]
+> > reports the same errors [1], but it isn't confirmed to advertise
+> > Immediate Readiness, so it's not included.
+> > 
+> > Patch 2 is independent and keeps pci_dev_wait() from treating ~0 as
+> > ready with RRS Software Visibility, which also affects the Intel
+> > [8086:0a54] in the open d591f6804e7e regression.  Hui, Linux-Fan: testing
+> > patch 2 on that drive would be appreciated.
+> > 
+> > Tested on v7.2.9 (Ryzen 9 7950X, X670E): with patch 1 and drive firmware
+> > 1B2QJXD7, three VM starts in a row work, and every FLR reports "ready
+> > 0ms after FLR".  With firmware 8B2QJXD7, plain v7.2.9 works.
+> > 
+> > Patch 2 is only tested for regressions, as the drive no longer shows the
+> > problem: below a Root Port with RRS SV, three VM starts work and every
+> > FLR reports "ready 0ms after FLR".  The VF path is untested with the
+> > patch, but on another machine, an X550 VF below a Root Port with RRS SV
+> > reads ~0 from the Vendor ID and valid data from the Command register
+> > 100 ms after FLR.  v1's variant, which read the Command register, was
+> > tested against the old firmware, and the drive's Vendor ID read ~0
+> > while it wasn't ready.  Applies to pci/next.
+> > 
+> > Changes since v2:
+> > - Patch 1: add Lukas's Reviewed-by
+> > - Patch 2: read the Command register on VFs whose Vendor ID reads ~0
+> >   instead of treating them as ready (Lukas, sashiko)
+> > 
+> > v2: https://lore.kernel.org/r/20261011163249.18479-1-gruhlke@mailbox.org
+> > v1: https://lore.kernel.org/r/20261010160529.27974-1-gruhlke@mailbox.org
+> > 
+> > [1] https://bbs.archlinux.org/viewtopic.php?id=314833
+> > 
+> > Alexander Gruhlke (2):
+> >   PCI: Ignore Immediate Readiness on Samsung 990 PRO NVMe
+> >   PCI: Don't treat ~0 as ready in pci_dev_wait() with RRS SV
+> > 
+> >  drivers/pci/pci.c    | 14 ++++++++++----
+> >  drivers/pci/quirks.c | 11 +++++++++++
+> >  2 files changed, 21 insertions(+), 4 deletions(-)
 > 
-> No harm is caused by leaving the special case in place, even
-> though it is no longer needed. But in the interest of overall
-> code cleanliness, remove it.
-> 
-> Signed-off-by: Michael Kelley <mhklinux@outlook.com>
-> ---
-> This patch does not just do a revert of 7d40c0f70d92 because
-> an intervening commit moved the code to a new source code
-> file.
-> 
->  drivers/pci/pci-acpi.c | 12 +-----------
->  1 file changed, 1 insertion(+), 11 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index 42d545edd7fa..452a90317c58 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -1572,17 +1572,7 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->  		return 0;
->  
->  	cfg = bridge->bus->sysdata;
-> -
-> -	/*
-> -	 * On Hyper-V there is no corresponding ACPI device for a root bridge,
-> -	 * therefore ->parent is set as NULL by the driver. And set 'adev' as
-> -	 * NULL in this case because there is no proper ACPI device.
-> -	 */
-> -	if (!cfg->parent)
-> -		adev = NULL;
-> -	else
-> -		adev = to_acpi_device(cfg->parent);
-> -
-> +	adev = to_acpi_device(cfg->parent);
->  	bus_dev = &bridge->bus->dev;
->  
->  	ACPI_COMPANION_SET(&bridge->dev, adev);
-> -- 
-> 2.25.1
->
+> Applied to pci/reset for v7.4, thank you!
 
-I was trying to find a case where any new driver would have started using the NULL case
-but couldn't find any.
+On second thought, I think at least the first should be in v7.3
+because it fixes a v7.2 regression.  The other regression dates to
+v6.12, but it seems worth keeping the fixes together.
 
-Reviewed-by: Saurabh Sengar <ssengar@linux.microsoft.com> 
+I moved them both to pci/for-linus for v7.3.
