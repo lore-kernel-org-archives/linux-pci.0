@@ -1,97 +1,144 @@
-Received: from ultrarisc.com (unknown [218.76.62.146])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 0A7853DB658;
-	Thu, 15 Oct 2026 02:35:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.76.62.146
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C4042F84F;
+	Thu, 15 Oct 2026 02:48:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792031713; cv=none; b=sgoBpwa3YhUYp8zZYkbEk/QYErB+CbfvDUNsaXQwI5scHpdrW9PiWHE0iFsjYAwWH3P8Knry93hxkwxDXqdcveOvsbnf7z7wDSUulpqk1zgyIr63bmpsIAH3z4tSeviBmHVX5LfkBYz1X8U4D783lix6r67AehVsRDHVxWt3iqE=
+	t=1792032537; cv=none; b=IGtAB47PzLXrpXisIOjiWGHMmad2rN+uMur6d5pDAmTnt2xtFcaXGhCRXUMZYIH3XX1Zm4KqCz6EvA/zhp14G8qV908GOhytzuoWaZiEZewjKsQXy3hhEqiMlO1Q3ms/YAKeycxMHBSe5VV497zhtSIAePfQjDpjseWIplH45Bs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792031713; c=relaxed/simple;
-	bh=yqboJuSFj1MiuZgOPBB633piM82kQ985s72WYweaYT0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=TkK3Os68WJ5+BWNlZNiLgoY0Ja9Wb4q5eh3FAmv5iJt0y4VtCemMnnwH5n5c+ypFaV0Z9mHjxzlSu+ac2lzCGIiOWgK/75/Sn3xX8c21fHkHIpZEPHgqz96eyYwvWRR3u4Wdvb92EybbIinjd1GAYjEFdEuBCwpD9zs6wMxBGf8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=none smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=pe93UWe4; arc=none smtp.client-ip=218.76.62.146
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ultrarisc.com
+	s=arc-20240116; t=1792032537; c=relaxed/simple;
+	bh=MHWIw5WohRGeS+nCMpsnchI4dcpYDb/lTWnUMAzmK1c=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=F2M9q+T5aXYdhxRPCwboBNbVo5n9/5tjHjdZzDtmBvE7jwfDm+NNxxrqylP/jnfQaZte4iiHUMyaAuqgZ58QZUCTUBsevUq/yZGddRU00ikm9n/q6451wJcW2VLiznT88yl+CYk4RRUtfmK4rCAwKjfZ2CJregW/hNWB7l19BlA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wv9mXWl1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="pe93UWe4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=ultrarisc.com; s=dkim; h=Received:From:To:Cc:Subject:Date:
-	Message-Id:In-Reply-To:References:MIME-Version:
-	Content-Transfer-Encoding; bh=c/6W0LBdBU+dTI2matne96lJqD7HP4Hyuh
-	pge2Ox2K8=; b=pe93UWe4R2PxYqJgNMsXL/fjQfk6/pAlF2O0O8LoIRbu0AB0X5
-	HNJrK5pwRyuF1AQOJvn4KRlLKe1NqchCAZrDFgWfA4MFHxeTh8NlzSUWbl5Y7EH2
-	FFHFXx+9+nvIa7X2H+t6BVRsVhBBhqrtjbV99ALy1ZRrxvBDA2z9yd94k=
-Received: from leopard.. (unknown [192.168.100.1])
-	by localhost.localdomain (Coremail) with SMTP id AQAAfwCnYwXWO9Bq+BcCAA--.697S2;
-	Thu, 15 Oct 2026 10:35:02 +0800 (CST)
-From: Xincheng Zhang <zhangxincheng@ultrarisc.com>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <Frank.Li@kernel.org>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] PCI: dwc: Allow drivers to skip MEM outbound iATU setup
-Date: Thu, 15 Oct 2026 10:34:59 +0800
-Message-Id: <20261015023459.125468-1-zhangxincheng@ultrarisc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <as89A9X9wAHJ-dIR@ryzen>
-References: <20260905025635.211390-1-zhangxincheng@ultrarisc.com> <20260905025635.211390-2-zhangxincheng@ultrarisc.com> <as89A9X9wAHJ-dIR@ryzen>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wv9mXWl1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8A411F000C4;
+	Thu, 15 Oct 2026 02:48:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792032536;
+	bh=46AFgzVmY97B2lLtRfutmz9zdCYQ1/ffN1AhtsIbhMA=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=Wv9mXWl1i4jT1pmOhcnIXDncu7VWS7vcZa4chM97Sqmi7vAhG86yAJbyIb8Eg6/DJ
+	 Ze8lTvigx5dweFj4uG+28gvEzbrru7GrOwt9ViUqCI4b/DSDQkqcqZdp5NmLRmU8Qd
+	 mVO6btWaAd75g8Fq7IKF5opwrYgSi864ThO+f1T3gekM0GIAfSYoMELyPvCEMIGzO3
+	 c971nKuEeBKsc7HAs79VDBI//op2m74EPBLJm6lOfj08PX83Hmobt+MBT0SgdHCkR9
+	 mZWRBhF+QUuYRv68nbkROtRIPQyZNXAVIJ/bYghMpDc0dKOYAFznN+/+E2Rxi4NuO7
+	 ltLSaZulGGAjQ==
+Message-ID: <1dff27c5-76d6-4137-956f-8e7164cf1c64@kernel.org>
+Date: Wed, 14 Oct 2026 21:48:51 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:AQAAfwCnYwXWO9Bq+BcCAA--.697S2
-X-Coremail-Antispam: 1UD129KBjvdXoW7Gr4DAF45AryUWF1xGr1DAwb_yoWDXwcEka
-	4DKw4Ikw1DJa9rA3WfKF45WrZ29a9I9rn5JrWDX397G3yFvFnxXrZ5Grsay3Z5Ja4xCr45
-	Kr98J3yxKwnIyjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbhAYjsxI4VWkKwAYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I
-	6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM2
-	8CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWUJVWUCwA2z4x0Y4vE2Ix0
-	cI8IcVCY1x0267AKxVW8JVWxJwA2z4x0Y4vEx4A2jsIE14v26r1j6r4UM28EF7xvwVC2z2
-	80aVCY1x0267AKxVW8JVW8Jr1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IE
-	w4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ec7CjxVAajcxG14v26r1j6r
-	4UMcIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vI
-	r41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFylc2xSY4AK6svPMx
-	AIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_
-	Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwI
-	xGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8
-	JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcV
-	C2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUgSfODUUUU
-X-CM-SenderInfo: x2kd0wp0lquxxhqjq3powut2xlvfhudrp/1tbiAQAGDGq8sakAAwASsU
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] PCI/PM: Restore BARs after powering up during
+ enumeration
+To: Keng-Yu Lin <keng-yu.lin@hpe.com>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J . Wysocki" <rafael@kernel.org>,
+ Matthew Ruffell <matthew.ruffell@canonical.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org, andy.liang@hpe.com,
+ david.chang@hpe.com, s.collins@hpe.com, jenifer.golmitz@hpe.com,
+ pravallika.kamma@hpe.com, zhen-dong.lai@hpe.com, zachary.pabor-ext@hpe.com,
+ acelan.kao@canonical.com, michael.reed@canonical.com, desnesn@redhat.com,
+ dlee@hpe.com
+References: <20261015020811.1132314-1-keng-yu.lin@hpe.com>
+Content-Language: en-US
+From: Mario Limonciello <superm1@kernel.org>
+In-Reply-To: <20261015020811.1132314-1-keng-yu.lin@hpe.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi Niklas,
 
-On Wed, Oct 14, 2026 at 10:27:57AM +0200, Niklas Cassel wrote:
-> Sorry for commenting on this patch after it was accepted.
->
-> But... since this behavior is intrinsic to the DWC controller, rather than
-> being SoC specific... Why bother creating a flag for it?
->
-> Is there a reason why this can't just be a simple:
->
-> if (atu.parent_bus_addr == atu.pci_addr)
-> 	continue;
 
-Thanks for pointing this out.
-
-I added the flag because I had only tested no-match pass-through on DP1000.
-But you are right that this is DWC behavior, not SoC-specific, and comparing
-the two addresses is enough to tell whether translation is needed.
-
-Since the series has already been applied, I will send a follow-up patch
-that skips MEM outbound iATU programming when atu.parent_bus_addr is equal
-to atu.pci_addr, and removes bypass_ob_mem_iatu and the UltraRISC-specific
-setting. CFG and I/O accesses, as well as non-identity-mapped MEM ranges,
-will continue to use outbound iATU windows.
-
-Thanks,
-Xincheng
+On 10/14/26 21:08, Keng-Yu Lin wrote:
+> Commit 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when
+> initializing") added pci_pm_power_up_and_verify_state() to pci_pm_init().
+> The helper ignores pci_power_up()'s return value indicating that BARs
+> need restoring. Its resume callers restore saved configuration
+> afterwards; pci_pm_init() does not.
+> 
+> D3hot-to-D0 may reset a device and lose its BARs (PCI PM 1.2, sec 5.4.1).
+> After enumeration powers it up, pci_enable_device() reads D0 and skips
+> the full power-up path. Previously, a device still in D3hot at enable
+> time took that path, including BAR restoration.
+> 
+> On AMD Venice SP7, two AMD xHCI controllers [1022:17d2] are in runtime
+> D3hot with No_Soft_Reset clear before kdump. Diagnostic reads on
+> v7.3-rc6-37 show the following for 0000:01:00.4 in the crash kernel:
+> 
+>                                     PMCSR      BAR0
+>    before the platform power call   0003       f4100004
+>    after the platform power call    0003       f4100004
+>    after native D0 power-up         0000       00000004
+> 
+> The upper BAR DWORD stays zero. pci_power_up() returns 1, but the BAR
+> address remains zero while dev->resource[0] still contains 0xf4100000.
+> Without BAR restoration, the crash kernel hangs during boot. The
+> last console output includes:
+> 
+>    pci 0000:01:00.4: enabling device (0000 -> 0002)
+> 
+> Restoring both controllers' BARs gives matching readbacks and allows
+> kdump to save a vmcore and reboot. An AMD Turin xHCI [1022:1557] shows
+> the same BAR loss; restoring its BAR also allows kdump to complete.
+> 
+> Read the initial power state first. Otherwise, pci_power_up() may
+> request a BAR restore based on a cached PCI_UNKNOWN state, even
+> when the device is already in D0.
+> 
+> For devices already in D0, only synchronize the platform state so
+> that ACPI calls such as _REG still run. For other states, use
+> pci_set_full_power_state() to power up the device and restore BARs
+> when needed.
+> 
+> Suggested-by: Mario Limonciello <mario.limonciello@amd.com>
+> Suggested-by: Rafael J. Wysocki <rafael@kernel.org>
+> Fixes: 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when initializing")
+> Link: https://lore.kernel.org/r/CAJZ5v0ie2AvCbdv8-zkpYzHLcTwUPUj+=WWOQjDAPmSepSAQPg@mail.gmail.com/
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Keng-Yu Lin <keng-yu.lin@hpe.com>
+Reviewed-by: Mario Limonciello (AMD) <superm1@kernel.org>> ---
+> 
+> Changes in v3:
+> - Use Rafael's sequence: sync only the platform state for devices
+>    already in D0, and use pci_set_full_power_state() otherwise.
+> - The D0 path no longer runs the full helper's ASPM update.
+> 
+> Tested with diagnostic prints on AMD Venice SP7 and Turin. Normal
+> boots made no BAR writes from this path. The crash kernels restored
+> only the cleared xHCI BARs (two on Venice, one on Turin), with matching
+> readbacks. Both systems saved a vmcore and rebooted.
+> 
+> v2: https://lore.kernel.org/r/20261012104645.975190-1-keng-yu.lin@hpe.com/
+> 
+>   drivers/pci/pci.c | 10 +++++++++-
+>   1 file changed, 9 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8cc6a89130b5..895969fe4520 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3255,7 +3255,15 @@ void pci_pm_init(struct pci_dev *dev)
+>   	}
+>   
+>   poweron:
+> -	pci_pm_power_up_and_verify_state(dev);
+> +	pci_update_current_state(dev, PCI_UNKNOWN);
+> +	if (dev->current_state == PCI_D0) {
+> +		/* No need to do a full power-up, just sync-up the platform state. */
+> +		platform_pci_set_power_state(dev, PCI_D0);
+> +	} else {
+> +		/* Power up the device and restore BARs if necessary. */
+> +		pci_set_full_power_state(dev, false);
+> +	}
+> +	pci_update_current_state(dev, PCI_D0);
+>   	pm_runtime_forbid(&dev->dev);
+>   
+>   	/*
+> 
+> base-commit: 7b63ef2d55f24519e7e9e5f4d15dbea03f126e40
 
