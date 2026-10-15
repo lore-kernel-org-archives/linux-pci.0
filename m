@@ -1,309 +1,535 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from sender5-op-o11.zoho.com (sender5-op-o11.zoho.com [165.173.182.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64084525A90;
-	Thu, 15 Oct 2026 12:21:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792066868; cv=none; b=oDmuakDJusKgu3rv+lswdumk0EYOYKG1xN1kCslwZ4vopc5SyRi5TI+k0ITgOKx+G7gbaHNT7VJ+yOvXIu9ghqz4DpqdNWDO7Hrsn9B5WPznRPQYKO+ElYKnLiWORggVIDklveWO6wlTSOeO09TBljNfVqcn/gYFO+w7T3B5g8I=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792066868; c=relaxed/simple;
-	bh=Ox1xbZLOZJW2NqByxDANPKArn+SfLQtTDB3WiJswZoc=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=Dh53V65ei3wbDl3LJfpScaB3uneRZzx2JPi1dzAAF5DkccVTa8NLEmQPg2cq7txqC2207Jtqt3cXUt/pnmiZmjg9kJ20XVz1+hot/M98MqTE8NxiMZDIrTW9gk+Wpx7JiHJnqftPn85dIAiRi32euvaVc1LaeN8O/4wiehAuGWo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h/IWRFaq; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 449555221F0;
+	Thu, 15 Oct 2026 12:39:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=165.173.182.11
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792068000; cv=pass; b=iLowbJdwxIoJ710fvmzWE/m7XbuH7rgVYZtW/LYEw3T8BSOkY6xopH4It0zhF6m4Hmgk8opbRS+NVCyiRMW78+pC/X5bsR4qnwztW5fMmVE6OLwZo8uemRkY9EzqNdLjsofc8y7pxSxFb5BA88NoMOvnG9rO/pjyoOQtlh38moY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792068000; c=relaxed/simple;
+	bh=BQNPOvIEumpI3ZQKw6LY4qA4QfqlHK/9RJtkHQIHdFA=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=oaOR5FDRmxBqIK63SesTvJ+SEv25mCcYZGnMIW8GeNX3DtvN8tVk4qz6ombIQOe7CI3jB5IWGOCou8NAQRwlPuLVykXb5xh++8t1x7PykloyVhgCYrr9+DOe3BHFyDsGKlBLTdUFte+Uuta1a79jMhJySETo0DNxbMvCs6eJ3ws=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=ArFmEJE9; arc=pass smtp.client-ip=165.173.182.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h/IWRFaq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0EC01F000C4;
-	Thu, 15 Oct 2026 12:21:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792066867;
-	bh=NT2XbSQZp+cU7Cn4WzI+ruP1eafbyQ8K/6l27WXBHEs=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=h/IWRFaq4vA9PtvjP61helCdett9RPb6ElPn1qf8Rmx5VpDLIOMyGhWQAl4AqqKq+
-	 pB9w4hUWwxUkgv7/VeC0aZVKq9gdMDTq1n2jzH73aVJymY1ba6j+HH3nC2w+JnRWfP
-	 J/XrSzZfsKbPodI48N6DSA9Yb0XQdOJMGHYmJVkayrGuaOz3JooD3sWwdBBHavaILA
-	 bKBaModR4Pm4+rMEHP/D90IGF8JbG20dewHhOZ57o9qZV+YyTHpkK9Gfbgra4+3wY7
-	 2SVGgT++KvPbARS5XSpKpJnpe4RgDExOgFfx1DDZs7YOPRzn4E8/oMgNCptt+DygU9
-	 3UDbtQYkvuaew==
-From: Pratyush Yadav <pratyush@kernel.org>
-To: Logan Odell <loganodell@google.com>
-Cc: arnd@arndb.de,  pasha.tatashin@soleen.com,  rppt@kernel.org,
-  pratyush@kernel.org,  graf@amazon.com,  akpm@linux-foundation.org,
-  pbonzini@redhat.com,  maz@kernel.org,  oupton@kernel.org,
-  seanjc@google.com,  bhelgaas@google.com,  alex@shazbot.org,
-  jgg@nvidia.com,  kevin.tian@intel.com,  dwmw2@infradead.org,
-  baolu.lu@linux.intel.com,  joro@8bytes.org,  will@kernel.org,
-  robin.murphy@arm.com,  linux-arch@vger.kernel.org,
-  linux-kernel@vger.kernel.org,  kexec@lists.infradead.org,
-  linux-mm@kvack.org,  kvm@vger.kernel.org,
-  linux-arm-kernel@lists.infradead.org,  kvmarm@lists.linux.dev,
-  linux-pci@vger.kernel.org,  iommu@lists.linux.dev
-Subject: Re: [RFC PATCH 1/3] luo: Move to feature flags instead of
- compatibility strings
-In-Reply-To: <20260903023452.721732-2-loganodell@google.com> (Logan Odell's
-	message of "Wed, 2 Sep 2026 19:34:50 -0700")
-References: <20260903023452.721732-1-loganodell@google.com>
-	<20260903023452.721732-2-loganodell@google.com>
-Date: Thu, 15 Oct 2026 14:21:01 +0200
-Message-ID: <2vxzzewfgno2.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="ArFmEJE9"
+ARC-Seal: i=1; a=rsa-sha256; t=1792067968; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=HXlYleMGYoR4L6lEUytje1PlZGP7V2yEObe0tnu83z/06mV8iU8cOmn6rAzKG3SuLlTveQxnPu0RQYIiHXfD7D7ej1rGFXcKiwUrS64wm9RHcKkJKrRVEC9xpUFeCYjpL4vFkkX9VfBSujF1ugIrQZn6RW2q0FDaEwD0sTKgrrQ=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1792067968; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=3E1bdrq4gqFYtbBaaweOh7zV8x4SqRbEvntWxZX2Fbg=; 
+	b=bNYvQmWb+FS8RpOmYw8AdoMdTzxK8+y4Pq2LmC7TAHc1FpmYm0++TE11oUql0lfyzyxgcs5pwxQv4OkaoXwNA79blJjFZlZNobPh7ExWnYIqJTtutN7acQtv6Sf6LOgoQytIqeMRxQBljBUE2K1oKQjeiZwTTkmdJUFGIfI82pU=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
+	dmarc=pass header.from=<daniel.almeida@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1792067967;
+	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
+	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:In-Reply-To:To:To:Cc:Cc:Reply-To;
+	bh=3E1bdrq4gqFYtbBaaweOh7zV8x4SqRbEvntWxZX2Fbg=;
+	b=ArFmEJE9eFZD4SNTUMDpxsswzqIvZC77SC8WU4lXGVoXosYu8yuyTSEFjIPUEuMy
+	W78d4MTPPngtio6K1vm5ThEBwGuBMm+AzRvCvLIJjIrz09eVaaLbedsus0utzL485rg
+	O4noIZU5iCVq6e9qbNqzVxtKuXnmmI4bYS39HTo0=
+Received: by smtp.zohomail.com with SMTPS id 1792067964754958.2798476402018;
+	Thu, 15 Oct 2026 05:39:24 -0700 (PDT)
+From: Daniel Almeida <daniel.almeida@collabora.com>
+Date: Thu, 15 Oct 2026 09:39:05 -0300
+Subject: [PATCH 1/7] rust: io: split IoCapable into IoReadable and
+ IoWritable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261015-io-access-modes-v1-1-93611b84b5e3@collabora.com>
+References: <20261015-io-access-modes-v1-0-93611b84b5e3@collabora.com>
+In-Reply-To: <20261015-io-access-modes-v1-0-93611b84b5e3@collabora.com>
+To: Danilo Krummrich <dakr@kernel.org>, 
+ Abdiel Janulgue <abdiel.janulgue@gmail.com>, 
+ Robin Murphy <robin.murphy@arm.com>, 
+ Andreas Hindborg <a.hindborg@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, 
+ Boqun Feng <boqun@kernel.org>, Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
+ Trevor Gross <tmgross@umich.edu>, Tamir Duberstein <tamird@kernel.org>, 
+ Alexandre Courbot <acourbot@nvidia.com>, 
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>
+Cc: driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ dri-devel@lists.freedesktop.org, 
+ Daniel Almeida <daniel.almeida@collabora.com>
+X-Mailer: b4 0.15.2
+X-ZohoMailClient: External
 
-Hi Logan,
+`IoCapable<T>` provides both `io_read` and `io_write`, so a backend that
+supports accesses of type `T` supports them in both directions, and every
+(non-copy) `Io` method that reads or writes a value requires both. There
+is no way to express a backend, or a view, that can only be read or only
+be written.
 
-On Wed, Sep 02 2026, Logan Odell wrote:
+Thus, replace `IoCapable<T>` with an `IoReadable<T>` trait holding
+`io_read` and an `IoWritable<T>` trait holding `io_write`, and implement
+both for all existing backends. The non-copy `Io` methods that read a
+value now require `IoReadable` and those that write one require
+`IoWritable`. `update` and `try_update` read and then write, so they
+require both.
 
-> Define a 128 byte header that can be used by all live update serialized
-> structures. In this header, we reserve room for 64 features with
-> supported, active, and required bits. Update the top level luo struct to
-> use this instead of compatibility strings. Previous versions of the
-> struct had smaller sizes, so add a minimum size check to avoid
-> collisions with older kernels.
->
-> Signed-off-by: Logan Odell <loganodell@google.com>
-> ---
->  include/linux/kho/abi/luo.h  | 74 +++++++++++++++++++++++++++++-------
->  kernel/liveupdate/luo_core.c | 44 +++++++++++++--------
->  2 files changed, 90 insertions(+), 28 deletions(-)
->
-> diff --git a/include/linux/kho/abi/luo.h b/include/linux/kho/abi/luo.h
-> index 288076de6d4a..0a7662a0cf9a 100644
-> --- a/include/linux/kho/abi/luo.h
-> +++ b/include/linux/kho/abi/luo.h
-> @@ -13,15 +13,17 @@
->   * kernel. The ABI is built upon the Kexec HandOver framework and registers
->   * the central `struct luo_ser` via the KHO raw subtree API.
->   *
-> - * This interface is a contract. Any modification to the structure fields,
-> - * compatible strings, or the layout of the `__packed` serialization
-> - * structures defined here constitutes a breaking change. Such changes require
-> - * incrementing the version number in the relevant `_COMPATIBLE` string to
-> - * prevent a new kernel from misinterpreting data from an old kernel.
-> + * This interface is a contract. To ensure the stability of moving between
-> + * kernel versions, any changes to the structures should only be additive
-> + * and should utilize the feature flags to denote the supported, active, and
-> + * required status of the feature.
-> + *
-> + * Features that are entirely optional can be added with the supported and
-> + * active flags both asserted, and the required flag cleared. Features that
-> + * require that the next kernel supports the feature should only be added as
-> + * supported to allow compatible transition kernels. At a later time, the
-> + * active and required flag should be asserted.
->   *
-> - * Changes are allowed provided the compatibility version is incremented;
-> - * however, backward/forward compatibility is only guaranteed for kernels
-> - * supporting the same ABI version.
->   *
->   * KHO Structure Overview:
->   *   The entire LUO state is encapsulated within a single KHO entry named "LUO".
-> @@ -30,7 +32,7 @@
->   * Serialization Structures:
->   *   - struct luo_ser:
->   *     The central ABI structure that contains the overall state of the LUO.
-> - *     It includes the compatibility string, the liveupdate-number, and pointers
-> + *     It includes the feature flags, the liveupdate-number, and pointers
->   *     to sessions and FLBs.
->   *
->   *   - struct luo_session_ser:
-> @@ -58,19 +60,65 @@
->  #define _LINUX_KHO_ABI_LUO_H
->  
->  #include <linux/align.h>
-> +#include <linux/bits.h>
->  #include <linux/kho/abi/block.h>
->  #include <uapi/linux/liveupdate.h>
->  
-> +/**
-> + * struct luo_feature_hdr - Feature negotiation and versioning header.
-> + * @supp:     Bitmask of features supported by the producing subsystem.
-> + * @req:      Bitmask of features required for safe deserialization by the
-> + *            receiving subsystem.
+The copy methods use `IoCopyable` and are not changed here.
 
-I think you are mixing two things here: description of the payload and
-description of the file handler capability.
+No functional change intended. This prepares for read-only and write-only
+views, added in a following patch.
 
-The payload that is handed over via KHO should have the active and
-required bitmasks only. It doesn't need the supported bitmask, because
-it doesn't matter what the handler that produced the payload supports.
-It only matters what fields it populated and which ones are mandatory to
-understand.
+Signed-off-by: Daniel Almeida <daniel.almeida@collabora.com>
+---
+ rust/kernel/dma.rs    |  12 ++++--
+ rust/kernel/io.rs     | 101 +++++++++++++++++++++++++++++---------------------
+ rust/kernel/pci/io.rs |  10 +++--
+ 3 files changed, 75 insertions(+), 48 deletions(-)
 
-Similarly, the description of the file handler can't really describe
-"active". Because the capabilities are static and the active bits will
-depend on a specific file.
-
-So I reckon we should separate these two. These should be the same bits
-of course, but expressed in two ways in two different places.
-
-> + * @active:   Bitmask of features actually active/used in the serialized payload.
-> + * @reserved: Reserved for future use.
-> + *
-> + * This header can be embedded at the beginning of any serialized structure to
-> + * provide forward and backward compatibility via feature negotiation across
-> + * live update.
-> + */
-> +struct luo_feature_hdr {
-> +	u64 supp;
-> +	u64 req;
-> +	u64 active;
-> +	u64 reserved[13];
-
-How do you plan to ever use this? Say I want to extend my bitmaps so I do:
-
-    struct luo_feature_hdr {
-    	u64 supp;
-    	u64 req;
-    	u64 active;
-    	u64 supp2;
-    	u64 req2;
-    	u64 active2;
-    	u64 reserved[10];
-
-But when I go back to a kernel that doesn't know about supp2, req2,
-etc., how does it know how to interpret these? How does it know what the
-values mean?
-
-Is your goal only to be able to extend the three types of flags we have?
-If so, perhaps something like "if bit 63 is set, the flags continue to
-the next u64"? It is certainly harder for the parser, but seems to at
-least be extensible. What do you think?
-
-> +} __packed;
-> +
-> +#define LUO_FEATURE_ACTIVE(s, f)		\
-> +	do {					\
-> +		(s)->features.supp |= (u64)(f);	\
-> +		(s)->features.active |= (u64)(f);	\
-> +	} while (0)
-> +#define LUO_FEATURE_SUPPORTED(s, f)	((s)->features.supp |= (u64)(f))
-> +#define LUO_FEATURE_REQUIRED(s, f)	((s)->features.req |= (u64)(f))
-> +#define LUO_FEATURE_IS_ACTIVE(s, f)	(!!((s)->features.active & (u64)(f)))
-> +#define LUO_FEATURE_IS_SUPPORTED(s, f)	(!!((s)->features.supp & (u64)(f)))
-> +#define LUO_FEATURE_IS_REQUIRED(s, f)	(!!((s)->features.req & (u64)(f)))
-> +
->  /*
->   * The LUO state is registered under this KHO entry name.
->   */
->  #define LUO_KHO_ENTRY_NAME	"LUO"
-> -#define LUO_ABI_COMPATIBLE	"luo-v5"
-> -#define LUO_ABI_COMPAT_LEN	ALIGN(sizeof(LUO_ABI_COMPATIBLE), 8)
-> +
-> +/*
-> + * Bits associated with the luo_feature_hdr values.
-> + */
-> +#define LUO_FEATURE_NUMBER    BIT_ULL(0)
-> +#define LUO_FEATURE_SESSIONS  BIT_ULL(1)
-> +#define LUO_FEATURE_FLBS      BIT_ULL(2)
-
-Nit: please give the flags full documentation on their semantics.
-
-> +
-> +#define LUO_CORE_FEATURES_SUPP		(LUO_FEATURE_NUMBER | \
-> +					 LUO_FEATURE_SESSIONS | \
-> +					 LUO_FEATURE_FLBS)
-> +#define LUO_CORE_FEATURES_REQ		(LUO_FEATURE_NUMBER | \
-> +					 LUO_FEATURE_SESSIONS | \
-> +					 LUO_FEATURE_FLBS)
-> +#define LUO_CORE_FEATURES_ACTIVE	(LUO_FEATURE_NUMBER | \
-> +					 LUO_FEATURE_SESSIONS | \
-> +					 LUO_FEATURE_FLBS)
->  
->  /**
->   * struct luo_ser - Centralized LUO ABI header.
-> - * @compatible:     Compatibility string identifying the LUO ABI version.
-> + * @features:       Bit mask of supported and active features.
->   * @liveupdate_num: A counter tracking the number of successful live updates.
->   * @sessions_pa:    Physical address of the first session block header.
->   * @flbs_pa:        Physical address of the FLB header.
-> @@ -78,7 +126,7 @@
->   * This structure is the root of all preserved LUO state.
->   */
->  struct luo_ser {
-> -	char compatible[LUO_ABI_COMPAT_LEN];
-> +	struct luo_feature_hdr features;
-
-Do we still need compatible here? How will we ever do breaking changes
-if we really need to?
-
->  	u64 liveupdate_num;
->  	u64 sessions_pa;
->  	u64 flbs_pa;
-> diff --git a/kernel/liveupdate/luo_core.c b/kernel/liveupdate/luo_core.c
-> index 1b2bda22902d..6add1ecc463f 100644
-> --- a/kernel/liveupdate/luo_core.c
-> +++ b/kernel/liveupdate/luo_core.c
-> @@ -107,26 +107,37 @@ static int __init luo_early_startup(void)
->  		return 0;
->  	}
->  
-> -	if (len < sizeof(*luo_ser)) {
-> -		pr_err("LUO state is too small (%zu < %zu)\n", len, sizeof(*luo_ser));
-> -		return -EINVAL;
-> +	luo_ser = phys_to_virt(luo_ser_phys);
-> +
-> +	if (len < sizeof(struct luo_feature_hdr)) {
-> +		pr_err("LUO state is too small (%zu < %zu)\n",
-> +		       len, sizeof(struct luo_feature_hdr));
-> +		err = -EINVAL;
-> +		goto out_free_ser;
->  	}
->  
-> -	luo_ser = phys_to_virt(luo_ser_phys);
-> -	if (strncmp(luo_ser->compatible, LUO_ABI_COMPATIBLE, LUO_ABI_COMPAT_LEN)) {
-> -		pr_err("LUO state is incompatible with '%s'\n", LUO_ABI_COMPATIBLE);
-> -		return -EINVAL;
-> +	if (luo_ser->features.req & ~LUO_CORE_FEATURES_SUPP) {
-> +		pr_err("Unsupported required LUO feature (req: 0x%llx, supp: 0x%llx)\n",
-> +		       luo_ser->features.req, (u64)LUO_CORE_FEATURES_SUPP);
-> +		err = -EOPNOTSUPP;
-> +		goto out_free_ser;
->  	}
->  
-> -	luo_global.liveupdate_num = luo_ser->liveupdate_num;
-> -	pr_info("Retrieved live update data, liveupdate number: %lld\n",
-> -		luo_global.liveupdate_num);
-> +	if (LUO_FEATURE_IS_ACTIVE(luo_ser, LUO_FEATURE_NUMBER)) {
-> +		luo_global.liveupdate_num = luo_ser->liveupdate_num;
-> +		pr_info("Retrieved live update data, liveupdate number: %lld\n",
-> +			luo_global.liveupdate_num);
-> +	}
->  
-> -	err = luo_session_setup_incoming(luo_ser->sessions_pa);
-> -	if (err)
-> -		goto out_free_ser;
->  
-> -	luo_flb_setup_incoming(luo_ser->flbs_pa);
-> +	if (LUO_FEATURE_IS_ACTIVE(luo_ser, LUO_FEATURE_SESSIONS)) {
-> +		err = luo_session_setup_incoming(luo_ser->sessions_pa);
-> +		if (err)
-> +			goto out_free_ser;
-> +	}
-> +
-> +	if (LUO_FEATURE_IS_ACTIVE(luo_ser, LUO_FEATURE_FLBS))
-> +		luo_flb_setup_incoming(luo_ser->flbs_pa);
->  
->  	err = 0;
->  
-> @@ -162,7 +173,10 @@ static int __init luo_state_setup(void)
->  		return PTR_ERR(luo_ser);
->  	}
->  
-> -	strscpy(luo_ser->compatible, LUO_ABI_COMPATIBLE, sizeof(luo_ser->compatible));
-> +	luo_ser->features.supp = LUO_CORE_FEATURES_SUPP;
-> +	luo_ser->features.req = LUO_CORE_FEATURES_REQ;
-> +	luo_ser->features.active = LUO_CORE_FEATURES_ACTIVE;
-> +
->  	luo_ser->liveupdate_num = luo_global.liveupdate_num + 1;
->  
->  	luo_session_setup_outgoing(&luo_ser->sessions_pa);
+diff --git a/rust/kernel/dma.rs b/rust/kernel/dma.rs
+index 4ce914b7d1da..7216a78d38c9 100644
+--- a/rust/kernel/dma.rs
++++ b/rust/kernel/dma.rs
+@@ -17,8 +17,9 @@
+     io::{
+         IoBackend,
+         IoBase,
+-        IoCapable,
+         IoCopyable,
++        IoReadable,
++        IoWritable,
+         SysMem,
+         SysMemBackend, //
+     },
+@@ -1180,15 +1181,20 @@ unsafe fn project_view<'a, T: ?Sized + KnownSize, U: ?Sized + KnownSize>(
+     }
+ }
+ 
+-impl<T> IoCapable<T> for CoherentIoBackend
++impl<T> IoReadable<T> for CoherentIoBackend
+ where
+-    SysMemBackend: IoCapable<T>,
++    SysMemBackend: IoReadable<T>,
+ {
+     #[inline]
+     fn io_read<'a>(view: Self::View<'a, T>) -> T {
+         SysMemBackend::io_read(view.cpu_addr)
+     }
++}
+ 
++impl<T> IoWritable<T> for CoherentIoBackend
++where
++    SysMemBackend: IoWritable<T>,
++{
+     #[inline]
+     fn io_write<'a>(view: Self::View<'a, T>, value: T) {
+         SysMemBackend::io_write(view.cpu_addr, value)
+diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+index de8ef8e2aec4..fd5dd5f6bda4 100644
+--- a/rust/kernel/io.rs
++++ b/rust/kernel/io.rs
+@@ -247,9 +247,9 @@ fn io_view_as_repr<'a, IO: Io<'a, Target = T>, T: AsRepr>(
+ /// backends (e.g. MMIO, PCI config space, etc.).
+ ///
+ /// The base trait only defines the projection operations; which I/O methods are available depends
+-/// on which [`IoCapable<T>`] traits are implemented for the type. For example, for MMIO regions,
+-/// all widths (u8, u16, u32, and u64 on 64-bit systems) are typically supported. For PCI
+-/// configuration space, u8, u16, and u32 are supported but u64 is not.
++/// on which [`IoReadable<T>`] and [`IoWritable<T>`] traits are implemented for the type. For
++/// example, for MMIO regions, all widths (u8, u16, u32, and u64 on 64-bit systems) are typically
++/// supported. For PCI configuration space, u8, u16, and u32 are supported but u64 is not.
+ ///
+ /// This trait is separate from the `Io` trait as multiple different I/O types may share the same
+ /// operation.
+@@ -276,18 +276,24 @@ unsafe fn project_view<'a, T: ?Sized + KnownSize, U: ?Sized + KnownSize>(
+     ) -> Self::View<'a, U>;
+ }
+ 
+-/// Trait indicating that an I/O backend supports operations of a certain type and providing an
+-/// implementation for these operations.
++/// Trait indicating that an I/O backend supports reads of a certain type and providing an
++/// implementation for these reads.
+ ///
+ /// Different I/O backends can implement this trait to expose only the operations they support.
+ ///
+-/// For example, a PCI configuration space may implement `IoCapable<u8>`, `IoCapable<u16>`,
+-/// and `IoCapable<u32>`, but not `IoCapable<u64>`, while an MMIO region on a 64-bit
++/// For example, a PCI configuration space may implement `IoReadable<u8>`, `IoReadable<u16>`,
++/// and `IoReadable<u32>`, but not `IoReadable<u64>`, while an MMIO region on a 64-bit
+ /// system might implement all four.
+-pub trait IoCapable<T>: IoBackend {
++pub trait IoReadable<T>: IoBackend {
+     /// Performs an I/O read of type `T` at `view` and returns the result.
+     fn io_read<'a>(view: Self::View<'a, T>) -> T;
++}
+ 
++/// Trait indicating that an I/O backend supports writes of a certain type and providing an
++/// implementation for these writes.
++///
++/// Like [`IoReadable`], it is implemented for each type the backend supports.
++pub trait IoWritable<T>: IoBackend {
+     /// Performs an I/O write of `value` at `view`.
+     fn io_write<'a>(view: Self::View<'a, T>, value: T);
+ }
+@@ -548,7 +554,7 @@ fn try_cast<U>(self) -> Result<<Self::Backend as IoBackend>::View<'a, U>>
+     fn read_val(self) -> Self::Target
+     where
+         Self::Target: AsReprMut,
+-        Self::Backend: IoCapable<<Self::Target as AsRepr>::Repr>,
++        Self::Backend: IoReadable<<Self::Target as AsRepr>::Repr>,
+     {
+         Self::Target::from_repr(Self::Backend::io_read(io_view_as_repr(self)))
+     }
+@@ -570,7 +576,7 @@ fn read_val(self) -> Self::Target
+     fn write_val(self, value: Self::Target)
+     where
+         Self::Target: AsRepr,
+-        Self::Backend: IoCapable<<Self::Target as AsRepr>::Repr>,
++        Self::Backend: IoWritable<<Self::Target as AsRepr>::Repr>,
+     {
+         Self::Backend::io_write(io_view_as_repr(self), Self::Target::into_repr(value))
+     }
+@@ -695,7 +701,7 @@ fn copy_to_slice(self, data: &mut [u8])
+     fn try_read8(self, offset: usize) -> Result<u8>
+     where
+         usize: IoLoc<Self::Target, u8>,
+-        Self::Backend: IoCapable<u8>,
++        Self::Backend: IoReadable<u8>,
+     {
+         self.try_read(offset)
+     }
+@@ -705,7 +711,7 @@ fn try_read8(self, offset: usize) -> Result<u8>
+     fn try_read16(self, offset: usize) -> Result<u16>
+     where
+         usize: IoLoc<Self::Target, u16>,
+-        Self::Backend: IoCapable<u16>,
++        Self::Backend: IoReadable<u16>,
+     {
+         self.try_read(offset)
+     }
+@@ -715,7 +721,7 @@ fn try_read16(self, offset: usize) -> Result<u16>
+     fn try_read32(self, offset: usize) -> Result<u32>
+     where
+         usize: IoLoc<Self::Target, u32>,
+-        Self::Backend: IoCapable<u32>,
++        Self::Backend: IoReadable<u32>,
+     {
+         self.try_read(offset)
+     }
+@@ -725,7 +731,7 @@ fn try_read32(self, offset: usize) -> Result<u32>
+     fn try_read64(self, offset: usize) -> Result<u64>
+     where
+         usize: IoLoc<Self::Target, u64>,
+-        Self::Backend: IoCapable<u64>,
++        Self::Backend: IoReadable<u64>,
+     {
+         self.try_read(offset)
+     }
+@@ -735,7 +741,7 @@ fn try_read64(self, offset: usize) -> Result<u64>
+     fn try_write8(self, value: u8, offset: usize) -> Result
+     where
+         usize: IoLoc<Self::Target, u8>,
+-        Self::Backend: IoCapable<u8>,
++        Self::Backend: IoWritable<u8>,
+     {
+         self.try_write(offset, value)
+     }
+@@ -745,7 +751,7 @@ fn try_write8(self, value: u8, offset: usize) -> Result
+     fn try_write16(self, value: u16, offset: usize) -> Result
+     where
+         usize: IoLoc<Self::Target, u16>,
+-        Self::Backend: IoCapable<u16>,
++        Self::Backend: IoWritable<u16>,
+     {
+         self.try_write(offset, value)
+     }
+@@ -755,7 +761,7 @@ fn try_write16(self, value: u16, offset: usize) -> Result
+     fn try_write32(self, value: u32, offset: usize) -> Result
+     where
+         usize: IoLoc<Self::Target, u32>,
+-        Self::Backend: IoCapable<u32>,
++        Self::Backend: IoWritable<u32>,
+     {
+         self.try_write(offset, value)
+     }
+@@ -765,7 +771,7 @@ fn try_write32(self, value: u32, offset: usize) -> Result
+     fn try_write64(self, value: u64, offset: usize) -> Result
+     where
+         usize: IoLoc<Self::Target, u64>,
+-        Self::Backend: IoCapable<u64>,
++        Self::Backend: IoWritable<u64>,
+     {
+         self.try_write(offset, value)
+     }
+@@ -777,7 +783,7 @@ fn try_write64(self, value: u64, offset: usize) -> Result
+     fn read8(self, offset: usize) -> u8
+     where
+         usize: IoLoc<Self::Target, u8>,
+-        Self::Backend: IoCapable<u8>,
++        Self::Backend: IoReadable<u8>,
+     {
+         self.read(offset)
+     }
+@@ -789,7 +795,7 @@ fn read8(self, offset: usize) -> u8
+     fn read16(self, offset: usize) -> u16
+     where
+         usize: IoLoc<Self::Target, u16>,
+-        Self::Backend: IoCapable<u16>,
++        Self::Backend: IoReadable<u16>,
+     {
+         self.read(offset)
+     }
+@@ -801,7 +807,7 @@ fn read16(self, offset: usize) -> u16
+     fn read32(self, offset: usize) -> u32
+     where
+         usize: IoLoc<Self::Target, u32>,
+-        Self::Backend: IoCapable<u32>,
++        Self::Backend: IoReadable<u32>,
+     {
+         self.read(offset)
+     }
+@@ -813,7 +819,7 @@ fn read32(self, offset: usize) -> u32
+     fn read64(self, offset: usize) -> u64
+     where
+         usize: IoLoc<Self::Target, u64>,
+-        Self::Backend: IoCapable<u64>,
++        Self::Backend: IoReadable<u64>,
+     {
+         self.read(offset)
+     }
+@@ -825,7 +831,7 @@ fn read64(self, offset: usize) -> u64
+     fn write8(self, value: u8, offset: usize)
+     where
+         usize: IoLoc<Self::Target, u8>,
+-        Self::Backend: IoCapable<u8>,
++        Self::Backend: IoWritable<u8>,
+     {
+         self.write(offset, value)
+     }
+@@ -837,7 +843,7 @@ fn write8(self, value: u8, offset: usize)
+     fn write16(self, value: u16, offset: usize)
+     where
+         usize: IoLoc<Self::Target, u16>,
+-        Self::Backend: IoCapable<u16>,
++        Self::Backend: IoWritable<u16>,
+     {
+         self.write(offset, value)
+     }
+@@ -849,7 +855,7 @@ fn write16(self, value: u16, offset: usize)
+     fn write32(self, value: u32, offset: usize)
+     where
+         usize: IoLoc<Self::Target, u32>,
+-        Self::Backend: IoCapable<u32>,
++        Self::Backend: IoWritable<u32>,
+     {
+         self.write(offset, value)
+     }
+@@ -861,7 +867,7 @@ fn write32(self, value: u32, offset: usize)
+     fn write64(self, value: u64, offset: usize)
+     where
+         usize: IoLoc<Self::Target, u64>,
+-        Self::Backend: IoCapable<u64>,
++        Self::Backend: IoWritable<u64>,
+     {
+         self.write(offset, value)
+     }
+@@ -894,7 +900,7 @@ fn try_read<T, L>(self, location: L) -> Result<T>
+     where
+         T: AsReprMut,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
++        Self::Backend: IoReadable<<T as AsRepr>::Repr>,
+     {
+         Ok(io_read!(self, try: location))
+     }
+@@ -927,7 +933,7 @@ fn try_write<T, L>(self, location: L, value: T) -> Result
+     where
+         T: AsRepr,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
++        Self::Backend: IoWritable<<T as AsRepr>::Repr>,
+     {
+         io_write!(self, try: location, value);
+         Ok(())
+@@ -973,7 +979,7 @@ fn try_write_reg<T, L, V>(self, value: V) -> Result
+         T: AsRepr,
+         L: IoLoc<Self::Target, T>,
+         V: LocatedRegister<Self::Target, Location = L, Value = T>,
+-        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
++        Self::Backend: IoWritable<<T as AsRepr>::Repr>,
+     {
+         let (location, value) = value.into_io_op();
+ 
+@@ -1007,7 +1013,7 @@ fn try_update<T, L, F>(self, location: L, f: F) -> Result
+     where
+         T: AsReprMut,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
++        Self::Backend: IoReadable<<T as AsRepr>::Repr> + IoWritable<<T as AsRepr>::Repr>,
+         F: FnOnce(T) -> T,
+     {
+         let view = io_project!(self, try: location);
+@@ -1041,7 +1047,7 @@ fn read<T, L>(self, location: L) -> T
+     where
+         T: AsReprMut,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
++        Self::Backend: IoReadable<<T as AsRepr>::Repr>,
+     {
+         io_read!(self, build: location)
+     }
+@@ -1072,7 +1078,7 @@ fn write<T, L>(self, location: L, value: T)
+     where
+         T: AsRepr,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
++        Self::Backend: IoWritable<<T as AsRepr>::Repr>,
+     {
+         io_write!(self, build: location, value);
+     }
+@@ -1116,7 +1122,7 @@ fn write_reg<T, L, V>(self, value: V)
+         T: AsRepr,
+         L: IoLoc<Self::Target, T>,
+         V: LocatedRegister<Self::Target, Location = L, Value = T>,
+-        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
++        Self::Backend: IoWritable<<T as AsRepr>::Repr>,
+     {
+         let (location, value) = value.into_io_op();
+ 
+@@ -1150,7 +1156,7 @@ fn update<T, L, F>(self, location: L, f: F)
+     where
+         T: AsReprMut,
+         L: IoLoc<Self::Target, T>,
+-        Self::Backend: IoCapable<<T as AsRepr>::Repr>,
++        Self::Backend: IoReadable<<T as AsRepr>::Repr> + IoWritable<<T as AsRepr>::Repr>,
+         F: FnOnce(T) -> T,
+     {
+         let view = io_project!(self, build: location);
+@@ -1237,17 +1243,20 @@ unsafe fn project_view<'a, T: ?Sized + KnownSize, U: ?Sized + KnownSize>(
+     }
+ }
+ 
+-/// Implements [`IoCapable`] on `$backend` for `$ty` using `$read_fn` and `$write_fn`.
++/// Implements [`IoReadable`] and [`IoWritable`] on `$backend` for `$ty` using `$read_fn` and
++/// `$write_fn`.
+ macro_rules! impl_mmio_io_capable {
+     ($backend: ident, $ty:ty, $read_fn:ident, $write_fn:ident) => {
+-        impl IoCapable<$ty> for $backend {
++        impl IoReadable<$ty> for $backend {
+             #[inline]
+             fn io_read(view: <$backend as IoBackend>::View<'_, $ty>) -> $ty {
+                 // SAFETY: `$backend::as_ptr(view)` is a valid pointer for MMIO operations for both
+                 // `MmioBackend` and `RelaxedMmioBackend`.
+                 unsafe { bindings::$read_fn($backend::as_ptr(view).cast_const().cast()) }
+             }
++        }
+ 
++        impl IoWritable<$ty> for $backend {
+             #[inline]
+             fn io_write(view: <$backend as IoBackend>::View<'_, $ty>, value: $ty) {
+                 // SAFETY: `$backend::as_ptr(view)` is a valid pointer for MMIO operations for both
+@@ -1396,11 +1405,11 @@ unsafe fn project_view<'a, T: ?Sized + KnownSize, U: ?Sized + KnownSize>(
+     }
+ }
+ 
+-/// Implements [`IoCapable`] on `SysMemBackend` for `$ty` using `read_volatile` and
+-/// `write_volatile`.
++/// Implements [`IoReadable`] and [`IoWritable`] on `SysMemBackend` for `$ty` using
++/// `read_volatile` and `write_volatile`.
+ macro_rules! impl_sysmem_io_capable {
+     ($ty:ty) => {
+-        impl IoCapable<$ty> for SysMemBackend {
++        impl IoReadable<$ty> for SysMemBackend {
+             #[inline]
+             fn io_read(view: SysMem<'_, $ty>) -> $ty {
+                 // SAFETY:
+@@ -1411,7 +1420,9 @@ fn io_read(view: SysMem<'_, $ty>) -> $ty {
+                 // - The macro is only used on primitives so all bit patterns are valid.
+                 unsafe { view.ptr.read_volatile() }
+             }
++        }
+ 
++        impl IoWritable<$ty> for SysMemBackend {
+             #[inline]
+             fn io_write(view: SysMem<'_, $ty>, value: $ty) {
+                 // SAFETY:
+@@ -1601,10 +1612,10 @@ unsafe fn project_view<'a, T: ?Sized + KnownSize, U: ?Sized + KnownSize>(
+     }
+ }
+ 
+-impl<T> IoCapable<T> for IoSysMapBackend
++impl<T> IoReadable<T> for IoSysMapBackend
+ where
+-    MmioBackend: IoCapable<T>,
+-    SysMemBackend: IoCapable<T>,
++    MmioBackend: IoReadable<T>,
++    SysMemBackend: IoReadable<T>,
+ {
+     #[inline]
+     fn io_read(view: Self::View<'_, T>) -> T {
+@@ -1613,7 +1624,13 @@ fn io_read(view: Self::View<'_, T>) -> T {
+             IoSysMap::Sys(r) => SysMemBackend::io_read(r),
+         }
+     }
++}
+ 
++impl<T> IoWritable<T> for IoSysMapBackend
++where
++    MmioBackend: IoWritable<T>,
++    SysMemBackend: IoWritable<T>,
++{
+     #[inline]
+     fn io_write<'a>(view: Self::View<'a, T>, value: T) {
+         match view {
+diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
+index 953e16735c6e..426e914e15c2 100644
+--- a/rust/kernel/pci/io.rs
++++ b/rust/kernel/pci/io.rs
+@@ -10,7 +10,8 @@
+     io::{
+         IoBackend,
+         IoBase,
+-        IoCapable,
++        IoReadable,
++        IoWritable,
+         Mmio,
+         MmioBackend,
+         MmioRaw,
+@@ -111,10 +112,11 @@ unsafe fn project_view<'a, T: ?Sized + KnownSize, U: ?Sized + KnownSize>(
+     }
+ }
+ 
+-/// Implements [`IoCapable`] on [`ConfigSpace`] for `$ty` using `$read_fn` and `$write_fn`.
++/// Implements [`IoReadable`] and [`IoWritable`] on [`ConfigSpace`] for `$ty` using `$read_fn`
++/// and `$write_fn`.
+ macro_rules! impl_config_space_io_capable {
+     ($ty:ty, $read_fn:ident, $write_fn:ident) => {
+-        impl IoCapable<$ty> for ConfigSpaceBackend {
++        impl IoReadable<$ty> for ConfigSpaceBackend {
+             fn io_read(view: ConfigSpace<'_, $ty>) -> $ty {
+                 // CAST: The offset is cast to `i32` because the C functions expect a 32-bit
+                 // signed offset parameter. PCI configuration space size is at most 4096 bytes,
+@@ -128,7 +130,9 @@ fn io_read(view: ConfigSpace<'_, $ty>) -> $ty {
+                 let _ = unsafe { bindings::$read_fn(view.pdev.as_raw(), addr, &mut val) };
+                 val
+             }
++        }
+ 
++        impl IoWritable<$ty> for ConfigSpaceBackend {
+             fn io_write(view: ConfigSpace<'_, $ty>, value: $ty) {
+                 // CAST: The offset is cast to `i32` because the C functions expect a 32-bit
+                 // signed offset parameter. PCI configuration space size is at most 4096 bytes,
 
 -- 
-Regards,
-Pratyush Yadav
+2.56.0
+
