@@ -1,44 +1,44 @@
-Received: from sender6-op-o11.zoho.com (sender6-op-o11.zoho.com [165.173.180.11])
+Received: from sender5-op-o11.zoho.com (sender5-op-o11.zoho.com [165.173.182.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D2B251DDF3;
-	Thu, 15 Oct 2026 12:40:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=165.173.180.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0696751C077;
+	Thu, 15 Oct 2026 12:40:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=165.173.182.11
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792068026; cv=pass; b=Gh3MKeLOo7yNenefUmqgH6yijGYm2IBKnDA2ztth8cEbuyiDx/j+cNuEeFowQyTKwx5rA3NuklG/6BcU87aOfK5NlI0Im/xGgMhqjyJz2Qm/9o9uc+2uLRkBNiUsbahucr7XIayDpUs4mGFhzOOXrQYPvMn1vKBIeV43LAP7/Tw=
+	t=1792068035; cv=pass; b=PLAy/yShNe/IWkswOvu+b4EQSD/qm1gbkywdZYjdBCZ2QomgIUpWcr7hFEvyqKGivI6N7raGwLyOqtjwcdTWU0ZPVU8PQONnvI1TMmaXcB732e95H+GBqEHN/K8JQficZvHyX6s9NVQoAsn2N+c93GiArrv1/9M5mmwlFb6b8EQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792068026; c=relaxed/simple;
-	bh=UhOW24s2yUc8kCp4Km06imoSYBRncV1dnDwDdFdwwUI=;
+	s=arc-20240116; t=1792068035; c=relaxed/simple;
+	bh=al3CME/inp0DukWbj0924UKJ7/mOzuRSXXvkNW61d4A=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=VxigYJtbpg7x+SSPrrySxLjqz9U4CEnHo18JGAshGU44q6Antyx5AaAr+1OKk+MIMB7fzU3YvG/CMKIDYEgD3r0Y1uCzfAouLjladh7aLT2MXTDHjJ0TaYSaSRIcY9lSM6hqFoyoxYi1jAdc9jhf+tim1OcGdf2THo7Zk2WN5XI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=OU6U70VQ; arc=pass smtp.client-ip=165.173.180.11
+	 In-Reply-To:To:Cc; b=FdyfHYA1e3ANMhlOz8pC2IX5CUS2arAa3A8vh9H3T7ijqJTMphVH9Ap4gscF/Nc6GNAesyXczpu5c+Idp9T93S1eYqW91/IZ2rtf5kHH+ybWDJI6NOeSJfj9KA9WRVU2Q0pEI9NHbZ6Wk31CI2ma4Hq1RJ35svJVK6ZR3ZMQoUE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=Te0ofT7W; arc=pass smtp.client-ip=165.173.182.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="OU6U70VQ"
-ARC-Seal: i=1; a=rsa-sha256; t=1792067988; cv=none; 
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="Te0ofT7W"
+ARC-Seal: i=1; a=rsa-sha256; t=1792067998; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=FZ3HWdsydTpzqso0xg3TZ3uHmmznThlVa1zh5NoGHc0tcmIeNDlBgvokcny4BvdD8A3k2KNVDAOB+PQZEUhNwtUnRnxXubZ/eYhab9BJEKEoQtMzmripCh+LKqjIj9+wtawYUtzUSs3mGzsnENie7qQ9kNp2YB2Nxv4dpC16K3c=
+	b=CLYVnIv0YslQQGivCi2x1vd2eoWUHm23qh1dix3svOFnThoMWjSVujyHRNnIlCWE54brbiEAu0U1UZOafyoNd8SqbmnXL/776a8efwh0gQ4EejRqJvGHWjQzifgqpoEW3CO2+cZe2niZmfoyJ3lzTzWI07rzxi/1pqzUNdjNnNM=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1792067988; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=SbvGLtSNiT/nCJriHxBz6XcPbdrSHUtNrM6kaTGv7tM=; 
-	b=ll5EctNRWAGch20FX4/tXDGUOz9fHnujwJRNPgavoLZ4bst6DULkO4jVpywjbcy8cM8MVBgFn1FUjuiGzrm+2q4epX7TYGR38+tkyU5ums66s4MTeFd6yS8wy8mLkFW22xgKeVEz0hhgyYnCHG5mm6ia2VbDa1v7k0PK7esCGRM=
+	t=1792067998; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=q85EzV/zGA0BWz9e+hHW+D6/t0h0lhxXVushOZlu8W4=; 
+	b=k7LcEcXdeV4bH2xnLGRYyCfaCxiVQzBupS5tvTCFvS6mcTtHusg2XmLNq33B2BDGsxMLVfUJFm61YwmXKtqdoDPGFS+ZyXYSb1qIMNagF6xv5NgTVRJm1RGjCusMcJt+q0zod6nc/uIogHE3f20aeDpvUHxCHp+DGAueSUh2Ets=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=collabora.com;
 	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
 	dmarc=pass header.from=<daniel.almeida@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1792067988;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1792067998;
 	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
 	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:In-Reply-To:To:To:Cc:Cc:Reply-To;
-	bh=SbvGLtSNiT/nCJriHxBz6XcPbdrSHUtNrM6kaTGv7tM=;
-	b=OU6U70VQDn7KWtzdeALGltwGSVR/5TDudX/mhupbKtbl3l2nAZ2eI3b3UXt/wXFQ
-	6OPC7RF2L7bIhyaD7LfTuFM/1ZYQ/qSmxT7hX/dy0a6EuuvpWNoj3MD5RlsAaPD05H6
-	iEcN66eDgP69Mw1YY7tgzRrc9UbfsmBTWtjdnDEo=
-Received: by smtp.zohomail.com with SMTPS id 1792067985538849.0373958060442;
-	Thu, 15 Oct 2026 05:39:45 -0700 (PDT)
+	bh=q85EzV/zGA0BWz9e+hHW+D6/t0h0lhxXVushOZlu8W4=;
+	b=Te0ofT7WSIzSF7wO9e84VzOKiJYYdRjVdcC4htHGNrc1JcaaQAyaNUVyKHJfDmb8
+	ij1oKIedutEOtWBgPOkIewlmImSe0BbxzBYGPnGOt/6pagrCGHlHwGMdhmEpURbqFQS
+	tx+JZrFSsCOzoPZ/Ox6WZ4pL4Ot79mROmlUEV1rg=
+Received: by smtp.zohomail.com with SMTPS id 1792067995759443.73080526438025;
+	Thu, 15 Oct 2026 05:39:55 -0700 (PDT)
 From: Daniel Almeida <daniel.almeida@collabora.com>
-Date: Thu, 15 Oct 2026 09:39:09 -0300
-Subject: [PATCH 5/7] rust: io: let I/O locations carry an access mode
+Date: Thu, 15 Oct 2026 09:39:11 -0300
+Subject: [PATCH 7/7] drm/tyr: mark read-only and write-only registers
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,7 +47,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261015-io-access-modes-v1-5-93611b84b5e3@collabora.com>
+Message-Id: <20261015-io-access-modes-v1-7-93611b84b5e3@collabora.com>
 References: <20261015-io-access-modes-v1-0-93611b84b5e3@collabora.com>
 In-Reply-To: <20261015-io-access-modes-v1-0-93611b84b5e3@collabora.com>
 To: Danilo Krummrich <dakr@kernel.org>, 
@@ -70,337 +70,521 @@ Cc: driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org,
 X-Mailer: b4 0.15.2
 X-ZohoMailClient: External
 
-`Io::read`, `Io::write`, `Io::update` and their fallible variants
-project the view to the given `IoLoc` and access it there. A location
-has no say in which accesses are allowed, so a register cannot be
-declared read-only or write-only.
+The documentation in regs.rs describes some registers as read-only or
+write-only, but nothing enforces it, and most registers do not document
+a mode at all.
 
-Add the `io::access` module with the `Mode` trait and the `ReadWrite`,
-`ReadOnly` and `WriteOnly` modes, and add an `Access` associated type to
-`IoLoc`. Projecting through a location applies its mode: `ReadWrite`
-leaves the view as it is, while `ReadOnly` and `WriteOnly` wrap it in the
-`ReadOnly` and `WriteOnly` views. The bounds of the generic accessors now
-apply to the backend of the restricted view, so a write to a read-only
-location, or a read from a write-only one, does not compile.
+Declare every read-only and write-only register with the `#[ro]` and
+`#[wo]` attributes of `register!`, so that writing a read-only register,
+or reading a write-only one, does not compile. The modes follow the
+documentation in regs.rs where there is one, and otherwise the register
+permissions in Arm's kbase driver for v10 GPUs. Both halves of a 64-bit
+register get the same mode, and so do the aliases of `GPU_COMMAND`.
 
-Raw offsets are `ReadWrite`. `OffsetLoc` takes the mode as a type
-parameter that defaults to `ReadWrite`, and `RegisterArray` gets an
-`Access` type, which `register!` sets to `ReadWrite` for now.
-
-No existing location changes its mode, so there is no functional change.
-A following patch lets `register!` declare read-only and write-only
-registers.
+No existing access goes against these modes, so the driver code does not
+change.
 
 Signed-off-by: Daniel Almeida <daniel.almeida@collabora.com>
 ---
- rust/kernel/io.rs          | 42 +++++++++++++++++--------
- rust/kernel/io/access.rs   | 76 ++++++++++++++++++++++++++++++++++++++++++++++
- rust/kernel/io/register.rs | 18 +++++++++--
- rust/macros/io/register.rs |  1 +
- 4 files changed, 121 insertions(+), 16 deletions(-)
+ drivers/gpu/drm/tyr/regs.rs | 77 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 77 insertions(+)
 
-diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-index 4be8c761c556..71bcd0d77ce9 100644
---- a/rust/kernel/io.rs
-+++ b/rust/kernel/io.rs
-@@ -22,6 +22,7 @@
-     }, //
- };
+diff --git a/drivers/gpu/drm/tyr/regs.rs b/drivers/gpu/drm/tyr/regs.rs
+index 69c901afb28f..6695a292c786 100644
+--- a/drivers/gpu/drm/tyr/regs.rs
++++ b/drivers/gpu/drm/tyr/regs.rs
+@@ -63,6 +63,7 @@ pub(crate) mod gpu_control {
+         base: TyrRegisters;
  
-+pub mod access;
- #[cfg(CONFIG_HAS_IOMEM)]
- pub mod mem;
- pub mod poll;
-@@ -377,12 +378,16 @@ fn copy_write<T: IntoBytes>(view: Self::View<'_, T>, value: T) {
- ///
- /// - The valid `Base` to operate on. For most registers, this should be [`Region`].
- /// - The offset to access (returned by [`IoLoc::offset`]),
--/// - The type `T` in which the data is returned or provided.
-+/// - The type `T` in which the data is returned or provided,
-+/// - The access mode ([`IoLoc::Access`]) applied to the views projected through it.
- ///
- /// `T` is not necessarily the type for underlying I/O operation. Methods that take `IoLoc` have `T:
- /// AsRepr` bound and the `<T as AsRepr>::Repr` type would be used to perform I/O and converted to
- /// `T` instead.
- pub trait IoLoc<Base: ?Sized, T> {
-+    /// Access mode applied to the views projected through this location.
-+    type Access: access::Mode;
-+
-     /// Consumes `self` and returns the offset of this location.
-     fn offset(self) -> usize;
- }
-@@ -393,6 +398,8 @@ macro_rules! impl_usize_ioloc {
-     ($($ty:ty),*) => {
-         $(
-             impl<const SIZE: usize> IoLoc<Region<SIZE>, $ty> for usize {
-+                type Access = access::ReadWrite;
-+
-                 #[inline(always)]
-                 fn offset(self) -> usize {
-                     self
-@@ -961,7 +968,7 @@ fn try_read<T, L>(self, location: L) -> Result<T>
-     where
-         T: AsReprMut,
-         L: IoLoc<Self::Target, T>,
--        Self::Backend: IoReadable<<T as AsRepr>::Repr>,
-+        <L::Access as access::Mode>::Backend<Self::Backend>: IoReadable<<T as AsRepr>::Repr>,
-     {
-         Ok(io_read!(self, try: location))
-     }
-@@ -994,7 +1001,7 @@ fn try_write<T, L>(self, location: L, value: T) -> Result
-     where
-         T: AsRepr,
-         L: IoLoc<Self::Target, T>,
--        Self::Backend: IoWritable<<T as AsRepr>::Repr>,
-+        <L::Access as access::Mode>::Backend<Self::Backend>: IoWritable<<T as AsRepr>::Repr>,
-     {
-         io_write!(self, try: location, value);
-         Ok(())
-@@ -1040,7 +1047,7 @@ fn try_write_reg<T, L, V>(self, value: V) -> Result
-         T: AsRepr,
-         L: IoLoc<Self::Target, T>,
-         V: LocatedRegister<Self::Target, Location = L, Value = T>,
--        Self::Backend: IoWritable<<T as AsRepr>::Repr>,
-+        <L::Access as access::Mode>::Backend<Self::Backend>: IoWritable<<T as AsRepr>::Repr>,
-     {
-         let (location, value) = value.into_io_op();
+         /// GPU identification register.
++        #[ro]
+         pub(crate) GPU_ID(u32) @ 0x0 {
+             /// Status of the GPU release.
+             3:0     ver_status;
+@@ -81,6 +82,7 @@ pub(crate) mod gpu_control {
+         }
  
-@@ -1074,7 +1081,8 @@ fn try_update<T, L, F>(self, location: L, f: F) -> Result
-     where
-         T: AsReprMut,
-         L: IoLoc<Self::Target, T>,
--        Self::Backend: IoReadable<<T as AsRepr>::Repr> + IoWritable<<T as AsRepr>::Repr>,
-+        <L::Access as access::Mode>::Backend<Self::Backend>:
-+            IoReadable<<T as AsRepr>::Repr> + IoWritable<<T as AsRepr>::Repr>,
-         F: FnOnce(T) -> T,
-     {
-         let view = io_project!(self, try: location);
-@@ -1108,7 +1116,7 @@ fn read<T, L>(self, location: L) -> T
-     where
-         T: AsReprMut,
-         L: IoLoc<Self::Target, T>,
--        Self::Backend: IoReadable<<T as AsRepr>::Repr>,
-+        <L::Access as access::Mode>::Backend<Self::Backend>: IoReadable<<T as AsRepr>::Repr>,
-     {
-         io_read!(self, build: location)
-     }
-@@ -1139,7 +1147,7 @@ fn write<T, L>(self, location: L, value: T)
-     where
-         T: AsRepr,
-         L: IoLoc<Self::Target, T>,
--        Self::Backend: IoWritable<<T as AsRepr>::Repr>,
-+        <L::Access as access::Mode>::Backend<Self::Backend>: IoWritable<<T as AsRepr>::Repr>,
-     {
-         io_write!(self, build: location, value);
-     }
-@@ -1183,7 +1191,7 @@ fn write_reg<T, L, V>(self, value: V)
-         T: AsRepr,
-         L: IoLoc<Self::Target, T>,
-         V: LocatedRegister<Self::Target, Location = L, Value = T>,
--        Self::Backend: IoWritable<<T as AsRepr>::Repr>,
-+        <L::Access as access::Mode>::Backend<Self::Backend>: IoWritable<<T as AsRepr>::Repr>,
-     {
-         let (location, value) = value.into_io_op();
+         /// Level 2 cache features register.
++        #[ro]
+         pub(crate) L2_FEATURES(u32) @ 0x4 {
+             /// Cache line size.
+             7:0     line_size;
+@@ -93,12 +95,14 @@ pub(crate) mod gpu_control {
+         }
  
-@@ -1217,7 +1225,8 @@ fn update<T, L, F>(self, location: L, f: F)
-     where
-         T: AsReprMut,
-         L: IoLoc<Self::Target, T>,
--        Self::Backend: IoReadable<<T as AsRepr>::Repr> + IoWritable<<T as AsRepr>::Repr>,
-+        <L::Access as access::Mode>::Backend<Self::Backend>:
-+            IoReadable<<T as AsRepr>::Repr> + IoWritable<<T as AsRepr>::Repr>,
-         F: FnOnce(T) -> T,
-     {
-         let view = io_project!(self, build: location);
-@@ -1909,19 +1918,26 @@ pub unsafe fn project_view<U: ?Sized + KnownSize>(
-     pub fn try_project_loc<U, L>(
-         self,
-         location: L,
--    ) -> Result<<T::Backend as IoBackend>::View<'a, U>>
-+    ) -> Result<access::RestrictedView<'a, L::Access, T::Backend, U>>
-     where
-         L: IoLoc<T::Target, U>,
-     {
--        io_view::<_, U>(self.0, location.offset())
-+        let view = io_view::<_, U>(self.0, location.offset())?;
-+
-+        Ok(<L::Access as access::Mode>::restrict::<T::Backend, U>(view))
-     }
+         /// Shader core features.
++        #[ro]
+         pub(crate) CORE_FEATURES(u32) @ 0x8 {
+             /// Shader core variant.
+             7:0     core_variant;
+         }
  
-     #[inline(always)]
--    pub fn project_loc<U, L>(self, location: L) -> <T::Backend as IoBackend>::View<'a, U>
-+    pub fn project_loc<U, L>(
-+        self,
-+        location: L,
-+    ) -> access::RestrictedView<'a, L::Access, T::Backend, U>
-     where
-         L: IoLoc<T::Target, U>,
-     {
--        io_view_assert::<_, U>(self.0, location.offset())
-+        let view = io_view_assert::<_, U>(self.0, location.offset());
-+
-+        <L::Access as access::Mode>::restrict::<T::Backend, U>(view)
-     }
- }
+         /// Tiler features.
++        #[ro]
+         pub(crate) TILER_FEATURES(u32) @ 0xc {
+             /// Log of the tiler's bin size.
+             5:0     bin_size;
+@@ -107,6 +111,7 @@ pub(crate) mod gpu_control {
+         }
  
-diff --git a/rust/kernel/io/access.rs b/rust/kernel/io/access.rs
-new file mode 100644
-index 000000000000..caec21dd943b
---- /dev/null
-+++ b/rust/kernel/io/access.rs
-@@ -0,0 +1,76 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+//! Access modes of I/O locations.
-+//!
-+//! An I/O location ([`IoLoc`](super::IoLoc)) has an access mode, which applies to the views
-+//! projected through it: a [`ReadWrite`] location gives the view as it is, a [`ReadOnly`] location
-+//! gives a [`ReadOnly`](super::ReadOnly) view, and a [`WriteOnly`] location gives a
-+//! [`WriteOnly`](super::WriteOnly) view.
-+
-+use crate::ptr::KnownSize;
-+
-+use super::{
-+    IoBackend,
-+    ReadOnlyBackend,
-+    WriteOnlyBackend, //
-+};
-+
-+/// An access mode of an I/O location.
-+pub trait Mode {
-+    /// Backend of the views this mode gives for views of backend `B`.
-+    type Backend<B: IoBackend>: IoBackend;
-+
-+    /// Applies this mode to `view`.
-+    fn restrict<'a, B: IoBackend, T: ?Sized + KnownSize>(
-+        view: B::View<'a, T>,
-+    ) -> <Self::Backend<B> as IoBackend>::View<'a, T>;
-+}
-+
-+/// View of `T` that access mode `M` gives for views of backend `B`.
-+pub type RestrictedView<'a, M, B, T> = <<M as Mode>::Backend<B> as IoBackend>::View<'a, T>;
-+
-+/// Read-write access mode.
-+///
-+/// Views are given as they are.
-+pub struct ReadWrite;
-+
-+impl Mode for ReadWrite {
-+    type Backend<B: IoBackend> = B;
-+
-+    #[inline(always)]
-+    fn restrict<'a, B: IoBackend, T: ?Sized + KnownSize>(view: B::View<'a, T>) -> B::View<'a, T> {
-+        view
-+    }
-+}
-+
-+/// Read-only access mode.
-+///
-+/// Views are wrapped in [`ReadOnly`](super::ReadOnly).
-+pub struct ReadOnly;
-+
-+impl Mode for ReadOnly {
-+    type Backend<B: IoBackend> = ReadOnlyBackend<B>;
-+
-+    #[inline(always)]
-+    fn restrict<'a, B: IoBackend, T: ?Sized + KnownSize>(
-+        view: B::View<'a, T>,
-+    ) -> super::ReadOnly<B::View<'a, T>> {
-+        super::ReadOnly(view)
-+    }
-+}
-+
-+/// Write-only access mode.
-+///
-+/// Views are wrapped in [`WriteOnly`](super::WriteOnly).
-+pub struct WriteOnly;
-+
-+impl Mode for WriteOnly {
-+    type Backend<B: IoBackend> = WriteOnlyBackend<B>;
-+
-+    #[inline(always)]
-+    fn restrict<'a, B: IoBackend, T: ?Sized + KnownSize>(
-+        view: B::View<'a, T>,
-+    ) -> super::WriteOnly<B::View<'a, T>> {
-+        super::WriteOnly(view)
-+    }
-+}
-diff --git a/rust/kernel/io/register.rs b/rust/kernel/io/register.rs
-index b6513fa0f412..9218dc66017b 100644
---- a/rust/kernel/io/register.rs
-+++ b/rust/kernel/io/register.rs
-@@ -118,7 +118,10 @@
+         /// Memory system features.
++        #[ro]
+         pub(crate) MEM_FEATURES(u32) @ 0x10 {
+             0:0     coherent_core_group => bool;
+             1:1     coherent_super_group => bool;
+@@ -114,6 +119,7 @@ pub(crate) mod gpu_control {
+         }
  
- use crate::{
-     build_assert::build_assert,
--    io::IoLoc, //
-+    io::{
-+        access,
-+        IoLoc, //
-+    },
- };
+         /// Memory management unit features.
++        #[ro]
+         pub(crate) MMU_FEATURES(u32) @ 0x14 {
+             /// Number of bits supported in virtual addresses.
+             7:0     va_bits;
+@@ -122,11 +128,13 @@ pub(crate) mod gpu_control {
+         }
  
- /// Allows `()` to be used as the `location` parameter of [`Io::write`](super::Io::write) when
-@@ -127,6 +130,8 @@ impl<Base: ?Sized, T> IoLoc<Base, T> for ()
- where
-     T: FixedIoLoc<Base>,
- {
-+    type Access = <T::Location as IoLoc<Base, T>>::Access;
-+
-     #[inline(always)]
-     fn offset(self) -> usize {
-         T::LOCATION.offset()
-@@ -135,7 +140,7 @@ fn offset(self) -> usize {
+         /// Address spaces present.
++        #[ro]
+         pub(crate) AS_PRESENT(u32) @ 0x18 {
+             31:0    present;
+         }
  
- // Provides a `IoLoc` impl that for a fixed offset.
- #[doc(hidden)]
--pub struct OffsetLoc<Base: ?Sized, T>(usize, PhantomData<(T, Base)>);
-+pub struct OffsetLoc<Base: ?Sized, T, A = access::ReadWrite>(usize, PhantomData<(T, A, Base)>);
+         /// CSF version information.
++        #[ro]
+         pub(crate) CSF_ID(u32) @ 0x1c {
+             /// MCU revision ID.
+             3:0     mcu_rev;
+@@ -164,6 +172,7 @@ pub(crate) mod gpu_control {
+         }
  
- impl<Base: ?Sized, T> OffsetLoc<Base, T> {
-     #[inline]
-@@ -149,7 +154,9 @@ pub const fn const_offset(self) -> usize {
-     }
- }
+         /// IRQ sources to clear. Write only.
++        #[wo]
+         pub(crate) GPU_IRQ_CLEAR(u32) @ 0x24 {
+             /// Clear the GPU_FAULT interrupt, a 1-bit boolean flag.
+             0:0     gpu_fault => bool;
+@@ -202,6 +211,7 @@ pub(crate) mod gpu_control {
+         }
  
--impl<Base: ?Sized, T> IoLoc<Base, T> for OffsetLoc<Base, T> {
-+impl<Base: ?Sized, T, A: access::Mode> IoLoc<Base, T> for OffsetLoc<Base, T, A> {
-+    type Access = A;
-+
-     #[inline(always)]
-     fn offset(self) -> usize {
-         self.0
-@@ -161,6 +168,9 @@ pub trait RegisterArray: Sized {
-     /// Base type for this register.
-     type Base: ?Sized;
+         /// IRQ status for enabled sources. Read only.
++        #[ro]
+         pub(crate) GPU_IRQ_STATUS(u32) @ 0x2c {
+             /// GPU_FAULT interrupt status, a 1-bit boolean flag.
+             0:0     gpu_fault => bool;
+@@ -328,11 +338,13 @@ fn from(mode: FlushMode) -> Self {
+         /// - [`GPU_COMMAND::reset()`]
+         /// - [`GPU_COMMAND::flush_caches()`]
+         /// - [`GPU_COMMAND::clear_fault()`]
++        #[wo]
+         pub(crate) GPU_COMMAND (u32) @ 0x30 {
+             7:0     command ?=> GpuCommand;
+         }
+         /// Internal alias for GPU_COMMAND in reset mode.
+         /// Use [`GPU_COMMAND::reset()`] instead.
++        #[wo]
+         GPU_COMMAND_RESET (u32) => GPU_COMMAND {
+             7:0     command ?=> GpuCommand;
+             11:8    reset_mode ?=> ResetMode;
+@@ -340,6 +352,7 @@ fn from(mode: FlushMode) -> Self {
  
-+    /// Access mode of the registers in this array.
-+    type Access: access::Mode;
-+
-     /// Start offset of the register.
-     ///
-     /// The interpretation of this offset depends on the type of the register.
-@@ -198,6 +208,8 @@ impl<Base: ?Sized, T> IoLoc<Base, T> for RegisterArrayLoc<T>
- where
-     T: RegisterArray<Base = Base>,
- {
-+    type Access = T::Access;
-+
-     #[inline(always)]
-     fn offset(self) -> usize {
-         T::OFFSET + self.0 * T::STRIDE
-diff --git a/rust/macros/io/register.rs b/rust/macros/io/register.rs
-index 420c3ad052b8..2d92c7f41447 100644
---- a/rust/macros/io/register.rs
-+++ b/rust/macros/io/register.rs
-@@ -283,6 +283,7 @@ impl ::kernel::io::register::Array for #name {}
+         /// Internal alias for GPU_COMMAND in cache flush mode.
+         /// Use [`GPU_COMMAND::flush_caches()`] instead.
++        #[wo]
+         GPU_COMMAND_FLUSH (u32) => GPU_COMMAND {
+             7:0     command ?=> GpuCommand;
+             /// L2 cache flush mode.
+@@ -389,6 +402,7 @@ pub(crate) fn clear_fault() -> Self {
+         base: TyrRegisters;
  
-                     impl ::kernel::io::register::RegisterArray for #name {
-                         type Base = #base;
-+                        type Access = ::kernel::io::access::ReadWrite;
-                         const OFFSET: usize = #offset;
-                         const SIZE: usize = #size;
-                         const STRIDE: usize = #stride;
+         /// GPU status register. Read only.
++        #[ro]
+         pub(crate) GPU_STATUS(u32) @ 0x34 {
+             /// GPU active, a 1-bit boolean flag.
+             0:0     gpu_active => bool;
+@@ -474,6 +488,7 @@ fn from(access: AccessType) -> Self {
+         base: TyrRegisters;
+ 
+         /// GPU fault status register. Read only.
++        #[ro]
+         pub(crate) GPU_FAULTSTATUS(u32) @ 0x3c {
+             /// Exception type.
+             7:0     exception_type ?=> ExceptionType;
+@@ -493,10 +508,12 @@ fn from(access: AccessType) -> Self {
+         /// Once a fault is reported, it must be manually cleared by issuing a
+         /// [`GPU_COMMAND::clear_fault()`] command to the [`GPU_COMMAND`] register. No further GPU
+         /// faults will be reported until the previous fault has been cleared.
++        #[ro]
+         pub(crate) GPU_FAULTADDRESS_LO(u32) @ 0x40 {
+             31:0    pointer;
+         }
+ 
++        #[ro]
+         pub(crate) GPU_FAULTADDRESS_HI(u32) @ 0x44 {
+             31:0    pointer;
+         }
+@@ -519,39 +536,47 @@ fn from(access: AccessType) -> Self {
+         }
+ 
+         /// GPU cycle counter. Read only.
++        #[ro]
+         pub(crate) CYCLE_COUNT_LO(u32) @ 0x90 {
+             31:0    count;
+         }
+ 
++        #[ro]
+         pub(crate) CYCLE_COUNT_HI(u32) @ 0x94 {
+             31:0    count;
+         }
+ 
+         /// Global time stamp. Read only.
++        #[ro]
+         pub(crate) TIMESTAMP_LO(u32) @ 0x98 {
+             31:0    timestamp;
+         }
+ 
++        #[ro]
+         pub(crate) TIMESTAMP_HI(u32) @ 0x9c {
+             31:0    timestamp;
+         }
+ 
+         /// Maximum number of threads per core. Read only constant.
++        #[ro]
+         pub(crate) THREAD_MAX_THREADS(u32) @ 0xa0 {
+             31:0    threads;
+         }
+ 
+         /// Maximum number of threads per workgroup. Read only constant.
++        #[ro]
+         pub(crate) THREAD_MAX_WORKGROUP_SIZE(u32) @ 0xa4 {
+             31:0    threads;
+         }
+ 
+         /// Maximum number of threads per barrier. Read only constant.
++        #[ro]
+         pub(crate) THREAD_MAX_BARRIER_SIZE(u32) @ 0xa8 {
+             31:0    threads;
+         }
+ 
+         /// Thread features. Read only constant.
++        #[ro]
+         pub(crate) THREAD_FEATURES(u32) @ 0xac {
+             /// Total number of registers per core.
+             21:0    max_registers;
+@@ -565,173 +590,211 @@ fn from(access: AccessType) -> Self {
+         ///
+         /// A bitmap where each bit indicates support for a specific compressed texture format.
+         /// The bit position maps to an opaque format ID (`texture_features_key_t` in spec).
++        #[ro]
+         pub(crate) TEXTURE_FEATURES(u32)[4] @ 0xb0 {
+             31:0    supported_formats;
+         }
+ 
+         /// Shader core present bitmap. Read only constant.
++        #[ro]
+         pub(crate) SHADER_PRESENT_LO(u32) @ 0x100 {
+             31:0    value;
+         }
+ 
++        #[ro]
+         pub(crate) SHADER_PRESENT_HI(u32) @ 0x104 {
+             31:0    value;
+         }
+ 
+         /// Tiler present bitmap. Read only constant.
++        #[ro]
+         pub(crate) TILER_PRESENT_LO(u32) @ 0x110 {
+             31:0    present;
+         }
+ 
++        #[ro]
+         pub(crate) TILER_PRESENT_HI(u32) @ 0x114 {
+             31:0    present;
+         }
+ 
+         /// L2 cache present bitmap. Read only constant.
++        #[ro]
+         pub(crate) L2_PRESENT_LO(u32) @ 0x120 {
+             31:0    present;
+         }
+ 
++        #[ro]
+         pub(crate) L2_PRESENT_HI(u32) @ 0x124 {
+             31:0    present;
+         }
+ 
+         /// Shader core ready bitmap. Read only.
++        #[ro]
+         pub(crate) SHADER_READY_LO(u32) @ 0x140 {
+             31:0    ready;
+         }
+ 
++        #[ro]
+         pub(crate) SHADER_READY_HI(u32) @ 0x144 {
+             31:0    ready;
+         }
+ 
+         /// Tiler ready bitmap. Read only.
++        #[ro]
+         pub(crate) TILER_READY_LO(u32) @ 0x150 {
+             31:0    ready;
+         }
+ 
++        #[ro]
+         pub(crate) TILER_READY_HI(u32) @ 0x154 {
+             31:0    ready;
+         }
+ 
+         /// L2 ready bitmap. Read only.
++        #[ro]
+         pub(crate) L2_READY_LO(u32) @ 0x160 {
+             31:0    ready;
+         }
+ 
++        #[ro]
+         pub(crate) L2_READY_HI(u32) @ 0x164 {
+             31:0    ready;
+         }
+ 
+         /// Shader core power up bitmap.
++        #[wo]
+         pub(crate) SHADER_PWRON_LO(u32) @ 0x180 {
+             31:0    request;
+         }
+ 
++        #[wo]
+         pub(crate) SHADER_PWRON_HI(u32) @ 0x184 {
+             31:0    request;
+         }
+ 
+         /// Tiler power up bitmap.
++        #[wo]
+         pub(crate) TILER_PWRON_LO(u32) @ 0x190 {
+             31:0    request;
+         }
+ 
++        #[wo]
+         pub(crate) TILER_PWRON_HI(u32) @ 0x194 {
+             31:0    request;
+         }
+ 
+         /// L2 power up bitmap.
++        #[wo]
+         pub(crate) L2_PWRON_LO(u32) @ 0x1a0 {
+             31:0    request;
+         }
+ 
++        #[wo]
+         pub(crate) L2_PWRON_HI(u32) @ 0x1a4 {
+             31:0    request;
+         }
+ 
+         /// Shader core power down bitmap.
++        #[wo]
+         pub(crate) SHADER_PWROFF_LO(u32) @ 0x1c0 {
+             31:0    request;
+         }
+ 
++        #[wo]
+         pub(crate) SHADER_PWROFF_HI(u32) @ 0x1c4 {
+             31:0    request;
+         }
+ 
+         /// Tiler power down bitmap.
++        #[wo]
+         pub(crate) TILER_PWROFF_LO(u32) @ 0x1d0 {
+             31:0    request;
+         }
+ 
++        #[wo]
+         pub(crate) TILER_PWROFF_HI(u32) @ 0x1d4 {
+             31:0    request;
+         }
+ 
+         /// L2 power down bitmap.
++        #[wo]
+         pub(crate) L2_PWROFF_LO(u32) @ 0x1e0 {
+             31:0    request;
+         }
+ 
++        #[wo]
+         pub(crate) L2_PWROFF_HI(u32) @ 0x1e4 {
+             31:0    request;
+         }
+ 
+         /// Shader core power transition bitmap. Read-only.
++        #[ro]
+         pub(crate) SHADER_PWRTRANS_LO(u32) @ 0x200 {
+             31:0    changing;
+         }
+ 
++        #[ro]
+         pub(crate) SHADER_PWRTRANS_HI(u32) @ 0x204 {
+             31:0    changing;
+         }
+ 
+         /// Tiler power transition bitmap. Read-only.
++        #[ro]
+         pub(crate) TILER_PWRTRANS_LO(u32) @ 0x210 {
+             31:0    changing;
+         }
+ 
++        #[ro]
+         pub(crate) TILER_PWRTRANS_HI(u32) @ 0x214 {
+             31:0    changing;
+         }
+ 
+         /// L2 power transition bitmap. Read-only.
++        #[ro]
+         pub(crate) L2_PWRTRANS_LO(u32) @ 0x220 {
+             31:0    changing;
+         }
+ 
++        #[ro]
+         pub(crate) L2_PWRTRANS_HI(u32) @ 0x224 {
+             31:0    changing;
+         }
+ 
+         /// Shader core active bitmap. Read-only.
++        #[ro]
+         pub(crate) SHADER_PWRACTIVE_LO(u32) @ 0x240 {
+             31:0    active;
+         }
+ 
++        #[ro]
+         pub(crate) SHADER_PWRACTIVE_HI(u32) @ 0x244 {
+             31:0    active;
+         }
+ 
+         /// Tiler active bitmap. Read-only.
++        #[ro]
+         pub(crate) TILER_PWRACTIVE_LO(u32) @ 0x250 {
+             31:0    active;
+         }
+ 
++        #[ro]
+         pub(crate) TILER_PWRACTIVE_HI(u32) @ 0x254 {
+             31:0    active;
+         }
+ 
+         /// L2 active bitmap.  Read-only.
++        #[ro]
+         pub(crate) L2_PWRACTIVE_LO(u32) @ 0x260 {
+             31:0    active;
+         }
+ 
++        #[ro]
+         pub(crate) L2_PWRACTIVE_HI(u32) @ 0x264 {
+             31:0    active;
+         }
+ 
+         /// Revision ID. Read only constant.
++        #[ro]
+         pub(crate) REVIDR(u32) @ 0x280 {
+             31:0    revision;
+         }
+@@ -739,6 +802,7 @@ fn from(access: AccessType) -> Self {
+         /// Coherency features present. Read only constant.
+         /// Supported protocols on the interconnect between the GPU and the
+         /// system into which it is integrated.
++        #[ro]
+         pub(crate) COHERENCY_FEATURES(u32) @ 0x300 {
+             /// ACE-Lite protocol supported, a 1-bit boolean flag.
+             0:0     ace_lite => bool;
+@@ -866,6 +930,7 @@ fn from(status: McuStatus) -> Self {
+         base: TyrRegisters;
+ 
+         /// MCU status. Read only.
++        #[ro]
+         pub(crate) MCU_STATUS(u32) @ 0x704 {
+             /// Read current state of MCU.
+             1:0 value => McuStatus;
+@@ -897,6 +962,7 @@ pub(crate) mod job_control {
+         /// Clear job interrupts. Write only.
+         ///
+         /// Write a 1 to a bit to clear the corresponding bit in [`JOB_IRQ_RAWSTAT`].
++        #[wo]
+         pub(crate) JOB_IRQ_CLEAR(u32) @ 0x1004 {
+             /// Clear CSG request interrupts.
+             30:0    csg;
+@@ -918,6 +984,7 @@ pub(crate) mod job_control {
+         ///
+         /// This register contains the result of ANDing together [`JOB_IRQ_RAWSTAT`] and
+         /// [`JOB_IRQ_MASK`].
++        #[ro]
+         pub(crate) JOB_IRQ_STATUS(u32) @ 0x100c {
+             /// CSG request interrupt status.
+             30:0    csg;
+@@ -953,6 +1020,7 @@ pub(crate) mod mmu_control {
+ 
+         /// IRQ sources to clear.
+         /// Write a 1 to a bit to clear the corresponding bit in [`IRQ_RAWSTAT`].
++        #[wo]
+         pub(crate) IRQ_CLEAR(u32) @ 0x2004 {
+             /// Clear the PAGE_FAULT interrupt.
+             15:0    page_fault;
+@@ -973,6 +1041,7 @@ pub(crate) mod mmu_control {
+         /// IRQ status for enabled sources. Read only.
+         ///
+         /// This register contains the result of ANDing together [`IRQ_RAWSTAT`] and [`IRQ_MASK`].
++        #[ro]
+         pub(crate) IRQ_STATUS(u32) @ 0x200c {
+             /// PAGE_FAULT interrupt status.
+             15:0    page_fault;
+@@ -1388,6 +1457,7 @@ fn from(cmd: MmuCommand) -> Self {
+             base: TyrRegisters;
+ 
+             /// MMU command register for each address space. Write only.
++            #[wo]
+             pub(crate) COMMAND(u32)[MAX_AS, stride = STRIDE] @ 0x2418 {
+                 7:0     command ?=> MmuCommand;
+             }
+@@ -1517,6 +1587,7 @@ fn from(access: MmuAccessType) -> Self {
+             base: TyrRegisters;
+ 
+             /// Fault status register for each address space. Read only.
++            #[ro]
+             pub(crate) FAULTSTATUS(u32)[MAX_AS, stride = STRIDE] @ 0x241c {
+                 /// Exception type.
+                 7:0     exception_type ?=> MmuExceptionType;
+@@ -1527,15 +1598,18 @@ fn from(access: MmuAccessType) -> Self {
+             }
+ 
+             /// Fault address for each address space. Read only.
++            #[ro]
+             pub(crate) FAULTADDRESS_LO(u32)[MAX_AS, stride = STRIDE] @ 0x2420 {
+                 31:0    pointer;
+             }
+ 
++            #[ro]
+             pub(crate) FAULTADDRESS_HI(u32)[MAX_AS, stride = STRIDE] @ 0x2424 {
+                 31:0    pointer;
+             }
+ 
+             /// MMU status register for each address space. Read only.
++            #[ro]
+             pub(crate) STATUS(u32)[MAX_AS, stride = STRIDE] @ 0x2428 {
+                 /// External address space command is active, a 1-bit boolean flag.
+                 0:0     active_ext => bool;
+@@ -1783,10 +1857,12 @@ fn from(sh: PtwShareability) -> Self {
+             }
+ 
+             /// Extra fault information for each address space. Read only.
++            #[ro]
+             pub(crate) FAULTEXTRA_LO(u32)[MAX_AS, stride = STRIDE] @ 0x2438 {
+                 31:0    value;
+             }
+ 
++            #[ro]
+             pub(crate) FAULTEXTRA_HI(u32)[MAX_AS, stride = STRIDE] @ 0x243c {
+                 31:0    value;
+             }
+@@ -1816,6 +1892,7 @@ pub(crate) mod doorbell_block {
+         base: TyrRegisters;
+ 
+         /// Doorbell request register. Write-only.
++        #[wo]
+         pub(crate) DOORBELL(u32)[NUM_DOORBELLS, stride = STRIDE] @ 0x80000 {
+             /// Doorbell set. Writing 1 triggers the doorbell.
+             0:0    ring => bool;
 
 -- 
 2.56.0
