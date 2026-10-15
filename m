@@ -1,64 +1,85 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2BD2377EC3
-	for <linux-pci@vger.kernel.org>; Thu, 15 Oct 2026 03:38:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EC44391822
+	for <linux-pci@vger.kernel.org>; Thu, 15 Oct 2026 03:39:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792035525; cv=none; b=K7xq73P6bQcN2h0zcuJGmtBTRDnGtbf8+Pxff7JQ8OfSpQy8wCNq5PNFF3z3Tz4f4UBnROpk2opzG8grW8mg9LIK8NuxOKM5VrYJseWn9BW6UQz1LyFXRE4aZU1iY85LBnP6qccAdZgHzBh4N5+G2OTubePClrBkFPh3M6M2lko=
+	t=1792035548; cv=none; b=mb8kK4bDR3PIf0rz30oABypQQpNDmLxl0r02xWgrvjAt1xofMecbNFqB69Qv5VKiZ+7rLd5C2hU5jnzZp7+yOqRTLxpN19PmiZoKy+qZwn/5tCdGSC7wa66jfwH911VtCGaoNHFvIM+X617jHyKEWh9Jt8nqFymiwHAeXlNf76s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792035525; c=relaxed/simple;
-	bh=wUXWnPa3+hOmXQkp4CWmfSak4XiHvIaExjzFwpGvrG8=;
+	s=arc-20240116; t=1792035548; c=relaxed/simple;
+	bh=KEtIm9EKZbngrkl36DfIdNdcO/eC4XLOtE2fPh5K8xs=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=E0l/FArVDUfEPlxgQ6hPNmK8YEM83avGp1LLKWeRJajIkhCWdh/JUCi6QsmK0uS7YaGRUdnsQqpZRkdDymdYdpO7mhPanSOYSIdoKVy7ggE09PzU3C5f/Q9+zbpObo+GhmZ96JlMi5rF5w4VVlllmwZAaBfr1gFX5hR37udE75E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lJC2pHO1; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=cgG5Z6cuMAtpq3rL7GFtHHDfknjfgh/4RAd4pDuJNJ1D8jAhCf6aPiVTyMUVMdUeUC3XOB2nG2z2FOfzL8GbLJScZBIHnV1mDpd/+ITKSNZZvFnawwL9hViQukBlrKZfh26zswmm2VjV8Z2uQqLVJiYCVoEkRk86D+p6dVfYt0A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gZRD1vWX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lJC2pHO1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99C1A1F000CC;
-	Thu, 15 Oct 2026 03:38:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gZRD1vWX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CD5C1F000C4;
+	Thu, 15 Oct 2026 03:39:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792035524;
-	bh=wUXWnPa3+hOmXQkp4CWmfSak4XiHvIaExjzFwpGvrG8=;
+	s=k20260515; t=1792035545;
+	bh=KEtIm9EKZbngrkl36DfIdNdcO/eC4XLOtE2fPh5K8xs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lJC2pHO1hf+KssxLQ6ccRODQTE6J+8osyIiMrko3TY3vOSpzMkC76mWZ2pFXMaXDZ
-	 9p39sZmsmlokl1pIhyDjQKoWmTWz4jhmHHiwvM/9tsgYK9fBunBcQqoJOLwYSEVuvM
-	 jH4H/bnHEOTYh6TVAxgRwqucN2H7uGIJXj4P0HiPGMBtfEaq2TNMDlcdcL8IB79SPB
-	 H6FwruYf4couO9b9cM77cMuInWX+2H5jeSj6rVfshcIlOBG66KEcksxfzhEMBsFwvQ
-	 kRn4Hu0ktVU+NtnH/5roNH5FhCWM5yJGEDDh9hzKmkJyBdNEeQ8lMDebCS8Xn2gzsv
-	 EbuwI7OVD/WZA==
-Message-ID: <sashiko-outbox-172208@kernel.org>
+	b=gZRD1vWXlRI2VJ323DrBc1SYokOeG1Wezdctyg2VUuilv25OG5e/aDifJkeYncqKK
+	 YfPtzsrnul2IBCMzLd0P6axya9ozsEmGLHS/dykTVWhX0vTZwaLrrInnHY6Yb8eHVe
+	 mBf62EyCXsa4+msb3dwWOTBygv9mS3Aqk1N8opBTEbA1nLN7R6iADYVsBQ6Sd1XrKx
+	 Db2/09XcByHQVxlHQrrqNJLnNQtNt4nIekCNTNaGAtA+U6EF6IC72l8fcwH6n5Tm4b
+	 IBgyOtMbD5Lls+dnTRLm6pB35WODOJWiCB7EtoFLUThb3F+8nb/WXvx2hHPN3gYt32
+	 d/TuSods0vFPA==
+Message-ID: <sashiko-outbox-172209@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 07/18] PCI: rcar-gen4: Assert resets when Gen5 SoC
- PHY initialization fails
+Subject: Re: [PATCH v4 03/18] PCI: rcar-gen4: Check live link status in
+ link_up()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Koichiro Den" <den@valinux.co.jp>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261015033103.3076869-8-den@valinux.co.jp>
+In-Reply-To: <20261015033103.3076869-4-den@valinux.co.jp>
 References: <20261015033103.3076869-1-den@valinux.co.jp>
- <20261015033103.3076869-8-den@valinux.co.jp>
+ <20261015033103.3076869-4-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 15 Oct 2026 03:38:44 +0000
+Date: Thu, 15 Oct 2026 03:39:04 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> common_init() enables the clocks and deasserts the power and
-> Application/Local resets before phy_init(). If phy_init() fails, the
-> error path only disables the clocks, leaving those resets deasserted.
+> rcar_gen4_pcie_link_up() checks link state using SMLH_LINK_UP and
+> RDLH_LINK_UP in PCIEINTSTS0. However, these bits do not reflect the live
+> link state. On an R-Car S4, after taking down the endpoint, a link-down
+> interrupt saw PCIEINTSTS0 =3D 0x20a000c5 with both bits still set. Even
+> after resetting the controller with the LTSSM back in Polling, they read
+> 0xa000c5, still set.
 >=20
-> Assert both resets before disabling the clocks to unwind the completed
-> common initialization.
+> As a result, dw_pcie_link_up() keeps reporting the link as up after it
+> has gone down. That defeats the check in dw_pcie_other_conf_map_bus(),
+> which is supposed to stop config accesses to downstream devices while
+> the link is down, so such accesses go out on the dead link and stall the
+> host. It also makes the callback useless for the link-down recovery
+> added later, which has to wait for the link to actually come back after
+> resetting the controller.
 >=20
-> Fixes: 3283c4db6009 ("PCI: rcar-gen4: Add support for R-Car X5H PCIe4")
+> Keep the APP link-up event check from Figure 104.5 of the R-Car S4
+> reference manual, but also require PORT_LINK_DEBUG1 to report the link
+> up and not in training, through dw_pcie_link_up_debug_check(). The
+> callback then rejects a downed link even if the APP link-up events
+> remain latched.
+>=20
+> Clear the APP latches before enabling LTSSM to discard events from a
+> previous start, and only read them in .link_up(). RC startup uses
+> dw_pcie_wait_for_link() to poll the combined condition.
+>=20
+> Fixes: 0d0c551011df ("PCI: rcar-gen4: Add R-Car Gen4 PCIe controller supp=
+ort for host mode")
+> Suggested-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 > Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+> Tested-by: Marek Vasut <marek.vasut+renesas@mailbox.org> # R-Car V4H
 > Signed-off-by: Koichiro Den <den@valinux.co.jp>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261015033103.3076=
-869-1-den@valinux.co.jp?part=3D7
+869-1-den@valinux.co.jp?part=3D3
 
