@@ -1,44 +1,44 @@
-Received: from sender6-op-o11.zoho.com (sender6-op-o11.zoho.com [165.173.180.11])
+Received: from sender5-op-o11.zoho.com (sender5-op-o11.zoho.com [165.173.182.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85F28527594;
-	Thu, 15 Oct 2026 12:40:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=165.173.180.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3882152843E;
+	Thu, 15 Oct 2026 12:40:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=165.173.182.11
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792068010; cv=pass; b=THl+EDuvp1QFfg6cg1kGZbjQIG5p99Tjm1nUtUjkCwN+oGl4BMXyE0cyPfJMiBAzQI7UefXjof2qCpQyEEbWM7qRN+51j+V/GlplFTe61rtxhvANQQ3+1LwxBKmzw4mtpdz/b76ouKKAb/l3HjTdEfCP8t+eNpYjr8pgVRpG1sg=
+	t=1792068012; cv=pass; b=uWKK2ji63jT/OVk3TSHfjDBmRGyjMHVE3V5xo3fFVphB1mAVhuApqtgL030BcE4vEVFto+lLYl//My5kmoYC3rulZ+P8SRYEgRtmRtE/8bNVRkQEOOcAJk7YaEwjr2/I+viJM03bJHx5ZIjEgXZm+ucnyLJhq7ZZaPsln+nk8XI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792068010; c=relaxed/simple;
-	bh=ZXs+UbRTBut/6Px7I+y7M6DfbeawrplpXo9EgCMm/g0=;
+	s=arc-20240116; t=1792068012; c=relaxed/simple;
+	bh=xKDG9h3H2MbSH2iEn+dK0pAfPuRHgdctbefS9til6rA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=lQzDX36VxrhJFFqoJz9wfZmNkXwr+4itl9aF5BgaXvzHpJmAB/RKMpkZqFARSlhVkFMbw1BObuZV7qJedI8AlT/P+Cr6N7wXHnNivOoPjP7vXH2yB0MY6YfM/TMzLN8w5ffdXipzZOQzYgbUNYiupJVUvQmnAEmhfgraOqPe7pE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=HAlsDRYt; arc=pass smtp.client-ip=165.173.180.11
+	 In-Reply-To:To:Cc; b=cJm8VaZ8nrgDFUUsxDxBhWsanVLENUmSi3hw8EiNwbN3L9K//TTvFRRYl4SS7ugjCXsbw7a7p5CDF8q2qOvct+/5GFtZm4UsRqFN1e5dUeRCCHXF5ytwjgzzOIT163+YvkL0Q6sRzh33hGhfnFttzEKqje0Qyuekm3dHkcEao+k=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=GL1gIXDV; arc=pass smtp.client-ip=165.173.182.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="HAlsDRYt"
-ARC-Seal: i=1; a=rsa-sha256; t=1792067978; cv=none; 
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="GL1gIXDV"
+ARC-Seal: i=1; a=rsa-sha256; t=1792067982; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=SYR+JcckoeIPBpaSy4Jn5EtpG0RcV/jNU/GdubIgUtb01GPJOpH6QIUoSzAmZYureOg52UJsTYnOs3edSX3c8EzqXwrrG/xyxR8FhNjfMit8zJnIdMnkXOuKfKgikR4GiKKSTTStYtYB0GnQKhf73/ZqwGcWqZ/eO3y4VNEHFJw=
+	b=DyhMRqkKihZ1A/Hb4y+nXQwSWXaopISfNqtV+LgAuERUTiCfmotaMwYAOSUfEHvyN/kfnFsnVcyX8alRtOfzzNapgKDEU8s49JsXipCoJCuJjH0nv6isozUAjScH2u0PtyKNBPwiq8yCbG3/fMAJZc2JvpYlwwNqxurRUGi4wZw=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1792067978; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=ltzYYSYrndLaIvxs1Wxb7B9oHjD7meehlnBm5QI9WGw=; 
-	b=O/C5NX27pCvfL2pbN3QK4Z8RpbuLxaZtoHz8W4rVrBZMjZe0OIaUrZokyCYMsLFt/PgSX4/nzTrgPob2kB7gwN8OF9KWYRRHi/kTJD2aIbpUsFN1QRgi28h1Jh1s3KrYKLwH0ew8U57VsY1bXdusBMWt7mbyWXEvyiyxhkfWUHo=
+	t=1792067982; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=RAurlbvYi1gTpRSGoDogqwNyUvcm3XilGc7GqT+POP0=; 
+	b=lbPLOlyGRWhxfex7N5jKJpq7PNq57D8EN58/OFPNJATcLbiv1isfhAyWgpGqJCOiKb81XLjiAjIeFWt4XTew/Te3TZ0YH0t6vxAnh5nZJGtTXybeAYh+/PYRjcsVFe53S3QyE/hB/w17tQnk4N7s4JLl9BggVX/bcl4zS5FvIM4=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=collabora.com;
 	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
 	dmarc=pass header.from=<daniel.almeida@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1792067978;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1792067982;
 	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
 	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:In-Reply-To:To:To:Cc:Cc:Reply-To;
-	bh=ltzYYSYrndLaIvxs1Wxb7B9oHjD7meehlnBm5QI9WGw=;
-	b=HAlsDRYtggV1yZDjQXFrieOSsvt4GGryp4OqBeKbjZDEWm1aX2+MfldWVGScChuO
-	dY10bwOsr1iYT1baFn9f+gHFGq87yYKiyRJn20Ptrl5ctcIboSY8bPlr9Nw4bv/Vbmv
-	kfpInkRBEhlTsmrbZAoZHiWvtXfJY9mu9u3UFIkw=
-Received: by smtp.zohomail.com with SMTPS id 1792067975281355.6348964848903;
-	Thu, 15 Oct 2026 05:39:35 -0700 (PDT)
+	bh=RAurlbvYi1gTpRSGoDogqwNyUvcm3XilGc7GqT+POP0=;
+	b=GL1gIXDVs3w6KtTRdWBxnhpMv+Fz9cg4ttaHi2h04g92IEzmp74vdmVI2re+93Au
+	zLEsu1XDWvfBPX5h+9M8YgAWhSc5lzXgKncKRyEuKtwNcxAcZYD7jEXw808UJp85RfM
+	5oPw9NWFSKFrrYKbhIkpAeSkgWbKTXNuHp0kCrGg=
+Received: by smtp.zohomail.com with SMTPS id 1792067980479943.4807218210801;
+	Thu, 15 Oct 2026 05:39:40 -0700 (PDT)
 From: Daniel Almeida <daniel.almeida@collabora.com>
-Date: Thu, 15 Oct 2026 09:39:07 -0300
-Subject: [PATCH 3/7] rust: io: add read-only and write-only views
+Date: Thu, 15 Oct 2026 09:39:08 -0300
+Subject: [PATCH 4/7] rust: io: project primitive accessors directly
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,7 +47,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261015-io-access-modes-v1-3-93611b84b5e3@collabora.com>
+Message-Id: <20261015-io-access-modes-v1-4-93611b84b5e3@collabora.com>
 References: <20261015-io-access-modes-v1-0-93611b84b5e3@collabora.com>
 In-Reply-To: <20261015-io-access-modes-v1-0-93611b84b5e3@collabora.com>
 To: Danilo Krummrich <dakr@kernel.org>, 
@@ -70,224 +70,181 @@ Cc: driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org,
 X-Mailer: b4 0.15.2
 X-ZohoMailClient: External
 
-An I/O view can always be both read and written, as long as its backend
-supports both directions. The I/O API has no view that only allows the
-accesses the hardware or firmware permits, such as a status register
-that must not be written or a doorbell that must not be read.
+The primitive accessors, `read8` to `write64` and their `try_` variants,
+pass their offset as an `IoLoc` to the generic `read`, `write`,
+`try_read` and `try_write`, which project the view to that location and
+then call `read_val` or `write_val`. Commit 147b41ba23d6 ("rust: io: use
+generic read/write accessors for primitive accesses") made them do so to
+reduce the number of unsafe blocks.
 
-Add `ReadOnly` and `WriteOnly`, which wrap a view of any backend, and
-their backends `ReadOnlyBackend` and `WriteOnlyBackend`. A read-only
-backend implements `IoReadable` and `IoCopyReadable` where the wrapped
-backend does, by forwarding to it, and implements neither `IoWritable`
-nor `IoCopyWritable`, so the write methods of `Io` do not compile on a
-`ReadOnly` view. `WriteOnly` is the converse. Views projected from a
-wrapped view stay wrapped, and the wrapped view cannot be retrieved.
+Since commit e0454ec1220c ("rust: io: use view types instead of
+addresses for `Io`"), projecting to an offset is safe. Thus, have the
+primitive accessors project with `io_view` and `io_view_assert` and call
+`read_val` or `write_val` themselves. The bounds checks are the same.
 
-Add `Io::read_only` and `Io::write_only` to create them from any view or
-I/O handle.
+This prepares for access modes on I/O locations, added in a following
+patch, which make the bounds of the generic methods depend on the mode
+of the location. The primitive accessors keep their current bounds.
 
-There are no users yet. Register locations with an access mode will be
-the first, in a following patch.
+No functional change intended.
 
 Signed-off-by: Daniel Almeida <daniel.almeida@collabora.com>
 ---
- rust/kernel/io.rs | 176 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 176 insertions(+)
+ rust/kernel/io.rs | 36 ++++++++++++++++++++----------------
+ 1 file changed, 20 insertions(+), 16 deletions(-)
 
 diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-index ae60099fd4c3..03af0590b0f4 100644
+index 03af0590b0f4..4be8c761c556 100644
 --- a/rust/kernel/io.rs
 +++ b/rust/kernel/io.rs
-@@ -540,6 +540,60 @@ fn try_cast<U>(self) -> Result<<Self::Backend as IoBackend>::View<'a, U>>
-         Ok(unsafe { Self::Backend::project_view(view, ptr.cast()) })
+@@ -760,7 +760,7 @@ fn try_read8(self, offset: usize) -> Result<u8>
+         usize: IoLoc<Self::Target, u8>,
+         Self::Backend: IoReadable<u8>,
+     {
+-        self.try_read(offset)
++        Ok(io_view::<_, u8>(self, offset)?.read_val())
      }
  
-+    /// Returns a view of this I/O region that can only be read.
-+    ///
-+    /// The returned view, and every view projected from it, provides the read methods of [`Io`]
-+    /// and none of the write methods.
-+    ///
-+    /// # Examples
-+    ///
-+    /// ```no_run
-+    /// use kernel::io::{
-+    ///     Io,
-+    ///     Mmio,
-+    ///     ReadOnly,
-+    ///     Region,
-+    /// };
-+    ///
-+    /// fn do_reads(io: Mmio<'_, Region<0x100>>) -> u32 {
-+    ///     let ro: ReadOnly<Mmio<'_, Region<0x100>>> = io.read_only();
-+    ///
-+    ///     // Reads work as on `io`. A write such as `ro.write32(0, 0x10)` does not compile.
-+    ///     ro.read32(0x10)
-+    /// }
-+    /// ```
-+    #[inline]
-+    fn read_only(self) -> ReadOnly<<Self::Backend as IoBackend>::View<'a, Self::Target>> {
-+        ReadOnly(self.as_view())
-+    }
-+
-+    /// Returns a view of this I/O region that can only be written.
-+    ///
-+    /// The returned view, and every view projected from it, provides the write methods of [`Io`]
-+    /// and none of the read methods.
-+    ///
-+    /// # Examples
-+    ///
-+    /// ```no_run
-+    /// use kernel::io::{
-+    ///     Io,
-+    ///     Mmio,
-+    ///     Region,
-+    ///     WriteOnly,
-+    /// };
-+    ///
-+    /// fn do_writes(io: Mmio<'_, Region<0x100>>) {
-+    ///     let wo: WriteOnly<Mmio<'_, Region<0x100>>> = io.write_only();
-+    ///
-+    ///     // Writes work as on `io`. A read such as `wo.read32(0x10)` does not compile.
-+    ///     wo.write32(1, 0x10);
-+    /// }
-+    /// ```
-+    #[inline]
-+    fn write_only(self) -> WriteOnly<<Self::Backend as IoBackend>::View<'a, Self::Target>> {
-+        WriteOnly(self.as_view())
-+    }
-+
-     /// Read a value from I/O.
-     ///
-     /// This only works for primitives supported by the I/O backend.
-@@ -1697,6 +1751,128 @@ fn as_view(self) -> IoSysMap<'a, T> {
+     /// Fallible 16-bit read with runtime bounds check.
+@@ -770,7 +770,7 @@ fn try_read16(self, offset: usize) -> Result<u16>
+         usize: IoLoc<Self::Target, u16>,
+         Self::Backend: IoReadable<u16>,
+     {
+-        self.try_read(offset)
++        Ok(io_view::<_, u16>(self, offset)?.read_val())
      }
- }
  
-+/// A view that can only be read.
-+///
-+/// It wraps a view `V` of another I/O backend and provides the read methods of [`Io`] for it, but
-+/// none of the write methods. Views projected from it are read-only too, and the wrapped view
-+/// cannot be retrieved.
-+///
-+/// See [`Io::read_only`] for a usage example.
-+#[derive(Clone, Copy)]
-+pub struct ReadOnly<V>(V);
-+
-+/// I/O Backend for [`ReadOnly`] views of backend `B`.
-+pub struct ReadOnlyBackend<B>(PhantomData<B>);
-+
-+impl<B: IoBackend> IoBackend for ReadOnlyBackend<B> {
-+    type View<'a, T: ?Sized + KnownSize> = ReadOnly<B::View<'a, T>>;
-+
-+    #[inline]
-+    fn as_ptr<'a, T: ?Sized + KnownSize>(view: Self::View<'a, T>) -> *mut T {
-+        B::as_ptr(view.0)
-+    }
-+
-+    #[inline]
-+    unsafe fn project_view<'a, T: ?Sized + KnownSize, U: ?Sized + KnownSize>(
-+        view: Self::View<'a, T>,
-+        ptr: *mut U,
-+    ) -> Self::View<'a, U> {
-+        // SAFETY: Per safety requirement.
-+        ReadOnly(unsafe { B::project_view(view.0, ptr) })
-+    }
-+}
-+
-+impl<'a, V: IoBase<'a>> IoBase<'a> for ReadOnly<V> {
-+    type Backend = ReadOnlyBackend<V::Backend>;
-+    type Target = V::Target;
-+
-+    #[inline]
-+    fn as_view(self) -> <Self::Backend as IoBackend>::View<'a, Self::Target> {
-+        ReadOnly(self.0.as_view())
-+    }
-+}
-+
-+impl<B: IoReadable<T>, T> IoReadable<T> for ReadOnlyBackend<B> {
-+    #[inline]
-+    fn io_read(view: Self::View<'_, T>) -> T {
-+        B::io_read(view.0)
-+    }
-+}
-+
-+impl<B: IoCopyReadable> IoCopyReadable for ReadOnlyBackend<B> {
-+    #[inline]
-+    unsafe fn copy_from_io(view: Self::View<'_, [u8]>, buffer: *mut u8) {
-+        // SAFETY: Per safety requirement.
-+        unsafe { B::copy_from_io(view.0, buffer) }
-+    }
-+
-+    #[inline]
-+    fn copy_read<T: FromBytes>(view: Self::View<'_, T>) -> T {
-+        B::copy_read(view.0)
-+    }
-+}
-+
-+/// A view that can only be written.
-+///
-+/// It wraps a view `V` of another I/O backend and provides the write methods of [`Io`] for it, but
-+/// none of the read methods. Views projected from it are write-only too, and the wrapped view
-+/// cannot be retrieved.
-+///
-+/// See [`Io::write_only`] for a usage example.
-+#[derive(Clone, Copy)]
-+pub struct WriteOnly<V>(V);
-+
-+/// I/O Backend for [`WriteOnly`] views of backend `B`.
-+pub struct WriteOnlyBackend<B>(PhantomData<B>);
-+
-+impl<B: IoBackend> IoBackend for WriteOnlyBackend<B> {
-+    type View<'a, T: ?Sized + KnownSize> = WriteOnly<B::View<'a, T>>;
-+
-+    #[inline]
-+    fn as_ptr<'a, T: ?Sized + KnownSize>(view: Self::View<'a, T>) -> *mut T {
-+        B::as_ptr(view.0)
-+    }
-+
-+    #[inline]
-+    unsafe fn project_view<'a, T: ?Sized + KnownSize, U: ?Sized + KnownSize>(
-+        view: Self::View<'a, T>,
-+        ptr: *mut U,
-+    ) -> Self::View<'a, U> {
-+        // SAFETY: Per safety requirement.
-+        WriteOnly(unsafe { B::project_view(view.0, ptr) })
-+    }
-+}
-+
-+impl<'a, V: IoBase<'a>> IoBase<'a> for WriteOnly<V> {
-+    type Backend = WriteOnlyBackend<V::Backend>;
-+    type Target = V::Target;
-+
-+    #[inline]
-+    fn as_view(self) -> <Self::Backend as IoBackend>::View<'a, Self::Target> {
-+        WriteOnly(self.0.as_view())
-+    }
-+}
-+
-+impl<B: IoWritable<T>, T> IoWritable<T> for WriteOnlyBackend<B> {
-+    #[inline]
-+    fn io_write(view: Self::View<'_, T>, value: T) {
-+        B::io_write(view.0, value)
-+    }
-+}
-+
-+impl<B: IoCopyWritable> IoCopyWritable for WriteOnlyBackend<B> {
-+    #[inline]
-+    unsafe fn copy_to_io(view: Self::View<'_, [u8]>, buffer: *const u8) {
-+        // SAFETY: Per safety requirement.
-+        unsafe { B::copy_to_io(view.0, buffer) }
-+    }
-+
-+    #[inline]
-+    fn copy_write<T: IntoBytes>(view: Self::View<'_, T>, value: T) {
-+        B::copy_write(view.0, value)
-+    }
-+}
-+
- // This helper turns associated functions to methods so it can be invoked in macro.
- // Used by `io_project!()` only.
- #[doc(hidden)]
+     /// Fallible 32-bit read with runtime bounds check.
+@@ -780,7 +780,7 @@ fn try_read32(self, offset: usize) -> Result<u32>
+         usize: IoLoc<Self::Target, u32>,
+         Self::Backend: IoReadable<u32>,
+     {
+-        self.try_read(offset)
++        Ok(io_view::<_, u32>(self, offset)?.read_val())
+     }
+ 
+     /// Fallible 64-bit read with runtime bounds check.
+@@ -790,7 +790,7 @@ fn try_read64(self, offset: usize) -> Result<u64>
+         usize: IoLoc<Self::Target, u64>,
+         Self::Backend: IoReadable<u64>,
+     {
+-        self.try_read(offset)
++        Ok(io_view::<_, u64>(self, offset)?.read_val())
+     }
+ 
+     /// Fallible 8-bit write with runtime bounds check.
+@@ -800,7 +800,8 @@ fn try_write8(self, value: u8, offset: usize) -> Result
+         usize: IoLoc<Self::Target, u8>,
+         Self::Backend: IoWritable<u8>,
+     {
+-        self.try_write(offset, value)
++        io_view::<_, u8>(self, offset)?.write_val(value);
++        Ok(())
+     }
+ 
+     /// Fallible 16-bit write with runtime bounds check.
+@@ -810,7 +811,8 @@ fn try_write16(self, value: u16, offset: usize) -> Result
+         usize: IoLoc<Self::Target, u16>,
+         Self::Backend: IoWritable<u16>,
+     {
+-        self.try_write(offset, value)
++        io_view::<_, u16>(self, offset)?.write_val(value);
++        Ok(())
+     }
+ 
+     /// Fallible 32-bit write with runtime bounds check.
+@@ -820,7 +822,8 @@ fn try_write32(self, value: u32, offset: usize) -> Result
+         usize: IoLoc<Self::Target, u32>,
+         Self::Backend: IoWritable<u32>,
+     {
+-        self.try_write(offset, value)
++        io_view::<_, u32>(self, offset)?.write_val(value);
++        Ok(())
+     }
+ 
+     /// Fallible 64-bit write with runtime bounds check.
+@@ -830,7 +833,8 @@ fn try_write64(self, value: u64, offset: usize) -> Result
+         usize: IoLoc<Self::Target, u64>,
+         Self::Backend: IoWritable<u64>,
+     {
+-        self.try_write(offset, value)
++        io_view::<_, u64>(self, offset)?.write_val(value);
++        Ok(())
+     }
+ 
+     /// Infallible 8-bit read with compile-time bounds check.
+@@ -842,7 +846,7 @@ fn read8(self, offset: usize) -> u8
+         usize: IoLoc<Self::Target, u8>,
+         Self::Backend: IoReadable<u8>,
+     {
+-        self.read(offset)
++        io_view_assert::<_, u8>(self, offset).read_val()
+     }
+ 
+     /// Infallible 16-bit read with compile-time bounds check.
+@@ -854,7 +858,7 @@ fn read16(self, offset: usize) -> u16
+         usize: IoLoc<Self::Target, u16>,
+         Self::Backend: IoReadable<u16>,
+     {
+-        self.read(offset)
++        io_view_assert::<_, u16>(self, offset).read_val()
+     }
+ 
+     /// Infallible 32-bit read with compile-time bounds check.
+@@ -866,7 +870,7 @@ fn read32(self, offset: usize) -> u32
+         usize: IoLoc<Self::Target, u32>,
+         Self::Backend: IoReadable<u32>,
+     {
+-        self.read(offset)
++        io_view_assert::<_, u32>(self, offset).read_val()
+     }
+ 
+     /// Infallible 64-bit read with compile-time bounds check.
+@@ -878,7 +882,7 @@ fn read64(self, offset: usize) -> u64
+         usize: IoLoc<Self::Target, u64>,
+         Self::Backend: IoReadable<u64>,
+     {
+-        self.read(offset)
++        io_view_assert::<_, u64>(self, offset).read_val()
+     }
+ 
+     /// Infallible 8-bit write with compile-time bounds check.
+@@ -890,7 +894,7 @@ fn write8(self, value: u8, offset: usize)
+         usize: IoLoc<Self::Target, u8>,
+         Self::Backend: IoWritable<u8>,
+     {
+-        self.write(offset, value)
++        io_view_assert::<_, u8>(self, offset).write_val(value)
+     }
+ 
+     /// Infallible 16-bit write with compile-time bounds check.
+@@ -902,7 +906,7 @@ fn write16(self, value: u16, offset: usize)
+         usize: IoLoc<Self::Target, u16>,
+         Self::Backend: IoWritable<u16>,
+     {
+-        self.write(offset, value)
++        io_view_assert::<_, u16>(self, offset).write_val(value)
+     }
+ 
+     /// Infallible 32-bit write with compile-time bounds check.
+@@ -914,7 +918,7 @@ fn write32(self, value: u32, offset: usize)
+         usize: IoLoc<Self::Target, u32>,
+         Self::Backend: IoWritable<u32>,
+     {
+-        self.write(offset, value)
++        io_view_assert::<_, u32>(self, offset).write_val(value)
+     }
+ 
+     /// Infallible 64-bit write with compile-time bounds check.
+@@ -926,7 +930,7 @@ fn write64(self, value: u64, offset: usize)
+         usize: IoLoc<Self::Target, u64>,
+         Self::Backend: IoWritable<u64>,
+     {
+-        self.write(offset, value)
++        io_view_assert::<_, u64>(self, offset).write_val(value)
+     }
+ 
+     /// Generic fallible read with runtime bounds check.
 
 -- 
 2.56.0
