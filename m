@@ -1,194 +1,149 @@
-Received: from mail-pj1-f99.google.com (mail-pj1-f99.google.com [209.85.216.99])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C6A6522F0C
-	for <linux-pci@vger.kernel.org>; Thu, 15 Oct 2026 19:10:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCB72361974;
+	Thu, 15 Oct 2026 19:48:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792091429; cv=none; b=jLtInbAh+p2b1i/hlmFSXLJmoXBVRSN92ZsTSf3Oj/1V2dOb2g79DKXRR2UxvHbwO0OadwcnLSvWYGkRHvYEyteEhP5IlbUjSmhyaxyRKJLL4g7c/8KfcpnyrDIquDeIr4UZGBrDQs5IOF56WFiTfIRsCD+/AjYqarVU9FzKO6E=
+	t=1792093711; cv=none; b=mQpsSyltfUFbT397wpcxUJVj62QitBj5BXIwbbznXtpaBLnxWSFJb1KQiMW6PR/F+DMyG6yjgZRzJ1Sqz6SJI409ou+kfwt8fC/4o9PKhDN2Qdou5i66+f9/e5lv02rQeExnaBh8jZodhZtQVQf8m2G7EV50Kw34a41xBdpuxkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792091429; c=relaxed/simple;
-	bh=hE3f8QdWqnVhUuJM36XTgD2Q348p5LglREhubn7I+ww=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=TrSmy7vLCoXz4LnQL6Fg7rC9FemNzDUcDboCi3uQJ2LQQ+bkS3eBzvaMfqt20/8FO0kiTFCObAbSy3pI0DfsOOw9Fl63bgU1LHKD+1wxmBNgHedrZyZ/KRO1etpMqg1UUXs4Cfuo+RzscwvzHOfGZr9Ks+r6ZQLqKEn/FFX2Ffo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=VV6K+DVN; arc=none smtp.client-ip=209.85.216.99
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1792093711; c=relaxed/simple;
+	bh=0g01QF83G0QV1pfGlRZE+NDsZHZI3qhUh8ERA8EyKjw=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=dcBjKQxJBKGCSr95/n5mDeKx7rG6n6Jxee4Vym2oKDaBm5S6CpPZ2x8b/cL5jt6+A0LaXQs1bU6oI5ci7mXjbtope5tAkcDDl1HXcIrzAuo/S/r0LLx/wf3tLyTJkrD6YcBiZgJsVx+OLWsBbX6o/4wqknNnWmH9FRzH3FA/RF8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aSgseOwy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="VV6K+DVN"
-Received: by mail-pj1-f99.google.com with SMTP id 98e67ed59e1d1-3ab4178ee33so3316308a91.3
-        for <linux-pci@vger.kernel.org>; Thu, 15 Oct 2026 12:10:27 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792091427; x=1792696227;
-        h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=fpovG3xe/GFBxw/GZpFun0w46KPpZR7RwgjQ0+f5SJE=;
-        b=ru+Rjhgsg187T3kx1lsSja3/KIg1i4tCQM+vECKUSr7A8acX4+86wSAZn6SFA0SsIQ
-         HTjNMMyty2moxLQvE2qS0cCNWMq9x1TLcoUQo1klSF8sChD8aFch4OjwVQ9TyI5A79lM
-         poGxwUgGmDv+ZtfvYok+ie+NbJDq25o91Kd35RjhmuPXG2gf1bLk2FrlU0t976FscpLn
-         /U6Zno6VRuCkZDKox6Lg0x2o7j3iWqqBoDDkZOCPGCARaOKYotKIssfw9SclOS1MwbUB
-         yUYSFHccu9mfKDTZnmwqUyBZbefJvFedHvSHVYkYuLbsFc345S43tYad2qewNEwVzw2Q
-         C3sQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxxZIDPv8qWx0mBszA1imXQv6D3qx58ixLkkThPJVgjGvvAZU8GHmU1VC2DRrgglpc/aCRt4F+Ucwk=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLKLEv96TKMwYsX/L5VHFN/SuV3lrqbIJH++tuoryvEhBObuHR7
-	E6FfvgEBoHO3pqrygqrJLmXJdGKTBttw/Z6Vk2O0aAurPtawJNHptbIf6WkHChz1quA23nlacrT
-	JRnduECPqW2c7TB9bRlsbmvvgJRQfvjZSmGPVwKF9mobNK5aDBGe/yidsVMp3ljQJd/J5bR0GY1
-	lxg3MIxJAeaHPmxrio7MZRnZnEJ1MqaQ6BwQ3BoQUnZ8g3JQZygQ/qXUpfh/WRopZsvAMN5bOtv
-	JyhsMgne2upWNpRZwiY
-X-Gm-Gg: AYBFou0ICPaDVPFjWG3qW8vOpygu5Oufp/0SSMAFxawMzktAUdig0ziefOvhIpgfmgs
-	CHc6byTzxjPkO3sk0a9cM222toCPmH1OZdbRBw9aziuPDdDg/+BE51w5nKku5reK4bPF8LSKuZg
-	8/1HE/eJ43PhtjWviXsoeDyK3pNdOnjoQDfZ/n76Z9eXi38vDCVt5W/LKll5lRtY8Q8r0VsP++O
-	xNnaOZxS7cbZDrB2npunvczZrM7U9INEZ92nfs1LxaQ8D+Is8XUVHyE6/IpE6sOfOTwiBOdYuHT
-	ESl5hFuuGiGd5kik2jptFUBAxPzCAmPI9RH6LMBxZpjosPltp2pfc2ziD6LxIkL3UF5ylk2TZNz
-	y4yj4A+MiQBsmeH07DsBtpdMnKq9B4mLJ3xw/zyfk7STDDMwlPrkAYXa+x/9Rr76hMva/cCy249
-	9obNWQ5ydBpjBl2K4c6m7s2DRnSVMaMeX+YRIN0XV59VM=
-X-Received: by 2002:a17:90b:3c0d:b0:3ab:b39f:41da with SMTP id 98e67ed59e1d1-3abb39f450amr13105013a91.11.1792091427239;
-        Thu, 15 Oct 2026 12:10:27 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-120.dlp.protect.broadcom.com. [144.49.247.120])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3ac944741d8sm2140582a91.1.2026.10.15.12.10.26
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 15 Oct 2026 12:10:27 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-93cbacbb996so900066185a.2
-        for <linux-pci@vger.kernel.org>; Thu, 15 Oct 2026 12:10:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1792091426; x=1792696226; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=fpovG3xe/GFBxw/GZpFun0w46KPpZR7RwgjQ0+f5SJE=;
-        b=VV6K+DVN5vaRfTlBAHAqkf37WriJyaIgIDifIHp5nZMsvzTOhB5i3Tcu768etqPYX7
-         fdBhBIFS3JlNk7MWbRRmT1mrn+QqbPIhUcE8YHsMfeOxDjLcxdPR66QU1PNFZlPZAfWj
-         wDWBNffboufNooiacKahpBD3FutI8sAtdsXNc=
-X-Forwarded-Encrypted: i=1; AKwUvBzdXiIOWU3JERJJ1w6R/KIK7cwB1VWf+ZzW4g4ri2TDKtSlmn4gCat90e3+FQHFMfw5DKvmF6F8GEU=@vger.kernel.org
-X-Received: by 2002:a05:620a:19a5:b0:93e:acdd:acd9 with SMTP id af79cd13be357-93ebd0cb796mr3250024785a.7.1792091426076;
-        Thu, 15 Oct 2026 12:10:26 -0700 (PDT)
-X-Received: by 2002:a05:620a:19a5:b0:93e:acdd:acd9 with SMTP id af79cd13be357-93ebd0cb796mr3250018785a.7.1792091425443;
-        Thu, 15 Oct 2026 12:10:25 -0700 (PDT)
-Received: from [10.67.48.245] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91bcb8b4c51sm3232936d6.5.2026.10.15.12.10.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 15 Oct 2026 12:10:24 -0700 (PDT)
-Message-ID: <f7cf09c5-dba1-4501-b93e-ce4ad555edeb@broadcom.com>
-Date: Thu, 15 Oct 2026 12:10:22 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aSgseOwy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E8F01F000C4;
+	Thu, 15 Oct 2026 19:48:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792093710;
+	bh=RUHDErUkUfx36mIq2sUsnA7sTYYP9ovek6NHhcLYr0A=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=aSgseOwyTIlj9XqEsmDIwF9MKkyri10qtLGdd4CM/aPrd2+rmcs9LUhXtrPzg08D/
+	 9TsQwS0hgzmSK/f4MArPkCMCTdlt5k9dD8Y5a40rwXPOl6R+ZvdUz0+/my2UWn8lMq
+	 413KmU9YWnSWlTSBbskyZigYRGIytpL1nCZe1LmeK8Vy/2ggST2KiKA2NWbnPo0E09
+	 tjZFjF73VZ9aJBjQ4rDVzMIQUpb+S3H103E7rTWUg0PfPxPK9/Xb1sVYgEgeEsSOOO
+	 34ADm71bjKDavZjd/GJ1py999iC6XJxHt0F8wf19yX+4f2DfkHMQ2NtsnrZoACeKCX
+	 Ja8pAgv8vgA7A==
+Date: Thu, 15 Oct 2026 14:48:28 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: alexander.deucher@amd.com, christian.koenig@amd.com, airlied@gmail.com,
+	simona@ffwll.ch, bhelgaas@google.com,
+	Reza Nikzad Chaleshori <rezanikzadch@gmail.com>,
+	amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-pci@vger.kernel.org, Alex Williamson <alex@shazbot.org>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	Lukas Wunner <lukas@wunner.de>, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH] drm/amdgpu: Gate VFCT bus fallback on pci=realloc
+Message-ID: <20261015194828.GA1775177@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 0/2] PCI: iproc-bcma: Use EROM instead of devicetree
-To: Semih Baskan <strst.gs@gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Ray Jui <rjui@broadcom.com>,
- Scott Branden <sbranden@broadcom.com>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?=
- <rafal@milecki.pl>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
- Arnd Bergmann <arnd@arndb.de>, Rosen Penev <rosenp@gmail.com>,
- Rani Hod <rani.hod@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-References: <20261013220421.1588051-1-bhelgaas@google.com>
- <0dcfb2db-5536-465a-bee1-afe160535748@broadcom.com>
- <CAAsRjR=_Q7aT6+NGAszYx=FkFMYWtp0HVe1KJwLwHEVhR0ghSw@mail.gmail.com>
-Content-Language: en-US, fr-FR
-From: Florian Fainelli <florian.fainelli@broadcom.com>
-Autocrypt: addr=florian.fainelli@broadcom.com; keydata=
- xsBNBFPAG8ABCAC3EO02urEwipgbUNJ1r6oI2Vr/+uE389lSEShN2PmL3MVnzhViSAtrYxeT
- M0Txqn1tOWoIc4QUl6Ggqf5KP6FoRkCrgMMTnUAINsINYXK+3OLe7HjP10h2jDRX4Ajs4Ghs
- JrZOBru6rH0YrgAhr6O5gG7NE1jhly+EsOa2MpwOiXO4DE/YKZGuVe6Bh87WqmILs9KvnNrQ
- PcycQnYKTVpqE95d4M824M5cuRB6D1GrYovCsjA9uxo22kPdOoQRAu5gBBn3AdtALFyQj9DQ
- KQuc39/i/Kt6XLZ/RsBc6qLs+p+JnEuPJngTSfWvzGjpx0nkwCMi4yBb+xk7Hki4kEslABEB
- AAHNMEZsb3JpYW4gRmFpbmVsbGkgPGZsb3JpYW4uZmFpbmVsbGlAYnJvYWRjb20uY29tPsLB
- IQQQAQgAywUCZWl41AUJI+Jo+hcKAAG/SMv+fS3xUQWa0NryPuoRGjsA3SAUAAAAAAAWAAFr
- ZXktdXNhZ2UtbWFza0BwZ3AuY29tjDAUgAAAAAAgAAdwcmVmZXJyZWQtZW1haWwtZW5jb2Rp
- bmdAcGdwLmNvbXBncG1pbWUICwkIBwMCAQoFF4AAAAAZGGxkYXA6Ly9rZXlzLmJyb2FkY29t
- Lm5ldAUbAwAAAAMWAgEFHgEAAAAEFQgJChYhBNXZKpfnkVze1+R8aIExtcQpvGagAAoJEIEx
- tcQpvGagWPEH/2l0DNr9QkTwJUxOoP9wgHfmVhqc0ZlDsBFv91I3BbhGKI5UATbipKNqG13Z
- TsBrJHcrnCqnTRS+8n9/myOF0ng2A4YT0EJnayzHugXm+hrkO5O9UEPJ8a+0553VqyoFhHqA
- zjxj8fUu1px5cbb4R9G4UAySqyeLLeqnYLCKb4+GklGSBGsLMYvLmIDNYlkhMdnnzsSUAS61
- WJYW6jjnzMwuKJ0ZHv7xZvSHyhIsFRiYiEs44kiYjbUUMcXor/uLEuTIazGrE3MahuGdjpT2
- IOjoMiTsbMc0yfhHp6G/2E769oDXMVxCCbMVpA+LUtVIQEA+8Zr6mX0Yk4nDS7OiBlvOwE0E
- U8AbwQEIAKxr71oqe+0+MYCc7WafWEcpQHFUwvYLcdBoOnmJPxDwDRpvU5LhqSPvk/yJdh9k
- 4xUDQu3rm1qIW2I9Puk5n/Jz/lZsqGw8T13DKyu8eMcvaA/irm9lX9El27DPHy/0qsxmxVmU
- pu9y9S+BmaMb2CM9IuyxMWEl9ruWFS2jAWh/R8CrdnL6+zLk60R7XGzmSJqF09vYNlJ6Bdbs
- MWDXkYWWP5Ub1ZJGNJQ4qT7g8IN0qXxzLQsmz6tbgLMEHYBGx80bBF8AkdThd6SLhreCN7Uh
- IR/5NXGqotAZao2xlDpJLuOMQtoH9WVNuuxQQZHVd8if+yp6yRJ5DAmIUt5CCPcAEQEAAcLB
- gQQYAQIBKwUCU8AbwgUbDAAAAMBdIAQZAQgABgUCU8AbwQAKCRCTYAaomC8PVQ0VCACWk3n+
- obFABEp5Rg6Qvspi9kWXcwCcfZV41OIYWhXMoc57ssjCand5noZi8bKg0bxw4qsg+9cNgZ3P
- N/DFWcNKcAT3Z2/4fTnJqdJS//YcEhlr8uGs+ZWFcqAPbteFCM4dGDRruo69IrHfyyQGx16s
- CcFlrN8vD066RKevFepb/ml7eYEdN5SRALyEdQMKeCSf3mectdoECEqdF/MWpfWIYQ1hEfdm
- C2Kztm+h3Nkt9ZQLqc3wsPJZmbD9T0c9Rphfypgw/SfTf2/CHoYVkKqwUIzI59itl5Lze+R5
- wDByhWHx2Ud2R7SudmT9XK1e0x7W7a5z11Q6vrzuED5nQvkhAAoJEIExtcQpvGagugcIAJd5
- EYe6KM6Y6RvI6TvHp+QgbU5dxvjqSiSvam0Ms3QrLidCtantcGT2Wz/2PlbZqkoJxMQc40rb
- fXa4xQSvJYj0GWpadrDJUvUu3LEsunDCxdWrmbmwGRKqZraV2oG7YEddmDqOe0Xm/NxeSobc
- MIlnaE6V0U8f5zNHB7Y46yJjjYT/Ds1TJo3pvwevDWPvv6rdBeV07D9s43frUS6xYd1uFxHC
- 7dZYWJjZmyUf5evr1W1gCgwLXG0PEi9n3qmz1lelQ8lSocmvxBKtMbX/OKhAfuP/iIwnTsww
- 95A2SaPiQZA51NywV8OFgsN0ITl2PlZ4Tp9hHERDe6nQCsNI/Us=
-In-Reply-To: <CAAsRjR=_Q7aT6+NGAszYx=FkFMYWtp0HVe1KJwLwHEVhR0ghSw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261015124843.203905-1-mario.limonciello@amd.com>
 
-On 10/15/26 11:51, Semih Baskan wrote:
->> Humm, this is not materially different for me before/after applying tihs
->> patch and unfortunately but here is what I am getting with these two
->> patches applied on top of Linus' master at
->> 0fcb05b72344f40806cbe810de8872f1698bf053:
-> [...]
->> Unhandled fault: external abort on non-linefetch (0x1008) at 0xc896df40
-> [...]
->> r3 : c896df40  r2 : 0000ffff  r1 : 00000f40  r0 : c1ce1a00
-> [...]
->>    pci_host_probe from iproc_pcie_setup+0x8a0/0xd94
->>    iproc_pcie_setup from iproc_pltfm_pcie_probe+0x10c/0x1d4
+[+cc Alex, Ilpo, Lukas, linux-acpi]
+
+On Thu, Oct 15, 2026 at 07:48:42AM -0500, Mario Limonciello wrote:
+> The soft filter system introduced by commit 11c141672045f ("drm/amdgpu:
+> Fix VFCT bus number matching with soft filter") has a deficiency that
+> it won't work when there are multiple GPUs of the exact same model.
 > 
-> The series only changes the pcie-iproc-bcma path, and this kernel probes
-> the controller with pcie-iproc-platform, so the patches do not run here.
-
-Yes, clearly not enough coffee, thank you Semih.
-
+> As it was introduced specifically to help the case of pci=realloc, gate
+> it to only run when that's in use.
 > 
-> I think the abort is the read of APB_ERR_EN at offset 0xf40 (r1). I
-> measured the same on an RT-N18U (core revision 0x01) in September: the
-> platform-only kernel does not come up, and with this one line it boots
-> and enumerates the BCM4360 [1]:
+> Fixes: 11c141672045f ("drm/amdgpu: Fix VFCT bus number matching with soft filter")
+> Reported-by: Reza Nikzad Chaleshori <rezanikzadch@gmail.com>
+> Closes: https://lore.kernel.org/amd-gfx/20261014080523.186533-1-rezanikzadch@gmail.com/
+> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+> ---
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c | 15 ++++++++-------
+>  drivers/pci/setup-bus.c                  |  5 +++++
+>  include/linux/pci.h                      |  1 +
+>  3 files changed, 14 insertions(+), 7 deletions(-)
 > 
-> --- a/drivers/pci/controller/pcie-iproc.c
-> +++ b/drivers/pci/controller/pcie-iproc.c
-> @@ -1388,7 +1388,7 @@
->           break;
->       case IPROC_PCIE_PAXB:
->           regs = iproc_pcie_reg_paxb;
-> -        pcie->has_apb_err_disable = true;
-> +        pcie->has_apb_err_disable = false;
->           if (pcie->need_ob_cfg) {
->               pcie->ob_map = paxb_ob_map;
->               pcie->ob.nr_windows = ARRAY_SIZE(paxb_ob_map);
+> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
+> index 08ed1eb695586..75af9a59671ae 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
+> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
+> @@ -384,12 +384,10 @@ static bool amdgpu_read_disabled_bios(struct amdgpu_device *adev)
+>   * @vhdr: VFCT image header to check
+>   *
+>   * VFCT entries contain the PCI bus number as recorded during BIOS POST.
+> - * On systems where the kernel renumbers PCI buses (e.g. pci=realloc or
+> - * resource conflicts), the runtime bus number may differ from the POST
+> - * value.  Match by device identity (vendor + device + function) and use
+> - * the bus number as a preference: exact bus match is preferred, but when
+> - * the bus numbers disagree we accept the entry if the device identity
+> - * matches.
+> + * On systems where the user requested PCI resource reallocation, the
+> + * runtime bus number may differ from the POST value. Match by device
+> + * identity (vendor + device + function), but only treat the bus number as
+> + * a preference when pci=realloc was explicitly requested.
 
-Yes that works for me, and I was able to establish the last working 
-baseline was v7.0 which did not include 
-76701239797698b620f2b7ec713fe08ef50ee664 ("ARM: dts: BCM5301X: Describe 
-PCIe controllers fully"), whereas v7.1 and onwards crashes unless your 
-patch is applied.
+This is a generic problem, isn't it?  
 
-Also, the good thing is that my local test bed has been resurrected and 
-will be more regularly testing now.
+I think any table from firmware that has PCI bus numbers in it could
+trip over issues like this.  Seems like we need a more generic
+solution.
 
+>   *
+>   * Returns: 0 on match, -ENODEV on no match
+>   */
+> @@ -409,7 +407,10 @@ static int amdgpu_acpi_vfct_match(struct amdgpu_device *adev,
+>  	if (vhdr->PCIBus == adev->pdev->bus->number)
+>  		return 0;
+>  
+> -	/* Bus mismatch but device identity matches (PCI renumbering case) */
+> +	/* Allow bus renumbering only when the user requested pci=realloc. */
+> +	if (!pci_realloc_enabled_by_user())
+> +		return -ENODEV;
+> +
+>  	dev_notice(adev->dev,
+>  		   "VFCT bus number mismatch: table %u != runtime %u, matching by device identity (vendor 0x%04x device 0x%04x)\n",
+>  		   vhdr->PCIBus, adev->pdev->bus->number,
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index ed16ef7c26fa7..d9450585082c0 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1799,6 +1799,11 @@ static bool pci_realloc_enabled(enum enable_type enable)
+>  	return enable >= user_enabled;
+>  }
+>  
+> +bool pci_realloc_enabled_by_user(void)
+> +{
+> +	return pci_realloc_enable == user_enabled;
+> +}
+
+I don't like this.  I think the same bus renumbering can happen in the
+"auto_enabled" case, and I don't think we set pci_realloc_enable in
+that case.
+
+But more generally, I think ultimately the PCI core should be able to
+reassign bus numbers arbitrarily to accommodate hotplugs (given the
+appropriate driver support to tolerate that, of course).
+
+>  #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
+>  static int iov_resources_unassigned(struct pci_dev *dev, void *data)
+>  {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index d31a8d107b1ef..844734da9250f 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -610,6 +610,7 @@ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+>  }
+>  
+>  struct pci_dev *pci_alloc_dev(struct pci_bus *bus);
+> +bool pci_realloc_enabled_by_user(void);
+>  
+>  #define	to_pci_dev(n) container_of(n, struct pci_dev, dev)
+>  #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
+> -- 
+> 2.43.0
 > 
-> [1] https://lore.kernel.org/all/CAAsRjRnV-RTddO6h2XCUz2N5pB0pS8i_-_2XRcD=WOTA7AAFZQ@mail.gmail.com/
-> 
-> Best regards,
-> Semih
-
-
--- 
-Florian
