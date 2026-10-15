@@ -1,99 +1,64 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 571FA3EF67D;
-	Thu, 15 Oct 2026 09:10:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE15451C349;
+	Thu, 15 Oct 2026 09:55:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792055411; cv=none; b=DSjpvJuYSudmZVtrKV6cQnhXFgf3MO85lLP9wlnKc2g7eupZFnM9gTQE88nGO4xX1DHGnMRon3VZPcdTclD6Xp+NS7l4POwg/Gt8ftrfLmvpi4CDaRnnSUYKblKLhymmPUKtWxL91mnuwklF12iajspX1QpP4X0p/Pangdkoce8=
+	t=1792058141; cv=none; b=KT9wWpUnttOahKU6ox1VHk1+ex4plmJwjeD6rXR89Md4z6clKV/tRQzbpGpq7xUcRiktpSQqsMGoPYittawrg4cna7CjtEK1qlkYV7TEFh3cIW2zNqvrxLuIFrs/ySKjNY/TI8G1q4KhY+VBkgLswc74Bh0VawJE6gUUkJjsQw4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792055411; c=relaxed/simple;
-	bh=qbPT3vKmnaI+U1z729U2LoQwg0qtNLYje1pulpSivYk=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=KHWFS9SHG+tjH1cgGqKVQK24lKCqjUxRyW8KNncSXm9tagqE5W2kzSyP2wLrQ9qvcIWr9wyowpYNxH87d5nEE0sLe3SKPUYKlj+n3pvkyy8YKdbWQm4rRVSFU3Utu4MGoDTIUNRjFeMVHovnkp9IREbOEisEjk6mgnEQ2RNfbYg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=AawnaJ4I; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1792058141; c=relaxed/simple;
+	bh=Buk9x+xIr0Hp/9kAkSnMDdIn8/lS/bCV6UBqC0TwOuE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Okzh081qTz2HVHbNCCOgEvVJliQss1lVYXtABcLTjwUeDG4PIxIH3rl+Xe1Ju69aOuYKvqSCKwrCbyLMd1ggum9wkroYUdp3j81YwYj/tEl/gE6NM5isWsCESbSYrNYBVaJMIu/hec8J6NvJDH5h9KeL4Jc8iBndNpz98jFD0OU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=uMZAES2D; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="AawnaJ4I"
-Received: from [10.95.64.106] (unknown [4.194.122.162])
-	by linux.microsoft.com (Postfix) with ESMTPSA id A639120B7166;
-	Thu, 15 Oct 2026 02:09:55 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com A639120B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1792055405;
-	bh=7ZvitbVIHx4genvaOzk0rR3WfZKmeRXiVirIb0psHlU=;
-	h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
-	b=AawnaJ4IjGtG8X+AJ0H3qpVpiCtWFQzQCs1HCf9BkxyP8vQoU5D8ierMAr/05YWuk
-	 ZmRmSvdbWN5PhkJKuaOwrqbcg8zbip9lpbbtlozuc/pPhzG7wGDJHuJfWtye+UYMsU
-	 uL2XH18rxyBhHi4I4D4G1bSERbRGZ6U5fRCGjyOc=
-Message-ID: <cb24da4f-fd1e-478d-8924-5d047b904336@linux.microsoft.com>
-Date: Thu, 15 Oct 2026 14:39:57 +0530
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="uMZAES2D"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D0E81F000CB;
+	Thu, 15 Oct 2026 09:55:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
+	s=korg; t=1792058135;
+	bh=OjGYxvUIE7EfrZL3fGuw5Qh3SDT3bvcL3SWeWM8eUOw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=uMZAES2DjeDsfGU5WPmZ87Wr/UbsnwQy3b5GKnnqD++JeUejUdV1+IZqEnBQIvxQl
+	 iZVXQvcVfRUUG7ueXrfqr/b0eG+eJgMUcjiNZECTrokNEEsCQ3PWeijXVBiMDjfVF6
+	 v/kUAM0ScHfJZFx9Rj+Zh1l/+6FxopYq5s1mlJiE=
+Date: Thu, 15 Oct 2026 11:55:39 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Artem Dinaburg <artem@trailofbits.com>, stable@vger.kernel.org,
+	dlemoal@kernel.org, kwilczynski@kernel.org, kishon@kernel.org,
+	frank.li@kernel.org, bhelgaas@google.com, sashal@kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [6.12.y] Please apply one upstream fix
+Message-ID: <2026101501-willed-gracious-cc62@gregkh>
+References: <20261014190815.23455-1-artem@trailofbits.com>
+ <atBnuPOa68f21L6C@debian>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 0/4] x86/irq: Fix lost interrupts on CPU hot-unplug
-From: Naman Jain <namjain@linux.microsoft.com>
-To: Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
- Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>,
- x86@kernel.org, "H . Peter Anvin" <hpa@zytor.com>,
- Wei Liu <wei.liu@kernel.org>, "K . Y . Srinivasan" <kys@microsoft.com>,
- Haiyang Zhang <haiyangz@microsoft.com>, Dexuan Cui <decui@microsoft.com>,
- Michael Kelley <mhklinux@outlook.com>
-Cc: Long Li <longli@microsoft.com>, Nam Cao <namcao@linutronix.de>,
- Joerg Roedel <joro@8bytes.org>,
- Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
- Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
- Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Kees Cook <kees@kernel.org>,
- "Rafael J . Wysocki" <rafael@kernel.org>, Radu Rendec <radu@rendec.net>,
- Sean Christopherson <seanjc@google.com>, Kai Huang <kai.huang@intel.com>,
- Dmitry Ilvokhin <d@ilvokhin.com>,
- Shradha Gupta <shradhagupta@linux.microsoft.com>,
- Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
- Thierry Reding <treding@nvidia.com>, Jiri Wiesner <jwiesner@suse.de>,
- Daniel J Blueman <daniel@quora.org>, linux-hyperv@vger.kernel.org,
- linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
- linux-pci@vger.kernel.org
-References: <20260923043023.3150498-1-namjain@linux.microsoft.com>
-Content-Language: en-US
-In-Reply-To: <20260923043023.3150498-1-namjain@linux.microsoft.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <atBnuPOa68f21L6C@debian>
 
+On Thu, Oct 15, 2026 at 11:13:42AM +0530, Manivannan Sadhasivam wrote:
+> On Wed, Oct 14, 2026 at 03:08:15PM -0400, Artem Dinaburg wrote:
+> > Hi,
+> > 
+> > Please consider applying the following upstream commit to 6.12.y. It
+> > applies cleanly to 6.12.112 and is already in 6.18.y and 7.2.y.
+> > 
+> 
+> Please explain why you want this commit to be backported to stable kernels.
 
+Yeah, this is odd, it's a test function?  Artem, how are you hitting
+this and why is it needed in older kernels?  Can't you just update to a
+newer one if you have this hardware and want to test the endpoint
+hardware?
 
-On 9/23/2026 10:00 AM, Naman Jain wrote:
-> On CPU hot-unplug, fixup_irqs() re-injects interrupts that are still
-> pending in the outgoing CPU's IRR via the irqchip's irq_retrigger()
-> callback. The Hyper-V root partition PCI/MSI irqchip lost that callback
-> when it was converted to msi_create_parent_irq_domain(), so such a
-> pending interrupt is silently dropped, leading to lost interrupts, stalls
-> and "No irq handler for vector" messages.
-> 
-> Patch 1 is the minimal, backportable fix (Fixes:/Cc: stable) that restores
-> irq_chip_retrigger_hierarchy() on the Hyper-V root partition PCI/MSI chip.
-> The equivalent guest pci-hyperv.c fix from the previous version is already
-> merged, so it is dropped here.
-> 
-> Patch 2 then switches fixup_irqs() to call irq_chip_retrigger_hierarchy()
-> directly which ensures that this issue does not occur for chips that
-> miss adding this initialization.
-> 
-> Patch 3 makes a similar change in msi_set_affinity()
-> 
-> Patch 4 then drops the now-redundant irq_retrigger() initializations.
-> This way, patch 2-4 do not need to be backported.
-> 
+thanks,
 
-Hi Thomas, maintainers,
-Gentle ping on this patch series. Please let me know if this is good to 
-be picked in next merge cycle or if any changes are needed from my side.
-
-Regards,
-Naman
+greg k-h
