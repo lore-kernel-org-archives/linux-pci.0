@@ -1,75 +1,136 @@
-Received: from sender-op-o17.zoho.eu (sender-op-o17.zoho.eu [136.143.169.17])
+Received: from mail-m12740.qiye.163.com (mail-m12740.qiye.163.com [115.236.127.40])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C82F725B0B9;
-	Thu, 15 Oct 2026 03:57:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.169.17
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792036625; cv=pass; b=jbMf/PjT8kH/FFpeyVjOAaYN60ylU4nm8aW2be3gb6OrWmc9dnsdqvU9cObBXhzw3GYZWlKZ9p3YAdmQ8OOnQ/S925gPz3HC9Wtavx193g2J5Mce3w/6NZ4/79E3jSk5ZE5ZHtGbI50XlJmNxOXQFJngCSOyIrknvFNhRAzuMP8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792036625; c=relaxed/simple;
-	bh=jSihIRXkAvNegGSpg4GhePbA5ylhlVWwIpl1+BYLpws=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=miD5BxXsSC6Q4yXO9qKDPqnY+PcFoe4HrIoA/TqUWZ9F71x/5rBQuCqQXusc4Qk2oqtXVmembspFrXUW4OFo9HA3Si7kOCf3qhy49N/1OIEp4rGzbszaom3d4/1spGqOO3lm+keJAs+iOxxCFp1oH/nW2AX6V1l1fOGZOXfyRF4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iav.lv; spf=pass smtp.mailfrom=iav.lv; dkim=pass (1024-bit key) header.d=iav.lv header.i=iav@iav.lv header.b=Akc0haoJ; arc=pass smtp.client-ip=136.143.169.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iav.lv
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iav.lv
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5390C3DE440;
+	Thu, 15 Oct 2026 04:03:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.236.127.40
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792037024; cv=none; b=mzg09tCIQN/DgSURpqapVzHqzllvYgl1g8+PUT5z4XnQ0PM/fvkdCb3lrtPYEzBA+8Ing3JKa3mynGvc7Xpwawda3/28KZvFBVIktnF0OsNTbRFJH8XzlYzn5R4li4KQaVvmhWsqNAdbZq8IgMQ9bQvbbYivv3fJ7VBGGyMwCYI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792037024; c=relaxed/simple;
+	bh=6HXh1nJs1d9mcThJGV+TzKhxt11JxPG6GterzuwLd78=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=KS8oUKpt3X3icJWBh5kK+8oNP+HBWqkQ+5D+KmGoCvW9VXFqZlUe1sDoaS8Sf2kKgpWICLAiqyMymiemjs5so/IYYTbxG76B9B+eXd6llYXREHidrkNSDSJWML+M0SInoXMBqsD7svNUEcVPkclo7rviSGN7FqjIhdZbwcUyGgY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=Okr4OX+K; arc=none smtp.client-ip=115.236.127.40
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=iav.lv header.i=iav@iav.lv header.b="Akc0haoJ"
-ARC-Seal: i=1; a=rsa-sha256; t=1792036578; cv=none; 
-	d=zohomail.eu; s=zohoarc; 
-	b=HyjvtTwhbqCnEDH+MM5AHhQ87mjpWDv0DrsKtXsvxuq6lhn5N8rGWPQIDyZY+fAh3AwiXa8Xe8gKNdvpdhizsg3rYIKeozFX0ia2GSRiCj5c2xsb6FL/h3xmfTAbUqDsPQh5Jh8U/yD/0CZi0W8xf58qk9HbFWXjr3xClzlQGHU=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-	t=1792036578; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=OJEWc0eoUwLODa0bYpq9gJ49xJvUkRMXg6H5LcqBKIo=; 
-	b=E2eOfspFM5gCwbCsatAD8Fn64RGT0FWn/DZ21T2Vv7mPZIfNcaJBPbyt6tyxbyE4w8/sHczqOnDHrTzd56qEYsQOgN7zpToITst4OEZuCqK8qcKj1HEtzHAJlsP9QHCB44m8hXXcJ/MMGYJJcgDkbp5t2xrV/r3djHvQzPQvJKw=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-	dkim=pass  header.i=iav.lv;
-	spf=pass  smtp.mailfrom=iav@iav.lv;
-	dmarc=pass header.from=<iav@iav.lv>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1792036578;
-	s=zoho; d=iav.lv; i=iav@iav.lv;
-	h=Date:Date:From:From:To:To:Cc:Cc:Subject:Subject:In-Reply-To:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Reply-To;
-	bh=OJEWc0eoUwLODa0bYpq9gJ49xJvUkRMXg6H5LcqBKIo=;
-	b=Akc0haoJe+d24pdB1r5qr5Bcd+Rzg071FeSpZ0OaUBwMo+3lG/uVXD9prR3yw8Jw
-	+yU+IVSHY82dU1hfI40eJWMTNT8+27LnGlakJMMMuQtW/TVDIaykx4UkM1jGgrcfk90
-	XGvHILAdm1gFbK6VaI6HvHZKz7m07gmIqnLQQt28=
-Received: by smtp.zoho.eu with SMTPS id 1792036574971162.77080539620772;
-	Thu, 15 Oct 2026 05:56:14 +0200 (CEST)
-Date: Thu, 15 Oct 2026 06:56:12 +0300
-From: Igor Velkov <iav@iav.lv>
-To: Sebastian Reichel <sebastian.reichel@collabora.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, Philipp Zabel <p.zabel@pengutronix.de>, Jingoo Han <jingoohan1@gmail.com>, Shawn Lin <shawn.lin@rock-chips.com>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, "Yury Norov (NVIDIA)" <yury.norov@gmail.com>, Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, Alexey Charkov <alchark@flipper.net>, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org, kernel@collabora.com, Igor Velkov <iav@iav.lv>
-Subject: Re: [PATCH v6 09/10] PCI: dw-rockchip: Add system PM support
-In-Reply-To: <20260908-rockchip-pcie-system-suspend-v6-9-fbabcca9921b@collabora.com>
-References: <20260908-rockchip-pcie-system-suspend-v6-0-fbabcca9921b@collabora.com> <20260908-rockchip-pcie-system-suspend-v6-9-fbabcca9921b@collabora.com>
-Message-ID: <20261015-m1-tested-by-pcie-v6-09@iav.lv>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="Okr4OX+K"
+Received: from [172.16.12.48] (unknown [61.154.14.86])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 511c0652a;
+	Thu, 15 Oct 2026 11:48:09 +0800 (GMT+08:00)
+Message-ID: <990c293e-9c73-44ac-b89c-641bf08770b2@rock-chips.com>
+Date: Thu, 15 Oct 2026 11:48:09 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+User-Agent: Mozilla Thunderbird
+Cc: shawn.lin@rock-chips.com, Philipp Zabel <p.zabel@pengutronix.de>,
+ Frank Li <Frank.Li@nxp.com>, Niklas Cassel <cassel@kernel.org>,
+ Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+ Serge Semin <fancer.lancer@gmail.com>, linux-pci@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 02/18] PCI: dwc: Factor out the PORT_LINK_DEBUG1
+ link-up check
+To: Koichiro Den <den@valinux.co.jp>,
+ Marek Vasut <marek.vasut+renesas@mailbox.org>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski
+ <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
+ Magnus Damm <magnus.damm@gmail.com>, Jingoo Han <jingoohan1@gmail.com>
+References: <20261015033103.3076869-1-den@valinux.co.jp>
+ <20261015033103.3076869-3-den@valinux.co.jp>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <20261015033103.3076869-3-den@valinux.co.jp>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa13dacb02903a4kunm10e744703af49f
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaGkJPVh8YTh4aTBpKSEhKTlYVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUpLSU
+	9PT0hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=Okr4OX+Kt8xyDnQyvmJm9MobbukZABSGfEFoz7seJJOqBnDgx+09+gED8aJbd3TTi5JgA9goqows7oOUV9LwK7tTvi1KhlWupNFTd4mnQn9i86X78eXB44oTJEDr++iPDFMorUNk02pXNAwWuA3BY7KHoGn1TPznDZ1LP5WiL78=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=/B1vcuAwqO/2IRqfoBy0p5esdy53HEbneGYiujfDLvk=;
+	h=date:mime-version:subject:message-id:from;
 
-Tested on ODROID-M1 (RK3568, NVMe on pcie3x2) with 7.3-rc7 and Jonas'
-EHCI/OHCI clock patch: s2idle 4/4, deep 6/6, the NVMe stays usable
-after resume. Without this series it is lost on resume:
+在 2026/10/15 星期四 11:30, Koichiro Den 写道:
+> dw_pcie_link_up() reads PORT_LINK_DEBUG1 when the glue driver provides
+> no .link_up() callback. A callback that needs a platform-specific check
+> on top of that register would have to duplicate the register read.
+> 
+> Factor the check out into dw_pcie_link_up_debug_check() and export it
+> for modular glue drivers. pcie-rcar-gen4 will be the first user: its APP
+> link-up events remain latched after the link goes down, so it has to
+> combine them with the live PORT_LINK_DEBUG1 state.
+> 
+> No functional change.
+> 
 
-  nvme 0002:21:00.0: Unable to change power state from D3cold to D0, device inaccessible
+Reviewed-by: Shawn Lin <Shawn.lin@rock-chips.com>
 
-Tested-by: Igor Velkov <iav@iav.lv>
-
-> +	ret = dw_pcie_suspend_noirq(pci);
-> +	if (ret)
-> +		return ret;
+> Suggested-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
+> Changes since v3:
+>    - No changes.
+> 
+>   drivers/pci/controller/dwc/pcie-designware.c | 15 +++++++++++----
+>   drivers/pci/controller/dwc/pcie-designware.h |  1 +
+>   2 files changed, 12 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> index c726aa71c830..49a9ba910ba8 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -817,17 +817,24 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
+>   }
+>   EXPORT_SYMBOL_GPL(dw_pcie_wait_for_link);
+>   
+> -bool dw_pcie_link_up(struct dw_pcie *pci)
+> +/* Link state from PORT_LINK_DEBUG1: up and not in training */
+> +bool dw_pcie_link_up_debug_check(struct dw_pcie *pci)
+>   {
+>   	u32 val;
+>   
+> -	if (pci->ops && pci->ops->link_up)
+> -		return pci->ops->link_up(pci);
+> -
+>   	val = dw_pcie_readl_dbi(pci, PORT_LINK_DEBUG1);
+>   	return ((val & PORT_LINK_DEBUG1_LINK_UP) &&
+>   		(!(val & PORT_LINK_DEBUG1_LINK_IN_TRAINING)));
+>   }
+> +EXPORT_SYMBOL_GPL(dw_pcie_link_up_debug_check);
 > +
-> +	gpiod_set_value_cansleep(rockchip->rst_gpio, 0);
-> +	rockchip_pcie_phy_deinit(rockchip);
+> +bool dw_pcie_link_up(struct dw_pcie *pci)
+> +{
+> +	if (pci->ops && pci->ops->link_up)
+> +		return pci->ops->link_up(pci);
+> +
+> +	return dw_pcie_link_up_debug_check(pci);
+> +}
+>   EXPORT_SYMBOL_GPL(dw_pcie_link_up);
+>   
+>   void dw_pcie_upconfig_setup(struct dw_pcie *pci)
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index 419932488280..2ce61709b58c 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -618,6 +618,7 @@ int dw_pcie_write(void __iomem *addr, int size, u32 val);
+>   u32 dw_pcie_read_dbi(struct dw_pcie *pci, u32 reg, size_t size);
+>   void dw_pcie_write_dbi(struct dw_pcie *pci, u32 reg, size_t size, u32 val);
+>   void dw_pcie_write_dbi2(struct dw_pcie *pci, u32 reg, size_t size, u32 val);
+> +bool dw_pcie_link_up_debug_check(struct dw_pcie *pci);
+>   bool dw_pcie_link_up(struct dw_pcie *pci);
+>   void dw_pcie_upconfig_setup(struct dw_pcie *pci);
+>   int dw_pcie_wait_for_link(struct dw_pcie *pci);
 
-When pci_host_common_d3cold_possible() returns false,
-dw_pcie_suspend_noirq() returns 0 without setting pci->suspended. The
-controller is then powered down here anyway, and dw_pcie_resume_noirq()
-returns early on !pci->suspended, so the RC is not set up again and the
-link is not restarted. I did not hit this path on M1.
