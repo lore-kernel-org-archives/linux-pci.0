@@ -1,33 +1,38 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C21363D5C06;
-	Fri, 16 Oct 2026 20:10:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 248773E95B1;
+	Fri, 16 Oct 2026 20:12:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792181436; cv=none; b=T6xk0e5A7Vc4Pu3dQPt5mCPrer/DSHrHMNGVArmnTixe44jpmEn+xmfoNrF+VT8APnVlOhQDz6b0PwfY7CfLSl1h+F+0b12KB98dAQFp/W3X3113CEjsC/tIaSiwLsfpCUyWV7mY6EQ6nK/TLJv2mRl66EUBfQuZ308EQzwudoY=
+	t=1792181543; cv=none; b=uHqXeWSgtz/By45i/SoedJnLyjvQMfMCx9Y3/tKm64xu7Bi6LnmTHX8K/sUDUcYt4DbbYIq1Fk57gPdyqkT+jRZubw7QZLYqygrNPN0K84cgWiywWUVuzdQj4U9kiv83TOPAg+nPhi+2CkmvG97/AZLOlaXGGLwXsFTCXppmsRI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792181436; c=relaxed/simple;
-	bh=TGRKCqcM8wtCgAwvh0/4E7uvPhaoPBzUamFXlq+7dG0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=TngoQkewrNnKkqsjRc4i7/PEJcbuU8QSupJOC6oFiXeKHm51unPpfO7sbltSOBMkZjH6+elvxPZUvTilZE8wJUBuo5tCFcVkAvZNkWxbuNgJXY1QHoPm0wAubomvkmvQ3L9Wfjn3Ae5t54dlD8MdIJxg9XMsawFHX1Mh958mojY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RZquliao; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792181543; c=relaxed/simple;
+	bh=frQbdMeqfT3iVzHUO53VKHE3fVx+XEIDlfmA6XLFAxk=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=hVQ953t/X8F3omQdt1Cf4Iy3w/Fh9RkVRqMccbf9rNWVj12r0mLuZ55xGDYNdqUZNjilya9eLvopQ5iR/PJyN46HbM80ev95ZPgTxPwaXH+I3gikV7wZwL65O3edIi8O/Yr86RzGMARHZuO31319beGCqMTizVMzxJrtHgd8fmw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=mvspbEK2; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RZquliao"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37E201F000C4;
-	Fri, 16 Oct 2026 20:10:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792181434;
-	bh=DLpgKGQp8T1NzqmFrpLhW5VkyIVBtZn3g2ShHAUV1fI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=RZquliao9IYErFXqpqzk1toqYSIFPmUqm1YM0Q48SUPs9yzVnHoFlDYr8MR0IwAKg
-	 alm9gnRYCIMw/iN0zc96XfDXEeC6QDlo7SCSksBG80kVx4C+l+6t2E7FEUZqgG/LPu
-	 VNwZYIy6109R40bV4jhCN4GnxX0tuAFPF/ogy3gbF6oaJu1k72Dh2Kxu15cuDpntOB
-	 beZ+gnaVsxLwRDqYroiYGFFEm/gpHQf7mAwQii7d7InI5VN/p65MirzptuuEOKHAtU
-	 6z2Shb7ibcfSBkEGhPrrzV1Hmc5WLG335KF/JiAMBg7r+zNoWlL0pvrXEpsn1A0pE3
-	 KrkzfqBF/wMbg==
-Message-ID: <309f6f13-b010-4818-936d-4b7b4b389239@kernel.org>
-Date: Fri, 16 Oct 2026 23:10:27 +0300
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="mvspbEK2"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=wtdAQptKrqycD2VywERsAjBpDeEa1De9Zkj3MUtqTNQ=; b=mvspbEK2ee4odC+BIxpLwOXj8Q
+	hzN60UX9dMxZalkHUsUXge5kcBNBeXurXeZwo+Xbj69xK4/L8JzlQ+Rw0jFNfaUjaqa7m2mKqDLcX
+	6NnCK3CscVe3AgRi9qRHZmLjceW6Di5QDcMBKZO+yXgLSsO4LhH6eZ1AmGzCNq9YOt9snP2bVwZxt
+	P507ARY5Ny+OqnOiK9q8LFkayF/2VKOrEMgCKo1cYf3WhA6lbG2tFajfOZGQWgXbVoaqjetwXhuCv
+	BHotQZobDcfo9cJkTONlPeT/cdgUz1aNCasBv4weONy1q4f/Mb+9Ix7EYhvnAvoKgHvH/QpP3TR9X
+	6MU3pqig==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1xHoHj-00000007oQj-0K0C;
+	Fri, 16 Oct 2026 14:12:12 -0600
+Message-ID: <4af82730-44ff-4ca7-a126-fba78cbf34f4@deltatee.com>
+Date: Fri, 16 Oct 2026 14:12:08 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -35,65 +40,73 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: iproc-msi: Bound events handled per IRQ
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
- Scott Branden <sbranden@broadcom.com>,
- Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-References: <20261016182124.GA1884550@bhelgaas>
-Content-Language: en-US
-From: Eugen Hristev <ehristev@kernel.org>
-In-Reply-To: <20261016182124.GA1884550@bhelgaas>
+To: "Popov, Pavel E" <pavel.e.popov@intel.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: Leon Romanovsky <leon@kernel.org>, Jim Chow <jim.chow@broadcom.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Radu Rugina <radu.rugina@broadcom.com>,
+ Alexey Makhalov <alexey.makhalov@broadcom.com>, Wei Liu
+ <wei.liu@kernel.org>, Michael Kelley <mhklinux@outlook.com>,
+ Lukas Wunner <lukas@wunner.de>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ Nathan Ciobanu <nathan.d.ciobanu@linux.intel.com>,
+ "bcm-kernel-feedback-list@broadcom.com"
+ <bcm-kernel-feedback-list@broadcom.com>,
+ "virtualization@lists.linux.dev" <virtualization@lists.linux.dev>,
+ "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20261009184923.GE11438@unreal>
+ <LV2PR11MB60707DAD12BFBEAB681463B7B2922@LV2PR11MB6070.namprd11.prod.outlook.com>
+ <20261011054700.GF11438@unreal>
+ <LV2PR11MB60708F76EB7D6E5A40E82853B29F2@LV2PR11MB6070.namprd11.prod.outlook.com>
+ <20261012162410.GH219304@unreal>
+ <DS7PR11MB6064DA61339B9AB0F52EBED4B29F2@DS7PR11MB6064.namprd11.prod.outlook.com>
+ <20261012182120.GJ219304@unreal>
+ <DS7PR11MB60647FA80C6BE1029982222DB29F2@DS7PR11MB6064.namprd11.prod.outlook.com>
+ <20261013122002.GN219304@unreal>
+ <LV2PR11MB60704D89055FBC471FF81B31B29B2@LV2PR11MB6070.namprd11.prod.outlook.com>
+ <20261016153147.GC219304@unreal>
+ <LV2PR11MB6070D328D5E6A538DB6370B2B29B2@LV2PR11MB6070.namprd11.prod.outlook.com>
+ <006effed-576f-4aed-b3ac-c335d8d51106@deltatee.com>
+ <LV2PR11MB6070A3BB8BCB592EDFAFC261B29B2@LV2PR11MB6070.namprd11.prod.outlook.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <LV2PR11MB6070A3BB8BCB592EDFAFC261B29B2@LV2PR11MB6070.namprd11.prod.outlook.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: pavel.e.popov@intel.com, helgaas@kernel.org, leon@kernel.org, jim.chow@broadcom.com, bhelgaas@google.com, radu.rugina@broadcom.com, alexey.makhalov@broadcom.com, wei.liu@kernel.org, mhklinux@outlook.com, lukas@wunner.de, rafael@kernel.org, nathan.d.ciobanu@linux.intel.com, bcm-kernel-feedback-list@broadcom.com, virtualization@lists.linux.dev, linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH 0/2] PCI/P2PDMA: Allow P2PDMA in VMware and Hyper-V guests
+ on Intel hosts
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-On 10/16/26 21:21, Bjorn Helgaas wrote:
-> On Fri, Oct 16, 2026 at 03:18:53PM +0300, Eugen Hristev wrote:
->> Limit each iProc MSI parent IRQ to 16 event-queue entries.
->>
->> A continuously fed queue could otherwise keep the chained handler running
->> and starve other work. The budget still drains pending events and lets the
->> next parent interrupt continue processing, improving fairness and bounding
->> interrupt-handler latency.
->>
->> Without this starvation avoidance, one CPU can stall indefinitely
->> in the loop and not serve other interrupts, timers, etc.
->>
->> While testing it with an Ethernet NIC,  when too many MSI interrupts
->> come in, CPU might get starved:
->>
->> Connecting to host 192.168.30.1, port 5201
->> [  5] local 192.168.30.2 port 52586 connected to 192.168.30.1 port 5201
->> [ ID] Interval           Transfer     Bitrate         Retr  Cwnd
->> [  5]   0.00-1.00   sec   240 MBytes  2.01 Gbits/sec    2    334 KBytes
->> [  5]   1.00-2.00   sec  63.2 MBytes   531 Mbits/sec    1   1.41 KBytes
->> [  5]   2.00-3.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->> [  5]   3.00-4.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->> [  5]   4.00-5.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->> [  5]   5.00-6.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->> [  5]   6.00-7.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->> [  5]   7.00-8.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->> [  5]   8.00-9.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->> [  177.568497] rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
->> [  177.568913] rcu:     0-...!: (1 GPs behind) idle=28ac/1/0x4000000000000002 softirq=28922/28930 fqs=1
->> [  177.569457] rcu:     (detected by 1, t=5256 jiffies, g=21629, q=819 ncpus=4)
->> [  177.569870] Sending NMI from CPU 1 to CPUs 0:
->>
->> With this bounded approach, IRQ handler will complete and continue
->> to serve MSI events on the next handler invocation.
-> 
-> Is there something unique about iproc that makes this an issue, or do
-> we need to worry about this in every MSI interrupt handler?
-> 
-This is not specific to iPROC, so in theory it can happen to any other
-MSI interrupt handler. If the handler has no way to break the loop, and
-the condition that generates the MSI IRQ happens continuously, the same
-situation will happen.
-Some other drivers e.g. take the IRQ state into a local variable, do the
-task, clear it up, and don't care to read it again, like the iPROC is
-doing, unless another MSI fires.
+
+
+On 2026-10-16 13:45, Popov, Pavel E wrote:
+> 	X86_MATCH_VFM(INTEL_SKYLAKE_X, NULL),
+> 	X86_MATCH_VFM(INTEL_ICELAKE_X, NULL),
+> 	X86_MATCH_VFM(INTEL_ICELAKE_D, NULL),
+> 	X86_MATCH_VFM(INTEL_SAPPHIRERAPIDS_X, NULL),
+> 	X86_MATCH_VFM(INTEL_EMERALDRAPIDS_X, NULL),
+> 	X86_MATCH_VFM(INTEL_GRANITERAPIDS_X, NULL),
+> 	X86_MATCH_VFM(INTEL_GRANITERAPIDS_D, NULL),
+> 	X86_MATCH_VFM(INTEL_ATOM_CRESTMONT_X, NULL),	/* Sierra Forest */
+> 	X86_MATCH_VFM(INTEL_ATOM_DARKMONT_X, NULL),	/* Clearwater Forest */
+> 	X86_MATCH_VFM(INTEL_DIAMONDRAPIDS_X, NULL),
+
+I think this list would be pretty easy to approve if we know the two
+Atom parts work.
+
+> If you still prefer the kernel command line option you suggested, v3
+> can add it, per-endpoint or global. It works without a patched kernel,
+> but puts the burden on every VMware user to know about and set it,
+> where v1 or v2 just works.
+
+A kernel command line option probably wouldn't be a bad idea independent
+of this. But up to you if you want to try to implement it.
+
+Logan
+
+
