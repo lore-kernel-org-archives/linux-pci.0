@@ -1,79 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7945E1D432D;
-	Fri, 16 Oct 2026 22:41:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B1EE390CB7;
+	Fri, 16 Oct 2026 22:55:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792190486; cv=none; b=P8ZDqn7tmgBT31idzEp57oDG72PfLv6sKjKGQsXy6L8t6L2n0zrH9uuUzDv2v9+4oXDNt/IcBVwyqwg9lhKCxg4C6T2JuwFrxoGeoVFjaFhXJE0UL/dmEfzVQ3JYrLOgNJ1HjW7bYd4k7KsU6dag88Z9Pt1T2O83Dab1qiqUsoU=
+	t=1792191327; cv=none; b=bhN6nPKT+8J42sR9VsNXdD2CjKjHsJi2B0zV2DdxIOpizhOv9n6UUlQ8+5RXkIs0Cz04xnTBMmzwsuT/KqjeTbEVzLyqJFPFMj/+e7Zj62b4/hHGERNosg1WW2QvlFUVGHajWBdV9hjFqJyVymI+uTGWNTDs1HbMUz2Yjp83STc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792190486; c=relaxed/simple;
-	bh=nOmlBcRzNKtRPQ4eEUsj+/2m3286iFfddMj78Z+R054=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=imalEvjoguz2Vja9R8/pvSxmNsi+av8GOw2IZ1iRCsbSK2ZgulJnb4j7apjNci6MS9igvuIVwY439k6yDRF0gGjbwd8T3EsNPEZYa16Iy3utmoBQQ9fh5T0p/jmrpvw1SrCf1EQuW4NICD1+NiWJ+3I42IfO0/A3y7+QDL/the4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hH71egwH; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792191327; c=relaxed/simple;
+	bh=eLcXstUGQpu+xrOJ8PeHGrIktdadao5yyHaVL34ACQ0=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=fe8CAX4XRU2RJRk2BEX6Q+ktYlPWWdh1WwYsUZgbDgL1KCHMWDCh25Rr09FcuYfzVje7sKJFmMs8cLV1ctz4XDRVG2FIAu0spHbfazE0XVu33BNQs++NhigetjSBNdHOUfUOkHITmyHlCAOi61GzyZDLLadyX1OG59lapit0dig=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=MrxFxZ1e; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hH71egwH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50B801F000C4;
-	Fri, 16 Oct 2026 22:41:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792190485;
-	bh=wlqZJKJYIhaeE0t+tvS/zxiZ9grWXt674kx1cECAGCM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=hH71egwHYq9vWkbUXDiJA2QB7ySa4Da0tZ3L8qH+Zx70I9dvyd3tvxyOhOOy2zUPw
-	 nIYzx/JCugdltAn/0Xza23DF4+AfZ3MW+gM6Q79ynl5/3JZ4LUTi7tnfmi2mRBeP2a
-	 F50Uuzio+26S2WjZGFYXoQm7N6wX35FGf81LayX5errbMnOSIBJOqBrokBw53cUlYs
-	 3T+23U+vKIxm4ZRyCn1r/Lbb1S1ZJSSDHp5MMo0PfXR6fYWiXElfKHy0Ejdv/rFVji
-	 fXl1yfrlLWwxa8SXSEU6bzmDNgoNQgcSNSTOSfbhWceLNi2h5QSUDHbOxfkBu3zFaR
-	 eZ39RiLw2w32g==
-Date: Fri, 16 Oct 2026 23:41:18 +0100
-From: Jonathan Cameron <jic23@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Dave Jiang <dave.jiang@intel.com>, Davidlohr Bueso <dave@stgolabs.net>,
- Alison Schofield <alison.schofield@intel.com>, Vishal Verma
- <vishal.l.verma@intel.com>, Dan Williams <djbw@kernel.org>, Bjorn Helgaas
- <bhelgaas@google.com>, Ira Weiny <iweiny@kernel.org>, Li Ming
- <ming.li@zohomail.com>, Richard Cheng <icheng@nvidia.com>, Terry Bowman
- <terry.bowman@amd.com>, Alejandro Lucero <alucerop@amd.com>,
- linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/3] cxl: Account for link width in latency calculation
-Message-ID: <20261016234118.20f6a7e1@jic23-hlaptop>
-In-Reply-To: <20261009045452.1107921-3-den@valinux.co.jp>
-References: <20261009045452.1107921-1-den@valinux.co.jp>
-	<20261009045452.1107921-3-den@valinux.co.jp>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="MrxFxZ1e"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=pkithiv798uVgMzxb5UwY/p9qnpe6saIvaiV4xnnvbM=; b=MrxFxZ1eCmPPTVkoO/7d402aFx
+	54n2ufNyF/N+ngkBlIuLiqbXr4QQbmPebkPoK+pbYNWVLdb6hxK6hgrv5fnv7pYBx/w3a/eslHbfG
+	qzp+xinSmAOEQkpFBse7CspNBt+Sp0bU5ssyL6kXNuDvGZLdo4MqbrFIDYnexNykjMm/aueV86NJC
+	uYuR178SBkOGSSzNliyes3CyvhEovU/0/xxg2dsiu0cxZPR5LJOOP8469PK4+YBp0LkhIO0N6e48c
+	Ciy4dq6hDVYn+/DoR9fs8BZt+U4CTd+bRanjKun1J4UEAv7rJ/5eqdHBJ80v/m5b3mBkVrNYWg5iS
+	VWLi5w5A==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1xHqpf-00000007pyk-0pWS;
+	Fri, 16 Oct 2026 16:55:24 -0600
+Message-ID: <8b01d643-f62d-4118-a700-8874341d953b@deltatee.com>
+Date: Fri, 16 Oct 2026 16:55:20 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+To: Pavel Popov <pavel.e.popov@intel.com>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jim Chow <jim.chow@broadcom.com>, Radu Rugina <radu.rugina@broadcom.com>,
+ Alexey Makhalov <alexey.makhalov@broadcom.com>, Wei Liu
+ <wei.liu@kernel.org>, Michael Kelley <mhklinux@outlook.com>,
+ Lukas Wunner <lukas@wunner.de>, Leon Romanovsky <leonro@nvidia.com>,
+ Nathan Ciobanu <nathan.d.ciobanu@linux.intel.com>,
+ bcm-kernel-feedback-list@broadcom.com, virtualization@lists.linux.dev,
+ linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20261016223402.19991-1-pavel.e.popov@intel.com>
+ <20261016223402.19991-2-pavel.e.popov@intel.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20261016223402.19991-2-pavel.e.popov@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: pavel.e.popov@intel.com, bhelgaas@google.com, jim.chow@broadcom.com, radu.rugina@broadcom.com, alexey.makhalov@broadcom.com, wei.liu@kernel.org, mhklinux@outlook.com, lukas@wunner.de, leonro@nvidia.com, nathan.d.ciobanu@linux.intel.com, bcm-kernel-feedback-list@broadcom.com, virtualization@lists.linux.dev, linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH v2 1/2] PCI/P2PDMA: Allow P2PDMA in VMware guests on Intel
+ hosts
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-On Fri,  9 Oct 2026 13:54:51 +0900
-Koichiro Den <den@valinux.co.jp> wrote:
 
-> cxl_pci_get_latency() derives bandwidth from the per-lane speed returned
-> by pcie_link_speed_mbps(), ignoring the negotiated link width. This
-> overestimates the FlitLatency contribution for multi-lane links.
-> Sections 2.11.3 and 2.11.4 of the Intel CXL Memory Device Software Guide
-> describe the link bandwidth as the product of the negotiated speed and
-> width.
-> 
-> Replace pcie_link_speed_mbps() with pcie_link_bandwidth_mbps() and
-> migrate both CXL callers (the only users of the API). The new helper
-> obtains speed and width from a single Link Status read. The CXL
-> bandwidth calculation no longer needs a separate width read and
-> multiplication.
-> 
-> While at it, make error handling more robust by converting PCI config
-> read errors to negative errno values and checking for zero bandwidth
-> before calculating latency.
-> 
-> Fixes: 4d07a05397c8 ("cxl: Calculate and store PCI link latency for the downstream ports")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
-Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
 
+On 2026-10-16 16:34, Pavel Popov wrote:
+> +#ifdef CONFIG_X86
+> +/* CPUs whose host bridges support p2pdma, see pci_p2pdma_whitelist[] */
+> +static const struct x86_cpu_id hypervisor_p2pdma_cpu_ids[] = {
+> +	X86_MATCH_VFM(INTEL_SKYLAKE_X, NULL),
+> +	X86_MATCH_VFM(INTEL_ICELAKE_X, NULL),
+> +	X86_MATCH_VFM(INTEL_ICELAKE_D, NULL),
+> +	X86_MATCH_VFM(INTEL_SAPPHIRERAPIDS_X, NULL),
+> +	X86_MATCH_VFM(INTEL_EMERALDRAPIDS_X, NULL),
+> +	X86_MATCH_VFM(INTEL_GRANITERAPIDS_X, NULL),
+> +	X86_MATCH_VFM(INTEL_GRANITERAPIDS_D, NULL),
+> +	X86_MATCH_VFM(INTEL_ATOM_CRESTMONT_X, NULL),
+> +	X86_MATCH_VFM(INTEL_ATOM_DARKMONT_X, NULL),
+> +	X86_MATCH_VFM(INTEL_DIAMONDRAPIDS_X, NULL),
+> +	{}
+> +};
+> +
+> +static bool hypervisor_supports_p2pdma(void)
+> +{
+> +	/* Hypervisor hides host topology, allow p2pdma on whitelisted CPUs */
+> +	if (hypervisor_is_type(X86_HYPER_VMWARE))
+> +		return x86_match_cpu(hypervisor_p2pdma_cpu_ids);
+> +
+> +	return false;
+> +}
+One quick thought, after a very quick pass at this:
+
+Why does this now need to be related to the hypervisor? Wouldn't it make
+sense to do this check regardless of whether VMWare is involved?
+
+Logan
