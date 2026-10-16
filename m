@@ -1,214 +1,137 @@
-Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F599348C6B
-	for <linux-pci@vger.kernel.org>; Fri, 16 Oct 2026 20:45:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792183533; cv=pass; b=ag/NuwyIkEp38xHKNSDhGdKXNm6qG6q5UrfMaq7BNpptsihjsSK/Rhww8m8MzOdQsRHKKS+xc9fF5BQzq9WzusUeWEhkjCSOCWkoEahpTJRqHD01Yq4JG9h9Z51p3ltA+uCTYCrs6UOVOF8HiULq8whRzy6jQTOeRJe5YSSQnQM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792183533; c=relaxed/simple;
-	bh=w7JWyGZgHnZCAXoncz6LsZsA5BNgjOZNNNQ+Gy3++CA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=UpOgqMMKLEWCgpHfA6+yHkkHLZ9WAVadXUq4f1qrCpQF5PCYlCVBHVzEkm9yKThrYhL7SxliyWdd3jwlj6qd3CiVrw83JbgEms8TagLL9yVYuGbUjh6Y1OtJhSwbRN+/5Omv/0q1YBx/paoSsHMDq/cn7Ff6j4EVGlqZ5FaGCv4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=oUDjoBO7; arc=pass smtp.client-ip=209.85.208.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B5A83E40F3;
+	Fri, 16 Oct 2026 21:41:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792186886; cv=none; b=UnSjcU/lNWSZRLkW2SSAs6LvIUNjWXbvgCmMcG+etm0GxWb5Z4Mg8YFp/8LU5A6a/i7SXELpfjr94d9CZFOqAVzMlFCxPqh45saz8yVJ/9B+w641T8fDBx25Cpghzn+78T2MAZM1Xbjsr1FjuSMqFHtQtt0BVTQr+z0lbpakmAM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792186886; c=relaxed/simple;
+	bh=QIgnUXlbiLx9EEgz8FvAf9L1rd4SgT2sOP93nNhslrI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=Fe5ip5/oLDFUzQNsWiwC93riaiaHLDY66F7AP/kJWAiIY2TaxfLPj/NP6tMuHkyEsVeIQSouHjFhr0nf9zM2l2lwu57Kp3YBcxqDQ4geHoH7w0NeB4+vPyjshszY0WjywnLjqVq8D2XgLj447QrtqMi6MIazwQK0d7bUX40lGhY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RDMeX8KF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="oUDjoBO7"
-Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-6b1b12de661so3435a12.0
-        for <linux-pci@vger.kernel.org>; Fri, 16 Oct 2026 13:45:30 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792183529; cv=none;
-        d=google.com; s=arc-20260327;
-        b=EQpOoBk4Xhuss5xxaLh1SRRq2i/G0yY7NFwuwPvrP4BnnBjTc+klJN71FPsvWRYHqp
-         dLdhVBqgroVHLKgDFtaHsOt7uocyWgIpcjLCWBtMBqWRvQACbjr7+C4K7vPAB/9Zq97Z
-         tp5eoxQDJYdHrM4ACq3WM+y9kufqizzXeYlmHSII4a4jdKKrKfCXq0ivbizJmtsSpTWm
-         zmXTbqXX2v8cWP5QhMHQya3J1MCj7JIwSCN1oNHYQJm99AxlQAHyXj6CW9FS+54bki0D
-         6Qp+Mtn+hE7yiLb9U7+WZfRx8i+1Pe04Pb4nBhYPFHgCoyt/M5FA0QWCJeZY5Tr/LW0b
-         +SpA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=03NCNpz5syFo1Xi0u7EMykw+dKPD9aN2iwbA6vJW+Ss=;
-        fh=Cvs4pkYTtcHuWMW2FnVY1DEKeSFr+yFxWy1PmN4u0a8=;
-        b=ciDrSkFtlTukU5LRMlJ5S3RiS7ZDOkVgSI430tvQqf72d2byMq5zcnB2r3L10/1/fz
-         +o5DbEqlA/Ush1ruk6bASwlPNJzcx9ycshPYP6n5JGv1GOCP1pE8iTxPE4q9V0iF2Iaj
-         DZgOJ1BxFZnW50BAlKNc5320oOgQKVJ6zK8SL7LKABgt+We6MK/qHDubr3b0cq11tOjp
-         cOkwdw992NTZt/bPmi/cXSG5xY+zGRHJAso8Rn0NNzLDGZVh3pZvEKnoT3Oiml0FLryG
-         iRgtlDBzT0qVG5Gxiu49iIrhw4tWnlMAXxCkmT2MDoxq6so3gLlytsFddam0jpz8D1rC
-         MkPg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1792183529; x=1792788329; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=03NCNpz5syFo1Xi0u7EMykw+dKPD9aN2iwbA6vJW+Ss=;
-        b=oUDjoBO7duICncwbCaZxWoozEseHLEJYmdaHso+GoltA9+8o98+95pXhv8Zf0bIOe3
-         FfwyU7MjMh+I54Xuk+YlLhM2ORaBHZgOTIZ8MbrP4KR+WoCM2K3pwyd4GikDklWBlUhs
-         +pr2UnUpW3H+XB6APm1dyz8stWF2q4egAkh9wMmm23fvOlEephPpcZOulpuJCE5WK0J7
-         rDUBv4bWR8GGW0q6WRSFGwb16c89FtpHcCcPZyHEJDagom8MuE2hDPpTSBpgWKcIqQXL
-         hndIFgPY5LiyXaQIY53zhaF7VCmRifcw2rbXWy7VnxsdnQM4U5dsmj5EZY1FIyI35GP4
-         SlIA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792183529; x=1792788329;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=03NCNpz5syFo1Xi0u7EMykw+dKPD9aN2iwbA6vJW+Ss=;
-        b=kiuvcCxk/efdTC2r9vMWOA585XMfO+P/MS3+jC5SrTAJ+iODsHpunSURhnI/8o9Jbr
-         utGxleC4wBAPuBwdUGa5NbDxgFrrlUsdu3kCIIDb5Drc233tL3G1yQyG48bzC2NzP8O3
-         lyZopW37NWzb2Mv9AnE2LkoZMz+e+wgD4w9fY6p/7GZA3RDZhxbZogGr2VfDXT7FsPO+
-         eLBIbL/Pxd1zEA1ocRWqm3DCn76wnm7Gj+h5T3d9z/QnAgMfL41lijBoKuw6EyyZj3DK
-         WyviSnNMHB8wlgJpgDRhYSlvm20qUnGnTpj9+0nNdaLCI2meS/PozbBynj50WNBO/9AN
-         k4HA==
-X-Forwarded-Encrypted: i=1; AKwUvBwkDnqqLaGSbMZ1gpZL/kBajXmHamHpGAylY7CPZE+50Dw46Sx5tuVQqblKpH0u4VPgd9cNIcY8Olg=@vger.kernel.org
-X-Gm-Message-State: AFq9FYIaZI2kHkrPLSOKZuAQ2QOtWiBxZaGNdWZTZiE/So1b9p8AK523
-	BlGj0V1/+fKM/AjqymkwC8X0/bGwmI1yvvFkDK8iGskJvWb+Ew7GE1bnVGyEg6XMbU2Ko/Fvu6m
-	VRdlO5Xdnjig9bnaAZsU9NT53tKhuqNseBjKNAzMa
-X-Gm-Gg: AYBFou155f1mMKHTTy6mP/DqOJayKgqjj60f/BmRn+vFneU752VtdXWou7I/qZBG3Jf
-	buWFAL4t0Xk2mUYgwUwijteUcdXajmxmzNMTsJaeydutoz+u/FbzkqvqY8sKtCGHvDfMgLdnSv6
-	k2CAZOfk4KtpycPrEosvjNHyBvsWQgIMTR13zQEF1sKUJ5jmRVi/qlr5RG/Zp6i97lmAbYefC2Z
-	YqDPPCQ+1i1F/uVTk2P3TLjrCFUJVTD0RJfJP/5dh4QWXV73VMN4R3ZZthu6W9acoQ5tqb/5pdJ
-	QS2g2BGwRsDRBHW/S0gnqwSWzO2rcTBATG20F56Eu4rOC4wAu2x4SijN2ww0ro0pQkCn9RDWmgZ
-	9H83EI33cdEKu/ILHIOUvB1JI9n589dM+xuQi6INF/lT/PGrFqpBAk+3FI2wYYdw+xV1sO+2DEp
-	AUmwpW9Aqr1vbj6VTnaS2U
-X-Received: by 2002:aa7:cd52:0:b0:6af:b196:68bf with SMTP id
- 4fb4d7f45d1cf-6b3ad90b370mr2852a12.7.1792183528706; Fri, 16 Oct 2026 13:45:28
- -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RDMeX8KF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E28DE1F000C4;
+	Fri, 16 Oct 2026 21:41:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792186885;
+	bh=JUDBnrW28gehfNTEclfWXj2rC2kKDVBh4m1iqdq7Kcs=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=RDMeX8KFOkhHjI8n3QCztKH7owT2CMLZhL2q5VLujdEJw+F4BpxLmbj+krUwuj60e
+	 ug7DziDcFJAmUFfFuwzP/qT/s961bofdw52yR5MBmPNIQxVE3w9XXKa0JoIyG+zGls
+	 eGgjtLt/d5t3jBZ8/CVH4Si+A4WKbemwC+YCBDHffEscD5+L57E8oD+T4m5Sj2FlrI
+	 dWXuAGDu6R+nKnvAmZRdMw9AdXh8VT5XfHI8HWlChBHmYDdE+BtxFa5p/e1OEiuTid
+	 is1AD8152LCBSmcbiN7Nin+Y/7DbbIcLhFQLCG0kO38QqlfixDzjHs583rHrHohvnv
+	 ePl6EdRzIlN4A==
+Date: Fri, 16 Oct 2026 16:41:23 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Navon John Lukose <navonjohnlukose@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Mario Limonciello <Mario.Limonciello@amd.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	Francisco =?utf-8?B?QmVsdHLDoW4gTWlsbGFsw6lu?= <fbeltranmillalen@gmail.com>
+Subject: Re: [PATCH] PCI/PM: Skip the suspend_noirq config save if
+ runtime-suspended
+Message-ID: <20261016214123.GA1884818@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20261012114213.1757207-1-mclapinski@google.com> <atKGTn7PqaDaednD@google.com>
-In-Reply-To: <atKGTn7PqaDaednD@google.com>
-From: =?UTF-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>
-Date: Fri, 16 Oct 2026 22:45:17 +0200
-X-Gm-Features: AclHuK9TobvuzpulXhszilDKlYekt3FFZzWTrchifXJqQVbqZiZZYgBDRTMbwuQ
-Message-ID: <CAAi7L5eqd0WzxiRY-fj3fB1=zOhYdTJnpR3OGgX27tYLe-SPmQ@mail.gmail.com>
-Subject: Re: [PATCH RESEND] PCI/DOE: Poll briefly for a response before sleeping
-To: David Matlack <dmatlack@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-	Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260923022511.24932-1-navonjohnlukose@gmail.com>
 
-On Fri, Oct 16, 2026 at 10:17=E2=80=AFPM David Matlack <dmatlack@google.com=
-> wrote:
->
-> On 2026-10-12 01:42 PM, Michal Clapinski wrote:
-> > doe_statemachine_work() waits for a response by sleeping
-> > PCI_DOE_POLL_INTERVAL (PCI_DOE_TIMEOUT / 128) between status reads,
-> > which is 7 ms at HZ=3D1000 and 4 ms at HZ=3D250. Exchanges are served f=
-rom
-> > the device's local mailbox logic and typically complete within tens of
-> > microseconds, so nearly all of that sleep is wasted. Every DOE-capable
-> > endpoint pays it once per supported feature during enumeration.
-> >
-> > Poll with usleep_range(20, 50) for the first ~2 ms before falling back
-> > to the jiffies-based wait. On an Intel Emerald Rapids system, time spen=
-t
-> > in pci_device_add() for a DOE-capable endpoint drops from 41.8 ms to
-> > 14.0 ms.
->
-> Does any of this remaining time come from pci_doe_abort()? I see that is
-> also called during mailbox creation and has the same call to
-> pci_doe_wait(). If so, maybe the poll logic can be shared.
+[+cc Francisco, tangentially related to your series at
+https://lore.kernel.org/linux-pci/20260930141914.6678-1-fbeltranmillalen@gmail.com/t/#u]
 
-Yes, but I'm not sure if the poll logic can be shared without making
-the code worse rather than better. I'll look into that.
+On Wed, Sep 23, 2026 at 07:55:11AM +0530, Navon John Lukose wrote:
+> pci_pm_suspend_noirq() saves config space unconditionally when the driver
+> of the device has no PM callbacks, which includes unbound devices.  If
+> such a device is runtime-suspended, the bridge above it may be in a
+> low-power state with the link down.  Depending on the platform, the
+> config reads then either hang the CPU or return all ones, which overwrite
+> the snapshot taken at runtime suspend and are written back to the device
+> on resume.
 
-Also, I'm planning on skipping pci_doe_abort for preserved devices so
-it was less of a priority for me.
+Right, bridges in non-D0 states don't forward requests downstream, so
+they end with Unsupported Request (PCIe r7.0, sec 5.3.1) or master
+abort (PCI PM r1.2, sec 6).  It's up to the host bridge to choose how
+to report those.
 
-> >
-> > Signed-off-by: Michal Clapinski <mclapinski@google.com>
-> > ---
-> > I was asked if I can do this with interrupts instead. I don't see a way
-> > to do that during device enumeration that won't collide with the
-> > drivers.
-> > ---
-> >  drivers/pci/doe.c | 28 +++++++++++++++++++++++-----
-> >  1 file changed, 23 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
-> > index 6b5d9ba8e969..5e93d78a1a97 100644
-> > --- a/drivers/pci/doe.c
-> > +++ b/drivers/pci/doe.c
-> > @@ -27,6 +27,9 @@
-> >  /* Timeout of 1 second from 6.30.2 Operation, PCI Spec r6.0 */
-> >  #define PCI_DOE_TIMEOUT HZ
-> >  #define PCI_DOE_POLL_INTERVAL        (PCI_DOE_TIMEOUT / 128)
->
-> It would be nice to also fix the HZ=3D100 issue, in a separate patch
-> within the same series, since you are updating this code.
+> Skip the save if the device is runtime-suspended, as pci_pm_freeze()
+> does, since pci_pm_runtime_suspend() has already saved the config space.
 
-Okay, will do in v2.
+pci_pm_freeze() doesn't call pci_save_state() itself, so I guess it's
+the combination of pci_pm_freeze() and pci_pm_freeze_noirq(), where if
+not runtime-suspended, pci_pm_freeze() clears dev->state_saved so
+pci_pm_freeze_noirq() will call pci_save_state()?
 
-> > +#define PCI_DOE_POLL_FAST_MIN_US     20
-> > +#define PCI_DOE_POLL_FAST_MAX_US     50
-> > +#define PCI_DOE_POLL_FAST_TRIES              40
-> >
-> >  #define PCI_DOE_FLAG_CANCEL  0
-> >  #define PCI_DOE_FLAG_DEAD    1
-> > @@ -487,7 +490,7 @@ static void doe_statemachine_work(struct work_struc=
-t *work)
-> >       int offset =3D doe_mb->cap_offset;
-> >       unsigned long timeout_jiffies;
-> >       u32 val;
-> > -     int rc;
-> > +     int rc, tries =3D 0;
-> >
-> >       if (test_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags)) {
-> >               signal_task_complete(task, -EIO);
-> > @@ -525,10 +528,25 @@ static void doe_statemachine_work(struct work_str=
-uct *work)
-> >                       signal_task_abort(task, -EIO);
-> >                       return;
-> >               }
-> > -             rc =3D pci_doe_wait(doe_mb, PCI_DOE_POLL_INTERVAL);
-> > -             if (rc) {
-> > -                     signal_task_abort(task, rc);
-> > -                     return;
-> > +             /*
-> > +              * Exchanges are served from the device's local mailbox
-> > +              * logic and usually complete in tens of microseconds, fa=
-r
-> > +              * below the jiffies granularity of PCI_DOE_POLL_INTERVAL=
-.
-> > +              * Poll for up to ~2 ms before falling back to it.
-> > +              */
->
-> If tens of microsecond is the norm then is polling for up to 2ms
-> overkill?
+> Use pm_runtime_status_suspended(), because runtime PM is disabled by the
+> noirq phase and pm_runtime_suspended() would always be false.
+> 
+> Fixes: 931ff68a5a53 ("PCI PM: Restore config spaces of all devices during early resume")
+> Cc: stable@vger.kernel.org # v6.19+
+> Signed-off-by: Navon John Lukose <navonjohnlukose@gmail.com>
 
-I guess. I can do more precise measurements and tweak this value;
-however, I can only speak for the device I have on hand, so generally
-I prefer overkilling it.
+Seems ok to me, but would be good to get Rafael's ack.
 
-> > +             if (tries++ < PCI_DOE_POLL_FAST_TRIES) {
-> > +                     if (test_bit(PCI_DOE_FLAG_CANCEL, &doe_mb->flags)=
-) {
-> > +                             signal_task_abort(task, -EIO);
-> > +                             return;
-> > +                     }
-> > +                     usleep_range(PCI_DOE_POLL_FAST_MIN_US,
-> > +                                  PCI_DOE_POLL_FAST_MAX_US);
-> > +             } else {
-> > +                     rc =3D pci_doe_wait(doe_mb, PCI_DOE_POLL_INTERVAL=
-);
-> > +                     if (rc) {
-> > +                             signal_task_abort(task, rc);
-> > +                             return;
-> > +                     }
-> >               }
-> >               goto retry_resp;
-> >       }
-> > --
-> > 2.56.0.385.gd3acb90ef8-goog
-> >
+> ---
+> Found on a Lenovo Yoga 83KF (Arrow Lake-H).  A driverless O2 Micro SD
+> reader at 57:00.0 with power/control=auto lets its root port 00:1c.0
+> runtime-suspend to D3hot.  The port then swallows the ECAM reads in
+> pci_save_state(), and the forward-progress watchdog raises a fatal machine
+> check at the ECAM load in pci_mmcfg_read().
+> 
+> The same port returns all ones for CF8/CFC reads.  A local quirk hid the
+> reader's extended config space so the save did only those reads, and it
+> was tried once on each kernel.  The unpatched kernel still died, and the
+> patched one resumed with no "restore config" writes for the reader.
+> 
+> !pci_dev->state_saved would only work for one cycle per boot, because
+> pci_restore_state() clears it and pci_pm_runtime_suspend() does not run
+> again for a device left in RPM_SUSPENDED.
+> 
+> Stable starts at v6.19 because the fix relies on a2f1e22390ac2 ("PCI/ERR:
+> Ensure error recoverability at all times").  Older trees still return
+> early from pci_restore_state() when state_saved is false, so a backport
+> there also needs "pci_dev->state_saved = true;" on the skip path.
+> 
+> Tested on 7.2.5 with the root port in D3hot, three suspend/resume cycles
+> in one boot.  The unpatched kernel dies on the first.  W=1 and sparse
+> clean.
+> 
+>  drivers/pci/pci-driver.c | 10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index e16aa59dd..bdc8bad57 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -915,7 +915,15 @@ static int pci_pm_suspend_noirq(struct device *dev)
+>  		return pci_legacy_suspend_late(dev);
+>  
+>  	if (!pm) {
+> -		pci_save_state(pci_dev);
+> +		/*
+> +		 * The bridge above a runtime-suspended device may be in a
+> +		 * low-power state with the link down, which makes the device's
+> +		 * config space inaccessible.  pci_pm_runtime_suspend() has
+> +		 * saved it already.
+> +		 */
+> +		if (!pm_runtime_status_suspended(dev))
+> +			pci_save_state(pci_dev);
+> +
+>  		goto set_unknown;
+>  	}
+>  
+> -- 
+> 2.55.0
+> 
