@@ -1,28 +1,28 @@
-Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010002.outbound.protection.outlook.com [40.93.198.2])
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011016.outbound.protection.outlook.com [52.101.52.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 794CD51AFD6;
-	Fri, 16 Oct 2026 16:20:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E31B5226BF;
+	Fri, 16 Oct 2026 16:20:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.16
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792167654; cv=fail; b=Qh+fxDjw9ETpXG+p0ig84CH2znYoxaKG1VdeoggnXdpBdfv2yIzU3SMBL8tfGpIN+S6my27mh8EjFpWhY82EF8EUSM82ofXTbWM6yx/CEETpJy08lFHOhHBF6bqJbN2V1j+aLkeWP1jecdw8LHPiCXxWr1uHJJjBYq4H603150o=
+	t=1792167664; cv=fail; b=eySWJHIye19dAGg2e9w7glOdxDhPxFlMgsVpf74AsVISTsVrVBJUHAeeat4QmysQXu1fAGaPwOaGUojsB6FnIl8vOYB9ZTA2fgFkci/fSvrjO1QJmq1HaC7mFT/agS8vODMGX3e9j2+oVOh7k5mtb2+05naaty/J62g7fs3Rh68=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792167654; c=relaxed/simple;
-	bh=hFMykWzszy3u7WcKWOys8rQ+HhTv8beh81bFYkNC8O4=;
+	s=arc-20240116; t=1792167664; c=relaxed/simple;
+	bh=AkL29L5i7Yau0MK43U91Zj16op1aV4ijmkHwN89pao0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HETTx/lFw6xgNIMVGAFIEM4GT4yrpiXPi3JqYYGMPCLStXWlywHe5hg8gaSq17RBWga/R61exvPnyLYWdJBEx60t2yLiSthBNGCrW303ap/u/6+9Eq0najkNUxpQu0VQzzBcW2XFl1aWslNey3VqnZgHHRdMx5Bck6PwrzvJ1jo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=E1Fwy2z2; arc=fail smtp.client-ip=40.93.198.2
+	 MIME-Version:Content-Type; b=kcF/uC5GTgJU0LIz8EVsJEg4c5wLUe16JWWwI2lOFl3VtKFyXZ3o8aMISb/WPpYwyFaz5epq2lV95VmhpcJ4TXYEImr4v3mJnKoZh5nvBRwZ+MUB73ZrFfiEcS9K3ATjXweCSsEh9B+wRJ3pCK21E3wyv2QwONWMQJ1+zJwjV+g=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Oc3tjs1f; arc=fail smtp.client-ip=52.101.52.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="E1Fwy2z2"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Oc3tjs1f"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=uW2dwslu4SOd2kkISZOA6HRXeXZQ77btGnq0JNzn6zqSrFKhr2Y91tN7+XnqdJwk/mB8tj9gR1ASAPV/vbigrUlu2nVHLtI93cqha7wcKZrGv1UA5oQPCmUrMQvbDURB9DqMJlXZh+WlWaBgZzCaS7c61zFms5LAo4o9ARUTv6dhR/M5MMTRw9PLxz0p1qi7PWyvDCgGykZVDxfEkTpd7MyLA9hgTlM/T1KxOqzOMsYpQV0IN9taK2FgXDXvTAwrMtzCvoFVdMgNkijNuHNqmUybrsmG6eCwer+KuE8l0MqUd1WYxSY6y+krbiboeOvs0MnVn+QvrBjXv+tqVGON3w==
+ b=rnrR9W2RhcmOyQoBK7iudHqnzotw4Cl3x1HWslquD3zqtGfJBTuk6Qa9XnZyB5ztK7qUn7acLxnQIcC/myQhupsmLe7YKT0JGyt3OFI5AAKQa/htCE8b3Z9YyxkYHupnMH3aS/0WkN8D8vN9RxVdTuqqX3WGUCm3idWOrZ8wlfv4Ndw7vMnu2J0PFcxtglrYrw5NFdXMuVkUckORzbDGCxQj+AF56hLm7SpOFUW47AfUgU56cjRhghLcPJjGRr8kJS2aih+pqAw51hk+Q9DFgFHOJ21PIcLH/i8zd8sBXp/E8+Mlq02V2yPUhB3pYq57zMITSHn0+6VAvofiC10oNA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=JVT9aWpk2LOeeY08VsQrXyDIIQ0NM3t3nw14oApz3ww=;
- b=HjsXUYagvNhJshFGNt6NvFr+wogD2W/O1tvsExIQgcEg679Sn+ZtSFX70xlAGdUyG78OP3M+zhZB+qaclsEvkGeSiYLzZGUF+ZnxF2aQz/Yisyp0BOPL+t2M99+UUyXE5H3KzlmqflJWKI9krsAmTDdhK5IUmRSY+R2S1HcVx3en0tuaJ1xcdlUV2fb8pvtfL5KyKPL8mPXaT8HDk+BiKmsnaCh4TryIug6BuHYYwp6Ygc7ARNn9ePUg4z18jwuwbvApDhvfAKioKx29ZzocKiMvdO7OCRNLjdQbRwRCZM3AGp89SBd1OFh9QJHTkLwUbiZ+nrNcQY1JZSh3kp4/VQ==
+ bh=D9QNeAr9IqsSomsyHREyUJ8AIUUMVr43KzC4nfHPwJw=;
+ b=U0Z5Kom7qpA8C+858/3QgMAGRi0rOl5RUYTz8OidaepfgKu4T7i6cFtKIz3BEv2Vb2ScBOJxyCxElWYJMMS1YXsdf1T54XGlvNTVXN8kAPrmj3hIgeAAaviprEtSnSsyCofrvBJMyuhr5XvvlQNN1jXUS6qEgyrXOMM5xIqGpDW4us94seriJfUaWbLog+aqiybzAA0Rx+nIvseU1YU+wzCvFdayRE8UBeZQs3svlo63SLWYVjjAjKPTXYsAeSqAsKj/WRzM35eIvYgtA74Vu07GZqh8h+I7IUw6prxdnsbN5R+k+nuPWlEj8EpDx4iCN13j9dy/PBYoCB210y1jRg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.160) smtp.rcpttodomain=shazbot.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -30,18 +30,17 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JVT9aWpk2LOeeY08VsQrXyDIIQ0NM3t3nw14oApz3ww=;
- b=E1Fwy2z2odrBPiqrOKlmxUsaxiRVHS6D7IBSOyJOtMXaNM0C6legNKP+A23RDhxnCTv50Xi8+nOMCQxh3nZQ6wkUhU7h743dYjHAxfug5iEsHciapi5V9G+pG7rVyeGFk1OmuoMOob6HoEDPGb1unQeylRmqltL5N99iGB8XRuSyqqFtAyf0CG4sYeLm1F/QQtWVC++Lflc9w+/vHg+yE2ZTGehwwVe+w+jLo9I9vszekS1oyWnt3V4FWOShNjMGom5K8Idg8EH0J6/+j2QVnhaLxnti11jChnwV5fbYpiBMubxtmR9GofSjEiDZhHMs9p/zbDSFzivvdft2uynj1g==
-Received: from CH0PR04CA0112.namprd04.prod.outlook.com (2603:10b6:610:75::27)
- by SJ5PPF5D591B24D.namprd12.prod.outlook.com (2603:10b6:a0f:fc02::994) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.13; Fri, 16 Oct
- 2026 16:20:45 +0000
-Received: from CH01EPF000BE94C.namprd02.prod.outlook.com
- (2603:10b6:610:75:cafe::43) by CH0PR04CA0112.outlook.office365.com
- (2603:10b6:610:75::27) with Microsoft SMTP Server (version=TLS1_3,
+ bh=D9QNeAr9IqsSomsyHREyUJ8AIUUMVr43KzC4nfHPwJw=;
+ b=Oc3tjs1f8ej9nF2XB3vu5dB1y4eEMLqq2Nx7+6u9ELDRx0ywLq1fV5w89P7mcGQf7DeNMax0qhITO5ywUw2n8u6BZ0JALI388fO926OsoAJ92XOCC+Z6vWACOi8Z+/PxrZEoK+2TZpiL+Wi2Me5zaKvfq923w3iOU9ddierS8PElFrrnFQLw5Zn2kVlAEcRXMok0DENHu0C68Oa1ZHB43+13gMiExkRC6ilbbe8+9fHasqeuWHcgs9pbA5j7G80R6B9TWmm48ih7Uel9MlTFAJp5j//B0vNW/7rhg1DETFxDUDv2jK3Nq7A6Wz1NQlWGTfIzhL/SpJ6T3H9S/thdZw==
+Received: from DS7P220CA0002.NAMP220.PROD.OUTLOOK.COM (2603:10b6:8:1ca::12) by
+ DM4PR12MB7719.namprd12.prod.outlook.com (2603:10b6:8:101::13) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.472.18; Fri, 16 Oct 2026 16:20:34 +0000
+Received: from CH01EPF000BE94A.namprd02.prod.outlook.com
+ (2603:10b6:8:1ca:cafe::5a) by DS7P220CA0002.outlook.office365.com
+ (2603:10b6:8:1ca::12) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.21.522.17 via Frontend Transport; Fri,
- 16 Oct 2026 16:20:42 +0000
+ 16 Oct 2026 16:20:32 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -49,17 +48,17 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.117.160 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.117.160) by
- CH01EPF000BE94C.mail.protection.outlook.com (10.167.244.201) with Microsoft
+ CH01EPF000BE94A.mail.protection.outlook.com (10.167.244.198) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.522.6 via Frontend Transport; Fri, 16 Oct 2026 16:20:41 +0000
+ 15.21.522.6 via Frontend Transport; Fri, 16 Oct 2026 16:20:31 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
  (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Fri, 16 Oct
- 2026 09:20:16 -0700
+ 2026 09:20:07 -0700
 Received: from nvidia-4028GR-scsim.nvidia.com (10.126.230.37) by
  rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Fri, 16 Oct 2026 09:20:07 -0700
+ 15.2.2562.49; Fri, 16 Oct 2026 09:19:58 -0700
 From: <mhonap@nvidia.com>
 To: <alex@shazbot.org>, <jgg@ziepe.ca>, <ankita@nvidia.com>,
 	<jic23@kernel.org>, <dave.jiang@intel.com>, <alejandro.lucero-palau@amd.com>,
@@ -74,9 +73,9 @@ CC: <cjia@nvidia.com>, <kjaju@nvidia.com>, <vsethi@nvidia.com>,
 	<linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
 	<linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-kselftest@vger.kernel.org>, <linux-hardening@vger.kernel.org>
-Subject: [PATCH v6 08/31] vfio/pci: Add a generic excluded-range list
-Date: Fri, 16 Oct 2026 21:48:15 +0530
-Message-ID: <20261016161839.2765592-9-mhonap@nvidia.com>
+Subject: [PATCH v6 07/31] vfio/pci: Detect CXL devices and load the CXL provider on demand
+Date: Fri, 16 Oct 2026 21:48:14 +0530
+Message-ID: <20261016161839.2765592-8-mhonap@nvidia.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261016161839.2765592-1-mhonap@nvidia.com>
 References: <20261016161839.2765592-1-mhonap@nvidia.com>
@@ -92,358 +91,209 @@ X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH01EPF000BE94C:EE_|SJ5PPF5D591B24D:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4f31a22d-6797-4518-9367-08df2ba16c8d
+X-MS-TrafficTypeDiagnostic: CH01EPF000BE94A:EE_|DM4PR12MB7719:EE_
+X-MS-Office365-Filtering-Correlation-Id: edb61497-657a-42f2-5617-08df2ba1669f
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|36860700016|376014|1800799024|82310400026|7416014|22082099003|10067099003|18002099003|11063799006|261009223027099003|921020|56012099006;
+	BCL:0;ARA:13230040|82310400026|376014|36860700016|7416014|1800799024|23010399003|18002099003|22082099003|10067099003|5023799004|921020|3023799007|56012099006|11063799006|261009223027099003;
 X-Microsoft-Antispam-Message-Info:
-	jX5tLRUQleXkLsZEEvvhLmETEqzgpHDUVw0aUMTc+6nTnJhFimLQ4Sqoj7rmdqonhoH4eN5Bs7J5PeQ3sE/PwBETj7GTpryb/EVtWTGKmNj5EhdGzydipw5sd/AvPSH1O3zLUmV5HZsBnCd71ih+9Y1qsM28kAjdEYZBcClnzcZlzQSzBQvynsNG3HlDFnjp3Mb6whBemYeNeGrilB0LLU2VvC6h+m76/7T2nIWELMLW8gxZgZinGVbYvPhiHfTG+czy+vxo4u/YTm5aowInAnDAv+GUOldc1A8xgneVRz0Og10q8S+jd+TkIpNQbmnv+etOWnohcqf32oLEUY61eSfuOJvcANKzV6vSGskZzrpILMeu7RzNfLbylDusGT3qCO3UCt1SLPMqEin2741oRbe/EYVjgynK5kJ3Ly5Halw23u/gm24MhNwcVDivQLHtrHWXBLiuROy5qsMOpOV8Y7wdbTaiiVxcwdGqwsHUNQAjLYcyfO2VhTt/7pErePYbSnW2oFO5iklqRRi77bYTN04BnKfgbYfiTydgU9TZMf3NhIVsDSoKLA541ZTXx1IkNbZ57h5S/4KxOlnS2H1UzWuMy47QJqeFstkjsb7u20H7+1IlsDTkWieURw+4ZFHqsp/77hLy7RVyv8JGDEGlX8wLMl84DmyispQFUrs8SN6dmPDGxgjLfIJj/vQ/Z5sAXKj5Z1lhr3Qqp2kQS5EElKuucmiyW7EPqaj+wr3XEoOy8gKg9iFRVyVKiO/6tXST
+	rnwk7ad/cidPJDS8xOwaI0p31rEcslOP5v3RAMpLyMfNNzu6mHqXcFLgTcPBYNxdZ6HcNHLkEcSVagP0WAPuGiLLYj+qaQ0Dwyu4z+88RBezO7J5lGMRavl+Aua8SXtVHfrd9tJK0Z08VOrkLH0gVgPadHS+GHyXCou3055KKoa15iu39+/som7d61hKpt88dNpUNw2BuivQQF3Lx0lZhuggHhltRDFnRXqbH4h0wiNlhP5lJnGevc5b6xkx1XQyGGyRG6/Qx7kyszfqowj38X3VbXD+ostDDAsQBvB2Q2mF+aQpiFNlk0T5nbhXm+FzImnjdmMDL1JjJwl8PGQs+nBdspXvh2ACthqobSG6jvuo7rWTsz/sLw2Xmk0wpFdV4RhwcGGbi3XGvIRKvuPTmcMs+jww2B5bkwNvfYMw8rth93dnnGa2y0W/vJa48ll98mqWCp9vEZeNDK/58/9jzZPv93LeTQQ6C5AG8sTTXHjQQj1PGwmp61GvIdr0IeHM2TOwSvBhO3rczSe5TYe0HFu8hkCbd6X7UltCp+6U6DbhMJtOXc4Fq7FVn6L0SHJO1NN1sYeUVT1TDs7fwCf0WNdUT+hIWn5xJmRvtBRX2ZDHA14XR4rUHJpAKfzMjF3eyRokv3nYJ5oQ4fHUALnpvMrkmh6T4fz2MmKXAIHIPa27xNduFZv6l3blDZK1I3MGEORdVprV6++vBWwvw8UMqBmIml/BKyuQDuSknS+gHwXMzfCkLflJ/d2Cq2+pXKK8
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(36860700016)(376014)(1800799024)(82310400026)(7416014)(22082099003)(10067099003)(18002099003)(11063799006)(261009223027099003)(921020)(56012099006);DIR:OUT;SFP:1101;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(376014)(36860700016)(7416014)(1800799024)(23010399003)(18002099003)(22082099003)(10067099003)(5023799004)(921020)(3023799007)(56012099006)(11063799006)(261009223027099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	ZGWCV3/Fn1qO/HshpMpZ4+iM3TBeHvUZPSSBgFMhqzBs44y/xum2kWorNn+73SaQEbvqfrDutxct/bMNsuHKv1rQkhrAPUVsLcmSgzMnMWWRrbEVqFOZV7anYtC1LAz3f3rwxdA2LK1n9vm06NtiB7F9+XDzgVXhzhlXytr11f4UQxrzDWiY3F19Yque3NM2nc3TfMKaAQN8WamhVVxtobrfFTT2VfLMEY8YK6EAGhW34vyRuAGsW8wJDcWYkKVvDR+Xse+IrdvWMzNxjVB99TYdO9b9kckjaUSqan+i4MQNOwDVrqaSufbRoq7TjgG4V7MFiwoOYDz/C5xFmIDniMRyW6JzXHATdgrYG1gzsHPqAne9sF0kO4qajM2Xw3oWVMn8o0+mdVEnWsLFSBKbUAaskX6ZVWqp7enZvLnfunPSAr7EN+rqKlI8T589X2DD
+	Lt4ZMeI2KYtSquXS8Hh9eXmEOxXx5eEYVCnuSnXBQTqvXy3LHnVYgbARicKIHYf7RguSZPYw/bRsFdH7Sgny8Pt8grsQIJoR0I03Qq1VgP8s5jp2mDe2Hmz3XkMZU6jULP+ifzG13draaVrGjUbbwEyo3686pMqUIp5oyjLgA5BTLc2856WcqnSmJPAnjwAUFJC0QTm5lrAymVw9rVj/+EQhZ15PXToE3eXQlHqn0/TrDXuSWHWX5u2LjPUQhIyMBQvtkP0uW/+8OJF/frjzT4u3ZHXPCr6l/afbXDnRfJ9bx8JFlNXB9u+irTivwimZNx+1hTJ5G6jLzwYK/en7b4WlT94WACHMJnNJCb0KFLZN6+ZBcpq84sEicECaA7+uzO+GDdX3t4GVDqAemY1X8K00aAS1zwqvXGpoMNc0SRUZqC5+YqSrJ9kTnRk4P7mN
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2026 16:20:41.9382
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2026 16:20:31.9828
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4f31a22d-6797-4518-9367-08df2ba16c8d
+X-MS-Exchange-CrossTenant-Network-Message-Id: edb61497-657a-42f2-5617-08df2ba1669f
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	CH01EPF000BE94C.namprd02.prod.outlook.com
+	CH01EPF000BE94A.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ5PPF5D591B24D
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB7719
 
 From: Manish Honap <mhonap@nvidia.com>
 
-A provider such as vfio-cxl needs to keep sub-ranges of a BAR off the
-direct guest path and serve them through its own trap. vfio-pci-core
-already has one such window, the MSI-X table, open-coded in
-vfio_pci_bar_rw().
+A CXL device needs the vfio-cxl callbacks, but pulling vfio-cxl and the
+CXL core in unconditionally would bloat every vfio-pci setup. Detect a
+CXL Type-2 device at bind and request_module("vfio-cxl") only then, then
+hand the device to the registered ops.
 
-Add vfio_pci_core_add_excluded_range(). Each BAR has its own list,
-sorted by start, and an insert that overlaps a range on the same BAR or
-ends past the BAR fails with -EINVAL. Ranges are added only while the
-device is being opened and are freed in vfio_pci_core_disable(), so
-readers on an open device take no lock.
+Each bound CXL device pins the provider through
+vfio_pci_get_cxl_ops() (try_module_get) and drops it with
+vfio_pci_put_cxl_ops() at release, so vfio-cxl can unload once no CXL
+device is bound.
 
-The MSI-X table is virtualized in vfio_pci_bar_rw() by an open-coded
-x_start/x_end window that fills reads with -1 and drops writes. Register
-the MSI-X table as a read and write excluded range when the MSI-X
-capability is parsed in vfio_pci_core_enable(), and walk the BAR's
-ranges in order in vfio_pci_bar_rw(), so an access that spans several
-ranges is handled in one pass. Only the part of the table inside its BAR
-is registered, so a device whose MSI-X capability points outside the BAR
-still opens, as before. The ROM BAR keeps its trailing -1 window,
-outside the list.
+If the provider is absent the device is bound without the CXL
+extensions. A built-in provider whose initcall has not run yet is waited
+for with -EPROBE_DEFER; the deferred-probe machinery will retry the bind
+once the provider registers.
 
-No behavioral change for an MSI-X table in a standard BAR: an access to
-it still reads -1 and drops writes.
+The provider .init() can return -EPROBE_DEFER when the device is not
+ready yet, for example when its CXL port has not enumerated. Propagate
+it so the bind is retried later. Any other init failure is non-fatal: a
+CXL Type-2 device is also a valid vfio-pci device, so log the error, drop
+the provider reference, leave cxl_ops NULL and continue without CXL
+support.
 
 Assisted-by: LLM
 Signed-off-by: Manish Honap <mhonap@nvidia.com>
 ---
- drivers/vfio/pci/vfio_pci_core.c | 97 ++++++++++++++++++++++++++++++++
- drivers/vfio/pci/vfio_pci_priv.h |  8 +++
- drivers/vfio/pci/vfio_pci_rdwr.c | 67 +++++++++++++++++++---
- include/linux/vfio_pci_core.h    | 20 +++++++
- 4 files changed, 185 insertions(+), 7 deletions(-)
+ drivers/vfio/pci/vfio_pci_core.c | 101 +++++++++++++++++++++++++++++++
+ include/linux/vfio_pci_core.h    |   3 +
+ 2 files changed, 104 insertions(+)
 
 diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index e50b36751d9a..bee3d1b4d8d2 100644
+index 2cc5dd20396c..e50b36751d9a 100644
 --- a/drivers/vfio/pci/vfio_pci_core.c
 +++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -588,6 +588,8 @@ static const struct dev_pm_ops vfio_pci_core_pm_ops = {
- 			   NULL)
- };
- 
-+static void vfio_pci_free_excluded_ranges(struct vfio_pci_core_device *vdev);
-+
- int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
- {
- 	struct pci_dev *pdev = vdev->pdev;
-@@ -644,6 +646,7 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
- 
- 	msix_pos = pdev->msix_cap;
- 	if (msix_pos) {
-+		u64 bar_len = 0;
- 		u16 flags;
- 		u32 table;
- 
-@@ -654,6 +657,30 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
- 		vdev->msix_offset = table & PCI_MSIX_TABLE_OFFSET;
- 		vdev->msix_size = ((flags & PCI_MSIX_FLAGS_QSIZE) + 1) * 16;
- 		vdev->has_dyn_msix = pci_msix_can_alloc_dyn(pdev);
-+
-+		/*
-+		 * Virtualize the MSI-X table through the excluded-range list:
-+		 * reads fill -1 and writes are dropped so the guest never
-+		 * reaches the hardware table directly. BAR access never goes
-+		 * past the BAR, so only the part of the table inside the BAR
-+		 * needs a range; a table placed outside its BAR needs none.
-+		 */
-+		if (vdev->msix_bar < PCI_STD_NUM_BARS)
-+			bar_len = pci_resource_len(pdev, vdev->msix_bar);
-+		if (vdev->msix_offset < bar_len) {
-+			u64 len = min_t(u64, vdev->msix_size,
-+					bar_len - vdev->msix_offset);
-+
-+			ret = vfio_pci_core_add_excluded_range(vdev, vdev->msix_bar,
-+							       vdev->msix_offset, len,
-+							       VFIO_PCI_EXCLUDE_READ |
-+							       VFIO_PCI_EXCLUDE_WRITE);
-+			if (ret) {
-+				vfio_pci_free_excluded_ranges(vdev);
-+				vfio_config_free(vdev);
-+				goto out_free_zdev;
-+			}
-+		}
- 	} else {
- 		vdev->msix_bar = 0xFF;
- 		vdev->has_dyn_msix = false;
-@@ -740,6 +767,7 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
- 	vdev->region = NULL; /* don't krealloc a freed pointer */
- 
- 	vfio_config_free(vdev);
-+	vfio_pci_free_excluded_ranges(vdev);
- 
- 	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
- 		bar = i + PCI_STD_RESOURCES;
-@@ -1012,6 +1040,72 @@ static int msix_mmappable_cap(struct vfio_pci_core_device *vdev,
- 	return vfio_info_add_capability(caps, &header, sizeof(header));
+@@ -2202,6 +2202,101 @@ void vfio_pci_core_unregister_cxl_ops(const struct vfio_cxl_ops *ops)
  }
+ EXPORT_SYMBOL_GPL(vfio_pci_core_unregister_cxl_ops);
  
-+/**
-+ * vfio_pci_core_add_excluded_range() - keep a BAR sub-range off direct access
-+ * @vdev: vfio PCI device being opened
-+ * @bar: BAR index, below PCI_STD_NUM_BARS
-+ * @start: offset of the range in @bar
-+ * @size: length of the range in bytes
-+ * @flags: VFIO_PCI_EXCLUDE_* paths the range is excluded from
-+ *
-+ * Call only while the device is being opened, from vfio_pci_core_enable() or
-+ * a provider's open hook; vfio_pci_core_disable() frees the ranges. Ranges on
-+ * one BAR must not overlap and must lie inside the BAR.
-+ *
-+ * Return: 0 on success, -EINVAL for an invalid or overlapping range or one
-+ * that ends past the BAR, or -ENOMEM.
-+ */
-+int vfio_pci_core_add_excluded_range(struct vfio_pci_core_device *vdev, int bar,
-+				     u64 start, u64 size, u32 flags)
++static const struct vfio_cxl_ops *vfio_pci_get_cxl_ops(void)
 +{
-+	const u32 valid = VFIO_PCI_EXCLUDE_MMAP | VFIO_PCI_EXCLUDE_READ |
-+			  VFIO_PCI_EXCLUDE_WRITE;
-+	struct vfio_pci_excluded_range *range, *pos;
-+	struct list_head *head;
++	guard(rwsem_read)(&vfio_pci_cxl_ops_rwsem);
 +
-+	if (bar < 0 || bar >= PCI_STD_NUM_BARS || !size ||
-+	    start + size < start || !flags || (flags & ~valid))
-+		return -EINVAL;
-+	if (start + size > pci_resource_len(vdev->pdev, bar))
-+		return -EINVAL;
++	if (vfio_pci_cxl_ops && try_module_get(vfio_pci_cxl_ops->owner))
++		return vfio_pci_cxl_ops;
 +
-+	/* Keep the list sorted by start; find the first range after @start. */
-+	head = &vdev->excluded_ranges[bar];
-+	list_for_each_entry(pos, head, entry) {
-+		if (start < pos->start + pos->size && start + size > pos->start)
-+			return -EINVAL;
-+		if (pos->start > start)
-+			break;
++	return NULL;
++}
++
++static void vfio_pci_put_cxl_ops(const struct vfio_cxl_ops *ops)
++{
++	module_put(ops->owner);
++}
++
++/*
++ * A CXL Type-2 device advertises both CXL.cache and CXL.mem in its CXL DVSEC.
++ * pcie_is_cxl() is also true for Type-1 (cache only) and Type-3 (mem only)
++ * devices, which the vfio-cxl provider does not handle, so confirm the Type-2
++ * identity before engaging it.
++ */
++static bool vfio_pci_is_cxl_type2(struct pci_dev *pdev)
++{
++	u16 dvsec, cap;
++
++	if (!pcie_is_cxl(pdev))
++		return false;
++
++	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
++					  PCI_DVSEC_CXL_DEVICE);
++	if (!dvsec)
++		return false;
++
++	if (pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CAP, &cap))
++		return false;
++
++	return (cap & PCI_DVSEC_CXL_CACHE_CAPABLE) &&
++		(cap & PCI_DVSEC_CXL_MEM_CAPABLE);
++}
++
++/*
++ * Load vfio-cxl on demand for a CXL Type-2 device and hand the device to its
++ * ops. If the provider is absent the device is bound without the CXL
++ * extensions; a built-in provider whose initcall has not run yet is waited for with
++ * -EPROBE_DEFER.
++ */
++static int vfio_pci_core_cxl_init(struct vfio_pci_core_device *vdev)
++{
++	const struct vfio_cxl_ops *ops;
++	int ret;
++
++	if (!vfio_pci_is_cxl_type2(vdev->pdev))
++		return 0;
++
++	request_module("vfio-cxl");
++	ops = vfio_pci_get_cxl_ops();
++	if (!ops)
++		return IS_BUILTIN(CONFIG_VFIO_CXL) ? -EPROBE_DEFER : 0;
++
++	ret = ops->init(vdev);
++	/*
++	 * A provider that is not ready yet (for example its CXL port has not
++	 * enumerated) returns -EPROBE_DEFER. Propagate it so the bind retries
++	 * rather than continuing without CXL support.
++	 */
++	if (ret == -EPROBE_DEFER) {
++		vfio_pci_put_cxl_ops(ops);
++		return ret;
++	}
++	/*
++	 * Any other failure is non-fatal: a CXL device that cannot be brought
++	 * up as Type-2 still works without the CXL extensions, so log and
++	 * continue rather than failing the bind.
++	 */
++	if (ret) {
++		pci_warn(vdev->pdev,
++			 "CXL init failed (%d), continuing without CXL support\n",
++			 ret);
++		vfio_pci_put_cxl_ops(ops);
++		return 0;
 +	}
 +
-+	range = kmalloc_obj(*range);
-+	if (!range)
-+		return -ENOMEM;
-+
-+	*range = (struct vfio_pci_excluded_range) {
-+		.start = start,
-+		.size = size,
-+		.flags = flags,
-+	};
-+	list_add_tail(&range->entry, &pos->entry);
-+
++	vdev->cxl_ops = ops;
 +	return 0;
 +}
-+EXPORT_SYMBOL_GPL(vfio_pci_core_add_excluded_range);
 +
-+static void vfio_pci_free_excluded_ranges(struct vfio_pci_core_device *vdev)
++static void vfio_pci_core_cxl_release(struct vfio_pci_core_device *vdev)
 +{
-+	struct vfio_pci_excluded_range *range, *tmp;
++	if (!vdev->cxl_ops)
++		return;
 +
-+	for (int bar = 0; bar < PCI_STD_NUM_BARS; bar++) {
-+		list_for_each_entry_safe(range, tmp, &vdev->excluded_ranges[bar],
-+					 entry) {
-+			list_del(&range->entry);
-+			kfree(range);
-+		}
-+	}
++	vdev->cxl_ops->release(vdev);
++	vfio_pci_put_cxl_ops(vdev->cxl_ops);
 +}
 +
- int vfio_pci_core_register_dev_region(struct vfio_pci_core_device *vdev,
- 				      unsigned int type, unsigned int subtype,
- 				      const struct vfio_pci_regops *ops,
-@@ -2317,6 +2411,8 @@ int vfio_pci_core_init_dev(struct vfio_device *core_vdev)
- 	INIT_LIST_HEAD(&vdev->dmabufs);
+ int vfio_pci_core_init_dev(struct vfio_device *core_vdev)
+ {
+ 	struct vfio_pci_core_device *vdev =
+@@ -2223,6 +2318,10 @@ int vfio_pci_core_init_dev(struct vfio_device *core_vdev)
  	init_rwsem(&vdev->memory_lock);
  	xa_init(&vdev->ctx);
-+	for (int bar = 0; bar < PCI_STD_NUM_BARS; bar++)
-+		INIT_LIST_HEAD(&vdev->excluded_ranges[bar]);
  
- 	ret = vfio_pci_core_cxl_init(vdev);
- 	if (ret)
-@@ -2332,6 +2428,7 @@ void vfio_pci_core_release_dev(struct vfio_device *core_vdev)
++	ret = vfio_pci_core_cxl_init(vdev);
++	if (ret)
++		return ret;
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(vfio_pci_core_init_dev);
+@@ -2232,6 +2331,8 @@ void vfio_pci_core_release_dev(struct vfio_device *core_vdev)
+ 	struct vfio_pci_core_device *vdev =
  		container_of(core_vdev, struct vfio_pci_core_device, vdev);
  
- 	vfio_pci_core_cxl_release(vdev);
-+	vfio_pci_free_excluded_ranges(vdev);
- 
++	vfio_pci_core_cxl_release(vdev);
++
  	mutex_destroy(&vdev->igate);
  	mutex_destroy(&vdev->ioeventfds_lock);
-diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
-index 4e7162234a2e..53544e0cbedf 100644
---- a/drivers/vfio/pci/vfio_pci_priv.h
-+++ b/drivers/vfio/pci/vfio_pci_priv.h
-@@ -44,6 +44,14 @@ ssize_t vfio_pci_config_rw_single(struct vfio_pci_core_device *vdev,
- ssize_t vfio_pci_bar_rw(struct vfio_pci_core_device *vdev, char __user *buf,
- 			size_t count, loff_t *ppos, bool iswrite);
- 
-+/* A BAR sub-range kept off direct access; see vfio_pci_core_add_excluded_range() */
-+struct vfio_pci_excluded_range {
-+	struct list_head	entry;
-+	u64			start;
-+	u64			size;
-+	u32			flags;
-+};
-+
- #ifdef CONFIG_VFIO_PCI_VGA
- ssize_t vfio_pci_vga_rw(struct vfio_pci_core_device *vdev, char __user *buf,
- 			size_t count, loff_t *ppos, bool iswrite);
-diff --git a/drivers/vfio/pci/vfio_pci_rdwr.c b/drivers/vfio/pci/vfio_pci_rdwr.c
-index 7f14dd46de17..93823c6391f6 100644
---- a/drivers/vfio/pci/vfio_pci_rdwr.c
-+++ b/drivers/vfio/pci/vfio_pci_rdwr.c
-@@ -198,6 +198,57 @@ ssize_t vfio_pci_core_do_io_rw(struct vfio_pci_core_device *vdev, bool test_mem,
- }
- EXPORT_SYMBOL_GPL(vfio_pci_core_do_io_rw);
- 
-+/*
-+ * Access @count bytes of @bar at @pos, walking the BAR's excluded ranges in
-+ * order: a range excluded for this direction reads as -1 and drops writes,
-+ * and the bytes around it reach the device. The MSI-X table is one such
-+ * range, and a BAR can hold several, for example the MSI-X table and a CXL
-+ * HDM decoder block.
-+ */
-+static ssize_t vfio_pci_bar_do_io_rw(struct vfio_pci_core_device *vdev,
-+				     int bar, bool test_mem, void __iomem *io,
-+				     char __user *buf, loff_t pos,
-+				     size_t count, bool iswrite,
-+				     enum vfio_pci_io_width max_width)
-+{
-+	u32 want = iswrite ? VFIO_PCI_EXCLUDE_WRITE : VFIO_PCI_EXCLUDE_READ;
-+	struct vfio_pci_excluded_range *range;
-+	ssize_t done = 0;
-+	ssize_t ret;
-+
-+	list_for_each_entry(range, &vdev->excluded_ranges[bar], entry) {
-+		u64 end = range->start + range->size;
-+		size_t chunk;
-+
-+		if (!(range->flags & want) || end <= pos)
-+			continue;
-+		if (range->start >= pos + count)
-+			break;
-+
-+		/* Up to the end of this range; do_io_rw() fills it. */
-+		chunk = min_t(u64, count, end - pos);
-+		ret = vfio_pci_core_do_io_rw(vdev, test_mem, io, buf, pos, chunk,
-+					     range->start, end, iswrite,
-+					     max_width);
-+		if (ret < 0)
-+			return done ?: ret;
-+
-+		done += ret;
-+		pos += ret;
-+		buf += ret;
-+		count -= ret;
-+		if (!count)
-+			return done;
-+	}
-+
-+	ret = vfio_pci_core_do_io_rw(vdev, test_mem, io, buf, pos, count, 0, 0,
-+				     iswrite, max_width);
-+	if (ret < 0)
-+		return done ?: ret;
-+
-+	return done + ret;
-+}
-+
- ssize_t vfio_pci_bar_rw(struct vfio_pci_core_device *vdev, char __user *buf,
- 			size_t count, loff_t *ppos, bool iswrite)
- {
-@@ -256,13 +307,15 @@ ssize_t vfio_pci_bar_rw(struct vfio_pci_core_device *vdev, char __user *buf,
- 		}
- 	}
- 
--	if (bar == vdev->msix_bar) {
--		x_start = vdev->msix_offset;
--		x_end = vdev->msix_offset + vdev->msix_size;
--	}
--
--	done = vfio_pci_core_do_io_rw(vdev, res->flags & IORESOURCE_MEM, io, buf, pos,
--				      count, x_start, x_end, iswrite, max_width);
-+	if (bar == PCI_ROM_RESOURCE)
-+		done = vfio_pci_core_do_io_rw(vdev, res->flags & IORESOURCE_MEM,
-+					      io, buf, pos, count, x_start,
-+					      x_end, iswrite, max_width);
-+	else
-+		done = vfio_pci_bar_do_io_rw(vdev, bar,
-+					     res->flags & IORESOURCE_MEM, io,
-+					     buf, pos, count, iswrite,
-+					     max_width);
- 
- 	if (done >= 0)
- 		*ppos += done;
+ 	kfree(vdev->region);
 diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-index 7f3a2bcb5830..70acb03d466e 100644
+index 9fe0d1a3a370..7f3a2bcb5830 100644
 --- a/include/linux/vfio_pci_core.h
 +++ b/include/linux/vfio_pci_core.h
-@@ -162,6 +162,13 @@ struct vfio_pci_core_device {
- 	struct notifier_block	nb;
- 	struct rw_semaphore	memory_lock;
- 	struct list_head	dmabufs;
-+	/*
-+	 * Excluded BAR sub-ranges, one list per BAR, sorted by start and not
-+	 * overlapping. The lists are filled only while the device is being
-+	 * opened and emptied in vfio_pci_core_disable(); every reader runs on
-+	 * an open device in between, so readers take no lock.
-+	 */
-+	struct list_head	excluded_ranges[PCI_STD_NUM_BARS];
- };
+@@ -29,6 +29,7 @@ struct vfio_pci_core_device;
+ struct vfio_pci_region;
+ struct p2pdma_provider;
+ struct dma_buf_attachment;
++struct vfio_cxl_state;
  
- enum vfio_pci_io_width {
-@@ -172,6 +179,19 @@ enum vfio_pci_io_width {
- };
- 
- /* Will be exported for vfio pci drivers usage */
-+/*
-+ * A provider can keep a BAR sub-range off the direct guest path, reached only
-+ * through its own trap. The flags select which paths are excluded: mmap, and
-+ * region read and write (an excluded read fills -1, an excluded write is
-+ * dropped).
-+ */
-+#define VFIO_PCI_EXCLUDE_MMAP	BIT(0)
-+#define VFIO_PCI_EXCLUDE_READ	BIT(1)
-+#define VFIO_PCI_EXCLUDE_WRITE	BIT(2)
-+
-+int vfio_pci_core_add_excluded_range(struct vfio_pci_core_device *vdev, int bar,
-+				     u64 start, u64 size, u32 flags);
-+
- int vfio_pci_core_register_dev_region(struct vfio_pci_core_device *vdev,
- 				      unsigned int type, unsigned int subtype,
- 				      const struct vfio_pci_regops *ops,
+ struct vfio_pci_eventfd {
+ 	struct eventfd_ctx	*ctx;
+@@ -109,6 +110,8 @@ struct vfio_pci_core_device {
+ 	struct vfio_device	vdev;
+ 	struct pci_dev		*pdev;
+ 	const struct vfio_pci_device_ops *pci_ops;
++	const struct vfio_cxl_ops *cxl_ops;
++	struct vfio_cxl_state   *cxl;
+ 	void __iomem		*barmap[PCI_STD_NUM_BARS];
+ 	bool			bar_mmap_supported[PCI_STD_NUM_BARS];
+ 	/* Flags modified at runtime - dedicated storage unit */
 -- 
 2.53.0
 
