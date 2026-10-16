@@ -1,93 +1,105 @@
-Received: from mail-dy1-f173.google.com (mail-dy1-f173.google.com [74.125.82.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D49B52F83B5
-	for <linux-pci@vger.kernel.org>; Fri, 16 Oct 2026 08:43:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1421E44E67D;
+	Fri, 16 Oct 2026 08:55:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792140208; cv=none; b=c1yFErbg49JnOzNK1Igr4gyD2HzH6nNfPcW2T938/RbEYDIEcy0cpMhOYcU6rx0wBaZxo0jxPtkWutrDVp18z/z+08kuL9l8r8csSTIGMpKrcVfNXh+mZQiYTwIia8U2YIC/JCuZDHIunY0rCeHk03sodPMRYYctOvmUBSusxbQ=
+	t=1792140936; cv=none; b=I7pVeQImHgHaFWKRIw/eO20bvsxXCXGAZQ7WaOhRg0yEeqm9UrhxjQshapzYRC2IehLEtS9N3yT3mVF5VVdFe/w4sRb4zzUAh8B13/z/lrGdJDmwAwFxska2VzVW/bEDWUdh4wVDGYyKwC13tNdZ4EA6Uftea4GJL4w2TuAbYL8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792140208; c=relaxed/simple;
-	bh=9ytjh5h9nCKW6lRtRba8cDTN0tvYqToRzL6rsiKLUvQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YhN8seWejK8XAzEdpH6DjtJElp2xdtxLRtfh7Xt5uKVl1x3tzBbAqj+v9FefqmAvf+AKHYF/aitSFHn3XVd7J0oTYJvZL4oYY3PnhcR3+TLwAyy5E3MiBkJOxd0tOvdK0b63/q+wova/ujPs1RuzVkyCWiazGD7w1rqdliZYAl4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UdgMeqJb; arc=none smtp.client-ip=74.125.82.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UdgMeqJb"
-Received: by mail-dy1-f173.google.com with SMTP id 5a478bee46e88-3584f70a5aaso819509eec.1
-        for <linux-pci@vger.kernel.org>; Fri, 16 Oct 2026 01:43:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792140206; x=1792745006; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=9ytjh5h9nCKW6lRtRba8cDTN0tvYqToRzL6rsiKLUvQ=;
-        b=UdgMeqJbSyAnx9bLBdu2kQDFZCh6iKG+GtIzs9ycPlZ5yj0Kg/VyeCvPxSRm2URWXx
-         bWUg23QM/+8KfjBxWDe/H+AMcj/0vJN5vo2MHwrMA2rhjNvqcwe2GaFW/XKdWu92iIV+
-         vk0Bf/8mPSFXVbXXCKUDFP01ZclE9pDcWZDfDArdHnBAjxEixhMPyNOBVGyPr5M9IfD5
-         Z4ihYbbAho/u3jgiW5tkVS91RwCvTqMk7JuntNeABXh6NCHCmepjO5atHTusRdTc/MAx
-         REFvvH7Z4J1/QHZxS1GnX2/k0tJ28yrgV2R/8kvEEnkmUMUrO7h0ZzDKi5GKHretWIhd
-         Kdmg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792140206; x=1792745006;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=9ytjh5h9nCKW6lRtRba8cDTN0tvYqToRzL6rsiKLUvQ=;
-        b=ZWx36H5EDGHjbJkJRefFou8iD43INurZjfImVVKpD4YDyOqj7iuk1nkzrwUtV1ujP2
-         twFGU8tnAyVl/2f72Gdgqtu9hf7vLTH2g6W87xmqhUB/t2hRbycIR/EJHCkZ0zokaZJH
-         wAZA/RLyN7NN7bxk4T4//PAdEhe2ze/NsROxxDoA+dvEGG9lFH3t0Jn3/s+HV4evSIby
-         nZTE1ouNvUgkr1nMcA6ABQwiyQ1fW1vHBTYCWiq1r6fv7qQXoe8NQ14SvRpvCHX+n0hd
-         dAqt/kzPaH8wEJ68yK9fSn9x6z4ksbx587YZg7UDk7nSOUGe1LmBE9hfjEHNFbO+CJqL
-         sDsA==
-X-Forwarded-Encrypted: i=1; AKwUvByUxgrpNjI2mln/E7E7OUHW3iOnJThmzvr/UcW42YsNX7mELobPCSdMCGuCFbsIRKX6S677/9K4RLk=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLIW1nM8GuKT4kpMMTqQSXAJcH7Yl9rtA0Pkg74bVKWayP1lo3s
-	jeE9t0NEnzxrzOOGQzLIt/JevnLdCLiwm7Wj2BHzJiCfpzSBDSRmW1+D
-X-Gm-Gg: AYBFou3fMOFwBvS3uOP9teDtu+Hi6WwfYMwAmrCP1mGIM/oj+56+YJohQ6skkZ2Ty3z
-	he30F21p+rIrDhWBnZ6/3Vrwul0zxPMOV38jlHNSzvMZcoa22pZUfT76hc2A7AhBpyie2su6jDz
-	4YkeC5ez06N/RrcF7395eNPBbjnX6u+BDX1l5+Wyhf7IHlLSyXRxEosNGP30U8SITigPM9SNFwk
-	xJI1+tlS6hS4+btnI9PmxMng5gbfT3FQ2RRNb5GnMDyqh72d+M44uYYzgz3CNzIPwpWMFnp2XoG
-	9UYql9gqLzjPItw+tynrYnkplbe3X4Yy9Rc4h9pw5mxdLUgKT1GkMJW3E8pVpoZVqhqEN2BnUql
-	MMgUlAYQwK9DFfT7lEjNz0ewD6yVrc9lteqSznyBOuraSGcVO2HkGpKyGvdsMdqfV3RlztVKClR
-	/gnXmZZeMpf82AX7bWFC2GnuESGXbLuxp0/7u3OPRML7qPBoYDHxh6C/Zv5I0/U2FhnNgqgq1LT
-	WDPPFIt8IBi4bXSViBUzyvIAyYb7h/wDvGRUwF9jRSgo6aKL8t0JB1nEgu98GgNT1eO/df1RNDk
-	cObN6t58QoiPYVzOEX4ub4Vi9PDRhmOOeQ==
-X-Received: by 2002:a05:7023:a5b:10b0:147:d430:7322 with SMTP id a92af1059eb24-16a5bc5bd84mr42237796c88.1.1792140205626;
-        Fri, 16 Oct 2026 01:43:25 -0700 (PDT)
-Received: from cachyos-aura ([2409:40f2:311e:5e21:4c93:81a8:d3d8:4d1c])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1831b75be5esm5793636c88.16.2026.10.16.01.43.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Oct 2026 01:43:25 -0700 (PDT)
-From: Navon John Lukose <navonjohnlukose@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lukas Wunner <lukas@wunner.de>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Mario Limonciello <Mario.Limonciello@amd.com>,
-	linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/PM: Skip the suspend_noirq config save if runtime-suspended
-Date: Fri, 16 Oct 2026 14:13:16 +0530
-Message-ID: <20261016084316.22761-1-navonjohnlukose@gmail.com>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20260923022511.24932-1-navonjohnlukose@gmail.com>
-References: <20260923022511.24932-1-navonjohnlukose@gmail.com>
+	s=arc-20240116; t=1792140936; c=relaxed/simple;
+	bh=khkxtZWCOnDlDDJhV4ExhPjS1Qusd0nh6hCeTeRsCXo=;
+	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
+	 References:Date:Message-Id; b=KojcTmvqZwbpgJwDl+rgnUtvaGvQJbqLOw6xmUROPi4Oep/aSSMIxvXrdt9+kw9oflrVC2mWLg5NV6JfXNRFrXEnSotZ5CwT32nKv2jdSUvAxZAZ4ivXvFtdEg3UkLk3pMwaoZKxEa8B7wS4n0dZlyDSDfPQUstxGrdcyDmwG60=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 937AB1F000C4;
+	Fri, 16 Oct 2026 08:55:28 +0000 (UTC)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v5] PCI: rcar-gen4: Add missing PM ops
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>, 
+ wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org, 
+ robh@kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20261004013131.0C7D81F0089B@smtp.kernel.org>
+References: <20261004011851.866833-1-marek.vasut+renesas@mailbox.org>
+ <20261004013131.0C7D81F0089B@smtp.kernel.org>
+Date: Fri, 16 Oct 2026 14:25:06 +0530
+Message-Id: <179214090624.63727.1877053108500595755.b4-reply@b4>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2086;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=khkxtZWCOnDlDDJhV4ExhPjS1Qusd0nh6hCeTeRsCXo=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq0eZuc7B1lcdRwuLAxWowartnfBFByfwhzSYgB
+ aMiRiL+orCJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCatHmbgAKCRBVnxHm/pHO
+ 9f/NB/4/euPK6H+vg84xq+Wke5CyWAutjlCCqIvhhZkMSbkPn0CheAK5476VuJhOUkYkLnDbE8T
+ Wo8holnuEL1QjuhzpCgFGup6/JKhcbUKTZkiqfp5vC6hMP4Uhha3IJwp81r/daEP9SpKpOZ9Mie
+ STavwGzkq01+u9tKlRF5UvwYRHQtph58ISw81dToqzJtHe60UAv9YvaP5j/HjpK14I8ewCgY2q6
+ BV0/2sxRaE7W1CfgCYCzpoId/5HJ01MvZ2ajpdMfuPUPIiZaBbRMwXPnN5CdNIRAB6QV2lFodap
+ ziswAJK2IDZ3/njqNOFNjUuYSSGoga+2IEYDgqA+l3uQA2se
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-Hi Bjorn,
+On 2026-10-04 01:31 +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [High] pcie: deadlocks due to ioremap and request_firmware in NOIRQ PM phase
+> --
+> 
+> commit e6c055f1eedf6bd5c13e231da24f0c6a76a24ba2
+> Author: Marek Vasut <marek.vasut+renesas@mailbox.org>
+> 
+> PCI: rcar-gen4: Add missing PM ops
+> 
+> The R-Car Gen4 PCIe controller needs to gracefully suspend and resume its
+> link across system suspend/resume cycles to support power domains shutting
+> down. This patch adds suspend_noirq and resume_noirq PM operations to tear
+> down the link on suspend and restart it on resume.
+> 
+> > diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> > index 2e7a8d85c0060..fceecbd16355c 100644
+> > --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> > +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> 
+> [ ... ]
+> 
+> > @@ -1062,6 +1064,26 @@ static int rcar_gen4_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable
+> >  	return 0;
+> >  }
+> >  
+> > +static int rcar_gen4_pcie_suspend_noirq(struct device *dev)
+> > +{
+> > +	struct rcar_gen4_pcie *rcar = dev_get_drvdata(dev);
+> > +
+> > +	if (rcar->drvdata->mode != DW_PCIE_RC_TYPE)
+> > +		return 0;
+> > +
+> > +	return dw_pcie_suspend_noirq(&rcar->dw);
+>                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 
+> [Severity: High]
+> Does this code trigger a deadlock or kernel panic during the NOIRQ PM phase?
+> 
+> Setting pp->use_atu_msg to true causes dw_pcie_suspend_noirq() to eventually
+> call ioremap():
+> 
+> dw_pcie_suspend_noirq()
+>   dw_pcie_pme_turn_off()
+>     ioremap()
+> 
+> Since this runs during the suspend_noirq phase with local interrupts disabled
+> and the system frozen, ioremap() allocates memory with GFP_KERNEL and may
+> sleep, which is strictly prohibited in NOIRQ context.
+> 
 
-Gentle ping. The patch still applies to pci/pm on top of Mario's
-pci_pm_suspend_noirq_common() split, since the !pm branch it touches is
-unchanged there.
+What? Local CPU interrupts won't be disbled in the noirq phase, only the device
+interrupts will be. So this concern is utterly baseless.
 
-Thanks,
-Navon
+- Mani
+
