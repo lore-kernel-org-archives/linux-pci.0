@@ -1,174 +1,214 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2781842AD66
-	for <linux-pci@vger.kernel.org>; Fri, 16 Oct 2026 20:17:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792181850; cv=none; b=mUCyo6UzCSzZBr6QYwhUqIMXuqlb7fuEBZmITtuVZ2zSwRMiDp8gF0WmEGMtlICV30YTX5IFcpXLBDKzHEFqbMauWGNlIbiUPEK2+zrVuAgbxPfZlhj3Blc22FjKp8l2Rgj7VIY9jF7Q14SJ4aM/t8IuQfaS5FCe+zJSi3CcY4Q=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792181850; c=relaxed/simple;
-	bh=/OHS7CbxIjBbPttwPMwIagfUH3hXetk1CB+uZa9XJMQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Un8laARx/37cpwHYZnYUwsrUlkLlsLdPpJFezFhnF0I9wbzyHPTqszPSXl4yhrCiQpk9UkCtb33sBZEbRO052govH0iJpT6wby3iDMmdGwuZSeTbQxulAK5Pu22ch1KaSWqKg0jcimZItZ5X5oaOdnCrHc+Gs1MSrRXfiapBNXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=cl7J11iJ; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F599348C6B
+	for <linux-pci@vger.kernel.org>; Fri, 16 Oct 2026 20:45:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.46
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792183533; cv=pass; b=ag/NuwyIkEp38xHKNSDhGdKXNm6qG6q5UrfMaq7BNpptsihjsSK/Rhww8m8MzOdQsRHKKS+xc9fF5BQzq9WzusUeWEhkjCSOCWkoEahpTJRqHD01Yq4JG9h9Z51p3ltA+uCTYCrs6UOVOF8HiULq8whRzy6jQTOeRJe5YSSQnQM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792183533; c=relaxed/simple;
+	bh=w7JWyGZgHnZCAXoncz6LsZsA5BNgjOZNNNQ+Gy3++CA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=UpOgqMMKLEWCgpHfA6+yHkkHLZ9WAVadXUq4f1qrCpQF5PCYlCVBHVzEkm9yKThrYhL7SxliyWdd3jwlj6qd3CiVrw83JbgEms8TagLL9yVYuGbUjh6Y1OtJhSwbRN+/5Omv/0q1YBx/paoSsHMDq/cn7Ff6j4EVGlqZ5FaGCv4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=oUDjoBO7; arc=pass smtp.client-ip=209.85.208.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="cl7J11iJ"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-89ff475a152so139160b3a.3
-        for <linux-pci@vger.kernel.org>; Fri, 16 Oct 2026 13:17:24 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="oUDjoBO7"
+Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-6b1b12de661so3435a12.0
+        for <linux-pci@vger.kernel.org>; Fri, 16 Oct 2026 13:45:30 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792183529; cv=none;
+        d=google.com; s=arc-20260327;
+        b=EQpOoBk4Xhuss5xxaLh1SRRq2i/G0yY7NFwuwPvrP4BnnBjTc+klJN71FPsvWRYHqp
+         dLdhVBqgroVHLKgDFtaHsOt7uocyWgIpcjLCWBtMBqWRvQACbjr7+C4K7vPAB/9Zq97Z
+         tp5eoxQDJYdHrM4ACq3WM+y9kufqizzXeYlmHSII4a4jdKKrKfCXq0ivbizJmtsSpTWm
+         zmXTbqXX2v8cWP5QhMHQya3J1MCj7JIwSCN1oNHYQJm99AxlQAHyXj6CW9FS+54bki0D
+         6Qp+Mtn+hE7yiLb9U7+WZfRx8i+1Pe04Pb4nBhYPFHgCoyt/M5FA0QWCJeZY5Tr/LW0b
+         +SpA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=03NCNpz5syFo1Xi0u7EMykw+dKPD9aN2iwbA6vJW+Ss=;
+        fh=Cvs4pkYTtcHuWMW2FnVY1DEKeSFr+yFxWy1PmN4u0a8=;
+        b=ciDrSkFtlTukU5LRMlJ5S3RiS7ZDOkVgSI430tvQqf72d2byMq5zcnB2r3L10/1/fz
+         +o5DbEqlA/Ush1ruk6bASwlPNJzcx9ycshPYP6n5JGv1GOCP1pE8iTxPE4q9V0iF2Iaj
+         DZgOJ1BxFZnW50BAlKNc5320oOgQKVJ6zK8SL7LKABgt+We6MK/qHDubr3b0cq11tOjp
+         cOkwdw992NTZt/bPmi/cXSG5xY+zGRHJAso8Rn0NNzLDGZVh3pZvEKnoT3Oiml0FLryG
+         iRgtlDBzT0qVG5Gxiu49iIrhw4tWnlMAXxCkmT2MDoxq6so3gLlytsFddam0jpz8D1rC
+         MkPg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1792181844; x=1792786644; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+        d=google.com; s=20251104; t=1792183529; x=1792788329; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=OsnszACXPTVDnPZfOqDQkfMfDgaLqJRUD8jA3813/H4=;
-        b=cl7J11iJ3QKHzMi8S2V7wlsOS7RsGPKGYX3HE539xHUyZDKHMopuMs88Dmo71KQSTx
-         nNKEjyYXzaYHEvu2hLdl/ax/BYOP7LpvbWUobSdnwmyzlUsxHE87ZXjTDSidB1wedbQu
-         4UWbRd+011CD/Y21SDUjnW6I+ZS8BJAOr02vHqzy97mfyb/WaI1N3gYogwnFAN2gh+ZE
-         TeacLRe8UeR/uQTH5llbrZ3akRd+rvTRQajlG6Xnok7iYZJQp2lYS8nPf/5eCoPIGmv7
-         ePOn90ITA/i1USnnBSyCczdsEboTgYQZxDJs2zHSLCtvHBkD4XhdbaQeIbdmMBp/1TUS
-         JcUw==
+        bh=03NCNpz5syFo1Xi0u7EMykw+dKPD9aN2iwbA6vJW+Ss=;
+        b=oUDjoBO7duICncwbCaZxWoozEseHLEJYmdaHso+GoltA9+8o98+95pXhv8Zf0bIOe3
+         FfwyU7MjMh+I54Xuk+YlLhM2ORaBHZgOTIZ8MbrP4KR+WoCM2K3pwyd4GikDklWBlUhs
+         +pr2UnUpW3H+XB6APm1dyz8stWF2q4egAkh9wMmm23fvOlEephPpcZOulpuJCE5WK0J7
+         rDUBv4bWR8GGW0q6WRSFGwb16c89FtpHcCcPZyHEJDagom8MuE2hDPpTSBpgWKcIqQXL
+         hndIFgPY5LiyXaQIY53zhaF7VCmRifcw2rbXWy7VnxsdnQM4U5dsmj5EZY1FIyI35GP4
+         SlIA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792181844; x=1792786644;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20260707; t=1792183529; x=1792788329;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=OsnszACXPTVDnPZfOqDQkfMfDgaLqJRUD8jA3813/H4=;
-        b=NYH+zBkkmUwny7gjOohtWLQXJhGy38jZ+Rl7/DNL+EYQ7id6ViDXiSlfxaYUgVd5nM
-         MmA80gRRIZEgN4yAPnoL0jfyRZgqTomeUH7cbFPSX+FdRv6M9xCfn6ExI3b0RUc731PA
-         M/0usxI2hNZ32OP8Rq7RIEmr7IZpZWX7xpuj88C3B9RSOm2YrRz6veyZq2QgBkePos8u
-         s2ZPNpTqrpckQOtLQH+wQpyzUebND4c2L7Jtm4V5Un3RQOKYcbfbil84pJe/al158vj7
-         2t2Oo0LCGShwqE/7akYrAYF0npswp3SXdjPbpoeTQyWJIxAfRd/zDzh3R0fW/TJaBv/f
-         T6RQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxGEjoT+xktkxqWcOdTX5u+oRi0GE/mmL+/+FGs9R5fwAMkaGbb7Irnxn8X5/3HSqnC7VquJ2+vXig=@vger.kernel.org
-X-Gm-Message-State: AFq9FYK4WSpcXb0np8Gz+tLfroXmmbW41gjPHPkQp0+ZP85o0dVKHtz3
-	JEdXu2rRySE+LqiJhCNBi2XwQGjTuh+cvpRdgzf7Bbd25NKeheS2146PCw2fHV+T1g==
-X-Gm-Gg: AYBFou1HPxT+Uf6jEbp8tL1gV9V+G6lmKStNkbWqXusTnj1zuWa0ZWRdvrkqM4yRkd0
-	6Gu+bSTxhSk941cHHgPPCbduw9dNF2p3gH/f5P1IrULbxD5oC4voys7R2nRpHmLxJql6nWksDji
-	HdPxOzH4ntMLzF3mKqDmPSsJZer/IGrrW1iM5qXMmdWJ1sqFCRQxXN4E5ufX3YmMPb2rP4UU0WI
-	TDr8yKXB/JVC1JV/YAZUApziIIHQ6Vh3gtq41lOsP7RBlAyx1E9LGHerljz6+zUj4bRhGZIhaMW
-	ZWJbRy6SwVEAcimAfwimdch4poNhX+bXmKDJ4QdIhV48v8mqzuoBbM+Tf7765tudYOh9JmJ8dTu
-	RCwVc+No84MBvjwaOC5qfKaoEA7eDgD7Zf6eppU4XnH9CdVjWStVDoYsE3+pDq/Bc8kAnzRI2bT
-	5kaSK9SijpbEHm8Kfb/CLSeD0oVgtKBMryMY1kJUx2o2iFizkTQWh6PbWPyYjJklGWusdhm76LH
-	eSZQ+V15s5Jj69vrl0P1AYTLhfZZS0bZd2XH6OOIzCStCDWW95FrRHOlWRURSNfj+b4br7a6tlU
-	DXTxOvFaUlAwKwsQ
-X-Received: by 2002:a05:6a00:189a:b0:882:94ab:20ea with SMTP id d2e1a72fcca58-8a04be37e89mr491979b3a.39.1792181843202;
-        Fri, 16 Oct 2026 13:17:23 -0700 (PDT)
-Received: from google.com (64.75.127.34.bc.googleusercontent.com. [34.127.75.64])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-89f58017c70sm1663372b3a.48.2026.10.16.13.17.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Oct 2026 13:17:22 -0700 (PDT)
-Date: Fri, 16 Oct 2026 20:17:18 +0000
-From: David Matlack <dmatlack@google.com>
-To: Michal Clapinski <mclapinski@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org,
-	Pasha Tatashin <pasha.tatashin@soleen.com>
-Subject: Re: [PATCH RESEND] PCI/DOE: Poll briefly for a response before
- sleeping
-Message-ID: <atKGTn7PqaDaednD@google.com>
-References: <20261012114213.1757207-1-mclapinski@google.com>
+        bh=03NCNpz5syFo1Xi0u7EMykw+dKPD9aN2iwbA6vJW+Ss=;
+        b=kiuvcCxk/efdTC2r9vMWOA585XMfO+P/MS3+jC5SrTAJ+iODsHpunSURhnI/8o9Jbr
+         utGxleC4wBAPuBwdUGa5NbDxgFrrlUsdu3kCIIDb5Drc233tL3G1yQyG48bzC2NzP8O3
+         lyZopW37NWzb2Mv9AnE2LkoZMz+e+wgD4w9fY6p/7GZA3RDZhxbZogGr2VfDXT7FsPO+
+         eLBIbL/Pxd1zEA1ocRWqm3DCn76wnm7Gj+h5T3d9z/QnAgMfL41lijBoKuw6EyyZj3DK
+         WyviSnNMHB8wlgJpgDRhYSlvm20qUnGnTpj9+0nNdaLCI2meS/PozbBynj50WNBO/9AN
+         k4HA==
+X-Forwarded-Encrypted: i=1; AKwUvBwkDnqqLaGSbMZ1gpZL/kBajXmHamHpGAylY7CPZE+50Dw46Sx5tuVQqblKpH0u4VPgd9cNIcY8Olg=@vger.kernel.org
+X-Gm-Message-State: AFq9FYIaZI2kHkrPLSOKZuAQ2QOtWiBxZaGNdWZTZiE/So1b9p8AK523
+	BlGj0V1/+fKM/AjqymkwC8X0/bGwmI1yvvFkDK8iGskJvWb+Ew7GE1bnVGyEg6XMbU2Ko/Fvu6m
+	VRdlO5Xdnjig9bnaAZsU9NT53tKhuqNseBjKNAzMa
+X-Gm-Gg: AYBFou155f1mMKHTTy6mP/DqOJayKgqjj60f/BmRn+vFneU752VtdXWou7I/qZBG3Jf
+	buWFAL4t0Xk2mUYgwUwijteUcdXajmxmzNMTsJaeydutoz+u/FbzkqvqY8sKtCGHvDfMgLdnSv6
+	k2CAZOfk4KtpycPrEosvjNHyBvsWQgIMTR13zQEF1sKUJ5jmRVi/qlr5RG/Zp6i97lmAbYefC2Z
+	YqDPPCQ+1i1F/uVTk2P3TLjrCFUJVTD0RJfJP/5dh4QWXV73VMN4R3ZZthu6W9acoQ5tqb/5pdJ
+	QS2g2BGwRsDRBHW/S0gnqwSWzO2rcTBATG20F56Eu4rOC4wAu2x4SijN2ww0ro0pQkCn9RDWmgZ
+	9H83EI33cdEKu/ILHIOUvB1JI9n589dM+xuQi6INF/lT/PGrFqpBAk+3FI2wYYdw+xV1sO+2DEp
+	AUmwpW9Aqr1vbj6VTnaS2U
+X-Received: by 2002:aa7:cd52:0:b0:6af:b196:68bf with SMTP id
+ 4fb4d7f45d1cf-6b3ad90b370mr2852a12.7.1792183528706; Fri, 16 Oct 2026 13:45:28
+ -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261012114213.1757207-1-mclapinski@google.com>
+References: <20261012114213.1757207-1-mclapinski@google.com> <atKGTn7PqaDaednD@google.com>
+In-Reply-To: <atKGTn7PqaDaednD@google.com>
+From: =?UTF-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>
+Date: Fri, 16 Oct 2026 22:45:17 +0200
+X-Gm-Features: AclHuK9TobvuzpulXhszilDKlYekt3FFZzWTrchifXJqQVbqZiZZYgBDRTMbwuQ
+Message-ID: <CAAi7L5eqd0WzxiRY-fj3fB1=zOhYdTJnpR3OGgX27tYLe-SPmQ@mail.gmail.com>
+Subject: Re: [PATCH RESEND] PCI/DOE: Poll briefly for a response before sleeping
+To: David Matlack <dmatlack@google.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+	Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org, 
+	Pasha Tatashin <pasha.tatashin@soleen.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 2026-10-12 01:42 PM, Michal Clapinski wrote:
-> doe_statemachine_work() waits for a response by sleeping
-> PCI_DOE_POLL_INTERVAL (PCI_DOE_TIMEOUT / 128) between status reads,
-> which is 7 ms at HZ=1000 and 4 ms at HZ=250. Exchanges are served from
-> the device's local mailbox logic and typically complete within tens of
-> microseconds, so nearly all of that sleep is wasted. Every DOE-capable
-> endpoint pays it once per supported feature during enumeration.
-> 
-> Poll with usleep_range(20, 50) for the first ~2 ms before falling back
-> to the jiffies-based wait. On an Intel Emerald Rapids system, time spent
-> in pci_device_add() for a DOE-capable endpoint drops from 41.8 ms to
-> 14.0 ms.
+On Fri, Oct 16, 2026 at 10:17=E2=80=AFPM David Matlack <dmatlack@google.com=
+> wrote:
+>
+> On 2026-10-12 01:42 PM, Michal Clapinski wrote:
+> > doe_statemachine_work() waits for a response by sleeping
+> > PCI_DOE_POLL_INTERVAL (PCI_DOE_TIMEOUT / 128) between status reads,
+> > which is 7 ms at HZ=3D1000 and 4 ms at HZ=3D250. Exchanges are served f=
+rom
+> > the device's local mailbox logic and typically complete within tens of
+> > microseconds, so nearly all of that sleep is wasted. Every DOE-capable
+> > endpoint pays it once per supported feature during enumeration.
+> >
+> > Poll with usleep_range(20, 50) for the first ~2 ms before falling back
+> > to the jiffies-based wait. On an Intel Emerald Rapids system, time spen=
+t
+> > in pci_device_add() for a DOE-capable endpoint drops from 41.8 ms to
+> > 14.0 ms.
+>
+> Does any of this remaining time come from pci_doe_abort()? I see that is
+> also called during mailbox creation and has the same call to
+> pci_doe_wait(). If so, maybe the poll logic can be shared.
 
-Does any of this remaining time come from pci_doe_abort()? I see that is
-also called during mailbox creation and has the same call to
-pci_doe_wait(). If so, maybe the poll logic can be shared.
+Yes, but I'm not sure if the poll logic can be shared without making
+the code worse rather than better. I'll look into that.
 
-> 
-> Signed-off-by: Michal Clapinski <mclapinski@google.com>
-> ---
-> I was asked if I can do this with interrupts instead. I don't see a way
-> to do that during device enumeration that won't collide with the
-> drivers.
-> ---
->  drivers/pci/doe.c | 28 +++++++++++++++++++++++-----
->  1 file changed, 23 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
-> index 6b5d9ba8e969..5e93d78a1a97 100644
-> --- a/drivers/pci/doe.c
-> +++ b/drivers/pci/doe.c
-> @@ -27,6 +27,9 @@
->  /* Timeout of 1 second from 6.30.2 Operation, PCI Spec r6.0 */
->  #define PCI_DOE_TIMEOUT HZ
->  #define PCI_DOE_POLL_INTERVAL	(PCI_DOE_TIMEOUT / 128)
+Also, I'm planning on skipping pci_doe_abort for preserved devices so
+it was less of a priority for me.
 
-It would be nice to also fix the HZ=100 issue, in a separate patch
-within the same series, since you are updating this code.
+> >
+> > Signed-off-by: Michal Clapinski <mclapinski@google.com>
+> > ---
+> > I was asked if I can do this with interrupts instead. I don't see a way
+> > to do that during device enumeration that won't collide with the
+> > drivers.
+> > ---
+> >  drivers/pci/doe.c | 28 +++++++++++++++++++++++-----
+> >  1 file changed, 23 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
+> > index 6b5d9ba8e969..5e93d78a1a97 100644
+> > --- a/drivers/pci/doe.c
+> > +++ b/drivers/pci/doe.c
+> > @@ -27,6 +27,9 @@
+> >  /* Timeout of 1 second from 6.30.2 Operation, PCI Spec r6.0 */
+> >  #define PCI_DOE_TIMEOUT HZ
+> >  #define PCI_DOE_POLL_INTERVAL        (PCI_DOE_TIMEOUT / 128)
+>
+> It would be nice to also fix the HZ=3D100 issue, in a separate patch
+> within the same series, since you are updating this code.
 
-> +#define PCI_DOE_POLL_FAST_MIN_US	20
-> +#define PCI_DOE_POLL_FAST_MAX_US	50
-> +#define PCI_DOE_POLL_FAST_TRIES		40
->  
->  #define PCI_DOE_FLAG_CANCEL	0
->  #define PCI_DOE_FLAG_DEAD	1
-> @@ -487,7 +490,7 @@ static void doe_statemachine_work(struct work_struct *work)
->  	int offset = doe_mb->cap_offset;
->  	unsigned long timeout_jiffies;
->  	u32 val;
-> -	int rc;
-> +	int rc, tries = 0;
->  
->  	if (test_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags)) {
->  		signal_task_complete(task, -EIO);
-> @@ -525,10 +528,25 @@ static void doe_statemachine_work(struct work_struct *work)
->  			signal_task_abort(task, -EIO);
->  			return;
->  		}
-> -		rc = pci_doe_wait(doe_mb, PCI_DOE_POLL_INTERVAL);
-> -		if (rc) {
-> -			signal_task_abort(task, rc);
-> -			return;
-> +		/*
-> +		 * Exchanges are served from the device's local mailbox
-> +		 * logic and usually complete in tens of microseconds, far
-> +		 * below the jiffies granularity of PCI_DOE_POLL_INTERVAL.
-> +		 * Poll for up to ~2 ms before falling back to it.
-> +		 */
+Okay, will do in v2.
 
-If tens of microsecond is the norm then is polling for up to 2ms
-overkill?
+> > +#define PCI_DOE_POLL_FAST_MIN_US     20
+> > +#define PCI_DOE_POLL_FAST_MAX_US     50
+> > +#define PCI_DOE_POLL_FAST_TRIES              40
+> >
+> >  #define PCI_DOE_FLAG_CANCEL  0
+> >  #define PCI_DOE_FLAG_DEAD    1
+> > @@ -487,7 +490,7 @@ static void doe_statemachine_work(struct work_struc=
+t *work)
+> >       int offset =3D doe_mb->cap_offset;
+> >       unsigned long timeout_jiffies;
+> >       u32 val;
+> > -     int rc;
+> > +     int rc, tries =3D 0;
+> >
+> >       if (test_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags)) {
+> >               signal_task_complete(task, -EIO);
+> > @@ -525,10 +528,25 @@ static void doe_statemachine_work(struct work_str=
+uct *work)
+> >                       signal_task_abort(task, -EIO);
+> >                       return;
+> >               }
+> > -             rc =3D pci_doe_wait(doe_mb, PCI_DOE_POLL_INTERVAL);
+> > -             if (rc) {
+> > -                     signal_task_abort(task, rc);
+> > -                     return;
+> > +             /*
+> > +              * Exchanges are served from the device's local mailbox
+> > +              * logic and usually complete in tens of microseconds, fa=
+r
+> > +              * below the jiffies granularity of PCI_DOE_POLL_INTERVAL=
+.
+> > +              * Poll for up to ~2 ms before falling back to it.
+> > +              */
+>
+> If tens of microsecond is the norm then is polling for up to 2ms
+> overkill?
 
-> +		if (tries++ < PCI_DOE_POLL_FAST_TRIES) {
-> +			if (test_bit(PCI_DOE_FLAG_CANCEL, &doe_mb->flags)) {
-> +				signal_task_abort(task, -EIO);
-> +				return;
-> +			}
-> +			usleep_range(PCI_DOE_POLL_FAST_MIN_US,
-> +				     PCI_DOE_POLL_FAST_MAX_US);
-> +		} else {
-> +			rc = pci_doe_wait(doe_mb, PCI_DOE_POLL_INTERVAL);
-> +			if (rc) {
-> +				signal_task_abort(task, rc);
-> +				return;
-> +			}
->  		}
->  		goto retry_resp;
->  	}
-> -- 
-> 2.56.0.385.gd3acb90ef8-goog
-> 
+I guess. I can do more precise measurements and tweak this value;
+however, I can only speak for the device I have on hand, so generally
+I prefer overkilling it.
+
+> > +             if (tries++ < PCI_DOE_POLL_FAST_TRIES) {
+> > +                     if (test_bit(PCI_DOE_FLAG_CANCEL, &doe_mb->flags)=
+) {
+> > +                             signal_task_abort(task, -EIO);
+> > +                             return;
+> > +                     }
+> > +                     usleep_range(PCI_DOE_POLL_FAST_MIN_US,
+> > +                                  PCI_DOE_POLL_FAST_MAX_US);
+> > +             } else {
+> > +                     rc =3D pci_doe_wait(doe_mb, PCI_DOE_POLL_INTERVAL=
+);
+> > +                     if (rc) {
+> > +                             signal_task_abort(task, rc);
+> > +                             return;
+> > +                     }
+> >               }
+> >               goto retry_resp;
+> >       }
+> > --
+> > 2.56.0.385.gd3acb90ef8-goog
+> >
