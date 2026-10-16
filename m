@@ -1,176 +1,247 @@
-Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010013.outbound.protection.outlook.com [52.101.193.13])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D780046EC98;
-	Fri, 16 Oct 2026 09:32:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.13
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792143174; cv=fail; b=WTlTY0LlteBhrBJHQp6QLPTfR5FQgEGQXw1hP5R6hwcAwsmvo3RPU0NpySAUVP/2GnnTjLCld/weLcYV2CoEqUjtfbqiZf2/RUDWBwJim+jbVW3dv4QB+eHaDVnKfzI7D1NfDYITYu0W+MULe12scsXupCYZ7QyFS1ybM3O8oD0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792143174; c=relaxed/simple;
-	bh=iuLb3bsSPeSnF24ekv7HkEi4M1GQaGOZKuGFv6RHNEc=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=bC3isWTohyllV85vDypRFmEo7MAdxNPVvMGXspq3huG6DB+10JnM6G9mWm526nd86BogoCxMLdmY5Oh/HnEBiGl0sV10OkAwqsZW/A+Z9kDkYyjI1BPGyYT4Xf/FRiIn18bbkHauM7NbfEFRF7LumYdwMt3FWunwyeWTtMCcZ+A=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=hFM+irrB; arc=fail smtp.client-ip=52.101.193.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C17EF3F9F5B;
+	Fri, 16 Oct 2026 10:17:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792145864; cv=none; b=NDQWex3FYmy3eVXflPo8fNK6knvoOtSjkgdPlVdQD2gzp5wKLGpjYj/UBp0YctUM5D++vJkr1BerY7TCKaSLmvhAhN1KMtN+CkAkOifzetAwDVS8oaCYucxxn2TgZkCVxsSELk+OcEaxkrFv2i6w38bkZ2KuXV5UD7eCFwvxFSU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792145864; c=relaxed/simple;
+	bh=ps4odQHHb7l/wiRUo9dzB8hrI0RD41hOHQAtb2vg9yU=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=CyF6oGBi80lDtRlYlPB60zVozfKtNW9tEbpntC1KJMPAaer1SZtbH5BWuBB1CU9N98C7zXjsHM+FjWH9vd510aQgp5BhtDxTjVU/TGx8XkclRoGJtLVDnzfwfipazTGNAMrmpafonIMHbyBkA/y42F3xdDL0wpIUTzGxXc+4MNo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=S85C1yLc; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="hFM+irrB"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=JRmYZg8OBPBbed1+wY5OcofsNSETQiggkFLqrTCdpcXllB2ak/c7ks0+tAh0/bMYgeL+fuxf3WVDz6vDk0dFnc26eJzlpW9qd6l63LRdizqI7lTKn/7cap5WtZ4XokcpLAPRrNPI2KarQFyg2gP72u4rC3RZqT930NeXa1Fiq8/t/rSMzr8hX5Bjs2EfTZCbRGwic2ImmwfKSWmZJaPGDDWP/WwoUWVbybz2fHGA+rPRK/GuB8nCvUIYCxYRf8Qye0edJewGzxd9K0eYnYojuEH/OnIWiVh4CWQ4XWgx7IRv3qEgo9oDP6Fhg1oky6Od2J7rGGKsixjPAnECIBejAQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VHlgLzGmzQZwQpqCpk94oROsztnZ3B1pqTeKGqDbtAI=;
- b=eBxmxZfXLIvKbXEWyH/XL7TLrzV6cbfzAP/2RZyQZ7ryUza/BjO7+vOqWrULD8YGc0k7LVQp3C6A/iwV2erkjCJGJXoqefi4nvDuVyOf0g+f0uPjQ609Uy8JHrwdBRbtDO7tqwlrAeBYpCD4QA+9q/kXDaYDiPJkiA79QCx08W9J6/GBv/bn+J3HE63edm7w45lf1sjOXkOTfNR27VyAbtSiLHnHXsdkMiILZRpMqPJQrhSO+IQNigeAXjrIGCNAevUEEpfkVImCX45u4tdPWRHG3GSze+HIA+oSKtb0uGlTlHK/rlaE6VmZSAUtnPQZ8BQKvIVCcl/gSl3/V0z0Lw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VHlgLzGmzQZwQpqCpk94oROsztnZ3B1pqTeKGqDbtAI=;
- b=hFM+irrBbWDjdChOlKIHai0yOunvUrou8M4CgU9Jd/gwgf3T7zz5YwosQy0+d5yMIz/WudOXKzkvt4MmVGQCuZcG6uIahlPC0Z8Rdntk/J4CBO4p0+BTz3ppE3YuEmdkO/z5CQoTVmIXsGX4CBR2jbFaYvGsSUwIZtmaxp6+GmCBVTdUp0v9XoueqMmL5kHJ8ACol2v51mHG7g0cYQfbfMva2112l9HCEo9kVqYVw3hjze2y/+DolEK5I8QxMdoUMjZn1jwjcfBHNK9TU4y2Pexq3K2cFQ42IduXIYULYdnNVr9laNeDBBzeg68HjpEFVO6K0V3PJm75Imze0wQWnQ==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS0PR12MB8245.namprd12.prod.outlook.com (2603:10b6:8:f2::16) by
- DS2PR12MB9638.namprd12.prod.outlook.com (2603:10b6:8:27b::13) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.522.14; Fri, 16 Oct 2026 09:32:46 +0000
-Received: from DS0PR12MB8245.namprd12.prod.outlook.com
- ([fe80::e7c5:cfca:a597:7fa4]) by DS0PR12MB8245.namprd12.prod.outlook.com
- ([fe80::e7c5:cfca:a597:7fa4%3]) with mapi id 15.21.0522.016; Fri, 16 Oct 2026
- 09:32:46 +0000
-Message-ID: <73ad252e-98ce-4ecf-b767-aa8ae7802d62@nvidia.com>
-Date: Fri, 16 Oct 2026 15:02:36 +0530
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 04/11] PCI: tegra194: Do not skip no-link Root Port remove
- cleanup
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Krzysztof Wilczynski <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas
- <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, Rob Herring <robh@kernel.org>,
- Thierry Reding <thierry.reding@kernel.org>, Jon Hunter
- <jonathanh@nvidia.com>, Kishon Vijay Abraham I <kishon@kernel.org>,
- Frank Li <Frank.Li@kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
- Niklas Cassel <cassel@kernel.org>, Koichiro Den <den@valinux.co.jp>,
- Marco Crivellari <marco.crivellari@suse.com>,
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20260923072237.1139013-1-mmaddireddy@nvidia.com>
- <20260923072237.1139013-5-mmaddireddy@nvidia.com>
- <179198766519.63727.17783665861059106121.b4-reply@b4>
-Content-Language: en-US
-X-Nvconfidentiality: public
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-In-Reply-To: <179198766519.63727.17783665861059106121.b4-reply@b4>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: PN2PR01CA0222.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:c01:ea::12) To DS0PR12MB8245.namprd12.prod.outlook.com
- (2603:10b6:8:f2::16)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="S85C1yLc"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1792145863; x=1823681863;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version:content-id;
+  bh=ps4odQHHb7l/wiRUo9dzB8hrI0RD41hOHQAtb2vg9yU=;
+  b=S85C1yLcceF9b2gthZGV3q5EGN55+JfjOLm7gLHVdJ1V0/g8YzHIpz/d
+   oEAkySNppkaYxNDZF/YMyDTSCLeCmt5GNfR7QeJ7nxuM4DcLNvdX9JLM0
+   pUuiKh9702e+t4bDdwD1tmA91EK4D91KvkW7BnyhnSwllhuA4iPw0nZiA
+   Mtzyl6vPKY5IFs60RxD9GF43euC3lXBnALXjmGx/m2gUE+4lVN0gsQ3BN
+   2FwrW4j/P+Ijc5tf4auSK3njUn/8Mr6qL8P5DKNJOg+lIljFq/4yk6gvG
+   BHfolLnGxrhJ9oylcmvDif4yyQAnOJsfP0U03PIYktPM35v2vOaNDdrEq
+   w==;
+X-CSE-ConnectionGUID: s2RMltnvQ7OjOrUBwdCFig==
+X-CSE-MsgGUID: Yd7wZkfETBiL6kF5J6XyBA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11936"; a="947796"
+X-IronPort-AV: E=Sophos;i="6.27,161,1787036400"; 
+   d="scan'208";a="947796"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Oct 2026 03:17:42 -0700
+X-CSE-ConnectionGUID: HJbJ4n/iS9mI5RPiq2hT8g==
+X-CSE-MsgGUID: L52WigXOQAKc7nd3wTm9HQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,161,1787036400"; 
+   d="scan'208";a="1892016"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.34])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Oct 2026 03:17:35 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Fri, 16 Oct 2026 13:17:29 +0300 (EEST)
+To: Manivannan Sadhasivam <mani@kernel.org>
+cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+    Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>, 
+    Rob Herring <robh@kernel.org>, Nirmal Patel <nirmal.patel@linux.intel.com>, 
+    Jonathan Derrick <jonathan.derrick@linux.dev>, 
+    Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org, 
+    LKML <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org, 
+    linux-wireless@vger.kernel.org, ath12k@lists.infradead.org, 
+    ath11k@lists.infradead.org, ath10k@lists.infradead.org, 
+    Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+    Qiang Yu <qiang.yu@oss.qualcomm.com>, 
+    Emmanuel Grumbach <egrumbach@gmail.com>, 
+    Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH v3 0/8] PCI/ASPM: Add pci_force_enable_link_state() API
+ and convert Atheros drivers
+In-Reply-To: <atG61oicHbsLKiib@debian>
+Message-ID: <8ceaf259-ae07-efa1-911f-4cc86a2710c2@linux.intel.com>
+References: <20260708-pci-aspm-fix-v3-0-6bd72451746e@kernel.org> <20261014205117.GA1665327@bhelgaas> <atG61oicHbsLKiib@debian>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS0PR12MB8245:EE_|DS2PR12MB9638:EE_
-X-MS-Office365-Filtering-Correlation-Id: 08a079e9-d814-496a-0ec4-08df2b686fd8
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|23010399003|56012099006|4143699003|11063799006|22082099003|18002099003|10067099003;
-X-Microsoft-Antispam-Message-Info:
-	8whzaDw0uio1GEqBEJtdN3CFLjSD0kubVfCur4+/w3eKTbKmO4SPI3Kd1fLc93DaAaee9nvq90vS1V8JG/m5znj6pKPeIUPfD6EjW+g6jq4MAsnzkY9AfZKDVY0H9UL/6NFafT4YKvmJKj9n7Hpnejct0YyI6cnriApAdX4cHY+vWfFwUNuGaQbbrray0Gciv/n7ygXKXUvCccjiwcVvfavSZxhdMclveh0hmIAJAWkMaJgSjMWQ3i46qMOqbZRQjwM/jtoE4SdiB57T63GJbUthj5+fc8JHcdWRsoriMIkDndFQ7PHCwV5O61oa85AOG/SI1cJt4EH+e7yPEeNhOUm9divVL9hF7DGdOWHXMeUsOuF320rIi+Zsn1uoeOahSCT4uMcg8Zh4YSpfnDxEiwVkegeTYH4v2cnMkc6bRg/okZAdxR+B9+zDTzTuNuPwQWK6hvOc3ycivQwU2/BD8k4uD2z1Ci8M9Kzi/GROcF+b5kXuATUrTycwRhL6CeDvIvT0BOtZm/jQ+11TUySABkH9zC/1wAZowC4PFQymF7f9cDSF+aGPdFbNJ01uW132DA4MCiUenoTZrXgpRUkvUHIETJjCogjvU0i4iREPrwaoCvz35C0+LEMsqUSmtEC1u9vPEkCnjRv7aI4RT140WiHiZt4rquX5PBHmqBJABCc=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB8245.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(23010399003)(56012099006)(4143699003)(11063799006)(22082099003)(18002099003)(10067099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?YUMrK1ladlpWbHoyRmVJVTR2ZmtBQnM4RTZ5c2ZIR3NPSktBVklwcDU4WlNK?=
- =?utf-8?B?RDVkeVJ5WHU5aHZtUmIvRU5Ydmc1R0VhK1FzT0tZVndnVGRVKzBZRDd1bzdq?=
- =?utf-8?B?UWloVEpmVWF0bFVhd0xRQUhqdU04czJLOGtDRU5Hb3ZEMy9uUHBRZEFCMHZ2?=
- =?utf-8?B?M21iTkpqT2thaDFwZTUxa2FUN2RoTFlxWTUzQkRrNlR4ZGtXVGJhRzc4UHhQ?=
- =?utf-8?B?b2RiTE9GYmJBWHpGMGxjOWozNmxsd0cxckwwMjliNjRvdkdvN0hDU09XWTVl?=
- =?utf-8?B?dXZtV1hPeDN5SmZmTFNVaWxVWkw4a2xIdWYrLzBBamtMR1E2Qndubk5qc3Az?=
- =?utf-8?B?K1lXL0plSUdoUWNKRVRZTTFEdXNtQzd3S0FselY5eFFqMzRJWVNVdkNPKzBo?=
- =?utf-8?B?N21PeWMvYUhUbHJWYlUvdGhSOStncHF4THhndXB3MFhqRE1uTGRSNmFsTnZq?=
- =?utf-8?B?cVpNb3R6TmRoQWF3a1JmZklubEVXdmhnN21wNTRDWTJXMENnQTNLYUlqcDQ0?=
- =?utf-8?B?UUZyV0crcHBra2xiNlVRcGRVYlg0bE05UFB3L2ZkWkF3aElkM0JSaTFuUnpE?=
- =?utf-8?B?QTdPSHN5dS9HVm96MFV2ODVSQk44WFNqTUJibzFaWU0rcGJXTForaFE5S3hm?=
- =?utf-8?B?YUM3WUx1OGJyeExjNFMyMXJ4N2xmOWgyaUZwUG5kNmxLblR3bFdYRkpsVzIr?=
- =?utf-8?B?em9wOTB5RkdhZFVNdUJscHlWamZkTU9EbDJQTGIvNytxbnZsSHJETWhlTklD?=
- =?utf-8?B?d0x1SGdoUmRSbFlaSjFtOXBCQ0NUclZ0QlR2MzFMVGdSZEtRcHVmdktUSGtw?=
- =?utf-8?B?WkxBL2FPTXpiR1d1dVNRMmNrdnIxYnNSQXJDWG5LcUtoM2dGTG9ZUk9Zei9T?=
- =?utf-8?B?WU5JTDZ5QmJnTEVFdXRQUFBOS0tJNVZYOEZzZ0NwNmZZRHZrT3NRSVpHOTJC?=
- =?utf-8?B?L3JuSmcwYmpKNzZEYUxqOTViUzlncHZZdGJjMUE0RkNreENGdHdTekNrVUR6?=
- =?utf-8?B?Uy9sMEU1ZjZCNi9NdHJFL0wyUUdCblRqQWF4OGFtVC9CemhVbEtNa0tZbXZZ?=
- =?utf-8?B?VndGc21Fb1lLRGdROHJ5ZnREV0c2dWYzbnNod1NUTVMwSW9jR1hNeE1pN0Z0?=
- =?utf-8?B?Z3B3L05LOUNQS3dWbjB4YlBrbWdUN1V1Tlk1Y2QwaFdaZU5ZblFMcG1seG5G?=
- =?utf-8?B?VWUvVkNqMVVGN2NXc1JkTnlmZnBVb3FtTTkzTDc3ejZldFRtQnpyTEJENkxB?=
- =?utf-8?B?Vkl6QWFic0psWVU3ZFJoanVnbnJqYlRRa3F3SFloSkZPM1grakZWZ2xaU1U2?=
- =?utf-8?B?MU5YeDdoYzBFT24weTBVYjVBQ3hCVUtTVGJKMUJtaEZZczdnc2ZoTXRkZ3dl?=
- =?utf-8?B?TzdYNnNpMENlZU1tSjBkNHV1SzlieVJzQXRtcnl0cnhEcTR3cEFvay81eFR3?=
- =?utf-8?B?RitGRjF3Wi9ySFlzNXYrbXErT29nVGNlenFmcmVDaUJrTDl2RDJNbUc0R0Y4?=
- =?utf-8?B?NWtTMVhNR2RySXhJM2g3b29zZEs5R0VkU0JaWnF3NjJvOHg1Tzd4c1JhNFRr?=
- =?utf-8?B?Z0NGd0tCckd4NmN5a3hOK2laby94NENvT21VK0pudkdiU09sRGhXSlluWm1p?=
- =?utf-8?B?WlVxdVpoUThnckVxVUFKZEN6SkQybEhhNUw4Si96V1AwKzNicEVGa01LK0s3?=
- =?utf-8?B?SEJJTHFaQmlqV2dSVW90NmNPcXhPaGlLcTJ2bVRvYXprdDdPRHRNZHo0WTVs?=
- =?utf-8?B?djRWNndTakVXczlBR2YxOXpFaWRRcVhzbE16QXN6M2twR2Z6dmthemJGdHB3?=
- =?utf-8?B?Ly9NVHltSC92VnlpWG12SHNnZVN4MHNmS2tPM0QzK3FKQkhYOFR5WGY1SElj?=
- =?utf-8?B?UGlSUkNJNERIQ014VkE4OVJqb2xCNHdveUVZd0VFbGhjenNlQWtScGpNOTdZ?=
- =?utf-8?B?TDFXQXIySCthb0tEa05lSUdXd214Rkl6ZHRaaWliSDljQUhaSkFZcmR4OUhm?=
- =?utf-8?B?djNBUFlpeFlIWUg5cWEvL2ZuODRMUVpLaUU0dEZHUmliOGVsL0UwVENMeWJS?=
- =?utf-8?B?MWFUN1Y2Qk1FTWZrQnBPTGdMMWl6TUsxdERDVHA2Mmg2Y0tway9WY2hja0VL?=
- =?utf-8?B?MEo5bVFWUHVaUXN2OVhXUitmZ1NaV29WR0pKMlZHeVJjUU0xallrMjZOci9B?=
- =?utf-8?B?MFBaV0xkZ21EUTY3WHczVjNhUE8rRElnbWhTMUZGSFExWUxvRVVWNEVaTzd0?=
- =?utf-8?B?Tk5aSFQwNUJBdEFIVEM3MDFnMUJVaVJkTVdNcmZnWjdJNm1zNW4waDVIanZu?=
- =?utf-8?B?Vms5bHUrWU5DdXludFB4emtEWGl6NnhQVWlWa2VFVUx4L0xMNElFdz09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 08a079e9-d814-496a-0ec4-08df2b686fd8
-X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB8245.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2026 09:32:46.6281
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: bQmLYVjOOnCohmyRSZr85nKkzmR3p6yHpuw7p5UW/90OCfZTgU8H64upnUhbgXKzhXfnymL+hURol32XCRZMgw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS2PR12MB9638
+Content-Type: multipart/mixed; BOUNDARY="8323328-1775956960-1792142584=:1180"
+Content-ID: <0d2502b4-10fe-3dd3-f6d5-e547a5ecd889@linux.intel.com>
 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
+--8323328-1775956960-1792142584=:1180
+Content-Type: text/plain; CHARSET=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-ID: <391745ff-eb7c-bf57-36a4-00b885c75592@linux.intel.com>
 
-On 14/10/26 7:51 pm, Manivannan Sadhasivam wrote:
-> On 2026-09-23 12:52 +0530, Manikanta Maddireddy wrote:
->> tegra_pcie_config_rp() deinitializes the controller and disables runtime PM
->> when link training fails, then probe treats -ENOMEDIUM as success so the
->> driver can remain bound without a link.
->>
-> 
-> What is the use of keeping the driver then? If the controller is deinitialized,
-> the it can't do hotplug either.
-> 
-> This patch is fine though.
-> 
-> - Mani
+On Fri, 16 Oct 2026, Manivannan Sadhasivam wrote:
 
+> On Wed, Oct 14, 2026 at 03:51:17PM -0500, Bjorn Helgaas wrote:
+> > [+cc Emmanuel, Matthew]
+> >=20
+> > On Wed, Jul 08, 2026 at 04:30:14PM +0200, Manivannan Sadhasivam wrote:
+> > > Hi,
+> > >=20
+> > > This series converts the atheros WLAN drivers (ath10k/ath11k/ath12k) =
+to
+> > > use the PCI core ASPM APIs for enabling/disabling ASPM instead of wri=
+ting
+> > > to the LNKCTL register directly. Touching LNKCTL behind the PCI core'=
+s
+> > > back leaves the ASPM service driver's view of the link state out of s=
+ync
+> > > with the hardware, which is not nice.
+> > >=20
+> > > The catch is that these drivers save the currently enabled ASPM state=
+s,
+> > > disable ASPM before firmware download, and restore the saved states
+> > > afterwards. pci_enable_link_state() cannot restore states that were
+> > > disabled via pci_disable_link_state() or blacklisted during init (lik=
+e
+> > > the pre-1.1 device blacklist, which is only meant to be overridden wi=
+th
+> > > pcie_aspm=3Dforce), and that is intentional. So the save/restore sequ=
+ence
+> > > cannot be expressed with the existing APIs.
+> > >=20
+> > > In v2 I tried to fix this by making pci_enable_link_state*() symmetri=
+c
+> > > with the disable APIs, but as pointed out during review, that also en=
+ds
+> > > up overriding the init-time blacklist for every caller (including VMD=
+),
+> > > which is not something we want. So instead, this version adds a separ=
+ate
+> > > pci_force_enable_link_state() API (patch 2) that re-enables the reque=
+sted
+> > > states unconditionally. The caller is responsible for only asking for
+> > > states the device actually supports, and the ath drivers do this by
+> > > restoring exactly what pcie_aspm_enabled() reported earlier.
+> > >=20
+> > > The first five patches touch the PCI core: patch 1 (from Ilpo) makes
+> > > pci_disable_link_state() disable ASPM unconditionally, patch 2 adds t=
+he
+> > > new API, patch 3 moves the D0 transition needed before enabling PCI-P=
+M
+> > > L1 PM Substates (PCIe r6.0, sec 5.5.4) into the shared helper and dro=
+ps
+> > > it from the vmd and pcie-qcom callers, patch 4 cleans up the kernel-d=
+oc,
+> > > and patch 5 makes pcie_aspm_enabled() return the enabled state mask s=
+o it
+> > > can be used for save/restore. The last three patches convert the ath
+> > > drivers.
+> > >=20
+> > > Testing
+> > > =3D=3D=3D=3D=3D=3D=3D
+> > >=20
+> > > I've tested this series on a Lenovo Thinkpad T14s with WCN7850 (so th=
+at's
+> > > just the ath12k driver). Rest of the drivers are compile tested only.
+> > >=20
+> > > Merging Strategy
+> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > >=20
+> > > Even though there is no build dependency between the PCI core and ath=
+eros
+> > > patches, there is a functional dependency. So I'd recommend creating =
+an
+> > > immutable branch with the PCI patches and merging that branch into bo=
+th
+> > > the PCI and linux-wireless trees, and finally merging the atheros pat=
+ches
+> > > into the linux-wireless tree.
+> > >=20
+> > > If the immutable branch seems like a hassle, then the PCI core patche=
+s
+> > > could get merged first and the atheros patches can wait for the next
+> > > cycle.
+> > >=20
+> > > - Mani
+> > >=20
+> > > Changes in v3:
+> > > * Dropped the change that made pci_enable_link_state*() symmetric wit=
+h the
+> > >   disable APIs. Instead added a new pci_force_enable_link_state() API=
+ used
+> > >   only by the ath drivers, so the init-time blacklist stays overridab=
+le
+> > >   only via pcie_aspm=3Dforce and existing callers like VMD are left
+> > >   untouched.
+> > > * Fixed the locked path to use pci_set_power_state_locked() for the D=
+0
+> > >   transition. The previous version called the non-locked variant, whi=
+ch
+> > >   re-acquires pci_bus_sem.
+> > > * ath drivers now disable PCIE_LINK_STATE_ASPM_ALL instead of
+> > >   PCIE_LINK_STATE_ALL so that CLKPM is preserved and can be restored
+> > >   (pcie_aspm_enabled() doesn't report CLKPM).
+> > > * Reworked the kernel-doc patch to cover both the enable and disable =
+APIs
+> > >   and reference the new API.
+> > > * Rebased on top of v7.2-rc1.
+> > >=20
+> > > Changes in v2:
+> > > * Reworked the pcie_aspm_enabled() API to return the enabled states
+> > >   instead of bool and used it to save/restore the ASPM states in ath
+> > >   drivers.
+> > > * Added a patch from Ilpo to disable ASPM even if BIOS didn't grant
+> > >   permission.
+> > > * Added the CONFIG_PCIEASPM dependency to ath{10/11/12}k drivers.
+> > > * Rebased on top of v6.17-rc1.
+> > >=20
+> > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualc=
+omm.com>
+> > > ---
+> > > Ilpo J=E4rvinen (1):
+> > >       PCI/ASPM: Always disable ASPM when driver requests it
+> >=20
+> > I put this first patch on pci/aspm for v7.4 because there seems to be
+> > a consensus that it's better to have the ASPM core disable things even
+> > if it doesn't technically have control of ASPM, because the
+> > alternative is that drivers just do it themselves, also ignoring ASPM
+> > ownership concerns.  Having the drivers do it just means the PCI core
+> > ASPM support doesn't know what's happening.
+> >=20
+> > I think we should defer the rest of these because I think there's a
+> > little room to make the enable/disable/force-enable dance more
+> > intuitive for the drivers.  As far as I know, the rest of the series
+> > is definite cleanups but doesn't fix any actual functional issues.
+> >=20
+>=20
+> I wouldn't just categorize the rest of the patches as mere cleanups. They=
+ are
+> indeed fixing an obvious race between PCI core and the driver doing ASPM =
+dance
+> at the same time.
 
-This behaviour dates back to the original Tegra194 driver review. Bjorn 
-recommended decoupling host-bridge probe success from downstream link 
-state, so Root Ports remain accessible for enumeration/debugging and 
-possible hotplug. However, as you point out, deinitializing the 
-controller defeats those benefits. The existing no-link policy deserves 
-a separate review; this patch only fixes the cleanup skipped when 
-removing that already-bound driver.
+Agreed.
 
-Ref: https://lkml.indiana.edu/1907.2/06835.html
+> But for sure, even after these patches, one can trigger the
+> same race between sysfs 'config' and the driver/PCI core, but that's more=
+ of an
+> user trying to perform an action to trigger a race vs race happening with=
+in the
+> kernel without user intervention (which is too bad).
 
-- Manikanta
+Which is why I suggested moving to a counter based approach so we could=20
+arbitrarily overlap any number of disable/enable pairs for a state in=20
+arbitrary order, no matter what's the source.
 
--- 
-nvpublic
+> I'd really like to see a way forward for these patches, even with a new A=
+PI and
+> not let them fall through the cracks.
 
+Me too. The needs have simply outgrown the old API (which was never good=20
+anyway due to its asymmetry caveat).
+
+--=20
+ i.
+--8323328-1775956960-1792142584=:1180--
