@@ -1,119 +1,114 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DD7D3BC69E;
-	Fri, 16 Oct 2026 11:27:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B17BB2D5C8E;
+	Fri, 16 Oct 2026 12:02:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792150057; cv=none; b=s9kCRyzM/hUf3bUNNqEY2SIggGEm0PH85rmsirx48RaDNhfCsuFvNg8ENVAPdj+kytVaL32+uJFa5+2hU/tawrFHgey7nIQ8vtgpQ6Nc6cTUQm+/eSgPcv42kEhnU4EVdc6W0XO5Orq0N936Ak9G7hDNzmuJWkoCBYO1CD+xT4o=
+	t=1792152143; cv=none; b=aDq6xR2HdZIivsI/GFylJrAQ3KchryM+0Ekv7wrzTvDACTaBhuOAjcSPMj5KZj73eqsi2s9cDVPcHYApsPRmP8aadU0LbwPyHsviBOWN+IbvE68jE1pSBoPmfydPYqRHIQJxfYxPuoieeEhMchlqtoSrcbSonjQLAUDudZhe2NE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792150057; c=relaxed/simple;
-	bh=GhyQN17VWd7SoAjtlip9xuFKJIo9rp2AytN0LvK4U9k=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mXbwMfLXO7wzWoAwX+gzrRQrkUYrgu58FLMe8huVnrc5LK1909ccsZaAIDYId7OIVsp9W+qMaSG/BrlshrN25jPuCVO9szy6xDmwJ7FfX8LS+pdTG2maomQrusHCU0s0u2Io9pgMtnS2v2dF4eOBWJPw4CbcEisRqZPAP54AWP4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=ru6SnttG; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1792152143; c=relaxed/simple;
+	bh=2YG3k7N1X38H5sXvrgps9p+vMXJSHS9aHjR1BucBmKk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Vo2RxmNDKscKBsOZQ9Z/ORHg6L4navQYT6E0u//2BzG5pJRjo/aQgoz6ylmzHiWgRZIVAo6IF86k1M5sdezIR2lwVyVfPFaHexDrxs+yUYnzBGdc3br/F3+zp3zn5ZeigVBQ39xx12EEGCjf8RdQec6V1zqFEppKA0B4OrL+G/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mHAgS+yW; arc=none smtp.client-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="ru6SnttG"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519MLKEM768 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4j5jMz0Gj6z8tyR;
-	Fri, 16 Oct 2026 13:27:27 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1792150047;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=zmG3vMARJIZwqxyiykSt3n/8NHm7T43hsxGEbT9x4MM=;
-	b=ru6SnttGuBZforc1QjhHsCRqyZt3SATyEzV2jvy4Li3rBk/ou4I3Z4E3CON2jGH7ZbALOA
-	12K/tY51uQvp0ENPgY18LI31RgLcS/VxEguWlQmUq1s6yHjS/0yILRe5NmNPv43wSGXTmJ
-	TpJq6DjV/prHE7MLV0torsxtrahYXjfVm4cIKSYUCuUKnumVnIkoznqMGfrrP1TXd2waon
-	Mg6yWk/Fzlhjr1tgUMQjps6jSfavieBw+IXgOeL2ANs7K8c6cu5J0N2U+Ok+VEMFvTRbjw
-	yowif3EjUbmWQWf7uJ1v1dFzaZfIf+hmIiZ52N+2S3KNnTAA4VGC3hpcHJs3MQ==
-Message-ID: <a5cbdf4e-ad1d-4e54-84b7-15f7841c414c@mailbox.org>
-Date: Fri, 16 Oct 2026 12:54:55 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mHAgS+yW"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1792152142; x=1823688142;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=2YG3k7N1X38H5sXvrgps9p+vMXJSHS9aHjR1BucBmKk=;
+  b=mHAgS+yWT5tE2MO5q8fD9OSLqvv7m/rvyd23KFhmDgKBhaRELNJrYqkX
+   93VSVEng9HmEq2+4lo0X+X0EfCI4kbLzns0/sk3vxCAnxCc17wjmqQgsA
+   0hgvAofuU6BOkw2ilcQuh1nzpPSeayJ+dxePRoLh0TDx8HXTQKEgppatl
+   Yb5B+3zxmIGiHaBITn3OP2tIVoZZ66Y19v8QdvTmEhS0GW/G+Km0nUvle
+   ti8n+qde3RBzKgXTfhsppHIvQ9kqKppjaEVUQkAqfojPzNmv34GqJo4mY
+   W5266v2vyyahuhPKa0zs5u3Xgd+Ve/UAfxVCWdUIswXTmsUAHSqZMqvla
+   g==;
+X-CSE-ConnectionGUID: ITiQa9HhSuCnXC5bi4Vs5w==
+X-CSE-MsgGUID: Pc+bYGelTAaPyG2bGeVZoA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11936"; a="929469"
+X-IronPort-AV: E=Sophos;i="6.27,161,1787036400"; 
+   d="scan'208";a="929469"
+Received: from fmviesa011.fm.intel.com ([10.60.135.151])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Oct 2026 05:02:21 -0700
+X-CSE-ConnectionGUID: pThTZQvkRnyij68vVsx+Ew==
+X-CSE-MsgGUID: Hx0W6NieRSqo/qKFwsRFqQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,161,1787036400"; 
+   d="scan'208";a="3766634"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.47.46])
+  by fmviesa011.fm.intel.com with ESMTP; 16 Oct 2026 05:02:17 -0700
+Date: Fri, 16 Oct 2026 19:57:57 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: Nikolay Borisov <nik.borisov@suse.com>
+Cc: Ankit Agrawal <ankita@nvidia.com>, linux-cxl@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dave@stgolabs.net, jic23@kernel.org, dave.jiang@intel.com,
+	alison.schofield@intel.com, vishal.l.verma@intel.com,
+	jgg@nvidia.com, aneesh.kumar@kernel.org, aik@amd.com,
+	iweiny@kernel.org, ming.li@zohomail.com, icheng@nvidia.com,
+	bhelgaas@google.com, smadhavan@nvidia.com,
+	ilpo.jarvinen@linux.intel.com,
+	Smita.KoralahalliChannabasappa@amd.com,
+	andriy.shevchenko@linux.intel.com, linux-coco@lists.linux.dev
+Subject: Re: [RFC PATCH 1/4] PCI/TSM: Create MMIO descriptors via TDISP Report
+Message-ID: <atIRRUO/t/Fj4VX6@yilunxu-OptiPlex-7050>
+References: <20261005070252.84810-1-ankita@nvidia.com>
+ <20261005070252.84810-2-ankita@nvidia.com>
+ <7605d698-b08c-4fcb-b86b-3f79927fb0d5@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5] PCI: rcar-gen4: Add missing PM ops
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
- sashiko-reviews@lists.linux.dev
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
- wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org,
- robh@kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org
-References: <20261004011851.866833-1-marek.vasut+renesas@mailbox.org>
- <20261004013131.0C7D81F0089B@smtp.kernel.org>
- <179214090624.63727.1877053108500595755.b4-reply@b4>
-Content-Language: en-US
-From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <179214090624.63727.1877053108500595755.b4-reply@b4>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MBO-RS-META: sjspt4g83kpztx5uz3hy416u9cgcio6w
-X-MBO-RS-ID: 8acdd262cc24994b0e6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7605d698-b08c-4fcb-b86b-3f79927fb0d5@suse.com>
 
-On 10/16/26 10:55 AM, Manivannan Sadhasivam wrote:
-> On 2026-10-04 01:31 +0000, sashiko-bot@kernel.org wrote:
->> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
->> - [High] pcie: deadlocks due to ioremap and request_firmware in NOIRQ PM phase
->> --
->>
->> commit e6c055f1eedf6bd5c13e231da24f0c6a76a24ba2
->> Author: Marek Vasut <marek.vasut+renesas@mailbox.org>
->>
->> PCI: rcar-gen4: Add missing PM ops
->>
->> The R-Car Gen4 PCIe controller needs to gracefully suspend and resume its
->> link across system suspend/resume cycles to support power domains shutting
->> down. This patch adds suspend_noirq and resume_noirq PM operations to tear
->> down the link on suspend and restart it on resume.
->>
->>> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
->>> index 2e7a8d85c0060..fceecbd16355c 100644
->>> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
->>> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
->>
->> [ ... ]
->>
->>> @@ -1062,6 +1064,26 @@ static int rcar_gen4_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable
->>>   	return 0;
->>>   }
->>>   
->>> +static int rcar_gen4_pcie_suspend_noirq(struct device *dev)
->>> +{
->>> +	struct rcar_gen4_pcie *rcar = dev_get_drvdata(dev);
->>> +
->>> +	if (rcar->drvdata->mode != DW_PCIE_RC_TYPE)
->>> +		return 0;
->>> +
->>> +	return dw_pcie_suspend_noirq(&rcar->dw);
->>                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->>
->> [Severity: High]
->> Does this code trigger a deadlock or kernel panic during the NOIRQ PM phase?
->>
->> Setting pp->use_atu_msg to true causes dw_pcie_suspend_noirq() to eventually
->> call ioremap():
->>
->> dw_pcie_suspend_noirq()
->>    dw_pcie_pme_turn_off()
->>      ioremap()
->>
->> Since this runs during the suspend_noirq phase with local interrupts disabled
->> and the system frozen, ioremap() allocates memory with GFP_KERNEL and may
->> sleep, which is strictly prohibited in NOIRQ context.
->>
+> > +int pci_tsm_mmio_setup(struct pci_dev *pdev, struct pci_tsm_mmio *mmio)
+> > +{
+> > +	int i;
+> > +
+> > +	device_lock_assert(&pdev->dev);
+> > +	if (pdev->dev.driver)
+> > +		return -EBUSY;
+> > +
+> > +	for (i = 0; i < mmio->nr; i++) {
+> > +		struct resource *res = pci_tsm_mmio_resource(mmio, i);
+> > +		int j;
+> > +
+> > +		if (resource_size(res) == 0 || !(res->flags & IORESOURCE_MEM))
+> > +			break;
+> > +
+> > +		/* Only require the caller to set the range, init remainder */
+> > +		*res = DEFINE_RES_NAMED_DESC(res->start, resource_size(res),
+> > +					     pci_name(pdev), IORESOURCE_MEM,
+> > +					     IORES_DESC_ENCRYPTED);
+> > +
+> > +		for (j = 0; j < PCI_NUM_RESOURCES; j++)
+> > +			if (resource_contains(pci_resource_n(pdev, j), res))
+> > +				break;
+> > +
+> > +		/* Request is outside of device MMIO */
+> > +		if (j >= PCI_NUM_RESOURCES)
+> > +			break;
+> > +
+> > +		if (insert_resource(&encrypted_iomem_resource, res) != 0)
+> > +			break;
+> > +	}
+> > +
+> > +	if (i >= mmio->nr)
+> > +		return 0;
 > 
-> What? Local CPU interrupts won't be disbled in the noirq phase, only the device
-> interrupts will be. So this concern is utterly baseless.
-Do you think we could get this patch into 7.4 since this is a bugfix ?
+> Shouldn't this check be if (i == mmio->nr -1 ) i.e all descriptors have been
+> initialized, given the for loop condition i can ever be at most mmio->nr - 1
+> i.e the actual index of a descriptor?
 
-Thank you !
+The original if (i >= mmio->nr) check is correct. Valid i is at most mmio->nr -1,
+but you need an invalid i to finish the loop.
