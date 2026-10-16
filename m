@@ -1,65 +1,64 @@
-Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010061.outbound.protection.outlook.com [52.101.85.61])
+Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012038.outbound.protection.outlook.com [52.101.48.38])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A727F5172EB;
-	Fri, 16 Oct 2026 16:20:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.85.61
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44E78399890;
+	Fri, 16 Oct 2026 16:20:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.38
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792167624; cv=fail; b=obHwCgPCQx1k+sa0ed2ouvj4BhpM9/X7gn62bYZDEA8fpdOPy+5wO4O93WoajqAgM+ZP/Q9oCUbeDyTbeVYvaLXv6vkjWwq9pkDfi5YUSxiH5yGD2gIV7TWPqjidutsYOAfEitsdPHbZ/h8+I5zeU9PWmgLo3Hg7BnG/k4iGih4=
+	t=1792167625; cv=fail; b=nYN/1HKUUOjgxv2HJ3sT4Uw7aUKXzjG0WhNDerXKyixGYjQp+6CNtrADUNOE8dv6nTYp/uQKA226hcY5VY1tLK+zbfPE3SJt1SdGxtOUQ45s0NI7vbE19oALnvykVOA0gXmy6nfLyIqUFVW+al/oj5a2eVoocQA5JWLOSNrupk8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792167624; c=relaxed/simple;
-	bh=8QhyH9Jcjjt9ujwr5O6h7SZdxK5Ffn0sTE8sbDtEhTE=;
+	s=arc-20240116; t=1792167625; c=relaxed/simple;
+	bh=ZZxxEwukw1H/TNoO5JxWZ4OJvIJXABCrmL+que5JhHU=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=m69tmPnLEMeiMW1rVJgND4UcCCpT3i1o0coxTMCsRwo+mjdn3xYc1Ng8eCGTFahYx4bTD6e1XWFVtV/B/aE1pmZuhIiwODlqcA0ByaxhfU9yRGWpBv5soIPZsIx1CaiYmG36Ta7HhIuF+s950TlT8+GLRezi3MNgs5AhrsjJ+R0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=trsrvFvZ; arc=fail smtp.client-ip=52.101.85.61
+	 MIME-Version:Content-Type; b=opurD5ddjUVb4QInE0nAUA5IyMS51tYK8r3b7fabr1Y7ngkgqplsaMSmhHQN2stWAckqDrzOcMZWwSlXfbpz+9MK51/X2kXgingfCmKJ/RNRhEDk9HZ4q5wka7yjCSPqfK10tsofLkbPupWRFrRzEaqINkVjO3Y1fv6df6F300c=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=S1lkIcor; arc=fail smtp.client-ip=52.101.48.38
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="trsrvFvZ"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="S1lkIcor"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=fBpi1L21OQkd3AjyGPKafWEerjFlwDjgiN3Z0CPlm2SUZ58jK+rl3PdTxl5pHpix/X2RXWC6lsnLKrRSoaOISTDKfnMgerO7PbeNM8qO/p+9nxYPJknWt3fhaSzM9uCttYH7Q9PA+rCPKZDSkTSSOLFoEJYK3Rs0PIrvzDtOx6ooMuRHu7xtZ1CtdtEvHAX8l8Y672sYd2kRr/DNXVXK2AGipefuJdil6uJkHrxPIOWZVSUcdlXsq5IA89sszc54pKdu/fUz2FC3IaObYHv0vJbveN+FTape0h83atjBkQYArJ5ar2gnzN3EzULzqBCu3cKLF8U7E1Ny7WbIYK6rJA==
+ b=QGx0vE+cYhOYEGPP84KXjvakT8+CIFvaxTbMlC/R4TeLh2Nvfao1LyXm57ynJkyONs1uitaq8lfV+Aft+nPzP1c5IRLosqd/6SQHLvk3/imDsTL6wgHtMad2lcH3CtVg4It32zP16kjFYqjaNFl2JzBAYmnVPAtAYPmIYMrV+z36iWOvFjIWtLGDcaqGato8A4lNKbx6bG70wEjqPZLp6S5arbEOBB2XzrIEPWUZSnzOMmFvk6mZuzH40n0TuJ803qaEO5NVyX+b5/U/Qn60bDmGoVZiI+bc3AIGupi94HtOsymqVeQlZ87YOSaSyfT6S6fm5NG2kH4gvePlxAx7QQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Pqwj7rutqEAKzmmRhmHaeiTk0Wr+mOa+A8BVtvmtaG8=;
- b=OOoGppRx8jzlTRlh8xV3AvbfULNSXpDX2q71biyXzwIHRrZHerHQb3Yt/i2LfJqJowRQSLM9SAbMkPJKlFXORtKhKPEYc+jtZIBT9OAu6wGOvG2H8asVj5RF/I8K5FE2hr4UA81Q0ja0CbDKtryEQv4zKUKkCbpqpls3qjb3SgfgbnAUSgO1ZBsFHLATPKtNy5KUE9q9fPpG3Gu+sE9NVxsh0y7+CPhpJvtQChcXWyUm6CL/n/yrP2BPAzi6jy2gVd5Nouyyy/oJv0ZQj2sFQ1h4f0rjZOWs152oX5skxbXv83NJPF79EgHJsSZq5azvWarxghuDoGkIeVA2tp4Q4Q==
+ bh=jAiVWZOjp332j0IMM7eQtQj7cueC30jM+IV0r3N7Sac=;
+ b=l/UiV8OMtHWrOyUreNVXpw7Tb89ecFmaTEoLrgvI989Jizb+K1Esb2hImUNQslCJbsjX1QvF7bO5EL6i3Afv2/0VQkkzTh4ZW0WNDLv4OiZMJuCb9rEYdUFWGyrfKoxcIBIXHRUYe20PnYBePpO7TNMeRcx7cwCXK/yF6/jqu7RJc3HsSqXLBNu84oVbxTk+5Q+QFhahYFrkvZY3OeblIi2kYRemA1WKmjpLgBZll6oiT5/Bj3GeJEEq1vLsEDPS2iIEWFGh6HW4itJlxkBmBTKfwrlFWKkV5JKFiisOZ7vBVdvbyGQvQOHFXQU3kBI7P/y5z7kg+IOzMZLfNgSrqw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=shazbot.org smtp.mailfrom=nvidia.com;
+ 216.228.117.160) smtp.rcpttodomain=shazbot.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Pqwj7rutqEAKzmmRhmHaeiTk0Wr+mOa+A8BVtvmtaG8=;
- b=trsrvFvZBQrv0QAEIp0qD9QUT3rhZtEpV29U3TJTyQlRz1N78RCLthabUQnMiWL/K7xSLx62BADHxDw4G9NJge7F8Ka1DmlsrQ7zY5dlWHUy5usqljGtiexM0jAPD6Zo7NkkKLIPiDPEHcoRfBf02N4ZMwvKdajkA6QeUyQcUhoVJLZmKQhYuUNgx1y1CnSk/fn6pDAEWG3XOLKzIIjj6XFvLAMljdUU6XLUGMCxnPAWHpp8sHsZYN22yO09ATgLL53Uyhk+47l8NUy6kwdHDou2C8hETmrAKlkULnc3c/QK1wloOc8Qu2+UBQFCuGoMF1cXg406lTjQARxQ14jObw==
-Received: from CH5P222CA0006.NAMP222.PROD.OUTLOOK.COM (2603:10b6:610:1ee::27)
- by AT6PR12MB026081.namprd12.prod.outlook.com (2603:10b6:170:113::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.17; Fri, 16 Oct
- 2026 16:20:07 +0000
-Received: from BN7PEPF000000A7.namprd05.prod.outlook.com
- (2603:10b6:610:1ee:cafe::56) by CH5P222CA0006.outlook.office365.com
- (2603:10b6:610:1ee::27) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.472.21 via Frontend Transport; Fri,
- 16 Oct 2026 16:20:07 +0000
+ bh=jAiVWZOjp332j0IMM7eQtQj7cueC30jM+IV0r3N7Sac=;
+ b=S1lkIcorQXdtAtJbUt4kK1F4HVhrxqPVXUmosAs/Bbwyal34yx7l/f2+7+ORd6utEZb5v0HrBGF2hYwb7BPIFMI7YR19zSA8jHh++xaOt4X3JKsEW7kFzaqXu9UUKAXojpC/yugT9QuvsZ5mqVewGS15T5h9hWYq+R7d6RFAqGx9yTs7g7FyKwmP9hHHclL7O1Ct1k1WwguSqNp1kUyDYP3K/tw7MhUFu9bOG1wBFLFwuoBmUx2LRC3RL6cz7FDx6ZOSoMSJLkKFHKHRfnwISEEIjw1u/bvMwLyHmlWN9Fbl6nTBvqcGum6719yzk0E3SQk2IRh/uP7wPs2SmoIU3w==
+Received: from DM6PR01CA0006.prod.exchangelabs.com (2603:10b6:5:296::11) by
+ DSVPR12MB066941.namprd12.prod.outlook.com (2603:10b6:8:4fe::5) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.522.17; Fri, 16 Oct 2026 16:20:17 +0000
+Received: from CH01EPF000BE94B.namprd02.prod.outlook.com
+ (2603:10b6:5:296:cafe::2f) by DM6PR01CA0006.outlook.office365.com
+ (2603:10b6:5:296::11) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.522.17 via Frontend Transport; Fri,
+ 16 Oct 2026 16:20:17 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- BN7PEPF000000A7.mail.protection.outlook.com (10.167.245.231) with Microsoft
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ CH01EPF000BE94B.mail.protection.outlook.com (10.167.244.200) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.522.6 via Frontend Transport; Fri, 16 Oct 2026 16:20:07 +0000
+ 15.21.522.6 via Frontend Transport; Fri, 16 Oct 2026 16:20:16 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Fri, 16 Oct
- 2026 09:19:40 -0700
+ 2026 09:19:49 -0700
 Received: from nvidia-4028GR-scsim.nvidia.com (10.126.230.37) by
  rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Fri, 16 Oct 2026 09:19:31 -0700
+ 15.2.2562.49; Fri, 16 Oct 2026 09:19:40 -0700
 From: <mhonap@nvidia.com>
 To: <alex@shazbot.org>, <jgg@ziepe.ca>, <ankita@nvidia.com>,
 	<jic23@kernel.org>, <dave.jiang@intel.com>, <alejandro.lucero-palau@amd.com>,
@@ -74,9 +73,9 @@ CC: <cjia@nvidia.com>, <kjaju@nvidia.com>, <vsethi@nvidia.com>,
 	<linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
 	<linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-kselftest@vger.kernel.org>, <linux-hardening@vger.kernel.org>
-Subject: [PATCH v6 04/31] PCI/CXL: Let the driver that owns the HDM range run CXL Reset
-Date: Fri, 16 Oct 2026 21:48:11 +0530
-Message-ID: <20261016161839.2765592-5-mhonap@nvidia.com>
+Subject: [PATCH v6 05/31] PCI: Refuse bus and slot reset below a CXL port with SBR masked
+Date: Fri, 16 Oct 2026 21:48:12 +0530
+Message-ID: <20261016161839.2765592-6-mhonap@nvidia.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261016161839.2765592-1-mhonap@nvidia.com>
 References: <20261016161839.2765592-1-mhonap@nvidia.com>
@@ -92,465 +91,149 @@ X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN7PEPF000000A7:EE_|AT6PR12MB026081:EE_
-X-MS-Office365-Filtering-Correlation-Id: ea77363f-65c6-4464-b284-08df2ba157cb
+X-MS-TrafficTypeDiagnostic: CH01EPF000BE94B:EE_|DSVPR12MB066941:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0951db2d-ec6c-4706-e388-08df2ba15d9d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|82310400026|376014|7416014|36860700016|1800799024|6133799003|22082099003|18002099003|10067099003|921020|261009223027099003|11063799006|5023799004|56012099006;
+	BCL:0;ARA:13230040|36860700016|23010399003|1800799024|376014|7416014|82310400026|921020|56012099006|11063799006|261009223027099003|18002099003|10067099003|22082099003|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	oV6yBP0RZXHPDG4k3q6QXKEbtXX0lv7Lv8m6cR6ph9GNtUEzTsukqXftxbqg65dHuwIdCt0aGP+pE/EwvVUIOLKTw2+iSnqajeIO8IuFZQm6HCCcmAm3TAFL9nQWTRp8aFdOdbIiyjEEASZC+blGvqcXpSju61Mwm0fy0tz+ab2OlSNOVzmQ1WgD0AVLcj/iHkrPAn4DLwDGxuirFKg69SdQeHSe1D5b+jmOZ3CTfouD5ZHgheVfcRi/h9kg1nCUQrWjSD56ruExx89d6KKaQTqi4yfNI54/uOqyjpnfBkIHRRAHPgcYoKkeir/7pvk0hIEptVRb6j/eDO2FlGOipkmWL9HPIalTbhDF9VYucAp/Q1PDl7xz3i3h9fUo2HDj33ach/gunNi2UoXiq4B3MkCCVqwo4guSU8G2sereHj/3yLyHaUpnTqy7FsJLZjhtmdDLYvWsGguh4jbmySKvlkPF6yxlegZ8SagXxO0N0P3RsyUXYzgOT5TMzrtjDlZVb8FuhS/XLazTdb7BV4zdWcVLv02qu5D2PK3qMYW5XtfVunuD8WlWz5EyiYbP5GJFGs9tZN9hlhUZ73O6ear77ThzmMKKwMxWXwCepuandPeAvo4lKfORMHCC5LY7pivl4gjEazpXk/M/VeiJw2FToJjaCnYbBgKiX8L7AKvEpuPsm0qgthodSyk8EeteALoRoO+q4aHcRRQkOTPEOdIKkebEPI6PxVFTCtWEzapt3CslfSpl0JtJ/CAw3saPGlcQ
+	+qS/DZfektzJdYVY0vPD/wb+FisIOFHY+0ng/jW27BmgFXZLCX/z5HAy1lka49kAHjUQPHFvs6TA84GhbM4+1/y3EQEJTK+rf++bi4WoYNyV3yh/3FPAEsyyUN1ld80Cmc1Bvmsc//bfctnClqHoOsbZwYtmYTRTk5YPP4U/GsJwUbSjyJeapZVgGlUclMQPEuVL7Tej42stct4Bm3dlJrGvbgkFdQk6bhZ1daa3wQQHVE549YwCzOIJEDnrLQ7lkCJegiLqgLrPIJ2HBzkNFT9aPgY/Ql0FXlTbHg7+e1JLHcazD3b07N7eUYGE1NwYxD8wZc6a/1iuCnXw18EPtj0/lrihunGSLkaMvlLIOPgPxCKSvTvUfnp9dtdsl7aPgML/1W1ypX356J1P/Zf+T/UUlstInqeeNOK5l4232lPF5zEoViSQEKBWYTp/g/kC9DJW/D5gsuD789yffGNmfLIgvuIhf3b5H9vENAn0EMLMS90+ygkeQQeAOqOv6h4Sbm3bCtwtcrjxu1WTJm5P6h9FZM2tgS+8z6uxmPLxjf0xxHO+1rffvdScW0Dv/yq/gywRuPiyBmKq2Bk4+JoPG/ETClib94n+qRpOKgubrvo7SEurFMvJ2c8VIQW7QpGfuNkTKSQWy4xLAPBNkvC+/7aKNyQ2iKAyND41JJ0AAyytGL10la2+hc+EyxkRRkNCv04DOCDdWkUGjGdoAWUBB7lIiK5XskhJHzBsSbZKaILyxDwh8r+U1EJBk/59Uj45
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(82310400026)(376014)(7416014)(36860700016)(1800799024)(6133799003)(22082099003)(18002099003)(10067099003)(921020)(261009223027099003)(11063799006)(5023799004)(56012099006);DIR:OUT;SFP:1101;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(23010399003)(1800799024)(376014)(7416014)(82310400026)(921020)(56012099006)(11063799006)(261009223027099003)(18002099003)(10067099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	noSjxSJt/MoL2BWlnykxtNFf6qRX9b+HtBNFIjDxSHWE7ATJ5bJX6QrhxXS9+uySsbaoCc4Fw4roAHQskGNn8H7nkSHnXNfDw5X3yoYAP0kvXmfZFRIoy/hkktYzs3BmAlWXHFFW5ewALEil+8q6U37wrh2fDOUTlOLYTnmEBbeUty16PCvrkBIh4e65qC0bTc+LcCKJEAgn1eTWQOG2jfvVKbCHFfto/QxW79u0jIJXiLV9oiAZwCRpcabpn0UPGak7KZ2rFUckUR4m2tr0CKXI3mZAJjh/sabfa3hy63s1gX+llk/apPysfLRiG7MfSB5b/AM1reoOBLv3m2YmgnRYWISqMup7/tyflptnY5ncJqncal80sp8+Bfqi3bP2phXzGzkEZjmI+tMkUIQFUtfWr9k04MwaxvhpRfJuitrLB4rtue5eel8E48ubLSd6
+	KwSLFKf1B0j2LN8UARwooHw9fCOIcZr1wgIZg218QZ7O8Tp+lkliumkZUcDL817PLVOfJj2PcTUrx6Qfu56iB/ALJVB4VVyGT6GE/0j5nuKWljgOWwVoL/FZGnih7J9ht+qpohRamei92awywgOFvsOpBFqhOnnMiMddPbek4ekmVNru10Y1+vKp9KNN1ZB2/2swEvcE2gM1Zq8zYMaAuc6v4LeKm3XsUUQUsjgFncWokbHS0uCiY0qJ95eGk+0/z8OtTDNl99fRcsfXBjwkdEqxnJfRP5vYc5vTbOXF/l7I5nlPjgug5XXlJB9YhUNm8v63bESpj2fFbvUIM32+GNolwc7oZPk1HdbYxQz2EJ6DCq5Vylii2yB7f5koF6BqDVkflzlrHpfhIdL3UuLPvgO7YjmSSFakh2MKsLsQQNUMKLlKd9P24HvjUq003B5H
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2026 16:20:07.0682
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2026 16:20:16.8749
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: ea77363f-65c6-4464-b284-08df2ba157cb
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0951db2d-ec6c-4706-e388-08df2ba15d9d
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BN7PEPF000000A7.namprd05.prod.outlook.com
+	CH01EPF000BE94B.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AT6PR12MB026081
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DSVPR12MB066941
 
 From: Manish Honap <mhonap@nvidia.com>
 
-vfio-cxl passes a CXL Type-2 device to a guest and must run CXL Reset at
-the vfio reset points. The cxl_reset PCI reset method does not fit that
-caller:
+A CXL port ignores the Secondary Bus Reset bit in Bridge Control unless
+Unmask SBR is set in its CXL Port DVSEC (CXL r4.0 sec 8.1.5.2).
+pci_reset_bus_function() already returns -ENOTTY in that case.
+pci_reset_bus(), pci_probe_reset_bus() and the slot variants do not, so
+they report success for a reset that reached no device below the port.
 
-- It requests every HPA range the device decodes. vfio-cxl holds that
-  range with request_mem_region_exclusive() while it exposes the memory,
-  so the request fails with -EBUSY.
-- When the reset cannot run, the method returns -ENOTTY and the PCI core
-  moves on to the next method. That is FLR, which leaves device memory
-  intact for the next user.
-- The snapshot and restore helpers that vfio-cxl needs after a bus reset
-  and on return from low power are not exported.
+vfio-pci uses these for VFIO_DEVICE_GET_PCI_HOT_RESET_INFO and
+VFIO_DEVICE_PCI_HOT_RESET. A user is then told a hot reset happened while
+a CXL device below a masked port kept its state.
 
-Let cxl_hdm_quiesce_prepare() take the resource the caller already holds
-and skip the request for ranges inside it. pci_cxl_reset_owned() accepts
-only a resource marked busy and exclusive, as
-request_mem_region_exclusive() leaves it. The CPU caches are still
-written back and invalidated for every range before and after the reset,
-as the reset method does.
+Return -ENOTTY from pci_probe_reset_slot() and pci_probe_reset_bus()
+when the bridge above the bus is a CXL port with SBR masked.
+pci_reset_bus() and pci_try_reset_bridge() probe before they reset, so
+they refuse too.
 
-Add:
-- pci_cxl_reset_owned(): runs the reset method's sequence for a caller that
-  holds the device lock and returns any failure to that caller
+Users see this in three places:
+- the vfio hot reset ioctls fail (vfio reports -ENODEV when neither probe
+  succeeds),
+- the reset_subordinate sysfs attribute returns -ENOTTY,
+- vfio-pci groups a device in a hotplug slot below such a port by bus
+  instead of by slot.
 
-- pci_cxl_reset_capable(): checks the cached HDM state and the CPU cache
-  invalidation that the reset-method probe skips.
+Every other pci_reset_bus() caller, including the vfio bus reset at
+close, is refused the same way. With one device per CXL port both
+groupings have the same members.
 
-- pci_cxl_hdm_snapshot(): copies the HDM state cached at enumeration
-  without requiring the device lock. A driver needs this copy in probe,
-  which the PCI core may run in a worker on the device's NUMA node, where
-  device_lock_assert() would warn although the binding task holds the
-  lock. pci_cxl_reset_prepare() becomes that copy plus the lock assertion.
-
-Export:
-- pci_cxl_reset_owned()
-- pci_cxl_reset_capable()
-- pci_cxl_hdm_snapshot()
-- cxl_restore_state_after_pci_reset()
-
-to the vfio-cxl module only, and declare them in include/cxl/pci.h.
-
-CXL Reset always clears memory, so there is no caller Memory Clear choice.
+Leave pci_bus_error_reset() as it is. AER and host bridge error recovery
+call it without saving or restoring state and only map its result to
+recovered or disconnect. Failing it below a masked port would turn
+recovery of every CXL device there, memory expanders included, into a
+disconnect; that is a CXL error handling decision, not part of this fix.
 
 Assisted-by: LLM
 Signed-off-by: Manish Honap <mhonap@nvidia.com>
 ---
- drivers/cxl/core/hdm_state.c |  22 ++++--
- drivers/pci/cxl.c            | 136 ++++++++++++++++++++++++++++-------
- drivers/pci/pci.h            |  18 +----
- include/cxl/hdm.h            |   3 +-
- include/cxl/pci.h            |  39 ++++++++++
- 5 files changed, 171 insertions(+), 47 deletions(-)
+ drivers/pci/pci.c | 31 ++++++++++++++++++++++++++++---
+ 1 file changed, 28 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/cxl/core/hdm_state.c b/drivers/cxl/core/hdm_state.c
-index 95daeda0ef80..9452047e3b97 100644
---- a/drivers/cxl/core/hdm_state.c
-+++ b/drivers/cxl/core/hdm_state.c
-@@ -267,7 +267,8 @@ static int cxl_hdm_ranges_collect(struct cxl_hdm_quiesce *q, struct device *dev,
- 	return 0;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index cecf8e681e69..87fe9de81acf 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4984,6 +4984,20 @@ static bool cxl_sbr_masked(struct pci_dev *dev)
+ 	return true;
  }
  
--static int cxl_hdm_ranges_request(struct cxl_hdm_quiesce *q)
-+static int cxl_hdm_ranges_request(struct cxl_hdm_quiesce *q,
-+				  const struct resource *owned)
- {
- 	struct cxl_hdm_range *range;
- 
-@@ -275,6 +276,12 @@ static int cxl_hdm_ranges_request(struct cxl_hdm_quiesce *q)
- 
- 	list_for_each_entry(range, &q->ranges, list) {
- 		const struct range *hpa_range = &range->hpa_range;
-+		struct resource res = DEFINE_RES_MEM(hpa_range->start,
-+						     range->len);
++/*
++ * A secondary bus reset below a CXL port with SBR masked does not reach the
++ * devices on the bus, so a bus or slot reset there would report success for
++ * a reset that did not happen. The probes and the save/restore resets that
++ * pci_reset_bus() and reset_subordinate use refuse it; error recovery
++ * (pci_bus_error_reset()) keeps its existing behavior.
++ */
++static bool pci_bus_cxl_sbr_masked(struct pci_bus *bus)
++{
++	struct pci_dev *bridge = bus->self;
 +
-+		/* The caller already holds this range exclusively. */
-+		if (owned && resource_contains(owned, &res))
-+			continue;
- 
- 		range->res = request_mem_region(hpa_range->start, range->len,
- 						"cxl_reset");
-@@ -316,15 +323,20 @@ static int cxl_hdm_ranges_invalidate(struct cxl_hdm_quiesce *q)
-  * @dev: device for error messages
-  * @q: quiesce state to initialize
-  * @snapshot: HDM state from cxl_hdm_cache_snapshot()
-+ * @owned: resource the caller holds exclusively over the ranges, or NULL
-  *
-  * Reserve every enabled system-physical range in @snapshot exclusively, then
-- * write back and invalidate CPU caches for them. Call
-- * cxl_hdm_quiesce_destroy() afterwards whether or not this succeeds.
-+ * write back and invalidate CPU caches for them. A range inside @owned is
-+ * not requested again; the caller's reservation already excludes other
-+ * users.
-+ *
-+ * Call cxl_hdm_quiesce_destroy() afterwards whether or not this succeeds.
-  *
-  * Return: 0 on success, or a negative errno.
++	return bridge && pcie_is_cxl(bridge) && cxl_sbr_masked(bridge);
++}
++
+ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
+ {
+ 	struct pci_dev *bridge = pci_upstream_bridge(dev);
+@@ -5615,6 +5629,9 @@ static int pci_slot_reset(struct pci_slot *slot, bool probe)
   */
- int cxl_hdm_quiesce_prepare(struct device *dev, struct cxl_hdm_quiesce *q,
--			    const struct cxl_hdm_info *snapshot)
-+			    const struct cxl_hdm_info *snapshot,
-+			    const struct resource *owned)
+ int pci_probe_reset_slot(struct pci_slot *slot)
+ {
++	if (slot && pci_bus_cxl_sbr_masked(slot->bus))
++		return -ENOTTY;
++
+ 	return pci_slot_reset(slot, PCI_RESET_PROBE);
+ }
+ EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
+@@ -5638,7 +5655,7 @@ static int pci_try_reset_slot(struct pci_slot *slot)
  {
  	int rc;
  
-@@ -340,7 +352,7 @@ int cxl_hdm_quiesce_prepare(struct device *dev, struct cxl_hdm_quiesce *q,
+-	rc = pci_slot_reset(slot, PCI_RESET_PROBE);
++	rc = pci_probe_reset_slot(slot);
  	if (rc)
  		return rc;
  
--	rc = cxl_hdm_ranges_request(q);
-+	rc = cxl_hdm_ranges_request(q, owned);
+@@ -5685,7 +5702,7 @@ static int pci_try_reset_bus(struct pci_bus *bus)
+ {
+ 	int rc;
+ 
+-	rc = pci_bus_reset(bus, PCI_RESET_PROBE);
++	rc = pci_probe_reset_bus(bus);
  	if (rc)
  		return rc;
  
-diff --git a/drivers/pci/cxl.c b/drivers/pci/cxl.c
-index ed0b6f619c70..b4d467506c54 100644
---- a/drivers/pci/cxl.c
-+++ b/drivers/pci/cxl.c
-@@ -372,9 +372,32 @@ static int cxl_reset_save_restored_state(struct pci_dev *pdev, u16 command)
- 	return rc;
- }
+@@ -5726,8 +5743,13 @@ static int pci_reset_bridge(struct pci_dev *bridge, bool restore)
+ 	if (list_empty(&bus->slots))
+ 		goto bus_reset;
  
-+/**
-+ * pci_cxl_hdm_snapshot() - copy the HDM state cached at enumeration
-+ * @pdev: CXL device
-+ *
-+ * The cache is read under cxl_rwsem.dpa, so the caller needs no device
-+ * lock. A driver can call this from probe, which the PCI core may run in a
-+ * worker on the device's NUMA node while the binding task holds the lock.
-+ *
-+ * Return: a copy to free with kfree(); NULL when @pdev has no cached HDM
-+ * state; or an ERR_PTR() on failure.
-+ */
-+struct cxl_hdm_info *pci_cxl_hdm_snapshot(struct pci_dev *pdev)
-+{
-+	struct cxl_hdm_info *snapshot;
-+
-+	snapshot = cxl_hdm_cache_snapshot(&pdev->hdm);
-+	if (IS_ERR(snapshot) && PTR_ERR(snapshot) == -ENXIO)
-+		return NULL;
-+
-+	return snapshot;
-+}
-+EXPORT_SYMBOL_FOR_MODULES(pci_cxl_hdm_snapshot, "vfio-cxl");
-+
- /**
-  * pci_cxl_reset_prepare() - allocate HDM state storage ahead of a bus reset
-- * @pdev: device about to be reset
-+ * @pdev: device about to be reset, with its device lock held
-  *
-  * Copy the cached HDM state before the reset, so that restoring cannot fail
-  * for lack of memory. The decoder settings are refreshed when the state is
-@@ -386,14 +409,8 @@ static int cxl_reset_save_restored_state(struct pci_dev *pdev, u16 command)
++	/*
++	 * Probe without the CXL SBR mask check: error recovery keeps its
++	 * reset path below a masked CXL port, and pci_try_reset_slot() and
++	 * pci_try_reset_bus() refuse the restore path there.
++	 */
+ 	list_for_each_entry(slot, &bus->slots, list)
+-		if (pci_probe_reset_slot(slot))
++		if (pci_slot_reset(slot, PCI_RESET_PROBE))
+ 			goto bus_reset;
+ 
+ 	list_for_each_entry(slot, &bus->slots, list) {
+@@ -5773,6 +5795,9 @@ int pci_try_reset_bridge(struct pci_dev *bridge)
   */
- struct cxl_hdm_info *pci_cxl_reset_prepare(struct pci_dev *pdev)
+ int pci_probe_reset_bus(struct pci_bus *bus)
  {
--	struct cxl_hdm_info *snapshot;
--
- 	device_lock_assert(&pdev->dev);
--	snapshot = cxl_hdm_cache_snapshot(&pdev->hdm);
--	if (IS_ERR(snapshot) && PTR_ERR(snapshot) == -ENXIO)
--		return NULL;
--
--	return snapshot;
-+	return pci_cxl_hdm_snapshot(pdev);
++	if (pci_bus_cxl_sbr_masked(bus))
++		return -ENOTTY;
++
+ 	return pci_bus_reset(bus, PCI_RESET_PROBE);
  }
- 
- /**
-@@ -433,6 +450,7 @@ int cxl_restore_state_after_pci_reset(struct pci_dev *pdev,
- 	cxl_region_quiesce_unlock();
- 	return rc;
- }
-+EXPORT_SYMBOL_FOR_MODULES(cxl_restore_state_after_pci_reset, "vfio-cxl");
- 
- /*
-  * CXL r4.0 sec 9.7.2 defines the reset completion timeout encodings.
-@@ -642,7 +660,8 @@ static int __cxl_reset_execute(struct pci_dev *pdev, int dvsec, u16 cap,
- 	return rc;
- }
- 
--static int cxl_reset_quiesced(struct pci_dev *pdev, int dvsec, u16 cap)
-+static int cxl_reset_quiesced(struct pci_dev *pdev, int dvsec, u16 cap,
-+			      const struct resource *owned)
- 	__must_hold(cxl_region_quiesce)
- {
- 	struct cxl_hdm_info *snapshot __free(kfree) = NULL;
-@@ -663,7 +682,7 @@ static int cxl_reset_quiesced(struct pci_dev *pdev, int dvsec, u16 cap)
- 		return PTR_ERR(snapshot);
- 	}
- 
--	rc = cxl_hdm_quiesce_prepare(&pdev->dev, &q, snapshot);
-+	rc = cxl_hdm_quiesce_prepare(&pdev->dev, &q, snapshot, owned);
- 	if (rc) {
- 		cxl_hdm_quiesce_destroy(&q);
- 		return rc;
-@@ -686,32 +705,40 @@ static int cxl_reset_quiesced(struct pci_dev *pdev, int dvsec, u16 cap)
- 	return cxl_reset_save_restored_state(pdev, command);
- }
- 
--static int cxl_reset_execute(struct pci_dev *pdev, int dvsec, u16 cap)
-+static int cxl_reset_execute(struct pci_dev *pdev, int dvsec, u16 cap,
-+			     const struct resource *owned)
- {
- 	int rc;
- 
-+	/* Raw reset callers may not have saved the PCI state needed for restore. */
-+	if (!pdev->state_saved) {
-+		pci_err(pdev, "CXL reset requires saved PCI state\n");
-+		return -EINVAL;
-+	}
-+
- 	cxl_region_quiesce_lock();
--	rc = cxl_reset_quiesced(pdev, dvsec, cap);
-+	rc = cxl_reset_quiesced(pdev, dvsec, cap, owned);
- 	cxl_region_quiesce_unlock();
- 
- 	return rc;
- }
- 
--int cxl_reset_function(struct pci_dev *pdev, bool probe)
-+static int cxl_reset_check(struct pci_dev *pdev, bool probe, u16 *dvsec,
-+			   u16 *cap)
- {
--	u16 dvsec, cap, ctrl;
-+	u16 ctrl;
- 	int rc;
- 
--	rc = cxl_pci_device_dvsec(pdev, &dvsec, &cap);
-+	rc = cxl_pci_device_dvsec(pdev, dvsec, cap);
- 	if (rc)
- 		return probe ? -ENOTTY : rc;
--	if (!(cap & PCI_DVSEC_CXL_CACHE_CAPABLE) ||
--	    !(cap & PCI_DVSEC_CXL_MEM_CAPABLE) ||
--	    !(cap & PCI_DVSEC_CXL_RST_CAPABLE) ||
--	    !(cap & PCI_DVSEC_CXL_RST_MEM_CLR_CAPABLE))
-+	if (!(*cap & PCI_DVSEC_CXL_CACHE_CAPABLE) ||
-+	    !(*cap & PCI_DVSEC_CXL_MEM_CAPABLE) ||
-+	    !(*cap & PCI_DVSEC_CXL_RST_CAPABLE) ||
-+	    !(*cap & PCI_DVSEC_CXL_RST_MEM_CLR_CAPABLE))
- 		return -ENOTTY;
- 
--	rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL, &ctrl);
-+	rc = pci_read_config_word(pdev, *dvsec + PCI_DVSEC_CXL_CTRL, &ctrl);
- 	if (rc)
- 		return probe ? -ENOTTY : pcibios_err_to_errno(rc);
- 	if (PCI_POSSIBLE_ERROR(ctrl))
-@@ -737,11 +764,70 @@ int cxl_reset_function(struct pci_dev *pdev, bool probe)
- 	if (!cpu_cache_has_invalidate_memregion())
- 		return -ENOTTY;
- 
--	/* Raw reset callers may not have saved the PCI state needed for restore. */
--	if (!pdev->state_saved) {
--		pci_err(pdev, "CXL reset requires saved PCI state\n");
-+	return 0;
-+}
-+
-+int cxl_reset_function(struct pci_dev *pdev, bool probe)
-+{
-+	u16 dvsec, cap;
-+	int rc;
-+
-+	rc = cxl_reset_check(pdev, probe, &dvsec, &cap);
-+	if (rc || probe)
-+		return rc;
-+
-+	return cxl_reset_execute(pdev, dvsec, cap, NULL);
-+}
-+
-+/**
-+ * pci_cxl_reset_capable() - check whether CXL Reset can run on a device now
-+ * @pdev: CXL device
-+ *
-+ * Unlike the reset-method probe, this also checks the cached HDM state and
-+ * the CPU cache invalidation that the reset needs.
-+ *
-+ * Return: true when pci_cxl_reset_owned() can attempt the reset.
-+ */
-+bool pci_cxl_reset_capable(struct pci_dev *pdev)
-+{
-+	u16 dvsec, cap;
-+
-+	return !cxl_reset_check(pdev, false, &dvsec, &cap);
-+}
-+EXPORT_SYMBOL_FOR_MODULES(pci_cxl_reset_capable, "vfio-cxl");
-+
-+/**
-+ * pci_cxl_reset_owned() - CXL Reset for the driver that owns the HDM range
-+ * @pdev: CXL device, with its device lock held and PCI state saved
-+ * @owned: resource the caller reserved over the device's HPA range with
-+ *	   request_mem_region_exclusive(), or NULL
-+ *
-+ * Run the same sequence as the cxl_reset method. Ranges inside @owned are not
-+ * requested again, so a driver that keeps the HPA range reserved while it
-+ * exposes the memory can reset the device. The CPU caches are still
-+ * invalidated for every range before and after the reset.
-+ *
-+ * Return: 0 on success, or a negative errno. Unlike the reset method, a
-+ * device that cannot be reset returns an error to the caller instead of
-+ * falling through to another reset method. -EINVAL if @owned is not a busy,
-+ * exclusive reservation.
-+ */
-+int pci_cxl_reset_owned(struct pci_dev *pdev, const struct resource *owned)
-+{
-+	const unsigned long held = IORESOURCE_BUSY | IORESOURCE_EXCLUSIVE;
-+	u16 dvsec, cap;
-+	int rc;
-+
-+	device_lock_assert(&pdev->dev);
-+
-+	/* Only a busy, exclusive reservation keeps other users off the range. */
-+	if (owned && WARN_ON_ONCE((owned->flags & held) != held))
- 		return -EINVAL;
--	}
- 
--	return cxl_reset_execute(pdev, dvsec, cap);
-+	rc = cxl_reset_check(pdev, false, &dvsec, &cap);
-+	if (rc)
-+		return rc;
-+
-+	return cxl_reset_execute(pdev, dvsec, cap, owned);
- }
-+EXPORT_SYMBOL_FOR_MODULES(pci_cxl_reset_owned, "vfio-cxl");
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 476e8eefafb2..b1fa4ec7ae75 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -730,14 +730,12 @@ static inline void pci_doe_destroy(struct pci_dev *pdev) { }
- static inline void pci_doe_disconnected(struct pci_dev *pdev) { }
- #endif
- 
--struct cxl_hdm_info;
-+#include <cxl/pci.h>
-+
- #ifdef CONFIG_CXL_RESET
- void pci_cxl_hdm_cache_init(struct pci_dev *pdev);
- void pci_cxl_hdm_cache_release(struct pci_dev *pdev);
- int cxl_reset_function(struct pci_dev *pdev, bool probe);
--struct cxl_hdm_info *pci_cxl_reset_prepare(struct pci_dev *pdev);
--int cxl_restore_state_after_pci_reset(struct pci_dev *pdev,
--				      struct cxl_hdm_info *snapshot);
- #else
- static inline void pci_cxl_hdm_cache_init(struct pci_dev *pdev) { }
- static inline void pci_cxl_hdm_cache_release(struct pci_dev *pdev) { }
-@@ -745,18 +743,6 @@ static inline int cxl_reset_function(struct pci_dev *pdev, bool probe)
- {
- 	return -ENOTTY;
- }
--
--static inline struct cxl_hdm_info *pci_cxl_reset_prepare(struct pci_dev *pdev)
--{
--	return NULL;
--}
--
--static inline int
--cxl_restore_state_after_pci_reset(struct pci_dev *pdev,
--				  struct cxl_hdm_info *snapshot)
--{
--	return 0;
--}
- #endif
- 
- #ifdef CONFIG_PCI_NPEM
-diff --git a/include/cxl/hdm.h b/include/cxl/hdm.h
-index 02cad2d74329..fa3b5845a33c 100644
---- a/include/cxl/hdm.h
-+++ b/include/cxl/hdm.h
-@@ -96,7 +96,8 @@ struct cxl_hdm_quiesce {
- void cxl_region_quiesce_lock(void);
- void cxl_region_quiesce_unlock(void);
- int cxl_hdm_quiesce_prepare(struct device *dev, struct cxl_hdm_quiesce *q,
--			    const struct cxl_hdm_info *snapshot)
-+			    const struct cxl_hdm_info *snapshot,
-+			    const struct resource *owned)
- 	__must_hold(cxl_region_quiesce);
- int cxl_hdm_quiesce_flush(struct cxl_hdm_quiesce *q)
- 	__must_hold(cxl_region_quiesce);
-diff --git a/include/cxl/pci.h b/include/cxl/pci.h
-index 0b74819fea6d..64efecb44c1f 100644
---- a/include/cxl/pci.h
-+++ b/include/cxl/pci.h
-@@ -4,6 +4,7 @@
- #ifndef __CXL_CXL_PCI_H__
- #define __CXL_CXL_PCI_H__
- 
-+#include <linux/errno.h>
- #include <linux/types.h>
- 
- /* Register Block Identifier (RBI) */
-@@ -27,6 +28,44 @@ int cxl_reg_map_set_owned_resource(struct cxl_register_map *map,
- int cxl_find_regblock(struct pci_dev *pdev, enum cxl_regloc_type type,
- 		      struct cxl_register_map *map);
- int cxl_setup_regs(struct cxl_register_map *map);
-+
-+struct cxl_hdm_info;
-+#ifdef CONFIG_CXL_RESET
-+struct cxl_hdm_info *pci_cxl_hdm_snapshot(struct pci_dev *pdev);
-+struct cxl_hdm_info *pci_cxl_reset_prepare(struct pci_dev *pdev);
-+int cxl_restore_state_after_pci_reset(struct pci_dev *pdev,
-+				      struct cxl_hdm_info *snapshot);
-+bool pci_cxl_reset_capable(struct pci_dev *pdev);
-+int pci_cxl_reset_owned(struct pci_dev *pdev, const struct resource *owned);
-+#else
-+static inline struct cxl_hdm_info *pci_cxl_hdm_snapshot(struct pci_dev *pdev)
-+{
-+	return NULL;
-+}
-+
-+static inline struct cxl_hdm_info *pci_cxl_reset_prepare(struct pci_dev *pdev)
-+{
-+	return NULL;
-+}
-+
-+static inline int
-+cxl_restore_state_after_pci_reset(struct pci_dev *pdev,
-+				  struct cxl_hdm_info *snapshot)
-+{
-+	return 0;
-+}
-+
-+static inline bool pci_cxl_reset_capable(struct pci_dev *pdev)
-+{
-+	return false;
-+}
-+
-+static inline int pci_cxl_reset_owned(struct pci_dev *pdev,
-+				      const struct resource *owned)
-+{
-+	return -ENOTTY;
-+}
-+#endif
- /*
-  * CXL r4.0 sec 8.1.3.1: a CXL.mem capable device reports one or two HDM
-  * ranges. 00b is illegal when Mem_Capable is set and 11b is reserved.
+ EXPORT_SYMBOL_GPL(pci_probe_reset_bus);
 -- 
 2.53.0
 
