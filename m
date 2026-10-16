@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B067A377EAC;
-	Fri, 16 Oct 2026 08:15:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AF9B3B840B;
+	Fri, 16 Oct 2026 08:15:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792138507; cv=none; b=qd6dmiASNAoYVGsk9GRKyOwf7IZY0ymY3TZtw6tK2OWZBRouY8VDJSeB2fo3Mwy+GEhuE12ARYdw2aMcvIhJxc00e4JK5P/DV9yvCkUJcHqURBLcJ4jY4EcKqeIJUTG78XqPto21RfQEUYCJwZUD/bS+LvGkwWLC3/xhCTw+01k=
+	t=1792138508; cv=none; b=eFjErlVSbSbxBedb5Oof8rNY2zc9sHxYz/vrqyF0hHAEGRzkFimYzwlpToz4gvLn/0LIxbQs7hwU8xzHOYesi8HQitezVxDbsDoC5MpqfkucnihSrhxVsR12RROEGSF9vOfjxLdLObuCrj7JHWkvH0gfkgrWKuaNnkYrYLLB9u0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792138507; c=relaxed/simple;
-	bh=dHL2K4hZcbv3gpJ0meEra9CDkE5P8NpYUDndTG6l2s8=;
+	s=arc-20240116; t=1792138508; c=relaxed/simple;
+	bh=yE3URZ4LSMCvfOHTLU90OfPc2FMggKfrDv0mgqN31aY=;
 	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=tdJvVS+io6D775GtmbOPgBS1iVuAsUdas5kz2zSw6wfAgprZcJL07ACdD2vxBn1EIKRe8Fm/OgQxopjANPfIYq0OjkAE3m7gpJG2wtRAYEULtuAWPTQeM6309JmUgIh3zjhlglumXsKgg92Qt2f3XD37aml1mbCZMoigd7SqEWY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=in/+l1kq; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:MIME-Version; b=lWTfqoBsnsd60+Se6pK+sJMzJtdEFv5X2RKlxJ3d9zVqRu1aXpR9n/x2OSANE2IWNrQoB5sozW5r5AAX85itPe716BRb8rFqn7AGIKfAY7mGlV64l4P61vAzKKnp5ZUYstPZ9gOAjXr5C4Va+Aqq4JOCdfmPp/qcq7VmCEth8bk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=okLQqAE8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="in/+l1kq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC5681F000C4;
-	Fri, 16 Oct 2026 08:15:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="okLQqAE8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E45B31F000C5;
+	Fri, 16 Oct 2026 08:15:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792138505;
-	bh=WhJQShRZnAAN8bJPhh/C1URcM7H1xauzce/dmuhwcd4=;
+	s=k20260515; t=1792138506;
+	bh=/bvCiLf6vBkMMBRNuJTrnlTfWU/nsPLGDPhU7Y1gras=;
 	h=Subject:From:To:Cc:Date:In-Reply-To:References;
-	b=in/+l1kqD9B55xfTvz+qShZqoytkdmfyNuIzyYA8TWW88Z57BimZF6kPi0hoBnjGD
-	 6+uOD50bj4dgVffX/BI8O/KmKsztgmT4Uv6woQZ8EmMuWiDGRD+IHXT/49/wXIHbjb
-	 p+jwdxjO4c/baFS93cStqA+LFEyMV82b4ls8xXV4g0OW4C//MDnEvrFe68qyJ0FXce
-	 gxQ9+vq/i8T+qCetUde1kAe+MO/Y28IXr1vZvPuo0Kds60eZn/O1SNh8T7RFfjTVgB
-	 FLRs5fgHHd1YSdCq9UZMGJd9AFkkljdFMr2PrPBl4FGxYU2mmUt4VugT9VqpzBDTsI
-	 07cRrNsJTq7Pg==
-Subject: Re: [PATCH net-next v2 1/5] net: enetc: Add pseudo-MAC support for
- ENETCv4 Ports via a fixed-link node
+	b=okLQqAE8WESTLANfyyas5vOesaM6d77QUXYLF3JQKpwZN/rVoiVgv970tetV6toH7
+	 s+Td6Yn5J+YVIY3mWDIBKtSZbLaoy6DUjnGCDLQAz7xxPy9p8psrTmCnZUZCnUhgVv
+	 5UWEd0bJmdZubH2RgVhmtYfYD81We4I4OFupzUGQzEOhapIoaZSL86Rf4jSLO67DkU
+	 Gh9+T6Fw7lWg9mMOxNW7co5HH50doju+3zCeK1H7ho2JOy2A0uIJ/tYfkgulIa8vhm
+	 C0GShG2VyeN8HtLtsbWhwWd4AOlX5GcZI5TIBTtd9sSg4a72sYsn8z/o/z2HOwV3X3
+	 RaFrOQVzK8osg==
+Subject:
+ Re: [PATCH net-next v2 2/5] net: enetc: Enable probing of version 4.4 devices
 From: netdev-bot+sashiko@kernel.org
 To: claudiu.manoil@nxp.com
 Cc: netdev@vger.kernel.org, s32@nxp.com, linux-kernel@vger.kernel.org,
  bhelgaas@google.com, linux-pci@vger.kernel.org, kuba@kernel.org
-Date: Fri, 16 Oct 2026 08:15:04 +0000
-Message-ID: <179213850452.434549.17833070545168867976@kernel.org>
-In-Reply-To: =?utf-8?q?=3Cd7b51cb29758538a4c68a700dd8cd41b6e7e08b6=2E1791908?=
+Date: Fri, 16 Oct 2026 08:15:05 +0000
+Message-ID: <179213850547.434549.3270982004598435479@kernel.org>
+In-Reply-To: =?utf-8?q?=3C537a977b10b3d76c30b1f879f423bde4fd6f42f8=2E1791908?=
  =?utf-8?q?694=2Egit=2Eclaudiu=2Emanoil=40nxp=2Ecom=3E?=
-References: =?utf-8?q?=3Cd7b51cb29758538a4c68a700dd8cd41b6e7e08b6=2E17919086?=
+References: =?utf-8?q?=3C537a977b10b3d76c30b1f879f423bde4fd6f42f8=2E17919086?=
  =?utf-8?q?94=2Egit=2Eclaudiu=2Emanoil=40nxp=2Ecom=3E?=
 X-sashiko-severity: Medium
 Content-Type: text/plain; charset="utf-8"
@@ -48,10 +48,10 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-Thank you for your contribution! Sashiko AI review found 4 potential
+Thank you for your contribution! Sashiko AI review found 1 potential
 issue(s) to consider.
 
-Critical: 0 · High: 0 · Medium: 3 · Low: 1
+Critical: 0 · High: 0 · Medium: 1 · Low: 0
 
 If you believe none of the issues are legitimate, please reply to each
 issue of Medium severity or higher and explain why the AI is wrong.
@@ -59,206 +59,94 @@ If any of them are legitimate and you plan to respin, please let patchwork
 know by including "pw-bot: cr" as a separate line at the end of your reply
 (one such reply per series is enough).
 
-- [Medium] Build break when CONFIG_OF_DYNAMIC=n.
-- [Medium] enetc4_link_init() uses the OF_DYNAMIC flag alone to decide
-  that a pseudo-MAC port's node is 'an empty node created by the PCI…
-- [Medium] The pseudo-MAC fixed-link speed is the boot-time PCR[PSPEED]
-  rounded down to a phylink-supported value, and the existing link-up…
-- [Low] enetc4_add_ppm_fixed_link() can write 20000 or 25000 into the
-  synthesized node's fixed-link 'speed' property.
+- [Medium] The patch enables ENETC v4.4 (S32N79) by adding ENETC_REV_4_4
+  entries to enetc_info[], including { ENETC_REV_4_4,…
 
 --
 
-net: enetc: Add pseudo-MAC support for ENETCv4 Ports via a fixed-link node
+net: enetc: Enable probing of version 4.4 devices
 
-This commit lets ENETCv4 pseudo-MAC ports probe when they have no static
-DT description. At probe time it uses an of_changeset to add a
-fixed-link child node to the port's OF node, with the speed taken from
-PCR[PSPEED], so that phylink can pick it up. The changeset is reverted
-and destroyed on teardown and on the probe error path.
+This commit adds the ENETC_REV_4_4 revision define. It also adds
+enetc_info[] entries for v4.4 devices, as found on S32N79 SoCs. Both PF
+device IDs (0xe101 and 0xe110) map to enetc4_ppm_data, and the 0xef00
+VF ID maps to enetc4_vf_data.
 
-> diff --git a/drivers/net/ethernet/freescale/enetc/enetc4_pf.c b/drivers/net/ethernet/freescale/enetc/enetc4_pf.c
-> index 71c971618388b..70e34ca6ddf8e 100644
-> --- a/drivers/net/ethernet/freescale/enetc/enetc4_pf.c
-> +++ b/drivers/net/ethernet/freescale/enetc/enetc4_pf.c
-
-[ ... ]
-
-> @@ -946,23 +955,112 @@ static void enetc4_pci_remove(void *data)
+> diff --git a/drivers/net/ethernet/freescale/enetc/enetc.c b/drivers/net/ethernet/freescale/enetc/enetc.c
+> index c6571b5cc8425..be7795d4e0c66 100644
+> --- a/drivers/net/ethernet/freescale/enetc/enetc.c
+> +++ b/drivers/net/ethernet/freescale/enetc/enetc.c
+> @@ -3862,6 +3862,18 @@ static const struct enetc_platform_info enetc_info[] = {
 
 [ ... ]
 
-> +static int enetc4_add_ppm_fixed_link(struct enetc_ndev_priv *priv)
-> +{
-> +	struct device_node *np = dev_of_node(priv->dev);
-> +	struct device_node *fixed_link;
-> +	struct of_changeset *ocs;
-> +	int speed, err;
-> +
-> +	if (!np)
-> +		return dev_err_probe(priv->dev, -ENODEV,
-> +				     "Missing of_node for Pseudo-MAC port\n");
-> +
-> +	enetc4_get_pcr_speed(&priv->si->hw, &speed);
-> +	speed = enetc_phylink_match_pseudo_mac_speed(speed);
+> +	{ .revision = ENETC_REV_4_4,
+> +	  .dev_id = NXP_ENETC_VF_DEV_ID,
+> +	  .data = &enetc4_vf_data,
+> +	},
+>  };
 
 [Severity: Medium]
-Does this rounding end up overwriting the boot-time PCR[PSPEED] value?
+With this entry, v4.4 VFs probe with enetc4_vf_data and get
+enetc_vf_ethtool_ops, which sets .get_ts_info = enetc_get_ts_info. Was the
+second revision-keyed table in enetc_get_phc_index_by_pdev() in
+enetc_ethtool.c meant to be updated as well? It only knows about the older
+revisions:
 
-enetc4_get_pcr_speed() decodes PSPEED as (pspeed + 1) * 10, so the
-result can be any multiple of 10 Mbps. enetc_phylink_match_pseudo_mac_speed()
-then rounds down to the first table entry that is <= that value, with no
-warning. For example, 4000 becomes 2500 and 40000 becomes 25000.
+drivers/net/ethernet/freescale/enetc/enetc_ethtool.c:enetc_get_phc_index_by_pdev() {
+    ...
+	switch (si->revision) {
+	case ENETC_REV_1_0:
+		devfn = PCI_DEVFN(0, 4);
+		break;
+	case ENETC_REV_4_1:
+		devfn = PCI_DEVFN(24, 0);
+		break;
+	case ENETC_REV_4_3:
+		devfn = PCI_DEVFN(0, 1);
+		break;
+	default:
+		return -1;
+	}
+    ...
+}
 
-The rounded value goes into the fixed-link "speed" property. On link-up,
-phylink passes it to enetc4_pl_mac_link_up(), which has no pseudo-MAC
-check:
+On a v4.4 VF, enetc_vf_get_revision() computes si->revision as
+(pdev->revision << 8) | ip_mn, which gives 0x0404. VFs have no OF node,
+since the PCI fixup in this series only covers 0xe101/0xe110. So
+enetc_get_phc_index() always falls back to the by-pdev lookup:
 
-enetc4_pl_mac_link_up()
-    enetc4_set_port_speed(priv, speed);
+enetc_get_ts_info()
+  enetc_get_phc_index()
+    if (!np) return enetc_get_phc_index_by_pdev(si);
+      default: return -1;
+  goto timestamp_tx_sw;
 
-priv->speed starts at 0, so the first call always does a read-modify-write
-of ENETC4_PCR with PCR_PSPEED_VAL(rounded speed).
+As a result, ethtool -T on a v4.4 VF reports only
+SOF_TIMESTAMPING_TX_SOFTWARE and no PHC, even with CONFIG_PTP_NETC_V4_TIMER
+enabled.
 
-Suppose the switch owner programmed a PSPEED that is not in the table.
-Wouldn't the driver replace it with a lower rate? priv->speed is used by
-enetc_qos.c for the CBS port_transmit_rate. Wouldn't it also stop
-matching the real internal link?
+enetc_hwtstamp_set() is gated only by enetc_ptp_clock_is_enabled():
 
-This seems to conflict with the commit message statement that "the fixed
-link reflects the actual boot-time configuration". I could not confirm
-whether firmware actually programs rates outside the table.
+	if (!enetc_ptp_clock_is_enabled(priv->si))
+		return -EOPNOTSUPP;
 
-> +
-> +	ocs = kzalloc_obj(*ocs);
-> +	if (!ocs)
-> +		return -ENOMEM;
-> +
-> +	of_changeset_init(ocs);
+So it still enables ENETC_F_TX_TSTAMP / ENETC_F_RX_TSTAMP on the same VF.
+That leaves ethtool and the hwtstamp path disagreeing, and PTP userspace
+has no PHC to pair with the hardware timestamps.
 
-[Severity: Medium]
-Will this build when CONFIG_OF_DYNAMIC is not set?
+When REV_4_1 and REV_4_3 were enabled, each got a timer devfn in this
+switch. Does the S32N79 NETC timer sit on the same PCI bus as the ENETC
+functions?
 
-This function calls of_changeset_init(), of_changeset_create_node(),
-of_changeset_add_prop_u32(), of_changeset_add_prop_bool() and
-of_changeset_apply(). enetc4_put_ppm_fixed_link() also calls
-of_changeset_revert() and of_changeset_destroy(). All of these are
-declared in include/linux/of.h only under #ifdef CONFIG_OF_DYNAMIC.
+If it does, should a REV_4_4 case with the right devfn be added here? If
+it doesn't, should hardware timestamping be refused for v4.4 VFs, so that
+ndo_hwtstamp_set and get_ts_info report the same thing?
 
-The #else branch only has stubs for the of_reconfig_* helpers.
-drivers/of/dynamic.c is also only built with OF_DYNAMIC=y.
+The PFs use enetc4_ppm_data and enetc4_ppm_ethtool_ops, which have no
+.get_ts_info, so the ethtool half of this does not apply to them.
 
-config NXP_ENETC4 only depends on PTP_1588_CLOCK_OPTIONAL and PCI_MSI.
-OF_DYNAMIC is a hidden symbol that is only enabled when something
-selects it (OF_OVERLAY, PCI_DYNAMIC_OF_NODES, ...).
-
-With NXP_ENETC4=y/m and OF_DYNAMIC=n, wouldn't the build fail? I'd
-expect implicit declaration errors first, then undefined symbols at
-modpost or link time. That includes CONFIG_OF=n builds through
-COMPILE_TEST.
-
-The commit message says:
-
-  This is intentionally not a hard Kconfig dependency, since the ENETC4
-  driver also serves regular ports described by static DT; when
-  PCI_DYNAMIC_OF_NODES is absent the PCI function has no of_node and the
-  pseudo-MAC probe path fails gracefully with a clear -ENODEV error.
-
-If nothing selects OF_DYNAMIC, the driver would not build at all, so it
-never gets to the -ENODEV path. Should NXP_ENETC4 select or depend on
-OF_DYNAMIC, or should these calls be guarded?
-
-> +
-> +	fixed_link = of_changeset_create_node(ocs, np, "fixed-link");
-> +	if (!fixed_link) {
-> +		err = -ENOMEM;
-> +		goto err_destroy;
-> +	}
-> +
-> +	err = of_changeset_add_prop_u32(ocs, fixed_link, "speed", speed);
-
-[Severity: Low]
-This isn't a functional bug, but can this write a speed that the
-fixed-link binding doesn't allow?
-
-enetc_phylink_pseudo_mac_caps[] includes SPEED_25000 and SPEED_20000. For
-PSPEED >= 20 Gbps, enetc_phylink_match_pseudo_mac_speed() returns 20000
-or 25000.
-
-For the object form of fixed-link, the "speed" property in
-Documentation/devicetree/bindings/net/ethernet-controller.yaml only
-allows:
-
-  enum: [10, 100, 1000, 2500, 5000, 10000]
-
-The commit message says the node is added "exactly as if it had come
-from static DT". A static DT describing this port the same way would
-fail dtschema validation. phylink_parse_fixedlink() accepts these speeds
-at runtime, so nothing breaks.
-
-Should the binding be extended to 20000 and 25000, or should the driver
-avoid emitting them?
-
-[ ... ]
-
->  static int enetc4_link_init(struct enetc_ndev_priv *priv,
->  			    struct device_node *node)
->  {
-> +	bool dynamic = node && of_node_check_flag(node, OF_DYNAMIC);
->  	struct enetc_pf *pf = enetc_si_priv(priv->si);
->  	struct device *dev = priv->dev;
->  	int err;
 >  
-> -	err = of_get_phy_mode(node, &pf->if_mode);
-> -	if (err) {
-> -		dev_err(dev, "Failed to get PHY mode\n");
-> -		return err;
-> +	/* Pseudo-MAC ENETCs are described by a runtime-synthesized fixed-link
-> +	 * node rather than static DT. This covers both a missing OF node and a
-> +	 * PCI-synthesized (OF_DYNAMIC) node, which is an empty node created
-> +	 * by the PCI core and thus carries no fixed-link description.
-> +	 */
-> +	if (enetc_is_pseudo_mac(priv->si) && (!node || dynamic)) {
-> +		pf->if_mode = PHY_INTERFACE_MODE_INTERNAL;
-
-[Severity: Medium]
-Can OF_DYNAMIC be relied on to mean the node has no link description?
-
-OF_DYNAMIC only records that a node was allocated at runtime.
-__of_node_dup() sets it on every runtime-created node. That includes
-nodes created by the overlay engine (add_changeset_node()->__of_node_dup())
-and PCI-synthesized nodes that a later overlay fills in. The
-PCI-synthesized node is not empty either, since it has compatible and
-reg.
-
-Take an OF_DYNAMIC pseudo-MAC node that already has phy-mode and a
-fixed-link child. This path skips of_get_phy_mode() and forces
-PHY_INTERFACE_MODE_INTERNAL. enetc4_add_ppm_fixed_link() then adds a
-second child named "fixed-link" without checking for an existing one.
-
-__of_attach_node() inserts the new node at the head of the parent's
-child list:
-
-	np->sibling = np->parent->child;
-	np->parent->child = np;
-
-So phylink_parse_fixedlink()->fwnode_get_named_child_node(fwnode,
-"fixed-link") would find the synthesized node first. Wouldn't the
-overlay's speed, pause, asym-pause and link-gpios be silently ignored?
-The tree would also end up with two sibling nodes of the same name.
-
-Before this patch, such a node went through of_get_phy_mode() and its
-own fixed-link was used. Would a check based on the node's contents (no
-phy-mode, no phy-handle, and !of_phy_is_fixed_link()) match the intent
-in the comment better than the flag?
-
-I couldn't find in-tree code that applies such an overlay to an ENETC
-node today, so this may be theoretical for now.
-
-> +
-> +		err = enetc4_add_ppm_fixed_link(priv);
-> +		if (err)
-> +			return err;
+>  int enetc_get_driver_data(struct enetc_si *si)
 
 [ ... ]
 
