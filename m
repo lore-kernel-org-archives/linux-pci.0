@@ -1,145 +1,199 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34DAC38A73C
-	for <linux-pci@vger.kernel.org>; Fri, 16 Oct 2026 13:41:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E05B443C16
+	for <linux-pci@vger.kernel.org>; Fri, 16 Oct 2026 13:51:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792158111; cv=none; b=gWMkjGnKgdLkMA4UFDjuYLSHkF/j30rV5hRI2CLitUR4/u8hl6amNWIlLwWDT+XZaeBT+bukpAhPLPZDCOiJnVKmOtPEX+9C/cEYurrxgesQef6WIE5loIQiQcAPoldJMlYSxqYkzSiLAFFuhAJgsxg2mRH7d1LCIhc/i0iTMEA=
+	t=1792158667; cv=none; b=Y4LXGyij85zqxfR9KF+iYg8GQLs8s1UYH4QyYr8bjx5lnc7vFIezeVmsMGfYY7/rtNdgKWEJxgU30dTTSdpFPI/1h/mfRCkpCGNG5zPqS+qhoaELUGbEVu6SOYwzp8DaEUn5tfiVzdeHCHJFJS+0iiv0eHdi8mY0XQKi8rTgV28=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792158111; c=relaxed/simple;
-	bh=/zR8X6sWq9nDJwlulrdRxs4JEZClf9bzUIbyy6aGuMU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mfn+ADbEPuP75IOi5fd8l7tmKi4mTh4BBaDnghFMcucZdJIsVOw3MfXpFdEq0dxPvb+5CgVA5ooE+wuTQclWgE7aVauWX9P8uUNSrHCBV+Pjkng19Zu++sHZmDO9TxebgkB7ZcOWdFXZfZHLa24bt4Sa9JQ29shY9qZG1ho4pOc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=QMJa48YV; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=PdyI3gcf; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1792158667; c=relaxed/simple;
+	bh=Cg7Wzu6dZp3KYVFnjaN6WmNCUV7dQ8wSyfbkDpoovas=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Ts40MHqsOduzTzySBgBR0nG/GBsBiFaNMKNQKkbPOsIWQ7eOZqsrWyOqEUSOtESB1GStkP6P036gGyhmJe6QxnsNGy+oCVB3M6SK3dfdtYcl/XrG636SPecafIkEU5dDS9qSn8tXmSbpZ2LShFnnRS7t8myuku+UajCZX+r9OyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ONpnz0ol; arc=none smtp.client-ip=209.85.128.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="QMJa48YV";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="PdyI3gcf"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69GAAGh61793687
-	for <linux-pci@vger.kernel.org>; Fri, 16 Oct 2026 13:41:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	LLW0dwvOxGWpHegS5C7HG/kvWUkdwyRzWYnnzVJQotc=; b=QMJa48YVEcz4cPgI
-	11UqulUYYo5Bi3mi2qAw5JB7asvNfzBrmcf/eIk3pghjWlWzYkbs/Eb6YvYzzk0w
-	Y5Q4BtnMFqIuk9yAKmpDkdAOsFy7Jyz5a2B9Psn5NW3pxGZCakFrggMinsHiJDvi
-	vTz4P7YDQD0ytBudc+F3c/J1cXkGYcTsg/mBqb+dzqnT0s/gegmPo7XFp5wqlcIb
-	ytMOG2ijjrzMlcbJtR2leQABtlUJhvTQg7zqTxPBbDBp0fWcVXF9l7fozm/NQSZ7
-	M6g5701lLv3R5NmOxvPalCrmppV8O99WEK6vxmsKrzMr6EU5yl3qfOcUAaRYqwmL
-	8zBxWg==
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hb3seuxp0-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 16 Oct 2026 13:41:48 +0000 (GMT)
-Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-93e92aad34aso1177598885a.0
-        for <linux-pci@vger.kernel.org>; Fri, 16 Oct 2026 06:41:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ONpnz0ol"
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-4a1b07c3c5fso28346305e9.1
+        for <linux-pci@vger.kernel.org>; Fri, 16 Oct 2026 06:51:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1792158108; x=1792762908; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=LLW0dwvOxGWpHegS5C7HG/kvWUkdwyRzWYnnzVJQotc=;
-        b=PdyI3gcffOZxlXP50kTuI/UWjJS4ES4Tp+2hFfaofhWhwN0NkTPcUCxWqGeSp4A7Vr
-         CPiMq6oOe7FiQKQgd/6Kj8OevDakOW0ySdsvGwFhQcncaBp70txxHmwp57A/ViS7uGQV
-         qwvDryrOO9gAeoN5Oo1o0CyX/EuNS7UyOtrNBvSF8QL1VheiU040jJ1Qkrjrc72OinII
-         uvZYeY5XKcTpdLwfrl6X2/hDiKGrx/t+iue1IIuJS3i24DNNKH/D0Qrx4Ql0zrl/yivH
-         HfAWC6zuGdvTHqxBoVN2XoGCgbMkPfSne8cgolwwDva3Do5ztmZSzQ0R7BBcVx4CG+h/
-         AiyA==
+        d=gmail.com; s=20251104; t=1792158663; x=1792763463; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=q1Ejug8D4zQ8KB1tRStJYJdlaIVOQFSEH869zeCaYNA=;
+        b=ONpnz0olmW9FJI4tI/btYaN8+/FqVvQoZcuzmaPMBEHraltVvvqtFad5768YlDMR5I
+         FIOyssclrYXQJaLKbKxEzWgjk0wTECvCmV4P2f78O4PJtguoN1hwEzdfVuLIh11Qtg7U
+         4U7Z16pAEr26Gi5lERpj+O7yMSdaxyf9tHMaV3n77rQ6anBBYAXFwINxnftkuATNEXbG
+         aFocyyaB4Oc5igUQxJmaP0fMIY/ze1QQLbk20yzGmi9GI45+SXq9+FiXAU4RtzM0lAmy
+         8L4Y+lfUyv6SCqSRWOs+fz62Me09JenpwYAbvzbKfRF8GZxm16WOpXbv5jgpqgiFLzyH
+         IBvw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792158108; x=1792762908;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=LLW0dwvOxGWpHegS5C7HG/kvWUkdwyRzWYnnzVJQotc=;
-        b=cyieGN5RG9Qeei/xHeItx9ectYdh3JkgnCzty4Am0XZxSLfTjUSHHZkrHE7JGCmQ3L
-         YhuqJ2Llz5vb/iNK22OOSJ6gf/Vxy9/sFY0LdkZVIdR09Z72vKlPnM0Pd2iEiClwFRHn
-         qwbc6pPMzH9BhbNN6D+O0hr8a/nwGDUdjU2GBJdm/aDBqJDF9TyH4HEQlww5NUB8enRY
-         eLub2Juk/qrtDmRZ3FpvDwz7JV/87fHhjeCHj0gQwXI3Ldwlzmp0aO+WlATMaWVokWUn
-         TfHBapJne2Qor7cgcIEOT9sCSLISdhBAfdMQJbzeFVMMAiXEXO4Y+iJfzGfXHHzosKF8
-         rtHA==
-X-Forwarded-Encrypted: i=1; AKwUvByeu8f3vv0eKzxE5HlYd65i3UvqasqsSAwGiP+akTmQ/BSiWkyaM1Rap3wLVjJ+qLnd5GsmTOH4Msg=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJ23PjIxitr1NGlGadr1dg8SmO5l0MYZXQTs9/sJ2p8MWNW6li/
-	VBmaubWDCbxx6cMmK8yyE/UCLVL0dUGMRWNA+xMVz518VbeDoI2AW0rowzc2yss0f2BNQX4/wyl
-	lpqeO54rkhPNcZUEj3/10mVIe9cyEiuMFMZUx6SSrNRPi+9dG+y4bzKPu+uKQuDA=
-X-Gm-Gg: AYBFou1NHQ2rQGEg30tPXPigcH9WRvdBYJVXJ292JXJw8mxXjSnPaY2R7JqsSvDwVo+
-	nXhNwca46c4BorSjuxkpg+TBTRSGCYO+t62RHhhcoACrgnm9rk65kz1ZhLYZExTChVERX7O1et/
-	JeKF5aS3yqOxZ9t/EIRhE9TamTjT6USvSQGt03l0nsH6H6eR8BqKnRcptlHx5tp6+isnXmj+jX+
-	V/Ma/Sy9zTroJtlItA+BojZcs/ben/7rt6hju+1ciM1d42rrQam+NwRdgUH9FZ192/B+X8RJr1F
-	mLmZIl7dgRBckhWWne42PcMis8RwsAhzw3nBYyVZyOciYv+cjnwWPzxvdWNTgt1jELBB8oQV705
-	BNDveD0kL0xXCOQzH9/GP3fmxe7I=
-X-Received: by 2002:a05:620a:29d5:b0:93e:920c:bf9a with SMTP id af79cd13be357-93ebd1e011bmr3417416885a.13.1792158108260;
-        Fri, 16 Oct 2026 06:41:48 -0700 (PDT)
-X-Received: by 2002:a05:620a:29d5:b0:93e:920c:bf9a with SMTP id af79cd13be357-93ebd1e011bmr3417410885a.13.1792158107616;
-        Fri, 16 Oct 2026 06:41:47 -0700 (PDT)
-Received: from brgl-qcom.home ([2a01:cb1d:dc:7e00:8916:7b9b:97a2:6c96])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48dfd4f8d1esm5486672f8f.39.2026.10.16.06.41.45
+        d=1e100.net; s=20260707; t=1792158663; x=1792763463;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=q1Ejug8D4zQ8KB1tRStJYJdlaIVOQFSEH869zeCaYNA=;
+        b=yfTPuyJB4z3rucYSC42G8xP4rUCnbzwuid3ZiCKdzgSH+BpC7+1+0cg4Z7baNwvt59
+         R0eq1ufjgpnfBQjtAN7lx6uPv5eDoVy22+hSg2zSJCGF7TpMjl6Z/nVKR+v1AkoDHobd
+         rCxf+WED5IiTeEX+K9hCZd9Bb6ri02YTetXyzcZ0fu1Ntb6x6kN0V1Yqhq9ng/HRPVYL
+         lyCatNdM+2LrkoG3pk/nTruZjSwzXNzYwThgUJQiyT/XfJHs+tMqdya2MKYvbTJ4A721
+         pgLD9d9BHu25hx70OeWtLX+pYSyAyH5FxSO4+2LJTVsrZ/Z9ObD9LlB4XBdN0+czROM9
+         4Obg==
+X-Forwarded-Encrypted: i=1; AKwUvBxZb41dWryeN2K/UlewI9ZGSfTwBKtruJ2KhTywZ2VvXJcw4/dVgCZ0PSv1fc0LDmtE3dKdepElBk4=@vger.kernel.org
+X-Gm-Message-State: AFq9FYI0kmAecJobTakf/ftzJm/4Qw4i1GKDqyo+fMqhll0aF/dtxUIO
+	wT6FmGdQZW+o7plR+fweExUN3yaKyhKW22+79E/j2odw4EU2qF7kKBsH
+X-Gm-Gg: AYBFou1VwGcop3oucWEvHIz62HdL3m67EdCmyYMS7qjVNqTM52CcRjhJPngVkIw8qR/
+	Gk055cTuXAUsx4uP8gL405t0y5sudt+WTGve75si4lFvxUqylYxs7aisjG5f+NVg1AedCx2sz3m
+	+AJIzj2UmlV3afAcJSj/CxCH6I0n/i2J4Ct50MHE2Fvn4UzOk63I5IHQUrWVDnXbwVps4i2IL//
+	sp/RMHmnOR3GBzAOssaQq4IrDesgQu5BImSng7yN2mGFsXdITY/S+nlO39n6n6m7Qs+NIur7UFM
+	cBueRFPIMaIvSmgJUPSdRPXLW0v4fN9lEP3UgvmIjJNy0J3vL/U3GJrk6xc6LoMpwj/TzR62F5C
+	v5eH/ZWgx7mQdTbr8D0vMZ/nBEaHPbvPCuyO+yCDLI/wARv3G/qX4EEMw26k1Vmhco66eunSMbp
+	PifWuUKHy358NJibbrpNbvsMfjkckvsHZbxmMi7UiSuvx05blBsDK/6VrYrVsM8a9+mMrm9eDUX
+	zzUfaMasTaH0fzSxVqGpQM=
+X-Received: by 2002:a05:600d:82e4:b0:4a1:a49e:a925 with SMTP id 5b1f17b1804b1-4a1a49ea94bmr310744565e9.35.1792158662480;
+        Fri, 16 Oct 2026 06:51:02 -0700 (PDT)
+Received: from localhost.localdomain ([2001:818:dc1d:c500:21cd:8ec9:48da:59ee])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1d2e93a01sm27190725e9.0.2026.10.16.06.51.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Oct 2026 06:41:46 -0700 (PDT)
-From: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-        Bartosz Golaszewski <brgl@kernel.org>,
-        Wei Deng <wei.deng@oss.qualcomm.com>, Val Packett <val@packett.cool>
-Cc: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] power: sequencing: pcie-m2: Add Foxconn WCN7850 subsystem PCI ID
-Date: Fri, 16 Oct 2026 15:41:44 +0200
-Message-ID: <179215810170.58960.8245836334838240026.b4-ty@oss.qualcomm.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261016051745.577777-1-val@packett.cool>
-References: <20261016051745.577777-1-val@packett.cool>
+        Fri, 16 Oct 2026 06:51:01 -0700 (PDT)
+From: Diogo Sousa <diogogsousa@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Diogo Sousa <diogogsousa@gmail.com>,
+	Mario Limonciello <superm1@kernel.org>,
+	Vijendar Mukunda <Vijendar.Mukunda@amd.com>,
+	David Glushkov <david.glushkov@sntiq.com>,
+	linux-sound@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: Disable async suspend for AMD rev 0x62 ACP and HD Audio
+Date: Fri, 16 Oct 2026 14:50:35 +0100
+Message-ID: <20261016135042.44914-1-diogogsousa@gmail.com>
+X-Mailer: git-send-email 2.56.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: n-id4s-vGO0XQPTrt1f3SJr6YWdW4fgk
-X-Proofpoint-GUID: n-id4s-vGO0XQPTrt1f3SJr6YWdW4fgk
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE2MDA1NCBTYWx0ZWRfX6o9Nje3GBJzG
- Nys4e91re03lsdXP2paCBY8Xza1zlluOa4uSK6U6hs7yCBirocFa+VWYPc9lwxrI6hnClXjOdcE
- c5MFCBoISTw0N7+WVqibbst1GUYUUj0=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE2MDA1NCBTYWx0ZWRfXwpisldaN95ok
- G1dBN1THGfNRsV5xWCdMSjzxGwWpg2DxWZEm8ZMg/PkvUycEbf9Pbd7ZKxZGW3Vqz+KniQ94SCT
- DOns92itpns4/mlrwVa50Sqikq5d1EjiEIaPupAvdqHnzGtklRD3gp+HUj1F9OUeWq0+UJ5og8A
- tm+PoI4GHoD/nMZfT6SsObn2751lqNE6nlLCzVjtwGJ6CCF7pfKzKQqGrK2ffx7NV+kt5Gzdhnb
- e69dXOl+P5ZCYLJTRerAJKADeKhXmo9ZEfdkbFrwYFB2ckpf1Ar80pHP1c+HfOu4bKjgYH3IXMc
- smDxEUMUDkGnvcEL9ncavBvVTeRhVaeIx2nIqxe//kewStN130KfSzod/3jVzj4Rt+z87B9pXtU
- Xqnniybe5Gcm5uwzGMQ8ohfwmLdU7HeWBobAgneR/Ocm++IZPq5FCQgrCI3B72bnA2Sn/s4P5bF
- ECKcLl+0UtgWLpgV7rA==
-X-Authority-Analysis: v=2.4 cv=Se1i5fRu c=1 sm=1 tr=0 ts=6ad2299d cx=c_pps
- a=HLyN3IcIa5EE8TELMZ618Q==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22 a=VwQbUJbxAAAA:8
- a=EUspDBNiAAAA:8 a=Ac9oEOQn9GJuJuDrb4UA:9 a=QEXdDO2ut3YA:10
- a=bTQJ7kPSJx9SKPbeHEYW:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-16_01,2026-10-14_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1011 adultscore=0 spamscore=0 malwarescore=0 priorityscore=1501
- phishscore=0 bulkscore=0 suspectscore=0 lowpriorityscore=0 impostorscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610160054
 
+On AMD platforms with a revision 0x62 ACP, such as Dragon Range and Fire
+Range laptops, the HD Audio controller usually stops responding after
+resume from suspend:
 
-On Fri, 16 Oct 2026 02:13:35 -0300, Val Packett wrote:
-> Add a new device match for the PCI subdev id found on the Dell
-> Latitude 7455 laptop.
-> 
-> 
+  snd_hda_intel 0000:69:00.6: CORB reset timeout#2, CORBRP = 65535
 
-Applied, thanks!
+Audio playback then stalls.
 
-[1/1] power: sequencing: pcie-m2: Add Foxconn WCN7850 subsystem PCI ID
-      https://git.kernel.org/brgl/c/eadea156f11b2c9a780b60c1699c2da145c9d1f2
+The ACP (function 5) and the HD Audio controller (function 6) share an
+audio block whose power is gated by the firmware.  In the AMD CPMACPV4
+SSDT, the _PS0 method of each function marks the function as present
+and then calls a common method that powers the block up only if exactly
+one function is present:
 
-Best regards,
+  Method (_PS0, 0, NotSerialized)  // ACP; AZAL sets M279 instead
+  {
+      M278 = One
+      M276 ()
+  }
+
+  Method (M276, 0, Serialized)
+  {
+      Acquire (M27E, 0xFFFF)
+      If (!(M278 ^ M279))
+      {
+          Release (M27E)
+          Return (Zero)
+      }
+
+      // Power up the audio block.
+      ...
+  }
+
+The presence flags are set outside the lock, and M276 calls a debug
+print method before the check, during which the AML interpreter can run
+other threads.  So when the PM core resumes both functions in parallel,
+both flags can be set before either _PS0 reaches the check.  Both _PS0
+methods then skip the power up, each assuming that the other function
+did it.  An ACPICA trace of a failing resume shows exactly that: the
+M276 call of the ACP sees both flags set and returns early.
+
+Disable async suspend for both functions, so that the PM core never
+suspends or resumes them at the same time.
+
+This started with v7.1, which moved these ACPs from the RPL driver to
+the YC driver.  With the ACP bound to the RPL driver, test resumes
+worked, but it isn't clear why the YC driver makes the race so much
+more likely.
+
+Fixes: df4148a5a3cf ("ASoC: Add DMIC support for the AMD RPL platform")
+Link: https://github.com/CachyOS/linux-cachyos/issues/950
+Assisted-by: LLM
+Signed-off-by: Diogo Sousa <diogogsousa@gmail.com>
+---
+Tested on an ASUS ROG Strix G16 G614FR (Ryzen 9 9955HX3D, BIOS G614FR.317):
+without this patch (v7.2.9), every resume from s2idle broke audio; with it,
+on top of v7.3-rc7, three resumes in a row worked.
+
+This also covers the MSI Raider A18 HX A9WJG, for which a quirk matching its
+subsystem ID was posted:
+https://lore.kernel.org/r/20260606204547.11945-1-david.glushkov@sntiq.com
+
+ drivers/pci/quirks.c | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index de9bbccda21f..d4e4ab3c332e 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1901,12 +1901,44 @@ static void quirk_jmicron_async_suspend(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_CLASS_STORAGE_IDE, 8, quirk_jmicron_async_suspend);
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_CLASS_STORAGE_SATA_AHCI, 0, quirk_jmicron_async_suspend);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, 0x2362, quirk_jmicron_async_suspend);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, 0x236f, quirk_jmicron_async_suspend);
+ 
++/*
++ * On AMD platforms with the revision 0x62 ACP (e.g. Dragon Range and Fire
++ * Range), the firmware power gates the ACP (function 5) and HD Audio
++ * (function 6) together.  The _PS0 method of each function marks it as
++ * present and then powers up the shared audio hardware only if the other
++ * function isn't present yet.  The marking isn't done under the lock that
++ * serializes the power up, so if both _PS0 methods run concurrently, they can
++ * both conclude that the hardware is already powered up.  The HD Audio
++ * controller is then left unpowered, with all its registers reading ~0.
++ *
++ * Suspend and resume both functions synchronously, so that the PM core never
++ * transitions them at the same time.
++ */
++static void quirk_amd_acp_hda_async_suspend(struct pci_dev *pdev)
++{
++	struct pci_dev *acp;
++
++	acp = pci_get_slot(pdev->bus, PCI_DEVFN(PCI_SLOT(pdev->devfn), 5));
++	if (!acp)
++		return;
++
++	if (acp->vendor == PCI_VENDOR_ID_AMD && acp->device == 0x15e2 &&
++	    acp->revision == 0x62) {
++		device_disable_async_suspend(&pdev->dev);
++		pci_info(pdev, "async suspend disabled to avoid ACP/HD Audio power up race\n");
++	}
++
++	pci_dev_put(acp);
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x15e2, quirk_amd_acp_hda_async_suspend);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x15e3, quirk_amd_acp_hda_async_suspend);
++
+ #ifdef CONFIG_X86_IO_APIC
+ static void quirk_alder_ioapic(struct pci_dev *pdev)
+ {
+ 	int i;
+ 
+ 	if ((pdev->class >> 8) != 0xff00)
+
+base-commit: 0fcb05b72344f40806cbe810de8872f1698bf053
 -- 
-Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+2.56.0
+
