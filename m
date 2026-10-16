@@ -1,264 +1,172 @@
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011003.outbound.protection.outlook.com [40.107.208.3])
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010017.outbound.protection.outlook.com [52.101.56.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D92D142901D;
-	Fri, 16 Oct 2026 07:41:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EF4630F55B;
+	Fri, 16 Oct 2026 07:45:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.17
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792136495; cv=fail; b=r+xVMbx3MTyJ7ZpY3hKpW8h5aIZw4EwHao3W3xZGAufJh0/34Pq6eRo47fSnI/vBQKvE0uNluJldA9RzsMEWWb40T70WVKUd0ea1W7PdyMUtjPgU0KamnjMO/mUIKmndehap6R3M7OH6QD7F63D3pHck//nWRlGtUpDAhPdUzeE=
+	t=1792136748; cv=fail; b=LWm79gspMsCbFoN/IWwP2rjzYL86TM3+Nkwl+MbwQsm3xOklOv9y4GOL6apo/wea2wnx6jOo+LIPgYmTWe1vqOAos3SCKQukyhuDXA3CBSShc2MWq5OkHKkT79j/DNL1cgyZhp/Fubo4ZBacjHvd3BFVdG418kGewKm/MQfgzt8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792136495; c=relaxed/simple;
-	bh=7mRlv9QYDkczX0d810PfxI4XSAOeGkYuzFbVYnSOSj0=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DiPPEkio2lCEUY7gVXwwjUMcyY7YnjGF6b1ZrHylrQXL8skMWLZBYt/vQVTNdwW5/Q8neIMLM5kBHJOcRZsd7dtW1O/rkU91dSFy/1iEOUl93FpXxy8Pn11O8VF+1CzSGybehaQC0cw/GUME4Bcz/Hg/PYUoEWPmGPkgRusnSdo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Mywg0XK+; arc=fail smtp.client-ip=40.107.208.3
+	s=arc-20240116; t=1792136748; c=relaxed/simple;
+	bh=1eb7eK/z8KmhspKevlsijMN8IX/ghszjICF62VNabWA=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=ltx9qIdLRZqgJWDw5o26vu0X70ttvAE601ma6YvXi7iDRmWgNubNkdxvMyr4+kptmg8Vie16CikKx/FIsuZ+0CT4pNZISiJfr4J4ZO+uRU5ROP/6J4Z1FxX+XCf1IqUJGp57EeM927Pq7ZnIXpdkBcugTufvV2jo4vkIelaPbkM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=tdNzk38L; arc=fail smtp.client-ip=52.101.56.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Mywg0XK+"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="tdNzk38L"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=u3SiyOo/62q/ER7FY3adFTpHHhIIXBxExDrqsuEyJJsbd+jGYQuNH3rXRb5sT7Ku5OXKkveUQXubwrkaCKOGDkk0+d1msGVxPDAdrWWWkqlMI3B016w2E6Dt6Spj36RMz3oyRhEe6PH2txeO89GOu4Qn/CQz3xrNfgPVPm/yPPH0rpwCnqWZA65jm5NKSV600GU+PQ69YwZoMRCJ8MPkolsVSCCfaS+0VQFL7NMS0geJWb3mDEk+xSLKu1KQ5RZijogRozYysliM4LELNJwHYStUBje+c8tn7Sv6XPrAx5gGUWhpvMpFqGNtIUoJknB2gu/7dfQtxGWxoPQvTw8RVg==
+ b=sRtRIAPN9umxGmBZtYoShzkYTsPymI9YmZdUVE6z2AGPoIzQMbQxZiJfIDmvDmSc7baO2+jNmq35MeYi2o7V/jWyu7ncEHvLZDPDXG1ahKxRg2BPL9CtSZZSqYbryQ9GVab1GVP7c7puhSecK8LiJpbx/4fDem6DxzsYzei9y5KYokooj59TXplC/nAKJyRhFHf0JFSXx/gsN5sWwZQX7xJ5oz9AZwnybFLMuDSg5UziWs39YOrdSQK42bIaU1vvGfSqEp+OcPwm/9YXVCJPce7RbTQAwWcK0xpUsytiRpey1aweOKEPQqqIb6armdUp8F+gnh3JaCM9DZLG3YdJmQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=q1MHAzyCBi+1ledJynZ0l5F1IpcRkr8gmkw2eQ91sn8=;
- b=YBGmVThK1T3cWeP4qplxg3R8Qo8fkHSmQnR4qkqGmWyD8Pv2VPP7mT0UAg81SykuQxLaqvi5sd1Frlxoq63UaqfIAEyPqL+9QbTWx9hDAORlWLHERr3jjxELqVewf8uoWHBJTSqRDXuAv+iNfP5EHdSiC6Qfm9SAj6SN/YS48Z5oIIpveewXDtNA7cw/JVDhUueNMLi/ddvtWpApLwuSmTY3JW5MFYegtPLe4VVDc7yO/57QO+xyaqqT9680H/xJM4ASI7gLXXRpQDyB4LdSIRFWpvs2W7FLZjFHffrcmisigbRW3Xfdu8daOO4+u6nHxFKkQrvfUMABgeefwuIvaw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=gmail.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
+ bh=vSZJp3pmGfT8sGd3uBrAmgVmEQ9345NY9yP+SQc4lrM=;
+ b=Chv611IO4uXvBKUK6JlZYge//l5QPxMywlzAlWc7iiZrZlKglEm1MxEvGGyXC+y/UQ9FBt+0h6+VbDckgD1dR6dWOSFwdbMShuu3YuiBHXRUfMgkaCZ5dUNEUMdsicyB16Q3Ku+1foiSmkuMNkTNzyR3hf5fq9YQyBL5BIkJm0CuvmvgQS1P4/4jecybhvocKtABf84+RqLLp38L8yy5X71DZNz/iDY6hsnIQxQ8/7aiOCwMIXREuuG/1yzq2f9nLBUSvLetWQR1+swX/uhveRQyS6QhOZZ4puyCIuvTTA78ELVAOBbVB1OLdZ8V9MzhntFyTbeLxZw7PPHf5GnwYQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=q1MHAzyCBi+1ledJynZ0l5F1IpcRkr8gmkw2eQ91sn8=;
- b=Mywg0XK+CrQj5x9X8PIv2zbVEAZLBfXu3RvgFOI3Wt3zCOfpQF83b95ysQgaGjr3/YBs09g6YUvM0+bip8Sg4RwGCA+CVfDiihsCtRpWtNhtXc3s/+RxI1QsR5oPawd7roUzIie5YO8/7ngWxqFy7+aeCFUzIPV39btU757AFYqn2d/6Xfx001z1QAwGbmYB6u06UIhs0NqyZTUz2BBtQmqJKkpdOLXN6RRfXwVBtSslgxiUHxDH9gg+4UYLMQi4tfG+MfP2X2CKcUt81Gn61iWZYhLguyNc8Z+D9vAyC44MRuX1UGED1y+5eGNk9q55jJ0YDhvMbuEBoTHZeirIkQ==
-Received: from CH5PR03CA0023.namprd03.prod.outlook.com (2603:10b6:610:1f1::21)
- by DS0PR12MB7900.namprd12.prod.outlook.com (2603:10b6:8:14e::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.496.24; Fri, 16 Oct
- 2026 07:41:28 +0000
-Received: from CH2PEPF00000145.namprd02.prod.outlook.com
- (2603:10b6:610:1f1:cafe::1f) by CH5PR03CA0023.outlook.office365.com
- (2603:10b6:610:1f1::21) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.472.20 via Frontend Transport; Fri,
- 16 Oct 2026 07:41:28 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- CH2PEPF00000145.mail.protection.outlook.com (10.167.244.102) with Microsoft
+ bh=vSZJp3pmGfT8sGd3uBrAmgVmEQ9345NY9yP+SQc4lrM=;
+ b=tdNzk38LiPlU6F1uVz7RpachlED9c45E3vZz1au5lYqtwnFQeFOZ+pL4YZptIBbZhGhz9HNRVlQXEQaoNHZHNuTXlIRwojkgrLrVcJ7YlWoJkQzDZs4ev+3cGvp0MGoa2FdxDI3vHua7ue5uRoxd6bljoenhqbEC4PjIu0FSOTrtZBWPzWucUZXu/xqbb22pU3HLRNSQcPo08weeO+EdPJos/WOkHCy7T+Q+n7XpTiHUDElDgSaff7r1ayx4sBvKpHhLz3dOF5yFyMVEPIoZmRJAK56DFFbcE9zQ7aqRcxD/n+ovG1knRh+GMRHwhEJyqFVetCmds3dgyM28hexReg==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS0PR12MB8245.namprd12.prod.outlook.com (2603:10b6:8:f2::16) by
+ SJ2PR12MB8978.namprd12.prod.outlook.com (2603:10b6:a03:545::6) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.522.6 via Frontend Transport; Fri, 16 Oct 2026 07:41:28 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Fri, 16 Oct
- 2026 00:41:09 -0700
-Received: from mmaddireddy-ubuntu.nvidia.com (10.126.231.37) by
- rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Fri, 16 Oct 2026 00:41:04 -0700
+ 15.21.522.13; Fri, 16 Oct 2026 07:45:42 +0000
+Received: from DS0PR12MB8245.namprd12.prod.outlook.com
+ ([fe80::e7c5:cfca:a597:7fa4]) by DS0PR12MB8245.namprd12.prod.outlook.com
+ ([fe80::e7c5:cfca:a597:7fa4%3]) with mapi id 15.21.0522.016; Fri, 16 Oct 2026
+ 07:45:42 +0000
+Message-ID: <cc413ec5-3d69-4fee-9bad-1e6c152b789f@nvidia.com>
+Date: Fri, 16 Oct 2026 13:15:33 +0530
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/5] PCI: dwc: Clean up RAS-DES and register field
+ handling
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam
+ <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Krzysztof Wilczynski <kwilczynski@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Rob Herring <robh@kernel.org>, Thierry Reding <thierry.reding@kernel.org>,
+ Jon Hunter <jonathanh@nvidia.com>, Vidya Sagar <vidyas@nvidia.com>,
+ Niklas Cassel <cassel@kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+References: <20260923071706.1134320-1-mmaddireddy@nvidia.com>
+ <179198416084.63727.13083524527951291207.b4-review@b4>
+Content-Language: en-US
+X-Nvconfidentiality: public
 From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <jingoohan1@gmail.com>, <mani@kernel.org>, <lpieralisi@kernel.org>,
-	<kwilczynski@kernel.org>, <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: <robh@kernel.org>, <thierry.reding@kernel.org>, <jonathanh@nvidia.com>,
-	<vidyas@nvidia.com>, <cassel@kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-tegra@vger.kernel.org>, <mmaddireddy@nvidia.com>
-Subject: [PATCH v2 5/5] PCI: dwc: Consolidate RAS-DES event counter fields
-Date: Fri, 16 Oct 2026 13:10:26 +0530
-Message-ID: <20261016074026.564302-6-mmaddireddy@nvidia.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20261016074026.564302-1-mmaddireddy@nvidia.com>
-References: <20261016074026.564302-1-mmaddireddy@nvidia.com>
+In-Reply-To: <179198416084.63727.13083524527951291207.b4-review@b4>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: PN3PR01CA0120.INDPRD01.PROD.OUTLOOK.COM
+ (2603:1096:c01:96::15) To DS0PR12MB8245.namprd12.prod.outlook.com
+ (2603:10b6:8:f2::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-NVConfidentiality: public
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PEPF00000145:EE_|DS0PR12MB7900:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0e81741b-3d1c-469c-853f-08df2b58e366
+X-MS-TrafficTypeDiagnostic: DS0PR12MB8245:EE_|SJ2PR12MB8978:EE_
+X-MS-Office365-Filtering-Correlation-Id: a0918519-6ab2-404c-60d2-08df2b597add
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|23010399003|1800799024|376014|82310400026|7416014|56012099006|11063799006|261009223027099003|18002099003|10067099003|22082099003;
+	BCL:0;ARA:13230040|366016|23010399003|1800799024|376014|7416014|56012099006|11063799006|4143699003|261009223027099003|22082099003|10067099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	zAdam983QikIl1p+NOwA/e1J1kOSMAhgJ2oS67/zQdoxjRmjNOxLu1nDsfrrBGrKHId9opdrBGdjHqPLajHsPUhT2S9ptvfMrljrRRloaIltGDbA3sXdJdwv/BzyNL98GfUn6g5CVr7Q2JZl96F1OjiiZtY9+MPPOkOFsCedgyKJgg1PkIJjjE+U0+pCpsDKId1DTW5n1sY0BL10HomBxXcfl4w6/7y6P7Eg8eLOiNCuvgXs0KFN6E1KpsmQCWQFDBtzwtUl9SRa8Uj4rYWD4yw+3ZHYuGjqe1EHLg1BP4t886aqeVA7LKLlUKQRT2jTM3WPG8OTfH85ielVyuNm8XQmu3OXgz+L1SmOmAjhmzKNQfBqw6ZdcrlVeG4AT01em8Mtmn9Pj2OMR2szWPbVhyomdTEaQf5Rw5Hox1GLr2+Bg+0BV554Yli+PzlDOTwNa1bIiHdOUUgOWdHZvbuvNij3iTg2p7bbIQAOiTmERn35K7RMal7UNdy5K+a+DEF7R9UQ4cqzdkjHG2UsNbt4HJw+TEfI1ZWgxy3SOYqq2CSUvM94D+BFjEDpgbAz2VHC0iyV8EPUK60hyCywBxPb0Sa0agtnLXTdZxzYOHq8Glarsg5Rlgcl26/JsasNGioY7VtiAo4ZAV82qjK9SJTPZ8vI4Z/krVcefebCVYHJYlv7DNLGNXAs72TDW2xdCmjZk0KliNdcESNzuKvcs+ntrQ==
+	Onhyov0ET5XJmcxHoSxcZwXn/Zw/+D/AXCChhsV46bmX5n7jWmEJ5S+lV4B26hlDo4LhfA0TfT/DFlLgpZirbwL7sALvVAjBdyTUoEt4J5kaElZb2SvEtEFkM++JzmiWD5dICSfg1xpI7HyO2s+W27/5KbL24qtTdPgnBG2HITdStP1mwBq97hKOQ3IBVHEeMqnRA9jRDfk+PcounPh9LqqgrQ2wJHCOQ70U3+0d1y8IJwaibHOCGfE/oEoWZiIKB0UKzFmX1UVsdEx97HY/KtsRBNOrjed/AmmhuCLgiwEdquhHmMQxcKOLwD22Gds+0eLuPgF5X9jXzl+j4FzW/Hm60c/nppclHB0RDrEn/f5NsHFbYV1wmEq/sNOWCI5vBEfBc7uAqc+a8JCnRzPzA66xypAkkBg6LBTOEaiGO9Dl8tiTFuoFe9sWhQt/Lj4tzb9SEYuJxLQV+GMtJojxCDPCO1yQ1Nwnzu0jVwR4izkFqtcydtCv9gGiE+vziZByNqzXlMhUoOmBH22PamX1iHUW5aR7PaIREw0waSEAu8Qox05JIyN8KgvIyGOXtx4CLauKFPg+ZGtrXxeQT/l3BEw9BigGUZWZQaSAq/g1Hgi9slYAxmFFQKYsEOic1au5b4Go1+pM9fMhF946+Mn1ZLhR0Sr8Gxvd+RFD8FOp2vE=
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(23010399003)(1800799024)(376014)(82310400026)(7416014)(56012099006)(11063799006)(261009223027099003)(18002099003)(10067099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB8245.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(1800799024)(376014)(7416014)(56012099006)(11063799006)(4143699003)(261009223027099003)(22082099003)(10067099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	hDQ8/gBEeeAj0SYeh8y/diTrJn1W23NflEQPwiqpriiS5UF69t1SjKM4hHkhQ0srhEWabCz0pQto4NiNQP2dEYbLeReTAwCkmHwyZzN6TU2jkUOOHrO04qAfN++oaw0uFFaaQfgW5rbLylkirpktfpoAnZZpvaUopgx10YnKnPsk6gCtjy/iRIPVEQvHnEwJ14blFnNbW7AfYYrMJUNOGg7x73N3TxxkfVpxvlRKzekrixRJxHMPgCA+F2y+zrlqelDlW0ZcaSvJFS1wWc3jZnO1YnlNrfSZqhcz90Lx9hrmrpZgjXfiCUt5vT/flSTXCJBOSZj2+jvSE1APuZeBY106GS58K4MiG7dd/gYoM/2YqZRN7mlNPWjbuN1CLyVUzQHrOXK3g365lGNithOMpsQiTUzxQkTUocQyk7O6C0ZCmjwkI0+8TBvgWL9hlEV4
+	=?utf-8?B?eDczNDVLME90bXp6eGFsYkh1bGM1NzJGbHpWSkFSMzg0YVhXT1ZlMHAxdDN6?=
+ =?utf-8?B?RXQ1aHFXTjBHcC83VVJyeWRnZFFuNS9EbzZpSGtzcnJxS0I3NGZTWkk2Qk9O?=
+ =?utf-8?B?T3JmUlpndm9KWFdKY3pNR0xBenJCWklvTkJnSHNUeTFVSWxiMmdsVEx4NnFk?=
+ =?utf-8?B?eURSZHd2Mlp1N2tLb25HSDRZMlptUmtpSlZ4TjkwTk9IQnZSVmRnWldjUm51?=
+ =?utf-8?B?RkpFK09DZERCWEFZaHZuQnY2WjdaOXVEQThwTUJ1RUgxSW43SzJ3ajlzbDFP?=
+ =?utf-8?B?L3Y4Y1hjTk5yT1IzNUJROENZK1BtRXZWZUpNMzgzTVVCazA1VldNVDB4eUxj?=
+ =?utf-8?B?REx3M1pMdkZMQU5PZCtTVTdqV3F6V3AzUTB6NGtyS2grOVVpdWNTcGdMUjly?=
+ =?utf-8?B?L3V4KzVWcXptU3BwNWNaemdkRE80clBhL283eEYzUDBOQkRTUkxOcHI4V2xX?=
+ =?utf-8?B?bVM4YWt2N0FhR1JWRStQUTdrRFNuS3ZobUFlQmRxZWtZckw1czhYQXlOLzgv?=
+ =?utf-8?B?RGgvMnB6dmszekk1UlVaZzlCRUg4U3JRSkMxajVxd1BHb0RlVW1iMmNOTlBV?=
+ =?utf-8?B?ZlZQeGxDMTRJUmJmWFZwdWlGanhBME5UWlZnU0lFMlV6VlZ5TDI3N2FucHNH?=
+ =?utf-8?B?QU1RVFNzYW9YNWJ2b2lPNlBLUkhkeU5BdGwxb2tWNTRoSE5vbEVlL05mRHor?=
+ =?utf-8?B?czV4bHVEOWVVOTJOaVJBQjAzVEp1dTgzVVV6RzJZUnprQk9uWVV1MWFUb2hu?=
+ =?utf-8?B?TEdDbkN5d0k2bVFOOVRqTDFMdzVTdDE1UGRSQzFEWlk4blNCUEJXanE1akJP?=
+ =?utf-8?B?b2NyOVVnYzd0enVScVhxMHlQRnl1Y05TQVYyR3JBdERyWjViMWFhMkNzbnVD?=
+ =?utf-8?B?Yll3OXJqNjl5NitzejNvSU04UnhWUWtpdjZMYUthOGprUW8vTDBDdWtHbFQw?=
+ =?utf-8?B?WjBJVVFKdDBuUGpKeXZNM1dhMFZYMzZnZ1I5dWNxKzJwc2hlbEx3cC80bTZy?=
+ =?utf-8?B?Z1NYZHFMcEU3UDVWNkZ5ZUZwaUhPR3FZTy80eDF5OFpMeks1OVo3Z1pPNzZu?=
+ =?utf-8?B?YVhDcy9HbnovYjU4VE4zcXRNZVYvVVJ4VkRLRDIvUzEzcVlkVXd5elZwZll2?=
+ =?utf-8?B?eTNaazBLdXlub1dhdGFsTklldFQ1QlFqZ29FbjNxZFBMaWZDYSsxYU0xU010?=
+ =?utf-8?B?ZHduSTNWanJTYkRodTFySUlpeVlUR1I5Mnp3bmd6Z0dBOG56WFNHOVVBS1JC?=
+ =?utf-8?B?OG9TWVUzeDdQQlZJTWtoODRhOXEyZUUya1NnN1JZWjJ3ek16dWtMMEp0aVp4?=
+ =?utf-8?B?dllzKzhVWjdKOFUzemVaK05rNzZvS285alFFSEt0TjMwVkwvWTd0YTNZRXlu?=
+ =?utf-8?B?b2RxNUxmUkJRSlZSWlFXN29qdzRNQ2F3REt0WUN6VkZJOUVpRTU4Y1psYXls?=
+ =?utf-8?B?c3VYdVRGNllSV2RKSGtudmNjRWx2d2tzMlRENEdxZHlJNzNlMjdkY3NWZk15?=
+ =?utf-8?B?RUttbFY3ZG5qdEhYUHlqdHl6YXBxcFdtcEZIdENZUUp3MmNrbGx0MmlWWDBE?=
+ =?utf-8?B?ZDJmcUpyOExKaStKbk0vRXcvbVV6b2laNG50S1RiYlhKb2k5bFVNdGxKK0hL?=
+ =?utf-8?B?ZHNQdDJuNEpFUU9aVXkvK1BJaFk1Wk9WNkFxRi9ER1MzdTBWdEY5Y2VqMmpD?=
+ =?utf-8?B?TFJic1lTcTgvRXBxSUFiUUErT3BMMWUwdnA3cU82TVdON1laWDNoV2ZCN3VY?=
+ =?utf-8?B?UlFDaTZ0ckFJTDNCRVFnQlZwL3drRVRGMkFXSytIc2pFVG1jeU1NbEMrN3dZ?=
+ =?utf-8?B?NjBmQzczUHd6TCtkbUpjVnJyUDc1OXFmR1JPYkVSNTVuU1ZDUDZqMlUzQ0U2?=
+ =?utf-8?B?RUcrUldSVWZzREpTd0RYNEg0K0prNGcrSVd2UVZsWEgwRDlWL0w5RGFzZWRX?=
+ =?utf-8?B?RzRBQllkbEV2L045Uk5RUmpYaEJ4M0o1aXJBckl0MldMVXVnRVVKVFVOUjl2?=
+ =?utf-8?B?Z29ZT0QzSS9WdDcxaGhGSm9KMnFpd2NwNUp0RTB3L09PL3JYNGh2MHU5ZXZF?=
+ =?utf-8?B?NjlkcGNZS1Y0WGZJeTNGTFBlb1RocmxER3hhVFUwekhnYWIxRVNtWklET3Rv?=
+ =?utf-8?B?eS9vMDg0blZ6VnlCT1NoVHNuTVlYMW4wZ2F6NllLdENVcmNxeXhueW5pbHZp?=
+ =?utf-8?B?WFEzbzRUa1VwM0hyYkU4S05oU0ZSbEZ1Wk1PSjNVWExGcG1tZXJJYVZWL2N5?=
+ =?utf-8?B?NGliSVdGaURITmVpejIrYml5WWhHajhqRmtoZXFaOFdlU2ExVjA5dmR0ZVM3?=
+ =?utf-8?B?Y2MzUWtVclhRL25OVlFnSTBzZ1ZoTE5INkEwMkhscmtSREIzenFuUT09?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2026 07:41:28.0632
+X-MS-Exchange-CrossTenant-Network-Message-Id: a0918519-6ab2-404c-60d2-08df2b597add
+X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB8245.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2026 07:45:42.5001
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0e81741b-3d1c-469c-853f-08df2b58e366
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CH2PEPF00000145.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB7900
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: QkSsPLEeZ3GyTXd08re9ndXQZFyMmRDYRmEKg1Rl34eMnHdfbWEBOmEzQBaRvVGwZS+TWpdqK91mWAjckmqgnA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR12MB8978
 
-Use the shared DesignWare RAS-DES event counter register offsets and
-field masks in the common debugfs code instead of carrying duplicate
-private definitions.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
- .../controller/dwc/pcie-designware-debugfs.c  | 56 +++++++++++--------
- drivers/pci/controller/dwc/pcie-designware.h  |  1 -
- 2 files changed, 32 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-debugfs.c b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-index be0b84665c9e..19752cba50b8 100644
---- a/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-@@ -31,14 +31,8 @@
- 
- #define ERR_INJ_ENABLE_REG		0x30
- 
--#define RAS_DES_EVENT_COUNTER_DATA_REG	0xc
--
--#define RAS_DES_EVENT_COUNTER_CTRL_REG	0x8
--#define EVENT_COUNTER_GROUP_SELECT	GENMASK(27, 24)
--#define EVENT_COUNTER_EVENT_SELECT	GENMASK(23, 16)
- #define EVENT_COUNTER_LANE_SELECT	GENMASK(11, 8)
- #define EVENT_COUNTER_STATUS		BIT(7)
--#define EVENT_COUNTER_ENABLE		GENMASK(4, 2)
- #define PER_EVENT_ON			0x3
- #define PER_EVENT_OFF			0x1
- 
-@@ -356,11 +350,15 @@ static void set_event_number(struct dwc_pcie_rasdes_priv *pdata,
- {
- 	u32 val;
- 
--	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG);
--	val &= ~EVENT_COUNTER_ENABLE;
--	FIELD_MODIFY(EVENT_COUNTER_GROUP_SELECT, &val, event_list[pdata->idx].group_no);
--	FIELD_MODIFY(EVENT_COUNTER_EVENT_SELECT, &val, event_list[pdata->idx].event_no);
--	dw_pcie_writel_dbi(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG, val);
-+	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset +
-+					RAS_DES_EVENT_COUNTER_CONTROL);
-+	val &= ~EVENT_COUNTER_ENABLE_MASK;
-+	FIELD_MODIFY(EVENT_COUNTER_GROUP_SEL_MASK, &val,
-+		     event_list[pdata->idx].group_no);
-+	FIELD_MODIFY(EVENT_COUNTER_EVENT_SEL_MASK, &val,
-+		     event_list[pdata->idx].event_no);
-+	dw_pcie_writel_dbi(pci, rinfo->ras_cap_offset +
-+				     RAS_DES_EVENT_COUNTER_CONTROL, val);
- }
- 
- static ssize_t counter_enable_read(struct file *file, char __user *buf,
-@@ -375,13 +373,16 @@ static ssize_t counter_enable_read(struct file *file, char __user *buf,
- 
- 	mutex_lock(&rinfo->reg_event_lock);
- 	set_event_number(pdata, pci, rinfo);
--	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG);
-+	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset +
-+					RAS_DES_EVENT_COUNTER_CONTROL);
- 	mutex_unlock(&rinfo->reg_event_lock);
- 	val = FIELD_GET(EVENT_COUNTER_STATUS, val);
- 	if (val)
--		pos = scnprintf(debugfs_buf, DWC_DEBUGFS_BUF_MAX, "Counter Enabled\n");
-+		pos = scnprintf(debugfs_buf, DWC_DEBUGFS_BUF_MAX,
-+				"Counter Enabled\n");
- 	else
--		pos = scnprintf(debugfs_buf, DWC_DEBUGFS_BUF_MAX, "Counter Disabled\n");
-+		pos = scnprintf(debugfs_buf, DWC_DEBUGFS_BUF_MAX,
-+				"Counter Disabled\n");
- 
- 	return simple_read_from_buffer(buf, count, ppos, debugfs_buf, pos);
- }
-@@ -401,13 +402,15 @@ static ssize_t counter_enable_write(struct file *file, const char __user *buf,
- 
- 	mutex_lock(&rinfo->reg_event_lock);
- 	set_event_number(pdata, pci, rinfo);
--	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG);
-+	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset +
-+					RAS_DES_EVENT_COUNTER_CONTROL);
- 	if (enable)
--		val |= FIELD_PREP(EVENT_COUNTER_ENABLE, PER_EVENT_ON);
-+		val |= FIELD_PREP(EVENT_COUNTER_ENABLE_MASK, PER_EVENT_ON);
- 	else
--		val |= FIELD_PREP(EVENT_COUNTER_ENABLE, PER_EVENT_OFF);
-+		val |= FIELD_PREP(EVENT_COUNTER_ENABLE_MASK, PER_EVENT_OFF);
- 
--	dw_pcie_writel_dbi(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG, val);
-+	dw_pcie_writel_dbi(pci, rinfo->ras_cap_offset +
-+				     RAS_DES_EVENT_COUNTER_CONTROL, val);
- 
- 	/*
- 	 * While enabling the counter, always read the status back to check if
-@@ -416,7 +419,7 @@ static ssize_t counter_enable_write(struct file *file, const char __user *buf,
- 	 */
- 	if (enable) {
- 		val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset +
--					RAS_DES_EVENT_COUNTER_CTRL_REG);
-+					RAS_DES_EVENT_COUNTER_CONTROL);
- 		if (!FIELD_GET(EVENT_COUNTER_STATUS, val)) {
- 			mutex_unlock(&rinfo->reg_event_lock);
- 			return -EOPNOTSUPP;
-@@ -440,7 +443,8 @@ static ssize_t counter_lane_read(struct file *file, char __user *buf,
- 
- 	mutex_lock(&rinfo->reg_event_lock);
- 	set_event_number(pdata, pci, rinfo);
--	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG);
-+	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset +
-+					RAS_DES_EVENT_COUNTER_CONTROL);
- 	mutex_unlock(&rinfo->reg_event_lock);
- 	val = FIELD_GET(EVENT_COUNTER_LANE_SELECT, val);
- 	pos = scnprintf(debugfs_buf, DWC_DEBUGFS_BUF_MAX, "Lane: %d\n", val);
-@@ -463,9 +467,11 @@ static ssize_t counter_lane_write(struct file *file, const char __user *buf,
- 
- 	mutex_lock(&rinfo->reg_event_lock);
- 	set_event_number(pdata, pci, rinfo);
--	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG);
-+	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset +
-+					RAS_DES_EVENT_COUNTER_CONTROL);
- 	FIELD_MODIFY(EVENT_COUNTER_LANE_SELECT, &val, lane);
--	dw_pcie_writel_dbi(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG, val);
-+	dw_pcie_writel_dbi(pci, rinfo->ras_cap_offset +
-+				     RAS_DES_EVENT_COUNTER_CONTROL, val);
- 	mutex_unlock(&rinfo->reg_event_lock);
- 
- 	return count;
-@@ -483,9 +489,11 @@ static ssize_t counter_value_read(struct file *file, char __user *buf,
- 
- 	mutex_lock(&rinfo->reg_event_lock);
- 	set_event_number(pdata, pci, rinfo);
--	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_DATA_REG);
-+	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset +
-+					RAS_DES_EVENT_COUNTER_DATA);
- 	mutex_unlock(&rinfo->reg_event_lock);
--	pos = scnprintf(debugfs_buf, DWC_DEBUGFS_BUF_MAX, "Counter value: %d\n", val);
-+	pos = scnprintf(debugfs_buf, DWC_DEBUGFS_BUF_MAX,
-+			"Counter value: %d\n", val);
- 
- 	return simple_read_from_buffer(buf, count, ppos, debugfs_buf, pos);
- }
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index cb1d1a98e61a..e7cdf1c69744 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -278,7 +278,6 @@
- #define EVENT_COUNTER_ENABLE_ALL	0x7
- #define EVENT_COUNTER_ENABLE_MASK	GENMASK(4, 2)
- #define EVENT_COUNTER_EVENT_SEL_MASK	GENMASK(23, 16)
--#define EVENT_COUNTER_EVENT_SEL_FIELD_MASK	EVENT_COUNTER_EVENT_SEL_MASK
- #define EVENT_COUNTER_EVENT_Tx_L0S	0x2
- #define EVENT_COUNTER_EVENT_Rx_L0S	0x3
- #define EVENT_COUNTER_EVENT_L1		0x5
+On 14/10/26 6:52 pm, Manivannan Sadhasivam wrote:
+>> This series addresses review feedback around register field handling in the
+>> DWC PCIe code and the Tegra194 PCIe driver.
+>>
+>> The first patches add shared masks for the RAS-DES event counter fields,
+>> convert Tegra194 register programming to FIELD_PREP()/FIELD_MODIFY(), and
+>> drop shift macros that become unused after the conversion.  The final
+>> patches make Tegra194 use the common RAS-DES selector definitions and
+>> consolidate the event counter field definitions in the DWC header.
+>>
+>> There should be no functional change intended beyond making the
+>> bitfield programming explicit and keeping the shared RAS-DES definitions in
+>> one place.
+>>
+> 
+> Series LGTM! Please rebase on top of pci/controller/dwc branch and resend.
+> 
+> - Mani
+> 
+
+Thank you for reviewing the changes.
+
+I rebased the changes and posted V2 at 
+https://patchwork.kernel.org/project/linux-pci/list/?series=1187061
+
+- Manikanta
+
 -- 
-2.34.1
+nvpublic
 
