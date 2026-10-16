@@ -1,65 +1,65 @@
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010030.outbound.protection.outlook.com [52.101.61.30])
+Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013043.outbound.protection.outlook.com [40.107.201.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 388A139E6F1;
-	Fri, 16 Oct 2026 16:21:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBA445187EB;
+	Fri, 16 Oct 2026 16:21:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.43
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792167691; cv=fail; b=Eo6QymAbiy77idwFH6kuHqoCqIQJI/vhgmi+HrRM6qWH9VGLul0yYW5JsD78okgBYP0ryICQDyg1mwbwtbNSez6Gqxc+uuQIdnFIpOTxDmk1VUn+4anI3C2Xz8WBPIYgV/FBtIHZUmbMxpHm0W9TNy2VjNhr5hcrAfkKKxrx59U=
+	t=1792167697; cv=fail; b=e8y+0QsZMC+1Umkq9PjD3Ty6nY8ZjOs/qk8wGsdTX+vMwv+055DXiJReixwMJ8PprPzdKEduvvMk0hhOGs14Kh8EHip08WmB9js/pyR3g32uiHUIR8e9Pz2Y/Eqpif0KeOQBW519nlRxzjRwpIq04rQ/JwldWk+03dySfQLbHCk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792167691; c=relaxed/simple;
-	bh=DIzkkkYRx/tWrdyE+TgY8xestSQHusEgNZZQVm97yRQ=;
+	s=arc-20240116; t=1792167697; c=relaxed/simple;
+	bh=dUAI6Hx91iCaupc6SRg+sISPLcscmo3w1+qtZTvb7Cw=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Q4iheqzTQ7SykiP9cmDEpALpeWC9bIy2ND1VG1FoCk8/+/3ii/3ufCfhN8sm+H3rE2JW9w1wIBfa/pG290ZESvJ5J8gfj+JqV5onfkUdnJ2Hr6JiJ3zHla91oFeq8P1gqzaq/iqN8fYRmtTZV9O6I9gD4Fx9GsqgvLwtwLe5huI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=IVxhHYST; arc=fail smtp.client-ip=52.101.61.30
+	 MIME-Version:Content-Type; b=Yu2+OG5LDJMwOGKTHDChHXkQE14ahDOG0buyOShnurfHUVLr+eSoOyjMGhludbRcR45/Dhlu0Q2Ht1MFU4YXZf9Kbi66nH4MH5ibOqed50fDBhpnEfS0MDej/fz/kRH0hqwx9f/fp/Q6MEa+gtwgGuRlpX5Ek4NKjyHAOLIZFbI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=U8SvCzH7; arc=fail smtp.client-ip=40.107.201.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="IVxhHYST"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="U8SvCzH7"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=YG7E3WrY0VHkpKgg67WA+1+HKKj8MvBElvUWPEg52aRioIYEnEfX3263ktp6KuBeB1t91so0ykP1d7HLckBn/E3qPxIoX5qAHtP4fqDMvVECO4/ediOqyrvgTeLijpM3QILOPi7qCZkYrptYzhdLKCbNiGOm++yMiV54X1V90aDZLE5n8Les53Q7QsGEmRix2fE5WjJkwaYfRrGsfvvQGkNgqXE34+iY8z3v2J8B/EyiZfoEd4ZUkvvExoK6TLcNR1XzuN9OgEkpa3XBx2uyI8XmVyh1Aho3IXfQzpbr92VDWb969qijuBAxMkhlFtsZRvzGD+N+mmsfAb6Nma5zpg==
+ b=N2kbcc3VyLMAujJqNSRXfmt+nZX59Bh7mUybB1wXOZ6BAUcqEAqRqLgIqaPQ60T+qhXHR/v2cZyjRFSdWAXuWLB/h2AQ7qOz+qWMwD9tpGSW0W32qksgW+YLW0oxo46XFiNBFTOySsqo9A9k8nchZm7mfxcKCNUN7Gho0NJmzLgKRXBtnCVAZiFOEfhIAh5u8vZ2c/vQNyw5YyrUqY56aBTg5VxBg3gUnpfCyxTt5MBD3lX4y6pJqatM3kCL16RX+zSbSznqdiQkxZQMFOQ5H28C9b/+M7ZbFF2TN2UtleQbQ+5nD/FjCm6aOet5B4qQVpkZ4AQ7MrFF8MdOrkBmpA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7D9AwU5rqJRescNHKFvU9xQlfSZ2Gc7oPCBC/6nJi/w=;
- b=HVqIZ7ueDc57j17PQ/ivl8+qD6+075sjLy1X27jEDPF6ZZe6j73iIv0rURRVVrySogF7F2jBRoYhF12GNJfbBSSSFZ+5OI8G3TyvmesHC/QO2GUw3FY42NE2hu8KrLpCNVns1nl0z+pmx6q1qKurl0QYMzcbnJGuaiuoZNRHHdzfRVqTFLVv4AC1+syVHCKlljy/yoUbqBJq00L8ZCrauOHKYrX0CKvWDdQybvgeznYIBEAVWmuzQriRZevzseqAyFFbaDXr8f9MclMs1Qo7WAAaOUjXfVCdS7d15GsmuxvfFnFqAPdmCGv/6zELBcbRfR+adY2TdGMysXhNxtqTpQ==
+ bh=WZ0azavEvib4AMe9E9aXbgFhgwg+Mha5jOSEd9s+gx0=;
+ b=Nw0d2Rpd/9/FZQdebm8LjCEGbLODoYIMzONtVLg9HeJHdaTUiHseLxoDqD4g+DhCccGoPz4IsSi6xLcWJ+G22wqX5YOuIkltX4zrCRD95yPiHIR77BS3OWNVn0ZW0FxQdBiMF95ez3WitCpe5u9A2qjMFQ2AqEVudrrF4mDSFRHwUCU3XSosFn8z964Kj4H3lffR9rsByjA2goO82hQPifAvAfQvqRk7UlIsD2g17pzK/UDYrESPJJfGzurLrIT//Z6UfFLklDsbXnmJ7LgcFPnPlFwAhNeOMGDT6F17ZSoA0CFe6hyj8bktN/mYRrJxogtt1mnM50S2zdj344yZgQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=shazbot.org smtp.mailfrom=nvidia.com;
+ 216.228.117.160) smtp.rcpttodomain=shazbot.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7D9AwU5rqJRescNHKFvU9xQlfSZ2Gc7oPCBC/6nJi/w=;
- b=IVxhHYSTKNWeg8QCPG7tXH6U8kdS6MRr+5XZudKEqaYGlE9RfssFOh7A/U8d/cuWLO+gcM/mf+MnkYDQwSzEGSAsL3DntIqp2q9JJ8st7f4+cVp3JDub+HVG1d8rp5C4mdUfLmjlhk5q6K723yBOzbD7EzE7SYUEXzlLBF3iXQKts3fiD4G1dvCs4FDadlVzWxM8L0ho/TVSqFaI4FA8ZcL4PNGC6pS+tRNsv07yMO66onyddc4I07284oSW/uni0aN6q5KRS6AWC5Wtrh0rTZGlRU0XBnVyl+fYBMOaPKzzTVfItnYRu9R6uDglv/8o5sMPHsfHyM6QFO8OBrwwlQ==
-Received: from MN2PR03CA0019.namprd03.prod.outlook.com (2603:10b6:208:23a::24)
- by CH3PR12MB7690.namprd12.prod.outlook.com (2603:10b6:610:14e::20) with
+ bh=WZ0azavEvib4AMe9E9aXbgFhgwg+Mha5jOSEd9s+gx0=;
+ b=U8SvCzH7Ufb5yBFrErQk+jz7S8NmuKcptZsf87BWm0MT+Cm1dN04l7xEp7bISQklKLRSQkb6O1AFkZiRrzHsh+XFG9RT8dzEzPZJaxXFIUCGQN1bQl88EIjJEuENPVZTQ+yWG2DNzGgFNfzaSP6OEh/MRvT0q80VEVHf73aU5qTu4PDZ59y9vkvvpiQsgbdfDw/dt9zk8VYetGmO3MsDht1pSx1faDzHfwLD/EY6SesxmO0UusMUDnKRC9VqWqowdZlefEV2YpMa+svDj9bUacCnnm05cPkiS4idxaNMk6NGEwT0MpymTzuAgHAlhPYu/KuB3O84p4Z7umFzxw2XPw==
+Received: from DSZP220CA0003.NAMP220.PROD.OUTLOOK.COM (2603:10b6:5:280::13) by
+ SA5PPFCB4F033D6.namprd12.prod.outlook.com (2603:10b6:80f:fc04::8e2) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.496.28; Fri, 16 Oct
- 2026 16:21:09 +0000
-Received: from BN7PEPF000000A4.namprd05.prod.outlook.com
- (2603:10b6:208:23a:cafe::16) by MN2PR03CA0019.outlook.office365.com
- (2603:10b6:208:23a::24) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.522.4 via Frontend Transport; Fri, 16
- Oct 2026 16:21:08 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.13; Fri, 16 Oct
+ 2026 16:21:23 +0000
+Received: from CH01EPF000BE94E.namprd02.prod.outlook.com
+ (2603:10b6:5:280:cafe::49) by DSZP220CA0003.outlook.office365.com
+ (2603:10b6:5:280::13) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.522.17 via Frontend Transport; Fri,
+ 16 Oct 2026 16:21:22 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- BN7PEPF000000A4.mail.protection.outlook.com (10.167.245.228) with Microsoft
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ CH01EPF000BE94E.mail.protection.outlook.com (10.167.244.203) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.522.6 via Frontend Transport; Fri, 16 Oct 2026 16:21:08 +0000
+ 15.21.522.6 via Frontend Transport; Fri, 16 Oct 2026 16:21:22 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Fri, 16 Oct
- 2026 09:20:42 -0700
+ 2026 09:20:59 -0700
 Received: from nvidia-4028GR-scsim.nvidia.com (10.126.230.37) by
  rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Fri, 16 Oct 2026 09:20:33 -0700
+ 15.2.2562.49; Fri, 16 Oct 2026 09:20:51 -0700
 From: <mhonap@nvidia.com>
 To: <alex@shazbot.org>, <jgg@ziepe.ca>, <ankita@nvidia.com>,
 	<jic23@kernel.org>, <dave.jiang@intel.com>, <alejandro.lucero-palau@amd.com>,
@@ -74,9 +74,9 @@ CC: <cjia@nvidia.com>, <kjaju@nvidia.com>, <vsethi@nvidia.com>,
 	<linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
 	<linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-kselftest@vger.kernel.org>, <linux-hardening@vger.kernel.org>
-Subject: [PATCH v6 11/31] vfio/pci: Virtualize the CXL DVSEC in vfio_pci_config.c
-Date: Fri, 16 Oct 2026 21:48:18 +0530
-Message-ID: <20261016161839.2765592-12-mhonap@nvidia.com>
+Subject: [PATCH v6 13/31] vfio/pci: Bracket PCI resets with the CXL reset hooks
+Date: Fri, 16 Oct 2026 21:48:20 +0530
+Message-ID: <20261016161839.2765592-14-mhonap@nvidia.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261016161839.2765592-1-mhonap@nvidia.com>
 References: <20261016161839.2765592-1-mhonap@nvidia.com>
@@ -92,327 +92,380 @@ X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN7PEPF000000A4:EE_|CH3PR12MB7690:EE_
-X-MS-Office365-Filtering-Correlation-Id: 51aa26cd-8afc-4f3b-4e7f-08df2ba17c73
+X-MS-TrafficTypeDiagnostic: CH01EPF000BE94E:EE_|SA5PPFCB4F033D6:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0a76bc67-83d3-4ff5-c345-08df2ba1849d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|376014|1800799024|7416014|36860700016|23010399003|10067099003|18002099003|22082099003|5023799004|11063799006|261009223027099003|921020|56012099006;
+	BCL:0;ARA:13230040|23010399003|36860700016|82310400026|1800799024|376014|7416014|22082099003|18002099003|10067099003|921020|261009223027099003|5023799004|11063799006|56012099006;
 X-Microsoft-Antispam-Message-Info:
-	gWDCV58FIHG7Uqu30AiMeKdc44TJ2haCy4qv5t+PizZuO35TDpn3TgH5qYu6UYZx6m/IsF3QTIRbmMuucxYwUQqB/qyJVoGj6uiaDVp9SN3Adn/TwvWkturYVA2VhU0Wgev60vQnFYuyMNmmdnF8E2XCX7I7+TotG99DBedcHDgoUvf3PAlB1TPvB5jwMSlpUP3FlXunvbAoIhXHOGR0fL/4fYKyNmfepE72FkrWInl975Vw+bTGTYtxV9F6Kwodpn2HzihQ8AObj4gh5psw3aQquYdqH77CALRkfs9drDuEPkfSTi20He8lQVuesCu0d4jjMUmfIRQ+Bt4Rlc0EKoEmDUi1zGY8xoyiudWqWWG1gRHPRwqNT1gdon1VICmJUt2rnyQXzVTJALbYk4fTHNaRfzuoDOy6U03nf+iwySxIljwera3CWWllgznL3LKw8j5TMAVu9tCNcZqutzOGpe3c4upj7dos2MUlLHvbp+Lbq41dE9UPH997gadOLMKBJ8nk6/a+3YzGNf6Jn+XCjvzj3A7xxPZTqjkM/NqubvigJ0Fgue897/93G47CVCZgyHQ/cklUEPBB3vX3eVlQbEpIA9o1YaMvTnv7T+EwV9/QCLuilAbw04Of3vc0WXMf5yUZF7HrXgbA1GzsQBfG7uomst40FjR1YkYCwrltbWKnfmrOEhN+fnewsYCVET8pBfFi2T8u6z7fCU+xE7AtW4XpBCEOc0K3SYXvFczcuZW9OC8uK6+f+gvGaMcy122e
+	SQ6nAq3Kyhz/OJrVCnXC4dwgt9X0OIx8EqDHb6L3m6NpE0jCOy85Ke1Fao/LiUjSuD5CdRgpE+CTDy4eltsX9Gnxk/A6VvKKkWikyy3x+I7uGn6bFbY/z6tn7aKwkrq8cLZixip5B9JU4/5czSNohwLEWGFDiOhIzkjYuJ46KteV4ZiCqvQDNpafGGzmA6lZwAJlcX/Hb27qpSRCxdKkRmUvWeNKU9GMqg1wS9OG4/6yjl/1EkIpNuDXnSVAYboicBKOB7HNUN/nTaSQWWFL3FM7CViwr7z1wL7j0qzDYJCu1cJDb/7qCsgBh1Hxm66n/ZRkEs/nFSAAAo0qXQE4DAaF2I7feL8QWHeMlTRzFf+QfRo5Owe/JYM50oLlyk3kQDM+7CB3E2zs3umH6Hl4dK36Hz4ZEQrdXRRHY8IzjuaU+wyPQJpfB4xzLZd+KAYX91h2QCs3jtjvjKxZLxWA9CsXwKMmXOl42VyFvinQ8yR+HqA3So/LdNhxcnxDDGKNHUxgSCqoQL4g3k5EMr/UFLWAfsVIqa+psTnDCCPWAdE+MfBhzsf9hbzj2+xMvj0ZCFgxEW2iL3HlazVEoXu5wJbk001AJZTuynGhukBbuRVTyeyRwY203ENF75H9MpX0InFoczYVmhLwUTtlX+x+Tz+Pc2yzxVNUA5NP3ssPhg7Hw77YoY/znY0uM0JgwtPUTyhVlA8ZhDUY9nTKB1muSDxuEYbG0eL2K8CZqL7rfmtcBPJiSJy4V0lHZSvWS4OE
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(376014)(1800799024)(7416014)(36860700016)(23010399003)(10067099003)(18002099003)(22082099003)(5023799004)(11063799006)(261009223027099003)(921020)(56012099006);DIR:OUT;SFP:1101;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(36860700016)(82310400026)(1800799024)(376014)(7416014)(22082099003)(18002099003)(10067099003)(921020)(261009223027099003)(5023799004)(11063799006)(56012099006);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	R5evRP/CI+zlGPoNzx5lVCS/3+KSq3iHJHJD7qWRYaTA3T5qrublZcnX60QR8VERprivjBgXV2smrBrM1Ra/vK2lRSOn9M/ey67qWeXOFUid69XyYAu3YVXi7Ux4wnDMmBGnv0P8QymD32XQNIkFYh4kqSI5WLo5yozDEbSkxlx+nWtf+gUIKM05P/W4CDTE9RkSVWJq8ZtmSAvNFcZm0QthXY3gEGXxuto8mHJYMn6KiwJ7DUQXlY4c2+E9wlSl6VMafrF2Capp1yMfKDgqxc3g+jAnMbO8TeFyFI/jos/EiRmx54WGPLWyS3i6MRygqG0DmcVb3QIyzsS9G0+dhP6WZxSo7fGC9l8anmyhFU0t2uYnhtVaIgIIj7WiGuRkUTDi29A8XHH/KgjR2b/NsZpRNygfD3V066ZaAQhaT9PpR97Eoaq9m8wiTtVuSFc3
+	s5+0mt15CPTUFml3ILsP4DV7ubSUoirraF2LKDj61j+PQ9sO1ds70wu/Vjp2ZyJ6tmDpF0m5nnvn9vhVJusnMC3mZUxQkbTpKzCS6mFaF9oeQiCzH0tiCVrb9y1x13PD2wdfMUBmDwkeqJiL10VNpALw14lJFOuNURA6K6LLPULXZAnbmJLWz8m0Ugt8Eu47tjXm5RqSGgDzyMtsSfN90WF624EpcYJogsf4hsf3j4VtqhaqKKW9SxUQ6Aeto8AbVRoQKl6LVZzByOa0BjEWX1T5JtUuhzMu8w+TmEEI8OAK3PXl6ftWsfgRVkziWNKmyx3KTyU4xeHZQDPaMsk11rBrMVgibjIVKuJQ1DB+EW2dgqFV9/dacsoiyFurE3F7/2RQKaOyc+YrrA15ygH1rBPu17aKeUKT1a63yUq6JWY6FTk+JLUXaUFNp0vQ5Yrx
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2026 16:21:08.5672
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2026 16:21:22.2895
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 51aa26cd-8afc-4f3b-4e7f-08df2ba17c73
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0a76bc67-83d3-4ff5-c345-08df2ba1849d
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BN7PEPF000000A4.namprd05.prod.outlook.com
+	CH01EPF000BE94E.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB7690
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA5PPFCB4F033D6
 
 From: Manish Honap <mhonap@nvidia.com>
 
-A CXL Type-2 device is reprogrammable through its CXL DVSEC: a guest could
-set Config Lock, toggle CXL.cache and CXL.mem enable, or rewrite the HDM
-range registers that govern host memory decode. Virtualize the DVSEC so
-the guest sees a shadow it cannot use to reprogram the hardware.
+A CXL Type-2 device must quiesce its coherent link before any reset and
+restore its HDM decoder state afterward, or a reset can leave the device
+mastering the bus over decoders that are no longer valid. This has to
+happen around every reset the PCI core drives for the device, not only
+the ones VFIO issues directly, and around AER and DPC recovery, which
+can reset the link without the reset callbacks.
 
-Build a per-device cxl_perm permission map, modeled on msi_perm. When
-the device is bound through the CXL provider (e.g. vfio-cxl), the whole
-CXL DVSEC is served from the vconfig shadow; only Control and Control2
-are guest programmable, while Capability, Status, Lock and the Range
-registers keep their firmware snapshot. A vendor DVSEC on the same
-device is unaffected: the map is selected by the CXL DVSEC's range,
-since every DVSEC has the same ID in the config map and two DVSECs can
-be adjacent.
+Add:
+- reset_prepare
+- reset_done
+- an optional error_resume to the CXL ops
 
-A Type-2 function bound without the provider (the provider is absent,
-its init failed, or the extensions are disabled) gets a guard map
-instead. The DVSEC reads from hardware, Control and Control2 stay
-writable and the RW1C status bits stay clearable, but writes to Lock and
-the Range registers are dropped, since they outlive the user. Initiate
-CXL Reset uses the same doorbell; a cache write-back goes to the device.
+Export:
+- vfio_pci_core_reset_prepare()
+- vfio_pci_core_reset_done()
+- vfio_pci_core_error_detected()
+- vfio_pci_core_error_resume()
+which take the vfio device.
 
-Control2 carries the CXL reset and cache write-back-invalidate initiate
-bits as self-clearing doorbells. With the provider, vfio never forwards
-them to hardware, so a custom writefn synthesizes their completion in
-the shadow: the initiate bit self-clears and the matching Status2 bit
-(Cache Invalid or Reset Done) is set, so a guest that writes back its
-cache (CXL r4.0 sec 9.6) and then runs CXL Reset (sec 9.7.2) progresses
-instead of timing out. Cache Invalid is reported only while Disable
-Caching is set, as the spec requires. The host performs the real cache
-write-back and reset at the vfio reset points. Until a later patch in
-this series runs the real reset from the doorbell, Initiate CXL Reset
-completes in the shadow only.
+vfio-pci calls them from its own pci_error_handlers, which resolve the
+driver data it owns. A variant driver that binds CXL devices calls them
+from its own handlers the same way; a driver without reset_prepare,
+reset_done, error_detected and resume callbacks gets no CXL support.
+
+The provider hooks run with memory_lock held for write: vfio-pci-core
+already holds it across its own hot reset, and
+vfio_pci_core_reset_prepare() takes it for a reset started anywhere else
+until vfio_pci_core_reset_done(). The hot reset records its task, so a
+reset that another task starts meanwhile waits for memory_lock instead
+of skipping it. pci_dev_lock() blocks user config access, which a
+PCI_COMMAND write can be waiting for while it holds memory_lock, so
+reset_prepare lets config access through while it waits. reset_done
+returns an error when the provider could not restore its device, and
+VFIO_DEVICE_PCI_HOT_RESET returns that error; for any other reset the
+provider logs it.
 
 Assisted-by: LLM
 Signed-off-by: Manish Honap <mhonap@nvidia.com>
 ---
- drivers/vfio/pci/vfio_pci_config.c | 206 ++++++++++++++++++++++++++++-
- include/linux/vfio_pci_core.h      |   3 +
- 2 files changed, 205 insertions(+), 4 deletions(-)
+ drivers/vfio/pci/vfio_pci.c      |  39 +++++++-
+ drivers/vfio/pci/vfio_pci_core.c | 154 +++++++++++++++++++++++++++++++
+ include/linux/vfio_pci_core.h    |  22 +++++
+ 3 files changed, 214 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-index 9914f3ac69ae..1fc463540211 100644
---- a/drivers/vfio/pci/vfio_pci_config.c
-+++ b/drivers/vfio/pci/vfio_pci_config.c
-@@ -1747,6 +1747,194 @@ static const struct pci_device_id known_bogus_vf_intx_pin[] = {
-  * for each area requiring emulated bits, but the array of pointers
-  * would be comparable in size (at least for standard config space).
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 830369ff878d..286244059569 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -223,13 +223,50 @@ static const struct pci_device_id vfio_pci_table[] = {
+ 
+ MODULE_DEVICE_TABLE(pci, vfio_pci_table);
+ 
++static void vfio_pci_reset_prepare(struct pci_dev *pdev)
++{
++	struct vfio_pci_core_device *vdev = dev_get_drvdata(&pdev->dev);
++
++	vfio_pci_core_reset_prepare(vdev);
++}
++
++static void vfio_pci_reset_done(struct pci_dev *pdev)
++{
++	struct vfio_pci_core_device *vdev = dev_get_drvdata(&pdev->dev);
++
++	vfio_pci_core_reset_done(vdev);
++}
++
++static pci_ers_result_t vfio_pci_error_detected(struct pci_dev *pdev,
++						pci_channel_state_t state)
++{
++	struct vfio_pci_core_device *vdev = dev_get_drvdata(&pdev->dev);
++
++	vfio_pci_core_error_detected(vdev);
++	return vfio_pci_core_aer_err_detected(pdev, state);
++}
++
++static void vfio_pci_error_resume(struct pci_dev *pdev)
++{
++	struct vfio_pci_core_device *vdev = dev_get_drvdata(&pdev->dev);
++
++	vfio_pci_core_error_resume(vdev);
++}
++
++static const struct pci_error_handlers vfio_pci_err_handlers = {
++	.error_detected = vfio_pci_error_detected,
++	.reset_prepare = vfio_pci_reset_prepare,
++	.reset_done = vfio_pci_reset_done,
++	.resume = vfio_pci_error_resume,
++};
++
+ static struct pci_driver vfio_pci_driver = {
+ 	.name			= "vfio-pci",
+ 	.id_table		= vfio_pci_table,
+ 	.probe			= vfio_pci_probe,
+ 	.remove			= vfio_pci_remove,
+ 	.sriov_configure	= vfio_pci_sriov_configure,
+-	.err_handler		= &vfio_pci_core_err_handlers,
++	.err_handler		= &vfio_pci_err_handlers,
+ 	.driver_managed_dma	= true,
+ };
+ 
+diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+index 3d4e01eea7b1..f1e1ec36eec7 100644
+--- a/drivers/vfio/pci/vfio_pci_core.c
++++ b/drivers/vfio/pci/vfio_pci_core.c
+@@ -2462,6 +2462,7 @@ static bool vfio_pci_is_cxl_type2(struct pci_dev *pdev)
   */
-+static int vfio_cxl_dvsec_write(struct vfio_pci_core_device *vdev, int pos,
-+				int count, struct perm_bits *perm,
-+				int offset, __le32 val)
-+{
-+	u16 start = vdev->cxl_dvsec;
-+	__le16 *pctrl2, *pstatus2;
-+	u16 ctrl2, status2;
-+
-+	count = vfio_default_config_write(vdev, pos, count, perm, offset, val);
-+	if (count < 0)
-+		return count;
-+
-+	/* Only Control2 carries the self-clearing doorbells. */
-+	if (offset > PCI_DVSEC_CXL_CTRL2 ||
-+	    offset + count <= PCI_DVSEC_CXL_CTRL2)
-+		return count;
-+
-+	pctrl2 = (__le16 *)&vdev->vconfig[start + PCI_DVSEC_CXL_CTRL2];
-+	pstatus2 = (__le16 *)&vdev->vconfig[start + PCI_DVSEC_CXL_STATUS2];
-+	ctrl2 = le16_to_cpu(*pctrl2);
-+	status2 = le16_to_cpu(*pstatus2);
-+
+ static int vfio_pci_core_cxl_init(struct vfio_pci_core_device *vdev)
+ {
++	const struct pci_error_handlers *err_handler;
+ 	const struct vfio_cxl_ops *ops;
+ 	int ret;
+ 
+@@ -2473,6 +2474,23 @@ static int vfio_pci_core_cxl_init(struct vfio_pci_core_device *vdev)
+ 	if (!ops)
+ 		return IS_BUILTIN(CONFIG_VFIO_CXL) ? -EPROBE_DEFER : 0;
+ 
 +	/*
-+	 * INIT_CACHE_WBI and INIT_CXL_RST are self-clearing doorbells. With a
-+	 * provider neither reaches hardware: synthesize their completion in the
-+	 * shadow so the guest poll finishes, clearing the initiate bit and
-+	 * setting the matching Status2 completion. Cache Invalid is set only
-+	 * while caching is disabled and reads 0 otherwise (CXL r4.0 sec 8.1.3.5,
-+	 * Table 8-9). Under the guard map INIT_CACHE_WBI and Cache Invalid go to
-+	 * the device; only INIT_CXL_RST and its completion are virtualized.
++	 * The provider must see every PCI core reset of the device and every
++	 * AER or DPC recovery. A driver without reset_prepare, reset_done,
++	 * error_detected and resume callbacks gets no CXL support; the driver's
++	 * callbacks must call vfio_pci_core_reset_prepare(), _reset_done(),
++	 * _error_detected() and _error_resume().
 +	 */
-+	if (ctrl2 & PCI_DVSEC_CXL_INIT_CACHE_WBI) {
-+		ctrl2 &= ~PCI_DVSEC_CXL_INIT_CACHE_WBI;
-+		if (ctrl2 & PCI_DVSEC_CXL_DISABLE_CACHING)
-+			status2 |= PCI_DVSEC_CXL_CACHE_INV;
-+	}
-+	if (!(ctrl2 & PCI_DVSEC_CXL_DISABLE_CACHING))
-+		status2 &= ~PCI_DVSEC_CXL_CACHE_INV;
-+	if (ctrl2 & PCI_DVSEC_CXL_INIT_CXL_RST) {
-+		ctrl2 &= ~PCI_DVSEC_CXL_INIT_CXL_RST;
-+		status2 &= ~PCI_DVSEC_CXL_RST_ERR;
-+		status2 |= PCI_DVSEC_CXL_RST_DONE;
++	err_handler = vdev->pdev->driver ? vdev->pdev->driver->err_handler : NULL;
++	if (!err_handler || !err_handler->reset_prepare ||
++	    !err_handler->reset_done || !err_handler->error_detected ||
++	    !err_handler->resume) {
++		pci_info(vdev->pdev,
++			 "driver lacks PCI reset or error recovery hooks, continuing without CXL support\n");
++		vfio_pci_put_cxl_ops(ops);
++		return 0;
 +	}
 +
-+	*pctrl2 = cpu_to_le16(ctrl2);
-+	*pstatus2 = cpu_to_le16(status2);
-+
-+	return count;
-+}
-+
-+static int init_cxl_dvsec_perm(struct perm_bits *perm, int len)
-+{
-+	if (alloc_perm_bits(perm, len))
-+		return -ENOMEM;
-+
-+	perm->writefn = vfio_cxl_dvsec_write;
-+
-+	/* Serve the whole CXL DVSEC from the shadow. */
-+	for (int i = 0; i < len; i++)
-+		p_setb(perm, i, (u8)ALL_VIRT, NO_WRITE);
-+
-+	/*
-+	 * Control and Control2 are guest programmable; Capability, Status,
-+	 * Lock and the Range registers keep their firmware snapshot, so the
-+	 * guest cannot set Config Lock or rewrite the capability and ranges.
-+	 */
-+	p_setw(perm, PCI_DVSEC_CXL_CTRL, (u16)ALL_VIRT, (u16)ALL_WRITE);
-+	p_setw(perm, PCI_DVSEC_CXL_CTRL2, (u16)ALL_VIRT, (u16)ALL_WRITE);
-+
-+	return 0;
-+}
-+
+ 	ret = ops->init(vdev);
+ 	/*
+ 	 * A provider that is not ready yet (for example its CXL port has not
+@@ -2759,6 +2777,128 @@ int vfio_pci_core_sriov_configure(struct vfio_pci_core_device *vdev,
+ }
+ EXPORT_SYMBOL_GPL(vfio_pci_core_sriov_configure);
+ 
 +/*
-+ * Without a CXL provider the device is bound without the CXL extensions, so
-+ * the DVSEC is read from hardware, Control and Control2 stay writable, and
-+ * the RW1C status bits in Status and Status2 (for example Viral_Status) can
-+ * still be cleared. Drop the writes whose effect outlives the user: Config
-+ * Lock and the Range registers. Initiate CXL Reset goes through the same
-+ * doorbell as with a provider, so the reset runs at a vfio reset point under
-+ * memory_lock.
++ * Take memory_lock for a reset that the PCI core runs on a locked device.
++ * pci_dev_lock() also blocks user config access, and vfio_basic_config_write()
++ * holds memory_lock while its pci_user_*_config() calls wait for that block
++ * to clear. Waiting for memory_lock with config access blocked would hang
++ * both tasks, so let user config access through while waiting: the PCI core
++ * calls reset_prepare before it saves or touches the device. The caller holds
++ * the device lock, so a block found set is the caller's own.
 + */
-+static int init_cxl_dvsec_guard_perm(struct perm_bits *perm, int len)
-+{
-+	if (alloc_perm_bits(perm, len))
-+		return -ENOMEM;
-+
-+	perm->writefn = vfio_cxl_dvsec_write;
-+
-+	/* Extended capability header: ID and next pointer from vconfig. */
-+	p_setd(perm, 0, ALL_VIRT, NO_WRITE);
-+
-+	p_setw(perm, PCI_DVSEC_CXL_CTRL, NO_VIRT, (u16)ALL_WRITE);
-+	p_setw(perm, PCI_DVSEC_CXL_CTRL2, PCI_DVSEC_CXL_INIT_CXL_RST,
-+	       (u16)ALL_WRITE);
-+	/* Status (offset 0Eh, between Control and Control2): RW1C to the device. */
-+	p_setw(perm, PCI_DVSEC_CXL_CTRL + 2, NO_VIRT, (u16)ALL_WRITE);
-+	p_setw(perm, PCI_DVSEC_CXL_STATUS2,
-+	       PCI_DVSEC_CXL_RST_DONE | PCI_DVSEC_CXL_RST_ERR,
-+	       (u16)~(PCI_DVSEC_CXL_RST_DONE | PCI_DVSEC_CXL_RST_ERR));
-+
-+	return 0;
-+}
-+
-+/* Virtualize the CXL DVSEC so a guest cannot reprogram the device through it. */
-+static int vfio_cxl_dvsec_init(struct vfio_pci_core_device *vdev)
++static void vfio_pci_reset_lock_memory(struct vfio_pci_core_device *vdev)
 +{
 +	struct pci_dev *pdev = vdev->pdev;
-+	u32 dword;
-+	u16 dvsec, cap;
-+	int len, ret;
 +
-+	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-+					  PCI_DVSEC_CXL_DEVICE);
-+	if (!dvsec)
-+		return 0;
-+
-+	ret = pci_read_config_dword(pdev, dvsec + PCI_DVSEC_HEADER1, &dword);
-+	if (ret)
-+		return pcibios_err_to_errno(ret);
-+	len = PCI_DVSEC_HEADER1_LEN(dword);
-+
-+	/*
-+	 * The virtualization writes fixed DVSEC offsets up to Status2 (the reset
-+	 * doorbell stamps it). A device that reports a shorter DVSEC is not a
-+	 * usable Type-2 function; leave its DVSEC unvirtualized rather than
-+	 * index the device-length-sized perm allocation past its end.
-+	 */
-+	if (len < PCI_DVSEC_CXL_STATUS2 + 2)
-+		return 0;
-+
-+	/*
-+	 * Without a provider, guard only a CXL Type-2 function, with the same
-+	 * test vfio-pci-core uses to load the provider.
-+	 */
-+	if (!vdev->cxl_ops) {
-+		if (!pcie_is_cxl(pdev))
-+			return 0;
-+		ret = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CAP, &cap);
-+		if (ret)
-+			return pcibios_err_to_errno(ret);
-+		if (!(cap & PCI_DVSEC_CXL_CACHE_CAPABLE) ||
-+		    !(cap & PCI_DVSEC_CXL_MEM_CAPABLE))
-+			return 0;
-+	}
-+
-+	vdev->cxl_perm = kmalloc_obj(*vdev->cxl_perm, GFP_KERNEL_ACCOUNT);
-+	if (!vdev->cxl_perm)
-+		return -ENOMEM;
-+
-+	if (vdev->cxl_ops)
-+		ret = init_cxl_dvsec_perm(vdev->cxl_perm, len);
-+	else
-+		ret = init_cxl_dvsec_guard_perm(vdev->cxl_perm, len);
-+	if (ret) {
-+		kfree(vdev->cxl_perm);
-+		vdev->cxl_perm = NULL;
-+		return ret;
-+	}
-+
-+	vdev->cxl_dvsec = dvsec;
-+	vdev->cxl_dvsec_len = len;
-+
-+	return 0;
-+}
-+
-+static void vfio_cxl_dvsec_exit(struct vfio_pci_core_device *vdev)
-+{
-+	if (!vdev->cxl_perm)
++	if (down_write_trylock(&vdev->memory_lock))
 +		return;
 +
-+	free_perm_bits(vdev->cxl_perm);
-+	kfree(vdev->cxl_perm);
-+	vdev->cxl_perm = NULL;
-+	vdev->cxl_dvsec = 0;
-+	vdev->cxl_dvsec_len = 0;
++	/* The caller did not block config access: nothing to release. */
++	if (pci_cfg_access_trylock(pdev)) {
++		pci_cfg_access_unlock(pdev);
++		down_write(&vdev->memory_lock);
++		return;
++	}
++
++	pci_cfg_access_unlock(pdev);
++	down_write(&vdev->memory_lock);
++	pci_cfg_access_lock(pdev);
 +}
 +
-+/*
-+ * Every DVSEC carries the same ID in pci_config_map, so vfio_find_cap_start()
-+ * can walk from one DVSEC into an adjacent one. Match the CXL DVSEC by range.
++/**
++ * vfio_pci_core_reset_prepare() - prepare a device for a PCI core reset
++ * @vdev: vfio PCI device about to be reset
++ *
++ * Call from the driver's pci_error_handlers.reset_prepare callback.
 + */
-+static bool vfio_cxl_dvsec_contains(struct vfio_pci_core_device *vdev,
-+				    loff_t pos)
++void vfio_pci_core_reset_prepare(struct vfio_pci_core_device *vdev)
 +{
-+	return vdev->cxl_perm && pos >= vdev->cxl_dvsec &&
-+	       pos < vdev->cxl_dvsec + vdev->cxl_dvsec_len;
++	if (!vdev->cxl_ops)
++		return;
++
++	/*
++	 * vfio-pci-core holds memory_lock across its own hot reset. Hold it
++	 * across a reset started anywhere else too, until reset_done. Test
++	 * the owner, not just a flag: another task can reset the device while
++	 * a hot reset holds memory_lock and has not yet locked the device.
++	 */
++	if (READ_ONCE(vdev->hot_reset_task) != current)
++		vfio_pci_reset_lock_memory(vdev);
++
++	vdev->cxl_ops->reset_prepare(vdev);
 +}
++EXPORT_SYMBOL_GPL(vfio_pci_core_reset_prepare);
 +
- int vfio_config_init(struct vfio_pci_core_device *vdev)
- {
- 	struct pci_dev *pdev = vdev->pdev;
-@@ -1842,6 +2030,10 @@ int vfio_config_init(struct vfio_pci_core_device *vdev)
- 	if (ret)
- 		goto out;
- 
-+	ret = vfio_cxl_dvsec_init(vdev);
-+	if (ret)
-+		goto out;
++/**
++ * vfio_pci_core_reset_done() - restore a device after a PCI core reset
++ * @vdev: vfio PCI device that was reset
++ *
++ * Call from the driver's pci_error_handlers.reset_done callback.
++ */
++void vfio_pci_core_reset_done(struct vfio_pci_core_device *vdev)
++{
++	int ret;
 +
- 	return 0;
- 
- out:
-@@ -1863,6 +2055,7 @@ void vfio_config_free(struct vfio_pci_core_device *vdev)
- 		kfree(vdev->msi_perm);
- 		vdev->msi_perm = NULL;
- 	}
-+	vfio_cxl_dvsec_exit(vdev);
- }
- 
- /*
-@@ -1926,12 +2119,17 @@ ssize_t vfio_pci_config_rw_single(struct vfio_pci_core_device *vdev,
- 			 * of the extended capability list.  Use default, ro
- 			 * access, which will virtualize the id and next values.
- 			 */
--			if (cap_id > PCI_EXT_CAP_ID_MAX)
-+			cap_start = vfio_find_cap_start(vdev, *ppos);
++	if (!vdev->cxl_ops)
++		return;
 +
-+			if (cap_id > PCI_EXT_CAP_ID_MAX) {
- 				perm = &direct_ro_perms;
--			else
-+			} else if (cap_id == PCI_EXT_CAP_ID_DVSEC &&
-+				   vfio_cxl_dvsec_contains(vdev, *ppos)) {
-+				perm = vdev->cxl_perm;
-+				cap_start = vdev->cxl_dvsec;
-+			} else {
- 				perm = &ecap_perms[cap_id];
--
--			cap_start = vfio_find_cap_start(vdev, *ppos);
++	ret = vdev->cxl_ops->reset_done(vdev);
++
++	/*
++	 * hot_reset_task cannot change since reset_prepare: setting it needs
++	 * memory_lock, which this task or the hot reset task holds.
++	 */
++	if (READ_ONCE(vdev->hot_reset_task) == current) {
++		/* VFIO_DEVICE_PCI_HOT_RESET returns the error. */
++		vdev->reset_done_err = ret;
++		return;
++	}
++
++	/*
++	 * Nobody waits for the result of a reset started elsewhere. A provider
++	 * that failed has logged it and keeps its device memory out of use
++	 * until a later reset restores the device.
++	 */
++	up_write(&vdev->memory_lock);
++}
++EXPORT_SYMBOL_GPL(vfio_pci_core_reset_done);
++
++/**
++ * vfio_pci_core_error_detected() - prepare a device for AER or DPC recovery
++ * @vdev: vfio PCI device the recovery reports an error on
++ *
++ * Call from the driver's pci_error_handlers.error_detected callback. The
++ * recovery may reset the device without reset_prepare and reset_done, so a
++ * provider takes its device memory out of use here.
++ */
++void vfio_pci_core_error_detected(struct vfio_pci_core_device *vdev)
++{
++	if (!vdev->cxl_ops)
++		return;
++
++	guard(rwsem_write)(&vdev->memory_lock);
++	vdev->cxl_ops->reset_prepare(vdev);
++}
++EXPORT_SYMBOL_GPL(vfio_pci_core_error_detected);
++
++/**
++ * vfio_pci_core_error_resume() - resume a device after AER or DPC recovery
++ * @vdev: vfio PCI device the recovery resumes
++ *
++ * Call from the driver's pci_error_handlers.resume callback. A provider puts
++ * its device memory back if the device still decodes it; otherwise the memory
++ * stays out of use until the user resets the device.
++ */
++void vfio_pci_core_error_resume(struct vfio_pci_core_device *vdev)
++{
++	if (!vdev->cxl_ops || !vdev->cxl_ops->error_resume)
++		return;
++
++	guard(rwsem_write)(&vdev->memory_lock);
++	vdev->cxl_ops->error_resume(vdev);
++}
++EXPORT_SYMBOL_GPL(vfio_pci_core_error_resume);
++
+ const struct pci_error_handlers vfio_pci_core_err_handlers = {
+ 	.error_detected = vfio_pci_core_aer_err_detected,
+ };
+@@ -2915,6 +3055,8 @@ static int vfio_pci_dev_set_hot_reset(struct vfio_device_set *dev_set,
+ 			ret = -EBUSY;
+ 			break;
+ 		}
++		WRITE_ONCE(vdev->hot_reset_task, current);
++		vdev->reset_done_err = 0;
+ 
+ 		vfio_pci_dma_buf_move(vdev, true);
+ 		vfio_pci_zap_bars(vdev);
+@@ -2940,6 +3082,17 @@ static int vfio_pci_dev_set_hot_reset(struct vfio_device_set *dev_set,
+ 
+ 	ret = pci_reset_bus(pdev);
+ 
++	/* A provider that could not restore its device fails the hot reset. */
++	if (!ret) {
++		list_for_each_entry(vdev, &dev_set->device_list,
++				    vdev.dev_set_list) {
++			if (vdev->reset_done_err) {
++				ret = vdev->reset_done_err;
++				break;
 +			}
- 		} else {
- 			WARN_ON(cap_id > PCI_CAP_ID_MAX);
++		}
++	}
++
+ 	vdev = list_last_entry(&dev_set->device_list,
+ 			       struct vfio_pci_core_device, vdev.dev_set_list);
+ 
+@@ -2948,6 +3101,7 @@ static int vfio_pci_dev_set_hot_reset(struct vfio_device_set *dev_set,
+ 					 vdev.dev_set_list) {
+ 		if (vdev->vdev.open_count && __vfio_pci_memory_enabled(vdev))
+ 			vfio_pci_dma_buf_move(vdev, false);
++		WRITE_ONCE(vdev->hot_reset_task, NULL);
+ 		up_write(&vdev->memory_lock);
+ 	}
  
 diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-index 70acb03d466e..fd1ad0baf470 100644
+index 6520a2dcfd4a..881e51c42414 100644
 --- a/include/linux/vfio_pci_core.h
 +++ b/include/linux/vfio_pci_core.h
-@@ -120,6 +120,9 @@ struct vfio_pci_core_device {
- 	u8			*pci_config_map;
- 	u8			*vconfig;
- 	struct perm_bits	*msi_perm;
-+	struct perm_bits	*cxl_perm;
-+	u16			cxl_dvsec;
-+	u16			cxl_dvsec_len;
- 	spinlock_t		irqlock;
- 	struct mutex		igate;
- 	struct xarray		ctx;
+@@ -72,6 +72,21 @@ struct vfio_cxl_ops {
+ 	void	(*release)(struct vfio_pci_core_device *vdev);
+ 	int	(*open_device)(struct vfio_pci_core_device *vdev);
+ 	void	(*close_device)(struct vfio_pci_core_device *vdev);
++	/*
++	 * Optional. Called with memory_lock held for write when AER or DPC
++	 * recovery resumes the device, after reset_prepare was called for the
++	 * error. Config space is as the recovery left it.
++	 */
++	void	(*error_resume)(struct vfio_pci_core_device *vdev);
++	/*
++	 * Called around a PCI core reset of the device with memory_lock held
++	 * for write; reset_prepare also when AER or DPC recovery reports an
++	 * error. reset_done returns an error if the provider could not
++	 * restore the device; VFIO_DEVICE_PCI_HOT_RESET returns it, and for
++	 * any other reset the provider logs it.
++	 */
++	void	(*reset_prepare)(struct vfio_pci_core_device *vdev);
++	int	(*reset_done)(struct vfio_pci_core_device *vdev);
+ 	/* Pinned per bound CXL device so vfio-cxl cannot unload under usage */
+ 	struct module *owner;
+ };
+@@ -166,6 +181,9 @@ struct vfio_pci_core_device {
+ 	struct vfio_pci_core_device	*sriov_pf_core_dev;
+ 	struct notifier_block	nb;
+ 	struct rw_semaphore	memory_lock;
++	/* Task running VFIO_DEVICE_PCI_HOT_RESET while it holds memory_lock */
++	struct task_struct	*hot_reset_task;
++	int			reset_done_err;
+ 	struct list_head	dmabufs;
+ 	/*
+ 	 * Excluded BAR sub-ranges, one list per BAR, sorted by start and not
+@@ -207,6 +225,10 @@ void vfio_pci_core_release_dev(struct vfio_device *core_vdev);
+ int vfio_pci_core_register_device(struct vfio_pci_core_device *vdev);
+ void vfio_pci_core_unregister_device(struct vfio_pci_core_device *vdev);
+ extern const struct pci_error_handlers vfio_pci_core_err_handlers;
++void vfio_pci_core_reset_prepare(struct vfio_pci_core_device *vdev);
++void vfio_pci_core_reset_done(struct vfio_pci_core_device *vdev);
++void vfio_pci_core_error_detected(struct vfio_pci_core_device *vdev);
++void vfio_pci_core_error_resume(struct vfio_pci_core_device *vdev);
+ int vfio_pci_core_sriov_configure(struct vfio_pci_core_device *vdev,
+ 				  int nr_virtfn);
+ long vfio_pci_core_ioctl(struct vfio_device *core_vdev, unsigned int cmd,
 -- 
 2.53.0
 
