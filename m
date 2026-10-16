@@ -1,28 +1,28 @@
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010069.outbound.protection.outlook.com [52.101.61.69])
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010035.outbound.protection.outlook.com [52.101.56.35])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16D4A541462;
-	Fri, 16 Oct 2026 16:23:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.69
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB30948488D;
+	Fri, 16 Oct 2026 16:23:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.35
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792167789; cv=fail; b=GIElqAjH21eJPaFjp6pYQj/JfdpTt5ZiD5LpwX5lwutfQEvl0Gjf8C+zFuupxdYAeStAfw8Lhedfa1XPRKy7345pQgSu/FOI/V0e8csarTy2GQSmqBvIuio+Jg1HkwZD1TXfZnNguIdrMlQKYNUdU2+fR56lRSUoM4zbaHrZf0Y=
+	t=1792167795; cv=fail; b=awHLLex/gGxroga6d1wpnEnMjO+lLXZS57VbGQW9aP1AKO+c9iPmDAW2ixOVzexeNZDzjYP5A78OV619YcJqg4hv709tqpYy++iKJx4uoAksmS4yocMy/gsC6ryNsNx0J0yEC90P3CZGj4oVG7W9UmUSXSlQzQBMgzCQghGBWIM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792167789; c=relaxed/simple;
-	bh=jj/beiD/SI2gUZBx0dfSVjMA/IwAMxdtYI/zme1Wm+k=;
+	s=arc-20240116; t=1792167795; c=relaxed/simple;
+	bh=J2EsODocr6sAIV4LyvmaPy4kBbpY8OaFJI0Cowos51k=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BNGq/h0P5a7BJ5epkP2ZZ1Aj1iA7jGnjeoA+3k9UpLkA5vZqs2LuCaeekjuf17TQMnFlssGiTwVK2I38G2tb6Vvxk2kRQb7ftVJ8qCbWsFZ6dAabjmcTcwx5p5YnHitYtRmLQ+QliDZ5GjcP05XPsIb2A8dYdccyQ4QEOROTCJY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=uuIs3yHY; arc=fail smtp.client-ip=52.101.61.69
+	 MIME-Version:Content-Type; b=V0dZxkNTwSd4jiOf/CTURV2yXUYyOj5Pipp5QB5qfgWPjopeJGDAoFQgnj2/4AXr8tUQ+NSZc7PWXqu6/rxZAjTROwQ8rLslOfS9GzRZs0ULi+7vU7zw1WE5a+VQgIRrAJQjYPPKmt8h3CwGYt5bo6FVBXm+IVhCXE0OkUzTHYM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=bMY2wn/N; arc=fail smtp.client-ip=52.101.56.35
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="uuIs3yHY"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="bMY2wn/N"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=yU8Qf4DYrgv9arcCDhEpIh52aQL/IOZRuWXlsZmm137nRO+22rdWo0dnf6wvxNuz62eFTjuV+K2OY8+xcJg58ZU1FqSKiHdg/HU/qOGtGPExms1rlD7gTeExFhK0oJKGXs/Kpn40z/JB7bTex3g3/UMxtgGurPSv7oHRATrHp0K39Uyoe4JTBnHaCv/6F98h7iTqtZL7nS5nyqK19vHYktPn8+c8EoMGDF2ZS91XDI44fXpYAzpjw65A0s6rQ3hIQ4TFvFKFAcxCwDWxldTT4TFAKgMXLFuT+Cm3e1ySdPLJyWy0ohzx0o7lTaFd/GcBmUbLOVcT4zeEKyEO5WMyFw==
+ b=XQDqRf8/nunPejFvBmvlYATg6ckfcRPZPR042S5dEt4kalKKiKF8ihwk63qKYcUdmOenq1+o6KHJYpqn5FD5zrpuA/W9+/FIkuS2LZSWX8V1uW3sQitZ9xAZI6CfZBuVb9Uoa1EbAz8BH7wjCOLxqdoued+Rv9h7Oa3UqVGN1LO/UUsqf3Sn/6bVh3hYw1L1CRzVxsg68ZeRxmWfbnR4NxKSHEhVx3SZOV2P/KomK5pYl1cLqWbTvGlIM0fPENeqnYgxkg6P3yxFgAph6Xg182RgX/B8w+HIlURONRDGI7wIS0qWcgB8cg8iJykVZbT02PIVDhv31Fxq8reWxmY9xw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=AZCUKwXpgL0iZNNrDBWRI0ozDZF/6YZHzKXEro+iGkg=;
- b=Mm4TSAS3k+Le+202Ph6ChYcuFGq9J2Zjs/4ISY4tvGTEir+Fbx6DzUHMuWg/O66iUZH0UCVgVjcEmBzXUFz2GAagAu+o8Ol3q9K0BSre35V+DpoON/AFMV2EsY+gL8Yhu7KflWIQcyfsOQHVtVPgTvyKJt2fvXv1HQUUxY3LMRdvH55TtCBFXy3pP7MAThUnhpu5W+l83wbg4TezAwMGnYnqbxo31kM/gIQYqI43nnK3ezOUiaz/qxnQS4WzqvcU+DXoIin4XfbvFbNERoJb/cQG7juBvwvvFbOXnaruBi5RffkUP3KyqnctvCu2bJmnCCdBS2g0kIeHUDsyZQKazA==
+ bh=F4sOsoITAm65Uo3RxNHBGvOEvuzEy3LKCwKxoecGv6k=;
+ b=tdPjCEtadgkzCZYk4gtjxiq3bplkzMQrMkQqqJv111ZvtfVrNFpDNWZlgU2QldAEBwqz6q0fj3fPzgXzaTPuR462SjK+Qkxcr8Kn5aGNE74yoUPowh/FtG3H7eKviO9eYSCJfOFDWbXKNGEAO9ID3gq5kkibac1ElNDKQwcRF8YLQxDYYpufz8vK+YL9NlQ7aiqLc/3QlsiVE9tvhknw2YIGEk4RFTNHxTPBWOAEW9l0GNkbO4tFZEwLoHfcjf1gBZXbm8rNF5m98rSRKld02HY6Xkk3dXN2rwo2J6VrrTzJwYgwPRHh7OCBAGU7ARgk9EM7EgtXKHo0xSrjOF//lA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.161) smtp.rcpttodomain=shazbot.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -30,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AZCUKwXpgL0iZNNrDBWRI0ozDZF/6YZHzKXEro+iGkg=;
- b=uuIs3yHYCeJ+7RwSXmA1xm4Sh4teZBahT5WCSQSg3YIeQFHdDcp2RzF1SNNAnUu050cQ++fmH7uosMT61PQ9seY6QHfDp2aCFiIF4qiuyl+znG60ShAAIPcxlzyyrPgVYPYxPYjrVwc5CGgvo7jjtjt69d3NnxwUB3UB2E474WhJV7Td/T1f4dHAGjYrofeRcbS+TxLOhTUWP38F8Vwdy5qiCYJmtNSqTM0hdf/w7B8MjKGgn81ekrfCoGbuD8TtmXHG0BPnMPVTZwWSWM+wD7iU4r+GAMcffndky/K+HDCVwIUOa19SBPYAdhl34jkIOZNCJL/WVR5sQ49P0UdDaQ==
-Received: from SN7PR04CA0153.namprd04.prod.outlook.com (2603:10b6:806:125::8)
- by DM4PR12MB6640.namprd12.prod.outlook.com (2603:10b6:8:8f::15) with
+ bh=F4sOsoITAm65Uo3RxNHBGvOEvuzEy3LKCwKxoecGv6k=;
+ b=bMY2wn/NskI5ufWTmqSChmfvgYdLlcI3NbeIynI5rwF5p2VedBeh3vXSvDVY7Epw525+t5kChr02mom9OtVnRk/932NvA7nTagYfYTSzT3D8QmBwj8Yt7eJtF/RrAzbNl/eUupXkzmidLv4SQsC/cBEjsixCcT4D+8icWaY0GOLcnvJIgki+h53eE14zX9dZV4L4t/IM72fkRwvHvOzNL9aWf30Be7/5XM9cL8/grfFWvz+bi/o0x/H3o1r8/iM/yXiXafYBwDegL7sRWwivy6W/5hythdTNixI0pgXWavh5N+OfF9E5zGQDYznvzxelfif5Ju/jdKtvez9PeIFRbQ==
+Received: from MN2PR03CA0021.namprd03.prod.outlook.com (2603:10b6:208:23a::26)
+ by IA0PR12MB8905.namprd12.prod.outlook.com (2603:10b6:208:484::6) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.20; Fri, 16 Oct
- 2026 16:21:58 +0000
-Received: from BN7PEPF000000A7.namprd05.prod.outlook.com
- (2603:10b6:806:125:cafe::2d) by SN7PR04CA0153.outlook.office365.com
- (2603:10b6:806:125::8) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.522.4 via Frontend Transport; Fri, 16
- Oct 2026 16:21:55 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.17; Fri, 16 Oct
+ 2026 16:22:49 +0000
+Received: from BN7PEPF000000A4.namprd05.prod.outlook.com
+ (2603:10b6:208:23a:cafe::7d) by MN2PR03CA0021.outlook.office365.com
+ (2603:10b6:208:23a::26) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.522.17 via Frontend Transport; Fri,
+ 16 Oct 2026 16:22:46 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -49,17 +49,17 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.117.161 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.117.161) by
- BN7PEPF000000A7.mail.protection.outlook.com (10.167.245.231) with Microsoft
+ BN7PEPF000000A4.mail.protection.outlook.com (10.167.245.228) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.522.6 via Frontend Transport; Fri, 16 Oct 2026 16:21:55 +0000
+ 15.21.522.6 via Frontend Transport; Fri, 16 Oct 2026 16:22:46 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
  (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Fri, 16 Oct
- 2026 09:21:26 -0700
+ 2026 09:22:20 -0700
 Received: from nvidia-4028GR-scsim.nvidia.com (10.126.230.37) by
  rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Fri, 16 Oct 2026 09:21:17 -0700
+ 15.2.2562.49; Fri, 16 Oct 2026 09:22:11 -0700
 From: <mhonap@nvidia.com>
 To: <alex@shazbot.org>, <jgg@ziepe.ca>, <ankita@nvidia.com>,
 	<jic23@kernel.org>, <dave.jiang@intel.com>, <alejandro.lucero-palau@amd.com>,
@@ -74,9 +74,9 @@ CC: <cjia@nvidia.com>, <kjaju@nvidia.com>, <vsethi@nvidia.com>,
 	<linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
 	<linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-kselftest@vger.kernel.org>, <linux-hardening@vger.kernel.org>
-Subject: [PATCH v6 16/31] vfio/pci: Revoke and re-arm one device-specific region
-Date: Fri, 16 Oct 2026 21:48:23 +0530
-Message-ID: <20261016161839.2765592-17-mhonap@nvidia.com>
+Subject: [PATCH v6 22/31] vfio/cxl: Allow mmap of the HDM memory region
+Date: Fri, 16 Oct 2026 21:48:29 +0530
+Message-ID: <20261016161839.2765592-23-mhonap@nvidia.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261016161839.2765592-1-mhonap@nvidia.com>
 References: <20261016161839.2765592-1-mhonap@nvidia.com>
@@ -92,392 +92,270 @@ X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN7PEPF000000A7:EE_|DM4PR12MB6640:EE_
-X-MS-Office365-Filtering-Correlation-Id: 6302b381-c124-47fc-7e38-08df2ba1983e
+X-MS-TrafficTypeDiagnostic: BN7PEPF000000A4:EE_|IA0PR12MB8905:EE_
+X-MS-Office365-Filtering-Correlation-Id: ebe617a1-a132-4f9f-699e-08df2ba1b6f8
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|23010399003|376014|7416014|82310400026|1800799024|921020|10067099003|11063799006|56012099006|22082099003|18002099003|261009223027099003;
+	BCL:0;ARA:13230040|82310400026|376014|7416014|36860700016|1800799024|23010399003|6133799003|18002099003|22082099003|10067099003|11063799006|261009223027099003|921020|56012099006;
 X-Microsoft-Antispam-Message-Info:
-	9B7iqqQZFz67fN0RTzocr2LuNS4OnRIKFSKfZoTJfBSDHREc6qAW9TJh2o5/daHDqwWCsdKp+jaasq3gDRaSqEuZFTG1Jbigwe2mGzYTXJfbutcdngeKoXcqZ+gjHzyWJk3hyzl9Jnocacz+aoI/tGqjctHHqdu7ryf/C4dyMnoSo+63WmR2UoiGTGGb1Uj4z2HmF1gAUDuV/zMmcLoy0uewypVLFHmaympagI0F3Y1o+/782krVQWFeX06tImuaiiL8Lpul+hByjMz/+JSnvcD0brT4WfAPO2sftWzcppvxjlU9VW3G1e+2+xbUmSBDOHXrSljoQ39gC/mgXywaWkY/jKLbvRp0RpdVA8wa3RpxZ5VD5dt4Xzktb2QN9fQenHtMmAT5aUPursqrLtPdOSzOM4PaZ6OfBQ1FPrIlguR/U/5J4KygZUoukZB1FITRtyIk8fUZzHeykSdjcCedAvGLy+bV+7l6IqQSC2bIf2XsJxH/ylRl4VEqYz6cDKl34gva/YUPR59I+4gpsKhgWLjOXXTsS162VTpJiWbzvvQt36y9oqhZeTh5O2hwiXe8vpHClo6+H2X0FYSttzy90+8/pnPLx6/IDM6epBr+zabZ4va8fGjYrWqczG89Id4fRX7Y2RABNv78ef1rZYnC+30e9qy3I54gUwOsDWaufDipte55BiBuBRqGQLe97eRuKjxAVmh59t/XhYVeTQpiZzFkNBrq434WWrgzDNmXwBd+VyBBFuIixeMYbNkizDu0
+	qRgl3r0HNscFgFqybKzNWw+eytXE1//6WrPHJ2ncm1foREhhQo0LzDNqBEpxl13hkxoQNp0vOU7vLJ2En9gg0QpikxwHNN3iQ7E1VnfMbKGGm8wC+RLBGwk5eGSdwcueGXqbgeORbAqdWeEHetemv6uOwnGPaS6kZrMBUsjhRG/sVEyB1HcyQWYnW/ovyEIO1dJtB0voPXl/jNxpnz9cPQKeex6ZMFdPGuL4DrXo4Vq5j+brmrOzNQ81D2vOKDebZi+mqAykePJiE+h6ga5IbC0ozj6HsZccX6LsJjRdKD7by0ehv5NqSKR4stfXmSdDe6xwZMSVU/2mgy/taPBrpj5a8e9FGx2tPO4Tpj1X3YNFteAOaAWB9VQVxlZUpcdPmyI8Ft4RSlQ6q4KcIRmmj3UbV6m6aRVAnnhFjSoeqguOEweePPKprv26fBCqfIJ/IfyZveCn01D/hyA1O+LcrT9WEcWVznPWGaxhXPV3V2ktIPQX5WwI6HfMVdMKZ+F83nolIj4fUZbPhRNM4yUVDKxQFnzQPkT3t2e07SSMmku0oH7iD9DQcSI5JxCWZWupjq2QX8N/8u4WJ/umMz2XQcy5oHG0OsU8WHDaC1CpdrOdefwlRyaqiFxhPco7xA8DQNLL5cRquGezGwAurKH/8ACvwshDevixFwnt9GNw1vtvj1HpF03DyS2v3P6CeQtzhKmmG6/9/g2p1xayIb9xckjJHP3+ofiX/HIPsOm48cz4AnyEyPROqBTIVw3PbgW5
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(23010399003)(376014)(7416014)(82310400026)(1800799024)(921020)(10067099003)(11063799006)(56012099006)(22082099003)(18002099003)(261009223027099003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(376014)(7416014)(36860700016)(1800799024)(23010399003)(6133799003)(18002099003)(22082099003)(10067099003)(11063799006)(261009223027099003)(921020)(56012099006);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	EzHLOm3iVAzXef1v/Di2I0k9iU2AFcwLOZRYCxwRKEwbDqlbjst33PLJ/12U2WEPXwntXtu5uzPBjbs6gdqtrR3LraDylup/0dpyP02FRQ8nzStRff5lH473FYDuGCz6AbH30l01rfpYeWCT/2SCUq55+2n10IIokPW/5E7jghM0ZUfzCAaF52CC9cVWpVnMHLxyA3xMVSZqg7iSsGKF6sHQNSlh4OvRdz286QfUw3ZgUyVxUb0icULlD4C/5PDTPrioNnmCUdF5cq9JRIrnn4AcVQQDHVMLyJhDtmKXhsegzuSaaYVE5X4fVo6QkV2GBXK2DGFk127c8mUX1Y3n1HR81IUAmAtAHioLToThbhePPyLuYIY8BRjgx71A6MF8Ow18BLNlI1v+OsqrSwf9xkIkxzuceklRpQXtHC7VL6wtNER5Jq+HpcwvV5q86lm2
+	cXWCPWvHUd2QNHqpA+9HDq6LyYsWlymQRciUDGPTuXRdTOxtfvHl4G434RyXM1C22O2XV/tPGKIe0Sn9MSRfI2FjZ/xOep5xbmgnqkVrbOIeD/g3NSwfhteuXxT3pAuKhxN51KZNmYsZnYd02tNNuy8xCSbv2megSpPawE/M1Wrwpgb2Y7c3dE4B29W3dP1EsdB+m9hV8dKIU6kuwYm63jrZe9U0aDm/thZXWZtfLlVFyue7o+nGFZgVCal8VIFEh63m3glqq6ZZRLIwbbvqGCU52glR56E7kZahzw8nZeJJ3e5VieGINu/RocIBHGQ2sZG2MAYe4BwgccFJV2/+sFPmsO8Aea9Lg3LGDkYQ6jK6TVlPFqv+rOhmYyN6J/fhzNm7otuyv5XSocBcejm+BrY6stcGYipvWVWfd2b4gamLckg/+CPZ/1o7hhHGtAYl
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2026 16:21:55.2065
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2026 16:22:46.7595
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6302b381-c124-47fc-7e38-08df2ba1983e
+X-MS-Exchange-CrossTenant-Network-Message-Id: ebe617a1-a132-4f9f-699e-08df2ba1b6f8
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BN7PEPF000000A7.namprd05.prod.outlook.com
+	BN7PEPF000000A4.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6640
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB8905
 
 From: Manish Honap <mhonap@nvidia.com>
 
-The BARs of a vfio PCI device follow the memory enable bit: clearing it
-zaps their mmaps and revokes their dma-bufs, and setting it re-arms the
-dma-bufs. A device-specific region does not have to follow that bit. The
-HDM memory region of a CXL Type-2 device follows the committed HDM
-decoder, which changes across reset, bus reset and low power, not with
-Memory Space Enable. Other device-specific regions, such as nvgrace
-coherent memory or the IGD OpRegion, do not depend on it either.
+A CXL Type-2 guest maps the device HDM memory to use its coherent
+CXL.mem, so the guest and KVM need a write-back mapping of the HDM
+memory region. Make the region mmap-able. The range has no struct page,
+so the mapping is VM_PFNMAP and its fault handler inserts the pfn, at
+huge-page order where the alignment allows.
 
-Record the region index of each dma-buf at export. vfio_pci_dma_buf_move()
-now moves only the BAR dma-bufs, and vfio_pci_dma_buf_cleanup() still
-drains every dma-buf of the device.
+The fault handler inserts a pfn only while the decoder is known good and
+the media is ready, and returns SIGBUS otherwise. It inserts with
+__vfio_pci_vmf_insert_pfn(), so a fault does not depend on memory
+enable; low power already closes the gate through power_down. When the
+gate closes, in low power and later in reset and bus reset, revoke the
+region with vfio_pci_core_revoke_region() so no live mapping outlives
+the decoder, and re-arm it once the decoder is restored. The BARs keep
+following the memory enable bit; this region does not.
 
-Export vfio_pci_core_revoke_region(), which zaps the user mmaps of one
-device-specific region and revokes its dma-bufs, and
-vfio_pci_core_rearm_region(), which re-arms them. A provider calls them
-under memory_lock when the state its region depends on changes. Also
-export __vfio_pci_vmf_insert_pfn(), the pfn insert of
-vfio_pci_vmf_insert_pfn() without its memory enable and runtime PM
-checks, for the fault handler of such a region. Export
-vfio_pci_core_clear_memory_enable() for a provider whose failed
-operation left Memory Space off in the device: it zaps the BAR mmaps,
-revokes the BAR dma-bufs and clears vfio's record of the bit.
-
-Suggested-by: Alex Williamson <alex@shazbot.org>
 Assisted-by: LLM
 Signed-off-by: Manish Honap <mhonap@nvidia.com>
 ---
- drivers/vfio/pci/vfio_pci_core.c   | 109 +++++++++++++++++++++++++++--
- drivers/vfio/pci/vfio_pci_dmabuf.c |  98 +++++++++++++++++---------
- drivers/vfio/pci/vfio_pci_priv.h   |   7 ++
- include/linux/vfio_pci_core.h      |   8 +++
- 4 files changed, 180 insertions(+), 42 deletions(-)
+ drivers/vfio/pci/cxl/vfio_cxl_core.c | 131 +++++++++++++++++++++++++--
+ include/uapi/linux/vfio.h            |   2 +-
+ 2 files changed, 123 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index 6676c561465b..9d0c22a4f3c6 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -1982,6 +1982,77 @@ static void vfio_pci_zap_bars(struct vfio_pci_core_device *vdev)
- 	unmap_mapping_range(core_vdev->inode->i_mapping, start, len, true);
- }
- 
-+/**
-+ * vfio_pci_core_revoke_region() - take a device-specific region out of use
-+ * @vdev: vfio PCI device, with memory_lock held for write
-+ * @index: vfio region index of a device-specific region
-+ *
-+ * Zap the user mmaps of the region and revoke its dma-bufs, for a provider
-+ * whose region depends on device state that is about to change. The BARs
-+ * follow the memory enable bit instead; a device-specific region may not.
-+ * A later fault on the region goes back to the region's own fault handler.
-+ */
-+void vfio_pci_core_revoke_region(struct vfio_pci_core_device *vdev,
-+				 unsigned int index)
-+{
-+	struct vfio_pci_region *region;
-+
-+	lockdep_assert_held_write(&vdev->memory_lock);
-+
-+	if (WARN_ON(index < VFIO_PCI_NUM_REGIONS ||
-+		    index - VFIO_PCI_NUM_REGIONS >= vdev->num_regions))
-+		return;
-+
-+	region = &vdev->region[index - VFIO_PCI_NUM_REGIONS];
-+	unmap_mapping_range(vdev->vdev.inode->i_mapping,
-+			    VFIO_PCI_INDEX_TO_OFFSET(index), region->size, true);
-+	vfio_pci_dma_buf_move_region(vdev, index, true);
-+}
-+EXPORT_SYMBOL_GPL(vfio_pci_core_revoke_region);
-+
-+/**
-+ * vfio_pci_core_rearm_region() - put a revoked device-specific region back
-+ * @vdev: vfio PCI device, with memory_lock held for write
-+ * @index: vfio region index passed to vfio_pci_core_revoke_region()
-+ */
-+void vfio_pci_core_rearm_region(struct vfio_pci_core_device *vdev,
-+				unsigned int index)
-+{
-+	lockdep_assert_held_write(&vdev->memory_lock);
-+
-+	vfio_pci_dma_buf_move_region(vdev, index, false);
-+}
-+EXPORT_SYMBOL_GPL(vfio_pci_core_rearm_region);
-+
-+/**
-+ * vfio_pci_core_clear_memory_enable() - follow a device that lost Memory Space
-+ * @vdev: vfio PCI device, with memory_lock held for write
-+ *
-+ * For a provider whose failed operation left Memory Space disabled in the
-+ * device. Zap the BAR mmaps, revoke the BAR dma-bufs and clear vfio's record
-+ * of the Memory Space bit, as a user write that clears the bit would. The
-+ * user's next Memory Space write enables it again.
-+ */
-+void vfio_pci_core_clear_memory_enable(struct vfio_pci_core_device *vdev)
-+{
-+	__le16 *virt_cmd;
-+
-+	lockdep_assert_held_write(&vdev->memory_lock);
-+
-+	/* Closed, or not open yet: vfio_config_init() reads the device. */
-+	if (!vdev->vconfig)
-+		return;
-+
-+	virt_cmd = (__le16 *)&vdev->vconfig[PCI_COMMAND];
-+	if (!(*virt_cmd & cpu_to_le16(PCI_COMMAND_MEMORY)))
-+		return;
-+
-+	vfio_pci_zap_bars(vdev);
-+	vfio_pci_dma_buf_move(vdev, true);
-+	*virt_cmd &= cpu_to_le16(~PCI_COMMAND_MEMORY);
-+}
-+EXPORT_SYMBOL_GPL(vfio_pci_core_clear_memory_enable);
-+
- void vfio_pci_zap_and_down_write_memory_lock(struct vfio_pci_core_device *vdev)
- {
- 	down_write(&vdev->memory_lock);
-@@ -2019,16 +2090,26 @@ static unsigned long vma_to_pfn(struct vm_area_struct *vma)
- 	return (pci_resource_start(vdev->pdev, index) >> PAGE_SHIFT) + pgoff;
- }
- 
--vm_fault_t vfio_pci_vmf_insert_pfn(struct vfio_pci_core_device *vdev,
--				   struct vm_fault *vmf,
--				   unsigned long pfn,
--				   unsigned int order)
-+/**
-+ * __vfio_pci_vmf_insert_pfn() - insert a pfn without the memory enable and
-+ *	runtime PM checks
-+ * @vdev: vfio PCI device, with memory_lock held for read
-+ * @vmf: the fault being served
-+ * @pfn: first pfn to insert
-+ * @order: page order of the mapping
-+ *
-+ * For a device-specific region that does not follow the memory enable bit.
-+ * The caller checks the state its region depends on under memory_lock, and
-+ * revokes the region with vfio_pci_core_revoke_region() when it changes or
-+ * before the device leaves D0.
-+ */
-+vm_fault_t __vfio_pci_vmf_insert_pfn(struct vfio_pci_core_device *vdev,
-+				     struct vm_fault *vmf,
-+				     unsigned long pfn,
-+				     unsigned int order)
- {
- 	lockdep_assert_held_read(&vdev->memory_lock);
- 
--	if (vdev->pm_runtime_engaged || !__vfio_pci_memory_enabled(vdev))
--		return VM_FAULT_SIGBUS;
--
- 	if (!order)
- 		return vmf_insert_pfn(vmf->vma, vmf->address, pfn);
- 
-@@ -2040,6 +2121,20 @@ vm_fault_t vfio_pci_vmf_insert_pfn(struct vfio_pci_core_device *vdev,
- 
- 	return VM_FAULT_FALLBACK;
- }
-+EXPORT_SYMBOL_GPL(__vfio_pci_vmf_insert_pfn);
-+
-+vm_fault_t vfio_pci_vmf_insert_pfn(struct vfio_pci_core_device *vdev,
-+				   struct vm_fault *vmf,
-+				   unsigned long pfn,
-+				   unsigned int order)
-+{
-+	lockdep_assert_held_read(&vdev->memory_lock);
-+
-+	if (vdev->pm_runtime_engaged || !__vfio_pci_memory_enabled(vdev))
-+		return VM_FAULT_SIGBUS;
-+
-+	return __vfio_pci_vmf_insert_pfn(vdev, vmf, pfn, order);
-+}
- EXPORT_SYMBOL_GPL(vfio_pci_vmf_insert_pfn);
- 
- static vm_fault_t vfio_pci_mmap_huge_fault(struct vm_fault *vmf,
-diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
-index 8606c15ab2fe..d0f7ec5487de 100644
---- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-+++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-@@ -19,6 +19,7 @@ struct vfio_pci_dma_buf {
- 	u32 nr_ranges;
- 	struct kref kref;
- 	struct completion comp;
-+	u32 region_index;
- 	u8 revoked : 1;
+diff --git a/drivers/vfio/pci/cxl/vfio_cxl_core.c b/drivers/vfio/pci/cxl/vfio_cxl_core.c
+index e6e633902ecd..977d0c9c747a 100644
+--- a/drivers/vfio/pci/cxl/vfio_cxl_core.c
++++ b/drivers/vfio/pci/cxl/vfio_cxl_core.c
+@@ -9,6 +9,7 @@
+ #include <linux/cleanup.h>
+ #include <linux/delay.h>
+ #include <linux/io.h>
++#include <linux/mm.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+ #include <linux/range.h>
+@@ -29,6 +30,7 @@
+  * @hdm_valid: true when host CPU access to the HDM range is safe; under memory_lock
+  * @await_mem_active: the device reported its memory active at bind, so wait
+  *	for Memory_Active before host access reopens after a reset or low power
++ * @mem_region_index: vfio region index of the HDM memory region while open, else 0
+  */
+ struct vfio_cxl_state {
+ 	struct cxl_dev_state cxlds;
+@@ -38,8 +40,82 @@ struct vfio_cxl_state {
+ 	struct cxl_hdm_info *hdm;
+ 	bool hdm_valid;
+ 	bool await_mem_active;
++	unsigned int mem_region_index;
  };
  
-@@ -288,6 +289,7 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
- 	priv->vdev = vdev;
- 	priv->nr_ranges = get_dma_buf.nr_ranges;
- 	priv->size = length;
-+	priv->region_index = get_dma_buf.region_index;
- 	ret = vdev->pci_ops->get_dmabuf_phys(vdev, &priv->provider,
- 					     get_dma_buf.region_index,
- 					     priv->phys_vec, dma_ranges,
-@@ -347,6 +349,49 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
- 	return ret;
- }
- 
-+static void vfio_pci_dma_buf_move_one(struct vfio_pci_dma_buf *priv,
-+				      bool revoked)
++static unsigned long vfio_cxl_mem_pgoff(struct vm_area_struct *vma,
++					unsigned long addr)
 +{
-+	if (!get_file_active(&priv->dmabuf->file))
-+		return;
++	unsigned long mask = (1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1;
 +
-+	if (priv->revoked != revoked) {
-+		dma_resv_lock(priv->dmabuf->resv, NULL);
-+		if (revoked)
-+			priv->revoked = true;
-+		dma_buf_invalidate_mappings(priv->dmabuf);
-+		dma_resv_wait_timeout(priv->dmabuf->resv,
-+				      DMA_RESV_USAGE_BOOKKEEP, false,
-+				      MAX_SCHEDULE_TIMEOUT);
-+		dma_resv_unlock(priv->dmabuf->resv);
-+		if (revoked) {
-+			kref_put(&priv->kref, vfio_pci_dma_buf_done);
-+			wait_for_completion(&priv->comp);
++	return (vma->vm_pgoff & mask) + ((addr - vma->vm_start) >> PAGE_SHIFT);
++}
++
++static vm_fault_t vfio_cxl_mem_huge_fault(struct vm_fault *vmf,
++					  unsigned int order)
++{
++	struct vm_area_struct *vma = vmf->vma;
++	struct vfio_pci_core_device *vdev = vma->vm_private_data;
++	struct vfio_cxl_state *cxl = vdev->cxl;
++	unsigned long addr = ALIGN_DOWN(vmf->address, PAGE_SIZE << order);
++	unsigned long pfn = PHYS_PFN(cxl->hpa_range.start) +
++			    vfio_cxl_mem_pgoff(vma, addr);
++	vm_fault_t ret = VM_FAULT_FALLBACK;
++
++	if (is_aligned_for_order(vma, addr, pfn, order)) {
++		scoped_guard(rwsem_read, &vdev->memory_lock) {
 +			/*
-+			 * Re-arm the registered kref reference and the
-+			 * completion so the post-revoke state matches the
-+			 * post-creation state.  An un-revoke followed by a
-+			 * new mapping needs the kref to be non-zero before
-+			 * kref_get(), and vfio_pci_dma_buf_cleanup()
-+			 * delegates its drain back through this revoke
-+			 * path on a possibly-already-revoked dma-buf.
++			 * Insert a PFN only for a known-good decoder whose
++			 * media is ready. CXL.mem decode follows the committed
++			 * decoder and Mem_Enable, not Memory Space Enable (CXL
++			 * r4.0 sec 8.2.4.20.2, 8.1.3.2), so skip the BAR memory
++			 * enable check; low power closes hdm_valid through
++			 * power_down.
 +			 */
-+			kref_init(&priv->kref);
-+			reinit_completion(&priv->comp);
-+		} else {
-+			dma_resv_lock(priv->dmabuf->resv, NULL);
-+			priv->revoked = false;
-+			dma_resv_unlock(priv->dmabuf->resv);
++			if (cxl->hdm_valid && cxl->cxlds.media_ready)
++				ret = __vfio_pci_vmf_insert_pfn(vdev, vmf, pfn,
++								order);
++			else
++				ret = VM_FAULT_SIGBUS;
 +		}
 +	}
-+	fput(priv->dmabuf->file);
++
++	return ret;
 +}
 +
-+/*
-+ * Revoke or re-arm the dma-bufs of the BARs, which follow the memory enable
-+ * bit. A device-specific region is moved by its provider through
-+ * vfio_pci_dma_buf_move_region().
-+ */
- void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
- {
- 	struct vfio_pci_dma_buf *priv;
-@@ -354,41 +399,23 @@ void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
- 
- 	lockdep_assert_held_write(&vdev->memory_lock);
- 
--	list_for_each_entry_safe(priv, tmp, &vdev->dmabufs, dmabufs_elm) {
--		if (!get_file_active(&priv->dmabuf->file))
--			continue;
-+	list_for_each_entry_safe(priv, tmp, &vdev->dmabufs, dmabufs_elm)
-+		if (priv->region_index < VFIO_PCI_NUM_REGIONS)
-+			vfio_pci_dma_buf_move_one(priv, revoked);
-+}
- 
--		if (priv->revoked != revoked) {
--			dma_resv_lock(priv->dmabuf->resv, NULL);
--			if (revoked)
--				priv->revoked = true;
--			dma_buf_invalidate_mappings(priv->dmabuf);
--			dma_resv_wait_timeout(priv->dmabuf->resv,
--					      DMA_RESV_USAGE_BOOKKEEP, false,
--					      MAX_SCHEDULE_TIMEOUT);
--			dma_resv_unlock(priv->dmabuf->resv);
--			if (revoked) {
--				kref_put(&priv->kref, vfio_pci_dma_buf_done);
--				wait_for_completion(&priv->comp);
--				/*
--				 * Re-arm the registered kref reference and the
--				 * completion so the post-revoke state matches the
--				 * post-creation state.  An un-revoke followed by a
--				 * new mapping needs the kref to be non-zero before
--				 * kref_get(), and vfio_pci_dma_buf_cleanup()
--				 * delegates its drain back through this revoke
--				 * path on a possibly-already-revoked dma-buf.
--				 */
--				kref_init(&priv->kref);
--				reinit_completion(&priv->comp);
--			} else {
--				dma_resv_lock(priv->dmabuf->resv, NULL);
--				priv->revoked = false;
--				dma_resv_unlock(priv->dmabuf->resv);
--			}
--		}
--		fput(priv->dmabuf->file);
--	}
-+/* Revoke or re-arm the dma-bufs exported from one device-specific region. */
-+void vfio_pci_dma_buf_move_region(struct vfio_pci_core_device *vdev,
-+				  unsigned int index, bool revoked)
++static vm_fault_t vfio_cxl_mem_fault(struct vm_fault *vmf)
 +{
-+	struct vfio_pci_dma_buf *priv;
-+	struct vfio_pci_dma_buf *tmp;
++	return vfio_cxl_mem_huge_fault(vmf, 0);
++}
++
++static const struct vm_operations_struct vfio_cxl_mem_vm_ops = {
++	.fault = vfio_cxl_mem_fault,
++#ifdef CONFIG_ARCH_SUPPORTS_HUGE_PFNMAP
++	.huge_fault = vfio_cxl_mem_huge_fault,
++#endif
++};
++
++static int vfio_cxl_mem_mmap(struct vfio_pci_core_device *vdev,
++			     struct vfio_pci_region *region,
++			     struct vm_area_struct *vma)
++{
++	unsigned long mask = (1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1;
++	u64 req_start = (vma->vm_pgoff & mask) << PAGE_SHIFT;
++	u64 req_len = vma->vm_end - vma->vm_start;
++
++	if (req_start + req_len > region->size)
++		return -EINVAL;
++
++	/*
++	 * CXL.mem is coherent memory, so leave the mapping write-back cacheable.
++	 */
++	vm_flags_set(vma, VM_IO | VM_PFNMAP | VM_DONTEXPAND | VM_DONTDUMP);
++	vma->vm_ops = &vfio_cxl_mem_vm_ops;
++	vma->vm_private_data = vdev;
++
++	return 0;
++}
++
+ /*
+  * Copy one chunk between the bounce buffer and the HDM range under
+  * memory_lock. The user copy stays outside the lock: a user buffer that is
+@@ -131,6 +207,7 @@ static void vfio_cxl_region_release(struct vfio_pci_core_device *vdev,
+ 
+ static const struct vfio_pci_regops vfio_cxl_mem_regops = {
+ 	.rw = vfio_cxl_mem_rw,
++	.mmap = vfio_cxl_mem_mmap,
+ 	.release = vfio_cxl_region_release,
+ };
+ 
+@@ -387,20 +464,31 @@ static int vfio_cxl_add_region(struct vfio_pci_core_device *vdev, u32 subtype,
+ static int vfio_cxl_open_device(struct vfio_pci_core_device *vdev)
+ {
+ 	struct vfio_cxl_state *cxl = vdev->cxl;
++	int ret;
+ 
+ 	/*
+ 	 * vfio-pci-core frees all dynamic regions on close and on a failed
+ 	 * open, so register them here per open rather than at bind.
+ 	 */
+-	return vfio_cxl_add_region(vdev, VFIO_REGION_SUBTYPE_CXL_MEM,
+-				   &vfio_cxl_mem_regops,
+-				   range_len(&cxl->hpa_range),
+-				   VFIO_REGION_INFO_FLAG_READ |
+-				   VFIO_REGION_INFO_FLAG_WRITE);
++	ret = vfio_cxl_add_region(vdev, VFIO_REGION_SUBTYPE_CXL_MEM,
++				  &vfio_cxl_mem_regops,
++				  range_len(&cxl->hpa_range),
++				  VFIO_REGION_INFO_FLAG_READ |
++				  VFIO_REGION_INFO_FLAG_WRITE |
++				  VFIO_REGION_INFO_FLAG_MMAP);
++	if (ret)
++		return ret;
++
++	/* Record where the HDM memory region landed, to revoke it later. */
++	cxl->mem_region_index = VFIO_PCI_NUM_REGIONS + vdev->num_regions - 1;
++
++	return 0;
+ }
+ 
+ static void vfio_cxl_close_device(struct vfio_pci_core_device *vdev)
+ {
++	/* vfio-pci-core frees the regions after this returns. */
++	vdev->cxl->mem_region_index = 0;
+ }
+ 
+ static void vfio_cxl_reset_prepare(struct vfio_pci_core_device *vdev)
+@@ -412,6 +500,33 @@ static int vfio_cxl_reset_done(struct vfio_pci_core_device *vdev)
+ 	return 0;
+ }
+ 
++/*
++ * Take the HDM memory region out of use: zap its mmaps and revoke its
++ * dma-bufs. A fault then gets SIGBUS from vfio_cxl_mem_huge_fault() until
++ * hdm_valid is set again.
++ */
++static void vfio_cxl_revoke_hdm(struct vfio_pci_core_device *vdev)
++{
++	struct vfio_cxl_state *cxl = vdev->cxl;
 +
 +	lockdep_assert_held_write(&vdev->memory_lock);
 +
-+	list_for_each_entry_safe(priv, tmp, &vdev->dmabufs, dmabufs_elm)
-+		if (priv->region_index == index)
-+			vfio_pci_dma_buf_move_one(priv, revoked);
- }
- 
- void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev)
-@@ -405,7 +432,8 @@ void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev)
- 	 * ready, so cleanup itself does not need to participate in kref
- 	 * bookkeeping.
- 	 */
--	vfio_pci_dma_buf_move(vdev, true);
-+	list_for_each_entry_safe(priv, tmp, &vdev->dmabufs, dmabufs_elm)
-+		vfio_pci_dma_buf_move_one(priv, true);
- 
- 	list_for_each_entry_safe(priv, tmp, &vdev->dmabufs, dmabufs_elm) {
- 		if (!get_file_active(&priv->dmabuf->file))
-diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
-index dbede6e24fa9..23bccfbb7eb7 100644
---- a/drivers/vfio/pci/vfio_pci_priv.h
-+++ b/drivers/vfio/pci/vfio_pci_priv.h
-@@ -141,6 +141,8 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
- 				  size_t argsz);
- void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev);
- void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked);
-+void vfio_pci_dma_buf_move_region(struct vfio_pci_core_device *vdev,
-+				  unsigned int index, bool revoked);
- #else
- static inline int
- vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
-@@ -156,6 +158,11 @@ static inline void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev,
- 					 bool revoked)
- {
- }
-+static inline void
-+vfio_pci_dma_buf_move_region(struct vfio_pci_core_device *vdev,
-+			     unsigned int index, bool revoked)
-+{
++	cxl->hdm_valid = false;
++	if (cxl->mem_region_index)
++		vfio_pci_core_revoke_region(vdev, cxl->mem_region_index);
 +}
- #endif
++
++static void vfio_cxl_rearm_hdm(struct vfio_pci_core_device *vdev)
++{
++	struct vfio_cxl_state *cxl = vdev->cxl;
++
++	lockdep_assert_held_write(&vdev->memory_lock);
++
++	cxl->hdm_valid = true;
++	if (cxl->mem_region_index)
++		vfio_pci_core_rearm_region(vdev, cxl->mem_region_index);
++}
++
+ /*
+  * vfio-cxl holds the HDM range, so the PCI core's cxl_reset method would
+  * fail to request it. Run the same CXL Reset with that claim.
+@@ -429,9 +544,7 @@ static int vfio_cxl_reset(struct vfio_pci_core_device *vdev)
+ /* Low power loses the committed decoder: close host access until restored. */
+ static void vfio_cxl_power_down(struct vfio_pci_core_device *vdev)
+ {
+-	lockdep_assert_held_write(&vdev->memory_lock);
+-
+-	vdev->cxl->hdm_valid = false;
++	vfio_cxl_revoke_hdm(vdev);
+ }
  
- #endif
-diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-index cb9ba92b696a..7dd93ef103cb 100644
---- a/include/linux/vfio_pci_core.h
-+++ b/include/linux/vfio_pci_core.h
-@@ -227,6 +227,11 @@ int vfio_pci_core_register_dev_region(struct vfio_pci_core_device *vdev,
- 				      unsigned int type, unsigned int subtype,
- 				      const struct vfio_pci_regops *ops,
- 				      size_t size, u32 flags, void *data);
-+void vfio_pci_core_revoke_region(struct vfio_pci_core_device *vdev,
-+				 unsigned int index);
-+void vfio_pci_core_rearm_region(struct vfio_pci_core_device *vdev,
-+				unsigned int index);
-+void vfio_pci_core_clear_memory_enable(struct vfio_pci_core_device *vdev);
- void vfio_pci_core_close_device(struct vfio_device *core_vdev);
- int vfio_pci_core_init_dev(struct vfio_device *core_vdev);
- void vfio_pci_core_release_dev(struct vfio_device *core_vdev);
-@@ -250,6 +255,9 @@ ssize_t vfio_pci_core_read(struct vfio_device *core_vdev, char __user *buf,
- 		size_t count, loff_t *ppos);
- ssize_t vfio_pci_core_write(struct vfio_device *core_vdev, const char __user *buf,
- 		size_t count, loff_t *ppos);
-+vm_fault_t __vfio_pci_vmf_insert_pfn(struct vfio_pci_core_device *vdev,
-+				     struct vm_fault *vmf, unsigned long pfn,
-+				     unsigned int order);
- vm_fault_t vfio_pci_vmf_insert_pfn(struct vfio_pci_core_device *vdev,
- 				   struct vm_fault *vmf, unsigned long pfn,
- 				   unsigned int order);
+ static void vfio_cxl_power_up(struct vfio_pci_core_device *vdev)
+@@ -460,7 +573,7 @@ static void vfio_cxl_power_up(struct vfio_pci_core_device *vdev)
+ 	if (ret)
+ 		pci_warn(pdev, "vfio-cxl: HDM decoder restore failed: %d\n", ret);
+ 	else if (!vfio_cxl_await_mem_active(vdev))
+-		cxl->hdm_valid = true;
++		vfio_cxl_rearm_hdm(vdev);
+ }
+ 
+ static const struct vfio_cxl_ops vfio_cxl_ops = {
+diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+index 883b51521e6a..359fed40eb1b 100644
+--- a/include/uapi/linux/vfio.h
++++ b/include/uapi/linux/vfio.h
+@@ -371,7 +371,7 @@ struct vfio_region_info_cap_type {
+ #define VFIO_REGION_SUBTYPE_IBM_NVLINK2_ATSD	(1)
+ 
+ /* CXL Type-2 device (0x1e98) sub-types for VFIO_REGION_TYPE_PCI_VENDOR_TYPE */
+-/* CXL.mem HDM region of a Type-2 device, read and write */
++/* CXL.mem HDM region of a Type-2 device, read, write and mmap */
+ #define VFIO_REGION_SUBTYPE_CXL_MEM		(1)
+ 
+ /* sub-types for VFIO_REGION_TYPE_GFX */
 -- 
 2.53.0
 
