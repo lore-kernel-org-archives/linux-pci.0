@@ -1,156 +1,98 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f41.google.com (mail-dl1-f41.google.com [74.125.82.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF7854CF47C;
-	Sat, 17 Oct 2026 12:17:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 204FF331EB2
+	for <linux-pci@vger.kernel.org>; Sat, 17 Oct 2026 13:08:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792239475; cv=none; b=Zs/qPy15QO4mh9TBa6Ngh4neQTVeoODtuanIeT+yEFTQ3/VD+Va/hWL6EyiCVrOzIK3bGbzGmOIVnzq4n9IsWq7M8y9aYxqMQZfw4EiJUn6Ui68BAaNHiFc5baZqukaSO3fgsDpKtEt2egbbLHmLvR8MrQZh85voBLV9c9uBdXM=
+	t=1792242501; cv=none; b=jSBzATEdjbad8BqNY2ERsKH8/86RybgKwVjTl9MEWZfwp7snoqGRdb/Z3yBljZPV1dIG1TOopwL0Tj6QUiTefgCG+9s2I+tld3mGgvkYo4rLMqe+uxjLxcGiAF8VV8fCeqwSoVljGMP9FHTiX62MDHmZ88QoGHup50Tnxoe8bfc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792239475; c=relaxed/simple;
-	bh=ltUFJHuUt8xxihxeGW7JXWQvpY6Far+jwebWB6Wgo6Q=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ALFoDTf7Vo+1F5aVou9pk9G6keGV0C4ta4dAAKitWidLpMMupHfBzI4mA/0dKEqKhizpWtQTLxCjmiH+XwYmlXWerLHEAU23ePGaDv2WtkZkPoIvptOO8H/Xw58+VQGHEhIKefPXdEW1kfkogn3jqR0CWGqSd6my0RmjAna6VUc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=hQwPcZf3; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1792242501; c=relaxed/simple;
+	bh=Z/5JBeqwPxSZ0TpSsf5O+k1fvGG7B04vtfTOruv2JxA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=NyE52d9aOGw02y8IN/efvm6xiKHyOIw8p1KGQykyaD4wf+IhmMPq60pJ/93JcD5XCk25fLL89C0R/kXJ0wUetz+a6v8sChiolYmpAjp+ZthpPFijDWu5yT8wuAoTvywfvSt4T6CF/v0oleheYmDr8J3Vjr5g/38uPJIFRjOCqZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VXl2HU6b; arc=none smtp.client-ip=74.125.82.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="hQwPcZf3"
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519MLKEM768 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4j6LRW5n7zz8sYP;
-	Sat, 17 Oct 2026 14:17:43 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1792239463;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Rk5Lh21RnQJCZHlWuL13QYUUtzk8xkysSYr1XB0Phdo=;
-	b=hQwPcZf3n1ch7VoaUcFqBl1U/UWXmfSsF5DxVsYNWkHSqiyaA9KKGNdZlDoki89vAjudm2
-	nODfBX5+iiYpNVancfgD2JBBzGf1uFLFYZC6WSRcN2r/f7oYZygNlZLQSx270IbEwpjbqk
-	8abqVq9b4HiwXW0aio5fZWhMJgFptMBD0lj05SPiq691WfbXpcpSKnlojIkz/J96iOr7ga
-	mwDshAEfcj+BoA1daHuQjrAUuP/39l77af0iGUVRI31dvOqRsWiiz/0uds4u4hFwP38X2P
-	HEgX1jfpfE6ctv9veQweQOq8OY88kslrO0O+hyWuHmxJuVVseximiy/NkaM7KA==
-Message-ID: <814043dc-d194-4afd-8317-03b55cc9e913@mailbox.org>
-Date: Sat, 17 Oct 2026 14:17:38 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VXl2HU6b"
+Received: by mail-dl1-f41.google.com with SMTP id a92af1059eb24-17089130deaso25522c88.2
+        for <linux-pci@vger.kernel.org>; Sat, 17 Oct 2026 06:08:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792242498; x=1792847298; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Z/5JBeqwPxSZ0TpSsf5O+k1fvGG7B04vtfTOruv2JxA=;
+        b=VXl2HU6bjknN1IMUfwiSPFCo4VVowwrSEmRotFX6qrdkgbsozOl3Sgewo2O/cYYsXg
+         Pkc55EjKirp/4gxCfW7/bybcVFjy/TgoKYkAKf1yvgMlb2Ir8ikM85CcQInSJwJ52Ckw
+         gHWUDuLm8EdyOQTVT6oM2XaqeKWqBK3Eusu+kBT0D9jWULFuVqhAvjf4AMFJCVjm3cJz
+         9O6oO9PfUW8EK9WwFnQZHdvfq68nOFTWlL0Xx3ZRGePCm2uKpj/QEiu7qAn5mZvLV89A
+         VqZ7tpokdg3y4NHKeIXL5h7ZQ+YTV6kBu4k6EAtGzUYxAFjXZxmERJea60rAaaKFh1LN
+         WGiA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792242498; x=1792847298;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Z/5JBeqwPxSZ0TpSsf5O+k1fvGG7B04vtfTOruv2JxA=;
+        b=geAxNgBZJC/KAQss35fQJ1fi2G0u3/F3TV/D1MmirsWCk/HJzSccpWHZMD6XNvXz16
+         I+wzP6dk22dOnUV57z2AcMdV5+THOhn0H6hzV9+kFSWDaYCYJ1fUsqQ00xQvtw0yvqqk
+         QGbeyAczpa8kBX3PQgPD292l9GtfIZdxZUqwktaLfIKzULscoEjGrJgBP4jVk7OkZYOv
+         4u6tMiWbiKjVqYixMnO//pDCGLcfNnBlQCoooj28xloEXyzGfE9inh6xwVGDPxNAyTDJ
+         t/KSzTGPr9g8fvFSZVY277ytZfJsUBvYOTePL22gB2wBRSRcRNb0uPcmEwcvfSkhLOpb
+         7e+w==
+X-Forwarded-Encrypted: i=1; AKwUvBxd8pTO/MdN+dBVf05/iBMQ0HJ9R5PQVtseskoAN+fQWGtmocp2p3abTh3yvs6lysdEVwgFd49c0Lw=@vger.kernel.org
+X-Gm-Message-State: AFq9FYI/V6OvBIU/blusjXZB5k6uozpr2EPp23Kub6YWW3c9iU12Irv6
+	b4lReL84tfDGuAhu+pQG1J33EtYpmfEt+cyWeLbCT7Ul6v5w3eHOew0s
+X-Gm-Gg: AYBFou3kbGKuUamgGd51+4uFK8TGmRiajMKYwecyS2EWRm9OHszEsvuskXSfHikDaWY
+	bMDYf9H2AejCcT2z9Ro0TiKj1Or2uDPoe4cJLJLDgYbTDnEN6id+r2OfCJfsdWQ2rtOTrGoQfS/
+	BlFdJQJWagKVBDGTThnuob7czTtXTdjwyrMBTx7TTbyA9QyTL/VIWNtjdcAf5dc3oTLquphJTn5
+	sPctp//brxWGWC9O04JpfyU0YkekyFefiXqB4Wl/PlnzlBgfK337jNwrnDIpDQSU0S/pWTWsZuc
+	ju0dFT5QD0+fHvDlUqc0a+NwSGlmhORBA90dBVyNnacvEc3e2mltNM5/IVCsKpGYdenHSeQhUEm
+	++ieNH1uXUvwlEF3ammp1h5zSevYlohBKErEMzPzOSSzCWT3KZ3uRPwfQNinMJhhRNr7RE8KRmd
+	ZDDSeguaZNxLxKtb6L8hxDToZyk5B+Wq7/IWeTcvwg8QbYkCyPiKh47x6MxHcO1CgBlq15YgO5w
+	8iTvWnFm3laVBQiudpKeOgBMXOfwUJfRwsTNEXW28Q2nnwZP+iiCEEXjMrAdkY1OczK+tyHRq9t
+	sqzG23q2BNAyrQGNtQ==
+X-Received: by 2002:a05:7023:a5c:10b0:183:d275:cf76 with SMTP id a92af1059eb24-18511adbd46mr5910454c88.2.1792242497725;
+        Sat, 17 Oct 2026 06:08:17 -0700 (PDT)
+Received: from cachyos-aura ([45.112.151.53])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1831b75be5esm18903260c88.16.2026.10.17.06.08.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 17 Oct 2026 06:08:17 -0700 (PDT)
+From: Navon John Lukose <navonjohnlukose@gmail.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Mario Limonciello <Mario.Limonciello@amd.com>,
+	=?UTF-8?q?Francisco=20Beltr=C3=A1n=20Millal=C3=A9n?= <fbeltranmillalen@gmail.com>,
+	linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] PCI/PM: Skip the suspend_noirq config save if runtime-suspended
+Date: Sat, 17 Oct 2026 18:38:06 +0530
+Message-ID: <20261017130806.305673-1-navonjohnlukose@gmail.com>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261016214123.GA1884818@bhelgaas>
+References: <20261016214123.GA1884818@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 04/18] dt-bindings: PCI: rcar-gen4: Add optional "aer"
- interrupt for R-Car Gen4 SoCs
-To: Koichiro Den <den@valinux.co.jp>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski
- <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
- Magnus Damm <magnus.damm@gmail.com>, Jingoo Han <jingoohan1@gmail.com>
-Cc: Philipp Zabel <p.zabel@pengutronix.de>, Frank Li <Frank.Li@nxp.com>,
- Niklas Cassel <cassel@kernel.org>, Wilfred Mallawa
- <wilfred.mallawa@wdc.com>, Serge Semin <fancer.lancer@gmail.com>,
- linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20261015033103.3076869-1-den@valinux.co.jp>
- <20261015033103.3076869-5-den@valinux.co.jp>
-Content-Language: en-US
-From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <20261015033103.3076869-5-den@valinux.co.jp>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MBO-RS-META: rjej7x87b81ytdg5xf5xxb7s3wh5rtxc
-X-MBO-RS-ID: 3315d6597cf075cc723
+Content-Transfer-Encoding: 8bit
 
-On 10/15/26 5:30 AM, Koichiro Den wrote:
-> The intreq_pcim_lperr interrupt carries Root Port AER notifications,
-> separately from the integrated MSI receiver interrupt. Describe it with
-> the "aer" name so the controller driver can use it for Root Port error
-> reporting.
-> 
-> Keep the fifth interrupt optional on R-Car Gen4 SoCs so existing device
-> trees remain valid. Extend the example accordingly.
-> 
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> ---
-> Changes since v3:
->    - Rebase on Marek's Gen5 AER binding fix:
->      https://lore.kernel.org/r/20261003215710.792518-1-marek.vasut+renesas@mailbox.org/
->      This requires "aer" for the Gen5 SoC PCIe4 controller from the
->      beginning. Update the subject to clarify that it is optional only
->      on Gen4 SoCs, for compatibility with existing DTs.
->    - Drop R-b tags due to the changes.
-> 
-> v3: https://lore.kernel.org/r/20261006084638.3821710-5-den@valinux.co.jp/
-> 
->   .../devicetree/bindings/pci/rcar-gen4-pci-host.yaml | 13 ++++++++++---
->   1 file changed, 10 insertions(+), 3 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
-> index 083b77d4de8f..a86c06701fa9 100644
-> --- a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
-> +++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
-> @@ -26,7 +26,8 @@ properties:
->             - const: renesas,rcar-gen5-pcie4 # R-Car Gen5 PCIe4
->   
->     interrupts:
-> -    maxItems: 4
-> +    minItems: 4
-> +    maxItems: 5
+On Fri, Oct 16, 2026 at 04:41:23PM -0500, Bjorn Helgaas wrote:
+> pci_pm_freeze() doesn't call pci_save_state() itself, so I guess it's
+> the combination of pci_pm_freeze() and pci_pm_freeze_noirq(), where if
+> not runtime-suspended, pci_pm_freeze() clears dev->state_saved so
+> pci_pm_freeze_noirq() will call pci_save_state()?
 
-Wouldn't it be easier/cleaner keep only maxItems: 4 here and set ...
+Yes, that's what I meant.
 
->     clocks:
->       maxItems: 2
-> @@ -93,11 +94,13 @@ allOf:
->               - const: config
->   
->           interrupt-names:
-> +          minItems: 4
-
-... minItems/maxItems here ^ for R-Car Gen4 (because Gen4 is the only 
-SoC family which has optional non-mandatorily-described AER interrupt) ...
-
->             items:
->               - const: msi
->               - const: dma
->               - const: sft_ce
->               - const: app
-> +            - const: aer
->     - if:
->         properties:
->           compatible:
-> @@ -117,6 +120,9 @@ allOf:
->               - const: app
->               - const: config
->   
-> +        interrupts:
-> +          maxItems: 4
-
-... and drop this interrupts: hunk here entirely (because Gen5 always 
-has mandatorily described AER interrupt) ?
-
->           interrupt-names:
->             items:
->               - const: msi
-> @@ -146,8 +152,9 @@ examples:
->               interrupts = <GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
->                            <GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH>,
->                            <GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH>,
-> -                         <GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>;
-> -            interrupt-names = "msi", "dma", "sft_ce", "app";
-> +                         <GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>,
-> +                         <GIC_SPI 421 IRQ_TYPE_LEVEL_HIGH>;
-> +            interrupt-names = "msi", "dma", "sft_ce", "app", "aer";
->               clocks = <&cpg CPG_MOD 624>, <&pcie0_clkref>;
->               clock-names = "core", "ref";
->               power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
-
-What do you think ?
+Thanks,
+Navon
