@@ -1,198 +1,71 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C51AB381B1C;
-	Sat, 17 Oct 2026 00:00:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68F6A2AF00
+	for <linux-pci@vger.kernel.org>; Sat, 17 Oct 2026 00:07:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792195211; cv=none; b=IMSCGl7rt6D9IWIZ9h85oIJaeCSN6JB5kxX2keQucAVioenejRXXQOrc3H093c+Ud0c6lMXJKpN3fBf24hb0q0eJz+p+SKY2m0uXaa+lXfaRz3SSU3EoT495PJ4Y/DZdg79Q9Ya73+hR4xyYllG/pQZm4YMyX4xWJINOJNzLWhQ=
+	t=1792195638; cv=none; b=sjtn8t3qEADSUpJId4EH+ylp/e2TLFnXgKuqSFDuDje13P07bS5eswTkFt5gmB6HQ5tyekPzGEQ3AYGy7OJa7IbLy22jA9ipGgxNJ7tTUTPqKrh9SYgIz5B9KzRnf2myoQyy7Yvr/XBhx5ENMBf4tObBN+w3kk7iLkNWSKPS4i8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792195211; c=relaxed/simple;
-	bh=9xDY8RJxMnbDzlivRKIo9yR1vRznPmY5J8sWs5iLWd4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LB7Wn8POr6t4+Rd0aGIYeqCtL1qUWZTiDkA/hoRw8nMZ6VDzxNpc+XU0RX7W6fzaqImCJtN7o2Gt6XjjgNeo75EEiz1eez9sxjafq3ZI+WqjXhE0tW27RPEtO4JGxOWFoy8vJIQ0kCfcTF68ukLMciA8c0rc2cj8W/FFshXP9x8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=ogijTMZc; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1792195638; c=relaxed/simple;
+	bh=yHgiR4a81smWGbufMKV+59ZXEXxnIOx0PczChkcd4ck=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=gbPF8QLRzx5iNhJ03pt4BOMOEKAvhN46yvO7qYko4LCpHk0Qx4Vr8Dsj/xdOHvzv8fHVQpksKzvJRJfsD1psCFeWljiYox7l0PpDXHh3Q4L55tehfwFZhhpzbdBHGbs4D6VdbiHCXrjjBWHhvRq0U4gz7qABaaG3iGs2gYRrGd4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mCNTnc4a; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="ogijTMZc"
-Received: by linux.microsoft.com (Postfix, from userid 1216)
-	id 8A62720B7168; Fri, 16 Oct 2026 17:00:04 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 8A62720B7168
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1792195204;
-	bh=ibhrdaDiErzJvlxjxB5JJub8TppCWT7KleXCU2bg3eE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ogijTMZcO/0ALxKv13Ohj+MKuj45OFTZ0nU3H0mCwu8YSnLeZLFt1WaEkrUxdOo9C
-	 pKneCHDhuAq0xFa8Ki+qiXMJcLiYCAGAfWZAjmXPsAKXLny3xBf2s3eeepZdZocaTg
-	 k6WWRKSLPK9vFCrvmZZTqMJB8RNpT6s8+9S6glHg=
-From: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
-To: linux-hyperv@vger.kernel.org
-Cc: Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>,
-	Dexuan Cui <decui@microsoft.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-doc@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
-Subject: [PATCH 2/2] PCI: hv: add vPCI device reset support
-Date: Fri, 16 Oct 2026 19:59:40 -0400
-Message-ID: <20261016235940.942090-2-hamzamahfooz@linux.microsoft.com>
-X-Mailer: git-send-email 2.43.7
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mCNTnc4a"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE0101F000C4;
+	Sat, 17 Oct 2026 00:07:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792195637;
+	bh=yHgiR4a81smWGbufMKV+59ZXEXxnIOx0PczChkcd4ck=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=mCNTnc4aNbKZdRREqzbsuCtYpYFbrPCHRnPI65znUJ/w0mqsm8n60P+ahOhdrdUPX
+	 YvtLKOiN/g+VKRUp/qwB4k5z7r+iajcVnm98lwJgcfcFkmlYhrsrR3t+XwxUy3OtDD
+	 aKV06heZzdGC0SimZvLRUBk12uDHh5e5hfkaeQ5Wp/91gX1oJ0FOR1mQBSz7vAOjN8
+	 5O+vhbVN71eGF1W44AF0Wp75p5Rbk8kQXdQC18E7US33ejUhFPZVcAEwthCrGdsc9Q
+	 CqE4JP7LdKGVshI0k27yb2502uC30D2yLKVoAo0HcrISybl2qY2z3lLaA2BQtjdiOk
+	 3PEIc62aDuw7Q==
+Message-ID: <sashiko-outbox-175058@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 1/2] PCI: use reset_root_port() for bus reset of devices
+ on a root bus
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Hamza Mahfooz" <hamzamahfooz@linux.microsoft.com>
+Cc: linux-pci@vger.kernel.org
 In-Reply-To: <20261016235940.942090-1-hamzamahfooz@linux.microsoft.com>
 References: <20261016235940.942090-1-hamzamahfooz@linux.microsoft.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 17 Oct 2026 00:07:16 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Hyper-V vPCI protocol version 1.5 adds a RESET_DEVICE request for
-projected PCI functions. Negotiate the new protocol version and, when it
-is in use, implement the pci_host_bridge::reset_root_port() callback by
-issuing the request through the vPCI VMBus channel.
+> The "bus" reset method resets a device by asserting Secondary Bus Reset
+> on its upstream bridge, so it is not available for a device on a root
+> bus, which has no upstream bridge.
+>=20
+> Some platforms have no Root Ports and expose PCI devices directly on a
+> root bus, e.g., Hyper-V vPCI places each assigned PCI function directly
+> on the root bus of a virtual host bridge. Such a device has no reset
+> method at all if it supports neither FLR nor PM reset, even if the
+> platform is able to reset it.
+>=20
+> pci_host_bridge::reset_root_port() already allows a host bridge to reset
+> a device on a root bus in a platform-specific way, so far only in place
+> of a Secondary Bus Reset by a Root Port. Use it for the "bus" reset
+> method of a device that is the only device on a root bus, and wait for
+> the device to become ready afterwards, as is done for other reset
+> methods.
+>=20
+> Signed-off-by: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
 
-Hyper-V has no Root Ports and exposes projected functions directly on
-the root bus, so PCI core uses the callback for the "bus" reset method
-of a function that is the only one on its vPCI bus.
+Sashiko has reviewed this patch and found no issues.
 
-Use the existing VMBus response path. Return -ENOTTY when the host
-reports STATUS_NOT_SUPPORTED so PCI core may try another reset method.
-
-Co-developed-by: Wei Liu <wei.liu@kernel.org>
-Signed-off-by: Wei Liu <wei.liu@kernel.org>
-Signed-off-by: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
----
- Documentation/virt/hyperv/vpci.rst  |  2 +-
- drivers/pci/controller/pci-hyperv.c | 54 +++++++++++++++++++++++++++++
- 2 files changed, 55 insertions(+), 1 deletion(-)
-
-diff --git a/Documentation/virt/hyperv/vpci.rst b/Documentation/virt/hyperv/vpci.rst
-index b65b2126ede3..6bfee7225c14 100644
---- a/Documentation/virt/hyperv/vpci.rst
-+++ b/Documentation/virt/hyperv/vpci.rst
-@@ -65,7 +65,7 @@ exchange messages with the vPCI VSP for the purpose of setting
- up and configuring the vPCI device in Linux.  Once the device
- is fully configured in Linux as a PCI device, the VMBus
- channel is used only if Linux changes the vCPU to be interrupted
--in the guest, or if the vPCI device is removed from
-+in the guest, or if the vPCI device is reset or removed from
- the VM while the VM is running.  The ongoing operation of the
- device happens directly between the Linux device driver for
- the device and the hardware, with VMBus and the VMBus channel
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index 85d826f8f68d..790bf533a7e3 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -68,6 +68,7 @@ enum pci_protocol_version_t {
- 	PCI_PROTOCOL_VERSION_1_2 = PCI_MAKE_VERSION(1, 2),	/* RS1 */
- 	PCI_PROTOCOL_VERSION_1_3 = PCI_MAKE_VERSION(1, 3),	/* Vibranium */
- 	PCI_PROTOCOL_VERSION_1_4 = PCI_MAKE_VERSION(1, 4),	/* WS2022 */
-+	PCI_PROTOCOL_VERSION_1_5 = PCI_MAKE_VERSION(1, 5),	/* GE, device reset */
- };
- 
- #define CPU_AFFINITY_ALL	-1ULL
-@@ -77,6 +78,7 @@ enum pci_protocol_version_t {
-  * first.
-  */
- static enum pci_protocol_version_t pci_protocol_versions[] = {
-+	PCI_PROTOCOL_VERSION_1_5,
- 	PCI_PROTOCOL_VERSION_1_4,
- 	PCI_PROTOCOL_VERSION_1_3,
- 	PCI_PROTOCOL_VERSION_1_2,
-@@ -90,6 +92,7 @@ static enum pci_protocol_version_t pci_protocol_versions[] = {
- #define MAX_SUPPORTED_MSI_MESSAGES 0x400
- 
- #define STATUS_REVISION_MISMATCH 0xC0000059
-+#define STATUS_NOT_SUPPORTED     0xC00000BB
- 
- /* space for 32bit serial number as string */
- #define SLOT_NAME_SIZE 11
-@@ -136,6 +139,7 @@ enum pci_message_type {
- 	PCI_BUS_RELATIONS2		= PCI_MESSAGE_BASE + 0x19,
- 	PCI_RESOURCES_ASSIGNED3         = PCI_MESSAGE_BASE + 0x1A,
- 	PCI_CREATE_INTERRUPT_MESSAGE3   = PCI_MESSAGE_BASE + 0x1B,
-+	PCI_RESET_DEVICE                = PCI_MESSAGE_BASE + 0x1C,
- 	PCI_MESSAGE_MAXIMUM
- };
- 
-@@ -1416,6 +1420,52 @@ static int hv_pcifront_write_config(struct pci_bus *bus, unsigned int devfn,
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
-+static int hv_pci_reset_device(struct pci_host_bridge *bridge,
-+			       struct pci_dev *pdev)
-+{
-+	struct hv_pcibus_device *hbus =
-+		container_of(bridge->sysdata, struct hv_pcibus_device, sysdata);
-+	struct pci_child_message reset = {};
-+	struct hv_pci_compl comp_pkt;
-+	struct pci_packet pkt = {
-+		.completion_func = hv_pci_generic_compl,
-+		.compl_ctxt = &comp_pkt,
-+	};
-+	enum hv_pcibus_state state;
-+	int ret;
-+
-+	/* Do not take state_lock: eject holds it while removing/locking pdev. */
-+	state = READ_ONCE(hbus->state);
-+	if (state != hv_pcibus_probed && state != hv_pcibus_installed)
-+		return -ENODEV;
-+
-+	init_completion(&comp_pkt.host_event);
-+	reset.message_type.type = PCI_RESET_DEVICE;
-+	reset.wslot.slot = devfn_to_wslot(pdev->devfn);
-+
-+	ret = vmbus_sendpacket(hbus->hdev->channel, &reset, sizeof(reset),
-+			       (unsigned long)&pkt, VM_PKT_DATA_INBAND,
-+			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-+	if (ret)
-+		return ret;
-+
-+	ret = wait_for_response(hbus->hdev, &comp_pkt.host_event,
-+				"PCI_RESET_DEVICE");
-+	if (ret)
-+		return ret;
-+
-+	if (comp_pkt.completion_status == STATUS_NOT_SUPPORTED)
-+		return -ENOTTY;
-+
-+	if (comp_pkt.completion_status) {
-+		pci_err(pdev, "Hyper-V device reset failed: %#x\n",
-+			comp_pkt.completion_status);
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+
- /* PCIe operations */
- static struct pci_ops hv_pcifront_ops = {
- 	.read  = hv_pcifront_read_config,
-@@ -2017,6 +2067,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- 		break;
- 
- 	case PCI_PROTOCOL_VERSION_1_4:
-+	case PCI_PROTOCOL_VERSION_1_5:
- 		size = hv_compose_msi_req_v3(&ctxt.int_pkts.v3,
- 					cpu,
- 					hpdev->desc.win_slot.slot,
-@@ -2546,6 +2597,9 @@ static int create_root_hv_pci_bus(struct hv_pcibus_device *hbus)
- 	bridge->sysdata = &hbus->sysdata;
- 	bridge->ops = &hv_pcifront_ops;
- 
-+	if (hbus->protocol_version >= PCI_PROTOCOL_VERSION_1_5)
-+		bridge->reset_root_port = hv_pci_reset_device;
-+
- 	error = pci_scan_root_bus_bridge(bridge);
- 	if (error)
- 		return error;
--- 
-2.56.0
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261016235940.9420=
+90-1-hamzamahfooz@linux.microsoft.com?part=3D1
 
