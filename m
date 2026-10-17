@@ -1,41 +1,41 @@
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAAB03C8C68;
-	Sat, 17 Oct 2026 17:33:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2BC73C8C68;
+	Sat, 17 Oct 2026 17:33:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792258419; cv=none; b=kApj3tGYL7Kyh9qyrF6G0jHS/BDKAIX13/JoqI8YEkjj0kbHFdGEPLQIUxErheRuRr3BuFLHwoG7H0H4LOfWfO5t8rqryANMNSFQZlGGLrWtMXKzgtIO6g4LeU9MgBVAkX040IVb8DNUY/SyZqau2DWkd/NcHXn/d4uUAT1TtO8=
+	t=1792258423; cv=none; b=NTH3jlcVxwcV+wkUgH4/mps9O/UJY8F3ov93Wzf4mp03LVmmHo6ZnMU9N9hbromSbNhqCyfUOs9DZcfAV377ota2r6yGL0tX+HnlAwif1/f8bq8jOMnsSNmEX9ARgdslBzXdAHd2aqKhVDrBwdrWzlTKupxz2UG2R/wOFm8MNhQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792258419; c=relaxed/simple;
-	bh=T/h6CY1fUsJnpk75d7YEDaeATteZ18FX499uU03II1M=;
+	s=arc-20240116; t=1792258423; c=relaxed/simple;
+	bh=9an8ZU9aL8kZNakcS/RYNxKgIe8hkwL7Sx9YGGe23ZA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=W//TPHKkgooECeU7+PA99zm/lF8VV7VKHD8qkkFwNlJWCp3tQ2QFvcrzNIqNFzdSZs8cBl0rVe6S3yvlxvgYrn0kF2rrc2swDKoFwC68xew/m6J7Tu7Ds9ym/TNxxbL9TlmCrya9daiVjpMktGY6RCS29iBe/kdFyDBNfslfdOQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=ZT5sFYcU; arc=none smtp.client-ip=80.241.56.161
+	 In-Reply-To:Content-Type; b=flXXwtJgevTyMHrFR+1le9PQRYV8LZbme6tMBiEk/JDTCyrNPGtYUgsermAgmjHHCQmPeaNreoVOQr0PNO1uzizzTb+DMXb534K+D8XQ+eUjF5nLllZGbmEH3LF5AF20NgSPCOJMHu5h2hVMJ3gXfIucITTcZb4oyeS47cw50M4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=iuEZsMQo; arc=none smtp.client-ip=80.241.56.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="ZT5sFYcU"
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="iuEZsMQo"
 Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519MLKEM768 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4j6TRx5GN8zKnjj;
-	Sat, 17 Oct 2026 19:33:33 +0200 (CEST)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4j6TS1710yzMlJf;
+	Sat, 17 Oct 2026 19:33:37 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1792258413;
+	t=1792258418;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=wN7yaUxayKg6i+92YqS4bvwXXLse4slYUwkICAgqFyM=;
-	b=ZT5sFYcUofFI1ZiF+zdI0tqExtOVQ2iEL9SAVcHX1px2t+gA4S+eCCIdOB9WJ3bm5AEKl9
-	Q/2SHk98uA7z8W3mG2oZL+H62y9vOsDrzYa5U8OyqsqhcwJIGOeEAjHEy2tJTFEQCFW2dK
-	+lH7Q3v0m+P+uwD9ofXPS6AGUeWo9zPEOLVoHGn8XT/nBCMPm1LIO5P+JcAVTgb+iTUeON
-	myREBAbgr1dQXVF216eFB0dXjZN6WOT7LW4csZSqIXSTaAKZ0YhVa4EnBJRvJpBADJ3JdO
-	lBNkDU9PGtB7Vsx8uId7drbyr3K7CVFCzAYrnqS2SbDMnz2YPdivc/IFBRa/Dg==
-Message-ID: <001f4975-46db-4a2e-a187-bde76bb4a0aa@mailbox.org>
-Date: Sat, 17 Oct 2026 15:24:27 +0200
+	bh=tKbV9Avda/1koykeC8dCH8WTScrt3Q+IRecabZtWXo4=;
+	b=iuEZsMQolC3p4GIh0BUNGRoU8wytxR07GsaUGG5hdPQPbdsshRBwwzhGKyfwoTpH6N6zTe
+	T23LOUReU/gvtKNLkhGhQEIin+YaX9QZrkSwNmWR564TM7yin2k6dsy995+52TJOhiWEqa
+	nQw9Fs6dWaRN4rU2vIHimiIbFZbu2rMSXgOeKwF97kciLpj7XlxG/J3dZmP+gYxBGj3eDg
+	qTyXiE9UqST9caf6/f4w/2JCL2ApTl+mCGd+JF3F2oICsJgotQOblGsWI5BUzXzdU/h3RE
+	nywaAW0TMYXR7vwgxaU6JBouGfREI3fRODpaR07BSswrsLlKDSLaJ6V8XQKssA==
+Message-ID: <ce856844-573b-45be-82eb-cda58dd5ca9e@mailbox.org>
+Date: Sat, 17 Oct 2026 15:24:43 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -43,8 +43,8 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 17/18] arm64: dts: renesas: r8a779g0: Describe the PCIe
- AER interrupts
+Subject: Re: [PATCH v4 18/18] arm64: dts: renesas: r8a779h0: Describe the PCIe
+ AER interrupt
 To: Koichiro Den <den@valinux.co.jp>,
  Marek Vasut <marek.vasut+renesas@mailbox.org>,
  Geert Uytterhoeven <geert+renesas@glider.be>,
@@ -61,22 +61,22 @@ Cc: Philipp Zabel <p.zabel@pengutronix.de>, Frank Li <Frank.Li@nxp.com>,
  linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
  devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20261015033103.3076869-1-den@valinux.co.jp>
- <20261015033103.3076869-18-den@valinux.co.jp>
+ <20261015033103.3076869-19-den@valinux.co.jp>
 Content-Language: en-US
 From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <20261015033103.3076869-18-den@valinux.co.jp>
+In-Reply-To: <20261015033103.3076869-19-den@valinux.co.jp>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-MBO-RS-ID: 579987f2eb200ed68e0
-X-MBO-RS-META: 4hh5r611bg8ope6xryyqbduy31ido5zf
+X-MBO-RS-ID: 5619af8c79a4a6ac0b1
+X-MBO-RS-META: cpf1tooqt7aunik7ui1y1pkhch8s1gt5
 
 On 10/15/26 5:31 AM, Koichiro Den wrote:
-> The PCIe controllers report Root Port AER notifications through SPI 454
-> and SPI 461, respectively, separately from the integrated MSI receiver
-> interrupts. Describe these interrupts with the "aer" name so the
-> controller driver can use them for Root Port error reporting.
+> The PCIe controller reports Root Port AER notifications through SPI 454,
+> separately from the integrated MSI receiver interrupt. Describe this
+> interrupt with the "aer" name so the controller driver can use it for
+> Root Port error reporting.
 > 
-> Append the new interrupts to preserve the existing interrupt indices.
+> Append the new interrupt to preserve the existing interrupt indices.
 > 
 > Suggested-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 > Signed-off-by: Koichiro Den <den@valinux.co.jp>
