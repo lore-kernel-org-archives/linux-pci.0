@@ -1,154 +1,305 @@
-Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011036.outbound.protection.outlook.com [52.101.62.36])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 174872C026C;
-	Sat, 17 Oct 2026 18:17:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.36
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792261039; cv=fail; b=WsSFDyDort/O7U0ZIyHmHQpi2cg4/ZrRoiPR0CHq4f+oQeJAC+JGtwb4zz4f8IA/upcmUkGasKSuZoi2u+PnVecC88Ar/4zD679d8YnytmTJiUOzoumyj5S1neYQXV1PQGZWDsT6jNythBSQcvfb81rkqpg2ijuT49LKj0yB6fo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792261039; c=relaxed/simple;
-	bh=XdFPmmzzMSkuWJqd2nTOHHfi2VdHNMB8iwnhCLwvLPs=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cOPx3DL1nzhp1UMkXHIsl4flgB/TpNWaZ0viGKLK3lnnDUiZrs5a05XhNrxbGSUjYaMiSPv28adpiwkdk2UgBdK1Tt10LnhcrXl/KYw6aYgkMknHX9BDb4zjlFXrJTR2lufbYSYTxHlmokEZla9hIEvC/LkZ9UKnqHtuDOSJBLY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=bBZzbY1M; arc=fail smtp.client-ip=52.101.62.36
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76039390CAE
+	for <linux-pci@vger.kernel.org>; Sat, 17 Oct 2026 19:45:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792266359; cv=none; b=cFO7wbF37P+MKfoWjmfueHthVjbP2ro63MuqFmXkB05Okp/r77T9ICWDiVKC3YvqnblFnw+2AaHvVpAEIPH0P0QtDiNxEpsKjFJsz2dS5sJyazLNrSdtYtTtWJtuOjEc0FJXnm5pupd3Wk2aeq3Fry+vByWKcPMOZ0FMw1oMk20=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792266359; c=relaxed/simple;
+	bh=hHEG/5tS/7vtKg0Oon+8b+B9/EiHX13dKlpzgjFEnBc=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=Ai3SFsotL4YgziSHkjjgKdi3fvZcGG+mAddPmtt4wJg2D7C/DfTY1yujbaAh//VCQt+PcG+x8/Xbjiqyd1h8fTmOlKGNpndVjdsPRguhbJ+tccAKJXH623eotQEurIpuS4bzlMO0twVsdnib+U3I3muKlP/hbOiGZB2yIAaIENo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OR63qWOa; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="bBZzbY1M"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=KkFaFyE40d5DXEUCI49IRKaYF646vw6y90ggXKbTdPT8k5FebjP9cgwujPA54YFAjLNDmJ6pSE/UKs2uXHyxGatkga0ZbtvSCe0fHSPbE7+bDBjH/DKF3c1s2zkO9S2zXxRzuuDgJFKPoX12/VXsj9MSY6O81ygwA3Wh0N5ilUbq+h5xUXPf7MQD6TKiE61GZnGN/dBeipLS2fC4GJAt6VU0h+WYEQh0z7vXmoHKAqkTHJ2MNmtjRFRVEufwL3iShBxaYjmnOnYIc7HqhezhjlaMEJ1z4+5yh3uqx9mYvAduWjw/vps8SUgXtLUahI93wDiv6TQ9lyogZeDRrKQIPw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BYjPQ3YxWnKnf8GbYnY1r6L7faIrZd0wqJX8FJ2o+Ls=;
- b=h6S7ccgbQW10RIhQbLHfIOUcHmb7tKn9RryTdKJ90c8j+k9gRhhC3tgJeLuDqQWDbVZ5CnkZhIqEN2Y9yKujmI1fKvyvMPQ8s/2hmxPnEh7M/GRUvQjLRBHfXBwNCyaV/Gc2yFh29XScZkVdnz0C6f2nyXgUzVdAs3Qs8m8aAWoOr9ukuH7I+6xpu2UfwOe1juLe+AwnHHIluMOoueOXVe6y4PUW5FMYrPRxk3kOE6iwW/rYTqNhcfeS7KCg2CjrzTOQMdAn5pvP+GO6NFOp7N8NdC8wLCwN6ID4VSm3aHHjN95+ipzhB2jgtUa9jtB+nJcx0GnV2b1lD9kquY17/w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=ziepe.ca smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BYjPQ3YxWnKnf8GbYnY1r6L7faIrZd0wqJX8FJ2o+Ls=;
- b=bBZzbY1Mgim9x97CayqL3gxWY7Ud9F7uMFJisBtEYTnGZfWdcBQBWSO8dhl3SBjUmjDvG9mhFHNaemHnkzbtdEv8w2YzUB+ysG9KTDrxHOyGBAK2u9J+wDq+2yNV4ezODqbhHTRg/yFUfuxU07JaYYhitrV+/UapbEGJMPrf50KpcLhJ+zqNTTck+jeThNJx5zvHbvn6p9cloloVsMnvAf4YI6TWbU86FsbHe4OqHUKV58yycfRmKUMklKXsCtVK9ZJysFIKHaqbtGSrtSh+nQXJyI5tic2KUm4atCXH45n2qZnpx79/HKoxx9qqddsnDS5sJ5qjqvPsHHh1quEs/g==
-Received: from DS7PR03CA0010.namprd03.prod.outlook.com (2603:10b6:5:3b8::15)
- by CH0PR12MB8505.namprd12.prod.outlook.com (2603:10b6:610:193::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.18; Sat, 17 Oct
- 2026 18:17:02 +0000
-Received: from CY6PEPF0000004E.namprd03.prod.outlook.com
- (2603:10b6:5:3b8:cafe::75) by DS7PR03CA0010.outlook.office365.com
- (2603:10b6:5:3b8::15) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.522.18 via Frontend Transport; Sat,
- 17 Oct 2026 18:17:02 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- CY6PEPF0000004E.mail.protection.outlook.com (10.167.247.139) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.522.6 via Frontend Transport; Sat, 17 Oct 2026 18:17:02 +0000
-Received: from rnnvmail204.nvidia.com (10.129.68.6) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Sat, 17 Oct
- 2026 11:16:50 -0700
-Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail204.nvidia.com
- (10.129.68.6) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Sat, 17 Oct
- 2026 11:16:49 -0700
-Received: from nvidia.com (10.127.8.13) by mail.nvidia.com (10.129.68.9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49 via Frontend
- Transport; Sat, 17 Oct 2026 11:16:48 -0700
-Date: Sat, 17 Oct 2026 11:16:45 -0700
-From: Nicolin Chen <nicolinc@nvidia.com>
-To: Jason Gunthorpe <jgg@ziepe.ca>
-CC: Pranjal Shrivastava <praan@google.com>, <iommu@lists.linux.dev>, "Will
- Deacon" <will@kernel.org>, Joerg Roedel <joro@8bytes.org>, Robin Murphy
-	<robin.murphy@arm.com>, Mostafa Saleh <smostafa@google.com>, Daniel Mentz
-	<danielmentz@google.com>, Ashish Mhetre <amhetre@nvidia.com>,
-	<linux-arm-kernel@lists.infradead.org>, Thomas Gleixner <tglx@kernel.org>,
-	Radu Rendec <radu@rendec.net>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>, "Greg
- Kroah-Hartman" <gregkh@linuxfoundation.org>, <rafael@kernel.org>, "Danilo
- Krummrich" <dakr@kernel.org>, <driver-core@lists.linux.dev>
-Subject: Re: [PATCH v11 11/16] iommu/arm-smmu-v3: Add CMDQ_PROD_STOP_FLAG to
- gate CMDQ submissions
-Message-ID: <atO7jTV+XNReShT+@nvidia.com>
-References: <20260929034510.2023173-1-praan@google.com>
- <20260929034510.2023173-12-praan@google.com>
- <ar1yNtr7Kp2OTcDd@nvidia.com>
- <ar3yWUmi8E0k37Ml@google.com>
- <ar6gY9grmdMZcN/M@nvidia.com>
- <20261002164748.GD3481470@ziepe.ca>
- <asAeCz_rmpe5hbsh@google.com>
- <asUvUf4PZJ7JCLXp@nvidia.com>
- <20261017174912.GK14213@ziepe.ca>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OR63qWOa"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1792266358; x=1823802358;
+  h=date:from:to:cc:subject:message-id;
+  bh=hHEG/5tS/7vtKg0Oon+8b+B9/EiHX13dKlpzgjFEnBc=;
+  b=OR63qWOaYFWUGwMvb+Oygl747glU4H6cDBeuxvOPWIM3qkgUmBe2i0B3
+   ZGQCGEDi06okJEI468/dle8sgSsaL4zb4KdGlVoCoGAp9AcSmVR5cXEgX
+   RYboCedc5tl1QX40QE0kHdgLjLEuyfTZ0ovDp62xhRBO55MvK9D3rxGNg
+   NLuV6ypPrygsJoLQSpANJsoHNXZgIB+H6ssip5yjo6+sh5B3/bvPV4Sgp
+   gdLk/fcO4K/F/8WqJY+LBPg7PkKVYEFTmcUP9/kmBQGX5CrY6DsIPBA7m
+   YnkrdCaP08xEcC002ezB9GBLGt6LT1CSU2O0cX51MoCTZ/Nj7BH4tI0we
+   w==;
+X-CSE-ConnectionGUID: 3baPrdHZQTmVs115wJV9DA==
+X-CSE-MsgGUID: MKiB3MnzRmie2a0H4nrf7g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11938"; a="1012294"
+X-IronPort-AV: E=Sophos;i="6.27,163,1787036400"; 
+   d="scan'208";a="1012294"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2026 12:45:57 -0700
+X-CSE-ConnectionGUID: d9FzNzyKQVaXTBgyHJQ8xQ==
+X-CSE-MsgGUID: UR1pj/7oTZyY82tk+nKkCw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,163,1787036400"; 
+   d="scan'208";a="2470805"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by fmviesa001.fm.intel.com with ESMTP; 17 Oct 2026 12:45:56 -0700
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xIALo-00000000Jg4-43qc;
+	Sat, 17 Oct 2026 19:45:53 +0000
+Date: Sun, 18 Oct 2026 03:45:42 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:aspm] BUILD SUCCESS
+ 2cbfd6c8dcfc9c5539d0ffca22b5609593f93c03
+Message-ID: <202610180339.xW0CG73o-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20261017174912.GK14213@ziepe.ca>
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY6PEPF0000004E:EE_|CH0PR12MB8505:EE_
-X-MS-Office365-Filtering-Correlation-Id: c3805e99-f6b8-4eaf-5b36-08df2c7ad7ac
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|7416014|376014|1800799024|23010399003|82310400026|56012099006|260925021311599003|260925021911599003|260925022911599003|4143699003|11063799006|261009223027099003|261009221227099003|10067099003|22082099003|18002099003|13003099007;
-X-Microsoft-Antispam-Message-Info:
-	uOnMmTUM0lC85dP4zNzXyFbQrigkwAMK0BjDuOc8lNWnSCFptK53dtV5ItXxfdp96J42JPt/8zYs/+RR7ikxJbpu7vwLIZwQV49OlX+wnOwKHektXHDweXsxZ4g7SCfEQ4Grthg8XuqtyqMAlWO/1wxXgRY3rJtuvhjC4iIxq+EahRQSsQR4AM2aWBmLURiTigQkrlzwD/VBbW3Pb0s3j3DfOP3GrHOdPyskB7HYN7hkLjlTGuZTIL7QLsYdlbeaYuHFfEJDnM076Ggi8qT68R/cv4SJcINzdD167HD//eePvdlN6LmyqTF4yvGJWatMILkY48ctgMPusg3r2ocjs4pG/D0JXM6HI3ar7FNWS2gvRkrqgmQSonFckmodfcWtvfWJYuEi9delQq5HrgnvCbhDFQ8P4zMR4+sioC7Rd2mFwKrBX9+6ta5MewIMfhUjbAOWtpCm3Nc99CRMOKoqygXS/kwppkmA9GZ71NpzVDpLqa8RZwijHP+omW+KUyZlNw0RDiw/ZpFkl30QUcmD82e607o51OSr1l8rA6SY0a/VVi/AWtUOdk/VOSp+0KNXh5pYQewMPlNHtezb4tiNfhHXvJcYWniHZ1XcsioA3FivXjRDjWNnEGODOsi8GIPao2GOGCrKeIZSE7vXV0DRgIOKKI06aibaeDWPMEm1uPTaA0PoZTg221GMfIKjgwVvL6Vd0MD1SQnMUVX2nsq/Ow==
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(7416014)(376014)(1800799024)(23010399003)(82310400026)(56012099006)(260925021311599003)(260925021911599003)(260925022911599003)(4143699003)(11063799006)(261009223027099003)(261009221227099003)(10067099003)(22082099003)(18002099003)(13003099007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	tKmPJ94/yib+oDkYUZ4q/qRqc8UHRoOrSzrpoWonyqiDU3FGiJKQISya5TapoLmtIOT2AxkY4PKkN3Z7ikUsI6SYXtyRCcztHiUMlrU+feYrzNCFWeUYHxjQnF9P9Z1USxfW8aAnYj8wCSUPtoj5RQYWSXdn22Cm1vC/KYxdPJSEX1B4zDxMRXL2NDw8d1cSFr4FTR3Bc6UwKk46gEHTDsqaFZ5+vAahTA6smTnN0vdLs5uIuYc5lnLuZlQC9akBmVJidn5LqdgePY+Qr/yu8xzoGN822OIdhWbyvD7Jhr3+rH+cdzcPhZIY4kZ8NkOGPw5Xks42pPOqGmF767ykZbVbyElATlSXefy4aCD5UYA9lqwcP8cDP9sFJeB9CqdcKQuYUFamcmtZmSXuhyNdiCJNvMLQuARpFiUFqYvffUBeMYR8Yu1oUWWM96/5nfDz
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Oct 2026 18:17:02.4686
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: c3805e99-f6b8-4eaf-5b36-08df2c7ad7ac
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CY6PEPF0000004E.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR12MB8505
 
-On Sat, Oct 17, 2026 at 02:49:12PM -0300, Jason Gunthorpe wrote:
-> On Tue, Oct 06, 2026 at 10:26:41AM -0700, Nicolin Chen wrote:
-> > > pci_dev_reset_iommu_prepare/done() pair (with slight refactoring) in EP's
-> > > suspend/resume?
-> > 
-> > That sounds right to me, though a different API for suspend/resume
-> > will be required. And call them in pci_pm_runtime_suspend/resume()
-> > maybe.
-> > 
-> > Jason, how do you think about this?
-> 
-> Maybe lets just start by refusing power management when ATS is on? For
-> PCIe devices too?
-> 
-> It isn't just ARM that has this issue, every iommu is busted if you
-> suspend the PCI device while an ATS domain is still active..
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git aspm
+branch HEAD: 2cbfd6c8dcfc9c5539d0ffca22b5609593f93c03  PCI/ASPM: Disable ASPM when driver requests it
 
-So, should we put that refuse guard in pci_pm_runtime_suspend()?
+elapsed time: 1813m
 
-I am thinking about splitting the iommu and pci patches out of my
-smmmuv3_atc_timeout series. They could be get merged alone.
+configs tested: 228
+configs skipped: 2
 
-Then, we add a new API for pci_pm_runtime_suspend/resume() with a
-new BLOCKED_SUSPEND reason in the list:
-https://lore.kernel.org/linux-iommu/bf5ccc916593357c640cd7fcdffabfb46fdf4c64.1790188510.git.nicolinc@nvidia.com/
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Nicolin
+tested configs:
+alpha                              allnoconfig    gcc-16.1.0
+alpha                             allyesconfig    gcc-16.1.0
+alpha                                defconfig    gcc-16.1.0
+arc                               allmodconfig    clang-24
+arc                                allnoconfig    gcc-16.1.0
+arc                               allyesconfig    clang-24
+arc                                  defconfig    gcc-16.1.0
+arc                   randconfig-1000-20261017    gcc-10.5.0
+arc                   randconfig-1001-20261017    gcc-10.5.0
+arc                         vdk_hs38_defconfig    gcc-16.1.0
+arm                               alldefconfig    gcc-16.1.0
+arm                                allnoconfig    gcc-16.1.0
+arm                               allyesconfig    clang-24
+arm                        aspeed_g4_defconfig    gcc-16.1.0
+arm                                  defconfig    gcc-16.1.0
+arm                       footbridge_defconfig    clang-24
+arm                         multi_v5_defconfig    clang-24
+arm                        netwinder_defconfig    gcc-16.1.0
+arm                          nhk8815_defconfig    clang-24
+arm                   randconfig-1000-20261017    gcc-10.5.0
+arm                   randconfig-1001-20261017    gcc-10.5.0
+arm                   randconfig-1002-20261017    gcc-10.5.0
+arm                   randconfig-1003-20261017    gcc-10.5.0
+arm                          socfpga_defconfig    clang-24
+arm64                             allmodconfig    clang-24
+arm64                              allnoconfig    gcc-16.1.0
+arm64                                defconfig    gcc-16.1.0
+arm64                 randconfig-1000-20261017    clang-24
+arm64                 randconfig-1000-20261018    gcc-14.3.0
+arm64                 randconfig-1001-20261017    clang-24
+arm64                 randconfig-1001-20261018    gcc-14.3.0
+arm64                 randconfig-1002-20261017    clang-24
+arm64                 randconfig-1002-20261018    gcc-14.3.0
+arm64                 randconfig-1003-20261017    clang-24
+arm64                 randconfig-1003-20261018    gcc-14.3.0
+csky                              allmodconfig    gcc-16.1.0
+csky                               allnoconfig    gcc-16.1.0
+csky                                 defconfig    gcc-16.1.0
+csky                  randconfig-1000-20261017    clang-24
+csky                  randconfig-1000-20261018    gcc-14.3.0
+csky                  randconfig-1001-20261017    clang-24
+csky                  randconfig-1001-20261018    gcc-14.3.0
+hexagon                           allmodconfig    gcc-16.1.0
+hexagon                            allnoconfig    gcc-16.1.0
+hexagon                              defconfig    gcc-16.1.0
+hexagon               randconfig-1000-20261017    clang-21
+hexagon               randconfig-1000-20261018    clang-21
+hexagon               randconfig-1001-20261017    clang-21
+hexagon               randconfig-1001-20261018    clang-21
+i386                              allmodconfig    clang-22
+i386                               allnoconfig    gcc-16.1.0
+i386                              allyesconfig    clang-22
+i386        buildonly-randconfig-1000-20261017    gcc-14
+i386        buildonly-randconfig-1001-20261017    gcc-14
+i386        buildonly-randconfig-1002-20261017    gcc-14
+i386        buildonly-randconfig-1003-20261017    gcc-14
+i386        buildonly-randconfig-1004-20261017    gcc-14
+i386        buildonly-randconfig-1005-20261017    gcc-14
+i386                                 defconfig    gcc-16.1.0
+i386                  randconfig-1000-20261017    clang-22
+i386                  randconfig-1001-20261017    clang-22
+i386                  randconfig-1002-20261017    clang-22
+i386                  randconfig-1003-20261017    clang-22
+i386                  randconfig-1004-20261017    clang-22
+i386                  randconfig-1005-20261017    clang-22
+i386                  randconfig-1006-20261017    clang-22
+i386                  randconfig-1007-20261017    clang-22
+i386                  randconfig-1008-20261017    clang-22
+i386                  randconfig-1009-20261017    clang-22
+i386                  randconfig-1010-20261017    clang-22
+i386                  randconfig-1011-20261017    clang-22
+i386                  randconfig-1012-20261017    clang-22
+i386                  randconfig-1013-20261017    clang-22
+loongarch                         allmodconfig    clang-24
+loongarch                          allnoconfig    gcc-16.1.0
+loongarch                            defconfig    clang-24
+loongarch             randconfig-1000-20261017    clang-21
+loongarch             randconfig-1000-20261018    clang-21
+loongarch             randconfig-1001-20261017    clang-21
+loongarch             randconfig-1001-20261018    clang-21
+m68k                              allmodconfig    gcc-16.1.0
+m68k                               allnoconfig    gcc-16.1.0
+m68k                              allyesconfig    clang-24
+m68k                                 defconfig    clang-24
+microblaze                         allnoconfig    gcc-16.1.0
+microblaze                        allyesconfig    gcc-16.1.0
+microblaze                           defconfig    clang-24
+mips                              allmodconfig    gcc-16.1.0
+mips                               allnoconfig    gcc-16.1.0
+mips                              allyesconfig    gcc-16.1.0
+mips                   cavium_octeon_defconfig    clang-24
+mips                   cavium_octeon_defconfig    gcc-16.1.0
+mips                            ip30_defconfig    clang-24
+mips                      loongson2k_defconfig    clang-24
+mips                    sb1250_swarm_defconfig    clang-24
+mips                    sb1250_swarm_defconfig    gcc-16.1.0
+nios2                             allmodconfig    clang-20
+nios2                              allnoconfig    clang-24
+nios2                                defconfig    clang-24
+nios2                 randconfig-1000-20261017    clang-21
+nios2                 randconfig-1000-20261018    clang-21
+nios2                 randconfig-1001-20261017    clang-21
+nios2                 randconfig-1001-20261018    clang-21
+openrisc                          allmodconfig    clang-20
+openrisc                           allnoconfig    clang-24
+openrisc                             defconfig    gcc-16.1.0
+parisc                            allmodconfig    gcc-16.1.0
+parisc                             allnoconfig    clang-24
+parisc                            allyesconfig    clang-17
+parisc                               defconfig    gcc-16.1.0
+parisc                randconfig-1000-20261017    gcc-15.2.0
+parisc                randconfig-1000-20261018    clang-24
+parisc                randconfig-1001-20261017    gcc-15.2.0
+parisc                randconfig-1001-20261018    clang-24
+parisc64                             defconfig    clang-24
+powerpc                           allmodconfig    gcc-16.1.0
+powerpc                            allnoconfig    clang-24
+powerpc                       chrp32_defconfig    clang-24
+powerpc                       ep88xc_defconfig    gcc-16.1.0
+powerpc               randconfig-1000-20261017    gcc-15.2.0
+powerpc               randconfig-1000-20261018    clang-24
+powerpc               randconfig-1001-20261017    gcc-15.2.0
+powerpc               randconfig-1001-20261018    clang-24
+powerpc                     socrates_defconfig    gcc-16.1.0
+powerpc                      tqm8548_defconfig    clang-24
+powerpc64             randconfig-1000-20261017    gcc-15.2.0
+powerpc64             randconfig-1000-20261018    clang-24
+powerpc64             randconfig-1001-20261017    gcc-15.2.0
+powerpc64             randconfig-1001-20261018    clang-24
+riscv                             allmodconfig    clang-24
+riscv                              allnoconfig    clang-24
+riscv                             allyesconfig    clang-24
+riscv                                defconfig    gcc-16.1.0
+riscv                                defconfig    gcc-16.1.0
+riscv                 randconfig-1000-20261017    clang-19
+riscv                 randconfig-1000-20261018    clang-17
+riscv                 randconfig-1001-20261017    clang-19
+riscv                 randconfig-1001-20261018    clang-17
+s390                              allmodconfig    clang-17
+s390                               allnoconfig    clang-24
+s390                              allyesconfig    gcc-16.1.0
+s390                                 defconfig    gcc-16.1.0
+s390                  randconfig-1000-20261017    clang-19
+s390                  randconfig-1000-20261018    clang-17
+s390                  randconfig-1001-20261017    clang-19
+s390                  randconfig-1001-20261018    clang-17
+s390                        zfcpdump_defconfig    gcc-16.1.0
+sh                                alldefconfig    gcc-16.1.0
+sh                                allmodconfig    gcc-16.1.0
+sh                                 allnoconfig    clang-24
+sh                                allyesconfig    clang-17
+sh                          ap325rxa_defconfig    gcc-16.1.0
+sh                                   defconfig    gcc-14
+sh                  kfr2r09-romimage_defconfig    clang-24
+sh                           lboxre2_defconfig    gcc-16.1.0
+sh                             migor_defconfig    gcc-16.1.0
+sh                    randconfig-1000-20261017    clang-19
+sh                    randconfig-1000-20261018    clang-17
+sh                    randconfig-1001-20261017    clang-19
+sh                    randconfig-1001-20261018    clang-17
+sh                           rsk7264_defconfig    gcc-16.1.0
+sh                           rsk7269_defconfig    clang-24
+sh                            sh2007_defconfig    clang-24
+sparc                              allnoconfig    clang-24
+sparc                                defconfig    gcc-16.1.0
+sparc                 randconfig-1000-20261017    gcc-15.2.0
+sparc                 randconfig-1000-20261018    clang-24
+sparc                 randconfig-1001-20261017    gcc-15.2.0
+sparc                 randconfig-1001-20261018    clang-24
+sparc                        sparc32_defconfig    clang-24
+sparc64                           allmodconfig    clang-20
+sparc64                              defconfig    gcc-14
+sparc64               randconfig-1000-20261017    gcc-15.2.0
+sparc64               randconfig-1000-20261018    clang-24
+sparc64               randconfig-1001-20261017    gcc-15.2.0
+sparc64               randconfig-1001-20261018    clang-24
+um                                allmodconfig    clang-17
+um                                 allnoconfig    clang-24
+um                                allyesconfig    gcc-16.1.0
+um                                   defconfig    gcc-14
+um                              i386_defconfig    gcc-14
+um                    randconfig-1000-20261017    gcc-15.2.0
+um                    randconfig-1000-20261018    clang-24
+um                    randconfig-1001-20261017    gcc-15.2.0
+um                    randconfig-1001-20261018    clang-24
+um                            x86_64_defconfig    gcc-14
+x86_64                            allmodconfig    clang-22
+x86_64                             allnoconfig    clang-24
+x86_64                            allyesconfig    clang-22
+x86_64      buildonly-randconfig-1000-20261017    gcc-14
+x86_64      buildonly-randconfig-1001-20261017    gcc-14
+x86_64      buildonly-randconfig-1002-20261017    gcc-14
+x86_64      buildonly-randconfig-1003-20261017    gcc-14
+x86_64      buildonly-randconfig-1004-20261017    gcc-14
+x86_64      buildonly-randconfig-1005-20261017    gcc-14
+x86_64                               defconfig    gcc-14
+x86_64                                   kexec    clang-22
+x86_64                randconfig-1000-20261017    gcc-14
+x86_64                randconfig-1001-20261017    gcc-14
+x86_64                randconfig-1002-20261017    gcc-14
+x86_64                randconfig-1003-20261017    gcc-14
+x86_64                randconfig-1004-20261017    gcc-14
+x86_64                randconfig-1005-20261017    gcc-14
+x86_64                randconfig-1006-20261017    clang-22
+x86_64                randconfig-1007-20261017    clang-22
+x86_64                randconfig-1008-20261017    clang-22
+x86_64                randconfig-1009-20261017    clang-22
+x86_64                randconfig-1010-20261017    clang-22
+x86_64                randconfig-1011-20261017    clang-22
+x86_64                randconfig-1012-20261017    clang-22
+x86_64                randconfig-1013-20261017    clang-22
+x86_64                randconfig-1014-20261017    clang-22
+x86_64                randconfig-1015-20261017    clang-22
+x86_64                randconfig-1016-20261017    clang-22
+x86_64                randconfig-1017-20261017    clang-22
+x86_64                                rhel-9.4    clang-22
+x86_64                            rhel-9.4-bpf    gcc-14
+x86_64                           rhel-9.4-func    clang-22
+x86_64                     rhel-9.4-kselftests    clang-22
+x86_64                          rhel-9.4-kunit    gcc-14
+x86_64                            rhel-9.4-ltp    gcc-14
+x86_64                           rhel-9.4-rust    clang-22
+xtensa                             allnoconfig    clang-24
+xtensa                            allyesconfig    clang-20
+xtensa                randconfig-1000-20261017    gcc-15.2.0
+xtensa                randconfig-1000-20261018    clang-24
+xtensa                randconfig-1001-20261017    gcc-15.2.0
+xtensa                randconfig-1001-20261018    clang-24
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
