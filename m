@@ -1,40 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F21364503B
-	for <linux-pci@vger.kernel.org>; Sat, 17 Oct 2026 05:05:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D02031925BC;
+	Sat, 17 Oct 2026 05:07:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792213516; cv=none; b=JrY6FkPLC2GgczuZUpO7Y9ae6jEmUF5ng/a/sVebmi+GNPhj1bJRIhoHuKS5hfMOGl3CQcKn/ovK1KUVuLP5q1tK1FvNeHLuO+zhA7et1UNOBqjj6tmiPBw8zT/iGprsI5c/XQaKRNizZqL298PslORLbjRt8eoRc+iG7WMS3fA=
+	t=1792213621; cv=none; b=NVZdA6KLo3unh3NdNoimHWkry+OKfOdGOY6CuMs8ULbylsdYgN829SrYXcsRVShKJiIxdmZ9fjdrT3Mu1kTjirujDS7hKNWfyazGvMYY6f26RUcJR8Uuho346gzWJ4owVLWKt5gcvv/R1JOys2q4nRrY+NjlaQKqlJxf5UQPilc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792213516; c=relaxed/simple;
-	bh=A/wsIXdnF5hAoLYTK9PXO/xkmhm+NVdxHMfZOrfD/no=;
+	s=arc-20240116; t=1792213621; c=relaxed/simple;
+	bh=6AibX6YCngIJcN/yXS5xOBZtVb3XeCfFM8NCLdf3Cr8=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=o1eNEmP3hU+hh6nlrs4T6Wc/d/zkiQjkQuNbhrrHpPN6+0F+XNsKwDwWmuxLRFHSVqTtjT3cXQ/mPk0rgCZ051wCSFwfDPr53UyRTfzOoj2/vaTFKbdVPCNRB3kDvo83qtj1kVN6Y9ViIEyh8WAIscKpF5jonqm2Qi4LHNn8KQA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Epw9VXQU; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=qq3DkAEiL5S706CbDgRsxsXjXgdPJ5Rs4wvp5n2ac5xz/ALJWhB+djA+gETSlrNzD1YcH+NkY5Cc5DJbFdp9gP0TPhfaR3NZpeu/y2rep5NWSFfos7bajJFtd1jtZvHWC9BKZY52v2qz1NN7HIlnGyNIJXIyrNrBMlIVlPR/YuM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EIXuIoXy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Epw9VXQU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B79E1F000C4;
-	Sat, 17 Oct 2026 05:05:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EIXuIoXy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B99FF1F000C4;
+	Sat, 17 Oct 2026 05:06:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792213515;
-	bh=fMkiOqz7yOVvd/FGiSqbAkWsz/PHKXvYjF0u+jq5oRU=;
+	s=k20260515; t=1792213620;
+	bh=4UCDTeoeo6cYiyxMe9fYq1aH8U/k4xUlpfLtsbN67hA=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=Epw9VXQUdMadAZaVVFGLO8ZX+edV5AVn4UTt2VEmUMPjMIQXY+X7Oy7cPDE+yBJgd
-	 uZuLjstbUJtCaet4oXSs6GBINznwHHhsuPFb2RwEYk18cj31E8qtwoZ58sIuIigBF9
-	 UwO4f84QgahR2zpe6v2g67gpMyGrz0PcZqM+Est3qkDH0LsayFNb3utLe7fCM8fdfs
-	 HzOQCws0YRt4Adh/eUoOdfXKFUAMvgmCwtcK1Mwj1Qxb4HzW10r+IzmZ400vt4H9Rr
-	 3pvDm5nErM5vseBC4Oz8KnBcwiWg+e19rMb3VTF4zybCNsQevpgAj5F+jMBDyRurcS
-	 VzAUWx3ekWa8w==
+	b=EIXuIoXy3+29oJgMgyp8pD7E1RqhrdvTx66dg09UFZxu3s/lF9aLfGDZNGCa2SIF/
+	 oxowfoZns3iT4cOk03+0TzbAIqvJgnhTELjWmgnPXr8oUwdtYNBAfAmefJSg/Zq/RO
+	 oX6Oq5lwVWDP6vcZXmtuKSm8q0d0U9Zr+vJwJ6weNPcY8h1/1je4bFGIU2Lv5BefoM
+	 kiYy0UcTAGlJnGXFuqr2PP2emuszSh1RF69p8Dzq8BD25ApyI0/XQ+aXRv2qYK3VJ0
+	 9/07h1MunZMohHlmZmRm+vYyil2kI8jPGST8vA5xnptPNV+UMBUhuNqI/o1sbliX2Z
+	 rlw6Pxg5Sx9Gg==
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, 
- Shawn Lin <shawn.lin@rock-chips.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <1790734930-217000-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1790734930-217000-1-git-send-email-shawn.lin@rock-chips.com>
-Subject: Re: [PATCH 0/2] PCI: dwc: Make the MSI domain naming explicit
-Message-Id: <179221350012.2165.13239090578589363213.b4-ty@b4>
-Date: Sat, 17 Oct 2026 10:35:00 +0530
+To: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
+ jingoohan1@gmail.com, Hans Zhang <18255117159@163.com>
+Cc: robh@kernel.org, a-garg7@ti.com, linux-pci@vger.kernel.org, 
+ linux-kernel@vger.kernel.org
+In-Reply-To: <20260930013842.82476-1-18255117159@163.com>
+References: <20260930013842.82476-1-18255117159@163.com>
+Subject: Re: [PATCH] PCI: dwc: Describe DWC PCIe fields with full masks and
+ FIELD_PREP()
+Message-Id: <179221360235.2165.13933379659986541066.b4-ty@b4>
+Date: Sat, 17 Oct 2026 10:36:42 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,37 +46,27 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=812;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=355;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=ZutYSKINpC4dBsNX1VDGCS6WiFGxHD/UIq4TmEapULU=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq0wIIyYh16Kv1JCjhStl/xEEFUmKn1G7IeB2bQ
- 1FdZ7h0RKuJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCatMCCAAKCRBVnxHm/pHO
- 9XptCACAgvK7VNHbwad4x7zwWm4tfLOfJmOtixBN+w3n4PhUcTDNiufdG5uqhGSjelMWfhqwuXu
- 0jzwwar1t2jUBOmZG7w/eBXczG3CHnrSbX4qrWH8N91doTXobcBphXzCeIEzdkR71Wgv3Skfj4A
- 3dBNBBumFb8PVfdvcPZJB2GGdYNa2g+fcNYrrOR6O7r/4UYn+yjLAJgKPB9jfnfJDyhGKbuW8sk
- HHewxu14qg0HH8DRwBpudEWoEWsToH2add4NyyhMgr6417Rf9MJY7x4R168DaxS2kAy8EDbrflM
- cHf4ttlZwrzwZGbi1kmQeNvbsfJa++s9c17qSAtWYe7saVDd
+ bh=UNjcYDt4Eez7Rct3x9msn07EXLMBl1+K916IzfnTGS8=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq0wJvl8Ay+Jvq3whqz6n62/7yWs1n6YmtzzehT
+ NrlkVwLT4GJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCatMCbwAKCRBVnxHm/pHO
+ 9esZB/4uBJ1bGH4foyQieZE9iqZAzSGWjWIBZARh/xU8s5PZ4QXB6YGXjOM3LWaJMy/wyd3KlrZ
+ ZCu6QLuOyIoJkGyRfhYMC4YXZv5XGrvPEKn84LNNb+xlQl4u1KnujQAEjzH5v+BWXPEib0fQyy9
+ 9eXWgYqsv3V3CVFemFZ5/unQJYfaxh/caBobWBYyyp9QBWm69hfYGLmR3IHTd35Bik3H9a86Jb6
+ vnKXe5FiOAT+KVPSH682SoZyusVs8EZWF/URsVUzhkyobvUOkap2R4UFr5QDc1fIB6YUZzlfmQs
+ Db1o7u9H8G4KONLK06iQyyGk0DstR9dluFCDV2cAwpyCu8w6
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 
 
-On Wed, 30 Sep 2026 10:22:08 +0800, Shawn Lin wrote:
-> PCI: dwc: Make the MSI domain naming explicit
-> 
-> I was looking into whether the DWC core provides a common INTx irq
-> domain registration and handling flow, as several glue drivers owning
-> a legacy interrupt controller copy-paste the same code (get the
-> "legacy-interrupt-controller" child node, create a linear domain with
-> a one-line .map callback, install a chained handler).
-> 
-> [...]
+On Wed, 30 Sep 2026 09:38:42 +0800, Hans Zhang wrote:
+> PCI: dwc: Describe DWC PCIe fields with full masks and FIELD_PREP()
 
 Applied, thanks!
 
-[1/2] PCI: dwc: Rename dw_pcie_allocate_domains to dw_pcie_allocate_msi_domains
-      commit: e078e64169b1da85c057092e2b2c673b21e08647
-[2/2] PCI: dwc: Rename pp->irq_domain to pp->msi_irq_domain
-      commit: 315ba6800480eb49fa0c37085c808fc6f2f9dcd6
+[1/1] PCI: dwc: Describe DWC PCIe fields with full masks and FIELD_PREP()
+      commit: 0bb385e6f5bc3f172097ec16392fc19493725c25
 
 Best regards,
 -- 
