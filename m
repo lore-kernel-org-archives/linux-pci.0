@@ -1,57 +1,57 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58EE9248F72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8A4E377A80
 	for <linux-pci@vger.kernel.org>; Sat, 17 Oct 2026 19:50:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792266631; cv=none; b=nJa4zPEGCxz5A/Dp2mkOGAtmRzRtlP237lm3lVKS3OfVXDr+t+dboQVs7ghiUi/2Ti4xFCJZWZck+bEqR82EHgO2ujX87NLGCSgH8wOgYzJkY5RVN/1pGe9Oo35X5BbzCRVknkifgZ3IkDOBsQN5g00FMsmPLxEqGdDG6MRCeXY=
+	t=1792266632; cv=none; b=BA9MMmEUpD/mCrAAL8wFNrvw4edNfJecaaph7YxK5LDLcansVVBlgTblxBH3laTXtKhb0f5zYfVoDczcdVVZJ9dxb+G7N7DQ3m5gHET3e3VQ+p844OOP1hVBrxBE/Ai8a5jLP1DgybU4n/2JiU97GL76roy+V5Qw4PEBpT2y50Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792266631; c=relaxed/simple;
-	bh=0Df22jdn4DGxCibmS8Y6alX2L+om1by7GkUlqri5Ii8=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=c2gM0gghyyZwVDPD9aZg5Jinkaq+Q/51+IjimkOo/aSz/QeQF0+oEmMeZoSXWZzq+uueg9NzVeqoOYroMmQ+8A66IqUjL9FPKtZ89rbyf0jx0PS+KuqCC9E+pooygcrx1Kdv1+QjikH0UthOgfepFwmibyqAcxSa4rr0Kduk9H0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NAdt/mRs; arc=none smtp.client-ip=198.175.65.10
+	s=arc-20240116; t=1792266632; c=relaxed/simple;
+	bh=SuBqUTXTXq3lSJ0GvjTdiu88rAkXDKOV5CMCM2e7oFc=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=JepXCCwLAeSJJTWN4ou7FHgQ7eeAGHRQgIOSXWLjjgsx/snc2krSKcYkfvtyghUJ9NFLzf8EcC1H05xq3alhx0iMoa24Be++vd3I8FVuo3D6FQ7GYRrpziG3LnHs9qHYKDuPr0VkjbMuMu1gExNxlk8SfkTFTp34GhlULBjm3Nc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GAq7qWUS; arc=none smtp.client-ip=198.175.65.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NAdt/mRs"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GAq7qWUS"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1792266629; x=1823802629;
+  t=1792266630; x=1823802630;
   h=date:from:to:cc:subject:message-id;
-  bh=0Df22jdn4DGxCibmS8Y6alX2L+om1by7GkUlqri5Ii8=;
-  b=NAdt/mRs197b4PNJ386gNDAEsE6kZkQbswq+diKrXVK68zU4ojPECKvJ
-   MyUf92qDOeaKQyFVdFUFiO7WGiZeyDV7cUCyIH8OgHw69vKlzoSACdK0X
-   ZpWsTjV2ZynJKJFIIBvboYzuyxMUXfP686yrhMq7EmbjAbmrXYD5KRSXS
-   CzHpX15OEWtMFbfepv1BwHFvdiDG5kCJ0R3CPswURuKbck5fOIdzb+Uq9
-   3/xwOA5GNAF06JqBMhYiw8ZEopy4c+1AWHdS2Oiwcd9C8J1QY0owXuD0D
-   Alw5VWk1/sx84PY5LL+Ik7Z7uTTZBJRU9CkoLKgM6I6ax+rXqruwJgpIU
+  bh=SuBqUTXTXq3lSJ0GvjTdiu88rAkXDKOV5CMCM2e7oFc=;
+  b=GAq7qWUSL4BH99WV2www1fczJE8N9IA3OVuN3cYb1jrnMDU2VKwwDGZM
+   emsdnXx0o/Dvi8MfkvhwDpWwMSfPzNeoMRbzvol7M1xCxH0V4PYRQdRLY
+   WxxajTmui4DiRraScPJFaqchYpKENMy7N21lkoaAOhgnRL5gHfxRfglBZ
+   /BgafG/n6U2YABpmPi1iKoIIS5JOlT3RaBVQOlp54lvGCD305w0jYpq0G
+   gIaX1EH66nnEDpyOMFDZZQOOn9t+1N/ChO/sRFqqbX/H7on6N6ul0kTDZ
+   yLRJQijbEXpRh4/D7HVlz8K7lx5dNAbF2aTpMoG7x6YPqOmaWCIj4JIMa
    A==;
-X-CSE-ConnectionGUID: xTCwfjGGTOyoF+WIv0MRzQ==
-X-CSE-MsgGUID: R4WMg3ezS52ompAMR6k27g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11938"; a="902453"
+X-CSE-ConnectionGUID: SPNRzsO7TCekUafHhbC4lQ==
+X-CSE-MsgGUID: XeUJmMP5R0Sc9tz+e7Qaxw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11938"; a="902462"
 X-IronPort-AV: E=Sophos;i="6.27,163,1787036400"; 
-   d="scan'208";a="902453"
+   d="scan'208";a="902462"
 Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2026 12:50:27 -0700
-X-CSE-ConnectionGUID: vBrCfVv1TmasmsAHQNaSVw==
-X-CSE-MsgGUID: 8WAv6Rw2TFWKh0PPtxcWIw==
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2026 12:50:29 -0700
+X-CSE-ConnectionGUID: F4tO6vmsQLaCJyHkxKVG5g==
+X-CSE-MsgGUID: pDongmZ1TSWN5P6qITRqOg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,163,1787036400"; 
-   d="scan'208";a="2614248"
+   d="scan'208";a="2614256"
 Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 17 Oct 2026 12:48:59 -0700
+  by orviesa010.jf.intel.com with ESMTP; 17 Oct 2026 12:50:05 -0700
 Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1xIAOm-00000000Jgc-198z;
-	Sat, 17 Oct 2026 19:48:56 +0000
-Date: Sun, 18 Oct 2026 03:48:03 +0800
+	id 1xIAPp-00000000Jgo-2Q65;
+	Sat, 17 Oct 2026 19:50:01 +0000
+Date: Sun, 18 Oct 2026 03:49:02 +0800
 From: kernel test robot <lkp@intel.com>
 To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller:dwc-eswin] BUILD SUCCESS
- e564a064a2d61641d6c5068d41e677e6180aa5b8
-Message-ID: <202610180359.ohTCbZnw-lkp@intel.com>
+Subject: [pci:controller:dwc-qcom] BUILD SUCCESS
+ b41d4c09797a626a555f333c13df5bfaf8e7ebb2
+Message-ID: <202610180359.glE2Iln5-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,12 +59,12 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-eswin
-branch HEAD: e564a064a2d61641d6c5068d41e677e6180aa5b8  PCI: eswin: Publish the platform driver OF alias
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-qcom
+branch HEAD: b41d4c09797a626a555f333c13df5bfaf8e7ebb2  PCI: qcom: Skip DWC MSI host initialization when msi-map is present
 
-elapsed time: 1815m
+elapsed time: 1816m
 
-configs tested: 485
+configs tested: 478
 configs skipped: 2
 
 The following configs have been built successfully.
@@ -328,7 +328,6 @@ powerpc               randconfig-2000-20261014    clang-22
 powerpc               randconfig-2000-20261015    clang-22
 powerpc               randconfig-2001-20261014    clang-22
 powerpc               randconfig-2001-20261015    clang-22
-powerpc              randconfig-r2106-20261015    clang-24   cocci
 powerpc              randconfig-r2108-20261014    gcc-11.5.0 cocci
 powerpc              randconfig-r2108-20261015    clang-18   cocci
 powerpc              randconfig-r2111-20261015    gcc-12.5.0 cocci
@@ -366,9 +365,7 @@ riscv                 randconfig-2000-20261014    gcc-16.1.0
 riscv                 randconfig-2000-20261015    gcc-9.5.0
 riscv                 randconfig-2001-20261014    gcc-16.1.0
 riscv                 randconfig-2001-20261015    gcc-9.5.0
-riscv                randconfig-r2107-20261015    clang-24   cocci
 riscv                randconfig-r2110-20261015    clang-22   cocci
-riscv                randconfig-r2110-20261015    clang-24   cocci
 riscv                randconfig-r2301-20261015    clang-24   sparse
 riscv                randconfig-r2302-20261015    clang-17   sparse
 riscv                randconfig-r2303-20261015    gcc-14     sparse
@@ -387,7 +384,6 @@ s390                  randconfig-2000-20261015    gcc-9.5.0
 s390                  randconfig-2001-20261014    gcc-16.1.0
 s390                  randconfig-2001-20261015    gcc-9.5.0
 s390                 randconfig-r2102-20261015    gcc-9.5.0  cocci
-s390                 randconfig-r2105-20261015    clang-24   cocci
 s390                 randconfig-r2201-20261015    gcc-8.5.0  smatch
 s390                 randconfig-r2300-20261015    gcc-14     sparse
 s390                 randconfig-r2301-20261015    clang-17   sparse
@@ -431,7 +427,6 @@ sparc                 randconfig-2000-20261015    gcc-15.2.0
 sparc                 randconfig-2001-20261014    gcc-14.3.0
 sparc                 randconfig-2001-20261015    gcc-15.2.0
 sparc                randconfig-r2100-20261015    gcc-10.5.0 cocci
-sparc                randconfig-r2104-20261015    clang-24   cocci
 sparc                randconfig-r2106-20261015    clang-22   cocci
 sparc                        sparc32_defconfig    clang-24
 sparc64                           allmodconfig    clang-20
@@ -448,7 +443,6 @@ sparc64              randconfig-r2100-20261014    gcc-11.5.0 cocci
 sparc64              randconfig-r2101-20261015    gcc-9.5.0  cocci
 sparc64              randconfig-r2102-20261015    clang-24   cocci
 sparc64              randconfig-r2102-20261015    gcc-10.5.0 cocci
-sparc64              randconfig-r2111-20261015    clang-24   cocci
 sparc64              randconfig-r2202-20261015    gcc-9.5.0  smatch
 sparc64              randconfig-r2302-20261015    gcc-16.1.0 sparse
 sparc64              randconfig-r2308-20261014    gcc-16.1.0 sparse
@@ -529,7 +523,6 @@ x86_64                randconfig-2302-20261014    clang-22   sparse
 x86_64                randconfig-2302-20261015    gcc-14     sparse
 x86_64               randconfig-r2104-20261015    clang-22   cocci
 x86_64               randconfig-r2111-20261014    gcc-8.5.0  cocci
-x86_64               randconfig-r2200-20261015    clang-22   smatch
 x86_64               randconfig-r2301-20261014    gcc-14     sparse
 x86_64               randconfig-r2301-20261015    gcc-14     sparse
 x86_64               randconfig-r2304-20261015    gcc-14     sparse
