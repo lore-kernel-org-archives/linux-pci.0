@@ -1,82 +1,162 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFCF9374721;
-	Sat, 17 Oct 2026 05:20:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D87C3BB66B;
+	Sat, 17 Oct 2026 07:48:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792214416; cv=none; b=e08GPQhxQ/HyGclzyxqbCCh0nH+lZ80bTIkXjAYyorL901hrmTLzldkNWwwJofxAm3u0ulLl7dZz75pAWoT0D/oEqmzfN1DDp+CBBSVu/UqP4BYR5c/9yz2kqOtAd3zi2udGsY0icfEHPgZns4MscdxnOfDlb1at9KG/uLvOZgU=
+	t=1792223307; cv=none; b=nzt/lFhRRIzwKyfR7p1zbx2OT7Z3U4YqYwTJQYUCHJWwMqg6uOGKgzbtfHmrE+GYgdVXbVa1ZXAfuBNXU58mPBtE20yPXWDqouPYnAKFg+kVPlFdxQ4AOGsqa40FKcileu+TTx45I/JI/1lUwj8sLhibZMq8D/u8zJWpr9jQE8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792214416; c=relaxed/simple;
-	bh=Bago6Jmsj0xZLAW/+e39d5cA/Jv5xrDfzf2WuwVhn+g=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=J/hkwxJyBpId2GH75bGj/68O78Y3f+2FVTTJCrN7ZyKoA2XE9XxhV794CQGBYERKWpMJQwz5dp332Gy5irBz0Z0A03LeAdbua+bw3ysXTOafgbPIsFobskjc9i067G2FGNlzPR28aueULjLmQVuKOLkXXCa2eYI9T4/V+j4CJgY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jVhRD4VO; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792223307; c=relaxed/simple;
+	bh=LJ0L8lNXH+iKRyYZ0J+y5TKtnpyQoG4JfCwMuUNWYHE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VcN0pi2DX+9ZD5Rjr9zMQ0DiW1g6teQ7XlVJo60153pqdnjkQJoJCLKdixYbB/NfZ81OF/fiz6GpJQkjzB0fHimK4h0EAJA3+ggm36ZU1uzQ/3Y4i63LfpdceRduIYSszkBZjzm20B2IttAG2huIoBN5Vo77NvIlbMZEKHo4NLE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZSjVg3/f; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jVhRD4VO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 570DD1F000C4;
-	Sat, 17 Oct 2026 05:20:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZSjVg3/f"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51C451F000C4;
+	Sat, 17 Oct 2026 07:48:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792214415;
-	bh=+BN2a5NcxG91rbh0FFEoErkrQJ4cOoOgg1Ae5R2Rh4k=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=jVhRD4VOQnfBlgQy12tBqMq1npNEpMAHR98MVp0ZLmA8skDya4z947MCM66fnK66h
-	 NwmILDiZLgtkjCMgFtMIlo/9n32+O/+erzBcW36+qzemKNHhmWCHQ39ZopgQm9Ha3u
-	 9ps8pLqa04AWTT7jFGj4Seofl/YeNuwrqqVftewS/ytZtUXQqf2sfdSrqeGxYeq4Sz
-	 LEl5hMyar0JN37r+/Q4Ff73CG8VBCoxMYoUYLYUlVggq2zzLk5fFJakrx5EbtvZO6X
-	 INTCae9HuhwL53S3Fvl4ea1hbityB04EJtVlVd0sQArdhWqjgCSgpgRTLtJKCTgHKN
-	 Awnqz9CP5LtkQ==
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Richard Zhu <hongxing.zhu@nxp.com>, 
- Lucas Stach <l.stach@pengutronix.de>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- Frank Li <Frank.Li@nxp.com>, Sascha Hauer <s.hauer@pengutronix.de>, 
- Pengutronix Kernel Team <kernel@pengutronix.de>, 
- Fabio Estevam <festevam@gmail.com>, "Peng Fan (OSS)" <peng.fan@oss.nxp.com>
-Cc: linux-kernel@vger.kernel.org, Peng Fan <peng.fan@nxp.com>, 
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- imx@lists.linux.dev
-In-Reply-To: <20260924083429.461746-1-peng.fan@oss.nxp.com>
-References: <20260924083429.461746-1-peng.fan@oss.nxp.com>
-Subject: Re: [PATCH] PCI: dwc: imx6: use regmap_assign_bits() for
- conditional set/clear
-Message-Id: <179221439258.2165.18106999350998009762.b4-ty@b4>
-Date: Sat, 17 Oct 2026 10:49:52 +0530
+	s=k20260515; t=1792223304;
+	bh=INiyZA4QBulgrv+B43Bh/g4Z2yhYtj+aBp4s+wjME0A=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ZSjVg3/f2f2IEHckEWsa9j7DHSQukPCfT7RXxa/yYO0b0df1HJMWEmHTDMwVgMr+u
+	 /6XSZLjbZC5h15RxWGPzfFrICilQQnRaYwSrS1RvJl3r19Ha8860qIcttrip7DPIdM
+	 ezQVjpLZ3tPQnuT6iiaHLyovMIeTDyjCyXyNobOrZDCRJKIxGcFaSlbnyjJS2AStlC
+	 8t9Zzg3k0lZrCgYmMXwjhiB5l+sUc0HlnUAD+lSo3KE+1KEPSrXwARiPFo1eNZXI7D
+	 NQYcunCW90DQsgo1qEN+NR6LhoUlQTXdPu66ndYhy3s2Ntug5iQ8vbu6QzBqGo/ZKT
+	 B7ReR+DgDeuZA==
+Date: Sat, 17 Oct 2026 10:48:20 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: "Popov, Pavel E" <pavel.e.popov@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jim Chow <jim.chow@broadcom.com>,
+	Radu Rugina <radu.rugina@broadcom.com>,
+	Alexey Makhalov <alexey.makhalov@broadcom.com>,
+	Wei Liu <wei.liu@kernel.org>, Michael Kelley <mhklinux@outlook.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Nathan Ciobanu <nathan.d.ciobanu@linux.intel.com>,
+	"bcm-kernel-feedback-list@broadcom.com" <bcm-kernel-feedback-list@broadcom.com>,
+	"virtualization@lists.linux.dev" <virtualization@lists.linux.dev>,
+	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 1/2] PCI/P2PDMA: Allow P2PDMA in VMware guests on
+ Intel hosts
+Message-ID: <20261017074820.GD219304@unreal>
+References: <20261016223402.19991-1-pavel.e.popov@intel.com>
+ <20261016223402.19991-2-pavel.e.popov@intel.com>
+ <8b01d643-f62d-4118-a700-8874341d953b@deltatee.com>
+ <LV2PR11MB6070CE9CCA125C290C0F8209B29A2@LV2PR11MB6070.namprd11.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=357;
- i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=C6xSwQJLZdYpqw3s2Kwdy1fWQP8TOCHAaGWqZDEm7ps=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq0wWH1v8anA90InpGpuoBX7GtYOjmX2ZdUY7ns
- k0XskPTcRuJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCatMFhwAKCRBVnxHm/pHO
- 9dB3B/0VSlMrEBrkhftm9VoxrrNVzlMYISIts298KImUkOKQst5BGFrLG/R/M9HdNVk1amNzAHU
- ncYZYmVEeKlZ+RRaC+iW7DZ9YWEdrMcF91DwPai0J8nGMpD8JHSKtsLOxfVboSOT6KuUwG9JVMe
- sT1+MhEY2WyyT4PNRnU5hJ7L1876Zlsieupda75tgP8lbjfBoQKYhMJVd2pdCHSI4Ues9MQ9Gvb
- 1uCZDPH19dqKiTJDpQf2vmHq9CkQHCgEaVc37zXtjd4rUh3kTCpgNNwISOa/LSI8FX+jroY5Rta
- w/SmpkOSNgdOMnqj+O7rwVuMIHfSVEiOu1y7xt3wsAres9xx
-X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <LV2PR11MB6070CE9CCA125C290C0F8209B29A2@LV2PR11MB6070.namprd11.prod.outlook.com>
 
+On Sat, Oct 17, 2026 at 12:31:49AM +0000, Popov, Pavel E wrote:
+> Logan,
+> 
+> > Why does this now need to be related to the hypervisor? Wouldn't it
+> > make sense to do this check regardless of whether VMware is involved?
+> 
+> The whitelist decides per host bridge, and a global CPU check would
+> override it on these CPUs, for example:
+> 
+> - It allows VMD domains, CXL 1.1 devices and other RCiEPs, which are
+>   not whitelisted.
+> - It overrides the emulated topology in KVM/QEMU guests, which already
+>   decides P2P there.
+> - It makes the existing QAT, DSA and IAA whitelist entries pointless,
+>   since any RCiEP would be allowed.
+> 
+> Limiting it to the hypervisor keeps the whitelist logic unchanged on
+> bare metal and in other guests.
 
-On Thu, 24 Sep 2026 16:34:28 +0800, Peng Fan (OSS) wrote:
-> PCI: dwc: imx6: use regmap_assign_bits() for conditional set/clear
+Logan,
 
-Applied, thanks!
+You can see how convoluted and illogical this discussion has become.
 
-[1/1] PCI: dwc: imx6: use regmap_assign_bits() for conditional set/clear
-      commit: 8f509a936cee46939f8bac231066e0f8a5d62bd0
+Initially, Pavel was told that P2P inside a VM is not working reliably
+(to put it mildly). His response was that he wanted Intel to provide
+the same poor experience that AMD currently provides. We agreed.
 
-Best regards,
--- 
-மணிவண்ணன் சதாசிவம்
+Now he points out that AMD's solution does not work well and proposes
+keeping his hack, which will not work any better.
 
+Moreover, it is unrealistic to expect users to run this software and VMware's
+code only on machines certified by Broadcom. It shows complete
+misunderstanding of users.
 
+His claim that HMAT's future is unclear is also inaccurate. Half the work
+had already been done: p2p ACS had been cleaned up and was waiting for
+Bjorn to pick it up; an initial version of the HMAT specification had
+been drafted and verified against the current kernel implementation;
+and the community had been consulted and had endorsed the approach at
+LPC. The remaining work is to update the specification, move it through
+the code-first process, and implement it in QEMU.
+
+The direction is clear, and developer time has been allocated. This will
+happen.
+
+Thanks
+
+> 
+> Thanks,
+> Pavel
+> 
+> > -----Original Message-----
+> > From: Logan Gunthorpe <logang@deltatee.com>
+> > Sent: Friday, October 16, 2026 3:55 PM
+> > To: Popov, Pavel E <pavel.e.popov@intel.com>; Bjorn Helgaas
+> > <bhelgaas@google.com>
+> > Cc: Jim Chow <jim.chow@broadcom.com>; Radu Rugina
+> > <radu.rugina@broadcom.com>; Alexey Makhalov
+> > <alexey.makhalov@broadcom.com>; Wei Liu <wei.liu@kernel.org>; Michael
+> > Kelley <mhklinux@outlook.com>; Lukas Wunner <lukas@wunner.de>; Leon
+> > Romanovsky <leonro@nvidia.com>; Nathan Ciobanu
+> > <nathan.d.ciobanu@linux.intel.com>; bcm-kernel-feedback-
+> > list@broadcom.com; virtualization@lists.linux.dev; linux-
+> > hyperv@vger.kernel.org; linux-pci@vger.kernel.org; linux-
+> > kernel@vger.kernel.org
+> > Subject: Re: [PATCH v2 1/2] PCI/P2PDMA: Allow P2PDMA in VMware guests
+> > on Intel hosts
+> > 
+> > 
+> > 
+> > On 2026-10-16 16:34, Pavel Popov wrote:
+> > > +#ifdef CONFIG_X86
+> > > +/* CPUs whose host bridges support p2pdma, see pci_p2pdma_whitelist[]
+> > > +*/ static const struct x86_cpu_id hypervisor_p2pdma_cpu_ids[] = {
+> > > +	X86_MATCH_VFM(INTEL_SKYLAKE_X, NULL),
+> > > +	X86_MATCH_VFM(INTEL_ICELAKE_X, NULL),
+> > > +	X86_MATCH_VFM(INTEL_ICELAKE_D, NULL),
+> > > +	X86_MATCH_VFM(INTEL_SAPPHIRERAPIDS_X, NULL),
+> > > +	X86_MATCH_VFM(INTEL_EMERALDRAPIDS_X, NULL),
+> > > +	X86_MATCH_VFM(INTEL_GRANITERAPIDS_X, NULL),
+> > > +	X86_MATCH_VFM(INTEL_GRANITERAPIDS_D, NULL),
+> > > +	X86_MATCH_VFM(INTEL_ATOM_CRESTMONT_X, NULL),
+> > > +	X86_MATCH_VFM(INTEL_ATOM_DARKMONT_X, NULL),
+> > > +	X86_MATCH_VFM(INTEL_DIAMONDRAPIDS_X, NULL),
+> > > +	{}
+> > > +};
+> > > +
+> > > +static bool hypervisor_supports_p2pdma(void) {
+> > > +	/* Hypervisor hides host topology, allow p2pdma on whitelisted CPUs
+> > */
+> > > +	if (hypervisor_is_type(X86_HYPER_VMWARE))
+> > > +		return x86_match_cpu(hypervisor_p2pdma_cpu_ids);
+> > > +
+> > > +	return false;
+> > > +}
+> > One quick thought, after a very quick pass at this:
+> > 
+> > Why does this now need to be related to the hypervisor? Wouldn't it make
+> > sense to do this check regardless of whether VMWare is involved?
+> > 
+> > Logan
