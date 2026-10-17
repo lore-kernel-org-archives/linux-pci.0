@@ -1,159 +1,119 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f43.google.com (mail-qv1-f43.google.com [209.85.219.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AB8C3C7E19;
-	Sat, 17 Oct 2026 17:33:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1716838F950
+	for <linux-pci@vger.kernel.org>; Sat, 17 Oct 2026 17:49:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792258435; cv=none; b=DumClviVyA2+wiZhpkkNJJvPWuxR8FvSIbxQW2cznj5felM4o8EyHA7sXV0rE+USJvEMhTo5dyR/FgqYgf6aFhO3gocUKxE5bSHA2CxqB0rmoBKvFKr7A1qbFNjNXnBKzj8aQCZfZb16DCiZTyfITvE/cAkbxyye24CfP57gONs=
+	t=1792259356; cv=none; b=gMN38GETIs9Qo6963DzdKsau8BBdofgq3czoN4Z1sha3y3MRLEBYvJkFCccpJ1IZqvOxqgxzjIROmLDsrM9Noe+WZtZn64roVvgPCQQyTAg1l3veJK+/GeVNF2W3LfIdHISDfoE69g4QrURVMjgwHEPLEIBjCP30TwL3F+84oOo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792258435; c=relaxed/simple;
-	bh=sUMtSjJfH1Hc2Rb0srMs7Cu3KDrbOZILBwySp6UMGhU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=B7kIcHCbIF1CQI8V8TR6YB41miqx3UwmX2F6baGonkACMIMdk5If4GEz8xjULsFV+K8EiWEM4B1jbUDLQp8QYH8Ycd5lTCZXziPrD0ktohGxNNpA6FFTtqTNl4ApZ3pAebmrUul1vTNuv/5IvqGgs8aD7WJb9x0+H73lAGvZ7qQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=ht5vrwyE; arc=none smtp.client-ip=80.241.56.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1792259356; c=relaxed/simple;
+	bh=9iVYwkAnCtZ3hFTHC7pQKEPigp9IEaagz00Mkpk73RY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OdjRrrL22hkwmtkdC0xcrQV5AFRw9bIodr/9KqdXPZqaLsc3yT6lTR00f8wUdNr4N8PC1Zs14FuJqAR+2HlIQikX9SuFgOLTuDri4c4skE59kBWyzx6oilGn+DCLioN9aSfbyiKd3Heyzfoglt8NT+5YndudU3XylvFEL+zPSV0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=NRyAzGFy; arc=none smtp.client-ip=209.85.219.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="ht5vrwyE"
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519MLKEM768 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4j6TSH0PqlzMlJf;
-	Sat, 17 Oct 2026 19:33:51 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1792258431;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=wQcUAi6MSkLaCexc0ZzSlMbqTFUROvz0PGaISaVK38A=;
-	b=ht5vrwyEXe1MmJR/VXBRbkVY2fVUtrLL5E3WwdpDVo8iaESYeFsS4hbKbpRXb0nQwJbxV+
-	J/Jirm2+UI1PqkQT0oO3niVcbWH08YWDVIcKJZUiY6/EXOfmt07dPFcEbxkZ9RBLJwSq8C
-	QWqiZy3NKOs6YTxPkJ2cHb/2GNCaroQyaG0RNorS3OE2wgQjW4HSUFzuSse3LQuRbyLQRT
-	l/tMxrJPOUxxdq70ecioFZyYK0yrLpwBuDbHzrPYgTpjtqcyiivJv2HGh6lSgXdLRulTj/
-	XvSdpULrp8OtyNh6Oyc1t0aj1sChCsYBagY+H9t+lJprQwPk7eFQCA4pCTlWPA==
-Message-ID: <cba6b5db-d610-45d7-85e9-30ccf0a659f6@mailbox.org>
-Date: Sat, 17 Oct 2026 19:01:15 +0200
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="NRyAzGFy"
+Received: by mail-qv1-f43.google.com with SMTP id 6a1803df08f44-91beb36fcc6so2889536d6.1
+        for <linux-pci@vger.kernel.org>; Sat, 17 Oct 2026 10:49:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1792259354; x=1792864154; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=6ZKiIqr2wNuyAPe6hCnVLHZyBqqQ8TWVMIEldJ82jWw=;
+        b=NRyAzGFywlf+ipFSkikeU1QJNkmpIa6EXsxE7+o7jrUMJwkna2NQbS0i6CDrzKuziq
+         psUDgr5fFUjCbFn5Z0o7CdRmuU/DbCiLGCKKX/hpmeUL2U7oJE3UITKw3Pw4wn/N45/Q
+         YHf1HlBso1n07ntQMSElPSX6T3YXss1oNmpm4GU7EuBoKpyVGaNgAgDo257Pon9Ygv9w
+         ZNBVia5CXt5bw1UdncCvS5t2IgUKzmknh33OgewHLvfZAJuIi7pmCtYv4N0a4GpvoZMH
+         ILm6LX2s+NXpb/KSr9bjW/jWVFEUqry6horlblCLB3Yo/LkcHY0MwO7Urk3DBr/dHaVO
+         cMYw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792259354; x=1792864154;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=6ZKiIqr2wNuyAPe6hCnVLHZyBqqQ8TWVMIEldJ82jWw=;
+        b=tyco0Hz2rpn61FBGebnLmgSCKg7En4HRGHOcp8VPaNMOPHxeKA42meQmnpBg6ljhbM
+         rWO+7soel4BJVT3JZeabeGnN8TEjWrSqRn+cGA3aJz3OiYSxkqDPI6btVBuwHCHrlOUU
+         rb4DUATbdUw0bCAhlMWlfg4g6iNGF8X5dHpHxVzoZyp9uAV05k5N5yG/wwV+kn+RvifO
+         4/A+W++VRGMHw1tnXuTLf7nDkgucYNPZST1cJzo+Ifz7rjFY15v0hA1qOtTf0nwrNdaS
+         noosSZbWVfV0ZQWj3LavzRag1Abfcw8lQeNewPpNA3v2kUK1rX2ylyQ/ITFa5PLEfm+X
+         Ttnw==
+X-Forwarded-Encrypted: i=1; AKwUvBypH2qVOZqOF9f8npseGU6GpkqR0r2TlfdMBiL77mBJ3tV9ZJ58UHuMOi+USBwN0x/RbbapYfjM0zo=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJBxBNU7lHPvOXciujw7UNaZye5BFog59oeqTysj8wsI1/paDJv
+	u/AYhk8gKLH3QlHquVmaa8TCoIJAPmKJlUGpJgirrIpT6iwRg9t0QOOshqb7kJwScqw=
+X-Gm-Gg: AYBFou1T8Lur7/YkrXl1EgWr9SHfgevpWkNkaDJniljnn+iSl5nSKXEuYWdYpRHyVJh
+	AjkGcUtFLzc5aR8a0ByHIfjEfsTDIoFIX7BAvghw05F5e0NmSh0/4babDcapNFa3Fp/Pob02ET8
+	IfN1ueB2wT9LYnsEklfosPBS/iSlVAVcdoGmYNAu/hAOyKvE5Qa/L9axilTESbFnnX0wyIm9qC/
+	pOI43BeYTLyOSD+fTwWSV8xJ2CP8Ab4pEr3m4jDzlXXo94z9Xo7s+FM5dhJZ+2sYpxZG1uXYAkU
+	MVD1Tqg5Y+dcIXuCLNcSPxs+z275IrWFQXWSfTC1AhAFButQ/q1uOAFMZKaJEaButsouuBuZCR8
+	DnmwbE6f0DJ0DRzdee9aEBxlHqKF5n3j7t5v0wsILkrvC+CYS6/MN81voRhWzCaxbyPBsLjRQP3
+	XAFwf4Ps4/AksJHtnnkAhkR4aPp2I/UUdQKzNyMeBuWqRymltCfvwvDuI0pV+TzH45alG6CQNmS
+	7dNSfx6qae8DHSYAiC8uAtkafXTkjoMubn6uxiTHUk/RKMUguMqoj8W
+X-Received: by 2002:a05:620a:45a2:b0:93e:c12c:9dcd with SMTP id af79cd13be357-93f29deb855mr546221985a.77.1792259353931;
+        Sat, 17 Oct 2026 10:49:13 -0700 (PDT)
+Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-93f2f045ca4sm171937385a.29.2026.10.17.10.49.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 17 Oct 2026 10:49:13 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1xI8Wu-00000004sUa-33rg;
+	Sat, 17 Oct 2026 14:49:12 -0300
+Date: Sat, 17 Oct 2026 14:49:12 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Nicolin Chen <nicolinc@nvidia.com>
+Cc: Pranjal Shrivastava <praan@google.com>, iommu@lists.linux.dev,
+	Will Deacon <will@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Mostafa Saleh <smostafa@google.com>,
+	Daniel Mentz <danielmentz@google.com>,
+	Ashish Mhetre <amhetre@nvidia.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Thomas Gleixner <tglx@kernel.org>, Radu Rendec <radu@rendec.net>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, rafael@kernel.org,
+	Danilo Krummrich <dakr@kernel.org>, driver-core@lists.linux.dev
+Subject: Re: [PATCH v11 11/16] iommu/arm-smmu-v3: Add CMDQ_PROD_STOP_FLAG to
+ gate CMDQ submissions
+Message-ID: <20261017174912.GK14213@ziepe.ca>
+References: <20260929034510.2023173-1-praan@google.com>
+ <20260929034510.2023173-12-praan@google.com>
+ <ar1yNtr7Kp2OTcDd@nvidia.com>
+ <ar3yWUmi8E0k37Ml@google.com>
+ <ar6gY9grmdMZcN/M@nvidia.com>
+ <20261002164748.GD3481470@ziepe.ca>
+ <asAeCz_rmpe5hbsh@google.com>
+ <asUvUf4PZJ7JCLXp@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: rcar-host: Validate IO/MEM resource count in DT
- ranges property
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Magnus Damm <magnus.damm@gmail.com>, Manivannan Sadhasivam
- <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
- linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-References: <20261005233758.GA646371@bhelgaas>
-Content-Language: en-US
-From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <20261005233758.GA646371@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-MBO-RS-ID: d0ad517624d8bf8c23f
-X-MBO-RS-META: jzgfbkmkmm44umbxituzuuidegm4rezp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <asUvUf4PZJ7JCLXp@nvidia.com>
 
-On 10/6/26 1:37 AM, Bjorn Helgaas wrote:
-> On Sat, Oct 03, 2026 at 09:35:59AM +0200, Marek Vasut wrote:
->> The R-Car Gen3 PCIEC controller supports up to 4 memory area mappings.
->> Count the IO and MEM ranges described in DT 'ranges' property of the
->> controller DT node, and in case there are more than 4, refuse to probe
->> the controller driver, because such DT does not describe valid hardware
->> configuration. Do the IO and MEM counting early to avoid controller
->> configuration rollback in case of failure.
->>
->> Fixes: 5d2917d469fa ("PCI: rcar: Convert to DT resource parsing API")
->> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
->> ---
->> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->> Cc: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
->> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
->> Cc: Magnus Damm <magnus.damm@gmail.com>
->> Cc: Manivannan Sadhasivam <mani@kernel.org>
->> Cc: Rob Herring <robh@kernel.org>
->> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
->> Cc: linux-kernel@vger.kernel.org
->> Cc: linux-pci@vger.kernel.org
->> Cc: linux-renesas-soc@vger.kernel.org
->> ---
->>   drivers/pci/controller/pcie-rcar-host.c | 31 +++++++++++++++++++++++++
->>   1 file changed, 31 insertions(+)
->>
->> diff --git a/drivers/pci/controller/pcie-rcar-host.c b/drivers/pci/controller/pcie-rcar-host.c
->> index cd9171eebc289..4bcc8c3051ac4 100644
->> --- a/drivers/pci/controller/pcie-rcar-host.c
->> +++ b/drivers/pci/controller/pcie-rcar-host.c
->> @@ -341,6 +341,32 @@ static void rcar_pcie_force_speedup(struct rcar_pcie *pcie)
->>   		 (macsr & LINK_SPEED) == LINK_SPEED_5_0GTS ? "5" : "2.5");
->>   }
->>   
->> +static int rcar_pcie_validate_resource_count(struct rcar_pcie_host *host)
->> +{
->> +	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
->> +	struct rcar_pcie *pcie = &host->pcie;
->> +	struct resource_entry *win;
->> +	int i = 0;
->> +
->> +	resource_list_for_each_entry(win, &bridge->windows) {
->> +		struct resource *res = win->res;
->> +		unsigned long type = resource_type(res);
->> +
->> +		if (!res->flags)
->> +			continue;
->> +
->> +		if (type == IORESOURCE_IO || type == IORESOURCE_MEM)
->> +			i++;
->> +
->> +		if (i > RCAR_PCI_MAX_RESOURCES)
->> +			return dev_err_probe(pcie->dev, -ENOSPC,
->> +					     "Too many IO/MEM entries in DT 'ranges' property, limit is %d\n",
->> +					     RCAR_PCI_MAX_RESOURCES);
->> +	}
->> +
->> +	return 0;
->> +}
->> +
->>   static void rcar_pcie_hw_enable(struct rcar_pcie_host *host)
->>   {
->>   	struct rcar_pcie *pcie = &host->pcie;
->> @@ -947,6 +973,11 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->>   	host = pci_host_bridge_priv(bridge);
->>   	pcie = &host->pcie;
->>   	pcie->dev = dev;
->> +
->> +	err = rcar_pcie_validate_resource_count(host);
->> +	if (err)
->> +		return err;
+On Tue, Oct 06, 2026 at 10:26:41AM -0700, Nicolin Chen wrote:
+> > pci_dev_reset_iommu_prepare/done() pair (with slight refactoring) in EP's
+> > suspend/resume?
 > 
-> I guess you did this here to avoid rolling back controller config, but
-> the code would be a lot more readable if it checked the index at the
-> point where it might exceed the array bound, e.g., (I think) in
-> rcar_pcie_set_outbound().
+> That sounds right to me, though a different API for suspend/resume
+> will be required. And call them in pci_pm_runtime_suspend/resume()
+> maybe.
+> 
+> Jason, how do you think about this?
 
-All right, I'll send a v2 like that in a bit.
+Maybe lets just start by refusing power management when ATS is on? For
+PCIe devices too?
 
-I also found another issue triggered during irq_dispose_mapping() in 
-probe fail path, I want to fix that too.
+It isn't just ARM that has this issue, every iommu is busted if you
+suspend the PCI device while an ATS domain is still active..
 
-(sorry, I'm still catching up on emails, hence my slow response)
-
-> This is for an invalid DT, which is unlikely.  What if
-> rcar_pcie_set_outbound() just printed a warning and ignored any excess
-> windows?
-I'd say it is better to simply reject the invalid DT and fail to probe 
-the controller driver, esp. since it is unlikely there are such invalid 
-DTs and users should really fix that problem instead of being surprised 
-by the missing windows. What do you think ?
+Jason
