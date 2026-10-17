@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D7C64CF487;
-	Sat, 17 Oct 2026 09:22:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 939DE12D21B;
+	Sat, 17 Oct 2026 09:27:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792228964; cv=none; b=rjd7UjZkx+2nj3/M0gZcblGKZoV7k7Uxay3/d4hR+rruRlZwwF/eujHp1TE4/FD3KYNcwb992y6DwhoXK+DgBq+Tq6D57WH7JpciE5hV3a4KInx0clnkl/eNw7M+ZT0PEVO3DucG9uLJjjAqfDURepKvhaPBrn6H9QjcquxyR9Y=
+	t=1792229243; cv=none; b=n4M55lHRT5DjFM0BVuyp0bYJUxN4xya1j0zbozB80R0VofwW8rBqQlqrZSFFI6WpX48rB3vIfMw6K/CGZC/ycMy17yH4rR+wn/xi1afCVUzobh5OWUx+sT6TLPDz5Fxugp/wmJt1VbBo0zEiTvNKZvWZcKSTsQzGPLy2kVjL8do=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792228964; c=relaxed/simple;
-	bh=PjNzsWtledvd+ALvAvqcS+QgajX2hsFQGoJeirc18Fc=;
+	s=arc-20240116; t=1792229243; c=relaxed/simple;
+	bh=8fCM+ZIyN8PVxzgFF9qasAvMvV+8H88XHgQe8q2Lfx0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dI1FQX1lpVxWXEYlWvuWr8p7wNojhWnWNSug1uDUaWF5zqfBEbO6pJDPQNQab4MGX5A3pz7jrlDv5uRMUarW6LRy+BLXqPA6WLx9nwm88OIw/W4usXEoKGFnlEsCBDWoKFc58mbT9V3TCxUJ0jzFYjqn4kAJl4SjK17MFA5s8z0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J2ruVNSV; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=uwGTyYSdDrJ8wy2lb7HVK5qNZxfqfYjOtOqRdT/RNYw7elr+bC1H9VZV0WenANSBl0MHCDoPBYuLjaVlZQwaHu/D7PPgDqZvfFw/2yY4BwEjH+MgN3Wc9Poya/SKF1+aBncI1XQH2Su0XNqKcmgWXiz+VktUjzPn4KaB6++whDI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GVAuLt/U; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J2ruVNSV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 081B01F000C4;
-	Sat, 17 Oct 2026 09:22:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GVAuLt/U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1AAA1F000C4;
+	Sat, 17 Oct 2026 09:27:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792228963;
-	bh=vrEM57kvw03+nyiDaBS4tcxaXsddYN2DMYLy7Jqn17E=;
+	s=k20260515; t=1792229242;
+	bh=WJcKlK/pnWllbjb2ycYVXrDMuD9GwRzRABpINzqCzmc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=J2ruVNSVWI7x36ixeN4lDIuO8yqZig0wk9dQNkwsnJ8xG684Ur+8obencxAUvaFPX
-	 4U6pEPxLIHuZ8jZAgraKFkQp9+isdRgRXyn6NCwEQ7W3KJ4MeMrS7lJMO8FkHQFT1y
-	 372wc5R22UJPlvxP1Un6vCoex+FAFtwTKD8jUkSFrY9KkkaUWCgIRkfv0CUusRA5aP
-	 8E4AKHk6LMekKHFpMajt82Nmef3sH/lNgTl1+LB9VATeyWRUlVp4v6pgXXHcY1cVoR
-	 nNlCBVGDNT9GGQ6KXEefxyLrqupdJcP1zJt0fOUCRzw5ONKQLeK6wTMP4rTeZvDo4D
-	 c2KjL5ImieHkw==
-Date: Sat, 17 Oct 2026 11:22:35 +0200
+	b=GVAuLt/U+SOqKGKqm0j1WcV5xRu+jofMbuSn8Xa7fydLkr7fbeYhMBxYzrFXqSeIJ
+	 +I0Rf/LeB+xrrcsNg9CU9/0l3quuJo1cWqeKfTRiuATRDkOjKfvYo0YJuhKhCUmXe8
+	 YbXist2DnxQZGDBNQRchNSa7UT4HXmTgWXzJ1hvqpAsQtJ4vR8YgcHtXbB5/8pyl1r
+	 BkVDqqoNED0KtdkHvk83ZNfWiL6xpvGZNPOjNT9pTJZ/iIaRWa+/wP4RDWAS+JqBpT
+	 Kvj3I59fP1vjURJqV4D7AtslvhNJZFx3KgWkvGmHriCv10n5c1yfBZFhY0zB4cXyz3
+	 /ZBfN2WxVuPLQ==
+Date: Sat, 17 Oct 2026 11:27:13 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 Cc: Jingoo Han <jingoohan1@gmail.com>, 
@@ -35,11 +35,10 @@ Cc: Jingoo Han <jingoohan1@gmail.com>,
 	Thierry Reding <thierry.reding@kernel.org>, Jonathan Hunter <jonathanh@nvidia.com>, 
 	Vidya Sagar <vidyas@nvidia.com>, Niklas Cassel <cassel@kernel.org>, linux-kernel@vger.kernel.org, 
 	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH 3/3] PCI: tegra194: Notify Endpoint functions on PERST#
- assert
-Message-ID: <ogerzdjwq5wus3eb436x5gylxyfekmir7rz72ycywd2xoaiank@h7ayvhizjpu7>
+Subject: Re: [PATCH 1/3] PCI: dwc: Add Endpoint reinit helper
+Message-ID: <dee53d7no6nmzsaousuoqleg6dhigkejvkxmpyihc4v4piipwt@opa366n2sakq>
 References: <20260923072554.1141864-1-mmaddireddy@nvidia.com>
- <20260923072554.1141864-4-mmaddireddy@nvidia.com>
+ <20260923072554.1141864-2-mmaddireddy@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,73 +48,162 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260923072554.1141864-4-mmaddireddy@nvidia.com>
+In-Reply-To: <20260923072554.1141864-2-mmaddireddy@nvidia.com>
 
-On Wed, Sep 23, 2026 at 12:55:54PM +0530, Manikanta Maddireddy wrote:
-> Tegra Endpoint mode powers the controller down when the host asserts
-> PERST#. EPF drivers must be told about link down before that happens,
-> otherwise remove while PERST# is asserted can free EPC resources while
-> EPF work is still active.
+On Wed, Sep 23, 2026 at 12:55:52PM +0530, Manikanta Maddireddy wrote:
+> Endpoint controllers can receive a fundamental reset while software
+> resources such as eDMA, debugfs and function state must live for the
+> controller lifetime.
 > 
-> Use pci_epc_linkdown() directly in the PERST# assert path. It is a
-> software-only EPF notification
-
-Not entirely true. The EPF drivers can still access the hardware registers in
-the link_down() callback. But most likely they won't access any DBI registers,
-so that access may still be OK without REFCLK.
-
-> and avoids dw_pcie_ep_linkdown(), which
-> reinitializes non-sticky DWC registers and touches DBI while the host
-> REFCLK may be disappearing.
+> Track whether DWC Endpoint resources are initialized and add helpers
+> that perform full initialization once, then reinitialize only reset-lost
+> registers on later fundamental reset cycles.
 > 
-> Keep pci_epc_deinit_notify() in the PERST# deassert path, after core
-> reset is deasserted, because EPF deinit callbacks can clear BARs and
-> therefore need register access. If remove runs while the controller is
-> already powered down, pex_ep_event_pex_rst_assert() returns because
-> ep_state is disabled; that is safe because the link-down notification
-> was sent at the earlier PERST# assert.
+> A fundamental reset also clears outbound iATU programming. Clear the
+> cached outbound window map, outbound address array and MSI iATU cache
+> before reinitializing registers so stale software state cannot hide a
+> window that was reset by hardware.
 > 
-> The final dw_pcie_ep_deinit() does not require Tegra register access
-> today: Tegra uses its own MSI-X address-match window instead of the
-> DWC MSI iATU, and the supported DTs do not register a DWC eDMA device.
-> 
-
-Is the last paragraph related to this patch?
-
 > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 > ---
->  drivers/pci/controller/dwc/pcie-tegra194.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
+>  .../pci/controller/dwc/pcie-designware-ep.c   | 152 +++++++++++++-----
+>  drivers/pci/controller/dwc/pcie-designware.h  |  13 ++
+>  2 files changed, 124 insertions(+), 41 deletions(-)
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-> index dd3f4c30ba52..3e9d46850a78 100644
-> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
-> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> @@ -1724,6 +1724,7 @@ static int tegra_pcie_config_rp(struct tegra_pcie_dw *pcie)
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> index de8ee3db4360..7ba40220b821 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> @@ -1155,6 +1155,28 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+>  }
+>  EXPORT_SYMBOL_GPL(dw_pcie_ep_raise_msix_irq);
 >  
->  static void pex_ep_event_pex_rst_assert(struct tegra_pcie_dw *pcie)
->  {
-> +	struct dw_pcie_ep *ep = &pcie->pci.ep;
->  	u32 val;
->  	int ret;
->  
-> @@ -1745,6 +1746,8 @@ static void pex_ep_event_pex_rst_assert(struct tegra_pcie_dw *pcie)
->  	if (ret)
->  		dev_info(pcie->dev, "LTSSM state: 0x%x detect timeout: %d\n", val, ret);
->  
-> +	pci_epc_linkdown(ep->epc);
+> +static void dw_pcie_ep_clear_msi_iatu(struct dw_pcie_ep *ep)
+> +{
+> +	ep->msi_iatu_mapped = false;
+> +	ep->msi_iatu_mapped_offset = 0;
+> +	ep->msi_msg_addr = 0;
+> +	ep->msi_map_size = 0;
+> +}
 > +
->  	/*
->  	 * Deassert LTSSM state to stop the state toggling between
->  	 * Polling and Detect.
-> @@ -1913,7 +1916,7 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
+> +static void dw_pcie_ep_clear_outbound_atus(struct dw_pcie_ep *ep)
+> +{
+
+I don't think this function clears the OB iATU mappings. It is done in
+dw_pcie_ep_unmap_addr().
+
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +
+> +	if (ep->ob_window_map)
+> +		bitmap_zero(ep->ob_window_map, pci->num_ob_windows);
+> +
+> +	if (ep->outbound_addr)
+> +		memset(ep->outbound_addr, 0,
+> +		       pci->num_ob_windows * sizeof(*ep->outbound_addr));
+> +
+> +	dw_pcie_ep_clear_msi_iatu(ep);
+> +}
+> +
+>  /**
+>   * dw_pcie_ep_cleanup - Cleanup DWC EP resources after fundamental reset
+>   * @ep: DWC EP device
+> @@ -1169,11 +1191,12 @@ void dw_pcie_ep_cleanup(struct dw_pcie_ep *ep)
+>  
+>  	if (ep->msi_iatu_mapped) {
+>  		dw_pcie_ep_unmap_addr(ep->epc, 0, 0, ep->msi_mem_phys);
+> -		ep->msi_iatu_mapped = false;
+> +		dw_pcie_ep_clear_msi_iatu(ep);
 >  	}
 >  
->  	/* Perform cleanup that requires refclk and core reset deasserted */
-> -	pci_epc_deinit_notify(pcie->pci.ep.epc);
-> +	pci_epc_deinit_notify(ep->epc);
+>  	dwc_pcie_debugfs_deinit(pci);
+>  	dw_pcie_edma_remove(pci);
+> +	ep->resources_initialized = false;
+>  }
+>  EXPORT_SYMBOL_GPL(dw_pcie_ep_cleanup);
+>  
+> @@ -1307,6 +1330,89 @@ static void dw_pcie_ep_disable_bars(struct dw_pcie_ep *ep)
+>  	}
+>  }
+>  
+> +static void dw_pcie_ep_init_ptm(struct dw_pcie_ep *ep)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +	u32 ptm_cap_base, reg;
+> +
+> +	/*
+> +	 * PCIe r6.0, section 7.9.15 states that for endpoints that support
+> +	 * PTM, this capability structure is required in exactly one
+> +	 * function, which controls the PTM behavior of all PTM capable
+> +	 * functions. This indicates the PTM capability structure
+> +	 * represents controller-level registers rather than per-function
+> +	 * registers.
+> +	 *
+> +	 * Therefore, PTM capability registers are configured using the
+> +	 * standard DBI accessors, instead of func_no indexed per-function
+> +	 * accessors.
+> +	 */
+> +	ptm_cap_base = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_PTM);
+> +
+> +	/*
+> +	 * PTM responder capability can be disabled only after disabling
+> +	 * PTM root capability.
+> +	 */
+> +	if (ptm_cap_base) {
+> +		dw_pcie_dbi_ro_wr_en(pci);
+> +		reg = dw_pcie_readl_dbi(pci, ptm_cap_base + PCI_PTM_CAP);
+> +		reg &= ~PCI_PTM_CAP_ROOT;
+> +		dw_pcie_writel_dbi(pci, ptm_cap_base + PCI_PTM_CAP, reg);
+> +
+> +		reg = dw_pcie_readl_dbi(pci, ptm_cap_base + PCI_PTM_CAP);
+> +		reg &= ~(PCI_PTM_CAP_RES | PCI_PTM_GRANULARITY_MASK);
+> +		dw_pcie_writel_dbi(pci, ptm_cap_base + PCI_PTM_CAP, reg);
+> +		dw_pcie_dbi_ro_wr_dis(pci);
+> +	}
+> +}
+> +
+> +/**
+> + * dw_pcie_ep_reinit_registers - Reinitialize DWC EP reset-lost registers
+> + * @ep: DWC EP device
+> + *
+> + * Reinitialize the EP registers lost after a fundamental reset without
+> + * reallocating EP resources that live until dw_pcie_ep_deinit(). The
+> + * caller must only use this after hardware has reset the iATU; this
+> + * helper invalidates software iATU state but does not disable live
+> + * windows.
+> + */
+> +int dw_pcie_ep_reinit_registers(struct dw_pcie_ep *ep)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +	int ret;
+> +
+> +	dw_pcie_ep_clear_outbound_atus(ep);
+> +
+> +	if (ep->ops->init) {
+> +		ret = ep->ops->init(ep);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+> +	dw_pcie_ep_disable_bars(ep);
+> +	dw_pcie_ep_init_ptm(ep);
+> +	dw_pcie_ep_init_non_sticky_registers(pci);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(dw_pcie_ep_reinit_registers);
+> +
+> +/**
+> + * dw_pcie_ep_init_or_reinit_registers - Initialize or reinitialize DWC EP
+> + * @ep: DWC EP device
+> + *
+> + * Initialize DWC EP resources on first use. If resources are already
+> + * initialized, reinitialize only the reset-lost registers.
+> + */
+> +int dw_pcie_ep_init_or_reinit_registers(struct dw_pcie_ep *ep)
+> +{
 
-Unrelated change.
+This function name looks awkward. Can you fold it inside
+dw_pcie_ep_init_registers() instead?
 
 - Mani
 
