@@ -1,96 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E8353FC5B7;
-	Sun, 18 Oct 2026 04:27:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A597349CFD
+	for <linux-pci@vger.kernel.org>; Sun, 18 Oct 2026 04:35:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792297622; cv=none; b=aQNX6WMPeFDA8wyxubPJookvcB35mAKt7bCd6MS3N0YNI4IV9D1agBBaZbr3wC1On9MjYWgMbeM9Q5CpOOVCq8de2C5GYNEuJYVQ2F0l15YfjRCQCUVq2+AFIFBafHI/tD5jT16KPPXu3uLrLv4NjWrnWcWaa92DO7Qwo2G/Ikk=
+	t=1792298152; cv=none; b=GJBg2pv4Kb5RHIh3gU/2t6Ugpc0uqo1kakJ0I1Bq7gstSxxcdCS6QYoB702zysNSNloWxDpGudYekrc/LOE8UVHbOKqYotEyfS+4Sn0spA/W11IzykafnzGN74jLyW4DSTT2XJYmfQslSW7RlecXTZQeOcDMv8kU2B13pSnOCmo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792297622; c=relaxed/simple;
-	bh=+JZBFoP6UNzCFMG8ksizQMfuFaGhbvgaHgjE0pQtPfU=;
-	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=TtvXAP13t5/52RQS2feQwu5wru8MyQmY26mJ//m4Zdkxs+sfGHYzsihLraO7bEE+QE5s3Bl6xpFigwq21Epo+7N99OHePbXTTL7exzAu+IQ+xo+9vYfbDvGjwlJstmBbTM/3laLvPd0bzh5CXaKmkK/KwMCySsvQTfAQP5OGgeA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E97A91F000C6;
-	Sun, 18 Oct 2026 04:26:54 +0000 (UTC)
+	s=arc-20240116; t=1792298152; c=relaxed/simple;
+	bh=Yqd4iOCg4iu2u405pEONxbc5rSue+ZGiXbk0EdbQS1E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=T12qPt76+rLzGaZvMs0a0hZsrI10y+U/nil6BwIELV+TM9ul3nRwUM72qG1h5dXHjGihMSYYm6AKr2z3uzeIEOWYV3ZFEdBxFJF2nIqiOEkaXQErTGdH9SNFV5Vq3PhgKdeaFnvaYc1UOCcEr/7jRCm2zm3c5PFg24Gw0l1iSbI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A3E9Rqqn; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A3E9Rqqn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14E451F000C4;
+	Sun, 18 Oct 2026 04:35:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792298151;
+	bh=qdIVrSpMtK5zxHRgcArGiQkPWd9/eYBAHEZePZ+kECI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=A3E9Rqqnj37ALGfj9RcYKyKZNOvIQSgWV+TXcMuqbPw6r9dnPHBV4Rv5dJdPyF93G
+	 ICL7Q4aMhGC5eGXk3okNZmot2vxMuzRGjc+Y3erSJn4+sEUw782qElApJZE2XjBiWR
+	 Dp61hdStKxV40IRbbu0FQ7G4uTXGUjKxl3GW5+/GNRGR9ZzElI5g1uUvQYkGjA6Ygu
+	 8qjD9w2ANmU8FXA7S2yjAi722sS4CRNGP0iUGt5sCrV/iP/GgqDzGQ52TIUvPEluUZ
+	 byd9IMJGOzIzNi5ExpIBVP0u24FelroZprGtRgC17smV9cWflUKKnIRno3W42NUog5
+	 ioxRkbj77pvgA==
+Date: Sun, 18 Oct 2026 10:05:39 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Thomas Gleixner <tglx@kernel.org>, 
+	Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: dw-rockchip: Enable INTx affinity support
+Message-ID: <atRLsp1qUA_sGS-0@debian>
+References: <1790664898-207928-1-git-send-email-shawn.lin@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] PCI: spacemit: Ignore link partner PERST on K1
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: Encrow Thorne <encrow.thorne@linux.spacemit.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Yixun Lan <dlan@kernel.org>, 
- Troy Mitchell <troy.mitchell@linux.spacemit.com>, linux-pci@vger.kernel.org, 
- linux-riscv@lists.infradead.org, spacemit@lists.linux.dev, 
- linux-kernel@vger.kernel.org
-In-Reply-To: <20260924-spacemit-k1-pcie-fix-v1-1-002b5c1ba9fc@linux.spacemit.com>
-References: <20260924-spacemit-k1-pcie-fix-v1-1-002b5c1ba9fc@linux.spacemit.com>
-Date: Sun, 18 Oct 2026 09:56:35 +0530
-Message-Id: <179229759512.2114.3306580489141327360.b4-reply@b4>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1642;
- i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=+JZBFoP6UNzCFMG8ksizQMfuFaGhbvgaHgjE0pQtPfU=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq1EqICXdhzjUEDQMjpvZ3wE8aqjI6trQnPERXd
- f3BCRP+uG+JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCatRKiAAKCRBVnxHm/pHO
- 9RhIB/0UnDR/cESj/ARcD4ltFPWMso/Y5xVbiFQY1/4b25i2qjtVDRbpD7lI1LAgivEOE5F0p2J
- f4YHBCbHjrJOTHsTWR6Ytqe4LD2d4Os3j19iUkzQRmEGw+tIeHY8pAhTeOk57zdKRAXt7DMqgYw
- srp8+/o8jR9O6VbQN/GCaPSOCoxscKPxbUuYJYCISRR428OYkmUWOKEPZ6/a2zASB09HG2JI1ac
- Qd74hdQr3HJGVUIprrUFwQUfHMgSRIAjQidIWMV7mXJ6TnIScvP7G33ipEunr7F2KSuk9Ocgtr3
- 4NxELV3NJebnOqeLgHZVZ5663Q9mEYHelv4z6u+iA5xndgYT
-X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1790664898-207928-1-git-send-email-shawn.lin@rock-chips.com>
 
-On 2026-09-24 10:04 +0800, Encrow Thorne wrote:
-> The K1 PCIe controller and PHY are affected by the PERST signal from
-> the link partner during initialization. With some devices connected,
-> this can prevent host initialization from progressing and cause the
-> system to hang while probing the PCIe controller.
-> 
-> Set PCIE_IGNORE_PERSTN before accessing the DBI registers. When set,
-> this bit makes both the PCIe controller and PHY ignore the PERST
-> signal from the link partner.
-> 
-> This allows host initialization to complete without being affected by
-> the link partner's PERST state.
-> 
-> Signed-off-by: Encrow Thorne <encrow.thorne@linux.spacemit.com>
-> ---
->  drivers/pci/controller/dwc/pcie-spacemit-k1.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> index 0564c46e2f48..98f067e1ba81 100644
-> --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> @@ -44,6 +44,7 @@
->  
->  #define PCIE_CONTROL_LOGIC			0x0004
->  #define PCIE_SOFT_RESET			BIT(0)
-> +#define PCIE_IGNORE_PERSTN			BIT(2)
->  
->  struct k1_pcie {
->  	struct dw_pcie pci;
-> @@ -137,6 +138,13 @@ static int k1_pcie_init(struct dw_pcie_rp *pp)
->  	if (ret)
->  		return ret;
->  
-> +	/*
-> +	 * When set to 1, the PCIe controller and PHY ignore the PERST signal
-> +	 * from the link partner in both RC and EP modes.
-> +	 */
++ Thomas
 
-What? PERST# is an output signal to RC and input to Endpoint. PERST# is not
-controlled by the Endpoint, but only by the RC/host.
+On Tue, Sep 29, 2026 at 02:54:58PM +0800, Shawn Lin wrote:
+> Leverage the interrupt redirection infrastructure to enable CPU
+> affinity support for the legacy INTx interrupts. The INTx virqs are
+> demultiplexed by the chained handler of the "legacy" interrupt, whose
+> affinity cannot be changed, so affinity control for the INTx virqs is
+> achieved by redirecting the handler to run in IRQ work context on the
+> target CPU.
+> 
+> Mask the INTx source in .irq_pre_redirect() before the handler is
+> redirected: the legacy interrupt is level triggered, so an unmasked
+> line would keep re-firing the chained interrupt until the redirected
+> handler runs.
+> 
+> Same approach as the DesignWare core, commit eaf290c404f7c39f2 ("PCI:
+> dwc: Enable MSI affinity support").
+> 
+> Test was done on RK3588 EVB1 board with an NVMe with pci=nomsi
+> parameter. The /proc/interrupts columns are trimmed for brevity.
+> 
+>   # cat /proc/interrupts | grep INTx
+>   51:  137 0 0 0 0 0 0 0 INTx 0 Edge PCIe PME, nvme0q0, nvme0q1
+>   # echo 10 > /proc/irq/51/smp_affinity
+>   # dd if=/dev/nvme0n1p1 of=/dev/null bs=1M count=200
+>   200+0 records in
+>   200+0 records out
+>   209715200 bytes (210 MB, 200 MiB) copied, 0.182021 s, 1.2 GB/s
+>   # cat /proc/interrupts | grep INTx
+>   51:  137 0 0 0 946 0 0 0 INTx 0 Edge PCIe PME, nvme0q0, nvme0q1
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+
+I'd like to get an Ack from Thomas for this patch since I'm not an irqchip
+expert to decipher whether this patch is valid or not.
+
+If this patch is valid and INTx affinity can be enabled like this, I'd like to
+extend this to other RC drivers exposing INTx irqchip.
 
 - Mani
 
+-- 
+மணிவண்ணன் சதாசிவம்
