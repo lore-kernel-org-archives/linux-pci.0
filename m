@@ -1,76 +1,85 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E55E23BF684;
-	Sun, 18 Oct 2026 16:47:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C725030F95C
+	for <linux-pci@vger.kernel.org>; Sun, 18 Oct 2026 20:04:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792342038; cv=none; b=suGix1+mczOssvITLilIles+GIvrqpMdr2siRHUHCyNASXfHYl6KtcjZVpSUCe7XyXWcltYNnJA/rHF8K2XtM4VcxFqQ34w4c0TK0NtjHI3aGvhzYkFVVVhPZFNOiPR+dWIDViYHAjJT9AcbfYXxALxljvyLDRgB0KNaOfQEPeg=
+	t=1792353873; cv=none; b=uophMO7hj4cjltsZBs36CL8xO2K0kS2XWPN7f8x8bTW2cSLlFKBo7c981V9kBAKC14NJjy39xwIwbtco22Ox1f5S1izt4elpDI3R4dzyu2q/e+BLiPbTIJL8Jyyef93yAljy5/g7ufm3hhsYMOoNBaNozKMD6XErak1eCfJ4yy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792342038; c=relaxed/simple;
-	bh=isU0Ku3imsd4vWs+kxfBGwUjKzROuG4ArDI6zLFet+I=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=mp2XMqCdZz8YpFZw08arZ0q9pJPj+z7W93GuHu5rcEnO4MhD+AAusdpnh+E1FXhiiyP3hou9AUwKabrDj0lFoHpaQPD24BlJ2gmdcP/aK0x6z4vINAgntbw8fwgcULYRUNsJjpUqBtl6hkOi4UPp6gg/bqsz1We4QlZf+sx12aU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VmB7kGTT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792353873; c=relaxed/simple;
+	bh=7TlQsGW8Ky4gB3RUb3lx8U6PzzZvkGGwhy8ltKRWrDQ=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=qsaTtGSofMOwREVAMRjz8nBFZybNM0oNKRnfvU+JAdnIL0x6bMjn7vNhQEJkFx6prrUgFcq4sBb7FSuoDM41OTTjEGv+vRr+u5lIbUIIAS+jFdukJbU0hWCk8R9fnqsw1qZD7wEQkebliDaHHj3CBGMDgeTWu/59YbBRE22nJQ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nTLME0r7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VmB7kGTT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 082F11F000C4;
-	Sun, 18 Oct 2026 16:47:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nTLME0r7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7582C1F000C5;
+	Sun, 18 Oct 2026 20:04:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792342035;
-	bh=1cAAGTlZsG+dIC1kWnvlbj8WRGLKlwHJMqx+2z1sasY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VmB7kGTTaRjuaYW1yJr5oGFt5qHEXZ0GfX7wfbWN97v23UjuCXT+W+cCtUxD/Wrju
-	 gxAPvissch8BjVJbsX5ETObtvVkqJFKPjcZwXz7Ki8jCbM/YHpHbgDGTqYa6wjBjd/
-	 3w+jiUk0O6ulXdR8clXXROCXEY0BEc8dgsvipvIGBqiayBVW9Dr561Nkd55xWwzRuw
-	 WIh8BAQ5fLRPeyzqMs6wR2YiEts8BfRKPL1M9dT8uPprftAox9NkYizjYCk2Frkqu4
-	 tdpfNBRkFg7UKWG10tk8D/cdUr+wycMBA74f73cxHS1T9VcoCwGrN8hbNAB5ELrdmU
-	 oVxSTw93andZg==
-Message-ID: <sashiko-outbox-176295@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] PCI: pciehp: Defer device replacement handling
- until ->resume()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Cole Leavitt" <cole@unwrap.rs>
-Cc: linux-pci@vger.kernel.org, linux-usb@vger.kernel.org
-In-Reply-To: <20261018163910.132231-1-cole@unwrap.rs>
-References: <20261018163750.130470-1-cole@unwrap.rs>
- <20261018163910.132231-1-cole@unwrap.rs>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 18 Oct 2026 16:47:14 +0000
+	s=k20260515; t=1792353868;
+	bh=gMSKwfEUvy76tp19EXY6DU7m5XMqNAf5LjZmGXHDufw=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=nTLME0r7ugQMR3bx7GO1a9UK9dBkIkrbG9Q0ZnHrOMWeE3s0r7zgfhdvvh3VrQJZB
+	 QShihuGuW7obaY8TW8GvFkdlhgHtOSC4ryJY363163F1fJzQGVNbQEAMKYomT1T6ju
+	 G/zKsCr3ddiJkgYBERfwKJRr+LwA2YVz2YuNs3iA9JNXLlpT30EoL96bFOmIwCQc4j
+	 O7sDgvegd4coN/t4/cw7g9Rcrft/T4bNaY3TCRM1FlDSdm1ZdTJ/JG+LdpzSrlZP9q
+	 08x6EpPBCELxcg9+AjtQ5Whwoazxyr+fkn6fi40V20ZnU/JhpIK+utysDGOKKdgHTX
+	 11Rx9dTf4X8tQ==
+From: Thomas Gleixner <tglx@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>, Shawn Lin
+ <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-rockchip@lists.infradead.org,
+ linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: dw-rockchip: Enable INTx affinity support
+In-Reply-To: <atRLsp1qUA_sGS-0@debian>
+References: <1790664898-207928-1-git-send-email-shawn.lin@rock-chips.com>
+ <atRLsp1qUA_sGS-0@debian>
+Date: Sun, 18 Oct 2026 22:04:24 +0200
+Message-ID: <87y0bubws7.ffs@fw13>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain
 
-> On a Lenovo ThinkPad P16 Gen3 with a discrete Thunderbolt 5 host
-> controller (Intel JHL9580 "Barlow Ridge") below Root Port 0000:80:1b.4,
-> resume from suspend-to-idle intermittently hangs with a black screen:
->=20
->   pcieport 0000:80:1b.4: Data Link Layer Link Active not set in 100 msec
->   pcieport 0000:80:1b.4: pciehp: Slot(25): Card not present
->   thunderbolt 0000:8a:00.0: RX ring 0 already stopped
->   ...
->   Oops: general protection fault, kernel NULL pointer dereference 0x32b
->   Workqueue: async async_run_entry_fn
->   RIP: 0010:tb_resume_noirq+0x3f/0x2e0 [thunderbolt]
->   Call Trace:
->    tb_domain_resume_noirq+0x42/0x60 [thunderbolt]
->    dpm_run_callback+0x4b/0x140
->    device_resume_noirq+0x16d/0x2c0
-> [ ... ]
-> followed by ->resume(), so resume from hibernation is fixed as well.
->=20
-> Fixes: 9d573d19547b ("PCI: pciehp: Detect device replacement during syste=
-m sleep")
-> Cc: stable@vger.kernel.org # v6.11+
-> Signed-off-by: Cole Leavitt <cole@unwrap.rs>
+On Sun, Oct 18 2026 at 10:05, Manivannan Sadhasivam wrote:
+> On Tue, Sep 29, 2026 at 02:54:58PM +0800, Shawn Lin wrote:
+>> Leverage the interrupt redirection infrastructure to enable CPU
+>> affinity support for the legacy INTx interrupts. The INTx virqs are
+>> demultiplexed by the chained handler of the "legacy" interrupt, whose
+>> affinity cannot be changed, so affinity control for the INTx virqs is
+>> achieved by redirecting the handler to run in IRQ work context on the
+>> target CPU.
+>> 
+>> Mask the INTx source in .irq_pre_redirect() before the handler is
+>> redirected: the legacy interrupt is level triggered, so an unmasked
+>> line would keep re-firing the chained interrupt until the redirected
+>> handler runs.
+>> 
+>> Same approach as the DesignWare core, commit eaf290c404f7c39f2 ("PCI:
+>> dwc: Enable MSI affinity support").
+>> 
+>> Test was done on RK3588 EVB1 board with an NVMe with pci=nomsi
+>> parameter. The /proc/interrupts columns are trimmed for brevity.
+>> 
+>>   # cat /proc/interrupts | grep INTx
+>>   51:  137 0 0 0 0 0 0 0 INTx 0 Edge PCIe PME, nvme0q0, nvme0q1
+>>   # echo 10 > /proc/irq/51/smp_affinity
+>>   # dd if=/dev/nvme0n1p1 of=/dev/null bs=1M count=200
+>>   200+0 records in
+>>   200+0 records out
+>>   209715200 bytes (210 MB, 200 MiB) copied, 0.182021 s, 1.2 GB/s
+>>   # cat /proc/interrupts | grep INTx
+>>   51:  137 0 0 0 946 0 0 0 INTx 0 Edge PCIe PME, nvme0q0, nvme0q1
+>> 
+>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>
+> I'd like to get an Ack from Thomas for this patch since I'm not an irqchip
+> expert to decipher whether this patch is valid or not.
 
-Sashiko has reviewed this patch and found no issues.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261018163910.1322=
-31-1-cole@unwrap.rs?part=3D1
+I'm happy to look at it, but I can't be bothered to fish it out from a
+mail archive. Can you please bounce me the original submission?
 
