@@ -1,34 +1,34 @@
 Received: from mail.unwrap.rs (mail.unwrap.rs [172.232.15.166])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D25C3DAABE;
-	Sun, 18 Oct 2026 16:39:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A5203DD532;
+	Sun, 18 Oct 2026 16:39:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=172.232.15.166
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792341589; cv=none; b=EY2tXgcFWD+rzERsUB01EJtr0CgjtV8I1LM4AydvjRqc2FJkUq6LKOitzGNM8a2hguq0S1zuvWL8Ej52MXuH/hIirn/hcyWzZJqCDGMeODR1Abb/0eLPAd66cTqH7S/YJcu+PR4OBBbjH/I8MIO2xpMlwJKZViFr3zHM0D7btas=
+	t=1792341593; cv=none; b=f+Wb6HDa0D+Rc27D2UzE3EP7LG70cYCsKihdlQOArEhm6fsedgKVSjl9ujwfPe1cCV8bBwkGP2uU76e1CT42GM69lsUZPDGsIE9ZL2XvbFjYfKFjjddWKQd42wqkpM3A6Lw1IXw64pIrTueMruBbGnZvWJAI9JXmU22F/lZPgtI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792341589; c=relaxed/simple;
-	bh=wiuqhKDFFiN/prD7X1V5jprsERJYlwxTTS2oLB9lPbk=;
+	s=arc-20240116; t=1792341593; c=relaxed/simple;
+	bh=xnz7VyyvGosr1DkFBgY1vAtFglzhSfCFgKNu3qVaUPM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uaMMswfp4BJEun7tfegGPAuKF4+bMisNI7nF4EIkuuim4h1+zYKOAluq8PjI4nYZXfdVXxP0fZheY/6/Z09xQPf8ImZ7yBn5hOI065xLiAr+DNBKtFV+F5p0s2Kj76t+0bZvxz4pyZ9UzTWgI+hn519GI15slsGVynTgLy14JYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=unwrap.rs; spf=pass smtp.mailfrom=unwrap.rs; dkim=pass (2048-bit key) header.d=unwrap.rs header.i=@unwrap.rs header.b=dfecKDUd; dkim=permerror (0-bit key) header.d=unwrap.rs header.i=@unwrap.rs header.b=OXnkvEXL; arc=none smtp.client-ip=172.232.15.166
+	 MIME-Version; b=DO/dNY5raO35sNZl7xXhENUx6o11DI2Wg62T5PQ05t9LqFQlsxjk/WmjufDtY94Lg5X7kKRTAajWLYHYN8uI9kpeo+1Lpip3Pwrfak/HzwLUIr2zPaLoPceztQKRpMPhRZ7Bml6jH0zUw3JUc/7Qlpft5m+/n/uBBUxy2M22nbE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=unwrap.rs; spf=pass smtp.mailfrom=unwrap.rs; dkim=pass (2048-bit key) header.d=unwrap.rs header.i=@unwrap.rs header.b=CheW6/hz; dkim=permerror (0-bit key) header.d=unwrap.rs header.i=@unwrap.rs header.b=FNMkCy1W; arc=none smtp.client-ip=172.232.15.166
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=unwrap.rs
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=unwrap.rs
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=unwrap.rs header.i=@unwrap.rs header.b="dfecKDUd";
-	dkim=permerror (0-bit key) header.d=unwrap.rs header.i=@unwrap.rs header.b="OXnkvEXL"
+	dkim=pass (2048-bit key) header.d=unwrap.rs header.i=@unwrap.rs header.b="CheW6/hz";
+	dkim=permerror (0-bit key) header.d=unwrap.rs header.i=@unwrap.rs header.b="FNMkCy1W"
 DKIM-Signature: v=1; a=rsa-sha256; s=202503r; d=unwrap.rs; c=relaxed/relaxed; r=y;
-	h=Message-ID:Date:Subject:To:From:Content-Type; t=1792341582; bh=NEa26fheps
-	46uhHUomRCw+7tK+W+HuxA+vMg5443bKo=; b=dfecKDUdOpmbZYE6RyjCHRDCAOcz2n3AlM2Ii
-	rne8cUZ85J7E7oQTcc8GjKr9KUiHuWgV5hjMwnAlKPHEVHKMQipEIHWEFANseX6pvsnxD24aIz/
-	69oi6nN2cktlTpf6kz5JJHU0JrI6skCy7H6FViAtCNnPwBP0MQE0wl7KHM62c+XFNzjP8li4ply
-	EhsferO1e60ZxzqnmJG5aF96k8ZvUHvoRB5N5ylA7gFBNS/1DFkyceH0SP9RiWjkdegVKSXwnLB
-	7a70EArkZYhYSkbyTLmW8tyogzriq2rJ+94JPHXDufHAFWp9twzNkFuyY/ZCJRiUZqAa54+2UiW
-	cH4kQ==;
+	h=Message-ID:Date:Subject:To:From:Content-Type; t=1792341582; bh=uZDJsaDR/e
+	x/tkUGgMpptdKBo0kd2xMrKUBmb9WaJLc=; b=CheW6/hzWWTs6Q0f9DJrbXmmcvztpxl0w1lfY
+	UbyI3jaabrWlzrvk/Cj8gjonharhj2G/rn5iPCBEvghgQx0dSAptXQseDBp8hH0L/YIHnZ6Xs5W
+	qEdYBYe/8INAymm/RQgsyEtqOJ98rG6Ng7Q8tS3a6TU6Mr9++Y8rGf4qoq/glssY3SA6KaraYcA
+	sTWcxdMqsDJv9IgxO02Ncrxsy5Ul3LTBbPiDa31fbgNsqYv4Y7/IkyDXQIn91FciEkJdgVKAut7
+	XgY0PZQf9jH7sIjmLuYMVmaSTWucuTHhLseAFM5BtgDYq3sPAyePe2Xf8QpAJrPt42RYLARXyqe
+	0K2qg==;
 DKIM-Signature: v=1; a=ed25519-sha256; s=202503e; d=unwrap.rs; c=relaxed/relaxed;
-	h=Message-ID:Date:Subject:To:From:Content-Type; t=1792341582; bh=NEa26fheps
-	46uhHUomRCw+7tK+W+HuxA+vMg5443bKo=; b=OXnkvEXLnj86PAvznWd2I5kUZaZvJisJ+Z54v
-	TP5AukTKI8au5Qt34FZZ9DSq0xOH1tCX/R55fRJweE4+QFXCQ==;
+	h=Message-ID:Date:Subject:To:From:Content-Type; t=1792341582; bh=uZDJsaDR/e
+	x/tkUGgMpptdKBo0kd2xMrKUBmb9WaJLc=; b=FNMkCy1WyChku0/YDsvm3bS6vq01aCTNy0/61
+	ostvN7wYmAYXAbP9yhAzonI3ABb2p2ZLf39ErQnWoeIjKx4AA==;
 From: Cole Leavitt <cole@unwrap.rs>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Mika Westerberg <westeri@kernel.org>
@@ -40,12 +40,13 @@ Cc: Cole Leavitt <cole@unwrap.rs>,
 	linux-pci@vger.kernel.org,
 	linux-usb@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] PCI: pciehp: Defer device replacement handling until ->resume()
-Date: Sun, 18 Oct 2026 12:39:07 -0400
-Message-ID: <20261018163910.132231-1-cole@unwrap.rs>
+Subject: [PATCH 2/2] thunderbolt: Don't resume the software CM if the host controller is gone
+Date: Sun, 18 Oct 2026 12:39:08 -0400
+Message-ID: <20261018163910.132231-2-cole@unwrap.rs>
 X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20261018163750.130470-1-cole@unwrap.rs>
+In-Reply-To: <20261018163910.132231-1-cole@unwrap.rs>
 References: <20261018163750.130470-1-cole@unwrap.rs>
+ <20261018163910.132231-1-cole@unwrap.rs>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -54,70 +55,42 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On a Lenovo ThinkPad P16 Gen3 with a discrete Thunderbolt 5 host
-controller (Intel JHL9580 "Barlow Ridge") below Root Port 0000:80:1b.4,
-resume from suspend-to-idle intermittently hangs with a black screen:
+nhi_resume_noirq() sets nhi->going_away when the host controller is not
+present anymore on resume (commit bdccf295d7cd ("thunderbolt: Do not
+touch the hardware if the NHI is gone on resume")). With going_away set
+tb_ring_start() refuses to start the control channel rings, but the
+software connection manager's tb_resume_noirq() still goes through the
+whole resume sequence. Every control channel request then fails with
+-ESHUTDOWN from __tb_ring_enqueue(), and tb_cfg_read()/tb_cfg_write()
+WARN for each one:
 
-  pcieport 0000:80:1b.4: Data Link Layer Link Active not set in 100 msec
-  pcieport 0000:80:1b.4: pciehp: Slot(25): Card not present
-  thunderbolt 0000:8a:00.0: RX ring 0 already stopped
-  ...
-  Oops: general protection fault, kernel NULL pointer dereference 0x32b
-  Workqueue: async async_run_entry_fn
-  RIP: 0010:tb_resume_noirq+0x3f/0x2e0 [thunderbolt]
+  tb_cfg_write: -108
+  WARNING: drivers/thunderbolt/ctl.c:1157 at tb_cfg_write+0x94/0xf0 [thunderbolt]
   Call Trace:
+   tb_switch_configure+0x8f/0x1d0 [thunderbolt]
+   tb_switch_resume+0xb9/0x3d0 [thunderbolt]
+   tb_resume_noirq+0x5d/0x2e0 [thunderbolt]
    tb_domain_resume_noirq+0x42/0x60 [thunderbolt]
-   dpm_run_callback+0x4b/0x140
-   device_resume_noirq+0x16d/0x2c0
-   async_resume_noirq+0x21/0x30
-   async_run_entry_fn+0x36/0x160
+   ...
+  tb_cfg_read: -108
+  WARNING: drivers/thunderbolt/ctl.c:1131 at tb_cfg_read+0x94/0xf0 [thunderbolt]
+  ...
+  thunderbolt 0000:8a:00.0: 0: failed to restore TMU configuration
 
-The link to Barlow Ridge is not up in time when the Root Port returns
-from D3cold, so the devices below it are marked disconnected and
-pciehp_resume_noirq() considers the device in the slot replaced.  It
-then synthesizes a Presence Detect Changed event with pciehp_request(),
-which wakes the IRQ thread through irq_wake_thread().  Unlike hardirq
-delivery, irq_wake_thread() is not inhibited by suspend_device_irqs(),
-so the IRQ thread starts bringing down the slot immediately, in the
-middle of the noirq phase.
+This happens on a discrete Barlow Ridge host when the root port link
+does not come back in time on resume from s2idle: pciehp marks the
+subtree disconnected in pciehp_resume_noirq(), so pci_device_is_present()
+returns false for the NHI and the (about to be removed) domain is then
+"resumed" through dead rings.
 
-The PM core resumes the devices below the hotplug port asynchronously
-and holds no device_lock in the noirq and early phases, so the removal
-is not serialized against their ->resume_noirq() callbacks:  The IRQ
-thread unbinds the NHI (nhi_pci_remove() -> tb_domain_remove() ->
-tb_stop(), which sets tb->root_switch to NULL) while nhi_resume_noirq()
--> tb_resume_noirq() runs concurrently on another CPU and dereferences
-tb->root_switch.  Before commit e56249d8a68e ("thunderbolt: Set
-tb->root_switch to NULL when domain is stopped") the pointer was left
-dangling instead.  Any other driver below a hotplug port is exposed to
-the same race.
+The firmware connection manager already honors the flag in
+icm_complete(). Do the same in the software connection manager and skip
+tb_resume_noirq() when the host controller is gone. The domain is torn
+down when the controller is removed, and hotplug_active stays false so
+no events are processed in the meantime.
 
-Only record the synthesized event in pciehp_resume_noirq() and wake the
-IRQ thread from pciehp_system_resume(), the ->resume() callback used for
-system sleep transitions.  By then all noirq and early callbacks have
-completed, and device_resume() holds the device_lock across each
-driver's ->resume() callback, which the removal path acquires in
-device_release_driver().  This is also where pciehp_check_presence()
-already requests bringing down slots vacated during system sleep.
-Runtime resume is left alone.
-
-The old devices are still marked disconnected in the noirq phase, so
-that their drivers and any nested hotplug ports (see commit e3260237aaad
-("PCI: pciehp: Avoid unnecessary device replacement check")) keep
-seeing them as gone.
-
-A real hotplug interrupt cannot consume the deferred event earlier
-either, as long as PME is native:  pciehp_suspend() then masks the
-hotplug interrupt and only pciehp_resume() unmasks it again.  Without
-native PME the interrupt stays enabled across system sleep, and an event
-latched after resume_device_irqs() can still run the IRQ thread during
-the early phase, but no longer during the noirq phase.
-
-pciehp_resume_noirq() also serves as ->restore_noirq() and is likewise
-followed by ->resume(), so resume from hibernation is fixed as well.
-
-Fixes: 9d573d19547b ("PCI: pciehp: Detect device replacement during system sleep")
-Cc: stable@vger.kernel.org # v6.11+
+Fixes: bdccf295d7cd ("thunderbolt: Do not touch the hardware if the NHI is gone on resume")
+Cc: stable@vger.kernel.org
 Signed-off-by: Cole Leavitt <cole@unwrap.rs>
 ---
 
@@ -126,65 +99,33 @@ Notes:
     Barlow Ridge host, I226 Ethernet), in daily use with s2idle since
     2026-09-17.
 
- drivers/pci/hotplug/pciehp_core.c | 26 ++++++++++++++++++++++++--
- 1 file changed, 24 insertions(+), 2 deletions(-)
+ drivers/thunderbolt/tb.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 2cafd3b26f34..850a6d3bb08a 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -302,12 +302,19 @@ static int pciehp_resume_noirq(struct pcie_device *dev)
- 		 * during system sleep, mark the old device disconnected
- 		 * (to prevent its driver from accessing the new device)
- 		 * and synthesize a Presence Detect Changed event.
-+		 *
-+		 * Don't wake the IRQ thread yet:  The PM core resumes the
-+		 * devices below asynchronously and without holding their
-+		 * device_lock in the noirq and early phases, so bringing
-+		 * the slot down now would race with their ->resume_noirq()
-+		 * and ->resume_early() callbacks.  pciehp_system_resume()
-+		 * wakes the IRQ thread once those have completed.
- 		 */
- 		if (pciehp_device_replaced(ctrl)) {
- 			ctrl_dbg(ctrl, "device replaced during system sleep\n");
- 			pci_walk_bus(ctrl->pcie->port->subordinate,
- 				     pci_dev_set_disconnected, NULL);
--			pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
-+			atomic_or(PCI_EXP_SLTSTA_PDC, &ctrl->pending_events);
- 		}
- 	}
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index 4e5d0578fd4b..d236de1e5568 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -3177,6 +3177,19 @@ static int tb_resume_noirq(struct tb *tb)
+ 	unsigned int usb3_delay = 0;
+ 	LIST_HEAD(tunnels);
  
-@@ -327,6 +334,21 @@ static int pciehp_resume(struct pcie_device *dev)
- 	return 0;
- }
++	/*
++	 * The host controller is gone (for example the last device was
++	 * unplugged, or the PCIe hotplug driver found the controller
++	 * removed or replaced during system sleep). The control channel
++	 * rings are not started in that case so every config space access
++	 * below would just fail. Leave the domain as is; it is torn down
++	 * when the controller is removed.
++	 */
++	if (tb->nhi->going_away) {
++		tb_dbg(tb, "host controller not present, skipping resume\n");
++		return 0;
++	}
++
+ 	tb_dbg(tb, "resuming...\n");
  
-+#ifdef CONFIG_PM_SLEEP
-+static int pciehp_system_resume(struct pcie_device *dev)
-+{
-+	struct controller *ctrl = get_service_data(dev);
-+
-+	pciehp_resume(dev);
-+
-+	/* Act on events deferred by pciehp_resume_noirq() */
-+	if (atomic_read(&ctrl->pending_events))
-+		pciehp_request(ctrl, 0);
-+
-+	return 0;
-+}
-+#endif
-+
- static int pciehp_runtime_suspend(struct pcie_device *dev)
- {
- 	pciehp_disable_interrupt(dev);
-@@ -362,7 +384,7 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
- #ifdef	CONFIG_PM_SLEEP
- 	.suspend	= pciehp_suspend,
- 	.resume_noirq	= pciehp_resume_noirq,
--	.resume		= pciehp_resume,
-+	.resume		= pciehp_system_resume,
- #endif
- 	.runtime_suspend = pciehp_runtime_suspend,
- 	.runtime_resume	= pciehp_runtime_resume,
+ 	/*
 -- 
 2.54.0
 
