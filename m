@@ -1,164 +1,190 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.unwrap.rs (mail.unwrap.rs [172.232.15.166])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AF9C4AD7FA
-	for <linux-pci@vger.kernel.org>; Sun, 18 Oct 2026 14:31:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D25C3DAABE;
+	Sun, 18 Oct 2026 16:39:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=172.232.15.166
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792333867; cv=none; b=iSW2sWVHOMJ2sWX3K9YmtDG+tscfU0y74wbB80R4pKRQ+/0TAuZBtZFstT4LFbBP0R03rpaK1ouihpwcMjvAzZc1VumR12nvP+Bh4HMDd7Mo2tYAwojZsNrzhvLGZBbo0CCr+eX2u+mmOoKJ5Z6mx71PubsI9UQvPZn5dA6If2U=
+	t=1792341589; cv=none; b=EY2tXgcFWD+rzERsUB01EJtr0CgjtV8I1LM4AydvjRqc2FJkUq6LKOitzGNM8a2hguq0S1zuvWL8Ej52MXuH/hIirn/hcyWzZJqCDGMeODR1Abb/0eLPAd66cTqH7S/YJcu+PR4OBBbjH/I8MIO2xpMlwJKZViFr3zHM0D7btas=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792333867; c=relaxed/simple;
-	bh=iYRUEe3PZ45l038eObE72ihFRzzU/ncepqESTIKoxq8=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bXPpMfJX+XlUcdnvustv8UnqYUPB7E6ZY8Q8gAZFC0cRCfBf4GVRcaOPWfY0zuUr0Q4AcKor+XlR7ayEHBiPJ6ChxmpRPPGc3BrN5or1BJhvpsUeM0437LDLKDwfYBgZpcqfR0xUfIZiwzbvrPZjuGaAJpCnYHi5+SjVACYuuZg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aNoHEqyv; arc=none smtp.client-ip=209.85.128.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1792341589; c=relaxed/simple;
+	bh=wiuqhKDFFiN/prD7X1V5jprsERJYlwxTTS2oLB9lPbk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=uaMMswfp4BJEun7tfegGPAuKF4+bMisNI7nF4EIkuuim4h1+zYKOAluq8PjI4nYZXfdVXxP0fZheY/6/Z09xQPf8ImZ7yBn5hOI065xLiAr+DNBKtFV+F5p0s2Kj76t+0bZvxz4pyZ9UzTWgI+hn519GI15slsGVynTgLy14JYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=unwrap.rs; spf=pass smtp.mailfrom=unwrap.rs; dkim=pass (2048-bit key) header.d=unwrap.rs header.i=@unwrap.rs header.b=dfecKDUd; dkim=permerror (0-bit key) header.d=unwrap.rs header.i=@unwrap.rs header.b=OXnkvEXL; arc=none smtp.client-ip=172.232.15.166
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=unwrap.rs
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=unwrap.rs
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aNoHEqyv"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4a1e477fe16so1980375e9.1
-        for <linux-pci@vger.kernel.org>; Sun, 18 Oct 2026 07:31:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792333864; x=1792938664; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=QkrVVEoSqEIKumzhBHzfKxUezLvi+M+pFa/zf57rau8=;
-        b=aNoHEqyvwfziWkqLyWX4BZ3HNKkPTa6UvsNTo5kX9ounySaabucmK28FpVdVe203jV
-         dJx4JTKMNiq2mbHxnIfgNAd0hW4mTXBfzl0ErFKJwKeHwGvaaSmfKvIjKQyqn/nhBFGk
-         Vuv+Oc1/JdcXch7g86JJiFpVfEWee7Vwg8Ig9CCuaR8eaAThEzdl7a42Cf8CS/19Zht3
-         zAws9qBxYK+3xfPJ/qpzlk0T0RDrrl2c40Zh32WfEv1IM8yaoHmSM8/CV2jPTGON2JZH
-         yUS1W6OU5DYKUmRLcgZ88ME8r/8IMl+HVq1rAVfPLHxwygoUhJTQd7dhAfNoV/JCHF+6
-         AF4w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792333864; x=1792938664;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=QkrVVEoSqEIKumzhBHzfKxUezLvi+M+pFa/zf57rau8=;
-        b=bZUMbl1SGzpzsP1bUBO+TBCi1oj76HB7Zul6T6yLOh3EGNNpDDgp45mGDeFYEbNsb0
-         GAwqMPdukoNh1mABIacVjE1SYzF6UjKGtawc9a2YMFtLCXez3waXdDOPsPEZ+y+0HeP5
-         B/PKaakuwdmypjR49PWyNns4N0UwvDyPBCBP8xCHULjISE0u9OkCBvxBMuNJIy864A4X
-         ULGz64hYXGSwzqJ59prl6u7pDeZ0SVtanGjyqRlGOSXS75V0rwGLKMAYYtKnwYbnc3+y
-         +91HvEpnKqpWBUKdEzvNiMANTV7SFFY80VHES9q3bj5mLDK1FNC0jhVxMsyXFs60XgT5
-         KQSw==
-X-Forwarded-Encrypted: i=1; AKwUvBxm9d9fkPzobLJcMCEohWHQBLhWHr9YCWdEq72m/wyZMwd124Ili/V92PyEwKcmjE8oH1ULafC7i7w=@vger.kernel.org
-X-Gm-Message-State: AFq9FYILfHWIttTQFcWqekpnK1qEq2Q3iKUv/YBIAOo2nEyqsEoUPvmO
-	cRQulbIeSn4MKaI63FTULgtCPXLw7daO+LPxJosmY2Cp/5mvzDRkSNdf
-X-Gm-Gg: AYBFou2tHECW4tV7guTshJWeaI81dm818MboTqJm/bYbHJp4/OLdsI4fW7Xww6iAeKZ
-	xja94uum7nqcU+2UepdsAb+Sf/I9uOGufq90E5kO/Ois0jf9bEJEGpclfsvz28TbSPS6mryuB91
-	JICXtzNfyngh96tQQsjd0tL08MwNRHVIIaMhi85h6rtvyzroZ2AQe+0MvgQojl+fIaCCUxw0nfi
-	xcQRRgJ3Qb1eH1qLN4hPIHu56fTzwmINA7GwJ3l/t42ZP01w1+Q4bZ2/6hv0evRueXvPZagvn9o
-	FC35oOOZeiq3LMXCm4+cM6pig06sSnJKVcDnFDhFvrxYREjf6NXTvDr0zIDorg1xNx8lSJOM3Px
-	VCXDsVZG1+cfSgCYeBXMx2aT8HoMgUnAxpX68L1jGWwDgKJeUOTlfEfN4hXwikeV1th5LYISf6A
-	mxBmPtJQAkyz9CnBaAwsTVAl3D3rYkUsH13gmV9exhRpLM0rFne6O8LXkY9zqjfxNNDL0o8KYAs
-	YMPl662wXbOsuwPqlEDC+h2ofx+9ULaY7g=
-X-Received: by 2002:a05:600c:1d05:b0:4a1:bd69:526f with SMTP id 5b1f17b1804b1-4a1d75ab235mr101854615e9.4.1792333863572;
-        Sun, 18 Oct 2026 07:31:03 -0700 (PDT)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1ce325107sm169279385e9.3.2026.10.18.07.31.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Oct 2026 07:31:03 -0700 (PDT)
-Date: Sun, 18 Oct 2026 15:31:01 +0100
-From: David Laight <david.laight.linux@gmail.com>
-To: Deepanshu Kartikey <kartikey406@gmail.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: sysfs: Reject unaligned resource I/O port
- accesses
-Message-ID: <20261018153101.59d276f5@pumpkin>
-In-Reply-To: <CADhLXY6Pb9Y5f9r12RZA1bbjBS_ctXAkXHPwY8qWwn_1WOJAsA@mail.gmail.com>
-References: <20260928123036.7902-1-kartikey406@gmail.com>
-	<CADhLXY6Pb9Y5f9r12RZA1bbjBS_ctXAkXHPwY8qWwn_1WOJAsA@mail.gmail.com>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+	dkim=pass (2048-bit key) header.d=unwrap.rs header.i=@unwrap.rs header.b="dfecKDUd";
+	dkim=permerror (0-bit key) header.d=unwrap.rs header.i=@unwrap.rs header.b="OXnkvEXL"
+DKIM-Signature: v=1; a=rsa-sha256; s=202503r; d=unwrap.rs; c=relaxed/relaxed; r=y;
+	h=Message-ID:Date:Subject:To:From:Content-Type; t=1792341582; bh=NEa26fheps
+	46uhHUomRCw+7tK+W+HuxA+vMg5443bKo=; b=dfecKDUdOpmbZYE6RyjCHRDCAOcz2n3AlM2Ii
+	rne8cUZ85J7E7oQTcc8GjKr9KUiHuWgV5hjMwnAlKPHEVHKMQipEIHWEFANseX6pvsnxD24aIz/
+	69oi6nN2cktlTpf6kz5JJHU0JrI6skCy7H6FViAtCNnPwBP0MQE0wl7KHM62c+XFNzjP8li4ply
+	EhsferO1e60ZxzqnmJG5aF96k8ZvUHvoRB5N5ylA7gFBNS/1DFkyceH0SP9RiWjkdegVKSXwnLB
+	7a70EArkZYhYSkbyTLmW8tyogzriq2rJ+94JPHXDufHAFWp9twzNkFuyY/ZCJRiUZqAa54+2UiW
+	cH4kQ==;
+DKIM-Signature: v=1; a=ed25519-sha256; s=202503e; d=unwrap.rs; c=relaxed/relaxed;
+	h=Message-ID:Date:Subject:To:From:Content-Type; t=1792341582; bh=NEa26fheps
+	46uhHUomRCw+7tK+W+HuxA+vMg5443bKo=; b=OXnkvEXLnj86PAvznWd2I5kUZaZvJisJ+Z54v
+	TP5AukTKI8au5Qt34FZZ9DSq0xOH1tCX/R55fRJweE4+QFXCQ==;
+From: Cole Leavitt <cole@unwrap.rs>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <westeri@kernel.org>
+Cc: Cole Leavitt <cole@unwrap.rs>,
+	Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Yehezkel Bernat <YehezkelShB@gmail.com>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/2] PCI: pciehp: Defer device replacement handling until ->resume()
+Date: Sun, 18 Oct 2026 12:39:07 -0400
+Message-ID: <20261018163910.132231-1-cole@unwrap.rs>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20261018163750.130470-1-cole@unwrap.rs>
+References: <20261018163750.130470-1-cole@unwrap.rs>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Sun, 18 Oct 2026 16:30:19 +0530
-Deepanshu Kartikey <kartikey406@gmail.com> wrote:
+On a Lenovo ThinkPad P16 Gen3 with a discrete Thunderbolt 5 host
+controller (Intel JHL9580 "Barlow Ridge") below Root Port 0000:80:1b.4,
+resume from suspend-to-idle intermittently hangs with a black screen:
 
-> On Mon, Sep 28, 2026 at 6:00=E2=80=AFPM Deepanshu Kartikey
-> <kartikey406@gmail.com> wrote:
-> >
-> > pci_resource_io() validates that the requested port lies within the
-> > BAR but never checks that it is aligned to the access size. A
-> > pwrite64()/pread64() on a resourceN file with an odd offset and
-> > count=3D2 or count=3D4 reaches outw()/outl() with a misaligned address.
-> > On arm64 this becomes a store/load to a Device-memory mapping
-> > (PCI_IOBASE + port), which architecturally requires natural
-> > alignment, causing an alignment fault and kernel oops.
-> >
-> > Reject misaligned 2- and 4-byte accesses before they reach the
-> > low-level accessor. With natural alignment enforced, an access that
-> > starts inside the BAR cannot extend past its end, so drop the
-> > port + count - 1 range check.
-> >
-> > Reported-by: syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
-> > Closes: https://syzkaller.appspot.com/bug?extid=3D7134530b25073b4ef373
-> > Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
-> > ---
-> > v2: Check alignment per access size in the case 2/case 4 branches
-> >     instead of using IS_ALIGNED() with a user-controlled count, and
-> >     drop the now-redundant port + count - 1 range check.
-> >     (Bjorn, David, sashiko)
-> > ---
-> >  drivers/pci/pci-sysfs.c | 7 ++++---
-> >  1 file changed, 4 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> > index 1f21856aac8a..8118cc6b3a61 100644
-> > --- a/drivers/pci/pci-sysfs.c
-> > +++ b/drivers/pci/pci-sysfs.c
-> > @@ -1209,9 +1209,6 @@ static ssize_t pci_resource_io(struct file *filp,=
- struct kobject *kobj,
-> >         if (port > pci_resource_end(pdev, bar))
-> >                 return 0;
-> >
-> > -       if (port + count - 1 > pci_resource_end(pdev, bar))
-> > -               return -EINVAL;
-> > -
-> >         switch (count) {
-> >         case 1:
-> >                 if (write)
-> > @@ -1220,12 +1217,16 @@ static ssize_t pci_resource_io(struct file *fil=
-p, struct kobject *kobj,
-> >                         *(u8 *)buf =3D inb(port);
-> >                 return 1;
-> >         case 2:
-> > +               if (port & 1)
-> > +                       return -EINVAL;
-> >                 if (write)
-> >                         outw(*(u16 *)buf, port);
-> >                 else
-> >                         *(u16 *)buf =3D inw(port);
-> >                 return 2;
-> >         case 4:
-> > +               if (port & 3)
-> > +                       return -EINVAL;
-> >                 if (write)
-> >                         outl(*(u32 *)buf, port);
-> >                 else
-> > --
-> > 2.43.0
-> > =20
->=20
-> Hi David,
->=20
-> Gentle Reminder. Please let me know the status of this patch.
+  pcieport 0000:80:1b.4: Data Link Layer Link Active not set in 100 msec
+  pcieport 0000:80:1b.4: pciehp: Slot(25): Card not present
+  thunderbolt 0000:8a:00.0: RX ring 0 already stopped
+  ...
+  Oops: general protection fault, kernel NULL pointer dereference 0x32b
+  Workqueue: async async_run_entry_fn
+  RIP: 0010:tb_resume_noirq+0x3f/0x2e0 [thunderbolt]
+  Call Trace:
+   tb_domain_resume_noirq+0x42/0x60 [thunderbolt]
+   dpm_run_callback+0x4b/0x140
+   device_resume_noirq+0x16d/0x2c0
+   async_resume_noirq+0x21/0x30
+   async_run_entry_fn+0x36/0x160
 
-You need to prod the relevant maintainer, not me.
+The link to Barlow Ridge is not up in time when the Root Port returns
+from D3cold, so the devices below it are marked disconnected and
+pciehp_resume_noirq() considers the device in the slot replaced.  It
+then synthesizes a Presence Detect Changed event with pciehp_request(),
+which wakes the IRQ thread through irq_wake_thread().  Unlike hardirq
+delivery, irq_wake_thread() is not inhibited by suspend_device_irqs(),
+so the IRQ thread starts bringing down the slot immediately, in the
+middle of the noirq phase.
 
-David
+The PM core resumes the devices below the hotplug port asynchronously
+and holds no device_lock in the noirq and early phases, so the removal
+is not serialized against their ->resume_noirq() callbacks:  The IRQ
+thread unbinds the NHI (nhi_pci_remove() -> tb_domain_remove() ->
+tb_stop(), which sets tb->root_switch to NULL) while nhi_resume_noirq()
+-> tb_resume_noirq() runs concurrently on another CPU and dereferences
+tb->root_switch.  Before commit e56249d8a68e ("thunderbolt: Set
+tb->root_switch to NULL when domain is stopped") the pointer was left
+dangling instead.  Any other driver below a hotplug port is exposed to
+the same race.
 
->=20
-> Thanks
->=20
-> Deepanshu
+Only record the synthesized event in pciehp_resume_noirq() and wake the
+IRQ thread from pciehp_system_resume(), the ->resume() callback used for
+system sleep transitions.  By then all noirq and early callbacks have
+completed, and device_resume() holds the device_lock across each
+driver's ->resume() callback, which the removal path acquires in
+device_release_driver().  This is also where pciehp_check_presence()
+already requests bringing down slots vacated during system sleep.
+Runtime resume is left alone.
+
+The old devices are still marked disconnected in the noirq phase, so
+that their drivers and any nested hotplug ports (see commit e3260237aaad
+("PCI: pciehp: Avoid unnecessary device replacement check")) keep
+seeing them as gone.
+
+A real hotplug interrupt cannot consume the deferred event earlier
+either, as long as PME is native:  pciehp_suspend() then masks the
+hotplug interrupt and only pciehp_resume() unmasks it again.  Without
+native PME the interrupt stays enabled across system sleep, and an event
+latched after resume_device_irqs() can still run the IRQ thread during
+the early phase, but no longer during the noirq phase.
+
+pciehp_resume_noirq() also serves as ->restore_noirq() and is likewise
+followed by ->resume(), so resume from hibernation is fixed as well.
+
+Fixes: 9d573d19547b ("PCI: pciehp: Detect device replacement during system sleep")
+Cc: stable@vger.kernel.org # v6.11+
+Signed-off-by: Cole Leavitt <cole@unwrap.rs>
+---
+
+Notes:
+    Tested on a Lenovo ThinkPad P16 Gen 3 (Core Ultra 9 275HX, JHL9580
+    Barlow Ridge host, I226 Ethernet), in daily use with s2idle since
+    2026-09-17.
+
+ drivers/pci/hotplug/pciehp_core.c | 26 ++++++++++++++++++++++++--
+ 1 file changed, 24 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 2cafd3b26f34..850a6d3bb08a 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -302,12 +302,19 @@ static int pciehp_resume_noirq(struct pcie_device *dev)
+ 		 * during system sleep, mark the old device disconnected
+ 		 * (to prevent its driver from accessing the new device)
+ 		 * and synthesize a Presence Detect Changed event.
++		 *
++		 * Don't wake the IRQ thread yet:  The PM core resumes the
++		 * devices below asynchronously and without holding their
++		 * device_lock in the noirq and early phases, so bringing
++		 * the slot down now would race with their ->resume_noirq()
++		 * and ->resume_early() callbacks.  pciehp_system_resume()
++		 * wakes the IRQ thread once those have completed.
+ 		 */
+ 		if (pciehp_device_replaced(ctrl)) {
+ 			ctrl_dbg(ctrl, "device replaced during system sleep\n");
+ 			pci_walk_bus(ctrl->pcie->port->subordinate,
+ 				     pci_dev_set_disconnected, NULL);
+-			pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
++			atomic_or(PCI_EXP_SLTSTA_PDC, &ctrl->pending_events);
+ 		}
+ 	}
+ 
+@@ -327,6 +334,21 @@ static int pciehp_resume(struct pcie_device *dev)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM_SLEEP
++static int pciehp_system_resume(struct pcie_device *dev)
++{
++	struct controller *ctrl = get_service_data(dev);
++
++	pciehp_resume(dev);
++
++	/* Act on events deferred by pciehp_resume_noirq() */
++	if (atomic_read(&ctrl->pending_events))
++		pciehp_request(ctrl, 0);
++
++	return 0;
++}
++#endif
++
+ static int pciehp_runtime_suspend(struct pcie_device *dev)
+ {
+ 	pciehp_disable_interrupt(dev);
+@@ -362,7 +384,7 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
+ #ifdef	CONFIG_PM_SLEEP
+ 	.suspend	= pciehp_suspend,
+ 	.resume_noirq	= pciehp_resume_noirq,
+-	.resume		= pciehp_resume,
++	.resume		= pciehp_system_resume,
+ #endif
+ 	.runtime_suspend = pciehp_runtime_suspend,
+ 	.runtime_resume	= pciehp_runtime_resume,
+-- 
+2.54.0
 
