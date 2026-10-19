@@ -1,53 +1,52 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792448528;
-	b=HDz0ob3tqFS6V8GdeRn8wABKRs5Dd5JZJkHT46Gwp69J0wOVW0gnbJyuaQ9mwZTbf4mL
-	 QsMP/xDsPeBXCpTu0VGYR0SqRtb3BfE23JvfbB7WF87ZWZJ0t1Dz4kTNyUFt48oTlzMZw
-	 mdUigHsYz+WXgcJO8Inbzauv7hY1y1pv+tnPbrq1Kdff9BZz4vau7wZfydAn1yqWSQdgG
-	 FXPa4BJK4vDCA0i9YD77SNd518rNh4/RNy4hbdVjoTYJblpt9NTBQ+PzaRAYjv9Yoiq/e
-	 pXAIRyoF9c9bU67B9uwYxH036L4jqsAAwn2RP2YK2SBGCUF81gdPnV2nb3ENVPc6kUA==
+	t=1792449617;
+	b=dKiw7FUcTRuw6UUz+xVsqf5IlQoBkVBM2EST5mWiq4lcz+ni4ZFf5TWIlo0YPGicmD4c
+	 JYjSEUr2gHPGvKFJyC6MsNjM02fVJAMyg56QzVzPAeLf664HJY8SiEz6bZmhx29SgjXY8
+	 VWxT1XBQlvBIbpe56uDSMHRgBDKXKQajV6JzcjMAmJ/dQaueUKDDY6L6rYjqnLwdqYriV
+	 JYDcGhJipu8ITPROsxIfewxVVoGswgG8kzAGqOjxBHryphrc0bGewBF+1AxJ741R04/w+
+	 pqIcSQYDREkppLrmsp3IHHO4k2lIXEZQkjOIk6RvhziG8pDlKMQ2Xrk8vOwv5bBkn+A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792448528;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792449617;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=Jvk59d9ewbiErKIPtDSsfuozYDEOraaR9TdxvyL2+sE=;
-	b=gUqYv2XeI/vD7sbTXlPWKbJOXWFmfGj5YF0yOSEBqVN61gm1RyMz1lUnrTLHLnloXhxv
-	 RKObig2dVpRSNGWME2GkeYYsAjQQwJ4HxtYaffxjN/wG3IBfue+CJcFSCKyHJL8fiFT+2
-	 WtzhUQkvXnhRc5kBQRxKR8EWdihr/fGtwZtcN7FTX+Iywh4JvGIOu0TRZ72NxavWSL5b1
-	 zOJEc+3ppF+uKlyahXFLvAkpYnltdKnFvAQuijNhlqj6rxvNVaQIB2TcntMkKi804vWtn
-	 1syVVe9m9noo7ergA+vxWbW1n6UOB/GQK8s7+/JbnS++nMlTQHU2yBXsCHqXTeooTFA==
+	bh=YmuZwfeBT5PsQnS4UwCJoYlbiqEwj60N4JH54SSWZiA=;
+	b=NoOwAldkRjRFNE3RexYhly5mcX5V4OxdRZ6Str1lB/ldt5oVJ3zT9IuXDSF/2gaZvGS9
+	 8QZGNfY7hYa/uXpxnwM0RsTcxwNritvKejg2fYsjrvfAdI47+SJT45xwL4SUMB5t9hhu6
+	 TaPVVb9SREwt5htFMuuE0qBKxcNC/NpwM1YXXali37MrE50/a4BKuHqvDc9THd59WRure
+	 LKE2ic7nQhrEoj7Mc9RHWKe16Cw0C0bsqLTEE49Xr9roof5lzjGhdNnm5c9u4/TFTBN8Z
+	 Fqlt++zBL+IHDdsmV35Xufz204CrDI3wuYU6ALGdj62FhPzBbzcu7K5j1igyFkmCYSQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FVHeHKnj;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=C5Izwnj2;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D906606A31F
-	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 22:22:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E3FE606A31A;
+	Mon, 19 Oct 2026 22:40:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FVHeHKnj
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E77481F000C5;
-	Mon, 19 Oct 2026 22:22:07 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=C5Izwnj2
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 041071F000C4;
+	Mon, 19 Oct 2026 22:40:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792448528;
-	bh=Jvk59d9ewbiErKIPtDSsfuozYDEOraaR9TdxvyL2+sE=;
+	s=k20260515; t=1792449617;
+	bh=YmuZwfeBT5PsQnS4UwCJoYlbiqEwj60N4JH54SSWZiA=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=FVHeHKnjI258cSzmWvP3OsFQQH5RMmQAgntMEIENO6IVvGmDCaAQqLvh7Tbr3U/zd
-	 MH8VIeeVinVC+IdAPqKFxI1e7noUFKyxvakorknV873jydGDdFZnFzqYvKUKpfk8PH
-	 DHO6RP0VPLP9Bk2Dgxn7hnVYRDToQ/vf8iQcgip4MPBLkJoLkc5D/fbePdAeGq0RFi
-	 NpPSJoJ3MpMqEHtJpRzcLa4Ayv0FRobtKJXLsg1YdvZ/TvCqLrz17otNIahuWDhQaf
-	 tOJizlgKpw7dQ1pjPxqtJkSgBEHcivU+zZlg83d3sX+6x2439DYOEyISlYNdSkjzrL
-	 lxQJ+GsVwWuqw==
-Date: Mon, 19 Oct 2026 17:22:06 -0500
+	b=C5Izwnj2RRmKah5xBRTSrdyIMMjxtS7nlh9XRcuOwmd8X/YBi2B0KUdKJ7gv77a4E
+	 ZXLt/1Hl3Wh4DeMi1LbBrkBqufAFpu3AKu8rRvhYUNRjKNIatsZOer0vQqVY4jxV4V
+	 lHKwoTwv+tB966v0bt0E6v6HORGoP+GspTNZ+rkXoQ5qpD18fwYDXpiQjCf+31jYbn
+	 uJJtWhDqQvrtGALkGId5bmBtGkM9+qnd0vwH+TcH9nnCZcqETfOqaRcrY973tcunYf
+	 gGbb2PN0V/p02Fx+MUeJ6vYrwOjorjR9davRvzFGNBwjLfHviT2FkUXadIdNhua/3I
+	 x0Oy4bSgtRG+g==
+Date: Mon, 19 Oct 2026 17:40:15 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mario Limonciello <mario.limonciello@amd.com>
-Cc: Alex Deucher <alexander.deucher@amd.com>, amd-gfx@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org, Oz Tiram <oz@shift-computing.de>,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/2] Revert "drm/amdgpu: Fix VFCT bus number matching
- with soft filter"
-Message-ID: <20261019222206.GA2276349@bhelgaas>
+To: Deepanshu Kartikey <kartikey406@gmail.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
+Subject: Re: [PATCH] PCI: sysfs: Reject unaligned resource I/O port accesses
+Message-ID: <20261019224015.GA2281064@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,108 +58,45 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a8838ac4-ee24-486a-ab57-19d7c6a8901c@amd.com>
+In-Reply-To: <20260809045946.15638-1-kartikey406@gmail.com>
 
-On Mon, Oct 19, 2026 at 02:47:08PM -0500, Mario Limonciello wrote:
-> +Bjorn
-> +linux-pci
+On Sun, Aug 09, 2026 at 10:29:46AM +0530, Deepanshu Kartikey wrote:
+> pci_resource_io() validates that off+count stays within the BAR's
+> range but never checks that the resulting port is aligned to the
+> access size. A pwrite64()/pread64() on a resourceN file with an odd
+> offset and count=2 or count=4 reaches outw()/outl() with a misaligned
+> address. On arm64 this becomes a store/load to a Device-memory
+> mapping (PCI_IOBASE + port), which architecturally requires natural
+> alignment, causing an alignment fault and kernel oops.
 > 
-> On 10/19/26 14:41, Alex Deucher wrote:
-> > This reverts commit 11c141672045ffc0187aa604f2c0f597bc334fb2.
-> > 
-> > This was added to work around systems where the user specified
-> > pci=realloc on the kernel command line.  The firmware specifies the
-> > BDF to match, but those may not be the same with pci=realloc. This
-> > causes mismatches when there are multiple cards of the same type in
-> > the system and failure of the cards to initialize. pci=realloc is
-> > not the most common case so let's revert for now to fix the regression.
-> > We probably need to store the original BDF in the PCI subsystem so
-> > we can use it match later if the BDF has changed.  This can be properly
-> > reinstated once we have a general solution.
-> > 
-> > Closes: https://gitlab.freedesktop.org/drm/amd/-/work_items/5762
-> > Cc: Mario Limonciello <mario.limonciello@amd.com>
-> > Cc: Oz Tiram <oz@shift-computing.de>
-> > Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
-> > ---
+> Reject misaligned accesses before they reach the low-level accessor.
 > 
-> I hate to trade one regression for another; but arguably pci=realloc is the
-> less common than the case of two identical GPUs.
-> 
-> Bjorn,
-> 
-> You open to storing the original BDF in the device somewhere and letting
-> drivers access it?
+> Reported-by: syzbot+7134530b25073b4ef373@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=7134530b25073b4ef373
+> Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
 
-I mentioned in the other thread that saving the original bus number in
-a struct pci_bus or similar might be practical?
+Applied to pci/sysfs for v7.4, thanks!
 
-> That's what I suggested here in response to the other way (let driver detect
-> pci=realloc).
+Hopefully the last patch for v7.4.
+
+> ---
+>  drivers/pci/pci-sysfs.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> https://lore.kernel.org/linux-pci/4284d6d4-244d-4d49-bbdb-f1bda89fc1e8@amd.com/
-> >   drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c | 45 +++---------------------
-> >   1 file changed, 5 insertions(+), 40 deletions(-)
-> > 
-> > diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
-> > index f9315e0472fe9..6bbca70a4e2eb 100644
-> > --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
-> > +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
-> > @@ -428,45 +428,6 @@ static bool amdgpu_read_disabled_bios(struct amdgpu_device *adev)
-> >   }
-> >   #ifdef CONFIG_ACPI
-> > -/**
-> > - * amdgpu_acpi_vfct_match() - Check if a VFCT entry matches the device
-> > - * @adev: AMDGPU device
-> > - * @vhdr: VFCT image header to check
-> > - *
-> > - * VFCT entries contain the PCI bus number as recorded during BIOS POST.
-> > - * On systems where the kernel renumbers PCI buses (e.g. pci=realloc or
-> > - * resource conflicts), the runtime bus number may differ from the POST
-> > - * value.  Match by device identity (vendor + device + function) and use
-> > - * the bus number as a preference: exact bus match is preferred, but when
-> > - * the bus numbers disagree we accept the entry if the device identity
-> > - * matches.
-> > - *
-> > - * Returns: 0 on match, -ENODEV on no match
-> > - */
-> > -static int amdgpu_acpi_vfct_match(struct amdgpu_device *adev,
-> > -				  VFCT_IMAGE_HEADER *vhdr)
-> > -{
-> > -	/* Vendor and device IDs must always match */
-> > -	if (vhdr->VendorID != adev->pdev->vendor ||
-> > -	    vhdr->DeviceID != adev->pdev->device)
-> > -		return -ENODEV;
-> > -
-> > -	if (vhdr->PCIDevice != PCI_SLOT(adev->pdev->devfn) ||
-> > -	    vhdr->PCIFunction != PCI_FUNC(adev->pdev->devfn))
-> > -		return -ENODEV;
-> > -
-> > -	/* Exact bus number match - preferred */
-> > -	if (vhdr->PCIBus == adev->pdev->bus->number)
-> > -		return 0;
-> > -
-> > -	/* Bus mismatch but device identity matches (PCI renumbering case) */
-> > -	dev_notice(adev->dev,
-> > -		   "VFCT bus number mismatch: table %u != runtime %u, matching by device identity (vendor 0x%04x device 0x%04x)\n",
-> > -		   vhdr->PCIBus, adev->pdev->bus->number,
-> > -		   adev->pdev->vendor, adev->pdev->device);
-> > -	return 0;
-> > -}
-> > -
-> >   static bool amdgpu_acpi_vfct_bios(struct amdgpu_device *adev)
-> >   {
-> >   	struct acpi_table_header *hdr;
-> > @@ -503,7 +464,11 @@ static bool amdgpu_acpi_vfct_bios(struct amdgpu_device *adev)
-> >   		}
-> >   		if (vhdr->ImageLength &&
-> > -		    !amdgpu_acpi_vfct_match(adev, vhdr)) {
-> > +		    vhdr->PCIBus == adev->pdev->bus->number &&
-> > +		    vhdr->PCIDevice == PCI_SLOT(adev->pdev->devfn) &&
-> > +		    vhdr->PCIFunction == PCI_FUNC(adev->pdev->devfn) &&
-> > +		    vhdr->VendorID == adev->pdev->vendor &&
-> > +		    vhdr->DeviceID == adev->pdev->device) {
-> >   			adev->bios = kmemdup(&vbios->VbiosContent,
-> >   					     vhdr->ImageLength,
-> >   					     GFP_KERNEL);
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 5ec0b245a69b..72f0404a34e9 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1175,6 +1175,9 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
+>  	if (port + count - 1 > pci_resource_end(pdev, bar))
+>  		return -EINVAL;
+>  
+> +	if (!IS_ALIGNED(port, count))
+> +		return -EINVAL;
+> +
+>  	switch (count) {
+>  	case 1:
+>  		if (write)
+> -- 
+> 2.43.0
 > 
