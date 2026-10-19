@@ -1,100 +1,171 @@
-Received: from mail-m19731116.qiye.163.com (mail-m19731116.qiye.163.com [220.197.31.116])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31F004825AC
-	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 06:08:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.116
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id DA8E736B913;
+	Mon, 19 Oct 2026 06:44:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792390089; cv=none; b=EpmoG7z5bhatK2vw/jr0fkjGr/Uy60Zw8YbyUfq7xN+KE3Bk4TjSk6rgy9MuGCCT/D6dW1ydtkm0J13dl9baogUTBmUnZgRV7YK30pkbMBCB/fv8WGH8JdsFs6Eonh54PiqDMmGOJFyru63WEpygV2+HiIhqhc7BSXs/NP7pGkE=
+	t=1792392284; cv=none; b=dW0ywi3kzWZ2ChPuAfhpGnMgqI1AMLn/HHd8qD/DU8zPgTOCqrbkw6cDs08y/Okv/Lf4xIYjECchjRWPp1akpYGV9EbR34urfQ+D5HNQRySImRRzOAzW7iJKfObwbJ6hFcEiMH9sSjj5D96ey/ODfavVK83WVZ+LkwwqN0YuD/U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792390089; c=relaxed/simple;
-	bh=JB82PfHE7hAsuihF68ENZAUlg6qwTakPNhuhVUHPgto=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=NsxcVfvsQuxREPiqspXTZvvFN+sbTsFWj3650m+sDY5Ro0zn0TjtwDVLu2YuZKm/ne285YLtDonQPeAgG97tHoKxVcTlBdEB5v66S7gfxeAZ1Y+W21ZusbpfVqg//1i3N4fzLHo7m5eZecMXGLrmgyGWnQ2CG8VyUciqR7obfLQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=TD9n+NTh; arc=none smtp.client-ip=220.197.31.116
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1792392284; c=relaxed/simple;
+	bh=TaxUYCazpzjqvEXq1Wn1UVrlD7Nftpov0ZTJAH6790k=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=k+30jsGZN6bIBL9L8haq/J/FkG1X7tIRzQPsXiPQrK6qsUKedXg/QQRj+NrxQHXlZMv6DShif0fDnQ3axIyTPRqqZT+vxvehvvIqsIPhrU75d1BNbHcsQjNnLJxfhxpnsufRox/C5WGogkngHhNE0YF2b/NesP9Tw3Vn8Myh/+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=NgUBhXNE; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="TD9n+NTh"
-Received: from [172.16.12.48] (unknown [61.154.14.86])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 517613f42;
-	Mon, 19 Oct 2026 08:25:13 +0800 (GMT+08:00)
-Message-ID: <d6becae5-df39-422b-8d2c-f15efb4ef4a5@rock-chips.com>
-Date: Mon, 19 Oct 2026 08:25:09 +0800
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="NgUBhXNE"
+Received: from CPC-namja-026ON.localdomain (unknown [4.213.232.17])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 7C72320B7168;
+	Sun, 18 Oct 2026 23:44:32 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 7C72320B7168
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1792392275;
+	bh=2DFMNxT5EAxE+zkNjVZeNr8HwIMDEtuggVJLWaMvr2Y=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=NgUBhXNEskg+Kitot3pNbm0DXRI7kLB5TKAysCy3gYO5WJHpWyZ95Dm+X20a1dfi5
+	 3EGWHYcVFej4i3PT5Km2+czyAsE52woC6Yo/Rn7ib0URfAzhgT+cBxQ08/pWDW48ap
+	 stwwGHGotaFO/1k4ZoaFX6RbJ2cxk1K0exFJ+/yw=
+From: Naman Jain <namjain@linux.microsoft.com>
+To: changfengnan@bytedance.com
+Cc: lrizzo@google.com,
+	hch@infradead.org,
+	tglx@linutronix.de,
+	maz@kernel.org,
+	rizzo.unipi@gmail.com,
+	pabeni@redhat.com,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	bhelgaas@google.com,
+	netdev@vger.kernel.org,
+	linux-nvme@lists.infradead.org,
+	guzebing@bytedance.com,
+	kbusch@kernel.org
+Subject: Re: [PATCH v5 0/7] Global Software Interrupt Moderation (GSIM)
+Date: Mon, 19 Oct 2026 06:44:29 +0000
+Message-ID: <20261019064429.362555-1-namjain@linux.microsoft.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <8e816cdc-a714-49d8-943f-677617682352@bytedance.com>
+References: <878q5f5tlt.ffs@fw13> <aqD7FDvDhiEF_u0N@infradead.org> <CAMOZA0Lt99A1H45Hp0Snq4aSEw-Xr_Mh4xA--Cx0Qh_6vsQvOQ@mail.gmail.com> <8e816cdc-a714-49d8-943f-677617682352@bytedance.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
- linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
- Manivannan Sadhasivam <mani@kernel.org>
-Subject: Re: [PATCH] PCI: dw-rockchip: Enable INTx affinity support
-To: Thomas Gleixner <tglx@kernel.org>
-References: <1790664898-207928-1-git-send-email-shawn.lin@rock-chips.com>
- <atRLsp1qUA_sGS-0@debian> <87y0bubws7.ffs@fw13>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <87y0bubws7.ffs@fw13>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa1518c524103a4kunm24f5ed8a5ff813
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlDTxlPVh9LHUsYSU5MHx8aQlYVFA
-	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUpLSU
-	9PT0hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=TD9n+NTh0EX+TpPG74TbMH6mKTeQLOCgnsFyB63BJkXrvDa+A7RnAHBg15/jS8FdsfitzXlgRk0TY93MtG+j/j/imUrzWs7+stzxiupdg5fIAZynzQI8qEsp4VmEOlBvNtw8DqGaG3Y0X/8Z2WtQ9oRck5/pJ4tp1+bVuG/ipUk=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=7M+DcHmAl0Qr6G2WXxfJbEG7iMvZDkTSZZ2o71deWKo=;
-	h=date:mime-version:subject:message-id:from;
 
-Hi Thomas
+On Wed, Sep 09, 2026 at 04:52:27PM +0800, Fengnan wrote:
+> 在 2026/9/9 16:06, Luigi Rizzo 写道:
+> > On Wed, Sep 9, 2026 at 8:25 AM Christoph Hellwig <hch@infradead.org> wrote:
+> >> On Sat, Sep 05, 2026 at 10:30:22PM +0200, Thomas Gleixner wrote:
+> >>>> it appears that GSIM is only effective in scenarios where multi disks at very high
+> >>>> IOPS; in some cases, there was a noticeable performance regression.
+> >>>> If there’s something wrong with my configuration, please correct me.
+> >>> So we have a NVME specific mechanism to tackle the same problem and a
+> >>> more generic version which is subsystem "independent".
+> >> I'm not sure they tackle the entirely same problem, although they are
+> >> very related.
+> > There is overlap but it is accidental.
+> > The difference between the two mechanism is the following:
+> >
+> > - GSIM addresses hardware limitations (SoCs that create huge PCIe
+> >    backpressure on each MSIx interrupt, eventually reducing the available
+> >    bandwidth too much, regardless of how many CPUs can process interrupts).
+> >    The goal here is to throttle the total MSIx rate, blocking them at
+> >    the source (PCIe device) rather than later in the interrupt controller.
+> >
+> > - the NVME mechanism (and NAPI) aim to amortize interrupt processing
+> >    overhead. It does so by recreating some fine grained single-source
+> >    interrupt moderation (something that NICs do in hardware, but NVME
+> >    does not, with 100us being way too coarse for modern SSDs) and an
+> >    adaptive scheme to adjust the delay and decide when to kick in.
+> That's a great summary.
+>
+> As for generic solutions, I've tried several approaches before, but none
+> of them
+> could achieve the same or close results as NVMe adaptive interrupt polling.
+> I'm still experimenting with different options.
+>
+>
+> >
+> > I think there is a reason for both.
+> >
+> > GSIM because it is more general and addresses an issue the others cannot handle
+> > the subsystem-specific scheme because they can be more efficient
+> > (eg they can hook into existing helpers like the threaded irq handler,
+> > call directly the handler without going through the full irq chain,
+> > use more targeted heuristics to decide when to kick in).
+> >
+> > cheers
+> > luigi
 
-在 2026/10/19 星期一 4:04, Thomas Gleixner 写道:
-> On Sun, Oct 18 2026 at 10:05, Manivannan Sadhasivam wrote:
->> On Tue, Sep 29, 2026 at 02:54:58PM +0800, Shawn Lin wrote:
->>> Leverage the interrupt redirection infrastructure to enable CPU
->>> affinity support for the legacy INTx interrupts. The INTx virqs are
->>> demultiplexed by the chained handler of the "legacy" interrupt, whose
->>> affinity cannot be changed, so affinity control for the INTx virqs is
->>> achieved by redirecting the handler to run in IRQ work context on the
->>> target CPU.
->>>
->>> Mask the INTx source in .irq_pre_redirect() before the handler is
->>> redirected: the legacy interrupt is level triggered, so an unmasked
->>> line would keep re-firing the chained interrupt until the redirected
->>> handler runs.
->>>
->>> Same approach as the DesignWare core, commit eaf290c404f7c39f2 ("PCI:
->>> dwc: Enable MSI affinity support").
->>>
->>> Test was done on RK3588 EVB1 board with an NVMe with pci=nomsi
->>> parameter. The /proc/interrupts columns are trimmed for brevity.
->>>
->>>    # cat /proc/interrupts | grep INTx
->>>    51:  137 0 0 0 0 0 0 0 INTx 0 Edge PCIe PME, nvme0q0, nvme0q1
->>>    # echo 10 > /proc/irq/51/smp_affinity
->>>    # dd if=/dev/nvme0n1p1 of=/dev/null bs=1M count=200
->>>    200+0 records in
->>>    200+0 records out
->>>    209715200 bytes (210 MB, 200 MiB) copied, 0.182021 s, 1.2 GB/s
->>>    # cat /proc/interrupts | grep INTx
->>>    51:  137 0 0 0 946 0 0 0 INTx 0 Edge PCIe PME, nvme0q0, nvme0q1
->>>
->>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->>
->> I'd like to get an Ack from Thomas for this patch since I'm not an irqchip
->> expert to decipher whether this patch is valid or not.
-> 
-> I'm happy to look at it, but I can't be bothered to fish it out from a
-> mail archive. Can you please bounce me the original submission?
+Sharing the test results with GSIM and other NVME specific approaches
+here as well. Previously discussed in
+https://lore.kernel.org/all/1d12109d-2f47-4ca5-af7b-66c032a379a7@linux.microsoft.com/
 
-Sure, you can check it from:
+There are couple of implementations posted on NVME list, including mine,
+to solve nvme issues. Below data also suggests that while GSIM may bring
+generic improvements in certain cases, we may still need some NVME
+specific changes to address hardirq workload problems.
 
-https://lore.kernel.org/linux-pci/87y0bubws7.ffs@fw13/T/#mf0d53a0e27cb142ec0a2b09418ea2a7f04dbb321
+Background: I was debugging soft lockup issues where sufficiently high FIO
+workload can lockup the CPU cores on which high number of NVME PCI MSI
+interrupts are affined.
 
-> 
-> 
+System: 128 ARM64 vCPUs, two NUMA nodes (CPUs 0-63 / 64-127),
+There are four data NVMe controllers, each with 14 interrupt-driven I/O 
+queues. Corresponding queue vectors from the four controllers are routed
+to the same CPU. Therefore:
 
+   vectors per affected CPU:       4
+   affected interrupt CPUs:       14
+   total data-NVMe I/O vectors:   56
+
+The affected CPUs are:
+   0, 10, 19, 28, 37, 46, 55,
+   64, 74, 83, 92, 101, 110, 119
+The reproduced soft lockups happen on exactly those 14 CPUs.
+
+The production fio command is equivalent to:
+   --filename=dev1:dev2:dev3:dev4
+   --numjobs=128
+   --iodepth=256
+   --group_reporting
+
+so the potential total is:
+   128 x 256 = 32,768 requests
+
+The NVMe hardware queue depth is 1,024, with 1,023 usable entries.
+
+Default GSIM changes could not prevent soft lockup. Luigi suggested
+a timer push change in addition to GSIM changes, which prevents the
+lockups, but has an impact on latency and throughput. These are marked as
+"push" in below tables.
+
+NVMe fallback: changes I proposed in NVME, here:
+https://lore.kernel.org/all/20261009050556.2817978-1-namjain@linux.microsoft.com/
+threaded NVMe IRQs: Default kernel with nvme.use_threaded_interrupts=1
+
+High-load results are medians of three runs, you can find complete 
+minimum-to-maximum range:
+
+                               IOPS median       complete range
+   NVMe fallback                 5.004M          5.002-5.004M
+   threaded NVMe IRQs            3.140M          3.100-3.169M
+   GSIM fixed 10 us + push       1.962M          1.935-2.025M
+   GSIM fixed 30 us + push       1.790M          1.775-1.822M
+   GSIM fixed 50 us + push       1.744M          1.736-1.746M
+
+Completion latency:
+                               mean        p99          p99.9
+   NVMe fallback              6.533 ms    14.352 ms     16.908 ms
+   threaded NVMe IRQs        10.421 ms    22.151 ms     24.510 ms
+   GSIM fixed 10 us + push   16.570 ms    38.011 ms    270.533 ms
+   GSIM fixed 30 us + push   18.283 ms    40.108 ms    492.831 ms
+   GSIM fixed 50 us + push   18.743 ms    40.632 ms    541.065 ms
+
+More details and numbers in my RFC series.
+
+Regards,
+Naman
