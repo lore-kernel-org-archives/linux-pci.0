@@ -1,78 +1,72 @@
-Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010012.outbound.protection.outlook.com [52.101.201.12])
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010046.outbound.protection.outlook.com [52.101.201.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 809554848AC;
-	Mon, 19 Oct 2026 11:14:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F2FC4DD3CD;
+	Mon, 19 Oct 2026 11:16:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.46
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792408453; cv=fail; b=h6a4PPk1TJ8frbww/unOkEiyHhNVo+D7ZoaXP3mOoMNer9xN3dNZkCVwJTGttsc3f6082losLZpltTXfUsyI0+tj89LPj7nP0CDSPfr9q56I+Lm/3c2w1wPvemaR2vbjHJBik+JguGmVOvPi0WEptgDZZEVNJRLnHBLH0FgVT9A=
+	t=1792408573; cv=fail; b=kY3h3GEps84JYVUkDVxp4DPC2Rsc7gNJfIUEFuDb+T6xw23Vsex+T2bjkIWzsEdJFUUpwOknEnA72a15V1BQwkB6IFe923i/8n3VdTWgSd+CGW4yCqUGZjZV4MX2QAnb8xox05WD/qH2Pi2uvw5hqAaxYDVgkYUk6BeMde1utAI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792408453; c=relaxed/simple;
-	bh=4V1EeEIDpUZPJwumvCNO2Vk/v8ckyTzKFq7FJVmmFL8=;
+	s=arc-20240116; t=1792408573; c=relaxed/simple;
+	bh=ONnP6kVvSEWyQC6p7tpxgfBPeBW9bNZJgn7p2e7JsG4=;
 	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=awLGBLtJ7llpgnkb0HI10RzOFJC1fxZLCzbgEkMcHk52Wf6sFhqKkOzT/dN0KV313hWak0DA+eqJNME4GwZiHGMCNL9Ci52ufbyPcR9l0VD4fOtpkaUfHDOx8Z3S7/G7REYtfh/ouiQkGCPLbvJy+CtOvMIE9hJtXyWVxFW5LRM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=bf5oWsbk; arc=fail smtp.client-ip=52.101.201.12
+	 Content-Type:MIME-Version; b=umVA80e1rbyRH/zyGdqPOHWCvRFK0yH/+CyQ3njG3K5lNBV9lCWigRJNs6VFrr6+TnYwUFR7CXegHqMTFQJBzPgSSEY1oHB8vlGHwr5OnH09INAfxTl+Ov8UUjfMXBkwSaeU0jmdM8qS2bGwsuJ7Z7bhFbsxHyIcq3kWibIyCe0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=mC2tGMYv; arc=fail smtp.client-ip=52.101.201.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="bf5oWsbk"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="mC2tGMYv"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=xeJOHZdym07a1vAVtLmDlJkYXhzgCVBOpgyBQ+NunwXiVbLGIc3SrGUAzvgHAG57yNpzN2CIGzJR7x53hyLsXhkozh2SDzurcSvpx0L+iUAYKTudj9neLTIVpLHi0UFDo/rUu7UuMBrjyLdFw8SvygLEC0pDUWtQMKMMbDzdJjeowGTs0QMeBg8jdqBGLf5j/q8ASl6yBfX5myJCyaja7tcCVvQFRF5scDm2TBQq5NBHRSxs455xNQiGrgO3bhpK617jxPQMRAljS8gWWtNNjb/dIpH6Ct1PXgXF/valM0Hg8wkQnl/PiHvlH8yAPhSFfjGTGwJp+X8r+VquOWGeIg==
+ b=hI1LoorDyA5jUlSamSZlVyZyhvbnUvrHYzo1cbq+8/nTRw5Vd286GbggoSlk3czXd+bNCrF3PVyT4D/J8ECSUWm7cwwph/bxNxMSsEEYeUuty/wZS8+HWqQ0BWnNRrsb+m+bLvNwjXJ9guy9VkIZw+vsI2aVKjc4qZo1qNJsweYUhB2MG1HBez5ZR7GHjX3EHJxplcUN1SL+EulUK5njyRIyXALcPDRFSy7ZB+j5ccg6qn6YJirEPwj7a4jVMnt7A/IKsTMM2j3z7V+5p12zL4QfuukUKNi086M2a6S9k0kTAIKlibULpFvf5uXp1+qWkT19r7ElVDpKjpyhvJBA9Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=wP8wBXIBuq5ZdlxvFkMbU13JOKJfZV7kPsxH+W00P78=;
- b=nGvPIhUEbhRb2pSFggftw0M0ZKcnpsWj7GWZujSKXvTHHKYFEYMSIUXjNJrDvd7Vrka2EuGb/O99P2KbaM9ydcg6Ck8FXzgK5Wf+ZgzdlHNgNcE0G6GlGW72d2ZAzUwQe88G7TWDls9mzcX54EqEKOjPdTxdU0EkpwPI2QTakdcwFoJbqsKhwFeMv3nh34waSs5cXOxDxuYbIF/lG+H3W/xfC6Ia3Xu200rulpTwBrYl2LU496UDlVrHAbkn0NrjQn1wdWgBbHrCPzbG0v2TZ5l0FvcyCGQ+j17veXkbAcBPrIe7lMqCGcALMVVOwrZsgRU1Gyama2BXY4L5UilUUw==
+ bh=Nsh72XS6tqaHYif0XeAKVWePLkZL7l0kNOfyVSSWWhY=;
+ b=GwVglnP0LNrtGVQYuavkV27yL2LbBDM9rKZPgZa3wVdmAbvceAVSDlcWEyYJ3woPvvFArBTKuED8Yf8vRXNM3sVz3bVyvrLb4MBd5k30giyMrXoQqs8OonQDIxDeeF4WV+iVbersYa76DLQsxFE96CPj/qAGOrW7gx+Ik/JXvUrnzbF6R7pFR8y1hj34Xig12RsWxCBBVRhCJaE2fLN27Aq0Uheto5IL7c+WwWG2usZ2swyaH4qbWMnjx+Dk4wQnz8Vygd0Xp2JeWWxtmMwMk6hLF3Q6R2IqMXpDhgRdKJJWVOzGOG4X5UR1V2Ro5kf3ppFxi91n7zBCclrY/fVenA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=wP8wBXIBuq5ZdlxvFkMbU13JOKJfZV7kPsxH+W00P78=;
- b=bf5oWsbkjlBtIdRymuPO94REd2561ZiTUt4psTwzKEuW/N4Me8qNonLgx1tA/+xpvvZwEAeOtxOtE0Jh5OwYYR0kIdUg5Lt0kkjekhWvp76Yv36e24Tm4meQEqDHLNhDyuIMg7N9tFAYZfY21DljHrbXgUb7lncBwsnoI2qj3lJ/HdoF3jHEwbOw5f3Ozu+cMmu04GBs+u66QndfCB6AcDV5BwPQa+03zfnevg8RDVinxSOGV6xxXNF7Zu5TmDsE2WGRVxoDFzzx6GkxKPLGTLiLG5j5V3k79EDUBO3ZAQED8LJSCbMnw/wN2Fzf3jn5cPWoMMDnWY09CugkYpZ7vA==
+ bh=Nsh72XS6tqaHYif0XeAKVWePLkZL7l0kNOfyVSSWWhY=;
+ b=mC2tGMYvoduAYv1tipXd3BrGIbvR6X91jzOh0AWYYi8IqHUSnF94aQg6Yox1mqPAX3+fpawIepg8qujV/8xDIcAPR6lv7bQ7xvdvih/9J4O+zULTPqtH3iRsvmoqbTY9EOTT0Mji7E398PgU5O3BrvJkt1sZZir+ko1C+3qWE9GWjsU4s+BidZStblEq/WzKff+7skg0YUywfJfdHJUeMTNnVzSlvhT4/GykXZRwqGwaeU33ByRDi1VplOfnXyESwq4Tx5c+bmY1PUe3In+nmvbLiuljiKDU97GG/5atn8WZwaOHwMUZDScuHp6HT/3X1sC3FYlMBDI8xYGAwMpD5Q==
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from DS0PR12MB8245.namprd12.prod.outlook.com (2603:10b6:8:f2::16) by
  SA3PR12MB8045.namprd12.prod.outlook.com (2603:10b6:806:31d::5) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.451.24; Mon, 19 Oct 2026 11:14:07 +0000
+ 15.21.451.24; Mon, 19 Oct 2026 11:16:07 +0000
 Received: from DS0PR12MB8245.namprd12.prod.outlook.com
  ([fe80::e7c5:cfca:a597:7fa4]) by DS0PR12MB8245.namprd12.prod.outlook.com
  ([fe80::e7c5:cfca:a597:7fa4%3]) with mapi id 15.21.0522.017; Mon, 19 Oct 2026
- 11:14:07 +0000
-Message-ID: <549bbe12-d171-4874-902e-bd38bb900957@nvidia.com>
-Date: Mon, 19 Oct 2026 16:43:57 +0530
+ 11:16:07 +0000
+Message-ID: <3df397d8-5cec-448e-8dcd-59252ff240d6@nvidia.com>
+Date: Mon, 19 Oct 2026 16:45:59 +0530
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 11/11] PCI: endpoint: test: Do not relocate fixed MSI-X
- tables
-To: Koichiro Den <den@valinux.co.jp>,
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
- Niklas Cassel <cassel@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+Subject: Re: [PATCH 1/3] PCI: dwc: Add Endpoint reinit helper
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
  Krzysztof Wilczynski <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas
- <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, Rob Herring <robh@kernel.org>,
- Thierry Reding <thierry.reding@kernel.org>, Jon Hunter
- <jonathanh@nvidia.com>, Kishon Vijay Abraham I <kishon@kernel.org>,
- Frank Li <Frank.Li@kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
- Marco Crivellari <marco.crivellari@suse.com>,
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20260923072237.1139013-1-mmaddireddy@nvidia.com>
- <20260923072237.1139013-12-mmaddireddy@nvidia.com> <arPjAeYzVbe5_qo8@ryzen>
- <179198883276.63727.4456977474157450415.b4-reply@b4>
- <wfzi6cojnam2flqksk55i2nghpovhteeirsy3phfa6zxlloy66@oajxjlhqusrb>
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Rob Herring <robh@kernel.org>, Thierry Reding <thierry.reding@kernel.org>,
+ Jon Hunter <jonathanh@nvidia.com>, Vidya Sagar <vidyas@nvidia.com>,
+ Niklas Cassel <cassel@kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+References: <20260923072554.1141864-1-mmaddireddy@nvidia.com>
+ <20260923072554.1141864-2-mmaddireddy@nvidia.com>
+ <dee53d7no6nmzsaousuoqleg6dhigkejvkxmpyihc4v4piipwt@opa366n2sakq>
 Content-Language: en-US
 X-Nvconfidentiality: public
 From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-In-Reply-To: <wfzi6cojnam2flqksk55i2nghpovhteeirsy3phfa6zxlloy66@oajxjlhqusrb>
+In-Reply-To: <dee53d7no6nmzsaousuoqleg6dhigkejvkxmpyihc4v4piipwt@opa366n2sakq>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: PN0PR01CA0003.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:c01:4f::8) To DS0PR12MB8245.namprd12.prod.outlook.com
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: PN0PR01CA0016.INDPRD01.PROD.OUTLOOK.COM
+ (2603:1096:c01:4f::21) To DS0PR12MB8245.namprd12.prod.outlook.com
  (2603:10b6:8:f2::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -82,261 +76,240 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: DS0PR12MB8245:EE_|SA3PR12MB8045:EE_
-X-MS-Office365-Filtering-Correlation-Id: 683e58a6-20b9-40e4-d601-08df2dd2174f
+X-MS-Office365-Filtering-Correlation-Id: 2d284e5d-7079-4eb8-afd3-08df2dd25ee6
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|376014|366016|1800799024|7416014|23010399003|5023799004|10067099003|6133799003|56012099006|4143699003|11063799006|18002099003|261009223027099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	sVCo4w4rk2D5ORWLwltqeSVXVG/e5hjE2OKqUlSpCkx8fzFcODGKBVouciQJEB2R7Du9PhNkQRpKax1lYX7TNDMmo5GvbTmx9rjp6ZznKmnrMW3mnovTrQAA4BhMEDHTlEvj18/mESdsR0GgNMu+SbsTYoFSqm1k/ojATCClSVTAG22W/D7zry+/kDFvmcELkeUfpXBc0Oaa32/XtJ05EQdJP2i8vLX7eXhbjySbhgafCLjWEcBfiTg0tleUs3sn1W+Mbds6Hu4mFvOHkFgztCM17nGOP8NAohMPeWFyfotwQpaP8YE3NBZBiLzqhrfFIXb7CrtGXjIHRemUY5ZVh5a5zON8TRW9309N3a+9LUjyfnnQRHdSjamzkXWXgihEzLSi/ZMFE+aADj8LKLX4xt/V5n1d6niDKeHxUzJuky7E83Pn3cDxm7BssG3Rd6FfJoBQUYtQ41bwMsBXi/7E8klE0OLoomDn7yUXTcyM6q9QfOvOqeR4sznkIqvNsAPMyTT1tDVEL63jNqocQmDvjPMoUATaU10GM2yJABO3S3LrGC/F0nYO6zVCC1FeFxfXpsin0DYJL6fu3XM0QDDHifOYBcCXT7GfJ+TF2ZPsOBlPN81GHAKvIJrDQuCrRd/6E35LyIJxrHARpeltaknR1GTfLy8vcGFCZn1llFL3Ftc=
+	7f/D9bmsN9cKOjYnC+CbFHvhdnIC684gMPRLTQsaoGJVcvCwLq7jqs7Re4AK1VI5QKn+nnG/uQRl9OR30wR2W2u9XBUaLOkg1Et663quPi0ozegXAuK1KMDo/ZPo98ziwEqRG2SJTy7eC4y7MKUKoP3hmu/v/85l2ZZfvuYRJdZkxs6+775sYjaf8PrzQ3Cgq4QVqa6DfLRV3lQA+c6fVLWIoGFNM2yQCVFDrzoxOa0de9H5n2CxnJDw3h0+yKwTf1VfoREowtiQKuW306nsWdaVJoPmlmQUa3reCbfZ+X3DFJeMtQB4G32tfehgL4L6dtJxUSdOXi9o0BiuzjYRgOPoeSjW/6hS9CMESBVtbFeDk1wZPrZfsJq2Kdd+iQ0/KxH/7W94iBIfcllCRrxMGYYGis5cib6swqSFQSc3/vk/yNiZ9PK5Exje2fOQJl6QdZYFjn0dlom5c8LtsqLcyUUvaHJyNcU/U3AvR8D0RksMqqsBrTytnyMC/IO2qQZPOQw2h59C807zs/0xxKUpqL4KRSJG1I5ozE7ob3xy1a8850roa45qNX1x27glR/Vshz0eVtfC7lMBIGUkyeQEsLjAIBRyi8FXD1/bn2Wm8N3MVB96eRRi5BalXNdmQZjz4ok6QiH+ax7D+mgAhXTHW3HLzylls6WAqgL+i0g+ZXQ=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB8245.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(7416014)(23010399003)(5023799004)(10067099003)(6133799003)(56012099006)(4143699003)(11063799006)(18002099003)(261009223027099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?NERoWHpBUDdlM0tUSmhoUy9nZTY2TG0rbGpqcjFDNEVUalBIM2QzWHI0Y3px?=
- =?utf-8?B?VnhCYmR5dmZyMldBUlJESUI1Q3pienRhSlNCWldPbXp1dTFUMGlxcmhhUnVW?=
- =?utf-8?B?bVc1VnlmWjhFNTJzZit2SktmckJvUkhRWWpROGJtNVhMSkxwTXpaMldxNkVL?=
- =?utf-8?B?b3dPZmpLZml2dzhONmNMYjRoT29jZk9DUXlPM2YydHhBQzZBRTNwUWRJZmFW?=
- =?utf-8?B?NnVIWlAwVDhldkl6U3l2bFhtWlYwVjRUeG5FSk9wWSs3Mm5uNThWUWlCVnF1?=
- =?utf-8?B?T3dtdkE0b3dPNDBYajNGY0RBZTZJSVF2cGFtclRGYmQyellyOGZFcUxYeWtG?=
- =?utf-8?B?dWZndmV4ZHBvRDBZSzFuaWlUd2xIYUtLaTFaM1hpbGFMbTVuOVprNFJ2NG9B?=
- =?utf-8?B?ZUFZa0dnOEZTK25hM3dqSmlLS2R0citTeGdDajlvb2pXWG5rVXVHYTJrOW96?=
- =?utf-8?B?WFJlemZXbTVwdkpJN2Z5YWxreE1GTkdJZFQ1SkY2MjI2ZitqUktSZlJJYjA5?=
- =?utf-8?B?NlJQZW5aUlFsY09Qb1M1bmVpWmFEaEtIdEUzVFBxQk91SzdxWVpNZnFzTXM5?=
- =?utf-8?B?UEFUbEJxY3hDK3NtQjllRWNOQzEra1QzdDVoVkdnRmFjcTR1QWQ2RlNZM0lY?=
- =?utf-8?B?Z2NHTGlGWFh4UjRjTkVrRFJFallycjR3dG8xYnk4Wno5VmplZDFza2VDNUl3?=
- =?utf-8?B?YVBjNkpPRzJiMnlXWjJKbU1Vd1pPb1plZHhKbktLTlJJK3ZhZ1lDYy9HTk5i?=
- =?utf-8?B?U1RucEJUeFBZRG1sdHRyZGZDK3lzTENUSVhONjRQUkNyMlFrZlBiWUd0U1J5?=
- =?utf-8?B?b1hHNjNQZlFhTHBiekZCL1BGNGVlUXAraGFWTGd0ZlFoZkVQcG44WHBWSGJB?=
- =?utf-8?B?VCs0bTBhTFJXOStoWXlZaUsxeGVVTjFwcHdTNk9iMmpWVEdHbWNyRnJwbURV?=
- =?utf-8?B?U01nVXlsajdUSVZEWjVLMjJDRFRsSVFid1BmUUtsWmZDSCtxV3hIQmtwT2lh?=
- =?utf-8?B?N0hwVWRIWUhVYStPTWpseFQ1OUVXSzRJRGtkSllEL2N2cXBaRUx1YjJRa0lZ?=
- =?utf-8?B?ZE1PWUdGUjFZcFpUZ3lORDdONjRwYzB1cGRlRGJjZ1lyS1ZPWFZXM21Wc3ps?=
- =?utf-8?B?c2tQZm5qNXY5T2t3QTBkcWRhWnBzUnhYS3VNRGhFdW1YcDNNdElab1lzMkJn?=
- =?utf-8?B?V0I5SWMvaFFmM0Z0Z2RsbDA5N3Uzb0xmQ0IzRUpoTWpKeVBDcFRQZGt2akdS?=
- =?utf-8?B?MCtCczhBNnVBN2xmM01DTk9UWnJ5QXd6WENJZnRubkJiTSt1MjNuMzhTVVJN?=
- =?utf-8?B?eG0yZXhDb1pCZVh4WUZ0QkUvL3hVZUlCMVFRbFFpTWU1REVVOE9pZU1yZTBa?=
- =?utf-8?B?VExRck1TNVZMcWwzQ0hCY0l1UHFWNUg3L1cycXFid3B3NW5Mbmhxc2FRak9W?=
- =?utf-8?B?bFJQeCthdVRtaFRyRllnNXgyRWU4eGVrZXJyVUJWTVlUN2xORmV0a1lBZmNh?=
- =?utf-8?B?SnlpQ29VM2JzQm51QXVSeFplRTgzeHdSaklrSjB3RzM2R0dwVkgxZWJ1cmFU?=
- =?utf-8?B?bEx6Skt6Uzhwa2VHeDJIb1V1YmVtV0ZWZ1c0bzllNHpnYjRHUDNJTTFmQ0hO?=
- =?utf-8?B?VkY5YU9kNDE1eDdCY3M2M2ExNTY1L2VnWWFzcFdOaytLbmJ0V0R3OEszMnVp?=
- =?utf-8?B?ZlJyeUpOQ3F3aTdKaFR6dkl4dTd2WEpJQzQydnJ4OVhkU2FBdllERE1OSkZD?=
- =?utf-8?B?MzNQa2tPYU0zc2ptQlNsRzVqTFZ0MWt1QTJCYzdiVC9XZk1scG1MbHdyekZI?=
- =?utf-8?B?OXFjWC9Na3VMRFQrQnNJdUxoOWpLdzZzM0QvMVRQcS8xR0RGak92MndqWjVD?=
- =?utf-8?B?ZzJBZFBud3dHTlB4Mnl0WVdZZm04aFNIdzY2OGRwOVZuZW55a3NUbmZ3U2RS?=
- =?utf-8?B?dlJXMThTUFhJQ1gyM0hCZFRDcHZyeWM0TTlqbEIyOFltTGRGOUthTmliRUlF?=
- =?utf-8?B?bXRPNTNXWjJFN25wcUtJZlh4MzRvWUVsSWhzYTZrMTlYRmZDUENUaGI4ZVlK?=
- =?utf-8?B?T3o2TUNBMXdOQWU5SCtUdk0zRitDWm40cHFpWnhnOUpXUysyd2I1d0ZKOEFm?=
- =?utf-8?B?MVJEKzRhWkp4cE9yVm9sdFFmR3RZc2dmNkFra01ObWM2MnAwR29KNnR5N05i?=
- =?utf-8?B?VVlaa1RoZm53alpmVkVWYWhUK0xkalRCeEJXK0ZRUEJ5Si9IZDBSaERZZFhr?=
- =?utf-8?B?M1RocFlRVmc3Y0tJRzVIZnV3NFZ6RVpzUEdaN1daT2NHZ1R6c0xqTHBzdEl2?=
- =?utf-8?B?OVBIdmlUbUNwL20rOC8wNVM5MDJtQ0FjSEs4ZG5LdjI5OUNZUFp1QT09?=
+	=?utf-8?B?Q2VBMGNvM2RjMVJLdVNOcmM5Z282TEtwMjhvMlIzbHhjRkpicG1OOGZkNnE2?=
+ =?utf-8?B?RHlwanBYbXlpbzU1Njh2WmxIcTN2RzQvOXdSQzFRWE4vWTgvZU9ONUVUeHBY?=
+ =?utf-8?B?OHFyeGFrb0tFS2RORElsbWRvV256bE5KMWk1YkZvdnFZd3Jvay94M2lXMWFJ?=
+ =?utf-8?B?TTU0YVlhaVZPUXpudG1JNnlRMkpySWtIT0dSWUJvd2UwbVFIWk5qbUhWUnVE?=
+ =?utf-8?B?QmZIODNUWjI5aTZHNDl3emt4NDNqejRlWXlOVWFkRDBBVXhGTnc3OTJ6R0F5?=
+ =?utf-8?B?ZVBiMjgzWlZkL0Z2VXNMUldBVlZoWlhwWjFuQ0ZycFNpdTIzd2ZEbGlyeU5x?=
+ =?utf-8?B?R3doTDZ0ZzArcklBN2g4czIvWWsvTGpRcis3czlXZXVVYmEwTVBlbnl0c0tI?=
+ =?utf-8?B?UDM2NTNtUVN3TndTRXhabmtzR0RiV2NucldFWFFxY3BNTm9GcVlmNWJyMFl1?=
+ =?utf-8?B?aFdhMGZOQ0UyTEl5Q1F5NDNJR2NHY3RsZ0lTQXhvbnRtL3NTUEprQXVPKzBF?=
+ =?utf-8?B?NEtYeVhmR2svM1VRcC9YdnN5V3N0cGtRUHpNc0ZzdW4xamM4QS9RWmlQbnU1?=
+ =?utf-8?B?aXJscTJiM1hJdDVSRURJMEFuSnppeER5YjNqZ01abENLNkhETXduWm4rOTBY?=
+ =?utf-8?B?QkNxbmtVK011d2E0KzNrVjkvMk9FcmU5NEFGNSt3aDczcXp6R3FTaTRnZlE3?=
+ =?utf-8?B?bElFY0pFVTdicVFIK0U3WTVOaXlmTkpRNGYrUGVQQXBwcUptN1FEaXczUnBR?=
+ =?utf-8?B?ck1GS212bExvWTNkbCtuVXpqYU40LzJ0SzRGTlhTUHlqclBEaHVHSDQ2dmtP?=
+ =?utf-8?B?eEpyYTRXaVlCakZDR3E2cmZmNkxoeDhlM1FpQXpuMHZ5M2ZzL0pDRTdqTDl2?=
+ =?utf-8?B?c21aWDNYOUV4cFVyZ3o5Y0JqRzNuRWRNRWVJUEtvNEhUWGRid2w5QS9od0s5?=
+ =?utf-8?B?ZndsMVdjbGQ3WmRzU3pGRWR3eWQ3dUc5c1hwNVJYckZRZzl0enI4RFFadDRN?=
+ =?utf-8?B?cnAzOVZnWThkcGFCSk8ycUEvNTBucmsvNTlOczV4ZG5rdU5laGNjTVg1S1M3?=
+ =?utf-8?B?UXR4Mm5Ld1k5SzFNam5iN1hsZ25ld3A2dFZBRUNzc092ZzY4VFR2K0dzQkFk?=
+ =?utf-8?B?Um91VmNaK1EwRDNSQ01zVmdRMDlOcFozNmxlelFwUThPbHFEd0dsYWg2dHBs?=
+ =?utf-8?B?WU5aeFlUckluNHpSUTdvMzFuQ2hGdzFNUW91d1Y3U0lOa0hoME9vUU9Ga2FK?=
+ =?utf-8?B?RzNlR0ZZSngxV2xsaGRKMXRLV2MzVWh6OG9TY3Q2QWI5eFF5REYydVJhWHRX?=
+ =?utf-8?B?OXM2R2JoZ25WZXJlbTRqbmN5eElTZ2l2K1dRbEZ1K3RNTnF5S1A2c0UyRnJ6?=
+ =?utf-8?B?OUtoYnRLaFQ5bUVxRXhPVVB5UkJ5eklBTHZVTjFTTUNvdzlRNEdjUVFoVlB1?=
+ =?utf-8?B?Z0RhbmpvNDE0ZzJxb1BmeTV6cjdwSEFPN0VUR2VwNEg0RzYxK0JuQ1VuU0Fo?=
+ =?utf-8?B?MG9EcVJDYVV5TjJvcVFpdTNicHZmMXl4Sit2dkxtT25DVVNIY2g4REpsSXZm?=
+ =?utf-8?B?V1o0UHJPT0Q2WnRxZWtOZDNxbjBjdWM2QUxqaHBTbkNwcWZhaW1KUHJ2V0RR?=
+ =?utf-8?B?ZDJwR2xFbnNqclhHSWhSek50dUNMVWpjZzZ2RC9UWG1zcnhMYXFsTTA2VzNS?=
+ =?utf-8?B?SUhVSEh5M1V6Y2t1UnNYUGdqWCtYNUtEUExtTHphWU9ucG9MYjJWem15b0Ny?=
+ =?utf-8?B?MVJnZGozcDd6OUh6Rmp5OHNIVjMxQURMMFRPVTgwanhKUC9GbjVuZnlHTTFC?=
+ =?utf-8?B?K1lKcVlpNWdIdVAwTUVjU0dxajhNMVFLd0kzaWgxSmFMbEY1RzhGMlMwQ1Bp?=
+ =?utf-8?B?L1FZZUdYeFgvcTNMYzZiVExVRnpRQXpPRzNnM1MyVGxCcVoxV0U4S2k5RmM0?=
+ =?utf-8?B?RWlEVjBIMFlRdklHUVlWNmhpaUFoYnBPVjEvSnhIQjROdXljYWRZeU0wbDJa?=
+ =?utf-8?B?Ty9zcThFTDlMQlFsZ1cyMGFObWwrcENIcFkwdDhyQUZCV3pmclZMMmZKK2hi?=
+ =?utf-8?B?QjB6SUNlWnJpS0txVThRdWdTYUVXWFJkTCtUK3MxdmRoUk10clBYbWJuZHZ1?=
+ =?utf-8?B?S0NtT0t1UmFuekRTVG0vU1ZkTStkUUZNNEdtZXo4NE5jV0hST1pZcVQ2Z2sy?=
+ =?utf-8?B?RlJ4YlE2UkpFUmN0SXdIUlpkd2p6TWhISjQ0Zi9RbWhJNWRSOFF0a3B3ZU9a?=
+ =?utf-8?B?SzhJbkRybzlDSWF6dDc3YkhxazNsb3BBaFV6QjZPZFdoV1djdlRhaEloREtT?=
+ =?utf-8?B?U1JPelFvZUF4TlNYRC9lQ05OeHlXY0UydDNpQU1nSEs5eERsc1pFUT09?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 683e58a6-20b9-40e4-d601-08df2dd2174f
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2d284e5d-7079-4eb8-afd3-08df2dd25ee6
 X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB8245.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Oct 2026 11:14:06.9259
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Oct 2026 11:16:07.1775
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 0K4sriuQcmQ0AmjHZIIBe25SQEqBerVNzb4Z8K1N5QLzQorlBz4hqT7aUd3bb5gl0ahsNM9Z2Y95aJ+2MEnbFw==
+X-MS-Exchange-CrossTenant-UserPrincipalName: dMbmrIlr5pkqO9rpvMLV+p05vhrhTQzTVR8ifUJSGGsoBsGtIDZfiFfme/bR2WblUNH0Rr4tBokrmeAJqBMVfQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA3PR12MB8045
 
 
 
-On 15/10/26 11:13 pm, Koichiro Den wrote:
-> On Wed, Oct 14, 2026 at 08:10:32PM +0530, Manivannan Sadhasivam wrote:
->> On 2026-09-23 16:32 +0200, Niklas Cassel wrote:
->>> On Wed, Sep 23, 2026 at 12:52:37PM +0530, Manikanta Maddireddy wrote:
->>>> Some endpoint controllers expose MSI-X table/PBA storage at fixed,
->>>> hardware-owned BARs. Such BARs are described to endpoint functions as
->>>> BAR_RESERVED with PCI_EPC_BAR_RSVD_MSIX_TBL_RAM, so the function driver
->>>> must not reprogram the MSI-X Table/PBA capability to point into ordinary
->>>> function BAR memory.
->>>>
->>>> pci_epf_test always allocates MSI-X storage after its test registers and
->>>> calls pci_epc_set_msix(). On controllers with fixed MSI-X storage, this
->>>> overwrites the controller-defined MSI-X layout. For example, the generic
->>>> DesignWare path derives the PBA offset from the number of vectors, which
->>>> can make the host program the wrong MSI-X storage and prevent MSI-X
->>>> delivery.
->>>>
->>>> Detect fixed MSI-X table BARs and leave the controller-owned MSI-X
->>>> capability layout unchanged. Keep allocating and programming MSI-X
->>>> storage in the test BAR only for controllers that do not advertise fixed
->>>> MSI-X table storage.
->>>>
->>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->>>> ---
->>>>   drivers/pci/endpoint/functions/pci-epf-test.c | 27 +++++++++++++++++--
->>>>   1 file changed, 25 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
->>>> index d4905aa8e4c0..82d4714e998c 100644
->>>> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
->>>> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
->>>> @@ -83,6 +83,7 @@ struct pci_epf_test {
->>>>   	struct config_group	group;
->>>>   	enum pci_barno		test_reg_bar;
->>>>   	size_t			msix_table_offset;
->>>> +	bool			msix_table_fixed;
->>>>   	struct delayed_work	cmd_handler;
->>>>   	struct dma_chan		*dma_chan_tx;
->>>>   	struct dma_chan		*dma_chan_rx;
->>>> @@ -98,6 +99,26 @@ struct pci_epf_test {
->>>>   	size_t			bar_size[PCI_STD_NUM_BARS];
->>>>   };
->>>>   
->>>> +static bool pci_epf_test_msix_table_fixed(const struct pci_epc_features *features)
->>>> +{
->>>> +	enum pci_barno bar;
->>>> +	int i;
->>>> +
->>>> +	for (bar = BAR_0; bar < PCI_STD_NUM_BARS; bar++) {
->>>> +		const struct pci_epc_bar_desc *desc = &features->bar[bar];
->>>> +
->>>> +		if (desc->type != BAR_RESERVED)
->>>> +			continue;
->>>> +
->>>> +		for (i = 0; i < desc->nr_rsvd_regions; i++) {
->>>> +			if (desc->rsvd_regions[i].type == PCI_EPC_BAR_RSVD_MSIX_TBL_RAM)
->>>> +				return true;
->>>> +		}
->>>> +	}
->>>> +
->>>> +	return false;
->>>> +}
->>>> +
->>>>   struct pci_epf_test_reg {
->>>>   	__le32 magic;
->>>>   	__le32 command;
->>>> @@ -1214,7 +1235,7 @@ static int pci_epf_test_epc_init(struct pci_epf *epf)
->>>>   		}
->>>>   	}
->>>>   
->>>> -	if (epc_features->msix_capable) {
->>>> +	if (epc_features->msix_capable && !epf_test->msix_table_fixed) {
->>>>   		ret = pci_epc_set_msix(epc, epf->func_no, epf->vfunc_no,
->>>>   				       epf->msix_interrupts,
->>>>   				       epf_test->test_reg_bar,
->>>> @@ -1282,7 +1303,9 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
->>>>   
->>>>   	test_reg_bar_size = ALIGN(sizeof(struct pci_epf_test_reg), 128);
->>>>   
->>>> -	if (epc_features->msix_capable) {
->>>> +	epf_test->msix_table_fixed = pci_epf_test_msix_table_fixed(epc_features);
->>>> +
->>>> +	if (epc_features->msix_capable && !epf_test->msix_table_fixed) {
->>>>   		msix_table_size = PCI_MSIX_ENTRY_SIZE * epf->msix_interrupts;
->>>>   		epf_test->msix_table_offset = test_reg_bar_size;
->>>>   		/* Align to QWORD or 8 Bytes */
->>>
->>> Here you are only updating pci-epf-test. What about the other EPF drivers?
->>>
+On 17/10/26 2:57 pm, Manivannan Sadhasivam wrote:
+> On Wed, Sep 23, 2026 at 12:55:52PM +0530, Manikanta Maddireddy wrote:
+>> Endpoint controllers can receive a fundamental reset while software
+>> resources such as eDMA, debugfs and function state must live for the
+>> controller lifetime.
 >>
->> How can we test those other EPF drivers if there is no hw setup available? TBH,
->> we don't need to add all functionalities to all EPF drivers. Adding them to
->> pci-epf-test driver is enough. If other EPF driver maintainers want to add the
->> missing features, then they can add them after testing on relevant hw setup.
-> 
-> I wonder if nvmet-pci-epf was one of the cases Niklas had in mind.
-> Patch #10 sets .msix_capable = true, so with msix_interrupts set to a non-zero
-> value, nvmet_pci_epf_init_irq() selects MSI-X and calls pci_epc_set_msix() with
-> BAR0, which looks like the concern this patch #11 itself wants to resolve.
-> 
-> So, Manikanta, have you tested nvmet-pci-epf with MSI-X on Tegra with and
-> without this series? I don't have the hardware, so please correct me if I'm
-> missing something.
-> 
+>> Track whether DWC Endpoint resources are initialized and add helpers
+>> that perform full initialization once, then reinitialize only reset-lost
+>> registers on later fundamental reset cycles.
 >>
->>>
->>> Also, if you run then pci_endpoint kselftest, with the default 2048 MSI-X
->>> interrupts. Are really all 2048 MSI-X successful?
-> 
-> This also reminds me of the unresolved entry #0 issue Niklas and I saw on
-> RK3588... The kselftest's final status hid the failure when a later vector was
-> skipped, so it's worth checking the individual results. If the same symptom
-> appears on Tegra, it would be useful to compare the two.
-> 
->>>
->>> It seems that often the "hardware owned" MSI-X table is much smaller than
->>> that. See e.g. Koichiro's series which tries to use "hardware owned" MSI-X
->>> table, but if the "hardware owned" MSI-X table is too small to hold all
->>> 2048 MSI-X IRQs, then "hardware owned" MSI-X table would not be used:
->>>
->>> https://lore.kernel.org/linux-pci/20260830151948.3547577-2-den@valinux.co.jp/
->>>
->>> +	if (layout->table_size < table_size || layout->pba_size < pba_size)
->>> +		return -ENOSPC;
-> 
-> Unlike my previous series, this patch skips pci_epc_set_msix(), so as I
-> understand it, msix_interrupts does not change the Table Size advertised to the
-> host. Assuming the existing Table Size matches the hardware, that would avoid
-> advertising more entries than it has.
-> 
-> (BTW, skipping pci_epc_set_msix() alone would not be enough for RK3588. Its
-> upstream driver does not yet advertise the fixed MSI-X Table/PBA regions, so
-> this patch does not change its behaviour. But if we add those regions later, the
-> interrupt path may need to change too. dw_pcie_ep_raise_msix_irq() reads an
-> EPF-owned Table through ep_func->epf_bar[], which is not populated for the
-> reserved BAR4. The rockchip driver would need to select the controller doorbell
-> when using the fixed Table.)
-> 
-> Best regards,
-> Koichiro Den
-
-I verified only with pci-epf-test driver.
-
-Tegra MSI-X HW supports maximum 8 vectors. pci_endpoint_test drivers 
-supports MSI-X allocation from 1 to 2048, so this driver is allocating 8 
-MSI-X vectors and I could see 8 MSI-X vector and the count increase on 
-all 8 vectors.
-
-  152:          2          0          0          0          0          0 
-          0          0          0          0          0          0 
-DW-PCI-MSIX-0005:01:00.0    0 Edge      pci-endpoint-test.0
-  153:          2          0          0          0          0          0 
-          0          0          0          0          0          0 
-DW-PCI-MSIX-0005:01:00.0    1 Edge      pci-endpoint-test.0
-  154:          2          0          0          0          0          0 
-          0          0          0          0          0          0 
-DW-PCI-MSIX-0005:01:00.0    2 Edge      pci-endpoint-test.0
-  155:          2          0          0          0          0          0 
-          0          0          0          0          0          0 
-DW-PCI-MSIX-0005:01:00.0    3 Edge      pci-endpoint-test.0
-  156:          2          0          0          0          0          0 
-          0          0          0          0          0          0 
-DW-PCI-MSIX-0005:01:00.0    4 Edge      pci-endpoint-test.0
-  157:          2          0          0          0          0          0 
-          0          0          0          0          0          0 
-DW-PCI-MSIX-0005:01:00.0    5 Edge      pci-endpoint-test.0
-  158:          2          0          0          0          0          0 
-          0          0          0          0          0          0 
-DW-PCI-MSIX-0005:01:00.0    6 Edge      pci-endpoint-test.0
-  159:          2          0          0          0          0          0 
-          0          0          0          0          0          0 
-DW-PCI-MSIX-0005:01:00.0    7 Edge      pci-endpoint-test.0
-
-
-For now, I will drop msix feature from this series.
-
-> 
->>>
->>>
->>>
->>> Apparently NTB EPF needs to read the MSI-X table from RAM:
->>> https://lore.kernel.org/linux-pci/pj5vpwwd5tr5tuvhdq3bcpefnq27r6ljvwoysguz2o4tglcqx5@l7zmb6wjnhla/
->>>
->>> Which is why he also decided to let an EPF driver choose if it should
->>> use "hardware owned" MSI-X table or not.
->>>
+>> A fundamental reset also clears outbound iATU programming. Clear the
+>> cached outbound window map, outbound address array and MSI iATU cache
+>> before reinitializing registers so stale software state cannot hide a
+>> window that was reset by hardware.
 >>
->> Yeah, makes sense. Otherwise, we will see kselftests failures.
+>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>> ---
+>>   .../pci/controller/dwc/pcie-designware-ep.c   | 152 +++++++++++++-----
+>>   drivers/pci/controller/dwc/pcie-designware.h  |  13 ++
+>>   2 files changed, 124 insertions(+), 41 deletions(-)
 >>
->> - Mani
->>
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> index de8ee3db4360..7ba40220b821 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> @@ -1155,6 +1155,28 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+>>   }
+>>   EXPORT_SYMBOL_GPL(dw_pcie_ep_raise_msix_irq);
+>>   
+>> +static void dw_pcie_ep_clear_msi_iatu(struct dw_pcie_ep *ep)
+>> +{
+>> +	ep->msi_iatu_mapped = false;
+>> +	ep->msi_iatu_mapped_offset = 0;
+>> +	ep->msi_msg_addr = 0;
+>> +	ep->msi_map_size = 0;
+>> +}
+>> +
+>> +static void dw_pcie_ep_clear_outbound_atus(struct dw_pcie_ep *ep)
+>> +{
+> 
+> I don't think this function clears the OB iATU mappings. It is done in
+> dw_pcie_ep_unmap_addr().
+> 
+
+Correct, this helper only resets the software bookkeeping after a 
+fundamental reset has cleared the hardware iATU configuration. It does 
+not disable live mappings. I’ll rename it to 
+dw_pcie_ep_reset_outbound_state() and clarify that prerequisite in the 
+comment and commit message.
+
+>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>> +
+>> +	if (ep->ob_window_map)
+>> +		bitmap_zero(ep->ob_window_map, pci->num_ob_windows);
+>> +
+>> +	if (ep->outbound_addr)
+>> +		memset(ep->outbound_addr, 0,
+>> +		       pci->num_ob_windows * sizeof(*ep->outbound_addr));
+>> +
+>> +	dw_pcie_ep_clear_msi_iatu(ep);
+>> +}
+>> +
+>>   /**
+>>    * dw_pcie_ep_cleanup - Cleanup DWC EP resources after fundamental reset
+>>    * @ep: DWC EP device
+>> @@ -1169,11 +1191,12 @@ void dw_pcie_ep_cleanup(struct dw_pcie_ep *ep)
+>>   
+>>   	if (ep->msi_iatu_mapped) {
+>>   		dw_pcie_ep_unmap_addr(ep->epc, 0, 0, ep->msi_mem_phys);
+>> -		ep->msi_iatu_mapped = false;
+>> +		dw_pcie_ep_clear_msi_iatu(ep);
+>>   	}
+>>   
+>>   	dwc_pcie_debugfs_deinit(pci);
+>>   	dw_pcie_edma_remove(pci);
+>> +	ep->resources_initialized = false;
+>>   }
+>>   EXPORT_SYMBOL_GPL(dw_pcie_ep_cleanup);
+>>   
+>> @@ -1307,6 +1330,89 @@ static void dw_pcie_ep_disable_bars(struct dw_pcie_ep *ep)
+>>   	}
+>>   }
+>>   
+>> +static void dw_pcie_ep_init_ptm(struct dw_pcie_ep *ep)
+>> +{
+>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>> +	u32 ptm_cap_base, reg;
+>> +
+>> +	/*
+>> +	 * PCIe r6.0, section 7.9.15 states that for endpoints that support
+>> +	 * PTM, this capability structure is required in exactly one
+>> +	 * function, which controls the PTM behavior of all PTM capable
+>> +	 * functions. This indicates the PTM capability structure
+>> +	 * represents controller-level registers rather than per-function
+>> +	 * registers.
+>> +	 *
+>> +	 * Therefore, PTM capability registers are configured using the
+>> +	 * standard DBI accessors, instead of func_no indexed per-function
+>> +	 * accessors.
+>> +	 */
+>> +	ptm_cap_base = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_PTM);
+>> +
+>> +	/*
+>> +	 * PTM responder capability can be disabled only after disabling
+>> +	 * PTM root capability.
+>> +	 */
+>> +	if (ptm_cap_base) {
+>> +		dw_pcie_dbi_ro_wr_en(pci);
+>> +		reg = dw_pcie_readl_dbi(pci, ptm_cap_base + PCI_PTM_CAP);
+>> +		reg &= ~PCI_PTM_CAP_ROOT;
+>> +		dw_pcie_writel_dbi(pci, ptm_cap_base + PCI_PTM_CAP, reg);
+>> +
+>> +		reg = dw_pcie_readl_dbi(pci, ptm_cap_base + PCI_PTM_CAP);
+>> +		reg &= ~(PCI_PTM_CAP_RES | PCI_PTM_GRANULARITY_MASK);
+>> +		dw_pcie_writel_dbi(pci, ptm_cap_base + PCI_PTM_CAP, reg);
+>> +		dw_pcie_dbi_ro_wr_dis(pci);
+>> +	}
+>> +}
+>> +
+>> +/**
+>> + * dw_pcie_ep_reinit_registers - Reinitialize DWC EP reset-lost registers
+>> + * @ep: DWC EP device
+>> + *
+>> + * Reinitialize the EP registers lost after a fundamental reset without
+>> + * reallocating EP resources that live until dw_pcie_ep_deinit(). The
+>> + * caller must only use this after hardware has reset the iATU; this
+>> + * helper invalidates software iATU state but does not disable live
+>> + * windows.
+>> + */
+>> +int dw_pcie_ep_reinit_registers(struct dw_pcie_ep *ep)
+>> +{
+>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>> +	int ret;
+>> +
+>> +	dw_pcie_ep_clear_outbound_atus(ep);
+>> +
+>> +	if (ep->ops->init) {
+>> +		ret = ep->ops->init(ep);
+>> +		if (ret)
+>> +			return ret;
+>> +	}
+>> +
+>> +	dw_pcie_ep_disable_bars(ep);
+>> +	dw_pcie_ep_init_ptm(ep);
+>> +	dw_pcie_ep_init_non_sticky_registers(pci);
+>> +
+>> +	return 0;
+>> +}
+>> +EXPORT_SYMBOL_GPL(dw_pcie_ep_reinit_registers);
+>> +
+>> +/**
+>> + * dw_pcie_ep_init_or_reinit_registers - Initialize or reinitialize DWC EP
+>> + * @ep: DWC EP device
+>> + *
+>> + * Initialize DWC EP resources on first use. If resources are already
+>> + * initialized, reinitialize only the reset-lost registers.
+>> + */
+>> +int dw_pcie_ep_init_or_reinit_registers(struct dw_pcie_ep *ep)
+>> +{
+> 
+> This function name looks awkward. Can you fold it inside
+> dw_pcie_ep_init_registers() instead?
+> 
+> - Mani
+> 
+Agreed. I’ll move the selection into dw_pcie_ep_init_registers() and 
+keep the register restoration helper internal. Tegra can then retain its 
+existing initialization call and omit the full cleanup on each PERST# cycle.
+
+- Manikanta
 
 -- 
 nvpublic
