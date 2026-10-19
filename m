@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F5AF488231;
-	Mon, 19 Oct 2026 06:51:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8A25488D9C;
+	Mon, 19 Oct 2026 06:51:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792392710; cv=none; b=tPTF3Ib92TfwxxsbY+haHc/7LDTTMHa0OCQVmsFzcSgdN2JtwC2XoSE45LMyxm1u3osmOlkBkvGMu+UCQhCcNC8LVr30BxEmwF2X18DxyrGfaPDGgXHnkWfrYeWnpFDLwASgmTVtoFo9GWqxcCOVLsUNuO9ueqHpSpV1wiVAhH8=
+	t=1792392711; cv=none; b=Sizwff2GpZpU5exVTxGfpjdVBROMEwrKfAOwz32mmPmzQ0zGNkkjSoRf/n0KMQKm4sco1z/eZta8Xz5DpqM/G9jy1szHlPIJnG8asgLKsGlqC/GKcXhWcd4dx9z7N06TquGb/ng44WpGkvBviPJKzbZ3x3jbdkIYe2+94DcPxUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792392710; c=relaxed/simple;
-	bh=G58MKv4/AnMNW0AVvLb+wuNT9iB/lRdfy7QM1KBmz1Y=;
+	s=arc-20240116; t=1792392711; c=relaxed/simple;
+	bh=JKF8M3zN/9nkgBlRYr11WegN6XgjwaIV44etnGDkfsQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=aIHntH98QhdzNLvxak0narym1YWBOqfLw+2rR06Aqx1xRok5BrcVdiVp0cSN34yOTCD3RYzm/CWCA1flHfKjD84GWBKh6P5Ew/kLLNXlLZBPp7KCKfmttdo2QEYC8bfulq/lydVsRJNCTuBOvvH2ShjoNLV0SlFEMEiH0Ppq1ww=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RX7B9rQo; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=RBAKSgbDUuVPKMFTRWrHJ6wIFarnLmS8euHXKGj4i+s+PDI6U7y1e1n6dT484xWndafoYtswUTLUmj6dpRfBClqICf2PdBP3RiNndLnBHmVkTuSka229HtipuFc6muPlvjRoLTCU5zGMHXhanpU7ugfHCwETmCoIvPMzbaqo534=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mmUDCsiE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RX7B9rQo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D5581F000C4;
-	Mon, 19 Oct 2026 06:51:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mmUDCsiE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B86211F000C5;
+	Mon, 19 Oct 2026 06:51:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792392706;
-	bh=k7excfwmi7i9h9fFvl0AyYpiwZEOtSL+UXmcBaJ2EE8=;
+	s=k20260515; t=1792392709;
+	bh=61UVuIXEwhKty431ZjA9LKthVF6b5nnhbcYKZGMkP7U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=RX7B9rQortpyGcem6MmOyhSoL1gz8F5NFm3uE6Kj//6MszPt7mclaz0pHuU5Znqod
-	 fNfGq/cQtxtHEsQ39KVhp9A6Jq1QLTnFGrJ/KXHARZQSckHD47t7ucwj98iNvOReHH
-	 vHiiug/l8cZgXI0RaKZaTH9LnYZFLIE3tnqzuAYzSckBwjHuSBdTMqj2P+TSIjFr28
-	 KdwyeSCvg4WI0Dn30h589ZkUBtn4SPv1N9hJcsa81uWhcmDw18rRtAMWE4O4v9wTAM
-	 qfbW0A4CBj466ManuW55N0ILlGmo649XRB3fCJ2W01qXCOnU9HJcBddsJ05pzHGbJP
-	 ZB9A1FRLA66lQ==
+	b=mmUDCsiEZyBmv5Fc8jPf+7tGWMuUOzjY233Dix+u2kOHdwO1pGcy7Mnh9VBc2melM
+	 RAsVqTW4t22tr+QgklO7yF8MVcieF2FCnley0U/N5Cdyyfc+1i766e9HgtMnv7NQqg
+	 arpRQI21S8LOZjSKwZ8wfVraXgjBLrdyaR3caZCNrbYn1SPT5zAqTBqZc8mwLh0j2f
+	 PMpgPMPeSbdvwbbMcYQPyPzUC21Pbn/DladyIiSzMWdhYyiGDiFAG0qUF5q6H1DKh7
+	 cKfJM650+RrMI5QO5yHt8TWYDgBKcatp/dvPMlWdcZoy5Bmqxhj4wOBGokrtaMl8+d
+	 3Vosw1tOBlk1A==
 From: Claudiu Beznea <claudiu.beznea@kernel.org>
 To: lpieralisi@kernel.org,
 	kwilczynski@kernel.org,
@@ -39,11 +39,10 @@ Cc: claudiu.beznea@tuxon.dev,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org,
-	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v7 06/14] PCI: rzg3s-host: Drop read-modify-write approach for the R/W1C registers
-Date: Mon, 19 Oct 2026 09:50:17 +0300
-Message-ID: <20261019065025.2146539-7-claudiu.beznea@kernel.org>
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Subject: [PATCH v7 07/14] PCI: rzg3s-host: Use cached MSI address in .irq_compose_msi_msg()
+Date: Mon, 19 Oct 2026 09:50:18 +0300
+Message-ID: <20261019065025.2146539-8-claudiu.beznea@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
 References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
@@ -57,64 +56,48 @@ Content-Transfer-Encoding: 8bit
 
 From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 
-The AXI registers PCI_PINTRCVIS and PCI_PINTRCVIS_MSI are R/W1C. According
-to the RZ/G3S HW manual, Rev. 1.30, R/W1C means "it can be cleared to 0b by
-writing 1b. Writing 0b does not change anything."
+The MSI window address is already cached in msi->window_base when the
+MSI window is configured. Use it to fill msg->address_lo and
+msg->address_hi in .irq_compose_msi_msg() instead of reading it back
+from the controller registers.
 
-Drop the read-modify-write approach and make use of this hardware
-capability. This avoids clearing unwanted interrupts.
+This avoids unnecessary register accesses.
 
-Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
-Cc: stable@vger.kernel.org
 Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 ---
 
 Changes in v7:
 - none, this patch is new
 
- drivers/pci/controller/pcie-rzg3s-host.c | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+ drivers/pci/controller/pcie-rzg3s-host.c | 14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-index 94345d6f0bee..b0a150262959 100644
+index b0a150262959..6acb0231a067 100644
 --- a/drivers/pci/controller/pcie-rzg3s-host.c
 +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-@@ -82,6 +82,7 @@
- #define RZG3S_PCI_MSGRCVIE			0x120
- #define RZG3S_PCI_MSGRCVIE_MSG_RCV		BIT(24)
- 
-+/* Register is R/W1C, it doesn't require locking. */
- #define RZG3S_PCI_MSGRCVIS			0x124
- #define RZG3S_PCI_MSGRCVIS_MRI			BIT(24)
- 
-@@ -591,11 +592,10 @@ static irqreturn_t rzg3s_pcie_msi_irq(int irq, void *data)
- 		return IRQ_NONE;
- 
- 	/* Clear the MSI */
--	rzg3s_pcie_update_bits(host->axi, RZG3S_PCI_PINTRCVIS,
--			       RZG3S_PCI_PINTRCVIS_MSI,
--			       RZG3S_PCI_PINTRCVIS_MSI);
--	rzg3s_pcie_update_bits(host->axi, RZG3S_PCI_MSGRCVIS,
--			       RZG3S_PCI_MSGRCVIS_MRI, RZG3S_PCI_MSGRCVIS_MRI);
-+	writel_relaxed(RZG3S_PCI_PINTRCVIS_MSI,
-+		       host->axi + RZG3S_PCI_PINTRCVIS);
-+	writel_relaxed(RZG3S_PCI_MSGRCVIS_MRI,
-+		       host->axi + RZG3S_PCI_MSGRCVIS);
- 
- 	for (u8 reg_id = 0; reg_id < regs; reg_id++) {
- 		status = readl_relaxed(host->axi + RZG3S_PCI_MSIRS(reg_id));
-@@ -958,9 +958,8 @@ static void rzg3s_pcie_intx_irq_ack(struct irq_data *d)
+@@ -660,19 +660,9 @@ static void rzg3s_pcie_irq_compose_msi_msg(struct irq_data *data,
+ 					   struct msi_msg *msg)
  {
- 	struct rzg3s_pcie_host *host = irq_data_get_irq_chip_data(d);
+ 	struct rzg3s_pcie_msi *msi = irq_data_get_irq_chip_data(data);
+-	struct rzg3s_pcie_host *host = rzg3s_msi_to_host(msi);
+-	u32 lo, hi;
+-
+-	/*
+-	 * Enable and msg data enable bits are part of the address lo. Drop
+-	 * them along with the unused bit.
+-	 */
+-	lo = readl_relaxed(host->axi + RZG3S_PCI_MSIRCVWADRL) &
+-	     RZG3S_PCI_MSIRCVWADRL_MASK;
+-	hi = readl_relaxed(host->axi + RZG3S_PCI_MSIRCVWADRU);
  
--	rzg3s_pcie_update_bits(host->axi, RZG3S_PCI_PINTRCVIS,
--			       RZG3S_PCI_PINTRCVIS_INTX(d->hwirq),
--			       RZG3S_PCI_PINTRCVIS_INTX(d->hwirq));
-+	writel_relaxed(RZG3S_PCI_PINTRCVIS_INTX(d->hwirq),
-+		       host->axi + RZG3S_PCI_PINTRCVIS);
+-	msg->address_lo = lo;
+-	msg->address_hi = hi;
++	msg->address_lo = lower_32_bits(msi->window_base);
++	msg->address_hi = upper_32_bits(msi->window_base);
+ 	msg->data = data->hwirq;
  }
  
- static void rzg3s_pcie_intx_irq_mask(struct irq_data *d)
 -- 
 2.43.0
 
