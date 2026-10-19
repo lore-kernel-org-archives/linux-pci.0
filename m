@@ -1,65 +1,58 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 438E7481641
-	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 08:43:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC1E149BB7C
+	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 08:44:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792399432; cv=none; b=BCdzytyRk72ZDHt3VxSdxriK6vwrrwE7s1KQ92K8iHfvH9vQeKms73ns42MRkFHl/yY62Ri6WzJ8oMguXRNPZrd2kOTcAA4QvhrsMZ5Km/eQkSdh1UsTiqibVs3dzl8geQbNDr0ctdohefWjlxJpigQ/3zayoRr6yBrhJPdhOM0=
+	t=1792399454; cv=none; b=m5aD0rxCmwQ5EFb8Y/s7jFfwFX8XRnPuFlRgxBBFI8Lvi8ogpEz5p+GhaeBs7X/SendzuK+JoUmH1NlS0pA9gCaxGafl9orMGrvQsQAqhBATAywQUE1EsWQak3BAgWWMtH7bILM9gQR5m+OvfZUFixaGy1Lcdr4VtxIh5x+CyAQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792399432; c=relaxed/simple;
-	bh=nawQtEZugCFH+H6/sqiD9NdI394DzafweqzBR9XK1i0=;
+	s=arc-20240116; t=1792399454; c=relaxed/simple;
+	bh=FStUe+rCWgQWWMCGKc0uKtqxSFNFzS7Go2+tYEjZ2ZY=;
 	h=Message-ID:From:Subject:To:In-Reply-To:References:Content-Type:
-	 Date; b=pdh+zY8gu5gy1g8IP/jltYzoWEyZKHDGNbumvy72/NC9vdvYzM+1I6OXdMuI2XiF4aaKTutFZH5i73HvcantoPqmeV4/ibBeEtEvmjjrTyotw4q7KmfILqkFtFl44eDPN2gFKDhlU2TpjFrM3BXb74/LYOU0G8bRsW+V+RDanqA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Spn7RfdN; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=c3jqxGIYmf73zzsWV2dPCTz3Ki2iIqh7VzvawOIozLHqWtzNCIf0sLHW9a+aKMpAxGC7s+HmCQxBi8YhXllIx1nCzL35Bpdne5tZZ432EzEdDoxMK8IJ/PZ4lSKUeUdJtMx4m3nAzEVykjQG3xcnxIz1ZmK6XvXQ8HBJRa19E28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y1ESwj28; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Spn7RfdN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 105761F000C4;
-	Mon, 19 Oct 2026 08:43:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y1ESwj28"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B1671F000C4;
+	Mon, 19 Oct 2026 08:44:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792399431;
-	bh=nawQtEZugCFH+H6/sqiD9NdI394DzafweqzBR9XK1i0=;
+	s=k20260515; t=1792399452;
+	bh=FStUe+rCWgQWWMCGKc0uKtqxSFNFzS7Go2+tYEjZ2ZY=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=Spn7RfdNCMN3tPY9n0BTNqN41MTQXByy43E0UmAHuOMioRwOd/cWSoezIudO6LdP3
-	 p4r66mzoktppEtffBYCr/+gd3L7tl/aVhPHXxW9LGAOWXVTMt9lDw8s+TflPX0FFev
-	 k3r40LkeWuxx80mmeHnpRKH2+mDW0T+HKzvC8ygzQ5wA92x5zbFgvQMnonuy1fL3NO
-	 BvBylQJ4T1qad+9klQu9wrVxYvUGSv202g4aiM2C4wpVNssYWxb7baioRhCniEYlp4
-	 /15uAnbmD5C4vQlLxB3YkXwOmw9G0iFah66lo0fXicRdcSCuplAYqCl5RPFmWgLT+X
-	 gjQ5fy0Wf7gIw==
-Message-ID: <sashiko-outbox-176830@kernel.org>
+	b=Y1ESwj28vTTdFT4+FUmjuDg53NY6ZxNxufEtpbmIVxfk1QZPQfei+DfLvWe7r6hSe
+	 F8IjgqosMB4gA6N7U3Be42ocPNkPphv4u4H23OhwCLWy69CesY79/yWz4V6ZPxoiII
+	 GmZylDcrBLZol5s6uxvhmnK0i6TYrbBdqIv6ybj3P1dXXMW8JeBtKtMJ2f6jOpJD4I
+	 +PtGmta0pld6zWqGiJi6XPyDvPBpSb2okYVVuJHzKR77TeXqhNGpsB0XIlDdKy3G8O
+	 O42Xj5uDM6st4TqYjonCoielRTsQC0PwB7w/iiyBeGHKuZR1FsZ/Q4J1F8cLgz4XCq
+	 lNruCX4puDt0Q==
+Message-ID: <sashiko-outbox-176831@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 02/13] PCI/IOV: Introduce VF iterators
+Subject: Re: [PATCH v1 06/13] pds_core: Lock VFs around
+ pci_reset_function_locked()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Lukasz Laguna" <lukasz.laguna@intel.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261019083514.838640-3-lukasz.laguna@intel.com>
+In-Reply-To: <20261019083514.838640-7-lukasz.laguna@intel.com>
 References: <20261019083514.838640-1-lukasz.laguna@intel.com>
- <20261019083514.838640-3-lukasz.laguna@intel.com>
+ <20261019083514.838640-7-lukasz.laguna@intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 19 Oct 2026 08:43:50 +0000
+Date: Mon, 19 Oct 2026 08:44:11 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> Introduce helpers to iterate over the enabled VFs of a PF. Add
-> pci_get_vf() and pci_get_vf_reverse() to retrieve the next enabled VF
-> of a PF in ascending or descending VF ID order, along with
-> for_each_pci_vf(), for_each_pci_vf_reverse(), and
-> for_each_pci_vf_continue_reverse() built on top of them. The helpers
-> return each VF with a reference held, matching existing PCI device
-> lookup APIs.
+> pci_reset_function_locked() now requires PF callers to hold the device
+> locks for all enabled VFs as well. Lock VFs around the reset in
+> pdsc_pci_error_resume().
 >=20
-> This provides a common and convenient way to iterate over a PF's enabled
-> VFs and avoids duplicating the iteration logic in drivers.
->=20
-> Assisted-by: LLM
 > Signed-off-by: Lukasz Laguna <lukasz.laguna@intel.com>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261019083514.8386=
-40-1-lukasz.laguna@intel.com?part=3D2
+40-1-lukasz.laguna@intel.com?part=3D6
 
