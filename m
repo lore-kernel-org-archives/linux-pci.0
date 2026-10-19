@@ -1,82 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.171
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.170
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792441507;
-	b=fxPDLmTKrFXZjzKEGzkYZ00t+iqnQ+WryO3nDKW+PdkciZjA7ajSF8TczNcsDnQ9GZtB
-	 baLu3uNLj2F3T4ng+4XMR9cDuKkLOMZ2S+aipj7mvJ+FHdYM21Pz7RLQ6U0GyOAaJUPFJ
-	 G42+c3uTCxmHcKSecZjDURv2HG3fflqtBFtkGAbIuOsmO5mr9QZFPi25xiM/+iQuqj1Co
-	 F5EgL6iBE03hWc33KSYcwJCWgzsQ/8Sak4mqprxkbhq7AjPBNRhvDIQlZRhGCWJ0UQXWT
-	 aZnahCfoUXKpPe1d7gjmPN4n3YfbuByeom4zKe3X49/K+m0DUvbvgQWp1Ev1E/KRqTw==
+	t=1792441513;
+	b=qk9+LRkO4gOhwM2h+zbVrRwGVqnOITbkib51WpSm2wLbUJJP/8RKqdVK2q0h0xmT5Myw
+	 mHQgjxPVDZrNoIlEj1BbZsmgzH6Pblrkvk3OnxAV901MHXHjeBgDO4BdWdpbpLzeMyl7h
+	 neAHB/jA12BZ5ToK73sA7GyhFY9WBA/urfcEQT0nFtV6wAPH/AKRhTNaYZkADFpy9+LT3
+	 0GpRRS0n3BJpUqUuyKHDEh4Xv6klYto9VgEqx0zAm0LGltO53QXTVHo4WKhcP1ZDYMFUj
+	 c1+qzPW99VKgaZkIBDFGU5d/OfU0FhYcluG/O9UOFGhi0FZz+R6ykPURliqYh5kTs0Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792441507;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792441513;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=CYZTGOdlwMOQm8Q+o3LfRbkQ9TshE/oKmn4afUM8mfs=;
-	b=pX2GufJ3JakLQB5KIYkxZNlCOZN73onzVIbD+yvIzGuLw2pLiRq1NnUHjliRuwdHQkGa
-	 9VucQHeAnFxwJQAvX3GyoHEmCTpYIdxeLq0px1JUbmvzGtz5wNzWz5Sljh0nM7bl68KGP
-	 RauylnzzfrO3y2k+0HfwMfIp7dml3nq+nQI0LS0uqwmwpaPM56nEm3DH0ZUKrKxgQlB1v
-	 f+ng0P81ja/gTgNhinT0i1oUHMo2n6AUrmAgKmqMxYRfHP7hbv7cPN6xi2wehNuW5rNS/
-	 sHw40/6i4eKS/gNBFoQ3e+RSoa9Y2SlLmQv/Um1aDyFwq82BUvcsfJJi4LFzEYFw7Vw==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=hsppLSOUeeqjvZdBbTpnZu3hGwb8gc1TK9datAxS4XA=;
+	b=VusQ+PmgJDlWu8ErJBFxOZfTONQf11MGvX3AHUX23O60JMs9Nqp8NUinaKRJR1KtO3xH
+	 r7va3z+XEOmxxAbkdIsFBTNZy4so2mJf5Cu7VyTR5VLh7PMRWTbX8K/7O6B6LEH618y/f
+	 brwP4LXPW2RvqbW9KbHGTz0EvzGJh3fR5QDRpB34n8qCbHTlTEWdZwQCuU4qFTbJkYQP+
+	 wseSMciqehhnBzDT2UVwGKMNG1MoNXOgWVxe6AqveYs77ccuooi+N8wC7tOdtiPO1oFLj
+	 SMFZywfPF2F+sg4WEB2FzU5sZxsg0AlwhU/eDwRM2rSeqz98GdLmd0RuhsuQS4ZOlbg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=TC4TKF9l;
-	arc=none smtp.remote-ip=209.85.221.171
-Received: from mail-vk1-f171.google.com (mail-vk1-f171.google.com [209.85.221.171])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=CFJ2KsqM;
+	arc=none smtp.remote-ip=209.85.221.170
+Received: from mail-vk1-f170.google.com (mail-vk1-f170.google.com [209.85.221.170])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BED0606A333
-	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 20:25:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2BED0606A333
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0957606A320
+	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 20:25:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B0957606A320
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=TC4TKF9l
-Received: by mail-vk1-f171.google.com with SMTP id 71dfb90a1353d-5e948e56b9dso1022473e0c.1
-        for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 13:25:06 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=CFJ2KsqM
+Received: by mail-vk1-f170.google.com with SMTP id 71dfb90a1353d-5eac01ff101so586480e0c.2
+        for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 13:25:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792441506; x=1793046306; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=CYZTGOdlwMOQm8Q+o3LfRbkQ9TshE/oKmn4afUM8mfs=;
-        b=TC4TKF9lY4lChXjrHgxF/o23vDcUzWCN0n4b+YcZCIMJhtZgjMOMRPnaoctqbMvD0l
-         0hNIi8fQ6VgYTRwSGjqXlvHW4FGY/KhmENEPMUjjnjsYjSoUZcB5HAHzf8VORuXNvs7M
-         iMUYzAlFB50t77pQHCk6cBFEyGu+hczE7lQWSc7PettrDxX4Yx345iTYNRElwSplYyT5
-         LyyvsTkFotSaWdtki0h2oZ4tjiP4FLYsmgG/JruMRUhhbFU/FQGkcbdmaL0gSjJdmV5P
-         aO/6pWCYVlB/Wckn8BIZ3Crc9F5BbDKZ7b37MPTdvahpBSQ4RY1MQ+GeJfINq0PMRN2y
-         lWFg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792441506; x=1793046306;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+        d=gmail.com; s=20251104; t=1792441512; x=1793046312; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=CYZTGOdlwMOQm8Q+o3LfRbkQ9TshE/oKmn4afUM8mfs=;
-        b=BW1KRlSbS8dYAO9k6J+Uejyc+yRN0s/xaYHEKfAJKtiksDeDT5GCYGrsLZb/6NFFls
-         mntGWybtBolrFC7NJf25bQYypx7tOA5Y/6ipTYTJT0pAzVv7P8O84p8x8y6Zczbsvekz
-         jMhzJFsMYuPRHv1Cl+GTg6e1Vtbd7nFbpdGiIVj+dwDmXnZF4Es/l6mvd5T3i55m7AX1
-         azhCcm6ff/eMfJ8opYWQR6g0iCMrWBo2JeDYLs+fi1GOphib0gBQtWO7O0Vi9F6Cej35
-         pQA3g7m65v76EvtbYn/QRF5QhfDCGFWcpFbFqW5z5wfU2vOe+Wlh64pWj1J36N+xE4r1
-         DmXg==
-X-Forwarded-Encrypted: i=1; AKwUvBy4+yJkBh12gRm9talEftUfMLr1kLioUtSoM7RExLg1IV6c7vy95xP3xPB7bJNlsqCMV+CynxDcu+o=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLcXVa5tGsauNkcclud6zmEob7YgaNINeCtOR71AlyQmT/6Nj0v
-	2TfDUJsROJc/e6ZUxGck5Fus/vW2M2qhSog69N5FG07gZoZPQbMc+Y89
-X-Gm-Gg: AYBFou32BJmXh2L33RRXGZChy4p60aGcxfB5wrPho+tF9kjeZAKD1tn1s4tfRBuMEz1
-	7A6v2zXjsEMUIDUQN9dtAhBLUr9WrGaAN2ieLaTP+Dr6H+RK2Jkfddc0rNicdjYaPH1zhy2tE9a
-	CPq+HSnwrZRvHY0oFy9ZyomU0faIoS+zOsGNkNuN0S7kzLu8tBBqmc8Hh8pFPNXitHxCUvIEFI/
-	YCXc48XC3z9rdiqgKprMAxZ/rKx1BMOrjyfbVj6ItNxreSjuvYa7qeTBYzyGSJjg7U2mgyf4bFn
-	9fIxsdIJY1ftwQPS4NeeDBD4GvewtbtQaoHMdbiHU0bSYNVmstxhM6MCCIe8YsT4VtwzaFQDpTb
-	meR2h/SBcciNfyV3gWDKowEOX9cY38DonM77tVONcZaQ7ebkJOjetvcUhE9n4qLj0sJdk0p5YVc
-	zeEMYesZp9rFXmC2k9ioSlL3WoiS6bYkcNqYsymwl8WubstLvwAiXt5FewAhGeJ+wcY4L0mEv0s
-	w4oJd++
-X-Received: by 2002:a05:6122:488c:b0:5ce:b65d:22b8 with SMTP id 71dfb90a1353d-5eaaa6a8d9amr3168085e0c.19.1792441505981;
-        Mon, 19 Oct 2026 13:25:05 -0700 (PDT)
+        bh=hsppLSOUeeqjvZdBbTpnZu3hGwb8gc1TK9datAxS4XA=;
+        b=CFJ2KsqMmbIo7UtPZXx3j6AVvvP52FpxGnddjpg6xbAzCUXLKiIJcOifoHesx8Bztg
+         ntGbkEhUd6+tyWb+/AmUQCLf1HL4ckojiqN0yyRAxycixL/VDhxxIG0N4X87oqXNLJhc
+         JQx3iquQI4ibyfTQCKbHsWtpXGX8ZbitARovpekluSkUQcCdbgFEDVgKF9TzSLOk+1vu
+         op0fYEhQp5/3iN3JC+bS9MmALBN1xOy18zzGqRcjqOprKBsSzuY6JciGVqFLxRyuLT32
+         AnbCIUtWVPHBl4FABVQsAahSDj6smgGEuqmcjhpnNHsNpNnOnM0ZZgZo18maR85HilCu
+         9BTw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792441512; x=1793046312;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=hsppLSOUeeqjvZdBbTpnZu3hGwb8gc1TK9datAxS4XA=;
+        b=stuo1THwQL1RfrmySwi7xLDHQRm+MSpvc1A/60hz7iDmQYO3NYjC32wjpWiVxtJ3F7
+         HK12Cy5NWsaBTeQGQpiLn772D7ZasQid81RnSt0u0nNbfMoOovDA2NIq0neNV8TabTxw
+         dggdyYh8S5Xz/sI1kOAqr5chDhHzRNqqp5HvG4c+1t1YSRFaYTBzmJLUwqMxjBd2wU5c
+         E9HW0/RVnIcqXVZaVgaNNV52FWX8Upf1JWHGrBnJF/qvw2v+bJ7bPFqY3BxV6oc+4w0x
+         DHlYkte93D+4bLJV9pJBsd7cPxqw8qulBs4X3iDJ47oQwJkB50dJcBy39UTxFY+AViFJ
+         1Gbg==
+X-Forwarded-Encrypted: i=1; AKwUvBxVm3QkI4fEcAcrPc9oq2YjhC9jTj6qJWQezJbXPairwxRlJ6ZrXN6yJ4apXghY2SlvJ46P2rjcBWs=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKWuzB6ebiOwNkU06Hs8x7BAwbFddvKmELVMQoQXfXlXfTFbb/8
+	gLPjXLIKa3Sg4FJ+TUj9VtecZbhHqhzFh2U6ABF+k+z8lt6Qs7pzBDv4
+X-Gm-Gg: AYBFou2t1t4w4TwK5n9lur6sX8IgWyYoyXVU9yaDObLX3ywDagDfIrPmDrlkchIBs5N
+	2F5bXhsBsUzqD40+ta2ZyMBezQPRTgSIPkmYKAuj6LIcigUdbRUpJicxQFwmv8O9vLJe9B2Y/2g
+	vnbYyIJc5hthLaUk3GBCB0Ios1xKmsUWnZ+ejqg4ZNE4xUWyXvDivNI1mwgRZ9wr+J07RBM5zn1
+	W+uLBugMvQOEaJPYL0t1t31WQuyG3m5IdGxAiBU1jRfZsbqyK3xQYJbIDpZOoLprHbfU5wYVFm5
+	Wq1SKF419Emf2OSFSPhlRRNB1fk5ubz5pJO5peX0xL8pAPvklPReQbHVWtx65xirjxdDIuMU14u
+	wWyCCCfDYbQDi2d1TGNyF0d6mIAx/B7L6/K33ZUdMs15WRRz023iVp5ynrSvVE9QPmkUokGb8vk
+	LtCi0mCfKxNgSZ7rYrBmqUSxP7R+G2/l6mN2EbDGR9dPqDwg3kg4sTTnhv29EZ4rpUBEsf3u+f/
+	y5q4hk2gI2GXDLBqvE=
+X-Received: by 2002:a05:6122:490d:b0:5ea:c727:11fa with SMTP id 71dfb90a1353d-5eac7271e8bmr1173834e0c.0.1792441511588;
+        Mon, 19 Oct 2026 13:25:11 -0700 (PDT)
 Received: from maclinux ([2803:c600:9110:8ba5:1c75:eeaa:b22f:20dc])
-        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5ea9b128725sm11194050e0c.0.2026.10.19.13.25.02
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5ea9b128725sm11194050e0c.0.2026.10.19.13.25.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Oct 2026 13:25:05 -0700 (PDT)
+        Mon, 19 Oct 2026 13:25:11 -0700 (PDT)
 From: =?UTF-8?q?Francisco=20Beltr=C3=A1n=20Millal=C3=A9n?= <fbeltranmillalen@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	linux-pci@vger.kernel.org
@@ -91,10 +92,12 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	Darrell Gum <d@rrell.co>,
 	linux-usb@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 0/2] PCI/PM: Keep the saved config space of an inaccessible device
-Date: Mon, 19 Oct 2026 17:24:43 -0300
-Message-ID: <20261019202445.38259-1-fbeltranmillalen@gmail.com>
+Subject: [PATCH v3 1/2] PCI/PM: Keep the saved config space of an inaccessible device
+Date: Mon, 19 Oct 2026 17:24:44 -0300
+Message-ID: <20261019202445.38259-2-fbeltranmillalen@gmail.com>
 X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261019202445.38259-1-fbeltranmillalen@gmail.com>
+References: <20261019202445.38259-1-fbeltranmillalen@gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -107,110 +110,105 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-When a PCI device stops responding while the system is suspending,
-pci_save_state() stores all ones over its saved config space, and
-pci_restore_state() writes that back on resume once the device responds
-again.  For a bridge, that means bus numbers ff/ff/ff and Secondary Bus
-Reset asserted, which cuts off everything below it.  Resume can also
-wait about 65 seconds for a device behind a dead bridge, because an
-all-ones Link Status reads as an active link.  I ran into both on a
-MacBookPro14,3.
+pci_save_state() saves the standard header without checking whether the
+device responded.  For an inaccessible device, each read returns all
+ones, overwriting the previous snapshot, which pci_restore_state()
+writes back after resume.  On a bridge, that sets every writable bit of
+the Bridge Control register, Secondary Bus Reset included, and sets the
+primary, secondary and subordinate bus numbers to 0xff, which cuts off
+everything below it.  This was seen on a MacBookPro14,3, where a bridge
+that stopped responding during system suspend came back after resume
+with bus numbers ff/ff/ff.
 
-Patch 1 makes pci_save_state() keep the previous snapshot of a device
-that is not accessible, instead of overwriting it with all ones.  Patch
-2 stops the link wait code from taking an all-ones Link Status for an
-active link.
+Commit e18d1abc3bff ("PCI: Avoid saving config space state if
+inaccessible") added pci_dev_config_accessible() and checks it before a
+reset.  Check it in pci_save_state() itself, so that system suspend is
+covered as well.
 
-Patch 2 does not depend on patch 1 and is unchanged from v2, so it can
-be applied on its own, as you offered on v2.
+If it is not accessible, keep the previous snapshot, mark the state as
+saved and return 0.  This avoids changing callers or making the PM core
+warn about a low-power device without saved state.  pci_bus_add_device()
+saves the state when the device is added, so normally a snapshot exists.
+That snapshot can be older than the last values the device had, for
+example if its driver changed the Command register after the last
+successful save.
 
-Why patch 1 changed
--------------------
-On v2 I described [1] what returning -EIO from pci_save_state() does to
-some drivers: stmmac_pci_plat_suspend(), intel_eth_pci_suspend(),
-atl1e, atl2 and amd_mp2 abort system suspend, and libata and others
-trigger the "State of device not saved" warning.  I asked how you would
-like those drivers handled, and said I would hold v3 until then.
+Assisted-by: LLM
+Signed-off-by: Francisco Beltrán Millalén <fbeltranmillalen@gmail.com>
+---
+v3:
+- Keep the previous snapshot and return 0 instead of returning -EIO, so
+  that callers see no change.  Returning -EIO changed what some drivers
+  do, as described on v2:
+  https://lore.kernel.org/all/20261011210451.12129-1-fbeltranmillalen@gmail.com/
+- Check accessibility only once, at the start of pci_save_state(), and
+  drop the temporary copy of the header and the second check, as Bjorn
+  suggested.
+- pci_dev_save_and_disable() is left as it is.  Bjorn suggested using
+  the return value of pci_save_state() there, and on v2 I said I would.
+  This version returns 0 for an inaccessible device, so the existing
+  check stays.  It also keeps that function from clearing the Command
+  register of a device that does not respond.
+- The commit message no longer presents this as a fix for the
+  Thunderbolt controller dropping off during suspend.
+- Darrell's Tested-by from v2 is not carried over, as the code changed.
+- Farhan pointed out [1] that in 2025 Lukas was concerned about checking
+  in pci_save_state() itself, as callers that don't need the check pay
+  for it [2].  The check is one config read on top of the 16 for the
+  header and those for the capabilities.  System suspend saves the state
+  both from the PCI core and from the suspend callbacks of many drivers,
+  so checking in every caller isn't practical.
 
-The Thunderbolt work exposed the same PCI problem in another path.  I
-have sent a Thunderbolt patch [2] that calls the SXFP ACPI method on
-Apple systems with Alpine Ridge before system sleep.  SXFP also powers
-down the xHCI on the side of the controller with nothing connected.
-The automated review of that patch pointed out that if this happens
-before the xHCI saves its state, pci_save_state() stores all ones and
-resume writes them back.  I found the same by reading the code; I have
-not run that case without this series.
+About the snapshot that is kept, which I have not tested beyond the
+case in the cover letter:
+- For a bridge, bus numbers and windows changed after the last
+  successful save, for example by hotplug, would be written back with
+  their older values.
+- The snapshot from pci_bus_add_device() is taken before the driver
+  probes, so a device that was never saved again since then gets the
+  pre-probe values.
+- A device that became inaccessible before it was added has no real
+  snapshot: the saved header is all zeros, which is what would be
+  written back.
 
-On v2 you wrote that skipping pci_save_state() when the device is not
-accessible seemed worthwhile.  That preserves a usable saved state, but
-does not make the Thunderbolt controller resume.  The Thunderbolt part
-now has its own patch in drivers/thunderbolt [2].  This version only
-does the skipping: pci_save_state() keeps the previous snapshot, marks
-the state as saved and returns 0, as it does today.  Callers see no
-change, and there is nothing for the PM core to warn about.  The device
-gets the config space it had when it was last accessible back on
-resume.  This makes v2 patch 1 (usb: hcd-pci) unnecessary, so it is
-dropped.  The values written back can be older than the last ones the
-device had; patch 1 describes that.
+[1] https://lore.kernel.org/all/7ed02ff5-d7f8-42e4-bca9-b3d3ce7b6795@linux.ibm.com/
+[2] https://lore.kernel.org/all/aOQX6ZTMvekd6gWy@wunner.de/
 
-If you would still rather have pci_save_state() report the failure, I'd
-like to know how you want the drivers above handled.
+v2:
+- Use pci_dev_config_accessible() instead of reading the Vendor ID,
+  which always reads as all ones on SR-IOV VFs: v1 refused to save the
+  state of every VF.
+- Do the second check after saving the capabilities, and set
+  state_saved only if both checks pass.
 
-[1] https://lore.kernel.org/all/20261011210451.12129-1-fbeltranmillalen@gmail.com/
-[2] https://lore.kernel.org/all/20261019134851.7496-1-fbeltranmillalen@gmail.com/
+ drivers/pci/pci.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-Changes since v2:
-- 1/2 (was 2/3): keep the previous snapshot and return 0 instead of
-  returning -EIO, with the check once at the start of pci_save_state()
-  as you suggested.  On v2 I said I would make pci_dev_save_and_disable()
-  use the return value of pci_save_state(); with this version that no
-  longer works, so it keeps its own check (see the notes in patch 1).
-- Dropped v2 1/3 (usb: hcd-pci).
-- 2/2 (was 3/3): no code change.  Added Darrell's Tested-by from v2.
-- Based on pci/next as of 2026-10-15 (732c4f7d2c04).
-
-v2: https://lore.kernel.org/all/20260930141914.6678-1-fbeltranmillalen@gmail.com/
-v1: https://lore.kernel.org/all/20260924124221.12374-1-fbeltranmillalen@gmail.com/
-
-Testing:
-I built patch 1 into a v6.18.49 kernel with patch 2, a backport of
-e18d1abc3bff and other local changes for the MacBookPro14,3, including
-the next version of the Thunderbolt patch above, with the changes Mika
-asked for in his review.  The USB HCD patch was not included.  I tested
-it on that machine with 30 second suspend/resume cycles and a USB 3
-disk on the Type-C ports, which sit behind the two Thunderbolt
-controllers:
-
-- Five cycles: three with the disk on one side or the other, one
-  removing the disk while the system was suspended, and one with
-  nothing connected.  All resumed, and both Thunderbolt controllers
-  came back.  The disk was read after each cycle in which it stayed
-  connected, and after the other two it worked when plugged in again
-  (on both sides after the first, on one after the second).  In these
-  cycles the xHCI saved its state before SXFP powered it down, so the
-  new check in pci_save_state() did not trigger.  The order of the two
-  is not fixed, as both suspend asynchronously.
-- To hit the case above, I also called SXFP earlier, in the PCI suspend
-  phase, through a test-only PCI quirk that is otherwise disabled.  In 3
-  of 3 cycles the xHCI on the empty side (each side at least once) was
-  reported as "Device config space inaccessible; unable to save state",
-  the snapshot from before was written back on resume instead of all
-  ones, and the xHCI came back.  A disk plugged into that xHCI
-  afterwards worked at USB 3 speed, on both sides.  In all of them the
-  snapshot was one taken earlier while the xHCI was accessible.
-
-There was no kernel WARNING and no "State of device not saved" during
-the whole boot.  The series itself was built on pci/next with W=1.  I
-have no SR-IOV hardware, so the VF case is untested, and the machine
-never reaches the pcie_wait_for_link_status() change.
-
-Thanks to Bjorn for the review and the simpler check, to Farhan for the
-pointer to the 2025 discussion, and to Darrell Gum for testing v2 on a
-second MacBookPro14,3.
-
-Francisco Beltrán Millalén (2):
-  PCI/PM: Keep the saved config space of an inaccessible device
-  PCI: Do not mistake an absent device for an active link
-
- drivers/pci/pci.c | 29 ++++++++++++++++++++++++-----
- 1 file changed, 24 insertions(+), 5 deletions(-)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a62af7320539..eacaa1e71a83 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1794,10 +1794,23 @@ static void pci_restore_pcix_state(struct pci_dev *dev)
+  * pci_save_state - save the PCI configuration space of a device before
+  *		    suspending
+  * @dev: PCI device that we're dealing with
++ *
++ * If the config space of @dev is not accessible, the previous snapshot is
++ * kept and reported as saved, as writing back the all-ones values read from
++ * such a device would corrupt it once it is accessible again.
++ *
++ * Return: 0 on success, or a negative errno if a capability could not be
++ * saved.
+  */
+ int pci_save_state(struct pci_dev *dev)
+ {
+ 	int i;
++
++	if (!pci_dev_config_accessible(dev, "save state")) {
++		dev->state_saved = true;
++		return 0;
++	}
++
+ 	/* XXX: 100% dword access ok here? */
+ 	for (i = 0; i < 16; i++) {
+ 		pci_read_config_dword(dev, i * 4, &dev->saved_config_space[i]);
