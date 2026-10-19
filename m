@@ -1,74 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.69
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792445486;
-	b=yik8i0SzSpq5av1Lc+pPYTAg+8LjkUxMesu1w4R5myWFJ8afIpV0zUHR1bAbYlocEVSR
-	 hglU8TPThpIpv6SuJD1XXpeIYv+yLYxjFHO6kR6TIXoGasa+dTjQFFpUvzSqtgZ7DNvw/
-	 Gxqlc/ARhuikQk/OlhiOpQGOtTSq1ZYWpkmEDt8rAXc5VlEuIn8L+xYlW92kQwTDtFgRZ
-	 wIdcDYMeSri2uj/BjZslkApgkfzydqS9wLP8PNMjWiNB/t+b1rgfH6nTqcFJUbi/wZZEZ
-	 o7ioPUzU+Jh70PLYFOYWH8QzKLebUao7yZPywJwcNbBhqNS7GqMgxEDJ1IhiCCjhpmA==
+	t=1792445491;
+	b=aaKWLl82dGy0mCroTjHYjUc/d2jpT6iGNZGdWRGLFUGvJY+0gNpRF8TrRQ5RCfaDCsUw
+	 5Np4MWouXi7NIFFhBOY4I06+0xUG6v37O45mu/tSXOo6K+tj5ELz4wufw6Yzyi4RjzMQI
+	 x3Oa11IZe9flw66qLRmueob+nZjo2szc4OshZ2iCgn7S7dVhAGhiITAl0ACMmepNx1ae9
+	 rp22g9ogB4AafgY3PtcdunueSwyeFeTngt/gfftS4sycSTEim4paWVKpx20EbCBlp2Cr+
+	 i9pRGHhiHyqAA/4DNkUsQCSwu6q2X11wg0TwtbohE53gmpVIkNRkOUNRmMB4L95P5Zw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792445486;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792445491;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
 	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
 	 Content-Type;
-	bh=ob0OqST4cKlshaBFbfeFqwou5GMUNnLOz8/rLCUeWMM=;
-	b=ScaAIvpJsFZzmdbv08JnSBQyI3l7KVJ9anb+VvciU9r0uiIi9E/HoyuaW9TAeaA78qik
-	 WVDYju1bNDy8Kmb5XsoMulPPbi4hHC8awdlTcym8MfcHZf1E7wB6AkOlOKrjg4jDc+SBo
-	 6Zy8OxCk18bxTvAkaJtdvdZysyXxx3vCw4x3XINbHXuFKVDJ/6pu/7yPz0B1bx4yE6saa
-	 JrEr1HuK8ogFSN4eCmJdql8bt/qClsgQYnYq/FkrgqUftiIQuGbo2ErUIH+t6EgokokjW
-	 71wJclRIkZN/echaZAqveMdQuhjYazx3JZrOs1P7Kr1cxlRw1f124s/raZKuaaCWjyg==
+	bh=27szfxESPIZuT7PVf91SFMXZ+5PrRuOJzgCi66FtF/Q=;
+	b=N+dfns/5QAuWzGYSkrp+MosEBQCpxv9gUxeOI9K1WIRs+YOW5uClrNFOHjJbRSATijNG
+	 YUB43Xl3aT7YW7R3BfVGEqMRxuvWXSWUfblcY0cf22+E+hEXRVoKhzlLL2PVt71pqTFRX
+	 Lk1FKiZ4m3Lsno6O71NPU/VuSuRavZa/+4RV9jGHM8/O8pFGCE2/MBUhmjDvy2JyqFGYB
+	 H4kJZe+3N6v1ihW9+iseILgh0W/QOeXNsvQlFSfEtXz+7+3XnrIjqZBdKopf08XYZ4B2j
+	 av9ClJoj/dPVmXlgDZo4xGfOHJ/MRmViKNeOA7mmnh0DvSdZCqq+PUtzUe6wrTNrRXQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=T4Sro0OZ;
-	arc=none smtp.remote-ip=209.85.216.72
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=i4lrcuR5;
+	arc=none smtp.remote-ip=209.85.216.69
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9540760A2606
-	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 21:31:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9540760A2606
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7C7B606A32E
+	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 21:31:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A7C7B606A32E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=T4Sro0OZ
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-3ac575a9198so4414554a91.3
-        for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 14:31:25 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=i4lrcuR5
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38f97b3f853so3476334a91.3
+        for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 14:31:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1792445485; x=1793050285; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1792445490; x=1793050290; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=ob0OqST4cKlshaBFbfeFqwou5GMUNnLOz8/rLCUeWMM=;
-        b=T4Sro0OZ28fiKwxvpYEt2fs/XjjsSsNpSO94bH2OQtLu/IXEZJZJht2v0BcI0JKV4n
-         aQLcBeYaohTHUbSA9J5/u0tzt8PvXV8FK4Y8HDSks3AZ8FxqN6VsrABTSKH4RMQ1B6lQ
-         OpuiEbqdaroJoFQtv1F2cYA6XfF6kXOJtLuXzrj6WDXZB4MmqM/+jqWxoB8dkw8SjjPz
-         VXmnttPaZ2su7b42g0v6PpSqkp0+2YyNkR/XSutq0vGH9OS88qE4QPpE7xihQ4ZXLpeZ
-         WACJ14okGtZVoKw9zDkRZIxJi//iDUkS2f+2aPclxtRjFIiqdhKnAV1I/ZEv+VtpjR4v
-         sK6g==
+        bh=27szfxESPIZuT7PVf91SFMXZ+5PrRuOJzgCi66FtF/Q=;
+        b=i4lrcuR5Gz3f03/2FaWCGGrOASn2Z8EJMgJpErVvT8tyfFmDQ+pvrxBkXLLzk5LTQi
+         0rNv8Df3ri/jYg101eIWcr/8kAP0BGnChC7KfQ5/5O6u3Z9ns0j67XyfF0D2O8IsnfpA
+         08mQTrT3dH8UboVu3Emoo9YxxkU54NFTNSWpbteQtQ+kfaFCHYNXeo01hex7+i8r2GxA
+         XiDP6Yf9FI8SrbO7sLCzsbHpc+Zf9Nu1IlCtkS3330fIjP9JN9F0qNRF44GJC+BlsDNK
+         WdoA79vBUa3NpK9JmePcuCm6djuDjnI6p+fdeWzlqQrNYw1gM0UFGGTTTdpCxoqivYnq
+         RqvQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792445485; x=1793050285;
+        d=1e100.net; s=20260707; t=1792445490; x=1793050290;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=ob0OqST4cKlshaBFbfeFqwou5GMUNnLOz8/rLCUeWMM=;
-        b=ElrjqldEN/4Uwo/CZzXFJATsoBRml4WuCgrhtVb+ru4sdJ/Q6b4HikJEi9ROn/We2X
-         AQ8ac1LbYMeanHmPnC2gsFLc4+xE0/RfoH9mjc6rtNzm6Grw7B6HdRZ10vBOsIJ2qSZF
-         mzo6qSuDfSy0L7FL15cOsGj7xduJIQ6PCN8FQM4zh9Gnvl7pAwT0aywtLNdgsFD7G8Hk
-         VJPmtmv2WIme0wT+kYkYCPMiZmcrdqXfWTWI9kiBQx1dukkHqiAjS70R283f9r4A1dHO
-         B5pc02F1A1dFc2CBH6LG6XxC9e6ielx4BfbQt0LiiZtRIheKHyTo29dJ0jUsbfgnY/ed
-         6KiQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzbSW6MJJytbenJ8tOXDagiHmnXAHw8PeDTcPF5Cdk30L4GfwMlD2SsK4P+lmM8MniFVdeHifIf0ac=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJ3G9C62uI4FenFXioffvjrKHduz+I+uJCmy3jS45owFvZkZyMK
-	OdVxaCqguFYpj96vyMULnBkoTSxFkcVMA7qlfmJlFzC9NVUVhdkBFg/hWO14HKQvTa3p/bnVVG3
-	+7/AbTGGuVJy8rQ==
-X-Received: from plxe4.prod.google.com ([2002:a17:902:ef44:b0:2e9:73da:58d6])
+        bh=27szfxESPIZuT7PVf91SFMXZ+5PrRuOJzgCi66FtF/Q=;
+        b=MnPMEQqA41FCKSp5QRvo0VZYLRVULzHqxsipZQf5DzKsl7TiCdAdTXef4cYaq8u6Ge
+         jNJ0WHmBHLBE2PT/BqApOhinZ254Ip0EAKQ3/xbFZGrn4gO4n9AspuEOmgOVAst54GzL
+         l++p2yTl/8kh8dUXRCcrChis394+ZwE85KR1YuP4j1m+3Bhsr1hvJ+j7N3OCcUNI36Tz
+         Y8MC/FbV11qISp63OwMvtHsRFetmznl9yP+UHlYhYjcGvvziuxRigNp8JSbIxR8exA4X
+         NWnaWOgVh/7O0kwv7t+8pp4iF7srRqPoWrOCTZQgILsObeZFDXtFWEb+XrcAz6kA1l6V
+         ZpsQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzwaXlJ1NDX0O7NEp0y++Bdmq2p8HF11dBwnvi4NCw0tF4sodB5T6wqG7CUHqkABdh/iWEefwKiTMA=@vger.kernel.org
+X-Gm-Message-State: AFq9FYLMzPElJcdolTFcbZ+hDGSAvmKQqjWMEjBj5aTEWTjN06cIC+LZ
+	1K1We5B/0JYEYUaR41eIDEnQPg3CuXD7nunumBCJ/bIJnMrfBqCxMB5QYKjgZdbtXA0M4AP1RCT
+	mFlGsG56khtf3tA==
+X-Received: from pgbm24-n2.prod.google.com ([2002:a05:6a02:6198:20b0:cc7:c2bc:cc73])
  (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90b:2b48:b0:3ac:9f00:3bc7 with SMTP id 98e67ed59e1d1-3acef0c88a8mr8307573a91.33.1792445484749;
- Mon, 19 Oct 2026 14:31:24 -0700 (PDT)
-Date: Mon, 19 Oct 2026 21:30:48 +0000
+ 2002:a17:90b:4d06:b0:3a6:e159:a233 with SMTP id 98e67ed59e1d1-3aceefae03fmr7921990a91.43.1792445489657;
+ Mon, 19 Oct 2026 14:31:29 -0700 (PDT)
+Date: Mon, 19 Oct 2026 21:30:54 +0000
 In-Reply-To: <20261019213054.3157159-1-dmatlack@google.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,8 +81,8 @@ Precedence: list
 Mime-Version: 1.0
 References: <20261019213054.3157159-1-dmatlack@google.com>
 X-Mailer: git-send-email 2.56.0.212.g129ede20d9-goog
-Message-ID: <20261019213054.3157159-5-dmatlack@google.com>
-Subject: [PATCH 04/10] PCI: liveupdate: Avoid probing windows of incoming bridges
+Message-ID: <20261019213054.3157159-11-dmatlack@google.com>
+Subject: [PATCH 10/10] PCI: liveupdate: Avoid enabling INTx on incoming devices
 From: David Matlack <dmatlack@google.com>
 To: kexec@lists.infradead.org, linux-kernel@vger.kernel.org, 
 	linux-mm@kvack.org, linux-pci@vger.kernel.org
@@ -98,274 +98,185 @@ Cc: Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.
 	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Avoid probing which windows incoming preserved bridges implement during
-enumeration. Instead, add a new optional feature for passing the
-results of probing in struct pci_dev_ser, and use it to pass which
-windows each preserved bridge implements.
+Avoid clearing PCI_COMMAND_INTX_DISABLE on incoming preserved devices.
+Pass whether INTx masking is broken on each preserved device to the
+next kernel instead of probing it, and skip clearing
+PCI_COMMAND_INTX_DISABLE in do_pci_enable_device() for incoming
+devices.
 
-pci_probe_bridge_windows() always writes all 1s to the Prefetchable
-Base Upper 32 Bits register of bridges with a 64-bit prefetchable
-window to check that it is writable. This temporarily disables the
-prefetchable window, so the bridge stops forwarding memory transactions
-targeting devices below it, such as P2PDMA from other preserved devices,
-or MMIO from VMs whose vCPUs keep running during kexec.
+Clearing PCI_COMMAND_INTX_DISABLE enables INTx on the device, even if
+only temporarily. pci_intx_mask_broken() probes whether INTx masking
+works by toggling PCI_COMMAND_INTX_DISABLE during enumeration, and
+do_pci_enable_device() clears it when a device that is not using MSI or
+MSI-X is enabled. A preserved device may assert INTx at any point
+during the Live Update, before its driver in the next kernel has set up
+interrupt handling, so enabling INTx could result in interrupts that
+no handler claims, on a line that may be shared with other devices.
 
-The new optional feature, PCI_SER_OPTIONAL_PROBED, appends two bitmasks
-to struct pci_dev_ser: @probed holds the results of probing properties
-of the device that require temporarily writing to it, one bit per
-property (PCI_DEV_SER_PROBED_*), and @probed_supported indicates which
-bits of @probed are valid. This allows passing the results of more
-probes in the future (e.g. whether INTx masking is broken) without
-adding a new feature flag for each one, and lets the next kernel use
-the results it understands and probe the rest.
+Pass the result of probing as a new bit in the probed results in
+struct pci_dev_ser, PCI_DEV_SER_PROBED_BROKEN_INTX_MASKING, which
+reflects struct pci_dev::broken_intx_masking. If the previous kernel
+did not pass it, fall back to probing INTx masking.
 
-If the previous kernel did not pass which windows a bridge implements,
-fall back to probing the windows.
+Drivers bound to incoming devices are responsible for enabling INTx once
+they are ready to handle it. pci_alloc_irq_vectors() already does so
+with pci_intx() when it falls back to INTx, and vfio-pci clears
+PCI_COMMAND_INTX_DISABLE itself in vfio_pci_core_enable().
 
 Assisted-by: LLM
 Signed-off-by: David Matlack <dmatlack@google.com>
 ---
- drivers/pci/liveupdate.c    | 93 ++++++++++++++++++++++++++++++++++++-
- drivers/pci/liveupdate.h    |  6 +++
- drivers/pci/probe.c         |  9 ++++
- include/linux/kho/abi/pci.h | 24 ++++++++++
- 4 files changed, 131 insertions(+), 1 deletion(-)
+ drivers/pci/liveupdate.c    | 37 ++++++++++++++++++++++++++++++++++++-
+ drivers/pci/liveupdate.h    |  6 ++++++
+ drivers/pci/pci.c           |  8 ++++++++
+ drivers/pci/probe.c         | 10 ++++++++++
+ include/linux/kho/abi/pci.h |  3 +++
+ 5 files changed, 63 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-index f48cab3cc232..72ad4fd00f7b 100644
+index ac4525568818..8a74762c3f7d 100644
 --- a/drivers/pci/liveupdate.c
 +++ b/drivers/pci/liveupdate.c
-@@ -204,6 +204,12 @@
-  *    vCPUs keep running during kexec). Instead, the previous kernel passes the
-  *    size of each BAR in struct pci_dev_ser. Everything else about the BARs
-  *    (e.g. their addresses and types) is read from the device as usual.
+@@ -216,6 +216,11 @@
+  *    bridge implements), since that would disrupt memory transactions
+  *    targeting the device or devices below it. Instead, the previous kernel
+  *    passes the results of probing in struct pci_dev_ser.
 + *
-+ *  * The PCI core does not probe properties of incoming preserved devices
-+ *    that require temporarily writing to the device (e.g. which windows a
-+ *    bridge implements), since that would disrupt memory transactions
-+ *    targeting the device or devices below it. Instead, the previous kernel
-+ *    passes the results of probing in struct pci_dev_ser.
++ *  * The PCI core does not enable INTx (i.e. clear PCI_COMMAND_INTX_DISABLE)
++ *    on incoming preserved devices, neither while probing whether INTx masking
++ *    works nor when the device is enabled, since the device could then raise
++ *    interrupts before its driver is ready to handle them.
   */
  
  #define pr_fmt(fmt) "PCI: liveupdate: " fmt
-@@ -282,7 +288,13 @@ struct pci_flb_incoming {
-  * Bits in struct pci_ser::optional_flags that this kernel knows how to handle.
-  * This kernel also provides all of them to the next kernel.
-  */
--#define PCI_SER_OPTIONAL_FLAGS_SUPPORTED	PCI_SER_OPTIONAL_BAR_MASKS
-+#define PCI_SER_OPTIONAL_FLAGS_SUPPORTED \
-+	(PCI_SER_OPTIONAL_BAR_MASKS | PCI_SER_OPTIONAL_PROBED)
-+
-+#define PCI_DEV_SER_PROBED_WINDOWS		\
-+	(PCI_DEV_SER_PROBED_IO_WINDOW |		\
-+	 PCI_DEV_SER_PROBED_PREF_WINDOW |	\
-+	 PCI_DEV_SER_PROBED_PREF_64_WINDOW)
- 
- /*
-  * The minimum size of struct pci_dev_ser given the optional features that are
-@@ -295,6 +307,9 @@ static u32 pci_dev_ser_min_size(u64 optional_flags)
- 	if (optional_flags & PCI_SER_OPTIONAL_BAR_MASKS)
- 		size = max(size, offsetofend(struct pci_dev_ser, rom_mask));
- 
-+	if (optional_flags & PCI_SER_OPTIONAL_PROBED)
-+		size = max(size, offsetofend(struct pci_dev_ser, probed));
-+
- 	return size;
- }
- 
-@@ -626,6 +641,28 @@ static void pci_liveupdate_save_bar_masks(struct pci_dev *dev,
- 	dev_ser->rom_mask = lower_32_bits(mask);
- }
- 
-+static void pci_liveupdate_preserve_probed(struct pci_dev *dev,
-+					   struct pci_dev_ser *dev_ser)
-+{
-+	u64 supported = 0, probed = 0;
-+
-+	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+		supported |= PCI_DEV_SER_PROBED_WINDOWS;
-+
-+		if (dev->io_window)
-+			probed |= PCI_DEV_SER_PROBED_IO_WINDOW;
-+
-+		if (dev->pref_window)
-+			probed |= PCI_DEV_SER_PROBED_PREF_WINDOW;
-+
-+		if (dev->pref_64_window)
-+			probed |= PCI_DEV_SER_PROBED_PREF_64_WINDOW;
-+	}
-+
-+	dev_ser->probed_supported = supported;
-+	dev_ser->probed = probed;
-+}
-+
- static int pci_liveupdate_preserve_device(struct pci_flb_outgoing *outgoing,
- 					  struct pci_dev *dev)
+@@ -650,7 +655,11 @@ static void pci_liveupdate_save_bar_masks(struct pci_dev *dev,
+ static void pci_liveupdate_preserve_probed(struct pci_dev *dev,
+ 					   struct pci_dev_ser *dev_ser)
  {
-@@ -671,6 +708,8 @@ static int pci_liveupdate_preserve_device(struct pci_flb_outgoing *outgoing,
- 		if (IS_ERR(dev_ser))
- 			return PTR_ERR(dev_ser);
- 
-+		pci_liveupdate_preserve_probed(dev, dev_ser);
+-	u64 supported = 0, probed = 0;
++	u64 supported = PCI_DEV_SER_PROBED_BROKEN_INTX_MASKING;
++	u64 probed = 0;
 +
- 		pci_info(dev, "Device will be preserved across next Live Update\n");
- 		outgoing->ser->nr_devices++;
- 		outgoing->ser->devices = kho_block_set_head_pa(&outgoing->block_set);
-@@ -1116,6 +1155,58 @@ int pci_liveupdate_read_bar_masks(struct pci_dev *dev, unsigned int nr_bars,
++	if (dev->broken_intx_masking)
++		probed |= PCI_DEV_SER_PROBED_BROKEN_INTX_MASKING;
+ 
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+ 		supported |= PCI_DEV_SER_PROBED_WINDOWS;
+@@ -1213,6 +1222,32 @@ int pci_liveupdate_read_bridge_windows(struct pci_dev *bridge)
  	return 0;
  }
  
-+/*
-+ * Get the results of probing @bits on the incoming device @dev, as passed by
-+ * the previous kernel. Returns false if the previous kernel did not pass all of
-+ * @bits, in which case they must be probed.
-+ */
-+static bool pci_liveupdate_read_probed(struct pci_dev *dev, u64 bits,
-+				       u64 *probed)
-+{
-+	struct pci_dev_ser *dev_ser = dev->liveupdate.incoming;
-+
-+	lockdep_assert_held(&pci_liveupdate.rwsem);
-+
-+	if (!dev_ser)
-+		return false;
-+
-+	if (!(pci_liveupdate.incoming_optional_flags & PCI_SER_OPTIONAL_PROBED))
-+		return false;
-+
-+	if ((dev_ser->probed_supported & bits) != bits)
-+		return false;
-+
-+	*probed = dev_ser->probed & bits;
-+	return true;
-+}
-+
 +/**
-+ * pci_liveupdate_read_bridge_windows() - Get the windows of an incoming bridge
-+ * @bridge: The PCI bridge
++ * pci_liveupdate_intx_mask_broken() - Get whether INTx masking is broken on an
++ *                                     incoming device
++ * @dev: The PCI device
 + *
-+ * Set which windows @bridge implements (@bridge->io_window, pref_window, and
-+ * pref_64_window) as determined by the previous kernel, so that the windows do
-+ * not need to be probed.
++ * Get whether INTx masking is broken on @dev as determined by the previous
++ * kernel, so that INTx masking does not need to be probed.
 + *
-+ * Return: 0 on success, or -ENODATA if @bridge is not incoming-preserved or
-+ * the previous kernel did not pass which windows @bridge implements.
++ * Return: 1 if INTx masking is broken, 0 if it is not, or -ENODATA if @dev is
++ * not incoming-preserved or the previous kernel did not pass whether INTx
++ * masking is broken on @dev.
 + */
-+int pci_liveupdate_read_bridge_windows(struct pci_dev *bridge)
++int pci_liveupdate_intx_mask_broken(struct pci_dev *dev)
 +{
 +	u64 probed;
 +
 +	guard(rwsem_read)(&pci_liveupdate.rwsem);
 +
-+	if (!pci_liveupdate_read_probed(bridge, PCI_DEV_SER_PROBED_WINDOWS,
++	if (!pci_liveupdate_read_probed(dev,
++					PCI_DEV_SER_PROBED_BROKEN_INTX_MASKING,
 +					&probed))
 +		return -ENODATA;
 +
-+	bridge->io_window = !!(probed & PCI_DEV_SER_PROBED_IO_WINDOW);
-+	bridge->pref_window = !!(probed & PCI_DEV_SER_PROBED_PREF_WINDOW);
-+	bridge->pref_64_window = !!(probed & PCI_DEV_SER_PROBED_PREF_64_WINDOW);
-+	return 0;
++	return !!probed;
 +}
 +
- /**
-  * pci_liveupdate_is_incoming() - Check if a device is incoming-preserved
-  * @dev: The PCI device to check
+ /*
+  * Check if the windows of @bridge have been read from hardware. Outside of x86
+  * that does not happen during scanning.
 diff --git a/drivers/pci/liveupdate.h b/drivers/pci/liveupdate.h
-index 80749f14beea..4c4104025a7e 100644
+index 98d23e217308..7f86cc85deee 100644
 --- a/drivers/pci/liveupdate.h
 +++ b/drivers/pci/liveupdate.h
-@@ -21,6 +21,7 @@ int pci_liveupdate_adopt_ari(struct pci_dev *dev);
- bool pci_liveupdate_is_outgoing(struct pci_dev *dev);
+@@ -22,6 +22,7 @@ bool pci_liveupdate_is_outgoing(struct pci_dev *dev);
  int pci_liveupdate_read_bar_masks(struct pci_dev *dev, unsigned int nr_bars,
  				  u32 *bar_masks, u32 *rom_mask);
-+int pci_liveupdate_read_bridge_windows(struct pci_dev *bridge);
+ int pci_liveupdate_read_bridge_windows(struct pci_dev *bridge);
++int pci_liveupdate_intx_mask_broken(struct pci_dev *dev);
+ void pci_liveupdate_claim_bus_resources(struct pci_bus *bus);
  #else
  static inline void pci_liveupdate_setup_device(struct pci_dev *dev)
- {
-@@ -66,6 +67,11 @@ static inline int pci_liveupdate_read_bar_masks(struct pci_dev *dev,
- {
+@@ -74,6 +75,11 @@ static inline int pci_liveupdate_read_bridge_windows(struct pci_dev *bridge)
  	return -EINVAL;
  }
-+
-+static inline int pci_liveupdate_read_bridge_windows(struct pci_dev *bridge)
+ 
++static inline int pci_liveupdate_intx_mask_broken(struct pci_dev *dev)
 +{
 +	return -EINVAL;
 +}
- #endif
- 
- #endif /* DRIVERS_PCI_LIVEUPDATE_H */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 473e4389ffae..184d93aa8522 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -529,6 +529,15 @@ static void pci_probe_bridge_windows(struct pci_dev *bridge)
- 	u16 io;
- 	u32 pmem, tmp;
++
+ static inline void pci_liveupdate_claim_bus_resources(struct pci_bus *bus)
+ {
+ }
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 853c84a2c782..43af72d1e5c9 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2184,6 +2184,14 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+ 	if (dev->msi_enabled || dev->msix_enabled)
+ 		return 0;
  
 +	/*
-+	 * Writing to the window registers would disrupt memory transactions
-+	 * that bridges preserved across Live Update forward to devices below
-+	 * them, so use the windows determined by the previous kernel for those
-+	 * bridges.
++	 * Leave INTx disabled on devices preserved across Live Update, since
++	 * the device could raise interrupts before its driver is ready. It is
++	 * up to the driver to enable INTx once it is ready.
 +	 */
-+	if (!pci_liveupdate_read_bridge_windows(bridge))
-+		return;
++	if (pci_liveupdate_is_incoming(dev))
++		return 0;
 +
- 	pci_read_config_word(bridge, PCI_IO_BASE, &io);
- 	if (!io) {
- 		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
+ 	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+ 	if (pin) {
+ 		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index a53d0077a08b..badce31b34f8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1976,6 +1976,16 @@ static u8 pci_hdr_type(struct pci_dev *dev)
+ static int pci_intx_mask_broken(struct pci_dev *dev)
+ {
+ 	u16 orig, toggle, new;
++	int ret;
++
++	/*
++	 * Toggling PCI_COMMAND_INTX_DISABLE could let a device preserved across
++	 * Live Update raise interrupts before its driver is ready, so use the
++	 * result determined by the previous kernel for those devices.
++	 */
++	ret = pci_liveupdate_intx_mask_broken(dev);
++	if (ret >= 0)
++		return ret;
+ 
+ 	pci_read_config_word(dev, PCI_COMMAND, &orig);
+ 	toggle = orig ^ PCI_COMMAND_INTX_DISABLE;
 diff --git a/include/linux/kho/abi/pci.h b/include/linux/kho/abi/pci.h
-index 5fa2ecfe5b6d..84a1bf71eeca 100644
+index 84a1bf71eeca..badcf2f01be7 100644
 --- a/include/linux/kho/abi/pci.h
 +++ b/include/linux/kho/abi/pci.h
-@@ -66,6 +66,13 @@
-  *             which requires disabling decoding and would disrupt memory
-  *             transactions targeting the device.
-  * @rom_mask: Same as @bar_masks, but for the Expansion ROM BAR.
-+ * @probed_supported: The ``PCI_DEV_SER_PROBED_*`` bits that are valid in
-+ *                    @probed.
-+ * @probed: The results of probing properties of the device that require
-+ *          temporarily writing to it (``PCI_DEV_SER_PROBED_*``). Used by the
-+ *          next kernel instead of probing the device again, which would
-+ *          disrupt memory transactions targeting the device or devices below
-+ *          it.
-  *
-  * Each field after @refcount is only present if the ``PCI_SER_OPTIONAL_*``
-  * flag that covers it is set in ``pci_ser.optional_flags``.
-@@ -76,8 +83,23 @@ struct pci_dev_ser {
- 	u16 refcount;
- 	u32 bar_masks[PCI_STD_NUM_BARS];
- 	u32 rom_mask;
-+	u64 probed_supported;
-+	u64 probed;
- } __packed;
+@@ -95,10 +95,13 @@ struct pci_dev_ser {
+  *    window.
+  *  * PCI_DEV_SER_PROBED_PREF_64_WINDOW: The bridge's prefetchable memory
+  *    window is 64-bit.
++ *  * PCI_DEV_SER_PROBED_BROKEN_INTX_MASKING: INTx masking cannot be used on
++ *    the device, i.e. struct pci_dev::broken_intx_masking is set.
+  */
+ #define PCI_DEV_SER_PROBED_IO_WINDOW		BIT_ULL(0)
+ #define PCI_DEV_SER_PROBED_PREF_WINDOW		BIT_ULL(1)
+ #define PCI_DEV_SER_PROBED_PREF_64_WINDOW	BIT_ULL(2)
++#define PCI_DEV_SER_PROBED_BROKEN_INTX_MASKING	BIT_ULL(3)
  
-+/*
-+ * Bits in struct pci_dev_ser::probed_supported and probed:
-+ *
-+ *  * PCI_DEV_SER_PROBED_IO_WINDOW: The bridge has an I/O window.
-+ *  * PCI_DEV_SER_PROBED_PREF_WINDOW: The bridge has a prefetchable memory
-+ *    window.
-+ *  * PCI_DEV_SER_PROBED_PREF_64_WINDOW: The bridge's prefetchable memory
-+ *    window is 64-bit.
-+ */
-+#define PCI_DEV_SER_PROBED_IO_WINDOW		BIT_ULL(0)
-+#define PCI_DEV_SER_PROBED_PREF_WINDOW		BIT_ULL(1)
-+#define PCI_DEV_SER_PROBED_PREF_64_WINDOW	BIT_ULL(2)
-+
  /*
   * The size of struct pci_dev_ser when this ABI was introduced. Since fields
-  * can only be appended, every struct pci_dev_ser is at least this large.
-@@ -113,7 +135,9 @@ struct pci_ser {
-  * large enough to contain the fields of struct pci_dev_ser that it covers:
-  *
-  *  * PCI_SER_OPTIONAL_BAR_MASKS: @bar_masks and @rom_mask
-+ *  * PCI_SER_OPTIONAL_PROBED: @probed_supported and @probed
-  */
- #define PCI_SER_OPTIONAL_BAR_MASKS	BIT_ULL(0)
-+#define PCI_SER_OPTIONAL_PROBED		BIT_ULL(1)
- 
- #endif /* _LINUX_KHO_ABI_PCI_H */
 -- 
 2.56.0.212.g129ede20d9-goog
 
