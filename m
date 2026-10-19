@@ -1,82 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=204.191.154.188
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792442779;
-	b=mVbtlHMCQirReMn+BiKdIcPbVraD0Wa7znylyJsN5YLfYebsnLI3onoe1Kb+ao0kwBc2
-	 ADVUqPVQSHjYI5KmqibWVSsoJAyFoKikIm5qVB8Kxrb3nbamqpC2o7ukC7RqN38Ph6A6e
-	 GNWGO7sVjgFs0QSaJ1IUgiDHH7VVrKQXOaIVOLch+On7xXcehkxNzBa5dCG7xKNYiUJae
-	 Bv/WLAEYQJH2yvKc6cReT70p0wakpbEy1eQ5guktGkb7l5cT7H26Bo08FguZUBg4+BLWN
-	 3JxvHT891w8H24kW2zEQmHk6cys+Ogk1eEwfwApR1oAMsWmb/wpdwmayZkZEvdlXIuA==
+	t=1792444500;
+	b=VOSTpE1Joktl9LM3eiV5ECHdVFjP2xIvxskiKWLoH5jCMFNGUjMNWh+SrXcMyUCfwnHg
+	 LRgN1y1JaIkq3XiuOK2AG0TEkVz5bHQotY3i/krm8xi3mpk6d2EKt3yAIcbAx79g4ZfCg
+	 L6nmb+F5+d/LWadkmMMXgmIvjrih6ZgijeodAgU7iuGWTpGFur+oFmarAiJwyoaZdkJvV
+	 U29Tij0iT/Jmc+SOfrUifw+Pcg60zdKH0B3gKp2FpbHwXS51R/Teo/hQgh/4192/SD3nF
+	 LpT+nsq29T5fFxDGfgNxTbkCy3L4GpwSIVXEMZHu9HlqI1vwa/HfTj0HRfUCbX2N12Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792442779;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
-	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=26rFftVWg3BQetk+2+hV1kDO5oxZKU6oU2x+jE3vKwM=;
-	b=45KT5z/EWNv39qv6ehb95mPvaDEmY9yk9Qk1Wt7xNeuuGj5tcrUi5fI8xakPSwqLIy67
-	 NzZ2QFBk/Dw6PsjlKjntcdA1G4OzZfLz6GO+PYX5mCG/yWzKohDejY1nYUFASUARkm5E3
-	 opT9MTDl2X8F3UVAbGe2tiPpfc/OzlIug1GjpojUrTVt2xt+Bg14da1g1kLg+AyqjUcPv
-	 eowuDbZ3/tEGsU1roIUotzFlDwySO88zEUHykCs7yXiVkbMKtOwN/TTESmj3O1FNdjTYe
-	 O1d5gJhjzr9cYEkz2LorBmDU5N2SXtGrMq9ieOLDEKDE4dwcc5zabU8/hhs5xqJkjnw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792444500;
+	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-SA-Exim-Connect-IP:
+	 X-SA-Exim-Rcpt-To:X-SA-Exim-Mail-From:X-Spam-Checker-Version:
+	 X-Spam-Level:X-Spam-Status:Subject:X-SA-Exim-Version:
+	 X-SA-Exim-Scanned;
+	bh=UUZq94NQZVOOmLkYnr0O3jTydDL2EzwXIjitFjyB/co=;
+	b=s4HzL5WgwyO2S/BIxkUQl+HXp5VDOXAIM69UTArs3+TpMA0SRpcwrf3xxJ3v4P0pQGYO
+	 gJuNRKUvWT7JcZrrN10+AYbXGg1qxTk1UNbuHtsZySm89LJ42DxeXbHsC1oNo/D6hLxkI
+	 weCSWNMr8dhJfQ6H1Q48XX7VK5OCp4n/lAgXdeLap48/6SCMeQnXHfBqfk+dbsST1OaCh
+	 8LC2FcidOYsdTnjMBY+h1ooTGVdssAzET5GkImPOijCs5k0iCOEQEBqZ5jc7qkUpvVX6u
+	 o0SleaXA8x6FvfXyhzBrHqNB7OK3uHTo7TM1jRBeyKbxZY+HyFjtO6uNfqj/S9SGjIA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=E38UPn2r;
-	arc=none smtp.remote-ip=192.198.163.7
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=deltatee.com;
+	spf=pass smtp.mailfrom=deltatee.com;
+	dkim=pass header.d=deltatee.com header.i=@deltatee.com header.a=rsa-sha256 header.s=20200525 header.b=chlpUkYZ;
+	arc=none smtp.remote-ip=204.191.154.188
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25125606A319
-	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 20:46:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 25125606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F19F2606A31B;
+	Mon, 19 Oct 2026 21:14:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F19F2606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=E38UPn2r
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1792442779; x=1823978779;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=QPaKfxrJTwuGXpNqJn91Xad8Zve1NjywuhAkFJLP6Tc=;
-  b=E38UPn2rgH7rX4XIEs9xoUJF0ay0h7u8rHhC0ycQUpK7qz62HcvyN65O
-   a1vh/zDjBA9AjjCqNkqZmT5YQdhmeaToXfo+xbLkjqkeNo+jzYMRkJjSd
-   oID1OtbFXfK2YWCgQJAQJWit6ln+ZxQzncaJdOX9p8T+WZfK33jCjRFlV
-   THOuNfgcMhE8/whpvV8W9ZEVCHh7szv+XdN3NunDPZvFddVNbwc1/K9Ax
-   NoiWYF6JpBDIByIkBS6FAjGJ2RJnA0xlCu7GULaWttyWOiPiBcndbCjSY
-   fRtJR9GmpO4cPWYf2HHWBiAwc5PfkIZcx0pGH+uRr6fI537EstDTPbK7p
-   w==;
-X-CSE-ConnectionGUID: 5vXmziMoSROJDmA1bMHDeg==
-X-CSE-MsgGUID: mCLACKXPRHuxmsp023Rdmw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11940"; a="1041463"
-X-IronPort-AV: E=Sophos;i="6.27,168,1787036400"; 
-   d="scan'208";a="1041463"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Oct 2026 13:46:18 -0700
-X-CSE-ConnectionGUID: 46avrWP0QweOGadN9LhM5A==
-X-CSE-MsgGUID: ak8vEZwiQ3KRBKTFOCEBoA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,168,1787036400"; 
-   d="scan'208";a="2683900"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by fmviesa003.fm.intel.com with ESMTP; 19 Oct 2026 13:46:15 -0700
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xIuFJ-00000000MNC-0m8k;
-	Mon, 19 Oct 2026 20:46:13 +0000
-Date: Tue, 20 Oct 2026 04:45:59 +0800
-From: kernel test robot <lkp@intel.com>
-To: Mario Limonciello <mario.limonciello@amd.com>,
-	alexander.deucher@amd.com, christian.koenig@amd.com,
-	airlied@gmail.com, simona@ffwll.ch, bhelgaas@google.com
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Reza Nikzad Chaleshori <rezanikzadch@gmail.com>,
-	amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] drm/amdgpu: Gate VFCT bus fallback on pci=realloc
-Message-ID: <202610200440.fq7Zgnxm-lkp@intel.com>
-References: <20261015124843.203905-1-mario.limonciello@amd.com>
+	dkim=pass (2048-bit key, unprotected) header.d=deltatee.com header.i=@deltatee.com header.a=rsa-sha256 header.s=20200525 header.b=chlpUkYZ
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=UUZq94NQZVOOmLkYnr0O3jTydDL2EzwXIjitFjyB/co=; b=chlpUkYZbGrbu3Dvkcaa+tIgM7
+	0dpzAXPvxd9GMjCGrBqksQzj44m5jWRM0yipgFrW+uW88Gu1Bm8+GTu4j2Vw0OtolWwPsGyC9rEQc
+	MK6dd7bxuKS6FBI4QtqLQOOQPGXUdMzxg3rD8eVmQ3cfkhqtUpcrJSRMpn+Uy1dBL7VOXKKrnuQtM
+	0sWvy+EXYwqAprB+jJpc4NpYJG9Q4bftwzBWMzb94W6s6iZxUbp9rbiCXNLysOWHh2xvFD6nbDi6L
+	ux3S7SaqxO47C5IlVRMpdM+viGCjZl3LnjMixfhi7ZOUWictm3usCr1rKO6P76ttloO3BzMc18R9/
+	MUL5Xeaw==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1xIugz-00000000HUZ-2bSt;
+	Mon, 19 Oct 2026 15:14:50 -0600
+Message-ID: <fca6d815-519a-449d-a5b7-36bd3ad0c19f@deltatee.com>
+Date: Mon, 19 Oct 2026 15:14:38 -0600
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -86,37 +62,58 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261015124843.203905-1-mario.limonciello@amd.com>
+User-Agent: Mozilla Thunderbird
+To: "Popov, Pavel E" <pavel.e.popov@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Leon Romanovsky <leon@kernel.org>
+Cc: Jim Chow <jim.chow@broadcom.com>, Radu Rugina <radu.rugina@broadcom.com>,
+ Alexey Makhalov <alexey.makhalov@broadcom.com>, Wei Liu
+ <wei.liu@kernel.org>, Michael Kelley <mhklinux@outlook.com>,
+ Lukas Wunner <lukas@wunner.de>,
+ Nathan Ciobanu <nathan.d.ciobanu@linux.intel.com>,
+ "bcm-kernel-feedback-list@broadcom.com"
+ <bcm-kernel-feedback-list@broadcom.com>,
+ "virtualization@lists.linux.dev" <virtualization@lists.linux.dev>,
+ "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20261016223402.19991-1-pavel.e.popov@intel.com>
+ <20261016223402.19991-2-pavel.e.popov@intel.com>
+ <8b01d643-f62d-4118-a700-8874341d953b@deltatee.com>
+ <LV2PR11MB6070CE9CCA125C290C0F8209B29A2@LV2PR11MB6070.namprd11.prod.outlook.com>
+ <20261017074820.GD219304@unreal>
+ <LV2PR11MB6070ABD61B46E9590C9B28ACB29A2@LV2PR11MB6070.namprd11.prod.outlook.com>
+ <LV2PR11MB607077BABF5643BD4FAF470FB2982@LV2PR11MB6070.namprd11.prod.outlook.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <LV2PR11MB607077BABF5643BD4FAF470FB2982@LV2PR11MB6070.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: pavel.e.popov@intel.com, bhelgaas@google.com, leon@kernel.org, jim.chow@broadcom.com, radu.rugina@broadcom.com, alexey.makhalov@broadcom.com, wei.liu@kernel.org, mhklinux@outlook.com, lukas@wunner.de, nathan.d.ciobanu@linux.intel.com, bcm-kernel-feedback-list@broadcom.com, virtualization@lists.linux.dev, linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH v2 1/2] PCI/P2PDMA: Allow P2PDMA in VMware guests on Intel
+ hosts
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-Hi Mario,
 
-kernel test robot noticed the following build errors:
 
-[auto build test ERROR on pci/next]
-[also build test ERROR on pci/for-linus drm-misc/drm-misc-next daeinki-drm-exynos/exynos-drm-next drm/drm-next drm-i915/for-linux-next drm-i915/for-linux-next-fixes drm-tip/drm-tip linus/master v7.3 next-20261016]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+On 2026-10-19 13:48, Popov, Pavel E wrote:
+> Logan, Leon,
+> 
+> I kept the hypervisor check to avoid changing what the host bridge
+> whitelist refuses on bare metal. Looking at those cases again, on the
+> listed Xeon CPUs this is a limitation of the whitelist itself, not a
+> known hardware limit, and it is why Intel QAT/DSA/IAA had to be added
+> by ID. So I'd drop the hypervisor check.
+> 
+> Would a v3 that moves the Xeon list into cpu_supports_p2pdma(), the
+> same way as the AMD check, be acceptable to you both?
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Mario-Limonciello/drm-amdgpu-Gate-VFCT-bus-fallback-on-pci-realloc/20261015-074842
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/20261015124843.203905-1-mario.limonciello%40amd.com
-patch subject: [PATCH] drm/amdgpu: Gate VFCT bus fallback on pci=realloc
-config: loongarch-allmodconfig (https://download.01.org/0day-ci/archive/20261020/202610200440.fq7Zgnxm-lkp@intel.com/config)
-compiler: clang version 19.1.7 (https://github.com/llvm/llvm-project cd708029e0b2869e80abe31ddb175f7c35361f90)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261020/202610200440.fq7Zgnxm-lkp@intel.com/reproduce)
+Yes, that's essentially what I was suggesting before. That would be
+acceptable to me.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202610200440.fq7Zgnxm-lkp@intel.com/
+Thanks,
 
-All errors (new ones prefixed by >>, old ones prefixed by <<):
-
->> ERROR: modpost: drivers/gpu/drm/amd/amdgpu/amdgpu.ko: symbol 'pci_realloc_enabled_by_user' undefined!
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Logan
