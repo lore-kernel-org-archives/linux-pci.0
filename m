@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75950380FF4
-	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 08:35:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F323D4973A0
+	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 08:35:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792398941; cv=none; b=CvcaoMFukumkSZKSR2gHGbjf96mxJ9Nr9IR5oCh9t/jFjPw8cz9+YD2B5+7XBs5hj2yxnaiMpnaakZ0Ox51Lp6Rs4a7igC0Ohbd3t3WYjYKJKsB4puz9dpIBgWeLlE7QcOqpMrpOvWcxx1WBQtPv/ytnuDGUxnqePzGwI6E1K9M=
+	t=1792398948; cv=none; b=By4KupOIDCOUXpNUExG83vQlJAZMSR8uNtfTiP6XUWVtpPgZJ19chG1UnPt3CLkqWflh5YFqlYg6d1C8JPV53PDb3qZ/QeiSzDyJK3HqDonXiSIq4aJXQzIVicpnCcQMBiiHcsawnNNmy1bkgxHnwRJtHKUNyBeTGcy2APeItC0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792398941; c=relaxed/simple;
-	bh=FgZCB0k1VE4Mfu3T/vFcE/5POedJAES6gbobSvce7Sg=;
+	s=arc-20240116; t=1792398948; c=relaxed/simple;
+	bh=FTJ4N54R6NJvwv48j3HnRg3hPkhS8TJSmAIVPcSR/w4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=o+TdfqlMOeFCOSBviM+neH6iNwjUPpJaZ0QOPq+L5tCbUcjCtQS3xeK5VbxZM1TJN8M2oryK/vkXMmp8uiw4pDu09O2bwNLjkC5jos5ouExziCCVm8bTsuGTdfm4+HIBIVDsD4XNIP3FLkp8JtodI8T24yPyYaH7R1WCEpf+lds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CNzSPdyg; arc=none smtp.client-ip=192.198.163.13
+	 MIME-Version; b=I0jNYJv2Y8XEq5k69zL3VPFpgyPqivXlf5S37daDUyC/yTlvZI8kbHEnsx3Ja5kW+GsHokHz7aQlU5KVI4LJsbDHaYRQ/O9w9lzNrwwwVPo5hIjFdOF5WmvCfOdDyOU8ZaZPGqkVUuwmVZGeAaUjQwJmSpF4sDo+qrCJVJZ5an4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Q5x7NO3B; arc=none smtp.client-ip=192.198.163.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CNzSPdyg"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Q5x7NO3B"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1792398939; x=1823934939;
+  t=1792398942; x=1823934942;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=FgZCB0k1VE4Mfu3T/vFcE/5POedJAES6gbobSvce7Sg=;
-  b=CNzSPdygM1FfHaXwJEPM0oCl5UE79pUeU93Vlx5LTUsEwutNxCsoFGJb
-   5TOXjA4DtID94wpeViUv+cd1muxqnaksJm74e8jiKeQUPJTZL6ekqQ22E
-   IPjpwjCsaJqd8bTaPKWFdDApAXye5dAeY1Uagx+Gso8Unk0hz48IxwIE4
-   RG8LvSSaQzjwKQ2QHGRzMgguLRcW6OltvGmi6AiCq0gk40joOMAetNVpI
-   kkvjyEadd0Na994tFJKt6zMALHTVgyA3ye7XKFvF2gFtNFOuYKpHCVsRk
-   VHz321va5M01p9Td7keITPr2eo/KyNm/cJEavTCUUXW7gFdlYtjeav490
-   g==;
-X-CSE-ConnectionGUID: llPsRYLNSW+n/DAsOfqDJw==
-X-CSE-MsgGUID: 5ScD4s9YQ9Slus3lacEWVQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11939"; a="1061698"
+  bh=FTJ4N54R6NJvwv48j3HnRg3hPkhS8TJSmAIVPcSR/w4=;
+  b=Q5x7NO3BYO96r0ZWgclrGgOFBnNdRY3E+wvIv/gtZl9fLAf0l4jKd93b
+   YtWwPEW+D1LhvhUKOFX8QUgAbcilR83w6dCfF7MBIys2UwfgxuI+U4NSW
+   bpOAUjEZsJFapEoyN/GS4Du28bS0fAlDWf8jZnNGv+aVVZgwP7g5KTost
+   13sn011/ujm+oubzae4UF6fEQZ5ijzD0cxuhVpyttgGqRZ56l45u/0pJN
+   e5zotEYO7wsOjuwCc6YNBKvC1SvBMUmBerERmKhoSGyxL2mVsEcS02RMQ
+   +Of83pRyUQ41ddV8pY6ymjFJe6nq9vyExIysjeUQnydRpT/9dcbsSA1Bv
+   A==;
+X-CSE-ConnectionGUID: hsCpd8exRnWCSXAH5P/Gew==
+X-CSE-MsgGUID: fQjO8X0bSMGUJsxoZA/p2A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11939"; a="1061712"
 X-IronPort-AV: E=Sophos;i="6.27,167,1787036400"; 
-   d="scan'208";a="1061698"
+   d="scan'208";a="1061712"
 Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Oct 2026 01:35:39 -0700
-X-CSE-ConnectionGUID: VtuLMc8XSxWKp5FWjTlAYA==
-X-CSE-MsgGUID: 4DdHXtZ2Sn2fx357uD7jkA==
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Oct 2026 01:35:42 -0700
+X-CSE-ConnectionGUID: XyM4Y8VgQ7+ve/ZEZ8vkpQ==
+X-CSE-MsgGUID: ZYgVizO8R6KPLAT5R8OGjQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,167,1787036400"; 
-   d="scan'208";a="2857738"
+   d="scan'208";a="2857751"
 Received: from dev-150.igk.intel.com (HELO localhost) ([10.91.214.40])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Oct 2026 01:35:34 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Oct 2026 01:35:39 -0700
 From: Lukasz Laguna <lukasz.laguna@intel.com>
 To: linux-pci@vger.kernel.org,
 	bhelgaas@google.com
@@ -56,9 +56,9 @@ Cc: michal.winiarski@intel.com,
 	davem@davemloft.net,
 	edumazet@google.com,
 	kuba@kernel.org
-Subject: [PATCH v1 02/13] PCI/IOV: Introduce VF iterators
-Date: Mon, 19 Oct 2026 10:35:03 +0200
-Message-ID: <20261019083514.838640-3-lukasz.laguna@intel.com>
+Subject: [PATCH v1 03/13] PCI/IOV: Introduce VF locking helpers
+Date: Mon, 19 Oct 2026 10:35:04 +0200
+Message-ID: <20261019083514.838640-4-lukasz.laguna@intel.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261019083514.838640-1-lukasz.laguna@intel.com>
 References: <20261019083514.838640-1-lukasz.laguna@intel.com>
@@ -70,180 +70,81 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Introduce helpers to iterate over the enabled VFs of a PF. Add
-pci_get_vf() and pci_get_vf_reverse() to retrieve the next enabled VF
-of a PF in ascending or descending VF ID order, along with
-for_each_pci_vf(), for_each_pci_vf_reverse(), and
-for_each_pci_vf_continue_reverse() built on top of them. The helpers
-return each VF with a reference held, matching existing PCI device
-lookup APIs.
+Add pci_dev_lock_vfs() and pci_dev_unlock_vfs() helpers to lock and
+unlock all enabled VFs of a PF device.
 
-This provides a common and convenient way to iterate over a PF's enabled
-VFs and avoids duplicating the iteration logic in drivers.
+This provides a common way to serialize operations involving
+subordinate VFs.
 
-Assisted-by: LLM
 Signed-off-by: Lukasz Laguna <lukasz.laguna@intel.com>
 ---
- drivers/pci/iov.c   | 63 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h | 57 ++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 120 insertions(+)
+ drivers/pci/pci.c   | 39 +++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  2 ++
+ 2 files changed, 41 insertions(+)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index eb019201faed..a437370c4e36 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -70,6 +70,69 @@ struct pci_dev *pci_iov_get_virtfn(struct pci_dev *dev, int id)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a62af7320539..f1669f88e768 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5111,6 +5111,45 @@ void pci_dev_unlock(struct pci_dev *dev)
  }
- EXPORT_SYMBOL_GPL(pci_iov_get_virtfn);
+ EXPORT_SYMBOL_GPL(pci_dev_unlock);
  
 +/**
-+ * pci_get_vf() - Return the first or next existing VF of a PF
-+ * @dev: PCI PF whose VFs are being iterated
-+ * @from: Previous VF returned by this function, or %NULL to return the first VF
++ * pci_dev_lock_vfs() - Lock subordinate VFs of a PF device
++ * @dev: PCI device whose VFs should be locked
 + *
-+ * Iterate over existing VFs of @dev in ascending VF ID order, skipping VF IDs
-+ * with no device present. If a VF is found, its reference count is incremented.
-+ * A new iteration is started by passing %NULL as the @from argument. Otherwise,
-+ * iteration continues after @from, and the reference count on @from is
-+ * decremented.
++ * Lock all currently enabled VFs in forward iteration order.
 + *
-+ * Return: a pointer to the first or next VF, or %NULL if no further VF is found.
++ * Context: The caller must hold the device lock of @dev.
 + */
-+struct pci_dev *pci_get_vf(struct pci_dev *dev, struct pci_dev *from)
++void pci_dev_lock_vfs(struct pci_dev *dev)
 +{
-+	int id = 0;
++	struct pci_dev *vf;
 +
-+	if (from) {
-+		id = pci_iov_vf_id(from) + 1;
-+		pci_dev_put(from);
-+	}
++	device_lock_assert(&dev->dev);
 +
-+	for (; id < pci_num_vf(dev); id++) {
-+		from = pci_iov_get_virtfn(dev, id);
-+		if (from)
-+			return from;
-+	}
-+
-+	return NULL;
++	for_each_pci_vf(dev, vf)
++		pci_dev_lock(vf);
 +}
-+EXPORT_SYMBOL_GPL(pci_get_vf);
++EXPORT_SYMBOL_GPL(pci_dev_lock_vfs);
 +
 +/**
-+ * pci_get_vf_reverse() - Return the last or previous existing VF of a PF
-+ * @dev: PCI PF whose VFs are being iterated
-+ * @from: Previous VF returned by this function, or %NULL to return the last VF
++ * pci_dev_unlock_vfs() - Unlock subordinate VFs of a PF device
++ * @dev: PCI device whose VFs should be unlocked
 + *
-+ * Same semantics as pci_get_vf(), except iteration proceeds in descending VF
-+ * ID order.
++ * Unlock all currently enabled VFs in reverse iteration order of
++ * pci_dev_lock_vfs().
 + *
-+ * Return: a pointer to the last or previous VF, or %NULL if no further VF is
-+ * found.
++ * Context: The caller must hold the device lock of @dev and all its VFs.
 + */
-+struct pci_dev *pci_get_vf_reverse(struct pci_dev *dev, struct pci_dev *from)
++void pci_dev_unlock_vfs(struct pci_dev *dev)
 +{
-+	int id = pci_num_vf(dev);
++	struct pci_dev *vf;
 +
-+	if (from) {
-+		id = pci_iov_vf_id(from);
-+		pci_dev_put(from);
-+	}
++	device_lock_assert(&dev->dev);
 +
-+	while (id > 0) {
-+		id--;
-+		from = pci_iov_get_virtfn(dev, id);
-+		if (from)
-+			return from;
-+	}
-+
-+	return NULL;
++	for_each_pci_vf_reverse(dev, vf)
++		pci_dev_unlock(vf);
 +}
-+EXPORT_SYMBOL_GPL(pci_get_vf_reverse);
++EXPORT_SYMBOL_GPL(pci_dev_unlock_vfs);
 +
- /**
-  * pci_iov_get_pf_drvdata - Return the drvdata of a PF
-  * @dev: VF pci_dev
+ static void pci_dev_save_and_disable(struct pci_dev *dev)
+ {
+ 	const struct pci_error_handlers *err_handler =
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ac161f9f930c..03fe10ffa19b 100644
+index 03fe10ffa19b..718d17035439 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -616,6 +616,53 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus);
- #define for_each_pci_dev_reverse(d) \
- 	while ((d = pci_get_device_reverse(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
+@@ -2097,6 +2097,8 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
+ void pci_dev_lock(struct pci_dev *dev);
+ int pci_dev_trylock(struct pci_dev *dev);
+ void pci_dev_unlock(struct pci_dev *dev);
++void pci_dev_lock_vfs(struct pci_dev *dev);
++void pci_dev_unlock_vfs(struct pci_dev *dev);
+ DEFINE_GUARD(pci_dev, struct pci_dev *, pci_dev_lock(_T), pci_dev_unlock(_T))
  
-+/**
-+ * for_each_pci_vf - iterate over existing VFs of a PF
-+ * @dev: PCI PF whose VFs are being iterated
-+ * @vf: struct pci_dev * used as a loop cursor
-+ *
-+ * Iterate over existing VFs in ascending VF ID order, skipping VF IDs with no
-+ * device present.
-+ *
-+ * During each iteration, @vf is returned with a reference held. That
-+ * reference is released automatically only when advancing to the next VF.
-+ * If the loop is exited early, the caller must drop the last reference.
-+ */
-+#define for_each_pci_vf(dev, vf) \
-+	for ((vf) = NULL; ((vf) = pci_get_vf((dev), (vf))) != NULL; )
-+
-+/**
-+ * for_each_pci_vf_reverse - iterate backwards over existing VFs of a PF
-+ * @dev: PCI PF whose VFs are being iterated
-+ * @vf: struct pci_dev * used as a loop cursor
-+ *
-+ * Iterate over existing VFs in descending VF ID order, skipping VF IDs with no
-+ * device present.
-+ *
-+ * During each iteration, @vf is returned with a reference held. That
-+ * reference is released automatically only when advancing to the next VF.
-+ * If the loop is exited early, the caller must drop the last reference.
-+ */
-+#define for_each_pci_vf_reverse(dev, vf) \
-+	for ((vf) = NULL; ((vf) = pci_get_vf_reverse((dev), (vf))) != NULL; )
-+
-+/**
-+ * for_each_pci_vf_continue_reverse - iterate backwards from the given VF
-+ * @dev: PCI PF whose VFs are being iterated
-+ * @vf: struct pci_dev * used as a loop cursor
-+ *
-+ * Continue iterating in descending VF ID order from the preceding @vf.
-+ * Before the first iteration, @vf must point to the current VF with a
-+ * reference held.
-+ *
-+ * During each iteration, @vf is returned with a reference held. That
-+ * reference is released automatically only when advancing to the next VF.
-+ * If the loop is exited early, the caller must drop the last reference.
-+ */
-+#define for_each_pci_vf_continue_reverse(dev, vf) \
-+	for ((vf) = pci_get_vf_reverse((dev), (vf)); (vf) != NULL; \
-+	     (vf) = pci_get_vf_reverse((dev), (vf)))
-+
- static inline int pci_channel_offline(struct pci_dev *pdev)
- {
- 	return (pdev->error_state != pci_channel_io_normal);
-@@ -2600,6 +2647,8 @@ int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
- int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
- int pci_iov_vf_id(struct pci_dev *dev);
- struct pci_dev *pci_iov_get_virtfn(struct pci_dev *dev, int id);
-+struct pci_dev *pci_get_vf(struct pci_dev *dev, struct pci_dev *from);
-+struct pci_dev *pci_get_vf_reverse(struct pci_dev *dev, struct pci_dev *from);
- void *pci_iov_get_pf_drvdata(struct pci_dev *dev, struct pci_driver *pf_driver);
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
-@@ -2640,6 +2689,14 @@ static inline int pci_iov_vf_id(struct pci_dev *dev)
- static inline struct pci_dev *pci_iov_get_virtfn(struct pci_dev *dev, int id)
- { return NULL; }
- 
-+static inline struct pci_dev *pci_get_vf(struct pci_dev *dev,
-+					 struct pci_dev *from)
-+{ return NULL; }
-+
-+static inline struct pci_dev *pci_get_vf_reverse(struct pci_dev *dev,
-+						 struct pci_dev *from)
-+{ return NULL; }
-+
- static inline void *pci_iov_get_pf_drvdata(struct pci_dev *dev,
- 					   struct pci_driver *pf_driver)
- {
+ /*
 -- 
 2.43.0
 
