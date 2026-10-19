@@ -1,209 +1,261 @@
-Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011066.outbound.protection.outlook.com [52.101.62.66])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B7FC403B1E
-	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 08:49:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.66
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792399774; cv=fail; b=BVnQyBRt+oRg3NhVctLn3b7MIXqCwLxsd5B80vHAJS/ZVHmKECQDjkrZY3BgXpb/Vj3x9MjpJENK1lticpNHOtPEwU8qajsjAoulxsM+NX8qPxBtBA5Gy1pgu4uS0XwNX9JmzdsvhVeS72v0+MB00OHuz42yv2LWcVHfrtIxk08=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792399774; c=relaxed/simple;
-	bh=vUQCtzsrK4xzq6aePqaY3zmAsXoSErEBdVVAe524iTA=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=kVx86G/WrswOw5d1JY/Dap+nfi1g6dILXUomnlGZpIovF7eZV8+NfGPbiVz72s7m3rudGbTqaMRTalg0NIQoV1iYWSwB1ITsapHFPpVCS0CiLx5pMQ9Q/q64UQPGS54+z9axy5TVL31HaDmlCYRZJkEQGhy3wVjqkAYPK4pooN8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=yQtGlmmk; arc=fail smtp.client-ip=52.101.62.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9476346E5D
+	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 09:03:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792400614; cv=none; b=XRuYyZgqvIni1smOkall/pp4QMnSiIdpjBi4kjUfYWpDCHSlwpSYt+5szRYauAG/YKJDShIkdPN3SGYtuE3qURf8k6pgB6Ijhmt0cDtzha4mg6YSoF2cKprE/nxxbcDQCdNJsdpfvmrtkbUNNxUMRvaQ+JBR7QLwXgHu0bVfF1s=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792400614; c=relaxed/simple;
+	bh=mJ5T+MCnWvt+sUQeHHLGMRJ6RnhtB1lo8QTwW/RMRtM=;
+	h=Message-ID:From:Subject:To:In-Reply-To:References:Content-Type:
+	 Date; b=CrzXq2vJ9fOIvWx54oyP7+Us9Oex/edqJTXs4MpKt7/YdBBiaN1xK+BuN1I0tabPJPRWuOX0odk4vnch/r7Fr2uRkC0Qgb377pFjPAg9qErPBTudiU9uZUop5/NqS0aoh+AkHLmH9KUPE4F9xRiMBRWYXALckhYtSXadhub3f+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fV5KBOtp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="yQtGlmmk"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Fe6leiTcpMDwYCJyuwlEkSckL8r9gr319KD5RkjvBys7ppa3ZdBqHTzXRq3tYGbRGreYFbhmghQHgy3SRpc4fWIwuOoLO50n24Qchh41Gqe95U1BpMohqNZRACfirV0BfMd6TE6eOabVIZt3rAYi3QhOo6u5DyUm9oetGlpvYOZKL18P+/80yfekkJ2GTMjKYD0ACdQl90sFz40SBmHgfb+2e47K2DcoyVXAsIlA+00ChgtCaO1fz4NWaOPsmyD4hodSamQYeMWOelZXOwFJ+krhUvfQK5VpYO+Ze1ZH5V6lAE0uuK2R1TaADpYvoA4PtNyL5UJQVfO0MvvCnJ1vGA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7DF41A3wXulv85lXY+aBPWeZ8okNt8B6y+ECdBVWvPo=;
- b=QHbwBc37gMbSJA9VJcGn5m82aryFaroemf9hzXk4ECTEWh95jeyq0DN/rNSZxWZmPdROmHUTaYW81hWtBIA48V0rVb6S/XRhKuInq+/BSuLNOc/IihgFDnsAuQIcVe18l0hP7Ifo0Kf2yRF4r8Dfp86+qDmjxB4Y8N33Qf1CiONNJXl3nhUyUZbfzS+jnT/ELBojTtXqjvpEQOo7y9LVjlvYTqxYRwsj/3VEn2YgucSDsV/gFoeuxmQOvXVq+vxQT6yyJTlHI439iKtlD8S6Mm7WI2IY5dCtLN8KcUFGynOWaFkiXLXudU3D+1xoxDqRiUEDPUy0lT0lOzZUO/35Fg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7DF41A3wXulv85lXY+aBPWeZ8okNt8B6y+ECdBVWvPo=;
- b=yQtGlmmkNBp+NIUC8tCZ8vmvJfFbLMVMAfZ2SZ9IvP82NRspUWJGmx1V4n7s2fdAfMIERwaEJcLGTzw/IMDsSn8sSZLeKDCVt3pLWeGc6X+oFpEE2086214IYCoQJxg9bknWKFd9mRS76k12jFXYtFlSvExC06rBp7JkqePed4o=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from SA1PR12MB999228.namprd12.prod.outlook.com
- (2603:10b6:806:4db::10) by CH3PR12MB8878.namprd12.prod.outlook.com
- (2603:10b6:610:17e::21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.18; Mon, 19 Oct
- 2026 08:48:40 +0000
-Received: from SA1PR12MB999228.namprd12.prod.outlook.com
- ([fe80::4dba:119e:8e7c:37b3]) by SA1PR12MB999228.namprd12.prod.outlook.com
- ([fe80::4dba:119e:8e7c:37b3%6]) with mapi id 15.21.0522.017; Mon, 19 Oct 2026
- 08:48:40 +0000
-Message-ID: <df162498-3f81-49be-b1e3-ea58c46927d8@amd.com>
-Date: Mon, 19 Oct 2026 19:48:30 +1100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] coco/tsm: Update maintainership
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>, ankita@nvidia.com,
- Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
- "Borislav Petkov (AMD)" <bp@alien8.de>, Cedric Xing <cedric.xing@intel.com>,
- Jonathan Corbet <corbet@lwn.net>, Eric Biggers <ebiggers@kernel.org>,
- Jani Nikula <jani.nikula@intel.com>, Jonathan Cameron <jic23@kernel.org>,
- Jiri Pirko <jiri@resnulli.us>, Kai Huang <kai.huang@intel.com>,
- Kees Cook <kees@kernel.org>, Leon Romanovsky <leon@kernel.org>,
- linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
- =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>,
- Lukas Wunner <lukas@wunner.de>, Luis Chamberlain <mcgrof@kernel.org>,
- Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
- "Fontenot, Nathan" <Nathan.Fontenot@amd.com>,
- Fang Peter <peter.fang@intel.com>, Petr Pavlu <petr.pavlu@suse.com>,
- rick.p.edgecombe@intel.com, Samuel Ortiz <sameo@rivosinc.com>,
- Sami Tolvanen <samitolvanen@google.com>,
- Saravana Kannan <saravanak@google.com>,
- Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
- Steven Price <steven.price@arm.com>,
- Suzuki K Poulose <suzuki.poulose@arm.com>,
- Tom Lendacky <thomas.lendacky@amd.com>, Will Deacon <will@kernel.org>,
- yilun.xu@intel.com, Kevin Tian <kevin.tian@intel.com>,
- Xu Yilun <yilun.xu@linux.intel.com>
-References: <0-v1-52697321555d+14e66-tsm_maintainer_jgg@nvidia.com>
-From: Alexey Kardashevskiy <aik@amd.com>
-Content-Language: en-US
-In-Reply-To: <0-v1-52697321555d+14e66-tsm_maintainer_jgg@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SY5P282CA0160.AUSP282.PROD.OUTLOOK.COM
- (2603:10c6:10:24a::17) To SA1PR12MB999228.namprd12.prod.outlook.com
- (2603:10b6:806:4db::10)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fV5KBOtp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63A571F000C5;
+	Mon, 19 Oct 2026 09:03:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792400612;
+	bh=sdzBDjNH3kMQdfcV3dMcPy9z86kn6OMwHDy6PiiVxBY=;
+	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
+	b=fV5KBOtp5mmLyWvKoRjhCLkkI3AlkRygK7w+dL1Mzs6iKxkYMA7PeI5XL1IemCSXW
+	 LvEDRlz+rDzs4fbMFAT8MJVGrPP1dUrsdNtn1Tznm85Su7PM1/9Un2TCG4WvuhNhQZ
+	 JM9i3nXq4pQqvRty3hsthjSFb8d9raQcE5p1IUNEZqzup3M/gU/z1+gaANYJlbaLDA
+	 UzqYhYwrUIVoIyuhQDsb4acWzVkyj3LhDDs+pQZ8hGtA2ApmiL4qh2Lf8+DuDPk5Ae
+	 MVoDkAUnvMx26YBlmoYTrmDxjuayvlFcTkw6dlBiCynSlmggRRSirkXVV3NSv/M3Wi
+	 oBWThjns6QYzg==
+Message-ID: <sashiko-outbox-176858@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v1 04/13] PCI/IOV: Allow VF drivers to handle resets
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Lukasz Laguna" <lukasz.laguna@intel.com>, linux-pci@vger.kernel.org
+In-Reply-To: <20261019083514.838640-5-lukasz.laguna@intel.com>
+References: <20261019083514.838640-1-lukasz.laguna@intel.com>
+ <20261019083514.838640-5-lukasz.laguna@intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 19 Oct 2026 09:03:31 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR12MB999228:EE_|CH3PR12MB8878:EE_
-X-MS-Office365-Filtering-Correlation-Id: 095e1a07-2e20-4cde-520b-08df2dbdc639
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|23010399003|7416014|376014|56012099006|11063799006|261009223027099003|10067099003|18002099003|22082099003|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	8gSFqZtEBpWqXhQHhQlIvyNfSaTfUJ2XcMaI3/1uqkElxJYVb8PotC9q4XqZu4axfCEBOhAsNrA7P7wpCurkJideI0SoxZM/FXqgOYHXFjIhE8H4ifCjM/JsdK1p1nCJ13ImAzx54aNlpwCkHFRF62xwItVE7w/vZWQnP7hqruf1CFvjN1LV3pdTberdLJJyHnKCCJXEk8FpFZmVcNhOSxEZZgxeeGl2mLjhrhlCTVO/0hbTB8G03aEPyOUv5IJyC/ixWrzSPE/QOfhpyDiULRRP93d4SbQS5K55vlso0I+M2VkYIKl6WQ47P+WkSj+lBlow6s60QczabYXf0W/u8arbAaBQuEYG2+uUoqZAD6dFRblW00dRQstS29nAvKm5gERyHAdy+UTmR5sDFAr+KXf+pDx4hHQnTYUoVyqhMS16yu1jDcoyTwxvm9vB1UuDPR1xrZ9mBj/EH3m/T9DDQYnOdvNJwcmo6uaVkByLe8Pro7t12CMdsPDUno2ZpFQ0NJCuFqnEgcDOlLteJpigciujF0Lx+wnKu1VxW22fvNFWjNPWoHstWScFrZz3BsaGTFYuwD4z2yykavbrz1saKIweQ4adoevFksJddmZQH69/emuegWFZZKBu9tgLhRs3
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB999228.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(23010399003)(7416014)(376014)(56012099006)(11063799006)(261009223027099003)(10067099003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?QXB0RjRBZE81NC82OUdqRFBEZ0krbVpBN29JMGx1b3dxaDIzOFp4YzZwQjli?=
- =?utf-8?B?M3hURWo5RHpLWjdMZHV3VFZlL0x6cDVlTFQxRXJldy9XRTNvc2MrQXQvbGJF?=
- =?utf-8?B?TjBsVGdidWpwTUoxSnR5TTRVYXc1WFhFanBzVk53QUh2bWpXcHJURjBSYklN?=
- =?utf-8?B?SnU3d28xUXRJS3gzaGZLZFlBVTE0YXNFU1NidFVqYVEwTDI4VlRaNUxWSWRV?=
- =?utf-8?B?b2RpRFR3ekZpRUszNlJhY2pFZE9UcldOVjRUWW1ZYndqNUZtVGs1QjVoelRO?=
- =?utf-8?B?eE9NbDVxdUUycEVXcVNOWk9FV2tpNWE1bEV6dlFCZ2RNOWFsVmFMUjRvOFJG?=
- =?utf-8?B?NGtTcHRDNnJtZGIxNmZIUkppUEVCMERkcnF4enFmcHBFblFDSGN0WTE0QlZG?=
- =?utf-8?B?SEg1eHpTdi8rOTlhL0JXOUUrbEJVNUJyTFZkc2srYTZaNFI4eDZlc0x4eGRW?=
- =?utf-8?B?ZjFNcjJtUk10dDZRRTl3MHNBdzdYMHF6cGx0QlJya2V5RXJQMlNQUjRkYnZO?=
- =?utf-8?B?djV5NEdyMy9QQmh2RkY2S293S3hLRVhtZXQyUGNFd09Ka3ZseEFOUmNVc00w?=
- =?utf-8?B?S3N2d2xWOFN6eWJndEJmUTJRZFdYTWsyb0lPUlJoOGRNOUIwMUYvQWJ1dkox?=
- =?utf-8?B?dUJYVm8vUUJKR2F0c0Y0MGQyNklMcW43VTFIWDMwcUNQeWxYTnNva2M3UTJs?=
- =?utf-8?B?aGhVYTE2UTVlWW4wUU9xb0MwdEh3UVZURXBTdjVrVmtCbkpIOUNpZ0w2VUtP?=
- =?utf-8?B?T3h2SUlvRnJwRFRpWVY1d0s1cEw1U1VzY2hZTmJwZk9OMFFxR2dmMjErNzYy?=
- =?utf-8?B?RmZvZFBOL3pIcS94cEJHanNTSkh3NGZ5VlRSRHdRckd4VW1ER0xIQ2svam8z?=
- =?utf-8?B?S3piYnNMaWloaVgxUnRkM0JuUHRiWUdUeUZHS0szVjV5VDYxaGM2emtncVQw?=
- =?utf-8?B?NWMwRjdGRktCbFRMcEhqdGRpcU5tTElkdlR6NDFXTXVLSkU0d0lBWDB4Q1BC?=
- =?utf-8?B?QkFNelpudnlHQytkNm9ydTVzeXNnTU5leXJqQ2lDRDBGUHViSkgrK2VBK0Vj?=
- =?utf-8?B?dlhrVXhUdFFMVEhUYlBXQVFGS2VQUlU5Y2RCR2hxQmtHVlpZZDg2R3pIQ2Vz?=
- =?utf-8?B?ODNLS016L1FRbXlwdVZXYzZBeTV3MVpBVnE2TUFvZENjZlBPSUxVS0lmREtX?=
- =?utf-8?B?Nmx5WDVZc3J4ZE9veGRGMlZreEZKNkdOMUpMNkQzSmtLVzlOZFdnTHkvVjdU?=
- =?utf-8?B?MHI0V044T1BLUXZ3MmhGalhBZ0xFSzZObWpWN3A0NzdUR1dTaG5SY1RPSGhT?=
- =?utf-8?B?ZlVUWWNpWE15QVZlb0F0QnlkQVdjN04vcTNmdFdpQkgydjRoNlJFUEEwRTJ1?=
- =?utf-8?B?Ujl3SFhMRUFJbExGSWhCbDlPOTdLZU83ZmdHQXM2c1VieWlmWXFUalRuUjNx?=
- =?utf-8?B?dkdicG8xc1haYkh6dGhkeWtTSlNBaSszdU8wQXI2WkdDN09mdW9BZVBhV2Vy?=
- =?utf-8?B?elVVSzEyWU55ZlpoVGF4R0pHdjdoNFN5RmYrd3dVZkZ1N2FsU3QxMk9tRTRO?=
- =?utf-8?B?QzA4S2FLdjJHVmpqQXU3Mmg4eXVFNVNoMy9vWEZMN3pLU3ZUdGFDYUZsdDJp?=
- =?utf-8?B?ZzUyZFdzOFBldk5LcmxEeUVVQ0xYM3F5Zm5JRXhhVHo1WHJiblRUbUswTjJh?=
- =?utf-8?B?TmIrblBYR1lyYjAvT2JYb1hGbmZZRTE5dklIL0I1Y1JmdW54ZThVcGNmbW5k?=
- =?utf-8?B?Lzk3MWgyTVA2c2hUNWV3OXA1Y0VvbzY1cytBcDVkRHJLU2lZV0JhN0hqR1Br?=
- =?utf-8?B?bmlRN2ovWGFhMEk4QXY1ZlVhcWc3OVFwTmRZRVlLcUxKMUhjWGQxVlRGWXJC?=
- =?utf-8?B?V1l0dys4ZytsbzNvYjE1dWt5ckxtUlc4V2V6NXQwUGV1M095M2dPcjVSaTFT?=
- =?utf-8?B?NDQzQTRlUGJmK1pheW5LUGFvL1ZKRHB5eDVUZTBTbXBhWS8zK05USG5lTVNt?=
- =?utf-8?B?ZTFISlZubUpLbkFEdkduNjd0VmhEUExEaTF1RWMrSjBReHBOdGxIbU0yT2s1?=
- =?utf-8?B?VTlRZkNNZkxvSnBoWVlndUlrajA5WUJsTEowVG5DVDBtL3NURUxxMUIxUnQ4?=
- =?utf-8?B?ZmNtdFBvdnlhUElSelYrU2sxWWxqejcwd29uOWYrcEFPeXFQYkxRTU56cnpP?=
- =?utf-8?B?ZG90SXNxSm1qSUFRNlZZQVdKSHB2bm9FaXB6TUh5RU1ldENMRnpUYkxwekk5?=
- =?utf-8?B?MGw1aEN1KzBzbU1OY3NseFJlNE41UzZqREF0NG43dkt0R014R0ZobEhHS090?=
- =?utf-8?B?NFRKM09ienFpUUJDMTgyVFoyQ1E0QWFaWVlnVlhiZDRydUpERWwwUT09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 095e1a07-2e20-4cde-520b-08df2dbdc639
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR12MB999228.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Oct 2026 08:48:40.8305
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: IKO6JwyZr64mK5zoO32ml9tFZBpTdT+Z4fmiDs7990BjXL36px3KNl2cCieMlSrBVLCbAu33cWKgWLvNrcyY8Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8878
 
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] PCI/IOV: bus and slot resets fail to lock VFs on virtfn bus or oth=
+er slots
+- [High] PCI/IOV: VF reset_prepare() before PF reset_prepare() deadlocks hi=
+si_qm FLR
+--
 
+commit f7e0f3b0fa0caf7e168b1c2965897910aa159a0a
+Author: Micha=C5=82 Winiarski <michal.winiarski@intel.com>
 
-On 30/9/26 09:26, Jason Gunthorpe wrote:
-> With Dan's passing Aneesh and Jason have volunteered to take this on, with
-> the support of their employers.
-> 
-> Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
-> ---
->   CREDITS     | 9 +++++++++
->   MAINTAINERS | 3 ++-
->   2 files changed, 11 insertions(+), 1 deletion(-)
-> 
-> I've now spoken to all the main companies contributing here and asked for
-> volunteers. This is what I could confirm at this point. I'll be at LPC also
-> for any further discussion. Regards
+PCI/IOV: Allow VF drivers to handle resets
 
-sorry for being late and my bad communication (I'll do better!), as we discussed at LPC, I'm happy to volunteer for M: too. Thanks,
+This commit saves and restores PCI configuration state for all subordinate
+VFs across PF resets and notifies VF drivers via reset_prepare() and
+reset_done(). It also updates bus and slot resets so that VFs are managed
+through their parent PF rather than walked independently on the bus.
 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 95452c11dea55..ba8553011daea 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
 
-> 
-> diff --git a/CREDITS b/CREDITS
-> index a0bd941ca5dd26..7749f1e477ab43 100644
-> --- a/CREDITS
-> +++ b/CREDITS
-> @@ -4414,6 +4414,15 @@ W: ftp://ftp.uk.linux.org/pub/linux/people/willy/
->   D: Linux/PARISC hacker.  Filesystem hacker.  Random other hacking.  Custom
->   D: PPC port hacking.
->   
-> +N: Dan Williams
-> +D: Technical Advisory Board member
-> +D: Asynchronous Transfers/Transforms (IOAT) API, Compute Express Link (CXL),
-> +D: Device Direct Access (DAX), Filesystem Direct Access (DAX),
-> +D: Intel I/OAT DMA driver, libnvdimm BTT: block translation table,
-> +D: libnvdimm PMEM: persistent memory driver,
-> +D: libnvdimm: non-volatile memory device subsystem,
-> +D: Trusted Execution Environment Security Manager (TSM)
+[ ... ]
+
+> @@ -5164,6 +5195,17 @@ static void pci_dev_save_and_disable(struct pci_de=
+v *dev)
+>  		return;
+> =20
+>  	pci_save_state(dev);
+> +}
 > +
->   N: G\"unter Windau
->   E: gunter@mbfys.kun.nl
->   D: Some bug fixes in the polling printer driver (lp.c)
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 72294ddfa5b757..729ab465af96a8 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -27788,7 +27788,8 @@ S:	Maintained
->   F:	Documentation/devicetree/bindings/trigger-source/*
->   
->   TRUSTED EXECUTION ENVIRONMENT SECURITY MANAGER (TSM)
-> -M:	Dan Williams <djbw@kernel.org>
-> +M:	Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-> +M:	Jason Gunthorpe <jgg@nvidia.com>
->   L:	linux-coco@lists.linux.dev
->   S:	Maintained
->   F:	Documentation/ABI/testing/configfs-tsm-report
-> 
-> base-commit: 72d3fcf802c45d00b300f25b848a93c3a2bd7c7e
+> +static void pci_dev_save_and_disable(struct pci_dev *dev)
+> +{
+> +	struct pci_dev *vf;
+> +
+> +	for_each_pci_vf(dev, vf)
+> +		pci_dev_reset_prepare_and_save(vf);
+> +
+> +	pci_dev_reset_prepare_and_save(dev);
 
--- 
-Alexey
+[Severity: High]
+Does calling pci_dev_reset_prepare_and_save(vf) on every VF before calling
+pci_dev_reset_prepare_and_save(dev) on the PF deadlock HiSilicon QM resets?
 
+During pci_reset_function(pf), pci_dev_save_and_disable() now runs
+reset_prepare() on all VFs and then on the PF before pci_dev_restore() calls
+reset_done() on any of them.
+
+In drivers/vfio/pci/hisilicon/hisi_acc_vfio_pci.c,
+hisi_acc_vf_pci_reset_prepare() sets QM_RESETTING on the parent PF's
+qm->misc_ctl (hisi_acc_vdev->pf_qm) and only clears it in
+hisi_acc_vf_pci_aer_reset_done():
+
+    while (test_and_set_bit(QM_RESETTING, &qm->misc_ctl)) {
+        msleep(1);
+        if (++delay > QM_RESET_WAIT_TIMEOUT) {
+            dev_err(dev, "reset prepare failed\n");
+            return;
+        }
+    }
+
+When the first VF sets QM_RESETTING on pf_qm->misc_ctl, any subsequent VF's
+hisi_acc_vf_pci_reset_prepare() spins for 60 seconds and fails, and the PF's
+hisi_qm_reset_prepare() -> qm_reset_prepare_ready(pf_qm) ->
+qm_wait_reset_finish(pf_qm) in drivers/crypto/hisilicon/qm.c also spins on
+pf_qm->misc_ctl for ~80 seconds before timing out with -EBUSY ("FLR not
+ready!") without stopping the PF.
+
+A similar self-deadlock occurs when VFs are bound to the host hisi_qm drive=
+rs
+(hisi_hpre, hisi_sec2, hisi_zip) in drivers/crypto/hisilicon/qm.c:
+
+    static int qm_reset_prepare_ready(struct hisi_qm *qm)
+    {
+        struct pci_dev *pdev =3D qm->pdev;
+        struct hisi_qm *pf_qm =3D pci_get_drvdata(pci_physfn(pdev));
+
+        if (qm->ver < QM_HW_V3)
+            return qm_wait_reset_finish(pf_qm);
+
+        return qm_wait_reset_finish(qm);
+    }
+
+On Kunpeng920 (qm->ver < QM_HW_V3), the first VF's hisi_qm_reset_prepare()
+sets QM_RESETTING on pf_qm->misc_ctl, blocking subsequent VFs and the PF's
+own hisi_qm_reset_prepare(). On Kunpeng930+ (qm->ver >=3D QM_HW_V3), each V=
+F's
+hisi_qm_reset_prepare() sets QM_RESETTING on vf_qm->misc_ctl; when the PF's
+hisi_qm_reset_prepare() then calls qm_try_stop_vfs(qm, QM_PF_FLR_PREPARE,
+QM_DOWN), each VF's mailbox handler qm_pf_reset_vf_prepare() calls
+qm_reset_prepare_ready(vf_qm) -> qm_wait_reset_finish(vf_qm), which waits f=
+or
+QM_RESETTING on vf_qm->misc_ctl to clear and times out.
+
+[ ... ]
+
+> @@ -5551,6 +5631,11 @@ static int pci_slot_trylock(struct pci_slot *slot)
+>  	return __pci_bus_trylock(slot->bus, slot);
+>  }
+> =20
+> +static bool pci_dev_skip_bus_reset(struct pci_dev *dev)
+> +{
+> +	return dev->is_virtfn; /* VFs are managed by their PF */
+> +}
+> +
+>  /*
+>   * Save and disable devices from the top of the tree down while holding
+>   * the @dev mutex lock for the entire tree.
+> @@ -5560,6 +5645,8 @@ static void pci_bus_save_and_disable_locked(struct =
+pci_bus *bus)
+>  	struct pci_dev *dev;
+> =20
+>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+> +		if (pci_dev_skip_bus_reset(dev))
+> +			continue;
+>  		pci_dev_save_and_disable(dev);
+>  		if (dev->subordinate)
+>  			pci_bus_save_and_disable_locked(dev->subordinate);
+> @@ -5576,6 +5663,8 @@ static void pci_bus_restore_locked(struct pci_bus *=
+bus)
+>  	struct pci_dev *dev;
+> =20
+>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+> +		if (pci_dev_skip_bus_reset(dev))
+> +			continue;
+>  		pci_dev_restore(dev);
+>  		if (dev->subordinate) {
+>  			pci_bridge_wait_for_secondary_bus(dev, "bus reset");
+> @@ -5595,6 +5684,8 @@ static void pci_slot_save_and_disable_locked(struct=
+ pci_slot *slot)
+>  	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+>  		if (!dev->slot || dev->slot !=3D slot)
+>  			continue;
+> +		if (pci_dev_skip_bus_reset(dev))
+> +			continue;
+>  		pci_dev_save_and_disable(dev);
+>  		if (dev->subordinate)
+>  			pci_bus_save_and_disable_locked(dev->subordinate);
+> @@ -5613,6 +5704,8 @@ static void pci_slot_restore_locked(struct pci_slot=
+ *slot)
+>  	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+>  		if (!dev->slot || dev->slot !=3D slot)
+>  			continue;
+> +		if (pci_dev_skip_bus_reset(dev))
+> +			continue;
+>  		pci_dev_restore(dev);
+>  		if (dev->subordinate) {
+>  			pci_bridge_wait_for_secondary_bus(dev, "slot reset");
+
+[Severity: High]
+Can pci_bus_save_and_disable_locked(), pci_bus_restore_locked(),
+pci_slot_save_and_disable_locked(), and pci_slot_restore_locked() operate on
+unlocked VFs when VFs reside on an SR-IOV virtual bus or do not match the
+PF's struct pci_slot?
+
+When pci_dev_save_and_disable() and pci_dev_restore() run on a PF, they
+iterate over all VFs with for_each_pci_vf(dev, vf) and call
+pci_dev_reset_prepare_and_save(vf) and pci_dev_reset_done(vf), both of which
+require the VF lock to be held and assert device_lock_assert(&vf->dev).
+
+However, __pci_bus_lock(), __pci_bus_trylock(), and __pci_bus_unlock() in
+drivers/pci/pci.c only walk bus->devices (filtered by dev->slot =3D=3D slot=
+ for
+slot resets) and recurse into dev->subordinate:
+
+    list_for_each_entry(dev, &bus->devices, bus_list) {
+        if (slot && (!dev->slot || dev->slot !=3D slot))
+            continue;
+        if (dev->subordinate) {
+            if (!pci_bus_trylock(dev->subordinate))
+                goto unlock;
+        } else if (!pci_dev_trylock(dev))
+            goto unlock;
+    }
+
+First, if any VFs reside on an SR-IOV virtual bus created by virtfn_add_bus=
+()
+in drivers/pci/iov.c:
+
+    child =3D pci_add_new_bus(bus, NULL, busnr);
+
+that virtual bus has bridge =3D=3D NULL, so pf->subordinate is NULL and tho=
+se VFs
+are on the virtual bus's devices list rather than pf->bus->devices. As a
+result, __pci_bus_lock() and __pci_bus_trylock() never lock VFs on the
+virtual bus.
+
+Second, during a slot reset (pci_slot_trylock() / pci_slot_lock()),
+pci_dev_matches_slot() in drivers/pci/slot.c only assigns dev->slot =3D slot
+when the device matches the slot number:
+
+    static bool pci_dev_matches_slot(struct pci_dev *dev, struct pci_slot *=
+slot)
+    {
+        if (slot->per_func_slot)
+            return dev->devfn =3D=3D slot->number;
+
+        return slot->number =3D=3D PCI_SLOT_ALL_DEVICES ||
+            PCI_SLOT(dev->devfn) =3D=3D slot->number;
+    }
+
+Any VF with a different PCI_SLOT(vf->devfn) (when slot->number !=3D
+PCI_SLOT_ALL_DEVICES) or a different devfn (when slot->per_func_slot is set)
+has vf->slot !=3D slot and is skipped by __pci_bus_trylock(slot->bus, slot),
+while pci_slot_save_and_disable_locked() and pci_slot_restore_locked() still
+visit all VFs of the PF via for_each_pci_vf(dev, vf) without holding their
+device or config access locks.
+
+Should __pci_bus_lock(), __pci_bus_trylock(), and __pci_bus_unlock() also
+skip VFs with pci_dev_skip_bus_reset(dev) and lock/unlock VFs via their PF
+using pci_dev_lock_vfs(), pci_dev_trylock_vfs(), and pci_dev_unlock_vfs()?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261019083514.8386=
+40-1-lukasz.laguna@intel.com?part=3D4
