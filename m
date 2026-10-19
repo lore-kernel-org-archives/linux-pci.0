@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17AE3484250;
-	Mon, 19 Oct 2026 06:51:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA1954848BE;
+	Mon, 19 Oct 2026 06:51:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792392686; cv=none; b=CZtbo4xXUZUvcRMKZbKublkdvWns5+lar2yRzfL4+WHZXgowlyCwYak0GlzhL9uXYW+sleiNF5daahfVCPkMFLDOQfqYbV1hiyPWM7VAWLGtVuGhxzmo/0r/qK3Iq+fWzPSAjvr1R6+e5/UynT0VbLGk1fMNOFcLRxtB87n51YM=
+	t=1792392689; cv=none; b=ORRs5I27m5T7s1tH6buJ5vZE1W3w039lMy38NalYbnB21Ol77prqgl2sS4CTuIxKfBeozRI+F3UPgSKP79Iwa5K+lwG74ZVXu9X49ipFI0kW+uQM1lH458SE0lTl/lAn1lvrdkiUUX/KI2FILyjrTdUyDXH7dEhnURoGxnyVbXA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792392686; c=relaxed/simple;
-	bh=SKCpijYdf40bdB7TjZgsPQt1cOqmj+Rx6EDrKlUQHcY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cYyu3dEdWlST19x8dhUqJe3wNan+tc/jile/ZZ6r1z1nMnk8yVuU6g1Pqs9NOIDlHKp0NvV7eBCoQFmX4Qf5wlGsaxmSad/UUkO3yhHT5vcoTLH+XykN++wGviqpwJ+uA44YsCXw1zqv9A5uRqAw2Ebi6/P0gQUP4YeApnoAvkc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n2PeLf+F; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792392689; c=relaxed/simple;
+	bh=eeB4SKIb7t7+3YTMsXzEyOw6pwy6g8BpMVMtKXD2W9E=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=TGHju91pszGi1CRQzLaDkiNuz7eXROpyGaVAXMYLVncbbDDdjxMDOmtRypox80aJqBtdwX/+jv9TnYd8RHX+hxQCcTNEM4o2r6nyxwJySkq7uoVxlwrXGQ0SguChaOuTBIs/p68Zvm/gaqe/7sDOuRBbgBKIk5NTSS8oBRXb4CQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EWy7DbQK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n2PeLf+F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C210B1F000C4;
-	Mon, 19 Oct 2026 06:51:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EWy7DbQK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 288211F000C5;
+	Mon, 19 Oct 2026 06:51:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792392684;
-	bh=j8oA05heiJ+N4wmFr3ACIe5gpscRTFotRO2J7gCfkEA=;
-	h=From:To:Cc:Subject:Date;
-	b=n2PeLf+F0crZIjsT3pnOI1BhYjefSUw7Ncz+YHki9etBGikp11A/aV8fgMbFuM+BV
-	 WSb6yO9QWpGRzw48nBTi3j94NHhxsKMEUkrj0ANTVd8+22ySy8bjK4oPOlwQaCZ98Z
-	 jBQZGr4kh80CszEwjmRf8Jeo7UjY40CwdseDH3Y/2zuDHMOwBGkMKUv3UcLbFRW0ur
-	 QnBj/c2ZHqqRK6lgtywfLLoftQX9WWuUmYTmZ5fFDcfUyzUUtjgZ2Opy5x03gfVEen
-	 vAvcsV7o2cRrSWS1KL54XAVVbnSg2afWLzrnH7ZW8SyoqD86J/cHhDtRX3KMDi9rhU
-	 7Q9cV7HeEBGPA==
+	s=k20260515; t=1792392688;
+	bh=IUlIDps8XyWSDb32G4KUhVb0C7gubLKT7PaDbrjp0pQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=EWy7DbQK3woK2rZ13NvA7khCYmOaWjb5V8YCvBTEYhz26soYPK2m5oCbd8inFL97m
+	 6Qd65TL5BSJQTRbix4DnFicISpf3woDwU0NF+kt6IIE+Bys5CPpjN389BEaHDJi5Zi
+	 R30EQgPmuhLgiV9Ka5u6OvWVAzYKFzrlB/zxYUFpNbmc3ZBqR67zi1VPoL2oq4Db6x
+	 oTnoPyBct6xcewn9ZC40GjOABUQlDrTew/iyeWxBhLu9s6mkJzmNZbs4m1YdLH46yT
+	 kAvkGxcpPX3cvwS2n7XId9O/CEK10W4GJZlOzN3+RshOOAWCKswljvmbhOOz4MLH1e
+	 lnhPyc09SjIvg==
 From: Claudiu Beznea <claudiu.beznea@kernel.org>
 To: lpieralisi@kernel.org,
 	kwilczynski@kernel.org,
@@ -38,11 +39,15 @@ Cc: claudiu.beznea@tuxon.dev,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org,
-	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-Subject: [PATCH v7 00/14] PCI: rzg3s-host: Add PCIe hotplug support
-Date: Mon, 19 Oct 2026 09:50:11 +0300
-Message-ID: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
+	stable@vger.kernel.org,
+	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH v7 01/14] PCI: rzg3s-host: Follow hardware manual clock/reset initialization order
+Date: Mon, 19 Oct 2026 09:50:12 +0300
+Message-ID: <20261019065025.2146539-2-claudiu.beznea@kernel.org>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
+References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -53,103 +58,163 @@ Content-Transfer-Encoding: 8bit
 
 From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 
-Hi,
+The RZ/G3S PCIe hardware manual specifies that the clocks must be enabled
+before the reset signals are deasserted during initialization.
 
-Series adds hotplug support for the rzg3s-host driver. This is a
-continuation of the series John posted initially at [1]. Along with it,
-prerequisites fixes and cleanup patches were added.
+Follow this sequence in the probe(), suspend(), and resume() paths to
+match the hardware requirements and avoid potential issues.
 
-Series was tested on RZ/G3S and RZ/G3E boards by generating consecutive
-link down/up events. The RZ/G3S has an I2C device which, depending on
-the way it is programmed, it controls the state of the PCIe link. The
-board has 3 PCIe interface: PCIE_SLOT, M.2 Key E, M.2 Key B. The
-following script was executed for ~9 hours:
-
-#!/bin/sh
-
-echo performance > /sys/module/pcie_aspm/parameters/policy
-
-while :; do
-        i2cset -y 1 0x18 0xf4 0x8 # Link down
-        i2cset -y 1 0x18 0xf4 0xc # Link up: PCIE_SLOT (NVMe Micron)
-        i2cset -y 1 0x18 0xf4 0x8 # Link down
-        i2cset -y 1 0x18 0xf4 0xd # Link up: M.2 Key B (NVMe Transcend)
-        i2cset -y 1 0x18 0xf4 0x8 # Link down
-        i2cset -y 1 0x18 0xf4 0xb # Link up: M.2 Key E (WiFi AX200)
-done
-
-Thank you,
-Claudiu
+Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
+Cc: stable@vger.kernel.org
+Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+---
 
 Changes in v7:
-- added the following fixes patches:
--- PCI: rzg3s-host: Don't mix goto-based unwinding and cleanup helpers
--- PCI: rzg3s-host: Create the INTx IRQ domain before setting the chained
-   handlers
--- PCI: rzg3s-host: Initialize the IRQ domains after the IRQs are masked
--- PCI: rzg3s-host: Drop read-modify-write approach for the R/W1C
-   registers
--- PCI: rzg3s-host: Use cached MSI address in .irq_compose_msi_msg()
-
-- addressed sashiko comments:
--- do not mix goto and __free() cleanup constructs
--- addressed concurrency: b/w different paths calling .reset_root_port()
-   and b/w IRQ subsystems and .reset_root_port()
+- none
 
 Changes in v6:
-- addressed review comments as follows:
-- added patch 7/9 ("PCI: rzg3s-host: Add helper to wait for link up")
-- adopted the approach from pciehp and saved DSN of the connected
-  device and, based on it, take decision if the bus devices need to be
-  removed + rescanned
-- in case of link up and !list_empty(&bus->devices) remove first the
-  devices from the bus and re-scan (adopted the approach from pciehp)
-- with the new approach cleared the link IRQ (before enabling it) in
-  probe, and resume paths
+- none
 
 Changes in v5:
 - collected tags
-- added patch 3/9 ("PCI: rzg3s-host: Select PCI_HOST_COMMON")
-- addressed sashiko review comments (detailed in individual patches)
 
 Changes in v4:
-- simplified comments in patch 2/8
-- kept only DL_UpDown changes in patch 7/8
-- added patch 8/8 for the .reset_root_port() support
+- none
 
 Changes in v3:
-- added patches 1-6
-- re-worked patch 7 to use struct pci_host_bridge::reset_root_port() API
+- none, this patch is new
 
-[1] https://lore.kernel.org/all/20260630141720.3938514-1-john.madieu.xa@bp.renesas.com/
+ drivers/pci/controller/pcie-rzg3s-host.c | 40 +++++++++++++-----------
+ 1 file changed, 21 insertions(+), 19 deletions(-)
 
-
-Claudiu Beznea (13):
-  PCI: rzg3s-host: Follow hardware manual clock/reset initialization
-    order
-  PCI: rzg3s-host: Fix runtime PM handling in the NOIRQ suspend/resume
-    phase
-  PCI: rzg3s-host: Don't mix goto-based unwinding and cleanup helpers
-  PCI: rzg3s-host: Create the INTx IRQ domain before setting the chained
-    handlers
-  PCI: rzg3s-host: Initialize the IRQ domains after the IRQs are masked
-  PCI: rzg3s-host: Drop read-modify-write approach for the R/W1C
-    registers
-  PCI: rzg3s-host: Use cached MSI address in .irq_compose_msi_msg()
-  PCI: rzg3s-host: Drop nop instructions
-  PCI: rzg3s-host: Move host configuration code together
-  PCI: rzg3s-host: Move suspend/resume code into dedicated functions
-  PCI: rzg3s-host: Move IRQ domain setup code
-  PCI: rzg3s-host: Add helper to wait for link up
-  PCI: rzg3s-host: Add bridge::reset_root_port()
-
-John Madieu (1):
-  PCI: rzg3s-host: Re-enumerate the bus on PCIe link-state changes
-
- drivers/pci/controller/Kconfig           |    1 +
- drivers/pci/controller/pcie-rzg3s-host.c | 1260 +++++++++++++++-------
- 2 files changed, 851 insertions(+), 410 deletions(-)
-
+diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+index 077cfb0834b3..e1105b1f2652 100644
+--- a/drivers/pci/controller/pcie-rzg3s-host.c
++++ b/drivers/pci/controller/pcie-rzg3s-host.c
+@@ -1888,10 +1888,6 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto sysc_signal_restore;
+ 
+-	ret = rzg3s_pcie_power_resets_deassert(host);
+-	if (ret)
+-		goto sysc_signal_restore;
+-
+ 	pm_runtime_enable(dev);
+ 
+ 	/*
+@@ -1902,12 +1898,16 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto rpm_disable;
+ 
++	ret = rzg3s_pcie_power_resets_deassert(host);
++	if (ret)
++		goto rpm_put;
++
+ 	raw_spin_lock_init(&host->hw_lock);
+ 
+ 	ret = rzg3s_pcie_host_setup(host, rzg3s_pcie_init_irqdomain,
+ 				    rzg3s_pcie_teardown_irqdomain);
+ 	if (ret)
+-		goto rpm_put;
++		goto power_resets_assert;
+ 
+ 	bridge->sysdata = host;
+ 	bridge->ops = &rzg3s_pcie_root_ops;
+@@ -1922,12 +1922,13 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ 	clk_disable_unprepare(host->port.refclk);
+ 	rzg3s_pcie_teardown_irqdomain(host);
+ 	host->data->config_deinit(host);
++power_resets_assert:
++	reset_control_bulk_assert(host->data->num_power_resets,
++				  host->power_resets);
+ rpm_put:
+ 	pm_runtime_put_sync(dev);
+ rpm_disable:
+ 	pm_runtime_disable(dev);
+-	reset_control_bulk_assert(host->data->num_power_resets,
+-				  host->power_resets);
+ sysc_signal_restore:
+ 	/*
+ 	 * SYSC RST_RSM_B signal need to be asserted before turning off the
+@@ -1948,10 +1949,6 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+ 	struct rzg3s_sysc *sysc = host->sysc;
+ 	int ret;
+ 
+-	ret = pm_runtime_put_sync(dev);
+-	if (ret)
+-		return ret;
+-
+ 	clk_disable_unprepare(port->refclk);
+ 
+ 	/* SoC-specific de-initialization */
+@@ -1964,13 +1961,19 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+ 	if (ret)
+ 		goto config_reinit;
+ 
+-	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
++	ret = pm_runtime_put_sync(dev);
+ 	if (ret)
+ 		goto power_resets_restore;
+ 
++	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
++	if (ret)
++		goto rpm_resume;
++
+ 	return 0;
+ 
+ 	/* Restore the previous state if any error happens */
++rpm_resume:
++	pm_runtime_resume_and_get(dev);
+ power_resets_restore:
+ 	reset_control_bulk_deassert(data->num_power_resets,
+ 				    host->power_resets);
+@@ -1980,7 +1983,6 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+ 	data->config_post_init(host);
+ refclk_restore:
+ 	clk_prepare_enable(port->refclk);
+-	pm_runtime_resume_and_get(dev);
+ 	return ret;
+ }
+ 
+@@ -2009,18 +2011,18 @@ static int rzg3s_pcie_resume_noirq(struct device *dev)
+ 			goto assert_rst_rsm_b;
+ 	}
+ 
+-	ret = rzg3s_pcie_power_resets_deassert(host);
++	ret = pm_runtime_resume_and_get(dev);
+ 	if (ret)
+ 		goto assert_rst_rsm_b;
+ 
+-	ret = pm_runtime_resume_and_get(dev);
++	ret = rzg3s_pcie_power_resets_deassert(host);
+ 	if (ret)
+-		goto assert_power_resets;
++		goto rpm_put;
+ 
+ 	ret = rzg3s_pcie_host_setup(host, rzg3s_pcie_msi_hw_setup,
+ 				    rzg3s_pcie_msi_hw_teardown);
+ 	if (ret)
+-		goto rpm_put;
++		goto assert_power_resets;
+ 
+ 	return 0;
+ 
+@@ -2028,11 +2030,11 @@ static int rzg3s_pcie_resume_noirq(struct device *dev)
+ 	 * If any error happens there is no way to recover the IP. Put it in the
+ 	 * lowest possible power state.
+ 	 */
+-rpm_put:
+-	pm_runtime_put_sync(dev);
+ assert_power_resets:
+ 	reset_control_bulk_assert(data->num_power_resets,
+ 				  host->power_resets);
++rpm_put:
++	pm_runtime_put_sync(dev);
+ assert_rst_rsm_b:
+ 	rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
+ 	return ret;
 -- 
 2.43.0
 
