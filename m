@@ -1,47 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79B9B5D2A15;
-	Mon, 19 Oct 2026 14:01:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72F75540760;
+	Mon, 19 Oct 2026 14:05:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418497; cv=none; b=EM3KGdSTvmZx50X1CVE66vdhYjmNoYqC8F/NYo3kg0cKRi1BH8JhFBiwVhtpZxIQdNhDpgEeeH1FAG15GDVlBG5t5x4UfQjJlqjyl9EgIH1UM7FYEAP5eYCAo8BxdDpJKnJ6LWSmPNZR8LXJMejWVhaq4I7GDW+QP1ymEPQjA0I=
+	t=1792418734; cv=none; b=jgpgqCjKZJpabfOfQWD7gJAu3zO9mqAoLnkkFMyI00jz8MG7RWzvEGumOkVaS/R7IOlng9Ng7TmaiaZZSwWiWNHh+KTU7cb3y9/ga57tz43+113lUFKYfDoWPdVAuyY76O8GPxviTK0AYVGPVNSUKEWbQHYfQt7+QaMZBZwJTpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418497; c=relaxed/simple;
-	bh=RbSzruvk7tdPZGBe2uxzDrFkG4eYkkVPyWyLNyqEUfk=;
+	s=arc-20240116; t=1792418734; c=relaxed/simple;
+	bh=wuv4QQPfrA+28/x/mOc9yJ6c1H1DGov3sFiROc4ep7I=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=s1NQI/EU+PHXIv8GDGkTkZuwC0PGpPAN6n/uiSXUjEev5fLF13oQGfhRyBD6k4IyvUcRpAl/wengjUB+NWFaU9SZheGql8jgAOYZH0rPWwZKJtGSJKXc4MNMl5lvxmfN5VNiyr1Wi+chuz6UACdR3pu6mKi0idClxKcslGfQvi0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ku55ul+Y; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=h/6AoCEJxaaor3RsDpUMhBKK7NdVTKW5UqYuVJr9l1utk5DARj2IDWEDa241bpKmtf8g++Si2iIuAfn4maSbzAhRfs/q4WRGmuu0ovTURleSFzgOJObXoHaHXmdz8mi5Mz59z9pK7XpDBHSXGiEfUpc0MD8tIKfgBHPJ49ZqHt8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aslYCR1E; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ku55ul+Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DF8A1F000C8;
-	Mon, 19 Oct 2026 14:01:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aslYCR1E"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16E531F000C8;
+	Mon, 19 Oct 2026 14:05:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418494;
-	bh=C4uLmbh3UY4Wvc/ua3+aKR6tqdcVCGj3zhapadbwh/U=;
+	s=k20260515; t=1792418731;
+	bh=ZsRVqzdZHElcE+klBvADse0UYwgU5hroLrFhVkJiRL0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Ku55ul+YpKeAWoCfIDFM70b/xeErKDSm28cs/wmFhTJFW8SrrZKjSSKhNLC6CXIyz
-	 HCep7TQ4FMHzMNr/4K9x8M0xohyn7+2TacrT1CzpcptxsLb1wQOUMprF6stpeOpL1q
-	 LtuuQJ5yAJ38xrTldpPvocEGjo36MbD2v2ajeXx4y72r0o8chatabYxI99OpP4t5BE
-	 Y/NRPGQPcnNsIO7FlmYXL6m4GxZ6WP/NVrm0RosmmWhk/LQsDNVHwkGxE53ndKKx3B
-	 H9/1A5luRpI71nwXkwbFsQGl+hFn6aKbUXg2xfkQFTz/91atTISxrZ1G07I6M9WBL7
-	 9uWMQAZmUaPCg==
+	b=aslYCR1EJtDGab37v7SuQiyNLKqdyed7jM53r1xQ6WRp/etcVWnkI+M3C/Ghni3jO
+	 3/AFUhxHkc7lSS0Q7PavIUidlEITaQiiD0iugGS5ahUKeRMNitpY1DjWoYhWkqIQus
+	 5PpKzPc3ootboQN6dHDE8mMecqmxOcNOfDdGBar7FV/YTjoc5pkA3PLSIpx6Vp8Lia
+	 arNUKgh1//eDpGcYJkCnezO0AroFeM6HCzKlaIHiiiDiYXuXb2gBTf7WqWqVQ2Z33E
+	 x71+TNaL+MHrsWHA0MN3r3UW1PRLdpJdFGrinF2eRpThCwXGVl8gAJqdJFdNq4qj1/
+	 HAem0Jei1a/aw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Ali Alaei <ali.alaei.tabatabaei@gmail.com>,
-	Lin Mohan <linmhwork@outlook.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
+Cc: Pranjal Shrivastava <praan@google.com>,
+	Jason Gunthorpe <jgg@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Nicolin Chen <nicolinc@nvidia.com>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Kevin Tian <kevin.tian@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
+	Joerg Roedel <joerg.roedel@amd.com>,
 	Sasha Levin <sashal@kernel.org>,
-	nirmal.patel@linux.intel.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] PCI: vmd: Handle BUS_RESTRICT_CFG value 3 for Arrow Lake-HX
-Date: Mon, 19 Oct 2026 09:49:39 -0400
-Message-ID: <20261019135441.1420968-288-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.10] PCI/ATS: Ensure pci_ats_supported() is PF-aware for VFs
+Date: Mon, 19 Oct 2026 09:52:27 -0400
+Message-ID: <20261019135441.1420968-456-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -57,503 +58,374 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Ali Alaei <ali.alaei.tabatabaei@gmail.com>
+From: Pranjal Shrivastava <praan@google.com>
 
-[ Upstream commit 72b32eccbcd591b9606edacf3bd7c455176d7660 ]
+[ Upstream commit 4f2cd6091ac41566a7300f5a4590d20a99aaa8bc ]
 
-On Intel Arrow Lake-HX systems (e.g. Core Ultra 9 275HX on Acer Predator
-PH16-73), the VMD controller reports BUS_RESTRICT_CFG = 3 in the VMCONFIG
-register. The existing switch statement only handled values 0, 1, and 2,
-causing vmd_get_bus_number_start() to return -ENODEV and aborting the
-entire VMD probe. This leaves NVMe drives behind the VMD controller
-invisible to the kernel.
+Update pci_ats_supported() to additionally check the associated PF's
+status when called on a VF. This ensures that PF-level quirks and
+untrusted status are correctly propagated to VFs, providing a robust
+support check that aligns with the kernel's PF-centric ATS configuration
+model and is immune to the timing of VF-specific fixups.
 
-Hardware registers (VMCAP/VMCONFIG at offsets 0x40/0x44):
-
-  VMD 0000:00:0e.0 (8086:ad0b): VMCAP=0x000f, VMCONFIG=0x03b8
-  BUS_RESTRICT_CFG(0x03b8) = (0x03b8 >> 8) & 0x3 = 3
-
-Add cfg=3 as a fallthrough to cfg=2, setting busn_start=224, which is
-the correct bus number base for this hardware.
-
-Also add a PCI_POSSIBLE_ERROR() guard after reading VMCONFIG: a failed
-config space read returns 0xFFFF, and BUS_RESTRICT_CFG(0xFFFF) = 3,
-so without this guard a removed or errored device would falsely match
-the new case 3 instead of being caught as an error.
-
-Reported-by: Lin Mohan <linmhwork@outlook.com>
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=221137 # Arrow-Lake-S
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=221136 # Arrow-Lake-S
-Signed-off-by: Ali Alaei <ali.alaei.tabatabaei@gmail.com>
-Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Link: https://patch.msgid.link/20260628143450.92492-1-ali.alaei.tabatabaei@gmail.com
+Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
+Reviewed-by: Samiullah Khawaja <skhawaja@google.com>
+Reviewed-by: Nicolin Chen <nicolinc@nvidia.com>
+Reviewed-by: Lu Baolu <baolu.lu@linux.intel.com>
+Reviewed-by: Kevin Tian <kevin.tian@intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Pranjal Shrivastava <praan@google.com>
+Signed-off-by: Joerg Roedel <joerg.roedel@amd.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-The local tree is **7.3.0-rc4**. This commit is a three-line VMD
-hardware workaround: Arrow Lake reports `BUS_RESTRICT_CFG=3`, probe used
-to abort with `-ENODEV`, and NVMe behind VMD disappeared. That is a
-real, user-visible bug and is appropriate for this tree.
+## Phase 1: Commit message forensics
+
+**Step 1.1: Subject line**
+Record: `[PCI/ATS] [Ensure] make pci_ats_supported() PF-aware when
+called on a VF`
+
+**Step 1.2: Tags**
+Record:
+- Reviewed-by: Jason Gunthorpe (NVIDIA / IOMMU)
+- Reviewed-by: Samiullah Khawaja (Google)
+- Reviewed-by: Nicolin Chen (NVIDIA)
+- Reviewed-by: Lu Baolu (Intel VT-d)
+- Reviewed-by: Kevin Tian (Intel)
+- Acked-by: Bjorn Helgaas (PCI maintainer)
+- Signed-off-by: Pranjal Shrivastava (author)
+- Signed-off-by: Joerg Roedel (IOMMU maintainer, committer)
+- No Fixes:, Reported-by:, Tested-by:, Link:, or Cc: stable (absence
+  expected)
+
+**Step 1.3: Body**
+Record:
+- Bug: `pci_ats_supported()` on a VF only inspects that VF. PF quirks
+  (`quirk_no_ats` zeros `ats_cap`) and PF `untrusted` are not applied.
+- Symptom: VFs can be treated as ATS-capable when the PF is not allowed
+  to use ATS; IOMMU then programs ATS and `pci_enable_ats()` can fail,
+  leaving inconsistent ATS/IOMMU state.
+- Cover letter (v9 0/4): seen under `iova_stress` as `pci_enable_ats()`
+  failure → PCI warnings on detach. Also: “`pci_ats_supported()` did not
+  account for PF-level quirked status.”
+- Root cause: helper is device-local; kernel ATS policy is PF-centric
+  (STU programmed on PF, VFs share it).
+- Version: helper added in 2020 (`521376741b2c2`); this change landed
+  for v7.3-rc1.
+
+**Step 1.4: Hidden bug fix?**
+Record: Yes. “Ensure” / “robust support check” is a real correctness
+fix: VFs of quirked or untrusted PFs could be reported as ATS-capable.
+Not style-only.
 
 ---
 
-## PHASE 1: COMMIT MESSAGE FORENSICS
+## Phase 2: Diff analysis
 
-**Step 1.1: PARSE THE SUBJECT LINE**
-
-Record: **[PCI: vmd]** **[Handle]** Handle `BUS_RESTRICT_CFG` value 3
-for Arrow Lake-HX so VMD probe no longer fails.
-
-Subsystem: PCI VMD controller (`drivers/pci/controller/vmd.c`). Verb
-“Handle” is a bug-fix verb: previously-unhandled hardware encoding.
-
-**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
-
+**Step 2.1: Inventory**
 Record:
-- **Reported-by:** Lin Mohan `<linmhwork@outlook.com>` (real user; also
-  the bugzilla reporter)
-- **Closes:** https://bugzilla.kernel.org/show_bug.cgi?id=221137 (Arrow-
-  Lake-S)
-- **Closes:** https://bugzilla.kernel.org/show_bug.cgi?id=221136 (Arrow-
-  Lake-S)
-- **Signed-off-by:** Ali Alaei (author); Manivannan Sadhasivam (PCI
-  host/endpoint maintainer, applied); Bjorn Helgaas (PCI subsystem
-  maintainer, committed)
-- **Link:** https://patch.msgid.link/20260628143450.92492-1-
-  ali.alaei.tabatabaei@gmail.com
-- **No Fixes:** tag (expected for this review)
-- **No Cc: stable** (expected)
-- Ignored pipeline SOBs if present; none from Sasha Levin on this commit
+- File: `drivers/pci/ats.c` (+5 / −2)
+- Function: `pci_ats_supported()`
+- Scope: single-function surgical change
 
-Notable: two independent Closes tags plus a Reported-by, plus PCI
-maintainer SOBs.
+**Step 2.2: Control flow**
+Record: Before: `false` if `!ats_cap`, else `untrusted == 0`. After:
+`false` if `!ats_cap` or `untrusted`; if VF, recurse to
+`pci_physfn(dev)`; else `true`. Recursion is one level (PF is not a
+virtfn).
 
-**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
-
+**Step 2.3: Bug mechanism**
 Record:
-- **Bug:** On Arrow Lake-HX (Core Ultra 9 275HX, Acer Predator PH16-73),
-  VMD `8086:ad0b` reports `VMCONFIG=0x03b8` so `BUS_RESTRICT_CFG =
-  (0x03b8 >> 8) & 0x3 = 3`. The switch only handled 0/1/2, so
-  `vmd_get_bus_number_start()` returned `-ENODEV` and probe aborted.
-- **Symptom:** NVMe behind VMD is invisible.
-- **Root cause:** New 2-bit encoding (value 3) treated as unknown.
-  `BUS_RESTRICT_CFG` is only 2 bits, so 3 is a legal value, not
-  “reserved garbage.”
-- **Fix:** Treat cfg=3 like cfg=2 (`busn_start=224`). Guard
-  `pci_read_config_word()` with `PCI_POSSIBLE_ERROR()` because a failed
-  read is `0xFFFF` and `BUS_RESTRICT_CFG(0xFFFF)=3`, which would now
-  look valid.
-- **Version info in message:** none beyond Arrow Lake-HX/S hardware.
+- Category: logic/correctness + hardware quirk inheritance (security-
+  adjacent ATS policy)
+- Mechanism: `quirk_no_ats()` is `DECLARE_PCI_FIXUP_FINAL` and matches
+  PF IDs, zeroing PF `ats_cap`. VFs have their own ATS cap and usually
+  different IDs, so VF `ats_cap` stays set. FINAL quirks run in
+  `pci_bus_add_device()` after `device_add()` → IOMMU probe. Checking
+  the PF avoids depending on VF FINAL fixup timing.
 
-**Step 1.4: DETECT HIDDEN BUG FIXES**
-
-Record: Not hidden. Explicit hardware-handling bug: probe fails, disks
-missing. The error-read guard is a real correctness fix that became
-necessary once case 3 was valid.
+**Step 2.4: Fix quality**
+Record: Minimal and aligned with `pci_ats_required()` /
+`pci_pri_supported()`, which already walk to the PF. Regression risk is
+low: it only denies ATS when the PF is already denied. VF ATS without a
+usable PF was already broken (`pci_enable_ats()` requires matching PF
+STU).
 
 ---
 
-## PHASE 2: DIFF ANALYSIS
+## Phase 3: Git history
 
-**Step 2.1: INVENTORY THE CHANGES**
+**Step 3.1: Blame**
+Record: Helper introduced by `521376741b2c2` (“PCI/ATS: Only enable ATS
+for trusted devices”, 2020-05-27, ~v5.8). The VF PF walk is
+`4f2cd6091ac41` (2026-07-09).
 
+**Step 3.2: Fixes: tag**
+Record: None. Buggy code is the original helper from `521376741b2c2`,
+present in this tree.
+
+**Step 3.3: Related file history**
 Record:
-- File: `drivers/pci/controller/vmd.c` (+3 lines)
-- Function: `vmd_get_bus_number_start()`
-- Scope: **single-file surgical fix**
+- `6c17c7d5936e6` (v6.12): `pci_prepare_ats()` — PF STU before VFs
+- `4f2cd6091ac41`: this change (series 1/4)
+- `6fd7c5c81af23`: series 2/4, STU check in `pci_prepare_ats()` —
+  follow-on, not a prerequisite
 
-**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
+**Step 3.4: Author**
+Record: Pranjal Shrivastava; IOMMU/PCI ATS work. Not subsystem
+maintainer. Joerg Roedel applied it; Bjorn Helgaas acked.
 
-Record:
-- **Before:** After `pci_read_config_word(VMCONFIG)`, switch on bits
-  [9:8]. 0→bus 0, 1→128, 2→224, anything else (including 3) → `pci_err`
-  + `-ENODEV`.
-- **After:** If the word is `0xFFFF`, return `-ENODEV`. Case 3 falls
-  through to case 2 (`busn_start=224`).
-- Path: VMD probe / domain setup, not a hot path and not an optional
-  debug path.
-
-**Step 2.3: IDENTIFY THE BUG MECHANISM**
-
-Record:
-- **Category:** Hardware workaround / logic correctness (unhandled
-  register encoding), plus error-path guard.
-- **Mechanism:** Firmware programs Dynamic Bus Offset / restriction mode
-  3. Driver rejected it, so the VMD domain never came up and child NVMe
-  never enumerated.
-- **Secondary:** Without the `PCI_POSSIBLE_ERROR()` check, a dead device
-  (`0xFFFF`) would now be accepted as mode 3.
-
-**Step 2.4: ASSESS THE FIX QUALITY**
-
-Record:
-- **Quality:** Minimal and locally obvious. Mask is `& 0x3`, so 3 is the
-  last encoding; mapping it to the existing 224–255 window matches cfg=2
-  and matches the author’s dump plus tester reports.
-- **Regression risk:** Low. Only devices that actually report cfg=3
-  change behavior (they used to fail probe). Other encodings unchanged.
-  The `0xFFFF` guard restores the old “abort on bad read” behavior for
-  the new case.
-- **Caveat (verified, not blocking):** An older Intel series treated
-  cfg=3 as a *second* root bus (BUS0=224, BUS1=225). That series is
-  **not** in this tree (`bus1_rootbus` / `VMD_FEAT_HAS_BUS1_ROOTBUS`
-  absent). This 3-line mapping was tested on real Arrow Lake-HX and
-  confirmed by the Arrow Lake-S bugzilla reporter. PCI maintainers
-  merged it.
+**Step 3.5: Dependencies**
+Record: Standalone. Uses existing `pci_physfn()`, `is_virtfn`,
+`ats_cap`, `untrusted`. Later series patches (SMMUv3 WARN, VT-d probe
+fail) depend on this, not the reverse.
 
 ---
 
-## PHASE 3: GIT HISTORY INVESTIGATION
+## Phase 4: Mailing list
 
-**Step 3.1: BLAME THE CHANGED LINES**
-
+**Step 4.1: Original discussion**
 Record:
-- Switch and helper: **`2e1224183b1bec`** (“PCI: vmd: Create bus offset
-  configuration helper”, Jon Derrick, 2020) — first in **v5.10-rc1**.
-- Even earlier, **`51f939b11cb1c`** / related bus-restriction decode
-  treated case 3 as `"Unknown Bus Offset Setting"` + `-ENODEV` on
-  purpose.
-- Buggy “3 is unknown” behavior has been in the driver for years; it
-  only bit users once Arrow Lake firmware started programming 3.
+- Lore:
+  https://patch.msgid.link/20260615235037.259909-2-praan@google.com
+- Cover:
+  https://patch.msgid.link/20260615235037.259909-1-praan@google.com
+- Revisions: v3 (2026-05-19) through v9 (2026-06-15). Applied version is
+  v9 1/4.
+- No NAKs in the v9 mbox. Joerg: “Applied, thanks.”
+- No reviewer Cc: stable.
 
-**Step 3.2: FOLLOW THE FIXES: TAG**
+**Step 4.2: Recipients (`b4 dig -w`)**
+Record: iommu@lists.linux.dev, linux-pci@, Joerg Roedel, Will Deacon,
+Robin Murphy, Lu Baolu, Jason Gunthorpe, Kevin Tian, Bjorn Helgaas,
+Nicolin Chen, Samiullah Khawaja.
 
-Record: **No Fixes: tag.** Not applicable. Introduction of the
-incomplete switch is `2e1224183b1bec` (v5.10). Device ID `8086:ad0b`
-added in **`57a128acaba02`** (“Add DID 8086:7D0B and 8086:AD0B for Intel
-MTL SKUs”, ~v6.0). `PCI_POSSIBLE_ERROR` from **`57bdeef471668`**
-(~v5.17).
+**Step 4.3: Bug report**
+Record: No syzbot/bugzilla. Cover letter: `iova_stress` ATS mismatch; PF
+quirk gap after David’s HEADER-phase work. UNVERIFIED: I could not open
+lore via WebFetch (403); content is from `b4 dig -m`.
 
-**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
+**Step 4.4: Series**
+Record: v9 0/4 “iommu: Standardize ATS robustness and state tracking” (4
+patches). This is patch 1 and is independently correct.
 
-Record:
-- Later on the same file: `2162572d34c50` (_OSC flags in guests),
-  `55aa45154fe48` (Nova Lake / Dunlow IDs). Neither is a prerequisite or
-  a revert.
-- Parent `b030905bf5a64` (BIOS-enumerated devices) does **not** change
-  this switch; this commit is standalone.
-- Not a “patch X/Y” series.
-
-**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-
-Record: Ali Alaei’s only commit under `drivers/pci/controller/` is this
-one. Applied by Mani, committed by Bjorn. Intel VMD maintainers (Nirmal
-Patel, Jonathan Derrick) were CCed on v3; no NAK in the thread.
-
-**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
-
-Record: None required. Uses existing `vmd_get_bus_number_start()`,
-existing `BUS_RESTRICT_CFG()`, existing `PCI_POSSIBLE_ERROR()`. Can
-apply standalone on this tree.
+**Step 4.5: Stable list**
+Record: No hit that this was requested or rejected for stable (curl to
+lore.kernel.org/stable returned empty). UNVERIFIED beyond that.
 
 ---
 
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+## Phase 5: Code semantics
 
-**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
+**Step 5.1: Functions**
+Record: `pci_ats_supported()` only.
 
+**Step 5.2: Callers**
 Record:
-- **Lore (via b4 dig):** https://patch.msgid.link/20260628143450.92492-
-  1-ali.alaei.tabatabaei@gmail.com
-- **Revisions:** v1 (2026-06-04, case 3 only) → v2 (same day, add
-  `PCI_POSSIBLE_ERROR`) → **v3 applied** (changelog placement + CC VMD
-  maintainers)
-- v1 review (sashiko-bot) flagged exactly the `0xFFFF` → case 3 issue;
-  v2/v3 addressed it.
-- Mani: style/CC nits on v2; **“Applied, thanks!”** on v3.
-- Bjorn: asked whether it closes bugzilla 221136, noted lack of public
-  spec, wanted Intel VMD maintainers to comment; still merged and added
-  Reported-by/Closes.
-- **No NAK.** No reviewer asked for Cc: stable (absence expected).
+- `pci_prepare_ats()` / `pci_enable_ats()` / `pci_ats_required()`
+  (`drivers/pci/ats.c`)
+- Intel VT-d probe / ATS / release (`drivers/iommu/intel/iommu.c`)
+- ARM SMMUv3 `arm_smmu_ats_supported()` and probe
+  (`drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c`)
+- AMD IOMMU `pdev_get_caps()` (`drivers/iommu/amd/iommu.c`)
+- IOMMU reset prepare/done (`drivers/iommu/iommu.c`)
 
-**Step 4.2: CHECK WHO REVIEWED THE PATCH**
+**Step 5.3: Callees**
+Record: `pci_physfn()` (returns `dev->physfn` for VFs).
 
-Record (b4 dig -w): linux-pci, Bjorn Helgaas, Lorenzo Pieralisi, Nirmal
-Patel, Jonathan Derrick, Krzysztof Wilczyński, Manivannan Sadhasivam,
-Rob Herring. Right lists and maintainers.
+**Step 5.4: Reachability**
+Record: Yes. IOMMU `probe_device` during PCI add / SR-IOV VF create.
+Userspace can create VFs (sysfs `sriov_numvfs`). Not a rare config-only
+path if IOMMU + SR-IOV + ATS are enabled.
 
-**Step 4.3: SEARCH FOR THE BUG REPORT**
+**Step 5.5: Similar patterns**
+Record: `pci_ats_required()`, `pci_pri_supported()`, PASID helpers
+already use `pci_physfn()`. This helper was the outlier.
 
+Verified probe vs quirk order:
+- `pci_device_add()`: HEADER fixups → `pci_ats_init()` → `device_add()`
+  (IOMMU probe)
+- `pci_bus_add_device()`: FINAL fixups (`quirk_no_ats`) after that
+So IOMMU can observe VF `ats_cap` before VF FINAL quirks. PF FINAL
+quirks have usually already run when VFs are created later.
+
+---
+
+## Phase 6: This checkout
+
+**Step 6.1: Buggy code in this tree?**
+Record: Yes. Tree is **v7.3-rc4** (`7.3.0-rc4`). `pci_ats_supported()`
+exists since v5.8. Pre-change body is the `!ats_cap` / `untrusted == 0`
+check. `git merge-base --is-ancestor 4f2cd6091ac41 HEAD` is true (native
+7.3-rc1 merge, not a reason to skip technical review).
+
+**Step 6.2: Backport difficulty**
+Record: Clean apply onto the parent helper. No API/struct change.
+
+**Step 6.3: Related fixes already here?**
+Record: No earlier substitute for PF-aware `pci_ats_supported()`.
+`quirk_no_ats` is still FINAL, not HEADER, so the VF/PF gap remains
+without this change.
+
+---
+
+## Phase 7: Subsystem context
+
+**Step 7.1**
+Record: PCI ATS / IOMMU. Criticality: **IMPORTANT** (IOMMU DMA
+translation; ATS can emit Translated AT and partially bypass IOMMU).
+
+**Step 7.2**
+Record: Active (VF ATS, CXL always-on ATS, Intel/AMD/SMMUv3). Helper
+itself is mature (2020).
+
+---
+
+## Phase 8: Impact and risk
+
+**Step 8.1: Who is affected**
+Record: SR-IOV + IOMMU + ATS. Datacenter NICs/IPUs/GPUs. Intel IPU E2000
+quirk: broken ATS invalidation → “outdated translations” and “system
+instability.” Those FINAL quirks match listed PF IDs; VF IDs often
+differ.
+
+**Step 8.2: Trigger**
+Record: Creating/probing a VF of a PF with `ats_cap` cleared or
+`untrusted` set. Common on SR-IOV enable, not every boot. Unprivileged
+users cannot usually create VFs.
+
+**Step 8.3: Failure mode**
 Record:
-- Bugzilla fetches returned **403**; full bug text **UNVERIFIED**.
-- On-list, Lin Mohan confirmed both 221137 and 221136 are the same Mode
-  3 / Dynamic Bus Offset issue, including on `8086:09ab` Arrow Lake-S,
-  and asked for Closes tags after merge.
-- Author tested Acer Predator PH16-73 / Core Ultra 9 275HX /
-  `8086:ad0b`.
-- Multiple users/platforms: **HX laptop + S desktop**.
+- ATS enabled on hardware the PF quirk meant to disable → stale IOTLB /
+  instability / possible bad DMA (**HIGH**)
+- IOMMU thinks ATS is supported, `pci_enable_ats()` fails, detach
+  warnings / inconsistent state (**MEDIUM–HIGH**)
+- Untrusted PF VFs getting ATS would be a DMA/ATS bypass gap; VF
+  `untrusted` is often already set from the upstream bridge, so this
+  part is extra defense
 
-**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
+Severity: **HIGH** (quirk bypass on broken ATS), not a universal panic.
 
-Record: Standalone 1/1. Older Intel “second rootbus” series on spinics
-is a large new feature and is **not** in this tree; not a dependency of
-this 3-line workaround.
-
-**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-
-Record: lore.kernel.org/stable search returned **403**. **UNVERIFIED**
-whether stable@ already discussed it. No evidence in the pci thread of a
-reason to keep it out of stable.
+**Step 8.4: Risk-benefit**
+Record: Benefit high for SR-IOV ATS users on quirked devices; risk very
+low (5 lines, stricter deny only). Ratio: favorable.
 
 ---
 
-## PHASE 5: CODE SEMANTIC ANALYSIS
+## Phase 9: Synthesis
 
-**Step 5.1: IDENTIFY KEY FUNCTIONS**
+**Step 9.1: Evidence**
 
-Record: `vmd_get_bus_number_start()` only.
+For:
+- Real bug: VF ATS allow-list ignored PF quirk/`untrusted`
+- Concrete trigger: SR-IOV VF probe; `iova_stress` saw enable-fail /
+  detach warnings
+- E2000-class quirks document instability if ATS stays on
+- 5-line, obviously correct, PF walk matches the rest of PCI ATS
+- Reviewed by PCI and Intel/AMD/ARM IOMMU maintainers
+- Self-contained; applies to this tree’s helper
 
-**Step 5.2: TRACE CALLERS**
+Against:
+- Framed as robustness in a 4-patch series, not a panic/CVE
+- No Fixes:/Cc: stable (not a negative by itself)
+- Affects SR-IOV+ATS, not all machines
+- Untrusted gap is weaker than the quirk/`ats_cap` gap
 
-Record:
-- Called from `vmd_prepare_offsets_and_bus()` when
-  `VMD_FEAT_HAS_BUS_RESTRICTIONS`.
-- That is called from `vmd_enable_domain()`.
-- That is called from `vmd_probe()`.
-- Probe path during PCI enumeration of the VMD device. Not IRQ/hot path.
+Unresolved:
+- Exact `iova_stress` trace not in the v9 mbox
+- Whether every E2000 VF ID is already in the quirk table (PF walk still
+  needed for timing and other `quirk_no_ats` IDs)
 
-`VMD_FEATS_CLIENT` includes `VMD_FEAT_HAS_BUS_RESTRICTIONS`. Device
-`0xad0b` uses `VMD_FEATS_CLIENT`. Several other client IDs do too, so
-any of those that firmware sets to cfg=3 hit this.
+**Step 9.2: Stable rules**
+1. Obviously correct and tested? **PASS** — one-level PF recurse; v9
+   reviews; `iova_stress` mentioned
+2. Real user-visible bug? **PASS** — false ATS support on VFs; IOMMU
+   mismatch; quirk bypass
+3. Important (crash/security/corruption/deadlock)? **PASS** — ATS on
+   quirked broken invalidation is instability / stale translations; ATS
+   policy is security-adjacent
+4. Small and contained? **PASS** — +5/−2, one function
+5. No new features/APIs? **PASS**
+6. Applies to this tree? **PASS** — helper and fields exist; parent hunk
+   matches
 
-**Step 5.3: TRACE CALLEES**
+**Step 9.3: Exceptions**
+Record: Not a device-ID/DT/build/doc exception. Hardware-quirk
+*inheritance* for existing `quirk_no_ats` entries.
 
-Record: `pci_read_config_word()` (VMCAP 0x40, VMCONFIG 0x44),
-`PCI_POSSIBLE_ERROR()`, `pci_err()` on unknown values.
+**Step 9.4: Decision**
+This tree is Linux **7.3-rc4**. The helper has been wrong for VFs since
+v5.8. The change is a small, reviewed correctness fix so VFs cannot use
+ATS when the PF is quirk-disabled or untrusted, which is the kernel’s
+PF-centric ATS model. That is appropriate here.
 
-**Step 5.4: FOLLOW THE CALL CHAIN**
+### What the commit solves for users of this tree
+Without it, `pci_ats_supported(VF)` can be true while the PF has
+`ats_cap == 0` (FINAL `quirk_no_ats`) or is untrusted. IOMMU drivers
+then set up ATS on the VF. That can enable ATS on hardware the PF quirk
+turned off (Intel E2000: bad invalidate endianness → stale translations
+/ instability), or fail later in `pci_enable_ats()` and leave IOMMU/PCI
+ATS state inconsistent.
 
-Record: Boot / device probe. Reachable whenever VMD is enabled (RST/VMD
-in firmware) on affected Intel client platforms. Unprivileged users do
-not trigger it via a syscall; they just lose NVMe. **User-visible and
-common on those laptops.**
+### Verification
+- [Phase 1] Tags: five Reviewed-by + Bjorn Acked-by; no Fixes/Reported-
+  by/Cc: stable
+- [Phase 1] Cover letter from `/tmp/ats-thread.mbox`: `iova_stress`, PF
+  quirk gap
+- [Phase 2] Diff: +5/−2 in `pci_ats_supported()` only
+- [Phase 3] `git blame`: helper from `521376741b2c2` (v5.8); VF walk
+  from `4f2cd6091ac41`
+- [Phase 3] `git show 4f2cd6091ac41^:drivers/pci/ats.c`: old `return
+  (dev->untrusted == 0)`
+- [Phase 3] Series 2/4 is `6fd7c5c81af23`; not required for this helper
+  change
+- [Phase 4] `b4 dig -c 4f2cd6091ac41`: v9 1/4 at
+  patch.msgid.link/20260615235037.259909-2-praan@google.com
+- [Phase 4] `b4 dig -a`: v3–v9; applied = v9
+- [Phase 4] `b4 dig -w`: PCI + IOMMU maintainers on Cc
+- [Phase 4] mbox msg 9: Joerg “Applied, thanks.” No NAK
+- [Phase 4] WebFetch lore: 403; used b4 mbox instead
+- [Phase 5] Callers: VT-d, SMMUv3, AMD IOMMU,
+  `pci_enable_ats`/`pci_prepare_ats`
+- [Phase 5] `pci_device_add` vs `pci_bus_add_device`: IOMMU probe before
+  FINAL `quirk_no_ats`
+- [Phase 6] `git describe HEAD` = v7.3-rc4-27-gf0100363d8c37; `make
+  kernelversion` = 7.3.0-rc4
+- [Phase 6] `git merge-base --is-ancestor 4f2cd6091ac41 HEAD` = yes
+- [Phase 8] E2000 quirk commit `a18615b1cfc04`: ATS invalidate endian
+  bug → system instability
+- UNVERIFIED: full `iova_stress` log; whether every E2000 VF ID is
+  already quirked
 
-**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-
-Record: Same `PCI_POSSIBLE_ERROR()` pattern already used in
-`vmd_get_phys_offsets()` for VMLOCK. No other unhandled
-`BUS_RESTRICT_CFG` sites.
-
----
-
-## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
-
-**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-
-Record:
-- `git describe HEAD` → **v7.3-rc4-27-gf0100363d8c37**
-- `make kernelversion` → **7.3.0-rc4**
-- `vmd_get_bus_number_start()` is present; `0xad0b` is in `vmd_ids[]`;
-  `PCI_POSSIBLE_ERROR` is in `include/linux/pci.h`.
-- Bug introduced with the 0/1/2-only switch (v5.10 helper); manifests on
-  Arrow Lake once those IDs exist (~v6.0+).
-- **Yes, the bug exists in this lineage.**
-
-**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-
-Record: **Clean apply** on this tree. Hunk is isolated to the helper;
-surrounding refactor (`vmd_prepare_offsets_and_bus`) does not overlap.
-
-**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-
-Record: No other commit implements cfg=3. No revert. No dual-rootbus
-substitute.
-
----
-
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
-
-**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
-
-Record: **PCI controller / Intel VMD.** Criticality **IMPORTANT** (not
-core mm/vfs, but VMD is how many Intel laptops expose NVMe).
-`CONFIG_VMD` depends on `PCI_MSI && X86_64`.
-
-**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
-
-Record: Actively maintained (new device IDs, BIOS-scan feature, _OSC
-guest fix). The **switch itself** has been stable since 2020; this is a
-late hardware encoding, not churn in the helper.
-
----
-
-## PHASE 8: IMPACT AND RISK ASSESSMENT
-
-**Step 8.1: DETERMINE WHO IS AFFECTED**
-
-Record: **Driver-specific / platform-specific:** x86_64 systems with
-Intel VMD and firmware `BUS_RESTRICT_CFG=3` (Arrow Lake-HX confirmed;
-Arrow Lake-S reporter confirmed). Not universal.
-
-**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
-
-Record: Every boot on affected machines with VMD enabled. Not a race.
-Not unprivileged-exploit; **storage simply missing.**
-
-**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
-
-Record: VMD probe fails (`-ENODEV`); NVMe behind VMD never appears.
-**HIGH** (loss of boot/root/data disks on common Intel client hardware).
-Not a panic, but production-breaking.
-
-**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
-
-Record:
-- **Benefit:** High for affected users (NVMe works).
-- **Risk:** Very low (3 lines, probe-only, existing mapping, error-read
-  guard).
-- **Ratio:** Strongly in favor of applying it on this tree.
-
----
-
-## PHASE 9: FINAL SYNTHESIS
-
-**Step 9.1: COMPILE THE EVIDENCE**
-
-**For:**
-- Real bug: VMD probe abort, NVMe invisible.
-- Confirmed on Arrow Lake-HX (author) and Arrow Lake-S (bugzilla
-  reporter).
-- 3-line, obviously correct mapping of a 2-bit field.
-- Extra `PCI_POSSIBLE_ERROR()` prevents a new false-positive on
-  `0xFFFF`.
-- PCI maintainers applied/committed; v1 review hole fixed in v2/v3.
-- Fits the stable **hardware quirk / existing-device enablement**
-  exception.
-- All helpers and IDs exist in **this** 7.3.0-rc4 tree; no missing
-  prerequisites.
-
-**Against:**
-- Not a crash/UAF/security bug.
-- No public VMD spec for mode 3; Bjorn noted a “new mode” might someday
-  need more than a fallthrough (dual-rootbus series never landed here).
-- Intel VMD maintainers were CCed but did not ack in the saved thread.
-
-**Unresolved:**
-- Full bugzilla pages (HTTP 403).
-- stable@ archive search (HTTP 403).
-- Whether every cfg=3 platform only needs bus 224 (empirically yes for
-  the reported machines).
-
-Those gaps do not outweigh the hardware reports and the size of the fix.
-
-**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
-
-1. Obviously correct and tested? **PASS** — register dump, author test,
-   reporter confirmation, v3 review.
-2. Fixes a real bug that affects users? **PASS** — NVMe missing on
-   shipping Arrow Lake systems.
-3. Important issue? **PASS** — HIGH: boot/storage devices not enumerated
-   (not a panic, but not cosmetic).
-4. Small and contained? **PASS** — +3 lines, one function.
-5. No new features or APIs? **PASS** — no new ABI; handles a value the
-   existing 2-bit field can already produce.
-6. Can apply to the local tree? **PASS** — helper, IDs, and
-   `PCI_POSSIBLE_ERROR` all present; apply is clean.
-
-**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
-
-Record: **Hardware quirk/workaround** (and the same class as device-ID
-enablement): existing driver, existing PCI ID, firmware encoding the
-driver rejected, so the device did not work.
-
-**Step 9.4: MAKE YOUR DECISION**
-
-This tree is 7.3.0-rc4. The VMD driver, Arrow Lake DID `0xad0b`, bus-
-restriction feature flag, and the old 0/1/2-only switch all exist here.
-The patch is a small, tested workaround that restores NVMe on affected
-Intel VMD systems. It should be applied to this tree.
-
-### What the commit solves
-`BUS_RESTRICT_CFG` is two bits. Arrow Lake programs **3**. The driver
-treated 3 as unknown, failed VMD probe, and hid NVMe. Mapping 3 to the
-existing bus-224 window, and rejecting `0xFFFF` config reads, is the
-correct local fix.
-
-### Stable rules
-Meets all six criteria. It is a hardware workaround, not a new API.
-
-### Risk vs benefit
-Benefit is high (disks appear). Risk is very low (three lines, probe-
-only).
-
-### Concerns
-Dual-rootbus would be a large new feature and is not in this tree; it is
-not required for the reported machines. `PCI_POSSIBLE_ERROR` is already
-here, so no extra backport of that helper is needed on this tree.
-
----
-
-## Verification
-- **[Phase 1]** Parsed commit `72b32eccbcd59`: Reported-by Lin Mohan;
-  Closes 221137/221136; SOB Ali Alaei, Mani, Bjorn Helgaas; Link to
-  msgid 20260628143450.92492-1; no Fixes/Cc-stable.
-- **[Phase 2]** Diff: +3 lines in `vmd_get_bus_number_start()`:
-  `PCI_POSSIBLE_ERROR` + `case 3:` fallthrough to `busn_start=224`.
-- **[Phase 2]** Confirmed `BUS_RESTRICT_CFG` is `((vmcfg >> 8) & 0x3)`
-  in `vmd.c:32`; `0xFFFF` → 3.
-- **[Phase 3]** `git blame`: switch from `2e1224183b1bec` (v5.10-rc1);
-  case 3 lines from this commit.
-- **[Phase 3]** `0xad0b` added in `57a128acaba02`; `PCI_POSSIBLE_ERROR`
-  in `57bdeef471668` (~v5.17); present in `include/linux/pci.h:179`.
-- **[Phase 3]** `git log --oneline -20 -- drivers/pci/controller/vmd.c`:
-  no revert; later commits are IDs/_OSC only.
-- **[Phase 3]** Author has no other VMD commits.
-- **[Phase 4]** `b4 dig -c 72b32eccbcd59`: v3 at
-  patch.msgid.link/20260628143450.92492-1-ali.alaei.tabatabaei@gmail.com
-- **[Phase 4]** `b4 dig -a`: v1 → v2 → v3; v3 is what was applied.
-- **[Phase 4]** `b4 dig -w`: linux-pci + Helgaas, Pieralisi, Patel,
-  Derrick, Wilczyński, Sadhasivam, Herring.
-- **[Phase 4]** mbox: Mani applied; Bjorn discussed bugzilla; Lin Mohan
-  confirmed both bugs; sashiko-bot caught the `0xFFFF` issue on v1.
-- **[Phase 4]** Bugzilla WebFetch 403 — full bug text UNVERIFIED;
-  reporter confirmation verified from mbox.
-- **[Phase 4]** lore.kernel.org/stable 403 — UNVERIFIED.
-- **[Phase 5]** Call chain: `vmd_probe` → `vmd_enable_domain` →
-  `vmd_prepare_offsets_and_bus` → `vmd_get_bus_number_start`.
-- **[Phase 5]** `0xad0b` in `vmd_ids[]` with `VMD_FEATS_CLIENT`
-  including `VMD_FEAT_HAS_BUS_RESTRICTIONS`.
-- **[Phase 5]** No `bus1_rootbus` in this tree.
-- **[Phase 6]** `git describe HEAD`: v7.3-rc4-27-gf0100363d8c37; `make
-  kernelversion`: 7.3.0-rc4.
-- **[Phase 6]** `git merge-base --is-ancestor 72b32eccbcd59 HEAD`: yes;
-  first contained in **v7.3-rc1**; not in v7.2.
-- **[Phase 7]** `CONFIG_VMD` in `drivers/pci/controller/Kconfig`;
-  MAINTAINERS: Nirmal Patel / Jonathan Derrick.
-- **[Phase 8]** Failure mode: VMD probe `-ENODEV` → NVMe not enumerated;
-  severity HIGH.
-- **UNVERIFIED:** Full bugzilla 221136/221137 bodies; any stable@
-  thread; whether cfg=3 ever needs a second root bus on unreported SKUs.
+The fix is small, surgical, and meets the stable criteria for this tree.
 
 **YES**
 
- drivers/pci/controller/vmd.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/ats.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index b4b62b9ccc45a..5d3e6cc7e4feb 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -656,6 +656,8 @@ static int vmd_get_bus_number_start(struct vmd_dev *vmd)
- 	pci_read_config_word(dev, PCI_REG_VMCAP, &reg);
- 	if (BUS_RESTRICT_CAP(reg)) {
- 		pci_read_config_word(dev, PCI_REG_VMCONFIG, &reg);
-+		if (PCI_POSSIBLE_ERROR(reg))
-+			return -ENODEV;
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index ec6c8dbdc5e9c..a5fa7745bce8e 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -40,10 +40,13 @@ void pci_ats_init(struct pci_dev *dev)
+  */
+ bool pci_ats_supported(struct pci_dev *dev)
+ {
+-	if (!dev->ats_cap)
++	if (!dev->ats_cap || dev->untrusted)
+ 		return false;
  
- 		switch (BUS_RESTRICT_CFG(reg)) {
- 		case 0:
-@@ -664,6 +666,7 @@ static int vmd_get_bus_number_start(struct vmd_dev *vmd)
- 		case 1:
- 			vmd->busn_start = 128;
- 			break;
-+		case 3:
- 		case 2:
- 			vmd->busn_start = 224;
- 			break;
+-	return (dev->untrusted == 0);
++	if (dev->is_virtfn)
++		return pci_ats_supported(pci_physfn(dev));
++
++	return true;
+ }
+ EXPORT_SYMBOL_GPL(pci_ats_supported);
+ 
 -- 
 2.53.0
 
