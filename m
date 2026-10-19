@@ -1,56 +1,71 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792446999;
-	b=miq6VmhPcNZalwIKrDF8uu7IR6YKJRRIvMDDGJo5YbU/y+rr7PuLySOzk6rJHJpdueGR
-	 CM1kiEtzi7uGe+M0/VBMFQAnBN8ZhjdfyPIRqwQQiQyExSGQioyd9ssVJ6vkNutfPxxvi
-	 0qf4MBWcnD0rZktctB0HCeV0vaa4MFeal7a/ffQ/nFjWuPjwP2tq8uCyBXq1mO4/gA1bf
-	 MdLEUmGsqqZfz8Z/5BKpeHfQ1wMLNlebwQCHYYrxn31G6WpIEDqHMBXWY6P2+V1FExpbY
-	 Og15/YZnBEh4PlDs2QxxyOD7vXuBm9k+O2gY8H7kwszkDODLhno0miOOYaLKyG+YZ+Q==
+	t=1792447273;
+	b=loOjbE5ta+/kl0MxJSuSwZOqTfkN1ybf/Odwdq28X2HInxg8ZeWu7MzhMRBK6V5myDxn
+	 5cIPd2pH5bNZ/I7jzPluwoCqPT18pa9dfT5DaDvw4wlfAd2d1Hy0NXlPefRE+v1Gjvc4r
+	 wy73yCg6buRTbufEbWrE1dfDfIpCRmltxaIfGGslog57yfRy/9y1WeFxTcqdGDV/LApJ5
+	 6/3emJeoe4wI8dMwAY99AeOtWxBYiAQw3xFZcktNfwW682QQPAL+JpUOPrSpPIml1QUjS
+	 0NzsVdB9PHNdNS88rebcE/ciopy/fbhF+x2XqXPynIQ6XEH6M/pJg9eBvdV/R4L38lg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792446999;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792447273;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=uDbDRvDPkLpFWAxgfb5Uv4pS9UiCoXyEbXPvzTb819Q=;
-	b=WGKx8APegkS/rrmN3bQa8a/oMIP3JL56wJGXnxk9BP47lDFMssfoIbT1BJZp8m6qLR9C
-	 SWZ3OVmsOGx4Fjr9t3ooCAGQGzMwAQhI6h7TsMczPijATOKfsGZusnmoXaVdfpzaMCd41
-	 lV78hSKHajLcFn+O/m4I33SNRJcnB96HfkXwwzKDTJsnSgJOnokM22ShP7yKsP4YP8Cc7
-	 m9L5PP5j8YFjzIj9T9bILdwL6EjAXyMAW6NdDELux88gKYSO0bi64Xyos35ySvJ2BrA60
-	 SUHlLkSw8p2diQFWMnkruEHBh0wsbQaHWzCI72UekCce5h0kHWOPrOpm82osoyxqeXA==
+	 MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=bV0OPKtBUUI374C0IPHESWFunzS2ApGPBYB92il2cME=;
+	b=lpXWqJAXWfUMIjlJ49hGW+rDDn01CL0IbfbXfCjsrgKi+YtyNB6eURjlDbKBA40yAumW
+	 jyoYf7TWw4dshmr6iQiwajq3QD9SndTMaQoG2XUB83qAy20YIOoM0kUXPoCUIm0KRCYby
+	 RdulKxPJX6ragT5jJCPz5WhKBUiCZ3/4UGUCgDi/z+kZiuKwDavP2EEJbkT+6na6fFeAG
+	 VNpHySrKcu5XzTIbKos9NFcuMFiwDspPBwj3ZosI7odBgPykOUyZ3TR9c3OuAkCWbZhw5
+	 dGi3irQ10rifUpvFOOX5slI4sdhPQMFw5rKvX1UbFx41RG/oMtpQDiWqFn9P76z7qoQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jPo1ul98;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZfkdXr2W;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 292D3606A320;
-	Mon, 19 Oct 2026 21:56:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C460606A31A;
+	Mon, 19 Oct 2026 22:01:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jPo1ul98
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7D711F000C4;
-	Mon, 19 Oct 2026 21:56:38 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZfkdXr2W
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6984F1F000C5;
+	Mon, 19 Oct 2026 22:01:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792446999;
-	bh=uDbDRvDPkLpFWAxgfb5Uv4pS9UiCoXyEbXPvzTb819Q=;
+	s=k20260515; t=1792447272;
+	bh=bV0OPKtBUUI374C0IPHESWFunzS2ApGPBYB92il2cME=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=jPo1ul98XSAB2kcTe2SNsbLB7qBABuJZkr3HXYqzidmUi1YUiqsfPNEco7nZZElgW
-	 bLBtGpozjQL1RlXUWLE5MNuJnQUxqek+96SMy1HKFPJ7qtW7RA2SypTbJ5d2/47sRk
-	 vkfjQDgB/CRc/o4OKtjZVTZi75hbeyp2cGaGuiIzMaQqnk/AVeYtIW06NNaVABd4B+
-	 rpoHXgk9Wo7aIoL4DfW0cs5bWV0DkVGtN26ZEt/1RAEhGiLG5ORsuBmrKo7Zp+v+BD
-	 NfQdnxtrkDvSuxiSooQ46HtzsTWBSiyyIxaahmypzjRR4A3lHGwTyeDZdL9FAsq6oJ
-	 j0Z3GF4xuNM6A==
-Date: Mon, 19 Oct 2026 16:56:37 -0500
+	b=ZfkdXr2Wx/dPio8PnbGRT0u83V4fo5Cvg9y3bnl08Q6htx5aSAm4IAYI3xhJ99931
+	 nuzDO/3Ta1/zJpkvp2/+piPM+YzD26RedDsB60/rj5aRXI4vMZiX4TNDJmewkoy/o+
+	 qMkJZCUyQPxdnSti+4ZP70d5dFuFcz6GZCwT1ves88FisAZ0K+qjam7MO8RzGnhz/O
+	 D7pWg5T58WEVaJlxyE64jA271HLMj38vajEeqBSrfUTdRWSnaFkJXncmb4+0ohVOfL
+	 QaxTR16aGIlCiaO81EOE4f3T/aQboHXBSwmpu/XYj2ZVlvaFn1bb2lrgoKMrh5h732
+	 rzrAq265t5oKQ==
+Date: Mon, 19 Oct 2026 17:01:11 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Sumit Kumar <sumit.kumar@oss.qualcomm.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
+To: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>,
+	Bjorn Andersson <andersson@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
 	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] pci: designware: Set DMA_BYPASS bit in outbound IATU
- CTRL2 register
-Message-ID: <20261019215637.GA2267961@bhelgaas>
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Michael Walle <mwalle@kernel.org>, Alex Elder <elder@riscstar.com>,
+	Daniel Thompson <daniel@riscstar.com>,
+	Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-gpio@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
+	Abel Vesa <abel.vesa@oss.qualcomm.com>
+Subject: Re: [PATCH v5 5/5] arm64: dts: qcom: qcs6490-rb3gen2: Enable TC9563
+ embedded GPIO controller
+Message-ID: <20261019220111.GA2271378@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,57 +75,80 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261019215514.GA2267032@bhelgaas>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261015172620.GA1780580@bhelgaas>
 
-On Mon, Oct 19, 2026 at 04:55:15PM -0500, Bjorn Helgaas wrote:
-> On Thu, Oct 15, 2026 at 11:10:49AM +0530, Manivannan Sadhasivam wrote:
-> > On Wed, Oct 14, 2026 at 02:20:49PM -0500, Bjorn Helgaas wrote:
-> > > On Tue, Sep 08, 2026 at 11:48:22AM +0530, Sumit Kumar wrote:
-> > > > An outbound iATU region matches any local (AXI/application-side)
-> > > > address that falls within its Base/Limit window and rewrites it to
-> > > > the PCIe-side address programmed in that region's Target Address
-> > > > Registers before the transaction goes out on the link. This matching
-> > > > does not distinguish CPU-initiated transactions from ones issued by
-> > > > the internal DMA engine (eDMA/HDMA).
-> > > > 
-> > > > Example: outbound region 0 is programmed with Base/Limit covering
-> > > > local addresses 0x8000_0000-0x8000_0FFF and Target 0x1_0000_0000, for
-> > > > CPU-initiated accesses. The DMA engine is later given a descriptor
-> > > > whose destination is the host address 0x8000_0080, which happens to
-> > > > fall inside region 0's Base/Limit range. The iATU matches the DMA
-> > > > transaction against region 0 too and rewrites it to 0x1_0000_0080
-> > > > instead of passing 0x8000_0080 through unchanged. The transaction
-> > > > then lands on the wrong host address, causing data corruption or an
-> > > > IOMMU fault when the rewritten address has no valid mapping.
-> > > > 
-> > > > Set the DMA_BYPASS bit (bit 27) in PCIE_ATU_REGION_CTRL2 when
-> > > > programming outbound iATU regions so only CPU/AXI-initiated
-> > > > transactions are matched against the region; DMA engine transactions
-> > > > bypass the translation and go out on the PCIe link with their
-> > > > original address.
-> > > > 
-> > > > Signed-off-by: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
-> > > 
-> > > Thanks for the fix.  A data corruption is pretty disastrous.
-> > > 
-> > > Is there a Fixes: tag we can add here?
-> > > 
-> > > Probably also a stable tag?
+On Thu, Oct 15, 2026 at 12:26:21PM -0500, Bjorn Helgaas wrote:
+> On Wed, Sep 09, 2026 at 04:55:57PM +0200, Lorenzo Bianconi wrote:
+> > The Toshiba TC9563 PCIe switch embeds a GPIO controller providing 37 GPIO
+> > lines. The controller is registered as an auxiliary device by the TC9563
+> > power controller driver and accessed through the same i2c device.
 > > 
-> > Just to clarify, there is no reported data corruption due to kernel.
-> > Our internal teams saw corruption in the bootloader with overlapped
-> > mapping between iATU and eDMA and fixed it with this BYPASS flag. So
-> > Sumit wanted to do the same thing in kenrel to avoid hitting such
-> > scenarios. That's why there is no fixes or stable tag.
+> > Describe the switch node itself as the embedded GPIO controller and us
+> > it to drive the PERST# reset lines of the two external downstream port
+> > (pcie@1,0 and pcie@2,0), as expected by the TC9563 power controller after
+> > switching to the GPIO descriptor API for per-port resets.
+> > 
+> > Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+> > Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+> > Reviewed-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
+> > Reviewed-by: Alex Elder <elder@riscstar.com>
+> > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@oss.qualcomm.com>
 > 
-> This doesn't sound very comforting to me.  Unless there's some reason
-> similar corruption can't happen in the kernel, I think this deserves
-> Fixes: and a stable tag.
+> Bjorn A, I first applied this arch/arm64 DTS patch to the PCI tree
+> along with the rest of this series, but that was a mistake because 
+> those changes should go through your tree instead.
 > 
-> The fact that nobody's reported it doesn't mean it's not happening or
-> won't happen.
+> I dropped it from pci/pwrctrl.  Do you want to pick it up?
 
-I guess I had already added a stable tag, but if we knew a Fixes
-commit, that would still be helpful for stable kernels.
+Just following up to make sure this DTS patch gets merged somewhere...
+
+> > ---
+> >  arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts | 7 ++++++-
+> >  1 file changed, 6 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
+> > index a13315bf0fb0..4da7342ca90d 100644
+> > --- a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
+> > +++ b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
+> > @@ -867,7 +867,7 @@ &pcie1_phy {
+> >  &pcie1_port0 {
+> >  	reset-gpios = <&tlmm 2 GPIO_ACTIVE_LOW>;
+> >  
+> > -	pcie@0,0 {
+> > +	tc9563: pcie@0,0 {
+> >  		compatible = "pci1179,0623";
+> >  		reg = <0x10000 0x0 0x0 0x0 0x0>;
+> >  		#address-cells = <3>;
+> > @@ -891,6 +891,9 @@ pcie@0,0 {
+> >  		pinctrl-0 = <&tc9563_resx_n>;
+> >  		pinctrl-names = "default";
+> >  
+> > +		gpio-controller;
+> > +		#gpio-cells = <2>;
+> > +
+> >  		pcie1_switch0_dsp1: pcie@1,0 {
+> >  			reg = <0x20800 0x0 0x0 0x0 0x0>;
+> >  			#address-cells = <3>;
+> > @@ -899,6 +902,7 @@ pcie1_switch0_dsp1: pcie@1,0 {
+> >  			device_type = "pci";
+> >  			ranges;
+> >  			bus-range = <0x3 0xff>;
+> > +			reset-gpios = <&tc9563 2 GPIO_ACTIVE_LOW>;
+> >  		};
+> >  
+> >  		pcie@2,0 {
+> > @@ -909,6 +913,7 @@ pcie@2,0 {
+> >  			device_type = "pci";
+> >  			ranges;
+> >  			bus-range = <0x4 0xff>;
+> > +			reset-gpios = <&tc9563 3 GPIO_ACTIVE_LOW>;
+> >  
+> >  			/* Renesas μPD720201 PCIe USB3.0 Host Controller */
+> >  			usb-controller@0,0 {
+> > 
+> > -- 
+> > 2.55.0
+> > 
