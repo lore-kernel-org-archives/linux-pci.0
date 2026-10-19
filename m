@@ -1,489 +1,756 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17A5748B383
-	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 07:25:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A57CE48CD63
+	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 07:30:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792394751; cv=none; b=mN4128UZVrUFNv+KAdTMr7sBeam8qZm5xU55bRaIrBJdxwuQzHXwLcLhjE1mxFVu6i9/UyaHpJzcxql9jVohImSx+qXtFVqc4FW+qSYIh/4XdsL2I+/ZHKnacs2w4uiAXHv6q6j+HqmoaxvYn6lSiSAuAyHTkXFTGvgBHWRzEfI=
+	t=1792395019; cv=none; b=Zzcvss7up65ZE71M5OiaJeAu8yJ7A5nyU6yCctSbeY71N4f3bMmrdGSsvl6YXoPpMbowmVEqrtv9Vds6guWfQ01dOqY8L6SjQQ/7reHooIFAJkuS3yqvY2z9aVo1Hfc9gZ66XrbuXE3MvqmDDxhYZ6wXNUhm0ut1VtzDXCfNlMo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792394751; c=relaxed/simple;
-	bh=m2b+c9D3zXEdhmT7DA1gifnMKALbGFGBicy2HZdEO4s=;
+	s=arc-20240116; t=1792395019; c=relaxed/simple;
+	bh=2aP8bXmJVdHf2KNLTzIV0oSQr4xvoq2KaFYvTcIebtM=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=iFqbu8vNSydlngVJRykcRTum29bTomfd5BbIJaZItykwE+SKhhiBi735dogJBslkDMGB9lyPBPWmQqN84fl9dsmBOq8ctrq8FZBLiXy2Khy2rqBh3DFJ+9mziMtnlND+XM1KNU60y5G5o2YbNL1jWe818WVGh6V5UQLxaoJpPJM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eiyVRjBK; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=fTfpsS6IxzTlHfCAnUK7mtbWRVRb3qcQ3gxw+CkZTyad+9Kvw00vYS2XREYg4+pSp6N8GHpxsDnmisbh5yYxBuqyf+RDamNcIFvd9TiB/4rdwXOM20RyLwDNAyvxLT9Oh94NTF/edtKKp4r7tGFnB/aXaftzozQbzfRKT1n13K0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fX1Ha7yj; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eiyVRjBK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A8411F000C4;
-	Mon, 19 Oct 2026 07:25:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fX1Ha7yj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 135441F000C4;
+	Mon, 19 Oct 2026 07:30:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792394747;
-	bh=s5mbd10odh0WP4iIHTalkrrQx+TdiOQ1o0xD2xuXWfM=;
+	s=k20260515; t=1792395017;
+	bh=8y+DLmNvm6la+GVKOvn3QhSa+UuyEs2xIch2711E2Kg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=eiyVRjBKaDPJMnVFt/MVxVLZ4UPobdCEk3ivKPvz865F7KCeBE4P2C7d6ToQ37yp7
-	 Rf5TEwKfpK8xtsyErFHKMlxShCo+lexnTGnry4xwW+XE29tz3P6OsHN9Hl+038jU10
-	 OceV5iJqEUSEiQTlTJSFBzCHhArpSwjE7wNRm3D6N+pLXdlihfBcyrCvpryBmP0muJ
-	 qC6pbq0BcSTyQeeVo1KpDLgfJgd3L5CxNNTJSPxZkpWQ98yQUFoBb7BMmBwQkzSaRj
-	 RNAhiZZBBpHoRi1tODM1JSeUjWqT5i7Bw+nTeRUkYhSH/gRPlC2+K1yUUgcqlAs1ff
-	 3gq7pFz1ugOsQ==
-Message-ID: <sashiko-outbox-176744@kernel.org>
+	b=fX1Ha7yjjkC3FuNP3UP3+E6vO8hiZI/hDs6Dh4wWNjdH4N8yiYqLbRl7rdM2O+jis
+	 DXn71pffXnyMnwCAKEupe8eZ6/+PLnJPuUVwUS7YcQUd5H35ajJzXmcUcy0puu4gnI
+	 LivTttWunTgazC2vHt4Q1a6mJGOZXyszzgWManiquSUM4foD2veP3cS39T2IK7fQC6
+	 hS5NzJjlBcX+e8Isg8S2iAW1z14WQDF4liCTa1zcqEytFrJz0rZUFgoKw31mTnRU5h
+	 o71JlS3AvEG76rfpqhgEJ2y/APUNF57Op6buahFLNIi0Sf7tmIp31woeyQdDGSgjL4
+	 IeR/jSwbsiFLw==
+Message-ID: <sashiko-outbox-176746@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 14/14] PCI: rzg3s-host: Add bridge::reset_root_port()
+Subject: Re: [PATCH v7 13/14] PCI: rzg3s-host: Re-enumerate the bus on PCIe
+ link-state changes
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Claudiu Beznea" <claudiu.beznea@kernel.org>
 Cc: linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
-In-Reply-To: <20261019065025.2146539-15-claudiu.beznea@kernel.org>
+In-Reply-To: <20261019065025.2146539-14-claudiu.beznea@kernel.org>
 References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
- <20261019065025.2146539-15-claudiu.beznea@kernel.org>
+ <20261019065025.2146539-14-claudiu.beznea@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 19 Oct 2026 07:25:47 +0000
+Date: Mon, 19 Oct 2026 07:30:16 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 6 potential issue(=
+Thank you for your contribution! Sashiko AI review found 7 potential issue(=
 s) to consider:
-- [High] PCI: rzg3s-host: unguarded MMIO access and lost INTx mask after st=
-art failure
-- [High] PCI: rzg3s-host: lost MSI/INTx mask state across rzg3s_pcie_host_r=
-eset_root_port()
-- [High] PCI: rzg3s-host: race and lost link event in rzg3s_pcie_host_reset=
-_root_port()
-- [Medium] PCI: rzg3s-host: race in rzg3s_pcie_host_reset_root_port() state=
- ordering
-- [Medium] PCI: rzg3s-host: race on RZG3S_PCI_PEIE0 between reset and PM no=
-tifier
-- [Medium] PCI: rzg3s-host: ineffective disable_irq() on chained INTx IRQs =
-in reset
+- [High] pci: rzg3s-host: rzg3s_pcie_remove_devices() marks Root Port disco=
+nnected
+- [High] pci: rzg3s-host: rzg3s_pcie_pm_notifier() misses hibernation PM ev=
+ents
+- [High] PCI: rzg3s-host: race between rzg3s_pcie_probe() and PM notifier c=
+allbacks
+- [High] PCI: rzg3s-host: deadlock on pm_chain_head.rwsem in rzg3s_pcie_pm_=
+notifier()
+- [Medium] pci: rzg3s-host: late PEIS0_DL_UPDOWN clear loses link bounce ev=
+ents
+- [Medium] pci: rzg3s-host: rzg3s_pcie_link_event() reads config before lin=
+k settles
+- [Medium] PCI: rzg3s-host: controller registers accessed after resume_noir=
+q() failure
 --
 
-commit 6658179b714958398bb0f41660bab61430893417
-Author: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+commit 1730fab066afd00592ed2f6ea77d04307ed48cf0
+Author: John Madieu <john.madieu.xa@bp.renesas.com>
 
-PCI: rzg3s-host: Add bridge::reset_root_port()
+PCI: rzg3s-host: Re-enumerate the bus on PCIe link-state changes
 
-This commit implements pci_host_bridge::reset_root_port() for the Renesas
-RZ/G3S PCIe host controller so the Root Port can be reset and recovered
-across a link down/up cycle. It masks and disables MSI and INTx interrupts
-around stopping and restarting the controller and adds a host->resetting
-flag to block concurrent register accesses from the IRQ callbacks.
+This commit enables the DL_UpDown interrupt on RZ/G3S and related PCIe
+controllers to detect link-state transitions and hotplug-like events,
+removing or rescanning devices on the bus accordingly. It also adds a PM
+notifier to disable link event interrupts across system suspend and force a
+bus rescan on resume, and makes probe tolerant of an initially down link.
 
 > diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/contr=
 oller/pcie-rzg3s-host.c
-> index a1c9e29f43e5d..f6823c9bc4149 100644
+> index 1ced6d83c7c18..a1c9e29f43e5d 100644
 > --- a/drivers/pci/controller/pcie-rzg3s-host.c
 > +++ b/drivers/pci/controller/pcie-rzg3s-host.c
 
 [ ... ]
 
-> @@ -653,6 +655,9 @@ static void rzg3s_pcie_msi_irq_mask(struct irq_data *=
-d)
-> =20
->  	guard(raw_spinlock_irqsave)(&host->hw_lock);
-> =20
-> +	if (host->resetting)
-> +		return;
-> +
->  	rzg3s_pcie_update_bits(host->axi, RZG3S_PCI_MSIRM(reg_id), BIT(reg_bit),
->  			       BIT(reg_bit));
->  }
-> @@ -666,6 +671,9 @@ static void rzg3s_pcie_msi_irq_unmask(struct irq_data=
- *d)
-> =20
->  	guard(raw_spinlock_irqsave)(&host->hw_lock);
-> =20
-> +	if (host->resetting)
-> +		return;
-> +
->  	rzg3s_pcie_update_bits(host->axi, RZG3S_PCI_MSIRM(reg_id), BIT(reg_bit),
->  			       0);
->  }
-> @@ -972,6 +980,9 @@ static void rzg3s_pcie_intx_irq_mask(struct irq_data =
-*d)
-> =20
->  	guard(raw_spinlock_irqsave)(&host->hw_lock);
-> =20
-> +	if (host->resetting)
-> +		return;
-> +
->  	rzg3s_pcie_update_bits(host->axi, RZG3S_PCI_PINTRCVIE,
->  			       RZG3S_PCI_PINTRCVIE_INTX(d->hwirq), 0);
->  }
-> @@ -982,6 +993,9 @@ static void rzg3s_pcie_intx_irq_unmask(struct irq_dat=
-a *d)
-> =20
->  	guard(raw_spinlock_irqsave)(&host->hw_lock);
-> =20
-> +	if (host->resetting)
-> +		return;
-> +
->  	rzg3s_pcie_update_bits(host->axi, RZG3S_PCI_PINTRCVIE,
->  			       RZG3S_PCI_PINTRCVIE_INTX(d->hwirq),
->  			       RZG3S_PCI_PINTRCVIE_INTX(d->hwirq));
-
-[Severity: High]
-Could returning early when host->resetting is true cause the hardware IRQ
-masks in RZG3S_PCI_MSIRM(reg_id) and RZG3S_PCI_PINTRCVIE to go out of sync
-with genirq?
-
-In kernel/irq/chip.c, mask_irq() and unmask_irq() unconditionally update
-IRQD_IRQ_MASKED after calling the chip callback. If an INTx or MSI vector is
-masked or unmasked while host->resetting is true, these callbacks drop the
-update without recording it, and rzg3s_pcie_host_reset_root_port() later
-writes the pre-reset irqs snapshot back to RZG3S_PCI_PINTRCVIE.
-
-In particular, rzg3s_pcie_host_reset_root_port() sets host->resetting =3D t=
-rue
-before reading RZG3S_PCI_PINTRCVIE into irqs (outside host->hw_lock) and
-before calling disable_irq(host->intx_irqs[i]). If an INTx interrupt is in
-flight on another CPU in handle_level_irq() or in a threaded IRQF_ONESHOT
-handler on a child virq when irqs is snapshotted, its bit in
-RZG3S_PCI_PINTRCVIE is 0. When that handler finishes and calls
-cond_unmask_irq() or irq_finalize_oneshot() -> rzg3s_pcie_intx_irq_unmask(),
-the unmask is ignored because host->resetting is true, and restoring the
-stale irqs snapshot at unmask_irqs leaves the INTx line masked in hardware
-while genirq considers it unmasked.
-
-Also, because rzg3s_pcie_msi_parent_ops sets MSI_FLAG_PCI_MSI_MASK_PARENT,
-per-vector MSI masking lives in RZG3S_PCI_MSIRM(reg_id) rather than
-RZG3S_PCI_PINTRCVIE. Across rzg3s_pcie_host_stop() and
-rzg3s_pcie_host_start(), RZG3S_PCI_MSIRM(reg_id) is reset and never saved or
-restored.
-
-> @@ -1185,12 +1199,46 @@ static void rzg3s_pcie_link_event(struct rzg3s_pc=
-ie_host *host, bool bounced)
->  {
->  	struct pci_host_bridge *bridge =3D pci_host_bridge_from_priv(host);
->  	struct pci_bus *bus =3D bridge->bus, *child;
-> +	unsigned long flags;
->  	u32 val;
->  	int ret;
-> =20
-> -	pci_lock_rescan_remove();
-> +	/*
-> +	 * A latched DL_UpDown means at least one real link transition took
-> +	 * place since the last enumeration. If devices are enumerated
-> +	 * recover the Root Port first.
-> +	 */
-> +	if (bounced && !list_empty(&bus->devices)) {
-> +		struct pci_dev *port =3D pci_get_slot(bus, PCI_DEVFN(0, 0));
-> +
-> +		if (port && pci_pcie_type(port) =3D=3D PCI_EXP_TYPE_ROOT_PORT)
-> +			pci_host_handle_link_down(port);
-> =20
-> +		pci_dev_put(port);
-> +	}
-> +
-> +	raw_spin_lock_irqsave(&host->hw_lock, flags);
-> +
-> +	/*
-> +	 * Don't continue if reset in progress or .reset_root_port() failed to
-> +	 * start HW.
-> +	 */
-> +	if (host->resetting || !READ_ONCE(host->started)) {
-> +		raw_spin_unlock_irqrestore(&host->hw_lock, flags);
-> +		return;
-> +	}
-> +
-> +	/*
-> +	 * Check the link state after the recovery: the .reset_root_port()
-> +	 * retrains the link, so a device that is still present comes back
-> +	 * up here and is re-enumerated right away instead of waiting for
-> +	 * the next DL_UpDown event.
-> +	 */
->  	val =3D readl_relaxed(host->axi + RZG3S_PCI_PCSTAT1);
-> +	raw_spin_unlock_irqrestore(&host->hw_lock, flags);
-
-[Severity: High]
-What prevents a concurrent rzg3s_pcie_host_reset_root_port() from stopping
-the controller after host->hw_lock is released here while
-rzg3s_pcie_link_event() is still accessing controller registers?
-
-bridge->reset_root_port can be invoked outside rzg3s_pcie_link_event()
-through pci_bridge_secondary_bus_reset() -> pcibios_reset_secondary_bus()
-(for example via sysfs reset_subordinate, pci_reset_function(),
-pci_reset_bus(), or aer_root_reset()). Once rzg3s_pcie_link_event() drops
-host->hw_lock after reading RZG3S_PCI_PCSTAT1, it proceeds to touch
-host->axi and host->pcie in rzg3s_pcie_device_replaced(),
-rzg3s_pcie_set_max_link_speed(), pci_scan_child_bus(), and
-rzg3s_pcie_cache_connected_dev_id(). Because rzg3s_pcie_host_reset_root_por=
-t()
-only takes host->hw_lock briefly to set host->resetting =3D true and does n=
-ot
-synchronize with host->event_irq, it can enter rzg3s_pcie_host_stop() and
-assert power_resets while rzg3s_pcie_link_event() is in the middle of those
-MMIO accesses.
-
-Conversely, if rzg3s_pcie_event_irq_thread() clears RZG3S_PCI_PEIS0_DL_UPDO=
-WN
-and host->link_rescan and then rzg3s_pcie_link_event() returns early here
-because a concurrent reset set host->resetting =3D true, won't that link ev=
-ent
-or rescan request be lost?
+> @@ -1094,12 +1108,187 @@ static int rzg3s_pcie_wait_for_link_up(struct rz=
+g3s_pcie_host *host)
 
 [ ... ]
 
-> @@ -2038,6 +2095,91 @@ static int rzg3s_pcie_host_start(struct rzg3s_pcie=
-_host *host)
->  	return ret;
->  }
-> =20
-> +static int rzg3s_pcie_host_reset_root_port(struct pci_host_bridge *bridg=
-e,
-> +					   struct pci_dev *pdev)
+> +static void rzg3s_pcie_remove_devices(struct pci_bus *bus)
 > +{
-> +	struct rzg3s_pcie_host *host =3D pci_host_bridge_priv(bridge);
-> +	unsigned long flags;
-> +	u32 irqs, link_irqs;
+> +	struct pci_dev *dev, *tmp;
+> +
+> +	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+> +		pci_dev_set_disconnected(dev, NULL);
+> +		if (pci_has_subordinate(dev)) {
+> +			pci_walk_bus(dev->subordinate, pci_dev_set_disconnected,
+> +				     NULL);
+> +		}
+> +		pci_stop_and_remove_bus_device(dev);
+> +	}
+> +}
+
+[Severity: High]
+Both callers in rzg3s_pcie_link_event() pass bridge->bus (the root bus) to
+rzg3s_pcie_remove_devices(), where dev in &bus->devices is the controller's
+own integrated Root Port (0000:00:00.0) rather than an endpoint across the
+link.
+
+Should pci_dev_set_disconnected() only be called on dev->subordinate (as
+done in rzg3s_pcie_resume_noirq()) rather than on dev itself?
+
+Because pci_read_config_*() and pci_write_config_*() immediately abort with
+PCIBIOS_DEVICE_NOT_FOUND when pci_dev_is_disconnected(dev) is true, marking
+the Root Port as disconnected before pci_stop_and_remove_bus_device(dev)
+causes Root Port teardown (such as pcie_aspm_exit_link_state(),
+pcie_pme_remove(), aer_remove(), pci_msi_shutdown(), and
+do_pci_disable_device()) to skip clearing hardware state in the Root Port's
+local MMIO registers (host->pcie), leaving stale ASPM, PME, AER, MSI, and
+PCI_COMMAND settings across subsequent re-enumerations.
+
+> +
+> +static void rzg3s_pcie_link_event(struct rzg3s_pcie_host *host, bool bou=
+nced)
+> +{
+> +	struct pci_host_bridge *bridge =3D pci_host_bridge_from_priv(host);
+> +	struct pci_bus *bus =3D bridge->bus, *child;
+> +	u32 val;
 > +	int ret;
 > +
-> +	raw_spin_lock_irqsave(&host->hw_lock, flags);
-> +	if (host->resetting) {
-> +		raw_spin_unlock_irqrestore(&host->hw_lock, flags);
-> +		return -EBUSY;
-> +	}
-> +	host->resetting =3D true;
-> +	raw_spin_unlock_irqrestore(&host->hw_lock, flags);
+> +	pci_lock_rescan_remove();
 > +
-> +	/* Mask link up/down interrupts. */
-> +	link_irqs =3D readl_relaxed(host->axi + RZG3S_PCI_PEIE0);
-> +	writel_relaxed(0, host->axi + RZG3S_PCI_PEIE0);
-> +
-> +	/* Mask INTx and MSI interrupts. */
-> +	irqs =3D readl_relaxed(host->axi + RZG3S_PCI_PINTRCVIE);
-> +	writel_relaxed(0, host->axi + RZG3S_PCI_PINTRCVIE);
-> +
-> +	/* Flush IRQ masks. */
-> +	readl_relaxed(host->axi + RZG3S_PCI_PEIE0);
-> +	readl_relaxed(host->axi + RZG3S_PCI_PINTRCVIE);
-> +
-> +	/*
-> +	 * Make sure the next operations are not disturbed by any pending
-> +	 * IRQs.
-> +	 */
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		disable_irq(host->msi.irq);
-> +	for (unsigned int i =3D 0; i < PCI_NUM_INTX; i++)
-> +		disable_irq(host->intx_irqs[i]);
-
-[Severity: Medium]
-Does disable_irq(host->intx_irqs[i]) actually mask or synchronize the INTx
-interrupts here?
-
-In rzg3s_pcie_init_irqdomain(), host->intx_irqs[i] are registered with
-irq_set_chained_handler_and_data(irq, rzg3s_pcie_intx_irq_handler, host)
-without IRQ_DISABLE_UNLAZY. On GICv3, irq_chip::irq_disable is NULL, so
-__irq_disable() only sets IRQD_IRQ_DISABLED (lazy disable) without masking
-the GIC SPI. And because chained handlers replace desc->handle_irq with
-rzg3s_pcie_intx_irq_handler(), generic_handle_irq_desc() invokes
-rzg3s_pcie_intx_irq_handler() directly without checking irqd_irq_disabled()
-or setting IRQD_IRQ_INPROGRESS.
-
-If an INTx SPI is already pending at the GIC before RZG3S_PCI_PINTRCVIE is
-cleared, or glitches while resets are toggled, rzg3s_pcie_intx_irq_handler()
-can still run during reset and call generic_handle_domain_irq() ->
-handle_level_irq() -> mask_ack_irq() -> rzg3s_pcie_intx_irq_ack(), which
-writes to host->axi + RZG3S_PCI_PINTRCVIS without checking host->resetting.
-
-> +
-> +	ret =3D rzg3s_pcie_host_stop(host);
-> +	if (ret) {
-> +		dev_err(host->dev, "Failed to stop the host!\n");
-> +		goto unmask_irqs;
+> +	val =3D readl_relaxed(host->axi + RZG3S_PCI_PCSTAT1);
+> +	if (val & RZG3S_PCI_PCSTAT1_DL_DOWN_STS) {
+> +		if (!list_empty(&bus->devices)) {
+> +			dev_info(host->dev,
+> +				 "PCIe link down, removing devices\n");
+> +			rzg3s_pcie_remove_devices(bus);
+> +		}
+> +		goto unlock;
 > +	}
 > +
-> +	ret =3D rzg3s_pcie_host_start(host, false);
-> +	if (ret) {
-> +		dev_err(host->dev, "Failed to start the host!\n");
+> +	if (!list_empty(&bus->devices)) {
+> +		bool replaced =3D rzg3s_pcie_device_replaced(host);
 > +
 > +		/*
-> +		 * Don't unmask IRQs. We are in a bad state here and we
-> +		 * can recover only through a suspend/resume cycle. Just
-> +		 * re-enable the IRQs and return.
+> +		 * If bounced =3D false it means link rescanning (after probe
+> +		 * or system resume), no link transition was recorded. The
+> +		 * enumerated devices are intact, so remove them only if the
+> +		 * connected device was replaced while link events were not
+> +		 * delivered.
+> +		 *
+> +		 * If bounced =3D true it means at least one real link down/up
+> +		 * cycle occurred.
 > +		 */
-> +		goto enable_irqs;
+> +		if (!bounced && !replaced)
+> +			goto unlock;
+> +
+> +		rzg3s_pcie_remove_devices(bus);
 > +	}
-
-[Severity: High]
-If rzg3s_pcie_host_start(host, false) fails here and jumps to enable_irqs,
-won't subsequent callers access host->pcie and host->axi while power_resets
-are asserted and RST_RSM_B is 0?
-
-When rzg3s_pcie_host_reset_root_port() returns an error to
-pcibios_reset_secondary_bus(), pci_bridge_secondary_bus_reset() still calls
-pci_bridge_wait_for_secondary_bus(), which immediately polls config space
-through rzg3s_pcie_root_ops (rzg3s_pcie_root_map_bus()) and
-rzg3s_pcie_child_ops (rzg3s_pcie_child_read()), neither of which checks
-host->started or host->resetting. Moreover, rzg3s_pcie_link_event() returns
-early on !READ_ONCE(host->started) without removing or marking child devices
-disconnected, so endpoint drivers and pci_pm_suspend() during the recovery
-suspend/resume cycle will also access config space and MMIO while the IP is
-held in reset.
-
-In addition, jumping to enable_irqs discards the local irqs variable holding
-the saved RZG3S_PCI_PINTRCVIE value. When rzg3s_pcie_resume_noirq() later
-calls rzg3s_pcie_host_start(host, true), only RZG3S_PCI_PINTRCVIE_MSI is set
-and the INTx enable bits in RZG3S_PCI_PINTRCVIE are never restored. And if
-rzg3s_pcie_resume_noirq() itself fails in rzg3s_pcie_host_start(host, true),
-host->started remains false while host->resetting is false, so
-rzg3s_pcie_host_reset_root_port(), rzg3s_pcie_msi_irq_mask/unmask(),
-rzg3s_pcie_intx_irq_mask/unmask(), and rzg3s_pcie_event_irq_thread() (which
-only check host->resetting) will access host->axi while the IP is not
-started.
-
 > +
-> +unmask_irqs:
-> +	/* Unmask INTx and MSI interrupts. */
-> +	writel_relaxed(irqs, host->axi + RZG3S_PCI_PINTRCVIE);
+> +	dev_info(host->dev, "PCIe link up, rescanning bus\n");
 > +
-> +	/*
-> +	 * rzg3s_pcie_host_start() retrains the link. If the link comes
-> +	 * back up, DL_UpDown gets latched in PEIS0. Clear the latch.
-> +	 * The link state is evaluated after this function returns, so
-> +	 * the event is not lost. For the same reason there is no need
-> +	 * to set host->link_rescan.
-> +	 */
-> +	writel_relaxed(RZG3S_PCI_PEIS0_DL_UPDOWN, host->axi + RZG3S_PCI_PEIS0);
-
-[Severity: High]
-Is it safe to clear RZG3S_PCI_PEIS0_DL_UPDOWN here without setting
-host->link_rescan or waking host->event_irq when .reset_root_port() is
-called outside rzg3s_pcie_link_event()?
-
-When rzg3s_pcie_host_reset_root_port() is invoked via
-pci_bridge_secondary_bus_reset() -> pcibios_reset_secondary_bus() from a pa=
-th
-other than rzg3s_pcie_link_event() (such as pci_reset_function(),
-pci_reset_bus(), or sysfs reset_subordinate), nothing evaluates the link
-state after this function returns, so clearing RZG3S_PCI_PEIS0_DL_UPDOWN
-drops any link transition that occurred during the reset.
-
-> +	/* Unmask link up/down interrupts. */
-> +	writel_relaxed(link_irqs, host->axi + RZG3S_PCI_PEIE0);
+> +	ret =3D rzg3s_pcie_set_max_link_speed(host);
+> +	if (ret)
+> +		dev_info(host->dev, "Failed to set max link speed\n");
 > +
-> +	raw_spin_lock_irqsave(&host->hw_lock, flags);
-> +	host->resetting =3D false;
-> +	raw_spin_unlock_irqrestore(&host->hw_lock, flags);
-> +
-> +	WRITE_ONCE(host->started, true);
+> +	pci_host_common_link_train_delay(host->max_link_speed);
 
 [Severity: Medium]
-Can the ordering between unmasking RZG3S_PCI_PEIE0, clearing
-host->resetting, and setting host->started =3D true cause false failure
-detection or a dropped link interrupt?
+When bounced is true and !list_empty(&bus->devices), does calling
+rzg3s_pcie_device_replaced(host) issue Type 0 configuration reads to the
+downstream endpoint before the link has finished settling?
 
-First, RZG3S_PCI_PEIE0 is unmasked before host->resetting is cleared, while
-host->event_irq remains enabled throughout rzg3s_pcie_host_reset_root_port(=
-).
-If a link event fires right after RZG3S_PCI_PEIE0 is written,
-rzg3s_pcie_event_irq_thread() can run while host->resetting is still true
-and return IRQ_NONE.
-
-Second, host->resetting =3D false is committed and host->hw_lock is released
-before WRITE_ONCE(host->started, true) (since rzg3s_pcie_host_stop() set
-host->started =3D false and rzg3s_pcie_host_start(host, false) was called w=
-ith
-set_started =3D false). In that window, both host->resetting and host->star=
-ted
-are false, so a reader holding host->hw_lock in rzg3s_pcie_link_event():
-
-	if (host->resetting || !READ_ONCE(host->started)) {
-		raw_spin_unlock_irqrestore(&host->hw_lock, flags);
-		return;
-	}
-
-or in rzg3s_pcie_pm_notifier() can observe host->resetting =3D=3D false and
-host->started =3D=3D false and treat a successful reset as a failed hardware
-start. Note that rzg3s_pcie_host_start() (when set_started is true) and
-rzg3s_pcie_host_stop() also update host->started and host->resetting without
-holding host->hw_lock.
-
-> +
-> +enable_irqs:
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		enable_irq(host->msi.irq);
-> +	for (unsigned int i =3D 0; i < PCI_NUM_INTX; i++)
-> +		enable_irq(host->intx_irqs[i]);
-> +
-> +	return ret;
-> +}
-> +
->  static int rzg3s_pcie_get_controller_id(struct rzg3s_pcie_host *host)
->  {
->  	struct device_node *np =3D host->dev->of_node;
-> @@ -2113,18 +2255,22 @@ static int rzg3s_pcie_pm_notifier(struct notifier=
-_block *nb,
->  {
->  	struct rzg3s_pcie_host *host =3D container_of(nb, struct rzg3s_pcie_hos=
-t,
->  						    pm_nb);
-> +	unsigned long flags;
-> =20
->  	switch (action) {
->  	case PM_SUSPEND_PREPARE:
->  		/* Disable link up/down interrupts. */
-> -		if (host->started)
-> +		raw_spin_lock_irqsave(&host->hw_lock, flags);
-> +		if (READ_ONCE(host->started) && !host->resetting)
->  			writel_relaxed(0, host->axi + RZG3S_PCI_PEIE0);
-> +		raw_spin_unlock_irqrestore(&host->hw_lock, flags);
->  		disable_irq(host->event_irq);
->  		break;
-> =20
->  	case PM_POST_SUSPEND:
->  		/* Enable link up/down interrupts and force link re-scan. */
-> -		if (host->started) {
-> +		raw_spin_lock_irqsave(&host->hw_lock, flags);
-> +		if (READ_ONCE(host->started) && !host->resetting) {
->  			/*
->  			 * The link re-train in resume triggers the link up IRQ
->  			 * if there are connected devices. Clear the DL_UpDown
-> @@ -2137,8 +2283,9 @@ static int rzg3s_pcie_pm_notifier(struct notifier_b=
-lock *nb,
->  			writel_relaxed(RZG3S_PCI_PEIE0_DL_UPDOWN,
->  				       host->axi + RZG3S_PCI_PEIE0);
->  		}
-> +		raw_spin_unlock_irqrestore(&host->hw_lock, flags);
->  		enable_irq(host->event_irq);
-> -		if (host->started)
-> +		if (READ_ONCE(host->started))
->  			irq_wake_thread(host->event_irq, host);
->  		break;
->  	}
-
-[Severity: Medium]
-Can rzg3s_pcie_pm_notifier() and rzg3s_pcie_host_reset_root_port() race on
-RZG3S_PCI_PEIE0?
-
-PM_SUSPEND_PREPARE runs before tasks are frozen or devices are suspended. If
-rzg3s_pcie_host_reset_root_port() is already running, it saves link_irqs =3D
-RZG3S_PCI_PEIE0_DL_UPDOWN and sets host->resetting =3D true. When
-rzg3s_pcie_pm_notifier(PM_SUSPEND_PREPARE) runs concurrently, it sees
-host->resetting =3D=3D true and skips writing 0 to RZG3S_PCI_PEIE0, and
-rzg3s_pcie_host_reset_root_port() then writes link_irqs back to
-RZG3S_PCI_PEIE0 at unmask_irqs, leaving link interrupts unmasked in hardware
-during suspend.
-
-Conversely, if PM_SUSPEND_PREPARE runs first and writes 0 to
-RZG3S_PCI_PEIE0, and a reset is then triggered before devices suspend,
-rzg3s_pcie_host_reset_root_port() saves link_irqs =3D 0. If suspend aborts =
-and
-PM_POST_SUSPEND runs while the reset is still in progress (host->resetting
-=3D=3D true, host->started =3D=3D false), PM_POST_SUSPEND skips re-enabling
-RZG3S_PCI_PEIE0_DL_UPDOWN and skips irq_wake_thread(), and
-rzg3s_pcie_host_reset_root_port() restores link_irqs =3D 0 at unmask_irqs,
-leaving link up/down interrupts disabled after resume.
+When a real DL_UpDown event occurs (bounced =3D=3D true), the result of
+rzg3s_pcie_device_replaced(host) is not needed because the devices are
+removed unconditionally, and rzg3s_pcie_set_max_link_speed() (which polls
+for LTSSM L0 and negotiates link speed) and
+pci_host_common_link_train_delay() have not been called yet. Should
+rzg3s_pcie_device_replaced(host) only be called when !bounced?
 
 [ ... ]
 
->
-> --=20
-> 2.43.0
->
+> @@ -1901,6 +2108,44 @@ static void rzv2h_pcie_release_lanes(void *data)
+>  	rzv2h_num_total_lanes -=3D host->num_lanes;
+>  }
+> =20
+> +static int rzg3s_pcie_pm_notifier(struct notifier_block *nb,
+> +				  unsigned long action, void *data)
+> +{
+> +	struct rzg3s_pcie_host *host =3D container_of(nb, struct rzg3s_pcie_hos=
+t,
+> +						    pm_nb);
+> +
+> +	switch (action) {
+> +	case PM_SUSPEND_PREPARE:
+> +		/* Disable link up/down interrupts. */
+> +		if (host->started)
+> +			writel_relaxed(0, host->axi + RZG3S_PCI_PEIE0);
+> +		disable_irq(host->event_irq);
+> +		break;
+
+[Severity: High]
+Can calling disable_irq(host->event_irq) inside rzg3s_pcie_pm_notifier()
+deadlock on pm_chain_head.rwsem if rzg3s_pcie_event_irq_thread() is
+concurrently probing or removing a PCI device whose driver registers or
+unregisters a PM notifier?
+
+During system suspend:
+
+suspend_prepare()
+  pm_notifier_call_chain_robust(PM_SUSPEND_PREPARE, PM_POST_SUSPEND)
+    blocking_notifier_call_chain_robust(&pm_chain_head, ...)
+      down_read(&pm_chain_head.rwsem)
+      rzg3s_pcie_pm_notifier()
+        disable_irq(host->event_irq)
+          synchronize_irq(host->event_irq)
+
+If rzg3s_pcie_event_irq_thread() is simultaneously running
+rzg3s_pcie_link_event(), it calls pci_bus_add_devices() or
+rzg3s_pcie_remove_devices() -> pci_stop_and_remove_bus_device(), which
+synchronously runs PCI endpoint driver .probe() or .remove() callbacks.
+Several PCI drivers (such as ath11k_pci, wil6210, amdgpu, and xe) call
+register_pm_notifier() or unregister_pm_notifier() in those callbacks,
+which blocks on down_write(&pm_chain_head.rwsem) while the suspend thread
+holds down_read(&pm_chain_head.rwsem) waiting for the IRQ thread to finish.
+
+> +
+> +	case PM_POST_SUSPEND:
+> +		/* Enable link up/down interrupts and force link re-scan. */
+> +		if (host->started) {
+> +			/*
+> +			 * The link re-train in resume triggers the link up IRQ
+> +			 * if there are connected devices. Clear the DL_UpDown
+> +			 * status and trigger link_rescan to avoid
+> +			 * re-enumerating the already connected devices.
+> +			 */
+> +			writel_relaxed(RZG3S_PCI_PEIS0_DL_UPDOWN,
+> +				       host->axi + RZG3S_PCI_PEIS0);
+> +			WRITE_ONCE(host->link_rescan, true);
+> +			writel_relaxed(RZG3S_PCI_PEIE0_DL_UPDOWN,
+> +				       host->axi + RZG3S_PCI_PEIE0);
+> +		}
+> +		enable_irq(host->event_irq);
+> +		if (host->started)
+> +			irq_wake_thread(host->event_irq, host);
+> +		break;
+> +	}
+> +
+> +	return NOTIFY_DONE;
+> +}
+
+[Severity: High]
+rzg3s_pcie_pm_ops uses NOIRQ_SYSTEM_SLEEP_PM_OPS(rzg3s_pcie_suspend_noirq,
+rzg3s_pcie_resume_noirq), which wires up the freeze_noirq, thaw_noirq,
+poweroff_noirq, and restore_noirq callbacks for hibernation. However,
+rzg3s_pcie_pm_notifier() only handles PM_SUSPEND_PREPARE and
+PM_POST_SUSPEND.
+
+During hibernation, won't omitting PM_HIBERNATION_PREPARE /
+PM_RESTORE_PREPARE leave host->event_irq enabled during device freeze and
+poweroff, and won't omitting PM_POST_HIBERNATION / PM_POST_RESTORE leave
+RZG3S_PCI_PEIE0 cleared to 0 (after rzg3s_pcie_resume_noirq() ->
+rzg3s_pcie_host_start() -> rzg3s_pcie_irq_init() resets it) and skip waking
+the IRQ thread to rescan the bus?
+
+> =20
+>  static int rzg3s_pcie_probe(struct platform_device *pdev)
+>  {
+
+[ ... ]
+
+> @@ -1999,15 +2244,38 @@ static int rzg3s_pcie_probe(struct platform_devic=
+e *pdev)
+>  	if (ret)
+>  		goto power_resets_assert;
+> =20
+> +	host->started =3D true;
+> +	host->pm_nb.notifier_call =3D rzg3s_pcie_pm_notifier;
+> +	ret =3D register_pm_notifier(&host->pm_nb);
+> +	if (ret)
+> +		goto host_probe_teardown;
+> +
+>  	bridge->sysdata =3D host;
+>  	bridge->ops =3D &rzg3s_pcie_root_ops;
+>  	bridge->child_ops =3D &rzg3s_pcie_child_ops;
+>  	ret =3D pci_host_probe(bridge);
+>  	if (ret)
+> -		goto host_probe_teardown;
+> +		goto pm_notifier_unregister;
+> +
+> +	pci_lock_rescan_remove();
+> +	rzg3s_pcie_cache_connected_dev_id(host);
+> +	pci_unlock_rescan_remove();
+> +
+> +	/*
+> +	 * The link re-train triggers the link up IRQ if there are connected
+> +	 * devices. Clear DL_UpDown status and trigger link_rescan to avoid
+> +	 * re-enumerating the devices detected while pci_host_probe() and loose
+> +	 * any potential event.
+> +	 */
+> +	writel_relaxed(RZG3S_PCI_PEIS0_DL_UPDOWN, host->axi + RZG3S_PCI_PEIS0);
+> +	WRITE_ONCE(host->link_rescan, true);
+> +	writel_relaxed(RZG3S_PCI_PEIE0_DL_UPDOWN, host->axi + RZG3S_PCI_PEIE0);
+> +	irq_wake_thread(host->event_irq, host);
+> =20
+>  	return 0;
+
+[Severity: High]
+Because rzg3s_pcie_driver sets PROBE_PREFER_ASYNCHRONOUS, and system
+suspend runs pm_notifier_call_chain_robust(PM_SUSPEND_PREPARE,
+PM_POST_SUSPEND) before dpm_prepare() calls wait_for_device_probe(), can
+rzg3s_pcie_probe() race with rzg3s_pcie_pm_notifier()?
+
+1. host->started is set to true and register_pm_notifier(&host->pm_nb) is
+called before pci_host_probe(bridge) initializes bridge->bus. If
+suspend_prepare() aborts before pci_register_host_bridge() sets
+bridge->bus, PM_POST_SUSPEND wakes rzg3s_pcie_event_irq_thread() ->
+rzg3s_pcie_link_event(), which dereferences bridge->bus while it is still
+NULL.
+
+2. If PM_SUSPEND_PREPARE runs while rzg3s_pcie_probe() is inside
+pci_host_probe(), rzg3s_pcie_pm_notifier() clears RZG3S_PCI_PEIE0 and calls
+disable_irq(host->event_irq), but rzg3s_pcie_probe() then finishes before
+wait_for_device_probe() returns and unconditionally enables
+RZG3S_PCI_PEIE0_DL_UPDOWN and calls irq_wake_thread(host->event_irq, host),
+waking the IRQ thread during suspend.
+
+3. If PM_SUSPEND_PREPARE runs before register_pm_notifier(&host->pm_nb) is
+called in rzg3s_pcie_probe(), PM_POST_SUSPEND will later call
+enable_irq(host->event_irq) without a matching disable_irq().
+
+[Severity: Medium]
+In addition, clearing RZG3S_PCI_PEIS0_DL_UPDOWN here at the end of
+rzg3s_pcie_probe() (after pci_host_probe(bridge)) and in
+rzg3s_pcie_pm_notifier() under PM_POST_SUSPEND (after all device resume
+callbacks or after an aborted suspend), rather than immediately after link
+training in rzg3s_pcie_host_setup(), seems able to lose link bounce events:
+
+If the same endpoint experiences a link down/up bounce during
+pci_host_probe(), between rzg3s_pcie_resume_noirq() and PM_POST_SUSPEND, or
+during an aborted suspend, clearing RZG3S_PCI_PEIS0_DL_UPDOWN discards the
+hardware event so bounced is false. Because the same device is still
+attached, rzg3s_pcie_device_replaced() returns false and
+rzg3s_pcie_link_event() exits at:
+
+	if (!bounced && !replaced)
+		goto unlock;
+
+leaving the endpoint with unconfigured BARs, PCI_COMMAND, and MSI state (or
+at Gen1 speed if link-up raced with rzg3s_pcie_wait_for_link_up() timing
+out in rzg3s_pcie_host_setup()). Should RZG3S_PCI_PEIS0_DL_UPDOWN be
+cleared in rzg3s_pcie_host_setup() right after link training instead?
+
+[ ... ]
+
+> @@ -2041,8 +2309,25 @@ static int rzg3s_pcie_suspend_noirq(struct device =
+*dev)
+>  static int rzg3s_pcie_resume_noirq(struct device *dev)
+>  {
+>  	struct rzg3s_pcie_host *host =3D dev_get_drvdata(dev);
+> +	int ret;
+> =20
+> -	return rzg3s_pcie_host_start(host);
+> +	ret =3D rzg3s_pcie_host_start(host);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (rzg3s_pcie_device_replaced(host)) {
+> +		struct pci_host_bridge *bridge =3D
+> +			pci_host_bridge_from_priv(host);
+> +		struct pci_dev *port __free(pci_dev_put) =3D
+> +			pci_get_slot(bridge->bus, PCI_DEVFN(0, 0));
+> +
+> +		if (port && port->subordinate) {
+> +			pci_walk_bus(port->subordinate,
+> +				     pci_dev_set_disconnected, NULL);
+> +		}
+> +	}
+> +
+> +	return 0;
+>  }
+
+[Severity: Medium]
+If rzg3s_pcie_host_start(host) fails in rzg3s_pcie_resume_noirq(), its
+error path asserts host->power_resets and clears
+RZG3S_SYSC_FUNC_ID_RST_RSM_B, leaving host->started as false.
+
+Although rzg3s_pcie_pm_notifier() checks host->started to avoid touching
+controller registers after a failed resume, the PM core still runs
+pci_pm_resume_noirq() and pci_pm_resume() on the child PCI devices. Since
+rzg3s_pcie_resume_noirq() returns early before marking the devices
+disconnected, and neither rzg3s_pcie_root_ops nor rzg3s_pcie_child_ops
+checks host->started, won't config-space accesses during child device
+resume (and later runtime accesses to the remaining PCI devices) still read
+and write host->pcie and host->axi while the controller is held in reset?
+
+Should the devices also be marked disconnected (or config accesses guarded
+by host->started) when rzg3s_pcie_host_start() fails?
+
+[ ... ]
+
+=E5=AE=8C=E7=BE=8E=EF=BC=81=E7=8E=B0=E5=9C=A8=E6=A3=80=E6=9F=A5=E6=89=80=E6=
+=9C=89=E8=A7=84=E5=88=99=EF=BC=9A
+1. Plain text only, no markdown headers, no backticks, no ALL CAPS shouting=
+? Checked.
+2. Commit header format: `commit 1730fab066afd00592ed2f6ea77d04307ed48cf0`,=
+ `Author: John Madieu <john.madieu.xa@bp.renesas.com>`, one line subject, b=
+rief summary (2 sentences), unified diff quoted with `> `. Checked.
+3. No line numbers mentioned in comments? Checked!
+4. Wrapped at 78 characters for added text? Checked.
+5. `[Severity: <level>]` on its own line right above each inline comment bl=
+ock? Checked (VF1: High, VF4: Medium, PVF3: High, VF2: High, PVF1: High, VF=
+3: Medium, PVF2: Medium - all 7 findings included).
+6. Ends with a blank line? Yes, I will make sure the output ends with a bla=
+nk line and contains only the report. Let's output the final text now.commi=
+t 1730fab066afd00592ed2f6ea77d04307ed48cf0
+Author: John Madieu <john.madieu.xa@bp.renesas.com>
+
+PCI: rzg3s-host: Re-enumerate the bus on PCIe link-state changes
+
+This commit enables the DL_UpDown interrupt on RZ/G3S and related PCIe
+controllers to detect link-state transitions and hotplug-like events,
+removing or rescanning devices on the bus accordingly. It also adds a PM
+notifier to disable link event interrupts across system suspend and force a
+bus rescan on resume, and makes probe tolerant of an initially down link.
+
+> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/contr=
+oller/pcie-rzg3s-host.c
+> index 1ced6d83c7c18..a1c9e29f43e5d 100644
+> --- a/drivers/pci/controller/pcie-rzg3s-host.c
+> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
+
+[ ... ]
+
+> @@ -1094,12 +1108,187 @@ static int rzg3s_pcie_wait_for_link_up(struct rz=
+g3s_pcie_host *host)
+
+[ ... ]
+
+> +static void rzg3s_pcie_remove_devices(struct pci_bus *bus)
+> +{
+> +	struct pci_dev *dev, *tmp;
+> +
+> +	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+> +		pci_dev_set_disconnected(dev, NULL);
+> +		if (pci_has_subordinate(dev)) {
+> +			pci_walk_bus(dev->subordinate, pci_dev_set_disconnected,
+> +				     NULL);
+> +		}
+> +		pci_stop_and_remove_bus_device(dev);
+> +	}
+> +}
+
+[Severity: High]
+Both callers in rzg3s_pcie_link_event() pass bridge->bus (the root bus) to
+rzg3s_pcie_remove_devices(), where dev in &bus->devices is the controller's
+own integrated Root Port (0000:00:00.0) rather than an endpoint across the
+link.
+
+Should pci_dev_set_disconnected() only be called on dev->subordinate (as
+done in rzg3s_pcie_resume_noirq()) rather than on dev itself?
+
+Because pci_read_config_*() and pci_write_config_*() immediately abort with
+PCIBIOS_DEVICE_NOT_FOUND when pci_dev_is_disconnected(dev) is true, marking
+the Root Port as disconnected before pci_stop_and_remove_bus_device(dev)
+causes Root Port teardown (such as pcie_aspm_exit_link_state(),
+pcie_pme_remove(), aer_remove(), pci_msi_shutdown(), and
+do_pci_disable_device()) to skip clearing hardware state in the Root Port's
+local MMIO registers (host->pcie), leaving stale ASPM, PME, AER, MSI, and
+PCI_COMMAND settings across subsequent re-enumerations.
+
+> +
+> +static void rzg3s_pcie_link_event(struct rzg3s_pcie_host *host, bool bou=
+nced)
+> +{
+> +	struct pci_host_bridge *bridge =3D pci_host_bridge_from_priv(host);
+> +	struct pci_bus *bus =3D bridge->bus, *child;
+> +	u32 val;
+> +	int ret;
+> +
+> +	pci_lock_rescan_remove();
+> +
+> +	val =3D readl_relaxed(host->axi + RZG3S_PCI_PCSTAT1);
+> +	if (val & RZG3S_PCI_PCSTAT1_DL_DOWN_STS) {
+> +		if (!list_empty(&bus->devices)) {
+> +			dev_info(host->dev,
+> +				 "PCIe link down, removing devices\n");
+> +			rzg3s_pcie_remove_devices(bus);
+> +		}
+> +		goto unlock;
+> +	}
+> +
+> +	if (!list_empty(&bus->devices)) {
+> +		bool replaced =3D rzg3s_pcie_device_replaced(host);
+> +
+> +		/*
+> +		 * If bounced =3D false it means link rescanning (after probe
+> +		 * or system resume), no link transition was recorded. The
+> +		 * enumerated devices are intact, so remove them only if the
+> +		 * connected device was replaced while link events were not
+> +		 * delivered.
+> +		 *
+> +		 * If bounced =3D true it means at least one real link down/up
+> +		 * cycle occurred.
+> +		 */
+> +		if (!bounced && !replaced)
+> +			goto unlock;
+> +
+> +		rzg3s_pcie_remove_devices(bus);
+> +	}
+> +
+> +	dev_info(host->dev, "PCIe link up, rescanning bus\n");
+> +
+> +	ret =3D rzg3s_pcie_set_max_link_speed(host);
+> +	if (ret)
+> +		dev_info(host->dev, "Failed to set max link speed\n");
+> +
+> +	pci_host_common_link_train_delay(host->max_link_speed);
+
+[Severity: Medium]
+When bounced is true and !list_empty(&bus->devices), does calling
+rzg3s_pcie_device_replaced(host) issue Type 0 configuration reads to the
+downstream endpoint before the link has finished settling?
+
+When a real DL_UpDown event occurs (bounced =3D=3D true), the result of
+rzg3s_pcie_device_replaced(host) is not needed because the devices are
+removed unconditionally, and rzg3s_pcie_set_max_link_speed() (which polls
+for LTSSM L0 and negotiates link speed) and
+pci_host_common_link_train_delay() have not been called yet. Should
+rzg3s_pcie_device_replaced(host) only be called when !bounced?
+
+[ ... ]
+
+> @@ -1901,6 +2108,44 @@ static void rzv2h_pcie_release_lanes(void *data)
+>  	rzv2h_num_total_lanes -=3D host->num_lanes;
+>  }
+> =20
+> +static int rzg3s_pcie_pm_notifier(struct notifier_block *nb,
+> +				  unsigned long action, void *data)
+> +{
+> +	struct rzg3s_pcie_host *host =3D container_of(nb, struct rzg3s_pcie_hos=
+t,
+> +						    pm_nb);
+> +
+> +	switch (action) {
+> +	case PM_SUSPEND_PREPARE:
+> +		/* Disable link up/down interrupts. */
+> +		if (host->started)
+> +			writel_relaxed(0, host->axi + RZG3S_PCI_PEIE0);
+> +		disable_irq(host->event_irq);
+> +		break;
+
+[Severity: High]
+Can calling disable_irq(host->event_irq) inside rzg3s_pcie_pm_notifier()
+deadlock on pm_chain_head.rwsem if rzg3s_pcie_event_irq_thread() is
+concurrently probing or removing a PCI device whose driver registers or
+unregisters a PM notifier?
+
+During system suspend:
+
+suspend_prepare()
+  pm_notifier_call_chain_robust(PM_SUSPEND_PREPARE, PM_POST_SUSPEND)
+    blocking_notifier_call_chain_robust(&pm_chain_head, ...)
+      down_read(&pm_chain_head.rwsem)
+      rzg3s_pcie_pm_notifier()
+        disable_irq(host->event_irq)
+          synchronize_irq(host->event_irq)
+
+If rzg3s_pcie_event_irq_thread() is simultaneously running
+rzg3s_pcie_link_event(), it calls pci_bus_add_devices() or
+rzg3s_pcie_remove_devices() -> pci_stop_and_remove_bus_device(), which
+synchronously runs PCI endpoint driver .probe() or .remove() callbacks.
+Several PCI drivers (such as ath11k_pci, wil6210, amdgpu, and xe) call
+register_pm_notifier() or unregister_pm_notifier() in those callbacks,
+which blocks on down_write(&pm_chain_head.rwsem) while the suspend thread
+holds down_read(&pm_chain_head.rwsem) waiting for the IRQ thread to finish.
+
+> +
+> +	case PM_POST_SUSPEND:
+> +		/* Enable link up/down interrupts and force link re-scan. */
+> +		if (host->started) {
+> +			/*
+> +			 * The link re-train in resume triggers the link up IRQ
+> +			 * if there are connected devices. Clear the DL_UpDown
+> +			 * status and trigger link_rescan to avoid
+> +			 * re-enumerating the already connected devices.
+> +			 */
+> +			writel_relaxed(RZG3S_PCI_PEIS0_DL_UPDOWN,
+> +				       host->axi + RZG3S_PCI_PEIS0);
+> +			WRITE_ONCE(host->link_rescan, true);
+> +			writel_relaxed(RZG3S_PCI_PEIE0_DL_UPDOWN,
+> +				       host->axi + RZG3S_PCI_PEIE0);
+> +		}
+> +		enable_irq(host->event_irq);
+> +		if (host->started)
+> +			irq_wake_thread(host->event_irq, host);
+> +		break;
+> +	}
+> +
+> +	return NOTIFY_DONE;
+> +}
+
+[Severity: High]
+rzg3s_pcie_pm_ops uses NOIRQ_SYSTEM_SLEEP_PM_OPS(rzg3s_pcie_suspend_noirq,
+rzg3s_pcie_resume_noirq), which wires up the freeze_noirq, thaw_noirq,
+poweroff_noirq, and restore_noirq callbacks for hibernation. However,
+rzg3s_pcie_pm_notifier() only handles PM_SUSPEND_PREPARE and
+PM_POST_SUSPEND.
+
+During hibernation, won't omitting PM_HIBERNATION_PREPARE /
+PM_RESTORE_PREPARE leave host->event_irq enabled during device freeze and
+poweroff, and won't omitting PM_POST_HIBERNATION / PM_POST_RESTORE leave
+RZG3S_PCI_PEIE0 cleared to 0 (after rzg3s_pcie_resume_noirq() ->
+rzg3s_pcie_host_start() -> rzg3s_pcie_irq_init() resets it) and skip waking
+the IRQ thread to rescan the bus?
+
+> =20
+>  static int rzg3s_pcie_probe(struct platform_device *pdev)
+>  {
+
+[ ... ]
+
+> @@ -1999,15 +2244,38 @@ static int rzg3s_pcie_probe(struct platform_devic=
+e *pdev)
+>  	if (ret)
+>  		goto power_resets_assert;
+> =20
+> +	host->started =3D true;
+> +	host->pm_nb.notifier_call =3D rzg3s_pcie_pm_notifier;
+> +	ret =3D register_pm_notifier(&host->pm_nb);
+> +	if (ret)
+> +		goto host_probe_teardown;
+> +
+>  	bridge->sysdata =3D host;
+>  	bridge->ops =3D &rzg3s_pcie_root_ops;
+>  	bridge->child_ops =3D &rzg3s_pcie_child_ops;
+>  	ret =3D pci_host_probe(bridge);
+>  	if (ret)
+> -		goto host_probe_teardown;
+> +		goto pm_notifier_unregister;
+> +
+> +	pci_lock_rescan_remove();
+> +	rzg3s_pcie_cache_connected_dev_id(host);
+> +	pci_unlock_rescan_remove();
+> +
+> +	/*
+> +	 * The link re-train triggers the link up IRQ if there are connected
+> +	 * devices. Clear DL_UpDown status and trigger link_rescan to avoid
+> +	 * re-enumerating the devices detected while pci_host_probe() and loose
+> +	 * any potential event.
+> +	 */
+> +	writel_relaxed(RZG3S_PCI_PEIS0_DL_UPDOWN, host->axi + RZG3S_PCI_PEIS0);
+> +	WRITE_ONCE(host->link_rescan, true);
+> +	writel_relaxed(RZG3S_PCI_PEIE0_DL_UPDOWN, host->axi + RZG3S_PCI_PEIE0);
+> +	irq_wake_thread(host->event_irq, host);
+> =20
+>  	return 0;
+
+[Severity: High]
+Because rzg3s_pcie_driver sets PROBE_PREFER_ASYNCHRONOUS, and system
+suspend runs pm_notifier_call_chain_robust(PM_SUSPEND_PREPARE,
+PM_POST_SUSPEND) before dpm_prepare() calls wait_for_device_probe(), can
+rzg3s_pcie_probe() race with rzg3s_pcie_pm_notifier()?
+
+1. host->started is set to true and register_pm_notifier(&host->pm_nb) is
+called before pci_host_probe(bridge) initializes bridge->bus. If
+suspend_prepare() aborts before pci_register_host_bridge() sets
+bridge->bus, PM_POST_SUSPEND wakes rzg3s_pcie_event_irq_thread() ->
+rzg3s_pcie_link_event(), which dereferences bridge->bus while it is still
+NULL.
+
+2. If PM_SUSPEND_PREPARE runs while rzg3s_pcie_probe() is inside
+pci_host_probe(), rzg3s_pcie_pm_notifier() clears RZG3S_PCI_PEIE0 and calls
+disable_irq(host->event_irq), but rzg3s_pcie_probe() then finishes before
+wait_for_device_probe() returns and unconditionally enables
+RZG3S_PCI_PEIE0_DL_UPDOWN and calls irq_wake_thread(host->event_irq, host),
+waking the IRQ thread during suspend.
+
+3. If PM_SUSPEND_PREPARE runs before register_pm_notifier(&host->pm_nb) is
+called in rzg3s_pcie_probe(), PM_POST_SUSPEND will later call
+enable_irq(host->event_irq) without a matching disable_irq().
+
+[Severity: Medium]
+In addition, clearing RZG3S_PCI_PEIS0_DL_UPDOWN here at the end of
+rzg3s_pcie_probe() (after pci_host_probe(bridge)) and in
+rzg3s_pcie_pm_notifier() under PM_POST_SUSPEND (after all device resume
+callbacks or after an aborted suspend), rather than immediately after link
+training in rzg3s_pcie_host_setup(), seems able to lose link bounce events:
+
+If the same endpoint experiences a link down/up bounce during
+pci_host_probe(), between rzg3s_pcie_resume_noirq() and PM_POST_SUSPEND, or
+during an aborted suspend, clearing RZG3S_PCI_PEIS0_DL_UPDOWN discards the
+hardware event so bounced is false. Because the same device is still
+attached, rzg3s_pcie_device_replaced() returns false and
+rzg3s_pcie_link_event() exits at:
+
+	if (!bounced && !replaced)
+		goto unlock;
+
+leaving the endpoint with unconfigured BARs, PCI_COMMAND, and MSI state (or
+at Gen1 speed if link-up raced with rzg3s_pcie_wait_for_link_up() timing
+out in rzg3s_pcie_host_setup()). Should RZG3S_PCI_PEIS0_DL_UPDOWN be
+cleared in rzg3s_pcie_host_setup() right after link training instead?
+
+[ ... ]
+
+> @@ -2041,8 +2309,25 @@ static int rzg3s_pcie_suspend_noirq(struct device =
+*dev)
+>  static int rzg3s_pcie_resume_noirq(struct device *dev)
+>  {
+>  	struct rzg3s_pcie_host *host =3D dev_get_drvdata(dev);
+> +	int ret;
+> =20
+> -	return rzg3s_pcie_host_start(host);
+> +	ret =3D rzg3s_pcie_host_start(host);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (rzg3s_pcie_device_replaced(host)) {
+> +		struct pci_host_bridge *bridge =3D
+> +			pci_host_bridge_from_priv(host);
+> +		struct pci_dev *port __free(pci_dev_put) =3D
+> +			pci_get_slot(bridge->bus, PCI_DEVFN(0, 0));
+> +
+> +		if (port && port->subordinate) {
+> +			pci_walk_bus(port->subordinate,
+> +				     pci_dev_set_disconnected, NULL);
+> +		}
+> +	}
+> +
+> +	return 0;
+>  }
+
+[Severity: Medium]
+If rzg3s_pcie_host_start(host) fails in rzg3s_pcie_resume_noirq(), its
+error path asserts host->power_resets and clears
+RZG3S_SYSC_FUNC_ID_RST_RSM_B, leaving host->started as false.
+
+Although rzg3s_pcie_pm_notifier() checks host->started to avoid touching
+controller registers after a failed resume, the PM core still runs
+pci_pm_resume_noirq() and pci_pm_resume() on the child PCI devices. Since
+rzg3s_pcie_resume_noirq() returns early before marking the devices
+disconnected, and neither rzg3s_pcie_root_ops nor rzg3s_pcie_child_ops
+checks host->started, won't config-space accesses during child device
+resume (and later runtime accesses to the remaining PCI devices) still read
+and write host->pcie and host->axi while the controller is held in reset?
+
+Should the devices also be marked disconnected (or config accesses guarded
+by host->started) when rzg3s_pcie_host_start() fails?
+
+[ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261019065025.2146=
-539-1-claudiu.beznea@kernel.org?part=3D14
+539-1-claudiu.beznea@kernel.org?part=3D13
