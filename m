@@ -1,32 +1,33 @@
 Received: from ultrarisc.com (unknown [218.76.62.146])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6E2BD3A7193;
-	Mon, 19 Oct 2026 06:47:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5343D23BCED;
+	Mon, 19 Oct 2026 06:47:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.76.62.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792392442; cv=none; b=mBFQG3r+nbQoOMsxUHSa67YPPTWpWYxsTTCYINHsBx+YU7sOdge1dlndJ9jpA8inhUmxAcaUhApmuUs9yQ7iFxkU2QlhAxv/3XyDLY3Gp9zV0ysf3Nl8QaKEazEov6z9J9bsrTmcCTV6E+C3UL7d2pnRuEOizyrcsWZYlZkc3sI=
+	t=1792392444; cv=none; b=IMjQN7kmA1dq4nByfBHVDILpaSptMJMHpdkvf3mMWxOYyjgWMSgpu8tZASx1GOEYuVQgEE2CBJk+5sQ089UBArhLG9MNcZ3NY290S8z/BoqXU39ijcCo89cD2+4GA9xwSIbIBVDUSE+Un+JR4S68LnAYSo0o9yi4Y1htLM5vI58=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792392442; c=relaxed/simple;
-	bh=Jx+tZOBjWgak424sCB5uyhVPgpJ40zsFG7LYIPpf6+Y=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=E03MJoRSnPeF1OEyLSkXEci1CMIJRtOHPsmGkC+w8sT1zJIxVk5oja7bgbLjEbPa++N3vvVctEdU5Pn2eb629SV7TkfUt3UgI8kKqsuK26amMjs1xMSXs/QjZxKGCZdxzriWH2r0rQJl62gfRsLQmK0e1b49FRe1X/pncTGiRlo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=pass smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=aUtJvXvt; arc=none smtp.client-ip=218.76.62.146
+	s=arc-20240116; t=1792392444; c=relaxed/simple;
+	bh=4VsvykK54zLvmmRtvQohmyKwI+tf+4VX/Q7c5bj+6Zg=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=brnbC2TZwfpjUmoaMNlHas70Ld3lDn2GuqMhu7U2Mev+WtN8OkmI3NwGwPXmo/VXfcBh50eac6NuFVSR3WsZF/O/oOxyvJg9fcWhvYO3FLbDb8LSTVXjGbVamHzSLHGOSGqOnLiJJbl+Tg3gLelyo5hMWiGy68/gFA6/7ARvU+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=pass smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=TUefa68z; arc=none smtp.client-ip=218.76.62.146
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ultrarisc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="aUtJvXvt"
+	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="TUefa68z"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=ultrarisc.com; s=dkim; h=Received:From:Subject:Date:Message-Id:
-	MIME-Version:Content-Type:Content-Transfer-Encoding:To:Cc; bh=gP
-	NbAxjpVOKYzA4WvVbuFWOnaiN6Yj/z0JRn6fNoTbs=; b=aUtJvXvtT/nizKzql4
-	51bbJ7GE+0RWCF6b7OXm1Q00S9+qyh2bE9r7dkgeEisVvJLX14a07FuBGyECtRkp
-	zqbWKc+8mX3BSJC0TVPR7RTbwHtHvlcnA3dtFsct9o4/6hI7b67qByKvLcaMrR93
-	HVcBqyNYsvMXaG+SkCDQ9rgew=
+	d=ultrarisc.com; s=dkim; h=Received:From:Date:Subject:
+	MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
+	References:In-Reply-To:To:Cc; bh=BCZhmT2V/2Yi/A+XDxOBor2BzyhdmT7
+	YWkibE4bCXak=; b=TUefa68z+HtcGjU4+Cq/oECJfM5kvpafVynRDHvRZvkbld+
+	hOmyDNuXBV2z+mTKON1IGRSvd21ihH4JlNC6Hwe56ONIG6GiEDIeMxzy5VoxYAZW
+	17pRPzxoZdY0tKQk3mNP3/9Vi4W0lVYG+C5g78JuFqBWv0WEzr2osJZRjV+Q=
 Received: from [127.0.0.1] (unknown [192.168.100.1])
-	by localhost.localdomain (Coremail) with SMTP id AQAAfwC3cwXnvNVqC28CAA--.728S2;
-	Mon, 19 Oct 2026 14:47:05 +0800 (CST)
+	by localhost.localdomain (Coremail) with SMTP id AQAAfwC3cwXnvNVqC28CAA--.728S4;
+	Mon, 19 Oct 2026 14:47:09 +0800 (CST)
 From: Xincheng Ji <jixincheng@ultrarisc.com>
-Subject: [PATCH 0/2] PCI: dwc: Fix MEM outbound iATU setup
-Date: Mon, 19 Oct 2026 14:47:01 +0800
-Message-Id: <20261019-dw-pci-fix-v1-0-9b7860f919b9@ultrarisc.com>
+Date: Mon, 19 Oct 2026 14:47:03 +0800
+Subject: [PATCH 2/2] PCI: ultrarisc: Remove bypass_ob_mem_iatu variable on
+ DP1000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -35,10 +36,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAOW81WoC/yXMyw5AMBCF4VdpZm2StkLEq4gFNWUskI5bIt5ds
- fxOcv4LhAKTQKkuCLSz8DxFmESBG5qpJ+QuGqy2udEmw+7AxTF6PtEVlBlfpC1pC/GwBIrzF6v
- q37K1I7n1LcB9PzZEBOluAAAA
-X-Change-ID: 20261015-dw-pci-fix-c8e51f83be02
+Message-Id: <20261019-dw-pci-fix-v1-2-9b7860f919b9@ultrarisc.com>
+References: <20261019-dw-pci-fix-v1-0-9b7860f919b9@ultrarisc.com>
+In-Reply-To: <20261019-dw-pci-fix-v1-0-9b7860f919b9@ultrarisc.com>
 To: Jingoo Han <jingoohan1@gmail.com>, 
  Manivannan Sadhasivam <mani@kernel.org>, 
  Lorenzo Pieralisi <lpieralisi@kernel.org>, 
@@ -51,62 +51,61 @@ Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
  linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
  Xincheng Ji <jixincheng@ultrarisc.com>
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1792392423; l=1310;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792392423; l=1066;
  i=jixincheng@ultrarisc.com; s=20260922; h=from:subject:message-id;
- bh=Jx+tZOBjWgak424sCB5uyhVPgpJ40zsFG7LYIPpf6+Y=;
- b=qNYrXee8wTSETKHo88M/ZxXDERRDzVCWgfB9IuDTJtAX38V/tVLZ3IDF+tDlA0Mc3/6LfukxA
- mHy2RePtV8hA0fzRlvzBwj2jnO9VX2yA+i7yYDk6iFl+EbxKFCBzoff
+ bh=4VsvykK54zLvmmRtvQohmyKwI+tf+4VX/Q7c5bj+6Zg=;
+ b=EcnT92ZANmqfA46KMt4NxMzC5396h8SjVVvIvA9KbV2/J8qJ3SqVQyLj+O5dXfmul3YpF3z/N
+ BgqWPscJSPfCe2NEXoh9ZFbrmFTg4IiturVpCBCSjMoODuN9LEscdEy
 X-Developer-Key: i=jixincheng@ultrarisc.com; a=ed25519;
  pk=n848dcS5D6g0vLad/rjp4Gf/1eedTe1a3pYUrkt2260=
-X-CM-TRANSID:AQAAfwC3cwXnvNVqC28CAA--.728S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7tF47WF1DKr1ktr4DKw4UJwb_yoW8Jw4xp3
-	WagFy7AFy8ArZIyr4ay3WUZ34jya1kAayjgF4Dtw1xCF1rua4UXr98Kw1rtas8GryrZr45
-	Kr1YqryxGanYya7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_Jr0_Gr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
-	4UJwAIcxvE14x267AKxVWUJVWUGwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
-	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
-	1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IE
-	rcIFxwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCY02Avz4vE-s
-	yl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWU
-	JVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7V
-	AKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42
-	IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUbgAzUUUUU
-X-CM-SenderInfo: pml0x0xfkh0wg6xo325dul2uoofrz/1tbiAQAJDmq-VKkAAgAzsf
+X-CM-TRANSID:AQAAfwC3cwXnvNVqC28CAA--.728S4
+X-Coremail-Antispam: 1UD129KBjvdXoW7GF1fAF1fZF1xWF1fGFy8Zrb_yoWkJrgEv3
+	4kKF47Aw1DCr97GFsF9w1IyrZ0ywnrZw1kC3Wkt3WxAa4Sqr1UXryvvrZ0ya4jqw15Jr97
+	Kr92yF1jkrWrtjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbH8FF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXwA2048vs2IY02
+	0Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
+	wVC0I7IYx2IY67AKxVWUJVWUCwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwA2z4
+	x0Y4vEx4A2jsIE14v26r1j6r4UM28EF7xvwVC2z280aVCY1x0267AKxVW8JVW8Jr1l0xvY
+	67AC8VAFwI0_Jrv_JF1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I
+	8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCF
+	s4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFI
+	xGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFylc2xSY4AK6svPMxAIw28I
+	cxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2
+	IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI
+	42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42
+	IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280
+	aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUjF1vDUUUUU==
+X-CM-SenderInfo: pml0x0xfkh0wg6xo325dul2uoofrz/1tbiAQAFDmrUbKwAHgAAsq
 
-This series follows up on the recently applied MEM outbound iATU support.
+The DP1000 PCIe address space is the same as the CPU address space.
+In this configuration, the DWC controller supports bypassing the
+outbound iATU window, so a separate variable is unnecessary.
 
-The DesignWare outbound no-match path does not translate addresses. Skip
-MEM outbound iATU programming whenever atu.parent_bus_addr matches
-atu.pci_addr, rather than relying on a driver-specific flag. CFG and I/O
-accesses, as well as non-identity-mapped MEM ranges, continue to use
-outbound iATU windows.
-
-Patch 1 removes bypass_ob_mem_iatu from the generic DesignWare PCIe host
-code and directly compares the parent-bus and PCI addresses before
-programming a MEM outbound iATU window.
-
-Patch 2 removes the now-redundant bypass_ob_mem_iatu assignment from the
-UltraRISC DP1000 driver.
-
+Fixes: 8da2b970ed4c ("PCI: ultrarisc: Skip MEM outbound iATU setup on DP1000")
 Signed-off-by: Xincheng Ji <jixincheng@ultrarisc.com>
 ---
-Xincheng Ji (2):
-      PCI: dwc: Skip MEM outbound iATU setup for identity mappings
-      PCI: ultrarisc: Remove bypass_ob_mem_iatu variable on DP1000
+ drivers/pci/controller/dwc/pcie-ultrarisc.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
- drivers/pci/controller/dwc/pcie-designware-host.c | 17 +++++------------
- drivers/pci/controller/dwc/pcie-designware.h      |  1 -
- drivers/pci/controller/dwc/pcie-ultrarisc.c       |  6 ------
- 3 files changed, 5 insertions(+), 19 deletions(-)
----
-base-commit: 0a2602de077462d3111eb9fd3da5b12a57fc6c93
-change-id: 20261015-dw-pci-fix-c8e51f83be02
+diff --git a/drivers/pci/controller/dwc/pcie-ultrarisc.c b/drivers/pci/controller/dwc/pcie-ultrarisc.c
+index 523f454c6c52..a0d328c0c09b 100644
+--- a/drivers/pci/controller/dwc/pcie-ultrarisc.c
++++ b/drivers/pci/controller/dwc/pcie-ultrarisc.c
+@@ -154,12 +154,6 @@ static int ultrarisc_pcie_probe(struct platform_device *pdev)
+ 
+ 	pp = &pci->pp;
+ 
+-	/*
+-	 * DP1000 routes MEM transactions without outbound iATU windows, which
+-	 * avoids the 16-window/4GB-per-window aperture limit.
+-	 */
+-	pp->bypass_ob_mem_iatu = true;
+-
+ 	platform_set_drvdata(pdev, ultra);
+ 
+ 	ret = ultrarisc_pcie_init_clks(ultra);
 
-Best regards,
---  
-Xincheng Ji <jixincheng@ultrarisc.com>
+-- 
+2.34.1
 
