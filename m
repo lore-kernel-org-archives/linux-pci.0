@@ -1,66 +1,64 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F0B5483BFA
-	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 06:54:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5136E3D75D7
+	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 06:55:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792392898; cv=none; b=o0Kb/Ln2oAunFQxI7NlxdelsPbZBGLv44pAlJlVfxMNhG2Fcy8xbBHNhX5XLOqNeHSu6ofCunMXrOFmE+j2EJOGVnkRYiP6453SfnzKZNiTel7SL0sUDNPaBNBRs3Nd5lyTgeUX5qGvWgPy99TUPGmYviO46cRSfx0x9iIO+0pI=
+	t=1792392904; cv=none; b=DdIMCVsV1ip3GG9RiQg78dQjwHLlahE+RShSxW+Te5e2DdXj8bG1g/gdvN/0hAxrmGInh3vZeQ2ZPvxytudam38JRf7kxfcLRZaHsUsm6SMNg7NqPn07RE1Y58+7RfbaTQFfY1Lq8EknVm+Y7xWjIvXJbdNCatuV1m9OkPQGtzs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792392898; c=relaxed/simple;
-	bh=2L0xWiiK/g7DAk4BmUlZQ7rhRtQMhkZH8SS5HIbFkfU=;
+	s=arc-20240116; t=1792392904; c=relaxed/simple;
+	bh=AzjxbkxchTNF+RFGgZmVcfY43E8Qbp7Bc/Gwd51lbtE=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=Obx0gW663iWPvB5CbCVZwPYyW5sIGOZTFO8x3bB/b1gZQpLZB/l/q1KP2kbOpQGhFMC+CLXsaWaMiSt5sjJRuBfUx0j2wOD4IYeEMkL0lmN2oFn+AftkXyibK6IaRpTe+6fiIman2VFEZ4NyHAl5IMYug+TVW49A7VlthU2oOtI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ijNy3UgB; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=tozhJehz95XaPUbCJgPwj7jzWy5RltRT/Bbkk3ndafEfpjaCkeLDRy0QwiGW3YREk5PHBvEcPIU1nneOSLTFm5k1zxJu70U6oQob3oPjTtoFDbF+ETV6ixtyLr6hQfsIPk18mF1VeK5dNqb2Xyhs0CwFP0KCQMB/WyH2PFfYrsc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QsGl8ivs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ijNy3UgB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B99C1F000C5;
-	Mon, 19 Oct 2026 06:54:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QsGl8ivs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0B321F000C4;
+	Mon, 19 Oct 2026 06:55:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792392897;
-	bh=2L0xWiiK/g7DAk4BmUlZQ7rhRtQMhkZH8SS5HIbFkfU=;
+	s=k20260515; t=1792392902;
+	bh=AzjxbkxchTNF+RFGgZmVcfY43E8Qbp7Bc/Gwd51lbtE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ijNy3UgBBNYAiA9vmGxMCVuhlFyVJmU42t4JC3rM48sJe2trAQEgjbLcsgkf0Rnly
-	 ebjxYn93HpgTSen0+KXIeETGMIwQC6QOQf62XUUWs2Gln4C5CGFO0RsZoR5pNVPo9O
-	 5pSvwF9BtEnX4nIJGzZDfGrxZmR104/OK/PKO6xFuTz70/RT4wtRuPWBDctmipCxUa
-	 5ZQrQZ6j4HVQmkSCRO701wAR0KLvPErQHwlyLtfd3V1ZIMMa/xMXD7F/UBCOpifgjg
-	 gmaK764jtFmkJM6bbAhNF2At4oaySynM89q64zL52AElqyvnRlUQA0pJBWDW/dUHd1
-	 IfwPg+ChJbBvQ==
-Message-ID: <sashiko-outbox-176712@kernel.org>
+	b=QsGl8ivs+M5kU3Gf/1/zzVVZLYMEgVs09MalLTj2Sq3nz74sFSDU58PdXU7qtkpr5
+	 bD3uitrpzAh/F00yqThd+1uzy6ZBb9LpnC4t8eoRtog6Dz1klz0rGA3JRaDO+TA/In
+	 o3rYEsZl3pAL6ezsvJOLwMn7hm9OUe78eOiNhzsv4xffHr+LAmWohE9xOQHSR7Zpig
+	 Vi9m7TCvT7WNpY3B1L9fe/zdM2oq8tXEpUsYEkW2etmAk10TZNoeb8mSeFPJUte8VF
+	 8Bp80cXabZHj5XZ8xGPKjxIH0b9yhtrQ5jhv+wqQuPLR45i76bjWRKLkARJXYcNdGu
+	 Ds86hoi5NDuFg==
+Message-ID: <sashiko-outbox-176713@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] PCI: dwc: Skip MEM outbound iATU setup for identity
- mappings
+Subject: Re: [PATCH v7 08/14] PCI: rzg3s-host: Drop nop instructions
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Xincheng Ji" <jixincheng@ultrarisc.com>
+To: "Claudiu Beznea" <claudiu.beznea@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261019-dw-pci-fix-v1-1-9b7860f919b9@ultrarisc.com>
-References: <20261019-dw-pci-fix-v1-0-9b7860f919b9@ultrarisc.com>
- <20261019-dw-pci-fix-v1-1-9b7860f919b9@ultrarisc.com>
+In-Reply-To: <20261019065025.2146539-9-claudiu.beznea@kernel.org>
+References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
+ <20261019065025.2146539-9-claudiu.beznea@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 19 Oct 2026 06:54:56 +0000
+Date: Mon, 19 Oct 2026 06:55:02 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> No outbound iATU translation is required when the parent-bus address
-> matches the PCI address. This is a DesignWare controller property, not
-> an UltraRISC-specific behavior.
+> From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 >=20
-> Compare the addresses directly and skip MEM outbound iATU setup when
-> they match. Remove bypass_ob_mem_iatu and the UltraRISC-specific setting.
-> CFG and I/O accesses, as well as non-identity-mapped MEM ranges, still
-> use outbound iATU windows.
+> On the RZ/G3S PCIe IP variant (which is similar to those used on the
+> RZ/G3E, RZ/V2H, and RZ/V2N SoCs), access to the PCIe Type 1 registers
+> requires setting the PCI_PERM.CFG_HWINIT_EN bit. Since this bit is not
+> set on the code paths where rzg3s_pcie_set_max_link_speed() is called,
+> the writes to PCI_EXP_LNKCTL2.TLS are nops. Drop them.
 >=20
-> Fixes: 17b478b29cf1 ("PCI: dwc: Allow drivers to skip MEM outbound iATU s=
-etup")
-> Signed-off-by: Xincheng Ji <jixincheng@ultrarisc.com>
+> Reviewed-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261019-dw-pci-fix=
--v1-0-9b7860f919b9@ultrarisc.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261019065025.2146=
+539-1-claudiu.beznea@kernel.org?part=3D8
 
