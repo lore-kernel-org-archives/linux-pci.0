@@ -1,91 +1,100 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+Received: from mail-m19731116.qiye.163.com (mail-m19731116.qiye.163.com [220.197.31.116])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DFB9466B63;
-	Mon, 19 Oct 2026 04:29:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31F004825AC
+	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 06:08:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.116
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792384170; cv=none; b=t+V2KwFZMzqTMTw28xyZ1v2Pr+ujXTgysLhFaMgMWJfaEdlMp/1XS7bk2zvpA1faAbUrsXw2n4zBm6RLZnvaLseXlBsbnusPW6JHbWhSp7RtgKxprXLMKr3JC3MlzaeWCS+RnGgmtwuj5wsoAfrYx4rnro9aFOjLrvNEKNgBv8g=
+	t=1792390089; cv=none; b=EpmoG7z5bhatK2vw/jr0fkjGr/Uy60Zw8YbyUfq7xN+KE3Bk4TjSk6rgy9MuGCCT/D6dW1ydtkm0J13dl9baogUTBmUnZgRV7YK30pkbMBCB/fv8WGH8JdsFs6Eonh54PiqDMmGOJFyru63WEpygV2+HiIhqhc7BSXs/NP7pGkE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792384170; c=relaxed/simple;
-	bh=hGEBTZeo+4uD/i+C8qWxW5X8VnOlOCZVXgQbjfZGwZI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sV52SJj2s3h5cBRzf4hYMCXE0pi97cn0CtYJFeTqUo2Bsa2sFjadz3PINu65JL53tyi/T+ixSEGN4L+NxcgVgzoqkV3bmU5OqNRTFDFtx3bzpl51n55y4h+DBMonkLViabyAe+di8gPj7MEUfnBjBe62yNRTgxyh2Ybw3y9MdV8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UPigaIhl; arc=none smtp.client-ip=192.198.163.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1792390089; c=relaxed/simple;
+	bh=JB82PfHE7hAsuihF68ENZAUlg6qwTakPNhuhVUHPgto=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=NsxcVfvsQuxREPiqspXTZvvFN+sbTsFWj3650m+sDY5Ro0zn0TjtwDVLu2YuZKm/ne285YLtDonQPeAgG97tHoKxVcTlBdEB5v66S7gfxeAZ1Y+W21ZusbpfVqg//1i3N4fzLHo7m5eZecMXGLrmgyGWnQ2CG8VyUciqR7obfLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=TD9n+NTh; arc=none smtp.client-ip=220.197.31.116
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UPigaIhl"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1792384165; x=1823920165;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=hGEBTZeo+4uD/i+C8qWxW5X8VnOlOCZVXgQbjfZGwZI=;
-  b=UPigaIhlQX0sxClhY1RQ8MFrMklq9yJ5fo9MAisTNJ+EaGtozJa63smn
-   bafMH1TV02BpGMiJlNRi3zSog5dybaqSz9kSHE0NuAf3re+ch2NqeQ8el
-   emjU5DehNR+xu8d0Bidxr0YAMpmXZ4jNXd2Fwa0BNgRW3okyTVSI9ewzx
-   Y/jotinFRBxj1gR1SfvR/RaGTNs8wV1WxVveMbD1zKEMKlDNKmRdOOVaJ
-   f7eHZCeX5XdxhB0mrrmTEzVkMiI/2XdYdIdNrecjsyCOoD1uMLo85ihkd
-   ssgSD4utsIvvEc1WWYJucc4J9y23PXjUNBAzWP/3puOz5MSYTtk/meDfX
-   Q==;
-X-CSE-ConnectionGUID: QPsvLA8sRT2mrxUTxG8jaQ==
-X-CSE-MsgGUID: eUybyaOTQqWA6kaxJ9Sd+Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11939"; a="953297"
-X-IronPort-AV: E=Sophos;i="6.27,166,1787036400"; 
-   d="scan'208";a="953297"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Oct 2026 21:29:23 -0700
-X-CSE-ConnectionGUID: rRthhWlHQlS8IG71+RgZHw==
-X-CSE-MsgGUID: WJUQcRY3SECX+TcpzN9V3w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,166,1787036400"; 
-   d="scan'208";a="2790095"
-Received: from black.igk.intel.com ([10.91.253.5])
-  by fmviesa008.fm.intel.com with ESMTP; 18 Oct 2026 21:29:22 -0700
-Received: by black.igk.intel.com (Postfix, from userid 1001)
-	id 8BF8399; Mon, 19 Oct 2026 06:29:20 +0200 (CEST)
-Date: Mon, 19 Oct 2026 06:29:20 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Cole Leavitt <cole@unwrap.rs>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Mika Westerberg <westeri@kernel.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] thunderbolt: Don't resume the software CM if the
- host controller is gone
-Message-ID: <20261019042920.GX176164@black.igk.intel.com>
-References: <20261018163750.130470-1-cole@unwrap.rs>
- <20261018163910.132231-1-cole@unwrap.rs>
- <20261018163910.132231-2-cole@unwrap.rs>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="TD9n+NTh"
+Received: from [172.16.12.48] (unknown [61.154.14.86])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 517613f42;
+	Mon, 19 Oct 2026 08:25:13 +0800 (GMT+08:00)
+Message-ID: <d6becae5-df39-422b-8d2c-f15efb4ef4a5@rock-chips.com>
+Date: Mon, 19 Oct 2026 08:25:09 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20261018163910.132231-2-cole@unwrap.rs>
+User-Agent: Mozilla Thunderbird
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
+ Manivannan Sadhasivam <mani@kernel.org>
+Subject: Re: [PATCH] PCI: dw-rockchip: Enable INTx affinity support
+To: Thomas Gleixner <tglx@kernel.org>
+References: <1790664898-207928-1-git-send-email-shawn.lin@rock-chips.com>
+ <atRLsp1qUA_sGS-0@debian> <87y0bubws7.ffs@fw13>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <87y0bubws7.ffs@fw13>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa1518c524103a4kunm24f5ed8a5ff813
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlDTxlPVh9LHUsYSU5MHx8aQlYVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUpLSU
+	9PT0hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=TD9n+NTh0EX+TpPG74TbMH6mKTeQLOCgnsFyB63BJkXrvDa+A7RnAHBg15/jS8FdsfitzXlgRk0TY93MtG+j/j/imUrzWs7+stzxiupdg5fIAZynzQI8qEsp4VmEOlBvNtw8DqGaG3Y0X/8Z2WtQ9oRck5/pJ4tp1+bVuG/ipUk=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=7M+DcHmAl0Qr6G2WXxfJbEG7iMvZDkTSZZ2o71deWKo=;
+	h=date:mime-version:subject:message-id:from;
 
-Hi,
+Hi Thomas
 
-On Sun, Oct 18, 2026 at 12:39:08PM -0400, Cole Leavitt wrote:
-> nhi_resume_noirq() sets nhi->going_away when the host controller is not
-> present anymore on resume (commit bdccf295d7cd ("thunderbolt: Do not
-> touch the hardware if the NHI is gone on resume")). With going_away set
-> tb_ring_start() refuses to start the control channel rings, but the
-> software connection manager's tb_resume_noirq() still goes through the
-> whole resume sequence. Every control channel request then fails with
-> -ESHUTDOWN from __tb_ring_enqueue(), and tb_cfg_read()/tb_cfg_write()
-> WARN for each one:
+在 2026/10/19 星期一 4:04, Thomas Gleixner 写道:
+> On Sun, Oct 18 2026 at 10:05, Manivannan Sadhasivam wrote:
+>> On Tue, Sep 29, 2026 at 02:54:58PM +0800, Shawn Lin wrote:
+>>> Leverage the interrupt redirection infrastructure to enable CPU
+>>> affinity support for the legacy INTx interrupts. The INTx virqs are
+>>> demultiplexed by the chained handler of the "legacy" interrupt, whose
+>>> affinity cannot be changed, so affinity control for the INTx virqs is
+>>> achieved by redirecting the handler to run in IRQ work context on the
+>>> target CPU.
+>>>
+>>> Mask the INTx source in .irq_pre_redirect() before the handler is
+>>> redirected: the legacy interrupt is level triggered, so an unmasked
+>>> line would keep re-firing the chained interrupt until the redirected
+>>> handler runs.
+>>>
+>>> Same approach as the DesignWare core, commit eaf290c404f7c39f2 ("PCI:
+>>> dwc: Enable MSI affinity support").
+>>>
+>>> Test was done on RK3588 EVB1 board with an NVMe with pci=nomsi
+>>> parameter. The /proc/interrupts columns are trimmed for brevity.
+>>>
+>>>    # cat /proc/interrupts | grep INTx
+>>>    51:  137 0 0 0 0 0 0 0 INTx 0 Edge PCIe PME, nvme0q0, nvme0q1
+>>>    # echo 10 > /proc/irq/51/smp_affinity
+>>>    # dd if=/dev/nvme0n1p1 of=/dev/null bs=1M count=200
+>>>    200+0 records in
+>>>    200+0 records out
+>>>    209715200 bytes (210 MB, 200 MiB) copied, 0.182021 s, 1.2 GB/s
+>>>    # cat /proc/interrupts | grep INTx
+>>>    51:  137 0 0 0 946 0 0 0 INTx 0 Edge PCIe PME, nvme0q0, nvme0q1
+>>>
+>>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>>
+>> I'd like to get an Ack from Thomas for this patch since I'm not an irqchip
+>> expert to decipher whether this patch is valid or not.
+> 
+> I'm happy to look at it, but I can't be bothered to fish it out from a
+> mail archive. Can you please bounce me the original submission?
 
-This is not supposed to happen with SW CM systems. I've seen a couple of
-times Lenovo BIOS has the PCIe root port hotplug enabled and that's against
-what the Barlow Ridge BIOS configuration checklist says. Please check if
-there is newer BIOS (Lenovo has been fixing these) and of not report it to
-Lenovo.
+Sure, you can check it from:
+
+https://lore.kernel.org/linux-pci/87y0bubws7.ffs@fw13/T/#mf0d53a0e27cb142ec0a2b09418ea2a7f04dbb321
+
+> 
+> 
+
