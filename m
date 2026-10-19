@@ -1,52 +1,53 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 807033D7D77
-	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 08:45:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05E75471D16
+	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 08:47:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792399539; cv=none; b=myELf6KBI8A6067R4XI7G6HuN3kouPDffOAx3AitV5h3FU4EAFLmb5WdO6I3J0Fv5SSi6TmN8YaPjpf0HCMOMgJ/V7QJWB3P/urKxVC52sQGJUlxgraOkJNjs1mfHvpvNuklytjxc2t4OkIx2jK72/L8WRNbmxn8WwUboGQoWXQ=
+	t=1792399645; cv=none; b=n5McyOVsLFiPwVAOxgQgVMOoEA1L9LEIy4exQQ9csCdpkp5iGIoN6bADV0u30qCA1MBhoHmkCYE4sBKWge8wZemXP52IDy98lhmiYkKIWeOWLa/j7eWxv2KITqU+mUx6lat8vgeeQWRObg7f1NKMTBkWPmnzs3WBwxw2YB/Ytcw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792399539; c=relaxed/simple;
-	bh=E3GRxUsoCPKSJ/HIptqNUcLhld3qaAUpDhGTKfHsi+g=;
+	s=arc-20240116; t=1792399645; c=relaxed/simple;
+	bh=4ncD0F8UyKRALyRolo9L8HwTLWWA/SeractbizyJuEM=;
 	h=Message-ID:From:Subject:To:In-Reply-To:References:Content-Type:
-	 Date; b=IZvt+fQEoQlhmoY+7qMIQJpOZDfNH9ewmzVao46vuGY+WY2GT3Ow+5yMN1jxA/x3qo/+u3qiorq+l3J610T3eys5ovFAm+qzqHhaIv9QM6iPt+avIdKdWGPc63TPORaUeU1q0DIwRdBEIUSyU0ErlByKAXLNNPQSkZlZ+U6ByJg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P3PkqVqC; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=lSAW2LNagj7XNR/xZRzUQqIh0DGAhTJBlSzVyc9gY07gY1/Drs1kQEa8ZPPCdZH+RdxCafT10rvfS5syIHEj9bHgcGSh5nz3XsfFNEhfFXltt928+IP+mMaNTNl6hiP6+KeM9cnKGQN+dywtxE7mQCr8aGXZkk3L2HK3LSFel3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OMrQm8+d; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P3PkqVqC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B12D1F000C4;
-	Mon, 19 Oct 2026 08:45:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OMrQm8+d"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEDD11F000C4;
+	Mon, 19 Oct 2026 08:47:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792399538;
-	bh=E3GRxUsoCPKSJ/HIptqNUcLhld3qaAUpDhGTKfHsi+g=;
+	s=k20260515; t=1792399644;
+	bh=4ncD0F8UyKRALyRolo9L8HwTLWWA/SeractbizyJuEM=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=P3PkqVqCAgTGjeTS7PbmLuKQfkfO81VzerNu8u+nX0yhORqb9RyWXJDJzf1HREb92
-	 WEMYb0IsDKvtMch5PL06BVeuxlUYqBtIq2Xa8U80a1WJF4rqGcu2nxUhdHcte9RbA1
-	 v9Zy/U/gY7+on6LF21NRl+XzyqVnUFnMXGEu7IV9frXHcFxn5f1yyXwFqjsqS4cjMq
-	 NkzgxMD+6ZRmiGjJx2prkVoe4yw4ol3H3gTGw9rQyy+eYevUn3g1Y36ZJZFRCeiP/V
-	 8TSC77JdVN2erK9+9ZopR3OrnhKsr1rrJhCbS4YwYAuInu5wpfAiup6tVHo0HUwfsQ
-	 EerLflUq6QTrw==
-Message-ID: <sashiko-outbox-176832@kernel.org>
+	b=OMrQm8+dyfmWED25Xrm8W3Ez702BigIi7ufwmFQMkv8B3WC/FdVjBAH+7/JXzdCW7
+	 35dkWRZ4jfvE2t3SqDk/a5JVcjz0FAZ5KPJfVLpt1EIsGX1h7DBZHO4AxlD7OFHBQ0
+	 pD7Bih9+MUXaXVsEckBSYHx+EYexN9NjUjYhcoPBpoe/pUN7VYH1fxbu8yRBMux2RL
+	 20H2tX1a/4PCiwJHRlx2WLv+CWrbGiA8GZgfPwquulHm9PFq15Ca+3t8NSl1WeNhuW
+	 NNuNfOb7+jiwVYM7cILwiVjZf2kBOC3SJSESSuOTwuXo0gUIga8pM43ymbzZMYCQDl
+	 VkGfhrYQA6Yrw==
+Message-ID: <sashiko-outbox-176836@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 05/13] ionic: Lock VFs around
- pci_reset_function_locked()
+Subject: Re: [PATCH v1 03/13] PCI/IOV: Introduce VF locking helpers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Lukasz Laguna" <lukasz.laguna@intel.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261019083514.838640-6-lukasz.laguna@intel.com>
+In-Reply-To: <20261019083514.838640-4-lukasz.laguna@intel.com>
 References: <20261019083514.838640-1-lukasz.laguna@intel.com>
- <20261019083514.838640-6-lukasz.laguna@intel.com>
+ <20261019083514.838640-4-lukasz.laguna@intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 19 Oct 2026 08:45:37 +0000
+Date: Mon, 19 Oct 2026 08:47:24 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-> pci_reset_function_locked() now requires PF callers to hold the device
-> locks for all enabled VFs as well. Lock VFs around the reset in
-> ionic_pci_error_resume().
+> Add pci_dev_lock_vfs() and pci_dev_unlock_vfs() helpers to lock and
+> unlock all enabled VFs of a PF device.
+>=20
+> This provides a common way to serialize operations involving
+> subordinate VFs.
 >=20
 > Signed-off-by: Lukasz Laguna <lukasz.laguna@intel.com>
 
@@ -54,5 +55,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261019083514.8386=
-40-1-lukasz.laguna@intel.com?part=3D5
+40-1-lukasz.laguna@intel.com?part=3D3
 
