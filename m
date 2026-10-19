@@ -1,123 +1,139 @@
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA1A04F3EC9
-	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 12:28:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 983924F4CE8;
+	Mon, 19 Oct 2026 12:39:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792412936; cv=none; b=dmDeHJCqT3+rrPOc9iONlp9egz758flOBeKWOrwfGynQX4jwvWaepV+qt267ISd/bTK8rJSqCwINmCcU5P2h4ItNgyyNYaEJNKCHvzw9W8zAvhfg/0DKg9BujSsDEFDKVLdy8Rv2JpsR9BDJ4NTSFn4VHWX+Q5m/TSEmnWtKVqM=
+	t=1792413588; cv=none; b=UdrXJD4bZmG+3YWnvk4MdqCkBfiauCusy0t7gmehg2r6bv0nVSU70jZBTwE/K3R8qRIOTm2oulf+/CZwTu77vkWNnE1VWE2hY3GVA3zsSc9qQgRSJVyxlEgvl3MhyQI0V3fWoP0t/b92bUUjKEmpbGDSKIzyBgSwf35eTofHisw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792412936; c=relaxed/simple;
-	bh=wDHb7dzaQPQ2plgxG6HfV+TCBJTGWZkoD1BwHBUXyTc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RelJFjyqtADyEKe5SHqUYe46442Ifk/DfT+o8OjMeebFDQ9XtZCLnbWVKoGISugmD9xfxt9DwjpsbPB3CL1G9iF13NCTKwQtqp4LUbERG8tcJf3qwjvbfe+UKoAHCqk3iT7gtxaumIcDvCF+hKC5lvQXCAp6eCDGH6yVxHi8y1c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev; spf=pass smtp.mailfrom=tuxon.dev; dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b=pY47HI11; arc=none smtp.client-ip=209.85.208.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxon.dev
+	s=arc-20240116; t=1792413588; c=relaxed/simple;
+	bh=pXmwrBo6dLNLkbP8HSIjATa8tntP/iItXRS9BRdu81U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fSs/xFjGC/i+5Gs+zV+5GVgrsJ3OAHK+FBdpBfT5fwu8OTZBSfFpehnrhT65Hw+rscFtByeiRQ3lKZY4Bm0/naWfaFOxvvgO3iG4vQ2KxEUN2fUNXEihLmjxiPHU9LGHpQiqnKzA1DDfk3+ry3XUaVjlIbw7CzvtwouqTbABA68=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=V3n7kcuV; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b="pY47HI11"
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-6a642495d81so2623616a12.2
-        for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 05:28:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=tuxon.dev; s=google; t=1792412926; x=1793017726; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=JUCsiNFq6vP2rgFSeWx5eYQ/F2LejIwiLiOUAjRGo4Y=;
-        b=pY47HI11V6PetEkI3UgclvGDYHyaI5ZMRE9LDiKW6Tolz931QxoBq0q7XaejTD6XAn
-         MXJG67G+GkUv0uBEnLuE4SwsCGfFFJ1f8CphqC7e0EnXS9QheH74dzxBXkNJtFqQCw1v
-         9AAkTh2t8CcK4rhuNguSACKd98GaHjl6Wmwz6IoM+RoK5qbkMV+H9ahFmHT/+8WX2X/0
-         cbXQR6xrphQGi/ddcGBKja4IGM2FVQiUuPEjHF9N3TpHKI9qwSZt/6hKhCsM5Acy+wyS
-         azimIaKP7X5OgE4raxKMPFNIUUOLY+Y3XSAhzojdbWo5BwQaIOibbjvQEJlGqv0liNn0
-         c5yg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792412926; x=1793017726;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=JUCsiNFq6vP2rgFSeWx5eYQ/F2LejIwiLiOUAjRGo4Y=;
-        b=zyOZrL/p7GuxgFlAUwwcZ/Q0hWt58MramM+wsTvj8CLQ/HjNWpJ+ZGgAeCmQdor3HP
-         U4xIA92P32RLSmxyq/tqqr2GRZyw/wXK+1D8oQE7/NAjp6WM6etQWfVQ6HR58cDR1kck
-         IjAYdTnSyHkxObcnNjZUFxVnW9MZ5aBp0bvONCQ4Pt8qdlqyyoXMp106pO0eRoparo2s
-         /HxgZPvNw6xylACVW7xVBKfacQqFGmSWh6HUMo20WccWdXH1zjAt8d+IyAqTeM/BTTRk
-         gbXZTf2h0P317pqzR9MNH9WpGLUSTHDIsSVoh5GYqmxy7A7p0dh/5O0+zvoI0PyQgD+l
-         quPA==
-X-Gm-Message-State: AFq9FYIsOlPigYL8XBlagAHJuqYXGosXp9PQEClpgI0rPyOMA5k0bBWd
-	qMXWE25rZAjTGw/a7owl7Mj3f9H3cdjntqFzxt6/jdQmfp+SQccozysBPuSSBNGHGLIPi7N00J1
-	HL5rd
-X-Gm-Gg: AYBFou0lCrTGx0ORAoJv/haepuLWfINNCkHvA3SzbfcdcHiZbot8V1E0mYqctmyw/m7
-	3LFFYIpI9pAGCCgHxisZa1wxTDTWE5KV75mjCGECrnJob2wvHNxRukouTb3l6srOrwQm0HC6vXl
-	TlDpKy8NC7eCjiokHQiE7yc7EDCn01nAYegXvz8tGSDSZZY//jeeLfYYJTCZ3TDoEMwy1xH/utX
-	gia5akX5MZIZ9+LMNLTI4NHJw0SoPWm1pPmaeF4ksyXVkJyWZ63MIyCmkJH1ZMQ+O117htl4oJU
-	ioXsMZLIiasZp+jDpbUnj0Y2rbXkIpUoQHBO2ppZ+embvYDh7NX0bKmVI/SGEk91ocnZvEpxkbP
-	f6PZLs0/E27PAhI43fRyYYM01RFmMZb+0ErHCKUT+YcR9Kjomsv0F8pPRAOcuixu4tbybUgIaSy
-	m78XtTGnr2wQtMVab2sCENUp5UW1TmSg79ohVyXRKONOKT3v9opwtUclT6sUL/c4r2vFzMiiNOt
-	02EcDo8
-X-Received: by 2002:a17:907:944d:b0:c31:b89b:213b with SMTP id a640c23a62f3a-c419e231a7dmr515664166b.18.1792412925084;
-        Mon, 19 Oct 2026 05:28:45 -0700 (PDT)
-Received: from [192.168.50.4] ([82.78.167.221])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c408e3284e3sm350775466b.3.2026.10.19.05.28.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 19 Oct 2026 05:28:44 -0700 (PDT)
-Message-ID: <48889e4c-04b3-4b50-b144-0d42ad2dbbc1@tuxon.dev>
-Date: Mon, 19 Oct 2026 15:28:42 +0300
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="V3n7kcuV"
+Received: by linux.microsoft.com (Postfix, from userid 1216)
+	id 961C620B7168; Mon, 19 Oct 2026 05:39:26 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 961C620B7168
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1792413566;
+	bh=kBdEuTY6MQ+H0utY/zhuUL3qVvLCYjNeXyFJ+yLQZis=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=V3n7kcuVKUm1AhJ6PZXwKO3w+wpYgHfp6NxT20jOMNoqOTV45Tg06yE6wp4wSgqKx
+	 X0idintsIYgYI9ISj3lG+XfGIgM1sHzuUbmHeza6Is5bTn+wvkcGBLehldfj//Nanm
+	 s/kzrvPD7ZG0ZI/ipNOSZLw9ZF9j8bWRY9X4YVC4=
+Date: Mon, 19 Oct 2026 08:39:26 -0400
+From: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: hv: add vPCI device reset support
+Message-ID: <atYPfibVVa+nyyb9@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+References: <20261016235940.942090-1-hamzamahfooz@linux.microsoft.com>
+ <20261016235940.942090-2-hamzamahfooz@linux.microsoft.com>
+ <sashiko-outbox-175060@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: rzg3s-host: Fix NVMe resume errors after s2idle
-To: Ovidiu Panait <ovidiu.panait.rb@renesas.com>,
- claudiu.beznea.uj@bp.renesas.com, lpieralisi@kernel.org,
- kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20261005110224.17160-1-ovidiu.panait.rb@renesas.com>
-Content-Language: en-US
-From: claudiu beznea <claudiu.beznea@tuxon.dev>
-In-Reply-To: <20261005110224.17160-1-ovidiu.panait.rb@renesas.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <sashiko-outbox-175060@kernel.org>
 
-
-
-On 10/5/26 14:02, Ovidiu Panait wrote:
-> On the Renesas RZ/V2H platform, when ASPM is enabled, resuming from s2idle
-> with an NVMe SSD connected fails with:
+On Sat, Oct 17, 2026 at 12:12:00AM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [Low] PCI: hv: hv_pci_reset_device() passes 3 arguments to wait_for_response()
+> --
 > 
->    nvme nvme0: I/O tag 27 (001b) opcode 0x9 (Admin Cmd) QID 0 timeout, reset controller
->    nvme nvme0: Disabling device after reset failure: -19
+> commit 5767f2b6950e5dc7da0b5c142f971d8282c27a56
+> Author: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
 > 
-> This happens because during s2idle, when ASPM is enabled, nvme_suspend()
-> does not shut the drive down. It leaves it in D0, puts it in its lowest
-> NVMe power state, so that resume only has to restore the previous power
-> state instead of a full reinitialization. This assumes the drive keeps
-> its context over the suspend.
+> PCI: hv: add vPCI device reset support
 > 
-> However, rzg3s_pcie_suspend_noirq() doesn't take this into account and
-> it always powers down the controller and asserts the controller resets,
-> including PERST#. That resets the drive, and the command the NVMe driver
-> sends on resume never completes.
+> This commit negotiates Hyper-V vPCI protocol version 1.5 and implements the
+> reset_root_port() callback on pci_host_bridge by sending a PCI_RESET_DEVICE
+> request over the vPCI VMBus channel.
 > 
-> To fix this, similar to the dwc driver, use
-> pci_host_common_d3cold_possible() to check if the controller should be
-> powered down and keep the controller running otherwise. Do this only for
-> s2idle, as deep sleep could power off the SoC and neither the power domain
-> nor the driver will restore the controller clocks and resets on resume.
+> > diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> > index 89816a2bd7cd3..4bb4ca6da1f7b 100644
+> > --- a/drivers/pci/controller/pci-hyperv.c
+> > +++ b/drivers/pci/controller/pci-hyperv.c
 > 
-> Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
-> Signed-off-by: Ovidiu Panait<ovidiu.panait.rb@renesas.com>
+> [ ... ]
+> 
+> > @@ -1397,6 +1401,52 @@ static int hv_pcifront_write_config(struct pci_bus *bus, unsigned int devfn,
+> >  	return PCIBIOS_SUCCESSFUL;
+> >  }
+> >  
+> > +static int hv_pci_reset_device(struct pci_host_bridge *bridge,
+> > +			       struct pci_dev *pdev)
+> > +{
+> > +	struct hv_pcibus_device *hbus =
+> > +		container_of(bridge->sysdata, struct hv_pcibus_device, sysdata);
+> > +	struct pci_child_message reset = {};
+> > +	struct hv_pci_compl comp_pkt;
+> > +	struct pci_packet pkt = {
+> > +		.completion_func = hv_pci_generic_compl,
+> > +		.compl_ctxt = &comp_pkt,
+> > +	};
+> > +	enum hv_pcibus_state state;
+> > +	int ret;
+> > +
+> > +	/* Do not take state_lock: eject holds it while removing/locking pdev. */
+> > +	state = READ_ONCE(hbus->state);
+> > +	if (state != hv_pcibus_probed && state != hv_pcibus_installed)
+> > +		return -ENODEV;
+> > +
+> > +	init_completion(&comp_pkt.host_event);
+> > +	reset.message_type.type = PCI_RESET_DEVICE;
+> > +	reset.wslot.slot = devfn_to_wslot(pdev->devfn);
+> > +
+> > +	ret = vmbus_sendpacket(hbus->hdev->channel, &reset, sizeof(reset),
+> > +			       (unsigned long)&pkt, VM_PKT_DATA_INBAND,
+> > +			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	ret = wait_for_response(hbus->hdev, &comp_pkt.host_event,
+> > +				"PCI_RESET_DEVICE");
+> 
+> [Severity: Low]
+> Does this compile when CONFIG_PCI_HYPERV is enabled?
+> 
+> In drivers/pci/controller/pci-hyperv.c, wait_for_response() only accepts two
+> arguments:
+> 
+> static int wait_for_response(struct hv_device *hdev,
+> 			     struct completion *comp)
+> 
+> Passing "PCI_RESET_DEVICE" as a third argument in hv_pci_reset_device()
+> causes the build to fail with too many arguments to wait_for_response().
+> 
 
-Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Not sure what tree this was applied to, but that function has 3 params
+as of mainline commit ca039df94983 ("PCI: hv: Warn when
+wait_for_response() waits indefinitely").
 
-Tested with [1], [2], [3] on top, so:
-
-Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-
-[1] https://lore.kernel.org/all/20261019065025.2146539-1-claudiu.beznea@kernel.org/
-[2] https://lore.kernel.org/all/20261005111157.17256-1-ovidiu.panait.rb@renesas.com/
-[3] https://lore.kernel.org/all/20261019122501.2423969-1-claudiu.beznea@kernel.org/
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	if (comp_pkt.completion_status == STATUS_NOT_SUPPORTED)
+> > +		return -ENOTTY;
+> > +
+> > +	if (comp_pkt.completion_status) {
+> > +		pci_err(pdev, "Hyper-V device reset failed: %#x\n",
+> > +			comp_pkt.completion_status);
+> > +		return -EIO;
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> 
+> [ ... ]
+> 
+> -- 
+> Sashiko AI review · https://sashiko.dev/#/patchset/20261016235940.942090-1-hamzamahfooz@linux.microsoft.com?part=2
