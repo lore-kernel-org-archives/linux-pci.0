@@ -1,261 +1,210 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9476346E5D
-	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 09:03:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA7D73A9DA3
+	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 09:25:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792400614; cv=none; b=XRuYyZgqvIni1smOkall/pp4QMnSiIdpjBi4kjUfYWpDCHSlwpSYt+5szRYauAG/YKJDShIkdPN3SGYtuE3qURf8k6pgB6Ijhmt0cDtzha4mg6YSoF2cKprE/nxxbcDQCdNJsdpfvmrtkbUNNxUMRvaQ+JBR7QLwXgHu0bVfF1s=
+	t=1792401930; cv=none; b=l6eqv18tVqd9KYXS4RrAGjxt69ZVyQut4H5qerkwxGSaxMkXIfiNIbG4dHfgzUMin4WVlLE42aicY5tUT5uQ+bbrKQuSp0HnUtIiOWAcL50SrFPcM/fbzZe8W/8LcqP6Sw+wJrjV7PtH+7+EOtCPXrXiaLzdsZfjO4jn8Zsn/qg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792400614; c=relaxed/simple;
-	bh=mJ5T+MCnWvt+sUQeHHLGMRJ6RnhtB1lo8QTwW/RMRtM=;
-	h=Message-ID:From:Subject:To:In-Reply-To:References:Content-Type:
-	 Date; b=CrzXq2vJ9fOIvWx54oyP7+Us9Oex/edqJTXs4MpKt7/YdBBiaN1xK+BuN1I0tabPJPRWuOX0odk4vnch/r7Fr2uRkC0Qgb377pFjPAg9qErPBTudiU9uZUop5/NqS0aoh+AkHLmH9KUPE4F9xRiMBRWYXALckhYtSXadhub3f+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fV5KBOtp; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792401930; c=relaxed/simple;
+	bh=UzSDvDLHIR8vUD/PBF+z84UxETXjLN+aGG5mAf6AxMw=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=pw7O0lVD/X79wSykYx4dyyfCbp9ZLTkSF2COEZ2v0BvbAQgnO3WZ7woBsu4DkIrZCu9qUrQ8dmNhDK5vC49lQ5UXIcBQtZ/neCE/xLuZr1TUgbfn1/F0mLXD5LY5OQUSqtsJmwyjVhQznjNeaHhqswgzd9fpZAgjolPe1/x6B9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=pqqz0XSA; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=gpUyemUl; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fV5KBOtp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63A571F000C5;
-	Mon, 19 Oct 2026 09:03:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792400612;
-	bh=sdzBDjNH3kMQdfcV3dMcPy9z86kn6OMwHDy6PiiVxBY=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=fV5KBOtp5mmLyWvKoRjhCLkkI3AlkRygK7w+dL1Mzs6iKxkYMA7PeI5XL1IemCSXW
-	 LvEDRlz+rDzs4fbMFAT8MJVGrPP1dUrsdNtn1Tznm85Su7PM1/9Un2TCG4WvuhNhQZ
-	 JM9i3nXq4pQqvRty3hsthjSFb8d9raQcE5p1IUNEZqzup3M/gU/z1+gaANYJlbaLDA
-	 UzqYhYwrUIVoIyuhQDsb4acWzVkyj3LhDDs+pQZ8hGtA2ApmiL4qh2Lf8+DuDPk5Ae
-	 MVoDkAUnvMx26YBlmoYTrmDxjuayvlFcTkw6dlBiCynSlmggRRSirkXVV3NSv/M3Wi
-	 oBWThjns6QYzg==
-Message-ID: <sashiko-outbox-176858@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 04/13] PCI/IOV: Allow VF drivers to handle resets
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Lukasz Laguna" <lukasz.laguna@intel.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261019083514.838640-5-lukasz.laguna@intel.com>
-References: <20261019083514.838640-1-lukasz.laguna@intel.com>
- <20261019083514.838640-5-lukasz.laguna@intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 19 Oct 2026 09:03:31 +0000
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="pqqz0XSA";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="gpUyemUl"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69J8P3VG2042434
+	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 09:25:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=EKRFsN8rnMk022/cD31rwX
+	WBBc2zyHwGF5EAKF+r0uU=; b=pqqz0XSAkxyEKEXTnfiSjPKcE+uvf8TUJkj+UK
+	o7tJ+gJxbcmynZ5K3ytgKWTLBftryrcf1bd7Bh4Dm0uRrGyvv+9ZHgSrXWwbd9yR
+	tv34CSZSkkfzJKGj0HXcmyKweDVocVBKHm5yz2rr4oVVIoBsfx48UGjWLU4cUjgR
+	c0sjYprxKz0N1ZLKyZoZKbndZUCHZyHgtl/KQfkj2eEIk57ff4Jo3OG0DcbXZnI2
+	gF+jwxThJ7cCtw2YWnJ6UZuFep8TBeh0/terMK5G+TLxeqrDMgB+2KMSQGwKwoZq
+	fuZliSFQQJj59IROGk4YfHLUqvt0PYwOMddQ5OREeE6q9xiw==
+Received: from mail-dl1-f72.google.com (mail-dl1-f72.google.com [74.125.82.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hd5ur218f-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 09:25:27 +0000 (GMT)
+Received: by mail-dl1-f72.google.com with SMTP id a92af1059eb24-17dc865c94cso567342c88.1
+        for <linux-pci@vger.kernel.org>; Mon, 19 Oct 2026 02:25:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1792401927; x=1793006727; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=EKRFsN8rnMk022/cD31rwXWBBc2zyHwGF5EAKF+r0uU=;
+        b=gpUyemUl8IGOKS+JJLOB3DrI7V08/A/c3mq5iugTRuD2+MCdHpA+9nEi04isJSt7xl
+         qCUGcSY8zdNbTKGB7EKiUUwMxRqtLqDyD96AVUWoD9ZMOZK0S63niuiJgnO/9Z8BFlI4
+         FtI/U/Vgni98V5aekDCnoiawAXt3apfk2BMOKqyGcIncrAAanrE9203oph2PiR7zyvF6
+         tvWsReV7tCiqPGQN1i3BxuRRs1eC91AWBhV+cdMRmhrrDSyBmdwJz4oSxewARgeAfRqM
+         FcQjSMdyjv7Sja9YOtgdACEQx+l3ZXz8+N2QalbiW0NHjOWoGAwqktQW5Qc7y/9Fl/Cc
+         nlMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792401927; x=1793006727;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=EKRFsN8rnMk022/cD31rwXWBBc2zyHwGF5EAKF+r0uU=;
+        b=Uj4ZH5j2Oa4pCuvMqdiZtmj9zWoiF7paf5y1XKkUUNebkdUmjhifPVYmYMIChp3xih
+         v4SZqYdD+wDDcPMkruCnrBKwbMCDoDwHjwO2KxVUOyALCWcymEBhhSl/9ryXu9zq321i
+         kGVaaLn7TZ1TVq6lEog0Zhv/eu357FHLKf0IQWKUcFK8V+j3o0wz3rWWUtq/bxRv1VY2
+         CcJkEzVUIyHSx8OmdUKR560TL64A/OpjzkSbwuzsE7gviS1ipeijcvClF/nfGPb5kvJY
+         D01n/PCludEzVd1HsDk2yozE6Agkm+25lwdH3F1WAAgYvmtpRT5Fpzeyh6djxDpEop71
+         HYxw==
+X-Forwarded-Encrypted: i=1; AKwUvByo0p5EnHg3YmeIwcEvnV7/AOTHllTVqtxOolTu8fw1TScgUU0sYTJcKTJvkq6FUU4t3BsqWZX/6Yw=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKSwh2VWG0QTQMuZn3KMrYVy2ZUJ80F8KREMH9sNgGl26ZePq/+
+	o7+WP6kmof+YSFpRp+kK8QGe1SvyhrGxvpoqVs5adpLDmeI3S32ElYWU/rlSFS+AKqNCwg7m4RR
+	EH8dhwnGDLedpFdeMfiI3Zr3yk1CAA8PjZuPSyMzTCJqCxEAwzv2u8R2vYV6STIE=
+X-Gm-Gg: AYBFou3rSAegKkqwB09db9hk/claSj6J/EVwooV38CkyFZrpDCCtGg/h9Ec9hSVOFlo
+	vX7Pv4Ga+W0u/GzuMoSydseOVcTPx5Gzn3v7Fu7x/X9Uom9nsku55xabHpo6/bCNGHaz8T+bOEW
+	GLeKhpLjh3MFx47IPdgiTijzsammfbW7eLiJJRIlzt2G+BOJVhVGL2DikRiSg63lvvok4leMVxY
+	oftdZeiaXvb0WFRBe+Vk7ubfP8GhSpdvPNERF+/mwPSAHNhaomHj6ZdgoL8Le6X/siP3xuVhlEC
+	V16I6gkL2JBV9W9TG3LWjJ3zuxK0KomCKrk9AtQdMHqI+kb7Vlt+nIzGzOSlCVG/7mP22aTgmUP
+	ebufT0AK2+N06HG+JdVlA+EffBERbq8Iy2A==
+X-Received: by 2002:a05:7022:2097:b0:143:46a6:b01f with SMTP id a92af1059eb24-185131078e1mr11974415c88.31.1792401926465;
+        Mon, 19 Oct 2026 02:25:26 -0700 (PDT)
+X-Received: by 2002:a05:7022:2097:b0:143:46a6:b01f with SMTP id a92af1059eb24-185131078e1mr11974369c88.31.1792401925745;
+        Mon, 19 Oct 2026 02:25:25 -0700 (PDT)
+Received: from hu-krichai-hyd.qualcomm.com ([202.46.23.25])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1831c4d4675sm26682584c88.21.2026.10.19.02.25.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Oct 2026 02:25:25 -0700 (PDT)
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Subject: [PATCH v2 0/6] PCI: qcom-ep: Add PCIe Endpoint support for Monaco
+Date: Mon, 19 Oct 2026 14:55:08 +0530
+Message-Id: <20261019-monaco_ep-v2-0-852cb9f5d012@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAPTh1WoC/02Nyw6CMBBFf4XM2pK2PoKu/A9DTDtMpUYodoBoC
+ P9uQRdubnKSk3MnYIqeGE7ZBJFGzz60CfQmA6xNeyPhq8SgpT7IoypEE1qD4UqdcFbtnHGVJER
+ IfhfJ+dfaupRf5sHeCfslsBi15z7E93o2qsX7dbX6645KSHHY4l4X2llZ2XNgzp+DeWBomjwNl
+ PM8fwC7j2WOuwAAAA==
+X-Change-ID: 20260918-monaco_ep-fb14fafd0ecc
+To: Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792401919; l=3328;
+ i=krishna.chundru@oss.qualcomm.com; s=20230907; h=from:subject:message-id;
+ bh=UzSDvDLHIR8vUD/PBF+z84UxETXjLN+aGG5mAf6AxMw=;
+ b=bryinFnw5NCiqJHL8v/CpYKB6l3W2+oZ/5pLQk1mj3MrBtN2HGUDcFDKTsTU/Wd2enwXYRCI6
+ QXqkSi7gwv8Bpzb7Tbzx2fcadlYuQLSE9hFfDqROS1WL0GJ2sfzMAIP
+X-Developer-Key: i=krishna.chundru@oss.qualcomm.com; a=ed25519;
+ pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE5MDAzNyBTYWx0ZWRfX/SaldJdLJE7m
+ vK1aGEFc4/cDfUPqmhxLGd2Dj0OQFog5p6UcAbat4qidKiplAdpksn5oXSJGy23m4ncMDQimFXX
+ bMqEXk7f2E8XwzIfZaxvi9FoQRGLfqY=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE5MDAzNyBTYWx0ZWRfXy1BGtxiImwxy
+ /HnBKvDj90iDvGHsWph4/3TaKY39TZItThoee9dn690+qC18sL4eYIbxiwwgNRkVXxq7tk+oK58
+ zuHkLjhTk2pYLirdBg/tXAYOX8uRsLYh40qk6bV+p9/N3loRom6CFZGblOV7daTzSvRA4ej5uJP
+ UO6mK3e3EKRgRTKn5aN8jvt7AO0a7b6hOR48K5Kw9T1ssSQr2O1ti0dmkUPkQM0sMElJM4+fkrp
+ l1jYOePouvkRO+5XOtQ2F9rIsUTmBQuTuxQbktyfpxDNWIpLVMP9ATUFHTGyGY8VxcVqY7rlRu2
+ qOVF8qYNd8LoSMLcgNpi2KNFDENsYSSvpdEqcB7L27E+KrLXQERmHmeElZqDAjQ54APy5pUEdnW
+ fo08sWepcddP8mAgp8seI4h+ViNistxs5x1iC1qQOC7tUmysoQgmcvQAq+cV1FpZ97iratwVpQa
+ mvaNNjA7YUgnt+2b0aQ==
+X-Proofpoint-ORIG-GUID: ePvamxEU5Z8r9FYPrTwhGcGg_z82blLy
+X-Proofpoint-GUID: ePvamxEU5Z8r9FYPrTwhGcGg_z82blLy
+X-Authority-Analysis: v=2.4 cv=CP6/zhrD c=1 sm=1 tr=0 ts=6ad5e207 cx=c_pps
+ a=bS7HVuBVfinNPG3f6cIo3Q==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
+ a=bC-a23v3AAAA:8 a=EUspDBNiAAAA:8 a=adqygFarq3v0-pgez_gA:9 a=QEXdDO2ut3YA:10
+ a=vBUdepa8ALXHeOFLBtFW:22 a=FO4_E8m0qiDe52t0p3_H:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-19_03,2026-10-14_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 bulkscore=0 clxscore=1015 suspectscore=0 lowpriorityscore=0
+ priorityscore=1501 spamscore=0 impostorscore=0 phishscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610080000 definitions=main-2610190037
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] PCI/IOV: bus and slot resets fail to lock VFs on virtfn bus or oth=
-er slots
-- [High] PCI/IOV: VF reset_prepare() before PF reset_prepare() deadlocks hi=
-si_qm FLR
---
+This series adds PCIe Endpoint mode support for the Monaco (QCS8300)
+SoC, which has two PCIe controllers capable of operating as Endpoints.
 
-commit f7e0f3b0fa0caf7e168b1c2965897910aa159a0a
-Author: Micha=C5=82 Winiarski <michal.winiarski@intel.com>
+- Patch 1 documents the dedicated 16 GT/s x4 QMP PCIe PHY compatible
+  for QCS8300, correcting an earlier gap where this PHY variant had no
+  QCS8300-specific compatible of its own.
+- Patch 2 documents the QCS8300 compatible for the PCIe Endpoint
+  controller binding, with SA8775P as its fallback.
+- Patch 3 adds the corresponding Endpoint PHY register configuration
+  to the QMP PCIe PHY driver, reusing the existing SA8775P programming
+  for the 16 GT/s x2 PHY and adding a new configuration for the 16
+  GT/s x4 PHY.
+- Patch 4 fixes clock-enable ordering in the qcom-ep controller driver:
+  some platforms require the interconnect bandwidth vote to be set
+  before enabling clocks, otherwise certain clocks can get stuck off.
+- Patch 5 fixes the existing pcie1_phy node's compatible string to
+  list the new QCS8300-specific compatible first, ahead of the
+  SA8775P fallback, matching the order used elsewhere in this series.
+- Patch 6 adds the Endpoint device tree nodes for both Monaco PCIe
+  controllers, covering register regions, clocks, interrupts,
+  interconnects, IOMMU mappings, resets, power domains, and PHY
+  connections.
 
-PCI/IOV: Allow VF drivers to handle resets
+Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+---
+Changes in v2:
+  -  dt-bindings: PCI: qcom-ep: Drop qcs8300 compatible from the standalone
+    enum list(Krzysztof)
+  - PCI: qcom-ep: Fix qcom_pcie_disable_resources() to tear down resources
+    in strict LIFO order (phy -> clocks -> interconnect bandwidth),
+    matching the enable path's error-unwind sequence. (Sashiko AI review)
+  - arm64: qcom: monaco: Add reset-gpios and wake-gpios to the pcie0_ep and
+    pcie1_ep nodes so the EP driver owns and correctly manages the PERST#
+    and WAKE# lines; drop the output-low override from the wake-pins
+    pinctrl state that was permanently asserting WAKE#. (Sashiko AI review)
+  - phy: qcom: qmp-pcie: Reword commit message to clarify the new RX
+    tuning sequence for the 16 GT/s x4 PHY is common to RC and EP modes,
+    not EP-only.
+- Link to v1: https://patch.msgid.link/20260921-monaco_ep-v1-0-63c5282fb0db@oss.qualcomm.com
 
-This commit saves and restores PCI configuration state for all subordinate
-VFs across PF resets and notifies VF drivers via reset_prepare() and
-reset_done(). It also updates bus and slot resets so that VFs are managed
-through their parent PF rather than walked independently on the bus.
+---
+Krishna Chaitanya Chundru (6):
+      dt-bindings: phy: qcom,sc8280xp-qmp-pcie-phy: Add qcs8300 16 GT/s PHY
+      dt-bindings: PCI: qcom-ep: Add QCS8300 compatible
+      phy: qcom: qmp-pcie: Add endpoint PHY configuration for QCS8300
+      PCI: qcom-ep: Set initial interconnect bandwidth before enabling clocks
+      arm64: qcom: monaco: Fix pcie1_phy compatible to list qcs8300 first
+      arm64: qcom: monaco: Add PCIe Endpoint nodes
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 95452c11dea55..ba8553011daea 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
+ .../devicetree/bindings/pci/qcom,pcie-ep.yaml      |   4 +
+ .../bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml   |  87 ++++++------
+ arch/arm64/boot/dts/qcom/monaco.dtsi               | 150 ++++++++++++++++++++-
+ drivers/pci/controller/dwc/pcie-qcom-ep.c          |  36 ++---
+ drivers/phy/qualcomm/phy-qcom-qmp-pcie.c           | 105 +++++++++++++++
+ 5 files changed, 322 insertions(+), 60 deletions(-)
+---
+base-commit: 0927a1e73df63eda38bb120b91e50d746d640e17
+change-id: 20260918-monaco_ep-fb14fafd0ecc
 
-[ ... ]
+Best regards,
+--  
+Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
-> @@ -5164,6 +5195,17 @@ static void pci_dev_save_and_disable(struct pci_de=
-v *dev)
->  		return;
-> =20
->  	pci_save_state(dev);
-> +}
-> +
-> +static void pci_dev_save_and_disable(struct pci_dev *dev)
-> +{
-> +	struct pci_dev *vf;
-> +
-> +	for_each_pci_vf(dev, vf)
-> +		pci_dev_reset_prepare_and_save(vf);
-> +
-> +	pci_dev_reset_prepare_and_save(dev);
-
-[Severity: High]
-Does calling pci_dev_reset_prepare_and_save(vf) on every VF before calling
-pci_dev_reset_prepare_and_save(dev) on the PF deadlock HiSilicon QM resets?
-
-During pci_reset_function(pf), pci_dev_save_and_disable() now runs
-reset_prepare() on all VFs and then on the PF before pci_dev_restore() calls
-reset_done() on any of them.
-
-In drivers/vfio/pci/hisilicon/hisi_acc_vfio_pci.c,
-hisi_acc_vf_pci_reset_prepare() sets QM_RESETTING on the parent PF's
-qm->misc_ctl (hisi_acc_vdev->pf_qm) and only clears it in
-hisi_acc_vf_pci_aer_reset_done():
-
-    while (test_and_set_bit(QM_RESETTING, &qm->misc_ctl)) {
-        msleep(1);
-        if (++delay > QM_RESET_WAIT_TIMEOUT) {
-            dev_err(dev, "reset prepare failed\n");
-            return;
-        }
-    }
-
-When the first VF sets QM_RESETTING on pf_qm->misc_ctl, any subsequent VF's
-hisi_acc_vf_pci_reset_prepare() spins for 60 seconds and fails, and the PF's
-hisi_qm_reset_prepare() -> qm_reset_prepare_ready(pf_qm) ->
-qm_wait_reset_finish(pf_qm) in drivers/crypto/hisilicon/qm.c also spins on
-pf_qm->misc_ctl for ~80 seconds before timing out with -EBUSY ("FLR not
-ready!") without stopping the PF.
-
-A similar self-deadlock occurs when VFs are bound to the host hisi_qm drive=
-rs
-(hisi_hpre, hisi_sec2, hisi_zip) in drivers/crypto/hisilicon/qm.c:
-
-    static int qm_reset_prepare_ready(struct hisi_qm *qm)
-    {
-        struct pci_dev *pdev =3D qm->pdev;
-        struct hisi_qm *pf_qm =3D pci_get_drvdata(pci_physfn(pdev));
-
-        if (qm->ver < QM_HW_V3)
-            return qm_wait_reset_finish(pf_qm);
-
-        return qm_wait_reset_finish(qm);
-    }
-
-On Kunpeng920 (qm->ver < QM_HW_V3), the first VF's hisi_qm_reset_prepare()
-sets QM_RESETTING on pf_qm->misc_ctl, blocking subsequent VFs and the PF's
-own hisi_qm_reset_prepare(). On Kunpeng930+ (qm->ver >=3D QM_HW_V3), each V=
-F's
-hisi_qm_reset_prepare() sets QM_RESETTING on vf_qm->misc_ctl; when the PF's
-hisi_qm_reset_prepare() then calls qm_try_stop_vfs(qm, QM_PF_FLR_PREPARE,
-QM_DOWN), each VF's mailbox handler qm_pf_reset_vf_prepare() calls
-qm_reset_prepare_ready(vf_qm) -> qm_wait_reset_finish(vf_qm), which waits f=
-or
-QM_RESETTING on vf_qm->misc_ctl to clear and times out.
-
-[ ... ]
-
-> @@ -5551,6 +5631,11 @@ static int pci_slot_trylock(struct pci_slot *slot)
->  	return __pci_bus_trylock(slot->bus, slot);
->  }
-> =20
-> +static bool pci_dev_skip_bus_reset(struct pci_dev *dev)
-> +{
-> +	return dev->is_virtfn; /* VFs are managed by their PF */
-> +}
-> +
->  /*
->   * Save and disable devices from the top of the tree down while holding
->   * the @dev mutex lock for the entire tree.
-> @@ -5560,6 +5645,8 @@ static void pci_bus_save_and_disable_locked(struct =
-pci_bus *bus)
->  	struct pci_dev *dev;
-> =20
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> +		if (pci_dev_skip_bus_reset(dev))
-> +			continue;
->  		pci_dev_save_and_disable(dev);
->  		if (dev->subordinate)
->  			pci_bus_save_and_disable_locked(dev->subordinate);
-> @@ -5576,6 +5663,8 @@ static void pci_bus_restore_locked(struct pci_bus *=
-bus)
->  	struct pci_dev *dev;
-> =20
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> +		if (pci_dev_skip_bus_reset(dev))
-> +			continue;
->  		pci_dev_restore(dev);
->  		if (dev->subordinate) {
->  			pci_bridge_wait_for_secondary_bus(dev, "bus reset");
-> @@ -5595,6 +5684,8 @@ static void pci_slot_save_and_disable_locked(struct=
- pci_slot *slot)
->  	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
->  		if (!dev->slot || dev->slot !=3D slot)
->  			continue;
-> +		if (pci_dev_skip_bus_reset(dev))
-> +			continue;
->  		pci_dev_save_and_disable(dev);
->  		if (dev->subordinate)
->  			pci_bus_save_and_disable_locked(dev->subordinate);
-> @@ -5613,6 +5704,8 @@ static void pci_slot_restore_locked(struct pci_slot=
- *slot)
->  	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
->  		if (!dev->slot || dev->slot !=3D slot)
->  			continue;
-> +		if (pci_dev_skip_bus_reset(dev))
-> +			continue;
->  		pci_dev_restore(dev);
->  		if (dev->subordinate) {
->  			pci_bridge_wait_for_secondary_bus(dev, "slot reset");
-
-[Severity: High]
-Can pci_bus_save_and_disable_locked(), pci_bus_restore_locked(),
-pci_slot_save_and_disable_locked(), and pci_slot_restore_locked() operate on
-unlocked VFs when VFs reside on an SR-IOV virtual bus or do not match the
-PF's struct pci_slot?
-
-When pci_dev_save_and_disable() and pci_dev_restore() run on a PF, they
-iterate over all VFs with for_each_pci_vf(dev, vf) and call
-pci_dev_reset_prepare_and_save(vf) and pci_dev_reset_done(vf), both of which
-require the VF lock to be held and assert device_lock_assert(&vf->dev).
-
-However, __pci_bus_lock(), __pci_bus_trylock(), and __pci_bus_unlock() in
-drivers/pci/pci.c only walk bus->devices (filtered by dev->slot =3D=3D slot=
- for
-slot resets) and recurse into dev->subordinate:
-
-    list_for_each_entry(dev, &bus->devices, bus_list) {
-        if (slot && (!dev->slot || dev->slot !=3D slot))
-            continue;
-        if (dev->subordinate) {
-            if (!pci_bus_trylock(dev->subordinate))
-                goto unlock;
-        } else if (!pci_dev_trylock(dev))
-            goto unlock;
-    }
-
-First, if any VFs reside on an SR-IOV virtual bus created by virtfn_add_bus=
-()
-in drivers/pci/iov.c:
-
-    child =3D pci_add_new_bus(bus, NULL, busnr);
-
-that virtual bus has bridge =3D=3D NULL, so pf->subordinate is NULL and tho=
-se VFs
-are on the virtual bus's devices list rather than pf->bus->devices. As a
-result, __pci_bus_lock() and __pci_bus_trylock() never lock VFs on the
-virtual bus.
-
-Second, during a slot reset (pci_slot_trylock() / pci_slot_lock()),
-pci_dev_matches_slot() in drivers/pci/slot.c only assigns dev->slot =3D slot
-when the device matches the slot number:
-
-    static bool pci_dev_matches_slot(struct pci_dev *dev, struct pci_slot *=
-slot)
-    {
-        if (slot->per_func_slot)
-            return dev->devfn =3D=3D slot->number;
-
-        return slot->number =3D=3D PCI_SLOT_ALL_DEVICES ||
-            PCI_SLOT(dev->devfn) =3D=3D slot->number;
-    }
-
-Any VF with a different PCI_SLOT(vf->devfn) (when slot->number !=3D
-PCI_SLOT_ALL_DEVICES) or a different devfn (when slot->per_func_slot is set)
-has vf->slot !=3D slot and is skipped by __pci_bus_trylock(slot->bus, slot),
-while pci_slot_save_and_disable_locked() and pci_slot_restore_locked() still
-visit all VFs of the PF via for_each_pci_vf(dev, vf) without holding their
-device or config access locks.
-
-Should __pci_bus_lock(), __pci_bus_trylock(), and __pci_bus_unlock() also
-skip VFs with pci_dev_skip_bus_reset(dev) and lock/unlock VFs via their PF
-using pci_dev_lock_vfs(), pci_dev_trylock_vfs(), and pci_dev_unlock_vfs()?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261019083514.8386=
-40-1-lukasz.laguna@intel.com?part=3D4
