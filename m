@@ -1,46 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF8A7546263;
-	Mon, 19 Oct 2026 13:56:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E11538422E;
+	Mon, 19 Oct 2026 13:56:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418189; cv=none; b=a6u3OSrz+V6+izeTdVPWEfTIJ1b4WuHhhmlvJ2MU6bEtk2vDEaKcZts7CUEcdKQB6Jog4Sgm0+jI4h64UaUGsKHVtr9ce5J+UEOvtmt13L2/LnzfagEmvW77WoeJWnePyrTJpeAip6nFuUMD/2pCnIPd0TzWYiEIEHVAck993EU=
+	t=1792418195; cv=none; b=Q9jqXHPp/yBnu5VsqFnN6aw2ivodIroPaay1T5TCg/QHYuUzcVOtES9Ln7+ibSw50XVYa2OEXPmw7HYLJanvLemLjdjWuUP90Vv8o1Rukf6DqkHp7TOmgEL8ynH7NZ4cHBvqSrMezPs8SqB0St+nJSXkpXDN0zsUgIJt4gwHv9M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418189; c=relaxed/simple;
-	bh=Zvl3JjBQn+ODgoMXzFQMk2a6kQzDcRT01owVbLeVK7w=;
+	s=arc-20240116; t=1792418195; c=relaxed/simple;
+	bh=gDuhLh3xzm1+PCur9Ea4AClzdSiOskaxCsOvp2DCZYY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MY+fH4+7MYO/42Tkkp35N1k5goqDTIhbx+bvoOzqGlkba+X8KrV0SccETR+KDQnLFAHC/ZotWpj+K+ppwQsUh5qyWxreolRUPcFgUsyVjMfSENdgeIDJMn6kScCfkQso3nUb2VOgmPl6KwE9gW5m07mg1S5UgmjA7ttovcTsSO8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gopm6PnP; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=O4S2F2lDWHHW00cu3yBX3n3NWa1Qjg45GCHE17m0DZiR8W0GlY7YVo78MayectouwtzHLEmPJ3bfyjf0mH2/UU/Kl6X6a3wk890tC9pN/q2uCJHcWa9wEfukE98sWwJa1WwacAvLca0+xA9SSYiYZKtSVwSr3XhC7WFqZUex0TQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oYb/5YDK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gopm6PnP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B68CA1F000C6;
-	Mon, 19 Oct 2026 13:56:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oYb/5YDK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E61D1F000C7;
+	Mon, 19 Oct 2026 13:56:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418187;
-	bh=wpdEVcJbxQdzM6qXyyHXE1omwKBVt/Pm/yWtAX1rFSk=;
+	s=k20260515; t=1792418193;
+	bh=UUmqX9tSMyy7Z8P2BIsi4KqSAwSAqTXl96Wr8w+vzLI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=gopm6PnPOmHNabzAfToZwbZRobwMYQEkdhkF9h85EoypEEwdM9l8qln2wkD+r1HLF
-	 9CF9+vM1XHuD6z12vtNpH51oJboNAlDzFha6RgIpJLU84k8k6HCBoM9wc6EGtlyasx
-	 bOq+e/iw2pKQIy5zYM/tj9hdnxvAwJDm3wjFuWuKPhKDQf709W+tpb4RAsDv2hnu32
-	 TRFA9RyowASpfCEXm+yJd2jeUJ10GK0Hqh06hdcN+tRmmG1p/gn0iNZNhJHL9ZwpD6
-	 /JUcYS8axP1YZsaYUzCrSk1n/VGm6ezGKCBF9Q+MU55QUJZu0Oj0Tb065E17WBRepX
-	 KZuDOV4fn0kDA==
+	b=oYb/5YDKUMouyxr+ixOxU2s72fM+J0aUCeZW8SCgWHh2zVnpW9uY3u3hIax1SiHYn
+	 4UlQdOV+JuYYD+UbhTSVVIQSJCDW/gkUDoNWZ7CCfCbmh11Qi2hcxoJHRrzcQKLzQ3
+	 37iACtO85NtGYwRB8/4rU2mpDE1YXo0djt3Jy1cOUxzgh9ciWoGY3Q6bo1x5cettez
+	 RLll9yrhsaGiCK7Hx1fUwTiPuPhdKyQ3szViujOVeAmCIo8Sq4JmoYgW8pYo1u/8n2
+	 6gITU2Udk53ETIU6TgqJnUBoCNtfmF30BiEagqKYt55iO1ErjLf+alnovLgOTNbE6g
+	 AdQp++PVINrtQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Aksh Garg <a-garg7@ti.com>,
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Sasha Levin <sashal@kernel.org>,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	bhelgaas@google.com,
+	kurt.schwemmer@microsemi.com,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] PCI: cadence: Add missing MODULE_DEVICE_TABLE()
-Date: Mon, 19 Oct 2026 09:46:05 -0400
-Message-ID: <20261019135441.1420968-74-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-6.1] PCI: switchtec: Add Microchip PCI1008 device ID
+Date: Mon, 19 Oct 2026 09:46:09 -0400
+Message-ID: <20261019135441.1420968-78-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -56,362 +53,361 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Pengpeng Hou <pengpeng@iscas.ac.cn>
+From: Logan Gunthorpe <logang@deltatee.com>
 
-[ Upstream commit 93aac16f1eb9a181f9bdde620b464f6cc5fa8369 ]
+[ Upstream commit 0d8a6306c680ee534be131e360f0cafa2bada7be ]
 
-The driver has an OF match table wired to .of_match_table, but does
-not export the table with MODULE_DEVICE_TABLE().
+Add the Microchip PCI1008 device ID to the core switchtec management
+driver's PCI ID table. Without it, the management endpoint on a PCI1008
+switch is not bound by this driver, preventing userspace tools from
+configuring or monitoring the switch and leaving NTB functionality
+unavailable.
 
-Add the missing MODULE_DEVICE_TABLE(of, ...) entry so module alias
-information is generated for OF based module autoloading.
-
-Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
-Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
-Reviewed-by: Aksh Garg <a-garg7@ti.com>
-Link: https://patch.msgid.link/20260704122835.14277-1-pengpeng@iscas.ac.cn
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Link: https://patch.msgid.link/20260714212010.230606-3-logang@deltatee.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable backport analysis: `PCI: cadence: Add missing
-MODULE_DEVICE_TABLE()`
+This is a one-line PCI ID addition to an existing Switchtec driver. The
+local tree is **7.3.0-rc4** (`v7.3-rc4-27-gf0100363d8c37`).
+`SWITCHTEC_PCI100X_DEVICE` and the PCI1001–PCI1006 IDs are already here,
+so the patch is applicable.
 
-Local tree: **Linux 7.3.0-rc4** (`v7.3-rc4-27-gf0100363d8c37`). Verdict
-is for this checkout only.
+===============================================================
+PHASE 1: COMMIT MESSAGE FORENSICS
+===============================================================
 
-Candidate: `93aac16f1eb9a181f9bdde620b464f6cc5fa8369`
+**Step 1.1: PARSE THE SUBJECT LINE**
+Record: [PCI: switchtec] [Add] [Microchip PCI1008 device ID to the
+existing switchtec management driver’s PCI ID table]
 
----
-
-## PHASE 1: COMMIT MESSAGE FORENSICS
-
-**Step 1.1 — Subject line**
-Record: `[PCI/cadence] [Add] missing MODULE_DEVICE_TABLE() so OF module
-aliases are generated`
-
-**Step 1.2 — Tags**
+**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
 Record:
-- `Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>` (author)
-- `Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>` (PCI
-  controller maintainer; applied the patch)
-- `Reviewed-by: Aksh Garg <a-garg7@ti.com>`
-- `Link:
-  https://patch.msgid.link/20260704122835.14277-1-pengpeng@iscas.ac.cn`
-- No `Fixes:`, no `Reported-by:`, no `Cc: stable` (absence is expected
-  for this review)
-- No syzbot / KASAN / crash report
+- Signed-off-by: Logan Gunthorpe <logang@deltatee.com> (author; listed
+  maintainer of PCI DRIVER FOR MICROSEMI SWITCHTEC)
+- Signed-off-by: Bjorn Helgaas <bhelgaas@google.com> (PCI maintainer)
+- Link:
+  https://patch.msgid.link/20260714212010.230606-3-logang@deltatee.com
+- No Fixes: tag (expected)
+- No Reported-by / Tested-by / Reviewed-by / Acked-by / Cc: stable on
+  this commit
+- Ignore any Sasha Levin SOB (none on the real commit)
 
-**Step 1.3 — Body**
+**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
 Record:
-[Bug] OF match table is wired to `.of_match_table` but not exported via
-`MODULE_DEVICE_TABLE()`.
-[Symptom] `depmod` / udev / `modprobe` do not get `of:N*T*Ccdns,cdns-
-pcie-host` / `cdns,cdns-pcie-ep` aliases, so the module does not
-autoload.
-[Version info] None in the message.
-[Root cause] Missing alias publication, not a runtime logic error. The
-mailing-list body (mbox) states this is a source-level fix with no
-hardware reproducer.
+- Bug: PCI1008 management endpoint is not bound because 0x1008 is
+  missing from `switchtec_pci_tbl`.
+- Symptom: userspace cannot configure/monitor the switch via
+  `/dev/switchtecX`; NTB is unavailable (probe requests
+  `ntb_hw_switchtec` only after this driver binds).
+- Version info: series was based on v7.2-rc3; applied by Helgaas for
+  v7.3.
+- Root cause: incomplete ID table for a new PCI100x SKU, not a logic
+  bug.
 
-**Step 1.4 — Hidden bug fix?**
-Record: Not disguised. It is an explicit autoload/modalias fix. Same
-class as `PCI: j721e: Fix module autoloading`.
+**Step 1.4: DETECT HIDDEN BUG FIXES**
+Record: Not a hidden cleanup. It is an explicit device-ID enablement.
+Stable rules treat “just add a device ID” as an accepted class.
 
----
+===============================================================
+PHASE 2: DIFF ANALYSIS
+===============================================================
 
-## PHASE 2: DIFF ANALYSIS
-
-**Step 2.1 — Inventory**
+**Step 2.1: INVENTORY THE CHANGES**
 Record:
-[Files] `drivers/pci/controller/cadence/pcie-cadence-plat.c` (+1 / −0)
-[Functions] none changed; one statement added after
-`cdns_plat_pcie_of_match[]`
-[Scope] single-file, one-line surgical change
+- File: `drivers/pci/switch/switchtec.c` (+1 / −0)
+- Function/data: `switchtec_pci_tbl[]` (static PCI ID table)
+- Scope: single-file, one-line surgical change
 
-**Step 2.2 — Code flow**
-Record: Before: match table exists and is used for probe matching, but
-`scripts/mod/file2alias.c` never sees it, so the `.ko` has no OF
-aliases. After: `MODULE_DEVICE_TABLE(of, cdns_plat_pcie_of_match)`
-creates the `__mod_of__cdns_plat_pcie_of_match` alias
-(`include/linux/module.h`). Normal module-build path only; no
-probe/runtime behavior change.
+**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
+Record:
+- Before: PCI1001–PCI1006 (vendor `PCI_VENDOR_ID_EFAR` / 0x1055) match
+  via `SWITCHTEC_PCI100X_DEVICE`; 0x1008 does not.
+- After: 0x1008 matches the same way as 0x1001–0x1006, with `driver_data
+  = SWITCHTEC_GEN4`.
+- Path: PCI enumeration → `pci_driver.id_table` match →
+  `switchtec_pci_probe()`.
 
-**Step 2.3 — Bug mechanism**
-Record: [Category] logic/correctness for modular OF drivers (missing
-userspace alias). [Mechanism] without the macro, a modular `pcie-
-cadence-plat` never autoloads from DT. Sibling Cadence drivers already
-export tables (`pci-j721e.c`, `pci-sky1.c`, `pcie-sg2042.c`).
+**Step 2.3: IDENTIFY THE BUG MECHANISM**
+Record:
+- Category: hardware enablement / device ID addition
+- Mechanism: without the ID, the management function is unbound. Probe
+  also does `request_module_nowait("ntb_hw_switchtec")` for
+  `PCI_CLASS_BRIDGE_OTHER`, so NTB never attaches.
 
-**Step 2.4 — Fix quality**
-Record: Obviously correct and minimal. Regression risk is effectively
-none: it only adds module metadata. Does not change locking, probe, or
-APIs. Reviewer AI notes about probe `return 0` and drvdata type mismatch
-are **pre-existing** and not introduced here.
+**Step 2.4: ASSESS THE FIX QUALITY**
+Record:
+- Obviously correct: same macro and generation as sibling PCI100x IDs.
+- Minimal: one table line, no API/behavior change for other devices.
+- Regression risk: very low; only PCI1008 (vendor 0x1055, device 0x1008)
+  is newly bound.
+- Red flags: none.
 
----
+===============================================================
+PHASE 3: GIT HISTORY INVESTIGATION
+===============================================================
 
-## PHASE 3: GIT HISTORY
+**Step 3.1: BLAME THE CHANGED LINES**
+Record:
+- PCI1001–PCI1006: `a3282f84b2151` (“PCI: switchtec: Add Microchip
+  PCI100X device IDs”, 2025-01-20), first described as
+  `v6.13-rc1-1-ga3282f84b2151`.
+- Sentinel `{0}`: original driver from 2017 (`080b47def5e5e2`).
+- PCI1008 line: this commit `0d8a6306c680e`.
 
-**Step 3.1 — Blame**
-Record: Match table introduced in `bd22885aa188f` (“PCI: cadence:
-Refactor driver to use as a core library”, 2019). Driver was
-`builtin_platform_driver` + `bool` Kconfig until `611627a4e5e4a` (“PCI:
-cadence: Add module support for platform controller driver”,
-2025-11-14). That commit is in **v6.19**. Bug (missing table export for
-a loadable module) starts there.
+**Step 3.2: FOLLOW THE FIXES: TAG**
+Record: No Fixes: tag. Not applicable.
 
-**Step 3.2 — Fixes: tag**
-Record: No `Fixes:` tag. The introducing commit is `611627a4e5e4a`
-(module support). It **is** an ancestor of this tree.
+**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
+Record:
+- `a3282f84b2151` added the PCI100X macro, IDs 0x1001–0x1006, and
+  matching `SWITCHTEC_PCI100X_QUIRK` entries.
+- Series companions (same author/date):
+  - `8b326de3cc02c` dmaengine: switchtec-dma: Add PCI1008 device ID
+    (msgid -2)
+  - `00a479ba1d012` PCI: switchtec: Add Microchip PCI1008 to NTB DMA
+    alias quirk (msgid -4)
+- This commit is standalone for the management driver. The quirk is
+  needed for NTB DMA under IOMMU; DMA ID is a different PCI function.
 
-**Step 3.3 — File history**
-Record: Recent: HPA support, module support, then this one-liner.
-Standalone; not `patch X/Y`. No later revert on this file.
+**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
+Record: Logan Gunthorpe is a listed maintainer (`MAINTAINERS`: PCI
+DRIVER FOR MICROSEMI SWITCHTEC). He authored the original switchtec
+driver and this ID series.
 
-**Step 3.4 — Author**
-Record: Pengpeng Hou also did `e145af8c14474` `PCI: spacemit: Add
-missing MODULE_DEVICE_TABLE()` the same day. Applied by Manivannan
-Sadhasivam (PCI controller maintainer).
+**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
+Record:
+- Needs `SWITCHTEC_PCI100X_DEVICE` and `SWITCHTEC_GEN4` — both present
+  here.
+- Does not need the dmaengine or quirk commits to compile or bind the
+  management device.
+- Applies standalone.
 
-**Step 3.5 — Dependencies**
-Record: Needs `module_platform_driver` + tristate Kconfig from
-`611627a4e5e4a`. Both are in this 7.3 tree. Applies standalone here.
+===============================================================
+PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+===============================================================
 
----
+**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
+Record:
+- `b4 dig -c 0d8a6306c680e`:
+  https://patch.msgid.link/20260714212010.230606-3-logang@deltatee.com
+- Series: v1 only, `[PATCH v1 0/3] switchtec: add new device IDs`
+  (2026-07-14)
+- Cover: IDs for PCI driver, DMA driver, and NTB quirk; based on
+  v7.2-rc3; intended for the PCI tree
+- Sashiko: “found no issues” on this patch
+- Bjorn Helgaas (2026-07-17): “Applied to pci/switchtec for v7.3,
+  thanks!”
+- No NAKs. Unrelated Sashiko note on `quirk_switchtec_ntb_dma_alias()`
+  pointer arithmetic was explicitly not a blocker.
+- No Cc: stable in the thread.
 
-## PHASE 4: MAILING LIST / EXTERNAL
+**Step 4.2: CHECK WHO REVIEWED THE PATCH**
+Record (`b4 dig -w`):
+- To: linux-pci, dmaengine, Vinod Koul, Bjorn Helgaas
+- Cc: Frank Li, Kelvin Cao (Microchip)
+- Vinod Acked-by on the dmaengine ID
+- PCI maintainer applied the series
 
-**Step 4.1 — Original discussion**
-Record: `b4 dig -c 93aac16f1eb9a` →
-https://patch.msgid.link/20260704122835.14277-1-pengpeng@iscas.ac.cn
-`b4 dig -a`: **v1 only**, 2026-07-04.
-Thread (mbox): Aksh Garg Reviewed-by; Manivannan “Applied, thanks!” to
-`93aac16f1eb9a`. No NAK, no stable nomination, no concern about this
-line.
+**Step 4.3: SEARCH FOR THE BUG REPORT**
+Record: No bugzilla/syzbot. Author is the subsystem maintainer adding a
+new SKU. Cover letter says Sashiko reminded him the management ID and
+NTB quirk were also required.
 
-**Step 4.2 — Recipients (`b4 dig -w`)**
-Record: PCI maintainers (Lorenzo Pieralisi, Krzysztof Wilczyński,
-Manivannan Sadhasivam, Bjorn Helgaas), Rob Herring, linux-pci, linux-
-kernel.
+**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
+Record: 3 independent one-line ID/quirk additions. This patch is 2/3 and
+self-contained. Companion quirk is valuable for PCI1008 NTB+IOMMU but is
+a separate candidate.
 
-**Step 4.3 — Bug report**
-Record: None. Author did not claim a hardware reproducer.
+**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
+Record: lore.kernel.org/stable search returned HTTP 403. Thread mbox has
+no “stable” mentions. UNVERIFIED: whether -stable already discussed this
+ID.
 
-**Step 4.4 — Related series**
-Record: Same-day sibling `PCI: spacemit: Add missing
-MODULE_DEVICE_TABLE()`. Precedent in-tree: `9a7f144e18dc5` `PCI: j721e:
-Fix module autoloading` (`Fixes:` + `Cc: stable`) — same one-line OF
-table export.
+===============================================================
+PHASE 5: CODE SEMANTIC ANALYSIS
+===============================================================
 
-**Step 4.5 — Stable list**
-Record: UNVERIFIED. lore.kernel.org returned a bot-check page; WebFetch
-of the msgid URL returned 403. No stable-list discussion was retrieved.
+**Step 5.1: IDENTIFY KEY FUNCTIONS**
+Record: No function body changed. Data: `switchtec_pci_tbl[]`.
+Consumers: `switchtec_pci_driver.id_table`, `MODULE_DEVICE_TABLE(pci,
+...)`. Probe: `switchtec_pci_probe()`.
 
----
+**Step 5.2: TRACE CALLERS**
+Record: PCI core matches `id_table` at enumeration/hotplug. Probe
+creates `/dev/switchtecX`, enables MRPC, and may load
+`ntb_hw_switchtec`. NTB uses `class_interface` on `switchtec_class` (no
+second PCI ID table).
 
-## PHASE 5: CODE SEMANTIC ANALYSIS
+**Step 5.3: TRACE CALLEES**
+Record: Probe calls `stdev_create`, `switchtec_init_pci`,
+`switchtec_init_isr`, `cdev_device_add`. Existing paths; ID only selects
+them for this device.
 
-**Step 5.1 — Functions**
-Record: No function bodies changed. Data: `cdns_plat_pcie_of_match[]`.
-Driver: `cdns_plat_pcie_driver` / `cdns_plat_pcie_probe`.
+**Step 5.4: FOLLOW THE CALL CHAIN**
+Record: Reachable when a PCI1008 is present (`CONFIG_PCI_SW_SWITCHTEC`).
+Unprivileged users do not enumerate PCI IDs; impact is hardware owners
+of this switch.
 
-**Step 5.2 — Callers**
-Record: Probe is the platform-driver callback. Match table used only in
-this file. Triggered when DT has `cdns,cdns-pcie-host` or `cdns,cdns-
-pcie-ep`.
+**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
+Record: Same family already lists 0x1001–0x1006. DMA driver has 0x1008.
+`quirks.c` has `SWITCHTEC_PCI100X_QUIRK(0x1008)` from the companion
+commit.
 
-**Step 5.3 — Callees**
-Record: Unchanged. `MODULE_DEVICE_TABLE` is a compile-time alias for
-`file2alias.c`.
+===============================================================
+PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
+===============================================================
 
-**Step 5.4 — Reachability**
-Record: Reachable on OF platforms that describe Cadence PCIe with those
-compatibles and build `CONFIG_PCIE_CADENCE_PLAT=m`. No in-tree
-`.dts`/`.dtsi` uses those strings (only DT binding examples). So the in-
-tree user set is small; out-of-tree / FPGA / IP reference boards may
-still use the generic compatible.
+**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
+Record: Yes. `drivers/pci/switch/switchtec.c` has
+`SWITCHTEC_PCI100X_DEVICE` and PCI1001–PCI1006. Without 0x1008, PCI1008
+would not bind. Prerequisite `a3282f84b2151` is an ancestor (`git merge-
+base --is-ancestor` succeeded). PCI100X support dates to v6.13-rc1.
 
-**Step 5.5 — Similar patterns**
-Record: Same missing-table pattern already fixed for j721e, mvebu, qcom-
-ep, spacemit, and the other Cadence glue drivers in this directory.
+**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
+Record: Clean apply. Adjacent lines are the existing PCI100x block. No
+refactor conflicts in this checkout.
 
----
+**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
+Record: No alternate PCI1008 ID in switchtec.c besides this line.
+Companion DMA ID and NTB quirk are also present here as separate
+commits.
 
-## PHASE 6: LOCAL TREE CROSS-CHECK
+===============================================================
+PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+===============================================================
 
-**Step 6.1 — Does the buggy code exist here?**
-Record: Yes. This tree has tristate `PCIE_CADENCE_PLAT`,
-`module_platform_driver`, and the OF table. Module support is in v6.19+.
-Without `MODULE_DEVICE_TABLE`, modular autoload is broken. (The one-line
-fix is present at line 166 of the current file; that is not used as
-“already selected” circular reasoning — it confirms the surrounding code
-matches the patch.)
+**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
+Record: [PCI switch management driver `drivers/pci/switch/`] [PERIPHERAL
+— specific Microchip/Microsemi Switchtec hardware; NTB/management users]
 
-**Step 6.2 — Backport difficulty**
-Record: Clean apply on this tree: one line next to the existing table.
+**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
+Record: Mature (driver since 2017). Recent work is mostly new IDs (Gen5,
+Gen6, PCI100x). Typical stable ID-table churn.
 
-**Step 6.3 — Related fixes already here?**
-Record: j721e/sky1/sg2042 already have `MODULE_DEVICE_TABLE`. Nothing
-else replaces this plat-driver export.
+===============================================================
+PHASE 8: IMPACT AND RISK ASSESSMENT
+===============================================================
 
----
+**Step 8.1: DETERMINE WHO IS AFFECTED**
+Record: Driver-specific / config-specific (`CONFIG_PCI_SW_SWITCHTEC`).
+Only PCI1008 (0x1055:0x1008). Other Switchtec IDs unchanged.
 
-## PHASE 7: SUBSYSTEM CONTEXT
+**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
+Record: Trigger is plugging/booting with a PCI1008. Common for that
+hardware; impossible otherwise. Not a userspace-triggerable crash.
 
-**Step 7.1**
-Record: `[drivers/pci/controller/cadence] [IMPORTANT for Cadence-IP
-SoCs; PERIPHERAL vs core mm/net]`. PCIe host not coming up is serious
-for those boards, not universal.
+**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
+Record: Device not bound → no `/dev/switchtecX`, no NTB. Severity MEDIUM
+for those systems (hardware unusable for management/NTB), LOW for
+everyone else. Not a panic/UAF.
 
-**Step 7.2**
-Record: Active PCI controller area (HPA, module support, several glue
-drivers). Plat driver itself is mature (2019) with occasional fixes.
+**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
+Record:
+- Benefit: high for PCI1008 owners (management + NTB enablement);
+  documented stable exception.
+- Risk: very low (one ID line, existing macro).
+- Ratio: strongly favors backport.
 
----
+===============================================================
+PHASE 9: FINAL SYNTHESIS
+===============================================================
 
-## PHASE 8: IMPACT AND RISK
+**Step 9.1: COMPILE THE EVIDENCE**
 
-**Step 8.1 — Who is affected**
-Record: Driver-specific / config-specific: `CONFIG_PCIE_CADENCE_PLAT=m`
-plus DT compatible `cdns,cdns-pcie-*`. Built-in builds are unaffected.
-No in-tree board DTS match; population is reference/FPGA/out-of-tree DT.
+FOR:
+- Stable rules: “fix a real bug … or just add a device ID”
+  (`Documentation/process/stable-kernel-rules.rst`).
+- Existing driver + PCI100X macro in this tree.
+- One line, same pattern as PCI1001–PCI1006.
+- Maintainer-authored, PCI maintainer applied, no NAKs.
+- Real user impact: management chardev and NTB never attach without the
+  ID.
 
-**Step 8.2 — Trigger**
-Record: Boot (or coldplug) on matching DT with the driver as a module.
-Common for modular embedded images. Unprivileged users cannot trigger a
-crash; they just never get the controller unless something else loads
-the module.
+AGAINST:
+- Not a crash/security fix; new SKU enablement only.
+- Affects a niche PCIe switch.
+- Companion quirk is a separate patch (NTB DMA under IOMMU still
+  incomplete without it). That does not make this ID wrong or unsafe.
 
-**Step 8.3 — Failure mode**
-Record: [Failure] module not autoloaded → PCIe host/endpoint never
-probes → downstream devices missing. [Severity] **MEDIUM** (functional
-miss, not oops/corruption). Workaround: `modprobe` or `=y`.
+UNRESOLVED:
+- lore.kernel.org HTTP 403; stable@ discussion not verified beyond the
+  saved thread (no “stable” hits there).
 
-**Step 8.4 — Risk vs benefit**
-Record: Benefit: hardware actually binds on modular kernels. Risk: very
-low (modinfo aliases only). Ratio: favorable. Same class as device-ID /
-autoload fixes that stable already takes (j721e was `Cc: stable`).
-
----
-
-## PHASE 9: SYNTHESIS
-
-**Step 9.1 — Evidence**
-
-For:
-- Real autoload bug on a driver this tree can build as a module
-- One line, obviously correct, maintainer-applied, reviewed
-- Sibling Cadence drivers already export tables; j721e’s identical fix
-  was stable-tagged
-- Zero runtime regression surface
-- Fits “device ID / make existing hardware work” exception more than a
-  feature
-
-Against:
-- No user report, no `Fixes:`/`Cc: stable` on this patch
-- Author stated no hardware reproduction
-- No in-tree DTS uses these compatibles
-- Not a crash, UAF, or data-corruption bug
-- Stable mailing-list history UNVERIFIED
-
-Unresolved: whether anyone on stable@ already rejected or requested this
-(lore blocked).
-
-**Step 9.2 — Stable rules (this tree)**
-1. Obviously correct and tested? **PASS** — one documented macro; v1
-   applied as-is after Reviewed-by.
-2. Real bug that affects users? **PASS** — modular OF autoload fails;
-   users who `=m` this controller do not get PCIe without a manual load.
-3. Important (crash/security/corruption/deadlock)? **PASS** at “oh,
-   that’s not good” / device-ID-class — PCIe does not come up. Not
-   CRITICAL.
+**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
+1. Obviously correct and tested? **PASS** — identical to existing
+   PCI100x entries; applied by PCI maintainer.
+2. Fixes a real bug that affects users? **PASS** — PCI1008 otherwise
+   unbound (or qualifies as a device ID addition).
+3. Important issue? **PASS** under the device-ID exception (not a
+   panic).
 4. Small and contained? **PASS** — +1 line, one file.
-5. No new features or APIs? **PASS** — metadata for IDs that already
-   exist.
-6. Can apply to this tree? **PASS** — table, `module_platform_driver`,
-   and tristate Kconfig are all here.
+5. No new features or APIs? **PASS** — ID only; no new ioctls/sysfs.
+6. Can apply to the local tree? **PASS** — `SWITCHTEC_PCI100X_DEVICE`
+   and sibling IDs present.
 
-**Step 9.3 — Exception category**
-Record: Closest to **device ID / hardware enablement**: publishing
-existing OF IDs for autoload, not a new driver.
+**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
+Record: Device ID addition to an existing driver.
 
-**Step 9.4 — Decision**
-This 7.3 tree can build the Cadence platform controller as a module.
-Without `MODULE_DEVICE_TABLE(of, ...)`, userspace never sees the aliases
-and the host/endpoint driver does not autoload. That is a real, user-
-visible functional bug, a one-line contained fix, and the same pattern
-already sent to stable for `pci-j721e`. Risk is negligible. It should be
-included in this tree.
+**Step 9.4: DECISION**
+This is the standard stable device-ID case. The driver and PCI100x
+helper exist in this tree, the change is one table line, and without it
+PCI1008 management/NTB never bind. Risk is negligible.
 
----
+The companion NTB DMA alias quirk is a separate one-line candidate; this
+ID patch does not depend on it.
 
-## What the commit solves (for stable users)
-
-On kernels where `CONFIG_PCIE_CADENCE_PLAT=m`, udev/modprobe cannot
-match DT nodes `cdns,cdns-pcie-host` / `cdns,cdns-pcie-ep` to `pcie-
-cadence-plat.ko`. The controller never probes unless the module is
-loaded by hand. The patch only emits the standard OF aliases. No new
-ABI, no probe-path change.
-
-Risk vs benefit: benefit is “PCIe works on modular images”; risk is
-alias-only. Backport on this tree is a clean one-line apply;
-prerequisite module support (`611627a4e5e4a`, v6.19) is already present.
-
----
-
-## Verification
-
-- [Phase 1] Parsed tags: author Hou, SOB+apply Manivannan Sadhasivam,
-  Reviewed-by Aksh Garg, Link msgid; no Fixes/Reported-by/Cc:stable
-- [Phase 2] Diff: +1 line `MODULE_DEVICE_TABLE(of,
-  cdns_plat_pcie_of_match)` in `pcie-cadence-plat.c`
-- [Phase 2] Confirmed macro in `include/linux/module.h` creates
-  `file2alias` alias
-- [Phase 3] `git describe HEAD` / `make kernelversion`: **7.3.0-rc4**
-- [Phase 3] `git blame`: table from `bd22885aa188f` (2019);
-  `MODULE_DEVICE_TABLE` line from `93aac16f1eb9a`
-- [Phase 3] Introducer of modular bug: `611627a4e5e4a` (bool→tristate,
-  `builtin_platform_driver`→`module_platform_driver`); first tag
-  **v6.19**; `git merge-base --is-ancestor 611627a4e5e4a HEAD` true
-- [Phase 3] `git merge-base --is-ancestor 93aac16f1eb9a HEAD` true (used
-  only to confirm context, not as “already selected”)
-- [Phase 3] No revert of this commit on the file after it
-- [Phase 4] `b4 dig -c/-a/-w/-m`: v1 only; lore msgid above; PCI
-  maintainers on To; Reviewed-by + Applied; no NAK
-- [Phase 4] WebFetch lore URL: 403; lore search: bot wall. Stable-list
-  discussion **UNVERIFIED**
-- [Phase 5] `git grep cdns_plat_pcie`: confined to plat driver + header
-  + sky1 using the of_data struct
-- [Phase 5] `git grep` of compatibles in `arch/`: **no** dts/dtsi users;
-  only DT binding examples
-- [Phase 5] Sibling `MODULE_DEVICE_TABLE` already in j721e, sky1, sg2042
-- [Phase 6] Local file has match table + `module_platform_driver` +
-  tristate Kconfig; patch applies as a single added line
-- [Phase 6] Precedent `9a7f144e18dc5` j721e autoload fix has `Fixes:` +
-  `Cc: stable`
-- [Phase 8] Failure mode: no autoload → PCIe missing; severity MEDIUM,
-  not oops
-- UNVERIFIED: whether this was discussed on stable@ (lore blocked)
+Verification:
+- [Phase 1] Parsed tags: Logan Gunthorpe SOB, Bjorn Helgaas SOB, lore
+  Link; no Fixes/Reported-by/Cc: stable
+- [Phase 1] `git describe HEAD` / Makefile: local tree is 7.3.0-rc4
+  (`v7.3-rc4-27-gf0100363d8c37`)
+- [Phase 2] Diff: +1 line in `switchtec_pci_tbl[]` —
+  `SWITCHTEC_PCI100X_DEVICE(0x1008, SWITCHTEC_GEN4)`
+- [Phase 2] Confirmed probe uses `id_table` and requests
+  `ntb_hw_switchtec` for bridge class
+- [Phase 3] `git blame`: PCI1001–1006 from `a3282f84b2151` (v6.13-rc1);
+  PCI1008 from `0d8a6306c680e`
+- [Phase 3] `git merge-base --is-ancestor a3282f84b2151 HEAD` succeeded
+- [Phase 3] Series companions: `8b326de3cc02c` (DMA ID), `00a479ba1d012`
+  (NTB quirk)
+- [Phase 4] `b4 dig -c 0d8a6306c680e`: lore URL found; v1-only 3-patch
+  series
+- [Phase 4] `b4 dig -w`: linux-pci, Bjorn Helgaas, Vinod Koul, Microchip
+  Cc
+- [Phase 4] mbox: Helgaas applied for v7.3; Sashiko clean on this patch;
+  Vinod Acked DMA ID; no NAK
+- [Phase 4] UNVERIFIED: stable@ mailing list (lore HTTP 403)
+- [Phase 5] NTB binds via `switchtec_class` class_interface; this ID is
+  required for NTB attach
+- [Phase 6] File in tree has PCI100x macro and IDs; patch applies
+  cleanly
+- [Phase 7] Maintainer entry: Logan Gunthorpe for Switchtec
+- [Phase 8] Failure: device unbound, not a kernel crash; device-ID
+  exception applies
+- [Phase 9] stable-kernel-rules.rst line 15 explicitly allows device ID
+  additions
 
 **YES**
 
- drivers/pci/controller/cadence/pcie-cadence-plat.c | 1 +
+ drivers/pci/switch/switchtec.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-index 0456845dabb96..0f9cf2a9f0034 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-@@ -167,6 +167,7 @@ static const struct of_device_id cdns_plat_pcie_of_match[] = {
- 	},
- 	{},
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index f32ddfa79da99..30566c2d9f806 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -1874,6 +1874,7 @@ static const struct pci_device_id switchtec_pci_tbl[] = {
+ 	SWITCHTEC_PCI100X_DEVICE(0x1004, SWITCHTEC_GEN4),  /* PCI1004 16XG4 */
+ 	SWITCHTEC_PCI100X_DEVICE(0x1005, SWITCHTEC_GEN4),  /* PCI1005 16XG4 */
+ 	SWITCHTEC_PCI100X_DEVICE(0x1006, SWITCHTEC_GEN4),  /* PCI1006 16XG4 */
++	SWITCHTEC_PCI100X_DEVICE(0x1008, SWITCHTEC_GEN4),  /* PCI1008 16XG4 */
+ 	{0}
  };
-+MODULE_DEVICE_TABLE(of, cdns_plat_pcie_of_match);
- 
- static struct platform_driver cdns_plat_pcie_driver = {
- 	.driver = {
+ MODULE_DEVICE_TABLE(pci, switchtec_pci_tbl);
 -- 
 2.53.0
 
