@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99E7D52CCCB;
-	Mon, 19 Oct 2026 13:59:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64F8C57F1D4;
+	Mon, 19 Oct 2026 13:59:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418361; cv=none; b=S4b7lIevukSGzovJiPgZyiBrgGOnMREpPls5LIzJ2Tyee6zxORBr7moSe6RNooL9mmlfzn+hXftDtFDmZmRsN+NMfN+LgGal4gxek4yskWr3gbCkanarWvlN0ALcwsUtrGVLxug9BNcie97C7X80paJUevKubLJxjsH91Kfkuvs=
+	t=1792418377; cv=none; b=tL6R65icECMcusUe8qHc+fsgPa12SjSpgMzrvd0TyKQjR5aW68Vycx+Qr7Z+LLJjkJdse60yJ2xoEnT2m1BHIivcDzw0aIiqSAem6GMr3HiOdIJjlSdqMu+xl6i0NlTWqTWMhaN/fMWA0NhYIjE2MGRdSJpDaLTAgiF44UnrMCk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418361; c=relaxed/simple;
-	bh=EKWuKuX0iCOyHfYPQ5DESSjbXZnnoeG9yYAC7X9LLp4=;
+	s=arc-20240116; t=1792418377; c=relaxed/simple;
+	bh=zdUu7Pa3R0nWdibcX3fSzDt30RkviElr22Mu3trSmI0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=I7JAwPCzqvBwuG0CPBRMLOJtWA+xPVkLlr3dZAAIvU9xqz0NOWm18ohK2W1gvA/e6OzLTe+qOo1Qq+AGR6vv+r5R7MEppicVPzJPrijX03EF2DPW5/bG2FbDR1QzXHftb9zX7m1JPCMJSKfknUMsqmx5hBl6Otauehgof/hpKrw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JIZhZDGG; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=pmxlsgsT52AN8FAJrjkdLn50xZChM1R112pEH8obcxh8AsIGmbIMD7ctMru6qccXepH2Yt85QdqzI+hJnc8QQB3B6TVFKwTj2X5g0OTWGvnMkgj0v6nzghbGYY9Grp0ZbBTqInY/O7orJHcNHRtVUomvDYfVG3O2AySx7JeBULE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JPnRF1GP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JIZhZDGG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EA2B1F000C9;
-	Mon, 19 Oct 2026 13:59:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JPnRF1GP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 721321F000C6;
+	Mon, 19 Oct 2026 13:59:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418358;
-	bh=4TmTuNRLh5iEaT4jqCfrRa0q278JAVTbcj4SloXq1Fk=;
+	s=k20260515; t=1792418374;
+	bh=sfRI21tM8GKpi9JyhhzyNsGEjmrs1KBd1sUu9/RDHzE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=JIZhZDGGFaB3xZDybFoO304e+Ne2hEdwjfCvk+nbyoHr5KXdFBKWW8iyghEPu8VvW
-	 BJYhGEfNXYvFbPorkenU4YZBAwdzAu74/iX901EILT3phx1vO3iB+nt5vQAP+wDo8k
-	 EP53zjJE5KboC08CTxzsHrp35cDfyIKlPIeP3v5YAaMZkz8asjceBURURU7iAxrqGM
-	 OTX4KSYo2EDUm4cj/+s7Bg97RnROMcF45ayTFSWTkVSWcE0C4zPjlD5jkaeZOPMuz9
-	 SZe3GaTCZUm1Xqus4NQeFGpVI2l86U0wJJrfH0hOBPq6eaUGyAKL2jewiyJxGeEPaT
-	 t0nB5D3eTMh4w==
+	b=JPnRF1GPTi8HdVOF0Cx9fNWKGXzN5EqkEHPW7gN5SrVoRY3FaB9NGmS2fIaMQd1Dp
+	 oz3lkdx+LauwRnDyEaRi/udi6T8sPMUzfI5hmAEcJB+MgKIGt+DLgnkvGrKJ0g0O/t
+	 JuU/Eg4AQsT1YygrEDUD15CCIAi2XgUZcIMA8sJXDFAUTZir7Og16V0AOqMu8o/CZH
+	 v5lYIwipQAExavi7WlQnU5AMfhz0dutmKx41pJktMJBUXfQaG2KOPV9l6xwfPVyG96
+	 EC2wPK7gh76pJi/am9FLV7/Vc3SM3jP+4GPFsv3GZEzIrcJtld5v0XufHVnmmfRmEb
+	 5CGBerXRMb6fw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Farhan Ali <alifm@linux.ibm.com>,
+Cc: Brian Norris <briannorris@chromium.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Lukas Wunner <lukas@wunner.de>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-6.1] PCI: Avoid saving config space state if inaccessible
-Date: Mon, 19 Oct 2026 09:48:02 -0400
-Message-ID: <20261019135441.1420968-191-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.10] PCI/portdrv: Allow probing even without child services
+Date: Mon, 19 Oct 2026 09:48:14 -0400
+Message-ID: <20261019135441.1420968-203-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -53,466 +53,578 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Farhan Ali <alifm@linux.ibm.com>
+From: Brian Norris <briannorris@chromium.org>
 
-[ Upstream commit e18d1abc3bff0a24a5299f3c150ab9546e9439aa ]
+[ Upstream commit 834171efeefffb1a0f2136f32e76669bbc11db86 ]
 
-The current reset process saves the device's config space state before
-reset and restores it afterward. However errors may occur unexpectedly and
-it may then be impossible to save config space because the device may be
-inaccessible (e.g. DPC). This results in saving invalid values that get
-written back to the device during state restoration.
+The PCIe port driver fails to probe if it finds no child services,
+presumably under the assumption that the driver is not useful in that case.
+However, the driver *can* still be useful for power management support --
+namely, it still configures the port for runtime PM / D3, which may be
+important for allowing a bridge to enter low power modes.
 
-With a reset we want to recover/restore the device into a functional state.
-So avoid saving the state of the config space when the device config space
-is inaccessible.
+Thus, allow probe to succeed even if no IRQs and no child services are
+available. This also mirrors existing behavior for ports that don't support
+any portdrv services (PCIe hotplug, AER, DPC, PME, bwctrl), where we'd also
+probe successfully.
 
-Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
-[bhelgaas: comment]
+This change is a bit more important after commit f5cd8a929c82 ("PCI: dwc:
+Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI
+controller"), because it's common for some DWC-based systems to:
+
+  1. have only the "aer" and "pcie_pme" port services available and
+
+  2. not define legacy INTx interrupts properly in their device tree.
+
+After commit f5cd8a929c82, such systems may fail pcie_init_service_irqs()
+and so exit with -ENODEV.
+
+Link: https://lore.kernel.org/all/nyada24tqwlkzdceyoxbzitzygvp4elvj5oajnqdwb33xkcdwk@76vnrx45fsfd/
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+[bhelgaas: reorder pcie_port_device_register() decls per Lukas]
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-Link: https://patch.msgid.link/20260805165518.794-4-alifm@linux.ibm.com
+Reviewed-by: Lukas Wunner <lukas@wunner.de>
+Link: https://patch.msgid.link/20260722160942.v4.1.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-The local tree is **6.12.111**. The buggy reset-time save path is
-present here; this is a small, self-contained PCI error-recovery fix for
-that path.
+I have enough to judge this against 7.3-rc4: the probe-fail path, the
+DWC IRQ regression, and the mailing-list review are all in this tree.
 
-===============================================================
-PHASE 1: COMMIT MESSAGE FORENSICS
-===============================================================
+---
+
+## PHASE 1: COMMIT MESSAGE FORENSICS
 
 **Step 1.1: PARSE THE SUBJECT LINE**
-Record: **[PCI]** **[Avoid]** Avoid saving config space state if
-inaccessible. “Avoid” here is a bug-fix verb: skip a save that would
-capture invalid `~0` values.
+
+Record: `[PCI/portdrv] [Allow] [succeed probe when no child port
+services can be registered, so runtime PM/D3 still works]`
+
+- Subsystem: `PCI/portdrv` (PCIe port bus driver)
+- Action verb: **Allow** — relaxing an overly strict probe failure, not
+  adding an API
+- Claimed intent: keep `pcieport` bound even with no
+  AER/PME/hotplug/DPC/bwctrl children
 
 **Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
-Record:
-- Signed-off-by: Farhan Ali \<alifm@linux.ibm.com\> (author)
-- Signed-off-by: Bjorn Helgaas \<bhelgaas@google.com\> (PCI maintainer;
-  also `[bhelgaas: comment]`)
-- Reviewed-by: Niklas Schnelle \<schnelle@linux.ibm.com\>
-- Reviewed-by: Bjorn Helgaas \<bhelgaas@google.com\>
-- Link:
-  https://patch.msgid.link/20260805165518.794-4-alifm@linux.ibm.com
-- No Fixes:, Reported-by:, Tested-by:, or Cc: stable (absence expected
-  for this review)
-- Ignore pipeline markers (none in the provided message except the
-  evaluation context)
 
-Notable: PCI maintainer both reviewed and applied it. The msgid is **v23
-3/5** of “Error recovery for vfio-pci devices on s390x” (cover is `-1`,
-so `-4` is patch 3/5).
+Record:
+- `Link: https://lore.kernel.org/all/nyada24tqwlkzdceyoxbzitzygvp4elvj5o
+  ajnqdwb33xkcdwk@76vnrx45fsfd/` — DWC iMSI-RX discussion where the
+  probe-fail side effect was first identified
+- `Signed-off-by: Brian Norris <briannorris@chromium.org>` (author)
+- `[bhelgaas: reorder pcie_port_device_register() decls per Lukas]`
+- `Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>` (PCI maintainer)
+- `Reviewed-by: Lukas Wunner <lukas@wunner.de>` (PCI PM reviewer)
+- `Link: https://patch.msgid.link/20260722160942.v4.1.I5fd5d83f518681b39
+  49d8ab2f16ba8244fd3e774@changeid` (v4 submission)
+
+Absent (expected): `Fixes:`, `Cc: stable@vger.kernel.org`, `Reported-
+by:`, `Tested-by:`
+
+Notable: maintainer SOB + expert Reviewed-by; no syzbot; Chrome OS
+author implies real hardware.
 
 **Step 1.3: ANALYZE THE COMMIT BODY TEXT**
+
 Record:
-- **Bug:** Reset saves config space, then restores it. If the device is
-  inaccessible (example given: DPC), reads return `~0`. Those invalid
-  values are saved and later written back.
-- **Symptom:** After reset/error recovery the device is programmed with
-  garbage (invalid BARs / Command register), so it does not come back
-  functional.
-- **Root cause:** Unconditional `pci_save_state()` in the reset path
-  while config space may already be gone.
-- **Fix:** Do not save (or disable via Command) when config space is
-  inaccessible.
-- **Versions:** None stated; DPC/AER reset is long-standing.
+- **Bug:** `pcie_port_device_register()` returns an error (`-ENODEV` or
+  IRQ-init errno) if no child services register, so `pcieport` does not
+  bind.
+- **Symptom:** Root/downstream ports never get portdrv runtime PM
+  (`pm_runtime_allow` / autosuspend), so the bridge may never enter D3.
+- **Root cause:** Probe treated “no child services” as “driver is
+  useless.” That is wrong: PM lives on the parent `pcieport` driver, not
+  on AER/PME children. It is also inconsistent with the existing `if
+  (!capabilities) return 0` path.
+- **Version info:** Called out as more important after `f5cd8a929c82`
+  (DWC: strip RP MSI/MSI-X when iMSI-RX is the MSI controller). On DWC
+  boards with only AER+PME and no working INTx in DT,
+  `pcie_init_service_irqs()` fails and the whole port driver exits.
+- **Author’s mechanism:** Always succeed after `pci_enable_device()`;
+  drop failed services from the capability mask; if none remain, free
+  IRQ vectors and `pci_clear_master()`, but do not
+  `pci_disable_device()` / return error.
 
 **Step 1.4: DETECT HIDDEN BUG FIXES**
-Record: Not hidden. This is an explicit correctness fix for invalid
-save/restore during error recovery.
 
-===============================================================
-PHASE 2: DIFF ANALYSIS - LINE BY LINE
-===============================================================
+Record: **Yes, a real probe/PM failure framed as “allow.”** It is not
+style cleanup. “Allow probing” here means “stop returning `-ENODEV` when
+the driver still has a job (runtime PM).” That is a functional fix,
+especially as a follow-on to `f5cd8a929c82`.
+
+---
+
+## PHASE 2: DIFF ANALYSIS
 
 **Step 2.1: INVENTORY THE CHANGES**
+
 Record:
-- File: `drivers/pci/pci.c` only (~+24 lines, 0 removed)
-- New helper: `pci_dev_config_accessible()`
-- Modified: `pci_dev_save_and_disable()`
-- Scope: single-file surgical fix
+- File: `drivers/pci/pcie/portdrv.c` — **+14 / −14** (net 0)
+- Function: `pcie_port_device_register()` only
+- Scope: **single-file surgical fix**
 
 **Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
-Record:
-- **Helper:** Read dword at `PCI_COMMAND` (Command + Status). If
-  `PCI_POSSIBLE_ERROR(val)` (`== ~0`), warn and return false. Uses
-  Command/Status rather than Vendor/Device ID because VFs can
-  legitimately read as `~0` there.
-- **`pci_dev_save_and_disable` before:** After
-  `pci_set_power_state(D0)`, always `pci_save_state()` then write
-  `PCI_COMMAND_INTX_DISABLE`.
-- **After:** If config is inaccessible, return without saving or writing
-  Command. `reset_prepare` and D0 wake still run.
-- Path: reset / error-recovery, not probe or normal PM suspend.
+
+Record (before → after), all in `pcie_port_device_register()`:
+
+1. IRQ init fails and no hotplug left: `goto error_disable` →
+   `pci_disable_device()` + return error → **`goto out`, still return
+   0**.
+2. Service loop: count successes in `nr_service`; if zero, `goto
+   error_cleanup_irqs` → **on `pcie_device_init()` failure, clear that
+   service bit; never fail the whole register**.
+3. Success path: return 0 with bus-master + IRQs kept even if unused →
+   **`out:` if `!capabilities`, `pci_free_irq_vectors()` +
+   `pci_clear_master()`**.
+4. Error path `pci_disable_device()` + `return status` **removed**.
+   Probe now fails only if `pci_enable_device()` fails.
+   `pcie_portdrv_remove()` still calls `pci_disable_device()`, so
+   enable/disable stays balanced when probe succeeds.
+
+Normal path with working IRQs and at least one service: unchanged (still
+`return 0` with master + IRQs).
 
 **Step 2.3: IDENTIFY THE BUG MECHANISM**
-Record: **Logic / correctness** in error recovery.
-- Broken: inaccessible config → `pci_save_state()` fills
-  `saved_config_space[]` with `~0` and sets `state_saved`.
-  `pci_restore_state()` later writes that back (BARs `0xFFFFFFFF`,
-  Command `0xFFFF`).
-- Fix: skip that overwrite so restore uses the last good snapshot
-  (enumeration-time save in this tree, or a driver’s later
-  `pci_save_state()`).
+
+Record:
+- **Category:** logic/correctness (wrong probe failure) + hardware
+  workaround for DWC platforms that lose INTx after MSI cap removal
+- **Mechanism:** “no child devices” was treated as fatal; that skipped
+  `pcie_portdrv_probe()`’s runtime-PM setup (`pci_bridge_d3_possible()`
+  → autosuspend/`pm_runtime_allow`). After `f5cd8a929c82`, that path is
+  hit on common DWC RPs that only advertise AER/PME and have no usable
+  INTx.
 
 **Step 2.4: ASSESS THE FIX QUALITY**
-Record:
-- Obviously correct: same `PCI_POSSIBLE_ERROR` heuristic already used
-  across PCI.
-- Minimal: one check, no API change.
-- Residual race is documented (device can disappear between check and
-  save); that is pre-existing, not introduced.
-- False positive (`Command|Status` actually `0xFFFFFFFF` on a live
-  device) is vanishingly unlikely; Status reserved bits typically read
-  0.
-- Skipping the Command disable when inaccessible is a no-op: that write
-  would not land anyway.
-- Regression risk: **low**. Healthy reset path is unchanged.
 
-===============================================================
-PHASE 3: GIT HISTORY INVESTIGATION
-===============================================================
+Record:
+- **Quality:** High after v4. v1 ignored `pcie_device_init()` errors and
+  leaked IRQ vectors; v4 checks the return, clears failed bits, and
+  frees unused vectors. Matches the long-standing `!capabilities`
+  success path.
+- **Regression risk:** Low–medium, contained.
+  - Lukas noted they no longer `pci_disable_device()` immediately on
+    IRQ-init failure; that is intentional (device stays bound). Remove
+    still disables.
+  - Enabling runtime D3 without a PME *service* does not newly break PME
+    IRQs: those IRQs already failed, so PME children never bound before
+    either.
+  - LS7A bus-master caveat was called out as **pre-existing**, not
+    introduced here.
+- No public API / data-structure change.
+
+---
+
+## PHASE 3: GIT HISTORY INVESTIGATION
 
 **Step 3.1: BLAME THE CHANGED LINES**
+
 Record:
-- Unconditional `pci_save_state()` in `pci_dev_save_and_disable()` comes
-  from Alex Williamson, 2013 (`77cb985ad4acbe` / `a6cbaadea0af9`).
-- Function itself dates to Keith Busch 2014 / Christoph Hellwig 2017.
-- Bug is old; it became more important after enumeration-time save +
-  always-restore.
+- Fail-if-zero-services (`status = -ENODEV; nr_service`) introduced in
+  **`40717c39b1e6c`** (“PCI: portdrv: minor cleanup…”, 2009).
+- IRQ-fail → `error_disable` from **`075b7d363c675`** (2022 revert of
+  “Do not setup IRQs if there are no users”).
+- `if (!capabilities) return 0` from **`eca67315e0e0d`** (2011).
+- Buggy policy has been in-tree for many years; the **acute trigger** is
+  `f5cd8a929c82` (2025-12-18, in **v7.0**).
 
 **Step 3.2: FOLLOW THE FIXES: TAG**
-Record: No Fixes: tag. Related in-tree commit **`58130e7ce6cb6`**
-(`PCI/ERR: Ensure error recoverability at all times`, upstream
-`a2f1e22390ac`) is an ancestor of HEAD. It:
-- Calls `pci_save_state()` at device add (`drivers/pci/bus.c`)
-- Removes the `if (!dev->state_saved) return;` in `pci_restore_state()`
 
-Verified in this checkout: `pci_save_state(dev)` at
-`pci_bus_add_device()` (placement later adjusted by `f8f55a226aab4`).
-Restore no longer bails on `state_saved`. So a garbage reset-time save
-**will** be restored. This patch is what keeps that snapshot valid when
-DPC has already isolated the device.
+Record: **No `Fixes:` tag.** Related commit `f5cd8a929c82` **is** an
+ancestor of this HEAD (`git merge-base --is-ancestor` exit 0). It is in
+v7.0, not v6.19.
 
 **Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
-Record:
-- Same series, already in this tree: **`1872805e97043`** `PCI/MSI:
-  Enable memory decoding before restoring MSI-X messages` (v23 5/5, `Cc:
-  stable`).
-- Not in this tree: v23 1/5 slot placeholder, 2/5 s390 per-function
-  slots, **this 3/5**, 4/5 “Fail FLR when config space inaccessible”.
-- Recent `pci.c` churn is unrelated (D3hot wait, ASPM, ACS, slot
-  locking).
 
-This patch is **standalone**. 1/5 and 2/5 are s390 slot work. 4/5 *uses*
-`pci_dev_config_accessible()` but is not required for the save-garbage
-fix. 5/5 already landed independently.
+Record (recent `portdrv.c`):
+- `834171efeefff` — this commit (in **v7.3-rc1**)
+- Later: `97ca178c899d0` PCI/DPC change — unrelated
+- No follow-up fix series from Brian Norris on `drivers/pci/`
+- **Standalone**, not patch N/M of a required series (subject is `[PATCH
+  v4]`, single patch)
 
 **Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-Record: Farhan Ali (IBM) works on s390 PCI / vfio. In this tree the
-related MSI-X restore fix is already present. Helgaas (subsystem
-maintainer) reviewed and applied.
+
+Record: Brian Norris is a Chromium OS PCI contributor (Tested-
+by/Reviewed-by on the DWC MSI patch). Not the PCI maintainer; **Bjorn
+Helgaas applied it**, **Lukas Wunner reviewed it**. Only this portdrv
+commit from him in the recent window.
 
 **Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
-Record:
-- Needs `PCI_POSSIBLE_ERROR` — present in `include/linux/pci.h`.
-- Needs `pci_find_dvsec_capability` only as an insertion landmark —
-  present at `drivers/pci/pci.c:762`.
-- Needs `pci_dev_save_and_disable` / `pci_save_state` — present.
-- `device_lock_assert` / `pci_warn(..., "resetting")` in the *upstream
-  context* are **not** in 6.12; they are context-only, not part of this
-  change. Insertion is after `pci_set_power_state(dev, PCI_D0)`, which
-  matches this tree.
-- Can apply standalone: **yes**.
 
-===============================================================
-PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
-===============================================================
+Record: **None required.** The patch only rearranges existing
+`pci_enable_device` / `pcie_init_service_irqs` / `pcie_device_init` /
+`pci_free_irq_vectors` / `pci_clear_master`. It does not depend on
+applying `f5cd8a929c82` first; that commit only raises the importance.
+**Can apply standalone.**
+
+---
+
+## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
 **Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
+
 Record:
-- `b4 dig -c 5e14afc4aa192` failed (that string is a **blob** hash from
-  the candidate diff, not a commit).
-- `b4 mbox` on msgid `20260805165518.794-4-alifm@linux.ibm.com`:
-  23-message thread saved.
-- Lore/cover: v23 0/5 “Error recovery for vfio-pci devices on s390x”;
-  this is **3/5**.
-- Earlier revisions (v9) tried to **never** save at reset (rely only on
-  enumeration save). Reviewers (Helgaas / Alex Williamson) rejected that
-  because normal resets must capture current driver-programmed state.
-  v22/v23 compromise: skip save **only** when config reads as `~0`.
-- Helgaas rewrote the comment on apply (`[bhelgaas: comment]`).
-  Functional code matches v23.
-- Sashiko: low `const char *msg` nit only. No NAK on this patch.
-- No reviewer asked for Cc: stable on **this** patch (unlike 2/5 and
-  5/5). That is not a negative for this evaluation.
+- **v4 (applied):** https://patch.msgid.link/20260722160942.v4.1.I5fd5d8
+  3f518681b3949d8ab2f16ba8244fd3e774@changeid
+- Revisions: **v1 2026-01-09 → v2 2026-02-09 → v3 2026-05-08 → v4
+  2026-07-22** (applied version is latest)
+- Bjorn: “Applied to pci/portdrv for v7.3”
+- **No NAKs.** Review iterated on IRQ leak, `pcie_device_init()` errors,
+  and `pci_set_master()` timing (v3 deferred master; v4 reverted that
+  after MSI-drop concern)
+- **No reviewer Cc: stable** found
+- `b4 dig` lore fetch returned 503; discussion recovered from
+  openwall/LKML/gnuweeb mirrors
 
 **Step 4.2: CHECK WHO REVIEWED THE PATCH**
-Record: linux-pci via Helgaas; Niklas Schnelle (s390 PCI). Right
-maintainers.
+
+Record: To/Cc included **Bjorn Helgaas**, **Lukas Wunner**, **Manivannan
+Sadhasivam**, `linux-pci@`. Right maintainers. Lukas **Reviewed-by** on
+v4 (Christmas-tree nit; Bjorn reordered decls).
 
 **Step 4.3: SEARCH FOR THE BUG REPORT**
-Record: No syzbot/bugzilla. Motivated by s390 vfio-pci DPC/error
-recovery (IBM). Mechanism is generic for any AER/DPC isolation, not
-s390-only.
+
+Record: Origin is review of DWC patch 3/5 (`f5cd8a929c82`). Brian
+Norris: platforms without INTx make `pcie_init_service_irqs()` fail,
+**“the port won’t be configured for runtime PM and won’t ever enter
+D3.”** Mani: **“Sounds logical”** because register already returns 0
+when there are no port capabilities. **Severity:** functional PM/probe
+failure on DWC/Chromium test devices, not a panic.
 
 **Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
-Record: v23 1–5 as above. 4/5 adds the same helper use in `pcie_flr()`;
-Helgaas was lukewarm on that racy FLR-only check but still merged this
-save-path patch. 5/5 already in 6.12.111.
+
+Record: Standalone. `b4 dig -a` also listed Qiang Yu’s DWC 5-patch
+series because of the lore Link; that is the *motivation*, not a
+prerequisite series for this diff.
 
 **Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-Record: lore.kernel.org/stable WebFetch returned 403. **UNVERIFIED**
-whether stable@ discussed this exact subject. 5/5 from the same series
-*was* explicitly Cc: stable and is already here.
 
-===============================================================
-PHASE 5: CODE SEMANTIC ANALYSIS
-===============================================================
+Record: **No stable@ discussion found** for this subject. Not a negative
+signal (no automatic `Cc: stable`).
 
-**Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF**
-Record: `pci_dev_config_accessible()` (new),
-`pci_dev_save_and_disable()` (modified).
+---
+
+## PHASE 5: CODE SEMANTIC ANALYSIS
+
+**Step 5.1: IDENTIFY KEY FUNCTIONS**
+
+Record: `pcie_port_device_register()` modified. Related:
+`pcie_init_service_irqs()`, `pcie_device_init()`,
+`pcie_portdrv_probe()`, `pcie_portdrv_remove()`.
 
 **Step 5.2: TRACE CALLERS**
-Record: `pci_dev_save_and_disable()` is static; callers in this tree:
-- `pci_reset_function()` — sysfs/`EXPORT` function reset
-- `pci_reset_function_locked()`
-- `pci_try_reset_function()`
-- `pci_bus_save_and_disable_locked()` ← `__pci_reset_bus()`
-- `pci_slot_save_and_disable_locked()` ← `__pci_reset_slot()`
 
-AER uses `pci_bus_error_reset()` → slot reset or bus reset, which
-save/disable then restore. Userspace can also hit this via
-`/sys/bus/pci/devices/.../reset`.
+Record:
+- `pcie_port_device_register()` ← only `pcie_portdrv_probe()`
+- `pcie_portdrv_probe()` is `.probe` of `pcie_portdriver`
+  (`"pcieport"`), `device_initcall`
+- Context: **PCI enumeration of every Root Port / Upstream / Downstream
+  / RCEC** — common boot path, not an obscure ioctl
+- `semcode` not available; callers confirmed with `git grep`
 
 **Step 5.3: TRACE CALLEES**
-Record: `pci_read_config_dword`, `PCI_POSSIBLE_ERROR`, `pci_warn`; then
-existing `pci_save_state` / Command write.
+
+Record: `pci_enable_device`, `get_port_device_capability`,
+`pci_set_master`, `pcie_init_service_irqs` (`pci_alloc_irq_vectors` MSI
+then INTx), `pcie_device_init` (`device_register` of service devices),
+`pci_free_irq_vectors`, `pci_clear_master`. After success, probe sets
+DPM flags and runtime autosuspend when `pci_bridge_d3_possible()`.
 
 **Step 5.4: FOLLOW THE CALL CHAIN**
-Record: User-reachable via sysfs reset and via AER/DPC error IRQs. DPC
-is the cited case: config reads `~0` while containment is active, then
-reset+restore. **Yes, reachable.**
+
+Record: Boot/hotplug enumeration → `pcieport` probe → register services
+→ PM setup. **Reachable without userspace.** Trigger on DWC: iMSI-RX MSI
+controller + missing/broken INTx in DT → `pci_alloc_irq_vectors(...,
+PCI_IRQ_INTX)` fails → previously whole probe failed.
 
 **Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-Record: `PCI_POSSIBLE_ERROR` already used in `pci.c` PM paths, DPC,
-probe, hotplug. 4/5 of this series reuses the new helper for FLR; not in
-this tree yet and not required for this verdict.
 
-===============================================================
-PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
-===============================================================
+Record: Same file already succeeds when `get_port_device_capability()`
+is 0. This change makes the IRQ-fail / all-`pcie_device_init`-fail paths
+match that. No sibling drivers with the same `nr_service` pattern.
+
+---
+
+## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
 
 **Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-Record: **Yes.** `pci_dev_save_and_disable()` at
-`drivers/pci/pci.c:5047` still does unconditional `pci_save_state()`
-after D0. `pci_dev_config_accessible()` does **not** exist. `make
-kernelversion` / Makefile: **6.12.111**. Bug introduced with 2013 reset
-save/disable; still here.
+
+Record:
+- Local tree: **`v7.3-rc4-27-gf0100363d8c37`**, `VERSION=7 PATCHLEVEL=3
+  SUBLEVEL=0 EXTRAVERSION=-rc4` (`make kernelversion` → `7.3.0-rc4`)
+- Current `pcie_port_device_register()` **already contains this fix**
+  (landed **v7.3-rc1**, `834171efeefff`; ancestor of HEAD)
+- Pre-fix failure policy existed here until 7.3-rc1; **`f5cd8a929c82` is
+  in this tree (v7.0)**
+- Buggy path: `drivers/pci/pcie/portdrv.c` `pcie_port_device_register()`
+  — fail when IRQ init fails and no HP, or when `nr_service == 0`
 
 **Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-Record: **Clean apply / trivial context.** Helper can sit after existing
-`pci_find_dvsec_capability()`. The three-line guard goes after
-`pci_set_power_state(dev, PCI_D0)` before `pci_save_state(dev)` —
-identical here. Upstream context lines (`device_lock_assert`,
-`"resetting"` warn) are later mainline-only and are not part of this
-patch.
+
+Record: **Clean apply** on this tree’s pre-fix `portdrv.c` (single
+function, same structure). No conflicting later edits that would block
+it. `kzalloc_obj` in `pcie_device_init` is pre-existing, not part of
+this diff.
 
 **Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-Record: Enumeration save + always-restore (**`58130e7ce6cb6`**) is here;
-without this patch it can restore **poisoned** `~0` state after DPC.
-MSI-X Memory-enable restore (**`1872805e97043`**) is here. No substitute
-for this skip-save check.
 
-===============================================================
-PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
-===============================================================
+Record: This *is* the fix. No alternate/earlier version of the same
+change. No follow-up reverting or tightening it.
 
-**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
-Record: **PCI core** (`drivers/pci/pci.c`). **IMPORTANT** (all PCI
-devices; error recovery and function reset). Not staging.
+---
+
+## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+
+**Step 7.1: IDENTIFY THE SUBSYSTEM**
+
+Record: **PCI Express port driver** (`drivers/pci/pcie/portdrv.c`).
+**IMPORTANT** — not mm/core, but every PCIe Root Port uses `pcieport`
+for AER/PME/hotplug **and** bridge runtime D3.
 
 **Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
-Record: Mature core with ongoing AER/DPC/reset work. This is a targeted
-recovery fix, not a refactor.
 
-===============================================================
-PHASE 8: IMPACT AND RISK ASSESSMENT
-===============================================================
+Record: Actively maintained (Helgaas). Recent portdrv work besides this:
+DPC on downstream ports, bus-type conversions. Mature driver; this is a
+policy fix, not churn in new code.
+
+---
+
+## PHASE 8: IMPACT AND RISK ASSESSMENT
 
 **Step 8.1: DETERMINE WHO IS AFFECTED**
-Record: PCI error recovery (AER/DPC) and anyone resetting a device whose
-config is gone. Originally s390 vfio-pci passthrough; same path is
-generic. Config-specific: PCI + AER/DPC/reset users (common on servers).
+
+Record: **Driver-specific / platform-specific.** All systems with PCIe
+ports run this probe; the *bug* bites when services exist on paper but
+IRQs cannot be allocated — especially **DWC iMSI-RX hosts without
+working INTx** (Qualcomm/Chrome OS class). Also any port whose child
+`device_register` all fail.
 
 **Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
-Record: DPC/containment or other inaccessible config during reset. Not
-every boot; when it hits, recovery is the path that should restore the
-device. Unprivileged users can trigger sysfs reset only with privilege;
-AER/DPC is hardware-driven.
+
+Record:
+- Trigger: port has AER/PME/etc. capability bits, but
+  `pcie_init_service_irqs()` fails (no MSI after cap strip, INTx
+  missing), **or** every `pcie_device_init()` fails
+- Common on affected DWC boards at **every boot**
+- Not a userspace-triggerable security path; enumeration-time
+- Not a race
 
 **Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
-Record: Restore of `~0` → invalid BARs, Command all-ones (I/O, MMIO, bus
-master, SERR). Device stays broken after “recovery”; possible further
-URs / bad DMA. **Severity: HIGH** (failed recovery, device unusable;
-bus-master with junk BARs is worse than a leak).
+
+Record:
+- **Failure:** `pcieport` probe fails (`-ENODEV` / IRQ errno). No
+  portdrv runtime PM. Bridges stay out of D3 (higher power). AER/PME
+  children would not have IRQs anyway, so those services were already
+  dead; the extra damage was losing **parent** PM.
+- **Severity: MEDIUM** (functional probe/PM failure, not
+  oops/corruption/deadlock). Still user-visible on real hardware, and a
+  **regression relative to `f5cd8a929c82`** which this tree has.
 
 **Step 8.4: CALCULATE RISK-BENEFIT RATIO**
-Record:
-- **Benefit: HIGH** — preserves last good config through DPC/reset;
-  completes recoverability that `58130e7ce6cb6` already shipped in this
-  tree.
-- **Risk: LOW** — ~24 lines, established heuristic, healthy devices
-  unchanged.
-- **Ratio:** strongly favors backport.
 
-===============================================================
-PHASE 9: FINAL SYNTHESIS
-===============================================================
+Record:
+- **Benefit:** Restores `pcieport` bind + bridge D3/runtime PM on
+  affected DWC/embedded systems; removes a 15-year inconsistent failure.
+  **Medium–high** for those platforms.
+- **Risk:** ~14-line change in one probe function; hot path is unchanged
+  when services work. Reviewed through v4. **Low.**
+- **Ratio:** Benefit outweighs risk on this tree because
+  **`f5cd8a929c82` is present**.
+
+---
+
+## PHASE 9: FINAL SYNTHESIS
 
 **Step 9.1: COMPILE THE EVIDENCE**
 
-FOR:
-- Real bug: save/restore of `~0` config during inaccessible reset (DPC).
-- Failure is failed PCI recovery and a device left misprogrammed.
-- Small, obviously correct, reviewed by Helgaas and Schnelle.
-- Buggy code and insertion points exist in 6.12.111.
-- Enumeration-time save already in this tree; this patch prevents
-  clobbering it.
-- Same series’ 5/5 already backported here.
-- Standalone vs s390 slot patches.
+**FOR backporting:**
+- Real probe failure, not theoretical; Chrome OS/DWC hardware, described
+  on list
+- Regression amplifier `f5cd8a929c82` **is in this 7.3 tree**
+- Small, contained, obviously correct after v4
+- PCI maintainer applied; Lukas Wunner Reviewed-by
+- Aligns IRQ-fail path with existing `!capabilities` success
+- No new API; `pcie_portdrv_remove()` still `pci_disable_device()`
+- Frees leftover IRQ vectors (addresses Lukas’s SG2042-style vector hog)
 
-AGAINST:
-- No Cc: stable / Fixes: on this commit (expected; not a veto).
-- Trigger is error recovery, not the hot path.
-- Check is racy (documented); Helgaas still merged it.
-- 4/5 (fail FLR) not included; incomplete vs full series, but this hunk
-  still fixes the save-poisoning bug on its own.
+**AGAINST:**
+- Not crash/UAF/corruption/deadlock
+- Verb is “Allow” — policy change vs classic sanitizer bug
+- No `Fixes:` / no stable nomination in review
+- Lukas noted enable/disable lifetime questions (not a NAK)
+- Missing INTx is also a DT/platform gap; this is a kernel workaround
 
-UNRESOLVED:
-- Stable-list thread 403; could not confirm prior stable@ discussion.
+**UNRESOLVED:**
+- Full lore.kernel.org threads 503/403; used mirrors (verified author,
+  v1–v4, reviews)
+- Exact Chromebook/SoC model list beyond “current test devices” not in
+  the patch
 
 **Step 9.2: APPLY THE STABLE RULES CHECKLIST**
-1. Obviously correct and tested? **PASS** — Helgaas+Schnelle Reviewed-
-   by; heuristic already in-tree.
-2. Fixes a real bug that affects users? **PASS** — DPC/error recovery
-   restores garbage config.
-3. Important issue? **PASS** — HIGH: recovery failure / device left with
-   invalid BARs and Command.
-4. Small and contained? **PASS** — one file, ~24 lines.
-5. No new features or APIs? **PASS** — static helper + guard.
-6. Can apply to the local tree? **PASS** — same functions and insertion
-   point in 6.12.111.
+
+1. Obviously correct and tested? **PASS** — v4, Helgaas + Wunner,
+   applied to 7.3
+2. Fixes a real bug that affects users? **PASS** — portdrv fails to
+   bind; no RP runtime D3 on DWC without INTx
+3. Important issue? **PASS** (MEDIUM, but a **probe/PM regression**
+   after a commit that is in this tree — driver never attaches)
+4. Small and contained? **PASS** — 14/14 lines, one function
+5. No new features or APIs? **PASS** — same driver, looser failure
+   condition; no sysfs/module param
+6. Can apply to the local tree? **PASS** — code and trigger both exist
+   here; patch is the current function body
 
 **Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
-Record: Not an ID/quirk/DT/build/docs exception. Ordinary important bug
-fix.
 
-**Step 9.4: MAKE YOUR DECISION**
-Backport. It prevents writing invalid `~0` config back after reset when
-the device is already inaccessible, which is exactly the DPC/AER
-recovery case this 6.12 tree already tries to support via enumeration-
-time save.
+Record: Not a device-ID/quirk table/DT/build/doc exception. It is a
+**driver probe/PM correctness fix** (related to a hardware IRQ-fallback
+limitation).
 
-------------------------------------------------
-What the commit solves for this tree
-------------------------------------------------
-On 6.12.111, reset still always calls `pci_save_state()` in
-`pci_dev_save_and_disable()`. If config reads as `~0` (DPC), that
-poisons `saved_config_space`. `pci_restore_state()` no longer refuses
-restore (`58130e7ce6cb6`), so those values get programmed back. Skipping
-the save keeps the enumeration (or last good) snapshot.
+**Step 9.4: DECISION**
 
-Risk vs benefit: low risk, high benefit. No new API. Apply is clean
-aside from unrelated later context around `device_lock_assert`.
+This tree is **7.3-rc4**. It contains both the DWC MSI-cap removal that
+makes `pcie_init_service_irqs()` fail on some RPs and the port driver
+that used to treat that as a fatal probe error. The result is a real,
+boot-time `pcieport` bind failure and missing bridge D3, not a cleanup.
+The change is small, reviewed, and matches behavior the driver already
+had when *no* services were advertised.
 
-------------------------------------------------
-Verification
-------------------------------------------------
-- [Phase 1] Subject/tags parsed from the candidate message; Link msgid
-  is v23 3/5.
-- [Phase 2] Diff: helper + 3-line guard in `pci_dev_save_and_disable`;
-  `pci_save_state()` in this tree writes `saved_config_space[]` and sets
-  `state_saved` with no accessibility check.
-- [Phase 3] `git describe` / `make kernelversion`: p-6.12-3 /
-  **6.12.111**.
-- [Phase 3] `git blame -L 5047,5076 drivers/pci/pci.c`: unconditional
-  save from 2013 Williamson commits.
-- [Phase 3] `git merge-base --is-ancestor 58130e7ce6cb6 HEAD`: yes;
-  enumeration save + restore-always.
-- [Phase 3] `git merge-base --is-ancestor 1872805e97043 HEAD`: yes;
-  series 5/5 already here.
-- [Phase 3] `git log --grep='Avoid saving config'` on `drivers/pci/`:
-  this fix **not** present.
-- [Phase 4] `b4 mbox` msgid 20260805165518.794-4: 23 msgs; Helgaas
-  Reviewed-by; no NAK on 3/5.
-- [Phase 4] Cover letter: PCI slice of vfio-pci s390 error recovery; v9
-  “never save at reset” was rejected.
-- [Phase 4] lore.kernel.org/stable: **UNVERIFIED** (HTTP 403).
-- [Phase 5] Callers of `pci_dev_save_and_disable` traced in `pci.c`; AER
-  `pci_bus_error_reset` → slot/bus reset save/restore.
-- [Phase 6] `pci_find_dvsec_capability` at line 762;
-  `PCI_POSSIBLE_ERROR` in `include/linux/pci.h`; `PCI_COMMAND` is 0x04.
-- [Phase 6] `pcie_flr()` in this tree has no accessibility check (4/5
-  not required for this verdict).
-- UNVERIFIED: whether Command+Status can be legitimate `0xFFFFFFFF` on
-  some broken device (kernel-wide heuristic already accepts that risk).
+That meets stable criteria for **this** tree.
+
+---
+
+### What the commit solves (for this tree)
+
+After `f5cd8a929c82` (in v7.0, present here), DWC root ports using iMSI-
+RX lose MSI and must use INTx. If DT does not provide INTx, IRQ init
+fails. Old `pcie_port_device_register()` then disabled the device and
+returned an error, so **`pcieport` never bound** and **runtime PM/D3 was
+never enabled** — even though child AER/PME devices were impossible
+anyway without IRQs. The parent driver is still the one that programs
+autosuspend. Succeeding probe (and cleaning unused IRQs/master) restores
+that.
+
+### Risk vs benefit
+
+Low risk (probe error path only when services cannot start; working
+AER/PME/hotplug path unchanged) vs medium benefit (ports actually enter
+low power; driver attaches). Reviewed caveats do not block it.
+
+### Concerns
+
+None that block a backport here: no missing prerequisites, no series
+dependency, no API change. Lukas’s `pci_disable_device` note is handled
+by `pcie_portdrv_remove()`.
+
+---
+
+### Verification
+
+- **[Phase 1]** Parsed tags: two `Link:`s, SOB Norris + Helgaas,
+  Reviewed-by Wunner; no Fixes/stable/syzbot
+- **[Phase 1]** Body: probe `-ENODEV` vs PM; cites `f5cd8a929c82`
+- **[Phase 2]** Diff: +14/−14 in `pcie_port_device_register()`; drop
+  `error_disable`/`nr_service`; always return 0 after enable
+- **[Phase 2]** Confirmed `pcie_portdrv_probe()` PM setup only runs if
+  register succeeds (lines 701–720)
+- **[Phase 2]** Confirmed `pcie_portdrv_remove()` still
+  `pci_disable_device()` (line 736)
+- **[Phase 3]** `git describe HEAD` → `v7.3-rc4-27-gf0100363d8c37`;
+  Makefile 7.3.0-rc4
+- **[Phase 3]** `git show 834171efeefff` — candidate SHA
+  `834171efeefffb1a0f2136f32e76669bbc11db86`
+- **[Phase 3]** Blame parent: `40717c39b1e6c` (2009 nr_service),
+  `075b7d363c675` (IRQ fail path), `eca67315e0e0d` (no-caps return 0)
+- **[Phase 3]** `git merge-base --is-ancestor f5cd8a929c82 HEAD` → 0
+  (present); not in v6.19; in v7.0
+- **[Phase 3]** `git merge-base --is-ancestor 834171efeefff HEAD` → 0;
+  `git describe --contains` → `v7.3-rc1~71^2~30^2`
+- **[Phase 3]** No later Norris PCI follow-ups; standalone
+- **[Phase 4]** `b4 dig -c 834171efeefff` — v4 msgid; lore 503
+- **[Phase 4]** `b4 dig -a` — v1..v4 of this patch (plus unrelated DWC
+  series via Link)
+- **[Phase 4]** Openwall: Bjorn applied for v7.3; Lukas v4 Reviewed-by +
+  LS7A/enable caveats
+- **[Phase 4]** gnuweeb: original DWC thread; Norris reports D3 loss;
+  Mani agrees success-with-no-services
+- **[Phase 4]** WebSearch stable@ — no hits for this subject
+- **[Phase 5]** Callers: only `pcie_portdrv_probe` → `pcieport` PCI
+  driver; semcode unavailable
+- **[Phase 5]** `pcie_init_service_irqs()` INTx fallback returns
+  `-ENODEV` if `pci_alloc_irq_vectors(..., PCI_IRQ_INTX)` fails
+- **[Phase 6]** Buggy fail path existed until 7.3-rc1; trigger commit in
+  this tree
+- **[Phase 8]** Failure mode: probe fail + no bridge D3, severity
+  MEDIUM; regression given `f5cd8a929c82`
+- **UNVERIFIED:** live lore.kernel.org HTML (403/503); exact product
+  names beyond “test devices”
 
 **YES**
 
- drivers/pci/pci.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+ drivers/pci/pcie/portdrv.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 264213aa7630b..16942779e6ebd 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -725,6 +725,28 @@ u16 pci_find_dvsec_capability(struct pci_dev *dev, u16 vendor, u16 dvsec)
- }
- EXPORT_SYMBOL_GPL(pci_find_dvsec_capability);
+diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
+index a0991da482136..91d1482221a8c 100644
+--- a/drivers/pci/pcie/portdrv.c
++++ b/drivers/pci/pcie/portdrv.c
+@@ -330,8 +330,8 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
+  */
+ static int pcie_port_device_register(struct pci_dev *dev)
+ {
+-	int status, capabilities, i, nr_service;
+ 	int irqs[PCIE_PORT_DEVICE_MAXSERVICES];
++	int status, capabilities, i;
  
-+static bool pci_dev_config_accessible(struct pci_dev *dev, char *msg)
-+{
-+	u32 val;
-+
+ 	/* Enable PCI Express port device */
+ 	status = pci_enable_device(dev);
+@@ -355,29 +355,29 @@ static int pcie_port_device_register(struct pci_dev *dev)
+ 	if (status) {
+ 		capabilities &= PCIE_PORT_SERVICE_HP;
+ 		if (!capabilities)
+-			goto error_disable;
++			goto out;
+ 	}
+ 
+ 	/* Allocate child services if any */
+-	status = -ENODEV;
+-	nr_service = 0;
+ 	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
+ 		int service = 1 << i;
+ 		if (!(capabilities & service))
+ 			continue;
+-		if (!pcie_device_init(dev, service, irqs[i]))
+-			nr_service++;
++		if (pcie_device_init(dev, service, irqs[i]))
++			capabilities &= ~service;
+ 	}
+-	if (!nr_service)
+-		goto error_cleanup_irqs;
+ 
+-	return 0;
++out:
 +	/*
-+	 * If a device's config space is inaccessible, reads typically
-+	 * return ~0.  Since Device and Vendor ID are always ~0 for VFs,
-+	 * check the Command and Status registers instead.
-+	 *
-+	 * N.B. This is racy because the device may become inaccessible
-+	 * before the next access.
++	 * With no child services, we shouldn't need bus mastering or any IRQ
++	 * vectors we allocated.
 +	 */
-+	pci_read_config_dword(dev, PCI_COMMAND, &val);
-+	if (PCI_POSSIBLE_ERROR(val)) {
-+		pci_warn(dev, "Device config space inaccessible; unable to %s\n",
-+				msg);
-+		return false;
++	if (!capabilities) {
++		pci_free_irq_vectors(dev);
++		pci_clear_master(dev);
 +	}
-+
-+	return true;
-+}
-+
- /**
-  * pci_find_parent_resource - return resource region of parent bus of given
-  *			      region
-@@ -5009,6 +5031,9 @@ static void pci_dev_save_and_disable(struct pci_dev *dev)
- 	 */
- 	pci_set_power_state(dev, PCI_D0);
  
-+	if (!pci_dev_config_accessible(dev, "save state"))
-+		return;
-+
- 	pci_save_state(dev);
- 	/*
- 	 * Disable the device by clearing the Command register, except for
+-error_cleanup_irqs:
+-	pci_free_irq_vectors(dev);
+-error_disable:
+-	pci_disable_device(dev);
+-	return status;
++	return 0;
+ }
+ 
+ typedef int (*pcie_callback_t)(struct pcie_device *);
 -- 
 2.53.0
 
