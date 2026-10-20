@@ -1,105 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.195.142
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792499014;
-	b=pkvx2skR0wCrc/OiUF5vExLakjWjtND3N9sYqrTxtycSwG0r52ezqbDGObP+ErOZwZnx
-	 Sgcs/XJRs3HBXQgvBoNMlk2l49uLx3owDiqXPPls9vjNKa7UilNIIhP1R0qJ3DefLpnuH
-	 PD7tEEpuS6hqtJDNo7JZnEKmIvA/eKc4gtZcecQDcoqWA2ujCHOnxj9dGDf0lvCEsMv/N
-	 Hr7H+v7O7UeIgCDlMQJfr0eKMiJ39SBq9idD7Pdq8dIOGfZjluLvszEXEHS3gu5JtY9G/
-	 1wVlUwhfDspTMhCKIGVu25HQXdrrWKJBUgzejD3FhjbAj4KEttAw45Ppml8gxqYXSKA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792499014;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:
-	 Content-Transfer-Encoding:Content-Type:Date:Message-Id:Cc:Subject:
-	 From:To:X-Mailer:References:In-Reply-To:X-ClientProxiedBy:
-	 MIME-Version:X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=QW6CDfvsHHGQnfZ8ATVKzOi8OWIvcEMYsNbEVzS/vEQ=;
-	b=iNK7xiXggH4rkvqoiAawVXv3iHtDpbzPXxYPw66EqElID2GSniPVhUB61ie70R34o6Kr
-	 8yRkBDT0KCSE/P6gxm1JcmJAyDOyR+nmps8fdxLaMo1b8lMeJp37njeDQ1zK0O77Qnfg8
-	 HCuStx68GoO6FSz8R5MWaS1I6929u2qb0qzzadKs2Iw1tk8XyXIe59+uzLDEbTbhrBvc5
-	 D+/4r/XkACbKizjCpV5nROJg9Tiwtwh3fTiCRmtbzN5m93qHpm1icYgdc1xWQlJ46zBJj
-	 6AXhtvZMIXHrLPglVeVLhAJuWl7NiPP2eY01bkRADR0LX2OBH+J6T7wvNXvbvmD5p5Q==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=garyguo.net;
-	spf=pass smtp.mailfrom=garyguo.net;
-	dkim=pass header.d=garyguo.net header.i=@garyguo.net header.a=rsa-sha256 header.s=selector1 header.b=oqgh8F78;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.195.142
-Received: from CWXP265CU008.outbound.protection.outlook.com (mail-ukwestazon11020142.outbound.protection.outlook.com [52.101.195.142])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792499624;
+	b=5YimZj4kcb//67qMpnfmrmeUqVZ/t1yT71cNJ/egVXFHofTKtGpefJpTzJ2ixLGXL+yt
+	 jBiBz89RRdvy88G5YF3OwXog99FVy4lFts3HQn4RVuKwXOUg6o1DplRmhQtQzUNawMYAJ
+	 mydrPZODgkqzRUNWh+AxVuQn0f1fFwuirwDGRAzfNuHoYHHkrdFmQwEHXMTLFKJrBhzjH
+	 thY0Ek2rWF/1pvqO8pU94jZNMphpWYfIMU+oy6YpS9ATS7DxCqFI/QVSBRjjxz9sz5qZG
+	 eZFqgZVUbfOJjqFBspf14cWNgI3lVcqMHM4v1eU8wlWHlj9swB94R9wruM9D8a4W12g==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792499624;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:X-Developer-Signature:X-Developer-Key:
+	 Content-Transfer-Encoding;
+	bh=YyvabeuZdGCyn0mzdaqPxqGEL8hOcf0Gwpe0U8+xx+c=;
+	b=AhvRu1GI3Ux810Oan8LLwDBO2qG5DOP0tiC5yHvPAnhbqpF5+OvTWsg+MXfMyal8JTev
+	 YmgkOgh8don9tHsmpO0mFk/RpN9jd9/yRnp+zfGqUft903Blq+fu/fPlUgABcXuTLVOfg
+	 HplGHpOMKgC0NXNMHIDTfkBGzsULSrrP6L6gy21exE8x+BGpjZK/ibNXMn/bqQGr4F5EL
+	 QnpjUR3JRcKcTc63efvb6rqm0yeg6ZsVDx/bNn3pXhPjibiHG14Wi1ZldDGRYKOSfZ0W5
+	 Cx6ELg2TPzbCqw1CARYhua6hqI4qd0TpS9fxTwNYcdhF8aa1yYU0dfjiNtrJISlBzQQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EteR52t8;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97E3B606A31D;
-	Tue, 20 Oct 2026 12:23:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 97E3B606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 315DE606A31D;
+	Tue, 20 Oct 2026 12:33:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=garyguo.net header.i=@garyguo.net header.a=rsa-sha256 header.s=selector1 header.b=oqgh8F78
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=YPmhfuYglwblMyXuxBGVnvqXa8+6nk5aN1BUcMXvGdXGkoVfRcRgHnI4KvOTqbFHOPLgMPEOTw6kCTriWpQNaQMpxgjff+qTjUjRr29iiGF0TPILbtQDRRgxeKZveSs2pNcybiiHyGkcD/tTimLgfvT34AWLsn7aeBWRRXaxLSUZaOj6IwT3tCMV+R2VPqtYx+1yk88bUzZGC9TvHQioKZzNcUI9a73QIE9urZ/uXkt3Oesa1LNcZJdMG2jX+mQkkuPdeolgOWhXtgNQJeAWcYXMrQZAGAVs1jsDZ4ZRp1e/cruE3AwsYIjdTO+Xt6XAEdzOiNqyjegNTK7Tat9P4A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=QW6CDfvsHHGQnfZ8ATVKzOi8OWIvcEMYsNbEVzS/vEQ=;
- b=FiJQoJEqG4ieY0wXffY0SPLck5PW9/F5bSZYKa+pBeY3oY4AMH6CFAG3zDjGOsmEFhxN17+S82BncZTps8ybuaPL9qiBt6Hbf4pWnknlWOUI8vLD9mxesN4JUAxKy+se4Ssl6Zp18lGg5XEC7OkyyxnfP2XwqpykJwDTecYk+c3fAqZ/HuFygdxcRGO5VJ4SWR2agaKMthIdgGzqaA2g5gactSKI5/Y69+oTzyjAT3AZSInv+bQAZFsvjACzTUvErQOlUQNGVQSs69rNcOOkCNM6JuXcawVSqN2RbAUc2fFYEIhnf2Mtz1DSmqfVNMp5HP9Te2N4sAMkXreVA2J2qw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=QW6CDfvsHHGQnfZ8ATVKzOi8OWIvcEMYsNbEVzS/vEQ=;
- b=oqgh8F78PajG1dJOi+ye/GyWZNCDTOzWSzmuMX+3mAZyeF3QUfFzXegnwSabipH5OGjeT6syYLCCgC2Wp9h9J1Obw4OIS93nIliOXdRX4n7FX0pb9OfIWuFt6o1Bk9S5T2LdSfeR5LBUJpcmmRAuKNyDS/v6Y7Rlv+ISAjXCrWA=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:4ab::19)
- by LOAP265MB8558.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:4ab::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.15; Tue, 20 Oct
- 2026 12:23:29 +0000
-Received: from LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
- ([fe80::f60b:1537:68d7:4fc1]) by LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
- ([fe80::f60b:1537:68d7:4fc1%6]) with mapi id 15.21.0522.017; Tue, 20 Oct 2026
- 12:23:29 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 20 Oct 2026 13:23:28 +0100
-Message-Id: <DM9NV8ICWRKK.2Q6FSBE476G5M@garyguo.net>
-Cc: <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <dri-devel@lists.freedesktop.org>
-Subject: Re: [PATCH 5/7] rust: io: let I/O locations carry an access mode
-From: "Gary Guo" <gary@garyguo.net>
-To: "Daniel Almeida" <daniel.almeida@collabora.com>, "Danilo Krummrich"
- <dakr@kernel.org>, "Abdiel Janulgue" <abdiel.janulgue@gmail.com>, "Robin
- Murphy" <robin.murphy@arm.com>, "Andreas Hindborg" <a.hindborg@kernel.org>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>, "Gary
- Guo" <gary@garyguo.net>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
- <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Alice
- Ryhl" <aliceryhl@google.com>, "Trevor Gross" <tmgross@umich.edu>, "Tamir
- Duberstein" <tamird@kernel.org>, "Alexandre Courbot" <acourbot@nvidia.com>,
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "Bjorn Helgaas"
- <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, "David Airlie" <airlied@gmail.com>, "Simona
- Vetter" <simona@ffwll.ch>
-X-Mailer: aerc 0.22.0
-References: <20261015-io-access-modes-v1-0-93611b84b5e3@collabora.com>
- <20261015-io-access-modes-v1-5-93611b84b5e3@collabora.com>
-In-Reply-To: <20261015-io-access-modes-v1-5-93611b84b5e3@collabora.com>
-X-ClientProxiedBy: LO4P265CA0032.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:2ae::18) To LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:4ab::19)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EteR52t8
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 436C31F000C5;
+	Tue, 20 Oct 2026 12:33:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792499623;
+	bh=YyvabeuZdGCyn0mzdaqPxqGEL8hOcf0Gwpe0U8+xx+c=;
+	h=From:To:Cc:Subject:Date;
+	b=EteR52t8RjKpe3vVE8R/r3w+RKREW07yyRakPdNS2Xv0S4HldkggSHeijwlBYLMNZ
+	 WGuHaXgiOG93n3t58CsNicTEdjSt0KbtZuw70MLZ7LO9Q/t6sSGHdmUEWdAWziCYVu
+	 qqjVaW5P8ecdN/XEpb3kWE69ugdJzDda3XRP4S5Jsju+I5qQEDusQCqjzrWppiusle
+	 zVnkNmIQfjbeCX5hnpQHst1P9iuCmwOygSk15cBC5bfhWy8vcf3YfSmMhz0SWGVEsM
+	 7NJm8/5NCqiV7OofOkHC6clwV7I9Z4Fl3yBFxDpzH+XUPEWXdv7l3d+kFQUP56nQ26
+	 8Ylcv5VfY4LLw==
+From: Niklas Cassel <cassel@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Yue Wang <yue.wang@Amlogic.com>,
+	Hans Zhang <18255117159@163.com>,
+	Rob Herring <robh@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Kevin Hilman <khilman@baylibre.com>,
+	Jerome Brunet <jbrunet@baylibre.com>,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+	Jon Mason <jdmason@kudzu.us>,
+	Myron Stowe <myron.stowe@redhat.com>
+Cc: Keith Busch <kbusch@kernel.org>,
+	mx2pg@pm.me,
+	Niklas Cassel <cassel@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	Frank Li <Frank.Li@nxp.com>,
+	Mahesh Vaidya <mahesh.vaidya@altera.com>,
+	Ricardo Pardini <ricardo@pardini.net>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-amlogic@lists.infradead.org,
+	linux-rockchip@lists.infradead.org
+Subject: [PATCH v2 0/3] PCI: Fix and improve default MPS configuration
+Date: Tue, 20 Oct 2026 14:28:54 +0200
+Message-ID: <20261020122854.1500883-5-cassel@kernel.org>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -109,142 +84,287 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOAP265MB8560:EE_|LOAP265MB8558:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9de4bcd7-64f1-4f7a-4ff5-08df2ea4f2a7
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|10070799003|23010399003|376014|1800799024|18002099003|22082099003|10067099003|4143699003|261009223027099003|921020|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	ccvsCU4dthBJ8CbSvX8YcwSU8KUUgstwuvc5bgOvlAuMN7QhIfRm44/P+OaikypgcVS7wrYvXbdd0UaSAXQF8YsIYLbB1BAmar7QOpcxebmQ+w+aYHwqv0TsF2DxIQ4C5/iwCv5jmCs5jBrJyrwIvP1b4cfauE3OoEJAH7bASlmQwgrvml+9bx9NKya3PyP0OVnUjULwGkAom49pgy8z+F565r5c1bO8ZeTGwNmSTaPNSlQkQsOGq1VsRoCcvXHbH+7jqlSenTDCZX+uqfCwgBS2izWX0scyzyWjFiIdCDMiwg9xLDeuwDSn7nwWy2DzCoy4KXwBKqb0u7bgD/z2HvJrqKO2aqlde6tYDF30jBJQpU6GAqwc8T/UhezdmYfRP+FZ0kHvsT4PXiGyo5EKc0xYYXfq8gHMxkxF2bVxLH6e2RfiFFykjfpxgLHWau2fYNSd0aLtE5eLkYrtK9XUzH/xyH3wvnCWcRxXH46BXcEK4xzRkxx1s7F0EaTZsEe+uicpZz0vXmMfG0YFMH3czdWXCEZhm4oQFzQwwkBEG+OuMdopaPjrsw1ol9i5zBHIstxovAlbGfUAwwhBkCUVJewYeuoQVHZtSVhxG1a7bb6r/HJU+Gm3Wfkrhf90hoS6BIDycmYOk2X8pImzSnyrld11KDfwOgb9d4hh0QDhdDiJAt1HpKklPUFU5TSkhObI1cfrLYf5rM6fxRhObL66bg==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(10070799003)(23010399003)(376014)(1800799024)(18002099003)(22082099003)(10067099003)(4143699003)(261009223027099003)(921020)(56012099006);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?bHpWY21mTm9OWnZJWC9kcis4cjkvS2t1RStqZkYrKzZ1bnFHRlNWWmVySXVY?=
- =?utf-8?B?Ym1SSWpWbEE4S2JEU1N2VlFMTDVnK1RWL215SGx0THJiUyt0Q05CeGhoUGt5?=
- =?utf-8?B?ckhWNkwxMTJVNjRxaHQ1c2lBdzlMMXdHVzJwRmRYWWVEUU9RelhMK2NWd29z?=
- =?utf-8?B?SFRnM3dJSWhZTUg4RzJld0MrTktFc3FOSGprWVJIV2FNSkx3UTloZ1lOUG53?=
- =?utf-8?B?T1dhRnQxSzB1cHh2R2dLc3VaTnprZFJKNmhGb1dpUHF4cGMzZXA1dFh5M3Nx?=
- =?utf-8?B?UG9lSnp1bm1qRVNDZVZPZ3c4T0g2aTNLaDFweEo2YlFuai9MczR5UGNWUVBo?=
- =?utf-8?B?QzEwV2h6MXRoUVFVa2R6dm1pMWJBSFFwSUZEeElDWWlYTzBIdDVLUm9ienNP?=
- =?utf-8?B?NFRpdDA2dG5lRU5KR0taYURRSC9kbGVUbmljWkMxeXpaV2Zyckd3UUY3UmNj?=
- =?utf-8?B?T1pTM1NMRENqV2c4eFZUc1FVeFJoYTNzSjE0T0pzNzlEUzMvQnI4R0dOZ0p3?=
- =?utf-8?B?YVVzRng3V1B2Q2twb0xvanFtZkZKVVd1R1YycWUxWVFVcFE5OVJaTHVtNHd0?=
- =?utf-8?B?Q2VpNy9YZmE2eEIrV1JlM0RmMEw5Znh3RHpCUmhqYkUwYVZxWDZSWXdIZnN0?=
- =?utf-8?B?WFFJcTd2RnUvVGJWMGtqS3ZqVTBEQXFtTG9aMGpINjBXQUhQeWhmUTBMWEda?=
- =?utf-8?B?KzhzaE82UHhxZ3R5OFRKcHFhMWh3ckhtc0wyM0phR0dYMi91anY2ZUVUQnVo?=
- =?utf-8?B?ZmV4YURjalk1THZ6eThpQ3BIRHovMUE3V2M0blpuT25OYTVmUldsVTJkZ1RH?=
- =?utf-8?B?OW54alZ6OEJmd0FFNUhLRkRLTVBUSjJ6NldleGM3UzVGZXNSRDZ6NjZVREZG?=
- =?utf-8?B?UlpUd0wya29ISUNTUyt0QlJUSUx4Ulp0VzhGWjNRWldIL001L0xLYUg0RTNF?=
- =?utf-8?B?K00reGdiTk14Ti9kSEJBVHVwTGJTSmdKK2NJUG5RWStCdGNjQ1BsbFU0bzQz?=
- =?utf-8?B?ZzVWbDVJcWo0VXZzOXhxazJxTk5SQXYyNDQxNnZhdnVmZU8wOUVTNml0Y2pl?=
- =?utf-8?B?bWdVWUFSdWw0OWd2Z2orTUVWRnNhYlozMG00OW1VQ0twSzJ0KzAwdW9McFNF?=
- =?utf-8?B?MWx6d212UnRla3dMN29EbVNFemNpZmZ3WWlDVXk2Y2ZoQXFSRUlSSCtrRnlu?=
- =?utf-8?B?VENaNG44dVd4N09kZXNBdWJITUp2L2RERnJFU3o1aUFZeDFDZlBIV3d5Skd5?=
- =?utf-8?B?MWowZHdRV2V6WHlDUTB3dlBsUG9haVk4ak5LWGVSQnVWOVdjbzBSMGFXY3Ez?=
- =?utf-8?B?YkV2MWNSWVBXcE81TGpnZEZzeTlpWnhHZFg4UzdVaWJXUENqTStUc3hQdDdT?=
- =?utf-8?B?aFVnSnZPa2pTdE9nOGNFR2FqeUNEM0xDR2xpTDBDYldZUzY4SEdPRDZhaGR2?=
- =?utf-8?B?OENtbmQ3RkN5OVdKYVpuaGZ5ZGtvVUZ5M3Z2dFJNazhLcEM0Z3ZMY3FHclZZ?=
- =?utf-8?B?ek9iSHcvejk2Q1Yrbno0YkM1UHJENjNXVGFqV0dOd1V3QkIvUlhKOE1MODVy?=
- =?utf-8?B?OE5yN0MwUG1UZjlBY1BUVEdJSTRNOXFPZDd2M2JOU2JrdHo0U3hLSTNqajBa?=
- =?utf-8?B?alhJWml6L1hwN0Q2WnRJa3ErL3paZ2pFRlZ2ZzBaS2wrMC9zUE5kQ0w0YzdD?=
- =?utf-8?B?N1BTQ0tuL0NqeWttSkpCQmMxakhRa0RkWHJ1cnNZVklicldRQzlpYzQ2R1Na?=
- =?utf-8?B?T0dXQ0hUbVQzT0Q2TGgxUkI1ZVJnWHp4UFF6c3Vvem4vUDZ5OXpmbzUyeVdI?=
- =?utf-8?B?KzdYZlhrVmJYeURtOGtHUzRoMTlaeWJhNUpvd0VNYU9wRUN3dXBic1F1RU0x?=
- =?utf-8?B?YVVtNzNYRDRWb0NWV1N2VE9rSmdXcVo4NmduWjRvSDZzS3BkU0poVmppK0dG?=
- =?utf-8?B?YVdLT1pQTG5mQ3ZmZk8rRHR6ZEdFNGM2TG9OQUpnUEZ0cE9RVXNqVlhlY1Vp?=
- =?utf-8?B?WHVONkhvOHFjMGYvTUFMVXViRUpNTHV5K3JwTm1wc3pQSTlHcGlYL0RscDdo?=
- =?utf-8?B?V2tDaU5hejFyZ2N6TFNpQVJ1elVwZFlrNmEwR0ZsM1RUZE9kbXppNUd6YTZ3?=
- =?utf-8?B?YnB3eWM2Tm5aRFpKaWc5ZnZVdFpETDBOa3dGVnU2Y2czdjFDYmNSOVpzWnpj?=
- =?utf-8?B?OEpMZUpYeGZPK3RROUswWTh2VEpETDhqemFkRmhkTFhhMnpjVDkxakpSQ3Q3?=
- =?utf-8?B?YkIvQ2srY2M5YTFZS096Q2R2ei9lRkFKaC9uT2xlcmZzaEVEckU0OFZrdEJs?=
- =?utf-8?B?K01MdGtNQU80eTd3RVJTN2FaZTl0UzFHUGtacFhNRXhPcG9LMko2dz09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9de4bcd7-64f1-4f7a-4ff5-08df2ea4f2a7
-X-MS-Exchange-CrossTenant-AuthSource: LOAP265MB8560.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Oct 2026 12:23:29.1375
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: mZa6jtjUbpbVFcZgpv5wNAQE2iUQcnM+6y/cfQxrThw28TQakr7hGoRT2WxgOPUUgu09cZLu5pSrAr17/AYYBg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LOAP265MB8558
+X-Developer-Signature: v=1; a=openpgp-sha256; l=13914; i=cassel@kernel.org; h=from:subject; bh=GKq1pZrgivOXBIyPXFoDErstixL1L10Iv5wDtYmz7nI=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLKux7VVaR2X+LdV6t0SwVtPJ/zKt253Np51vfq+wpzI9 lSrjImHOkpZGMS4GGTFFFl8f7jsL+52n3Jc8Y4NzBxWJpAhDFycAjCRTf8Z/kdwsqzYIl20bYah +0KR/9wd4XpC/6NuFd1LMFS0X79x9RqG/1nqahyJa13rJ0oc6N+SunbuTMk8oYyPMZNaVuX8/V+ lwQEA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On Thu Oct 15, 2026 at 1:39 PM BST, Daniel Almeida wrote:
-> `Io::read`, `Io::write`, `Io::update` and their fallible variants
-> project the view to the given `IoLoc` and access it there. A location
-> has no say in which accesses are allowed, so a register cannot be
-> declared read-only or write-only.
->
-> Add the `io::access` module with the `Mode` trait and the `ReadWrite`,
-> `ReadOnly` and `WriteOnly` modes, and add an `Access` associated type to
-> `IoLoc`. Projecting through a location applies its mode: `ReadWrite`
-> leaves the view as it is, while `ReadOnly` and `WriteOnly` wrap it in the
-> `ReadOnly` and `WriteOnly` views. The bounds of the generic accessors now
-> apply to the backend of the restricted view, so a write to a read-only
-> location, or a read from a write-only one, does not compile.
->
-> Raw offsets are `ReadWrite`. `OffsetLoc` takes the mode as a type
-> parameter that defaults to `ReadWrite`, and `RegisterArray` gets an
-> `Access` type, which `register!` sets to `ReadWrite` for now.
->
-> No existing location changes its mode, so there is no functional change.
-> A following patch lets `register!` declare read-only and write-only
-> registers.
+This series reworks Hans's series "PCI: Configure Root Port MPS during
+host probing" (v9, link below).  Besides configuring Root Ports, which
+that series was about, it fixes other problems in how mainline programs
+the Maximum Payload Size (MPS), and lists the problems it doesn't fix.
 
-So far, without considering access modes, we have a clean mapping after the
-register projection series that a `register!()` macro just generates a cust=
-om
-projection. However, this commit makes it special again and this isn't poss=
-ible
-with struct definitions, so it breaks feature composibility. It is also som=
-ewhat
-surprising in the sense that it changes the base view type.
+It is based on pci/next, which has the first patch of the RFC (link
+below), "PCI: Update saved Max Payload Size in pcie_set_mps()".
 
-What about making RO/WO wrapper types on actual data? Something like
+The changes compared to v9, including the commit messages and this
+cover letter, were developed with the help of an LLM, based on its
+review of v9 and of the sashiko-bot reports, and reviewed by me.
 
-    Mmio<'_, ReadOnly<T>>
+Background
+==========
 
-and
+A PCIe device must not send a TLP with a payload larger than the MPS it
+is programmed with, and a receiver treats a TLP larger than its own MPS
+as Malformed, so all devices on a path need compatible MPS settings.
 
-    Mmio<'_, WriteOnly<T>>
+Unless a "pci=pcie_bus_*" option is given, the kernel uses the default
+strategy, PCIE_BUS_DEFAULT: pci_configure_mps() programs each device, as
+it is enumerated, to the MPS of its upstream bridge.  If the device's MPS
+Supported (MPSS) is smaller and the upstream bridge is a Root Port, the
+Root Port is lowered instead (9f0e89359775).  The other strategies either
+configure whole hierarchies in pcie_bus_configure_settings()
+(pcie_bus_safe, pcie_bus_perf, pcie_bus_peer2peer) or don't touch MPS at
+all (pcie_bus_tune_off).
 
-Then we can implement
+Problems found in mainline
+==========================
 
-    impl<T, B> IoRead<ReadOnly<T>> for B where B: IoRead<T> {}
+Enumeration:
 
-and
+1. Root Ports keep whatever MPS they came up with.  Fixed by patch 2.
 
-    impl<T, B> IoWrite<WriteOnly<T>> for B where B: IoWrite<T> {}
+   Root Ports have no upstream bridge, so pci_configure_mps() never
+   configures them, and every hierarchy inherits the MPS that firmware or
+   the hardware reset left in its Root Port.  On platforms whose firmware
+   doesn't configure MPS, which is typical for DT-based systems with
+   native host controller drivers, every hierarchy runs at the 128-byte
+   reset value even if the Root Port and all devices below it support
+   more, at a cost in throughput.  Host controller drivers work around
+   this: the Meson driver programs its Root Port to 256 bytes itself,
+   regardless of what the devices below it support, which patch 3
+   removes.
 
-ReadOnly will not implement FromBytes, and WriteOnly will not implement
-IntoBytes, to avoid people using them with `copy_read`/`copy_write` API.
+2. Lowering the MPS only works directly below a Root Port.  Fixed by
+   patch 1.
 
-This way, the design works for struct too. One issue of this, though, is th=
-at
-you cannot project from `Mmio<'_, ReadOnly<Struct>>` to `Mmio<'_,
-ReadOnly<Field>>` currently. However, I believe this is solved with the "pl=
-ace
-wrapper" concept in field projection.
+   - Below a Switch, the Switch ports keep the larger MPS, and a device
+     that supports less is left mismatched with a "use
+     pci=pcie_bus_safe" warning.  This happens at boot whenever firmware
+     or a host controller driver programmed a larger MPS than a device
+     below a Switch supports.  It has been a known limitation since the
+     default strategy was introduced (27d868b5e6cf).
 
-Regardless, before we proceed with any design, I'd like to hear opinions fr=
-om
-Benno on how this interacts with the field projection design as language
-feature.
+   - For a multi-function device directly below a Root Port, function 0
+     is programmed to the Root Port's MPS first.  If function 1 supports
+     less, the Root Port is lowered, but function 0 is left at the larger
+     value and can send TLPs larger than the Root Port now accepts.  Only
+     an informational message about the Root Port is printed.  This was
+     introduced by 9f0e89359775.
 
-Best,
-Gary
+Hotplug and rescan:
 
->
-> Signed-off-by: Daniel Almeida <daniel.almeida@collabora.com>
-> ---
->  rust/kernel/io.rs          | 42 +++++++++++++++++--------
->  rust/kernel/io/access.rs   | 76 ++++++++++++++++++++++++++++++++++++++++=
-++++++
->  rust/kernel/io/register.rs | 18 +++++++++--
->  rust/macros/io/register.rs |  1 +
->  4 files changed, 121 insertions(+), 16 deletions(-)
+3. A device hot-added directly below a Root Port.  Fixed by patches 1
+   and 2.
+
+   If the device supports less than the Root Port's MPS, the Root Port
+   is lowered, with the multi-function problem from 2.  If it supports
+   more, it is only matched to the Root Port's current MPS: a Root Port
+   is never raised again, e.g. after a device that supported less has
+   been replaced, and without firmware MPS setup it stays at 128 bytes.
+   Devices found by a rescan below an empty Root Port slot behave the
+   same.
+
+4. A Switch hot-added directly below a Root Port.  Fixed by patches 1
+   and 2.
+
+   The Upstream Port can lower the Root Port, but the Downstream Ports
+   and the devices below them are only matched to their upstream bridge,
+   and any of them that supports less is left mismatched with a warning.
+   With patch 1, nothing below the Root Port is in use yet, so the whole
+   new hierarchy is lowered.  If the new Switch has hotplug-capable
+   ports, patch 2 then limits the hierarchy to 128 bytes, so devices
+   hot-added below it later can match (5).
+
+5. A device hot-added below a Switch.  Fixed by patches 1 and 2, unless
+   endpoints below the Root Port are already in use (7).
+
+   Only a Root Port is ever lowered, so a device that supports less than
+   the MPS of the Switch ports, e.g. less than what firmware programmed,
+   is left mismatched with a warning.  Patch 2 limits hierarchies with
+   hotplug-capable Switch ports to 128 bytes, like pcie_bus_safe does, so
+   devices hot-added below such ports always match.  Below a Switch
+   without hotplug support, e.g. when a device is found by a rescan,
+   patch 1 lowers the whole hierarchy as long as no endpoint below the
+   Root Port is in use, since the Switch ports themselves don't do DMA.
+
+6. A Switch hot-added below another Switch.  Fixed by patches 1 and 2,
+   unless endpoints below the Root Port are already in use (7).
+
+   Same as 5, for every port and device of the new Switch.  With patch
+   2, a hierarchy whose Switch has hotplug-capable ports, e.g. a chain of
+   Thunderbolt devices, already runs at 128 bytes, so the new Switch can
+   match.  Below a Switch without hotplug support, patch 1 lowers the
+   hierarchy as in 5.
+
+7. A device added next to endpoints already in use below the same Root
+   Port, e.g. a new function found by a rescan while function 0 is
+   bound, or a device below one Downstream Port of a Switch while an
+   endpoint below another one is bound.  Only partly addressed.
+
+   Directly below a Root Port, mainline lowers the Root Port below the
+   active function, which is left at the larger MPS.  With patch 1, the
+   hierarchy isn't changed, and the new device is left mismatched with a
+   warning instead, as below a Switch today.
+
+Other:
+
+8. With pci=pcie_bus_safe or pcie_bus_perf, devices found by a rescan
+   aren't configured at all: pci_configure_mps() leaves them to
+   pcie_bus_configure_settings(), which the rescan helpers don't call.
+   This doesn't affect the default strategy, where pci_configure_mps()
+   configures each device as it's enumerated.  Calling
+   pcie_bus_configure_settings() from the rescan helpers wouldn't fix
+   this safely, since those strategies reprogram every device of the
+   hierarchy, including ones in use.  Not addressed.
+
+Approach
+========
+
+Two constraints drive the design:
+
+- The MPS of a device that may have a driver bound can't be changed
+  safely: the device may have DMA in flight, its driver may have cached
+  the value, and the core's read-modify-write of Device Control isn't
+  serialized against the driver's own updates of that register.
+  Changes to a hierarchy are therefore limited to hierarchies in which
+  no device below the Root Port, other than a Switch port, has been
+  added or made available for driver binding yet, i.e. during the
+  initial scan, or when devices are hot-added or rescanned into a
+  hierarchy without endpoints in use, such as an empty slot directly
+  below a Root Port.  As today, the Root Port itself may still be
+  changed, and so may Switch ports, since they don't do DMA and the port
+  driver doesn't change Device Control after enumeration.
+
+- A device hot-added below a Switch later can't lower the MPS of a
+  hierarchy with endpoints in use, so it only works if it supports the
+  MPS the hierarchy already runs at (5).  Hierarchies with
+  hotplug-capable Switch ports are therefore limited to 128 bytes, which
+  every device supports.
+
+A better solution would be to quiesce the drivers of all devices below
+the Root Port, e.g. the way a reset does with ->reset_prepare() and
+->reset_done(), change the MPS of the whole hierarchy, and then resume
+them.  That would allow changing the MPS of a system that is in use,
+including when a device that supports less shows up next to endpoints
+in use (7), and hierarchies with hotplug-capable Switch ports wouldn't
+need to be limited to 128 bytes.  It requires every affected driver to
+support being quiesced and to cope with a changed MPS, e.g. drivers
+that cache it, which is beyond this series.
+
+Only PCIE_BUS_DEFAULT changes; the other strategies are unchanged.
+
+Why the Root Port MPS is set from pcie_bus_configure_settings()
+===============================================================
+
+v9 raised each Root Port to its maximum MPS when pci_configure_mps() ran
+for the Root Port itself, and relied on lowering it again as devices
+below it were enumerated.  At that point, nothing below the Root Port
+has been enumerated yet, so the kernel can't know the smallest MPSS
+below it, whether the hierarchy has hotplug-capable Switch ports, or
+whether the slot is empty.  Raising the Root Port there:
+
+- can't take hotplug-capable Switch ports into account, since they
+  haven't been found yet: hierarchies that have to be limited to 128
+  bytes (5) would be raised first and lowered again as those ports are
+  found, and bridges that are only marked as hotplug-capable later, e.g.
+  by acpiphp, would be missed;
+
+- raises empty slots, so a Switch hot-added into one later inherits the
+  raised MPS;
+
+- happens only once, since a Root Port isn't enumerated again on
+  hot-add, so the Root Port can't be raised again after a device that
+  supported less has been replaced (3).
+
+pcie_bus_configure_settings() runs after the hierarchy below a Root Port
+has been scanned and before its drivers are bound: from pci_host_probe()
+and the ACPI and arch-specific root bus scans, and from pciehp, acpiphp
+and shpchp after a hot-add.  It is where the other strategies already
+configure MPS for a whole hierarchy, and pcie_find_smpss() already
+computes the smallest MPSS of a hierarchy, returning 128 bytes for
+hierarchies with a hotplug bridge other than the Root Port, which is
+exactly the limit patch 2 applies to them.  An empty slot isn't
+configured until something is hot-added or rescanned there, and every
+hot-add directly below a Root Port re-evaluates its hierarchy.  The
+rescan helpers don't call pcie_bus_configure_settings(), so patch 2 does
+the same from them.
+
+Configuring the MPS in pci_bus_add_device() instead would also run after
+the scan, but once per device rather than once per hierarchy, and it
+would move all of the default MPS configuration into the driver binding
+path.
+
+Behavior changes
+================
+
+- With firmware that programs MPS, e.g. on x86, a hierarchy may now run
+  at a larger MPS than firmware chose, and different Root Port
+  hierarchies may end up with different values.  This could matter for
+  peer-to-peer DMA between devices below different Root Ports, unless
+  the Root Complex splits such TLPs.  pci=pcie_bus_peer2peer remains
+  available for that case.
+
+- Hierarchies with hotplug-capable Switch ports are limited to 128
+  bytes, even where firmware programmed more.  This costs throughput,
+  but makes every device hot-added below them work.
+
+- A single device with a small MPSS found during enumeration lowers the
+  MPS of every device below its Root Port.
+
+- A device that shows up later below a Switch without hotplug support,
+  e.g. found by a rescan, next to endpoints already in use, may find its
+  hierarchy raised by patch 2, and is left mismatched with a warning if
+  it supports less (7).
+
+- Read completion coalescing is now also disabled on Intel 5000/5100 in
+  the default mode (quirk_intel_mc_errata()), since the default mode can
+  now raise MPS above what firmware programmed.
+
+- Scan paths that call neither pcie_bus_configure_settings() nor the
+  rescan helpers, mostly legacy ones or ones without Root Ports, are left
+  as they are today.
+
+---
+Changes in v2:
+- Drop "PCI: Update saved Max Payload Size in pcie_set_mps()", which has
+  been applied to pci/next, and rebase on pci/next.
+- Patch 1: Don't count Switch ports as devices in use, since they don't
+  do DMA and the port driver doesn't change Device Control after
+  enumeration, so that a device that shows up below a Switch without
+  endpoints in use can still lower the hierarchy.
+- Patch 2 (was 3): Limit hierarchies with hotplug-capable Switch ports to
+  128 bytes, so that devices hot-added below them always match, instead
+  of leaving them at their current MPS.  The hierarchy's MPS is now set
+  rather than only raised.
+- Patch 2: Stop at the first device whose MPS can't be set and restore the
+  previous MPS of the hierarchy, instead of carrying on and leaving it
+  with mismatched settings (reported by sashiko-bot:
+  https://lore.kernel.org/r/20260930150617.CE88A1F000FF@smtp.kernel.org/).
+- Patch 3 (was 4): Update the comment in meson_size_to_mrrs() to refer to
+  MRRS (reported by sashiko-bot:
+  https://lore.kernel.org/r/20260930145752.C0D4D1F00893@smtp.kernel.org/).
+- No longer an RFC: raising the MPS above what firmware programmed is
+  acceptable, hierarchies with hotplug-capable Switch ports are limited to
+  128 bytes, and a device that can't match a hierarchy in use stays bound
+  with a warning, as today.
+
+RFC: https://lore.kernel.org/linux-pci/20260930145017.1356088-6-cassel@kernel.org/
+v9: https://lore.kernel.org/linux-pci/20260916153907.60344-1-18255117159@163.com/
+
+Hans Zhang (2):
+  PCI: Match the hierarchy's MPS to a device's MPSS as necessary
+  PCI: meson: Remove redundant MPS configuration
+
+Niklas Cassel (1):
+  PCI: Configure Root Port MPS after scanning its hierarchy
+
+ drivers/pci/controller/dwc/pci-meson.c |  27 +---
+ drivers/pci/probe.c                    | 194 ++++++++++++++++++++++++-
+ drivers/pci/quirks.c                   |   3 +-
+ 3 files changed, 195 insertions(+), 29 deletions(-)
+
+
+base-commit: a907c0643fb44bb260f3133b9c73bd34fd125e4c
+-- 
+2.56.0
 
