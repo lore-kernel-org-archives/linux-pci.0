@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.25
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.201.19
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792505099;
-	b=HM622mG+nMW/ogsR5fud1XCi3ckDLRG+YV14pOpg49swXU+22AKJo4Oj8q38y1F8pk5J
-	 +dQEGADpbBoGmyx6lnDqL0TmsFYOozou+zoPJxEgineG+rUnMWSdWsYymPGxwrqkTfdiB
-	 xIdWuZpfMXO5JbEQxXt1/4JKtefwKJ4KMzCGPEnti1vtklu/E0C8bSNrT3z6iXnpxiSPo
-	 CyNwNI3NMReFW0qYU3Ry/b9i4+82xBT0qYr2dDXMNCRZ43SZJAz/iOCxW8StfrKp1sJYw
-	 tWIzYAUIaq5Kq0+6NALHQDRSpPsBDEGebrz4p/2A4LMVLMDKnp3LrwIbLDd1BfzuCQg==
+	t=1792505101;
+	b=TwlW7h3VNSLY+wsv9eeTmDXTyc8bO2zRihTqkw6qB7AJEhcyE/8Z98ue/r3bsiXSaGw7
+	 mZTov3EdCIxxALrhYFjTrYwZYTDC56WMzYeXQ3s8JyXOlkeowXRBsvrCLjWG3SOWZxIYz
+	 HCb4h1JwpReDgWqKAvDz68pjJ3rNkF2OGhfKEVSuotWwBjq49Gm/1htxrsze3ME/344gm
+	 Mmpuxd60KxO7KXtOSv0ZomEHLE/PmmPKv0iFuowP9SLsfdlxPJs11axAVKyd5POdD6wBV
+	 XwsoGibtK9y25wiWBJTM3C8lmdTyXiMTuOrkWfBCzLvahpQpflRO51a9J5A0MLbCIlQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792505099;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792505101;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
 	 From:Date:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:
@@ -26,53 +26,53 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=qfjEj+0QtpfcAKgWV6lqny3G7ajFWudkbdd/yJx8mKA=;
-	b=lVziMFCqh95aXj2Mu9+BA7SaJiiYK54jCJRQjoe0fJ98to4+vLOZwF626+tTKGlHtl5j
-	 Mo7lbX0fmj9uWbQXKcI1S0BPeWhmj616NWJfbL6ytjKfBZfTvebx8Ywfq2h49QTSlVAVA
-	 aWIcUXmZrwtEV4ZqW00j4tTd138YdjUxFXpZZqNy63n6owXzAO4b7e/ztexwFvGo5RgNV
-	 ogo6LFNAia7miOGG7lqz21v5Q7Yr5sgl5T7NyFv8et27NQoXZWe0VaPMEsC+dW9WWpwXK
-	 +X+o1iBUUST6lsWITTvB7RbNm4mhg34zPzaQf9+/5Ic/4F1Ar4Z2cexBtzQoR9Wn6Ww==
+	bh=tO4spEKe9JdRgj12wcWijTRNiRAWdhbaHRwxG+rLjS0=;
+	b=bv0dbcUbda/me36jrHoiNfCZE6SeF9YNfRWqxzjYwkBKHJeKDTT+hwoSHMKTUAVzH6ng
+	 V6bNdx7uyhMCyrogKpnqg1yZ7AG8E7tauPsf6l1ujw1xJxzUjzQLomtcfdTyOkteU9EuR
+	 u4emIeQDk7fZWsE8+JzsJqGhd+jlY6uvjbeezdqMLiij6giLut7+OO3IagA3P3s/aYfVd
+	 C6ble9pHnTTTFU/VJ5u9yLRccHdpGyQDzsL8ui3eP5y9nBWIzdUvhLqf+ece5DifbZ1e4
+	 WR907y9/eMm3I4jXZRlb7bF8tT/jGw+/OQ1McfREWdsjfHVASVpDoWdD+hCcbmZPK+w==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=amd.com;
 	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=4oEl1MdB;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.25
-Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012025.outbound.protection.outlook.com [52.101.48.25])
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=PvsTdNBX;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.201.19
+Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013019.outbound.protection.outlook.com [40.107.201.19])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 420C4606A31C;
-	Tue, 20 Oct 2026 14:04:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 420C4606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E5F4606A333;
+	Tue, 20 Oct 2026 14:05:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3E5F4606A333
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=4oEl1MdB
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=PvsTdNBX
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=jIkbvxTUfe2qM/6F1LaUWOq9r8UHgCHCqiEaScVgkAusBEnrJ63pc1IEWW4StNvNDA+M3PPUpVIigP3HCrR32Ib3gxe4HDPGDErnj1VWxhRX2SA/uIEab+p6twcCbGddPi8vKuSD0Iy9L+DxiZjHvsOIDSiQBER31mhhPhs3AggakoR7l0pO95usBo4riM/BDf2tWWL6D42CFcYVaoidiiqYZ/BYo/h2FArYWHL5DkrSOrMaRh9U8ubeDJKVvL84dwiRv20TX/qizs3IHHKmQ+OScBYS29VQ4GSJ0lw+27Fr1MwjNbTH5vr6W26AI78f+4y+a0H5Hx7aLzXCWQHfJg==
+ b=dT7dzbrh9sARBfO9A6oljmR0AkfZZSGqh1d7pHypuy+htOWGublRJK7sbydDnnWqmNnrRXcWeXaeRT81Bsrkjmi0OKj7Fs4YfTTRuwlrqi544x1k7CKCbuK3MfhGsvC6jHD1vreVoJpL1cqElv9V7jzO3A3JGS6bYifEwS925u2Tq3zK1WhN2F6mxlO8dv5/majqI/4HveHtXtmTtAfcxsm57pYksQ7ayLcmnnF7krpLUhJXR2X+GN1Ww//yVNSIFzg0Dum8EIHcEGn+F1rbGlZ4zkKjE5d2B2wMDhQh+SVt1IbCzLoAn6k1Mr5D+vfycomVkEu6ZHo5mfErWa1l0w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qfjEj+0QtpfcAKgWV6lqny3G7ajFWudkbdd/yJx8mKA=;
- b=kXveRjNluj95DoVbrDwWqhUKln/1bUYIG6gDlw1WDOgHbACUXI9zU/KF/1uNieID+NW8Xod++W6h/9w3/N9JxDyrQ935Coc5MrqMFcVrpQVOgarH+jrIpHcPhOti3abnhhgXEEEsOGpXwjxDagmNoI2Qzh1WJ4F3WVC30BUrWIVmvDwCdEQZbve7bZ4Ge/syzQawN23kaS/fAXNT/jcLnIuMIUGsGD3gPCR0AVM3UD0eibpLGDUKiqPG09B+blIf9yxPxzKFk/LQU+w6eKqbmZty9/jCQ9T7DmPMv6Ck1qLoH+COSh1bdpfU/Y4nvxFY8Egb/MGaPPCeqjEU/KwJyw==
+ bh=tO4spEKe9JdRgj12wcWijTRNiRAWdhbaHRwxG+rLjS0=;
+ b=W/oTWLGk3Rr33l3F5jsuCDvNWPO5fWtfhklzI+9ZbaG0sEYuG2J5xvW1dGc+eDfsVQ+JahOlaLdFkLm2DREOFrXzUVOCG0vjligBG5FH7dtM7jbJkQKh/eCkVVafTzJ+5vdE1hegVzQkx4e9hR3pjJ7A7t0CF2pngNirFIaKHAM26PIu+Rwo4ankqXN2ttpwxdVju/8PE61kPlfSme0BhG0GA/TpA8mxXszWQ1LAylmnFWYYreRKXvfTgT1wbS/qeCSkFuT/FaEAUvFOzQ0C+SkzUlZcUYTN+/NrgpnUUJesJFyUUPCMk4EGUaIiTYZREGqL3E6vhg8klIWk09vNpQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=lists.freedesktop.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qfjEj+0QtpfcAKgWV6lqny3G7ajFWudkbdd/yJx8mKA=;
- b=4oEl1MdBnWzPAPcE7EfD2OTk9NWZEl1otcUJWaHeecldCQwOe/RAZyu2c7f+NrC9h3kFf7zWd8vr9vO0lTG0Mw1Qg5xacrqYx6pCQBYkGuSc44SWEGaPv18ozIEdi++xCXdVGjuk8sGN4HByHdegy+xKSKI2fsvOpu2GfjFIOuo=
-Received: from CH0PR03CA0200.namprd03.prod.outlook.com (2603:10b6:610:e4::25)
- by SA0PR12MB4480.namprd12.prod.outlook.com (2603:10b6:806:99::10) with
+ bh=tO4spEKe9JdRgj12wcWijTRNiRAWdhbaHRwxG+rLjS0=;
+ b=PvsTdNBXydOkKg/y/g9Jmm+FQr+KQZYBUuJHLvVHmB/CJ9RuZiVZghvREtWo3XFq4hv1pWvYzkPCG9rOG6tGKpF28hVBfQwT0fNz8y4AmGC84zwjsrdmXIijyXxqpKym8RNUdcLzyS82UL+FrNyI52VJncEnzEt+cJS9fSikEwI=
+Received: from CH0PR03CA0194.namprd03.prod.outlook.com (2603:10b6:610:e4::19)
+ by MN0PR12MB6341.namprd12.prod.outlook.com (2603:10b6:208:3c2::13) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.15; Tue, 20 Oct
- 2026 14:04:56 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.19; Tue, 20 Oct
+ 2026 14:04:58 +0000
 Received: from BN1PEPF00005FFC.namprd05.prod.outlook.com
- (2603:10b6:610:e4:cafe::84) by CH0PR03CA0200.outlook.office365.com
- (2603:10b6:610:e4::25) with Microsoft SMTP Server (version=TLS1_3,
+ (2603:10b6:610:e4:cafe::1a) by CH0PR03CA0194.outlook.office365.com
+ (2603:10b6:610:e4::19) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.21.522.20 via Frontend Transport; Tue,
- 20 Oct 2026 14:04:56 +0000
+ 20 Oct 2026 14:04:57 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 165.204.84.17) smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -82,14 +82,14 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from satlexmb07.amd.com (165.204.84.17) by
  BN1PEPF00005FFC.mail.protection.outlook.com (10.167.243.228) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.546.15 via Frontend Transport; Tue, 20 Oct 2026 14:04:56 +0000
+ 15.21.546.15 via Frontend Transport; Tue, 20 Oct 2026 14:04:57 +0000
 Received: from [127.0.1.1] (10.180.168.240) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.53; Tue, 20 Oct
- 2026 09:04:55 -0500
+ 2026 09:04:56 -0500
 From: Mario Limonciello <mario.limonciello@amd.com>
-Date: Tue, 20 Oct 2026 09:04:40 -0500
-Subject: [PATCH v2 1/3] PCI: Preserve the initial bus number in pci_dev
+Date: Tue, 20 Oct 2026 09:04:42 -0500
+Subject: [PATCH v2 3/3] drm/radeon: Match VFCT using initial PCI bus number
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -101,7 +101,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-ID: <20261020-vfct-regression-v2-1-d2394d11450a@amd.com>
+Message-ID: <20261020-vfct-regression-v2-3-d2394d11450a@amd.com>
 References: <20261020-vfct-regression-v2-0-d2394d11450a@amd.com>
 In-Reply-To: <20261020-vfct-regression-v2-0-d2394d11450a@amd.com>
 To: Bjorn Helgaas <helgaas@kernel.org>, Alex Deucher
@@ -116,122 +116,78 @@ X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb07.amd.com
  (10.181.42.216)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN1PEPF00005FFC:EE_|SA0PR12MB4480:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0544d246-b434-48c1-5923-08df2eb31ee1
+X-MS-TrafficTypeDiagnostic: BN1PEPF00005FFC:EE_|MN0PR12MB6341:EE_
+X-MS-Office365-Filtering-Correlation-Id: a202496f-af00-4324-407a-08df2eb31fdb
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|1800799024|376014|23010399003|36860700016|10067099003|18002099003|22082099003|3023799007|11063799006|261009223027099003|56012099006;
+	BCL:0;ARA:13230040|36860700016|376014|82310400026|23010399003|1800799024|261009223027099003|10067099003|56012099006|22082099003|18002099003|11063799006;
 X-Microsoft-Antispam-Message-Info:
-	VrHLJHl8cM227BT1XrPegvXJZxfoIs7ITubZjdrTQ57+43oU5kE32Wzma0DXP2pvW+SelzyF9LoyDl5sAY+P654eKpUHVuWsTAQlf25Hp+bYhMuiK3DlhjdeiZgzIwytNG0wPW/+YV8YjAVqIwG9bP6EM1WInzm9KT2NEOQ9HKPdH7RbbBQ1n9OUMwEj8NomncMmeoJ/CzVY4yGZwCqQVXg8UJBrYmvPdMnJuVsjuWoOuUPVP2EBofA964/VzY5NmY4iGJ/eob3sb1go2F/AcvrcVzDAKxm2UWljLOgp3rrV/H0mHgvJHx7T6ghrLRHNbsLECZGwNaBINOyTPhZq5meYsGWyCzz58AQbfzo8HVijBzRn2NXM6NnAWW01m08R3XH6fYG2y/vHxjfemgqsKmSGBNpouG4NlFTnGPpG62TRLeTLkSXw+4m/PiC4GPif4eXFawxdS4/siri7egvUF86GdV6WQMJVvDRQrW+q8jICpI5M1nmijMNpSqD5IxnSJ6DQQptBt+7LCGEAt/0MPLP1bLvauYpQSGZl86br5XjSrHw69EYPiTwLs+DzSMTX2ovKuIJLf97OdYHdrlTzc7QgFG6C3Ti09aqrtejze7nKMO4qwKoPwPub/j7RBQ3dN8XUItZPlxtobKz/Ls9pGR2w85QhtxdibMs3B6072WkCqXp/2EoQHluCYNmNvpt2
+	+RCXLWAUGg6/EFLfkbzBeZs5Str/v5eLbghve4X7DPjNFwxF6L2GHzOGR6hMeK3JTQ2IYSo/+VGAtvSwGSMZ1jWLtvQPEAWETGg/PG3ZcbZYM5jHPsdlRbPGqOZpO+E8LEgAkCgR95paxpfo+4SOqiRfjoBVYar5kYSkLjTtWvgNtYEFtSkLHiR3M/nsLgoZKU8SZqrFzYSwOBei1s9coUxC+/qFyiKpUiLSg0zlMVY6UIE6bCH0ZLSFvz2ZiS6lRgIRCfzrNxdRCkvfChMF5+WRuHKvftSxZJM7x071g3HWZH5Ffwj42Y2lDsSxejIjjodDIclLfs8RNHreUvOIUu7HkgO6xrVgXLIpE6GvhTVtE5l1qiJybr3uEYx/J3mcNqhJzGJheZXMRtaZEmS6BSTx0kyLHcypJpFXPV4+Tmc48wQJ65TGJsLG2cvhbIVFpUUWgVK82r6tZhCTgss1W79L8QEevFal2asPqKEoQMSMC0IrBlG4AaINsJEHRkn59pmk9TLEVq5pZok/alyujKdkCTci4qz9lS1QFwi2FIOVjBiUtPbr7aktLmfFo8i18qQvhGMHHpRdpDVzCJdNqDyWeMiMT6KogoJ5ygteFSkfVkjBYVJccBeF8U3so+lAtQi052TWrUDdcIVeO9YO39fe+AXEzgusQBD8lj/4ZkUR5AXXtzyokm9REU9f+7WdRwwwnT3K2tpZJQUYG9yfoA==
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(376014)(23010399003)(36860700016)(10067099003)(18002099003)(22082099003)(3023799007)(11063799006)(261009223027099003)(56012099006);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700016)(376014)(82310400026)(23010399003)(1800799024)(261009223027099003)(10067099003)(56012099006)(22082099003)(18002099003)(11063799006);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	2K99GaOl9jm6o7XJ/hnBTMn2MuXUUg0Z81LXiKZVFupz/DVyXOvvzH8wbxyz7TLWt1Np4+bPG/EvWdc3JiqgEZ5btIEE6sWcPjFQtzCXim1pmQaHJC8jIDB4h26hF/OEYxs8LZ9q4asRQOk1jGDA9B5FP3kYJb2BgH2w1KITQZrnyDVoxqEUaEuCP/kVSGjrB/YsPFnzMLs8WQiRpRRheyFrYlUHYZIN/s3NKBQmH5tefwLDSK5BZ+QNCGpjSxNXPBEEUIGHeJEIc2uR6kw3ooaL+3alsJi8cnDPKq4c3bl/cjDBCok9+/8sdVHzunIiaOTaHQQGGnjO5EjxTDt31HWHFypGx1zd+VBOBL8kWFppfEguEWp/SbkhBPnzIQTAMLWVHB7SrWCb1xGh3D6BKCSd4beAsPSHe+IvsTWg4NCfHeJ/NS0B7gWiVmdQP/tR
+	p/yAFshDAd58NDiJThLMRmdmy6svxtobsgG8jOjxELxQMsVwS6OoZ7ad/SvbN8Fk6jTpCW5qfDrHYwUuQU8/k4DRonmHwMXfwxBTcqEK1/3DXKlgZJzbl9TKbPfV4F7hpt3v+NOxyTmcZ8QudF3c1923M0CNUdQSGxu250uVkYq40YXy0wWpT8n02uw4P+tHnubACr1EObGtAnz/f4ojIoEd9ZLUvcDXu/zQ8q015B5lBYHAO+L22DaZPGPmAC2d6wTJfqp4wfF/lSRHxM/EC2gvBo/3DaCWunkXDcjW6xA+J7EbHzdKPxe5WvUffWyiionBz0ILIUG5H2EIIt/JYGafgUUuSOJDdcmnZ3rD01CITRJEK2WAd+HZGK6EvybdOLAWyJj3rf0tmBQSX7fJsraBv4YzryXTgyBsL63n3ix55qFopXulnugB6JoDC6un
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Oct 2026 14:04:56.1597
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Oct 2026 14:04:57.7962
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0544d246-b434-48c1-5923-08df2eb31ee1
+X-MS-Exchange-CrossTenant-Network-Message-Id: a202496f-af00-4324-407a-08df2eb31fdb
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
 	BN1PEPF00005FFC.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4480
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN0PR12MB6341
 
-Bridges that need bus reassignment are scanned in two passes. Save
-the firmware secondary bus number during the first pass, before the
-bridge is disabled, and carry it to the bus created in the second
-pass. Initialize pci_dev from this preserved bus number so drivers
-can match firmware records after PCI bus renumbering.
+VFCT records the PCI bus number from BIOS POST. The current bus number
+can change after PCI core renumbers the bus, while accepting a mismatch
+based only on device identity can select the wrong VFCT image when
+matching devices are present. Compare against the bus number captured
+from the firmware bus assignment before bridge renumbering.
 
-Handle pci_alloc_dev(NULL) as well; some in-tree callers use it to
-allocate a standalone pci_dev.
-
+Fixes: 4059e2f02c8a ("drm/radeon: Fix VFCT bus number matching with soft filter")
 Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 ---
- drivers/pci/probe.c | 9 +++++++++
- include/linux/pci.h | 3 +++
- 2 files changed, 12 insertions(+)
+ drivers/gpu/drm/radeon/radeon_bios.c | 17 +++--------------
+ 1 file changed, 3 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 27008e2ea5afc..4ece4b70cdc15 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1012,6 +1012,7 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
- 	bus->sysdata = bridge->sysdata;
- 	bus->ops = bridge->ops;
- 	bus->number = bus->busn_res.start = bridge->busnr;
-+	bus->initial_bus_number = bus->number;
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
- 	if (bridge->domain_nr == PCI_DOMAIN_NR_NOT_SET)
- 		bus->domain_nr = pci_bus_find_domain_nr(bus, parent);
-@@ -1232,6 +1233,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+diff --git a/drivers/gpu/drm/radeon/radeon_bios.c b/drivers/gpu/drm/radeon/radeon_bios.c
+index 1da6bf1c17ff3..88989c93757b1 100644
+--- a/drivers/gpu/drm/radeon/radeon_bios.c
++++ b/drivers/gpu/drm/radeon/radeon_bios.c
+@@ -609,10 +609,8 @@ static bool radeon_read_disabled_bios(struct radeon_device *rdev)
+  * VFCT entries contain the PCI bus number as recorded during BIOS POST.
+  * On systems where the kernel renumbers PCI buses (e.g. pci=realloc or
+  * resource conflicts), the runtime bus number may differ from the POST
+- * value.  Match by device identity (vendor + device + function) and use
+- * the bus number as a preference: exact bus match is preferred, but when
+- * the bus numbers disagree we accept the entry if the device identity
+- * matches.
++ * value.  Match using the bus number captured when the device was
++ * discovered, before any bus renumbering.
+  *
+  * Returns: 0 on match, -ENODEV on no match
+  */
+@@ -628,16 +626,7 @@ static int radeon_acpi_vfct_match(struct radeon_device *rdev,
+ 	    vhdr->PCIFunction != PCI_FUNC(rdev->pdev->devfn))
+ 		return -ENODEV;
  
- 	/* Set up the primary, secondary and subordinate bus numbers */
- 	child->number = child->busn_res.start = busnr;
-+	child->initial_bus_number = busnr;
- 	child->primary = parent->busn_res.start;
- 	child->busn_res.end = 0xff;
+-	/* Exact bus number match - preferred */
+-	if (vhdr->PCIBus == rdev->pdev->bus->number)
+-		return 0;
+-
+-	/* Bus mismatch but device identity matches (PCI renumbering case) */
+-	dev_notice(&rdev->pdev->dev,
+-		   "VFCT bus number mismatch: table %u != runtime %u, matching by device identity (vendor 0x%04x device 0x%04x)\n",
+-		   vhdr->PCIBus, rdev->pdev->bus->number,
+-		   rdev->pdev->vendor, rdev->pdev->device);
+-	return 0;
++	return vhdr->PCIBus == rdev->pdev->initial_bus_number ? 0 : -ENODEV;
+ }
  
-@@ -1470,6 +1472,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- 			child = pci_add_new_bus(bus, dev, secondary);
- 			if (!child)
- 				goto out;
-+			child->initial_bus_number = secondary;
- 			child->primary = primary;
- 			pci_bus_insert_busn_res(child, secondary, subordinate);
- 			child->bridge_ctl = bctl;
-@@ -1491,6 +1494,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- 		 * do in the second pass.
- 		 */
- 		if (!pass) {
-+			if (!dev->initial_secondary_bus_number)
-+				dev->initial_secondary_bus_number = secondary;
- 			if (pcibios_assign_all_busses() || broken)
- 
- 				/*
-@@ -1526,6 +1531,9 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- 			child = pci_add_new_bus(bus, dev, next_busnr);
- 			if (!child)
- 				goto out;
-+			if (dev->initial_secondary_bus_number)
-+				child->initial_bus_number =
-+					dev->initial_secondary_bus_number;
- 			pci_bus_insert_busn_res(child, next_busnr,
- 						bus->busn_res.end);
- 		}
-@@ -2508,6 +2516,7 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
- 	INIT_LIST_HEAD(&dev->bus_list);
- 	dev->dev.type = &pci_dev_type;
- 	dev->bus = pci_bus_get(bus);
-+	dev->initial_bus_number = bus ? bus->initial_bus_number : 0;
- 	dev->driver_exclusive_resource = (struct resource) {
- 		.name = "PCI Exclusive",
- 		.start = 0,
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5ffcf5ce8c966..f6b377dcf7a14 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -363,6 +363,8 @@ struct pci_dev {
- 	struct pci_slot	*slot;		/* Physical slot this device is in */
- 
- 	unsigned int	devfn;		/* Encoded device & function index */
-+	u8		initial_bus_number;	/* Bus number when device was discovered */
-+	u8		initial_secondary_bus_number;	/* Bus number behind this bridge */
- 	unsigned short	vendor;
- 	unsigned short	device;
- 	unsigned short	subsystem_vendor;
-@@ -724,6 +726,7 @@ struct pci_bus {
- 	struct proc_dir_entry *procdir;	/* Directory entry in /proc/bus/pci */
- 
- 	unsigned char	number;		/* Bus number */
-+	unsigned char	initial_bus_number;	/* Bus number before reassignment */
- 	unsigned char	primary;	/* Number of primary bridge */
- 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
- 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
+ static bool radeon_acpi_vfct_bios(struct radeon_device *rdev)
 
 -- 
 2.43.0
