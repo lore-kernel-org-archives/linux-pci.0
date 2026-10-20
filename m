@@ -1,111 +1,44 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.229.113
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792465883;
-	b=S8nK7gu9NNB5Df9ybBgx5cCixOwjvnHNqTG2dqnKHNE9X7uTe30V2tW/w+czYlUwl1ge
-	 r3JWh0zRZbABjwm0j41fdTdNw10+CY+lyo5axog66seNyosdlOrinG0LrjALMU+zqrXQe
-	 DrsG9SlCNP9W3qqlYOz5d1jvfWhF5hY5sJ5YhCNE4JqlUzMrK1pGMtEJi3KK68SqqTN5x
-	 V60y/qSVxBENXQoI2+yPDx68NMak1JZr7mnNI2rptUi14Efbo1ZSgX09vMqhWIwXU//xA
-	 +7JUlqZm9X9CtkfnRFB4EhacZ7ECT/Pk0gNJ4yI+fh5/6Crm6ktzRBh9HX78lUGzeBQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792465883;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 Content-Transfer-Encoding:Content-Type:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=MHH8cgFYJV0Q+RWmjfaPMLo6mFAfAZoNKAq3UKtUFz4=;
-	b=QmVnIDOPw5BG1zDgQNXokwlnDXCLhTFvp5mmBzDuGZPEgDp+IkYKR5CLzmYnr3FEs5pn
-	 DH4HhY6K4MROKnwjh8JDqhhMOIiWRIgQkLR+MAL1JWCOXntEglaQ5bu0aDIn1sZ/XO/TT
-	 igwCP3Zmd/LSxEZViq3hqsOV582CGvV77dr5EnqCaDpKMTpMw6/8+4DqsWBXoKgrEqPFM
-	 5ctdTmfAFPNR5TRJHkaOwBAgVxV4c+KI0ccr/mi/EeWYgZAoSyJoWYdmyyj/jBEZDi3NP
-	 tkCwQg8oqsFvuFaZbcJqmOsAHzGXZ/r9ja2domPQ9Qee07YOcAkv5TD+7t+G9/jAq7A==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=valinux.co.jp;
-	spf=pass smtp.mailfrom=valinux.co.jp;
-	dkim=pass header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=oBsiBZRx;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.229.113
-Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020113.outbound.protection.outlook.com [52.101.229.113])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=156.224.81.152
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792468474;
+	b=xjS6seG7vy/qEgJ8c+4PMwtLuGwnJRRT4OZx29tmpecbHIlt1NWMfQ0L42tHptGUJtYR
+	 rzCb9RqXrZoz/Zw81T5O55EBE0pK4+WWCcLCjjdRQz6ZYdeatyzx/k4lOk2QBAg6ocC8R
+	 bKB2c3/y5+IPMCI1wxinDgIje9cGtRxLj4gRidsoIG76iDq8+2gyERklw0gAsOKM5oA7X
+	 myGATVN6sQo1ht6EMPW3IlXxAoSnebNVXRs2OZ6EBOjVDZ5dnLKda0gHnvyDC0oEE6KFt
+	 9/ZXrCBNBRgHueqEsRAh/HSjptKw2oMhwHncPuRBwAzhNox/U0pg1OBtV5IUCwN12eQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792468474;
+	h=DMARC-Filter:Received:Message-ID:Date:MIME-Version:User-Agent:Cc:
+	 Subject:To:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:X-HM-Spam-Status:
+	 DKIM-Signature;
+	bh=unM+Wmu425LqozgSwnXty70TeWuAL+4t8eE8dEw9cXU=;
+	b=z7arhadlxf49V80BSTDU/SUVaCGRUK3mcMOwbCuQEdGovqGXoFy0ytYShUYp2lLvnC3J
+	 v7NSaW+oZYqq4ZHIDtfErPFBLvcrp3BTgG9nTpT9fp6Gddn7MNp55PChjEJl2HyHFis/W
+	 V0PZzBNLzphCd5HABAHKrSKMqVkqq6IE+sSeBBkjExgkajc4IsHYFwT9MKrOoKxF0hfaq
+	 /LW/NMil5DUooMFffBMfCXi80yJGo1AudsHPwDOQxeMzu1WLlC4D6VAKXTBRywAWkmogu
+	 L6AwOdWdUCpWsAZygTbO734tKDQZfAjRtU9yfo4OBUIJZ8xNno/1b4py4zPJUdugSrg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=rock-chips.com;
+	spf=pass smtp.mailfrom=rock-chips.com;
+	dkim=pass header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=dWvFX6XN;
+	arc=none smtp.remote-ip=156.224.81.152
+Received: from mail-m81152.xmail.ntesmail.com (mail-m81152.xmail.ntesmail.com [156.224.81.152])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78507606E578;
-	Tue, 20 Oct 2026 03:11:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 78507606E578
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CAFA606A31A;
+	Tue, 20 Oct 2026 03:54:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4CAFA606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=oBsiBZRx
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=FPvgIRzUPmEaEZo/6oh5EB2uma0M0FnCAwjkpo4AVHBAXUR4PzMOIKZAtGkG4Sr+vpKpcDLZ7c6rOaxfx08+lzZGwED9eT/xXB1+2ONWmRPuggLruS93iid3TfOS4Xnio/t7iGZ24d+FcX6xXCK0C/HSLvWivlFgnFCX2AEriW3rC3DOy+upAyXEXrLZ0tvxklfEq2OPOAFBc+mDykpKVgOloux0Fw/D+ggVwFbs0UM9Tou7DHhger3lLR8qwwpTJhgL4PzN/VjpnTrf+kFHxnCTdkaspKK+AlV0Pn26Px0RdOL4hxlcAj0/MbernBwUT9W1BfMQWiW80VjMZDPpcg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=MHH8cgFYJV0Q+RWmjfaPMLo6mFAfAZoNKAq3UKtUFz4=;
- b=YEFvwba10mJ61ZyxvOk79UWPVBisIO28Cv5LQzg5vEn22PWYXnYxowIqgyEX8AzlVvy3SC4YsQ2vK3ixTpp3RP14UcsrSd/mCUJUzGYhbnjB/Lcd6Sf64mbrbbWMjB6D7ZF5pE0VWkeUBg6cYj1Y1id4yWSz1WjyfgzJFtbIxQPx3rCvyX3zMJoJ/xbHne+sHQnqUR2iUPR4FsthP9MA9lDX3IX/zh8w/5DnrTpfaUbWJPVZzOhg6dt8NYuQrkAojUDEtxUrtVd5+2Efm9YhrcP+2DsGEPTsQuffodfMKmrX3cgMU8rPQLmdCun9h/Qdm/ZJwihr0HeDlr8AYLF9Gg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MHH8cgFYJV0Q+RWmjfaPMLo6mFAfAZoNKAq3UKtUFz4=;
- b=oBsiBZRxUhVB5FQiIr7O4Dx23XwsEz0Buf+GvDsb+sPnAa8sSfeY/ESkRFtkSdMUTQ66jaXbh5c9QVAPBh6gOT7G2C8hW/alXb9zZ1Dy0DiYKFtvkcidlw6YpL92eGHPMEtGuRb9UmrkCHddJT/nHne8avyUFRj2/uMDEbbpY8M=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:325::11)
- by OS9P286MB7503.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:44f::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.19; Tue, 20 Oct
- 2026 03:11:12 +0000
-Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
- ([fe80::cce5:2aa8:53f9:dba9]) by TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
- ([fe80::cce5:2aa8:53f9:dba9%5]) with mapi id 15.21.0522.017; Tue, 20 Oct 2026
- 03:11:12 +0000
-From: Koichiro Den <den@valinux.co.jp>
-To: Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	Shawn Lin <Shawn.lin@rock-chips.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>
-Cc: Philipp Zabel <p.zabel@pengutronix.de>,
-	Frank Li <Frank.Li@nxp.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
-	Serge Semin <fancer.lancer@gmail.com>,
-	linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v5 15/17] arm64: dts: renesas: r8a779f0: Describe the PCIe AER interrupts
-Date: Tue, 20 Oct 2026 12:10:47 +0900
-Message-ID: <20261020031049.969895-16-den@valinux.co.jp>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20261020031049.969895-1-den@valinux.co.jp>
-References: <20261020031049.969895-1-den@valinux.co.jp>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: TY4P301CA0042.JPNP301.PROD.OUTLOOK.COM
- (2603:1096:405:2be::18) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:325::11)
+	dkim=pass (1024-bit key, unprotected) header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=dWvFX6XN
+Received: from [172.16.12.48] (unknown [61.154.14.86])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 51a6837e1;
+	Tue, 20 Oct 2026 11:54:19 +0800 (GMT+08:00)
+Message-ID: <5f982595-f3b1-4d64-8b14-ad38dac2b3a1@rock-chips.com>
+Date: Tue, 20 Oct 2026 11:54:18 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -115,106 +48,161 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB6866:EE_|OS9P286MB7503:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9ddc2ff3-2e16-42cb-a437-08df2e57cb7a
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|366016|7416014|1800799024|376014|10070799003|22082099003|18002099003|921020|10067099003|261009223027099003|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	oD0xFhOEFzpLUcVyhBYrDC6HBMmqlm+uL/n4ob8jNSCr7lHt1ZWwNDaXedIteaa2U3n3TZOO4FwM1C/MXIrJrXPGFCgSNpCAeVll5sq9CKCyDOAT9Ey2iyV3xbvJRE2gvkubFyeXaZmu+rny3wCDGGZVYxJk2tKh+lZTDLZbUKwXzfF3cirSPOBHSch7W37vU3xW4/66RqpEkIVdzqiUmXO/yvX94gjLOjxvJdAZMb+i1IpAm9Mz8IVGqaHBP265A92U7fQwyEBC/tAZgjjzJlEcoIwmuBlglCBjddz+sstNuEcofRphRjRbrKn0iZHadgvPFvwQuYRli0gNq1SzinRphxpdu0qjOm1XbH33isFEuFedXUp7fzOETzUokbVTs5xPiiYl7V2r6nSG4uDRE5EzHfSvJtcdmFXVPx+wKevsDGO/4y1zAI6C84bEwablJk0W8sb61dSmQIkYCA9gapelVHI/2NfRW/ADrLTXctbDGF0k2jyHlVwOhI9nKFgpxEhHCWb/QH/XJs3Mu4kn7zGTb3Sq9oN5W/wFE4T4OngIx7wF6K2+VosZq5zUxADaORinJrMOTK+lUNWHZhbhFWz4/l/n5etkH8seD7yCAz3x8AetSlcB0YryEQh3rmTzA6cPm2BuhCkwycwreir0RGq+yK6uoEDvZcfF8Dm+v1D62YasWyFemFNz0P7Yp5Sr5jUvx0vFBZV5yQqFsVbmLw==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(7416014)(1800799024)(376014)(10070799003)(22082099003)(18002099003)(921020)(10067099003)(261009223027099003)(56012099006);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?7jnXLdN3j/kEdfK557AEaUXsKGEZJqQ/d1J7HVWQSyEoZ7QwmGyDQeIEzfXe?=
- =?us-ascii?Q?1GsInC9AZdLMql2E4eP9kwuBXGYJfzd2F1ooJTJTq5HNCMuUYNANdW5hLDsJ?=
- =?us-ascii?Q?2nHQIyPfmufIjSSEo8+CfBdfceQYavuEjGVwHuYdbIe4lMXWbf3vBLywgCrw?=
- =?us-ascii?Q?WItoSjBDdlk3DfZujqgXNEuQNJBVOsWM9yA3XOaghVeVKkv4IYCWNp0cnmSO?=
- =?us-ascii?Q?JM06fN4zVS+QPMddKBVzNlbxpNuEUpno8Q32TINrRQ264lET0LkoNhwnen66?=
- =?us-ascii?Q?2GRvUkEUiIJQelTtMOjGJH4BQpiNW4+/tIgBjOwUaWlUnqnxd5WS7fuCWXwm?=
- =?us-ascii?Q?RGapxtk7YY9Tw8C9jHfIhrUTOWt2Np/GPAwnfuV7fb2ROtVX3pd/0J7W78sb?=
- =?us-ascii?Q?kPQqV6o3wtpjCUDhHjndYo228Xahmuvo8P6Va9pODTXvHghF1/Cr5Bejk7sF?=
- =?us-ascii?Q?fR6ww72Kql6nWH1b6nZfXKOUy5PA+yfNCnaBbs7jPNkCSTQifCHKCUve6J+R?=
- =?us-ascii?Q?rDl3zMsG3y/gF7bGUj7fg0gzR4Q71vUwszyYOPiUIRrXZ9CsUd7xvSIDL47D?=
- =?us-ascii?Q?5WMyYAvuxUE2bgD8ZcbmPfXoBsHfJx++X77kczZTNT1gC5YRAZwZfV8QuAja?=
- =?us-ascii?Q?yGbckp47g/lQUr0eCfjoflo/gyoyvHKnd1l7MT8H9iJ87ERd2EM8LLB4z0v/?=
- =?us-ascii?Q?TeSASzj9gaymRLETVUlMUYVR3iYaJXefTW1+99+tFpWtdx7IsgiCc1wUi8Hy?=
- =?us-ascii?Q?zRXGP5bcYCt229/PHDp1C6j3r5dhQXQkaGNMGeH4LqVU6FyUTQ0+hwnI5vA5?=
- =?us-ascii?Q?G3ZBMmlpULWxia2MOhQmntWpKSaMFSz28rdYepl4IE48AWIvv2Lg5xWzHim8?=
- =?us-ascii?Q?vwaQlQTbN+iqeGtufAAyDOBLFBSZhfa+jtgrqH1Z5yHhSjsZNehNLojTPrGr?=
- =?us-ascii?Q?AAT71EPsZZcth7BDnrwuY/4AZIBxdBs4Y5rv3Rv2pHyT0kUUk2zFD2svB0rz?=
- =?us-ascii?Q?djMDG53WtJ0SiOEkf4Murqu8KjAIUENk0bcHUKSOuBxaylrO2tiD+Ok55xMF?=
- =?us-ascii?Q?WsIejisXlkG1QBK3cvpRq33j4e7TlYShoGv4JYPIsr9zuEkG7pjYnmyrCtKh?=
- =?us-ascii?Q?/vMt+VyaZ8M5cXqN9RyWxv4NyN/3WmhCgX2xX/cFIw/X9LObi+9pLjp7QsaQ?=
- =?us-ascii?Q?GJ37v7kFbbSwmjkifoqSzGAJIydr7sBt2uUhbeN23DGUXWA/RCcoyxXLy0Ka?=
- =?us-ascii?Q?ONUPmy3ZcMCGLdFxnjLPtkz0+AJfsmgcWk6Zi5r8nzRU8rq8VeGSBAK3rAdu?=
- =?us-ascii?Q?+yecKxOWUHev/iyhmlhSxDY0GOaBjoXSJp0BqCecQBwRpmlhNjyPiS1WXOeZ?=
- =?us-ascii?Q?5wGp2hnax/ehG6tLcxPZ2WQZ9d0uxUZuj2MbOM23SUfw/WeDu+iVWh5woXQC?=
- =?us-ascii?Q?Xlr6ec0bCsCxupWfYlSGAJGzCnovbUYLs7ryMgt9jJHuYFMFUk9ZUtMUUoL+?=
- =?us-ascii?Q?sYXsji1nsjv8yYNIluo4L9j9vA/nt+PHvsDaj/pblWVL8vx0KOZp4P3UJWkj?=
- =?us-ascii?Q?RjuW6BaPT6Ft+5xB2a7bcMZA6kcRhqlImLr+EaQBhMRS1pOVqqyC5qdgRiiD?=
- =?us-ascii?Q?vYfzhYcrcbhi6V9MTtadbRNajP6pbKIT1qnPZoE1spiO72h1rGVLM1AYsyfV?=
- =?us-ascii?Q?IxCMKIY7msMHFKhCG9XvqOARxrnkeXOp/kNn0MssthZ6KG2ss5rvxeHgZfbJ?=
- =?us-ascii?Q?9apq40B+H/LiWs7MeDgkDLAEOFxZBRKSHA2fZDCVs7GuFY5QgmUt?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9ddc2ff3-2e16-42cb-a437-08df2e57cb7a
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Oct 2026 03:11:12.1500
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Uhz2LmIO2fpkYAgs3cIcohT/rrgPD4V89M5L0HntqtSm2Syh/+x2T8Dj3JYJygqNPJg9Bhr42bmw85k9wML7IQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS9P286MB7503
+User-Agent: Mozilla Thunderbird
+Cc: shawn.lin@rock-chips.com, Philipp Zabel <p.zabel@pengutronix.de>,
+ Frank Li <Frank.Li@nxp.com>, Niklas Cassel <cassel@kernel.org>,
+ Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+ Serge Semin <fancer.lancer@gmail.com>, linux-pci@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 10/17] PCI: dwc: Free the MSI domain after the host
+ .deinit() callback
+To: Koichiro Den <den@valinux.co.jp>,
+ Marek Vasut <marek.vasut+renesas@mailbox.org>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski
+ <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
+ Magnus Damm <magnus.damm@gmail.com>, Jingoo Han <jingoohan1@gmail.com>
+References: <20261020031049.969895-1-den@valinux.co.jp>
+ <20261020031049.969895-11-den@valinux.co.jp>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <20261020031049.969895-11-den@valinux.co.jp>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa157721e3f03a4kunm5db5cf0491b23d
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkZHk1IVk8fTEpDHkIfSh0ZTFYVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUpLSU
+	9PT0hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=dWvFX6XNnQNDR54IgdjXK6+k4kPUsSDESx0hmPEK9CoHYPoYPS0d77IXfq3s+v1Qxj3fTIBAwRaKWsn3O8elzaUYD1cu5iRW2dkO4UW8upfXaIscnbBGfY5xfMjKVXta5Qo0njIwP1rdhnzY6gY1cmozU5QeojPoA9OiMf/ExSM=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=unM+Wmu425LqozgSwnXty70TeWuAL+4t8eE8dEw9cXU=;
+	h=date:mime-version:subject:message-id:from;
 
-The PCIe controllers report Root Port AER notifications through
-intreq_pci0_lperr (SPI 421) and intreq_pci1_lperr (SPI 428),
-respectively, separately from the integrated MSI receiver interrupts.
-Describe these interrupts with the "aer" name so the controller driver
-can use them for Root Port error reporting.
+Hi Koichiro
 
-Append the new interrupts to preserve the existing interrupt indices.
+在 2026/10/20 星期二 11:10, Koichiro Den 写道:
+> dw_pcie_host_deinit() frees the iMSI-RX domain before calling the host
+> .deinit() callback. For a core-owned parent interrupt,
+> dw_pcie_free_msi() removes the chained handler right before the domain.
+> A glue driver that owns the parent interrupt and demultiplexes the MSIs
+> itself through dw_handle_msi_irq() can only stop its handler in
+> .deinit(), after the domain is gone, so a late interrupt can still
+> dispatch into the freed domain.
+> 
 
-Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-Signed-off-by: Koichiro Den <den@valinux.co.jp>
----
-Changes since v3:
-  - No changes.
+I think you need a rebase anyway since there are two patches touching
+MSI irq naming stuff in pci-tree's next branch and will probably
+show up in tommorow's linux-next.
 
- arch/arm64/boot/dts/renesas/r8a779f0.dtsi | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+...
 
-diff --git a/arch/arm64/boot/dts/renesas/r8a779f0.dtsi b/arch/arm64/boot/dts/renesas/r8a779f0.dtsi
-index 17a632770e65..8c818eb93119 100644
---- a/arch/arm64/boot/dts/renesas/r8a779f0.dtsi
-+++ b/arch/arm64/boot/dts/renesas/r8a779f0.dtsi
-@@ -785,8 +785,9 @@ pciec0: pcie@e65d0000 {
- 			interrupts = <GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH>,
--				     <GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>;
--			interrupt-names = "msi", "dma", "sft_ce", "app";
-+				     <GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 421 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "msi", "dma", "sft_ce", "app", "aer";
- 			clocks = <&cpg CPG_MOD 624>, <&pcie0_clkref>;
- 			clock-names = "core", "ref";
- 			power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
-@@ -824,8 +825,9 @@ pciec1: pcie@e65d8000 {
- 			interrupts = <GIC_SPI 423 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 424 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 425 IRQ_TYPE_LEVEL_HIGH>,
--				     <GIC_SPI 429 IRQ_TYPE_LEVEL_HIGH>;
--			interrupt-names = "msi", "dma", "sft_ce", "app";
-+				     <GIC_SPI 429 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 428 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "msi", "dma", "sft_ce", "app", "aer";
- 			clocks = <&cpg CPG_MOD 625>, <&pcie1_clkref>;
- 			clock-names = "core", "ref";
- 			power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
--- 
-2.54.0
+> +static void dw_pcie_free_msi_domain(struct dw_pcie_rp *pp)
+> +{
+>   	irq_domain_remove(pp->irq_domain);
+> +	pp->irq_domain = NULL;
+> +}
+> +
+> +void dw_pcie_free_msi(struct dw_pcie_rp *pp)
+> +{
+> +	dw_pcie_remove_msi_handlers(pp);
+> +	dw_pcie_free_msi_domain(pp);
+>   }
+>   EXPORT_SYMBOL_GPL(dw_pcie_free_msi);
+>   
+
+
+dw_pcie_free_msi() now calls freeing irq_domain unconditionally:
+
+The problem is that pcie-qcom.c uses the ECAM init path, which does not
+go through dw_pcie_host_init(), and registers its own devres action,
+see:
+drivers/pci/controller/dwc/pcie-qcom.c:2034
+      return devm_add_action_or_reset(dev, qcom_pci_free_msi, pp);
+
+drivers/pci/controller/dwc/pcie-qcom.c:1995
+      static void qcom_pci_free_msi(void *ptr)
+      {
+             struct dw_pcie_rp *pp = (struct dw_pcie_rp *)ptr;
+
+             if (pp && pp->use_imsi_rx)
+                     dw_pcie_free_msi(pp);
+      }
+
+This leads to the following sequence:
+
+   1. dw_pcie_host_init() succeeds and pp->irq_domain is created;
+   2. the driver is removed or probe fails, dw_pcie_host_deinit() calls
+      dw_pcie_free_msi_domain() and sets pp->irq_domain to NULL;
+   3. the devres action qcom_pci_free_msi() still holds the same pp and
+      calls dw_pcie_free_msi(), which enters dw_pcie_free_msi_domain()
+      again;
+   4. irq_domain_remove(NULL) dereferences a NULL pointer and the kernel
+      crashes.
+
+
+So I suggest you to add a safe check if (!pp->irq_domain) before doing
+that.
+
+
+> @@ -633,7 +643,7 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+>   
+>   	ret = of_pci_get_equalization_presets(dev, &pp->presets, pci->num_lanes);
+>   	if (ret)
+> -		goto err_free_msi;
+> +		goto err_deinit_host;
+>   
+>   	/*
+>   	 * Allocate the resource for MSG TLP before programming the iATU
+> @@ -649,7 +659,7 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+>   
+>   	ret = dw_pcie_edma_detect(pci);
+>   	if (ret)
+> -		goto err_free_msi;
+> +		goto err_deinit_host;
+>   
+>   	ret = dw_pcie_setup_rc(pp);
+>   	if (ret)
+> @@ -686,14 +696,16 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+>   err_remove_edma:
+>   	dw_pcie_edma_remove(pci);
+>   
+> -err_free_msi:
+> -	if (pp->use_imsi_rx)
+> -		dw_pcie_free_msi(pp);
+> -
+>   err_deinit_host:
+> +	if (pp->use_imsi_rx && pp->irq_domain)
+> +		dw_pcie_remove_msi_handlers(pp);
+> +
+>   	if (pp->ops->deinit)
+>   		pp->ops->deinit(pp);
+>   
+> +	if (pp->use_imsi_rx && pp->irq_domain)
+> +		dw_pcie_free_msi_domain(pp);
+> +
+>   err_free_ecam:
+>   	if (pp->cfg)
+>   		pci_ecam_free(pp->cfg);
+> @@ -718,11 +730,14 @@ void dw_pcie_host_deinit(struct dw_pcie_rp *pp)
+>   	dw_pcie_edma_remove(pci);
+>   
+>   	if (pp->use_imsi_rx)
+> -		dw_pcie_free_msi(pp);
+> +		dw_pcie_remove_msi_handlers(pp);
+>   
+>   	if (pp->ops->deinit)
+>   		pp->ops->deinit(pp);
+>   
+> +	if (pp->use_imsi_rx)
+> +		dw_pcie_free_msi_domain(pp);
+> +
+>   	if (pp->cfg)
+>   		pci_ecam_free(pp->cfg);
+>   }
 
