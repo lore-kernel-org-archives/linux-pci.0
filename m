@@ -1,102 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.82.176
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792514367;
-	b=3EjHJwH7qg8kjFq4o0SRfyaXeJw6lDAGysLUsVwmME+cI4SKtgrtkitgPQTk4QCBw/vR
-	 9DMXJn72Gku6Pnl8ary2npueptPO41o7FLu00lD49lS3d5I4YHI/Ultm9SwrfnVgCVrrZ
-	 tmDE5xaKPFQzru+75alrUJysrCQAvXG7C0DNydyMMBAQClTv9IkMEjcD1lSfZeVXooPS/
-	 0685TjafKb51fkLeRjpsR1mqHTW0d+alI4xCWVhW/VWMQ6g4rWsty7PgUf7gCfvMTn/FK
-	 gH/uRSBm74dUNn6Q6Tp5aEYB96TLDarlBofls3XnDOX7KCZgWUCYFjmvHEHGpwbVUKQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792514367;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=9cdkm/1auD8QI195+wns4rrwS9hItJzoaOrK80+ng1w=;
-	b=J+XTOLhHTN/DKNn1joyM/8qfQqQQ3KY6dw5OuCvzpq/gPtXnH7mSSCReaPDMBSekH9R8
-	 g1qn8KikORDuzNKU5hZ0Pn31XDE6C+6bQ0uyDY3fWEv6DZQUrh9f5JVyomfL8oldxoVP5
-	 neKSN2eJ+XNRzGhU0zW/Wm9v5cNCabdxttMPsdDOh7uc86VNn4/hxjVhyroNMD0PUZYWm
-	 Yqp5k2AI/c1Hu+V6afV96Z8opxeUpMPP2oQTsj6O3JxUF58MdxCvuIFe4VQZL8Gj4CKkU
-	 C78e2cTNdxF3bzgXDKjNnfI0E58l9lI06I85qT7YEZcMcxYtAam/PCbUg7qoEQbcG3w==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=enkbmR5N;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.82.176
-Received: from mail-dy1-f176.google.com (mail-dy1-f176.google.com [74.125.82.176])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.97
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792514407;
+	b=lkyTlqi0r+VjbCy/B1fTmG0m1BsR1vx4VGj/r7MZ/U+68txbnO9gXl6cV9RznlXNxLAu
+	 3jQoIjLEEwSL9bqoDQ63G0Yj0Pca/3/mLi2/9JaspeQyBDQBNZGgzBdOvDKDWIkNTIA+C
+	 sxVJqTLSvAGyPrKGvpzm1QCpGGq9656UXUGj3MH7NtTDm+oSzuICk91FIGRVovXjxeNFk
+	 +NTk8/88JspBcj6Kur5Bo7hemj3o9yoaS5ZVU9f5SUfSf8xB3wW2fr4IhkXVggPJmJXCJ
+	 ljhbJJO2sYvZdI7HuIz7M9Mhlzk/SP6f5ViJC/AqJbeHRlpI2sKBD97p1Su+qzoXbtg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792514407;
+	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:X-Relaying-Domain:
+	 X-CFilter-Loop:Received:DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Received:X-Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:Autocrypt:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 X-DetectorID-Processed;
+	bh=h4e35O9vinCVQ3Dvv8AyNcp+IPtrtbVDIcNsVfa87Fg=;
+	b=5K2xL2uCA99s8uJcE8LtRnMbnIIsep8sQI+lHiz427E2CdidG4YHl6UX/B82TCdgf7se
+	 owuGAUhlUAHEvoUMbRPAslX9aPTwhm41rR615YrkAkxxXnYTBXcFaSR3hiACscvOulXSJ
+	 LtuU5y6/Q+R56twqoq6z5QG4p13U8+HU7jUCFRT4ya7q/Z8kHiHvc7Y2rdEO9SgleJyGN
+	 YDc8CnAfWCvpONXnkKTtM8bcABf/rk9ggmq9bczi7HIFUIhrsaeq0zA+VQsbQKbRRgD4V
+	 bgUSUfMRzEP0bkhtk7YNoh5YrvSOeMeEpMwSvicZNoojvjjVRtv89B0WCcxlc+Yw9Ug==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=broadcom.com;
+	spf=fail smtp.mailfrom=broadcom.com;
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=f5ZAn2ui;
+	arc=none smtp.remote-ip=209.85.216.97
+Received: from mail-pj1-f97.google.com (mail-pj1-f97.google.com [209.85.216.97])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F4AD606A333
-	for <linux-pci@vger.kernel.org>; Tue, 20 Oct 2026 16:39:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4F4AD606A333
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC604606A33D
+	for <linux-pci@vger.kernel.org>; Tue, 20 Oct 2026 16:40:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BC604606A33D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=enkbmR5N
-Received: by mail-dy1-f176.google.com with SMTP id 5a478bee46e88-33c10faf6easo385401eec.0
-        for <linux-pci@vger.kernel.org>; Tue, 20 Oct 2026 09:39:27 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792514366; cv=none;
-        d=google.com; s=arc-20260327;
-        b=oNLTCtCDTim5Ytvk+q5/vV8hZ03mLnRq3F27oxAnC8HsIRPrDxoRww7NQScBVud9GT
-         iQIGbhdy1+zjIkU/UBb0zS5PIX8La1NZqmEjZlRPXeR/v8+TAEmt590nT4qFmpBSKmNq
-         SuhtMIRRBc20Juau9FNiPINBOzFHBMUCP9NAuDZtKld7A8NQOKUPDLacWOcNt2NQ9R+H
-         pwKdnrUR1m+M/8woFzlDxpsviDJju7uzSb52kQ61UFVPwFTApA/mgJIdTeFeeSgrizUh
-         ZUcv5Rb3uYlq/6WzBGDAuEowRQvHlqqB4MP/OMg66kqiTdMI2eEaa8KxOtXCs9mxmzQw
-         jllg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=9cdkm/1auD8QI195+wns4rrwS9hItJzoaOrK80+ng1w=;
-        fh=7icAvTm6uafgf8mzMzf1kAP0Oneh7ONFQl+VBw8RXhA=;
-        b=dazQMYzSPMpYkmFAm9k58UzWjs8bof0S2butmnvO0Rrajh+/UMI2tMs5/S08hxcre0
-         XlLpmd1k/NpmSDAVOj+3YZZkly//L45dMFJxSmB66B5kBew5WmuebGBg5Ki9ND315fz+
-         PeE+E0Nod8M2Yv8t5tmJIu8MZBGtIfK/Tk9wall8OP7FU1/p7+ghK2uV7SE/ogb8kQC8
-         qsat0knijbwLWgCPSS7hsLs9e3luAbTN76HIoeyiBG1eN/Zvi/GxfYhapvf2mQGakwKy
-         zrs0PLK8idVDBdv8T4L7eoBFn6UTRHPNdqij8TNHUaZcm9od+dwIG25renCu8PJRuUzz
-         LC+w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792514366; x=1793119166; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=9cdkm/1auD8QI195+wns4rrwS9hItJzoaOrK80+ng1w=;
-        b=enkbmR5NTVbQ3UrlQC171YQTmcaAcweChXaMlD/dH3Kb0NdENuVXXvN6HdylZ9SxOc
-         YZDdTFSVaIlTSe+WbxvtGwjaue5Oso8RDImcyW75nMxyHJv4wJLaVJYMckH1jXWy7M4V
-         jjVwjSnIkX7ngKBx12o/x0jHhkNsYjaMeEqeYPTlLs2s7qN0vYhvrJk62IysjOGbMHXk
-         BKM0oi7e3qstE3umQzjkF5wcADd87bZr9CfbK5CVLXuY0F6yh6vIT1l1N8rExH/j8BuO
-         OrzSzEVnZbIAFyjMi9EAa+l25RIvlyXNJ7A3AT9Fn38GUnYn3ohZjgFIHOUUSKMmjmwS
-         d0ug==
+	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=f5ZAn2ui
+Received: by mail-pj1-f97.google.com with SMTP id 98e67ed59e1d1-38ec1402b05so2212720a91.2
+        for <linux-pci@vger.kernel.org>; Tue, 20 Oct 2026 09:40:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792514366; x=1793119166;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=1e100.net; s=20260707; t=1792514406; x=1793119206;
+        h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=h4e35O9vinCVQ3Dvv8AyNcp+IPtrtbVDIcNsVfa87Fg=;
+        b=FgM4+G49v4zr3frrkPS4PsnbAIORmDrmMREGsRInZ9RvTxUI1xP3UvadzwyuXFv36l
+         p6Qm/PQieXwqrcWxGgAQ91v78bEQhESWG1hGKalCV+TT03uhMt0uUvdrNjeKCp0IGuAt
+         R04/Ov44qV9hbmPUgRqM6C0bxujU+9STImJk1tM5EP3NZhffK61Ax5DyuI4asBZCXVO5
+         5yRLC3+VtdrePtC9to1mUtrq6YZreSZWkHQeQbJM8JAiQsVJJrlOOFl+ZjUiXyVEj9tv
+         W4IKAKqs35qTLUDZK2B3Uq7IdgqOdhiwZ9QDWRv02M4VthDGSw1fw1lCruPN3u9fpVmi
+         Ovcw==
+X-Forwarded-Encrypted: i=1; AKwUvBykbe2IcZFgLPpe81D2HSiJL2y+3Ff6tzFikNUvY/WtpBeITWY508OcuQSDD0G9nW5QAhy+0f4tiB8=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJ7WJni6MxYHTQihrgjGrcUli0xNwkRAVc/lVl2/0GuH2qAY4xL
+	UJJdezJ8Sxm+nmwTnU0rkRJq9/fD/YXEHK2R1MUlFspAz3CecjGncJ5ufKJ+QJe8PL2kEzITK4j
+	ugHxkAp6HAbwzzKHruNgBvPwdzaDNS3OmUATIa22HUTtW9JzARrfnnmEmzDGrlGeRuVt9mWn4+X
+	WfNStNxHrxjfw4Fulj4CSzFGLCTaMp+V4SDjrT3xPAhoICPe6oJrpD0H40Ryq/UdE1TCWwFuKBG
+	A3dnwOoKH6TAv76T1+Q
+X-Gm-Gg: AYBFou0rb2F73c1MbcZrf24K1E27XEZPxoLhItkmMYxk/cORx0BLE7/yQ0Yv3U9OkKv
+	JcQcAuxSPYLlprsKESEjSCPuvucKO5MIhoej7qMWV72CyaVieqFkVE40FECGUuOUa9eGGxLi+8o
+	4dbwDzn+9U35XBsuTkOwCPzk/JE/IT+Y1FYBkfI/rZIMNrxY0Paf31KtFJFesUSpOR4fZnGTKJa
+	gA+Rc5xYKsFXM0FJwTSM2AKYZypIr50JWj6jky8SiM9kmVW41iGKNGVidHm/yiGHcAy/UCTEugM
+	J2YKUSuAWlvI0ag5bpKUXB3Nbq3zO8qgj1wOHF6P1KZ1Xk3SkFJuah050ic8R1rzqDtMEixM/3v
+	UD3JnvsJuHZ9Aisv7f2UkbIGX0xnnw97KKQ91API74hp+L3xhAp0sFz7kddSLEri6OFGtp+k6wR
+	+E5MbS9RYkLyYfHRzd6dXFfIaDV7FZo4kPZUBlrgOmn08=
+X-Received: by 2002:a17:90b:3e85:b0:3a7:82ef:bcdd with SMTP id 98e67ed59e1d1-3acef519f17mr10053728a91.41.1792514405857;
+        Tue, 20 Oct 2026 09:40:05 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-125.dlp.protect.broadcom.com. [144.49.247.125])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3ad80b83bbfsm85390a91.0.2026.10.20.09.40.05
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 20 Oct 2026 09:40:05 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-91bc57d4d11so74409466d6.1
+        for <linux-pci@vger.kernel.org>; Tue, 20 Oct 2026 09:40:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1792514405; x=1793119205; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=9cdkm/1auD8QI195+wns4rrwS9hItJzoaOrK80+ng1w=;
-        b=ryRdAThQ/NRLr+Yji48HQFjWsU+1fDwjOoxWlqcntGRRrPvT2BPuX+WwA5ZlxACU2N
-         Xy+wkDvRNYQj+Hx3gQXGBYPTVjI0hDTYHRg1bz7ZqqFFe972lKBXDwgTiZQ34omG6OLV
-         h7OPkegeoUguddunfw4tcZELhKlqOxK37kCKFhSr/PbnZg2AWrnCs21s4AQms1ipEhNP
-         PdWkmvuPvK4p69VukChPZSBxYvNeCDNJxcnYIt931HpL+1KUcpzzPwQdtpWP5h5FL2XJ
-         1GWN/tTkuhFgtTMCUevA+ZO358/4wPAa5o1nq4R2O9xRN8xOffTKzRgoTjmNtq0wZOOW
-         JCWA==
-X-Forwarded-Encrypted: i=1; AKwUvBx1ZATbYEfzObHeCaxQ6y1+kbqWKwM4EEevQP+Lan88zjlc59fQOmrA/H5h7RJ0sczYprFkeIMHlG8=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJyRvzVFdS0sj/X12gcQS1w5ukbDABYnJ8wHhwPOrONu2iWSW9f
-	8sqfbs2R0Eby/cDsAdMTZpOLUiLHjfJ5smsMyZDC5UEtjSByUEq8Q5tJY7SaKhxveu6QLCLY7I1
-	ZmkF4wXczaZ6iTX9/6nyapriECJBS6/A=
-X-Gm-Gg: AYBFou0zMOUPeSkA7DEEWJs/fI+g0dBXsHsRQhzsOhXS+fwYD3P7MAfZEd8nXsrjgaC
-	EawLcHN3YqVWmM2xJHwV1xVzBuMfoC4mPQINuOhlUMwL4ZJp2eRdBaP2IuVJ+JiU3gOkpk+G2XU
-	0p3+k5E0iEBxVF/+gU03LybJYkn97jddgLf7mDn7PJHXrnRWGL550qtU+THmVu7aDrgE1WRTiuv
-	jom9suRr7zfnEXmAii9TkNjh4BL4AloQAefjagfWwPDmGI2CfGGGaBZC3TeI/SI1/Qs1NXreXcH
-	2+OQQCAE+3RhsO4VqHQPXOGRSZxDmyidK08HiQB9GHvpxSjeae+yy3YZsdnbvD6gxKVpqvU2wrH
-	vJunx+NvlNX+Q2Dus5AGUGFsobrXT/2pykTtfgBUaCKWJWBO2pxAtD5SF+kSzbdpaPfegoGgWcT
-	anW6/KT89zNv+sLerGKChsTFXE3QQ0Q3C0g1TNkaABDX8gA43N57Sj1xfvAc7aLFbpawI08pxZX
-	rU3B4s6fM2pKGnp8AHjBX9LpVnTHqFO8xlg
-X-Received: by 2002:a05:7301:da84:b0:351:7e15:9c59 with SMTP id
- 5a478bee46e88-3619b30919emr24534750eec.0.1792514366275; Tue, 20 Oct 2026
- 09:39:26 -0700 (PDT)
+        bh=h4e35O9vinCVQ3Dvv8AyNcp+IPtrtbVDIcNsVfa87Fg=;
+        b=f5ZAn2uisPrO4JPbTpZIaiPAlniZ1m3q9gcugHsL9B2seyjs95OenZNxs2SH1v5lpK
+         JwwESNmIE7wZUSFPrO2JYciOg20S8vnx2u08K84gP510xqGhqXaQMwGvo1AVKclmkg5n
+         OfW//GcLbQK3bPZW2UAcjTaqdS4/cIWzECA/g=
+X-Forwarded-Encrypted: i=1; AKwUvBxiBTwMtZuh4TGDcjfNYnxr5WAt0mPkoo6M30oRlQiak4ssF0L7CX+y6lkH4oyRSIw8y73ImV3yzgo=@vger.kernel.org
+X-Received: by 2002:a05:6214:62cc:20b0:91c:5ca:801b with SMTP id 6a1803df08f44-91c05ca85ccmr31567736d6.24.1792514404552;
+        Tue, 20 Oct 2026 09:40:04 -0700 (PDT)
+X-Received: by 2002:a05:6214:62cc:20b0:91c:5ca:801b with SMTP id 6a1803df08f44-91c05ca85ccmr31567116d6.24.1792514403938;
+        Tue, 20 Oct 2026 09:40:03 -0700 (PDT)
+Received: from [10.67.48.245] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91c10bb221fsm2310886d6.20.2026.10.20.09.40.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 20 Oct 2026 09:40:03 -0700 (PDT)
+Message-ID: <14d6f296-c117-4f72-a5a6-a4e97fa32a0f@broadcom.com>
+Date: Tue, 20 Oct 2026 09:40:00 -0700
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -106,46 +106,100 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261016-rust_leds-v27-0-2c296d8a8e5b@posteo.de>
- <20261016-rust_leds-v27-4-2c296d8a8e5b@posteo.de> <20261019143818.GC2663669@google.com>
- <236149b4c90323f412d6385c034a78908013e2d7.camel@posteo.de>
- <20261019160407.GG2663669@google.com> <14fd9a916dd0792a74ca01ae073e714f95a9c780.camel@posteo.de>
-In-Reply-To: <14fd9a916dd0792a74ca01ae073e714f95a9c780.camel@posteo.de>
-From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date: Tue, 20 Oct 2026 18:39:13 +0200
-X-Gm-Features: AclHuK8raElhkbPr-7bZyBZSZrGqtKLbWS10csaRXDChmKEDOAjNZ5GlvVMRpWY
-Message-ID: <CANiq72mRvmHOM3wHseReRXUCgpWh2Qzbhto5LqG+eOQ_pUGLGA@mail.gmail.com>
-Subject: Re: [PATCH v27 4/4] MAINTAINERS: rust: leds: Add rust abstraction entry
-To: Markus Probst <markus.probst@posteo.de>
-Cc: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dave Ertman <david.m.ertman@intel.com>, 
-	Leon Romanovsky <leon@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, Alex Gaynor <alex.gaynor@gmail.com>, 
-	Gary Guo <gary@garyguo.net>, =?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
-	Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
-	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
-	Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Boqun Feng <boqun@kernel.org>, Daniel Almeida <daniel.almeida@collabora.com>, 
-	Tamir Duberstein <tamird@kernel.org>, Alexandre Courbot <acourbot@nvidia.com>, 
-	=?UTF-8?Q?Onur_=C3=96zkan?= <work@onurozkan.dev>, 
-	Ira Weiny <iweiny@kernel.org>, rust-for-linux@vger.kernel.org, 
-	linux-leds@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: iproc: Skip BCMA-attached controllers in the
+ platform bus driver
+To: Semih Baskan <strst.gs@gmail.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Rob Herring <robh@kernel.org>, Ray Jui <rjui@broadcom.com>,
+ Scott Branden <sbranden@broadcom.com>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?=
+ <rafal@milecki.pl>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+ Arnd Bergmann <arnd@arndb.de>, bcm-kernel-feedback-list@broadcom.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+References: <20261019065249.552-1-strst.gs@gmail.com>
+Content-Language: en-US, fr-FR
+From: Florian Fainelli <florian.fainelli@broadcom.com>
+Autocrypt: addr=florian.fainelli@broadcom.com; keydata=
+ xsBNBFPAG8ABCAC3EO02urEwipgbUNJ1r6oI2Vr/+uE389lSEShN2PmL3MVnzhViSAtrYxeT
+ M0Txqn1tOWoIc4QUl6Ggqf5KP6FoRkCrgMMTnUAINsINYXK+3OLe7HjP10h2jDRX4Ajs4Ghs
+ JrZOBru6rH0YrgAhr6O5gG7NE1jhly+EsOa2MpwOiXO4DE/YKZGuVe6Bh87WqmILs9KvnNrQ
+ PcycQnYKTVpqE95d4M824M5cuRB6D1GrYovCsjA9uxo22kPdOoQRAu5gBBn3AdtALFyQj9DQ
+ KQuc39/i/Kt6XLZ/RsBc6qLs+p+JnEuPJngTSfWvzGjpx0nkwCMi4yBb+xk7Hki4kEslABEB
+ AAHNMEZsb3JpYW4gRmFpbmVsbGkgPGZsb3JpYW4uZmFpbmVsbGlAYnJvYWRjb20uY29tPsLB
+ IQQQAQgAywUCZWl41AUJI+Jo+hcKAAG/SMv+fS3xUQWa0NryPuoRGjsA3SAUAAAAAAAWAAFr
+ ZXktdXNhZ2UtbWFza0BwZ3AuY29tjDAUgAAAAAAgAAdwcmVmZXJyZWQtZW1haWwtZW5jb2Rp
+ bmdAcGdwLmNvbXBncG1pbWUICwkIBwMCAQoFF4AAAAAZGGxkYXA6Ly9rZXlzLmJyb2FkY29t
+ Lm5ldAUbAwAAAAMWAgEFHgEAAAAEFQgJChYhBNXZKpfnkVze1+R8aIExtcQpvGagAAoJEIEx
+ tcQpvGagWPEH/2l0DNr9QkTwJUxOoP9wgHfmVhqc0ZlDsBFv91I3BbhGKI5UATbipKNqG13Z
+ TsBrJHcrnCqnTRS+8n9/myOF0ng2A4YT0EJnayzHugXm+hrkO5O9UEPJ8a+0553VqyoFhHqA
+ zjxj8fUu1px5cbb4R9G4UAySqyeLLeqnYLCKb4+GklGSBGsLMYvLmIDNYlkhMdnnzsSUAS61
+ WJYW6jjnzMwuKJ0ZHv7xZvSHyhIsFRiYiEs44kiYjbUUMcXor/uLEuTIazGrE3MahuGdjpT2
+ IOjoMiTsbMc0yfhHp6G/2E769oDXMVxCCbMVpA+LUtVIQEA+8Zr6mX0Yk4nDS7OiBlvOwE0E
+ U8AbwQEIAKxr71oqe+0+MYCc7WafWEcpQHFUwvYLcdBoOnmJPxDwDRpvU5LhqSPvk/yJdh9k
+ 4xUDQu3rm1qIW2I9Puk5n/Jz/lZsqGw8T13DKyu8eMcvaA/irm9lX9El27DPHy/0qsxmxVmU
+ pu9y9S+BmaMb2CM9IuyxMWEl9ruWFS2jAWh/R8CrdnL6+zLk60R7XGzmSJqF09vYNlJ6Bdbs
+ MWDXkYWWP5Ub1ZJGNJQ4qT7g8IN0qXxzLQsmz6tbgLMEHYBGx80bBF8AkdThd6SLhreCN7Uh
+ IR/5NXGqotAZao2xlDpJLuOMQtoH9WVNuuxQQZHVd8if+yp6yRJ5DAmIUt5CCPcAEQEAAcLB
+ gQQYAQIBKwUCU8AbwgUbDAAAAMBdIAQZAQgABgUCU8AbwQAKCRCTYAaomC8PVQ0VCACWk3n+
+ obFABEp5Rg6Qvspi9kWXcwCcfZV41OIYWhXMoc57ssjCand5noZi8bKg0bxw4qsg+9cNgZ3P
+ N/DFWcNKcAT3Z2/4fTnJqdJS//YcEhlr8uGs+ZWFcqAPbteFCM4dGDRruo69IrHfyyQGx16s
+ CcFlrN8vD066RKevFepb/ml7eYEdN5SRALyEdQMKeCSf3mectdoECEqdF/MWpfWIYQ1hEfdm
+ C2Kztm+h3Nkt9ZQLqc3wsPJZmbD9T0c9Rphfypgw/SfTf2/CHoYVkKqwUIzI59itl5Lze+R5
+ wDByhWHx2Ud2R7SudmT9XK1e0x7W7a5z11Q6vrzuED5nQvkhAAoJEIExtcQpvGagugcIAJd5
+ EYe6KM6Y6RvI6TvHp+QgbU5dxvjqSiSvam0Ms3QrLidCtantcGT2Wz/2PlbZqkoJxMQc40rb
+ fXa4xQSvJYj0GWpadrDJUvUu3LEsunDCxdWrmbmwGRKqZraV2oG7YEddmDqOe0Xm/NxeSobc
+ MIlnaE6V0U8f5zNHB7Y46yJjjYT/Ds1TJo3pvwevDWPvv6rdBeV07D9s43frUS6xYd1uFxHC
+ 7dZYWJjZmyUf5evr1W1gCgwLXG0PEi9n3qmz1lelQ8lSocmvxBKtMbX/OKhAfuP/iIwnTsww
+ 95A2SaPiQZA51NywV8OFgsN0ITl2PlZ4Tp9hHERDe6nQCsNI/Us=
+In-Reply-To: <20261019065249.552-1-strst.gs@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-On Tue, Oct 20, 2026 at 6:23=E2=80=AFPM Markus Probst <markus.probst@posteo=
-.de> wrote:
->
-> drivers/ includes rust drivers. (e.g. drivers/pwm/pwm_th1520.rs)
-> rust/ is only for the rust abstractions (the layer between the C api
-> and the rust drivers).
+On 10/18/26 23:52, Semih Baskan wrote:
+> Since commit 767012397976 ("ARM: dts: BCM5301X: Describe PCIe
+> controllers fully"), the Northstar PCIe nodes under the "brcm,bus-axi"
+> node have compatible = "brcm,iproc-pcie". bcma_bus_register() creates
+> platform devices for the children of that node before it registers its
+> own cores, so pcie-iproc-platform probes these controllers before
+> pcie-iproc-bcma does, as IPROC_PCIE_PAXB.
+> 
+> IPROC_PCIE_PAXB sets has_apb_err_disable, so the first config read on
+> bus 1 reads APB_ERR_EN at offset 0xf40. The report in the Closes: link
+> shows that read taking an external abort. On a BCM47081 (PCIe core
+> revision 0x01) with a device behind the root port, the board does not
+> boot, and it boots when has_apb_err_disable is cleared.
+> 
+> Return -ENODEV for a controller whose parent is "brcm,bus-axi", before
+> the driver allocates or maps anything, so that the controller is left
+> to pcie-iproc-bcma. The devicetree stays as it is. The check does not
+> depend on CONFIG_PCIE_IPROC_BCMA, because a kernel with only
+> pcie-iproc-platform does not boot on the BCM47081 either. On a BCM47094
+> (core revision 0x07) pcie-iproc-platform enumerates the devices on its
+> own, so there a kernel without CONFIG_PCIE_IPROC_BCMA loses PCIe, as
+> before v7.1. CONFIG_PCIE_IPROC_BCMA defaults to y on ARCH_BCM_5301X.
+> 
+> Tested on an ASUS RT-N18U (BCM47081) on a 6.18 kernel with the
+> controller/iproc-bcma changes backported. With both drivers enabled,
+> pcie-iproc-bcma binds controller 0, the BCM4360 behind it enumerates
+> and the platform driver logs nothing. With only pcie-iproc-platform
+> enabled, the board boots without PCIe. Without this change, neither
+> configuration boots on this board.
+> 
+> Fixes: 767012397976 ("ARM: dts: BCM5301X: Describe PCIe controllers fully")
+> Reported-by: Florian Fainelli <florian.fainelli@broadcom.com>
+> Closes: https://lore.kernel.org/r/0dcfb2db-5536-465a-bee1-afe160535748@broadcom.com
+> Suggested-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> Signed-off-by: Semih Baskan <strst.gs@gmail.com>
 
-Yeah, and we will be moving soon even abstractions out of `rust/` too.
+On a SmartRG SR400-AC which is based upon BCM4708:
 
-i.e. there is no difference between C and Rust in that regard;
-subsystems already own their Rust code (unless they explicitly decided
-not to).
+Tested-by: Florian Fainelli <florian.fainelli@broadcom.com>
 
-Cheers,
-Miguel
+Thank you Semih!
+-- 
+Florian
