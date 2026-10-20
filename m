@@ -1,64 +1,63 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.11
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792520373;
-	b=Ku9idlZ5BwEBWTqJsZPswaTQ3fHZoJYuKnMcdcDzWv0NeSYIZbY4tlrGcAbkPLxBu6Cr
-	 DF/jT7/zCA3yPYArkuZk3R3fHlPSMCWbDUh+T77VgwVbqjHwDYcMRvHhaCI+kUXCCqijl
-	 aK818/mibm2+/+p/gErdytIxNKRC0V/1xpcYIIMNlGJv6sF20Y6loGv1Wk4j2qFBf5kj2
-	 hGCky15GCk87Ik8s9wX6S5AVS/2hK9KT/cPW1rofWXiX+b+3Lw7s2IFPSqd4gQBSCyUNi
-	 bGMaCbekCli1CVBSQM5tFxOR77JqwM4/b0OzPqxkxE3glDWGHIa5wzWKPo4lvKegsKA==
+	t=1792520372;
+	b=yDySMQeThYEEXvNHzSAK2JOAQl7p7geYMkYBJUcz2yibZGHzlYytL9KJAYvURcMXEvIU
+	 OBpSSKwSyafDq7BmRqEqbOE0tbu/uDOaJPM1MAr8oiNbItFFWVh9JHeHunF97shwUfJ1z
+	 Tu4UfYkefQh9QC0OI3MVooMxD+eMr7D6EVyoEznnv2k/Gdsz8ahzK5d8VLoAGuu2gIJ28
+	 P+7cY/sL0hnvUp+/80Xr4loqGPv0zj/kkeuKtlvNgeHFGS7a8zmc/9tO4JNufnekuejCg
+	 f7+gfOxZUY3JYvqbYzSpwm9g+v70aNtLdQXzjhLIAvE361/8axwm76o1zUTXupr6HMA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792520373;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792520372;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=7cXcXagyDTRYiWsmw0C+I6wer3QJwg2iX14YlwEpp4Q=;
-	b=a80KMYDYdkB7bxT7quD1H2RmeBXsIE9Hg3wRDegOyo4GrviuP+3AVxi3ZTKUJiiKB6Hv
-	 VpWWAQ081qY53x2eWmZskPJ79TH8KSdCLyLTTnBo6uZfmVi2ZF5S/K3bC0de2Dj5s+nLI
-	 SoH7JnfuT2lsLVqckvG9XRi25hJI32SE8FmkJE43b7UilCmYHUzHFzeKtZE3p8ZiKMD+W
-	 BZxGSgdVJV7+9CT7mT6tZCq6syehHtfYzM/gJPO4Nj4bXLG5eaX2u2chEPLt0nhC+9G0f
-	 SeHFBIZ2G896ItnTyYWRC4lwwRnQGHBs/UH3IyunI4fiuhQ5zC3BlbBPFxY22ft/k8w==
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=KfUqdA6x+a+aeW1vcE32ccAPw3wvWBZd45BG+NNu4gY=;
+	b=TWduAoiptLLD5GZIxVWGIZ2bv7u6DOj1TVLsfBqWilTntzEFUOgv2jqkSmQKXwXMRXpu
+	 KzdzCdU54XOXZ9KrtEpNg2uiJgGlGyjdefQIWIfeEuLFbZHnLViAhW65onuJ98GXoDL6z
+	 6ulfmXTjL7IH1DxpxVm+/6OdpzqSfqiar9qbMvBTSnvG/6vmlzIDCYAJER9wx/BOGAjz5
+	 MghLsxBs0JLdp/2zkbsAEmeoVtRVzXQA4QBIIQZ8ReftW2Q1MAnKwK9dg9D75WRnt6zYM
+	 shZ5vrvL5yibyPyn81NMd5CYYO2h67QBp00xFnx+bvSmFyZLp0WY1TU2yA2zYInptrg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.intel.com;
 	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=KtMAQ7t7;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=GYJXxHys;
 	arc=none smtp.remote-ip=198.175.65.11
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D24C60A381A;
-	Tue, 20 Oct 2026 18:19:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5D24C60A381A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C01DF60A3810;
+	Tue, 20 Oct 2026 18:19:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C01DF60A3810
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=KtMAQ7t7
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=GYJXxHys
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1792520373; x=1824056373;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=9ZQ90ownXOSqYvb8K2HE1uQ5sEoGc2uCAIUHSUy5p/o=;
-  b=KtMAQ7t785iWeEzcmKoVcLrnSqGZn3hqk2ZiiYr+MtiJNBGJT85cekUF
-   ruHUUFCXJY1b+l1q/zdugYV75fWQ6cWZzzZO06ezwCi3AVnamlai0UQNq
-   cvdzgmaLlpA3pQvbPTpoNEIJErbNCB57A2wFgT9rhyBN9dgvlt5R+tGLd
-   kJ/aRvts9pqUNd514T7klpQzCXynrueMnARyr6ZysElT/KP3zei6ppXmt
-   jmOy7aAs/WIYl8CGl8Ts1o0dJlMv4G8eJ2yZbsfDStDaRoreTrW7fBIxI
-   7r8fP97yLLxVMy0uPzXtQvJ/6RNleCiDJUhWrIM9BsC27MUfVFLbKc5OH
-   w==;
-X-CSE-ConnectionGUID: aw7JGWXPQ5uOaYFLHDN7Cg==
-X-CSE-MsgGUID: hfSILMyZR+6+Q+1ip9yhnA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11941"; a="1119692"
+  t=1792520372; x=1824056372;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=xrmY3On3SUaPiTmjJm8no6amlLfZLQFd7Jplxq/8MMw=;
+  b=GYJXxHysrPygG0n/cCRPU+ijJYobG0vMhxY1/CABQexd6udUpJ+Dwl0y
+   1Pcu+z3xmJMcB9kGw+Ht5lJXjUtIrY4jckauuk6fTV/uO8PHLE8AZJQax
+   yWbsfjp4qTqKkorPiNK9IPGA+doWN7NC9KIiAE5DfjSn9mZpjfZlg81zq
+   oPGz5dLs60KMlvNJNxwuldVb0fdpR1VyEtBkERNeuwbYkDi2lGm+zU5I2
+   9+fXwS4IfUdXzz549OdsvhagH8owxmxcg7uAZKIy8LFe/kLMOoHF0S+ba
+   zG2l03msdNaccDEIeHdr6091xl/HYuGmiz6/t4LarQLN5E0ac7FweXJ/W
+   A==;
+X-CSE-ConnectionGUID: X9MtjV6aTtaTdB+cXkWyiQ==
+X-CSE-MsgGUID: pV+ERTaIQp2EYfDC/RxnEw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11941"; a="1119653"
 X-IronPort-AV: E=Sophos;i="6.27,168,1787036400"; 
-   d="scan'208";a="1119692"
+   d="scan'208";a="1119653"
 Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2026 11:19:30 -0700
-X-CSE-ConnectionGUID: gMG2ZwmuQA6PISUj02a5ZA==
-X-CSE-MsgGUID: OewZLiDLTIK8mZAkeTTzkQ==
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2026 11:19:29 -0700
+X-CSE-ConnectionGUID: fqHd6TO7RUuZcWQGHI0Yhg==
+X-CSE-MsgGUID: t0d71XRFTNWO1N+gFB/dGw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,168,1787036400"; 
-   d="scan'208";a="3283610"
+   d="scan'208";a="3283603"
 Received: from skuppusw-desk2.jf.intel.com ([10.165.154.101])
   by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2026 11:19:29 -0700
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -71,12 +70,10 @@ Cc: Lukas Wunner <lukas@wunner.de>,
 	linux-pci@vger.kernel.org,
 	linux-acpi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 6/6] PCI/portdrv: Bind DPC service based on host_bridge->native_dpc
-Date: Tue, 20 Oct 2026 11:19:23 -0700
-Message-ID: <20261020181924.3003553-7-sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v2 0/6] PCI/DPC: Decide DPC ownership with host_bridge->native_dpc
+Date: Tue, 20 Oct 2026 11:19:17 -0700
+Message-ID: <20261020181924.3003553-1-sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261020181924.3003553-1-sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <20261020181924.3003553-1-sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -88,90 +85,84 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-get_port_device_capability() binds the DPC service if the port has a DPC
-capability and either "pcie_ports=dpc-native" was given or the OS
-controls AER.  This repeats decisions that are already made elsewhere.
-It also ignores host_bridge->native_dpc, which is meant to say whether
-the OS owns DPC.
+This series makes host_bridge->native_dpc the single decider for whether
+Linux uses DPC, as Bjorn asked during the review of "Simplify PCIe native
+ownership".
 
-Make host_bridge->native_dpc the single decider:
+  https://lore.kernel.org/r/20261001221408.GA2731929@bhelgaas
 
-  - In acpi_pci_root_create(), assume DPC control whenever _OSC grants
-    AER control.  PCI Firmware r3.3, sec 4.5.2.4, requires platforms to
-    retain AER if they retain DPC.  Put the other way, firmware that
-    grants AER does not keep DPC.  PCIe r7.0 sec 6.2.11 recommends that
-    the OS link control of DPC to control of AER.  Commit 97ca178c899d
-    ("PCI/DPC: Allow DPC on all Downstream Ports when OS controls AER")
-    relied on this link.  Keeping it means DPC still works with firmware
-    that predates the _OSC DPC control bit.  Such firmware grants AER but
-    masks DPC.  The OS cannot tell such firmware from firmware that
-    retains DPC on purpose, so log a message when it assumes DPC control
-    that _OSC did not grant.  Only do this if the OS requested DPC
-    control, i.e., if CONFIG_PCIE_DPC is enabled.
+Today the DPC service binds on host_bridge->native_aer, AER availability
+and "pcie_ports=dpc-native".  host_bridge->native_dpc is only consulted
+by pci_dpc_recovered().  After this series, native_dpc is the end result
+of everything that decides DPC ownership, and portdrv binds the DPC
+service on it.
 
-  - "pcie_ports=native" and "pcie_ports=dpc-native" are already folded
-    into the _OSC control mask, so they are reflected in native_dpc.
+The series depends on:
 
-Then bind the DPC service if the port has a DPC capability and
-host_bridge->native_dpc is set.
+  - Three patches from v15 of "Simplify PCIe native ownership", merged
+    into pci/portdrv.  They fold "pcie_ports=native" and
+    "pcie_ports=dpc-native" into the _OSC control mask, so native_dpc
+    already reflects the command line.
 
-The only change in behavior is for firmware that grants DPC control but
-retains AER control.  PCI Firmware r3.3, sec 4.5.2.4, does not forbid
-this.  The OS now uses DPC there because firmware granted it.  Since
-"PCI/DPC: Reinstate support for AER-incapable ports", dpc_probe() no
-longer requires AER control.
+    https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/log/?h=portdrv
 
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
----
- drivers/acpi/pci_root.c    | 16 ++++++++++++++++
- drivers/pci/pcie/portdrv.c |  6 +-----
- 2 files changed, 17 insertions(+), 5 deletions(-)
+  - Two DPC patches from Lukas's "Error reporting for AER-incapable
+    devices", which are included here directly as patches 1-2.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 5c674d5b6bb8..b380b6d8874d 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -1056,6 +1056,22 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 	ctrl = root->osc_control_set;
- 	ext_ctrl = root->osc_ext_control_set;
- 
-+	/*
-+	 * PCI Firmware r3.3, sec 4.5.2.4, requires platforms to retain AER
-+	 * if they retain DPC.  Put the other way, firmware that grants AER
-+	 * does not keep DPC.  PCIe r7.0 sec 6.2.11 recommends that the OS
-+	 * link control of DPC to control of AER.  Firmware that predates
-+	 * the _OSC DPC control bit grants AER without DPC, so assume control
-+	 * of DPC whenever we control AER.
-+	 */
-+	if (IS_ENABLED(CONFIG_PCIE_DPC) &&
-+	    (ctrl & OSC_PCI_EXPRESS_AER_CONTROL) &&
-+	    !(ctrl & OSC_PCI_EXPRESS_DPC_CONTROL)) {
-+		decode_osc_control(root, "OS assuming control (AER granted) of",
-+				   OSC_PCI_EXPRESS_DPC_CONTROL);
-+		ctrl |= OSC_PCI_EXPRESS_DPC_CONTROL;
-+	}
-+
- 	/*
- 	 * If the user specified "pcie_ports=native", use the PCIe port
- 	 * services regardless of what _OSC says, i.e., proceed as though the
-diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-index b77680fd3b75..f1beb440a3dc 100644
---- a/drivers/pci/pcie/portdrv.c
-+++ b/drivers/pci/pcie/portdrv.c
-@@ -258,12 +258,8 @@ static int get_port_device_capability(struct pci_dev *dev)
- 		pcie_pme_interrupt_enable(dev, false);
- 	}
- 
--	/*
--	 * With dpc-native, allow Linux to use DPC even if it doesn't have
--	 * permission to use AER.
--	 */
- 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
--	    (pcie_ports_dpc_native || host->native_aer))
-+	    host->native_dpc)
- 		services |= PCIE_PORT_SERVICE_DPC;
- 
- 	/* Enable bandwidth control if more than one speed is supported. */
+    https://lore.kernel.org/r/ae05fe2df3a3182594c4a9638daba1c72cf40358.1790531238.git.lukas@wunner.de
+    https://lore.kernel.org/r/2ce502e5caa57db01e0a7bbc781210b66b73bec8.1790531238.git.lukas@wunner.de
+
+Patch 1 keeps the DPC driver from accessing a non-existent AER
+capability.
+
+Patch 2 drops the AER ownership check from dpc_probe(), so DPC also
+works on ports without an AER capability.
+
+Patch 3 removes CONFIG_PCIE_EDR, which was another knob in deciding
+whether to request DPC control in _OSC.
+
+Patch 4 stops requiring pci_aer_available() to bind the DPC service,
+since the DPC driver does not depend on MSI or on the AER driver.
+
+Patch 5 requests DPC control only together with AER control, as PCI
+Firmware r3.3, sec 4.5.2.4, requires.
+
+Patch 6 binds the DPC service on host_bridge->native_dpc and logs a
+message when the OS assumes DPC control that _OSC did not grant.
+
+Changes since v1:
+
+  - Include Lukas's two DPC patches instead of depending on his series
+    (Bjorn).
+
+  - Add Rafael's Acked-by to "Request DPC control only together with AER
+    control".
+
+  - Refer to "PCI/DPC: Reinstate support for AER-incapable ports" instead
+    of Lukas's series in the native_dpc binding patch.
+
+v1: https://lore.kernel.org/r/20261007165840.1604136-1-sathyanarayanan.kuppuswamy@linux.intel.com
+
+Kuppuswamy Sathyanarayanan (4):
+  PCI/EDR: Remove CONFIG_PCIE_EDR
+  PCI/portdrv: Don't require AER to bind DPC service
+  PCI/ACPI: Request DPC control only together with AER control
+  PCI/portdrv: Bind DPC service based on host_bridge->native_dpc
+
+Lukas Wunner (2):
+  PCI/DPC: Avoid access to non-existent AER capability
+  PCI/DPC: Reinstate support for AER-incapable ports
+
+ drivers/acpi/pci_root.c    | 26 +++++++++++++++++++++++---
+ drivers/pci/pcie/Kconfig   |  9 ---------
+ drivers/pci/pcie/Makefile  |  5 ++++-
+ drivers/pci/pcie/dpc.c     | 31 +++++++++++++------------------
+ drivers/pci/pcie/portdrv.c |  7 +------
+ include/linux/pci-acpi.h   |  4 ++--
+ 6 files changed, 43 insertions(+), 39 deletions(-)
+
+
+base-commit: 4fe37866b0d92cdc45b62954a76489a9d9f8bd73
 -- 
 2.43.0
 
