@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792483848;
-	b=i7Sk8hcV6ehuSuqp+6nGRO9aUdadd/YSbgoVe9WnUM+TuNG8xOxowktL1ihXRKJBXWBO
-	 au3u8YmOy5N2Qqj07XWZGoRSVNgk+apVGIs9h5jacMUNcdmw2fNdHEcWZZMgMkA/wckza
-	 1hpTMlBeRdz3vYMalAkCgEJHgc7Qp2hAVD+CBu95EPajoVaiBM0OYPy161z3KHQtw6mbE
-	 ybYGNrV7VgrIQY0D2+4tPqEueLT5Rda3Oxi7Ep4DGS5k1/cXtuFZWfX/Yv3Hdmmy0ZxET
-	 3AIH43dEB7wOIaKlln4fyHWtGKMF0hRHHjsQKEbN9OMnzyfyAl7h/HxGkhPYr+wk0Tw==
+	t=1792483965;
+	b=T0i0JJSD2/AKBvWuKpVzkPC0Qs8CRVJjXjWSjh2NLyDZnZHAw02VY4w6frva4uK1pqz+
+	 rBHXCGL4iazbuDFe9NnFv4eax9AifiAVFYpYxz5ACdAXYtUhvjp2JBZy4Pbc91JZsJoVt
+	 psyARwyX91FQLmh3ZA/2aQROxZyqGLYjakgUJTr5KLCWoi/iSsp6Jvh890CFUsQEVshWM
+	 uw7oAvCHm7m+BHDAgchYOYmZLfgob34mN+XYQ0+Ltox9HyK7/sGNqUCcSE2s1B209Zbt5
+	 YRoCwnxRWXcZDdN860tGS8oj0DxEm40692jHyfg8O5ePVAeW3i3iAfbrx/SjhLefkhg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792483848;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792483965;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=ALblVKsJz8bJc2vx7ZGDPCnmZWHcDpzcee9IhQmbjKA=;
-	b=BM6rQlvbXxTOehbEy5q8VmV0+p21nTEVLQhSQHp4/eL+ehLO1/zxH9EBdUwPSUqf+eO2
-	 opjZ4wyhgwpbO8eNLY69RWzd9b4bhytUtnOCAB/5nTFmudRX2z0htv3qYbIQ4H7TlADLD
-	 nY9em6cVuSFMtmkprBPyv8nZN1kgJyZM8Kyi06TtkSfYIYzgDoWlgrXJ177fNUaUnQggW
-	 fn9rWOxaF8x7o9X9JrE+el638BDotlJedssxJGBH6mg1SPlK7d/j9nVVhAq9GK0nqBDmZ
-	 LWZxSuNFtQcYYAScsMqko/077BJwRCWabaRqn5sxkq8TBAFrODlGUajxzg8b39h1t7w==
+	bh=10r0if6Nr9WKwfaQ9LB/CcTAReFShrgbCt395Lsmo+4=;
+	b=oO3yFCiWyBt8TRrWGkc/cQys0UT8khUe169XCgFxaBqcXo9U9ndwSxfiibItn5obG90n
+	 n92Y805r/W5i3a3/kXPRg/EPTkInww1v4LgfSv8jkfcAqasR02Tc+GrQcFtE0yqd7y7mH
+	 77rKifmGz/PiCY1sXmu5WopuFBCUb+kDbq3rFyz0kagye1+I9I+gz2q5LzQ1G8ScBhuUD
+	 trPdHkdbrYa4kNqUXQjgT6Nnw1nxMrGT3O4ZXMHUhcmBRZug/dHWUCAnKhQpcncULF3eR
+	 A09jD+TtzvYWdYOftjODoPs9n6muIzUia+77tzP2vnZLOsBvxbvq5zJnpjQq1K9EV6w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lfJoXUR7;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jHHY9KgZ;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10AE8606A31E
-	for <linux-pci@vger.kernel.org>; Tue, 20 Oct 2026 08:10:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6B7F606A31C
+	for <linux-pci@vger.kernel.org>; Tue, 20 Oct 2026 08:12:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lfJoXUR7
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB3141F000C4;
-	Tue, 20 Oct 2026 08:10:47 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jHHY9KgZ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4563C1F000C6;
+	Tue, 20 Oct 2026 08:12:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792483847;
-	bh=ALblVKsJz8bJc2vx7ZGDPCnmZWHcDpzcee9IhQmbjKA=;
+	s=k20260515; t=1792483964;
+	bh=10r0if6Nr9WKwfaQ9LB/CcTAReFShrgbCt395Lsmo+4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lfJoXUR7s0E0t0Xd5mWUF/xQKfymgpxf6HBjI86jW/PIBDGMFYirmvjiEcqpzMVx6
-	 nbDuncE2nJ+M8QpWgNVmA5jSZQgdDzsMzB8OU54STo207fA/8WR7dEwnu+zaU/BV31
-	 7t10xpJMSwpv7WUoYztxMxUrM7uygC5pmOUfKg6foZL3twKwHuMwMMvJ1ebNtzIGEv
-	 uKHmiEECYCIbl4LUjZkwxbmGRnzVXsgDdLyj561vfTVbsiVKfp1faOPs0bmeE30bkd
-	 XclpZbvBPdyNueBdkIDoLfG8pC0AA7pqYjUzNtrIDz8v14IrqXZ+Db2J4So23zsO9r
-	 GuU85a3rLNYmg==
-Message-ID: <sashiko-outbox-178490@kernel.org>
+	b=jHHY9KgZbaCUGaKUbzQKypW6kpIMdZf+6oy2Qk6q1atfyEtkuRG9KXoLf5kIIBUzr
+	 U2GpsvnUMmGlcN40BKQv2jr3Z9b+8nTOy5NMy1wEBD287Ll/QnuNV9eRKZNlBpjCSY
+	 XgCSYEUy5RyqJ2RLv4vaj52rOLaO+Z7rH6H4OsvRaMXIVH+/ro6UW8G6AeQ6X2EXpS
+	 A4GFucMT/4tSC6L2QYCblZ1U/jveMK/bAVKgVEUESVlM2KYv1VrZpzsPsDOXHKOe8v
+	 i/dxTI5emg1wHVNWq0kv9Cchhcxkdpt9qo9ms9H4plFuZ46W3osQZBPji9lrwB/MLt
+	 0TQnbF1vvq56A==
+Message-ID: <sashiko-outbox-178493@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 02/17] PCI: dwc: Factor out the PORT_LINK_DEBUG1
- link-up check
+Subject: Re: [PATCH v5 03/17] PCI: rcar-gen4: Check live link status in
+ link_up()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Koichiro Den" <den@valinux.co.jp>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261020031049.969895-3-den@valinux.co.jp>
+In-Reply-To: <20261020031049.969895-4-den@valinux.co.jp>
 References: <20261020031049.969895-1-den@valinux.co.jp>
- <20261020031049.969895-3-den@valinux.co.jp>
+ <20261020031049.969895-4-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 20 Oct 2026 08:10:47 +0000
+Date: Tue, 20 Oct 2026 08:12:43 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,25 +61,41 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> dw_pcie_link_up() reads PORT_LINK_DEBUG1 when the glue driver provides
-> no .link_up() callback. A callback that needs a platform-specific check
-> on top of that register would have to duplicate the register read.
+> rcar_gen4_pcie_link_up() checks link state using SMLH_LINK_UP and
+> RDLH_LINK_UP in PCIEINTSTS0. However, these bits do not reflect the live
+> link state. On an R-Car S4, after taking down the endpoint, a link-down
+> interrupt saw PCIEINTSTS0 =3D 0x20a000c5 with both bits still set. Even
+> after resetting the controller with the LTSSM back in Polling, they read
+> 0xa000c5, still set.
 >=20
-> Factor the check out into dw_pcie_link_up_debug_check() and export it
-> for modular glue drivers. pcie-rcar-gen4 will be the first user: its APP
-> link-up events remain latched after the link goes down, so it has to
-> combine them with the live PORT_LINK_DEBUG1 state.
+> As a result, dw_pcie_link_up() keeps reporting the link as up after it
+> has gone down. That defeats the check in dw_pcie_other_conf_map_bus(),
+> which is supposed to stop config accesses to downstream devices while
+> the link is down, so such accesses go out on the dead link and stall the
+> host. It also makes the callback useless for the link-down recovery
+> added later, which has to wait for the link to actually come back after
+> resetting the controller.
 >=20
-> No functional change.
+> Keep the APP link-up event check from Figure 104.5 of the R-Car S4
+> reference manual, but also require PORT_LINK_DEBUG1 to report the link
+> up and not in training, through dw_pcie_link_up_debug_check(). The
+> callback then rejects a downed link even if the APP link-up events
+> remain latched.
 >=20
+> Clear the APP latches before enabling LTSSM to discard events from a
+> previous start, and only read them in .link_up(). RC startup uses
+> dw_pcie_wait_for_link() to poll the combined condition.
+>=20
+> Fixes: 0d0c551011df ("PCI: rcar-gen4: Add R-Car Gen4 PCIe controller supp=
+ort for host mode")
 > Suggested-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-> Reviewed-by: Shawn Lin <Shawn.lin@rock-chips.com>
 > Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+> Tested-by: Marek Vasut <marek.vasut+renesas@mailbox.org> # R-Car V4H
 > Signed-off-by: Koichiro Den <den@valinux.co.jp>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261020031049.9698=
-95-1-den@valinux.co.jp?part=3D2
+95-1-den@valinux.co.jp?part=3D3
 
