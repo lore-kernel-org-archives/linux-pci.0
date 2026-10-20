@@ -1,56 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792499790;
-	b=ZQvEIUNLKWT1aWhktpz7uR9eHW7p4YQ65n9t7Lve3ELb5YGV+fvChRrd22kwK1rLR1yu
-	 K6BKNHXU2hl59JZckrnxF5NMYPJBZDnHwYJ/yYhnH2wDb9/qNRnNICSD4ODIm4Q0DY3WR
-	 4d3hPkr+5LMipCt1C74nUMnwqLo8kVop8pdV7Mw0p1PUXJ3gJLT45BLYvrutCs/PJJIlM
-	 lbaXeyYq5Mf5emIAKS/1qzTH0s//pcbE5v5HQnnoRwmS5YStl2n0ex//OZT5QHwyfMFp6
-	 EmHQnD8AWEsNmfbiniTNwll4bcD8lREWsN4tlP2g/Bjr3N3AjsX/uEvyleRIJ9amzig==
+	t=1792500241;
+	b=KFPTEWDXRd+8vp+xOIQUN9FJ3H8ZEbPBdIRu+xY8DYUfTc/p9Nyz++oQVMgwVnSH/Z1N
+	 3jaGkznRFHk95byoaCkTozGaLS1wFGuaokAq8t2Jv0J6byDIRidJD757nfqA28h1OnaDs
+	 k6svfkkNXRIFZFbsa6qhtDWCRkkKqgvgKYmQy6qCTW53HVhsOwrBbaxbLvS5mxiAmWt3d
+	 SoTRZwY47np+TcrEjhSJ+bQeJ6G85NOXsOQMzuejELsbZh8guB42+DRhBrbb4rFrUbe82
+	 0rQHNtTmxzXNajkVEjpwOP7hyVfJTUtHcSfozxAjqp7s9YOB0Of04C+fp5kWSyr4EKA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792499790;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792500241;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=GGCrjHv6NQXXfXzkCzwLWYEgOONtBDr5UvPtgRbBmxU=;
-	b=Ap+PeW2bUbhne0BSO4JykoWgF04Iz10K9PXuq3MCqC7LI0z+gfMbuevBR9oeaLD7Pvjy
-	 diy0n3asKqbDC4dC1f0b6eO/Or2jswK5o5RgnUgy5BpDulxANVmD5fGl67v+kDuti+q9u
-	 A/DnNU8HARQuBdcc0rQD9r3tVOFCgn9aRN/6JjAfnDgJHupiKZXOaGIbOEN+w/mylWP7L
-	 qrBMGMMC2Juj52tqaAV2pC9z8GYqWxwGPuorSK4aldOxDQ3LjjWfhhtiHav00WuIdQp/e
-	 Hif5wt9c1DXQyt+SKgEgPyaeyXhH1o4K3HqRFH3vZZXVS5eXxV3NuXmxu1ctNo70hPg==
+	bh=70044XyRM7M9zlZ1E3/O3HI1xtBAY4tCs57x88K8Ao8=;
+	b=D/Nkdunn7GjfRhZCr0Q8Pdl1qCwGmTjRjqwfdC9vFMooD2X0nxJK1FZ4nFKFD9eugEX7
+	 btNBBHn0AqW8SrTEPtE1N1i1kkSUFgRPxNr2Z0MlY0spoNHEWFJXzK0AJ/gz2hRgw/20F
+	 +lfnhzD9iYOWSUQstbwoAVTfFlrcsLmuYh172jjdxf4R7DR7UFqoKC9j8FlNa3u9/w+2S
+	 F5C3T6shofJzSTu4NtA26WlHIjc1Ece4JPgFLs8R5eVRvkwhLEp6AAl9z18GebhTgzt9M
+	 6d731712jbr4Jb+n41h3axszrKvfdBi+7C2bdSF6A5NFhffFFFpziezE31UbJXFc3hg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jsFwPqHb;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=knUlUaYR;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE933606A31A
-	for <linux-pci@vger.kernel.org>; Tue, 20 Oct 2026 12:36:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCCE6606A324
+	for <linux-pci@vger.kernel.org>; Tue, 20 Oct 2026 12:44:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jsFwPqHb
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3912A1F000C4;
-	Tue, 20 Oct 2026 12:36:29 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=knUlUaYR
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9351C1F000C4;
+	Tue, 20 Oct 2026 12:44:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792499789;
-	bh=GGCrjHv6NQXXfXzkCzwLWYEgOONtBDr5UvPtgRbBmxU=;
+	s=k20260515; t=1792500240;
+	bh=70044XyRM7M9zlZ1E3/O3HI1xtBAY4tCs57x88K8Ao8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jsFwPqHb7ynLNFmQYHyEfRP7OJTJx9fLFHDIVXHZiK/ivQAbf2bs/0JgRiUxVlK66
-	 tFyiG6ThwPprFI9j/dQAZeWrFr9RT3sf1fiJhb3C38erRkPrBDtmsCmkQ1kiJf/Mqw
-	 S1ml8aeK2ygc0R1R6WXHauaYpYVmFpVzvSOpKFCWQxLWO5XadvMDtfjYW3G7PE9+cT
-	 dm2aQgXrqNZl5YMi8csyzC6d8oWqahdlo8mBgiclSvFdOQvUhGIa523SNmwz4EhdhH
-	 90mCqRQgbHSauf2I6SGAu3Eq+UrIusBqlEdPDsv526qsYNVGKGYG+kJn+0d4xGS55X
-	 fnutiJ9XeCZFQ==
-Message-ID: <sashiko-outbox-178952@kernel.org>
+	b=knUlUaYRbk5jjOfUatVr7/VWiwJXvSp7iTCe5FQm69nCEHjeI7ugUcyQoWRpjtv6F
+	 RlWf1qsH/luhRp6gwkE4eeiCrMBGbe6D08FEm5BOMW5US1icYZkVbxU0Rw/NMujtzW
+	 01nVNEo4I+m+qYanxTprAQgNMD2+xXdekC3HE8rvkwLZSymyqGXvugOc3AlEDEyKEX
+	 mXRb90t+ROVNaXmugPuKroUco6Hv5Slu/mbmrOtWbOtBSFqIBOw1/lRKQWGXnSVgap
+	 gDgysUxvTiJooEpBlakxGVarPJPCBm4OeIDK70CLcL3tcPLiUXEXJGUwmbulVGaGqy
+	 tITt+UnHTbPWw==
+Message-ID: <sashiko-outbox-178957@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 3/3] PCI: meson: Remove redundant MPS configuration
+Subject: Re: [PATCH v2 1/3] PCI: Match the hierarchy's MPS to a device's
+ MPSS as necessary
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Niklas Cassel" <cassel@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261020122854.1500883-8-cassel@kernel.org>
+In-Reply-To: <20261020122854.1500883-6-cassel@kernel.org>
 References: <20261020122854.1500883-5-cassel@kernel.org>
- <20261020122854.1500883-8-cassel@kernel.org>
+ <20261020122854.1500883-6-cassel@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 20 Oct 2026 12:36:28 +0000
+Date: Tue, 20 Oct 2026 12:44:00 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,24 +63,30 @@ Precedence: list
 
 > From: Hans Zhang <18255117159@163.com>
 >=20
-> The Meson PCIe controller driver manually configures maximum payload
-> size (MPS) through meson_set_max_payload, duplicating functionality now
-> centralized in the PCI core.  Deprecating redundant code simplifies the
-> driver and aligns it with the consolidated MPS management strategy,
-> improving long-term maintainability.
+> pci_configure_mps() enumerates top-down and programs each device's Maximum
+> Payload Size (MPS) to match its upstream bridge.  When a device's MPS
+> Supported (MPSS) is too small to match, commit 9f0e89359775 ("PCI: Match
+> Root Port's MPS to endpoint's MPSS as necessary") reduces the upstream
+> bridge instead, but only when that bridge is a Root Port.
 >=20
-> With meson_set_max_payload() gone, meson_size_to_payload() is only used
-> for MRRS.  Rename it to meson_size_to_mrrs(), update its comment and
-> warning message, and drop the now-unused PCIE_CAP_MAX_PAYLOAD_SIZE and
-> MAX_PAYLOAD_SIZE macros.
+> That covers an endpoint directly below a Root Port and nothing else.  With
+> a Switch in between, the Switch ports have already inherited the Root
+> Port's larger MPS, the reduction is skipped because the upstream bridge is
+> a Switch Downstream Port, and pcie_set_mps() then fails with -EINVAL for
+> the endpoint.  The endpoint is left below a port programmed for a larger
+> MPS, so any larger TLP it receives is treated as Malformed.
 >=20
-> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+> [ ... ]
+>=20
+> Fixes: 9f0e89359775 ("PCI: Match Root Port's MPS to endpoint's MPSS as ne=
+cessary")
 > Signed-off-by: Hans Zhang <18255117159@163.com>
+> Co-developed-by: Niklas Cassel <cassel@kernel.org>
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261020122854.1500=
-883-5-cassel@kernel.org?part=3D3
+883-5-cassel@kernel.org?part=3D1
 
