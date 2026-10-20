@@ -1,95 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.198.39
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792461998;
-	b=dC+QNVa21ORErHBFybW5YVD3jc4/qUzUyEiFsBa/0r5c6IPOpVoOishJ5cBGusEQh06o
-	 abscdJt0UZBH9erB0swDoXa/RUDCPtp+C8C5oCc6V8f0v5ZkPmyW8R2dXeCkRC6ng10tM
-	 i7zdS/jKqT3fQYe66J7944Pbo+xeI8YDxBNvqem+DbGPoqvQ4zDA2uyBfIfonvxEyPEdh
-	 VtO6DQvO5B5PWjAU4vQH+CzNe4Zx/kjoerWIDs+tRXcQcKiD1y+pZgbtfwQJGo2o7S58K
-	 Yi5T1WZl+Y/X83RgvYkoUjn/w0pMoCOX6DVE8QqfpKtCQr7VjJjRaaXEEXdoVwb9AVw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792461998;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
-	 User-Agent:Subject:Content-Language:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=FLH263AfoM7YgZmlVKMqHIp4wTcwqrZOSngI9TtX4xg=;
-	b=Bz/rEd1aMDyyVq8Cp7yt3sL//aTsvmjFJjKoxGBPi/qgwHmk8DGGuBt3y0Xf2YoC7mC4
-	 jsydpuSM0S0+vDB5Pca/ezF6neqNDX9RUd7QK9/ESa3M6IcOIUl1Up53vjt3EcVjYc+ff
-	 KBe7lA5XRV8QEC84JFCnLv718qRDvKzqB9eHJbCGo9WbLKtwok4djVUsC+m+7L10NyceF
-	 RqcUQdxGuWmwjF1Z4erBeNkf9J1CWscT6cVxENPKjewVZXQ3ondATvogU0TJaTNPx0HYS
-	 aaPi6b8jlNyee+Gi36uAbx4WhrlsLYwH1vd3YsXMEh+cprzPseLw9ZgvWuwzJ2e7tNw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=amd.com;
-	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=Mx07XBtT;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.198.39
-Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010039.outbound.protection.outlook.com [40.93.198.39])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DFD4606A319;
-	Tue, 20 Oct 2026 02:06:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4DFD4606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=218.76.62.146
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792463882;
+	b=PtrSRnkFlfF0xypBoYlGqOZn4Iwrz+yiovitm4tTkONiagotufPll2ZpsedYWr/8ree1
+	 QltrBgDC1JJ7qsXdeqSdH0P8vIc2iHEb+bVxef3Pi6FXS49CaeOixLudVn5+2JwVRDJG5
+	 LAqhLNkCcO0a3N5i02VDesM8X4mhJniMsVyuEHkfWrUZuJ4n+U9bid1/Yr9pjbeyUYAVi
+	 tWJnFwp/xFH9zjFwe4HAQXunzdrg1FlctyJE9wdp1yQ3UQ67TsCxZk/77kr/7T4+Airxy
+	 QR3zLAo6DCJGmec62Wo1Nc6aSCifgPnMkSAZjQJuVJV7Bl0DIaEVYwGFhCazgvL1hqA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792463882;
+	h=DMARC-Filter:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:Message-Id:X-B4-Tracking:
+	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
+	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
+	bh=VK9g7vRPPBC9tHhJzOVeroCsAXFqKlIYl/3Cax3+FZg=;
+	b=XleSAWPRBfSoj4pMlphR+RCS8CQCHvcneFi9dTocHFDXzruqOs6Es0K2UJ1cC5ohuVny
+	 Cd380t3rzads7zww3y6azkSo1tEVZGwyO18dzRlscwo4k6EPEZkslqlP+qicM+3GL0EBx
+	 Y4SOCAGQbuyycWTWqUhDRcmTfJmqt4bu/n0n6iT6iQyf2c/6ryTOG+FUtQuFzdeEbd4W9
+	 WVTvA0OwoQCQ4lk+suEkPpKAkcIC3erIRD7FLMG4nvDDDv+OHS1vMiUiRG/hoCjf8pdnf
+	 +UAM2DZmBH5I6q46dELgQa4AlML24NPdCbWQ5nvu3c9o1MkjGKfJRpNYm/WdekphkRw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=ultrarisc.com;
+	spf=pass smtp.mailfrom=ultrarisc.com;
+	dkim=pass header.d=ultrarisc.com header.i=@ultrarisc.com header.a=rsa-sha256 header.s=dkim header.b=UD0Q+gcb;
+	arc=none smtp.remote-ip=218.76.62.146
+Received: from ultrarisc.com (unknown [218.76.62.146])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 34CBF606A319;
+	Tue, 20 Oct 2026 02:37:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 34CBF606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ultrarisc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=Mx07XBtT
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=C2EKE5apUxcin/ATbjsK3l0c5u3tNwluNw4/ybrHwZl8ErT+rV8TFnWwPN3/284zYYsfs9Pg/GKTgngbOtJ+6Stz5X2HDO8FeVSdTolIN58cmgS3kihejM+etG+0sTFs+09wgoDEpE9BPFE9lZ1IJs+KWIXHmgmAASyHq0aXvOfqkpak9DZMXvd6sGcDhlRTz7Po9LjHaB8IH8SW9aGclGsGBtJaUK/0tkDvuESNw5mwbU3ktIry9ddi0AjTS6ONEHpUJ4BeY7eVk6kQL4RI16eBTJStKn8/tKG+BYZliD3zTqUxw7UwMUPQJ26ee+bmVe8ZcdtILCc74WXvgzEL5w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=FLH263AfoM7YgZmlVKMqHIp4wTcwqrZOSngI9TtX4xg=;
- b=B5hipw8lOPG3E42OysNprg9OeFdbet14VP6x2e5e6bbyH/89gptQwm2RRP6cIFyqOTUigk306Y2NqX/0cMNbBwcDZ95Hutz/HovGW42PQmwefLAlu6QtEzaEf/g64WDsIroMVp0zL0MRkYmFWtNY+UsdAUp4fJx+MtulktZIdsMm1uQXAeSQfUsOSHRDKJgKzko5LN0kqetar/zY3kMciXeJhxkzp6La6X6xy40LxnYsxtqaTyvY3yLn1PyYRJFz5Xj2H5UZ283GzlMM3whh++THbsuy177YNRMQFB9cy30CqeMfj0nDpqobpBvCajRt4w8p+K74Bln/TKB8bq8MhA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FLH263AfoM7YgZmlVKMqHIp4wTcwqrZOSngI9TtX4xg=;
- b=Mx07XBtTihruhr1NhNwmoS5Go7mVM5dlaeXhGbX3GrXu16sVDg/LPLyAWNO8pg+0LOD3YdMgXe8yguCKwBh9L4CBtF4j3xAcCaALORlhAGtpjhdV5RuszSbc2OymmpBiWOqcZgeR6B50KPPiKj4LB0T4jj6LinqcxiQMfCkUzrA=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com (2603:10b6:510:1cb::21)
- by MN2PR12MB4336.namprd12.prod.outlook.com (2603:10b6:208:1df::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.19; Tue, 20 Oct
- 2026 02:06:34 +0000
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000]) by PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000%7]) with mapi id 15.21.0522.017; Tue, 20 Oct 2026
- 02:06:34 +0000
-Message-ID: <daa45533-29be-47f7-bbfd-67b3045b63cb@amd.com>
-Date: Mon, 19 Oct 2026 21:06:32 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/2] Fix amdgpu detection of pci=realloc
-Content-Language: en-US
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Alex Deucher <alexander.deucher@amd.com>
-Cc: Oz Tiram <oz@shift-computing.de>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
- dri-devel@lists.freedesktop.org,
- Reza Nikzad Chaleshori <rezanikzadch@gmail.com>
-References: <20261019-vfct-regression-v1-0-5a63ddd378dd@amd.com>
-From: Mario Limonciello <mario.limonciello@amd.com>
-In-Reply-To: <20261019-vfct-regression-v1-0-5a63ddd378dd@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SA1P222CA0034.NAMP222.PROD.OUTLOOK.COM
- (2603:10b6:806:2d0::7) To PH8PR12MB6914.namprd12.prod.outlook.com
- (2603:10b6:510:1cb::21)
+	dkim=pass (1024-bit key, unprotected) header.d=ultrarisc.com header.i=@ultrarisc.com header.a=rsa-sha256 header.s=dkim header.b=UD0Q+gcb
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=ultrarisc.com; s=dkim; h=Received:From:Date:Subject:
+	MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
+	To:Cc; bh=VK9g7vRPPBC9tHhJzOVeroCsAXFqKlIYl/3Cax3+FZg=; b=UD0Q+g
+	cb6t2tDWGjfStIfbW1RXHyDGGM1NzcRsEb5dl6NXhd3CGiR20/fQMfYecwFwqKtT
+	kKLEYiRSxlCZi7B1n3+55VweiP2yjpmaFhEE0Sip49Ma6uDwXbVtbWk7Q57r0Tz/
+	xdbWUP07KAueeWo8pOSzD3ndzBA3GItI1GOP4=
+Received: from [127.0.0.1] (unknown [192.168.100.1])
+	by localhost.localdomain (Coremail) with SMTP id AQAAfwDHQAf709ZqunoCAA--.1134S2;
+	Tue, 20 Oct 2026 10:37:49 +0800 (CST)
+From: Xincheng Ji <jixincheng@ultrarisc.com>
+Date: Tue, 20 Oct 2026 10:37:35 +0800
+Subject: [PATCH v2] PCI: dwc: Skip MEM outbound iATU setup for identity
+ mappings
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -99,101 +54,152 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR12MB6914:EE_|MN2PR12MB4336:EE_
-X-MS-Office365-Filtering-Correlation-Id: 121ad041-c417-4db3-3c08-08df2e4ec459
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|366016|23010399003|1800799024|11063799006|56012099006|261009223027099003|10067099003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	jR8qxme3fyz5CeofkFvt/EbQ9g4dT/3vR15JM74NdV0dhL1rZZu2DPyXX0s6LKTgEpmJGen7yO5Bl1TNlhnVj1UCdAIBqIlUbZWkt5q5vgXGNN9emHXHVkYuJcAZV0oRhMIpW/6znAp7st/rX8beson4lH7E8oVa3I0Q5OtBH36Y/xtGcTwxwRciV4CA1Fh9uQ6IILCSKdAPXSGMLRuPydNmA5A6x7P7mi6nykbTG/xY2+SkmAA2QA+PmZP7y+lIcdUCr3rPFcdg0UChXCT4SlOCOtwZd7Su8qlkiEF5PlNQSv99jS/Ajd0Wp3/ISuw0nFwqE30y1im6ZWw7P8dVhiUr77753ybDlEL2SEYTE5N2Ow32W/d1Py7iC36VqNcev30sAWsD31Q4mYRyF2ap6aSfhaAK6N+Q0G9rMOMmPF2dTeSqcCsuOaWMWW38psBm4hj2yGvFAMiAqRebtWQqId0alGZtVVzsVCDJRIE2gl3wLEvMC4e+Q3OJVYlHSjhv4cksXSu7GsKPzMTLjIEvwOWjh/8ytAJhZpMDYBJtffC/ecEdA6pY3kQow3zUG8DM035yILCF9p3F1tHcGMWTBH2C8r8YSrTqe2y0B9b2rNg=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR12MB6914.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(23010399003)(1800799024)(11063799006)(56012099006)(261009223027099003)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?SEpqd29oWlFkUHRqVEJlbUcvZTVSWUNid3MvWGpLUWhMZUxsaFh3Y1lYclZk?=
- =?utf-8?B?RmxIMEk1U0xsUEZGdjVCN0pyYUZ6NGluMFJuNU1LMkZPS2pqSWdHNHlvL01M?=
- =?utf-8?B?WkpCek1XTGUyVVdJNTJGNTJLRkIzN2diMkFiUkR6S3p2ZjlGZjJFOU9FY2Vi?=
- =?utf-8?B?NkhTdlZEdk1kZHgyanBUdjVyNWJoaWdTWDJkOXFaTUE3RzExZzBZeFhzZG9V?=
- =?utf-8?B?VmVBdW1lOFJrbmtWRHFwNmNoalRWM2MreWJUT1ZZeXZ6SENZaVV3aHJ5UEVY?=
- =?utf-8?B?NFdDOExycmJOZm5UNFpxa1k3NTBjTjNoeTNKclgvbmtUN1NSenpuS1FJNmdK?=
- =?utf-8?B?WGZtcVNKM1drcklocjQyRkdUdE9WVFZ1Y2h6RWRvOUpNVXI3U00wZlFVbWFm?=
- =?utf-8?B?enA0d0hWeHhtcDJrelJPQmp5Ry9udmRxRW9DeTlzR29NbXpaemV4dkpkZmps?=
- =?utf-8?B?TmRsaXZXRDEzUncxTHphVFg4eUczbHAwNUEwdForRVR3N3lJWStKdjNneXha?=
- =?utf-8?B?UEdTUzh1VVBuQUZ0LzRHdWhLbmZIbFNpWWJZQlp2T00yTTd3WFlqbnFoZ2pD?=
- =?utf-8?B?bDFaL0o3ZjJVUnozR0pZVzhWNzNyQVUxK0VBU0xZV2tXU2t1a1M1K0V5VUpB?=
- =?utf-8?B?RC9lTE0yYm5nT2lIRFh3ZndnclBhemkyYlRPemlkQ0V1eDRqS0RvNm04TnFr?=
- =?utf-8?B?dmxLbkV1a0hOMWtHb1hNckFVTEljZjd5TVdEYzAxY0RNZW5BdFBIT2JHcnE4?=
- =?utf-8?B?V3JIMnJmb2M4SWUxaUk1cjMyZGtoaWhTMkpJelN1bElGeU5KQ2JkRGVQR1pS?=
- =?utf-8?B?OFR3aFlBdXBaeEVrVUplcGlzWHF0cE90U25hcmU2T0c0bWRSOU5QUjJ4MFFn?=
- =?utf-8?B?RWFYZ2hFL1pTZWxnT2ZIamRuRU8wYmpzV2dScHk0MDRIMm1HM21KT1ZwdHZ2?=
- =?utf-8?B?VGJ3SjZubWc1RzJlU1ZHb3ZnL2xJcnJtdFpSczlQZCt3OER5dDNtamJ5V2ts?=
- =?utf-8?B?QXpxcWZlN2lhTmZCK29aYTlobVRhcmFOL1AxRXM2ZEZOekh5TjA0TjcwRjRr?=
- =?utf-8?B?enpmWVBBaVJ3cEdBT25yWjhlRDVmam5NSFFPU3FQLy84S0hyZEtJc3JzSENa?=
- =?utf-8?B?aUFvdGZ2TCtnQUZVVTRIZy9ma3JiRFNLNXcxRzhRZERxa0VVTUZSamRQcGlN?=
- =?utf-8?B?bytjNUtoK09yRmZVYTNYWW9HT1BBQ3pLZFByaW1tRkV0cVYvMjlBb2pkRzZW?=
- =?utf-8?B?WXJpNmxNcklvR3VVNVgyWnFKSndQWTd4STVoOWliRlllV2VuY1FaT3p6WkRN?=
- =?utf-8?B?OENVbnZOWDRqYjBZYW9EV09oeWpnQUVqSUFwaS9HT0cyV3p4b29ETktQYml0?=
- =?utf-8?B?RmtxYTR2czhoMlFiRTd2WVh5U3ozQzBTRG9iTFI4RDREVDYxcTZCK09JUmxF?=
- =?utf-8?B?dlBaUHZmRlZ6dHFCcEdpTUx3ZDVBZHlpcUpUL0tRNlNnTFFaTHVXeUlENHgy?=
- =?utf-8?B?bUJWNXJva2hzd2NXa2FSOUZKNmNUWm53bVBjS1FxTkprbnFGRkZxN3FSMGc2?=
- =?utf-8?B?dmNnNndDdExNdkxWUEh3ZnQzU1IyV0RPQjZZK2g3RWFhRUIvOHU0bzBZeTJL?=
- =?utf-8?B?UklNMVRjSDRLYWxnYU4yZ1ppZUZpalpOZXhHb2lZbW1JWTdML1N5dkNOampr?=
- =?utf-8?B?M3N5aUR1ZDY5cDhkdXAvdHJmMXZQS0pmRFU4elpORzY1aHVVeWRmSlhSbFhr?=
- =?utf-8?B?Zy9Vd2tmZzBRaTI4dC9LZjM1aEFDanFKNXEyeTV2Wm8reFJZZ1d2OER1Y2Rs?=
- =?utf-8?B?UEkzVitiNlNZSGw2bWdkdmV6Zi9PVXRSREdIRVV3VDhvY1lRblNQeUtoZWRa?=
- =?utf-8?B?K0hkc0FhaTQxbk1uN0dwNVpYMit0WHYydWpUN2ExVTJicW9HdHdIdWcxT1JL?=
- =?utf-8?B?Y1I2YUdsYUhudDF2T1djeVN4Um1Pbk8xa1NZT0Z3ZTJEUmFwdUdwaDd1cWV2?=
- =?utf-8?B?eEFlTWk3T0Q0QnJCSDdiWjdwQ0k4dXprNGFMWUpONnpISDF2ZiswTDgxNkdt?=
- =?utf-8?B?eC95QjdTMVFCd1ZqaGhlaXNZQ3JUbTJPeHVkaG9aUEZ0ZzdDOGloeDdMVk1B?=
- =?utf-8?B?UUNPTXR6T3JxNWNDNS9aQTZTTUlFcUg1RHVtV3FUb1JvRmIvRkVmNmIxeEdx?=
- =?utf-8?B?dFhNQndia3NFTUZZSmVtanI1WGtpWmIrRnRTTmdhaE5lTDY0NE4rWE5mY3VM?=
- =?utf-8?B?VU50TzBqWXdTR2U3cjFZMDJpRDM1TVp3K2srdjlpdUJ5M0xiT0JxeGl6aHN3?=
- =?utf-8?Q?FjLcenBGqp/a5FhrZw?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 121ad041-c417-4db3-3c08-08df2e4ec459
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR12MB6914.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Oct 2026 02:06:34.7893
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Zf3+5bfvF1YXpHqoI55GKUlWNQo2W6f3u+tGiL+E9HPM3gGQfVfBxRa2ltX2wKgvDDju39ouhkqQ2Cxsme8ASw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4336
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261020-dw-pci-fix-v2-1-32b6d62e0edf@ultrarisc.com>
+X-B4-Tracking: v=1; b=H4sIAO7T1moC/02NwQ6CMBBEf4Xs2TVtDdh68j8MB1oWWaNAWkAN4
+ d9tMSYe32TmzQKBPFOAU7aAp5kD910EtcvAtVV3JeQ6MiihCilkjvUTB8fY8Audplw2+mBJKIi
+ DwVOMN9ml/HKY7I3cmAyp0XIYe//e3maZej+x+RfPEgUae9SFaIw01pyn++grz8HtXf+Acl3XD
+ 4Vb+S66AAAA
+X-Change-ID: 20261015-dw-pci-fix-c8e51f83be02
+To: Jingoo Han <jingoohan1@gmail.com>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Niklas Cassel <cassel@kernel.org>, 
+ Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
+ Jia Wang <wangjia@ultrarisc.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Xincheng Ji <jixincheng@ultrarisc.com>
+X-Mailer: b4 0.17-dev
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792463868; l=4234;
+ i=jixincheng@ultrarisc.com; s=20260922; h=from:subject:message-id;
+ bh=Q9+BbDS9yoQuyZhe7cObUA+8q6N/qC+6CswqkBQwSRw=;
+ b=NiwEdG9VnycmQ0G7JUSJURSWYgrpsPOVgeEf4VWKfdtTytEsMJ7nZVuI25yzhErBX/mRNixnF
+ H2xoHUWik1oCAiNEZYVh0+K25pRzQychPNyxiNHT+uM8D/H0TaStaCX
+X-Developer-Key: i=jixincheng@ultrarisc.com; a=ed25519;
+ pk=n848dcS5D6g0vLad/rjp4Gf/1eedTe1a3pYUrkt2260=
+X-CM-TRANSID:AQAAfwDHQAf709ZqunoCAA--.1134S2
+X-Coremail-Antispam: 1UD129KBjvJXoWxXr1rAFWfKFy7WFWrtrWkWFg_yoWrCrWUpa
+	9xKFWxAFW8JF4YvFsFy3WkZa4Yy3ZrAFWDKFsI9a4xuF13ua4jqryrKFyftasxGr4rZr15
+	Kw4Yq3s7Ga1rJa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
+	4UJwAIcxvE14x267AKxVWUJVWUGwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
+	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
+	1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IE
+	rcIFxwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCY02Avz4vE-s
+	yl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWU
+	JVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7V
+	AKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42
+	IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUbgAzUUUUU
+X-CM-SenderInfo: pml0x0xfkh0wg6xo325dul2uoofrz/1tbiAQAFDmrVviwAAQASs0
 
+No outbound iATU translation is required when the parent-bus address
+matches the PCI address. This is a DesignWare controller property, not
+an UltraRISC-specific behavior.
 
+Compare the addresses directly and skip MEM outbound iATU setup when
+they match. Remove bypass_ob_mem_iatu and the UltraRISC-specific setting.
+CFG and I/O accesses, as well as non-identity-mapped MEM ranges, still
+use outbound iATU windows.
 
-On 10/19/26 20:44, Mario Limonciello wrote:
-> amdgpu needs to know the bus number the platform assigned a device to
-> be able to match firmware images against the right device.
-> 
-> This was previously adjusted to be a soft filter due to
-> commit 11c141672045f ("drm/amdgpu: Fix VFCT bus number matching with
-> soft filter") where if everything but the number matched to take a device.
-> 
-> This however fails when there are two identical devices.  Instead save the
-> initial bus number to the PCI device structure and then match that.
-> 
-> Link: https://lore.kernel.org/linux-pci/20261015124843.203905-1-mario.limonciello@amd.com/
-> Link: https://lore.kernel.org/amd-gfx/20261019194106.2796150-1-alexander.deucher@amd.com/
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
-> ---
-> Mario Limonciello (2):
->        PCI: Preserve the initial bus number in pci_dev
->        drm/amdgpu: Match VFCT using initial PCI bus number
-> 
->   drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c | 17 +++--------------
->   drivers/pci/probe.c                      |  1 +
->   include/linux/pci.h                      |  1 +
->   3 files changed, 5 insertions(+), 14 deletions(-)
-> ---
-> base-commit: 87bba57a9f33e2b5e90d4ad70973675333182a2c
-> change-id: 20261019-vfct-regression-2142fc52852a
-> 
-> Best regards,
-> --
-> Mario Limonciello <mario.limonciello@amd.com>
+Fixes: 17b478b29cf1 ("PCI: dwc: Allow drivers to skip MEM outbound iATU setup")
+Fixes: 8da2b970ed4c ("PCI: ultrarisc: Skip MEM outbound iATU setup on DP1000")
+Signed-off-by: Xincheng Ji <jixincheng@ultrarisc.com>
+---
+This series follows up on the recently applied MEM outbound iATU support.
 
-I think Sashiko is right on the feedback.  I'll iterate further on it.
+The DesignWare outbound no-match path does not translate addresses. Skip
+MEM outbound iATU programming whenever atu.parent_bus_addr matches
+atu.pci_addr, rather than relying on a driver-specific flag. CFG and I/O
+accesses, as well as non-identity-mapped MEM ranges, continue to use
+outbound iATU windows.
+
+The UltraRISC DP1000 driver has removed the now-unneeded 
+bypass_ob_mem_iatu, and the general DesignWare PCIe host 
+code has also dropped bypass_ob_mem_iatu, directly comparing 
+the parent bus and PCI addresses before setting up the MEM 
+outbound iATU window
+---
+Changes in v2:
+- Merge patch1 and patch2, because they depend on each other
+- Link to v1: https://patch.msgid.link/20261019-dw-pci-fix-v1-0-9b7860f919b9@ultrarisc.com
+---
+ drivers/pci/controller/dwc/pcie-designware-host.c | 17 +++++------------
+ drivers/pci/controller/dwc/pcie-designware.h      |  1 -
+ drivers/pci/controller/dwc/pcie-ultrarisc.c       |  6 ------
+ 3 files changed, 5 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index cf5ca281e91b..c593a1f1c2e0 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -918,19 +918,12 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+ 		atu.parent_bus_addr = entry->res->start - pci->parent_bus_offset;
+ 		atu.pci_addr = entry->res->start - entry->offset;
+ 
+-		if (pp->bypass_ob_mem_iatu) {
+-			/*
+-			 * The no-match pass-through path preserves the correct
+-			 * PCI address only for identity-mapped MEM ranges.
+-			 */
+-			if (atu.parent_bus_addr != atu.pci_addr) {
+-				dev_err(pci->dev,
+-					"Cannot bypass outbound iATU for non-identity MEM range %pr\n",
+-					entry->res);
+-				return -EINVAL;
+-			}
++		/*
++		 * No ATU translation is required when the parent-bus address matches
++		 * the PCI address. This is a property of the DesignWare controller.
++		 */
++		if (atu.parent_bus_addr == atu.pci_addr)
+ 			continue;
+-		}
+ 
+ 		/* Adjust iATU size if MSG TLP region was allocated before */
+ 		if (pp->msg_res && pp->msg_res->parent == entry->res)
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 799c05213ae3..128729fee607 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -471,7 +471,6 @@ struct dw_pcie_rp {
+ 	struct pci_config_window *cfg;
+ 	bool			ecam_enabled;
+ 	bool			native_ecam;
+-	bool			bypass_ob_mem_iatu;
+ 	bool                    skip_l23_ready;
+ 	bool			skip_pwrctrl_off;
+ 	/* Set if the RC loses power during suspend */
+diff --git a/drivers/pci/controller/dwc/pcie-ultrarisc.c b/drivers/pci/controller/dwc/pcie-ultrarisc.c
+index 523f454c6c52..a0d328c0c09b 100644
+--- a/drivers/pci/controller/dwc/pcie-ultrarisc.c
++++ b/drivers/pci/controller/dwc/pcie-ultrarisc.c
+@@ -154,12 +154,6 @@ static int ultrarisc_pcie_probe(struct platform_device *pdev)
+ 
+ 	pp = &pci->pp;
+ 
+-	/*
+-	 * DP1000 routes MEM transactions without outbound iATU windows, which
+-	 * avoids the 16-window/4GB-per-window aperture limit.
+-	 */
+-	pp->bypass_ob_mem_iatu = true;
+-
+ 	platform_set_drvdata(pdev, ultra);
+ 
+ 	ret = ultrarisc_pcie_init_clks(ultra);
+
+---
+base-commit: 0a2602de077462d3111eb9fd3da5b12a57fc6c93
+change-id: 20261015-dw-pci-fix-c8e51f83be02
+
+Best regards,
+--  
+Xincheng Ji <jixincheng@ultrarisc.com>
+
