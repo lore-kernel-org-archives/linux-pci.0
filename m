@@ -1,60 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792487299;
-	b=Qj2p2SxoYqEBizjjun5sXWyIp56JYkrfpv2yY20ryuO40tj1rEEbQBihAVV77vyYYfNx
-	 dDul3Cpryb2NzdB07EwiGDk1MUSjP/k1sLROz+0svsCEQDkv0qg1WgcDXLPu2uNV7ODLO
-	 iQTfKcJg8NA+wcvGUQhIx5QLyn/QXjvtLLjPDI0Cb9Ksmk5WiCfXXMDx13b2o7dX+nr64
-	 L4Jb2t4azW+PpjnhWO50tKWUUGah0A0bCKoXXUsC9Np1VXLgC/uGrawxIXm892x/6Rszq
-	 B9yVD/dTYlCQxIJOcizEM/X0wh5lJlYnPYn82SvRYWKTh7RqzKRJP1nRpZiRfuZFH3Q==
+	t=1792487464;
+	b=WSSxSTIj7WOsY86Ej/LLgZSqNnyh43aNvqk2bc7ojQYwiQNihVsBfE+Lnl6VgMJBO2Aa
+	 vn1tWbg8Ojie/59xIbKKbLb+4/uPFyeVEn2eOEjAVaPZsiN8b/aP8YufMNRFLNcrHwZxz
+	 ccAtGxkj5oDHVG8wUJ1EzSeGPsvp0PGR8MjAS3syZGhUjJ8I0iUxXNnR2m05r5xnN6fml
+	 hvHBqqdyx25KpdBkRD0xXS6IRVtndXlIpTzLSZoqpgxl9GNypJY5qJ63xBkHIOBXv9Srp
+	 FeuHD0Tte/1URID/nZqNH2vV9CxbQZWwlMXfXYnYtH7ozG9laDsyaDO7DDNtrmcZvDQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792487299;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=c/mxp7V/VRtv8rYf6QERZex7DqIj3GY/QslfqdH8fgI=;
-	b=RHWy8+zJZTdIxKuqIAsi2MkVztgMR6WDngF47YoskpGHLb8iWULZvpV7DVo+QVZwRI4k
-	 G9ADuBYgLp9QO/fdLVtkfbhPse4lhegt/znrGuf5VmIQIK6EVrxtqVIpDh20NKD1WnKD8
-	 oTgBz/0YMSfvJSqMmlFN7Sh/t9YghyFnKARK+XHO1X3gqlmeqn3/gp1TtIPE+lfq+GRJ/
-	 ZtrHMHYy1kEXdGFWmdlToGnRCNRyu7R6HPe7MlIY7N3yBtgb9bYemw/aeJjWdAskG22cO
-	 5j0OQSx2eMEVh1C9eQ4vwT8ZTd6Mxw6DscF6zUaUcgkng0nIsghtheubHpmapCx+QAQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792487464;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=wDZ2KjJtRoYfQnBwEa+Mae6SxtBKX/Ns4UZQjUw46Vk=;
+	b=gJ1tF+TvXac4Iji84V2K33JKhgsRIRK7HJ3NPDZgPeNeDd6+3fBmxyWEZWBcGaIeYiS5
+	 rXu9q0QmPFSEYDHmrfaTd/b8xEkYDMB9NEES6NMfgZXdb4BP6WYl7OfhGS6Z8L3INsRVP
+	 Ejc15dq30Ud3ZCtW8GnZBHWAga/kKCuJ+x/Qqm9XT91NkpBqomq/2+IaGMy+l6mG0shhY
+	 ep2RvBf2y75KydVUaeyAQE8gnfIT2wvXKjQEIUDsi+SZMVYtcuy31YS+nIXprIfnTBkop
+	 cHnsd/J9PTQ67/JD04mPdGNY8NfKATLe+q7a2UdwgO44PLs7j+yKpqL0ZXW0yKOH6Hw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NkvlZ4w9;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eBo4bYt+;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9311C606A319;
-	Tue, 20 Oct 2026 09:08:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44B59606A31A;
+	Tue, 20 Oct 2026 09:11:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NkvlZ4w9
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE23C1F000C4;
-	Tue, 20 Oct 2026 09:08:16 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eBo4bYt+
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C6931F000C4;
+	Tue, 20 Oct 2026 09:11:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792487299;
-	bh=c/mxp7V/VRtv8rYf6QERZex7DqIj3GY/QslfqdH8fgI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=NkvlZ4w9Qs/YlaotQaMOoWnxzeoVuX2QRg7kBJD16ppFseUZzmRzmS0mBmZZNLVND
-	 IRd7iUqOluzTHKuMVpOCl5pW0z+vindc8ypoUWFUQlO495bB1kUK5xJFNkyJPdhPq/
-	 /J/2MC52FnlNKCWj5TtWFImSVE9J/gnXa5NPigcXwKZTNwPub8mDxgmRvR2YzLcyWZ
-	 YPJqL34NShBfOAJ4Ugy0YJY+rqrWl+G6jWdsULhfVXh9iIF3lJVc3AmxDTAUaDJrJJ
-	 L2TbJwyCOtWEK9vo+i/kmHVn1gPxklzLck6EpcUOHvxkt8WVi17aR50PaoiKHrmLW4
-	 vNRWpnwbyG5pQ==
-Date: Tue, 20 Oct 2026 11:08:14 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Xincheng Ji <jixincheng@ultrarisc.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Xincheng Zhang <zhangxincheng@ultrarisc.com>,
-	Jia Wang <wangjia@ultrarisc.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: dwc: Skip MEM outbound iATU setup for identity
- mappings
-Message-ID: <atcvfrhVGNIbN6d2@ryzen>
-References: <20261020-dw-pci-fix-v2-1-32b6d62e0edf@ultrarisc.com>
+	s=k20260515; t=1792487464;
+	bh=wDZ2KjJtRoYfQnBwEa+Mae6SxtBKX/Ns4UZQjUw46Vk=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=eBo4bYt+nkm0nO5B5NomU+fDUCxptr0IeA3pwdQrXKxHq0o0T3/JIbQWDlT+zRRZ4
+	 eaTpuYYtvdfSQPv9tTw5lrdNcI0pfRPSmIwf84cJ/xu8m94/9OR7+D54tHj4rqcpkl
+	 +zNruDuTTBCCIqZMUGY7IJ3IAEKpO1shnPUp0ipn0u9E6YbXXzPdraBG7Dr8sjOdo9
+	 Czkjyvkoxn2R49PA38iVXww5dnRbvHLE83G3rB6S1NKSo6z1sfZl8YpCrnQbK5JPvV
+	 fI1H0ntsd6J4PpfShyDWL/hOuXYOpJ8YbO92jtXOTyhd4+q4PId6a5+bCSEv+wM6/Q
+	 DAEMt6USEb3ig==
+Message-ID: <7f7c4992-14b1-4cc4-ae6b-8e110be20177@kernel.org>
+Date: Tue, 20 Oct 2026 12:10:58 +0300
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -64,24 +51,77 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261020-dw-pci-fix-v2-1-32b6d62e0edf@ultrarisc.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 07/14] PCI: rzg3s-host: Use cached MSI address in
+ .irq_compose_msi_msg()
+To: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ robh@kernel.org, bhelgaas@google.com, p.zabel@pengutronix.de,
+ geert+renesas@glider.be, magnus.damm@gmail.com, claudiu.beznea@tuxon.dev,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org,
+ Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
+ <20261019065025.2146539-8-claudiu.beznea@kernel.org>
+ <CA+V-a8sQe-bb7AEagc8QzQYVVY27+aVF2v=x1SxNtXQagpSOUw@mail.gmail.com>
+Content-Language: en-US
+From: Claudiu Beznea <claudiu.beznea@kernel.org>
+In-Reply-To: <CA+V-a8sQe-bb7AEagc8QzQYVVY27+aVF2v=x1SxNtXQagpSOUw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Tue, Oct 20, 2026 at 10:37:35AM +0800, Xincheng Ji wrote:
-> No outbound iATU translation is required when the parent-bus address
-> matches the PCI address. This is a DesignWare controller property, not
-> an UltraRISC-specific behavior.
+Hi, Prabhakar,
+
+On 10/20/26 11:45, Lad, Prabhakar wrote:
+> Hi Claudiu,
 > 
-> Compare the addresses directly and skip MEM outbound iATU setup when
-> they match. Remove bypass_ob_mem_iatu and the UltraRISC-specific setting.
-> CFG and I/O accesses, as well as non-identity-mapped MEM ranges, still
-> use outbound iATU windows.
+> Thank you for the patch.
 > 
-> Fixes: 17b478b29cf1 ("PCI: dwc: Allow drivers to skip MEM outbound iATU setup")
-> Fixes: 8da2b970ed4c ("PCI: ultrarisc: Skip MEM outbound iATU setup on DP1000")
-> Signed-off-by: Xincheng Ji <jixincheng@ultrarisc.com>
+> On Mon, Oct 19, 2026 at 7:57 AM Claudiu Beznea
+> <claudiu.beznea@kernel.org> wrote:
+>> From: Claudiu Beznea<claudiu.beznea.uj@bp.renesas.com>
+>>
+>> The MSI window address is already cached in msi->window_base when the
+>> MSI window is configured. Use it to fill msg->address_lo and
+>> msg->address_hi in .irq_compose_msi_msg() instead of reading it back
+>> from the controller registers.
+>>
+>> This avoids unnecessary register accesses.
+>>
+>> Signed-off-by: Claudiu Beznea<claudiu.beznea.uj@bp.renesas.com>
+>> ---
+>>
+>> Changes in v7:
+>> - none, this patch is new
+>>
+>>   drivers/pci/controller/pcie-rzg3s-host.c | 14 ++------------
+>>   1 file changed, 2 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+>> index b0a150262959..6acb0231a067 100644
+>> --- a/drivers/pci/controller/pcie-rzg3s-host.c
+>> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
+>> @@ -660,19 +660,9 @@ static void rzg3s_pcie_irq_compose_msi_msg(struct irq_data *data,
+>>                                             struct msi_msg *msg)
+>>   {
+>>          struct rzg3s_pcie_msi *msi = irq_data_get_irq_chip_data(data);
+>> -       struct rzg3s_pcie_host *host = rzg3s_msi_to_host(msi);
+>> -       u32 lo, hi;
+>> -
+>> -       /*
+>> -        * Enable and msg data enable bits are part of the address lo. Drop
+>> -        * them along with the unused bit.
+>> -        */
+>> -       lo = readl_relaxed(host->axi + RZG3S_PCI_MSIRCVWADRL) &
+>> -            RZG3S_PCI_MSIRCVWADRL_MASK;
+> We need to drop RZG3S_PCI_MSIRCVWADRL_MASK macro, as this now triggers
+> the below warning:
+> 
+> drivers/pci/controller/pcie-rzg3s-host.c:66:9: warning: macro
+> ‘RZG3S_PCI_MSIRCVWADRL_MASK’ is not used [-Wunused-macros]
+>     66 | #define RZG3S_PCI_MSIRCVWADRL_MASK              GENMASK(31, 3)
 
-Looks good to me:
+Will update it in the next version.
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Thank you for your review,
+Claudiu
