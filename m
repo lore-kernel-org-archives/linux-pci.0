@@ -1,58 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792515285;
-	b=ZL+/acKb3+zLGK8eHsha9W14ygWITxnOLJyU97wAiVTa+HNTYv9ojEFz/fpIk+q7upVt
-	 BCH3nmpgvNeO0Ud0D+yuUUKRwha+hmZWXF8TaAmWJbpB6BBSKS4U0uMkqfZAPPYE3bog0
-	 gKjtPtktL9DD6wUJAmrhxf5vC7k3L68sWAmO59LoZpVTdc/IyuADsbLDsw2yHO3ABY/Aq
-	 I2A7DaVDe15+hVIdif6TJilN6gb/mbvgfTci9FRXKZYcqyc/PGphtt8zkddkBGxcqRBsV
-	 MIeeXTvJsIpByEpNhqzfZZUmWc8EuAJlU6LeGRGhWL0x5nOOf5J/Vc70cGb43xVsVzA==
+	t=1792515442;
+	b=zqT3pSnYcFbZianUuSP+43YEh+51Y964yQU5A3ZQE07gouwDfpu2ThYR0G3t1hQ0mWse
+	 Gie+Sdx1YVotmi+f+khQdB2EBsxA3ZTCusnRDXI7qqOwuvW55D8PiBd7elj1enEKlRnOA
+	 rSfX7iSdPgONzDn7nPoRh6mry+WSMTUuXwOWe5YnedEJpW1LD6/hJkkyXaTnnd2NZxnQw
+	 qOh8HJrPBDS8cIqmVNdCz01+3FLjrLfPAQIdxBRHmXuHNyB1vP7/acoyh0OUWPVZs+AKk
+	 plr4mOBA/zieWNcwT+6Pt1y6jlk9yj8142DIgNXGQ75KLKYVPgZl+SrRPgtlCgmP4Tg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792515285;
-	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-SA-Exim-Connect-IP:
-	 X-SA-Exim-Rcpt-To:X-SA-Exim-Mail-From:X-Spam-Checker-Version:
-	 X-Spam-Level:X-Spam-Status:Subject:X-SA-Exim-Version:
-	 X-SA-Exim-Scanned;
-	bh=cXfGenyjXLSMXgfQE5Chfdo/t+3Ko9b5078skif6VV0=;
-	b=hr3RXJmSQaDX4eh3uMlFYrXHYXCgkClnkcHKV3e4iNYF0HmOSjR7ZUtY260H5HYsc5qD
-	 1qV5ybY0XnNKaLYUbZRcj+2U8iPigRjh3lK14C+IUD1z1I1j5MplWo33QNShiZKLjPLyn
-	 rfnGgA7LWl3KNYY+L6JLwwu/sBjcjMBbLwQKcMObKStsOjq1prpq2z83gtWdWobggkmV6
-	 kMa00JVUtl7v6cMzsROB4xT5vBivr26u/RjPDVHB+EPsEQAEiUiBNIW524sVkzBlvmgWJ
-	 T1FE8PuLHFJkt/2UVG+u279MgSCgoRmvr2F8Zsp7NAJ5X6Bznq/yXzjrvbwxt+vpj7w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792515442;
+	h=Received:Message-ID:From:Subject:Reply-To:To:Cc:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=DYyeC4wsrvfiAfaX9Rid1EdH8JoC7B2jLyM1UbegR+8=;
+	b=JHm9jKFsukP7uKYMs929xpieg4mGtDiuhpheA2GRY6ZL0oi7jtDtMMzy5mKjnE2HemCb
+	 uLfM+B6RaB5D0WevKRmWlTI/C4isFFxq6Hnk6ZB17SUoBGNqJWDq3XhkWvJN3gpAt6IKE
+	 xFJNaLhq0+iz/eqle3v4tkT48+I7xF48deKauMphU/anv/6vgtixThMibJ1cljxrIPgD2
+	 hWAWJHCDBW1B97Jjddc7VZSivXvCX7Dd/Xiku1/3ryRSg6qt6JE/C84lhXhZfSofl0biC
+	 VynFBkAO9yxhIAgEMGX2PP6PlnXhvuO1BW6Q0yqX/NuGPgtyZeIS0BFtj0kzckUcLdw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=deltatee.com;
-	spf=pass smtp.mailfrom=deltatee.com;
-	dkim=pass header.d=deltatee.com header.i=@deltatee.com header.a=rsa-sha256 header.s=20200525 header.b=f1wlx+ou;
-	arc=none smtp.remote-ip=204.191.154.188
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E71C606A31A;
-	Tue, 20 Oct 2026 16:54:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1E71C606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=deltatee.com header.i=@deltatee.com header.a=rsa-sha256 header.s=20200525 header.b=f1wlx+ou
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=cXfGenyjXLSMXgfQE5Chfdo/t+3Ko9b5078skif6VV0=; b=f1wlx+ouq0YwBBYWkhPhkh/9Td
-	WE1CHe1X4il+154zbyZu/0quHKs1fHHKcI3z4mU7xZ+9uN9o6PkFG5rdhT87KIkEXAzAsh4uqadSU
-	1f2btNohJiNAF6SprVJ4/U4v9eVPt6qstV23beBb29j9tzW0D1INRHymYI6Omjp6KkHJMmjMrAlrb
-	NHffIHzenhfjGfV1D0+xRS7WPnX6LLsiU8gg8o/sMXdjRgJGShCuguqAHSwLE5XINP48NQicmTFux
-	Ud0NBJETtxuT2YXzhZ3sGNnBPUYyNSROupLA/d/aL0vbshTUzPQcpzmcRGIeYNb58Z+DolisbmNok
-	QP7Ycusg==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1xJD6n-00000000zOY-1cjl;
-	Tue, 20 Oct 2026 10:54:42 -0600
-Message-ID: <db26b21b-8416-4b11-aed8-3829ed5a6cfa@deltatee.com>
-Date: Tue, 20 Oct 2026 10:54:39 -0600
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14EBF606A320
+	for <linux-pci@vger.kernel.org>; Tue, 20 Oct 2026 16:57:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AD9A1F000C9;
+	Tue, 20 Oct 2026 16:57:21 +0000 (UTC)
+Message-ID: <sashiko-outbox-179389@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 1/9] driver core: rely on put_device to free dev->p
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "David Jeffery" <djeffery@redhat.com>, "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael
+ J. Wysocki" <rafael@kernel.org>, "Danilo Krummrich" <dakr@kernel.org>
+Cc: linux-pci@vger.kernel.org, "Tarun Sahu" <tarunsahu@google.com>, "Stuart
+ Hayes" <stuart.w.hayes@gmail.com>, "Laurence Oberman" <loberman@redhat.com>, "Bjorn
+ Helgaas" <helgaas@kernel.org>, kexec@lists.infradead.org, "Ewan Milne" <emilne@redhat.com>, "John
+ Meneghini" <jmeneghi@redhat.com>, =?utf-8?b?TG9tYmFyZGksIE1hdXJpemlv?= <mlombard@redhat.com>, "Bart
+ Van Assche" <bvanassche@acm.org>, "John Garry" <john.g.garry@oracle.com>, "Jeremy
+ Allison" <jallison@ciq.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "Pasha
+ Tatashin" <tatashin@google.com>
+In-Reply-To: <20261020164435.80499-2-djeffery@redhat.com>
+References: <20261020164435.80499-1-djeffery@redhat.com>
+ <20261020164435.80499-2-djeffery@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 20 Oct 2026 16:56:50 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,51 +53,30 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: "Popov, Pavel E" <pavel.e.popov@intel.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Leon Romanovsky <leon@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
- Jim Chow <jim.chow@broadcom.com>, Radu Rugina <radu.rugina@broadcom.com>,
- Alexey Makhalov <alexey.makhalov@broadcom.com>, Wei Liu
- <wei.liu@kernel.org>, Michael Kelley <mhklinux@outlook.com>,
- Nathan Ciobanu <nathan.d.ciobanu@linux.intel.com>,
- "bcm-kernel-feedback-list@broadcom.com"
- <bcm-kernel-feedback-list@broadcom.com>,
- "virtualization@lists.linux.dev" <virtualization@lists.linux.dev>,
- "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20261020161447.GN64621@unreal>
- <20261020163758.GA2342476@bhelgaas>
- <LV2PR11MB6070444E927B9AA891B8180FB2672@LV2PR11MB6070.namprd11.prod.outlook.com>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <LV2PR11MB6070444E927B9AA891B8180FB2672@LV2PR11MB6070.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: pavel.e.popov@intel.com, helgaas@kernel.org, leon@kernel.org, bhelgaas@google.com, lukas@wunner.de, jim.chow@broadcom.com, radu.rugina@broadcom.com, alexey.makhalov@broadcom.com, wei.liu@kernel.org, mhklinux@outlook.com, nathan.d.ciobanu@linux.intel.com, bcm-kernel-feedback-list@broadcom.com, virtualization@lists.linux.dev, linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v3] PCI/P2PDMA: Allow P2PDMA on Intel Xeon server CPUs
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
+> From: Tarun Sahu <tarunsahu@google.com>
+>=20
+> device_add allocate private_data for device and assigns to
+> dev->p. If device_add fails in later steps of the function,
+> it cleans up this dev->p which is not necessary because In
+> the next call, put_device free it anyway (if reference to
+> the device is 0 which will be unless someone concurrently
+> get the reference to this device).
+>=20
+> This avoids unnecessary races introduced in system. After device
+> is added in device_kset->list by device_add and later steps in the
+> device_add function failures occur, it will free dev->p manually,
+> while in between there might be a user of device_kset->list will
+> take reference to the device just added by device_add. and might
+> try to access dev->p. So relying on put_device to free dev->p
+> prevents such problem.
+>=20
+> Signed-off-by: Tarun Sahu <tarunsahu@google.com>
+> Signed-off-by: David Jeffery <djeffery@redhat.com>
 
+Sashiko has reviewed this patch and found no issues.
 
-On 2026-10-20 10:47, Popov, Pavel E wrote:
-> If preferred, we could use for cpu_supports_p2pdma() the pattern Logan
-> suggested for hypervisor_supports_p2pdma() in v1: the whole function
-> under #ifdef CONFIG_X86 with a stub returning false for !CONFIG_X86.
-> The Intel CPU list then moves into the same #ifdef block, which saves
-> one #ifdef, at the cost of also touching the existing AMD part.
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261020164435.8049=
+9-1-djeffery@redhat.com?part=3D1
 
-I personally would prefer cleaning up the #ifdef style but that's an
-issue that's already in the code. I don't feel the need to make it
-conditional on my Reviewed-by. If you are able to clean that up, I would
-appreciate it.
-
-Thanks,
-
-Logan
