@@ -1,128 +1,97 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.67.36.66
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.224.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792513356;
-	b=nTlcpfz+lnpdEBrK7MH/2K5JQQq/0enIry8ad4Z4Tlbpk66JvKh5M/ziWA2AoxEAGRz4
-	 s8/KzciNUoJm8MIjD96Imx+gNMXsXroibMWzF92mE3O1Mmy3F9AoX0UcmzMbR4viYNe3X
-	 8wAiO36/fcLLSZR5SZQMGewM3pjsYSXgZDete8WLkubU1LFjNpsCfsF8UpLez+7HWi7JF
-	 5FqRdeEXmS7N5lf18v1K7hGg0+uJG9R188RmPA96aTeS8KvN9oDENKU7Je9bjL0gp373V
-	 5ypTNU5ZZJlwA3RNTPZ59H9snNEPV1Iem0C5nlupz5hVH6fyxX5y4vGlOsfOz1B9R7g==
+	t=1792513484;
+	b=uFjDq0H33r9Fjp8sGtqiz54agx3rzJL76God7A4dvboU9UZ2SKXbvs2p4Q8E+HV/ZuQF
+	 B5n2Uqdpug6J6aGCeLfJgm5ePcTalk8dbBOgAaiU/cjkAVTfeT+1m/32b/MCZYx+NOXo+
+	 E3e48m9jwZF7UgSc2JQTYdGHmQRJHxGTZfwd3sRDItMSQe50mP/8X5DTWi/L3my9B20oT
+	 bup/WrJWUiQ4QK11VbDu9Pbj6Ggj1t2idEmF9ePs45yk2cknjBNQ0DuY3uTcb0iGEm+pF
+	 MZwoqYu7FewaMXWmHfhND2NIfcYZII+CWi3xfpoa0VrADfsjIm3QpkyAuHAGTwdm9mA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792513356;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Message-ID:Subject:
-	 From:To:Cc:Date:In-Reply-To:References:Autocrypt:Content-Type:
-	 MIME-Version:OpenPGP;
-	bh=H/vNvjrtMUqOQt9qQYr+tk8Yq6LHFR9p8potps30VmA=;
-	b=uEcVVkXkWYdfe1Fe1sFWAXWA6JWxZltkj2d5xDrT6tgUexMo0Qu3WAz2OoH9igHIHPx4
-	 8XWKFEIrzQ+Xy2+mBbKpfov374d51zmWgk9hISEfttdUcsc6gztEbizMmfsRkqiQHxA/y
-	 2YjtKr0wfzPY2yUcXN9hcSV16V0X1U+8lPYAUPjEjF+UkOOw6JOXOZQz4UTk7Rl8Is1po
-	 jYTQS06KSC1VIOzlHrPvG7svYcRn9/cypAYkFusm+7PgRM9qPDTc37KdDEvVlToV2yv5V
-	 mdZS9T0JvLkkMEdI27gHeCKBA+w3EkX5Fce+6lEiiUmfBO0whEkmRf7o2bT3gniRDFQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792513484;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:CC:Subject:User-Agent:Message-ID:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=OigSq64J0rt4TZoDpYc+GBYQyOVQhjW9BeOIpOHcBFA=;
+	b=BFPA7F4WDPcyKv/+OAisev+qMpatWcuqnWxHXT/w1s6l7Dc74ffJFLpuCTY16vo2VVvj
+	 thf0wJhzZhZ6H9oVJD17VAzVlGFHT/rhyOpPQ4WCkWJtMkm+7WAaoJhdqWMs0gu7OxS0z
+	 gaUwxx9yw9gTRmTWrX70wy2e0j3A5tmeYuZnlCicltLFvq8jRilX4tBMBBS6HXSg3Q5IZ
+	 doSyjqEFz06ElRbzUKMy+2p3iCtWORJ0nRuU1mxuSgh+AB4UExZ4mPDYxUvFeR3MFlLkj
+	 TE8Q6Qb50TR7xKwV3rnIN0kmsNY8y6bHS6QHvW4Ev0Iro2JwtQsiq2phKbsmnBRtUJg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=posteo.de;
-	spf=pass smtp.mailfrom=posteo.de;
-	dkim=pass header.d=posteo.de header.i=@posteo.de header.a=rsa-sha256 header.s=1984.8680eb header.b=ZuhLWjjZ;
-	arc=none smtp.remote-ip=185.67.36.66
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=JcbfB6El;
+	arc=none smtp.remote-ip=74.125.224.52
+Received: from mail-yx1-f52.google.com (mail-yx1-f52.google.com [74.125.224.52])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1D6C606A31E
-	for <linux-pci@vger.kernel.org>; Tue, 20 Oct 2026 16:22:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E1D6C606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD9D160A2608
+	for <linux-pci@vger.kernel.org>; Tue, 20 Oct 2026 16:24:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DD9D160A2608
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=posteo.de header.i=@posteo.de header.a=rsa-sha256 header.s=1984.8680eb header.b=ZuhLWjjZ
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id C5292240106
-	for <linux-pci@vger.kernel.org>; Tue, 20 Oct 2026 18:22:33 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de;
-	s=1984.8680eb; t=1792513353;
-	bh=H/vNvjrtMUqOQt9qQYr+tk8Yq6LHFR9p8potps30VmA=;
-	h=Message-ID:Subject:From:To:Cc:Date:Autocrypt:Content-Type:
-	 MIME-Version:OpenPGP:From;
-	b=ZuhLWjjZreDPtCadjSox0Y3JWwlqoyXmsmBA/zXxjBweRfKu85JN7o47RhQsJeQ63
-	 okuqBLAJjtyaTfr4mpBOmZh/lStLXfsS8//zrrrBrA0E9svhFvzQ60NDN1CPlVkXcn
-	 /pqPbI5zyfdy+chDNkmLckj9WuPVaiTa5lr0rNj2ffyyDvEMbI61CH4POQ64CInwu0
-	 kxvc8wzGG+OqridbZ38v3RNogI5HiL6fQUJSSvMyk08q7PPC2r44s+gve6KUFuqtjU
-	 4duGaRQcay4xUiUXyU6d0+SL2ur+zux1a2P9UPVKg0P9yQ0bCcLbBonL8qj/9jhWzB
-	 kDf0XLLcP/iKg==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4j8HkT0032z9rxP;
-	Tue, 20 Oct 2026 18:22:24 +0200 (CEST)
-Message-ID: <14fd9a916dd0792a74ca01ae073e714f95a9c780.camel@posteo.de>
-Subject: Re: [PATCH v27 4/4] MAINTAINERS: rust: leds: Add rust abstraction
- entry
-From: Markus Probst <markus.probst@posteo.de>
-To: Lee Jones <lee@kernel.org>
-Cc: Pavel Machek <pavel@kernel.org>, Greg Kroah-Hartman	
- <gregkh@linuxfoundation.org>, Dave Ertman <david.m.ertman@intel.com>, Leon
- Romanovsky <leon@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, Alex Gaynor
- <alex.gaynor@gmail.com>,  Gary Guo <gary@garyguo.net>,
- =?ISO-8859-1?Q?Bj=F6rn?= Roy Baron <bjorn3_gh@protonmail.com>,  Benno
- Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, Alice
- Ryhl <aliceryhl@google.com>,  Trevor Gross <tmgross@umich.edu>, Danilo
- Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, Boqun Feng <boqun@kernel.org>, Daniel Almeida
- <daniel.almeida@collabora.com>, Tamir Duberstein	 <tamird@kernel.org>,
- Alexandre Courbot <acourbot@nvidia.com>, Onur =?ISO-8859-1?Q?=D6zkan?=	
- <work@onurozkan.dev>, Ira Weiny <iweiny@kernel.org>, 
-	rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Tue, 20 Oct 2026 16:22:29 +0000
-In-Reply-To: <20261019160407.GG2663669@google.com>
-References: <20261016-rust_leds-v27-0-2c296d8a8e5b@posteo.de>
-	 <20261016-rust_leds-v27-4-2c296d8a8e5b@posteo.de>
-	 <20261019143818.GC2663669@google.com>
-	 <236149b4c90323f412d6385c034a78908013e2d7.camel@posteo.de>
-	 <20261019160407.GG2663669@google.com>
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
- keydata=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
- jfGillcaQOqFZ3WwVqyzG1BUfTow==
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-RhW9kQSDmlQzQnDLToQh"
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=JcbfB6El
+Received: by mail-yx1-f52.google.com with SMTP id 956f58d0204a3-679a2b540f3so3233325d50.2
+        for <linux-pci@vger.kernel.org>; Tue, 20 Oct 2026 09:24:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792513483; x=1793118283; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id
+         :user-agent:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=OigSq64J0rt4TZoDpYc+GBYQyOVQhjW9BeOIpOHcBFA=;
+        b=JcbfB6ElF0dXJk/pdHAhuxeqJ+cksCGm7FNEjK/67u2FsqW+EOwEhBzLJk+ylc5nNv
+         HO1ChSiigoKMgW+OsknuONzCRobFmd2ys/9oBt/PJVw+vsfwTLcduSTXNDvDsq5PMq1R
+         9B9FvRT0UiP9LXbwlBuf5i2UaQgCmDMIwC++Cq/fK0p00DDQbyVWt9TjncLwrGIo2QRz
+         ub/5ieaLv9hU0DjWL4ZSoNFpjjHqbcRZt/YGoPyme5KFn43CkB1zlNFLbj0saVWc1XPS
+         EH1yMbJXitOM4SmylHIQW2o7Of1BLnRMwllmhTZlRAV2S0Rm70u04080XyP3YKD/qC8I
+         mgyg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792513483; x=1793118283;
+        h=content-transfer-encoding:content-type:mime-version:message-id
+         :user-agent:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=OigSq64J0rt4TZoDpYc+GBYQyOVQhjW9BeOIpOHcBFA=;
+        b=qphcXLkJm9wvuPza5A1VrKNbIVvsO2qs3gKGJH6ZHYcGl+ASF4brKLpwVIQg8EGKAq
+         vU/2IwMeU+6OUD1R21uWuYpSlg9cpJN17Y/wyJllDVS1iIsr+EhbY/G5gLRtPoP/hGjA
+         4XFS53ruIir3nbwUcqm6uo9aI4uQ0cCRU6ydzt9ZmSQkPIStZvT+pmZUevgpuTL2Cu7X
+         AUe5p8tQd3Qya7HAnoA4gxJoIFZS/yNApCuTmfrVTMRNXh0HfgJhy6g1PQ9nr5ZVxgOW
+         JwcPWxawe19W4VEIHXrzU10XQ6VFuLi8oE6MTEN3RhC6MlVFbRSK0NFHK8t6830ywnLc
+         kh8A==
+X-Forwarded-Encrypted: i=1; AKwUvBw9qc7xp/2uLMwQ8vTIk5LPBrMxtWxMw8Eyp0cBJ+eXJDk1VEjVm5DXspm/IT912KYa7+XKF3bQYyw=@vger.kernel.org
+X-Gm-Message-State: AFq9FYL4mbQWTys3uzN74qdJ5aX+CF3Uh1imA8Q6TG3XSMqzzR4qxDnd
+	upJkteIsh97E5Nbt1DnkrKFnOkvefDysyUcCOO/PahuWST67FdW4GJKr
+X-Gm-Gg: AYBFou1klagGjQb3LAONWXXZLEZ/qjWFagdjm/LLQiKNEMekV+kOhz/LT4sDGKk11Ll
+	7n5nkb2xIG28nASH9NXcDuORv3DiPEq/NemqRCsRe3ZNMpAfUVNxPa/QpxNZZwQ7ty/AR6Gqqw0
+	/iTjk8baP4qdOhOChQQ7b2zkPBG/uLoZPgqTs0Q1k4wreKbVhlNmzuMOacAi71YqI4cZjx4Ekbk
+	2m/s28uLXVNNezDhkBXzVqccj0iTHL9B7gkUB64iVSkpaHLCR2uJduK8L79KyZQFdoYRwNN3rEN
+	B/Qwx/7uwsh2pr3ypA9obcezq2+77gK8TYjoeq1Lj3VCZVwpNDgrzWq//x5vpnJ1qt7tr2yxVVL
+	q61P//2FkULLOBa+08gS4QS8hdfMJc0D2aDyuDawhnoQVM8XqU34bfTP3jMAPzr5UF0O8GbwqrY
+	PJR3n6uaiePzvNVuEMbFbDyvDl0VC6H4xogxLpBZsJxnWomNSwvowKvEx051fundIFDNt0qkFVY
+	P/eGGbICj1Qt8Y6vKhR/D2Q3FecxaOS8asEHVLH1DvKifomic+fYWEpugYI7Q6/DV1oA/HjUs8w
+	1rMsuToy0Nu5ZgrvHbcM0IkQsGaCKOOykelGna1wangB+4cNytgQ7gU8Ij7fAmU0lhq77podqHw
+	wDg3Spg==
+X-Received: by 2002:a05:690e:43c3:b0:679:980d:996d with SMTP id 956f58d0204a3-679ca75c039mr1677629d50.23.1792513482689;
+        Tue, 20 Oct 2026 09:24:42 -0700 (PDT)
+Received: from ehlo.thunderbird.net (212.153.88.200.l.sta.codetel.net.do. [200.88.153.212])
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-679b1e095efsm5543486d50.5.2026.10.20.09.24.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 20 Oct 2026 09:24:41 -0700 (PDT)
+Date: Tue, 20 Oct 2026 12:24:40 -0400
+From: Jason Perlow <jperlow@gmail.com>
+To: aditya.garg@linux.dev, baolu.lu@linux.intel.com, dwmw2@infradead.org
+CC: iommu@lists.linux.dev, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ arend.vanspriel@broadcom.com, linux-wireless@vger.kernel.org,
+ linux-kernel@vger.kernel.org, regressions@lists.linux.dev,
+ regressions@leemhuis.info
+Subject: =?US-ASCII?Q?=5BREGRESSION=5D_intel-iommu/brcmfmac?=
+ =?US-ASCII?Q?_DMAR_fault_on_Broadcom_PCIe_wifi=2C?=
+ =?US-ASCII?Q?_v7=2E3-rc7_-=3E_v7=2E3_final_--_candida?=
+ =?US-ASCII?Q?te_mechanism_and_proposed_fix_path?=
+User-Agent: Thunderbird for Android
+Message-ID: <7A444F17-F81B-4A33-A7AF-9E30B3EEFA67@gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -132,88 +101,168 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
-
-
---=-RhW9kQSDmlQzQnDLToQh
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+ charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2026-10-19 at 17:04 +0100, Lee Jones wrote:
-> On Mon, 19 Oct 2026, Markus Probst wrote:
->=20
-> > On Mon, 2026-10-19 at 15:38 +0100, Lee Jones wrote:
-> > > On Fri, 16 Oct 2026, Markus Probst via B4 Relay wrote:
-> > >=20
-> > > > From: Markus Probst <markus.probst@posteo.de>
-> > > >=20
-> > > > Add self as maintainer.
-> > > >=20
-> > > > Signed-off-by: Markus Probst <markus.probst@posteo.de>
-> > > > ---
-> > > >  MAINTAINERS | 9 +++++++++
-> > > >  1 file changed, 9 insertions(+)
-> > > >=20
-> > > > diff --git a/MAINTAINERS b/MAINTAINERS
-> > > > index f53047aa8d3c..3ae821614cd8 100644
-> > > > --- a/MAINTAINERS
-> > > > +++ b/MAINTAINERS
-> > > > @@ -14791,6 +14791,15 @@ F:	drivers/leds/
-> > > >  F:	include/dt-bindings/leds/
-> > > >  F:	include/linux/leds.h
-> > > > =20
-> > > > +LED SUBSYSTEM [RUST]
-> > > > +M:	Markus Probst <markus.probst@posteo.de>
-> > > > +L:	linux-leds@vger.kernel.org
-> > > > +L:	rust-for-linux@vger.kernel.org
-> > > > +S:	Maintained
-> > >=20
-> > > > +F:	drivers/leds/*.rs
-> > >=20
-> > > -ENOENT
-> >=20
-> > Yes, but why is this an issue?
-> > It will catch future rust led drivers.
->=20
-> Is this where drivers will go then?
-Yes.
+Resending, stupid Gmail mobile client/HTML/apologies =2E
 
-Rust led drivers go into drivers/leds/ .
+=3D=3D=3D ORIGINAL REPORT =3D=3D=3D
 
->=20
-> I assumed the Rust parts would be self contained.
-Generally,
+Hardware: Intel CoffeeLake-H platforms, various=2E The affected device is =
+a Broadcom BCM4364 802=2E11ac PCIe wifi adapter (14e4:4464) at 0000:05:00=
+=2E0 on an Apple MacBookPro16,1 (T2 Mac)=2E Aditya, including you directly =
+since this is T2 hardware; copying iommu/pci/wireless because the fault sig=
+nature and the fact that it reproduces on only one of five tested machines =
+(at the time of the original report -- see follow-up below, that has since =
+changed) looked like it needed eyes on the core IOMMU/PCI path, not the dri=
+ver=2E
 
-drivers/ includes rust drivers. (e.g. drivers/pwm/pwm_th1520.rs)
-rust/ is only for the rust abstractions (the layer between the C api
-and the rust drivers).
+SYMPTOM
 
->=20
-> No worries either way.  Just setting expectations.
+Between a locally-built v7=2E3-rc7 kernel and a v7=2E3 final kernel (same =
+=2Econfig template, same patch series beyond one T2-specific AER quirk that=
+ is upstream in final and therefore held out of our patch set), the BCM4364=
+ wifi firmware on the affected unit crash-loops continuously:
 
-Thanks
-- Markus Probst
+   brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac4364b3-pcie for ch=
+ip BCM4364/4
+   brcmfmac: brcmf_c_preinit_dcmds: Firmware: BCM4364/4 wl0: =2E=2E=2E
+   ieee80211 phy0: brcmf_fw_crashed: Firmware has halted or crashed
 
---=-RhW9kQSDmlQzQnDLToQh
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+repeating every ~6s, indefinitely=2E dmesg shows the actual mechanism -- a=
+ real IOMMU DMAR page fault on the wifi device, timed to the same cadence a=
+s the firmware crash:
 
------BEGIN PGP SIGNATURE-----
+   DMAR: DRHD: handling fault status reg 3
+   DMAR: [DMA Read NO_PASID] Request device [0000:05:00=2E0] fault addr 0x=
+ffeff000 [fault reason 0x06] PTE Read access is not set
 
-iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAmrXlTsbFIAAAAAABAAO
-bWFudTIsMi41KzEuMTIsMiwyAAoJEDR2H/jnrUPSZtAQAJ5ir+O8N0ajOVPE7xyC
-6kk7jLTude8WkuAYtiSJEgWw7rGRIZ85hBAKRnQxO+ZwanZlCjONOczc3Z0M+OdK
-aQJ//bdwtaDc0rS6JuMcgr5tQl++Phta9f06yP0hZMOKSqIqgz9Hou+xw0lvkxzL
-+h2CV8KwUUaVqubA/ayBeh/xtEe7Io1V1g/bInE1qJ4fJRXB89mQ25hE77d9EHOt
-AoGFm94WWqentJTGSXBbNK1e/rV1OrGi+Y48i3PoQGwnCgEDqkI/bEU/5nehNmCR
-eLfB+Q9qcmlnlo1QIeBg9xyo9nLDKcVyfDIdEvtBFBQWFM9vMyHSu3ztQtBMVWgn
-W4BvFeDG7d1Hn2h6mW7TKg4izK/WUdD7w6H+oSGPRcScQv0qx5WSQt1zjXMdzJhj
-2CeOuM0q1rSkpdo+AqEdSyvLnFk0RvBGy7KDbMP3D9nYRhOoBzd8u0hsluGSLKaI
-0ERNJ8pfcit9JaLxaU0HnPjR/2DhYQ1WmFcz5zftN1CZqxb5LDUD/QtHSIYW7xLA
-rZ9qCYwxsgE+SchoNZeYYx25MdxAUV28COkAInlgDs8nEfRkypJFaXE72HHc62gM
-s0ZqdxiG/rGp3q7sISX/Ajb2upfTis/DbDydv3vIJx5R7WTaM297u4EWKHqZTCOO
-VgGlfzFTJI7PagntrNadkTuH
-=Yjx2
------END PGP SIGNATURE-----
+Four such faults logged at uptime 13=2E4s/19=2E4s/25=2E3s/31=2E2s, each im=
+mediately followed by a brcmf_fw_crashed event=2E intel_iommu=3Doff removes=
+ the fault and the crash entirely (8+ minutes stable, single clean firmware=
+ load, stable AP association)=2E The prior v7=2E3-rc7 kernel on the SAME un=
+it has zero DMAR faults and zero firmware crashes with IOMMU on by default,=
+ so this is a regression introduced somewhere in the rc7->final window on t=
+his unit, not a long-standing issue=2E
 
---=-RhW9kQSDmlQzQnDLToQh--
+ORIGINAL 1-of-5-machines SURVEY (since superseded, see follow-up)
+
+We initially ran the identical kernel build across five machines and only =
+one faulted at the time: the affected unit; a second MacBookPro16,1 with th=
+e same BCM4364 chip; three non-Mac x86_64 machines spanning three more wifi=
+ vendors (Intel iwlwifi AX201, Intel iwlwifi Centrino 2230, Realtek rtw89 8=
+852BE), all clean=2E IOMMU was actively translating DMA on every one of the=
+ five machines; only the one unit faulted at that time=2E
+
+WHAT WE RULED OUT BEFORE WRITING IN
+
+ * AER/ANFE quirk on the T2 Secure Enclave device: its PCI ID match is exa=
+ct (Apple SEP, 106b:1802) and does not touch the wifi device (14e4:4464); r=
+eal PCI topology on the affected unit also shows SEP and wifi on separate r=
+oot ports (00:1b=2E0 -> [04] vs 00:1c=2E0 -> [05] off the PCH), so there's =
+no shared-root-port mechanism either=2E
+ * brcmfmac driver source: git diff v7=2E3-rc7=2E=2Ev7=2E3 -- drivers/net/=
+wireless/broadcom/brcm80211/ is empty=2E
+ * Our own config template: byte-identical between the rc7 and final build=
+s=2E
+ * The upstream Kconfig stanza for INTEL_IOMMU_DEFAULT_ON (drivers/iommu/i=
+ntel/Kconfig): byte-identical text between v7=2E3-rc7 and v7=2E3 (default y=
+, no depends on)=2E
+
+THE ONE ANOMALY WE CAN'T YET EXPLAIN
+
+Despite the last two items above being unchanged, the actual generated =2E=
+config has CONFIG_INTEL_IOMMU_DEFAULT_ON unset after make olddefconfig agai=
+nst the rc7 source tree, but =3Dy after the same process against the final =
+source tree, even though our template explicitly answers "# CONFIG_INTEL_IO=
+MMU_DEFAULT_ON is not set" in both cases=2E Our working theory is that some=
+ other symbol started selecting/implying INTEL_IOMMU_DEFAULT_ON between rc7=
+ and final -- which would override an explicitly-seeded "not set" answer du=
+ring olddefconfig resolution -- but we have not identified which one yet=2E
+
+=3D=3D=3D FOLLOW-UP (what changed since the original report) =3D=3D=3D
+
+1=2E The second test unit we called "clean" (CHIMERA, identical MacBookPro=
+16,1 model and BCM4364 chip to the affected unit) was NOT actually immune -=
+- left running longer, it crashed at 41 minutes uptime with the identical s=
+ignature=2E So this is not host-specific or even config-specific within a m=
+odel; it is cumulative/probabilistic with firmware-crash retries, not a sta=
+tic per-unit property=2E We now apply intel_iommu=3Doff to both units=2E
+
+2=2E We tested iommu=2Estrict=3D1 (forcing synchronous TLB invalidation, n=
+o lazy-unmap window) on the affected unit=2E It does NOT fix the problem --=
+ 9 firmware crashes and 18 DMAR faults in the first minute, same as baselin=
+e with lazy invalidation=2E This rules out a stale-mapping-during-lazy-unma=
+p race specifically=2E The IOMMU is failing to produce a valid mapping for =
+the address the device requests, not failing to invalidate an old one in ti=
+me=2E
+
+CANDIDATE MECHANISM
+
+The four DMAR fault addresses we captured are all exactly 4K-page-aligned,=
+ clustered within a ~2MB window, with irregular (non-fixed-stride) deltas b=
+etween them -- consistent with each firmware-crash retry requesting a genui=
+nely fresh page, not a sub-page cacheable-alias bug=2E
+
+Reading drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie=2Ec (v7=2E3)=
+ shows why=2E On firmware crash, the bus =2Ereset op (brcmf_pcie_reset()) r=
+uns this sequence, unconditionally, for every chip revision:
+
+ 1=2E Disable ASPM=2E
+ 2=2E A real hardware watchdog reset of the wifi chip's own silicon: WRITE=
+CC32(devinfo, watchdog, 4) -- a write to the BCMA ChipCommon core's watchdo=
+g register, Broadcom's standard SoC-wide hardware reset mechanism (used her=
+e in place of a PCIe FLR)=2E
+ 3=2E Restore ASPM=2E
+ 4=2E Free the old ring buffers (brcmf_pcie_release_ringbuffers, dma_free_=
+coherent) and allocate fresh ones (brcmf_pcie_init_ringbuffers -> dma_alloc=
+_coherent, confirmed clean, correct DMA-API usage -- no raw pointer math, n=
+o dma_map_single/dma_map_page misuse)=2E
+
+So every firmware-crash recovery cycle contains an actual chip-level hardw=
+are reset of the wifi silicon, sitting inside the normal recovery path, imm=
+ediately before fresh DMA buffers are allocated=2E The IOMMU has no visibil=
+ity into that internal chip reset -- it only tracks dma_alloc_coherent/dma_=
+free_coherent calls=2E If the chip's internal DMA engine state (cached poin=
+ters, in-flight descriptor/prefetch state) is not fully re-synchronized wit=
+h the IOMMU's page tables across that reset window -- plausibly interacting=
+ with whatever changed in pci_dev_wait()'s reset-timing behavior between v7=
+=2E3-rc7 and final, one of the only real PCI-core diffs we could find betwe=
+en those two tags -- a stale or premature DMA read from the chip in that wi=
+ndow would produce exactly "PTE Read access is not set": a page the IOMMU h=
+as no reason to have mapped yet=2E
+
+This reads as plausibly Broadcom-specific rather than a generic any-PCIe-w=
+ifi-vendor bug: in our survey across Intel iwlwifi (two chip generations) a=
+nd Realtek rtw89, all clean on identical kernel/IOMMU config, none of those=
+ drivers perform a full chip-level silicon watchdog reset as part of routin=
+e firmware-crash recovery the way brcmfmac does=2E That is a direct consequ=
+ence of Broadcom's wifi chips having their own embedded ARM co-processor an=
+d firmware, versus a more host-driven firmware model elsewhere=2E
+
+We have not proven this causally yet -- it is a source-grounded mechanism,=
+ not a confirmed root cause=2E
+
+PROPOSED FIX PATH
+
+1=2E Bisect: the real fix, if this mechanism is right, most likely belongs=
+ in one of two places -- (a) brcmfmac's reset sequence, inserting a synchro=
+nization point (barrier, or a readback to force completion) between the poi=
+nt where the fresh DMA mapping is guaranteed IOMMU-visible and the point wh=
+ere the device is signaled ready to resume (brcmf_pcie_hostready / the mail=
+box write that follows), or (b) PCI/IOMMU core, if pci_dev_wait()'s v7=2E3 =
+behavior change doesn't give the IOMMU enough time to fully settle before t=
+he device can issue a post-reset DMA=2E We don't yet know which=2E
+2=2E We are rebuilding with CONFIG_DMA_API_DEBUG=3Dy to reproduce this on =
+the affected unit=2E That should show the exact call site and timing of the=
+ bad mapping, which would tell us definitively whether this is a one-line b=
+rcmfmac timing fix or something deeper in IOMMU/PCI core=2E Will report bac=
+k with results=2E
+3=2E In the meantime, worth testing as a less blunt interim workaround tha=
+n intel_iommu=3Doff: iommu=3Dpt (passthrough -- disables DMA remapping but =
+keeps interrupt remapping)=2E Haven't tried this yet ourselves=2E
+
+Happy to share full dmesg, the DMA_API_DEBUG output once we have it, or te=
+st a proposed patch on real hardware -- we have the affected unit and can r=
+eproduce on demand=2E
