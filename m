@@ -1,69 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.166
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792577745;
-	b=ppP/S03wnuaTC5Vf1UEwCOKuMjTSXi4Z3HqFC/+d4HUZ/oGVdIuBjKYwE7HMtZVhtH/q
-	 DUGD555Kd9WnNklC8tWF83huhGQ1XQBD1KddQGsldaFILsYwWaStsZiuCXqL5TCiMLjMZ
-	 7wAiqKut4FAoBFUTFbhZainSOgiNci00ZCwXp6LwDlLc69Z1RELD8ov1KgVCJxPzJUZLA
-	 OqT3r8akVEvQq39G+LsEZ3W4RiRTvmJFg6V1GeOws78TF3tuFuJFb2GGk86aSyjiaY9d4
-	 0rQcgye0ieQYyXFV8t4740C4c4DKNXY1ykOpmAnHSWU7wOje9sq2iTZFFk7rYZvWclQ==
+	t=1792577873;
+	b=kTBITZ0c2Yc9+2nSPPOmhwy9utsQn1xqbUL7k1+H43lOJdJwxC0+pdE3Wer6Afgad9OG
+	 TkCtjRsy1aIdcUcOOWD5Pgcy0AkKudVJ9OjvpDlxysmiWdfweM6Pe4sXWx+VW8LUgMdby
+	 sDj0prA3TIQM5HLQDvz6LMpQKFl1wPw3inH3fsQ8JjLXW8zT+tJUMyyzL9gB6SoGshD/n
+	 w58WLBCbHfCxUXmr8mV3T8fx6v2YQTrwqeGl+Uj44OhbYBjjU+lkL/IuWlbUExCpRQz8M
+	 SEJY0H6lh4u0A6Ih6pD5u0wSRUuB4zod5as79/B64+4mfxk+MdmcX4ZH5oMwrUf/HqA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792577745;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=qID+dEtKjHnTB7zRrjAZ+x1ovn7794ILO31jRDajG3g=;
-	b=UPqq/1Yb2BxDTD+plXiKcpdg9YuJOYXdIhWyPfMuTvavPHMeZgwB1vHqRL+cQ1CeGDxL
-	 06MIfoWSvrqx2znCWBoHcKvUgfCCvozdi40Qqm+H3XfSS6L0tQnYGo0wGrtS5ostlCNvK
-	 ltkz13lBupItx1+qLvTUneRdq/RazA67ggs7O2yigBd34B0MG620/f+VOVlCgjRFyEnNV
-	 6XVVoSClSZSHKmlCz/rbVTSoAYp5Av/pnGuHFv/t50xOSA0bmqy44AZ8GmmQ7a4DIaKe7
-	 WUlferXc7nE/ADrd0MHr1zpvBZ2ujS9GCW66y6oVYpePkejAJp3giX8AxfKpnTe5gPw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792577873;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=rD+VjwxFzBy2TUqQBiwNSj3iuJMVU9sSI4F+/IKFoB8=;
+	b=AAGxO6GMhWyNa76JnBsu2kK9Wv1BUF9FkWcjRnjaaYc7hznAoosdW1G00OAkSfOekdVk
+	 M2mq2dVz10FurxBJSSYIfJI5yFExO/jeqYWLEktT4XyteCOBsoP/5KBGJ7/2p79Ro8fq3
+	 TwSiu+tml3QM1zuUnVjH8tw1E+fXaR6wcUPFHpJVIhvDcnQHVHQ9eCeDyraoZajgLR+cq
+	 p1QnzmK25ZHWRKjf1YtWEZ++mKDOBbtQz4pT17Jefvs6ORhPFdNx2WWJBS2KLbBb8SIqI
+	 hPGIJwdcl42obB4SBMvlkYuRO+f1IwCg1PZVpksC3SuQbOasQntS3y9eO6xx0Qxxs7Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=cknow-tech.com;
-	spf=pass smtp.mailfrom=cknow-tech.com;
-	dkim=pass header.d=cknow-tech.com header.i=@cknow-tech.com header.a=rsa-sha256 header.s=key1 header.b="Lqtnk/E9";
-	arc=none smtp.remote-ip=95.215.58.166
-Received: from mta1.migadu.com (out-166.mta1.migadu.com [95.215.58.166])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=T0y19LOA;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7699D606A31B
-	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 10:15:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7699D606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cknow-tech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cknow-tech.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4703A606A31A
+	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 10:17:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=cknow-tech.com header.i=@cknow-tech.com header.a=rsa-sha256 header.s=key1 header.b=Lqtnk/E9
-X-Envelope-To: linux-pci@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=gsCMZZdvoKKiSu7dqO9JkNt1TMT38UkvVw1xwlAFKHE=;
- c=simple/simple; d=cknow-tech.com;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792577741; v=1; x=1793182541;
- b=Lqtnk/E9A6eXhIx5TY/NrE8qCmhglMh93geCeasd4HC56ijwiDVVD7xeCWTAI0SuXM3fYEP0
- 02mSxqKGNmENiAntBMd/rZAdbgi5I74ARzRYgdyan76Gx+qNZHnnsLVkPedltTJGsDHXdJTnfT+
- bfOsPU4TP4/OQ1YWPkQ0AIG69HN6XO2jIytY5V3kTGuLCGVpJpLYsxWii5jWaYIe2s8zYMh7Phg
- +cxncq7EgBxqk6SqWEdUYS5ytEpTpEVAGQPPdo0TWFg45/awQhffkMo03jStHO9ymuqu9RbfYPA
- 5o+kmHw1w/7EVBVpJbMkbvVLBl1yyUDx/HL9wJRApt+bw==
-X-Envelope-To: linux-pci@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 6805060a84a1d670;
-	Wed, 21 Oct 2026 10:15:38 +0000
-X-Mizu-Trace-ID: 6805060a84a1d670
-X-Migadu-Flow: FLOW_OUT
-From: Diederik de Haas <diederik@cknow-tech.com>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>
-Cc: Rob Herring <robh@kernel.org>,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Diederik de Haas <diederik@cknow-tech.com>
-Subject: [PATCH] PCI: dw-rockchip: Remove redundant dev_err()
-Date: Wed, 21 Oct 2026 12:14:57 +0200
-Message-ID: <20261021101533.609118-1-diederik@cknow-tech.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=T0y19LOA
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACB061F000C9;
+	Wed, 21 Oct 2026 10:17:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792577872;
+	bh=rD+VjwxFzBy2TUqQBiwNSj3iuJMVU9sSI4F+/IKFoB8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=T0y19LOA1JwdkOv4n23cMr91yVuVVHHKGvV/Nm3tCIu38gUxuXpS+oCT/Wi8yV8A4
+	 j3K3wct4K4VKGxRwHUb8KVvBVxJPRmSNp920t8HRtUKyUbq/62SSFCDJohvZ9+u4d1
+	 Dsk1VHE+vVi2Czv+lBkNwkof0gBm9FuzFCrPlLrRj6rrmphSqKJ9R7EDRJmrPUj2vA
+	 WleuLxknCJ1ZHglytQwSN4PLPjrGHM3N9HYe6Fcvox2iAil6ma9u5L8aXryp3GbzgQ
+	 Hj6hPCzVWcx4cacGLqQGdgPp5HRRiUdp5D0OQZA8vYBYIauNIecZ8Z07r1J1Dw6ZgJ
+	 1qGXPMkUZrKHA==
+Message-ID: <sashiko-outbox-180090@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: dw-rockchip: Remove redundant dev_err()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Diederik de Haas" <diederik@cknow-tech.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261021101533.609118-1-diederik@cknow-tech.com>
+References: <20261021101533.609118-1-diederik@cknow-tech.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 21 Oct 2026 10:17:52 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -72,47 +58,17 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-The devm_request_threaded_irq() function already automatically logs
-detailed error messages on failure since commit
-55b48e23f5c4 ("genirq/devres: Add error handling in devm_request_*_irq()")
-So remove the now-redundant driver-specific dev_err() calls.
+> The devm_request_threaded_irq() function already automatically logs
+> detailed error messages on failure since commit
+> 55b48e23f5c4 ("genirq/devres: Add error handling in devm_request_*_irq()")
+> So remove the now-redundant driver-specific dev_err() calls.
+>=20
+> Signed-off-by: Diederik de Haas <diederik@cknow-tech.com>
 
-Signed-off-by: Diederik de Haas <diederik@cknow-tech.com>
----
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+Sashiko has reviewed this patch and found no issues.
 
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index 14976861f8ef..a4dbfc52c2f1 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -718,10 +718,8 @@ static int rockchip_pcie_configure_rc(struct platform_device *pdev,
- 	ret = devm_request_threaded_irq(dev, irq, NULL,
- 					rockchip_pcie_rc_sys_irq_thread,
- 					IRQF_ONESHOT, "pcie-sys-rc", rockchip);
--	if (ret) {
--		dev_err(dev, "failed to request PCIe sys IRQ\n");
-+	if (ret)
- 		return ret;
--	}
- 
- 	/* LTSSM enable control mode */
- 	val = FIELD_PREP_WM16(PCIE_LTSSM_ENABLE_ENHANCE, 1);
-@@ -764,10 +762,8 @@ static int rockchip_pcie_configure_ep(struct platform_device *pdev,
- 	ret = devm_request_threaded_irq(dev, irq, NULL,
- 					rockchip_pcie_ep_sys_irq_thread,
- 					IRQF_ONESHOT, "pcie-sys-ep", rockchip);
--	if (ret) {
--		dev_err(dev, "failed to request PCIe sys IRQ\n");
-+	if (ret)
- 		return ret;
--	}
- 
- 	/*
- 	 * LTSSM enable control mode, and automatically delay link training on
--- 
-2.55.0
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261021101533.6091=
+18-1-diederik@cknow-tech.com?part=3D1
 
