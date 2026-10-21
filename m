@@ -1,98 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.72.20
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.44
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792597425;
-	b=pG/wDvXnvDvNktynx0qJWFNjbCrKr6nluHnFUU/zdao7Ib2CXrlDx+wGON2/euJcr4gT
-	 4GcO0Obh7riVIjDQUlbI9fyaAIGieocqrfkPGJJO7MBY8HGurCn7DcEsOnnLMqv0N+Dm2
-	 WAxkOXJdjYOicFw70LPfYExM6aUdsfdSuTeUaphmyFu2tiz6tpDEv25Z1oQ6tOkkyPfco
-	 uWiKH0QZM1gZ+Eq+oUZzMBShpI55r+OQDqE3hWScS6xuuxfEGdlBmTpx/wmuI7uAOiUnQ
-	 UrSFiS8WkV9bgSqCQvugozaiSiwbmSq7MaPzxTJKxYp9JL4w0JtAUF1ghcABP4bMq+Q==
+	t=1792597473;
+	b=r4HAglo2bqU5VRIWWbXlo9ym/iJtaK7a2wcRNCUHiH2xIXgAvLxtGcQDCbYWRf5juiZo
+	 rbSBcnzucv681hr4PmRQ7DRkbUgRXsX2DMbKQ01cPtasccL0g14daO3OrvHhR8TP3aK9L
+	 qu1MhN6A0xwYp8WzxhR5+7HdsV4RatsqgKmnnmDgcx3ckQ3nObbdq0qYzFAPrqff14waq
+	 /fjF51oQJnEAsecwJGHQVFt2wx308nC3vbJkAgdhMdwGfZJZvfnLT3fHdcpd9VEJrGJS7
+	 3mx7NF86moGxTb1gR7ucy0zOjzRlDoaztE0cGO4t8cKXqin4nFUrjwJ5axdTL3gxDyQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792597425;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:Content-Type:Content-Disposition:
-	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=kHii8f14H9f2GlAXEq94y1Sg4Xrrc8XE4uliTeNT+4c=;
-	b=deFIqYQkpiK6nvDe7FTeqjJW2tB2pIcz0SIoQKqBO4tbBmOwnaX2a298YHBst+ckx3nU
-	 oJwudto/bivEFzL5lY4mzgJpoN4HihMdxbA81BU3O/MT5xI4qKnb9uCAMiiDYLFMxWB++
-	 ncfqGifXf/3VlWIz+pTt/6w01NEU06MByFM6sKxfQDsqRKaGkk5BhyWtg20FsgzR0kFG8
-	 72SyXLBixGt/gT1eqWkcDBZa5srucska1TNmtmcqehU/1A2yb6FrAFTEGSlviUMnS6uRD
-	 TtQMgVapG8yjKa93woLaz97gA4NBQNucKHfF1OOEXO20W6QLILZ4Gh5rFMjG4h79uaA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792597473;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=JP3isnTjkGCFTemUyIlLVxDc+jortqiyhczyp4kIfzM=;
+	b=WH1R5g6/DGyViXGSLM/ZYQDlN12dgcWWVlS14nmvn2Y8q836+L8XqsvuxV+x4YOPhKJw
+	 GKoswo6U+jf/GyK4C0wUGj+6mR4aID+V5IZBlwMMPxqvdXfl3M5HJtwgAd2kJGD4w7T1s
+	 HBKzz91CZ6Gcw/tH5gjcwiRQTmUM00T1u+yManhzETQic/EdsQ37Bw8sV26E7/QcJLKGD
+	 H3xpvxrH1/Soi2LaFe1RiDm12lT0lAZ0Jr2aku0kwR8Spf0VJqCaI9mDxn8ExQUn4hstS
+	 tsqDaCIC8RIjd8JwYRqfZaQSNE7/hdVOQcLbchDe17YCQBxgRGKCE3QKPZY/Hh5betg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.nxp.com;
-	spf=pass smtp.mailfrom=oss.nxp.com;
-	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=mIaGdtf4;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.72.20
-Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013020.outbound.protection.outlook.com [52.101.72.20])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=flipper.net;
+	spf=pass smtp.mailfrom=flipper.net;
+	dkim=pass header.d=flipper.net header.i=@flipper.net header.a=rsa-sha256 header.s=google header.b="fT1Ejq+/";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.44
+Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com [209.85.218.44])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8D2460A5BD3;
-	Wed, 21 Oct 2026 15:43:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A8D2460A5BD3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E6A960A2627
+	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 15:44:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0E6A960A2627
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=flipper.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flipper.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=mIaGdtf4
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=iXiz000sihD+lUTmOxTUQhkmX0fFdtovbhX7oTTWIBsjXGmx/DpObVKLHFDksyoUnr6oWJYJZYKO2ettjvYHhqVakmK1EjPj8KGfW76wHYv/lz9GtoiD1ZF7w6GKk8xqO2xYCxK/VV4/Ix/FQ/UGXl8bUqXCW0mXyVAMye9LahFVrQjiYj2JZxvafUQ98lAFoqC0HGrixVM0R6h5B5iBTnAcjpQmnVoBpqDlnSSDkiXNCOrAusPu91oFlJ7oTryRfvFs8rLLLibFxFgHVZ1NsqMjC/F5tSafN0ggAFbhreFWLmW7HnIlr3XHSeKvkplfMzEcSOh/IDNfVwSqck/4aQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kHii8f14H9f2GlAXEq94y1Sg4Xrrc8XE4uliTeNT+4c=;
- b=VOZe8l5td3AuVLQOy26U3C9wCzZgEYpvz12no38eX/rSHeBMVOr/N4T+ZrokGhE/QoFuwPL+mGqTThLAMkji2b6kBYzID0/xgGlzC5q5OdRi+x9QhjAqULFc4kGUmt5q10nswzC6R7k3i5Rw9FIdRzOpL2GvSYEunXAbqFruahYgBTIy303GmhVa2hyj99rT2bfcMWIu3N0jtXWFqmCDeD6Vj8C8VQZT0SBfGclPrRc9N4yzNBzw5jMRMoxru3YYLgWn0reYE5gyQ26mtGDw3sLcaMV1lG1GQMNaeAnJe33rpFZmeyYh9nFxjZFv2dz8AbGnmfXYjYc/5oO0dbS9/A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kHii8f14H9f2GlAXEq94y1Sg4Xrrc8XE4uliTeNT+4c=;
- b=mIaGdtf4HTfJLOiKO2dhomfNTBtLRPa6bCBWNsxvOddZ/LI0rF89/qg3Jdksh9t5jRgLnrYafurfYRXRAxixyItc19/WLpZSaNdFJ9rmDqbekP8iUzj1ny2lYE1yPpMfXxHKJP/6phabvjIaFAIP/ZLg+AGz/lePqiYZ27FLWRLd6snZkyNaL7nwDDoDKpd3+d97hRN2noizIra8kTsRarkBZ0pDnmG9UXbHndgopIL5enDV6W+IY0DUTEm1Bc4q/ESSnjDtVTCI1yJ9sdi5SmAgaboB/lI57HcZVFoHgIofDMPc1p7K5G7E4oro1wR+R5e9Xia/9RXLH3JAOwu0zw==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from MI3PR04MB12438.eurprd04.prod.outlook.com (2603:10a6:290:76::14)
- by GV1PR04MB10534.eurprd04.prod.outlook.com (2603:10a6:150:205::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.15; Wed, 21 Oct
- 2026 15:43:32 +0000
-Received: from MI3PR04MB12438.eurprd04.prod.outlook.com
- ([fe80::c715:c32:8bb1:b70b]) by MI3PR04MB12438.eurprd04.prod.outlook.com
- ([fe80::c715:c32:8bb1:b70b%6]) with mapi id 15.21.0546.012; Wed, 21 Oct 2026
- 15:43:32 +0000
-Date: Wed, 21 Oct 2026 10:43:22 -0500
-From: Frank Li <Frank.li@oss.nxp.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	bhelgaas@google.com, linux-pci@vger.kernel.org, robh@kernel.org,
-	thierry.reding@kernel.org, jonathanh@nvidia.com, kishon@kernel.org,
-	Frank.Li@kernel.org, vidyas@nvidia.com, cassel@kernel.org,
-	den@valinux.co.jp, marco.crivellari@suse.com,
-	andriy.shevchenko@linux.intel.com, linux-tegra@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 09/10] PCI: tegra194: Balance core monitor clock on
- failures
-Message-ID: <atjdmjX4-Hv2hGVq@SMW015318>
-References: <20261021061349.1265704-1-mmaddireddy@nvidia.com>
- <20261021061349.1265704-10-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261021061349.1265704-10-mmaddireddy@nvidia.com>
-X-ClientProxiedBy: PH7PR03CA0013.namprd03.prod.outlook.com
- (2603:10b6:510:339::16) To MI3PR04MB12438.eurprd04.prod.outlook.com
- (2603:10a6:290:76::14)
+	dkim=pass (2048-bit key, unprotected) header.d=flipper.net header.i=@flipper.net header.a=rsa-sha256 header.s=google header.b=fT1Ejq+/
+Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-c38ac26cc5dso127928766b.2
+        for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 08:44:32 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792597471; cv=none;
+        d=google.com; s=arc-20260327;
+        b=HEmVAbQ41zQQ+kvG9mIjIEW6P+4aq2Lls+UpRRzBaYnkkkoDrK8m0/nRDzfT7kiQ4C
+         Xm6MPXeSL88vZZ3MfeRie5MtrxsRcsNRtfnywgKijmcDlpITpUiM6n3XQlGfh/jr4Gbc
+         ELIRQRcJPI4z79yMx5CGGwBe4DeJtSHWMJeTGBMI36WvQqA4/EPgE16InxDbPvKGSkKY
+         TLbmB6Mxp0+xEwbFH7QY17al9DK42CKeAcqeHnOHSgR/sE88/RylnlWpQMBTbC/g8dYB
+         5YRw5r7shtLE8awaI9DkKb0WosunsYCz/q/uWHrJuvZfpyZqLbQg6yAVhanODOF/IvNv
+         WW6A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=JP3isnTjkGCFTemUyIlLVxDc+jortqiyhczyp4kIfzM=;
+        fh=JT19lwrc+le7QVW2eOhG6qTJMJlqy2oyLEvPfpYemZw=;
+        b=dVWI6ttKuayKdCk5WjTojfOl5WG/l0bqzYE3Wx2v5kbIUrT/DW0gHCfjaKj7bsTilM
+         XmNOxFiOJFOQQuJOTeaN9rO1OvlM74o8xmB424e33nmfKTfkFPkBj1MM5kCI9wsM23sO
+         KJ2I6GgDZJpXyPU33L7Z8BVATHNHX9gnwAwjm4cX/b283wxc7d1NeIi5cIZKySN+opsI
+         WdsyO6r4ECEpdQJFLR0iCpipEOb1TJ2CVFNIrrJLBV8O4SZ49XqRxf2212zBYZAhGW/U
+         ertUW1wW3AEs9vFe9Zus0SJ7pKswu1ihbFRdrLwQnue8qcb14lSrugixQuRmcCbCcQdo
+         2biw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=flipper.net; s=google; t=1792597471; x=1793202271; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=JP3isnTjkGCFTemUyIlLVxDc+jortqiyhczyp4kIfzM=;
+        b=fT1Ejq+/L56l79ie+PNmdQbxUE9/wPpsUh5WzFCARRIo7DhXjRMQdSMvNzHnT/eXUK
+         U1uG49UybtIek/3tGTHsFnortB7I2Ud3eqM90D/fcwX2ZoNpWpLOYqIySWj5tZGiVmo5
+         A8c4weGoCSi9qGxJAFMQK7fltmLgJitKz6b5FZvPv8IhrMLbQUQ3XkwLPLN4X5zIAw7V
+         jDdMr7FQo9B1Jxu6a/lEtrZm7yUThf57nza2x9rNdhhjVZ2bCwn+ycLxa1LDU2+7gAwM
+         c4w3om4KynnPQ8oVYNL8wqUCw1p0MtaOC4BAZXAZdu98lWHTUOJYF6I9QRNLwZnlW/9S
+         b/bg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792597471; x=1793202271;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=JP3isnTjkGCFTemUyIlLVxDc+jortqiyhczyp4kIfzM=;
+        b=QMu1zLog7g+PqT93FG5qhPFExuqhILn9rUZ0c7E+t0OXjwwVQUKrqN+HG6GI7F4MPv
+         wQrBMah7Npx+axV1uSgDGnA6nH/YsgXwvrTGl46a6JJeFtE7Cys+HoRAQ38LNA7DGu5E
+         3m3vLVdjGSCVYz7qE9DnaKY1EJ9/XZpU5WEtmTguQ7cqxi3L9FsDDauzG+HWY1mvIa9g
+         +nzwnpkzOYv8ToDBMjXhUR9SjL9URthX6FtxTGv8Zql25/dbeoWqWeJWCD/fV6EDmaji
+         QnNHqMLBHl6AOeEELtIEoeAaaRrvxQVYh+vJFje3WcDsTg5mMzmzJYP2wbSU8ry9TAMN
+         6nkQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzGv32EW4lg7L2Cs2nJsi+wOh0Z9eetZVxrGjNSbiyIMkbgSuZOcFVHvwEe9Bsok8dS/JzHxhG74xg=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJ/uXHrQvQx5FdR6lC/aHg2oFo1q0F4F7byYeSX03QaEk3HEZUZ
+	xLu8EJKosRNl3FYvPYehioAtsYkR9FVRCjG1AMIwK37sx+v0PKyTYqhv0jpdsEuei5FwUb65wJF
+	ZvQ8XnYBd21sB4V5kX2rDk8wkHKpAUNmddZmIWvtCow==
+X-Gm-Gg: AYBFou1DKV3UQHVS6IGJy3sW49kaav+6eeEopjqjMhhWqlWmlrUzFiFWk5+0tMOC83r
+	NhYH4UspNBjj0XInK7spnp4MTsoaEkjdtw7/rYplDlZi7eqJBvYmPLGPdYnht0M5fFq/FKsVhmq
+	yleXDotG4GFkcHfnxuNCb6w0uR6fekUy/o3h/hzHlETmNFFyN3DOtFHXO7Zo649hZqWWOkbB9T/
+	3bmvzWer+bUYt777fcBbG8oL5qogRlM4gzTjQJABpMjODDNXy3uuDPI+ZPWoT+e2oGPDbtgJIIo
+	cB7BbZ8Z+fsgtPTxRnSayQT3jjdUejhouo1SomEKN31JBk/nkkWoj56JNCgE3UwALuIkcWHIUvw
+	dXLTs5sefzY0qnc8iPljVtIZxBG9Jc+sv6DmRU/JQR1Rq+aNfI+09cqp5TBFhskUTHqzQ2w==
+X-Received: by 2002:a17:906:4fc8:b0:c2d:ca32:2176 with SMTP id
+ a640c23a62f3a-c467961d9f7mr245660266b.8.1792597471151; Wed, 21 Oct 2026
+ 08:44:31 -0700 (PDT)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -102,72 +104,187 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MI3PR04MB12438:EE_|GV1PR04MB10534:EE_
-X-MS-Office365-Filtering-Correlation-Id: f3a11ae6-e843-4d64-bb56-08df2f8a0fc5
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|19092799006|366016|1800799024|7416014|376014|23010399003|22082099003|18002099003|10067099003|4143699003|11063799006|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	VoiO/Ilz1wufHLV0AjHVdUokgjod3pyNV1zxFOXKXI6eLfsa6BpM8gTHwUqD+JozTpERnX3usG6ejddTW3PbWWmyDUVtwcotthNJ3bgP8krc6Ke/RMzWxiHlFT27MBOjZ+lgfWQLU9G2cuLcKT07C8UVGvMoKHLARGaCSLEQNHDkQFro2klT20vBP1uoGuyudbpwdvXM1GrQuM7+V5tjh5MZ+Yv3VvgMP+tJQM3rOYy3rZYdaNmfZGt02yzFxRLYuGioRb6Pufs6XyD29crl/57js47tXRU5YXB7LOlutUVuGwchGOlcjNEycXDGkMye5cKu8DWEvcVATM84Jb5J8nTZfcKouWv3jCuaK+Twf2mq3uLeVTb30f93aSQkXx3oRaf8cUowlndLTgDosBcKXTzK9CUHSsDDLhAaeECoyz2oT2yMg1YipoMsPwNMGW6TIDDrKZvi5jwI9HemWlbF2k2l72d1j9KckiFlHR72C+yfRlOqNZGaHKcxsjBdhpK54E01MDx3M/5eMN7eMwAnlhojqHgIZHoxf+Mnlh+dglA4rr0s9cTAKdAe/R2DZNYQtW0m8XyzIVgrpGjCRr75wNyLknMmy1IfXvp4jU4kZ0uO7NZb6T0Pi0MIrAWOmCxw+nwh9+HMluZDwCNTX5B0yn+mrWMP8uZ0gTublp/tEJM=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MI3PR04MB12438.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(366016)(1800799024)(7416014)(376014)(23010399003)(22082099003)(18002099003)(10067099003)(4143699003)(11063799006)(56012099006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?AXkmWT/CsJq3m8aqXDuBySYId//6nhLZsVAXEhOCGPcQC3rWqfCwcI3n6uRY?=
- =?us-ascii?Q?uVt1rj0YTAW82N69ZvTKniK98m0LcHY6UZtoHfIy7MTmG3tZePnEBr+TD3Dt?=
- =?us-ascii?Q?VhRfYSDuSJcoJJ+REbltPGrec+/mSX2YrQyAvOn8hC2HuNfVQEySbfDb+Uwf?=
- =?us-ascii?Q?+1XLFRacQ9E46dp7mbMJhabhb18+Av7gq3GwLr1c3NBadlubc2NP0o5tTaOK?=
- =?us-ascii?Q?WgxjWzOt3AjbnLQHOBFe8Bya7rqfUjifTqhrJZPM8Gae3zsOoVhCgx2hAokv?=
- =?us-ascii?Q?Gu/hIIk1Y/EiAHwaEI9W4Yjr7HBjF3NhpijuptLi7SSeADS+EbgYsLkVW52H?=
- =?us-ascii?Q?EeC6IPuyQlkPASXdelM/y3FTQRGMjN/yFtuJ4db43HoALAemxkacd3be3NsQ?=
- =?us-ascii?Q?A8PpRRtmw4R7diQdwQpwBT40P2uHFWSYJFK+H4Kmwu3ICGizN4sw/RO6MJd8?=
- =?us-ascii?Q?ASrPhA8ISbARQe6dpm+jEGj2fn4fIV08HGSPeBfsEIXNoWw3w7jVyUnYt+cA?=
- =?us-ascii?Q?kCOkoaYojTUJw2LitnoRij39TD9BAsaTrNA5lVFesmE5mBtxHpIKS4GrhfXt?=
- =?us-ascii?Q?88B45NaU/WM1yiXW9IYB0OaQfgLtd+1AK36d+s6Hp0GHySP0IBm6z5y18euu?=
- =?us-ascii?Q?OAKz3vG3ND6n6JOXL2DFg46DLQDf3ayZlyqJ3tV7kRu53xXuw0oans74IdBa?=
- =?us-ascii?Q?1zlX8cFZFPd2YrJ5VLdW6Th9SsWeeqgT7ix/6K7mq2cvmRuqbpkbIQ0t0s1j?=
- =?us-ascii?Q?Ce6q0aUPJxFapZilKUzn7y6+Ru2sbl9x9zC0+yWuBzl+9CMl0Afhs4muTJel?=
- =?us-ascii?Q?nwYZsw2QM6A7z6/OTUN9b4X8E8kJGwd4M8gtnlQsmqcjIrxIZGXKD1GZkLn+?=
- =?us-ascii?Q?Tj4qI7ebAE6udISAxevyJmVI2wo3KrqSgOsm6PJt6dUGSXVBp5oDFA87xKGu?=
- =?us-ascii?Q?sHQhgnC4sKIDovVCZmsH4mVZcYyjgXhjVlbs/5ealHBIKjLvTE2xS5X+sNON?=
- =?us-ascii?Q?ZRq6rKgULOjM9VSaUBvHsUPRYeXa5B+KECw5LCiZ/wPxrkaVOScN7rcSWwf7?=
- =?us-ascii?Q?CBYNWA3V3uSC1tO6vLCBpVtDUF8uHhqvDvquR2V+8jD+l3MNat3uvZMnbe2+?=
- =?us-ascii?Q?9/bSORBnFmvWnToNLNRVVQwyKDfRHj/X3LhhK5/A/J0aiziMwSGX6oTjrZor?=
- =?us-ascii?Q?AMkwMeaQHMGV6FMh7mWRvdlKtyWoiF/Akelj4eyxN3AxWSLuqu1Dz8Q0jbwN?=
- =?us-ascii?Q?NpvIWbY2s5JoitOSooE/t1iPZR32/mIbFDlM6LCGealvHTBND1+adKr9jeLc?=
- =?us-ascii?Q?w9NyytZ1IWr9XcsY51IF39mixGxTth8cTKC4kMGErNffou6SPAF+ZHsuUoN8?=
- =?us-ascii?Q?D/TehIOLoLFytI7qeizq/CVDIzi5J2pcOtkl6BM4J5AxVR6B2B5AbYjyTXa+?=
- =?us-ascii?Q?fB+54ubrXxS7hHJPziB0BLFqwqwfWFCs4CFE0iu38WZvFJ84hmYT2Lg0FfxB?=
- =?us-ascii?Q?w9ZTxBGQ45qNU2QV5hGXt5sqctqyC4reLivUr+2Wh0bkLeBXp0QP8e05VR1O?=
- =?us-ascii?Q?MXlpE97wHq6MQV0Uq5U2jEJuxJUBErNP0qmbcXCU7O2w2ijOi23L/5TvBIpJ?=
- =?us-ascii?Q?Yo3PLIojgpTUdUWNw4OpGXJz7YSbOlNntQQzy0MdvPCADXhbfbMmfL4KBA+a?=
- =?us-ascii?Q?Bq3bqToUsdhbmJQnP1Mb2kMqpvm12wdf2jY0VYvMTfAFCzkaaf5wqktuNsY7?=
- =?us-ascii?Q?75x7Gy7g4iw9gFW24JF1vQqMonJea74rtqoDL07r0/NRSzynuUBg?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f3a11ae6-e843-4d64-bb56-08df2f8a0fc5
-X-MS-Exchange-CrossTenant-AuthSource: MI3PR04MB12438.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Oct 2026 15:43:32.7267
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: e36Zm09nj3UUUdr9zakilwV4eyYqNw0vI4Twe9tkrBgO/QSA5PgpUwCXEkiB908qNuy0yPmKMPwKO1q9OM0PzbkhUeMwIlX5Dxn0DjgtNEVFgDBxALbZ8I+szo7CF1kd
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV1PR04MB10534
+References: <20261021-pcie6_fix-v1-0-ad37134c35a3@oss.qualcomm.com> <20261021-pcie6_fix-v1-1-ad37134c35a3@oss.qualcomm.com>
+In-Reply-To: <20261021-pcie6_fix-v1-1-ad37134c35a3@oss.qualcomm.com>
+From: Alexey Charkov <alchark@flipper.net>
+Date: Wed, 21 Oct 2026 19:44:20 +0400
+X-Gm-Features: AclHuK_OzLUc98RwVb-VyZ4la1jnJworigni-GUiOSt1W-ytIr-eQQIArUmgwS4
+Message-ID: <CAKTNdwG5XA_chr2ZM9qTnr2RaDMzOjdb85bRdCr4aJCr1EGy7Q@mail.gmail.com>
+Subject: Re: [PATCH 1/3] dt-bindings: connector: Add PCIe M.2 Mechanical Key B connector
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Bartosz Golaszewski <brgl@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-pm@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Oct 21, 2026 at 11:43:48AM +0530, Manikanta Maddireddy wrote:
-> tegra_pcie_dw_host_init() enables core_clk_m, but failure paths that leave
-> after the host init callback can unconfigure the controller without
-> disabling that clock. The enable error is also only logged, so later
-> cleanup can try to disable a clock that was never enabled.
+Hi Krishna,
+
+On Wed, Oct 21, 2026 at 5:51=E2=80=AFPM Krishna Chaitanya Chundru
+<krishna.chundru@oss.qualcomm.com> wrote:
 >
-> Track the monitor clock state, return enable failures, and use a common
-> helper on retry, remove, suspend, shutdown and host-init failure paths so
-> the clock is disabled exactly when it was enabled.
+> Add the devicetree binding for PCIe M.2 Mechanical Key B connector
+> defined in the PCI Express M.2 Specification, r4.2, sec 3.2.19.1. This
+> connector is used to attach WWAN Adapters to the host machine over
+> interfaces such as PCIe, USB3.1 Gen1, SSIC, or USB 2.0, selected by the
+> Adapter's configuration pins.
+>
+> The connector provides a primary power supply of 3.3V/VBAT, along with
+> optional GPIO signals for WWAN-specific power/radio control:
+> FULL_CARD_POWER_OFF#, RESET#, W_DISABLE1#/2#, WAKE_ON_WWAN#, and DPR.
+>
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.co=
+m>
+> ---
+>  .../bindings/connector/pcie-m2-b-connector.yaml    | 146 +++++++++++++++=
+++++++
+>  MAINTAINERS                                        |   1 +
+>  2 files changed, 147 insertions(+)
+>
+> diff --git a/Documentation/devicetree/bindings/connector/pcie-m2-b-connec=
+tor.yaml b/Documentation/devicetree/bindings/connector/pcie-m2-b-connector.=
+yaml
+> new file mode 100644
+> index 000000000000..a7f4bcbc5119
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/connector/pcie-m2-b-connector.yam=
+l
+> @@ -0,0 +1,146 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/connector/pcie-m2-b-connector.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: PCIe M.2 Mechanical Key B Connector
+> +
+> +maintainers:
+> +  - Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> +
+> +description:
+> +  A PCIe M.2 B connector node represents a physical PCIe M.2 Mechanical =
+Key B
+> +  connector. Mechanical Key B connectors are used to connect WWAN device=
+s to
+> +  the host machine over interfaces like PCIe, USB3.1 Gen1, SSIC, or USB =
+2.0,
+> +  selected by the Adapter's configuration pins.
+> +
+> +properties:
+> +  compatible:
+> +    const: pcie-m2-b-connector
+> +
+> +  vpcie3v3-supply:
+> +    description: A phandle to the regulator for the 3.3v/VBAT supply.
+> +
+> +  full-card-power-off-gpios:
+> +    description: GPIO output to FULL_CARD_POWER_OFF# signal. This signal=
+ is
+> +      used by the host system to turn off the entire Adapter. Refer, PCI
+> +      Express M.2 Specification r4.0, sec 3.2.13.1 for more details.
+> +    maxItems: 1
+> +
+> +  reset-gpios:
+> +    description: GPIO output to RESET# signal. This signal is used by th=
+e
+> +      host system to place the WWAN Adapter into a power-on reset condit=
+ion.
+> +      Refer, PCI Express M.2 Specification r4.0, sec 3.2.13.2 for more
+> +      details.
+> +    maxItems: 1
+> +
+> +  w-disable1-gpios:
+> +    description: GPIO output to W_DISABLE1# signal. This signal is used =
+by
+> +      the host system to disable the WWAN radio on the Adapter. Refer, P=
+CI
+> +      Express M.2 Specification r4.0, sec 3.1.12.3 for more details.
+> +    maxItems: 1
+> +
+> +  w-disable2-gpios:
+> +    description: GPIO output to W_DISABLE2# signal (default function of
+> +      GPIO_10). This signal is used by the host system to disable a seco=
+nd
+> +      radio on the Adapter. Refer, PCI Express M.2 Specification r4.0,
+> +      sec 3.1.12.3 for more details.
+> +    maxItems: 1
+> +
+> +  wowwan-gpios:
+> +    description: GPIO input to WAKE_ON_WWAN# (WoWWAN#) signal. The Adapt=
+er
+> +      asserts this signal to wake up the host system. Refer, PCI Express=
+ M.2
+> +      Specification r4.0, sec 3.2.13.3.6 for more details.
+> +    maxItems: 1
+> +
+> +  dpr-gpios:
+> +    description: GPIO output to the Dynamic Power Reduction (DPR) signal=
+.
+> +      This signal is provided by a host system proximity sensor to the
+> +      Adapter to trigger a reduction in the radio transmit output power =
+to
+> +      meet regulatory SAR requirements. Refer, PCI Express M.2 Specifica=
+tion
+> +      r4.0, sec 3.2.13.4 for more details.
+> +    maxItems: 1
 
-Feel like checking core_clk_m_enabled for clock is not good desgin. Do you
-disable clock when linkdown?
+This seems to be missing the four CONFIG_* pins, which are quite
+crucial in these connectors, as they define which interfaces the
+module asks the host to provide on the respective pins. Without those
+module type detection is impossible.
 
-Frank
+> +  clocks:
+> +    description: 32.768 KHz Suspend Clock (SUSCLK) input from the host s=
+ystem to
+> +      the M.2 card. Refer, PCI Express M.2 Specification r4.0, sec 3.1.1=
+2.1 for
+> +      more details.
+> +    maxItems: 1
+> +
+> +  ports:
+> +    $ref: /schemas/graph.yaml#/properties/ports
+> +    description: OF graph bindings modeling the interfaces exposed on th=
+e
+> +      connector. Since a single connector can have multiple interfaces, =
+every
+> +      interface has an assigned OF graph port number as described below.
+> +
+> +    properties:
+> +      port@0:
+> +        $ref: /schemas/graph.yaml#/properties/port
+> +        description: PCIe interface for WWAN
+> +
+> +      port@1:
+> +        $ref: /schemas/graph.yaml#/properties/port
+> +        description: SSIC interface for WWAN
+> +
+> +      port@2:
+> +        $ref: /schemas/graph.yaml#/properties/port
+> +        description: USB 2.0 interface for WWAN
+> +
+> +      port@3:
+> +        $ref: /schemas/graph.yaml#/properties/port
+> +        description: USB3.1 Gen1 interface for WWAN
+> +
+> +    anyOf:
+> +      - required:
+> +          - port@0
+> +      - required:
+> +          - port@1
+> +      - required:
+> +          - port@3
+
+This misses SATA which shares pins with PCIe. PCIe second lane also
+conflicts with USB 3.1/SSIC, which isn't captured here. Should it be?
+
+Should the graph also envisage connections for the I2C bus (GNSS),
+audio (2 or 4 wire), re-muxing of W_DISABLE2# and WAKE_ON_WWAN# into
+HSIC functions in Port Config_3, GNSS interrupt line and the such?
+Should the connector node also define pinctrl configurations for each
+of the 15 interface configurations?
+
+Best regards,
+Alexey
