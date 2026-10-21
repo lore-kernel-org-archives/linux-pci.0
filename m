@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.65.54
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.69.66
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792595705;
-	b=WkifNSm540GyL71aQIaLEsCrESWu3mDwep1LuUWgHW0B4xDZbYkXVf/oaaW4fjHg9CM6
-	 pouC9fTW/qvJsgAjLxwM863zfz8/4kCHpu1Wd7bkvwVCMPhiNGjf9Cb/B/gH4foadXfd3
-	 uRVn33CkyrAVlDPYOSAl3xwlnRli+U/kzDYo1tgkQCwWk4drM102JitJ1CMCbmYSPTEbF
-	 T711ZB2pP2Vev7FlHo7Aj20I/2uhJ/3Vh4xweftT3uwK0Ips0GjQKXZmFsN72kMhpaukI
-	 7cyhZxPWVyOrr2St8LYGXDKu8f4BOjiVuJPQt4z+nPDO6OptNNQVMvauftXmlMdRl7w==
+	t=1792595783;
+	b=VrRW/OoWQAjIVL/LFtakQukWLdTllLjYMsgASyR1QpGfA/O8KvFSmG20w+eKsB9Wnb7H
+	 2aeQpO4RzVAKWnS/ktckCF9EBVxtj2daBsH6UnxgN5jGE767Nn4lHUwH93YAvwYRTot3x
+	 /gpynzp+bL9875kaOblbM/jLmEKMKhP59sGWDCInfda+mSLBjsG5UlQtVi/ZaEu0P99/E
+	 i1C17jJCqoAeLICp/naZcLMBADchn/OSQg5aokvzz221y/DUCNKXLk2SN9EZhetkslYkj
+	 kvYkwLIhiEdtNnm7PFWO3u3DxykBicH9SbKgAno7IS96rOJ7y1HAigeIlVMJZ1p4KdQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792595705;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792595783;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
 	 Subject:Message-ID:References:Content-Type:Content-Disposition:
 	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
@@ -24,55 +24,55 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
 	 X-MS-Exchange-CrossTenant-UserPrincipalName:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=QuTk6DzVmcrBI6hNwnMFkLyxQcIWffWjNpXv8Ct1AM0=;
-	b=lb3yTjRIq6wNK10EH+SFMvWk0vk00Qm+HfUy9QrS/qU79fWWS1uRUfIKaCtxEmVQPw/r
-	 +G1VeeEkVFioGv2ZIpLxh2N+wri4WPglPd/PMkQ11kZX9oaghi6cSg6y36blC9DnycJNw
-	 mjxFun6ml3F0nE/3ALrr9/KOCnzt7l5ZlKGJuXL/TaW8Z68wSm73iobvBpk73BDF0Utz/
-	 y4qxLw0O2KmqaL3Q22RUPkKIrXtYQ9Jyv/8RPVTdn5sNvdZ8k9Tl3eaqJlyKz17yn1LZN
-	 bQS0DAapEjQgXr/aZFbQLfvmJ6gNsa502HQXZMs2NqvRbcXOZPrkQVQZqXENfkXEJ1w==
+	bh=sw2SOLaawbFPqXp7JY4scp1cgeD9LlD6E/UpVVUMVVg=;
+	b=Qk7RgeOWQbbkPJSzR45vhpEONIghTPh3Jk6NjSTmizWs5etw96VysDERW4HhZ+PaqMdG
+	 6RpkejoeSjT59q9WKGgiPj05Pzua57P9kjlxO23k3EB3D/vp+StKonWIxSTyaP7nl7TdV
+	 CrA8u+ZZkfCiFVvgonIPqto2rv7PJTA3JxXseQzQFi2WWClaYzNQxZ9gmG7nL8yAzP3fG
+	 bBvOKdUuzOYNfiyUJQpsQnKJtZ39+wH3bE2+EfK5eTcyzDBbmjVqXnMGDKq2L+FHqtNpc
+	 qcs10cX75vK9ArUwbPhRRwLn3pXIjnjvjRFXQ0iD15ofCusPw5xJtW6qhPYw/VZFUsw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=oss.nxp.com;
 	spf=pass smtp.mailfrom=oss.nxp.com;
-	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=MDZBqNKI;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.65.54
-Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11011054.outbound.protection.outlook.com [52.101.65.54])
+	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=OVb13d10;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.69.66
+Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010066.outbound.protection.outlook.com [52.101.69.66])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A770B606A31B;
-	Wed, 21 Oct 2026 15:15:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A770B606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63FF3606A33B;
+	Wed, 21 Oct 2026 15:16:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 63FF3606A33B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=MDZBqNKI
+	dkim=pass (2048-bit key, unprotected) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=OVb13d10
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=YrSNReVVgr6uw2m4PH68qGgaQRmnGxVEPGx9RuyTdU+H0rjecSiNEAJdbaQjCUZ+upb3LNdZO4omQOzvnUHXwi1k4OLlyZx5wLjUaM/bfd+xmqjqC3FtIgOJMuDExc32wE3JMOFZVUCzSd23YLtKwH842ihpw7oTg+O/vkMGJTPKlNCliqZbXj03Xk1Lt5O6ZS4uBAcuaWY0nnDxjP15Qb8F10f+1ohrRI0roM1qE9LKm6s6dnCr8tmvBE2CyDVbvBvHi7Z0xrY/zsQh0Td0Hi3+WcgwNM0lNvc6zZlnlQlWLtX6VX3aVEHPKtS/RMGRCtVWIz0l1ZWla4qrAXOxlA==
+ b=UEDW0RwOzQerjuerqaiiGVsdy0RldnffFF12QSrtI5Q3Y5qQW/pE+kVtS7GzPLMsrsrIZZm4RApfep8VFCW6SIxpyo82tFIStq9iDUWB0JqG1mB7W7VZxQw8np/Vmja1YWBTtSAVbqNKmWP3PEY/qZA5KddHxq1TNtpl1vbwPP3TWff3Ef9Vp4EuqncGikGfNgchIfG3+nBjAOF+ZZUn64Ox2MzQb2fDE+uRqMlhqHPvkQNlxJguyzu+SJJ5Deszdo700z2CUsM+RlYY7JdDdtlmhmV45lqsausejALkNO/wIs7W5+WiSlqZChr7GGjpKhbUW8aA7l3ofEAA0ghBxQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=QuTk6DzVmcrBI6hNwnMFkLyxQcIWffWjNpXv8Ct1AM0=;
- b=kzK+I6oBPjMX6qGM5BAOXAucYTujIPlKjszSvLGipd/dHPLULQO5zq10+H3P0PmVJ9dU+zhZVAFUESJeKi3/dkD9SHSS/5+UrPij1KiXz1amjdDUqc+ZA+/sjRyqGfgWuKC9Zlx2yMS5MrQ22IgsJv2XlSat4CQpBd+PnNc9X05SWst3Ry2kgLTwVQx428pFKaAIXToBU6SY/p6H1EprhFQYKjTzjhX4uB/JSl6/j4J72miRbNRvLznz7MzSAOfYlUCt+B0aGoEduM69AXoTogPuvW/kC2rXx2bgj+AopYg4Jvp8EnV7AXAJwLss67za0OBQj5p9GKaswloUjfhq3A==
+ bh=sw2SOLaawbFPqXp7JY4scp1cgeD9LlD6E/UpVVUMVVg=;
+ b=Z30J1Vp3gAPlsKkWaB4yosqPFmpuyYvNFHuaX22jI5ztDcJWvEPX5HudmOzR0dYlBp1mqNVfOkhNZOCrYxfa+We2P3BEIlxrIMVDtg3+gPiaU6dzSd0W+nMSLVBvFFero0hzyaIbWU1Vmq8q7ltJ4p1njWqOMUg7y+j0huTDbE0K9H/r86XVM+6fpUVZ4W9V8oXBK69aJccLc1n6p1CqOXBMLNGldrpXyINg7UJsnZtBRpNqoiIMBLYTUUhZnOvQe9KobiTC82OOz47nFTp7tfSfGYZYaEFd9wni9/desgHKngZpKcemdHLiBuNwYza3GQtzUwh0acIvQ0Pr9BgAzw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
  dkim=pass header.d=oss.nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
  s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=QuTk6DzVmcrBI6hNwnMFkLyxQcIWffWjNpXv8Ct1AM0=;
- b=MDZBqNKI0XX97D1sRwMe/aF3i6j06wPw3QGuS6JVUgwg20IXHuE+UWfSzJXqUAKAGQFpWIJxQUHttyxsVDevgca38St5JwdjxJslPNGXuDu9iSloP4wyy8/NFI4xHJWCJZKJKFOoR+lnmWxht910gRaSpvveM55cWHkPBxM+lmgcHKGEWpH7gnaUBR6ZdsyWMcKBZP5iS7fjk1KCtQ3k/dB6VKVRwwglICV4upFrWQyRKKbGzygxTDW52AiEOtSv9ziaAprj42qwWaUSpUeOSAzVdmZKzXxdVlJUQKPhV8IUuN7gRRY9MvQQYgPP4BEsrX1yoXuxmxfCO8IA+gbJIQ==
+ bh=sw2SOLaawbFPqXp7JY4scp1cgeD9LlD6E/UpVVUMVVg=;
+ b=OVb13d10U832vy80PQ2oU21HSA0ouXBgyQX4Cwe0msjbPrRnryBq6Izp4jFb20Ew9Sb6Mfur2HL0u9UBIvqrK1yfVcdlk4daYDTyiB8qQ/slbraZpXBcgso4NC2ZLL7NqhBX6DqXEwa69RScg5veu+duqSP7hoSuBtl6PgQSFw3Lwewc2hSKSwNepgiMVr8Uyxtyr10uUH0dCcegF1895/ox55g0fLZeCyHHDNgaNxNw+ZYBTidxGj8L7710M00Ydke4CJ2epD1zEc7m7Yzy5/nZlKcAAkFkTWwILO+OQLZ7T9zKdpybbC74g3gOi6tdjzxRIK1TKiehplbnqKazag==
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=oss.nxp.com;
 Received: from MI3PR04MB12438.eurprd04.prod.outlook.com (2603:10a6:290:76::14)
- by DUYPR04MB12692.eurprd04.prod.outlook.com (2603:10a6:10:65d::20) with
+ by AS4PR04MB9460.eurprd04.prod.outlook.com (2603:10a6:20b:4ec::9) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.14; Wed, 21 Oct
- 2026 15:15:01 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.15; Wed, 21 Oct
+ 2026 15:16:19 +0000
 Received: from MI3PR04MB12438.eurprd04.prod.outlook.com
  ([fe80::c715:c32:8bb1:b70b]) by MI3PR04MB12438.eurprd04.prod.outlook.com
  ([fe80::c715:c32:8bb1:b70b%6]) with mapi id 15.21.0546.012; Wed, 21 Oct 2026
- 15:15:01 +0000
-Date: Wed, 21 Oct 2026 10:14:51 -0500
+ 15:16:19 +0000
+Date: Wed, 21 Oct 2026 10:16:10 -0500
 From: Frank Li <Frank.li@oss.nxp.com>
 To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
@@ -82,16 +82,15 @@ Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
 	den@valinux.co.jp, marco.crivellari@suse.com,
 	andriy.shevchenko@linux.intel.com, linux-tegra@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 01/10] PCI: tegra194: Propagate REFCLK select GPIO
- errors
-Message-ID: <atjW62YB5hGU0I4C@SMW015318>
+Subject: Re: [PATCH v2 02/10] PCI: tegra194: Check core reset deassertion
+Message-ID: <atjXOqLOijOiwO2c@SMW015318>
 References: <20261021061349.1265704-1-mmaddireddy@nvidia.com>
- <20261021061349.1265704-2-mmaddireddy@nvidia.com>
+ <20261021061349.1265704-3-mmaddireddy@nvidia.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261021061349.1265704-2-mmaddireddy@nvidia.com>
-X-ClientProxiedBy: PH7PR02CA0002.namprd02.prod.outlook.com
- (2603:10b6:510:33d::33) To MI3PR04MB12438.eurprd04.prod.outlook.com
+In-Reply-To: <20261021061349.1265704-3-mmaddireddy@nvidia.com>
+X-ClientProxiedBy: DSSP221CA0005.NAMP221.PROD.OUTLOOK.COM
+ (2603:10b6:8:3d5::10) To MI3PR04MB12438.eurprd04.prod.outlook.com
  (2603:10a6:290:76::14)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -103,70 +102,70 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MI3PR04MB12438:EE_|DUYPR04MB12692:EE_
-X-MS-Office365-Filtering-Correlation-Id: 72583b50-34a4-439d-622e-08df2f8613f8
+X-MS-TrafficTypeDiagnostic: MI3PR04MB12438:EE_|AS4PR04MB9460:EE_
+X-MS-Office365-Filtering-Correlation-Id: 85210488-47b9-4e86-b0d9-08df2f864253
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|366016|7416014|376014|19092799006|1800799024|56012099006|11063799006|4143699003|261009223027099003|22082099003|18002099003|10067099003;
+	BCL:0;ARA:13230040|7416014|19092799006|23010399003|366016|376014|1800799024|10067099003|261009223027099003|11063799006|56012099006|4143699003|22082099003|18002099003|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	fqK/+A2vKvv+5N5uEevfjYz9Phqqb5/fOfVdLboP/Aup5RplvcqJBqYDaVPikRESSwQ6uHwgV135pgzlJKVWyAs3Z5JsCZ+H17ybifqhCqCFefls80jvLXCLXNrgx0WHEIRds5Rg40e+9C+4ldChkgO7MhCnpYbOXY3h2JS4K4tra3V5JC3hnmvvJ5m7Kd0Vd3JTRe7srzte+G5DUbJZjddQUCH68CDaAu6Z8b4V5xdUgVcrLBt4Za/y01pyXgeha8NBqcpB9algV8ftk7+mC8Bh6dr3Ba+8Env5SIKRXPCpZUM2tXk7G7v4+wshNY/p7xJ5I/hZz6le9aXIvB+iaSJ7SU7z+MDxloO6cxziQcUIxA09nwgwxdxN96ug03BNORqgf1fe0Xm5fMybqUP55ZQImDB3EsKhKFbYPqugLu0JumG24HtpkBc8jrCAIXEGEuaARJ1ROXKAeTp4yksYMJNCifxD+4xj/UHhwWYY778jeVChtk7rWb0xwB68NjRz+htQMCsrIwIEfuN/4TIXTO5Y1IRXpO6QcYH5kHoNYuK+jP15PXPW73OHervDKDk0HztsENX8+Gk5VsrWONhoDgUFMQ2l2s9u89gVwRGK8O0VR4kcbTn2wYvDPyJX3nBvfhgQ2Ov8r6RKFLLjIT7JQfkFerbxzvtDPQou3ziY0bo=
+	OJR57KA6Td6onX7R3LVYLrptIFZJQMcwS19peLgEsO1/YLlt6km6U3QA8xmYDs2wFLk/KApJr3hvgcp+H1jaYVZ72QUn7rb7upGI9eayBfh8ZssnaclK5ZXdKyDNqkhxCGw2MZyvFTOt3ntVqShcJ2clhUFuED2mkZwDOMBe+jw5VCTwbSKf6WKyDeYWfO+PunXsBikZ2UnJ7S5ysZk6AKzy8BUBBmpvItxrrecarlqkI4yVp1t/QggazKKJRMIWgqTjxCXYUc3KLXxKeHzu/J6IM1AdnzWfEbEL0PZykU81NwjXLZ05VPo6mBwuyvUfeIzodr/6Knood9hVl8/rEetbKJEyF6hly8iT+I6wH+HLQ14iKMzT+3mpi+PAS79bcxnh5altjd/1uDJCZIMBJaLbxndX6U7YOTzKUV8b6OU3n4NF7PDVJc0S56rVX7EbRto4ejbzpnONy9ZcU1k/zXRRAATTBQDVGEq2jDcmGfidVXRq4CZbI9jpjFOIEwEJCsqnqBvoDHQ4wfXIP+IWLMERkA5592SwaW0/2DoRAtilYTq8l6lNgBzJBAPmQ1FjX4Ml+SS7u/4mjazuAQ3Kfxz2eg5M00Y1QrOuP/ryWNW7ex9aQJSDaHbE2Epc+sSiDBupZWa95p66C8ODXGhwBdw3SejQ0n5QA9OqQS1IesE=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MI3PR04MB12438.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(7416014)(376014)(19092799006)(1800799024)(56012099006)(11063799006)(4143699003)(261009223027099003)(22082099003)(18002099003)(10067099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MI3PR04MB12438.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(19092799006)(23010399003)(366016)(376014)(1800799024)(10067099003)(261009223027099003)(11063799006)(56012099006)(4143699003)(22082099003)(18002099003)(6133799003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?5rFFP3V9KzskJzI/EqGmrxzGsRBvA0uhAxiCfZV8BcFFuh8onn5nyUWbXrNO?=
- =?us-ascii?Q?E313EPfj3Ai5O4UYjqTSBvyKRyvnEF3w/WLi2ubtgxfnyluG26hKsFLup+as?=
- =?us-ascii?Q?TCyz4y+cPBRgWwd9k7E+OY66z6QECWUAPqnRfDuQF0I0UMwqzw7b4ebU2yfs?=
- =?us-ascii?Q?LhkPi5pgNclnJEzSrJ+hxdJdqB/bt6hYqxTxff37NY3ZmyP0gafW1M5l2Ic2?=
- =?us-ascii?Q?4iQuV7X0cGoNfRi3lYb0VYKIkBoqIvss4TiKcEkH7MyYR5g2IcL2nmsPQYkB?=
- =?us-ascii?Q?wRJDN4JBBzAbbp6be8F0y7qfPj/GbjAmh7Vw026RdnEcm+K2BUz8nrhmyZDK?=
- =?us-ascii?Q?m6c0iCvpnDdZ75/Y5svvcbpFfwCPk32nlNq9+vBahNlvOh+e6X7X84YxYFhC?=
- =?us-ascii?Q?P2prU95cP6iOnB0hxRMd/Z7BhkagK2P60AHizTd0xU5+wrc6FKMYaqcuL5Fs?=
- =?us-ascii?Q?tQd5s7Y0aGVXggfP/F7WSNJP6+He83eLpcnp6Oe3Mj/TjjZng6yILw4aVhH2?=
- =?us-ascii?Q?Cj/dz31g+dqVoLgUC8B7uLHLdCHF9sA8e8v3k9yn1oXFPiT9ohTl3Gils4XH?=
- =?us-ascii?Q?KpngjuaT0NRUaOZQJVwLNm9sv4eoRj0tGl+yUdaZnyRyoWs+fkS4fGC35Nc8?=
- =?us-ascii?Q?KRYXtHPTkkN0Bvg0cQ2d/HP0rNmjpM8ENdgkwjsKvnmtM8f9AMgJWKmWO+vu?=
- =?us-ascii?Q?Ai7Jj0x8ZzltICugwOB88UsovYgD/YuZtcY77gISvw9G3Tas11cHRYpqEl9G?=
- =?us-ascii?Q?oZsGmIvPJnGtOxFpaQV9uRXwYsIBcTzS3YW4k4bnsRs7ipH3hiZbvXaTwhE7?=
- =?us-ascii?Q?/Nag5vE8Abn00LY7vgqM0F2UNNG/b6tZRiFdwVOK2aVMTxmu3AL8/vEbQ1Av?=
- =?us-ascii?Q?Dfc781hDRd96rqlYT78lNg+oWN1wttCoPBY2xwo6vh9JUClhHSyis2YlHvLc?=
- =?us-ascii?Q?alnQYSbvuvvOsasMCO+fI9zJauWc/not3RK3ySXJQ10xno3ht2ZzvKtX6Xwe?=
- =?us-ascii?Q?GGHbWOjZREvRTls/JvzdVQDO/qyBFqKXX+NNYMBx0c55ZqEFZojrPkYowB47?=
- =?us-ascii?Q?/DKIhy+9pBWUeePuEkXiSiSGfcyFKiaM7YfLJ/L9fjsREIVMlQfRWym5w3n8?=
- =?us-ascii?Q?eRgGElpUvoEmk55HFAq3XvpE9DzhaG7CBBnwIpLITRjj1n/AMRSPJEZTF3c3?=
- =?us-ascii?Q?VVJy41XJgTYiNp4dig4f/00LqHRjgjmOvXNunvbQbqDAfvCX372pBfosNMeY?=
- =?us-ascii?Q?O/3pvkHl3ajz3emox6vbUvFMTxMv3gB0XFXi2UnxB2yLRBqCXNrUnKLRDKX8?=
- =?us-ascii?Q?RyJ70UJVkA7p8fDr48f6uBLSS0iu7r0vEcUV1pdyCkELlyVjNxriDeDcMzbH?=
- =?us-ascii?Q?OqntNLDDnNrANZwbh0MooUY8Hbs12KX9loH8wQGLJFX2OeID7fNm6X8jKkKk?=
- =?us-ascii?Q?OaJ/TdfVcoK3cJyM7sO3/9/4HZ3K5X+1GhkA+7N/sVwVpvnOsQWf7wM7Q7+V?=
- =?us-ascii?Q?KN1KwYAuMDcsm7VdzWFZByRu1/BY8w7+u64lgcLpifolPcKSVOaWDiPgFnUX?=
- =?us-ascii?Q?PjYqoxvIQd93A3A2RZ8QNkgQ+UPJHRVF8e0m0r09EvbQ7/P2D7SXQ7DnUWts?=
- =?us-ascii?Q?B+li155WB/vt8jKsdrZVhae0XHTgsMVaZREUUoaV0NSVY7zuf1XjkO8HNRE1?=
- =?us-ascii?Q?D8lyu55u8I4WvfMorWhjFzpY6C33mrIm4ltv94ywLsEbq81vPhD8QAaM/LtF?=
- =?us-ascii?Q?u+fsnT/50mPKRPBuYhX1sW+jCJxQQVjiTJHfDUTQmq6XKzub6Toq?=
+	=?us-ascii?Q?aH1PblghOrUxiFFJIm/qwJvoUYhOucrcsAPq6FyAy7BQ/huOSr5t6ynzW5HU?=
+ =?us-ascii?Q?Th2eLM1PzZPZcnc7iBthO+99rG76q9wVTpz/g4wAiCBn+FVE6WH9QuKAd0kn?=
+ =?us-ascii?Q?oSrrt86kexOX9xnopg8m5JeE69ci6hRcrcYE0hRei3pTUD46o0yT7j8VKl5N?=
+ =?us-ascii?Q?RrtOm9+lb5TDc2p79fUUb5a0QUodTPFgd8AAM1Fy/TN3xYjrDAeJMGhAG7sv?=
+ =?us-ascii?Q?FnFksfslFCheKatkoOfKMWmNVpCy7XN4vLYIpaPy8X61GXFm+SxYRzQJGsr5?=
+ =?us-ascii?Q?A4TNleq1RWrmKQgiusaqcqUyGwO5kdsFvCt0pDgkS6O+7wdFXqR4UJTH/GaQ?=
+ =?us-ascii?Q?3sGcSF9Prutsq5uueTbO81k33sp0PXCJA26QYIwo1cUfZbSjgNgtcbvEUNbP?=
+ =?us-ascii?Q?j28+EmQHPzBpYwBGl6oyCgKpDeivnqBQrWB45r8oa4EyD+uUrAKFC21ris59?=
+ =?us-ascii?Q?V00oENPMryx0pLwqui9AphyfSzWteNX68EykZRF6uzL7SNgcrfluya7zU3v2?=
+ =?us-ascii?Q?IaeTcgMaxig2nNe5BKNZ/l2vilZ8T4IqWOLjGwlyivVY1xynf7AQtDQ+qocM?=
+ =?us-ascii?Q?nO/18rlwQqjwUxhFPBlmEt2sOD4qqjv6vqbuy1NsWFzZaDYhSx4SBuUfoT0U?=
+ =?us-ascii?Q?2B9IxS5raCjFbMBBswE+Xl+Q/rHzPYbWIUmvIjef009EEQzgGIFMD0WmJKIl?=
+ =?us-ascii?Q?sSmT7AF3cDE937lv3iPOXYDiGjXHfv3R+9bHTub/5pUr8mLrY8EXR04Iz7iL?=
+ =?us-ascii?Q?7ogjavXNx0KNpNsu53dRxSfEHmIRTiIHhjf8CtFx4plQAQusGQOjDE53UaAa?=
+ =?us-ascii?Q?pC4nHM5VS98zCbjPHO+SNO4qZvNR/5JnFrTnJ8e+/nbXHc8Sp8ElyR97OSFV?=
+ =?us-ascii?Q?TrXWYLF7yo4puF3POEq/H3LtRIWruqsibwOZn5+VypBHSpt3Q4TnZPZDug6F?=
+ =?us-ascii?Q?l/u/yUfmzWi7O0CJjvrSNyuXgu1Sfdx6nf7t/5aujGrIWYOap2CHw23ZMvYl?=
+ =?us-ascii?Q?L/Z0oUosFIbBKGIUlPXxcWBKMtRvVnhi1162LbLrvBS1Ytb0pIFtUIu4TEZ6?=
+ =?us-ascii?Q?p9IvtdI0Aqv/bQbhbm7fmWZRpp18UD3GO0FRjqo2epytCGq9S0F7qF2mgSH3?=
+ =?us-ascii?Q?qG9RhaxIzeTx2g57dp98ot/A3ygL8NMuLcC5DMJXvxew8k72ZJwDFNzZFJ6g?=
+ =?us-ascii?Q?WrxoORnGePOn2QWehjBV8sBGqmDeQV/WEeMtvllGcPEs0Xa2RQGMLLruEu4I?=
+ =?us-ascii?Q?EfTylpOOGkuO4alr2WlGBTY8LS8np2eWsIXTehBCr6LD1Wy+BduWTuYycoGv?=
+ =?us-ascii?Q?ApNY5JlbXKIaODqSGt4Wl7Ojp5PT2xT8Ec+zaCC3MIEqsus1RwudfGBCSST1?=
+ =?us-ascii?Q?Qg3But/SsHJqGmQf9RBh602VRutbDk9+a1xGpz4rLOeVZpdUmRja48bdFi9q?=
+ =?us-ascii?Q?jZJVZOncpX2ARBiiG7h2iv5lMhLnHpnXOiGmBfyVTuO0Qd8rtZw1CvzpphwY?=
+ =?us-ascii?Q?oczzJkSuqmBhGw4OriRO4+vt0iVoJOyA4nuOxwFcDjcz1Ibgw8RfxBkLqJVB?=
+ =?us-ascii?Q?gi1qOAWJu+VGbgm1pdAh9RsQSk9Z9rR/xp8KRHf56DuU5M9OeToD+S/xKAWe?=
+ =?us-ascii?Q?pXrPbd0sU6xZXFdhSwVkpajtN8ZKLQ9olR4D/0IDdGetG0/FYTamWtsIPl+Y?=
+ =?us-ascii?Q?xOokyDH7QhblL3hbHqc1IgXAVn0nqNdgWQBcI0gxCP5RDmFMN9nlYViU0jnE?=
+ =?us-ascii?Q?27ts39fl60E4YwkWWiSSRsHIs9cgQeo7Jd5gpmkN1v83+1FNZCfm?=
 X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 72583b50-34a4-439d-622e-08df2f8613f8
+X-MS-Exchange-CrossTenant-Network-Message-Id: 85210488-47b9-4e86-b0d9-08df2f864253
 X-MS-Exchange-CrossTenant-AuthSource: MI3PR04MB12438.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Oct 2026 15:15:01.9213
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Oct 2026 15:16:19.6767
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: d6OwZLnCrD8Q1BrwQK8kL2TxY+h5uR738koIOFZ7tyaIj/TuE2+vIow5ESuHbjD1RC6Z3qmCuNbueK8aCbRMn1GVIR7SDOKWAxfX92QYMmkCU8HOOIeaZLUPKSmB4rra
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DUYPR04MB12692
+X-MS-Exchange-CrossTenant-UserPrincipalName: J7cpLi4PDXH+DNIGZh0qrVvW+rDxY0m/KRkLxPPqRelWZCPk9FdqOTtPXuVnCvNxL8tu9KEH4nS0/QSw625Sz1AA8LaLp8O/h/xONELhJN6IDcfJslS2DqTJoYBh4ECE
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS4PR04MB9460
 
-On Wed, Oct 21, 2026 at 11:43:40AM +0530, Manikanta Maddireddy wrote:
-> devm_gpiod_get_optional() returns NULL only when the optional GPIO is
-> absent. Other error pointers, including -EPROBE_DEFER, describe real
-> failures and should not be converted to NULL.
+On Wed, Oct 21, 2026 at 11:43:41AM +0530, Manikanta Maddireddy wrote:
+> Several paths access DBI registers after deasserting the controller core
+> reset. If reset_control_deassert() fails, those DBI accesses can trigger a
+> CBB timeout, or setup can return success with the core still in reset.
 >
-> Return dev_err_probe() errors for nvidia,refclk-select so probe does not
-> continue without a GPIO that exists but is not ready or could not be
-> requested.
+> Check core reset deassertion in Root Port setup, the DLF retry path and the
+> Endpoint PERST# deassert path. Unwind before DBI access when deassertion
+> fails.
 >
-> Fixes: c57247f940e8 ("PCI: tegra: Add support for PCIe endpoint mode in Tegra194")
+> Fixes: 56e15a238d92 ("PCI: tegra: Add Tegra194 PCIe support")
 > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 > ---
 
@@ -174,35 +173,74 @@ Reviewed-by: Frank Li <Frank.Li@nxp.com>
 
 > Changes V1 -> V2: None
 >
->  drivers/pci/controller/dwc/pcie-tegra194.c | 15 +++------------
->  1 file changed, 3 insertions(+), 12 deletions(-)
+>  drivers/pci/controller/dwc/pcie-tegra194.c | 23 +++++++++++++++++++---
+>  1 file changed, 20 insertions(+), 3 deletions(-)
 >
 > diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-> index 9b349b3430f1..6104a22d930e 100644
+> index 6104a22d930e..89dbef83dd9e 100644
 > --- a/drivers/pci/controller/dwc/pcie-tegra194.c
 > +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> @@ -1206,18 +1206,9 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
->  	pcie->pex_refclk_sel_gpiod = devm_gpiod_get_optional(pcie->dev,
->  							     "nvidia,refclk-select",
->  							     GPIOD_OUT_HIGH);
-> -	if (IS_ERR(pcie->pex_refclk_sel_gpiod)) {
-> -		int err = PTR_ERR(pcie->pex_refclk_sel_gpiod);
-> -		const char *level = KERN_ERR;
-> -
-> -		if (err == -EPROBE_DEFER)
-> -			level = KERN_DEBUG;
-> -
-> -		dev_printk(level, pcie->dev,
-> -			   dev_fmt("Failed to get REFCLK select GPIOs: %d\n"),
-> -			   err);
-> -		pcie->pex_refclk_sel_gpiod = NULL;
-> -	}
-> +	if (IS_ERR(pcie->pex_refclk_sel_gpiod))
-> +		return dev_err_probe(pcie->dev, PTR_ERR(pcie->pex_refclk_sel_gpiod),
-> +				     "Failed to get REFCLK select GPIO\n");
+> @@ -954,6 +954,7 @@ static int tegra_pcie_dw_start_link(struct dw_pcie *pci)
+>  	struct tegra_pcie_dw *pcie = to_tegra_pcie(pci);
+>  	struct dw_pcie_rp *pp = &pci->pp;
+>  	u32 val, offset, tmp;
+> +	int ret;
+>  	bool retry = true;
 >
->  	return 0;
->  }
+>  	if (pcie->of_data->mode == DW_PCIE_EP_TYPE) {
+> @@ -1009,7 +1010,12 @@ static int tegra_pcie_dw_start_link(struct dw_pcie *pci)
+>  		appl_writel(pcie, val, APPL_CTRL);
+>
+>  		reset_control_assert(pcie->core_rst);
+> -		reset_control_deassert(pcie->core_rst);
+> +		ret = reset_control_deassert(pcie->core_rst);
+> +		if (ret) {
+> +			dev_err(pci->dev, "Failed to deassert core reset: %d\n",
+> +				ret);
+> +			return ret;
+> +		}
+>
+>  		offset = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_DLF);
+>  		val = dw_pcie_readl_dbi(pci, offset + PCI_DLF_CAP);
+> @@ -1455,10 +1461,16 @@ static int tegra_pcie_config_controller(struct tegra_pcie_dw *pcie,
+>  		    pcie->atu_dma_res->start & APPL_CFG_IATU_DMA_BASE_ADDR_MASK,
+>  		    APPL_CFG_IATU_DMA_BASE_ADDR);
+>
+> -	reset_control_deassert(pcie->core_rst);
+> +	ret = reset_control_deassert(pcie->core_rst);
+> +	if (ret) {
+> +		dev_err(pcie->dev, "Failed to deassert core reset: %d\n", ret);
+> +		goto fail_core_rst;
+> +	}
+>
+>  	return ret;
+>
+> +fail_core_rst:
+> +	tegra_pcie_disable_phy(pcie);
+>  fail_phy:
+>  	reset_control_assert(pcie->core_apb_rst);
+>  fail_core_apb_rst:
+> @@ -1853,7 +1865,11 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
+>  	      LTR_NOSNOOP_MSG_REQ;
+>  	appl_writel(pcie, val, APPL_LTR_MSG_1);
+>
+> -	reset_control_deassert(pcie->core_rst);
+> +	ret = reset_control_deassert(pcie->core_rst);
+> +	if (ret) {
+> +		dev_err(dev, "Failed to deassert core reset: %d\n", ret);
+> +		goto fail_core_rst;
+> +	}
+>
+>  	/* Perform cleanup that requires refclk and core reset deasserted */
+>  	pci_epc_deinit_notify(pcie->pci.ep.epc);
+> @@ -1927,6 +1943,7 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
+>
+>  fail_init_complete:
+>  	reset_control_assert(pcie->core_rst);
+> +fail_core_rst:
+>  	tegra_pcie_disable_phy(pcie);
+>  fail_phy:
+>  	reset_control_assert(pcie->core_apb_rst);
 > --
 > 2.34.1
 >
