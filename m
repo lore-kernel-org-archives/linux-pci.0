@@ -1,56 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=57.103.78.171
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792579563;
-	b=MCTbOTNNzi83dmKxP/IPFwIT4nvM7HPWDq5Tc1qcF6thx+6EmuAltW54Y+7C3qIpXEQC
-	 q8siNhg7Fm68WkCb+S6TTMQ9elY4fgXHq5/D7X4o6raKQ77vntbgRsGQlNsNGi+SE7C4v
-	 LOoSQ6wpY4BSAbUGWu6E3XC9n/kgcco8IPaGthHzkH7oN9AZfLPCcFNKOoR9lOq3AgEym
-	 kQaMRjZG6dlfX+ySUNdcs8R9HDvNXV6i0EGELRBzFlhLX7sa0ssbCxMKaByK/2T+8i11T
-	 R6tsXfLeEQiDab7jE18Y+oYTAIy59vURQipvvHPc3TwLYM8wDiFHo4XPNrmzrkZYB0g==
+	t=1792583011;
+	b=3lsNxoOtPLEeAAch5WjBdFZvmQZrNScuByHc3HH2ibQhCSZ7+R1Y2Qaardp/EFf9GcNk
+	 EkKXXxB5xPA3G6HFclHgm0TnzjVfsJFjla/mbYDa88qgWM/5ywyjz5PkMM0wUvZ7zzJai
+	 LBS6mddLma1MCd0ZOU1qCYz9bf/mmyPah/4XJZr3+XDVLr1HPAOg0P5pOEQZJoX6mARrx
+	 ow7Q3EBoHChQ2tcz8g6yJZT9AZQ129DwZORms7LJw/zNKEYISVnBqdTjFRGCgPuoKD6q7
+	 a/T8FavhB2azsXUt4Wdfts0XWGZLSwgdLi4r03DoS6Nc19kTbE8KkTVW7heIYFHracg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792579563;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=l2rxQ/cue1QRgY1CBYb6HcLs6Po78m3h1LJug5FfbkY=;
-	b=NTYFwmKrFJsN/JEcQ+Y1N6XV4bd3TiLxkS4ta5iS48kMEwogX9IXjWjnqn4MwjKzkgE0
-	 zUZ1iMrqD/KS+hPCKuM1wwTxBYxhQpZXusIf9XzQxfIAtemS0cYwrMXPqay1dE5dVOVNO
-	 9dWiJp2HJDxxdcWt9g87VVJ3kOmyPcg2Fp+TNfOQlqCraqGFGG/WXdVmwy+VS6wG8tSJN
-	 GuS4jMBGSEOdM42gf9yZ0w9mCsg5URQBbReDbuJQJ7gVMw6s4tLglnq1IV+zEucPI9VEg
-	 G0Qj8EPMz5LYMCYKbhpD1g1xzUOiXAYBqjhx4BP3148PXzq1Oq/SCpYXFTtlIBTBJeg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792583011;
+	h=DMARC-Filter:Received:X-ICL-RepId:X-ICL-Out-Info:Dkim-Signature:
+	 Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:Content-Transfer-Encoding:User-Agent:MIME-Version:
+	 X-Proofpoint-ORIG-GUID:X-Authority-Info-Out:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-GUID:X-JNJ;
+	bh=Sw5Eir+xy65c9AYKBeuz0upxYVB/n3ogNv/58XRlDuU=;
+	b=T3GmAnZk5q5C5T7CmMsrAbjRWCqWl4eHIijwzSv4rRYbZ1ODf3bw5JHDl1ung87V80II
+	 Ix93VHxhUf8vjHcOgaCq0qBKJRQVC9MN0USmeX1kFUDHagvvzsZ+KyTnwBMHUckIqb/Wl
+	 oLQDgoAtgDXTScseYnrFXFxTFI1XcKs7nuoPvFjd3W5DS9L+HFnqnnrDrDwJB108571Ws
+	 skxvMreb3LqGjWC7bXYFLdPlhedBH8hF+cE/t6ASqe2UHxRAe/SbrS7Q6S0Wy6+J4KTGx
+	 LPw4o+QyyX+tg2u3FmUhVq5XhnfVbsxWfKmh94xk/MvMAyn0YXGur8vTzZHDqu6tlrA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WQcSQ7QN;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=icloud.com;
+	spf=pass smtp.mailfrom=icloud.com;
+	dkim=pass header.d=icloud.com header.i=@icloud.com header.a=rsa-sha256 header.s=1a1hai header.b=aV3Q2gGB;
+	arc=none smtp.remote-ip=57.103.78.171
+Received: from outbound.st.icloud.com (st-2004b-snip4-11.eps.apple.com [57.103.78.171])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DD11606A31F;
-	Wed, 21 Oct 2026 10:46:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76BC2606A31B
+	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 11:43:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 76BC2606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WQcSQ7QN
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4ED791F000C9;
-	Wed, 21 Oct 2026 10:46:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792579562;
-	bh=l2rxQ/cue1QRgY1CBYb6HcLs6Po78m3h1LJug5FfbkY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=WQcSQ7QNd6/XSXlk0Tu/4bfE7GME4LaHNy2j80yskogRanONZCA8x584IEVjgR6ai
-	 yfIZb5lOxHBlCVveFf9bc5ae2KBzZlvugIR20pSpVdVxjTJ0E+w6lFkkdDeC1Wv7rP
-	 WiuV5icaI6oTVG9W9YDS4pyeGtMkZuzuOP+nDbkuVoXQd98JjLan/J0b9HV59/t91h
-	 y1rHB0717fqa3syrUAo4eqgUGO+qZI9JB5UIwBHddZtxHGqkHeqzMPOIm9g5gaQrIW
-	 BdG1aPbbCXU+O3CMGjpBVa/Umtma6A+8bT0MrWCOGJzd9+cZr+ZTMJLCj7OiCyUL4q
-	 nNmWaUfxHjQTQ==
-Date: Wed, 21 Oct 2026 12:45:57 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: mani@kernel.org, kwilczynski@kernel.org, linux-pci@vger.kernel.org,
-	kishon@kernel.org, Frank.Li@kernel.org, bhelgaas@google.com,
-	den@valinux.co.jp, thierry.reding@kernel.org, jonathanh@nvidia.com,
-	vidyas@nvidia.com, linux-tegra@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1] PCI: endpoint: Skip upper halves of 64-bit BARs
- during search
-Message-ID: <atiX5UoJ0qgV0wGN@ryzen>
-References: <20261021080644.1346549-1-mmaddireddy@nvidia.com>
+	dkim=pass (2048-bit key, unprotected) header.d=icloud.com header.i=@icloud.com header.a=rsa-sha256 header.s=1a1hai header.b=aV3Q2gGB
+Received: from outbound.st.icloud.com (unknown [127.0.0.2])
+	by p00-icloudmta-asmtp-us-east-1a-60-percent-10 (Postfix) with ESMTPS id E4CB51800112;
+	Wed, 21 Oct 2026 11:43:28 +0000 (UTC)
+X-ICL-RepId: 01a15e46-0268-78d5-8cd7-027a83f8e2e5
+X-ICL-Out-Info: HUtFAUMEWwJACUgATUQeDx5WFlZNRAJCTQFIHV8EWxxCDFYCVARLVxQEHVcaVhlWHVgUWgYOXnIZWhRcGFNFUR9UWFUJCgJRHFYNV0NUBF9QSxsOXAdLWhVVFw4CQh9QH0wWV0NEHxwZWhRcGFNFUR9UWEMZRVZpQQtPHV0ZWxxCZFhXCQoCURxWDVdDVARfUFQRV1ALXQVCX0gFDAUIVkBbGgBVBw1TFlwZUA4CDQNHCklWXFFfAkMJHgBfDkVREVQdXy1eCF4fTBwdDlgGDFBNAUMICgJRHFYNVw==
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1792583010; x=1824119010; bh=Sw5Eir+xy65c9AYKBeuz0upxYVB/n3ogNv/58XRlDuU=; h=Message-ID:Subject:From:To:Date:Content-Type:MIME-Version:x-icloud-hme; b=aV3Q2gGBkAbE+s+j4VBqtqB5tMNqTRzXYwQVyyGpbfV222wg6MAUsQCBykjxjR2Lifd9uSl6J92EcYvtYRQtf914Eya/AXz/W4sXAAce42jz9F5zhMEbTG2vU3SU0Z6NdFfZ5TyCW7HhrOd88Rkh1ampUTVK5Ydzabjkv2siU27tvZLLSxV5/d8Jq/LjaOxG9YElNN6OQiteZnX5zVNfBjcfIUofh/X4y6MSHcUawKyqXnp1j549miBCYhfKgCcF8UZxEDCxhPQBFulO2QtwQL2LP1p74t4QxzbGaOvmwNElLmLA3H4q20CEyw706hpELEE6V6lDRQXJ2T+ia9xxyA==
+Received: from archlinux.lan (unknown [17.156.216.30])
+	by p00-icloudmta-asmtp-us-east-1a-60-percent-10 (Postfix) with ESMTPSA id A0B6B180061B;
+	Wed, 21 Oct 2026 11:43:26 +0000 (UTC)
+Message-ID: <672f06a2cd0bb380fafeacc5f1731e1f4030f329.camel@icloud.com>
+Subject: Re: [PATCH v3] PCI: Skip Target Speed quirk on clamped ports with
+ no link
+From: Edward Malik <edwardmalik95@icloud.com>
+To: Thorsten Leemhuis <regressions@leemhuis.info>, Andreas Wild
+	 <andiwild@gmail.com>
+Cc: "Maciej W. Rozycki" <macro@orcam.me.uk>, Bjorn Helgaas
+ <helgaas@kernel.org>,  Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	regressions@lists.linux.dev, M M <restafvalendergelijke@outlook.com>, blaat
+ windows <blaaaat@hotmail.com>
+Date: Wed, 21 Oct 2026 14:43:22 +0300
+In-Reply-To: <f9ab8a2d-966f-4e96-b905-116919c5ac7b@leemhuis.info>
+References: <20260801201244.4421-1-andiwild@gmail.com>
+		 <20260917233355.GA1115024@bhelgaas>
+		 <b4ed1637-ac6a-4af5-ab47-e07309af200b@leemhuis.info>
+		 <alpine.DEB.2.21.2609181131520.57799@angie.orcam.me.uk>
+		 <1b2cceea-8da4-4239-a955-e0c6b475a227@leemhuis.info>
+		 <87c93553-d74d-4588-bd54-0ccb2728f327@leemhuis.info>
+		 <20260929080109.53944-1-andiwild@gmail.com>
+		 <c5ee9a34c6b7d3ca96538c9cc2914b603b0dce7e.camel@icloud.com>
+		 <f9ab8a2d-966f-4e96-b905-116919c5ac7b@leemhuis.info>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.62.1 (by Flathub.org) 
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,53 +78,57 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261021080644.1346549-1-mmaddireddy@nvidia.com>
+X-Proofpoint-ORIG-GUID: jfvug_hKU7GqZHd4w8hhxoltUhobAMOP
+X-Authority-Info-Out: v=2.4 cv=Kf/fcAYD c=1 sm=1 tr=0 ts=6ad8a561
+ cx=c_apl:c_pps:t_out a=oyWFxbOnq+dmhQrAPgaJYA==:117
+ a=oyWFxbOnq+dmhQrAPgaJYA==:17 a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10
+ a=x7bEGLp0ZPQA:10 a=U1xsJXor1XMA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=mehdgkVfAAAA:8 a=EYuV28GwPtMp2H73JGAA:9 a=QEXdDO2ut3YA:10
+ a=J1pP9gvGZaT0y92QayzM:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIxMDA0NiBTYWx0ZWRfX/QDSnfPWwh3f
+ EMf/j+r7ReIulNjkJWcQ9z2EOuZPJ9Z8B3z7HXu/sLGC+BlM6HfWXIh+Ndpi2d5u4QGiBSOYKe9
+ OOpWZq3IycFehpOFDx24Z5oEWqz8dfFFa8kchqNxMYVBL+BdX9nrg0YJnTDG1uZ/0JoESS1g+3B
+ Pahw0nzVOEistB+xe/MvHPdf4p4W14pKzx+xgYVPhcinyz9fSGvX6XQLpi4BMhMSkq+quoXVRTI
+ tvwq1JuXDcEuHvoykW3byfdtUL9yFHx/JbtfDlUNz0hnUDt2UROn1GD4jPkI01MC3NjFqTGz1J9
+ FWRyx619b9jxmJuP+92C4LAePMilO1J5RZ+EPzRbUOq/lfyKsG1kBw9P08zTlE=
+X-Proofpoint-GUID: jfvug_hKU7GqZHd4w8hhxoltUhobAMOP
+X-JNJ: AAAAAAABAd/xUgKloXi36jrVhjDyGBkGJf4zI4bjApuQCd7QYEZ2/UXt9UYj+94eu2We7wFCs4QcGUUAf85mhDavELQT2cD+qZGfquZw8jLB6DYUWoNbI5Fa7ERoYDUAEYEx914B7hhQThVS8sHsRt+8C3ILXo7fdXTd+zgmsYBV5Co15KaHrEQhp90rImk7ti1GKgqy1edKtuPfJimXmZltUA8Iq8Z5zqzG/K6BramBeH2WGO+N61cluBYe3pF7GPSq/2rRftRBsSdAV/aUP5cqMBnCrej4M6JwKNH5H8pFfJVp8hygC82wdO9OeVq24LwVvyAFdE2cpWvyhvlhvsUxjwVHRJkbUb83zPusxEHhMi6vvrIq2CBz6RUewgtDO5u3J4NsqOF7/3dO0dKSKHRzbaBms0mIgBg/v3UM3vRtXhrsb2iRQcUp7wSDbcnAS8//Wpwxt4/2G1t+3rQds/T23SQ6HFkRynvuLS/sgDN0q5Wxpb4uGU+5IJmfljn6td6laboptso0wF243Ip86H+7Qt8DP0Ax3cj0+vFpZtnTthW40kJWNOQiDENtvn75QGlW4PciO59N9+NhOEeqscmKE1srBJOcPwdwa1M39JrFtWpVFdywFGp8RfoZmH/XxsggH3y8ehCOCqD5BOPgR8yyHXLntV7Q4/CJAYIyFPYX/qEeE9DcYpB6LwKKe2PCsvSapiWO4w5c4ctYd4yhJbTls+cmK6MJ3jnvjOLoyPsE4QiIeg9qVUjR15TGducroQZRWPPySl9dAjR1an+xr2gG+epF9I91sW5hFrfGvXhyhBC7A8CoOfsmwAqXv4+gx2wca3Lh1rx5Wh+Z0HhPx6Rqqp/vCFRq3nTTx/gIEoNf3PLt9gSV6+vQ39lx6HadqX+KsHmwGPZB1soZbjjqvk1QQukl7802NWc+bbPp8lGjtOZAm90uabgN6fLYbhrvlOBCnxBZLGIBx/Rkw3alCbf4+H2oXHJ
+ yGiYlCSuIMUGEOdI2oielJ+ORLnf/fhWZKbrA4M9sloOWdT2MX60e18RY1YZZkrtN0w9Gtp0U9fTn/1W0AYghNaqwMqa6q+jtOUQv0eNBi3tAZ4QWsojn1ZJ/XsfXAo7B36tvYmpukW6zEdvMsgdRmvrcvnj3zDVcgoPUWtxPZh/e2566MyEUTKmmYkPXuwgtFVYEN4Io5/gh9uHHG3xJAW7rK8GJH1v5K8FKpSl+n9yW+R78dJx3/LuweyWFkVFJNORRTTeQmq45WG0KgTAYkX2K8uTjsLGJr1Mv0Fo7yuwRxtFCHh2eAVAFLwxC77EmoRlflrXaEYcj4XNL/UZ9RUJeDL0HpaQe6WyKeve2vtwOyweeQs9Q9LkxgV7T/EdcTGXqSxFjykVpE5PUbRXu1OOPTQ==
 
-On Wed, Oct 21, 2026 at 01:36:44PM +0530, Manikanta Maddireddy wrote:
-> pci_epc_get_next_free_bar() skips the upper half of a 64-bit BAR only
-> when it is the starting BAR. If the search subsequently passes a
-> reserved or disabled 64-bit BAR, it can return its upper half as an
-> independent BAR because that slot has a default programmable descriptor.
-> 
-> For example, Tegra exposes a programmable 64-bit BAR0 and reserved
-> 64-bit BAR2 and BAR4. A search starting at BAR1 skips BAR1 and BAR2,
-> then incorrectly returns BAR3. The next search can similarly return
-> BAR5, causing the EPF test driver to allocate and program BARs that
-> belong to the reserved hardware windows.
-
-The 'only_64bit' property tells an EPF that it can only configure the
-BAR as 64-bit.
-
-BARs that are reserved are hidden from an EPF, and can not be programmed
-at all, so the 'only_64bit' property does not make sense on reserved BARs.
-
-See:
-9266514689fe ("PCI: endpoint: Drop only_64bit on reserved BARs")
-
-At least when I cleanup up all the properties (including tegra) in:
-e01c9797c0eb ("PCI: endpoint: Clean up hardware description for BARs")
-
-I made sure that there were no BARs that were marked both reserved and
-only_64bit.
-
-
-This also matches the @only_64bit kdoc in include/linux/pci-epc.h.
-
-
-I see you changed this in:
-12a22fb38cbb ("PCI: tegra194: Expose BAR2 (MSI-X) and BAR4 (DMA) as
-64-bit BAR_RESERVED").
-
-
-I'm fine with this patch, but I think you need to rephrase the kdoc
-to reflect this new reality, because currently the kdoc is confusing/
-not in line with the 'new' meaning of BAR_RESERVED, which can contain
-MSI-X table etc.
-
-(The old BAR_RESERVED was renamed to be BAR_DISABLED, to be more clear.)
-
-
-Kind regards,
-Niklas
+On Wed, 2026-10-21 at 10:24 +0200, Thorsten Leemhuis wrote:
+> On 10/21/26 04:23, Edward Malik wrote:
+> > I noticed another reported incident on the CachyOS Discord server:
+> > [1.278083] pci 0000:00:1c.0: retraining failed
+> > System information:=E2=80=A8https://paste.cachyos.org/p/35d9bd0.log
+> > I'm sharing this in case it helps with investigating the PCIe
+> > retraining regression maybe there is a common denominator among the
+> > hardware=20
+> >=20
+> > Probably will see more now that ubuntu has moved to the new kernel
+> > i
+> > think
+>=20
+> I don't known about the others, but if you ask me this thread always
+> was
+> confusing, as we ended up discussing two different problems; over
+> time
+> it became even more confusing.=C2=A0 And one of the issues was fixed for
+> 7.3
+> iirc.
+>=20
+> So if you ask me I think it's overdue someone tests if *vanilla* 7.3
+> (not a vendor kernel) is still affected and reports any remaining
+> problems separately anew (e.g. in a new thread) in a way that can be
+> read without reading this thread -- while still briefly dropping a
+> link
+> to this thread for completeness. Afterwards reply here with a link to
+> the new thread.
+>=20
+> Ciao, Thorsten
+i think i understand you want to seperate the threads between the patch
+itself and the original quirk which was introduced by commit
+72780f7964684939d7d2f69c348876213b184484 correct ? just to clear it up
+the patch still works for me it's worth noting i don't think i
+mentioned in my original report but the retrain failure happens to me
+on my empty pcie slots it detects as me having 6 slots the 3 taken ones
+it reports them as gpu, nvme, and ethernet controller=20
