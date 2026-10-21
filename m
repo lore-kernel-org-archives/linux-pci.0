@@ -1,75 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792573629;
-	b=rJumeTl39JHTbqjLTwfTxJUB5jCU8SoP6Xt42Vtog9CeFnGWvaT5vzBFwePrgjlgwM/Y
-	 i0i2FHbX9uUuB04slTejOoyhkGrBAIfdDHoZvM/zb83VW+Mcah4/YNr1OTMxFoFdM1d6D
-	 dFKf7ywiJMU7Dl8SRYf/GA1Yw3XSSOWFrIvS/Xv4vZOJUmp/PRNwDSNYyoIi2+w0Iwt9Z
-	 lbe+r5JeFSJUXuaexh6K5p+OXmvadm37Yp0RauPNBWSLLFwXcQrxeENaX61zJn1lvvCvO
-	 jZGEVloxlO0v5vN2gKqYdABbETtGxJRW2dhS95V5LhQjQFDIVTc5rP0twOsC0HbuxoA==
+	t=1792573947;
+	b=vQWTT77sd0hMrn4sFkPfMKhM2RFKwqpgZ0Q3dPn5ZGO2FZlm86Tv0TudJUsdDmLA0uK0
+	 h9fjn1Bf/LDF8CXOna5dRo3CJaH32FsyZQ2koNBEdUVOKgDLx3DnkSZj92Tu/5rTR4ekY
+	 h3rAdoZYHXINOf6F/IIkJPGvV/iLnmGpCiXE6BR5KteBIEiPuBUE/NF2izW94ZmjGfo5s
+	 N6U44Z/sF/ru8wiWBMA9yjOEfB2W15mPuiEqVYNcrFbPXHutmw/AttDKrVavtFfhsUFhW
+	 X+992ofWFqAwRFC7s4VTMeZIjI2JbmJMZdgcHHEux63kVSNDKUUhxVup9Pcg0U+HpJQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792573629;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=rg0LSI4npnBDUHtGy7KX4tR0xQfgXS+TF5Cj0A9UQlA=;
-	b=TwReF0pqTdL156r1ljAVacn3FKYqMOkoZvCi5WusGSUgovFNjyx8XCN8rA3MD/j+Skg3
-	 mIV3JwvsqZqrvj9xKeM3wWFkgly+FhRNyxHbDZ2p4TmMC2SIZ7BO0p8v6Lc2XIZQrovF/
-	 86k0YDC4YAbZAaesDpJm1I1MQgikWhOOtf0i3O+has/Ats5Q/baZYUP1UZapDSmrV2Vjj
-	 XrjK3IoW7IsWOo/lUM/N4neMQAp39fD/8DKyAWlSFH0XLKsEyJTo4CZOLcd5BCdHfu9RA
-	 PgGaDlEPmmJXWrW1UnbuxoFQflcUR1uDAUVtvhT+l4763yVqXZ2j7Kqxb7V1sLQiozA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792573947;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:Organization;
+	bh=q5o4c9Se3qqfB0CkHzs+jJJ9WgHiDHng2N6iX71Z4eM=;
+	b=uaHXc/jUCuZoK38w/m3pcmkKF9hhAkyeZeGF6Oojr9KJUbbM9JxCkXGdSDQV8cKoO002
+	 oJ8mf++8uRPZz1rXg7Pqs3ZIB2qQqGxc9en85jtIdWA4o8CHg5TvFq1VdIhnGn/3vxsl1
+	 G88NMCGNYxDnDTGIgv3fdAf8pYVt69p0TbHHVympfezZYchU1eC15L7QfKaCOWGBB5UMu
+	 OqNNjmXAhYgk1BtN+R8azsYQfKCxpxDYSHCC8gS00+eyAN0Hc9Or1wYcVoiMvLuikUp+i
+	 KpKtR14tBdPB72PlFvfk2T28QllBGIdyDhwXazyCjaYafnSS4hRQcSx9ipuY3a58KLQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="dyuS/W3e";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=ZsUeF8C7;
+	arc=none smtp.remote-ip=198.175.65.16
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59655606A31A;
-	Wed, 21 Oct 2026 09:07:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43376606A319;
+	Wed, 21 Oct 2026 09:12:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 43376606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dyuS/W3e
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFFE11F000C9;
-	Wed, 21 Oct 2026 09:07:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792573629;
-	bh=rg0LSI4npnBDUHtGy7KX4tR0xQfgXS+TF5Cj0A9UQlA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=dyuS/W3ea7Wx2GQYveNRK6A4clR9WKquzSo7emGhmilDJhGfkRm482JLiSIwwvRnx
-	 tRz4YkGWU3RkgKsj26EjGPNpY38Ya01YaNDP0hCT90bnF7P5q+D7Py9DsMI5woYLHu
-	 wWbIaBLbHYHuXIVgoDtWJ0GLSihrVcRJkLfNz8gTGWeofTATdXiiLIVoIqZpPBnzRO
-	 XCtataIa6A8TKYyIOUu2+EzZ1bNvRfuGc+c8P/3T4KJasoornuP0Gp+q4aozA5S8bU
-	 fB3ivzGfBxENRbMhT6L4jvtekd5apDXWVnfilDfcEojbQzi8sh0s8xZWFvkeCBEgDP
-	 PUnDjzchRcszg==
-From: Imre Kaloz <kaloz@kernel.org>
-To: Jakub Kicinski <kuba@kernel.org>
-Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-	linux-mips@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Lee Jones <lee@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jiri Slaby <jirislaby@kernel.org>,
-	mfd@lists.linux.dev,
-	linux-serial@vger.kernel.org,
-	Alexandre Belloni <alexandre.belloni@bootlin.com>,
-	linux-rtc@vger.kernel.org,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	netdev@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=ZsUeF8C7
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1792573947; x=1824109947;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=smbmGXOgf53sUhVEG5nOCbt/F7K1bGkWUk3QHVbfxqM=;
+  b=ZsUeF8C7j17c55lCl8Kmi9Psgdg02yx3YrXxX1oDTne8InTbVSZw/ZN/
+   nchTLGzdAOTYNyQnrt/JqBk5AEkBQDLTflgrdGilqpspxhVZlRgotNIcN
+   OMprz7i5cbB5a7G5HNZGJ8FcLRRjBSAAniq8SZd6iGBKchhfOEbHbWjDg
+   bKbJKUOuQ/rnfqv7ydbyh0QmYedTUlSwsXCa+x5CrxnGYhofkCEtrjRaA
+   wqKdXeyNxRHgXVmkay/peTYs8TSf2ktDwKhAYLyz6kMw/KRMR1RedQHbc
+   jWiL3XvpPIxK8jwwc7HQnsgI3cNYBPOPfB+rF1CWmbInnnWMhfFIn2CUy
+   g==;
+X-CSE-ConnectionGUID: TpFyxcXUTwm2H/49uhkJLQ==
+X-CSE-MsgGUID: m6QN9GLaQKSXm7kglyQKLQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11941"; a="1286661"
+X-IronPort-AV: E=Sophos;i="6.27,169,1787036400"; 
+   d="scan'208";a="1286661"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2026 02:12:26 -0700
+X-CSE-ConnectionGUID: zBKMWarpT7ayhJrrRQriow==
+X-CSE-MsgGUID: 1W7CIl06TNCcqn7kFEwRNQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,169,1787036400"; 
+   d="scan'208";a="3059375"
+Received: from cpetruta-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.24])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2026 02:12:18 -0700
+Date: Wed, 21 Oct 2026 12:12:15 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Inochi Amaoto <inochiama@gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Frank Li <Frank.Li@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
 	Niklas Cassel <cassel@kernel.org>,
-	linux-ide@vger.kernel.org,
-	Pavel Machek <pavel@kernel.org>,
-	linux-leds@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 00/53] MIPS: SGI-IP27: add support for the IP35 (Bedrock hub) machines
-Date: Wed, 21 Oct 2026 11:05:55 +0200
-Message-ID: <20261021090556.21168-1-kaloz@kernel.org>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261020145611.4e277615@kernel.org>
-References: <cover.1791890466.git.kaloz@kernel.org> <20261020110619.12774a1c@kernel.org> <20261020204214.28625-1-kaloz@kernel.org> <20261020145611.4e277615@kernel.org>
+	Christian Bruel <christian.bruel@foss.st.com>,
+	Senchuan Zhang <zhangsenchuan@eswincomputing.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Randolph Lin <randolph@andestech.com>,
+	Xincheng Zhang <zhangxincheng@ultrarisc.com>,
+	Alex Elder <elder@riscstar.com>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	Vidya Sagar <vidyas@nvidia.com>,
+	Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
+	spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>,
+	Longbin Li <looong.bin@gmail.com>
+Subject: Re: [PATCH v7 1/6] PCI: spacemit-k1: Add device data support
+Message-ID: <atiB7-u5bxJbf-1q@ashevche-desk.local>
+References: <20260929083755.458238-2-inochiama@gmail.com>
+ <20261019164108.GA2177470@bhelgaas>
+ <athuYJjPMkrecGm3@inochi.infowork>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -79,28 +106,41 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <athuYJjPMkrecGm3@inochi.infowork>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Tue, 20 Oct 2026 14:56:11 -0700 Jakub Kicinski wrote:
-> I don't think you answered my question, or at least I'm too daft 
-> to catch what you mean. IP35 was not supported so nobody is using
-> it with Linux today. You're adding the support, and since it's 
-> a platform discontinued 20 years ago there's 0 chance of real users 
-> of any of this code.
+On Wed, Oct 21, 2026 at 03:51:20PM +0800, Inochi Amaoto wrote:
+> On Mon, Oct 19, 2026 at 11:41:08AM -0500, Bjorn Helgaas wrote:
+> > On Tue, Sep 29, 2026 at 04:37:47PM +0800, Inochi Amaoto wrote:
+
+...
+
+> > > +struct k1_pcie_device_data {
+> > > +	const struct dw_pcie_host_ops *host_ops;
+> > > +	const struct dw_pcie_ops *ops;
+> > > +	int (*parse_port)(struct k1_pcie *k1);
+> > > +};
+> > 
+> > Does the "const" here add anything useful?  This patch suggests maybe
+> > not:
+> > 
+> >   https://lore.kernel.org/all/20260911233541.1650895-2-james.quinlan@broadcom.com/
 > 
-> What am I missing?
+> I am not sure whether the compiler can make use it.
+> And I have not seen any explaination for why no reason
+> for that. It is good to have a clarification.
 
-The users are the people running these machines, the same population
-as for IP27 and IP30, and the ioc3-eth driver in net/ exists for them
-today. The series was developed and tested on a Fuel and a Tezro in
-regular use, so "nobody is using it with Linux" is true only in the
-sense that the support isn't merged yet; that was equally true of IP30
-when it went in for 5.5, and of every port before it.
+These const make no sense. First of all, the third one is missing it.
+And I have no idea what would be the proper syntax to add a such. But
+adding a such make it clear that there no sense to have them. Either
+you make the const the whole data type instance on the user level or
+don't do it at all.
 
-The kernel's test for a platform isn't commercial relevance, it's a
-maintainer, which Thomas is, and testers, which this series has. If
-netdev doesn't want to spend time on it, say so and I'll ask Thomas to
-take the two ioc3-eth patches through the MIPS tree.
+-- 
+With Best Regards,
+Andy Shevchenko
 
 
-Imre
