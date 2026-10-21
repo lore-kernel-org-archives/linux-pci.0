@@ -1,56 +1,108 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792589551;
-	b=2hNKpodG36xFabDE0A43yze9e829T2edGH+jLLmQXp6k2/dth8Qrh4ZGZiYR0f9jQnuu
-	 A/ciyXmYF1r7ohhSiTBuDXFOFQfdhqUqEuk/fYDFuWgzixxyhDmPJErtiGOUzzD+XxEF/
-	 DCpbfFwXOal/c1G/873rbp4HRNv6wHgocWb53C+sU2kUAdFYVbmh8dAG7XBtCw/68Kej1
-	 buR4oKMc6ICxFV1bHqfd4Oo69c0pxZIzybiLHmYCxQiHIEmop5wfCGOIXUUkwrkM+Q3CN
-	 VUvjG0yflqQl/WOx9kx4inFWXfy9Lueuh+EvwRaaW+r3cCF9p6bMr/ib+tChvhA4MeA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792589551;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=mFTldsOmE3pwihevS/TLReILU1zdfy8wuG9bog3o8H4=;
-	b=wOR1Ncm9+965QZgbDYZrxZeOGs/1Bk12hdDBo3yyhWdEDuLcKAF7faSs/OUn+34bQX+P
-	 RRK+Fq6bXk4v+bS+N3HvbQO/RRAo1/9YkdBfz573MvnzmcH5wZbQu4rTxZ1ChUCv1fsdn
-	 vOCPVNokSV2o5AQW3JZL+O42ubFP5Z9OGd795v95nhrro3RKW9dV7B9XaoMFKVb0IgF7l
-	 UBspBv1Lo9n+WdzlY0z7vd9fu2GDaRhlEVHY6lRx8X6vZ63EsiKV3xch/1v3GFWiVSdqg
-	 vSXeA040FC8EvR5HYS7HHY9MDwHynEVf7h66jxhz6Hla47ibRexFnLiSqi+iQofISRA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cpSjP4Bh;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.85.33
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792590002;
+	b=r0aCYhBVZG7BaWdPygA5NiBdHEBd5I0GZLnEDD92+iD8M08Y1+t9hF6e7LxP2RAZjwJV
+	 HDS5GB9TbZqOcWQ5a1cv3tOzCu3ecpMcrr/Smv4c+/InMxbqt7MgscCCPi89JOQrvBjr6
+	 HnBD7kCOjIO3kyvSlFvAg+AxeKzYW3alUQCMONE0NpBZQlQQmofxZLp68EOwrxCKmt3px
+	 o4XfSiBEamzn4EEOy7OXj+uF44VjM/V0bYi8594WMhOGUuExZ/z+B1NKGtqaBpLaWvhZ6
+	 i1BCDaiOonlnkDJ+x0veFPXhD2V05w/SOE/hBzq2k5dM+UdxAhAOKZqylP8O7BBIGiA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792590002;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
+	 User-Agent:Subject:Content-Language:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
+	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
+	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
+	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=/6FM7QolNfHrrPK8nvEjjXkbVjguY4vVbCJlAeDVT3Y=;
+	b=yjLn2jaz0cfdcC/zwoD+yEXInDpLINWqHkh6KmJlKbvga1pVUkeSYE3PlLcVidaQSQvA
+	 tOwQLQFdfBmk5cm2SskC8w8jWDJti4YA8pnnWG4Dg7yPKJCacm7sY+a4ST537/CIKu+0G
+	 2flJ5G1lzWSKL935kQ2ylWJReVUn9obYVN3ZX+ENMQjm1v4mJc58u2rcWAVa0UVNXxnbw
+	 bIlQYfF8i2FN6n3I3zHhEl3DLe6RsCgls71HCspgLzhccs6IcM9nRH0GZ6BVi8btCfcpt
+	 qMDXeGqaEiegfe4UeBoC+7DYuRboMbDZCTd2tIZo3+wuWE/GJ4W91uXxd4HZIxLQwNg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=amd.com;
+	spf=fail smtp.mailfrom=amd.com;
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=Ao4L+vtX;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.85.33
+Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010033.outbound.protection.outlook.com [52.101.85.33])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E84DF606A31B
-	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 13:32:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B1A0606A319;
+	Wed, 21 Oct 2026 13:40:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2B1A0606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cpSjP4Bh
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 653D51F000C4;
-	Wed, 21 Oct 2026 13:32:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792589550;
-	bh=mFTldsOmE3pwihevS/TLReILU1zdfy8wuG9bog3o8H4=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=cpSjP4BhzoD8YcAPwxp2sac/1Bc8HeqtoSZYk7O+SURcKygPxKJsy76hrlNfsJEbb
-	 KmIOUQ/qra3aBPjkIFuyDf7DQolZVdQluG6oXD53hLJVRZtUdWvJnemIyC3INVTF/0
-	 wUKcQMJwoXd5Y9BECXqp9k5gYC/7OAAnBPKd+UUxJly3RyDkKCFY+7ia5zYJu8c+Uv
-	 hMdMCMVfnTtYxqTnp0K0zScnhKvkFJB1wvGVhNasxCUVxa+yVa0gtdmtcYavaVheqB
-	 03zWIplwbsD/GXdicnVT4j0uR+3hKkOTTuecNRzvS3NRQLJj0sg3BYyAWqj+M/3Iob
-	 pW/XBpZQshoaQ==
-Message-ID: <sashiko-outbox-180311@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 4/7] PCI: Fix nesting windows with remainder at the
- left edge
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?SWxwbyBKw6RydmluZW4=?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261021124956.4250-5-ilpo.jarvinen@linux.intel.com>
-References: <20261021124956.4250-1-ilpo.jarvinen@linux.intel.com>
- <20261021124956.4250-5-ilpo.jarvinen@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 21 Oct 2026 13:32:29 +0000
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=Ao4L+vtX
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=ivkUHr3ua/ao1WrUjTHl4MvCmh4eOthrSX5bUEpqxGSUpCuI657ZkQOagZc8p5Cld5SVznb8Y7znBsKvUTsOyft5W5EyN6e+xU/XOCVMKXdqDdH3ch10GBq5oS9WlTAjmjtYwn52QMYvBW6nZyabpLN11r8ed7zdEpMCk2wUDYwiIiyApRoG/ho6MP60Eg4zg/bNB5CbWMFodoVU9vPPCYX/lDmChFRA7GkDRyr9LfHTiljYUHRmMaMh2PILflnKxOvELrCBkoF0teXy16SJnwf4byW2CVRWEez3Gcb9RfyOtv1Q2DW90clBpX01sPT+36zVie/dVRgekGUos60+0w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=/6FM7QolNfHrrPK8nvEjjXkbVjguY4vVbCJlAeDVT3Y=;
+ b=OlOl/e4sz9C18UriFzKsEcS5z1ZKARbxRF66ppgCeUFtQLUvx50Wli4Go0rVcWrAk/VAk1POfCUSl8NuJZeLjUaLuwCYPL2hTsoXLAX9HiK9WeDiANvL8RCegkDNdWHWFFAXBcD6PqM/n52yx5CcLnNCQCELVQGZyA7ZdwDxahXEpkyf31qnTRYc6MwF4vvsrj3s/WRwEjHB/3Kownl+AqYc7UIzupTp30ygBWyNQh8csTIZR5SVZ3fEhgggOOE6ct7YNrICpMJKPTKqdheklCbI0ZDIiqBjr6KNJqx9h5RmFy7Qq0ub9bs0j6l4kvwxTmAUwL0Mp7TsI+Fmkp8kNg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/6FM7QolNfHrrPK8nvEjjXkbVjguY4vVbCJlAeDVT3Y=;
+ b=Ao4L+vtXvgQqwP56nB2RmcG9tmjebnXzrUhh0KYCYwYbc2bvmJ53AlBwEoPLrC0578zPjaxsn/b8qEP6OQnVvayMhlTA+SejZ9RnUE4xPvv+uznmgOZoHDnnuGALMDMzNqKY6ao8cjmFaoCtDFtSStu7S7Vmi9dMMTnavWP12C4=
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from PH8PR12MB6914.namprd12.prod.outlook.com (2603:10b6:510:1cb::21)
+ by PH0PR12MB8776.namprd12.prod.outlook.com (2603:10b6:510:26f::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.15; Wed, 21 Oct
+ 2026 13:39:54 +0000
+Received: from PH8PR12MB6914.namprd12.prod.outlook.com
+ ([fe80::2893:177a:72b0:6000]) by PH8PR12MB6914.namprd12.prod.outlook.com
+ ([fe80::2893:177a:72b0:6000%7]) with mapi id 15.21.0522.017; Wed, 21 Oct 2026
+ 13:39:54 +0000
+Message-ID: <24cb6ea3-eaee-4682-afda-dabc7f347fc2@amd.com>
+Date: Wed, 21 Oct 2026 08:39:51 -0500
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 8/8] PCI/quirks: Avoid certain address on Genoa systems
+Content-Language: en-US
+To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ linux-pci@vger.kernel.org
+Cc: Hans de Goede <hansg@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+ Maciej Grochowski <Maciej.Grochowski@sony.com>,
+ Nikolas Joshua Britton <nbritton@exabit.io>,
+ Geramy Loveless <gloveless@jqluv.com>, Eric Auger <eauger@redhat.com>,
+ Alexey Fomenko <alexey.fomenko@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Rob Herring
+ <robh@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+ Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+ Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>,
+ x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
+ LKML <linux-kernel@vger.kernel.org>, Bradley Morgan <brads@mainlining.org>,
+ Kai-Heng Feng <kaihengf@nvidia.com>,
+ Andy Shevchenko <andriy.shevchenko@intel.com>, linux-acpi@vger.kernel.org
+References: <20261013224010.GA1589480@bhelgaas>
+ <f823d264-8b9d-422e-bfaf-388957fbc2fa@kernel.org>
+ <b9f0ac77-079c-2383-a572-73ad649af0c8@linux.intel.com>
+ <69e5be12-b107-bd7c-8cd0-1db29319bf6b@linux.intel.com>
+From: Mario Limonciello <mario.limonciello@amd.com>
+In-Reply-To: <69e5be12-b107-bd7c-8cd0-1db29319bf6b@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: SA1PR05CA0002.namprd05.prod.outlook.com
+ (2603:10b6:806:2d2::8) To PH8PR12MB6914.namprd12.prod.outlook.com
+ (2603:10b6:510:1cb::21)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,221 +111,95 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR12MB6914:EE_|PH0PR12MB8776:EE_
+X-MS-Office365-Filtering-Correlation-Id: b224ed41-f5a5-42ca-336f-08df2f78ca3a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|1800799024|376014|7416014|366016|22082099003|18002099003|4143699003|11063799006|261009223027099003|10067099003|56012099006;
+X-Microsoft-Antispam-Message-Info:
+	M1ZNVVUIjRm81UZ5mCvw5qMHhRgb0PeP6ZK31E9UiX+KB37MPA3MlnDfLowWF+Rd+eH8ukTo0kTugcr7ATXkLoFuiBxH69Fypi7nhkgNHXTzv9ECI0yF8HethG4exb+mSTiOe2VmgVEnzWtYrk5SyGuNUNWoqeDvy+fN/L18lu9qYPHCUqyWok8qsQYfRjM1GVq791FPKJb0+u+bMOq7ZVTSZtUCNivcVCbqdNoeW2bMUz+rD4sRcw7zEcpARQ4+tA48fDiPapTutNdNS4CyEe6k4GAu+RqairDB1hirvQLNiXZqNcdBQsVgURezVeHk6O6C1Af/tTP/y1jbWi1DHYyRWu9HzY2HTLTnXPW+lfOFP6l2NuBzjLelPFu7Pgu8xau+d3u350roUwo7RjXx716xLcjDFitImW3ToakZbJo+ipsjas0GAT70KgUx14kiuV1jqwhq0RgJCg6g4kz4SJZbJD7QoAQBpYPlXjaiMSbzsOBJGw4qj+Kd4390pJkRdEqImZ8u8jDNYFjdcfhxJ9KngiK5sOSOF4WxzwJG/41yTX/Ju4e1h5kDwS9hwqyxxHq7mDJ7IgpLaaiCYQgWWZDE1yc6v/1dbrwXpozHaA3TnYa6+aiRB36jJZc8sjrq
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR12MB6914.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(376014)(7416014)(366016)(22082099003)(18002099003)(4143699003)(11063799006)(261009223027099003)(10067099003)(56012099006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?ZnU2dnY4Rlo5M1Vlc0pPZjRnMXQxZzJXR1h1TW5BTng5ZnV2U1R6UUZncllh?=
+ =?utf-8?B?TGExVnVmdnVzalJVVzdJblRkQzNoeThxS2lzNjBreEliNjlIKzNQbGNGSUJQ?=
+ =?utf-8?B?M1VzMVBOcXlIbmx3SDRvaHFvSmJzNTliblBJTDRCNndNbFVrQk9LTC9xQ3ZT?=
+ =?utf-8?B?YnF1c3gzQmczUWwrRmg2N1FTVERkeWwzTmxJeDU5QXJDbEJUelhjb0ExVnpv?=
+ =?utf-8?B?N0dlL3VPZXF3ZkZiS3J1V2RDaDRWN3U5dENGblA3eVRoVHdJVWVHeFJGMVdF?=
+ =?utf-8?B?NVg5YXJTSWxXMEs0akpQSGs2K08vRFd2WjFRRHh0a3FBb3hpN2RrUmtpNVlv?=
+ =?utf-8?B?SGZPRVA5bldzYW9LNE5MK2pjUHMyN2IyWkRTYytVdnlRdno2SWtNd1dKR0ph?=
+ =?utf-8?B?M3JqUmFsN3NMWlByRktKeWxLL2tJc3dTYnNkb2dOS2M5R1VkbTMvVmwrM3BQ?=
+ =?utf-8?B?bHRIbkxFNkk2OHFrd1ErNlR4R0ZXWENLUUFNTXB3TkZTcnBTM2hIMVM0SVVz?=
+ =?utf-8?B?OURWYlRtU1psNzlUdE5hMU1OUEZ1TGJIQVl4akxLSTFzUVNJcFFHVnIrK0pz?=
+ =?utf-8?B?am9qeWR0Nm43bEtya09rRTJvWkNnRHp3QjdieFhMd003TGJrcDZ2aFVyT3dW?=
+ =?utf-8?B?SFhGTTI0b1NZekRyZUdNNWVUMnZRYWthOXNuK0d0VHF6TjhYdUN2THI3ZXVC?=
+ =?utf-8?B?SngxZlhDd2pSN09ObGNSTUh2QURXb2NMcEg0TEV6cmZEUWNKSThadUpKcHlF?=
+ =?utf-8?B?NzVKWlNrTHhibEhhVkZXMEh0L0FvakNDMHJTajNNZll0WDhqaFNXdFhZYjg0?=
+ =?utf-8?B?L1orQkJZUzk4TGtsZ3ZxRFJBZFVTb2FwV1hJUmJsNFJiQXRQdjF4VWE4ZnNu?=
+ =?utf-8?B?WVBxRUFXNHlkckpNbTAxQ1ZWdEZHK1hydGRoeS9TYnJWSmpsTWdIM3p5dWty?=
+ =?utf-8?B?aGtmWUdpSCtYY2hSRU41amtWZ2VaQnZJTmliSWVjZDQyd25CNWFoRkdjMm1T?=
+ =?utf-8?B?dHdRcG9WWTlWQjlzcHhwZkdua3EraWcwUHpTK1NWdXZwZVpOSmgrQlFBTFJh?=
+ =?utf-8?B?ZE93S3ZqY0VLUktiSENVQVJDekxvU2hXNnU2ZGx4bTcwbE1ORjRpQ0VlUmFp?=
+ =?utf-8?B?eUZURkh5V1JMZTBsWHFhYm9vZmNvSjhLY3NhNmM4c00xZ2lDaDVEUEk1N2Uw?=
+ =?utf-8?B?M2JDOGZkM1pBaVFmMzhOSlVXK0FaYW9KWllScTRYSi9obHB4cmYwek1LTXlB?=
+ =?utf-8?B?Y3ZMZENDbEZNNGxYN2dCdXl0V1FSVGFUNWRHTVNkbURGTkFkbzdzQVpWcXlF?=
+ =?utf-8?B?MENFbFdXZ3dHWTJ1dU5xS0JmYjh4eUhNcDlTc000enRYWXZ3dWRsVXlQditN?=
+ =?utf-8?B?dGJqajJ0aWFlYnJLNlZVdzVyeFRSQUp5SjMvUGQ3WEJIUFptS1c5SEI5eW53?=
+ =?utf-8?B?cGkyWjZURkZxNFNOUkdMZ0JobktVaEltS3hQL1BWWUl4elZoREtlN0xqQ3di?=
+ =?utf-8?B?OUpsRnRQUnFzb1B2bTNBU2ZIckVWQ2ZBaGx1TVVmYkk4Y0RNb3pxNXlwYUlq?=
+ =?utf-8?B?TjVXTWlLOCtrSFF2YURLY2tHaXl0RlJtUUQ2MlpaM0hmbDg3VHRjdEJUQytn?=
+ =?utf-8?B?Tk5NMDFGOTFOOTliWStnaWhiQXFMYkNlSjdxeUJqS0p0bUp0ZDNjZG1Nekgx?=
+ =?utf-8?B?ZmFTQVI0bkRnYlhyWVFEaEthYzBSclNCaEZob043ZUVsZS9ZUUMwM1BQQ2lp?=
+ =?utf-8?B?cUZCM1lQUDlwakxXdmpoZm9xTFlWZEMrbmxxenFrc0NhZXZUNG9penBTTjRR?=
+ =?utf-8?B?TEZmV3ROWEhsRUMvWmRkT05mMlZmRzVsUFN3bDROMVN3V3Vqd2x1L0N1NnhJ?=
+ =?utf-8?B?RVZ4aVg4SW5KUnpPYjBYeXAyTUExRWs4WStRai9DbHg2N1NkS3FiTDlnUWty?=
+ =?utf-8?B?bUFtdStab2pDRjl3WkE3TnNTaHJ5MEc2a3JOaTRDeXE1M2QrWXZYS1FYU0tq?=
+ =?utf-8?B?UjF2SmdHSzlBNTVtZUlBUDh4WTYvUzlNdlRYYnYzZ2M0a0ZTZEdNSW56eHlX?=
+ =?utf-8?B?M3BSeFMrNVArV29YcUw1SW83L0w2UllLSnErUnhRdFp2d2dFeFlMZkJIR3Rj?=
+ =?utf-8?B?c1RDRlZVaXdNbWRsL04xMHpiT2JHc1Z3RHpRQ1hBUEs4SUtsM2hidGNFZzRt?=
+ =?utf-8?B?WmRmeEhvLy9pRzFDa3FYV3RRZUJqOERPaVl6a05kRmcxQ2VIdnlhU0V5SnVF?=
+ =?utf-8?B?dzAyZVVicktlRzIvZXpTb3IxVndpbjdTaCtvRHVUUXYwd1R3UHluM1oyc1FD?=
+ =?utf-8?Q?vTeK40CMVDTPwzsipY?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: b224ed41-f5a5-42ca-336f-08df2f78ca3a
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR12MB6914.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Oct 2026 13:39:54.6632
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: T9VvBDIOpcSiue+0c1GuTYndjKo+qZqmnsSN5sYfV8pPuZiLF2vFTD8mVd5B65yPTbj6kVPFes0IyADLwd5xxA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB8776
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] PCI: pci_resreq_remainder() treats size < align as tail remainder
-- [Medium] PCI: wrong bus passed to pci_min_window_alignment() in __pci_ass=
-ign_resource()
---
 
-commit d393d2dd34eb6d31504106da364759753902d029
-Author: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
 
-PCI: Fix nesting windows with remainder at the left edge
+On 10/21/26 07:56, Ilpo Järvinen wrote:
+> Hi all,
+> 
+> I've sent v4 of this series to address a few comments sashiko had for
+> b3 [1]. v4 does not contain my version of the quirk as it seemed least
+> likely to be selected among the proposed solutions and the decision is
+> largely independent from rest of the resource placement series.
+> 
+> [1] https://lore.kernel.org/linux-pci/20261021124956.4250-1-ilpo.jarvinen@linux.intel.com/
+> 
 
-This commit wraps pcibios_align_resource() with pci_resreq_check() and pass=
-es
-a smaller alignment constraint to the resource allocator when a memory
-resource has a non-zero remainder. This allows nested bridge windows with a
-remainder at the left edge to fit into parent windows of the same size while
-preserving the real alignment in pci_resreq_data.
+ From your perspective is v4 applied on top of 7.3 a good test for 
+people?  I'm unsure how closely it relies on pci.git/next.
 
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index 441a62807719d..2ca3784aa323f 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
+It all cleanly applies and builds (result here):
 
-[ ... ]
+https://git.kernel.org/pub/scm/linux/kernel/git/superm1/linux.git/log/?h=superm1/genoa-mess 
 
-> @@ -260,6 +262,12 @@ resource_size_t pci_resource_alignment(const struct =
-pci_dev *dev,
->  	return resource_alignment(res);
->  }
-> =20
-> +static resource_size_t pci_resreq_remainder(resource_size_t size,
-> +					    resource_size_t align)
-> +{
-> +	return size - ALIGN_DOWN(size, align);
-> +}
-> +
->  /*
->   * For mem bridge windows, try to relocate tail remainder space to space
->   * before res->start if there's enough free space there. This enables
-> @@ -280,10 +288,17 @@ resource_size_t pci_align_resource(struct pci_resre=
-q_data *rr,
->  	if (rr->user_align)
->  		return res->start;
-> =20
-> -	if (IS_ALIGNED(size, align))
-> +	remainder =3D pci_resreq_remainder(size, align);
-> +	if (!remainder)
-> +		return res->start;
-> +
-> +	/*
-> +	 * Size constraints forced an early start move in
-> +	 * pci_check_and_align_resource()?
-> +	 */
-> +	if (!IS_ALIGNED(res->start, align))
->  		return res->start;
-> =20
-> -	remainder =3D size - ALIGN_DOWN(size, align);
->  	/* Don't mess with size that doesn't align with window size granularity=
- */
->  	if (!IS_ALIGNED(remainder, pci_min_window_alignment(dev->bus, res->flag=
-s)))
->  		return res->start;
-> @@ -315,6 +330,33 @@ resource_size_t __weak pcibios_align_resource(void *=
-data,
->  	return pci_align_resource(rr, res, empty_res, size, align);
->  }
-> =20
-> +static resource_size_t pci_resreq_check(void *data,
-> +					const struct resource *res,
-> +					const struct resource *empty_res,
-> +					resource_size_t size,
-> +					resource_size_t min_align)
-> +{
-> +	struct pci_resreq_data *rr =3D data;
-> +	resource_size_t align =3D rr->real_align;
-> +	resource_size_t remainder, start;
-> +	struct resource tmp =3D *res;
-> +
-> +	if (res->flags & IORESOURCE_MEM && !IS_ALIGNED(res->start, align)) {
-> +		resource_set_range(&tmp, ALIGN(res->start, align), size);
-> +		if (!__resource_contains_unbound(empty_res, &tmp)) {
-> +			remainder =3D pci_resreq_remainder(size, align);
-> +			resource_set_range(&tmp, tmp.start - remainder, size);
-> +			if (!__resource_contains_unbound(empty_res, &tmp))
-> +				return tmp.start;	/* caller skips range */
-> +		}
-> +	}
 
-[Severity: High]
-What happens in pci_resreq_remainder() and pci_resreq_check() when a memory
-resource has size < align and rr.user_align is 0?
+If that's a good test in your view I'm fine starting up a thread with 
+all the previous folks complaining to get testing of your changes with 
+the revert and quirks.
 
-When size < align, ALIGN_DOWN(size, align) evaluates to 0, so
-pci_resreq_remainder(size, align) returns size instead of 0. That treats the
-entire resource as a movable remainder even though it has no align-sized
-portion.
-
-This can occur with rr.user_align =3D=3D 0 in paths such as:
-
-1. On PowerNV, pcibios_default_alignment() -> pnv_pci_default_alignment()
-   returns PAGE_SIZE (for example, 64 KiB). When no pci=3Dresource_alignmen=
-t=3D
-   parameter matches the device, pci_reassigndev_resource_alignment() ->
-   pci_specified_resource_alignment(dev, &resize) returns align =3D PAGE_SI=
-ZE
-   with resize =3D false. For a 4 KiB BAR, pci_request_resource_alignment()
-   sets IORESOURCE_STARTALIGN with r->start =3D PAGE_SIZE while keeping
-   size =3D 4 KiB, and pci_init_pci_resreq_data() leaves rr.user_align =3D =
-0.
-
-2. For a CardBus bridge (PCI_CLASS_BRIDGE_CARDBUS), BAR 0 has size =3D 4 KiB
-   while pci_resource_alignment() -> pci_cardbus_resource_alignment()
-   returns 64 MiB with rr.user_align =3D=3D 0.
-
-In __pci_assign_resource(), because pci_resreq_remainder(size, align) is
-non-zero and !pci_resource_is_bridge_win(resno), the alignment constraint
-passed to pci_bus_alloc_resource() is lowered to 1U.
-
-Then in pci_resreq_check(), if an unaligned free range empty_res cannot fit
-[ALIGN(res->start, align), ALIGN(res->start, align) + size - 1], subtracting
-remainder (which equals size) shifts tmp.start to
-ALIGN(res->start, align) - size. If that range fits within empty_res, the
-resource is assigned just below the alignment boundary at an unaligned
-address (for example, 0x8000f000 in [0x80001000, 0x8000ffff] after an earli=
-er
-4 KiB BAR at 0x80000000), violating the required alignment.
-
-Later in the series, commit "PCI: Place resources to either edge of the
-window" also uses pci_resreq_remainder() in pci_align_resource() to constru=
-ct
-candidates at ALIGN(empty_res->start, align) - remainder and
-ALIGN_DOWN(empty_res->end + 1, align) - size, which similarly selects
-unaligned addresses when size < align.
-
-Should pci_resreq_remainder() return 0 when size < align?
-
-> +
-> +	start =3D pcibios_align_resource(rr, &tmp, empty_res, size, align);
-> +	WARN_ON_ONCE(!IS_ALIGNED(start, min_align));
-> +
-> +	return start;
-> +}
-> +
->  static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *de=
-v,
->  		int resno, resource_size_t size, resource_size_t align)
->  {
-> @@ -324,9 +366,17 @@ static int __pci_assign_resource(struct pci_bus *bus=
-, struct pci_dev *dev,
->  	int ret;
-> =20
->  	pci_init_pci_resreq_data(&rr, dev);
-> +	rr.real_align =3D align;
-> =20
->  	min =3D (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
-> =20
-> +	if (!rr.user_align &&
-> +	    (res->flags & IORESOURCE_MEM) && pci_resreq_remainder(size, align))=
- {
-> +		align =3D 1U;
-> +		if (pci_resource_is_bridge_win(resno))
-> +			align =3D pci_min_window_alignment(bus, res->flags);
-> +	}
-
-[Severity: Medium]
-Should pci_min_window_alignment() here (and in pci_align_resource()) be
-passed dev->subordinate instead of bus?
-
-When sizing bridge windows in pbus_size_io() and pbus_size_mem(),
-pci_min_window_alignment() is called with the bridge's subordinate bus
-(where bus->self is the bridge device dev):
-
-drivers/pci/setup-bus.c:pbus_size_mem() {
-	...
-	win_align =3D pci_min_window_alignment(bus, b_res->flags);
-}
-
-On PowerNV, pnv_pci_window_alignment() walks up from bridge =3D bus->self
-counting PCI_EXP_TYPE_PCI_BRIDGE devices:
-
-arch/powerpc/platforms/powernv/pci-ioda.c:pnv_pci_window_alignment() {
-	...
-	bridge =3D bus->self;
-	while (bridge) {
-		if (pci_pcie_type(bridge) =3D=3D PCI_EXP_TYPE_PCI_BRIDGE) {
-			num_pci_bridges++;
-			if (num_pci_bridges >=3D 2)
-				return 1;
-		}
-
-		bridge =3D bridge->bus->self;
-	}
-	...
-}
-
-In __pci_assign_resource(), dev is the bridge whose window res is being
-assigned, while bus is dev->bus (or an ancestor bus). For a second-level
-PCI_EXP_TYPE_PCI_BRIDGE bridge on PowerNV, pbus_size_mem(dev->subordinate,
-...) sizes the window with a 1 MiB minimum window alignment
-(num_pci_bridges >=3D 2), whereas calling pci_min_window_alignment(bus,
-res->flags) with dev->bus sees num_pci_bridges =3D=3D 1 and returns m32_seg=
-size
-or m64_segsize (for example, 16 MiB or 64 MiB) as min_align.
-
-If pci_resreq_check() (or pci_align_resource() in the subsequent commit
-"PCI: Place resources to either edge of the window") places the window at an
-address shifted by remainder that is aligned to dev->subordinate's 1 MiB
-window alignment but not to the parent bus's segment size, can that reject
-valid candidates or trigger WARN_ON_ONCE(!IS_ALIGNED(start, min_align)) in
-pci_resreq_check()?
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261021124956.4250=
--1-ilpo.jarvinen@linux.intel.com?part=3D4
+If you think it's too dependent on pci.git/next we can wait until 
+7.4-rc1 to start this thread.
