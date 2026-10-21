@@ -1,98 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.217.53
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792592101;
-	b=vezlCtNjwDaJ3AORHWB2UwvhuGC0I4hFhL+b11S9GGR0tPTNTrXJhUkAyFBuVuhnStTM
-	 IZqbNd/BhIM6INkbkbx+P7K4F69dfVQj99S4Ea6/8dKsUUska3q/fRHFhXoIkskBhDLdu
-	 YIM5TULbFKQtQ79LW1nLXgUdqyolLO7BCk3xIqAT7psH0QDxoT+duaGVrgs35ukmUiOhR
-	 Hqv3CEGj6Z3aqvB8CrrVUTnexxgeSdkqFd+SCJBQFbd9U0PWhIejgoO0kM1nvgJCessB2
-	 2BC/ZuTANeu6Ljyxi2//u9CXtW4c5w923NXgXNRDjid+vcuFaDTsoRyTnBHcKrMyOWA==
+	t=1792592740;
+	b=IIRr4aZ/Uy1GtkscJYY4vSkgXx2KOk50D5FhmD1iHteqWew54z+w/D9h4LFN4Tuyr7og
+	 a2PQhGIIXZI2Z4K62svIj4nP/D013aJMIX9X+GUYqgQDnK/WbNH5+eXm4yRi6+nKvINxp
+	 ynBoF2y2WBWhHFv2jMbvOB6accG8zNR/psE+TBMQnFy6tYJz+QMzKu8d+VH2QADrvkdY5
+	 3JFekNqpxO8zyXNofI6QKVZBULGKUqvzomuhI9GLmnpaHe/OANKNjd/8wLs+sMrERG9fO
+	 08+Z39Tqx+1TMr+CdHH0TawqSMwCzd/siI6KDr9kStJ8ugy8nohG5RFhagxQYd8jRPQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792592101;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=VEoqsyhtNt4pywZ7i46cO2Rjo/76LeE67oKBXmhC90c=;
-	b=JINqcjs7SmiEIPR1E8evcldXxll5O/EWkQ9YnGPwEmG6fcVuJO2mXqYzg2M4qJ8c58kW
-	 +Fc5F5DCKdUTyij37BfZoElwUfXrXFmlInobsEoha1gsOXUGprdmmcUWWRKAusGKlfp1z
-	 suSfMwtREVnFWog1dPBxE7ZVt5Vaha6zQ2c8ghBr9k0lhw9T0xdCyHi9W4Jv+3Dz+lhme
-	 BMEGp5Y2DHaa+/Fd1QMLHSNZ/wi1KWn3u0dtg+COJTMat33c4CbA+jyI36Q85b9amOm7q
-	 vDTjfiAteMYXb527zozzmXakb1w9w+xb1vmmNKyxuAQu1V0FvhW6BNAcl2fP7qKZE2Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792592740;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=L4qLQp+EeajMXHsH+2rm3DjABec4mArcixLHZHtBpE8=;
+	b=jUsobpCAxo/E8fLbf8JB7W4fDeQrSspbZuEwLU4u74hHGGrRIQgbYxShbj+tFkZ1wWHl
+	 YNtsV0cQBuWmjXjynqNRNadJ+XuZtMp+f6LJeXQBYejPb6vdHwsNrK1EJhIPgK8/Duk7m
+	 CF8ewVOJi/CXNY08GdZvU7SP+Kq4FuwPNzcBrn6YTIYsrZd0BzaEbYx5Len2R322wiWLm
+	 0eKs969D46/o+YamOUxmVODus3DjlUlYCMZ8fqu2CsNSa73niBH9kbz64gVaIQ9I3ecGV
+	 5ZfZO+0EaXEXtZUmyUgbSS8i/Hn0vWheE7xNyFMbRa4102cuLv35B+fKzs6YQ68RS5A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=VQznuiE2;
-	arc=none smtp.remote-ip=209.85.217.53
-Received: from mail-vs1-f53.google.com (mail-vs1-f53.google.com [209.85.217.53])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n0u24M9G;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 808BE606A323
-	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 14:15:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 808BE606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 201D5606A31B;
+	Wed, 21 Oct 2026 14:25:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=VQznuiE2
-Received: by mail-vs1-f53.google.com with SMTP id ada2fe7eead31-7cc2bb73cd9so220295137.3
-        for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 07:15:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792592099; x=1793196899; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=VEoqsyhtNt4pywZ7i46cO2Rjo/76LeE67oKBXmhC90c=;
-        b=VQznuiE23LBl1R7/qdhan1d4OlL3N8d6bLRB5gXKbbDH4DnpBoxMJHBQpRwpGLlksI
-         lqN79a2o0n2yoMC+nrEIZKM9hilGcrS0OQHU6Q6Rmm8/MWNyyg6tM3uuns1X/8lG9Xdj
-         alFGuwypp2Goele3eFOgyGh7padlfptEfT8E3bGFdxtGRFyN1sFZwDqxQEDXx1uTYrG5
-         /Th+BZB9FcK/75NUpCfuKK+NqMLaalWuXohdErUK99QUffwalmUyl+f7/HSlddNHa+L7
-         tyS4xSJhAiUulKMXH6PNFiHNBQPqETjL9q+l6aKr6TMrtYQfKs0iy3nJEEqTlRpIW5gP
-         xgKw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792592099; x=1793196899;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=VEoqsyhtNt4pywZ7i46cO2Rjo/76LeE67oKBXmhC90c=;
-        b=jJZwjCD2NiQVpBP/i3JFZMnoHcgaFVmIURR6gW4cUCDMqve7UaCQaVKgblaOwxnRay
-         8VkQG3ojJAuf4gJxNKa/FbjUQSYIN4u2G+bA1e+UCsk87dcqt4Bda3eLo8JTN2q+NNx7
-         WXEbBPLSceHjsmysI32d8B8jndlsFVsp+aDAkiFxLLNvZV30r7U9yO7NhNT9sIupcWue
-         mX89l2Bil5T2CFECreIid1jFPC56CrPf7AftAEHOTtuboRVCFXexD7cSRK1VYfBimXCk
-         fyb7NPUs5J9M6wKfkgqM+f+KBgEmxNbnQu0YThLEJMNRJVgR+1hOE6m4a4Obf+DGJo+o
-         hSiA==
-X-Forwarded-Encrypted: i=1; AKwUvBx4ySeaieNEpfoqwIxfmT8eC1sEBtT55P7cNx7oV4HS8Uqv54VH34PHW1lgGvM8N+hVKdoQzpxU+qs=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJ7707XjgKuA08rOMAKrMQEeuy2m10hYSIpHXWnPQmGTQTq9oFS
-	9n9OmmQFwCLlReNsB6i5vwV9JhvQiLIWFffPQamE0zsi30bX01VUpkK+
-X-Gm-Gg: AYBFou1NMXCGfQGQYoBSSUyWGqZaB9oNNIy78//DaOn8B75VAJlt2xhbbgB4Sqs0StC
-	X4SH8fEHhWNrJ8h4TfgB27axURx4Z6eAs9TvN5wSM8mEFOlEEWoYawULB3Z35TOWwedGR+lwmYg
-	pIwTWThhcsdzJm3rfYRn5qB5Ql8UO4J0IXRvQe25Z9va9kJDHEN10iUSLMTJ5HVMTXvCb1iLl+o
-	BRV5BhyOWLyC5+BcHhj2D50O8b6wmr3NPsk78kNAp7Iu42npYX+hWF/KOPOic4o+7XlyF8RNBcx
-	DIDtZSxaqw1yCeX9tyPEuuQO1iyToRgaS1onFXm8J5D4DgKfk0sAsVIHn9HzCPkry1uUQm3B6Ma
-	oWbH7jBXb2j0Lyp1gyyKIi49kyhosylvGR7Zyx0DW32a0zk3sFof58HR49V02DmuuRkRH3iwxyT
-	fm6Gg9TV8QfLs5dpit/WHzBrm5hyqhZgChMunSg5SnHKu23DwII6QPSgIwtojuOBlEgRzV290tL
-	5JjAtoLwptmxaHJAYzm9uTS3KPhAM3VXfVr/QxfgBwU1zHI9v0WWBHJjH3BtQY8Yg==
-X-Received: by 2002:a05:6102:5489:b0:7cc:226a:f963 with SMTP id ada2fe7eead31-7cc926d4603mr760493137.28.1792592099097;
-        Wed, 21 Oct 2026 07:14:59 -0700 (PDT)
-Received: from maclinux ([2803:c600:9110:8ba5:1c75:eeaa:b22f:20dc])
-        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-7cc91f9c7f1sm2802416137.0.2026.10.21.07.14.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Oct 2026 07:14:58 -0700 (PDT)
-From: =?UTF-8?q?Francisco=20Beltr=C3=A1n=20Millal=C3=A9n?= <fbeltranmillalen@gmail.com>
-To: mika.westerberg@linux.intel.com
-Cc: andreas.noever@gmail.com,
-	westeri@kernel.org,
-	YehezkelShB@gmail.com,
-	linux-usb@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	helgaas@kernel.org,
-	bhelgaas@google.com,
-	linux-pci@vger.kernel.org,
-	lukas@wunner.de,
-	d@rrell.co
-Subject: [PATCH v3] thunderbolt: Call SXFP() on Apple systems with Alpine Ridge when suspending
-Date: Wed, 21 Oct 2026 11:14:44 -0300
-Message-ID: <20261021141444.10632-1-fbeltranmillalen@gmail.com>
-X-Mailer: git-send-email 2.56.0
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n0u24M9G
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EF161F000C4;
+	Wed, 21 Oct 2026 14:25:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792592739;
+	bh=L4qLQp+EeajMXHsH+2rm3DjABec4mArcixLHZHtBpE8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=n0u24M9GkemyRmHyNjgMUcIawUT9Uyp5AXNXvcD5yhqmTAk5l2H26YNxXemCx+/uT
+	 swILoYKsWF7xEqZ5NWOjoLsF/jOVYEezlS4j5ar8qkX6mATRC5FWt53GMsm5c7k2t4
+	 NxChBn1umzIk7Emhg1F7ZapMpOR3wnz0WRtr/j3i9Fi8trA0Tnoxqv4v+rByDX2e6A
+	 LUEbsr+WMinThia2BSB3BhbzTuRMbDzARHny2ChFj56/1yzafdM1YByjiE4sR52u5H
+	 daNBlyW/8GJ4IqHTiJ5BvCSWkM0qyMhX6PxcsxqxPn7nfb+KRY6fULIu4mEYyEtcem
+	 CGoNXnnZ+hyFw==
+Date: Wed, 21 Oct 2026 16:25:34 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: mani@kernel.org, kwilczynski@kernel.org, linux-pci@vger.kernel.org,
+	kishon@kernel.org, Frank.Li@kernel.org, bhelgaas@google.com,
+	den@valinux.co.jp, thierry.reding@kernel.org, jonathanh@nvidia.com,
+	vidyas@nvidia.com, linux-tegra@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1] PCI: endpoint: Skip upper halves of 64-bit BARs
+ during search
+Message-ID: <atjLXvkc-XZNF0oi@ryzen>
+References: <20261021080644.1346549-1-mmaddireddy@nvidia.com>
+ <atiX5UoJ0qgV0wGN@ryzen>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -102,351 +61,51 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <atiX5UoJ0qgV0wGN@ryzen>
 
-On Apple systems with Alpine Ridge, suspending to RAM with a device
-connected to a Type-C port leaves the PCIe link to the upstream port of
-the controller down on resume, and the ports are lost until reboot.
-Calling the SXFP(0) ACPI method under the NHI before entering sleep
-avoids that.
+On Wed, Oct 21, 2026 at 12:46:03PM +0200, Niklas Cassel wrote:
+> On Wed, Oct 21, 2026 at 01:36:44PM +0530, Manikanta Maddireddy wrote:
+> > pci_epc_get_next_free_bar() skips the upper half of a 64-bit BAR only
+> > when it is the starting BAR. If the search subsequently passes a
+> > reserved or disabled 64-bit BAR, it can return its upper half as an
+> > independent BAR because that slot has a default programmable descriptor.
+> > 
+> > For example, Tegra exposes a programmable 64-bit BAR0 and reserved
+> > 64-bit BAR2 and BAR4. A search starting at BAR1 skips BAR1 and BAR2,
+> > then incorrectly returns BAR3. The next search can similarly return
+> > BAR5, causing the EPF test driver to allocate and program BARs that
+> > belong to the reserved hardware windows.
+> 
 
-The firmware can set bit 26 of plug events CS_20 when it resumes the
-NHI. While it is set SXFP(0) turns the router off and it does not come
-back on resume, so clear the bit first and skip SXFP(0) if that fails.
+> 12a22fb38cbb ("PCI: tegra194: Expose BAR2 (MSI-X) and BAR4 (DMA) as
+> 64-bit BAR_RESERVED").
+> 
+> 
+> I'm fine with this patch, but I think you need to rephrase the kdoc
+> to reflect this new reality, because currently the kdoc is confusing/
+> not in line with the 'new' meaning of BAR_RESERVED, which can contain
+> MSI-X table etc.
 
-Clearing the bit needs the control channel, which is already stopped
-when the suspend_noirq hook of the NHI runs. So add a new NHI hook,
-pre_suspend_noirq, that runs just before the domain is suspended, and
-use it for Alpine Ridge.
+To clarify, I can see that you updated the definition in:
+27ce1d8ecb9b ("PCI: endpoint: Allow only_64bit on BAR_RESERVED")
 
-Signed-off-by: Francisco Beltrán Millalén <fbeltranmillalen@gmail.com>
----
-Thanks for the review, Mika, and for the idea of moving this to pci.c.
 
-I did not use the suspend_noirq hook in the end, because it runs too
-late.  By the time it is called, the domain has been suspended and the
-control channel is stopped, so bit 26 can no longer be cleared.  I also
-tried clearing the bit earlier and calling SXFP(0) from suspend_noirq,
-but then the side with the disk did not come back on resume.  I only
-ran that once, so I did not go further with it.
+But, IMO it is still not super clear.
 
-Instead, this adds a new hook that runs just before the domain is
-suspended, while the control channel still works.  That is about the
-same point where v2 called SXFP(0).  ar_nhi_ops provides it with the
-code you suggested.  If you would prefer another way, please let me
-know.
+Perhaps we should have mentioned explicitly that only_64bit is
+also allowed on a BAR_RESERVED, if that reserved BAR is 64-bit.
+(Since that use case is different from what the kdoc currently
+says.)
 
-v3:
-- Renamed the function to tb_acpi_force_power(), and moved the Apple
-  and Alpine Ridge checks to ar_nhi_ops in pci.c, as you suggested.
-  tb.c is no longer changed.
-- Use the new pre_suspend_noirq hook instead of suspend_noirq (see
-  above).
-- Return early when the ICM firmware is in use, as v2 only ran with the
-  software connection manager.
-- ar_nhi_ops keeps the other default NHI operations.
-- Moved the declaration and added the empty line you asked for.
 
-v2: https://lore.kernel.org/all/20261019202900.39062-1-fbeltranmillalen@gmail.com/
-v1: https://lore.kernel.org/all/20261019134851.7496-1-fbeltranmillalen@gmail.com/
+I also think that this patch needs a Fixes tag with either:
+27ce1d8ecb9b ("PCI: endpoint: Allow only_64bit on BAR_RESERVED")
+or
+12a22fb38cbb ("PCI: tegra194: Expose BAR2 (MSI-X) and BAR4 (DMA) as
+64-bit BAR_RESERVED")
 
-The note on v2 about SXFP(0) and the xHCI on the side with nothing
-connected still applies, as SXFP(0) is called at about the same point.
 
-Testing:
-I tested it on a MacBookPro14,3 (two Alpine Ridge controllers, software
-connection manager) with 6.18.49 and a backport of this patch.  The kernel also carried the PCI series I sent
-alongside v2:
-https://lore.kernel.org/all/20261019202445.38259-1-fbeltranmillalen@gmail.com/
-and a local change equivalent to the ACPICA fix mentioned in v1,
-without which the firmware does not set bit 26 here.  The old PCI
-quirk was switched off.  All cycles were 30 second suspends to RAM.
-
-- Three cycles with a USB 3 disk on one side or the other, after a
-  first one that I don't count.  Both domains came back each time,
-  with both upstream port links at 8 GT/s x4, and the disk could be
-  read.  In each cycle SXFP(0) was called on both NHIs before their
-  control channel was stopped.
-- One cycle with nothing connected.  Both domains came back, and the
-  disk worked at USB 3 speed when plugged into either port on one side
-  afterwards.  In the lower port it first came up at USB 2 through the
-  PCH xHCI, twice; with the connector flipped it came up at USB 3 on
-  the controller's xHCI.  I think that is the cable.
-
-There was no kernel WARNING during the whole boot.  The version for
-your tree was only built (with W=1), not booted, so the default NHI
-operations copied into ar_nhi_ops were not run here.
-
-Not tested:
-- Real Thunderbolt devices, only the USB 3 disk behind the
-  controller's xHCI.
-- Other Alpine Ridge variants.
-- A suspend aborted after SXFP(0).
-- An NHI that is runtime suspended when the system suspends.  Here
-  both NHIs were always active.  If one is runtime suspended, the PM
-  core may skip its suspend_noirq (direct_complete), and then SXFP(0)
-  is not called.
-- Suspend-to-idle and hibernation; the checks in
-  tb_acpi_force_power() keep the patch out of both.
-
-As noted in v1, a device plugged in while the system is suspended does
-not wake it.  I did not repeat that with this version.
-
- drivers/thunderbolt/acpi.c    | 47 +++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/domain.c  |  2 ++
- drivers/thunderbolt/nhi.h     |  3 +++
- drivers/thunderbolt/pci.c     | 45 +++++++++++++++++++++++++++++++++--------
- drivers/thunderbolt/switch.c  | 32 +++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.h      |  4 ++++
- drivers/thunderbolt/tb_regs.h |  3 +++
- 7 files changed, 128 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/thunderbolt/acpi.c b/drivers/thunderbolt/acpi.c
-index 53546bc477a5..824938a459d5 100644
---- a/drivers/thunderbolt/acpi.c
-+++ b/drivers/thunderbolt/acpi.c
-@@ -8,6 +8,7 @@
- 
- #include <linux/acpi.h>
- #include <linux/pm_runtime.h>
-+#include <linux/suspend.h>
- 
- #include "tb.h"
- 
-@@ -279,6 +280,52 @@ int tb_acpi_power_off_retimers(struct tb_port *port)
- 	return tb_acpi_retimer_set_power(port, false);
- }
- 
-+/**
-+ * tb_acpi_force_power() - Call SXFP(0) when entering system sleep
-+ * @tb: Domain that is being suspended
-+ *
-+ * On Apple systems with Alpine Ridge the PCIe link to the upstream port
-+ * of the controller does not come up on resume from system sleep if a
-+ * device is connected, unless SXFP(0) ("Sx Force Power") under the NHI
-+ * is called before entering it. Bit 26 of plug events CS_20 must be
-+ * clear when SXFP(0) is called, otherwise the router is turned off and
-+ * does not come back on resume.
-+ *
-+ * Must be called with @tb->lock held, before the domain is suspended:
-+ * clearing the bit needs the control channel, and SXFP(0) does not help
-+ * once the router has been put to sleep.
-+ */
-+void tb_acpi_force_power(struct tb *tb)
-+{
-+	struct tb_switch *sw = tb->root_switch;
-+	struct acpi_device *adev;
-+	acpi_status status;
-+
-+	if (tb_switch_is_icm(sw))
-+		return;
-+	/*
-+	 * Only when firmware handles system suspend, as in
-+	 * quirk_apple_poweroff_thunderbolt(): the OS does not know how to
-+	 * power the controller back on. pm_suspend_in_progress() excludes
-+	 * hibernation.
-+	 */
-+	if (!pm_suspend_in_progress() || !pm_suspend_via_firmware())
-+		return;
-+
-+	adev = ACPI_COMPANION(tb->nhi->dev);
-+	if (!adev || !acpi_has_method(adev->handle, "SXFP"))
-+		return;
-+
-+	if (tb_switch_set_bit26(sw, false))
-+		return;
-+
-+	tb_sw_dbg(sw, "ACPI: calling SXFP\n");
-+	status = acpi_execute_simple_method(adev->handle, "SXFP", 0);
-+	if (ACPI_FAILURE(status))
-+		tb_sw_warn(sw, "ACPI: SXFP failed: %s\n",
-+			   acpi_format_exception(status));
-+}
-+
- static bool tb_acpi_bus_match(struct device *dev)
- {
- 	return tb_is_switch(dev) || tb_is_usb4_port_device(dev);
-diff --git a/drivers/thunderbolt/domain.c b/drivers/thunderbolt/domain.c
-index 12c88509a54f..a9a6d63bf414 100644
---- a/drivers/thunderbolt/domain.c
-+++ b/drivers/thunderbolt/domain.c
-@@ -533,6 +533,8 @@ int tb_domain_suspend_noirq(struct tb *tb)
- 	 * we actually have stopped the domain and the control channel.
- 	 */
- 	mutex_lock(&tb->lock);
-+	if (tb->nhi->ops->pre_suspend_noirq)
-+		tb->nhi->ops->pre_suspend_noirq(tb->nhi);
- 	if (tb->cm_ops->suspend_noirq)
- 		ret = tb->cm_ops->suspend_noirq(tb);
- 	if (!ret)
-diff --git a/drivers/thunderbolt/nhi.h b/drivers/thunderbolt/nhi.h
-index b2e2e2c413b2..6f66a2608d06 100644
---- a/drivers/thunderbolt/nhi.h
-+++ b/drivers/thunderbolt/nhi.h
-@@ -44,6 +44,8 @@ extern const struct dev_pm_ops nhi_pm_ops;
-  * struct tb_nhi_ops - NHI specific optional operations
-  * @init: NHI specific initialization
-  * @add_links: Setup device links for tunneling native protocols
-+ * @pre_suspend_noirq: hook to run in suspend_noirq before the domain is
-+ *		       suspended, while the control channel is still running
-  * @suspend_noirq: NHI specific suspend_noirq hook
-  * @resume_noirq: NHI specific resume_noirq hook
-  * @runtime_suspend: NHI specific runtime_suspend hook
-@@ -60,6 +62,7 @@ extern const struct dev_pm_ops nhi_pm_ops;
- struct tb_nhi_ops {
- 	int (*init)(struct tb_nhi *nhi);
- 	bool (*add_links)(struct tb_nhi *nhi);
-+	void (*pre_suspend_noirq)(struct tb_nhi *nhi);
- 	int (*suspend_noirq)(struct tb_nhi *nhi, bool wakeup);
- 	int (*resume_noirq)(struct tb_nhi *nhi);
- 	int (*runtime_suspend)(struct tb_nhi *nhi);
-diff --git a/drivers/thunderbolt/pci.c b/drivers/thunderbolt/pci.c
-index e40d4d6af071..c25f33221df1 100644
---- a/drivers/thunderbolt/pci.c
-+++ b/drivers/thunderbolt/pci.c
-@@ -360,6 +360,27 @@ static const struct tb_nhi_ops pci_nhi_default_ops = {
- 	.reset_interface = nhi_reset_interface,
- };
- 
-+/* Alpine Ridge specific NHI operations */
-+
-+static void ar_nhi_pre_suspend_noirq(struct tb_nhi *nhi)
-+{
-+	if (x86_apple_machine)
-+		tb_acpi_force_power(dev_get_drvdata(nhi->dev));
-+}
-+
-+static const struct tb_nhi_ops ar_nhi_ops = {
-+	.add_links = nhi_pci_add_links,
-+	.pre_suspend_noirq = ar_nhi_pre_suspend_noirq,
-+	.pre_nvm_auth = nhi_pci_start_dma_port,
-+	.post_nvm_auth = nhi_pci_complete_dma_port,
-+	.request_ring_irq = nhi_pci_ring_request_msix,
-+	.release_ring_irq = nhi_pci_ring_release_msix,
-+	.shutdown = nhi_pci_release_irq,
-+	.is_present = nhi_pci_is_present,
-+	.init_interrupts = nhi_pci_init_msi,
-+	.reset_interface = nhi_reset_interface,
-+};
-+
- /* Ice Lake specific NHI operations */
- 
- #define ICL_LC_MAILBOX_TIMEOUT	500 /* ms */
-@@ -677,14 +698,22 @@ static struct pci_device_id nhi_ids[] = {
- 	},
- 
- 	/* Thunderbolt 3 */
--	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_NHI) },
--	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI) },
--	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_USBONLY_NHI) },
--	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_NHI) },
--	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_USBONLY_NHI) },
--	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_2C_NHI) },
--	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_4C_NHI) },
--	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_USBONLY_NHI) },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_NHI),
-+	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI),
-+	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_USBONLY_NHI),
-+	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_NHI),
-+	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_USBONLY_NHI),
-+	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_2C_NHI),
-+	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_4C_NHI),
-+	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_USBONLY_NHI),
-+	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
- 	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_TITAN_RIDGE_2C_NHI) },
- 	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_TITAN_RIDGE_4C_NHI) },
- 	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ICL_NHI0),
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index 4b8bcba7bd2f..44141b19c1f2 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -4027,6 +4027,38 @@ int tb_switch_xhci_connect(struct tb_switch *sw)
- 	return 0;
- }
- 
-+/**
-+ * tb_switch_set_bit26() - Set or clear bit 26 of plug events CS_20
-+ * @sw: Alpine Ridge router
-+ * @value: %true to set the bit, %false to clear it
-+ *
-+ * On Apple systems the firmware can set this bit when it resumes the
-+ * NHI. While it is set, SXFP(0) turns the router off and it does not
-+ * come back on resume.
-+ *
-+ * Return: %0 on success, negative errno otherwise.
-+ */
-+int tb_switch_set_bit26(struct tb_switch *sw, bool value)
-+{
-+	unsigned int offset = sw->cap_plug_events + TB_PLUG_EVENTS_CS_20;
-+	u32 val;
-+	int ret;
-+
-+	ret = tb_sw_read(sw, &val, TB_CFG_SWITCH, offset, 1);
-+	if (ret)
-+		return ret;
-+
-+	if (!!(val & TB_PLUG_EVENTS_CS_20_BIT26) == value)
-+		return 0;
-+
-+	if (value)
-+		val |= TB_PLUG_EVENTS_CS_20_BIT26;
-+	else
-+		val &= ~TB_PLUG_EVENTS_CS_20_BIT26;
-+
-+	return tb_sw_write(sw, &val, TB_CFG_SWITCH, offset, 1);
-+}
-+
- /**
-  * tb_switch_xhci_disconnect() - Disconnect internal xHCI
-  * @sw: Router whose xHCI to disconnect
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index e86845762e22..9900d0018174 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -1099,6 +1099,8 @@ int tb_switch_pcie_l1_enable(struct tb_switch *sw);
- int tb_switch_xhci_connect(struct tb_switch *sw);
- void tb_switch_xhci_disconnect(struct tb_switch *sw);
- 
-+int tb_switch_set_bit26(struct tb_switch *sw, bool value);
-+
- int tb_port_state(struct tb_port *port);
- int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
- int tb_port_add_nfc_credits(struct tb_port *port, int credits);
-@@ -1524,6 +1526,7 @@ int tb_acpi_init(void);
- void tb_acpi_exit(void);
- int tb_acpi_power_on_retimers(struct tb_port *port);
- int tb_acpi_power_off_retimers(struct tb_port *port);
-+void tb_acpi_force_power(struct tb *tb);
- #else
- static inline bool tb_acpi_add_links(struct tb_nhi *nhi) { return false; }
- 
-@@ -1537,6 +1540,7 @@ static inline int tb_acpi_init(void) { return 0; }
- static inline void tb_acpi_exit(void) { }
- static inline int tb_acpi_power_on_retimers(struct tb_port *port) { return 0; }
- static inline int tb_acpi_power_off_retimers(struct tb_port *port) { return 0; }
-+static inline void tb_acpi_force_power(struct tb *tb) { }
- #endif
- 
- #ifdef CONFIG_DEBUG_FS
-diff --git a/drivers/thunderbolt/tb_regs.h b/drivers/thunderbolt/tb_regs.h
-index 92d893634d2b..0940e8b12d89 100644
---- a/drivers/thunderbolt/tb_regs.h
-+++ b/drivers/thunderbolt/tb_regs.h
-@@ -563,6 +563,9 @@ struct tb_regs_hop {
- #define TB_PLUG_EVENTS_CS_1_LOW_DPIN_DISABLE	BIT(5)
- #define TB_PLUG_EVENTS_CS_1_HIGH_DPIN_DISABLE	BIT(6)
- 
-+#define TB_PLUG_EVENTS_CS_20			0x14
-+#define TB_PLUG_EVENTS_CS_20_BIT26		BIT(26)
-+
- #define TB_PLUG_EVENTS_PCIE_WR_DATA		0x1b
- #define TB_PLUG_EVENTS_PCIE_CMD			0x1c
- #define TB_PLUG_EVENTS_PCIE_CMD_DW_OFFSET_MASK	GENMASK(9, 0)
+Kind regards,
+Niklas
