@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792556858;
-	b=l3pbp+laiVx5/y2Pk5Ikor3lGbFkE7rF4qZ1vmYdWswy/OF4pT7ZbiAyTsWQCdhSAN6F
-	 x12jwMpdtd9ajEUes+PS4inRhbVUFtF7cnRI7EUzlIdB/i7mW+T5o8/AbvzBYU6hsU3Sg
-	 IKdVQrmKU9Vr2asw8lEKIFD6qucMkv2au8B79CGUOC/RBrV4Eo8oiXroBltozKy9ZHCBr
-	 iWoUKfR455OscezKBH9+UHlGwhjQxSmSYL57JvkTP/mEXc7E2mLeOZlcxelhiuEAv+sFo
-	 8EFjpY/nI4siliImPlVTrBIKZ29ftKnXyK/C8SnMQxhKOn7KyS/yw2g5a2OxzIVL9SA==
+	t=1792557212;
+	b=qooGDbyeMLJ4slZzflDHPaC8nCSdQ8M0u/B45yPskAUzhEqEzNkCUYDdU+xMs/GpiOBh
+	 iN3CvIeNpBY5tMguMalYSkzZuMb+qBDY0wKK+8+7a+BtwTPZx5w5F4MupscHQSXNu0giL
+	 Uo71spc0OdCAkPuN68sLYwb3JB2gFi8ebV1JyGLLJlz8gWK7WvF5JeYSUBrq0Ho5Dce/u
+	 R9LW83gApbcEn+u62oIYy9tyVmXAqxw7xYsTXbNy6rXCBVE+AeJgMUM8tP954VxlZbQJz
+	 JcQFhkXUdIU4pfNjFhdMhFp52+ztsXvBjzmOmcwrSMZ8pdFb4joOHNl0hdHLHIYt4KA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792556858;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792557212;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=uKOy2bzgwW5q/8u1RfFIHTjuWAoGBzqeKHYMhq49qvc=;
-	b=B8RLyZACcwfqhhCMueqwKPNbHY4yS8nHKckvJbE1UCm9lpRB6EyLtDhNpepNs9NuPw4m
-	 wXgAvwM0RysQE1lfX57ejUIroEZtDCMSgKrTk4cm4jOPdLlOviDwT574qECGbmQ+48r8R
-	 v9gpZsV8jAA+C4lwNzG4w3itx7rRfBi/hDizwtQAREctkQB+OFgwg9ZyPj3E9cVvMUtct
-	 sp7QdDsiCRrGP99XYYerYyBP2eG1sgKeqb6w+ZpG0jCLZ1RXyb4JuL+dXcgybYvhkKMqM
-	 lyQMhFvz0GE+HbBpCIrLQAbOjeO7HYJxe3MDKg513GgpypfpvqJYUtFxSfMcO+1lKQA==
+	bh=VLqpe7j4Q9h/YqOkFa6Q/QvAG0shwC/enE07t1pZxmc=;
+	b=2z2UqsiLcIbuDr0vYSeQf228i7SEdtC3RW+JtQ0SUTKyrVthbjOfkhhZF0Qwr2InTxAM
+	 unfr2SbgVdG6kU8fxOV2sJ58b0NSj8EZDDfYwqjdTHDe5F4uFCx0zkeQhKcj58z3plFGk
+	 SMEPvMrApmIGtmiT6S1YNepEXAbOK8fLJC/qq1tr0MlhntHXsOwwJPOVTgZhBl1ajeQLP
+	 DhrgC/xxlNvCG/rXU1qAjC53Mf0K+f4twfUutzrtXtYLdztCBw/JPiBeWmB4FFKtnJWfM
+	 0uo+Su2mzaKs3090SXm0EtzJzbPyQA3N/ynXyHDLUOYHgy6jXnKJ+XGvkHCUXuXocsQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=V7Bh0xJ+;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i+ZPY2ae;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E9E3606A31A
-	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 04:27:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09860606A319
+	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 04:33:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=V7Bh0xJ+
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0EAB1F000C9;
-	Wed, 21 Oct 2026 04:27:37 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i+ZPY2ae
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67EA31F000C9;
+	Wed, 21 Oct 2026 04:33:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792556857;
-	bh=uKOy2bzgwW5q/8u1RfFIHTjuWAoGBzqeKHYMhq49qvc=;
+	s=k20260515; t=1792557211;
+	bh=VLqpe7j4Q9h/YqOkFa6Q/QvAG0shwC/enE07t1pZxmc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=V7Bh0xJ+MkkxA6eDGVAYAL+Ko/dgsPqSLbSORxa6qP9tWw8xrTuX8JHbTAHedmFVr
-	 eReQsthIiQwhGGdVWDH2ddzHG9BYTZIuyVwf7VBEuX+BkDbKcQtWFZm+pVK+FrRbv2
-	 J1RcpKAOiZqn+bmqwzufjEpDvW79Dl5cX5djdE5fkwWx1cC1UL6Ru7d6Ie1kbJonWG
-	 jsdNc1tjEqXbwdydowl5UaAQBsG1FKoORavpUlrugfkH/e/i2zE4QNRuor/prmFU+Q
-	 ftdJaqYdvCqogaQRP1xWT3NhAQwN2tiC/XtYoAn17aLcDRD4O50Uwv7X6Ar8+FRjBe
-	 v2U6GDQ8NKN3w==
-Message-ID: <sashiko-outbox-179781@kernel.org>
+	b=i+ZPY2aezH/dJsos2qS0B503dqlrxIAskEcRpNVSvq7QzfJ8IQGTZ4O0FY1va28FP
+	 3tfpaXCnC+cQbI/YEJwnYvLAgaVPLUXBVS0DZGsEjBTmd4Y7ZHwks2WmLH4pJ+vUNc
+	 Dkl1Dx2gDIDljJzIvzyV+MeI8HpZtmwPUB+6uNnCPvlEEG5v5uE/kxGrw3fT+llnel
+	 d9s9dl4glQprWlJfur8hd6S9coRdUGSD/o0gX4SJYBZUQBYR3xRmUL+1//LObJTRWO
+	 Q4LJFy+mFXkIhMC55qN2O0HGVNn2HrYplWY/9M+8r23rGeVg6wgegsmF6/BNDBEF9G
+	 3ObrJynxjdX6w==
+Message-ID: <sashiko-outbox-179785@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 01/10] PCI: endpoint: Add DMA auxiliary resource
- metadata
+Subject: Re: [PATCH v7 10/10] NTB: ntb_hw_epf: Support DMA and MW sharing a
+ BAR
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Koichiro Den" <den@valinux.co.jp>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261021042229.2280937-2-den@valinux.co.jp>
+In-Reply-To: <20261021042229.2280937-11-den@valinux.co.jp>
 References: <20261021042229.2280937-1-den@valinux.co.jp>
- <20261021042229.2280937-2-den@valinux.co.jp>
+ <20261021042229.2280937-11-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 21 Oct 2026 04:27:37 +0000
+Date: Wed, 21 Oct 2026 04:33:30 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,20 +61,18 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> Endpoint functions that export controller-local DMA channels need the
-> controller register and descriptor-memory layout.
+> A vNTB endpoint can place DMA resources after an MW in the same BAR.
+> Limit the MW to the advertised boundary so clients cannot overwrite
+> those resources.
 >=20
-> Add DMA control and descriptor-memory resource types. The control
-> resource carries the register layout and channel counts. Each descriptor
-> region is associated with the static channel ID assigned by the local
-> DMA driver.
+> Advertise this support in LINK_UP, including when DMA is unavailable.
+> Older endpoints ignore the argument.
 >=20
-> Reviewed-by: Frank Li <Frank.Li@nxp.com>
 > Signed-off-by: Koichiro Den <den@valinux.co.jp>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261021042229.2280=
-937-1-den@valinux.co.jp?part=3D1
+937-1-den@valinux.co.jp?part=3D10
 
