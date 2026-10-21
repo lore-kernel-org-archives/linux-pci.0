@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792556751;
-	b=YiVtSW3wDrZkXuGKoz2QfIoxZdKjZq+2jMtG5UmUfiQ9vjuzmRXwFSB1quZx758K6DYa
-	 +4YiYLdIRxQUQfXAXCG/bP99Nf/o7vzugRxconzuLp/k92PDGD8fHT7cEtszFg2n3aRrM
-	 iEjUUTG+I1eZi0ZeLSi38d1QWpTDXW+OLGcd5AOHBOT6LydU4eezJNZfdydKcRxkY2pw2
-	 8hWhoW3YFRcwMkbKiPxIL6lhancBOlfhESiXAXqdiA7tcG3qJh+jHru0EUPAiFoQmK26R
-	 /s/yRbySAPluxUZ6qvl8dFyYWbT6ZgaEqOY+onUJ6nhTuDuq9j/tYcifrrQJ8g8CQjg==
+	t=1792556792;
+	b=o87zquz+J7KxMWQqvtt/MaojSsIrW7Ut8+sE5N4JWtBser4N1KHwIRg0rcq4tuL7UpsI
+	 PvPI4Gc1gm82Xwo32iTRQ3hdmhrR0mxtq2l7PaLSE80J5RP3scVuF4C1S7meYqZKyOsEH
+	 kh0gWdxztK7CIV6fSSSI5IRuWMwDeGL8VfBLRVDtHg+x2cgPaChdVY7LuSyQyt+CqM5MP
+	 OdsxEMRXkpVb6a0+ajIXsK1Xo+NLpaqww5sEuw82P3iQKO2MMlwurnenlZXcyTvlMRksa
+	 0ZMursIk3u1ZmNG1E3+C05xmoFmK3pQMVl7lmda2qzp8q3Mq6pkKff9gPvKxv4VtHUA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792556751;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792556792;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=MXEd15e61peyJRjuqmG9O01zoAnGXpLE92mclTsxmpw=;
-	b=krrxb8uJTvcuVbF6Mkec5jA+pACHjpnVVBj5Aie4desNKF9PqjJCPZFb6cRX8CVz0gDN
-	 bO1VeNFRjIv93Fr7j7AB3v01+zUwNuj4tQKb2i90QN1v/y09ITWy4rUuzGHgNBP/D5ecV
-	 1tqQfDiZ7bOiu7nqKv7MBsOLwIr+3xOTMch27Ssuv68k3CthU+Js6UTEGquDq87nZGDjR
-	 Yuy316TjtaDXsn8/QUlkqhDrQZq7huUouRC30rJXqsoFUVDBlr5x/nEOkopnmfPRBFofI
-	 GNCbEuQRGo4pUAAYEGgdgeneKY78vz26YEM35Y74xXyBhSMZclEdWIUh22JLMIfNEdw==
+	bh=+jcKnVYuqFoSl9mm3gUiToUW8nQeAjri4DZljLPLHug=;
+	b=GV4MlogW7i7H33Jl96MFTjQpAQtdTuxrmwVkDkC3j8EsEMhrgrQNV3VXNXYMMw2rEEW1
+	 txmsQ5CS6zTGJx5Vl7ljDPXWyhOTckeo4/7lV2l4FQ70O4jSxWyX/0josZUWnFfBMgpAW
+	 waokrJ++HOC+LBYcPXlnZZun72JuCXQw1vbU+m62mgLvyV7SiGEuNuLxTQw/I7yPUzUSe
+	 vTjkQ0dwEqSDf09Y7xk/cNyG3F8D2w4HeYY7Vo0Tx2wNgBCVbZxAxDTIgycLD0NoCk7RQ
+	 BNgBjPA69MEWfs6h44EG/MrOELlZ8iC+b7d8R9vBcmfbGrvrDtBk7tK0oOmEQc+WLqA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iTPN7K5g;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Lpp/RYSu";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82EE2606A31A
-	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 04:25:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D439606A319
+	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 04:26:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iTPN7K5g
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F238D1F000CA;
-	Wed, 21 Oct 2026 04:25:50 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Lpp/RYSu
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C39F21F000C9;
+	Wed, 21 Oct 2026 04:26:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792556751;
-	bh=MXEd15e61peyJRjuqmG9O01zoAnGXpLE92mclTsxmpw=;
+	s=k20260515; t=1792556792;
+	bh=+jcKnVYuqFoSl9mm3gUiToUW8nQeAjri4DZljLPLHug=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=iTPN7K5g+VXTSTn5/7rFK2al+g+Dn70PgubhaHQoL/w5fCGiQTja/C/p1M/VCk+MN
-	 B+m4ndN8N/pMSSMrthN4EG4unUfS+nnsBLcMG3hs4xv3+mX4330ulwxtLQ1CwpGxOo
-	 RTPPU0mM4Y14HWhHSMIadTVWJm9lRQbfLPP7GZM1OQa+ys0KZymKiknKpRpXj6C/G4
-	 eksvTRUncOVuXR44HvR2jGqQpyPdfriumGBrTvRx/PLdKNrM3i9XR7AttYfX6C7fLR
-	 2epmbttKo3of1zh/2Tak62f/h301CKgY1ikdtcvOfYsUPYhZLj09as46/OMFF3b0j/
-	 FWzmJGkNoiL2g==
-Message-ID: <sashiko-outbox-179779@kernel.org>
+	b=Lpp/RYSu9LYPBiDnuRqzBGfH829y6fJECUYDIJ5eRIpFcdrb8+r6W4+ESAOh1ZvsT
+	 WOjv5Fg0qQLpFgpKXndwt+HBgT+6Rrog3b70+AU04LPVN5N3aX+6BbgjGsupm11cr6
+	 rAp+r/W6fQJprffeTbHTcJlmSpsUmVHtGqvm9RkPPjlGgEWK+F9Ghj20y9rUC7HqgS
+	 J5JhJqA6CSZDEf/LioSaRq632+KknjqvWrCeksqad4pJj3vk4XltXaHMsswkrRtcvg
+	 K8R/tC4ZqNCKSAJW1y3kdhMvYmMETjoQE08rftaFU27iot5zcdRWuSYiO0YBDeaISJ
+	 2DG6Pxz0AqDFA==
+Message-ID: <sashiko-outbox-179780@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 04/10] PCI: endpoint: Add pci-epf-ntb.h for the
- shared NTB control layout
+Subject: Re: [PATCH v7 08/10] NTB: ntb_hw_epf: Use the shared NTB control
+ layout
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Koichiro Den" <den@valinux.co.jp>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261021042229.2280937-5-den@valinux.co.jp>
+In-Reply-To: <20261021042229.2280937-9-den@valinux.co.jp>
 References: <20261021042229.2280937-1-den@valinux.co.jp>
- <20261021042229.2280937-5-den@valinux.co.jp>
+ <20261021042229.2280937-9-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 21 Oct 2026 04:25:50 +0000
+Date: Wed, 21 Oct 2026 04:26:31 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,13 +61,11 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> Currently, pci-epf-ntb.c and pci-epf-vntb.c each define struct
-> epf_ntb_ctrl, and ntb_hw_epf.c mirrors the same layout with hard-coded
-> register offsets.
+> Currently, ntb_hw_epf.c duplicates the endpoint control layout with
+> hard-coded register offsets.
 >=20
-> Move the shared struct and macros to include/linux/pci-epf-ntb.h. The
-> vNTB "reserved" field takes the pci-epf-ntb.c name mw1_offset, which is
-> what ntb_hw_epf.c reads at that offset.
+> Use the shared struct and macros in pci-epf-ntb.h and derive offsets
+> with offsetof().
 >=20
 > No functional changes.
 >=20
@@ -78,5 +76,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261021042229.2280=
-937-1-den@valinux.co.jp?part=3D4
+937-1-den@valinux.co.jp?part=3D8
 
