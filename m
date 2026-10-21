@@ -1,98 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.66.62
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792596306;
-	b=Z2YmPO0hwcY24SBdOokevzVFMOidHRoLjQuHjlPtdL+kBkJ4Ef3H4Vqd4W4D5//x9mot
-	 LdUoB0VKADrP/DrQuDfp1ph69pICiDh1js49YqW3lYEAuRKfY+blgw4xhtOoeZVnsrOlC
-	 xhaU7e9Tw14MdGmerhlAvvUAEyJ3Wa9DKF1x1EYxstROP4ZesRoAn0XyOPY1OOC0tXNLC
-	 lBilPgLeDBAu/gghC18zmXu3BbOSC1oCLWVNTlqwP+DrnLuOiGy4uSOc7oydv7E7S8yvl
-	 AcHTiHEtPcE84xGk6iG1/JnCno/TED7rJ4aNBudD+K67jAhAUn5Q/jkkEXFlFqlQlyg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792596306;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:Content-Type:Content-Disposition:
-	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=3YQW2wPoNrUElvQVBxdRB5ZJamVm6YVC6pzY12xi64c=;
-	b=rCnbbjJnqOALq+vbRuefGn/hliu/OsIQkHjSO9RPNwB0vZfCJG/6RSfGTuTKH/s9IPTg
-	 n32HDgEycAmsfgLFNEn/JCdkrCgyfqcFx4UIBD4xFcoSni+A37nOwLKWrD7auhC6WdZl5
-	 LhRUPQf//y40BEf+3ieW6PYDKxb4UInxqyHt1Hgbp2E0Il4IcktPPVaUbcmlJinMagFIK
-	 pDR6QXhrGUAFYKGoSB2pguulsnuo6rFldaOmH8D2Sm9mrw9Q7bf6XTQ9ACh20WnR8mpMJ
-	 cNabeC+S3wfHLrADi1jOgl2GlUpNr5TAdgmRyuJ1qhrh7uC4EVheXM97wHIPQPE04zg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.nxp.com;
-	spf=pass smtp.mailfrom=oss.nxp.com;
-	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=w8nNdRXM;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.66.62
-Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012062.outbound.protection.outlook.com [52.101.66.62])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.72
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792596331;
+	b=PsrPlXBIPn2tA1tdwhGmYDKKKlAjCYkBSIjzzONiue7uL4xD7NRL0saJJoOfYjZi82Au
+	 nSA209SYmtnLiSirUhwCGeWNck8iFM+J48p31o0MTFQCFhKhIVSAXiSe15anx5VCPqYQI
+	 XaWa0FqrUFgtCV3BCm7jXxt/Zx5wXMryCSvSBvCz4FafJGhLlcjNZR0pgov2aXdIlZ0BP
+	 8y17NEv+i7ZPL/cgJmqem4Wv5a5wAU45xGRX0UABPxYpbQZA2YX0wo5NYyyHy+/O5Npw7
+	 gMVr2luz1YlZgncvTnw51R7Reiz98cO6Vlr78l12ldM1rzD47qd1HTBdN48SSc1q9rg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792596331;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
+	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
+	bh=W0oLRP7RmrwK+s1WyDoN9zSSlBczsPl1G7flMYO8vs0=;
+	b=EvRadhepUOb0lAaPvRtz9Fidwh+UjbpU7Kq5IxHioVDMamx2dNVJ/GMsxWw5HjFE9LiV
+	 SADGAXFQw2Xer4lzYi3YaVSissrZLsd0iE11xjMcWjdsSNTF3N0e8m+RtDZrKjLxpmtU8
+	 w+azxUgONfvElurWhhvUz2j11FiudjHUdRXokOJv8OFeTKfeFGAp+/3+4e8kF/ide5ZMk
+	 yqxOqY/R39Z8Gamx22R6dhMcoKxAVDEXUMLnDUtx7uU32MLIVH4Ga0N6fLajV1r4j2BQ7
+	 68fVpkZLo23t3W8uwUcPy9m7rNyu5LtoNTtp9DFQZ0ymnF8jNaq33XXNQtn/txFSOoQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=Tptzn3AB;
+	arc=none smtp.remote-ip=209.85.218.72
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com [209.85.218.72])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61771606A31A;
-	Wed, 21 Oct 2026 15:25:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 61771606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DB3E606A324
+	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 15:25:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4DB3E606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=w8nNdRXM
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Etp/MeupraReb8HekDV65ptt1U+iLmpI4QTUBjxGEKzKdaUKMe7evnHXEzqu7TZqdvHE14J0iHju3FMYdmNwROiu7HPPHJiBM2gy02+q0TP+Mfrb9bdmuzmPLPtSBaTO7jnWyN2DbXfiWhFM4agbCmU/TYns2X2DvmNoBs1AM4bycco58D2GJrCUH0WuYmobmayzuou16jCPFLuo1LgKDvyDhsAstwg8pe0NjeUY1pn0P7lVbkc2GUdUDMtQJBqBFrc9SatW6JhpaoUsEs0l6Ae9gSh2+GTwXht9NwEeMM4qTJKb3zQufF0i+SK6PKGPKpXAvFbyzSqbeKdjQov4GA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=3YQW2wPoNrUElvQVBxdRB5ZJamVm6YVC6pzY12xi64c=;
- b=qHBai9rxUZC1JkWepfoDJy91r1CYc5TsyjWgfQVJH3DxSgKPfXozN3BR89rbe4aGDSoT3St/zlq1FZJyPCnS+5Jx0I90akuTdfyU72B3p4qfHqy3BpshmJUgR8X06oB86cpZJa+l9d/XHWWsFUHF0HngZtWMjDCsy0QMzVwCDT4xxGUcrCNNDEhlt2gcwJMuU6O62Tj5wZ8GFA/zIcLhmouoCWjC0R1ulBChsDyqT2Tzcb3i86yZUMpVTcHP7tcKrKHsTFq1VWnDtBydfWnll+HdMwFrLpplEQvbaKX/2OUEeunZBqvGNrnq3LBOhMauGkfx87ozcltE7yjMSfR6gg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3YQW2wPoNrUElvQVBxdRB5ZJamVm6YVC6pzY12xi64c=;
- b=w8nNdRXM/7MzCLD18DZSUUIVbRdfUpP8bqsv7pbPR4NqQVjE38bHXqiQI5phcRNZkvo9uC2T48YnUeGzYmah27cskzWTniNDZT3UTD6eNsGo7nSI+ycvEETEZszJdEqKr2w/oYx9AEoRzQkua4g+fOp5l3iOGV+MqJisHNjjRvLBNhmkzyLwMwxneBAIhtdsL3je0Sqg2ZQ8aLfN4x4is61+RWErC6u6T3dgIlQB0oopSzPevYR1Ux2nveyINjmkEPM3u4S5UcOnBIa0Ukj8IqQ5zKedFg8u9eyNBZKwZGuooCeehgQEas/AE8MqAgT20XgaIfBOXRef//R3m7WJlw==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from MI3PR04MB12438.eurprd04.prod.outlook.com (2603:10a6:290:76::14)
- by VI3PR04MB018611.eurprd04.prod.outlook.com (2603:10a6:800:375::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.19; Wed, 21 Oct
- 2026 15:25:01 +0000
-Received: from MI3PR04MB12438.eurprd04.prod.outlook.com
- ([fe80::c715:c32:8bb1:b70b]) by MI3PR04MB12438.eurprd04.prod.outlook.com
- ([fe80::c715:c32:8bb1:b70b%6]) with mapi id 15.21.0546.012; Wed, 21 Oct 2026
- 15:25:01 +0000
-Date: Wed, 21 Oct 2026 10:24:51 -0500
-From: Frank Li <Frank.li@oss.nxp.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	bhelgaas@google.com, linux-pci@vger.kernel.org, robh@kernel.org,
-	thierry.reding@kernel.org, jonathanh@nvidia.com, kishon@kernel.org,
-	Frank.Li@kernel.org, vidyas@nvidia.com, cassel@kernel.org,
-	den@valinux.co.jp, marco.crivellari@suse.com,
-	andriy.shevchenko@linux.intel.com, linux-tegra@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 05/10] PCI: tegra194: Check for 16 GT/s capability
- before programming
-Message-ID: <atjZQ7IufvjYdXcs@SMW015318>
-References: <20261021061349.1265704-1-mmaddireddy@nvidia.com>
- <20261021061349.1265704-6-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261021061349.1265704-6-mmaddireddy@nvidia.com>
-X-ClientProxiedBy: PH7PR13CA0005.namprd13.prod.outlook.com
- (2603:10b6:510:174::8) To MI3PR04MB12438.eurprd04.prod.outlook.com
- (2603:10a6:290:76::14)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=Tptzn3AB
+Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-c42888c50c4so70312366b.0
+        for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 08:25:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1792596330; x=1793201130; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=W0oLRP7RmrwK+s1WyDoN9zSSlBczsPl1G7flMYO8vs0=;
+        b=Tptzn3ABnmHqtPXLuADfZF4yFU6lG5l1Ssqdqb172WU9/FrYRnWCpGXVjNVNMxCjqK
+         xBfZ2oU1XFe/hSKaPVcpnziKVhIe3b3JcmKF0w5oMicR/cPa/2V02Vaej8oDTI+rM49w
+         gT6NLACNDJWkctlcXwOYsttU6s+V/xhh/DaAwO59LjgrUVvNs0J27kf2jlpu3PeJZKi/
+         DIi4UQiNtpt1D70MWz7bJa21RUYvd0ZgfIDWml+MEGX8mMTmpwK2IQvr0XoBveYatAF/
+         uYRh2sb1kBzuXtMACIHqzL1woRfmnwtIH8zPMZWKlCiJUwtqXst7OEOdDLxJvQHoDT3R
+         SSqA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792596330; x=1793201130;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=W0oLRP7RmrwK+s1WyDoN9zSSlBczsPl1G7flMYO8vs0=;
+        b=X1gAT1RszzgQbkOjMwYD1pMTE8TtkoSUj1krzGEhhTgra+FfxChFHMu2YmvEH8nP6i
+         8iev9Y6ER2mzsmV3ybyqQ809R8kfGvLk+OM/hajdBN8Olv5tEC3lo+5K9WjFGD98uTMw
+         DgUSP+dfR6UNvh0LQEGy9xTwoxHlmBEbubXC08YTrD8mWHnWkrYEgY/acFi5fty/UpBT
+         I/Qd6XT5hPbwqqU/P9OCELGP7wtxujkjoKKUe4HbL7odQu4LMOvn7bfRG/4Q9vdbMO5j
+         5MKX/VcgDpt9lDm7QPBkRQYT00scRSoB959LUFftCZl6WL3PR/sUWai7MPpErQhl6Nnx
+         4xTg==
+X-Forwarded-Encrypted: i=1; AKwUvBxIrB65v/ixrOdGHHuAYILq5a/rgp2Xur3xseSF59PsKFreYEjNuYcNNpvY3p9yH7yx+jn3xZGDqlo=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKanM5IPgKN6dIqGx0f2LwMgksOP0gHou9zfeMn5gCLFUw8pMuN
+	e1njNwtQwnTig67bGy0ltdyR3kSBGYHM9cBkOUgcKvgxcJcg+etjGr8Cw9lE14ra4N/PCoU0TqD
+	r18gdFZoEWjF33JezWw==
+X-Received: from edqo20.prod.google.com ([2002:aa7:c514:0:b0:6b1:dfff:2ee9])
+ (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:906:dc8e:b0:c44:14d:d95d with SMTP id a640c23a62f3a-c46796ec9bcmr208718966b.23.1792596329153;
+ Wed, 21 Oct 2026 08:25:29 -0700 (PDT)
+Date: Wed, 21 Oct 2026 15:25:23 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -101,120 +75,145 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MI3PR04MB12438:EE_|VI3PR04MB018611:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5fb4e9a2-6a74-457a-680b-08df2f877992
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|19092799006|366016|23010399003|7416014|376014|56012099006|11063799006|4143699003|261009223027099003|10067099003|22082099003|6133799003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	tDTCGKZlK+zCttkaUCJ0hwhokWJbufTMiM1xLMa1YtRdQu2pKk+3LwHrouT320VRt3xXVLzohfyRce9OBq3RdngC5FkWnn6HXkwtT8ZXc6LN7IWeOONJOe+iDH0gUD0OEmiY6DoCmrWZ2w7UdiK2lqHLcTmwVDcPw9y+1cHDvMrPVfmV7OG+CYbdReBNE5Zg6CD5xZ3gslr0MREAwlrE/W9xYVukdQf0P/Aa+dphh+dyQIot6Y0bqTsDbLQ2tA/VPGjAJXIWpR0XyGIc9zhATMcEHBQ0aVry/CelU4ChlANV4OoLJAaZ9AdNwrCBEEi03InvCffNu/Qk9AtNZVDy60Dprmzuqpz/Bg4tXkd9JHuYkumQo7y65Bdj+KNX1RLgNg5z83DGkBueISzcWAHe9xVUgWfnTD/Je7O+MYbyKC+KLm94+6F5uZsK2XEieJFIgaQExxVQPRjCndV6XgfvvNHD5uu08ex7VVYjr5+o/rqgtVPYe+eyq9cL96jJmS8//baZkP7pXV3CWwXkzX56BIc2I6lYJMapprXvd6En/ZYBnkhL34152nAM2dhciXjU7MGiy1wKZGgwtPBcfXwhi0mulurxJyLQfy1bf1al2J+P1PUwXzR4z1G9y0knVQn+wNjHe8ft0qlpzfnU0mCIO28tPRXhIP7OS/aR3BaD++0=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MI3PR04MB12438.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(19092799006)(366016)(23010399003)(7416014)(376014)(56012099006)(11063799006)(4143699003)(261009223027099003)(10067099003)(22082099003)(6133799003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?9Tpu7GSVZCEe2GSM6VOy0nCe0Yfqo9pQdXLSn5py7sWAhqyQuE9TsQu2VVgL?=
- =?us-ascii?Q?MvoLM6b+u7CUFvqDwPG+aevoraOzasoWAuCkPRheA439y5bKN69DYqhqnOHC?=
- =?us-ascii?Q?z1sLSfLCZGQQm6VXNBhiPn5NwOUyg4uT9kQRRGd7SwWIFhqzSV/0cDBgFSLe?=
- =?us-ascii?Q?ognhjZw1TwCupdBlJcco9lE4PPpBDO/8IXbXUJXVx1ouBWQKbWROJ6ZByiV3?=
- =?us-ascii?Q?t/1jQtvUXrmQ/BbXqSwJLkww13KkL3T7Kycr6fCqUYkuA2qa+xtbYVcQ1O1P?=
- =?us-ascii?Q?gL8QPqV36GHaqP8nXHjUHohiWTMzsXioTIoUKJnkj9GG6iTMmT4OoQQAZLEP?=
- =?us-ascii?Q?MQgNRAnT2BqvPzofK6FVf4XRo0kZg6yZBlV/Ew7zmUj2Oh03dZbCKwpW8h3q?=
- =?us-ascii?Q?xQIwc2V/XgT7sIlu+Hhd7VMBd+iQfqrQv4a/wbc4EzioL3Zt3ZfF1xUXz+US?=
- =?us-ascii?Q?kqRh/8RVYmZONLkR/uqBhIhb0Hu4LsQFlvVsjsydmtxRERP7nbktjdXyWdkx?=
- =?us-ascii?Q?Tyc1TdDyLxz32mwks0r0cr0Mq3BS/LMVHBapRSrH08JCR9+3HjVDutofoP7i?=
- =?us-ascii?Q?OmcbP57W//2p/feWPQQ7qNyAhqoPeGc+kWQpTt+hAzIFY9bqUOc5DEDlxF+1?=
- =?us-ascii?Q?zc3ZlSC7HhNhN6QxrMn2wEelkgGxozewWkoMGv8HiKuciYaSFX14gWYF5Mxv?=
- =?us-ascii?Q?irrUhwZrQgZNAmNDfT2qWY7hy+X2cofP0Dab5CNHg6v9T41ce+aKxrJLoa8q?=
- =?us-ascii?Q?jwtaxryonnBasHO1A4mKAfiIA7poOUYUPe6+TUB/t2gZaEOUq5LYTUwPr0TS?=
- =?us-ascii?Q?FMJQUW/Mp+jXHQiRyrniuEzXa/Pujh+nESViTr8ga5Avj9dEcbxSws2AwLHm?=
- =?us-ascii?Q?WmlWFruFZSetP8aWF+UMYbpe3309h0kNAePBQuyf16MGPXQl86L4lRSa31bJ?=
- =?us-ascii?Q?0QsrpOiPAXEzACbnhK/RYQR+AewjFZKkYR68/WmL4ALHbY3E03AgJSqJWXuo?=
- =?us-ascii?Q?422g2TgzTgmFQiQGPc/wXH3LjAiV8ZVvM5J33FhEp/NTh07ojl5/7SCoqqGV?=
- =?us-ascii?Q?KhmELCXNWKusqM5IcaBKICQatFG4h3jJUD+HCTJR7vPcD0jOHdaDpG0g8nB1?=
- =?us-ascii?Q?5c9JcVwS9EcZ/wddV3nPYIzSzz6ZCY+eyYuLXF/2JrWPlqhAZu86Zc0PNT/Q?=
- =?us-ascii?Q?pSLFAYz/Lg/UCFQBrZsCkWtQWcUvEx9RYS76U0OI51HkDcsg4V5gUpMIagxJ?=
- =?us-ascii?Q?E/rG0hAs/ODQDeaV9dfVJsiwKZVNmBnzWzS6j5IOATt90ih9Apop3OSpG2B0?=
- =?us-ascii?Q?Yy0szGZ9PTT1tAo1ywuNmceK+5sh3LDMuZh9bB6eSKznuwpsNuSXDERg5s1v?=
- =?us-ascii?Q?DKHZCZHTs58gnu2UrQhik7PT3CI9/xldNvqVDZgGbq+mV5tN3DbORY9REqiY?=
- =?us-ascii?Q?Vns1i7cp7i56nPxqK/yOUaJm0CKIVdolAnpocYIe5wEnxWsVbnonCiK7INA5?=
- =?us-ascii?Q?r/ezcFA7Jf46Ak5oxaHGaQVPYI2oadFwlCJwVU9Od5KLIBI2CRkSYg7CfTCe?=
- =?us-ascii?Q?7qV2G4aWu8TbkDBV8swOgx7YtBZLBtzQCou55KIWgCnwNL/BYSzU6k8yw7Xi?=
- =?us-ascii?Q?6R8D/fKx8ODeDyY3G1lDKdA7rhs2ah0i02GkUW81qYbOXPujNdA7d4E7IVpz?=
- =?us-ascii?Q?UbLy7lseqXqaDqr5ioNlzYlfqeTYOQDPWcdal9MmKQbEkgwwfIEg52QY7zxd?=
- =?us-ascii?Q?rXzPuHSoMjH4lrzWNrXOwYbrZwdzjjIkr0FojpjSA/ALmHEpI918?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5fb4e9a2-6a74-457a-680b-08df2f877992
-X-MS-Exchange-CrossTenant-AuthSource: MI3PR04MB12438.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Oct 2026 15:25:01.7782
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: qN8IciFM9ibsZRhtgR78+7Id4fYYs+DQjzRmUwd76qLgZWy3M6SifDUggoCAB7vCzdzZ5f5DD8beNcb1s7jXq1SPtKssitY90qXkeTsI8eDUwEZoB6LF0TFh075XDOvE
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI3PR04MB018611
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.56.0.212.g129ede20d9-goog
+Message-ID: <20261021152527.375070-1-tarunsahu@google.com>
+Subject: [RFC PATCH v2 0/4] liveupdate: Feature header ABI and named handler
+From: Tarun Sahu <tarunsahu@google.com>
+To: Andrew Morton <akpm@linux-foundation.org>, joro@8bytes.org, 
+	Mike Rapoport <rppt@kernel.org>, Pratyush Yadav <pratyush@kernel.org>, maz@kernel.org, arnd@arndb.de, 
+	David Matlack <dmatlack@google.com>, jgg@nvidia.com, robin.murphy@arm.com, 
+	loganodell@google.com, oupton@kernel.org, kevin.tian@intel.com, 
+	alex@shazbot.org, dwmw2@infradead.org, pbonzini@redhat.com, seanjc@google.com, 
+	will@kernel.org, Pasha Tatashin <pasha.tatashin@soleen.com>, 
+	Alexander Graf <graf@amazon.com>, Bjorn Helgaas <bhelgaas@google.com>, baolu.lu@linux.intel.com
+Cc: linux-arm-kernel@lists.infradead.org, linux-arch@vger.kernel.org, 
+	sagis@google.com, linux-mm@kvack.org, kvmarm@lists.linux.dev, 
+	iommu@lists.linux.dev, linux-pci@vger.kernel.org, kexec@lists.infradead.org, 
+	skhawaja@google.com, kvm@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Tarun Sahu <tarunsahu@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed, Oct 21, 2026 at 11:43:44AM +0530, Manikanta Maddireddy wrote:
-> config_gen3_gen4_eq_presets() added PCI_PL_16GT_LE_CTRL to the result of
-> dw_pcie_find_ext_capability() without checking whether the 16 GT/s
-> capability exists. If the capability is absent, the code writes lane
-> presets at an unrelated configuration offset.
->
-> Look up the capability once before the lane loop and skip the 16 GT/s lane
-> equivalent control programming when it is absent.
->
-> Fixes: 56e15a238d92 ("PCI: tegra: Add Tegra194 PCIe support")
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
+Live Update Orchestrator (LUO) and its file handlers currently validate
+handed-over KHO state using monolithic compatibility strings ("luo-v5",
+"memfd-v2"). Any change to a serialized structure, even an optional
+additive field, requires bumping the compatibility string, breaking live
+update between adjacent kernel versions across both forward updates and
+rollbacks. This series introduces the feature flags per serialized
+struct to communicate between the kernel about their active and required
+features. Having feature flags increase the compatibility matching
+granularity.
 
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
+This series also renames the file-handler and FLB compatible identifier to
+name, extends LIVEUPDATE_SESSION_PRESERVE_FD so userspace can
+optionally select which registered file handler preserves a file
+descriptor by name, and replaces monolithic version strings in serialized
+payloads with a fixed-size 2-bit pair feature header
+(struct luo_feature_hdr). So in future, If a change to a subsystem
+preservation can not be handled with feature flags, we can attach a new
+handler to support the preservation.
 
-> Changes V1 -> V2: None
->
->  drivers/pci/controller/dwc/pcie-tegra194.c | 16 ++++++++++------
->  1 file changed, 10 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-> index fb8084cef38b..14031cfaee8b 100644
-> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
-> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> @@ -840,7 +840,11 @@ static void tegra_pcie_enable_interrupts(struct dw_pcie_rp *pp)
->  static void config_gen3_gen4_eq_presets(struct tegra_pcie_dw *pcie)
->  {
->  	struct dw_pcie *pci = &pcie->pci;
-> -	u32 val, offset, i;
-> +	u32 pl16g, val, i;
-> +
-> +	pl16g = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_PL_16GT);
-> +	if (pl16g)
-> +		pl16g += PCI_PL_16GT_LE_CTRL;
->
->  	/* Program init preset */
->  	for (i = 0; i < pcie->num_lanes; i++) {
-> @@ -851,15 +855,15 @@ static void config_gen3_gen4_eq_presets(struct tegra_pcie_dw *pcie)
->  			     GEN3_GEN4_EQ_PRESET_INIT);
->  		dw_pcie_writew_dbi(pci, CAP_SPCIE_CAP_OFF + (i * 2), val);
->
-> -		offset = dw_pcie_find_ext_capability(pci,
-> -						     PCI_EXT_CAP_ID_PL_16GT) +
-> -				PCI_PL_16GT_LE_CTRL;
-> -		val = dw_pcie_readb_dbi(pci, offset + i);
-> +		if (!pl16g)
-> +			continue;
-> +
-> +		val = dw_pcie_readb_dbi(pci, pl16g + i);
->  		FIELD_MODIFY(PCI_PL_16GT_LE_CTRL_DSP_TX_PRESET_MASK, &val,
->  			     GEN3_GEN4_EQ_PRESET_INIT);
->  		FIELD_MODIFY(PCI_PL_16GT_LE_CTRL_USP_TX_PRESET_MASK, &val,
->  			     GEN3_GEN4_EQ_PRESET_INIT);
-> -		dw_pcie_writeb_dbi(pci, offset + i, val);
-> +		dw_pcie_writeb_dbi(pci, pl16g + i, val);
->  	}
->
->  	val = dw_pcie_readl_dbi(pci, GEN3_CTRL);
-> --
-> 2.34.1
->
+This change is motivated by the LPC discussion.
+
+Named File Handler Selection
+============================
+With fine-grained compatibility tracked via feature headers, the
+handler and FLB compatible field is renamed to name. When a subsystem
+needs a genuinely incompatible new handler alongside an existing one for
+the same file type, struct liveupdate_session_preserve_fd now includes
+char handler[LIVEUPDATE_HNDL_NAME_LENGTH] after token (keeping
+min_size at 16 bytes for backward compatibility):
+- Empty handler (or 16-byte struct): selects the first registered
+  handler whose .can_preserve() accepts the fd, keeping default callers
+  on the original rollback-safe handler.
+- Non-empty handler: selects the registered handler with that exact
+  name and verifies .can_preserve() accepts the fd.
+
+2-Bit Pair Feature Header (struct luo_feature_hdr)
+==================================================
+Each serialized ABI structure (struct luo_ser, struct memfd_luo_ser)
+starts with a fixed 128-byte struct luo_feature_hdr containing:
+- size: byte size of the enclosing serialized structure from the source
+  kernel.
+- flags[15]: 15 chained 64-bit feature flags entries. Each entry
+  encodes up to 31 features as 2-bit pair (req, active) states
+  (enum luo_feat_state: LUO_FEAT_DISABLED = 0b00,
+  LUO_FEAT_OPTIONAL = 0b01, LUO_FEAT_REQUIRED = 0b11) plus
+  LUO_FEAT_EXT_MASK (bits[63:62] = 0b11) chaining to the next entry
+  (up to 465 features total). Because the header is fixed at 128 bytes,
+  payload field offsets never shift when extended flags entries are used.
+
+Each subsystem defines its feature states as a static const u8 array
+indexed by its feature enum, which luo_feature_hdr_init() packs into
+the payload feature header. During deserialization,
+luo_feature_hdr_validate() checks the header from the source kernel
+against the feature array in the target kernel according to the
+per-feature (req, active) truth table:
+
+  Source Target Action
+  (1,0)  (x,x)  Reject -EINVAL: invalid source kernel (req without active)
+  (x,x)  (1,0)  Reject -EINVAL + WARN_ON_ONCE: invalid target kernel
+  (0,0)  (0,0)  Accept: feature absent
+  (0,0)  (0,1)  Accept: feature absent
+  (0,0)  (1,1)  Reject -EOPNOTSUPP: target kernel requires the feature
+  (0,1)  (0,0)  Accept: ignore payload data
+  (1,1)  (0,0)  Reject -EOPNOTSUPP: source kernel requires the feature
+  (x,1)  (x,1)  Accept: use payload data
+
+Structure Evolution
+===================
+The relative order and offsets of fields in serialized structures must
+remain unchanged as features are added or retired. New fields are always
+appended at the end of the structure under a new feature flag, and
+retired fields are kept in place so that the offsets of subsequent
+fields never shift. If the type or format of a field needs to change,
+the existing field and feature are kept intact (and retired when no
+longer needed) and a new feature flag with a new appended field of the
+new type is added.
+
+In the target kernel, fields of a LUO_FEAT_REQUIRED feature are
+guaranteed to be present once luo_feature_hdr_validate() succeeds,
+whereas fields of a LUO_FEAT_OPTIONAL feature should be accessed only
+after verifying that the feature is active in the source kernel header:
+
+  if (luo_feature_is_active(&ser->features, FEAT_X))
+          val = ser->x_field;
+
+Changes since RFC v1 [1]:
+- Renamed file-handler and FLB compatible to name and added optional
+  handler selection by name in LIVEUPDATE_SESSION_PRESERVE_FD.
+- Replaced the 3-mask (supp, req, active) + variable-length FDT and
+  feature-section design with a fixed 128-byte struct luo_feature_hdr
+  embedding size and 15 chained 64-bit 2-bit pair (req, active)
+  flags entries directly in struct luo_ser and struct memfd_luo_ser.
+- Replaced compile-time bitmask macros with a static const u8 feature
+  array per subsystem packed by luo_feature_hdr_init() and validated
+  in a single pass by luo_feature_hdr_validate().
+
+[1] https://lore.kernel.org/all/20260903023452.721732-1-loganodell@google.com/
+
+Tarun Sahu (4):
+  liveupdate: Rename handler compatible to name
+  liveupdate: Select file handler by name in the preserve ioctl
+  liveupdate: Replace compatibility string with a 2-bit pair feature
+    header
+  mm: memfd_luo: Add the 2-bit pair feature header
+
+ drivers/pci/liveupdate.c         |  10 +-
+ include/linux/kho/abi/luo.h      | 367 +++++++++++++++++++++++++++----
+ include/linux/kho/abi/memfd.h    |  39 +++-
+ include/linux/kho/abi/pci.h      |   2 +-
+ include/linux/liveupdate.h       |  18 +-
+ include/uapi/linux/liveupdate.h  |  15 +-
+ kernel/liveupdate/luo_core.c     |  27 ++-
+ kernel/liveupdate/luo_file.c     |  64 ++++--
+ kernel/liveupdate/luo_flb.c      |  16 +-
+ kernel/liveupdate/luo_internal.h |   3 +-
+ kernel/liveupdate/luo_session.c  |   7 +-
+ lib/tests/liveupdate.c           |  22 +-
+ mm/memfd_luo.c                   |  16 +-
+ 13 files changed, 481 insertions(+), 125 deletions(-)
+
+-- 
+2.56.0.212.g129ede20d9-goog
+
