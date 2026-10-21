@@ -1,66 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.19
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792587081;
-	b=mEygAU7NR0QYISPccvXHPo5I4sg/u3jEoUFrLRMXmTIecN2kNO1fWq/p0jVYlAwHuu9z
-	 +b7fP7oVEdt66bbp8UnuZtNT21bXjbiDQb2+lpFoEe8sqNQD0wLERJJa6c+zz/koRfW+/
-	 Miw45jV4segr6FQDs4G4Mj0CcUb1X2ZcDrnZGozyNB71pOShzgH+i+MxYToyo6g36wBHd
-	 Gga8ihGT9MIKBQAtkqCRGCBk83KVivG7gMnkkwUGVwjC0ivrmKKEOA6tK6HZsS/FR+O6O
-	 DaO/ybfKHrxfyICi4yk3Hup46rEKKw0+1GSEVXHhkQ9eyAXtDVYFHuDTgnLKWZf9AoA==
+	t=1792587094;
+	b=HjZfbbDggJX0I/9nJNqKtGQmZtYCgyw6oFt+yAwnwukWwnPf0P1FS7SASBA9egUY4Ew6
+	 eot7TbX0FTKmi1QEE9r0tGrQ81jKLzVN9ponythQmyNZ/E6fW5XHg4Ncepffc2ZO9HLdP
+	 iq108tmKkzGzny+KsaqPZ5nu5Bfz0nxwd+KvZApFwFXX3qIZeI1AAXHhyGmiwzKtBooJm
+	 LKDqw5ziEorG/EH2nWs+BTI0UI4ADXotJpZ9KkHHG+J2dCmSHbcciNF+DsHPjHVc5rVnp
+	 dwMEF/UhFTJdGfkiA/s8lug6UBO7kXFGzLvBD6i+eWfA3ZQ1kRBb4ywDUGFoa8CNsUw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792587081;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792587094;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=aTH0PmxbbxC55ROBWOOZo8z909XjE3QcvaLlFOsDK4U=;
-	b=uaesHmkrWq9BQ5cTr45IlZQKVkLnOCV9ohDHVSSmxVCD7lBmqSbotEOO8EHIY2T+JyQp
-	 fpavHy8ofXx0HqEK4e0AiTrY7WLI6VOFFH88yVIsWNk0VAjZAhZO1BwTpLtIL5y9zZfXv
-	 OrosPbuiPtWdOCjrxWNeqtNSib+wX2lD648Mak7Kz1krI1ycENot8ihOUFQLQ8Hq3P+9Q
-	 in44HLtRVmuRzD4c7bL4BIsu71yXuwQnMD4Hcz/Yqgh3Kt07BK7zcJwLGu7pEnxqbG3nF
-	 C5XMFsiIVL73/ZOQhq7FJ7dcslL+2fE+oXrK3gJex/AjPw417lBGa9hqSHqlz2u7N1w==
+	bh=+GNewJ6L9R0kZcLclJ0ECaHeA7hp5BDW2YfdidmWPVA=;
+	b=DOyCxGvglVKiKOEeDPjWGY8jEG2tTt/JYm+y+jjQJINsu0iV84AZ4GRFm4qdhOOZNJxF
+	 D94irnm/lO0HaMXfkkiMSj2T9TQtmXTQB+Ft54RUumR9h6bffCkN1XB79rWKKP7DWhF2Y
+	 nvusIlm4NWxVxU3HhFUP9OrChMCxxXARqtlfK6v9CJk0cHyL24FySSgBKTry/S6AxeZUo
+	 1U2+Cm7nE35CczTL/pOR7XZwPbf5c9a0P/39HC3rRYE7oe6tvjgTpxlDaSgtruCrhPUWp
+	 ZCm1at/HjT7j5ZTGCyV0HnFA1ga6gVmSM8Tk7kYrcIxIqL2tv2mYE5+svE+sXCp+kxQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.intel.com;
 	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=JJKugwND;
-	arc=none smtp.remote-ip=198.175.65.18
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=bXb2vJy8;
+	arc=none smtp.remote-ip=192.198.163.19
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2A6C606A322;
-	Wed, 21 Oct 2026 12:51:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F2A6C606A322
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D05A8606A31B;
+	Wed, 21 Oct 2026 12:51:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D05A8606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=JJKugwND
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=bXb2vJy8
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1792587081; x=1824123081;
+  t=1792587094; x=1824123094;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=c/QEOOLyncZHREMfGdMjnu+W3S4VLUTYWjMAqrSAl8s=;
-  b=JJKugwNDAI9ikJKPgtQIDYFTPd43NeelXdMWifyECZZlF/LluYbppv0o
-   TjlhlE8ihortraMHkf7OBL/fUDHM2/P+f9w7/PpcfTVIo033bOj6HgeWc
-   e+RoepmCY9RgYuKCWpzguDnFVA2ilskKeQCuVyQRUAGrFr3JB7PlITxI4
-   +WcmpEWPnpKwwoL9P2D6LaVVp2DAEFZ0M+6EFNDo9LN8wvAGxv+KdeBMy
-   FSTkMo3avtmeSdvl01XSA7U/cJ3VgaZ7NkOPrc82OrNkWia9VywuWbBNJ
-   zerLcM6ko4M58xFymCy3fQWm8dLcudgMuDLMNJebYiZxiMN/Mm0t5kaOX
-   w==;
-X-CSE-ConnectionGUID: 8RWUd9t5Qaqj6Ob/s+/zPQ==
-X-CSE-MsgGUID: Y672gsOXTG+XRkuDzQhWEg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11941"; a="1319920"
+  bh=MUHiTFnNM8tHXb+wyBzyqGTi0bYSO/5cbTwPohIvtdk=;
+  b=bXb2vJy8OOj1cEOLAdIDea/LVcizF/PshQnMJy+TWXqbW3nNC1KrzNZc
+   s+ZY26wmsWI+5Mo530ITgdyRkvkfDHXwkUmL++as97E19O7pLnuZCsScG
+   TpOYmLBLXQG7F08DPaQ9A2fbD8WfzGdMES/lRF7fd+pQefks65prKLGxm
+   jU4d6JIxCYWldwy2lOQj8XCUwGma/a/oJQxQrMQwbma6EKeB/WNO5ZYtL
+   cNodnNDtX/vWSo+Y1vffB6SAkPjElrypEs3RTSjAqgjIeW7lOlQSKxGzZ
+   56jfIq2OZ14vlcwV56IHaunYCVRfAHfcN5z7jkrepwG8Zhiqs8SmQoXSR
+   A==;
+X-CSE-ConnectionGUID: x01DB0B0R6qZs/h7B1RbhQ==
+X-CSE-MsgGUID: VvKFx5/VRimrQ8kIWq8jCA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11941"; a="1413060"
 X-IronPort-AV: E=Sophos;i="6.27,170,1787036400"; 
-   d="scan'208";a="1319920"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2026 05:51:21 -0700
-X-CSE-ConnectionGUID: n8pjYNxITUu4b8AwqNaEsg==
-X-CSE-MsgGUID: Mz28nd1fRAyVp1H9/8Y7HQ==
+   d="scan'208";a="1413060"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2026 05:51:33 -0700
+X-CSE-ConnectionGUID: fC9Apgr5SjaoDikeLr5Ykw==
+X-CSE-MsgGUID: Z4Vr5kpbQbyZhtEU1FlFbw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,170,1787036400"; 
-   d="scan'208";a="3423036"
+   d="scan'208";a="3029272"
 Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.75])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2026 05:51:16 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2026 05:51:27 -0700
 From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
 	Nikolas Joshua Britton <nbritton@exabit.io>,
@@ -72,12 +72,13 @@ To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
 	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	Rob Herring <robh@kernel.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
 	linux-kernel@vger.kernel.org
 Cc: Bradley Morgan <brads@mainlining.org>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH v4 5/7] linux/log2.h: Add 64-bit roundup/down_pow_of_two64() variants
-Date: Wed, 21 Oct 2026 15:49:50 +0300
-Message-ID: <20261021124956.4250-6-ilpo.jarvinen@linux.intel.com>
+	Eric Auger <eric.auger@redhat.com>
+Subject: [PATCH v4 6/7] PCI: Place resources to either edge of the window
+Date: Wed, 21 Oct 2026 15:49:51 +0300
+Message-ID: <20261021124956.4250-7-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261021124956.4250-1-ilpo.jarvinen@linux.intel.com>
 References: <20261021124956.4250-1-ilpo.jarvinen@linux.intel.com>
@@ -93,111 +94,344 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Generic sounding roundup_pow_of_two() and rounddown_pow_of_two() are
-internally based on fls() that limits types to unsigned long. The type
-limitation is unexpected and undocumented.
+PCI resource assignment phase based on a greedy algorithm. The
+resources are assigned in descending order of required alignment.
+Because the PCI BARs are power-of-two sized resources, it mostly works
+(bridge windows and VF BARs are composite resources that might not
+necessarily have power-of-two size but internally they are still
+composed of BARs).
 
-Worse yet, the typing seems also inconsistent between
-__builtin_constant_p() and __roundup/down_pow_of_two() branches, the
-former using full 64-bit size and the latter truncating type.
+The resource assignment prior to the commit 9036bd0efcb6 ("PCI: Align
+head space better") placed resource to/towards the left edge of the
+window. The commit 9036bd0efcb6 ("PCI: Align head space better")
+altered assignment for resources whose size is not a perfect multiple
+of the required alignment by moving the remainder before the left edge
+of the window if possible.
 
-The most sensible way seems to be eventually changing types such that
-the return type for roundup/down_pow_of_two() is same as input but it
-requires auditing all the existing callers that have mixed input/output
-types.
+The behavior after the commit 9036bd0efcb6 ("PCI: Align head space
+better") may result in problems when a bridge window consists of one
+large alignment resource and a composite one with a smaller alignment
+(this is a typical setup for GPUs PF BAR and VF BARs). The resource
+with largest alignment is assigned first and placed such that the
+remainder space is left of the assigned resource, which effectively
+splits the remaining space into two. While the VF BAR could fit to the
+remaining space, it requires continuous free space that is no longer
+there because the large resource is now in the middle.
 
-As a stop gap solution, add roundup/down_pow_of_two64() that do not
-unexpectedly truncate 64-bit input.
+In this log exceprt, BAR 2 is placed in the middle of the window blocking
+the larger VF BAR 2 from fitting anywhere:
 
+pci 0000:03:01.0: bridge window [mem 0xa9f8000000-0xbfffffffff 64bit pref]: assigned
+pci 0000:04:00.0: BAR 2 [mem 0xb000000000-0xb7ffffffff 64bit pref]: assigned
+pci 0000:04:00.0: VF BAR 2 [mem size 0xe00000000 64bit pref]: can't assign; no space
+pci 0000:04:00.0: VF BAR 2 [mem size 0xe00000000 64bit pref]: failed to assign
+
+The old behavior, despite being greedy, naturally consumed space from
+the left edge leaving the remainder space adjacent to the other free
+space. When remainder space is at the left edge of the window, the
+greedy algorithm should instead assign to the right edge of the window.
+(If both ends do align, either end works equally.)
+
+While defining window edge aware resource assignment algorithm, one
+additional thing is useful to note. In DT setups the bridge
+windows/root bus resources are often very precisely sized, with right
+edge of the window having much smaller alignment that the left edge.
+They also often come with a small BAR that should be placed to the
+right edge to not block bridge window placed to the left edge of the
+window. The bridge window may be entirely optional at this point
+because of hotplug. The resource assignment fallback phase assigns
+mandatory resources first and in such a case, small BAR gets assigned
+first.
+
+One example where mandatory BAR 0 blocks bridge windows from fitting
+(both bridge windows wouldn't fit because of qemu not providing enough
+space for both bridge windows but one should fit like it was originally
+setup by the platform):
+
+pci_bus 0000:0a: root bus resource [mem 0x10a00000-0x10c00fff window]
+pci 0000:0a:00.0: [1b36:000c] type 01 class 0x060400 PCIe Root Port
+pci 0000:0a:00.0: BAR 0 [mem 0x10c00000-0x10c00fff]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0d]
+pci 0000:0a:00.0:   bridge window [mem 0x10a00000-0x10bfffff]
+pci 0000:0a:00.0: enabling Extended Tags
+pci 0000:0a:00.0: bridge window [mem 0x00100000-0x000fffff 64bit pref] to [bus 0b-0d] add_size 200000 add_align 100000
+pci 0000:0a:00.0: bridge window [mem 0x00100000-0x000fffff] to [bus 0b-0d] add_size 200000 add_align 100000
+pci 0000:0a:00.0: bridge window [mem 0x10a00000-0x10bfffff]: assigned
+pci 0000:0a:00.0: bridge window [mem size 0x00200000 64bit pref]: can't assign; no space
+pci 0000:0a:00.0: bridge window [mem size 0x00200000 64bit pref]: failed to assign
+pci 0000:0a:00.0: BAR 0 [mem 0x10c00000-0x10c00fff]: assigned
+pci 0000:0a:00.0: bridge window [mem 0x10a00000-0x10bfffff]: releasing
+pci 0000:0a:00.0: BAR 0 [mem 0x10c00000-0x10c00fff]: releasing
+pci 0000:0a:00.0: BAR 0 [mem 0x10a00000-0x10a00fff]: assigned
+pci 0000:0a:00.0: bridge window [mem size 0x00200000]: can't assign; no space
+pci 0000:0a:00.0: bridge window [mem size 0x00200000]: failed to assign
+pci 0000:0a:00.0: bridge window [mem size 0x00200000 64bit pref]: can't assign; no space
+pci 0000:0a:00.0: bridge window [mem size 0x00200000 64bit pref]: failed to assign
+pci_bus 0000:0a: Some PCI device resources are unassigned, try booting with pci=realloc
+
+To achieve best generalization of the approach, the solution should
+also avoid consuming space from the window edge that can fit largest
+aligning resources in the future, whenever possible.
+
+Fixes: 9036bd0efcb6 ("PCI: Align head space better")
+Reported-by: Alexey Fomenko <alexey.fomenko@intel.com>
+Tested-by: Alexey Fomenko <alexey.fomenko@intel.com>
+Reported-by: Eric Auger <eauger@redhat.com>
+Tested-by: Eric Auger <eric.auger@redhat.com>
+Tested-by: Nikolas Joshua Britton <nbritton@exabit.io>
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- include/linux/log2.h | 52 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 52 insertions(+)
 
-diff --git a/include/linux/log2.h b/include/linux/log2.h
-index e17ceb32e0c9..180e5702f677 100644
---- a/include/linux/log2.h
-+++ b/include/linux/log2.h
-@@ -57,6 +57,16 @@ unsigned long __roundup_pow_of_two(unsigned long n)
- 	return 1UL << fls_long(n - 1);
+Both reports are private discussions (Eric's report started as public
+and produced another fix but further problem was only visible in the
+privately send logs after that). Thus no links.
+---
+ drivers/pci/pci.h       |   4 +
+ drivers/pci/setup-bus.c |   4 -
+ drivers/pci/setup-res.c | 170 ++++++++++++++++++++++++++++++++++------
+ 3 files changed, 148 insertions(+), 30 deletions(-)
+
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index ba3c3fddddc2..82a5fd267f5b 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -106,6 +106,10 @@ struct pcie_tlp_log;
+ #define PCI_BUS_BRIDGE_MEM_WINDOW	1
+ #define PCI_BUS_BRIDGE_PREF_MEM_WINDOW	2
+ 
++#define PCI_RES_TYPE_MASK \
++	(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH |\
++	 IORESOURCE_MEM_64)
++
+ #define PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
+ 				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
+ 
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index e8c94aa1d3c1..7ca0e9f4ffb6 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -31,10 +31,6 @@
+ #include <linux/acpi.h>
+ #include "pci.h"
+ 
+-#define PCI_RES_TYPE_MASK \
+-	(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH |\
+-	 IORESOURCE_MEM_64)
+-
+ unsigned int pci_flags;
+ EXPORT_SYMBOL_GPL(pci_flags);
+ 
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 2ca3784aa323..0833ea88bfa1 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -17,6 +17,9 @@
+ #include <linux/bug.h>
+ #include <linux/kernel.h>
+ #include <linux/export.h>
++#include <linux/limits.h>
++#include <linux/log2.h>
++#include <linux/minmax.h>
+ #include <linux/pci.h>
+ #include <linux/errno.h>
+ #include <linux/ioport.h>
+@@ -262,16 +265,84 @@ resource_size_t pci_resource_alignment(const struct pci_dev *dev,
+ 	return resource_alignment(res);
+ }
+ 
++static resource_size_t pci_max_natural_size(const struct resource *res,
++					    resource_size_t *max_align)
++{
++	resource_size_t size = resource_size(res);
++	resource_size_t powof2, natural_start;
++
++	*max_align = 1;
++	if (!size)
++		return 0;
++
++	powof2 = rounddown_pow_of_two64(size);
++	natural_start = ALIGN(res->start, powof2);
++	/* end = ~0 first overflows, then -1 brings it back */
++	if (natural_start >= ALIGN_DOWN(res->end + 1, powof2) - 1) {
++		powof2 = max(powof2 / 2, 1U);
++		natural_start = ALIGN(res->start, powof2);
++	}
++
++	if (natural_start) {
++		*max_align <<= __ffs64(natural_start);
++	} else {
++		/*
++		 * Zero address has infinite alignment, return the largest
++		 * representable number even if it's not a power of two.
++		 */
++		*max_align = RESOURCE_SIZE_MAX;
++	}
++
++	return powof2;
++}
++
+ static resource_size_t pci_resreq_remainder(resource_size_t size,
+ 					    resource_size_t align)
+ {
+ 	return size - ALIGN_DOWN(size, align);
  }
  
 +/**
-+ * __roundup_pow_of_two64() - round up to nearest power of two
-+ * @n: value to round up
++ * pci_align_resource - Places resource into empty space range
++ * @rr: PCI resource request data
++ * @res: Candidate range calculated by caller (not among @dev's resources!)
++ * @empty_res: Full free space range
++ * @size: Required size for the resource
++ * @align: Required alignment (see below for details)
++ *
++ * Places resource inside @empty_res honoring @size and @align.
++ *
++ * Returns: start address for the resource.
 + */
-+static inline __attribute__((const))
-+u64 __roundup_pow_of_two64(u64 n)
-+{
-+	return 1ULL << fls64(n - 1);
-+}
+ /*
+- * For mem bridge windows, try to relocate tail remainder space to space
+- * before res->start if there's enough free space there. This enables
+- * tighter packing for resources.
++ * Following candidate logic only applies to mem resources currently. For
++ * composite resources not divisable by @align, @align does not apply to
++ * non-aligning remainder part giving some leeway for its placement. There
++ * are 4 candidate positions:
++ *
++ *           W0WWW0WWW0WWW
++ * 1.         AAAAr
++ * 2.        rAAAA
++ * 3.             AAAAr
++ * 4.                rAAAA
++ *
++ * W = bridge window
++ * 0 = bridge window offset matching align
++ * A = aligning part of size (size rounded down by align)
++ * r = non-aligning remainder
++ *
++ * Cases 1 & 3 and 2 & 4 may degenerate to the same candidate.
++ *
++ * Select resource placement based on the remaining free space. Pick the
++ * candidate with which the remaining free space has (in decreasing order of
++ * priority):
++ *
++ *   1. the largest naturally aligning power-of-two-sized address range within,
++ *   2. the largest continous free space,
++ *   3. the largest alignment of the start address for the naturally aligning
++ *      free space range (from check 1).
++ *
++ * Cases 1 & 2 check only right edge free space and 3 & 4 the left edge.
+  */
+ resource_size_t pci_align_resource(struct pci_resreq_data *rr,
+ 				   const struct resource *res,
+@@ -280,38 +351,85 @@ resource_size_t pci_align_resource(struct pci_resreq_data *rr,
+ 				   resource_size_t align)
+ {
+ 	struct pci_dev *dev = rr->dev;
+-	resource_size_t remainder, start_addr;
++	unsigned long type = res->flags & PCI_RES_TYPE_MASK;
++	resource_size_t best_natural_size = 0, best_size = 0, best_maxalign = 0;
++	resource_size_t aligning, remainder;
++	struct resource candidate[4];
++	unsigned int i;
++	int best = -1;
+ 
+ 	if (!(res->flags & IORESOURCE_MEM))
+ 		return res->start;
+ 
+-	if (rr->user_align)
+-		return res->start;
+-
+ 	remainder = pci_resreq_remainder(size, align);
+-	if (!remainder)
+-		return res->start;
++	aligning = size - remainder;
 +
- /**
-  * __rounddown_pow_of_two() - round down to nearest power of two
-  * @n: value to round down
-@@ -67,6 +77,16 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
- 	return 1UL << (fls_long(n) - 1);
++	candidate[0] = DEFINE_RES(ALIGN(empty_res->start, align), size, type);
++	candidate[1] = DEFINE_RES(ALIGN(empty_res->start, align) - remainder,
++				  size, type);
++	candidate[2] = DEFINE_RES(ALIGN_DOWN(empty_res->end + 1 - remainder, align) -
++				  aligning, size, type);
++	candidate[3] = DEFINE_RES(ALIGN_DOWN(empty_res->end + 1, align) - size,
++				  size, type);
++
++	for (i = 0; i < ARRAY_SIZE(candidate); i++) {
++		struct resource remaining;
++		resource_size_t natural_size, size, maxalign;
++
++		if ((candidate[i].start > candidate[i].end) ||
++		    !__resource_contains_unbound(empty_res, &candidate[i])) {
++			pci_dbg(dev, "%pR: candidate %u not within free space %pR\n",
++				&candidate[i], i, empty_res);
++			continue;
++		}
+ 
+-	/*
+-	 * Size constraints forced an early start move in
+-	 * pci_check_and_align_resource()?
+-	 */
+-	if (!IS_ALIGNED(res->start, align))
+-		return res->start;
++		if (rr->user_align &&
++		    !IS_ALIGNED(candidate[i].start, rr->user_align)) {
++			pci_dbg(dev, "%pR: candidate %u skipped due to resource_alignment=%llx\n",
++				&candidate[i], i,
++				(unsigned long long)rr->user_align);
++			continue;
++		}
+ 
+-	/* Don't mess with size that doesn't align with window size granularity */
+-	if (!IS_ALIGNED(remainder, pci_min_window_alignment(dev->bus, res->flags)))
+-		return res->start;
+-	/* Try to place remainder that doesn't fill align before */
+-	if (res->start < remainder)
+-		return res->start;
+-	start_addr = res->start - remainder;
+-	if (empty_res->start > start_addr)
++		remaining.flags = type;
++		if (i <= 1) {
++			remaining.start = candidate[i].end + 1;
++			remaining.end = empty_res->end;
++		} else {
++			remaining.start = empty_res->start;
++			remaining.end = candidate[i].start - 1;
++		}
++
++		natural_size = pci_max_natural_size(&remaining, &maxalign);
++		size = resource_size(&remaining);
++		pci_dbg(dev, "%pR: candidate %u free space naturalsize=%llx size=%llx maxalign=%llx\n",
++			&candidate[i], i,
++			(unsigned long long)natural_size,
++			(unsigned long long)size,
++			(unsigned long long)maxalign);
++		if ((best < 0) ||
++		    (natural_size > best_natural_size) ||
++		    (natural_size == best_natural_size && size > best_size) ||
++		    (natural_size == best_natural_size && size == best_size &&
++		     maxalign > best_maxalign)) {
++			best = i;
++			best_natural_size = natural_size;
++			best_size = size;
++			best_maxalign = maxalign;
++		}
++	}
++
++	/* None fits? Return some address and let the caller deal with it. */
++	if (best == -1)
+ 		return res->start;
+ 
+-	pci_dbg(dev, "%pR: moving candidate start address below align to %llx\n",
+-		res, (unsigned long long)start_addr);
+-	return start_addr;
++	pci_dbg(dev, "%pR: candidate %u selected (free space %pR), size: %llx + %llx, align: %llx\n",
++		&candidate[best], best, empty_res,
++		(unsigned long long)aligning,
++		(unsigned long long)remainder,
++		(unsigned long long)align);
++
++	return candidate[best].start;
  }
  
-+/**
-+ * __rounddown_pow_of_two64() - round down to nearest power of two
-+ * @n: value to round down
-+ */
-+static inline __attribute__((const))
-+u64 __rounddown_pow_of_two64(u64 n)
-+{
-+	return 1ULL << (fls64(n) - 1);
-+}
-+
- /**
-  * const_ilog2 - log base 2 of 32-bit or a 64-bit constant unsigned value
-  * @n: parameter
-@@ -163,6 +183,23 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
- 	__ilog2_u64(n)			\
-  )
- 
-+/**
-+ * roundup_pow_of_two64 - round the given value up to nearest power of two
-+ * @n: parameter
-+ *
-+ * round the given value up to the nearest power of two
-+ * - the result is undefined when n == 0
-+ * - this can be used to initialise global variables from constant data
-+ */
-+#define roundup_pow_of_two64(n)			\
-+(						\
-+	__builtin_constant_p(n) ? (		\
-+		((n) == 1) ? 1 :		\
-+		(1UL << (ilog2((n) - 1) + 1))	\
-+				   ) :		\
-+	__roundup_pow_of_two64(n)		\
-+ )
-+
- /**
-  * roundup_pow_of_two - round the given value up to nearest power of two
-  * @n: parameter
-@@ -180,6 +217,21 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
- 	__roundup_pow_of_two(n)			\
-  )
- 
-+/**
-+ * rounddown_pow_of_two64 - round the given value down to nearest power of two
-+ * @n: parameter
-+ *
-+ * round the given value down to the nearest power of two
-+ * - the result is undefined when n == 0
-+ * - this can be used to initialise global variables from constant data
-+ */
-+#define rounddown_pow_of_two64(n)		\
-+(						\
-+	__builtin_constant_p(n) ? (		\
-+		(1UL << ilog2(n))) :		\
-+	__rounddown_pow_of_two64(n)		\
-+ )
-+
- /**
-  * rounddown_pow_of_two - round the given value down to nearest power of two
-  * @n: parameter
+ /*
 -- 
 2.47.3
 
