@@ -1,68 +1,112 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.15
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792563225;
-	b=Ju1iJFNj7P9NQb8NeUpTQdGhIg3qHQvV7aosj+qwEWKRFIotUq6zp0bqvkJ7IbH32sUa
-	 zUwGEZMpPAxNsYQGS1Qx86Yu8ehDzwNdxO2fvDg8LuuNBJllqA3Gqz0SXitQ/PwyS7J63
-	 egXjxlCc4ratHR75sF+m8fxuZRQpQjSb5dmOha+Snm62UEfzZeQH8wXEsnkFOuni1g/Cs
-	 eH1bsWoTzB+jjAI+MNHmZ2lNiEOZqeO2BimLayYkw95WGgpF547yM0oU1MAD0PRvOGrSa
-	 ZpcDytHlInCcsppBczHGARbGf5fZOYRrCJPNGHZaPC1wQboT1VEJtxobqw8VFd6Yfpg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792563225;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
-	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=POTt6D1OgauRrY8k1vEWEZeF2cYhNnrrsYVlV43I0WA=;
-	b=sPHmLwKxVvdCXrvUy/VbbbbDhS7vpC+G0Shu1DwLvYVzjzeqcmi0RiwLMv9kK3yi5nGY
-	 j5CcY1iYDoJlf2xtSCaGewh81Thfp+owGOI2JlNoeVIRyOp9WxCbVjO/AIPktDcNqdz3M
-	 Qi5BnhQWEvyNVx3Hx2MwmdJWPuMdAghY2wo9b4GCJeGxHIwWAhe/JOFs2CoGNTVKxJOVj
-	 8kFmC+x278w2gICnvZYgvfRj0hdB0unoJuPKPuOnD0rYuO3ZffRbA8ZQPE3vwMOB2eiT8
-	 OP3GWbVEl6IBcw/FjruBsCl8C1hPmu6tV9Eb4UFxaJZ3azWZ/SOkEe13Zz+EtaJN3Sg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Dz7CgAHA;
-	arc=none smtp.remote-ip=198.175.65.15
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.201.69
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792563281;
+	b=UMKW/wd45KEHiK0Rvxe0JEA1A2ClHcCwEHFGzhxxvjoHlIIczxp2oVb1LlUp4yIto1HJ
+	 sMus+vPDYVsaMyvsKzXJEWP2ibjlWGhxN2scba908xyT07eQLfr3pUOMQgZk7UW9o2xqz
+	 zkRtNqfB0bAYjmR0i9mX0l1cUgUWAfvpCe9lgtTYeWKLiFKrFu6mZVGFBJ+xJXCoU3ycV
+	 xzhGVNB+rBS/hhju6+OEgkncE0z9beBDJxJir0xA/i39v7u6BzFKHzzq1rc9FS4Sy6Sxs
+	 TTHT1Nz2U3v8gpQTTpqZEfqClSII+w2AJQNnW9JuWe5oT0yfwA1qm0DUKkwuDDyQ8/w==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792563281;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:
+	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
+	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
+	 References:MIME-Version:X-NVConfidentiality:Content-Transfer-Encoding:
+	 Content-Type:X-Originating-IP:X-ClientProxiedBy:
+	 X-EOPAttributedMessage:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-Id:
+	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=DFglQVB2I1WeCAmcAU1S5dQNMBLYQl+UnvNwZBlMLpg=;
+	b=5kAbTuQF1iuiVJjC5nA+U9IPtrcvuUgYvEQSBhfvgOX0ZRvjtx1JSO1BrzWso/mCuPcp
+	 wOuJWSi5adJLblR0GSJKYYZzuxbsOAUslf+dusQkU9G7iUVh5Zo5dPlHlAygVtl8XZrQw
+	 2JItwT+ThAP5t1gFjLKRe0vNiMJXwODTHi9BRV82WQj99onuLWvcgIEo4TcPmECvnCU2m
+	 7RVnSIpbUTeQOQveq19cCSJ24GRZDjZnd3qYLPu6FzN/TOH3bZTuafYQIjUdlc49RL6bZ
+	 aBS6eF2qdXSJhM5rsJAXIeDGGZd5NfS3uROGEQ6t11FH28jjZKpcobz+NqKJmNzj6iw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=nvidia.com;
+	spf=fail smtp.mailfrom=nvidia.com;
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=d1kUDU0F;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.201.69
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010069.outbound.protection.outlook.com [52.101.201.69])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47B45606A325;
-	Wed, 21 Oct 2026 06:13:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 47B45606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 125DA606A326;
+	Wed, 21 Oct 2026 06:14:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 125DA606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Dz7CgAHA
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1792563225; x=1824099225;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=zoRAmnpBls2Nylk53pHmCqUXQ+xNgPqiQAFCKXRHWUU=;
-  b=Dz7CgAHA95NsIn3nkFUb+8jUL7WoUt9bVQoq4JWe9h1fAXsR8Fy/fc9X
-   35n2EASQMdi4A4o01GR6xs+T9OMN8rlHcd0DaeCg0qmSW/PQMp1XWccVM
-   cV1qaUBcgdEUxJEtrVHEHPujejsL/hcVJlH5JwuLIi/TYX4o4/u0ZKDJa
-   3rZQfOSrR21RZMWCmRIUusBbQ+Qp9xhm3d1aTnaag6BJn2IcUEzMcweM6
-   iWupuQdX6oacllJ+u9q//Ndf1X5WB1i9PHEbZjYMtbsATbsfkK5EiFWWH
-   fzh7cn5qYZkORGdprUvFXM0t6lgcjl2YzGk5X2fEDAHXTaH0tIHV/tvNo
-   Q==;
-X-CSE-ConnectionGUID: Ji/Rw3dbSgqG7TzSz+cCSg==
-X-CSE-MsgGUID: 3BB1bHMSRte6axfiSIo7cA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11941"; a="1281495"
-X-IronPort-AV: E=Sophos;i="6.27,169,1787036400"; 
-   d="scan'208";a="1281495"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2026 23:13:44 -0700
-X-CSE-ConnectionGUID: q9De8LF1Tz+6m/1zFAuAlg==
-X-CSE-MsgGUID: cWHIF8jUQ1+92Y77y8Qvzg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,169,1787036400"; 
-   d="scan'208";a="2946911"
-Received: from blu2-desk.sh.intel.com (HELO [10.239.156.26]) ([10.239.156.26])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2026 23:13:42 -0700
-Message-ID: <2c840dcf-4292-4579-a62d-f9766b7cb780@linux.intel.com>
-Date: Wed, 21 Oct 2026 14:13:40 +0800
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=d1kUDU0F
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=XKl7nToxOvi6vnNMsT2Wvotq3+N7F+bVAnOjw+LZZKos5zwDddq3tYnsmLi8ynVmJT6H5Kj+Uj0lPpZT9etApyaeEhvTAGUE+OXnd5A6L33FaX78hfNHxi2F2UTYWlDYmHEgL/2CmuC5SxTavna3rLo0wn2vTTiJzYG+zt3F0L0TuqrWgD51JmCr6xIkGmxKhH4skCz+EQzqoZx5vF93ZFipNKjOjKvBxKS/fs0wkTN9i9lwlHSST6+kwCgcS1oLyi+ai8/9s/+3hmqzOy7FQ03c5nf7IzFHNxAN+BMZRngtZFnEwV/onUVJCEVefHrbxKD65aBNVhWD4JUgGdwx9w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=DFglQVB2I1WeCAmcAU1S5dQNMBLYQl+UnvNwZBlMLpg=;
+ b=Pz0af/UVIBU4V6DpuNQTy0uhGon51+SUm8M6/I4atN4IBbaukVNWP5RyVh10gn9k7ukDKeEFYwmu9evpdse4IC9TaJt6SN/+Q4zj60OG1BXY4hQiZS/FFrxckSjmJpK9teAJzjA+x5nlTNRq/yY8jjAC43oXXVUrRisvPx84y8hGwTX3ilbYmaC+CrxWrrAY8zFM58j1mGa/5oDMFLpH71h1biFAHUlbUnHXhaHCnDDQWAjg4dUnQ1dGoiUi8f1mgqPcDgk/40HeMfAkpr/rpGyNtPARWsiMsHn3mQzYtcvXTigTW/yQvQ072I/lR0kGIPLgfSxscUFlDDrzqKT4RA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.160) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DFglQVB2I1WeCAmcAU1S5dQNMBLYQl+UnvNwZBlMLpg=;
+ b=d1kUDU0FheZb85tEOZnRPmvy7DAS2iT5i9N9Jm4cYc0dVSUHEDLCuME8L87BjLhSKxSJFZit/alKNeuoesO2xfKVAy86sH/3dd2MleBVyjJ27mXLK8RkNakNk3UJ+KSjui3WBjnGkeqLEs+olYVr4vvOW7SCwReGbxK+A8EwkWv3PjStBfkDiiL5a88r9UmEELK/dJQJeXNOWsKBKNj+l7ifiv4QBYaLB9TgXagVdYynw2jYfxVgMNzD59XOGLtjrwcN7quGAVB67BjUg3iPKGO9PZ8RX4/v/25Go5vu4BtqR7qkvaYMiO11KoOWvaJlGL1hlpHXhds5Oa+/L+PjDw==
+Received: from CH5PR02CA0006.namprd02.prod.outlook.com (2603:10b6:610:1ed::16)
+ by PH7PR12MB6609.namprd12.prod.outlook.com (2603:10b6:510:213::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.15; Wed, 21 Oct
+ 2026 06:14:37 +0000
+Received: from CH2PEPF00000145.namprd02.prod.outlook.com
+ (2603:10b6:610:1ed:cafe::67) by CH5PR02CA0006.outlook.office365.com
+ (2603:10b6:610:1ed::16) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.496.5 via Frontend Transport; Wed, 21
+ Oct 2026 06:14:36 +0000
+X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
+ is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ CH2PEPF00000145.mail.protection.outlook.com (10.167.244.102) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.546.15 via Frontend Transport; Wed, 21 Oct 2026 06:14:36 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Tue, 20 Oct
+ 2026 23:14:20 -0700
+Received: from mmaddireddy-ubuntu.nvidia.com (10.126.231.37) by
+ rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Tue, 20 Oct 2026 23:14:14 -0700
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <mani@kernel.org>,
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <robh@kernel.org>, <thierry.reding@kernel.org>, <jonathanh@nvidia.com>,
+	<kishon@kernel.org>, <Frank.Li@kernel.org>, <vidyas@nvidia.com>,
+	<cassel@kernel.org>, <den@valinux.co.jp>, <marco.crivellari@suse.com>,
+	<andriy.shevchenko@linux.intel.com>, <linux-tegra@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <mmaddireddy@nvidia.com>
+Subject: [PATCH v2 02/10] PCI: tegra194: Check core reset deassertion
+Date: Wed, 21 Oct 2026 11:43:41 +0530
+Message-ID: <20261021061349.1265704-3-mmaddireddy@nvidia.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20261021061349.1265704-1-mmaddireddy@nvidia.com>
+References: <20261021061349.1265704-1-mmaddireddy@nvidia.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -72,138 +116,119 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: intel-iommu: DMAR PTE Read fault crash-loops a PCIe wifi device,
- v7.3-rc7 -> v7.3 final regression, reproduces on one unit out of five tested
-To: "Perlow, Jason" <jperlow@gmail.com>, Aditya Garg <aditya.garg@linux.dev>,
- dwmw2@infradead.org
-Cc: iommu@lists.linux.dev, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci@vger.kernel.org, arend.vanspriel@broadcom.com,
- linux-wireless@vger.kernel.org
-References: <CABZrw2GfC8SEPiGOUD42um57nKZAghjHz8N1DhMsw8sOC7OAxA@mail.gmail.com>
-Content-Language: en-US
-From: Baolu Lu <baolu.lu@linux.intel.com>
-In-Reply-To: <CABZrw2GfC8SEPiGOUD42um57nKZAghjHz8N1DhMsw8sOC7OAxA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-NVConfidentiality: public
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH2PEPF00000145:EE_|PH7PR12MB6609:EE_
+X-MS-Office365-Filtering-Correlation-Id: a02abf95-6cc5-4cce-714e-08df2f3a953a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|7416014|1800799024|36860700016|23010399003|82310400026|56012099006|11063799006|261009223027099003|10067099003|22082099003|18002099003|6133799003;
+X-Microsoft-Antispam-Message-Info:
+	syLXibJLqwUkHlAQwbns3njjbgX8IUmYJr6URa7Ibl4gdZ4qbioYD8iCgw563d0mBd5FuIv3elvoVZ3+39BwZlcTBo92MfBG6TH4WD92pkxiLdUg5fCnHHWshmi4LGqzKNw6vrob5Fg5olxHPWGgKKqnnEs4zG9mf37jsCeZbg2Br5O4FOiVFkbe1HokRjaGiVMuoPVMMPrsobCaAu8GI5Y6Sq3pmTvPX6vwYNHiJI11MzufFp4hUTbYCefB+w5AqJVO7dkMRKg0KscP0mjf8JHx8gI+JBstYwSXUl6SEzsUEr2GTPf5PU1CqqzeFbapS1N3QiyJ3IhxhpIc4kDhIazpBoDlDRs38J4vqvkdN3toBpIg5ZGRtOY5VgVkP9x7T5iwTpUPpb14OFISqVNNFzRD1bqf1pgPoAWLbASWMiaRx5xlfO8In3sxdIz/KxUKGwowTg4CL3SIPmYEcFSmWS1s2+CBJ+Dz4cKRhDFWYwIvcRlfO8LBValSZ3Ub4NG3LzFRLT0Mcu+sqRdC6wIuHumlWcQ0cRAAclQdk0bqQxBstQaZITQ4sK0zM1TtohIfrqAOo6fbSfMi9am5HFXYgvYasQZDe3l3914T+oNSXpJoUYg8RtNzlffZm47n/lFsvA81LSsRkuCXlctrPm4SWJwqLcrmq5jCKW26fG96S0XX2g5TWjrmQelxwn2PHkMfk3kR1YmTTY11kN9/G5f7kw==
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(36860700016)(23010399003)(82310400026)(56012099006)(11063799006)(261009223027099003)(10067099003)(22082099003)(18002099003)(6133799003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	1z2efdJvVSBwTva0iGcbM7sQ7bHdxSDb/38gzTJ1vVjAhSsQAgI6ltT/kob+k4Rth69wfyUGd7kS4iqmiJWWWARZ4Q/fFxiinhg4XelrR55P26085jXeK0o4GU48n8BCvWIO34hHtOUZ7j0LjJakjDrZhSX0pEZVlCR4Z6EvksWYURi8pKBglyqjUl2mknENlbQuNNWNKd3rOeYF3vGqmV13HaRmaMLG6RScujJLrJyqstIT97gGBU6vtOSjjt14mxqQ0eTKxud08AQnhiUZXulYNMR+Gu1bipQizFFIZjILA98hD7JNLhYjby4d+WqRgFNE51Hbwwu2c4Gp7CFwehGLSOCU3NXbZMz1pS00GevVPgZAKhGMevrNgBYOJOptwaqNCPJwmiRqvfT8X9Pmbrwb8CuDMKldRtdO5oIPzqBuPsfb9AxJojMKKMUImb4e
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Oct 2026 06:14:36.6563
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: a02abf95-6cc5-4cce-714e-08df2f3a953a
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	CH2PEPF00000145.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB6609
 
-On 10/20/26 22:40, Perlow, Jason wrote:
-> Hardware: Intel CoffeeLake-H platforms, various. The affected device is 
-> a Broadcom BCM4364 802.11ac PCIe wifi adapter (14e4:4464) at 
-> 0000:05:00.0 on an Apple MacBookPro16,1 (T2 Mac). Aditya, including you 
-> directly since this is T2 hardware; copying iommu/pci/wireless because 
-> the fault signature and the fact that it reproduces on only one of five 
-> tested machines looks like it needs eyes on the core IOMMU/PCI path, not 
-> the driver.
-> 
-> SYMPTOM
-> 
-> Between a locally-built v7.3-rc7 kernel and a v7.3 final kernel 
-> (same .config template, same patch series beyond one T2-specific AER 
-> quirk that is upstream in final and therefore held out of our patch 
-> set), the BCM4364 wifi firmware on ONE affected unit crash-loops 
-> continuously:
-> 
-> brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac4364b3-pcie for 
-> chip BCM4364/4
-> brcmfmac: brcmf_c_preinit_dcmds: Firmware: BCM4364/4 wl0: ...
-> ieee80211 phy0: brcmf_fw_crashed: Firmware has halted or crashed
-> 
-> repeating every ~6s, indefinitely. dmesg shows the actual mechanism -- a 
-> real IOMMU DMAR page fault on the wifi device, timed to the same cadence 
-> as the firmware crash:
-> 
-> DMAR: DRHD: handling fault status reg 3
-> DMAR: [DMA Read NO_PASID] Request device [0000:05:00.0] fault addr 
-> 0xffeff000 [fault reason 0x06] PTE Read access is not set
-> 
-> Four such faults logged at uptime 13.4s/19.4s/25.3s/31.2s, each 
-> immediately followed by a brcmf_fw_crashed event. intel_iommu=off 
-> removes the fault and the crash entirely (8+ minutes stable, single 
-> clean firmware load, stable AP association). The prior v7.3-rc7 kernel 
-> on the SAME unit has zero DMAR faults and zero firmware crashes with 
-> IOMMU on by default, so this is a regression introduced somewhere in the 
-> rc7->final window on this unit, not a long-standing issue.
+Several paths access DBI registers after deasserting the controller core
+reset. If reset_control_deassert() fails, those DBI accesses can trigger a
+CBB timeout, or setup can return success with the core still in reset.
 
-Can you confirm that the IOMMU is actually enabled and translating on
-the rc7 boot? Please check that boot's kernel log for:
+Check core reset deassertion in Root Port setup, the DLF retry path and the
+Endpoint PERST# deassert path. Unwind before DBI access when deassertion
+fails.
 
-DMAR: IOMMU enabled
-iommu: Default domain type: Translated
+Fixes: 56e15a238d92 ("PCI: tegra: Add Tegra194 PCIe support")
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+Changes V1 -> V2: None
 
-> 
-> REPRODUCES ON 1 OF 5 MACHINES TESTED
-> 
-> We ran the identical kernel build (and, where applicable, the identical 
-> firmware blob) across five machines and only one faults:
-> 
-> * Affected unit (MacBookPro16,1, T2, BCM4364 wifi): faults as above.
-> * Second MacBookPro16,1 (same generation, different configuration within 
-> the 16,1 line -- we have not enumerated every hardware delta): same 
-> kernel binary, same firmware blob, IOMMU also active by default (iommu: 
-> Default domain type: Translated, identical to the affected unit) -- zero 
-> DMAR faults, brcmfmac stable.
-> * Three non-Mac x86_64 machines spanning three more wifi vendors (Intel 
-> iwlwifi AX201, Intel iwlwifi Centrino 2230, Realtek rtw89 8852BE) -- 
-> IOMMU active and translating on all three, zero DMAR faults, all three 
-> wifi chips loaded firmware and ran cleanly.
-> 
-> So across four different wifi silicon vendors and five physical 
-> machines, IOMMU is actively translating DMA on every one of them and 
-> only the single affected unit faults. This looks like a host-specific or 
-> hardware-configuration-specific trigger rather than a blanket rc7->final 
-> regression that would hit every machine with this kernel. We do not yet 
-> know what distinguishes the affected unit (ACPI RMRR table contents, 
-> exact PCIe link training time, and IOMMU group/domain-attach ordering 
-> are the candidates we have not yet isolated).
-> 
-> WHAT WE RULED OUT BEFORE WRITING IN
-> 
-> * AER/ANFE quirk on the T2 Secure Enclave device: its PCI ID match is 
-> exact (Apple SEP, 106b:1802) and does not touch the wifi device 
-> (14e4:4464); real PCI topology on the affected unit also shows SEP and 
-> wifi on separate root ports (00:1b.0 -> [04] vs 00:1c.0 -> [05] off the 
-> PCH), so there's no shared-root-port mechanism either.
-> * brcmfmac driver source: git diff v7.3-rc7..v7.3 -- drivers/net/ 
-> wireless/broadcom/brcm80211/ is empty.
-> * Our own config template: byte-identical between the rc7 and final builds.
-> * The upstream Kconfig stanza for INTEL_IOMMU_DEFAULT_ON (drivers/iommu/ 
-> intel/Kconfig): byte-identical text between v7.3-rc7 and v7.3 (default 
-> y, no depends on).
-> 
-> THE ONE ANOMALY WE CAN'T YET EXPLAIN
-> 
-> Despite the last two items above being unchanged, the actual 
-> generated .config has CONFIG_INTEL_IOMMU_DEFAULT_ON unset after make 
-> olddefconfig against the rc7 source tree, but =y after the same process 
-> against the final source tree, even though our template explicitly 
-> answers "# CONFIG_INTEL_IOMMU_DEFAULT_ON is not set" in both cases. Our
+ drivers/pci/controller/dwc/pcie-tegra194.c | 23 +++++++++++++++++++---
+ 1 file changed, 20 insertions(+), 3 deletions(-)
 
-If CONFIG_INTEL_IOMMU_DEFAULT_ON was not set in your rc7 build, and
-intel_iommu=on was not on the command line, the Intel IOMMU was
-disabled by default on rc7. In that case, rc7 could never report a
-DMAR fault, and the "regression" is only that v7.3 final enabled the
-IOMMU.
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index 6104a22d930e..89dbef83dd9e 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -954,6 +954,7 @@ static int tegra_pcie_dw_start_link(struct dw_pcie *pci)
+ 	struct tegra_pcie_dw *pcie = to_tegra_pcie(pci);
+ 	struct dw_pcie_rp *pp = &pci->pp;
+ 	u32 val, offset, tmp;
++	int ret;
+ 	bool retry = true;
+ 
+ 	if (pcie->of_data->mode == DW_PCIE_EP_TYPE) {
+@@ -1009,7 +1010,12 @@ static int tegra_pcie_dw_start_link(struct dw_pcie *pci)
+ 		appl_writel(pcie, val, APPL_CTRL);
+ 
+ 		reset_control_assert(pcie->core_rst);
+-		reset_control_deassert(pcie->core_rst);
++		ret = reset_control_deassert(pcie->core_rst);
++		if (ret) {
++			dev_err(pci->dev, "Failed to deassert core reset: %d\n",
++				ret);
++			return ret;
++		}
+ 
+ 		offset = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_DLF);
+ 		val = dw_pcie_readl_dbi(pci, offset + PCI_DLF_CAP);
+@@ -1455,10 +1461,16 @@ static int tegra_pcie_config_controller(struct tegra_pcie_dw *pcie,
+ 		    pcie->atu_dma_res->start & APPL_CFG_IATU_DMA_BASE_ADDR_MASK,
+ 		    APPL_CFG_IATU_DMA_BASE_ADDR);
+ 
+-	reset_control_deassert(pcie->core_rst);
++	ret = reset_control_deassert(pcie->core_rst);
++	if (ret) {
++		dev_err(pcie->dev, "Failed to deassert core reset: %d\n", ret);
++		goto fail_core_rst;
++	}
+ 
+ 	return ret;
+ 
++fail_core_rst:
++	tegra_pcie_disable_phy(pcie);
+ fail_phy:
+ 	reset_control_assert(pcie->core_apb_rst);
+ fail_core_apb_rst:
+@@ -1853,7 +1865,11 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
+ 	      LTR_NOSNOOP_MSG_REQ;
+ 	appl_writel(pcie, val, APPL_LTR_MSG_1);
+ 
+-	reset_control_deassert(pcie->core_rst);
++	ret = reset_control_deassert(pcie->core_rst);
++	if (ret) {
++		dev_err(dev, "Failed to deassert core reset: %d\n", ret);
++		goto fail_core_rst;
++	}
+ 
+ 	/* Perform cleanup that requires refclk and core reset deasserted */
+ 	pci_epc_deinit_notify(pcie->pci.ep.epc);
+@@ -1927,6 +1943,7 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
+ 
+ fail_init_complete:
+ 	reset_control_assert(pcie->core_rst);
++fail_core_rst:
+ 	tegra_pcie_disable_phy(pcie);
+ fail_phy:
+ 	reset_control_assert(pcie->core_apb_rst);
+-- 
+2.34.1
 
-Could you boot the rc7 kernel on the affected unit with intel_iommu=on
-and see whether the same fault shows up? If it does, there is no
-rc7->final regression in the IOMMU code. It would be an existing DMA
-issue with brcmfmac/BCM4364.
-
-> working theory is that some other symbol started selecting/implying 
-> INTEL_IOMMU_DEFAULT_ON between rc7 and final -- which would override an 
-> explicitly-seeded "not set" answer during olddefconfig resolution -- but 
-> we have not identified which one. Happy to bisect further, or provide 
-> the full .config / additional dmesg, if that would help narrow it.
-> 
-> CURRENT STATUS
-> 
-> intel_iommu=off on the affected unit's kernel command line is our 
-> accepted fix for this specific machine while the root cause is 
-> unresolved; we are not disabling IOMMU fleet-wide, since four of the 
-> five test machines show no problem with it on. Posting here in case this 
-> fault signature is recognized, or in case others on different T2 or non- 
-> T2 hardware see the same thing on v7.3 final.
-
-Thanks,
-baolu
