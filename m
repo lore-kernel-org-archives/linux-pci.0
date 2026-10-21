@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792566025;
-	b=Yp42EFriXMR2jW6LW0RYzLN3TRCiER+zu2W2P8iyoQwUbulyRUqMTMiIaa26jcI3BPP/
-	 a7cidtnNu3ELUUPxERvyh4mRwt1pPyyuKjYDvqE+7ji3/bEJdK7HltcBIvzXb71auhnBK
-	 0BCYaj9AnZYjvyOs9BQtX5eLdvEDbMoBobS5VDoJDkDszYY6yj4/hy2ZH+iRNFS35qcFa
-	 erdhbayb6AhvTzLevy3zwbN99KOZ1yJ90uAX7o5Yq8Ztfdi5rHR+V9Fl1kY1CiikpWQ/F
-	 nx/r4kPl2EotEfIYNK+wBph1LdQoF5+vUW24YCD1o+S5KLOSM9wRXGHsoq1GyoVG6rQ==
+	t=1792566759;
+	b=N+iPRbrYmxp4iD2fiRnQgusqDSBiY0xZGWiqq3cKEjJ0IfQZNFXsZp2bDAR1k3VH+Dr/
+	 EsSdjqByhxNBQzJLXu1L4DvLlMtj3JmyYmUnxFz2HbDFJ60+A+hm+HtDfYMWXewG+5LX5
+	 yVcRdGA2pvdufs6K2wZAsm+F8E+XzKWdef2ATEbQMf3Ps7eLrIZ0gi0/8elx1OWsHyrI2
+	 7fUsPulprLe8TbpuHrhwWgA+J2u4s4OZWnfGTNn5AphP+aYFYqoYc6VVX6iay/tdwXLHD
+	 ERneEzZFZbftfWxwdexuwCDLZ6eWiQ1ZDzrYMBplvBf1iRaAueIfKh3/ggEiOwJy9Sw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792566025;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=D0U7LD+1OMXi9F3KB4i2r9piHjp3wjEVg+hH9Yd6jj4=;
-	b=xM11TNtrByJh1Rdq6GTxRDDbzSWp94XAgcPy/hUr+rLIHwA4mBNnGzQqIoFScM2zCMXg
-	 dY9Ai4REZy+7LfgoN8Gz5F8EaHuI9V+dnHdMZCZcSCEXfDDbo15gEEUi5QIzqcFnMLxvz
-	 jdAI9BKFxq36JbawB11N/iYo37tc+VeAe70ugZIHkj6bhGrWfk/21aH3cvAQGi12rYRLW
-	 laG5y+m9IqGBgY1K5Wj0T1WQETSZw40O9Jq2Y5OCZ9tYgAG9bu9E4NBgZPzEh5otF4XlZ
-	 /umPrB7+gLw2yL5lyH2OxrZBO8bABDtmiMfzKa4PGkdrq0BbZpuB/6Qer288kcWQqXA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792566759;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=vcc8SXBf3xzir4Lak2b1xe9rdcx6QX+V+Egzn2h6A1c=;
+	b=ZjSmMYvYvZC4e9k9fM2LcNMFn5gLDnKgw5DD234oK9L0IodyEZFIiAYPfN7u4MMuU9NM
+	 xNb0jrtzuQfX0Ve6UvklVQMBl33kmvnbd/TnB+qeovkHxBNXUkRV0UK76nWoZxv4W0ydW
+	 zF1qs1aB+CETcz2D3zGsIZXlAuQc2nZmsOa9zeTru0H2xUX39O7oFkuuhYMf61pkzA52p
+	 KIUScDsSQV6UQXXa5UDoaftfJVD2R5gtA2QR5dTAtiFjLfemC3c6XV6gYtHx4+Fz7kFMT
+	 w8ROkxbAw9/entrc/cOxsFnv/V6LZLOlfLgM4keDiuUdMX1+0v0kd/b4aLV7pXjqJcA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=liZX9ibL;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OUGGIcKw;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19C0B606A319
-	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 07:00:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0175D606A31A;
+	Wed, 21 Oct 2026 07:12:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=liZX9ibL
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73D661F000C9;
-	Wed, 21 Oct 2026 07:00:22 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OUGGIcKw
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 801BC1F000C9;
+	Wed, 21 Oct 2026 07:12:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792566022;
-	bh=D0U7LD+1OMXi9F3KB4i2r9piHjp3wjEVg+hH9Yd6jj4=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=liZX9ibLUC9l7SuQz2950F/YySZAEPAsxWpsWN1H9nxixB8MkojZ/713aVDrwPQSk
-	 MLMQClJvVBccBdbEnA9UX7ZrCVKxM4FtwxfMYdkcZpEpAuhQqL6eskyn4qa1DAd7wt
-	 NlACMO0YNLhPJnuxQabn1vgzY9I+rKl+jKzUduBLUCwfHWsc8oerOoA/SUibUauA+W
-	 0g9bIG7p712LxAwC53Id/bDxqwCZ1MN0L2+bFbQlymqK1Kp5DQb9psqshcD1Yyg5Ip
-	 DOQ73zU20mRSsBEaTlKrXI6B6wvOuTIkHU5U7kc8xQOAd7hmbM2C2kc0ZiXf2asasp
-	 47mnPdA292PnQ==
-Message-ID: <sashiko-outbox-179851@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 3/3] PCI: tegra194: Notify Endpoint functions on
- PERST# assert
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manikanta Maddireddy" <mmaddireddy@nvidia.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261021061903.1269605-4-mmaddireddy@nvidia.com>
-References: <20261021061903.1269605-1-mmaddireddy@nvidia.com>
- <20261021061903.1269605-4-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 21 Oct 2026 07:00:21 +0000
+	s=k20260515; t=1792566758;
+	bh=vcc8SXBf3xzir4Lak2b1xe9rdcx6QX+V+Egzn2h6A1c=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=OUGGIcKw/ZpSSVUcfi/IzHJ5QKybdiuYXAxvT05egGZKsQADdJaBBEfRmdYkHPvF0
+	 viZQPBWPUkAyrESwHjhGa8fBWj3fyuRghvzat9in5IKLrDi/GIFLoKPhMcQQKA9nBR
+	 IGRgh1qiR8gjtqTv1ZS5yvTaCHlU3pmqr8ph/4agYSNtQrSxOr3mQtzU1sLCb/Ezbh
+	 ruHH+lnSo/cqH/LUJuC6u7PUDRLFHj8Ocufzshx0QdBKHX3nqZRfsXr8bExWR5hpXj
+	 A9XFS833HE8N7WqD7p0DBPHpBjZ6lPchk3n1CiMKJgKFqGCsqt+gSzDcd4W0D5oSx6
+	 R01iqAErv5Haw==
+Date: Wed, 21 Oct 2026 00:12:37 -0700
+From: Wei Liu <wei.liu@kernel.org>
+To: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+Cc: sashiko-reviews@lists.linux.dev, linux-hyperv@vger.kernel.org,
+	linux-pci@vger.kernel.org, Wei Liu <wei.liu@kernel.org>
+Subject: Re: [PATCH 2/2] PCI: hv: add vPCI device reset support
+Message-ID: <20261021071237.GC851443@liuwe-devbox-debian-v2.local>
+References: <20261016235940.942090-1-hamzamahfooz@linux.microsoft.com>
+ <20261016235940.942090-2-hamzamahfooz@linux.microsoft.com>
+ <sashiko-outbox-175060@kernel.org>
+ <atYPfibVVa+nyyb9@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,86 +59,94 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <atYPfibVVa+nyyb9@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] PCI: tegra194: missing stub for pci_epc_linkdown() when !CONFIG_PCI=
-_ENDPOINT
---
+On Mon, Oct 19, 2026 at 08:39:26AM -0400, Hamza Mahfooz wrote:
+> On Sat, Oct 17, 2026 at 12:12:00AM +0000, sashiko-bot@kernel.org wrote:
+> > Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> > - [Low] PCI: hv: hv_pci_reset_device() passes 3 arguments to wait_for_response()
+> > --
+> > 
+> > commit 5767f2b6950e5dc7da0b5c142f971d8282c27a56
+> > Author: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+> > 
+> > PCI: hv: add vPCI device reset support
+> > 
+> > This commit negotiates Hyper-V vPCI protocol version 1.5 and implements the
+> > reset_root_port() callback on pci_host_bridge by sending a PCI_RESET_DEVICE
+> > request over the vPCI VMBus channel.
+> > 
+> > > diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> > > index 89816a2bd7cd3..4bb4ca6da1f7b 100644
+> > > --- a/drivers/pci/controller/pci-hyperv.c
+> > > +++ b/drivers/pci/controller/pci-hyperv.c
+> > 
+> > [ ... ]
+> > 
+> > > @@ -1397,6 +1401,52 @@ static int hv_pcifront_write_config(struct pci_bus *bus, unsigned int devfn,
+> > >  	return PCIBIOS_SUCCESSFUL;
+> > >  }
+> > >  
+> > > +static int hv_pci_reset_device(struct pci_host_bridge *bridge,
+> > > +			       struct pci_dev *pdev)
+> > > +{
+> > > +	struct hv_pcibus_device *hbus =
+> > > +		container_of(bridge->sysdata, struct hv_pcibus_device, sysdata);
+> > > +	struct pci_child_message reset = {};
+> > > +	struct hv_pci_compl comp_pkt;
+> > > +	struct pci_packet pkt = {
+> > > +		.completion_func = hv_pci_generic_compl,
+> > > +		.compl_ctxt = &comp_pkt,
+> > > +	};
+> > > +	enum hv_pcibus_state state;
+> > > +	int ret;
+> > > +
+> > > +	/* Do not take state_lock: eject holds it while removing/locking pdev. */
+> > > +	state = READ_ONCE(hbus->state);
+> > > +	if (state != hv_pcibus_probed && state != hv_pcibus_installed)
+> > > +		return -ENODEV;
+> > > +
+> > > +	init_completion(&comp_pkt.host_event);
+> > > +	reset.message_type.type = PCI_RESET_DEVICE;
+> > > +	reset.wslot.slot = devfn_to_wslot(pdev->devfn);
+> > > +
+> > > +	ret = vmbus_sendpacket(hbus->hdev->channel, &reset, sizeof(reset),
+> > > +			       (unsigned long)&pkt, VM_PKT_DATA_INBAND,
+> > > +			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+> > > +	if (ret)
+> > > +		return ret;
+> > > +
+> > > +	ret = wait_for_response(hbus->hdev, &comp_pkt.host_event,
+> > > +				"PCI_RESET_DEVICE");
+> > 
+> > [Severity: Low]
+> > Does this compile when CONFIG_PCI_HYPERV is enabled?
+> > 
+> > In drivers/pci/controller/pci-hyperv.c, wait_for_response() only accepts two
+> > arguments:
+> > 
+> > static int wait_for_response(struct hv_device *hdev,
+> > 			     struct completion *comp)
+> > 
+> > Passing "PCI_RESET_DEVICE" as a third argument in hv_pci_reset_device()
+> > causes the build to fail with too many arguments to wait_for_response().
+> > 
+> 
+> Not sure what tree this was applied to, but that function has 3 params
+> as of mainline commit ca039df94983 ("PCI: hv: Warn when
+> wait_for_response() waits indefinitely").
 
-commit 670ef998037ee122764995c2ef40bfe453687d53
-Author: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+The link ...
 
-PCI: tegra194: Notify Endpoint functions on PERST# assert
+> > Sashiko AI review · https://sashiko.dev/#/patchset/20261016235940.942090-1-hamzamahfooz@linux.microsoft.com?part=2
+> 
 
-This commit notifies endpoint function drivers of link down when the host
-asserts reset in pex_ep_event_pex_rst_assert() before disabling the
-controller. It calls pci_epc_linkdown() directly instead of
-dw_pcie_ep_linkdown() to avoid reinitializing registers when the reference
-clock may be unavailable.
+... shows that it picked git.lwn.net/docs-next (90d9f76ccb72ec024ef476b4229f3dd1957d7b26).
 
-> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/con=
-troller/dwc/pcie-tegra194.c
-> index 8cb907dbf6356..8dede9531956d 100644
-> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
-> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> @@ -1704,6 +1704,9 @@ static void pex_ep_event_pex_rst_assert(struct tegr=
-a_pcie_dw *pcie)
->  	if (ret)
->  		dev_info(pcie->dev, "LTSSM state: 0x%x detect timeout: %d\n", val, ret=
-);
-> =20
-> +	/* Avoid the DBI register reinitialization in dw_pcie_ep_linkdown(). */
-> +	pci_epc_linkdown(pcie->pci.ep.epc);
+It looks like it is hallucinating.
 
-[Severity: Low]
-Does calling pci_epc_linkdown() in pex_ep_event_pex_rst_assert() break the
-build of drivers/pci/controller/dwc/pcie-tegra194.c when host mode is
-enabled without endpoint support?
-
-In drivers/pci/controller/dwc/Kconfig, host mode selects the common driver
-without requiring endpoint support:
-
-    config PCIE_TEGRA194_HOST
-    	tristate "NVIDIA Tegra194 (and later) PCIe controller (host mode)"
-    	depends on (ARCH_TEGRA && ARM64) || COMPILE_TEST
-    	depends on PCI_MSI
-    	select PCIE_DW_HOST
-    	select PHY_TEGRA194_P2U
-    	select PCIE_TEGRA194
-
-In drivers/pci/controller/dwc/pcie-tegra194.c,
-pex_ep_event_pex_rst_assert() is compiled unconditionally. However, in
-include/linux/pci-epc.h, pci_epc_linkdown() is only declared inside the
-endpoint guard and has no stub in the fallback block:
-
-    #ifdef CONFIG_PCI_ENDPOINT
-    ...
-    void pci_epc_linkup(struct pci_epc *epc);
-    void pci_epc_linkdown(struct pci_epc *epc);
-    void pci_epc_init_notify(struct pci_epc *epc);
-    void pci_epc_notify_pending_init(struct pci_epc *epc, struct pci_epf *e=
-pf);
-    void pci_epc_deinit_notify(struct pci_epc *epc);
-    ...
-    #else
-    static inline void pci_epc_init_notify(struct pci_epc *epc)
-    {
-    }
-
-    static inline void pci_epc_deinit_notify(struct pci_epc *epc)
-    {
-    }
-    #endif /* CONFIG_PCI_ENDPOINT */
-
-Should a static inline stub for pci_epc_linkdown() be added to
-include/linux/pci-epc.h so host-only configurations continue to build?
-
-> +
->  	/*
->  	 * Deassert LTSSM state to stop the state toggling between
->  	 * Polling and Detect.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261021061903.1269=
-605-1-mmaddireddy@nvidia.com?part=3D3
+Wei
