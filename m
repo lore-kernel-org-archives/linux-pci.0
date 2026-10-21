@@ -1,100 +1,87 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.49
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792608694;
-	b=KQMRBR//6pKdrpUhfD7xCdSHQVcX2uqwaVos1OAMe4lfaWVBvLKfpov2GIzEqRzf7PvL
-	 A9Zo9+6q+2OapI6Tc1Y0ch0odZMUjFIIq02TM1OuYfHDXBg05ojHXSExzJO3ZX+brHcl7
-	 9y80urciqBDNwBa3d3fIB/3lU2Ef9XmQeG2X2/Vctb1bMLX/5djbVUOdX4yTjVMRntirX
-	 G/C/uYIwFbkpttMurDXgOxY0WY3n+Gkaaw0jSy9LASdG/mwjzFa86XcrU9fD5xjLcwgM3
-	 S/x+Rqy6SYIKMHTmKcisZN+kOR4fCRSs2faQs44g38sSzZbUYoRKggaD/5NQ7u040JA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792608694;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.231.134
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792609026;
+	b=zCZwCoW2L3PUoQBoe6Kin0d9R1EEUc14Ov5zZJgm7e/VFBQsvuTAbz6dYrnOYS7yITJ9
+	 fOSWYnp8kILCFF2wVB3k9smKvpEENCbdtrrbIVRizfbRWeWYSyn0U08hTot6dp+aBB8Rk
+	 QawIkh+/Tl/LPLorcYGHL1C00GCkqPO+cLhFtv8/XzgoxxrM3mvIYgQwJzFcxA4KssPXJ
+	 YRZT/6iogkzw588cVe9hGg1Ebk6Ponmx4JQWBE7Sb0A3RUUrlDKvDbzkZDjgqqCmYL4px
+	 yDZjYTRhxxLgwSfXAddvAf4ysdJbJ6Ffqi94GsQHHEBSaSYjHOpeEEV9aQrWVybrjYg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792609026;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=V2oW+YxRWdAsPD4uJs1XKcHYT7T/4QzyNKf44tXuYtg=;
-	b=CFW0tlc+uRyZ9+1HcQoSYEDDiegNOsYL8R797PTnrJ8NUtHMej3ABbLppcFFaiFyo1q7
-	 vlldz0OJJJdYdqIGujxu2KKYrZ61xeI7Okfsu/rOBZjkXwZcmjkdnPsCIO07YD71yGgHz
-	 oG5vRv4c1gdecFbjixL2RnbmTfcdDTSgXWTVifI8V/g87l8l/mhvtccIKRYI8ate33abg
-	 yGfRDDO2bgUkEgvatodzDBkowMGy57cZ0Ou2P1lg/TdXw/AjSbTpV/hUhC24NXZemZLOL
-	 NSrkrG2L/G1EFHQVMXXm/A4slIIxyFe82nZYcPOksa40t1Ng3gKvHmRIJzxGFvNwVsg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=soleen.com;
-	spf=pass smtp.mailfrom=soleen.com;
-	dkim=pass header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b=HlE8O8AN;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.49
-Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:Date:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 Message-Id:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key;
+	bh=ogfEpVoNGCmkg6dBBDlzC30lc+A0Pk8UmaytNLyYguI=;
+	b=kquQbLeS5ebtubTLyhzwb70paIMQH+2uzeiAMXoXE+rds8g/YUX9KSq+6Im8cVlKKZ3G
+	 YrBO6BPlVokdRM+pbL55fpomlk+CNVxjT+mlXTi+mQafBMWaZmGzwgXgRZaq00xq8zJlc
+	 3Ev0ublI5rpqf4yWPF1fcllXn3zBDX93R9mtjmVG2mX9CwGJGo63Q0CQ1Nt8z+sW69Fne
+	 OEIFrC/zlQCoRbw1zuHD2kWy6jjAHhfDMOo8Em741sp3dYvlpjcLUjVY7fPPJa49q6noB
+	 euJB1o3nXlvRNUTsqCUfdm9BpzOJ6uvrkDBHW/KCeyZkUPXixoqIjIU7HlYYuWWDbIQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=tCh1eE2e;
+	arc=none smtp.remote-ip=74.125.231.134
+Received: from mail-oo2-f6.google.com (mail-oo2-f6.google.com [74.125.231.134])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF2EF606A31A
-	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 18:51:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EF2EF606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCBF2606A31A
+	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 18:57:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CCBF2606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b=HlE8O8AN
-Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-6ae14eecc64so1465388a12.1
-        for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 11:51:33 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792608692; cv=none;
-        d=google.com; s=arc-20260327;
-        b=VvSG4XMgP6x7whuL2S2AT5NNkeiSqNXFrdbsOXIrufJlmVR3/DJk0iDr9Q/kJnfuz7
-         rkzyzdqIgWf+WKLAraN0VrbYwIMR+mBMtrMg9vy7WCIdHQ0RvJ8XII02me0/eGiCh8P+
-         /JLDFoOt3R7u01QYfHnPuiTD4BsRC/TH/KVkohCXB+HiF24NtA9kSN6hA0MwWGtuqdyw
-         3PNaNwJSLJZ0EnQ1R8FMHNxljfOiUYoBU5SdgM9Sr9moPK2dNYEuEshwL/EDeVSJX3Vx
-         p/zpmZCtY2MBZ1LCZkFnfNlYVAR2XyOjMh7pedmw3tVqQM6mubSwLwRKW6JeIOttIjSL
-         5dDg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=V2oW+YxRWdAsPD4uJs1XKcHYT7T/4QzyNKf44tXuYtg=;
-        fh=dePFsug+VMnU99LtpJTEIPmX6AC5f1A7Fq6Z+gEAyy0=;
-        b=PIijezKy3Jiaa9sTjkZrSIsADz923D/qPHpBQsdzX4ZsDSIykjxZeP0EtfsnFqV1qx
-         lFElmQWOi/sWRiB4Hc8afjtG7QI4hYIz/TOXwockreaH9ZMU5GuCHP1JDExGBw5bt/tA
-         AtrSHkZreQxyOVvj6pfTHqfoQlWUuHDZ7+GZrlZOcQOCGReLkundtnETa2NeLDPRVkdS
-         ImXADXNsUIDDWYA2w3V2M2Qhkvr8OcUuFeaegMdqtMDoUgd8UuuU2S6aClX4ecjMomg4
-         61g67aQOFBqB5EikcSxEua+TJui1+sgzFy7UuR2693MRASGwl/4yDZ7lop5Y/DeV4dmP
-         9p/A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=tCh1eE2e
+Received: by mail-oo2-f6.google.com with SMTP id 46e09a7af769-8217177c5daso130124a34.0
+        for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 11:57:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1792608692; x=1793213492; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=V2oW+YxRWdAsPD4uJs1XKcHYT7T/4QzyNKf44tXuYtg=;
-        b=HlE8O8ANX0EKpSe16g+iBaKuq+PflNI/nF8nfZx6q4OaNXjnD3WcfTP3ZxUZ6C5yww
-         AQBlVf8uKRAHdsAZlJ3nOI2KRDtgeKEzjh6KweWDxu1SToMmLpwutL5+Lhr+woZoPbMT
-         N1VnHlS+CynNKAT7F1IUt5thcgbaiveM8ggBR3Nw16XMDjcQGNRcVcNo5SDcaGJ27VgC
-         SQZcks2KlihqbrkzWQ6XLWFtJ/xz9Gpgi9JXe2qQ02aMC2CNEezI26fvbSwiRyYprEUe
-         g6GxU5sGPGr92AGt2GfoO7lQG5xEts7k+b+8LB52OVC6Pn4O+EIbicTODb4yWZNAA2oj
-         0ngQ==
+        d=gmail.com; s=20251104; t=1792609025; x=1793213825; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=ogfEpVoNGCmkg6dBBDlzC30lc+A0Pk8UmaytNLyYguI=;
+        b=tCh1eE2e0+7jkZ1B1SoN7jAIA4z4NOzY1fgvUVyq/2JbD7Sq5KWN4ik3JjqI+/Y4j/
+         VJPq+1yofQW3G1qFevcyKTDXc2RuPL6FhJUHMKZmAGZAsIJcONSXje0JoHo7wU14yBml
+         sJKnACtCDolcxQshkLQlYOpi1GPsWsciY4pSpApOk5Pkb/3ONTswCctriFM5n2Wo3dQl
+         shhRAuDapTUJC0O4oPZYZIQ1TlmRKzNMeY1CbEUBqFgfbZhxAJ5ctm8muZcKxGcs1svI
+         zYc2EpkhQsw8oIxeR4m/knczJi4x0zees3VM+vtJptIpGedpVaDhTuYATBzrTdR+kXqv
+         c76A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792608692; x=1793213492;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=V2oW+YxRWdAsPD4uJs1XKcHYT7T/4QzyNKf44tXuYtg=;
-        b=aX1dr5cTLGLdLBXjdFFRcWTnrIzPqXqybVlpqVHrDtxFB02k3AMmQ5EVutDrB0oNp7
-         Oi8r+q94uSaXndkSgGpr7t1yMwWjJg1duXMYzku2wH9QL5fb5ndTTh+EwuLLkqw0x25D
-         VGiU+dzgbyI3L0eWGReHhqZjpM0ziFro2tvAKK/c8cMZUTpKkgLqyEg52+30b+sp3gBX
-         tK1OcO4jkwfBLFyYuYKrWb4rbDWyhmV19BBRf3q4g05xxQY/HmIm267fyIpxqucKIYR5
-         ACKJ8wIzs+i/g48utRGSg4ozJquhTEsQm3Q6FNIfY77Xjg3Kto+FeRvsk4HVChPCBUgS
-         VBOg==
-X-Forwarded-Encrypted: i=1; AKwUvBx/Q5dTbLqv+SdOA2p1I9AcLP6/Ft4n314bJKuke8ZGZT8k1rAP/JUuE7RZrsAUMIJNcnSIr81Frn4=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLf9JpbZs7HecVb+yV5AyyWFmCT940edz6CGJ7kV5CgGzK/BhzY
-	+2ROMMWkPZzBWcj+mK9bJJ3EoKXm4JY2ZCiq2ZhPOg3s4LeN7lNnHzpY0dXlLqmhQP6pq2JsgHJ
-	GPSsSij5FVv4VzQYTKO471yQcGhtEMQiGOk8czB4ffQ==
-X-Gm-Gg: AYBFou2mhIZk9oh57ioiDuTHkOABcU6GKGKdNYJliKhhIU2DsVZrcmbT6imqlV4oPwn
-	0Ra7+d0fnUMnFTt9+PAAr3/T8czHmqlYaZcBFy8HdmYs2D3wfjd0EpJ+46+LO7LCIUbjJjd5u4L
-	LuLK65PQWczQZo/sKXFiyrdchcj9eG5GPFTXeFsGfYC0JanLB3okMgoSPjz+XluwwNoHAJ4MU0x
-	xkhVTO+dCGf+B1KjzPdjvZN/WgHILoNiEBd74Ne7x/lyRdTbbX8r3VB243o7NHJAO4ZzUrJwB0D
-	KkWoODeMC/R/7kdHw9nfWQxcQPMT6pf7yVQsUVy0r2xICWsj8MyaQqavzDTt7rA7/NzkRSjg1mA
-	IBb+Tftn0hPgiDqOtvG3h5ayL2OszMy0KngbsJOqhiPM9kMOd3nqj3R5VJh+sKrUDQQQ=
-X-Received: by 2002:a05:6402:241a:b0:6b4:1df2:244e with SMTP id
- 4fb4d7f45d1cf-6b41df242e6mr53870a12.38.1792608691873; Wed, 21 Oct 2026
- 11:51:31 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1792609025; x=1793213825;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=ogfEpVoNGCmkg6dBBDlzC30lc+A0Pk8UmaytNLyYguI=;
+        b=1fdfZ6QC7SC38DHyjjWo0aU6inilYj2vtObs3EzCRfcjEgCndYlk6Zkd1GUGw/0/mT
+         W7ZrWhNyaWF3LSWGF8vbEwPRk4DcIfKsmKDUxMWo8HZ5PnnKSNmL1u9FiGfZ99XomCRs
+         sEjwPUyX2AhXui/nqt6O9+rvc9wKk6kiUuCmd3KoSpP8iujpisxW02TJy/KZK5LLi6Qk
+         +2WYwDqip8EpxGAvRhsKJPr3fKY3k/P2Vm8rfbeB74HbL9f+j0GZnpEXLVhc7FMRmwtG
+         xhONlmN3Mwa7zYIT8jxTzWjs+A77+5QSQniC9KMcQ4CYh9i937waLCcmbhO9ogEeR9sz
+         2/NQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxsUbBAhO+zoDrW2WtX287V66NB7c+SbivQtXxeS+coXZDsQn4lfKtsSVc+cCouNkVdb7sfHHbC1s8=@vger.kernel.org
+X-Gm-Message-State: AFq9FYLe8ncklFNZBskn9auFE/QYSphIMMNc8zCVkpa6gVOBjN2aOHcs
+	gU4oMxVJNVq0jtReva0af0axcjfjPamvgJ8cNjUI1d0bzqAwubgb1qVB
+X-Gm-Gg: AYBFou3S26V9iARQxgxPGO8URJ79+bvuXIXa7/AM+P9h0ThJdnIHmjg9n8FS4aB37Uy
+	IS8B+26V6wDKbg0pjvaZRJ+7MdVDGScEWDtJALiyIbyWBFXd8D51k55hGGYZee1i7rfErxj++Qy
+	s0QR0PDJoHeOW3e8gbKAVhbI8xzb12OCHS5lDqaxi6lE+EzApd8hxP7QBF7wfeOlQ61XzId5JHk
+	SJCmCXOBIU/mhBQ6G0IHx5dYuOi3AO1v1gShr7zfOh/o6LaxKGb2Qq/BfvKL1vkY7um4G4dwSsP
+	a0z3NI95GQl44ODp0RnWrp9eQ+MKzuefzQlO81iZ+71A/u82G+knLqR0NaUDdDIE188pTaiYHTk
+	cHy3bxqR1bUdrEGMcu5FcY+4jxyA4rZM308vFtspnEVMf+FdOcYHrafcf3ck0CCa2NZOb37WzBg
+	37iRAROW5J35v7aMZvvunTsdGbp5uFkHJ4Gu6LJGNrGd9rrBzftJnCUmUXfulgDpmw2aK5KQqar
+	wQMbP3LmZZiN3a3+QRzltFAIuDi239guyF9W9IxZd6kSUDFKNc1JsufxRy4egYIhDan2aTDDHuT
+	2vpk+My/LPA2o+n0rGCU7VAQorKNHh8Q4phajFfRKX1otR4u
+X-Received: by 2002:a05:6830:8294:b0:805:620e:4d40 with SMTP id 46e09a7af769-84d065d1b57mr2227487a34.2.1792609024618;
+        Wed, 21 Oct 2026 11:57:04 -0700 (PDT)
+Received: from [10.10.121.179] (wsip-64-207-253-118.tu.ok.cox.net. [64.207.253.118])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-84cbd8cb051sm3067290a34.22.2026.10.21.11.57.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 21 Oct 2026 11:57:04 -0700 (PDT)
+From: Ryan Brue <ryanbrue.dev@gmail.com>
+Date: Wed, 21 Oct 2026 13:57:01 -0500
+Subject: [PATCH RESEND v3] pci: Add broken-GPE quirk for some Lenovo
+ Legions with Nvidia GPUs
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -104,98 +91,176 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261021152527.375070-1-tarunsahu@google.com> <20261021152527.375070-4-tarunsahu@google.com>
- <CA+CK2bAQbmq3ArP3XMErF_8RC2CUwvgpLY0H83D0nCJTaVKYyA@mail.gmail.com>
- <9huzecdi6go0.fsf@tarunix.c.googlers.com> <CALzav=dLdJoVy=B1pv0FAurD9OhAzLSTjJNbtjTdJRmSqaB0yw@mail.gmail.com>
-In-Reply-To: <CALzav=dLdJoVy=B1pv0FAurD9OhAzLSTjJNbtjTdJRmSqaB0yw@mail.gmail.com>
-From: Pasha Tatashin <pasha.tatashin@soleen.com>
-Date: Wed, 21 Oct 2026 14:50:54 -0400
-X-Gm-Features: AclHuK9td__2XcAMViewCe_NhDoA_TjTC8gr4y8u3SANqGewpEKZoTgIKv6iXME
-Message-ID: <CA+CK2bAQRMAEXZyHTEuUN0_Fo59Sn0hBmYbme_J9ewjx6gPyJQ@mail.gmail.com>
-Subject: Re: [RFC PATCH v2 3/4] liveupdate: Replace compatibility string with
- a 2-bit pair feature header
-To: David Matlack <dmatlack@google.com>
-Cc: tarunsahu@google.com, Andrew Morton <akpm@linux-foundation.org>, joro@8bytes.org, 
-	Mike Rapoport <rppt@kernel.org>, Pratyush Yadav <pratyush@kernel.org>, maz@kernel.org, arnd@arndb.de, 
-	jgg@nvidia.com, robin.murphy@arm.com, loganodell@google.com, 
-	oupton@kernel.org, kevin.tian@intel.com, alex@shazbot.org, 
-	dwmw2@infradead.org, pbonzini@redhat.com, seanjc@google.com, will@kernel.org, 
-	Alexander Graf <graf@amazon.com>, Bjorn Helgaas <bhelgaas@google.com>, baolu.lu@linux.intel.com, 
-	linux-arm-kernel@lists.infradead.org, linux-arch@vger.kernel.org, 
-	sagis@google.com, linux-mm@kvack.org, kvmarm@lists.linux.dev, 
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org, kexec@lists.infradead.org, 
-	skhawaja@google.com, kvm@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261021-broken-gpe-legion-v3-1-097226ba8383@gmail.com>
+To: Mark Pearson <mpearson-lenovo@squebb.ca>
+Cc: Lyude Paul <lyude@redhat.com>, linux-kernel@vger.kernel.org, 
+ Ryan Brue <ryanbrue.dev@gmail.com>, linux-pci@vger.kernel.org
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792609023; l=5681;
+ i=ryanbrue.dev@gmail.com; s=20260906; h=from:subject:message-id;
+ bh=bQF3AmZL0YQ5DEicF3r2yu3cYqe9iEy3BSx14DhZw3A=;
+ b=DekNitr86qPxU/aAbNNYOk/Nfyn4jbglpC2dOf8MZQ/bJoqkhBXvLow6iBmnY4H7KkF4Ayx6C
+ D9sXCQuvFF1DMwEVfzVuLR1J9Kaw+7muPDp4jJg77Zpv4Ze3krF/wkc
+X-Developer-Key: i=ryanbrue.dev@gmail.com; a=ed25519;
+ pk=KsUvVaP//v/2q+ZBuacc7cLbsyEYn+AD71Sn28oZWKo=
 
-On Wed, Oct 21, 2026 at 2:47=E2=80=AFPM David Matlack <dmatlack@google.com>=
- wrote:
->
-> On Wed, Oct 21, 2026 at 11:40=E2=80=AFAM <tarunsahu@google.com> wrote:
-> >
-> > Pasha Tatashin <pasha.tatashin@soleen.com> writes:
-> >
-> > > On Wed, Oct 21, 2026 at 11:25=E2=80=AFAM Tarun Sahu <tarunsahu@google=
-.com> wrote:
-> > >>
-> > >> LUO and its file handlers validate handed-over state with monolithic
-> > >> compatibility strings ("luo-v5", "memfd-v2"). Any change to a serial=
-ized
-> > >> structure, even an optional additive one, must bump the string, whic=
-h
-> > >> breaks live update between adjacent kernels. Replace the string in
-> > >> struct luo_ser with a feature header, so that the target kernel can
-> > >> accept or reject the source kernel state per feature.
-> > >>
-> > >> struct luo_feature_hdr is a fixed 128-byte header: the serialized
-> > >
-> > > This patch is all wrong; 128 bytes is far too large. For every _ser
-> > > struct, we only need 8 bytes instead.
-> >
-> > NOO, It is not. It is intended to avoid complex mess with unnecessary
-> > over-engineering.
+From: Lyude Paul <lyude@redhat.com>
 
-128-byte per serialized struct is not starter.
+On certain Lenovo Legion devices (including the 16APH8, 16AHP9, and
+15AHP9), the firmware appears to enjoy firing a GPE on the parent PCIe
+port of the nvidia GPU very shortly after the GPU enters D3Cold. This means
+that every time the GPU is runtime suspended, ACPI firmware immediately
+wakes up its parent PCIe port, which then wakes up the GPU. Once it falls
+asleep again, the cycle repeats.
 
-> >
-> > >
-> > > The first 4 bytes are the size, and the next 4 bytes are flags (i.e.,
-> > > 30 feature flags + 2 reserved bits for flags extension). The last two
-> > > bits of the flags indicate whether an extended flags field is present=
-.
-> > > Each extended flags field is 8 bytes, and its last two bits indicate
-> > > that yet another extended flags field follows.
-> >
-> > If we will have dynamic extension of flags, Think about this.
->
-> To support dynamic extensions in a backward compatible way you want
-> something like this:
->
-> struct luo_feature_hdr {
->    size
->    flags
+Note, this bug doesn't require Nvidia's driver. It happens on nouveau and
+nova as well, and it even seems possible for this to happen without any
+driver loaded.
 
-__u32 size
-__u32 flags
+This seems to simply be a bug. Luckily, there is nothing that we actually
+need ACPI wakeup events for on the GPU. Events such as display connector
+hotplug events in D3Cold come through as ACPI_VIDEO events which aren't
+affected by this quirk.
 
->    extensions  // offset of first luo_feature_extensions (or 0)
+Reported-by: Ryan Brue <ryanbrue.dev@gmail.com>
+Link: https://github.com/NVIDIA/open-gpu-kernel-modules/issues/905
+Co-developed-by: Ryan Brue <ryanbrue.dev@gmail.com>
+Signed-off-by: Ryan Brue <ryanbrue.dev@gmail.com>
+Signed-off-by: Lyude Paul <lyude@redhat.com>
+Cc: stable@vger.kernel.org
+---
+V3:
+* Add the Lenovo LOQ 15AHP9 to the quirk table (@jindalpratik on GitHub)
+* Also match Nvidia RTX 4070 Max-Q (0x2860), which similarly refuses to
+  stay in D3Cold (@inigo001 on GitHub)
+V2:
+* Don't forget to actually use parent_adev with acpi_remove_pm_notifier()
+* Check if parent_adev is NULL (could happen if booted with acpi=off), just
+  consider it a no-op if it is.
+* Base the patch off Linux master instead, I based it off drm-misc-next by
+  mistake because I'm too used to working on DRM drivers :).
+---
 
-__u64 extensions[0]  --> but the size should be specificed in
-declaration macro that I showed in the next patch.
+Tested on all the modified Legion devices. The Nvidia dGPU properly goes
+into D3Cold with the patch, whereas without it, the dGPU will wake up
+shortly after going to D3Cold. See the linked open-gpu-kernel-modules
+issue for more details.
 
-> }
->
-> struct luo_feature_extentions {
->     flags
->     extensions // offset of next luo_feature_extensions (or 0)
-> }
->
-> And then an example serialization struct would be:
->
-> struct foo_ser {
->     struct luo_feature_hdr header;
->     ... fields ...
->     struct luo_feature_extension extensions1;
->     ... fields ...
->     struct luo_feature_extension extensions2;
-> }
+Lyude gave me permission to send out the v3 with modifications, as she has
+been busy.
+---
+ drivers/pci/quirks.c | 88 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 88 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index de9bbccda21f..f0ea0a722183 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -6169,6 +6169,94 @@ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, 0x13b1,
+ 			      PCI_CLASS_DISPLAY_VGA, 8,
+ 			      quirk_reset_lenovo_thinkpad_p50_nvgpu);
+ 
++#ifdef CONFIG_ACPI
++#ifdef CONFIG_DMI
++static const struct dmi_system_id nvidia_dgpu_broken_gpe_quirk_table[] = {
++	{
++		.matches = {
++			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "LENOVO"),
++			DMI_MATCH(DMI_PRODUCT_VERSION, "15AHP9"),
++		},
++	},
++	{
++		.matches = {
++			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "LENOVO"),
++			DMI_MATCH(DMI_PRODUCT_VERSION, "16APH8"),
++		},
++	},
++	{
++		.matches = {
++			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "LENOVO"),
++			DMI_MATCH(DMI_PRODUCT_VERSION, "16AHP9"),
++		},
++	},
++	{}
++};
++
++/*
++ * On the Lenovo Legion Slim 5 16APH8 and 16AHP9, the firmware appears to enjoy
++ * firing a GPE on the parent PCIe port of the nvidia GPU very shortly after the
++ * GPU enters D3Cold. This means that every time the GPU is runtime suspended,
++ * ACPI firmware immediately wakes up its parent PCIe port, which then wakes up
++ * the GPU. Once it falls asleep again, the cycle repeats.
++ *
++ * See: https://github.com/NVIDIA/open-gpu-kernel-modules/issues/905
++ *
++ * Note, this bug doesn't require Nvidia's driver. It happens on nouveau and
++ * nova as well, and it even seems possible for this to happen without any
++ * driver loaded.
++ *
++ * This seems to simply be a bug. Luckily, there is nothing that we actually
++ * need ACPI wakeup events for on the GPU. Events such as display connector
++ * hotplug events in D3Cold come through as ACPI_VIDEO events which aren't
++ * affected by this quirk.
++ *
++ * So, workaround this by disabling wakeup events for the parent PCIe port of
++ * the GPU.
++ */
++static void quirk_nvidia_dgpu_broken_gpe(struct pci_dev *pdev)
++{
++	struct acpi_device *parent_adev;
++	struct device *parent_dev;
++	int ret;
++
++	/* Just to be extra safe and make sure we don't try this on an eGPU */
++	if (pci_is_thunderbolt_attached(pdev))
++		return;
++
++	ret = dmi_check_system(nvidia_dgpu_broken_gpe_quirk_table);
++	if (ret == 0)
++		return;
++
++	pci_info(pdev, FW_BUG "GPU PCIe port has broken wakeup events, disabling\n");
++
++	parent_dev = pci_physfn(pdev)->dev.parent;
++	if (!parent_dev) {
++		pci_err(pdev,
++			"Can't find PCIe parent? Your Nvidia GPU will have broken runtime PM\n");
++		return;
++	}
++
++	parent_adev = ACPI_COMPANION(parent_dev);
++	if (!parent_adev) /* No ACPI? That means no GPE, and nothing to do here. */
++		return;
++
++	/* The spurious GPEs will be sent from the ACPI device for the PCIe port this GPU is
++	 * connected to, so remove our PM notifier to turn them into a no-op.
++	 */
++	ret = acpi_remove_pm_notifier(parent_adev);
++	if (ACPI_FAILURE(ret))
++		pci_err(pdev, "Removing PM notifier failed: %d\n", ret);
++}
++DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, 0x28e0,
++			      PCI_CLASS_DISPLAY_VGA, 8,
++			      quirk_nvidia_dgpu_broken_gpe);
++DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, 0x2860,
++			      PCI_CLASS_DISPLAY_VGA, 8,
++			      quirk_nvidia_dgpu_broken_gpe);
++#endif
++#endif
++
+ /*
+  * Device [1b21:2142]
+  * When in D0, PME# doesn't get asserted when plugging USB 3.0 device.
+
+---
+base-commit: a90ee4305c4a5df72c11b31dacfdc76e00fcf78a
+change-id: 20261005-broken-gpe-legion-9c9f87a5898c
+
+Best regards,
+--
+Ryan Brue <ryanbrue.dev@gmail.com>
+-- 
+Ryan Brue <ryanbrue.dev@gmail.com>
+
