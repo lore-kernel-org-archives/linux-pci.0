@@ -1,76 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.70
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792611332;
-	b=k4+qrmCXGxeo/axfOfWxwjjlq+UyW4NCLXKJWfqXtQ7edaDlRWbfiuwYJjVMRhLnflrn
-	 Lq/oHoFXDmAM6aoRF8VUgTOJaqHsEWQcnIrejDBxesyHSEaVumbpbLy8JwNTL1MZfkDyC
-	 eb/+OBQ7BmUcS0SyLblI0h1RUg8oueBB791Npf9eYPjaqwM4LaAUXBC2oWanJNDLYj5sj
-	 LJVQ4OfEmRW0GRStR2CvAHv4yBpu+dh6v/c/4T4aflgOoFEyRdEBif3QkI7PtZbXmCx50
-	 ka+UIEyvi1w5qXxJkIsKKJ1U8ZzkFgXdWeORPLE7IrzydaWEGctSEJyuAv2ZIfsEoBQ==
+	t=1792622638;
+	b=EWM6cD/IM2JiEFkGCS0HTET0I2hy2N+LY8gZWGD+5lRfgkhLlOrMfAMvo4nt+aCdMsa/
+	 cefmFEQjx63zNwicM6SBxY9Uee28pL9fymwUUPyp3fhYL6KczImU/3go5u1upAQmkQRca
+	 zhrNYYFYXjDpTMTXlfRtYR4p89QPwd2O74ROF9uq89iElptdtXWJM+5TWWXIMsDLo+SdI
+	 aomCwjsXsy5k5f4ujZ1sep4t1/Up1reTJ1a2bIfxSNK3AVVqNQlRkQrXLVj9WRbDf4sVa
+	 F7+oYGvYhYke1UufMb/I7BYeS/+pxa3H5gBYJCSKalTZNIUsPoTXeUnp6R59Rjenhlw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792611332;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:Message-ID:Subject:From:To:Cc:Content-Type:
+	a=rsa-sha256; c=relaxed/relaxed; t=1792622638;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 MIME-Version:Content-Type:Content-Disposition:
 	 Content-Transfer-Encoding;
-	bh=pt5urRMT2WSF8F6D5dXj/zEgDBH8Cy6Wkm/uZuSTaoY=;
-	b=c/jV385OLGXKb6g/KuqQP3XjdtixoTpE0kah2phsp8zFZtfg/XtJvxN21AVtRTulpA9P
-	 3vYrzX4sj4k/oPGhFzjGpYe2UD2G4m9jHSRNjppfRN/X72prVUX08uZnRMAZAo/sBDOr3
-	 Jcc6Wgtix/PPGQ4Nlu0e/HocVEDyVYYRfjTU5SZRUXWcPcDJ2Q498npZ1djzyP9IIQfpg
-	 HBD7UpBrzl7FxdiwLUOeQZsrA6Tf3Um/+E2XWNdTWT0kwirwDit0DkQ20y9JK80XzJEXm
-	 sIXJBmL2UIOry9Vbo/2E0aD2Ztlihjbg6J3XxbcwBRGNoZ7WmW4MP6ID/rQ4XVWdYrQ==
+	bh=/rDyevIpZGbgRLz03UqC+BeKvLzHeEGsK20YVIDmBsU=;
+	b=ajlCA8sFRcdMZBCQWzVS4D77zbWztdGXxd/5ivDhuRja2uHeY0d2lh9Eke064moXG1i/
+	 fDkOGEpQCfGGY5WiQdtHns2Kjx2E6UHql7k3oOW036FfJNTvUMjiz+frXxBi6fnHfVByL
+	 aoBZ5E+VYWM6I1DmMuOoMon7V4qAezm63VYNvXScJD9uJRAAgDO4YQZaHQHV6WuK/irx9
+	 ak78AdqrTg7UoE53jb6Ng5agIvFm4LMZwQuRhbV73oGpEkxGAbxjCXK0mjlOZfUyFrZGN
+	 r6AUydzj4P6CFNV81qEsGd9Fm6uNcxe/iWpfxY7QN/gspWhWMCOJOP9RMqZ04jTrGvQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=srsxHlyP;
-	arc=none smtp.remote-ip=209.85.208.70
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com [209.85.208.70])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Wz6Wyer6;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5562A606A31F
-	for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 19:35:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5562A606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49101606A319;
+	Wed, 21 Oct 2026 22:43:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=srsxHlyP
-Received: by mail-ed1-f70.google.com with SMTP id 4fb4d7f45d1cf-6b1a56fd429so1293765a12.3
-        for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 12:35:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1792611330; x=1793216130; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=pt5urRMT2WSF8F6D5dXj/zEgDBH8Cy6Wkm/uZuSTaoY=;
-        b=srsxHlyPdeo0YtzEPSQcyIweJ8y4TlQVCgaRxqKCfZG34fIHWaWsTGT1l6iDnnMhwc
-         JMV1CZXht6ZiPYMn7j63ttL8vkJTtZcu6JlZq3+lZHI3jVM3gcVMdBnfWi05aWjRdR38
-         2B5alE9fD/FhF2dDt9LxWJIzb5b3JRKZOLfxNtxYWfR11SBBRZPU9Bu0q+4pTCVmAHPc
-         BHtVYWSonfZ7wqkWpLh74sQ/1kzcB4gYDW14wlitJ4hWIWNyjeRvSTN5YWtLDYXDiMOE
-         W+iRIngsBLdvItvn/pKuJKdthJ+bTzXUb2qI/mVnd1OcmCCNCWF+hI3pHv3QrVTwgEak
-         f39A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792611330; x=1793216130;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=pt5urRMT2WSF8F6D5dXj/zEgDBH8Cy6Wkm/uZuSTaoY=;
-        b=NCIzCesCxD21pd9ll+su2MshFY/iU5dBZn0Ra7oPh0WWaQxRrSMkV0iqC3R3k1yrr3
-         kodbuLrvT4eMPo1fJZsnr6TQHZ2qqHREJ9NAPGvW3nRHZcOYJyNq9P7z3IROVNqxJjQq
-         nuZOUTeAWqs4fz2pmmVO6BQwAfyZPg30H1WG6JG/osPjdzJhu3Dwxnfc3nbUaRcDYKG4
-         /LJaNgGOSnytqnTpHSLGwlhecYA75ZHrRSXTXLHaT+du7mEHI1K1jNK0lNG8mMqCk8pM
-         yfr5OSL8vdDvX0ghRSd6IO8HP2EZ71JZEOLrgVv1WxkO7b9cazA6ipRKEZreU/svwS1L
-         ReRg==
-X-Forwarded-Encrypted: i=1; AKwUvBy3rbQvzum2ah3JlLGHf1AyU59qkBJ0Iojd28OiGuWvGvnkImIc+BN/az1ERliuCxtXIdQ5iEO1AtA=@vger.kernel.org
-X-Gm-Message-State: AFq9FYIEsU1rTYywhPh/xdb1tGmZOIUhlrbzZhaTR+G+x+PUrTDdvWTE
-	Yyj9wde8jmJOvs/PtJ+Uelew7TY7zm3dBEB/KS07ufG8/EeBvt5R6uAzyVx9p0H8PhtqUxINZQU
-	PK4VaIoInrz0xUsHt/w==
-X-Received: from edrm11.prod.google.com ([2002:aa7:d34b:0:b0:6b1:f575:1672])
- (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6402:1cc2:b0:6b1:cd52:5798 with SMTP id 4fb4d7f45d1cf-6b408ef1e43mr1941841a12.42.1792611329210;
- Wed, 21 Oct 2026 12:35:29 -0700 (PDT)
-Date: Wed, 21 Oct 2026 19:35:28 +0000
-In-Reply-To: <CA+CK2bDyk=F7W3J=q3pKCjsr2wy_PLdgqgu+ywp0F5HL=VoMpA@mail.gmail.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Wz6Wyer6
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 820901F000C1;
+	Wed, 21 Oct 2026 22:43:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792622636;
+	bh=/rDyevIpZGbgRLz03UqC+BeKvLzHeEGsK20YVIDmBsU=;
+	h=Date:From:To:Cc:Subject;
+	b=Wz6Wyer6kBc4uwfjSiO8MF51gsjvUDgVaWyh5EEhaDKLmO3dZ1Mg2u5VQWFrq6CT8
+	 7GO+anZnLVZSe6gv2XdkVzJUp+9otxo5lCBTjUqvqssDE8GVOSiY6Afy+L2DzrNM2R
+	 cWI257iNmVimEhEeHudbPwIb9cQI+jImkbey6wq7xkS0Z7DXqaLlf91Dlxq9T55eF1
+	 XmGh3NJuPzrlj7B02sgCxrqAsYlx6rN2PoavHvjqfsr4dCfHunG25kam/4i4Apo4U5
+	 Oz6Ag0HPpMfrDfdfoOo8SARoT5H6TTUOElXQDJggdy4lxVBO0t7R9dsHhVvcGmoBXc
+	 YFKppSdrHse9g==
+Date: Wed, 21 Oct 2026 17:43:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Rob Herring <robh@kernel.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Subject: [GIT PULL] PCI changes for v7.4
+Message-ID: <20261021224355.GA2571577@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -79,772 +58,790 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261021152527.375070-1-tarunsahu@google.com> <20261021152527.375070-2-tarunsahu@google.com>
- <CA+CK2bC_wc4LxvHe0TREbBP7esYW3pcMNtkGK-kqvf6MyvOh2g@mail.gmail.com>
- <9huzik2u6hs5.fsf@tarunix.c.googlers.com> <CA+CK2bDyk=F7W3J=q3pKCjsr2wy_PLdgqgu+ywp0F5HL=VoMpA@mail.gmail.com>
-Message-ID: <9huzld7q4zjz.fsf@tarunix.c.googlers.com>
-Subject: Re: [RFC PATCH v2 1/4] liveupdate: Rename handler compatible to name
-From: tarunsahu@google.com
-To: Pasha Tatashin <pasha.tatashin@soleen.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, joro@8bytes.org, 
-	Mike Rapoport <rppt@kernel.org>, Pratyush Yadav <pratyush@kernel.org>, maz@kernel.org, arnd@arndb.de, 
-	David Matlack <dmatlack@google.com>, jgg@nvidia.com, robin.murphy@arm.com, 
-	loganodell@google.com, oupton@kernel.org, kevin.tian@intel.com, 
-	alex@shazbot.org, dwmw2@infradead.org, pbonzini@redhat.com, seanjc@google.com, 
-	will@kernel.org, Alexander Graf <graf@amazon.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	baolu.lu@linux.intel.com, linux-arm-kernel@lists.infradead.org, 
-	linux-arch@vger.kernel.org, sagis@google.com, linux-mm@kvack.org, 
-	kvmarm@lists.linux.dev, iommu@lists.linux.dev, linux-pci@vger.kernel.org, 
-	kexec@lists.infradead.org, skhawaja@google.com, kvm@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-Pasha Tatashin <pasha.tatashin@soleen.com> writes:
+The following changes since commit cee9395acd8043be0644b25c34bfa86623f2b935:
 
-> On Wed, Oct 21, 2026 at 2:16=E2=80=AFPM <tarunsahu@google.com> wrote:
->>
->> Pasha Tatashin <pasha.tatashin@soleen.com> writes:
->>
->> > On Wed, Oct 21, 2026 at 11:25=E2=80=AFAM Tarun Sahu <tarunsahu@google.=
-com> wrote:
->> >>
->> >> File handler and File-Lifecycle-Bound (FLB) identifiers name the
->> >
->> > Please use FLB directly, no need to spell it out.
->> >
->> >> registered handler or FLB rather than a monolithic compatibility vers=
-ion.
->> >> Rename compatible to name across LUO headers, structures, and consume=
-rs:
->> >> - struct liveupdate_file_handler and struct luo_file_ser name field
->> >> - LIVEUPDATE_HNDL_NAME_LENGTH (in include/uapi/linux/liveupdate.h) an=
-d
->> >>   MEMFD_LUO_FH_NAME
->> >> - struct liveupdate_flb name field, LIVEUPDATE_FLB_NAME_LENGTH,
->> >>   PCI_LUO_FLB_NAME, and LIVEUPDATE_TEST_FLB_NAME
->> >>
->> >> Signed-off-by: Tarun Sahu <tarunsahu@google.com>
->> >> ---
->> >>  drivers/pci/liveupdate.c        | 10 ++++----
->> >>  include/linux/kho/abi/luo.h     | 26 +++++++++----------
->> >>  include/linux/kho/abi/memfd.h   |  4 +--
->> >>  include/linux/kho/abi/pci.h     |  2 +-
->> >>  include/linux/liveupdate.h      | 18 +++++--------
->> >>  include/uapi/linux/liveupdate.h |  3 +++
->> >>  kernel/liveupdate/luo_file.c    | 45 +++++++++++++++++--------------=
---
->> >>  kernel/liveupdate/luo_flb.c     | 16 ++++++------
->> >>  lib/tests/liveupdate.c          | 22 ++++++++--------
->> >>  mm/memfd_luo.c                  |  2 +-
->> >>  10 files changed, 73 insertions(+), 75 deletions(-)
->> >>
->> >> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
->> >> index 51695782ed42..3cf01d7d615c 100644
->> >> --- a/drivers/pci/liveupdate.c
->> >> +++ b/drivers/pci/liveupdate.c
->> >> @@ -424,7 +424,7 @@ static struct liveupdate_flb_ops pci_liveupdate_f=
-lb_ops =3D {
->> >>
->> >>  static struct liveupdate_flb pci_liveupdate_flb =3D {
->> >>         .ops =3D &pci_liveupdate_flb_ops,
->> >> -       .compatible =3D PCI_LUO_FLB_COMPATIBLE,
->> >> +       .name =3D PCI_LUO_FLB_NAME,
->> >>  };
->> >>
->> >>  static void pci_liveupdate_flb_put_outgoing(void)
->> >> @@ -667,13 +667,13 @@ static struct pci_flb_incoming *pci_liveupdate_=
-flb_get_incoming(void)
->> >>
->> >>         /*
->> >>          * Live Update is enabled and there is incoming FLB data, but=
- none of it
->> >> -        * matches pci_liveupdate_flb.compatible.
->> >> +        * matches pci_liveupdate_flb.name.
->> >>          */
->> >>         if (ret =3D=3D -ENOENT)
->> >>                 return NULL;
->> >>
->> >>         /*
->> >> -        * There is incoming FLB data that matches pci_liveupdate_flb=
-.compatible
->> >> +        * There is incoming FLB data that matches pci_liveupdate_flb=
-.name
->> >>          * but retrieve failed (pci_flb_retrieve() returned an error =
-or LUO
->> >>          * failed to acquire a reference to pci_liveupdate_flb_ops.ow=
-ner).
->> >>          */
->> >> @@ -998,7 +998,7 @@ EXPORT_SYMBOL_GPL(pci_liveupdate_is_incoming);
->> >>   */
->> >>  int pci_liveupdate_register_flb(struct liveupdate_file_handler *fh)
->> >>  {
->> >> -       pr_debug("Registering file handler \"%s\"\n", fh->compatible)=
-;
->> >> +       pr_debug("Registering file handler \"%s\"\n", fh->name);
->> >>         return liveupdate_register_flb(fh, &pci_liveupdate_flb);
->> >>  }
->> >>  EXPORT_SYMBOL_GPL(pci_liveupdate_register_flb);
->> >> @@ -1009,7 +1009,7 @@ EXPORT_SYMBOL_GPL(pci_liveupdate_register_flb);
->> >>   */
->> >>  void pci_liveupdate_unregister_flb(struct liveupdate_file_handler *f=
-h)
->> >>  {
->> >> -       pr_debug("Unregistering file handler \"%s\"\n", fh->compatibl=
-e);
->> >> +       pr_debug("Unregistering file handler \"%s\"\n", fh->name);
->> >>         liveupdate_unregister_flb(fh, &pci_liveupdate_flb);
->> >>  }
->> >>  EXPORT_SYMBOL_GPL(pci_liveupdate_unregister_flb);
->> >> diff --git a/include/linux/kho/abi/luo.h b/include/linux/kho/abi/luo.=
-h
->> >> index 288076de6d4a..5fb2f46425d7 100644
->> >> --- a/include/linux/kho/abi/luo.h
->> >> +++ b/include/linux/kho/abi/luo.h
->> >> @@ -39,9 +39,9 @@
->> >>   *     Multiple blocks are linked via the `next` field in the header=
-.
->> >>   *
->> >>   *   - struct luo_file_ser:
->> >> - *     Metadata for a single preserved file. Contains the `compatibl=
-e` string to
->> >> - *     find the correct handler in the new kernel, a user-provided `=
-token` for
->> >> - *     identification, and an opaque `data` handle for the handler t=
-o use.
->> >> + *     Metadata for a single preserved file. Contains the handler `n=
-ame` string
->> >> + *     to find the correct handler in the new kernel, a user-provide=
-d `token`
->> >> + *     for identification, and an opaque `data` handle for the handl=
-er to use.
->> >>   *
->> >>   *   - struct luo_flb_header_ser:
->> >>   *     Header for the FLB array. Contains the total page count of th=
-e
->> >> @@ -49,9 +49,9 @@
->> >>   *     that follow.
->> >>   *
->> >>   *   - struct luo_flb_ser:
->> >> - *     Metadata for a single preserved global object. Contains its `=
-name`
->> >> - *     (compatible string), an opaque `data` handle, and the `count`
->> >> - *     number of files depending on it.
->> >> + *     Metadata for a single preserved global object. Contains its F=
-LB `name`
->> >> + *     string, an opaque `data` handle, and the `count` number of fi=
-les
->> >> + *     depending on it.
->> >>   */
->> >>
->> >>  #ifndef _LINUX_KHO_ABI_LUO_H
->> >> @@ -84,18 +84,16 @@ struct luo_ser {
->> >>         u64 flbs_pa;
->> >>  } __packed;
->> >>
->> >> -#define LIVEUPDATE_HNDL_COMPAT_LENGTH  48
->> >> -
->> >>  /**
->> >>   * struct luo_file_ser - Represents the serialized preserves files.
->> >> - * @compatible:  File handler compatible string.
->> >> + * @name:        File handler name string.
->> >
->> > We are renaming from cpmaptible to name; I am not sure that is
->> > necessary. We can still use compatible for the same purpose as name.
->> > Unless it really bothers people, but for me 'compatible' works just
->> > the same.
->>
->> Yes it is necessary, For example if we have two handler for a single
->> subsystem. We should refer it by handle this or handler that, not like
->> handler with compatible string this and handler with compatible string
->> that.
->
-> I still feel like compatability makes more sense to me. Take an example:
->
-> We have two file handlers for memfd (i.e., FH_OLD and FH_NEW): one has
-> compatibility =3D "memfd", and the other has compatibility =3D
-> "memfd_next_generation". The user chooses one of them to preserve the
-> memfd data, and the compatibility string is saved alongside the FD.
-> When the next kernel scans through the registered file handlers, it
-> must find exactly one that is compatible with the preserved data.
+  Linux 7.3-rc1 (2026-08-30 13:34:40 -0700)
 
-I will open this for vote.
+are available in the Git repository at:
 
-I can debate this in the following way:
+  git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git pci-v7.4-changes
 
- We have two file handlers for memfd (i.e., FH_OLD and FH_NEW): one has
- name =3D "memfd", and the other has name =3D "memfd_next_generation". The
- user chooses one of them to preserve the memfd data, and the name
- string is saved alongside the FD.
+for you to fetch changes up to f4319f548f7d8cb595ac1c91bfd459876399eeb3:
 
- When the next kernel scans through the registered file handlers, it
- must find exactly one whose name matches with the preserved data.
+  Merge branch 'pci/misc' (2026-10-21 13:20:39 -0500)
 
- name here is the identity of the handler which feels like "In target
- kernel, Find this handler to operate on the payload." and compatiblility
- feels like "find the handler in the target kernel for which the payload is
- compatible with."
+You should see this trivial drivers/pci/pcie/aer.c conflict:
 
- Based on LPC discussion, if current handler gives up to support
- anything new without breaking backward compatiblity. Then only, we
- should have a new handler.
+  upstream 79c168e2aa95 ("PCI/AER: Skip error recovery on false alarms")
+  vs PCI   d4c842c3af5b ("PCI/AER: Fix memory leak in aer_recover_work_func() when pci_dev is missing")
 
- So New handler is new identity for a same subsystem. While compatiblity
- string sounds feasible when comparing among all different kind of
- subsystem handlers.
+Preferred resolution at https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/tree/drivers/pci/pcie/aer.c?h=v7.4-merge#n1395
 
-~Tarun
+----------------------------------------------------------------
 
->
-> Pasha
->
->>
->> It ease the conversation and people will understand it quickly with
->> name.
->>
->> ~Tarun
->>
->> >
->> >>   * @data:        Private data
->> >>   * @token:       User provided token for this file
->> >>   *
->> >>   * If this structure is modified, `LUO_ABI_COMPATIBLE` must be updat=
-ed.
->> >>   */
->> >>  struct luo_file_ser {
->> >> -       char compatible[LIVEUPDATE_HNDL_COMPAT_LENGTH];
->> >> +       char name[LIVEUPDATE_HNDL_NAME_LENGTH];
->> >>         u64 data;
->> >>         u64 token;
->> >>  } __packed;
->> >> @@ -134,7 +132,7 @@ struct luo_session_ser {
->> >>  } __packed;
->> >
->> > Unreleated to this patch, but should be handled by this work, let's
->> > remove all the '__packed' attributes, the are not needed, we will
->> > explicitly fill in all the holes, with reserved fields.
->> >
->> >>
->> >>  /* The max size is set so it can be reliably used during in serializ=
-ation */
->> >> -#define LIVEUPDATE_FLB_COMPAT_LENGTH   48
->> >> +#define LIVEUPDATE_FLB_NAME_LENGTH     48
->> >>
->> >>  /**
->> >>   * struct luo_flb_header_ser - Header for the serialized FLB data bl=
-ock.
->> >> @@ -156,7 +154,7 @@ struct luo_flb_header_ser {
->> >>
->> >>  /**
->> >>   * struct luo_flb_ser - Represents the serialized state of a single =
-FLB object.
->> >> - * @name:    The unique compatibility string of the FLB object, used=
- to find the
->> >> + * @name:    The unique name string of the FLB object, used to find =
-the
->> >>   *           corresponding &struct liveupdate_flb handler in the new=
- kernel.
->> >>   * @data:    The opaque u64 handle returned by the FLB's .preserve()=
- operation
->> >>   *           in the old kernel. This handle encapsulates the entire =
-state needed
->> >> @@ -172,14 +170,14 @@ struct luo_flb_header_ser {
->> >>   * If this structure is modified, `LUO_ABI_COMPATIBLE` must be updat=
-ed.
->> >>   */
->> >>  struct luo_flb_ser {
->> >> -       char name[LIVEUPDATE_FLB_COMPAT_LENGTH];
->> >> +       char name[LIVEUPDATE_FLB_NAME_LENGTH];
->> >>         u64 data;
->> >>         u64 count;
->> >>  } __packed;
->> >>
->> >>  /* Kernel Live Update Test ABI */
->> >>  #ifdef CONFIG_LIVEUPDATE_TEST
->> >> -#define LIVEUPDATE_TEST_FLB_COMPATIBLE(i)      "liveupdate-test-flb-=
-v" #i
->> >> +#define LIVEUPDATE_TEST_FLB_NAME(i)    "liveupdate-test-flb-v" #i
->> >>  #endif
->> >>
->> >>  #endif /* _LINUX_KHO_ABI_LUO_H */
->> >> diff --git a/include/linux/kho/abi/memfd.h b/include/linux/kho/abi/me=
-mfd.h
->> >> index 08b10fea2afc..371ffd108a79 100644
->> >> --- a/include/linux/kho/abi/memfd.h
->> >> +++ b/include/linux/kho/abi/memfd.h
->> >> @@ -87,7 +87,7 @@ struct memfd_luo_ser {
->> >>         struct kho_vmalloc folios;
->> >>  } __packed;
->> >>
->> >> -/* The compatibility string for memfd file handler */
->> >> -#define MEMFD_LUO_FH_COMPATIBLE        "memfd-v2"
->> >> +/* The name string for memfd file handler */
->> >> +#define MEMFD_LUO_FH_NAME      "memfd-v2"
->> >>
->> >>  #endif /* _LINUX_KHO_ABI_MEMFD_H */
->> >> diff --git a/include/linux/kho/abi/pci.h b/include/linux/kho/abi/pci.=
-h
->> >> index 9485ed73c351..973ca5b26dbd 100644
->> >> --- a/include/linux/kho/abi/pci.h
->> >> +++ b/include/linux/kho/abi/pci.h
->> >> @@ -23,7 +23,7 @@
->> >>   * incrementing the version number in the PCI_LUO_FLB_VERSION number=
-.
->> >>   */
->> >>
->> >> -#define PCI_LUO_FLB_COMPATIBLE "pci"
->> >> +#define PCI_LUO_FLB_NAME "pci"
->> >>  #define PCI_LUO_FLB_VERSION 2
->> >>
->> >>  /**
->> >> diff --git a/include/linux/liveupdate.h b/include/linux/liveupdate.h
->> >> index 6051abc0612c..475da5fc22ee 100644
->> >> --- a/include/linux/liveupdate.h
->> >> +++ b/include/linux/liveupdate.h
->> >> @@ -90,10 +90,8 @@ struct liveupdate_file_ops {
->> >>  /**
->> >>   * struct liveupdate_file_handler - Represents a handler for a live-=
-updatable file type.
->> >>   * @ops:                Callback functions
->> >> - * @compatible:         The compatibility string (e.g., "memfd-v1", =
-"vfiofd-v1")
->> >> - *                      that uniquely identifies the file type this =
-handler
->> >> - *                      supports. This is matched against the compat=
-ible string
->> >> - *                      associated with individual &struct file inst=
-ances.
->> >> + * @name:               Unique handler name string (e.g., "memfd-v2"=
-), matched
->> >> + *                      against &struct luo_file_ser.name in the tar=
-get kernel.
->> >>   *
->> >>   * Modules that want to support live update for specific file types =
-should
->> >>   * register an instance of this structure. LUO uses this registratio=
-n to
->> >> @@ -102,7 +100,7 @@ struct liveupdate_file_ops {
->> >>   */
->> >>  struct liveupdate_file_handler {
->> >>         const struct liveupdate_file_ops *ops;
->> >> -       const char compatible[LIVEUPDATE_HNDL_COMPAT_LENGTH];
->> >> +       const char name[LIVEUPDATE_HNDL_NAME_LENGTH];
->> >>
->> >>         /* private: */
->> >>
->> >> @@ -209,11 +207,9 @@ struct luo_flb_private {
->> >>  /**
->> >>   * struct liveupdate_flb - A global definition for a shared data obj=
-ect.
->> >>   * @ops:         Callback functions
->> >> - * @compatible:  The compatibility string (e.g., "iommu-core-v1"
->> >> - *               that uniquely identifies the FLB type this handler
->> >> - *               supports. This is matched against the compatible st=
-ring
->> >> - *               associated with individual &struct liveupdate_flb
->> >> - *               instances.
->> >> + * @name:        The FLB name string (e.g., "iommu-core-v1") that un=
-iquely
->> >> + *               identifies this FLB type. In the target kernel, it =
-is
->> >> + *               matched against the name stored in &struct luo_flb_=
-ser.
->> >>   *
->> >>   * This struct is the "template" that a driver registers to define a=
- shared,
->> >>   * file-lifecycle-bound object. The actual runtime state (the live o=
-bject,
->> >> @@ -221,7 +217,7 @@ struct luo_flb_private {
->> >>   */
->> >>  struct liveupdate_flb {
->> >>         const struct liveupdate_flb_ops *ops;
->> >> -       const char compatible[LIVEUPDATE_FLB_COMPAT_LENGTH];
->> >> +       const char name[LIVEUPDATE_FLB_NAME_LENGTH];
->> >>
->> >>         /* private: */
->> >>         struct luo_flb_private __private private;
->> >> diff --git a/include/uapi/linux/liveupdate.h b/include/uapi/linux/liv=
-eupdate.h
->> >> index 4043d4038712..509c6236720d 100644
->> >> --- a/include/uapi/linux/liveupdate.h
->> >> +++ b/include/uapi/linux/liveupdate.h
->> >> @@ -46,6 +46,9 @@
->> >>  /* The maximum length of session name including null termination */
->> >>  #define LIVEUPDATE_SESSION_NAME_LENGTH 64
->> >>
->> >> +/* The maximum length of file handler name including null terminatio=
-n */
->> >> +#define LIVEUPDATE_HNDL_NAME_LENGTH 48
->> >> +
->> >>  /* The /dev/liveupdate ioctl commands */
->> >>  enum {
->> >>         LIVEUPDATE_CMD_BASE =3D 0x00,
->> >> diff --git a/kernel/liveupdate/luo_file.c b/kernel/liveupdate/luo_fil=
-e.c
->> >> index a39992da504f..fb81239bedf3 100644
->> >> --- a/kernel/liveupdate/luo_file.c
->> >> +++ b/kernel/liveupdate/luo_file.c
->> >> @@ -50,7 +50,7 @@
->> >>   *
->> >>   * 2. Freeze (Pre-Reboot): Just before the kexec, luo_file_freeze() =
-is called.
->> >>   *    It iterates through all preserved files, calls their respectiv=
-e .freeze()
->> >> - *    operation, and serializes their final metadata (compatible str=
-ing, token,
->> >> + *    operation, and serializes their final metadata (handler name, =
-token,
->> >>   *    and data handle) into a contiguous memory block for KHO.
->> >>   *
->> >>   * 3. Deserialize: After kexec, luo_file_deserialize() runs when ses=
-sion gets
->> >> @@ -220,7 +220,7 @@ static bool luo_token_is_used(struct luo_file_set=
- *file_set, u64 token)
->> >>   * 1. Validates that the @token is not already in use within the fil=
-e_set.
->> >>   * 2. Ensures the file_set's memory for files serialization is alloc=
-ated
->> >>   *    (allocates if needed).
->> >> - * 3. Iterates through registered handlers, calling can_preserve() t=
-o find one
->> >> + * 3. Iterates through registered handlers, calling .can_preserve() =
-to find one
->> >>   *    compatible with the given @fd.
->> >>   * 4. Calls the handler's .preserve() operation, which saves the fil=
-e's state
->> >>   *    and returns an opaque private data handle.
->> >> @@ -238,7 +238,7 @@ static bool luo_token_is_used(struct luo_file_set=
- *file_set, u64 token)
->> >>   *         -EBUSY if the file descriptor is already preserved by ano=
-ther session.
->> >>   *         -EBADF if the file descriptor is invalid.
->> >>   *         -ENOSPC if the file_set is full.
->> >> - *         -ENOENT if no compatible handler is found.
->> >> + *         -ENOENT if no compatible handler is found for the file ty=
-pe.
->> >>   *         -ENOMEM on memory allocation failure.
->> >>   *         Other erros might be returned by .preserve().
->> >>   */
->> >> @@ -456,9 +456,10 @@ static void __luo_file_unfreeze(struct luo_file_=
-set *file_set,
->> >>   *    private data handle during this step.
->> >>   *
->> >>   * 2. Serializes Metadata: After a successful freeze, it copies the =
-final file
->> >> - *    metadata=E2=80=94the handler's compatible string, the user tok=
-en, and the final
->> >> - *    private data handle=E2=80=94into the pre-allocated contiguous =
-memory buffer
->> >> - *    (file_set->files) that will be handed over to the next kernel =
-via KHO.
->> >> + *    metadata - the handler's name string, the user token, and the =
-final
->> >> + *    private data handle - into the pre-allocated contiguous memory=
- buffer
->> >> + *    (file_set->files) that will be handed over to the target kerne=
-l via
->> >> + *    KHO.
->> >>   *
->> >>   * Error Handling (Rollback):
->> >>   * This function is atomic. If any handler's .freeze() operation fai=
-ls, the
->> >> @@ -495,13 +496,13 @@ int luo_file_freeze(struct luo_file_set *file_s=
-et,
->> >>                 err =3D luo_file_freeze_one(file_set, luo_file);
->> >>                 if (err < 0) {
->> >>                         pr_warn("Freeze failed for token[%#0llx] hand=
-ler[%s] err[%pe]\n",
->> >> -                               luo_file->token, luo_file->fh->compat=
-ible,
->> >> +                               luo_file->token, luo_file->fh->name,
->> >>                                 ERR_PTR(err));
->> >>                         goto err_unfreeze;
->> >>                 }
->> >>
->> >> -               strscpy(file_ser->compatible, luo_file->fh->compatibl=
-e,
->> >> -                       sizeof(file_ser->compatible));
->> >> +               strscpy(file_ser->name, luo_file->fh->name,
->> >> +                       sizeof(file_ser->name));
->> >>                 file_ser->data =3D luo_file->serialized_data;
->> >>                 file_ser->token =3D luo_file->token;
->> >>         }
->> >> @@ -747,7 +748,7 @@ static int luo_file_deserialize_one(struct luo_fi=
-le_set *file_set,
->> >>
->> >>         down_read(&luo_register_rwlock);
->> >>         list_private_for_each_entry(fh, &luo_file_handler_list, list)=
- {
->> >> -               if (!strcmp(fh->compatible, ser->compatible)) {
->> >> +               if (!strcmp(fh->name, ser->name)) {
->> >>                         if (try_module_get(fh->ops->owner))
->> >>                                 handler_found =3D true;
->> >>                         break;
->> >> @@ -756,9 +757,9 @@ static int luo_file_deserialize_one(struct luo_fi=
-le_set *file_set,
->> >>         up_read(&luo_register_rwlock);
->> >>
->> >>         if (!handler_found) {
->> >> -               pr_warn("No registered handler for compatible '%.*s'\=
-n",
->> >> -                       (int)sizeof(ser->compatible),
->> >> -                       ser->compatible);
->> >> +               pr_warn("No registered handler for name '%.*s'\n",
->> >> +                       (int)sizeof(ser->name),
->> >> +                       ser->name);
->> >>                 return -ENOENT;
->> >>         }
->> >>
->> >> @@ -789,9 +790,9 @@ static int luo_file_deserialize_one(struct luo_fi=
-le_set *file_set,
->> >>   * in-memory linked list of 'struct luo_file' instances.
->> >>   *
->> >>   * For each serialized entry, it performs the following steps:
->> >> - *   1. Reads the 'compatible' string.
->> >> + *   1. Reads the handler 'name' string.
->> >>   *   2. Searches the global list of registered file handlers for one=
- that
->> >> - *      matches the compatible string.
->> >> + *      matches the handler name.
->> >>   *   3. Allocates a new 'struct luo_file'.
->> >>   *   4. Populates the new structure with the deserialized data (toke=
-n, private
->> >>   *      data handle) and links it to the found handler. The 'file' p=
-ointer is
->> >> @@ -884,9 +885,9 @@ void luo_file_set_destroy(struct luo_file_set *fi=
-le_set)
->> >>  /**
->> >>   * liveupdate_register_file_handler - Register a file handler with L=
-UO.
->> >>   * @fh: Pointer to a caller-allocated &struct liveupdate_file_handle=
-r.
->> >> - * The caller must initialize this structure, including a unique
->> >> - * 'compatible' string and a valid 'fh' callbacks. This function add=
-s the
->> >> - * handler to the global list of supported file handlers.
->> >> + * The caller must initialize this structure, including a unique 'na=
-me'
->> >> + * string and valid 'fh' callbacks. This function adds the handler t=
-o the
->> >> + * global list of supported file handlers.
->> >>   *
->> >>   * Context: Typically called during module initialization for file t=
-ypes that
->> >>   * support live update preservation.
->> >> @@ -908,11 +909,11 @@ int liveupdate_register_file_handler(struct liv=
-eupdate_file_handler *fh)
->> >>         }
->> >>
->> >>         down_write(&luo_register_rwlock);
->> >> -       /* Check for duplicate compatible strings */
->> >> +       /* Check for duplicate handler names */
->> >>         list_private_for_each_entry(fh_iter, &luo_file_handler_list, =
-list) {
->> >> -               if (!strcmp(fh_iter->compatible, fh->compatible)) {
->> >> -                       pr_err("File handler registration failed: Com=
-patible string '%s' already registered.\n",
->> >> -                              fh->compatible);
->> >> +               if (!strcmp(fh_iter->name, fh->name)) {
->> >> +                       pr_err("File handler registration failed: Han=
-dler name '%s' already registered.\n",
->> >> +                              fh->name);
->> >>                         err =3D -EEXIST;
->> >>                         goto err_unlock;
->> >>                 }
->> >> diff --git a/kernel/liveupdate/luo_flb.c b/kernel/liveupdate/luo_flb.=
-c
->> >> index cd715a7c1d99..222c6d7f821e 100644
->> >> --- a/kernel/liveupdate/luo_flb.c
->> >> +++ b/kernel/liveupdate/luo_flb.c
->> >> @@ -178,7 +178,7 @@ static int luo_flb_retrieve_one(struct liveupdate=
-_flb *flb)
->> >>                 return -ENODATA;
->> >>
->> >>         for (int i =3D 0; i < fh->header_ser->count; i++) {
->> >> -               if (!strcmp(fh->ser[i].name, flb->compatible)) {
->> >> +               if (!strcmp(fh->ser[i].name, flb->name)) {
->> >>                         private->incoming.data =3D fh->ser[i].data;
->> >>                         refcount_set(&private->incoming.count, fh->se=
-r[i].count);
->> >>                         found =3D true;
->> >> @@ -337,7 +337,7 @@ static void luo_flb_unregister_one(struct liveupd=
-ate_file_handler *fh,
->> >>
->> >>         if (!found) {
->> >>                 pr_warn("Failed to unregister FLB '%s': not found in =
-file handler '%s'\n",
->> >> -                       flb->compatible, fh->compatible);
->> >> +                       flb->name, fh->name);
->> >>                 return;
->> >>         }
->> >>
->> >> @@ -442,9 +442,9 @@ int liveupdate_register_flb(struct liveupdate_fil=
-e_handler *fh,
->> >>                 if (luo_flb_global.count =3D=3D LUO_FLB_MAX)
->> >>                         return -ENOSPC;
->> >>
->> >> -               /* Check that compatible string is unique in global l=
-ist */
->> >> +               /* Check that FLB name is unique in global list */
->> >>                 list_private_for_each_entry(gflb, &luo_flb_global.lis=
-t, private.list) {
->> >> -                       if (!strcmp(gflb->compatible, flb->compatible=
-))
->> >> +                       if (!strcmp(gflb->name, flb->name))
->> >>                                 return -EEXIST;
->> >>                 }
->> >>
->> >> @@ -596,9 +596,9 @@ void __init luo_flb_setup_incoming(u64 flbs_pa)
->> >>   * preserved (i.e., its reference count is greater than zero), it wr=
-ites its
->> >>   * metadata into the memory region designated for Kexec Handover.
->> >>   *
->> >> - * The serialized data includes the FLB's compatibility string, its =
-opaque
->> >> - * data handle, and the final reference count. This allows the new k=
-ernel to
->> >> - * find the appropriate handler and reconstruct the FLB's state.
->> >> + * The serialized data includes the FLB's name string, its opaque
->> >> + * data handle, and the final reference count. This allows the targe=
-t
->> >> + * kernel to find the appropriate FLB and reconstruct its state.
->> >>   *
->> >>   * Context: Called from liveupdate_reboot() just before kho_finalize=
-().
->> >>   */
->> >> @@ -614,7 +614,7 @@ void luo_flb_serialize(void)
->> >>                 long count =3D refcount_read(&private->outgoing.count=
-);
->> >>
->> >>                 if (count > 0) {
->> >> -                       strscpy(fh->ser[i].name, gflb->compatible,
->> >> +                       strscpy(fh->ser[i].name, gflb->name,
->> >>                                 sizeof(fh->ser[i].name));
->> >>                         fh->ser[i].data =3D private->outgoing.data;
->> >>                         fh->ser[i].count =3D count;
->> >> diff --git a/lib/tests/liveupdate.c b/lib/tests/liveupdate.c
->> >> index 4c08a7c6fb78..e4df09eed1f3 100644
->> >> --- a/lib/tests/liveupdate.c
->> >> +++ b/lib/tests/liveupdate.c
->> >> @@ -17,7 +17,7 @@
->> >>  static const struct liveupdate_flb_ops test_flb_ops;
->> >>  #define DEFINE_TEST_FLB(i) {                                        =
-   \
->> >>         .ops =3D &test_flb_ops,                                      =
-     \
->> >> -       .compatible =3D LIVEUPDATE_TEST_FLB_COMPATIBLE(i),           =
-     \
->> >> +       .name =3D LIVEUPDATE_TEST_FLB_NAME(i),                       =
-     \
->> >>  }
->> >>
->> >>  /* Number of Test FLBs to register with every file handler */
->> >> @@ -34,7 +34,7 @@ static int test_flb_preserve(struct liveupdate_flb_=
-op_args *argp)
->> >>  {
->> >>         ptrdiff_t index =3D argp->flb - test_flbs;
->> >>
->> >> -       pr_info("%s: preserve was triggered\n", argp->flb->compatible=
-);
->> >> +       pr_info("%s: preserve was triggered\n", argp->flb->name);
->> >>         argp->data =3D TEST_FLB_MAGIC_BASE + index;
->> >>
->> >>         return 0;
->> >> @@ -42,7 +42,7 @@ static int test_flb_preserve(struct liveupdate_flb_=
-op_args *argp)
->> >>
->> >>  static void test_flb_unpreserve(struct liveupdate_flb_op_args *argp)
->> >>  {
->> >> -       pr_info("%s: unpreserve was triggered\n", argp->flb->compatib=
-le);
->> >> +       pr_info("%s: unpreserve was triggered\n", argp->flb->name);
->> >>  }
->> >>
->> >>  static int test_flb_retrieve(struct liveupdate_flb_op_args *argp)
->> >> @@ -52,11 +52,11 @@ static int test_flb_retrieve(struct liveupdate_fl=
-b_op_args *argp)
->> >>
->> >>         if (argp->data =3D=3D expected_data) {
->> >>                 pr_info("%s: found flb data from the previous boot\n"=
-,
->> >> -                       argp->flb->compatible);
->> >> +                       argp->flb->name);
->> >>                 argp->obj =3D (void *)argp->data;
->> >>         } else {
->> >>                 pr_err("%s: ERROR - incorrect data handle: %llx, expe=
-cted %llx\n",
->> >> -                      argp->flb->compatible, argp->data, expected_da=
-ta);
->> >> +                      argp->flb->name, argp->data, expected_data);
->> >>                 return -EINVAL;
->> >>         }
->> >>
->> >> @@ -69,10 +69,10 @@ static void test_flb_finish(struct liveupdate_flb=
-_op_args *argp)
->> >>         void *expected_obj =3D (void *)(TEST_FLB_MAGIC_BASE + index);
->> >>
->> >>         if (argp->obj =3D=3D expected_obj) {
->> >> -               pr_info("%s: finish was triggered\n", argp->flb->comp=
-atible);
->> >> +               pr_info("%s: finish was triggered\n", argp->flb->name=
-);
->> >>         } else {
->> >>                 pr_err("%s: ERROR - finish called with invalid object=
-\n",
->> >> -                      argp->flb->compatible);
->> >> +                      argp->flb->name);
->> >>         }
->> >>  }
->> >>
->> >> @@ -103,7 +103,7 @@ static void liveupdate_test_init(void)
->> >>                 err =3D liveupdate_flb_get_incoming(flb, &obj);
->> >>                 if (err && err !=3D -ENODATA && err !=3D -ENOENT) {
->> >>                         pr_err("liveupdate_flb_get_incoming for %s fa=
-iled: %pe\n",
->> >> -                              flb->compatible, ERR_PTR(err));
->> >> +                              flb->name, ERR_PTR(err));
->> >>                 }
->> >>
->> >>                 if (!err)
->> >> @@ -124,18 +124,18 @@ void liveupdate_test_register(struct liveupdate=
-_file_handler *fh)
->> >>                 err =3D liveupdate_register_flb(fh, flb);
->> >>                 if (err) {
->> >>                         pr_err("Failed to register %s %pe\n",
->> >> -                              flb->compatible, ERR_PTR(err));
->> >> +                              flb->name, ERR_PTR(err));
->> >>                 }
->> >>         }
->> >>
->> >>         err =3D liveupdate_register_flb(fh, &test_flbs[0]);
->> >>         if (!err || err !=3D -EEXIST) {
->> >>                 pr_err("Failed: %s should be already registered, but =
-got err: %pe\n",
->> >> -                      test_flbs[0].compatible, ERR_PTR(err));
->> >> +                      test_flbs[0].name, ERR_PTR(err));
->> >>         }
->> >>
->> >>         pr_info("Registered %d FLBs with file handler: [%s]\n",
->> >> -               TEST_NFLBS, fh->compatible);
->> >> +               TEST_NFLBS, fh->name);
->> >>  }
->> >>
->> >>  MODULE_LICENSE("GPL");
->> >> diff --git a/mm/memfd_luo.c b/mm/memfd_luo.c
->> >> index 6b68220275eb..64f8b8cb75bd 100644
->> >> --- a/mm/memfd_luo.c
->> >> +++ b/mm/memfd_luo.c
->> >> @@ -602,7 +602,7 @@ static const struct liveupdate_file_ops memfd_luo=
-_file_ops =3D {
->> >>
->> >>  static struct liveupdate_file_handler memfd_luo_handler =3D {
->> >>         .ops =3D &memfd_luo_file_ops,
->> >> -       .compatible =3D MEMFD_LUO_FH_COMPATIBLE,
->> >> +       .name =3D MEMFD_LUO_FH_NAME,
->> >>  };
->> >>
->> >>  static int __init memfd_luo_init(void)
->> >> --
->> >> 2.56.0.212.g129ede20d9-goog
->> >>
+Enumeration:
+
+  - Set supported_speeds in set_pcie_port_type() so sparc64 and powerpc,
+    which call it via of_create_pci_dev() instead of the usual
+    pci_setup_device(), correctly set the supported PCIe link speeds (Stian
+    Halseth)
+
+  - When pcie_set_mps() changes MPS, update the value in the saved state so
+    a subsequent restore doesn't restore an invalid value (Niklas Cassel)
+
+  - Skip Target Speed quirk on clamped ports with no link (Maciej W.
+    Rozycki)
+
+Driver binding:
+
+  - Assume control of portdrv-related features only when portdrv is
+    enabled, since we can't use them without portdrv (Kuppuswamy
+    Sathyanarayanan)
+
+  - Centralize feature ownership checking so code only needs to check
+    'host->native_X' and doesn't need to also check 'pcie_ports_native'
+    (Kuppuswamy Sathyanarayanan)
+
+Error handling:
+
+  - Fix leaks when ACPI APEI/GHES error events overflow the kfifo or
+    mention a device that no longer exists (Priyank Rathod)
+
+  - Fix aer_process_err_devices() leak when a device is recorded as an
+    error source purely by being mentioned in the Root Port Error Source
+    and the device is inaccessible or logged only masked errors (Priyank
+    Rathod)
+
+ASPM:
+
+  - Disable ASPM when drivers request that, even if the OS doesn't own
+    ASPM; otherwise drivers do it on their own, which is worse (Ilpo
+    Järvinen)
+
+Power management:
+
+  - Align hibernate poweroff flow with suspend flow for bridges so they can
+    be powered down at hibernate as they are for suspend (Mario
+    Limonciello)
+
+  - Restore BARs after powering up during enumeration to fix a regression
+    on devices that don't preserve state in D3hot (Keng-Yu Lin)
+
+  - Avoid D3 on PLX PEX 8532/8533/8548 downstream ports, where putting them
+    in D3hot takes down the whole switch (Imre Kaloz)
+
+Power control:
+
+  - Add GPIO driver for Toshiba TC9563 embedded GPIO controller (Alex
+    Elder)
+
+  - Add DT documentation and pwrctrl driver support for TC9563 embedded
+    GPIO controller (Lorenzo Bianconi)
+
+  - Switch the tc9563 per-port reset to use the GPIO descriptor API instead
+    of direct regmap accesses (Lorenzo Bianconi)
+
+  - Only destroy devices created by pwrctrl core, so that when removing a
+    PCIe controller driver that uses pwrctrl, we don't remove devices
+    populated by another mechanism (Shawn Lin)
+
+  - Power off child devices on power-on failure (Lorenzo Bianconi)
+
+PCIe native device hotplug:
+
+  - Make the 'pciehp_poll_mode' parameter read-only to prevent changes via
+    sysfs, which can cause errors when unbinding (Runyu Xiao)
+
+Virtualization:
+
+  - Read SR-IOV VF Revision ID and Subsystem ID from VF instead of assuming
+    they're the same as VF 0; they may differ (Logan Odell)
+
+  - Add ACS quirk for Pericom PI7C9X2G304 switches (Hans de Goede)
+
+Peer-to-peer DMA:
+
+  - Add Zhaoxin KX-6000, KH-40000, KX-6000G, KX-7000, and KH-50000 host
+    bridges to allowlist (LeoLiu-oc)
+
+  - Add Alibaba T-HEAD Yitian 710 host bridge to allowlist (Feng Tang)
+
+  - Add Intel Haswell client host bridge to allowlist (Scott Lee)
+
+  - Intel Xeon E3/E5/E7 0x6f00 host bridge to allowlist (kai zhang)
+
+  - Fix handling of errors in pci_p2pdma_add_resource() to avoid (a)
+    unmapping a BAR if registering another fails and (b) use after free of
+    p2p_pgmap (Leon Romanovsky)
+
+  - Wait for RCU readers before freeing state to avoid use-after-free of
+    pdev->p2pdma (Leon Romanovsky)
+
+  - Restrict pci_p2pmem_find_many() to providers backed by a pool (Leon
+    Romanovsky)
+
+  - Safely terminate ACS redirect lists to avoid out-of-bounds access to
+    the buffer (Leon Romanovsky)
+
+  - Silence 'Host bridge not in P2PDMA whitelist' warnings unless caller,
+    e.g., pci_p2pmem_find_many(), requests 'verbose' (Leon Romanovsky)
+
+Sysfs:
+
+  - Return -ENODEV or -EIO sysfs 'label' or 'acpi_index' attributes when
+    Device Name _DSM fails, not -1, which is interpreted as -EPERM
+    (Krzysztof Wilczyński)
+
+  - Return valid sysfs 'acpi_index' attribute even if the Device Name _DSM
+    returned an invalid 'label' (Krzysztof Wilczyński)
+
+  - Expose sysfs 'acpi_index' and 'label' based on whether the Device Name
+    _DSM returns valid data, not merely whether the _DSM is implemented
+    (Krzysztof Wilczyński)
+
+  - Avoid out-of-bounds reads of the label returned by the Device Name
+    _DSM, which is in UTF-16 characters, not bytes (Krzysztof Wilczyński)
+
+  - Reject unaligned resource I/O port accesses, which can oops on arm64
+    (Deepanshu Kartikey)
+
+Endpoint framework:
+
+  - Pass the correct physical and virtual endpoint function numbers when
+    setting translation of inbound memory windows (Koichiro Den)
+
+  - Make embedded doorbell IRQ non-shared, since currently only the first
+    EPF can allocate doorbells (Koichiro Den)
+
+  - MSI doorbells currently target the first EPF attached to an EPC; let
+    other EPFs try the embedded doorbell instead of failing when they can't
+    use the MSI doorbell (Koichiro Den)
+
+  - Serialize scan of vNTB virtual PCI bus with other PCI topology changes
+    (Koichiro Den)
+
+  - Manage vNTB lifetimes to avoid leaking virtual devices and buses and
+    allow removal (Koichiro Den)
+
+  - Track vNTB link state from both sides so both see the same effective
+    link state (Koichiro Den)
+
+  - Configure vNTB MSI-X when supported to avoid IOMMU faults and failure
+    to deliver doorbell interrupts on RC (Koichiro Den)
+
+APM X-Gene PCIe controller driver:
+
+  - Use devm for clocks so they're automatically disabled, unprepared, and
+    released if errors happen during probe (Yuho Choi)
+
+ASPEED PCIe controller driver:
+
+  - Fix clk and PHY leaks in aspeed_pcie_port_init() error paths (Liu
+    Zhenlong)
+
+Broadcom iProc PCIe controller driver:
+
+  - Expose devm_pci_alloc_host_bridge_release() so drivers can share a devm
+    release function even if they don't need the device tree parsing done
+    by devm_pci_alloc_host_bridge() (Bjorn Helgaas)
+
+  - Request only the memory window from BCMA Enumeration ROM and warn if it
+    doesn't match the one in DT, which fixes an iproc-bcma probe failure
+    (Semih Baskan)
+
+Broadcom STB PCIe controller driver:
+
+  - Replace bool properties for each SoC configuration with a u32 bitvector
+    and a BFLAG() helper (Jim Quinlan)
+
+  - Use a similar BQUIRK() helper to test various SoC quirks (Jim Quinlan)
+
+Cadence PCIe controller driver:
+
+  - Remove device links to PHY, which are redundant because the PHY core
+    itself adds them (Vladimir Oltean)
+
+  - Return error (not success) from cdns_plat_pcie_probe() if
+    pm_runtime_get_sync() or cdns_pcie_ep_setup() failed (Vladimir Oltean)
+
+  - Correct the driver data pointer usage; previously .probe() stored
+    'struct cdns_plat_pcie *', but .shutdown() used the pointer as 'struct
+    cdns_pcie *', resulting in accessing garbage  (Linmao Li)
+
+ESWIN PCIe controller driver:
+
+  - Publish the platform driver MODULE_DEVICE_TABLE so the driver can be
+    autoloaded when built as a module (Pengpeng Hou)
+
+Freescale i.MX6 PCIe controller driver:
+
+  - Fix resource and pwrctrl device leaks .probe() (Zhijian Han)
+
+  - Improve i.MX95 Gen3 link stability by changing MPLLB_BANDWIDTH from
+    default 120 to 140 (Richard Zhu)
+
+  - Use dev_err_probe() in host init error path to silence -EPROBE_DEFER
+    messages (Alexander Stein)
+
+  - Avoid dereferencing NULL clock names when 'clocks' includes more
+    phandles than 'clock-names' has names (Rudi Heitbaum)
+
+  - Add suspend_poweroff flag so platforms like i.MX that power off RC
+    controllers during suspend can enter L2 so endpoints can get
+    PME_Turn_Off notifications before power loss (Richard Zhu)
+
+Freescale Layerscape PCIe controller driver:
+
+  - Enable PROBE_PREFER_ASYNCHRONOUS to reduce probe time of the four
+    controllers on LX2160A (Vincent Jardin)
+
+Intel VMD host bridge driver:
+
+  - Flush DMA writes before handling MSI on Meteor Lake: MSI may arrive
+    before write has completed, resulting in an nvme 30 second stall before
+    a QID timeout and possibly other similar problems (Rickey Bartlett)
+
+  - Flush DMA writes before handling MSI on Arrow Lake (Vladimir
+    Nedoshivin)
+
+Marvell Aardvark PCIe controller driver:
+
+  - Disable PHY on probe failures (Myeonghun Pak)
+
+Marvell MVEBU PCIe controller driver:
+
+  - Refcount child OF nodes during .probe() to make a concurrent OF overlay
+    removal safe (Krzysztof Kozlowski)
+
+MediaTek PCIe controller driver:
+
+  - Find INTx DT property by 'interrupt-controller' name instead of
+    assuming it's the first child node (Zhengping Zhang)
+
+MediaTek PCIe Gen3 controller driver:
+
+  - Fix a 64-bit type truncation in mtk_pcie_set_trans_table() to avoid
+    issues with windows above or larger than 4GB (Sreeraj S Kurup)
+
+NVIDIA Tegra264 PCIe controller driver:
+
+  - Fix the Link Capabilities offset so we read the correct register (Bjorn
+    Helgaas)
+
+Qualcomm PCIe controller driver:
+
+  - Only collect reset GPIOs from PCI bridge DT nodes to avoid stealing
+    resets used by downstream devices like USB controllers (Christopher
+    Obbard)
+
+  - Block accesses to downstream devices on link down to reduce a storm of
+    Completion Timeout AER interrupts (Qiang Yu)
+
+  - Skip system suspend/resume for firmware-managed PCIe, where firmware
+    manages clocks, regulators, resets, etc (Mrinmay Sarkar)
+
+  - Honor IOMMU provider's #iommu-cells in qcom_pcie_config_sid_1_9_0()
+    (Manivannan Sadhasivam)
+
+  - Deinitialize endpoint on remove (Guangshuo Li)
+
+  - Treat Root Port error recovery as successful even if link doesn't come
+    up after reset because the device was hot-unplugged (Konrad Dybcio)
+
+  - Skip unnecessary iMSI-RX initialization if DT 'msi-map' is present,
+    indicating an external MSI controller (Ayiluri Naga Rashmi)
+
+Renesas R-Car PCIe controller driver:
+
+  - Limit Max_Read_Request_Size to 256 to avoid hardware erratum (Marek
+    Vasut)
+
+  - Support PERST# via reset subsystem as well as the existing GPIO support
+    to prepare for R-Car Gen5 SoCs (Marek Vasut)
+
+  - Add DT and driver support for the R-Car Gen 5 X5H (R8A78000) PCIe Gen 4
+    core (Marek Vasut)
+
+  - Add Application/Local register reset DT description and driver support
+    for both host and endpoint mode (Marek Vasut)
+
+  - Add PM ops so controller works after suspend/resume (Marek Vasut)
+
+Renesas RZ/G3S PCIe controller driver:
+
+  - Disable refclk on probe failure (Lad Prabhakar)
+
+  - Propagate platform_get_irq_byname() errors so probe deferral works
+    correctly (Lad Prabhakar)
+
+  - Tear down INTx handlers if subsequent initialization fails (Lad
+    Prabhakar)
+
+  - Add RZ/G3L (R9A08G046) DT and driver support (Biju Das)
+
+Rockchip PCIe controller driver:
+
+  - Limit host and endpoint controllers to 2.5 GT/s since 5.0 GT/s is
+    unsafe per Rockchip (Geraldo Nascimento)
+
+Synopsys DesignWare PCIe controller driver:
+
+  - Set DMA_BYPASS bit in outbound IATU CTRL2 register to avoid data
+    corruption if the iATU translates DMA engine transactions (Sumit Kumar)
+
+  - Use FIELD_PREP() to remove need for *_SHIFT definitions (Hans Zhang)
+
+TI DRA7xx PCIe controller driver:
+
+  - Remove device links to PHY, which are redundant because the PHY core
+    itself adds them (Vladimir Oltean)
+
+  - Fix optional clock leak when .probe() fails by using
+    devm_clk_get_optional_enabled() (Felix Gu)
+
+TI Keystone PCIe controller driver:
+
+  - Remove device links to PHY, which are redundant because the PHY core
+    itself adds them (Vladimir Oltean)
+
+UltraRISC PCIe controller driver:
+
+  - Allow DWC drivers to skip outbound iATU setup if they don't need
+    translation between CPU and PCI addresses (Xincheng Zhang)
+
+  - Skip MEM outbound iATU setup on DP1000 (Xincheng Zhang)
+
+Xilinx Versal CPM PCIe controller driver:
+
+  - Add DT and driver support for optional PERST# for use in warm reset
+    scenarios (Sai Krishna Musham)
+
+Xilinx XDMA PCIe controller driver:
+
+  - Fix device node reference leak in xilinx_pl_dma_pcie_init_irq_domain()
+    (Wentao Liang)
+
+----------------------------------------------------------------
+Abel Vesa (1):
+      PCI/pwrctrl: tc9563: Allow RESX reset assertion to sleep
+
+Alex Elder (1):
+      gpio: tc9563: Add support for the embedded GPIO controller
+
+Alexander Stein (1):
+      PCI: imx6: Use dev_err_probe() in error path of pci_pwrctrl_power_on_devices()
+
+Alexey Charkov (1):
+      PCI/pwrctrl: generic: Fix leaking array from of_regulator_bulk_get_all()
+
+Ayiluri Naga Rashmi (1):
+      PCI: qcom: Skip DWC MSI host initialization when DT 'msi-map' is present
+
+Biju Das (2):
+      dt-bindings: PCI: renesas,r9a08g045s33-pcie: Document RZ/G3L SoC
+      PCI: rzg3s-host: Add support for RZ/G3L SoC
+
+Bjorn Helgaas (44):
+      PCI: tegra264: Fix Link Capabilities register offset
+      PCI: Expose devm_pci_alloc_host_bridge_release()
+      Merge branch 'pci/aer'
+      Merge branch 'pci/aspm'
+      Merge branch 'pci/doe'
+      Merge branch 'pci/enumeration'
+      Merge branch 'pci/hotplug'
+      Merge branch 'pci/mps'
+      Merge branch 'pci/p2pdma'
+      Merge branch 'pci/pm'
+      Merge branch 'pci/portdrv'
+      Merge branch 'pci/pwrctrl'
+      Merge branch 'pci/reset'
+      Merge branch 'pci/sysfs'
+      Merge branch 'pci/tph'
+      Merge branch 'pci/virtualization'
+      Merge branch 'pci/endpoint'
+      Merge branch 'pci/controller/misc'
+      Merge branch 'pci/controller/aardvark'
+      Merge branch 'pci/controller/aspeed'
+      Merge branch 'pci/controller/brcmstb'
+      Merge branch 'pci/controller/cadence'
+      Merge branch 'pci/controller/mvebu'
+      Merge branch 'pci/controller/rockchip'
+      Merge branch 'pci/controller/dwc'
+      Merge branch 'pci/controller/dwc-dra7xx'
+      Merge branch 'pci/controller/dwc-eswin'
+      Merge branch 'pci/controller/dwc-imx6'
+      Merge branch 'pci/controller/dwc-keystone'
+      Merge branch 'pci/controller/dwc-layerscape'
+      Merge branch 'pci/controller/dwc-qcom'
+      Merge branch 'pci/controller/dwc-rcar-gen4'
+      Merge branch 'pci/controller/dwc-ultrarisc'
+      Merge branch 'pci/controller/iproc-bcma'
+      Merge branch 'pci/controller/mediatek'
+      Merge branch 'pci/controller/mediatek-gen3'
+      Merge branch 'pci/controller/rzg3s-host'
+      Merge branch 'pci/controller/tegra'
+      Merge branch 'pci/controller/tegra264'
+      Merge branch 'pci/controller/vmd'
+      Merge branch 'pci/controller/xgene'
+      Merge branch 'pci/controller/xilinx-cpm'
+      Merge branch 'pci/controller/xilinx-dma-pl'
+      Merge branch 'pci/misc'
+
+Christopher Obbard (1):
+      PCI: qcom: Only check bridge nodes for PERST# GPIOs
+
+Deepanshu Kartikey (1):
+      PCI/sysfs: Reject unaligned resource I/O port accesses
+
+Donggeun Yoo (1):
+      PCI/DOE: Fix double free of a duplicate feature's sysfs name
+
+Felix Gu (1):
+      PCI: dra7xx: Fix clock enable leak on probe failure
+
+Feng Tang (1):
+      PCI/P2PDMA: Add Alibaba T-HEAD Yitian 710 to allowlist
+
+Geraldo Nascimento (3):
+      PCI: rockchip-ep: Do not attempt 5.0 GT/s retraining
+      PCI: rockchip-host: Do not attempt 5.0 GT/s retraining
+      PCI: rockchip: Drive at 2.5 GT/s, error other speeds
+
+Guangshuo Li (1):
+      PCI: qcom-ep: Deinitialize endpoint on remove
+
+Hans Zhang (4):
+      PCI: cadence: Fix enum type mismatch warning in LTSSM debugfs
+      PCI: dwc: Align register macros with Synopsys documentation
+      PCI: dwc: Remove unused PCIE_ATU_UNR_* register definitions
+      PCI: dwc: Describe DWC PCIe fields with full masks and FIELD_PREP()
+
+Hans de Goede (1):
+      PCI: Add ACS quirk for Pericom PI7C9X2G304 switches [12d8:b304]
+
+Ilpo Järvinen (1):
+      PCI/ASPM: Disable ASPM when driver requests it
+
+Imre Kaloz (2):
+      PCI: Disable MSI for ULi M1575 EHCI controller
+      PCI: Avoid D3 on PLX PEX 8532/8533/8548 downstream ports
+
+Janusz Krzysztofik (1):
+      PCI: Avoid FLR and SBR on Intel DG1 0x4905 graphics adapters
+
+Jim Quinlan (10):
+      PCI: brcmstb: Remove redundant const specifier for struct fields
+      PCI: brcmstb: Use flags u32 instead of bools
+      PCI: brcmstb: Add Broadcom quirks macro
+      PCI: brcmstb: Declare and assign quirk OB_WIN_32BIT_ADDR
+      PCI: brcmstb: Declare and assign quirk OB_WIN_MAXSZ_128MB
+      PCI: brcmstb: Declare and assign flag IS_BMIPS
+      PCI: brcmstb: Declare and assign quirk 32BIT_PCI_OPS
+      PCI: brcmstb: Declare and assign quirk NO_RGR1_TIMER
+      PCI: brcmstb: Declare and assign quirk EARLY_PERST_ASSERT
+      PCI: brcmstb: Declare and assign quirk PERST_PCIE_REV_CUTOFF
+
+Jose Ignacio Tornos Martinez (2):
+      PCI: Add device-specific reset for Qualcomm SDX62/SDX65 modems
+      PCI: Add device-specific reset for Qualcomm WCN6855/WCN7850 WLAN
+
+Keng-Yu Lin (1):
+      PCI/PM: Restore BARs after powering up during enumeration
+
+Koichiro Den (8):
+      PCI: endpoint: pci-epf-vntb: Pass PF/VF number when BAR programming
+      PCI: endpoint: pci-ep-msi: Make embedded doorbell IRQ exclusive
+      PCI: endpoint: pci-ep-msi: Let non-first EPFs use embedded doorbells
+      PCI: endpoint: pci-epf-vntb: Serialize virtual PCI bus scan
+      PCI: endpoint: pci-epf-vntb: Manage virtual NTB and PCI bus lifetime
+      PCI: endpoint: pci-epf-vntb: Track link state from both sides
+      PCI: endpoint: pci-epf-vntb: Use a local epf pointer in interrupt setup
+      PCI: endpoint: pci-epf-vntb: Honor MSI-X selection
+
+Konrad Dybcio (1):
+      PCI: qcom: Ignore -ENODEV after Root Port reset
+
+Krzysztof Kozlowski (2):
+      PCI: mvebu: Simplify with scoped for each OF child loop
+      PCI: mvebu: Keep child node refcnt for probe duration
+
+Krzysztof Wilczyński (4):
+      PCI/sysfs: Stop reporting _DSM failures as -EPERM
+      PCI/sysfs: Decouple acpi_index from the optional device name element
+      PCI/sysfs: Handle a malformed _DSM result in acpi_attr_is_visible()
+      PCI/sysfs: Pass the device name length in UTF-16 code units
+
+Kuppuswamy Sathyanarayanan (3):
+      PCI: Assume control of portdrv-related features only when portdrv enabled
+      PCI/ACPI: Tidy _OSC control bit checking
+      PCI/ACPI: Centralize pcie_ports_native checking
+
+LECOINTRE Philippe (1):
+      PCI: dwc: Correct PCIE_DW_PLAT_EP reference in Kconfig help
+
+Lad Prabhakar (3):
+      PCI: rzg3s: Disable refclk on probe failure
+      PCI: rzg3s: Propagate platform_get_irq_byname() errors
+      PCI: rzg3s: Fix IRQ domain initialization error handling
+
+LeoLiu-oc (1):
+      PCI/P2PDMA: Add Zhaoxin host bridges to allowlist
+
+Leon Romanovsky (6):
+      PCI/P2PDMA: Update DMABUF lifecycle docs after move_notify() rename
+      PCI/P2PDMA: Do not tear down the allocate attribute on registration failure
+      PCI/P2PDMA: Wait for RCU readers before freeing state
+      PCI/P2PDMA: Restrict the p2pmem search to pool-backed providers
+      PCI/P2PDMA: Safely terminate ACS redirect lists
+      PCI/P2PDMA: Gate the host bridge whitelist warning on verbose
+
+Linmao Li (1):
+      PCI: cadence: Store the core controller in platform drvdata
+
+Liu Zhenlong (1):
+      PCI: aspeed: Fix clk and PHY leak in aspeed_pcie_port_init() error paths
+
+Logan Odell (1):
+      PCI/IOV: Read VF config values that need not match PF
+
+Lorenzo Bianconi (6):
+      PCI/pwrctrl: tc9563: Rely on regmap APIs
+      PCI/pwrctrl: tc9563: Use devm-managed I2C dummy device allocation
+      dt-bindings: PCI: toshiba,tc9563: Document embedded GPIO controller
+      PCI/pwrctrl: tc9563: Add GPIO auxiliary device support
+      PCI/pwrctrl: tc9563: Switch per-port reset to GPIO descriptor API
+      PCI/pwrctrl: Power off child devices on power-on failure
+
+Maciej W. Rozycki (1):
+      PCI: Skip Target Speed quirk on clamped ports with no link
+
+Manivannan Sadhasivam (1):
+      PCI: qcom: Honor IOMMU provider's #iommu-cells in qcom_pcie_config_sid_1_9_0()
+
+Marek Vasut (14):
+      PCI: rcar-gen4: Limit Max_Read_Request_Size to 256 Bytes
+      PCI: dwc: Add dw_pcie_ep_ops->post_deinit() callback
+      PCI: rcar-gen4: Use .post_deinit() to handle dw_pcie_ep_init() failures
+      dt-bindings: PCI: rcar-gen4-pci-host: Add R-Car X5H PCIe4 compatible
+      PCI: rcar-gen4: Rework .additional_common_init() into .init()
+      PCI: rcar-gen4: Add .deinit() callback
+      PCI: rcar-gen4: Add .speed_control() callback
+      PCI: rcar-gen4: Handle PERST# via reset subsystem
+      PCI: rcar-gen4: Add support for R-Car X5H PCIe4
+      PCI: rcar-gen4: Drop documentation about obtaining platform firmware
+      dt-bindings: PCI: rcar-gen4-pci-host: Document Application/Local register reset
+      dt-bindings: PCI: rcar-gen4-pci-ep: Document Application/Local register reset
+      PCI: rcar-gen4: Add Application/Local register reset control
+      PCI: rcar-gen4: Add missing PM ops
+
+Mario Limonciello (AMD) (2):
+      PCI/PM: Split out code from pci_pm_suspend_noirq() into helper
+      PCI: Align hibernate poweroff flow with suspend flow for bridges
+
+Mohamad Raizudeen (1):
+      PCI: Fix out-of-bounds MMIO read in nvme_disable_and_flr()
+
+Mrinmay Sarkar (1):
+      PCI: qcom: Skip system suspend/resume for firmware-managed PCIe
+
+Myeonghun Pak (1):
+      PCI: aardvark: Disable PHY on probe failures
+
+Niklas Cassel (1):
+      PCI: Update saved Max Payload Size in pcie_set_mps()
+
+Peng Fan (1):
+      PCI: dwc: imx6: Use regmap_assign_bits() for conditional set/clear
+
+Pengpeng Hou (1):
+      PCI: eswin: Publish the platform driver OF alias
+
+Priyank Rathod (4):
+      PCI/AER: Fix memory leak in aer_recover_queue() on kfifo buffer overflow
+      PCI/AER: Fix memory leak in aer_recover_work_func() when pci_dev is missing
+      PCI/AER: Document that aer_recover_queue() takes ownership of aer_regs
+      PCI/AER: Fix struct pci_dev reference leak in aer_process_err_devices()
+
+Qiang Yu (1):
+      PCI: qcom: Block accesses to downstream devices on link down
+
+Richard Zhu (2):
+      PCI: imx6: Update MPLLB bandwidth to improve i.MX95 Gen3 PCIe stability
+      PCI: dwc: Add suspend_poweroff flag for platforms with RC power loss
+
+Rickey Bartlett (1):
+      PCI: vmd: Flush DMA writes before handling MSI on Meteor Lake
+
+Rudi Heitbaum (1):
+      PCI: imx6: Avoid dereferencing a NULL clock name
+
+Runyu Xiao (1):
+      PCI: pciehp: Make 'pciehp_poll_mode' parameter read-only
+
+Sai Krishna Musham (2):
+      dt-bindings: PCI: xilinx-versal-cpm: Add PERST# and reset support
+      PCI: xilinx-cpm: Add support for PCIe RP PERST# signal
+
+Scott Lee (1):
+      PCI/P2PDMA: Add Intel Haswell client host bridge to allowlist
+
+Semih Baskan (1):
+      PCI: iproc: Use the EROM outbound window on BCMA
+
+Shawn Lin (3):
+      PCI: dwc: Rename dw_pcie_allocate_domains() to dw_pcie_allocate_msi_domains()
+      PCI: dwc: Rename pp->irq_domain to pp->msi_irq_domain
+      PCI/pwrctrl: Only destroy devices created by pwrctrl core
+
+Sreeraj S Kurup (1):
+      PCI: mediatek-gen3: Fix 64-bit type truncation in mtk_pcie_set_trans_table()
+
+Stian Halseth (1):
+      PCI: Set supported_speeds in set_pcie_port_type()
+
+Sumit Kumar (1):
+      PCI: dwc: Set DMA_BYPASS bit in outbound IATU CTRL2 register
+
+Thierry Reding (1):
+      dt-bindings: PCI: tegra: Convert to json-schema
+
+Vincent Jardin (1):
+      PCI: layerscape: Enable async probe by default
+
+Vladimir Nedoshivin (1):
+      PCI: vmd: Flush DMA writes before handling MSI on Arrow Lake
+
+Vladimir Oltean (2):
+      PCI: cadence: Preserve all error codes in cdns_plat_pcie_probe()
+      PCI: Add missing headers transitively included by <linux/phy/phy.h>
+
+Wei Huang (1):
+      PCI/TPH: Validate the firmware Steering Tag response
+
+Wentao Liang (1):
+      PCI: xilinx-xdma: Fix device node reference leak in xilinx_pl_dma_pcie_init_irq_domain()
+
+Xincheng Zhang (2):
+      PCI: dwc: Allow drivers to skip MEM outbound iATU setup
+      PCI: ultrarisc: Skip MEM outbound iATU setup on DP1000
+
+Yuho Choi (1):
+      PCI: xgene: Use managed clock for PCIe controller
+
+Zhengping Zhang (1):
+      PCI: mediatek: Find INTx controller by property
+
+Zhijian Han (1):
+      PCI: imx6: Fix resource leaks in probe error paths
+
+hanzhijian (1):
+      PCI: imx6: Fix pwrctrl device leak on PM runtime setup failure
+
+kai zhang (1):
+      PCI/P2PDMA: Add Intel Xeon E3 v4/E5 v4/E7 v4 host bridge to allowlist
+
+vladimir.oltean@nxp.com (3):
+      PCI: keystone: Remove device links to PHY
+      PCI: cadence: Remove device links to PHY
+      PCI: dra7xx: Remove device links to PHY
+
+ Documentation/ABI/testing/sysfs-bus-pci            |  14 +-
+ Documentation/PCI/controller/index.rst             |   1 -
+ .../PCI/controller/rcar-pcie-firmware.rst          |  32 -
+ .../bindings/pci/nvidia,tegra20-pcie.txt           | 670 ---------------------
+ .../bindings/pci/nvidia,tegra20-pcie.yaml          | 532 ++++++++++++++++
+ .../devicetree/bindings/pci/rcar-gen4-pci-ep.yaml  |   9 +-
+ .../bindings/pci/rcar-gen4-pci-host.yaml           |  83 ++-
+ .../bindings/pci/renesas,r9a08g045-pcie.yaml       |  33 +-
+ .../devicetree/bindings/pci/toshiba,tc9563.yaml    |  14 +-
+ .../devicetree/bindings/pci/xilinx-versal-cpm.yaml |  38 ++
+ Documentation/driver-api/pci/p2pdma.rst            |   6 +-
+ MAINTAINERS                                        |   1 -
+ drivers/acpi/pci_root.c                            |  78 ++-
+ drivers/gpio/Kconfig                               |  12 +
+ drivers/gpio/Makefile                              |   1 +
+ drivers/gpio/gpio-tc9563.c                         |  99 +++
+ .../pci/controller/cadence/pcie-cadence-debugfs.c  |  15 +-
+ drivers/pci/controller/cadence/pcie-cadence-plat.c |  33 +-
+ drivers/pci/controller/cadence/pcie-cadence.c      |  16 +-
+ drivers/pci/controller/cadence/pcie-cadence.h      |   2 -
+ drivers/pci/controller/dwc/Kconfig                 |   4 +-
+ drivers/pci/controller/dwc/pci-dra7xx.c            |  24 +-
+ drivers/pci/controller/dwc/pci-imx6.c              | 161 +++--
+ drivers/pci/controller/dwc/pci-keystone.c          |  40 +-
+ drivers/pci/controller/dwc/pci-layerscape.c        |   1 +
+ drivers/pci/controller/dwc/pcie-designware-ep.c    |  18 +-
+ drivers/pci/controller/dwc/pcie-designware-host.c  |  60 +-
+ drivers/pci/controller/dwc/pcie-designware.c       | 178 +++---
+ drivers/pci/controller/dwc/pcie-designware.h       | 292 ++++-----
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c      |   1 +
+ drivers/pci/controller/dwc/pcie-eswin.c            |   1 +
+ drivers/pci/controller/dwc/pcie-fu740.c            |   6 +-
+ drivers/pci/controller/dwc/pcie-histb.c            |   1 +
+ drivers/pci/controller/dwc/pcie-nxp-s32g.c         |  18 +-
+ drivers/pci/controller/dwc/pcie-qcom-common.c      |  28 +-
+ drivers/pci/controller/dwc/pcie-qcom-ep.c          |   3 +
+ drivers/pci/controller/dwc/pcie-qcom.c             | 190 ++++--
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c        | 374 ++++++++++--
+ drivers/pci/controller/dwc/pcie-spacemit-k1.c      |   3 +
+ drivers/pci/controller/dwc/pcie-tegra194-acpi.c    |  22 +-
+ drivers/pci/controller/dwc/pcie-tegra194.c         | 103 ++--
+ drivers/pci/controller/dwc/pcie-ultrarisc.c        |  16 +-
+ drivers/pci/controller/pci-aardvark.c              |  31 +-
+ drivers/pci/controller/pci-mvebu.c                 |  21 +-
+ drivers/pci/controller/pci-tegra.c                 |   1 +
+ drivers/pci/controller/pci-xgene.c                 |  11 +-
+ drivers/pci/controller/pcie-aspeed.c               |   9 +-
+ drivers/pci/controller/pcie-brcmstb.c              |  92 ++-
+ drivers/pci/controller/pcie-iproc-bcma.c           |  40 +-
+ drivers/pci/controller/pcie-mediatek-gen3.c        |  15 +-
+ drivers/pci/controller/pcie-mediatek.c             |   4 +-
+ drivers/pci/controller/pcie-rockchip-ep.c          |  13 -
+ drivers/pci/controller/pcie-rockchip-host.c        |  21 +-
+ drivers/pci/controller/pcie-rockchip.c             |  14 +-
+ drivers/pci/controller/pcie-rockchip.h             |   3 -
+ drivers/pci/controller/pcie-rzg3s-host.c           |  76 ++-
+ drivers/pci/controller/pcie-tegra264.c             |   9 +-
+ drivers/pci/controller/pcie-xilinx-cpm.c           |  77 ++-
+ drivers/pci/controller/pcie-xilinx-dma-pl.c        |  10 +-
+ drivers/pci/controller/plda/pcie-starfive.c        |   1 +
+ drivers/pci/controller/vmd.c                       |  55 +-
+ drivers/pci/doe.c                                  |   5 +-
+ drivers/pci/endpoint/functions/pci-epf-vntb.c      | 243 ++++++--
+ drivers/pci/endpoint/pci-ep-msi.c                  |  40 +-
+ drivers/pci/hotplug/pciehp_core.c                  |   4 +-
+ drivers/pci/iov.c                                  |  25 -
+ drivers/pci/p2pdma.c                               |  43 +-
+ drivers/pci/pci-acpi.c                             |   3 -
+ drivers/pci/pci-driver.c                           | 100 ++-
+ drivers/pci/pci-label.c                            |  92 ++-
+ drivers/pci/pci-sysfs.c                            |   3 +
+ drivers/pci/pci.c                                  |  34 +-
+ drivers/pci/pci.h                                  |  14 +-
+ drivers/pci/pcie/aer.c                             |  56 +-
+ drivers/pci/pcie/aer_cxl_rch.c                     |   2 +-
+ drivers/pci/pcie/aspm.c                            |  33 +-
+ drivers/pci/pcie/err.c                             |   2 +-
+ drivers/pci/pcie/portdrv.c                         |   6 +-
+ drivers/pci/pcie/portdrv.h                         |   2 -
+ drivers/pci/probe.c                                |  33 +-
+ drivers/pci/pwrctrl/Kconfig                        |   2 +
+ drivers/pci/pwrctrl/core.c                         |  22 +-
+ drivers/pci/pwrctrl/generic.c                      |   1 +
+ drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c           | 325 ++++++----
+ drivers/pci/quirks.c                               | 152 ++++-
+ drivers/pci/tph.c                                  |   6 +-
+ include/linux/pci-epf.h                            |   3 +-
+ include/linux/pci.h                                |   2 +
+ include/linux/soc/qcom/tc9563.h                    |  19 +
+ 89 files changed, 3156 insertions(+), 1852 deletions(-)
+ delete mode 100644 Documentation/PCI/controller/rcar-pcie-firmware.rst
+ delete mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.yaml
+ create mode 100644 drivers/gpio/gpio-tc9563.c
+ create mode 100644 include/linux/soc/qcom/tc9563.h
