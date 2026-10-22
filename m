@@ -1,100 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.51
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792676583;
-	b=liRiHdzKr04CkxUK56pXY0D0fgreRBuZ3e7+UqbziSZjWYVGKsHvdmwK1WBVGMuxyOfN
-	 thZ0Pqi+7Q6fKHfT04AcgOBJSTHBh4TDgvlChz+vCm6JrTduRPuaPiRQdBez7hmQ5IgjG
-	 /8A0p/z7Kz4aUHfk4rLzpt5OFpt8iIfMAPmqpzrSO48ryCxi0knpkJOsXVVpESPitI9PD
-	 xprecqQnsDxcDxz7NqQNaIqeiKl2zSdeQYQBdwoUMtd69vnZvB6UlwG4+ldtRE9DF1U27
-	 KuwgEHK41Ki7IAzJ3mRisTLhe6T2CceMuLZQViYfJOw9cTGGEcerz6qC/2G3AdFBY8w==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792676583;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=gizFMxgAiNeNcK9yHAVbAAuSg3KjclB/mQKEXDByXnY=;
-	b=tMXJq+9nDdH21q2+Y1KtaOhAEHlE14zeGoL6bVJe+WEmmYM3hwD1aGcuqAzdhXY4w0jv
-	 UTWa8MMHn3vZEEnLvfRFvDfaEqXOID5KPnHYgo1LhMSReXWtGSgla8VyTb3zGoOs1iiir
-	 7yCdhHCzhDPb6EIumK7/W9ywhlnYq8hzjZ3V4KJuOUacw2LUPnFMMs44Hv+jkvASpJLfI
-	 0RO/AjB/whbdXlumsozKK+iqD33DFceEq1IlMSfY+16JQEIaWd5SxZseNwfCm/68dCTD6
-	 dqV8A7S+7qcJSGBfst5jNTw2bLIaM6W/n9Kss39Z0sy9DLJ+ZXLC8slF13pOXe5QzTA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=soleen.com;
-	spf=pass smtp.mailfrom=soleen.com;
-	dkim=pass header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b=W1Ud43OR;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.51
-Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B92860A263A
-	for <linux-pci@vger.kernel.org>; Thu, 22 Oct 2026 13:43:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8B92860A263A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b=W1Ud43OR
-Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-6b1a86c0316so2473367a12.0
-        for <linux-pci@vger.kernel.org>; Thu, 22 Oct 2026 06:43:02 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792676581; cv=none;
-        d=google.com; s=arc-20260327;
-        b=kK+odDKBDTHn5p4BPwpx/Wd8L9GxKnGPmxPUI+2r4DrQ9vmGwZz5q4rppZjaslXiw+
-         hTObcM7oSHgTlZJeotAnFASPE09bnORv2B7a8Eu66jaeCiSidDjn0b9BEmJ3lyZZ72jN
-         92NBmnDWsILQL3RNQGZ7b1F/oAI7kecyFzoOxFV+O7j+0J3ZoONC3yKXUvrZrGckbUCK
-         HZKR3hR9pV7JhMG8VoLpQWG+PbWjSBHzwGC71+qqNPH4Bqfe5j7RaILioeEK56CbtfQv
-         JjKBEfAVr4VupbXT8n7vnlHokhLFgdLmnAmlq4cQ5YQjDonFtr3jPiMjCQCf3T/YWfnn
-         KZWw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=gizFMxgAiNeNcK9yHAVbAAuSg3KjclB/mQKEXDByXnY=;
-        fh=c0Ojz73OWuQnmUyDVvD6pMNY25a1srkU2aGGRS/yT6k=;
-        b=SqKdc5La9CE4SRDBC/2qxysuBmnERtslLYhxUBHhafgt538gMDjMXJcCoHKAJz8DTR
-         1FzxiRjRQsbiZRNzRHQ33QJKRBBXnUyPG2m1pn3Kh1EPfrPcxH/2eOddySlVHu/vT6hS
-         diYKXkE+okMIiyPTXz8n0yWIVZB83gzmycTnd02nbpL1ytvjSURkSTxx1u001U4sbgae
-         BFkZijq15AUO/Dq9/8hpiI1w+Ers9DNMhFvaMiWVxksZDMeLhispjV5AvQgR4oiTxxi/
-         6jDlcVPLKXaK9oVe5CMDc1JiqnjAiFnzh8vLaGuAb+LXxGo+tb70FPHyFLJZeqMJFuFJ
-         xuHA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1792676581; x=1793281381; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=gizFMxgAiNeNcK9yHAVbAAuSg3KjclB/mQKEXDByXnY=;
-        b=W1Ud43ORzgSFMDywx4yvDHgCuuF+9zibORRfmsLvoGg8BFOpG4Lbjv6C87RTAZOJtf
-         QkMOCWMIoew6FIFD0Ynxigr5YmQF64OsEYl3GNvsCkhU1FIwRi3Ku0YfJ09ZBIpsA/a8
-         CC9bLa3cPKSPHM89GoFI46a62fUtGeCfdtyVM+5ooCJQvMiYwNMW1Xk/0RMHO5uhn/2t
-         Bo56RpK3wG6iAMnifAt07fZPmqe3nnQzD8DRosuZG+SomyXv3BALLv5B9/tV/SJdvMMP
-         FYdLZ24HLrVHFCtMG+t2A2oPAAP8Lr7/W1/TLYZXea3u69Vuz9EUmrNwNkAefXZIWVmj
-         HiTQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792676581; x=1793281381;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=gizFMxgAiNeNcK9yHAVbAAuSg3KjclB/mQKEXDByXnY=;
-        b=Tgsk0lz/GllXlm4JiocVayiDJn4C5JVlWVc/eH42AKeu8ykCNd6m6w2qInkDVG0QoV
-         76LtH3kHEjBF6DKkVQOang5Xeqy/DRxSqsVubPi9VunLYr6pxPykhmd8QdYNkLSHk0mR
-         lSg4bqrLAgapXVpZxm8P1WhbR8mbidI+ghzfbBwoOeA77fp224Y9N/iZaF4ELootfGNF
-         lHk7jLSRHfbwtdqxWtBbVCa9DTGdkCIpd6SVFONa+oIE1LQxLrsyYBGp6HwhCYc050QO
-         Bsw76Xn1bTSFyQtJ2Kbfm9+YWGYTIX4Px3CnR+2l9Wi08aBg41Kfmz34PsCJqcvlyAJ4
-         x57w==
-X-Forwarded-Encrypted: i=1; AKwUvByR+dCLahTj9numCthApnPJMTLkG+Oe4z1EdQ8IKNuuns6TJF1JFwVzRXieELXpPlwYWHjst4tfaIo=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJmgfdUnxi8cEivIGKNTcNZrG9EF/Y2Ti/0IfQLbquCXHtd/Uoz
-	u1pL+ThC++zE8h5Imex0wtOBq43lzRFGWyZgLVkEpV+HlYLEC/GjFVpIHGjqO5iKBJDDhLEccL9
-	/ld+naJ8lUzAYu2icHEMcJ+Y+hIYHO7UWkiEApkhEnA==
-X-Gm-Gg: AYBFou0fFGxBBtStvWibhk43RkO8hjzyJsWSp9q48m6tC4jm8+oRy7IZuBQyB5VYzFH
-	kGiBYTAlysIiu21naSaMrlhJMyYKTZHEjCLMkyc2ikULp+EH4WxjjiWZoo9L+WQJDOZ6HhZ7TgA
-	j7rF8aCg9ae+SqZf11+LKGtdBkyALxCbLZzTDgm1gvkG1acCZ09A8J6+FwF4XnL85SqQ5rUQVYz
-	juV1MrU07ylTdYFLBAcYSnZrLLeQPwJQzXAStXyTNELFAsx/ZmVnCnxQ1N0LKmnFarEF2z+z/nJ
-	3wd2PUjAWG27jQTLgMC/X/wGEH5Uax3njgLExgcMRe6IkwdIsVLPmQPE9EcdaeDCVqP+BASafvv
-	xPm6MBMQzTuxysplESvgnRsVAyHCkjc3A7PCFPXsPdhjOTGQKz6F5K0hbmE7XQ85BchNy
-X-Received: by 2002:a05:6402:51cb:b0:6b1:ba86:5f55 with SMTP id
- 4fb4d7f45d1cf-6b408eda746mr4955017a12.35.1792676580475; Thu, 22 Oct 2026
- 06:43:00 -0700 (PDT)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=13.76.78.106
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792677922;
+	b=n0D84YOZA6uX/4wzHvvoGkRUYTXjGb/OH4rgZF6HH90g6StZ5E+bcDPY7Cp/0hqk1093
+	 XcWoRSUECQlZ3jjsvKCWeBh2h7HK90iyArFGH66F5TBDU46oZDeUdxdAVWg2UW8MU6VCh
+	 0ZoTCTQqNx5u/bJLirwblwNxEI4SY4R4OhMgtaWbaCBfGVyTNCyCqh1UKZqRoYjl4CnnC
+	 adhstuTHrnYpYuHI83RqWxZRc4avBVCheGdoGYP904myO6QNWDylchZmolikJ4Aq5aPFC
+	 DcmUvnt8CRQm0Niw6drNs7ly96WM1xRM6O3WaJiL9v5/HLiqOxsDqOOGCMz4j8X4CZg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792677922;
+	h=DMARC-Filter:Received:X-Originating-IP:Date:X-CM-HeaderCharset:From:
+	 To:Cc:Subject:X-Priority:X-Mailer:X-CM-CTRLMSGS:Content-Type:
+	 MIME-Version:Message-ID:X-Coremail-Locale:X-CM-TRANSID:
+	 X-CM-SenderInfo:X-Coremail-Antispam;
+	bh=9Tk4FoL9U7rhfLnWmQtCZ3Py8oBe/qHJBFjUSKmmX+8=;
+	b=PlGnPmbpWv+WJ4nmYtp6GE/uIHtyU8MVFkk1uPErkHtNa90Y8eOGh0EDZMWlNOUMAJzh
+	 IVmlktz7jdi0uK0FqiRPhhVEOV3NLOkgW+tCKljw6NAkDYZQFPt5v685VgmyH6y8yXw6T
+	 vriAkWE7qnIn7WbXpdx3T1zNqPPenH58UuoHdccYF3etVtFi7qFPVtlNNqzLA/p8kxt9B
+	 MCWXiUW3dy92w5I2RXOia+jipasE9RF8Sc8op3xBlanLhwkyxzoERJeESyUY+3l+BwKLR
+	 IsMAlmxU1vQXtemsM7SXnhPZQNhOoCDGHwJA4fRuAuqVa1QA8Xf7sz6Zbo/3EG4MqTw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=none header.from=hust.edu.cn;
+	spf=pass smtp.mailfrom=hust.edu.cn;
+	arc=none smtp.remote-ip=13.76.78.106
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [13.76.78.106])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id CD9BE606A319;
+	Thu, 22 Oct 2026 14:05:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CD9BE606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hust.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hust.edu.cn
+Received: from xuhx$hust.edu.cn ( [10.12.190.107] ) by ajax-webmail-app2
+ (Coremail) ; Thu, 22 Oct 2026 22:05:04 +0800 (GMT+08:00)
+Date: Thu, 22 Oct 2026 22:05:04 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: =?UTF-8?B?5b6Q5pmX57+U?= <xuhx@hust.edu.cn>
+To: joro@8bytes.org, will@kernel.org
+Cc: iommu@lists.linux.dev, linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, nicolinc@nvidia.com
+Subject: iommu: PCI reset helpers' lock-free entry reads race the
+  iommu_device_unregister() traversal -> group use-after-free or NULL  deref
+ inside the reset path
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2025.3-cmXT6 build
+ 20260810(6c94e3b5) Copyright (c) 2002-2026 www.mailtech.cn hust
+X-CM-CTRLMSGS: =?B?Stx/pDiH6nJ5xwDR7hwMki1N8jM=
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_283853_1938003770.1792677904304"
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -104,365 +54,377 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261021152527.375070-1-tarunsahu@google.com> <20261021152527.375070-3-tarunsahu@google.com>
- <CA+CK2bCnS8wcVDbOymBGeJB6pDUkknOpF22EynbwSV=D5=J4ow@mail.gmail.com> <9huzik2t5281.fsf@tarunix.c.googlers.com>
-In-Reply-To: <9huzik2t5281.fsf@tarunix.c.googlers.com>
-From: Pasha Tatashin <pasha.tatashin@soleen.com>
-Date: Thu, 22 Oct 2026 09:42:22 -0400
-X-Gm-Features: AclHuK8k5bT2ZKs2HYGA795ETIkO2JydSGkbGrRRu0cT3FC7RgYcT81JMzNVsA4
-Message-ID: <CA+CK2bA2zqQJryBqpoNG7RQqnUnQT1+d8G5xwrjx0Dqo58woHA@mail.gmail.com>
-Subject: Re: [RFC PATCH v2 2/4] liveupdate: Select file handler by name in the
- preserve ioctl
-To: tarunsahu@google.com
-Cc: Andrew Morton <akpm@linux-foundation.org>, joro@8bytes.org, 
-	Mike Rapoport <rppt@kernel.org>, Pratyush Yadav <pratyush@kernel.org>, maz@kernel.org, arnd@arndb.de, 
-	David Matlack <dmatlack@google.com>, jgg@nvidia.com, robin.murphy@arm.com, 
-	loganodell@google.com, oupton@kernel.org, kevin.tian@intel.com, 
-	alex@shazbot.org, dwmw2@infradead.org, pbonzini@redhat.com, seanjc@google.com, 
-	will@kernel.org, Alexander Graf <graf@amazon.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	baolu.lu@linux.intel.com, linux-arm-kernel@lists.infradead.org, 
-	linux-arch@vger.kernel.org, sagis@google.com, linux-mm@kvack.org, 
-	kvmarm@lists.linux.dev, iommu@lists.linux.dev, linux-pci@vger.kernel.org, 
-	kexec@lists.infradead.org, skhawaja@google.com, kvm@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Message-ID: <2f9a772a.14c19.1a163edffb0.Coremail.xuhx@hust.edu.cn>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:IQEQrMBGb3gQGNpq4HlUAA--.61073W
+X-CM-SenderInfo: bgsqjkayqyjmo6kx23oohg3hdfq/1tbiAQoIB2rY5euqrQABs+
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWkKw
+	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+	daVFxhVjvjDU=
 
-On Thu, Oct 22, 2026 at 8:50=E2=80=AFAM <tarunsahu@google.com> wrote:
->
->
-> I have gone through the discussion in reply to this thread between
-> @dmatlack and @pasha
->
-> I am not sure If I understood the discussion correctly.
->
-> userspace IOCTL for FLB compatiblity might not necessary as each FLBs are
-> registered with the file handler. So when new file handler introduced in =
-the
-> system, new flb handlers can be registered that is compatible with this
-> new file handler. I have tried to explain this below.
->
-> Pasha Tatashin <pasha.tatashin@soleen.com> writes:
->
-> > On Wed, Oct 21, 2026 at 11:25=E2=80=AFAM Tarun Sahu <tarunsahu@google.c=
-om> wrote:
-> >>
-> >> Currently luo_preserve_file() iterates over luo_file_handler_list and
-> >> picks the first registered handler whose .can_preserve() callback
-> >> returns true. When a subsystem introduces a new, backwards-incompatibl=
-e
-> >> file handler alongside an existing one for the same file type, userspa=
-ce
-> >> has no way to choose which handler preserves a file descriptor, nor ca=
-n
-> >> the kernel keep the existing rollback-safe handler as the default whil=
-e
-> >> allowing callers to opt into the new handler.
-> >
-> > That is not how it will work.
-> > If we are in the .can_preserve() call,
-> > it means the user has already decided which file handlers to use.
->
-> That is not true.
+------=_Part_283853_1938003770.1792677904304
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 
-Please re-read what I wrote: I said that is not how it *will* work.
-Currently, we only have one FH per supported FD type, and that is how
-it will remain when we supply the target kernel specs. before the live
-update begins.
+VGhlIFBDSSByZXNldCBJT01NVSBoZWxwZXJzIHJlYWQgcGRldi0+ZGV2LmlvbW11X2dyb3VwIGFu
+ZApkZXYtPmlvbW11IGJlZm9yZSB0YWtpbmcgYW55IGxvY2ssIGFuZCB0aGUgd2hvbGUgUENJIHJl
+c2V0IGJvZHkKKEZMUiBhbG9uZSBzbGVlcHMgMTAwbXMpIHJ1bnMgYmV0d2VlbiB0aGVpciBwcmVw
+YXJlIGFuZCBkb25lIGhhbHZlcwotLSBtZWFud2hpbGUgdGhlIGlvbW11X2RldmljZV91bnJlZ2lz
+dGVyKCkgdHJhdmVyc2FsIGNhbiB0ZWFyIHRoZQpkZXZpY2UncyBncm91cCBhd2F5IGVudGlyZWx5
+LCBzbyB0aGUgaGVscGVyJ3MgcG9zdC1yZXNldCBoYWxmIGxvY2tzCmFuIGFscmVhZHktZnJlZWQg
+Z3JvdXAgKHVzZS1hZnRlci1mcmVlIHNwaW5sb2NrKSBvciB3YWxrcwomTlVMTC0+ZGV2aWNlcyAo
+TlVMTCBkZXJlZiBvb3BzKS4gIFRoZSBrZXJuZWwncyBvd24gY29tbWVudCBhYm92ZQp0aGVzZSBo
+ZWxwZXJzIHN0YXRlcyB0aGUgY29udHJhY3QgLS0gImNhbGxlcnMgbXVzdCBlbnN1cmUgdGhlcmUg
+d2lsbApiZSBubyByYWN5IGlvbW11X3JlbGVhc2VfZGV2aWNlKCkgY2FsbCwgd2hpY2ggb3RoZXJ3
+aXNlIHdvdWxkIFVBRiB0aGUKZGV2LT5pb21tdV9ncm91cCBwb2ludGVyIiAoZHJpdmVycy9pb21t
+dS9pb21tdS5jOjQwMjctNDAzMikgLS0gYnV0CnRoZSB1bnJlZ2lzdGVyIHRyYXZlcnNhbCBpcyBw
+cmVjaXNlbHkgYW4gaW9tbXVfcmVsZWFzZV9kZXZpY2UoKQpzb3VyY2UgdGhhdCBubyByZXNldC1w
+YXRoIGNhbGxlciBjYW4gZW5zdXJlIGFnYWluc3Q6IGl0IHRha2VzIG5vCmRldmljZSBsb2NrLCBz
+byB0aGUgZGV2aWNlX2xvY2sgdGhlIHJlc2V0IHBhdGggaG9sZHMgKHdoaWNoIGRvZXMKc2VyaWFs
+aXplIGRldmljZV9kZWwpIHByb3RlY3RzIG5vdGhpbmcgaGVyZS4KCkNvbmNyZXRlbHksIG9uIG1h
+aW5saW5lIDcuMzogcGNpX2Rldl9yZXNldF9pb21tdV9wcmVwYXJlKCkKKGlvbW11LmM6NDAzNCkg
+cmVhZHMgdGhlIGdyb3VwIGF0IDo0MDM2IGFuZCB0ZXN0cyBkZXZfaGFzX2lvbW11KCkgYXQKOjQw
+NDIgYmVmb3JlIGd1YXJkKG11dGV4KSgmZ3JvdXAtPm11dGV4KSBhdCA6NDA0NTsKcGNpX2Rldl9y
+ZXNldF9pb21tdV9kb25lKCkgKDo0MTQ2KSBoYXMgdGhlIHNhbWUgc2hhcGUgYXQgOjQxNDgsCjo0
+MTUzLCA6NDE1NiBhbmQgdGhlbiBjYWxscyBfX2Rldl90b19nZGV2KCkgYXQgOjQxNTgsIHdoaWNo
+IHdhbGtzCmdyb3VwLT5kZXZpY2VzLiAgVGhlIHJlc2V0IGJvZHkgYnJhY2tldGVkIGJ5IHRoZXNl
+IGhlbHBlcnMgaW5jbHVkZXMKZml2ZSBjYWxsLXNpdGUgcGFpcnMgaW4gZHJpdmVycy9wY2kvcGNp
+LmMgKDo0NDI2Lzo0NDQ2IHdpdGggdGhlIEZMUgptc2xlZXAoMTAwKSBhdCA6NDQ0MiwgOjQ1MDMv
+OjQ1MjQgd2l0aCBhbm90aGVyIGF0IDo0NTIwLCA6NDU2MS86NDU3OCwKOjUwMTkvOjUwMzEsIDo1
+MDU2Lzo1MDc2KSAtLSBhID49MTAwbXMgd2luZG93IGR1cmluZyB3aGljaCB0aGUKdHJhdmVyc2Fs
+J3MgbWlsbGlzZWNvbmQtc2NhbGUgdGVhcmRvd24gZml0cyB3aXRoIHJvb20gdG8gc3BhcmUuClVu
+bGlrZSB0aGUgcmVtb3ZhbC1zaWRlIHJhY2UgSSByZXBvcnRlZCBlYXJsaWVyLCB0cmlnZ2VyaW5n
+IG5lZWRzIE5PCmNvbmN1cnJlbnQgZGV2aWNlX2RlbDogYSBjbGllbnQgZGV2aWNlIHBlcmZvcm1p
+bmcgYW4gRkxSIG9yIGJ1cwpyZXNldCAoYWRtaW5pc3RyYXRvciAiZWNobyAxID4gL3N5cy9idXMv
+cGNpL2RldmljZXMvPEJERj4vcmVzZXQiLCBvcgphIGRyaXZlci1pbml0aWF0ZWQgcmVzZXQgc3Vj
+aCBhcyBOSUMgcmVjb25maWd1cmF0aW9uKSB3aGlsZSB0aGUgSU9NTVUKaW5zdGFuY2UgaXMgdW5y
+ZWdpc3RlcmVkICh2aXJ0aW8taW9tbXUgc3lzZnMgdW5iaW5kLCBwbGF0Zm9ybSBJT01NVSkKaXMg
+ZW5vdWdoIC0tIHRoZSByZXNldCBib2R5J3Mgd2lkdGggbWFrZXMgdGhpcyB0aGUgZWFzaWVzdCBv
+ZiB0aGUKdW5yZWdpc3Rlci1yYWNlIGZhbWlseSB0byBoaXQuCgpUaGUgZGV0YWlsZWQgZGVzY3Jp
+cHRpb246CgoqIFRlc3QgZW52aXJvbm1lbnQgLyBhZmZlY3RlZCB2ZXJzaW9uCgogIExpbnV4IHZl
+cnNpb24gNy4zLjAgKGdjYyAxMy4zLjAsIEdOVSBsZCAyLjQyKSAjMSBTTVAgUFJFRU1QVF9EWU5B
+TUlDCiAgLS0gdmFuaWxsYSBtYWlubGluZSA3LjMgcmVsZWFzZSB0YXJiYWxsIChrZXJuZWwub3Jn
+LCB1bm1vZGlmaWVkKS4KICBBbGwgZnVuY3Rpb25zIGNpdGVkIGFyZSBieXRlLWlkZW50aWNhbCBp
+biA3LjEuNSBhbmQgNy4zOyBsaW5lCiAgbnVtYmVycyBhcmUgZnJvbSA3LjMuICBUaGlzIHJlcG9y
+dCBpcyBzb3VyY2UtbGV2ZWw6IG15IHRlc3QKICBlbnZpcm9ubWVudCBwcm92aWRlcyBubyBQQ0kr
+QVRTIGNsaWVudCB0byBkcml2ZSB0aGUgRSBzaWRlLCBzbyB0aGUKICBpbnRlcmxlYXZpbmcgaXRz
+ZWxmIHdhcyBub3QgcmVwcm9kdWNlZCBkeW5hbWljYWxseTsgdGhlIHNoYXJlZAogIHRlYXJkb3du
+IGhhbGYgKHRoZSB0cmF2ZXJzYWwgZnJlZWluZyBhIGdyb3VwIHRocm91Z2ggdGhlCiAgdW5jb25k
+aXRpb25hbCBpb21tdV9ncm91cF9wdXQoKSBhdCBpb21tdS5jOjc3NSkgaXMgdGhlIHNhbWUKICBj
+b21wb25lbnQgbXkgcmVtb3ZhbC1zaWRlIHJlcG9ydCBkZW1vbnN0cmF0ZWQgd2l0aCBLQVNBTi4K
+CiogTWVjaGFuaXNtCgogIFRoZSBoZWxwZXIgcGFpcidzIHNoYXBlIChlbnRyeSByZWFkcyBwcmVj
+ZWRlIGV2ZXJ5IGxvY2spOgoKICAgICAgaW50IHBjaV9kZXZfcmVzZXRfaW9tbXVfcHJlcGFyZShz
+dHJ1Y3QgcGNpX2RldiAqcGRldikgICAvKiA6NDAzNCAqLwogICAgICB7CiAgICAgICAgICAgICAg
+c3RydWN0IGlvbW11X2dyb3VwICpncm91cCA9IHBkZXYtPmRldi5pb21tdV9ncm91cDsgIC8qIDo0
+MDM2CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgIGxvY2stZnJlZSAqLwogICAgICAgICAgICAgIC4uLgogICAgICAgICAgICAg
+IGlmICghcGNpX2F0c19zdXBwb3J0ZWQocGRldikgfHwgIWRldl9oYXNfaW9tbXUoJnBkZXYtPmRl
+dikpCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgLyogOjQwNDIsIHNlY29uZAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBsb2NrLWZyZWUgcmVhZCAqLwogICAg
+ICAgICAgICAgICAgICAgICAgcmV0dXJuIDA7CiAgICAgICAgICAgICAgZ3VhcmQobXV0ZXgpKCZn
+cm91cC0+bXV0ZXgpOyAgICAgICAgICAgICAgICAgICAgLyogOjQwNDUgKi8KICAgICAgICAgICAg
+ICAuLi4KCiAgICAgIHZvaWQgcGNpX2Rldl9yZXNldF9pb21tdV9kb25lKHN0cnVjdCBwY2lfZGV2
+ICpwZGV2KSAgICAgLyogOjQxNDYgKi8KICAgICAgewogICAgICAgICAgICAgIHN0cnVjdCBpb21t
+dV9ncm91cCAqZ3JvdXAgPSBwZGV2LT5kZXYuaW9tbXVfZ3JvdXA7ICAvKiA6NDE0OCAqLwogICAg
+ICAgICAgICAgIC4uLgogICAgICAgICAgICAgIGlmICghcGNpX2F0c19zdXBwb3J0ZWQocGRldikg
+fHwgIWRldl9oYXNfaW9tbXUoJnBkZXYtPmRldikpCiAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgLyogOjQxNTMgKi8KICAgICAgICAg
+ICAgICAgICAgICAgIHJldHVybjsKICAgICAgICAgICAgICBndWFyZChtdXRleCkoJmdyb3VwLT5t
+dXRleCk7ICAgICAgICAgICAgICAgICAgICAvKiA6NDE1NiAqLwogICAgICAgICAgICAgIGdkZXYg
+PSBfX2Rldl90b19nZGV2KCZwZGV2LT5kZXYpOyAgICAgICAgICAgICAgIC8qIDo0MTU4OiB3YWxr
+cwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICBncm91cC0+ZGV2aWNlcyAgICAgKi8KCiAgQSBzaWRlOiBpb21tdV9kZXZpY2VfdW5yZWdpc3Rl
+cigpIC0+IGJ1c19mb3JfZWFjaF9kZXYgLT4KICByZW1vdmVfaW9tbXVfZ3JvdXAoKSAoOjI3Mykg
+LT4gaW9tbXVfcmVsZWFzZV9kZXZpY2UoKSAoOjc3OCkgLT4KICBfX2lvbW11X2dyb3VwX3JlbW92
+ZV9kZXZpY2UoKSAoOjc1MSkgY2xlYXJzIGRldi0+aW9tbXVfZ3JvdXAgdW5kZXIKICB0aGUgZ3Jv
+dXAgbG9jayAoOjc2NjsgYWxzbyB2aWEgaW9tbXVfZGVpbml0X2RldmljZSBhdCA6NjExKSBhbmQs
+CiAgd2l0aCB0aGUgdW5jb25kaXRpb25hbCBpb21tdV9ncm91cF9wdXQoKSBhdCA6Nzc1LCBjYW4g
+ZnJlZSB0aGUKICBncm91cCBvdXRyaWdodCB3aGVuIHRoaXMgZGV2aWNlIGhlbGQgdGhlIGxhc3Qg
+cmVmZXJlbmNlLgoKICBJbnRlcmxlYXZpbmcgKGRvbmUoKSBoYWxmIHNob3duOyBwcmVwYXJlIGlz
+IHN5bW1ldHJpYyk6CgogICAgICBFOiAgZ3JvdXAgPSBwZGV2LT5kZXYuaW9tbXVfZ3JvdXA7ICAg
+ICAgICAvKiA6NDE0OCwgcmVhZHMgRyAqLwogICAgICAuLi4gcmVzZXQgYm9keTogbXNsZWVwKDEw
+MCkgLi4uICAgICAgICAgICAvKiA+PTEwMG1zICAgICAgICAqLwogICAgICBBOiAgdHJhdmVyc2Fs
+IGNvbXBsZXRlczogZ3JvdXAgbG9jayB0ZWFyZG93biwgZGV2LT5pb21tdV9ncm91cAogICAgICAg
+ICAgPSBOVUxMLCBwYXJhbSBmcmVlZCwgOjc3NSBwdXQgZHJvcHMgdGhlIGxhc3QgcmVmIC0+IEcg
+ZnJlZWQKICAgICAgRTogIGRldl9oYXNfaW9tbXUoJnBkZXYtPmRldikgICAgICAgICAgICAgLyog
+OjQxNTM6CiAgICAgICAgICAtIHJlYWQgbGFuZHMgYmVmb3JlIEEncyBwYXJhbSBjbGVhciAtPiB0
+cnVlCiAgICAgICAgICAgIC0+IGd1YXJkKG11dGV4KSgmZ3JvdXAtPm11dGV4KSAgICAgIC8qIDo0
+MTU2OiBtdXRleF9sb2NrIG9uCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICBGUkVFRCBncm91cCAtPiBVQUYKICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgIChzcGlubG9jayBvbiBmcmVlZC8KICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHJldXNlZCBtZW1vcnkpICAqLwogICAg
+ICAgICAgLSBHIHN1cnZpdmVkIChvdGhlciByZWZzKSAtPiBfX2Rldl90b19nZGV2KCZwZGV2LT5k
+ZXYpCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgLyogOjQx
+NTg6IHJlLXJlYWRzCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgZGV2LT5pb21tdV9ncm91cCA9PQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgIE5VTEwgLT4gZm9yX2VhY2hfCiAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZ3JvdXBfZGV2aWNlKE5VTEwpCiAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgd2Fsa3MgJk5VTEwtPmRl
+dmljZXMKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAt
+PiBOVUxMIGRlcmVmIG9vcHMgKi8KCiAgICAgIFN5bW1ldHJpYyB2YXJpYW50OiA6NDE0OCBhbHJl
+YWR5IHJlYWRzIE5VTEwgKGFmdGVyIEEncyA6NzY2KQogICAgICB3aGlsZSA6NDE1MyBzdGlsbCBz
+ZWVzIHRoZSBwYXJhbSAtPiBndWFyZChtdXRleCkgb24gYSBOVUxMCiAgICAgIGdyb3VwIHBvaW50
+ZXIuCgogIFdoeSB0aGUgZXhpc3RpbmcgbG9ja3MgZG8gbm90IGhlbHA6IHRoZSByZXNldCBwYXRo
+IGhvbGRzIHRoZQogIGRldmljZSBsb2NrLCB3aGljaCBzZXJpYWxpemVzIGRldmljZV9kZWwgKHRo
+ZSBjYXNlIHRoZSA6NDAyNwogIGNvbW1lbnQgd2FzIGRlc2lnbmVkIGZvciAtLSBQQ0kgc3lzZnMg
+aXMgcmVtb3ZlZCBiZWZvcmUgdGhlCiAgcmVtb3ZhbCBub3RpZmljYXRpb24pLiAgVGhlIHVucmVn
+aXN0ZXIgdHJhdmVyc2FsIGlzIG5vdAogIGRldmljZV9kZWw6IGl0IHdhbGtzIHRoZSBidXMncyBr
+bGlzdCBhbmQgY2FsbHMKICBpb21tdV9yZWxlYXNlX2RldmljZSgpIGRpcmVjdGx5LCB0YWtpbmcg
+bm8gY2xpZW50IGRldmljZSBsb2NrIGFuZAogIG5vbmUgb2YgdGhlIGxvY2tzIHRoZSBoZWxwZXJz
+IHRha2UgYmVmb3JlIHRoZWlyIGVudHJ5IHJlYWRzLgoKKiBUcmlnZ2VyIG1vZGVsCgogIEFueSBy
+dW50aW1lLXVucmVnaXN0cmFibGUgSU9NTVUgaW5zdGFuY2UgKHZpcnRpby1pb21tdSBzeXNmcwog
+IHVuYmluZDsgcGxhdGZvcm0gSU9NTVVzIHdpdGhvdXQgc3VwcHJlc3NfYmluZF9hdHRyczsgUENJ
+CiAgaG90LXVucGx1ZyBwYXRocykgdGltZXMgYSBjbGllbnQgZGV2aWNlIHVuZGVyZ29pbmcgRkxS
+L2J1cyByZXNldAogIGR1cmluZyB1bnJlZ2lzdHJhdGlvbjoKCiAgICAgICMgdGVybWluYWwgQSAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKHJvb3QpCiAgICAgIGVjaG8gPHZpcnRp
+by1idXMtaWQ+ID4gL3N5cy9idXMvdmlydGlvL2RyaXZlcnMvdmlydGlvX2lvbW11L3VuYmluZAog
+ICAgICAjIHRlcm1pbmFsIEIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIChyb290
+KQogICAgICBlY2hvIDEgPiAvc3lzL2J1cy9wY2kvZGV2aWNlcy88QkRGPi9yZXNldCAgICAgICMg
+bG9vcCwgb3IgbGV0IHRoZQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICMgZHJpdmVyIHJlY29uZmlnCiAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIyB0cmlnZ2VyIEZMUgoKICBUaGUgPj0xMDBtcyBy
+ZXNldCBib2R5IG1ha2VzIHRoZSBoaXQgcHJvYmFiaWxpdHkgZmFyIGhpZ2hlciB0aGFuCiAgdGhl
+IHJlbW92YWwtc2lkZSByYWNlJ3MgbWlsbGlzZWNvbmQgb3ZlcmxhcC4KCiogRXZpZGVuY2UKCiAg
+U291cmNlLWxldmVsIG9uIDcuMywgZnVuY3Rpb24gYnkgZnVuY3Rpb24gKGV2ZXJ5IGFuY2hvciBp
+cyBxdW90ZWQKICBpbiB0aGUgbWVjaGFuaXNtIHNlY3Rpb24gYWJvdmU7IGEgY29uc29saWRhdGVk
+IGFubm90YXRlZCBsaXN0IGlzCiAgYXZhaWxhYmxlIG9uIHJlcXVlc3QpLiAgVGhlIEEtc2lkZSB0
+ZWFyZG93biB0aGF0IHRoZSBpbnRlcmxlYXZpbmcKICBjb25zdW1lcyAtLSB0aGUgdHJhdmVyc2Fs
+IGVudGVyaW5nIGlvbW11X3JlbGVhc2VfZGV2aWNlKCkgd2l0aG91dAogIGFueSBvZiB0aGUgcHJv
+YmUtc2lkZSBsb2NrcyBhbmQgZnJlZWluZyBhIGdyb3VwIHZpYSB0aGUKICB1bmNvbmRpdGlvbmFs
+IDo3NzUgcHV0IC0tIGlzIHRoZSBpZGVudGljYWwgY29tcG9uZW50IGRlbW9uc3RyYXRlZAogIHdp
+dGggS0FTQU4gaW4gbXkgcmVtb3ZhbC1zaWRlIHJlcG9ydCAocmVwcm9kdWNlciBhdHRhY2hlZCBh
+Z2FpbgogIGhlcmUgZm9yIGNvbnZlbmllbmNlOyBpdHMgImFiIiBhY3Rpb24gZHJpdmVzIGV4YWN0
+bHkgdGhhdCB0ZWFyZG93bgogIGhhbGYpLgoKClRoYW5rcyBmb3IgdGFraW5nIGEgbG9vay4KClJl
+Z2FyZHMsCkhhbnhpYW5nIFh1Cnh1aHhAaHVzdC5lZHUuY24KCgo=
+------=_Part_283853_1938003770.1792677904304
+Content-Type: text/plain; name=iommurace.c
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="iommurace.c"
 
->
-> From the documentation of the luo_preserve_file(): 3rd point.
->
-> * This function orchestrates the first phase of preserving a file. It per=
-forms
->  * the following steps:
->  *
->  * 1. Validates that the @token is not already in use within the file_set=
-.
->  * 2. Ensures the file_set's memory for files serialization is allocated
->  *    (allocates if needed).
-> =3D>* 3. Iterates through registered handlers, calling can_preserve() to =
-find one
->  *    compatible with the given @fd.
->  * 4. Calls the handler's .preserve() operation, which saves the file's s=
-tate
->  *    and returns an opaque private data handle.
->  * 5. Adds the new instance to the file_set's internal list.
->  *
->
-> luo_preserve_file():
->
->         list_private_for_each_entry(fh, &luo_file_handler_list, list) {
->                 if (fh->ops->can_preserve(fh, file)) {
->                         if (try_module_get(fh->ops->owner))
->                                 err =3D 0;
->                         break;
->                 }
->         }
->
->
-> the first handler whose can_preserve return true will be selected as the
-> FH;
->
-> later in code:
->
->         err =3D fh->ops->preserve(&args);
->
-> So can_preserve() is called on every handler for a fd and once it finds
-> the FH which reutrns true, it uses its preserve call to preserve the file=
-.
+Ly8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IEdQTC0yLjAKLyoKICogaW9tbXVyYWNlLmMgLSBk
+eW5hbWljIHZlcmlmaWNhdGlvbiBkcml2ZXIgZm9yIHRoZSBJT01NVSBsaWZlY3ljbGUgcmFjZQog
+KiBhdWRpdCAoSFYtMyAvIEhWLTQgaW4gZG9jcy9tYW51YWwtcmV2aWV3LWRyaXZlcnMtYmFzZS0y
+MDI2LTEwLTIwLm1kKS4KICoKICogUmVnaXN0ZXJzIGEgRkFLRSBJT01NVSBpbnN0YW5jZSAoc3Ry
+dWN0IGlvbW11X2RldmljZSArIHN0cnVjdCBpb21tdV9vcHMpCiAqIHRocm91Z2ggdGhlIHJlYWwg
+RVhQT1JUX1NZTUJPTF9HUEwgY29yZSBBUElzLCBhbmQgZHJpdmVzIHRoZSBSRUFMIGNvcmUKICog
+Y29kZSBwYXRocyBvZiBkcml2ZXJzL2lvbW11L2lvbW11LmMgd2l0aCBSRUFMIHBsYXRmb3JtLWJ1
+cyBkZXZpY2VzOgogKgogKiAgIGVudHJ5IEEgKGluc3RhbmNlIHVucmVnaXN0ZXIgdHJhdmVyc2Fs
+KToKICogICAgICAgaW9tbXVfZGV2aWNlX3VucmVnaXN0ZXIoKSAtPiBidXNfZm9yX2VhY2hfZGV2
+IC0+IHJlbW92ZV9pb21tdV9ncm91cAogKiAgIGVudHJ5IEIgKGNsaWVudCByZW1vdmFsKToKICog
+ICAgICAgcGxhdGZvcm1fZGV2aWNlX3VucmVnaXN0ZXIoKSAtPiBkZXZpY2VfZGVsIC0+CiAqICAg
+ICAgIEJVU19OT1RJRllfUkVNT1ZFRF9ERVZJQ0UgLT4gaW9tbXVfYnVzX25vdGlmaWVyIC0+IGlv
+bW11X3JlbGVhc2VfZGV2aWNlCiAqICAgZW50cnkgQyAoY2xpZW50IHByb2JlKToKICogICAgICAg
+cGxhdGZvcm1fZGV2aWNlX2FkZCgpIC0+IGRldmljZV9hZGQgLT4gQlVTX05PVElGWV9BRERfREVW
+SUNFIC0+CiAqICAgICAgIGlvbW11X2J1c19ub3RpZmllciAtPiBpb21tdV9wcm9iZV9kZXZpY2Ug
+LT4gaW9tbXVfaW5pdF9kZXZpY2UKICoKICogQ2xpZW50cyBhcmUgYm91bmQgdG8gdGhlIGZha2Ug
+aW5zdGFuY2UgYnkgY2FsbGluZyBpb21tdV9md3NwZWNfaW5pdCgpCiAqIChFWFBPUlRfU1lNQk9M
+X0dQTCkgYmV0d2VlbiBwbGF0Zm9ybV9kZXZpY2VfYWxsb2MoKSBhbmQKICogcGxhdGZvcm1fZGV2
+aWNlX2FkZCgpLCBzbyB0aGUgQUREIG5vdGlmaWVyJ3MgcHJvYmUgbWF0Y2hlcyB0aGUgZmFrZSBv
+cHMKICogdmlhIGlvbW11X2Z3c3BlY19vcHMoKSBvbiB0aGUgc2hhcmVkIHNvZnR3YXJlIGZ3bm9k
+ZS4KICoKICogYWN0aW9ucyAoZWNobyA8Y21kPiA+IC9zeXMvbW9kdWxlL2lvbW11cmFjZS9wYXJh
+bWV0ZXJzL2FjdGlvbik6CiAqICAgc2V0dXAgICAgICAgICAgIC0gY2FycmllciBkZXZpY2UgKyBz
+b2Z0d2FyZSBmd25vZGUgKyBpb21tdV9kZXZpY2Vfc3lzZnNfYWRkCiAqICAgICAgICAgICAgICAg
+ICAgICAgKyBpb21tdV9kZXZpY2VfcmVnaXN0ZXIgKHJlYWwgYnVzX2lvbW11X3Byb2JlIHN3ZWVw
+KQogKiAgIHVucmVnICAgICAgICAgICAtIG9uZSBpb21tdV9kZXZpY2VfdW5yZWdpc3RlciAocmVh
+bCB0cmF2ZXJzYWwpCiAqICAgcmVnICAgICAgICAgICAgIC0gb25lIGlvbW11X2RldmljZV9yZWdp
+c3RlcgogKiAgIHJlZ2xvb3AgTiAgICAgICAtIE4gc2VxdWVudGlhbCByZWdpc3Rlcit1bnJlZ2lz
+dGVyIHJvdW5kcyAoYmFzZWxpbmUpCiAqICAgY2xpZW50IE4gICAgICAgIC0gTiBjbGllbnRzIGFk
+ZGVkIHRoZW4gcmVtb3ZlZCBzZXF1ZW50aWFsbHkgKGJhc2VsaW5lOwogKiAgICAgICAgICAgICAg
+ICAgICAgIGV4cGVjdCB6ZXJvIHNwbGF0cyB3aXRoIGEgc3RhYmxlIHJlZ2lzdGVyZWQgaW5zdGFu
+Y2UpCiAqICAgYWIgTiAgICAgICAgICAgIC0gSFYtMyBBIHggQjoga3RocmVhZCBBIGxvb3BzIHJl
+Z2lzdGVyK3VucmVnaXN0ZXIsCiAqICAgICAgICAgICAgICAgICAgICAga3RocmVhZCBCIGxvb3Bz
+IGNsaWVudCBhZGQrZGVsOyByZWFsIHBhdGhzIG9uIGJvdGggc2lkZXMKICogICBhYyBOICAgICAg
+ICAgICAgLSBIVi00IEEgeCBDOiBrdGhyZWFkIEEgbG9vcHMgcmVnaXN0ZXIrdW5yZWdpc3RlciwK
+ICogICAgICAgICAgICAgICAgICAgICBrdGhyZWFkIEMgbG9vcHMgY2xpZW50IGFkZCBvbmx5IChX
+MS9XMiB3aW5kb3dzLAogKiAgICAgICAgICAgICAgICAgICAgIGNsaWVudHMga2VwdCBmb3IgcG9z
+dC1tb3J0ZW0gaW5zcGVjdGlvbikKICogICBhYzEgTiAgICAgICAgICAgLSBzYW1lIGFzIGFjIGJ1
+dCBkZXZpY2VfZ3JvdXAgPSBnZW5lcmljX3NpbmdsZV9kZXZpY2VfZ3JvdXAKICogICAgICAgICAg
+ICAgICAgICAgICAoVzM6IHVucmVnaXN0ZXIgdGFpbCBzaW5nbGV0b25fZ3JvdXAgcmFjZSBzdXJm
+YWNlKQogKiAgIGNsZWFudXAgICAgICAgICAtIGJlc3QtZWZmb3J0IHRlYXJkb3duICh1bnJlZ2lz
+dGVyLCBkcm9wIGNsaWVudHMsIHN5c2ZzKQogKiAgIHN0YXR1cyAgICAgICAgICAtIGxvZyBzdGF0
+cwogKgogKiBLZXJuZWwgc291cmNlIGlzIE5PVCBtb2RpZmllZDsgZXZlcnl0aGluZyBpcyBkcml2
+ZW4gdGhyb3VnaCBleHBvcnRlZAogKiBpb21tdSBjb3JlIEFQSXMsIG1hdGNoaW5nIHRoZSBtZXRo
+b2RvbG9neSBvZiBwbXVfcmFjZS9tY3JzaW0vcmVnbWFwX3JhY2UuCiAqCiAqIE5PVEU6IGFiL2Fj
+L2FjMSBtYXkgbGVhayBtb2R1bGUgcmVmZXJlbmNlcyB3aGVuIHRoZSBhdWRpdCdzICJXMiBkZWZl
+Y3RpdmUKICogc3RhdGUiIGhpdHMgKHByb2JlIHN1Y2NlZWRlZCAtPiB0cnlfbW9kdWxlX2dldCwg
+bGF0ZXIgcmVtb3ZhbCBza2lwcwogKiBpb21tdV9kZWluaXRfZGV2aWNlIC0+IG5vIG1vZHVsZV9w
+dXQpLiBybW1vZCB0aGVuIGZhaWxzIHdpdGggRUJVU1k7IHRoZQogKiBwbGFucyB0aGVyZWZvcmUg
+ZG8gbm90IHJtbW9kIGFmdGVyIHJhY2UgYWN0aW9ucyAtIHRoZSBsZWFrIGl0c2VsZiBpcyBhCiAq
+IHZlcmlmaWVkIHByZWRpY3Rpb24gb2YgdGhlIHJlcG9ydC4KICovCiNkZWZpbmUgcHJfZm10KGZt
+dCkgIklPTU1VUkFDRTogIiBmbXQKCiNpbmNsdWRlIDxsaW51eC9tb2R1bGUuaD4KI2luY2x1ZGUg
+PGxpbnV4L2tlcm5lbC5oPgojaW5jbHVkZSA8bGludXgva3RocmVhZC5oPgojaW5jbHVkZSA8bGlu
+dXgvZGVsYXkuaD4KI2luY2x1ZGUgPGxpbnV4L2Vyci5oPgojaW5jbHVkZSA8bGludXgvc3RyaW5n
+Lmg+CiNpbmNsdWRlIDxsaW51eC9zbGFiLmg+CiNpbmNsdWRlIDxsaW51eC9jb21wbGV0aW9uLmg+
+CiNpbmNsdWRlIDxsaW51eC9hdG9taWMuaD4KI2luY2x1ZGUgPGxpbnV4L3BsYXRmb3JtX2Rldmlj
+ZS5oPgojaW5jbHVkZSA8bGludXgvaW9tbXUuaD4KI2luY2x1ZGUgPGxpbnV4L3Byb3BlcnR5Lmg+
+CgovKiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0gKi8KLyogZmFrZSBJT01NVSBpbnN0YW5jZSAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAqLwoKc3RhdGljIHN0cnVjdCBpb21tdV9k
+ZXZpY2UgZm9tX2lvbW11OwpzdGF0aWMgc3RydWN0IGlvbW11X29wcyBmb21fb3BzOwpzdGF0aWMg
+c3RydWN0IHBsYXRmb3JtX2RldmljZSAqY2FycmllcjsKc3RhdGljIHN0cnVjdCBmd25vZGVfaGFu
+ZGxlICpzd19ub2RlOwpzdGF0aWMgYXRvbWljX3QgcmVnX3N0YXRlID0gQVRPTUlDX0lOSVQoMCk7
+IC8qIDEgPSByZWdpc3RlcmVkICovCnN0YXRpYyBpbnQgdXNlX3NpbmdsZXRvbjsKCi8qIHN0YXRz
+ICovCnN0YXRpYyB1bnNpZ25lZCBsb25nIHN0YXRfcmVnLCBzdGF0X3VucmVnLCBzdGF0X3JlZ19m
+YWlsOwpzdGF0aWMgdW5zaWduZWQgbG9uZyBzdGF0X2FkZF9vaywgc3RhdF9hZGRfZmFpbCwgc3Rh
+dF9md19mYWlsLCBzdGF0X2RlbDsKc3RhdGljIHVuc2lnbmVkIGxvbmcgc3RhdF9iX2RvbmUsIHN0
+YXRfY19kb25lLCBzdGF0X2FfZG9uZTsKCi8qIGZha2Ugc3RhdGljIGlkZW50aXR5IGRvbWFpbjog
+YXR0YWNoIGlzIGEgbm8tb3AsIGZyZWUgbXVzdCBub3Qga2ZyZWUgKi8Kc3RhdGljIGludCBmb21f
+YXR0YWNoX2RldihzdHJ1Y3QgaW9tbXVfZG9tYWluICpkb20sIHN0cnVjdCBkZXZpY2UgKmRldiwK
+CQkJICBzdHJ1Y3QgaW9tbXVfZG9tYWluICpvbGQpCnsKCXJldHVybiAwOwp9CgpzdGF0aWMgdm9p
+ZCBmb21fZG9tX2ZyZWUoc3RydWN0IGlvbW11X2RvbWFpbiAqZG9tKQp7Cglwcl9pbmZvKCJmb21f
+ZG9tX2ZyZWUgb24gc3RhdGljIGlkZW50aXR5IGRvbWFpbiAoaWdub3JlZClcbiIpOwp9CgpzdGF0
+aWMgY29uc3Qgc3RydWN0IGlvbW11X2RvbWFpbl9vcHMgZm9tX2RvbV9vcHMgPSB7CgkuYXR0YWNo
+X2RldiA9IGZvbV9hdHRhY2hfZGV2LAoJLmZyZWUgPSBmb21fZG9tX2ZyZWUsCn07CgpzdGF0aWMg
+c3RydWN0IGlvbW11X2RvbWFpbiBmb21faWRlbnRpdHlfZG9tID0gewoJLnR5cGUgPSBJT01NVV9E
+T01BSU5fSURFTlRJVFksCgkub3BzID0gJmZvbV9kb21fb3BzLAoJLm93bmVyID0gJmZvbV9vcHMs
+CgkucGdzaXplX2JpdG1hcCA9IDAsCgkuZ2VvbWV0cnkgPSB7CgkJLmFwZXJ0dXJlX3N0YXJ0ID0g
+MCwKCQkuYXBlcnR1cmVfZW5kID0gfjBVTCwKCQkuZm9yY2VfYXBlcnR1cmUgPSBmYWxzZSwKCX0s
+Cn07CgpzdGF0aWMgc3RydWN0IGlvbW11X2RldmljZSAqZm9tX3Byb2JlX2RldmljZShzdHJ1Y3Qg
+ZGV2aWNlICpkZXYpCnsKCXJldHVybiAmZm9tX2lvbW11Owp9CgpzdGF0aWMgdm9pZCBmb21fcmVs
+ZWFzZV9kZXZpY2Uoc3RydWN0IGRldmljZSAqZGV2KQp7Cn0KCnN0YXRpYyBpbnQgZm9tX2RlZl9k
+b21haW5fdHlwZShzdHJ1Y3QgZGV2aWNlICpkZXYpCnsKCXJldHVybiBJT01NVV9ET01BSU5fSURF
+TlRJVFk7Cn0KCnN0YXRpYyBpbnQgZm9tX3JlZ2lzdGVyKHZvaWQpCnsKCWludCByZXQ7CgoJaWYg
+KGF0b21pY194Y2hnKCZyZWdfc3RhdGUsIDEpICE9IDApCgkJcmV0dXJuIDA7IC8qIGFscmVhZHkg
+cmVnaXN0ZXJlZCAqLwoKCWZvbV9vcHMgPSAoc3RydWN0IGlvbW11X29wcyl7CgkJLm93bmVyCQkJ
+PSBUSElTX01PRFVMRSwKCQkucHJvYmVfZGV2aWNlCQk9IGZvbV9wcm9iZV9kZXZpY2UsCgkJLnJl
+bGVhc2VfZGV2aWNlCQk9IGZvbV9yZWxlYXNlX2RldmljZSwKCQkuZGV2aWNlX2dyb3VwCQk9IHVz
+ZV9zaW5nbGV0b24gPwoJCQkJCSAgZ2VuZXJpY19zaW5nbGVfZGV2aWNlX2dyb3VwIDoKCQkJCQkg
+IGdlbmVyaWNfZGV2aWNlX2dyb3VwLAoJCS5kZWZfZG9tYWluX3R5cGUJPSBmb21fZGVmX2RvbWFp
+bl90eXBlLAoJCS5pZGVudGl0eV9kb21haW4JPSAmZm9tX2lkZW50aXR5X2RvbSwKCX07CgoJcmV0
+ID0gaW9tbXVfZGV2aWNlX3JlZ2lzdGVyKCZmb21faW9tbXUsICZmb21fb3BzLCAmY2Fycmllci0+
+ZGV2KTsKCWlmIChyZXQpIHsKCQlhdG9taWNfc2V0KCZyZWdfc3RhdGUsIDApOwoJCXN0YXRfcmVn
+X2ZhaWwrKzsKCQlyZXR1cm4gcmV0OwoJfQoJc3RhdF9yZWcrKzsKCXJldHVybiAwOwp9CgpzdGF0
+aWMgdm9pZCBmb21fdW5yZWdpc3Rlcih2b2lkKQp7CglpZiAoYXRvbWljX3hjaGcoJnJlZ19zdGF0
+ZSwgMCkgIT0gMSkKCQlyZXR1cm47IC8qIG5vdCByZWdpc3RlcmVkICovCglpb21tdV9kZXZpY2Vf
+dW5yZWdpc3RlcigmZm9tX2lvbW11KTsKCXN0YXRfdW5yZWcrKzsKfQoKLyogLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tICov
+Ci8qIGZha2UgY2xpZW50IGRldmljZXMgKHJlYWwgcGxhdGZvcm0gYnVzIGRldmljZXMpICAgICAg
+ICAgICAgICAgICAgICAgKi8KCiNkZWZpbmUgTUFYX0NMSSA1MTIKc3RhdGljIHN0cnVjdCBwbGF0
+Zm9ybV9kZXZpY2UgKmNsaVtNQVhfQ0xJXTsKc3RhdGljIGludCBucl9jbGk7CgpzdGF0aWMgaW50
+IGZvbV9uZXdfY2xpZW50KHN0cnVjdCBwbGF0Zm9ybV9kZXZpY2UgKipvdXQpCnsKCXN0cnVjdCBw
+bGF0Zm9ybV9kZXZpY2UgKnBkZXY7CglpbnQgcmV0OwoKCXBkZXYgPSBwbGF0Zm9ybV9kZXZpY2Vf
+YWxsb2MoImZvbWNsaSIsIFBMQVRGT1JNX0RFVklEX0FVVE8pOwoJaWYgKCFwZGV2KQoJCXJldHVy
+biAtRU5PTUVNOwoKCS8qCgkgKiBCaW5kIHRoZSBjbGllbnQncyBmd3NwZWMgdG8gdGhlIGZha2Ug
+aW5zdGFuY2UgQkVGT1JFIGRldmljZV9hZGQgc28KCSAqIHRoZSBBREQgbm90aWZpZXIncyBpb21t
+dV9wcm9iZV9kZXZpY2UoKSBtYXRjaGVzIG91ciBmYWtlIG9wcy4KCSAqIEZhaWxzIHdpdGggLUVO
+T0RFVi8tRVBST0JFX0RFRkVSIHdoZW4gdGhlIGluc3RhbmNlIGlzIGN1cnJlbnRseQoJICogdW5y
+ZWdpc3RlcmVkIC8gbWlkLXJlZ2lzdHJhdGlvbjogdGhlIG5hdHVyYWwgbm9uLXJhY3kgYnJhbmNo
+LgoJICovCglyZXQgPSBpb21tdV9md3NwZWNfaW5pdCgmcGRldi0+ZGV2LCBzd19ub2RlKTsKCWlm
+IChyZXQpIHsKCQlzdGF0X2Z3X2ZhaWwrKzsKCQlwbGF0Zm9ybV9kZXZpY2VfcHV0KHBkZXYpOwoJ
+CXJldHVybiByZXQ7Cgl9CgoJcmV0ID0gcGxhdGZvcm1fZGV2aWNlX2FkZChwZGV2KTsKCWlmIChy
+ZXQpIHsKCQlzdGF0X2FkZF9mYWlsKys7CgkJcGxhdGZvcm1fZGV2aWNlX3B1dChwZGV2KTsKCQly
+ZXR1cm4gcmV0OwoJfQoJc3RhdF9hZGRfb2srKzsKCSpvdXQgPSBwZGV2OwoJcmV0dXJuIDA7Cn0K
+CnN0YXRpYyB2b2lkIGZvbV9kZWxfY2xpZW50KHN0cnVjdCBwbGF0Zm9ybV9kZXZpY2UgKnBkZXYp
+CnsKCXBsYXRmb3JtX2RldmljZV91bnJlZ2lzdGVyKHBkZXYpOwoJc3RhdF9kZWwrKzsKfQoKLyog
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tICovCi8qIHJhY2UgdGhyZWFkcyAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgKi8KCnN0cnVjdCByYXJncyB7CglpbnQgcm91bmRz
+Owp9OwoKc3RhdGljIHN0cnVjdCByYXJncyByYSwgcmI7CgpzdGF0aWMgaW50IHRocmVhZF9hKHZv
+aWQgKmRhdGEpIC8qIGVudHJ5IEE6IHJlZ2lzdGVyL3VucmVnaXN0ZXIgcm91bmRzICovCnsKCXN0
+cnVjdCByYXJncyAqYSA9IGRhdGE7CglpbnQgaTsKCglmb3IgKGkgPSAwOyBpIDwgYS0+cm91bmRz
+OyBpKyspIHsKCQlmb21fcmVnaXN0ZXIoKTsKCQlmb21fdW5yZWdpc3RlcigpOwoJCWlmICgoaSAl
+IDUwMCkgPT0gNDk5KQoJCQlwcl9pbmZvKCJ0aHJlYWRfYSByb3VuZCAlZFxuIiwgaSArIDEpOwoJ
+CS8qCgkJICogTm8gc2xlZXA6IG1heGltaXplIG92ZXJsYXAgb2YgdGhlIHVucmVnaXN0ZXIgdHJh
+dmVyc2FsCgkJICogd2l0aCBjb25jdXJyZW50IGNsaWVudCBhZGQvZGVsL3Byb2JlIG9uIG90aGVy
+IENQVXMuCgkJICovCgl9CglzdGF0X2FfZG9uZSsrOwoJcHJfaW5mbygidGhyZWFkX2EgZmluaXNo
+ZWQgJWQgcm91bmRzXG4iLCBhLT5yb3VuZHMpOwoJcmV0dXJuIDA7Cn0KCnN0YXRpYyBpbnQgdGhy
+ZWFkX2Iodm9pZCAqZGF0YSkgLyogZW50cnkgQjogY2xpZW50IGFkZCtkZWwgY2h1cm4gKi8KewoJ
+c3RydWN0IHJhcmdzICphID0gZGF0YTsKCWludCBpOwoJc3RydWN0IHBsYXRmb3JtX2RldmljZSAq
+cGRldjsKCglmb3IgKGkgPSAwOyBpIDwgYS0+cm91bmRzOyBpKyspIHsKCQlpZiAoZm9tX25ld19j
+bGllbnQoJnBkZXYpKQoJCQljb250aW51ZTsKCQlmb21fZGVsX2NsaWVudChwZGV2KTsKCQlpZiAo
+KGkgJSA1MDApID09IDQ5OSkKCQkJcHJfaW5mbygidGhyZWFkX2Igcm91bmQgJWRcbiIsIGkgKyAx
+KTsKCX0KCXN0YXRfYl9kb25lKys7Cglwcl9pbmZvKCJ0aHJlYWRfYiBmaW5pc2hlZCAlZCByb3Vu
+ZHMgKGFkZF9vaz0lbHUgZndfZmFpbD0lbHUpXG4iLAoJCWEtPnJvdW5kcywgc3RhdF9hZGRfb2ss
+IHN0YXRfZndfZmFpbCk7CglyZXR1cm4gMDsKfQoKc3RhdGljIGludCB0aHJlYWRfYyh2b2lkICpk
+YXRhKSAvKiBlbnRyeSBDOiBjbGllbnQgYWRkIG9ubHkgKEhWLTQpICovCnsKCXN0cnVjdCByYXJn
+cyAqYSA9IGRhdGE7CglpbnQgaTsKCglmb3IgKGkgPSAwOyBpIDwgYS0+cm91bmRzOyBpKyspIHsK
+CQlzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2OwoKCQlpZiAobnJfY2xpIDwgTUFYX0NMSSkg
+ewoJCQlpZiAoZm9tX25ld19jbGllbnQoJnBkZXYpID09IDApCgkJCQljbGlbbnJfY2xpKytdID0g
+cGRldjsKCQl9CgkJaWYgKChpICUgNTAwKSA9PSA0OTkpCgkJCXByX2luZm8oInRocmVhZF9jIHJv
+dW5kICVkXG4iLCBpICsgMSk7Cgl9CglzdGF0X2NfZG9uZSsrOwoJcHJfaW5mbygidGhyZWFkX2Mg
+ZmluaXNoZWQgJWQgcm91bmRzIChhZGRlZD0lZClcbiIsIGEtPnJvdW5kcywgbnJfY2xpKTsKCXJl
+dHVybiAwOwp9CgpzdGF0aWMgdm9pZCBydW5fcmFjZShjb25zdCBjaGFyICpraW5kLCBpbnQgcm91
+bmRzKQp7CglzdHJ1Y3QgdGFza19zdHJ1Y3QgKnRhLCAqdGI7CgoJcmEucm91bmRzID0gcm91bmRz
+OwoJcmIucm91bmRzID0gcm91bmRzOwoKCWlmIChzdHJjbXAoa2luZCwgImFiIikgPT0gMCkKCQl0
+YiA9IGt0aHJlYWRfcnVuKHRocmVhZF9iLCAmcmIsICJpb21tdXJhY2VfYiIpOwoJZWxzZQoJCXRi
+ID0ga3RocmVhZF9ydW4odGhyZWFkX2MsICZyYiwgImlvbW11cmFjZV9jIik7Cgl0YSA9IGt0aHJl
+YWRfcnVuKHRocmVhZF9hLCAmcmEsICJpb21tdXJhY2VfYSIpOwoJaWYgKElTX0VSUih0YSkgfHwg
+SVNfRVJSKHRiKSkgewoJCXByX2Vycigia3RocmVhZCBjcmVhdGlvbiBmYWlsZWRcbiIpOwoJCXJl
+dHVybjsKCX0KCS8qIGJsb2NrIHVudGlsIGJvdGggc2lkZXMgY29tcGxldGUgKGJvdW5kZWQ6IGEg
+Y3Jhc2hlZCB0aHJlYWQgbmV2ZXIKCSAqIGluY3JlbWVudHMgaXRzIGRvbmUgY291bnRlciAtIGJh
+aWwgb3V0IGFmdGVyIDE1MHMgYW5kIGxldCB0aGUKCSAqIHBsYW4gY29udGludWU7IHRoZSBLQVNB
+TiByZXBvcnQgaW4gZG1lc2cgaXMgdGhlIGV2aWRlbmNlKSAqLwoJewoJCWludCB3YWl0ZWQgPSAw
+OwoKCQl3aGlsZSAoc3RhdF9hX2RvbmUgKyBzdGF0X2JfZG9uZSArIHN0YXRfY19kb25lIDwgMiAm
+JgoJCSAgICAgICB3YWl0ZWQgPCAxNTAwMDApIHsKCQkJbXNsZWVwKDIwMCk7CgkJCXdhaXRlZCAr
+PSAyMDA7CgkJfQoJfQoJcHJfaW5mbygicmFjZSAlcyByb3VuZHM9JWQgY29tcGxldGVcbiIsIGtp
+bmQsIHJvdW5kcyk7Cn0KCi8qIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSAqLwovKiBhY3Rpb24gcGFyYW1ldGVyICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICovCgpzdGF0aWMg
+Y2hhciBhY3Rpb25fYnVmWzY0XTsKCnN0YXRpYyBpbnQgYWN0aW9uX3NldChjb25zdCBjaGFyICp2
+YWwsIGNvbnN0IHN0cnVjdCBrZXJuZWxfcGFyYW0gKmtwKQp7CgljaGFyIGNtZFsxNl07Cglsb25n
+IG4gPSAwOwoJaW50IGdvdDsKCglzdHJzY3B5KGFjdGlvbl9idWYsIHZhbCwgc2l6ZW9mKGFjdGlv
+bl9idWYpKTsKCWdvdCA9IHNzY2FuZih2YWwsICIlMTVzICVsZCIsIGNtZCwgJm4pOwoJaWYgKGdv
+dCA8IDEpCgkJcmV0dXJuIC1FSU5WQUw7CgoJaWYgKHN0cmNtcChjbWQsICJzZXR1cCIpID09IDAp
+IHsKCQlpbnQgcmV0OwoKCQlpZiAoY2FycmllcikgewoJCQlwcl9pbmZvKCJzZXR1cDogYWxyZWFk
+eSBkb25lXG4iKTsKCQkJcmV0dXJuIDA7CgkJfQoJCXN3X25vZGUgPSBmd25vZGVfY3JlYXRlX3Nv
+ZnR3YXJlX25vZGUoTlVMTCwgTlVMTCk7CgkJaWYgKElTX0VSUihzd19ub2RlKSkgewoJCQlzd19u
+b2RlID0gTlVMTDsKCQkJcmV0dXJuIFBUUl9FUlIoc3dfbm9kZSk7CgkJfQoJCWNhcnJpZXIgPSBw
+bGF0Zm9ybV9kZXZpY2VfYWxsb2MoImZvbWh3IiwgUExBVEZPUk1fREVWSURfQVVUTyk7CgkJaWYg
+KCFjYXJyaWVyKSB7CgkJCWZ3bm9kZV9yZW1vdmVfc29mdHdhcmVfbm9kZShzd19ub2RlKTsKCQkJ
+c3dfbm9kZSA9IE5VTEw7CgkJCXJldHVybiAtRU5PTUVNOwoJCX0KCQlkZXZpY2Vfc2V0X25vZGUo
+JmNhcnJpZXItPmRldiwgc3dfbm9kZSk7CgkJcmV0ID0gcGxhdGZvcm1fZGV2aWNlX2FkZChjYXJy
+aWVyKTsKCQlpZiAocmV0KSB7CgkJCXBsYXRmb3JtX2RldmljZV9wdXQoY2Fycmllcik7CgkJCWNh
+cnJpZXIgPSBOVUxMOwoJCQlmd25vZGVfcmVtb3ZlX3NvZnR3YXJlX25vZGUoc3dfbm9kZSk7CgkJ
+CXN3X25vZGUgPSBOVUxMOwoJCQlyZXR1cm4gcmV0OwoJCX0KCQlyZXQgPSBpb21tdV9kZXZpY2Vf
+c3lzZnNfYWRkKCZmb21faW9tbXUsICZjYXJyaWVyLT5kZXYsIE5VTEwsCgkJCQkJICAgICAiZm9t
+X2lvbW11MCIpOwoJCWlmIChyZXQpIHsKCQkJcGxhdGZvcm1fZGV2aWNlX3VucmVnaXN0ZXIoY2Fy
+cmllcik7CgkJCWNhcnJpZXIgPSBOVUxMOwoJCQlmd25vZGVfcmVtb3ZlX3NvZnR3YXJlX25vZGUo
+c3dfbm9kZSk7CgkJCXN3X25vZGUgPSBOVUxMOwoJCQlyZXR1cm4gcmV0OwoJCX0KCQlyZXQgPSBm
+b21fcmVnaXN0ZXIoKTsKCQlwcl9pbmZvKCJzZXR1cCBkb25lIChyZWdpc3RlciByZXQ9JWQpXG4i
+LCByZXQpOwoJCXJldHVybiByZXQ7Cgl9CgoJaWYgKHN0cmNtcChjbWQsICJ1bnJlZyIpID09IDAp
+IHsKCQlmb21fdW5yZWdpc3RlcigpOwoJCXByX2luZm8oInVucmVnIGRvbmVcbiIpOwoJCXJldHVy
+biAwOwoJfQoJaWYgKHN0cmNtcChjbWQsICJyZWciKSA9PSAwKSB7CgkJaW50IHJldCA9IGZvbV9y
+ZWdpc3RlcigpOwoKCQlwcl9pbmZvKCJyZWcgcmV0PSVkXG4iLCByZXQpOwoJCXJldHVybiByZXQ7
+Cgl9CglpZiAoc3RyY21wKGNtZCwgInJlZ2xvb3AiKSA9PSAwICYmIGdvdCA9PSAyKSB7CgkJbG9u
+ZyBpOwoKCQlmb3IgKGkgPSAwOyBpIDwgbjsgaSsrKSB7CgkJCWZvbV9yZWdpc3RlcigpOwoJCQlm
+b21fdW5yZWdpc3RlcigpOwoJCX0KCQlwcl9pbmZvKCJyZWdsb29wICVsZCBkb25lXG4iLCBuKTsK
+CQlyZXR1cm4gMDsKCX0KCWlmIChzdHJjbXAoY21kLCAiY2xpZW50IikgPT0gMCAmJiBnb3QgPT0g
+MikgewoJCWxvbmcgaTsKCQlpbnQgZXJyID0gMDsKCgkJaWYgKG4gPiBNQVhfQ0xJKQoJCQluID0g
+TUFYX0NMSTsKCQlmb3IgKGkgPSAwOyBpIDwgbjsgaSsrKSB7CgkJCWlmIChmb21fbmV3X2NsaWVu
+dCgmY2xpW25yX2NsaV0pKSB7CgkJCQllcnIgPSAxOwoJCQkJYnJlYWs7CgkJCX0KCQkJbnJfY2xp
+Kys7CgkJfQoJCW1zbGVlcCg1MDApOyAvKiBsZXQgcHJvYmVzIHNldHRsZSAqLwoJCWZvciAoaSA9
+IDA7IGkgPCBucl9jbGk7IGkrKykKCQkJZm9tX2RlbF9jbGllbnQoY2xpW2ldKTsKCQlucl9jbGkg
+PSAwOwoJCXByX2luZm8oImNsaWVudCAlbGQgZG9uZSAoZXJyPSVkKVxuIiwgbiwgZXJyKTsKCQly
+ZXR1cm4gMDsKCX0KCWlmICgoc3RyY21wKGNtZCwgImFiIikgPT0gMCB8fCBzdHJjbXAoY21kLCAi
+YWMiKSA9PSAwIHx8CgkgICAgIHN0cmNtcChjbWQsICJhYzEiKSA9PSAwKSAmJiBnb3QgPT0gMikg
+ewoJCXVzZV9zaW5nbGV0b24gPSAoY21kWzJdID09ICcxJyk7CgkJc3RhdF9hX2RvbmUgPSBzdGF0
+X2JfZG9uZSA9IHN0YXRfY19kb25lID0gMDsKCQlydW5fcmFjZShjbWQsIChpbnQpbik7CgkJcmV0
+dXJuIDA7Cgl9CglpZiAoc3RyY21wKGNtZCwgImNsZWFudXAiKSA9PSAwKSB7CgkJaW50IGk7CgoJ
+CWZvbV91bnJlZ2lzdGVyKCk7CgkJZm9yIChpID0gMDsgaSA8IG5yX2NsaTsgaSsrKQoJCQlpZiAo
+Y2xpW2ldKQoJCQkJZm9tX2RlbF9jbGllbnQoY2xpW2ldKTsKCQlucl9jbGkgPSAwOwoJCXByX2lu
+Zm8oImNsZWFudXAgZG9uZSAobW9kdWxlIHJlZmNvdW50IGxlYWsgPT4gcm1tb2QgRUJVU1kgaXMg
+ZXhwZWN0ZWQgYWZ0ZXIgcmFjZXMpXG4iKTsKCQlyZXR1cm4gMDsKCX0KCWlmIChzdHJjbXAoY21k
+LCAic3RhdHVzIikgPT0gMCkgewoJCXByX2luZm8oInN0YXRzOiByZWc9JWx1IHVucmVnPSVsdSBy
+ZWdfZmFpbD0lbHUgYWRkX29rPSVsdSBhZGRfZmFpbD0lbHUgZndfZmFpbD0lbHUgZGVsPSVsdVxu
+IiwKCQkJc3RhdF9yZWcsIHN0YXRfdW5yZWcsIHN0YXRfcmVnX2ZhaWwsIHN0YXRfYWRkX29rLAoJ
+CQlzdGF0X2FkZF9mYWlsLCBzdGF0X2Z3X2ZhaWwsIHN0YXRfZGVsKTsKCQlwcl9pbmZvKCJjbGll
+bnRzIHRyYWNrZWQ9JWQgc2luZ2xldG9uPSVkXG4iLCBucl9jbGksIHVzZV9zaW5nbGV0b24pOwoJ
+CXJldHVybiAwOwoJfQoKCXJldHVybiAtRUlOVkFMOwp9CgpzdGF0aWMgY29uc3Qgc3RydWN0IGtl
+cm5lbF9wYXJhbV9vcHMgYWN0aW9uX29wcyA9IHsKCS5zZXQgPSBhY3Rpb25fc2V0LAoJLmdldCA9
+IHBhcmFtX2dldF9zdHJpbmcsCn07Cm1vZHVsZV9wYXJhbV9jYihhY3Rpb24sICZhY3Rpb25fb3Bz
+LCAmYWN0aW9uX2J1ZiwgMDYwMCk7Ck1PRFVMRV9QQVJNX0RFU0MoYWN0aW9uLCAic2V0dXB8dW5y
+ZWd8cmVnfHJlZ2xvb3AgTnxjbGllbnQgTnxhYiBOfGFjIE58YWMxIE58Y2xlYW51cHxzdGF0dXMi
+KTsKCnN0YXRpYyBpbnQgX19pbml0IGlvbW11cmFjZV9pbml0KHZvaWQpCnsKCXByX2luZm8oImxv
+YWRlZCAoa2VybmVsIGhhcyBJT01NVV9BUEkpXG4iKTsKCXJldHVybiAwOwp9CgpzdGF0aWMgdm9p
+ZCBfX2V4aXQgaW9tbXVyYWNlX2V4aXQodm9pZCkKewoJaW50IGk7CgoJZm9tX3VucmVnaXN0ZXIo
+KTsKCWZvciAoaSA9IDA7IGkgPCBucl9jbGk7IGkrKykKCQlpZiAoY2xpW2ldKQoJCQlmb21fZGVs
+X2NsaWVudChjbGlbaV0pOwoJbnJfY2xpID0gMDsKCWlmIChjYXJyaWVyKSB7CgkJaW9tbXVfZGV2
+aWNlX3N5c2ZzX3JlbW92ZSgmZm9tX2lvbW11KTsKCQlwbGF0Zm9ybV9kZXZpY2VfdW5yZWdpc3Rl
+cihjYXJyaWVyKTsKCQlmd25vZGVfcmVtb3ZlX3NvZnR3YXJlX25vZGUoc3dfbm9kZSk7Cgl9Cglw
+cl9pbmZvKCJ1bmxvYWRlZFxuIik7Cn0KCm1vZHVsZV9pbml0KGlvbW11cmFjZV9pbml0KTsKbW9k
+dWxlX2V4aXQoaW9tbXVyYWNlX2V4aXQpOwoKTU9EVUxFX0xJQ0VOU0UoIkdQTCIpOwpNT0RVTEVf
+REVTQ1JJUFRJT04oIklPTU1VIGxpZmVjeWNsZSByYWNlIHZlcmlmaWNhdGlvbiBkcml2ZXIgKEhW
+LTMvSFYtNCkiKTsK
+------=_Part_283853_1938003770.1792677904304--
 
-And as I explained later in that e-mail, the set of FHs will be
-decided ahead of time:
-
-"Therefore, there should be a luoctl call (i.e via a new ioctl to set
-compatability) that provides the kernel with the specs file of the
-target kernel we are updating to, allowing the kernel to select the
-compatible file handlers. Since .can_preserve() is called when the
-user is already preserving files, the specification must have already
-been supplied, or the kernel should fall back to using the default
-(i.e., latest) file handlers."
-
-The user/admin will configure the active set of FHs *before* the first
-FD is preserved. By the time we search for a compatible FH via
-.can_preserve(), that choice has already been made, and there will be
-ONLY one active FH per supported FD type.
-
->
-> > We
-> > need to do that before any preservation happens; otherwise, we could
-> > run into conflicts on FLBs i.e. FH of different version require
-> > different FLBs.
->
-> My change below will select the user passed handler directly if it is
-> valid otherwise it fallbacks to looping .can_preserve based selection.
->
-> ****For flb****:
->
-> Registration of flb handlers happens with original
-> subsytem fd handler, for example, for iommu
->
->  iommu_liveupdate_register_flb(&iommufd_ser_handler); ->liveupdate_regist=
-er_flb(fh, flb);
->
-> This function takes the FH argument. So every FH has direct relation
-> with their flbs.
->
-> If new FH will be introduced within the system, it must register
-> compatible flbs handlers with it by liveupdate_register_flb.
->
-> Currently, FLB objects are preserved with the first dependent file's
-> preservation. and each flb handler in fh->flb_list (was associated
-> using each flb handler registration) will call its ops to preserve itself=
-.
->
-> Same on retrieval side, handler name is preserved so the flb name is
-> also preserved. And they can just call their respects ops to retrieve
-> themselves.
->
-> What about If user try to preserve other dependent but same subsystem
-> files with different handler. Kernel must reject this. I have not
-> integrated this support. Which can also be added as part of this series.
-> Let me know if this sounds good, Then I will add that in the V3?
-
-No, do not go this route. Rejecting mismatched handlers on subsequent
-FDs still leaves handler selection as a per-FD decision, meaning the
-first session/process to preserve an FD dictates the FH and FLB
-version for the entire subsystem. Individual processes preserving FDs
-should not need to know which handler version the target kernel
-supports. Version compatibility is a global orchestration policy and
-should be configured once up front before any FDs are preserved.
-
-Pasha
-
->
-> ~Tarun
->
-> >
-> > Therefore, there should be a luoctl call (i.e via a new ioctl to set
-> > compatability) that provides the kernel with the specs file of the
-> > target kernel we are updating to, allowing the kernel to select the
-> > compatible file handlers. Since .can_preserve() is called when the
-> > user is already preserving files, the specification must have already
-> > been supplied, or the kernel should fall back to using the default
-> > (i.e., latest) file handlers.
-> >
-> >>
-> >> Append char handler[LIVEUPDATE_HNDL_NAME_LENGTH] to struct
-> >> liveupdate_session_preserve_fd immediately after token, keeping
-> >> IOCTL_OP min_size at offsetofend(..., token) so callers passing the
-> >> original 16-byte structure continue to work:
-> >> - When handler is empty (all-zero, or zero-filled when userspace
-> >>   passes the 16-byte structure), luo_preserve_file() selects the first
-> >>   registered handler whose .can_preserve() callback accepts the fd.
-> >> - When handler is non-empty, it must be null-terminated within
-> >>   LIVEUPDATE_HNDL_NAME_LENGTH bytes (returning -EINVAL otherwise);
-> >>   luo_preserve_file() looks up the registered handler with that exact
-> >>   name (returning -ENOENT if unknown) and verifies that its
-> >>   .can_preserve() callback accepts the fd (returning -EINVAL if not).
-> >>
-> >> The retrieve ioctl is unchanged because the handler is identified by t=
-he
-> >> name stored in the serialized payload from the source kernel.
-> >>
-> >> Signed-off-by: Tarun Sahu <tarunsahu@google.com>
-> >> ---
-> >>  include/uapi/linux/liveupdate.h  | 12 +++++++++---
-> >>  kernel/liveupdate/luo_file.c     | 21 ++++++++++++++++++---
-> >>  kernel/liveupdate/luo_internal.h |  3 ++-
-> >>  kernel/liveupdate/luo_session.c  |  7 ++++++-
-> >>  4 files changed, 35 insertions(+), 8 deletions(-)
-> >>
-> >> diff --git a/include/uapi/linux/liveupdate.h b/include/uapi/linux/live=
-update.h
-> >> index 509c6236720d..2413b19dabc1 100644
-> >> --- a/include/uapi/linux/liveupdate.h
-> >> +++ b/include/uapi/linux/liveupdate.h
-> >> @@ -126,9 +126,14 @@ struct liveupdate_ioctl_retrieve_session {
-> >>
-> >>  /**
-> >>   * struct liveupdate_session_preserve_fd - ioctl(LIVEUPDATE_SESSION_P=
-RESERVE_FD)
-> >> - * @size:  Input; sizeof(struct liveupdate_session_preserve_fd)
-> >> - * @fd:    Input; The user-space file descriptor to be preserved.
-> >> - * @token: Input; An opaque, unique token for preserved resource.
-> >> + * @size:    Input; sizeof(struct liveupdate_session_preserve_fd)
-> >> + * @fd:      Input; The user-space file descriptor to be preserved.
-> >> + * @token:   Input; An opaque, unique token for preserved resource.
-> >> + * @handler: Input; Optional null-terminated file handler name (max l=
-ength
-> >> + *           %LIVEUPDATE_HNDL_NAME_LENGTH including null terminator) =
-selecting
-> >> + *           which registered handler preserves @fd. If empty (all-ze=
-ro, or
-> >> + *           omitted when passing the 16-byte structure), the kernel =
-selects
-> >> + *           the first registered handler whose .can_preserve() accep=
-ts @fd.
-> >>   *
-> >>   * Holds parameters for preserving a file descriptor.
-> >>   *
-> >> @@ -152,6 +157,7 @@ struct liveupdate_session_preserve_fd {
-> >>         __u32           size;
-> >>         __s32           fd;
-> >>         __aligned_u64   token;
-> >> +       char            handler[LIVEUPDATE_HNDL_NAME_LENGTH];
-> >>  };
-> >>
-> >>  #define LIVEUPDATE_SESSION_PRESERVE_FD                               =
-  \
-> >> diff --git a/kernel/liveupdate/luo_file.c b/kernel/liveupdate/luo_file=
-.c
-> >> index fb81239bedf3..be20e0f1e0aa 100644
-> >> --- a/kernel/liveupdate/luo_file.c
-> >> +++ b/kernel/liveupdate/luo_file.c
-> >> @@ -207,6 +207,8 @@ static bool luo_token_is_used(struct luo_file_set =
-*file_set, u64 token)
-> >>   * @file_set: The file_set to which the preserved file will be added.
-> >>   * @token:    A unique, user-provided identifier for the file.
-> >>   * @fd:       The file descriptor to be preserved.
-> >> + * @handler:  Optional NUL-terminated handler name. If NULL or empty,=
- the first
-> >> + *            registered handler whose .can_preserve() accepts @fd is=
- selected.
-> >>   *
-> >>   * This function orchestrates the first phase of preserving a file. U=
-pon entry,
-> >>   * it takes a reference to the 'struct file' via fget(), effectively =
-making LUO
-> >> @@ -238,11 +240,13 @@ static bool luo_token_is_used(struct luo_file_se=
-t *file_set, u64 token)
-> >>   *         -EBUSY if the file descriptor is already preserved by anot=
-her session.
-> >>   *         -EBADF if the file descriptor is invalid.
-> >>   *         -ENOSPC if the file_set is full.
-> >> - *         -ENOENT if no compatible handler is found for the file typ=
-e.
-> >> + *         -ENOENT if no matching handler is registered or accepts @f=
-d.
-> >> + *         -EINVAL if the named handler cannot preserve @fd.
-> >>   *         -ENOMEM on memory allocation failure.
-> >>   *         Other erros might be returned by .preserve().
-> >>   */
-> >> -int luo_preserve_file(struct luo_file_set *file_set, u64 token, int f=
-d)
-> >> +int luo_preserve_file(struct luo_file_set *file_set, u64 token, int f=
-d,
-> >> +                     const char *handler)
-> >>  {
-> >>         struct liveupdate_file_op_args args =3D {0};
-> >>         struct liveupdate_file_handler *fh;
-> >> @@ -266,6 +270,18 @@ int luo_preserve_file(struct luo_file_set *file_s=
-et, u64 token, int fd)
-> >>         err =3D -ENOENT;
-> >>         down_read(&luo_register_rwlock);
-> >>         list_private_for_each_entry(fh, &luo_file_handler_list, list) =
-{
-> >> +               if (handler && handler[0]) {
-> >> +                       if (strcmp(fh->name, handler))
-> >> +                               continue;
-> >> +                       if (!fh->ops->can_preserve(fh, file)) {
-> >> +                               err =3D -EINVAL;
-> >> +                               break;
-> >> +                       }
-> >> +                       if (try_module_get(fh->ops->owner))
-> >> +                               err =3D 0;
-> >> +                       break;
-> >> +               }
-> >> +
-> >>                 if (fh->ops->can_preserve(fh, file)) {
-> >>                         if (try_module_get(fh->ops->owner))
-> >>                                 err =3D 0;
-> >> @@ -274,7 +290,6 @@ int luo_preserve_file(struct luo_file_set *file_se=
-t, u64 token, int fd)
-> >>         }
-> >>         up_read(&luo_register_rwlock);
-> >>
-> >> -       /* err is still -ENOENT if no handler was found */
-> >>         if (err)
-> >>                 goto err_fput;
-> >>
-> >> diff --git a/kernel/liveupdate/luo_internal.h b/kernel/liveupdate/luo_=
-internal.h
-> >> index dac6644bfb18..911ffedec9f3 100644
-> >> --- a/kernel/liveupdate/luo_internal.h
-> >> +++ b/kernel/liveupdate/luo_internal.h
-> >> @@ -101,7 +101,8 @@ int __init luo_session_setup_incoming(u64 sessions=
-_pa);
-> >>  int luo_session_serialize(void);
-> >>  int luo_session_deserialize(void);
-> >>
-> >> -int luo_preserve_file(struct luo_file_set *file_set, u64 token, int f=
-d);
-> >> +int luo_preserve_file(struct luo_file_set *file_set, u64 token, int f=
-d,
-> >> +                     const char *handler);
-> >>  void luo_file_unpreserve_files(struct luo_file_set *file_set);
-> >>  int luo_file_freeze(struct luo_file_set *file_set,
-> >>                     struct luo_file_set_ser *file_set_ser);
-> >> diff --git a/kernel/liveupdate/luo_session.c b/kernel/liveupdate/luo_s=
-ession.c
-> >> index f48e9a4185f9..194ef45907c1 100644
-> >> --- a/kernel/liveupdate/luo_session.c
-> >> +++ b/kernel/liveupdate/luo_session.c
-> >> @@ -266,8 +266,13 @@ static int luo_session_preserve_fd(struct luo_ses=
-sion *session,
-> >>         struct liveupdate_session_preserve_fd *argp =3D ucmd->cmd;
-> >>         int err;
-> >>
-> >> +       if (strnlen(argp->handler, sizeof(argp->handler)) =3D=3D
-> >> +           sizeof(argp->handler))
-> >> +               return -EINVAL;
-> >> +
-> >>         guard(mutex)(&session->mutex);
-> >> -       err =3D luo_preserve_file(&session->file_set, argp->token, arg=
-p->fd);
-> >> +       err =3D luo_preserve_file(&session->file_set, argp->token, arg=
-p->fd,
-> >> +                               argp->handler);
-> >>         if (err)
-> >>                 return err;
-> >>
-> >> --
-> >> 2.56.0.212.g129ede20d9-goog
-> >>
