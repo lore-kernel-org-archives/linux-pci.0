@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.228.140
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.125.110
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792657363;
-	b=EtwiJyU8Sfq9rWZ8uelp0VoWX2Oq/0CRMRII5z6kZ3os/MomjX5ezAecLgrUHf9aDpUh
-	 HUiNvEpA6MnHEkFQ7U1EhsCZUfYLv27NwlKupAO3ud8rpfewdzWedQZzRkHi3CsGYlIcI
-	 EHpoPDJiOpEN0YAuA1Es5/tz8eBcQ5qIld2Mn0x2TT3rLrhCMzg5irhi5kE8VjYIaKaAF
-	 QbhTLP9O30dLQiaeeoOmT3EZ3pdw01SE02mfWEQ9YGDnauyEHB5aoIi0rch294wI22Kr4
-	 +b9G17mpGHlUPMf9U4zsKzDgv5wChtQ2m2dpWbFHByLGD/8KuYhIWsJgqBSTHZYFEfg==
+	t=1792657366;
+	b=N48KIKDkOU+TGeHb2aS7YJVy13mQAwod8m5TCF+baFmRC0TWVzr0wRZGDc/ImiYA+RjT
+	 xuXINJHOcvrUNJIMJk6e4Wi/UO98ISw8rfQ5je7zko1Sc4Qj6K+RDUUcLTkZwGstnVo00
+	 BgLT4Ww1sVFv7jJTOV9PXlb19OGMYk8lUWTfOP0lqXVUi3R3JeDFeb1oZ3F5pW+WqMBq1
+	 tt57TX2ucxm3Hv6Jhuk0DY6mCRIjD3Fwd01NuCIoJJRH8OVwOZXlCXZat8cuzl/FHy+xg
+	 0ZDftW4W85Oj2m1TKMC+5mCNvf+5GOB0IdglbKSd5zjVOoBhGNCG8K0Et4QGC0RFB5A==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792657363;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792657366;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 Content-Transfer-Encoding:Content-Type:X-ClientProxiedBy:MIME-Version:
@@ -24,54 +24,54 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
 	 X-MS-Exchange-CrossTenant-UserPrincipalName:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=irjzt6+lCZMtDRmH4lYApLOnqZZ7O8B+QT6XwYujfHk=;
-	b=R6Ri5OUKOoaByKGvAV+odATmQemfs+PJkAwnvb52kiB0BD2TS10wTCpcVUYA/LOhCeJ9
-	 Jf+MmadK4aGRrmfJ3d7IqAuEOhEpChGOLyr++PvmPJBx+ufC/zIUtg9QWC+I5HJmtefnl
-	 sUcv36aiT57TINauXI4v/i7E9tW8axU+337fWQW2F1tEgmbT76RAhfsYQMuun/n5E8NoB
-	 tnXokeza7UEFY/C0jQpSph6arA50ShGT8DOo3OnWru4oGoX/i1npA4OyDNIZV+K21kPYL
-	 kQXIQmLFCq+FHpd+39X6gem6JECB/UUps9MGkhjl/vHapZsc5uke33vtTmSeJGBQrPg==
+	bh=WfDAxHUpTiaaAMn5n6K4kPwfTExQRqo2gVz53VJIr8g=;
+	b=JJ8xeIFb00rG34zdHpq1Lhum9XxHasKc72OQ5hiPO8u5SR8ODP6CsYeV85hc/cz71PAU
+	 ftRvS4S5BbtjV99I6ztUVQ1aT3L9rttGge9ryexAtTzBy1O/Q7FNBfc657JSRfYuo9SRl
+	 IUv2aICPDBXD61bUVA/ZSkxjlRLmv8zgibD546OD0NKKGPrPVSKvmWYH7WoZJUupGOdh8
+	 qzoEiPC0Lurd0/xo2Lq99uf7QNyRkVtd7hee+AoeHfZUXiUINHWvicNDl6x8vfuvjsQiy
+	 55pEoM1516pNyoTRlmfoYiYSQGLW9HUx3D8CjL1QhsdjnLEfKdzf0hk1fjC4t+ZyQlA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=valinux.co.jp;
 	spf=pass smtp.mailfrom=valinux.co.jp;
-	dkim=pass header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=FCHA3+69;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.228.140
-Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020140.outbound.protection.outlook.com [52.101.228.140])
+	dkim=pass header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=v1RxKe65;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.125.110
+Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021110.outbound.protection.outlook.com [52.101.125.110])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AFE5606A327;
-	Thu, 22 Oct 2026 08:22:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6AFE5606A327
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 790C1606A32E;
+	Thu, 22 Oct 2026 08:22:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 790C1606A32E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=FCHA3+69
+	dkim=pass (1024-bit key, unprotected) header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=v1RxKe65
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=L8eS2SQvNazsOpLBnoDUx2jwPwu0ubhnOdpW3W+zwH1q8pjwQWtznBYM4N+tignGMlDUa3KbLxEfDlvSZmb+OgWv//XGaLXlmXmYZZjGAH+f0Cu6joVFhs5GJ0Qz3EZrbJ9fNrRFFiBSPFMNnw0MLww6edgBAP9+93Ula0px1pSUn4z9xTztZoqI2EDNng+Nw568c2b1JiE9AHVeCtMtItPqvXhr519hAxXXtDM+zgOjEcoy7jpVUW813EssnbUsXV/nC0qqWOQO1kGUrKYih6RMSgUMvLplI2yR4PN04BXUL01Ccll/AP1l+ux8Lm/flvwnB/Xrx2hoeCvinnPc4g==
+ b=G3X2uKoVnvxn1+HywFFGWXW/A9CIvEIZkuDi4Q1KoF2h3JT6vL2AfY52LUNegEgR30hOtcYi6KDlD9QFgZguSWXdFTZS5fdFgv5RDoL5UCa1kbWZ9PuYUVD9kFcdGVjUYYfEJM35b1qxXEdArs10O9cM49T1SD5Ieot9On+qGWsACobhRaNGWb2mxJ/fRrAgxCNIQ3GGnHdzqsjC4vObv3ur9HeGXhlVd10zP3cMIwoKEATFa4tu4z+q/e073Hz1uBgR0vHiqcA/P12Rkk+ERPF2pG658fNW4J2QwMe5K0n70jsSFXIDaLR3Ls5VR25DuVxtvWyoAS6ZZb6p0fqRrg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=irjzt6+lCZMtDRmH4lYApLOnqZZ7O8B+QT6XwYujfHk=;
- b=F7yFsIvQwNH+lxR9puagc/Pu1qe/dCyg+7gPy6djJ20wQ0XgR/BiZojBwwAVkrHOnNsHX4ecp6nqBR8nLO5ciz51Tjme2uelPzSl3hJqQyemLrry1GvjBmBLiouD4HgA9m2DzF8VNHg3sTn0ykRyXDqqGyfNnBfhEnvLlu7H0iSdLZyh97aoOxoDSPH0v09kAJcj6xcdOTi2j+gdERX+ZrX7snjQ4t7w8J0RKOhkaTmA0vhQV2F4OaYlaP8xyhpHB+SuUoFn3Wgl1aQQlnZNMfrcGBjVR6C1vP8Y/ekyQ+USqKW76U45KZUyQizfvvzTuPVsnN/4rrC6azOpRHZPQg==
+ bh=WfDAxHUpTiaaAMn5n6K4kPwfTExQRqo2gVz53VJIr8g=;
+ b=P7LYsAVrscCBnOMG2nbMBwv+qWEXbGVYortDZ6d4ySGk7JqcQPQnRkdmgbfwNd7aWUc/3MTsz1F8HHkJiuG0Y4MCXKIpw+OiAO7qO490xse6r5PbpOnA5KzjpevBis6Wmu8giS3QVchiXJwyYKsn9AYAFFepbw92/l8Ua+4GO2d/1/S2Om2bAhrtbnCHbUBrCe0QuH0DiLNsYaKpiWWvft0cf2SVCqf3fhIm4ChMd/CPEaAeAcrsUGBm9E4v7/mJK3CGtn40eelMoHDTtV1fBtOAh7Dk4ohUGPi5nDVisZSsLW6A8JVF03gLL7BAkpLrOoYFFtBytyUxmchIODQvBg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
  header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=irjzt6+lCZMtDRmH4lYApLOnqZZ7O8B+QT6XwYujfHk=;
- b=FCHA3+69KaLCFj8T0dT/1E5TNXM//dYzpOHbIvUgnIcSOQnboW0OadqaCVZeldmUmo/19TklzdNb/j399uhCTrY1cpjDFFyqHRuoFUh+XRWv6+c4COmAmLWrWJe7K46vv3/KX2cb3mWvXhMc8d9uhJL7uTcf5RRwKcwITT2uB6U=
+ bh=WfDAxHUpTiaaAMn5n6K4kPwfTExQRqo2gVz53VJIr8g=;
+ b=v1RxKe65R/SLwFC0KG5rYKC8QAxiokxY73HK0v2KhiFslg1WAqAmJ/s62biwqh7MBpkzbzWVUwlYPRmmSRXPfu3upvruERuny9S++HjhDEaCUM7M5SMkHfNkgdR02FqnoyxbhtawxGrnpjDAh2Y4/+UTjW8l4jOSwV3LQdr+ktU=
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=valinux.co.jp;
 Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:325::11)
- by OS9P286MB7221.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:458::13) with
+ by OSCP286MB5275.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:353::8) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.15; Thu, 22 Oct
- 2026 08:22:42 +0000
+ 2026 08:22:37 +0000
 Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  ([fe80::cce5:2aa8:53f9:dba9]) by TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  ([fe80::cce5:2aa8:53f9:dba9%5]) with mapi id 15.21.0546.012; Thu, 22 Oct 2026
- 08:22:42 +0000
+ 08:22:37 +0000
 From: Koichiro Den <den@valinux.co.jp>
 To: Frank Li <Frank.Li@kernel.org>,
 	Manivannan Sadhasivam <mani@kernel.org>,
@@ -93,16 +93,16 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	ntb@lists.linux.dev
-Subject: [PATCH v8 10/10] NTB: ntb_hw_epf: Support DMA and MW sharing a BAR
-Date: Thu, 22 Oct 2026 17:22:30 +0900
-Message-ID: <20261022082230.3164834-11-den@valinux.co.jp>
+Subject: [PATCH v8 04/10] PCI: endpoint: Add pci-epf-ntb.h for the shared NTB control layout
+Date: Thu, 22 Oct 2026 17:22:24 +0900
+Message-ID: <20261022082230.3164834-5-den@valinux.co.jp>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20261022082230.3164834-1-den@valinux.co.jp>
 References: <20261022082230.3164834-1-den@valinux.co.jp>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: TY4P286CA0123.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:37c::13) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+X-ClientProxiedBy: TYCP301CA0001.JPNP301.PROD.OUTLOOK.COM
+ (2603:1096:400:386::19) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  (2603:1096:405:325::11)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -114,185 +114,534 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB6866:EE_|OS9P286MB7221:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2330caff-7e73-4552-711f-08df3015a4b8
+X-MS-TrafficTypeDiagnostic: TY7P286MB6866:EE_|OSCP286MB5275:EE_
+X-MS-Office365-Filtering-Correlation-Id: a806a614-9ff7-4484-552d-08df3015a12a
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|10070799003|7416014|376014|23010399003|1800799024|6133799003|18002099003|10067099003|261021121427099003|22082099003|261021123027099003|261009223027099003|56012099006;
+	BCL:0;ARA:13230040|366016|10070799003|7416014|376014|23010399003|1800799024|6133799003|18002099003|10067099003|261021121427099003|261021135927099003|22082099003|261021123027099003|5023799004|56012099006|261009223027099003;
 X-Microsoft-Antispam-Message-Info:
-	jLMTQxRj7VAHv6OWIU7rV+NQpYXuXNWzE2xN8Wmm4Cky2DW55WuLl447qGFAN3yDKfCaIJKZUWDK/JMk+qOXIG5kJsu7KBuBhfQ35zoekvkNnu29MEL/yzoGVEVN7bhrTw53c1zaOlipL+yY6goBO5KeYAihmPyQU1gd5AjXpbMAkPOj3wJfx0xyhBpqKZTGW5Hn5flL6GJQlv9qWpPuhS3GVz3ZvlK5pZxezJtydv7aSwZFRT8tjajtEX8MiLpVK6WOcBagoLTsFoX3jo+0TTg7+G114m0UQxeMhmjNhXK0JC6D1ot7T79FfvJK4utuQWJ8sDiYgNkp/FE4FwO6Rwu7r8udu8yW5YBIdy9oUtV0idW7zMAfYfVX4LUEV/dDRiMFOUT1685u0wtd3gxkLIwB2Chmsgs75w4q79lNZQYOIeSoSNdY/ulbhYCGvwiDg41YFrfhUPJ87rlzVO+y5EfTngVBgPAz3k4Mlca8Ixq8chxkxImJiZqXe+rZwCzjSf+OGP19Nt7RnSuHpDn02rOE6BW5Er1HJk3hysRqAbqVXQI7THCrbW3OobCp0ciPXiEeYZh+s0Y+nqFOyXk9O8kzwVZG5DedtrlNxrQPtV2GBlj8E7s38kjmdY6S9jAkq+wDw+DZ0mfPeUciHnhZ+Bo1s1EQyhtsKNLIOWrlBg4=
+	nTPMG+WO0aj5ulELeH+6nBiXdLbE0I3No9piekFseSBiOoTbldu5OCPuHKaQdGpNjCFmiE4GJ3AhNSSCPvocdXDyjn7dtjIM7zKhRwd4Vxh8jaICZZcwvG8CseHVszLG6LHgu3N7jOyMc33CMXeueA7Ku5i4ISy0nz5Ztu5oXmxHmWB05pFuN5YGTHQL1G3jlIC8CyEiLYAgylPHjvhc4idPZw4Zp8iMjxoFURjP4tHawfSJ0yK6GKfPPHMyL6soAdyyMSa+UOOOhAODOw4Yj+CiJU6spAZAkJp9y4XV5bO25uMNefjvi5IKdUCou5NB6znjGpL6PZSDrZKWrI32dJTqWxYe7JgaqpL+VS9c5V+kw3JGVUzuPrSHnHp+EkGCG0JtDFTXdaJEWchjqsySPHnRRFHG63CW8k83fxnndy9C5oUYBExP/QnCJR9wlOnkpJ9JUTi2e2qFDKGwyWEVRqv74Nka98qnD1N26/SBzmU3JBdeUzj6OBqOdXETq4yFpQgSymizC0Zc1qwZlsXW0BYrgIOjMI4nS++rJk1hlxlMTv4z0KYNgEbuWk0eZQ5FjZYfcb9cpdy7KJfIypwZoIt9YiFWdjWI20omn1vWZZboM1P/aegL4fOpYGpiUBcI3DR8uUku4xruFMzipqzuHk8jYFFqSREpvYohrfQ1rv8=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(10070799003)(7416014)(376014)(23010399003)(1800799024)(6133799003)(18002099003)(10067099003)(261021121427099003)(22082099003)(261021123027099003)(261009223027099003)(56012099006);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(10070799003)(7416014)(376014)(23010399003)(1800799024)(6133799003)(18002099003)(10067099003)(261021121427099003)(261021135927099003)(22082099003)(261021123027099003)(5023799004)(56012099006)(261009223027099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?VoLOYfpGzYtWjP2JZba3Mdz/SdivFdxdbJDqM+XsfKHmOColRwCbgFq4pOxp?=
- =?us-ascii?Q?Md2w6zv9DkBRpwh10cIOKyDpXIn1YsKwwz6GB72zUb1e5Magt+z4yv9+cXfV?=
- =?us-ascii?Q?V5DzhoOfE6sQKpbsyPC1K4JhlzYdSs3Thr8Gwbc3l5A4uROjYkQqPVxd593f?=
- =?us-ascii?Q?bj3QzDZn8r61K+PpY/LODv784R92q9c7wpkKJxQC7HbBHW6NGCMy3AUFTacP?=
- =?us-ascii?Q?mrwncgtG9kaa7hgX2ELfCY71w+rCO3XbZRhPUsfXzh7uKt01cmHJMr/ouPE+?=
- =?us-ascii?Q?Kej83dIz5kWEe2LmLENl9P6gVLWmc5P0aVHOGjX4+4t7iJA389qXa7bqJc/H?=
- =?us-ascii?Q?nEBn7bO2qoRuSdYcWziW+dF70bDqtXOJTsvmbZjOEi1/0bl3OKZILWSthwMM?=
- =?us-ascii?Q?dNSFVTLgq7N/RKfAXWja+GZmvl58bJuKTjsCXUFUA0NVGRdx0JxjMTYxIkNl?=
- =?us-ascii?Q?m3vFGWd3XUsm4RDjzmdD7MxXPkkQTBwUZY0dAdMMW2Lkdu377bDcX4o+PGK8?=
- =?us-ascii?Q?03SbJIb+W/w4vXoX8nnzENnYpAfYw2V/Lzw9eVI+2wjbyxliyOlymZwyvyQ6?=
- =?us-ascii?Q?Qgnl+L4Z66Ipidz1cQxqbXO176/2Sn8InWx0Q6QftRBK+NnQIJ9ENNjFEyCZ?=
- =?us-ascii?Q?WC0lL3zwTtRxYxY6Gh7jL8oMzrJM6/miIt4Xr3mUkzbxSrhvf03O9yEA1x3A?=
- =?us-ascii?Q?6T6yq6WdSQbNVQksW9l4wbiMSiqDmGntDJkKBnIegkNohg083dMuPes31HBu?=
- =?us-ascii?Q?uT9pRZ8JVQvylxCqKZEPGANN+tJjPc1KQkwFPsQNPB4gCCLCn0XcP0kiAF3C?=
- =?us-ascii?Q?x0HnXPnj3WTmk/o8lsSPwSkTMrFt4rEOwJZIh2Zbd4iM3kcV3a4qE1NUV/Rj?=
- =?us-ascii?Q?22xJmH0EcEolk4dZLbbQX6WZUrD9s3I/a7AulvsBHZY93G3gU5clU5gTDeqj?=
- =?us-ascii?Q?LcKQyx4Z7uY+uHXkPKLnoLre2ADNHgo64rRLvhCtxoTRTePCMcdOpJAwexbT?=
- =?us-ascii?Q?xFK96t+Q7rGlp3bgHAsWe76wn+kIc9xZo0UT12VRSHoR+K2W9FCk4cNHTY62?=
- =?us-ascii?Q?PZB4RPkfhF6NKuW7mdoO6Vhgj3sg0PtrMro6G7LwcN5mITffXHGpt2BeSKAR?=
- =?us-ascii?Q?MC7fBtm0LA2D4k1QbPTX52UT9glbcexDiL+RNbOzVP2AgTjiVlWdzgHobIk8?=
- =?us-ascii?Q?Y6y66oaBLh/wGuxgSBBhgH/Hv9u/3g4OUDe4QGSNAw7zFzpnVp5u6WmGxXGs?=
- =?us-ascii?Q?Bvr3NrSPb2HyhKWsBvee/b4HkE4YmmH0vnuSNfDCwb86DjC30Fb5oxzItvBK?=
- =?us-ascii?Q?Ns5CeG9CyTSePbNndJSm1mRMpmMY86KfdvneD1UGP/SZWeUWPDlsa8Dfp8Om?=
- =?us-ascii?Q?FtncG5bolWT8m8bOqVbfrvbDmsqYFjD9EZcqXtX1s9YRVD4aTxPGd+9tYp6d?=
- =?us-ascii?Q?mQMM9XbgfG/PQ0nJijcQjrFXR+VDIQcr2sybcV/iORhZMXXYDBeO6sR/QWnB?=
- =?us-ascii?Q?d2g6zcPTcwy5OPkhmvFPDJCU1eUouSe72A0nKWUPn9bwcGKsPp8h+m1EA7P9?=
- =?us-ascii?Q?ovHSJbE7KPMEfTFckNkfYSQWxoWVSNK4UecuUcHeWgGUtmBnKt4C0bzGTjT5?=
- =?us-ascii?Q?8opzbftmgDkpR/lP6GpncQwj78tA31OS58Uj/IcuGshddKj9cNUey2PxAEZs?=
- =?us-ascii?Q?pQ3rZpPLiyqdK4stRUbE+zjNZ00X7Cn5Qcynho6udtGntNe9R0y/9kcigeQd?=
- =?us-ascii?Q?hijbiYdz5uHQpgBNAx9etA6+5dFg0QieXCUAV8rg4RWvWmCjMJdw?=
+	=?us-ascii?Q?Eq2NCo4q91uqOeUxu6d73a7LxwA3jymHSBd/KkJuQgQQQn39BfGSnx9Qky92?=
+ =?us-ascii?Q?A0yUF2Kp8hIscof7vQPqksb7JGvHTKviHdNIaqzKfb6Sz+2U6la0VrNfmVfm?=
+ =?us-ascii?Q?HVjvX7HjNfK6c/joX2kcjiqhcev0+24blhlMRnp1dqc1aJF7FbSppEy3sUNJ?=
+ =?us-ascii?Q?upKUDQj40GDVuaZcIKGP05LhmPimWk4F7aGrMdIK5FwkUib4upFmmgSFmmWk?=
+ =?us-ascii?Q?yePtp9BzMxYTnltIS8oXvJhzixHC9sPhCi/j2XNj1DuyEJUIZNuuhq8ZNhFL?=
+ =?us-ascii?Q?nkFhLvU8tkoUTb0Y7ssHgIpQ7SLEAQgLnN5VM8+hPEvaDiAoZa45r+85zqts?=
+ =?us-ascii?Q?kBe19g3kzNIsrpRp3e4PoPcm2stG2GDgbTJOGhdBuYeuSUu4f6owtMg+5thS?=
+ =?us-ascii?Q?pZ1s5PeEDkqQln3o7IaT1i7C8MZf12li7gDYF82kVQMab28GI6b40HMSeSl0?=
+ =?us-ascii?Q?HkZbnOhINhiQ0l9O0mLxyNKwrgXeNfAGqId1HboW+p8+G++9C7N2/+BIQqou?=
+ =?us-ascii?Q?/5fP/2nIjQ4ivzg5HGHYmfEC9eKd/hGzOkNTPKcV2KUDLdOqU3VZDWceG4xC?=
+ =?us-ascii?Q?NWWyplU91/37wUXFrWYmETFo6pG3FhDi01pqEPqg1Z9qLJVwypJq8MG5uco3?=
+ =?us-ascii?Q?O0oXEhBhkKzR3kega/3jYqODb/bqIJq9AAHNfe5Z1LIgTN3+JS/jOhTXqHnQ?=
+ =?us-ascii?Q?IyIrT9wDwWwQbBJBar8fx9JfZKzp52rONk/sPmpIwZ2Mgje8k9AD9rcn8VvK?=
+ =?us-ascii?Q?i5wo7cEF9DDlahn1bA4AiDaa1jIxAp2m+ICzfJWKmDIAhU4YMLnoHHwytLcZ?=
+ =?us-ascii?Q?JIyVch56hcLnqRlqW4F0oTll+4Y3Exj7vN9hGOYBN8zMqE5J0jdYQpStwvSz?=
+ =?us-ascii?Q?tiaZZ7hDGcHqiK0UZS2PG6NOnm5bIrPh8Vd4rCjtX7bT2wO5M+Ouw0mktLU7?=
+ =?us-ascii?Q?s+26hKTj026MpDInjkXVUlBSVtlmdPWWV5cdNIhEXlkxmEPtrwITtekOTJmh?=
+ =?us-ascii?Q?QhszvkAnwIJCJn7OHgxKlDPxOaDOFIUyY9isIlhIR3N1ClFyWQrHdi7Qcws3?=
+ =?us-ascii?Q?+hnuo72lCiL+++oISyFb7E/jHJ7n100vsAUZnrZi8CjM12R6C7HEtSiB1coR?=
+ =?us-ascii?Q?S8lY7oR3se9fay65wN5a8KG0ibfwT9jEk60n7myVCukkLis3AQmP9n46W5oD?=
+ =?us-ascii?Q?yZBsgFzWvIprlyvN3dqH0nztvA44356CgbP1/Exfg57RgMxVheXxb0EroIGy?=
+ =?us-ascii?Q?C7fS67UzI+Ngv52PxZ5wnY6aTCX5sM2ecMhiIxrkDcPTprRm3NGOCe+Q3O9R?=
+ =?us-ascii?Q?QeVGDn3ZYB4u+hImRTUSCvt6CtAJu6p5NMIBboXqXA5wKC38nckNzsohqwC2?=
+ =?us-ascii?Q?vLB+LMu3RLiom3NSQO/6K7hAbvL+Ns0+MrexpsrscgU/kolAiGQzdBdkWsKH?=
+ =?us-ascii?Q?KyWRfUoIH+w58IoopFip3McjG0QkzJYQOPYFRUdewwyRREc+0tURVAUQrPtW?=
+ =?us-ascii?Q?YHoEJ9Ot2gu+Ht11pO3Ut+d2MeH7zUPOwWRvQ5xtnwL4DcWFwEkisBiS7Amh?=
+ =?us-ascii?Q?V0ki3+LiGvxwdiJ5yQFgy69naqLKsUJogvkEIy0m6FadOWskuYMeSsFiWo4W?=
+ =?us-ascii?Q?O7kbxFJgaqsXOvs6Ov6Bnzh2pJzvrqaCMkljPZmt23BXqf5G0z2pURFbf+8v?=
+ =?us-ascii?Q?JsI4DY8QRdxFGZzmspzqWunLqmh2oglt3wE/vVwDaaUOoAjHvbNzmic/NIUS?=
+ =?us-ascii?Q?oqWw5Twc/+HakkNI8KOO5I9TDPsEkbQqyxUQPnbz+iVaNeCZO+aP?=
 X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2330caff-7e73-4552-711f-08df3015a4b8
+X-MS-Exchange-CrossTenant-Network-Message-Id: a806a614-9ff7-4484-552d-08df3015a12a
 X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Oct 2026 08:22:42.6856
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Oct 2026 08:22:36.7325
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: rvqaH/eZaPn5U20xihciPtsZyX8MiZvvQSlj4n9HiUggXCf/ft8BChLZp9oodvnYX/w0lgX33x/l2CGeLdUTyA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS9P286MB7221
+X-MS-Exchange-CrossTenant-UserPrincipalName: bxh8aeSUhwC5oIur/PZA0Vv0CEtCnBH1lyl0ylTUD53Umqea5X3rp9A+cMmFL3rF7bqBYV806ZMN8OYwgUkxzw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSCP286MB5275
 
-A vNTB endpoint can place DMA resources after an MW in the same BAR.
-Limit the MW to the advertised boundary so clients cannot overwrite
-those resources.
+Currently, pci-epf-ntb.c and pci-epf-vntb.c each define struct
+epf_ntb_ctrl, and ntb_hw_epf.c mirrors the same layout with hard-coded
+register offsets.
 
-Advertise this support in LINK_UP, including when DMA is unavailable.
-Older endpoints ignore the argument.
+Move the shared struct and macros to include/linux/pci-epf-ntb.h. The
+vNTB "reserved" field takes the pci-epf-ntb.c name mw1_offset, which is
+what ntb_hw_epf.c reads at that offset.
 
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
+No functional changes.
+
+Suggested-by: Frank Li <Frank.Li@nxp.com>
 Signed-off-by: Koichiro Den <den@valinux.co.jp>
 ---
 Changes since v7:
-  - Add Frank's Reviewed-by tag. No code changes.
+  - No changes.
 
- drivers/ntb/hw/epf/ntb_hw_epf.c | 46 +++++++++++++++++++++++++++------
- 1 file changed, 38 insertions(+), 8 deletions(-)
+ MAINTAINERS                                   |   1 +
+ drivers/pci/endpoint/functions/pci-epf-ntb.c  |  85 ++++--------
+ drivers/pci/endpoint/functions/pci-epf-vntb.c | 131 +++++++-----------
+ include/linux/pci-epf-ntb.h                   |  48 +++++++
+ 4 files changed, 128 insertions(+), 137 deletions(-)
+ create mode 100644 include/linux/pci-epf-ntb.h
 
-diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_epf.c
-index e0016128b95c..56185870cba9 100644
---- a/drivers/ntb/hw/epf/ntb_hw_epf.c
-+++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
-@@ -382,6 +382,23 @@ static int ntb_epf_mw_to_bar(struct ntb_epf_dev *ndev, int idx)
- 	return ndev->barno_map[BAR_MW1 + idx];
- }
+diff --git a/MAINTAINERS b/MAINTAINERS
+index f58a305de664..855d2a6f59cd 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -19916,6 +19916,7 @@ F:	drivers/ntb/
+ F:	drivers/pci/endpoint/functions/pci-epf-*ntb.c
+ F:	include/linux/ntb.h
+ F:	include/linux/ntb_transport.h
++F:	include/linux/pci-epf-ntb.h
+ F:	tools/testing/selftests/ntb/
  
-+static resource_size_t ntb_epf_mw_offset(struct ntb_epf_dev *ndev, int idx)
-+{
-+	return !idx ? readl(ndev->ctrl_reg + NTB_EPF_CTRL(mw1_offset)) : 0;
-+}
-+
-+static resource_size_t ntb_epf_mw_size(struct ntb_epf_dev *ndev, int bar)
-+{
-+	resource_size_t end;
-+
-+	end = pci_resource_len(ndev->ntb.pdev, bar);
-+	/* The DMA submap offset marks the end of an MW sharing this BAR. */
-+	if (ndev->dma.submap.size && ndev->dma.submap.bar == bar)
-+		end = min(end, ndev->dma.submap.offset);
-+
-+	return end;
-+}
-+
- static int ntb_epf_mw_count(struct ntb_dev *ntb, int pidx)
- {
- 	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
-@@ -420,7 +437,7 @@ static int ntb_epf_mw_get_align(struct ntb_dev *ntb, int pidx, int idx,
- 		*size_align = 1;
+ NTB INTEL DRIVER
+diff --git a/drivers/pci/endpoint/functions/pci-epf-ntb.c b/drivers/pci/endpoint/functions/pci-epf-ntb.c
+index 5314aca2188a..925cf46219d7 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-ntb.c
++++ b/drivers/pci/endpoint/functions/pci-epf-ntb.c
+@@ -41,27 +41,13 @@
  
- 	if (size_max)
--		*size_max = pci_resource_len(ndev->ntb.pdev, bar);
-+		*size_max = ntb_epf_mw_size(ndev, bar);
+ #include <linux/pci-epc.h>
+ #include <linux/pci-epf.h>
++#include <linux/pci-epf-ntb.h>
  
- 	return 0;
- }
-@@ -524,7 +541,8 @@ static int ntb_epf_link_enable(struct ntb_dev *ntb,
- 	struct device *dev = ndev->dev;
- 	int ret;
+ static struct workqueue_struct *kpcintb_workqueue;
  
--	ret = ntb_epf_send_command(ndev, EPF_NTB_COMMAND_LINK_UP, 0);
-+	ret = ntb_epf_send_command(ndev, EPF_NTB_COMMAND_LINK_UP,
-+				   EPF_NTB_LINK_UP_DMA_MW_SUPPORTED);
- 	if (ret) {
- 		dev_err(dev, "Fail to enable link\n");
- 		return ret;
-@@ -707,7 +725,7 @@ static int ntb_epf_mw_set_trans(struct ntb_dev *ntb, int pidx, int idx,
- 	if (bar < 0)
- 		return bar;
- 
--	mw_size = pci_resource_len(ntb->pdev, bar);
-+	mw_size = ntb_epf_mw_size(ndev, bar);
- 
- 	if (size > mw_size) {
- 		dev_err(dev, "Size:%pa is greater than the MW size %pa\n",
-@@ -739,21 +757,20 @@ static int ntb_epf_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
- 				    phys_addr_t *base, resource_size_t *size)
- {
- 	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
--	u32 offset = 0;
-+	resource_size_t offset;
- 	int bar;
- 
--	if (idx == 0)
--		offset = readl(ndev->ctrl_reg + NTB_EPF_CTRL(mw1_offset));
+-#define COMMAND_CONFIGURE_DOORBELL	1
+-#define COMMAND_TEARDOWN_DOORBELL	2
+-#define COMMAND_CONFIGURE_MW		3
+-#define COMMAND_TEARDOWN_MW		4
+-#define COMMAND_LINK_UP			5
+-#define COMMAND_LINK_DOWN		6
 -
- 	bar = ntb_epf_mw_to_bar(ndev, idx);
- 	if (bar < 0)
- 		return bar;
+-#define COMMAND_STATUS_OK		1
+-#define COMMAND_STATUS_ERROR		2
+-
+-#define LINK_STATUS_UP			BIT(0)
+-
+ #define SPAD_COUNT			64
+ #define DB_COUNT			4
+ #define NTB_MW_OFFSET			2
+-#define DB_COUNT_MASK			GENMASK(15, 0)
+-#define MSIX_ENABLE			BIT(16)
+-#define MAX_DB_COUNT			32
+ #define MAX_MW				4
  
-+	offset = ntb_epf_mw_offset(ndev, idx);
-+
- 	if (base)
- 		*base = pci_resource_start(ndev->ntb.pdev, bar) + offset;
+ enum epf_ntb_bar {
+@@ -104,23 +90,6 @@ struct epf_ntb_epc {
+ 	const struct pci_epc_features *epc_features;
+ };
  
- 	if (size)
--		*size = pci_resource_len(ndev->ntb.pdev, bar) - offset;
-+		*size = ntb_epf_mw_size(ndev, bar) - offset;
+-struct epf_ntb_ctrl {
+-	u32	command;
+-	u32	argument;
+-	u16	command_status;
+-	u16	link_status;
+-	u32	topology;
+-	u64	addr;
+-	u64	size;
+-	u32	num_mws;
+-	u32	mw1_offset;
+-	u32	spad_offset;
+-	u32	spad_count;
+-	u32	db_entry_size;
+-	u32	db_data[MAX_DB_COUNT];
+-	u32	db_offset[MAX_DB_COUNT];
+-} __packed;
+-
+ static struct pci_epf_header epf_ntb_header = {
+ 	.vendorid	= PCI_ANY_ID,
+ 	.deviceid	= PCI_ANY_ID,
+@@ -156,9 +125,9 @@ static int epf_ntb_link_up(struct epf_ntb *ntb, bool link_up)
+ 		is_msix = ntb_epc->is_msix;
+ 		ctrl = ntb_epc->reg;
+ 		if (link_up)
+-			ctrl->link_status |= LINK_STATUS_UP;
++			ctrl->link_status |= EPF_NTB_LINK_STATUS_UP;
+ 		else
+-			ctrl->link_status &= ~LINK_STATUS_UP;
++			ctrl->link_status &= ~EPF_NTB_LINK_STATUS_UP;
+ 		irq_type = is_msix ? PCI_IRQ_MSIX : PCI_IRQ_MSI;
+ 		ret = pci_epc_raise_irq(epc, func_no, vfunc_no, irq_type, 1);
+ 		if (ret) {
+@@ -562,9 +531,9 @@ static int epf_ntb_configure_db(struct epf_ntb *ntb,
+ 	ntb_epc = ntb->epc[type];
+ 	epc = ntb_epc->epc;
  
- 	return 0;
- }
-@@ -851,6 +868,7 @@ static int ntb_epf_init_dev(struct ntb_epf_dev *ndev)
- {
- 	struct device *dev = ndev->dev;
- 	int ret;
-+	int i;
- 
- 	ndev->mw_count = readl(ndev->ctrl_reg + NTB_EPF_CTRL(num_mws));
- 	if (ndev->mw_count > NTB_EPF_MAX_MW_COUNT) {
-@@ -862,6 +880,18 @@ static int ntb_epf_init_dev(struct ntb_epf_dev *ndev)
- 		dev_err(dev, "Invalid endpoint DMA layout\n");
- 		return ret;
+-	if (!db_count || db_count > MAX_DB_COUNT) {
++	if (!db_count || db_count > EPF_NTB_MAX_DB_COUNT) {
+ 		dev_err(&epc->dev, "DB count %d out of range (1 - %d)\n",
+-			db_count, MAX_DB_COUNT);
++			db_count, EPF_NTB_MAX_DB_COUNT);
+ 		return -EINVAL;
  	}
-+	if (ndev->dma.submap.size) {
-+		for (i = 0; i < ndev->mw_count; i++) {
-+			int bar = ntb_epf_mw_to_bar(ndev, i);
-+
-+			if (bar == ndev->dma.submap.bar &&
-+			    ntb_epf_mw_size(ndev, bar) <=
-+			    ntb_epf_mw_offset(ndev, i)) {
-+				dev_err(dev, "Invalid DMA/MW boundary\n");
-+				return -EINVAL;
-+			}
-+		}
-+	}
  
- 	/* One Link interrupt and rest doorbell interrupt */
- 	ret = ntb_epf_init_isr(ndev, NTB_EPF_MIN_DB_COUNT + 1,
+@@ -648,50 +617,52 @@ static void epf_ntb_cmd_handler(struct work_struct *work)
+ 	dev = &ntb->epf->dev;
+ 
+ 	switch (command) {
+-	case COMMAND_CONFIGURE_DOORBELL:
+-		db_count = argument & DB_COUNT_MASK;
+-		is_msix = argument & MSIX_ENABLE;
++	case EPF_NTB_COMMAND_CONFIGURE_DOORBELL:
++		db_count = argument & EPF_NTB_DB_COUNT_MASK;
++		is_msix = argument & EPF_NTB_MSIX_ENABLE;
+ 		ret = epf_ntb_configure_db(ntb, type, db_count, is_msix);
+ 		if (ret < 0)
+-			ctrl->command_status = COMMAND_STATUS_ERROR;
++			ctrl->command_status = EPF_NTB_COMMAND_STATUS_ERROR;
+ 		else
+-			ctrl->command_status = COMMAND_STATUS_OK;
++			ctrl->command_status = EPF_NTB_COMMAND_STATUS_OK;
+ 		break;
+-	case COMMAND_TEARDOWN_DOORBELL:
++	case EPF_NTB_COMMAND_TEARDOWN_DOORBELL:
+ 		epf_ntb_teardown_db(ntb, type);
+-		ctrl->command_status = COMMAND_STATUS_OK;
++		ctrl->command_status = EPF_NTB_COMMAND_STATUS_OK;
+ 		break;
+-	case COMMAND_CONFIGURE_MW:
++	case EPF_NTB_COMMAND_CONFIGURE_MW:
+ 		ret = epf_ntb_configure_mw(ntb, type, argument);
+ 		if (ret < 0)
+-			ctrl->command_status = COMMAND_STATUS_ERROR;
++			ctrl->command_status = EPF_NTB_COMMAND_STATUS_ERROR;
+ 		else
+-			ctrl->command_status = COMMAND_STATUS_OK;
++			ctrl->command_status = EPF_NTB_COMMAND_STATUS_OK;
+ 		break;
+-	case COMMAND_TEARDOWN_MW:
++	case EPF_NTB_COMMAND_TEARDOWN_MW:
+ 		epf_ntb_teardown_mw(ntb, type, argument);
+-		ctrl->command_status = COMMAND_STATUS_OK;
++		ctrl->command_status = EPF_NTB_COMMAND_STATUS_OK;
+ 		break;
+-	case COMMAND_LINK_UP:
++	case EPF_NTB_COMMAND_LINK_UP:
+ 		ntb_epc->linkup = true;
+ 		if (ntb->epc[PRIMARY_INTERFACE]->linkup &&
+ 		    ntb->epc[SECONDARY_INTERFACE]->linkup) {
+ 			ret = epf_ntb_link_up(ntb, true);
+ 			if (ret < 0)
+-				ctrl->command_status = COMMAND_STATUS_ERROR;
++				ctrl->command_status =
++					EPF_NTB_COMMAND_STATUS_ERROR;
+ 			else
+-				ctrl->command_status = COMMAND_STATUS_OK;
++				ctrl->command_status =
++					EPF_NTB_COMMAND_STATUS_OK;
+ 			goto reset_handler;
+ 		}
+-		ctrl->command_status = COMMAND_STATUS_OK;
++		ctrl->command_status = EPF_NTB_COMMAND_STATUS_OK;
+ 		break;
+-	case COMMAND_LINK_DOWN:
++	case EPF_NTB_COMMAND_LINK_DOWN:
+ 		ntb_epc->linkup = false;
+ 		ret = epf_ntb_link_up(ntb, false);
+ 		if (ret < 0)
+-			ctrl->command_status = COMMAND_STATUS_ERROR;
++			ctrl->command_status = EPF_NTB_COMMAND_STATUS_ERROR;
+ 		else
+-			ctrl->command_status = COMMAND_STATUS_OK;
++			ctrl->command_status = EPF_NTB_COMMAND_STATUS_OK;
+ 		break;
+ 	default:
+ 		dev_err(dev, "%s intf UNKNOWN command: %d\n",
+@@ -1298,9 +1269,9 @@ static int epf_ntb_configure_interrupt(struct epf_ntb *ntb,
+ 	func_no = ntb_epc->func_no;
+ 	vfunc_no = ntb_epc->vfunc_no;
+ 
+-	if (!ntb->db_count || ntb->db_count > MAX_DB_COUNT) {
++	if (!ntb->db_count || ntb->db_count > EPF_NTB_MAX_DB_COUNT) {
+ 		dev_err(dev, "DB count %d out of range (1 - %d)\n",
+-			ntb->db_count, MAX_DB_COUNT);
++			ntb->db_count, EPF_NTB_MAX_DB_COUNT);
+ 		return -EINVAL;
+ 	}
+ 
+diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+index 1a0ce31e680c..3adbaa9d85db 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
++++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+@@ -47,27 +47,14 @@
+ #include <linux/pci-ep-msi.h>
+ #include <linux/pci-epc.h>
+ #include <linux/pci-epf.h>
++#include <linux/pci-epf-ntb.h>
+ #include <linux/ntb.h>
+ 
+ static struct workqueue_struct *kpcintb_workqueue;
+ 
+-#define COMMAND_CONFIGURE_DOORBELL	1
+-#define COMMAND_TEARDOWN_DOORBELL	2
+-#define COMMAND_CONFIGURE_MW		3
+-#define COMMAND_TEARDOWN_MW		4
+-#define COMMAND_LINK_UP			5
+-#define COMMAND_LINK_DOWN		6
+-
+-#define COMMAND_STATUS_OK		1
+-#define COMMAND_STATUS_ERROR		2
+-
+-#define LINK_STATUS_UP			BIT(0)
+-
+ #define SPAD_COUNT			64
+ #define DB_COUNT			4
+ #define NTB_MW_OFFSET			2
+-#define DB_COUNT_MASK			GENMASK(15, 0)
+-#define MSIX_ENABLE			BIT(16)
+ #define MAX_MW				4
+ 
+ /* Limit per-work execution to avoid monopolizing kworker on doorbell storms. */
+@@ -90,47 +77,6 @@ enum epf_irq_slot {
+ };
+ 
+ #define MIN_DB_COUNT			(EPF_IRQ_DB_START + 1)
+-#define MAX_DB_COUNT			32
+-
+-/*
+- * +--------------------------------------------------+ Base
+- * |                                                  |
+- * |                                                  |
+- * |                                                  |
+- * |          Common Control Register                 |
+- * |                                                  |
+- * |                                                  |
+- * |                                                  |
+- * +-----------------------+--------------------------+ Base+spad_offset
+- * |                       |                          |
+- * |    Peer Spad Space    |    Spad Space            |
+- * |                       |                          |
+- * |                       |                          |
+- * +-----------------------+--------------------------+ Base+spad_offset
+- * |                       |                          |     +spad_count * 4
+- * |                       |                          |
+- * |     Spad Space        |   Peer Spad Space        |
+- * |                       |                          |
+- * +-----------------------+--------------------------+
+- *       Virtual PCI             PCIe Endpoint
+- *       NTB Driver               NTB Driver
+- */
+-struct epf_ntb_ctrl {
+-	u32 command;
+-	u32 argument;
+-	u16 command_status;
+-	u16 link_status;
+-	u32 topology;
+-	u64 addr;
+-	u64 size;
+-	u32 num_mws;
+-	u32 reserved;
+-	u32 spad_offset;
+-	u32 spad_count;
+-	u32 db_entry_size;
+-	u32 db_data[MAX_DB_COUNT];
+-	u32 db_offset[MAX_DB_COUNT];
+-} __packed;
+ 
+ struct epf_ntb {
+ 	struct ntb_dev *ntb;
+@@ -195,9 +141,9 @@ static void epf_ntb_update_link(struct epf_ntb *ntb)
+ 
+ 	/* The link is usable only after both sides have enabled it. */
+ 	if (ntb->host_link_enabled && ntb->vhost_link_enabled)
+-		link_status |= LINK_STATUS_UP;
++		link_status |= EPF_NTB_LINK_STATUS_UP;
+ 	else
+-		link_status &= ~LINK_STATUS_UP;
++		link_status &= ~EPF_NTB_LINK_STATUS_UP;
+ 
+ 	WRITE_ONCE(ntb->reg->link_status, link_status);
+ }
+@@ -368,45 +314,47 @@ static void epf_ntb_cmd_handler(struct work_struct *work)
+ 	dev = &ntb->epf->dev;
+ 
+ 	switch (command) {
+-	case COMMAND_CONFIGURE_DOORBELL:
++	case EPF_NTB_COMMAND_CONFIGURE_DOORBELL:
+ 		epc_features = pci_epc_get_features(ntb->epf->epc,
+ 						    ntb->epf->func_no,
+ 						    ntb->epf->vfunc_no);
+-		if (((argument & MSIX_ENABLE) && !epc_features->msix_capable) ||
+-		    (!(argument & MSIX_ENABLE) && !epc_features->msi_capable)) {
+-			ctrl->command_status = COMMAND_STATUS_ERROR;
++		if (((argument & EPF_NTB_MSIX_ENABLE) &&
++		     !epc_features->msix_capable) ||
++		    (!(argument & EPF_NTB_MSIX_ENABLE) &&
++		     !epc_features->msi_capable)) {
++			ctrl->command_status = EPF_NTB_COMMAND_STATUS_ERROR;
+ 			break;
+ 		}
+-		ntb->peer_msix = argument & MSIX_ENABLE;
+-		ctrl->command_status = COMMAND_STATUS_OK;
++		ntb->peer_msix = argument & EPF_NTB_MSIX_ENABLE;
++		ctrl->command_status = EPF_NTB_COMMAND_STATUS_OK;
+ 		break;
+-	case COMMAND_TEARDOWN_DOORBELL:
+-		ctrl->command_status = COMMAND_STATUS_OK;
++	case EPF_NTB_COMMAND_TEARDOWN_DOORBELL:
++		ctrl->command_status = EPF_NTB_COMMAND_STATUS_OK;
+ 		break;
+-	case COMMAND_CONFIGURE_MW:
++	case EPF_NTB_COMMAND_CONFIGURE_MW:
+ 		ret = epf_ntb_configure_mw(ntb, argument);
+ 		if (ret < 0)
+-			ctrl->command_status = COMMAND_STATUS_ERROR;
++			ctrl->command_status = EPF_NTB_COMMAND_STATUS_ERROR;
+ 		else
+-			ctrl->command_status = COMMAND_STATUS_OK;
++			ctrl->command_status = EPF_NTB_COMMAND_STATUS_OK;
+ 		break;
+-	case COMMAND_TEARDOWN_MW:
++	case EPF_NTB_COMMAND_TEARDOWN_MW:
+ 		epf_ntb_teardown_mw(ntb, argument);
+-		ctrl->command_status = COMMAND_STATUS_OK;
++		ctrl->command_status = EPF_NTB_COMMAND_STATUS_OK;
+ 		break;
+-	case COMMAND_LINK_UP:
++	case EPF_NTB_COMMAND_LINK_UP:
+ 		ret = epf_ntb_set_link_enabled(ntb, true);
+ 		if (ret < 0)
+-			ctrl->command_status = COMMAND_STATUS_ERROR;
++			ctrl->command_status = EPF_NTB_COMMAND_STATUS_ERROR;
+ 		else
+-			ctrl->command_status = COMMAND_STATUS_OK;
++			ctrl->command_status = EPF_NTB_COMMAND_STATUS_OK;
+ 		goto reset_handler;
+-	case COMMAND_LINK_DOWN:
++	case EPF_NTB_COMMAND_LINK_DOWN:
+ 		ret = epf_ntb_set_link_enabled(ntb, false);
+ 		if (ret < 0)
+-			ctrl->command_status = COMMAND_STATUS_ERROR;
++			ctrl->command_status = EPF_NTB_COMMAND_STATUS_ERROR;
+ 		else
+-			ctrl->command_status = COMMAND_STATUS_OK;
++			ctrl->command_status = EPF_NTB_COMMAND_STATUS_OK;
+ 		break;
+ 	default:
+ 		dev_err(dev, "UNKNOWN command: %d\n", command);
+@@ -518,6 +466,28 @@ static void epf_ntb_config_spad_bar_free(struct epf_ntb *ntb)
+  *   region
+  * @ntb: NTB device that facilitates communication between HOST and VHOST
+  *
++ * +--------------------------------------------------+ Base
++ * |                                                  |
++ * |                                                  |
++ * |                                                  |
++ * |          Common Control Register                 |
++ * |                                                  |
++ * |                                                  |
++ * |                                                  |
++ * +-----------------------+--------------------------+ Base+spad_offset
++ * |                       |                          |
++ * |    Peer Spad Space    |    Spad Space            |
++ * |                       |                          |
++ * |                       |                          |
++ * +-----------------------+--------------------------+ Base+spad_offset
++ * |                       |                          |     +spad_count * 4
++ * |                       |                          |
++ * |     Spad Space        |   Peer Spad Space        |
++ * |                       |                          |
++ * +-----------------------+--------------------------+
++ *       Virtual PCI             PCIe Endpoint
++ *       NTB Driver               NTB Driver
++ *
+  * Allocate the Local Memory mentioned in the above diagram. The size of
+  * CONFIG REGION is sizeof(struct epf_ntb_ctrl), plus space for the MSI-X
+  * Table and PBA if supported. The size of SCRATCHPAD REGION is obtained
+@@ -602,9 +572,10 @@ static int epf_ntb_configure_interrupt(struct epf_ntb *ntb)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (ntb->db_count < MIN_DB_COUNT || ntb->db_count > MAX_DB_COUNT) {
++	if (ntb->db_count < MIN_DB_COUNT ||
++	    ntb->db_count > EPF_NTB_MAX_DB_COUNT) {
+ 		dev_err(dev, "DB count %d out of range (%d - %d)\n",
+-			ntb->db_count, MIN_DB_COUNT, MAX_DB_COUNT);
++			ntb->db_count, MIN_DB_COUNT, EPF_NTB_MAX_DB_COUNT);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -1258,7 +1229,7 @@ static ssize_t epf_ntb_db_count_store(struct config_item *item,
+ 	if (ret)
+ 		return ret;
+ 
+-	if (val < MIN_DB_COUNT || val > MAX_DB_COUNT)
++	if (val < MIN_DB_COUNT || val > EPF_NTB_MAX_DB_COUNT)
+ 		return -EINVAL;
+ 
+ 	WRITE_ONCE(ntb->db_count, val);
+@@ -1456,7 +1427,7 @@ static int vntb_epf_db_vector_count(struct ntb_dev *ntb)
+ 	 *
+ 	 * Report only usable per-vector doorbell interrupts.
+ 	 */
+-	if (db_count < MIN_DB_COUNT || db_count > MAX_DB_COUNT)
++	if (db_count < MIN_DB_COUNT || db_count > EPF_NTB_MAX_DB_COUNT)
+ 		return 0;
+ 
+ 	return db_count - EPF_IRQ_DB_START;
+diff --git a/include/linux/pci-epf-ntb.h b/include/linux/pci-epf-ntb.h
+new file mode 100644
+index 000000000000..0c02d709aa08
+--- /dev/null
++++ b/include/linux/pci-epf-ntb.h
+@@ -0,0 +1,48 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Control region layout shared by the PCI endpoint NTB function drivers
++ * (pci-epf-ntb, pci-epf-vntb) and the host side ntb_hw_epf driver.
++ */
++
++#ifndef __LINUX_PCI_EPF_NTB_H
++#define __LINUX_PCI_EPF_NTB_H
++
++#include <linux/bits.h>
++#include <linux/types.h>
++
++#define EPF_NTB_COMMAND_CONFIGURE_DOORBELL	1
++#define EPF_NTB_COMMAND_TEARDOWN_DOORBELL	2
++#define EPF_NTB_COMMAND_CONFIGURE_MW		3
++#define EPF_NTB_COMMAND_TEARDOWN_MW		4
++#define EPF_NTB_COMMAND_LINK_UP			5
++#define EPF_NTB_COMMAND_LINK_DOWN		6
++
++/* EPF_NTB_COMMAND_CONFIGURE_DOORBELL argument */
++#define EPF_NTB_DB_COUNT_MASK			GENMASK(15, 0)
++#define EPF_NTB_MSIX_ENABLE			BIT(16)
++
++#define EPF_NTB_COMMAND_STATUS_OK		1
++#define EPF_NTB_COMMAND_STATUS_ERROR		2
++
++#define EPF_NTB_LINK_STATUS_UP			BIT(0)
++
++#define EPF_NTB_MAX_DB_COUNT			32
++
++struct epf_ntb_ctrl {
++	u32 command;
++	u32 argument;
++	u16 command_status;
++	u16 link_status;
++	u32 topology;
++	u64 addr;
++	u64 size;
++	u32 num_mws;
++	u32 mw1_offset;
++	u32 spad_offset;
++	u32 spad_count;
++	u32 db_entry_size;
++	u32 db_data[EPF_NTB_MAX_DB_COUNT];
++	u32 db_offset[EPF_NTB_MAX_DB_COUNT];
++} __packed;
++
++#endif /* __LINUX_PCI_EPF_NTB_H */
 -- 
 2.54.0
 
