@@ -1,49 +1,109 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=66.228.49.9
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.181
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792633025;
-	b=DyRRbGDL2WQI0tG3i0JiCqIgrIyIwL+lErQOZ54StZ6/j7TMqckPDepy7NlqnL80V0uI
-	 Ws/q8bMiuph4g6oSuXBVXtmd4sYOhcUkL6TVWx7OKQUJmRM5gRg+zQA2HbBVJVxEti0MI
-	 dNBQjSButtMXjaIQs9n2BJgJOF2JIZQoJjVFUfM85ZxrqdbmiLjW1Wigp0V9R1pDiKu9y
-	 1XY/bWvEgc5o4nFUhWPGJyUxq8GZnY1OITw/2I/+mEb0sL1zztZMyIkDH1XaaU5CnHPVp
-	 x7TaHRZRMN4yEo5+eR1iB7z+vALSb2Gm+q6oIapIxqB1xYaAuy2liI6DMft2wNUpJ3Q==
+	t=1792637492;
+	b=VTX5sdTKKpz1YkMqlPoKh6wD1iBA7QJggbbfgGwmpAsQPehpxVLA1qasyINQTojQmnvx
+	 cJmAf3G9PTP3Yr1kBzqoy6dUNrGFcqX6+TXueOzeJoKuAn9aFtw53hNMKghmpiNN8wuxk
+	 Qs5DAvnp2SVS2aUatTHAYLmfrkIPDFYQWUeVfzvcFYURpksGzCZIfW4jQ0Jlz2Ss3cKEF
+	 ophNJ3ZRYmwQK4MIa5gKQatZlIOjOQMO71DdIMCx//Sl/RSQZgt8ks4u26w6OeHp8H+hS
+	 iUJF1D85KkZbZ6OdKyPn8jRQ76T8kzVwhUTeZBiWSJuzzCefDDInwGwbIA4YVtlKOqw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792633025;
-	h=DMARC-Filter:Received:DKIM-Signature:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:From:To:Cc:References:Content-Language:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=nnW4VcwHbkk2DHavEEkUKXNZPZrDj8F0/wl71Ri5e/E=;
-	b=EwZ0U3NXSEcGQyBrjplGSg2ka6lLl6TsVtSXmLZG28i2vylTZ391Sdd1b6gaZcQXVQE1
-	 soC5/WKBW09lLNJUTVA/K7KVuH1YRKIskF1mQfk/+eOIF/cl2T1GgZyf7Jy+R0naSzlmE
-	 Fit3HqHXx+sCqW/+Bd0k4BcREOE36EcXMfR+AWKf02mYUtxQrQ1s3jr5Z8rSPbeGuHxDt
-	 bzkAYRkobXDrin+5X7UCsOKUZCOGEYSaUwADCm6U2i5FD8ekULRBuZT+hraQn9YIg5hd+
-	 fN+hX3VD+TNFaKtWswwYYtxTvi/uzgC87n+ih7MuyXzRwDj/jnyNuyOU42+FeZVsVqg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792637492;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=DgxDvLuT+FrYCt+izSlqoI4afXyKDdrxGMCJ1K0jMX4=;
+	b=mFFXWqYLnF0R8MV5/ub2wOkQo0RGDTNFUPQsZ4Oc1JhuzRoiOAxo30h5mH8rGfbkT3nC
+	 oJ1DLDHS1U0KWa/GQI4kc8p8fBC28HYkUIy2LEACwzgmPTcen3IwgR4jDRzu7jO2BTy17
+	 5iAMfp2ACD3rvvDr0g0OfGq8LFbXvZWqzcEnAHfip3g9ukF/h4HmHAebm9tKD/FutvYMz
+	 pDPPUdjbKld9yG/qHnJ0gFhdrOLvkNym8ivI379CYqh98Pvah2krOfqf2Adm62L1Vg20Q
+	 Yo23Q3NRGReV5NAjsm+iNmYGf1d8OW6sxYs2F3ERobQFL95qHolhR206z+ZpQwy/l/Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=6bit.com;
-	spf=pass smtp.mailfrom=6bit.com;
-	dkim=pass header.d=6bit.com header.i=@6bit.com header.a=rsa-sha256 header.s=dkim header.b=qInkceLN;
-	arc=none smtp.remote-ip=66.228.49.9
-Received: from mail.6bit.com (www.6bit.com [66.228.49.9])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b="G1/B1IYM";
+	arc=none smtp.remote-ip=209.85.215.181
+Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1432A606A31A;
-	Thu, 22 Oct 2026 01:37:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1432A606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=6bit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=6bit.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D998606A319
+	for <linux-pci@vger.kernel.org>; Thu, 22 Oct 2026 02:51:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8D998606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=6bit.com header.i=@6bit.com header.a=rsa-sha256 header.s=dkim header.b=qInkceLN
-Received: from [10.0.2.245] (unknown [143.105.105.29])
-	by mail.6bit.com (Postfix) with ESMTPSA id DDC12945CF;
-	Wed, 21 Oct 2026 19:36:56 -0600 (MDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=6bit.com; s=dkim;
-	t=1792633017; bh=RdgdE9wO/hgi3O1MxEmLdNMt5z4BOtTeJVms7OjvJGM=;
-	h=Date:Subject:From:To:Cc:References:In-Reply-To;
-	b=qInkceLN5nIN09rB36JK7hx7zloayLzTBJxvJRwM1gejsIs9xzW9lVpFA5cMyOE9r
-	 YkmYiNl+MBkmb1FEXt/g4NC4ruUBZ5FT4G+oNngDw3WgnukcrsN7dbWyBzcDLgYfSh
-	 ONfw/LH+lwL9WSMQ0oxNFD750wEsYkBIZAX0u8pY=
-Message-ID: <b859285b-e43e-43f2-a4f7-af82705d3513@6bit.com>
-Date: Wed, 21 Oct 2026 19:36:55 -0600
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=G1/B1IYM
+Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-cc147d86bebso282461a12.0
+        for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 19:51:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1792637491; x=1793242291; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=DgxDvLuT+FrYCt+izSlqoI4afXyKDdrxGMCJ1K0jMX4=;
+        b=G1/B1IYMVcrhCs8k5cLUsJt4iwZWffCZ2GipE3/G4twY6XtK3n0IZQfatuGThfkFTu
+         oBjA1YRuAmB3rUPvOfoZRuv8XRlVMAAzm65fcCs0w1qcXhj+6ZnwzHc6WFn2exgARbsi
+         84TpJfPti8NqLiXuuoHAG1VfMsZnBByDsXdWSuGJeECaDkw9+QXJa/4Ffl+GWuPjbfKf
+         6uICkWQiFROSra6jLGRblsPqMh+R2kmA1N/+fv5yLnSNXSygWvGLRIeDUY6B4oo9VPe0
+         0OS+gfveyIJSsXkjcHq182NiCFy9rsKDZS8zAb4Llw6xeZO8j/8kdrjnKUTf+TPQ2j4Q
+         +Xrg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792637491; x=1793242291;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=DgxDvLuT+FrYCt+izSlqoI4afXyKDdrxGMCJ1K0jMX4=;
+        b=p+zH3x67+CN1HnwC/V1Wiz2KQavU89+fYwnTPnB4qANEPEiikS3xEg8hQyQUwghDFc
+         WtYIYe6WP4opn97c35SpPEHOdufJrrwyd2LP7joeZtthABDqRBwhFFjPIKDEY4KdNBOI
+         xA3RZtv+p+nHRmJYGiq9arGEVevfPkmXO0bG/SgQ0zxnvL8DmBxxw5cANWTcLrPmSAUc
+         0pE8cN2s2NwxGy+39kPViTi5OFtN7YzJbs9MdGrd487JhOr+VlCzAmYmODg0wUz7q0Yo
+         7qLV+e2diJ7+OMayvpTFaBW5aHYSPuHVmJ4k41UZ5UcKj1VKQjN3s41BFpwhKQmCPcuM
+         Nrjg==
+X-Forwarded-Encrypted: i=1; AKwUvBw+PsDHpfO3Uh7KREUfibjjW29RkoIovPZQU/uQxtlU67FDcKw09zjX7x8N4QJFsqxuJ3RBMfVphwM=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKwgyt70OPG9cEZyEuKsPRM1loI4glLIOj1ennqL78VDK+VyZ9i
+	mH04JqjaCzdT4RbFJWADpaiOd4GB/9IeMRhxlgXR88+GYLYxq5m+nv1a6UhJWspZ0g==
+X-Gm-Gg: AYBFou1k21PUxy1/s/+s7lZsNdWADJAIbY6IhciIhJGOFjz/pwh+BkJwbD2eNWnR4pw
+	84J/ir8pb+J/pQsA6Fwxm+IClDVd5hMsRDBOLzXTg38m2DwvPsftEir4Z88mqipK4unobYjqCLL
+	5YeM+Cjuhhq5xNwU1k0li/VA6NQI9H30gRx5jFYKMBKRu+Lsb38Avg7KfM4VR019VifU9sd6q6o
+	KnmjFii5datnsFlSpVFZHP57q5eS3cXCkvExMwseXaV8iLUBkJvMgoTGsZam/6kOJS/n2TqpoBw
+	qdQOQ4AMWcmNlDCNm9739Btov3NfOOFL9guP4AGupdqoYPpGnf7NWYHW6YFVm1SDFqvwtQ3MVJZ
+	quDPteAQY9M+fK+GV+w1Bwqc/wCezYWjtvNligFP+Ad4s75EppXOjaSCS+nnlQWPTg2TlSmhm5F
+	D1x67weSer1VpMY8ouaOoE5xdYUxM5JBAqT8i82eh8Z0OB6P2J/6dxCErHpekN+3bQ7h67IPIxe
+	5MyatFR7HbvPcEp8NNMQ15ZhKA26GTUEDIzdWhj2zkAnCzXfZ28xuk/lrivyrPRmQkh2LqpOLDv
+	qMNS6Xe8PX1E0jRBhQ==
+X-Received: by 2002:a05:6a21:3b46:b0:3e2:ea7:621 with SMTP id adf61e73a8af0-3e2a0bed41bmr545882637.42.1792637489967;
+        Wed, 21 Oct 2026 19:51:29 -0700 (PDT)
+Received: from google.com (64.75.127.34.bc.googleusercontent.com. [34.127.75.64])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cd6b85e8c9asm635619a12.20.2026.10.21.19.51.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 21 Oct 2026 19:51:28 -0700 (PDT)
+Date: Thu, 22 Oct 2026 02:51:23 +0000
+From: David Matlack <dmatlack@google.com>
+To: Pasha Tatashin <pasha.tatashin@soleen.com>
+Cc: Tarun Sahu <tarunsahu@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>, joro@8bytes.org,
+	Mike Rapoport <rppt@kernel.org>,
+	Pratyush Yadav <pratyush@kernel.org>, maz@kernel.org, arnd@arndb.de,
+	jgg@nvidia.com, robin.murphy@arm.com, loganodell@google.com,
+	oupton@kernel.org, kevin.tian@intel.com, alex@shazbot.org,
+	dwmw2@infradead.org, pbonzini@redhat.com, seanjc@google.com,
+	will@kernel.org, Alexander Graf <graf@amazon.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, baolu.lu@linux.intel.com,
+	linux-arm-kernel@lists.infradead.org, linux-arch@vger.kernel.org,
+	sagis@google.com, linux-mm@kvack.org, kvmarm@lists.linux.dev,
+	iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+	kexec@lists.infradead.org, skhawaja@google.com, kvm@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH v2 4/4] mm: memfd_luo: Add the 2-bit pair feature
+ header
+Message-ID: <atl6K2Juy6Bh29lh@google.com>
+References: <20261021152527.375070-1-tarunsahu@google.com>
+ <20261021152527.375070-5-tarunsahu@google.com>
+ <CA+CK2bCWo7ixrNLKPvqETn3JSFwSNaB2UsPgy9RHVAhWroJURQ@mail.gmail.com>
+ <atlINfvlXY4wMbpO@google.com>
+ <CA+CK2bDf-pKbH2J13mRYRT7Ddj-Q+VXaGYePs+E-azSWXKzV5w@mail.gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -53,98 +113,329 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: =?UTF-8?Q?Re=3A_=5BREGRESSION_6=2E16=5D_r8169_RTL8168h/8111h_fails_?=
- =?UTF-8?Q?to_probe_=E2=80=94_=22Unable_to_change_power_state_from_D3cold_to?=
- =?UTF-8?Q?_D0=22_=E2=80=94_bisected_to_4d4c10f763d7?=
-From: Josh Perry <josh@6bit.com>
-To: mario.limonciello@amd.com, bhelgaas@google.com
-Cc: hkallweit1@gmail.com, nic_swsd@realtek.com, rafael@kernel.org,
- linux-pci@vger.kernel.org, netdev@vger.kernel.org,
- regressions@lists.linux.dev
-References: <d4aaa5e8-7366-461c-94b1-ccf3631c8bf9@6bit.com>
-Content-Language: en-US
-In-Reply-To: <d4aaa5e8-7366-461c-94b1-ccf3631c8bf9@6bit.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+CK2bDf-pKbH2J13mRYRT7Ddj-Q+VXaGYePs+E-azSWXKzV5w@mail.gmail.com>
 
-On 6/11/26 19:07, Josh Perry wrote:
-> #regzbot introduced: 4d4c10f763d7
+On 2026-10-21 08:41 PM, Pasha Tatashin wrote:
+> > > >  /**
+> > > >   * struct memfd_luo_ser - Main serialization structure for a memfd.
+> > > > + * @features:  ABI feature and size header for memfd_luo_ser.
+> > > >   * @pos:       The file's current position (f_pos).
+> > > >   * @size:      The total size of the file in bytes (i_size).
+> > > >   * @seals:     The seals present on the memfd. The seals are uABI so it is safe
+> > > > @@ -79,6 +103,7 @@ struct memfd_luo_folio_ser {
+> > > >   *             struct memfd_luo_folio_ser.
+> > > >   */
+> > > >  struct memfd_luo_ser {
+> > > > +       struct luo_feature_hdr features;
+> > >
+> > > I have not looked into this yet, but I would prefer to use some kind
+> > > of macro constructor for serialized structs. That way, they will
+> > > automatically include the header, making it easier to search the code
+> > > for what is actually preserved versus what exists only in this kernel.
+> >
+> > If you want to know what is preserved don't you just look at
+> > include/linux/kho/abi?
 > 
-> Since v6.16 one of two onboard RTL8168h/8111h NICs on this board fails 
-> to probe on boot; the device drops to D3cold and the driver can't bring 
-> it back:
+> Yes, and having it initialized and declared in the code correctly with
+> proper macros and verified just gives the right handling and avoids
+> making silly mistakes. The second reason is so we never forget to
+> include the header, and to make it expandable and easy for everyone to
+> use. I think this kind of constructor is just useful overall. Are
+> there any reasons why we wouldn't want to use it?
 > 
->    r8169 0000:02:00.0 eth0: RTL8168h/8111h, 00:2b:67:48:40:01, XID 541, 
-> IRQ 137
->    r8169 0000:04:00.0: Unable to change power state from D3cold to D0, 
-> device inaccessible
->    r8169 0000:04:00.0: Mem-Wr-Inval unavailable
->    r8169 0000:04:00.0: error -EIO: PCI read failed
->    r8169 0000:04:00.0: probe with driver r8169 failed with error -5
+> > > So, I think something like this:
+> > > /* Base serialization header: 4 bytes total size, 4 bytes flags */
+> > > struct luo_ser_hdr {
+> > >     __u32 total_size;
+> >
+> > Why do we need the size? I'm not really opposed to it I just don't
+> > understand what problem it solves.
+> [...]
+> > The luo_ser_hdr is needed for top-level file handler and FLB ser
+> > structs. Those structs are always dynamically allocated and preserved
+> > with KHO.
 > 
-> The board has two identical RTL8168h NICs (both XID 541): 0000:02:00.0 
-> and 0000:04:00.0. Only 04:00.0 fails — its sibling 02:00.0, on a 
-> different root port, probes and works normally on the very same kernel 
-> and boot. The failing NIC then does not appear (no enp4s0), taking the 
-> machine's WAN offline. This strongly suggests the problem is port/ 
-> topology-specific rather than device- or driver-specific: the upstream 
-> port behind 04:00.0 is placed in D3cold and the endpoint cannot be 
-> resumed to D0.
+> The top level is not enough. I think it is needed for every single
+> serialized struct in kho/abi - the blocks, the FLBs, etc. They all
+> must
+> be expandable in case we need to allow that. Let's have future
+> protection for everything that gets preserved.
 > 
-> Hardware: RTL8168h/8111h, XID 541, PCI 04:00.0 (onboard 1GbE).
-> Platform: Lenovo ThinkCentre M90n-1 (11AHS0B200), BIOS M2AKT49A 
-> (2026-03-25, latest available). Firmware is current, so this is not a 
-> platform-firmware issue.
+> For example, take a look at vCPU preservation:
+> https://lore.kernel.org/all/20260920193650.3373435-9-pasha.tatashin@soleen.com
+> https://lore.kernel.org/all/20260920193650.3373435-11-pasha.tatashin@soleen.com
 > 
-> Bisection: v6.15 good, v6.16 bad (verified by booting both). I then 
-> reverted 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when 
-> initializing") together with its follow-up 907a7a2e5bf4 ("PCI/PM: Set up 
-> runtime PM even for devices without PCI PM") on top of 6.16.7: the NIC 
-> probes and links at 1Gbps/Full normally, with no workaround:
+> +struct kvm_vcpu_ser {
+> +    u32 vcpu_id;
+> +    u32 flags;
+> +    u64 vm_token;
+> +    DECLARE_KHOSER_PTR(arch_state, struct kvm_vcpu_arch_ser *);
+> +};
 > 
->    r8169 0000:04:00.0 eth1: RTL8168h/8111h, 00:2b:67:48:40:02, XID 541, 
-> IRQ 138
->    r8169 0000:04:00.0 enp4s0: Link is Up - 1Gbps/Full - flow control rx/tx
+> We might want to add fields to the arch-independent part, and we also
+> absolutely must keep the arch-dependent parts expandable. Therefore,
+> the header needs to stay small and flexible enough to grow as needed.
+
+Hm, anything that is dynamically allocated can have it, but anything
+that it is embedded directly or in an array cannot, because those
+structs cannot grow anyway. So I agree it's not exclusive to the
+top-level FLB and FH structs. But I would push back on any a mandate
+that _every_ struct in include/linux/kho/abi needs it.
+
 > 
-> Workaround: booting an unmodified v6.16+ kernel with pcie_port_pm=off 
-> also restores the NIC, which is consistent with the upstream port being 
-> placed in D3cold and the device failing to resume to D0 after the 
-> explicit-D0 init change.
+> > On retrieve, KHO gives you back the blob of memory. You look at the
+> > header to determine what features are used in the struct, and then
+> > access the fields associated with those features. At no point do you
+> > need to check the size.
+> >
+> > The only time you need the size is for a KHO block array. You want to
+> > store the size of the KHO block array elements so that the retrieving
+> > kernel can correctly initialize the iterator.
+> >
+> > e.g. from the PCI base series:
+> >
+> > /**
+> >  * struct pci_ser - PCI Subsystem Live Update State
+> >  *
+> >  * This struct tracks state about all devices that are being preserved across
+> >  * a Live Update for the next kernel. It contains only state owned by the PCI
+> >  * core; the state a driver needs to resume its device is preserved separately
+> >  * by that driver.
+> >  *
+> >  * @required_flags: Features that the next kernel must support to take over
+> >  *                  the preserved devices. No flags are currently defined.
+> >  * @optional_flags: Features that the next kernel may ignore if it does not
+> >  *                  support them. No flags are currently defined.
+> >  * @dev_ser_size: The size in bytes of each struct pci_dev_ser in @devices.
+> >  * @nr_devices: The number of devices that were preserved.
+> >  * @devices: Physical address of the first KHO block containing pci_dev_ser.
+> >  */
+> > struct pci_ser {
+> >         u64 required_flags;
+> >         u64 optional_flags;
+> >         u32 dev_ser_size; <==========
+> >         u32 nr_devices;
+> >         u64 devices;
+> > };
 > 
-> The follow-up 907a7a2e5bf4 does not fix this resume case: v6.18.33 is 
-> still affected (retested today on current firmware).
+> Having `total_size` embedded in the standard header of every
+> serialized struct solves this uniformly: any struct can be placed in a
+> block array without needing an ad-hoc `*_ser_size` field in the parent
+> struct, and on retrieve we can always sanity-check that the preserved
+> blob is at least as large as the struct fields implied by the flags.
+
+I agree we shouldn't need an ad-hoc *_ser_size field in the parent. But
+I don't think the entries are the right place to store the size.
+
+A KHO block set needs the entry size before it can do anything with the
+incoming blocks. kho_block_set_restore() uses it to validate each
+block's count, and the iterator uses it to locate every entry (index *
+entry_size). The entry size is a property of the block set, not of each
+entry.
+
+Putting the size in a header on every entry means:
+
+ - The block set has to peek into the first entry to learn its own
+   layout, so KHO blocks would depend on the LUO header format of
+   whatever is stored in them.
+
+ - Every entry repeats the same value, since all entries in a block set
+   are written by the same kernel using the same struct. For small
+   entries that is a lot of overhead, e.g. struct pci_dev_ser is 8 bytes,
+   so an 8-byte header doubles its size.
+
+ - Nothing enforces that all the entries actually agree.
+
+Instead, I think KHO blocks should record the entry size themselves.
+For example:
+
+struct kho_block_header_ser {
+    u64 next;
+    u32 count;
+    u32 entry_size;
+};
+
+kho_block_set_restore() would then take the entry size from the
+previous kernel and verify that every block agrees. Users of the block
+set can read the entry size back and decide how to handle entries
+written by an older or newer kernel, e.g. ignoring fields past the end
+of a smaller entry. That removes dev_ser_size from struct pci_ser, and
+any struct can be stored in a block array without a header or a size
+field in the parent.
+
+I also don't think block set entries need their own feature flags. The
+struct that holds the block set (e.g. struct pci_ser) already has
+feature flags, and those flags can describe extensions to the entries.
+For example, an optional flag in struct pci_ser could indicate that
+struct pci_dev_ser has a new field appended. All entries in a block set
+are written by the same kernel, so the flags would be identical for
+every entry anyway. The flags only need to be checked once, before
+iterating, rather than once per entry.
+
+If a feature only applies to some entries (e.g. some devices), the
+parent flag indicates the field is present and the value of the field
+in each entry indicates whether that entry uses it.
+
+The entry size in the block header and the feature flags in the parent
+are complementary: the entry size lets the iterator step over fields
+the kernel doesn't know about, and the flags say which fields are there
+and whether the next kernel must understand them.
+
+Please take a look at this series for how I am extending KHO block set
+elements using top-level feature flags:
+
+  https://lore.kernel.org/linux-pci/20261019213054.3157159-1-dmatlack@google.com/
+
 > 
-> Happy to test patches or provide full dmesg / lspci.
+> >
+> > >     __u32 flags;
+> > > };
+> > >
+> > > #define LUO_SER_INIT_HDR(obj, _flags) do {           \
+> > >     (obj)->hdr.total_size = sizeof(*(obj));          \
+> > >     (obj)->hdr.flags = (_flags);                     \
+> > > } while (0)
+> > >
+> > > #define DECLARE_LUO_SER(name, expected_size, members)       \
+> > >     struct name {                                           \
+> > >         struct luo_ser_hdr hdr;                             \
+> > >         members                                             \
+> > >     };                                                      \
+> > >     static_assert(sizeof(struct name) == (expected_size),   \
+> > >                   "LUO struct " #name " size mismatch!")
+> >
+> > Why?
+> >
+> > Practically every change to a serialized struct is going to involve
+> > appending one or more fields to the end of the struct. Asserting the
+> > size means we have to update the hard-coded size as well every time we
+> > do that.
+> >
+> > Is this to protect against embedded structs accidentally changing?
+> >
+> 
+> Yes, exactly. See how kvm_vcpu_arch_ser is proposed in that same series:
+> 
+> +struct kvm_vcpu_arch_ser {
+> +    struct kvm_regs regs;
+> +    struct kvm_sregs sregs;
+> +    struct kvm_mp_state mp_state;
+> +    u32 pad;
+> +    struct kvm_xcrs xcrs;
+> +    struct kvm_lapic_state lapic;
+> +    u8 pad_xsave[40];
+> +    struct kvm_xsave xsave;
+> +    struct kvm_vcpu_events events;
+> +    struct kvm_debugregs debugregs;
+> +    u32 num_msrs;
+> +    u32 cpuid_nent;
+> +    struct kvm_msr_entry msrs[];
+> +};
+> 
+> All the above structs are uAPI, so they are stable compared to random
+> kernel structs, but they still have a size and can be expanded. So,
+> having the size and a static assert guarantees that when we expand
+> these uAPI structs, we automatically catch that in this struct and add
+> the appropriate flag to notify the next kernel of the changed world.
+> Also, it catches implicit compiler padding changes across
+> architectures.
 
+Ok makes sense. Having protection from accidentally changing the offset
+of fields in a serialized struct is a good thing.
 
-Hey guys,
+> 
+> > >
+> > > Usage:
+> > > /*
+> > >  * Header:  8 bytes (hdr: 4 bytes total_size + 4 bytes flags)
+> > >  * Payload: 8 (pos) + 8 (size) + 4 (seals) + 4 (_pad) = 24 bytes
+> > >  * Total:   32 bytes
+> > >  */
+> > > DECLARE_LUO_SER(memfd_luo_ser, 32,
+> > >     __u64 pos;
+> > >     __u64 size;
+> > >     __u32 seals;
+> > >     __u32 _pad;
+> > > );
+> >
+> > IMO this makes the code harder to read. I think open coding keeps things
+> > simpler.
+> 
+> I am ok switching to a different construct or way of declaring these
+> structs if what I proposed is hard to read. However, we still need
+> standardization so that every serialized struct has a common,
+> expandable header (taking only 8 bytes by default), has its size
+> verified at both compile time and runtime, and is initialized in a
+> uniform way.
 
-Thanks, and apologies for the slow follow-up. Multiple of you asked me 
-to test on the latest mainline.
+I think your idea to have a growable header from the thread basically
+means that the header and the ser struct will be 2 completely separate
+structs and you will need to user pointer arithmetic to jump past the
+header and find your serialized struct. So I think this is probably
+moot.
 
-I had a chance to do just that today with the latest mainline v7.3. 
-Verdict is that it's still broken, same messages as in the original 
-report. pcie_port_pm=off on the same build still works around it.
-
-dmesg, "sudo lspci -vvv" and the sysfs PM state for both boots (same 
-v7.3 build, only the command line differs) are attached here:
-
-   https://bugzilla.kernel.org/show_bug.cgi?id=222179
-
-New detail from the failing boot: the root port above the dead NIC 
-(00:1d.3) is in D0 but its link shows DLActive-, and the endpoint's 
-config space reads all-ones ("Unknown header type 7f"). With 
-pcie_port_pm=off the port shows DLActive+ and the NIC is in D0 at 
-2.5GT/s x1. So the port seems to come back but the link to 04:00.0 
-doesn't retrain.
-
-#regzbot link: https://bugzilla.kernel.org/show_bug.cgi?id=222179
-
-Thanks again!
-
-Josh
-
-P.S. I'm relying on claude for formalisms like the bot tags and digging 
-up the CC list, but I'm pretty noob so please let me know if I'm doing 
-things wrong.
+> 
+> >
+> > struct pci_ser {
+> >         struct luo_ser_hdr header;
+> >         __u32 dev_ser_size;
+> >         __u32 nr_devices;
+> >         __u64 devices;
+> > };
+> > LUO_SER_ASSSERT_SIZE(pci_ser, 32);
+> >
+> > >
+> > > struct memfd_luo_ser *ser;
+> > > ...
+> > > LUO_SER_INIT_HDR(ser, 0);
+> > >
+> > > Thanks,
+> > > Pasha
+> > >
+> > > >         u64 pos;
+> > > >         u64 size;
+> > > >         u32 seals;
+> > > > diff --git a/mm/memfd_luo.c b/mm/memfd_luo.c
+> > > > index 64f8b8cb75bd..ea1f4c8cd259 100644
+> > > > --- a/mm/memfd_luo.c
+> > > > +++ b/mm/memfd_luo.c
+> > > > @@ -84,6 +84,10 @@
+> > > >
+> > > >  #include "internal.h"
+> > > >
+> > > > +static const u8 memfd_luo_features[MEMFD_LUO_FEAT_MAX] = {
+> > > > +       [MEMFD_LUO_FEAT_CORE] = LUO_FEAT_REQUIRED,
+> > > > +};
+> > > > +
+> > > >  static int memfd_luo_preserve_folios(struct file *file,
+> > > >                                      struct kho_vmalloc *kho_vmalloc,
+> > > >                                      struct memfd_luo_folio_ser **out_folios_ser,
+> > > > @@ -284,6 +288,8 @@ static int memfd_luo_preserve(struct liveupdate_file_op_args *args)
+> > > >                 goto err_free_ser;
+> > > >         }
+> > > >
+> > > > +       luo_feature_hdr_init(&ser->features, sizeof(*ser),
+> > > > +                            memfd_luo_features);
+> > > >         ser->pos = args->file->f_pos;
+> > > >         inode_size = i_size_read(inode);
+> > > >
+> > > > @@ -525,6 +531,14 @@ static int memfd_luo_retrieve(struct liveupdate_file_op_args *args)
+> > > >         if (!ser)
+> > > >                 return -EINVAL;
+> > > >
+> > > > +       err = luo_feature_hdr_validate(&ser->features, memfd_luo_features);
+> > > > +       if (err) {
+> > > > +               pr_err("memfd_luo_ser feature header validation failed (size=%llu, flags[0]=%#llx): %pe\n",
+> > > > +                      ser->features.size, ser->features.flags[0],
+> > > > +                      ERR_PTR(err));
+> > > > +               goto free_ser;
+> > > > +       }
+> > > > +
+> > > >         /* Make sure the file only has seals supported by this version. */
+> > > >         if (ser->seals & ~MEMFD_LUO_ALL_SEALS) {
+> > > >                 err = -EOPNOTSUPP;
+> > > > --
+> > > > 2.56.0.212.g129ede20d9-goog
+> > > >
