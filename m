@@ -1,100 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.45
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792632406;
-	b=pVcyOTxzaQ4SxMTrtNTam2qnIYAyzhPp7Z8ZO1BIH5UymDQHBYfMgGlD1eCTobcHNhiy
-	 q8CCxInBU14jQSRs9smRFqnjDgtoryp9UDIJyZezREGns4l0AGJthBZrMl2HUMX1e5nVM
-	 PUmQ2GW7hV6R8ppblBYhcCz3wE5rzR3Q54zInAVs8l3LnRMRcEHlgIXwWZzX5pO7Hg4u7
-	 Bo2OuajsOP0blFvgJ8XqxexxmqWPGuVeHZeXg8ipCV7eMdJnSD+WFBTEE3sepD70F4Xh2
-	 LiBNnJK7lFE9MlThkeRXyvlmfZbhVbLFJ1Z0azb/hJdJcR3plzrW93Lr6KDHbDQQaPQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792632406;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=o28ydFuUHHD4c/U0AkyEgOljfI5EK57zWWg+tuRSc8Y=;
-	b=W+upFyOC1t6XHr/WiloaeHatZ8kHbEgmUoc/PhZu4jsZwGziHag+yiCEj5f7TYai+8Vg
-	 gdfXWYnonCxwzNZjEVYovQ4uN023OIW/UaF3XD522Qr8G65CgzEh20P1BV09dvrfKDpKn
-	 sXQh08rHLfbb1sUsnw/K4wCes+jj6H5NGJuMVtJj2v7+nCNGlboJmA6XiqrEquFRJsmmH
-	 EljirTTxyO8XawlW1GqBqnGySrIcqqtq0Pu7JIPJmAkGhDmBwed5AFFVYw9VZWexyBzWx
-	 uKvmuwksbt0HxNNHFnQ1XnHO2F+lPRr2tXxu7trcozARyGt0XmnQkb+L+/j80NrIGYw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=soleen.com;
-	spf=pass smtp.mailfrom=soleen.com;
-	dkim=pass header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b=UjasCW3N;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.45
-Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=66.228.49.9
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792633025;
+	b=DyRRbGDL2WQI0tG3i0JiCqIgrIyIwL+lErQOZ54StZ6/j7TMqckPDepy7NlqnL80V0uI
+	 Ws/q8bMiuph4g6oSuXBVXtmd4sYOhcUkL6TVWx7OKQUJmRM5gRg+zQA2HbBVJVxEti0MI
+	 dNBQjSButtMXjaIQs9n2BJgJOF2JIZQoJjVFUfM85ZxrqdbmiLjW1Wigp0V9R1pDiKu9y
+	 1XY/bWvEgc5o4nFUhWPGJyUxq8GZnY1OITw/2I/+mEb0sL1zztZMyIkDH1XaaU5CnHPVp
+	 x7TaHRZRMN4yEo5+eR1iB7z+vALSb2Gm+q6oIapIxqB1xYaAuy2liI6DMft2wNUpJ3Q==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792633025;
+	h=DMARC-Filter:Received:DKIM-Signature:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:From:To:Cc:References:Content-Language:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=nnW4VcwHbkk2DHavEEkUKXNZPZrDj8F0/wl71Ri5e/E=;
+	b=EwZ0U3NXSEcGQyBrjplGSg2ka6lLl6TsVtSXmLZG28i2vylTZ391Sdd1b6gaZcQXVQE1
+	 soC5/WKBW09lLNJUTVA/K7KVuH1YRKIskF1mQfk/+eOIF/cl2T1GgZyf7Jy+R0naSzlmE
+	 Fit3HqHXx+sCqW/+Bd0k4BcREOE36EcXMfR+AWKf02mYUtxQrQ1s3jr5Z8rSPbeGuHxDt
+	 bzkAYRkobXDrin+5X7UCsOKUZCOGEYSaUwADCm6U2i5FD8ekULRBuZT+hraQn9YIg5hd+
+	 fN+hX3VD+TNFaKtWswwYYtxTvi/uzgC87n+ih7MuyXzRwDj/jnyNuyOU42+FeZVsVqg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=6bit.com;
+	spf=pass smtp.mailfrom=6bit.com;
+	dkim=pass header.d=6bit.com header.i=@6bit.com header.a=rsa-sha256 header.s=dkim header.b=qInkceLN;
+	arc=none smtp.remote-ip=66.228.49.9
+Received: from mail.6bit.com (www.6bit.com [66.228.49.9])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33B51606A31A
-	for <linux-pci@vger.kernel.org>; Thu, 22 Oct 2026 01:26:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 33B51606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1432A606A31A;
+	Thu, 22 Oct 2026 01:37:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1432A606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=6bit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=6bit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b=UjasCW3N
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-6b1f4d8e09aso1997400a12.1
-        for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 18:26:46 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792632405; cv=none;
-        d=google.com; s=arc-20260327;
-        b=hZ3c4XiB8h95njKvwXtVIlp2E3opigzf/m1DNlUkZAiyg8Q8t78HOYZIAknecn/Fg2
-         jYV35Xic+pQ2yef/dHPoPJ7YZWMc4gF/wnUeWqUJWdSj723EfvigvWpYP6FjmhaHjgyO
-         bw9V7tR/bb9l0P9+Q4Xz+Pbngmoowxggjzvor80ilErxGCvaCvizTwxIX5FfaxcXQQx7
-         P57gRer4Pbk1BDkw7VcfPpIOXoqwhITJ4q8xcNi0qen+Lon3gTBSOSMFO3YCgTD/+uJi
-         TdVJL3wa4LWep2bQZnJ7chDzzf6caQk1FxtjHUX3G9lWy1yi/Cb+S/7x1Nr8U5Y9p8Z4
-         bRkA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=o28ydFuUHHD4c/U0AkyEgOljfI5EK57zWWg+tuRSc8Y=;
-        fh=naAIcinsxQ5oAlyw1PIgg2tkzPxByhEjQDNGQBbiHrU=;
-        b=oWJB7NJBL86nTX4fvUzjaPKYuBg6ioIkqJ86EEFW0UAZEdVNDMnGpX+hlkF5G+WwWP
-         wGIsjoiLnxjQgbPMoB8qHq3bLYjqpXmMMEFDbhAqAOErCrmn5ThdW1xsQ+YBkytj5J5H
-         mhC4YKMTCP+N8cmNNv69DCVhLFkN192mlz2ciW+PmgEXfpVokDLXUHNxbrnbV4lBOd5W
-         YYHxO9/YZj0ypUbgKBACW7fEhxNPbbBCng8zPLXXkCCa0aC17A2dFqZQ0SEz2yPtZrOX
-         RSzYMk7zBK1HfLWDeaq+L1Z2d4U60VwNhvt5sEGVBoIPMsTcrCYOD0Nj2XAhfST0zge7
-         GzpQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1792632405; x=1793237205; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=o28ydFuUHHD4c/U0AkyEgOljfI5EK57zWWg+tuRSc8Y=;
-        b=UjasCW3NpozzrrA3uptNAoyxN3DqKW8HmkXQNxzRnN/JTz/QnCPODSFsuQp+CU15iz
-         1LkOjKGsHN11814MpjY+/WDEGC7whEmqGfcFHZilFU92hVZmd0P/jDJQsz1R1tiY1v22
-         QEJjzFYaVhhlpS7AL3b9a9Eh15m7QtFtTO0PXMi0cpCfJWXwrmO20D3TU8B5QgOQt69/
-         SNKIxNxzV23JLqHMuIqF+Rxhbp4ACGvPlVLutcB6tch3U6K8bn3cBIdJedvQXqJoWms3
-         LTcsARGJuNIIBF49+wPKcY+NHi+T9ZqJmZfG7n2YznT0MSfnTRXZ9Wu7/w8UUAK2YMpN
-         qYkQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792632405; x=1793237205;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=o28ydFuUHHD4c/U0AkyEgOljfI5EK57zWWg+tuRSc8Y=;
-        b=ffMyXfcM6TS6BGKmMB7KOh/sIRDraaEwLhJDMRSZjFkwK3J6y8rDZzdFdbX4lu0jIg
-         UdHzBK3UvHLoW8WhOfoltZ6Pk+LBFQ5krUw+OKqJDJ6AyODYH4f6TDQAL635D6idAl+i
-         dGtKyZXElmbrP5xtDl6hWK313YieAtBG31SZURLACa8jQ7+1qVaQxbT9VU9BavL9/SQ2
-         7+VXTerVcY2tltfoRKeMYqF1EahU1JR48TN/xm83iHxiwuA3KTB3mN1zNx4XOJL/sMyw
-         g6Fhds6oyNoVQVjIOL1nQJON7hoQ75ktaGB7LUoEWQPEHxIhsrWtDzGyk6q2rQNd+jLJ
-         GUCg==
-X-Forwarded-Encrypted: i=1; AKwUvByz4Oivzitd3kalGOLYGCcokTpJYXycOfChugYOgn2QvWaS+DZcejgnf39aTTTxbrLno9S0qKkq/SU=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJ9y6e6bK1aXEIFpB/b/x5ZNMvdioWYVC8Roa/jMX8u8kUi/QLQ
-	ttqTkRCpApTG7sV/mDoUersI7QBZ1rp1skmTNJJiSyOtmX1p8kTJMY9VIjqJqGQMJ4IxSY7acS7
-	WAMM3JKhybNLeagNehgRNCJI49iTOFYdG7N60nWq1Ng==
-X-Gm-Gg: AYBFou36sF4XU1PxOnj7PjkAKzjoZQu5QXuuiVOC2J77bhklDxthxhdd9mTIX5D/umK
-	d4b351GVBZ8B5mZqLRr+nsjQ2xm+2tjhHlDUWekwQf85inNUDM685zjveGJ5O5qWAakTNMSsQkc
-	8tkN5kQRxyUE0pvGk9IGe24GG2gVQyQCqyGbxFv0qxsSKkqA742gaDZUP9RpbgSJxIAhZPodBTg
-	1ASldqqeRCNtPCy1oHXyWiSABEKRPt/9fMQZyIN2NiqlIPPBbjniYn0zV0dYH1fO5IC7KGRZMu7
-	A2ZQf3SWBKbChxayCexP2XdDIIgNSEf0+7PpifVBzKVXgaWOlfbYQeDdRqdaVNSeOnEut1AXCvG
-	UfBAxwXo9B4+gFqF8WIn3Hqn3wwnrgy7ZR8BIT+au1FkFUe8oymc+aqmYNICzR/RkiBU=
-X-Received: by 2002:a05:6402:2801:b0:6b3:a1ad:ef6d with SMTP id
- 4fb4d7f45d1cf-6b408dcce19mr2969744a12.6.1792632404378; Wed, 21 Oct 2026
- 18:26:44 -0700 (PDT)
+	dkim=pass (1024-bit key, unprotected) header.d=6bit.com header.i=@6bit.com header.a=rsa-sha256 header.s=dkim header.b=qInkceLN
+Received: from [10.0.2.245] (unknown [143.105.105.29])
+	by mail.6bit.com (Postfix) with ESMTPSA id DDC12945CF;
+	Wed, 21 Oct 2026 19:36:56 -0600 (MDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=6bit.com; s=dkim;
+	t=1792633017; bh=RdgdE9wO/hgi3O1MxEmLdNMt5z4BOtTeJVms7OjvJGM=;
+	h=Date:Subject:From:To:Cc:References:In-Reply-To;
+	b=qInkceLN5nIN09rB36JK7hx7zloayLzTBJxvJRwM1gejsIs9xzW9lVpFA5cMyOE9r
+	 YkmYiNl+MBkmb1FEXt/g4NC4ruUBZ5FT4G+oNngDw3WgnukcrsN7dbWyBzcDLgYfSh
+	 ONfw/LH+lwL9WSMQ0oxNFD750wEsYkBIZAX0u8pY=
+Message-ID: <b859285b-e43e-43f2-a4f7-af82705d3513@6bit.com>
+Date: Wed, 21 Oct 2026 19:36:55 -0600
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -104,119 +53,98 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261021152527.375070-1-tarunsahu@google.com> <20261021152527.375070-4-tarunsahu@google.com>
- <CA+CK2bAQbmq3ArP3XMErF_8RC2CUwvgpLY0H83D0nCJTaVKYyA@mail.gmail.com>
- <9huzecdi6go0.fsf@tarunix.c.googlers.com> <CALzav=dLdJoVy=B1pv0FAurD9OhAzLSTjJNbtjTdJRmSqaB0yw@mail.gmail.com>
- <CA+CK2bAQRMAEXZyHTEuUN0_Fo59Sn0hBmYbme_J9ewjx6gPyJQ@mail.gmail.com> <atlKsD-aJB3mJr2j@google.com>
-In-Reply-To: <atlKsD-aJB3mJr2j@google.com>
-From: Pasha Tatashin <pasha.tatashin@soleen.com>
-Date: Wed, 21 Oct 2026 21:26:06 -0400
-X-Gm-Features: AclHuK8Appp8OBdUFGLxu0V1hBTCm-a-9f142JZiexa4wOQOsDrRrU21F_J0R34
-Message-ID: <CA+CK2bABt4OZO31TenVF2+uBUWVwViWbvfE00=0xbAw=f7K9SA@mail.gmail.com>
-Subject: Re: [RFC PATCH v2 3/4] liveupdate: Replace compatibility string with
- a 2-bit pair feature header
-To: David Matlack <dmatlack@google.com>
-Cc: tarunsahu@google.com, Andrew Morton <akpm@linux-foundation.org>, joro@8bytes.org, 
-	Mike Rapoport <rppt@kernel.org>, Pratyush Yadav <pratyush@kernel.org>, maz@kernel.org, arnd@arndb.de, 
-	jgg@nvidia.com, robin.murphy@arm.com, loganodell@google.com, 
-	oupton@kernel.org, kevin.tian@intel.com, alex@shazbot.org, 
-	dwmw2@infradead.org, pbonzini@redhat.com, seanjc@google.com, will@kernel.org, 
-	Alexander Graf <graf@amazon.com>, Bjorn Helgaas <bhelgaas@google.com>, baolu.lu@linux.intel.com, 
-	linux-arm-kernel@lists.infradead.org, linux-arch@vger.kernel.org, 
-	sagis@google.com, linux-mm@kvack.org, kvmarm@lists.linux.dev, 
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org, kexec@lists.infradead.org, 
-	skhawaja@google.com, kvm@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: =?UTF-8?Q?Re=3A_=5BREGRESSION_6=2E16=5D_r8169_RTL8168h/8111h_fails_?=
+ =?UTF-8?Q?to_probe_=E2=80=94_=22Unable_to_change_power_state_from_D3cold_to?=
+ =?UTF-8?Q?_D0=22_=E2=80=94_bisected_to_4d4c10f763d7?=
+From: Josh Perry <josh@6bit.com>
+To: mario.limonciello@amd.com, bhelgaas@google.com
+Cc: hkallweit1@gmail.com, nic_swsd@realtek.com, rafael@kernel.org,
+ linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+ regressions@lists.linux.dev
+References: <d4aaa5e8-7366-461c-94b1-ccf3631c8bf9@6bit.com>
+Content-Language: en-US
+In-Reply-To: <d4aaa5e8-7366-461c-94b1-ccf3631c8bf9@6bit.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Wed, Oct 21, 2026 at 7:28=E2=80=AFPM David Matlack <dmatlack@google.com>=
- wrote:
->
-> On 2026-10-21 02:50 PM, Pasha Tatashin wrote:
-> > On Wed, Oct 21, 2026 at 2:47=E2=80=AFPM David Matlack <dmatlack@google.=
-com> wrote:
-> > >
-> > > On Wed, Oct 21, 2026 at 11:40=E2=80=AFAM <tarunsahu@google.com> wrote=
-:
-> > > >
-> > > > Pasha Tatashin <pasha.tatashin@soleen.com> writes:
-> > > >
-> > > > > On Wed, Oct 21, 2026 at 11:25=E2=80=AFAM Tarun Sahu <tarunsahu@go=
-ogle.com> wrote:
-> > > > >>
-> > > > >> LUO and its file handlers validate handed-over state with monoli=
-thic
-> > > > >> compatibility strings ("luo-v5", "memfd-v2"). Any change to a se=
-rialized
-> > > > >> structure, even an optional additive one, must bump the string, =
-which
-> > > > >> breaks live update between adjacent kernels. Replace the string =
-in
-> > > > >> struct luo_ser with a feature header, so that the target kernel =
-can
-> > > > >> accept or reject the source kernel state per feature.
-> > > > >>
-> > > > >> struct luo_feature_hdr is a fixed 128-byte header: the serialize=
-d
-> > > > >
-> > > > > This patch is all wrong; 128 bytes is far too large. For every _s=
-er
-> > > > > struct, we only need 8 bytes instead.
-> > > >
-> > > > NOO, It is not. It is intended to avoid complex mess with unnecessa=
-ry
-> > > > over-engineering.
-> >
-> > 128-byte per serialized struct is not starter.
-> >
-> > > >
-> > > > >
-> > > > > The first 4 bytes are the size, and the next 4 bytes are flags (i=
-.e.,
-> > > > > 30 feature flags + 2 reserved bits for flags extension). The last=
- two
-> > > > > bits of the flags indicate whether an extended flags field is pre=
-sent.
-> > > > > Each extended flags field is 8 bytes, and its last two bits indic=
-ate
-> > > > > that yet another extended flags field follows.
-> > > >
-> > > > If we will have dynamic extension of flags, Think about this.
-> > >
-> > > To support dynamic extensions in a backward compatible way you want
-> > > something like this:
-> > >
-> > > struct luo_feature_hdr {
-> > >    size
-> > >    flags
-> >
-> > __u32 size
-> > __u32 flags
-> >
-> > >    extensions  // offset of first luo_feature_extensions (or 0)
-> >
-> > __u64 extensions[0]  --> but the size should be specificed in
-> > declaration macro that I showed in the next patch.
->
-> I think you may have misunderstood what I meant. In my proposal,
-> extensions is an offset to the first extension, not an array of
-> extensions that immediately follow the header.
->
-> If the extensions immediately follow the header, then the number of
-> extensions is baked into the struct layout. Every field after them sits
-> at an offset that depends on how many extensions there are. If we ever
-> need one more extension, all the fields shift and old and new kernels
-> can no longer read each other's struct. That is the problem Tarun
+On 6/11/26 19:07, Josh Perry wrote:
+> #regzbot introduced: 4d4c10f763d7
+> 
+> Since v6.16 one of two onboard RTL8168h/8111h NICs on this board fails 
+> to probe on boot; the device drops to D3cold and the driver can't bring 
+> it back:
+> 
+>    r8169 0000:02:00.0 eth0: RTL8168h/8111h, 00:2b:67:48:40:01, XID 541, 
+> IRQ 137
+>    r8169 0000:04:00.0: Unable to change power state from D3cold to D0, 
+> device inaccessible
+>    r8169 0000:04:00.0: Mem-Wr-Inval unavailable
+>    r8169 0000:04:00.0: error -EIO: PCI read failed
+>    r8169 0000:04:00.0: probe with driver r8169 failed with error -5
+> 
+> The board has two identical RTL8168h NICs (both XID 541): 0000:02:00.0 
+> and 0000:04:00.0. Only 04:00.0 fails — its sibling 02:00.0, on a 
+> different root port, probes and works normally on the very same kernel 
+> and boot. The failing NIC then does not appear (no enp4s0), taking the 
+> machine's WAN offline. This strongly suggests the problem is port/ 
+> topology-specific rather than device- or driver-specific: the upstream 
+> port behind 04:00.0 is placed in D3cold and the endpoint cannot be 
+> resumed to D0.
+> 
+> Hardware: RTL8168h/8111h, XID 541, PCI 04:00.0 (onboard 1GbE).
+> Platform: Lenovo ThinkCentre M90n-1 (11AHS0B200), BIOS M2AKT49A 
+> (2026-03-25, latest available). Firmware is current, so this is not a 
+> platform-firmware issue.
+> 
+> Bisection: v6.15 good, v6.16 bad (verified by booting both). I then 
+> reverted 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when 
+> initializing") together with its follow-up 907a7a2e5bf4 ("PCI/PM: Set up 
+> runtime PM even for devices without PCI PM") on top of 6.16.7: the NIC 
+> probes and links at 1Gbps/Full normally, with no workaround:
+> 
+>    r8169 0000:04:00.0 eth1: RTL8168h/8111h, 00:2b:67:48:40:02, XID 541, 
+> IRQ 138
+>    r8169 0000:04:00.0 enp4s0: Link is Up - 1Gbps/Full - flow control rx/tx
+> 
+> Workaround: booting an unmodified v6.16+ kernel with pcie_port_pm=off 
+> also restores the NIC, which is consistent with the upstream port being 
+> placed in D3cold and the device failing to resume to D0 after the 
+> explicit-D0 init change.
+> 
+> The follow-up 907a7a2e5bf4 does not fix this resume case: v6.18.33 is 
+> still affected (retested today on current firmware).
+> 
+> Happy to test patches or provide full dmesg / lspci.
 
-We can structure it cleanly by nesting the payload: something like
-struct { struct header {...}h; struct serialize_data { ... }p; };
-That way, the header can expand dynamically at the front, while all
-fields inside `serialize_data` stay at fixed offsets relative to the
-start
-of the payload.
 
-Since the header size is self-describing via continuation bits (e.g.,
-the last two bits indicating whether another flag word follows), LUO
-can
-easily compute where the payload begins in the incoming blob. This
-keeps the implementation simple, avoids linked lists of offsets.
+Hey guys,
+
+Thanks, and apologies for the slow follow-up. Multiple of you asked me 
+to test on the latest mainline.
+
+I had a chance to do just that today with the latest mainline v7.3. 
+Verdict is that it's still broken, same messages as in the original 
+report. pcie_port_pm=off on the same build still works around it.
+
+dmesg, "sudo lspci -vvv" and the sysfs PM state for both boots (same 
+v7.3 build, only the command line differs) are attached here:
+
+   https://bugzilla.kernel.org/show_bug.cgi?id=222179
+
+New detail from the failing boot: the root port above the dead NIC 
+(00:1d.3) is in D0 but its link shows DLActive-, and the endpoint's 
+config space reads all-ones ("Unknown header type 7f"). With 
+pcie_port_pm=off the port shows DLActive+ and the NIC is in D0 at 
+2.5GT/s x1. So the port seems to come back but the link to 04:00.0 
+doesn't retrain.
+
+#regzbot link: https://bugzilla.kernel.org/show_bug.cgi?id=222179
+
+Thanks again!
+
+Josh
+
+P.S. I'm relying on claude for formalisms like the bot tags and digging 
+up the CC list, but I'm pretty noob so please let me know if I'm doing 
+things wrong.
