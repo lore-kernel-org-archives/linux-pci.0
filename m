@@ -1,49 +1,107 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=13.77.154.182
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792651259;
-	b=T8STbFL2nS9sNKM88ucSsEKlPALxkdSCN4Tbo8n3sEclulBvmDbXf8iur61hytIaBeFr
-	 re24Xzp6+5j/rq3iX8X345hdwppjSzdmJvz/LRCWfgyxcHkYxSPVyFwd1qDbGVKzDDB7+
-	 rhw8ct53Gnj4aRMV4LKAXD3uyVlHpBj8Me+mvhYAJbHn7v/84ajX7cCabG+tspb4PAFDA
-	 6xyOjfMYcZq81tMPtq27l52wHisthhELop9ZVu4yh0DWMqFRwIJNO9d8fMksfQE8JVKVD
-	 P9WAx2yxVAFcpeXnjpuicuCLc4PXwTUkl0klo55Kaq2wHqAQ1HSliBuwzMUYqxJrE7g==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792651259;
-	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
-	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding:X-Spam-Status:
-	 X-Spam-Checker-Version;
-	bh=Ak39HYGsVbjQ81liEI2M4HumUVWbf64V9toCPOlMMmU=;
-	b=zWUJ+YgYQpQJKkHCduf/CJDX5QkRj3X8R5v0OZTedmcS2JULTnIx/0LpoAD7LeeGlDhN
-	 5+ZhNFdKLx4meBas08xKHSYjMvOkVYhgpwRPJCGJpwaImqgHYlvYaJQMRLp713popjhcX
-	 r74mdwk61Bkr2BRHwk+kPtLuREQ0Lq70/O5PCkLhjZbmRtkQmEcxVuXWGRg0EGyQFD4O9
-	 ce1kqXCY+8OyC1PkUAxbvZkmLpfK1dww2pnJvAUfmg4R3dQ+9Y4X8MJuDe6eQouM3EAGY
-	 eUKfI63jiWyXXQtGrmYrBWI0OlUbDhHSS1P+m3+MIkzovWDpIhxY3ikhOQcxxkNs/Ng==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.microsoft.com;
-	spf=pass smtp.mailfrom=linux.microsoft.com;
-	dkim=pass header.d=linux.microsoft.com header.i=@linux.microsoft.com header.a=rsa-sha256 header.s=default header.b=aOqxDhdQ;
-	arc=none smtp.remote-ip=13.77.154.182
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id A8B46606A31A;
-	Thu, 22 Oct 2026 06:40:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A8B46606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.74.110
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792657356;
+	b=jaEX9I2j1CuN3TIz89+z3qyr2FT9EfHEv5fw6adRsecDUCZ26XdiIjCsKVlefYLVBt8M
+	 PFjQSb88v3E0j1wX2pkQHDMXdgmj+xY+P14QpmA25Je0XNBBXcTpBktwC5A4d+9PaLijd
+	 bt1vxc21liNcrGqw8xWU8bm8Znf+VvMfsTt258iLrxy9LcxYxR65QnJfAxsYAOmDwoRMO
+	 oxpiJ7dLzzJ5Huxx7O56XgpAJE0u5uJY8d2j2fgONKErlqwy03Maf4ptjTNj05cxWEVeC
+	 NOjOQgvHhfm+epb1lZyQ21t6ONpqW0+fnbpEalsAB0qRJDlwKoE/fVvlslbkY6931bg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792657356;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:Content-Transfer-Encoding:Content-Type:
+	 X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=bUlrYIl8YkaAmq6Vp9xo+/oYMPzAZQdQRqM5rWh23wo=;
+	b=yjZ8r5dfTAWlSGMfaCwvQnHbFm5c3nj5gUo9TlnPOQhwrEnivlimx1NjRgC9Siyg33JS
+	 f16Hu4v5+15obzzyx494cqXaKlRvpTwuTsM3tqAY+aBz1KIF5GptpBg6H5+AQEVJR3S2z
+	 UyAh4XOJRrMhB473MhPdMAoJkY/MMFP0itK8+IrRu65nJ8KnMZUO3NEH4haHNoTrFyW0Z
+	 Y56y8x5Qv55YMrt206L2sT5yuxybk3c0wTGnzhDmMk3PFjvARpI2rxfU392U6bQhLqQ/S
+	 ekaduV/aHGGy8nAIblZGQJZvMhM7kKTll9sNG9MqwHfxbZ9Z4xE9CinIYh578pJtQKw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=valinux.co.jp;
+	spf=pass smtp.mailfrom=valinux.co.jp;
+	dkim=pass header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=fCuHr81O;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.74.110
+Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11021110.outbound.protection.outlook.com [40.107.74.110])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE37A606A319;
+	Thu, 22 Oct 2026 08:22:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BE37A606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.a=rsa-sha256 header.s=default header.b=aOqxDhdQ
-Received: from [10.95.64.178] (unknown [4.194.122.144])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 0D5A920B7166;
-	Wed, 21 Oct 2026 23:40:46 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 0D5A920B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1792651249;
-	bh=Ak39HYGsVbjQ81liEI2M4HumUVWbf64V9toCPOlMMmU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=aOqxDhdQcgsNSOufTKSffimOkjuZFAgoNtYb79wHFSwD2JIib5/Z+6FS2gBpTKK7w
-	 o/FXWlQlWw3VoX9z8pXILgRSd6vCD04gt2LboSV66Y9JOFdY87eSVtqSlxBJORQmk7
-	 XX+gdIU5LGvpprc1qxCa7Oi9Z5nL8VfnY1SpUkZk=
-Message-ID: <7da0011b-b51e-4181-961e-fb6b177b7691@linux.microsoft.com>
-Date: Thu, 22 Oct 2026 12:10:52 +0530
+	dkim=pass (1024-bit key, unprotected) header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=fCuHr81O
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=bFaUQvs6xrc1/I2iguRfhcK/O1yGHACztHXYxzhR7yt7Ag5as/yt4JwIu/m/DvS+YWiYnO6ulJzfhsfgvqQJBOFVOfb6QJpt5vUkqWV8fLqHi9Q3+X2DMpFxHDTPOLeVcPLASJUz2xaQKNBO3vjI6N6Ahb8D90UPdM9eCz0aDnapun9e3GNVEBGXx+wRgP2kpbQecIvbLqbQz108hOGoUnRNLCXiyeg82j5O0vlWW8YpoT+/04oZ1dGvGUKephfEFPSB/uicUv9p+M5xHBUPu7jsW6cYNjxmIR2rGRXlVw92m9iOdblAIsFzf6L37Of3f8KrOfnf394g5FNwJjDP9g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=bUlrYIl8YkaAmq6Vp9xo+/oYMPzAZQdQRqM5rWh23wo=;
+ b=xocVbxiAolHQsoSWvxG9ia/SrV7sg3KC0B92nQzUQXe92egffBkioRHbok5JPng3hY44yCNamL2slURaJbFAT9ARL9mV532tJXbdQtp8iiF2FVy+Zuvg3WDT3ZNYVH1PiTBiMgQ46w8W4+fFQ2koFLYmsNrMPIKHXHWLH17Oqi8ToCDycaBl3V49pCJ1OVNTkOQvN7l5lJGJ99Ixf3VObf/SVKWnBXmYvSzOqeDRRrZUAtLvIriva25kns0epK2BN8UqEEenesSbmuD8W78i8BkUnQi6QmL/VJ+FQ6Uj7jg8bjTEOZZyXKJP5MjQikiZUBjwPcnNZzIZI5nVOzpbMA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=bUlrYIl8YkaAmq6Vp9xo+/oYMPzAZQdQRqM5rWh23wo=;
+ b=fCuHr81O8bv9wrO31FrzrMtmsR8UXmIvIwgc4l4Xw6psq8mBxyljAQ7QE8XlXr90n6bNxxyesCX0StyvQ34XvxtrNFOp64Dca+eFe31HUa74yV0t8gqrBXnlh7OsPDYp/FEa8VZ3SXtpgUoIL0UUF7umosCoScIWTh4O+nf/5mA=
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:325::11)
+ by OSCP286MB5275.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:353::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.15; Thu, 22 Oct
+ 2026 08:22:33 +0000
+Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::cce5:2aa8:53f9:dba9]) by TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::cce5:2aa8:53f9:dba9%5]) with mapi id 15.21.0546.012; Thu, 22 Oct 2026
+ 08:22:33 +0000
+From: Koichiro Den <den@valinux.co.jp>
+To: Frank Li <Frank.Li@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <allenbh@gmail.com>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Jerome Brunet <jbrunet@baylibre.com>,
+	linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	ntb@lists.linux.dev
+Subject: [PATCH v8 00/10] PCI: endpoint: Remote DMA support via vNTB
+Date: Thu, 22 Oct 2026 17:22:20 +0900
+Message-ID: <20261022082230.3164834-1-den@valinux.co.jp>
+X-Mailer: git-send-email 2.54.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: TY4P301CA0022.JPNP301.PROD.OUTLOOK.COM
+ (2603:1096:405:2b1::14) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:325::11)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -53,277 +111,203 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/1] PCI: hv: Spread load across CPUs when selecting
- effective affinity CPU
-To: mhklinux@outlook.com, haiyangz@microsoft.com, wei.liu@kernel.org,
- decui@microsoft.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
- mani@kernel.org, robh@kernel.org, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-hyperv@vger.kernel.org
-References: <20261020182433.336637-1-mhklinux@outlook.com>
-Content-Language: en-US
-From: Naman Jain <namjain@linux.microsoft.com>
-In-Reply-To: <20261020182433.336637-1-mhklinux@outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB6866:EE_|OSCP286MB5275:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3346d00a-08dd-4ab4-1850-08df30159eed
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|10070799003|7416014|376014|23010399003|1800799024|6133799003|18002099003|10067099003|261021121427099003|261021123027099003|56012099006|261009223027099003;
+X-Microsoft-Antispam-Message-Info:
+	btlt5mnWV7Bbjz17anPBITTWQhXm+g7KmIhnWNMD8EPKVzlI/v6qJp3v3yOuEksBjoaS2aAJ3uD4UfzMi6wSIj7MNgCm3Uhofd9PhqmO9JpD3rxb6fRdq0qEum2Ty5Xjj9eGwvaYnfuaEVeo1g+M/gAZMlbpSjD1lQuqp+fcab+qtSmoppfgT0nRFELaJ9QKFV8FWitR72UjEW7MkLDdS3mMB+HsQTAvGnlGeAbn8vxmgfneqEctDKO66dJ1okMygz5HNggG4YfWoXBZphVCQuJv4E3Pxu5ZBQpYoSwdW2QVm54lt2cWNp/eP2tOiJKD9coTpaU9EYQICP23efP6RPeyMPtkDT5z2XL/0Q+3nGmhTaXf/LwejqBbIR5JhiV70rYo961ODIaSPoGc7nqrKSEs8Yx7jFiuuHTSI1IotjjA0xDahWHJQz+BgTUrognFHwS8ghuNXJazpkCEqlLUfa314ISF2qB/LymUgu6CwiKCs0NzstpTTYnWv8eR9RymsrWArXeigZEiahs4AmHmcr8w9uOCTDVsTyDHbv8I3tLqsNb1qM7M1bHIiZwtet74NUhaX/faphhuQJE0g0Gt5ILwkfwSVFcIGElmLyDhaDqOLQ4x7S2dkTXrDh9hOGXq
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(10070799003)(7416014)(376014)(23010399003)(1800799024)(6133799003)(18002099003)(10067099003)(261021121427099003)(261021123027099003)(56012099006)(261009223027099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?A0jZogoa+C77pAlWab11Njz9QthRUP2kU7sNx7fNesmqWog4ywpMDx4zQmT3?=
+ =?us-ascii?Q?9EFsE9iNHE5TAZtY67i7fbyZrSucfm1LR9BPlm/MsIPku6qc3VYk3MWDC7zS?=
+ =?us-ascii?Q?veUTvPR99q+XRp/PKhVgvyLmaSB1UCoPDO8XIBtGNG/T+udALuvIZVgdstl0?=
+ =?us-ascii?Q?VJReRGVijuIFZ9lC4aOUBZGkGRVcDWcpKm5MvIypKiswZS+d3XcHnhQ7MdvX?=
+ =?us-ascii?Q?JbzZAY9G4yE425FTS3lUkJWfJHJ318Y36fFjqhOTWL8hKcj9unqwPm7C/ihl?=
+ =?us-ascii?Q?Umk2FwQH7cqjNqFlYy8gJiFAzABsv/ucioBLR+i3jYpFP9v4G2DeqI5A/etY?=
+ =?us-ascii?Q?xLj/kT0aESPWG++t3XviKUW/5TZlnk/I5COX8s35So9QZ/gGIWRiyOO0H/QW?=
+ =?us-ascii?Q?fp+OuZlHD6EIl8Uu35fqjRYcaNIvJV2D8j/hWfj2bTL7jwNxPBdErgEXT0wP?=
+ =?us-ascii?Q?xTREL7MuMxb6Eer6lRUlH94ofCEYxbQowHRTJyafH6EFv5fWPmQbG9ggnS5k?=
+ =?us-ascii?Q?9zDMHaHjHwiPgfniy73Yb3HtoM6bRPELWgwff0zp9ickCy9MLq+8s1fBZn6A?=
+ =?us-ascii?Q?IUvqxmMhrDcbUrQJYsHpKKi1besKO5XuxC7RfbfLZytfFCNIRCUD29cUs0N9?=
+ =?us-ascii?Q?Xl2NSkm9IWL9DVBsQzZU8XT8ajEfrjrxDx1th1kuQYVMdUqa6fainFUiV3bl?=
+ =?us-ascii?Q?sa143L6UKMJvxe4GfFTP67Y6a0Y3rVwaoVWAv5K8HvOaHlrVWC+bmF+zPgon?=
+ =?us-ascii?Q?WiZ0MxydWr8NBP78eLkZ0WzrQMGGHRkIuoe3iV6gkPUGU6ZqDFNljZbJaURg?=
+ =?us-ascii?Q?cLV1OCLSXKOYVzLjwy91x8dWdQRISKf15W0ETzTg3iSjmKfdHAp5O01O9P8h?=
+ =?us-ascii?Q?LhsjhWey6j4t+IXBCO3wIIgAZPzLNcmWObaWYzf4sFnkh82rcrSO83xH75kD?=
+ =?us-ascii?Q?vPMGIzpBt8HsI7A1R/mQZudUTHtdZJndogKG27rAWsj1QNqbRjR8JhSNHraJ?=
+ =?us-ascii?Q?rijcSmV2wUIk52YUoOGMXGulE+v92M3PVTNQv1jcG8cNt5g9LFoLI6C7GuoO?=
+ =?us-ascii?Q?wugg/D/TwGB48ox94gEZWV+sbupa+KGqRK4w/aBunhc/7GSsNs3yB8u3xWWx?=
+ =?us-ascii?Q?74WqpDN82/vuXE2r/Vf1Vyqkf57Sx6mCBEqZpwH+bj5OTNUEGonNpVOMGavl?=
+ =?us-ascii?Q?x9aza57bONePi3UynvpleDH2vfs1SnsAp3R+HnUJe546FriAOUd88rszLKE6?=
+ =?us-ascii?Q?nijKkwZ9yA+WxtsGMsg5RCgQGDw9Bk0tNEUpNDQ9vE7sa+x/BwYpWAdHJTmm?=
+ =?us-ascii?Q?6kFVyBDwRj7fS9TRoO2cCvAp14+G7wb/++ASr29aPc3BNp9GkzGdET7JQXj+?=
+ =?us-ascii?Q?cmT04JH6Zf+2gqL3bKPKpp8ylie6fBuTM56LrTCtnqQP4912x2IM/VekCASq?=
+ =?us-ascii?Q?/IYQ9m4c41ijDzH/03acZHxHL0mfOOFnaHSA0ZzGRIVC0pEjhXRyhEhTfbdq?=
+ =?us-ascii?Q?29PeADiJMLuwQlY1avrmvwTlPpMbZ8m27lK1V/DN5NiuO/dmcle//zWEB8tY?=
+ =?us-ascii?Q?0uqm1JCPPoaV8Lj34dZnJHi/Xyfjr1T+93A1I6uXjvVp6kajBczB23Cwj82y?=
+ =?us-ascii?Q?7hCwr0Tk6eEePo8uhxtgRGtA8r1/ObTH11AaPPBTMTBVTj6GzbMFSfgupUIT?=
+ =?us-ascii?Q?/HZegMCLxx76m3jSHojdvEaGLOfxoreTanUM1p2GJ47snyqzvg56vt4+w12b?=
+ =?us-ascii?Q?edpctUuB871QLOOYnEZqo6vJqPvz99AmfVpF3mB77+JKEfK7qY/l?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3346d00a-08dd-4ab4-1850-08df30159eed
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Oct 2026 08:22:33.0002
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: YDd2UCi+52nHCcZE108AnQcyQ+vLwgr5AWmlRj3xLdHJn6rsHwxNktbYzhaZIltNFssL7CC8l9H72vOONaDs1w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSCP286MB5275
+
+Hi,
+
+This series lets host Linux use EPC-local DMA read (RC-to-EP) channels
+through vNTB. I also tried a separate PCI DMA EPF, which reached v7 [1],
+but came back to this vNTB-embedded approach after discussion.
+
+An EPC-local DMA engine can use host DMA addresses (IOVAs when an IOMMU
+is enabled) as PCI addresses to reach any host buffer mapped for the
+endpoint. Letting the RC side drive its read channels also gives the RC
+a direct path into endpoint-local buffers.
+
+A major motivation is direct TX in ntb_transport. Both sides could use
+the same dmaengine-based TX path (ie. symmetric), sending directly to RX
+buffer DMA addresses supplied by the peer. This would avoid MW bounce
+buffers and per-transfer MW remapping for payloads in both directions.
+
+This assumes both sides trust each other. The RC side still programs DMA
+over PCIe MMIO, so this is expected to pay off for large data transfers.
+
+DesignWare eDMA is the only supported dmaengine backend for now. Other
+EPC-local DMA engines can be added if there is a need and they have a
+suitable programming interface.
+
+This series does not include a consumer for the dmaengine channels exposed
+to RC Linux. Native HDMA support is also left out to keep the series from
+growing too large.
+
+Setting pci-epf-vntb's 'dma_bar' configfs attribute enables DMA export.
+The default is -1, which leaves it disabled. pci-epf-ntb only switches to
+the shared control layout header and is functionally unchanged.
 
 
+Dependency
+==========
 
-On 10/20/2026 11:54 PM, Michael Kelley wrote:
-> In a system with multiple devices with the same configuration (such as
-> NVMe controllers), the affinity masks are the same for all such devices.
-> Linux typicaly must select a single CPU from each mask to be the effective
-> affinity. If a fixed algorithm is used, such as picking the first CPU
-> in the mask, interrupts from multiple devices are assigned to the same
-> CPUs, while other CPUs are not assigned any interrupts, producing an
-> interrupt load imbalance.
-> 
-> On x86, the "APIC" IRQ chip avoids this problem by spreading the
-> interrupts across the CPUs in an affinity mask. It tracks the number
-> of IRQs assigned to each CPU, and chooses the CPU in the mask that
-> has the fewest assignments. Because Hyper-V vPCI device IRQs eventually
-> parent to APIC, the spreading done by APIC accrues to Hyper-V vPCI
-> devices, so all is good in x86 systems.
-> 
-> On arm64, the "ITS" IRQ chip for the GICv3+ITS does the same kind of
-> spreading for LPI interrupts. But Hyper-V provides guest VMs only with
-> a virtual GICv3, not including an ITS or LPI support. IRQs for vPCI
-> devices on arm64 are mapped to SPIs and parented to the "GICv3" IRQ
-> chip. The GICv3 IRQ chip always chooses the first CPU in the affinity
-> mask as the effective affinity, producing an interrupt load imbalance
-> for Hyper-V vPCI devices in arm64 systems.
-> 
-> The Hyper-V vPCI driver already has an arm64-specific IRQ chip to
-> allocate and managed SPIs for use by vPCI devices. Solve the imbalance
-> problem by extending this IRQ chip to implement a "set affinity"
-> function that tracks SPIs assigned to each CPU, and chooses the
-> least-loaded CPU as the effective affinity. Then invoke the parent
-> IRQ chip (GICv3) to actually set that single CPU as the effective
-> affinity in the virtual GICv3 hardware. As a result, IRQs are spread
-> across CPUs like on x86 and interrupt load imbalances are avoided.
-> 
-> Signed-off-by: Michael Kelley <mhklinux@outlook.com>
+Based on next-20261020, which includes the following dmaengine series
+needed to build these patches:
 
-The overall changes are well explained and LGTM. I saw your comment 
-about Sashiko review, so that is covered.
-Mentioning some minor nits and review comments inline.
+  [PATCH v4 0/3] dmaengine: dw-edma: Prepare channels for remote use
+  https://lore.kernel.org/r/20260912174023.1227397-1-den@valinux.co.jp/
 
-You may also want to look at some of the checkpatch "strict" warnings 
-with these changes. Since you sent it from a different email id than 
-what is signed-off by, you may not have seen that mismatch warning in 
-local run.
 
-> ---
-> As an alternative, this spreading functionality could be implemented
-> for SPIs directly in the GICv3 IRQ chip, similar to what the ITS IRQ
-> chip already has for LPIs. While Hyper-V's scheme of using SPIs for
-> vPCI interrupts is allowed by the arm64 architecture, it's atypical.
-> So the original decision was for the Hyper-V vPCI driver to handle
-> the allocation and management of SPIs for this purpose rather than do
-> it in generic GIC code. That led of the introduction of the "MSI" IRQ
-> chip in the Hyper-V vPCI driver. This implementation of the spreading
-> functionality follows that original decision by extending the "MSI"
-> IRQ chip. If reviewers have reasons to prefer enhancing the GICv3 IRQ
-> chip driver instead, I'm open to doing that.
-> 
-> I have not added any documentation to Documentation/virt/hyperv/vpci.rst.
-> That documentation needs an entirely new section on the IRQ domains
-> and chips, and their hierarchy differences on x86 and arm64. I'm
-> working on a separate patch to add that documentation. But I don't
-> want to hold up this improvement for that larger documentation task.
-> 
->   drivers/pci/controller/pci-hyperv.c | 144 +++++++++++++++++++++++++++-
->   1 file changed, 142 insertions(+), 2 deletions(-)
-> 
+Proposed merge plan
+===================
 
-IRQ-affinity comparison with and without your changes:
+Patches 1-7 are for the PCI tree, and patches 8-10 for the NTB tree.
+The NTB patches need the shared header as updated by patches 4-6.
 
-System:
-   Azure Standard_D64plds_v6
-   64 ARM Neoverse-N2 vCPUs, no SMT, one NUMA node.
-   Four independent Microsoft NVMe Direct Disk v2 controllers,
-   approximately 945 GB each, with 14 I/O queues/controller.
-   Hyper-V GICv3 SPI routing; no ITS/LPIs.
 
-Both kernels use next-20261021.
+Compatibility matrix
+====================
 
-                              Vanilla       With patch
-   Data IRQ vectors              56              56
-   Effective target CPUs         14              56
-   Maximum data IRQs/CPU         4               1
+"Old" means next-20261020 without this series, and "new" means with it
+applied. The table describes expected behavior.
 
-The requested affinity masks remain unchanged. Entries below are
-measured effective target CPUs. Columns identify the four controllers
-by stable serial suffix, not their boot-dependent nvmeX names.
+  EP                              | Old host     | New host
+  --------------------------------+--------------+----------
+  Old                             | OK*          | OK*
+  New (dma_bar = -1)              | OK*          | OK*
+  New (dedicated DMA BAR)         | OK*          | OK
+  New (shared MW/DMA BAR)         | OK**         | OK
 
-              Vanilla                    With patch
-Queue   0001 0002 0003 0004        0001 0002 0003 0004
-q1         0    0    0    0           4    2    1    3
-q2         5    5    5    5           8    7    5    6
-q3        10   10   10   10          13   10   12   11
-q4        15   15   15   15          18   15   17   16
-q5        20   20   20   20          23   20   22   21
-q6        25   25   25   25          28   25   27   26
-q7        30   30   30   30          33   30   31   32
-q8        35   35   35   35          38   35   36   37
-q9        40   40   40   40          43   41   42   40
-q10       44   44   44   44          47   45   44   46
-q11       48   48   48   48          51   48   49   50
-q12       52   52   52   52          55   52   53   54
-q13       56   56   56   56          59   58   56   57
-q14       60   60   60   60          63   62   61   60
+  *  NTB works without DMA.
+  ** NTB works without DMA. An "Old" host treats the whole shared BAR
+     as an MW, so the EP falls back to that layout at LINK_UP and the
+     DMA ranges are no longer mapped.
 
-This distribution could effectively prevent soft lockups from happening 
-on this ARM VM when sufficiently high FIO workload was run, focussed on 
-4 CPU group (cpu 5-9 for example). I verified this by testing on the 
-same VM as mentioned above.
 
-> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-> index 85d826f8f68d..1706090cebeb 100644
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
+Testing
+=======
 
-<snip>
+The existing MW-based ntb_netdev path worked with DMA export disabled
+(dma_bar = -1) and enabled with the following EP-side BAR settings:
 
-> +
-> +static unsigned int hv_pci_arm64_get_min_load(struct irq_data *d,
-> +				       const struct cpumask *cpu_mask)
-> +{
-> +	return hv_pci_arm64_get_min_load_and(d, cpu_mask, cpu_possible_mask);
-> +}
-> +
-> +static int hv_pci_arm64_select_cpu(struct irq_data *d,
-> +			  const struct cpumask *aff_mask)
-> +{
-> +	int cpu;
-> +
-> +	if (irqd_affinity_is_managed(d))
-> +		cpu = hv_pci_arm64_get_min_load(d, aff_mask);
-> +
+* Dedicated DMA BAR configuration on RK3588 Rock 5B:
 
-You can remove the empty lines here, if these are not intentional.
+  ctrl_bar = 0
+  mw1_bar  = 2
+  db_bar   = 4
+  dma_bar  = 5
 
-> +	else if (cpumask_intersects(aff_mask, cpu_online_mask))
-> +		/* Try the intersection of the affinity and online masks */
-> +		cpu = hv_pci_arm64_get_min_load_and(d, aff_mask, cpu_online_mask);
-> +
+* MW-shared DMA BAR configuration on R-Car S4 Spider:
 
-Ditto
+  ctrl_bar = 0
+  mw1_bar  = 2
+  dma_bar  = 2
+  db_bar   = 4
 
-> +	else
-> +		/* If that doesn't fly, the online mask is the last resort */
-> +		cpu = hv_pci_arm64_get_min_load(d, cpu_online_mask);
-> +
-> +	pr_debug("IRQ%d -> %*pbl CPU%d\n", d->irq, cpumask_pr_args(aff_mask), cpu);
+I tested all combinations in the compatibility matrix with ntb_netdev.
 
-Add an empty line here instead.
+Best regards,
+Koichiro
+---
+Changes in v8:
+  - Fall back to exposing the whole shared BAR as an MW for hosts
+    without MW/DMA boundary support (ie. "Old" Host), instead of
+    rejecting LINK_UP. (Frank)
+  - Link to v7: https://lore.kernel.org/r/20261021042229.2280937-1-den@valinux.co.jp/
 
-> +	return cpu;
-> +}
-> +
-> +/*
-> + * Track the count of SPIs assigned to each CPU. Pick a single CPU from the
-> + * affinity mask based on the SPI loading data, and have the parent IRQ
-> + * chip (should be "GICv3") set the effective affinity to that single CPU.
-> + */
+Changes in v7:
+  - Split and reorder the patches for the PCI and NTB trees. (Frank)
+  - Reject LINK_UP from hosts without MW/DMA boundary support when
+    a BAR is shared. (Frank)
+  - Link to v6: https://lore.kernel.org/r/20261020054948.1218370-1-den@valinux.co.jp/
 
-Could concurrent affinity updates for different IRQs select the same 
-stale minimum here?
+Changes in v6:
+  - Add a prep patch that moves the control region layout to
+    include/linux/pci-epf-ntb.h, shared by pci-epf-ntb, pci-epf-vntb and
+    ntb_hw_epf. (Frank)
 
-Each update holds only its own IRQ descriptor lock, so two callbacks can 
-both decrement their old counts, observe the same CPU as least loaded, 
-program both SPIs to it, and only then increment its count. Could the 
-selection and count reservation be serialized across these IRQs, or 
-could the selected CPU be reserved atomically before programming the parent?
+For earlier changes, see v5:
+https://lore.kernel.org/r/20261009045949.1109871-1-den@valinux.co.jp/
 
-> +static int hv_pci_arm64_set_affinity(struct irq_data *d,
-> +				     const struct cpumask *mask_val,
-> +				     bool force)
-> +{
-> +	unsigned int cpu, prev_cpu;
-> +	int ret;
-> +
-> +	prev_cpu = cpumask_first(irq_data_get_effective_affinity_mask(d));
-> +	if (prev_cpu < nr_cpu_ids)
-> +		hv_pci_dec_spi_count(d, prev_cpu);
-> +
-> +	if (force)
-> +		cpu = hv_pci_arm64_get_min_load(d, mask_val);
-> +	else
-> +		cpu = hv_pci_arm64_select_cpu(d, mask_val);
-> +
-> +	if (cpu >= nr_cpu_ids)
-> +		goto err;
-> +
-> +	ret = irq_chip_set_affinity_parent(d, cpumask_of(cpu), force);
-> +	if (ret < 0)
-> +		goto err;
-> +
-> +	hv_pci_inc_spi_count(d, cpu);
-> +	return ret;
-> +
-> +err:
-> +	if (prev_cpu < nr_cpu_ids)
-> +		hv_pci_inc_spi_count(d, prev_cpu);
-> +	return -EINVAL;
-> +}
-> +
->   /* Hyper-V PCI MSI IRQ chip */
->   static struct irq_chip hv_arm64_msi_irq_chip = {
->   	.name = "MSI",
-> -	.irq_set_affinity = irq_chip_set_affinity_parent,
-> +	.irq_set_affinity = hv_pci_arm64_set_affinity,
->   	.irq_eoi = irq_chip_eoi_parent,
->   	.irq_mask = irq_chip_mask_parent,
->   	.irq_unmask = irq_chip_unmask_parent
-> @@ -888,21 +1010,39 @@ static int hv_pci_vec_irq_domain_alloc(struct irq_domain *domain,
->    * composing MSI from the hypervisor. GIC will eventually set the right
->    * affinity for the irq and the 'unmask' will retarget the interrupt to that
->    * cpu.
-> + *
-> + * The first cpu is always used for initial activation because spreading the
-> + * initial CPU would have to be done without information about affinity groups
-> + * that may exist. The resulting assignments would pollute the "least loaded"
-> + * data for making the final assignments. Everything would still work, but
-> + * the spreading would be less even than it could be.
->    */
->   static int hv_pci_vec_irq_domain_activate(struct irq_domain *domain,
->   					  struct irq_data *irqd, bool reserve)
->   {
-> -	int cpu = cpumask_first(cpu_present_mask);
-> +	int cpu = cpumask_first(cpu_online_mask);
+[1] Superseded approach, PCI DMA EPF, v7:
+    https://lore.kernel.org/r/20260813063757.3131865-1-den@valinux.co.jp/
 
-This should be harmless, but I am wondering if this is actually required 
-for your changes or this is a separate independent change, addressing 
-some other issue.
 
->   
-> +	hv_pci_inc_spi_count(irqd, cpu);
->   	irq_data_update_effective_affinity(irqd, cpumask_of(cpu));
->   
->   	return 0;
->   }
->   
-> +static void hv_pci_vec_irq_domain_deactivate(struct irq_domain *domain,
-> +					     struct irq_data *irqd)
-> +{
-> +	int cpu;
-> +
-> +	cpu = cpumask_first(irq_data_get_effective_affinity_mask(irqd));
-> +	if (cpu < nr_cpu_ids)
-> +		hv_pci_dec_spi_count(irqd, cpu);
-> +}
-> +
->   static const struct irq_domain_ops hv_pci_domain_ops = {
->   	.alloc	= hv_pci_vec_irq_domain_alloc,
->   	.free	= hv_pci_vec_irq_domain_free,
->   	.activate = hv_pci_vec_irq_domain_activate,
-> +	.deactivate = hv_pci_vec_irq_domain_deactivate,
->   };
->   
->   #ifdef CONFIG_OF
+Koichiro Den (10):
+  PCI: endpoint: Add DMA auxiliary resource metadata
+  PCI: dwc: Expose endpoint DMA resources
+  PCI: endpoint: pci-epf-vntb: Move epf_ntb_is_bar_used() up
+  PCI: endpoint: Add pci-epf-ntb.h for the shared NTB control layout
+  PCI: endpoint: pci-epf-vntb: Export endpoint DMA channels
+  PCI: endpoint: pci-epf-vntb: Allow DMA and MW to share a BAR
+  Documentation: PCI: endpoint: Document vNTB DMA export
+  NTB: ntb_hw_epf: Use the shared NTB control layout
+  NTB: ntb_hw_epf: Discover vNTB-embedded DMA
+  NTB: ntb_hw_epf: Support DMA and MW sharing a BAR
 
-Regards,
-Naman
+ Documentation/PCI/endpoint/pci-vntb-howto.rst |  32 +-
+ MAINTAINERS                                   |   1 +
+ drivers/ntb/hw/epf/ntb_hw_epf.c               | 410 +++++++--
+ .../pci/controller/dwc/pcie-designware-ep.c   | 107 ++-
+ drivers/pci/endpoint/functions/pci-epf-ntb.c  |  85 +-
+ drivers/pci/endpoint/functions/pci-epf-vntb.c | 838 +++++++++++++++---
+ include/linux/pci-epc.h                       |  34 +-
+ include/linux/pci-epf-ntb.h                   |  90 ++
+ 8 files changed, 1320 insertions(+), 277 deletions(-)
+ create mode 100644 include/linux/pci-epf-ntb.h
+
+
+base-commit: 8f7df005a7564bd7ffa75da9c3085d5b996f1e16
+-- 
+2.54.0
 
