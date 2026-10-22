@@ -1,101 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.54
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.45
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792631688;
-	b=f5RCc+hw2q3kUk7Vmp+BItMN7fVXbIbLX6XUiUT7/LTXF7a5cbN4MPQIHPsP8RrHcsr4
-	 vvzSwa70oAAt0IunvX8yMRKGGNimbuw6Y95ebzb6IT34dIjCnSNRtJsrOmMLWkY4UM1hY
-	 oJvImOiHTCQI3vBKy+cAljpSKVm8cBawHGKym8tJaCbFSvv5M+VV8ONE+yB+/IKvx+PzS
-	 /Jl+NCnX16zeTSpsTBHcsNrx0ddZ0vDJAxgHdlc8KU30yqAucv8vOX8Qu8/HwbnoRypyi
-	 NVo7MtAqD0Av3/GCwaTysi2xteijichJdl+NnZ3E9UG5NwL/6rdtUXHlRbRQHfIgJ3Q==
+	t=1792632406;
+	b=pVcyOTxzaQ4SxMTrtNTam2qnIYAyzhPp7Z8ZO1BIH5UymDQHBYfMgGlD1eCTobcHNhiy
+	 q8CCxInBU14jQSRs9smRFqnjDgtoryp9UDIJyZezREGns4l0AGJthBZrMl2HUMX1e5nVM
+	 PUmQ2GW7hV6R8ppblBYhcCz3wE5rzR3Q54zInAVs8l3LnRMRcEHlgIXwWZzX5pO7Hg4u7
+	 Bo2OuajsOP0blFvgJ8XqxexxmqWPGuVeHZeXg8ipCV7eMdJnSD+WFBTEE3sepD70F4Xh2
+	 LiBNnJK7lFE9MlThkeRXyvlmfZbhVbLFJ1Z0azb/hJdJcR3plzrW93Lr6KDHbDQQaPQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792631688;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792632406;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
 	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
 	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=a8oVHE7uhvQM0uF0tb8qagzI2B8K9hhXgyXmbesBuqk=;
-	b=DyCC/qGIytF4kJ3/yesJB60TtiRnZpEK0Em1rozGEVu3IRJBEBox5DQygGEs9wQrDJyt
-	 uKZHVINpTzp75D3t0MDEmnXB4J+7ZT0z2SaFWn6DXBWzG9H5qxaxpvmxFau87rrIer65a
-	 mhcVYn2rnIGkTaVGilU/WHzBJf1QutUCCGc89etA+z1qho1hYtt+sjwOYNPiGicvkLYX9
-	 s9RvTqjMBtGll+Ggu0UFrx8jaoVO/Lng2c8dqO6Qu0R9NRxTqGgHl7eWhybJk4PcEoWTD
-	 VJgABe1j7mgkOS16XDfFgKa1cP1xD+iI3pdyrL9GV63vcL5WVPNk5XdqetsUnt6oC2g==
+	bh=o28ydFuUHHD4c/U0AkyEgOljfI5EK57zWWg+tuRSc8Y=;
+	b=W+upFyOC1t6XHr/WiloaeHatZ8kHbEgmUoc/PhZu4jsZwGziHag+yiCEj5f7TYai+8Vg
+	 gdfXWYnonCxwzNZjEVYovQ4uN023OIW/UaF3XD522Qr8G65CgzEh20P1BV09dvrfKDpKn
+	 sXQh08rHLfbb1sUsnw/K4wCes+jj6H5NGJuMVtJj2v7+nCNGlboJmA6XiqrEquFRJsmmH
+	 EljirTTxyO8XawlW1GqBqnGySrIcqqtq0Pu7JIPJmAkGhDmBwed5AFFVYw9VZWexyBzWx
+	 uKvmuwksbt0HxNNHFnQ1XnHO2F+lPRr2tXxu7trcozARyGt0XmnQkb+L+/j80NrIGYw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=soleen.com;
 	spf=pass smtp.mailfrom=soleen.com;
-	dkim=pass header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b=h4aeOYMM;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.54
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+	dkim=pass header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b=UjasCW3N;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.45
+Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D604A606A31B
-	for <linux-pci@vger.kernel.org>; Thu, 22 Oct 2026 01:14:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D604A606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33B51606A31A
+	for <linux-pci@vger.kernel.org>; Thu, 22 Oct 2026 01:26:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 33B51606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b=h4aeOYMM
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-6a0794669a6so2012161a12.2
-        for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 18:14:47 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792631686; cv=none;
+	dkim=pass (2048-bit key, unprotected) header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b=UjasCW3N
+Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-6b1f4d8e09aso1997400a12.1
+        for <linux-pci@vger.kernel.org>; Wed, 21 Oct 2026 18:26:46 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792632405; cv=none;
         d=google.com; s=arc-20260327;
-        b=dIIqt0qmUnR6zlg9GlCA24APSiCTgboeyxmM03jOClWMKbYKR4MaUEx7MRL8CQ+Lwg
-         WnpfS9BnXnkymjA8RLhGXbQ5V5cANjw8GtoNL6jk6OeJ3TYRDn0IBQbCEWHvRyqSUn9I
-         y4MFTM4bWrwcUs3eFu8HkTvyNOK+1PI9S7xb8+4Fs9BrtnOkVcNvYk1xGeLY1vqbsU7/
-         3VKIV42tKRlAtYf05/znuyp9kHAf1jxTtgLaV4ZRJH9r4oTTfbLYgFpNjtTujFZGHNn4
-         pwLZOZgpzvrdBAH5KIEkkMeN+yjm6qkghcMZ8i5t8o/nWX1M8/XUEL/75122eRuTPwyz
-         TCpQ==
+        b=hZ3c4XiB8h95njKvwXtVIlp2E3opigzf/m1DNlUkZAiyg8Q8t78HOYZIAknecn/Fg2
+         jYV35Xic+pQ2yef/dHPoPJ7YZWMc4gF/wnUeWqUJWdSj723EfvigvWpYP6FjmhaHjgyO
+         bw9V7tR/bb9l0P9+Q4Xz+Pbngmoowxggjzvor80ilErxGCvaCvizTwxIX5FfaxcXQQx7
+         P57gRer4Pbk1BDkw7VcfPpIOXoqwhITJ4q8xcNi0qen+Lon3gTBSOSMFO3YCgTD/+uJi
+         TdVJL3wa4LWep2bQZnJ7chDzzf6caQk1FxtjHUX3G9lWy1yi/Cb+S/7x1Nr8U5Y9p8Z4
+         bRkA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=a8oVHE7uhvQM0uF0tb8qagzI2B8K9hhXgyXmbesBuqk=;
-        fh=ym4iNQsN0q1FgnaVqch5MS9fh3qfpukhCMItc3e1VXQ=;
-        b=rL9qV62Y/V88sisY+eituo9WE9hfCmuMgkmNRgkQKxSpZno8vXqSMW6FJiaxW9LI7v
-         78OOOluqu6lJJHN08+WLXsUEx5AzCdMD2Lf9kovm9kVVXonpswaC3KCuDEfM/I4M60hf
-         2PqxJY1lIbGWix9DOZL6vga70IIH1EXckUCFFaYEv7VoZXzAgYDsNT0uqJ2sMoMLlakd
-         y9jGN2Zizm0eFWOWh2rWsBUylGmTUYRiFvLB+CqasqgqYGIUN1WfFF7pLrRNZ4ZHiG+1
-         Hum8t9XFULFRSrfU0BeOnV1IZ+IVUDHlusaS0vxAHIZLFuKtsEMBudTg6A3EzRl2ROru
-         b6BA==;
+        bh=o28ydFuUHHD4c/U0AkyEgOljfI5EK57zWWg+tuRSc8Y=;
+        fh=naAIcinsxQ5oAlyw1PIgg2tkzPxByhEjQDNGQBbiHrU=;
+        b=oWJB7NJBL86nTX4fvUzjaPKYuBg6ioIkqJ86EEFW0UAZEdVNDMnGpX+hlkF5G+WwWP
+         wGIsjoiLnxjQgbPMoB8qHq3bLYjqpXmMMEFDbhAqAOErCrmn5ThdW1xsQ+YBkytj5J5H
+         mhC4YKMTCP+N8cmNNv69DCVhLFkN192mlz2ciW+PmgEXfpVokDLXUHNxbrnbV4lBOd5W
+         YYHxO9/YZj0ypUbgKBACW7fEhxNPbbBCng8zPLXXkCCa0aC17A2dFqZQ0SEz2yPtZrOX
+         RSzYMk7zBK1HfLWDeaq+L1Z2d4U60VwNhvt5sEGVBoIPMsTcrCYOD0Nj2XAhfST0zge7
+         GzpQ==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1792631686; x=1793236486; darn=vger.kernel.org;
+        d=soleen.com; s=google; t=1792632405; x=1793237205; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=a8oVHE7uhvQM0uF0tb8qagzI2B8K9hhXgyXmbesBuqk=;
-        b=h4aeOYMMTxKyRYgZtsnsT3DxNu23YYAw1u34qUhRlSjeVCO1bPj8wwJ4QJmbI/Wpmk
-         mCvtrETuEXZHHHYPExcPssw9U0vFNPwSjLUL+6vY43kAicvIfcWspH9bPbwlkSupYC4f
-         tDhbq41Ou4QJ//OkC4ciETvL8U5bpuUErc6cmmf8D4sVIy5Z8Dcal76uchJ+nCF+1pbb
-         tsJMul/0jtnlQzJUbRVS9vJEp+7n9wujrZwcgIJ5/P/RQo/RJpoW6DDj7ff7jrxlEkTk
-         pMX1IImB8n4NMX5HBFvK7m0lKJVt2FDm3Xcyq0Kpdw5g2BpjXaoEfSl+w+aRpiVFzcZf
-         Mvvw==
+        bh=o28ydFuUHHD4c/U0AkyEgOljfI5EK57zWWg+tuRSc8Y=;
+        b=UjasCW3NpozzrrA3uptNAoyxN3DqKW8HmkXQNxzRnN/JTz/QnCPODSFsuQp+CU15iz
+         1LkOjKGsHN11814MpjY+/WDEGC7whEmqGfcFHZilFU92hVZmd0P/jDJQsz1R1tiY1v22
+         QEJjzFYaVhhlpS7AL3b9a9Eh15m7QtFtTO0PXMi0cpCfJWXwrmO20D3TU8B5QgOQt69/
+         SNKIxNxzV23JLqHMuIqF+Rxhbp4ACGvPlVLutcB6tch3U6K8bn3cBIdJedvQXqJoWms3
+         LTcsARGJuNIIBF49+wPKcY+NHi+T9ZqJmZfG7n2YznT0MSfnTRXZ9Wu7/w8UUAK2YMpN
+         qYkQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792631686; x=1793236486;
+        d=1e100.net; s=20260707; t=1792632405; x=1793237205;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=a8oVHE7uhvQM0uF0tb8qagzI2B8K9hhXgyXmbesBuqk=;
-        b=wEDPiqN9Gpdy/bm2PqGFEIFpzV37lTTiOckJObBdQTXbpTq8FPhuEiarAfcHMGEHz6
-         L1gurf9oZeimZLhnj8/QIo3OcZPbNH4Vl9TncC1M3iNFEpRSAupnq9qOWg0yTnJeUP5H
-         jp6/CytDEeyigCalX8m1k04va4T7ouRdRzkr8B4Y7QN/MWmVXL+J69B/D/zTkrbqcGI/
-         nGZWGXo6G51TwCq/RyLpBur5SbJ8xngNt3/rQ7UHmLyX90866ftzJOPJ5v6df5Oc6mxQ
-         e3o4Cy2ZogonYn4QbI7E7rXkkT71drU+CjoW4YSOU/Lgtnt51+0NmVAoTFMoSmqEzr/g
-         4ETg==
-X-Forwarded-Encrypted: i=1; AKwUvBwXeKKH8c6oKPNrH6CiuCFf2knutRlxQdhVZu+2z6Ht2Ve3q7w9txfBJJmsTDcP+pg7KIjixGrKgVI=@vger.kernel.org
-X-Gm-Message-State: AFq9FYIvCM7X98huUZ8QfS/0iVt+e9mzBEPotWDJdkJSy7nZ7CL1hWgB
-	iPn8C5JeHyDEr4PSwDK/MQRcmqYKWIZEe7IoykClCpt+VYsGi6dyF33gICxuFLjubKY1UJSPixr
-	2B6mhdfiyrVNGgT0+67ePkhnOmFiCSbFmbBO+66ZqNw==
-X-Gm-Gg: AYBFou2FgjVGRh7Ux1ylctaH47kp9tnz33KT/obluh2Y9pmUP37UyhuiV9IUB7m75Gk
-	1Gjt0QzV7/GDrNfVMAqp25RnVK2MWpKmW6OMFl93+FgUZLiiL5OPkyQXy9D3FKe9cNQGIj8+Ucr
-	7rvwfm5f8XGciAeb3/maSUr0d7LBg+kS4aq03aIsEVJvdGVr+2vqBv4qGVYIya+lLifxv4sN7OZ
-	Vu9t35r6bdGKEXaO3xK/rvdyvBbXDO22EtfO6rofP965f4gHZDcONkvD0+DWVyC/4nnXT46zs70
-	DGGjy4hRp79PYz2U4kaOebMAwq2bJdTrKb88DytNmKjXve2VIm0SN3E7J+8YS6Of6igYgPnM7Ve
-	KFwIKno7W85IEBmwEn7jXNSurAA3RvViuVsoJMEK6enpf18YycSwp1tRimJeC0a4JbWkGH3f1E5
-	YTbt4rVw0dswev
-X-Received: by 2002:a05:6402:428d:b0:6b1:b5b8:b696 with SMTP id
- 4fb4d7f45d1cf-6b408eba0a5mr2764546a12.23.1792631685748; Wed, 21 Oct 2026
- 18:14:45 -0700 (PDT)
+        bh=o28ydFuUHHD4c/U0AkyEgOljfI5EK57zWWg+tuRSc8Y=;
+        b=ffMyXfcM6TS6BGKmMB7KOh/sIRDraaEwLhJDMRSZjFkwK3J6y8rDZzdFdbX4lu0jIg
+         UdHzBK3UvHLoW8WhOfoltZ6Pk+LBFQ5krUw+OKqJDJ6AyODYH4f6TDQAL635D6idAl+i
+         dGtKyZXElmbrP5xtDl6hWK313YieAtBG31SZURLACa8jQ7+1qVaQxbT9VU9BavL9/SQ2
+         7+VXTerVcY2tltfoRKeMYqF1EahU1JR48TN/xm83iHxiwuA3KTB3mN1zNx4XOJL/sMyw
+         g6Fhds6oyNoVQVjIOL1nQJON7hoQ75ktaGB7LUoEWQPEHxIhsrWtDzGyk6q2rQNd+jLJ
+         GUCg==
+X-Forwarded-Encrypted: i=1; AKwUvByz4Oivzitd3kalGOLYGCcokTpJYXycOfChugYOgn2QvWaS+DZcejgnf39aTTTxbrLno9S0qKkq/SU=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJ9y6e6bK1aXEIFpB/b/x5ZNMvdioWYVC8Roa/jMX8u8kUi/QLQ
+	ttqTkRCpApTG7sV/mDoUersI7QBZ1rp1skmTNJJiSyOtmX1p8kTJMY9VIjqJqGQMJ4IxSY7acS7
+	WAMM3JKhybNLeagNehgRNCJI49iTOFYdG7N60nWq1Ng==
+X-Gm-Gg: AYBFou36sF4XU1PxOnj7PjkAKzjoZQu5QXuuiVOC2J77bhklDxthxhdd9mTIX5D/umK
+	d4b351GVBZ8B5mZqLRr+nsjQ2xm+2tjhHlDUWekwQf85inNUDM685zjveGJ5O5qWAakTNMSsQkc
+	8tkN5kQRxyUE0pvGk9IGe24GG2gVQyQCqyGbxFv0qxsSKkqA742gaDZUP9RpbgSJxIAhZPodBTg
+	1ASldqqeRCNtPCy1oHXyWiSABEKRPt/9fMQZyIN2NiqlIPPBbjniYn0zV0dYH1fO5IC7KGRZMu7
+	A2ZQf3SWBKbChxayCexP2XdDIIgNSEf0+7PpifVBzKVXgaWOlfbYQeDdRqdaVNSeOnEut1AXCvG
+	UfBAxwXo9B4+gFqF8WIn3Hqn3wwnrgy7ZR8BIT+au1FkFUe8oymc+aqmYNICzR/RkiBU=
+X-Received: by 2002:a05:6402:2801:b0:6b3:a1ad:ef6d with SMTP id
+ 4fb4d7f45d1cf-6b408dcce19mr2969744a12.6.1792632404378; Wed, 21 Oct 2026
+ 18:26:44 -0700 (PDT)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -105,17 +104,19 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261021152527.375070-1-tarunsahu@google.com> <20261021152527.375070-3-tarunsahu@google.com>
- <CA+CK2bCnS8wcVDbOymBGeJB6pDUkknOpF22EynbwSV=D5=J4ow@mail.gmail.com> <atlEdhPjlyTPDWmG@google.com>
-In-Reply-To: <atlEdhPjlyTPDWmG@google.com>
+References: <20261021152527.375070-1-tarunsahu@google.com> <20261021152527.375070-4-tarunsahu@google.com>
+ <CA+CK2bAQbmq3ArP3XMErF_8RC2CUwvgpLY0H83D0nCJTaVKYyA@mail.gmail.com>
+ <9huzecdi6go0.fsf@tarunix.c.googlers.com> <CALzav=dLdJoVy=B1pv0FAurD9OhAzLSTjJNbtjTdJRmSqaB0yw@mail.gmail.com>
+ <CA+CK2bAQRMAEXZyHTEuUN0_Fo59Sn0hBmYbme_J9ewjx6gPyJQ@mail.gmail.com> <atlKsD-aJB3mJr2j@google.com>
+In-Reply-To: <atlKsD-aJB3mJr2j@google.com>
 From: Pasha Tatashin <pasha.tatashin@soleen.com>
-Date: Wed, 21 Oct 2026 21:14:09 -0400
-X-Gm-Features: AclHuK8ceakYR2BnO2tCnQU3MVfSYSSwRjvSGLmyMHhBXtZBiFnzxvM1Bfsv7Tk
-Message-ID: <CA+CK2bAxgtx2gZ-UE2HqwAU8=h9K5RE3xozBs1njgLo1-CaPvA@mail.gmail.com>
-Subject: Re: [RFC PATCH v2 2/4] liveupdate: Select file handler by name in the
- preserve ioctl
+Date: Wed, 21 Oct 2026 21:26:06 -0400
+X-Gm-Features: AclHuK8Appp8OBdUFGLxu0V1hBTCm-a-9f142JZiexa4wOQOsDrRrU21F_J0R34
+Message-ID: <CA+CK2bABt4OZO31TenVF2+uBUWVwViWbvfE00=0xbAw=f7K9SA@mail.gmail.com>
+Subject: Re: [RFC PATCH v2 3/4] liveupdate: Replace compatibility string with
+ a 2-bit pair feature header
 To: David Matlack <dmatlack@google.com>
-Cc: Tarun Sahu <tarunsahu@google.com>, Andrew Morton <akpm@linux-foundation.org>, joro@8bytes.org, 
+Cc: tarunsahu@google.com, Andrew Morton <akpm@linux-foundation.org>, joro@8bytes.org, 
 	Mike Rapoport <rppt@kernel.org>, Pratyush Yadav <pratyush@kernel.org>, maz@kernel.org, arnd@arndb.de, 
 	jgg@nvidia.com, robin.murphy@arm.com, loganodell@google.com, 
 	oupton@kernel.org, kevin.tian@intel.com, alex@shazbot.org, 
@@ -128,119 +129,94 @@ Cc: Tarun Sahu <tarunsahu@google.com>, Andrew Morton <akpm@linux-foundation.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Oct 21, 2026 at 7:02=E2=80=AFPM David Matlack <dmatlack@google.com>=
+On Wed, Oct 21, 2026 at 7:28=E2=80=AFPM David Matlack <dmatlack@google.com>=
  wrote:
 >
-> On 2026-10-21 01:17 PM, Pasha Tatashin wrote:
-> > On Wed, Oct 21, 2026 at 11:25=E2=80=AFAM Tarun Sahu <tarunsahu@google.c=
-om> wrote:
+> On 2026-10-21 02:50 PM, Pasha Tatashin wrote:
+> > On Wed, Oct 21, 2026 at 2:47=E2=80=AFPM David Matlack <dmatlack@google.=
+com> wrote:
 > > >
-> > > Currently luo_preserve_file() iterates over luo_file_handler_list and
-> > > picks the first registered handler whose .can_preserve() callback
-> > > returns true. When a subsystem introduces a new, backwards-incompatib=
-le
-> > > file handler alongside an existing one for the same file type, usersp=
-ace
-> > > has no way to choose which handler preserves a file descriptor, nor c=
-an
-> > > the kernel keep the existing rollback-safe handler as the default whi=
-le
-> > > allowing callers to opt into the new handler.
+> > > On Wed, Oct 21, 2026 at 11:40=E2=80=AFAM <tarunsahu@google.com> wrote=
+:
+> > > >
+> > > > Pasha Tatashin <pasha.tatashin@soleen.com> writes:
+> > > >
+> > > > > On Wed, Oct 21, 2026 at 11:25=E2=80=AFAM Tarun Sahu <tarunsahu@go=
+ogle.com> wrote:
+> > > > >>
+> > > > >> LUO and its file handlers validate handed-over state with monoli=
+thic
+> > > > >> compatibility strings ("luo-v5", "memfd-v2"). Any change to a se=
+rialized
+> > > > >> structure, even an optional additive one, must bump the string, =
+which
+> > > > >> breaks live update between adjacent kernels. Replace the string =
+in
+> > > > >> struct luo_ser with a feature header, so that the target kernel =
+can
+> > > > >> accept or reject the source kernel state per feature.
+> > > > >>
+> > > > >> struct luo_feature_hdr is a fixed 128-byte header: the serialize=
+d
+> > > > >
+> > > > > This patch is all wrong; 128 bytes is far too large. For every _s=
+er
+> > > > > struct, we only need 8 bytes instead.
+> > > >
+> > > > NOO, It is not. It is intended to avoid complex mess with unnecessa=
+ry
+> > > > over-engineering.
 > >
-> > That is not how it will work. If we are in the .can_preserve() call,
-> > it means the user has already decided which file handlers to use. We
-> > need to do that before any preservation happens; otherwise, we could
-> > run into conflicts on FLBs i.e. FH of different version require
-> > different FLBs.
+> > 128-byte per serialized struct is not starter.
 > >
-> > Therefore, there should be a luoctl call (i.e via a new ioctl to set
-> > compatability) that provides the kernel with the specs file of the
-> > target kernel we are updating to, allowing the kernel to select the
-> > compatible file handlers. Since .can_preserve() is called when the
-> > user is already preserving files, the specification must have already
-> > been supplied, or the kernel should fall back to using the default
-> > (i.e., latest) file handlers.
+> > > >
+> > > > >
+> > > > > The first 4 bytes are the size, and the next 4 bytes are flags (i=
+.e.,
+> > > > > 30 feature flags + 2 reserved bits for flags extension). The last=
+ two
+> > > > > bits of the flags indicate whether an extended flags field is pre=
+sent.
+> > > > > Each extended flags field is 8 bytes, and its last two bits indic=
+ate
+> > > > > that yet another extended flags field follows.
+> > > >
+> > > > If we will have dynamic extension of flags, Think about this.
+> > >
+> > > To support dynamic extensions in a backward compatible way you want
+> > > something like this:
+> > >
+> > > struct luo_feature_hdr {
+> > >    size
+> > >    flags
+> >
+> > __u32 size
+> > __u32 flags
+> >
+> > >    extensions  // offset of first luo_feature_extensions (or 0)
+> >
+> > __u64 extensions[0]  --> but the size should be specificed in
+> > declaration macro that I showed in the next patch.
 >
-> I don't think that is the right direction. IMO the kernel should not be
-> choosing which file handler to use, userspace should be. If userspace
-> gets it wrong and chooses a file handler the next kernel does not
-> support, that's on them.
+> I think you may have misunderstood what I meant. In my proposal,
+> extensions is an offset to the first extension, not an array of
+> extensions that immediately follow the header.
 >
-> The problem with the kernel making a decision about file handlers is
-> then userspace does not know what arguments to pass in. We are adding
-> custom per-file handler arguments to PRESERVE_FD and RETRIEVE_FD. If the
-> kernel is picking which file handler to use, say for a memfd, then
-> userspace doesn't know which arguments to pass in.
+> If the extensions immediately follow the header, then the number of
+> extensions is baked into the struct layout. Every field after them sits
+> at an offset that depends on how many extensions there are. If we ever
+> need one more extension, all the fields shift and old and new kernels
+> can no longer read each other's struct. That is the problem Tarun
 
-It is not the kernel deciding on its own which handler to use; it is
-the system admin (or host orchestrator) that configures LUO before the
-LU process starts, because the sysadmin knows what kernel we are
-rebooting into and the LUO specs of that target kernel. Meanwhile, the
-process calling PRESERVE_FD (e.g., a VMM) only knows about its own FDs
-and should not have to track target kernel serialization versions.
+We can structure it cleanly by nesting the payload: something like
+struct { struct header {...}h; struct serialize_data { ... }p; };
+That way, the header can expand dynamically at the front, while all
+fields inside `serialize_data` stay at fixed offsets relative to the
+start
+of the payload.
 
-Also, the PRESERVE_FD and RETRIEVE_FD arguments are uABI tied to the
-FD type, not to a specific internal handler version. They are stable,
-and we can expand them the same way any ioctl argument is expanded
-(via size and flags), without ever shrinking or breaking them. We
-should not play the game of providing completely different uABI
-argument structs for different versions of a file handler. If a caller
-passes a new feature in the uABI args that the currently configured
-file handler version does not support, PRESERVE_FD simply returns
--EOPNOTSUPP, just like any other extensible ioctl.
-
-> Sure you could add some method where userspace could query which file
-> handlers are active and decide arguments based on that. But it feels
-> backwards.
->
-> I think a much cleaner solution is that userspace chooses file handler
-> during PRESERVE_FD. I would even require it for RETRIEVE_FD so that we
-> are guaranteed that the args the user is passing in are being sent to
-> the right file handler. Passing to RETRIEVE_FD also opens the door to
-> transforming across Live Update (similar to how AWS did LU from Xen to
-> KVM as discussed at LPC).
-
-On RETRIEVE_FD, the preserved metadata already identifies what format
-was preserved. Validating that the user is passing the right argument
-struct only requires checking the compatable string, not selecting a
-serialization version on every call. And if we ever want to support
-cross-subsystem transformations on retrieve, that is a retrieve-side
-conversion capability.
-
-> Regarding FLB conflicts, today we don't support multiple FLBs for the
-> same global state, so there is nothing to conflict. Selecting a file
-> handler during PRESERVE_FD doesn't change that.
->
-> If we ever need to support multiple FLBs for the same global state
-> (e.g. an incompatible change to the PCI FLB), we can add an ioctl that
-> lets userspace select which FLB to use before preserving any files.
-> After that, only file handlers registered with the selected FLB can be
-> used to preserve files. PRESERVE_FD with any other file handler fails.
->
-> That keeps the FLB decision up front and global, like you want, while
-> still letting userspace pick the file handler for each fd. I'd also
-> expect this to be rare, since FLB serialized state can use the same
-> feature flags as everything else in this series.
-
-Userspace owns FDs, not FLBs. Whether a subsystem uses one FLB, two
-FLBs, or no FLB to coordinate state across FDs is internal kernel
-plumbing. Exposing an ioctl for userspace to select FLBs leaks kernel
-internals into the uABI.
-
-Therefore, I think we should not select FLBs from userspace at all.
-FLBs are an internal kernel mechanism for sharing state across FDs;
-from userspace, we only preserve FDs, so that is what should be
-configurable, and the kernel should resolve the dependencies and pick
-the FLB versions accordingly.
-
-Changing one file handler may require changing another file handler
-because they share an FLB. We can't have a situation where one VMM
-preserves using FH_A and another uses FH_B for the same FD type,
-trying to use different FLBs for the same data (since we can't
-preserve the same page into KHO twice). More generally, we are
-rebooting the host into a single target kernel, so compatibility is a
-session-level property, not a per-FD property. If we need an upfront
-global ioctl anyway, configuring the target compatibility upfront in
-one place is much cleaner than exposing FLBs to userspace and
-splitting version selection between a global ioctl and per-FD
-PRESERVE_FD calls.
+Since the header size is self-describing via continuation bits (e.g.,
+the last two bits indicating whether another flag word follows), LUO
+can
+easily compute where the payload begins in the incoming blob. This
+keeps the implementation simple, avoids linked lists of offsets.
