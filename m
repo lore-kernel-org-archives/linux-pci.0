@@ -1,110 +1,115 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.225
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792691840;
-	b=PoBnm8HZJAly3L7K9iedgmY7lRWkxpT4JFFrdUdU80il3oVhGqQj8VEL4mxwS+QxFuxW
-	 t9ZpoibU2ZpsNWGLrpD9XPyH7SS/0I578B0uFBwkbwA03Ee3v5Mcey0u4f2E/U+LOUe1S
-	 OTwhFVTWIZo+mOxNwmWs0ZpUB0tVkseiyaTL5O86AOfAtc2JRkxuVjt1Z15foRpRL+X1g
-	 UBp3TS/jI7tHxNjsIlXqn60sv6nXbrkprQrdX0b7UbbJFeVGdwTRVixtDer3bT5VC0+ju
-	 N+s8bnQJG19bCsTUglE2Fd8vAoraaUv9mCcYAwUcYaEulwndiUR1Enwdn/8lsgs4aLA==
+	t=1792692033;
+	b=KD6i+N7IpJ597fsSkSd8kQXnvCLK2dyrZuNGru0dOUR/liH81o0gAhoPISU90woVFc2i
+	 DvSLJDq4d3VbwR3RR25ctM6v3d9bUhQQ9ZFyCGxgA2qDqNXIIrHgrqyW0jw3Cu4q1vs2k
+	 jikDj1Kqwq4+mdORpXdFTeJWgu/Xe6T/1gTrY1PB8xZIWlXyc/EWpDpzEvWVScVjvwcBw
+	 AJEYpfgs//0LgeDTdSRF/Q/vHUV8zR9/ttOupJ2VY5WindvhKH/y/OrsS5A+GksRrtaKX
+	 JSox3OW4bLQlT7rZft3YyGHzQUTcgj4662Flr5IJugjRqd50pP0O8OJEfvW+35Y1pSQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792691840;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:Content-Transfer-Encoding:
-	 In-Reply-To;
-	bh=8EgRcbuDfKORZQpY0utOTTMffHlpWo5to8q3utLizKM=;
-	b=aIM0m7WwwO4G0zyN6tGOYAb4x8zBXZ3INykN5BMi/pru3TbymhvdMQJS6OGaiSFw1H6p
-	 t7OsePFhQhr0n/TrA3n0AaL09tRLkVSHWd14x2vpxiwBGHtUmaUFQ2tWUCV8PuZ7eLPT3
-	 z1lFZ32LNccsYVAH9ggvLSTjIM0yPg/etLHMJts6iNDL7xF7zVLMoDao/R+lGvWu0yRIo
-	 /MqXvH0SUSPhUn+XFINfsIS/AZGGSfj4AA9Nc8SdgtZuoiYuidQM1rNH8zxULl3KT49uP
-	 IV3QgGqbQfef9RlQJm+sRkGhJVGp9hQXcxW2R5FczMTnIkMkjiyu7oU+de7JmbEIPvA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792692033;
+	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:X-Relaying-Domain:
+	 X-CFilter-Loop:Received:DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Received:X-Received:Received:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding:
+	 X-DetectorID-Processed;
+	bh=qVs0gHMpL7OkRuO249jNop/fDefJUtpskmuuYXxUmmM=;
+	b=Bu71pWnn1YxSs1iTGmYClU8mREJ9H8FYrhOdsK7I7V1s39ivKwZxH2y7Qdczv0x8ckBE
+	 rnYkPj1Lqz+dwNyS8hJkzGXgVQeIBxXAYDki9T+2Et8NR7PZWo61g1+06jt/iTrK447NY
+	 ET6WShuHO4REov3s0rm+8XulG9pGpdkPxSaDascIGnco5f4xGEh6SdxMFheo0H5wnL8FW
+	 ZtWAexNPM0fyPZ3wAAxU5DuayWoX38qqmgrpYwTXGf9SvDLrabqWojLC7aog9/V3/wxHt
+	 vc9c+xp7wzoLKi8Rv6kV6Zq/O/6Gv/BPh4r2P3lK9Uz7i+6h7ECAQKeJhOXoFJY9j7g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=WA9JyD3j;
-	arc=none smtp.remote-ip=209.85.214.177
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	dmarc=pass header.from=broadcom.com;
+	spf=fail smtp.mailfrom=broadcom.com;
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=ES6kgvhP;
+	arc=none smtp.remote-ip=209.85.215.225
+Received: from mail-pg1-f225.google.com (mail-pg1-f225.google.com [209.85.215.225])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78B51606A321
-	for <linux-pci@vger.kernel.org>; Thu, 22 Oct 2026 17:57:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 78B51606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7533606A31B
+	for <linux-pci@vger.kernel.org>; Thu, 22 Oct 2026 18:00:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D7533606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=WA9JyD3j
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2ea4f255ba1so26455ad.2
-        for <linux-pci@vger.kernel.org>; Thu, 22 Oct 2026 10:57:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1792691840; x=1793296640; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=8EgRcbuDfKORZQpY0utOTTMffHlpWo5to8q3utLizKM=;
-        b=WA9JyD3j3itUY4lpXFpySPuRa1vB0WMDbXDWzbH5meWjpkiKz8M2ORcecVCQMPW6On
-         NZxrCd95AGwvVXGo2wNHowz20f3Y7syCumDLBaj0DE3bwViDTT5DHqk7RRBBguxfrEFC
-         goGLj86653STW4eXuGeTo93EvGmQDdLRRJIEzZ16lfAHDcKM8/HI5+n6W4OPJ/4tLkbs
-         NwLWZ9Qgya3s6H0s1NOzrjasSmSWIHbWZXPuqlCgHOHYQ7kqcFHB+hBd3GCAARAx7j/8
-         p/NAIP6KlLywer4KnwCnIGba7fMS3myOBLfQuC0IKs7/P6nGO+1XrYWZk2zLW4/TS25E
-         pqng==
+	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=ES6kgvhP
+Received: by mail-pg1-f225.google.com with SMTP id 41be03b00d2f7-cd8ba7c2694so21660a12.1
+        for <linux-pci@vger.kernel.org>; Thu, 22 Oct 2026 11:00:32 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792691840; x=1793296640;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=8EgRcbuDfKORZQpY0utOTTMffHlpWo5to8q3utLizKM=;
-        b=H18DPtIad8aGclab6X3ye8qVsTc9hNk+WGQCkihVAeVDk2z9Hzdox5spYn8uzhu0UN
-         /YP1xLEMq+xieOR1NSHRbm1zmuPniTSwv7nVNre6VZpHTI/xwhY1L4rEBVoKc4D2Zd+j
-         Ld06yu//j3+n1zQYFYwwFmSNxSxorSBTflk87rNd3mzG45U9jXdkRlKxcIfGeqd2AtJu
-         jJFKyE1fI9VbMF3mKyYzdF/Wh+dRl8ZgDA2g0kuGeTH+7vi6LsMy4egCTvoEVaL1sGxC
-         dOFscbZK2MjxfEMifiIoLeAEq5zn9cEO8oMlW7F1LvVi3AaSUBj6+2vYvOEKfKVb/wDr
-         3/Ow==
-X-Forwarded-Encrypted: i=1; AKwUvBxDOA0DNZYMiiFEFu7HKmR2fa0Eoy2WYdXyxctFqirwXlPMSMqQLoY8rnvNEgwl+t+v9QCKC39kI4Y=@vger.kernel.org
-X-Gm-Message-State: AFq9FYIbJ4keJoODLXcOzfYx9sXBK7XWap8omFeyA99IPpWBStTCBSCL
-	xf4M6asCjIRBgC6D+SrautfA9MyjBTFHMBLMOwwBwIwoogUJLYgzugtyGSrQiQ7Oow==
-X-Gm-Gg: AYBFou1XsOzcYJG79aKSOCP4KkQ3fnwYWK+qraElt0uF8KsKBtUChnKYG9Q04pFIOml
-	guSk0RSYIV0idKqgTOZNzSKONW8EEUb5eYnYajk0StZ7ogkj7riu8Da2uNGx4oQLJp1kKDx8tBn
-	DUFiZHCZKP6skg78LxDzaHE5QxumbtNbjovWNKXxhHw+W/XGM8cNy30tVIIJj2PM/y85RdH4aD4
-	7Nvz6cylOBZcuwl4Da66EdEl1+9dGOM1qxLRYQBjQJ94DRoDOyt5H+sKBSuMOfutUwcMVLumwTP
-	KAzrczYk920fSdQ6RYsgdzeII3SNoJJnk2NsPgiBYmG/A4vYz463gP1Z3kx+rd83ps/4LAu89rT
-	WRl7Kce61ApJFcEd3y2q5FJkzngGnBv+peEaBc7ta7+t0BA1k3nFbXcI9zqvigqxHleM64vZU/X
-	fda7Eza/QeGuCnqS31Uh0uxdH6csFZZbS2Zpsh0t3TtixSvarG+sqCyBQpPJXzaUjqSdBnJk3+c
-	TELCpd6DsvdBW2lKqZeXGaUIlzarfdFEbRGDL7PVTcDsSFLWmf1R6P3eyfvpyvcUzRauF3jQsdS
-	g8oBK5FFbT9hnV9Wc8nmRQ==
-X-Received: by 2002:a17:903:19ef:b0:2e9:61bf:6591 with SMTP id d9443c01a7336-2ea7c33be70mr1491705ad.45.1792691839016;
-        Thu, 22 Oct 2026 10:57:19 -0700 (PDT)
-Received: from google.com (192.150.203.35.bc.googleusercontent.com. [35.203.150.192])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ea7b34dadbsm1687675ad.26.2026.10.22.10.57.17
+        d=1e100.net; s=20260707; t=1792692032; x=1793296832;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=qVs0gHMpL7OkRuO249jNop/fDefJUtpskmuuYXxUmmM=;
+        b=ufsvoxD20L0Zkj79fZvylNaye+V8or0XoLNV1rqwIhnftI2PrAtqlrPOHjyS2bEqFx
+         u0+aMXB2x1RtL88fz6oZ69IRxqyyBgr2lfqsUtShrXWYRcT+Ho9A1PijTYsHuaZQcHaG
+         547pEe5y/s+gf8BMB8h0YMlApoD8Ct+Mj9KKJC/tdXdMMqzMgV3kN3TRT7eelhXWYHxI
+         cWxiv5MWbCTdw0c4cCV0MHWMdl9vcVDntznWlhbXQLEFSuaPrJBidYfKohI/AQUEgSUw
+         7z8LYWu+s5VywSDicuWZtSIyHhyjiqUDsOrmySa54EhBT2tLekeCZN9PoYw0TVhIxoWm
+         NhXA==
+X-Forwarded-Encrypted: i=1; AKwUvBz1FvDw3qsONz54BMZw281d/Yb3gxubk9yi4JVQyXYxN2/Ey/9rUZL/Z3h+rBvyROzLo/T6cy/5PX4=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKUbqWuBY0smTH0TXlCrrzJ7JJ77/wqEOcZX6ZKJ42CpRw4gv7O
+	HaCZ67KtWoP4QJZrAD8m94sLAY7iafn3f+8qfodiPMLMDI6wMhy7xDEU6f17ElNiya/tx3L5CeH
+	yXzW6Y02LA40E5WfFLQUsUBem79DbtRB6pi0EjxblYWG+Fg+ujsjGxp2jPsTvjwW0KGnNRezhnv
+	zCZ2jan+Hv4NYlA/orNdf/T5vjY4qeAMRBgieBaFFjXGXWN15G7rKFLeOrrL8MvphZNxB/N9P44
+	V4ciNNepSo1eaXpD4rJ
+X-Gm-Gg: AYBFou2dPYY3zWkQ3ZyO5tmIVZqiSip4BRPBRofa78z8DKG7nZgmzx/VcQe00hMQzOB
+	boHi6TwddQO7nplHQoPHeZgid5YE5+j3wgTQbSwdsd2QzVHSpy4uQcX1tMEOJsq72BQ/T58AZwl
+	w5B8OHx+I2fbbrHafJS7tdDYetRHgCb571Rq65NMr+YMYbdNjUBV7brqulmQXGGpOShdu0FT2Ga
+	qnzs7HRRvTy19zXemrB6LEcGa6axEgpO4kOZGg0JnCs3rXOgWRcEfrVDwK3h82J5Q+PctHLoSjh
+	DczEFQe/+IV3QZjt4Fzzsg4wsk/CkkeBwTkBkyxyTrVFqMp3l/2lK7B3S6qaS66GPGD405afMkK
+	8HeqveW6cEk9jc95NRoypSA2B5EnIiDGZwwV0QO8fnj+lhJBxTERU/6CRcmdg7YPg5MgLgHx7Jh
+	NgetSPYepVZrB6G0kMOqUBSC0sfblegIOHixugx+QsM5Y=
+X-Received: by 2002:a17:90b:2ccc:b0:3ad:5c64:c7a0 with SMTP id 98e67ed59e1d1-3ad86ef45bemr4906272a91.38.1792692032026;
+        Thu, 22 Oct 2026 11:00:32 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-120.dlp.protect.broadcom.com. [144.49.247.120])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3ada48be026sm2554707a91.6.2026.10.22.11.00.31
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 22 Oct 2026 11:00:32 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-yw1-f199.google.com with SMTP id 00721157ae682-8b09ee23de2so2251467b3.0
+        for <linux-pci@vger.kernel.org>; Thu, 22 Oct 2026 11:00:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1792692030; x=1793296830; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=qVs0gHMpL7OkRuO249jNop/fDefJUtpskmuuYXxUmmM=;
+        b=ES6kgvhPb2n1YPas4O4A8ugXV23no66hopgfrBUHcIjvyxhPns8VCCC+3O68VQw21l
+         uOpAHuiSFD4DgTBkYBurp/nyiQTle7Hlh3DdGZXhfp2EvgkI02ttCtQhb6h4WWovtnqZ
+         hON5RgWlteVjEGENxaRvG57YRfGnzpgyDbFnU=
+X-Forwarded-Encrypted: i=1; AKwUvBwqFaFE1qwxR+2BMrz0PE4XkHe51+0f1otDWWb9xCWRiazC5uvvfQGGdDAqHt7nZx6MBVloZn9g9cY=@vger.kernel.org
+X-Received: by 2002:a05:690c:2604:b0:8b0:dca9:8fc8 with SMTP id 00721157ae682-8b134089d4cmr31279877b3.92.1792692030615;
+        Thu, 22 Oct 2026 11:00:30 -0700 (PDT)
+X-Received: by 2002:a05:690c:2604:b0:8b0:dca9:8fc8 with SMTP id 00721157ae682-8b134089d4cmr31279647b3.92.1792692029727;
+        Thu, 22 Oct 2026 11:00:29 -0700 (PDT)
+Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b156107beesm1968187b3.16.2026.10.22.11.00.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Oct 2026 10:57:18 -0700 (PDT)
-Date: Thu, 22 Oct 2026 17:57:15 +0000
-From: David Matlack <dmatlack@google.com>
-To: Pasha Tatashin <pasha.tatashin@soleen.com>
-Cc: Tarun Sahu <tarunsahu@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>, joro@8bytes.org,
-	Mike Rapoport <rppt@kernel.org>,
-	Pratyush Yadav <pratyush@kernel.org>, maz@kernel.org, arnd@arndb.de,
-	jgg@nvidia.com, robin.murphy@arm.com, loganodell@google.com,
-	oupton@kernel.org, kevin.tian@intel.com, alex@shazbot.org,
-	dwmw2@infradead.org, pbonzini@redhat.com, seanjc@google.com,
-	will@kernel.org, Alexander Graf <graf@amazon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, baolu.lu@linux.intel.com,
-	linux-arm-kernel@lists.infradead.org, linux-arch@vger.kernel.org,
-	sagis@google.com, linux-mm@kvack.org, kvmarm@lists.linux.dev,
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, skhawaja@google.com, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH v2 2/4] liveupdate: Select file handler by name in
- the preserve ioctl
-Message-ID: <atpOe-blcgW-uDd4@google.com>
-References: <20261021152527.375070-1-tarunsahu@google.com>
- <20261021152527.375070-3-tarunsahu@google.com>
- <CA+CK2bCnS8wcVDbOymBGeJB6pDUkknOpF22EynbwSV=D5=J4ow@mail.gmail.com>
- <atlEdhPjlyTPDWmG@google.com>
- <CA+CK2bAxgtx2gZ-UE2HqwAU8=h9K5RE3xozBs1njgLo1-CaPvA@mail.gmail.com>
+        Thu, 22 Oct 2026 11:00:28 -0700 (PDT)
+From: Florian Fainelli <florian.fainelli@broadcom.com>
+To: linux-kernel@vger.kernel.org
+Cc: thomas.petazzoni@bootlin.com,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Frank Li <Frank.Li@kernel.org>,
+	Shuah Khan <shuah@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Padmanabhan Rajanbabu <p.rajanbabu@samsung.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	Aman Gupta <aman1.gupta@samsung.com>,
+	linux-pci@vger.kernel.org (open list:PCI ENDPOINT SUBSYSTEM),
+	linux-kselftest@vger.kernel.org (open list:KERNEL SELFTEST FRAMEWORK)
+Subject: [PATCH] selftests: pci_endpoint: Do not link with pthread
+Date: Thu, 22 Oct 2026 11:00:21 -0700
+Message-ID: <20261022180022.1282641-1-florian.fainelli@broadcom.com>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -114,76 +119,30 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CA+CK2bAxgtx2gZ-UE2HqwAU8=h9K5RE3xozBs1njgLo1-CaPvA@mail.gmail.com>
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-On 2026-10-21 09:14 PM, Pasha Tatashin wrote:
-> On Wed, Oct 21, 2026 at 7:02 PM David Matlack <dmatlack@google.com> wrote:
-> >
-> > On 2026-10-21 01:17 PM, Pasha Tatashin wrote:
-> > > On Wed, Oct 21, 2026 at 11:25 AM Tarun Sahu <tarunsahu@google.com> wrote:
-> > > >
-> > > > Currently luo_preserve_file() iterates over luo_file_handler_list and
-> > > > picks the first registered handler whose .can_preserve() callback
-> > > > returns true. When a subsystem introduces a new, backwards-incompatible
-> > > > file handler alongside an existing one for the same file type, userspace
-> > > > has no way to choose which handler preserves a file descriptor, nor can
-> > > > the kernel keep the existing rollback-safe handler as the default while
-> > > > allowing callers to opt into the new handler.
-> > >
-> > > That is not how it will work. If we are in the .can_preserve() call,
-> > > it means the user has already decided which file handlers to use. We
-> > > need to do that before any preservation happens; otherwise, we could
-> > > run into conflicts on FLBs i.e. FH of different version require
-> > > different FLBs.
-> > >
-> > > Therefore, there should be a luoctl call (i.e via a new ioctl to set
-> > > compatability) that provides the kernel with the specs file of the
-> > > target kernel we are updating to, allowing the kernel to select the
-> > > compatible file handlers. Since .can_preserve() is called when the
-> > > user is already preserving files, the specification must have already
-> > > been supplied, or the kernel should fall back to using the default
-> > > (i.e., latest) file handlers.
-> >
-> > I don't think that is the right direction. IMO the kernel should not be
-> > choosing which file handler to use, userspace should be. If userspace
-> > gets it wrong and chooses a file handler the next kernel does not
-> > support, that's on them.
-> >
-> > The problem with the kernel making a decision about file handlers is
-> > then userspace does not know what arguments to pass in. We are adding
-> > custom per-file handler arguments to PRESERVE_FD and RETRIEVE_FD. If the
-> > kernel is picking which file handler to use, say for a memfd, then
-> > userspace doesn't know which arguments to pass in.
-> 
-> It is not the kernel deciding on its own which handler to use; it is
-> the system admin (or host orchestrator) that configures LUO before the
-> LU process starts, because the sysadmin knows what kernel we are
-> rebooting into and the LUO specs of that target kernel. Meanwhile, the
-> process calling PRESERVE_FD (e.g., a VMM) only knows about its own FDs
-> and should not have to track target kernel serialization versions.
-> 
-> Also, the PRESERVE_FD and RETRIEVE_FD arguments are uABI tied to the
-> FD type, not to a specific internal handler version. They are stable,
-> and we can expand them the same way any ioctl argument is expanded
-> (via size and flags), without ever shrinking or breaking them. We
-> should not play the game of providing completely different uABI
-> argument structs for different versions of a file handler. If a caller
-> passes a new feature in the uABI args that the currently configured
-> file handler version does not support, PRESERVE_FD simply returns
-> -EOPNOTSUPP, just like any other extensible ioctl.
+This tool does not make use of POSIX threads there is no need to link
+with libpthread as a result.
 
-If we require that PRESERVE_FD and RETRIEVE_FD uAPI is stable across
-different file handlers for the same file type, then my concern is
-resolved.
+Fixes: 392188bb0f6e ("selftests: pci_endpoint: Migrate to Kselftest framework")
+Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
+---
+ tools/testing/selftests/pci_endpoint/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> More generally, we are rebooting the host into a single target kernel,
-> so compatibility is a session-level property, not a per-FD property.
-> If we need an upfront global ioctl anyway, configuring the target
-> compatibility upfront in one place is much cleaner than exposing FLBs
-> to userspace and splitting version selection between a global ioctl
-> and per-FD PRESERVE_FD calls.
+diff --git a/tools/testing/selftests/pci_endpoint/Makefile b/tools/testing/selftests/pci_endpoint/Makefile
+index bf21ebf20b4a..b4ddfc52e79d 100644
+--- a/tools/testing/selftests/pci_endpoint/Makefile
++++ b/tools/testing/selftests/pci_endpoint/Makefile
+@@ -1,6 +1,6 @@
+ # SPDX-License-Identifier: GPL-2.0
+ CFLAGS += -O2 -Wl,-no-as-needed -Wall $(KHDR_INCLUDES)
+-LDFLAGS += -lrt -lpthread -lm
++LDFLAGS += -lrt -lm
+ 
+ TEST_GEN_PROGS = pci_endpoint_test
+ 
+-- 
+2.53.0
 
-That's a good point. Ok let's not do per-FD FH selection.
