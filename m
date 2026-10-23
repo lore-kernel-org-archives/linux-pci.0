@@ -1,56 +1,68 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792779607;
-	b=NMR7RV5GPgGcYG5oyYzSdDI9JQQeJQL1CwGe7XCmSs39oVl3Nqy22pwypppldxL+7SLM
-	 vXs5e8dRUTuDf5x/Z6CNCzj2wwh2wNz6XMlt+vYmmEs1HQ/NnmY9/1XCvo8WDupuxcuHi
-	 WrSl7J/3Yfu/UGmITWwMsDDABsNeJOz7UtHFLLbTcf5+Qg6N79txLjcjiVKAL5L5ea3Ny
-	 tbw7XCygR5Z9gCMnZxE8CRnBXbS6mYTV3ebU+7cV4pAcq8MzONmdJyLutetTY4qjQ9KUZ
-	 joVfmYb267eALSYlaeJah8ehEBUww0qKobKTXrZZfhOUGN02CBUYOahPDkT0h28swWw==
+	t=1792780038;
+	b=T73JsWBBworZsJUmYYedeFAs0sglLzveWJx3oqnAThWqk6+psa7dlzjba/tuJXotKtMB
+	 0DJIGX6r/D3T6J6GcElTVxAZag7fG3Py7VO8gMDJGcViv/k32uzy+CdrM4RosiN4FBO/C
+	 TseWRN9vpLp5KSjhNRrzZOCwpxG2ohnnm7D8Tdte6jx/Ai+VJSWehw/x+Kch/6th49lK+
+	 H+obtyKD6RkiNGeJHxZOyLUGDzgak1jJ+LdJiFNeR4snKTHiS2B/oYtd9LN+zA8z5HwUP
+	 /fBJbPIn4E0wv2HymhdajjK90CzkZ61nXaG9FYqyQVBpXjfph6c09sIqO+0FTGUyuOw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792779607;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792780038;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=n4JcfF8uWyN7U+HWj8jtqOevy4U9dtFdq/NbsoSQUcg=;
-	b=Ve6ap5XLmtFuKfXwwNsdTJMyxb/xVLFljjcEzBZQatrGy9R/y2u0t80ACo5UWR8Io8Kj
-	 AxYwvKWSikiDqOpfZyebpw8fqOF/PfmD/XbSga5gPPayqFt77+tcoQ1eR6VMBX4/ICnNH
-	 RFWJFN4yffwlenrXLI6oicExy8dNBHx1HQ57pEe6x8AyN8Lmz1bTk7XjyArDxBTYE8KrQ
-	 8zxCvpX3ttsxJBw8T1Wfr5kzrpylUwYE7fesqwpQXe2l63rQlNsDP3Z+29UT/iw4CT4eC
-	 W+PyBhfqNIwJpr9xRuyQr2n3U03+oRUBYzWC2NXe1I9F2YS/X8auYt/7FaJChJ7DZPA==
+	bh=OMMk0FY0QXXjJrMUkrwply/6bMqx0VFwmW8asWdCFJQ=;
+	b=hu+CmCRu417F/A+MgHYm/53hG9mFg2MTiyN9qsU847u3UArwcNv5y5mGPN+oTICQ1CRi
+	 W5kuQvO+pgA/1stP8SUXkYPULiKhkpC/BL9EeoNSRMtBtrs9nSaJChvL/ZVoQV/Yjo0Fz
+	 UVztMh/SK7ui5q9JQr2qEZ1iaFvp1bLkS1HHMDSPFkHpBdCmQwOWA/YPRlA057fTsTRlg
+	 q+5NaXQLuAXLxaVPjyk5cVWcQTpJCigG3hMlarM6293X4W7hI0uKdwkIJme7Rv2yU4VcO
+	 uYpybp1ZmQaH3Y0qG24LbcbVTZo1uQlfotrLJRdWsm2TtyOl4RnaHdK8oHpbHeEk09Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=c89ZcEzW;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=G9n9PYHm;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAE29606A31A;
-	Fri, 23 Oct 2026 18:20:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B12E7606A31A;
+	Fri, 23 Oct 2026 18:27:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=c89ZcEzW
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26CAD1F01828;
-	Fri, 23 Oct 2026 18:20:06 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=G9n9PYHm
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 259B01F01825;
+	Fri, 23 Oct 2026 18:27:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792779606;
-	bh=n4JcfF8uWyN7U+HWj8jtqOevy4U9dtFdq/NbsoSQUcg=;
+	s=k20260515; t=1792780037;
+	bh=OMMk0FY0QXXjJrMUkrwply/6bMqx0VFwmW8asWdCFJQ=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=c89ZcEzWmZiP96A3AFYWNHl2c1DrQASv3EEK4Izx3Dv+XPxPoA02UwK86asvGkqOu
-	 cotGlZOfS/MEEDBfxrQGq05S0i1WSW1M8MUmgdNy1MISN4YiRcOQ+jWU5lKl0i1Pga
-	 1E4znn5j1Wgg1lOwixT81kdPsZvKmCEMyPGrXA/rV3caKSBmBuaRMNPp7ObjW4gmC+
-	 W2pFfDBeQ8/QGFKoTbUoEEsX9kFoC9a9DjjSTv4SXTVVl506iTR8bnzupimMl0bAav
-	 CeWgdZNbO+KMba8w2oVr6mbM46O1oFNIs41iVE8PB2D4T7/Pj+7ORWKSX/iwJUM6RZ
-	 K9b9Nee8Uk80Q==
-Date: Fri, 23 Oct 2026 13:20:04 -0500
+	b=G9n9PYHmDL6cgVGQNgXtNMCyVym07kIyyjM2nGMF3bsN0888XQNZ4UlZQ5VXpvrwH
+	 jSs376aScTw45oN1ocyIVZKX/rCW4ZO5vpA7KQKBkWB39rIEmJYmQcsPSwwAT2QsdX
+	 QlpB3wcDy7WH2w8//1hJ4V+fstquvb8vfORjJrtI6GR3ls85ONhfDpEaffIfXk8Jwi
+	 oNQ5WeXNpwNKMCS4ISCn2rDsxme+3kpE+h1SicZs+5Cs95krMsAUUNZZKkmPNCAOPi
+	 KCuzxbEt2ogrM7EFOAVrSYEN/4rsnKGSM8ZaL9iYZ86rJ+FagondpXmymu1fiSUUbk
+	 RXgCab24TbNrw==
+Date: Fri, 23 Oct 2026 13:27:15 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Anthony Ruhier <aruhier@mailbox.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
-	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
-	Manivannan Sadhasivam <mani@kernel.org>
-Subject: Re: [PATCH] PCI: Disable LTR on Qualcomm WCN7850 [17cb:1107] to
- allow ASPM L1.2
-Message-ID: <20261023182004.GA2796729@bhelgaas>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
+	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
+	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>
+Subject: Re: [PATCH v9 02/18] PCI/P2PDMA: Derive routing from directional ACS
+ controls
+Message-ID: <20261023182715.GA2798722@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,103 +74,59 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261023-quick-wcn7850-v1-1-9a139b9b2c8e@mailbox.org>
+In-Reply-To: <20261023155914.GK3977851@ziepe.ca>
 
-[+cc Qualcomm folks]
-
-On Fri, Oct 23, 2026 at 07:39:35PM +0200, Anthony Ruhier wrote:
-> The WCN7850 Wifi/BT card, found in several Snapdragon X laptops, never
-> enters ASPM L1.2 when LTR is enabled. Its firmware reads the
-> LTR_L1.2_THRESHOLD set at enumeration and reports an LTR value just
-> below it, so the L1.2 entry condition is never met and the link stays in
-> L1.1.
-
-Here are the ASPM L1.2 entry conditions in PCIe r7.0, sec 5.5.1:
-
-  The following rules define how the L1.1 and L1.2 substates are entered:
-  
-    - Both the Upstream and Downstream Ports must monitor the logical
-      state of the CLKREQ# signal.
-      ...
-
-    - When in ASPM L1.0 and the ASPM L1.2 Enable bit is Set, the L1.2
-      substate must be entered when CLKREQ# is deasserted and all of
-      the following conditions are true:
-
-      - The reported snooped LTR value last sent or received by this
-	Port is greater than or equal to the value set by the
-	LTR_L1.2_THRESHOLD Value and Scale fields, or there is no
-	snoop service latency requirement.
-
-      - The reported non-snooped LTR last sent or received by this
-	Port value is greater than or equal to the value set by the
-	LTR_L1.2_THRESHOLD Value and Scale fields, or there is no
-	non-snoop service latency requirement.
-
-By "firmware reports LTR value", do you mean that the WCN7850 sends an
-LTR Message with snooped/non-snooped values just below
-LTR_L1.2_THRESHOLD?
-
-And since the reported LTR values are never greater than or equal to
-LTR_L1.2_THRESHOLD, the link never enters L1.2?
-
-If so that sounds like a clue that the firmware went to some lengths
-to prevent L1.2 from being used, which is "interesting."
-
-> Windows does not set LTR Mechanism Enable for this device (verified by
-> dumping the ACPI tables), and the link idles in L1.2 normally.
-
-I don't know that ASL not enabling LTR is definitive (lspci would be
-more direct).  But it sounds like you've verified that the link is
-actually in L1.2 when idle.
-
-> Replicate the same behavior: clear PCI_EXP_DEVCTL2_LTR_EN for WCN7850 at
-> enumeration and again on resume, as the LTR state is restored there.
+On Fri, Oct 23, 2026 at 12:59:14PM -0300, Jason Gunthorpe wrote:
+> On Fri, Oct 09, 2026 at 08:43:01PM +0300, Leon Romanovsky wrote:
+> > On Wed, Oct 07, 2026 at 03:40:45PM -0500, Bjorn Helgaas wrote:
+> > > On Wed, Oct 07, 2026 at 09:32:27AM +0300, Leon Romanovsky wrote:
+> > > > On Tue, Oct 06, 2026 at 03:49:47PM -0500, Bjorn Helgaas wrote:
+> > > > > On Thu, Oct 01, 2026 at 02:55:10PM +0300, Leon Romanovsky wrote:
+> > > > > > From: Leon Romanovsky <leonro@nvidia.com>
+> > > > > > 
+> > > > > > pci_bridge_has_acs_redir() treats Request and Completion Redirect as
+> > > > > > interchangeable. On asymmetric fabrics, a control for only the reverse TLP
+> > > > > > direction can unnecessarily force P2PDMA through the host bridge.
+> > > > > 
+> > > > > Does "the reverse TLP direction" refer to Completions?
+> > > > 
+> > > > In general, the P2P code treats TLPs flowing from device A to device B the
+> > > > same as TLPs flowing from device B to device A.
+> > > > 
+> > > > However, in the context of this commit message, yes: completions flow in the
+> > > > opposite direction from the device's perspective.
+> > > 
+> > > And I guess asymmetric fabrics must mean fabrics where Request
+> > > Redirect and Completion Redirect are not set the same way?
+> > 
+> > Yes, in some of our systems, deviceA to deviceB is going through
+> > different route than deviceB to deviceA.
 > 
-> On a Lenovo Yoga Slim 7x (X1E80100) this allows the link to reach L1.2
-> and reduces idle power by about 70 mW.
+> It is a little more subtle, I think practical systems try very hard to
+> avoid that since many host bridges do not like seeing only half of an
+> exchange.
 > 
-> Signed-off-by: Anthony Ruhier <aruhier@mailbox.org>
-> ---
->  drivers/pci/quirks.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
+> What we end up with is Relaxed Ordering and Strict Ordering take
+> different flows in the fabric.
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 1aa87a3ef9ed..374c505981a0 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3795,6 +3795,20 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_QCOM, 0x1103, quirk_no_bus_reset); /* WCN
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_QCOM, 0x1107, quirk_no_bus_reset); /* WCN7850 */
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_QCOM, 0x0308, quirk_no_bus_reset); /* SDX62/SDX65 */
->  
-> +/*
-> + * The WCN7850 firmware reports an LTR just below the LTR_L1.2_THRESHOLD it
-> + * sees at boot, preventing it to ever enter L1.2.
-> + * With LTR disabled the link idles in L1.2, similar to what Windows does.
-> + */
-> +static void quirk_wcn7850_disable_ltr(struct pci_dev *pdev)
-> +{
-> +	pcie_capability_clear_word(pdev, PCI_EXP_DEVCTL2,
-> +				   PCI_EXP_DEVCTL2_LTR_EN);
+> > > But I asked about ordering because it sounds like this patch expects
+> > > to encounter asymmetric fabrics where Request Redirect and Completion
+> > > Redirect may not be set the same way, and the spec implies that
+> > > asymmetry may result in ordering violations.
+> > 
+> > My guess is that the hardware and system architects have ensured this
+> > doesn't happen. At least, I haven't received any complaints about this
+> > series during internal testing.
+> 
+> Yes, the ACS combination is selected to avoid ordering issues
 
-I don't think we can guarantee that the PCI core ASPM support will
-leave LTR disabled.  I don't see anything there that looks like "leave
-PCI_EXP_DEVCTL2_LTR_EN unchanged."
+Does a user have any way to know whether the configuration is safe?
 
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_QCOM, 0x1107, quirk_wcn7850_disable_ltr);
-> +DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_QCOM, 0x1107,
-> +			       quirk_wcn7850_disable_ltr);
-> +
->  /*
->   * Root port on some Cavium CN8xxx chips do not successfully complete a bus
->   * reset when used with certain child devices.  After the reset, config
-> 
-> ---
-> base-commit: 7be4bc52fd9e0e55dc9a2e0232b89427d2c4b614
-> change-id: 20261023-quick-wcn7850-a792968cc25f
-> 
-> Best regards,
-> --  
-> Anthony Ruhier <aruhier@mailbox.org>
-> 
+I'm wondering whether users might use "pci=config_acs=" to configure
+ACS so things appear to work as they prefer but may not provide the
+ordering guarantees drivers depend on.
+
+If that's a possibility, do we have any notes in dmesg that we are
+depending on fabric behavior that the OS can't discover and verify?
+
+Bjorn
