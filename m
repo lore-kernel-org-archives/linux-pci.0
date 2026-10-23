@@ -1,56 +1,81 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.156.1
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792729167;
-	b=FMrUGms8CaBjBDgC0T9usw/7X0VjNCGzwg4iQdXBxwp2pH7v272ofAz75cYn8kEb4kr0
-	 aPPmJ2P1Z3RNyehDEWcf8QXAFVrENLmzCM6uMKzd1oar3B2LfsKk4uQEe9Q5a3arc8lzx
-	 JkttiAVwtQvAXebqb/NfChm1lhfwWC/oFsDpvfTMjXnsaeggj3kjdW1+Cme5Ow2NBzGDe
-	 Lzx+b/UFG3UQ/lA5TZ/PWBVHnM81r9t6FwTx3ljOPlR2N0rQXNC/WSeDu0xFWn2fs9tGA
-	 VD9zK8CuW+WNdqtoLQ43MYyBHuKwjfBKkpYFO6jwXjOp2INQINCO4XQCABW4y6OzNww==
+	t=1792737015;
+	b=K+Mv919t0ImasAglwA7gduH0ScXY+PHzeFiJOeDn1SCNyvfvUJM2c680ER64NlruNvtJ
+	 quW5Lqy8HrvPXbs5Nh2/9zVUgCfnuUYUoGziZRziIygxBLab0C5/xBT79htxd0nkSg6Ed
+	 FOWc9h3vft7rAeloOapZAi1XSmkbIV5bk1vJ3IFX8RiikN0XzrUeac+KBubdoMvucBTdJ
+	 tymG8Q6uQg2/Z9OGe4rkrzqagIALHRtbLZQFE4Cu2/MHnQS7tEE0m4oEa3qtPotSF0rFI
+	 z/dIu4V+K81S53QCWE0W6V4Hasxo1kkQqoBwG7/QlSVFbP4hVUsB4X4pPVO6e64xYzQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792729167;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=uurudZQl3IKgvmPD3uPMt6mIZNNHMAowzYIwlH77pkY=;
-	b=YyNG91pptIFIeGro9rqOnLs0dnrB+nvqsYg6+RHtYgffrh3VeS03runqo5DqPu177CVK
-	 B/sdQGbt0s5p7HLDqNHzDAdkyJxYLHRG936AJQJQMmfmViM0rRrm+hKbUZpbc46Qb4KeU
-	 umwOd9gMoia9I2ONUKyWu25OTr3bUTD7hHBNBBoihZrM7S6q3c/ZJ6mLukEZCCe74El3h
-	 AyndBmOJBHtqq2K3illgURbmNIUsG4OskdTxTgRcmseZzpqxmJo4e5TiVu5BQZyp1md+k
-	 B7UScyAm+bzoXMADNBjbR5A7HMx1OSOxSXNi3jOtaYcsJRU7T0dzy4arKkQUMAp4uOQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792737015;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
+	 Received:Received:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-TM-AS-GCONF:
+	 X-Proofpoint-Spam-Info:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-GUID:X-Authority-Analysis:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
+	bh=7lw0H2LbzbhjiWgEPqMCL4TOhF9iPd7aDQ7ovzInLvE=;
+	b=GljPQz/Ten38VdXE/PhGgZykdEtrxF02Bp3KhoTu4mA8GaFma0T+We8EwaMSpT5tcqxl
+	 6BRGX6S8t9dnBVIc+O+aNx8979oeNDjJ7RWqMBbkl20rG/U9mUJu/tpwyF9H/gNt+m1wR
+	 GlWXEhZy8WoC0hVltgumnSZefmJxQiVttpjTYC4nxUNpwHrFTMfEhPYeQNQRXyiAJe5P9
+	 Qxx4Mjp93RCKsHdmMPFOCBd5LohzHyf690dH2Vmgc58uxGmSpvhhE4qkIrMXZO64Uj8au
+	 Em1KfpYrXZD0uyb5DUjWZNarnQA88Rubw7A6roWzymLQBiB5enShsNdFfvk5KlsWplw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=f2EtR30M;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=linux.ibm.com;
+	spf=pass smtp.mailfrom=linux.ibm.com;
+	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=N3EK8n56;
+	arc=none smtp.remote-ip=148.163.156.1
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98ED9606A31A
-	for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2026 04:19:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40E44606A31B
+	for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2026 06:30:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 40E44606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=f2EtR30M
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E8971F01825;
-	Fri, 23 Oct 2026 04:19:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792729167;
-	bh=uurudZQl3IKgvmPD3uPMt6mIZNNHMAowzYIwlH77pkY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=f2EtR30MaAsWoKz2+XSxt33EEV6TwmydkDnGgIhZIhsuh5lXLjM1Du9N2GJg3Qwn0
-	 tbRCtRjcRQ9wxQXrs60L/QfzTWVM0/vmT5LrYkgHT9ufaNivHKslzJW9/cAP8tu/8A
-	 OHC5rBovFLucDsop5ZJdlzv0P0pnqy1sjbNs4xuz91w4P4Knnf4x6UEPmg0ilUKqPU
-	 3dHCMjn84W9TmH0W0iQWGTIaF2zX4/oXHfpFSWy6043nXHDfwDogG0X0RrMoMmWYLj
-	 FbJCw4KZdcbA2mpojXE4dg6tueKKJE7oM8b/M1qrmHRyELCVX/pA7V9yoDE0uT1bq3
-	 z5+MmIlZM2TAw==
-Message-ID: <sashiko-outbox-182274@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: Disable ACPI wakeup on MSI MS-1592 and MS-1594
- dGPU root port
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Victor Carreras" <vicajilau@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <179272791966.20251.3697951431087014523@gmail.com>
-References: <179272791966.20251.3697951431087014523@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 23 Oct 2026 04:19:26 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=N3EK8n56
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69N1EHmQ1491335;
+	Fri, 23 Oct 2026 06:30:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=7lw0H2
+	LbzbhjiWgEPqMCL4TOhF9iPd7aDQ7ovzInLvE=; b=N3EK8n56efyEOfTLB3TQkh
+	4vbK4qtDmaok9+QVHruAVq5K2467NmBlFQKsSweRapYUBDy5A5WOtRF09ZiRDdLB
+	KK13PpfkbCJ0yeuQ/lhPRKPVnGhDZtx9JY1yZ+x5sbFH/8Mvb61gnosb9Y2+vZ+8
+	ZBwjfQYgfmVrc/gyfODHUdUfhh1jkgrw7C0vA1iNgOGDY0ToTyaC/tUMmq4oZexg
+	xRdFL1ySzbhgl2ozH2ut0d48C0sGbDUZ4emscOP+5yKJkwsmgXW8j7RKjXDTDbyk
+	bxhu5w4Nsb0DcgQV/A2yDcsa0lyvTfZS9atB72BRkI9crtGCDlDq8rLxo4P4W/yQ
+	==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hdw5akj2g-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Fri, 23 Oct 2026 06:30:11 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 69N6H01U1410598;
+	Fri, 23 Oct 2026 06:30:10 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4hfgck48db-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 23 Oct 2026 06:30:10 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 69N6U5KK31195436
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 23 Oct 2026 06:30:06 GMT
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id E35C52004D;
+	Fri, 23 Oct 2026 06:30:05 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 0102620040;
+	Fri, 23 Oct 2026 06:30:05 +0000 (GMT)
+Received: from [9.123.14.142] (unknown [9.123.14.142])
+	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Fri, 23 Oct 2026 06:30:04 +0000 (GMT)
+Message-ID: <7c4eb75e-2e11-485e-8438-eef24201c567@linux.ibm.com>
+Date: Fri, 23 Oct 2026 12:00:04 +0530
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,125 +84,83 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] MAINTAINERS: Update EEH maintainer details
+To: Mahesh Salgaonkar <mahesh@linux.ibm.com>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Cc: Madhavan Srinivasan <maddy@linux.ibm.com>,
+        linux-pci <linux-pci@vger.kernel.org>
+References: <20261022101342.2962384-1-mahesh@linux.ibm.com>
+Content-Language: en-US
+From: Sourabh Jain <sourabhjain@linux.ibm.com>
+In-Reply-To: <20261022101342.2962384-1-mahesh@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIzMDAyNCBTYWx0ZWRfX8cCCYzOVS82R
+ ikVDunJSeGxMg/IDAH1RYP9cRlpv6SOlEHmj04zqlvqmqg4qqgsD99pRsm8dItz3+49peC4SFpq
+ Dq1xELWprjyOQ7OAWSkzphkbGWzi9DM=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIzMDAyNCBTYWx0ZWRfX3PpE9oU8MPV/
+ Rm6MXnqn76G5GZXbt9L+oF2F6FGooPbnXsWYuqCzu9tc2FhARmt68JQ8pR6+plG2cEZUuqlETI2
+ S84Dz/Vy43uuv8iFDCCsaL0zgRIllx37uVUc0LzPQHCX4FS4p9KdTPl6ruIhl4yh472iRgurj9O
+ JwE+L0cdKdZ+XvkyBO+wlmeDjULy2Ntuv+Iw2Wb3i072gKG9LCesvRDYLkySCbs5sRrRj1jttD8
+ sU6QWf1rfuZJ85pf2EudZ51+d/m9K9+fWG62m2qPqvrvpqTD/dUdgijTRCTvYcmpGDnHqcyXDMr
+ Yf6SNGd+UjNnCLjJjJqhmBBTh4Pn+qgHEb9PTcBhxmuFnoQ+EehALyw+KjzVrkwThgTeBlLAyvD
+ FyWLQIEj7Ct5jD4IhMuSdfja3w54C6A424ixpfOOwW2Y27nT8Ipc6FSg4KpHhV0RDrpUo+i/rSq
+ Vm8bcPJWsAEdpa8vKLw==
+X-Proofpoint-GUID: otMcKrtXBoG6j6s_8lt1njHJY2BnwiFT
+X-Authority-Analysis: v=2.4 cv=JIKuIMKb c=1 sm=1 tr=0 ts=6adafef3 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
+ a=pGLkceISAAAA:8 a=voM4FWlXAAAA:8 a=CjOHaDgk-Ss2aPD01hIA:9 a=QEXdDO2ut3YA:10
+ a=IC2XNlieTeVoXbcui8wp:22
+X-Proofpoint-ORIG-GUID: otMcKrtXBoG6j6s_8lt1njHJY2BnwiFT
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-23_01,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 malwarescore=0 lowpriorityscore=0 adultscore=0
+ priorityscore=1501 spamscore=0 phishscore=0 bulkscore=0 clxscore=1011
+ impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
+ definitions=main-2610230024
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] PCI: unbalanced ACPI power dependent cleanup in quirk_msi_peg0_no_=
-wakeup()
---
 
-commit f7da2ed74b979227b2829513aae8ba6e3fc051b4
-Author: Victor Carreras <vicajilau@gmail.com>
 
-PCI: Disable ACPI wakeup on MSI MS-1592 and MS-1594 dGPU root port
+On 22/10/26 15:43, Mahesh Salgaonkar wrote:
+> I no longer have the bandwidth to maintain EEH. Sourabh Jain has
+> graciously agreed to take over as the new maintainer.
+>
+> - Add Sourabh Jain as EEH maintainer
+> - Remove myself from the EEH maintainer role
 
-This patch adds a PCI final fixup quirk for MSI MS-1592 and MS-1594 boards =
-to
-disable ACPI wakeup on the dGPU PCIe root port (0000:00:06.0), preventing
-firmware from switching the touchpad's GPIO interrupt pin into ACPI GPE mode
-during D3cold transitions.
+Thanks for the trust. I will do my best to maintain and support EEH 
+going forward.
 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 7572b358b50fc..385c9d6db19e0 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3969,6 +3969,56 @@ static void quirk_apple_poweroff_thunderbolt(struc=
-t pci_dev *dev)
->  DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL,
->  			       PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
->  			       quirk_apple_poweroff_thunderbolt);
-> +
-[ ... ]
-> +static void quirk_msi_peg0_no_wakeup(struct pci_dev *dev)
-> +{
-> +	struct acpi_device *adev =3D ACPI_COMPANION(&dev->dev);
-> +
-> +	if (!adev || pci_dev_id(dev) !=3D PCI_DEVID(0, PCI_DEVFN(6, 0)))
-> +		return;
-> +
-> +	if (!dmi_check_system(msi_peg0_no_wakeup_dmi_table))
-> +		return;
-> +
-> +	pci_info(dev, FW_BUG "Disabling ACPI wakeup to avoid touchpad GPIO (GPP=
-_A20) takeover in D3cold\n");
-> +	device_wakeup_disable(&dev->dev);
-> +	device_set_wakeup_capable(&dev->dev, false);
-> +	adev->wakeup.flags.valid =3D 0;
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x464d, quirk_msi_peg0_no_w=
-akeup);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0xa74d, quirk_msi_peg0_no_w=
-akeup);
+Acked-by: Sourabh Jain <sourabhjain@linux.ibm.com>
 
-[Severity: High]
-Does clearing adev->wakeup.flags.valid in a DECLARE_PCI_FIXUP_FINAL quirk
-without removing the ACPI power resource dependent leave a dangling pointer
-on resource->dependents if the PCI device is later removed?
+>
+> Thank you Sourabh for stepping up and ensuring continued support for
+> EEH.
+>
+> Signed-off-by: Mahesh Salgaonkar <mahesh@linux.ibm.com>
+> ---
+>   MAINTAINERS | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 0e9fe9c2a39b..e7bc0bb7353d 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -21092,7 +21092,7 @@ F:	drivers/pci/endpoint/
+>   F:	tools/testing/selftests/pci_endpoint/
+>   
+>   PCI ENHANCED ERROR HANDLING (EEH) FOR POWERPC
+> -M:	Mahesh J Salgaonkar <mahesh@linux.ibm.com>
+> +M:	Sourabh Jain <sourabhjain@linux.ibm.com>
+>   R:	Oliver O'Halloran <oohall@gmail.com>
+>   L:	linuxppc-dev@lists.ozlabs.org
+>   S:	Supported
 
-During device enumeration, pci_device_add() -> device_add() ->
-acpi_device_notify() -> pci_acpi_setup() runs before pci_fixup_final quirks
-are applied:
-
-drivers/pci/pci-acpi.c:pci_acpi_setup() {
-	...
-	if (!adev->wakeup.flags.valid)
-		return;
-
-	device_set_wakeup_capable(dev, true);
-	if (pci_dev->bridge_d3)
-		device_wakeup_enable(dev);
-
-	acpi_pci_wakeup(pci_dev, false);
-	acpi_device_power_add_dependent(adev, dev);
-	...
-}
-
-Because adev->wakeup.flags.valid is still set when pci_acpi_setup() runs,
-acpi_device_power_add_dependent() links a struct acpi_power_dependent_device
-entry holding an unreferenced dep->dev =3D &dev->dev pointer onto the D0 po=
-wer
-resource's dependents list (here, \_SB.PC00.PEG0.PXP).
-
-When quirk_msi_peg0_no_wakeup() subsequently clears adev->wakeup.flags.vali=
-d,
-any later removal of the root port (for example via sysfs remove ->
-pci_stop_and_remove_bus_device() -> pci_destroy_dev() -> device_del() ->
-acpi_device_notify_remove() -> pci_acpi_cleanup()) will skip removing that
-dependent entry:
-
-drivers/pci/pci-acpi.c:pci_acpi_cleanup() {
-	struct acpi_device *adev =3D ACPI_COMPANION(dev);
-	struct pci_dev *pci_dev =3D to_pci_dev(dev);
-
-	if (adev->wakeup.flags.valid) {
-		acpi_device_power_remove_dependent(adev, dev);
-		if (pci_dev->bridge_d3)
-			device_wakeup_disable(dev);
-
-		device_set_wakeup_capable(dev, false);
-	}
-}
-
-Once struct pci_dev is freed, if the power resource is turned on again with
-another dependent present (such as during a PCI bus rescan),
-__acpi_power_on() iterates resource->dependents and passes the freed
-dep->dev pointer to dev_dbg() and pm_request_resume().
-
-In addition, clearing adev->wakeup.flags.valid causes
-acpi_free_power_resources_lists() to skip freeing adev->wakeup.resources on
-ACPI device teardown, and causes pci_acpi_setup() on a subsequent bus rescan
-to return early before calling acpi_dev_power_up_children_with_adr(adev).
-
-Since pci_acpi_setup() and pm_runtime_put() have already run by the time
-final quirks execute, and runtime/system suspend paths check
-device_can_wakeup(&dev->dev) (in pci_Full_Power_On / pci_target_state /
-pci_finish_runtime_suspend / pci_prepare_to_sleep) before invoking
-acpi_pci_wakeup(), is setting device_wakeup_disable(&dev->dev) and
-device_set_wakeup_capable(&dev->dev, false) sufficient on its own without
-clearing adev->wakeup.flags.valid, or should
-acpi_device_power_remove_dependent(adev, &dev->dev) be called if
-adev->wakeup.flags.valid is cleared?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/179272791966.20251.=
-3697951431087014523@gmail.com?part=3D1
