@@ -1,68 +1,62 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792780038;
-	b=T73JsWBBworZsJUmYYedeFAs0sglLzveWJx3oqnAThWqk6+psa7dlzjba/tuJXotKtMB
-	 0DJIGX6r/D3T6J6GcElTVxAZag7fG3Py7VO8gMDJGcViv/k32uzy+CdrM4RosiN4FBO/C
-	 TseWRN9vpLp5KSjhNRrzZOCwpxG2ohnnm7D8Tdte6jx/Ai+VJSWehw/x+Kch/6th49lK+
-	 H+obtyKD6RkiNGeJHxZOyLUGDzgak1jJ+LdJiFNeR4snKTHiS2B/oYtd9LN+zA8z5HwUP
-	 /fBJbPIn4E0wv2HymhdajjK90CzkZ61nXaG9FYqyQVBpXjfph6c09sIqO+0FTGUyuOw==
+	t=1792780957;
+	b=vXxbYYraeeZEoSYXrvUaEALgWzBt7M8voB8U9Ig4ecX+c9oeD6OS7ga9Ujj843UUbSdp
+	 sLbIpO3b5MUJg6KU5tA5YZNJiCQ+MKKeOVI4tIFncZyEKMWJ1evSedeZVCmhBrKz+T7YU
+	 7Rv4/Sm8an5it9a2D6aUOIQ5KhYZBpaluTiRlHRXCKDojezzHlImd7SBmNOGCAv6NXUbz
+	 Dn8K9XvFjGNizaLlhmMmPZ6BSAPO5thE5A04tUFF92pu73KNR15Truj6qhgJHY/pPnYYe
+	 jVaT6hzn73s4pj8e/K7/Wv3r2GfM0FXh1WQM7Jz/Kzr8Bh8a7q6AU6AuGOGXmMp91MQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792780038;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792780957;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=OMMk0FY0QXXjJrMUkrwply/6bMqx0VFwmW8asWdCFJQ=;
-	b=hu+CmCRu417F/A+MgHYm/53hG9mFg2MTiyN9qsU847u3UArwcNv5y5mGPN+oTICQ1CRi
-	 W5kuQvO+pgA/1stP8SUXkYPULiKhkpC/BL9EeoNSRMtBtrs9nSaJChvL/ZVoQV/Yjo0Fz
-	 UVztMh/SK7ui5q9JQr2qEZ1iaFvp1bLkS1HHMDSPFkHpBdCmQwOWA/YPRlA057fTsTRlg
-	 q+5NaXQLuAXLxaVPjyk5cVWcQTpJCigG3hMlarM6293X4W7hI0uKdwkIJme7Rv2yU4VcO
-	 uYpybp1ZmQaH3Y0qG24LbcbVTZo1uQlfotrLJRdWsm2TtyOl4RnaHdK8oHpbHeEk09Q==
+	bh=NNM5yQ01YePyoWldFqWq1JW4Jzta8vvLgFBnOX/HqDU=;
+	b=KkjQVsFGCdxi+2buN0W/BJz0t0IpEhFLi7k+YpRNr7oXAAaDcFjzJksbVFYVdjo+8hwg
+	 J8hqjR1WRk/tgw9w8H68qfOAqdr48SlFw00uBH0sqd+Wu1VdeTCviYXepB6y4AAAwyCEp
+	 ArJMX40I24SPwiMWbN6zkdV0porQt13avdyEl/sQuGMK3kR4gmWrWs22BG3+ZvY8ReLrC
+	 CIwRmrwErcWn8C4EruLV/uCBEBWbITQ9o716qEB5/Sx6Wzh0zFwdql2QpvI+ZM9jZ4rcH
+	 i7aptnz/JyMTKqFLgvyfoqBIMSU34beu6c466R1hBS4oVITKl1EhhRftsEGBp0bj3Cg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=G9n9PYHm;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="QOm50d/S";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B12E7606A31A;
-	Fri, 23 Oct 2026 18:27:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C480606A31A;
+	Fri, 23 Oct 2026 18:42:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=G9n9PYHm
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 259B01F01825;
-	Fri, 23 Oct 2026 18:27:17 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QOm50d/S
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FDD41F01825;
+	Fri, 23 Oct 2026 18:42:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792780037;
-	bh=OMMk0FY0QXXjJrMUkrwply/6bMqx0VFwmW8asWdCFJQ=;
+	s=k20260515; t=1792780956;
+	bh=NNM5yQ01YePyoWldFqWq1JW4Jzta8vvLgFBnOX/HqDU=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=G9n9PYHmDL6cgVGQNgXtNMCyVym07kIyyjM2nGMF3bsN0888XQNZ4UlZQ5VXpvrwH
-	 jSs376aScTw45oN1ocyIVZKX/rCW4ZO5vpA7KQKBkWB39rIEmJYmQcsPSwwAT2QsdX
-	 QlpB3wcDy7WH2w8//1hJ4V+fstquvb8vfORjJrtI6GR3ls85ONhfDpEaffIfXk8Jwi
-	 oNQ5WeXNpwNKMCS4ISCn2rDsxme+3kpE+h1SicZs+5Cs95krMsAUUNZZKkmPNCAOPi
-	 KCuzxbEt2ogrM7EFOAVrSYEN/4rsnKGSM8ZaL9iYZ86rJ+FagondpXmymu1fiSUUbk
-	 RXgCab24TbNrw==
-Date: Fri, 23 Oct 2026 13:27:15 -0500
+	b=QOm50d/SekKZDk9PZzzdmMiGdo9+EvMc1kTKhKGCpVimfDSJqEY36jZdKP7id95/U
+	 jScPyyUqy/i3WUy2mMzcp4Cs0wRL4Px/qmnP8M5HeRjYAe6/J9105zSLiX366sNvK1
+	 wSOLNqN87VANC5ZQPzL3JNPB6S6JSE7wQAurc41tc1bD9IGvXkCcxcHqN4NjKjRPtb
+	 i7L+H/9mrrBVKyqrYqAd69xyKBev591tphdWoQ+LDvnL+g10dhLRLLONLxNzWFUkr6
+	 ZwQjLLPQk+aTNVkNJiMwm282NxbUJeMDCmXlEfYNxxmnx3yrM4FDQHFLa1hBRg9WNw
+	 G93UmNmqn6/Eg==
+Date: Fri, 23 Oct 2026 13:42:35 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
-	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: Re: [PATCH v9 02/18] PCI/P2PDMA: Derive routing from directional ACS
- controls
-Message-ID: <20261023182715.GA2798722@bhelgaas>
+To: Pranjal Shrivastava <praan@google.com>
+Cc: iommu@lists.linux.dev, Will Deacon <will@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>, Robin Murphy <robin.murphy@arm.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Mostafa Saleh <smostafa@google.com>,
+	Nicolin Chen <nicolinc@nvidia.com>,
+	Daniel Mentz <danielmentz@google.com>,
+	Ashish Mhetre <amhetre@nvidia.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Thomas Gleixner <tglx@kernel.org>, Radu Rendec <radu@rendec.net>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, rafael@kernel.org,
+	Danilo Krummrich <dakr@kernel.org>, driver-core@lists.linux.dev
+Subject: Re: [PATCH v11 07/16] genirq/msi: Cache MSI message in
+ irq_chip_write_msi_msg()
+Message-ID: <20261023184235.GA2800344@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -74,59 +68,70 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261023155914.GK3977851@ziepe.ca>
+In-Reply-To: <20260929034510.2023173-8-praan@google.com>
 
-On Fri, Oct 23, 2026 at 12:59:14PM -0300, Jason Gunthorpe wrote:
-> On Fri, Oct 09, 2026 at 08:43:01PM +0300, Leon Romanovsky wrote:
-> > On Wed, Oct 07, 2026 at 03:40:45PM -0500, Bjorn Helgaas wrote:
-> > > On Wed, Oct 07, 2026 at 09:32:27AM +0300, Leon Romanovsky wrote:
-> > > > On Tue, Oct 06, 2026 at 03:49:47PM -0500, Bjorn Helgaas wrote:
-> > > > > On Thu, Oct 01, 2026 at 02:55:10PM +0300, Leon Romanovsky wrote:
-> > > > > > From: Leon Romanovsky <leonro@nvidia.com>
-> > > > > > 
-> > > > > > pci_bridge_has_acs_redir() treats Request and Completion Redirect as
-> > > > > > interchangeable. On asymmetric fabrics, a control for only the reverse TLP
-> > > > > > direction can unnecessarily force P2PDMA through the host bridge.
-> > > > > 
-> > > > > Does "the reverse TLP direction" refer to Completions?
-> > > > 
-> > > > In general, the P2P code treats TLPs flowing from device A to device B the
-> > > > same as TLPs flowing from device B to device A.
-> > > > 
-> > > > However, in the context of this commit message, yes: completions flow in the
-> > > > opposite direction from the device's perspective.
-> > > 
-> > > And I guess asymmetric fabrics must mean fabrics where Request
-> > > Redirect and Completion Redirect are not set the same way?
-> > 
-> > Yes, in some of our systems, deviceA to deviceB is going through
-> > different route than deviceB to deviceA.
+On Tue, Sep 29, 2026 at 03:45:01AM +0000, Pranjal Shrivastava wrote:
+> Currently, PCI MSI caches the composed MSI message into the MSI
+> descriptor inside __pci_write_msi_msg(), whereas platform MSI and other
+> device MSI domains do not cache the message in the core, forcing
+> individual drivers to manually copy the message into desc->msg if they
+> need to restore it across power transitions.
 > 
-> It is a little more subtle, I think practical systems try very hard to
-> avoid that since many host bridges do not like seeing only half of an
-> exchange.
+> Cache desc->msg in irq_chip_write_msi_msg() before invoking the chip
+> callback so all hierarchical MSI domains automatically record the
+> latest message. Document why the redundant assignment in
+> __pci_write_msi_msg() must remain for direct callers outside the
+> irq_chip hierarchy.
 > 
-> What we end up with is Relaxed Ordering and Strict Ordering take
-> different flows in the fabric.
+> Suggested-by: Thomas Gleixner <tglx@kernel.org>
+> Signed-off-by: Pranjal Shrivastava <praan@google.com>
+
+With the fix testing Thomas proposed:
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> ---
+>  drivers/pci/msi/msi.c | 6 ++++++
+>  kernel/irq/msi.c      | 9 +++++++++
+>  2 files changed, 15 insertions(+)
 > 
-> > > But I asked about ordering because it sounds like this patch expects
-> > > to encounter asymmetric fabrics where Request Redirect and Completion
-> > > Redirect may not be set the same way, and the spec implies that
-> > > asymmetry may result in ordering violations.
-> > 
-> > My guess is that the hardware and system architects have ensured this
-> > doesn't happen. At least, I haven't received any complaints about this
-> > series during internal testing.
+> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+> index 80a9db417dc8..f7bedc31d486 100644
+> --- a/drivers/pci/msi/msi.c
+> +++ b/drivers/pci/msi/msi.c
+> @@ -257,6 +257,12 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+>  		pci_write_msg_msi(dev, entry, msg);
+>  	}
+>  
+> +	/*
+> +	 * Although irq_chip_write_msi_msg() already caches the message,
+> +	 * keep the assignment here for callers that invoke
+> +	 * __pci_write_msi_msg() or pci_write_msi_msg() directly outside
+> +	 * the irq_chip hierarchy.
+> +	 */
+>  	entry->msg = *msg;
+>  
+>  	if (entry->write_msi_msg)
+> diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+> index fb5f372215bf..df460a574d80 100644
+> --- a/kernel/irq/msi.c
+> +++ b/kernel/irq/msi.c
+> @@ -634,6 +634,15 @@ static unsigned int msi_domain_get_hwsize(struct device *dev, unsigned int domid
+>  static inline void irq_chip_write_msi_msg(struct irq_data *data,
+>  					  struct msi_msg *msg)
+>  {
+> +	struct msi_desc *desc = irq_data_get_msi_desc(data);
+> +
+> +	/*
+> +	 * PCI Multi-MSI shares a single descriptor across all vectors and
+> +	 * the device stores only the base message. Cache the message of the
+> +	 * first interrupt only, so that sub-vectors cannot overwrite it.
+> +	 */
+> +	if (desc->irq == data->irq)
+> +		desc->msg = *msg;
+>  	data->chip->irq_write_msi_msg(data, msg);
+>  }
+>  
+> -- 
+> 2.56.0.rc1.315.gc6ed9934b7-goog
 > 
-> Yes, the ACS combination is selected to avoid ordering issues
-
-Does a user have any way to know whether the configuration is safe?
-
-I'm wondering whether users might use "pci=config_acs=" to configure
-ACS so things appear to work as they prefer but may not provide the
-ordering guarantees drivers depend on.
-
-If that's a possibility, do we have any notes in dmesg that we are
-depending on fabric behavior that the OS can't discover and verify?
-
-Bjorn
