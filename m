@@ -1,114 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.183.30.70
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792792912;
-	b=rFGuo9ftEeUy4lBdh1i615sfaPYXkN0g+c1GOuFKmngv6qrsm2DWIdiZFOzX2mOHC07w
-	 8XfDclRQkPzuJIR50QmJhmTGnENBeULyxsQcLT5mB8Bkq2I/NKlncpNd8lyfELOPx5nNY
-	 l53l457LQadXqusRJyj6Z1CUg5FohGaXIZt6a4SEL8dkpDGNoBtngVfy/0SaP5J6gV3WI
-	 XIa/myIfF55z8n862e013dfv9hV7sO8kFISCoo7OLTeJZ1Mlz6sB9ZrjliCvI0Swfhj58
-	 ejafD28kyx2iOcUPSiAyZfYvtFhO2J0J/v71rsyhdVjBGZ6I+UBPVtADyOBL9EW4ViQ==
+	t=1792795563;
+	b=X9M9Cj5+jBueBLR/CZsktNsK+8J/Exf4tz4pG94+jV2/OjxAfQjbP3LheOzp9PBXAwbD
+	 wv53E+ehtZeB2u4KPX1IWFNmtVPzCpF0UN01xWsqVHboJOzT5ixxlwHK1HlX06ncy/uIm
+	 Ohpw7PBrgQq8OcCa1D2UBgvBtSrfOBdliTxhVtUHpWA0mHPhuDGDCZbe29cXfGK7gM6Sy
+	 pzkXaGViSrEbH8JTkLq2Gu7CFnooZimZ3flXkitqWJAdT4knXbvyYMHA5yasfwJDujK6k
+	 g1rfTJqt2ARwGqfL7u24QHSGEn8L2LmgU9izaAdox1XO4i4tSJFP27HeU4TjOSuaueA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792792912;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=7bRloCtYRc/1CN8Q7Hs9aasGSanwrF1DkhN4CIO4rT0=;
-	b=oj9XyoRJoWuEwxhYiIsnpDD6DyWvS4ymer3JpoaSGLKq2/md2kYHGnbJqzhpCJqMYSe7
-	 EZSvv4D5Bbq1hNNoEmCmU9Zkn5GbsVh76v1Nnv2PE0+2acbPpYpqCdhGia1PGhv0MuMim
-	 yAhsdkYGjaIVVrnwNRxZLvJXPHCfqO8qBAHRGr09JjkICQz42kNXu1ZOM3Q12OQjxIGV5
-	 NltkUfqUBAu/A/iLt8cZ2C7SNBgfdccet8a8SGEb3dEj8BATizeZlmiDRfkcgGHs9ryOR
-	 x2nkk+oxL2ABLq59F/Ocsbse8u28Qsy0/qyj6Imex5NbfhBkMmo6lfPkecJI01DxZIA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792795563;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
+	 Received:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:Content-Type:MIME-Version:
+	 Content-Transfer-Encoding:X-Proofpoint-Reinject:
+	 X-Sony-BusinessRelay-GUID:X-Proofpoint-Virus-Version:
+	 X-Sony-EdgeRelay-GUID:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Info:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:X-Authority-Analysis:
+	 X-Sony-Outbound-GUID:X-Proofpoint-Virus-Version;
+	bh=ocdg/JbjnDcItI5QAROwLtgPo6FsVy1gaj6z/eWhuwk=;
+	b=xRCDDzcEIGAFlfCWUmUWIqfcgDBf/63t/Y9PxnA/cn0YzP/wVhPTwYVDzLzVqFCB67+K
+	 WmwOdEDqL3PzWWL9/05PbAmkH7XAwRBTb3vQ+vrftwkOYR0FM3ryyJPqphe0KksW2ClqL
+	 8AxKMgz26YvGjbe7b9JdVn3Je8yUtghjuroThlFFzGfFgUL0Q5yBMMvpz3C/2fnv2V7I9
+	 Z/SBSjfXiJfElsQF+8it6J9xWah3TVqLBxwKUToWULrG8qmisbK8buivW6N9gXhHhsJsh
+	 pZYgkw3AA+GQh53aJ9L1kG5ZHTKOS/E+rFkfiuulbyzxkmPVM/wI9WDHXzw8Q1r0cUw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=ziepe.ca;
-	spf=pass smtp.mailfrom=ziepe.ca;
-	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=H2Nk80SC;
-	arc=none smtp.remote-ip=209.85.160.172
-Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=sony.com;
+	spf=pass smtp.mailfrom=sony.com;
+	dkim=pass header.d=sony.com header.i=@sony.com header.a=rsa-sha256 header.s=p1 header.b=AsC9gyxV;
+	arc=none smtp.remote-ip=185.183.30.70
+Received: from mx08-001d1705.pphosted.com (mx08-001d1705.pphosted.com [185.183.30.70])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFFF0606A31A
-	for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2026 22:01:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DFFF0606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E369606A31E
+	for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2026 22:46:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8E369606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sony.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sony.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=H2Nk80SC
-Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-53667180af3so14305411cf.2
-        for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2026 15:01:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1792792911; x=1793397711; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=7bRloCtYRc/1CN8Q7Hs9aasGSanwrF1DkhN4CIO4rT0=;
-        b=H2Nk80SC0IE0suPURnYr9e6hZbC4LBCNbP2UbticIu/vM5Zx8lZxl1WF9oIVeOGweJ
-         W19x63RIXk3jCkb/8AZ9w0/6q6ZaY29bsZqX8VJh3ACjKIAi6gixXOH39qqPhJV0UGZD
-         h9hrX7AQMBlOV6X6RgQiCpuKPLs0LqoIe0SH9hdfWiIr6eNHUZFFbT0I/kCisS92xxMY
-         Ucn1ZlEpvxoCWlvTmp2e0dWk4YFXYfROdABgbIgP0F4SF8jcDI2aMT5TzMY19oaj7RhQ
-         ktu/3+o+78VzxnRBhNe+IMPeqMjRjTTMOSsOLuA26L6BAOJT0HaC4+T4MRB1PHDXmGMo
-         Ignw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792792911; x=1793397711;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=7bRloCtYRc/1CN8Q7Hs9aasGSanwrF1DkhN4CIO4rT0=;
-        b=xfI6XpSZKEVZfJzhYcEn5NvCRf0QEzyjqQOD1koTVCiyCirvhAv/8qKaFoYI0QNFiX
-         QD23mwu44YEQIlCF3XjbMfPsfKqT5zUG8VAJ+36EOz5scXXg3rLW8bc3b5eTUx3sT9YB
-         uEjmCj1VTl10QWDiqS7Gw0Nv7xaDD+zZle/07QtK4Eb657TjmPyB3kAOXlU28OTgf7We
-         r6HP54NnQkqbAYFtnD/Rut3FhOaIWISc1FVhj/DacNoYIBBUUZeMN1IrQCIsXfCgIjA/
-         QFJSWILYy8l1UP1f2/+cxyytULrBvZ4l1nimFp2SSe1iWkuEOCsYh/vdP4FKOU1NzxRC
-         DDhQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzZlQup2LyUq/VPpTOnJe3C8Ja+PpUzk+/4pXHhkhxWeha5p+Ejhk+B0Flq+cZ0fwiNCIXADT2t4tM=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJuS0uvu2ADEkp7M7qr6dVdzlZkyqX3p9YXYSIo1yQc20AYeOE3
-	5tS68WpLAkVRPWWPkPC4Ug0FLkx5iNRu/K4HUfkcTqZCSQoxi8rSQ6bEJW7HDnMq3dA=
-X-Gm-Gg: AYBFou2yePg17SVueqJLXKwctUuCFdnTVTASlTby2lwwuji4+kYr//APM5Wmf3jCGtj
-	BVrc4roc/E+ke4peKklj5xKVZB7igFYYfwS66SU2x07POKeKUVlBfkaI5cWoLOZgryV4Q9RrWJE
-	jeixMtt1pTUDjQbaLI4A+/JwyKvybMtwv20OGELAhtvUEVBlyU/QrhVojYrGL/5GYjS/yV7f7WW
-	9vEQztm9+kAdkKLtU+cHtTEleUioit01j5Hw8rfGwi7F0SgcGO8fhDgzLedMIavYZxaAcoNFeGl
-	B2z+F0gAVlW/rDt4d/wUaSchIrdtKwIpRNUta6+Q7Zstn0OEZSjQ9TB1t47xCrWLE58xyiNzw0u
-	oOT9zCI9Xmp8NQn7doD7hPBwkSPIlzudz+QgqCmpYkiGQAA5oVw1FM8bpqisuE5VNGpooQgCUyT
-	8QrnWousymsH/bPdNCYvOk/WDTKW4Vpl+I1+EHkyvOjN8RZDRccTtc+1nSJBjpDiaP5mM2mn+NB
-	5MkR6M5xZ8tImUBd4I/GK++zJLjpm9y+zHF3SXGuxnLMqtniaqlN5tuuOZAFPmEy+uAB8giYUnh
-	1e6mC0PPoEFLuTkNtXHGbUmNpAtyh5OKfRAA4g==
-X-Received: by 2002:a05:620a:4441:b0:93e:c12c:f137 with SMTP id af79cd13be357-940ef9c87e0mr54142985a.82.1792792910841;
-        Fri, 23 Oct 2026 15:01:50 -0700 (PDT)
-Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-940f078a762sm18520585a.30.2026.10.23.15.01.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Oct 2026 15:01:49 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xKNKe-0000000H7Vk-3jIV;
-	Fri, 23 Oct 2026 19:01:48 -0300
-Date: Fri, 23 Oct 2026 19:01:48 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
-	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: Re: [PATCH v9 02/18] PCI/P2PDMA: Derive routing from directional ACS
- controls
-Message-ID: <20261023220148.GN3977851@ziepe.ca>
-References: <20261023190036.GL3977851@ziepe.ca>
- <20261023201531.GA2805244@bhelgaas>
+	dkim=pass (2048-bit key, unprotected) header.d=sony.com header.i=@sony.com header.a=rsa-sha256 header.s=p1 header.b=AsC9gyxV
+Received: from pps.filterd (m0209318.ppops.net [127.0.0.1])
+	by mx08-001d1705.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69NMj4Wh1420297;
+	Fri, 23 Oct 2026 22:45:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sony.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=p1; bh=ocdg/Jb
+	jnDcItI5QAROwLtgPo6FsVy1gaj6z/eWhuwk=; b=AsC9gyxVeP9593CY1uUXAGh
+	jzX0sFbzBd5hkTLMSxx8xxPsT6YiVQTuxMHDbFv4rQitbI1SDoOIMLfum+V2/v3g
+	GH8KHP+gi+PM3jtnY1RU5YRhSYwCQ40QWYUKWfyuWWdll4uj3nH2kIr6qsFr2/3z
+	rOCOhTVX+4rCHCuH1NDfwj36+RjEZOcmVELRD2ajFxeNJe1+j0ilGAguKsHE2X/C
+	LWwhErSYh3zMjh5s5638U6ilhgScLIqDuf0aVFxsHCBoUyeKXzOnFFHOnjWkvdMJ
+	gHpPDD/xiT7CJWxh/OrxehEz9oUN6svz7oJqEVfphEOEt1USjwKiyX2XBvdm9mQ=
+	=
+Received: from sgppsea01v.sg.gdce.sony.com.sg ([121.100.43.225])
+	by mx08-001d1705.pphosted.com (PPS) with ESMTPS id 4hdw4yw9xe-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
+	Fri, 23 Oct 2026 22:45:25 +0000 (GMT)
+Received: from pps.filterd (SGPPSEA01v.sg.gdce.sony.com.sg [127.0.0.1])
+	by SGPPSEA01v.sg.gdce.sony.com.sg (8.18.1.11/8.18.1.11) with ESMTP id 69NLuUhM1536605;
+	Fri, 23 Oct 2026 22:45:22 GMT
+Received: from usculxsnt12v.am.sony.com ([146.215.230.186])
+	by SGPPSEA01v.sg.gdce.sony.com.sg (PPS) with ESMTPS id 4hc4qag6nu-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Fri, 23 Oct 2026 22:45:22 +0000 (GMT)
+Received: from pps.filterd (USCULXSNT12v.am.sony.com [127.0.0.1])
+	by USCULXSNT12v.am.sony.com (8.18.1.11/8.18.1.11) with ESMTP id 69NM71nB2512675;
+	Fri, 23 Oct 2026 22:45:20 GMT
+Received: from us842f57abef3e ([10.10.10.214])
+	by USCULXSNT12v.am.sony.com (PPS) with ESMTPS id 4hdcefxsme-1
+	(version=TLSv1.3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256 verify=NOT);
+	Fri, 23 Oct 2026 22:45:20 +0000 (GMT)
+From: Maciej Grochowski <Maciej.Grochowski@sony.com>
+To: Ilpo =?utf-8?q?J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: Nikolas Joshua Britton <nbritton@exabit.io>,
+        Geramy Loveless <gloveless@jqluv.com>, Eric Auger <eauger@redhat.com>,
+        Alexey Fomenko <alexey.fomenko@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Mesih Kilinc <Mesih.Kilinc@sony.com>
+Subject: Re: [PATCH v4 0/7] PCI: Resource placement algorithm fixe
+Date: Fri, 23 Oct 2026 15:45:18 -0700
+Message-ID: <20261023224518.80653-1-Maciej.Grochowski@sony.com>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20261021124956.4250-1-ilpo.jarvinen@linux.intel.com>
+References: <20261021124956.4250-1-ilpo.jarvinen@linux.intel.com>
+Content-Type: text/plain; charset="utf-8"
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -118,44 +96,71 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261023201531.GA2805244@bhelgaas>
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Sony-BusinessRelay-GUID: x5IRshrKW55zRpe9EBP9gsxXITBkjcnL
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-23_06,2026-10-21_02,2025-10-01_01
+X-Sony-EdgeRelay-GUID: xoWvK6l_KKea92Uqu8eIwyrCc8Fm82QX
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-23_06,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIzMDA4OSBTYWx0ZWRfX0vQJbk2C5yKP
+ +dcKfNT1ZyAeQMiElcaCPdjoOhEd3zCDaOrjshVg9F2gKOEoiJDgL6dbUqS3lV+9S6mw9ItfDln
+ zyQJa2QsVTadY28r3CX/gFjkowu4wtpSaqkxAVmY0BOBYzrL+s53
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIzMDA4OSBTYWx0ZWRfXzHCYqttqXIa0
+ lG8s44JZTA5AssJoVkbwx2I7BKfiO4cwDzQi05QqtaThlYk82x/Ef2KE2VwKbVcxL7beXTOB29k
+ cGcuMyukouJsbvL7kjsd7ro1o4PMIz3GxU5vZpkG1gQPSRiNlQ+SzuOLrSughEIXEelC/po+2D8
+ cLQbv7dx9T5Ii7LAtJ2H3rEly5Y8Lh/RB/GJysO7ShnyaN1iN7kBBQBg7LkmavAhFlIDVw4GTdJ
+ 5HTRATDAItZqjzYoxrsHShiLm0PCUj8SJinOIWHb7CJu8VzCISHAr2B6z1kISFIuFsj1OI+Id+F
+ BR73L5QLbOU4YqGNszVU10YY8dFMbKtyqqELQLy2hzOhSfH3nqewmXtk+mxDIPYv59gsf4xazqY
+ KJ7uM6o1kgHg7U9momb0aTO05KDmOmV9uBg2mt2kY/ByNVEAYmHaJkFQ0kCxOke+eyPBTzEUKzL
+ aGTN7lD172BSdqvIw3w==
+X-Proofpoint-GUID: kovLTJBzzqaGXWqF__swo3aWy3TtdeI2
+X-Proofpoint-ORIG-GUID: kovLTJBzzqaGXWqF__swo3aWy3TtdeI2
+X-Authority-Analysis: v=2.4 cv=XK+l2ghE c=1 sm=1 tr=0 ts=6adbe386 cx=c_pps
+ a=XNW8778QP6juiAqijDMnrw==:117 a=XNW8778QP6juiAqijDMnrw==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=KAb5x4SsHD3PzxGk7EmX:22 a=XGr2FpfLDd2dUKU_94WB:22 a=HM1u4s5SZPqGU_3Sr3gA:9
+ a=QEXdDO2ut3YA:10
+X-Sony-Outbound-GUID: kovLTJBzzqaGXWqF__swo3aWy3TtdeI2
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-23_06,2026-10-21_02,2025-10-01_01
 
-On Fri, Oct 23, 2026 at 03:15:31PM -0500, Bjorn Helgaas wrote:
-> On Fri, Oct 23, 2026 at 04:00:36PM -0300, Jason Gunthorpe wrote:
-> > On Fri, Oct 23, 2026 at 01:27:15PM -0500, Bjorn Helgaas wrote:
-> > 
-> > > > Yes, the ACS combination is selected to avoid ordering issues
-> > > 
-> > > Does a user have any way to know whether the configuration is safe?
-> > 
-> > No, unfortunately in PCIe so much is really difficult when it comes to
-> > deployment :(
-> > 
-> > > I'm wondering whether users might use "pci=config_acs=" to configure
-> > > ACS so things appear to work as they prefer but may not provide the
-> > > ordering guarantees drivers depend on.
-> > 
-> > I imagine that could happen, but on most practical systems the root
-> > complex will blow up if you do asymmetric routing so there is an early
-> > indication.
-> > 
-> > I know this because I've help debug such configurations at
-> > customers. Some servers helpfully MCE if you do this. Lovely.
-> 
-> I'm still confused about this because earlier in this thread, I
-> thought Leon said you do asymmetric routing:
-> 
->   Bjorn> And I guess asymmetric fabrics must mean fabrics where
->   Bjorn> Request Redirect and Completion Redirect are not set the same
->   Bjorn> way?
-> 
->   Leon> Yes, in some of our systems, deviceA to deviceB is going
->   Leon> through different route than deviceB to deviceA.
+Hi Ilpo,
 
-Yeah, that's what I clarifed, it isn't quite accurate. The asymetric
-routing is between Strict Order and Relaxed Order TLPs, not
-request/response.
+Thank you for the v4 patches, and sorry for the delayed feedback on v2.
+Mesih (CC'd) tested your full v2 seven-patch series on our
+Switchtec-based platform, with positive results.
 
-Jason
+The test used a backport to our Linux 6.18.20 platform tree, with
+additional allocator prerequisites included and our local
+max() -> ALIGN() workaround reverted. This is therefore feedback
+on the backported series rather than a test on its upstream base.
+
+The kernel boots successfully, all eight endpoints have
+BAR0, BAR2 and BAR4 assigned, and switchtec detects all nine
+switches. No BAR assignment failures were observed in the boot log.
+
+One difference from my original report is that BAR4 is enabled in
+this test; the earlier report described a configuration with BAR4
+suppressed. The total BAR allocation across the eight endpoints
+is now 288 MiB.
+
+We also compared /proc/iomem against the earlier kernel carrying
+our ALIGN() workaround. The enclosing prefetchable bridge window
+is 387 MiB with the backported v2 series, versus 384 MiB with the
+workaround, while the total endpoint BAR allocation is unchanged.
+So this test shows successful assignment, but no address-space
+reduction for this configuration. I do not yet have the detailed
+placement traces needed to explain the 3 MiB difference.
+
+We will now also test v4 and report back. Could the changes since v2
+affect this window-size result, or is this amount of padding expected
+for this topology? Please let us know which logs or allocator traces
+would be most useful to collect with the v4 test.
+
+Thanks,
+Maciej
