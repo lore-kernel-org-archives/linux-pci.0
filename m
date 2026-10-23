@@ -1,115 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.173
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792771157;
-	b=OQDvdYhpeajf6MQ9guzrxiAyPwwkxf/X/4o6YmI3TzMdiZBOK5S5UQzG1PY7J242l+As
-	 9sD9C6s3DJ24eEIKm8q7k8ddjA7GqDhbBY53onITWWP+pX3uHgjn8/FoidukhGsMZl9ex
-	 MaX80mYT9TOOX4OHpAxyEnwnJ1vbRvDxE/tCZgNCUbHuyirXCZRQEMSSPT7gjL708Jzz5
-	 io8uoHgOMHufuIk4TqfmAcjaMtKwnXyYWVTW8f0KmrGMwuxNqWqwsU2+BBrTP0s2YEQlj
-	 dCibSnNTp3hviduAAIXrpKS4DQB7xQme4PVll3vGzx2oYYkFHHRGX/QQ/v1NMiYzejg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792771157;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=qfip9nPMyQ6NKHGpF7rQvQFL04olz8IZl5yoz+w1jok=;
-	b=kuTDqNnx0fMDrBc8sjPZxFiufm/btR2TuCLGKmUt3Dq9G9mqUfCiVjKrnzplZBetnKH8
-	 76ECQSgtk5jQxK0+dMcvzN7+aGbHgUlsZ8EBWGgXtBQtoKxOtuREOZ08S6OraKp2iLpD+
-	 GHQfe9HVfalawc1H8Df2ezEyWxLzA24nIhOLf5CigiZK/MT83yBoIK0ovcFnntzq2P+Ux
-	 DlhMtX0EZUublqur9xoWet+j09XbDMwsPaHchYv3fhYboZt6Z2b8kjJOUsU0Bf7+dKLwj
-	 iOIAeo2PKE1lMf2qKw8eapOL/M2LUYQoz9sqZe5mJ5ZmvXigmwILGPxCCdKILDrv03g==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=ziepe.ca;
-	spf=pass smtp.mailfrom=ziepe.ca;
-	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=pOV9sna9;
-	arc=none smtp.remote-ip=209.85.160.173
-Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792777191;
+	b=pC+tK5QkUTGcWNLOCnSWLwxxvh3vgqlYETZ7crPxz94BwrFR6Ct4CkmkM6ObeZB2sO6F
+	 K4DGVhfVarkh4AGKygXMd956Ce5af2mXm9ZMNLaZBI6XlOi7V9Ri/ZzCvwpQZjuOYiirV
+	 SrrMPOe4xcJfgpyNbA6lfDU0sitRYG0pNa4jIEij1bDWeueqtwoJ6JqlrzaEbkKoEA4TP
+	 qWRz+5XbT7Oy3C6SJRU+bx6tvUIXMz5QJh+FG6DRi3prQFdw6ru3bf9TY/mc4FTSLetOx
+	 H6tHEjYplprRBZKZ32O1VFdVwEnjbvXAGgj4zZwxZ+weQM7J1mcW1pjPDCY5/oc+jfg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792777191;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=waB3ovVdlrOaRg5kwbOJtqiQowW1jAyrixqhCwCH4EM=;
+	b=XdBwRaFV5Rli3r39VZwDrAEWLhYEmn+djBNcW7puQwQoAYsKNrf+uRS9pbZFj/4bC2sB
+	 Zg/L8sAyvbp4/KMPtrjyA64rWbvYvUv4OU9KccN2t0jQtwrEwtneE4XpOs098vbhiTVoa
+	 3nD+svOrWPDqLMwZijVr99ufCLJWT5kT2VaiUlGQrbky3ILXtDG/OZmVH9uKYsKED/UlC
+	 vIQM6zoYNbL8gvbM8nbNwQyQn//TVHg9x3NZNpdAcSzeDBVIYntzCJEpegp4iYVgzM4qn
+	 CQ0I+ycISWPHRQtaq5SwG3IJTuTCcMnjiVx9x62Kh2gn6WvxyVX1GqzWSgPBqwcIntQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AXejTeFP;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75E93606A31B;
+	Fri, 23 Oct 2026 17:39:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AXejTeFP
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1792777191;
+	b=KYAgd2nZRfLkXZCyEm3RprqHCgCudBBAFlbBtsCcDRQ3CjvhqJsVohCAMxPJcpg8Y8xN
+	 tjxb2GLnJke5H0etawm8+K6eWnp7amCqBfRmm5GnyPBKBjqnLCgn1oq5Y+90dnZyywSEu
+	 lhIwmIfZHzayC0Wacd/QGmuaamcjtvMfS6iO62q8VEwHbXkR7cSLTSlSPjtoQU+dS34tS
+	 s0ly7VoyjU8CEXeaWkCK8+i97lzG0cqU0SabkGL40Pade7zZKWxVaZkt3zow12EDhpPV1
+	 LNQVQw0cOeyBXwvQfTuLsBpE43Fff68qHG4sOfAHiq+PXDY+BjabZQs1SlvhaQU454Q==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1792777191;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=waB3ovVdlrOaRg5kwbOJtqiQowW1jAyrixqhCwCH4EM=;
+	b=SsVJ+akbXzgOeTGxAHviosfcQQpr0LdjHbEtB+LU+tivksiyfh4bfN6SdE5DITVnCq9d
+	 vwLaRZ4lSPR4w/eMtA/1998hH/n8GjByrlQqj3/gW/fzdPmRMfGfMsPRQT8ikyrJxDSKn
+	 zf4JBGemZHTwFrI+DIxZNp0i6RU87EfzELJERVi005bFVuhV011POZdO2vtoJPUf/nCmO
+	 u5mrZd7pkoRPEsm9UUWs8EtR3BVSjnnTU1kAHw+9v9z649zgB4fUs1WS8o6TdeX4OBPqM
+	 SQDI/Xzpvb+/HXRxTV2wSMH64q+D48X17GfrEK1nQpivRMj73mDU9ZywNjfKCS+oNQw==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AAC5606A31A
-	for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2026 15:59:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6AAC5606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=pOV9sna9
-Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-53644b28706so13933751cf.3
-        for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2026 08:59:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1792771155; x=1793375955; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=qfip9nPMyQ6NKHGpF7rQvQFL04olz8IZl5yoz+w1jok=;
-        b=pOV9sna9TZaCqywtdDI8h+mSGdu3kY7TvcG6DQSaz/wzZ4RWxvzzkBqqhU+wauIVz0
-         y7gqDg4Pv98+G/EoG0dUf5Bpk4Cl0e0UZ7LUISdotu9Tsw4EOlJNa9g21e1C+Zf9KMZH
-         gYHQI9+v1MeGOmU6kjTdceiCLbZqOiGD/vZZ2gPbf7Lfpg+R46vh7tpjBVmQ5GGunmYC
-         VtuXQ6ZEps4zStuYQLp7cEl/vePQpZ5aYQvoiujxoHTHp/fCRUKvmNk27XK19PLiHYCI
-         JYluupC4j0EMlwXjgXHC4TBCzVFNeQ1eRj7qeCWp0ln6/w6oJwD1gZkKqq5ddT+khVyu
-         ejmA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792771155; x=1793375955;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=qfip9nPMyQ6NKHGpF7rQvQFL04olz8IZl5yoz+w1jok=;
-        b=EKWjxt7A8lJmGsIdtqG7rqDrghNDdqpyLVCcRogdOo5SN4R6yKcP0UnlGFlg+06qI0
-         7RXOoG794GAX6EHGnYPxyXY3wkSxMAgb0IcAL9VSpkcJDQJw7pF7XvgzKtRUAYQ7faAd
-         0GFGsEhJxTsNicPLmHl0Xirdcq7XP+LFXaRrW5mFoJ4e10ffkDIcdGUk2dwyqmsiWnjR
-         DFzdMcB19t+TCFe+d6JeBenmMFlh7D4FIWheWBDXgqLc5FsL7iROBbnUu9CtwZkb1DB1
-         g5V/Yp5zJrv7ieCRlidpxEdE2z+LD05iXHvRB/J1H7a3nFdzOH9P0nsvFtajgU6RIPgJ
-         WHBg==
-X-Forwarded-Encrypted: i=1; AKwUvBxbCo8o/telC/iD+JWh0vUY1HQdqmvmi7FbREzziMQzxwAahbf67TvHEe6vpsQIxQTdwkZpIMyeB9o=@vger.kernel.org
-X-Gm-Message-State: AFq9FYITQhhtR0uRMlLC8izgonBQHDVoGcp9SQ3b6Y1kAcWWPPelJlrg
-	ysqv7UjeQakvu6NMVyTAZiFMRJ1bpS6dDvHCexV0sOKM4Ta+y7OVoZjFb5rqE4UDNTk=
-X-Gm-Gg: AYBFou0/QD6qu4IXfkvuV8Y07jyxZB9L0w2VUg7kBxcFK5QyWgixputVN9rLdCcXdpH
-	tuAHrZGWRE+EYi/PeU9pJ8HivBtRpanSi404CSIhE3msN6GE/Xo/jPJN5csu2uW7pzsGT0QcSkL
-	r9nc5+qA8nIUTYee60ePvv8Sd/oLirQqWBSU+38myE2Ihpn/jBi6pdImyP1Q9NuFK0rJAWWGpce
-	PWXuUhbXGabGvQOoidGJPN2AViLhxl605dIfNaWgBOydbIAgpVBuaybtOlXUn7hW0Hi0lhew1IA
-	97bibJOonQeZgh+V8RE5fYsbyp4ORzC+9eS0L8j91dLcWqfj/wPScxp0f9Vd8ob+nN93PRY5GPW
-	kgtc7Li6LWCc+dmGD3/gmPzUHJM1sAa8Xwgy4togQuOT1ntB4khxv2kjuQAigd9WJ5yEXEC+sHQ
-	VTUbG1fbnzvYwMVE3+GDY3REkRxx/QamGlDZ0wfBcrTkzMi4u8VxXXs5ZwBFTViT0+JDKFsS6Sn
-	/mgnj3UDFGFVrHQ3PPXJIRjkbEL43apyrmNaqvB9aISSXfnl2iHxS5sUa7ozhPhbi/L5eQTmQ5k
-	wjbVLBp9uL9k3H8J5Q37VTY2Wr/SZ2zsqCOf4g==
-X-Received: by 2002:a05:622a:a0e:b0:535:859c:b6ff with SMTP id d75a77b69052e-536c24e2452mr39136051cf.20.1792771155235;
-        Fri, 23 Oct 2026 08:59:15 -0700 (PDT)
-Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-53836c78f67sm656181cf.27.2026.10.23.08.59.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Oct 2026 08:59:14 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xKHfm-0000000Go19-0EMi;
-	Fri, 23 Oct 2026 12:59:14 -0300
-Date: Fri, 23 Oct 2026 12:59:14 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
-	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: Re: [PATCH v9 02/18] PCI/P2PDMA: Derive routing from directional ACS
- controls
-Message-ID: <20261023155914.GK3977851@ziepe.ca>
-References: <20261007063227.GC7822@unreal>
- <20261007204045.GA783967@bhelgaas>
- <20261009174301.GC11438@unreal>
+	by smtp.kernel.org (Postfix) with ESMTPS id 8E33C1F01825;
+	Fri, 23 Oct 2026 17:39:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792777191;
+	bh=waB3ovVdlrOaRg5kwbOJtqiQowW1jAyrixqhCwCH4EM=;
+	h=From:Date:Subject:To:Cc:Reply-To;
+	b=AXejTeFPl2g76hjcjwYj23tvvyPiO2O9fBFqIp0gibOAKU3RTySfEdImOH2NSaLTB
+	 v8WFO75gZAkCnXocqPuOOGzye3Tq7ejCrodL8fRfD039dKiMobU4snQwLW2FoHV6Uy
+	 g7g6glNTejVPw8vTK+WvuAKeIthwOqINFFXA4gHUt3cCGo3dH4wmqQbgOdb+MmrwiS
+	 U/ptzDjsmG8ZWm61OkPsXm+yqzFFquvLT4u8yABzqlU1RxspiInevzYju4mVsPjHg8
+	 eWbYj2WG3AkCnD6XSKwROyREjI+mmWpqCisrIXL4HsXdTCbd78pJyjwZ/BYscPFcsc
+	 r4644y498UWWQ==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id E6F0944568;
+	Fri, 23 Oct 2026 17:39:48 +0000 (UTC)
+From: Anthony Ruhier via B4 Relay <devnull+aruhier.mailbox.org@kernel.org>
+Date: Fri, 23 Oct 2026 19:39:35 +0200
+Subject: [PATCH] PCI: Disable LTR on Qualcomm WCN7850 [17cb:1107] to allow
+ ASPM L1.2
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -119,51 +83,85 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261009174301.GC11438@unreal>
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261023-quick-wcn7850-v1-1-9a139b9b2c8e@mailbox.org>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIzNDAyNj3cLSzORs3fLkPHMLUwPdRHNLI0szi+RkI9M0JaCegqLUtMwKsHn
+ RsRB+cWlSVmpyCcgQpdpaAMlxQMFxAAAA
+X-Change-ID: 20261023-quick-wcn7850-a792968cc25f
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Anthony Ruhier <aruhier@mailbox.org>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2159;
+ i=aruhier@mailbox.org; s=2026; h=from:subject:message-id;
+ bh=qVemxmolshXeAK74vDQvvG7KPXw1hF5ybwiK/r2mOek=;
+ b=owGbwMvMwCV2okp4cvOBsLOMp9WSGLJuz37Cz7ZBaGX46ad/bsqxTZD6LcNw0ZBnqkJrwdacm
+ 1pPv7ct6JjIwiDGxWAppshywbLg8eNb0ZO762y6YOawMoEMkRZpYAACFga+3MS8UiMdIz1TbUM9
+ QyBDx4iBi1MApnpDKMP/xMmyzmsuPG+6cth1W+oN4UOPFToOlfhzH0tV85ppVFDLzshw57/Enfl
+ ZHiY5m8+oif48uOj39EBP86wX+2UXXYyvvi3JAQA=
+X-Developer-Key: i=aruhier@mailbox.org; a=openpgp;
+ fpr=F4A378DD8D494AE48EBA554CB00FBC7D08D231D9
+X-Endpoint-Received: by B4 Relay for aruhier@mailbox.org/2026 with
+ auth_id=1292
+X-Original-From: Anthony Ruhier <aruhier@mailbox.org>
+Reply-To: aruhier@mailbox.org
+Content-Transfer-Encoding: 7bit
 
-On Fri, Oct 09, 2026 at 08:43:01PM +0300, Leon Romanovsky wrote:
-> On Wed, Oct 07, 2026 at 03:40:45PM -0500, Bjorn Helgaas wrote:
-> > On Wed, Oct 07, 2026 at 09:32:27AM +0300, Leon Romanovsky wrote:
-> > > On Tue, Oct 06, 2026 at 03:49:47PM -0500, Bjorn Helgaas wrote:
-> > > > On Thu, Oct 01, 2026 at 02:55:10PM +0300, Leon Romanovsky wrote:
-> > > > > From: Leon Romanovsky <leonro@nvidia.com>
-> > > > > 
-> > > > > pci_bridge_has_acs_redir() treats Request and Completion Redirect as
-> > > > > interchangeable. On asymmetric fabrics, a control for only the reverse TLP
-> > > > > direction can unnecessarily force P2PDMA through the host bridge.
-> > > > 
-> > > > Does "the reverse TLP direction" refer to Completions?
-> > > 
-> > > In general, the P2P code treats TLPs flowing from device A to device B the
-> > > same as TLPs flowing from device B to device A.
-> > > 
-> > > However, in the context of this commit message, yes: completions flow in the
-> > > opposite direction from the device's perspective.
-> > 
-> > And I guess asymmetric fabrics must mean fabrics where Request
-> > Redirect and Completion Redirect are not set the same way?
-> 
-> Yes, in some of our systems, deviceA to deviceB is going through
-> different route than deviceB to deviceA.
+From: Anthony Ruhier <aruhier@mailbox.org>
 
-It is a little more subtle, I think practical systems try very hard to
-avoid that since many host bridges do not like seeing only half of an
-exchange.
+The WCN7850 Wifi/BT card, found in several Snapdragon X laptops, never
+enters ASPM L1.2 when LTR is enabled. Its firmware reads the
+LTR_L1.2_THRESHOLD set at enumeration and reports an LTR value just
+below it, so the L1.2 entry condition is never met and the link stays in
+L1.1.
 
-What we end up with is Relaxed Ordering and Strict Ordering take
-different flows in the fabric.
+Windows does not set LTR Mechanism Enable for this device (verified by
+dumping the ACPI tables), and the link idles in L1.2 normally.
 
-> > But I asked about ordering because it sounds like this patch expects
-> > to encounter asymmetric fabrics where Request Redirect and Completion
-> > Redirect may not be set the same way, and the spec implies that
-> > asymmetry may result in ordering violations.
-> 
-> My guess is that the hardware and system architects have ensured this
-> doesn't happen. At least, I haven't received any complaints about this
-> series during internal testing.
+Replicate the same behavior: clear PCI_EXP_DEVCTL2_LTR_EN for WCN7850 at
+enumeration and again on resume, as the LTR state is restored there.
 
-Yes, the ACS combination is selected to avoid ordering issues
+On a Lenovo Yoga Slim 7x (X1E80100) this allows the link to reach L1.2
+and reduces idle power by about 70 mW.
 
-Jason
+Signed-off-by: Anthony Ruhier <aruhier@mailbox.org>
+---
+ drivers/pci/quirks.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 1aa87a3ef9ed..374c505981a0 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3795,6 +3795,20 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_QCOM, 0x1103, quirk_no_bus_reset); /* WCN
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_QCOM, 0x1107, quirk_no_bus_reset); /* WCN7850 */
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_QCOM, 0x0308, quirk_no_bus_reset); /* SDX62/SDX65 */
+ 
++/*
++ * The WCN7850 firmware reports an LTR just below the LTR_L1.2_THRESHOLD it
++ * sees at boot, preventing it to ever enter L1.2.
++ * With LTR disabled the link idles in L1.2, similar to what Windows does.
++ */
++static void quirk_wcn7850_disable_ltr(struct pci_dev *pdev)
++{
++	pcie_capability_clear_word(pdev, PCI_EXP_DEVCTL2,
++				   PCI_EXP_DEVCTL2_LTR_EN);
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_QCOM, 0x1107, quirk_wcn7850_disable_ltr);
++DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_QCOM, 0x1107,
++			       quirk_wcn7850_disable_ltr);
++
+ /*
+  * Root port on some Cavium CN8xxx chips do not successfully complete a bus
+  * reset when used with certain child devices.  After the reset, config
+
+---
+base-commit: 7be4bc52fd9e0e55dc9a2e0232b89427d2c4b614
+change-id: 20261023-quick-wcn7850-a792968cc25f
+
+Best regards,
+--  
+Anthony Ruhier <aruhier@mailbox.org>
+
+
