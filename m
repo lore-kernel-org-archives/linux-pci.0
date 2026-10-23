@@ -1,121 +1,115 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.61.60
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792770098;
-	b=M4z7HPNyOtOJaTySVMw9osWLdxxw0dXg5S3SoUtA3NceBDecBYYCF7Q0l34FTrP+90P9
-	 0F77GgJrBRrj+Hkn3oUlEnDbSixVJJVol9D0Nn/LTl/bnbAvq5sFC2fK/o4LsexcGxmyh
-	 vcCZvq0/XZAsgC71MA8QfCM9JC4Q47ivdKttOs0ooEMC0QUnPtCj0AeLXzV2ce4NK1sHo
-	 Ener7F29Wi9dBiSXKIxtfRDBYPA8kZB/uVswuHbuMf5lpzsL0yATWdw5V2po0mJ6VbUUN
-	 AM8EVk31lxhfKx2ExqhbaG6Gaj0EnrzJWNemSSZhKKdx2MA8sN69alppGRDEKnhzmqA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792770098;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:
-	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
-	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
-	 References:MIME-Version:Content-Transfer-Encoding:Content-Type:
-	 X-Originating-IP:X-ClientProxiedBy:X-EOPAttributedMessage:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-Id:
-	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=7YUWWAhjzO0AVAvCxR6WWaQ0hTCmKJ5+4AL11pcgXeA=;
-	b=y0J0qO4NVAq1/ne2i5yBpD1p7/bThVPX7rsZaqq1NoWj3IuLrJK5zs3yaY5Nzp3zqbkD
-	 ZnunpyfeYFt3LX+YkpUxVgd8+lA15ub18HQ++qqXLsC6XqQfan4KN755d0Y83VRt//IfX
-	 Or8c80T9OBmNm3NeQwC4Y1yMM1NfDgIprjodQH37ClTyueIr2uzv7WYyX5pgF1IyElK0y
-	 Yl1dG/kkKA00pnedxxFgdLinV5hPaM3LaR8Ru8xyTKNC6wmeZfec0eTZw4gjlThXRmYdK
-	 Squc06rFoTZU0hthfg62iPcLTRAsznqbIIF5GH9e0Mey/ODpG08mk+2ASw/yyGnt5gg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=LJcvuIT4;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.61.60
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010060.outbound.protection.outlook.com [52.101.61.60])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.173
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792771157;
+	b=OQDvdYhpeajf6MQ9guzrxiAyPwwkxf/X/4o6YmI3TzMdiZBOK5S5UQzG1PY7J242l+As
+	 9sD9C6s3DJ24eEIKm8q7k8ddjA7GqDhbBY53onITWWP+pX3uHgjn8/FoidukhGsMZl9ex
+	 MaX80mYT9TOOX4OHpAxyEnwnJ1vbRvDxE/tCZgNCUbHuyirXCZRQEMSSPT7gjL708Jzz5
+	 io8uoHgOMHufuIk4TqfmAcjaMtKwnXyYWVTW8f0KmrGMwuxNqWqwsU2+BBrTP0s2YEQlj
+	 dCibSnNTp3hviduAAIXrpKS4DQB7xQme4PVll3vGzx2oYYkFHHRGX/QQ/v1NMiYzejg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792771157;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=qfip9nPMyQ6NKHGpF7rQvQFL04olz8IZl5yoz+w1jok=;
+	b=kuTDqNnx0fMDrBc8sjPZxFiufm/btR2TuCLGKmUt3Dq9G9mqUfCiVjKrnzplZBetnKH8
+	 76ECQSgtk5jQxK0+dMcvzN7+aGbHgUlsZ8EBWGgXtBQtoKxOtuREOZ08S6OraKp2iLpD+
+	 GHQfe9HVfalawc1H8Df2ezEyWxLzA24nIhOLf5CigiZK/MT83yBoIK0ovcFnntzq2P+Ux
+	 DlhMtX0EZUublqur9xoWet+j09XbDMwsPaHchYv3fhYboZt6Z2b8kjJOUsU0Bf7+dKLwj
+	 iOIAeo2PKE1lMf2qKw8eapOL/M2LUYQoz9sqZe5mJ5ZmvXigmwILGPxCCdKILDrv03g==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=none header.from=ziepe.ca;
+	spf=pass smtp.mailfrom=ziepe.ca;
+	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=pOV9sna9;
+	arc=none smtp.remote-ip=209.85.160.173
+Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4501F606DB6E;
-	Fri, 23 Oct 2026 15:41:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4501F606DB6E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AAC5606A31A
+	for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2026 15:59:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6AAC5606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=LJcvuIT4
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=UyhUlvUmZ/zNubefmBVE3Oy21N8CKEmEhuwV7WXVmMjN22m8W2IGCeAyNRFe2K+RNOplw8+snsEg5svg9M+sX67q8MW5ePaQ4FE58fcARXJYhX1eNBW64YmqmyPj89c2pZC4TUBts3KZuXa5Q4a6BgW0T6VLeay46nzTwhADtWdA9vV8F6StCQZ2KplfWLkSAtQxcOAvxlDHwkobYU4/VD2rHgYC+4hXxiOWNe1Yof5/3/ik0peWF3q4Mb5pIuVWMLS/G8doTvOabBn1k7hrw2YaukDUNtEaBCgPwO+n/V8gPSc2eM40r6Rb+wbjZnDznmH4L/UvXtqH7ExOcVDlyQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7YUWWAhjzO0AVAvCxR6WWaQ0hTCmKJ5+4AL11pcgXeA=;
- b=sO9KmbskFBy4EZVOhlgS8GrFQ7dAmLbDx43B9y4yQOarDIZqWfp0Tv2NLhpR0kjnkGx8RqsOge7wlgPLZDTC6EDc5l/Y6simBhKl6mSPFvsjz+8jOtCZIP8QSot43Me39Ut0Hr1fvoVDclPWLSMwuGdCdkbTGJCeSQId+2QOwg082YmKtFBy5JJx7URKci3lRDUaDOBTwsVXX7W3E38WwOO6ANq5WzGAzUK5FfVLfDWCM3s12qNn9+PXFtLmZD1GTbGpqDpt18Tmu+zIqut44t39DxKnVlDpt5CG4WN3Y1bAPGU1ynQpThTleAcZD4tFEm2afl/vx5wUvMDzvOHl4w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7YUWWAhjzO0AVAvCxR6WWaQ0hTCmKJ5+4AL11pcgXeA=;
- b=LJcvuIT4zzdi6djv71CACk4tT2MOm6Z9bolkMbY2w+jfPsmU+y1Z44weRhy0lumeFwiSk6uKkln1GRqkngfR/1HxbwMxek/cTG0yfLaVssM4TC97aXj7UvIxEkxwrwduj+rvolFzfn9VYVGwZdZEbSlCsQvyB8tntuJttWqBvzpBLtu/ADvytlkj7JpZgSO7dEBIdlBNcNvAbQByYQAqYQvcYFcLG2a357Ya3R//RqAW1ghg+hv8JgtVVWmdxxl4Qg4e36TlBHsOIdHTv4p4/XyttX739Vvm8noOvcTYDDDIAOWVdzdhkhYBwsVWVsjJsF9NbC5A/K6Zbf7euLkW0w==
-Received: from DS7PR03CA0280.namprd03.prod.outlook.com (2603:10b6:5:3ad::15)
- by PH7PR12MB8016.namprd12.prod.outlook.com (2603:10b6:510:26b::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.19; Fri, 23 Oct
- 2026 15:41:05 +0000
-Received: from BL02EPF00029929.namprd02.prod.outlook.com
- (2603:10b6:5:3ad:cafe::8c) by DS7PR03CA0280.outlook.office365.com
- (2603:10b6:5:3ad::15) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.546.19 via Frontend Transport; Fri,
- 23 Oct 2026 15:41:04 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- BL02EPF00029929.mail.protection.outlook.com (10.167.249.54) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.569.4 via Frontend Transport; Fri, 23 Oct 2026 15:41:04 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Fri, 23 Oct
- 2026 08:40:33 -0700
-Received: from xinmengs-dev-vm-linux.nvidia.com (10.126.231.37) by
- rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Fri, 23 Oct 2026 08:40:32 -0700
-From: Simon Song <xinmengs@nvidia.com>
-To: <dakr@kernel.org>, <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
-	<rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
-	<linux-pci@vger.kernel.org>
-CC: <alex@shazbot.org>, <jgg@nvidia.com>, <yishaih@nvidia.com>,
-	<skolothumtho@nvidia.com>, <kevin.tian@intel.com>, <airlied@gmail.com>,
-	<simona@ffwll.ch>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
-	<boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
-	<lossin@kernel.org>, <a.hindborg@kernel.org>, <aliceryhl@google.com>,
-	<tmgross@umich.edu>, <jhubbard@nvidia.com>, <ecourtney@nvidia.com>,
-	<cjia@nvidia.com>, <smitra@nvidia.com>, <kjaju@nvidia.com>,
-	<alkumar@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
-	<kwankhede@nvidia.com>, <targupta@nvidia.com>,
-	<linux-kernel@vger.kernel.org>, <zhiwang@kernel.org>, <zhiw@nvidia.com>,
-	<boqun@kernel.org>, <daniel.almeida@collabora.com>, <tamird@kernel.org>,
-	<work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
-	<kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
-	<peter@colberg.org>, <xinmengs@nvidia.com>
-Subject: [PATCH v2 02/12] rust: pci: expose the VF index within its PF
-Date: Fri, 23 Oct 2026 08:39:57 -0700
-Message-ID: <20261023154009.2246627-3-xinmengs@nvidia.com>
-X-Mailer: git-send-email 2.43.7
-In-Reply-To: <20261023154009.2246627-1-xinmengs@nvidia.com>
-References: <20261023154009.2246627-1-xinmengs@nvidia.com>
+	dkim=pass (2048-bit key, unprotected) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=pOV9sna9
+Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-53644b28706so13933751cf.3
+        for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2026 08:59:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1792771155; x=1793375955; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=qfip9nPMyQ6NKHGpF7rQvQFL04olz8IZl5yoz+w1jok=;
+        b=pOV9sna9TZaCqywtdDI8h+mSGdu3kY7TvcG6DQSaz/wzZ4RWxvzzkBqqhU+wauIVz0
+         y7gqDg4Pv98+G/EoG0dUf5Bpk4Cl0e0UZ7LUISdotu9Tsw4EOlJNa9g21e1C+Zf9KMZH
+         gYHQI9+v1MeGOmU6kjTdceiCLbZqOiGD/vZZ2gPbf7Lfpg+R46vh7tpjBVmQ5GGunmYC
+         VtuXQ6ZEps4zStuYQLp7cEl/vePQpZ5aYQvoiujxoHTHp/fCRUKvmNk27XK19PLiHYCI
+         JYluupC4j0EMlwXjgXHC4TBCzVFNeQ1eRj7qeCWp0ln6/w6oJwD1gZkKqq5ddT+khVyu
+         ejmA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792771155; x=1793375955;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=qfip9nPMyQ6NKHGpF7rQvQFL04olz8IZl5yoz+w1jok=;
+        b=EKWjxt7A8lJmGsIdtqG7rqDrghNDdqpyLVCcRogdOo5SN4R6yKcP0UnlGFlg+06qI0
+         7RXOoG794GAX6EHGnYPxyXY3wkSxMAgb0IcAL9VSpkcJDQJw7pF7XvgzKtRUAYQ7faAd
+         0GFGsEhJxTsNicPLmHl0Xirdcq7XP+LFXaRrW5mFoJ4e10ffkDIcdGUk2dwyqmsiWnjR
+         DFzdMcB19t+TCFe+d6JeBenmMFlh7D4FIWheWBDXgqLc5FsL7iROBbnUu9CtwZkb1DB1
+         g5V/Yp5zJrv7ieCRlidpxEdE2z+LD05iXHvRB/J1H7a3nFdzOH9P0nsvFtajgU6RIPgJ
+         WHBg==
+X-Forwarded-Encrypted: i=1; AKwUvBxbCo8o/telC/iD+JWh0vUY1HQdqmvmi7FbREzziMQzxwAahbf67TvHEe6vpsQIxQTdwkZpIMyeB9o=@vger.kernel.org
+X-Gm-Message-State: AFq9FYITQhhtR0uRMlLC8izgonBQHDVoGcp9SQ3b6Y1kAcWWPPelJlrg
+	ysqv7UjeQakvu6NMVyTAZiFMRJ1bpS6dDvHCexV0sOKM4Ta+y7OVoZjFb5rqE4UDNTk=
+X-Gm-Gg: AYBFou0/QD6qu4IXfkvuV8Y07jyxZB9L0w2VUg7kBxcFK5QyWgixputVN9rLdCcXdpH
+	tuAHrZGWRE+EYi/PeU9pJ8HivBtRpanSi404CSIhE3msN6GE/Xo/jPJN5csu2uW7pzsGT0QcSkL
+	r9nc5+qA8nIUTYee60ePvv8Sd/oLirQqWBSU+38myE2Ihpn/jBi6pdImyP1Q9NuFK0rJAWWGpce
+	PWXuUhbXGabGvQOoidGJPN2AViLhxl605dIfNaWgBOydbIAgpVBuaybtOlXUn7hW0Hi0lhew1IA
+	97bibJOonQeZgh+V8RE5fYsbyp4ORzC+9eS0L8j91dLcWqfj/wPScxp0f9Vd8ob+nN93PRY5GPW
+	kgtc7Li6LWCc+dmGD3/gmPzUHJM1sAa8Xwgy4togQuOT1ntB4khxv2kjuQAigd9WJ5yEXEC+sHQ
+	VTUbG1fbnzvYwMVE3+GDY3REkRxx/QamGlDZ0wfBcrTkzMi4u8VxXXs5ZwBFTViT0+JDKFsS6Sn
+	/mgnj3UDFGFVrHQ3PPXJIRjkbEL43apyrmNaqvB9aISSXfnl2iHxS5sUa7ozhPhbi/L5eQTmQ5k
+	wjbVLBp9uL9k3H8J5Q37VTY2Wr/SZ2zsqCOf4g==
+X-Received: by 2002:a05:622a:a0e:b0:535:859c:b6ff with SMTP id d75a77b69052e-536c24e2452mr39136051cf.20.1792771155235;
+        Fri, 23 Oct 2026 08:59:15 -0700 (PDT)
+Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-53836c78f67sm656181cf.27.2026.10.23.08.59.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Oct 2026 08:59:14 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1xKHfm-0000000Go19-0EMi;
+	Fri, 23 Oct 2026 12:59:14 -0300
+Date: Fri, 23 Oct 2026 12:59:14 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
+	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
+	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>
+Subject: Re: [PATCH v9 02/18] PCI/P2PDMA: Derive routing from directional ACS
+ controls
+Message-ID: <20261023155914.GK3977851@ziepe.ca>
+References: <20261007063227.GC7822@unreal>
+ <20261007204045.GA783967@bhelgaas>
+ <20261009174301.GC11438@unreal>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -125,73 +119,51 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL02EPF00029929:EE_|PH7PR12MB8016:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0ffafc72-ea17-4adb-55c0-08df311c0c2b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|82310400026|23010399003|376014|7416014|1800799024|6133799003|18002099003|10067099003|22082099003|56012099006|11063799006|261022105027099003|261021121427099003|261009223027099003;
-X-Microsoft-Antispam-Message-Info:
-	A3rEypZK0LBYFKB7RUnEhGF5xPft6UE4CrEJMvPtzFT/+h4an7Jum2MAYC45ao+g9IRzk/wmX+10DzIxuov9uGbakaWuXkrn8d9FcilxUISKTz17CoyXDEMyrLRVt0xbwSIR3qMwBtfq18ewSmyDxq0f3S/+gFugVwvFKfjgsPD1inv0+9UdWzINO1Cwm1Y9LDVnqgGsb17DbM9QHyjIzH4fG54fdIL5cE+GtXP/vQeVlUli7H5OdJwIwuOb+QgFrWtD+LTCIy8sPqUqEShqWqWlunVx2yIUbGOgeR9o/ZWK7/UNCL/opW8A5ar2TWN7Nz8v+QHt8Z+R6nYH+9HIo83Rr8Z1AYdIj2iZ9XQMy/In6JtYDDSo2drbkA01Mmv5zGM2ZCTwEJhEx693GRlvmu++eWpoSwV0n7hxsV0uRaaiX55yvI3qXynPBoV8ERnWA3BlcTOLO5/QB8vZGbcDzJpyOkP374cskyrAcurPUdMcpf9x72x8WJFuN5bgi0HLy+rgoCzzo0u3dJWb/a03wHio/fH8Owp3/qWyYYlnJ0P+zWI8XTXuLw/4TtJgO2hQBvIxknVeuJQxQsJ9tON5PBnXYNSWNz9tNaibISithgPQqjU3EnqSiHLLv3eusNKG48o54L4q9p0DLXmpCVxPbwoJ6w4P3DK1fKRIL7LE4Jth4O3gYqiUPMMcu2/u+7BqThrHxZRk9Czq60Aq8wc+/g==
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(82310400026)(23010399003)(376014)(7416014)(1800799024)(6133799003)(18002099003)(10067099003)(22082099003)(56012099006)(11063799006)(261022105027099003)(261021121427099003)(261009223027099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	EyNX0hsoOAMDadMQLJFefPku969vWF/7xURJZW85PpOiPRdP1+zw4j0YgM6W5swFE0m2A+AS5mKmuKTTHW7bB31MESXfMxfxzUlOnz7dKhkNLMMfhKg+LIMog9D+ccbZIuJRu7WEmO1jO5SWf2pReNadd7dLC9+n++DY/GDQbGDIZVzO+llLDhogMMOXxE/yR8WL5O/KM6nJGETe5qc9lMMFj9PRkqcTh6DbHK+6Bmh5lc3oqLfQVEgvX0YJMJ1h1wgA0y035FQCrcmCKCWkRli9GZTmlrEkXllPgARHbXfkVyqIEZQ2Qgf2YQTqXOnwv5IYl6UAi+I9jB7E0aEnfY+ZTiqjoy0nkDZ0o1Ozpwa533z1w2wnamKwmGV/s7RwvkYDqFT9UQZoaWwr9MLHjPdE+QhKGPqxupFX4FBOZ64HCmM6FxxcdK8vhycxVxbZ
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Oct 2026 15:41:04.1232
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0ffafc72-ea17-4adb-55c0-08df311c0c2b
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	BL02EPF00029929.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB8016
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261009174301.GC11438@unreal>
 
-From: Danilo Krummrich <dakr@kernel.org>
+On Fri, Oct 09, 2026 at 08:43:01PM +0300, Leon Romanovsky wrote:
+> On Wed, Oct 07, 2026 at 03:40:45PM -0500, Bjorn Helgaas wrote:
+> > On Wed, Oct 07, 2026 at 09:32:27AM +0300, Leon Romanovsky wrote:
+> > > On Tue, Oct 06, 2026 at 03:49:47PM -0500, Bjorn Helgaas wrote:
+> > > > On Thu, Oct 01, 2026 at 02:55:10PM +0300, Leon Romanovsky wrote:
+> > > > > From: Leon Romanovsky <leonro@nvidia.com>
+> > > > > 
+> > > > > pci_bridge_has_acs_redir() treats Request and Completion Redirect as
+> > > > > interchangeable. On asymmetric fabrics, a control for only the reverse TLP
+> > > > > direction can unnecessarily force P2PDMA through the host bridge.
+> > > > 
+> > > > Does "the reverse TLP direction" refer to Completions?
+> > > 
+> > > In general, the P2P code treats TLPs flowing from device A to device B the
+> > > same as TLPs flowing from device B to device A.
+> > > 
+> > > However, in the context of this commit message, yes: completions flow in the
+> > > opposite direction from the device's perspective.
+> > 
+> > And I guess asymmetric fabrics must mean fabrics where Request
+> > Redirect and Completion Redirect are not set the same way?
+> 
+> Yes, in some of our systems, deviceA to deviceB is going through
+> different route than deviceB to deviceA.
 
-Nova identifies a vGPU instance by the VF's index within its PF. Expose
-pci_iov_vf_id() through Device::vf_id() so a Rust VF driver can obtain
-that index, with an error for devices that are not VFs.
+It is a little more subtle, I think practical systems try very hard to
+avoid that since many host bridges do not like seeing only half of an
+exchange.
 
-Restrict vf_id() to Device<device::Bound>
+What we end up with is Relaxed Ordering and Strict Ordering take
+different flows in the fabric.
 
-Suggested-by: Danilo Krummrich <dakr@kernel.org>
-Suggested-by: Zhi Wang <zhiw@nvidia.com>
-Signed-off-by: Danilo Krummrich <dakr@kernel.org>
-Signed-off-by: Zhi Wang <zhiw@nvidia.com>
-Signed-off-by: Simon Song <xinmengs@nvidia.com>
----
- rust/kernel/pci/iov.rs | 8 ++++++++
- 1 file changed, 8 insertions(+)
+> > But I asked about ordering because it sounds like this patch expects
+> > to encounter asymmetric fabrics where Request Redirect and Completion
+> > Redirect may not be set the same way, and the spec implies that
+> > asymmetry may result in ordering violations.
+> 
+> My guess is that the hardware and system architects have ensured this
+> doesn't happen. At least, I haven't received any complaints about this
+> series during internal testing.
 
-diff --git a/rust/kernel/pci/iov.rs b/rust/kernel/pci/iov.rs
-index 9d9bd3ac702..76b2e395ca3 100644
---- a/rust/kernel/pci/iov.rs
-+++ b/rust/kernel/pci/iov.rs
-@@ -329,6 +329,14 @@ unsafe impl<F: ForLt> Send for VfRegistration<'_, F> where for<'a> F::Of<'a>: Se
- unsafe impl<F: ForLt> Sync for VfRegistration<'_, F> where for<'a> F::Of<'a>: Send + Sync {}
- 
- impl Device<device::Bound> {
-+    /// Return the zero-based VF index within its PF, or an error for a non-VF device.
-+    pub fn vf_id(&self) -> Result<u32> {
-+        // SAFETY: `self.as_raw()` points to a live PCI device; the helper checks VF membership.
-+        let id = unsafe { bindings::pci_iov_vf_id(self.as_raw()) };
-+        to_result(id)?;
-+        Ok(id as u32)
-+    }
-+
-     /// Internal helper: reads the `vf_registration_data_rust` pointer from the
-     /// PF, checks the `TypeId`, and returns a pinned reference.
-     ///
--- 
-2.43.7
+Yes, the ACS combination is selected to avoid ordering issues
 
+Jason
