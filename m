@@ -1,114 +1,119 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.180
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792763419;
-	b=ZD90letnJ39kGUkoGmQh1O1CBlyFK2tAy0zG0wBTwPjezp8vNE3Sxdyx48VfLtmpknpi
-	 085WSCd23Jxir4zDinJ3moEnMgBOyllNkpfMc/deYbHvR3GZmywxjDV22jOhQf3NfVXpl
-	 9aKO6hC28+G8rJ2zQYpKlEQAkXt0ha9Y9f9h3O/QrOxg1S+SK19a6vzm60VAVb4SeJpeO
-	 6xO7kL9Vs62N8HMKOwgGyISdLeGUNHzDtiJKfz9js5/Ia38OGkEkA3wUseG0Mbf16IJvC
-	 8o/HSgfQCPDT1HKvMFQxehPSKzW3I9e/tiP8puIDRvw2ldQqc9R4ydG9s7qAp8fmf1Q==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792763419;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:Content-Transfer-Encoding:
-	 In-Reply-To;
-	bh=8FyuJnnll3uJwbR+wT99CVBO9fzREsmjzeqnUECMRTY=;
-	b=c9uLiNVab7tKppFjA2Rco9qP13Q3VKVZc1t7tpsNS3e0rCdDfPg/13wUxHqZDyUCzA0c
-	 E4UEzR6s2oxnKbshlrvXwbS29+W6WwoRgIJOnIXK1PuOAjIiHUbQJN9vvSID4eBPjLHv4
-	 CRhSpBAgI5Vvrepbod2kETkACioqojThphgaW8j1v2Uhi27DmiX3A4yTxPGyDmAhuxAg9
-	 QHHGcu1M8cFeGg2wtsdUjAio0gZGwPyZlK2WNNRfyHmeCSkNqMikf/uJeqyNF/ntmC8H7
-	 WMuXjDbr1LLvcrKdqFZH5uLDIuFY/Ay8dpN4Wm3QHoHToasGt62aapwbmYC984TVAmQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=tePYhySp;
-	arc=none smtp.remote-ip=209.85.215.180
-Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.201.54
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792770064;
+	b=K2rw7H1iOG+nV1e9TuFPyzygo4FcS2oBvzpD8NxBZpb9Gc4dRR8SAZzbTHJeNRotnxWl
+	 4SEIGXPbzFpNdkB0bhxWRM9pmiR/O+1K4R5SVvXUTsyL6QnfFD7VMj99eYJtBrwPNgUGa
+	 /y7B2cTo2tVifFwfBEN6UyAXqBo3br4WhCRnEZKlR+15FLeaInNdTu8/WuXp5tUOrT55c
+	 Oms3y+T2JtODoR3LT4clWshuL8Oc3VVhYiSPVRa7bAZ2+oB8umZrOceC6TjjCOGHyUiQy
+	 dme8tCRYKc5jExvpxuHFn1xUwOsI6BuImIrGY06Wynb4ECHEmxZb25ZLYTppHRVbMSg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792770064;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:
+	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
+	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type:X-Originating-IP:
+	 X-ClientProxiedBy:X-EOPAttributedMessage:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-Id:
+	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=FTpMsPedD8A3Ep+V61dgAdy8F87vVfoLgCwSA4qT+WE=;
+	b=q/GuMc+N56kqGkfBe/P4WBn9I83RiTIcRLsLXKXb7adC24qodUKzE6to78u6cLEgaxZi
+	 HzSOR6AEuCEEW28VEyusr8qlV3J2Sr4pEGguJXc045fY9+qqDNlpuMfEUoPvPvzLCtGdK
+	 mTPX6e5fGhB34AGz5rKy4l/om+O4OAlbwd9C3/vT1lzvWZ7XUeM10e7CjLXGhpG4FFYQc
+	 CfHzD3jtUqMzcLs4AIivyXL/HJ+PE307WHLRushW++q0SnHst1VjDcDeq+GoPeTdtuSJ1
+	 DJmAqoPsjU/Fy/rtG2ZRbMoXQJe5WXiYHx9KJ3okU+IjeR0PwYKutSeNfjD7DVZqJyQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=nvidia.com;
+	spf=fail smtp.mailfrom=nvidia.com;
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=NEbJztuk;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.201.54
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010054.outbound.protection.outlook.com [52.101.201.54])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 069A1606A31E
-	for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2026 13:50:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 069A1606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A165606A31A;
+	Fri, 23 Oct 2026 15:41:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5A165606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=tePYhySp
-Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-cc1d57602e8so368698a12.3
-        for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2026 06:50:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1792763418; x=1793368218; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=8FyuJnnll3uJwbR+wT99CVBO9fzREsmjzeqnUECMRTY=;
-        b=tePYhySpUVOPmNC7qMFCyUKUchitL2PPRJngdPKMZb+6YMlbzUwgcreLJ2yA42AZnA
-         v8cLSMIlGA3u4RIUYVaES5a8/BGQAUiCR1RaqgsSgZkWKdBE/ZcATVE5Tll8cS9l1X0y
-         jUG+yVquGbWgcvm/8MxxycOg/mddw+0l+MplyEJOYfUmLmzlCXrzhSBgacFZkAq8wkob
-         Pj6RrEf69ya9zTjuBsqnaaINqezSaQsmRkyRLV8jGDNSGGxqoJhr6jeq4my7fpYC7dyj
-         qOmm9rddJ6UF9PtTp9Nx897N1k7lGSJXyujgP0EVLYI9Voi13+8/ttJ+pRcICMcmmMTc
-         3lJw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792763418; x=1793368218;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=8FyuJnnll3uJwbR+wT99CVBO9fzREsmjzeqnUECMRTY=;
-        b=DmsWhPBw+2/xZrF3U+QYwt87Fqii9NjGXkgNonqkzV45SLV4Ob5MKa9jM1G+3Dhffa
-         bL3QQmeNd6NyQQyIwYFQJfvTcZIgA4bg86JeSACXvFzHWCcyooe/usWwMSAM01COwiIP
-         Lv+Ek4EA+wxCp6jNz21ruw3TPeQoGR02nU8jcTWyCe6E2JgH/TdFexoot6XRehifG1rp
-         neujccMHnY0guNvSanC9cZe7JM5BEKyQGL4P/D25PC/vcgR+zJlj8Muj6a2BamYutbql
-         d4vHR/G9yTYfirLt90mkI+pnd8ZdmH43ID+goUvlmsvVn0RKY8cK335bMC0HUsOdaBg+
-         QJ5A==
-X-Forwarded-Encrypted: i=1; AKwUvBz48Pn+dcZgnfy7S99E81HXw3DYQ7B0AcIy6DssrmbdIKjyS5pNpecGkBpo6KAepqxqNOUXQYMNR1M=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKAIahd8xirX39aDDs31VI5FhImdAUQNxd7QcGeN8hLONr/LTTd
-	rsw5wJt8IkD8XnLZLzERwbr9dG1qSAh75VkqMQ0PTfFRomIZt1aQOBh+wVcvf0XyAg==
-X-Gm-Gg: AYBFou0qynv8mdfwfU3bjRWnRSe20jI0T6IuUvEJKKf8e4lAeNlmdNrH8lfGxAn2uS/
-	12qomFtwO3WFJi2yKbH2eUJC1VxZnTdMr9WFSYlTTMeB+vivnOeURZAjuD+vgj9Zd3igYroz5Ab
-	JgcpeF0+vVk2UGnJcTJLkz5mU/+mFuz5Ni3PXKRLoI6nILpXAvham/x3Eai8nbzGKJKhnoi1SB9
-	iBAG2MKCNLYiW+Sv7wl6W19Y+ys6b20hFC6YRQq42FysAYYkgpGlPZgOiFWg5WhlvaDbctfhm8h
-	IaAB/Zip6NFiQEisvIkKOjxJOrw3ZXjJkOQFXGKcb41tz7XPIA17Zd9v4ubdFcGsUoIgFk1nk8p
-	DErIczZ9WIBEwhKKVLqQgKOTSEiVtYp5HO5Ib0/sPi+5DQUSkGQbZSb5yz9PDYK0sKzeVr4EI2x
-	ujeLRA4Wkv28W2W2+j9tARLtc8EeA0ij19+rR8vE6EuW1KmLYe0KwSUVwoluYHXxNtgojlTQYPj
-	z83jT4U0Y5JjOOEiXJJCTZnVf2lLYC5UrK8W+8v/2Td2zWP02riCGMOsbr2rcEakTPAqQqtlAz8
-	dcE/HZtMbhZ+6U09BV65S/vnOMNsyJfpbpNo6w==
-X-Received: by 2002:a17:90b:5906:b0:3ab:3437:554f with SMTP id 98e67ed59e1d1-3adce0073a2mr1983207a91.29.1792763417701;
-        Fri, 23 Oct 2026 06:50:17 -0700 (PDT)
-Received: from google.com (64.75.127.34.bc.googleusercontent.com. [34.127.75.64])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ea94677c91sm545015ad.4.2026.10.23.06.50.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Oct 2026 06:50:16 -0700 (PDT)
-Date: Fri, 23 Oct 2026 13:50:13 +0000
-From: David Matlack <dmatlack@google.com>
-To: Pasha Tatashin <pasha.tatashin@soleen.com>
-Cc: tarunsahu@google.com, Andrew Morton <akpm@linux-foundation.org>,
-	joro@8bytes.org, Mike Rapoport <rppt@kernel.org>,
-	Pratyush Yadav <pratyush@kernel.org>, maz@kernel.org, arnd@arndb.de,
-	jgg@nvidia.com, robin.murphy@arm.com, loganodell@google.com,
-	oupton@kernel.org, kevin.tian@intel.com, alex@shazbot.org,
-	dwmw2@infradead.org, pbonzini@redhat.com, seanjc@google.com,
-	will@kernel.org, Alexander Graf <graf@amazon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, baolu.lu@linux.intel.com,
-	linux-arm-kernel@lists.infradead.org, linux-arch@vger.kernel.org,
-	sagis@google.com, linux-mm@kvack.org, kvmarm@lists.linux.dev,
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, skhawaja@google.com, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH v2 3/4] liveupdate: Replace compatibility string with
- a 2-bit pair feature header
-Message-ID: <attmFVIFU_mS0Y7p@google.com>
-References: <CALzav=dLdJoVy=B1pv0FAurD9OhAzLSTjJNbtjTdJRmSqaB0yw@mail.gmail.com>
- <CA+CK2bAQRMAEXZyHTEuUN0_Fo59Sn0hBmYbme_J9ewjx6gPyJQ@mail.gmail.com>
- <atlKsD-aJB3mJr2j@google.com>
- <CA+CK2bABt4OZO31TenVF2+uBUWVwViWbvfE00=0xbAw=f7K9SA@mail.gmail.com>
- <atl7peoVHdP5hz7z@google.com>
- <CA+CK2bBFXnJA1kddbLKGq0DAHDgjYhsTSQQay-xeX7jJC1V_UQ@mail.gmail.com>
- <CALzav=e=ho2gVrn+7KpZ3ZyasvH2u15-pC-RSRSS7KcMfKqUJQ@mail.gmail.com>
- <CA+CK2bAJo8dnTOyKMgnnMnk-SCXbTsv+JCLEOWkjyj-wqtEkHg@mail.gmail.com>
- <atpNFEFIlqAoYIwH@google.com>
- <CA+CK2bB2C3Am5ssRuzYpfiU7_vB81vxMGc19HQLq7N=_7YrbTg@mail.gmail.com>
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=NEbJztuk
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=lTaeylx0D1yaaOMBG6e6Sd/f0ZZQbk3xfuSM/7NYmudVe56iKDtoJ5CsVtWVMIxqnKD/lKfu0boT4MjwqgM6PW02pHFAY4gQc7jS817+8+7oLJWpqoZBsyObQau2ofKQPONZpmH3iG4LH8UL94nt9nWBhxYObGHid8rbfDBuKCzqwjBr1ezoLZABFqiDS45dz1T5/fTNfDvZMmR00YgJbUGlp9WOvXiMEOSmjPQXNBUrvT6QcyFK6V8IQuFUe7GLzKfQxZeZGTfOQdl25RLXncd2a/0mHcxRgXLsTE8gQG7o9VmRgzWTmxce6Lqt/+Q5PQgEPa5nZZUk2/Mw2zRr/A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=FTpMsPedD8A3Ep+V61dgAdy8F87vVfoLgCwSA4qT+WE=;
+ b=gUN0J2u2ZP4SbsQRc1lczOhcniVzXvlC0lOV6P4xszKucOv6OCLNYcbJGk2yWEMmy6fhOjVRrasuuIlD+vZnggPZ33Vfj2mV54Cx3XyWSnFfNDfrL0mDS6vxzfSYADJL/CcfrvWzuvsR7agQyiaDwSNhp3DEeTy2aRCLze/yBkz+gMjQudttafZfeDW4uRqi/nHcwufj2zGfdV3mZ4wSmUtxwk4jKD2tfqEQW3Kg3PJFF6tToZe9FC2tK3SR3P0rBBmx8Dn5VFv9wuBWPnKjZRPpMTpa0E23Ou2Vr2+vlMktCE1+Q//mRiqmRX0L/C4QvwUu9sFgcS+h4MjOM83VeQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.161) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=FTpMsPedD8A3Ep+V61dgAdy8F87vVfoLgCwSA4qT+WE=;
+ b=NEbJztukwGcawfGq9YmyIRgjGtoihkjTqbmnsckCmpTFHeAxxoUUOm+o4ZjNd3U426CXJ9Uk8E2qOwYo6oS3hYLta0uHE/XmXJMZbxy9FrTJUBsFNawM670GrAHZol2ZZ5QOwLimhhZCV0pcANvXjed4E0AxjPGisXweSqeXOIqDS5tYqcGJsPJ2Wvh7UdUPQHf7juR8eEyVEBO+rcFTbxHEGjjTw3M/HFoaxqOTbxAhR+ECxkrOec49jhwQNCCwWDmyRpUI28cG/WCDInOpBDyF97d3ygF+iVS4c+BRs+2Q9VLaP1eSoBKKl0Q1i/V/VW8S5NVvEipodRepFmuEZg==
+Received: from CH5P221CA0016.NAMP221.PROD.OUTLOOK.COM (2603:10b6:610:1f2::12)
+ by CH3PR12MB8536.namprd12.prod.outlook.com (2603:10b6:610:15e::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.13; Fri, 23 Oct
+ 2026 15:40:55 +0000
+Received: from BL02EPF0002992D.namprd02.prod.outlook.com
+ (2603:10b6:610:1f2:cafe::4) by CH5P221CA0016.outlook.office365.com
+ (2603:10b6:610:1f2::12) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.546.19 via Frontend Transport; Fri,
+ 23 Oct 2026 15:40:55 +0000
+X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
+ is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ BL02EPF0002992D.mail.protection.outlook.com (10.167.249.58) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.569.4 via Frontend Transport; Fri, 23 Oct 2026 15:40:55 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Fri, 23 Oct
+ 2026 08:40:26 -0700
+Received: from xinmengs-dev-vm-linux.nvidia.com (10.126.231.37) by
+ rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.56; Fri, 23 Oct 2026 08:40:25 -0700
+From: Simon Song <xinmengs@nvidia.com>
+To: <dakr@kernel.org>, <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
+	<rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
+	<linux-pci@vger.kernel.org>
+CC: <alex@shazbot.org>, <jgg@nvidia.com>, <yishaih@nvidia.com>,
+	<skolothumtho@nvidia.com>, <kevin.tian@intel.com>, <airlied@gmail.com>,
+	<simona@ffwll.ch>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
+	<boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
+	<lossin@kernel.org>, <a.hindborg@kernel.org>, <aliceryhl@google.com>,
+	<tmgross@umich.edu>, <jhubbard@nvidia.com>, <ecourtney@nvidia.com>,
+	<cjia@nvidia.com>, <smitra@nvidia.com>, <kjaju@nvidia.com>,
+	<alkumar@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
+	<kwankhede@nvidia.com>, <targupta@nvidia.com>,
+	<linux-kernel@vger.kernel.org>, <zhiwang@kernel.org>, <zhiw@nvidia.com>,
+	<boqun@kernel.org>, <daniel.almeida@collabora.com>, <tamird@kernel.org>,
+	<work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
+	<kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
+	<peter@colberg.org>, <xinmengs@nvidia.com>
+Subject: [PATCH v2 00/12] Rust VFIO PCI support and NVIDIA vGPU driver
+Date: Fri, 23 Oct 2026 08:39:55 -0700
+Message-ID: <20261023154009.2246627-1-xinmengs@nvidia.com>
+X-Mailer: git-send-email 2.43.7
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -118,154 +123,133 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CA+CK2bB2C3Am5ssRuzYpfiU7_vB81vxMGc19HQLq7N=_7YrbTg@mail.gmail.com>
+Content-Type: text/plain
+X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL02EPF0002992D:EE_|CH3PR12MB8536:EE_
+X-MS-Office365-Filtering-Correlation-Id: 13eb2116-6351-4673-54cb-08df311c06da
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|1800799024|23010399003|376014|7416014|36860700016|261022115727099003|260925021911599003|260925021311599003|261022113327099003|260925022911599003|11063799006|261021135927099003|56012099006|261021123027099003|261009223027099003|261021130227099003|261021121427099003|10067099003|18002099003|6133799003|261022105027099003|261022075727099003|3023799007;
+X-Microsoft-Antispam-Message-Info:
+	1y94mE36t39juB5rcbTFPQb6rVy5OnF8hTavP7nNkR4jrjluLKCVWmvGcJGUBCixzdpug5efw9voaOS0koce8FuxPPkGwlwDSvvPuApOxdb0y0xL3hYG2NW8QV2wlboHRLDsSUdUsE+1KeeYNGZasl44m8gfNqqvfwkX+oF3OEOumDJXmz82F32QIq4pjfnvv0xM/AzFhx9Kx4o6o5arBrIVVWqCi+sSczGtK2C2WEzSWMgVDdifb/eH1p3CYpxvS66iEgCXBO5oZuA1CGby9O6v7A+7KPQbWLO3WhhMqr3uqA5j5QCObgzSZlnRRd8BBNt/sxI61WeMX7s10g5/cV82Hhy4Cix+6T4y9XBcawHW5I+HdnP+sx5TE3l8mJPHeJZk7Nn6aDNRya692Mj1pzGiGtk9YA7szS9gxFZ83EqOv/o3DPuLMTImEoqMM6A5tGB/EjQ5bZ5kTrgNsmYQUF4nDxbTkOO/H/iJ10kIurKFSuUKN4Jl7uQvwlNZUAYE0x0boG1LFuhAilymZ1InkD3Zpa4oxhVKBHD0GZkQ8ABnOx/BGSEDiGVCICAUz5ZcDJoWrbpaIb1pN9UEKocji3UswQwFIAC8ACo40aO+5EjhZgVAdA7+IwjqEgtIyNNZC7edvMKFKZnHxkqiU/20g0+ovOob+ixOFa4Du7hE5R/6mPENubn7nofYwl3Cn+FyNl8QMJOqMJbnDgPx2jpAGA==
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(23010399003)(376014)(7416014)(36860700016)(261022115727099003)(260925021911599003)(260925021311599003)(261022113327099003)(260925022911599003)(11063799006)(261021135927099003)(56012099006)(261021123027099003)(261009223027099003)(261021130227099003)(261021121427099003)(10067099003)(18002099003)(6133799003)(261022105027099003)(261022075727099003)(3023799007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	DUvhxrto5e0v4fSQ8b4W4rGRHvipT0HgdZdX5aYjVoqWzmprSuSJZZKKV0Qts7zDx7PQpL2sUyzrTKu4icHTHORliLjXqCUsESkLPPbtlYMAvr9Cz8IsYQry0mfe9edS8sxzVXVEqSR84FKesn9eqoGif5Af94S1FEKkThGsDrn1nmAZFphANMPb0o1Vuofwkax+M2JL9FGlnETirFd1Rz3oxdq4UpK5mc1PZzqz3KaMWy3v0rJS5b6IOpSSsdSRHyD+/opRRg14d+sDp/f4ha/CJGE4kJwSxlnuJYevHmSCmZtIjZZHnQVl5oZop2BfC9JL7IfMO11IBoqYuXJHyabS3K5FTHbQ1tBikMWV5cONEtRhHhryRdjlcstj811m2s8VdSi+CxTjNWf1JeZ5V9VlkuzOO1Wto6v9p1r2RCDJQy010JJsylsjLOv+rTMo
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Oct 2026 15:40:55.2071
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 13eb2116-6351-4673-54cb-08df311c06da
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BL02EPF0002992D.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8536
 
-On 2026-10-22 04:53 PM, Pasha Tatashin wrote:
-> On Thu, Oct 22, 2026 at 1:51 PM David Matlack <dmatlack@google.com> wrote:
-> > On 2026-10-22 12:11 AM, Pasha Tatashin wrote:
+This updates Zhi Wang's Rust VFIO PCI series [1]. The NVIDIA variant
+uses nova-core's typed SR-IOV PF interface to create, reset and release
+vGPU instances while VFIO provides userspace access to the PCI device.
 
-> > > Lets drop the fourth macro argument and generate the combined struct name:
-> > >
-> > > #define DECLARE_LUO_SER(name, expected_size, ext_flags_count)              \
-> > >     struct name##_hdr {                                                    \
-> > >         __u32 size;                                                        \
-> > >         __u32 flags;                                                       \
-> > >         __u64 ext_flags[ext_flags_count];                                  \
-> > >         struct name payload;                                               \
-> > >     };                                                                     \
-> > >     static_assert(sizeof(struct name##_hdr) == (expected_size),            \
-> > >                   "LUO struct " #name " size mismatch!")
-> > >
-> > > For example:
-> > >
-> > > struct luo_memfd_ser {
-> > >     __u64 pos;
-> > >     __u64 size;
-> > > };
-> > >
-> > > DECLARE_LUO_SER_HDR(luo_memfd_ser, 24, 0);
-> >
-> > I think we are getting close, bu I have two remaining concerns:
-> >
-> >  * Reserving bits in each flags word for continuation leaves gaps
-> >    in the flag space that users have to know to skip.
-> 
-> Yes, but callers should never manipulate the raw flag words directly,
-> and we can provide simple accessor macros or inlines that take a
-> contiguous feature ID (0, 1, 2, ...)
-> 
-> enum luo_memfd_feats {
->     LUO_MEMFD_FEAT_HUGETLB = 0,
->     LUO_MEMFD_FEAT_SEALS   = 1,
->     /* ... */
->     LUO_MEMFD_FEAT_FOO     = 15, /* Automatically lands in
-> ext_flags[0] bits 0:1 */
->     LUO_MEMFD_NR_FEATS
-> };
-> 
-> if (luo_ser_get_feat(hdr, LUO_MEMFD_FEAT_HUGETLB)) {
->     /* handle hugetlb */
-> }
+The base includes Zhi's BAR1 self-test fix:
 
-Sure but why deal with all the complexity just to save 8 bytes? All of
-these structs are allocated on folios and there are kilobytes of unused
-space to fit this header. And even if we optimize that we are talking
-about 8 bytes per FH/FLB... or 16 bytes for structs with arch-specific
-sub-structs like the KVM ones.
+- commit 317e76cc60b7 ("gpu: nova-core: mm: keep BAR1 self-test page
+  tables alive") [2]
 
-> >  * struct name##_hdr only matches structs written by the current kernel
-> >    (in terms of length of array and offset of payload).
-> 
-> This is not an issue on the incoming path, we never cast incoming data
-> to struct name##_hdr or access ->payload directly. Instead, we parse
-> the incoming buffer, dynamically compute the header size from the
-> continuation bits, and cast the payload offset to "struct name *"
-> based on the negotiated feature flags.
+It also includes both prerequisites cherry-picked from Alex Williamson's
+VFIO tree:
 
-How?
+- commit f1b563d3e3cb ("Merge tag 'topic/pci-vgaarb-rework-2026-10-01'
+  of https://gitlab.freedesktop.org/drm/kernel into v7.4/vfio/next") [3]
+- commit 6a5f427bee12 ("vfio/pci: Remove the core dependency on driver
+  data") [4]
 
-This is the only data structure that describes the header. Are you
-saying the incoming path will parse the header purely with a void *? Or
-use this header but just be careful not to access payload?
+These allow Rust VFIO PCI drivers to use their own typed PCI driver data.
 
-We should have one header structure that can be used on the incoming and
-outgoing path. We should not have one header data structure that can be
-used on the outgoing path and one that can be used on the incoming
-path.
+Patches 1-4 provide the PCI helpers and VFIO PCI abstractions. Patches
+5-8 add reset, bind, AER and runtime-PM support to the shared PCI adapter.
+Patch 9 migrates VFIO to that adapter. Patch 10 separates common VFIO
+handling from PCI, patch 11 publishes the typed Nova PF interface, and
+patch 12 adds the NVIDIA VFIO variant driver.
 
-Also we need a standard header that can be shared across all structs,
-not a per struct header. Otherwise you will need to do weird casting and
-overlays to implement the shared helper routines that parse it.
+Changes since v1:
+- Patch 2: restrict vf_id() to Device<device::Bound>, following Danilo's
+  review, so VF index lookup requires a bound PCI device.
+- Patch 4: adapt to the updated VFIO core driver-data APIs. Pass only the
+  core device to vfio_pci_core_register_device() and
+  vfio_pci_core_aer_err_detected(), use VFIO core's VGA callback, and
+  guard runtime-PM helpers with CONFIG_PM.
+- New patches 5-8: add bind, reset, AER and runtime-PM callbacks to
+  pci::Driver so VFIO variants can reuse the PCI adapter. Run bind()
+  after driver data is installed, and require Sync only for runtime-PM
+  driver data.
+- New patch 9: remove vfio::pci::Adapter and expose VFIO registration
+  through the shared PCI adapter, with a build-time check that VFIO
+  drivers install PM callbacks when CONFIG_PM is enabled.
+- Patch 12 (v1 patch 7): register the NVIDIA driver through pci::Adapter
+  and delegate bind, unbind, reset, AER and runtime PM to its VFIO
+  registration.
 
-> > How about this instead:
-> >
-> > struct luo_ser_hdr {
-> >     __u32 size;        /* Size of header + payload in bytes */
-> >     __u32 nr_flags;    /* Number of features encoded in flags[] */
-> >     __u64 flags[];
-> > };
-> >
-> > Each feature occupies 2 bits of flags[], so feature N is always bits
-> > [2N+1:2N] of flags[N / 32], with no gaps:
-> >
-> >   00: Feature not present
-> >   01: Feature present, safe to ignore if not supported
-> >   11: Feature present, must be supported by the next kernel
-> >   10: Invalid
-> >
-> > The length of flags[] and the header size are computed directly rather
-> > than by walking continuation bits:
-> >
-> > static inline u32 luo_ser_nr_flag_words(const struct luo_ser_hdr *hdr)
-> > {
-> >     return DIV_ROUND_UP(hdr->nr_flags, 32);
-> > }
-> >
-> > static inline size_t luo_ser_hdr_size(const struct luo_ser_hdr *hdr)
-> > {
-> >     return struct_size(hdr, flags, luo_ser_nr_flag_words(hdr));
-> > }
-> >
-> > static inline void *luo_ser_payload(const struct luo_ser_hdr *hdr)
-> > {
-> >     return (void *)hdr + luo_ser_hdr_size(hdr);
-> > }
-> >
-> > and bounds checking is just luo_ser_hdr_size(hdr) <= hdr->size. The
-> > payload is always 8-byte aligned.
-> >
-> > Payload structs are then declared on their own, with no header:
-> >
-> > struct luo_memfd_ser {
-> >     __u64 pos;
-> >     __u64 size;
-> > };
-> > LUO_SER_ASSERT_SIZE(luo_memfd_ser, 16);
-> >
-> > The static_assert covers the payload to catch embedded structs changing
-> > size.  Asserting the header doesn't add anything since its size varies
-> > by kernel. And because flags[] is a flexible array, the header can't be
-> > embedded in front of a payload in a combined struct; it can only be
-> > reached through luo_ser_payload().
-> >
-> > I think the only downside is that the header increases to 16-bytes when
-> > there is at least 1 flag. But I don't think we need to be so concerned
-> > about an 8 byte difference...
-> 
-> I would prefer to keep the default header at 8 bytes. With 15 features
-> fitting directly inside the base __u32 flags word, adding the first 15
-> features to a struct keeps the header at 8 bytes and does not shift
-> the payload.
-> 
-> Computation-wise it is also very similar: for the 99% of structs that
-> have <= 15 features, LUO_FLAGS_CONT is 0, so computing the header size
-> is just a single bit test with no loop. Even if a struct ever needs
-> ext_flags, the loop will walk at most one or two extra words.
+Integration branch:
+https://github.com/xinmengsong/nova-core/tree/nova-vgpu-wip-oct-18
 
-Please explain why it is so important to keep the header 8 bytes that we
-have to jump through all these hoops to map a contiguous flag space
-onto a u32 + u64[] array structure where certain bits are reserved and
-have to be skipped.
+[1]
+https://lore.kernel.org/nova-gpu/cover.1790764573.git.zhiw@nvidia.com/
+[2]
+https://github.com/zhiwang-nvidia/nova-core/commit/317e76cc60b763a03664cbf8244f4de076e58aa7
+[3]
+https://github.com/awilliam/linux-vfio/commit/f1b563d3e3cb0f9a97ef77f538ffc0e75e79a628
+[4]
+https://github.com/awilliam/linux-vfio/commit/6a5f427bee12c82beaf13efbd133416da1541c39
+
+Danilo Krummrich (5):
+  rust: pci: add VFIO override device IDs
+  rust: pci: expose the VF index within its PF
+  rust: pci: allow drivers to manage DMA ownership
+  rust: vfio: add PCI variant driver abstractions
+  vfio/nvidia-vgpu: add the Rust VFIO variant driver
+
+Simon Song (5):
+  rust: pci: add reset callbacks
+  rust: pci: add a bind callback after installing driver data
+  rust: pci: add an error_detected callback
+  rust: pci: add runtime PM callbacks
+  rust: vfio: use the PCI adapter for variant drivers
+
+Zhi Wang (2):
+  rust: vfio: separate common device handling from PCI
+  gpu: nova-core: publish typed SR-IOV PF APIs
+
+ drivers/gpu/Makefile                        |  15 +-
+ drivers/gpu/nova-core/driver.rs             |  47 ++
+ drivers/gpu/nova-core/nova_core.rs          |   2 +
+ drivers/gpu/nova-core/vgpu/vgpu_api.rs      |  82 +-
+ drivers/vfio/pci/Kconfig                    |   2 +
+ drivers/vfio/pci/Makefile                   |   2 +
+ drivers/vfio/pci/nvidia-vgpu/Kconfig        |  20 +
+ drivers/vfio/pci/nvidia-vgpu/Makefile       |   3 +
+ drivers/vfio/pci/nvidia-vgpu/nvidia_vgpu.rs | 402 +++++++++
+ rust/bindings/bindings_helper.h             |   4 +
+ rust/kernel/lib.rs                          |   2 +
+ rust/kernel/pci.rs                          | 229 ++++++
+ rust/kernel/pci/iov.rs                      |   8 +
+ rust/kernel/vfio.rs                         | 290 +++++++
+ rust/kernel/vfio/pci.rs                     | 849 ++++++++++++++++++++
+ 15 files changed, 1953 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/vfio/pci/nvidia-vgpu/Kconfig
+ create mode 100644 drivers/vfio/pci/nvidia-vgpu/Makefile
+ create mode 100644 drivers/vfio/pci/nvidia-vgpu/nvidia_vgpu.rs
+ create mode 100644 rust/kernel/vfio.rs
+ create mode 100644 rust/kernel/vfio/pci.rs
+
+base-commit: 07484ea6c8335226301113bc86e7c11b52312f51
+-- 
+2.43.7
+
