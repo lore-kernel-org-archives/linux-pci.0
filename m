@@ -1,81 +1,70 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792737015;
-	b=K+Mv919t0ImasAglwA7gduH0ScXY+PHzeFiJOeDn1SCNyvfvUJM2c680ER64NlruNvtJ
-	 quW5Lqy8HrvPXbs5Nh2/9zVUgCfnuUYUoGziZRziIygxBLab0C5/xBT79htxd0nkSg6Ed
-	 FOWc9h3vft7rAeloOapZAi1XSmkbIV5bk1vJ3IFX8RiikN0XzrUeac+KBubdoMvucBTdJ
-	 tymG8Q6uQg2/Z9OGe4rkrzqagIALHRtbLZQFE4Cu2/MHnQS7tEE0m4oEa3qtPotSF0rFI
-	 z/dIu4V+K81S53QCWE0W6V4Hasxo1kkQqoBwG7/QlSVFbP4hVUsB4X4pPVO6e64xYzQ==
+	t=1792741455;
+	b=FZm+50GKq2Snzk3EKKvj6hWl2FL4XyralciMaqGP4yVMSPbLc94KdXTxYskAih+L4PxD
+	 WDDkCYD7r2u0Xk6SVIAb558Nz0nTBwZMv8B0F+sxEXZItfKcFLO8NjkYqyvJx4gSP7k3l
+	 6RofpFqBQRTN95SZdeGvmqJU0sKe7JgiMnwxsje3XqFlVEn1K5IBhnQf7P7TCwh1X1rZw
+	 sfhxvnvSn2127b+IDOwOYjA15vDHAH7iHtkOOJeGfiVN8c0CZ9nGVb69T+UJYUpbPJLvp
+	 VVA9pyYNvs0+abtFFnrRhalxQiOTvkGVZAA/ASLBZx3+9oB7mWAnqjAA77R8Eid/Lyg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792737015;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
-	 Received:Received:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-TM-AS-GCONF:
-	 X-Proofpoint-Spam-Info:X-Proofpoint-Spam-Details-Enc:
-	 X-Proofpoint-GUID:X-Authority-Analysis:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=7lw0H2LbzbhjiWgEPqMCL4TOhF9iPd7aDQ7ovzInLvE=;
-	b=GljPQz/Ten38VdXE/PhGgZykdEtrxF02Bp3KhoTu4mA8GaFma0T+We8EwaMSpT5tcqxl
-	 6BRGX6S8t9dnBVIc+O+aNx8979oeNDjJ7RWqMBbkl20rG/U9mUJu/tpwyF9H/gNt+m1wR
-	 GlWXEhZy8WoC0hVltgumnSZefmJxQiVttpjTYC4nxUNpwHrFTMfEhPYeQNQRXyiAJe5P9
-	 Qxx4Mjp93RCKsHdmMPFOCBd5LohzHyf690dH2Vmgc58uxGmSpvhhE4qkIrMXZO64Uj8au
-	 Em1KfpYrXZD0uyb5DUjWZNarnQA88Rubw7A6roWzymLQBiB5enShsNdFfvk5KlsWplw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792741455;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=wy/cnaPswmms/QpZfcVOeHijhXMXPHn20ADaK91xPcA=;
+	b=dTsoxeNIRIxZI1vaI3Lp6J5Wu0xUaKAOvp7jDDOt+XF8ElN/o/XvgD7DCZagn8ZyRF1r
+	 NthybCoaYGGKUJViF/YxRto8cyGYJDBsqCY+1RfwQ7FYFQ5ZJLsKRAe/xxOrsIkzSEwl7
+	 XyP7GyoZMAPhgPNA+coXjyMnQq1oJJcniXP3OW9yCEZC66/eAxx/1dB++6iP4jR0jUexH
+	 YuCg7CIP5+FU4Aam3pZUmDkSwJv4u109N6iM1Vz7Y+a2SimmVzbn5DX6bK3pD6XnBvjDq
+	 UOwo8tx5UeiBShwdpNFTsGciMwsfvgkLC20G6PqBOkG0VEmA5bryqmS1+qUOCa+OClw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.ibm.com;
-	spf=pass smtp.mailfrom=linux.ibm.com;
-	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=N3EK8n56;
-	arc=none smtp.remote-ip=148.163.156.1
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EaM7GVz8;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40E44606A31B
-	for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2026 06:30:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 40E44606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E82E606A31A;
+	Fri, 23 Oct 2026 07:44:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=N3EK8n56
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69N1EHmQ1491335;
-	Fri, 23 Oct 2026 06:30:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=7lw0H2
-	LbzbhjiWgEPqMCL4TOhF9iPd7aDQ7ovzInLvE=; b=N3EK8n56efyEOfTLB3TQkh
-	4vbK4qtDmaok9+QVHruAVq5K2467NmBlFQKsSweRapYUBDy5A5WOtRF09ZiRDdLB
-	KK13PpfkbCJ0yeuQ/lhPRKPVnGhDZtx9JY1yZ+x5sbFH/8Mvb61gnosb9Y2+vZ+8
-	ZBwjfQYgfmVrc/gyfODHUdUfhh1jkgrw7C0vA1iNgOGDY0ToTyaC/tUMmq4oZexg
-	xRdFL1ySzbhgl2ozH2ut0d48C0sGbDUZ4emscOP+5yKJkwsmgXW8j7RKjXDTDbyk
-	bxhu5w4Nsb0DcgQV/A2yDcsa0lyvTfZS9atB72BRkI9crtGCDlDq8rLxo4P4W/yQ
-	==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hdw5akj2g-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Fri, 23 Oct 2026 06:30:11 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 69N6H01U1410598;
-	Fri, 23 Oct 2026 06:30:10 GMT
-Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4hfgck48db-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 23 Oct 2026 06:30:10 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
-	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 69N6U5KK31195436
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 23 Oct 2026 06:30:06 GMT
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E35C52004D;
-	Fri, 23 Oct 2026 06:30:05 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 0102620040;
-	Fri, 23 Oct 2026 06:30:05 +0000 (GMT)
-Received: from [9.123.14.142] (unknown [9.123.14.142])
-	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 23 Oct 2026 06:30:04 +0000 (GMT)
-Message-ID: <7c4eb75e-2e11-485e-8438-eef24201c567@linux.ibm.com>
-Date: Fri, 23 Oct 2026 12:00:04 +0530
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EaM7GVz8
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9170D1F01825;
+	Fri, 23 Oct 2026 07:44:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792741455;
+	bh=wy/cnaPswmms/QpZfcVOeHijhXMXPHn20ADaK91xPcA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=EaM7GVz8N1F1WL1rJOnrhPXJUtKGkqsv14MRU42ie3CqopgX3LNFxUDnl1OPNUi/e
+	 2iQPCPAmrugokeUqdjjGnxoE/8npZif6jkFURSIYhrlahltUYFVTdLrUtWmi4bJDt4
+	 uJpg0nOqXHeMjeyusKILIH3Cl4Mf3vGvpiVoTnLCyKCJvnhkOfk8IhqWDgFcrVZDsw
+	 RQJc+E3xcDPh7iuKo7qjMm+aQPiRzX97cIhkWDsUcyao4CJSpPFEH+7iNFyZcmmnZH
+	 r3znD2zes+BCcnM/Q+slSfn7Uk5g9JQYqOi58zhfrrPLbNKPn/9s/EmGcuM+9Ol3+7
+	 YAzLqgDZtmCpA==
+Date: Fri, 23 Oct 2026 10:44:01 +0300
+From: Mike Rapoport <rppt@kernel.org>
+To: tarunsahu@google.com
+Cc: Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Andrew Morton <akpm@linux-foundation.org>, joro@8bytes.org,
+	Pratyush Yadav <pratyush@kernel.org>, maz@kernel.org, arnd@arndb.de,
+	David Matlack <dmatlack@google.com>, jgg@nvidia.com,
+	robin.murphy@arm.com, loganodell@google.com, oupton@kernel.org,
+	kevin.tian@intel.com, alex@shazbot.org, dwmw2@infradead.org,
+	pbonzini@redhat.com, seanjc@google.com, will@kernel.org,
+	Alexander Graf <graf@amazon.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, baolu.lu@linux.intel.com,
+	linux-arm-kernel@lists.infradead.org, linux-arch@vger.kernel.org,
+	sagis@google.com, linux-mm@kvack.org, kvmarm@lists.linux.dev,
+	iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+	kexec@lists.infradead.org, skhawaja@google.com, kvm@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH v2 1/4] liveupdate: Rename handler compatible to name
+Message-ID: <atsQQcUiVhb9KXWZ@kernel.org>
+References: <20261021152527.375070-1-tarunsahu@google.com>
+ <20261021152527.375070-2-tarunsahu@google.com>
+ <CA+CK2bC_wc4LxvHe0TREbBP7esYW3pcMNtkGK-kqvf6MyvOh2g@mail.gmail.com>
+ <9huzik2u6hs5.fsf@tarunix.c.googlers.com>
+ <CA+CK2bDyk=F7W3J=q3pKCjsr2wy_PLdgqgu+ywp0F5HL=VoMpA@mail.gmail.com>
+ <9huzld7q4zjz.fsf@tarunix.c.googlers.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -85,82 +74,165 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] MAINTAINERS: Update EEH maintainer details
-To: Mahesh Salgaonkar <mahesh@linux.ibm.com>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Cc: Madhavan Srinivasan <maddy@linux.ibm.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-References: <20261022101342.2962384-1-mahesh@linux.ibm.com>
-Content-Language: en-US
-From: Sourabh Jain <sourabhjain@linux.ibm.com>
-In-Reply-To: <20261022101342.2962384-1-mahesh@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIzMDAyNCBTYWx0ZWRfX8cCCYzOVS82R
- ikVDunJSeGxMg/IDAH1RYP9cRlpv6SOlEHmj04zqlvqmqg4qqgsD99pRsm8dItz3+49peC4SFpq
- Dq1xELWprjyOQ7OAWSkzphkbGWzi9DM=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIzMDAyNCBTYWx0ZWRfX3PpE9oU8MPV/
- Rm6MXnqn76G5GZXbt9L+oF2F6FGooPbnXsWYuqCzu9tc2FhARmt68JQ8pR6+plG2cEZUuqlETI2
- S84Dz/Vy43uuv8iFDCCsaL0zgRIllx37uVUc0LzPQHCX4FS4p9KdTPl6ruIhl4yh472iRgurj9O
- JwE+L0cdKdZ+XvkyBO+wlmeDjULy2Ntuv+Iw2Wb3i072gKG9LCesvRDYLkySCbs5sRrRj1jttD8
- sU6QWf1rfuZJ85pf2EudZ51+d/m9K9+fWG62m2qPqvrvpqTD/dUdgijTRCTvYcmpGDnHqcyXDMr
- Yf6SNGd+UjNnCLjJjJqhmBBTh4Pn+qgHEb9PTcBhxmuFnoQ+EehALyw+KjzVrkwThgTeBlLAyvD
- FyWLQIEj7Ct5jD4IhMuSdfja3w54C6A424ixpfOOwW2Y27nT8Ipc6FSg4KpHhV0RDrpUo+i/rSq
- Vm8bcPJWsAEdpa8vKLw==
-X-Proofpoint-GUID: otMcKrtXBoG6j6s_8lt1njHJY2BnwiFT
-X-Authority-Analysis: v=2.4 cv=JIKuIMKb c=1 sm=1 tr=0 ts=6adafef3 cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
- a=pGLkceISAAAA:8 a=voM4FWlXAAAA:8 a=CjOHaDgk-Ss2aPD01hIA:9 a=QEXdDO2ut3YA:10
- a=IC2XNlieTeVoXbcui8wp:22
-X-Proofpoint-ORIG-GUID: otMcKrtXBoG6j6s_8lt1njHJY2BnwiFT
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-23_01,2026-10-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 malwarescore=0 lowpriorityscore=0 adultscore=0
- priorityscore=1501 spamscore=0 phishscore=0 bulkscore=0 clxscore=1011
- impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
- definitions=main-2610230024
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9huzld7q4zjz.fsf@tarunix.c.googlers.com>
 
+On Wed, Oct 21, 2026 at 07:35:28PM +0000, tarunsahu@google.com wrote:
+> Pasha Tatashin <pasha.tatashin@soleen.com> writes:
+> > On Wed, Oct 21, 2026 at 2:16 PM <tarunsahu@google.com> wrote:
+> >> Pasha Tatashin <pasha.tatashin@soleen.com> writes:
+> >>
+> >> > On Wed, Oct 21, 2026 at 11:25 AM Tarun Sahu <tarunsahu@google.com> wrote:
+> >> >>
+> >> >> File handler and File-Lifecycle-Bound (FLB) identifiers name the
+> >> >
+> >> > Please use FLB directly, no need to spell it out.
+> >> >
+> >> >> registered handler or FLB rather than a monolithic compatibility version.
+> >> >> Rename compatible to name across LUO headers, structures, and consumers:
+> >> >> - struct liveupdate_file_handler and struct luo_file_ser name field
+> >> >> - LIVEUPDATE_HNDL_NAME_LENGTH (in include/uapi/linux/liveupdate.h) and
+> >> >>   MEMFD_LUO_FH_NAME
+> >> >> - struct liveupdate_flb name field, LIVEUPDATE_FLB_NAME_LENGTH,
+> >> >>   PCI_LUO_FLB_NAME, and LIVEUPDATE_TEST_FLB_NAME
+> >> >>
+> >> >> Signed-off-by: Tarun Sahu <tarunsahu@google.com>
+> >> >> ---
+> >> >>  drivers/pci/liveupdate.c        | 10 ++++----
+> >> >>  include/linux/kho/abi/luo.h     | 26 +++++++++----------
+> >> >>  include/linux/kho/abi/memfd.h   |  4 +--
+> >> >>  include/linux/kho/abi/pci.h     |  2 +-
+> >> >>  include/linux/liveupdate.h      | 18 +++++--------
+> >> >>  include/uapi/linux/liveupdate.h |  3 +++
+> >> >>  kernel/liveupdate/luo_file.c    | 45 +++++++++++++++++----------------
+> >> >>  kernel/liveupdate/luo_flb.c     | 16 ++++++------
+> >> >>  lib/tests/liveupdate.c          | 22 ++++++++--------
+> >> >>  mm/memfd_luo.c                  |  2 +-
+> >> >>  10 files changed, 73 insertions(+), 75 deletions(-)
+> >> >>
+> >> >> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> >> >> index 51695782ed42..3cf01d7d615c 100644
+> >> >> --- a/drivers/pci/liveupdate.c
+> >> >> +++ b/drivers/pci/liveupdate.c
+> >> >> @@ -424,7 +424,7 @@ static struct liveupdate_flb_ops pci_liveupdate_flb_ops = {
+> >> >>
+> >> >>  static struct liveupdate_flb pci_liveupdate_flb = {
+> >> >>         .ops = &pci_liveupdate_flb_ops,
+> >> >> -       .compatible = PCI_LUO_FLB_COMPATIBLE,
+> >> >> +       .name = PCI_LUO_FLB_NAME,
+> >> >>  };
+> >> >>
+> >> >>  static void pci_liveupdate_flb_put_outgoing(void)
+> >> >> @@ -667,13 +667,13 @@ static struct pci_flb_incoming *pci_liveupdate_flb_get_incoming(void)
+> >> >>
+> >> >>         /*
+> >> >>          * Live Update is enabled and there is incoming FLB data, but none of it
+> >> >> -        * matches pci_liveupdate_flb.compatible.
+> >> >> +        * matches pci_liveupdate_flb.name.
+> >> >>          */
+> >> >>         if (ret == -ENOENT)
+> >> >>                 return NULL;
+> >> >>
+> >> >>         /*
+> >> >> -        * There is incoming FLB data that matches pci_liveupdate_flb.compatible
+> >> >> +        * There is incoming FLB data that matches pci_liveupdate_flb.name
+> >> >>          * but retrieve failed (pci_flb_retrieve() returned an error or LUO
+> >> >>          * failed to acquire a reference to pci_liveupdate_flb_ops.owner).
+> >> >>          */
+> >> >> @@ -998,7 +998,7 @@ EXPORT_SYMBOL_GPL(pci_liveupdate_is_incoming);
+> >> >>   */
+> >> >>  int pci_liveupdate_register_flb(struct liveupdate_file_handler *fh)
+> >> >>  {
+> >> >> -       pr_debug("Registering file handler \"%s\"\n", fh->compatible);
+> >> >> +       pr_debug("Registering file handler \"%s\"\n", fh->name);
+> >> >>         return liveupdate_register_flb(fh, &pci_liveupdate_flb);
+> >> >>  }
+> >> >>  EXPORT_SYMBOL_GPL(pci_liveupdate_register_flb);
+> >> >> @@ -1009,7 +1009,7 @@ EXPORT_SYMBOL_GPL(pci_liveupdate_register_flb);
+> >> >>   */
+> >> >>  void pci_liveupdate_unregister_flb(struct liveupdate_file_handler *fh)
+> >> >>  {
+> >> >> -       pr_debug("Unregistering file handler \"%s\"\n", fh->compatible);
+> >> >> +       pr_debug("Unregistering file handler \"%s\"\n", fh->name);
+> >> >>         liveupdate_unregister_flb(fh, &pci_liveupdate_flb);
+> >> >>  }
+> >> >>  EXPORT_SYMBOL_GPL(pci_liveupdate_unregister_flb);
+> >> >> diff --git a/include/linux/kho/abi/luo.h b/include/linux/kho/abi/luo.h
+> >> >> index 288076de6d4a..5fb2f46425d7 100644
+> >> >> --- a/include/linux/kho/abi/luo.h
+> >> >> +++ b/include/linux/kho/abi/luo.h
+> >> >> @@ -39,9 +39,9 @@
+> >> >>   *     Multiple blocks are linked via the `next` field in the header.
+> >> >>   *
+> >> >>   *   - struct luo_file_ser:
+> >> >> - *     Metadata for a single preserved file. Contains the `compatible` string to
+> >> >> - *     find the correct handler in the new kernel, a user-provided `token` for
+> >> >> - *     identification, and an opaque `data` handle for the handler to use.
+> >> >> + *     Metadata for a single preserved file. Contains the handler `name` string
+> >> >> + *     to find the correct handler in the new kernel, a user-provided `token`
+> >> >> + *     for identification, and an opaque `data` handle for the handler to use.
+> >> >>   *
+> >> >>   *   - struct luo_flb_header_ser:
+> >> >>   *     Header for the FLB array. Contains the total page count of the
+> >> >> @@ -49,9 +49,9 @@
+> >> >>   *     that follow.
+> >> >>   *
+> >> >>   *   - struct luo_flb_ser:
+> >> >> - *     Metadata for a single preserved global object. Contains its `name`
+> >> >> - *     (compatible string), an opaque `data` handle, and the `count`
+> >> >> - *     number of files depending on it.
+> >> >> + *     Metadata for a single preserved global object. Contains its FLB `name`
+> >> >> + *     string, an opaque `data` handle, and the `count` number of files
+> >> >> + *     depending on it.
+> >> >>   */
+> >> >>
+> >> >>  #ifndef _LINUX_KHO_ABI_LUO_H
+> >> >> @@ -84,18 +84,16 @@ struct luo_ser {
+> >> >>         u64 flbs_pa;
+> >> >>  } __packed;
+> >> >>
+> >> >> -#define LIVEUPDATE_HNDL_COMPAT_LENGTH  48
+> >> >> -
+> >> >>  /**
+> >> >>   * struct luo_file_ser - Represents the serialized preserves files.
+> >> >> - * @compatible:  File handler compatible string.
+> >> >> + * @name:        File handler name string.
+> >> >
+> >> > We are renaming from cpmaptible to name; I am not sure that is
+> >> > necessary. We can still use compatible for the same purpose as name.
+> >> > Unless it really bothers people, but for me 'compatible' works just
+> >> > the same.
+> >>
+> >> Yes it is necessary, For example if we have two handler for a single
+> >> subsystem. We should refer it by handle this or handler that, not like
+> >> handler with compatible string this and handler with compatible string
+> >> that.
+> >
+> > I still feel like compatability makes more sense to me. Take an example:
+> >
+> > We have two file handlers for memfd (i.e., FH_OLD and FH_NEW): one has
+> > compatibility = "memfd", and the other has compatibility =
+> > "memfd_next_generation". The user chooses one of them to preserve the
+> > memfd data, and the compatibility string is saved alongside the FD.
+> > When the next kernel scans through the registered file handlers, it
+> > must find exactly one that is compatible with the preserved data.
+> 
+> I will open this for vote.
 
+I'd rather won't ;-)
 
-On 22/10/26 15:43, Mahesh Salgaonkar wrote:
-> I no longer have the bandwidth to maintain EEH. Sourabh Jain has
-> graciously agreed to take over as the new maintainer.
->
-> - Add Sourabh Jain as EEH maintainer
-> - Remove myself from the EEH maintainer role
+"compatible" does not contradict more fine grained bitfields, and still has meaning.
+Just like in FDT world from where we inherited it, it means "these ops are
+somewhat compatible with that serialized format, will check the details and
+will know for sure".
 
-Thanks for the trust. I will do my best to maintain and support EEH 
-going forward.
+And IMO we should keep it.
+ 
+And please, trim your responses. I had to scroll 463 lines to see there's
+nothing there.
 
-Acked-by: Sourabh Jain <sourabhjain@linux.ibm.com>
-
->
-> Thank you Sourabh for stepping up and ensuring continued support for
-> EEH.
->
-> Signed-off-by: Mahesh Salgaonkar <mahesh@linux.ibm.com>
-> ---
->   MAINTAINERS | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 0e9fe9c2a39b..e7bc0bb7353d 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -21092,7 +21092,7 @@ F:	drivers/pci/endpoint/
->   F:	tools/testing/selftests/pci_endpoint/
->   
->   PCI ENHANCED ERROR HANDLING (EEH) FOR POWERPC
-> -M:	Mahesh J Salgaonkar <mahesh@linux.ibm.com>
-> +M:	Sourabh Jain <sourabhjain@linux.ibm.com>
->   R:	Oliver O'Halloran <oohall@gmail.com>
->   L:	linuxppc-dev@lists.ozlabs.org
->   S:	Supported
-
+-- 
+Sincerely yours,
+Mike.
