@@ -1,101 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.170
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792812385;
-	b=aeO0WFrWmLatlxSCbwONv81ydYY2q+2QS0n1KY5uIUobqj1eMLUZXCigt//I80WW1lSP
-	 I3mAYefMqSb1xwTX+cGeR/TeMckDy3imAgxXo4CUbioAEXAO6k3t8x2OoKvS2NS0mqxlc
-	 x6WE1w+fEXExTVGBAi6ZDx3InPYmaqydHYkf86N0vBLD9bOVKLFXtHCu3WM+kBBg+StSy
-	 uNj/h7uhIRgfa/PU95Lp1BoWQWSTUraiPtD4egLuw/5RlCDYWMQ4w4x5hcd1R9Pqce1y5
-	 A0dTsLGwZOGwVaWOITIRkwSQCeT9KbmVIEAZUSVkxIIDZ+MjBa5GlW9fZQJQFNTkCSA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792812385;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.52
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792820836;
+	b=KkszAfo0PwyNO7XxyGUY4V0RflepSL1bIZuWm/lcAWmDslwW/fg+K2Rm52AthxLoVbOG
+	 GnFcdEcERTDziV1S8FYNZvRTLVCHKOP8Jii1ILCYyEP7wXpoHUQ1XZpJE9b6gF3Dl45lf
+	 Va3DIItIqm33/JINVeXDvRsHwKctQkhA1JFML5W2+wj1B14dm8YpIFXxi7L1lOT4QactZ
+	 erhdHtRabvGGD5oWQSys/qoH7/4SqJm5MS8QKjLV73cOhIjmUeqWkIYqezF+zmZGXcGsm
+	 lFwmqMMCtcnQsjTQ8+Tat+CxWDuHdBsLzXfgzEdLQj0IuvgkUEeR+dkleQUv29ZmWJQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792820836;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=FicJIZs2+/qCTDE+0FRHSg6kJmTqD7XGGr4iZ+o1ZRU=;
-	b=xx4hyp2M9nMMkgvrmEVpBblLqoKupF2HvnSBHkYnExOsTbVK0bf1I2EKT3bjlXlQ1x1e
-	 IYDpn3J2+v3EViGeU4aZs9TIJSe6fR6jBdutQ0rBjOcv/M2Ug85KhyxzUzxtatnMNqEbv
-	 YmSykQMUdiNvXX1tOMxmzfwkjBUZvNSbj6/ODLLK9Fctlmn8WB4d2Mg3GSwy/OOws5Ne7
-	 kbdplFU71LUzu6HLSzvHfMxXxBE7dTtNb09QKwlP5IWPJoiUK/DlVoxbY9ihIVtemPnCo
-	 61O0z+B14DRx42Y3XqwSAV0awDGAh3oYM9L7ccIJTXEKr3rPiwgYm4j7aBqqFZgKDJQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=JVRdE/3Jnet+h8SyIDy0Hc/nWbQ9iRRU6k7zkm9yJs4=;
+	b=W91tGoq9/iczxrDjkqoTEs10W9+I9s9SttYEzkuFejJJQW6zdJtAzDvIJ9kYRtearpow
+	 kavhjIWkY7YVJOSgPhByjj3RNMV7K1ezlXFBuu8BdzasvKes94iEGJxpBADfysPT7oIfy
+	 ImTb7aqS2TAp1Bwdsr2mx1ZDYQilHhEtU+VPSIMNagHG+MfsJUJYv90R66V4PlCRSY2gQ
+	 qyh/VRqtmkGMdTyWWrVwR+XRRfkCFyi7AXomQUq/caylBvbehN9vSXNZ0/VDE/8654ETs
+	 4af9dA6pujpW1+bjJdEex5J2Y2uKsEtA0TzC1zukHAB6IQCjDVBDFGpWn0qBEY1eyJw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=JPkEfqc3;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.170
-Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Yuw4ixgJ;
+	arc=none smtp.remote-ip=209.85.128.52
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CBE5606A31A
-	for <linux-pci@vger.kernel.org>; Sat, 24 Oct 2026 03:26:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1CBE5606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21A6B606A31E
+	for <linux-pci@vger.kernel.org>; Sat, 24 Oct 2026 05:47:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 21A6B606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=JPkEfqc3
-Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-53665358476so14162531cf.2
-        for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2026 20:26:23 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792812383; cv=none;
-        d=google.com; s=arc-20260327;
-        b=aoOFhHCnWYTYxsD7CK5m7Jz4+UDrfKFXEmMO1/cQLJ8ayXvuCN2pyCH//61WBcCl3o
-         MZO/mHCWpJolHUHci+BChfHquVFx+W0rphj8UoPjEziEnrWcJxos+fjjTCd01ktbU4R9
-         iDtcDOAXaIlEZlHJBrlNFHGMrPd1OsZ943KdItWTQWYlc6l1DFqd0rEl6vLVkOdsEY01
-         9XOEAF7LwTDMEjvwjQDkaprcy4rpNaVimZiXC+1qkiKBmIW6PZKdXnVioQqX8xl2UZqo
-         u2GOtwktlV3d1uIjU8iDze740a1XdX1wPcmrvhC0KlfC37YWvmvUfNvrYld+ivKfa39/
-         KsMA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=FicJIZs2+/qCTDE+0FRHSg6kJmTqD7XGGr4iZ+o1ZRU=;
-        fh=M+4scIZd54wlBEHkR0C3fblQtQjBh12rTHD9tQJNwEY=;
-        b=GE2QOC3kBqTWIBgrn68ggT0FqfzL6x35L+JBov+Fiqmzh48OzZYi67VlAzZN6km4u6
-         fbzWEz4jSjlSusTNN+DCa4gPmNq318FeTObe76uqo7CCgg9hNIo6eNN+PzgK0kanVMz1
-         91LE11lSOZNftugbcFfI6fO8vvZGn0MKn6N/5KY0+xBxUGaGHHKlaAiIu3V1GzzecF4X
-         zv7QD8N9gJ4YD2uiQ8Ouhobr1ykbpi9yy8NXXT1AltqsQ+2NJcf6gxUQ9IzGu7ryj/qo
-         5SQxxxTjBpHNiuILVNghvGA4cOAIei4ZcrL7ltobBXAGZYbBA1J3WvlIx8RonMlcyPKb
-         xLTw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Yuw4ixgJ
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4a35ac4475dso1522565e9.2
+        for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2026 22:47:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792812383; x=1793417183; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=FicJIZs2+/qCTDE+0FRHSg6kJmTqD7XGGr4iZ+o1ZRU=;
-        b=JPkEfqc38rmVYfBrogvq0HcazTissN0pHHCPFvXuEHZAFWWFfqeXm++eSjOmi06YDL
-         SJcUq8tZjdWdtztCDSE4OnOhc7+JupfiOahyimATsNI2DfpxgRDl5VikOe1KqEa2bxRb
-         x1Rag0wSOPQT489sGmvn7vOkDJuwKRhf+nSYqDBb5NDmOkXbbnhTvioy1WS843k1+m+c
-         xKeJxq8dwAHDkVgGayc+kNBX3ADw63+op6lwCt6enK2g45SEnzjzijeu+PztTXcvcSlW
-         W2dxvy2YcGbWnjqU8E64E6zMvOffo43W9UpFDUpygE8FkeyCWGKHL2+ICOJZuwYBlmkv
-         Mu9A==
+        d=gmail.com; s=20251104; t=1792820833; x=1793425633; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=JVRdE/3Jnet+h8SyIDy0Hc/nWbQ9iRRU6k7zkm9yJs4=;
+        b=Yuw4ixgJc6bzy2bcfbKthETR1aV1KVTchu3ycgR7/NVAXtHhd80u0bNyC3XZmU5Q9a
+         7nFiaAO0SGPvpxkbtFvr78kqPDoSRpZv2OEHpVI02E2vHo7FxiTuzkjPayNJtmPZqWPu
+         GBfVz7OixWqhoxpGPbjn/yKao1ZNgwJfR/BZz7I9T9WJQL3q6LTUJnlN0xQHRHvcS+WO
+         SSVrq+yFdxDUZiy8dppA4CwpQhMpykb7hlaaWmamK3wFMyzjbNpwSAcTcx1ydkZYBmW1
+         PCp9BnH1oKZKB3XpPCVEwsM2E+ahQikbxi5VLFV1ZVihHYexv6mQuxAXi5DF7PfLP560
+         Uv4Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792812383; x=1793417183;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=FicJIZs2+/qCTDE+0FRHSg6kJmTqD7XGGr4iZ+o1ZRU=;
-        b=t4ZS/Slvo4WVhNoflKkpbpDyjdXbiMbkUCQLxUOAtljukTy+mCKfDeTXkMEw+HLutL
-         p3Kah/PDMSrpPLfhtWTGgW7Oim6pAhFnNX0081o/uMUbuiiVQUFqkJ5GTtNQuZM5GPPA
-         GmR84Q/lpWiSoss5VVMIKEEEhF5CAaR94zstgIz/CgPKvUBbUUe+pk8YV3wF1m51TdvV
-         nr7o5Nu9A4X1cmyQEikxLd3eSFvDXB0f8O+2CmYBLVM0GQEsImyBxk/xVBFCc74+l7PU
-         USSxrl6o5obN1fQIv0Lgf83HAa9FfiRxfK8l4XTEhppfauob1tG8rzzZzWaOBC+oRXKD
-         ZyHQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzagm+cw/+zYnuPHfBmtmJugz3ZK81tfBeTJvG/I+LMuGZRZrx5JLJoVwVxnLlfKLUdvI/d92aW1P4=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJvzfcyC0jLT7m/NzUv+UZQMkQ23ohWRMLjUcPTRUm39mUwDfoR
-	LIhfVmNQJAFlSEQDl55hDa97zQ8WXcxAxd/JICL/AnrLgiKdQCjylJ1aBRnJcP8y6CIf47C5NhY
-	3PgfiIexRHADixfnlhTTmfqiaCsz+k1g=
-X-Gm-Gg: AYBFou2ZRazlEx5XfkP+KaP6kgMh2FNtfL3aM5mPtxeuyGOK27Ze2Nhe4PcZh1Zt0qD
-	nf9Z8QRls0ut2JXfFqYK3pggjibvsD40ZMSiEy2c6lohMBxo8kp6FM9T7l8LTc/4U5PVrkJakE1
-	vbRL5bjTa1H4W3hjZb+2QmvHQ3JdSDc6VrzXtMjcfrpj2UJlVQobg+FX0uwVcEie6OX+3keU35c
-	cqDKWwWssnxFt1W5B1OJfDfZFCABcR760R6h3uOBHFHqYkCnlhDe0qMqnbA5bwqk+bYycHAzQZj
-	1lntagTpaRZ7F7p1DQ1Efm48lZH3U/xDE7zee8AtjRiYvPc5I8vYYS3dtJbmWB5JThWsfNIF3uS
-	LkHG08UPITEGMHlhunXGYMzcD9ypLCvwtH7ibP6M2rwZrRlnVWiouby4vunG/Rn+XvWqxbRCsGU
-	Bh2pZS1hOY9AEEymGhFSQ=
-X-Received: by 2002:ac8:5f93:0:b0:535:11e7:fdb3 with SMTP id
- d75a77b69052e-5383b4fd48cmr11061231cf.34.1792812382943; Fri, 23 Oct 2026
- 20:26:22 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1792820833; x=1793425633;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=JVRdE/3Jnet+h8SyIDy0Hc/nWbQ9iRRU6k7zkm9yJs4=;
+        b=Y/nWsv3GBUsDDKvBfCYahtcvxIQTs5gRYZ89/i/J0bh9GRvRtKacaBQLV5c9U0vJ3J
+         L/2jfco5UeZdgEmS9kVicd3/nK90gNHepmNaXFfEEWiPnrIjlLAPN7cBqZtvi0mZ37p3
+         lrRh2P6BE4rMJ0znwhJt50HzjfqF6fb7JxKNuIyIaGembYiC20nLpQVTjBapUJJor7PH
+         fH7hfcqOSwHVDhF9v7ZxRB+3qf88/Zbu4v8DhuSMt8GMyIwiLK2d1Z2w2RNfgBuMkc3A
+         pZeIXke2W1Lf9tFXwmeYrD4k/oxD0ZLpQmmRhJ1R96hBS2BkTHVETvYR/lFX2WSG780J
+         fr+Q==
+X-Forwarded-Encrypted: i=1; AKwUvBzODPIiDOEYd/B41bheWEiPNXWMrJeorSKyAU8yRL1aq2I0JTykXV4X98XilMjv9KPEXZqmHnqZHMU=@vger.kernel.org
+X-Gm-Message-State: AFq9FYLs6jZ1s4WuMuFaxS+uPRgTiTZjH9qWSuqgKGU8oVnmEloqX5RX
+	BAA/DNDSYqY89OQ7cfbtgHr0QX2y3xsGPZOtGSwhTtZHBgxbdV1V76x5
+X-Gm-Gg: AYBFou2zjv55P+ljZRdZMMHnT4KybEA0c9V6w6z6tN1sPz0ad4eFwy7tKWj3sWZdNYm
+	fnQAX55AurPEzdBy7WlJe08ZBuG6vwvvdFlzqGr0AfxTzOZOQXUv0DXLW9Lf8sycAZxk/ZbDqR5
+	xHoWkdL6I3PSJghlQ5BRihDdSU3eQXmS+vx4WBtKRGXZur6YwmSxLy3MGa/C7wHsQa59y3q5GXT
+	4Ex7TJTDQOl1E8WoJsksj61TU/N3SgCld+VzMUbBRrHyNiBxPvt47vnBHknuvQiwMnjnAosigOF
+	QUZB3sAEGXvY5w4+nLPOydeuz8ijtyNLxGeJcvJQZmc/QU8s6yYo/2qWyKsD5Nt14iPqtsdIGco
+	GBcZ7xhOYF/Km1PYj0ASyKqaYzEX0wn+ERTbtpNlnabshHhs2gWSjDLFvIc4OTACXlE/tDjXtc3
+	IKfHQ5K6A5QPkiU5Oi4V0kD53oZ4qeysFf7qsZ2GKiXB/i3OZBgbfNFvoSMM3H6Bnyds3dIQj/D
+	tw/tRNYERz9p2ejRMqHBA4EY6WCfTx/j1yA/yWN4zpj7jT4nrWDxMDhVUYBBvjs1Cecpd/8Nr4K
+	nyYp8uU9lcq5xN/IAcy2V/eIxIsUKw7tMgoEq4d4Bw/yptxfsUtv
+X-Received: by 2002:a05:600c:8b72:b0:4a1:e11f:b2d5 with SMTP id 5b1f17b1804b1-4a35ac3948emr13955165e9.2.1792820833100;
+        Fri, 23 Oct 2026 22:47:13 -0700 (PDT)
+Received: from Sheldon ([185.4.35.110])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a35a00e1b0sm25917465e9.3.2026.10.23.22.47.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Oct 2026 22:47:12 -0700 (PDT)
+From: Victor Carreras <vicajilau@gmail.com>
+To: "Rafael J . Wysocki" <rafael@kernel.org>,
+	Hans de Goede <hdegoede@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lukas Wunner <lukas@wunner.de>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Victor Carreras <vicajilau@gmail.com>
+Subject: [PATCH v2] ACPI: x86: Disable wakeup on MSI MS-1592 and MS-1594 dGPU root port
+Date: Sat, 24 Oct 2026 07:47:11 +0200
+Message-ID: <20261024054711.21587-1-vicajilau@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <179272791966.20251.3697951431087014523@gmail.com>
+References: <179272791966.20251.3697951431087014523@gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -105,168 +104,117 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261018201727.96924-1-williamwoodstock79@gmail.com> <20261019141053.7b2d8e23@nvidia.com>
-In-Reply-To: <20261019141053.7b2d8e23@nvidia.com>
-From: William Woodstock <williamwoodstock79@gmail.com>
-Date: Fri, 23 Oct 2026 20:26:12 -0700
-X-Gm-Features: AclHuK-yfT4LvkJ-ln5yWRznOXG4xObhTaFvAUkqkJ-ddhw8muvQiG6pyIjtX5o
-Message-ID: <CAC_eNMPu=3Tez6L0jO2f-OkRWPL9-ub8BS+7uftcRqSGKbCFQA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Avoid bus reset on NVIDIA GB202 and GB203 GPUs
-To: Alex Williamson <alwilliamson@nvidia.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, kvm@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Resending because html was rejected, and I also tried kernel 7.3, with
-no success.
+On MSI Summit E16 Flip A12UCT (motherboard MS-1592, BIOS E1592IMS.111)
+and MSI Prestige 16 Studio A13VE / Summit E16 Flip A13VET (motherboard
+MS-1594, BIOS E1594IMS.115), the I2C touchpad (ELAN0305:00, 04F3:31FD)
+permanently stops generating interrupts as soon as the discrete NVIDIA
+GPU (0000:01:00.0) and its parent PCIe Root Port (0000:00:06.0,
+\_SB.PC00.PEG0) enter D3cold.
 
-> What's your RTX 5080 vBIOS version and system information?  Is it the
-> same Asus X870E as the other 5090 reports or something else?
+In the platform's SSDT (MSI_NB / AdlP_Rvp), \_SB.PC00.PEG0 sets its wake
+GPIO (WAKG) from the BIOS NVS variable P1WP, which erroneously points to
+GPP_A20 (INTC1055:00 pin 62) -- the GPIO interrupt line wired to the
+touchpad.
 
-vBIOS: 98.03.3b.c0.0b
-Card:  Zotac GeForce RTX 5080 (10de:2c02, subsystem 19da:1765),
-       primary PCIEX16 slot, bifurcation Auto
-Board: Gigabyte X870E Aorus Master, BIOS F14d (not the Asus board)
-CPU:   AMD Ryzen 9 9950X3D2, GPU on root port 00:01.1 [1022:14db]
-Host:  Proxmox VE, kernel 7.0.14-20-pve; guest Windows 11 Pro,
-       GPU passed through with vfio-pci
+During boot, \_SB.PC00.PEG0.PON() calls \_SB.SHPO(WAKG, One), setting
+PAD_CFG0_GPP_A20.GPIROUTSCI = 0 and HostSwOwn = 1 so the OS GPIO driver
+owns the pin. However, when the root port runtime-suspends to D3cold,
+Linux enables ACPI wakeup via \_SB.PC00.PEG0._DSW(1, 0, 3), which sets
+WKEN = 1. Subsequent evaluation of \_SB.PC00.PEG0.PXP._OFF -> POFF()
+executes:
 
-It reproduces without a VM. On the host, with the link at 32GT/s x16:
+  If (CondRefOf (WAKG))
+  {
+      If (((WAKG != Zero) && WKEN))
+      {
+          \_SB.SHPO (WAKG, Zero)
+      }
+  }
 
-  echo 1 > /sys/bus/pci/devices/0000:00:01.1/reset_subordinate
+This switches GPP_A20 ownership to ACPI GPE mode (HostSwOwn = 0,
+GPIROUTSCI = 1), silencing the touchpad interrupt until the dGPU wakes
+back up to D0. Under Windows, _DSW is not armed for S0 D3cold on this
+root port, leaving WKEN = 0 so POFF() powers off the dGPU (\PIN.OFF(PWRG))
+without touching GPP_A20.
 
-brings it back at x8. A bwctrl retrain restores the speed but not the
-width; only a cold boot gets x16 back.
+Add a PCI quirk in drivers/acpi/x86/utils.c for boards MS-1592 and
+MS-1594 on root port 0000:00:06.0 (8086:464d on 12th Gen Alder Lake-P
+and 8086:a74d on 13th Gen Raptor Lake-P/H) to disable wakeup capability.
+This keeps WKEN = 0 so the root port and dGPU still reach D3cold
+normally while leaving GPP_A20 owned by the GPIO driver.
 
-> Is the issue still present on kernel v7.3?
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220725
+Cc: stable@vger.kernel.org
+Signed-off-by: Victor Carreras <vicajilau@gmail.com>
+---
+Changes in v2:
+- Move the quirk from drivers/pci/quirks.c to drivers/acpi/x86/utils.c
+  as it is x86-specific (Lukas Wunner).
+- Drop clearing adev->wakeup.flags.valid in the final fixup so ACPI
+  power resource dependent tracking between pci_acpi_setup() and
+  pci_acpi_cleanup() remains balanced.
+- Link to v1: https://lore.kernel.org/r/179272791966.20251.3697951431087014523@gmail.com
 
-Yes. I built v7.3 from kernel.org with no patches, using the Proxmox
-7.0.14-20-pve config (make olddefconfig, LOCALVERSION=3D-stock), and ran
-the same host-only test with no VM running:
+ drivers/acpi/x86/utils.c | 47 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
 
-  uname -r: 7.3.0-stock
+diff --git a/drivers/acpi/x86/utils.c b/drivers/acpi/x86/utils.c
+index 4189516..84a6ca7 100644
+--- a/drivers/acpi/x86/utils.c
++++ b/drivers/acpi/x86/utils.c
+@@ -665,3 +665,50 @@ void __init acpi_proc_quirk_mwait_check(void)
+ 	 */
+ 	dmi_check_system(acpi_proc_quirk_mwait_dmi_table);
+ }
++
++/*
++ * On MSI Summit E16 Flip A12UCT (board MS-1592) and MSI Prestige 16 Studio
++ * A13VE / Summit E16 Flip A13VET (board MS-1594), the BIOS SSDT (MSI_NB /
++ * AdlP_Rvp) assigns the touchpad's GPIO interrupt pin (GPP_A20) as the PCIe
++ * wake GPIO (WAKG / P1WP) for the dGPU root port (\_SB.PC00.PEG0, 0000:00:06.0).
++ *
++ * When ACPI wakeup is armed on this root port via _DSW (setting WKEN = 1),
++ * subsequent D3cold transitions (\_SB.PC00.PEG0.PXP._OFF -> POFF) call
++ * \_SB.SHPO(WAKG, Zero), switching GPP_A20 ownership from GPIO driver mode
++ * to ACPI GPE mode and permanently freezing the I2C touchpad (ELAN0305:00).
++ *
++ * Disable wakeup on this root port so _DSW is not armed and WKEN remains zero
++ * during D3cold transitions.
++ */
++static const struct dmi_system_id msi_peg0_no_wakeup_dmi_table[] = {
++	{
++		.ident = "MSI MS-1592",
++		.matches = {
++			DMI_MATCH(DMI_BOARD_VENDOR, "Micro-Star International Co., Ltd."),
++			DMI_MATCH(DMI_BOARD_NAME, "MS-1592"),
++		},
++	},
++	{
++		.ident = "MSI MS-1594",
++		.matches = {
++			DMI_MATCH(DMI_BOARD_VENDOR, "Micro-Star International Co., Ltd."),
++			DMI_MATCH(DMI_BOARD_NAME, "MS-1594"),
++		},
++	},
++	{}
++};
++
++static void quirk_msi_peg0_no_wakeup(struct pci_dev *dev)
++{
++	if (pci_dev_id(dev) != PCI_DEVID(0, PCI_DEVFN(6, 0)))
++		return;
++
++	if (!dmi_check_system(msi_peg0_no_wakeup_dmi_table))
++		return;
++
++	pci_info(dev, FW_BUG "Disabling ACPI wakeup to avoid touchpad GPIO (GPP_A20) takeover in D3cold\n");
++	device_wakeup_disable(&dev->dev);
++	device_set_wakeup_capable(&dev->dev, false);
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x464d, quirk_msi_peg0_no_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0xa74d, quirk_msi_peg0_no_wakeup);
+-- 
+2.55.0
 
-  before: 01:00.0 LnkSta: Speed 2.5GT/s (downgraded), Width x16
-  after:  01:00.0 LnkSta: Speed 32GT/s, Width x8 (downgraded)
-
-  [  211.617016] vfio-pci 0000:01:00.0: resetting
-  [  211.617225] vfio-pci 0000:01:00.1: resetting
-  [  212.898377] vfio-pci 0000:01:00.0: not ready 1023ms after bus
-reset; waiting
-  [  279.586064] vfio-pci 0000:01:00.0: not ready 65535ms after bus
-reset; giving up
-  [  279.587022] vfio-pci 0000:01:00.0: reset done
-  [  279.589284] vfio-pci 0000:01:00.1: reset done
-
-The 65 s "not ready" wait didn't happen on 7.0.14, where the reset
-finished in about a second. On this run the guest had been
-force-stopped just before the reset, so that may explain it rather
-than 7.3. The x8 result is the same either way.
-
-> Disabling bus reset entirely should be a last resort, it has
-> implications for device isolation when no other reset mechanism exists.
-
-Understood. What I measured:
-
-- 01:00.0 (GPU) reports reset_method "flr bus"; 01:00.1 (HDA) none.
-- With only .0 assigned, FLR is used and the link stays x16.
-- With .1 assigned too, vfio falls back to a bus reset and the link
-  drops to x8.
-
-So the bus reset is only reached because the audio function has no
-reset of its own. Would you rather see a quirk that gives the HDA
-function a usable reset, or keep the bus reset and restore the link
-width afterwards? Happy to test either.
-Thanks,
-mark-ship-it
-
-
-On Mon, Oct 19, 2026 at 1:11=E2=80=AFPM Alex Williamson <alwilliamson@nvidi=
-a.com> wrote:
->
-> On Sun, 18 Oct 2026 13:17:27 -0700
-> mark-ship-it <williamwoodstock79@gmail.com> wrote:
->
-> > NVIDIA GB202 (GeForce RTX 5090, RTX PRO 6000) and GB203 (GeForce RTX
-> > 5080/5070 Ti/5070) GPUs train their link at x16 at boot, but after a
-> > Secondary Bus Reset the link comes back at x8 and stays there until the
-> > next cold boot.
-> >
-> > The GPU's HD Audio function (e.g. 10de:22e9 on GB203) has no reset meth=
-od,
-> > so when both functions are assigned to a VM, vfio-pci falls back to a b=
-us
-> > reset at VM start and again at release, and the GPU then runs at half
-> > width. Assigning only function 0 avoids the bus reset because the GPU
-> > itself supports FLR, which is why the problem is usually reported as
-> > "passing the audio function breaks x16".
-> >
-> > Observed on an RTX 5080 (10de:2c02) behind an AMD Root Port, kernel
-> > 7.0.14, Proxmox VE host with a Windows 11 Pro guest:
-> >
-> >   boot:                         LnkSta: Speed 32GT/s, Width x16
-> >   echo 1 > /sys/bus/pci/devices/<root port>/reset_subordinate
-> >                                 LnkSta: Speed 32GT/s, Width x8 (downgra=
-ded)
-> >
-> > No VM is involved in that reproduction. Stepping the link speed through
-> > bwctrl (Gen5 -> Gen4 -> Gen5) retrains the link and the speed follows,
-> > but the width stays at x8. With a VM started frozen (-S), the link is
-> > already at x8 before any guest code has run, so the guest driver is not
-> > involved.
-> >
-> > With this patch applied, reset_method for the GPU is "flr" only, both
-> > functions can be assigned, and the link stays at x16 Gen5 across VM
-> > start, shutdown and restart, with the Windows guest driver working.
-> >
-> > The same symptom has been reported with an RTX 5090 (10de:2b85) on an
-> > AMD X870E board, where passing only function 0 was the only thing that
-> > kept x16.
-> >
-> > Link: https://forum.proxmox.com/threads/asus-x870e-pcie-x8-bifurcation-=
-bug-with-rtx-5090-vfio-passthrough.178461/
-> >
-> > Signed-off-by: mark-ship-it <williamwoodstock79@gmail.com>
-> > ---
-> >  drivers/pci/quirks.c | 9 ++++++++-
-> >  1 file changed, 8 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 1aa87a3ef..a4adcc3e7 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -3769,10 +3769,17 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NVIDIA, =
-0x22D0, quirk_no_bus_reset);
-> >  /*
-> >   * Some NVIDIA GPU devices do not work with bus reset, SBR needs to be
-> >   * prevented for those affected devices.
-> > + *
-> > + * GB202 (0x2b80-0x2bbf) and GB203 (0x2c00-0x2c7f) GPUs train at x16 a=
-t
-> > + * boot, but after a Secondary Bus Reset the link comes back at x8 and
-> > + * stays there until the next cold boot; a link retrain restores the s=
-peed
-> > + * but not the width.  Function Level Reset does not have this problem=
-.
-> >   */
-> >  static void quirk_nvidia_no_bus_reset(struct pci_dev *dev)
-> >  {
-> > -     if ((dev->device & 0xffc0) =3D=3D 0x2340)
-> > +     if ((dev->device & 0xffc0) =3D=3D 0x2340 ||
-> > +         (dev->device & 0xffc0) =3D=3D 0x2b80 ||
-> > +         (dev->device & 0xff80) =3D=3D 0x2c00)
-> >               quirk_no_bus_reset(dev);
-> >  }
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
->
-> What's your RTX 5080 vBIOS version and system information?  Is it the
-> same Asus X870E as the other 5090 reports or something else?
->
-> Is the issue still present on kernel v7.3?
->
-> Disabling bus reset entirely should be a last resort, it has
-> implications for device isolation when no other reset mechanism exists.
-> Thanks,
->
-> Alex
