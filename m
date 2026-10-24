@@ -1,92 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.183.30.70
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792795563;
-	b=X9M9Cj5+jBueBLR/CZsktNsK+8J/Exf4tz4pG94+jV2/OjxAfQjbP3LheOzp9PBXAwbD
-	 wv53E+ehtZeB2u4KPX1IWFNmtVPzCpF0UN01xWsqVHboJOzT5ixxlwHK1HlX06ncy/uIm
-	 Ohpw7PBrgQq8OcCa1D2UBgvBtSrfOBdliTxhVtUHpWA0mHPhuDGDCZbe29cXfGK7gM6Sy
-	 pzkXaGViSrEbH8JTkLq2Gu7CFnooZimZ3flXkitqWJAdT4knXbvyYMHA5yasfwJDujK6k
-	 g1rfTJqt2ARwGqfL7u24QHSGEn8L2LmgU9izaAdox1XO4i4tSJFP27HeU4TjOSuaueA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792795563;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
-	 Received:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:Content-Type:MIME-Version:
-	 Content-Transfer-Encoding:X-Proofpoint-Reinject:
-	 X-Sony-BusinessRelay-GUID:X-Proofpoint-Virus-Version:
-	 X-Sony-EdgeRelay-GUID:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Info:X-Proofpoint-Spam-Details-Enc:
-	 X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:X-Authority-Analysis:
-	 X-Sony-Outbound-GUID:X-Proofpoint-Virus-Version;
-	bh=ocdg/JbjnDcItI5QAROwLtgPo6FsVy1gaj6z/eWhuwk=;
-	b=xRCDDzcEIGAFlfCWUmUWIqfcgDBf/63t/Y9PxnA/cn0YzP/wVhPTwYVDzLzVqFCB67+K
-	 WmwOdEDqL3PzWWL9/05PbAmkH7XAwRBTb3vQ+vrftwkOYR0FM3ryyJPqphe0KksW2ClqL
-	 8AxKMgz26YvGjbe7b9JdVn3Je8yUtghjuroThlFFzGfFgUL0Q5yBMMvpz3C/2fnv2V7I9
-	 Z/SBSjfXiJfElsQF+8it6J9xWah3TVqLBxwKUToWULrG8qmisbK8buivW6N9gXhHhsJsh
-	 pZYgkw3AA+GQh53aJ9L1kG5ZHTKOS/E+rFkfiuulbyzxkmPVM/wI9WDHXzw8Q1r0cUw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=sony.com;
-	spf=pass smtp.mailfrom=sony.com;
-	dkim=pass header.d=sony.com header.i=@sony.com header.a=rsa-sha256 header.s=p1 header.b=AsC9gyxV;
-	arc=none smtp.remote-ip=185.183.30.70
-Received: from mx08-001d1705.pphosted.com (mx08-001d1705.pphosted.com [185.183.30.70])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792803768;
+	b=AnkN3Cu0KsIuxXKKGMbmKCtthKgtMhphY32sjlqAQv3RkpWFkiOuBx9DkcZvfvtqrCzd
+	 WFBtHYamJo3Xvar8e4qPU9gJsNmhaWLqRFKohZsyLXe5ZkmYXHZUF0XAvdL71T8ZZZAut
+	 G8DZDNK6KYHkXeP3l7BoCC+G9n3p0KkfVT7E4zyTm9c8vgayqkOuIGFvIUiGXd8y08UOM
+	 G6tfK5EVnFVM40zDxsHFRYHvMSTVS+iMyo6U/lDdQM8CevifonQGVue0qwWOR/v6vvDcD
+	 JHSTw37FIudaBw/F08lVRxBsQVXF/jqmjOLBhkoRYx0nngCdX+VGl0CvtfDETd5O7+Q==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792803768;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=omGL6LcMhGREa1S5q4pFujxAG/NXDja8zf9xS2NZp5Y=;
+	b=ii3C1o2/GBKnKbv8HhDsoZHgIFo6kFGUG3TpOw/Nhhf4psW72R4Uek99W0+pm6XGtAPC
+	 5P0HfmOjhoiqAU/EFSOqcBfeOyGbtw6+QGLpk0EhWH8qPmCSwGVd3EImCRWR1TDhRaIOh
+	 QqhsXtSHufxwmmGuKKQB65kA70vzq9ZMhg/IrMSSjufd7xhg0h97zBPbNjHYZQcYYts8m
+	 a/T+w2TOLUnCphWNiUSlX3Cicpn/8ZFedHCDUYXST9aRGhvEuJcvmGTyWuthGrY74AK/L
+	 af5WbC2MKgYHC+JnTWkcGsTKApr/lPxqIzCJlXKABQeGz3y/STnjEb64sbhazgn5+Ag==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GJ93YXdH;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7196606A31A;
+	Sat, 24 Oct 2026 01:02:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GJ93YXdH
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1792803767;
+	b=zIZQSDVPrkbMX6ntSfQ0jG9XCG5cj01b0obgEVr1qyEfPIsFhXFQgyV5cEO47FqQQfif
+	 c7Ors3Yxji4E5HHlq5oNKQ5OhT4G5PDoY8BBH/G1yQxDtiFx+TURpM5Yr6aytg3kd+Pwc
+	 Vxx0vTewKG9su85y6uvNgEqANeHVxUXgyxx2KyztDlkHdRVsOZGpBiAqQnBn0sEHh4Kxb
+	 8se5F9vFFUUml4e/FPdpqApwBojJdEpH/P5HHYnSygLfVRQJ1Ol7P/Ok5GG632Amb3nBj
+	 tKfNQfdwGm/QV7ms/vWJP8d7frnPLZjhAPhG4Bku1Ox9oA1ROtLVH52PVePBZ72ytZQ==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1792803767;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=omGL6LcMhGREa1S5q4pFujxAG/NXDja8zf9xS2NZp5Y=;
+	b=CjP2C/GOZZntud2HWUMkdnw0oM9cPssnhX4BAYh57j30jC/AuL7aoACW7RcyhxWbCPhq
+	 ZKduBVLbbdGI48KinhGMEXSq0SaEZC7u40AIjuLr+ZLo6XqGxwRP8kUw8mtmO/Jgjg2GJ
+	 Ur4eljNdRhBA2ZElegZpuAfB2GRfJPNuCIeyriqOo1BuLyA+6u8vm2YsR3CxU+2gXg8QD
+	 MPWKwa78oXpFQrmbfcbGRvQsFuNl3gw0mqKlzFQyQrZQKDy5u0qEV/87+IWQkDtojtHsj
+	 lUjhJ9FYCD6sPaumGdz8GUM0Qk4vgBqxZPpJqtjR05qWUSE/8HkIunMg8z1sRY44H2g==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E369606A31E
-	for <linux-pci@vger.kernel.org>; Fri, 23 Oct 2026 22:46:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8E369606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sony.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sony.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sony.com header.i=@sony.com header.a=rsa-sha256 header.s=p1 header.b=AsC9gyxV
-Received: from pps.filterd (m0209318.ppops.net [127.0.0.1])
-	by mx08-001d1705.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69NMj4Wh1420297;
-	Fri, 23 Oct 2026 22:45:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sony.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=p1; bh=ocdg/Jb
-	jnDcItI5QAROwLtgPo6FsVy1gaj6z/eWhuwk=; b=AsC9gyxVeP9593CY1uUXAGh
-	jzX0sFbzBd5hkTLMSxx8xxPsT6YiVQTuxMHDbFv4rQitbI1SDoOIMLfum+V2/v3g
-	GH8KHP+gi+PM3jtnY1RU5YRhSYwCQ40QWYUKWfyuWWdll4uj3nH2kIr6qsFr2/3z
-	rOCOhTVX+4rCHCuH1NDfwj36+RjEZOcmVELRD2ajFxeNJe1+j0ilGAguKsHE2X/C
-	LWwhErSYh3zMjh5s5638U6ilhgScLIqDuf0aVFxsHCBoUyeKXzOnFFHOnjWkvdMJ
-	gHpPDD/xiT7CJWxh/OrxehEz9oUN6svz7oJqEVfphEOEt1USjwKiyX2XBvdm9mQ=
-	=
-Received: from sgppsea01v.sg.gdce.sony.com.sg ([121.100.43.225])
-	by mx08-001d1705.pphosted.com (PPS) with ESMTPS id 4hdw4yw9xe-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
-	Fri, 23 Oct 2026 22:45:25 +0000 (GMT)
-Received: from pps.filterd (SGPPSEA01v.sg.gdce.sony.com.sg [127.0.0.1])
-	by SGPPSEA01v.sg.gdce.sony.com.sg (8.18.1.11/8.18.1.11) with ESMTP id 69NLuUhM1536605;
-	Fri, 23 Oct 2026 22:45:22 GMT
-Received: from usculxsnt12v.am.sony.com ([146.215.230.186])
-	by SGPPSEA01v.sg.gdce.sony.com.sg (PPS) with ESMTPS id 4hc4qag6nu-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Fri, 23 Oct 2026 22:45:22 +0000 (GMT)
-Received: from pps.filterd (USCULXSNT12v.am.sony.com [127.0.0.1])
-	by USCULXSNT12v.am.sony.com (8.18.1.11/8.18.1.11) with ESMTP id 69NM71nB2512675;
-	Fri, 23 Oct 2026 22:45:20 GMT
-Received: from us842f57abef3e ([10.10.10.214])
-	by USCULXSNT12v.am.sony.com (PPS) with ESMTPS id 4hdcefxsme-1
-	(version=TLSv1.3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256 verify=NOT);
-	Fri, 23 Oct 2026 22:45:20 +0000 (GMT)
-From: Maciej Grochowski <Maciej.Grochowski@sony.com>
-To: Ilpo =?utf-8?q?J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc: Nikolas Joshua Britton <nbritton@exabit.io>,
-        Geramy Loveless <gloveless@jqluv.com>, Eric Auger <eauger@redhat.com>,
-        Alexey Fomenko <alexey.fomenko@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Mesih Kilinc <Mesih.Kilinc@sony.com>
-Subject: Re: [PATCH v4 0/7] PCI: Resource placement algorithm fixe
-Date: Fri, 23 Oct 2026 15:45:18 -0700
-Message-ID: <20261023224518.80653-1-Maciej.Grochowski@sony.com>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20261021124956.4250-1-ilpo.jarvinen@linux.intel.com>
-References: <20261021124956.4250-1-ilpo.jarvinen@linux.intel.com>
-Content-Type: text/plain; charset="utf-8"
+	by smtp.kernel.org (Postfix) with ESMTPS id C89C71F01825;
+	Sat, 24 Oct 2026 01:02:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792803767;
+	bh=omGL6LcMhGREa1S5q4pFujxAG/NXDja8zf9xS2NZp5Y=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=GJ93YXdHwFqu6Lsy9cSI74DVafUS1RrKGVdU1MenjUVoc9cP00PVsMQdvPsSGYpKl
+	 jWrmZSzD2j2+WBLOAkM4PyLKsdsLerBcmKGIn3fnI/TVUKz5cE8z+mGzTReNlwr7Xh
+	 pb49StYa19LzNU/M4QS80afgh/yvFWtKSkeUnlDgNnWDDk/say7UqtNuM7GCMBC1q3
+	 1E7tCWJPVxnytN7olYLlA4qFzhrfdFy71cHwW6eZe3LzRwbHxJR62kV8GOdbs3dwcw
+	 6Wn5ZxFY87jB+RQLEc4g1Wy7dUOo9NMDXEjawS+JbP/jW86c009nrE5teNBqdOwlrk
+	 rX3w5Vhw+6mjg==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 493C944691;
+	Sat, 24 Oct 2026 01:02:46 +0000 (UTC)
+From: Igor Velkov via B4 Relay <devnull+iav.iav.lv@kernel.org>
+Date: Sat, 24 Oct 2026 04:02:43 +0300
+Subject: [PATCH RFC 1/2] PCI: rockchip-host: Retry link training that times
+ out
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -96,71 +83,120 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Sony-BusinessRelay-GUID: x5IRshrKW55zRpe9EBP9gsxXITBkjcnL
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-23_06,2026-10-21_02,2025-10-01_01
-X-Sony-EdgeRelay-GUID: xoWvK6l_KKea92Uqu8eIwyrCc8Fm82QX
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-23_06,2026-10-21_02,2025-10-01_01
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIzMDA4OSBTYWx0ZWRfX0vQJbk2C5yKP
- +dcKfNT1ZyAeQMiElcaCPdjoOhEd3zCDaOrjshVg9F2gKOEoiJDgL6dbUqS3lV+9S6mw9ItfDln
- zyQJa2QsVTadY28r3CX/gFjkowu4wtpSaqkxAVmY0BOBYzrL+s53
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIzMDA4OSBTYWx0ZWRfXzHCYqttqXIa0
- lG8s44JZTA5AssJoVkbwx2I7BKfiO4cwDzQi05QqtaThlYk82x/Ef2KE2VwKbVcxL7beXTOB29k
- cGcuMyukouJsbvL7kjsd7ro1o4PMIz3GxU5vZpkG1gQPSRiNlQ+SzuOLrSughEIXEelC/po+2D8
- cLQbv7dx9T5Ii7LAtJ2H3rEly5Y8Lh/RB/GJysO7ShnyaN1iN7kBBQBg7LkmavAhFlIDVw4GTdJ
- 5HTRATDAItZqjzYoxrsHShiLm0PCUj8SJinOIWHb7CJu8VzCISHAr2B6z1kISFIuFsj1OI+Id+F
- BR73L5QLbOU4YqGNszVU10YY8dFMbKtyqqELQLy2hzOhSfH3nqewmXtk+mxDIPYv59gsf4xazqY
- KJ7uM6o1kgHg7U9momb0aTO05KDmOmV9uBg2mt2kY/ByNVEAYmHaJkFQ0kCxOke+eyPBTzEUKzL
- aGTN7lD172BSdqvIw3w==
-X-Proofpoint-GUID: kovLTJBzzqaGXWqF__swo3aWy3TtdeI2
-X-Proofpoint-ORIG-GUID: kovLTJBzzqaGXWqF__swo3aWy3TtdeI2
-X-Authority-Analysis: v=2.4 cv=XK+l2ghE c=1 sm=1 tr=0 ts=6adbe386 cx=c_pps
- a=XNW8778QP6juiAqijDMnrw==:117 a=XNW8778QP6juiAqijDMnrw==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=KAb5x4SsHD3PzxGk7EmX:22 a=XGr2FpfLDd2dUKU_94WB:22 a=HM1u4s5SZPqGU_3Sr3gA:9
- a=QEXdDO2ut3YA:10
-X-Sony-Outbound-GUID: kovLTJBzzqaGXWqF__swo3aWy3TtdeI2
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-23_06,2026-10-21_02,2025-10-01_01
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261024-rockchip-pcie-resume-v1-1-58e54a5cf5f1@iav.lv>
+References: <20261024-rockchip-pcie-resume-v1-0-58e54a5cf5f1@iav.lv>
+In-Reply-To: <20261024-rockchip-pcie-resume-v1-0-58e54a5cf5f1@iav.lv>
+To: Shawn Lin <shawn.lin@rock-chips.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>, 
+ linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org, 
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ Igor Velkov <iav@iav.lv>
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2899; i=iav@iav.lv;
+ h=from:subject:message-id;
+ bh=XyiyrHT+pm4QSQTgMimlGl6CYo9QtiIPmsWqK8gJ4SM=;
+ b=owGbwMvMwCVmNH1q96v4SmbG02pJDFl3mLfkvz242aLCc9kGMaUY60fpTxlnm+nuqd7PImudz
+ zGF7556RykLgxgXg6yYIsuEQxq3MpZc/evvYf4AZg4rE8gQBi5OAZiI4CRGhjvf9A4u3tt4JNBi
+ 2qysDcdeC+u/XX/soP6jr8vXf/hZ6nuNkWFtyEdT+bgjFXO5zrGdSjbXjDS2Y66bwXex9P81rY/
+ md1gB
+X-Developer-Key: i=iav@iav.lv; a=openpgp;
+ fpr=90C228DA68A4D5FD4F4837E03297958BEA5F7903
+X-Endpoint-Received: by B4 Relay for iav@iav.lv/default with auth_id=1060
+X-Original-From: Igor Velkov <iav@iav.lv>
+Reply-To: iav@iav.lv
+Content-Transfer-Encoding: 7bit
 
-Hi Ilpo,
+From: Igor Velkov <iav@iav.lv>
 
-Thank you for the v4 patches, and sorry for the delayed feedback on v2.
-Mesih (CC'd) tested your full v2 seven-patch series on our
-Switchtec-based platform, with positive results.
+On a Kobol Helios64 the JMB585 SATA controller sometimes does not train
+the link on resume from s2idle. The 500 ms poll times out and
+resume_noirq() returns -ETIMEDOUT. On v7.3-rc7 with the mainline DT
+this happened in the 14th of 14 cycles, and the system did not resume.
 
-The test used a backport to our Linux 6.18.20 platform tree, with
-additional allocator prerequisites included and our local
-max() -> ALIGN() workaround reverted. This is therefore feedback
-on the backported series rather than a test on its upstream base.
+When training times out, bring the port up again, at most twice. Each
+attempt initializes the PHYs again and, where PERST# is wired, holds it
+low for at least 100 ms. Without an endpoint, probe now gives up after
+three attempts, in about 2.1 s instead of 0.7 s.
 
-The kernel boots successfully, all eight endpoints have
-BAR0, BAR2 and BAR4 assigned, and switchtec detects all nine
-switches. No BAR assignment failures were observed in the boot log.
+Print the LTSSM state with the timeout message.
 
-One difference from my original report is that BAR4 is enabled in
-this test; the earlier report described a configuration with BAR4
-suppressed. The total BAR allocation across the eight endpoints
-is now 288 MiB.
+With the patch, one such timeout showed LTSSM 0x10, and the first retry
+trained the link.
 
-We also compared /proc/iomem against the earlier kernel carrying
-our ALIGN() workaround. The enclosing prefetchable bridge window
-is 387 MiB with the backported v2 series, versus 384 MiB with the
-workaround, while the total endpoint BAR allocation is unchanged.
-So this test shows successful assignment, but no address-space
-reduction for this configuration. I do not yet have the detailed
-placement traces needed to explain the 3 MiB difference.
+Assisted-by: LLM
+Signed-off-by: Igor Velkov <iav@iav.lv>
+---
+ drivers/pci/controller/pcie-rockchip-host.c | 29 ++++++++++++++++++++++++++---
+ 1 file changed, 26 insertions(+), 3 deletions(-)
 
-We will now also test v4 and report back. Could the changes since v2
-affect this window-size result, or is this amount of padding expected
-for this topology? Please let us know which logs or allocator traces
-would be most useful to collect with the v4 test.
+diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+index 5b071bdc4f90..b4499fc3f90b 100644
+--- a/drivers/pci/controller/pcie-rockchip-host.c
++++ b/drivers/pci/controller/pcie-rockchip-host.c
+@@ -325,7 +325,10 @@ static int rockchip_pcie_host_init_port(struct rockchip_pcie *rockchip)
+ 				 status, PCIE_LINK_UP(status), 20,
+ 				 500 * USEC_PER_MSEC);
+ 	if (err) {
+-		dev_err(dev, "PCIe link training gen1 timeout!\n");
++		status = rockchip_pcie_read(rockchip, PCIE_CLIENT_DEBUG_OUT_0) &
++			 PCIE_CLIENT_DEBUG_LTSSM_MASK;
++		dev_err(dev, "PCIe link training gen1 timeout! (LTSSM %#x)\n",
++			status);
+ 		goto err_power_off_phy;
+ 	}
+ 
+@@ -377,6 +380,26 @@ static int rockchip_pcie_host_init_port(struct rockchip_pcie *rockchip)
+ 	return err;
+ }
+ 
++#define ROCKCHIP_PCIE_INIT_RETRIES	2
++
++/* Pulse PERST# and train again when the link does not come up */
++static int rockchip_pcie_init_port_retry(struct rockchip_pcie *rockchip)
++{
++	struct device *dev = rockchip->dev;
++	int i, err;
++
++	for (i = 0; ; i++) {
++		err = rockchip_pcie_host_init_port(rockchip);
++		if (err != -ETIMEDOUT || i == ROCKCHIP_PCIE_INIT_RETRIES)
++			break;
++		dev_info(dev, "link training retry %d\n", i + 1);
++	}
++
++	if (!err && i)
++		dev_info(dev, "link up after %d retries\n", i);
++	return err;
++}
++
+ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+ {
+ 	struct rockchip_pcie *rockchip = arg;
+@@ -881,7 +904,7 @@ static int rockchip_pcie_resume_noirq(struct device *dev)
+ 	if (err)
+ 		goto err_disable_0v9;
+ 
+-	err = rockchip_pcie_host_init_port(rockchip);
++	err = rockchip_pcie_init_port_retry(rockchip);
+ 	if (err)
+ 		goto err_pcie_resume;
+ 
+@@ -938,7 +961,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 		goto err_set_vpcie;
+ 	}
+ 
+-	err = rockchip_pcie_host_init_port(rockchip);
++	err = rockchip_pcie_init_port_retry(rockchip);
+ 	if (err)
+ 		goto err_vpcie;
+ 
 
-Thanks,
-Maciej
+-- 
+2.43.0
+
+
