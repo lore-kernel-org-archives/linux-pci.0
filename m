@@ -1,64 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.62.57.87
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792807114;
-	b=YJnXw6HSpH02EZFXjF4vYLO43IXakjBivfcy5ox20vAxitFpLDjaWhQw6PHN6sSMJQor
-	 B6j9dhS9qs2/mgXjcbjstACtmVv5Fx4f3gAfIRSXSgxjHs46c0vtYU4L7knjFXqWOlVRm
-	 F1bUSJqckQcQ1XNoRVZMhA2E6ak3In167GTKaB+gx/c77uxzKxv3+t/9ZGrbZMcYz1b/M
-	 8N4eBi0l9CtreJc/vljO82vvSxCXMIjF8NnabrGsLLQsyJM42Z7oTh6Qbe8xCTJ7s7Q9u
-	 S5QsA9E6tqNGHnIU2U8V60z8PXxIz3/RFD65KRl5zI4YEvGERNLYOOuyhGwINCUevmg==
+	t=1792807512;
+	b=EPdktcsa1PEY7weJ91uTGtZx7f+Q4LJhDmJ5g2fe5jqyz7po2NvOuoCx70inNUc+WKVp
+	 0FGh2rN77Hm67FDJWre/DIG4y5+H5mQ+YnKvkbto25EVii1iBMA4Id5uaCr6fGJCYfS6b
+	 risw/kqyJfLaqMpMVkKUIAcYT/5n5ZsYn8pYhe69w9Y+vTBKhBEzRh/Vg4jr3o6vRDCgw
+	 ykEQTPfQd0wtE4wveiOLB5KQOF1xdjLcN1e46OLKHLIBTvHkxyYe+YGnQgGzBmaaVQ+cI
+	 IBmEnWZkigIFRj/90CH17mLaROavfdJLDY7B/K1FPtsXvf7tE7NIC40iYcd0S3uNO5w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792807114;
-	h=Received:DKIM-Signature:Received:Subject:From:In-Reply-To:References:
-	 X-PR-Tracked-List-Id:X-PR-Tracked-Message-Id:X-PR-Tracked-Remote:
-	 X-PR-Tracked-Commit-Id:X-PR-Merge-Tree:X-PR-Merge-Refname:
-	 X-PR-Merge-Commit-Id:Message-Id:Date:To:Cc;
-	bh=3hbiN5/uprvunvzos0dlVHJXelNrX5owbPIV377NlTg=;
-	b=r+mykFBGHtwAo9P7xgFjzmTfGc1Hyea3gPRbHfaNOKf6Xl1vn/DatH65yhnU9BZ00toK
-	 HgcCX20I+cW7ApIgnNkVX7Juz1o2B1RClGsIRVkHq1bBxxd+Hn5nJ0/QuZkJ7Ei7PL4LG
-	 jJMJjCCHjdzPktsxl2GzOtywIyk5w3CLdPPB+iQOjTv265iXg9dZULbKbqAKzE97EOTAe
-	 NxlHT3eUYmmTGdxM+umoGYhNO3dKsm3SszWuq0mQtjsFe/DlqjHMqtKwm6zwOFKvqIE6x
-	 HQgC9uoIXDrx79IjU9YWhy05m532rptpXW37G8wUefFxafiHc7hVUjsjRmK7xHRxzsg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792807512;
+	h=DMARC-Filter:DKIM-Signature:X-QQ-XMRINFO:X-QQ-XMAILINFO:
+	 List-Unsubscribe-Post:List-Unsubscribe:X-QQ-Markdown:From:To:Cc:
+	 Subject:Mime-Version:Content-Type:Content-Transfer-Encoding:Date:
+	 X-Priority:Message-ID:X-QQ-MIME:X-Mailer:X-QQ-Mailer:X-QQ-mid;
+	bh=x4gWWagvbtOPv+/4tORQb2UH1BHLG4DAxHQxMqeOfv0=;
+	b=kExwpkAlH66uS8cEmcAGOw++bMMghiBiciGmguehc/qNA0H5kuBWNiFFsTqBJ5PgB33Z
+	 O5x9vf3RIB/ejBgVWq8VZcS+MKbSNdUyZB/ajjJJGX4ZI/A3IO7BcsZjFjovF+j6x+pY1
+	 M4nZX9HesaHwAXHSWXo0MbAg7Pe6GcujB1MomBVnb0wueGJHAP9rbNvdB/NGvEOgY3evp
+	 PdYcPhEvSUTzKto8ciTUzjFNV/aiRPE3X/UBsgXXqJK8T0vQmLiK+qXw/MVVRqlsViENJ
+	 H2Eu4pACHwSkAWU/44CjvJqqWe4BNOTr1BEV0dM8tEB9rzxIo/dk86OC+gdcZ4MJGbw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aX088MP8;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=agent.qq.com;
+	spf=pass smtp.mailfrom=agent.qq.com;
+	dkim=pass header.d=agent.qq.com header.i=@agent.qq.com header.a=rsa-sha256 header.s=s201512 header.b=EFAEFGkK;
+	arc=none smtp.remote-ip=162.62.57.87
+Received: from out162-62-57-87.mail.qq.com (out162-62-57-87.mail.qq.com [162.62.57.87])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32EF7606A31A;
-	Sat, 24 Oct 2026 01:58:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B37B606A31A
+	for <linux-pci@vger.kernel.org>; Sat, 24 Oct 2026 02:05:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0B37B606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=agent.qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=agent.qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aX088MP8
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C96F61F01825;
-	Sat, 24 Oct 2026 01:58:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792807113;
-	bh=3hbiN5/uprvunvzos0dlVHJXelNrX5owbPIV377NlTg=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc;
-	b=aX088MP8KsmVUlMCY8YRTXQyHoiErz9Mw4AQtJQBQ0hOznit6yAtszv2gVEodnTl0
-	 H+u3wo3RNYe+nPP9DomeoIhwxUgJ9KV956ZzMpshFct0RX2FiPACVvGqGefikkO9NT
-	 6f/9Cn0lbUAs+9LDTsSFWBahVFi94uqduylnBkmg5GvcP8xQ2JIrNFWEu9TjhA9OyI
-	 kxhdziAMZsQZ55e/NRAdeY1BGR0NBR+M/vG554QKh9yCUAnikd7b6+nbjhLOm9HYgW
-	 3nzzPZwezqVyN8MxAyNe3lu7c230aj4C4HY1qEp1oPL4maACCODIIBxdDdKvDNTO0A
-	 ESkC+OebvsQ2w==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id BE789391B177;
-	Sat, 24 Oct 2026 01:58:33 +0000 (UTC)
-Subject: Re: [GIT PULL] PCI changes for v7.4
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20261021224355.GA2571577@bhelgaas>
-References: <20261021224355.GA2571577@bhelgaas>
-X-PR-Tracked-List-Id: <linux-pci.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20261021224355.GA2571577@bhelgaas>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git pci-v7.4-changes
-X-PR-Tracked-Commit-Id: f4319f548f7d8cb595ac1c91bfd459876399eeb3
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 17bb0e2f6c8043f70a693a5f3797471cbed354c8
-Message-Id: <179280711243.1400178.17950066981362111641.pr-tracker-bot@kernel.org>
-Date: Sat, 24 Oct 2026 01:58:32 +0000
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Rob Herring <robh@kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Manivannan Sadhasivam <mani@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+	dkim=pass (1024-bit key, unprotected) header.d=agent.qq.com header.i=@agent.qq.com header.a=rsa-sha256 header.s=s201512 header.b=EFAEFGkK
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=agent.qq.com;
+	s=s201512; t=1792807505;
+	bh=x4gWWagvbtOPv+/4tORQb2UH1BHLG4DAxHQxMqeOfv0=;
+	h=List-Unsubscribe:From:To:Cc:Subject:Date;
+	b=EFAEFGkK5gwMloowzGSJIDq43xn6R3rmGaE3x/k1AOoujzzCoxrsFmNwh2x1q64cm
+	 TPEmTZgAL6qDW9rjlRZo1ZEn85+t0QXGNfZ8A0a6vllPvHlu7wWTl7UWNiFdRqmCY/
+	 jOXFD7/CoN9w7AVd9/5/LBSj3UKBVejf++HPFQ2k=
+X-QQ-XMRINFO: OD9hHCdaPRBwH5bRRRw8tsiH4UAatJqXfg==
+X-QQ-XMAILINFO: Mi+38GKm5OhV+P8GcCcuM6DKc3X35DT6OA7w1QDjS/zD246bLpmUBeFwKrPnvJ
+	 FsPcEOPOXBrnM1qbm57mSOqchPgBTysWvlz3WA+/LWAkBrLue4Rog+KLaSg03PYwgovNRSxasUrr0
+	 wvDUuCODww7kw+Llz07PxcjHJauoG8TIsmG/xiF2LXA6ysXTk5hvp7pAabNbbOs34V5XiqkQzuN36
+	 VeeAxaTF2VyBQcckDxHEvmEUM+rHV6tkTE5LZPJIqAmyv+jxdjFS5AJMTMDS2ADdUe2wNwQ4yiLCF
+	 Ky6st7Cm4ej8T35UIrlN7azLGBkC6Hv5YIKshu2qkFXvukIptii922jdDX+mrqx0+ySt55ujZ/od0
+	 tz9P8DJWKzDSHxjMcfH/QKwVTYNr7lz4TPpZloiaq/7V5Zq9pbS7wEn8Mjw7/zbZA5/txDORg+DgT
+	 c1VZ+fwNvcdl9edkrwz84h4nRP5c3XknJte5dZ7eGsElYrj098ZR6rlWvT1X0kC6qxMrpY1h/jm8R
+	 FldXpAxfUR0jOiSvGZrBrTJACjsn3vLNCimZtfg2XCiXuIh4IM6g0LBzYn05XfTOydPZ2pmqnIBrG
+	 KmcU37bmOnFU4qUCQmUy6/w2dgK1Sqa+1WtItLDN0WxzFjQcA/kfQoNnnCExKLXFmZsx9a9aLHjG2
+	 SRu5n1TIgMw5pqGqT+BZ+6kPw4DG4fL8cQEDSQgjzIXkDFNQTbjVpawed+j/qHgwVP06Oz0retAjc
+	 farduMb0iFF8kQhDb4oqMNOxpB7aRw1D9Lh7aFutMz3UJXW1cX+UxedCIy78VloyVbmL011rtJeS5
+	 HZue/7wEz4c/fsoT9Jx9L6BnucG+JqgwCTKFfinMTzs2yxGiJEYocBB5jTXhw5z2sPfxxUqc4d7MF
+	 CRazM9Ngt37XSey7h2dEZHcOMxPy47Xr4uRm19rQ1iRFmNgNYv9RjwvHcrKSWZsLZFptiTTZ9QxaL
+	 YBExIwuDehPIzNyFaepNMZBrf+mOW51A/2GOK/V4LGdcAAeX3qb54fPf2MWaBfplbCflW8T4GKuvF
+	 PpkMhHaFT5QnI3qvzMmVgkGL+SBDFI0SBvKt8Zc3vu5NrxBk=
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+X-QQ-Markdown: 1
+From: "=?utf-8?B?eWFuZmlzdA==?=" <yanfist@agent.qq.com>
+To: "=?utf-8?B?bGludXgtd2lyZWxlc3M=?=" <linux-wireless@vger.kernel.org>
+Cc: "=?utf-8?B?bGludXgtcGNp?=" <linux-pci@vger.kernel.org>, "=?utf-8?B?YmhlbGdhYXM=?=" <bhelgaas@google.com>
+Subject: ath9k AR9565 [168c:0036]: continuous PCIe AER correctable error flood from idle adapter (Linux 7.3.0)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -67,16 +70,88 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
+Date: Sat, 24 Oct 2026 10:05:04 +0800
+X-Priority: 3
+Message-ID: <tencent_19545AB9612A22809533CFC1DDF519D8E508@qq.com>
+X-QQ-MIME: TCMime 1.0 by Tencent
+X-Mailer: QQMail 2.x
+X-QQ-Mailer: QQMail 2.x
+X-QQ-mid: xmmazb58-0t1792807504tvm4rvp87
 
-The pull request you sent on Wed, 21 Oct 2026 17:43:55 -0500:
+SGVsbG8sCgpJIHdvdWxkIGxpa2UgdG8gcmVwb3J0IGEgY29udGludW91cyBQQ0llIEFFUiBj
+b3JyZWN0YWJsZSBlcnJvciBmbG9vZCBmcm9tIGEgUXVhbGNvbW0gQXRoZXJvcyBRQ0E5NTY1
+L0FSOTU2NSB3aXJlbGVzcyBhZGFwdGVyLiBUaGUgZmxvb2Qgb2NjdXJzIGV2ZW4gdGhvdWdo
+IHRoZSBhZGFwdGVyIGlzIGNvbXBsZXRlbHkgaWRsZSAoaW50ZXJmYWNlIGRvd24sIG5ldmVy
+IGFzc29jaWF0ZWQsIG5vIHRyYWZmaWMpLgoKU3lzdGVtCi0tLS0tLQotIEJvYXJkOiBJbnRl
+bCBDb2ZmZWVMYWtlIGRlc2t0b3AsIEgzNzAgY2hpcHNldAotIE9TIC8ga2VybmVsOiBVYnVu
+dHUgMjYuMTAsIExpbnV4IDcuMy4wLTktZ2VuZXJpYyAoZGlzdHJvIGtlcm5lbCA3LjMuMC05
+LjkpCi0gRGV2aWNlOiAwMjowMC4wIE5ldHdvcmsgY29udHJvbGxlciBbMDI4MF06IFF1YWxj
+b21tIEF0aGVyb3MgUUNBOTU2NSAvIEFSOTU2NSBbMTY4YzowMDM2XSAocmV2IDAxKSwgZHJp
+dmVyIGF0aDlrCi0gUm9vdCBwb3J0OiAwMDoxYy43IFBDSSBicmlkZ2UgWzA2MDRdOiBJbnRl
+bCAzMDAvQzI0MCBTZXJpZXMgQ2hpcHNldCBGYW1pbHkgUENJZSBSb290IFBvcnQgIzggWzgw
+ODY6YTMzZl0gKHJldiBmMCkKLSBMaW5rOiBTcGVlZCAyLjVHVC9zLCBXaWR0aCB4MTsgTG5r
+Q2FwOiBBU1BNIEwwcyBMMTsgTG5rQ3RsOiBBU1BNIEwwcyBMMSBFbmFibGVkLCBDb21tQ2xr
+KwoKU3ltcHRvbQotLS0tLS0tCkEgc3VzdGFpbmVkIHN0cmVhbSBvZiBjb3JyZWN0YWJsZSBB
+RVIgbWVzc2FnZXMgc3RhcnRzIHJpZ2h0IGFmdGVyIGJvb3QgYW5kIG5ldmVyIHN0b3BzLCBh
+dCBhIHN0ZWFkeSByYXRlIG9mIGFib3V0IDQzIGV2ZW50cyBwZXIgbWludXRlIChtZWFzdXJl
+ZCBvdmVyIDYwIHNlY29uZHMgb24gYW4gaWRsZSBzeXN0ZW0pLiBFdmVyeSBldmVudCBwcm9k
+dWNlcyB0d28gZG1lc2cgbGluZXMsIGFuZCBlYWNoIGxpbmUgaXMgYWRkaXRpb25hbGx5IHdy
+aXR0ZW4gdG8gdGhlIHN5c3RlbWQgam91cm5hbCBhbmQgdG8gc3lzbG9nL2tlcm4ubG9nIGJ5
+IHJzeXNsb2csIHdoaWNoIGFjY3VtdWxhdGVzIHdlbGwgb3ZlciAxMDAgTUIgb2YgZHVwbGlj
+YXRlIGxvZyBlbnRyaWVzIHBlciBkYXkgb24gdGhpcyBvdGhlcndpc2UgaWRsZSBtYWNoaW5l
+LgoKU2FtcGxlIGRtZXNnIGxpbmVzIChzdGVhZHkgc3RhdGUsIHRpbWVzdGFtcHMgfjMgbWlu
+dXRlcyBhZnRlciBib290KToKClsgIDIwMC4wODM1MjBdIHBjaWVwb3J0IDAwMDA6MDA6MWMu
+NzogQUVSOiBDb3JyZWN0YWJsZSBFcnJvciBtZXNzYWdlIHJlY2VpdmVkIGZyb20gMDAwMDow
+MjowMC4wClsgIDIwMC4wODM1NTJdIGF0aDlrIDAwMDA6MDI6MDAuMDogUENJZSBCdXMgRXJy
+b3I6IHNldmVyaXR5PUNvcnJlY3RhYmxlClsgIDIwMy4yMjg2NThdIHBjaWVwb3J0IDAwMDA6
+MDA6MWMuNzogQUVSOiBDb3JyZWN0YWJsZSBFcnJvciBtZXNzYWdlIHJlY2VpdmVkIGZyb20g
+MDAwMDowMjowMC4wClsgIDIwMy4yMjg2OTJdIGF0aDlrIDAwMDA6MDI6MDAuMDogUENJZSBC
+dXMgRXJyb3I6IHNldmVyaXR5PUNvcnJlY3RhYmxlCgpSZXByZXNlbnRhdGl2ZSBmdWxsIGxp
+bmVzIGZyb20gL3Zhci9sb2cva2Vybi5sb2cgKHNhbWUgYm9vdCk6CgpwY2llcG9ydCAwMDAw
+OjAwOjFjLjc6IEFFUjogTXVsdGlwbGUgQ29ycmVjdGFibGUgZXJyb3IgbWVzc2FnZSByZWNl
+aXZlZCBmcm9tIDAwMDA6MDI6MDAuMAphdGg5ayAwMDAwOjAyOjAwLjA6IFBDSWUgQnVzIEVy
+cm9yOiBzZXZlcml0eT1Db3JyZWN0YWJsZSwgdHlwZT1QaHlzaWNhbCBMYXllciwgKFJlY2Vp
+dmVyIElEKQphdGg5ayAwMDAwOjAyOjAwLjA6ICAgWyAwXSBSeEVyciAgICAgICAgICAgICAg
+ICAgIChGaXJzdCkKYXRoOWsgMDAwMDowMjowMC4wOiAgICBkZXZpY2UgWzE2OGM6MDAzNl0g
+ZXJyb3Igc3RhdHVzL21hc2s9MDAwMDAwMDEvMDAwMDIwMDAKCldvcmthcm91bmRzIHRlc3Rl
+ZAotLS0tLS0tLS0tLS0tLS0tLS0KLSBrZXJuZWwgcGFyYW1ldGVyIHBjaT1ub2Flcjogc2ls
+ZW5jZXMgdGhlIGZsb29kIGNvbXBsZXRlbHkKLSB1bmxvYWRpbmcgdGhlIGF0aDlrIG1vZHVs
+ZTogc2lsZW5jZXMgdGhlIGZsb29kIGNvbXBsZXRlbHkKLSBubyBmdW5jdGlvbmFsIGltcGFj
+dCBvYnNlcnZlZDsgYWxsIGVycm9ycyBhcmUgY29ycmVjdGFibGUgYW5kIHRoZSBsaW5rIGtl
+ZXBzIHdvcmtpbmcKCk5vdGVzCi0tLS0tCi0gVGhpcyBpcyBhIHN0b2NrIGRpc3RybyBrZXJu
+ZWw7IEkgaGF2ZSBub3QgYmlzZWN0ZWQuIFRoZSBzYW1lIG1hY2hpbmUgcHJldmlvdXNseSBy
+YW4gVWJ1bnR1IDI2LjA0IChrZXJuZWwgNy4wLjAtMzgpIGJ1dCBJIGRpZCBub3QgY2hlY2sg
+dGhlIGxvZ3MgYXQgdGhhdCB0aW1lLCBzbyBJIGNhbm5vdCBzYXkgd2hldGhlciB0aGlzIGlz
+IGEgcmVncmVzc2lvbiBvciBoYXMgYWx3YXlzIGJlZW4gdGhlcmUgYXQgdGhpcyByYXRlLgot
+IFRoZSBhZGFwdGVyIGlzIGlkbGUgYW5kIHRoZSBpbnRlcmZhY2UgaXMgRE9XTiwgeWV0IHRo
+ZSBlcnJvciByYXRlIGlzIHN0ZWFkeSwgd2hpY2ggc3VnZ2VzdHMgYSBsaW5rLWxldmVsIC8g
+QVNQTSByZWxhdGVkIGNhdXNlIHJhdGhlciB0aGFuIHNvbWV0aGluZyB0cmFmZmljIHJlbGF0
+ZWQuCi0gSSBjYW4gcHJvdmlkZSBsc3BjaSAtdnZ4IG91dHB1dCwgQUVSIHN5c2ZzIGNvdW50
+ZXJzICgvc3lzL2J1cy9wY2kvZGV2aWNlcy8uLi4vYWVyX2Rldl8qKSwgb3IgdGVzdCBwYXRj
+aGVzIG9uIHJlcXVlc3QuCgpUaGFua3MgZm9yIGxvb2tpbmcgaW50byB0aGlzLgoKLS0tCuat
+pOmCruS7tueUsSZuYnNwOyZuYnNwO1t5YW5maXN0QGFnZW50LnFxLmNvbV0oaHR0cHM6Ly9h
+Z2VudC5xcS5jb20vcGFnZS9pZGVudGl0eT90b2tlbj1ZS3E1c05FRkw0MWtnNlJfdzlEeVYx
+RVNjeG9IOFF3NkJ2OTZZNU90M28xSWFFOHVreDdXSzR4ekU1dUZnbnBNVFJNMGFZQXBuT0RK
+SmhvVWtPVHV3QzJ1QUM2eGMxR0JRRlZJWG1LVlVlM0pnU0N0NjBCNVowVVpHUThZWGp5ZE85
+d3RIcEFmSUZFaWdCMjRBODBrM0JtY0xqS19XLVZTc2FzVikmbmJzcDtbIVtdKGh0dHBzOi8v
+cmVzY2RuLnFxbWFpbC5jb20vcXFtYWlsL2ltYWdlcy9yZWFsbmFtZS5zdmcpXShodHRwczov
+L2FnZW50LnFxLmNvbS9wYWdlL2lkZW50aXR5P3Rva2VuPVlLcTVzTkVGTDQxa2c2Ul93OUR5
+VjFFU2N4b0g4UXc2QnY5Nlk1T3QzbzFJYUU4dWt4N1dLNHh6RTV1RmducE1UUk0wYVlBcG5P
+REpKaG9Va09UdXdDMnVBQzZ4YzFHQlFGVklYbUtWVWUzSmdTQ3Q2MEI1WjBVWkdROFlYanlk
+Tzl3dEhwQWZJRkVpZ0IyNEE4MGszQm1jTGpLX1ctVlNzYXNWKSZuYnNwOyZuYnNwO+mAmui/
+hyZuYnNwO1tBZ2VudCBNYWlsXShodHRwczovL2FnZW50LnFxLmNvbSkmbmJzcDvoh6rliqjl
+j5HpgIHjgIImbmJzcDsmbmJzcDtb5Li+5oqlXShodHRwczovL2FnZW50LnFxLmNvbS9wYWdl
+L3JlcG9ydD90eXBlPXJlcG9ydCZ0b2tlbj1ZS3E1c05FRkw0MWtnNlJfdzlEeVYxRVNjeG9I
+OFF3NkJ2OTZZNU90M28xSWFFOHVreDdXSzR4ekU1dUZnbnBNVFJNMGFZQXBuT0RKSmhvVWtP
+VHV3QzJ1QUM2eGMxR0JRRlZJWG1LVlVlM0pnU0N0NjBCNVowVVpHUThZWGp5ZE85d3RIcEFm
+SUZFaWdCMjRBODBrM0JtY0xqS19XLVZTc2FzVikmbmJzcDsmbmJzcDtb6YCA6K6iXShodHRw
+czovL2FnZW50LnFxLmNvbS9wYWdlL3JlcG9ydD90eXBlPXVuc3Vic2NyaWJlJnRva2VuPVlL
+cTVzTkVGTDQxa2c2Ul93OUR5VjFFU2N4b0g4UXc2QnY5Nlk1T3QzbzFJYUU4dWt4N1dLNHh6
+RTV1RmducE1UUk0wYVlBcG5PREpKaG9Va09UdXdDMnVBQzZ4YzFHQlFGVklYbUtWVWUzSmdT
+Q3Q2MEI1WjBVWkdROFlYanlkTzl3dEhwQWZJRkVpZ0IyNEE4MGszQm1jTGpLX1ctVlNzYXNW
+KQo=
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git pci-v7.4-changes
-
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/17bb0e2f6c8043f70a693a5f3797471cbed354c8
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
