@@ -1,80 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792803768;
-	b=ZVD4XAMDQojrLRoYH8lTMdXObeeEO9nzafrSkm70CQZDX4fqV9jW+NVvewayRq41wZW+
-	 8qvpsKdtrhZxIabWBWLuSIqcPKcBhCqaqOds1BLBRXur0ssSM2umM2bfJeGJEiMvM2fWB
-	 91WcchfZLVXmnWvYJ5qT4mYBz5PMoBsNHBpeM0z6NqfJZxDQ71EJxih8DeZ+gcm5LWt9g
-	 uM3Mp4ECaYC/VslLLx+E86n+/QG1RsjBv6f4sK9zpiqTn2xj8Hn7AyXDAaQwznJokU2HH
-	 1zjik3HbyCBBOLIL11hElWZJLnM4xdCsnQ9MF+yZAjG9yy7z1lKdrgVYSxgH1Pbg3AQ==
+	t=1792803773;
+	b=15PeJ9jUmlsSUjB/PJFOl843k55KgE78MpcyRkHoABsIyXD77Po5sKq4mE6HND+TTO8A
+	 r5tNmTBvj3FPa5tSh1U/ceg1em/CxpMWPi412umBN2kbx/cnNOm2XE1yKE+EPDn25UpEE
+	 FnmGqSSipGSfIZEBU4OlXYOXdb501pYoU4VRsVgUu5qSOFzJXVcnSdwEUfoI/KfjRdVYz
+	 PRqHBUDyhVw4LV6xdi6wcHuu2ebwr+9qwgniL1qKB+S+laUoNvnWJlxmzTd7OoivMeAn6
+	 uMJ50lJMTQP1jBsfEdJ5T42p93MHHuSCCXRbMJJt4eVnb096f/shNP6CnG/F7+gfuOQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792803768;
-	h=Received:DKIM-Signature:Received:From:Subject:Date:Message-Id:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:To:
-	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To;
-	bh=ptXlvNW8/crskkQMBa6hZkzMbQX1iTP4V/XcJqDvAkE=;
-	b=UuZjACjfVWbbr0Yyc0pITT33htw40dU6tpDfcVnrdS0adrWb1bKEC2Gi09vzQkA/lNN1
-	 Zsqix5KKTNE9GNSoa5fKsG+JOfCp3U5TP13zt4s8W5JjmJiU/47xskb+CZa3HM1bexrl1
-	 ASaq+2kC456peOIEGcyB0XjJoJoQdocWLF0mpTS/NT4oATMjgkGLswG+9/bM/K/AHjy+B
-	 pXdpLUdGT0n4QjG74Z/6E2u/WSUV/z/YuCtKehy6kViWkrmWjLXoxK6Ne9bLFZmQck+GI
-	 J9a4IWUm9rC7v/R9wMzMFa5R+6S3kwAl7t+7FbiSHY39e3D2cdMHMoGQbQ9SguCVLTg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792803773;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=2Kz84VQKPAzFz/tBV0w0WG9msa96nepEBazejBtRhIs=;
+	b=wJPb1FwlfJ97WdF/nOkqJ3oXo5QatAhOatUh5jYcORIzItq+Zevwu+nW1CMMMXP0NHop
+	 +hlAhoMVe2lThGE7YkqtNXYMsDGfUAPvtDj6xA/zlxpbSKHCKcpKbKdTo/EwAzLCof49e
+	 tLgdI1ADBEE0o9CD4OBPXItwl34OFAnOVY1s9r/5YetzVZxAk2cDmGuWzHYNoiKoxWQ34
+	 sLCBN2FM6c4Z+MD8GmVBZCJSpZT7ZKWQ+ZgRqfmSdd4uu3yd8PHC9Tk/O0NgLcHcrg5WR
+	 EFgfQxUa482PwE0dRocYE4HFrVFciYgOzfrGG38cR5WR6ONat3dsLXATn+EnRmxQKXA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N4OQcLQo;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NfX7pgBQ;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6AF8606A31B;
-	Sat, 24 Oct 2026 01:02:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33080606A31F;
+	Sat, 24 Oct 2026 01:02:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N4OQcLQo
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NfX7pgBQ
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
 	t=1792803767;
-	b=ZcuDZ0dnvXqSob6QcHrBX2ov7++gxoCUp7vJOtcZw9bn5CbXE4KFTK9Fh8MvfIkQ6cRr
-	 uRNbQx9GLNRLMORYK4S/HxJK5bBxIsU5RrblYWM103gpEW3QdGHIEJUk9GogYCL5JUIk+
-	 J0o/QOruZKg57fTvCjy3rr7TKbILdw2cLawhK9LsjYFXQNemqikHxSxIcb3Z1XXlCcAkh
-	 SUQgvudKPEmhFNUHwwmDeoy6QYa7syybaPgqFPNRVjvmvfDv73PkyMhnSp5Uhx64/wdbI
-	 w2vl3HyStT18PF9CtxfozStIfSDIbImwvMawyDA9SF9a+IPVqVAcVyn1HpjxWNahY6g==
+	b=lqIuOAsIuXPKu5N+OECHGy8vKtTmeejgrIubbY3tXR6IqZ63w74hjQ/zM5kLtId83fQj
+	 W3emMCG7c2fxQhdGzdIZpRUp0OBYPSdRZsKjPR6jUYJNCatzOU+WrJ9iALem7nbM0P3F0
+	 hQOtiRdENLuoxRpx5hQQxRzEXzRJoC7/8HCd1YKyrhMu4MnQhzEPeGp/Xz3CTaPgJwrhS
+	 0rWAXVa21CaIkW9XnkiVQGb797FvtjJmtqdKaBBhNjH64zlxAgQO/Nvevisl8ngA/nWFx
+	 2hoGnTs4vRHj4BV1qK9WsQHeiHpzV4rZ+R3r8nUpvI/DzC+re+nwSH9/MeqJqaT21jw==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
 	c=relaxed/relaxed; t=1792803767;
-	h=DKIM-Signature:Received:From:Subject:Date:Message-Id:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:To:Cc:X-Mailer:
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To;
-	bh=ptXlvNW8/crskkQMBa6hZkzMbQX1iTP4V/XcJqDvAkE=;
-	b=Mjx0QR95vFx/ZhHWdBCB145WJCjPI/BBwD0R1VyA4mpTCdmkmRies/9iDgYlpYmW7R9K
-	 Ql0A5DUGMa6tYiEMCuDACZxnNAqPsVx8vpd3fW6Sv3brFltyOOOTazg0WKFuF0rQYOj8A
-	 FIxOxEfs91t55HR/UQIlwUFgTl73M+ZOL5OfMtoYh51Wx1dlUEL+AUYN/S48K119uphvD
-	 inf7iD6trzq9tYxKEUjNj4GsBGVNslu7jNuh36B4rLIXT5uZe+/CEO1u50vNt3V3Rru/P
-	 du91qvsQAHvWkLqMCoqs/xxWz/Lgv6vz2U/G2wvOjS2XcKmJ2duU+3un6FsWM3sjWKw==
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=2Kz84VQKPAzFz/tBV0w0WG9msa96nepEBazejBtRhIs=;
+	b=bQDDwAxgtZ2Lq16mHqGbvBYJEH2JdTIGgVLqiRY+zenI6MnDBtbBtStToliejpr/pkbP
+	 b/LLvPC7+N70NFf3odQpSSRCdKtBdOXWWPnHR81+S7nGpJvxxzCcLtGkKyhKWRRKe6Cf2
+	 vg4bp6rieqgpAdFUjqA5IrzlevYKcHvRdkWcAecn3M0YI2/xIfET2K43QsaK3TSwrunoW
+	 BAYL4aQAEYb6X6JlJ28W/FG4N3ovjDM0ZhpWHWoli71MOFge41KJSHnt/oBS+lyH21VlK
+	 L174ByVTWBR0c9IRUwGVLF4ifiK+j/J2ln/rvfiJOb0vVYt9wdhzrR2U8x5YRIAOHyA==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id C8BBC1F01828;
+	by smtp.kernel.org (Postfix) with ESMTPS id CADB91F01829;
 	Sat, 24 Oct 2026 01:02:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1792803767;
-	bh=ptXlvNW8/crskkQMBa6hZkzMbQX1iTP4V/XcJqDvAkE=;
-	h=From:Subject:Date:To:Cc:Reply-To;
-	b=N4OQcLQoRaNY1gJ7N9jLgAxkzACLl9zjLeZm1BWj9c3HsHfcjjGV0POFpQxN50rDn
-	 zcKBEcgwgJKJ135xUQb3NGQcTX9DGyPJaE+jDFXN7cUw4puBGedr9D3uFaQEkVzoMH
-	 C2puHLgnOB3rdjrXnWo38yLrUFr2VxYHwvrJZosNgDrhBjI0VW8c9+RCzI2RHRfTHJ
-	 qm4r6cINBQMlsJ0HpQFy2IDzBjpdbXmYLFoI3V5R+DPQsOx6juLdjxrdJnwsgfl/sW
-	 1/rpJV7NDZqtg2jRPNUaqqRWy2asARKbSFv3aV8Nplg7B+DgJuBfkfByRgdcM22Sgk
-	 aa9GUae+7D53w==
+	bh=2Kz84VQKPAzFz/tBV0w0WG9msa96nepEBazejBtRhIs=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=NfX7pgBQs5nmw5RohQOPaTQs2tdZhcWQezAEW6SBjI+0EnqjkuIa26+QpMqU+f608
+	 w6M+gB2yr4U1oe9CS4RpChvATXRb4+bqDWrmJWBJUqr9r9FEk8Fx8UrL3opXCarPNa
+	 ndM2JnTnC9Vbb/TVelSNCNeYkO2q636SfuxSDN26a4xfrB6CaR4toxhiH8WRyyuXPk
+	 hmFWgHZIkTxSsYfDTS15uXHykUcHvteZA8XPMqKgXqOQLaROiw1djCPlTcTc+G6pnr
+	 WQTc/krns6U4SU11Ius8yiu6bMg/eRxCXhtueH9iOPLYnxatwjbvnRy7s+CTkldSEN
+	 1sh+l8SvTAdFA==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 332A2446B9;
+	by lkml.kernel.org (Postfix) with ESMTP id 52117446BE;
 	Sat, 24 Oct 2026 01:02:46 +0000 (UTC)
 From: Igor Velkov via B4 Relay <devnull+iav.iav.lv@kernel.org>
-Subject: [PATCH RFC 0/2] PCI: rockchip-host: Retry training and hot-reset a
- JMB585 on RK3399
-Date: Sat, 24 Oct 2026 04:02:42 +0300
-Message-Id: <20261024-rockchip-pcie-resume-v1-0-58e54a5cf5f1@iav.lv>
+Date: Sat, 24 Oct 2026 04:02:44 +0300
+Subject: [PATCH RFC 2/2] PCI: rockchip-host: Hot-reset the endpoint before
+ using the link
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -85,10 +84,9 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIALID3GoC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDIzNDA0ML3aL85OzkjMwC3YLkzFTdotTi0txUXaNkk5S0VCNjYxPDVCWg1oK
- i1LTMCrCx0UpBbs5KsbW1ACV2BXxrAAAA
+Message-Id: <20261024-rockchip-pcie-resume-v1-2-58e54a5cf5f1@iav.lv>
+References: <20261024-rockchip-pcie-resume-v1-0-58e54a5cf5f1@iav.lv>
+In-Reply-To: <20261024-rockchip-pcie-resume-v1-0-58e54a5cf5f1@iav.lv>
 To: Shawn Lin <shawn.lin@rock-chips.com>, 
  Lorenzo Pieralisi <lpieralisi@kernel.org>, 
  =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
@@ -99,79 +97,163 @@ Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
  linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
  Igor Velkov <iav@iav.lv>
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2549; i=iav@iav.lv;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5422; i=iav@iav.lv;
  h=from:subject:message-id;
- bh=+J4t9tLH+2EYTg30VBIkqM2iIw1DwkZatrHsCOpjmlA=;
- b=owGbwMvMwCVmNH1q96v4SmbG02pJDFl3mLdUexyWM3bhtd3dmaqz3/Kgqe/ei+L8OuciSr6s4
- XuzrdK7o5SFQYyLQVZMkWXCIY1bGUuu/vX3MH8AM4eVCWQIAxenAEyE6RMjw/pZxZP5P9yZPE9w
- XhrzSgbj26LG9x6rZ0lqtWW2tal6bWb4n3bmVo9lnqtt83tVYbtimUMVcsJsIZ6iCuFfJXfonFj
- DDAA=
+ bh=JqNmsQpPl/FYQLmd44QeXU02W9GHIDITxGbAly7lXUc=;
+ b=owGbwMvMwCVmNH1q96v4SmbG02pJDFl3mLcK7pkcGBx9dmEJ+/NnLWdW/bvpvvmnb77qE01vc
+ a7zl+4rdpSyMIhxMciKKbJMOKRxK2PJ1b/+HuYPYOawMoEMYeDiFICJXDBk+KdsOV9s7n9jlwtR
+ b1Yd7HQ/O81Q02BlQXXb3DWyJxlVvj9mZNjcFXfszLJj3Es7Os3d/vwz/L7plk7yyZ9nQhK2PDx
+ 3r4UdAA==
 X-Developer-Key: i=iav@iav.lv; a=openpgp;
  fpr=90C228DA68A4D5FD4F4837E03297958BEA5F7903
 X-Endpoint-Received: by B4 Relay for iav@iav.lv/default with auth_id=1060
 X-Original-From: Igor Velkov <iav@iav.lv>
 Reply-To: iav@iav.lv
+Content-Transfer-Encoding: 7bit
 
-How should the host recover an endpoint that trains the link but does
-not answer config requests? On RK3399 that read ends in an external
-abort (an SError at probe, a synchronous abort on resume), and the
-kernel oopses instead of seeing an absent device.
+From: Igor Velkov <iav@iav.lv>
 
-This happens on a Kobol Helios64 (RK3399, JMicron JMB585 SATA) with
-v7.3-rc7 and the mainline DT, in two forms:
+On a Kobol Helios64 the JMB585 sometimes trains the link but does not
+answer config reads. On resume, a read in rockchip_pcie_rd_conf(),
+called from pci_power_up(), ends in a synchronous external abort and
+the kernel oopses. At probe, a config read during the bus scan ended in
+an SError on 1 of 4 boots of v7.3-rc7.
 
-- link training times out on resume from s2idle (patch 1);
-- the link trains, but a config read of the JMB585 aborts in
-  pci_power_up() during resume, and during the bus scan at probe on
-  1 of 4 boots (patch 2).
+After training, hot-reset the endpoint, hold the reset at least 2 ms as
+pci_reset_secondary_bus() does, and wait for the link. Clear the AXI
+link-down status (CDNS_PCIE_AT_LINKDOWN in the Cadence host driver),
+then wait the 100 ms required after a Conventional Reset. Fail probe
+and resume if the hot reset fails.
 
-Patch 1 trains again after a timeout. Patch 2 hot-resets the endpoint
-after training and waits the 100 ms required after a Conventional
-Reset, so every RK3399 probe and resume takes ~105 ms longer.
+s2idle on v7.3-rc7 with the mainline DT and patch 1:
 
-s2idle with both patches:
+  sleep    without this patch    with it
+  ~40 s    2 aborts / 30         0 / 100
+  ~25 s    1 abort / 11          0 / 40, then 2 aborts in the next 3
 
-  sleep    patch 1 only    both patches
-  ~40 s    2 aborts / 30   0 / 100
-  ~25 s    1 abort / 11    0 / 40, then 2 aborts in the next 3
+After the hot reset the link came back in 2.8-2.9 ms in the good
+cycles. In the last abort it came back in 25 ms, and the next config
+read aborted. The other abort left no timing. Boots with the patch were
+not counted.
 
-In the last of those aborts the link came back 25 ms after the hot
-reset instead of 2.8-2.9 ms, and the endpoint did not answer. We could
-not reproduce that state on demand.
+Print how long the link took to come back. This explains the data
+above and helps anyone who runs the code.
 
-host_init_port() already pulses PERST# and waits 100 ms before link
-training, so config reads start as soon as the link is up. Waiting 1 s
-after link-up before the bus scan did not help: 2 of 2 rebinds aborted,
-against 2 of 25 without the wait. That test ran without PERST# (the DT
-had no ep-gpios).
-
-The data is from the code as posted, except that patch 2 now also fails
-probe and resume when the hot reset itself fails; that path was not hit.
-
-Questions:
-1. Is an unconditional hot reset after training acceptable, or should
-   it depend on the board?
-2. Can the host tell before a config read that the endpoint will not
-   answer?
-3. Is PERST# or a power cycle of the slot the expected recovery from a
-   slow link after the hot reset?
-4. Should the reset be a Secondary Bus Reset through the Root Port
-   rather than PCIE_CLIENT_HOT_RESET_CTRL? We did not try it.
-
+Assisted-by: LLM
+Signed-off-by: Igor Velkov <iav@iav.lv>
 ---
-Igor Velkov (2):
-      PCI: rockchip-host: Retry link training that times out
-      PCI: rockchip-host: Hot-reset the endpoint before using the link
-
- drivers/pci/controller/pcie-rockchip-host.c | 88 ++++++++++++++++++++++++++++-
+ drivers/pci/controller/pcie-rockchip-host.c | 59 +++++++++++++++++++++++++++++
  drivers/pci/controller/pcie-rockchip.h      |  4 ++
- 2 files changed, 89 insertions(+), 3 deletions(-)
----
-base-commit: 732c4f7d2c04f8c175d85d9243213783ee024ebc
-change-id: 20261018-rockchip-pcie-resume-2c4dfe23341e
+ 2 files changed, 63 insertions(+)
 
-Best regards,
+diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+index b4499fc3f90b..f75c2c8358f5 100644
+--- a/drivers/pci/controller/pcie-rockchip-host.c
++++ b/drivers/pci/controller/pcie-rockchip-host.c
+@@ -400,6 +400,57 @@ static int rockchip_pcie_init_port_retry(struct rockchip_pcie *rockchip)
+ 	return err;
+ }
+ 
++/* Hot-reset the endpoint; *link_us: time until the link came back, 0 if not reset */
++static int rockchip_pcie_hot_reset(struct rockchip_pcie *rockchip, s64 *link_us)
++{
++	u32 status;
++	ktime_t start;
++	int err;
++
++	*link_us = 0;
++	rockchip_pcie_write(rockchip, PCIE_CLIENT_HOT_RESET_ASSERT,
++			    PCIE_CLIENT_HOT_RESET_CTRL);
++	err = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_INT_STATUS,
++				 status, status & PCIE_CLIENT_INT_HOT_RST,
++				 100, 100 * USEC_PER_MSEC);
++	rockchip_pcie_write(rockchip, PCIE_CLIENT_INT_HOT_RST,
++			    PCIE_CLIENT_INT_STATUS);
++	/* Hold the reset at least 2 ms, as pci_reset_secondary_bus() does */
++	if (!err)
++		usleep_range(2000, 3000);
++	rockchip_pcie_write(rockchip, PCIE_CLIENT_HOT_RESET_DEASSERT,
++			    PCIE_CLIENT_HOT_RESET_CTRL);
++	if (err)
++		return err;
++
++	start = ktime_get();
++	err = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_BASIC_STATUS1,
++				 status, PCIE_LINK_UP(status), 20,
++				 LINK_TRAIN_TIMEOUT);
++	*link_us = ktime_us_delta(ktime_get(), start);
++
++	/* Clear the AXI link-down status before config traffic, as the Cadence host driver does */
++	rockchip_pcie_write(rockchip, 0, PCIE_CORE_AXI_LINK_DOWN);
++
++	return err;
++}
++
++/* A JMB585 sometimes comes out of reset unable to answer config requests */
++static int rockchip_pcie_reset_endpoint(struct rockchip_pcie *rockchip)
++{
++	struct device *dev = rockchip->dev;
++	s64 link_us;
++	int err;
++
++	err = rockchip_pcie_hot_reset(rockchip, &link_us);
++	dev_info(dev, "hot reset: link back in %lld us, err %d\n", link_us, err);
++	if (err)
++		return err;
++
++	msleep(PCIE_RESET_CONFIG_WAIT_MS);
++	return 0;
++}
++
+ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+ {
+ 	struct rockchip_pcie *rockchip = arg;
+@@ -908,6 +959,10 @@ static int rockchip_pcie_resume_noirq(struct device *dev)
+ 	if (err)
+ 		goto err_pcie_resume;
+ 
++	err = rockchip_pcie_reset_endpoint(rockchip);
++	if (err)
++		goto err_err_deinit_port;
++
+ 	err = rockchip_pcie_cfg_atu(rockchip);
+ 	if (err)
+ 		goto err_err_deinit_port;
+@@ -965,6 +1020,10 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	if (err)
+ 		goto err_vpcie;
+ 
++	err = rockchip_pcie_reset_endpoint(rockchip);
++	if (err)
++		goto err_deinit_port;
++
+ 	err = rockchip_pcie_init_irq_domain(rockchip);
+ 	if (err < 0)
+ 		goto err_deinit_port;
+diff --git a/drivers/pci/controller/pcie-rockchip.h b/drivers/pci/controller/pcie-rockchip.h
+index b5da15601b58..4509e044862b 100644
+--- a/drivers/pci/controller/pcie-rockchip.h
++++ b/drivers/pci/controller/pcie-rockchip.h
+@@ -47,6 +47,9 @@
+ #define   PCIE_CLIENT_INT_IN_DEASSERT		HWORD_CLR_BIT(0x0002)
+ #define   PCIE_CLIENT_INT_PEND_ST_PEND		HWORD_SET_BIT(0x0001)
+ #define   PCIE_CLIENT_INT_PEND_ST_NORMAL	HWORD_CLR_BIT(0x0001)
++#define PCIE_CLIENT_HOT_RESET_CTRL	(PCIE_CLIENT_BASE + 0x18)
++#define   PCIE_CLIENT_HOT_RESET_ASSERT		HWORD_SET_BIT(0x0001)
++#define   PCIE_CLIENT_HOT_RESET_DEASSERT	HWORD_CLR_BIT(0x0001)
+ #define PCIE_CLIENT_SIDE_BAND_STATUS	(PCIE_CLIENT_BASE + 0x20)
+ #define   PCIE_CLIENT_PHY_ST			BIT(12)
+ #define PCIE_CLIENT_DEBUG_OUT_0		(PCIE_CLIENT_BASE + 0x3c)
+@@ -170,6 +173,7 @@
+ #define PCIE_CORE_OB_REGION_ADDR1	(PCIE_CORE_AXI_CONF_BASE + 0x4)
+ #define PCIE_CORE_OB_REGION_DESC0	(PCIE_CORE_AXI_CONF_BASE + 0x8)
+ #define PCIE_CORE_OB_REGION_DESC1	(PCIE_CORE_AXI_CONF_BASE + 0xc)
++#define PCIE_CORE_AXI_LINK_DOWN		(PCIE_CORE_AXI_CONF_BASE + 0x824)
+ 
+ #define PCIE_CORE_AXI_INBOUND_BASE	0xc00800
+ #define PCIE_RP_IB_ADDR0		(PCIE_CORE_AXI_INBOUND_BASE + 0x0)
+
 -- 
-Igor Velkov <iav@iav.lv>
+2.43.0
 
 
