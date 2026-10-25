@@ -1,69 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.136
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792950656;
-	b=WZ1ksc3SPE+U/UMpO9blURM2cYBXakoTyp2yN+wMnKKUV9uHBXnfkASDiLjFUfdUhNMO
-	 xd/7YAN612p1edsFo4PO02aLmMLdXRpo6n5DUpYmXDD3CNVhCUAtlUuUGyfdhG0Mz8l7N
-	 eIQueYEVmPTeaxONRXJFaxCaAvlluKsTqFesAZpnGM71tJY+Mzdqo724WgsMAPB9IB9AK
-	 kLiGKbd4hRQcH762KLDJ8YBO4PGUqz3adEGkeOoCw93Y5LmJsQ+sQJWDP8uby6PoOBV1D
-	 GnibY6fwtlN1sBjnnhDx6Ipxy/QqgetjHqZR/aBJZFQwdWLpAp5HAbQXDTtzNMhDC+Q==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792950656;
-	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Date:From:To:CC:
-	 Subject:User-Agent:In-Reply-To:References:Message-ID:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=TA54rHY6teOSFaQOktJwbWdE9uD5IaMDmhSmda0ZLjs=;
-	b=cnBOKNOvLs9myWwuPydzN7mNEH9dGMjrXpzfPZIwg748ykI8yAFtRUZPRmQaUPRcT83i
-	 SLnATPJhczoj2B2XQbMX/Bbs1FPwv876/jW6VqHKrPIFormF9ov6trYkhChBssEL8ifiR
-	 02lmY95Kz34GjO6U735Gbzdu1i6ypSTA7RIEfSrzABnsGc91ta2+O2Mc5xXQFom3A3EK1
-	 KePQplkrHfY3qeBCzTxWuOSZR2MpriLEOWlrj/OR7Dj87oHuHeSCBqWiRsoc+7iDmDA7D
-	 4unmSNhwBLPPIUVEXD+QJLMGybvznBi6+MHLIPm5UVLkz1pLGxN89FUDDejoZFrl1Ng==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=zytor.com;
-	spf=pass smtp.mailfrom=zytor.com;
-	dkim=pass header.d=zytor.com header.i=@zytor.com header.a=rsa-sha256 header.s=2026092801 header.b=aBY905KZ;
-	arc=none smtp.remote-ip=198.137.202.136
-Received: from mail.zytor.com (terminus.zytor.com [198.137.202.136])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.51
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792950743;
+	b=YIkIfDiO/E+W0NGzwCoElqYZsiBBFXdoF0LFF2M/kstDiajIrTBG8EJWO1gWVMreIJ6q
+	 GKKBHXJpWusHIxnY2ArQ2pTDXlwoFoCPKTHcXohinGbfBFscE7UTQkuBTuddsVe/84r/K
+	 kGqAo2JK7oGyPLlpC14kzovMtuTu6D9F/syzjWDYUWyMEdmpyyeDeXM7bdKGB6mWAhU5b
+	 ce5P6KtXawt0NLO831y088iQ5gM+sRysPDK09UsaSWa+IR7XiL1xMqJ9S8ATvgTzdK7Z6
+	 9EQrOtRXMV7qx1nFYncEbWB+RuyzF8UKqlx1gi/vStJw7eKqmOQKqnBE8lTQ7+mvubg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792950743;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type;
+	bh=7aFt4J3E+xSQOGJ2c0aTTJGMbHVCzTORiyeLEMNWLak=;
+	b=t2UJySTZKVPTRp5hY8r8vkEKvo5Hyb7au7F15S6345o/AG6sqf7IvE+YHmkWDQUsdUG7
+	 m4vmEM7+zwMR20+e8U1JRcYyxI+IKePB2oPF3tDrC1SkZC3xDvWq5PEWPjHFUIyv9/vhY
+	 sDsaZcuVwv3IUZ+IJiVWuKEJyJSs8eWqyc3tkbbuUFLVMIXZvU7k5x9077pylqnJxfPv1
+	 vs9ran6DFzCH9nrB1bcwL4Z2VNPnb5SYmtoaofdl+khwsYE91+TjBDbF1rawK+LkjLAUL
+	 UbfzMMhTV6xK7wbrSGNlGXkF10WJJbwa3OJjCiJrgjS3WWHsC7sGQz1YuYwkE3IXywg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=FC6HUzYm;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.51
+Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAAAE606A31A;
-	Sun, 25 Oct 2026 17:50:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CAAAE606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zytor.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A33A8606A31A
+	for <linux-pci@vger.kernel.org>; Sun, 25 Oct 2026 17:52:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A33A8606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=zytor.com header.i=@zytor.com header.a=rsa-sha256 header.s=2026092801 header.b=aBY905KZ
-Received: from ehlo.thunderbird.net (c-76-133-66-138.hsd1.ca.comcast.net [76.133.66.138])
-	(authenticated bits=0)
-	by mail.zytor.com (8.18.1/8.17.1) with ESMTPSA id 69PHoYjb4052143
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NO);
-	Sun, 25 Oct 2026 10:50:35 -0700
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.zytor.com 69PHoYjb4052143
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zytor.com;
-	s=2026092801; t=1792950635;
-	bh=TA54rHY6teOSFaQOktJwbWdE9uD5IaMDmhSmda0ZLjs=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
-	b=aBY905KZt3mZIxTLKMSLBnPJxCRSoDbW8HU2ypGBQFuIByLZyKivDl/zpKwR81hby
-	 0xbHsk0hCBYea1vXqj0FUvIxaxbBy/CJq3N4kMszBnMB8ChdzaGUqmxZWHAqPrZTWo
-	 7VzpmHbuwxHYgAvVoh+asSsxs6XkXJGV9OyorJ2El4QbDoJcJyFF3A+m/+r8IWoaJN
-	 fMiq3/J4kVlQzFpdyEpk9Eb5WEuUDdcXGmVlOqaFeJQvigmSgzntfna+eh+NQ09TLg
-	 2QEWxZxWDm0TIxHzCIrkIMn8zDima7pYJ0AcLUE6kLIN9AHIsUmJfFceIrVN5bC310
-	 0vDeabyYb39mw==
-Date: Sun, 25 Oct 2026 10:50:28 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
-To: "Maciej W. Rozycki" <macro@orcam.me.uk>, Thorsten Blum <blum@kernel.org>
-CC: Dave Hansen <dave.hansen@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-        Borislav Petkov <bp@alien8.de>,
-        Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_RESEND_v2=5D_x86/early-quirks=3A_S?=
- =?US-ASCII?Q?can_all_functions_in_early=5Fpci=5Fscan=5Fbus=28=29?=
-User-Agent: K-9 Mail for Android
-In-Reply-To: <alpine.DEB.2.21.2610250743510.42255@angie.orcam.me.uk>
-References: <20260916100206.92853-2-blum@kernel.org> <asDr0tWYBNC296EQ@kernel.org> <f9b1c1b6-03d9-44fb-bdc4-78342b05f2af@intel.com> <asLw3ZfDy-rDxwtv@kernel.org> <as0mu05UzFWBBRJ7@kernel.org> <alpine.DEB.2.21.2610250743510.42255@angie.orcam.me.uk>
-Message-ID: <74A9835A-4B16-409E-B13A-4C34FAB5DC8E@zytor.com>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=FC6HUzYm
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-c418e215671so289874166b.0
+        for <linux-pci@vger.kernel.org>; Sun, 25 Oct 2026 10:52:22 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792950741; cv=none;
+        d=google.com; s=arc-20260327;
+        b=ac6Grcl0wnhSntkx7F7mDp4akyHVJWktA1AMuRbi061cNIfLL55al3zT4s1f4zOV1z
+         75u2b1TY/al0Adeb7VmJepQ8O9ihDaVS5IqqvQE9eatAOGOUurHE/poUUY9ziXxIvvvO
+         iDLPWcgnLmEVqZRV3tE/OIqkloiKcPYmsBqNpgYRUuCKKcxlLmIxmpu/hJ7/iiEdh+iH
+         RURmY6UTJpi6G1l8XeoGUZZSMlhbXLLrS8uCE6ukRkZdwEyDUYhsHyc2v29E385RoBuG
+         RzxovhlE6bO0UVQobUfYE1QaA4ZpliY26FMINZxutQJxmqbdzmcEwh06cuqKjg4GxTZ8
+         ITmw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=7aFt4J3E+xSQOGJ2c0aTTJGMbHVCzTORiyeLEMNWLak=;
+        fh=DzEduu48ZZj0A60YMce45T5stbxYKzdprjOs4OCV6KU=;
+        b=Od45I/+DSnv/VKB1e8K2aor6GZ1+QK1ijqZ+9B3EsH/5GbFEFBKDjEjj5W7gLqkKkv
+         Y+aCa71dfFNZwzZ7OHrI46qFOAIMWC8ACOEiazkMIb6BclNv/ziJb+9uZ/T+bkeTfNrx
+         H33Vz88AJjae/KxP6I6MWa1gDbyhWSG65BnA1HpzqnySFL0o/KHSBvIkjd7DopZ7P9JR
+         e9PGmhW04Je2uVv0EdGeEmPw8YOcCaiPjgc0cxMo4Je5mu21BGYVVhtbgL92dNKecjFO
+         w9J2d0EBnSWGYIZAqQhc/wqDjEFBBRTtFyt+F8aent/60L0O5WsJN82T44WnDorErbR2
+         zbSg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792950741; x=1793555541; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=7aFt4J3E+xSQOGJ2c0aTTJGMbHVCzTORiyeLEMNWLak=;
+        b=FC6HUzYmMNQxSMmCXmfY45ZCuO/QTfl4IX7GWuzE+msxmYINvXAo6QHDZeyEiSHCJX
+         L2PHiLT28UoHFEosGOk9U4m+39P4IKoyBS5McHyEcRkFC+3hV4BsXrEjmRk7DEzawapX
+         VSuY0cUGX3gBsgSAdNjNzyMKf9fOPNMzn6Z1c8jMvlxdAYMTMExd+UI9ZLeGnH8PqUCN
+         y4Y0RridFPMkvhRla0ZTxu+O9HQD9fK08Jnf1N/UtW43eyx8wBe6CqhXP3sXSjmGFf1h
+         yw4V1AcDslf+F5ZpJPBH3UAUlMPpHHKQdgRYj/P2dc/YlzRLEd20N4BbEpmhYC9iahwA
+         TbGg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792950741; x=1793555541;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=7aFt4J3E+xSQOGJ2c0aTTJGMbHVCzTORiyeLEMNWLak=;
+        b=z2xWjcjW+Wr/ufbt2DvI9BGINHgjVHJmhozNhMmjL7LLkAX0og9kafDzwYbo/1Nn5+
+         +CLE/dLCRHG97r0RjafA9IiPuCQ0C66zWn2vCGKbLSSxWHWNwuzuusE8Gzz7n2sxc/5C
+         qoWeKqLXBqn8X40XVaHBpgYW4Bka1qK5KLxTHYkwdSGMUb8r18M4OtnwFyIwoSK/qPm7
+         uUlGlM3yW1M128PEdyBCzOAECMx+e3OLrryl5ilOLRkq4CDtq3rBiST/K6n3AZres2d7
+         4dXrtHvdGXRL62kQ39S+OnUuhUjrwUwIMSxuANvdsTyaBHp9g5hNJDNJYRKXqMboa9hp
+         5bXg==
+X-Forwarded-Encrypted: i=1; AKwUvBydsS022tfFCZvRvwEaXFzHp89So+qdHVjn6GUP6hFm8fzWGnyTcc2wr9rb3Gc7rVdzUcCg0el7IqM=@vger.kernel.org
+X-Gm-Message-State: AFq9FYIty4J783l4HfUNx4V2j9wSB7KfeMNiGmrbsG2toDeRCQ/FacpF
+	S8Qlyuux/8rs1w6q+c2GTZEOFYOa5IT5fAis7+PoRlkMq5/xy7JjMNC4Pf7pvPYP2LlBaVZwKuo
+	vSsuBlOchspp0AJYVhuLd78Tzg0crl2eSrokb
+X-Gm-Gg: AYBFou0qYOcws4y0/shL/G0G5aTQcX1mkhZwQcYTnB4OMQ7QxgVwzYfhVT6nzKQkXSk
+	udubUwvljB1lVT8fUqDKgK4cyE8Q0Q+yuQpcyb8nio7U3mzFMXQzy+GqoZAiuzbJ9vSokOU3jl8
+	+kB/nWXvXKm43pihEFPXn36WhLqmkQ5/ZVHpDXC/ZpdzcY1Ai9SSaFZTzOVfwyPCTT8SzBtvcTk
+	AdNa7J6g7pmOqYrWFjVXeh69tyNnvqiJeRI0yoAyzZC9aymIQX7kCgBQsxeclkVuoL6Vg1CMfBs
+	W+LVETSHckxy6DKq8gtf1Le39fyH700yHLRu4u3i1R6eU7tHiNBLCpcFAKWeUFSPSAQ8lS8gHKh
+	J2jOPGNaXVlG8Ho11FMojuAhyTjy+Tf+We8SqR0ddWW9qsx0P/s1rxwzlUvHudZ0vKt18UVO2hK
+	3m6nxcmFy6POZLboULUVKGcUMiU5IDUgDX0Hy9/r2AQGgvEtNv9OI=
+X-Received: by 2002:a17:907:9711:b0:c46:7b82:27b4 with SMTP id
+ a640c23a62f3a-c46bddc9600mr600371766b.19.1792950740660; Sun, 25 Oct 2026
+ 10:52:20 -0700 (PDT)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -73,42 +104,89 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+References: <CAOz=NNVc4C3aSC+VL59V31==P_sfgCkjSK+nG3LAByUF84OVVQ@mail.gmail.com>
+ <at41Hdy8ATMj9LRC@wunner.de>
+In-Reply-To: <at41Hdy8ATMj9LRC@wunner.de>
+From: Patryk Janik <patrykjanik1710@gmail.com>
+Date: Sun, 25 Oct 2026 18:52:09 +0100
+X-Gm-Features: AclHuK88Z2QavAmx4mSXDSBISgT_e3iYcuZ7GDfDRBk8SUdPo9i421telRTgTEI
+Message-ID: <CAOz=NNVW9khnnt40Bm_ddiNeZ+4Jr6pEPjSLb5Ezq0gAi6Y7uA@mail.gmail.com>
+Subject: Re: [PATCH RFC] PCI: Don't restore state of a device whose config
+ space is inaccessible
+To: Lukas Wunner <lukas@wunner.de>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, alex@shazbot.org, 
+	kvm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On October 25, 2026 1:07:28 AM PDT, "Maciej W=2E Rozycki" <macro@orcam=2Eme=
-=2Euk> wrote:
->On Mon, 12 Oct 2026, Thorsten Blum wrote:
->
->> Is there anything else I can do to help get this queued?
->
-> FWIW, it's not unusual even if not common for multifunction devices to=
-=20
->have "holes" in functions, e=2Eg=2E:
->
->07:00=2E0 Parallel controller [0701]: Oxford Semiconductor Ltd OXPCIe952 =
-Parallel Port [1415:c118]
->07:00=2E3 Serial controller [0700]: Oxford Semiconductor Ltd OXPCIe952 Na=
-tive 950 UART [1415:c11b]
->
->which is a chip the functions of which (one or two native or legacy seria=
-l=20
->ports, one parallel port, one GPIO interface) can be activated selectivel=
-y=20
->with reset straps, however the resulting numeric 0-3 function assignments=
-=20
->for individual interfaces are not necessarily contiguous, presumably to=
-=20
->simplify internal decoding logic=2E
->
->  Maciej
+On Sun, Oct 25, 2026 at 05:58PM +0100, Lukas Wunner wrote:
+> Config Space Writes are Posted Requests. There are no Completions
+> sent in return and consequently no Completion Timeout is observed.
+> So the above paragraph doesn't really make sense.
 
-Indeed, or there might be multiple versions of a chip with different featu=
-re sets =E2=80=93 often the same physical chip in different packages, so so=
-me features are fused or strapped off because they aren't pinned out=2E
+You're right that the writes aren't where the time goes; the
+paragraph is worded badly. (Strictly, Configuration Writes are
+Non-Posted on the link and do get a Completion, but with ECAM the CPU
+doesn't wait for it, so they don't stall either way.)
 
-The assumption that a multifunction service will have all its functions co=
-ntiguous is absolutely false=2E
+What stalls are the config *reads*. The trace is in pci_mmcfg_read()
+with RCX = R13 = 0xffc: when every header reads ~0,
+PCI_EXT_CAP_NEXT(0xffffffff) is 0xffc, and
+pci_find_next_ext_capability() re-reads that offset until its ttl of
+480 expires. pci_restore_state() does about ten such walks, so a
+single restore issues several thousand config reads to a device that
+no longer answers, each one stalling until the Root Port's Completion
+Timeout. On this host that was ~56 minutes in pci_restore_state()
+(and another ~33 minutes in the subsequent save for the bus reset).
 
-Acked-by: H=2E Peter Anvin (Rosaic) <hpa@zytor=2Ecom>
+I'll fix the commit message in a v2.
+
+> The outcome was that there's a firmware fix available and a quirk
+> should at least differentiate between good and bad firmware.
+> Or the fix is to update the firmware and then we don't need a quirk.
+
+Agreed on the FLR failure itself, which I'm pursuing with NVIDIA
+separately (for this SKU, 10de:2bb4, no newer VBIOS is published yet).
+
+This patch is not a quirk, though, and not NVIDIA-specific: it doesn't
+touch the reset, it only makes pci_restore_state() bail out on a
+device whose config space reads ~0, the same way pci_save_state() and
+pcie_flr() already do via pci_dev_config_accessible(). Whatever
+firmware the device runs, once it has fallen off after a failed reset
+the kernel shouldn't spend an hour in soft lockups restoring state
+into it. The same applies to any device that dies during reset.
+
+I left dev->state_saved untouched on the early return so a later
+restore can still apply the saved state if the device comes back.
+
+Thanks,
+Patryk Janik
+
+
+On Sun, 25 Oct 2026 at 17:58, Lukas Wunner <lukas@wunner.de> wrote:
+>
+> On Sun, Oct 25, 2026 at 05:37:39PM +0100, Patryk Janik wrote:
+> > After a failed reset, vfio_pci_core_disable() unconditionally calls
+> > pci_restore_state(). When the device did not come back (FLR timed out,
+> > config reads return ~0), restoring state walks the extended capability
+> > list and rewrites the whole config space. Every one of those accesses
+> > stalls for a completion timeout, so the host spends minutes in soft
+> > lockups instead of failing fast.
+>
+> Config Space Writes are Posted Requests.  There are no Completions
+> sent in return and consequently no Completion Timeout is observed.
+> So the above paragraph doesn't really make sense.
+>
+> > - "PCI: Avoid FLR for NVIDIA 5090 GPU" (linux-pci, 2026-04-16), where the
+> >   underlying FLR failure was described as a known device firmware defect.
+>
+> I assume you're referring to:
+>
+> https://lore.kernel.org/r/20260416070707.3242381-1-yuan.gao@ucloud.cn/
+>
+> The outcome was that there's a firmware fix available and a quirk
+> should at least differentiate between good and bad firmware.
+> Or the fix is to update the firmware and then we don't need a quirk.
+>
+> Thanks,
+>
+> Lukas
