@@ -1,86 +1,87 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.45
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.169
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792901036;
-	b=1aylqPlcsngrbXCwBzTch8ogT3u0nfxB0oH54nhMns2+XKlUEwRb3Wom6pwW9+lGYxdE
-	 n80MiuENqCC2mDlqNasnTucRglPXec9IDiDyFonzgCgBN4cybsDdi8m1MPy+qLcgIuCnb
-	 x2otoH1EdlQnL4rif5bSRRu1MjeCL+GjX0gYom+vdbHAI92EHN8IGturR6GkuQcvaTDdo
-	 pFkhQKdjQ/8FZh6Z5gJLf663QbtSeUEZAovHJ0hn6vKC4KonsinB3gw2PkUC9vMF1EBf0
-	 ycEh9rZlqTUQ5sIrQoOQIRR/5XNjVRC1cNwfb6YIpHj8w1p4rjwo9Jvf8qJ5yCTF2uw==
+	t=1792901049;
+	b=RG6+5MWeKR0aaqpmR+53SeTdVfnBBwxA9LVqTe3TUYmkpM61+C3Kou37B8A9U1anXUZB
+	 TjmXxRhwkAxKi/2v5eeskCQAkR92lf0WtMOGbnN646YGIpsbBQNX6PHGcsGKFBsJsejXF
+	 O13fuQ5aVFedWCYd4+vE1emRV5kGobm22G9UldcKkyj7goSlXiT2aqU+yoZvylCHK7cuB
+	 wBTc/2VjLuvx7+VDmTe0po8fJs+saJJrHXAshJZ0goebxWsk/fWx6GwW6JBj+2GRQVVKm
+	 rWA7ZTAZrz48QkYYPULRaSXSyLezMlplEaLCphLv2yl4thnblhv4w32rYpiGzoOquNw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792901036;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792901049;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=LMc3CYZEKLGD01XMea94oTj/yeGbugpGFxEInSpf2Xs=;
-	b=05qEz2F19nUs5FDYyesuB+5/h9U97Zwxeva8fzJilbkhB+WdUFxFZxi+I98X8Tt5tLZ/
-	 Dc/bn5nXSBiXcffvac8tr/RtkgO5YpkMyHCF2nx70npbFpEfrWj3hfrPyPDD4/zDsRkIf
-	 qTSKyE0fRSwAyge0Itq/FymV6PDFpLOKGxSrerpS/9JV2+jKwEw8116aVDHqHojj2v0SM
-	 YDuh0Wo1nbl4PWqQgxg2jtx6VgP07FzWYMJZ6Fju1rN1xCTuimIBA3dnbmO8vEK0TWzwN
-	 B3V3zYficDms/kn5WGKf5F98Z9FK0N+4lWyxTwqpPNhaKh2X6NsswPT90VeG+iziPDg==
+	bh=HlYNTG1YeavwC+hNZqZ9gnXD5hsIPEAX4XNijQPWf9E=;
+	b=JTepQvFHaTl0SKjge/DjtcF0CMM3d3umR2Z4HgoIrHbN1i9F0BC4twNX5pK4uYoN582J
+	 xXCBW5IUB6KF0tVuUIAwUAlrYNbZe0J2KVOqi6kw37aJ7cGtdVOGz+WTQ6ofPYCzl7cC7
+	 g33F1ggYMUwlBaqioYKAGBaKnasGWGsQjxjfH9PAh2xqI5ALF+iBpyScbDQw4aJQjZYwz
+	 SksqXfaNNeyAlR3U2FjF+NhIqYXBBFusD51tWLhxeSW4+RU7QPrWyKtaNZnMwi6vQqJ6u
+	 G1Bz5aXeyPCaiau7biMGftlAPonVncGO6UB/XSl1KzJvfj3WDBFTjuBlkvalSnUb1yQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=QGd5I5HD;
-	arc=none smtp.remote-ip=74.125.82.45
-Received: from mail-dl1-f45.google.com (mail-dl1-f45.google.com [74.125.82.45])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=L9SKuc6l;
+	arc=none smtp.remote-ip=74.125.82.169
+Received: from mail-dy1-f169.google.com (mail-dy1-f169.google.com [74.125.82.169])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28CCE606A31E
-	for <linux-pci@vger.kernel.org>; Sun, 25 Oct 2026 04:03:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 28CCE606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01DC9606A334
+	for <linux-pci@vger.kernel.org>; Sun, 25 Oct 2026 04:04:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 01DC9606A334
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=QGd5I5HD
-Received: by mail-dl1-f45.google.com with SMTP id a92af1059eb24-14fd9dafb0dso1649911c88.0
-        for <linux-pci@vger.kernel.org>; Sat, 24 Oct 2026 21:03:55 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=L9SKuc6l
+Received: by mail-dy1-f169.google.com with SMTP id 5a478bee46e88-35829219da8so3698653eec.0
+        for <linux-pci@vger.kernel.org>; Sat, 24 Oct 2026 21:04:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792901035; x=1793505835; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1792901048; x=1793505848; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=LMc3CYZEKLGD01XMea94oTj/yeGbugpGFxEInSpf2Xs=;
-        b=QGd5I5HD1H6NCJpr1gY99R+GQwI6Lfi+gl5HpCwWAv7ACSrLI2nAAUBsMTb9LuViuk
-         CKo6SoydrgyqUkwKqPO1rB721LH++KcE22039XwYe1Dj7/KseV8NmC25+4rM4Pdk6NI8
-         bhbtA7jVr4ZkW8BW91pBWT32vYkJOHAfyvXNtD90krp0XOg6y6bUCPq8ze7VWB5+h/Pg
-         VbwQfQ1zp3/PfT5eUU77bvySFBo3G9MbRfeDd6d/zugYHvQITfiC52z+vYEKXYk74uOI
-         HQMc2Q+kTvsu+YNcMfLBBgxA43Xgbgh3ALGtcYt8UWVH9fLmO1IFckuKGxtK4K0cGYn3
-         hFcQ==
+        bh=HlYNTG1YeavwC+hNZqZ9gnXD5hsIPEAX4XNijQPWf9E=;
+        b=L9SKuc6l7H2xpZ1V5KZNPlLweEJXM4cfELyqf0EUFa6eSqOjr+QKnsRdDfoyqAgqA2
+         rdQcY6UPG1T2QMg6w6WpbXAlsoN8kWZykxClLarrfczhRYFUntL/t8I/giAXuzP2Cf1o
+         R6W5/UB9mWrShso0fhqK/jnmBWsRHv1YUiT++MzGr3aT8hVanXIprRbcwlEUv6u376So
+         KLJpOiQcPsyxLQ0JCcaKzIFEpLeM6UVYIN4EZpyjm0v/BPinXiXplRQTMBFFz40UjkTP
+         i6R04EZZ9aVIgsbQ9nbrobfT1tFwoLFObp6+b/Ml61aJmmthENEB0CpO2Re2o7hZDKq8
+         vIXg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792901035; x=1793505835;
+        d=1e100.net; s=20260707; t=1792901048; x=1793505848;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=LMc3CYZEKLGD01XMea94oTj/yeGbugpGFxEInSpf2Xs=;
-        b=VDtxGC0akRgZeHjkaT6EG/mGAB4nzfXEO1LWLdb79WBF1du+QrlKnJyUnVfE2pUA9q
-         B9kLFWt0pz0Gkc8f6t7YHAqneIdsL6DCDLxHljPVep6QTPNLIPh5wVy4oIMwWf8d/XLQ
-         dLePRXfvvqE66VEBua811DfGc3CvqLgnQ7JkpD4LA6t1RiL/GnouMMfG93joUoHrtt/W
-         Ru8GpbpuukKS6RPOijkazadEPnJ5Qo5QCKhcRFCBcMQsKOnQjRBKDdoNNTrOQg2wB837
-         9hE/vFIMtMRTYCcVF1VItCRXffe9gNzxY4daz7MyZ8/TrOZGlvUUX6i0avpTdIXEX50C
-         FaGw==
-X-Forwarded-Encrypted: i=1; AKwUvBwpEElG8ZEwzXUXT+iDit5GOulHNSpqqVPkaQac0dhvRNLX9l4UY6XNDnxCbLCsJO+fMJCybpSRS7s=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJhckFjOHO/O8uLWDiv40UD23uw66gPAfR4FxbvVdD0TWJSmuT+
-	w2j2ULcr+2V3kvrbn+rms5xx2KXy/Et5OY0f9glVb1THXIWktBMJGoA=
-X-Gm-Gg: AYBFou30pcyMwvrl/8bk4ODqIyySuXkuiZsl2HP+t80vY4CavkZI5rGwLVBqGsONKXE
-	RFqTeoGY9j0ZFFJCz2g+OTtoFKox7GHVmMX+q8XAyR+0pasFavP61MaCP4SZDMUWW40hfOibWzF
-	Q898uamX92gxG0lPTI3ghF/ifUW7T1Rh62mbZSZfXT+S4MK9pp0S4R+0csBFMxbsZ/r8eOA83tq
-	CWxuHz2qHwxBo5vuPRJiLk3xaRgqbPYPvYhFZAZzyQXV3BtixwL76pTQXRQIN31y5E2ls0BjRSL
-	Og+eIiPQ9IVKU86iDAdHtQ1SBAVVziWhUmJkC2nC+B3suFyV7xeBBXBn2lkOs2+sDXio2YF89G9
-	CimQo5YdVi3SwF9w0Mmog5eTYYFW/0wZ5pTYX9OjocR4si4pmag2vd63VEXMAIRreo/I85px4Bs
-	9AUqPB9jHpV0pH7FWUAzBZyu4lOyDs0icFmqtDbwx9mC6iFIkBHlcvyC1GxkY64vD4nOo5/+dhe
-	5spheu0cYBWFH6XDmgd1d39YBXbxKP2hbINDev/pAbJC0JgtXkNZ2TX3r5QPnW+BL0q+66tBNbY
-	bd5WD6ZjOMnpQ5s=
-X-Received: by 2002:a05:7023:885:b0:16e:6e3:9a9f with SMTP id a92af1059eb24-1993639e6efmr6212921c88.34.1792901035199;
-        Sat, 24 Oct 2026 21:03:55 -0700 (PDT)
+        bh=HlYNTG1YeavwC+hNZqZ9gnXD5hsIPEAX4XNijQPWf9E=;
+        b=nZVc/1mPUJTbDCl0/nZF8h7kVR7Nhhei0j6hLM3zHA5zMiNAc6VRDAKVhCMzGDQWnv
+         AnXq+kUk9GRhjl+WPdMmIimCm7dcWB4jjfSQiPTkFy0uzp22+3tt9NhYM7ZWso5o3X2a
+         1/8NkeaQLj/qW9kK5+4jXYNwgQj8Ls0h6Oyf76B9u91YEfYBrsS1CrtHjBDKVChOB/3B
+         kMSy1mODvegBHOtagv35ZN4q+UFDrV9nD+Kqa9rmyyO/hdfrQzbkewIGme/O46jn9ULp
+         yjNFk79ni+130Bq0JjRjIRcN8faApgKq3WO4gPBCq391bfHyk5h7Y61Bufcm5k0uNO95
+         SU3w==
+X-Forwarded-Encrypted: i=1; AKwUvBxrVuj+sfCifkFLI14prwKKH1W2gO9VtMCcU3Yf2IBflsWgcfSnrjxCpamjxU+LM2KZXfxZplZRDy4=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKdkxaXeUluN+DX2/N9ECdSLK8GCsBLEtpM8CvJo6jdW7/N2woB
+	dSJ17dn/EjIj5ZRFA+f5GxC0kPxGwXAYyt2eeXA+XNumn0DpJ28us7E=
+X-Gm-Gg: AYBFou0fxa8Ecu6RsigxW2FLvDjkU1zLf2SaS3o4FbD7lx36gqdyb4crkZUtRSBUgPp
+	EiewZf42qvcrj5xyzEp0r+7XgbfJvmQcBODs83ySdlXkK1mX4+gwwkGxQxBy6yBMUkfEgxTlaBM
+	4VOeVwDEbHus/vhfu1JHJTNePSN0EG+gh0q7oEqBtT9hDaH5V8JUrKYSWm1MHS1eSW2+KkC+W6H
+	qNxtlUxopdezH78/20vFgP98FOtTeA9Zqb02gfG/ac7L7GK/0RkQLVihB3oEtT0e0kmWACn5PWI
+	xMD6tqu6VcuskB1pfIB/P2IMtiR/QUroQY1ncurh7w8hJlWu9UA7lT3E5NeYSFK3vf8FvF1z1cY
+	zg4qXZFxlzKpQY8sDv9QwVKxxT/QF5j4KXmvEeKJrk3w8ZKy+zioWpicIeviXASzEWj9e05tGtW
+	M4lIbTassZb91CGUMYhEjX4n+sbr2OIC95d6KU6iuirjF7fgyigcU4sIoEUc/gcPpSqA6FKeP9l
+	uThd7RUGIf69zcw+KQupIEotmk4fQXI0NrCP+tHk+5hGOWRR/S8cnSrGCj0+P6WO+WR6QUY/xpL
+	hGma0rjCFCpr5Q6Ekl44Av3s9TKZ1q2mCafBt3iMuRFHjIxRNVbszV6pKd+EtyFmhw==
+X-Received: by 2002:a05:7022:5f14:b0:146:5f73:d45b with SMTP id a92af1059eb24-1994cb430a1mr4374141c88.3.1792901048032;
+        Sat, 24 Oct 2026 21:04:08 -0700 (PDT)
 Received: from at-Standard-PC-Q35-ICH9-2009 ([106.221.76.40])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-198a32ff780sm11635283c88.22.2026.10.24.21.03.46
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-198a32ff780sm11635283c88.22.2026.10.24.21.03.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 24 Oct 2026 21:03:54 -0700 (PDT)
+        Sat, 24 Oct 2026 21:04:07 -0700 (PDT)
 From: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
 To: 
 Cc: Andre Eikmeyer <dev@deq.rocks>,
+	Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@kernel.org>,
 	Ingo Molnar <mingo@redhat.com>,
@@ -98,15 +99,14 @@ Cc: Andre Eikmeyer <dev@deq.rocks>,
 	Kenneth Feng <kenneth.feng@amd.com>,
 	Hans de Goede <hansg@kernel.org>,
 	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>,
 	linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
 	linux-kernel@vger.kernel.org (open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)),
 	amd-gfx@lists.freedesktop.org (open list:RADEON and AMDGPU DRM DRIVERS),
 	dri-devel@lists.freedesktop.org (open list:DRM DRIVERS),
 	platform-driver-x86@vger.kernel.org (open list:X86 PLATFORM DRIVERS)
-Subject: [PATCH 11/13] drm/amd/display: Refuse DP AUX while GMUX keeps the GPU off
-Date: Sat, 24 Oct 2026 23:59:47 -0400
-Message-ID: <20261025040046.1602-12-atharvatiwarilinuxdev@gmail.com>
+Subject: [PATCH 12/13] drm/amdgpu: Skip AC/DC notification while the GPU is runtime suspended
+Date: Sat, 24 Oct 2026 23:59:48 -0400
+Message-ID: <20261025040046.1602-13-atharvatiwarilinuxdev@gmail.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261025040046.1602-1-atharvatiwarilinuxdev@gmail.com>
 References: <20261025040046.1602-1-atharvatiwarilinuxdev@gmail.com>
@@ -123,64 +123,64 @@ Content-Transfer-Encoding: 8bit
 
 From: Andre Eikmeyer <dev@deq.rocks>
 
-fwupd reads /dev/drm_dp_aux* while the GPU is runtime suspended. The AUX
-device holds no runtime PM reference, so the transfer touched registers of
-the powered off GPU and caused a CPU CATTER.
+Plugging or unplugging the charger raises an ACPI AC event. The handler
+sent the new power source to the SMU without a runtime PM reference, so
+with GMUX keeping the GPU off every SMU message spun on skipped register
+reads for seconds. A runtime resume racing with that left the SMU
+firmware unable to start on MacBookPro15,1 and the GPU in runtime PM
+error state. Record the power source only and let the resume apply it.
 
+Signed-off-by: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
 Signed-off-by: Andre Eikmeyer <dev@deq.rocks>
 ---
- .../display/amdgpu_dm/amdgpu_dm_mst_types.c   | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+ drivers/gpu/drm/amd/pm/amdgpu_dpm.c | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_mst_types.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_mst_types.c
-index 7261317d4..b099bf520 100644
---- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_mst_types.c
-+++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_mst_types.c
-@@ -24,6 +24,7 @@
-  *
-  */
- 
+diff --git a/drivers/gpu/drm/amd/pm/amdgpu_dpm.c b/drivers/gpu/drm/amd/pm/amdgpu_dpm.c
+index 808be6c42..b64f0b681 100644
+--- a/drivers/gpu/drm/amd/pm/amdgpu_dpm.c
++++ b/drivers/gpu/drm/amd/pm/amdgpu_dpm.c
+@@ -30,6 +30,7 @@
+ #include "amd_pcie.h"
+ #include "amdgpu_display.h"
+ #include "hwmgr.h"
 +#include <linux/pm_runtime.h>
- #include <linux/vmalloc.h>
- #include <drm/display/drm_dp_helper.h>
- #include <drm/display/drm_dp_mst_helper.h>
-@@ -111,6 +112,20 @@ STATIC_IFN_KUNIT ssize_t dm_dp_aux_transfer(struct drm_dp_aux *aux,
- 	if (WARN_ON(msg->size > 16))
- 		return -E2BIG;
+ #include <linux/power_supply.h>
+ #include "amdgpu_smu.h"
  
-+	ddc = TO_DM_AUX(aux)->ddc_service;
-+	adev = ddc->ctx->driver_context;
-+
-+	/*
-+	 * User space reaches this through the drm_dp_aux_dev character device
-+	 * without a runtime PM reference. Refuse the transfer while GMUX keeps
-+	 * the GPU powered off, a register access then hangs the PEG link.
-+	 */
-+	pm_runtime_get_noresume(adev->dev);
-+	if (READ_ONCE(adev->gmux_off)) {
-+		pm_runtime_put_noidle(adev->dev);
-+		return -EBUSY;
-+	}
-+
- 	payload.address = msg->address;
- 	payload.data = msg->buffer;
- 	payload.length = msg->size;
-@@ -126,13 +141,13 @@ STATIC_IFN_KUNIT ssize_t dm_dp_aux_transfer(struct drm_dp_aux *aux,
- 	result = dc_link_aux_transfer_raw(TO_DM_AUX(aux)->ddc_service, &payload,
- 				      &operation_result);
+@@ -498,20 +499,26 @@ int amdgpu_dpm_smu_i2c_bus_access(struct amdgpu_device *adev,
  
-+	pm_runtime_put_autosuspend(adev->dev);
+ void amdgpu_pm_acpi_event_handler(struct amdgpu_device *adev)
+ {
++	int active = 0;
 +
- 	/*
- 	 * w/a on certain intel platform where hpd is unexpected to pull low during
- 	 * 1st sideband message transaction by return AUX_RET_ERROR_HPD_DISCON
- 	 * aux transaction is succuess in such case, therefore bypass the error
- 	 */
--	ddc = TO_DM_AUX(aux)->ddc_service;
--	adev = ddc->ctx->driver_context;
- 	if (adev->dm.aux_hpd_discon_quirk) {
- 		if (msg->address == DP_SIDEBAND_MSG_DOWN_REQ_BASE &&
- 			operation_result == AUX_RET_ERROR_HPD_DISCON) {
+ 	if (adev->pm.dpm_enabled) {
+ 		mutex_lock(&adev->pm.mutex);
++		active = adev->pm.rpm_mode == AMDGPU_RUNPM_GMUX ?
++				pm_runtime_get_if_active(adev->dev) : 1;
++
+ 		if (power_supply_is_system_supplied() > 0)
+ 			adev->pm.ac_power = true;
+ 		else
+ 			adev->pm.ac_power = false;
+ 
+-		if (adev->powerplay.pp_funcs &&
+-		    adev->powerplay.pp_funcs->notify_ac_dc)
+-			amdgpu_dpm_notify_ac_dc(adev);
+-
+-		if (is_support_sw_smu(adev))
+-			smu_set_ac_dc(adev->powerplay.pp_handle, true);
++		if (active) {
++			if (adev->powerplay.pp_funcs &&
++			    adev->powerplay.pp_funcs->notify_ac_dc)
++				amdgpu_dpm_notify_ac_dc(adev);
+ 
++			if (is_support_sw_smu(adev))
++				smu_set_ac_dc(adev->powerplay.pp_handle, true);
++		}
+ 		mutex_unlock(&adev->pm.mutex);
+ 	}
+ }
 -- 
 2.55.0
 
