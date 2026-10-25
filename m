@@ -1,57 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=109.224.244.123
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792936322;
-	b=qR/pIyW5tdArsChJ6lRrD1BzbZS4KgU2zk3oqha/jgLn0WEuAPnr/LOaNuqDJSUb8XL6
-	 1dhAFGfLlWoZT0xTgFik9faa7oVVVmde0h+wyZxTmhQ97N3HZIkWbXDMtRi6ozcj2Wu5H
-	 Sa65Qd2sgRMyqYFKujIM9y9cJXYsCHpahYqb85jghrsYaAeRVIckrH6egYm7rFarSp/1Q
-	 KNioy7btM1UkPMZePOrDrfyVIaa+0IXRtjlVOQutTOpays9alGCLJVMSpQ6vbUg2clh/f
-	 xnm3iNH8cbe3w8fsTzymTPRwoKGF0OT0xkWuyH57rQTvlHIaKMB6NJzwldQpmGtWgqw==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792936322;
-	h=DMARC-Filter:DKIM-Signature:Date:To:From:Cc:Subject:Message-ID:
-	 Feedback-ID:X-Pm-Message-ID:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=LV+gXF/xXhZ1UNrTU4g9ywrHyOMfy4hD/Fc6wa02E2M=;
-	b=n6vk6RgyHKKM8jT/p3QYlBQUJ/JEq1XjK23GmgC6kYjQphgfKD32CYQYvGuidPmkCeHI
-	 yfXBPs+zZUl6lNUO18nBMxazj8WwvhXKyPcoloEFhjYDYG4NLl/tFeGl6LVMd6Qb4vZY3
-	 KjBZJX3WtX5b6RGTLqmL06OftYAA3p2eUp0gAxJ9sNW6HLM0dxGnyRIETv30XojCWED2d
-	 5WWxIMFstQqqzxHJ2TJ/wVZoI0aUNUz/mTwyGvV5Yt6ND2BkvJnKunoXim1lSV12bP1ea
-	 qnE3URh4lxa8/J1GU7vl0m3rD4dh+3Z3tnNdk9LS+QFqPt+2sYYj/X+ta0W2fQh73cA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=pm.me;
-	spf=pass smtp.mailfrom=pm.me;
-	dkim=pass header.d=pm.me header.i=@pm.me header.a=rsa-sha256 header.s=protonmail3 header.b=HTQu6K2L;
-	arc=none smtp.remote-ip=109.224.244.123
-Received: from mail-244123.protonmail.ch (mail-244123.protonmail.ch [109.224.244.123])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.178
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792937980;
+	b=aWbMgM0k26km/Oe97cikUTE0hdPQJCLpSNCg8Ja2yZTiPTgZrIpMXsn8PDh5zYE0DmXG
+	 VDDBt4wzwtWv06jfnd30PFj6L1O1QMQ0RPSwlb442P92qaLEWWp/9N1TzVJXaUsrSYaEq
+	 YqqCr4CdowE27vhpxoAzXGJoRRD93PzZAZXXkaIA3Y5vd/GCRczAkez42NhHwvBaWZKuE
+	 TqgvbdDye21W8Tlx3WFVKTsZHS9xQqYlcQ8gdPztbyznsFplW0dd0i+0uXbYy7hZFiQqg
+	 8FS4cJq+A46uiTND5Xed5HQLZZ6+LxD8FU+NITL78c26vVuEdN8SE5l7evsPMLe+Nug==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792937980;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type;
+	bh=afEw9oZKmLEt3nCw5DyljPgEXMVJGWyX00qdwnVO3iE=;
+	b=h+V2Iy6pSzr3cYYyi4wn4zU0KbGOjgEyOUN+c7wzS1NC+M/yv8NK4tn0CJAxdVh70k/t
+	 nkgpmGSS7GbaUP0ENGbGwl2v0rlviQRqc70S1db9jd9jkKRKkCCrZBfuI2yWJ5B5oNBM7
+	 hPurzoH2eA6tzTqpGmUZTrr0NousM0f19mo4UOrJUSR4vDXkGXnEngVupoA4Yn7gqx9vk
+	 Egja0PUcw13iINF351L0Zx+qeDX+t3Vl1UTuWYSyq/RZOcArTbBsFJ0W0lKMPQDc5IpPJ
+	 +OibJtGjVh4sXZlN14yet8/aso4v6LZSIyZVgm8yRhYKJMZPImd2jL+dBKw5vpCPbIA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=rpwWsubX;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.178
+Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 927B0606A31B
-	for <linux-pci@vger.kernel.org>; Sun, 25 Oct 2026 13:52:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 927B0606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pm.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pm.me
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FE5C606A31D
+	for <linux-pci@vger.kernel.org>; Sun, 25 Oct 2026 14:19:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5FE5C606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=pm.me header.i=@pm.me header.a=rsa-sha256 header.s=protonmail3 header.b=HTQu6K2L
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pm.me;
-	s=protonmail3; t=1792936319; x=1793195519;
-	bh=LV+gXF/xXhZ1UNrTU4g9ywrHyOMfy4hD/Fc6wa02E2M=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=HTQu6K2L9yuODmflgM597mUXpZj8QuqjN8h8C9DikcVyamcVMKMqyB81pI9Gnq0nI
-	 nFztp6qoja7n36XXJI85h8Nzjyps/JMTN3WcQUB7m6Rx7XE4J+hbeW8k/O56Y76nNj
-	 /OnAZhqkhQ58p1VQD8LwrxRGf52VOAXg1Vc01JXPukm5HCmMVVOwxnkPHjunKJnWLZ
-	 bH6Hrk7dABgnarDUnszJ6Q52jJPrevMHxeNYSWkViYlCqunrsodnkiaOc8OimHu+KC
-	 c38/Cq3QS34f2WiYEk8ESADBIIzkUeGKGQ7hwd1cfDk/KhN7FVuF7Z4zAuolSoHh3V
-	 vMlGlbWNL/rdQ==
-Date: Sun, 25 Oct 2026 13:51:53 +0000
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: matt.protacio@pm.me
-Cc: Bjorn Helgaas <bhelgaas@google.com>, =?utf-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, "regressions@lists.linux.dev" <regressions@lists.linux.dev>
-Subject: [REGRESSION] PCI: sibling bridge windows undersized after rescan since f909e3ee3ed1 ("Remove old_size limit from bridge window sizing")
-Message-ID: <aw593qmbGeozzzeSm1vyhxbK4gXyV-yVyDA8-ZHeKwFbW_VS40s9LwMVMr9NWgJl2uPqVpMegCZPGub7MkswOWo3SfngaHNDj8ayjgHR14o=@pm.me>
-Feedback-ID: 135619238:user:proton
-X-Pm-Message-ID: 4304c96634f9d9cb5de56797038f9640c5a896a0
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=rpwWsubX
+Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-53394bffe0fso37455521cf.1
+        for <linux-pci@vger.kernel.org>; Sun, 25 Oct 2026 07:19:40 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792937979; cv=none;
+        d=google.com; s=arc-20260327;
+        b=XfyAF2GMyqkTd/IATtNAPtyvPp26WrzNvUubTN8c0JkDL2WvM42rFdTrvTr3jPt3UC
+         hzVVuWr5MbnP1wMEv1wRCG95eynvlFg5aXU9JHM0H01N/LC84mfHA+TRVZa7SgLsIYYG
+         Of5bI0QulGt2YrezkuCdrKjxtDuECf6kziHkmcEf/NRju7LIIdgAtfgJcb2h0kKrwAXW
+         bE3Nfabno0NJ1E5xdm3lZ+TZ9mvkRQoFijOU7HsClPy+7zhdmaD2F/qjpCOFNYVjdWeP
+         666iRMkzKRO8fmzS7G0SAE8+b50DmNJ1RU/jaTcajjTOVwvXNAij5CckTHptdpAS2GWY
+         7qYw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=afEw9oZKmLEt3nCw5DyljPgEXMVJGWyX00qdwnVO3iE=;
+        fh=gnOaVh4cbO6OBvS8dl7dJrt5xIcgU6/NCt8ySgN5EE0=;
+        b=XfqqcebX/RfrHyyVOFeFVP+W9OAXSqRxN6HQcxFVuxmNR0j3VaJQl3rgwHEOGKEoy3
+         Dd1oiTehEjTlNWrpagle5T8EapZ2FwQ1rb12fWa46u7kMfkRu/CAwEElvEDr8b3hXnaw
+         ZsL55QDtcAJIsCy+IoM3PPYiHkGFj1SBBOpl0DhiD9PFIrXyedtE9gYAOmwvT9goz1vC
+         v+xvacwl4w0RmO8XGI0eBmzqrrTkYjVL7cXAODB3d+yEHVNXX9yPDAZmz8eGa0WpkAtD
+         FfbsQwFJ3gIkcr3AivNIGXbV7YyjlPF+IJ1MTbjTFj2ouT7hg2qNPwdXGZ787rnAkP0X
+         WRbw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792937979; x=1793542779; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=afEw9oZKmLEt3nCw5DyljPgEXMVJGWyX00qdwnVO3iE=;
+        b=rpwWsubXievo0YLcf+Vs4oyL3gUbEkkg6C/OnQYw2QmkGoL1qKvYRJywg5ShhEZKOy
+         MisnyD6P198DHVaIT3z17H+r3SCXdXNuADpOlnmAUbMHDbljFh7euejz4u+2PeIJGXm2
+         j12GCrd6aQ5Gpp1MoNwrET16wv3oSBf2kipGQ69776/FBPtADAwSfOQDL680cq0s43BK
+         /9uMfVW0W10KZBZjigT/5ww3s+CfO4TlIAn+ErZAbnshbSf8Qc+dABZhxFWn11iXxoSZ
+         AJbi8CHNQkmbDv6KDkZkYhEMKwn9xLgzYHihgLdHZ7Ez9OJZ4z12mPgj9iIJDDLr/bjK
+         d4cQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792937979; x=1793542779;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=afEw9oZKmLEt3nCw5DyljPgEXMVJGWyX00qdwnVO3iE=;
+        b=GqIu7MsyI+dzV1cB6DISU0e10W6YCnLGeAE6HSS/WzvN/HxNL7A5sYmpSJ2/DW4s8N
+         sx4tRD+LDJPHzy8PBfM/GP168e8piAxOaUQV/Ex1cp+5WuW04i/WmnCgJ6oAaH1CTewl
+         XTtnPWZSYc6QNnBb8wax5FO3AkfbqIY+9pcyFE+qJoCZHsm+pWQTv7rKGj5VzDXC6132
+         YcurwMAqqOrrDErSOVAwhYEtxwJWDh7Y2GqBuqSRLLwxwydV4We79BJieyp1VKjr0eCL
+         FqwMVSiguE1KttDBzqLQF2IdAjLISZw+CnQ2X2pYhWTR1bABEM5ay13rnX1+V5XliluX
+         qRiQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxmqwOw7lZS6up7nfVyMcBwCOBPLHuF3L/ldproXzu9EWHWVQaEeABuXV/oDnuXAvKttSLeJjZZN4k=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJxZPjoOzIgLBMZj2CppSWZy4fU1UNFsMPn8l3s1gU7ah8GQzCz
+	JSUAXQhE4WzMuDO7dpfK7QrnUNaff6TMp2noReXkC/fYsP9U/LTiX0yBhTdPIN5V6RGq9+j8dAZ
+	1cmYw622uwstU/XhmP1q1FnJPgy0cL5s=
+X-Gm-Gg: AYBFou1C39f4R4nr3+8e0ld154N3MKPZjUzc3C8dNYP9cpFlHd3w1cHn9QPA7D0Aeym
+	hMLgfnMz3WqKvSiCMU8miBOHaLWmaHdR9oRXD+lt27rxU20nZBN2Hqq98869YfggeUMgUqFTC6P
+	iKLlFeo/ZiFvy0xqatK18R9pywBN+b/tHFi873dpiZn8r1nIY+UlRfyRmQhVhm1LBJ8IUT6M6AD
+	vvKhQtCtcLjWjc98Ju8bmp+55ci+lu84aUS+kUwajMVLbZvctDLJCu/xJ05MnefFekNXLbDuycW
+	JvYOuIYa38lz/SGfPMI/D6WNAhtRHYFrQ0H1FrHYCdtLTDC5QE4EhmWXXgk3hEmd425FNMcDnSl
+	P1CcG0UZjPZ4JOvL/AiC82Yxs6U1WJ3zFvWwd3t1r2iFu3dGJJlTfNNnPgNBQbM651R7BoDh5Ea
+	yoDOyYkR3+lyYsyydFNARRhUGBjJgB+AIDu1GfaNdtM+47pZpZS/dcd41H+/MzrKPozlm36Wy2
+X-Received: by 2002:a05:622a:44a:b0:537:548b:77ed with SMTP id
+ d75a77b69052e-5383b66676amr59161561cf.30.1792937979282; Sun, 25 Oct 2026
+ 07:19:39 -0700 (PDT)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,178 +104,61 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+References: <20261012-fix-aer-mask-override-v1-0-49a0d7aeaea0@google.com> <20261012-fix-aer-mask-override-v1-2-49a0d7aeaea0@google.com>
+In-Reply-To: <20261012-fix-aer-mask-override-v1-2-49a0d7aeaea0@google.com>
+From: Daniel Pereira <danielmaraboo@gmail.com>
+Date: Sun, 25 Oct 2026 11:19:28 -0300
+X-Gm-Features: AclHuK8BBiPLOfqYYGvUYpW8KblsSf6Aue6WOkhnIkNSO4BT_qaP3xQuaMz486g
+Message-ID: <CAMAsx6dLGdqr+ZxG8FrwN-6r=5yVY8hk-c+7CVrAkS0zpKPmGg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] Documentation: PCI: Document aer_inject's
+ aer_mask_override parameter
+To: rathodpriyank@google.com
+Cc: bhelgaas@google.com, lukas@wunner.de, 
+	sathyanarayanan.kuppuswamy@linux.intel.com, ilpo.jarvinen@linux.intel.com, 
+	dave.jiang@intel.com, prarit@redhat.com, ying.huang@linux.alibaba.com, 
+	terry.bowman@amd.com, corbet@lwn.net, jic23@kernel.org, 
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Hi,
+On Mon, Oct 12, 2026, Priyank Rathod wrote:
+> To exercise the handling of such errors anyway, e.g., of those that are
+> masked by default like Header Log Overflow or Poisoned TLP Egress
+> Blocked, load the module with::
 
-Since v7.0, a remove + rescan of a PCIe switch with four sibling
-downstream ports, each holding a device with a 32G and a 32M 64-bit
-prefetchable BAR, no longer assigns resources to three of the four
-devices. v6.19 and earlier assign all four. I bisected it to:
+Hi Priyank,
 
-=C2=A0 f909e3ee3ed1 ("PCI: Remove old_size limit from bridge window sizing"=
-)
+I read the text against patch 1/2 and the current tree, and it matches
+the implementation:
 
-#regzbot introduced: f909e3ee3ed1
+- the -EINVAL refusal for masked errors is the existing check in
+aer_inject() for both the Correctable and the Uncorrectable case;
+- 1/2 drops the writes to the hardware Mask registers, and
+aer_inj_read_config() clears the pending injected bits from the Mask
+values it returns;
+- the hidden bits are kept set in dword writes through
+uncor_mask_hidden/cor_mask_hidden until the module is unloaded;
+- PCIEAER_INJECT is a tristate, so the boot parameter form applies when
+it is built in.
 
-Hardware
---------
-- Intel i9-13900K, ASUS PRIME Z790-P WIFI (BIOS 1840)
-- Broadcom PEX88096 switch card (1000:c010) under root port 00:01.1
-- 4x NVIDIA Tesla V100-SXM2-32GB (10de:1db5), one per switch
-=C2=A0 downstream port. Each has BAR0 16M (32-bit non-prefetchable),
-=C2=A0 BAR1 32G (64-bit prefetchable) and BAR3 32M (64-bit prefetchable).
-=C2=A0 No Resizable BAR capability.
+The new section is also a proper subsection of "Software error
+injection", and the documentation builds with it without new warnings.
 
-Topology after rescan:
+There is one thing I could not reconcile, in case it is useful. The
+text gives Poisoned TLP Egress Blocked as an example of an error that
+is masked by default. In the sample session of the cover letter,
+PCI_ERR_UNCOR_MASK of the e1000e reads 02400000 before the test, which
+is PCI_ERR_UNC_INTN (0x00400000) plus PCI_ERR_UNC_TLPPRE (0x02000000),
+while PCI_ERR_UNC_POISON_BLK (0x04000000) is clear. The vendor register
+descriptions I found also list that bit with a reset value of 0. The
+Correctable side does match: 0000c000 has Corrected Internal and Header
+Log Overflow set. Internal errors match too, since
+pci_aer_unmask_internal_errors() is only used for CXL.
 
-=C2=A0 00:01.1 root port
-=C2=A0 =C2=A002:00.0 PEX upstream
-=C2=A0 =C2=A0 03:00.0 (pair A) =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A003:04.0 (pair B)
-=C2=A0 =C2=A0 =C2=A004:00.0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 08:00.0
-=C2=A0 =C2=A0 =C2=A0 05:10.0 -> 06:00.0 V100 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 09:00.0 -> 0a:00.0 V100
-=C2=A0 =C2=A0 =C2=A0 05:18.0 -> 07:00.0 V100 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 09:08.0 -> 0b:00.0 V100
-
-The board firmware hangs at POST if the GPUs are powered at boot, so
-they are powered after boot and hot-added with:
-
-=C2=A0 echo 1 > /sys/bus/pci/devices/0000:00:01.1/remove
-=C2=A0 echo 1 > /sys/bus/pci/rescan
-
-Command line: pci=3Drealloc intel_iommu=3Don iommu=3Dpt. The firmware's
-64-bit root window is too small and fragmented for this, so the host
-uses an ACPI table override (initrd DSDT upgrade + SSDT) adding a
-second root window, 0x8000000000-0xffffffffff. The problem also
-reproduces in a VM without that override (see "VM reproduction").
-
-Result on the host
-------------------
-Prefetchable windows after rescan:
-
-=C2=A0 bridge =C2=A0 =C2=A0 v6.17 (good) =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0v7.0.14 (bad)
-=C2=A0 00:01.1 =C2=A0 =C2=A06400000000-93ffffffff 192G =C2=A06800000000-880=
-7ffffff 128G+128M
-=C2=A0 03:00.0 =C2=A0 =C2=A06400000000-7bffffffff =C2=A096G =C2=A0680000000=
-0-7803ffffff =C2=A064G+64M
-=C2=A0 03:04.0 =C2=A0 =C2=A07c00000000-93ffffffff =C2=A096G =C2=A0not assig=
-ned
-=C2=A0 05:10.0 =C2=A0 =C2=A06400000000-6fffffffff =C2=A048G =C2=A0680000000=
-0-7001ffffff =C2=A032G+32M
-=C2=A0 05:18.0 =C2=A0 =C2=A07000000000-7bffffffff =C2=A048G =C2=A0not assig=
-ned
-=C2=A0 09:00.0 =C2=A0 =C2=A07c00000000-87ffffffff =C2=A048G =C2=A0not assig=
-ned
-=C2=A0 09:08.0 =C2=A0 =C2=A08800000000-93ffffffff =C2=A048G =C2=A0not assig=
-ned
-
-On v7.0 only 06:00.0 gets BAR1. The other three log:
-
-=C2=A0 pci 0000:0a:00.0: BAR 1 [mem size 0x800000000 64bit pref]: can't ass=
-ign; no space
-
-and the parent ports log:
-
-=C2=A0 pci 0000:09:00.0: bridge window [mem size 0x802000000 64bit pref]: c=
-an't assign; no space
-
-There is plenty of free root window space when this happens. The
-failure is inside the switch: pair A's window is the plain sum of its
-two children (2 x (32G + 32M)), but after the first child's BAR1 at
-0x6800000000 and its BAR3 at 0x7000000000, the second child's 32G
-BAR1 needs the next 32G-aligned address, 0x7800000000, which runs
-past the end of the pair window at 0x7803ffffff. Two such siblings
-need about 96G of parent window, not 64G + 64M.
-
-VM reproduction
----------------
-To bisect without rebooting the host, I reproduced it in a QEMU/KVM
-guest (q35, OVMF) with the same shape of topology built from emulated
-switches, and the four V100s passed through with vfio-pci behind it:
-
-=C2=A0 pcie-root-port -> x3130-upstream -> 2x xio3130-downstream
-=C2=A0 =C2=A0 -> each: x3130-upstream -> 2x xio3130-downstream -> V100
-
-with the guest's 64-bit hole set to 512G (pci-hole64-size). Inside the
-guest, a remove of the root port + rescan gives exactly the host's
-numbers: 48G port windows and 4/4 BAR1 on good kernels; 32G+32M port
-windows, 64G+64M pair windows and 1/4 BAR1 on bad kernels. I can share
-the exact QEMU arguments if that would be a useful test case.
-
-Release results (Ubuntu mainline builds, plus v7.3 built from stable):
-
-=C2=A0 v6.17.12 =C2=A0good
-=C2=A0 v6.18 =C2=A0 =C2=A0 good
-=C2=A0 v6.19 =C2=A0 =C2=A0 good
-=C2=A0 v7.0 =C2=A0 =C2=A0 =C2=A0bad
-=C2=A0 v7.0.14 =C2=A0 bad
-=C2=A0 v7.1 =C2=A0 =C2=A0 =C2=A0bad
-=C2=A0 v7.2 =C2=A0 =C2=A0 =C2=A0bad
-=C2=A0 v7.3-rc3 =C2=A0bad
-=C2=A0 v7.3 =C2=A0 =C2=A0 =C2=A0bad
-
-Bisect
-------
-Between v6.19 and v7.0, limited to drivers/pci, kernel/resource.c,
-include/linux/pci.h and include/linux/ioport.h.=20
-The parent of f909e3ee3ed1, 4326ab1806a5, is good; f909e3ee3ed1 is bad.
-
-# bad: [028ef9c96e96197026887c0f092424679298aae8] Linux 7.0
-# good: [05f7e89ab9731565d8a62e3b5d1ec206485eeb0b] Linux 6.19
-        git bisect start 'v7.0' 'v6.19' '--' 'drivers/pci' 'kernel/resource=
-.c' 'include/linux/pci.h' 'include/linux/ioport.h'
-# bad: [cb3ca564682a0a02a9f95b7b22ad434a7389daaf] Merge branch 'pci/control=
-ler/cadence-j721e'
-        git bisect bad cb3ca564682a0a02a9f95b7b22ad434a7389daaf
-# good: [bf37448d9b7793544904ccf21e5844b6ff4af3c0] Merge branch 'pci/pwrctr=
-l'
-        git bisect good bf37448d9b7793544904ccf21e5844b6ff4af3c0
-# bad: [73b4779864b1e6adad015d14047ae63b88ef9c4c] Merge branch 'pci/resourc=
-e'
-        git bisect bad 73b4779864b1e6adad015d14047ae63b88ef9c4c
-# bad: [9629f71722bb994f4b95088bc37a14f9aeaa5f90] PCI: Log reset and restor=
-e of resources
-        git bisect bad 9629f71722bb994f4b95088bc37a14f9aeaa5f90
-# bad: [f909e3ee3ed1a44202f09ac7e637a0f9ec372225] PCI: Remove old_size limi=
-t from bridge window sizing
-        git bisect bad f909e3ee3ed1a44202f09ac7e637a0f9ec372225
-# good: [bc75c8e5071120e919beb39e69f0979cccfdf219] PCI: Rewrite bridge wind=
-ow head alignment function
-        git bisect good bc75c8e5071120e919beb39e69f0979cccfdf219
-# good: [4326ab1806a52888d1cd076b9020677703e25545] resource: Increase MAX_I=
-ORES_LEVEL to 8
-        git bisect good 4326ab1806a52888d1cd076b9020677703e25545
-# first bad commit: [f909e3ee3ed1a44202f09ac7e637a0f9ec372225] PCI: Remove =
-old_size limit from bridge window sizing
-
-
-Notes
------
-From the patch discussion, f909e3ee3ed1 fixed Simon Richter's xe BAR
-resize failure (the aligned old size used as a lower bound after
-3baeae36039a), so I assume a plain revert would bring that back. I
-haven't tested a revert of v7.0 either: it conflicts with later
-changes in setup-bus.c and I didn't want to hand-port it.
-
-My reading of setup-bus.c, offered as a guess rather than a diagnosis:
-pbus_size_mem() sizes a window as the plain sum of max(r_size, align)
-over its children, while placement in __assign_resources_sorted()
-goes in descending alignment order. When a child window's size is not
-a multiple of its alignment (here 32G + 32M at 32G alignment), the
-next sibling's start has to skip to the next 32G boundary, and the
-plain sum leaves no room for that gap. Before f909e3ee3ed1 the old
-size lower bound seems to have covered it in my case. I couldn't work
-out exactly where the 48G per-port windows on v6.19 come from, so I
-may be missing something.
-
-I'm happy to test patches, a revert, or debug output on both the host
-and the VM. The VM setup makes it quick to try kernels.
+Perhaps the example could name only errors whose default is confirmed,
+for instance Header Log Overflow and the Internal Errors, or cite the
+spec section if it does say that Poisoned TLP Egress Blocked is masked
+by default. I may well be missing something in the spec.
 
 Thanks,
-
-Matt
+Daniel
