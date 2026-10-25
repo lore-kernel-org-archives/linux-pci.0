@@ -1,52 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.136
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792947497;
-	b=3J99QDu1leY5Zh5UV+ZYQR3eo1jadAFMDYKOVgo9hYweZtaIx6WXIAC+Rm7vlTYgCOxj
-	 k7s+c/hLDAWLyImv3sY2fLnhzD6RJIMHvHajd9lpXQIbm5kq0NlbK3mSubvQcj9xAaToy
-	 csfpbb1jXiIcDkE2RmME0VsMnDZS+RJhVPPuxE9ZUGx4egzI/6Hu4yR0NaATNDBfIym73
-	 Q1xnAphUDWg7TAkBcPjKZI4jfICVNcz2I/8azvmyBcjiKsz71eiuMPTggtAGWXVpOvZC5
-	 QyHkGucaGq6r1bVK/WRbxb42+JvwHXLtEmMX5IX/cz6q7tdGy3ygWczhoFfZXP7S40g==
+	t=1792950656;
+	b=WZ1ksc3SPE+U/UMpO9blURM2cYBXakoTyp2yN+wMnKKUV9uHBXnfkASDiLjFUfdUhNMO
+	 xd/7YAN612p1edsFo4PO02aLmMLdXRpo6n5DUpYmXDD3CNVhCUAtlUuUGyfdhG0Mz8l7N
+	 eIQueYEVmPTeaxONRXJFaxCaAvlluKsTqFesAZpnGM71tJY+Mzdqo724WgsMAPB9IB9AK
+	 kLiGKbd4hRQcH762KLDJ8YBO4PGUqz3adEGkeOoCw93Y5LmJsQ+sQJWDP8uby6PoOBV1D
+	 GnibY6fwtlN1sBjnnhDx6Ipxy/QqgetjHqZR/aBJZFQwdWLpAp5HAbQXDTtzNMhDC+Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792947497;
-	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=brbbFStdV2oWVkFUuvww/DPjCHH85W9kbHM3AyXaI7g=;
-	b=Dalkw+Ztq0fc7/w7D7CXVB6GfrFW8H/QI8B2RDGZufwBfADEc8MoON5AsOIiFaoKmNGH
-	 Kzp653IflKRE4qLQgLsO4KoU33IdLzRs95a/UGPDsjrgIPKwVfb82bI2pyoWGY+MCLHIt
-	 GFEIYaP8X/23bbGrvD9z811pb682t6lb/M0MWKUUgZHvOAOZ3vmgj3yb6Re19HDFyTNnj
-	 hNODRP42D5+nezbLwpVwDUlXfLbAAkvXfWMcqsZho3AzfTudRhGqDjgiTtQ60s6rUJiSi
-	 4pcAqjc4Mkny/0J9uBzL6HaDK4Ofh5WQ3ARW2hcIzeX3yPZ9DNRrRZ/zrAeBIPIRzXg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792950656;
+	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Date:From:To:CC:
+	 Subject:User-Agent:In-Reply-To:References:Message-ID:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=TA54rHY6teOSFaQOktJwbWdE9uD5IaMDmhSmda0ZLjs=;
+	b=cnBOKNOvLs9myWwuPydzN7mNEH9dGMjrXpzfPZIwg748ykI8yAFtRUZPRmQaUPRcT83i
+	 SLnATPJhczoj2B2XQbMX/Bbs1FPwv876/jW6VqHKrPIFormF9ov6trYkhChBssEL8ifiR
+	 02lmY95Kz34GjO6U735Gbzdu1i6ypSTA7RIEfSrzABnsGc91ta2+O2Mc5xXQFom3A3EK1
+	 KePQplkrHfY3qeBCzTxWuOSZR2MpriLEOWlrj/OR7Dj87oHuHeSCBqWiRsoc+7iDmDA7D
+	 4unmSNhwBLPPIUVEXD+QJLMGybvznBi6+MHLIPm5UVLkz1pLGxN89FUDDejoZFrl1Ng==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=wunner.de;
-	spf=pass smtp.mailfrom=wunner.de;
-	arc=none smtp.remote-ip=144.76.133.104
-Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
+	dmarc=pass header.from=zytor.com;
+	spf=pass smtp.mailfrom=zytor.com;
+	dkim=pass header.d=zytor.com header.i=@zytor.com header.a=rsa-sha256 header.s=2026092801 header.b=aBY905KZ;
+	arc=none smtp.remote-ip=198.137.202.136
+Received: from mail.zytor.com (terminus.zytor.com [198.137.202.136])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC302606A31A;
-	Sun, 25 Oct 2026 16:58:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DC302606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout3.hostsharing.net (Postfix) with ESMTPS id F0A48C18;
-	Sun, 25 Oct 2026 17:58:05 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id B82A460A9C9F; Sun, 25 Oct 2026 17:58:05 +0100 (CET)
-Date: Sun, 25 Oct 2026 17:58:05 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Patryk Janik <patrykjanik1710@gmail.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, alex@shazbot.org,
-	kvm@vger.kernel.org
-Subject: Re: [PATCH RFC] PCI: Don't restore state of a device whose config
- space is inaccessible
-Message-ID: <at41Hdy8ATMj9LRC@wunner.de>
-References: <CAOz=NNVc4C3aSC+VL59V31==P_sfgCkjSK+nG3LAByUF84OVVQ@mail.gmail.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAAAE606A31A;
+	Sun, 25 Oct 2026 17:50:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CAAAE606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zytor.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=zytor.com header.i=@zytor.com header.a=rsa-sha256 header.s=2026092801 header.b=aBY905KZ
+Received: from ehlo.thunderbird.net (c-76-133-66-138.hsd1.ca.comcast.net [76.133.66.138])
+	(authenticated bits=0)
+	by mail.zytor.com (8.18.1/8.17.1) with ESMTPSA id 69PHoYjb4052143
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NO);
+	Sun, 25 Oct 2026 10:50:35 -0700
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.zytor.com 69PHoYjb4052143
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zytor.com;
+	s=2026092801; t=1792950635;
+	bh=TA54rHY6teOSFaQOktJwbWdE9uD5IaMDmhSmda0ZLjs=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
+	b=aBY905KZt3mZIxTLKMSLBnPJxCRSoDbW8HU2ypGBQFuIByLZyKivDl/zpKwR81hby
+	 0xbHsk0hCBYea1vXqj0FUvIxaxbBy/CJq3N4kMszBnMB8ChdzaGUqmxZWHAqPrZTWo
+	 7VzpmHbuwxHYgAvVoh+asSsxs6XkXJGV9OyorJ2El4QbDoJcJyFF3A+m/+r8IWoaJN
+	 fMiq3/J4kVlQzFpdyEpk9Eb5WEuUDdcXGmVlOqaFeJQvigmSgzntfna+eh+NQ09TLg
+	 2QEWxZxWDm0TIxHzCIrkIMn8zDima7pYJ0AcLUE6kLIN9AHIsUmJfFceIrVN5bC310
+	 0vDeabyYb39mw==
+Date: Sun, 25 Oct 2026 10:50:28 -0700
+From: "H. Peter Anvin" <hpa@zytor.com>
+To: "Maciej W. Rozycki" <macro@orcam.me.uk>, Thorsten Blum <blum@kernel.org>
+CC: Dave Hansen <dave.hansen@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+        Borislav Petkov <bp@alien8.de>,
+        Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_RESEND_v2=5D_x86/early-quirks=3A_S?=
+ =?US-ASCII?Q?can_all_functions_in_early=5Fpci=5Fscan=5Fbus=28=29?=
+User-Agent: K-9 Mail for Android
+In-Reply-To: <alpine.DEB.2.21.2610250743510.42255@angie.orcam.me.uk>
+References: <20260916100206.92853-2-blum@kernel.org> <asDr0tWYBNC296EQ@kernel.org> <f9b1c1b6-03d9-44fb-bdc4-78342b05f2af@intel.com> <asLw3ZfDy-rDxwtv@kernel.org> <as0mu05UzFWBBRJ7@kernel.org> <alpine.DEB.2.21.2610250743510.42255@angie.orcam.me.uk>
+Message-ID: <74A9835A-4B16-409E-B13A-4C34FAB5DC8E@zytor.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -56,33 +73,42 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOz=NNVc4C3aSC+VL59V31==P_sfgCkjSK+nG3LAByUF84OVVQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On Sun, Oct 25, 2026 at 05:37:39PM +0100, Patryk Janik wrote:
-> After a failed reset, vfio_pci_core_disable() unconditionally calls
-> pci_restore_state(). When the device did not come back (FLR timed out,
-> config reads return ~0), restoring state walks the extended capability
-> list and rewrites the whole config space. Every one of those accesses
-> stalls for a completion timeout, so the host spends minutes in soft
-> lockups instead of failing fast.
+On October 25, 2026 1:07:28 AM PDT, "Maciej W=2E Rozycki" <macro@orcam=2Eme=
+=2Euk> wrote:
+>On Mon, 12 Oct 2026, Thorsten Blum wrote:
+>
+>> Is there anything else I can do to help get this queued?
+>
+> FWIW, it's not unusual even if not common for multifunction devices to=
+=20
+>have "holes" in functions, e=2Eg=2E:
+>
+>07:00=2E0 Parallel controller [0701]: Oxford Semiconductor Ltd OXPCIe952 =
+Parallel Port [1415:c118]
+>07:00=2E3 Serial controller [0700]: Oxford Semiconductor Ltd OXPCIe952 Na=
+tive 950 UART [1415:c11b]
+>
+>which is a chip the functions of which (one or two native or legacy seria=
+l=20
+>ports, one parallel port, one GPIO interface) can be activated selectivel=
+y=20
+>with reset straps, however the resulting numeric 0-3 function assignments=
+=20
+>for individual interfaces are not necessarily contiguous, presumably to=
+=20
+>simplify internal decoding logic=2E
+>
+>  Maciej
 
-Config Space Writes are Posted Requests.  There are no Completions
-sent in return and consequently no Completion Timeout is observed.
-So the above paragraph doesn't really make sense.
+Indeed, or there might be multiple versions of a chip with different featu=
+re sets =E2=80=93 often the same physical chip in different packages, so so=
+me features are fused or strapped off because they aren't pinned out=2E
 
-> - "PCI: Avoid FLR for NVIDIA 5090 GPU" (linux-pci, 2026-04-16), where the
->   underlying FLR failure was described as a known device firmware defect.
+The assumption that a multifunction service will have all its functions co=
+ntiguous is absolutely false=2E
 
-I assume you're referring to:
-
-https://lore.kernel.org/r/20260416070707.3242381-1-yuan.gao@ucloud.cn/
-
-The outcome was that there's a firmware fix available and a quirk
-should at least differentiate between good and bad firmware.
-Or the fix is to update the firmware and then we don't need a quirk.
-
-Thanks,
-
-Lukas
+Acked-by: H=2E Peter Anvin (Rosaic) <hpa@zytor=2Ecom>
