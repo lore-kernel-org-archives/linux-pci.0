@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792903062;
-	b=LO1v+O4zviw6WIiMJE2uAxD2SfJbCfcSsWaDUxQJ1sGoXR37z87BSeJQGBhxZBtdilTf
-	 7KI8AwXfGRmHBEZdpW97aXlHGI389VQBA4i2CK8IMJi1cWpyEI7tdX9YpjnW25cyBeU/h
-	 ot/CVwYdfT4NQEM87MzzxY1K9jX4kLr2215VJpPm4Jz+nVgXmUrwsig00UpVUwoqLsrp3
-	 m58Lo3FA13ALGBSRhqqnIzP8+4jx38dcBo8S6Sfgf7giJ9UGOBGBiZe+AqKHt8HvENamT
-	 t52sAVO8/hAKHacZy9zS9UQNG2P8oaLq+/hG1jaXf7Ix0qlZVvUFY9y3baEHRhjCCfw==
+	t=1792903183;
+	b=nbEsMy0K9C+HnuuQf1jWGiRU9f+8+j6Awa608KqKkyusraulKe93M7xMzgkGnH5Fq52+
+	 3wMeAZtXRJ25/q3nVz9fVqO5N8b2U5gEAeXMrpRjnjSnkBgrvZzxaBGAAyR6CrRoicW7Q
+	 mO0coo0W5dlmY6a/sBuLe4dPscK1RBa9Cpev9SBBwIWzHOnm+jaw7VUlhsIrQFrIdbOe4
+	 /bLxTwQ4THGPgsmaq5Bi4j4yRgJ1uOCvgy4jZ6giqMex8L1sO1dId3kmGxMDbpulbYhNA
+	 Lr6EZ4x1Q2WFZ58CgDkOH9R7/E594DPPzOI1gqYGgQCnMbZT7eAs2e5knCzuni8JLVw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792903062;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792903183;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=H3cK2XwovOb+whg2pedPqcdBmOxzliiaNVN7vTcH+W0=;
-	b=OUSAS+7USWTCOhm+9eGZX12T6gPUu5d4zQ992EFZ9Fxi9AixXj8t3mLm3c4ig3hE0Grq
-	 SXedzSE3Yec1rCciKKFj7jJRBga4vFT3yGKflYqYrEGGMtUBTFMk4GeyyrOGbFpa+RLHQ
-	 xB3bu9xi067jXe/FWtXWWHmOJDnOBUBgXrLWKWUPlMlM1RR50JHndI3nUhoqlwwneAFaE
-	 BC9yyyjZOPEdDgVNckj3AI+pzfOH8j3CK/orWlEMEq7GzxyvCAUz43MVXlDaTCUjmdLQ5
-	 7RW4LEJOIdcancFMixuDoTcM/9UWt+RP5qq9PJE4RyW0aE5NxU9UR3xsmhNAVZ1O4Sg==
+	bh=zr1VmyLli41XH3hMgIwT+DKclHIePwC9S9iwzNjk5R0=;
+	b=uKFB95ek/lWzE2JgdAWYSBJkFd/nWjBl952dPCs5MGGjTv+DhnDuSQE2cYPXMX/ILD7A
+	 jXgvXW3krQ3SXBJ+oPfe4bM/pv0/8fEhvWGBk4u01/8lGG5rkMLtu6qZOe5KMkp81tAyt
+	 ZuP2EgQeMvCf1ZBmqkUeRKNI/4Z8hr4mUPrhU4FM3kG/PCPvtKO3Lg2hf1ogKVwdNWfK9
+	 R5/b/JXkv7P6Bx2j1FOMiPyewInnf6ZCJ82Ujx49IXe4RP1dYsW3JY5L43JfrMA4kQkfr
+	 Qd/hHCBhSKw+UpXEwHvDbS/OldFqaQMhNL2Gt+y4TBAmunPD/3PIKnKwVGj7irIbD7Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PYJG0n9d;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EQt4Rw6O;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7DA8606A31A
-	for <linux-pci@vger.kernel.org>; Sun, 25 Oct 2026 04:37:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA1EB606A31A
+	for <linux-pci@vger.kernel.org>; Sun, 25 Oct 2026 04:39:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PYJG0n9d
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66FA11F01825;
-	Sun, 25 Oct 2026 04:37:41 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EQt4Rw6O
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 343E01F01825;
+	Sun, 25 Oct 2026 04:39:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792903061;
-	bh=H3cK2XwovOb+whg2pedPqcdBmOxzliiaNVN7vTcH+W0=;
+	s=k20260515; t=1792903182;
+	bh=zr1VmyLli41XH3hMgIwT+DKclHIePwC9S9iwzNjk5R0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PYJG0n9dPXMDEpZEXgNVqFqQ5qmc+mwHmBke1VhfkpNH3Tz593sdL5Wb+1pQ8XIYc
-	 0yCNAb6j+KF5k8C1x8HeB2VM2vLXXOmen+Iv+S65turCveXRAMaq+l8IVPzw9K8sYF
-	 l6GnnmfmStS7mmxw0rKPEnUuWgPD1MI6eizK51qO/8+ybcfugUJnhTO/J9rEhjV+5X
-	 GxJ4AufGADBJhT8z3tQN9cTOGQzkJrcGdE7BWElwkQydM3jwgn26gIVcbnXSu/KFcr
-	 fKA94cp+FRyv4dePSyAMiFPQIpo0Vab7weamzJOjot5cz3KjDbjhtiOKV5OFQSWq/d
-	 kgHXmkkFbwsXQ==
-Message-ID: <sashiko-outbox-184072@kernel.org>
+	b=EQt4Rw6OlhD8dkt7OHe2heg9E+LYIAz/rUZ120FT262gnH8ICxu5oAU5m5gfafGIF
+	 U5dYXRo2ZpRg7G/+/kGoq8CL6RbzbdXBy5o6jsPG2SQHfqf1vC53Jzal73BcccYqy5
+	 Kp5JXgDONtgRLKFzjm3a1ZthyTpqnTSi0xTekBts/QKl+6ROPHCVmUadJbBxBIsbPd
+	 o9DbHTcK2lrgvd0RRVt+h16NNf6FsVwO8l7PNuMC84cYz1c49WTT/GeTzd/ayB9bN8
+	 6/iO/QiT8BQhi4cus0LjbD1jvyh4iCzh1ERmXPP44BJNmiLNQcVirOh3tDCjX9zQCV
+	 aKafHI2hunD5w==
+Message-ID: <sashiko-outbox-184073@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 08/13] platform/apple-gmux: Add documentation about
- iMacs
+Subject: Re: [PATCH 04/13] platform/apple-gmux: Fix Interrupts for MMIO
+ systems
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Atharva Tiwari" <atharvatiwarilinuxdev@gmail.com>
 Cc: =?utf-8?b?b3BlbiBsaXN0OlBDSSBTVUJTWVNURU0=?= <linux-pci@vger.kernel.org>,
  =?utf-8?b?b3BlbiBsaXN0OkRSTSBEUklWRVJT?= <dri-devel@lists.freedesktop.org>
-In-Reply-To: <20261025040046.1602-9-atharvatiwarilinuxdev@gmail.com>
+In-Reply-To: <20261025040046.1602-5-atharvatiwarilinuxdev@gmail.com>
 References: <20261025040046.1602-1-atharvatiwarilinuxdev@gmail.com>
- <20261025040046.1602-9-atharvatiwarilinuxdev@gmail.com>
+ <20261025040046.1602-5-atharvatiwarilinuxdev@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 25 Oct 2026 04:37:40 +0000
+Date: Sun, 25 Oct 2026 04:39:41 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,265 +62,255 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 8 potential issue(=
 s) to consider:
-- [High] platform/x86: apple-gmux: lock leak and uninit return in gmux_mmio=
-_read8/32()
-- [High] platform/x86: apple-gmux: NULL discrete_pdev deref in gmux_set_dis=
-crete_state()
-- [High] platform/x86: apple-gmux: workqueue teardown bugs in gmux_probe/re=
-move()
-- [High] PCI: uninitialized output in pci_read_config_*() when access is ig=
-nored
-- [High] platform/x86: apple-gmux: PCI state corruption in gmux_set_discret=
-e_state()
+- [Critical] platform/apple-gmux: incorrect teardown order in gmux_remove()=
+ causes UAF
+- [High] platform/apple-gmux: cancel_work_sync() on uninitialized work in g=
+mux_remove()
+- [High] platform/apple-gmux: self-deadlock on powerchange_done in gmux_not=
+ify_work()
+- [High] platform/apple-gmux: iounmap() before cancel_work_sync() in gmux_p=
+robe()
+- [High] platform/apple-gmux: missing interrupt_work cancellation in gmux_s=
+uspend()
+- [High] platform/apple-gmux: unhandled status=3D0 GPEs and late init in gm=
+ux_probe()
+- [High] platform/x86: apple-gmux: unreleased lock and uninit val in gmux_m=
+mio_read8()
+- [Medium] platform/apple-gmux: lost events and unbounded loop in gmux_noti=
+fy_work()
 --
 
-commit 60c5ee5c904bb8e5a78842b541c5dc5de1769e8f
+commit 8b786eb41ee899344257c35e97176ec39dc10858
 Author: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
 
-platform/apple-gmux: Add documentation about iMacs
+platform/apple-gmux: Fix Interrupts for MMIO systems
 
-This series updates the apple-gmux driver and PCI access layer to support M=
-MIO
-gmux power management, interrupts, boot GPU selection, FSS detection, and i=
-Mac
-documentation.
-
-> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> index b123da16b63ba..5e95130671767 100644
-> --- a/drivers/pci/access.c
-> +++ b/drivers/pci/access.c
-> @@ -559,6 +559,9 @@ EXPORT_SYMBOL(pcie_capability_clear_and_set_dword);
-> =20
->  int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
->  {
-> +	if (pci_dev_ignore_access(dev))
-> +		return PCIBIOS_SUCCESSFUL;
-> +
->  	if (pci_dev_is_disconnected(dev)) {
->  		PCI_SET_ERROR_RESPONSE(val);
->  		return PCIBIOS_DEVICE_NOT_FOUND;
-> @@ -569,6 +572,9 @@ EXPORT_SYMBOL(pci_read_config_byte);
-> =20
->  int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
->  {
-> +	if (pci_dev_ignore_access(dev))
-> +		return PCIBIOS_SUCCESSFUL;
-> +
->  	if (pci_dev_is_disconnected(dev)) {
->  		PCI_SET_ERROR_RESPONSE(val);
->  		return PCIBIOS_DEVICE_NOT_FOUND;
-> @@ -580,6 +586,9 @@ EXPORT_SYMBOL(pci_read_config_word);
->  int pci_read_config_dword(const struct pci_dev *dev, int where,
->  					u32 *val)
->  {
-> +	if (pci_dev_ignore_access(dev))
-> +		return PCIBIOS_SUCCESSFUL;
-
-[Severity: High]
-Does returning PCIBIOS_SUCCESSFUL without setting *val in
-pci_read_config_byte(), pci_read_config_word(), and pci_read_config_dword()
-leave caller stack variables uninitialized when pci_dev_ignore_access(dev) =
-is
-true?
-
-Callers such as pci_update_current_state() and pci_clear_and_set_config_dwo=
-rd()
-pass an uninitialized stack variable to pci_read_config_word() or
-pci_read_config_dword() expecting *val to be populated on return:
-
-pci_update_current_state()
-    u16 pmcsr;
-    pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
-    dev->current_state =3D (pmcsr & PCI_PM_CTRL_STATE_MASK);
-
-When dev->ignore_access_d3 is set and dev->current_state is PCI_D3cold, lea=
-ving
-pmcsr uninitialized can overwrite dev->current_state and clear PCI_D3cold w=
-hile
-the upstream bridge is still powered down by PWRD(1), allowing subsequent
-config accesses to hit the powered-off bridge.
+This commit moves MMIO GMUX interrupt handling to a workqueue item, checks
+for failed interrupt status bits, and wakes the discrete GPU via runtime PM
+when external display hotplug interrupts occur on MMIO systems.
 
 > diff --git a/drivers/platform/x86/apple-gmux.c b/drivers/platform/x86/app=
 le-gmux.c
-> index 9c728ac4e045a..9f0e9ecbf9b97 100644
+> index 076ed7ba6af90..bef87a57ad43c 100644
 > --- a/drivers/platform/x86/apple-gmux.c
 > +++ b/drivers/platform/x86/apple-gmux.c
 
 [ ... ]
 
-> @@ -244,12 +264,14 @@ static u8 gmux_mmio_read8(struct apple_gmux_data *g=
-mux_data, int port)
->  	u8 val;
+> @@ -825,23 +838,78 @@ static void gmux_clear_interrupts(struct apple_gmux=
+_data *gmux_data)
+>  	/* to clear interrupts write back current status */
+>  	status =3D gmux_interrupt_get_status(gmux_data);
+>  	gmux_write8(gmux_data, GMUX_PORT_INTERRUPT_STATUS, status);
+> -	/* Prevent flood of status=3D0 interrupts */
+> -	if (gmux_data->config =3D=3D &apple_gmux_mmio)
+> -		acpi_execute_simple_method(gmux_data->dhandle, "GMSP", 0);
+>  }
 > =20
->  	mutex_lock(&gmux_data->index_lock);
-> -	gmux_mmio_wait(gmux_data);
-> -	iowrite8((port & 0xff), gmux_data->iomem_base + GMUX_MMIO_PORT_SELECT);
-> -	iowrite8(GMUX_MMIO_READ | sizeof(val),
-> -		gmux_data->iomem_base + GMUX_MMIO_COMMAND_SEND);
-> -	gmux_mmio_wait(gmux_data);
-> -	val =3D ioread8(gmux_data->iomem_base);
-> +	if (gmux_mmio_wait(gmux_data)) {
-> +		iowrite8((port & 0xff), gmux_data->iomem_base + GMUX_MMIO_PORT_SELECT);
-> +		iowrite8(GMUX_MMIO_READ | sizeof(val),
-> +			gmux_data->iomem_base + GMUX_MMIO_COMMAND_SEND);
-> +		if (!gmux_mmio_wait(gmux_data))
-> +			return 0;
-> +		val =3D ioread8(gmux_data->iomem_base);
-> +	}
->  	mutex_unlock(&gmux_data->index_lock);
-> =20
->  	return val;
-
-[ ... ]
-
-> @@ -275,12 +300,16 @@ static u32 gmux_mmio_read32(struct apple_gmux_data =
-*gmux_data, int port)
->  	u32 val;
-> =20
->  	mutex_lock(&gmux_data->index_lock);
-> -	gmux_mmio_wait(gmux_data);
-> -	iowrite8((port & 0xff), gmux_data->iomem_base + GMUX_MMIO_PORT_SELECT);
-> -	iowrite8(GMUX_MMIO_READ | sizeof(val),
-> -		gmux_data->iomem_base + GMUX_MMIO_COMMAND_SEND);
-> -	gmux_mmio_wait(gmux_data);
-> -	val =3D ioread32be(gmux_data->iomem_base);
+> +static void gmux_notify_work(struct work_struct *work)
+> +{
+> +	struct apple_gmux_data *gmux_data =3D
+> +		container_of(work, struct apple_gmux_data, interrupt_work);
+> +	u8 status;
+> +	bool turn_on_gpu =3D false;
 > +
-> +	if (gmux_mmio_wait(gmux_data)) {
-> +		iowrite8((port & 0xff), gmux_data->iomem_base + GMUX_MMIO_PORT_SELECT);
-> +		iowrite8(GMUX_MMIO_READ | sizeof(val),
-> +			gmux_data->iomem_base + GMUX_MMIO_COMMAND_SEND);
-> +		if (!gmux_mmio_wait(gmux_data))
-> +			return 0;
+> +	status =3D gmux_interrupt_get_status(gmux_data);
+> +	if (!status)
+> +		return;
 > +
-> +		val =3D ioread32be(gmux_data->iomem_base);
-> +	}
->  	mutex_unlock(&gmux_data->index_lock);
-> =20
->  	return val;
+> +	gmux_disable_interrupts(gmux_data);
+> +	pr_debug("Notify handler called: status %d\n", status);
+> +	acpi_execute_simple_method(gmux_data->dhandle, "GMSP", 0);
 
 [Severity: High]
-In gmux_mmio_read8() and gmux_mmio_read32(), if the second gmux_mmio_wait()
-times out and returns 0, won't returning 0 directly leak gmux_data->index_l=
-ock
-and deadlock subsequent gmux MMIO accesses?
+If a GPE interrupt fires on an MMIO GMUX system while
+GMUX_PORT_INTERRUPT_STATUS reads 0, doesn't returning early before calling
+GMSP(0) leave the status=3D0 interrupt flood uncleared?
 
-Also, if the first gmux_mmio_wait() call returns 0, the if block is skipped=
- and
-both functions return the uninitialized local variable val (which can also =
-be
-read from userspace via debugfs in gmux_selected_port_data_read()). Should =
-val
-be initialized to 0 and the early return paths unlock gmux_data->index_lock
-before returning?
+Previously, gmux_clear_interrupts() called GMSP(0) even when status was 0.
+In gmux_probe(), acpi_install_notify_handler() and acpi_enable_gpe() are
+called before init_completion(&gmux_data->powerchange_done) and before
+gmux_enable_interrupts(gmux_data, 1) initializes the GPIO polarity via
+GMSP(0):
 
-[ ... ]
+gmux_probe()
+    acpi_install_notify_handler(..., &gmux_notify_handler, pnp);
+    acpi_enable_gpe(NULL, gmux_data->gpe);
+    ...
+    init_completion(&gmux_data->powerchange_done);
+    gmux_enable_interrupts(gmux_data, 1);
 
-> @@ -502,23 +565,171 @@ static int gmux_switch_ddc(enum vga_switcheroo_cli=
-ent_id id)
-
-[ ... ]
-
->  static int gmux_set_discrete_state(struct apple_gmux_data *gmux_data,
->  				   enum vga_switcheroo_state state)
->  {
->  	reinit_completion(&gmux_data->powerchange_done);
-> +	acpi_handle discrete_handle =3D ACPI_HANDLE(&gmux_data->discrete_pdev->=
-dev);
-> +	acpi_status status;
-> +	unsigned long long result;
-> +
-> +	if (!discrete_handle)
-> +		return -ENODEV;
+If a GPE fires in that window (or during resume before gmux_resume() runs)
+with status =3D=3D 0, gmux_notify_work() returns without calling GMSP(0). A=
+nd if
+a GPE fires in that probe window with GMUX_INTERRUPT_STATUS_POWER set, won't
+gmux_notify_work() call complete(&gmux_data->powerchange_done) before
+init_completion(&gmux_data->powerchange_done) has initialized the waitqueue?
 
 [Severity: High]
-Can gmux_set_discrete_state() dereference a NULL gmux_data->discrete_pdev h=
-ere?
+What happens in gmux_notify_work() if gmux_mmio_wait() times out inside
+gmux_mmio_read8()?
 
-gmux_data->discrete_pdev is only assigned in gmux_get_client_id() when
-vga_switcheroo_enable() runs after both GPU clients have registered. If the
-discrete GPU registers and enters runtime suspend before a second client
-registers:
+On MMIO systems, gmux_interrupt_get_status() and gmux_read8() call
+gmux_mmio_read8() (introduced in the earlier series patch "platform/apple-g=
+mux:
+Fix MMIO interface"), which has the same structure as gmux_mmio_read32():
 
-vga_switcheroo_runtime_suspend()
-  -> vga_switcheroo_power_switch()
-    -> gmux_set_power_state()
-      -> gmux_set_discrete_state()
+static u8 gmux_mmio_read8(struct apple_gmux_data *gmux_data, int port)
+{
+	u8 val;
 
-gmux_data->discrete_pdev is still NULL when evaluating
-ACPI_HANDLE(&gmux_data->discrete_pdev->dev). In addition, checking
-!discrete_handle unconditionally at the start of gmux_set_discrete_state()
-will abort with -ENODEV on non-MMIO systems (APPLE_GMUX_TYPE_PIO and
-APPLE_GMUX_TYPE_INDEXED) that do not use discrete_handle.
+	mutex_lock(&gmux_data->index_lock);
+	if (gmux_mmio_wait(gmux_data)) {
+		iowrite8((port & 0xff), gmux_data->iomem_base + GMUX_MMIO_PORT_SELECT);
+		iowrite8(GMUX_MMIO_READ | sizeof(val),
+			gmux_data->iomem_base + GMUX_MMIO_COMMAND_SEND);
+		if (!gmux_mmio_wait(gmux_data))
+			return 0;
+		val =3D ioread8(gmux_data->iomem_base);
+	}
+	mutex_unlock(&gmux_data->index_lock);
 
->  	if (state =3D=3D VGA_SWITCHEROO_ON) {
+	return val;
+}
 
-[ ... ]
+If the first gmux_mmio_wait() call fails, gmux_mmio_read8() (and
+gmux_mmio_read32()) returns the uninitialized stack variable val, causing
+gmux_notify_work() to treat stack garbage as the interrupt status and
+potentially loop, complete gmux_data->powerchange_done, or wake the discrete
+GPU.
 
->  		pr_debug("Discrete card powered up\n");
->  	} else {
-> -		gmux_write8(gmux_data, GMUX_PORT_DISCRETE_POWER, 1);
-> -		gmux_write8(gmux_data, GMUX_PORT_DISCRETE_POWER, 0);
-> +		if (gmux_data->type =3D=3D APPLE_GMUX_TYPE_MMIO) {
-> +			if (gmux_data->uses_pwrd) {
-> +				acpi_handle parent_handle =3D discrete_handle;
-> +				bool saved_hda =3D false;
+If the second gmux_mmio_wait() call fails, gmux_mmio_read8() (and
+gmux_mmio_read32()) returns 0 while still holding gmux_data->index_lock, so
+the subsequent gmux_enable_interrupts() -> gmux_write8() -> gmux_mmio_write=
+8()
+call in gmux_notify_work() will immediately deadlock on gmux_data->index_lo=
+ck.
+
 > +
-> +				while (ACPI_SUCCESS(acpi_get_parent(parent_handle,
-> +								&parent_handle))) {
-> +					if (!saved_hda) {
-> +						if (!gmux_save_restore_pci(parent_handle,
-> +									"HDAU", true, NULL)) {
-> +							saved_hda =3D true;
-> +							pci_save_state(gmux_data->discrete_pdev);
-> +							gmux_data->discrete_pdev->current_state =3D
-> +									PCI_D3cold;
-> +						}
-> +					}
-> +					if (gmux_save_restore_pci(parent_handle, NULL, true, NULL))
-> +						break;
-> +				}
-> +				status =3D acpi_execute_simple_method(discrete_handle, "PWRD", 1);
-> +				if (ACPI_FAILURE(status))
-> +					return -EIO;
+> +	status =3D gmux_interrupt_get_status(gmux_data);
+> +	while (status) {
+> +		gmux_write8(gmux_data, GMUX_PORT_INTERRUPT_STATUS, status);
+> +		if (status & GMUX_INTERRUPT_STATUS_FAILED) {
+> +			pr_warn_ratelimited("interrupt failed: status: 0x%x\n", status);
+> +			status =3D gmux_interrupt_get_status(gmux_data);
+> +			continue;
+> +		}
+
+[Severity: Medium]
+If GMUX_INTERRUPT_STATUS_FAILED is set in status at the same time as
+GMUX_INTERRUPT_STATUS_POWER or GMUX_INTERRUPT_STATUS_HOTPLUG, doesn't writi=
+ng
+the full status value to GMUX_PORT_INTERRUPT_STATUS clear all of those bits=
+ in
+hardware before the continue statement skips handling them?
+
+Also, if clearing GMUX_PORT_INTERRUPT_STATUS fails (for example, if
+gmux_mmio_wait() times out in gmux_mmio_write8() or a hardware status bit
+remains stuck), could while (status) spin indefinitely on system_percpu_wq?
+
+> +		if (status & GMUX_INTERRUPT_STATUS_POWER)
+> +			complete(&gmux_data->powerchange_done);
+> +
+> +		if (status & GMUX_INTERRUPT_STATUS_HOTPLUG) {
+> +			/*
+> +			 * We get an interrupt every time a display connects or disconnects, =
+but
+> +			 * the GET_DISPLAY port only tells us if a display is connected or no=
+t,
+> +			 * so we resume every time a display is connected or disconnected.
+> +			 */
+> +			bool external_state =3D !!gmux_read8(gmux_data,
+> +						GMUX_PORT_SWITCH_GET_DISPLAY);
+> +			if (external_state !=3D gmux_data->external_state) {
+> +				gmux_data->external_state =3D external_state;
+> +				if (external_state)
+> +					pr_debug("A display has been connected\n");
+> +				else
+> +					pr_debug("All displays has been disconnected\n");
 > +			}
+> +			if (!gmux_data->external_switchable && gmux_data->discrete_pdev)
+> +				turn_on_gpu =3D true;
+> +		}
+> +		status =3D gmux_interrupt_get_status(gmux_data);
+> +	}
+> +
+> +	gmux_enable_interrupts(gmux_data, 0);
+> +
+> +	if (turn_on_gpu)
+> +		pm_runtime_resume(&gmux_data->discrete_pdev->dev);
+> +
+> +}
 
 [Severity: High]
-What happens on MacBookPro16,1 and MacBookPro16,4 (where gmux_data->uses_pw=
-rd
-is true) when the system suspends and resumes while gmux_data->power_state =
-is
-already VGA_SWITCHEROO_OFF?
+Won't calling synchronous pm_runtime_resume(&gmux_data->discrete_pdev->dev)
+from inside gmux_notify_work() self-deadlock on gmux_data->powerchange_done
+when the discrete GPU is runtime-suspended?
 
-On system resume, gmux_resume() calls:
+When discrete_pdev is runtime-suspended, pm_runtime_resume() synchronously
+runs the power switch callback on the current worker thread:
 
-gmux_resume()
-  -> gmux_set_discrete_state(gmux_data, VGA_SWITCHEROO_OFF)
+gmux_notify_work() [executing gmux_data->interrupt_work]
+  pm_runtime_resume(&gmux_data->discrete_pdev->dev)
+    ...
+      vga_switcheroo_runtime_resume()
+        vga_switcheroo_power_switch()
+          gmux_set_power_state()
+            gmux_set_discrete_state(apple_gmux_data, VGA_SWITCHEROO_ON)
+              reinit_completion(&gmux_data->powerchange_done);
+              ...
+              wait_for_completion_interruptible_timeout(&gmux_data->powerch=
+ange_done,
+                                                        msecs_to_jiffies(20=
+0));
 
-When the discrete GPU and upstream bridges are already powered off in
-PCI_D3cold, calling pci_save_state() and gmux_save_restore_pci(..., true, N=
-ULL)
-again will overwrite the previously saved PCI configuration state of HDAU,
-gmux_data->discrete_pdev, and the upstream bridges with readings from the
-powered-down devices before a subsequent VGA_SWITCHEROO_ON can restore them.
+When the resulting GMUX_INTERRUPT_STATUS_POWER interrupt fires,
+gmux_notify_handler() calls schedule_work(&gmux_data->interrupt_work).
+Because gmux_data->interrupt_work is the same work_struct currently blocked=
+ in
+pm_runtime_resume() and a work_struct cannot run concurrently with itself,
+gmux_notify_work() cannot run to call complete(&gmux_data->powerchange_done)
+until wait_for_completion_interruptible_timeout() times out after 200ms.
+
+Would asynchronous pm_request_resume() avoid blocking interrupt_work here?
 
 [ ... ]
 
-> @@ -823,6 +1101,7 @@ static int gmux_probe(struct pnp_dev *pnp, const str=
-uct pnp_device_id *id)
->  			pr_err("couldn't remap gmux mmio region");
->  			goto err_release;
->  		}
-> +		INIT_WORK(&gmux_data->interrupt_work, gmux_notify_work);
->  		goto get_version;
->  	case APPLE_GMUX_TYPE_INDEXED:
->  		gmux_data->config =3D &apple_gmux_index;
+> @@ -935,7 +1003,7 @@ static int gmux_resume(struct device *dev)
+>  	struct pnp_dev *pnp =3D to_pnp_dev(dev);
+>  	struct apple_gmux_data *gmux_data =3D pnp_get_drvdata(pnp);
+> =20
+> -	gmux_enable_interrupts(gmux_data);
+> +	gmux_enable_interrupts(gmux_data, 1);
+>  	gmux_write_switch_state(gmux_data);
+>  	if (gmux_data->power_state =3D=3D VGA_SWITCHEROO_OFF)
+>  		gmux_set_discrete_state(gmux_data, gmux_data->power_state);
+
+[Severity: High]
+In gmux_suspend() right above gmux_resume(), gmux_disable_interrupts() is
+called without cancelling gmux_data->interrupt_work:
+
+static int gmux_suspend(struct device *dev)
+{
+	struct pnp_dev *pnp =3D to_pnp_dev(dev);
+	struct apple_gmux_data *gmux_data =3D pnp_get_drvdata(pnp);
+
+	gmux_disable_interrupts(gmux_data);
+	return 0;
+}
+
+If gmux_data->interrupt_work is pending or running when gmux_suspend()
+executes on an MMIO system, can gmux_notify_work() run concurrently with or
+after gmux_suspend(), re-enabling interrupts via
+gmux_enable_interrupts(gmux_data, 0) and calling
+pm_runtime_resume(&gmux_data->discrete_pdev->dev) during system suspend?
 
 [ ... ]
 
-> @@ -977,6 +1263,8 @@ static int gmux_probe(struct pnp_dev *pnp, const str=
-uct pnp_device_id *id)
+> @@ -1150,6 +1219,8 @@ static int gmux_probe(struct pnp_dev *pnp, const st=
+ruct pnp_device_id *id)
 >  err_unmap:
 >  	if (gmux_data->iomem_base)
 >  		iounmap(gmux_data->iomem_base);
@@ -329,11 +319,18 @@ uct pnp_device_id *id)
 >  err_release:
 >  	if (gmux_data->config->resource_type =3D=3D IORESOURCE_MEM)
 >  		release_mem_region(gmux_data->iostart, gmux_data->iolen);
-> @@ -993,7 +1281,9 @@ static void gmux_remove(struct pnp_dev *pnp)
-> =20
->  	gmux_fini_debugfs(gmux_data);
+
+[Severity: High]
+In the err_unmap error path of gmux_probe(), iounmap(gmux_data->iomem_base)=
+ is
+called before cancel_work_sync(&gmux_data->interrupt_work). If
+gmux_notify_work() was scheduled before gmux_probe() failed, won't
+gmux_notify_work() access unmapped MMIO memory through gmux_data->iomem_base
+before cancel_work_sync() waits for it to finish?
+
+> @@ -1168,6 +1239,7 @@ static void gmux_remove(struct pnp_dev *pnp)
 >  	vga_switcheroo_unregister_handler();
-> +	pci_dev_put(gmux_data->discrete_pdev);
+>  	pci_dev_put(gmux_data->discrete_pdev);
 >  	gmux_disable_interrupts(gmux_data);
 > +	cancel_work_sync(&gmux_data->interrupt_work);
 >  	if (gmux_data->gpe >=3D 0) {
@@ -341,28 +338,54 @@ uct pnp_device_id *id)
 >  		acpi_remove_notify_handler(gmux_data->dhandle,
 
 [Severity: High]
-Are there a few teardown ordering issues with gmux_data->interrupt_work in
-gmux_probe() and gmux_remove()?
+In gmux_probe(), INIT_WORK(&gmux_data->interrupt_work, gmux_notify_work) is
+only called in the APPLE_GMUX_TYPE_MMIO case. On APPLE_GMUX_TYPE_PIO and
+APPLE_GMUX_TYPE_INDEXED systems, won't calling
+cancel_work_sync(&gmux_data->interrupt_work) unconditionally in gmux_remove=
+()
+pass an uninitialized work_struct (with work->func =3D=3D NULL) to
+__flush_work() and trigger a WARN_ON(!work->func) warning?
 
-First, INIT_WORK(&gmux_data->interrupt_work, gmux_notify_work) is only call=
-ed
-in gmux_probe() when type is APPLE_GMUX_TYPE_MMIO, but gmux_remove() calls
-cancel_work_sync(&gmux_data->interrupt_work) unconditionally, which triggers
-WARN_ON(!work->func) in __flush_work() on PIO and indexed gmux devices.
+[Severity: Critical]
+In gmux_remove(), is the teardown ordering around cancel_work_sync() safe
+against a racing ACPI notification?
 
-Second, in the err_unmap path of gmux_probe(), iounmap(gmux_data->iomem_bas=
-e)
-is called before cancel_work_sync(&gmux_data->interrupt_work), so a running
-gmux_notify_work() can access gmux_data->iomem_base after it has been unmap=
-ped.
+Currently gmux_remove() does:
 
-Third, in gmux_remove(), pci_dev_put(gmux_data->discrete_pdev) and
-cancel_work_sync(&gmux_data->interrupt_work) are called before
-acpi_disable_gpe() and acpi_remove_notify_handler(). Can gmux_notify_handle=
-r()
-reschedule interrupt_work after cancel_work_sync(), or can a running
-gmux_notify_work() dereference gmux_data->discrete_pdev after pci_dev_put()?
+	pci_dev_put(gmux_data->discrete_pdev);
+	gmux_disable_interrupts(gmux_data);
+	cancel_work_sync(&gmux_data->interrupt_work);
+	if (gmux_data->gpe >=3D 0) {
+		acpi_disable_gpe(NULL, gmux_data->gpe);
+		acpi_remove_notify_handler(gmux_data->dhandle,
+					   ACPI_DEVICE_NOTIFY,
+					   &gmux_notify_handler);
+	}
+	...
+	if (gmux_data->iomem_base) {
+		iounmap(gmux_data->iomem_base);
+		release_mem_region(gmux_data->iostart, gmux_data->iolen);
+	} else
+		release_region(gmux_data->iostart, gmux_data->iolen);
+	apple_gmux_data =3D NULL;
+	kfree(gmux_data);
+
+First, pci_dev_put(gmux_data->discrete_pdev) and gmux_disable_interrupts() =
+are
+called before cancel_work_sync(), so an already-running gmux_notify_work() =
+can
+still dereference gmux_data->discrete_pdev in pm_runtime_resume() and call
+gmux_enable_interrupts(gmux_data, 0) after interrupts were disabled.
+
+Second, because acpi_disable_gpe() and acpi_remove_notify_handler() are cal=
+led
+after cancel_work_sync(&gmux_data->interrupt_work), any GPE or in-flight
+execution of gmux_notify_handler() before acpi_remove_notify_handler()
+completes will call schedule_work(&gmux_data->interrupt_work) again, causing
+gmux_notify_work() to run concurrently with iounmap(gmux_data->iomem_base) =
+and
+kfree(gmux_data).
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261025040046.1602=
--1-atharvatiwarilinuxdev@gmail.com?part=3D8
+-1-atharvatiwarilinuxdev@gmail.com?part=3D4
