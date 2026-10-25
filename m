@@ -1,100 +1,97 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.178
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792937980;
-	b=aWbMgM0k26km/Oe97cikUTE0hdPQJCLpSNCg8Ja2yZTiPTgZrIpMXsn8PDh5zYE0DmXG
-	 VDDBt4wzwtWv06jfnd30PFj6L1O1QMQ0RPSwlb442P92qaLEWWp/9N1TzVJXaUsrSYaEq
-	 YqqCr4CdowE27vhpxoAzXGJoRRD93PzZAZXXkaIA3Y5vd/GCRczAkez42NhHwvBaWZKuE
-	 TqgvbdDye21W8Tlx3WFVKTsZHS9xQqYlcQ8gdPztbyznsFplW0dd0i+0uXbYy7hZFiQqg
-	 8FS4cJq+A46uiTND5Xed5HQLZZ6+LxD8FU+NITL78c26vVuEdN8SE5l7evsPMLe+Nug==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792937980;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.180
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792939852;
+	b=CWW2x2zRfXOl7K69t3tmHCqe4bnaIAtVU64Iu12EacfO/ITM1rP4F8W6zr/aY/fz5z6/
+	 erOvwF7/MehlcOM5bI4/clDz83vgoOEdQQXyUbYeA7mNPvqtMz0hcLnlN5dA7qO/SUpYp
+	 6lQoLUvVLxOdaN6j5omf2a2rxtgxi3Gh7oQRWk/FoYRt7CETC+c+Va7u25ZgtPY2sHPs/
+	 7zVzaNkWKrZXfYLTaE2inD5fNVwuC0cq5yzW0dtNanEiNqgRSdeeDS2xW5r8wmvz3g+BR
+	 VHNxGtRkWCj4yQzTqccZHMoAFQCJlAXk/NKy6CrisjdtmaV2bVJQnJYNxxuOonJSdDQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792939852;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type;
-	bh=afEw9oZKmLEt3nCw5DyljPgEXMVJGWyX00qdwnVO3iE=;
-	b=h+V2Iy6pSzr3cYYyi4wn4zU0KbGOjgEyOUN+c7wzS1NC+M/yv8NK4tn0CJAxdVh70k/t
-	 nkgpmGSS7GbaUP0ENGbGwl2v0rlviQRqc70S1db9jd9jkKRKkCCrZBfuI2yWJ5B5oNBM7
-	 hPurzoH2eA6tzTqpGmUZTrr0NousM0f19mo4UOrJUSR4vDXkGXnEngVupoA4Yn7gqx9vk
-	 Egja0PUcw13iINF351L0Zx+qeDX+t3Vl1UTuWYSyq/RZOcArTbBsFJ0W0lKMPQDc5IpPJ
-	 +OibJtGjVh4sXZlN14yet8/aso4v6LZSIyZVgm8yRhYKJMZPImd2jL+dBKw5vpCPbIA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=PA72TJOn96rTm0l6KrCuswMCgsDDGiF/Lj452tWSU2Q=;
+	b=IdwCrepvnOPQJ8nMGxTGx35oh/HUuq3bfL0HsxdQRsnDtKynXE6hr6xEV+JrfQYq7bXc
+	 9v+ZOi2eBjyTCM3J0hw5UPxPGOS75ScrI9f5XjYXgQwswT+KJeLyVS8uMnn0O/wyamRPV
+	 ONfewf4SZ7Emk1+6298Y96V8nee+P5MW37w+YkzlhkGZEXIrctK/1KYhMwOe9xfG/9RK1
+	 haFSywGuhtH/oJiid7Fj4x6OGmMt+dRe53NsaDw62miUlFBdjgibjAAaG+9Ks23IuPLI8
+	 MBpHWK9aSIozJ7YskptQH8itfsE2G2WScxelIXNifLEp+emDl/eGFshC96yKfuI/OLg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=rpwWsubX;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.178
-Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=j9T4F5OG;
+	arc=none smtp.remote-ip=74.125.82.180
+Received: from mail-dy1-f180.google.com (mail-dy1-f180.google.com [74.125.82.180])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FE5C606A31D
-	for <linux-pci@vger.kernel.org>; Sun, 25 Oct 2026 14:19:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5FE5C606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6422D606A31A
+	for <linux-pci@vger.kernel.org>; Sun, 25 Oct 2026 14:50:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6422D606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=rpwWsubX
-Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-53394bffe0fso37455521cf.1
-        for <linux-pci@vger.kernel.org>; Sun, 25 Oct 2026 07:19:40 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792937979; cv=none;
-        d=google.com; s=arc-20260327;
-        b=XfyAF2GMyqkTd/IATtNAPtyvPp26WrzNvUubTN8c0JkDL2WvM42rFdTrvTr3jPt3UC
-         hzVVuWr5MbnP1wMEv1wRCG95eynvlFg5aXU9JHM0H01N/LC84mfHA+TRVZa7SgLsIYYG
-         Of5bI0QulGt2YrezkuCdrKjxtDuECf6kziHkmcEf/NRju7LIIdgAtfgJcb2h0kKrwAXW
-         bE3Nfabno0NJ1E5xdm3lZ+TZ9mvkRQoFijOU7HsClPy+7zhdmaD2F/qjpCOFNYVjdWeP
-         666iRMkzKRO8fmzS7G0SAE8+b50DmNJ1RU/jaTcajjTOVwvXNAij5CckTHptdpAS2GWY
-         7qYw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=afEw9oZKmLEt3nCw5DyljPgEXMVJGWyX00qdwnVO3iE=;
-        fh=gnOaVh4cbO6OBvS8dl7dJrt5xIcgU6/NCt8ySgN5EE0=;
-        b=XfqqcebX/RfrHyyVOFeFVP+W9OAXSqRxN6HQcxFVuxmNR0j3VaJQl3rgwHEOGKEoy3
-         Dd1oiTehEjTlNWrpagle5T8EapZ2FwQ1rb12fWa46u7kMfkRu/CAwEElvEDr8b3hXnaw
-         ZsL55QDtcAJIsCy+IoM3PPYiHkGFj1SBBOpl0DhiD9PFIrXyedtE9gYAOmwvT9goz1vC
-         v+xvacwl4w0RmO8XGI0eBmzqrrTkYjVL7cXAODB3d+yEHVNXX9yPDAZmz8eGa0WpkAtD
-         FfbsQwFJ3gIkcr3AivNIGXbV7YyjlPF+IJ1MTbjTFj2ouT7hg2qNPwdXGZ787rnAkP0X
-         WRbw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=j9T4F5OG
+Received: by mail-dy1-f180.google.com with SMTP id 5a478bee46e88-355724d032fso281322eec.3
+        for <linux-pci@vger.kernel.org>; Sun, 25 Oct 2026 07:50:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792937979; x=1793542779; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=afEw9oZKmLEt3nCw5DyljPgEXMVJGWyX00qdwnVO3iE=;
-        b=rpwWsubXievo0YLcf+Vs4oyL3gUbEkkg6C/OnQYw2QmkGoL1qKvYRJywg5ShhEZKOy
-         MisnyD6P198DHVaIT3z17H+r3SCXdXNuADpOlnmAUbMHDbljFh7euejz4u+2PeIJGXm2
-         j12GCrd6aQ5Gpp1MoNwrET16wv3oSBf2kipGQ69776/FBPtADAwSfOQDL680cq0s43BK
-         /9uMfVW0W10KZBZjigT/5ww3s+CfO4TlIAn+ErZAbnshbSf8Qc+dABZhxFWn11iXxoSZ
-         AJbi8CHNQkmbDv6KDkZkYhEMKwn9xLgzYHihgLdHZ7Ez9OJZ4z12mPgj9iIJDDLr/bjK
-         d4cQ==
+        d=gmail.com; s=20251104; t=1792939851; x=1793544651; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=PA72TJOn96rTm0l6KrCuswMCgsDDGiF/Lj452tWSU2Q=;
+        b=j9T4F5OGt/GvWnCF/LtEZHkEkRFO/GwdoG7tZ9TBRqOSbJ/un2GPh6qS6VV1m4UN0s
+         C1PMcbCwLoMXk4IhKyNJU9a1XWYUciYATLE+8wwrXtM5LCfjzl2t8i7edkDP3Qm4L1xE
+         RAfQT3tjceo2XHgNziLQDhs9x3868J7jeMdM96byPm75GXmegHVlaKK3A0/s9hJsaQ01
+         dnG4wRhk6r5HWPZTAGQmrraByG3Yr4ZdfRDYR5C39izP5KSO6wbIJpb3fwenXZhoKsB9
+         8ekTLvlyl5EBwUBXvU2tMYpKG5bpjoYBYHX+C+v4HnGTZ4MC/wYTfXeNNBGv+KCX/W30
+         5pXQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792937979; x=1793542779;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=afEw9oZKmLEt3nCw5DyljPgEXMVJGWyX00qdwnVO3iE=;
-        b=GqIu7MsyI+dzV1cB6DISU0e10W6YCnLGeAE6HSS/WzvN/HxNL7A5sYmpSJ2/DW4s8N
-         sx4tRD+LDJPHzy8PBfM/GP168e8piAxOaUQV/Ex1cp+5WuW04i/WmnCgJ6oAaH1CTewl
-         XTtnPWZSYc6QNnBb8wax5FO3AkfbqIY+9pcyFE+qJoCZHsm+pWQTv7rKGj5VzDXC6132
-         YcurwMAqqOrrDErSOVAwhYEtxwJWDh7Y2GqBuqSRLLwxwydV4We79BJieyp1VKjr0eCL
-         FqwMVSiguE1KttDBzqLQF2IdAjLISZw+CnQ2X2pYhWTR1bABEM5ay13rnX1+V5XliluX
-         qRiQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxmqwOw7lZS6up7nfVyMcBwCOBPLHuF3L/ldproXzu9EWHWVQaEeABuXV/oDnuXAvKttSLeJjZZN4k=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJxZPjoOzIgLBMZj2CppSWZy4fU1UNFsMPn8l3s1gU7ah8GQzCz
-	JSUAXQhE4WzMuDO7dpfK7QrnUNaff6TMp2noReXkC/fYsP9U/LTiX0yBhTdPIN5V6RGq9+j8dAZ
-	1cmYw622uwstU/XhmP1q1FnJPgy0cL5s=
-X-Gm-Gg: AYBFou1C39f4R4nr3+8e0ld154N3MKPZjUzc3C8dNYP9cpFlHd3w1cHn9QPA7D0Aeym
-	hMLgfnMz3WqKvSiCMU8miBOHaLWmaHdR9oRXD+lt27rxU20nZBN2Hqq98869YfggeUMgUqFTC6P
-	iKLlFeo/ZiFvy0xqatK18R9pywBN+b/tHFi873dpiZn8r1nIY+UlRfyRmQhVhm1LBJ8IUT6M6AD
-	vvKhQtCtcLjWjc98Ju8bmp+55ci+lu84aUS+kUwajMVLbZvctDLJCu/xJ05MnefFekNXLbDuycW
-	JvYOuIYa38lz/SGfPMI/D6WNAhtRHYFrQ0H1FrHYCdtLTDC5QE4EhmWXXgk3hEmd425FNMcDnSl
-	P1CcG0UZjPZ4JOvL/AiC82Yxs6U1WJ3zFvWwd3t1r2iFu3dGJJlTfNNnPgNBQbM651R7BoDh5Ea
-	yoDOyYkR3+lyYsyydFNARRhUGBjJgB+AIDu1GfaNdtM+47pZpZS/dcd41H+/MzrKPozlm36Wy2
-X-Received: by 2002:a05:622a:44a:b0:537:548b:77ed with SMTP id
- d75a77b69052e-5383b66676amr59161561cf.30.1792937979282; Sun, 25 Oct 2026
- 07:19:39 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1792939851; x=1793544651;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=PA72TJOn96rTm0l6KrCuswMCgsDDGiF/Lj452tWSU2Q=;
+        b=IFgHUHZXY9n60d0i3yPyLDBo1fJ0XRqLV/FBB4LuKBlbLRpEnPKyjgMNbY2SDCa64r
+         PqdEzqBJ8J5wUSU7/XGsJnQdrOgfJOF/XcrG53Fli5CNETVIUyzDOWh4e6d0u/o8rxfY
+         ivaelBqEBtLbxAk2ALiCb725gxGnP3IN0xdMwz2crp0QgmOqXMDZPGPA+CMhui/kD5vU
+         0w5+7Xknoza+gAnjhVdUYIWuVQ2yRt8sDaKzc8rc7XKRbMOAYxYmasS/uGh03D4NUEsc
+         A9yZqrnj2xTIGEXDwR8ba4S7Pczqsf2Ay5FfMciIsEpk8VyPEYDOCIJnAJkTGK3t2Eio
+         qfOw==
+X-Forwarded-Encrypted: i=1; AKwUvBzbWd9ZNgThoqqksIBiicmSgQLsmkoNsx4ObWg2kjJMUYlLl9pIrHrxGKZhA+DeZA6ZwRuhzpM7fu0=@vger.kernel.org
+X-Gm-Message-State: AFq9FYLlA25M2XQaxGOTeG3ZKT0yce06hm/+VY1xGd2/EahfLsIi16Vl
+	GsgSCQLoKRofSx9lgtVzndeFKIWSTgS9/yU1q2vb4D6s2YjkNLPsfhJA
+X-Gm-Gg: AYBFou2uObk+xLel04t22WDEfDl1Etjhf90tWRD3IqB2Cvb5jdE1+tHS5YSAuEeV7ei
+	1PtV4FZ/WRRswX4Z1npqGDc1v/ccze+gRBmAALKPz/e7+7CrAxWulKqd27bgFfdSH20UJalyqiI
+	VhVUtErtT8okkVMQwnzSGGk3b1DtlkbBCFMb8/MVNIFE45dfie8Lzh0X2t6kfiXl0V86QcFIRzA
+	eKwRFGv4ypT8dbXdcl5NrYc0ohTJBaAAj1rkwdIO82lhxcCrDWstDzzPPSOFD2XkV0A0BY1cwUk
+	3kgcgFz9KsTjbjHidsMcnjSK72hsukNzmMeqqw0bUziKWd3AiyekqI58cWVndZpHZIS8BOsZ1CV
+	ElZzymM9gcLpc/VeqJD7w3tRnqN+6neFf+rdKZrlWsxt4cRfBvADNMm2rQaJkFTofZkw2De/kyg
+	Hwj91NYHDZEnprP1wkgeMO2hPZLxBcOK7XB5lYHxbH0VjqBx7YsatTx3QK3/fKoWQ0WqUo1gPRC
+	IMkgm49KEdwAcDQpQQbO9oIQ80gq3qw+j7Gl4WulyxSlIEqKjlxqu7K2rvn0CYAy+MJBMWlPR2N
+	iRTPwfAuJzG8p63vD5PokyTI9YXd8fyCxgRb6YwIn5Fvm6+jEzBCY/Ckxe68+hZ6/hwvNGJFsdN
+	8r81IQatGJ3kUmTp7X4Id
+X-Received: by 2002:a05:7301:19c:b0:368:1f8c:5f23 with SMTP id 5a478bee46e88-369e821311amr10255537eec.0.1792939851044;
+        Sun, 25 Oct 2026 07:50:51 -0700 (PDT)
+Received: from cachyos-aura ([45.112.149.26])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-369e8d8a690sm16770605eec.12.2026.10.25.07.50.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 25 Oct 2026 07:50:50 -0700 (PDT)
+From: Navon John Lukose <navonjohnlukose@gmail.com>
+To: Nika Krasnova <nika@nikableh.moe>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Mark Pearson <mpearson-lenovo@squebb.ca>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] x86/PCI: Disable D3cold on Intel BE200 Wi-Fi on Lenovo IdeaPad Pro 5 14IAH10
+Date: Sun, 25 Oct 2026 20:20:44 +0530
+Message-ID: <20261025145044.22228-1-navonjohnlukose@gmail.com>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20260722021321.68902-1-nika@nikableh.moe>
+References: <20260722021321.68902-1-nika@nikableh.moe>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -104,61 +101,16 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261012-fix-aer-mask-override-v1-0-49a0d7aeaea0@google.com> <20261012-fix-aer-mask-override-v1-2-49a0d7aeaea0@google.com>
-In-Reply-To: <20261012-fix-aer-mask-override-v1-2-49a0d7aeaea0@google.com>
-From: Daniel Pereira <danielmaraboo@gmail.com>
-Date: Sun, 25 Oct 2026 11:19:28 -0300
-X-Gm-Features: AclHuK8BBiPLOfqYYGvUYpW8KblsSf6Aue6WOkhnIkNSO4BT_qaP3xQuaMz486g
-Message-ID: <CAMAsx6dLGdqr+ZxG8FrwN-6r=5yVY8hk-c+7CVrAkS0zpKPmGg@mail.gmail.com>
-Subject: Re: [PATCH 2/2] Documentation: PCI: Document aer_inject's
- aer_mask_override parameter
-To: rathodpriyank@google.com
-Cc: bhelgaas@google.com, lukas@wunner.de, 
-	sathyanarayanan.kuppuswamy@linux.intel.com, ilpo.jarvinen@linux.intel.com, 
-	dave.jiang@intel.com, prarit@redhat.com, ying.huang@linux.alibaba.com, 
-	terry.bowman@amd.com, corbet@lwn.net, jic23@kernel.org, 
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-On Mon, Oct 12, 2026, Priyank Rathod wrote:
-> To exercise the handling of such errors anyway, e.g., of those that are
-> masked by default like Header Log Overflow or Poisoned TLP Egress
-> Blocked, load the module with::
+On Wed, Jul 22, 2026 at 04:13:15AM +0200, Nika Krasnova wrote:
+> +			DMI_MATCH(DMI_PRODUCT_VERSION, "IdeaPad Pro 5 14IAH10"),
 
-Hi Priyank,
+The Yoga Pro 7 14IAH10 (83KF) fails the same way on the same root port
+(00:06.0), so this should cover it too. Matching "14IAH10" would catch
+both.
 
-I read the text against patch 1/2 and the current tree, and it matches
-the implementation:
+Keeping the card out of D3cold costs nothing measurable here: across six
+90 s s2idle cycles, S0ix residency was 92-96% either way.
 
-- the -EINVAL refusal for masked errors is the existing check in
-aer_inject() for both the Correctable and the Uncorrectable case;
-- 1/2 drops the writes to the hardware Mask registers, and
-aer_inj_read_config() clears the pending injected bits from the Mask
-values it returns;
-- the hidden bits are kept set in dword writes through
-uncor_mask_hidden/cor_mask_hidden until the module is unloaded;
-- PCIEAER_INJECT is a tristate, so the boot parameter form applies when
-it is built in.
-
-The new section is also a proper subsection of "Software error
-injection", and the documentation builds with it without new warnings.
-
-There is one thing I could not reconcile, in case it is useful. The
-text gives Poisoned TLP Egress Blocked as an example of an error that
-is masked by default. In the sample session of the cover letter,
-PCI_ERR_UNCOR_MASK of the e1000e reads 02400000 before the test, which
-is PCI_ERR_UNC_INTN (0x00400000) plus PCI_ERR_UNC_TLPPRE (0x02000000),
-while PCI_ERR_UNC_POISON_BLK (0x04000000) is clear. The vendor register
-descriptions I found also list that bit with a reset value of 0. The
-Correctable side does match: 0000c000 has Corrected Internal and Header
-Log Overflow set. Internal errors match too, since
-pci_aer_unmask_internal_errors() is only used for CXL.
-
-Perhaps the example could name only errors whose default is confirmed,
-for instance Header Log Overflow and the Internal Errors, or cite the
-spec section if it does say that Poisoned TLP Egress Blocked is masked
-by default. I may well be missing something in the spec.
-
-Thanks,
-Daniel
+I've withdrawn my iwlwifi recovery series in favour of this.
