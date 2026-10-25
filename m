@@ -1,90 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.177
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.224.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792886925;
-	b=G2NCeRZUvpI37HRxkwryNLc2LfFpFMZHCHDumTYW+/t0wKFMqa7Tnjhlil23dleab5c0
-	 RlQo4petWMF87GhNQdtfBfbBiXWNtuCu1tc0vy1BmFsY7D6W+cK/ca+JT+NAVmKvn3SKA
-	 9tDeq2rqgXrxF21V7XaG6C6FF8e8H8iBj+nQSP/R1iAv5WZ7UspPBaBWGIhrg6L3BKO4o
-	 /947uf1rrUmd/nHIAM4uGpB3Kw/XO/1RadZKTRckKCVd5MjSr8zWpG+lFwDlMR9ZZXCoH
-	 OHMQvfaPZ8KG4em7CZ0BKMt8i8zQT4BaMJCT8Fwf0vFT9pCIl8AclWGnKO10/OHN1Bw==
+	t=1792886923;
+	b=wZYTmmwT9jp+cz4JPu1n1VOH/0KG1RyuqN13096iZNovczdtzkJw9T8ENosoV6lqpRLn
+	 MtrtiwGEE55Bs6VcOrEGEOcPhiBqvuhphWeHuZ2wyWUBqJsrGvsypCHsKZhNGiYPCtUXF
+	 0La9h2STwhYXIaHV81Jqyr2Bq5rIXYcwlqFp1JSlw9cKJsJM/YAlMen2XGDGsFy2r/XBK
+	 6ATf3OgO+XCqlw8yLKPf1oU+NxemIQyiRkoMc9P1NElR1ag16MREToAxd2ZRWgUdlTSUg
+	 BtVNfcIKjPRMKbZ3EUaF0KlmskBagvC5yCnF1+95AaU99BO8w2FJOgJM0dAAixPZBJg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792886925;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792886923;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=7dfyKzdRYvknKA9F2M27XwH3fnlKeDPMr9i7eMgXHCA=;
-	b=sRRfn0KSMroEpM8G3C6d9qUinr8tfVCB/glpOWm+1FL9AnfAt58gUNb0LZW09OZPT/wz
-	 owZ08cwNFa07KnB4W1xOvO2cZcG/7Eosq0d6Q/G3gaCqmlr3XjceCkAoFIOPZeKmlzhGM
-	 WGpyvwLeLnpp3MJxNSlWF8iuxLL3O4SUwK9ovGnNC2e+/8eJFwItDDe06wPxnkY56lWyr
-	 UyacSzMCx4CyKuz1quxZTlkp7L/BSJ9wJ86pmReRhrCcK+6L8CGlx4cZT4FZC52wIOoll
-	 x1TbBYKhljmozpgammYbEBYsiKQxETU7D0T+FV26syamErrBw1QRR9w7R2rQ+lblbwA==
+	bh=pPVrxLHgw9uvnWkIbWwQACs8ELNvhdEnjrajTTffzFc=;
+	b=ecxZdAr9h1HOapFrNY0Ow1Fsc5nbfooEK89ifzRxKcIe3HcnepeW2qxf0ULu+mBThbsZ
+	 QLC7DZqgFYkyQPcc0b6DfnHKBdSYYpqJg7lUUNqjBk5Km41npH0osYClygCuqQiW2mTem
+	 u6vh6VObhP7lk2wO9xLrYOvfqq/Mo8vimZjgOXt3C4XTZjb7IiO/ZSnHSZrnxUhqgTmcG
+	 g9Y9a9d9aT8l5sWpFcrVduJpgPfCrdGuYFIt5aWzXw9vUF9FRDspCJM/p48IkmSIglmyO
+	 0aZ2cJUNAe/mfu2dv3DoPizlUKyBfBW3n5rRLFEL4JYrO331f9s6h/Y9JGT0N4hQNyg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b="flQ/kmWx";
-	arc=none smtp.remote-ip=209.85.128.177
-Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=DichRZ6h;
+	arc=none smtp.remote-ip=74.125.224.43
+Received: from mail-yx1-f43.google.com (mail-yx1-f43.google.com [74.125.224.43])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B7E1606A31B
-	for <linux-pci@vger.kernel.org>; Sun, 25 Oct 2026 00:08:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8B7E1606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61EDA606A323
+	for <linux-pci@vger.kernel.org>; Sun, 25 Oct 2026 00:08:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 61EDA606A323
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=flQ/kmWx
-Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-8b0f59a5fdeso15519357b3.1
-        for <linux-pci@vger.kernel.org>; Sat, 24 Oct 2026 17:08:45 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=DichRZ6h
+Received: by mail-yx1-f43.google.com with SMTP id 956f58d0204a3-677dbe051d4so1646715d50.0
+        for <linux-pci@vger.kernel.org>; Sat, 24 Oct 2026 17:08:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792886925; x=1793491725; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1792886922; x=1793491722; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=7dfyKzdRYvknKA9F2M27XwH3fnlKeDPMr9i7eMgXHCA=;
-        b=flQ/kmWxxS03rLrKqQnRfDvryWFwFlCQaR5t76gjicE2KsEMIM1ydWBjjg/nqxu3JP
-         uZoMPXTe9rwgH36lRyIt4ho86CnjIXzro2RDGYQrRi2hVG70954xOW8OiMTthyBoRWln
-         HjjLn2Td6zAliuFtCsDA77Hnb/mREkD7X8eWx6CifezkSf96B/41m10JFm+Psu4j/EbB
-         aUic8/rXqZkxYwCsiSabO4lYZJwhLZG1UqJKIvtczTCH0TLGEo3OLSpHitSM3Gpdegz4
-         O5+YhXa8oxuTXDgi/pgoHtnu412azpP5XDu7oaferVAhlXWFiGDhlgq1ujnE0WcJgmgZ
-         0UNQ==
+        bh=pPVrxLHgw9uvnWkIbWwQACs8ELNvhdEnjrajTTffzFc=;
+        b=DichRZ6hJkdUXVfBKrhYXbsiCL67VTcfIrOWgv+u8W6Jd+P5WK3cf5Kp0rMNuSwEFZ
+         6fEwgAMv3OHfxXZQwVdewFQ6VKY5WXwFB40tMqVEFc4y5+5NEqaOHyo72zJL4EkDxwWY
+         ZPtMSbPdoJUknVF0HPe5G42AtUzUeaq5K2dUKQ6IzqSTaKaqOT936cXXz9S0HdEGqPRw
+         hjnbNdQTY/z6ZUUi+IlXyaH4meZBe1Lie847+AvLXvLlqI1AQfbXi4UiQqi6YS8XN/SY
+         eLM3/rMZ03Lak192bARgduabx0G8XTnNbeOp46NNJoMJQtSDpV5o/R7QKPX2ZQxAApFx
+         j0jw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792886925; x=1793491725;
+        d=1e100.net; s=20260707; t=1792886922; x=1793491722;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=7dfyKzdRYvknKA9F2M27XwH3fnlKeDPMr9i7eMgXHCA=;
-        b=pn2eeCBaz/PejNRsmc3vVNJD5ytLxQ/wXpKszgC/RSSPYbEZ123jRBKGD7PRYN/WvP
-         kQytltIF8MBe0xwavdrbfAQAUM69rNwL9TSyZxDeHs6HYwGagKlSLVEVnJkyt3UvtuOP
-         NaO0INsU7QvtRr1gQsk4IFlIEwlHgl0Zte7TijbuUde6o6/62E4Yb7VgAgkxTo23B9oI
-         g5q0Bxi7cRHVsk+VEagP+1L5fuMKoJYaQSUiRsyjAW6v3Spl62cw+Q0E2faIm+rDndUr
-         SPqRd9qotolTmnMcvR9sA9shE/q6lfr6VPakcNlQ3lWo15pM8+B5udEPLmnZ5pvaTk7d
-         /Mrw==
-X-Gm-Message-State: AFq9FYJGld3RKTObD0lAzfaMBmnXB8FLDqHgSLAK7SZoQf1lIgO+b/i8
-	K/hJ2DK89a6qvO67CGyx4t34+/xMZ5zD+suLgl5bXKUtMGmIxGwwNIkm
-X-Gm-Gg: AYBFou23xlfN5C08clYmyvvsNdQ5gdUp4JMuEXmIaaSnVKgS8on1zDqK5frjiURC+G5
-	VOZKQTEevGi4lBySwPun+T7iVlfRKYOpn+x/ryl+6m04KwZcI9v7NNEEb5/UQIAK+xy/bqYXuuT
-	vIG/MdsW4VIBRDokls41xLbkpAMXfazyzECnUZiWtMHpYZvJlj3ZzgFWiVTwGLxskuXIZJlYgfi
-	dbobfSw9QcH1b9400vJl9VfstAzkwfloaRhTYDrgX6JwtLI415anTNZqBrxIbHuzuZPOakQy+OC
-	hc0Z+vKclgFIGMftGe3cridxQyukXsOsDJt7WDtJ2JlsuQ94/xKdzcZS5EG0VSFnkCopnRGs40X
-	ketKlmN81UIh15iTCz6YrcTsS/rCDOUKc7DC+RSefNpaHyQKiDpjhGEAfyleCV7BquxtUwiLLFA
-	tyHBCj4q6eW42uy5ZgE/6lZr1qukXYK3awfgLwTG2qtaybIBW9Q58sbhj5gcmtDl8oPGyWfRlUT
-	5sIL78Va21EG/HfQS67G8bKjT58DIhjc2uHhfsmYsAptS6voIsukJB8
-X-Received: by 2002:a05:690c:a909:20b0:8b1:4267:3ed8 with SMTP id 00721157ae682-8b166cb48f8mr17793027b3.65.1792886924758;
-        Sat, 24 Oct 2026 17:08:44 -0700 (PDT)
-Received: from gmail.com ([2a03:2880:1fff:41::])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b166ded0aasm14148067b3.8.2026.10.24.17.08.43
+        bh=pPVrxLHgw9uvnWkIbWwQACs8ELNvhdEnjrajTTffzFc=;
+        b=AvLc6Eb7tuT2aGlZZkJj8/RiA+Smdr1dau+g/V5mxjV79Pb8rzm+kP8+6Y8XQ1u76d
+         YnWAEzRpSLIgxIOM11Js+bMewZ52J4kytzR+My1ODbH88D1V2e8LCIzMSh0LkCDlPoSe
+         33WCVvf0Q29whcMP5bqrGGiGqEpJLLr3syDx/qY4vTex4iTo7vvWE7l89mwizi5as5mv
+         jb8zauxePksdbqNg96Gtb3M5JfSJDnwRSsw2yIxqmSDhu3d0NdwPUAcyQ9rOXtUiNZaP
+         nGRuOcXFMsCVSHrNmMrRKnhX+oEGefp5bhzd52o4VeEkP/hQ8Zm2hgaHWEs/2zvqlKm6
+         XVpg==
+X-Gm-Message-State: AFq9FYKPneJrwWgl/rYu0P9lg+IvEelrMx7oeoYzrTbo2SzhwejSYzkR
+	sEvEkapCIuUaGNbxnWZkmJsP2Z22HuDPi1bWxg4nT6UDTh0aYVEjjnal
+X-Gm-Gg: AYBFou2W+HwWZlY+Of6WZhAXL6t90bx2X61Owp7FphPEEigGTLshBGs66nmJBcZK9qe
+	RG+fins8eSej8FGcZCHc5uIglpynECaya9hG0z/lPXJ6bwvv/CiybXPZMbG3lDK8Zw8r2nyoCpA
+	XUoqpUtImWkCRPsb+H/bYnPnsGCOYmHWGj0qYjg0PYOr8F5pvvRnKj5cAHGlLiW3gF+IOqghiGK
+	K5xkX39EzcIwc6UPc8kni64rLS82acsAEf6CP0qtlI+ib1nVYeK4RNa08H3tOaDGwDVFhKsdgPL
+	VhDu+Q0P7xugjoLMJTDEVbEivxMQCOzY3o7byhiqt1deJF1yHTuCdt/AEige/reWH6VsHwRs6JG
+	49joa0NFjL8K/stoMFV8wynUNMoT1PuzROSm4kgpBqh7JCaASsFA8vF6Qike96OQaZvb4liPdoa
+	F+ysQ9bXqHv6zP3CcTtZr8ZNOg5pjkGchRAgTqtIL6ISqua3/+44qj4Yn134CmjrEr2+CgvQpIu
+	meVF+xWMjmxaHoK05GbkszhTOFYB2djiqqZ0c0aAiz+mJeqfF8OPU0=
+X-Received: by 2002:a05:690e:441c:b0:678:3418:8cfd with SMTP id 956f58d0204a3-67a455397cbmr1541589d50.104.1792886922563;
+        Sat, 24 Oct 2026 17:08:42 -0700 (PDT)
+Received: from gmail.com ([2a03:2880:1fff:4a::])
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-67a461a715bsm1511878d50.6.2026.10.24.17.08.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 24 Oct 2026 17:08:43 -0700 (PDT)
+        Sat, 24 Oct 2026 17:08:42 -0700 (PDT)
 From: Matthew Wood <thepacketgeek@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	kbusch@kernel.org,
 	Nikita Vetoshkin <nekto0n@meta.com>
-Subject: [PATCH 3/5] PCI: Add pcie_capability_user_read_{word,dword}()
-Date: Sat, 24 Oct 2026 17:08:31 -0700
-Message-ID: <20261025000836.58294-4-thepacketgeek@gmail.com>
+Subject: [PATCH 2/5] PCI/sysfs: Use user config accessors for bus number attributes
+Date: Sat, 24 Oct 2026 17:08:30 -0700
+Message-ID: <20261025000836.58294-3-thepacketgeek@gmail.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261025000836.58294-1-thepacketgeek@gmail.com>
 References: <20261025000836.58294-1-thepacketgeek@gmail.com>
@@ -99,99 +99,43 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-pcie_capability_read_word() and pcie_capability_read_dword() use the
-kernel config accessors which don't check block_cfg_access, so they
-can't be used for reads on behalf of userspace that should wait for a
-reset (or other pci_cfg_access_lock() holder) to finish.
+secondary_bus_number and subordinate_bus_number read config space with
+pci_read_config_byte(). The kernel config accessors don't check
+block_cfg_access, so a read that races with a reset goes to the device
+mid-reset and can fail or return a bogus bus number.
 
-Add pcie_capability_user_read_word() and
-pcie_capability_user_read_dword() helpers, which provide the same function
-using the user config accessors.
-
-These are for use within the PCI core, so they are declared in
-drivers/pci/pci.h and not exported.
+Use pci_user_read_config_byte() instead, as the "config" attribute does,
+so the read waits for any pci_cfg_access_lock() holder (e.g.
+pci_reset_function()) to finish.
 
 Signed-off-by: Matthew Wood <thepacketgeek@gmail.com>
 Tested-by: Nikita Vetoshkin <nekto0n@meta.com>
 ---
- drivers/pci/access.c | 50 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h    |  2 ++
- 2 files changed, 52 insertions(+)
+ drivers/pci/pci-sysfs.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 18a206bb2a94..ff5a16236758 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -490,6 +490,56 @@ int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
- }
- EXPORT_SYMBOL(pcie_capability_read_dword);
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 6669e9ad5bd3..b37a285d717d 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -267,7 +267,7 @@ static ssize_t secondary_bus_number_show(struct device *dev,
+ 	int err;
  
-+/*
-+ * Same as pcie_capability_read_{word,dword}(), but using the user config
-+ * accessors.  Returns 0 on success, negative values indicate error.
-+ */
-+int pcie_capability_user_read_word(struct pci_dev *dev, int pos, u16 *val)
-+{
-+	int ret;
-+
-+	*val = 0;
-+	if (pos & 1)
-+		return -EINVAL;
-+
-+	if (pcie_capability_reg_implemented(dev, pos)) {
-+		ret = pci_user_read_config_word(dev, pci_pcie_cap(dev) + pos,
-+						val);
-+		if (ret)
-+			*val = 0;
-+		return ret;
-+	}
-+
-+	if (pci_is_pcie(dev) && pcie_downstream_port(dev) &&
-+	    pos == PCI_EXP_SLTSTA)
-+		*val = PCI_EXP_SLTSTA_PDS;
-+
-+	return 0;
-+}
-+
-+int pcie_capability_user_read_dword(struct pci_dev *dev, int pos, u32 *val)
-+{
-+	int ret;
-+
-+	*val = 0;
-+	if (pos & 3)
-+		return -EINVAL;
-+
-+	if (pcie_capability_reg_implemented(dev, pos)) {
-+		ret = pci_user_read_config_dword(dev, pci_pcie_cap(dev) + pos,
-+						 val);
-+		if (ret)
-+			*val = 0;
-+		return ret;
-+	}
-+
-+	if (pci_is_pcie(dev) && pcie_downstream_port(dev) &&
-+	    pos == PCI_EXP_SLTSTA)
-+		*val = PCI_EXP_SLTSTA_PDS;
-+
-+	return 0;
-+}
-+
- int pcie_capability_write_word(struct pci_dev *dev, int pos, u16 val)
- {
- 	if (pos & 1)
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 77efa4c5c960..7c5a2ebc5706 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -128,6 +128,8 @@ extern struct mutex pci_rescan_remove_lock;
- bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
- bool pcie_cap_has_lnkctl2(const struct pci_dev *dev);
- bool pcie_cap_has_rtctl(const struct pci_dev *dev);
-+int pcie_capability_user_read_word(struct pci_dev *dev, int pos, u16 *val);
-+int pcie_capability_user_read_dword(struct pci_dev *dev, int pos, u32 *val);
+ 	pci_config_pm_runtime_get(pci_dev);
+-	err = pci_read_config_byte(pci_dev, PCI_SECONDARY_BUS, &sec_bus);
++	err = pci_user_read_config_byte(pci_dev, PCI_SECONDARY_BUS, &sec_bus);
+ 	pci_config_pm_runtime_put(pci_dev);
  
- /* Standard Capability finder */
- /**
+ 	if (err)
+@@ -286,7 +286,7 @@ static ssize_t subordinate_bus_number_show(struct device *dev,
+ 	int err;
+ 
+ 	pci_config_pm_runtime_get(pci_dev);
+-	err = pci_read_config_byte(pci_dev, PCI_SUBORDINATE_BUS, &sub_bus);
++	err = pci_user_read_config_byte(pci_dev, PCI_SUBORDINATE_BUS, &sub_bus);
+ 	pci_config_pm_runtime_put(pci_dev);
+ 
+ 	if (err)
 -- 
 2.53.0-Meta
 
