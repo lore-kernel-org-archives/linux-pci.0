@@ -1,83 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.9
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793039350;
-	b=ksjv7smH9osyo4XpGt7n9jeazvHmRN1giwW+P/OtrJSDP9fyvwfbhdoDyVIr68YH9MDg
-	 RAKsPWbMtub/7z2rNi8LedPiqTD+cJb7mFnDNUN9XB+b9hGpH4Komy9Rl/C2VIYhbIG6a
-	 MYkVHWMprGv/RkmlAU+/z89wXLaprGnqGTWNCoMxc/ycQfa5i+qYiK0bzb9yYl6woZG4t
-	 fVBOlx+UjFnpQbcB2+1nk2UJWE1pZgFW1YG9zUnRPeSfXTx53n5uK3zq/WzWfCUIZJ2T3
-	 mx8ssMKf+lKe5REFxVZPFVf8dgiT6a3Le5tUFhe09idETCISpgw2sTgB/obDlS3ZRmA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793039350;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=136.143.169.15
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793039336;
+	b=ZjzW/PtqzIMnblxV3mE25bBgrgMEOWuLINEkG233ZUMWEAy53VMqE6fJuv3ylFn48Rrt
+	 pS2oguEaDD2QWMdYSeMrXjuA46NjWUqV1DgWj/dk6fnvKkZyhlBodR1T9SWjl3RfRWqJl
+	 WnyMCa8ph4bvOUBXmxr4TX5bclzOkxOQl8oa41X3AqVHtVl9gWDt2r5cveUJTpQt/9rL5
+	 df65sZwOAZPbLuUz79gXbsVjHCJRwcY/5i0DRzYdPvjK8YqEnWucrDtawV1EsSvGA+UjU
+	 hp6vbMR5Bev+ceK69rUakK/RR6Ico2VjLKwvq0M2bqa0unwsQVwV5K417QTyMCwV4+g==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793039336;
+	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
+	 Message-ID:In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=T5eyJuPYBB5dJvizm4B+jyIC7d0qJizGLlsOlHeOB6A=;
-	b=H9i+ER+CiO3ct6NOK7WPsQH3D3LdyrCDBfuMeWWZYYsRFNFn2RUJCa2eYvBTLtmrUr12
-	 dEUctHCJ+Ec8+LC+1YpjG1TuOeknDXqAn7vjYutNTSV93z1QjYUzhY4UbM2VC49tgqGkD
-	 fD0mH9pVgD6THHLssg4xtL+7s+TcxZ5IQ46v319InWxmu1ZKVpSrDXEuefA5NThS10Ghw
-	 1RygeZ7F+ghe+6lAASgiemm+jgA6LwKssY3Um6Cev0k945j5wnjbC4uQ00DSAJBjdCgYb
-	 NZFWoq41GjgfZetGRkfA1EDhsiP52Co9gJbQtYYk90atGVj4jxaBaPUga7bNHS/93vg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=NZoaDG9e;
-	arc=none smtp.remote-ip=198.175.65.9
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	bh=uazXjT0Ki1xgfLrx287ADuJ6KrWtZacD7vOR4+uIzX0=;
+	b=ai16/8Fri3iGwwglGC7PINjrTbeg16CSB5AMW/iLxCrQWT55uwt9n8I10wXHK1QLEP/w
+	 moq+AXGkaAN2KpPsaGrzRX2rg1RXOH7UoKOuB/POCKHgCFO9zQWi+t7mfRXG+3u/ljEfV
+	 0cVL25HZ6MfSeyWqffh1lzup10oriCeBIERgKHmy3OAJ494lZYeopUcmLztiGSh62kMrD
+	 DIhlPLnE8T+aVdgV4XpTVkC6shT+S2fG/v1iqSx5HL/BIYOvhTo/2Dj9nYGZFcb9M6f7Q
+	 Gtl754u7o3kJnLPKsBF5AFuPoOGmcCs3J2kMXvvyvLedaQoqPnxTK8k6j+5yV06jd1w==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=none header.from=iav.lv;
+	spf=pass smtp.mailfrom=iav.lv;
+	dkim=pass header.d=iav.lv header.i=iav@iav.lv header.a=rsa-sha256 header.s=zoho header.b=XATZ6N+0;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=136.143.169.15
+Received: from sender-op-o15.zoho.eu (sender-op-o15.zoho.eu [136.143.169.15])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76D0A606A332;
-	Mon, 26 Oct 2026 18:29:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 76D0A606A332
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7ABFC606A31A;
+	Mon, 26 Oct 2026 18:28:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7ABFC606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iav.lv
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iav.lv
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=NZoaDG9e
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793039350; x=1824575350;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=DOuXCw5dCps78nu9B9Qpc8vBfwq58tJ6JyIJ3pVMFXc=;
-  b=NZoaDG9ebApIJz+P568mCznCKF7ETv5MRBUrT5uSkZjOXjNwHHR4mXAI
-   IXU/KuzEvxLZ+yczsl4K5iYES3MGYwecg8NK5BYWu1Qznd6sJ5yRJt/pD
-   6AlZcgJZSOLX7vC/S68bAasCHjO59H+cOcfHUCH+lNAq6J1hEHL+hcMh8
-   2jGc8IhPZ+xQdLzaTJ8EZdkyFZWvkhqliQCDRMTDi702bNNLP/LAEqEXZ
-   jX39Q5RNR4V5ZwQ7S8RyWAXfigPaE9eyW4e80R2bWTNaG22PE1OH1rsdi
-   jia0ePRli/W4mwPvvvvJ5p8JgMTh6QWV1eEBkNhiXDHaP/CbIkjkBkD7q
-   Q==;
-X-CSE-ConnectionGUID: pQriogK5QE2j4eigVe3fgw==
-X-CSE-MsgGUID: S2Fxy8Z+SdGYBpAEuQTOow==
-X-IronPort-AV: E=McAfee;i="6800,10657,11947"; a="1601005"
-X-IronPort-AV: E=Sophos;i="6.27,179,1787036400"; 
-   d="scan'208";a="1601005"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Oct 2026 11:29:10 -0700
-X-CSE-ConnectionGUID: bzEHCSreTOaive/tL+vpzQ==
-X-CSE-MsgGUID: VmCmFiQ0R+m3Yf7sIGYzrw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,179,1787036400"; 
-   d="scan'208";a="4720088"
-Received: from ubuntu.igk.intel.com ([10.102.114.174])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Oct 2026 11:29:07 -0700
-From: Szymon Durawa <szymon.durawa@linux.intel.com>
-To: nirmal.patel@linux.intel.com,
-	bhelgaas@google.com,
-	robh@kernel.org,
-	mani@kernel.org,
-	kwilczynski@kernel.org,
-	lpieralisi@kernel.org,
-	asutosh.pathak@linux.intel.com,
-	szymon.durawa@linux.intel.com
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v9 2/7] PCI: vmd: Add vmd_configure_cfgbar() helper function
-Date: Mon, 26 Oct 2026 20:54:55 +0000
-Message-ID: <20261026205502.3502574-3-szymon.durawa@linux.intel.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261026205502.3502574-1-szymon.durawa@linux.intel.com>
-References: <20261026205502.3502574-1-szymon.durawa@linux.intel.com>
+	dkim=pass (1024-bit key, unprotected) header.d=iav.lv header.i=iav@iav.lv header.a=rsa-sha256 header.s=zoho header.b=XATZ6N+0
+ARC-Seal: i=1; a=rsa-sha256; t=1793039310; cv=none; 
+	d=zohomail.eu; s=zohoarc; 
+	b=At1s0ErSJRojm+Lo5eOE4pf53n79eDl1FaMWOq7H+kMo5gajrHxhJRVGizKSsDNbtF3LX0IKIxR2ONAJ/ZaQP6mg4iy6qWpado2eZHAmAibql8zixLJHFum9BrBw9VeouYp67eNFPQhxJSdGViY4fQXJdmBd8DfR7wuIxth1DBo=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+	t=1793039310; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=uazXjT0Ki1xgfLrx287ADuJ6KrWtZacD7vOR4+uIzX0=; 
+	b=By/GMvLsj0PfbOSqQ7dgE1LhuLBkbosqa1vawrSGb9WUva+hD/QP8suvEhN3JWg8WlifOBcHTv2TSo+0UUsMLc9y4PK/IgtZs/grXQxsQCORbeserLCDX0NNWeqI0MuVJcibP1US+CIcsUVj/XdSIIiUCFvkHAyzw0/4d2CC6nU=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+	dkim=pass  header.i=iav.lv;
+	spf=pass  smtp.mailfrom=iav@iav.lv;
+	dmarc=pass header.from=<iav@iav.lv>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1793039310;
+	s=zoho; d=iav.lv; i=iav@iav.lv;
+	h=Date:Date:From:From:To:To:Cc:Cc:Subject:Subject:Message-ID:In-Reply-To:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Reply-To;
+	bh=uazXjT0Ki1xgfLrx287ADuJ6KrWtZacD7vOR4+uIzX0=;
+	b=XATZ6N+0WmwnFLaX387iS8Wijyg09PysnImPV9MDgsXJiceNQ+zXB4ZfBb70yQxD
+	It4VcbK552OwQdLhaJd6iLZFJ/9oNPW1zG9IED7EW4cr8TAGqOwZ1/VLMXbRSNrx3ib
+	hAU8/VKF90+LwVp4QmP4/IQzw6IkzXO8+NnxKht0=
+Received: by smtp.zoho.eu with SMTPS id 1793039309417148.69976615563849;
+	Mon, 26 Oct 2026 19:28:29 +0100 (CET)
+Date: Mon, 26 Oct 2026 20:28:28 +0200
+From: Igor Velkov <iav@iav.lv>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Igor Velkov <iav@iav.lv>
+Subject: Re: [PATCH RFC 0/2] PCI: rockchip-host: Retry training and hot-reset a JMB585 on RK3399
+Message-ID: <20261026-rockchip-pcie-shawn-reply-1@iav.lv>
+In-Reply-To: <4316c1da-f7ff-4fa5-a330-512800474e45@rock-chips.com>
+References: <20261024-rockchip-pcie-resume-v1-0-58e54a5cf5f1@iav.lv> <4316c1da-f7ff-4fa5-a330-512800474e45@rock-chips.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -87,71 +70,33 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 
-Move the VMD CFGBAR initialization code to a new helper
-vmd_configure_cfgbar(). No functional changes.
+Hi Shawn,
 
-Suggested-by: Nirmal Patel <nirmal.patel@linux.intel.com>
-Reviewed-by: Asutosh Pathak <asutosh.pathak@linux.intel.com>
-Signed-off-by: Szymon Durawa <szymon.durawa@linux.intel.com>
----
- drivers/pci/controller/vmd.c | 28 +++++++++++++++++-----------
- 1 file changed, 17 insertions(+), 11 deletions(-)
+On 2026/10/26, Shawn Lin wrote:
+> The host cannot distinguish this case.
 
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index 57d5e917dc45..2a8c10604c82 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -905,6 +905,22 @@ static int vmd_pm_enable_quirk(struct pci_dev *pdev, void *userdata)
- 	return 0;
- }
- 
-+static void vmd_configure_cfgbar(struct vmd_dev *vmd)
-+{
-+	struct resource *res = &vmd->dev->resource[VMD_CFGBAR];
-+	resource_size_t busn_end;
-+
-+	/* Do not let resource[0] end go out of bound.*/
-+	busn_end = vmd->busn_start + (resource_size(res) >> 20) - 1;
-+	busn_end = min_t(resource_size_t, busn_end, 0xff);
-+	vmd->resources[0] = (struct resource) {
-+		.name  = "VMD CFGBAR",
-+		.start = vmd->busn_start,
-+		.end   = busn_end,
-+		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
-+	};
-+}
-+
- static void vmd_bus_enumeration(struct pci_bus *bus, unsigned long features)
- {
- 	struct pci_bus *child;
-@@ -962,7 +978,6 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	LIST_HEAD(resources);
- 	resource_size_t offset[2] = {0};
- 	resource_size_t membar2_offset = 0x2000;
--	resource_size_t busn_end;
- 	bool vmd_in_guest;
- 	int ret;
- 
-@@ -971,16 +986,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	if (ret)
- 		return ret;
- 
--	/* Do not let resource[0] end go out of bounds */
--	res = &vmd->dev->resource[VMD_CFGBAR];
--	busn_end = vmd->busn_start + (resource_size(res) >> 20) - 1;
--	busn_end = min_t(resource_size_t, busn_end, 0xff);
--	vmd->resources[0] = (struct resource) {
--		.name  = "VMD CFGBAR",
--		.start = vmd->busn_start,
--		.end   = busn_end,
--		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
--	};
-+	vmd_configure_cfgbar(vmd);
- 
- 	/*
- 	 * If the window is below 4GB, clear IORESOURCE_MEM_64 so we can
--- 
-2.43.0
+The controller seems to tell before the config read. On 26 Oct the
+link came back 2.9-4.5 ms after a hot reset in ~50 cases, all fine,
+and 10.9-35.4 ms in 8, each followed by an abort on the next config
+read. PCIE_CLIENT_BASIC_STATUS0 read 0x240 after each of 4 slow links
+and 0x1240 after each of 16 fast ones. What does bit 12 mean, and can
+the driver rely on it after link training?
 
+> You've tried PERST# with the patch 1 applied. So perhaps it's doesn't
+> help.
+
+Patch 1 pulses PERST# only after a training timeout. With PERST# in
+the DT a slow link still occurred (25 ms, then an abort).
+Re-initializing the port, without PERST# or a power cycle, brought
+each of 4 slow links back in 2.9 ms with the endpoint answering.
+
+> I've attached a vendor's debug patch, perhaps you could try it without
+> your patch.
+
+It hooks do_serror() only and registers after pci_host_probe(). Here
+both SErrors and synchronous external aborts occur, at probe and on
+resume (the cover had that wrong), so we will move the hook before
+pci_host_probe() when we try it.
