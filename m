@@ -1,101 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.82.43
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.82.171
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793038702;
-	b=Hqun6zk8komLuslpji9u2wul7MyGtBBgd6B7s2Wx6D1cVnbH1PiB1lOhUbii5q0bMcG6
-	 2IttrRj/KsXstFj7csIP50k6PkQA2bxjj/l3gMg+lKWRfX5QUDW2dr9TxdPv+Yp3Qf/2z
-	 LU5V11+U0azMs7Ujj2ZHhYZZv8ljG+5q1cER8KKXxZo887AYmAeu1JL8NH4Uu1L2paMF3
-	 SL1oinfZZZglct5MppQHWLHEy8LBVHSD8RpT1dSb5GralN2Ali8Y479GO2cxI0kY2AGOl
-	 Tr2ttFSrZ6j1XpAg2QoE7Vkzwx4xBu+gffH5K2Buuk1lZAn2d7/c8aMO0PN8Gk0o8vg==
+	t=1793039129;
+	b=vTLnT5HAuxImBZeFqiTZ9Ts4mM87qvGcGvzlci9ebmPqTiDaqpvaqdKgxiUurE4B6xOb
+	 9tcOtfMI+hndSAueKIl18PdUIaBd6EBpHW55RBM/95g2cBkwcbBOs41pIV/NZcQheUnx4
+	 d9itLt7akkNt7zlxLQB9BvTWUukQ0vGvT5hcjngkOIZavyTnHE3St0YfBRzp10zlo1J53
+	 BbDawU+uvAXr7JHVuJhssoi9+/9ziFM87X651tTRwZdgpmN3UgMtCymr0p6QxEBETyXVD
+	 AswF1o77pkFoIm6015Nkjr28O/yR1gdR2qHnLn5XLrDEP0kNJgTwLpch08SFShRZNqQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793038702;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793039129;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
 	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
 	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=rUFVEl7fV+HUh8nhoQnb/g9LkM23VhHFCgUj8hV83sM=;
-	b=fN9Ts+GdHCgVNJpgskmJ+QOMKErlDUs+zetORTqdVF8g7qACH0MoIDiM3tfMncL/lQmm
-	 nJ0ZRTHMdgLPPew4gzrowbWlYfQuh9NZadgza8GO1Iho3wRC62AYz4XOegMDvBpibqnTt
-	 l9Mh5sQSCHCi34YstN7cPCfs+LfWqmhHA/thlKsBFfXAK/JCVgDyDIkNg6/5IMPuuLN31
-	 XMIB2f5Ce0O1sLPK3MlEIwMJgBc8pzGSCM5rnb8QBaWXCSybjqsSJ9+6QQbKSmQV6Sa9d
-	 QrlXQbspJh4kzXgMDTyCSXilcsedaKLA4g0QvWBUjwtP1kU3AqU1EgT9HqFQlhCec8A==
+	bh=Do/93Ec+a4uH5EBQqfEmx8Kskebovc78z6QXsKmL6Zw=;
+	b=ywOEoEryZz4ze/eLHbq8nFU4RUWvIKohIqYofVO+Pn6DyN3/Lo96GzvkpX1k7nfAE0iR
+	 2tw9sDAsIj64/baqXYBfhaLxHspTZCUug61Qh6NcMdW6kKSJOTzuvwcvZGDldH3qJ9zCR
+	 978m/VNIUVV/b+8eFMtEaGp7ifsAo9JRPRwV4SoL1pRXaq1d3PPhB7YjKnUkupPll7UTq
+	 yzOOpCf6JZFS5N2Qrnf5jVSUyf3z6zT388dFCcEb4QKKjpgJVYzb1yrlONE25KDILKfTE
+	 fV7xKsIQ84Ii0BvclQ5eqO6e+uVzAa2Tlqg58USPNUvQKDjLuyfCmrbdDOK9P6aWevw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=fYOX5pph;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.82.43
-Received: from mail-dl1-f43.google.com (mail-dl1-f43.google.com [74.125.82.43])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=psje4x7z;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.82.171
+Received: from mail-dy1-f171.google.com (mail-dy1-f171.google.com [74.125.82.171])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A6B3606A31E
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 18:18:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5A6B3606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E83B606A33C
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 18:25:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4E83B606A33C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=fYOX5pph
-Received: by mail-dl1-f43.google.com with SMTP id a92af1059eb24-1438dbb05c1so180799c88.2
-        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 11:18:22 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1793038701; cv=none;
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=psje4x7z
+Received: by mail-dy1-f171.google.com with SMTP id 5a478bee46e88-3550dd02c9cso326930eec.0
+        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 11:25:28 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793039127; cv=none;
         d=google.com; s=arc-20260327;
-        b=JKvkB+2jdVaibRM2Vsgt5eJbyRFzltSw4LtsHCHq/qN2xzGNoWWuu1DZxFThJCbghv
-         rUBzCeNlnFMiYrc9NYwheQuYX3fo4124qUB3qPcCt8/I5WLb62NQMoo5fguJwtp0MAIS
-         QSwYMTq2kTKA8Sl6BvgD7OdutePCEC5D+7wlzIjsUjYlsGBUpmUh2uQgYwFT+6ky/84B
-         jqIvpMaSKvYXt24IF6PtofX6m9mOTsuBeCUJkruTGEpPVJ2edPL2oBZZt+V8bHgiE/eA
-         sjjKcPHyXrNBPh3pq0yGr01S5p/QbAN611GKdplhzwLw3p0VvZObSpjKgN48x2LsugDT
-         JC6Q==
+        b=Y08UEu5gV5Xm7fOxo0CMQ34InemRIgAGsDNxDgLY6s/2AXDWtPv/ESsiGGaCvXWVXj
+         rQdUIE3h7qagA25yKD+6dC5y5T7nKyhf8e8e4BwjyRjfta/PQfye3v0Z7K64/XCQhA3N
+         XjPA+4jLsKB+0rJq/gEcQZahf5mAbW4CwcyKNjkvFaiYdZ/wG2eJIR97QzNJ37OpGBM2
+         MlTNHFpIJE7hezmsR+ELKSlYkPgdUMt5F/tCPIJw090h3glVv8T5nRbc/pdFCL/WRJSe
+         73Q8PHTZcA7BCS5Aqr2orSCGAEfqYjNkkKoCBi/M2yYpin9OhFH1UZL/KoETyMjcMOWn
+         mMnA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=rUFVEl7fV+HUh8nhoQnb/g9LkM23VhHFCgUj8hV83sM=;
-        fh=ZJt8z809uxMgdm+sBP4cN6f5mYUTTfrPtaaf0F0kdhk=;
-        b=LIVNyeTdji9zb0YZyCSHE+8RCbt4pca0fiffH9ZJ4x7jDdd/o6K0DEEcbcq1bb07c/
-         l/mMr87s5jROXhUzFFuZ+FRBCAkF6P2/R45S3CsM4bdlmRSfhr8nuW6Duqyjr3/1JwbA
-         GnAVOj1vqJYtn+kxDbWwYCDHe4kuYj6M05V59Tmfdm1ONFJjn3DO4+Vj9w+Ps3JkrU3q
-         TPius6nT5AbSbun5IBHPo6g4lATAok+bm4ngHRSjGYqHtzoIL2zj0e32mAkMxKoicDuB
-         CpymEaPVNPeJXgDZW9ybz+EARDIt0ubvPTIZQRhE5rYTBbyaaxwTQINYfjxJI2KqzblY
-         DSwA==;
+        bh=Do/93Ec+a4uH5EBQqfEmx8Kskebovc78z6QXsKmL6Zw=;
+        fh=6grzwNjNX4kHbSLbWLPOH1CfnnMGeTsVvxZYhTOCaKk=;
+        b=fCqRz9rx2CIqdrdeCc606jqsQTIPdTaVAelJ7G8OAsmdTLJ2GFCjfnI+zkNtAEOnvT
+         QitNInX8NTh/vwpNJd6EoFKqUpqKwx+u7xZJvfYumnfPmFUcDwbkuo/2bvnv2XiwwujV
+         WHP06FQRLNPQkVDiCI7MypAWmbGISOZLOMtH5yDCmcC/EC9vhzvnyepuJ2jKfVhEbrjh
+         ZRXUzuy102xBNVEbEg4A4MqUzDGReNZ3HM1j9iVpRRVA6xgVNde2w4mQJgWoLGbH0uvN
+         f8W4v25seGBxGpxVdjw5IWSd5EdCv89ogXDmOAIM2Bt6k3GYtJJgQDJ62SrnYOvz7Fic
+         AlsQ==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1793038701; x=1793643501; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1793039127; x=1793643927; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=rUFVEl7fV+HUh8nhoQnb/g9LkM23VhHFCgUj8hV83sM=;
-        b=fYOX5pphsGY/+i/Iy06yAJ16VPzT/i1wL+b30sH0lJqe8b5j0u4TWNje0SRlBJbpNd
-         xVPxwEFG9gpIg7TXVB3JP/JIAyAYhYLwAH7rrfT9LYFSLkGi3RYylySiYPLv/ukn3+Ly
-         JyseKMEDyDuVup5co5JLXOoLtQQU5jiH+mNAEf6A9yIusnp+kdQvXSAZP8VLEHU76Pow
-         51SR089jLzIU4p3Jzib0uunNja3tletM5zojusi7gTZBYNg7T0rv6mVO2U2wp/P0/C8N
-         6v2SiKCeY6alA0+WUBcAMtxszynbgR9tww5BjynoDnP1oyhIwpO1dCic4ze44VzEHFvv
-         uBdg==
+        bh=Do/93Ec+a4uH5EBQqfEmx8Kskebovc78z6QXsKmL6Zw=;
+        b=psje4x7z1e4XGk6iRkqCgnwuVkNqyA5hL1Vp7pOb17/wITHwbAh0iYhBFF6mbhBM24
+         xvmdiZrEk7sxlbtJGRrL1dDwskbybjtm5434K6pwAuao7iFW0fn7EYfBaW2jZrbWpbR6
+         Kia39LOXBzpqlFZPdzAjJqwGYH0ePgO4sp83wQLX2dfMVkVgOoFzN4dRoLSC3BqTi2hG
+         6Tpq8SbAjt+m4i2nllfijPXNXSM/UKkWJPZ3h+MsofLN8OHoYscFnm1bPA3vhxPndd4m
+         9r4JKrstZNe2KzxJzptH//U3GfUJ4Hzpr3kyNTkkp4w8iMvy8jHjJ4zTlNpymwAGWsdb
+         sUlw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793038701; x=1793643501;
+        d=1e100.net; s=20260707; t=1793039127; x=1793643927;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=rUFVEl7fV+HUh8nhoQnb/g9LkM23VhHFCgUj8hV83sM=;
-        b=h9V/dm+ggfZKr4/3hgmp7/1bkcJgmDwW2NLhU2yNRiES+RPeVlN6hxEp5an23o49zu
-         tmmrVcRhaiSpZ+moG4jFmH+geo1Lq86spKhVARsPxWLxL0Pj6vhwG6QQXHZ5dy7uxDSi
-         KzvXporlbLVYHlF07+sD7Aun3HCv/fCBcrYJuVjud0sVLGLWWq04rLW/r6lxu0/wOi/K
-         5WfT5Wh+el4E1sbl3kNhz3ZpRvn6Qf6RmIwkJZcedV5BpNqEcn5+4PQwnYln34vwqqqU
-         JJkThV/RnidL0I0q67gx7IY5KqxET/Q+jQG+wACtV/dTlFYx7vWomeSm7HZt1ddFqsXy
-         0EeQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwHlTt9EH0xvm8VeSQq+TLdyokTdQ5Bod8b2/jzypg0ZE3ru7UDqNU6oYLu6na4JeDkWyeQv6x/zLc=@vger.kernel.org
-X-Gm-Message-State: AFq9FYIqtNfsBSxF6d/Ubp6UNdtgKja2k104u8OrsOvRfUkZh7hLw1Lv
-	uykaxuo9y3UWnCOw+U05e09s8MR3CwlYNYTYHagcLAPajCK+eGSob0i9+VbvijimOk66YkQHAL8
-	/NFCl4E+DNEx6SLZomnKLTR3CWR8SkZM=
-X-Gm-Gg: AYBFou2pnmZEGbLVggfuAlO9GHOF7j20t2jbBrH+4EggT6JN2dxu3s7fgCJjuj2KK2e
-	FaEc/JXOtz9w7QKpued1ibON8vgUCNSaw4/HU1bdNA/QV1LhB9VBYAzQzZae6cs+3hzZaY5WK35
-	gxFyQp+u4bKWI23UKBGcv9jcAwTgkkZn4L0GgiZ45/U8kmtWYyVfoE9ME/SZfyVEyU2uqJdaePa
-	r69VcI0JleoKRsd/8xSyl7Es3CLbEAdJG/rMr/98PaNZbjUsavAEu2gOs/msPUx5eAwK4qRTTe3
-	u6jO046mFNd8LRLag6E5WcYieUZKjeFTkq+K01MEzP3iOcCE0jNqgo9WWXMwzwp3bCvxZTdUOK/
-	gXan85Di74hbucsCSAzKNL2uZFZdDWOZeTl7n16N8wRA4jZ4mqQxPVV372OUYA3bLE3jVJ8VfVc
-	M3C/0DMiBAAL/LawB6j0meodw=
-X-Received: by 2002:a05:7022:5f07:b0:146:ffa9:2117 with SMTP id
- a92af1059eb24-1993639e5f7mr16191284c88.1.1793038700920; Mon, 26 Oct 2026
- 11:18:20 -0700 (PDT)
+        bh=Do/93Ec+a4uH5EBQqfEmx8Kskebovc78z6QXsKmL6Zw=;
+        b=CQKlXUvr2ienSix917xwjiAGUKpQutyRIwki+WBlB4NetDDWsykrxH5hOX44vBpCGM
+         CwqhchWPB1VcjJ2JSy9iV574RV62GmLgo5tqLUz4qNYue7q4vfIixg3XLXdPGPrq3UXj
+         uNWrg9RKAfaXZ+1QPgCJ0NjJydm6DwV7A9dAwwktLa4DXgDEkhX5CdluzvLVSTPns/aF
+         N/bLolGYRrWI7uBaX6gME7SFiEcATuC2gfHfbao/CV8rAtQodnZURiqpX5agqTkuYmvS
+         PW17e8vVietFzdmUyWvnSiGlxcPR5kFY/6u1ORjNRmpGUsOZti6RAjHWyLyj6N9I/eLm
+         CsAg==
+X-Forwarded-Encrypted: i=1; AKwUvBwGYRPmVK3tzdkurW9ero78QxAX5sJrjrxJZt296ZvZ+Dk/A0waOBm4bHp0TYlJiDxQtGWhp9GB4Nc=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJF4qT4XTSE32tAJGyUU4SX0WxTsubdHdLgDVi6AjJxdT5LhuwD
+	sg+NxdI2cpbZQqgn87QE7IJ0724kG8iova0ZfVULvq5dk3vn5ontYE9Oa4s+ZJZ+aXM6S9Fmsu+
+	nPuyxjhdRM9LtgyeXPoiVDQxqujT1MRo=
+X-Gm-Gg: AYBFou3K1ns9SEbKfou3+7Ru3S5vNSsmHjoXIW4kKAW7iKoLE9j/PK248FfXl0caKdk
+	vW5UA/KFP48nBnLJe/kqxMr90bLOQwMMyhPwy0t87/C00uSWZUX9jW1jWJ4c/PG/ueV8FaALewW
+	+2gMQN6dRUlsLz7fWqolEL/JzGdPSB5Hwk5H3eIcClcNNg30AyQJvQRbLsxK3LOxS5i5GJewnwg
+	oS4uffNyNwEt8YI8s+grWPUR2wYVXzK+m8JR0hnpLvwD8D7tggVYJarDr/n669N+AFYx5vjL2NM
+	xGnbGP+D7Cp6B3b9Aynpuz2qHDb5rdOcEdahKifgBp1W7HnvB9MHj5yWjcpGelh5keKqQSQe+/N
+	hc2DufizsXQc6ryEcayfRtg5B4ym8XdwkUv7RbO0L4V7qNxiNYvm6BrA7PdoDi8h+U+gp/tY7TC
+	HJD7QGHv7dO+qj7XVcxJ8sahY=
+X-Received: by 2002:a05:7022:7f05:b0:17f:641e:7f6b with SMTP id
+ a92af1059eb24-199345c5ecamr17915804c88.1.1793039127302; Mon, 26 Oct 2026
+ 11:25:27 -0700 (PDT)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -105,14 +105,14 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261025040046.1602-1-atharvatiwarilinuxdev@gmail.com> <20261025040046.1602-13-atharvatiwarilinuxdev@gmail.com>
-In-Reply-To: <20261025040046.1602-13-atharvatiwarilinuxdev@gmail.com>
+References: <20261025040046.1602-1-atharvatiwarilinuxdev@gmail.com> <20261025040046.1602-11-atharvatiwarilinuxdev@gmail.com>
+In-Reply-To: <20261025040046.1602-11-atharvatiwarilinuxdev@gmail.com>
 From: Alex Deucher <alexdeucher@gmail.com>
-Date: Mon, 26 Oct 2026 14:18:09 -0400
-X-Gm-Features: AclHuK_gGXqjT0cI7KV7tvEEJQhRHXFUqhLnyaELH9XqFgMeuwm1bkZPQKcDe-s
-Message-ID: <CADnq5_NLhN4TKH-afTtJdF2d-e0=1kysf=pWiUpXu+bLhJFEeQ@mail.gmail.com>
-Subject: Re: [PATCH 12/13] drm/amdgpu: Skip AC/DC notification while the GPU
- is runtime suspended
+Date: Mon, 26 Oct 2026 14:25:15 -0400
+X-Gm-Features: AclHuK-iVje5ZZPGXAxueHXGbehXRgBbIH4abpn4VFZrQQC5igwZxtMQm-2wnbg
+Message-ID: <CADnq5_O2tEUHOcbiKL8c4UHpy3AmOWtmM7A8o3jP2qLwkx2jUQ@mail.gmail.com>
+Subject: Re: [PATCH 10/13] drm/amdgpu: Catch register access while GMUX keeps
+ the GPU off
 To: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
 Cc: Andre Eikmeyer <dev@deq.rocks>, Bjorn Helgaas <bhelgaas@google.com>, 
 	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
@@ -131,78 +131,181 @@ Cc: Andre Eikmeyer <dev@deq.rocks>, Bjorn Helgaas <bhelgaas@google.com>,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, Oct 25, 2026 at 12:11=E2=80=AFAM Atharva Tiwari
+On Sun, Oct 25, 2026 at 12:26=E2=80=AFAM Atharva Tiwari
 <atharvatiwarilinuxdev@gmail.com> wrote:
 >
 > From: Andre Eikmeyer <dev@deq.rocks>
 >
-> Plugging or unplugging the charger raises an ACPI AC event. The handler
-> sent the new power source to the SMU without a runtime PM reference, so
-> with GMUX keeping the GPU off every SMU message spun on skipped register
-> reads for seconds. A runtime resume racing with that left the SMU
-> firmware unable to start on MacBookPro15,1 and the GPU in runtime PM
-> error state. Record the power source only and let the resume apply it.
+> As mentioned previous any access to the GPU when the GMUX has
+> shut off the rails results in a CPU CATTER, skip and report
+> any register access after the GPU was runtime suspended for GMUX power-of=
+f.
 >
-> Signed-off-by: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
 > Signed-off-by: Andre Eikmeyer <dev@deq.rocks>
 > ---
->  drivers/gpu/drm/amd/pm/amdgpu_dpm.c | 19 +++++++++++++------
->  1 file changed, 13 insertions(+), 6 deletions(-)
+>  drivers/gpu/drm/amd/amdgpu/amdgpu.h           |  2 ++
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c    |  5 ++++
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c       |  5 ++++
+>  .../gpu/drm/amd/amdgpu/amdgpu_reg_access.c    | 24 +++++++++++++++++++
+>  4 files changed, 36 insertions(+)
 >
-> diff --git a/drivers/gpu/drm/amd/pm/amdgpu_dpm.c b/drivers/gpu/drm/amd/pm=
-/amdgpu_dpm.c
-> index 808be6c42..b64f0b681 100644
-> --- a/drivers/gpu/drm/amd/pm/amdgpu_dpm.c
-> +++ b/drivers/gpu/drm/amd/pm/amdgpu_dpm.c
-> @@ -30,6 +30,7 @@
->  #include "amd_pcie.h"
->  #include "amdgpu_display.h"
->  #include "hwmgr.h"
-> +#include <linux/pm_runtime.h>
->  #include <linux/power_supply.h>
->  #include "amdgpu_smu.h"
->
-> @@ -498,20 +499,26 @@ int amdgpu_dpm_smu_i2c_bus_access(struct amdgpu_dev=
-ice *adev,
->
->  void amdgpu_pm_acpi_event_handler(struct amdgpu_device *adev)
->  {
-> +       int active =3D 0;
-> +
->         if (adev->pm.dpm_enabled) {
->                 mutex_lock(&adev->pm.mutex);
-> +               active =3D adev->pm.rpm_mode =3D=3D AMDGPU_RUNPM_GMUX ?
-> +                               pm_runtime_get_if_active(adev->dev) : 1;
+> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/am=
+dgpu/amdgpu.h
+> index 6fd607587..ac8dfc3ab 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+> @@ -881,6 +881,8 @@ struct amdgpu_device {
+>         /* enable runtime pm on the device */
+>         bool                            in_runpm;
+>         bool                            has_pr3;
+> +       /* GMUX has cut power, any register access would hang the PEG lin=
+k */
+> +       bool                            gmux_off;
 
-There's no reason this needs to be GMUX only.  You can drop the
-AMDGPU_RUNPM_GMUX check here.
+You can drop this.  Nothing about this is GMUX specific.
+
+>
+>         bool                            ucode_sysfs_en;
+>
+> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm=
+/amd/amdgpu/amdgpu_device.c
+> index c1f196242..8185934b4 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+> @@ -946,6 +946,11 @@ bool amdgpu_device_skip_hw_access(struct amdgpu_devi=
+ce *adev)
+>         if (adev->no_hw_access)
+>                 return true;
+>
+> +       if (unlikely(READ_ONCE(adev->gmux_off))) {
+> +               WARN_RATELIMIT(1, "%s: register access while powered off =
+by GMUX\n",
+> +                                       dev_name(adev->dev));
+> +               return true;
+> +       }
+>  #ifdef CONFIG_LOCKDEP
+>         /*
+>          * This is a bit complicated to understand, so worth a comment. W=
+hat we assert
+> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c b/drivers/gpu/drm/am=
+d/amdgpu/amdgpu_drv.c
+> index 5ad7b6dd8..135798c76 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
+> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
+> @@ -2932,6 +2932,9 @@ static int amdgpu_pmops_runtime_suspend(struct devi=
+ce *dev)
+>                 amdgpu_device_baco_enter(adev);
+>         }
+>
+> +       if (adev->pm.rpm_mode =3D=3D AMDGPU_RUNPM_GMUX)
+> +               WRITE_ONCE(adev->gmux_off, true);
+> +
+>         dev_dbg(&pdev->dev, "asic/device is runtime suspended\n");
+>
+>         return 0;
+> @@ -2960,6 +2963,8 @@ static int amdgpu_pmops_runtime_resume(struct devic=
+e *dev)
+>         if (adev->pm.rpm_mode =3D=3D AMDGPU_RUNPM_NONE)
+>                 return -EINVAL;
+>
+> +       WRITE_ONCE(adev->gmux_off, false);
+> +
+>         /* Avoids registers access if device is physically gone */
+>         if (!pci_device_is_present(adev->pdev))
+>                 adev->no_hw_access =3D true;
+> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_reg_access.c b/drivers/gpu=
+/drm/amd/amdgpu/amdgpu_reg_access.c
+> index 7468855c1..bb5dbeb7f 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_reg_access.c
+> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_reg_access.c
+> @@ -594,6 +594,9 @@ u32 amdgpu_device_indirect_rreg(struct amdgpu_device =
+*adev, u32 reg_addr)
+>         void __iomem *pcie_data_offset;
+>         u32 r;
+>
+> +       if (amdgpu_device_skip_hw_access(adev))
+> +               return 0;
+> +
+>         pcie_index =3D adev->nbio.funcs->get_pcie_index_offset(adev);
+>         pcie_data =3D adev->nbio.funcs->get_pcie_data_offset(adev);
+>
+> @@ -677,6 +680,12 @@ u64 amdgpu_device_indirect_rreg64(struct amdgpu_devi=
+ce *adev, u32 reg_addr)
+>         void __iomem *pcie_data_offset;
+>         u64 r;
+>
+> +       if (amdgpu_device_skip_hw_access(adev))
+> +               return 0;
+> +
+> +       if (amdgpu_device_skip_hw_access(adev))
+> +               return 0;
+
+Duplicate check here.
 
 Alex
 
 > +
->                 if (power_supply_is_system_supplied() > 0)
->                         adev->pm.ac_power =3D true;
->                 else
->                         adev->pm.ac_power =3D false;
+>         pcie_index =3D adev->nbio.funcs->get_pcie_index_offset(adev);
+>         pcie_data =3D adev->nbio.funcs->get_pcie_data_offset(adev);
 >
-> -               if (adev->powerplay.pp_funcs &&
-> -                   adev->powerplay.pp_funcs->notify_ac_dc)
-> -                       amdgpu_dpm_notify_ac_dc(adev);
-> -
-> -               if (is_support_sw_smu(adev))
-> -                       smu_set_ac_dc(adev->powerplay.pp_handle, true);
-> +               if (active) {
-> +                       if (adev->powerplay.pp_funcs &&
-> +                           adev->powerplay.pp_funcs->notify_ac_dc)
-> +                               amdgpu_dpm_notify_ac_dc(adev);
+> @@ -706,6 +715,9 @@ u64 amdgpu_device_indirect_rreg64_ext(struct amdgpu_d=
+evice *adev, u64 reg_addr)
+>         void __iomem *pcie_data_offset;
+>         u64 r;
 >
-> +                       if (is_support_sw_smu(adev))
-> +                               smu_set_ac_dc(adev->powerplay.pp_handle, =
-true);
-> +               }
->                 mutex_unlock(&adev->pm.mutex);
->         }
->  }
+> +       if (amdgpu_device_skip_hw_access(adev))
+> +               return 0;
+> +
+>         pcie_index =3D adev->nbio.funcs->get_pcie_index_offset(adev);
+>         pcie_data =3D adev->nbio.funcs->get_pcie_data_offset(adev);
+>         if ((reg_addr >> 32) && (adev->nbio.funcs->get_pcie_index_hi_offs=
+et))
+> @@ -762,6 +774,9 @@ void amdgpu_device_indirect_wreg(struct amdgpu_device=
+ *adev, u32 reg_addr,
+>         void __iomem *pcie_index_offset;
+>         void __iomem *pcie_data_offset;
+>
+> +       if (amdgpu_device_skip_hw_access(adev))
+> +               return;
+> +
+>         pcie_index =3D adev->nbio.funcs->get_pcie_index_offset(adev);
+>         pcie_data =3D adev->nbio.funcs->get_pcie_data_offset(adev);
+>
+> @@ -784,6 +799,9 @@ void amdgpu_device_indirect_wreg_ext(struct amdgpu_de=
+vice *adev, u64 reg_addr,
+>         void __iomem *pcie_index_hi_offset;
+>         void __iomem *pcie_data_offset;
+>
+> +       if (amdgpu_device_skip_hw_access(adev))
+> +               return;
+> +
+>         pcie_index =3D adev->nbio.funcs->get_pcie_index_offset(adev);
+>         pcie_data =3D adev->nbio.funcs->get_pcie_data_offset(adev);
+>         if ((reg_addr >> 32) && (adev->nbio.funcs->get_pcie_index_hi_offs=
+et))
+> @@ -832,6 +850,9 @@ void amdgpu_device_indirect_wreg64(struct amdgpu_devi=
+ce *adev, u32 reg_addr,
+>         void __iomem *pcie_index_offset;
+>         void __iomem *pcie_data_offset;
+>
+> +       if (amdgpu_device_skip_hw_access(adev))
+> +               return;
+> +
+>         pcie_index =3D adev->nbio.funcs->get_pcie_index_offset(adev);
+>         pcie_data =3D adev->nbio.funcs->get_pcie_data_offset(adev);
+>
+> @@ -861,6 +882,9 @@ void amdgpu_device_indirect_wreg64_ext(struct amdgpu_=
+device *adev, u64 reg_addr,
+>         void __iomem *pcie_index_hi_offset;
+>         void __iomem *pcie_data_offset;
+>
+> +       if (amdgpu_device_skip_hw_access(adev))
+> +               return;
+> +
+>         pcie_index =3D adev->nbio.funcs->get_pcie_index_offset(adev);
+>         pcie_data =3D adev->nbio.funcs->get_pcie_data_offset(adev);
+>         if ((reg_addr >> 32) && (adev->nbio.funcs->get_pcie_index_hi_offs=
+et))
 > --
 > 2.55.0
 >
