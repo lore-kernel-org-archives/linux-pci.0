@@ -1,85 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793017367;
-	b=kkPfD9XWE4KX8J5FF9ZirKPHoE52gORcnt9Ierv9j1L6y845hBsEUAvpyzC/phIqIt7X
-	 mpaoybLSC3jbNAPNwWCG0iO6zU7OacjS+eSMIurhLxF/wlFHuDRW7o6XMozJY5dXZjBgk
-	 2FOze8UP/S74s82lWWxybxPAfTwcUubQMAkaUvIguYUOi75wfzpDXCR3eDK6BP8hHovxg
-	 W/5h++LcdmerbCTSJEtz8oaaZ1I5Lqulc2F/PCMq64Jpv9ffXgvMVAHMVYBdBhoV+YQQt
-	 geQkqW7JdVg3X6YoPPD/mBJUiEjyN+2fxjQh2YNYOPt9h/u4MDL0wT+7GxtKkXztdkg==
+	t=1793018807;
+	b=W8wWfyOZPNY0WTN0FOJcA13IFyfotNQq7+eTKGPqU/o4Dd+5tOjGR+TaRTaFyhvmosyl
+	 yG66pkjHI3khdYalnMuPi/5p2rpzw82K0vE8ltjjbAevm83TaQf8fODxwPM9k/TOQxg8+
+	 FNArgf7boggWBWJCTo2tjzqant/9BJR7siCDXh5kyMdMREnOTaFBUqa/LlMYq+Wq3ql7t
+	 JhK183vNYGzQA3+8XQD1FGbhS5mDLFIva9yIFyyCtcwHokMrrLekn0RgnMc87st6psw/E
+	 E+lSyO3d7W7TcrtaZIREf9K6GIvcIVcRmfoS5MZSpnZU6OIevGnt1uHlIv55EZs6khw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793017367;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793018807;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:
 	 Content-Transfer-Encoding:In-Reply-To;
-	bh=RRJWtqm2l0xH+h0URe8qzmm/igRf8rcF8bV+QoG3lFA=;
-	b=Evm2a/W1yT+PfN9tKB8CXkxlQMVP9Uxk2wKoIWgT8KmwlY7fJiT8M/1R+6FUgm9GX5MN
-	 depqnf8JEZXgbWhM9disyKvYwlb1L1Z5qyH112OZxdVYtxAPYgMdpwjwULVofiCYFwCuM
-	 oSaB52BJDLXECLz5MDbrKi5slb6cR0v451zQxiWR0HIn74BrFdE/qaKTCXxNIlY6bvyCH
-	 giLGXCILau5DreXXIovlRy7ccFGcVEbcbMTIjiHi6k1sHccaG4Qhrzv9xfUF4k5dVuVRA
-	 A4CU2BUv9tVLqTRhh/IBrVP5yVcBROSF3z2EcLaMMy5OZErjvcA3dy54L08iLt4Bleg==
+	bh=ArmRsnsIQvKvAMge3n6tqu/iNcVRkVbInJbH5fsb0aQ=;
+	b=qGQKnWiwMBKZVSuKMdZGP/vsT8vO7xvvW00stslzehlsA2a2SijBLBhxKidSokom7HmL
+	 VcynC7FGM5L5POvPnAWW+OT/E+lMh+ADJ1FnDPorj0R3hUsBaS3NDFEGZtnXFQycLEQiX
+	 xMOIzisLi1p+64Vcay6lg7ZyN5JiOUEWmpdDX7HUwOCcn0Jtz8RCgPaZiSIMayqDQH287
+	 7lq6odWnF47o2/yubkJvYhtGKMMM/KbhykRYLj6ulNfhcjPwE2izCWOA9khO3QAzrUBfW
+	 JxRRcklgf7KZQyDbfYHTzvK0HuOCPmeXtR3v95U3+UPPClftMpmDqm3Wnkqu3WzFzFg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="K3yXPm5/";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="D/Ol83yr";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6415A606A31A;
-	Mon, 26 Oct 2026 12:22:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D627606A31A;
+	Mon, 26 Oct 2026 12:46:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K3yXPm5/
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A02BC1F01825;
-	Mon, 26 Oct 2026 12:22:46 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=D/Ol83yr
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D15EA1F01828;
+	Mon, 26 Oct 2026 12:46:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793017367;
-	bh=RRJWtqm2l0xH+h0URe8qzmm/igRf8rcF8bV+QoG3lFA=;
+	s=k20260515; t=1793018807;
+	bh=ArmRsnsIQvKvAMge3n6tqu/iNcVRkVbInJbH5fsb0aQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=K3yXPm5/DJsinKjwvvO6bf0LOL2vawqwdDpyXD5tqG3eAJIITX5pEtXtJbUtP5+WX
-	 xXh1A/TDK4nH/Q1pDQq/DNce6qXrlAYHe4N8nPLlEivekLR6UATMxXpJUbIMa1QpDM
-	 AnyWEMamA94AFT8VZwY+LsGvuoXyH/+6bgmCJGsSXbhGQ5ZTgJx38YYqHOsQ9JwsoQ
-	 cAe1ZZEH2oEsOzVVg/2ci6ifrzU7LcTutv+jvLwgDCQF+vB2yAZf8UbgGsH6Sjd7JW
-	 lhd5QZoYxiEqD5jXgquQMduw2hebHpim4jcIlzmnUatVDKIlLoCLvBTva/RMFt/kbA
-	 qWVEfHxpOmLzQ==
-Date: Mon, 26 Oct 2026 14:22:43 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Alex Williamson <alex@shazbot.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@baylibre.com>,
-	Armin Wolf <W_Armin@gmx.de>, David Lechner <dlechner@baylibre.com>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Petr Pavlu <petr.pavlu@suse.com>,
-	Daniel Gomez <da.gomez@kernel.org>,
-	Sami Tolvanen <samitolvanen@google.com>,
-	Aaron Tomlin <atomlin@atomlin.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Bradley Morgan <brads@mainlining.org>,
-	Aleksandr Nogikh <nogikh@google.com>, linux-modules@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-usb@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-trace-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
-	Richard Weinberger <richard@nod.at>,
-	Thierry Reding <thierry.reding@kernel.org>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 0/3] driver core: add TAINT_FORCED_BIND for when
- userspace manually messes with devices and drivers
-Message-ID: <20261026122243.GA28851@unreal>
-References: <20260914-bind_taint-v4-0-eadf8a090903@linuxfoundation.org>
- <DLIL9H50MALI.3JROXYEEUM3KU@kernel.org>
- <arIvG0nx4LXG9nlW@monoceros>
- <defb3953-7516-437e-b70b-d57de55b91bf@baylibre.com>
- <9bd3a34b-5e98-4038-80d6-da2c3b1948dd@gmx.de>
- <2026092321-province-yearly-44aa@gregkh>
- <arOfHEsGGglNse7T@monoceros>
- <2026092348-victory-erased-0e5a@gregkh>
- <20261023181326.0dc2f7ed@shazbot.org>
+	b=D/Ol83yrI6KJhaHiruMzDiB/zN9MfS423xwj7GvkkhXVbRAqy2KLHydZW73w/BCXs
+	 yAXd+YmsjQarrq2+Yr+ieSCOmbTixojIu2+Z32a61tSlBdha4ercIsSXRFR67U3As1
+	 xS7L+oXSm4mMQ+0mr9y1SFLg1Qf2VwqMf3VPqckWjT/jvUrS9UT6II2wfWJuot5eG5
+	 n2ErsVl2xHxbSCEVL959d/PcSGi9SvK3ZSvZGRcl0vBjJ5kYgDLg3wKspayc4boeZB
+	 eSqkXv468SdurUr1TsTuO9EK45qtNM/DYAFIiP67ilXjK6csCvWVPy4tOLrd4GaOEA
+	 2nyIKXAQwS79g==
+Date: Mon, 26 Oct 2026 18:16:38 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: William Bright <william.bright@imd-tec.com>
+Cc: Bartosz Golaszewski <brgl@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] power: sequencing: pcie-m2: Drive the Key E SDIO_RESET#
+ signal
+Message-ID: <at9KREB4Fyf-Jl5S@debian>
+References: <20261026-pwrseq-pcie-m2-sdio-reset-v1-1-02ecdafce518@imd-tec.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -89,68 +58,69 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261023181326.0dc2f7ed@shazbot.org>
+In-Reply-To: <20261026-pwrseq-pcie-m2-sdio-reset-v1-1-02ecdafce518@imd-tec.com>
 
-On Fri, Oct 23, 2026 at 06:13:26PM -0600, Alex Williamson wrote:
-> On Wed, 23 Sep 2026 12:29:56 +0200
-> Greg Kroah-Hartman <gregkh@linuxfoundation.org> wrote:
+On Mon, Oct 26, 2026 at 11:38:38AM +0000, William Bright wrote:
+> The pcie-m2-e-connector binding describes sdio-reset-gpios, but the
+> driver never requested it, so the line was left to pinctrl or to its
+> reset state.
+
+Do we have SDIO pwrseq consumer driver in mainline?
+
 > 
-> > On Wed, Sep 23, 2026 at 11:54:50AM +0200, Uwe Kleine-K�nig wrote:
-> > > > No, drivers should NOT have to do that in their .probe() function,
-> > > > that's what we moved away from decades ago!  The match function should
-> > > > handle all of that for you, otherwise it's contant duplication
-> > > > everywhere that is unneeded.  
-> > > 
-> > > Well then you have to accept that root can provoke a null pointer
-> > > exception (e.g. by forcing the pwm-tegra driver on a device) because at
-> > > least with today's platform bus match function such a match is ok.  
-> > 
-> > Agreed, yes, root can cause a crash and can do tons of horrible things
-> > much worse than this, that's not the issue.
-> > 
-> > That's why this taint is there, to make it obvious that this is not a
-> > "real" bug at all.
-> > 
-> > > > Please, learn from our history, don't make the same mistakes.
-> > > > 
-> > > > Now I might be convinced that driver_override is the way to go here, but
-> > > > it still feels really odd as again, bind/unbind was created as a driver
-> > > > debugging option only, it should NOT be a normal operation that any user
-> > > > should rely on.  The driver should "just work" properly instead, without
-> > > > requiring manual bind work, as that's not a good model at all.  
-> > > 
-> > > I agree in principle, but (in my case wifi) drivers are buggy sometimes
-> > > (due to missing documentation and/or engineering effort) and being able
-> > > to rebind the driver instead of rebooting to get a working device again
-> > > is very useful.  
-> > 
-> > Fine, use it!  Just don't expect that to be "normal".
-> > 
-> > > So yes, theoretically bind/unbind isn't needed, but theory and practise
-> > > differ in practise.  
-> > 
-> > Agreed, but again, don't rely on this as a "real" solution fo ranything.
+> Request it asserted, like W_DISABLE1# and W_DISABLE2#, deassert it once
+> the connector supplies are enabled and assert it again before they are
+> disabled. The card is then held in reset through power-up, and the
+> line is never driven high into an unpowered card.
 > 
-> Sorry, late to the party, but this isn't a few user scripts that rely
-> on this behavior.  Effectively every use case of vfio relies on this
-> behavior.  We rely on unbinding the default driver from the device
-> before using driver_override and drivers_probe.  That means every
-> hypervisor with device assignment and every userspace driver use case
-> now experiences a tainted kernel. That seems like a significant
-> regression.
+> Signed-off-by: William Bright <william.bright@imd-tec.com>
+> ---
+> The pcie-m2-e-connector binding describes sdio-reset-gpios, but the
+> driver never requested it. This holds the card in SDIO reset until the
+> connector supplies are enabled, and asserts it again before they are
+> disabled, matching how W_DISABLE1# and W_DISABLE2# are handled.
+> ---
+>  drivers/power/sequencing/pwrseq-pcie-m2.c | 20 +++++++++++++++++++-
+>  1 file changed, 19 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
+> index cafa642a4b6b..5f5a116063da 100644
+> --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
+> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+> @@ -39,6 +39,7 @@ struct pwrseq_pcie_m2_ctx {
+>  	struct notifier_block nb;
+>  	struct gpio_desc *w_disable1_gpio;
+>  	struct gpio_desc *w_disable2_gpio;
+> +	struct gpio_desc *sdio_reset_gpio;
+>  	struct device *dev;
+>  	struct list_head pci_devices;
+>  	struct mutex list_lock;
+> @@ -47,13 +48,23 @@ struct pwrseq_pcie_m2_ctx {
+>  static int pwrseq_pcie_m2_vregs_enable(struct pwrseq_device *pwrseq)
+>  {
+>  	struct pwrseq_pcie_m2_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
+> +	int ret;
+> +
+> +	ret = regulator_bulk_enable(ctx->num_vregs, ctx->regs);
+> +	if (ret)
+> +		return ret;
+>  
+> -	return regulator_bulk_enable(ctx->num_vregs, ctx->regs);
+> +	return gpiod_set_value_cansleep(ctx->sdio_reset_gpio, 0);
 
-Sorry, I was on vacation and missed this change earlier. This change will
-affect SR-IOV deployments around the world, which *rely* on being able to
-bind a driver manually *after* virtual functions are created but before
-they are used.
+You should not add GPIO control to the pwrseq_pcie_m2_vregs_{enable/disable}()
+callbacks. You should create a new 'sdio-enable' and populate
+pwrseq_unit_data->enable/disable callbacks for the SDIO_RESET# control.
 
-This is needed for two reasons: to save hardware and software resources
-when creating a large number of VFs, and to allow the PCI config space to
-be configured *before* the driver starts using it.
+Please take a look at the 'pcie-enable' unit and W_DISABLE1/2# GPIO control.
 
-There is no in-kernel alternative.
+But before that, you should explain how the SDIO consumer driver is making use
+of pwrseq.
 
-Thanks
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
