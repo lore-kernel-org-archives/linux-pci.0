@@ -1,96 +1,100 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.49
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793023010;
-	b=a89ig6BJFUh7a/XdyrWL9XAC+a9A3EnN7qxJvPLXEXWd6mk880IzUdpcWkVhNzwwQK3d
-	 cAAHAgqFPTcqlibOul27Kc3tNtodOJLTBPPdtihjAd0+BCqc7Hn7PUUy4CKiIKsA4vlVT
-	 I58WNjUizlIbZEvuEvVIVa1PfjuUKLE/+LJ7fKtZfNZ2RxLpo+6Qc1/V6WYQCVoO4JEqW
-	 rgRmBSq8kE3+pIxNxhum8bHU0+NsbWNwYsi8D5rWqSeOq3JI1LP9ughlS0yr7KJeoqyJb
-	 lL1WbRuXhAPhZAUo2T8LH0NfLYRhHxpwuDjjOkv5fSFWXckL5M7YCZKaxd8UqKl9QTQ==
+	t=1793026647;
+	b=v0cV/xJ1RHAPmbHRayF05TdQtUpeyGfsSMg7zG2PgUSh+DFa2Bvo/eooDa+cFdrVaNlN
+	 TOsEsYFeonFlhCoCc+x/4I/4t3QPJGiUY8cRGaaLsVQYZ4f8UPb9LyJ8uaXhSueuW8oYn
+	 fNQurlMW6U9x6L6faydjcAo6Q5wmI/xj98Hde+J0/5tGXukXW7ZVHo/Vc9LduHJ8FUZ0m
+	 peppEeLYC6NM7iBNgd0qbz1hYXCLwJFpM1J4T/gJh1msWvigYjxeBmQubl1lZXjghtfER
+	 yqDpWLbn+K1AYER76ARdQqXJWkLSJXRBUFTqbEu6rnRY9cwhRucKvQhjRQ/3FbLuLIA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793023010;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793026647;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:Content-Transfer-Encoding:
-	 In-Reply-To;
-	bh=2GkOj5GONDON7Vlx9Y8BowP7/PlsCg9Zwi4Dy0PdP9M=;
-	b=HXTOU1tyVYeDZbfaTRf/Z2xULCWBvTB0kUbb4XBJV17qr0qs7w2VscA/E1mJHyoAK8mQ
-	 ImRAeRYWRT57P/d9/SXq47CYxVJR8Ao1OPSYAASBpsUydNE3D/ZooBeI0Oq41u97mhKt/
-	 3HFCCHERbPpvLXRhxeOrnyNSe0NajMWdR9F13cWjDPzlSPYKBbyeHFCh7JldlaSbOUVRH
-	 9LnZKSwlr5VG0hQ67xeeTSEEnU1QCoh6BwU59krdaFhRlxr0s4xZX/u7pZPVWxET2iAP3
-	 8LQRMYCHuzp6xyyEIi+oKSqenQJX15mWmE0UyNCsomxqVRJFA+UOxbfiS8E0kuwEg6w==
+	 From:X-Google-Original-From:Date:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=EtKOfsTAyaPtV1waU6HbA1vsCK1xlnynFhw6+u4iHx8=;
+	b=Bh3F4Bvx6Ta6/VWDiL6FRl5iwuVcXHd2SMMEhe3mv3yBylEjtjh4iyP5Av20oVxZiYQj
+	 5eR/fg8IRhiAsgx1jq+XjwmbowwyJ9r2CgriNNnEWE/EZ4cu1PrtwcQVPh0RiJhKWWkj7
+	 MZEVyX8bNKieMc4/YLzbSroYv2aQzu3AzNIt5+YFAOtkfnDXrl5fXUVr7VTR2ss1kWfMS
+	 cFdKxJ5YiqF7x/eDu8rp1PV6z+Y2wBqp+5CG313zfNZZGEks0+6mxc/Et3jNaJRNw7naq
+	 dbijaPdAWrsu4xMQIGxredpbumMGKeIJWzbQLZMFmD8106eoEnPq/c3H8a0+pz6Qigg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=imd-tec.com;
-	spf=pass smtp.mailfrom=imd-tec.com;
-	dkim=pass header.d=imd-tec.com header.i=@imd-tec.com header.a=rsa-sha256 header.s=google header.b=Ln5oe8Ma;
+	dmarc=pass header.from=suse.com;
+	spf=pass smtp.mailfrom=suse.com;
+	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=AY7b3CLw;
 	arc=none smtp.remote-ip=209.85.128.49
 Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9195606A31B
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 13:56:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E9195606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=imd-tec.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=imd-tec.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03B5C606A31B
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 14:57:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 03B5C606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=imd-tec.com header.i=@imd-tec.com header.a=rsa-sha256 header.s=google header.b=Ln5oe8Ma
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4a207b02a2cso19497455e9.1
-        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 06:56:46 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=AY7b3CLw
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4a2d6d01ecbso14572145e9.0
+        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 07:57:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=imd-tec.com; s=google; t=1793023005; x=1793627805; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=2GkOj5GONDON7Vlx9Y8BowP7/PlsCg9Zwi4Dy0PdP9M=;
-        b=Ln5oe8MaVAIjRmSq+wS00CVQ0mE1zqk5Kl+HHNONwDL/+8h/N5zNyGLfdcBr9VfTym
-         zsVI77jFWr/+LiFXD7hBj4+cXEPBQwgQ7BILMy3J1oydU7K1KmnmVbxHV42r7+rNQfd7
-         jlHin+ajvQynYAG6PITI6nOoRT1ADZ3xiZnNOJSIczjOXTq1gTKfU2j5y+W3NShNBRfO
-         WfKYz17ryVFcboPYo4LDBJb9ggsMT2JdueG+zAUkQk5FXgSy36vcyiNCdbpZFA4QmGuz
-         8QkB/xbnDgBQhHiynp25EAouSFD89mNme5SBvP5OIpvLMmK6ybn7KxcUexTJfA34VbNw
-         5k9w==
+        d=suse.com; s=google; t=1793026645; x=1793631445; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:date:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=EtKOfsTAyaPtV1waU6HbA1vsCK1xlnynFhw6+u4iHx8=;
+        b=AY7b3CLwgywyBpBReinIxBM/g7nwl+q03KPQCh4GovNPZkxq/jV/lQYe0K3X013dpY
+         mXNLD9xd1fIe8yKwMntgyJncYMaLNrULAHE94S3oRJws+GDV68KQwOtZCErC9yaMgBO/
+         Pa9m+pUjYxbHQ4sChqznZ0OG81ugyZdCPA7NkdbsiOrqQoBTMfawheCyxBjE4gcEt8b1
+         N523KRTTJPqoqPXJMkqXVYmmX0DGAR6Xp3jy63/6p8iAPGg9oPkC7UEMypZWrNKe1yKr
+         JihsTu3rhtaAK3DsGPBA7c2Ixf+C0+eTesWxXTXkXMkfie8vtFkQ4nQuPsJmRha9eJYC
+         IGeA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793023005; x=1793627805;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=2GkOj5GONDON7Vlx9Y8BowP7/PlsCg9Zwi4Dy0PdP9M=;
-        b=Ww7auDT5Tm7am/h6MqOC0H24uWI6qUL31SISYqjTAAgPv68vYm7vBP4OrRIXxG46o5
-         G8W1400jaHpwD9yn93EzqYXNlXIysByVNW0mNCLtsoXpkOeMqhI/URpaNLVVJ8/+hmvU
-         /glAUqxnDFPxWXiVL4RgNzhUo1AY4kL7YycuH7TyNkGwdynH2paDRzr+lqV4aJdGaYbG
-         NIjoMrlWmJi6cWi51UTEQdqQNNub9n1nEIHb8LcLKwt3JbxE+cK9EUJfLEVVMC7GlSXQ
-         CpzgHI+M8Koog4klpJUBj0KKHZXMaL/vuBxTR0F/Ln445YN7iIvEnJhupuljcswt2CIj
-         2xFg==
-X-Forwarded-Encrypted: i=1; AKwUvByjTRnuNUO2hwBuDTvEX88Gd3l55dzay6ZwMO+ugOtrv2kMw+yQG1qPvdL7VZ98oJdtmn5OHJ13aWM=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJqi5oNrmJVWctBofuz2ViMgQW75H0M93HJxUVu0WRbpatTg5Tx
-	yloU51TkVttEdJ8Gm9yeZUzFPZ3AM6A8QdPVJg53xOFwAclk2PlvIEUzdbAuh9TQf6Y=
-X-Gm-Gg: AYBFou1yqebN4fsrl3awmqWjMMiBgO/kFMZs+3shZwcQZawPUXm4+OzPS10c39Yg4ie
-	KgF5nRjAQdJ47Jx+oIv1cBwnn9KVgtR+dA18BSX8NOi62wPQAn3BvWIkj75G2wYTGge2SH1gye5
-	riHQF6q/b4Cmlx3ex+gsKqofnILnb4Q13eNrNtj6Cu3MqbDgdIiqLYJIvKcnkhr9pznCRGMV4if
-	7iMTzZyKHKSADXEvfqJi/hOPOWppVCYl2MvsbS52Dbr1fu0peTwhsp7fej29McWv0uJB2FleIhp
-	FDIJAjmmeaZp6V5AMfJESfqPnOwTgGidCvK9MZ3HFp4z3NvTgvjDRxn0ZKmHG6DRySlJVWr0vfj
-	Bi2HZxFjwk/fmOpEk2U/S/kLmmCsnHFEaH2JcwWDDrsfsidgdLAukr+xMIWibJuEg8RUwTmQ9jM
-	BfCmFl4eguGfdsCOvTs5JUmHDNqeQ3lSrV6dgcZfLyr+JZxd393Aypwd2jXfeqYJrLkiREnIXNh
-	/TVbGw4w+RMYROGXZPpQXytQ7aWLA5vTIvc6EpoXoHhakDm4+PrRSFLTY1BDp1IjeXf9iIhg3z0
-	KsYEyEbFpvry9AqQEYuCuS3zhTdbcLv6x5KjXkPDMNKeNXZ+YuvPIFbCd3Mqkw5VAIA2kqgS2eH
-	VjovALNOEZo+ABzySQ/HJkLk=
-X-Received: by 2002:a05:600c:8b66:b0:4a2:a8c:22b0 with SMTP id 5b1f17b1804b1-4a35ac3b3d9mr120893705e9.1.1793023005302;
-        Mon, 26 Oct 2026 06:56:45 -0700 (PDT)
-Received: from will-Legion-Slim-5-16APH8 ([82.71.135.85])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a35a58a0e2sm245169285e9.13.2026.10.26.06.56.44
+        d=1e100.net; s=20260707; t=1793026645; x=1793631445;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=EtKOfsTAyaPtV1waU6HbA1vsCK1xlnynFhw6+u4iHx8=;
+        b=0qZK7yTKuDXQHQR5xDyM+M9fgvgUq4xE7d2dh3i8/HsQFNs5oHxEe/ucYkoOBI1U2i
+         nBsjmHhhzwpjcYe3n26+f3qOzci9P8sN80efUaR4yhdyq4UyK5J4nQtYgBR1YhGWGkUQ
+         RItWGsr7jd4TqghGCi+xBmgWbxaGyom75Mmc/tkAlaeF7ggoxVTmRwpJbKo1V1b/Yq+l
+         IXi6Y+jgeFtBRX7Gh1rg1XPA5QUmVTlmsjgjMMV1kXxjm/uXhV/IbvfWIfkRB+LLvL/U
+         Qd7AP6ESW+TyBO7jr9hI7WkhiBlLp4qMBFAScdvhc3g6bALNZA6ronOjhxLy23Ko7V8S
+         DoSQ==
+X-Forwarded-Encrypted: i=1; AKwUvBy9q6unPVw5XQT+s0aMmW5z5xJyc8askmtE8KkwUXsDy8Az8T7fI07f1XVEt1q8JRRYYcNS2EM0VXQ=@vger.kernel.org
+X-Gm-Message-State: AFq9FYLeQPli1vIJVY1Li0KPe2bOCnwnG+bgvv+YI2u5ZN8RU49M6nqG
+	/4hwdu9K+Rn17PkNnMKw6tJ+tLnsLSxAoh+j67YCAPagelx4hVgNwgeV+gIG0j/hufM=
+X-Gm-Gg: AYBFou22f/K428Y7xEv3o8cL7VK5k6ztDexlpXrI39cBC/l4T9DjsapuDTprVWtI8V5
+	HyuzGiKKjGtDws7OAbbXsLKFmFwKzhfOpaRRinVF7wP7Lybv9yMh+A2mBHZL86Zxc2Vl80nVwjH
+	GWziztJsLfN/InVZ19LpYbD08Heijir5yM8A25qKBhctUcmLczlK/t9aCAPmuIYJ8j8dPIjO72Z
+	E15vYvm/LIMG8g8HV3mwpXdaGJD8rACh1RJJzlP26KIQpIwgQ6PGfO874MiTzYo4HEV5i3Gz9Jg
+	YANzE4eOiaMab7Yh0iliXLfsd02GM1P3yUcrh47mK31nDMmki5XMz+SbDTv22RQpGQjl40g1+AW
+	sBWsw9l4bpHmBDr8hVl+/iKsN2EIWB2DksRFyMu45Wd55lOyelpkBHCsMvyedbLqH1QQrLbjtvB
+	ZymORG1dOQRjqRaolTEgIhGvnCZRd2c5CIDTjjMdN3KjwRE2Tedi3Do1P3p+y242E4HV9hirCKG
+	L/d7A4OuxAcQMQgzwHVFlJgq27+s/bYHJpR3o9FHw1vuJbRaJQM7NkU
+X-Received: by 2002:a05:600c:6212:b0:4a1:742e:3 with SMTP id 5b1f17b1804b1-4a35acdd912mr122317075e9.27.1793026645205;
+        Mon, 26 Oct 2026 07:57:25 -0700 (PDT)
+Received: from localhost ([82.192.120.214])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e3ecd354asm16082701f8f.43.2026.10.26.07.57.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2026 06:56:44 -0700 (PDT)
-Date: Mon, 26 Oct 2026 13:56:43 +0000
-From: William Bright <william.bright@imd-tec.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Bartosz Golaszewski <brgl@kernel.org>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] power: sequencing: pcie-m2: Drive the Key E SDIO_RESET#
- signal
-Message-ID: <at9cGzb2p4VB8EfW@will-Legion-Slim-5-16APH8>
-References: <20261026-pwrseq-pcie-m2-sdio-reset-v1-1-02ecdafce518@imd-tec.com>
- <at9KREB4Fyf-Jl5S@debian>
+        Mon, 26 Oct 2026 07:57:24 -0700 (PDT)
+From: Andrea della Porta <andrea.porta@suse.com>
+X-Google-Original-From: Andrea della Porta <aporta@suse.de>
+Date: Mon, 26 Oct 2026 16:01:17 +0100
+To: Andrea della Porta <andrea.porta@suse.com>
+Cc: Alex Elder <elder@riscstar.com>, bhelgaas@google.com, lizhi.hou@amd.com,
+	herve.codina@bootlin.com, daniel@riscstar.com,
+	mohdayaa@qti.qualcomm.com, lbiancon@qti.qualcomm.com,
+	mani@kernel.org, robh@kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 0/3] PCI: of: update endpoint ranges dynamically
+Message-ID: <at9rPUyR-X7bRgBz@apocalypse>
+References: <20260924222444.1351466-1-elder@riscstar.com>
+ <ase6toUhGn0XD0v9@apocalypse>
+ <223c5189-bfda-4c63-b09f-4ebd01bd144a@riscstar.com>
+ <asju_HpgXpIyAFdf@apocalypse>
+ <a8f7eb6c-69d1-468e-b7a4-7481e429c1cc@riscstar.com>
+ <as9CMO8gODU-jazS@apocalypse>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -100,38 +104,86 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <at9KREB4Fyf-Jl5S@debian>
+In-Reply-To: <as9CMO8gODU-jazS@apocalypse>
 
-On Mon, Oct 26, 2026 at 06:16:38PM +0530, Manivannan Sadhasivam wrote:
+Hi,
+
+On 10:49 Wed 14 Oct     , Andrea della Porta wrote:
+> Hi Alex,
 > 
-> Do we have SDIO pwrseq consumer driver in mainline?
+> On 17:30 Tue 13 Oct     , Alex Elder wrote:
+> > On 10/9/26 8:41 AM, Andrea della Porta wrote:
+> > > Hi Alex,
+> > > 
+> > > On 10:55 Thu 08 Oct     , Alex Elder wrote:
+> > > > On 10/8/26 10:45 AM, Andrea della Porta wrote:
+> > > > > After a quick test, it seems that it's not working out of the
+> > > > > box on my RPi5. Let me investigate a bit to see what's wrong.
+> > > 
+> > > I stand corrected: it works perfectly. So:
+> > > 
+> > > Tested-by: Andrea della Porta <andrea.porta@suse.com>
+> > 
+> > Sorry for the delay.  I'll add the above to v4.
+> > 
+> > > I think it should even be possible to tweak the static RPi5
+> > > DT in order to make it work dynamically with your patch. Can
+> > 
+> > I suspected that your static definitions *happen* to work,
+> > but I never took the time to confirm that and understand
+> > why.
 > 
+> As per your design and as expected, the static range is preserved
+> since the conditionals make the function exit if the device is a
+> bridge or it already has a ranges property,o it all works as before.
+> Right now the RP1 is acknowledged as a PCI bridge.
+> what I meant is that we can maybe amend the RPi5 DT getting rid
+> of the static ranges and tweaking the reg offset in the subperipheral
+> nodes. I will do some experiments with this, but not now in order
+> to not clash with current downstream DT. Definitely a thing I'd
+> like to try in teh long run, though.
+
+After some experiments, invoking of_pci_make_dev_node() as quirks
+for RP1 PCI endpoint and getting rid of the ranges property in the
+endpoint node makes everything working fine, which is very nice.
+
+Regards,
+Andrea
+
 > 
-
-No. MMC still uses its own mmc-pwrseq framework.
-
-> You should not add GPIO control to the pwrseq_pcie_m2_vregs_{enable/disable}()
-> callbacks. You should create a new 'sdio-enable' and populate
-> pwrseq_unit_data->enable/disable callbacks for the SDIO_RESET# control.
-
-An sdio-enable unit wouldn't ever be called until MMC gains a consumer.
-Should I add the unit anyway, or drop this patch until an SDIO user
-exists? Maybe I should switch to working on this first? But it looks to
-be quite a big task.
-
-> Please take a look at the 'pcie-enable' unit and W_DISABLE1/2# GPIO control.
+> Cheers,
+> Andrea
 > 
-> But before that, you should explain how the SDIO consumer driver is making use
-> of pwrseq.
-> 
-> - Mani
-> 
-> -- 
-> மணிவண்ணன் சதாசிவம்k
-
-Regards
-
-Will
+> > 
+> > > you please provide the relevant PCI DT nodes (from PCI controller
+> > > to pci-ep-bus endpoint) from the output of:
+> > > 
+> > > dtc -I fs -O dts /sys/firmware/devicetree/base/
+> > > 
+> > > taken on your reference board?
+> > 
+> > I'll send you that in a private message.
+> > 
+> > Thanks again.
+> > 
+> > 					-Alex
+> > 
+> > > 
+> > > Many thanks for your work,
+> > > Andrea
+> > > 
+> > > > 
+> > > > THANK YOU FOR TESTING THIS!!!
+> > > > 
+> > > > My hope was that the recent change (to avoid doing any
+> > > > updating of ranges property unless it was found to be
+> > > > "empty") would avoid any trouble with the RPi5.
+> > > > 
+> > > > I'm eager to hear what more you find.  Please let me
+> > > > know if I can be of any other help.
+> > > > 
+> > > > 					-Alex
+> > > 
+> > 
