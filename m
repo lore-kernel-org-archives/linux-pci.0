@@ -1,61 +1,81 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.1
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793041788;
-	b=s97yE3KMdfc2egNKR6o9NMZifekCGuSQqmCJNrpTPXzgu6oqQ6jZfJxPhm0p15IuK3Tf
-	 sy6+itrh1Gh9fvSS5sC78BLTZcyEfdNmwiY2Xg34MxDRtWTjqMJhh2GuKh+JWyqh99lpf
-	 TqkgJ/n+nHlXPbLA/Wu2OxI6FBgUQLJTYAWhNOPWe8jlWtdbrd2/XUlDfm5nuqikFoX2f
-	 JuYdLS/562oeqajkWRCTVF1h6RB1PXiHaWaOE+7Y9uxQw2x5u7JESjsXRvrAtTj63Csrj
-	 /6oNOC4Pj0qlRPNVxX5eV8dqSs3eOn/Lwbn8Cr2+OQBjxbwJ0isLpt5zkZyiWnRaHRw==
+	t=1793045108;
+	b=F0Ip3MryqY85Vdq/dOP9DxjlIfS3PAt2YtPUS+i0lrIzAb9IXmnfn5/OXJJK9GBQs2Ft
+	 gYP/h3I35ljYQN8q1di/K0hvv+2zV4O8IP+jB9tQbMybw1srL18PaOaHLZQIXkSR6Todk
+	 ewRvV/DZc9BBErVK0+Ki8VlsmmR/Zc+v9AIn7BgjWPktOTR0Uwar03M1z6fmX3Kac6g4t
+	 X7kTzPOGJPsUjelo0PU3NLsUVRP7WIrrE+ndBtxGKT3dtLun/WH9Y03URlDL7wMaLK9Fk
+	 EPVnhcF3VlbmVQ8L+WMAb3M7pNWbGR1k6FTggD5ks4nKZES3FC3w2cdE8aEXgJdt0iw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793041788;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Message-ID:In-Reply-To:
-	 References:Subject:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:X-Correlation-ID;
-	bh=d0/9qWWid7eSh4s2p7uR1bCkkdTfC4hPw3dFG/jWyRI=;
-	b=SC2r9TsiANrb0U97RIMDDRZ+LFf1K8A06eA7UrAiu3YIPzBBQCkxvah4WVYyiOH47D6u
-	 ThW1MiK2pnh4os5isquoc2cdUVrkyKMa8mt2XZJMgFoBkHy8AnDdV13sHEClv5FqBVzQg
-	 T4+3I9L6ZIR7hgkVNXHjX3jan7ycfj9//dRORtrSMhVFoi6hR/7rmZvHZX06qzteGD5u6
-	 BnaexCyPUyTiHPqm0jEzVOUjWRzJvW7sOqZOIliJZhXxEfIBQETdmtkEs0jSKbCjW7q73
-	 SGx4GauzBVsRjxNZ4ceEnRYy93x0oLV79rAlQHavlDHVGoF1DAbkrQvqzK78NaYHhDg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793045108;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=BawehOGx+swDNz30BXtD0rUayjwrRWdohfXeiD3Nwuc=;
+	b=rxd/TfUd8nEkr+Bhk134tT+Avsdhy0ugVOzSOk2nX0w0aX2B0atn/IoIOEr2rwIY26d7
+	 ga1q3AjO5GecHsaWBRcMhyFpR50ROnhOxa9VBnB7huH0LvCshEuMgL0Ab4uGpUocQh8C4
+	 pT2Ht/LTW/f89mqFKXVpOlovhOHXrVwEJoXMSjl6+nquGF0tVu6xBZwV1vMQans8JTRdP
+	 IGUrAVtCDqC8YHsJmxJDzGlPSVybnX2/R9ZsMpwDjPMziIxP0pjxs/kCpFckCMxl62qkJ
+	 bS16L3cvVoho4AEHVyMAgYyMFDz01V5NNfPpPTFQPC2YutztW1LJcoqGrnZl1GyL69A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	arc=none smtp.remote-ip=91.218.175.1
-Received: from mta0.migadu.com (out-1.mta0.migadu.com [91.218.175.1])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=uqkQoFM5;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BEF1606A31A
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 19:09:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3BEF1606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-X-Envelope-To: linux-pci@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=d0/9qWWid7eSh4s2p7uR1bCkkdTfC4hPw3dFG/jWyRI=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793041779; v=1; x=1793646579;
- b=mOxdfz/JW9dk9ctPky4ltgnXSJBfYxEIh3TexWocXMVW3Hc3jSnw09yIzM/GGnD1xHlX5DAg
- ITBRa4QJyPHgL0rPtaZum/1QofKAcyWOjHlOh3z+6pizSvWNjMPoPDipJD69rs9abO+1VAu53KN
- qVHaSK0sp3dQRyTYevOfXAp8=
-X-Envelope-To: linux-pci@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 600b06249a500df1;
-	Mon, 26 Oct 2026 19:09:39 +0000
-X-Mizu-Trace-ID: 600b06249a500df1
-X-Migadu-Flow: FLOW_OUT
-Date: Mon, 26 Oct 2026 20:09:34 +0100
-From: Denis Benato <denis.benato@linux.dev>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-wireless@vger.kernel.org, miriam.rachel.korenblit@intel.com,
-	emmanuel.grumbach@intel.com, linux-kernel@vger.kernel.org,
-	kernel@lists.opengamingcollective.org
-Message-ID: <76481816-6b21-4f45-8949-144342faf39e@linux.dev>
-In-Reply-To: <20261026184813.GA342157@bhelgaas>
-References: <20261026184813.GA342157@bhelgaas>
-Subject: Re: [PATCH 1/1] PCI: Disable D3cold for Killer BE200-family WiFi on
- MSI Claw A1M
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0B8C606A31A;
+	Mon, 26 Oct 2026 20:05:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=uqkQoFM5
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFCD41F01825;
+	Mon, 26 Oct 2026 20:05:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
+	s=korg; t=1793045107;
+	bh=BawehOGx+swDNz30BXtD0rUayjwrRWdohfXeiD3Nwuc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=uqkQoFM52klwzT7RGNaUFA6Qga4FuWuGaYyefzROIzukjBhIFqREK+pqTr4hriVoK
+	 PDd/0ELiJmI8EHpbo0nbvO9gLFbi48BLIx5y9dL4ZVWfdn+SY805AGZXuJumJAO/Tm
+	 19C/ca7D7sF/slrGjQ3K2AJ2vFy+qN+CzA+phAus=
+Date: Mon, 26 Oct 2026 21:05:06 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Leon Romanovsky <leon@kernel.org>, Alex Williamson <alex@shazbot.org>,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@baylibre.com>,
+	Armin Wolf <W_Armin@gmx.de>, David Lechner <dlechner@baylibre.com>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Luis Chamberlain <mcgrof@kernel.org>,
+	Petr Pavlu <petr.pavlu@suse.com>,
+	Daniel Gomez <da.gomez@kernel.org>,
+	Sami Tolvanen <samitolvanen@google.com>,
+	Aaron Tomlin <atomlin@atomlin.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Bradley Morgan <brads@mainlining.org>,
+	Aleksandr Nogikh <nogikh@google.com>, linux-modules@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-usb@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-trace-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
+	Richard Weinberger <richard@nod.at>,
+	Thierry Reding <thierry.reding@kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 0/3] driver core: add TAINT_FORCED_BIND for when
+ userspace manually messes with devices and drivers
+Message-ID: <2026102604-tint-catcall-433e@gregkh>
+References: <DLIL9H50MALI.3JROXYEEUM3KU@kernel.org>
+ <arIvG0nx4LXG9nlW@monoceros>
+ <defb3953-7516-437e-b70b-d57de55b91bf@baylibre.com>
+ <9bd3a34b-5e98-4038-80d6-da2c3b1948dd@gmx.de>
+ <2026092321-province-yearly-44aa@gregkh>
+ <arOfHEsGGglNse7T@monoceros>
+ <2026092348-victory-erased-0e5a@gregkh>
+ <20261023181326.0dc2f7ed@shazbot.org>
+ <20261026122243.GA28851@unreal>
+ <20261026184312.GA1685504@ziepe.ca>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -65,105 +85,39 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Correlation-ID: <76481816-6b21-4f45-8949-144342faf39e@linux.dev>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261026184312.GA1685504@ziepe.ca>
 
-26 ott 2026 19:48:16 Bjorn Helgaas <helgaas@kernel.org>:
+On Mon, Oct 26, 2026 at 03:43:12PM -0300, Jason Gunthorpe wrote:
+> On Mon, Oct 26, 2026 at 02:22:43PM +0200, Leon Romanovsky wrote:
+> 
+> > This is needed for two reasons: to save hardware and software resources
+> > when creating a large number of VFs, and to allow the PCI config space to
+> > be configured *before* the driver starts using it.
+> > 
+> > There is no in-kernel alternative.
+> 
+> Having userspace involved in driver binding has also always been the
+> plan for confidential computing needs. We cannot have a device driver
+> bound across some of the HW transitions like TDISP shared/private, so
+> there has always been an expectation of bind/unbind.
 
-> On Sun, Oct 25, 2026 at 11:18:13PM +0000, Denis Benato wrote:
->> During s2idle the platform removes power from the WiFi slot (D3cold).
->> The Killer BE1750 (Intel BE200, 8086:272b) installed in the MSI Claw A1M
->> fails to resume from that state: the PCIe link does not retrain
->> ("pcieport 0000:00:1c.0: Data Link Layer Link Active not set in
->> 100 msec") and every device register reads back as 0xffffffff, so the
->> card disappears from the bus and the machine must be power-cycled.
->>
->> Keeping the device in D3hot with the link in L1.2 during system sleep
->> makes suspend and resume work reliably: the package still reaches >99%
->> S0ix residency and the card survives every cycle (verified over multiple
->> suspend/resume tests with an RTC-timed wake).
->>
->> Disable D3cold for the BE200-family device on this board. This mirrors
->> the udev-level workaround distributions already ship for the AX200/AX210
->> (8086:2725), which suffers from the same class of problem, and moves it
->> into the kernel where it belongs.
->
-> If 2725 has the same problem, should we make the quirk apply to it
-> also?
->
+What, why?  What forces that decision?  What's wrong with the proper
+driver for the hardware being bound automatically to the device?
 
-Hi Bjorn,
+> For this case the existing sysf drivers_probe is good enough for bind,
+> but we must have taint-free unbind for PCI devices too.
 
-Probably yes, but I don't own that hardware, only saw gaming distros are sh=
-ipping an udev rule to do just that.
+Why?
 
-> I suppose this is a firmware problem with whatever is supposed to turn
-> the power back on?=C2=A0 Are there any firmware updates available?
->
+> I think this patch should be reverted ASAP, it is a pretty major
+> regression for a lot of users.
 
-Not that I know of. I have updated my bios (only update available) but the =
-issue is still there.
+But this use case hasn't even happened yet, so what would regress?
 
->> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=3D220223
->> Signed-off-by: Denis Benato <denis.benato@linux.dev>
->> ---
->> drivers/pci/quirks.c | 21 +++++++++++++++++++++
->> 1 file changed, 21 insertions(+)
->>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index 7572b358b50f..60156e6c3e49 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -6593,3 +6593,24 @@ static void pci_mask_replay_timer_timeout(struct =
-pci_dev *pdev)
->> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer=
-_timeout);
->> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer=
-_timeout);
->> #endif
->> +
->> +/*
->> + * MSI Claw A1M: during s2idle the platform removes power from the WiFi=
- slot
->> + * (D3cold). The Killer BE1750 (Intel BE200, 8086:272b) fails to resume=
- from
->> + * that state: the PCIe link does not retrain ("Data Link Layer Link Ac=
-tive
->> + * not set in 100 msec") and every device register reads back as 0xffff=
-ffff,
->> + * so the card disappears from the bus and the machine must be power-cy=
-cled.
->> + *
->> + * Keeping the device in D3hot with the link in L1.2 during system slee=
-p makes
->> + * suspend and resume work reliably: the package still reaches >99% S0i=
-x
->> + * residency and the card survives.
->
-> From just this patch, I don't think we can assert the L1.2 link state,
-> can we?=C2=A0 AFAICS, this patch just prevents the use of D3cold.
+I'm not talking about the vfio thing, that's different here...
 
-From this patch no, but that is the description of what happens on my msi c=
-law when I enter sleep with this patch, checked via s0ixselftest tool.
+thanks,
 
-This is surely better than the previous work around of detaching the driver=
- and re-attaching it leaving the device in d0.
-
->
->> + */
->> +static void quirk_msi_claw_be200_d3cold(struct pci_dev *pdev)
->> +{
->> +=C2=A0=C2=A0 if (!dmi_match(DMI_BOARD_NAME, "MS-1T41"))
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return;
->> +
->> +=C2=A0=C2=A0 pci_d3cold_disable(pdev);
->> +=C2=A0=C2=A0 pci_info(pdev, "disabling D3cold: slot power removal durin=
-g s2idle prevents resume on this system");
->> +}
->> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x272b, quirk_msi_claw_be2=
-00_d3cold);
->> --
->> 2.55.0
->>
-
+greg k-h
