@@ -1,68 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.69
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793055381;
-	b=JgE0zo9lXApUN19RbRYS+rUrPmic4gYJKv+A/Pfu0Y9YjBNFrv8alrWkHzt5URqTR4qy
-	 K/TvdTiAxJA3bxCeReV6iEkrBRzF+qwzKpluvn0Zp7UujIcve+gBuJM+kjcbfPOF+yzWi
-	 /bvgyNSHHYsk3Rt4pgNUm9f7c91kUm8O+E5UZMlW9XT5+WE1YcgRGpVkc1QiyMvAmJJMR
-	 eIu9L2vqBpczN2Ii8ZG0UENp6DIDmfoWtYIVAEFB/NKniVkQYrLfXl/lE2GXoK60oUxw6
-	 q3BnF52H/YQ2HAYgsp2S4eW/BKuv+RnLnTJ+0fIRgIOk4HZ7lRgk8CujtzvJ05rTd8w==
+	t=1793057327;
+	b=tnOU9efrHqUU89ZXGsSWNX4/tAbiOGTCugHeIFNPV6WnkiSe25HEhL5aIpW3UVJ2ws1z
+	 er4Xnit5c5K2U1YqNyUX335GbBvXphhmrn+uf8YucvNIydxY3B89gyhqLz7iAf2dDpQC2
+	 KAgTDcOjOfvGobnMynoZr6ElRcj9vQ9mUIURzdaZLxUHykuVH5UGuFZpW9FC46TDlxMK6
+	 Ss2DyGXNl26kWqkCJeSacNDvRAoU9uJJ4AoMg6apHFrzn3KjqQLNR6qJWqio7wtFaQitB
+	 9AEOpMqQO9czBfOkJLvkLIGLnb6VvENiTHZfmc+v1+mfhXWy+W7ZnxxpQYMiVnwlnJA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793055381;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:Cc:References:From:
-	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=5KXWNpM3l7eZ2uuYNviWQ+utc8EtZYeR0hwdFT7B3zw=;
-	b=nLTTEHe0jza0EJE9HmI0M1zBzM9whJevRSfs6HU6SxBeixQLuz9AbGPvOQnAFuuEZPMG
-	 2IXg6J3OrfPUIL4YWGbrGk9n5EjGO7ho+LYMQmTTiBSgtGuDFS7A6iOweVxG83/lHymrI
-	 I+JGaEzUgMhvY90zJuzVRuGp+Bq6yQFySgbP+T7LfVxejVbweL7McFUoIdMl2k8Ruux64
-	 YdXU18nFQWcNediq6+TFbgXZEIMoU5kHAvTT2jLJCRIGTkXC+2VIo2MpEgaTYZM5R/Xz0
-	 yUbN94YHUi+YJOb5G9bMG+am+NYdoQG/cLRfYC7TllcLfkM19x3T3yxJpkKdINHCZZg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793057327;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:Message-ID:Subject:From:To:Cc:Content-Type;
+	bh=RxRwD13OM0fFBvRZdfnXU3z0HVhv0MS7kXCqcjKQ5Ko=;
+	b=wq0WLCa3YiS1wFjDf2yNxmFrM5RBkYVCsvMdmupscIAezNfNNXmeLxJejPvYQg0kbgc8
+	 h9bSHofQZG+wm5yr/y2aXrAdWQNLLF/BYTl5dKU3XN9M5hnfgvK10Z16Hi59Z4cMUhmqC
+	 Ig0r/5e4GkoaffLklNRW8VRlecTa+0r6FTeYmjktSzPwXKnOToj69ZvnuVwnL2oyzIu41
+	 utfPVgEQDz4GGZEqvTFLoULiZqAiP6j3u2ozjPirNAJuoc2f2V9FFtvEQJawLT14/H4m3
+	 N8yvM2QSnmra1bB2beldsfBp9r4aNSbi4du/dINXr0D2rGuxwa5dn6aXj+lpnDX4k7A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=gdIm4kfc;
-	arc=none smtp.remote-ip=198.175.65.14
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=hK9TvNQw;
+	arc=none smtp.remote-ip=209.85.208.69
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com [209.85.208.69])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5C34606A32E;
-	Mon, 26 Oct 2026 22:56:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A5C34606A32E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80679606A323
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 23:28:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 80679606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=gdIm4kfc
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793055380; x=1824591380;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=apTiQPMdtSAB4IiLfrFTkXgfQZZauBljipfkSL7Abtg=;
-  b=gdIm4kfcJvJzqAH0PVLO2fqIN6hDHJ2viAERhHd8uzaL+YI9qijHb/ai
-   KZCqeQHcpYGQM9PN8BtcDqRBzlkYKc2oBre9u1FXdZc86+Fpi32XBp0PO
-   V/ZejUe1ClwzgoIoC9fP7HMiQTPbfFZG9sbxayfCmtBkW55CTof0rrKyd
-   Ft9AinrMiScc3DvAPepPy5JKwwMJLlHQH81OKCX0dtLTkKT8OBU1fLR0h
-   51aLIMMJChqrEXxReDsm8bn5N4aPrehdLbWXA20QeA2z/+ZTCP6DphrCR
-   tDIBVHznmNLgVkyWztPKgr4DeqrifKHlI4a/K9EjWEPhMQBJLP3lZziGl
-   w==;
-X-CSE-ConnectionGUID: j/HSNaLdTzGiOT15YPxA/g==
-X-CSE-MsgGUID: JIAnUqjaSTaiV+iZB9fw+g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11947"; a="1618040"
-X-IronPort-AV: E=Sophos;i="6.27,180,1787036400"; 
-   d="scan'208";a="1618040"
-Received: from fmviesa013.fm.intel.com ([10.60.135.153])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Oct 2026 15:56:19 -0700
-X-CSE-ConnectionGUID: RuzZhOdOTYC81FUNd8B7jw==
-X-CSE-MsgGUID: +xBgjqEhSImIh2fNbmnBdQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,180,1787036400"; 
-   d="scan'208";a="6218976"
-Received: from smithj1-mobl2.amr.corp.intel.com (HELO [10.125.108.112]) ([10.125.108.112])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Oct 2026 15:56:18 -0700
-Message-ID: <db212bda-9642-4b78-9bb0-c75aa60df401@intel.com>
-Date: Mon, 26 Oct 2026 15:56:16 -0700
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=hK9TvNQw
+Received: by mail-ed1-f69.google.com with SMTP id 4fb4d7f45d1cf-6b1d818b501so4309264a12.0
+        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 16:28:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1793057326; x=1793662126; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=RxRwD13OM0fFBvRZdfnXU3z0HVhv0MS7kXCqcjKQ5Ko=;
+        b=hK9TvNQwKUHIZZZjxzV0a2Cbv7bIzmVQ6+G1+2ZS+4rTVIMHR7NWA80kKuwDAAcZoF
+         pLSOv89ov3CxcEG25n/cIU3vcbj43p8ZXy7YHgOAoZooXblEghty3Cp5OoXY961rTOFW
+         vluruvAUIamnZHp/w6s/IA7uOvsu/nAHiF4juHAsJeVSwD1sGDyCemEYrF5pQaIy2+dJ
+         QncJE2F0CD5HeT7HOcfVMBY502l/Fc/PZf3COQxRAYovwWZKrkVRC9iWD24UfTl8Wv1i
+         2Cb4/bNodGzK/8TOu/0nGkcK9Dm/cZFmh/qAGvSI9XFlwuGZNgDKyDxopMHwUIKLkmPa
+         2o7g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793057326; x=1793662126;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=RxRwD13OM0fFBvRZdfnXU3z0HVhv0MS7kXCqcjKQ5Ko=;
+        b=CUhK94m6WpAuoLG3aLZA8sGJixOWexMLb42lmfjJaTn7358R6VGePWS0oohZXNUEyv
+         8TdrU0p0xj71dUeZ2gd22XkTJ8dLe0F34iVuQXfYcgfeyeRroUwBIMwChCnhm6th4EAq
+         1dlZBAIS9R2ginhU+1/ObL0LpfCYk9p7XHzmxuqVSkjeMNlKaBNIYF73HAqWVcyrwLtE
+         MMzJ2OJpZZ/utkHmNEP4VmfWboTXvLR/c25M2XIcbHw05Q2/ew3OQBekFPu3ij+wGdvh
+         bERrpQqM2tWeEESl3Fy1nNFPrG41kOKAE15aOb3A4gugWXwgza58LDLXa4h5MvOSng6X
+         i1eQ==
+X-Forwarded-Encrypted: i=1; AKwUvByxZkzWyIKFBk/AfyiFB3knwwak52xEOgd9XZjSdAWoKJzNlhnmOrQfAtmYuQJ7/5xUW33aMPIYLWs=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKo2+FR6FdztEBQ2JTcmv4CqMFTewniAPF6nxGOQBth9d1XKJFn
+	C2N6tqSZTTGNfbtPFqHqBOVwLfRY6Zbnqmglm408DA3NAr0xhOGcQdHr+0XVcQ58Au2dNQMrovE
+	Lz3O2FyaLSDwECsr8TA==
+X-Received: from edxw25.prod.google.com ([2002:a05:6402:719:b0:6a7:4541:3de3])
+ (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6402:4026:b0:6b4:1037:2b87 with SMTP id 4fb4d7f45d1cf-6b44300b84fmr9392138a12.31.1793057325809;
+ Mon, 26 Oct 2026 16:28:45 -0700 (PDT)
+Date: Mon, 26 Oct 2026 23:28:45 +0000
+In-Reply-To: <at_CncIPYCxOVkLo@google.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -71,356 +77,163 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v15 08/16] cxl: Refresh cached PCI HDM decoder settings
-To: Srirangan Madhavan <smadhavan@nvidia.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
- Ira Weiny <ira.weiny@intel.com>, Jonathan Cameron <jic23@kernel.org>,
- Vishal Verma <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
- alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20261011021422.3428136-1-smadhavan@nvidia.com>
- <20261011021422.3428136-9-smadhavan@nvidia.com>
-From: Dave Jiang <dave.jiang@intel.com>
-Content-Language: en-US
-In-Reply-To: <20261011021422.3428136-9-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+References: <20261021152527.375070-1-tarunsahu@google.com> <20261021152527.375070-4-tarunsahu@google.com>
+ <atlQ_Er0Ig7CCSxv@google.com> <CALzav=f00C4yOAseNunW8GgQTDUGWT927Qy=TLm-3-J0TEDH8Q@mail.gmail.com>
+ <9huzzew0el59.fsf@tarunix.c.googlers.com> <at_CncIPYCxOVkLo@google.com>
+Message-ID: <9huzecdcghxu.fsf@tarunix.c.googlers.com>
+Subject: Re: [RFC PATCH v2 3/4] liveupdate: Replace compatibility string with
+ a 2-bit pair feature header
+From: tarunsahu@google.com
+To: David Matlack <dmatlack@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, joro@8bytes.org, 
+	Mike Rapoport <rppt@kernel.org>, Pratyush Yadav <pratyush@kernel.org>, maz@kernel.org, arnd@arndb.de, 
+	jgg@nvidia.com, robin.murphy@arm.com, loganodell@google.com, 
+	oupton@kernel.org, kevin.tian@intel.com, alex@shazbot.org, 
+	dwmw2@infradead.org, pbonzini@redhat.com, seanjc@google.com, will@kernel.org, 
+	Pasha Tatashin <pasha.tatashin@soleen.com>, Alexander Graf <graf@amazon.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, baolu.lu@linux.intel.com, 
+	linux-arm-kernel@lists.infradead.org, linux-arch@vger.kernel.org, 
+	sagis@google.com, linux-mm@kvack.org, kvmarm@lists.linux.dev, 
+	iommu@lists.linux.dev, linux-pci@vger.kernel.org, kexec@lists.infradead.org, 
+	skhawaja@google.com, kvm@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+
+David Matlack <dmatlack@google.com> writes:
+
+> On 2026-10-26 11:50 AM, tarunsahu@google.com wrote:
+>> Right, Required bit should be source kernel payload property to tell
+>> target kernel that the payload must be handled to correctly deserialize
+>> the data. It should be source kernel (userspace) responsiblity to make
+>> sure it understand the target kernel before doing liveupdate.
+>> 
+>> Saying this, During deserialization, target kernel's required bit is not
+>> necessary. So I propose the following truth table.
+>> 
+>> Source hdr  Target supported[i]  Action
+>> ----------  -------------------  ----------------------------------
+>> 00          0 or 1               Accept: feature absent in payload
+>> 01          0                    Accept: ignore the feature data
+>> 01          1                    Accept: use the feature data
+>> 11          0                    Reject: -EOPNOTSUPP
+>> 11          1                    Accept: use the feature data
+>> 10          0 or 1               Reject: -EINVAL (invalid encoding)
+>
+> Yes, this matches what I had in mind for the semantics.
+>
+> To be explicit: the source kernel should set the bits for each Live
+> Update based on what is actually preserved, rather than generating the
+> header from a static per-kernel array. E.g. memfd would only mark a
+> feature present for memfds that actually use it. That's what allows
+> rollback to an older kernel as long as nothing being preserved depends
+> on the new feature.
+>
+> But looking at this again, I think the required bit is redundant. Whether
+> a feature can be safely ignored is a property of the feature itself, not
+> of any particular file. Every file that has a feature present will have
+> the same required bit for it. The only thing that actually varies per
+> file is whether the feature is present.
+
+The required bit is subsystem property not the per-file. e.g. memfd_luo,
+it is set at compile time for a kernel. So every file will get that required
+bit set. It is not per file property.
+
+struct u8 memfd_luo_feature_state {
+       [MEMFD_LUO_CORE_FEATURE] = LUO_FEATURE_REQUIRED
+}
 
 
+>
+> The required bit still has to be conveyed to the target somehow, since
+> the kernel that needs it is the one that doesn't know about the feature.
+> But it can be conveyed by the feature's number rather than an extra bit:
+> split the flag space into required features and optional features, and
+> assign each feature to one of them when it is defined. This is similar
+> to the required_flags and optional_flags approach in struct pci_ser [1].
+>
+> Keeping the same header shape as discussed with Pasha:
+>
+> struct kho_ser_hdr {
+>     __u32 size;           /* Size of header + payload in bytes */
+>     __u16 nr_required;    /* Number of required feature bits */
+>     __u16 nr_optional;    /* Number of optional feature bits */
+>     __u64 flags[];        /* Required bits, followed by optional bits */
+> };
+>
+> Required feature N is bit N of flags[], and optional feature N is bit
+> nr_required + N (using nr_required from the incoming header). The length
+> of flags[] is DIV_ROUND_UP(nr_required + nr_optional, 64). Both spaces
+> are numbered contiguously, so there are no gaps, and up to 64 features
+> still fit in a 16-byte header.
+>
+> Each bit just means the feature is present, so the truth table becomes:
+>
+> Source bit       Target supports  Action
+> ---------------  ---------------  ------------------------------
+> Not set          -                Accept: feature absent
+> Optional set     No               Accept: ignore the feature data
+> Optional set     Yes              Accept: use the feature data
+> Required set     No               Reject: -EOPNOTSUPP
+> Required set     Yes              Accept: use the feature data
+>
+> There is no invalid encoding left to check.
 
-On 10/10/26 7:14 PM, Srirangan Madhavan wrote:
-> Early PCI discovery creates the HDM cache, while later CXL enumeration and
-> decoder operations provide updated programming state.
-> 
-> Refresh the PCI snapshot when decoders are enumerated, committed, or reset
-> so reset recovery need not walk the CXL topology. Ignore updates when no
-> cache exists and reject decoder-count mismatches.
-> 
-> Use CXL_RESET for the PCI HDM cache. Shared HDM register helpers do not
-> require it.
-> 
-> Skip cache checks and updates for DVSEC-emulated decoders, which do not
-> use HDM registers. Keep cached global control when MMIO reads return all
-> ones.
-> 
-> Skip non-PCI mock ports to avoid test wrappers and a circular dependency
-> between cxl_core and cxl_mock.
 
-Maybe consider saying:
-Non-PCI mock ports have no upstream PCI device, so the cache helpers ignore them. This avoids test wrappers and a circular dependency between cxl_core and cxl_mock.
+IIUC, I believe this will not work.
 
-> 
-> Link: https://git.kernel.org/pub/scm/linux/kernel/git/djiang/linux.git/commit/?id=50a88f5194e5df38590d413f925d8d5afa8a8488
-> Suggested-by: Dave Jiang <dave.jiang@intel.com>
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> Assisted-by: LLM
+To Communicate between source and target, We are defining a protocol, A
+protocol which will be standard for all the kernel. And each bit location in
+flags must have the same meaning in both the source and target kernel.
 
-Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+Now in you approach, If Source kernel send feature N to target kernel,
+target kernel must understand Nth bit as the same feature. Even though
+the bit position in your approach is not fixed but they are fixed
+relative to their starting point.
 
-> ---
->  drivers/cxl/Kconfig     |  5 +++
->  drivers/cxl/core/core.h |  3 ++
->  drivers/cxl/core/hdm.c  | 55 +++++++++++++++++++++++++++++++-
->  drivers/cxl/core/pci.c  | 70 +++++++++++++++++++++++++++++++++++++++++
->  include/cxl/cxl.h       |  1 +
->  include/cxl/hdm.h       | 25 +++++++++++++++
->  include/linux/pci.h     |  6 ++++
->  7 files changed, 164 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
-> index 80aeb0d556bd..8b08bfdc4982 100644
-> --- a/drivers/cxl/Kconfig
-> +++ b/drivers/cxl/Kconfig
-> @@ -6,6 +6,7 @@ menuconfig CXL_BUS
->  	select FW_UPLOAD
->  	select PCI_DOE
->  	select FIRMWARE_TABLE
-> +	select CXL_RESET
->  	select NUMA_KEEP_MEMINFO if NUMA_MEMBLKS
->  	select FWCTL if CXL_FEATURES
->  	help
-> @@ -244,3 +245,7 @@ config CXL_ATL
->  	depends on ACPI_PRMT && AMD_NB
->  
->  endif
-> +
-> +# CXL_BUS requires the PCI HDM cache and built-in state helpers, even when modular.
-> +config CXL_RESET
-> +	bool
-> diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
-> index d69864b25656..77bc4f7d2e99 100644
-> --- a/drivers/cxl/core/core.h
-> +++ b/drivers/cxl/core/core.h
-> @@ -222,6 +222,9 @@ static inline void devm_cxl_dport_ras_setup(struct cxl_dport *dport) { }
->  int cxl_gpf_port_setup(struct cxl_dport *dport);
->  
->  struct cxl_hdm;
-> +/* Hold cxl_rwsem.dpa for write while using the returned cache. */
-> +struct cxl_hdm_info *cxl_hdm_get_cached_info(struct cxl_hdm *cxlhdm, int id);
-> +int cxl_hdm_check_decoder_count(struct cxl_hdm *cxlhdm);
->  int cxl_hdm_decode_init(struct cxl_dev_state *cxlds, struct cxl_hdm *cxlhdm,
->  			struct cxl_endpoint_dvsec_info *info);
->  int cxl_port_get_possible_dports(struct cxl_port *port);
-> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
-> index 1a19078e6c6c..b57257efbf4e 100644
-> --- a/drivers/cxl/core/hdm.c
-> +++ b/drivers/cxl/core/hdm.c
-> @@ -730,6 +730,47 @@ static void cxlsd_set_targets(struct cxl_switch_decoder *cxlsd, u64 *tgt)
->  		*tgt |= FIELD_PREP(GENMASK_ULL(63, 56), t[7]->port_id);
->  }
->  
-> +static void cxl_hdm_refresh_decoder(struct cxl_hdm *cxlhdm,
-> +				    struct cxl_decoder *cxld)
-> +{
-> +	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
-> +	struct cxl_endpoint_decoder_settings *settings;
-> +	struct cxl_hdm_info *info;
-> +	u32 global_ctrl;
-> +
-> +	if (!hdm)
-> +		return;
-> +	if (!is_endpoint_decoder(&cxld->dev))
-> +		return;
-> +
-> +	guard(rwsem_write)(&cxl_rwsem.dpa);
-> +	info = cxl_hdm_get_cached_info(cxlhdm, cxld->config.id);
-> +	if (!info)
-> +		return;
-> +
-> +	/* Preserve the last good value when the device does not respond. */
-> +	global_ctrl = readl(hdm + CXL_HDM_DECODER_CTRL_OFFSET);
-> +	if (global_ctrl != U32_MAX)
-> +		info->global_ctrl = global_ctrl;
-> +	settings = &info->settings[cxld->config.id];
-> +
-> +	/*
-> +	 * A disabled decoder's software object may retain its old range and
-> +	 * skip state. Leave only the decoder id in the cached settings so stale
-> +	 * state is not restored as an enabled decode.
-> +	 */
-> +	*settings = (struct cxl_endpoint_decoder_settings) {
-> +		.config.id = cxld->config.id,
-> +	};
-> +	if (cxld->config.flags & CXL_DECODER_F_ENABLE) {
-> +		struct cxl_endpoint_decoder *cxled =
-> +			to_cxl_endpoint_decoder(&cxld->dev);
-> +
-> +		settings->config = cxld->config;
-> +		settings->skip = cxled->skip;
-> +	}
-> +}
-> +
->  static void
->  cxl_endpoint_decoder_snapshot(struct cxl_endpoint_decoder *cxled,
->  			      struct cxl_endpoint_decoder_settings *settings)
-> @@ -811,6 +852,7 @@ static int cxl_decoder_commit(struct cxl_decoder *cxld)
->  	}
->  	port->commit_end++;
->  	cxld->config.flags |= CXL_DECODER_F_ENABLE;
-> +	cxl_hdm_refresh_decoder(cxlhdm, cxld);
->  
->  	return 0;
->  }
-> @@ -883,6 +925,7 @@ static void cxl_decoder_reset(struct cxl_decoder *cxld)
->  	writel(0, hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
->  
->  	cxld->config.flags &= ~CXL_DECODER_F_ENABLE;
-> +	cxl_hdm_refresh_decoder(cxlhdm, cxld);
->  
->  	/* Userspace is now responsible for reconfiguring this decoder */
->  	if (is_endpoint_decoder(&cxld->dev)) {
-> @@ -1090,9 +1133,17 @@ static int devm_cxl_enumerate_decoders(struct cxl_hdm *cxlhdm,
->  {
->  	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
->  	struct cxl_port *port = cxlhdm->port;
-> -	int i;
-> +	/* DVSEC-emulated decoders do not describe the cached HDM registers. */
-> +	bool emulated = should_emulate_decoders(info);
-> +	int check_rc, i;
->  	u64 dpa_base = 0;
->  
-> +	if (is_cxl_endpoint(port) && hdm && !emulated) {
-> +		check_rc = cxl_hdm_check_decoder_count(cxlhdm);
-> +		if (check_rc)
-> +			return check_rc;
-> +	}
-> +
->  	cxl_settle_decoders(cxlhdm);
->  
->  	for (i = 0; i < cxlhdm->decoder_count; i++) {
-> @@ -1131,6 +1182,8 @@ static int devm_cxl_enumerate_decoders(struct cxl_hdm *cxlhdm,
->  			put_device(&cxld->dev);
->  			return rc;
->  		}
-> +		if (!emulated)
-> +			cxl_hdm_refresh_decoder(cxlhdm, cxld);
->  		rc = add_hdm_decoder(port, cxld);
->  		if (rc) {
->  			dev_warn(&port->dev,
-> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-> index 33b21c8dcb21..2acddb472103 100644
-> --- a/drivers/cxl/core/pci.c
-> +++ b/drivers/cxl/core/pci.c
-> @@ -6,6 +6,7 @@
->  #include <linux/delay.h>
->  #include <linux/pci.h>
->  #include <linux/pci-doe.h>
-> +#include <cxl/hdm.h>
->  #include <cxl/pci.h>
->  #include <linux/aer.h>
->  #include <cxlpci.h>
-> @@ -180,6 +181,75 @@ int cxl_await_media_ready(struct cxl_dev_state *cxlds)
->  }
->  EXPORT_SYMBOL_NS_GPL(cxl_await_media_ready, "CXL");
->  
-> +/**
-> + * cxl_hdm_get_cached_info() - get the PCI-owned HDM cache for a decoder
-> + * @cxlhdm: HDM capability whose port identifies the upstream PCI device
-> + * @id: decoder ID to validate against the cached decoder count
-> + *
-> + * The caller must hold cxl_rwsem.dpa for write throughout this call and
-> + * all access through the returned pointer. The pointer refers to the live
-> + * cache; ownership remains with the PCI device.
-> + *
-> + * Return: the cache containing @id, or NULL if no upstream PCI device or
-> + * cache exists, or @id is outside the cached decoder count.
-> + */
-> +struct cxl_hdm_info *cxl_hdm_get_cached_info(struct cxl_hdm *cxlhdm, int id)
-> +{
-> +	struct cxl_hdm_info *info;
-> +
-> +	struct pci_dev *pdev __free(pci_dev_put) =
-> +		cxl_port_get_uport_pci_dev(cxlhdm->port);
-> +
-> +	if (!pdev)
-> +		return NULL;
-> +
-> +	lockdep_assert_held_write(&cxl_rwsem.dpa);
-> +	info = pdev->hdm;
-> +	if (!info)
-> +		return NULL;
-> +
-> +	if (id < 0 || id >= info->decoder_count) {
-> +		pci_warn(pdev, "CXL HDM decoder %d exceeds cached count %d\n",
-> +			 id, info->decoder_count);
-> +		return NULL;
-> +	}
-> +
-> +	return info;
-> +}
-> +EXPORT_SYMBOL_NS_GPL(cxl_hdm_get_cached_info, "CXL");
-> +
-> +/**
-> + * cxl_hdm_check_decoder_count() - check enumeration against the PCI HDM cache
-> + * @cxlhdm: HDM capability containing the decoder count to check
-> + *
-> + * Take cxl_rwsem.dpa for read while comparing the cached count. Call only
-> + * for hardware HDM decoders, since DVSEC-emulated ranges do not describe
-> + * the HDM registers represented by the cache.
-> + *
-> + * Return: 0 if the counts match or no upstream PCI device or cache exists,
-> + * or -ENXIO if the cached and enumerated decoder counts differ.
-> + */
-> +int cxl_hdm_check_decoder_count(struct cxl_hdm *cxlhdm)
-> +{
-> +	struct pci_dev *pdev __free(pci_dev_put) =
-> +		cxl_port_get_uport_pci_dev(cxlhdm->port);
-> +
-> +	if (!pdev)
-> +		return 0;
-> +
-> +	guard(rwsem_read)(&cxl_rwsem.dpa);
-> +	if (pdev->hdm &&
-> +	    pdev->hdm->decoder_count != cxlhdm->decoder_count) {
-> +		pci_warn(pdev,
-> +			 "CXL HDM cache decoder count mismatch: cached=%d hdm=%d\n",
-> +			 pdev->hdm->decoder_count, cxlhdm->decoder_count);
-> +		return -ENXIO;
-> +	}
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_NS_GPL(cxl_hdm_check_decoder_count, "CXL");
-> +
->  static int cxl_set_mem_enable(struct cxl_dev_state *cxlds, u16 val)
->  {
->  	struct pci_dev *pdev = to_pci_dev(cxlds->dev);
-> diff --git a/include/cxl/cxl.h b/include/cxl/cxl.h
-> index 9af01e1f45ba..b29374b34cfa 100644
-> --- a/include/cxl/cxl.h
-> +++ b/include/cxl/cxl.h
-> @@ -26,6 +26,7 @@ enum cxl_devtype {
->  };
->  
->  struct cxl_region;
-> +struct cxl_hdm_info;
->  
->  enum cxl_decoder_type {
->  	CXL_DECODER_DEVMEM = 2,
-> diff --git a/include/cxl/hdm.h b/include/cxl/hdm.h
-> index 219b9bb67440..d5e7efd2ffc0 100644
-> --- a/include/cxl/hdm.h
-> +++ b/include/cxl/hdm.h
-> @@ -16,4 +16,29 @@ struct cxl_endpoint_decoder_settings {
->  	u64 skip;
->  };
->  
-> +/**
-> + * struct cxl_hdm_info - cached CXL HDM state for a PCI device
-> + * @decoder_count: number of entries in @settings
-> + * @hdm_bar: PCI BAR containing the HDM decoder capability
-> + * @hdm_offset: offset of the HDM decoder capability in @hdm_bar
-> + * @hdm_size: size of the HDM decoder register block
-> + * @global_ctrl: HDM decoder global control register
-> + * @dvsec_ctrl: CXL DVSEC control register
-> + * @dvsec_ctrl_valid: whether @dvsec_ctrl contains valid state
-> + * @settings: per-endpoint-decoder programming state
-> + *
-> + * Publication through pci_dev.hdm and all mutable fields are protected by
-> + * cxl_rwsem.dpa.
-> + */
-> +struct cxl_hdm_info {
-> +	int decoder_count;
-> +	int hdm_bar;
-> +	resource_size_t hdm_offset;
-> +	resource_size_t hdm_size;
-> +	u32 global_ctrl;
-> +	u16 dvsec_ctrl;
-> +	bool dvsec_ctrl_valid;
-> +	struct cxl_endpoint_decoder_settings settings[] __counted_by(decoder_count);
-> +};
-> +
->  #endif /* __CXL_HDM_H__ */
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index d31a8d107b1e..7bb37fcb556d 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -339,6 +339,9 @@ struct pcie_link_state;
->  struct pci_sriov;
->  struct pci_p2pdma;
->  struct rcec_ea;
-> +#ifdef CONFIG_CXL_RESET
-> +struct cxl_hdm_info;
-> +#endif
->  
->  /* struct pci_dev - describes a PCI device
->   *
-> @@ -566,6 +569,9 @@ struct pci_dev {
->  #ifdef CONFIG_PCI_DOE
->  	struct xarray	doe_mbs;	/* Data Object Exchange mailboxes */
->  #endif
-> +#ifdef CONFIG_CXL_RESET
-> +	struct cxl_hdm_info *hdm;	/* CXL HDM decoder state */
-> +#endif
->  #ifdef CONFIG_PCI_NPEM
->  	struct npem	*npem;		/* Native PCIe Enclosure Management */
->  #endif
+required: reference is 0th bit: So target kernel will undersatnd the
+          bit as the same feature as source kernel.
+optional: reference is nr_required: So target kernel will understand the
+          bit as the same feature as the source kernel.
 
+To make sure there is harmony between these two kernel. Even though a
+bit is not set in required for a feature that must be 0 in required
+range. and similarly for optional bits.
+
+So flags will look like 0b 0 0 1 1 0 0 0 1 0 0 1 1 1 0
+                               o o o o o o r r r r r r
+
+                        0b 0 0 0 0 0 0 0 0 1 1 1 1 1 1
+                                           o o o r r r <= This is wrong
+                                           because target can never know
+                                           which bit mean what feature.
+                                           So as you said there will be
+                                           no gaps which will not work here.
+
+So, Based on the first, We still using same number of bits and increased
+complexity and no gain.
+
+
+For the current appraoch and V3 [2]. Think the below one as msb is
+required bit and lsb is feature present in payload bit.
+
+00  FEATURE_ABSENT / DEPRECATED
+01  FEATURE_OPTIONAL
+11  FEATURE_REQUIRED
+10  IS INVALID (analogy: required set but feature is not present) which can
+have different meaning in future if in future, a need arises to reuse this
+field.
+
+Deserialization can happen per feature from right to left. without
+jumping back and forth.
+
+Because of all these reasons, I believe current approach presented in
+V3 [2] is the better. It is close to your PCI series with two flags
+field for required and optional except I combined both field into one
+flags. In your above approach you do have two counts but not having gaps
+(which is wrong) and the way you proposed to parse with an offset is different.
+
+Let me know what you think.
+
+[2] https://lore.kernel.org/all/20261026174217.603114-1-tarunsahu@google.com/
+>
+> [1] https://lore.kernel.org/linux-pci/20261013162529.1928093-1-dmatlack@google.com/
