@@ -1,54 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793026830;
-	b=hh7gCHBdY6oAGgBbqAXs2/KlBNCBRLJzdn3Uk0Ovb0Nq7Z0kNawLRPlw89HoXOuXxNwG
-	 +c6F3U+tE0rILWI0vmGtP9Jg07nAiTn08vqxlEKqcHQ2fJodnyKtOhPQUXDoBNgiAFqin
-	 zm/Xg7sP8sHWqu7AXJAE7QhdiaIJHCQkLJBWxCTCzKV/kRTOftuxQ9btIKEJIK6omhRv/
-	 qLpX0TLEoRa6Q5t7gBEkpTPE9bH5Vh/8xYq3odozMq4qZV4RiVH0YxzjsXoCPrVfifEHT
-	 Wn3pJjIVRnZWm5lFgPL/9RKrMND6ivqbxosO6GxGmbnE9stUL2/kqJGlx9dUa4AT8Ug==
+	t=1793028035;
+	b=ellMxUfLQKWFPzB8lIlfze6cDltr9/2P1wsnu+kVeQmRI8YJItZUgUM57VkKP5RhQwOz
+	 8UapOGRy6unJqe6gDCt6uICUePfouD2WFhHs9dNpNh5Ap115nvtjPLBg/+jwZVDhiX0th
+	 JeEusYllIRSfuVpzNIRUdUdkz1SR3Afuxwe7Hq+3q4bHx+unZTLUoIoA45smAyoANLuAr
+	 GfuXK5atidxhZ9rtiHkK6LdIFJydOahqkAdL5kz25ohD15wP5a/0OWMpAq3wuI3eHsfj0
+	 4idyHYzq58t1apyCIsD+VQBI+81u6SZUL1nY0u/GJbO0Lkqm39wDsPXBtCHRy3QGXdw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793026830;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793028035;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=7D1qR2T1FcniBmWlpu66093qFwaBF+qRYqkH/VEScx4=;
-	b=OG4v5wShIVcOBwp+GyriX0hheOzShmYBYJUg0GfZzt1gj/T8ZtMzJsPhZd/S79zYFMFW
-	 zqsOK0+BYR90M+XWMM6AcV5GydtA/8JH9rrN4Y0/1yBmXPc88rfX62UQVjRP6xKTPFy5X
-	 2S7ZVmYr/HqDgIG2YE+6dMifDyOIwb2TExy4A2YHZLgf0oNYhM+yKtS4XCuE+BTXF3peR
-	 v/SOtpW9qsQLb4KUnGPGOE7+M7tHrUPe+OJgENzLSrv4I/QvDP1JiHKuScB/KI1KLkmwV
-	 xSKZBFnVblyxHN3RzggX08Y5dI8uFmRvvaTQH/gyYoMbei97z4VIl4slBL+ZUkVZNog==
+	bh=saM6ukN2tGITKKFGX4cYvy9MTPH6zkPj1P9puRht9Bk=;
+	b=x6CtFiguMzrkqjC89yySWN0/rg1gWUkuIftwBnBmlVfaB6O151pH+IV94tW2CC2nuHgU
+	 3HqiE4vG6uxIcvIFh3FvdGiko4ElXYRdan02q85ICeAJCS2w+3IB012V/Wb6LGPMUvxAR
+	 CPZp+07OE+js9RzcjE2eADxnqeXEGAnRKb9IEnvhrSnwEFombXKqO/j4FZDZKbTxUl1aA
+	 kU4v8g1pnsUf3vTTRw+MdhBfGG6j8Kj3dEs8Em99dM3dhCyZhotnhiCdQJp77QOBdS6d0
+	 Bhu23gCSztCB5F6x/w1MiYraVf7rd8CledXZHeXpzGmpdjoSlLCC05bZenn1PUgFXUQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mUbEJQYc;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="PBf/L2ru";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6279C606A31B;
-	Mon, 26 Oct 2026 15:00:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48E42606A32C;
+	Mon, 26 Oct 2026 15:20:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mUbEJQYc
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEBB01F01825;
-	Mon, 26 Oct 2026 15:00:29 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PBf/L2ru
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C8D71F031E0;
+	Mon, 26 Oct 2026 15:20:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793026830;
-	bh=7D1qR2T1FcniBmWlpu66093qFwaBF+qRYqkH/VEScx4=;
+	s=k20260515; t=1793028034;
+	bh=saM6ukN2tGITKKFGX4cYvy9MTPH6zkPj1P9puRht9Bk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=mUbEJQYc6xdq2uoq7a0/pCJhYgVmY3Lz5mPpyVD4T2cCviHXoWh8rddtJv1FZ+B16
-	 nglZZVyokTra52VgTpHchoNder23YudWMrGzHJi0y4obaivMBf+ajSGcmA+MIYhyuz
-	 +PkK/16DPdZrBDJumpzO6J5PkiV+2IP2UeZOeSfTpBN+2LWU8puUS9DZBYX4z/kjul
-	 vzls+PN7KI/XzU9RphZnDM3mTjwwTQlOnOLFPP4DsXJir8rLquKImmar+dnbIMLCQC
-	 +beOrKmn7hRVM7PfZ+cisTH2wW63/YRiC13c3BkHeGpaukQq5eLjiZ6Cue8w+p0gAk
-	 Oh2fIWFbh5VyA==
-Date: Mon, 26 Oct 2026 09:00:28 -0600
+	b=PBf/L2ruq1SLMs0cRulaRZ5XwFb0lXaPo6JukQlPMdlD2ofs+JCMuFC6N04xvgfr4
+	 Cf7sbqZVRMTKaHa2Kme8nbOEDdoVLkxMzqj2XddIsWuxmetD70IGo7Ez2Sn3qE1CHh
+	 QLsjYQRN19r/VamFnkRpUfewNhzl7z1B9plT3vidAGT5DqvNEk6y3o4bhix/63R1HB
+	 m9qLN/nFmLeyb6BEGLfJ7u12uJN/+MbJinCFF0xAo0WivkAxWDf941SYgQQXeu49zt
+	 Oss9ZlXdeGW3OxWvhIr/qpI6SVF2ixAG3YTpr5X9e1mmQH68BQKu/pRKN9EdJ1Cevx
+	 JVSo6kfwMpqRg==
+Date: Mon, 26 Oct 2026 09:20:33 -0600
 From: Keith Busch <kbusch@kernel.org>
 To: Matthew Wood <thepacketgeek@gmail.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org, Nikita Vetoshkin <nekto0n@meta.com>
-Subject: Re: [PATCH 2/5] PCI/sysfs: Use user config accessors for bus number
- attributes
-Message-ID: <at9rDMzMCXpaQgPB@kbusch-mbp>
+Subject: Re: [PATCH 3/5] PCI: Add pcie_capability_user_read_{word,dword}()
+Message-ID: <at9vwXpNUofIzxPl@kbusch-mbp>
 References: <20261025000836.58294-1-thepacketgeek@gmail.com>
- <20261025000836.58294-3-thepacketgeek@gmail.com>
+ <20261025000836.58294-4-thepacketgeek@gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,17 +59,20 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261025000836.58294-3-thepacketgeek@gmail.com>
+In-Reply-To: <20261025000836.58294-4-thepacketgeek@gmail.com>
 
-On Sat, Oct 24, 2026 at 05:08:30PM -0700, Matthew Wood wrote:
-> secondary_bus_number and subordinate_bus_number read config space with
-> pci_read_config_byte(). The kernel config accessors don't check
-> block_cfg_access, so a read that races with a reset goes to the device
-> mid-reset and can fail or return a bogus bus number.
+On Sat, Oct 24, 2026 at 05:08:31PM -0700, Matthew Wood wrote:
+> pcie_capability_read_word() and pcie_capability_read_dword() use the
+> kernel config accessors which don't check block_cfg_access, so they
+> can't be used for reads on behalf of userspace that should wait for a
+> reset (or other pci_cfg_access_lock() holder) to finish.
 > 
-> Use pci_user_read_config_byte() instead, as the "config" attribute does,
-> so the read waits for any pci_cfg_access_lock() holder (e.g.
-> pci_reset_function()) to finish.
+> Add pcie_capability_user_read_word() and
+> pcie_capability_user_read_dword() helpers, which provide the same function
+> using the user config accessors.
+> 
+> These are for use within the PCI core, so they are declared in
+> drivers/pci/pci.h and not exported.
 
 Looks good.
 
