@@ -1,109 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.176
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.9
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793049253;
-	b=savvO9G3XqOm4GcpZ6HxiEzmXC4kgZNnnwzL9EP8qnHQVCzoqxwtLpg7doSHirCLADzt
-	 ztvKcyN+bDYW2oZZBcC1HknlLjfoI3PtOM3QD04Mi1y5VRaKPF3gQ3bLUbM6ZaFyqGfbF
-	 8K0lWYU1Xd7GuFvzH1KUZ6PtfcW3nslhl8WLwZGzvfV4yKjyk+th6//pRyx9KthYy7Cjm
-	 xkZCxVbnJPxzB8ynS0JXlYPC0EU7ot9hWHtioCYRRUvDvSOKE0cPweA1bpFrWGtywegaN
-	 xBLukhGHBWIWaH6Bvn15CZsXA/Ju45rOsQkLEh0j03FlmtyNGgDktZftXDQE2I8F1IQ==
+	t=1793053244;
+	b=iSUKNjdVQBMSj1CU4Q6bEE/peKhSI/R2jLM9+NgvFDIdYzU2qhMRpJodCyX6QWA7io03
+	 bXSxJVrHhy+GiGU5nn63uNhWGrnE80SzVQE4uWwq2R6SB4dEPNVIyt2kufqxLyCu+Nxla
+	 HM1srZENkNSkVORFSJXTXLD/rC31cUOVCqkhZfdg828zojVytTMz8a/71Llp6tSxJ2nW2
+	 NNiX4KmN1R4dMhgG1s6lRBNnI8ZjUr//RgmpJelZWAFicThGXxORmkjm1ksBJJfTr2ucU
+	 Qtb7GGFdItBQEQmY5UeachRiv64fv1DHktO7qA+B91dQfaU+ES1182cBz+ATz7124mQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793049253;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=gKF3hAWDK1ltcE+SHB5ZbEu9q5rcNDasVCUAn/AhQHg=;
-	b=AUAZUBk6xu419NJVJtz1UwCv1kfyt0wRmStFzbIcYs4/uUdbLIEJgNfuVZXeBsaRPbfJ
-	 Oz8/34mpj6Scw9KCuQtFPDZR8D4AQLSqMKVrETD7U03JYjV4Vbt1HaGmozkN8zlgwaN79
-	 15bWI1VRerrUH9EctNOkC9HsLti3ptjy85oPgupgCcGhO1kLlMBApjG/4Mr1AFQW/Dboi
-	 ax1xFct0fE1GQmORF2MtRluG2n5TOTzD7QBIIUfH597iUpvwK/Voq4/J/F3lDH0Y2o2hY
-	 RtEtV4iS1oBrdoijAKcn9ariHKAYUeu7BokU3+Bew+m/a1M9O/FHEyjJjWO+DzFwKHQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793053244;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Subject:To:Cc:References:From:
+	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=J1IJmvDa01QSZGhYxBDY3bGQUCSekk9qn6rmDBEQPMc=;
+	b=RMt//lhWQiLd23DJPA2OFLNyjZRjBPDHTbkcA7tHmWGdqPY07esj5KWyxUwDMqfjtC/Z
+	 Yr5bWoWfPVXUPoZ4gNYYHlijSn8XVKALgwjLKP48vZO7eA1tFlYcsrb+OuJ2Hufvf1Sr2
+	 8+rgbsyWgJ30yw0pzGAZcY4gkuU6RohXo0olds3nYG20oeKsnZkXuwRKmFfPQb7Xhtkpb
+	 tY1Ax2263GgQS0OGtw71TFtQpt5fLTONhLXuzsTC7a4fRgdYFjTiumTF6zU/3xVQPMkTi
+	 m3hoRCqLVXCbQ3S4VK4YB8sZXg3i72ghztA5LP24GN2qO4n+pbeDYuWHwU3CSW3xReg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=K67nv9XJ;
-	arc=none smtp.remote-ip=209.85.215.176
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=bhDX5HDw;
+	arc=none smtp.remote-ip=198.175.65.9
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1851606A320
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 21:14:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F1851606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3DC7606A31B;
+	Mon, 26 Oct 2026 22:20:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B3DC7606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=K67nv9XJ
-Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-cdab938dc83so511729a12.3
-        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 14:14:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1793049252; x=1793654052; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=gKF3hAWDK1ltcE+SHB5ZbEu9q5rcNDasVCUAn/AhQHg=;
-        b=K67nv9XJ4TeaL34vMeEZnzHwkkjAJXvovbKt25dK0ARJPImK8eAJxasjllvcrO3Mvz
-         0GnHKSvbs2j+fu1L93vtVfYaEU7xBX2oBxVR4XSp19D8BxbS5MYCpBV1+ZjPWQ/Qou0G
-         zCzOQQs71hCXYgkSqfxoI+w4i5o+oRk28rX4pfVUgSmX2Ghz150YtewTvUM95BqcWP5W
-         +em5Y44xGXwMDj3h+mYQvTQ5PR6vT1Y1kvTbUxQmieHlgsnHuGeGqx3rs6CbGzAdcSyS
-         aIIPuVbSixMCtl5PfpYxO7dwRL+PhVrWizeSZ5Cq07AOWp7dCw6lGuB6PhYEUCIwAA9v
-         LA7A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793049252; x=1793654052;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=gKF3hAWDK1ltcE+SHB5ZbEu9q5rcNDasVCUAn/AhQHg=;
-        b=GLNJ0EQ5oqAfhoJ3IjzhMg8T2MCQ+aprSvXPP6DYxEJGF+VbpiSo3J58DzxYgWooGv
-         K6ECO8BvOiuenSwxujlkscCWFYqZAEZBmHwpF+Fj5ULgVo/2ycsOUMfa7qnYyM9reOQg
-         SJN/gC68mYzVIh5f+cwhf6Eq7T8UhJsvfbY6m/im9yntumO0jnZVsH5YNhcOIROXgrSg
-         /7yXHzMdu3t5nHcrIsltNm7Qbh7Rsuei3njWN28FBvUC0qyqYs8G/PhUE8bZ5kCv1Z8a
-         Ibwis/zVRzuXgoulsgzGXlgIYNt5BSP2qCb32H8zd/9ykqXTe5M4CnHK4BNk41vRVZpm
-         kojg==
-X-Forwarded-Encrypted: i=1; AKwUvBzqDyTXDWF/9Ex6cK9/rgO5Z8hvPnw5SFRmlzoRUkqjMqffN/8mk4PZ6VKpn1OzZ6etsdWSY53Ojz8=@vger.kernel.org
-X-Gm-Message-State: AFq9FYK6wjetBT5wjyWoGX4iYn+Vp7KYxteWvbUzw0qpzQaXck8qhoWm
-	fjXFQToYNOANT5haWKQLhpx5uScePCfA3AHd7O4HG/l23IBOVMphbPuWaWvryw9i0Q==
-X-Gm-Gg: AYBFou3PPBhhJMNh20NlKics4zimceU6JBGYOYtGfLAoSFF7+8xZOXQyopSm7LK7TVJ
-	ocT7Gk7kZYK5D+zhpTlpXQd/G4b+rtWy9+1Y20F3xmrVCuvPZB7f4mBOVfJyeZfMnxMlkRd6MJt
-	R3OZzZTodZZ3NR0IKbmTQiQDHtVBMEr/OfpGhEQRHykmwoRr66pt9nY+SMBd1MDVJpQQxMtcf5p
-	oTHR1Kc0qCAo3YzW+nUVk2uV06G06WaUu3iZlKsMUTy38njYHEjx9MKWTjuK9cwcboMSbT+CJsu
-	ht5A4+vAyFxLt65dUJn+DSySh9wckFpoASJnJgizbGV755G0yI5su807xOSF3VRWU6bl5hCF8QR
-	TcQBsx4fKSTJP7tVTBe+qmoScQwktp0AjBKTD60ETwatKoF5P/fwuN8mSuF5MT6hYy5qK/Up+jP
-	YAQI1nepJwL7uDjKYR+djt9cB8inG1Kz3sqynPwQfzvYWIwXs/gSmY9dtmsX0/20IQk/3oW8JF4
-	/ssn+0MRGgbqbOcfF4aIhbN73Rgi2c+ItDxZe2QPR8xCTk9MBhqCsE0kR8oAxf3FKGoW8c3IhuY
-	22PYx5YiXKyBzKwmRd8bb/ys/3mLmiBr065JYAb+eW4=
-X-Received: by 2002:a05:6300:6bc9:b0:3e2:3392:53e7 with SMTP id adf61e73a8af0-3e7a1b97750mr5308652637.0.1793049251805;
-        Mon, 26 Oct 2026 14:14:11 -0700 (PDT)
-Received: from google.com (192.150.203.35.bc.googleusercontent.com. [35.203.150.192])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8a36b372888sm1666157b3a.30.2026.10.26.14.14.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2026 14:14:09 -0700 (PDT)
-Date: Mon, 26 Oct 2026 21:14:05 +0000
-From: David Matlack <dmatlack@google.com>
-To: tarunsahu@google.com
-Cc: Andrew Morton <akpm@linux-foundation.org>, joro@8bytes.org,
-	Mike Rapoport <rppt@kernel.org>,
-	Pratyush Yadav <pratyush@kernel.org>, maz@kernel.org, arnd@arndb.de,
-	jgg@nvidia.com, robin.murphy@arm.com, loganodell@google.com,
-	oupton@kernel.org, kevin.tian@intel.com, alex@shazbot.org,
-	dwmw2@infradead.org, pbonzini@redhat.com, seanjc@google.com,
-	will@kernel.org, Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Alexander Graf <graf@amazon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, baolu.lu@linux.intel.com,
-	linux-arm-kernel@lists.infradead.org, linux-arch@vger.kernel.org,
-	sagis@google.com, linux-mm@kvack.org, kvmarm@lists.linux.dev,
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, skhawaja@google.com, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH v2 3/4] liveupdate: Replace compatibility string with
- a 2-bit pair feature header
-Message-ID: <at_CncIPYCxOVkLo@google.com>
-References: <20261021152527.375070-1-tarunsahu@google.com>
- <20261021152527.375070-4-tarunsahu@google.com>
- <atlQ_Er0Ig7CCSxv@google.com>
- <CALzav=f00C4yOAseNunW8GgQTDUGWT927Qy=TLm-3-J0TEDH8Q@mail.gmail.com>
- <9huzzew0el59.fsf@tarunix.c.googlers.com>
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=bhDX5HDw
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793053243; x=1824589243;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=EJlzZkZWz6HoaDfqJJgBqkmd5+G1yi+X3R9UmIvYRT8=;
+  b=bhDX5HDwOC1HICANHZjm+daEk0PRRYLCVHS77iYSpQ+XAGie6W/VKf0o
+   PtD6reYfQkpeDJEhVX69oOz1AcobrN+FMBPlEr7wbEqcJgZzcimpVx840
+   k+FeZU/g7ln6jCcVgccO5Gjbsa07Q1h6N972vx13oaBufMpmcZkWuHQgx
+   Hwt/YZgP0f8mxL/QcdltpgB6Acotfw4Uyn2Nx6UayNUSUwPZRCZFxiYDi
+   YsigwhLwndujUEY1m4151Wskw4iHqw+0nyWxH/+csjQbP00trirEUS4M1
+   M2VyPwgN2fOLraIWCxFSGFMTIMh/JnFQdC5qNDQnucoyEsmlUNWnqNwDA
+   w==;
+X-CSE-ConnectionGUID: qRyXIBH0RIeKyYL1gC7ZUA==
+X-CSE-MsgGUID: 4ALPiTR+QYmmaRNr5jdBOQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11947"; a="1621207"
+X-IronPort-AV: E=Sophos;i="6.27,180,1787036400"; 
+   d="scan'208";a="1621207"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Oct 2026 15:20:42 -0700
+X-CSE-ConnectionGUID: NrXPwidtRxSMW0wYhxFsrg==
+X-CSE-MsgGUID: aeDc91w0R7CUv5zhQIN8jw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,180,1787036400"; 
+   d="scan'208";a="4766492"
+Received: from smithj1-mobl2.amr.corp.intel.com (HELO [10.125.108.112]) ([10.125.108.112])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Oct 2026 15:20:40 -0700
+Message-ID: <654f2205-5dd8-4169-88ca-cba3f2c4ddb6@intel.com>
+Date: Mon, 26 Oct 2026 15:20:39 -0700
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -113,75 +72,265 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9huzzew0el59.fsf@tarunix.c.googlers.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v15 05/16] cxl: Introduce endpoint HDM decoder settings
+To: Srirangan Madhavan <smadhavan@nvidia.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
+ Ira Weiny <ira.weiny@intel.com>, Jonathan Cameron <jic23@kernel.org>,
+ Vishal Verma <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
+ alwilliamson@nvidia.com,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
+ Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
+ Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org
+References: <20261011021422.3428136-1-smadhavan@nvidia.com>
+ <20261011021422.3428136-6-smadhavan@nvidia.com>
+From: Dave Jiang <dave.jiang@intel.com>
+Content-Language: en-US
+In-Reply-To: <20261011021422.3428136-6-smadhavan@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 2026-10-26 11:50 AM, tarunsahu@google.com wrote:
-> Right, Required bit should be source kernel payload property to tell
-> target kernel that the payload must be handled to correctly deserialize
-> the data. It should be source kernel (userspace) responsiblity to make
-> sure it understand the target kernel before doing liveupdate.
+
+
+On 10/10/26 7:14 PM, Srirangan Madhavan wrote:
+> Keep common decoder configuration in cxl_decoder_config and represent
+> endpoint DPA skip in cxl_endpoint_decoder_settings. Share range
+> programming, but keep endpoint skip and switch target-list writes in
+> their respective commit paths.
 > 
-> Saying this, During deserialization, target kernel's required bit is not
-> necessary. So I propose the following truth table.
+> Separate commit initiation from completion waiting so reset restoration
+> can reuse register programming without changing normal DPA-lock policy.
 > 
-> Source hdr  Target supported[i]  Action
-> ----------  -------------------  ----------------------------------
-> 00          0 or 1               Accept: feature absent in payload
-> 01          0                    Accept: ignore the feature data
-> 01          1                    Accept: use the feature data
-> 11          0                    Reject: -EOPNOTSUPP
-> 11          1                    Accept: use the feature data
-> 10          0 or 1               Reject: -EINVAL (invalid encoding)
+> Link: https://git.kernel.org/pub/scm/linux/kernel/git/djiang/linux.git/commit/?id=20f9084b5b763238e2f18f629916bbbb46ec9f7d
+> Suggested-by: Dave Jiang <dave.jiang@intel.com>
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> Assisted-by: LLM
 
-Yes, this matches what I had in mind for the semantics.
+Reviewed-by: Dave Jiang <dave.jiang@intel.com>
 
-To be explicit: the source kernel should set the bits for each Live
-Update based on what is actually preserved, rather than generating the
-header from a static per-kernel array. E.g. memfd would only mark a
-feature present for memfds that actually use it. That's what allows
-rollback to an older kernel as long as nothing being preserved depends
-on the new feature.
+> ---
+>  drivers/cxl/core/core.h |  8 ++++
+>  drivers/cxl/core/hdm.c  | 96 ++++++++++++++++++++++++++++-------------
+>  include/cxl/hdm.h       | 19 ++++++++
+>  3 files changed, 93 insertions(+), 30 deletions(-)
+>  create mode 100644 include/cxl/hdm.h
+> 
+> diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
+> index 983d7690c3a5..fb14b222f3ca 100644
+> --- a/drivers/cxl/core/core.h
+> +++ b/drivers/cxl/core/core.h
+> @@ -7,6 +7,8 @@
+>  #include <cxl/mailbox.h>
+>  #include <linux/rwsem.h>
+>  
+> +struct cxl_endpoint_decoder_settings;
+> +
+>  extern const struct device_type cxl_nvdimm_bridge_type;
+>  extern const struct device_type cxl_nvdimm_type;
+>  extern const struct device_type cxl_pmu_type;
+> @@ -139,6 +141,12 @@ struct cxl_rwsem {
+>  
+>  extern struct cxl_rwsem cxl_rwsem;
+>  
+> +void cxl_commit_start_endpoint(const struct cxl_endpoint_decoder_settings *settings,
+> +			       void __iomem *hdm);
+> +void cxl_commit_start_switch(const struct cxl_decoder_config *config,
+> +			     u64 targets, void __iomem *hdm);
+> +int cxld_await_commit(void __iomem *hdm, int id);
+> +
+>  int cxl_memdev_init(void);
+>  void cxl_memdev_exit(void);
+>  void cxl_mbox_init(void);
+> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
+> index 9e05032a5426..7d3254a712e4 100644
+> --- a/drivers/cxl/core/hdm.c
+> +++ b/drivers/cxl/core/hdm.c
+> @@ -3,6 +3,7 @@
+>  #include <linux/seq_file.h>
+>  #include <linux/device.h>
+>  #include <linux/delay.h>
+> +#include <cxl/hdm.h>
+>  
+>  #include "cxlmem.h"
+>  #include "core.h"
+> @@ -707,7 +708,7 @@ int cxl_dpa_alloc(struct cxl_endpoint_decoder *cxled, u64 size)
+>  	return devm_add_action_or_reset(&port->dev, cxl_dpa_release, cxled);
+>  }
+>  
+> -static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
+> +static void cxld_set_interleave(const struct cxl_decoder_config *config, u32 *ctrl)
+>  {
+>  	u16 eig;
+>  	u8 eiw;
+> @@ -716,12 +717,12 @@ static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
+>  	 * Input validation ensures these warns never fire, but otherwise
+>  	 * suppress unititalized variable usage warnings.
+>  	 */
+> -	if (WARN_ONCE(ways_to_eiw(cxld->config.interleave_ways, &eiw),
+> -		      "invalid interleave_ways: %d\n", cxld->config.interleave_ways))
+> +	if (WARN_ONCE(ways_to_eiw(config->interleave_ways, &eiw),
+> +		      "invalid interleave_ways: %d\n", config->interleave_ways))
+>  		return;
+> -	if (WARN_ONCE(granularity_to_eig(cxld->config.interleave_granularity, &eig),
+> +	if (WARN_ONCE(granularity_to_eig(config->interleave_granularity, &eig),
+>  		      "invalid interleave_granularity: %d\n",
+> -		      cxld->config.interleave_granularity))
+> +		      config->interleave_granularity))
+>  		return;
+>  
+>  	u32p_replace_bits(ctrl, eig, CXL_HDM_DECODER0_CTRL_IG_MASK);
+> @@ -729,10 +730,10 @@ static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
+>  	*ctrl |= CXL_HDM_DECODER0_CTRL_COMMIT;
+>  }
+>  
+> -static void cxld_set_type(struct cxl_decoder *cxld, u32 *ctrl)
+> +static void cxld_set_type(const struct cxl_decoder_config *config, u32 *ctrl)
+>  {
+>  	u32p_replace_bits(ctrl,
+> -			  !!(cxld->config.target_type == CXL_DECODER_HOSTONLYMEM),
+> +			  !!(config->target_type == CXL_DECODER_HOSTONLYMEM),
+>  			  CXL_HDM_DECODER0_CTRL_HOSTONLY);
+>  }
+>  
+> @@ -764,7 +765,7 @@ static void cxlsd_set_targets(struct cxl_switch_decoder *cxlsd, u64 *tgt)
+>   * clock skew and other marginal behavior
+>   */
+>  #define COMMIT_TIMEOUT_MS 20
+> -static int cxld_await_commit(void __iomem *hdm, int id)
+> +int cxld_await_commit(void __iomem *hdm, int id)
+>  {
+>  	u32 ctrl;
+>  	int i;
+> @@ -784,45 +785,80 @@ static int cxld_await_commit(void __iomem *hdm, int id)
+>  	return -ETIMEDOUT;
+>  }
+>  
+> -static void setup_hw_decoder(struct cxl_decoder *cxld, void __iomem *hdm)
+> +static u32 cxl_hdm_write_range(void __iomem *hdm,
+> +			       const struct cxl_decoder_config *config)
+>  {
+> -	int id = cxld->config.id;
+> -	u64 base, size;
+> +	u64 size = range_len(&config->hpa_range);
+> +	u64 base = config->hpa_range.start;
+> +	int id = config->id;
+>  	u32 ctrl;
+>  
+> -	/* common decoder settings */
+> -	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(cxld->config.id));
+> -	cxld_set_interleave(cxld, &ctrl);
+> -	cxld_set_type(cxld, &ctrl);
+> -	base = cxld->config.hpa_range.start;
+> -	size = range_len(&cxld->config.hpa_range);
+> +	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +	cxld_set_interleave(config, &ctrl);
+> +	cxld_set_type(config, &ctrl);
+>  
+>  	writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
+>  	writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
+>  	writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id));
+>  	writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
+> +	return ctrl;
+> +}
+> +
+> +void cxl_commit_start_endpoint(const struct cxl_endpoint_decoder_settings *settings,
+> +			       void __iomem *hdm)
+> +{
+> +	int id = settings->config.id;
+> +	u32 ctrl;
+> +
+> +	lockdep_assert_held(&cxl_rwsem.dpa);
+> +	ctrl = cxl_hdm_write_range(hdm, &settings->config);
+> +	writel(upper_32_bits(settings->skip), hdm + CXL_HDM_DECODER0_SKIP_HIGH(id));
+> +	writel(lower_32_bits(settings->skip), hdm + CXL_HDM_DECODER0_SKIP_LOW(id));
+> +	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +}
+> +
+> +void cxl_commit_start_switch(const struct cxl_decoder_config *config,
+> +			     u64 targets, void __iomem *hdm)
+> +{
+> +	int id = config->id;
+> +	u32 ctrl;
+> +
+> +	lockdep_assert_held(&cxl_rwsem.dpa);
+> +	ctrl = cxl_hdm_write_range(hdm, config);
+> +	writel(upper_32_bits(targets), hdm + CXL_HDM_DECODER0_TL_HIGH(id));
+> +	writel(lower_32_bits(targets), hdm + CXL_HDM_DECODER0_TL_LOW(id));
+> +	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +}
+> +
+> +static void
+> +cxl_endpoint_decoder_snapshot(struct cxl_endpoint_decoder *cxled,
+> +			      struct cxl_endpoint_decoder_settings *settings)
+> +{
+> +	lockdep_assert_held(&cxl_rwsem.dpa);
+> +
+> +	*settings = (struct cxl_endpoint_decoder_settings) {
+> +		.config = cxled->cxld.config,
+> +		.skip = cxled->skip,
+> +	};
+> +}
+> +
+> +static void setup_hw_decoder(struct cxl_decoder *cxld, void __iomem *hdm)
+> +{
+> +	struct cxl_endpoint_decoder_settings settings;
+>  
+>  	if (is_switch_decoder(&cxld->dev)) {
+>  		struct cxl_switch_decoder *cxlsd =
+>  			to_cxl_switch_decoder(&cxld->dev);
+> -		void __iomem *tl_hi = hdm + CXL_HDM_DECODER0_TL_HIGH(id);
+> -		void __iomem *tl_lo = hdm + CXL_HDM_DECODER0_TL_LOW(id);
+>  		u64 targets;
+>  
+>  		cxlsd_set_targets(cxlsd, &targets);
+> -		writel(upper_32_bits(targets), tl_hi);
+> -		writel(lower_32_bits(targets), tl_lo);
+> -	} else {
+> -		struct cxl_endpoint_decoder *cxled =
+> -			to_cxl_endpoint_decoder(&cxld->dev);
+> -		void __iomem *sk_hi = hdm + CXL_HDM_DECODER0_SKIP_HIGH(id);
+> -		void __iomem *sk_lo = hdm + CXL_HDM_DECODER0_SKIP_LOW(id);
+> -
+> -		writel(upper_32_bits(cxled->skip), sk_hi);
+> -		writel(lower_32_bits(cxled->skip), sk_lo);
+> +		cxl_commit_start_switch(&cxld->config, targets, hdm);
+> +		return;
+>  	}
+>  
+> -	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +	cxl_endpoint_decoder_snapshot(to_cxl_endpoint_decoder(&cxld->dev),
+> +				      &settings);
+> +	cxl_commit_start_endpoint(&settings, hdm);
+>  }
+>  
+>  static int cxl_decoder_commit(struct cxl_decoder *cxld)
+> diff --git a/include/cxl/hdm.h b/include/cxl/hdm.h
+> new file mode 100644
+> index 000000000000..219b9bb67440
+> --- /dev/null
+> +++ b/include/cxl/hdm.h
+> @@ -0,0 +1,19 @@
+> +/* SPDX-License-Identifier: GPL-2.0-only */
+> +/* Copyright (c) 2026 NVIDIA Corporation & Affiliates */
+> +#ifndef __CXL_HDM_H__
+> +#define __CXL_HDM_H__
+> +
+> +#include <linux/types.h>
+> +#include <cxl/cxl.h>
+> +
+> +/**
+> + * struct cxl_endpoint_decoder_settings - endpoint HDM decoder programming
+> + * @config: common decoder configuration
+> + * @skip: length of DPA space skipped before this decoder's DPA mapping
+> + */
+> +struct cxl_endpoint_decoder_settings {
+> +	struct cxl_decoder_config config;
+> +	u64 skip;
+> +};
+> +
+> +#endif /* __CXL_HDM_H__ */
 
-But looking at this again, I think the required bit is redundant. Whether
-a feature can be safely ignored is a property of the feature itself, not
-of any particular file. Every file that has a feature present will have
-the same required bit for it. The only thing that actually varies per
-file is whether the feature is present.
-
-The required bit still has to be conveyed to the target somehow, since
-the kernel that needs it is the one that doesn't know about the feature.
-But it can be conveyed by the feature's number rather than an extra bit:
-split the flag space into required features and optional features, and
-assign each feature to one of them when it is defined. This is similar
-to the required_flags and optional_flags approach in struct pci_ser [1].
-
-Keeping the same header shape as discussed with Pasha:
-
-struct kho_ser_hdr {
-    __u32 size;           /* Size of header + payload in bytes */
-    __u16 nr_required;    /* Number of required feature bits */
-    __u16 nr_optional;    /* Number of optional feature bits */
-    __u64 flags[];        /* Required bits, followed by optional bits */
-};
-
-Required feature N is bit N of flags[], and optional feature N is bit
-nr_required + N (using nr_required from the incoming header). The length
-of flags[] is DIV_ROUND_UP(nr_required + nr_optional, 64). Both spaces
-are numbered contiguously, so there are no gaps, and up to 64 features
-still fit in a 16-byte header.
-
-Each bit just means the feature is present, so the truth table becomes:
-
-Source bit       Target supports  Action
----------------  ---------------  ------------------------------
-Not set          -                Accept: feature absent
-Optional set     No               Accept: ignore the feature data
-Optional set     Yes              Accept: use the feature data
-Required set     No               Reject: -EOPNOTSUPP
-Required set     Yes              Accept: use the feature data
-
-There is no invalid encoding left to check.
-
-[1] https://lore.kernel.org/linux-pci/20261013162529.1928093-1-dmatlack@google.com/
