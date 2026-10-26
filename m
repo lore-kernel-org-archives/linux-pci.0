@@ -1,83 +1,63 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793046446;
-	b=dkDdsL+1Q8dA9jZqJgCNbR9LDrCCY3I7XNhpRz48fMSyAmUKqT8CK/ClYXjLtIsEJxVw
-	 X1gAP0Yye0In6Mu/MKl8wugG0Ykf0Gsei+ZJnVQbLhlbEBLvWxWMSnte2kYtVpbydV0iZ
-	 +4L3U6IcRN69qYvO09ksl45Qoe7uA5sHfWGT/uJ2M5cZq7HZtByqTCZLFB0XO/Neeic7I
-	 jJWJQh+xCTsmviLeyuO6ax814OAGGEJ6BcZ/EZEqKmmvrzWgGs0EwDTntfwRFKyIQhCaa
-	 t55ciMuNtW4R1v2l8ZJ9tYs+Nv5Saw1T07iAstbg7tWZ0pOdezKuMxeK6W1e/wXFHBQ==
+	t=1793046730;
+	b=2Ie01l9QfWlBj4F60kb5UmbllcYSjLTlTYYEoXHDk8fXWFPunfaK8mXZXck6Vrjv0y9P
+	 mFNiqOGRvxN4WqGFrFE6nJaBJLgUdnxXCnhPiTBiaPpt8iJGzQbCCI/PpAQCSdlmYKoxU
+	 ZyOnJzO8qa/znak4Vsn9jx+ktPncANUMHlcS1KDR9rPBwspLXQ9CloM2VYgmstqHZvhrN
+	 WnDCnDcBYV2sZbfJ/xDlq/b3xfBxDnzQhv+/rOh/a5rFIPcAM7lVYfhLSkU72AQZXU7xX
+	 IYcj7BW0322zMibZeD7G4ys7Wkuzmm4o7DHKZCVMSEdM5nKVU4VWiYJSjP5PGUDrmPw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793046446;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=LFCglxF3YnOUeWs+Z5oFeCuqJ1fUCZ2MGnIwDKgVXec=;
-	b=SdvbJKsuYWFx5h7/wgv+aVy4RsSX15WavLhN3KlOcb7uUDpSRZGUVnejrHETPPd9SCSn
-	 DtUC08OfS5pSfP6isr49J+TTx6b5AW9e5bU5ZrLepq4cg//znRb724dXeVr8pNxo7hNaH
-	 ekDSTa+uERxpnxxBurg+kdUVl8t5TFooLyQpq0xDNvRT73y2mgWgh8fcrRLjjfHVZjGFy
-	 FtX6ZttmPTXMectfzIGi3/uacw7Y2T9BJWuYJibhd/F8wabFBP3xBTratI83dAqCLKSXw
-	 LkGgyNHwU4ZSfa1MrR8eSt9g08ntuvZGKJZBfHP6FTx9Ius10Bxsdeh0TroEpyWY/Ww==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793046730;
+	h=Received:DKIM-Signature:Subject:From:To:Cc:Date:Message-ID:
+	 In-Reply-To:References:X-sashiko-severity:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version;
+	bh=iJc4+QyiUpbP5bLPqs8ix+Tf2mWeWDixRtgU+vBWVdo=;
+	b=K8apKK9BIWaKD3P4uORhfVZbWC3f0bQlTrmilgPi8+CKhlQyfEPnZGlRn15GhG6Hv+wS
+	 cZrbmPMOG+fsoNVjpXjXudMwpqoSxB2XdeOAOpXcNnF13S6y2e70CAsi9d5eEU+hCE72H
+	 qctdinjukD9BbgJFDIZZbLhbHvosQ40N/iSSnMclAKz+HjCtr8Z4t+lHIXF7UCNv37eqY
+	 rYciGA5ah6V6eTvB+Q6j3y8OtitJ8pP4RYlCjlx3sHB3deL7rmkkNnrksoI2W1jLxGjUl
+	 5saldVB+UgX89SRosRdQVH7SThPsYoVLtoHSlmkEL1JgJTgA6juAolJlvbp6IoNTwuA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=c3W3E1id;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aZ3x7X7l;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 250F9606A31A;
-	Mon, 26 Oct 2026 20:27:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8DC8606A31D;
+	Mon, 26 Oct 2026 20:32:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=c3W3E1id
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 116BE1F01825;
-	Mon, 26 Oct 2026 20:27:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
-	s=korg; t=1793046445;
-	bh=LFCglxF3YnOUeWs+Z5oFeCuqJ1fUCZ2MGnIwDKgVXec=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=c3W3E1id0F+qhx0MI/3yl4YHWFa0JK35WvxQQ4ViH7gpyd/iDSJkcOvJlLjIrAM6z
-	 91sd+foBp+g36SI388PdvEdp3FoHb4Kp9FkVnpI0qG7GERFpMftCCh8aar+vr2z84g
-	 l2PMs8cC/HVVfnTiKkoKwH5h89JA3k4nGZQ6eVgk=
-Date: Mon, 26 Oct 2026 21:27:25 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Alex Williamson <alex@shazbot.org>,
-	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@baylibre.com>,
-	Armin Wolf <W_Armin@gmx.de>, David Lechner <dlechner@baylibre.com>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Petr Pavlu <petr.pavlu@suse.com>,
-	Daniel Gomez <da.gomez@kernel.org>,
-	Sami Tolvanen <samitolvanen@google.com>,
-	Aaron Tomlin <atomlin@atomlin.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Bradley Morgan <brads@mainlining.org>,
-	Aleksandr Nogikh <nogikh@google.com>, linux-modules@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-usb@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-trace-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
-	Richard Weinberger <richard@nod.at>,
-	Thierry Reding <thierry.reding@kernel.org>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 0/3] driver core: add TAINT_FORCED_BIND for when
- userspace manually messes with devices and drivers
-Message-ID: <2026102654-enlighten-perkiness-193c@gregkh>
-References: <20260914-bind_taint-v4-0-eadf8a090903@linuxfoundation.org>
- <DLIL9H50MALI.3JROXYEEUM3KU@kernel.org>
- <arIvG0nx4LXG9nlW@monoceros>
- <defb3953-7516-437e-b70b-d57de55b91bf@baylibre.com>
- <9bd3a34b-5e98-4038-80d6-da2c3b1948dd@gmx.de>
- <2026092321-province-yearly-44aa@gregkh>
- <arOfHEsGGglNse7T@monoceros>
- <2026092348-victory-erased-0e5a@gregkh>
- <20261023181326.0dc2f7ed@shazbot.org>
- <20261026122243.GA28851@unreal>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aZ3x7X7l
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30C261F01825;
+	Mon, 26 Oct 2026 20:32:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793046729;
+	bh=iJc4+QyiUpbP5bLPqs8ix+Tf2mWeWDixRtgU+vBWVdo=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References;
+	b=aZ3x7X7lPmzWi+0+la1FI2ySRw6j6DEWKtAMNpk1axiD+80W7IjyJFKABYyKgRTry
+	 zBO0XZTNS2hLHBc87nndDQ3scy6/d+hnIL1tck7jK47+NPeoCS7TL1EAuz8aWZ/o00
+	 ZLNR0f1fBLjqZ8GI0b0JE3UfbTGBbd5aBNy+FkVyBEtsDtDMmNKPUsTxVGd8iCzRga
+	 i4u5FbXnu5tEzlzP8jNC/xcE/h7a79NhZF3piV98Dz0QDTDMuOzhmgkpH9cCMRVHZ8
+	 ftcLrhH0m482X/wYy4xcWMNIWzK8ei4OXRC+pw51BhuNoMq6nYQqreRhVnOy7ucR+Y
+	 8KQXIaMLvY0ZA==
+Subject: Re: [PATCH net V2 1/4] {RDMA,net}/mlx5: cache and use TX-enabled
+ aggregate speed for vports
+From: netdev-bot+sashiko@kernel.org
+To: tariqt@nvidia.com
+Cc: andrew+netdev@lunn.ch, davem@davemloft.net, edumazet@kernel.org,
+ kuba@kernel.org, netdev@vger.kernel.org, pabeni@redhat.com,
+ bhelgaas@google.com, cjubran@nvidia.com, cratiu@nvidia.com,
+ edwards@nvidia.com, gal@nvidia.com, jgg@ziepe.ca, kees@kernel.org,
+ leon@kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-rdma@vger.kernel.org, msanalla@nvidia.com, mbloch@nvidia.com,
+ ohartoov@nvidia.com, saeedm@nvidia.com, shayd@nvidia.com
+Date: Mon, 26 Oct 2026 20:32:07 +0000
+Message-ID: <179304672765.3134.1208806064407803696@kernel.org>
+In-Reply-To: <20261022193053.3815866-2-tariqt@nvidia.com>
+References: <20261022193053.3815866-2-tariqt@nvidia.com>
+X-sashiko-severity: Medium
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -87,80 +67,210 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261026122243.GA28851@unreal>
 
-On Mon, Oct 26, 2026 at 02:22:43PM +0200, Leon Romanovsky wrote:
-> On Fri, Oct 23, 2026 at 06:13:26PM -0600, Alex Williamson wrote:
-> > On Wed, 23 Sep 2026 12:29:56 +0200
-> > Greg Kroah-Hartman <gregkh@linuxfoundation.org> wrote:
-> > 
-> > > On Wed, Sep 23, 2026 at 11:54:50AM +0200, Uwe Kleine-K�nig wrote:
-> > > > > No, drivers should NOT have to do that in their .probe() function,
-> > > > > that's what we moved away from decades ago!  The match function should
-> > > > > handle all of that for you, otherwise it's contant duplication
-> > > > > everywhere that is unneeded.  
-> > > > 
-> > > > Well then you have to accept that root can provoke a null pointer
-> > > > exception (e.g. by forcing the pwm-tegra driver on a device) because at
-> > > > least with today's platform bus match function such a match is ok.  
-> > > 
-> > > Agreed, yes, root can cause a crash and can do tons of horrible things
-> > > much worse than this, that's not the issue.
-> > > 
-> > > That's why this taint is there, to make it obvious that this is not a
-> > > "real" bug at all.
-> > > 
-> > > > > Please, learn from our history, don't make the same mistakes.
-> > > > > 
-> > > > > Now I might be convinced that driver_override is the way to go here, but
-> > > > > it still feels really odd as again, bind/unbind was created as a driver
-> > > > > debugging option only, it should NOT be a normal operation that any user
-> > > > > should rely on.  The driver should "just work" properly instead, without
-> > > > > requiring manual bind work, as that's not a good model at all.  
-> > > > 
-> > > > I agree in principle, but (in my case wifi) drivers are buggy sometimes
-> > > > (due to missing documentation and/or engineering effort) and being able
-> > > > to rebind the driver instead of rebooting to get a working device again
-> > > > is very useful.  
-> > > 
-> > > Fine, use it!  Just don't expect that to be "normal".
-> > > 
-> > > > So yes, theoretically bind/unbind isn't needed, but theory and practise
-> > > > differ in practise.  
-> > > 
-> > > Agreed, but again, don't rely on this as a "real" solution fo ranything.
-> > 
-> > Sorry, late to the party, but this isn't a few user scripts that rely
-> > on this behavior.  Effectively every use case of vfio relies on this
-> > behavior.  We rely on unbinding the default driver from the device
-> > before using driver_override and drivers_probe.  That means every
-> > hypervisor with device assignment and every userspace driver use case
-> > now experiences a tainted kernel. That seems like a significant
-> > regression.
-> 
-> Sorry, I was on vacation and missed this change earlier. This change will
-> affect SR-IOV deployments around the world, which *rely* on being able to
-> bind a driver manually *after* virtual functions are created but before
-> they are used.
+Thank you for your contribution! Sashiko AI review found 3 potential
+issue(s) to consider.
 
-Why can't a real driver bind to those virtual functions?  Like is
-happening in the rust apis?
+Critical: 0 · High: 0 · Medium: 2 · Low: 1
 
-> This is needed for two reasons: to save hardware and software resources
-> when creating a large number of VFs, and to allow the PCI config space to
-> be configured *before* the driver starts using it.
+If you believe none of the issues are legitimate, please reply to each
+issue of Medium severity or higher and explain why the AI is wrong.
+If any of them are legitimate and you plan to respin, please let patchwork
+know by including "pw-bot: cr" as a separate line at the end of your reply
+(one such reply per series is enough).
 
-How is hardware and software resources an issue here at all?  And you
-can write to PCI config space from userspace today, no driver needed
-anywhere at all, that's always been allowed.
+- [Medium] The new ldev->agg_speed_mbps cache is invalidated on only one
+  teardown path, and it is filled only after the IB device is exposed.
+- [Medium] For regular (non-MPESW) RoCE/SRIOV LAG, the patch replaces the
+  bond's ethtool-derived speed (tracker.bond_speed_mbps) with a sum of…
+- [Low] In non-MPESW mode, mlx5_lag_get_devices_oper_speed() now reads
+  the live ldev->tracker.netdev_state[pf_idx].tx_enabled/link_up for…
 
-> There is no in-kernel alternative.
+--
 
-Then just don't have a in-kernel driver for the device and all is good?
+{RDMA,net}/mlx5: cache and use TX-enabled aggregate speed for vports
 
-thanks,
+This patch caches the aggregate operational speed of the TX-enabled LAG
+ports in ldev->agg_speed_mbps. VF/SF vport max_tx_speed is now programmed
+from that cache instead of from the bond speed. The exported
+mlx5_lag_query_bond_speed() is replaced by
+mlx5_lag_query_aggregated_speed(), which the mlx5 IB driver uses for port
+speed queries and which returns -ENODATA until a measurement succeeds.
 
-greg k-h
+> diff --git a/drivers/net/ethernet/mellanox/mlx5/core/lag/lag.c b/drivers/net/ethernet/mellanox/mlx5/core/lag/lag.c
+> index 4e173b08cb37a..57755ceab8a75 100644
+> --- a/drivers/net/ethernet/mellanox/mlx5/core/lag/lag.c
+> +++ b/drivers/net/ethernet/mellanox/mlx5/core/lag/lag.c
+
+[ ... ]
+
+> @@ -1452,15 +1453,21 @@ static int mlx5_lag_get_devices_oper_speed(struct mlx5_lag *ldev,
+>  		pf_mdev = pf->dev;
+>  		if (!pf_mdev)
+>  			continue;
+> -		ret = mlx5_query_vport_max_tx_speed(pf_mdev, opmod, 0, 0,
+> -						    &speed, &state);
+> -		if (ret) {
+> -			mlx5_core_dbg(pf_mdev, "State query failed (err=%d)\n",
+> -				      ret);
+> -			return ret;
+> -		}
+> -		if (state != VPORT_STATE_UP)
+> +		if (mpesw) {
+> +			ret = mlx5_query_vport_max_tx_speed(pf_mdev, opmod, 0,
+> +							    0, &speed, &state);
+> +			if (ret) {
+> +				mlx5_core_dbg(pf_mdev,
+> +					      "State query failed (err=%d)\n",
+> +					      ret);
+> +				return ret;
+> +			}
+> +			if (state != VPORT_STATE_UP)
+> +				continue;
+> +		} else if (!ldev->tracker.netdev_state[pf_idx].tx_enabled ||
+> +			   !ldev->tracker.netdev_state[pf_idx].link_up) {
+>  			continue;
+> +		}
+
+[Severity: Low]
+
+Can these live reads of ldev->tracker race with mlx5_lag_netdev_event()?
+The notifier publishes the whole tracker while holding only RTNL:
+
+	ldev->tracker = tracker;
+
+This code runs from mlx5_do_bond_work() under ldev->lock and the devcom
+lock, but without RTNL. The lockdep_assert_held(&ldev->lock) in
+mlx5_lag_update_agg_speed() therefore does not exclude the writer.
+
+Between the tx_enabled/link_up reads for different ports,
+mlx5_port_oper_linkspeed() issues a PTYS command that sleeps. During an
+active-backup failover:
+
+bond work                              netdev notifier (RTNL)
+port 0: tx_enabled, count it
+mlx5_port_oper_linkspeed() sleeps
+                                       ldev->tracker = tracker
+                                       (port 0 off, port 1 on)
+port 1: tx_enabled, count it
+
+Would the aggregate then cover both ports, even though only one of them
+was TX-enabled at any given moment? That value goes to RDMA and into the
+VF/SF vport max_tx_speed, and it stays there until the requeued bond work
+recomputes it.
+
+mlx5_do_bond() already takes a snapshot with tracker = ldev->tracker for
+activate/modify. Could the speed calculation use that same snapshot?
+
+>  
+>  		ret = mlx5_port_oper_linkspeed(pf_mdev, &speed);
+
+[Severity: Medium]
+
+For non-MPESW RoCE/SRIOV LAG, this replaces tracker.bond_speed_mbps,
+which came from the netdevs' ethtool link speed, with a sum of
+mlx5_port_oper_linkspeed() results. Does that lose the fallbacks the old
+source had?
+
+mlx5_port_oper_linkspeed() picks the PTYS encoding only from
+mlx5_ptys_ext_supported(). When no known bit is set, it returns success
+with a speed of 0:
+
+	ext = mlx5_ptys_ext_supported(mdev);
+	err = mlx5_port_query_eth_proto(mdev, 1, ext, &eproto);
+	...
+	for (i = 0; i < max_size; ++i)
+		if (eproto.oper & MLX5E_PROT_MASK(i))
+			oper_speed = max(oper_speed, table[i].speed);
+
+	*speed = oper_speed;
+	return 0;
+
+The old source had two fallbacks:
+
+- mlx5e_ethtool_get_link_ksettings() falls back to the legacy
+  eth_proto_admin/eth_proto_oper when the extended admin field is zero.
+- get_link_properties() falls back to 100 * data_rate_oper when the
+  bitmap cannot be decoded.
+
+The legacy admin case looks reachable through
+mlx5e_ethtool_set_link_ksettings(). On ext-capable hardware with autoneg
+enabled, advertising only legacy modes writes the legacy admin field.
+
+In that configuration, would an up, TX-enabled member contribute 0 Mbps,
+with the result cached as a successful measurement? RDMA would then
+under-report the port speed. If the whole aggregate is 0, the VF/SF
+vports would get the max-capability fallback instead of the operational
+speed.
+
+This assumes firmware reports oper only in the legacy field in that
+configuration. That assumption comes from the ethtool code's handling,
+not from a firmware specification.
+
+>  		if (ret) {
+
+[ ... ]
+
+> @@ -1594,6 +1625,7 @@ void mlx5_lag_reset_vports_speed(struct mlx5_lag *ldev)
+>  	int pf_idx;
+>  	int ret;
+>  
+> +	mlx5_lag_reset_agg_speed(ldev);
+
+[Severity: Medium]
+
+Is this the only teardown path that invalidates agg_speed_mbps?
+mlx5_lag_reset_vports_speed() is only called from the disable branch of
+mlx5_do_bond():
+
+	} else if (mlx5_lag_should_disable_lag(ldev, do_bond)) {
+		mlx5_lag_reset_vports_speed(ldev);
+		mlx5_disable_lag(ldev);
+	}
+
+Other teardown paths do not appear to reset the cache. One example is
+mlx5_lag_disable_change(), reached on eswitch disable or mode change:
+
+	if (__mlx5_lag_is_active(ldev)) {
+		if (ldev->mode == MLX5_LAG_MODE_MPESW)
+			mlx5_lag_disable_mpesw(ldev);
+		else
+			mlx5_disable_lag(ldev);
+	}
+
+The MPESW disable work also calls mlx5_lag_disable_mpesw(), and the
+shared FDB path goes through
+mlx5_lag_shared_fdb_destroy()->mlx5_deactivate_lag(). Neither path
+touches agg_speed_mbps.
+
+On activation, mlx5_do_bond() calls mlx5_activate_lag() and then
+mlx5_lag_rescan_dev_locked(ldev, dev0, true) before
+mlx5_lag_set_vports_agg_speed() fills the cache.
+mlx5_lag_shared_fdb_create() also rescans and reloads the IB reps before
+it refreshes the speed.
+
+mlx5_lag_query_aggregated_speed() reads agg_speed_mbps without a lock,
+and its IB caller only checks the LAG mode. Could a uverbs
+QUERY_PORT_SPEED in that window return the previous LAG instance's
+aggregate as valid data? On a first activation, it would get -ENODATA
+instead.
+
+This seems to contradict the commit message:
+
+  "Until the aggregate has been measured, or after a failed measurement,
+  mlx5_lag_query_aggregated_speed() returns -ENODATA."
+
+It also contradicts the v2 changelog note about resetting the cache to
+SPEED_UNKNOWN on teardown.
+
+Later patches in the series do not appear to change this.
+mlx5_lag_reset_agg_speed() is still reachable only through the disable
+branch of mlx5_do_bond(). In "notify IB uplink on LAG aggregate speed
+change", the stale value also feeds the speed != old_speed check.
+
+>  	mlx5_ldev_for_each(pf_idx, 0, ldev) {
+
+[ ... ]
+
+-- 
+Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/20261022193053.3815866-1-tariqt%40nvidia.com
