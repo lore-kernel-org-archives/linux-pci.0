@@ -1,73 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.70
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793015412;
-	b=pynbTFSho6AyCAbMtEeyXUfax2rC5FljbVDdAn7AkEbnEDm1TQAp/OpVIj4lZrt2Zg4a
-	 tA5NuLwgkgcIkCdfcqAv3i5ZAuCd3SNVwOYb0c1RuxfutDw6PJJBM+7OYxbUWlEfOd3dG
-	 b9ksZkPkJSXXP/6341gq/4mmbEheQgRVEIbmKrTIyrgP/hdrAfpqGmTy487g8F20PXZS+
-	 qhDWWnsst7WP4USBPbPrBjqjMeVJgfIqnZzvZe4ExUHK/sff1NyPAs8ADootr2vxO3aO2
-	 KUHNmk1tboKshpWamU6sA3KCzZixYtgFKZkMXDqG3iQjmHshSewcEv+LgC0QI5dbpxg==
+	t=1793016675;
+	b=pZvfitu8azjsUp2zYoLUdhE8Ao9Wl5SKiR2dN652rhs19vu0ONtLZFpaMBaeZ1XUbAGG
+	 iDzczOGzHapXIPxKdnfh+5RYRvZneOQ/MakwSvuY9VrIY0S3AuJ0AQC1yet9JtfFZBYKO
+	 TRcBp+7NLDS0hwMt+WKHC+1l+AkAgaP548vpc6lbgMt50Kg2CiHDfOTg0XPOLBbEhs6kE
+	 vISJNl1SlskUlm4DfUfjqfmSrerXyyOIl/FrbZPqOIPrie/M2FPAoburUtFqjtP6PxPIh
+	 rfVMePUpLZxRJpkzUkfx2MoeaIrzsi3eXz9+UK47NGDp0NSIF5uMnloh5Ovhtz6LZUA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793015412;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:Message-ID:Subject:From:To:Cc:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=E6ehAr+5O7aPeLIKo6+S6CS8cvliVvtVKcymE8BrUws=;
-	b=EmKG9h/KOFGmoTBv2kKBv6mXLWGno5nt5a64og6r3IaduhBLcDdBZhaGQSTLNMYyA6Vt
-	 Ep+MK2+t9QKjMsCMxQMPv4WbCIAJIErmY2oX3ouS076rvhwX3ZpSKX0Y4/qskqdPsyMRl
-	 8gcefxmEk7lHgPHgMfMuL8Oyi8TBFb+yE92/x9bx4mWuo8M3MVRifuxMGjMmdwlTP1MZZ
-	 amnbq98ufR6Qm6oy5lk43S+/Epr737L910t6BEtKuQ7dPdXrIEJ2tCuMX97V5P6/JyaEm
-	 VdUVU5iD9UxW7JRENa1Lj2gqcZi1759kGG7iXj8I/aCcqNOqXgavukEUyVanZ+uau2Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793016675;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=8sHwlh4zlIZRYgYof5AkKe1QjtDKH6kPII2yHGPCHxg=;
+	b=pVGDvYVr/PhjltagOGksoivvxUtZ8s+qDoU3x0C92CzBpgYxEtPG7Pjcr2i/2dD5z+mv
+	 HLxyxdXzTaJRrpaurUpA/aZTz3PF1+7mIytsJ3/uEWqninX6PoKKpp9pR1KHob74d6jIO
+	 ROgxJBBDjUoghz0ksoiS8nD0PPdun/IrKksYwZNREFb1VlYCV5bOjBvR51ERYhwX3a5tX
+	 Ll8Fg/2fHtYdhF+GLniA9EgkTJ5EsXEGEFixGVeC3l19WYYt4DCEfWhHjx0xBAmP5McXQ
+	 h1obSJdX+NYQMdz9cv8rwyIQeaj+oD7ySS++XJJlQbUQzdJMVo4vdHYFF6eJth5Dkeg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com;
-	arc=none smtp.remote-ip=209.85.208.70
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com [209.85.208.70])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BK43soQQ;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92128606A321
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 11:50:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 92128606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
-Received: by mail-ed1-f70.google.com with SMTP id 4fb4d7f45d1cf-6b1c285faebso3084476a12.2
-        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 04:50:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1793015411; x=1793620211; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=E6ehAr+5O7aPeLIKo6+S6CS8cvliVvtVKcymE8BrUws=;
-        b=XAsGlQ44QhxLbX3s/vWrWR1fEjhFGkT5IlmfbZ+lkLP9Oe85SXpiAn1GeRLEL1H2XO
-         yQc+jA06Xl9daZwtD/YhVCQBe4QhPG4Wx6MdjOZ4iJEgGnKFU/FYUV7xzaqZQKLsA0aN
-         R/0o43MCYXNrmiuXKNSZMqL9QRoabLxkTEN4RZcoISWY2W4N5MHoElGvLxv39SyWGeoh
-         S2qHKVenxm/vznKTPaQvnAwIq1AJacG92itDoKu8OCiHjWi2HDS+a0fN0ni6jgV3kLpO
-         SlxEHMWkwZPDCPxARUPnqJ5+CJrAkhzChQ6p6s68BDHOT5BDv1rKIoQIexS1xnBLr1l6
-         sTEg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793015411; x=1793620211;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=E6ehAr+5O7aPeLIKo6+S6CS8cvliVvtVKcymE8BrUws=;
-        b=EVDeMEVx4X+49KjgISZO9ntM8KKg4jx2NmWuwhgGHan4k4bKRU7nC9VBZhoUNWihA7
-         Sbzd7sTXKQDBTS9tCi/Ak835B6ELPPK2pyk+A6moeA1PA2rqVPBSXwBZ6RSdu29ERxpl
-         ukrdG1H4/QvmnO4/9CJUm9OOTd+mu3QwWFH8CFQpnDZSqFc+dw8dz+FbQIxGQ2457giV
-         WLdIx6zZ4bcQQSInCN8ym6Kn/CHDg5Y8E4mn2ShXdvgSWsWJLdXyPlTmSEW0vM8mUEXD
-         GgnRXC1sunKRRhArfZwxOyc15FMP+XRKGJkYzdch8ehyi5DLW19EuMsBzlC/V1j64xLr
-         Hoow==
-X-Forwarded-Encrypted: i=1; AKwUvBwQDrJ0dzGOTF6eypOMMvimF7Rl714KcrRdzWj10/HluwYAy+IX8LC/sKjb78x3RQTbrj7Q7UP2WjQ=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKe9Upv4iD2TpaFb6i5tS+yMt1jyWuxW+aFQpHTiHCZZxlnQUn3
-	B9tRppzzwl95gWdI03eis9147uvHes0kWm4dIIfzH5OPfV7p5NR/DShRewlhZZGAmcyC+6jXGR5
-	Qqi0q3Uj5Zz6mSIozTg==
-X-Received: from edrd16.prod.google.com ([2002:aa7:d690:0:b0:6b3:8448:41c6])
- (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6402:249e:b0:6b1:c7d9:b622 with SMTP id 4fb4d7f45d1cf-6b442fffef3mr7891637a12.26.1793015410774;
- Mon, 26 Oct 2026 04:50:10 -0700 (PDT)
-Date: Mon, 26 Oct 2026 11:50:10 +0000
-In-Reply-To: <CALzav=f00C4yOAseNunW8GgQTDUGWT927Qy=TLm-3-J0TEDH8Q@mail.gmail.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CF27606A31B
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 12:11:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BK43soQQ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D45C51F01825;
+	Mon, 26 Oct 2026 12:11:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793016675;
+	bh=8sHwlh4zlIZRYgYof5AkKe1QjtDKH6kPII2yHGPCHxg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=BK43soQQIfpKRkHiQdqNs669zf/yRf7+72Be1P/THuS4tHPAdIZVFj5+W52A93RH3
+	 y3b9Us3Li/dnXNkuOXY6HuLVngt34u5fKxzVFVl64oeP33/wcMUJagBN8EpCLoI0Y7
+	 csplKQBo/HxK+vYIjg8Wg7GsHpP6PqPF4mXgayKiNvUAS8U8NUYdxH0RWswnIjT3e+
+	 OpPPD044M0mZVBgKgHw9cfgyxmLPUSBSp1/C3NKuw3FSuRjEDlxbwotPf/jGt+N/sl
+	 8p98vALbPdRrIx/J3lqgm6mrIbo+WtxluOr/CQQNJo/0v9VyI0ZsGn9nLH3wpOKd2m
+	 kgZ49ih7fbg7w==
+Message-ID: <sashiko-outbox-185177@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] power: sequencing: pcie-m2: Drive the Key E SDIO_RESET#
+ signal
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "William Bright" <william.bright@imd-tec.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261026-pwrseq-pcie-m2-sdio-reset-v1-1-02ecdafce518@imd-tec.com>
+References: <20261026-pwrseq-pcie-m2-sdio-reset-v1-1-02ecdafce518@imd-tec.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 26 Oct 2026 12:11:14 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -76,165 +59,112 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261021152527.375070-1-tarunsahu@google.com> <20261021152527.375070-4-tarunsahu@google.com>
- <atlQ_Er0Ig7CCSxv@google.com> <CALzav=f00C4yOAseNunW8GgQTDUGWT927Qy=TLm-3-J0TEDH8Q@mail.gmail.com>
-Message-ID: <9huzzew0el59.fsf@tarunix.c.googlers.com>
-Subject: Re: [RFC PATCH v2 3/4] liveupdate: Replace compatibility string with
- a 2-bit pair feature header
-From: tarunsahu@google.com
-To: David Matlack <dmatlack@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, joro@8bytes.org, 
-	Mike Rapoport <rppt@kernel.org>, Pratyush Yadav <pratyush@kernel.org>, maz@kernel.org, arnd@arndb.de, 
-	jgg@nvidia.com, robin.murphy@arm.com, loganodell@google.com, 
-	oupton@kernel.org, kevin.tian@intel.com, alex@shazbot.org, 
-	dwmw2@infradead.org, pbonzini@redhat.com, seanjc@google.com, will@kernel.org, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Alexander Graf <graf@amazon.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, baolu.lu@linux.intel.com, 
-	linux-arm-kernel@lists.infradead.org, linux-arch@vger.kernel.org, 
-	sagis@google.com, linux-mm@kvack.org, kvmarm@lists.linux.dev, 
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org, kexec@lists.infradead.org, 
-	skhawaja@google.com, kvm@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
 
-David Matlack <dmatlack@google.com> writes:
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] pwrseq: pcie-m2: regulator enable leak in pwrseq_pcie_m2_vregs_e=
+nable()
+- [Medium] pwrseq: pcie-m2: missing rollback on error in pwrseq_pcie_m2_vre=
+gs_disable()
+--
 
-> On Wed, Oct 21, 2026 at 4:55=E2=80=AFPM David Matlack <dmatlack@google.co=
-m> wrote:
->>
->> On 2026-10-21 03:25 PM, Tarun Sahu wrote:
->> > LUO and its file handlers validate handed-over state with monolithic
->> > compatibility strings ("luo-v5", "memfd-v2"). Any change to a serializ=
-ed
->> > structure, even an optional additive one, must bump the string, which
->> > breaks live update between adjacent kernels. Replace the string in
->> > struct luo_ser with a feature header, so that the target kernel can
->> > accept or reject the source kernel state per feature.
->> >
->> > struct luo_feature_hdr is a fixed 128-byte header: the serialized
->> > structure size from the source kernel followed by 15 chained u64 featu=
-re
->> > flags entries. The fixed size keeps payload field offsets identical in
->> > every kernel, regardless of how many flags entries a source kernel use=
-s.
->> >
->> > Each feature has a 2-bit pair (req, active) state (enum luo_feat_state=
-:
->> > LUO_FEAT_DISABLED, LUO_FEAT_OPTIONAL, LUO_FEAT_REQUIRED). A flags entr=
-y
->> > holds 31 features, and bits [63:62] =3D 0b11 chain to the next entry (=
-465
->> > features in total). Each subsystem defines its feature states as a
->> > static const u8 array indexed by its feature enum, which
->> > luo_feature_hdr_init() packs into 64-bit flags entries with
->> > LUO_FEAT_EXT_MASK chain bits. The target kernel validates the header f=
-rom
->> > the source kernel against its own feature array via
->> > luo_feature_hdr_validate() according to the per-feature (req, active)
->> > truth table:
->> >
->> >   Source Target Action
->> >   (1,0)  (x,x)  Reject -EINVAL: invalid source kernel (req without act=
-ive)
->> >   (x,x)  (1,0)  Reject -EINVAL + WARN_ON_ONCE: invalid target kernel
->> >   (0,0)  (0,0)  Accept: feature absent
->> >   (0,0)  (0,1)  Accept: feature absent
->> >   (0,0)  (1,1)  Reject -EOPNOTSUPP: target kernel requires the feature
->> >   (0,1)  (0,0)  Accept: ignore payload data
->> >   (1,1)  (0,0)  Reject -EOPNOTSUPP: source kernel requires the feature
->> >   (x,1)  (x,1)  Accept: use payload data
->>
->> I think we have different definitions of "required".
->>
->> In the PCI series [1], required and optional flags describe the _data_
->> the previous kernel handed over, not the kernel itself. A required bit
->> means "this preserved state depends on feature X; a kernel that does
->> not understand X must not take it over". An optional bit means "the
->> data for X is here, but you can safely ignore it". The source kernel
->> only sets a bit when the preserved state actually uses the feature.
->>
->> It's up to the FLB/FH retrieve how to handle the scenario where a
->> required bit is set that the target kernel does not understand. For the
->> PCI FLB we panic since failing to adopt the PCI state could lead to
->> memory corruption as preserved devices can be doing DMA.
->>
->> The target kernel never requires anything from the source. If a
->> feature is absent, the target kernel must handle that, e.g. by
->> falling back to default behavior. If it can't, that is a compatibility
->> break and should be handled by the compatible string.
->>
->> In this patch each kernel has a single static feature array that is used
->> both to generate the header and to validate the incoming header.  So if
->> kernel N marks a new feature X as required (so that older kernels reject
->> data they cannot understand), then kernel N will also reject every
->> kernel that does not have X, because of the (0,0) -> (1,1) row in the
->> truth table. That breaks forward updates from N-1 to N, and rollbacks
->> from N to N-1 even when **nothing being preserved uses X**. Therefore,
->> every new required feature becomes a compatible string bump.
->>
+commit e3e29ad909cb95485a7ebf63430d7d702095bb39
+Author: William Bright <william.bright@imd-tec.com>
 
-Right, Required bit should be source kernel payload property to tell
-target kernel that the payload must be handled to correctly deserialize
-the data. It should be source kernel (userspace) responsiblity to make
-sure it understand the target kernel before doing liveupdate.
+power: sequencing: pcie-m2: Drive the Key E SDIO_RESET# signal
 
-Saying this, During deserialization, target kernel's required bit is not
-necessary. So I propose the following truth table.
+This commit requests the optional sdio-reset-gpios line asserted during pro=
+be,
+deasserts it after enabling the M.2 connector supplies, and asserts it again
+before disabling the supplies.
 
-Source hdr  Target supported[i]  Action
-----------  -------------------  ----------------------------------
-00          0 or 1               Accept: feature absent in payload
-01          0                    Accept: ignore the feature data
-01          1                    Accept: use the feature data
-11          0                    Reject: -EOPNOTSUPP
-11          1                    Accept: use the feature data
-10          0 or 1               Reject: -EINVAL (invalid encoding)
+> diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/se=
+quencing/pwrseq-pcie-m2.c
+> index 56c5d51293c10..f8791e8080bdd 100644
+> --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
+> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+> @@ -39,6 +39,7 @@ struct pwrseq_pcie_m2_ctx {
+>  	struct notifier_block nb;
+>  	struct gpio_desc *w_disable1_gpio;
+>  	struct gpio_desc *w_disable2_gpio;
+> +	struct gpio_desc *sdio_reset_gpio;
+>  	struct device *dev;
+>  	struct list_head pci_devices;
+>  	struct mutex list_lock;
+> @@ -47,13 +48,23 @@ struct pwrseq_pcie_m2_ctx {
+>  static int pwrseq_pcie_m2_vregs_enable(struct pwrseq_device *pwrseq)
+>  {
+>  	struct pwrseq_pcie_m2_ctx *ctx =3D pwrseq_device_get_drvdata(pwrseq);
+> +	int ret;
+> +
+> +	ret =3D regulator_bulk_enable(ctx->num_vregs, ctx->regs);
+> +	if (ret)
+> +		return ret;
+> =20
+> -	return regulator_bulk_enable(ctx->num_vregs, ctx->regs);
+> +	return gpiod_set_value_cansleep(ctx->sdio_reset_gpio, 0);
+>  }
 
-Where Supported bit is extra bit information used by target kernel to
-deserialize the data. Which is static information of target kernel and
-will never be used in serialization payload.
+[Severity: Medium]
+Does pwrseq_pcie_m2_vregs_enable() leak the regulator enable reference coun=
+ts
+in ctx->regs if gpiod_set_value_cansleep() fails (for example, when
+sdio-reset-gpios is backed by an I2C GPIO expander)?
 
-Like,
+In drivers/power/sequencing/core.c, pwrseq_unit_enable() only disables
+unit->deps when unit->enable() returns an error and does not increment
+unit->enable_count or invoke unit->disable():
 
-static bool memfd_feat_supported[MEMFD_NR_FEATUERS]{
-       [MEMFD_CORE_FEATURE] =3D true
+drivers/power/sequencing/core.c:pwrseq_unit_enable() {
+	...
+	if (unit->enable) {
+		ret =3D unit->enable(pwrseq);
+		if (ret) {
+			dev_err(&pwrseq->dev,
+				"Failed to enable target '%s': %d\n",
+				unit->name, ret);
+			pwrseq_unit_disable_deps(pwrseq, &unit->deps);
+			return ret;
+		}
+	}
+
+	unit->enable_count++;
+	...
 }
 
-This makes every kernel 3 bit information.
+Should pwrseq_pcie_m2_vregs_enable() call regulator_bulk_disable(ctx->num_v=
+regs,
+ctx->regs) before returning when gpiod_set_value_cansleep() fails?
 
-required+active: used by source kernel and embedded in serialized hdr
-supported: used by target kernel to deserialize the data if it supports.
+> =20
+>  static int pwrseq_pcie_m2_vregs_disable(struct pwrseq_device *pwrseq)
+>  {
+>  	struct pwrseq_pcie_m2_ctx *ctx =3D pwrseq_device_get_drvdata(pwrseq);
+> +	int ret;
+> +
+> +	ret =3D gpiod_set_value_cansleep(ctx->sdio_reset_gpio, 1);
+> +	if (ret)
+> +		return ret;
+> =20
+>  	return regulator_bulk_disable(ctx->num_vregs, ctx->regs);
+>  }
 
-~Tarun
+[Severity: Medium]
+Similarly, in pwrseq_pcie_m2_vregs_disable(), what happens if
+regulator_bulk_disable(ctx->num_vregs, ctx->regs) fails after
+ctx->sdio_reset_gpio has been asserted?
 
+When unit->disable() fails in drivers/power/sequencing/core.c,
+pwrseq_unit_disable() aborts without decrementing unit->enable_count and ro=
+lls
+back the dependent unit by calling its unit->enable() callback, leaving the
+regulators and power sequencer state enabled while ctx->sdio_reset_gpio rem=
+ains
+asserted.
 
+Should ctx->sdio_reset_gpio be deasserted again if regulator_bulk_disable()
+returns an error?
 
->> I would drop the target-side required state entirely and let the source
->> kernel decide which flags to set for each Live Update based on what is
->> _actually_ preserved. Accessing a field added after the original struct
->> then always requires checking its flag.
->>
->> At the end of the day it is up to userspace to never start using a
->> required feature while they can still rollback to a kernel that does not
->> support it. Cloud Providers know how to do this since Live Migration has
->> the same problem. This also means we must be very careful when adding
->> new required features, as they need some way for userspace to explicitly
->> opt-into them. I do _not_ think we should try to have some generic LUO
->> opt-in for required features. That is up to the File Handlers and FLBs,
->> as they have their own uAPI.
->>
->> [1] https://lore.kernel.org/linux-pci/20261013162529.1928093-1-dmatlack@=
-google.com/
->
-> Oh and please see the follow-up PCI series to preserve BARs and bridge
-> windows for some examples of using optional_flags to extend struct
-> pci_ser with additional data without breaking backwards compatibility.
-> e.g. https://lore.kernel.org/linux-pci/20261019213054.3157159-5-dmatlack@=
-google.com/
->
-> I don't yet have a use-case for a required_flag.
-
-
-
-
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261026-pwrseq-pci=
+e-m2-sdio-reset-v1-1-02ecdafce518@imd-tec.com?part=3D1
