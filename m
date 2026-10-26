@@ -1,80 +1,88 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793010007;
-	b=djLOeQ7+xdLwQwAWGu4PYvh1JB13MYUNhDGxgUeKX+z2TU05d+5vapQP1MgoNqV2mSS3
-	 n3GNrtCOfPyNAblGijGQ1U3YF780JxubFpxL51aEaL6OZSO8MKrKLeucVJD2Gxe5i5EGf
-	 oPhTMD/TacrOLoDhrTOscuIffh/8uN/mDnZJ6JEUXFnDPeCyy70hPNQM6zMwkaotW3Tzl
-	 MiScJzjVYSzZCieEo5L1+Dtb1x5MVjLNMSno6pet1OVk7sriD5xeZBQ2k4p1E5JgHCO3M
-	 EEZCuMEXyLE21AXd2vi6DYloYtCkEx3lLomndsUdRIDIc04YX+LGe8kfdM4GQDPMGYg==
+	t=1793014724;
+	b=2qX2Xn172PX5nQcELqoVeZ4Z2bbykh2tpamBdMCfiKw3Tkd5PAD1v7kQSTX+3UxCua6N
+	 bnxeTut98cTywJXDFpyrexI3KNav5JKPsLDqnSBwVSLgmmw429MpetmdnrcUVLCPQKdJx
+	 EPwdyJMHo1dFMeylgsAX17Krb95HiqixHp4Bg6clJyXBKu1pqdtf+vAGIGKJTdAgqcQRZ
+	 oplqcDEG1Bt1drVdHnSv1dB0FOeIeWnT+YLZKXy9QKK12tnzAue9vPHBgESBGDRnIXwjy
+	 S/YtMKPA1HBSh2g5chyWLwovYMub2E/0F/4sNYsHPJSw5DzFYBPrtYIbtWqJb03GenA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793010007;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:Date:To:cc:
-	 Subject:In-Reply-To:Message-ID:References:MIME-Version:Content-Type;
-	bh=yfnX5hzY3bC5Xp4lxh1XT+4MtLePDgXbQ+AxeuDQN7o=;
-	b=zl/GgnPQiCA3Xp/ocU3n/ADuehOhF2wbJ95la2OJ3ghI4u71BfCZQ/+d6Fztcm7bAq7b
-	 RUBbtg3LDhXa8l6/JIlEWAnVYDUn9TuDg/VOPNq/dgFmsvIJKptEiRlE29rsmD/heBhFs
-	 LcZtVeWqhxZgLbgTsW1zSbZjsh3i07Xeb/9t89Z5Q9U3f/qPIz+nGiTw4zOw/U3zbg1wL
-	 h4tx480GFOMQ1BkM+VGCUC5p3otd6n1Cf8KaE2J2JfjYc+tABeZpBbXPZJqL6tpuhUPW8
-	 5GpbRWfpt0n5YjkhcVh9N10coSrJAvNavFfm4s1m6QVBRGibGksRU5p+ZmAs8HQm8WQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793014724;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:Date:Subject:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
+	 X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer;
+	bh=rmWzCzfSpt1rDCtVaLDN9FMHes3sH28/Mle8yGwChlY=;
+	b=04T34LHttAkSfPG1gxnHEbNvECVahBt47h95Dj71Ef4eJ9dHT3P5g0wrcbRuNaX+7Ipb
+	 BPJincVEmnTpnBZxkQ1C0TG7Ow/D5I/7OVTfA+0HySxifhlYiZZUuL95SJN4LwutFN0jx
+	 OEzqYQM5VHbtE9XIfvor/P74FvNpO/iSXLExh2Q2/Q1dw6Gxe1li8qkw/RB9zLiEdudbL
+	 wZ539Bhz7lXQiXIsLMgtj0StdH7wtTMDpQfgN+GiEdXaWWk/fWMcedbRUjha3hTgFr0JO
+	 x6apdXFngtnhQoCHDs7ZfWzmx/XVg8+YDu6Z4USJJEgomzQOhG1vHIcMcbOACxPjctQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Chi6Bne8;
-	arc=none smtp.remote-ip=192.198.163.14
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=imd-tec.com;
+	spf=pass smtp.mailfrom=imd-tec.com;
+	dkim=pass header.d=imd-tec.com header.i=@imd-tec.com header.a=rsa-sha256 header.s=google header.b="N+/aFAtt";
+	arc=none smtp.remote-ip=209.85.221.52
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A2C5606A324
-	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 10:20:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0A2C5606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A300606A325
+	for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 11:38:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2A300606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=imd-tec.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=imd-tec.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Chi6Bne8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793010007; x=1824546007;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=80s2DjEbZBE/QNlrsxYCvCrmg/E6x0dG867HeX2GXbc=;
-  b=Chi6Bne8qvzf/njLBjIKIV3B0nBQsPikkK/EZszZOtT9MDsQon7YCbJn
-   T4IQctMhotUR85OvqlDMILf514LInG6uYT1/mqhTQo7Ldb9Zw8h3X/5FM
-   om5+9O+YyKh8pApZ656hSs+1a5Y2+o1yVpxBKuccQI1FP4XYRDkOuem6n
-   KoXHEbxM/M36xrgWIWrTU+M576xgMgcKGfMwihapoUtmNGzITN8zhg0wO
-   7RQhT0cNCY7psYYIYsqkyhyIqTsCopsB0oAVbqNXyEK2pKjmM1Qqt7gkj
-   4W3MyydTM19Ug2yto4bPljZqAzC4WWIIaFqjKj+zTzMWI8WRuj3popYLj
-   g==;
-X-CSE-ConnectionGUID: JaXzVWJuRwqWWPJL5wKL5g==
-X-CSE-MsgGUID: LQgBF+8JSgap2msAJjcF4w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11946"; a="1699419"
-X-IronPort-AV: E=Sophos;i="6.27,179,1787036400"; 
-   d="scan'208";a="1699419"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Oct 2026 03:20:06 -0700
-X-CSE-ConnectionGUID: tAelqv8nQJGgkk1E0DaKkA==
-X-CSE-MsgGUID: tvR5pO2URH+6gI2f1b+rgA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,179,1787036400"; 
-   d="scan'208";a="4176526"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.109])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Oct 2026 03:20:02 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Mon, 26 Oct 2026 12:19:58 +0200 (EET)
-To: Maciej Grochowski <Maciej.Grochowski@sony.com>
-cc: Nikolas Joshua Britton <nbritton@exabit.io>, 
-    Geramy Loveless <gloveless@jqluv.com>, Eric Auger <eauger@redhat.com>, 
-    Alexey Fomenko <alexey.fomenko@intel.com>, 
-    Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-    Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, 
-    Rob Herring <robh@kernel.org>, 
-    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kw@linux.com>, 
-    Mesih Kilinc <Mesih.Kilinc@sony.com>
-Subject: Re: [PATCH v4 0/7] PCI: Resource placement algorithm fixe
-In-Reply-To: <20261023224518.80653-1-Maciej.Grochowski@sony.com>
-Message-ID: <b20cffba-3515-b8a8-1b6f-6483facac5af@linux.intel.com>
-References: <20261021124956.4250-1-ilpo.jarvinen@linux.intel.com> <20261023224518.80653-1-Maciej.Grochowski@sony.com>
+	dkim=pass (2048-bit key, unprotected) header.d=imd-tec.com header.i=@imd-tec.com header.a=rsa-sha256 header.s=google header.b=N+/aFAtt
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-48afcd7ba9bso1618848f8f.3
+        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 04:38:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=imd-tec.com; s=google; t=1793014722; x=1793619522; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=rmWzCzfSpt1rDCtVaLDN9FMHes3sH28/Mle8yGwChlY=;
+        b=N+/aFAttA7wTxM0/7LDeAzXgMIzcPEMVDQ7jPp7ixWrZDgJlJYT1Qhb2CUQSDuEZv8
+         Z7tjPRXeq9kmXmL2mQwtAqFotnrpYWH/hXktftDr7u1b+VAbjt+ZFw9PlOyi600cfkNB
+         9twYYrZi99rcUTsg5p07Z5cpv2idOP5looPy9Zesok2XZ2JR6Ysr/C4faeaZFkmXZCxw
+         tmkrFu05bYotW/Mk/xoOJ83I5QqSVBhovvemo4jRv8HJfY2bN0Rz0dEdKTyd6NgHTrdV
+         fxYjrhPMJ7blXzncrjaf89sB989y1ya/HATIn8yaGCV5hZjENniIgAo9vbauslHNWPvA
+         tyUQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793014722; x=1793619522;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=rmWzCzfSpt1rDCtVaLDN9FMHes3sH28/Mle8yGwChlY=;
+        b=U9xdnaLDDUnh7OvOcUGyfc+DKjWNiQPVxQwzfx4ny7Ki3O3l4Pqx1DXdH6tbXPnvXU
+         i6EsyJxAa1TakSiluSJjGUy+45aH8kZ3beww95dupuNl1IUPG+/3NJSHrTF3f//rH7u0
+         S/vEVu/gH99F+2agAeiQjm81AlpCnmBz2rqKOqq95x9xviB2K6EZb2naoUqehHvvz4n3
+         nO/Y8cFjwmMpN4n7ppI7ikmgHFM6mv3MgGbhUoUWoSuG+tdrE/2LftgZtARkc32dZXiP
+         ohUZtwR6e9vfIKrR91T1OdkpgdmV0YUWDFa5FBNsnlyItR5QJzTsJdZ9XaZJbcpLnBXN
+         3pKQ==
+X-Gm-Message-State: AFq9FYLK0shLAWJffLPoGAXbnKwjbjCMKaHRfuO6a/T4gPx6ntipRNhi
+	n7EBLCYVAFqc+7XGDzd5xkCib5jQ6VNZpMJBg/j28joR+UrvoNcaAz29JoRI4oVm04TIeHYWErN
+	CttioqW8YyQ==
+X-Gm-Gg: AYBFou1WmbfPeAUgZcrt6g1GjSNqkI5lCD0wOgpA/1Rstdp0IFjYbLwFmQfp+SFBwW4
+	zrUHQcgQbFURqMT94MkOgXQFmrNL+Qiq+7fy+3NQXGha17B8jtVylY8ydMYZQShIY/DAZQvM4Fc
+	0ji3MfBKtWXNemENcVDkU37d7+roM6zxgsLFEV7uY71i4Yqp2TMYlmRC7o8COcdanDBlgABzWaH
+	6YlM2PgutBXeRRt5Hk9ihuCixBsFwWah6Klo82bN/t+wKMeSPHcDJ9knBB+qTzkDoFlLMp/og0r
+	bbCn1GsEnglWHgXKkkAEgMQsmhfuEL0J29s1gRyDst86BoZuFnX6TTfL37/GlnfwKCgq8UWCOTu
+	ngcHEkQtXWkNQ6nlH3Mujx5AVD+E1yFYGlpNMYpKe5AUWvgqtvTMeLJrf7jobXqvf5g9opFjItG
+	gW3ouw9zOXVoOu24pVFnN4CwK6IopP7b4temLFRYHorf9gdBNEbvcDYjktHejZDRpFco3GxqJI1
+	h5FXY6PyuQtVHCMDl8T2k1VeNkSNpe2/oinG2Daxvg0RE4cmLnP1zLEqHi+45v0FtmuLdkR1Sy5
+	Kb56PCBqG4lo0oJpuE7KxaSuBPU6tgwgYg43sgjrzI9Er9s1j+567WFAvVUkP/zrdrtUHbDAb+J
+	SK0E=
+X-Received: by 2002:a05:600c:3acb:b0:4a1:992f:d0e7 with SMTP id 5b1f17b1804b1-4a35aca4fe1mr116576345e9.16.1793014722474;
+        Mon, 26 Oct 2026 04:38:42 -0700 (PDT)
+Received: from [127.0.1.1] ([82.71.135.85])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a35a04ad39sm503355405e9.1.2026.10.26.04.38.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 26 Oct 2026 04:38:42 -0700 (PDT)
+From: William Bright <william.bright@imd-tec.com>
+Date: Mon, 26 Oct 2026 11:38:38 +0000
+Subject: [PATCH] power: sequencing: pcie-m2: Drive the Key E SDIO_RESET#
+ signal
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -84,87 +92,95 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261026-pwrseq-pcie-m2-sdio-reset-v1-1-02ecdafce518@imd-tec.com>
+X-B4-Tracking: v=1; b=H4sIAL0732oC/yXMyw6CMBCF4Vchs3YS2iBBX8W4qO1Bh0SoM3hJC
+ O9ulcVZfIvzL2RQgdGxWkjxEpNpLHC7iuItjFewpGLytW9dGee3Gh6co4Dvni3JxArDzLXbNwc
+ fuqYNico/K3r5/Nun82Z7XgbE+Rekdf0Cc7Zl1X0AAAA=
+X-Change-ID: 20261026-pwrseq-pcie-m2-sdio-reset-015492a846ad
+To: Manivannan Sadhasivam <mani@kernel.org>, 
+ Bartosz Golaszewski <brgl@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, William Bright <william.bright@imd-tec.com>
+X-Mailer: b4 0.15.2
 
-On Fri, 23 Oct 2026, Maciej Grochowski wrote:
+The pcie-m2-e-connector binding describes sdio-reset-gpios, but the
+driver never requested it, so the line was left to pinctrl or to its
+reset state.
 
-> Hi Ilpo,
-> 
-> Thank you for the v4 patches, and sorry for the delayed feedback on v2.
-> Mesih (CC'd) tested your full v2 seven-patch series on our
-> Switchtec-based platform, with positive results.
-> 
-> The test used a backport to our Linux 6.18.20 platform tree, with
-> additional allocator prerequisites included and our local
-> max() -> ALIGN() workaround reverted. This is therefore feedback
-> on the backported series rather than a test on its upstream base.
+Request it asserted, like W_DISABLE1# and W_DISABLE2#, deassert it once
+the connector supplies are enabled and assert it again before they are
+disabled. The card is then held in reset through power-up, and the
+line is never driven high into an unpowered card.
 
-Hi,
+Signed-off-by: William Bright <william.bright@imd-tec.com>
+---
+The pcie-m2-e-connector binding describes sdio-reset-gpios, but the
+driver never requested it. This holds the card in SDIO reset until the
+connector supplies are enabled, and asserts it again before they are
+disabled, matching how W_DISABLE1# and W_DISABLE2# are handled.
+---
+ drivers/power/sequencing/pwrseq-pcie-m2.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
-Okay, thanks for the test.
-
-> The kernel boots successfully, all eight endpoints have
-> BAR0, BAR2 and BAR4 assigned, and switchtec detects all nine
-> switches. No BAR assignment failures were observed in the boot log.
-> 
-> One difference from my original report is that BAR4 is enabled in
-> this test; the earlier report described a configuration with BAR4
-> suppressed. The total BAR allocation across the eight endpoints
-> is now 288 MiB.
-> 
-> We also compared /proc/iomem against the earlier kernel carrying
-> our ALIGN() workaround. The enclosing prefetchable bridge window
-> is 387 MiB with the backported v2 series, versus 384 MiB with the
-> workaround, while the total endpoint BAR allocation is unchanged.
-> So this test shows successful assignment, but no address-space
-> reduction for this configuration. I do not yet have the detailed
-> placement traces needed to explain the 3 MiB difference.
-
-You want to look at the place where the window is sized and work 
-backwards why pbus_size_mem() calculated that size. In the printouts 
-(for non-assigned bridge window), the start address is the alignment
-and size is end-start+1. If the window has an optional part, the add_size 
-printout is there but otherwise the prints are a bit scarse.
-
-When trying to debug pci resource issues, dyndbg might be helpful here and 
-there so I always add this to kernel's cmdline myself:
-
-dyndbg="file drivers/pci/*.c +p"
-
-It will give a bit more information about resource decisions in dmesg and 
-their basis (things could be better in many areas still but most of the 
-missing details are inferrable, e.g., what resources are considered 
-optional, etc.).
-
-> We will now also test v4 and report back. Could the changes since v2
-> affect this window-size result, or is this amount of padding expected
-> for this topology? Please let us know which logs or allocator traces
-> would be most useful to collect with the v4 test.
-
-I suggest you wait until I send the next version which addresses the 
-problems sashiko located in v4. I've basically tested the update locally 
-and should get to sending it today or tomorrow.
-
-I normally use iomem, dmesg with pci dyndbg on, and lspci.
-
-Generally, I normally look /proc/iomem for quick overview of the layout. 
-If you have something to compare with, it's even easier to see what 
-changed and focus on those. E.g. you know commit x broke something so a 
-kernel before that commit or the problematic commit reverted vs the broken 
-one. The less there are other changes in between, the less noisy the 
-diff is.
-
-lspci is mainly needed to map resources to BAR/ROM/VF BAR as the iomem 
-format conceal what the resource is. Again, diffing pre (when available) 
-vs post saves lots of time in focusing on the relevant bits.
-
-For diffing dmesgs, I've this tool:
-
-$ cat dmesg-diff 
-#!/bin/bash
+diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
+index cafa642a4b6b..5f5a116063da 100644
+--- a/drivers/power/sequencing/pwrseq-pcie-m2.c
++++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+@@ -39,6 +39,7 @@ struct pwrseq_pcie_m2_ctx {
+ 	struct notifier_block nb;
+ 	struct gpio_desc *w_disable1_gpio;
+ 	struct gpio_desc *w_disable2_gpio;
++	struct gpio_desc *sdio_reset_gpio;
+ 	struct device *dev;
+ 	struct list_head pci_devices;
+ 	struct mutex list_lock;
+@@ -47,13 +48,23 @@ struct pwrseq_pcie_m2_ctx {
+ static int pwrseq_pcie_m2_vregs_enable(struct pwrseq_device *pwrseq)
+ {
+ 	struct pwrseq_pcie_m2_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
++	int ret;
++
++	ret = regulator_bulk_enable(ctx->num_vregs, ctx->regs);
++	if (ret)
++		return ret;
  
-diff -u <(cut -d ']' -f 2- "$1" | cut -b 2-) <(cut -d ']' -f 2- "$2" | cut -b 2-)
+-	return regulator_bulk_enable(ctx->num_vregs, ctx->regs);
++	return gpiod_set_value_cansleep(ctx->sdio_reset_gpio, 0);
+ }
+ 
+ static int pwrseq_pcie_m2_vregs_disable(struct pwrseq_device *pwrseq)
+ {
+ 	struct pwrseq_pcie_m2_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
++	int ret;
++
++	ret = gpiod_set_value_cansleep(ctx->sdio_reset_gpio, 1);
++	if (ret)
++		return ret;
+ 
+ 	return regulator_bulk_disable(ctx->num_vregs, ctx->regs);
+ }
+@@ -562,6 +573,13 @@ static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
+ 		goto err_free_regulators;
+ 	}
+ 
++	ctx->sdio_reset_gpio = devm_gpiod_get_optional(dev, "sdio-reset", GPIOD_OUT_HIGH);
++	if (IS_ERR(ctx->sdio_reset_gpio)) {
++		ret = dev_err_probe(dev, PTR_ERR(ctx->sdio_reset_gpio),
++				     "Failed to get the SDIO_RESET# GPIO\n");
++		goto err_free_regulators;
++	}
++
+ 	config.parent = dev;
+ 	config.owner = THIS_MODULE;
+ 	config.drvdata = ctx;
 
--- 
- i.
+---
+base-commit: 1a0586064ee1fbcefe49b6382ee17a236c590879
+change-id: 20261026-pwrseq-pcie-m2-sdio-reset-015492a846ad
+
+Best regards,
+--  
+William Bright <william.bright@imd-tec.com>
 
