@@ -1,66 +1,66 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793117279;
-	b=BaGXQeHjod5THJtK0AOnLLgF11dbHLer6PEBH/o+iZHuNykozjoMnXPBPWVXUirl6BsK
-	 MZ64jtZwBWmPQDQgmpDm9hO3bY4D05eFZ7wT02ohVSOYPHPDeGBz8q3Mz9wTAL+9nuyxT
-	 0CGG4hSClGsTMzANMMfiMQZprBtO5EsXe6vHZQoyrt4fApFIi9e/QS67qZhsmlNbKubj5
-	 vXjBUvsBw30Y4rmXtt2QURdivvsBYv40cn+YVn4FhcsPXEfaR3ma7hquoGnHGbXSWBwyc
-	 djPwp4orHduy0OCq5iAWMX1xjsEGLFAUTiDZCZXFO7hw6FL9uhp3gqOydMHTjaqXxfw==
+	t=1793117282;
+	b=od3WXVHb5R2dPe2Z5KT5T8lBtrijXIFfbIsPlNo5k5zrx0m/iLQ8L4xzLwt2dkfjQOTg
+	 9rqa4juOrKwPfN++kp2py6hzrzKcC9RG9PEfUyfsa0OkWXYSYvHy5DzGwygfTOmQ855dQ
+	 3p2oxWb+h5kUVwj33BPymdVbkXXKorZJVBTf8l+RRqrcNpgBDGkJfTYKQQRudxhavO5dy
+	 pJrF1DntRpoYaBKYiTuuuFRRbDcC1vwDGBHDwImQA6Lg4AlQTjHDTzDEC3uszI1Wdp62B
+	 4pU3EiHoElbYqbp7qJOXhLOX6qJHB2pZlh2Ofw0jcQfE2oNPtA6ZWtGus8w4MdDk82A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793117279;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793117282;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=v5uR4Z5kHSJcNS0UdZ0tMNPo3LYILfp4vjQ23uyOoJo=;
-	b=NP1YVpKzGSIZmqa3BSiwHgHfSxx+NAs1xLP3L+XXLfIYyXTfN47qjQY/SCjLy3BmSDfo
-	 a4wNbF3atKyt364ArGp0Ty6e+QIVGlj+4nWTxCWMi456FDaT89KHDlcYFweHYO6wmkmbG
-	 Z3IbqJ9gdYtRmOy/L248cFGdj+4AM9OAVYDs+gBdl6EcNaO19sNIdZ3pAnsp7Cm43Yrs5
-	 PPeAPN93ZMDl9WXMF2AEeH3VCgETwNpxJoo3MKWC8e/vFU66GJ6Zk850beMmYq9uZYMEI
-	 hl4tYHgKOQQNuu9UbSIVDrIRB6kNtoiq7ihMvcHxbUe1fTSL08qUoFTKGJYD+9hDI2Q==
+	bh=mfLPrkxSXOT9Qzdp8kSwc23ZitYzs93Xw5g1oZFnxV8=;
+	b=yltzH2Tj5lSRsVPvKtMrQdXR33/MRu0e1tNgvoc+6ZZDWsPecgg1U6Vsni/JZWndDjDf
+	 rLLnizbpJh7uAmRV/LP5Mkeg3WnMaowVSECB2YUnXEOgdtdQ3SfamVY9QMI+53nyB+x4+
+	 x+UPK02HLTDlUXT/1WH9mV+tzyP0zVEs9Jc0pT0E40H458K2HZQbCodjbJMBbFD8yZhYu
+	 y1mGy8a+9Vrne4V0MUQoAKTvVOj8cyF2wqG6hZsDArrbfoFvsRTmq/8sQiqPzUtyIOh5i
+	 sOTQiS7fCQQ1azoftOlUc2PuaKfuRCjhC5wjjsIpAjOUnlEOTDl0n8HLKhKzyv4FUTQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=intel.com;
 	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=CKf6R9XG;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=GJ1sYGqz;
 	arc=none smtp.remote-ip=198.175.65.16
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDB7C606A31D
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 16:07:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CDB7C606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BF80606A31B
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 16:08:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4BF80606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=CKf6R9XG
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=GJ1sYGqz
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793117279; x=1824653279;
+  t=1793117282; x=1824653282;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=DFF1a3y2zURxZG8SI0oGrTvFK4hHR26SKcevNxfqR1Q=;
-  b=CKf6R9XGb/NAW9sCqNKqQJZkB0Z+HdcMisbbZohT67/N3+xonJ3T5lcb
-   og0X3Ak0buvj1OgvtDN0cpH44e3G1TbaWKHBVDowGGqEM3EORLg0+cmlz
-   jjHMBQRPtnHJiBFN+AKNbY1Xlmq9lMT795nRAJR/jYNZ74ngP6iZpxUxA
-   FqxG3bIT+uN03vEXTsPS0/ca8rl5yqxehDR59neBc1QmnsHRWwKYV3Ql1
-   Up/+jVzQC6lLoe8GMLRYwPFPiRroc635dXgyzjX7cgnZmdlym1xiKoZx7
-   vtMhtNMvxRpH6lyaoV61dHecQTLem1gfnsD7GT2RZyGtMarXj0qNlFvnA
-   g==;
-X-CSE-ConnectionGUID: SQCA6CytSgyQwHmToZJNMA==
-X-CSE-MsgGUID: Bpne/jf7Rwa0CajN4r9fwA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11948"; a="1809175"
+  bh=eT16HeadQGcPbnz43jM/ZZabcXLE7BzYbxj7kIOQnTo=;
+  b=GJ1sYGqz0peB5LfWGAlUvsv0pLtPa1BkrJKSnKZXE1VpwQPbsUcHmQdm
+   O1CH9Tui1a1HHDLjHkcusOmCN2hU6UnbV/aN92f2NCiYF5KDwmYRjLagr
+   EG5kBRoVTy5A8l7W4XBNR9z2nVzm2FyFzm561/mFm02d1OhOC4+GYvnlO
+   8WKJvUPdByu1sdMWZ8YZJ9gpImTlRrhdlhWfsgFYvgIO1BuspMPQLXa0j
+   TK+pDpbolld1fdIpH7Z8ESA0b0oFwD2dfd/oIHy+m46UqYS+uAZ4SCNiH
+   3f0RIugcQcCaFNXvhjfKscXDafC2oi7TIp7SwEjwgNtYYFsToM7lek1Mc
+   A==;
+X-CSE-ConnectionGUID: W7FVsJgoRg2lH0xNttLQ0Q==
+X-CSE-MsgGUID: e/ktlZhBQk+9qxGOjdkjQQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11948"; a="1809193"
 X-IronPort-AV: E=Sophos;i="6.27,181,1787036400"; 
-   d="scan'208";a="1809175"
+   d="scan'208";a="1809193"
 Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 09:07:59 -0700
-X-CSE-ConnectionGUID: mXZnnI/cRD21fcP7Djh/5Q==
-X-CSE-MsgGUID: UvBX6bDtR9+1CmeED/tozg==
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 09:08:02 -0700
+X-CSE-ConnectionGUID: Mr5xac2FT++mz1ZLSUfmkQ==
+X-CSE-MsgGUID: 9PKukz3tSB2o8/rqpeLl/w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,181,1787036400"; 
-   d="scan'208";a="4982198"
+   d="scan'208";a="4982210"
 Received: from dev-150.igk.intel.com (HELO localhost) ([10.91.214.40])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 09:07:55 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 09:07:59 -0700
 From: Lukasz Laguna <lukasz.laguna@intel.com>
 To: linux-pci@vger.kernel.org,
 	bhelgaas@google.com
@@ -74,9 +74,9 @@ Cc: michal.winiarski@intel.com,
 	davem@davemloft.net,
 	edumazet@google.com,
 	kuba@kernel.org
-Subject: [PATCH v2 12/13] liquidio: Use pci_iov_get_virtfn()
-Date: Tue, 27 Oct 2026 17:04:45 +0100
-Message-ID: <20261027160446.858300-13-lukasz.laguna@intel.com>
+Subject: [PATCH v2 13/13] drm/xe/pf: Use pci_iov_get_virtfn()
+Date: Tue, 27 Oct 2026 17:04:46 +0100
+Message-ID: <20261027160446.858300-14-lukasz.laguna@intel.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261027160446.858300-1-lukasz.laguna@intel.com>
 References: <20261027160446.858300-1-lukasz.laguna@intel.com>
@@ -91,44 +91,29 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-lio_vf_pci_dev_by_qno() finds the VF by walking PCI devices with the
-CN23XX VF device ID and checking that they belong to the PF and match
-the VF ID. Replace it with pci_iov_get_virtfn(), which looks up the VF
-directly by its VF ID.
+xe_pci_sriov_get_vf_pdev() implements its own VF lookup. Replace it with
+pci_iov_get_virtfn(), which also takes the VF's bus number into account.
+Previously, the VF was assumed to be on the PF's bus, which is not always
+true.
 
 Signed-off-by: Lukasz Laguna <lukasz.laguna@intel.com>
 ---
- drivers/net/ethernet/cavium/liquidio/octeon_mailbox.c | 10 +---------
- 1 file changed, 1 insertion(+), 9 deletions(-)
+ drivers/gpu/drm/xe/xe_pci_sriov.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/ethernet/cavium/liquidio/octeon_mailbox.c b/drivers/net/ethernet/cavium/liquidio/octeon_mailbox.c
-index 697fcdc41e3c..58f25ddd2f6d 100644
---- a/drivers/net/ethernet/cavium/liquidio/octeon_mailbox.c
-+++ b/drivers/net/ethernet/cavium/liquidio/octeon_mailbox.c
-@@ -28,7 +28,6 @@
+diff --git a/drivers/gpu/drm/xe/xe_pci_sriov.c b/drivers/gpu/drm/xe/xe_pci_sriov.c
+index 31abcee55211..36d5ff27a2c2 100644
+--- a/drivers/gpu/drm/xe/xe_pci_sriov.c
++++ b/drivers/gpu/drm/xe/xe_pci_sriov.c
+@@ -274,7 +274,5 @@ struct pci_dev *xe_pci_sriov_get_vf_pdev(struct pci_dev *pdev, unsigned int vfid
+ 	xe_assert(xe, vfid);
+ 	xe_assert(xe, vfid <= pci_sriov_get_totalvfs(pdev));
  
- static struct pci_dev *lio_vf_pci_dev_by_qno(struct octeon_device *oct, u32 q_no)
- {
--	struct pci_dev *vfdev = NULL;
- 	int vfidx;
- 
- 	if (!oct->sriov_info.rings_per_vf)
-@@ -41,14 +40,7 @@ static struct pci_dev *lio_vf_pci_dev_by_qno(struct octeon_device *oct, u32 q_no
- 	if (vfidx >= oct->sriov_info.num_vfs_alloced)
- 		return NULL;
- 
--	while ((vfdev = pci_get_device(PCI_VENDOR_ID_CAVIUM,
--				       OCTEON_CN23XX_VF_VID, vfdev))) {
--		if (pci_physfn(vfdev) && pci_physfn(vfdev) == oct->pci_dev &&
--		    pci_iov_vf_id(vfdev) == vfidx)
--			return vfdev;
--	}
--
--	return NULL;
-+	return pci_iov_get_virtfn(oct->pci_dev, vfidx);
+-	return pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
+-					   pdev->bus->number,
+-					   pci_iov_virtfn_devfn(pdev, vfid - 1));
++	return pci_iov_get_virtfn(pdev, vfid - 1);
  }
- 
- /**
 -- 
 2.43.0
 
