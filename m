@@ -1,100 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.173
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793111701;
-	b=oMl01s/9/CaWL14NvEEjLfPawn6P/sudtmuBJI6zpPBTtjMrUe7oYvoT14bNhrynYKy4
-	 z+UV9GktBFK3WTOxyAw4EzHv59XghQ65lL+0Lyqaai9EvJp5MDNuX8glp9mu44TPSJjvM
-	 yf70YUbwHE+1syAXH3N9Jo4r29191da1b11XjS2MVjgD4BhG9mKIiu6NVLlrrGBM2zXH+
-	 21iFJ+XuRJobJOCzgAQwnDv3Vt9QjhhkbEnrlMkJTnNtUtH9J0Mjt2grEqsz2/JeuEASb
-	 xmbff3aqPGvdjJxgFkDKi4D+NMR3MmK7Vuxa+mi+IbQ1z2yTEFCBf5bPBbbUA8nVe8g==
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.remote-ip=209.85.217.51
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=fail;
+	t=1793114549;
+	b=O0Am6yEnr2dSjtk15CCDGMBUGyJUND4/tbeAUtBiHRxfNL5AgVW6aFwctzZFe+3IGru/
+	 mKa1d0hkDshmTK4DjaLlvDz410Z9z5AYp4bMX5VZM9Es5pg63a4ouHqqEnmlnameFszNP
+	 HVl/dirtLJwj6jGUFuMlMr8Utpq3sYwyRhfoLCcfnsbS5UWqo6W+pPabQRysI/R3f3Cbz
+	 Z0a3RfpSINo7Gwl/yxBHhLaMiiyX41UpiANzR28mNHeb/OPyUh6dt4lE6rGBiVmweN7RG
+	 Sz7YJYTAowZlZK/R4fKLEydk5HD5IwxFt4d13xt9xPVZ07GqJ2UMBtoN9rNYHkUcbpA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793111701;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793114549;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
 	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type;
-	bh=kpMVzTEsyq+10ygaZmcWH4opP1T6BP5uZJEA0uY70vE=;
-	b=ammpm6+UioBasrzcnsVyDw6R0ebDUrqolVhVPNDFqfNpm6EGB9kljT4sl4t9xyLqItsT
-	 ZGecUjLv5dtBsQYY6LIjjrJHcSI/dh4sOXJXyGInLIxguDLywFB8TLdvcHOjC8Pak9P6D
-	 b4DKmK4w9uoLMUaNEgM4cC7M5P7HEaeW1Km5cjC47xlm7UiZpRTIIsnTMLERdBrk+9RJJ
-	 MkYlkzeQxGd5KH60TB8WvmcupkFzn5h0cVRFOtla6zptuelNcOrhnZLWX1SBv/99IJ/Ek
-	 6DTa5A6JZo/jaVLg/uqFTywvNs8lFylDWV4qS2jVVOVYHK0Qrh0UR6+/9s7FlLFoxdA==
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=0gy1GbYoTDZfjLk4adPcTo+vL8RJLAqdM+FNRZN+GPw=;
+	b=GTAfhn+dIbgMd1ykBEns6ZLl/QqFLuUu2sh/PUf3Gml833SVbKs23RFc3VU5jqZvlRpf
+	 BGW6m8VzEqMRKUyu4yDShNZboCi+kW6m4BawEjHdjrXD0YVO01yIQyZDWaDfOuxi79kzg
+	 k05PA3knxXuDF32gOt3tforY+jGyXAWlWPXwc/NT17k/zI87cTfD4umyeho/g6dlhjq6+
+	 kJZzrCWF6Tp+2UU0UDIUrPGHlGm9VnOsR3fugkPRsK0roTVAc2NqxFEHHFu02J0WRmej3
+	 mgnyYN3JNkgTl5vpLAYyqYCbG5G1Nsbv66xvX5NmX5hCs7L5U1qxnF2qQbjtmkAQdtA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=gNL1x+Xv;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.173
-Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=rSdHnOiB;
+	arc=fail smtp.remote-ip=209.85.217.51
+Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41BA0606A31D
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 14:34:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 41BA0606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84CE1606A31A
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 15:22:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 84CE1606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=gNL1x+Xv
-Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-53397554beaso49865311cf.3
-        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 07:34:56 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1793111695; cv=none;
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=rSdHnOiB
+Received: by mail-vs1-f51.google.com with SMTP id ada2fe7eead31-7cc30120465so184151137.1
+        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 08:22:29 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793114548; cv=none;
         d=google.com; s=arc-20260327;
-        b=babDgO36UL2X4YDcNux4YGf7Z8MUEAfSYG5NCkwaoe/SUTmjXcuvGgl0L6If2WwRAL
-         w+DCY3MdhGmUTQSFpZSt+HP7vYEpPYhYG9LssyMkd+957iUdeI/Eiwf+qXzfGY5ugpms
-         /bJPYS9H5yEBrpy7hlHqBaKTUc63oRAnXRIqGHzNvtLzdbNHlGf97KO9a6RmgaxL8LuK
-         4C6ghy3yyQP2obMLXFtJ7LVXHG9JgOkCX0LN8uP90COaywCDr9j/1nuSKoSvaBPRB9EJ
-         CCTDxJHZZ7ug68PQh+8Rmyn1X6p4wiA175C9n5ETZALevC1anTWOsJPMSFf6znS0pO0i
-         Q1vw==
+        b=NupqlOezNWQXuxK3jyPtEsdNbN+JkCwuQBmSqljWyASdcnMdXCYYwfoD7CQEgjkQa+
+         LubLF2ZbyMcYjN8SQgsRoaOZ/ig7qHssK2D6WqqhXFBukHT48a+Fm8m7ZaqZ69CZzLKJ
+         l9x7g8YsbtxC0D1Nkc8GaSFZe3zublzGN6oLWK+byUs2WO8qS9tp+x7WqNJfrdJ31W61
+         oxBY+mynIqOoPJdyZ4BGR2ZpBRcoTYfaw9XGw8laYuoObfIUdY3MM2JezTGDCrfBmGS4
+         DwKgZHlcIiOQYyU2ii97E4EI5E1isE3sc0d7a+XAZS0QzXyBxhBp79ucYCvIdB0uyHG+
+         f7aQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=kpMVzTEsyq+10ygaZmcWH4opP1T6BP5uZJEA0uY70vE=;
-        fh=NSGw9K9nvFTr0tVrCDZMKCS1z0KgSeZHTVEWOjo1Unc=;
-        b=FUOgXHo407XZkRsdVS2MoFd9zyG/RE5dBHL+I8goe6QqorRwp4eRsWc9aS+TcRf2KB
-         Hhs1O37Z7PVD2yDEsaJte/j69L0JrpDAIN5FU5uSBPRg6ASAwfEOM59g0r3V+8G55/Fq
-         yclDOEqwbDa8+D66cTjUQcISMyPvmyJm59lKwM0YoLQpmPNbdaqN50jfl14W8dYTGg9/
-         tPEfc5Wf0mxvDLaufNpJSlQQvbBoV3/8ag7v+Kj1ews1dNQgzjDi81UCYlME1hWIvVWK
-         LOgCrfmeKIy5DwweQHRiZq0N3buzdeNXb4DIa8uodcmnMePEei2+2slRUafD9waBydZd
-         CC0w==;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=0gy1GbYoTDZfjLk4adPcTo+vL8RJLAqdM+FNRZN+GPw=;
+        fh=/E5eqPQ8rAqmuAq5WMrfmxqp7fS9HwfLI7f8ZZBkLL0=;
+        b=SCGR2OJiub4r4c9K6Gh2q49VjtR79vBC0hadT8ilXT6IbZIBLugXgFxbZfWGCpUs09
+         FNsF5d7jlrHJ5EVEmogSlN5Iqayol8LLbW8Z51OdD3ODIT5hJVfa6uhtwyVW58sBXNBA
+         EuBsZHWDR8kutQCVoAuuTJNc24I61IyKqzwM6tz8RhYi5eWF6rXh2B8VldJlwgYkdXWa
+         5a1x4ryeUWdtPGjQoBFXHtDOFae/pG5NzevNcFcPefYCznOfhpgam4vMRpSId+esGweV
+         CrBhB9spS/cFaPDGf2gr6QEBi4D8/bUfhe0HqQfW9zUMdNMFWPHSRqp9kuoTdPIxHBTt
+         x2og==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793111695; x=1793716495; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=kpMVzTEsyq+10ygaZmcWH4opP1T6BP5uZJEA0uY70vE=;
-        b=gNL1x+Xv1DnXFPpzgePiAQuuZuxGQYp4vZ1KZEbsXr6VBegt4pJtXNzLeNxrCpoSCI
-         vyOi7v6/0+IApmMQXYD6AGe5EUrYKJPHhrDm8nm3kiAEl/doeYsPq0sQTlTGWyGIHSax
-         8uUnTg6CWkRGKsQ5Qzhc3YiWHw/HIdwgW7WIjIl/n587BwpsChYbbMrR1t33toZDX5pu
-         cO31gnJ7HsIsGJijHvaWYd7DrEnivbFfmTpnn+VmfvsLebMcgPHXqdxCtjs4hOFv+opL
-         /7mt9QweVw3fEG1JnW37At3rsmCLkOf1b6RdlUc9/i//g2ff+EPN3LK9o7hPShF19pzU
-         QRsQ==
+        d=gmail.com; s=20260707; t=1793114548; x=1793719348; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=0gy1GbYoTDZfjLk4adPcTo+vL8RJLAqdM+FNRZN+GPw=;
+        b=rSdHnOiBHVDYoVQv5OsAPIJexs9GauRvr0qVYof54fNCMwrl2UeCsib7ZA3sPyHzg7
+         EUmx2RJjAbgsE7vXgiJhaOeAN8ixi10oX9AR609nY7NabtRAsHdKeis97W1Pwf1YPgzi
+         5tX3vTUeOHHd2H2V2LkSbI6f2HrGpB2I6Nz6V0T2nOgmMjzr8H4zdbr4FyI3Y5FdGSFY
+         60h6IyWEhdSrI79pmztL47iXi7Bwyeqxp1Jxpoa/DTyRSO+JsTWk36Lg0C5INS1td/5r
+         Sh/M9+SFnW/UAHqQXXcd58WcS634RkaxyeXMAFAlMKlEiHV+cEWctVBs+lZ/tbx0Qnao
+         4nkg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793111695; x=1793716495;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=kpMVzTEsyq+10ygaZmcWH4opP1T6BP5uZJEA0uY70vE=;
-        b=Y7R9frdl505RwMLcqltvfQkO3x9UbdgtwwjrwkhKX9dZX9jzKHr9wL7aB7Q+QFhxhh
-         0m5sQycoQhLAT+CtS2aGzzd/3rxl3ZwiByR0I9k55g0AjO4Fdyf7i75RS5aQboZXqCgc
-         Wbee0tYsYBMvNciqADWmC/oMsBTk5MXGCcbSicDWuIkCZSthYwsKAbok3yUvpYZjifHD
-         lUgZ9yjAiM96+81GjJzdCinSzeEw/zUXWkpw49WLFKfyTIqDwZuWPDjhqdpzQgK1ss7+
-         zLt+2/SEOyedYYbE90rsmfEVqvw3wPPmQlxKLHmg+xz9lQYZmAOFDbijRLwBtOBK3LZM
-         1K6Q==
-X-Forwarded-Encrypted: i=1; AKwUvBxg6oaE8RrutGsMIn8uaCiDuZsR+EpOkPWA9XAMDXfqIukplvkB/YgKO1m/nrLJxoWUWbPDvGRjXQg=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKc+NtQjIRPAc5bH9MeBlyf6LWwTo+pJxsfj4HZF3xO/eN7V7/x
-	wZf5P15k8GE2J+VlFQ4qQjR0V+SWOVF1HBWB4+OVSmXaxqRks+yUu0t2btkrOtbSSARsdeHsue4
-	+NEE6HjJBVtLBdrkd6eIaDc0b0FoGyE8=
-X-Gm-Gg: AYBFou1VMI4CpMoeyFPJcFB6caHDdzVWbKnu6msw0aKZFBFmj0oVuLw/4snOS7wmeae
-	zdDzbgCIF7+xw5rxB+jkCuZQESvHlg4xT1rIQtHPeGPpd9CBn58p+/P4A5O4IcdSX4IMjjkDZ7e
-	5NuWV7Ir0ePbb8l+wJ0kymXyobkGPnn8xBH8M+WuFchQol1Qbjhe8N6E+2DMol+6bT+57RQF/p0
-	ykF9XZ4Ro2ZSl+9xZpFDD1THSux/S1SyWsfZmweXekeMOQVGxuz15xUl5XflJT0Kj2InaRsj7Pc
-	ORIEKZNbZsmbl/v+b26LiUqgBo0GvomkgGJOhUcSJo+mBQxO4A9k09hUS+EwMZRws+owpClFiMI
-	hSygc4Wvp5u82gkyySHw7TaOVv0yNnip6MnXAlXTSfSt7u6leBlmkFm6hG+38jpHoQdHPAi3w0w
-	Lw+AH+GLK8kZecryyw4UGcjxhQVrNo/Nb6V0Z+mM7/Os/kGgAj
-X-Received: by 2002:a05:622a:90b:b0:536:6bc5:2fb9 with SMTP id
- d75a77b69052e-5383b4a928amr176076021cf.14.1793111694872; Tue, 27 Oct 2026
- 07:34:54 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1793114548; x=1793719348;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=0gy1GbYoTDZfjLk4adPcTo+vL8RJLAqdM+FNRZN+GPw=;
+        b=NBdwOGPQXjwKWO/o7QdmSPv9HBSUdvyYQ+c/o/nTtqcQD/CjCJjOXBO+BdOCxJ0N71
+         b+ETFMO+90Cj6gNifDePd6bYw70+uxatmF3mwqIBx06yfyZOd8ObCBL6g2UWrPj83bwZ
+         JhQOaBO4eIdQdTuZFiV1UQHE9u04PCWJaQwLCsxIVBkUtuSpPwU6Jk8UpYnXM+/Xtn5F
+         rUcVcfAaeCicN9m2uzL3j5SjF7KhaV4pa3UiWkcA3brahURhA8XKztwAHVHk0FMO3pGF
+         2VQrpyi4t+S5mwL6ufc5oEplSdTAK7zGAp2NenoK2PSymhvbSR/uz9l4bGGx/MHoVvFM
+         8v3Q==
+X-Forwarded-Encrypted: i=1; AKwUvBw4PNKJnobAmR5XFLFiEnpJxG8PkqHEZ791q93DbqKRF3Wugq2u7ZhYC7VKQ7pxfcqDq4ihGsa/VpU=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKrxR68qHbebL6FssRDVTJG5DoEn+79Xod1kHrfF3qu62AVoKDn
+	81bx63OJLdyKyLXWIJZp++dvZHMK6AiaIGRugykbe9lgaLEA1bsw4b4qg8nSMys/KQeEgf8s0Ck
+	7g7nhzmUe6JG1XCrlJBtjy2F6TkftqS8=
+X-Gm-Gg: AYBFou29imsfbIKRXotRFANmZh5GpoAuBOUN8NRZ1Nm/UfLX8MYkh/UC/niA2JnK1Ux
+	UUPeUbTpddTd2WsmLHZt3wgdwN5tefkE46tKsp5l8qLgfqODzqsvc9dIF3qeWnZhELfvQmUu5He
+	iYpy/fDHY8WTw4NeO6Bnd2DbyP7qflSB9ZPF1DD/p8ZWWB8yekurx2QNPseBP4a/txmNvyzEMIQ
+	NnlLJ8tn98CzLu1d0w1i3JqPO/XgPefSFcs1Fk7w41LOAWadPO7Q/MHeGg6SlezugyNllYLvgqu
+	+3k0+/jdy0jcSQgRIXfysajOMAyp9bNSmV+BdvfzaIc+gVyECbSqVa1rfg6wj3wwbPF4FuI70to
+	PyqYdA88EoKhQ0YjkpUZUL9khQrDr4z8HC1D/S1ZiMITDy3W1TeKTyA3amJHC1j+VXRNzTaMMCo
+	sWi4G4VlHe3NYOgUDcjuzQB9I=
+X-Received: by 2002:a05:6102:3250:10b0:7cc:174b:f7ca with SMTP id
+ ada2fe7eead31-7ce5c6ba0dfmr4003174137.0.1793114548478; Tue, 27 Oct 2026
+ 08:22:28 -0700 (PDT)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -104,54 +105,42 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261012-fix-aer-mask-override-v1-0-49a0d7aeaea0@google.com>
- <20261012-fix-aer-mask-override-v1-2-49a0d7aeaea0@google.com>
- <CAMAsx6dLGdqr+ZxG8FrwN-6r=5yVY8hk-c+7CVrAkS0zpKPmGg@mail.gmail.com> <20261026175724.1482083-1-rathodpriyank@google.com>
-In-Reply-To: <20261026175724.1482083-1-rathodpriyank@google.com>
-From: Daniel Pereira <danielmaraboo@gmail.com>
-Date: Tue, 27 Oct 2026 11:34:43 -0300
-X-Gm-Features: AclHuK_njZlT_A6caNrXNbbG7gBGxHmrzYc6IWZzccr4qUxgXvxpemc8dDRNGgY
-Message-ID: <CAMAsx6fdOmV4DH4WCi6u_EadZxdEg10FFnAKSe=g7duTW+eDdg@mail.gmail.com>
-Subject: Re: [PATCH 2/2] Documentation: PCI: Document aer_inject's
- aer_mask_override parameter
-To: rathodpriyank@google.com
-Cc: bhelgaas@google.com, lukas@wunner.de, 
-	sathyanarayanan.kuppuswamy@linux.intel.com, ilpo.jarvinen@linux.intel.com, 
-	dave.jiang@intel.com, prarit@redhat.com, ying.huang@linux.alibaba.com, 
-	terry.bowman@amd.com, corbet@lwn.net, jic23@kernel.org, 
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
+References: <CADnq5_O2tEUHOcbiKL8c4UHpy3AmOWtmM7A8o3jP2qLwkx2jUQ@mail.gmail.com>
+ <20261027082913.8002-1-atharvatiwarilinuxdev@gmail.com>
+In-Reply-To: <20261027082913.8002-1-atharvatiwarilinuxdev@gmail.com>
+From: Alex Deucher <alexdeucher@gmail.com>
+Date: Tue, 27 Oct 2026 11:22:15 -0400
+X-Gm-Features: AclHuK-Adz3pXhRznVuw9H0EI3Am4aff3rHKztB_BB4zRj3ojyCoORRQiP8JW0I
+Message-ID: <CADnq5_PYSbB-Ges6vVgNcR4ZjYH4TxLZeAShifdV9uuH8swQzA@mail.gmail.com>
+Subject: Re: [PATCH 10/13] drm/amdgpu: Catch register access while GMUX keeps
+ the GPU off
+To: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
+Cc: airlied@gmail.com, alexander.deucher@amd.com, 
+	amd-gfx@lists.freedesktop.org, bhelgaas@google.com, bp@alien8.de, 
+	christian.koenig@amd.com, dave.hansen@linux.intel.com, dev@deq.rocks, 
+	dri-devel@lists.freedesktop.org, hansg@kernel.org, harry.wentland@amd.com, 
+	hpa@zytor.com, ilpo.jarvinen@linux.intel.com, kenneth.feng@amd.com, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, mingo@redhat.com, 
+	platform-driver-x86@vger.kernel.org, simona@ffwll.ch, siqueira@igalia.com, 
+	sunpeng.li@amd.com, tglx@kernel.org, x86@kernel.org
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Oct 26, 2026, Priyank Rathod wrote:
-> The reason bit 26 reads 0b on the e1000e Endpoint in the cover letter
-> is Note 3 of Table 7-149: a non-VF Function only implements bit 26 when
-> Poisoned TLP Egress Blocking Supported is Set in the DPC Capability
-> Register (Offset 04h, bit 6; PCIe r7.0, sec 7.9.14.2, Table 7-280).
-> Per PCIe r7.0, sec 7.9.14, the DPC Extended Capability (001Dh) is only
-> applicable to Root Ports and Switch Downstream Ports, not to Endpoints
-> like e1000e (and in QEMU, pcie_aer_init() initializes PCI_ERR_UNCOR_MASK
-> to PCI_ERR_UNC_INTN | PCI_ERR_UNC_TLPPRE = 0x02400000).
+On Tue, Oct 27, 2026 at 4:29=E2=80=AFAM Atharva Tiwari
+<atharvatiwarilinuxdev@gmail.com> wrote:
+>
+> > You can drop this.  Nothing about this is GMUX specific.
+>
+> I agree, but there needs to be another variable. Using pm_runtime_suspend=
+ed
+> or using any other pm function will not work, as amdgpu_pmops_runtime_res=
+ume
+> also requires hardware access and even though hardware is accessable by t=
+hen
+> pm core will show that its runtime suspended.
+>
 
-Hi Priyank,
+I guess the runpm code doesn't update the status until after
+resume/suspend?  If so, call it something like runpm_active.
 
-Thank you for the detailed explanation, and for pointing me to Note 3 of
-Table 7-149. That clears up why PCI_ERR_UNCOR_MASK reads 02400000 on the
-e1000e in the sample session of the cover letter: bit 26 is only
-implemented when the DPC capability reports Poisoned TLP Egress Blocking
-support, which does not apply to an Endpoint.
-
-> That said, your suggestion to use "Header Log Overflow or Internal
-> Errors" (PCIe r7.0, sec 7.8.4.6, Table 7-152, bits 14-15, and
-> sec 7.8.4.3, Table 7-149, bit 22) as the example is much clearer
-> because those bits apply to Endpoints as well and match the sample
-> output directly. If you or anyone else suggests the same, I will gladly
-> change it.
-
-Yes, I would suggest using those two in the example, since they are
-masked by default on Endpoints too and match the sample output directly.
-This is only a suggestion, of course; how to proceed is up to you and the
-maintainers :)
-
-Thanks,
-Daniel
+Alex
