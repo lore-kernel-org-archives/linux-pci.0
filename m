@@ -1,82 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.179
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793078792;
-	b=1k5E0IFELZyd6g915qSNq7shoGUHZuFAMt2lgxSh5zqzEsJJSrin8bNSNT5lfzpIuS9G
-	 Q3XF+5qq8zL8g+LeZRTCVwHTw97g9V3NW1jLSzGPfWdRG+Ej62KM2r0iKiJV152yZi7qE
-	 yBu5qBvXzL435jThJRPplE/hytff21zXUVoiw6PVu4hS2ZuRzTGBYftC0RfinFTZV8g16
-	 vgpcJsmdvkNEvfuDOvCgMfN2YFR0Lig7j6aW0MHhJf8r+Q2sS7MWNaisDKcHJmxmhwrxO
-	 /VPOcr4ydUIKXISmpSk0b/gG9R9KzwTQD5b06afXBPU+GmpDqWgVBErlQOwH6SyhvpQ==
+	t=1793078785;
+	b=xQ3Y4fOZDFT6HY2fW6RS2Q1VYQ2K5Lg+3UEWqvVVfn/h+vabbb4bK1jjEdoiXw4CqXPB
+	 SR3O4FPc0h8w0J5SByE+peKAUZ/w5TbLSSY1n3rxQyx4myX6Omc6AWTIx9TGJA3vw0B6X
+	 9NJ07ZHEBdrvQkKv5XTkXreYkogZBNlKlGEmWx1zOd4MJxpKDx/r5sUg31kAmJJcFQQyi
+	 0JQwwqg/44BM4WVlE7vzL82gTZK536N29kYML1paTMysmp6yE5OPFGWz0tF9iep3mRn7V
+	 MbGyNwkMAFPvn1GDX3gEBHY4OFJsNBp/bkhxs44VfoJ4k5f9a6GtW3vn9KlcqdPdiSQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793078792;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793078785;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=2Z3y/YgIqgW/WpidEBgfx0w8AzIW3YmYo27EBzGRl0g=;
-	b=4g56TQHMLOyfuMDg7chGVsMrEZmUCD5L6WhqRkVJObv969SKR3f9EQ2d5o9fUb9H5RTQ
-	 e/M+e2+rvIHYpWuFO8CkQDQQ6HgOd0ny5boT9KO9xD00d512FrAMqFqnl43znsHtJavfh
-	 V9kvGTGLiJSsPJEy9Y+9gCH+8s44Ji2zP3Iy8CfUYhwjzE2uKi8hQxetWfKl+g+UNq81x
-	 +Rug2J5aVxXV8he0N9LhuyDqbbZ/AY9xk7bSqrnwiB+iw++I8P7cixSsYFGb3kFr/WKmt
-	 PoN3H3gcx8K0dlquV4VrzQa6uI3HOqBnZl8NRy2u6wCEAzF6+kBFhCm3UUMzLXBFFWw==
+	 In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=DF2GX2Vr9/zlICZewnCnHZ+XwMhrVOLtr9YXmakaBJ8=;
+	b=IZIDePMZIsfEp79anoRMp3WW6AmkLJVBSbjoYU5Tb7gZk2W4LANHzWVhp4MYUo05I72m
+	 6KafAs1cTmpf2OjazYpJVFB6l+lGx2Qhg5VygysK2gEkpqWbpAPGdmTjSFL+CsvSifwcQ
+	 rwZRqbdpsisKZtZbDCzwUo73/uecsiROwS0Uh9f35nbCQCoAYjrWd9yq1EIvFfH8V2Gxf
+	 GqpVYbsOapeUN5kQVr04LrqJ0Y5C6w1E3WJFqNShLq3XjK4QukLNQDOFL3ewYjG6KjHd/
+	 dRUBoBTWqV5UXvZMJSjhsxRAs//UyhaguIqlWyds2YxqFtUPKZsiiRe2Up2SkZykJpA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=JrICPA59;
-	arc=none smtp.remote-ip=209.85.214.178
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ppBUU5Jt;
+	arc=none smtp.remote-ip=209.85.214.179
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 932DA606A321
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 05:26:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 932DA606A321
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3E10606A31B
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 05:26:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F3E10606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=JrICPA59
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2e9d7791b00so23857145ad.0
-        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 22:26:32 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ppBUU5Jt
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2e987b4a710so2528645ad.1
+        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 22:26:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1793078792; x=1793683592; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=2Z3y/YgIqgW/WpidEBgfx0w8AzIW3YmYo27EBzGRl0g=;
-        b=JrICPA59gqLNarvkqoO6weEHrW/zx/EtXlFr41nnZZhTOrquJH+7KlJpdvFvK/0UcH
-         Dh5tNFTgPHYmXFKvUFewJIi2XvEK8rLKITKXSbOkrM3tI+SRkVR5oEMTKMAZb+VhmfnA
-         rluifilPnZR2HrA4S8rDrLOLFcEIqm24Mc/Mp67k+86FnLlq+Pxfhy0Ov5ayl9ME4LYi
-         RxR/iKU2aFqvtDs2/s42VfPtOGh0zFNvFu7m57mUq/IEpvdZT6da1uFfplL4oOx2MdkI
-         ip7NjXTlg7qYq5uigXCZ+bFxBy6qDV3BeFpncVkIDluMNLte1MR4h3C8r3vHc0TileXf
-         1xKA==
+        d=gmail.com; s=20251104; t=1793078784; x=1793683584; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=DF2GX2Vr9/zlICZewnCnHZ+XwMhrVOLtr9YXmakaBJ8=;
+        b=ppBUU5JtRQffnmvz2rPfVCMM0am1iKNTT99vWsxtfGruBwur7u+9uMc877XNtqKgWx
+         nIVOk9/LHIxR2M6QwA5WZvMpE75bn2BdBs19T+/oTV8He95F8ZGDE0Blcw5sWb/8pZC/
+         c8ujYPR/A99kQKfnnuCMEUueJWGXuEmq+WzbTUqJzCrVRNDPORf8hL6d9SAx5WS++S4m
+         GdnHr557QDvgp4i5dRMmTe2xa5zvSPTz24vrxafPuEG5UHK1fTBQwqOgKYqnF+/UNTWp
+         7lzZQePJQVfpNjfYh0hTJDCZgTmefumMec75BK2aGFPYKLmN4nZdkL/8el6bwtDSqldb
+         qUyg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793078792; x=1793683592;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=2Z3y/YgIqgW/WpidEBgfx0w8AzIW3YmYo27EBzGRl0g=;
-        b=If9380BD2Y/iCEe2CnIgvranx+CtTAywk91qE+ucSMk02ljSbUyh1E1vt6dTnpmeRW
-         2Hkug87UDrwQ5FuyEwZc13gesNqs8QAVq9K5E9OhjyGN0SWxx/4P1J/gF1tsa9MStkwW
-         X3ALEmeBA9KDh9kuUNchyJX59ihcQGlWCEy+KKe6XZ2ZHPeAqLULJtzsEq9EVto+QC7C
-         wcYQrt5bJEbrxIf1i0PYuWAZMQvVNj54Nimu5KPTCtz7YUzym2UQpdq66dw722ei8VTX
-         cSQQOy+0dI/Vp5de6WrfiYcuKN6fYp3M3Hi8U/4IMhWJYcMI6DnEO54ghzhMUuG/lPo4
-         jccQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwLnqcr+Fl47JvXxuo69c5Q6b6btRvBVL8h7w5Dd/YeVSXxZaFDBsNekg2AmVhxRS+N9q5cONJS0mM=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLyT3p/0tY+O6ah3pJq9e+QKC9bnthrVesV3baheNRuBKdBRSMJ
-	CcFSHWvj+kGv2gy7TSRJf7zbf04tzMgifl/dy5+uwBiDv8Udd1gpHDks
-X-Gm-Gg: AYBFou09Ck6nVVpSW3+H0RPJcBNVr4wqhMd7wzpUaVAyMRBqY2SivamPqdTvi98Rj4A
-	5NRHo6vN4vA7HwlHuCFz7OUji6AQ3zujjRqA5ROYhXSRbOiacQm+eLQ8SeiodVhVbasHiAOGxGC
-	ruDFHWnuWwYhnMjSBEIRUjxuikx3VSpDEn6Bzoibe7n9c98YA/XCgMfunDIW9zHYphEGggRcpu0
-	sNrjCXRJkLaZO+IKaeQ/7OJVyJdiq5o9A9VqQ2X4WS+jiqytNzvdr9v9slDKHC5NMHleU50VRJT
-	9ZfnMkGY+lweu3pYYoA9r0o+twcJt6Yh4U75X29uFrJtOOc7EYN6wyJfRjqC/oMqKNiDozhngOF
-	jXMNNNarX/zt0sqRdFVGoFXiQqjxeQWXQrZkTC8vxl7ovdFfcYPeVjDK5FCN+0q/N6eArCGlx2T
-	90X9cysMF3e+zeZ0pnX2mI0Uo/9UxnWWINxZGk0nW3UAbvEQFUPRhZzoOOPy9s2P5iYbkGZSoHh
-	1smYfWMYMUtKAV47cAar7Dv09PQQdnTLIwImGtnCUrSU094vkTqqMa9fYqw+Hq6EkeQO6Q5WA==
-X-Received: by 2002:a17:902:dac4:b0:2df:b250:ad9a with SMTP id d9443c01a7336-2ea9c7c46e7mr64891145ad.48.1793078791992;
-        Mon, 26 Oct 2026 22:26:31 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1793078784; x=1793683584;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=DF2GX2Vr9/zlICZewnCnHZ+XwMhrVOLtr9YXmakaBJ8=;
+        b=APoK0r6MRmw3Ia0j471DEF1qL3pmxdoIKdnaITBhlViYN/R1McFb//nqyweJKHL256
+         bpHi9wNVp7b93JBhmr3/rtz03AsEwU8otZbD7u7TyvvbxYFGhgvn45iICsKIytJCqIKV
+         avU6wkhA6UeppnRf2dPHH+euiNlKn4rYp7zIHVLA1JuvHBT0bTbP1woKAgi247FkuaZ/
+         +976skaTY2teB1x9hUjImGN5VtEas9xYe5Z0FAwYMZwukqIK3jjedrq8+YwblxV3e5xL
+         WFXq7lqvYYM3ogaDzkJoinU3PhrzDNgDmavycl131bRlmd7g25Xw508XfTFbpJnRUo8Q
+         mEXQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwVesVEqlNQv7gdzE0WhOJLQ71GBc4RC/vV88+OZsxIeCr8EYzwrvuVSPQYY3iLrGqdC69KLJ/y2dc=@vger.kernel.org
+X-Gm-Message-State: AFq9FYIG81SKmYyYubcJt2HAWw5/Nj/P7oXTw7DZ+4sZOcHGwM3EgZqV
+	jAmQ7DtJlqbXKVvdoIC9t9/eeBPWMRrqvXtPsElRKJeCAU59kVVHFoIn
+X-Gm-Gg: AYBFou3JZTsVBTEJ59BbQFor+O4zZOJUYOnCg9JeJtcqIU4GTIT0s2Zri5iF/+RPWcS
+	FaMybMNWsJ0cVPk10HC8ob3+JdONPczFhLGGgJEb8vThfCRjcVI0AFW7iurMzhFdy4IVVlc0vRk
+	JK3NKkAOSR88MGex20PCbrb9a1I26BIOx9SgJy7q/ILSQCcQMFpRfZJa+alc2qt0Z1CdJuohqFm
+	3gbVr3rsJRYb9/vhGA2nc93sE8lydBa6FsH8Pr2i+3nALXEID78HrSHeFDQoL7uP3WVWUtWWuGt
+	3sg3PS0R6xsvG7DF/v58/xu55uE7VklFtxIul8Wozq4BRGUhMt6NSeGNrGVsIi1fZ8F5++mN1yg
+	3IN9PCxpvhiimO8GqdcsyW0kmJjBgMA5QF13jI2vLA3qQ6+6/aNB0BPm67CGX/vRt0QP3qH0Atv
+	UuOxePeVe/rXaSy8ugkBR9KF3dyJduTH7pbOuMEyndwzWSpWXkK0zpTibQprg5csGVE8PQ0ZGt0
+	2ThL7nkSFcW8WhDNZtGEDOLE7MvBONusWMKQx9jdJgr+1rYH1JPiHtCWPvluet2A9MSdms7SQ==
+X-Received: by 2002:a17:902:e80b:b0:2e9:5313:8f7a with SMTP id d9443c01a7336-2eae3d1de56mr9703925ad.6.1793078784280;
+        Mon, 26 Oct 2026 22:26:24 -0700 (PDT)
 Received: from toolbx.alistair23.me ([2403:581e:fdf9:0:13b2:851f:d9cb:44c5])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eae6c9757bsm3307715ad.58.2026.10.26.22.26.24
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eae6c9757bsm3307715ad.58.2026.10.26.22.26.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2026 22:26:31 -0700 (PDT)
+        Mon, 26 Oct 2026 22:26:23 -0700 (PDT)
 From: alistair23@gmail.com
 X-Google-Original-From: alistair.francis@wdc.com
 To: akpm@linux-foundation.org,
@@ -100,12 +102,13 @@ Cc: ojeda@kernel.org,
 	gary@garyguo.net,
 	tmgross@umich.edu,
 	alex.gaynor@gmail.com,
-	Dan Williams <dan.j.williams@intel.com>,
 	Alistair Francis <alistair.francis@wdc.com>,
-	Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Subject: [PATCH v5 06/23] X.509: Move certificate length retrieval into new helper
-Date: Tue, 27 Oct 2026 15:25:19 +1000
-Message-ID: <20261027052536.1722081-7-alistair.francis@wdc.com>
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+	Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH v5 05/23] X.509: Parse Subject Alternative Name in certificates
+Date: Tue, 27 Oct 2026 15:25:18 +1000
+Message-ID: <20261027052536.1722081-6-alistair.francis@wdc.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261027052536.1722081-1-alistair.francis@wdc.com>
 References: <20261027052536.1722081-1-alistair.francis@wdc.com>
@@ -118,104 +121,63 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 From: Lukas Wunner <lukas@wunner.de>
 
-The upcoming in-kernel SPDM library (Security Protocol and Data Model,
-https://www.dmtf.org/dsp/DSP0274) needs to retrieve the length from
-ASN.1 DER-encoded X.509 certificates.
+The upcoming support for PCI device authentication with CMA-SPDM
+(PCIe r6.1 sec 6.31) requires validating the Subject Alternative Name
+in X.509 certificates.
 
-Such code already exists in x509_load_certificate_list(), so move it
-into a new helper for reuse by SPDM.
-
-Export the helper so that SPDM can be tristate.  (Some upcoming users of
-the SPDM libray may be modular, such as SCSI and ATA.)
-
-No functional change intended.
+Store a pointer to the Subject Alternative Name upon parsing for
+consumption by CMA-SPDM.
 
 Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+Reviewed-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
 Reviewed-by: Alistair Francis <alistair.francis@wdc.com>
+Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Acked-by: Dan Williams <dan.j.williams@intel.com>
 Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
 ---
- crypto/asymmetric_keys/x509_loader.c | 38 +++++++++++++++++++---------
- include/keys/asymmetric-type.h       |  2 ++
- 2 files changed, 28 insertions(+), 12 deletions(-)
+ crypto/asymmetric_keys/x509_cert_parser.c | 9 +++++++++
+ include/keys/x509-parser.h                | 2 ++
+ 2 files changed, 11 insertions(+)
 
-diff --git a/crypto/asymmetric_keys/x509_loader.c b/crypto/asymmetric_keys/x509_loader.c
-index 0d516c77cc26a..174451b93edad 100644
---- a/crypto/asymmetric_keys/x509_loader.c
-+++ b/crypto/asymmetric_keys/x509_loader.c
-@@ -4,28 +4,42 @@
- #include <linux/key.h>
- #include <keys/asymmetric-type.h>
+diff --git a/crypto/asymmetric_keys/x509_cert_parser.c b/crypto/asymmetric_keys/x509_cert_parser.c
+index bfd10f0195e01..c3ec2846695a5 100644
+--- a/crypto/asymmetric_keys/x509_cert_parser.c
++++ b/crypto/asymmetric_keys/x509_cert_parser.c
+@@ -596,6 +596,15 @@ int x509_process_extension(void *context, size_t hdrlen,
+ 		return 0;
+ 	}
  
-+ssize_t x509_get_certificate_length(const u8 *p, unsigned long buflen)
-+{
-+	ssize_t plen;
++	if (ctx->last_oid == OID_subjectAltName) {
++		if (ctx->cert->raw_san)
++			return -EBADMSG;
 +
-+	/* Each cert begins with an ASN.1 SEQUENCE tag and must be more
-+	 * than 256 bytes in size.
-+	 */
-+	if (buflen < 4)
-+		return -EINVAL;
++		ctx->cert->raw_san = v;
++		ctx->cert->raw_san_size = vlen;
++		return 0;
++	}
 +
-+	if (p[0] != 0x30 ||
-+	    p[1] != 0x82)
-+		return -EINVAL;
-+
-+	plen = (p[2] << 8) | p[3];
-+	plen += 4;
-+	if (plen > buflen)
-+		return -EINVAL;
-+
-+	return plen;
-+}
-+EXPORT_SYMBOL_GPL(x509_get_certificate_length);
-+
- int x509_load_certificate_list(const u8 cert_list[],
- 			       const unsigned long list_size,
- 			       const struct key *keyring)
- {
- 	key_ref_t key;
- 	const u8 *p, *end;
--	size_t plen;
-+	ssize_t plen;
- 
- 	p = cert_list;
- 	end = p + list_size;
- 	while (p < end) {
--		/* Each cert begins with an ASN.1 SEQUENCE tag and must be more
--		 * than 256 bytes in size.
--		 */
--		if (end - p < 4)
--			goto dodgy_cert;
--		if (p[0] != 0x30 ||
--		    p[1] != 0x82)
--			goto dodgy_cert;
--		plen = (p[2] << 8) | p[3];
--		plen += 4;
--		if (plen > end - p)
-+		plen = x509_get_certificate_length(p, end - p);
-+		if (plen < 0)
- 			goto dodgy_cert;
- 
- 		key = key_create_or_update(make_key_ref(keyring, 1),
-diff --git a/include/keys/asymmetric-type.h b/include/keys/asymmetric-type.h
-index 1b91c8f98688d..301efa952e263 100644
---- a/include/keys/asymmetric-type.h
-+++ b/include/keys/asymmetric-type.h
-@@ -84,6 +84,8 @@ extern struct key *find_asymmetric_key(struct key *keyring,
- 				       const struct asymmetric_key_id *id_2,
- 				       bool partial);
- 
-+ssize_t x509_get_certificate_length(const u8 *p, unsigned long buflen);
-+
- int x509_load_certificate_list(const u8 cert_list[], const unsigned long list_size,
- 			       const struct key *keyring);
- 
+ 	if (ctx->last_oid == OID_keyUsage) {
+ 		/*
+ 		 * Get hold of the keyUsage bit string
+diff --git a/include/keys/x509-parser.h b/include/keys/x509-parser.h
+index 8b68e720693a6..4e6a05a8c7a66 100644
+--- a/include/keys/x509-parser.h
++++ b/include/keys/x509-parser.h
+@@ -38,6 +38,8 @@ struct x509_certificate {
+ 	unsigned	raw_subject_size;
+ 	unsigned	raw_skid_size;
+ 	const void	*raw_skid;		/* Raw subjectKeyId in ASN.1 */
++	const void	*raw_san;		/* Raw subjectAltName in ASN.1 */
++	unsigned	raw_san_size;
+ 	unsigned	index;
+ 	bool		seen;			/* Infinite recursion prevention */
+ 	bool		verified;
 -- 
 2.56.0
 
