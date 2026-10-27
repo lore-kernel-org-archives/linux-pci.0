@@ -1,58 +1,44 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.79.60.207
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793106701;
-	b=DV5pZo0VKE7AFr6yUDC29l82f02/D9Cph0Od9VZGWEeh3zTomjri41am5MJYhzQCUtV4
-	 WHJk6gAEQpFqg/GMT37Qwlh71BboYp/sqn1dEqebJzQ1KACCqwgegcjC6IRdKqavwdfXM
-	 ZgUDbt0IVLW6CEa7m4rh35OboGSbh1jGsIsoWWa4KNrdgdYBJWuctm3U2diH0Uy6eJg8l
-	 mNprogzCEybDmlc8Xfe8iH0B74f/2K3SUhgEMXFix+/U3Z8BEjDlg/xk4FbMKMoDlouZq
-	 pAxMqYNhjC7+HqRwiPRnF/wFBgtFYtsHu1EXdJfkc01L/2Ad9+mG+H1d+DAc/9uooxw==
+	t=1793106793;
+	b=pUpKhP2KLSjhULZntbSTjFbJkXLt3ylsfI1fkYSBJErfL96jjbhvsYRkF2OEX9ocgbix
+	 ShHfYqdhyNdAyVDUXwxpK60TqFLJcknt9RqOzIkgJ6F+4sst5ClZMMbQz++qDuGjDlJfB
+	 bY1C79TwojA1jn3hv+MtCO5JDgAKytgx5KTrkmMPWoIFMf1okf+win4jy60q66hZAMuH/
+	 mhCx3/IIMcc0jC5Sq2azWWk6YuywyL+uJPSxH1FQx7+TUoATSZhxRUcmtRWZIB6mYC0nx
+	 V1hzmn3uNuxJmb4CbVV7AXrbGI4FUDxnGYyU+YPhzfLpg1QEn+LE/G5ApwmJa8Nd6bA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793106701;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=6T5qHszoT5KAnaMFtpj3HuHEDlbDw72PARLkg2WqNwI=;
-	b=0OE82RBVJkbupvAUrpomROroJWrhgt3H0zy5FbMrh/r5SGKj8wG+uxOF1bPnWJRry12Z
-	 7Pb/ZnZqk/iQqE+1S9vIrd//LRs/alOi/Rx/7fYj5J+ZigeJEnGll27yJ7/JQaCKTdZGk
-	 KzeY9AQ7dMLPWLTQgDRoOQtcxdCpCGaCk9gta8/x+4caSIBvCYxSuMCGEZGHWIFUW0yr9
-	 /zH9sFjJ2wAReu5tXQpL8dKk1CY/AgW8jQhSyM6jDadVC8DFaMuS/YyEPXcWk40ZECDUz
-	 gHJyrRBhx5qGoxjJkL+c26LboSQXwpuWaxFZQSxDfkytq3//njCloWR/enISYTwyxlw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793106793;
+	h=DMARC-Filter:Received:Message-ID:Date:MIME-Version:User-Agent:Cc:
+	 Subject:To:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:X-HM-Spam-Status:
+	 DKIM-Signature;
+	bh=g7rGr35rsfUat/aHvoe/Mi5rDCRRMxT0NcwnokuEoLQ=;
+	b=uSPHGRq9dRbvUjAaSI8r0KRXmqbAovuFgcddiB6+iq9cn7saAjc3H1lpvfn266W0rlpL
+	 m22auPgo8kEYpoqq4XKaS4BuwhXe+tUYPptGUVg8QKvkSeuIO8V5tyKDGzT7QrqjF+Mrn
+	 M10AVxxdYfC9IBeqfHfcvX5UG6/LvsYWW3hbZpSyz3nXQdFioVKyHk9WsoH8xe1NNg9iO
+	 lxNnWO75ZFTIyoJiAdfHXzBX3DwAp5OOKZBz75amVI/jz8g8bj5rB4tMGCIFqwGu2tUMv
+	 azn/Do/XbsneJ5oQoQNtWus3fNbIpjNlgMRtZSzK/rbkfjoNk/RGeDxEQVMpA0hkeoQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NhFfP2Am;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=rock-chips.com;
+	spf=pass smtp.mailfrom=rock-chips.com;
+	dkim=pass header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=if1OE+s+;
+	arc=none smtp.remote-ip=210.79.60.207
+Received: from mail-m60207.netease.com (mail-m60207.netease.com [210.79.60.207])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDEB3606A31D;
-	Tue, 27 Oct 2026 13:11:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8AAB606A327;
+	Tue, 27 Oct 2026 13:13:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C8AAB606A327
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NhFfP2Am
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF4FB1F01825;
-	Tue, 27 Oct 2026 13:11:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793106700;
-	bh=6T5qHszoT5KAnaMFtpj3HuHEDlbDw72PARLkg2WqNwI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=NhFfP2AmkN8X7XELirt7qT1omsb7npj/zadplmlZ/ndbM/9QYLp2ZJCOJx+dWlUMH
-	 WLIl9HcnEfz9gd3aqK4ZL7dj/jUrwFJl61kMEnfVFuO2eXjlv12kfExtfW8c22DCO1
-	 XS6kqIuoyvE7I5lyuEi75AOr6i07VYF2vgUNRu3r4vV1u1gvqwDF2ZJeXWx3BzDdbk
-	 wVX9EWBmnqqrIj3caxXblXv1sxbO8+kSSUkWMzV17NaqkEQBkQ8d4uTWltzWPvgaIL
-	 D6FLOCVRYM4oXdPXNHM3BFSD/u5X3pnF+GwgfpzP9KZI3CWVnt3gWDgtHSzYZ0nv/y
-	 brBln+2rf30pA==
-Date: Tue, 27 Oct 2026 14:11:32 +0100
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Sreeraj S Kurup <sreekuttan2156239@gmail.com>
-Cc: Ryder Lee <ryder.lee@mediatek.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?B?V2lsY3p5w4XigJ5za2k=?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org, 
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v4] PCI: mediatek: Fix integer truncation and handle
- oversized resources
-Message-ID: <kfnxuro5xf4mhokabg773zcyp7otcjxwpzcn3dlo6y3kpv4uv4@bne4qf3vcif5>
-References: <20260930120539.4967-1-sreekuttan2156239@gmail.com>
+	dkim=pass (1024-bit key, unprotected) header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=if1OE+s+
+Received: from [172.16.12.48] (unknown [61.154.14.86])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 528713ae7;
+	Tue, 27 Oct 2026 21:12:59 +0800 (GMT+08:00)
+Message-ID: <80f85ae9-7162-4940-8dec-690bc00098b4@rock-chips.com>
+Date: Tue, 27 Oct 2026 21:12:57 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,84 +48,136 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Cc: shawn.lin@rock-chips.com, imx@lists.linux.dev,
+ linuxppc-dev@lists.ozlabs.org, linux-amlogic@lists.infradead.org,
+ linux-rockchip@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ sophgo@lists.linux.dev, linux-riscv@lists.infradead.org,
+ spacemit@lists.linux.dev, linux-tegra@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 01/16] PCI: dwc: Add pcie_cap field and caching helper
+To: Hans Zhang <18255117159@163.com>, bhelgaas@google.com,
+ lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ jingoohan1@gmail.com
+References: <20261027122827.2725643-1-18255117159@163.com>
+ <20261027122827.2725643-2-18255117159@163.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <20261027122827.2725643-2-18255117159@163.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260930120539.4967-1-sreekuttan2156239@gmail.com>
+X-HM-Tid: 0aa17d7e1c8c03a4kunmbc22d35997dd
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaTkxPVksdSUpMGR9OGhlMTVYVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUpLSU
+	9PT0hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=if1OE+s+0vJEWd3Li6qhSK+6BnN+GRMpiXbxk3rZd8OP+gZRRJTgOPkxvlHVvkfTSHfgfCHrlQaCwDegrXIGqsg5RiwE8+kwUi0A9fecpSt8Hux3Z2shlMceNBl4RxxWxv/AwzexIk4Q9bjOpYyaV2XS7lJ5MiQP1V21+XMyr64=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=g7rGr35rsfUat/aHvoe/Mi5rDCRRMxT0NcwnokuEoLQ=;
+	h=date:mime-version:subject:message-id:from;
 
-On Wed, Sep 30, 2026 at 12:05:39PM +0000, Sreeraj S Kurup wrote:
-> resource_size() returns a resource_size_t, which is 64-bit on 64-bit
-> architectures or 32-bit systems with LPAE/PAE enabled. Passing this
-> directly to fls(), which accepts an unsigned int, implicitly
-> truncates the upper 32 bits.
+Hi Hans,
+
+在 2026/10/27 星期二 20:28, Hans Zhang 写道:
+> The DWC PCIe core and its platform drivers repeatedly call
+> dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) to obtain the offset of the
+> PCI Express Capability structure. Besides being verbose, that performs a
+> DBI read every time, including in paths that run repeatedly such as link
+> up polling, suspend/resume and interrupt handlers.
 > 
-> Furthermore, AHB2PCIE_SIZE() uses a 5-bit mask GENMASK(4, 0). If a
-> resource size exceeds 2 GiB (order > 31), the log2 size order
-> overflows the 5-bit mask. Clamping the value silently truncates the
-> hardware window while leaving the OS resource intact, causing bus
-> errors when accessing BARs in the unmapped upper region.
+> Add a pcie_cap field to struct dw_pcie and a helper
+> dw_pcie_get_pcie_cap() that performs the lookup on first use and caches
+> the result for the subsequent calls.
 > 
-> Fix this by using fls64(size - 1) to accurately calculate log2 size
-> orders without off-by-one errors and returning -EINVAL if the resource
-> size exceeds the maximum supported 31-bit window order.
+> The lookup is deliberately done lazily, at the first place that needs the
+> offset, instead of at a fixed point during controller initialization.
+> This guarantees that the DBI read happens exactly when the open coded
+> dw_pcie_find_capability() call it replaces used to happen, so no DBI
+> access can be made before the controller clocks, resets and power are
+
+
+With the controller inaccessible (clocks/power gated), what a DBI
+read returns is platform dependent, most integrations just hang the
+accessing CPU, like Rockchip's SoCs, others might return zero or
+garbage. Zero self-heals as the commit message describes, but a garbage 
+non-zero lookup would now be cached indefinitely, so every later caller
+would use a bogus offset?
+
+Perhaps the "TX Interface Progression Detection Features" of dwc IP
+could help return a dedicated value? I don't know, so I need to check
+it internally. I will get back to you later.
+
+
+> enabled. This matters for endpoint controllers such as qcom-ep and
+> tegra194, where DBI is only accessible after PERST# is deasserted, and it
+> also means platform drivers do not have to call the helper from a
+> specific callback at the right time.
 > 
-> Signed-off-by: Sreeraj S Kurup <sreekuttan2156239@gmail.com>
+> The cached value is accessed with READ_ONCE()/WRITE_ONCE(), because the
+> first lookup may be triggered from different contexts, for example the
+> qcom-ep global IRQ and PERST# IRQ handlers. A concurrent lookup stores
+> the same value, so this race is benign.
+> 
+> A return value of 0 means that the capability is not present. This
+> cannot happen on real DWC hardware, where the PCI Express Capability is
+> mandatory, so a negative result is not cached separately: it only causes
+> the search to be repeated, which does not affect correctness.
+> 
+> Signed-off-by: Hans Zhang <18255117159@163.com>
 > ---
->  drivers/pci/controller/pcie-mediatek.c | 29 ++++++++++++++++++++++++--
->  1 file changed, 27 insertions(+), 2 deletions(-)
+>   drivers/pci/controller/dwc/pcie-designware.h | 34 ++++++++++++++++++++
+>   1 file changed, 34 insertions(+)
 > 
-> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> index a60d1ae076f8..639884b22ad7 100644
-> --- a/drivers/pci/controller/pcie-mediatek.c
-> +++ b/drivers/pci/controller/pcie-mediatek.c
-> @@ -8,6 +8,7 @@
->   */
->  
->  #include <linux/bitfield.h>
-> +#include <linux/bitops.h>
->  #include <linux/clk.h>
->  #include <linux/delay.h>
->  #include <linux/errno.h>
-> @@ -686,6 +687,8 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
->  	const struct mtk_pcie_soc *soc = port->pcie->soc;
->  	u32 val;
->  	int err;
-> +	resource_size_t size;
-> +	int size_order;
->  
->  	entry = resource_list_first_type(&host->windows, IORESOURCE_MEM);
->  	if (entry)
-> @@ -753,8 +756,18 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
->  		mtk_pcie_enable_msi(port);
->  
->  	/* Set AHB to PCIe translation windows */
-> +	size = resource_size(mem);
-> +	if (!size)
-> +		return -EINVAL;
-
-PCI core already rejects the zero sized MEM regions. So this check is a dead
-code.
-
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index 0735ae940924..fa31e8b763bc 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -592,6 +592,8 @@ struct dw_pcie {
+>   	 * use_parent_dt_ranges to true to avoid this warning.
+>   	 */
+>   	bool			use_parent_dt_ranges;
 > +
-> +	size_order = fls64(size - 1);
-
-This is wrong. AHB2PCIE_SIZE() register needs the full size value to enable the
-whole window. Check:
-
-c61df57343bf ("PCI: mediatek: Fix memory mapped IO range size computation")
-
-> +	if (size_order > 31) {
-> +		dev_err(pcie->dev, "Memory resource size too large: %pa\n", &size);
-> +		return -EINVAL;
+> +	u8			pcie_cap;	/* Offset of PCI_CAP_ID_EXP */
+>   };
+>   
+>   #define to_dw_pcie_from_pp(port) container_of((port), struct dw_pcie, pp)
+> @@ -830,6 +832,38 @@ static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
+>   	dw_pcie_writel_dbi(pci, reg, val);
+>   }
+>   
+> +/**
+> + * dw_pcie_get_pcie_cap() - Return the PCIe Capability offset
+> + * @pci: DWC instance
+> + *
+> + * The offset of the PCI Express Capability structure is read once from
+> + * the DBI configuration space on the first call and cached in
+> + * @pci->pcie_cap for the subsequent ones.
+> + *
+> + * The lookup is done lazily at the first place that actually needs the
+> + * offset, so the DBI read happens exactly when it used to happen before
+> + * caching was introduced, i.e. never before the controller's clocks,
+> + * resets and power are enabled.
+> + *
+> + * DWC PCIe controllers always implement the PCI Express Capability, so a
+> + * return value of 0 means that the hardware is not usable. Callers that
+> + * check the returned offset keep working, and the (never expected)
+> + * lookup is simply repeated on the next call.
+> + *
+> + * Return: the cached offset, or 0 if the capability is not present.
+> + */
+> +static inline u8 dw_pcie_get_pcie_cap(struct dw_pcie *pci)
+> +{
+> +	u8 cap = READ_ONCE(pci->pcie_cap);
+> +
+> +	if (!cap) {
+> +		cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> +		WRITE_ONCE(pci->pcie_cap, cap);
 > +	}
 > +
->  	val = lower_32_bits(mem->start) |
-> -	      AHB2PCIE_SIZE(fls(resource_size(mem)));
-> +	      AHB2PCIE_SIZE(size_order);
+> +	return cap;
+> +}
+> +
+>   static inline int dw_pcie_start_link(struct dw_pcie *pci)
+>   {
+>   	if (pci->ops && pci->ops->start_link)
 
-Why can't you just do, fls64(resource_size(mem))?
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
