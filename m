@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793104324;
-	b=BI8xT/RozegMkfW7E7w3BUJw01+pyCodf0Lf/u/+hPoFWNIJMan/AfGQh88kkzhkGd3+
-	 sjAScdMYR5oPnl4qYCmINY08QRQ9Rxyg6lP0fs8+tjuGo7bquAZY+CBEcyEY+mBayF8A+
-	 bM8hWBXBohfWAn1+QBuYTH8neHg6yMvdOobfY8jI7a4wp5aKIzBqPmGeM+q0YH0WHZxPn
-	 M3vAgQ2y/QYXmMo/wJ2RwJyRlwHvx5soG13aNPH8cVJvqjwR6YGYBgOaN7pANgqVpYPHD
-	 EJtyypDSJtF5MXudB1no0L3ThtZm0mvRWHqpfHiyMbdRlxs3kTmUWx7b/yMaiSZ/Vbw==
+	t=1793104325;
+	b=1l0/rnwJpqARHVX7KAAcUayrhLYiKn9k55KgKXJtRN0X/EEh5+dsHm7sPQtriAZMdpBu
+	 xdEIosEOtpy1EdXCFRBH+hXXTCOGNp3xyrWjVXJTkvruTqK2IVahwDN8SgEV9O0OGO0JX
+	 rLUvbVNqrh9/SUUP/cGwApognoNfdmdlYxLyNx04Pm6+rg/aqqCmbq5Ca03h9jEQ/HZSw
+	 H65wxetQQyaEZ7AY1bvDs11qBC1EjZnruk7wO4Qm5JpnHe+x9xwDlG5ftKDsUenm9nrkK
+	 eA2A6vt/ex0qfxPLRZTvSDzWlj2PelQssYZebVRxp7C7ODqnaIqF8Dl3DFxO01frn2w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793104324;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793104325;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=tUPP5EnXEOh3ZR/xT7ZzPJBKDXOO2vVmY0jIu+wIj+c=;
-	b=TXwjpCRx7Vnxy20S7EmGek03Ukw+26UVE2/ky++xG0wyAimQGu7sHR3TbLjRwYm8bU1o
-	 F9aCqRAFc0RPRYLbFVwqHroBXsAZZK0bqkQOG8FWNkeLRQPuscZXDxnj4zLi28y37Ds/2
-	 HItQPGKZnud0PVQwsp0uuY4oGRuYfwOBJcNQwR4XmyovVH1NzTjZLSD60UbBEVeEalqgL
-	 xxDrAZ+U9JMEjr9HFZYKdV6OMbRUVv13y/r9tXJYsbAZ66dWqwBboqg6EjR20UwhHn1fe
-	 F6IWcdoy2dvdBm5G651aZMZ4d8CToMlka3aA6i/GMDMuoZIwG68Lkt9CjSvi/lbpnXg==
+	bh=328trzmhKzEF5BXVtZQ6YjInawLtD8pAiyGdqQ/oeKs=;
+	b=hv9tAueRKj1rHQffIxAZsxhT8cKHiYdF5zdIjDdz12TBIY/LHBoCAd8SA+XyHmgdWPYm
+	 Qyakkp0dEENJz74PTBuI51+FjhkbbLWQgpLrauGHkmGI4EVqCO1/J3rWuh5igCnDJ5iay
+	 TU7ILtXHZ91N6ooMFowDlVUrIvTJPmmVsMw6aRloM9aupxFLXqY46f6XYLrquCpUPHeXc
+	 kiDfxxLVFcLWGVwRh5jjKDgyUl3zO57RlS8qoRjyFcUH6B5EeqUYah+HoR/SjzEYgGISP
+	 EIuWv9sQ8Ol76Tad63DCGk+Mvfavsrm7GWYBHyLGvkDMlA2PXrXLbUUDWhEugDcYlSg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OezvACpr;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SNF9arVS;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D8AC606A331
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 12:32:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1654606B245
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 12:32:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OezvACpr
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2D241F01825;
-	Tue, 27 Oct 2026 12:32:03 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SNF9arVS
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 591CA1F01828;
+	Tue, 27 Oct 2026 12:32:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793104323;
-	bh=tUPP5EnXEOh3ZR/xT7ZzPJBKDXOO2vVmY0jIu+wIj+c=;
+	s=k20260515; t=1793104324;
+	bh=328trzmhKzEF5BXVtZQ6YjInawLtD8pAiyGdqQ/oeKs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=OezvACprxhxwlQ2d+kJimbsRvqIGbTO6QFovHmxP7EaZUfliDj3qfhd8HlwwcGEVI
-	 9jogdd+s6bnVMcx6l9GBTAWL9WtyaM7lGcG7lnHoUkmqNYSR9tx6vW/oe23dT2VYu0
-	 kXur6UqZry7R0sGO2LsJD2LWZWYaNoXRk3d8xRw+Vz2I4o1enM4i5fiqtAbpcvk4/l
-	 juiGucu9hDpBjf8E12SI09emQvWZQ5Pf5pDDWcKoMYN9fGesY5lDv8Gqm6g55QhKD8
-	 26U6om/PVXS/NkAoH3k/a6FmEzS9EMM05L4Z6VY1RfYi+pWrZ4K+If5IqO3P3hD3JH
-	 568ewlVgmFSBA==
-Message-ID: <sashiko-outbox-186550@kernel.org>
+	b=SNF9arVS3K6oj2bn4WLiZg7hDRtOtKbDo36VcyFHADoKZv3ugGTZC9oytTv0VlCMX
+	 HIG99Qv2hAkG6JA3/apMuxy2R/UXJGoAZnhmBIvLGZ2xIuUJZ6hwYYbnLIDDQgg0FI
+	 R7z4I+J/A0xmtf4HsITWJHlncI/zL5RSv8Kf9Qj+zashfJg7Wgf/FzF+7jSRtjj9yK
+	 rzVYp0pu+hU+q4PSGCC/e8AeiL/RZtzaSq7Q6DvXHLcFtnufeENYx4p4JGx1YnosmZ
+	 n6VRABsDPCTI6BaFTi5gJap0dV5fv4ydGDVhigadVvpxGSm9yjY7V4Ow2cdQG8ByoY
+	 kQgfSWbiSd4Uw==
+Message-ID: <sashiko-outbox-186551@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 09/16] PCI: dwc: intel-gw: Use cached PCIe capability
+Subject: Re: [PATCH v4 05/16] PCI: dwc: meson: Use cached PCIe capability
  offset
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hans Zhang" <18255117159@163.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261027122827.2725643-10-18255117159@163.com>
+In-Reply-To: <20261027122827.2725643-6-18255117159@163.com>
 References: <20261027122827.2725643-1-18255117159@163.com>
- <20261027122827.2725643-10-18255117159@163.com>
+ <20261027122827.2725643-6-18255117159@163.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 Date: Tue, 27 Oct 2026 12:32:03 +0000
@@ -61,9 +61,14 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> intel_pcie_link_setup() is called from intel_pcie_host_setup(), which
-> runs from the .init callback after the controller resources have been
-> enabled. Replace the capability search with dw_pcie_get_pcie_cap().
+> Replace the dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) calls in
+> meson_set_max_payload() and meson_set_max_rd_req_size() with
+> dw_pcie_get_pcie_cap() and store the offset in a u8, which is the type
+> used everywhere else for a capability offset.
+>=20
+> Both functions are called from meson_pcie_host_init(), which runs after
+> the controller clocks and resets have been enabled, so the first lookup
+> happens exactly where the open coded search used to happen.
 >=20
 > Signed-off-by: Hans Zhang <18255117159@163.com>
 
@@ -71,5 +76,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261027122827.2725=
-643-1-18255117159@163.com?part=3D9
+643-1-18255117159@163.com?part=3D5
 
