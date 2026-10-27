@@ -1,55 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793118370;
-	b=L+92YNegTevxph6FHydORWEyvTiII37hWIluhkng4woQhotw9jLQoT3hTFmcLOigMKH8
-	 HkBova7Eqz67BG4rARZAN1ballfs7lonnMxgo81qsprDRIuFczKoOfAEuUL+F2z47nEJS
-	 HzE86s7s7zJEYLGQ1TPqOZoYcYrv6A5dmC+B7MCOmD/8g6U0yd9aMa8rLIixUenq6QnQO
-	 u+/qmHTZj03vU94pDq7NDR+t5sDIBYM4P+WlD/e049mdFxveqJec0a02AjvhwyP8zZRT/
-	 QXtT7HrkD/Y4rRhJH9kDed2mMU9oFDzqNJOUGhxa/0YJb4vxRpauSyA7H+MMsvzs55Q==
+	t=1793118406;
+	b=KdmIgL+yQS9U+igTtTUEAKoLkkjQup2zEbaza/pRxyNCkyiTQTfP7a9nYG7mzBFB7hIg
+	 cpC8hitjvTbUUSrnylyJdXSU30bUjMp16l3D89ixuab8EewxAwPSH8cPUQMDkRo/4Jp7+
+	 2SF/AVx8ARbUO9eIDwvOIQ9l1iaTw3AffbsYqut4ZZueZkgToWe1ktD74zc0E2lKyOGcp
+	 WOadhZ2s1iGHoZGPEYiiP2/xus5EdtgWjInYkWm6RAfB4juGLluJrmNml+FAVWT9K17tZ
+	 gR+7Gxebkjz9mqo2BSFfhHzqJ8Qyx0jmckaWGcU6qCmCcNIn8X3PbALN5C6vsia/47w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793118370;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793118406;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=TvcTBJ/xHuagtsRzoCQJQpIh/ypOybdxk1MlhT6FS1I=;
-	b=ei2Vw6JguVW9rKMzuFk4exrrQtDlArYJQfF8p781qKjUbQx+PunJdqq8ZgnCkrRYxaIB
-	 teSbyFWoQca6CVXym4lLZsusVZa/Zyl9tGPnUljYs7/NuqvDUCFS9SPjGI2i1tkhU6dwH
-	 VAmMjNs26ibSs8vgA09Y0J6PmE3C10ikTMY6lKRzNaRM/s0U2WpiCMZf/TXE+bcpQcsyw
-	 lanIpv2qhk4kCkz+4LsszuXjQm88gCL8Ep9RPL269tzLuRBPq2YNjQYCdh4ukn7xMwhoo
-	 Njqm13BE+DOoRyX/nn5Qnyde6ODRjES+Ao/hVidp66weBOc6b2/wGuH2RtgO/b6/qFQ==
+	bh=v+jT1ar5EDEARWTrZzRXUSQAn5y/GjkZLhzphpIcRPY=;
+	b=lnFwXHylsybRs/l1IzvM0PCf9H63fYBI5JAkSj4/GL14nyoccMEcQgUzbfG/fNG0SznG
+	 78Na9xT6SOjfQkRSt0Fwk+4H1lirQOJgvHIl35VBLBEW8Vl0dJ498+bbrtu5UVNJY5h2y
+	 vDPlgdO5thUTXcGa3PofUSsOf9tiNf4O6tnpBKwdAzPDEqRpwAqUrYOzOyTevUfhfQk5B
+	 Ku77z/ACCq78w2AjRs2hjwXMZFDc1FLU2apOB1B+q2sHHPLAj9GSR4OpMeGmDp1JEoGXx
+	 ZI55G/qRrrwVoATgsnZT+Kro06KjzHAK1OFNv1uti68oXAbAeLoa4T9dBCYSsB60V3g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BjZl+U+e;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GSQv9uqV;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EC84606A31A
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 16:26:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 327BB606A31D
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 16:26:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BjZl+U+e
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AFBA1F01825;
-	Tue, 27 Oct 2026 16:26:10 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GSQv9uqV
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B88FB1F01828;
+	Tue, 27 Oct 2026 16:26:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793118370;
-	bh=TvcTBJ/xHuagtsRzoCQJQpIh/ypOybdxk1MlhT6FS1I=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=BjZl+U+eCfJEtIwwaaab25NeO7NQQJf6COY33U3CCsJqLBAMpHvHx6Ywia9fiXbEm
-	 Ft7AEF/iLxJdRlo29SGsulBXueH0KrC0V7maE9snJDz/pQzu+OE6vsSWtMzYcrL2Kg
-	 BNUfnSEt8hTPAbiue18/2SP5x8NeKey4yNXKznnuJLSFm8tM36OT5RWAicJGGDVg8P
-	 s0G1pZyfdEiE2FR3Vp7lbVBc09vE++KV5uzNSDSaTqiTN5JMdUSvZ8U5DatovMVJg7
-	 qfQOZ/d0AUmo/Keq7LXNDgMoboxNwHxdKQ+W068pAYGRpmvet/oyMtIjIEVMYIlRpO
-	 BVU13K1foUWMQ==
-Message-ID: <sashiko-outbox-186909@kernel.org>
+	s=k20260515; t=1793118405;
+	bh=v+jT1ar5EDEARWTrZzRXUSQAn5y/GjkZLhzphpIcRPY=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=GSQv9uqVdOaGPYIewj+O0vdXk9QgFekBUgSsH7dbyD2SH11nhsQwnNAjw11Oj/GxW
+	 bgNF5xVifjT2vfFup5epKLpqJy0dE0Q2nXn7YsVsHMv8n9p0Gnlu+bjDPHFmhFvvOl
+	 WNdF16VRvXv3mxX7KDxHqbwfbfzYaFJmXWs0dIs8lssBpcVJkGYS2sxGXacTRDgoHK
+	 geTyCW5LYLyRBpDYlCQQ9/58piDJ379FIlUZrgem7obu97G9ErA5w0JdCg0ed4+14a
+	 vf9DebYbs+U2SS5cVztaZmhklYEGkzaRegDRMakAjOEj8YcSROcFK7gW2jY20CtXP6
+	 E436fVCh8sQLQ==
+Message-ID: <sashiko-outbox-186910@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 03/13] PCI/IOV: Introduce VF locking helpers
+Subject: Re: [PATCH v4 3/3] drm/radeon: Match VFCT using initial PCI bus
+ number
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Lukasz Laguna" <lukasz.laguna@intel.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261027160446.858300-4-lukasz.laguna@intel.com>
-References: <20261027160446.858300-1-lukasz.laguna@intel.com>
- <20261027160446.858300-4-lukasz.laguna@intel.com>
+To: "Mario Limonciello" <mario.limonciello@amd.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261027-vfct-regression-v4-3-0e7190e39c2c@amd.com>
+References: <20261027-vfct-regression-v4-0-0e7190e39c2c@amd.com>
+ <20261027-vfct-regression-v4-3-0e7190e39c2c@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 27 Oct 2026 16:26:09 +0000
+Date: Tue, 27 Oct 2026 16:26:45 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,17 +61,19 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> Add pci_dev_lock_vfs() and pci_dev_unlock_vfs() helpers to lock and
-> unlock all enabled VFs of a PF device.
+> VFCT records the PCI bus number from BIOS POST. The current bus number
+> can change after PCI core renumbers the bus, while accepting a mismatch
+> based only on device identity can select the wrong VFCT image when
+> matching devices are present. Compare against the bus number captured
+> from the firmware bus assignment before bridge renumbering.
 >=20
-> This provides a common way to serialize operations involving
-> subordinate VFs.
->=20
-> Signed-off-by: Lukasz Laguna <lukasz.laguna@intel.com>
+> Fixes: 4059e2f02c8a ("drm/radeon: Fix VFCT bus number matching with soft =
+filter")
+> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261027160446.8583=
-00-1-lukasz.laguna@intel.com?part=3D3
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261027-vfct-regre=
+ssion-v4-1-0e7190e39c2c@amd.com?part=3D3
 
