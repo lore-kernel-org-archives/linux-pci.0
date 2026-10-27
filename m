@@ -1,54 +1,69 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793140892;
-	b=zDzDJdcJ/mF0yk0z/Df5qrKYwMnC/axrtiBAlRN9zBaZotrhZ/VFYR2mv4Rj5/gLNlnQ
-	 P6OLmsWhzvASi2IuHsNrHc3bOenr4AQQhqgcUso3/fS488lJGNsEuy+xGlAGa47+npayC
-	 6NPOjz6iStq8ic0o4bMA+lYyEz43SlrDrUHqF2OIm41xX2fp851ROD8dFEvRco5bD9pJF
-	 SX8M1TdEsLYrsMpHCWE/3z5omLJ2YrDWtxmL+U3YxjHi8/To00gkNvQwUysmFoxKqqSmH
-	 ls5e24QtVbAM87JfJzbZtcFSgYtdoT/uzoPGZcKu9jYveaNxYPaxv8uVMFP12lZQyRA==
+	t=1793142045;
+	b=D6Mx2hvKsuMWydNgHA0wl9ckkl8P6pZLCO0Ydkbfj/Kvw77CdydNq0KHrGc+QrgkB7/X
+	 PFTowSvrMNWLWV8NmAVvCpbD2NuaJJGBIY+UcOWdZbsKJ7FZfpoN4wsT3e00Ym78s63KA
+	 HSCFM3yE24lSpwUGqbXAVkrHuxeLQo5c2IV/61w40LeGJlDuy6vVIAn1On82XjITcwxFv
+	 a/rEFNlMnBPKP44oPhBXCt2w3ItredJgxS2q2lCX6ciijwGJDQQu3n3825wIUXxjTlTP2
+	 gbc35MxlqX58ibH0XWLD/JWMxTMJfluq6Zjcx6XV94a3nFsk5qmbe6Qgp7BztRI2C4w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793140892;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793142045;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=36BYKCF164tXZn3FsLSkOB63KBQCKvHjKoR2T7jC1As=;
-	b=fU1bcoaiMy3VodHFOpQqsv4O8/IMKk8SNjc1dsvaODG0oWNckAZaxh8aCt6bgcC5htu4
-	 QINxQaw5vOZHMuV4iWjwiG6gCZZF+du3TyYoDqXSjdVnx0S1daFJkoD3pPcoEOLs6YRPm
-	 p5wv15efrIBCzn4xg4snMUAqIFN/2n5V99QaRK1VDrXxAgjMyaJmerzoe7jE7vCo47iKH
-	 S1r2luCYIKM56Gr4tzLjoc5Bmhf03kszcf5SuGkFtS1HXi2K7tydFsi6hUQWh0b+53Gz2
-	 Kc8fNIIkNMAK8E+vQoiggmrZylGYcEDECzXVnrCdvg8iywoautU/Y5pXHxYtAM7hPIg==
+	bh=xdcwz2J0ViafkvJlhahLT/XzWeMevy88xwVh6TrPYbc=;
+	b=4b4sjJz7uILk/uIinro0q6e+zBockjI7X0cmcvdfMjIyqD0hEzZntxmvlSTc7cD+/MtL
+	 pMwNBGH+XrK5qT1l8nG1traAqFFqFUw7uO497KLb6tBRprJejYBf2gzeOYONCaem+KHfZ
+	 cLi2ITtiQhbLEANy2QMQK6OZjBlu56a34KfEOcFwmURTf18Bv/Jp5AKR7iUkISNsFLrhw
+	 bgXBUUqisinCmtfl4kiCUX7SMVJC6J/LJSDXLAxVnCvSQVRDgcu58buUGAWDXnGOLCJ/B
+	 nYs4FCY01f4YpyxwWR+YWhauKgt9UUEN/kw58Ew0ZYg8kJ913jbUe2i3mBp5vxKTNlA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=By9twM0k;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lmZebDL8;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46CBA606A31E;
-	Tue, 27 Oct 2026 22:41:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3771606A31E;
+	Tue, 27 Oct 2026 23:00:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=By9twM0k
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2F4B1F01825;
-	Tue, 27 Oct 2026 22:41:31 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lmZebDL8
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 133671F01825;
+	Tue, 27 Oct 2026 23:00:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793140891;
-	bh=36BYKCF164tXZn3FsLSkOB63KBQCKvHjKoR2T7jC1As=;
+	s=k20260515; t=1793142044;
+	bh=xdcwz2J0ViafkvJlhahLT/XzWeMevy88xwVh6TrPYbc=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=By9twM0khKiyjXxV0Yx0gmrjtdC4XEQPzMwUDl+Una0jfLlAUEm4jYcbm08BVHjQY
-	 PMAyhJ6MSrn6qWfGAs7OSIniRe1vJyzSMUnCSK4+sS5ogCsGxex4xW2wCncWk1TDyg
-	 m8erVmAzhMyDwbkh79AxfmDf5nW9diszeWU8Y4rFPEYVAWXRmn+b+1GTscQ6BDSEJR
-	 Gzpcv6o3EfAnCPBJuhgsgdwENi2BnGngjQBdQgaHjZJhtdY1fiQjW9aW60lQO+G8TN
-	 XVp3gfycemxjRqdGKuh6aNkpOLLXvGqAdyxszYvU7NO4z5Qv6nzzzD8iqeLTTu6HPG
-	 gTBIGzJ+M/neQ==
-Date: Tue, 27 Oct 2026 17:41:30 -0500
+	b=lmZebDL8yRqLM+Wh/deQQ76tvi8l8JU1S5SVzREGnKnCGkYrs8CFKQPbV7gBuyyRZ
+	 74IkyIL+66EnqWwbU1AzUGlaIvq8+IWUw5SkeVPl3PcsJRtpv4pDee4cO/eq2xiS4V
+	 y/RR/5ihw4wzrT0BHjxLQONiMLWKrfUpnqwXA/XAYM2ReGp3nFzrFdwZXOwVFPcVfo
+	 bavBhn9rhhvOeWv7/Ptgu8NvBgAEUVFYEDgBr3vAfzBE9gS+E5hXtV0NFop/nXyzsn
+	 ZnqrMiAx6J9uT9VDTh8fD/UPivifim82POVYIJ9mKgCed3urVNWgzCkpG6F9Hquocu
+	 6UsNpJAhLlb8A==
+Date: Tue, 27 Oct 2026 18:00:42 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mario Limonciello <mario.limonciello@amd.com>
-Cc: Alex Deucher <alexander.deucher@amd.com>,
+To: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Alex Deucher <alexander.deucher@amd.com>,
 	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Oz Tiram <oz@shift-computing.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org, Lijo Lazar <lijo.lazar@amd.com>
-Subject: Re: [PATCH v4 1/3] PCI: Preserve the initial bus number in pci_bus
-Message-ID: <20261027224130.GA511803@bhelgaas>
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	Harry Wentland <harry.wentland@amd.com>,
+	Leo Li <sunpeng.li@amd.com>, Rodrigo Siqueira <siqueira@igalia.com>,
+	Kenneth Feng <kenneth.feng@amd.com>,
+	Hans de Goede <hansg@kernel.org>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	Andre Eikmeyer <dev@deq.rocks>,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+	"open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <linux-kernel@vger.kernel.org>,
+	"open list:RADEON and AMDGPU DRM DRIVERS" <amd-gfx@lists.freedesktop.org>,
+	"open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>,
+	"open list:X86 PLATFORM DRIVERS" <platform-driver-x86@vger.kernel.org>
+Subject: Re: [PATCH 02/13] PCI: Disable pcie port and access on D3 on
+ specific amd devices
+Message-ID: <20261027230042.GA516670@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,103 +75,127 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261027-vfct-regression-v4-1-0e7190e39c2c@amd.com>
+In-Reply-To: <20261025040046.1602-3-atharvatiwarilinuxdev@gmail.com>
 
-[+cc Lijo]
+On Sat, Oct 24, 2026 at 11:59:38PM -0400, Atharva Tiwari wrote:
+> As mentioned in the previous commit, PWRD turns off the entire
+> bridge, and if we read/write anything to the config space
+> or the PCIE space when the bridge is dead, the CPU CATERR's,
 
-On Tue, Oct 27, 2026 at 11:22:25AM -0500, Mario Limonciello wrote:
-> Bridge scans are split into two passes when bus numbers need reassigning.
-> Save the firmware secondary bus number on the bridge in pass 0, before it
-> is disabled. Use it to initialize number_initial when the child bus is
-> created in pass 1, before bus registration callbacks run.
+Reading or writing to PCI devices in D3cold is a problem on every
+system and we should avoid it in generic ways.  I don't know what's
+special about these MacBooks.
+
+> so to avoid interaction when the bridge is dead,
+> we remove pcieport support for the bridges, and we restrict
+> access to those bridges when the bridge is dead.
 > 
-> Keep the saved secondary number on the bridge so a later rescan does not
-> replace the child's initial number with its reassigned runtime number.
-> 
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+> Signed-off-by: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
 > ---
->  drivers/pci/probe.c | 6 ++++++
->  include/linux/pci.h | 3 +++
->  2 files changed, 9 insertions(+)
+>  arch/x86/pci/fixup.c       | 30 ++++++++++++++++++++++++++++++
+>  drivers/pci/access.c       | 18 ++++++++++++++++++
+>  drivers/pci/pcie/portdrv.c |  2 +-
+>  include/linux/pci.h        |  7 +++++++
+>  4 files changed, 56 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 27008e2ea5afc..3c03ac22223d9 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1012,6 +1012,7 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
->  	bus->sysdata = bridge->sysdata;
->  	bus->ops = bridge->ops;
->  	bus->number = bus->busn_res.start = bridge->busnr;
-> +	bus->number_initial = bus->number;
->  #ifdef CONFIG_PCI_DOMAINS_GENERIC
->  	if (bridge->domain_nr == PCI_DOMAIN_NR_NOT_SET)
->  		bus->domain_nr = pci_bus_find_domain_nr(bus, parent);
-> @@ -1232,6 +1233,8 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index 795d81c7a..66829941e 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -1094,6 +1094,35 @@ static void asus_disable_nvme_d3cold(struct pci_dev *pdev)
+>  }
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x9a09, asus_disable_nvme_d3cold);
 >  
->  	/* Set up the primary, secondary and subordinate bus numbers */
->  	child->number = child->busn_res.start = busnr;
-> +	child->number_initial = bridge && bridge->bridge_secondary_busnr ?
-> +		bridge->bridge_secondary_busnr : busnr;
->  	child->primary = parent->busn_res.start;
->  	child->busn_res.end = 0xff;
+> +static const struct dmi_system_id quirk_disable_pcie_port_dmi_table[] = {
+> +	{
+> +		.matches = {
+> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
+> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro16,1"),
+> +		},
+> +	},
+> +	{
+> +		.matches = {
+> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
+> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro16,4"),
+> +		},
+> +	},
+> +	{}
+> +};
+> +
+> +static void quirk_disable_pcie_port(struct pci_dev *pdev)
+> +{
+> +	struct pci_dev *upstream = pdev;
+> +
+> +	if (dmi_check_system(quirk_disable_pcie_port_dmi_table)) {
+> +		while ((upstream = pci_upstream_bridge(upstream))) {
+> +			upstream->no_pcie_port = 1;
+> +			upstream->ignore_access_d3 = 1;
+> +		}
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7340, quirk_disable_pcie_port);
+> +
+>  #ifdef CONFIG_SUSPEND
+>  /*
+>   * Root Ports on some AMD SoCs advertise PME_Support for D3hot and D3cold, but
+> @@ -1179,4 +1208,5 @@ static void quirk_tuxeo_rp_d3(struct pci_dev *pdev)
+>  	}
+>  }
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1502, quirk_tuxeo_rp_d3);
+> +
+>  #endif /* CONFIG_SUSPEND */
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index b123da16b..5e9513067 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -559,6 +559,9 @@ EXPORT_SYMBOL(pcie_capability_clear_and_set_dword);
 >  
-> @@ -1418,6 +1421,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+>  int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
+>  {
+> +	if (pci_dev_ignore_access(dev))
+> +		return PCIBIOS_SUCCESSFUL;
+
+This doesn't seem like something we should do for a few special
+systems.
+
+> +++ b/drivers/pci/pcie/portdrv.c
+> @@ -688,7 +688,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+>  	int type = pci_pcie_type(dev);
+>  	int status;
 >  
->  	pci_dbg(dev, "scanning [bus %02x-%02x] behind bridge, pass %d\n",
->  		secondary, subordinate, pass);
-> +	if (!pass && !dev->bridge_secondary_busnr)
-> +		dev->bridge_secondary_busnr = secondary;
+> -	if (!pci_is_pcie(dev) ||
+> +	if (!pci_is_pcie(dev) || dev->no_pcie_port ||
+>  	    ((type != PCI_EXP_TYPE_ROOT_PORT) &&
+>  	     (type != PCI_EXP_TYPE_UPSTREAM) &&
+>  	     (type != PCI_EXP_TYPE_DOWNSTREAM) &&
 
-I think I was mistaken to suggest that pci_bus was the right place to
-store this.
+Nor does this.  I don't know what the purpose of this is.
 
-It seems like we definitely need something in the pci_dev because we
-may clear the initial bus numbers in the first pass, so we need to
-stash the secondary bus number somewhere until the second pass
-allocates the pci_bus and we can save it here.
-
-Since we have to have it in the pci_dev, I suspect maybe it would be
-enough to have it *only* there.  Maybe it could be set in
-pci_read_bridge_windows(), and drivers could find it via
-pdev->bus->self?
-
->  	if (!primary && (primary != bus->number) && secondary && subordinate) {
->  		pci_warn(dev, "Primary bus is hard wired to 0\n");
-> @@ -1470,6 +1475,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
->  			child = pci_add_new_bus(bus, dev, secondary);
->  			if (!child)
->  				goto out;
-> +			child->number_initial = secondary;
->  			child->primary = primary;
->  			pci_bus_insert_busn_res(child, secondary, subordinate);
->  			child->bridge_ctl = bctl;
 > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 5ffcf5ce8c966..c607818a98a87 100644
+> index d31a8d107..8835b1c82 100644
 > --- a/include/linux/pci.h
 > +++ b/include/linux/pci.h
-> @@ -363,6 +363,8 @@ struct pci_dev {
->  	struct pci_slot	*slot;		/* Physical slot this device is in */
+> @@ -420,6 +420,8 @@ struct pci_dev {
+>  	unsigned int	no_d1d2:1;	/* D1 and D2 are forbidden */
+>  	unsigned int	no_d3cold:1;	/* D3cold is forbidden */
+>  	unsigned int	bridge_d3:1;	/* Allow D3 for bridge */
+> +	unsigned int	no_pcie_port:1; /* PCIE Port driver is forbidden */
+> +	unsigned int	ignore_access_d3:1;	/* Ignore access when device is in D3Cold */
+>  	unsigned int	d3cold_allowed:1;	/* D3cold is allowed by user */
+>  	unsigned int	mmio_always_on:1;	/* Disallow turning off io/mem
+>  						   decoding during BAR sizing */
+> @@ -2747,6 +2749,11 @@ static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
+>  	return READ_ONCE(dev->error_state) == pci_channel_io_perm_failure;
+>  }
 >  
->  	unsigned int	devfn;		/* Encoded device & function index */
-> +	/* Firmware secondary bus number saved across bridge scan passes */
-> +	u8		bridge_secondary_busnr;
-
-I think you're right to use "secondary" here so we don't perpetuate
-the "subordinate" misuse.  Maybe also include "initial" and make it
-"unsigned char" so it's the same as pci_bus.number?
-
->  	unsigned short	vendor;
->  	unsigned short	device;
->  	unsigned short	subsystem_vendor;
-> @@ -724,6 +726,7 @@ struct pci_bus {
->  	struct proc_dir_entry *procdir;	/* Directory entry in /proc/bus/pci */
->  
->  	unsigned char	number;		/* Bus number */
-> +	unsigned char	number_initial;	/* Bus number before reassignment */
->  	unsigned char	primary;	/* Number of primary bridge */
->  	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
->  	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
-> 
+> +static inline bool pci_dev_ignore_access(const struct pci_dev *dev)
+> +{
+> +	return dev->ignore_access_d3 && dev->current_state == PCI_D3cold;
+> +}
+> +
+>  void pci_request_acs(void);
+>  bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+>  bool pci_acs_path_enabled(struct pci_dev *start,
 > -- 
-> 2.43.0
+> 2.55.0
 > 
