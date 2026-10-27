@@ -1,61 +1,61 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.182.94
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793082731;
-	b=mW1rLXQpcn5A+cunSBOY2/JtchK+kzUO3DcyllFzw293dt1X3VFdE6QqhmOdP2NzsgaP
-	 DwXFj8PuGKX39WI1Xu3mSvQH/7GRcVnMo+nhPdVwUAp1oZLVZ5KcQfcsnOCbjT3n2D2VK
-	 oXHwqf775/mEPCxBUWK/i0AzeFr1P1CZO7aApj8Nzcsx96tjdQjzt2NndvFoIYMQsmXSi
-	 au+O5YVABFwVc/hknHNKBQ0O2rhZFpAaKcV4zpw8kpmsm3SHwrsq7c7zRdI/HKZ8glcIR
-	 BdBTmLfoBECpB2Jeqh52WL6DY1HjcAnw0/6J45Y8dwZ3hqSd+bWu7t8HuqV6wFwOVqQ==
+	t=1793083860;
+	b=XzTZIA/PVKxBWPHXEhnSWr4l885tePWHAZm/H/i9g6OrSwAWykXg/21QRhE7CzzntdVp
+	 1fv964CwmFQmCDypEn6Ph6wOJ7K9fHwEI9LuYpV90ppEYZB7TZKlvgg59gUv5w9+zVdV5
+	 SyLdY7LZDwARfDj2BXj0IIQFdSqA+080eK0yp0K9kozTo8hANompPdUPzClL0sIwgLlbZ
+	 b4hOhVURWcWSwV2YM3I2GlFW1j5gScCkHZddZwQ8zHrqS3KWk5yr6q6ZkCvgaxrfXHEsY
+	 DfnHwmJp0Y05Xl+Eg4tI60DyoOokqB6kuHO7u2ktmukr/GLxBuYSWEq86nMT8nN4MVQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793082731;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793083860;
 	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
 	 User-Agent:Subject:To:Cc:References:From:In-Reply-To:Content-Type:
 	 Content-Transfer-Encoding:Feedback-ID:X-Zoho-CM-AccountID:
 	 X-ZohoMailClient;
-	bh=Egai3x/F/sMJ/8jM65XynOMt9tUM5sKIeF7VYes9mmI=;
-	b=ydx7L13ISg+b0cKNBYaHqAQHU3MEAIYHsptpOt5mNRY2S2tBpBbRefxfc9u23QCmiVuh
-	 1KHr2wq5cdRGdCgWl+qRC7JeSKAm3PxCKSTUFLqj5j5CRt6yDh2Dxztxb17HG9hDhZND4
-	 Xwr9FoIGlsJwDgaMEw0YBljxaXlY0RQ6utx0T/IG4zEg1/VPh0ShLLLqzohCP8t90DaHG
-	 BCI9FTjanz819qpTzyEj/jEqv5D/eicL5IMRivDvzbw/OfRqHPZeaZugUtsFkLYLvmYtg
-	 SC4cUpZZi44b8UkyqsKf0oDHffgZSlKzvuov5ax8rcOf10z4x6JqiCmpECjaro3V6tQ==
+	bh=5v8W69pEJjNShNlPAblERevgO2fDzlhJYp4v+tSGHW0=;
+	b=gCeI00MYZxQ/hfon5Weri262MdsRwXzt7X2DNMxjwJpS2LwxBSTi0Jz5eHR3uABliQhb
+	 dKcPzidLO1OqqHins18U8Ie6eT9udq1Fu4k4sp82J5ElOHShqBCy50y91KuYYrFC1rfCK
+	 F4mlR+MJ/c4HcyDkum4OrQJUFcTAlV/faJVZjEygVNCnVeNXlSPd/7xMASi1rW0Nh+bU4
+	 SPazko2aGfhmBfnmF9zoRrsj90yR0CaA0wrl6smEQL6e8rwwZE2/OJJhAKuALMQUw54+6
+	 oFL89ApD4Hr2stOTQQF4TQyAs2wwq3sAN3Zec89pKuyzUF2HsSE6/lHca5KMIPU07dw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=zohomail.com;
 	spf=pass smtp.mailfrom=zohomail.com;
-	dkim=pass header.d=zohomail.com header.i=ming.li@zohomail.com header.a=rsa-sha256 header.s=zm2022 header.b=GSiBFv1P;
+	dkim=pass header.d=zohomail.com header.i=ming.li@zohomail.com header.a=rsa-sha256 header.s=zm2022 header.b=cAEtvNKK;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.182.94
 Received: from sender5-pp-o94.zoho.com (sender5-pp-o94.zoho.com [165.173.182.94])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1173606A326;
-	Tue, 27 Oct 2026 06:32:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B1173606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F22F7606A31A;
+	Tue, 27 Oct 2026 06:50:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F22F7606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zohomail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=zohomail.com header.i=ming.li@zohomail.com header.a=rsa-sha256 header.s=zm2022 header.b=GSiBFv1P
-ARC-Seal: i=1; a=rsa-sha256; t=1793082717; cv=none; 
+	dkim=pass (1024-bit key, unprotected) header.d=zohomail.com header.i=ming.li@zohomail.com header.a=rsa-sha256 header.s=zm2022 header.b=cAEtvNKK
+ARC-Seal: i=1; a=rsa-sha256; t=1793083850; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=jXuFPMEzh2ddB3+/mwTJYRv2A/TPU7+31BNVatYYOQmxmidxZKQ8m/24sFofrpG64CLslzJ9acFf5GwbFjhJxQwYXTIjkO2BrAVUJlwy2ihW+a7jof4cpatoMaZDXazYhfq+f47PpyT2BVSLpeGMaK8fYIa4O2ksC7TCgrC7CFE=
+	b=PkNgMiGCcnLxaLPoA/E3HWsbS5J7j74XreRe1vgxgso5pFFWndae0jtnaP2CS5wef0qlrNBY3CZ6n+FXmeni0DTtf2vdL6Qyqdzg86wQc829eul1OTHpxhgqoUsWn1MlyIuaVImla2iNYRc5u1fmeXIEzab9BaDbfSUpWteAb4A=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1793082717; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=Egai3x/F/sMJ/8jM65XynOMt9tUM5sKIeF7VYes9mmI=; 
-	b=QlKin/mVgtey+2JlAtwnCZcoOkd6GvyPiOtPq1Lih9A2wKvEDXFTbj0jGT82TOIMXoWU+Qs8YG7EZ5eGK7160r50/fHttgHV13va9UBhksAdr8MfEcc/QyC5CbxDwx43mFvH9Dx2rLhBlYDiy66Iiv80Y9z9FgIREWFTEknjbew=
+	t=1793083850; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=5v8W69pEJjNShNlPAblERevgO2fDzlhJYp4v+tSGHW0=; 
+	b=AD3zcAe0pzAJObATYhPbZiGcYOz/9vOYB+6Asmp9KGTlqF3mGETCqaOVscmUh+c7aRAK+WDe8xSLRvEnhbpZoZzfrV8HxNMEf0r8LaHsnoy3KKCvbjkhhKg+v1e/644FxnanrsVFjnSadFS5N9b3tj+W3hR19QWxJTNO86Czv1o=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=zohomail.com;
 	spf=pass  smtp.mailfrom=ming.li@zohomail.com;
 	dmarc=pass header.from=<ming.li@zohomail.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1793082717;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1793083850;
 	s=zm2022; d=zohomail.com; i=ming.li@zohomail.com;
 	h=Message-ID:Date:Date:MIME-Version:Subject:Subject:To:To:Cc:Cc:From:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:Feedback-ID:Message-Id:Reply-To;
-	bh=Egai3x/F/sMJ/8jM65XynOMt9tUM5sKIeF7VYes9mmI=;
-	b=GSiBFv1PCbv8zCyDopKRLBLW1duZxXZDoYuqqsim/jlcEAwSviAjYXLs41yq9cDj
-	yDOEkGYk6t2ki0vXM+dVADCKM/TdSDODe1lp0aIlUyJ9LjQxvWgfzWiNzp04sE6g3bM
-	j5cM8OBBaV05YnT8ubejjX6KtAMSdaaGtb6rVZ8I=
-Received: by smtp.zohomail.com with SMTPS id 1793082714953204.26967948806123;
-	Mon, 26 Oct 2026 23:31:54 -0700 (PDT)
-Message-ID: <339935ef-17d8-4467-80bc-3f1856f591b9@zohomail.com>
-Date: Tue, 27 Oct 2026 14:31:45 +0800
+	bh=5v8W69pEJjNShNlPAblERevgO2fDzlhJYp4v+tSGHW0=;
+	b=cAEtvNKKkKzNjty6ATH1+FDTHA0L8TaSUk6aISZzolwV38RFFf4tgr9lJG/B+nE8
+	PvBXhFgkcLR1KRWDAB6KgQSZOr9W/QwdwytKcAGhqkBwRbNHDp53PpamOWpL7eAOn2/
+	K+cmyrisd4qIVU7etJBFCEURQS+ADOzeb+MrdDCs=
+Received: by smtp.zohomail.com with SMTPS id 1793083847254143.69273226168082;
+	Mon, 26 Oct 2026 23:50:47 -0700 (PDT)
+Message-ID: <b49b15bb-26cd-4764-a5e0-2030ade2d5f7@zohomail.com>
+Date: Tue, 27 Oct 2026 14:50:40 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -66,7 +66,7 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v15 07/16] cxl: Share HDM decoder register unpacking
+Subject: Re: [PATCH v15 08/16] cxl: Refresh cached PCI HDM decoder settings
 To: Srirangan Madhavan <smadhavan@nvidia.com>,
  Alison Schofield <alison.schofield@intel.com>,
  Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
@@ -81,214 +81,337 @@ Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
  Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
  linux-tegra@vger.kernel.org
 References: <20261011021422.3428136-1-smadhavan@nvidia.com>
- <20261011021422.3428136-8-smadhavan@nvidia.com>
+ <20261011021422.3428136-9-smadhavan@nvidia.com>
 From: Li Ming <ming.li@zohomail.com>
-In-Reply-To: <20261011021422.3428136-8-smadhavan@nvidia.com>
+In-Reply-To: <20261011021422.3428136-9-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Feedback-ID: zu08011227f1712e42a7d8af411be461f1000072a9dacb306c184067b7a0b62b376af06e9c33af381a3bb525:ZohoMail
+Feedback-ID: zu08011227fe4f005b639ed05ddf2cf5c50000d155d2913ce8276e2d98f2d3c866a60fc355a8c93528b7501d:ZohoMail
 X-Zoho-CM-AccountID: abd763e7b9fa23acf4f42a44f9876d2d993e05abdb9290f9ccb1008c977bf7f0
 X-ZohoMailClient: External
 
 
 在 2026/10/11 10:14, Srirangan Madhavan 写道:
-> Factor common HDM register parsing into cxl_hdm_unpack_decoder().
-> Validate range and interleave parameters in locals before publishing the
-> decoder configuration, including enable and lock flags. Reject nonzero
-> ranges whose end overflows the address space while preserving the
-> zero-size range representation.
+> Early PCI discovery creates the HDM cache, while later CXL enumeration and
+> decoder operations provide updated programming state.
 >
-> Read switch target lists and endpoint DPA skip in their respective
-> branches of init_hdm_decoder().
+> Refresh the PCI snapshot when decoders are enumerated, committed, or reset
+> so reset recovery need not walk the CXL topology. Ignore updates when no
+> cache exists and reject decoder-count mismatches.
 >
-> Preserve the decoder ID allocated by cxl_decoder_init() when publishing
-> the parsed configuration.
+> Use CXL_RESET for the PCI HDM cache. Shared HDM register helpers do not
+> require it.
 >
-> Link: https://git.kernel.org/pub/scm/linux/kernel/git/djiang/linux.git/commit/?id=7d6ed7faf7d8e14abce8ae23902d5323738868d2
+> Skip cache checks and updates for DVSEC-emulated decoders, which do not
+> use HDM registers. Keep cached global control when MMIO reads return all
+> ones.
+>
+> Skip non-PCI mock ports to avoid test wrappers and a circular dependency
+> between cxl_core and cxl_mock.
+>
+> Link: https://git.kernel.org/pub/scm/linux/kernel/git/djiang/linux.git/commit/?id=50a88f5194e5df38590d413f925d8d5afa8a8488
 > Suggested-by: Dave Jiang <dave.jiang@intel.com>
 > Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
 > Assisted-by: LLM
 Reviewed-by: Li Ming <ming.li@zohomail.com>
-Minor comments below.
+One comment below.
 > ---
->   drivers/cxl/core/core.h     |  3 ++
->   drivers/cxl/core/hdm.c      | 54 +++++++++-------------------------
->   drivers/cxl/core/hdm_regs.c | 58 +++++++++++++++++++++++++++++++++++++
->   3 files changed, 74 insertions(+), 41 deletions(-)
+>   drivers/cxl/Kconfig     |  5 +++
+>   drivers/cxl/core/core.h |  3 ++
+>   drivers/cxl/core/hdm.c  | 55 +++++++++++++++++++++++++++++++-
+>   drivers/cxl/core/pci.c  | 70 +++++++++++++++++++++++++++++++++++++++++
+>   include/cxl/cxl.h       |  1 +
+>   include/cxl/hdm.h       | 25 +++++++++++++++
+>   include/linux/pci.h     |  6 ++++
+>   7 files changed, 164 insertions(+), 1 deletion(-)
 >
+> diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
+> index 80aeb0d556bd..8b08bfdc4982 100644
+> --- a/drivers/cxl/Kconfig
+> +++ b/drivers/cxl/Kconfig
+> @@ -6,6 +6,7 @@ menuconfig CXL_BUS
+>   	select FW_UPLOAD
+>   	select PCI_DOE
+>   	select FIRMWARE_TABLE
+> +	select CXL_RESET
+>   	select NUMA_KEEP_MEMINFO if NUMA_MEMBLKS
+>   	select FWCTL if CXL_FEATURES
+>   	help
+> @@ -244,3 +245,7 @@ config CXL_ATL
+>   	depends on ACPI_PRMT && AMD_NB
+>   
+>   endif
+> +
+> +# CXL_BUS requires the PCI HDM cache and built-in state helpers, even when modular.
+> +config CXL_RESET
+> +	bool
 > diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
-> index fb14b222f3ca..d69864b25656 100644
+> index d69864b25656..77bc4f7d2e99 100644
 > --- a/drivers/cxl/core/core.h
 > +++ b/drivers/cxl/core/core.h
-> @@ -147,6 +147,9 @@ void cxl_commit_start_switch(const struct cxl_decoder_config *config,
->   			     u64 targets, void __iomem *hdm);
->   int cxld_await_commit(void __iomem *hdm, int id);
+> @@ -222,6 +222,9 @@ static inline void devm_cxl_dport_ras_setup(struct cxl_dport *dport) { }
+>   int cxl_gpf_port_setup(struct cxl_dport *dport);
 >   
-> +int cxl_hdm_unpack_decoder(struct cxl_decoder_config *config, int id,
-> +			   u32 ctrl, u64 base, u64 size);
-> +
->   int cxl_memdev_init(void);
->   void cxl_memdev_exit(void);
->   void cxl_mbox_init(void);
+>   struct cxl_hdm;
+> +/* Hold cxl_rwsem.dpa for write while using the returned cache. */
+> +struct cxl_hdm_info *cxl_hdm_get_cached_info(struct cxl_hdm *cxlhdm, int id);
+> +int cxl_hdm_check_decoder_count(struct cxl_hdm *cxlhdm);
+>   int cxl_hdm_decode_init(struct cxl_dev_state *cxlds, struct cxl_hdm *cxlhdm,
+>   			struct cxl_endpoint_dvsec_info *info);
+>   int cxl_port_get_possible_dports(struct cxl_port *port);
 > diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
-> index 47cf49bcd2e5..1a19078e6c6c 100644
+> index 1a19078e6c6c..b57257efbf4e 100644
 > --- a/drivers/cxl/core/hdm.c
 > +++ b/drivers/cxl/core/hdm.c
-> @@ -939,8 +939,8 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
->   			    u64 *dpa_base, struct cxl_endpoint_dvsec_info *info)
->   {
->   	struct cxl_endpoint_decoder *cxled = NULL;
-> +	struct cxl_decoder_config config;
->   	u64 size, base, skip, dpa_size, lo, hi;
-> -	bool committed;
->   	u32 remainder;
->   	int i, rc;
->   	u32 ctrl;
-Should arrange these variables in a reverse xmas tree order.
-> @@ -960,35 +960,24 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
->   	lo = readl(hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(which));
->   	hi = readl(hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(which));
->   	size = (hi << 32) + lo;
-> -	committed = !!(ctrl & CXL_HDM_DECODER0_CTRL_COMMITTED);
-> +	rc = cxl_hdm_unpack_decoder(&config, cxld->config.id, ctrl, base, size);
-> +	if (rc) {
-> +		dev_warn(&port->dev,
-> +			 "decoder%d.%d: Invalid decoder configuration (ctrl: %#x): %d\n",
-> +			 port->id, cxld->config.id, ctrl, rc);
-> +		return rc;
-> +	}
-> +
->   	cxld->commit = cxl_decoder_commit;
->   	cxld->reset = cxl_decoder_reset;
-> -
-> -	if (!committed)
-> -		size = 0;
-> -	if (base == U64_MAX || size == U64_MAX) {
-> -		dev_warn(&port->dev, "decoder%d.%d: Invalid resource range\n",
-> -			 port->id, cxld->config.id);
-> -		return -ENXIO;
-> -	}
-> +	cxld->config = config;
-> +	size = range_len(&cxld->config.hpa_range);
->   
->   	if (info)
->   		cxled = to_cxl_endpoint_decoder(&cxld->dev);
-> -	cxld->config.hpa_range = (struct range) {
-> -		.start = base,
-> -		.end = base + size - 1,
-> -	};
->   
->   	/* decoders are enabled if committed */
-> -	if (committed) {
-> -		cxld->config.flags |= CXL_DECODER_F_ENABLE;
-> -		if (ctrl & CXL_HDM_DECODER0_CTRL_LOCK)
-> -			cxld->config.flags |= CXL_DECODER_F_LOCK;
-> -		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_HOSTONLY, ctrl))
-> -			cxld->config.target_type = CXL_DECODER_HOSTONLYMEM;
-> -		else
-> -			cxld->config.target_type = CXL_DECODER_DEVMEM;
-> -
-> +	if (cxld->config.flags & CXL_DECODER_F_ENABLE) {
->   		guard(rwsem_write)(&cxl_rwsem.region);
->   		if (cxld->config.id != cxl_num_decoders_committed(port)) {
->   			dev_warn(&port->dev,
-> @@ -1022,23 +1011,6 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
->   			writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(which));
->   		}
->   	}
-> -	rc = eiw_to_ways(FIELD_GET(CXL_HDM_DECODER0_CTRL_IW_MASK, ctrl),
-> -			  &cxld->config.interleave_ways);
-> -	if (rc) {
-> -		dev_warn(&port->dev,
-> -			 "decoder%d.%d: Invalid interleave ways (ctrl: %#x)\n",
-> -			 port->id, cxld->config.id, ctrl);
-> -		return rc;
-> -	}
-> -	rc = eig_to_granularity(FIELD_GET(CXL_HDM_DECODER0_CTRL_IG_MASK, ctrl),
-> -				 &cxld->config.interleave_granularity);
-> -	if (rc) {
-> -		dev_warn(&port->dev,
-> -			 "decoder%d.%d: Invalid interleave granularity (ctrl: %#x)\n",
-> -			 port->id, cxld->config.id, ctrl);
-> -		return rc;
-> -	}
-> -
->   	dev_dbg(&port->dev, "decoder%d.%d: range: %#llx-%#llx iw: %d ig: %d\n",
->   		port->id, cxld->config.id, cxld->config.hpa_range.start, cxld->config.hpa_range.end,
->   		cxld->config.interleave_ways, cxld->config.interleave_granularity);
-> @@ -1053,7 +1025,7 @@ static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
->   		return 0;
->   	}
->   
-> -	if (!committed)
-> +	if (!(cxld->config.flags & CXL_DECODER_F_ENABLE))
->   		return 0;
->   
->   	dpa_size = div_u64_rem(size, cxld->config.interleave_ways, &remainder);
-> diff --git a/drivers/cxl/core/hdm_regs.c b/drivers/cxl/core/hdm_regs.c
-> index 53d2f236e49c..b6ee4becde8d 100644
-> --- a/drivers/cxl/core/hdm_regs.c
-> +++ b/drivers/cxl/core/hdm_regs.c
-> @@ -116,3 +116,61 @@ void cxl_commit_start_switch(const struct cxl_decoder_config *config,
->   	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> @@ -730,6 +730,47 @@ static void cxlsd_set_targets(struct cxl_switch_decoder *cxlsd, u64 *tgt)
+>   		*tgt |= FIELD_PREP(GENMASK_ULL(63, 56), t[7]->port_id);
 >   }
->   EXPORT_SYMBOL_FOR_MODULES(cxl_commit_start_switch, "cxl_core");
-> +
-> +int cxl_hdm_unpack_decoder(struct cxl_decoder_config *config, int id,
-> +			   u32 ctrl, u64 base, u64 size)
+>   
+> +static void cxl_hdm_refresh_decoder(struct cxl_hdm *cxlhdm,
+> +				    struct cxl_decoder *cxld)
 > +{
-> +	bool committed = FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMITTED, ctrl);
-> +	enum cxl_decoder_type target_type = 0;
-> +	int interleave_granularity;
-> +	int interleave_ways;
-> +	unsigned long flags = 0;
-> +	struct range hpa_range;
-> +	u64 end;
-> +	int rc;
-Same as above.
+> +	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
+> +	struct cxl_endpoint_decoder_settings *settings;
+> +	struct cxl_hdm_info *info;
+> +	u32 global_ctrl;
 > +
-> +	if (!committed)
-> +		size = 0;
-> +	if (base == U64_MAX || size == U64_MAX)
-> +		return -ENXIO;
-> +	if (size && check_add_overflow(base, size - 1, &end))
-> +		return -ENXIO;
-> +	if (!size)
-> +		end = base - 1;
+> +	if (!hdm)
+> +		return;
+> +	if (!is_endpoint_decoder(&cxld->dev))
+> +		return;
 > +
-> +	hpa_range = (struct range) {
-> +		.start = base,
-> +		.end = end,
+> +	guard(rwsem_write)(&cxl_rwsem.dpa);
+> +	info = cxl_hdm_get_cached_info(cxlhdm, cxld->config.id);
+> +	if (!info)
+> +		return;
+> +
+> +	/* Preserve the last good value when the device does not respond. */
+> +	global_ctrl = readl(hdm + CXL_HDM_DECODER_CTRL_OFFSET);
+> +	if (global_ctrl != U32_MAX)
+> +		info->global_ctrl = global_ctrl;
+> +	settings = &info->settings[cxld->config.id];
+> +
+> +	/*
+> +	 * A disabled decoder's software object may retain its old range and
+> +	 * skip state. Leave only the decoder id in the cached settings so stale
+> +	 * state is not restored as an enabled decode.
+> +	 */
+> +	*settings = (struct cxl_endpoint_decoder_settings) {
+> +		.config.id = cxld->config.id,
 > +	};
+> +	if (cxld->config.flags & CXL_DECODER_F_ENABLE) {
+> +		struct cxl_endpoint_decoder *cxled =
+> +			to_cxl_endpoint_decoder(&cxld->dev);
 > +
-> +	if (committed) {
-> +		flags |= CXL_DECODER_F_ENABLE;
-> +		if (ctrl & CXL_HDM_DECODER0_CTRL_LOCK)
-> +			flags |= CXL_DECODER_F_LOCK;
-> +		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_HOSTONLY, ctrl))
-> +			target_type = CXL_DECODER_HOSTONLYMEM;
-> +		else
-> +			target_type = CXL_DECODER_DEVMEM;
+> +		settings->config = cxld->config;
+> +		settings->skip = cxled->skip;
+> +	}
+> +}
+> +
+>   static void
+>   cxl_endpoint_decoder_snapshot(struct cxl_endpoint_decoder *cxled,
+>   			      struct cxl_endpoint_decoder_settings *settings)
+> @@ -811,6 +852,7 @@ static int cxl_decoder_commit(struct cxl_decoder *cxld)
+>   	}
+>   	port->commit_end++;
+>   	cxld->config.flags |= CXL_DECODER_F_ENABLE;
+> +	cxl_hdm_refresh_decoder(cxlhdm, cxld);
+>   
+>   	return 0;
+>   }
+> @@ -883,6 +925,7 @@ static void cxl_decoder_reset(struct cxl_decoder *cxld)
+>   	writel(0, hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
+>   
+>   	cxld->config.flags &= ~CXL_DECODER_F_ENABLE;
+> +	cxl_hdm_refresh_decoder(cxlhdm, cxld);
+>   
+>   	/* Userspace is now responsible for reconfiguring this decoder */
+>   	if (is_endpoint_decoder(&cxld->dev)) {
+> @@ -1090,9 +1133,17 @@ static int devm_cxl_enumerate_decoders(struct cxl_hdm *cxlhdm,
+>   {
+>   	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
+>   	struct cxl_port *port = cxlhdm->port;
+> -	int i;
+> +	/* DVSEC-emulated decoders do not describe the cached HDM registers. */
+> +	bool emulated = should_emulate_decoders(info);
+> +	int check_rc, i;
+>   	u64 dpa_base = 0;
+>   
+> +	if (is_cxl_endpoint(port) && hdm && !emulated) {
+> +		check_rc = cxl_hdm_check_decoder_count(cxlhdm);
+> +		if (check_rc)
+> +			return check_rc;
+Why needs this check_rc here? I think you can move the 'rc' defined in 
+the following for() loop to the top of this function, then reuse it.
 > +	}
 > +
-> +	rc = eiw_to_ways(FIELD_GET(CXL_HDM_DECODER0_CTRL_IW_MASK, ctrl),
-> +			 &interleave_ways);
-> +	if (rc)
-> +		return rc;
-> +	rc = eig_to_granularity(FIELD_GET(CXL_HDM_DECODER0_CTRL_IG_MASK, ctrl),
-> +				&interleave_granularity);
-> +	if (rc)
-> +		return rc;
+>   	cxl_settle_decoders(cxlhdm);
+>   
+>   	for (i = 0; i < cxlhdm->decoder_count; i++) {
+> @@ -1131,6 +1182,8 @@ static int devm_cxl_enumerate_decoders(struct cxl_hdm *cxlhdm,
+>   			put_device(&cxld->dev);
+>   			return rc;
+>   		}
+> +		if (!emulated)
+> +			cxl_hdm_refresh_decoder(cxlhdm, cxld);
+>   		rc = add_hdm_decoder(port, cxld);
+>   		if (rc) {
+>   			dev_warn(&port->dev,
+> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
+> index 33b21c8dcb21..2acddb472103 100644
+> --- a/drivers/cxl/core/pci.c
+> +++ b/drivers/cxl/core/pci.c
+> @@ -6,6 +6,7 @@
+>   #include <linux/delay.h>
+>   #include <linux/pci.h>
+>   #include <linux/pci-doe.h>
+> +#include <cxl/hdm.h>
+>   #include <cxl/pci.h>
+>   #include <linux/aer.h>
+>   #include <cxlpci.h>
+> @@ -180,6 +181,75 @@ int cxl_await_media_ready(struct cxl_dev_state *cxlds)
+>   }
+>   EXPORT_SYMBOL_NS_GPL(cxl_await_media_ready, "CXL");
+>   
+> +/**
+> + * cxl_hdm_get_cached_info() - get the PCI-owned HDM cache for a decoder
+> + * @cxlhdm: HDM capability whose port identifies the upstream PCI device
+> + * @id: decoder ID to validate against the cached decoder count
+> + *
+> + * The caller must hold cxl_rwsem.dpa for write throughout this call and
+> + * all access through the returned pointer. The pointer refers to the live
+> + * cache; ownership remains with the PCI device.
+> + *
+> + * Return: the cache containing @id, or NULL if no upstream PCI device or
+> + * cache exists, or @id is outside the cached decoder count.
+> + */
+> +struct cxl_hdm_info *cxl_hdm_get_cached_info(struct cxl_hdm *cxlhdm, int id)
+> +{
+> +	struct cxl_hdm_info *info;
 > +
-> +	*config = (struct cxl_decoder_config) {
-> +		.id = id,
-> +		.hpa_range = hpa_range,
-> +		.interleave_ways = interleave_ways,
-> +		.interleave_granularity = interleave_granularity,
-> +		.target_type = target_type,
-> +		.flags = flags,
-> +	};
+> +	struct pci_dev *pdev __free(pci_dev_put) =
+> +		cxl_port_get_uport_pci_dev(cxlhdm->port);
+> +
+> +	if (!pdev)
+> +		return NULL;
+> +
+> +	lockdep_assert_held_write(&cxl_rwsem.dpa);
+> +	info = pdev->hdm;
+> +	if (!info)
+> +		return NULL;
+> +
+> +	if (id < 0 || id >= info->decoder_count) {
+> +		pci_warn(pdev, "CXL HDM decoder %d exceeds cached count %d\n",
+> +			 id, info->decoder_count);
+> +		return NULL;
+> +	}
+> +
+> +	return info;
+> +}
+> +EXPORT_SYMBOL_NS_GPL(cxl_hdm_get_cached_info, "CXL");
+> +
+> +/**
+> + * cxl_hdm_check_decoder_count() - check enumeration against the PCI HDM cache
+> + * @cxlhdm: HDM capability containing the decoder count to check
+> + *
+> + * Take cxl_rwsem.dpa for read while comparing the cached count. Call only
+> + * for hardware HDM decoders, since DVSEC-emulated ranges do not describe
+> + * the HDM registers represented by the cache.
+> + *
+> + * Return: 0 if the counts match or no upstream PCI device or cache exists,
+> + * or -ENXIO if the cached and enumerated decoder counts differ.
+> + */
+> +int cxl_hdm_check_decoder_count(struct cxl_hdm *cxlhdm)
+> +{
+> +	struct pci_dev *pdev __free(pci_dev_put) =
+> +		cxl_port_get_uport_pci_dev(cxlhdm->port);
+> +
+> +	if (!pdev)
+> +		return 0;
+> +
+> +	guard(rwsem_read)(&cxl_rwsem.dpa);
+> +	if (pdev->hdm &&
+> +	    pdev->hdm->decoder_count != cxlhdm->decoder_count) {
+> +		pci_warn(pdev,
+> +			 "CXL HDM cache decoder count mismatch: cached=%d hdm=%d\n",
+> +			 pdev->hdm->decoder_count, cxlhdm->decoder_count);
+> +		return -ENXIO;
+> +	}
 > +
 > +	return 0;
 > +}
-> +EXPORT_SYMBOL_FOR_MODULES(cxl_hdm_unpack_decoder, "cxl_core");
+> +EXPORT_SYMBOL_NS_GPL(cxl_hdm_check_decoder_count, "CXL");
+> +
+>   static int cxl_set_mem_enable(struct cxl_dev_state *cxlds, u16 val)
+>   {
+>   	struct pci_dev *pdev = to_pci_dev(cxlds->dev);
+> diff --git a/include/cxl/cxl.h b/include/cxl/cxl.h
+> index 9af01e1f45ba..b29374b34cfa 100644
+> --- a/include/cxl/cxl.h
+> +++ b/include/cxl/cxl.h
+> @@ -26,6 +26,7 @@ enum cxl_devtype {
+>   };
+>   
+>   struct cxl_region;
+> +struct cxl_hdm_info;
+>   
+>   enum cxl_decoder_type {
+>   	CXL_DECODER_DEVMEM = 2,
+> diff --git a/include/cxl/hdm.h b/include/cxl/hdm.h
+> index 219b9bb67440..d5e7efd2ffc0 100644
+> --- a/include/cxl/hdm.h
+> +++ b/include/cxl/hdm.h
+> @@ -16,4 +16,29 @@ struct cxl_endpoint_decoder_settings {
+>   	u64 skip;
+>   };
+>   
+> +/**
+> + * struct cxl_hdm_info - cached CXL HDM state for a PCI device
+> + * @decoder_count: number of entries in @settings
+> + * @hdm_bar: PCI BAR containing the HDM decoder capability
+> + * @hdm_offset: offset of the HDM decoder capability in @hdm_bar
+> + * @hdm_size: size of the HDM decoder register block
+> + * @global_ctrl: HDM decoder global control register
+> + * @dvsec_ctrl: CXL DVSEC control register
+> + * @dvsec_ctrl_valid: whether @dvsec_ctrl contains valid state
+> + * @settings: per-endpoint-decoder programming state
+> + *
+> + * Publication through pci_dev.hdm and all mutable fields are protected by
+> + * cxl_rwsem.dpa.
+> + */
+> +struct cxl_hdm_info {
+> +	int decoder_count;
+> +	int hdm_bar;
+> +	resource_size_t hdm_offset;
+> +	resource_size_t hdm_size;
+> +	u32 global_ctrl;
+> +	u16 dvsec_ctrl;
+> +	bool dvsec_ctrl_valid;
+> +	struct cxl_endpoint_decoder_settings settings[] __counted_by(decoder_count);
+> +};
+> +
+>   #endif /* __CXL_HDM_H__ */
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index d31a8d107b1e..7bb37fcb556d 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -339,6 +339,9 @@ struct pcie_link_state;
+>   struct pci_sriov;
+>   struct pci_p2pdma;
+>   struct rcec_ea;
+> +#ifdef CONFIG_CXL_RESET
+> +struct cxl_hdm_info;
+> +#endif
+>   
+>   /* struct pci_dev - describes a PCI device
+>    *
+> @@ -566,6 +569,9 @@ struct pci_dev {
+>   #ifdef CONFIG_PCI_DOE
+>   	struct xarray	doe_mbs;	/* Data Object Exchange mailboxes */
+>   #endif
+> +#ifdef CONFIG_CXL_RESET
+> +	struct cxl_hdm_info *hdm;	/* CXL HDM decoder state */
+> +#endif
+>   #ifdef CONFIG_PCI_NPEM
+>   	struct npem	*npem;		/* Native PCIe Enclosure Management */
+>   #endif
