@@ -1,80 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.13
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793107899;
-	b=bp6ppvQPzkIU7FCmTU2YtGDLcSwqGhcwuJZkJmSY5N/Jib20G03M5QGJF2j/+RDghlre
-	 GEMgtGuO01YSxWorLuMg8PeL0swNPIV161WOdM9GWTSCM+NSZy1J7IsFa1pRiNXoCxiR6
-	 W379GaAbHCBdP7ciAQFum6AlCQher3tPg+QUtmQlDZ0B1k4C0i3gg9vZwQyU8x8O0bb89
-	 J2NnK1VdTz3oshEtxILcJojlDzXZYQiFJr/+wCeBKXAwGXN4zWfnxEvdMOji/chMlgjH8
-	 dCKfB+Mr4zWEMvVZNGgT07tUOcYrGbM+gVyU57Z4qN9kj3KJkAJrCQj6X2ZqD/rGTeg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793107899;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:Date:To:cc:
-	 Subject:In-Reply-To:Message-ID:References:MIME-Version:Content-Type;
-	bh=21lkp+jZKw7xeBP7grXhzOYdHsqOzFcmQ94QuOezdv8=;
-	b=dTSPqazoCEVv4TKIeNBgPruvXETKaKE04My7CNmTJysG1NgxaEqW6uhnZntM6hE0G9ng
-	 t8vBQ854raF31/NCPA6/BQNW7bJF9LQea0mYwIXTA0xwZ5vdlrX4BdlhWfYejoZEV6UJU
-	 f0QZz1azFGOeN7Zl0fFvk8essUGc+pzHgj+v2WHdgLGe5/ujnVMwnktJBoD2TH6D5xJSd
-	 lmX1p6GgDaC3RnYHMgYJb05MYg8q5YXJjw8Q6vj0B1kjPhKYq+IKXzaYOV6ijuaZ9Y+ND
-	 sj1HsFaUEGhUHebFEmS3zg8xQzC7kO9D6xBweF31Xi5VjFOeUvzPum/oVQoBZMnHA1w==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=BLcDig1U;
-	arc=none smtp.remote-ip=198.175.65.13
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.173
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793111701;
+	b=oMl01s/9/CaWL14NvEEjLfPawn6P/sudtmuBJI6zpPBTtjMrUe7oYvoT14bNhrynYKy4
+	 z+UV9GktBFK3WTOxyAw4EzHv59XghQ65lL+0Lyqaai9EvJp5MDNuX8glp9mu44TPSJjvM
+	 yf70YUbwHE+1syAXH3N9Jo4r29191da1b11XjS2MVjgD4BhG9mKIiu6NVLlrrGBM2zXH+
+	 21iFJ+XuRJobJOCzgAQwnDv3Vt9QjhhkbEnrlMkJTnNtUtH9J0Mjt2grEqsz2/JeuEASb
+	 xmbff3aqPGvdjJxgFkDKi4D+NMR3MmK7Vuxa+mi+IbQ1z2yTEFCBf5bPBbbUA8nVe8g==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793111701;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type;
+	bh=kpMVzTEsyq+10ygaZmcWH4opP1T6BP5uZJEA0uY70vE=;
+	b=ammpm6+UioBasrzcnsVyDw6R0ebDUrqolVhVPNDFqfNpm6EGB9kljT4sl4t9xyLqItsT
+	 ZGecUjLv5dtBsQYY6LIjjrJHcSI/dh4sOXJXyGInLIxguDLywFB8TLdvcHOjC8Pak9P6D
+	 b4DKmK4w9uoLMUaNEgM4cC7M5P7HEaeW1Km5cjC47xlm7UiZpRTIIsnTMLERdBrk+9RJJ
+	 MkYlkzeQxGd5KH60TB8WvmcupkFzn5h0cVRFOtla6zptuelNcOrhnZLWX1SBv/99IJ/Ek
+	 6DTa5A6JZo/jaVLg/uqFTywvNs8lFylDWV4qS2jVVOVYHK0Qrh0UR6+/9s7FlLFoxdA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=gNL1x+Xv;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.173
+Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4619C606A31B
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 13:31:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4619C606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41BA0606A31D
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 14:34:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 41BA0606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=BLcDig1U
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793107899; x=1824643899;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=YJJ7CQJRgoMn1xeWLRPQsvJHf+yAvrafWBYG1e7HcJM=;
-  b=BLcDig1U+TEkupYM5/FO7xzspP4/TItNQNYRzt8QGY0Tj7GPIg2L0Duh
-   V8uXvQjDwDk8cs74LHDJKH4IK0yobWmeHXZi7+AE0+KzcE1c0JZTx6VgE
-   tfHu5DIaAkrgkfCvLxtSaPocTgM2SyvK6e7v+JtlZOOh93WRvnrgDx1TV
-   m+Xj8xDzTM08/J1yfWX+PR1fCZGGotd7w8E0a/xxuq3342aFpg6/ATLhH
-   lG4QJrN+69bJpQHBwK4z5tVWd2qS3+QYZznEFGxNhgCJKu8gvrcqE12kl
-   ZkssSYA7IY1b0OucNu1I31xBRaeDTEfSu+AdXwkr6tY65EWhXeQLGU9cu
-   A==;
-X-CSE-ConnectionGUID: ZnwPDLxUSEy0uzWAt2cvCA==
-X-CSE-MsgGUID: xBYeBEdzQQGBneBwIlO8Yg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11948"; a="1682131"
-X-IronPort-AV: E=Sophos;i="6.27,181,1787036400"; 
-   d="scan'208";a="1682131"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 06:31:38 -0700
-X-CSE-ConnectionGUID: +vX9jtRMRgOvU5msbQOaLA==
-X-CSE-MsgGUID: Oxp2e5YwTQmDqgDRIjMSpA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,181,1787036400"; 
-   d="scan'208";a="4626909"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.30])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 06:31:34 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Tue, 27 Oct 2026 15:31:25 +0200 (EET)
-To: Maciej Grochowski <Maciej.Grochowski@sony.com>
-cc: Nikolas Joshua Britton <nbritton@exabit.io>, 
-    Geramy Loveless <gloveless@jqluv.com>, Eric Auger <eauger@redhat.com>, 
-    Alexey Fomenko <alexey.fomenko@intel.com>, 
-    Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-    Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, 
-    Rob Herring <robh@kernel.org>, 
-    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kw@linux.com>, 
-    Mesih Kilinc <Mesih.Kilinc@sony.com>
-Subject: Re: [PATCH v4 0/7] PCI: Resource placement algorithm fixe
-In-Reply-To: <b20cffba-3515-b8a8-1b6f-6483facac5af@linux.intel.com>
-Message-ID: <f1f8c0e9-75bd-bf0f-65cb-57fe3d5cb1cd@linux.intel.com>
-References: <20261021124956.4250-1-ilpo.jarvinen@linux.intel.com> <20261023224518.80653-1-Maciej.Grochowski@sony.com> <b20cffba-3515-b8a8-1b6f-6483facac5af@linux.intel.com>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=gNL1x+Xv
+Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-53397554beaso49865311cf.3
+        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 07:34:56 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793111695; cv=none;
+        d=google.com; s=arc-20260327;
+        b=babDgO36UL2X4YDcNux4YGf7Z8MUEAfSYG5NCkwaoe/SUTmjXcuvGgl0L6If2WwRAL
+         w+DCY3MdhGmUTQSFpZSt+HP7vYEpPYhYG9LssyMkd+957iUdeI/Eiwf+qXzfGY5ugpms
+         /bJPYS9H5yEBrpy7hlHqBaKTUc63oRAnXRIqGHzNvtLzdbNHlGf97KO9a6RmgaxL8LuK
+         4C6ghy3yyQP2obMLXFtJ7LVXHG9JgOkCX0LN8uP90COaywCDr9j/1nuSKoSvaBPRB9EJ
+         CCTDxJHZZ7ug68PQh+8Rmyn1X6p4wiA175C9n5ETZALevC1anTWOsJPMSFf6znS0pO0i
+         Q1vw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=kpMVzTEsyq+10ygaZmcWH4opP1T6BP5uZJEA0uY70vE=;
+        fh=NSGw9K9nvFTr0tVrCDZMKCS1z0KgSeZHTVEWOjo1Unc=;
+        b=FUOgXHo407XZkRsdVS2MoFd9zyG/RE5dBHL+I8goe6QqorRwp4eRsWc9aS+TcRf2KB
+         Hhs1O37Z7PVD2yDEsaJte/j69L0JrpDAIN5FU5uSBPRg6ASAwfEOM59g0r3V+8G55/Fq
+         yclDOEqwbDa8+D66cTjUQcISMyPvmyJm59lKwM0YoLQpmPNbdaqN50jfl14W8dYTGg9/
+         tPEfc5Wf0mxvDLaufNpJSlQQvbBoV3/8ag7v+Kj1ews1dNQgzjDi81UCYlME1hWIvVWK
+         LOgCrfmeKIy5DwweQHRiZq0N3buzdeNXb4DIa8uodcmnMePEei2+2slRUafD9waBydZd
+         CC0w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793111695; x=1793716495; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=kpMVzTEsyq+10ygaZmcWH4opP1T6BP5uZJEA0uY70vE=;
+        b=gNL1x+Xv1DnXFPpzgePiAQuuZuxGQYp4vZ1KZEbsXr6VBegt4pJtXNzLeNxrCpoSCI
+         vyOi7v6/0+IApmMQXYD6AGe5EUrYKJPHhrDm8nm3kiAEl/doeYsPq0sQTlTGWyGIHSax
+         8uUnTg6CWkRGKsQ5Qzhc3YiWHw/HIdwgW7WIjIl/n587BwpsChYbbMrR1t33toZDX5pu
+         cO31gnJ7HsIsGJijHvaWYd7DrEnivbFfmTpnn+VmfvsLebMcgPHXqdxCtjs4hOFv+opL
+         /7mt9QweVw3fEG1JnW37At3rsmCLkOf1b6RdlUc9/i//g2ff+EPN3LK9o7hPShF19pzU
+         QRsQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793111695; x=1793716495;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=kpMVzTEsyq+10ygaZmcWH4opP1T6BP5uZJEA0uY70vE=;
+        b=Y7R9frdl505RwMLcqltvfQkO3x9UbdgtwwjrwkhKX9dZX9jzKHr9wL7aB7Q+QFhxhh
+         0m5sQycoQhLAT+CtS2aGzzd/3rxl3ZwiByR0I9k55g0AjO4Fdyf7i75RS5aQboZXqCgc
+         Wbee0tYsYBMvNciqADWmC/oMsBTk5MXGCcbSicDWuIkCZSthYwsKAbok3yUvpYZjifHD
+         lUgZ9yjAiM96+81GjJzdCinSzeEw/zUXWkpw49WLFKfyTIqDwZuWPDjhqdpzQgK1ss7+
+         zLt+2/SEOyedYYbE90rsmfEVqvw3wPPmQlxKLHmg+xz9lQYZmAOFDbijRLwBtOBK3LZM
+         1K6Q==
+X-Forwarded-Encrypted: i=1; AKwUvBxg6oaE8RrutGsMIn8uaCiDuZsR+EpOkPWA9XAMDXfqIukplvkB/YgKO1m/nrLJxoWUWbPDvGRjXQg=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKc+NtQjIRPAc5bH9MeBlyf6LWwTo+pJxsfj4HZF3xO/eN7V7/x
+	wZf5P15k8GE2J+VlFQ4qQjR0V+SWOVF1HBWB4+OVSmXaxqRks+yUu0t2btkrOtbSSARsdeHsue4
+	+NEE6HjJBVtLBdrkd6eIaDc0b0FoGyE8=
+X-Gm-Gg: AYBFou1VMI4CpMoeyFPJcFB6caHDdzVWbKnu6msw0aKZFBFmj0oVuLw/4snOS7wmeae
+	zdDzbgCIF7+xw5rxB+jkCuZQESvHlg4xT1rIQtHPeGPpd9CBn58p+/P4A5O4IcdSX4IMjjkDZ7e
+	5NuWV7Ir0ePbb8l+wJ0kymXyobkGPnn8xBH8M+WuFchQol1Qbjhe8N6E+2DMol+6bT+57RQF/p0
+	ykF9XZ4Ro2ZSl+9xZpFDD1THSux/S1SyWsfZmweXekeMOQVGxuz15xUl5XflJT0Kj2InaRsj7Pc
+	ORIEKZNbZsmbl/v+b26LiUqgBo0GvomkgGJOhUcSJo+mBQxO4A9k09hUS+EwMZRws+owpClFiMI
+	hSygc4Wvp5u82gkyySHw7TaOVv0yNnip6MnXAlXTSfSt7u6leBlmkFm6hG+38jpHoQdHPAi3w0w
+	Lw+AH+GLK8kZecryyw4UGcjxhQVrNo/Nb6V0Z+mM7/Os/kGgAj
+X-Received: by 2002:a05:622a:90b:b0:536:6bc5:2fb9 with SMTP id
+ d75a77b69052e-5383b4a928amr176076021cf.14.1793111694872; Tue, 27 Oct 2026
+ 07:34:54 -0700 (PDT)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -84,43 +104,54 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-2079055605-1793107885=:1182"
+References: <20261012-fix-aer-mask-override-v1-0-49a0d7aeaea0@google.com>
+ <20261012-fix-aer-mask-override-v1-2-49a0d7aeaea0@google.com>
+ <CAMAsx6dLGdqr+ZxG8FrwN-6r=5yVY8hk-c+7CVrAkS0zpKPmGg@mail.gmail.com> <20261026175724.1482083-1-rathodpriyank@google.com>
+In-Reply-To: <20261026175724.1482083-1-rathodpriyank@google.com>
+From: Daniel Pereira <danielmaraboo@gmail.com>
+Date: Tue, 27 Oct 2026 11:34:43 -0300
+X-Gm-Features: AclHuK_njZlT_A6caNrXNbbG7gBGxHmrzYc6IWZzccr4qUxgXvxpemc8dDRNGgY
+Message-ID: <CAMAsx6fdOmV4DH4WCi6u_EadZxdEg10FFnAKSe=g7duTW+eDdg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] Documentation: PCI: Document aer_inject's
+ aer_mask_override parameter
+To: rathodpriyank@google.com
+Cc: bhelgaas@google.com, lukas@wunner.de, 
+	sathyanarayanan.kuppuswamy@linux.intel.com, ilpo.jarvinen@linux.intel.com, 
+	dave.jiang@intel.com, prarit@redhat.com, ying.huang@linux.alibaba.com, 
+	terry.bowman@amd.com, corbet@lwn.net, jic23@kernel.org, 
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Mon, Oct 26, 2026, Priyank Rathod wrote:
+> The reason bit 26 reads 0b on the e1000e Endpoint in the cover letter
+> is Note 3 of Table 7-149: a non-VF Function only implements bit 26 when
+> Poisoned TLP Egress Blocking Supported is Set in the DPC Capability
+> Register (Offset 04h, bit 6; PCIe r7.0, sec 7.9.14.2, Table 7-280).
+> Per PCIe r7.0, sec 7.9.14, the DPC Extended Capability (001Dh) is only
+> applicable to Root Ports and Switch Downstream Ports, not to Endpoints
+> like e1000e (and in QEMU, pcie_aer_init() initializes PCI_ERR_UNCOR_MASK
+> to PCI_ERR_UNC_INTN | PCI_ERR_UNC_TLPPRE = 0x02400000).
 
---8323328-2079055605-1793107885=:1182
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Hi Priyank,
 
-On Mon, 26 Oct 2026, Ilpo J=E4rvinen wrote:
+Thank you for the detailed explanation, and for pointing me to Note 3 of
+Table 7-149. That clears up why PCI_ERR_UNCOR_MASK reads 02400000 on the
+e1000e in the sample session of the cover letter: bit 26 is only
+implemented when the DPC capability reports Poisoned TLP Egress Blocking
+support, which does not apply to an Endpoint.
 
-> On Fri, 23 Oct 2026, Maciej Grochowski wrote:
->=20
-> > We will now also test v4 and report back. Could the changes since v2
-> > affect this window-size result, or is this amount of padding expected
-> > for this topology? Please let us know which logs or allocator traces
-> > would be most useful to collect with the v4 test.
->=20
-> I suggest you wait until I send the next version which addresses the=20
-> problems sashiko located in v4. I've basically tested the update locally=
-=20
-> and should get to sending it today or tomorrow.
+> That said, your suggestion to use "Header Log Overflow or Internal
+> Errors" (PCIe r7.0, sec 7.8.4.6, Table 7-152, bits 14-15, and
+> sec 7.8.4.3, Table 7-149, bit 22) as the example is much clearer
+> because those bits apply to Endpoints as well and match the sample
+> output directly. If you or anyone else suggests the same, I will gladly
+> change it.
 
-Hi,
+Yes, I would suggest using those two in the example, since they are
+masked by default on Endpoints too and match the sample output directly.
+This is only a suggestion, of course; how to proceed is up to you and the
+maintainers :)
 
-I think I'll have to renege on that timeline.
-
-I'm not entirely happy with how the gap calculation is currently done and=
-=20
-I'm planning on reworking the patch almost completely to be based on the=20
-existing loop in pbus_size_mem() but I'll have to first move that loop=20
-into own function (for which I have a patch in another series anyway so=20
-the more itself is just about shuffling my existing patches).
-
-It'll take a few days more.
-
---=20
- i.
-
---8323328-2079055605-1793107885=:1182--
+Thanks,
+Daniel
