@@ -1,83 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.180
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.172
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793078816;
-	b=QSwSUy4ijZakUVWEi+Bf38ZyOrpiqHjtKgPwUAON6Jo9ujljSBipdKbxt3FEmvx8i6zf
-	 TqLq1Lq37n7xxPT71SOrPCZZxBCBaAJQzbx+tvUxfHaYiNX8E2sc7ntasiGteslok0spy
-	 CeMEnCawpur4/OWU2WqDrParZ1B8KSGgFUPmff9nXxAL32Twcz9g/iCUXgrCDMUqJyan+
-	 OPB2wVZC7nm0UxmfM78veUye2iAFYAle/XBY0IuHzmTOrkB6AFXVNJBaXfICgTp99PGeU
-	 PgFJBd6CrSuq+kpS+rsbeF55F9WsxZva5ajjESLY+pbTKqoNaXgqvxNim44xYNzo1Rg==
+	t=1793078822;
+	b=bFXgkp0s6j/ke8zXubpjWeRmFIjFVSgsFJBirR0Yot9oAIimg+b5ilPn+5W8nHjhwi9L
+	 073tZo4d5zYwI8uKQVZy4DRwhAPNYzjplvaefbP09diMfgWo0ZsekxzgFK9jZzjLvTvFN
+	 THv32uu4v1cbiykDihsN/0S3O10tWE9AxIJCwarJHoMR3GYBBdvYRr5LZTDm/iprdfb4J
+	 KwlkdvvXoWqunMNJeujL5lTRH/0Ts9g1QtMhFnzJAb7lHfj/hvN2PEdMjdgVZdYiMq2Pb
+	 /EBcuxfdThH7eBDpD/pMVW2bcGOfPzxZG6LkcgNBQFD9vk2RyLAMJZNrLJ+GhBXOuyg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793078816;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793078822;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=uWpZkoUcD+11mT8IYyyOzkMFSXWipikoIkz7JmVhAWo=;
-	b=5GS640ZhLRg5KQf+IkA6R/BDW/bbVH5Nm4qdcuOPTjEY7DU1UAHgCC6ULFu6Hbr9uBE7
-	 IMmxHdchMjr56VflXzGBmJ9z7LDBU7Gk7YhFH1cQ7pY9UEv4onsaHJwIT4aE10lghyN3x
-	 yW3dKGLqjBViepTujYe07SCUQpgVcbwZHHsr11pRoK9LsUw94fKt5B6B0zOq8O5iIBLDK
-	 kD1c509oPaLvPUESuXyRlGBRHQ44PpjfwPmltRhEnoUiJtXk6pzNEa6w5QRNiW0FZZSNt
-	 ijbWzFIM9mh6zYwpiWUeMUe8LiS2wbbqiGa5NhNYIOlvVE6fHhrO2LWWJm/tNnp5S2g==
+	bh=fCfsZ5gVb41Wz9jN9lzm8Kqs7XyEi/INOv6bo1Lw1Qk=;
+	b=dmk3vxIH2OHCNId/5y1nWmtnuJZQKOhI456PmpjFAf8Ef7uhlkBeCp9xK1gSToEknT5p
+	 IvLY8Vtqdc9jZSzIQHlTB/tZkj3AVDzJU2t0dhqBgjXn+NupPymUQk35GJR6GT721tMNR
+	 fKIrHBfnL4+nB4er/L0gqTdEAK6OGkT45ggfNKpXNNbS7wzpSNiYImY0qaprl/BimfNO/
+	 kPWDVAUKhmICxkzcicXEed4ZHDPelcEciOiBtzqV8WajMOJpyuVYjOdC2wLN97AoMx/4W
+	 +K+mqoI1g2fcKlBXj6l64SrGycCdITEmMgZSFseuOdpaq+v+34Dy6kcJawXERGSQkxQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=stlmzcfE;
-	arc=none smtp.remote-ip=209.85.214.180
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=g6TYH8OH;
+	arc=none smtp.remote-ip=209.85.214.172
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDDEB606A31E
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 05:26:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EDDEB606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF5E3606A31F
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 05:27:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DF5E3606A31F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=stlmzcfE
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2e8b20a899fso23385495ad.1
-        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 22:26:54 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=g6TYH8OH
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2e98798cbddso14728465ad.0
+        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 22:27:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1793078814; x=1793683614; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1793078821; x=1793683621; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=uWpZkoUcD+11mT8IYyyOzkMFSXWipikoIkz7JmVhAWo=;
-        b=stlmzcfE0yubIwKonY8KIMkzFfeQ5G3tvxrLV3PWv6c04aL+lIquD7U+wxrkxO60HA
-         KVd000RR5Z9DE5lo++v/oDKYW4quxHkV2uDY5H+dtAs/Z0ha+LMb8+hd/j+pyFBzk7om
-         miV/uxOAjrIcAPGHmeebm/2NOb8fNCE6ESakI/50U5bbyHtGRRt9B2t8Mq33OPkps4F4
-         vVJ1KSksyycAk5uLWtrpcXwh+RfdCZyVlGQ9cu8PuL+IYBESjZWEohLTLw+lLtoyTewg
-         s2pJG+XYfxTRSV8cqGZOMXyW9sRMNQ76hb75WOIxeQL9sGE/hl0qu0eQZSUwo9lDjIXH
-         AKQg==
+        bh=fCfsZ5gVb41Wz9jN9lzm8Kqs7XyEi/INOv6bo1Lw1Qk=;
+        b=g6TYH8OHROwT7o7965IuGDUEiOIIsCk5Uzj4zj662W6e0D9uWResIJFB19E0L0SFzJ
+         ywOCRz/nBfowjduF8ewqZ2sWLaerDrSWPKir/b8wBWT+9CIF3hYXZcdDaFDqN4FrMSMS
+         mC1WCKKQ+WztEdXezhQ3Wsrcx9Rlkx7pMysdFbkWU2MluoDhnXfDfzcXfJO3A0AUGaOd
+         j436A776lCaNUTPXVxjgeOZxZ+t4kCpIWmwSDN55oMwPAwAXK/I4x312CltSGDqTvok6
+         2eYumfGCbs7k6Unhwwgq5uzQT1+lhHxCATA3OgUqmMeqmqspjTi3XQWpeWsMwRc1R2BL
+         Y5ZA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793078814; x=1793683614;
+        d=1e100.net; s=20260707; t=1793078821; x=1793683621;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=uWpZkoUcD+11mT8IYyyOzkMFSXWipikoIkz7JmVhAWo=;
-        b=1ck46DQJloyuTO01qhIsuvpWPR4itVH4a3b71Q7KV6mxgSxi96K6lnPcCVk6+2sjbW
-         a2lIGqqoC68EiwEgBgKW9ZkO6wAwFpncx+ivMUFmLtB/GD+ay01JzWXBgfHPYTvWTU4S
-         O5jkODJMR3T3gt/Eo9Ga14VJQjjFjPRAcBTmHChqufhUyuWMGkqyqmxheBazLg7Qh8L0
-         /mELtKLeQp159sxt0sUwpA4UIYREiCIJC43427dTcm25ZzPEfm1XCdnPQYT6HVdkFXL3
-         6LVLn0X0ZvQzu6SJpMzpVn38+tOioSmox/yEfrL9lvTo/msnUb3K3pwPjSsOJ8Ts1NSh
-         lmqQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzWPqRCEb58BcPX6Pg8a04LlkUCGcB8L9/b0ScKc871aiaIwluwgk7Mgq5ESN3mJjHLVAful0E0g6k=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJXMQJUO69+3N1apzyK2Bjw9oXoawbEmHQY5SW6yEP5qqajrQYG
-	KK+w//2L09xkziYEZ609O6Bp06oweUr00EMmcdzBghDTtu1XPxBApHco
-X-Gm-Gg: AYBFou2QWFOxSY9SgPxVnS6qAl9BN1HlP86wFRYa8cm1wCu6M0mdyRrVgOhGkDDUlYn
-	eE0GuAykcxWX0YrNuz5DCL0VJJ1sKCfuytRNyXg5lpj6CvNTvwg6yOOQHMzgHOuItSDVERPz9ut
-	aKkgwXaQey/dVbQtxCRotqnSH1Yvw91VgaQTYQjO+31e2Lniwt4xTRvk/x5MfK3A7/x9cxwwC1y
-	EnDIQ/kbvMRiGoPeUnZNfF/OrOieKRTXL/ibCcaxAl2pabjjVLPPboqbAWxT8lexKKSdJQ18O2s
-	7dLqrT0oix26KafBumMc3D/wap5UMkh7GVi1e5yv1ek7KywQmRnpOBL977Ki9LwbQdpcjgXkboW
-	r/oL5WhWnkKJltuBjStKg9PxJNXu9+9icdXRdJLI7HB5of5zKddzdirCa8o/xtPTNYXMRgNgBEW
-	b+kCQI+9yRE6CdmFgam9qku4gBNKIrEVt7fLtTdId3YTKFIC5/dartfluT0i6oLrUch1vVIR3Jq
-	5derlQkpWvJEcI8YDnjrPZ4u/T+GWYDphnSpbz5pFuzcpf8FARwjRhk8Xogqv772Ub1hofEWf6N
-	fN89ZVTgwrEWui84iFk=
-X-Received: by 2002:a17:903:2983:b0:2e9:cd03:b432 with SMTP id d9443c01a7336-2ea9c8fba40mr75320315ad.60.1793078814034;
-        Mon, 26 Oct 2026 22:26:54 -0700 (PDT)
+        bh=fCfsZ5gVb41Wz9jN9lzm8Kqs7XyEi/INOv6bo1Lw1Qk=;
+        b=IK9twOSSwhCaYEOG6LPZ2r/uF/9Z3CiE9pOQ5BHKoXkhTy/ACZdO0ncADg2tRrofJ4
+         6gqCRpH7McN5+YfINTHg4MWxl1RkGN32iKLKv9ZZBPINbfWmwk/VVgf26C6Ngv/gUFjz
+         dp2VlScKBPZC21mu3Kz9G/my6y7D4Vg8lkJ5cAaGh1DNtEaU08go1A1jGvPoN/Z+M94w
+         vAD+NXwEXhLiLlN2kVoLwyDDEsg4royXxwotpGNxXlz8ESNW6C0ZVMX/qhG0o0j+vBCt
+         67Se99l6wbdRr2msCodsa9RhMZ0caPdyUxFFo1PM7uCoBDI6kRWERRFUtc+rbJxY/gfJ
+         p/rQ==
+X-Forwarded-Encrypted: i=1; AKwUvByyO8VuEucGCUAhzzdQ420YkgNYo6iUKEGuEHJQqzo3gqnmn2NCNGCwDTwX3lxcT6ZIFpkSCP7AeC4=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJ0dDZIwTm3RX/YEhrwoQUkMfXiA+QjnynSEE/92Y8CjzmK3CRh
+	uWFFi6AAs3hs2ofAxzHsuHOwaMyDTsrJUN7WFjeSdlDNGiGy7unKr3A0
+X-Gm-Gg: AYBFou3Hesoo+r9haetK2T3jhb2xxyaqsFInujAhK8smyiHY2DHraPXMebSvUzbrR87
+	0o8OMo9eRrxbYFgGJ0ZRUqp/boQTw4UKOnNrh6bjEXFZOQht5PT9beeXw1iQPAJ28tcyi6IL/Y0
+	guYQS/j8Y+dv1qoD5nEG2/Yqht47v6rRSFvrX1MTtzpNJCjMXTnwymrN0DDkhM4ifjYrc0E3w0p
+	XYmHozoOEppstZSLza9AB5trr3xhOYZbApfe6pojga6enxfIyisSHMNoCyV1Pz79ykMzljCTVox
+	6CZM93FiwT++MCY6k3E6/5GXnI2odGoEunx767k0PtIaWHeDueQLdDOYYkYaDZ39QJd2BfK4oCP
+	Yra1bn36DXCXnYsmLK0lD7nbRuaZURUbYyu2S+JTF+iE3FUthuJ22EgGh0vmIu2FdkkPrcdOLOz
+	5/3ggzM0WDPZ8KakQobeMyDTZLkK/4gWYWS38eTxPpOG9Y0RpprlCewJHMOah4qp+xcpnNZFpqV
+	zW4Ph1qUckZJ36cVt/emmXlBoICTAhfntMC3wISZWy9x0BUknajvwjM3vSHrtIyC7gKRQ18Fw==
+X-Received: by 2002:a17:902:dad0:b0:2e5:3451:565 with SMTP id d9443c01a7336-2ea9c840814mr75035045ad.33.1793078821207;
+        Mon, 26 Oct 2026 22:27:01 -0700 (PDT)
 Received: from toolbx.alistair23.me ([2403:581e:fdf9:0:13b2:851f:d9cb:44c5])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eae6c9757bsm3307715ad.58.2026.10.26.22.26.46
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eae6c9757bsm3307715ad.58.2026.10.26.22.26.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2026 22:26:53 -0700 (PDT)
+        Mon, 26 Oct 2026 22:27:00 -0700 (PDT)
 From: alistair23@gmail.com
 X-Google-Original-From: alistair.francis@wdc.com
 To: akpm@linux-foundation.org,
@@ -101,11 +100,10 @@ Cc: ojeda@kernel.org,
 	gary@garyguo.net,
 	tmgross@umich.edu,
 	alex.gaynor@gmail.com,
-	Alistair Francis <alistair.francis@wdc.com>,
-	Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
-Subject: [PATCH v5 09/23] lib: rspdm: Initial commit of Rust SPDM
-Date: Tue, 27 Oct 2026 15:25:22 +1000
-Message-ID: <20261027052536.1722081-10-alistair.francis@wdc.com>
+	Alistair Francis <alistair.francis@wdc.com>
+Subject: [PATCH v5 10/23] PCI/TSM: Rename pf0 to host
+Date: Tue, 27 Oct 2026 15:25:23 +1000
+Message-ID: <20261027052536.1722081-11-alistair.francis@wdc.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261027052536.1722081-1-alistair.francis@wdc.com>
 References: <20261027052536.1722081-1-alistair.francis@wdc.com>
@@ -122,750 +120,413 @@ Content-Transfer-Encoding: 8bit
 
 From: Alistair Francis <alistair.francis@wdc.com>
 
-This is the initial commit of the Rust SPDM library.
+Rename pci_tsm_pf0 to pci_tsm_host (and rename variables and function
+names from pf0 to host) as part of converting pci_tsm_host
+to be any device that knows how to speak any of CMA, IDE, or
+TDISP.
 
-Security Protocols and Data Models (SPDM) [1] is used for authentication,
-attestation and key exchange. SPDM is generally used over a range of
-transports, such as PCIe, MCTP/SMBus/I3C, ATA, SCSI, NVMe or TCP.
-
-From the kernels perspective SPDM is used to authenticate and attest devices.
-
-This initial commit setups the framework for SPDM support. This uses the
-`Validate` and `Untrusted` traits, which means we can treat the
-responses as `Untrusted` until we validate them.
-
-The next few patches add SPDM functionality, which allows us to perform
-basic authentication.
-
-1: https://www.dmtf.org/standards/spdm
+This commit just renames the functions and provides no functional
+change. That will happen in the next commit.
 
 Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
-Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
 ---
- MAINTAINERS                     |  12 ++
- include/linux/spdm.h            |  66 ++++++++
- lib/Kconfig                     |  17 +++
- lib/Makefile                    |   2 +
- lib/rspdm/Makefile              |  10 ++
- lib/rspdm/consts.rs             |  18 +++
- lib/rspdm/lib.rs                | 263 ++++++++++++++++++++++++++++++++
- lib/rspdm/state.rs              | 145 ++++++++++++++++++
- lib/rspdm/validator.rs          |  92 +++++++++++
- rust/bindings/bindings_helper.h |   1 +
- 10 files changed, 626 insertions(+)
- create mode 100644 include/linux/spdm.h
- create mode 100644 lib/rspdm/Makefile
- create mode 100644 lib/rspdm/consts.rs
- create mode 100644 lib/rspdm/lib.rs
- create mode 100644 lib/rspdm/state.rs
- create mode 100644 lib/rspdm/validator.rs
+ drivers/crypto/ccp/sev-dev-tio.h |  4 +-
+ drivers/crypto/ccp/sev-dev-tsm.c | 12 ++---
+ drivers/pci/tsm.c                | 84 ++++++++++++++++----------------
+ include/linux/pci-tsm.h          | 18 ++++---
+ 4 files changed, 61 insertions(+), 57 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 03649f08c7c75..783da0b234541 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -25290,6 +25290,18 @@ M:	Security Officers <security@kernel.org>
- S:	Supported
- F:	Documentation/process/security-bugs.rst
+diff --git a/drivers/crypto/ccp/sev-dev-tio.h b/drivers/crypto/ccp/sev-dev-tio.h
+index 67512b3dbc538..78d598686487f 100644
+--- a/drivers/crypto/ccp/sev-dev-tio.h
++++ b/drivers/crypto/ccp/sev-dev-tio.h
+@@ -53,9 +53,9 @@ struct tsm_dsm_tio {
+ 	struct pci_ide *ide[TIO_IDE_MAX_TC];
+ };
  
-+SECURITY PROTOCOL AND DATA MODEL (SPDM)
-+M:	Alistair Francis <alistair@alistair23.me>
-+M:	Lukas Wunner <lukas@wunner.de>
-+M:	Jonathan Cameron <jic23@kernel.org>
-+L:	linux-coco@lists.linux.dev
-+L:	linux-cxl@vger.kernel.org
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/devsec/spdm.git
-+F:	include/linux/spdm.h
-+F:	lib/rspdm/
-+
- SECURITY SUBSYSTEM
- M:	Paul Moore <paul@paul-moore.com>
- M:	James Morris <jmorris@namei.org>
-diff --git a/include/linux/spdm.h b/include/linux/spdm.h
-new file mode 100644
-index 0000000000000..3cd5c1bf01def
---- /dev/null
-+++ b/include/linux/spdm.h
-@@ -0,0 +1,66 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * DMTF Security Protocol and Data Model (SPDM)
-+ * https://www.dmtf.org/dsp/DSP0274
-+ *
-+ * Copyright (C) 2021-22 Huawei
-+ *     Jonathan Cameron <Jonathan.Cameron@huawei.com>
-+ *
-+ * Copyright (C) 2022-24 Intel Corporation
-+ */
-+
-+#ifndef _SPDM_H_
-+#define _SPDM_H_
-+
-+#include <linux/types.h>
-+
-+struct key;
-+struct device;
-+struct spdm_state;
-+struct x509_certificate;
-+
-+typedef int (spdm_transport)(void *priv, struct device *dev,
-+			     const void *request, size_t request_sz,
-+			     void *response, size_t response_sz);
-+
-+typedef int (spdm_validate)(struct device *dev, u8 slot,
-+			    struct x509_certificate *leaf_cert);
-+
-+/**
-+ * spdm_create() - Allocate SPDM session
-+ * @dev: Responder device. Used for error reporting and passed to @transport.
-+ * @transport: Transport function to perform one message exchange.
-+ * @transport_priv: Transport function private data.
-+ * @transport_sz: Maximum message size the transport is capable of
-+ *	(in bytes).
-+ * @validate: Function to validate additional leaf certificate requirements
-+ *	(optional, may be %NULL).
-+ *
-+ * Return a pointer to the allocated SPDM session state or NULL on error.
-+ * The returned session must be freed with spdm_destroy().
-+ */
-+struct spdm_state *spdm_create(struct device *dev, spdm_transport *transport,
-+			       void *transport_priv, u32 transport_sz,
-+			       spdm_validate *validate);
-+
-+/**
-+ * spdm_authenticate() - Authenticate device
-+ * @spdm_state: SPDM session state
-+ *
-+ * Authenticate a device through a sequence of GET_VERSION, GET_CAPABILITIES,
-+ * NEGOTIATE_ALGORITHMS, GET_DIGESTS, GET_CERTIFICATE and CHALLENGE exchanges.
-+ *
-+ * Return 0 on success or a negative errno. In particular, -EPROTONOSUPPORT
-+ * indicates authentication is not supported by the device.
-+ */
-+int spdm_authenticate(struct spdm_state *spdm_state);
-+
-+/**
-+ * spdm_destroy() - Destroy SPDM session
-+ * @spdm_state: SPDM session state
-+ *
-+ * Free a session allocated by spdm_create().
-+ */
-+void spdm_destroy(struct spdm_state *spdm_state);
-+
-+#endif
-diff --git a/lib/Kconfig b/lib/Kconfig
-index 4e6b34c3346d5..b84facfa88bc9 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -588,6 +588,23 @@ config LWQ_TEST
- 	help
- 	  Run boot-time test of light-weight queuing.
+-/* Describes TSM structure for PF0 pointed by pci_dev->tsm */
++/* Describes TSM structure for the link host pointed by pci_dev->tsm */
+ struct tio_dsm {
+-	struct pci_tsm_pf0 tsm;
++	struct pci_tsm_host tsm;
+ 	struct tsm_dsm_tio data;
+ 	struct sev_device *sev;
+ };
+diff --git a/drivers/crypto/ccp/sev-dev-tsm.c b/drivers/crypto/ccp/sev-dev-tsm.c
+index 48df8c579c74d..1d2561628f432 100644
+--- a/drivers/crypto/ccp/sev-dev-tsm.c
++++ b/drivers/crypto/ccp/sev-dev-tsm.c
+@@ -205,7 +205,7 @@ static int stream_alloc(struct pci_dev *pdev, struct pci_ide **ide,
+ 	return 0;
+ }
  
-+config RSPDM
-+	bool "Rust SPDM"
-+	depends on RUST
-+	select KEYS
-+	select CRYPTO
-+	select ASYMMETRIC_KEY_TYPE
-+	select ASYMMETRIC_PUBLIC_KEY_SUBTYPE
-+	select X509_CERTIFICATE_PARSER
-+	help
-+	  The Rust implementation of the Security Protocol and Data Model (SPDM)
-+	  allows for device authentication, measurement, key exchange and
-+	  encrypted sessions.
-+
-+	  Crypto algorithms negotiated with SPDM are limited to those enabled
-+	  in .config.  Users of SPDM therefore need to also select
-+	  any algorithms they deem mandatory.
-+
- endmenu
+-static struct pci_tsm *tio_pf0_probe(struct pci_dev *pdev, struct sev_device *sev)
++static struct pci_tsm *tio_host_probe(struct pci_dev *pdev, struct sev_device *sev)
+ {
+ 	struct tio_dsm *dsm __free(kfree) = kzalloc_obj(*dsm);
+ 	int rc;
+@@ -213,7 +213,7 @@ static struct pci_tsm *tio_pf0_probe(struct pci_dev *pdev, struct sev_device *se
+ 	if (!dsm)
+ 		return NULL;
  
- config GENERIC_IOREMAP
-diff --git a/lib/Makefile b/lib/Makefile
-index a2afe954805cb..3a79a3738975f 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -297,6 +297,8 @@ obj-$(CONFIG_PERCPU_TEST) += percpu_test.o
- obj-$(CONFIG_ASN1) += asn1_decoder.o
- obj-$(CONFIG_ASN1_ENCODER) += asn1_encoder.o
+-	rc = pci_tsm_pf0_constructor(pdev, &dsm->tsm, sev->tsmdev);
++	rc = pci_tsm_host_constructor(pdev, &dsm->tsm, sev->tsmdev);
+ 	if (rc)
+ 		return NULL;
  
-+obj-$(CONFIG_RSPDM) += rspdm/
-+
- obj-$(CONFIG_FONT_SUPPORT) += fonts/
+@@ -226,8 +226,8 @@ static struct pci_tsm *dsm_probe(struct tsm_dev *tsmdev, struct pci_dev *pdev)
+ {
+ 	struct sev_device *sev = tsm_dev_to_sev(tsmdev);
  
- #
-diff --git a/lib/rspdm/Makefile b/lib/rspdm/Makefile
-new file mode 100644
-index 0000000000000..3f5cae33ccb8d
---- /dev/null
-+++ b/lib/rspdm/Makefile
-@@ -0,0 +1,10 @@
-+# SPDX-License-Identifier: GPL-2.0
-+#
-+# Rust implementation of the DMTF Security Protocol and Data Model (SPDM)
-+# https://www.dmtf.org/dsp/DSP0274
-+#
-+# Copyright (C) 2026 Western Digital
-+
-+obj-$(CONFIG_RSPDM) += spdm.o
-+
-+spdm-y := lib.o
-diff --git a/lib/rspdm/consts.rs b/lib/rspdm/consts.rs
-new file mode 100644
-index 0000000000000..ef6d61d4998b5
---- /dev/null
-+++ b/lib/rspdm/consts.rs
-@@ -0,0 +1,18 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+// Copyright (C) 2026 Western Digital
-+
-+//! Constants used by the library
-+//!
-+//! Rust implementation of the DMTF Security Protocol and Data Model (SPDM)
-+//! <https://www.dmtf.org/dsp/DSP0274>
-+
-+// SPDM versions supported by this implementation
-+pub(crate) const SPDM_VER_10: u8 = 0x10;
-+
-+pub(crate) const SPDM_MIN_VER: u8 = SPDM_VER_10;
-+
-+#[allow(dead_code)]
-+pub(crate) const SPDM_REQ: u8 = 0x80;
-+#[allow(dead_code)]
-+pub(crate) const SPDM_ERROR: u8 = 0x7f;
-diff --git a/lib/rspdm/lib.rs b/lib/rspdm/lib.rs
-new file mode 100644
-index 0000000000000..27449ac1ca25d
---- /dev/null
-+++ b/lib/rspdm/lib.rs
-@@ -0,0 +1,263 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+// Copyright (C) 2026 Western Digital
-+
-+//! Top level library for SPDM
-+//!
-+//! Rust implementation of the DMTF Security Protocol and Data Model (SPDM)
-+//! <https://www.dmtf.org/dsp/DSP0274>
-+//!
-+//! Top level library, including C compatible public functions to be called
-+//! from other subsytems.
-+
-+use crate::bindings::{
-+    spdm_state,
-+    EPROTONOSUPPORT, //
-+};
-+use core::ffi::{
-+    c_int,
-+    c_void, //
-+};
-+use core::ptr;
-+use kernel::prelude::*;
-+use kernel::{
-+    alloc::flags,
-+    bindings,
-+    device::{
-+        Bound,
-+        Device, //
-+    },
-+    error::to_result,
-+    new_mutex,
-+    sync::Mutex,
-+    types::ForeignOwnable, //
-+};
-+
-+use crate::state::{SpdmState, Transport};
-+
-+const __LOG_PREFIX: &[u8] = b"spdm\0";
-+
-+mod consts;
-+mod state;
-+mod validator;
-+
-+/// FFI shim implementing [`Transport`] for C transport functions.
-+///
-+/// The private data pointer is owned by the C caller; see the safety
-+/// requirements of [`spdm_create()`].
-+struct CTransport {
-+    func: bindings::spdm_transport,
-+    priv_: *mut c_void,
-+}
-+
-+impl Transport for CTransport {
-+    fn exchange(
-+        &self,
-+        dev: &Device<Bound>,
-+        request: &[u8],
-+        response: &mut [u8],
-+    ) -> Result<usize, Error> {
-+        let func = self.func.ok_or(EINVAL)?;
-+
-+        // SAFETY: `func` is non-NULL as checked above. By the safety
-+        // requirements of `spdm_create()`, `priv_` remains valid until
-+        // `spdm_destroy()` is called, and `dev` remains alive and bound for
-+        // the lifetime of the session. `request` and `response` are valid
-+        // slices that outlive this call, and the callback must not retain
-+        // either of them.
-+        let length = unsafe {
-+            func(
-+                self.priv_,
-+                dev.as_raw(),
-+                request.as_ptr().cast::<c_void>(),
-+                request.len(),
-+                response.as_mut_ptr().cast::<c_void>(),
-+                response.len(),
-+            )
-+        };
-+        to_result(length)?;
-+
-+        Ok(length as usize)
-+    }
-+}
-+
-+#[derive(Clone, Copy, Debug)]
-+#[repr(u8)]
-+pub(crate) enum SpdmErrorCode {
-+    InvalidRequest = 0x01,
-+    /// This was removed in version 1.2.0 and is now reserved
-+    InvalidSession = 0x02,
-+    Busy = 0x03,
-+    UnexpectedRequest = 0x04,
-+    Unspecified = 0x05,
-+    DecryptError = 0x06,
-+    UnsupportedRequest = 0x07,
-+    RequestInFlight = 0x08,
-+    InvalidResponseCode = 0x09,
-+    SessionLimitExceeded = 0x0a,
-+    SessionRequired = 0x0b,
-+    ResetRequired = 0x0c,
-+    ResponseTooLarge = 0x0d,
-+    RequestTooLarge = 0x0e,
-+    LargeResponse = 0x0f,
-+    MessageLost = 0x10,
-+    InvalidPolicy = 0x11,
-+    VersionMismatch = 0x41,
-+    ResponseNotReady = 0x42,
-+    RequestResynch = 0x43,
-+    OperationFailed = 0x44,
-+    NoPendingRequests = 0x45,
-+    RequestSessionTerminated = 0x46,
-+    InvalidState = 0x47,
-+    VendorDefinedError = 0xff,
-+}
-+
-+impl TryFrom<u8> for SpdmErrorCode {
-+    type Error = Error;
-+
-+    fn try_from(value: u8) -> Result<Self, Self::Error> {
-+        Ok(match value {
-+            0x01 => Self::InvalidRequest,
-+            0x02 => Self::InvalidSession,
-+            0x03 => Self::Busy,
-+            0x04 => Self::UnexpectedRequest,
-+            0x05 => Self::Unspecified,
-+            0x06 => Self::DecryptError,
-+            0x07 => Self::UnsupportedRequest,
-+            0x08 => Self::RequestInFlight,
-+            0x09 => Self::InvalidResponseCode,
-+            0x0a => Self::SessionLimitExceeded,
-+            0x0b => Self::SessionRequired,
-+            0x0c => Self::ResetRequired,
-+            0x0d => Self::ResponseTooLarge,
-+            0x0e => Self::RequestTooLarge,
-+            0x0f => Self::LargeResponse,
-+            0x10 => Self::MessageLost,
-+            0x11 => Self::InvalidPolicy,
-+            0x41 => Self::VersionMismatch,
-+            0x42 => Self::ResponseNotReady,
-+            0x43 => Self::RequestResynch,
-+            0x44 => Self::OperationFailed,
-+            0x45 => Self::NoPendingRequests,
-+            0x46 => Self::RequestSessionTerminated,
-+            0x47 => Self::InvalidState,
-+            0xff => Self::VendorDefinedError,
-+            _ => return Err(EINVAL),
-+        })
-+    }
-+}
-+
-+impl From<SpdmErrorCode> for Error {
-+    fn from(code: SpdmErrorCode) -> Self {
-+        match code {
-+            SpdmErrorCode::InvalidRequest => EINVAL,
-+            SpdmErrorCode::InvalidSession => EINVAL,
-+            SpdmErrorCode::Busy => EBUSY,
-+            SpdmErrorCode::UnexpectedRequest => EINVAL,
-+            SpdmErrorCode::Unspecified => EINVAL,
-+            SpdmErrorCode::DecryptError => EIO,
-+            SpdmErrorCode::UnsupportedRequest => EINVAL,
-+            SpdmErrorCode::RequestInFlight => EINVAL,
-+            SpdmErrorCode::InvalidResponseCode => EINVAL,
-+            SpdmErrorCode::SessionLimitExceeded => EBUSY,
-+            SpdmErrorCode::SessionRequired => EINVAL,
-+            SpdmErrorCode::ResetRequired => ECONNRESET,
-+            SpdmErrorCode::ResponseTooLarge => EINVAL,
-+            SpdmErrorCode::RequestTooLarge => EINVAL,
-+            SpdmErrorCode::LargeResponse => EMSGSIZE,
-+            SpdmErrorCode::MessageLost => EIO,
-+            SpdmErrorCode::InvalidPolicy => EINVAL,
-+            SpdmErrorCode::VersionMismatch => EINVAL,
-+            SpdmErrorCode::ResponseNotReady => EINPROGRESS,
-+            SpdmErrorCode::RequestResynch => ECONNRESET,
-+            SpdmErrorCode::OperationFailed => EINVAL,
-+            SpdmErrorCode::NoPendingRequests => ENOENT,
-+            SpdmErrorCode::RequestSessionTerminated => EINVAL,
-+            SpdmErrorCode::InvalidState => EINVAL,
-+            SpdmErrorCode::VendorDefinedError => EINVAL,
-+        }
-+    }
-+}
-+
-+impl core::fmt::LowerHex for SpdmErrorCode {
-+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-+        write!(f, "{:#x}", *self as u8)
-+    }
-+}
-+
-+/// Allocates an SPDM session.
-+///
-+/// See `include/linux/spdm.h` for the full C API documentation.
-+///
-+/// # Safety
-+///
-+/// The caller must guarantee that `dev` is a valid pointer to a
-+/// `struct device` that stays alive and bound to its driver for the
-+/// lifetime of the returned session, and must pass the session to
-+/// `spdm_destroy()` before `dev` is unbound. The caller must also
-+/// guarantee that `transport_priv` remains valid until `spdm_destroy()`
-+/// is called, as it is passed back to `transport` on each exchange.
-+#[export]
-+pub unsafe extern "C" fn spdm_create(
-+    dev: *mut bindings::device,
-+    transport: bindings::spdm_transport,
-+    transport_priv: *mut c_void,
-+    transport_sz: u32,
-+    validate: bindings::spdm_validate,
-+) -> *mut spdm_state {
-+    // SAFETY: `dev` points to a valid `struct device` that stays alive for the
-+    // lifetime of the session, so the returned reference is valid for the
-+    //  session's lifetime.
-+    let dev: &Device = unsafe { Device::from_raw(dev) };
-+
-+    // SAFETY: By the safety requirements of this function, the device stays
-+    // bound for the lifetime of the session, so the returned
-+    // `&Device<Bound>` is valid for the session's lifetime.
-+    let dev = unsafe { dev.as_bound() };
-+
-+    // Wrap the `SpdmState` in a `Mutex` so that concurrent FFI callers (for
-+    // example, two threads racing on `spdm_authenticate()` for the same
-+    // device) serialize on the lock and never form aliased `&mut SpdmState`
-+    // references.
-+    let state = SpdmState::new(
-+        dev,
-+        CTransport {
-+            func: transport,
-+            priv_: transport_priv,
-+        },
-+        transport_sz,
-+        validate,
-+    );
-+    match KBox::pin_init(new_mutex!(state), flags::GFP_KERNEL) {
-+        Ok(b) => b.into_foreign().cast::<spdm_state>(),
-+        Err(_) => ptr::null_mut(),
-+    }
-+}
-+
-+/// Authenticates a device through a sequence of SPDM exchanges.
-+///
-+/// See `include/linux/spdm.h` for the full C API documentation.
-+#[export]
-+pub extern "C" fn spdm_authenticate(_state_ptr: *mut spdm_state) -> c_int {
-+    -(EPROTONOSUPPORT as i32)
-+}
-+
-+/// Destroys an SPDM session.
-+///
-+/// See `include/linux/spdm.h` for the full C API documentation.
-+#[export]
-+pub extern "C" fn spdm_destroy(state_ptr: *mut spdm_state) {
-+    if state_ptr.is_null() {
-+        return;
-+    }
-+
-+    // SAFETY: `state_ptr` was returned from `spdm_create()` which used
-+    // `into_foreign()` to create the pointer.
-+    let mutex = unsafe {
-+        <Pin<KBox<Mutex<SpdmState<'_, CTransport>>>> as ForeignOwnable>::from_foreign(
-+            state_ptr.cast::<c_void>(),
-+        )
-+    };
-+
-+    drop(mutex);
-+}
-diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
-new file mode 100644
-index 0000000000000..f864d869eff0c
---- /dev/null
-+++ b/lib/rspdm/state.rs
-@@ -0,0 +1,145 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+// Copyright (C) 2026 Western Digital
-+
-+//! The `SpdmState` struct and implementation.
-+//!
-+//! Rust implementation of the DMTF Security Protocol and Data Model (SPDM)
-+//! <https://www.dmtf.org/dsp/DSP0274>
-+
-+use kernel::prelude::*;
-+use kernel::{
-+    bindings,
-+    device::{
-+        Bound,
-+        Device, //
-+    },
-+    error::Error,
-+    validate::Untrusted,
-+};
-+
-+use crate::consts::{
-+    SPDM_ERROR,
-+    SPDM_MIN_VER,
-+    SPDM_REQ, //
-+};
-+use crate::validator::{
-+    SpdmErrorRsp,
-+    SpdmHeader, //
-+};
-+
-+/// Transport for exchanging SPDM messages with a responder device.
-+///
-+/// This trait abstracts the bus-specific message transport (for example
-+/// a DOE mailbox for PCIe CMA) from the SPDM session logic.
-+pub(crate) trait Transport {
-+    /// Perform a single SPDM message exchange.
-+    ///
-+    /// Send `request` to the responder and write the response into
-+    /// `response`, returning the number of bytes received on success.
-+    fn exchange(
-+        &self,
-+        dev: &Device<Bound>,
-+        request: &[u8],
-+        response: &mut [u8],
-+    ) -> Result<usize, Error>;
-+}
-+
-+/// The current SPDM session state for a device.
-+///
-+/// Concurrent access is serialised by wrapping the whole struct in a
-+/// `Mutex<SpdmState>` at the FFI boundary, so `spdm_authenticate()` callers
-+/// run one at a time and the locked `&mut SpdmState` is the only way to
-+/// reach the inner fields.
-+///
-+/// The lifetime `'a` is the duration for which the responder device and the
-+/// transport are guaranteed to stay alive, bounded by the responder device
-+/// staying bound to its driver.
-+///
-+/// `T` is data and an exchange function owned by the caller,
-+/// so the borrow checker enforces that the transport data outlives `SpdmState`.
-+#[expect(dead_code)]
-+pub(crate) struct SpdmState<'a, T: Transport> {
-+    /// Responder device. Used for error reporting and passed to `transport`.
-+    pub(crate) dev: &'a Device<Bound>,
-+    /// Transport used to perform message exchanges. Typically a `&'a`
-+    /// reference to transport data owned by the caller, which then must
-+    /// outlive the session.
-+    pub(crate) transport: T,
-+    /// Maximum message size the transport is capable of (in bytes). Used as
-+    /// DataTransferSize in GET_CAPABILITIES exchange.
-+    pub(crate) transport_sz: u32,
-+    /// Function to validate additional leaf certificate requirements.
-+    pub(crate) validate: bindings::spdm_validate,
-+
-+    /// Maximum common supported version of requester and responder.
-+    /// Negotiated during GET_VERSION exchange.
-+    pub(crate) version: u8,
-+}
-+
-+impl<'a, T: Transport> SpdmState<'a, T> {
-+    pub(crate) fn new(
-+        dev: &'a Device<Bound>,
-+        transport: T,
-+        transport_sz: u32,
-+        validate: bindings::spdm_validate,
-+    ) -> Self {
-+        SpdmState {
-+            dev,
-+            transport,
-+            transport_sz,
-+            validate,
-+            version: SPDM_MIN_VER,
-+        }
-+    }
-+
-+    /// Start a SPDM exchange
-+    ///
-+    /// The data in `request_buf` is sent to the device and the response
-+    /// is returned as untrusted data to be validated by the caller.
-+    #[allow(dead_code)]
-+    pub(crate) fn spdm_exchange(
-+        &self,
-+        request_buf: &[u8],
-+        mut response_buf: KVec<u8>,
-+    ) -> Result<Untrusted<KVec<u8>>, Error> {
-+        let header_size = core::mem::size_of::<SpdmHeader>();
-+        let request: SpdmHeader = Untrusted::new(request_buf).validate(self)?;
-+
-+        let length = self
-+            .transport
-+            .exchange(self.dev, request_buf, response_buf.as_mut_slice())?;
-+
-+        // The transport must not report more bytes than the buffer can hold.
-+        if length > response_buf.len() {
-+            pr_err!("Transport returned invalid length {length}\n");
-+            return Err(EMSGSIZE);
-+        }
-+
-+        // Only validate the bytes actually received from the transport
-+        // Note that `length` might be longer then the actual SPDM packet as
-+        // some transports will pad the final message
-+        response_buf.truncate(length);
-+
-+        let response: SpdmHeader =
-+            Untrusted::new(response_buf.get(..header_size).ok_or(EPROTO)?).validate(self)?;
-+
-+        if response.code == SPDM_ERROR {
-+            let error_rsp: SpdmErrorRsp =
-+                Untrusted::new(response_buf.get(..header_size).ok_or(EPROTO)?).validate(self)?;
-+            pr_err!("Error response: {error_rsp:?}\n");
-+            return Err(error_rsp.error_code.into());
-+        }
-+
-+        if response.code != request.code & !SPDM_REQ {
-+            pr_err!(
-+                "Response code {:#x} does not match request code {:#x}\n",
-+                response.code,
-+                request.code
-+            );
-+            return Err(EPROTO);
-+        }
-+
-+        Ok(Untrusted::new(response_buf))
-+    }
-+}
-diff --git a/lib/rspdm/validator.rs b/lib/rspdm/validator.rs
-new file mode 100644
-index 0000000000000..0fe341b8dce12
---- /dev/null
-+++ b/lib/rspdm/validator.rs
-@@ -0,0 +1,92 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+// Copyright (C) 2026 Western Digital
-+
-+//! Related structs and their Validate implementations.
-+//!
-+//! Rust implementation of the DMTF Security Protocol and Data Model (SPDM)
-+//! <https://www.dmtf.org/dsp/DSP0274>
-+
-+use crate::{
-+    SpdmErrorCode,
-+    SpdmState,
-+    Transport, //
-+};
-+use kernel::prelude::*;
-+use kernel::{
-+    error::Error,
-+    validate::{
-+        Untrusted,
-+        Validate, //
-+    },
-+};
-+
-+#[derive(FromBytes)]
-+#[repr(C)]
-+pub(crate) struct SpdmHeader {
-+    pub(crate) version: u8,
-+    pub(crate) code: u8, /* RequestResponseCode */
-+    pub(crate) param1: u8,
-+    pub(crate) param2: u8,
-+}
-+
-+impl SpdmHeader {
-+    #[expect(dead_code)]
-+    pub(crate) fn new(code: u8) -> Self {
-+        SpdmHeader {
-+            version: 0,
-+            code,
-+            param1: 0,
-+            param2: 0,
-+        }
-+    }
-+
-+    #[expect(dead_code)]
-+    pub(crate) fn to_bytes(&self) -> Result<KVec<u8>> {
-+        let mut out = KVec::new();
-+
-+        out.extend_from_slice(
-+            &[self.version, self.code, self.param1, self.param2],
-+            GFP_KERNEL,
-+        )?;
-+
-+        Ok(out)
-+    }
-+}
-+
-+impl<'a, 'c, T: Transport> Validate<'c, Untrusted<&'a [u8]>, &'c SpdmState<'c, T>> for SpdmHeader {
-+    type Err = Error;
-+
-+    #[allow(clippy::get_first)]
-+    fn validate(unvalidated: &[u8], _context: &'c SpdmState<'c, T>) -> Result<Self, Self::Err> {
-+        SpdmHeader::read_from_bytes(unvalidated).or(Err(EPROTO))
-+    }
-+}
-+
-+#[expect(dead_code)]
-+#[derive(Debug)]
-+pub(crate) struct SpdmErrorRsp {
-+    pub(crate) version: u8,
-+    /// This will always be SPDM_ERROR (0x7F)
-+    pub(crate) code: u8,
-+    pub(crate) error_code: SpdmErrorCode,
-+    pub(crate) error_data: u8,
-+}
-+
-+impl<'a, 'c, T: Transport> Validate<'c, Untrusted<&'a [u8]>, &'c SpdmState<'c, T>>
-+    for SpdmErrorRsp
-+{
-+    type Err = Error;
-+
-+    #[allow(clippy::get_first)]
-+    fn validate(unvalidated: &[u8], _context: &'c SpdmState<'c, T>) -> Result<Self, Self::Err> {
-+        Ok(SpdmErrorRsp {
-+            version: *unvalidated.get(0).ok_or(EPROTO)?,
-+            code: *unvalidated.get(1).ok_or(EPROTO)?,
-+            // `try_from` rejects unknown `SpdmErrorCode` discriminants.
-+            error_code: SpdmErrorCode::try_from(*unvalidated.get(2).ok_or(EPROTO)?)
-+                .map_err(|_| EPROTO)?,
-+            error_data: *unvalidated.get(3).ok_or(EPROTO)?,
-+        })
-+    }
-+}
-diff --git a/rust/bindings/bindings_helper.h b/rust/bindings/bindings_helper.h
-index 4992bc3194e7e..a2512fda77e1f 100644
---- a/rust/bindings/bindings_helper.h
-+++ b/rust/bindings/bindings_helper.h
-@@ -90,6 +90,7 @@
- #include <linux/security.h>
- #include <linux/serdev.h>
- #include <linux/slab.h>
-+#include <linux/spdm.h>
- #include <linux/sys_soc.h>
- #include <linux/task_work.h>
- #include <linux/tracepoint.h>
+-	if (is_pci_tsm_pf0(pdev))
+-		return tio_pf0_probe(pdev, sev);
++	if (is_pci_tsm_host(pdev))
++		return tio_host_probe(pdev, sev);
+ 	return NULL;
+ }
+ 
+@@ -237,10 +237,10 @@ static void dsm_remove(struct pci_tsm *tsm)
+ 
+ 	pci_dbg(pdev, "TSM disabled\n");
+ 
+-	if (is_pci_tsm_pf0(pdev)) {
++	if (is_pci_tsm_host(pdev)) {
+ 		struct tio_dsm *dsm = container_of(tsm, struct tio_dsm, tsm.base_tsm);
+ 
+-		pci_tsm_pf0_destructor(&dsm->tsm);
++		pci_tsm_host_destructor(&dsm->tsm);
+ 		kfree(dsm);
+ 	}
+ }
+diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
+index 5fdcd7f2e8207..10c9c6696624d 100644
+--- a/drivers/pci/tsm.c
++++ b/drivers/pci/tsm.c
+@@ -45,22 +45,22 @@ static inline bool has_tee(struct pci_dev *pdev)
+ 	return pdev->devcap & PCI_EXP_DEVCAP_TEE;
+ }
+ 
+-/* 'struct pci_tsm_pf0' wraps 'struct pci_tsm' when ->dsm_dev == ->pdev (self) */
+-static struct pci_tsm_pf0 *to_pci_tsm_pf0(struct pci_tsm *tsm)
++/* 'struct pci_tsm_host' wraps 'struct pci_tsm' when ->dsm_dev == ->pdev (self) */
++static struct pci_tsm_host *to_pci_tsm_host(struct pci_tsm *tsm)
+ {
+ 	/*
+ 	 * All "link" TSM contexts reference the device that hosts the DSM
+ 	 * interface for a set of devices. Walk to the DSM device and cast its
+-	 * ->tsm context to a 'struct pci_tsm_pf0 *'.
++	 * ->tsm context to a 'struct pci_tsm_host *'.
+ 	 */
+-	struct pci_dev *pf0 = tsm->dsm_dev;
++	struct pci_dev *host = tsm->dsm_dev;
+ 
+-	if (!is_pci_tsm_pf0(pf0) || !is_dsm(pf0)) {
++	if (!is_pci_tsm_host(host) || !is_dsm(host)) {
+ 		pci_WARN_ONCE(tsm->pdev, 1, "invalid context object\n");
+ 		return NULL;
+ 	}
+ 
+-	return container_of(pf0->tsm, struct pci_tsm_pf0, base_tsm);
++	return container_of(host->tsm, struct pci_tsm_host, base_tsm);
+ }
+ 
+ static void tsm_remove(struct pci_tsm *tsm)
+@@ -186,7 +186,7 @@ static int probe_fn(struct pci_dev *pdev, void *dsm)
+ static int pci_tsm_connect(struct pci_dev *pdev, struct tsm_dev *tsm_dev)
+ {
+ 	int rc;
+-	struct pci_tsm_pf0 *tsm_pf0;
++	struct pci_tsm_host *tsm_host;
+ 	const struct pci_tsm_ops *ops = tsm_dev->pci_ops;
+ 	struct pci_tsm *pci_tsm __free(tsm_remove) = ops->probe(tsm_dev, pdev);
+ 
+@@ -197,10 +197,10 @@ static int pci_tsm_connect(struct pci_dev *pdev, struct tsm_dev *tsm_dev)
+ 		return -ENXIO;
+ 
+ 	pdev->tsm = pci_tsm;
+-	tsm_pf0 = to_pci_tsm_pf0(pdev->tsm);
++	tsm_host = to_pci_tsm_host(pdev->tsm);
+ 
+ 	/* mutex_intr assumes connect() is always sysfs/user driven */
+-	ACQUIRE(mutex_intr, lock)(&tsm_pf0->lock);
++	ACQUIRE(mutex_intr, lock)(&tsm_host->lock);
+ 	if ((rc = ACQUIRE_ERR(mutex_intr, &lock)))
+ 		return rc;
+ 
+@@ -300,15 +300,15 @@ static int remove_fn(struct pci_dev *pdev, void *data)
+ static int __pci_tsm_unbind(struct pci_dev *pdev, void *data)
+ {
+ 	struct pci_tdi *tdi;
+-	struct pci_tsm_pf0 *tsm_pf0;
++	struct pci_tsm_host *tsm_host;
+ 
+ 	lockdep_assert_held(&pci_tsm_rwsem);
+ 
+ 	if (!pdev->tsm)
+ 		return 0;
+ 
+-	tsm_pf0 = to_pci_tsm_pf0(pdev->tsm);
+-	guard(mutex)(&tsm_pf0->lock);
++	tsm_host = to_pci_tsm_host(pdev->tsm);
++	guard(mutex)(&tsm_host->lock);
+ 
+ 	tdi = pdev->tsm->tdi;
+ 	if (!tdi)
+@@ -341,7 +341,7 @@ EXPORT_SYMBOL_GPL(pci_tsm_unbind);
+  */
+ int pci_tsm_bind(struct pci_dev *pdev, struct kvm *kvm, u32 tdi_id)
+ {
+-	struct pci_tsm_pf0 *tsm_pf0;
++	struct pci_tsm_host *tsm_host;
+ 	struct pci_tdi *tdi;
+ 
+ 	if (!kvm)
+@@ -355,8 +355,8 @@ int pci_tsm_bind(struct pci_dev *pdev, struct kvm *kvm, u32 tdi_id)
+ 	if (!is_link_tsm(pdev->tsm->tsm_dev))
+ 		return -ENXIO;
+ 
+-	tsm_pf0 = to_pci_tsm_pf0(pdev->tsm);
+-	guard(mutex)(&tsm_pf0->lock);
++	tsm_host = to_pci_tsm_host(pdev->tsm);
++	guard(mutex)(&tsm_host->lock);
+ 
+ 	/* Resolve races to bind a TDI */
+ 	if (pdev->tsm->tdi) {
+@@ -404,7 +404,7 @@ ssize_t pci_tsm_guest_req(struct pci_dev *pdev, enum pci_tsm_req_scope scope,
+ 			  sockptr_t req_in, size_t in_len, sockptr_t req_out,
+ 			  size_t out_len, u64 *tsm_code)
+ {
+-	struct pci_tsm_pf0 *tsm_pf0;
++	struct pci_tsm_host *tsm_host;
+ 	struct pci_tdi *tdi;
+ 	int rc;
+ 
+@@ -422,8 +422,8 @@ ssize_t pci_tsm_guest_req(struct pci_dev *pdev, enum pci_tsm_req_scope scope,
+ 	if (!is_link_tsm(pdev->tsm->tsm_dev))
+ 		return -ENXIO;
+ 
+-	tsm_pf0 = to_pci_tsm_pf0(pdev->tsm);
+-	ACQUIRE(mutex_intr, ops_lock)(&tsm_pf0->lock);
++	tsm_host = to_pci_tsm_host(pdev->tsm);
++	ACQUIRE(mutex_intr, ops_lock)(&tsm_host->lock);
+ 	if ((rc = ACQUIRE_ERR(mutex_intr, &ops_lock)))
+ 		return rc;
+ 
+@@ -443,7 +443,7 @@ static void pci_tsm_unbind_all(struct pci_dev *pdev)
+ 
+ static void __pci_tsm_disconnect(struct pci_dev *pdev)
+ {
+-	struct pci_tsm_pf0 *tsm_pf0 = to_pci_tsm_pf0(pdev->tsm);
++	struct pci_tsm_host *tsm_host = to_pci_tsm_host(pdev->tsm);
+ 	const struct pci_tsm_ops *ops = to_pci_tsm_ops(pdev->tsm);
+ 
+ 	/* disconnect() mutually exclusive with subfunction pci_tsm_init() */
+@@ -455,7 +455,7 @@ static void __pci_tsm_disconnect(struct pci_dev *pdev)
+ 	 * disconnect() is uninterruptible as it may be called for device
+ 	 * teardown
+ 	 */
+-	guard(mutex)(&tsm_pf0->lock);
++	guard(mutex)(&tsm_host->lock);
+ 	pci_tsm_walk_fns_reverse(pdev, remove_fn, NULL);
+ 	ops->disconnect(pdev);
+ }
+@@ -494,7 +494,7 @@ static ssize_t bound_show(struct device *dev,
+ 			  struct device_attribute *attr, char *buf)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+-	struct pci_tsm_pf0 *tsm_pf0;
++	struct pci_tsm_host *tsm_host;
+ 	struct pci_tsm *tsm;
+ 	int rc;
+ 
+@@ -505,9 +505,9 @@ static ssize_t bound_show(struct device *dev,
+ 	tsm = pdev->tsm;
+ 	if (!tsm)
+ 		return sysfs_emit(buf, "\n");
+-	tsm_pf0 = to_pci_tsm_pf0(tsm);
++	tsm_host = to_pci_tsm_host(tsm);
+ 
+-	ACQUIRE(mutex_intr, ops_lock)(&tsm_pf0->lock);
++	ACQUIRE(mutex_intr, ops_lock)(&tsm_host->lock);
+ 	if ((rc = ACQUIRE_ERR(mutex_intr, &ops_lock)))
+ 		return rc;
+ 
+@@ -547,7 +547,7 @@ static bool pci_tsm_link_group_visible(struct kobject *kobj)
+ 	if (!pci_is_pcie(pdev))
+ 		return false;
+ 
+-	if (is_pci_tsm_pf0(pdev))
++	if (is_pci_tsm_host(pdev))
+ 		return true;
+ 
+ 	/*
+@@ -572,14 +572,14 @@ static umode_t pci_tsm_attr_visible(struct kobject *kobj,
+ 		struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+ 
+ 		if (attr == &dev_attr_bound.attr) {
+-			if (is_pci_tsm_pf0(pdev) && has_tee(pdev))
++			if (is_pci_tsm_host(pdev) && has_tee(pdev))
+ 				return attr->mode;
+ 			if (pdev->tsm && has_tee(pdev->tsm->dsm_dev))
+ 				return attr->mode;
+ 		}
+ 
+ 		if (attr == &dev_attr_dsm.attr) {
+-			if (is_pci_tsm_pf0(pdev))
++			if (is_pci_tsm_host(pdev))
+ 				return attr->mode;
+ 			if (pdev->tsm && has_tee(pdev->tsm->dsm_dev))
+ 				return attr->mode;
+@@ -587,7 +587,7 @@ static umode_t pci_tsm_attr_visible(struct kobject *kobj,
+ 
+ 		if (attr == &dev_attr_connect.attr ||
+ 		    attr == &dev_attr_disconnect.attr) {
+-			if (is_pci_tsm_pf0(pdev))
++			if (is_pci_tsm_host(pdev))
+ 				return attr->mode;
+ 		}
+ 	}
+@@ -662,7 +662,7 @@ static struct pci_dev *find_dsm_dev(struct pci_dev *pdev)
+ 	struct device *grandparent;
+ 	struct pci_dev *uport;
+ 
+-	if (is_pci_tsm_pf0(pdev))
++	if (is_pci_tsm_host(pdev))
+ 		return pdev;
+ 
+ 	struct pci_dev *pf0 __free(pci_dev_put) = pf0_dev_get(pdev);
+@@ -735,13 +735,13 @@ int pci_tsm_link_constructor(struct pci_dev *pdev, struct pci_tsm *tsm,
+ EXPORT_SYMBOL_GPL(pci_tsm_link_constructor);
+ 
+ /**
+- * pci_tsm_pf0_constructor() - common 'struct pci_tsm_pf0' (DSM) initialization
+- * @pdev: Physical Function 0 PCI device (as indicated by is_pci_tsm_pf0())
++ * pci_tsm_host_constructor() - common 'struct pci_tsm_host' (DSM) initialization
++ * @pdev: TSM host PCI device (as indicated by is_pci_tsm_host())
+  * @tsm: context to initialize
+  * @tsm_dev: Platform TEE Security Manager, initiator of security operations
+  */
+-int pci_tsm_pf0_constructor(struct pci_dev *pdev, struct pci_tsm_pf0 *tsm,
+-			    struct tsm_dev *tsm_dev)
++int pci_tsm_host_constructor(struct pci_dev *pdev, struct pci_tsm_host *tsm,
++			     struct tsm_dev *tsm_dev)
+ {
+ 	mutex_init(&tsm->lock);
+ 	tsm->doe_mb = pci_find_doe_mailbox(pdev, PCI_VENDOR_ID_PCI_SIG,
+@@ -753,13 +753,13 @@ int pci_tsm_pf0_constructor(struct pci_dev *pdev, struct pci_tsm_pf0 *tsm,
+ 
+ 	return pci_tsm_link_constructor(pdev, &tsm->base_tsm, tsm_dev);
+ }
+-EXPORT_SYMBOL_GPL(pci_tsm_pf0_constructor);
++EXPORT_SYMBOL_GPL(pci_tsm_host_constructor);
+ 
+-void pci_tsm_pf0_destructor(struct pci_tsm_pf0 *pf0_tsm)
++void pci_tsm_host_destructor(struct pci_tsm_host *host_tsm)
+ {
+-	mutex_destroy(&pf0_tsm->lock);
++	mutex_destroy(&host_tsm->lock);
+ }
+-EXPORT_SYMBOL_GPL(pci_tsm_pf0_destructor);
++EXPORT_SYMBOL_GPL(pci_tsm_host_destructor);
+ 
+ int pci_tsm_register(struct tsm_dev *tsm_dev)
+ {
+@@ -780,7 +780,7 @@ int pci_tsm_register(struct tsm_dev *tsm_dev)
+ 	/* On first enable, update sysfs groups */
+ 	if (is_link_tsm(tsm_dev) && pci_tsm_link_count++ == 0) {
+ 		for_each_pci_dev(pdev)
+-			if (is_pci_tsm_pf0(pdev))
++			if (is_pci_tsm_host(pdev))
+ 				link_sysfs_enable(pdev);
+ 	} else if (is_devsec_tsm(tsm_dev)) {
+ 		pci_tsm_devsec_count++;
+@@ -815,7 +815,7 @@ static void __pci_tsm_destroy(struct pci_dev *pdev, struct tsm_dev *tsm_dev)
+ 	 * skipped if the device itself is being removed since sysfs goes away
+ 	 * naturally at that point
+ 	 */
+-	if (is_link_tsm(tsm_dev) && is_pci_tsm_pf0(pdev) && !pci_tsm_link_count)
++	if (is_link_tsm(tsm_dev) && is_pci_tsm_host(pdev) && !pci_tsm_link_count)
+ 		link_sysfs_disable(pdev);
+ 
+ 	/* Nothing else to do if this device never attached to the departing TSM */
+@@ -828,7 +828,7 @@ static void __pci_tsm_destroy(struct pci_dev *pdev, struct tsm_dev *tsm_dev)
+ 	else if (tsm_dev != tsm->tsm_dev)
+ 		return;
+ 
+-	if (is_link_tsm(tsm_dev) && is_pci_tsm_pf0(pdev))
++	if (is_link_tsm(tsm_dev) && is_pci_tsm_host(pdev))
+ 		pci_tsm_disconnect(pdev);
+ 	else
+ 		pci_tsm_fn_exit(pdev);
+@@ -885,12 +885,12 @@ void pci_tsm_unregister(struct tsm_dev *tsm_dev)
+ int pci_tsm_doe_transfer(struct pci_dev *pdev, u8 type, const void *req,
+ 			 size_t req_sz, void *resp, size_t resp_sz)
+ {
+-	struct pci_tsm_pf0 *tsm;
++	struct pci_tsm_host *tsm;
+ 
+-	if (!pdev->tsm || !is_pci_tsm_pf0(pdev))
++	if (!pdev->tsm || !is_pci_tsm_host(pdev))
+ 		return -ENXIO;
+ 
+-	tsm = to_pci_tsm_pf0(pdev->tsm);
++	tsm = to_pci_tsm_host(pdev->tsm);
+ 	if (!tsm->doe_mb)
+ 		return -ENXIO;
+ 
+diff --git a/include/linux/pci-tsm.h b/include/linux/pci-tsm.h
+index a6435aba03f9b..950e2c36a4cae 100644
+--- a/include/linux/pci-tsm.h
++++ b/include/linux/pci-tsm.h
+@@ -40,7 +40,7 @@ struct pci_tsm_ops {
+ 	 * pci_tsm_rwsem held for write to sync with TSM unregistration and
+ 	 * mutual exclusion of @connect and @disconnect. @connect and
+ 	 * @disconnect additionally run under the DSM lock (struct
+-	 * pci_tsm_pf0::lock) as well as @probe and @remove of the subfunctions.
++	 * pci_tsm_host::lock) as well as @probe and @remove of the subfunctions.
+ 	 * @bind, @unbind, and @guest_req run under pci_tsm_rwsem held for read
+ 	 * and the DSM lock.
+ 	 */
+@@ -115,19 +115,23 @@ struct pci_tsm {
+ };
+ 
+ /**
+- * struct pci_tsm_pf0 - Physical Function 0 TDISP link context
++ * struct pci_tsm_host - TSM host link context (CMA, IDE, or TDISP)
+  * @base_tsm: generic core "tsm" context
+  * @lock: mutual exclustion for pci_tsm_ops invocation
+  * @doe_mb: PCIe Data Object Exchange mailbox
++ *
++ * The host of a TSM link is the device that knows how to speak
++ * CMA, IDE, or TDISP. For TDISP / IDE that is a Physical Function 0.
++ * For CMA-only it is a CMA DOE mailbox.
+  */
+-struct pci_tsm_pf0 {
++struct pci_tsm_host {
+ 	struct pci_tsm base_tsm;
+ 	struct mutex lock;
+ 	struct pci_doe_mb *doe_mb;
+ };
+ 
+ /* physical function0 and capable of 'connect' */
+-static inline bool is_pci_tsm_pf0(struct pci_dev *pdev)
++static inline bool is_pci_tsm_host(struct pci_dev *pdev)
+ {
+ 	if (!pdev)
+ 		return false;
+@@ -204,9 +208,9 @@ int pci_tsm_register(struct tsm_dev *tsm_dev);
+ void pci_tsm_unregister(struct tsm_dev *tsm_dev);
+ int pci_tsm_link_constructor(struct pci_dev *pdev, struct pci_tsm *tsm,
+ 			     struct tsm_dev *tsm_dev);
+-int pci_tsm_pf0_constructor(struct pci_dev *pdev, struct pci_tsm_pf0 *tsm,
+-			    struct tsm_dev *tsm_dev);
+-void pci_tsm_pf0_destructor(struct pci_tsm_pf0 *tsm);
++int pci_tsm_host_constructor(struct pci_dev *pdev, struct pci_tsm_host *tsm,
++			     struct tsm_dev *tsm_dev);
++void pci_tsm_host_destructor(struct pci_tsm_host *tsm);
+ int pci_tsm_doe_transfer(struct pci_dev *pdev, u8 type, const void *req,
+ 			 size_t req_sz, void *resp, size_t resp_sz);
+ int pci_tsm_bind(struct pci_dev *pdev, struct kvm *kvm, u32 tdi_id);
 -- 
 2.56.0
 
