@@ -1,66 +1,66 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793117102;
-	b=cXOg5JTc2A6wz3z0qE0y/LgWhXXQ75qWFLQ5Vstlt48u0zEMVd9DWGPbbeOqAEu89IEV
-	 n7HvR6TN+k0LzYbVe7eL1j4Vv1kWa4IkHLfeMT4EfoEGqZwiXJNo88h88oRTBv5gUNq2p
-	 s4ep83zDdGJDOzr7LVe3BrucXAkqg/45G7adUXw2oj6TDACvfs5HBrC7tP8IUrdqD6l2d
-	 CnLED9KHdc2jnRvhHVCp2+NWSUyOtX61siiDunabnP4Ybvz6kjHxxiGPA4xLIvtRRAyN9
-	 jIQA8rMDYxqkENPvN5wtMUhC0ZTRaObsxuONMg0RHIM2T13dXtgFTql5oJYTcbhlkRw==
+	t=1793117106;
+	b=i5WL3z+uZCgQZekIe6Zl29hpvcYu9vpaLtbhagzxN0xCJX28ORZE9CXdLKT0rTBn/12A
+	 HdtquvN7zzWQW4O/+AhYUeNEBTcYvigCHbE6pdeNfWf9VBdK5gBNzbtA8Qfgh8ox7cPxs
+	 4Pnvhsu66VOyuOkXtNv2Xqe64IbTICokWacq7DQo/Rde8Bgzs5RFduXhaPhF3lDrPTIKI
+	 e75PkW/4HBNbmjra7GtU+lWK5isoaO6bxfr0qT8DptCIK5Nqzq/Dy88Ak+4s8Cb0SRUez
+	 aPt3Ifvf1DDVBWXCJazChKGj/+V/tOKXKW3iPMDERqBPlcbrlrj5o1xZJ3fX0q7SL3A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793117102;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793117106;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Type:
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=xQsMP+lrBgTN6MoyUahidxPsqRNrb5J2WXgZ5OTTlBM=;
-	b=PzvuuUzSs09UFoctlsnVBfaqLK9Q5/LXPlJeJMRxnO49zegl7lxJtXhCs7/y2xsQAhcR
-	 tXhysVP2rPPNOiu2Z+rNSOU/3Z+zpT1Ru7mHRhvnHp5vRGh33WNpTn7JokiXBLHMMzFVb
-	 HP/PVchBIb/e2IKPTbpXTS6JBQuFkMfuPgqE5hcj8SC/EmzjC3rywWXlUhhOSa49xNTtI
-	 Yf31mnHkeQN2v5MJxGNRdVr5KRxBU18D2qhdOC2YO9ARlq6iIMjaVv99E77qMbWn697el
-	 U75QMFwPuZXyFbcGn/yR31iTBdx4o9REDDrTsN42wFX1HDn9hko9IlX5IYKi6cTzgCQ==
+	bh=q6u5CSCZ9kphvglZcxodRTcZdu4n10OUtD/l5u7EB+w=;
+	b=LUd5WUm8UNVCmvq3RKsLG+UCvOrMny1xQFbmP4x9oCprHKeJBOkfCelMVxTSO9xCVgzf
+	 p/NKBNjx5Gj8/+KXAKFRkAnrlr6BtII1Yvf+8GG5MgYfiUQAzv3++bVR/640K4tKIzqF9
+	 60wZM2MeYaco5FmdwlaJDpfovHNVR+/QJ+k7aRK5emqIxe/F6SBVhYvD+IJ8YSHEv/7e2
+	 gqZUhsibXzhRJaa366cIItZk5Z8t4r0ah+9MirkgzG2dGgC1coSwNeRNhh6kMAK26sens
+	 VYfEcigncju6I9Q8e2z4KCSvRBjhSKWBp6ENNDFX3aSMqNtzwUss/KnIwuGFXQ33HjA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=intel.com;
 	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=NtUA51VM;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=SjhbKxSH;
 	arc=none smtp.remote-ip=192.198.163.18
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C86AA60A2605
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 16:05:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C86AA60A2605
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBBC860A2612
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 16:05:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CBBC860A2612
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=NtUA51VM
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=SjhbKxSH
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793117101; x=1824653101;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=uKqy8DQJK1y1iwbFegTjPjh0qkdhTY1TpD7Xt8vtLPs=;
-  b=NtUA51VMaE+c8BRYjaLI9KnqjeYRgIaVi8NMiCJbQBnEyxm7u1BAXIFh
-   e3nMb4x4jzc+sWofpGRIX1jcrfRYzgkSasCMJ6UA5frGHuzVe+7KzsaXD
-   MWLmGGQHaYYpjG2uCK2YNkzc2j9oDQaIUlEeNPjjOC/yJ5tXsJEuJQUFm
-   3Q8Ff2VA8LEW0zCpBGqL4REPxhtJQ6QO/1nqIKXokz4O9FbrWOFPcS8Gc
-   Crj8Lq3L5UL2FUN/bfbu70x3+2eCs2qCJBvOPzOKC2t/R5oqXl+ywTz0q
-   VxFM2iKft06WakqOPj9e1GebG0WWlNL/0aKAt9Qa1OIo5Bb81wFNA9IFl
+  t=1793117105; x=1824653105;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=BO7TfNsoRPaWc25mK6Y8UlaHOwo5j0T4+Llq3lczV90=;
+  b=SjhbKxSH4adZSKiw1yevDdE/VF4o4oMhzmmTsBHzDKOWSetsovXjNTv5
+   MKZSYvINnxjyByGjP9sNSQ8WL50N0IswBXhfnrg6dtEV/ItXu/hIpbDbb
+   lQKB0yXhgAQjY2AzQ0f+aHpXHwyOE5AP/n3+EeiugbNos/ui1tCsBIv5F
+   rB5y9Y3OkYovPPdJo2AzhQeO9gKtp2kxIEO+gwUR9cTaxkI3SupVFxJl/
+   JDOLZQOPbih+5TTMZRQpy4FSfVQIg2cJQeQbfMvKmk+4FexnAyNwpA+HV
+   EEZJYsP1PllsL3FaTB1sXi5cOkREHbTq6X99ggx+9vEEKjooIYd6raYU2
    A==;
-X-CSE-ConnectionGUID: BI/RLdTSQVigStyy+YEBeQ==
-X-CSE-MsgGUID: ebTl6nfpTh2ID96KOgteig==
-X-IronPort-AV: E=McAfee;i="6800,10657,11948"; a="1852162"
+X-CSE-ConnectionGUID: +HhQTOxsTgKRtdLyuNXO6Q==
+X-CSE-MsgGUID: yUZvmjAzQ2ep3aSsozaKNg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11948"; a="1852178"
 X-IronPort-AV: E=Sophos;i="6.27,181,1787036400"; 
-   d="scan'208";a="1852162"
+   d="scan'208";a="1852178"
 Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 09:05:00 -0700
-X-CSE-ConnectionGUID: CVZWlXp2QECfe1KIxvp0Eg==
-X-CSE-MsgGUID: a8eeSotYQcmFKpcBKmVtTw==
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 09:05:05 -0700
+X-CSE-ConnectionGUID: TYysI2ixSJuySIb7+kRotA==
+X-CSE-MsgGUID: lQKEWM0NTw6ZQbTu3r/umg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,181,1787036400"; 
-   d="scan'208";a="5111751"
+   d="scan'208";a="5111770"
 Received: from dev-150.igk.intel.com (HELO localhost) ([10.91.214.40])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 09:04:58 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 09:05:02 -0700
 From: Lukasz Laguna <lukasz.laguna@intel.com>
 To: linux-pci@vger.kernel.org,
 	bhelgaas@google.com
@@ -74,10 +74,12 @@ Cc: michal.winiarski@intel.com,
 	davem@davemloft.net,
 	edumazet@google.com,
 	kuba@kernel.org
-Subject: [PATCH v2 00/13] PCI/IOV: Improve reset handling with VFs enabled
-Date: Tue, 27 Oct 2026 17:04:33 +0100
-Message-ID: <20261027160446.858300-1-lukasz.laguna@intel.com>
+Subject: [PATCH v2 01/13] PCI/IOV: Introduce pci_iov_get_virtfn()
+Date: Tue, 27 Oct 2026 17:04:34 +0100
+Message-ID: <20261027160446.858300-2-lukasz.laguna@intel.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261027160446.858300-1-lukasz.laguna@intel.com>
+References: <20261027160446.858300-1-lukasz.laguna@intel.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -87,99 +89,91 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This series improves reset handling for SR-IOV devices. Today there
-are a few gaps when resets happen with VFs enabled:
+Add pci_iov_get_virtfn() to look up a VF of a PF by its VF ID. It
+returns the matching pci_dev with a reference held, or NULL if no device
+is present. The caller must drop the reference with pci_dev_put().
 
- 1. VF state is lost across PF reset. The PCI core saves and restores
-    the PF's config state, including its SR-IOV capability, and the
-    kernel representation of each VF (struct pci_dev / struct device)
-    survives the reset, but the VFs' hardware state does not. From the
-    PCI point of view, the VFs do not exist between the PF reset and
-    the restore of the PF IOV state. Their config space is lost, and
-    their drivers are never notified about the reset.
+Assisted-by: LLM
+Signed-off-by: Lukasz Laguna <lukasz.laguna@intel.com>
+---
+ drivers/pci/iov.c   | 25 +++++++++++++++++++++----
+ include/linux/pci.h |  4 ++++
+ 2 files changed, 25 insertions(+), 4 deletions(-)
 
- 2. VFs are prepared in the wrong order during bus and slot reset. VFs
-    are handled like any other device on the bus, and because the walk
-    is top-down, the PF's .reset_prepare() runs before its VFs'
-    callbacks.
-
- 3. VFs on an SR-IOV virtual bus are not handled during bus and slot
-    reset. The walk recurses only through dev->subordinate, so it never
-    reaches them, as such a bus has no bridge. Those VFs are reset
-    without being locked, without driver notification and without
-    config space save/restore.
-
- 4. The "bus" reset method is unavailable for a PF with VFs enabled.
-    pci_parent_bus_reset() accepts a device only if no other devices
-    are on its bus. A PF's VFs typically sit on the same bus as the PF,
-    so enabling VFs makes the PF fail this check. The VFs are in the
-    PF's reset domain, so they should not block a bus reset of the PF.
-
-This series addresses these gaps as follows:
-
- - Patches 1-3 add the PCI core helpers used by the rest of the series.
-
- - Patch 4 fixes (1), (2) and (3). It locks all VFs together with the PF
-   around a function reset, saves and restores the VFs' config state,
-   and calls the VF drivers' .reset_prepare() / .reset_done()
-   callbacks, so both architected and device-specific state can be
-   preserved. During bus and slot resets, VFs are skipped in the device
-   walk and handled through their PF, so VFs on an SR-IOV virtual bus
-   are covered as well. VFs are prepared before the PF and restored
-   after it. As a result, pci_reset_function_locked() now requires PF
-   callers to hold the device locks of all enabled VFs as well.
-
- - Patches 5-7 adapt PF drivers to the new core behavior. ionic and
-   pds_core call pci_reset_function_locked() from their error resume
-   handlers, so they now need to lock the VFs around it. i40e no longer
-   needs to restore the VFs' MSI state in its .reset_done(), since the
-   PCI core now restores the VFs' config state.
-
- - Patch 8 fixes (4). pci_parent_bus_reset() now ignores the PF's own
-   VFs when it checks for other devices on the bus.
-
- - Patches 9-13 replace open-coded VF lookups with the new helpers.
-   PCI/TSM and ixgbe use the VF iterators, and ice, liquidio and xe
-   use pci_iov_get_virtfn(). These patches depend on patches 1-2 and
-   are independent of the reset changes.
-
-Link: https://lore.kernel.org/linux-pci/20261019083514.838640-1-lukasz.laguna@intel.com/ [v1]
-
-Lukasz Laguna (12):
-  PCI/IOV: Introduce pci_iov_get_virtfn()
-  PCI/IOV: Introduce VF iterators
-  PCI/IOV: Introduce VF locking helpers
-  ionic: Lock VFs around pci_reset_function_locked()
-  pds_core: Lock VFs around pci_reset_function_locked()
-  i40e: Drop VF MSI state restore from PF reset_done
-  PCI/IOV: Allow bus reset_method for PF with VFs enabled
-  PCI/TSM: Use generic VF iterators
-  ixgbe: Use generic VF iterator
-  ice: Use pci_iov_get_virtfn()
-  liquidio: Use pci_iov_get_virtfn()
-  drm/xe/pf: Use pci_iov_get_virtfn()
-
-Michał Winiarski (1):
-  PCI/IOV: Allow VF drivers to handle resets
-
- drivers/gpu/drm/xe/xe_pci_sriov.c             |   4 +-
- drivers/net/ethernet/amd/pds_core/main.c      |   5 +-
- .../ethernet/cavium/liquidio/octeon_mailbox.c |  10 +-
- drivers/net/ethernet/intel/i40e/i40e_main.c   |   3 -
- .../ethernet/intel/i40e/i40e_virtchnl_pf.c    |  26 ---
- .../ethernet/intel/i40e/i40e_virtchnl_pf.h    |   3 -
- drivers/net/ethernet/intel/ice/ice_sriov.c    |  20 +-
- .../net/ethernet/intel/ixgbe/ixgbe_sriov.c    |  25 +-
- .../ethernet/pensando/ionic/ionic_bus_pci.c   |   5 +-
- drivers/pci/iov.c                             |  88 ++++++-
- drivers/pci/pci.c                             | 217 +++++++++++++++---
- drivers/pci/tsm.c                             |  25 +-
- include/linux/pci.h                           |  63 +++++
- 13 files changed, 357 insertions(+), 137 deletions(-)
-
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 9185934a900f..eb019201faed 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -51,6 +51,25 @@ int pci_iov_vf_id(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL_GPL(pci_iov_vf_id);
+ 
++/**
++ * pci_iov_get_virtfn() - Get the VF of a PF by its VF ID
++ * @dev: PCI PF
++ * @id: VF ID
++ *
++ * Find the VF with ID @id that belongs to PF @dev.
++ *
++ * The caller must drop the reference on the returned VF with pci_dev_put().
++ *
++ * Return: a pointer to the VF with ID @id, or %NULL if no such VF is present.
++ */
++struct pci_dev *pci_iov_get_virtfn(struct pci_dev *dev, int id)
++{
++	return pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
++					   pci_iov_virtfn_bus(dev, id),
++					   pci_iov_virtfn_devfn(dev, id));
++}
++EXPORT_SYMBOL_GPL(pci_iov_get_virtfn);
++
+ /**
+  * pci_iov_get_pf_drvdata - Return the drvdata of a PF
+  * @dev: VF pci_dev
+@@ -380,9 +399,7 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id)
+ 	char buf[VIRTFN_ID_LEN];
+ 	struct pci_dev *virtfn;
+ 
+-	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+-					     pci_iov_virtfn_bus(dev, id),
+-					     pci_iov_virtfn_devfn(dev, id));
++	virtfn = pci_iov_get_virtfn(dev, id);
+ 	if (!virtfn)
+ 		return;
+ 
+@@ -399,7 +416,7 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id)
+ 	pci_stop_and_remove_bus_device(virtfn);
+ 	virtfn_remove_bus(dev->bus, virtfn->bus);
+ 
+-	/* balance pci_get_domain_bus_and_slot() */
++	/* balance pci_iov_get_virtfn() */
+ 	pci_dev_put(virtfn);
+ 	pci_dev_put(dev);
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index ef6327205520..c7d8b5292cc1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -2600,6 +2600,7 @@ void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar);
+ int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
+ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
+ int pci_iov_vf_id(struct pci_dev *dev);
++struct pci_dev *pci_iov_get_virtfn(struct pci_dev *dev, int id);
+ void *pci_iov_get_pf_drvdata(struct pci_dev *dev, struct pci_driver *pf_driver);
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
+@@ -2637,6 +2638,9 @@ static inline int pci_iov_vf_id(struct pci_dev *dev)
+ 	return -ENOSYS;
+ }
+ 
++static inline struct pci_dev *pci_iov_get_virtfn(struct pci_dev *dev, int id)
++{ return NULL; }
++
+ static inline void *pci_iov_get_pf_drvdata(struct pci_dev *dev,
+ 					   struct pci_driver *pf_driver)
+ {
 -- 
 2.43.0
 
