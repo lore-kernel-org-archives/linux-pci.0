@@ -1,55 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793079278;
-	b=UwdSUod/dvxI6iG6dwwLgLubDbVFE6fw7GjgcKm8ovqOS3VdBFBUUCFzpTkJ7AiGJYGt
-	 UZEfhrnpW00XRcnTxE567oT4PY3XvtHAditxGZRWXnWJrX6XdNPTqoUZeR4udwQAkm0Yi
-	 egpClseDKaHGHqk3uq+Xq8+sXQDY1NWfHbjmk7ZjQoo0ZsAwVzc3xPUFpmJlHGNQ/te+S
-	 87dQdLxT5pBv/rL3OxTdlepd1Xhsx8GnDEJt6Omccrdph5nhBzpymirXziSDf/BEggPhh
-	 8jsqhDdfkS/6qNrXo2D76jKsgfcORk0bu/Qg8P15XuWqdqygw/8QHolw8MhDhVbxhow==
+	t=1793079339;
+	b=Xnb0vUSJFN7LYSZckDPdxtHszm6kgQQCtaMrId2HJi/D4XJsMQXZriGQ5vKyOAXXTyC8
+	 DSfCW+uDECh8Awd1P+WRRa6araInMUPq7VmFYG8lTulr2ydsZhNfgQWcVJnn/mqk2xilV
+	 tnJKT3pr4fTdipSrTwwslz68TExuhK3SoTr92bj97EuNSnQtx1ilZ/W7c8yxVQ4npfMKn
+	 OFsxJg5iItoMPUnrWpydb760WysfvbgS+TF9XIJcL0TFB0goCDz1gzhQ0cQjXLbYO5zOO
+	 Ep8V7RtMmQvoTd3Nj3a0iYQXbi/InXQ2NgYO7+LXk4BJPNQe09bLMLsGq794m/9lw7A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793079278;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793079339;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=mr+2kR3Czx2gXEabbZXj3S3IwLsJbNX8fckeRnvpPyM=;
-	b=caANoXERz/LYyiLw8plsb+QKlItNLRpjOpGRzTYT3YeNk+yEtUB88x27j622RY2V5zlr
-	 iFA2lMPdJJQbRDoaitW+s2klOa66P6ikVmHcA3QlH87gnZoNZcOVjObXNmDOzK6dKJJxC
-	 l+9fF1cOxorMpyV8wbEwdxSMZHYUBk5hOU8sTdwR8zFLyecewWKAMIiUw/sdd2SxPKJTp
-	 s1D5aB71oWGgC+zbtTUa/aJvJpzcCpWg/6EldXaHflStpHpyJ3v7mlpvAh4YE2SetP3Nc
-	 kLKb3Ql6HnmIpEfm1vIwjlJzSjOyWeeFUNoH9mgLI99pKB6+lJ6NEx30es8zt8RwpnQ==
+	bh=POdcUv6nbKzcrXTHxGUK5syo5pasbn/CbPrdtl/Q91Q=;
+	b=hmnwG5Mw+BKTySpMQ5ygiQ3+DyR2IFCFp7jQyDZBklN0SoW+R8MUvIb6dswtrSsz/nl6
+	 jVTzUyZW/BDKBdGKvqipwN5k9scQRNt9Utmg4GgDVAVUq0pRRqAoYoNRLteHabDS/dafX
+	 7/0eCgcxv6MteZxIFbSNP1DFs/iPbOIrYVWKqdnoL2PrczuSBE0xKkXcX6qw8JFxm2xnm
+	 KDj5Fg13oewaxhvmWhB3WyABShlwqdgmrqtyogBY79IN9bwW0NTYGSQ2KUpN3zbF85mQ3
+	 OqEqs05ISrQUiIHIAPVU8uoA/8buIv/JCAjX31N35X7/+wYTQdnls+vyYKowVMPWlEA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ti3p8njA;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=m5Knr7MA;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52F5C606A31A
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 05:34:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BFAA606A31B
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 05:35:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ti3p8njA
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDA311F01825;
-	Tue, 27 Oct 2026 05:34:37 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=m5Knr7MA
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7B4B1F01825;
+	Tue, 27 Oct 2026 05:35:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793079277;
-	bh=mr+2kR3Czx2gXEabbZXj3S3IwLsJbNX8fckeRnvpPyM=;
+	s=k20260515; t=1793079339;
+	bh=POdcUv6nbKzcrXTHxGUK5syo5pasbn/CbPrdtl/Q91Q=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=Ti3p8njAtt9h322hwTCA6OrwznEddLg8klnMdr8UWUW75YwzXgaHFJMkZEpoo6t0P
-	 +0+rhjz9h/q+PlDJP71P+H+rGBhfO9Ohcg05d+9BCQ9Y59/NKT3UNdu5bgvE6fe0CH
-	 b5PHjwLi+HqZgrabhXBKZ5FGJP8rZVpy/oeX0gM81SIOtjTJsKNFbyonGj1zcJZvzY
-	 NduBDVIO/yHqNWQbTAoitsd0o2+Z/H9LVzZeWkZCXvCCcPQMXcvD48NaI4e+GwEHZV
-	 mPJmtHPI2prDKR7oXoLcomNkQSwWvrmnVs+MqNhU6UTr9SyhzbiEHMzT6m9jhwkXBf
-	 jk76AIWhqBiog==
-Message-ID: <sashiko-outbox-186125@kernel.org>
+	b=m5Knr7MAtnJtI6Sj8GugHCTofOCoz3Wh7IWhCOKkdw15imtmvk2gyKCClMU71sCAu
+	 0q3fKduLOxjGcHacweseoXTmmKtX9jMY4ae4pLpOiJQwUXaOXOA9nuKuNJpDKCswWP
+	 27TXjcYVY3IFo8c8vPIhyGPvfunBnlBkvTYKJBkx5e2CICjGyaFD2S46Yap4SWxbyQ
+	 DBsx07ClJ2QIsj3K7qan9SXyvWhdEOnAbvC5jztD7bevOEXLlqJT0eXwMi0Sb7OVMZ
+	 C/Mv4euNajXyK1WW4X96BMAssKp9/Q7ZXogWd/d3l2itlp5dAKRjbTLkU1fZRYm84X
+	 Lan18iZ+a4HQw==
+Message-ID: <sashiko-outbox-186126@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 07/23] rust: add bindings for hash.h
+Subject: Re: [PATCH v5 19/23] lib: rspdm: Support SPDM get_certificate
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com, linux-pci@vger.kernel.org
-In-Reply-To: <20261027052536.1722081-8-alistair.francis@wdc.com>
+In-Reply-To: <20261027052536.1722081-20-alistair.francis@wdc.com>
 References: <20261027052536.1722081-1-alistair.francis@wdc.com>
- <20261027052536.1722081-8-alistair.francis@wdc.com>
+ <20261027052536.1722081-20-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 27 Oct 2026 05:34:37 +0000
+Date: Tue, 27 Oct 2026 05:35:38 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,8 +61,12 @@ Precedence: list
 
 > From: Alistair Francis <alistair.francis@wdc.com>
 >=20
-> Make the functions crypto_shash_descsize(), crypto_shash_digestsize()
-> and crypto_free_shash() available to Rust.
+> Support the GET_CERTIFICATE SPDM command.
+>=20
+> The kernel will send a GET_CERTIFICATE request to the the responder and
+> then iterate over all of the certificates returned.
+>=20
+> Certificate validation happens in the next commit.
 >=20
 > Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
 
@@ -70,5 +74,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261027052536.1722=
-081-1-alistair.francis@wdc.com?part=3D7
+081-1-alistair.francis@wdc.com?part=3D19
 
