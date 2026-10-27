@@ -1,115 +1,111 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.175
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.177
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793089775;
-	b=ayZsObZM34prOcYZv0eziL6lyXh2YoevPV9ucu+PHJzRKvzMDdLEck7KBRClKxUIt3q3
-	 +8p4VrriApxx6kq51/BR32kueKhlHz9L4arGWA4h94NsBtf7QG1lhSC2NZL4NbdlJgabC
-	 ZZVXZNbcwVePrS63ySul6l/WHPAbi32yLdwLYtokJbluFp+FXRwiA6kHjrvdMDO4o0t/g
-	 S0+ZxnJByo0fgic0Tcyu4+RQPGNmQmsIDjw6AKtZjSjVqsrAPzElXX8N/BB50wjtdzRYF
-	 EB71OqbDvp76vFwVOgVX204rB9fGaaErE5n9xj1MT62SqFdELnJC8sb+ELsb2LCIjBg==
+	t=1793090594;
+	b=h/HC+jHtUTyKEQQN4GShPX5HvLtFjfcNQZYfhOKEkOktY9kPZkQL/EqybKS8dlINyHLJ
+	 YrCWgPrAaNaAUpxmyj9p6giL41YMAAuKTwmiekTFhBGz/Xe/1hTDcBkhdVXDJpz2t01hk
+	 4ATd1JxhxOet0CW6fyGq23urascZN9irRHocv0JQ8lUkG3xfK8Kc+Ozq8NQ2RV9rxihUc
+	 SeJeYKR+wD6wqMm9jFWPJ4h2oKJLA76WPQvYDF7BhBX9QWLzLK7A7XxGIU9ms3WtfB5dH
+	 zdsG2egn4YpGe1schedm/jmf4GXM4SkQ0X/luofLTTg4Z6Lgd9+SRAmS3C3B+ZOEQKg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793089775;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793090594;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=MGzHH13ZWFaAze8jomr5kn6NEKQkF5IKK+VbX0oc3KM=;
-	b=nvijJuW02R6HZKufxo7cDx+oA7yaCaM9bptksFTWbdyfSHMLI2c3bNQqXM05yyGsNnqz
-	 IYnJjF1k/ZS69qHo2R+CWxSuxq6bgKId4lj9YXWNjyljkPLmJQZxiuB0XO+S5NA5MRey3
-	 pEsykXJKw+Lr3WFlGv0q+jdm5fvpuKRIlSLpBXdnTe/7g3S6CMOhMD30g+7azFvyt/lza
-	 PBULcEt0KTCXK88eikaaeupUQuZO1Qghj2reAeTJknJshtn/1betQBW7n1CM+f82sQf7D
-	 psPe09DRW7PG548mCsLsN5i2WjzVobhmxMdbSSXfXHWjuANpqV21uQoCpszBAApVRzA==
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=y3mTGo6FRBU+gYpImJ1+JuKUhlGLGeu1U4jVbw/Cy/I=;
+	b=G41kh2ijWw5fhX4km4gzwqpV/oA00Dw1dMfH2a1Op7e5Fxf0Ehet+XQoRHYVWBnRRrvV
+	 VEvJ6+YMNMbFqoRdTFNdBwhkUkBe+/kG31V20UUVVj4d65QESgc5fWmZzNSiouaiParz/
+	 xbDoiKrTHem3S92reP3Ou14wnpmm0UcqqeYaxsaoR2IIIwk4bkdIsK5s6RYg9r8AE+JwH
+	 C3t0M5oo7Fj7tOqAfNsTZ7u+oXEsvGxXhqUrLd/WqJzoQlM4560Egj7mT+PgYCmVbAlGR
+	 RHPN/aZqZiJAGwI4d9EbAAZLiGiwudob07/cAj43M4+8mtTib9in8buxwVwFp46z8QA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=UfpuVEy5;
-	arc=none smtp.remote-ip=74.125.82.175
-Received: from mail-dy1-f175.google.com (mail-dy1-f175.google.com [74.125.82.175])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=U+MCwusp;
+	arc=none smtp.remote-ip=209.85.214.177
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C56F8606A31D
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 08:29:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C56F8606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 708AF606A31B
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 08:43:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 708AF606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=UfpuVEy5
-Received: by mail-dy1-f175.google.com with SMTP id 5a478bee46e88-35d0be18c71so904863eec.1
-        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 01:29:34 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=U+MCwusp
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2e60f9af6e6so33181065ad.3
+        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 01:43:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1793089774; x=1793694574; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=MGzHH13ZWFaAze8jomr5kn6NEKQkF5IKK+VbX0oc3KM=;
-        b=UfpuVEy5veyu7vgwxb5ILNxC7fDxcHBEy9NAS0QZtpUfc9NKoNx9N92KGbm8ljPN5p
-         6B4ZWPtqtXoCo4As62q9vysEjY1yGXImUkkdvr0rrv649HBeJLo5zIj/BQoDNws3rYwV
-         kWGL6ZVM/cJN5Eyywyvsy2jQAwMqHdw4yV6r+xsST+4TLBkZTgU3GfFkJKgxumU3P8yQ
-         2pdteBDfSYWRmIyfHkgdGY5MX+fKQ4/LvsGuN5l9iYg7iy9N9jcf4iRqT/iyx7WVoroJ
-         ZRdJpYpMGgHIR7+pt8EMnM4UpfnFgcgwrJeHS7hUJaISQmYniNvrK4MZpzG6EYiiZxJ5
-         Ce+A==
+        d=gmail.com; s=20251104; t=1793090594; x=1793695394; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=y3mTGo6FRBU+gYpImJ1+JuKUhlGLGeu1U4jVbw/Cy/I=;
+        b=U+MCwuspKVOe/KK7pWHUDK/JipbXiKDqESILed5yddyrB8jzOGCrRR1HLo9CIC7kpN
+         YWW6ShXECFbKW62LREn7LHMdFXmrBdFoH1PLM62ubh/E5tnQKus8h8su1aUN7ckQH87o
+         p+Nim5cuJl7XND8KTbx9UljIYReLcStP0wC+Ks5OvKSGRRQQZO8OlvL67yNQF/qVrbI7
+         pU+PRwVQS5/z+jHby7XUUYDajwViLkC/Z/JNNYTRvtgQPCxs5PJiQUMEtvqE3EyL4Fbr
+         HeX3QTP33FzySauLCgmMRbR2R/8CyCYzbFMsasZB2w0968yQX+VS18im2KtMPnH4mmKn
+         DR/w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793089774; x=1793694574;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=MGzHH13ZWFaAze8jomr5kn6NEKQkF5IKK+VbX0oc3KM=;
-        b=rXKokrngIPhLbGMhEJKlJhbHT0BiASkl5xvI8A4Rx1SADjJ13VRmKMS4yaWW+CY4M4
-         8Ta680UUI2+5dZ4GRebYzJHHXl9faftDCPPII+TLHoegVUZrMzJMeHKzNGeqD3TX5iNt
-         rCnZBSYXG64jOYEtwAJ5C2FQtWvbuMeFIaYpxCjhNJIPIC8CKzsrSJasz+noSkcTsQxL
-         XUM197XwcbOBarYmOL8CJo+RYpT6f2py8wBy06Ah02NpQMopih02gOB3y6AwI7avLr2a
-         F6SPg4mS0RgAG4PIlnHD6JfYMB2kTpi45PW8kAILjY97PSwCDf0bHM8NZxiuS5rfYABe
-         PbEQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwLVR2z4J9qdn/I5dm17QlXS86f0Rdb7DGLriM2O5LaBPh+Dt5OFrUrS76RC0BitN1FU0sRc9EXJ4Y=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKfMyvrc5M6DiA5pdtoHdrc2EBiD04O52lQZFh/6jIGsMX3ZK3N
-	CNCYluYY7yM9Eq1nPksdx1b1dLkRyF4RDUkTRLNfX3z1/XKKC6AX3DQ=
-X-Gm-Gg: AYBFou3+goe6d3LqUHl9dNNAZYqOqupwrl+QwZ8jZU1tjJQe+M6dnBIFe4TSk044140
-	fwECpd7ojPeCIETtIMa1UEuoyAnMXzWX17wnZ5ougxgylLXW1alArCME5bJklq5RuqI6JFcuO2n
-	cdawDqZoprn2kknhNDyuIqiBlA6xQqRQ3IANpA2syCq4ZI8SfhBgbeIIhp9i1f2dWcFAnchwRrD
-	r3JuIgZova0vxTnnVesw/Mf11SAIey9WIlEwmcVU+iVxvmFppjXorCeuNcKbBTLCeC+r7omolBA
-	zfl7A6CU8udop6KOsD+XKBBOV8ePxngyyYd4iLgaxOoJ+wHNKq4eU8kkZdpwMNexaweA1w2pPSq
-	fQ3cJApbSWQjvkNJaNYhuW8a4T8CzuD6R8i8JJWlj1MrLaoFGEdf3UwC89ooU/ckkfk9r/2b71O
-	F7MHRvtGvxqfw6dginPjUtuA/HVEONop+nfOVp44OJE1xhmHCU7pDzGhq5tcq7q7/Pr3KtW9h3l
-	7jkTVdZCyWJjSRyyWHq7nntT02kw0oB0excBl6/t0yYNEWvyIi4QmCAbhLhfzH1Jqh9eHB+PHno
-	UBTqigArd2aE
-X-Received: by 2002:a05:7022:eb51:10b0:144:eb3f:563a with SMTP id a92af1059eb24-1a3c84c3867mr2805885c88.15.1793089773456;
-        Tue, 27 Oct 2026 01:29:33 -0700 (PDT)
-Received: from at-Standard-PC-Q35-ICH9-2009 ([27.60.26.239])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-369e8db7b23sm43895151eec.19.2026.10.27.01.29.17
+        d=1e100.net; s=20260707; t=1793090594; x=1793695394;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=y3mTGo6FRBU+gYpImJ1+JuKUhlGLGeu1U4jVbw/Cy/I=;
+        b=sO+ccM0U6Vk0hg61/Vq754UwhPLpiZOTjrmX3Ryi6iuVDi9VI1jAfbOGB0Z3AQcrGt
+         8LgZOvgeQyw3iS/8pbHk4Ei6hEtDGSVfkNEfYgFGU22RM5Jp2W+DUvKAOtXmn7WRlNPt
+         eLoRhVa+JSog16+4Aa04rEyWqCnLcwG3b7m9Z4X9H89aQqPc+jk6ne74KODFqR91lBNn
+         z+VqjrbDhx8CqG/nKRJYBVnl6i4yMW7Nj2huMbVBoKPSGSnYPZXp79rYWKBMMmiKEEAd
+         W0t1Ze3UH68R17VUG6+CxkeUlvjDO/M5sORJ6I6hwRSzP/26g2riFyBOvSe/Tj03glCt
+         ZjlQ==
+X-Forwarded-Encrypted: i=1; AKwUvByTgrdg72ZWT1+myFkdwvZat962jL5Sg1D6nhV2mrEEAxFAj5i7CrgdDEeafPFWmCf7U9aR+cEsc+U=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJfJTD8qKNWaQnZ/gjWLI4f5z1/QspK4UzejZA69X8osgnQZuVw
+	OVwcwi4dXCF96BHV0x0/ua6GZZFNja2VEcVaaObnFiORpGLPvzDgZcwB
+X-Gm-Gg: AYBFou3dC91VhQzTomMQHTyh8wyyN1P18ocfK20Vi8saFDyPzFkhUVfpkKsQrL9yTf4
+	K7QxTMMLcLzQ13moXceyl0FyZdRVLebo+gPpGcG/kITIcVhcbb1RYCADRzchtdb3GmVtZXbowhK
+	rUbFJdwTm3os6fY8c9uSQem3QIj1UvqWizmzsKwpNl2DItF1RuY87HGhslYEveT5NVcrCFYxecH
+	7Y7dxTNTEzw4DEz6mcGFlh70Bspuw5rAtVPQClmtvk7BIF4ZCAM51Q2/NWKrObhW/VcrEMiHBOw
+	cknoxjrgFDLrhaBIqdXN23sPvicB/Ydu0z1FPa2+XhqP+zJrmSRBoqzVOx43Wi/GAQmM5lqX4Ed
+	vRBrL3r6ryAMYAhwAdTQ26aE9SztjGqg13IN3DMZinBQaStbd4RLSbkADVrFxjQJdDPvQxu5ndB
+	tgZQx4XEHmGiQe0cOuSAtO4XtTfIRG8PH6B8EbQDb5oRXqJDOqZHgBEdApscdvbuwwuLrDEHPNg
+	xG/as0VQTGsq3zznmvqrJibitYYyyTYoAqodzp//gmh6HNY0tSyhAipM38fdd+G9YduUqK6pAV9
+	MLwHYzE+jGR+aJW0wCNYaARumujY
+X-Received: by 2002:a17:902:f68c:b0:2ea:cb4f:fd3 with SMTP id d9443c01a7336-2eacb4f10a9mr43735615ad.4.1793090593725;
+        Tue, 27 Oct 2026 01:43:13 -0700 (PDT)
+Received: from localhost ([2001:19f0:8000:3e6e:5400:6ff:fe38:3d01])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eae6c3d17csm5901625ad.53.2026.10.27.01.43.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Oct 2026 01:29:32 -0700 (PDT)
-From: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
-To: alexdeucher@gmail.com
-Cc: airlied@gmail.com,
-	alexander.deucher@amd.com,
-	amd-gfx@lists.freedesktop.org,
-	atharvatiwarilinuxdev@gmail.com,
-	bhelgaas@google.com,
-	bp@alien8.de,
-	christian.koenig@amd.com,
-	dave.hansen@linux.intel.com,
-	dev@deq.rocks,
-	dri-devel@lists.freedesktop.org,
-	hansg@kernel.org,
-	harry.wentland@amd.com,
-	hpa@zytor.com,
-	ilpo.jarvinen@linux.intel.com,
-	kenneth.feng@amd.com,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	mingo@redhat.com,
-	platform-driver-x86@vger.kernel.org,
-	simona@ffwll.ch,
-	siqueira@igalia.com,
-	sunpeng.li@amd.com,
-	tglx@kernel.org,
-	x86@kernel.org
-Subject: Re: [PATCH 10/13] drm/amdgpu: Catch register access while GMUX keeps the GPU off
-Date: Tue, 27 Oct 2026 04:29:13 -0400
-Message-ID: <20261027082913.8002-1-atharvatiwarilinuxdev@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <CADnq5_O2tEUHOcbiKL8c4UHpy3AmOWtmM7A8o3jP2qLwkx2jUQ@mail.gmail.com>
-References: <CADnq5_O2tEUHOcbiKL8c4UHpy3AmOWtmM7A8o3jP2qLwkx2jUQ@mail.gmail.com>
+        Tue, 27 Oct 2026 01:43:13 -0700 (PDT)
+Date: Tue, 27 Oct 2026 16:42:26 +0800
+From: Inochi Amaoto <inochiama@gmail.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+	Inochi Amaoto <inochiama@gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Jingoo Han <jingoohan1@gmail.com>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>, Paul Walmsley <pjw@kernel.org>, 
+	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
+	Alexandre Ghiti <alex@ghiti.fr>, Frank Li <Frank.Li@nxp.com>, Arnd Bergmann <arnd@arndb.de>, 
+	Niklas Cassel <cassel@kernel.org>, Christian Bruel <christian.bruel@foss.st.com>, 
+	Senchuan Zhang <zhangsenchuan@eswincomputing.com>, Vincent Guittot <vincent.guittot@linaro.org>, 
+	Randolph Lin <randolph@andestech.com>, Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
+	Alex Elder <elder@riscstar.com>, Siddharth Vadapalli <s-vadapalli@ti.com>, 
+	Marek Vasut <marek.vasut+renesas@mailbox.org>, Vidya Sagar <vidyas@nvidia.com>, 
+	Pengpeng Hou <pengpeng@iscas.ac.cn>, Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>, 
+	Uwe =?utf-8?Q?Kleine-K=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>, Gustavo Pimentel <gustavo.pimentel@synopsys.com>, 
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>, 
+	Longbin Li <looong.bin@gmail.com>
+Subject: Re: [PATCH v7 1/6] PCI: spacemit-k1: Add device data support
+Message-ID: <auBj4o6t_RyT3wfk@inochi.infowork>
+References: <20260929083755.458238-2-inochiama@gmail.com>
+ <20261019164108.GA2177470@bhelgaas>
+ <athuYJjPMkrecGm3@inochi.infowork>
+ <atiB7-u5bxJbf-1q@ashevche-desk.local>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -119,12 +115,45 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <atiB7-u5bxJbf-1q@ashevche-desk.local>
 
-> You can drop this.  Nothing about this is GMUX specific.
+On Wed, Oct 21, 2026 at 12:12:15PM +0300, Andy Shevchenko wrote:
+> On Wed, Oct 21, 2026 at 03:51:20PM +0800, Inochi Amaoto wrote:
+> > On Mon, Oct 19, 2026 at 11:41:08AM -0500, Bjorn Helgaas wrote:
+> > > On Tue, Sep 29, 2026 at 04:37:47PM +0800, Inochi Amaoto wrote:
+> 
+> ...
+> 
+> > > > +struct k1_pcie_device_data {
+> > > > +	const struct dw_pcie_host_ops *host_ops;
+> > > > +	const struct dw_pcie_ops *ops;
+> > > > +	int (*parse_port)(struct k1_pcie *k1);
+> > > > +};
+> > > 
+> > > Does the "const" here add anything useful?  This patch suggests maybe
+> > > not:
+> > > 
+> > >   https://lore.kernel.org/all/20260911233541.1650895-2-james.quinlan@broadcom.com/
+> > 
+> > I am not sure whether the compiler can make use it.
+> > And I have not seen any explaination for why no reason
+> > for that. It is good to have a clarification.
+> 
+> These const make no sense. First of all, the third one is missing it.
+> And I have no idea what would be the proper syntax to add a such. But
+> adding a such make it clear that there no sense to have them. Either
+> you make the const the whole data type instance on the user level or
+> don't do it at all.
+> 
+> -- 
+> With Best Regards,
+> Andy Shevchenko
+> 
+> 
 
-I agree, but there needs to be another variable. Using pm_runtime_suspended
-or using any other pm function will not work, as amdgpu_pmops_runtime_resume
-also requires hardware access and even though hardware is accessable by then
-pm core will show that its runtime suspended.
+Good, I will remove it.
 
+Regards,
+Inochi
