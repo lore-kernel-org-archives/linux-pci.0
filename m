@@ -1,113 +1,86 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793090632;
-	b=vvLAzsxJemW3YhMee8YxwTmyxz0EC1/U1knd8YxQfXfulgo8Te+BkTxIdQGiVdpu9Poz
-	 Q+ThvFnlEzcxnST0EwZuY5Zm/1hBMGfBOo17nDHlD5wpRUsceNjCOLMkvPHAZorc6cW/3
-	 3Smzq4NDRHbH75+aESxi09ucGRVbWcCyYTkLmuxST9UA4WHcPsW9IfQE2hr7ogVJ4bv/8
-	 dGv4IYF2UoggctqcYcML7QsAPWzwWmx3a8M4+jqwlASiMx0iC7Xbml8IEZC0ZQIGM3iri
-	 ux9x8ntuQR2VqGEl+eIPdiH/SlohJ6BxhvIP1O3p3DJcVidQvOdshTaM+ZB6LO3HpVA==
+	t=1793091723;
+	b=4oUKEryDnvUfcaJUGV+KgvCXYvAXpMj7/KEbMeu44Xu0+8PN9llrl6Z1jTQz7y7NOLfX
+	 R0DDhlkuj4C0gffzgadQ5sOBLMtQWlLXs7Hl5N4T7FBer6xAWHInGhvUDqK06pxIx0XFA
+	 q/GzfsAmPZ+XlSuW+dLiEZtZHYXrqilH0NJnNgVhpxYNYrO6ySeJzjbWutztd/t67btp6
+	 uZrzKTrkTGTLzTY3ccYi4vj9/aogse8oDhdObS9odaKLgsGhum3OsIGGS1OcIgfevccaQ
+	 AChZNlttrE78wNP4/lQRKidH+vmv4yHM0lby+9hzCwmvFua88Js/yA9LFdEDbLks7pQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793090632;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=WdGWi2lCPsVOQrfWu4TCiPig1JxwAx4MQlsKT53PN3c=;
-	b=VS6qlcrG/XfpAzZiPWSlTRTUR0vEpgPwexkyeW/pnbzNFjmF9MSrQFlfQGRMO4sLEZRj
-	 xyJPV0rbwOzKk3OEIkj32+AIbjykgmxc7hEz+NjITIFglpyN6AgAyUmSFSUnIS6dDtfjF
-	 n20AhJByjDyCEK8oRcPdV0lvh6LeAX3ohcOim3cZu3P5x1fAbAom1RiRogCV0NNKQdgfD
-	 RG9Ls5g5mv4X++IZXvy5tx0nVy2Yi7vj7g4w7MEeRPfGAUzMlN37PQ9BfdnT3Pe7zMSwD
-	 WX33w0J7Km6e511WwbHsWLcXaUDtZ//SVvhIAxW5jCVCbzmFVYJZux+eLtC+5yxcfRw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793091723;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=5nq/yW3E6nSzBhQE//dTYvgfzBHRxLsoSrzMo34ZjSs=;
+	b=hSaOs+4NYwLMO+cyqaWyHBDnMZOOHPdZ64HJvCazT+MhIqlro9N6oJDzz1EV7o8yrBHL
+	 LRakrWXeYq2cRrkKkIlI1tmmynsWiGZcDHN1XPTCgZvThCaamD01Bq9LFSlg1AgFXMRsZ
+	 /l6f8ujsCEDVEAoSb8UWMkcMShBFJMGNGJplq7QXzSUPDDZfzZzCfbeu5HgCE7tHmCJds
+	 rBXP4H0UvVdd2KFAgb9+BrBdOnrMjPkcM9SAwd21AvBiKqB8MFm1bsrpOxvAfSf5OCbFW
+	 dBwvxLvgiGFgMhNnQsdy6u1OiTgY9XDVKu6k1wQ0PuBNcolSTTDO+uf4Sq709yCJLvQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=X6h3MaKU;
-	arc=none smtp.remote-ip=209.85.214.181
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ulj9p7Jn;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8887C606A31D
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 08:43:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8887C606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DA4D606A324;
+	Tue, 27 Oct 2026 09:02:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=X6h3MaKU
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2ea0efd636dso31000775ad.0
-        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 01:43:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1793090631; x=1793695431; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=WdGWi2lCPsVOQrfWu4TCiPig1JxwAx4MQlsKT53PN3c=;
-        b=X6h3MaKU/WaA/MnP0JtjHmvUoxo8La1Gi2rFdudPKo5jMX4Pg4Q1MAgw8PLeqeF0Qb
-         KPt/u3uRBlseZ+5gw3ZikC6qiss0fDsz/WtBZwv3nHEGmGtpxEmcM2sE9EFH6fG4c5BA
-         kx5j+7PLiQl8WBXroU8rS5DxbDa4TLqr7mJWdfcBu8yYXu8Dot79vSTVU1aiUtvVwMSx
-         55BSa9oYtiKKuOzVzqL5/RPRWAVP9C+Il8GFhbstTvLRxa7DvUDUCsXlqatLpZqqQYuI
-         CnBk51RdhO41gakhMBWpHtm5Vp8DoY/F4fq19tZ3melf0NZZoXoMEKBazIhCeKuRThws
-         Ed9g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793090631; x=1793695431;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=WdGWi2lCPsVOQrfWu4TCiPig1JxwAx4MQlsKT53PN3c=;
-        b=nM2lhDNHVEHrdnjoGV9P6ktG1LsOdB7uElifC3F/hGtN68amZj8IUFksIONP2H+GDh
-         pDnuTBaD7A0Ox6SZ8YoYeGt4IyUWEW37PryutL8d9NyR+sm+qgJHp/zJ7Ou+f65sS3Pf
-         oWeSc+SeRGtvg70f4Ll+nGxVAare5UzC+3lGMJOPMuF6ASD+CdCEvmGAYSpyEH2heflF
-         FU768oPZNYuoCCX0Le44t+Ie49oIYJe5C4UsagIWjjll5u1LIRidoBV6P9GA69EvuKDf
-         OWoDtPy5Y3ISAaIMzwgnrJ5OIuI3vJKBpv22yz01nin+RqqxxfYno7y9dOvaB0x8SQLR
-         mXDA==
-X-Forwarded-Encrypted: i=1; AKwUvBynSfjwuxM1/qZdlt309Z7GdK/v9TmfUVLobjpxVOc2BS5/EeRp5TxEok+HUhMvkKTVReTWeHjF86E=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKm7TjS7nKVKjXIUODpg0m7DobjSrqXOCZdZzajTgtrYNbHOaXh
-	8X3MXRpqY1r65hjKaVQbZo5Huh5Rme2keMBCTXJ5rHilZtv0vcqe+F/Y
-X-Gm-Gg: AYBFou0BFW8EhIQS7TJkVBr2Yc80Crw6IyOy0eAMPEYQwGnyOrnuCuOVCHSvQneV04B
-	8VCZKjlG1zGirPFKobJG1zMiZwxBYxMN9C72NNrNmYjQs8COpIB0mwjGvbuW47P8KT6GOdtDU/b
-	hYEY22/xNHAwMdmhCAWxY9Be81LrbW6tWttK8PyCgGIAH6bx8cejvSXrlJIGm1dOnt1Sw0aTedq
-	S/XtVm+L/mtjFwYls1R3apG8D3oG3f9ja80JQ4VwMqxiYFsj77zplfyLhbusknL9Xm3/z2gdyoI
-	ub6ZERB7w1lwV/UOUCdSliC/fQ++sXaiaRnB7vou3uJmRz8aRzAtWGLrkQSKuikxynDrHQSGdXT
-	QV5M9ZXnfvzPBiUWEo8dpdHhb/TwDdLM5G+6o3FaU8kvZ59l79krzQjEHLF1cltoyA1AqOJsXGC
-	eTtlColSqe6WKmy4RSfekmFyfyTd6Wec8tQrqgeMmphBBzPKm02lvZ+eVBKfd6lb/9PHnwBgUbe
-	G+on84DxJnOv2ZkzjjUKknjj+RlCQbDNG/FPYmpOyM2I25+pCC8Lw==
-X-Received: by 2002:a17:903:2389:b0:2e9:6788:9379 with SMTP id d9443c01a7336-2ea9c821072mr73512925ad.32.1793090630759;
-        Tue, 27 Oct 2026 01:43:50 -0700 (PDT)
-Received: from localhost ([2001:19f0:8000:3e6e:5400:6ff:fe38:3d01])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eae6bddae0sm5640215ad.35.2026.10.27.01.43.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Oct 2026 01:43:50 -0700 (PDT)
-Date: Tue, 27 Oct 2026 16:43:04 +0800
-From: Inochi Amaoto <inochiama@gmail.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	Siddharth Vadapalli <s-vadapalli@ti.com>
-Cc: Inochi Amaoto <inochiama@gmail.com>, Jingoo Han <jingoohan1@gmail.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>, Paul Walmsley <pjw@kernel.org>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Alexandre Ghiti <alex@ghiti.fr>, Frank Li <Frank.Li@nxp.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Niklas Cassel <cassel@kernel.org>, Christian Bruel <christian.bruel@foss.st.com>, 
-	Senchuan Zhang <zhangsenchuan@eswincomputing.com>, Vincent Guittot <vincent.guittot@linaro.org>, 
-	Randolph Lin <randolph@andestech.com>, Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
-	Alex Elder <elder@riscstar.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
-	Marek Vasut <marek.vasut+renesas@mailbox.org>, Vidya Sagar <vidyas@nvidia.com>, 
-	Pengpeng Hou <pengpeng@iscas.ac.cn>, Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>, 
-	Uwe =?utf-8?Q?Kleine-K=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>, Gustavo Pimentel <gustavo.pimentel@synopsys.com>, 
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>, 
-	Longbin Li <looong.bin@gmail.com>
-Subject: Re: [PATCH v7 6/6] PCI: spacemit-k1: Add Spacemit K3 PCIe host
- controller support
-Message-ID: <auBkBSr5N_FlCPxD@inochi.infowork>
-References: <20260929083755.458238-1-inochiama@gmail.com>
- <20260929083755.458238-7-inochiama@gmail.com>
- <179232693939.2114.10956498814503201256.b4-reply@b4>
- <athvDzJHs7WQmBnx@inochi.infowork>
- <bddc44d0-5446-40a9-b211-28d0b03f89ad@ti.com>
- <179308804504.2479.5374380919602671853.b4-reply@b4>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ulj9p7Jn
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E4501F01828;
+	Tue, 27 Oct 2026 09:02:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793091723;
+	bh=5nq/yW3E6nSzBhQE//dTYvgfzBHRxLsoSrzMo34ZjSs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Ulj9p7JneLFV1/XhjlgoB/eMNIqEQ4GJO5bi6UfrrD8HhsEGzbsJWw9Fh7Bbk2Zmy
+	 dXTv3coxEQCqyoRT50cWG5/xQfcfb+bKo538FX9mXlQkzg7LNrBHXKUlF7evcHRIO6
+	 xIHd3fw+SGUx7bY9O/A9rtGBRK1urm4D01a3/mQ8Uyvzumxm0hJJShV2f9I5rF/M4r
+	 sHH4Vy0ixTOveeMxJf8ojt1F8pBQYGgoJSXpbxuaFNN8Zg6jEbemlo5+aeWEl6Iyj4
+	 KXqOqZUDrUkhuzR+lhyki8q6UFZaHEsvSvX/e6qq2/E2VBr3h2VRD8uZlsfRHZGFUQ
+	 aEL9J2u5dvy5Q==
+Date: Tue, 27 Oct 2026 11:01:57 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Alex Williamson <alex@shazbot.org>,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@baylibre.com>,
+	Armin Wolf <W_Armin@gmx.de>, David Lechner <dlechner@baylibre.com>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Luis Chamberlain <mcgrof@kernel.org>,
+	Petr Pavlu <petr.pavlu@suse.com>,
+	Daniel Gomez <da.gomez@kernel.org>,
+	Sami Tolvanen <samitolvanen@google.com>,
+	Aaron Tomlin <atomlin@atomlin.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Bradley Morgan <brads@mainlining.org>,
+	Aleksandr Nogikh <nogikh@google.com>, linux-modules@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-usb@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-trace-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
+	Richard Weinberger <richard@nod.at>,
+	Thierry Reding <thierry.reding@kernel.org>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 0/3] driver core: add TAINT_FORCED_BIND for when
+ userspace manually messes with devices and drivers
+Message-ID: <20261027090157.GB28851@unreal>
+References: <DLIL9H50MALI.3JROXYEEUM3KU@kernel.org>
+ <arIvG0nx4LXG9nlW@monoceros>
+ <defb3953-7516-437e-b70b-d57de55b91bf@baylibre.com>
+ <9bd3a34b-5e98-4038-80d6-da2c3b1948dd@gmx.de>
+ <2026092321-province-yearly-44aa@gregkh>
+ <arOfHEsGGglNse7T@monoceros>
+ <2026092348-victory-erased-0e5a@gregkh>
+ <20261023181326.0dc2f7ed@shazbot.org>
+ <20261026122243.GA28851@unreal>
+ <2026102654-enlighten-perkiness-193c@gregkh>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -117,153 +90,121 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <179308804504.2479.5374380919602671853.b4-reply@b4>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <2026102654-enlighten-perkiness-193c@gregkh>
 
-On Tue, Oct 27, 2026 at 01:30:45PM +0530, Manivannan Sadhasivam wrote:
-> On 2026-10-21 13:56 +0530, Siddharth Vadapalli wrote:
-> > On 10/21/26 1:26 PM, Inochi Amaoto wrote:
-> > > On Sun, Oct 18, 2026 at 06:05:39PM +0530, Manivannan Sadhasivam wrote:
-> > >> On 2026-09-29 16:37 +0800, Inochi Amaoto wrote:
-> > >>> The PCIe controller on Spacemit K3 is almost a standard Synopsys
-> > >>> DesignWare PCIe IP with extra link and reset control. Unlike
-> > >>> the PCIe controller on K1, this controller supports external MSI
-> > >>> interrupt controller and can use multiple PHYs at the same time.
-> > >>>
-> > >>> Add driver to support PCIe controller on Spacemit K3 PCIe.
-> > >>>
-> > >>> Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
-> > >>> ---
-> > >>>   drivers/pci/controller/dwc/Kconfig            |   4 +-
-> > >>>   drivers/pci/controller/dwc/pcie-spacemit-k1.c | 139 ++++++++++++++++++
-> > >>>   2 files changed, 141 insertions(+), 2 deletions(-)
-> > >>>
-> > >>> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-> > >>> index dcfbe7e229fd..f9c27165260e 100644
-> > >>> --- a/drivers/pci/controller/dwc/Kconfig
-> > >>> +++ b/drivers/pci/controller/dwc/Kconfig
-> > >>> @@ -443,7 +443,7 @@ config PCIE_SOPHGO_DW
-> > >>>   	  Sophgo SoCs.
-> > >>>   
-> > >>>   config PCIE_SPACEMIT_K1
-> > >>> -	tristate "SpacemiT K1 PCIe controller (host mode)"
-> > >>> +	tristate "SpacemiT PCIe controller (host mode)"
-> > >>>   	depends on ARCH_SPACEMIT || COMPILE_TEST
-> > >>>   	depends on HAS_IOMEM
-> > >>>   	select PCIE_DW_HOST
-> > >>> @@ -451,7 +451,7 @@ config PCIE_SPACEMIT_K1
-> > >>>   	default ARCH_SPACEMIT
-> > >>>   	help
-> > >>>   	  Enables support for the DesignWare based PCIe controller in
-> > >>> -	  the SpacemiT K1 SoC operating in host mode.  Three controllers
-> > >>> +	  the SpacemiT SoC operating in host mode. Three controllers
-> > >>>   	  are available on the K1 SoC; the first of these shares a PHY
-> > >>>   	  with a USB 3.0 host controller (one or the other can be used).
-> > >>>   
-> > >>> diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> > >>> index ec59ccb710ec..61b430f2294a 100644
-> > >>> --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> > >>> +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> > >>> @@ -28,8 +28,18 @@
-> > >>>   #define SMLH_LINK_UP			BIT(1)
-> > >>>   #define RDLH_LINK_UP			BIT(12)
-> > >>>   
-> > >>> +#define INTR_STATUS				0x0010
-> > >>> +
-> > >>>   #define INTR_ENABLE				0x0014
-> > >>>   #define MSI_CTRL_INT			BIT(11)
-> > >>> +#define RDLH_LINK_UP_INT		BIT(20)
-> > >>> +
-> > >>> +#define K3_PHY_AHB_IRQSTATUS_INTX		0x0008
-> > >>> +
-> > >>> +#define K3_ADDR_INTR_STATUS1			0x0018
-> > >>> +
-> > >>> +#define K3_CACHE_MSTR_AWCACHE_MODE	GENMASK(14, 11)
-> > >>> +#define K3_CACHE_MSTR_AWCACHE_BEHAVIOR	0xf
-> > >>>   
-> > >>>   /* Some controls require APMU regmap access */
-> > >>>   #define SYSCON_APMU			"spacemit,apmu"
-> > >>> @@ -44,6 +54,9 @@
-> > >>>   
-> > >>>   #define PCIE_CONTROL_LOGIC			0x0004
-> > >>>   #define PCIE_SOFT_RESET			BIT(0)
-> > >>> +#define PCIE_PERSTN_OE			BIT(24)
-> > >>> +#define PCIE_PERSTN_OUT			BIT(25)
-> > >>> +#define PCIE_IGNORE_PERSTN		BIT(31)
-> > >>>   
-> > >>>   struct k1_pcie;
-> > >>>   
-> > >>> @@ -315,6 +328,123 @@ static int k1_pcie_parse_port(struct k1_pcie *k1)
-> > >>>   	return ret;
-> > >>>   }
-> > >>>   
-> > >>> +static int k3_pcie_init(struct dw_pcie_rp *pp)
-> > >>> +{
-> > >>> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> > >>> +	struct k1_pcie *k1 = to_k1_pcie(pci);
-> > >>> +	u32 reset_ctrl = k1->pmu_off + PCIE_CLK_RESET_CONTROL;
-> > >>> +	u32 val;
-> > >>> +	int ret;
-> > >>> +
-> > >>> +	regmap_clear_bits(k1->pmu, reset_ctrl, LTSSM_EN);
-> > >>> +
-> > >>> +	k1_pcie_toggle_soft_reset(k1);
-> > >>> +
-> > >>> +	/* K3: Set IGNORE_PERSTN and drive PERSTN_OE high (assert reset) */
-> > >>> +	regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
-> > >>> +			   PCIE_IGNORE_PERSTN | PCIE_PERSTN_OE | PCIE_PERSTN_OUT,
-> > >>> +			   PCIE_IGNORE_PERSTN | PCIE_PERSTN_OE);
-> > >>> +
-> > >>> +	ret = k1_pcie_enable_resources(k1);
-> > >>> +	if (ret)
-> > >>> +		goto failed_resources;
-> > >>> +
-> > >>> +	regmap_set_bits(k1->pmu, reset_ctrl, PCIE_AUX_PWR_DET);
-> > >>> +	regmap_clear_bits(k1->pmu, reset_ctrl, APP_HOLD_PHY_RST);
-> > >>> +
-> > >>> +	ret = phy_bulk_init(k1->phy_count, k1->phys);
-> > >>> +	if (ret)
-> > >>> +		goto failed_phy_init;
-> > >>
-> > >> You got me confused with this PHY bulk API for a moment. I think you are trying
-> > >> to control all the PHYs of the multi-port RC setup at once. But I believe
-> > >> that's not what we want mostly. Each port is an independent entity with its own
-> > >> PHY, PERST# etc... So the RC driver controlling all the PHYs at once, doesn't
-> > >> seem logical.
-> > >>
+On Mon, Oct 26, 2026 at 09:27:25PM +0100, Greg Kroah-Hartman wrote:
+> On Mon, Oct 26, 2026 at 02:22:43PM +0200, Leon Romanovsky wrote:
+> > On Fri, Oct 23, 2026 at 06:13:26PM -0600, Alex Williamson wrote:
+> > > On Wed, 23 Sep 2026 12:29:56 +0200
+> > > Greg Kroah-Hartman <gregkh@linuxfoundation.org> wrote:
 > > > 
-> > > In fact this thing is different. Accoring to statement from spacemit,
-> > > for software, it does not need to care about how the phy topology,
-> > > and which phy/phys is/are attached to the RC. It just needs to enable
-> > > all the phy and configure the APMU, which is the one that give some
-> > > control on PERST# and others. The phy itself does nothing on this.
-> > According to section "14.1.4 PHY Configuration Block Diagram" in the User 
-> > Manual for the Spacemit K3 SoC [0],the x8 Lane PCIe Controller namely 'PCIe 
-> > A' requires multiple PHYs (ranging from PHY0 to PHY5) to be 
-> > initialized/enabled simultaneously for a single Root-Port configuration. So 
-> > the phy_bulk_init() API here seems to be used in that sense. Mani's concern 
-> > is that the PHYs for all PCIe Controller instances are being configured in 
-> > a single invocation to phy_bulk_init() rather than the potentially multiple 
-> > PHY instances of a single PCIe Controller instance. Since k3_pcie_init is 
-> > invoked per Root-Port instance (i.e. per PCIe Controller instance), the 
-> > phy_bulk_init() API should configure 'all' PHY instances _strictly_ 
-> > associated with the corresponding PCIe instance. This might already be the 
-> > case.
+> > > > On Wed, Sep 23, 2026 at 11:54:50AM +0200, Uwe Kleine-König wrote:
+> > > > > > No, drivers should NOT have to do that in their .probe() function,
+> > > > > > that's what we moved away from decades ago!  The match function should
+> > > > > > handle all of that for you, otherwise it's contant duplication
+> > > > > > everywhere that is unneeded.  
+> > > > > 
+> > > > > Well then you have to accept that root can provoke a null pointer
+> > > > > exception (e.g. by forcing the pwm-tegra driver on a device) because at
+> > > > > least with today's platform bus match function such a match is ok.  
+> > > > 
+> > > > Agreed, yes, root can cause a crash and can do tons of horrible things
+> > > > much worse than this, that's not the issue.
+> > > > 
+> > > > That's why this taint is there, to make it obvious that this is not a
+> > > > "real" bug at all.
+> > > > 
+> > > > > > Please, learn from our history, don't make the same mistakes.
+> > > > > > 
+> > > > > > Now I might be convinced that driver_override is the way to go here, but
+> > > > > > it still feels really odd as again, bind/unbind was created as a driver
+> > > > > > debugging option only, it should NOT be a normal operation that any user
+> > > > > > should rely on.  The driver should "just work" properly instead, without
+> > > > > > requiring manual bind work, as that's not a good model at all.  
+> > > > > 
+> > > > > I agree in principle, but (in my case wifi) drivers are buggy sometimes
+> > > > > (due to missing documentation and/or engineering effort) and being able
+> > > > > to rebind the driver instead of rebooting to get a working device again
+> > > > > is very useful.  
+> > > > 
+> > > > Fine, use it!  Just don't expect that to be "normal".
+> > > > 
+> > > > > So yes, theoretically bind/unbind isn't needed, but theory and practise
+> > > > > differ in practise.  
+> > > > 
+> > > > Agreed, but again, don't rely on this as a "real" solution fo ranything.
+> > > 
+> > > Sorry, late to the party, but this isn't a few user scripts that rely
+> > > on this behavior.  Effectively every use case of vfio relies on this
+> > > behavior.  We rely on unbinding the default driver from the device
+> > > before using driver_override and drivers_probe.  That means every
+> > > hypervisor with device assignment and every userspace driver use case
+> > > now experiences a tainted kernel. That seems like a significant
+> > > regression.
 > > 
-> > [0]: 
-> > https://spacemit.com/community/document/info?lang=en&nodepath=hardware/key_stone/k3/k3_docs/k3_usermanual/14_connectivity/pcie.md
-> > 
+> > Sorry, I was on vacation and missed this change earlier. This change will
+> > affect SR-IOV deployments around the world, which *rely* on being able to
+> > bind a driver manually *after* virtual functions are created but before
+> > they are used.
 > 
-> Thanks for sharing the link to the doc. I didn't know this SoC allows muxing
-> multiple PHYs for a single RP. Now the bulk API makes sense!
-> 
-> For the next iteration, please include a link to this page.
-> 
-> - Mani
-> 
+> Why can't a real driver bind to those virtual functions?  Like is
+> happening in the rust apis?
 
-OK, I will include that, thanks.
+The actual driver is also bound, but at a later stage. I'm not sure what you
+mean by “Rust APIs.”
 
-Regards,
-Inochi
+> 
+> > This is needed for two reasons: to save hardware and software resources
+> > when creating a large number of VFs, and to allow the PCI config space to
+> > be configured *before* the driver starts using it.
+> 
+> How is hardware and software resources an issue here at all?  And you
+> can write to PCI config space from userspace today, no driver needed
+> anywhere at all, that's always been allowed.
+
+According to the PCI spec—or, at least, the common interpretation of it—
+newly created VFs should have equivalent hardware-resource partitions.
+For most hardware resources, this is not an issue. One resource, however,
+is critical to partition correctly: the number of MSI-X vectors per VF.
+These vectors are backed by physical resources and directly affect
+performance and utilization.
+
+In a correctly configured system, the number of MSI-X vectors should
+match the number of CPUs assigned to the VM. More vectors can leave
+hardware underutilized; fewer can degrade performance.
+
+The workflow for cloud operators is therefore:
+
+1. Create a large number of VFs, but do not assign them yet.
+2. Lease a VM to a user and determine how many CPUs they requested.
+3. Repartition the internal MSI-X table allocation.
+4. Assign the VF to the user.
+5. Check how many MSI-X vectors remain available, then return to step 2.
+
+The MSI-X table size is read near the beginning of driver initialization
+and cannot be changed afterward.
+
+So, no—you cannot change those PCI values without breaking the driver
+and OS that are already running.
+
+> 
+> > There is no in-kernel alternative.
+> 
+> Then just don't have a in-kernel driver for the device and all is good?
+
+In addition to Jason's comments, the PF and VF share the same driver because
+they are nearly identical, apart from a few differences in PCI
+configuration space.
+
+Please revert the series ASAP, you are clearly breaking existing deployments.
+
+Thanks
+
+> 
+> thanks,
+> 
+> greg k-h
+> 
