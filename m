@@ -1,97 +1,111 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.85.49
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793076101;
-	b=VuBSiHpKVkpjXLe8gtpBFmfk2ZLrpHAeXpfasnQ090fpqXPNRPPdd2SuQPXXcHgNujg8
-	 W1UkvkF6FKnInfSC2MieavhnGRqxdpNXj5wjQ8oQ047gUHpN1UzfX38pJ1jsi+Wa8QVcf
-	 R7tyDsWL8BkJwPjnCNz+X3s3cvxRDdml1iQGWQQR1iUKVeelm0OSojNsxGlqIOm7Yc1J1
-	 nx5Qd67oIdTcxHEBYlcXqjF0tRouZFrZxnO1MHktEgpHVDPctbFnOJHcOXfQh0j9tatr4
-	 75OWnnROFzdZ8KLyP48CXOUFsFsG/cZmODgjTpAG9Zn45rWxeFcnzVxp28E4G9TpzcA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793076101;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=SVK/bV1B3kvBJC10uWIJEZvjX8nNtALCrupE7TaYsME=;
-	b=ZXzALR4Sxj65lAwMQqVXk9KSUW1NA++oTw3UFx51a9DmztCukCdgA0c3t01rVM5YxjQW
-	 x3d11xjJNpgPWjXTdtN7l12Z2AobWO1kmwWpti/J+8aEJEkiG8GWQl7QiYbR9y7P7Nggg
-	 R8WeZxQCBGR3HA0itjNQPgRWFDcJX3YFcTbnhzTu+2ZqHyVIsC2cB7RBj0x7lGSgl+BrJ
-	 Cr84RWZo559rZJq6t8avt+kDLZaHnP3/9Oi4Bx5JGlbeZlvao1vuLZvAHSPzTsNSXE8vZ
-	 YZgVVxQQszLsBL4J3IHNSDGMQh5xV9zk9Fz5Hdp4EWVxCLSJCdTKBTWF0oH9whw9nFQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=amd.com;
-	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=ByZVhisO;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.85.49
-Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010049.outbound.protection.outlook.com [52.101.85.49])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.180
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793078747;
+	b=oYXAeJe0emCuoFk+futbHVlyJ78RNHten2zsbyHOrewce87Hjv1LFBxD/cOsCZmS30Kk
+	 DaJNqovpzk7SuPaAZOlt3h+i8Stv0hk9XQOjEjC2IcwnaGKno+J/C5JzaPFDT/fOKPwe0
+	 rCnKWSolin29QzII0pGtEyCejz9nYPnn75hzTZhbk6OFVfhjcMSsjDUCDIdVxwzUn03Tl
+	 ysMPjOdPAxAUq2ZxD1MZ6UgVwo2p30W8kt0p9CsxuGL3NjI8vVq5VG+0MkL6VBDg9g1Ef
+	 Q5Q88p24mXjVAuEnIRnSnAn8okD3Yy7bMo8J0z8P4d8Xbj2BR1fWwThiTTkFATFVurg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793078747;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=kHQppBuxk2+xzYf3QLOTBE1zqBXUyaj0qCJuhImI8OA=;
+	b=z7ajmhwnB9xHySqErPHQBQnNfWtoR/gq+8g1AQ1iuD8PE2++eLM6Y+FqKD0mOBFvbkE1
+	 FiDULZY6XTSYWOcCKLZ7VOZku2vCxGg8g3lThbsJzZebNyJo7dok5QZUcXBoxH20wO6t1
+	 P8ahe5X3ERJprilDuKXhiBYTRblNYcPvq8Nl3tPPDbYHy2Cq0aitHE8qwTlBdj72T/e9G
+	 HA7KjR02bPSs/bvPlVZ9hrhfOPEUvt+YuzPYEMQTliEFniS4suD1poRAWxnx9yWQuEjU8
+	 FVyo5bptlm8PYujFx2m5Sl9RDWCjh4Kw2Qvhs0U+YgRmKQhbHxOyinZeVzbfFeU0Nog==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b="TL/ZMDss";
+	arc=none smtp.remote-ip=209.85.214.180
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A16F606A31A;
-	Tue, 27 Oct 2026 04:41:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2A16F606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48F7B606A31A
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 05:25:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 48F7B606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=ByZVhisO
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=R6dRIAeCTGp1YCDM+EkZOgT4SV8sAHz9XB9Aua7/aGSPzhYm+0YmzbwrXZ1/deS3c0G4NMsKNImbvh8w1c6C46W6jZY8O8cb2s0HhDqi3fu63h9Fxnqv50oaxIzX51bgDOkYC+eLr1ImxT4KboYuz1fRRsP+phyMdpkgV3MGH34uf2HFzYvmyG6RvSWA2NvCpXQRifTl1atMvBlkn5NNP/TiUJfm91++A9EYwjjvtu8rfjP3bTcCCW7NOZ2qmfC8j7YPCGPVyWc5RQk1vLhk4s2/xdbhpbNkbxnptCIDtkgPfxWdU+9THwH1x6RCWotVP5wrw978pwtQjGin7pMQyw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=SVK/bV1B3kvBJC10uWIJEZvjX8nNtALCrupE7TaYsME=;
- b=xpDtB+Nn//o6usppo1l2FxhBI6yGICaHtgyp/dXdNUNG8mnT+nCSVDdXtub1wdGjZAltpJbPjYMG46hYR+UFWLsgJ5+OT4nIXQBuFGpJ3TShhtjlfuTHKjdcte69E57yNo7JuAKZJR6Yj5/UsyTyoLkFdAEOp0Jk+DSA/QnSZq9B4680M0GYdYa+YZUi2yTbyaEeZAS5DxAH5OOyUPQIcXqO/8d5wSm+wY/f4RzPxkeRMpc7K1LJsmSJv03gAuQ8183lZ+24XHnQs37gGka8W5kGeVuOvwh0SJNUuWsH6FKjIXK7vA0F9hCROZaLn1ikKPaSh2RHT3xF+HsrUsZuhA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SVK/bV1B3kvBJC10uWIJEZvjX8nNtALCrupE7TaYsME=;
- b=ByZVhisOnCbUByZW66biup2EA0IXrAi2Ym/eKK3thct+gCJDNNO7mx5dp0fQzYptMEg//YI1AsYwZ16zeiaDtxzT89jAfpj/cOC4NRguphbFW5kwt43x0VpUxEnd+HOi9JpZFv8Mx9EF8XTk/cxrmOmRcSQueQqKOUci6YHlsUo=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from SA0PR12MB7091.namprd12.prod.outlook.com (2603:10b6:806:2d5::17)
- by CH0PR12MB8552.namprd12.prod.outlook.com (2603:10b6:610:18e::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.22; Tue, 27 Oct
- 2026 04:41:38 +0000
-Received: from SA0PR12MB7091.namprd12.prod.outlook.com
- ([fe80::ec33:1213:cfd8:63bc]) by SA0PR12MB7091.namprd12.prod.outlook.com
- ([fe80::ec33:1213:cfd8:63bc%6]) with mapi id 15.21.0546.021; Tue, 27 Oct 2026
- 04:41:38 +0000
-Message-ID: <bb135cd6-5e36-4330-9635-885bb26576e3@amd.com>
-Date: Tue, 27 Oct 2026 10:11:31 +0530
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/3] PCI: Preserve the initial bus number in pci_bus
-To: Mario Limonciello <mario.limonciello@amd.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Alex Deucher
- <alexander.deucher@amd.com>, =?UTF-8?Q?Christian_K=C3=B6nig?=
- <christian.koenig@amd.com>
-Cc: Oz Tiram <oz@shift-computing.de>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
- dri-devel@lists.freedesktop.org
-References: <20261026-vfct-regression-v3-0-fe9586ed6978@amd.com>
- <20261026-vfct-regression-v3-1-fe9586ed6978@amd.com>
-Content-Language: en-US
-From: "Lazar, Lijo" <lijo.lazar@amd.com>
-In-Reply-To: <20261026-vfct-regression-v3-1-fe9586ed6978@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: MA1PR01CA0183.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:a01:d::6) To SA0PR12MB7091.namprd12.prod.outlook.com
- (2603:10b6:806:2d5::17)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=TL/ZMDss
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2e9eb579c0eso21094875ad.3
+        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 22:25:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1793078747; x=1793683547; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=kHQppBuxk2+xzYf3QLOTBE1zqBXUyaj0qCJuhImI8OA=;
+        b=TL/ZMDssXogw5ydIJYnfWZjriwgtecG2+uJ4HMuMiv2WDe4gfJFA1yj0Un2nLCJJv0
+         wMw6B7Wdk8jrDHSse/vmrsC2SJyORZIwS45IdraShJqJ1+NE9ue6u3iEje70M6uQ2liF
+         NuDQBHpbqTCR5ikqtdV4ZV/KGeu1fzeu86w+Qa8zeZIOfNDjMd4blhgBJXrw4i9oORyt
+         +zXMHmFTgB/G+L4MuX1l2ijJHmzZyu7eR/CrPrlrYExpYdDKnEE7bV9F8CNqGIWXfya8
+         EP7pFglnJMzkmXrz6UA/vlFxBkWix5BtMFL5A7y7ODruGrxHMJgwxtglYkL3V+kzukI0
+         TPnw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793078747; x=1793683547;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=kHQppBuxk2+xzYf3QLOTBE1zqBXUyaj0qCJuhImI8OA=;
+        b=mvevOiwZFAYyEyOztaL2khxra6drp0DZEuqS5m7rueDeLDpHznnXehlGRXsoh89LPP
+         xpD4koEW3eIdC+67eGFxCdfCBOOK92DifxKmyUwVHv4gVJTpaR2ZuP5POM55rBfFVvnz
+         QMd5NYQZSMLcMwPT0sq8JEE2Ydk1kTOoIHE5Pw01iSbAasqiG4FUO7qOsFp53/syU8DH
+         x6QXPqdw+mLieWggJ1TDq1THh2fVBpuSkTr/fZGGZskGs8uceAetcIIj6xrRhuF2dHUo
+         /xZc0237w1tXxFm7hhuWjXjRfRIb7xWQySxKNRzdE3b/+X9Gni1MuEtQtlvsloDMjqcN
+         YViA==
+X-Forwarded-Encrypted: i=1; AKwUvBx9JKMn8tFAJ63Y1z6GhOkLfusDGaOk0ARzWfnoyh5qWidMY9oVwJFjUzFstZov0/yC4srVOPv9hEs=@vger.kernel.org
+X-Gm-Message-State: AFq9FYLdrHCGOp8rAjYInpHo9NsGz8IshB9vwQTq/qakdBTM5M1yo8AZ
+	2gqIZVgCuU5+QOVb/QQZVCLfOWohVIhOF+tK3zyBSvh02WEcPHyhLUbL
+X-Gm-Gg: AYBFou3j1xJCBFztSrGh58NzWqv35tTJu5xDCXDVgpO0Azcntt9oPA2RDvra3h0w4i8
+	Rp0aHCyePguKwd6PytEFyL2lYO0tRwLxqKfv8g0A9I3O6ihPkxBwhlB3ggAzZNk2ru0/7oowhFm
+	+5lMW6LgsbA6IFky0A6jeZlrkL3t0fjfcZf1f0Dm1qRj1Aud8iOoNv7b2aotN9yalVoEiOeKabZ
+	RRjiU5tth110awAVyJBQJ9d3Voa2M101XUd2C5x+kAEHxvLkB70Vjosqe8+Xjx2tV5UDl75NXJW
+	lR0JyILui3ccv+IK9GffUAt68RQiG9t/V4Oz9U0ROIcnAATV9L81GEkysdL6pxVHpqctY/XzWTC
+	e+OEAsdOV3cuqhZorV2sIEL8+N3yNe0OkuEe9iuyVRP52SZ6mltfmRO97EjWl19Gd/txmgr4Kft
+	6SKhCJCBj18jR6gbXdCw+x11Lh0uFp5t1I6CObNsjlx/sXRQntHAnnaj35JaY1EgJxYPZpaRoKK
+	2XOAOYJjiqPc/KGHwHZ7dDHf8AFMwK+Rj/YrLkNZXb5GhvHnyIbaxkmaKF9w0aXWVZlVo1eFkqD
+	UlhUNT057wzop4js4bbuHzv2al0DRrFe51Gtsmd+b40mkuY=
+X-Received: by 2002:a17:903:fa8:b0:2e9:5eee:e078 with SMTP id d9443c01a7336-2ea9c0f39c7mr63239465ad.3.1793078746410;
+        Mon, 26 Oct 2026 22:25:46 -0700 (PDT)
+Received: from toolbx.alistair23.me ([2403:581e:fdf9:0:13b2:851f:d9cb:44c5])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eae6c9757bsm3307715ad.58.2026.10.26.22.25.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 26 Oct 2026 22:25:45 -0700 (PDT)
+From: alistair23@gmail.com
+X-Google-Original-From: alistair.francis@wdc.com
+To: akpm@linux-foundation.org,
+	bhelgaas@google.com,
+	lukas@wunner.de,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-cxl@vger.kernel.org,
+	alistair@alistair23.me,
+	rust-for-linux@vger.kernel.org,
+	jic23@kernel.org
+Cc: ojeda@kernel.org,
+	aliceryhl@google.com,
+	a.hindborg@kernel.org,
+	alistair23@gmail.com,
+	wilfred.mallawa@wdc.com,
+	bjorn3_gh@protonmail.com,
+	gregkh@linuxfoundation.org,
+	boqun.feng@gmail.com,
+	benno.lossin@proton.me,
+	gary@garyguo.net,
+	tmgross@umich.edu,
+	alex.gaynor@gmail.com,
+	Alistair Francis <alistair.francis@wdc.com>
+Subject: [PATCH v5 00/23] lib: Rust implementation of SPDM
+Date: Tue, 27 Oct 2026 15:25:13 +1000
+Message-ID: <20261027052536.1722081-1-alistair.francis@wdc.com>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -101,162 +115,235 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA0PR12MB7091:EE_|CH0PR12MB8552:EE_
-X-MS-Office365-Filtering-Correlation-Id: 23c04c03-5065-405b-eaee-08df33e49643
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|366016|1800799024|376014|261009223027099003|261022105027099003|261022075727099003|261021121427099003|10067099003|56012099006|261026121527099003|3023799007|22082099003|18002099003|4143699003|11063799006|261026140227099003;
-X-Microsoft-Antispam-Message-Info:
-	AG+i+YcszxkaC6OmkGKQSXyP7RyELYAxo0s+ED+FzdIyv/gcl4UqrS1X40L2j3oCnK4KSkTQOHCCZ8GZ9bOIhLe8gWDkiiXfcQ+lniRtoDpKUS0BSlHtxAPpst0vXmyJnExPkNtZeAvxa5RS2oatLhBxh3/8sNIbEZL+aJlVspvWi+/4DTlfeCXQ4fP5aVLOWzwW0sNlapQpiKsJkORlQAAOMmEIMQzN0ibeFDAiFdtB+BqyVp7RqNg5gyVtU9fEznHPt92ujgRf4rg/jD/WVhqTyglXUIQG5lzHHeukavApn5X1Tfk2gUrGn+0U4HSdlTi4XkbgSEXtnVEdNb3voZuYnEquiSPFZq+wLjdfUplfRBnX3jhipQBuuTm4zn/SHp9VBUbcT8bCeRvAvVreUakHXbeA4kAfuXCvqjJjx1EfkenhP5Z8rWyOM9mRUzLsQQR9CJfFDfjs0sIdCr2F7wk+y2z5QqRbY8AB1Nt8q7JAEGbc+P4C8EOG+Y7lpbCJiUjLDfoOc4eiUXD5pU+eNlGzWqpMOUmWVT1z2lhzZUI48qPJ6ZAG9+yn+/9nli6u3tUI/UO1sz+MjPW/lX5GseozQjwZ2L7AuiOC9X/oPBW/AI6oiZjFeSFMsTWZRflz2IOab1hNkFkghFouSB/wd4MvXBQXr5dyXsaMx4pTUkE=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB7091.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(1800799024)(376014)(261009223027099003)(261022105027099003)(261022075727099003)(261021121427099003)(10067099003)(56012099006)(261026121527099003)(3023799007)(22082099003)(18002099003)(4143699003)(11063799006)(261026140227099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?N3J1ZHR4UmY2cVNUK09Tbi8wbE5JWFF6OVc1cEtQWU1XMVhZdHBYWjlsTFQz?=
- =?utf-8?B?citRSVU1bjlRYjVGUkdLZTFyM1RRS21nZXFLQzg2VXg0M3pIMjgxZTZsdU9M?=
- =?utf-8?B?WnFHejdlT0xKOTg0eTlnczBzSGVMY3Z4MXZBOWFQckMxOWhXYmdPNzBtdzJI?=
- =?utf-8?B?TDZDSEUzczdiWkZuczl5ekZzSmlBT1dlZVBTTGxYcklxNnYxdVdTSk56Z0Jl?=
- =?utf-8?B?Q05qRG53NlljVW5yQmROelpZVjdkOEhCeGpWMDFmK3RpZWdQRlNrS3BKZkZF?=
- =?utf-8?B?WjJ6WE12ZUlVQUpKbDNialFtYmtrLzZ0bXRyVTZhbGFYSHZZY2k5QmViQVZH?=
- =?utf-8?B?cS9JV2dOVWczTnZtY0dCaU5GOGZBbW1GWkpHZFd1V3VtNk1LTUJjZmJVbGJP?=
- =?utf-8?B?NXFudmlzUVdWaTRENDlXOXBTbEw1NGFGSzBnTXhoT3Z2MXJmM0hwQ2x0ZDVa?=
- =?utf-8?B?emE0akR3eEtMWjJNQzdTRzVPNkdxNmJtK1JYS0JDaTBSOUtncEx5MzlSRmpo?=
- =?utf-8?B?TE82TlRqeGZNTWd4YWY0T3dFQ2xQbGVrQkVBNmRpNnJVa0pqb3dObXpDcGJz?=
- =?utf-8?B?ZUxLQXcxYndGdFg1QnNrVVYwanVtY1I1YUpCT0hNcG0zTUlRVFJzSVFoUU13?=
- =?utf-8?B?ZVd4K2tRRFE2Rmx0NDJzOHkwWXJsVllGUnNqTWREVFBOZzNJVUFvN3RPdUZU?=
- =?utf-8?B?Ui84UlJTbWhDZlFoSS81NUt0Q1l3ZTNoODFMV0d0bVZ2ZFdJTE8xZ3YveWk5?=
- =?utf-8?B?U2I2bkl6K0lvZzNWRlVVbWFLbnA5RmovWk1JZzFRQzI0YmlZZ21SWDFPdUtS?=
- =?utf-8?B?Vy91UDRIcVZLNFNYdUczNUpIR1V4S281OFNMdkJJVDBBNWxsM3hPN0RUb2I4?=
- =?utf-8?B?ajFqbXdiM3ZJNzhDYjVHVGYzQWtjMlczcGl2d1REQVRDT3o0Z1hWbS9FTVdX?=
- =?utf-8?B?UnFud3VYNUdRRVlRSzNmOVQwU25EVGJpRms1MXdpbzFMSmp4N3R3aXpkMHJp?=
- =?utf-8?B?MU1CaDNyQnlxSnpDalFzeWN2eWpYYXBoeFk0Y3lHbytOQm1OUjkwUjQrN0Jj?=
- =?utf-8?B?TitUMU9sdGlhN1NmeUNLZ29vcGVlQmpwdVBFa2NFa0pPUmd3QndMZVdlMW9Y?=
- =?utf-8?B?NFVnakd2WnoydmJaNTFoZWJ1OEJHUUdXU2tSV1diRng0b1BYWTJnalZkZ2RD?=
- =?utf-8?B?azNxd2V1L1VUbHlaWUlObjdYd2cvSFU3RnFpa1U0YjNzSXIzOUgrQ25NV0hS?=
- =?utf-8?B?Q1M3THNyMFlXMUkrS2FLZVJ2OUt4c3RtN1JSTVp1b3RYbzYvQllFWFlxbEEv?=
- =?utf-8?B?Nm9Dd1MzOEZJVHhnNlpMQzdJZHdjRlBUK0FvMFBVOUNPRHFmU3ZCN1ZKZGR3?=
- =?utf-8?B?b0k3dk5iczBGWktCZUg5aHl3dk83QUpKSXZ6Q3NqUTRvRUl4dE1iRkxjZDdp?=
- =?utf-8?B?VmhtMEVOREhHUUFNbU1SdXEwM01wZnk5SWxDRk9GYVp5V0V4Ukx4Qlpab0dD?=
- =?utf-8?B?VGhJeHdEaUJrTjhabHpZSmJ6ZlBCcTVObXZySEJJbllHK0F2QmpQbHRtOEtQ?=
- =?utf-8?B?d01qakJQWmg0dGJ3RDBybndMVWRJMCtXTzVQdEk3azlGd25DeEFreFJhb3ZQ?=
- =?utf-8?B?dFFMSDRJQWhtV3FTK3JvZVJuUFFOcTd0TDdCQ2JPUnJPa2VUVU4vYWRleWhp?=
- =?utf-8?B?dHpaQ1VMc3JTdEpZVVVRMVc0Tm01aWlaYk05L3ZWQVBHSlRwdFMvZGpjdlBH?=
- =?utf-8?B?V1dHOXZCLytsajRhaStHeElhY0xJNHd2eSs2WktwWUdreFkya1ZlMkw4RzV6?=
- =?utf-8?B?ZnhwRTlGWmF2akM5d1VWditqRXVuc0xnOGQwc1Z6c0ExYnlDRU5qdmhWQlJi?=
- =?utf-8?B?VEo0dStNSTVhQnVaeGZpVVQrMEtoUEx3d24xM1ZQQWorTUNaMjJzZzhQbTFw?=
- =?utf-8?B?ZHNSVUJYbmlNT2NuWTk3aFE4K2VtdXR0UXJnRXlacmpoNVpHZ1NuRUJLRVN3?=
- =?utf-8?B?Rlc2eGVSd25pQmg1bG5QclJtelpydzliQkV3R1pObW1Rc1l4RGphdU01UjFZ?=
- =?utf-8?B?M3VJL25hUWtuVFovaGtmVnJTL2xRcURxYkw3TGZoMDNIS2Q3cjZuUUw5dVdQ?=
- =?utf-8?B?RW9JeUZSeFM3L3pWbElPSFNydXllSDMwbjN1aE9GMHloV3BkS2F6cTJYcGNO?=
- =?utf-8?B?SWNWV3FwclpzQTNMckRsOXgydzVtd0F5RkhVT3lRYk8wTXdweWVzUXdtRTVj?=
- =?utf-8?B?NytCS2kxTG5QUUVVdkZhUW9rTHpHak94YXFNdDYyU2VjVmh3QmxNYUFQdm9K?=
- =?utf-8?Q?Ot8GVEb45Fi9tE4x/Y?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 23c04c03-5065-405b-eaee-08df33e49643
-X-MS-Exchange-CrossTenant-AuthSource: SA0PR12MB7091.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Oct 2026 04:41:37.9871
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: F1fP2TmBLKnJl5SwaRDLwgY1XS2y1foF+gv2lNyqlhnf2YpG5eEXSDanEBI+cyxu
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR12MB8552
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
+From: Alistair Francis <alistair.francis@wdc.com>
 
+Security Protocols and Data Models (SPDM) [1] is used for authentication,
+attestation and key exchange. SPDM is generally used over a range of
+transports, such as PCIe, MCTP/SMBus/I3C, ATA, SCSI, NVMe or TCP.
 
-On 26-Oct-26 9:18 PM, Mario Limonciello wrote:
-> Bridges that need bus reassignment are scanned in two passes. Save
-> the firmware secondary bus number during the first pass, before the
-> bridge is disabled, and carry it to the bus created in the second
-> pass. Drivers can then match firmware records against the bus number
-> from before PCI bus renumbering.
-> 
-> The initial number belongs to the bus, so consumers can use the
-> pci_bus value directly without copying it into every pci_dev.
-> 
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
-> ---
->   drivers/pci/probe.c | 9 +++++++++
->   include/linux/pci.h | 2 ++
->   2 files changed, 11 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 27008e2ea5afc..9950a9dd1db1f 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1012,6 +1012,7 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
->   	bus->sysdata = bridge->sysdata;
->   	bus->ops = bridge->ops;
->   	bus->number = bus->busn_res.start = bridge->busnr;
-> +	bus->number_initial = bus->number;
->   #ifdef CONFIG_PCI_DOMAINS_GENERIC
->   	if (bridge->domain_nr == PCI_DOMAIN_NR_NOT_SET)
->   		bus->domain_nr = pci_bus_find_domain_nr(bus, parent);
-> @@ -1232,6 +1233,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->   
->   	/* Set up the primary, secondary and subordinate bus numbers */
->   	child->number = child->busn_res.start = busnr;
-> +	child->number_initial = busnr;
->   	child->primary = parent->busn_res.start;
->   	child->busn_res.end = 0xff;
->   
-> @@ -1470,6 +1472,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
->   			child = pci_add_new_bus(bus, dev, secondary);
->   			if (!child)
->   				goto out;
-> +			child->number_initial = secondary;
->   			child->primary = primary;
->   			pci_bus_insert_busn_res(child, secondary, subordinate);
->   			child->bridge_ctl = bctl;
-> @@ -1491,6 +1494,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
->   		 * do in the second pass.
->   		 */
->   		if (!pass) {
-> +			if (!dev->secondary_busnr)
-> +				dev->secondary_busnr = secondary;
->   			if (pcibios_assign_all_busses() || broken)
->   
->   				/*
-> @@ -1529,6 +1534,10 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
->   			pci_bus_insert_busn_res(child, next_busnr,
->   						bus->busn_res.end);
->   		}
-> +		if (dev->secondary_busnr) {
-> +			child->number_initial = dev->secondary_busnr;
-> +			dev->secondary_busnr = 0;
-> +		}
->   		max++;
->   		if (available_buses)
->   			available_buses--;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 5ffcf5ce8c966..75a5fd2374acb 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -363,6 +363,7 @@ struct pci_dev {
->   	struct pci_slot	*slot;		/* Physical slot this device is in */
->   
->   	unsigned int	devfn;		/* Encoded device & function index */
-> +	u8		secondary_busnr;	/* Original secondary bus number */
+From the kernels perspective SPDM is used to authenticate and attest devices.
+In this threat model a device is considered untrusted until it can be verified
+by the kernel and userspace using SPDM. As such SPDM data is untrusted data
+that can be mallicious.
 
-This doesn't make sense for end point devices. Is it possible to keep 
-under bus itself?
+The SPDM specification is also complex, with the 1.2.1 spec being almost 200
+pages and the 1.3.0 spec being almost 250 pages long.
 
-Thanks,
-Lijo
+As such we have the kernel parsing untrusted responses from a complex
+specification, which sounds like a possible exploit vector. This is the type
+of place where Rust excels!
 
->   	unsigned short	vendor;
->   	unsigned short	device;
->   	unsigned short	subsystem_vendor;
-> @@ -724,6 +725,7 @@ struct pci_bus {
->   	struct proc_dir_entry *procdir;	/* Directory entry in /proc/bus/pci */
->   
->   	unsigned char	number;		/* Bus number */
-> +	unsigned char	number_initial;	/* Bus number before reassignment */
->   	unsigned char	primary;	/* Number of primary bridge */
->   	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
->   	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
-> 
+This series implements a SPDM requester in Rust.
+
+This is done using the `Validate` and `Untrusted` traits. The `validate()`
+function has been updated updated to allow `context` which we use as
+part of the validation.
+
+The validation has also swapped from a C style pointer cast to using a valid
+Rust struct and copying the data from the original buffer to the new struct.
+This obvious has some overhead, but as SPDM packets are relativly small, and
+not used as part of a constant hot path this seems fine. The big advantage is
+that we can validate everyting at once, convert the endianess when creating
+the struct and we get left with valid (not repr[c, packed]) Rust structs.
+
+This makes the code a lot cleaner and more robust. It also removes a large
+number of `unsafe`s and using `get()` for the arrays removes a large number
+of possible `panic`s. Thanks for everyone at Kangrejos for the help with this!
+
+I have kept Jonathon's reviews of the SPDM code, as the changes since the
+last vesion are mostly just mechanical, convertting the repr[c, packed] structs
+to copy structs.
+
+This is based on Lukas' C implementation [2], but has been refacted during the
+first few RFCs. I have included some of the relevent patchesfrom Lukas' C
+SPDM implementation in this series where they are required.
+
+This is a standalone series and doesn't depend on Lukas' implementation.
+
+The goal of this series is to get the smallest possible SPDM implementation
+upstream. That will provide building blocks for us to continue working on.
+
+As such we don't yet provide evidence or certificates to userspace, allow
+userspace to provide a nonce, support PQC or more advanced SPDM features.
+This is enough to communicate with a device and return "authenticated" to
+userspace.
+
+Note that RFC v3 did provide evidence and certificates to userspace and
+allowed a custom nonce. Showing that it's possible. I also have patches
+that build apon [4] to do this via a TSM driver, again showing it's
+possible with the current approach.
+We just don't support it yet and for TSM I need [4] upstream first.
+
+This series is different to Lukas' original approach and the approach taken
+in the previous RFCs and instead adds the PCI-CMA support as a TSM driver.
+This was described by Dan in [3] and [5]. The advantage here is that for PCIe
+we can leverage the TSM work for a lot of the features and provide userspace
+a consistient interface between PCI TSM and CMA.
+
+This series also doesn't check the certificate chain against the kernel
+keyring and will instead leave that to userspace once [4] is merged.
+
+Other transport mode (such as ATA, SCSI, NVMe and MCTP) will
+therefore need slightly different approaches, as TSM doesn't apply.
+The library can support this though, it will just need some netlink
+and sysfs wrappers added as applicable. This way each transport can support
+SPDM in the way it sees fit.
+
+The entire tree can be seen here:
+https://github.com/alistair23/linux/tree/alistair/spdm-rust-tsm
+
+I'm testing this by running the following
+
+```shell
+cargo run -- --qemu-server response
+
+qemu-system-x86_64 \
+  -nic none \
+  -object rng-random,filename=/dev/urandom,id=rng0 \
+  -device virtio-rng-pci,rng=rng0 \
+  -drive file=deploy/images/qemux86-64/core-image-pcie-qemux86-64.rootfs.ext4,if=virtio,format=raw \
+  -usb -device usb-tablet -usb -device usb-kbd \
+  -cpu Skylake-Client \
+  -machine q35,i8042=off \
+  -smp 4 -m 2G \
+  -drive file=blknvme,if=none,id=mynvme,format=raw \
+  -device pcie-root-port,chassis=1,id=pci.1 \
+  -device nvme,drive=mynvme,serial=deadbeef,spdm_port=2323,spdm_trans=doe,bus=pci.1 \
+  -snapshot \
+  -serial mon:stdio -serial null -nographic \
+  -kernel deploy/images/qemux86-64/bzImage \
+  -append 'root=/dev/vda rw  console=ttyS0 console=ttyS1 oprofile.timer=1 tsc=reliable no_timer_check rcupdate.rcu_expedited=1 swiotlb=0 '
+
+echo tsm0 > /sys/bus/pci/devices/0000:01:00.0/tsm/connect
+```
+
+1: https://www.dmtf.org/standards/spdm
+2: https://lore.kernel.org/all/cover.1719771133.git.lukas@wunner.de/
+3: http://lore.kernel.org/69976d7d39c60_2f4a1009@dwillia2-mobl4.notmuch
+4: https://lore.kernel.org/all/69976d7d39c60_2f4a1009@dwillia2-mobl4.notmuch/
+5: https://lore.kernel.org/lkml/69e19c80b892b_fe0831000@djbw-dev.notmuch/
+
+v5:
+ - Split out crypto into Rust kernel wrappers
+ - Use ZeroCopy for SpdmHeader
+ - Add the Transport trait and CTransport type
+ - Bind the device driver
+ - Address bugs and issues from reviews
+v4:
+ - Based on discussions at Kangrejos the following changes were made
+     - Add context to the validate functions
+     - Convert the validate() functions to be complete Rust structs and copy the
+       data, instead of C style pointer casts
+     - Use ForeignOwnable trait for SpdmState
+     - Use get() for array accesses
+ - Address review comments
+v3:
+ - Rebase on 7.3-rc1
+v2:
+ - Tidy up the PCI/TSM function naming and is_pci_tsm_host()
+ - A large number of changes (mostly to the Rust code) based on Sashiko reviews
+     - This includes a few local runs of Sashiko
+     - This has fixed a few undefined behviour bugs in the Rust code
+ - Rebase on v4 of Benno's validate patches (patch 1, 2, 3)
+v1:
+ - Add CMA as a TSM driver
+ - Initial support for SPDM 1.4
+ - Cleanup a range of comments and concerns from RFC
+ - Remove kernel keyring checks
+RFC v3:
+ - Use netlink to send information to userspace
+ - Don't autogenerate Rust helpers
+RFC v2:
+ - Drop support for Rust and C implementations
+ - Include patches from Lukas to reduce series deps
+ - Large code cleanups based on more testing
+ - Support for authentication
+
+Alistair Francis (17):
+  virt: coco: change tsm_register() to use a const struct
+  rust: add bindings for hash.h
+  rust: device: Expose Device from_raw() publically
+  lib: rspdm: Initial commit of Rust SPDM
+  PCI/TSM: Rename pf0 to host
+  PCI/TSM: Support connecting to PCIe CMA devices
+  PCI/CMA: Add a PCI TSM CMA driver using SPDM
+  lib: rspdm: Support SPDM get_version
+  lib: rspdm: Support SPDM get_capabilities
+  rust: kernel: Add crypto hash bindings
+  lib: rspdm: Support SPDM negotiate_algorithms
+  lib: rspdm: Support SPDM get_digests
+  lib: rspdm: Support SPDM get_certificate
+  rust: public_key: Add crypto public key bindings
+  rust: x509: Add X509 certificate bindings
+  lib: rspdm: Support SPDM certificate validation
+  lib: rspdm: Support SPDM challenge
+
+Benno Lossin (2):
+  rust: create basic untrusted data API
+  rust: validate: add `Validate` trait
+
+Lukas Wunner (4):
+  X.509: Make certificate parser public
+  X.509: Parse Subject Alternative Name in certificates
+  X.509: Move certificate length retrieval into new helper
+  PCI/CMA: Validate Subject Alternative Name in certificates
+
+ MAINTAINERS                               |   13 +
+ crypto/asymmetric_keys/x509_cert_parser.c |    9 +
+ crypto/asymmetric_keys/x509_loader.c      |   38 +-
+ crypto/asymmetric_keys/x509_parser.h      |   42 +-
+ drivers/crypto/ccp/sev-dev-tio.h          |    4 +-
+ drivers/crypto/ccp/sev-dev-tsm.c          |   14 +-
+ drivers/pci/Kconfig                       |   14 +
+ drivers/pci/Makefile                      |    5 +
+ drivers/pci/cma.asn1                      |   41 +
+ drivers/pci/cma.c                         |  271 +++++
+ drivers/pci/doe.c                         |    6 +-
+ drivers/pci/tsm.c                         |  122 ++-
+ drivers/virt/coco/tsm-core.c              |    4 +-
+ include/keys/asymmetric-type.h            |    2 +
+ include/keys/x509-parser.h                |   57 ++
+ include/linux/oid_registry.h              |    3 +
+ include/linux/pci-doe.h                   |    4 +
+ include/linux/pci-tsm.h                   |   48 +-
+ include/linux/pci.h                       |    1 +
+ include/linux/spdm.h                      |   66 ++
+ include/linux/tsm.h                       |    2 +-
+ lib/Kconfig                               |   17 +
+ lib/Makefile                              |    2 +
+ lib/rspdm/Makefile                        |   10 +
+ lib/rspdm/consts.rs                       |  113 +++
+ lib/rspdm/lib.rs                          |  329 ++++++
+ lib/rspdm/state.rs                        |  784 ++++++++++++++
+ lib/rspdm/validator.rs                    | 1129 +++++++++++++++++++++
+ rust/bindings/bindings_helper.h           |    5 +
+ rust/helpers/hash.c                       |   22 +
+ rust/helpers/helpers.c                    |    1 +
+ rust/kernel/device.rs                     |    2 +-
+ rust/kernel/hash.rs                       |  145 +++
+ rust/kernel/lib.rs                        |    7 +
+ rust/kernel/public_key.rs                 |   69 ++
+ rust/kernel/validate.rs                   |  275 +++++
+ rust/kernel/x509.rs                       |  118 +++
+ 37 files changed, 3669 insertions(+), 125 deletions(-)
+ create mode 100644 drivers/pci/cma.asn1
+ create mode 100644 drivers/pci/cma.c
+ create mode 100644 include/keys/x509-parser.h
+ create mode 100644 include/linux/spdm.h
+ create mode 100644 lib/rspdm/Makefile
+ create mode 100644 lib/rspdm/consts.rs
+ create mode 100644 lib/rspdm/lib.rs
+ create mode 100644 lib/rspdm/state.rs
+ create mode 100644 lib/rspdm/validator.rs
+ create mode 100644 rust/helpers/hash.c
+ create mode 100644 rust/kernel/hash.rs
+ create mode 100644 rust/kernel/public_key.rs
+ create mode 100644 rust/kernel/validate.rs
+ create mode 100644 rust/kernel/x509.rs
+
+-- 
+2.56.0
 
