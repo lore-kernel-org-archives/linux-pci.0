@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793079684;
-	b=C4DFjnZVYukdpLF0ky4LOHJXSHtTFWtBUN6cPS0Xm3MbXZklBLcck2t5kVEkRKbkZnK1
-	 ZyMj2bitbRNsMgO+BkNKtCz8ki6isRDM6m2bYGQZiTJXTE/9XkpXElemkUGATeHBM3874
-	 Ipnf/9snZQvUPDelJ2AOTgXrLrjJ1DyQmZX7smFHq9mSBTFyyWeyr6rog0PzUkhqbcPbW
-	 XzFU6T1kxkYuUhpZjcjrkduYlzOEmWssg8ZiED3x7ktS06Zm+KM6wT95SDa/geXNxPMaa
-	 OeImuUcsiAAUvbWXFfAxEkqKs+EK4GqdCBGbjBNSf11eS2uSBGD14jjSVDpheKhhIDw==
+	t=1793079700;
+	b=DK3UTA0ttiDW1ASl/wWPgYH7CB6kg3oXwDvO2sm9oNt37jcnQyyJUcs2b1JKrh2JJ3gL
+	 WBinJELF/ktB1WD9/aEAqLn8FquGcVMMJtK+kaQ/9YSGdn0WYNzw/cvVvqzRBPX3GoLh5
+	 +xBTwleulG1lZvJUdS6PT1eesd8yEbnGoTAtdlHW6lt6Gv85HTdx7OFYRbSXA8f4pxqAD
+	 qWPeidqDfV1MifoDynRZzoHBebmtA/pKC2/tvNDXWoGtRn4SGzZa7y+NG9H0SVEqdn9h/
+	 24kDoRyxNyGGCp5WEOSaBkMVFHuJZB3g9EfhrR9XDNJHaf8PjJO1dx36iUWfAkGanUg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793079684;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793079700;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=7L8cFlaz7+Q1O3I5pxd99jPtpTzBmIAHkv3Jd2eKUyg=;
-	b=I3J8BlVBLjXAVP7wE9UzbVj0wODANMVLfqRwDVA7RAinUwulVj6IY9lGDPBHhSugtL2i
-	 gxuKYB/z6OPjvN3jHIInb8YaDUs8lupcCfP5KIrMRkqU8eK9rsWMBuc0aMf3DZprJ6wTM
-	 hH/PLbFuo/91haoeFhAU45zKG4gzbIschw8aIHCNMeY0ZPnhmh5BF9451b8jt+wXHR+X3
-	 yo8hJhLPPfcQigWYblmvvVSYjDIggbs136Lca3G/7kAIp3HCBB93QV7IGlns5IJf+fq2C
-	 E2gAVMgwTUT2/OfG32TsP6LSa9NwYIjMnbwFvPgE5aVxEHKFmjS7yd9EDOaf1QQmAkQ==
+	bh=vR5zrEdzPYD/d1tQUU+M7eapTaCYqzDQ1xshE0jjrT0=;
+	b=KQmdiw/+8Zuq2Q8SIvzn+F1IZC6P7BccpCnxCO1mqSgZ+Vb+2Z1O9w1I7fHIGk2YBg+S
+	 lgle6+pO+gmvxTKaToLJFqs9EXgIJ4PTXNEENUFEInNCABEQOOdEZpR8mgpWz0l+sDDx1
+	 JXnYcXYtaX4gDZXop/8jEOxT8MHxZHm/XX91ngEbDu+Y0SOxkCEt5qLQrCQ/H4UiFWIAn
+	 cHpFZltcWj6aZLx2Rdnpm8IdAFCtkwElx+WFIKgIDeWiYMCWnU0+/c4qFxSt96iOcEVhD
+	 V43PnrA+uW8Zi7OOBesDZNlDK7yTEL3siPABlqtoSFQOYoiAeN1Sw7mASQTCZOG5W+w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DIgm7x9n;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d1mN9hBC;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7304606A31B;
-	Tue, 27 Oct 2026 05:41:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9841606A31A;
+	Tue, 27 Oct 2026 05:41:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DIgm7x9n
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B9471F031E2;
-	Tue, 27 Oct 2026 05:41:23 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d1mN9hBC
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A0E21F01829;
+	Tue, 27 Oct 2026 05:41:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793079683;
-	bh=7L8cFlaz7+Q1O3I5pxd99jPtpTzBmIAHkv3Jd2eKUyg=;
+	s=k20260515; t=1793079699;
+	bh=vR5zrEdzPYD/d1tQUU+M7eapTaCYqzDQ1xshE0jjrT0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DIgm7x9nFZmtSWkr1SOaHHcvKEYyjGUaH7MmrqX6x4HF+WwHGkm4CLBw2uufn5SYF
-	 duY8kny7fQiuZ3SYqlPxUyN/j3GdaMIt54EdP25q4CybAEpFOwgBccxP/tX+SE1C7c
-	 eAZ1gMxxqhhVb/q6dpkVyjCDQi/vzgKFGGFmk45c7SyDPO5br9L70lxCevO0CYAbz0
-	 3DrI5W7XxAOJNGB18Ru7cIFD3xr0boRByzqX67iAT05oY04RglNtWfgINjv2FpxuZN
-	 pgGGY2J5/SLLfYwCutAPFI8emVTpyDdcozbf3Rdd3Ae7f4UeBMV96BO+i9uhHG5jxj
-	 rz0kD285YIuzg==
-Message-ID: <sashiko-outbox-186133@kernel.org>
+	b=d1mN9hBCsXJACTfLZhn2lHSneENiT1xtFmvMjZaAMD9Vq16dV2FemElyirv8twoQ1
+	 Ij6DMHzT/cyweI/fUQ53jisoTLUAlUtXa/GDrOyIveoDGyaYyA5+lVcsz+HhEzpdki
+	 OGC07TNmYNCM8bCNnW3OLdorWJ0/PmzaNlMKZfkkFEvD/UM8NueJ0gRSgsyhj1+q8j
+	 ath0GoMcIEfdlXv3B+QVlMuMz1dwo/sisLtzgPy6XCpO9nbM00eHqK8R1Q4VwdJqM2
+	 lozcW1svixfl34KH0fJkOfGm28BhHrPm8r2AVZqHSjueC2YawEAL4GV2zSp4oWVtjE
+	 E755iEJXWudkQ==
+Message-ID: <sashiko-outbox-186135@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 14/23] lib: rspdm: Support SPDM get_version
+Subject: Re: [PATCH v5 16/23] rust: kernel: Add crypto hash bindings
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com, linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
 Cc: ojeda@kernel.org, gary@garyguo.net
-In-Reply-To: <20261027052536.1722081-15-alistair.francis@wdc.com>
+In-Reply-To: <20261027052536.1722081-17-alistair.francis@wdc.com>
 References: <20261027052536.1722081-1-alistair.francis@wdc.com>
- <20261027052536.1722081-15-alistair.francis@wdc.com>
+ <20261027052536.1722081-17-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 27 Oct 2026 05:41:23 +0000
+Date: Tue, 27 Oct 2026 05:41:38 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,67 +60,132 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [Medium] rspdm: missing unsafe and Safety doc on spdm_authenticate()
+- [Medium] rust: kernel: hash module gated on CONFIG_CRYPTO breaks m/n buil=
+ds
+- [Low] rust: kernel: unchecked usize to u32 cast in Shash::digest()
+- [Low] rust: kernel: wrong doc comment and missing #[inline] in Shash
 --
 
-commit 80429ad18bdb5fc720a23fcc20975ddc687dd8ec
+commit 43861816c7010fda266b93e8a13fd64b1fdc4ecd
 Author: Alistair Francis <alistair.francis@wdc.com>
 
-lib: rspdm: Support SPDM get_version
+rust: kernel: Add crypto hash bindings
 
-This commit adds support for the GET_VERSION SPDM command and calls
-state.get_version() from spdm_authenticate().
+This commit adds initial Rust abstractions in the kernel crate for synchron=
+ous
+crypto hash transformations (Shash) wrapping the C crypto_shash APIs.
 
-> diff --git a/lib/rspdm/lib.rs b/lib/rspdm/lib.rs
-> index 27449ac1ca25d..e0fb7b49d4a07 100644
-> --- a/lib/rspdm/lib.rs
-> +++ b/lib/rspdm/lib.rs
-> @@ -238,7 +238,30 @@ fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> c=
-ore::fmt::Result {
->  ///
->  /// See `include/linux/spdm.h` for the full C API documentation.
->  #[export]
-> -pub extern "C" fn spdm_authenticate(_state_ptr: *mut spdm_state) -> c_in=
-t {
-> +pub extern "C" fn spdm_authenticate(state_ptr: *mut spdm_state) -> c_int=
- {
-> +    if state_ptr.is_null() {
-> +        return -(bindings::EINVAL as c_int);
+> diff --git a/rust/kernel/hash.rs b/rust/kernel/hash.rs
+> new file mode 100644
+> index 0000000000000..1800065d98767
+> --- /dev/null
+> +++ b/rust/kernel/hash.rs
+
+[ ... ]
+
+> +    /// Return the name of the hash
+> +    pub fn name(&self) -> &'static CStr {
+> +        self.name
 > +    }
 > +
-> +    // SAFETY: `state_ptr` was returned from `spdm_create()` which used =
-`into_foreign()`
-> +    // to create the pointer, and it remains valid until `spdm_destroy()=
-` is called.
-> +    // We only borrow here (rather than `from_foreign()`) so that owners=
-hip stays
-> +    // with the foreign (C) caller.
-> +    // The exclusive `&mut SpdmState` lives entirely inside the lock gua=
-rd, so
-> +    // concurrent FFI callers serialize on the mutex and can never form
-> +    // aliased `&mut SpdmState` references.
-> +    let mutex =3D unsafe {
-> +        <Pin<KBox<Mutex<SpdmState<'_, CTransport>>>> as ForeignOwnable>:=
-:borrow(
-> +            state_ptr.cast::<c_void>(),
-> +        )
-> +    };
+> +    /// Return the name of the hash output
+> +    pub fn hash_len(&self) -> usize {
+> +        self.hash_len
+> +    }
+
+[Severity: Low]
+This isn't a bug, but the doc comment on Shash::hash_len() says "Return the
+name of the hash output" instead of the length of the hash output. Also,
+should Shash::name(), Shash::hash_len(), and Shash::digest() in
+rust/kernel/hash.rs be annotated with #[inline] as small kernel crate
+abstraction functions?
+
+> +    /// Computes a one-shot digest into `out`, which must be exactly the=
+ digest
+> +    /// size of the selected hash algorithm.
+> +    pub fn digest(&self, data: &[u8], out: &mut [u8]) -> Result {
+> +        if out.len() !=3D self.hash_len {
+> +            return Err(EINVAL);
+> +        }
+> +
+> +        // SAFETY: `self.desc` was created by `Shash::new()` and points =
+to a
+> +        // valid `shash_desc` with a valid `tfm`. `out` is checked above=
+ to be
+> +        // exactly `crypto_shash_digestsize()` bytes.
+> +        unsafe {
+> +            to_result(bindings::crypto_shash_digest(
+> +                self.desc.as_ptr(),
+> +                data.as_ptr(),
+> +                data.len() as u32,
+> +                out.as_mut_ptr(),
+> +            ))
+> +        }
+> +    }
+
+[Severity: Low]
+In Shash::digest(), could passing a slice with data.len() > u32::MAX on a
+64-bit platform silently truncate the input length via data.len() as u32 and
+compute a digest over only a prefix of data? Would u32::try_from(data.len()=
+)?
+avoid the unchecked narrowing cast?
+
+[ ... ]
+
+> diff --git a/rust/kernel/lib.rs b/rust/kernel/lib.rs
+> index a3c54971e9dea..f7db5975e7621 100644
+> --- a/rust/kernel/lib.rs
+> +++ b/rust/kernel/lib.rs
+> @@ -82,6 +82,8 @@
+>  pub mod fwctl;
+>  #[cfg(CONFIG_GPU_BUDDY =3D "y")]
+>  pub mod gpu;
+> +#[cfg(CONFIG_CRYPTO)]
+> +pub mod hash;
 
 [Severity: Medium]
-Should spdm_authenticate() in lib/rspdm/lib.rs be declared as pub unsafe
-extern "C" fn with a # Safety documentation section, similar to
-spdm_create() in the same file?
+Will gating the built-in hash module in rust/kernel/lib.rs on
+#[cfg(CONFIG_CRYPTO)] break the build when CONFIG_CRYPTO=3Dm, or when
+CONFIG_CRYPTO=3Dy and CONFIG_CRYPTO_HASH2 is m or n?
 
-Now that spdm_authenticate() passes a non-null state_ptr to
-ForeignOwnable::borrow() and locks the returned mutex, calling it with an
-invalid or dangling pointer (or concurrently with spdm_destroy()) causes
-undefined behavior. The SAFETY comment here relies on the caller
-guaranteeing that state_ptr was returned from spdm_create() and remains
-valid until spdm_destroy() is called, which requires the function to be
-marked unsafe.
+Because CONFIG_CRYPTO is a tristate symbol, Kconfig emits --cfg=3DCONFIG_CR=
+YPTO
+for both CONFIG_CRYPTO=3Dy and CONFIG_CRYPTO=3Dm, whereas in C, CONFIG_CRYP=
+TO is
+only defined for built-in builds:
+
+rust/helpers/hash.c:
+    #ifdef CONFIG_CRYPTO
+
+    __rust_helper unsigned int rust_helper_crypto_shash_descsize(struct cry=
+pto_shash *tfm)
+
+When CONFIG_CRYPTO=3Dm, Shash::new() and Shash::drop() in rust/kernel/hash.=
+rs
+are compiled into built-in rust/kernel.o, but bindgen does not generate
+bindings::crypto_shash_descsize, bindings::crypto_shash_digestsize, or
+bindings::crypto_free_shash from rust/helpers/hash.c.
+
+In addition, Shash::new() and Shash::digest() call crypto_alloc_shash(),
+crypto_shash_init(), and crypto_shash_digest(), which are compiled under
+CONFIG_CRYPTO_HASH2 rather than CONFIG_CRYPTO:
+
+crypto/Makefile:
+    crypto_hash-y +=3D ahash.o
+    crypto_hash-y +=3D shash.o
+    obj-$(CONFIG_CRYPTO_HASH2) +=3D crypto_hash.o
+
+If CONFIG_CRYPTO=3Dy and CONFIG_CRYPTO_HASH2 is n or m, vmlinux fails to li=
+nk
+with undefined references to those shash symbols from rust/kernel.o.
+
+Should rust/kernel/lib.rs use #[cfg(CONFIG_CRYPTO_HASH2 =3D "y")] (and
+rust/helpers/hash.c guard on CONFIG_CRYPTO_HASH2) to match the other built-=
+in
+subsystem modules in rust/kernel/lib.rs?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261027052536.1722=
-081-1-alistair.francis@wdc.com?part=3D14
+081-1-alistair.francis@wdc.com?part=3D16
