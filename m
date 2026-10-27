@@ -1,41 +1,41 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.131.191.58
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.210.164.56
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793087749;
-	b=YA8uKlpLCLR+p0RSmTD3qPQDd8JiDgWVhum7y/HUrnCdklOD5Lm2+XY61W8r5YeIBmWp
-	 Vh1sHM/0XbqlZpLmXbu6ce4Y3JE/nkru8LSR5gWpjAkzvyMbSKcL/SOvcRUb/vGTYvqPL
-	 i0N47d5TA/JF2KF1k+vp5Dc2qVz8V9tZ9nf1F8I7abI1fygofbT/8PYMxOJ2RlHkn+fUf
-	 8nWwrwTzHidD7JL48CJsdqRKv25vgvQ5uWro55bZjrJKuRpQpvRxq0c5bEF3nxeOcxTJ+
-	 EwyyEiIjdJsKgkw4XIoevdygLxZlHorm2Q8rkQwPTyBPe4Axl+GD4pXcWrFSldxmKZg==
+	t=1793087750;
+	b=4rFWStBc5p6ylVjoKiNkXGj10DDZHGEA6FS0g9TO0tVPTxT+aVuf5Hr9tmhQH2U9Duc2
+	 2FK5lTjs63fMiep+tTxbf743zfqzRjX3K7uaSOV9TYg5E8LZpY2p4HomJzTfVu7bTAgqE
+	 BQU+uIjvrqisSzupQZM4SCxwa8BpQW40L3AhjcRLgcKRZ3gWzo4t5iP+dxTNeo3EN2UVq
+	 oggbfzcJtr8evffLXYPvYP4MuSUwZKxmeQ/eYAYW/IXNiUp1P1SRdGK4mL/EYO1P2/Xb/
+	 NfBmiB93XjQhfiJOIQ/Lv0k6csXzlOWdXIsjzae+wOW6VQhDGANbwf90i0JzDrcjsdg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793087749;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793087750;
 	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:
 	 X-HM-Tid:X-HM-MType:X-HM-Spam-Status:DKIM-Signature;
-	bh=mNQ1WjZEAeSXGXCl7Be8gGrg5RDOiHSk+NlohDHDsdo=;
-	b=S7Z+sp4as58sNwbv3JqidCzmKOxXh5G6FZGMQVXXJ2DhHCQmJ4sbIG5TqiGJavi7lWOl
-	 I3L1ancOhBQcZJJGwBTalE5ua+39Mo1tNVdDiG2Sp8DW8mUaZZtco2RyKx6eIEAthn54X
-	 CAD2USnKjDkVLKMRo/QYGKlvU+wEeTlNKAVagB5Np9yGbxeC2st2CvWuMQER8IbkS/kFX
-	 CxR7/avbfnTkxJB/t7PcYvis3TaHs34pO6/mPh8PZ93g5QKgJ1c3nFyx1hAvjscpzGcGt
-	 wVQHNEjnK4CBmWop4LZ670wKwaGM/ICkcmW12S4I2lGMjEsIYkrXdu27YifBCr1aJvw==
+	bh=avlwFO4YaJ2loUf0K54UCcW3Kq7MdUM5DozbyuqnBWw=;
+	b=f0+b4O7tqukRMPwMVq3/6xqlcSefPOsZsRGclcNoG6u+7BmgnkWloPhIxASbfLnSdhfF
+	 FeMg4zWNTyiC9jHRl6sr7KCHRY3oqx/ZfPVsheNsotz40AWx4qRzO7oO2GZepmLKG2Dt3
+	 lwLbM/x2JzazIAJPQYgbxqZ4f3lt0p8Z7hJWxWFbD1ubdVcA8REnhwp97AV3TwMW+EKSl
+	 lwiAat/20qoTA9VfH7tPQ/9s7Wa++cILVTAjmnC7VH/t3qERuDmfQSww8dLmOLVOPZkqL
+	 151StrpfJX7nWT9AqWyt3w34uNvpA8LnIReqKKbiwHM4x01NcAWhtHkdol9M8H2VY1g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=rock-chips.com;
 	spf=pass smtp.mailfrom=rock-chips.com;
-	dkim=pass header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=BLUzfvVE;
-	arc=none smtp.remote-ip=103.131.191.58
-Received: from mail-m10313119158.xmail.ntesmail.com (mail-m10313119158.xmail.ntesmail.com [103.131.191.58])
+	dkim=pass header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=EAxR36c5;
+	arc=none smtp.remote-ip=205.210.164.56
+Received: from mail-m20521016456.xmail.ntesmail.com (mail-m20521016456.xmail.ntesmail.com [205.210.164.56])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBD4B606A321
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 07:55:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BBD4B606A321
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EACEE606A326
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 07:55:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EACEE606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=BLUzfvVE
+	dkim=pass (1024-bit key, unprotected) header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=EAxR36c5
 Received: from localhost.localdomain (unknown [61.154.14.87])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 527d681e8;
-	Tue, 27 Oct 2026 15:55:36 +0800 (GMT+08:00)
+	by smtp.qiye.163.com (Hmail) with ESMTP id 527d681f0;
+	Tue, 27 Oct 2026 15:55:37 +0800 (GMT+08:00)
 From: Shawn Lin <shawn.lin@rock-chips.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Manivannan Sadhasivam <mani@kernel.org>,
@@ -43,9 +43,9 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 Cc: linux-pci@vger.kernel.org,
 	linux-rockchip@lists.infradead.org,
 	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 1/2] PCI: dw-rockchip: Power on devices below the RC using pwrctrl
-Date: Tue, 27 Oct 2026 15:55:19 +0800
-Message-Id: <20261027075520.3591049-2-shawn.lin@rock-chips.com>
+Subject: [PATCH 2/2] arm64: dts: rockchip: rk3588-evb1: describe the PCIe3x4 slot supply
+Date: Tue, 27 Oct 2026 15:55:20 +0800
+Message-Id: <20261027075520.3591049-3-shawn.lin@rock-chips.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20261027075520.3591049-1-shawn.lin@rock-chips.com>
 References: <20261027075520.3591049-1-shawn.lin@rock-chips.com>
@@ -59,102 +59,57 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa17c5b8a3e03a4kunmefbf004c4b829f
+X-HM-Tid: 0aa17c5b901e03a4kunmefbf004c4b82ad
 X-HM-MType: 1
 X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlDSUIeVkIZGU9PSx1JHxodQ1YVFA
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaSU5IVkpMTB9CSBoaHk0fH1YVFA
 	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ0xZV1kWGg8SFR0UWUFZT0tIVUpLSU
 	9PT0hVSktLVUpCS0tZBg++
 DKIM-Signature: a=rsa-sha256;
-	b=BLUzfvVERZkOuAuadGQs/tf1RfnceYz5oc17HpQO5mMrOEY9oDptqOr0ZSAKLMlUTI4CLD18EdrYqZGp7/akBQyTQorBbwXCxRiOO0ps/Wcr6U0ILDiLH5+1uDGvcrS0ww9OSjU893ANevtS0saoYCUgHHBupEu7vxg/F6028Ig=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=mNQ1WjZEAeSXGXCl7Be8gGrg5RDOiHSk+NlohDHDsdo=;
+	b=EAxR36c5LAmfymK1ywbtUfK1OHTeAsTDPHPYqMT4A71pUsB3A2RIUKd3OvrgamWC8eOL+RXpvhNhc3agSwZQyHZa/4rS1xvkyex+Y/lcxUZHIEfL8aNcwZN1QVo1Eo8Y/lXedkdoJN6oFw8gON8izygKyg4mQFuhwKHOWLHv7Ko=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=avlwFO4YaJ2loUf0K54UCcW3Kq7MdUM5DozbyuqnBWw=;
 	h=date:mime-version:subject:message-id:from;
 
-Devices below the Rockchip PCIe host controller may need resources
-(regulators, clocks) enabled before they can be detected on the bus. So
-far the driver only enabled a single vpcie3v3 supply described by the
-controller node itself, which cannot express per-device or per-slot
-supplies.
+Move the vpcie3v3 supply of the PCIe3x4 controller into a child node
+describing the slot, so that the PCI pwrctrl framework manages it.
 
-Use the PCI pwrctrl framework: before initializing the PHY, create the
-pwrctrl devices for the DT nodes below the controller and power them on.
-The supplies of the slot must be up before PHY init, so this has to run
-ahead of rockchip_pcie_phy_init().
-
-The controller node supply is kept for backward compatibility: boards
-that still describe vpcie3v3 on the controller keep working, and boards
-that move the supply into a child node get it enabled by pwrctrl.
-
-Only the RC mode is affected, the endpoint does not own the supplies of
-the devices below it.
+The child node is modelled as a PCI bridge, which is what dtc expects
+for a node below a PCI host bridge, and carries the regulator that
+powers the devices in the slot.
 
 Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+
 ---
 
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 30 ++++++++++++++++---
- 1 file changed, 26 insertions(+), 4 deletions(-)
+ arch/arm64/boot/dts/rockchip/rk3588-evb1-v10.dts | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index bd86e32cc2b1..952b4c6cc4bf 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -19,6 +19,7 @@
- #include <linux/of.h>
- #include <linux/of_irq.h>
- #include <linux/phy/phy.h>
-+#include <linux/pci-pwrctrl.h>
- #include <linux/platform_device.h>
- #include <linux/regmap.h>
- #include <linux/regulator/consumer.h>
-@@ -841,16 +842,32 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
-+	/*
-+	 * Power on the devices described below this controller before the PHY
-+	 * is initialized: the slot supplies must be up before PHY init.
-+	 */
-+	if (data->mode == DW_PCIE_RC_TYPE) {
-+		ret = pci_pwrctrl_create_devices(dev);
-+		if (ret)
-+			return dev_err_probe(dev, ret,
-+					     "failed to create pwrctrl devices\n");
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-evb1-v10.dts b/arch/arm64/boot/dts/rockchip/rk3588-evb1-v10.dts
+index 8969b56f3063..80eb36e783e0 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-evb1-v10.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-evb1-v10.dts
+@@ -569,8 +569,20 @@ &pcie3x4 {
+ 	pinctrl-0 = <&pcie3_reset>, <&pcie30x4m1_clkreqn>;
+ 	supports-clkreq;
+ 	reset-gpios = <&gpio4 RK_PB6 GPIO_ACTIVE_HIGH>;
+-	vpcie3v3-supply = <&vcc3v3_pcie30>;
+ 	status = "okay";
 +
-+		ret = pci_pwrctrl_power_on_devices(dev);
-+		if (ret) {
-+			pci_pwrctrl_destroy_devices(dev);
-+			return dev_err_probe(dev, ret,
-+					     "failed to power on pwrctrl devices\n");
-+		}
-+	}
++	pcie@0 {
++		device_type = "pci";
++		compatible = "pciclass,0604";
++		reg = <0x000000 0x0 0x0 0x0 0x0>;
++		bus-range = <0x00 0x0f>;
 +
- 	/* DON'T MOVE ME: must be enable before PHY init */
- 	ret = devm_regulator_get_enable_optional(dev, "vpcie3v3");
- 	if (ret < 0 && ret != -ENODEV)
--		return dev_err_probe(dev, ret,
--				     "failed to enable vpcie3v3 regulator\n");
-+		goto err_pwrctrl_off;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges;
++
++		vpcie3v3-supply = <&vcc3v3_pcie30>;
++	};
+ };
  
- 	ret = rockchip_pcie_phy_init(rockchip);
- 	if (ret)
--		return dev_err_probe(dev, ret,
--				     "failed to initialize the phy\n");
-+		goto err_pwrctrl_off;
- 
- 	ret = reset_control_deassert(rockchip->rst);
- 	if (ret)
-@@ -883,6 +900,11 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
- deinit_phy:
- 	rockchip_pcie_phy_deinit(rockchip);
-+err_pwrctrl_off:
-+	if (data->mode == DW_PCIE_RC_TYPE) {
-+		pci_pwrctrl_power_off_devices(dev);
-+		pci_pwrctrl_destroy_devices(dev);
-+	}
- 
- 	return ret;
- }
+ &pd_gpu {
 -- 
 2.25.1
 
