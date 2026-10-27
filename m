@@ -1,32 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.2
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793102349;
-	b=JmaWmyzebBMMS2F4f2/OyFviZDnCAhFXWrcPCm59rWuIePssRz0skolitfdrLeKLVvvo
-	 lpvKks6sFF+LOjMaqhxRVGkBJNFH6UfAlBcPQneB+KO5doY7TCd+51sU7DzrKZgo4FHOx
-	 pv9fAFlmtjZupYA606OubD+4uiB3wZ1TFRCP9Brtvm9MJj+uk+yrDxEpntaOSPjDt6D8b
-	 U4D2HlzkbamkcYBcDP/qkC7GJ7i++6tis8e2mLm7NqnUz/pGl/vdJyTNr9neIgS9oXGOR
-	 D1cawHx9nng+xBS4VnZMYmzM4y/fuaPjZl5qSDsiHtGOaP8R4ZV4O5kYYqYBE60J/Fw==
+	t=1793104157;
+	b=mHJ48i/29YksELNOzw5wkYItJ67WjsLCfeRqQXFhOEpTlv7HU2ZmhX0WAW8swtIls/20
+	 YY3sbSFdhR+zxDeYBG4yQt8nyvxIax/aptDFCdxC3iJ38hK5BLlvLyQxxceZf2nXTR4B5
+	 L8H/QBnR7OqR5NN4nRzQxo+i2Uqxm//cVOR/+1+Yauxhii/rqyf+3mnQJSiPCPguDgVeW
+	 9SWGMbacU0EIdli+AuyUFMYl8oF11mifPNT41Q7d0UJQk2brfMRPOvLk1DvVmd59iXtcB
+	 mnb0CfgIa7ZYijsOujandcOCOayfXgkf+be/ipSakk+9jr2ZqZlvIlMSmsCWwFIF19A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793102349;
-	h=Received:MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:
-	 From:To:Cc:In-Reply-To:References:Date:Message-Id:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key;
-	bh=6ghFkMGjgkKUVgJSsrNjglhbUuFeRKKfCk5oqXCgc0M=;
-	b=G5SW6ntz42TEgSgrU60OFnQE1i6EZ4FV9MnUhRj6Ib5rgcumtNwifByc6dX3DvnTr5C6
-	 HI0VLp+O/uy38Mtoby4eJ7M2gItAEIqVoSS7Wt9NIr7+0rniScsCvULPpROeupd8pUbNF
-	 XTJjMoSA7yHZXdhBOQa2/vyv2oVFRikHR16pko/b6P8TURkqQWLgvUhZkJKCy9qRVXIc+
-	 w6pcHIxvaElpS+nuj1PYWixuwVlVt5uYZIJlgc2vlzHccBBXxxA3oe3nVX3MYqUUA2l8B
-	 YK0JRzk/d5AaNBdYDO6aT9hUnZ9GZQMoYbHLTTBf+MTYWBUM1/w+0ZCBxB6qRi61L9w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793104157;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
+	 X-CM-SenderInfo;
+	bh=TdYceE7RRPUM62LOVxn/fHgK36xYRy4qKZfZkYwC3NA=;
+	b=QPci7vFYFn1HxUEVWiqgnU2tVirljUHF9SOD2P+tCqEGwyWUkXkPC1SAWpAKT1Xf6Mo1
+	 84G4ecEUIWcS2R/upTzSpH9hppzLHtI3LFzBkAWB9NhtE5JEheKOW2fzAqy/YfhCUDDym
+	 utajPQa3Ih7rP6UBu0DXBxLlVZLi+zaw++aBeVzzurOPBiXuuJqlxRg7dZgkeCVM3tg94
+	 dzR8Yn+drfu1CqPZP0xOpZV25fgUvBCtWtOOu8mlhFz8g1XHyP6OT7QBXZvS10dpQnimW
+	 2oGg4LcsSZHGbHn1ucaFn7iQLn699kcWo7neuYl0P+QlCiPZ54FYHJc+xNbI5zPiN8Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=163.com;
+	spf=pass smtp.mailfrom=163.com;
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=Ql3fsKVv;
+	arc=none smtp.remote-ip=117.135.210.2
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCC5A606A31A;
-	Tue, 27 Oct 2026 11:59:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FB841F01828;
-	Tue, 27 Oct 2026 11:59:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B371606A335;
+	Tue, 27 Oct 2026 12:29:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3B371606A335
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=Ql3fsKVv
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=Td
+	YceE7RRPUM62LOVxn/fHgK36xYRy4qKZfZkYwC3NA=; b=Ql3fsKVvhSIX7zUl8a
+	qzihG3hTfydNTdF9wLL01uUMT1FV8wHgK2mWad0l/ETDV9U0UQx/eW5/86NZHCQQ
+	1Eg3YQFEO91ulexQRqIUvmkBdlDFdJfrg7lFGqmkDXidKtizIFsgQ7mtGUSYxIQ8
+	nwvaR5/DeNw/y5Elc1plFAl7A=
+Received: from Precision-7960.. (unknown [])
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wDnz2v5mOBqYaUSDA--.46182S6;
+	Tue, 27 Oct 2026 20:28:46 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	jingoohan1@gmail.com
+Cc: imx@lists.linux.dev,
+	linuxppc-dev@lists.ozlabs.org,
+	linux-amlogic@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org,
+	sophgo@lists.linux.dev,
+	linux-riscv@lists.infradead.org,
+	spacemit@lists.linux.dev,
+	linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH v4 12/16] PCI: dwc: sophgo: Use cached PCIe capability offset
+Date: Tue, 27 Oct 2026 20:28:23 +0800
+Message-ID: <20261027122827.2725643-13-18255117159@163.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261027122827.2725643-1-18255117159@163.com>
+References: <20261027122827.2725643-1-18255117159@163.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -36,58 +76,40 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] power: sequencing: pcie-m2: Drive the Key E
- SDIO_RESET# signal
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: William Bright <william.bright@imd-tec.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, 
- Bartosz Golaszewski <brgl@kernel.org>, linux-pci@vger.kernel.org, 
- linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <at9cGzb2p4VB8EfW@will-Legion-Slim-5-16APH8>
-References: <20261026-pwrseq-pcie-m2-sdio-reset-v1-1-02ecdafce518@imd-tec.com>
- <at9KREB4Fyf-Jl5S@debian> <at9cGzb2p4VB8EfW@will-Legion-Slim-5-16APH8>
-Date: Tue, 27 Oct 2026 17:29:01 +0530
-Message-Id: <179310234194.16692.5070156797811021066.b4-reply@b4>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=861;
- i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=CcGfh8L5LVnxTc4Pe/8nKaGbUYPnKwSLFkzEH5+Zduo=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq4JIJEq2AjgSjdmWztpFe13hNRTc2OfVtt5TDt
- UGDACgy0DGJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauCSCQAKCRBVnxHm/pHO
- 9T8jB/9zokkwzoKWEqjBoUBsewBlSJalPolszQPsirCPgckJ5dtG8HnC+ev9CQMv87Zg1Br1q6O
- wclQoBmr5dlG4I5cWo5raCBiZJ/K0fmrBfXlz+44R5zN4Yokh/jIut8nP0N5gqRyaNijkl0MIUn
- MCjEOhNQ/PnGKdzeGtJaRpTDqLMj3v/qBQmDlHrwGV7Nn46A8PNQxtlGTjZrBO5bew3r1cRBpFi
- SM3VYDbs+zW4TPIzw0p/SaQfiMmvA9LAruN2YhZDsgyAIrVKZlc33ezcT1R/yTpgfyJkb2T1nVK
- GviX91Jo8qN9FiHk0DZ4KWGj9LnWfDSaKYgyuiXrIEFs9GIY
-X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDnz2v5mOBqYaUSDA--.46182S6
+X-Coremail-Antispam: 1Uf129KBjvdXoWrtFW8tFy8Cry5CF1DZr4DXFb_yoWDWFgE9r
+	9rCFZ7ArWUury5G3ZFyw4fXryqva47ZF1j9ay8tF90vFn7Zw18tr9rZrZ8A3W8Gr1DJF97
+	Jr1qyF1rAry7JjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRNuWltUUUUU==
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7B8422rgmP8aZQAA3C
 
-On 2026-10-26 13:56 +0000, William Bright wrote:
-> On Mon, Oct 26, 2026 at 06:16:38PM +0530, Manivannan Sadhasivam wrote:
-> > 
-> > Do we have SDIO pwrseq consumer driver in mainline?
-> > 
-> > 
-> 
-> No. MMC still uses its own mmc-pwrseq framework.
-> 
-> > You should not add GPIO control to the pwrseq_pcie_m2_vregs_{enable/disable}()
-> > callbacks. You should create a new 'sdio-enable' and populate
-> > pwrseq_unit_data->enable/disable callbacks for the SDIO_RESET# control.
-> 
-> An sdio-enable unit wouldn't ever be called until MMC gains a consumer.
+sophgo_pcie_disable_l0s_l1() runs from the .init callback with the
+controller already enabled. Replace the capability search with
+dw_pcie_get_pcie_cap() and store the offset in a u8.
 
-Yes.
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ drivers/pci/controller/dwc/pcie-sophgo.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-> Should I add the unit anyway, or drop this patch until an SDIO user
-> exists? Maybe I should switch to working on this first? But it looks to
-> be quite a big task.
-> 
-
-If there is no user, then the unit will be a dead code and we don't add dead
-code in the kernel.
-
-- Mani
+diff --git a/drivers/pci/controller/dwc/pcie-sophgo.c b/drivers/pci/controller/dwc/pcie-sophgo.c
+index 044088898819..39703d2b7b5f 100644
+--- a/drivers/pci/controller/dwc/pcie-sophgo.c
++++ b/drivers/pci/controller/dwc/pcie-sophgo.c
+@@ -164,9 +164,10 @@ static void sophgo_pcie_msi_enable(struct dw_pcie_rp *pp)
+ static void sophgo_pcie_disable_l0s_l1(struct dw_pcie_rp *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	u32 offset, val;
++	u8 offset;
++	u32 val;
+ 
+-	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	offset = dw_pcie_get_pcie_cap(pci);
+ 
+ 	dw_pcie_dbi_ro_wr_en(pci);
+ 
+-- 
+2.43.0
 
