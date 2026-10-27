@@ -1,101 +1,64 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.173
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793101488;
-	b=wh9spjuNwlpePUPTykCpcPkcQaIPs9lmCEHbcxHe4UqErORdsaLft7oKi5PMwyFAjG8f
-	 0yqVQgoYBG/q9e+8fbFVKI6wpNPt5xlS4nv0ZPnyb9WDFdbr/DATI1Dox/f3IiSRZVoLh
-	 ZoURtW08S06N1xrENJtBLQ/20L1FpP5Fmx2Tksiu2Bi+/Had11ZVIuoezS0Wyuc0nrrvV
-	 9Vaw6khPldOcnApCZauYkps0nHwTVIMX6G9ZtgG5WraQteOHVphtPBUtnFlYaxfwwDvE5
-	 /pR6WxoNq32d/vJwAAJeIRtzAPRsYYSFINnw/2R/sL2gACkbw2uPopA0t2xurtcye4w==
+	t=1793101683;
+	b=ES99uNIiI408r4/kKOAIBbK9YsQYejsXhOOqaD7blebha1vnRFdr0u+n+XWHmdOGxx9M
+	 CPhabMgxnOwFppl/aOSsiiwqSZy+Sc9DgzVtT7Lp1fXXGIpUqUWg4/Rcdx0zgng8qvxu1
+	 GRlV5CnfnL9R86uZX86kqDdJpuHOycjbfCaV2nZcBnFeZhSMais0rjbW86ATnPAA457wF
+	 hUOWoej3qS+U7fNAnEoINOWiylo6ibOJFiqGowAlPCQsJ2aEo4RiyLXezu8PnEfT455UK
+	 TNy3hC4ttKdjHijVWf7ezb9+/BQeg0LwYYgcmgs4H0xA2WpV/4PwZjfAFFS3NEkoL3Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793101488;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=VL6Rob804TfrBVBHD9ZWTKZw10w75nWGhTvtW+uNe1c=;
-	b=umexct+Y4kIAtYQ+v52Z4cXRxxbzuYkfhMUf31eZF/EZp5BOwIKjuID4FgXjyiOKtN5a
-	 glH7BkAiZor1+Na38/4rZ6ikNG/dUWJnlVXPiTJWsSYIqcB4MM+rmkDTlWtYfoRKAlmJe
-	 uaU18RgHbu0v7hUHDYOGCcWwwG9LG5jhncRisAOQ8sA07YnMY3ell7G+IuGithNiOAfAz
-	 UaUFg9I2cdiUpeIs+PO2Ko3hzyOgv7ABr/LmSMcKhEdRROOKnQCXSFwFiHI/SqjAuQP6R
-	 erjMHhXYT7EP3K7scIMQ6D+sU/5FofprvDhUXaqWwb6q2ISbnTvvWRJ+RuCjhvy6Ehw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793101683;
+	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
+	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 X-Mailer:X-Developer-Signature:X-Developer-Key;
+	bh=jP5R0hiwF8cPUc5aa7ofvcurmINMhxrJaW/fyXdFY8M=;
+	b=x0jxpdDla25dLhhijEjji3bZXSrAzr1CeuJvlf83mnG80umdZyFrM1AmgM+5dzFzKvNp
+	 1ncuNDuNT5tRv2hBrXboVJC01KNsct8pNiy+RKi9yteME94foA3Cjp6p9m/QWXK3oWIBp
+	 Q6253MtP6fDp/+McLBSMu2TyAvTYKnbrgtBj7R1XuhCwC8uRjZ3yKQM3g7CtzYPg8NjaZ
+	 p4FSS64wenxxXpIKp/j2/RnuIvnk9oLCWOR0J87tWNcTTMzhUGnRksgo/T5cDhsSVbVX0
+	 lR26NuBLIWDB3d4WS0l7oSK2a8aKF8oJZN2oOFaJBxBn1G/4eskDuXyARiEeV2SEm1g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=fyGObDqD;
-	arc=none smtp.remote-ip=209.85.214.173
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="nwKezIz/";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D00B606AEED
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 11:44:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7D00B606AEED
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E204606A323;
+	Tue, 27 Oct 2026 11:48:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=fyGObDqD
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2e9f6a16afcso38785ad.1
-        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 04:44:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1793101488; x=1793706288; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=VL6Rob804TfrBVBHD9ZWTKZw10w75nWGhTvtW+uNe1c=;
-        b=fyGObDqDbLqO/Eg6fI773LOjM0osLi6Bf3QOYY3PB8zZPWTCT3m3C7PrvvKAZAvuFx
-         Bsafyb2OrH1UKet4PrlwS+h5K1Rdrgsr+3km9DG2Eygs1Voj7O5h4HIReUl35jqOlOB4
-         81VJ7tQ37uwIMAUzxjvF82OF7mdPnk839sQuVziduDBQ2/M27numqFJLivmGUU9egkoQ
-         jB3jJdujr8nUrrveC1MgTVz5J7rB0EvQ0NiLQGZ3ordXbIcRdlH+HzAXEhzayq8M2ozQ
-         2c9ibvJdhOioz++BbcbQ2TVg0a79wE6bszyEdGB+2vmCgbP+HYIxQuOFxyAk0L3/nvUJ
-         /azQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793101488; x=1793706288;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=VL6Rob804TfrBVBHD9ZWTKZw10w75nWGhTvtW+uNe1c=;
-        b=y8+GfbgtLYR8l3Y4O4A1q8xOPCfjwaNLS4iDPZ2cLtYRQE7vpfW/DNbMxtSk7WTtAx
-         x+zNqgPBs//EpupsQOfZmUUaqvAUHy0ZoAkUIfRndE5iS4qfxpBcjoWwaWqqOvfhmfYG
-         Fa1dXf+0jpeO2gq0M8kZDEDTeGmmARz7ET7fSBEqxZPTaKxDiMtdd4iHGW8QIinrY01c
-         KCMHgU1tlqmH5OfauswrZrBibGstEfr0AZuu/QS9nllmIRsYyhvnPqYIcBdKcMQNQJwc
-         LkA6Fuh+khKm/kPGYqwxpZCmCiqjVsIdJv0W0hZGdDL6eeWXJiloaA39bZksTj2fjXam
-         eaiw==
-X-Forwarded-Encrypted: i=1; AKwUvBwe2gvScxs004DB+nUcWgVDkL2/PIFM0ZEZ+UqZ9UzBfZvYJFSNpB1/Qkhoj7yXItkcF6q/4K16G2A=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKXdzJhDAW/czAuY4w2MOn++oWXCDoNpTchaQKaPgzP3EtDiRUe
-	iOaST4h+js64FXOPPFWDBDApL5nMKK8U0RnRPxRLfS44TMRTb1lbwGRX8UUYUcNjMg==
-X-Gm-Gg: AYBFou286aXdcE2kM5PfXKVKVXdK1A4u4n5vnHPzbALBopWtdCbZ6SI7BOajoj0kVbX
-	zwM670Oj91jLfkw99gmH7ocprlhQ2dQQlMcow3Bjww0wuVvKgKF98wutgi8qTySyc9k0ufr+Iw0
-	tR9atRKr2TD02bxil47zW0oOsiB2DmjycXYf7xTUN8CANQg6ihjVbnQHh9S/TSu+cMYJut6cgk+
-	36H/odHaX04bsizkSpfcSPwt5HIa6WhXCUXgm4JNBTlnNCoO1Aa1HRgUK50/tNLTW+nc2rteRiM
-	aa3rQ1AbFDgbMd73wegcI/YKUVrH8zcGA7BCxj8IKUg4/L06o7lKR/zDHIgh2UBta4S2u4VM6jj
-	mbTZvmRgvYDTlwKUsg98v6YTPSiHHYvw9hs1/35eucoT6hK3eLN9R0mzwXmi7mlKjvHOeKCJGnW
-	j8xVbhuetAks6f633Gvv1JmhQ+ShGCw+iAgCNN7YxCCKbwnCN9IS1rYAJ/t83etqePSI8prw4bp
-	JOQQ7fXIPAVrfKDiy12nymLfkdPLCwX9G6540JFRmv3at9iL1jehz+zlEpgfVagJsRQf1WCJNal
-	w8lYfKxwk+mIVzqOtQ==
-X-Received: by 2002:a17:903:32d2:b0:2c9:d89f:fd98 with SMTP id d9443c01a7336-2eae52ae155mr4517745ad.1.1793101487114;
-        Tue, 27 Oct 2026 04:44:47 -0700 (PDT)
-Received: from google.com (105.211.142.34.bc.googleusercontent.com. [34.142.211.105])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cd8ccc90d74sm2571152a12.20.2026.10.27.04.44.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Oct 2026 04:44:46 -0700 (PDT)
-Date: Tue, 27 Oct 2026 11:44:39 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Chuck Lever <cel@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Matthew Wilcox <willy@infradead.org>, linux-nfs@vger.kernel.org,
-	Trond Myklebust <trondmy@kernel.org>,
-	Anna Schumaker <anna@kernel.org>, Jeff Layton <jlayton@kernel.org>,
-	linux-kernel@vger.kernel.org, Logan Gunthorpe <logang@deltatee.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>, linux-pci@vger.kernel.org,
-	linux-rdma@vger.kernel.org, Shivaji Kant <shivajikant@google.com>,
-	Tom Talpey <tom@talpey.com>,
-	Unnati Sachan <unnatisachan@google.com>
-Subject: Re: [RFC PATCH v1 5/8] nfs: tag READ/WRITE RPCs carrying P2PDMA pages
-Message-ID: <auCOp5jphqwPX2BQ@google.com>
-References: <20261006233248.705086-1-praan@google.com>
- <20261006233248.705086-6-praan@google.com>
- <20261012071020.GH27033@unreal>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nwKezIz/
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A53BF1F01828;
+	Tue, 27 Oct 2026 11:47:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793101682;
+	bh=jP5R0hiwF8cPUc5aa7ofvcurmINMhxrJaW/fyXdFY8M=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=nwKezIz/ZPTcw2UOCvuBX2XjLbhwhV7tVYqBPun3BxxdfGxfhZlkqFMHoTxdxR2ln
+	 48yDLkVjRkj0WoHExDVhJtp9TLF7DOZskEWvmRkWDKAtORUekwxNrdYokzuWFXUMho
+	 +mLSCEmIvqRradZTCiqXdsh9scoq2IETQQg8d0QZQv9hXLRFMKPQ36KEocxPLCoLAR
+	 ggj0QEJJY5UZsBeJjEe3qdLTQwmEO/0fUcVSXu8v1V6AaeQG2x9dpMndzZfJhexONp
+	 1bH0EueUQnxjVhi+ooTKT8JuQAO4JPeuZ7c2lNLbB33ZfPNs6x4djOX0kh2NROXplx
+	 fRPWQKVINrTEg==
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Marek Vasut <marek.vasut+renesas@mailbox.org>, 
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
+ Fuad Tabba <fuad.tabba@linux.dev>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Geert Uytterhoeven <geert+renesas@glider.be>, 
+ Magnus Damm <magnus.damm@gmail.com>, 
+ Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>, 
+ linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Will Deacon <will@kernel.org>, 
+ Fuad Tabba <fuad.tabba@linux.dev>
+In-Reply-To: <20260923180749.3906547-1-fuad.tabba@linux.dev>
+References: <20260923180749.3906547-1-fuad.tabba@linux.dev>
+Subject: Re: [PATCH v2] PCI: rcar-gen4: Fix device_node leak in
+ rcar_gen4_pcie_host_msi_addr()
+Message-Id: <179310167143.5889.3369983512237009866.b4-ty@b4>
+Date: Tue, 27 Oct 2026 17:17:51 +0530
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -105,69 +68,33 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261012071020.GH27033@unreal>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=361;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=HqTG5LbYHSglUjHnKu6oj84sGwknU7rjDDCd8F+zNHc=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq4I9sNf9SRHJkQL3cylE0Fx61MgQ+sRWi4M3m1
+ ERQ9PJ/87OJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauCPbAAKCRBVnxHm/pHO
+ 9Zi/B/9zK56Rs5kTHRqao00gtG2CubEr6QPNABOW0xCeeD4SX5ctZAQmGhEYyTvcRnvABSvjF0d
+ LNGVcgGUI6I1Fl1MqjQyJkasJHq4Lhy7jAiPgDLgCZHdpA3GS2uN0EH1AlrLbtl1x5ZEhSBDkrY
+ wpJbWqH2YFAe9yfccPtHjIillBQDyu/KWPmLyHqrikgH1GDIxwmQAZRO/sQJbbBQcN3LCnXgPau
+ G0YbyiJkGZbmfFGcN9KNjVy+XOr7P/BGNOrBaU+ihu03pJXRGYd99FYYLv72AQsIdwJg56kFlFn
+ +JerZJ/E2XRbPr6iy3T59IPk1TShdZ+Ec9W6PblJhFXapiZe
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-On Mon, Oct 12, 2026 at 10:10:20AM +0300, Leon Romanovsky wrote:
-> On Tue, Oct 06, 2026 at 11:32:45PM +0000, Pranjal Shrivastava wrote:
-> > A transport must know when an RPC's payload pages are P2PDMA memory,
-> > so it can move them by DMA or refuse the RPC.
-> > 
-> > Check each page as nfs_generic_pgio() builds the page array, and
-> > record the result in nfs_pgio_args. The READ and WRITE encoders of
-> > every NFS version then set XDRBUF_P2PDMA on the buffer holding the
-> > payload.
-> > 
-> > Additionally, avoid using READ_PLUS when the pages are P2PDMA memory.
-> > 
-> > Signed-off-by: Pranjal Shrivastava <praan@google.com>
-> > ---
-> >  fs/nfs/nfs2xdr.c        | 4 ++++
-> >  fs/nfs/nfs3xdr.c        | 4 ++++
-> >  fs/nfs/nfs4proc.c       | 3 +++
-> >  fs/nfs/nfs4xdr.c        | 4 ++++
-> >  fs/nfs/pagelist.c       | 2 ++
-> >  include/linux/nfs_xdr.h | 1 +
-> >  6 files changed, 18 insertions(+)
-> 
-> <...>
-> 
-> > +++ b/fs/nfs/pagelist.c
-> > @@ -970,6 +970,8 @@ int nfs_generic_pgio(struct nfs_pageio_descriptor *desc,
-> >  				if (pageused > pagecount)
-> >  					goto full;
-> >  				*pages++ = last_page = page;
-> > +				if (is_pci_p2pdma_page(page))
-> > +					hdr->args.p2pdma = true;
-> 
-> Should we allow wider use of is_pci_p2pdma_page()? Does NFS require
-> `struct page`?
->
 
-Hi Leon,
+On Wed, 23 Sep 2026 19:07:49 +0100, Fuad Tabba wrote:
+> PCI: rcar-gen4: Fix device_node leak in rcar_gen4_pcie_host_msi_addr()
 
-Yes. NFS O_DIRECT is page based today, and the Direct I/O series [1]
-just moved it from get_page() references to FOLL_PIN pins through
-iov_iter_extract_pages(), which is what DMA into user pages requires.
+Applied, thanks!
 
-This series lets P2PDMA pages through the existing path, and
-is_pci_p2pdma_page() is how NFS tells which RPCs carry them, the same
-way the block layer does for bios.
+[1/1] PCI: rcar-gen4: Fix device_node leak in rcar_gen4_pcie_host_msi_addr()
+      commit: 34fb13a4a9620658e43be79f818ac5c456402c54
 
-I'm aware of Pavel's dma-buf I/O work [2], which Jens has queued for
-7.4. The hook is a file operation, but the only implementation so far
-is the raw block device on NVMe, where the block driver owns the
-dma-buf mapping. It's also exposed through io_uring registered
-buffers, while this series serves plain O_DIRECT on user buffers.
+Best regards,
+-- 
+மணிவண்ணன் சதாசிவம்
 
-Since NFS isn't block based & its I/O goes via SUNRPC to the transport,
-taking a dma-buf map instead of pages would mean reworking the NFS I/O
-path end to end, which is a large + separate effort that I'm happy
-to look into after this series.
 
-Thanks,
-Praan
-
-[1] https://lore.kernel.org/all/20260814143255.861084-1-praan@google.com/
-[2] https://lore.kernel.org/all/cover.1791975048.git.asml.silence@gmail.com/
