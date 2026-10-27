@@ -1,86 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.172
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793091723;
-	b=4oUKEryDnvUfcaJUGV+KgvCXYvAXpMj7/KEbMeu44Xu0+8PN9llrl6Z1jTQz7y7NOLfX
-	 R0DDhlkuj4C0gffzgadQ5sOBLMtQWlLXs7Hl5N4T7FBer6xAWHInGhvUDqK06pxIx0XFA
-	 q/GzfsAmPZ+XlSuW+dLiEZtZHYXrqilH0NJnNgVhpxYNYrO6ySeJzjbWutztd/t67btp6
-	 uZrzKTrkTGTLzTY3ccYi4vj9/aogse8oDhdObS9odaKLgsGhum3OsIGGS1OcIgfevccaQ
-	 AChZNlttrE78wNP4/lQRKidH+vmv4yHM0lby+9hzCwmvFua88Js/yA9LFdEDbLks7pQ==
+	t=1793094280;
+	b=Jvz9LBgqtYF20TW2p7muGcTMEbX6nQwmC9qKbopdO89DOKdrQjKjjNxiteyKXFbGRqYe
+	 NSueY6c+r62pV8sUrZStJ/puA+hNiYxvPJ4ytJQBzEVr1MzwfRVttvfCZoqlWrGOEyO+m
+	 EZ6R5Ryo1zzDX/t/GYTy3AK6/0+OJuqwd5gDwPJGqJ3Ck31jSt2UlPZ2mvnMgmb+X1Hfk
+	 BYveMlU6Wkk+dbyvehwmukhVmCyA/XSkBelJ6sCA2U1TBKxCO8tg7mE1Zje4eX8/Ecfdm
+	 /yw0ZyHkKa2Uc8yv4BkTHXJHRxTxtw6LDVgqLp9srJLm77HME0nvnQxO22h0gst+U5g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793091723;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=5nq/yW3E6nSzBhQE//dTYvgfzBHRxLsoSrzMo34ZjSs=;
-	b=hSaOs+4NYwLMO+cyqaWyHBDnMZOOHPdZ64HJvCazT+MhIqlro9N6oJDzz1EV7o8yrBHL
-	 LRakrWXeYq2cRrkKkIlI1tmmynsWiGZcDHN1XPTCgZvThCaamD01Bq9LFSlg1AgFXMRsZ
-	 /l6f8ujsCEDVEAoSb8UWMkcMShBFJMGNGJplq7QXzSUPDDZfzZzCfbeu5HgCE7tHmCJds
-	 rBXP4H0UvVdd2KFAgb9+BrBdOnrMjPkcM9SAwd21AvBiKqB8MFm1bsrpOxvAfSf5OCbFW
-	 dBwvxLvgiGFgMhNnQsdy6u1OiTgY9XDVKu6k1wQ0PuBNcolSTTDO+uf4Sq709yCJLvQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793094280;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=6hl/Nai93S8NAs/Tww+fCBXzZpo040uYm7bnamGWTrs=;
+	b=PLzHhUN/UdcDruFh6etRpjbfFHqmQxE6J2I5bcCFdUZbyRfHMPHhgXzKPpk5VxfKJRBs
+	 PtUKB1XMUvxqnblONG/20Y2q8r7HzqTA4h95G8qF2GfkJyYBWnDJJ7S4pNBywsXfXboJu
+	 u3RDoBKG+qizTJjGWMGQ1ZkisXB4d2pPlbJcyEdrWNCnQg7FZsfhe92fVQyE+E/QjoRha
+	 khsFrN7yaGqz0MH0iy5TU8yW1zB/7+4Hy7ym2gaSvs1kYPK9jkeicuDvsbkL7ZqcZg75B
+	 tL6LFLdcyrb5TvZhtWTzGfmc9EQ1E0F/jphVV0XCrxfA33p+3MRTC4pc90vpdCPgMzA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ulj9p7Jn;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=T566VoMV;
+	arc=none smtp.remote-ip=74.125.82.172
+Received: from mail-dy1-f172.google.com (mail-dy1-f172.google.com [74.125.82.172])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DA4D606A324;
-	Tue, 27 Oct 2026 09:02:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC36F606A31A
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 09:44:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DC36F606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ulj9p7Jn
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E4501F01828;
-	Tue, 27 Oct 2026 09:02:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793091723;
-	bh=5nq/yW3E6nSzBhQE//dTYvgfzBHRxLsoSrzMo34ZjSs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Ulj9p7JneLFV1/XhjlgoB/eMNIqEQ4GJO5bi6UfrrD8HhsEGzbsJWw9Fh7Bbk2Zmy
-	 dXTv3coxEQCqyoRT50cWG5/xQfcfb+bKo538FX9mXlQkzg7LNrBHXKUlF7evcHRIO6
-	 xIHd3fw+SGUx7bY9O/A9rtGBRK1urm4D01a3/mQ8Uyvzumxm0hJJShV2f9I5rF/M4r
-	 sHH4Vy0ixTOveeMxJf8ojt1F8pBQYGgoJSXpbxuaFNN8Zg6jEbemlo5+aeWEl6Iyj4
-	 KXqOqZUDrUkhuzR+lhyki8q6UFZaHEsvSvX/e6qq2/E2VBr3h2VRD8uZlsfRHZGFUQ
-	 aEL9J2u5dvy5Q==
-Date: Tue, 27 Oct 2026 11:01:57 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Alex Williamson <alex@shazbot.org>,
-	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@baylibre.com>,
-	Armin Wolf <W_Armin@gmx.de>, David Lechner <dlechner@baylibre.com>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Petr Pavlu <petr.pavlu@suse.com>,
-	Daniel Gomez <da.gomez@kernel.org>,
-	Sami Tolvanen <samitolvanen@google.com>,
-	Aaron Tomlin <atomlin@atomlin.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Bradley Morgan <brads@mainlining.org>,
-	Aleksandr Nogikh <nogikh@google.com>, linux-modules@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-usb@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-trace-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
-	Richard Weinberger <richard@nod.at>,
-	Thierry Reding <thierry.reding@kernel.org>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 0/3] driver core: add TAINT_FORCED_BIND for when
- userspace manually messes with devices and drivers
-Message-ID: <20261027090157.GB28851@unreal>
-References: <DLIL9H50MALI.3JROXYEEUM3KU@kernel.org>
- <arIvG0nx4LXG9nlW@monoceros>
- <defb3953-7516-437e-b70b-d57de55b91bf@baylibre.com>
- <9bd3a34b-5e98-4038-80d6-da2c3b1948dd@gmx.de>
- <2026092321-province-yearly-44aa@gregkh>
- <arOfHEsGGglNse7T@monoceros>
- <2026092348-victory-erased-0e5a@gregkh>
- <20261023181326.0dc2f7ed@shazbot.org>
- <20261026122243.GA28851@unreal>
- <2026102654-enlighten-perkiness-193c@gregkh>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=T566VoMV
+Received: by mail-dy1-f172.google.com with SMTP id 5a478bee46e88-36a1947498bso310826eec.1
+        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 02:44:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1793094279; x=1793699079; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=6hl/Nai93S8NAs/Tww+fCBXzZpo040uYm7bnamGWTrs=;
+        b=T566VoMVoI8gPHc3pBnX86446rdqho7Ga58ELgz7gtGP86o8Gqxt9sSR8VUqcybwST
+         +7Y2CMSLBZ1YaQzOuVYNJ2ODg0iTOhhk2/U/j9lVblNgM6du7jmTpKemVDs6qrXzRP0q
+         eMbHC+bX7ZmhqOZGhdPFx9qJiMWZaQcigFsttzAmlRlvRP74wIDlk5yeEdNAd6ILDbgV
+         8x+hmTHkWIbuMBgFEsFHBUyZgQ7OjjxcUrt27px/+rReaxgQQnKjD6nv9h6W8g92ziYF
+         Qrq4Tzre1y2Wh4IObTkQJnRbZx2rmUOR+NiIt6FscI55phaHbi9SblZIfB+GPxydaFeU
+         k0kw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793094279; x=1793699079;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=6hl/Nai93S8NAs/Tww+fCBXzZpo040uYm7bnamGWTrs=;
+        b=zGEE8AwJge6sxcd/BGdtrx4HobcI1OxQ5VWdw+Qpx8YJS7cJIvKygjoMsB5oPu1FH/
+         5Rxe4TohGekVC45sjiyGQGETWFEqW9EJA7hVRvVPBku2372yifElEMOuM+tOAY+YTvkB
+         1b1Z6zZiJP3RhPsulQzFJh7VGbbNnfyHZRs4QSu3c17tBNr3RkekBcbdzL3DMvORBpYE
+         pV3Z7vs0VKgfNi6cS2xotbWBylaY8zwudS3/VmelocCHRmxbKxz8+UwFZy0sS8xQlAZ+
+         Xv8iBYZaTPlOAle1fRBBJFPF8rwZAd9GgvryesxaAsgWT+P4hntL+ARWgTy+O5o6oiWc
+         dovA==
+X-Forwarded-Encrypted: i=1; AKwUvBzIOZgRT3T6yUlbrVlRb668u9K9zvM8dbMSnB1wDhAoPHWXz99Axn6DfZ8j7yY2TWMLPY/0UsQBqKM=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKVQe1Zb2oYAXXKmAH48omeeNyKCQhiym5VKokMppO5NeX/1DIg
+	S6Sf1FacPQSbzxCVybKsTEFH1mllW9DGRj6rP2uOjImmS+gejFbCEKXK
+X-Gm-Gg: AYBFou1HRcCVzVlKmt3WYoHu8hWvrD2HnS84tmC3oKE7GhvK1auefJkviGtiWHKx4vm
+	mJ9p4Mp27KopXSJjt7OS3rSV8QCxW1rKdsAth+onSCLEzZUHRzfL/+5zSsjJ5p8Q5SAB+CdmmPJ
+	wG7ecH9+oyBm11aEm4tfeI0rvtEf4vNRmwN8gLwgHA4PMYcHZqomcWw6XTxfjg8N94ekcPr5jTm
+	0JvoouToh7CLec/qF9lLP9/6kicaLLN+oTMXKyvZ02EYJpTUWrpCUx+Vbu6oFL4/Wiz4W+p7M/C
+	PmVEP3Xrkq6TQfTZ4fqho/00FXSpPjEeP/p6Ftd0Rv2hWJhcff2Vyai1LwEyirjViLoIM7fv9j1
+	Q3RBt9fz4orVeEaPkWcFvmTTVzHReM7KhvL3QGVlAlc9TW2S/fX+G7SSJNDaHDgpXPP2Tm2ee0R
+	EPLSd3SMNS5BhtCXeQP11BDrW+5Ef7DqzRkzzfcnKAoVG6ysZPcjc4p2oDAI/WmEKXy49xajHAb
+	SGeIOLSwnkpmWMrgP8nqEv/b5cz1Fy7foQrr/x8KOQ8gORj/htJr7ZbW/X/oxM2XZa2EAzyp0nT
+	35jP0QzF9w==
+X-Received: by 2002:a05:7301:7d01:b0:366:c497:610c with SMTP id 5a478bee46e88-369e8610133mr12065401eec.33.1793094278730;
+        Tue, 27 Oct 2026 02:44:38 -0700 (PDT)
+Received: from Zoro.lan ([2409:4090:2022:b00e:72eb:d31b:8aa6:1b54])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-369e8ec50bcsm60252926eec.23.2026.10.27.02.44.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Oct 2026 02:44:38 -0700 (PDT)
+From: Vishal Satle <vishalsatleit24@gmail.com>
+To: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Vishal Satle <vishalsatleit24@gmail.com>
+Subject: [PATCH] PCI: mobiveil: Fix device_node leak in ls_g4_pcie_probe()
+Date: Tue, 27 Oct 2026 15:14:27 +0530
+Message-ID: <20261027094427.143733-1-vishalsatleit24@gmail.com>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -90,121 +102,47 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <2026102654-enlighten-perkiness-193c@gregkh>
 
-On Mon, Oct 26, 2026 at 09:27:25PM +0100, Greg Kroah-Hartman wrote:
-> On Mon, Oct 26, 2026 at 02:22:43PM +0200, Leon Romanovsky wrote:
-> > On Fri, Oct 23, 2026 at 06:13:26PM -0600, Alex Williamson wrote:
-> > > On Wed, 23 Sep 2026 12:29:56 +0200
-> > > Greg Kroah-Hartman <gregkh@linuxfoundation.org> wrote:
-> > > 
-> > > > On Wed, Sep 23, 2026 at 11:54:50AM +0200, Uwe Kleine-König wrote:
-> > > > > > No, drivers should NOT have to do that in their .probe() function,
-> > > > > > that's what we moved away from decades ago!  The match function should
-> > > > > > handle all of that for you, otherwise it's contant duplication
-> > > > > > everywhere that is unneeded.  
-> > > > > 
-> > > > > Well then you have to accept that root can provoke a null pointer
-> > > > > exception (e.g. by forcing the pwm-tegra driver on a device) because at
-> > > > > least with today's platform bus match function such a match is ok.  
-> > > > 
-> > > > Agreed, yes, root can cause a crash and can do tons of horrible things
-> > > > much worse than this, that's not the issue.
-> > > > 
-> > > > That's why this taint is there, to make it obvious that this is not a
-> > > > "real" bug at all.
-> > > > 
-> > > > > > Please, learn from our history, don't make the same mistakes.
-> > > > > > 
-> > > > > > Now I might be convinced that driver_override is the way to go here, but
-> > > > > > it still feels really odd as again, bind/unbind was created as a driver
-> > > > > > debugging option only, it should NOT be a normal operation that any user
-> > > > > > should rely on.  The driver should "just work" properly instead, without
-> > > > > > requiring manual bind work, as that's not a good model at all.  
-> > > > > 
-> > > > > I agree in principle, but (in my case wifi) drivers are buggy sometimes
-> > > > > (due to missing documentation and/or engineering effort) and being able
-> > > > > to rebind the driver instead of rebooting to get a working device again
-> > > > > is very useful.  
-> > > > 
-> > > > Fine, use it!  Just don't expect that to be "normal".
-> > > > 
-> > > > > So yes, theoretically bind/unbind isn't needed, but theory and practise
-> > > > > differ in practise.  
-> > > > 
-> > > > Agreed, but again, don't rely on this as a "real" solution fo ranything.
-> > > 
-> > > Sorry, late to the party, but this isn't a few user scripts that rely
-> > > on this behavior.  Effectively every use case of vfio relies on this
-> > > behavior.  We rely on unbinding the default driver from the device
-> > > before using driver_override and drivers_probe.  That means every
-> > > hypervisor with device assignment and every userspace driver use case
-> > > now experiences a tainted kernel. That seems like a significant
-> > > regression.
-> > 
-> > Sorry, I was on vacation and missed this change earlier. This change will
-> > affect SR-IOV deployments around the world, which *rely* on being able to
-> > bind a driver manually *after* virtual functions are created but before
-> > they are used.
-> 
-> Why can't a real driver bind to those virtual functions?  Like is
-> happening in the rust apis?
+ls_g4_pcie_probe() calls of_parse_phandle() to verify the presence of
+the "msi-parent" device node. of_parse_phandle() increments the reference
+count of the returned device_node.
 
-The actual driver is also bound, but at a later stage. I'm not sure what you
-mean by “Rust APIs.”
+Because the return value was evaluated directly as a boolean condition,
+the acquired reference was never released, leaking the MSI controller node
+reference count on probe.
 
-> 
-> > This is needed for two reasons: to save hardware and software resources
-> > when creating a large number of VFs, and to allow the PCI config space to
-> > be configured *before* the driver starts using it.
-> 
-> How is hardware and software resources an issue here at all?  And you
-> can write to PCI config space from userspace today, no driver needed
-> anywhere at all, that's always been allowed.
+Assign the resolved node to a local variable and call of_node_put() once
+the existence check is complete.
 
-According to the PCI spec—or, at least, the common interpretation of it—
-newly created VFs should have equivalent hardware-resource partitions.
-For most hardware resources, this is not an issue. One resource, however,
-is critical to partition correctly: the number of MSI-X vectors per VF.
-These vectors are backed by physical resources and directly affect
-performance and utilization.
+Cc: stable@vger.kernel.org
 
-In a correctly configured system, the number of MSI-X vectors should
-match the number of CPUs assigned to the VM. More vectors can leave
-hardware underutilized; fewer can degrade performance.
+Signed-off-by: Vishal Satle <vishalsatleit24@gmail.com>
+---
+ drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-The workflow for cloud operators is therefore:
+diff --git a/drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c b/drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c
+index 4919b27ea..5b1862fe0 100644
+--- a/drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c
++++ b/drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c
+@@ -199,12 +199,15 @@ static int __init ls_g4_pcie_probe(struct platform_device *pdev)
+ 	struct mobiveil_pcie *mv_pci;
+ 	struct ls_g4_pcie *pcie;
+ 	struct device_node *np = dev->of_node;
++	struct device_node *msi_node;
+ 	int ret;
+ 
+-	if (!of_parse_phandle(np, "msi-parent", 0)) {
++	msi_node = of_parse_phandle(np, "msi-parent", 0);
++	if (!msi_node) {
+ 		dev_err(dev, "Failed to find msi-parent\n");
+ 		return -EINVAL;
+ 	}
++	of_node_put(msi_node);
+ 
+ 	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
+ 	if (!bridge)
+-- 
+2.53.0
 
-1. Create a large number of VFs, but do not assign them yet.
-2. Lease a VM to a user and determine how many CPUs they requested.
-3. Repartition the internal MSI-X table allocation.
-4. Assign the VF to the user.
-5. Check how many MSI-X vectors remain available, then return to step 2.
-
-The MSI-X table size is read near the beginning of driver initialization
-and cannot be changed afterward.
-
-So, no—you cannot change those PCI values without breaking the driver
-and OS that are already running.
-
-> 
-> > There is no in-kernel alternative.
-> 
-> Then just don't have a in-kernel driver for the device and all is good?
-
-In addition to Jason's comments, the PF and VF share the same driver because
-they are nearly identical, apart from a few differences in PCI
-configuration space.
-
-Please revert the series ASAP, you are clearly breaking existing deployments.
-
-Thanks
-
-> 
-> thanks,
-> 
-> greg k-h
-> 
