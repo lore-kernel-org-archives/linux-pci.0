@@ -1,54 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793131700;
-	b=Ru2fcgQUnOyMgnQBi9bDX6XF9CCaJvUJzWKcYBJvKXneFADFK7+sWSH9Vg3uM9AcNxMR
-	 L/T0HK3IpPM/hon/3pDAKDz2nm27NbxsYLADkIBjQjjq5Pc7IF5wpn5klruRRiOR3rMrG
-	 R0L5Rctd2azbX5Jh+I2aMCFReaUBVVUDlJ0iJ4ZkiZqoPdxJeyc6J5L5o+Z/Skzl9eQLW
-	 DwDLqIE0xIqI6uoakIH3nXi/sny6IbSdiWx5PDCmB4JQAOg+aHQ53UKZ4la3ro1vOUHD2
-	 B07GHDRr/CG4FD5VeTtHvxwApNctGCTRq92vuF++PrtwJrQv38xkD2cEjwnPK6u/IRA==
+	t=1793132020;
+	b=q971YJ5IdypWydCJzXmn7YmoEjxPmdw0Fufv2xTIgYBvrPvmgA2fb4PXWkgZWISm6dn/
+	 gmwd8t2eBCcp+vx8Ly3i0uZgwdvGlQ30UuR1CYIVe+Rcl4EG2RYRHrprEm+HZw7WfW6Xr
+	 IbL1htO8nk5FAPP0YoJpFEGUJgVrJ8cJREmNwVQssV/KkdurWj8qLNG0xE337FaY66aJk
+	 /qMLO6onZGCFQwxXVlbGhMDlHgc/HLcZL4fa0X0CI1Y8C30elwIwZAL8uX/NriYaM1d6T
+	 9mlUEuXoa8xNXEfnCnotBiNYeMnRsz2AF3ZNw5mJSh6VmoCQLz6Snepf06d7YzQ2P5Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793131700;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793132020;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=LfuuzRta0ecfFktp7KiAJuNjtLbag20YiQ4n2maa6Rk=;
-	b=kf9GOLUVaNZybTYsOklm7al0ThYBpy66Kjg3rinXV63BAb54QN9yQqIfNZAScUzNcXGT
-	 hdkrdKVY9SSGEKSZUgKZQy0uSm6s8KKvGjQcltgF+mQricq6xOWOB5DTzD9lI1zeRZ9tu
-	 dbKyzYhKYPG67d42TH1HEqFtBDeaca73FpN2dg58w67Qq80r5heZMglUPZVD3tMEzeMRo
-	 QaveU5+3PG29/Pcn4crs/mlv/JImuW15CiuSKjIa7yUw8FDDJ64763lK16Ach2HW7r5Ln
-	 ODIhD6jlrQsq3DRb4C80Xr5xrljmQrJbCoT9WSjs2CjJyc3dT2uqKeob1cQxsOOxPoA==
+	bh=ay8M5kGDBwMQmJOM2Q/RBf1PHxtwlcHfBqyhnd/ZXeA=;
+	b=UVvQscrc413SxTPHRQt/i6QJlvSBbSu0R3YoAQlpzgX/eEFvh7WwBZPHHsO8Eo70ucy5
+	 tN+qUKeN+A2QyRKnXN290sInX3PEoqepsnitTI0oTAP9FwW77S2JIiOQq4+4y4qNBCgrk
+	 YU0Wi1xMjw90kMFZfJWdHxNenfdBcSoyvu8qr+1XhRzh6VYIINeNREGXvxRZkrESi9H4D
+	 QSLfkF1ZvMhmVZkyCCoW9krKhkLyiL2C6F61Aumi7a/c4S/Dlx6/kKo2ylRLfeBZTYvgE
+	 9Pv4ey1hzJJsuT3x2liJ+QtT3vOg0nZDq9X4RA9hASDdOnOevtnE7qRTKpjc1aTuGJg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eT5NguxM;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="ZKL/rv58";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B183606A31A
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 20:08:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85C26606A31A;
+	Tue, 27 Oct 2026 20:13:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eT5NguxM
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A98481F01825;
-	Tue, 27 Oct 2026 20:08:19 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZKL/rv58
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE0B91F01825;
+	Tue, 27 Oct 2026 20:13:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793131699;
-	bh=LfuuzRta0ecfFktp7KiAJuNjtLbag20YiQ4n2maa6Rk=;
+	s=k20260515; t=1793132020;
+	bh=ay8M5kGDBwMQmJOM2Q/RBf1PHxtwlcHfBqyhnd/ZXeA=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=eT5NguxMt4xGTBLkyMjmlPqX+aGtE6akYq0rvjFcszXG7ABKcPZ0KdLvPfQuJurBh
-	 dgMVTnwi/TRCUaNFZXxuy3y0FvyApz4gYI5/59C0aXaAewhzYW6MI4TnnKjYLR7IT5
-	 sVMIXMsgGUwoqdtaqSyYTG80m/Il5+Nh6whfdbMfRPbgdeBLUjJuaIunEp8eFI4R1C
-	 ZQy3QeR3a1UECnkJSFFlYW01ouPWf52nKCAOCVa5GQERJYrs6yIZHLe1TO6D5Y5yoP
-	 QiqdoUZ6GJQHg0+h5cW0So5oqR/6+F1gpjCSoeOClxIrJoglcIX5ZG/MfHC4HoB4jh
-	 h2IJlaVeaPTeQ==
-Date: Tue, 27 Oct 2026 15:08:18 -0500
+	b=ZKL/rv58Nf6/50hxQ7L+yyVfjhxGqEsXEweBpUWAEzgvgbBY8OPFpupGn9uM/jCgO
+	 nEYL6oojX95nc+Is62oKbJ324c6g02VdjhVzV3y3+ssOpq3ijPI9qLcESxThXqwrBf
+	 E7+xahPdSjE0SstbXykRb95nL+OtSypPpWqTkQBcJPU+L+B80tTmV0nQF32YqtnC84
+	 PBxcggYJQqLY6LVdTJYFEGH2eK18WG2cW09WrRCkIZsgo3snf5exmDkbIOo5wNuMVk
+	 OXRJSULybEmJfNlEDW6aph/Gg6lXZHmXJWBnexuYsJGRj2x8SvPkA0qTjoLV6aKn80
+	 LkFSMfKyd9Pvw==
+Date: Tue, 27 Oct 2026 15:13:38 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukasz Laguna <lukasz.laguna@intel.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	michal.winiarski@intel.com, djbw@kernel.org, brett.creeley@amd.com,
-	anthony.l.nguyen@intel.com, przemyslaw.kitszel@intel.com,
-	pabeni@redhat.com, andrew+netdev@lunn.ch, davem@davemloft.net,
-	edumazet@google.com, kuba@kernel.org
-Subject: Re: [PATCH v2 09/13] PCI/TSM: Use generic VF iterators
-Message-ID: <20261027200818.GA482873@bhelgaas>
+To: Thorsten Blum <blum@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>, Jesse Barnes <jbarnes@hobbes.lan>,
+	Lukas Wunner <lukas@wunner.de>, Ingo Molnar <mingo@elte.hu>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RESEND v2] x86/early-quirks: Scan all functions in
+ early_pci_scan_bus()
+Message-ID: <20261027201338.GA485510@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,80 +62,53 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261027160446.858300-10-lukasz.laguna@intel.com>
+In-Reply-To: <auB_h07OAckfI7gV@kernel.org>
 
-On Tue, Oct 27, 2026 at 05:04:42PM +0100, Lukasz Laguna wrote:
-> pci_tsm_walk_fns() and pci_tsm_walk_fns_reverse() implement their own VF
-> iteration logic. Replace it with for_each_pci_vf() and
-> for_each_pci_vf_reverse().
-
-This and the rest of the series seems like nice, relatively simple
-cleanup that could be done earlier, e.g., after [02/13] "PCI/IOV:
-Introduce VF iterators".  Those look fairly straightforward and maybe
-could be merged earlier to get them out of the way.
-
-> Signed-off-by: Lukasz Laguna <lukasz.laguna@intel.com>
-> ---
->  drivers/pci/tsm.c | 25 ++++---------------------
->  1 file changed, 4 insertions(+), 21 deletions(-)
+On Tue, Oct 27, 2026 at 11:40:07AM +0100, Thorsten Blum wrote:
+> Hi Bjorn,
 > 
-> diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
-> index 5fdcd7f2e820..01fa6149e481 100644
-> --- a/drivers/pci/tsm.c
-> +++ b/drivers/pci/tsm.c
-> @@ -84,6 +84,7 @@ static void pci_tsm_walk_fns(struct pci_dev *pdev,
->  	for (int i = 0; i < 8; i++) {
->  		struct pci_dev *pf __free(pci_dev_put) = pci_get_slot(
->  			pdev->bus, PCI_DEVFN(PCI_SLOT(pdev->devfn), i));
-> +		struct pci_dev *vf;
->  
->  		if (!pf)
->  			continue;
-> @@ -93,18 +94,8 @@ static void pci_tsm_walk_fns(struct pci_dev *pdev,
->  			cb(pf, data);
->  
->  		/* walk virtual functions of each pf */
-> -		for (int j = 0; j < pci_num_vf(pf); j++) {
-> -			struct pci_dev *vf __free(pci_dev_put) =
-> -				pci_get_domain_bus_and_slot(
-> -					pci_domain_nr(pf->bus),
-> -					pci_iov_virtfn_bus(pf, j),
-> -					pci_iov_virtfn_devfn(pf, j));
-> -
-> -			if (!vf)
-> -				continue;
-> -
-> +		for_each_pci_vf(pf, vf)
->  			cb(vf, data);
-> -		}
->  	}
->  
->  	/*
-> @@ -128,22 +119,14 @@ static void pci_tsm_walk_fns_reverse(struct pci_dev *pdev,
->  	for (int i = 7; i >= 0; i--) {
->  		struct pci_dev *pf __free(pci_dev_put) = pci_get_slot(
->  			pdev->bus, PCI_DEVFN(PCI_SLOT(pdev->devfn), i));
-> +		struct pci_dev *vf;
->  
->  		if (!pf)
->  			continue;
->  
->  		/* reverse walk virtual functions */
-> -		for (int j = pci_num_vf(pf) - 1; j >= 0; j--) {
-> -			struct pci_dev *vf __free(pci_dev_put) =
-> -				pci_get_domain_bus_and_slot(
-> -					pci_domain_nr(pf->bus),
-> -					pci_iov_virtfn_bus(pf, j),
-> -					pci_iov_virtfn_devfn(pf, j));
-> -
-> -			if (!vf)
-> -				continue;
-> +		for_each_pci_vf_reverse(pf, vf)
->  			cb(vf, data);
-> -		}
->  
->  		/* on exit, caller will run @cb on function 0 */
->  		if (i > 0)
-> -- 
-> 2.43.0
+> On Mon, Oct 26, 2026 at 01:37:18PM -0500, Bjorn Helgaas wrote:
+> > On Wed, Sep 16, 2026 at 12:02:07PM +0200, Thorsten Blum wrote:
+> > > early_pci_scan_bus() stops scanning a PCI slot when check_dev_quirk()
+> > > returns nonzero, which avoids probing functions 1-7 on single-function
+> > > devices, but also stops scanning when a function is absent on a
+> > > multifunction device.
+> > > 
+> > > This can skip early quirks on multifunction devices with holes in their
+> > > function numbering.
+> > > 
+> > > On iMac13,1 and iMac13,2, the BCM4331 AirPort card is behind root port
+> > > 00:1c.3, also documented by the model list in commit abb2bafd295f
+> > > ("x86/quirks: Add early quirk to reset Apple AirPort card").
+> > > 
+> > > Public lspci output for 2012 iMacs [1][2] shows that 00:1c.0, 00:1c.2,
+> > > 00:1c.3 and 00:1c.4 are present, but 00:1c.1 is missing. The old code
+> > > stops at 00:1c.1 and never reaches 00:1c.3, so the AirPort reset quirk
+> > > is silently skipped on these machines.
+> > > 
+> > > Check function 0 first, and if it indicates a multifunction device, scan
+> > > functions 1-7 independently so that absent functions do not cause later
+> > > ones to be skipped.
+> > > 
+> > > Fixes: 15650a2f644a ("x86/PCI: fixup early quirk probing")
+> > > Cc: stable@vger.kernel.org
+> > > Signed-off-by: Thorsten Blum <blum@kernel.org>
+> > > Link: https://forum.libreelec.tv/thread/26799-wifi-not-detected-on-2012-imac-in-11-0/ [1]
+> > > Link: https://zoringroup.com/forum/5/7170/ [2]
+> > > Reviewed-by: Lukas Wunner <lukas@wunner.de>
+> > 
+> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> > 
+> > Let me know if you'd prefer this to be merged via the PCI tree.
 > 
+> Thanks for the Ack.
+> 
+> I'd appreciate it if you could take this through the PCI tree.
+
+I don't mind doing that but would like to have an ack from the x86
+folks.
+
+I wish we didn't have this early-quirk thing at all because (a) it's
+x86-only, and (b) it only works on domain 0, but obviously those are
+known issues and we don't have a better way to solve them so I'm not
+here to fight that battle.
