@@ -1,102 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.82.170
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793107210;
-	b=axFSpREnMQR7jtxKZGqQMv+6R8t60NdapUV1lZHnIYJJvDIZJnJZ5YVimBGIGNFQFIeY
-	 bONbTA7DpgS/VlS2Kql6V/G9bBYMHdde16ChL5qYcZLJz5HcqeQn0MudMamsKUdTKl3kx
-	 MJHghlLaaLqsvMbbZfdITMc4ovrW0OZyLcSluOoj5xDQC6oas1pBSS+SxRyLvYGWRPcwa
-	 +ZMvNgVYhEibk8WGy6NQG04HzV1qq+Xc0or49nXn4MYILWHfvRqwvCdgSJihk7fYMxM5H
-	 NQYXfwJUoJgyKXfXOJpkAm7mpS0luIeXCZgw74DLHY54E+mKeRkjsIwGQENQUm2J3OQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793107210;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=b4XlHG69rykZdY7UFDMMd4dGaLAt8RQaxs8vJ62P5ng=;
-	b=yrbSpO00TZwaHNhy1sTLQIJadtzFdkd07DvvhbpnCbzsAklem1u3N8rnx/029Q8hMzgO
-	 vLjvKqmj4wznSf6Eaj5J5U2I4oAID5BH0b18nYs4v/JQ95t+VrPnyBh236Eznfo4l2ent
-	 13BBazjnsNPjraF1jGA8PV+/x8uY4+BnzXTnnIJHhr+5V8vdNBDx7tvpGkItdNnIzqFaW
-	 ceZRLG6xVNazs66lY7rnqvq166575qr1sLjDV3ERQIrDiVDTeLHrM/htgyZ89Z6rad2Qc
-	 Rq/3R0QCx/rD5gEMzEBOAE4rdnt2rORSRG65KBwGlKO4F93wd8cpPkOeSwVSYr//Khg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=KwmXxI7Q;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.82.170
-Received: from mail-dy1-f170.google.com (mail-dy1-f170.google.com [74.125.82.170])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.13
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793107899;
+	b=bp6ppvQPzkIU7FCmTU2YtGDLcSwqGhcwuJZkJmSY5N/Jib20G03M5QGJF2j/+RDghlre
+	 GEMgtGuO01YSxWorLuMg8PeL0swNPIV161WOdM9GWTSCM+NSZy1J7IsFa1pRiNXoCxiR6
+	 W379GaAbHCBdP7ciAQFum6AlCQher3tPg+QUtmQlDZ0B1k4C0i3gg9vZwQyU8x8O0bb89
+	 J2NnK1VdTz3oshEtxILcJojlDzXZYQiFJr/+wCeBKXAwGXN4zWfnxEvdMOji/chMlgjH8
+	 dCKfB+Mr4zWEMvVZNGgT07tUOcYrGbM+gVyU57Z4qN9kj3KJkAJrCQj6X2ZqD/rGTeg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793107899;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:Date:To:cc:
+	 Subject:In-Reply-To:Message-ID:References:MIME-Version:Content-Type;
+	bh=21lkp+jZKw7xeBP7grXhzOYdHsqOzFcmQ94QuOezdv8=;
+	b=dTSPqazoCEVv4TKIeNBgPruvXETKaKE04My7CNmTJysG1NgxaEqW6uhnZntM6hE0G9ng
+	 t8vBQ854raF31/NCPA6/BQNW7bJF9LQea0mYwIXTA0xwZ5vdlrX4BdlhWfYejoZEV6UJU
+	 f0QZz1azFGOeN7Zl0fFvk8essUGc+pzHgj+v2WHdgLGe5/ujnVMwnktJBoD2TH6D5xJSd
+	 lmX1p6GgDaC3RnYHMgYJb05MYg8q5YXJjw8Q6vj0B1kjPhKYq+IKXzaYOV6ijuaZ9Y+ND
+	 sj1HsFaUEGhUHebFEmS3zg8xQzC7kO9D6xBweF31Xi5VjFOeUvzPum/oVQoBZMnHA1w==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=BLcDig1U;
+	arc=none smtp.remote-ip=198.175.65.13
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A37A606A31A
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 13:20:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5A37A606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4619C606A31B
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 13:31:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4619C606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=KwmXxI7Q
-Received: by mail-dy1-f170.google.com with SMTP id 5a478bee46e88-33bb5afa736so652117eec.1
-        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 06:20:10 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1793107209; cv=none;
-        d=google.com; s=arc-20260327;
-        b=lnhFaSB4XloBMUvo5h2kKCnl4sab6JiDzkflToZnogcBJ+10PpSjQG0olLh9j1wMuG
-         0HwMSHGTBqwaM9KtrT4jJY9Ko1GYK9JN+GanaebUqQbuXkvIw1wrnaYZEQuOI8WnTQA8
-         OABvdRbwxSr7swFE1pCvhfQOcjD4XIoRldOsIiVISsPLc9HlcrtzMEKEM1OLkKDSUFxM
-         wMqqr6wRIiPtXOY+xXmtxbzpgo0ApKxkEcyp3hOiH6qY+0g3fIS/HmIafixF0OyttNnY
-         N66UoK81Z1ZR/Cwb9ANIe029ofdIA0gADIaJye9J2mhipJSsi2eSBMLzp3al85uft9cj
-         bOLw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=b4XlHG69rykZdY7UFDMMd4dGaLAt8RQaxs8vJ62P5ng=;
-        fh=azSiUjJf/NyZngg4c3krtpRHOOpW21kuL6Zn+6zL3ZM=;
-        b=NeoKdtfcAntxohh8wj9sW6khfDH60Ff2kR90FOfolvkr3s+5XeMZ883YZlyGoB9ZxT
-         6Yi+mzYewxm/HpJaP37GWCjjwlsQ5CoNU2ZeW+2l64e3xjWTZPDsJlislmI29ShWDPIo
-         zK2jWXoHi8q7Eu7KeW8PXNmyKY0ZDLLG+eM8sDqeQv9H5UIvBSQdQT1k0e6cvn7wYENd
-         F5zUNwGZA5X4a6KAx3RBwX3aZbLTW17coflopdZKHuSDWV7u7EiRusLEVQCkBHJtkleo
-         W4d117v1Degopfeq68cN/4iRGn0GMeiCRLHZ/nZirvtbhU6g9NLtbHwxclO6CVVbq3OR
-         Ox2A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1793107209; x=1793712009; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=b4XlHG69rykZdY7UFDMMd4dGaLAt8RQaxs8vJ62P5ng=;
-        b=KwmXxI7QR3rV0LwEuF7BShBsVedgcPi8hai8PBobx3gkqKirVpQcBTCe4X9ZHRjS8t
-         M14IQzNGZsu4ZztRoW39NVUxZXvcM5bs7xFhcfttkxagYdJMJG2NmsNxEqs/yqY7YQc/
-         ImZwrvRUFoNCML37bPj7ZRCT2eT6g/M0tRhDr3GbRwirXSjVr3Kr9Ia5BU98BgeZ2SkG
-         epPhWGp0UIHP0ktg328MhtG183M5XggsEaNwijx6cOirBfhy9UAS2wyTCzeBzE5pCmsR
-         RPjhQWPw/SH1q+rzEVMGeKdQfE5nMr/gDetewjQmFhLg1zBP+icxHKGYp81oc3aKNDiH
-         YnLw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793107209; x=1793712009;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=b4XlHG69rykZdY7UFDMMd4dGaLAt8RQaxs8vJ62P5ng=;
-        b=shOKzopHPIhGa4TfjwTEByvjakpcCqTq/9Lmk7eB3mZAz/bCbz+9oe7DDEvTZwFo9Z
-         t5YxHF+8tKdg2y/OBSjJUoNdbvI1DaWlUNzXlBPkMT7kT+QpPkIJHMRkGQcHFy42lbmM
-         gN8jzf36cc4Fqed2p6uqicWMys+/V9qP5pgfZqx8BTIU4clDJxl0Cs2rg5dFbtw/naCB
-         Bx9rlEEl+QQjzJ/XCGwZw3kjAQ7Qc5tgmSPpeAL6l48LvoLyDVj3steTFwBbRt52YQr0
-         ORwzlg5VmVVQ/ecA6DIVsG7L15k2OfrKj5hi65dQwSwYaWpylU1lbyQxbT70SMYfoJnk
-         XS7g==
-X-Forwarded-Encrypted: i=1; AKwUvBx3iP/7W/AGjSoocf1vJYg6LpTXO7CTTl8t8fU7YGsNpKldZArWUNQLYGjy9FvCYMhn5X0GnOKLBXI=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLCEgOqoqGiuRT29/WX1wAoWg9DaigpZr06uAGfInLaRnMlO8Zp
-	7xWIfs2gMB6/BE+mrnwaWeJx+4k095Fu+x+8sgAME0TqkUdA60QYwPzjfe1yeOkczqMX1Vusq+t
-	yILKhn8qQQKtMkDs6zj7JoVkEEuPt50w=
-X-Gm-Gg: AYBFou1qkZPkUz0++oFTXB296+/U1tAgBrABFR5lDsq8KM7ppC48IhWQEkC6HWfb6Z5
-	q7TdZ7i4Bm5/5wpIs6ZxWh4og2AsOrPcjx/f1BrqXa5cKmRKrkvfB4m+SA+nC/Svo1z6Bk1UmKe
-	1TmBo+WVKh+5Pf1rHEDsV8PYErwE1krUmvxNw/WGa9H+BNCCGg+8ARpk0XpwgIe+Fc1Ce7zPKgu
-	QrXBXv61W/pUDeR3b84yLGcmZ/vVcLf+f2lro9izmgH44pwLEpEXvMWg4hEqFpn83DHjsT8GjPi
-	UDCymwntF8gt5sH5ITGlhpupUaaGR9CxeNOvzkbzvCwS9a6HhHWJjjHo53XiI2Moe1T9cs4EhUm
-	iAr2Ees1Jx/fliNoN4mGGJBfdxVqlUZ6CZfD8V4lwww7KJ/5QCH/HjYJXok0R/uaBlA3UQQmNSg
-	CfcJCmxNE0o4qzQlyv+9l7Ga8NUW/pTp7CHmGGY3YAXa2oxnEWE1NK42P6r/T6e9JzDbkORHV84
-	7CqUuYs5pL8M4Cm6tiJKxyminhF3hWW3b4m
-X-Received: by 2002:a05:693c:8817:10b0:36a:143d:98db with SMTP id
- 5a478bee46e88-36a143d9df6mr3896465eec.1.1793107209313; Tue, 27 Oct 2026
- 06:20:09 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=BLcDig1U
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793107899; x=1824643899;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=YJJ7CQJRgoMn1xeWLRPQsvJHf+yAvrafWBYG1e7HcJM=;
+  b=BLcDig1U+TEkupYM5/FO7xzspP4/TItNQNYRzt8QGY0Tj7GPIg2L0Duh
+   V8uXvQjDwDk8cs74LHDJKH4IK0yobWmeHXZi7+AE0+KzcE1c0JZTx6VgE
+   tfHu5DIaAkrgkfCvLxtSaPocTgM2SyvK6e7v+JtlZOOh93WRvnrgDx1TV
+   m+Xj8xDzTM08/J1yfWX+PR1fCZGGotd7w8E0a/xxuq3342aFpg6/ATLhH
+   lG4QJrN+69bJpQHBwK4z5tVWd2qS3+QYZznEFGxNhgCJKu8gvrcqE12kl
+   ZkssSYA7IY1b0OucNu1I31xBRaeDTEfSu+AdXwkr6tY65EWhXeQLGU9cu
+   A==;
+X-CSE-ConnectionGUID: ZnwPDLxUSEy0uzWAt2cvCA==
+X-CSE-MsgGUID: xBYeBEdzQQGBneBwIlO8Yg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11948"; a="1682131"
+X-IronPort-AV: E=Sophos;i="6.27,181,1787036400"; 
+   d="scan'208";a="1682131"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 06:31:38 -0700
+X-CSE-ConnectionGUID: +vX9jtRMRgOvU5msbQOaLA==
+X-CSE-MsgGUID: Oxp2e5YwTQmDqgDRIjMSpA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,181,1787036400"; 
+   d="scan'208";a="4626909"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.30])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 06:31:34 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Tue, 27 Oct 2026 15:31:25 +0200 (EET)
+To: Maciej Grochowski <Maciej.Grochowski@sony.com>
+cc: Nikolas Joshua Britton <nbritton@exabit.io>, 
+    Geramy Loveless <gloveless@jqluv.com>, Eric Auger <eauger@redhat.com>, 
+    Alexey Fomenko <alexey.fomenko@intel.com>, 
+    Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+    Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, 
+    Rob Herring <robh@kernel.org>, 
+    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kw@linux.com>, 
+    Mesih Kilinc <Mesih.Kilinc@sony.com>
+Subject: Re: [PATCH v4 0/7] PCI: Resource placement algorithm fixe
+In-Reply-To: <b20cffba-3515-b8a8-1b6f-6483facac5af@linux.intel.com>
+Message-ID: <f1f8c0e9-75bd-bf0f-65cb-57fe3d5cb1cd@linux.intel.com>
+References: <20261021124956.4250-1-ilpo.jarvinen@linux.intel.com> <20261023224518.80653-1-Maciej.Grochowski@sony.com> <b20cffba-3515-b8a8-1b6f-6483facac5af@linux.intel.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -106,47 +84,43 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20260928011123.450800-1-alistair.francis@wdc.com>
- <20260928011123.450800-11-alistair.francis@wdc.com> <DM4NT7TFX4X9.1GFI128LI5ZQ4@nvidia.com>
- <CAKmqyKNEup=x+bwmPD_8x0s4ssPkqFnQtSGqJ_82z9oDP=A6cA@mail.gmail.com>
- <DM58HRC3DHSS.1YC0E53ZXANT4@nvidia.com> <CAKmqyKPwirjmeBQvXgheY8Lh-M-RRq5pdbv=5mB4duhw9aCbGA@mail.gmail.com>
-In-Reply-To: <CAKmqyKPwirjmeBQvXgheY8Lh-M-RRq5pdbv=5mB4duhw9aCbGA@mail.gmail.com>
-From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date: Tue, 27 Oct 2026 14:19:55 +0100
-X-Gm-Features: AclHuK8O_cUPC_NV8nLehaHvClvws6tvszHDrs0qLddmTGSO7twgLKCazt9sU5Q
-Message-ID: <CANiq72n=eqh6W+iNWPdM+rrc+HujtZVRtVg=JB03OMS8rc5hiQ@mail.gmail.com>
-Subject: Re: [PATCH v4 10/22] lib: rspdm: Initial commit of Rust SPDM
-To: Alistair Francis <alistair23@gmail.com>, Andreas Hindborg <a.hindborg@kernel.org>
-Cc: Alexandre Courbot <acourbot@nvidia.com>, lukas@wunner.de, linux-cxl@vger.kernel.org, 
-	akpm@linux-foundation.org, Jonathan.Cameron@huawei.com, 
-	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	jic23@kernel.org, bhelgaas@google.com, alistair@alistair23.me, 
-	djbw@kernel.org, linux-pci@vger.kernel.org, wilfred.mallawa@wdc.com, 
-	gregkh@linuxfoundation.org, alex.gaynor@gmail.com, aliceryhl@google.com, 
-	benno.lossin@proton.me, boqun.feng@gmail.com, bjorn3_gh@protonmail.com, 
-	tmgross@umich.edu, gary@garyguo.net, ojeda@kernel.org, 
-	Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary="8323328-2079055605-1793107885=:1182"
 
-On Tue, Oct 27, 2026 at 5:19=E2=80=AFAM Alistair Francis <alistair23@gmail.=
-com> wrote:
->
-> That was kind of the goal with `SpdmState`. The issue is all of the
-> drivers calling this (PCIe, NVMe, SATA and SCSI) are C drivers and
-> won't be Rust for the foreseeable future. So there aren't any Rust
-> users.
->
-> I have improved things a lot with v5, let me know if you still want a
-> Rust API. It just feels a bit silly to add one that will probably
-> never be used.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-I mean, it is true that we don't want dead code, but in general we
-would also want more Rust callers in the future -- so I guess it
-depends on that "probably" you mention, i.e. how likely it is. So
-could you please elaborate? i.e. why is it that you don't expect
-future Rust callers? Would the NVMe Rust driver want to use this
-eventually if merged? (Cc'ing Andreas)
+--8323328-2079055605-1793107885=:1182
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-Cheers,
-Miguel
+On Mon, 26 Oct 2026, Ilpo J=E4rvinen wrote:
+
+> On Fri, 23 Oct 2026, Maciej Grochowski wrote:
+>=20
+> > We will now also test v4 and report back. Could the changes since v2
+> > affect this window-size result, or is this amount of padding expected
+> > for this topology? Please let us know which logs or allocator traces
+> > would be most useful to collect with the v4 test.
+>=20
+> I suggest you wait until I send the next version which addresses the=20
+> problems sashiko located in v4. I've basically tested the update locally=
+=20
+> and should get to sending it today or tomorrow.
+
+Hi,
+
+I think I'll have to renege on that timeline.
+
+I'm not entirely happy with how the gap calculation is currently done and=
+=20
+I'm planning on reworking the patch almost completely to be based on the=20
+existing loop in pbus_size_mem() but I'll have to first move that loop=20
+into own function (for which I have a patch in another series anyway so=20
+the more itself is just about shuffling my existing patches).
+
+It'll take a few days more.
+
+--=20
+ i.
+
+--8323328-2079055605-1793107885=:1182--
