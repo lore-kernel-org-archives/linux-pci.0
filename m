@@ -1,45 +1,32 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793107027;
-	b=XK948DPpob1obNT6WzjgO9NJEe14TwUeNQSMPsQVz91/E+wdXeYuSkrWkuElqdeVkM8n
-	 lP/qbd6a8RomuObTOASuZQZbcCDZS98QJhJZBDHv90u9inMCpS5xJmsJ0Aaxkz2FvHDjv
-	 UCsEW0bvAE56zchVFRCkpAVksY+r+ieIKy7NvGyrrYphuVXB/ljvBNtvb6mrAQLCLN6sj
-	 jCXZPlGxYDxIZbR1TUe6MF0xArCgXHX8Vn4lY+QbWKM9X1UzAFchOelaK6+u1ZYjxOddi
-	 Y1KK6YO8mmL8Ds0t7m+JNJ/YFAo4BgLh2HwgJ7XABLjF5YC+AFP3SxTJohN9ghW55qg==
+	t=1793107112;
+	b=4WuWEEtWvea0o5R423cgodchSyYlwqD0pI1BjdcVCwOP/97WB0lsMWY7Z48Gs14FJx23
+	 VXQyenHLQi8Wl4/c6WvQD3cpmwD5a/O/JbWYniNvFDMTWCP5Z/pKH4aF9+zO7XZrteqex
+	 Oa/UA2L64CGu0EMxfwr5a7wctajHE+6lzbtQGUDKzrfU8niIpecg0bF9xZZuFlgPJCAKA
+	 5lr314jtH5YwSzPox7F5arCxzGV/SrseOsfSF5tsjzXha4oaXVXPuHtvEcu3V5f+Quhxs
+	 gA9YMx8faN5eVaW0WdFvh7Igzf75/FEjjLDTgn22gzv1mTd6iSH697aSzLxD59QHjnw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793107027;
-	h=Received:DKIM-Signature:Mime-Version:Content-Transfer-Encoding:
-	 Content-Type:Date:Message-Id:Cc:Subject:From:To:X-Mailer:References:
-	 In-Reply-To;
-	bh=j4p5rqYKys+I1GBjxylvCjNQbtDMtwcx0aS4fbc0x60=;
-	b=v4k6HLZcjW/1brD/nQULTDkVYO0vuxYYTVAHXcx2GmqDAZSyVBJ5MntFGJkjRuPKPduy
-	 xe1Cs9BPPGlThHnzfiJlkcLa6DYxaBMuJ21zfow4HMReRjQjr4ASFjafT16LXVhppJBwo
-	 LDWmg7vNcHgAxJlNXVMiCnolgyei+xFavtY5TYFffIl+ohRYJDoExUMBNwyjE8kRml4De
-	 volj+kcs0paff812R/DOGs5wkiJ6BfNlpffopryD7wRvK9BCKXzIyF6xzRNh68C/hBFpA
-	 /RT1ivvhyHfaxp5FNkOBAKMWkqndghnbyCNyxS5ix7enOs+pzpSN1NcTxZ65tDe+OLw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793107112;
+	h=Received:MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:
+	 From:To:Cc:In-Reply-To:References:Date:Message-Id:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key;
+	bh=S1W3vj7Uq94wVrX/Lq/+NitQiEZyxkt2m/8k6adxiTs=;
+	b=D1VuizanRoOJtLKgQ5AJPQcwRNTieUAykkor0rhUI20V0dUuP84vvAC8dQfj82mggxJK
+	 7GJdv7PYGz551v78ncqvHdwiO6hv2zB18fJ2pFUkKGnMuRCTxO0WvMLoBoeLJpWzCyS48
+	 fVtOGUK9y08q30H/iWx/XVjiyWS49IU6iXLczoS4CWVdzfICPA38xTWM4WPAoHCttywUs
+	 3ZYs1KNdUWOTnnFqHxhN1/WTBZqUdxFussJOIIRdXkHidttXELzhpQan/XDiVF7COhPYN
+	 qsJyjoXLOynDPJofWTRXQfHMUbduScSywUKe1aVN8w5nJuGVbC5vC6m0plLvCv5TuSQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gOaIBhBY;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0993E606A321;
-	Tue, 27 Oct 2026 13:17:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gOaIBhBY
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F6D21F01828;
-	Tue, 27 Oct 2026 13:17:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793107026;
-	bh=j4p5rqYKys+I1GBjxylvCjNQbtDMtwcx0aS4fbc0x60=;
-	h=Date:Cc:Subject:From:To:References:In-Reply-To;
-	b=gOaIBhBYPYwmzoXXxLnFmKjLNrZm1xthPdlhLedgJo8veM24q4xSarTjZOd0DyZqb
-	 9ZIfZkGLZUfnaqflEE+Ml3XZqhf9Fji3LCbewut0zxQXnFkYtGj1juBwQ9PyGxER9N
-	 WBtOytqRMI3wQa7QOmmkyOkm+CeKYTkIWteiWdcLg753SUj1mHowUet5Z9IyeSrHp/
-	 HJ0Cd71mjtTKdFu6E/VV4h0W3zSA8S4JRiarN4bDcQmR/8Q3rwjLJVjoExnyUiU8zn
-	 mSsgPd13dyVrwhGzN24N/T3Tfp+4vJ7TCjUIM19hWuZcnSOzDMfd2DhU67aYmf+sJ/
-	 3K/Awj/t+5OAA==
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28075606A320;
+	Tue, 27 Oct 2026 13:18:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A7B01F01828;
+	Tue, 27 Oct 2026 13:18:27 +0000 (UTC)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -48,97 +35,89 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 27 Oct 2026 13:17:03 +0000
-Message-Id: <DMFNE2OD18PH.27J64IS0GAJLF@kernel.org>
-Cc: <ojeda@kernel.org>, <gary@garyguo.net>
-Subject: Re: [PATCH v5 02/23] rust: create basic untrusted data API
-From: "Benno Lossin" <lossin@kernel.org>
-To: <sashiko-reviews@lists.linux.dev>, <alistair23@gmail.com>,
- <linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>
-X-Mailer: aerc 0.21.0
-References: <20261027052536.1722081-1-alistair.francis@wdc.com>
- <20261027052536.1722081-3-alistair.francis@wdc.com>
- <sashiko-outbox-186123@kernel.org>
-In-Reply-To: <sashiko-outbox-186123@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] PCI: rzg3s-host: Fix NVMe resume errors after s2idle
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Cc: claudiu.beznea.uj@bp.renesas.com, lpieralisi@kernel.org, 
+ kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org, 
+ bhelgaas@google.com, linux-pci@vger.kernel.org, 
+ linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20261005110224.17160-1-ovidiu.panait.rb@renesas.com>
+References: <20261005110224.17160-1-ovidiu.panait.rb@renesas.com>
+Date: Tue, 27 Oct 2026 18:48:19 +0530
+Message-Id: <179310709974.16692.1197178939539578162.b4-reply@b4>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2532;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=OFbVCbpecaAx01zPKDHqteptC9SazpzmX4CfIyPRIT4=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq4KSe1yfPkIlyyeJ6mqhtSbqyq7u/PVEcRcEKj
+ 8t7NhoVyZGJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauCkngAKCRBVnxHm/pHO
+ 9XASB/0U1wA0WIJsrqTRuFtGIj0sAn9OOnQFldTAGUTkM+sYBko721xmb9qm0wWvwb+4YQNRmRE
+ mg0XcTwjWY2p2IfIvlZRXNAfyoFM5i+yHCquA+4XdF9GXtUaVrI34HHeWMmjpn3MmZ5aXH53Ooj
+ 8lRsSt/XWUlOmXSd6iyO+CbJG/APPxFw9eETRJeVXn/VdRtgUipadGBlTzHUyr9Zjzol7fpOwI1
+ cXmJ0WEG8R3eBVTAxP1ZtBENKhEyn9DFbivPvnKtgGjV+9ntEHFKqDGWBG/cFqpKqgTdLLc9Ch0
+ dzhLoEWe+rZ5GuSnLpKQziUi3Ne/EQ2pjkQQL2WE617FFwTx
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-On Tue Oct 27, 2026 at 5:34 AM GMT, sashiko-bot wrote:
->> +impl<T> Untrusted<T> {
->> +    /// Marks the data behind the given reference as untrusted.
->> +    ///
->> +    /// Unlike [`Untrusted::new`], this does not require moving the val=
-ue.
->> +    #[inline]
->> +    pub const fn from_ref(value: &T) -> &Self {
->> +        // SAFETY: `Untrusted<T>` transparently wraps `T`. The cast
->> +        // does not introduce interior mutability, as `Untrusted<T>`
->> +        // has interior mutability if and only if `T` has.
->> +        unsafe { &*from_ref(value).cast::<Self>() }
->> +    }
->> +
->> +    /// Marks the data behind the given mutable reference as untrusted.
->> +    ///
->> +    /// Unlike [`Untrusted::new`], this does not require moving the val=
-ue.
->> +    #[inline]
->> +    pub const fn from_mut(value: &mut T) -> &mut Self {
->> +        // SAFETY: Same reasoning as `from_ref()`.
->> +        unsafe { &mut *from_mut(value).cast::<Self>() }
->> +    }
->> +
->> +    /// Marks the given slice of data as untrusted.
->> +    #[inline]
->> +    pub const fn from_slice(value: &[T]) -> &[Self] {
->> +        // SAFETY: `Untrusted<T>` transparently wraps `T`. The cast
->> +        // does not introduce interior mutability either, as `Untrusted=
-<T>`
->> +        // has interior mutability if and only if `T` has.
->> +        unsafe { slice::from_raw_parts(value.as_ptr().cast::<Self>(), v=
-alue.len()) }
->> +    }
->> +
->> +    /// Marks the given mutable slice of data as untrusted.
->> +    #[inline]
->> +    pub const fn from_mut_slice(value: &mut [T]) -> &mut [Self] {
->> +        // SAFETY: Same reasoning as `from_slice()`.
->> +        unsafe { slice::from_raw_parts_mut(value.as_mut_ptr().cast::<Se=
-lf>(), value.len()) }
->> +    }
->> +}
->
-> [Severity: Medium]
-> Do public Untrusted::from_mut() and Untrusted::from_mut_slice() allow saf=
-e
-> code to bypass the opacity guarantee of Untrusted<T>?
->
-> Because mutable references are invariant in T, converting &mut T into
-> &mut Untrusted<T> (or &mut [T] into &mut [Untrusted<T>]) allows callers t=
-o
-> write unvalidated Untrusted<T> values directly into a plain, trusted T or=
- [T]
-> variable without validation:
->
->     let mut trusted: u8 =3D 0;
->     *Untrusted::from_mut(&mut trusted) =3D untrusted_byte;
->
-> Similarly, a caller with a plain mutable slice buf: &mut [u8] can pass
-> Untrusted::from_mut_slice(buf) to a function expecting &mut [Untrusted<u8=
->]
-> (such as the read_from_userspace(buf: &mut [Untrusted<u8>]) pattern shown=
- in
-> the documentation) and then read the unvalidated bytes directly from buf
-> after the call returns.
->
-> Since DerefMut on Untrusted<[T]> and Untrusted<Vec<T, A>> only converts a=
-n
-> already-untrusted container into &mut [Untrusted<T>], should from_mut_sli=
-ce()
-> be private and from_mut() be removed or kept private?
+On 2026-10-05 11:02 +0000, Ovidiu Panait wrote:
+> On the Renesas RZ/V2H platform, when ASPM is enabled, resuming from s2idle
+> with an NVMe SSD connected fails with:
+> 
+>   nvme nvme0: I/O tag 27 (001b) opcode 0x9 (Admin Cmd) QID 0 timeout, reset controller
+>   nvme nvme0: Disabling device after reset failure: -19
+> 
+> This happens because during s2idle, when ASPM is enabled, nvme_suspend()
+> does not shut the drive down. It leaves it in D0, puts it in its lowest
+> NVMe power state, so that resume only has to restore the previous power
+> state instead of a full reinitialization. This assumes the drive keeps
+> its context over the suspend.
+> 
+> However, rzg3s_pcie_suspend_noirq() doesn't take this into account and
+> it always powers down the controller and asserts the controller resets,
+> including PERST#. That resets the drive, and the command the NVMe driver
+> sends on resume never completes.
+> 
+> To fix this, similar to the dwc driver, use
+> pci_host_common_d3cold_possible() to check if the controller should be
+> powered down and keep the controller running otherwise. Do this only for
+> s2idle, as deep sleep could power off the SoC and neither the power domain
+> nor the driver will restore the controller clocks and resets on resume.
+> 
+> Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
+> Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+> ---
+> Note: this fix depends on the following series:
+> https://lore.kernel.org/all/20261002110935.2004349-1-claudiu.beznea@kernel.org/
+> 
+>  drivers/pci/controller/pcie-rzg3s-host.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+> index eea215818633..9fc1a5a4bed8 100644
+> --- a/drivers/pci/controller/pcie-rzg3s-host.c
+> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
+> @@ -2272,6 +2272,14 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+>  static int rzg3s_pcie_suspend_noirq(struct device *dev)
+>  {
+>  	struct rzg3s_pcie_host *host = dev_get_drvdata(dev);
+> +	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
+> +	bool pme_capable;
+> +
+> +	if (!pm_suspend_via_firmware() &&
 
-this is correct. we should remove `from_mut_slice`. but we can provide
-`Vec::from_trusted: fn(Vec<T>) -> Vec<Untrusted<T>>`.
+For checking S2R, you need to use:
+	
+	if (pm_suspend_target_state != PM_SUSPEND_MEM)
 
-best,
-Benno
+> +	    !pci_host_common_d3cold_possible(bridge, &pme_capable)) {
+> +		device_set_awake_path(dev);
+
+Why? To keep power domain ON? This is not justified in the commit message.
+
+- Mani
+
+
