@@ -1,76 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.70
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793138235;
-	b=h0QZwEgVktXiU0PJcqpmZ5Iog8Ge+jQDqetq7WRvTbgmj6eJxXS7UaIPutwobxI3WreB
-	 Ua2TtLfegLVzje0kDK0nfiRaePSi9fxqQ6g0+IzqC9E4g/Oue55GKPkN/YjkyiEFGZ8Vg
-	 jzP7SnYnBUxTM/tdv/Gj5Lv7YCXc2KJI3y3JJg5MN8I19AUtydBh8nXMtiZUgkO7UPqtX
-	 76lhOJaQaP1Tw6DLW6AMJuWCdz3645JEvEBPxAlzaNbbRKCWV216bEK6gBfo/ZNIK+23e
-	 21OheVqwLRdF3/VqECTdCgqKh4s5wCdfJbMnsSbAZKOaxVgXstH3rgP/NGea191yA1g==
+	t=1793140892;
+	b=zDzDJdcJ/mF0yk0z/Df5qrKYwMnC/axrtiBAlRN9zBaZotrhZ/VFYR2mv4Rj5/gLNlnQ
+	 P6OLmsWhzvASi2IuHsNrHc3bOenr4AQQhqgcUso3/fS488lJGNsEuy+xGlAGa47+npayC
+	 6NPOjz6iStq8ic0o4bMA+lYyEz43SlrDrUHqF2OIm41xX2fp851ROD8dFEvRco5bD9pJF
+	 SX8M1TdEsLYrsMpHCWE/3z5omLJ2YrDWtxmL+U3YxjHi8/To00gkNvQwUysmFoxKqqSmH
+	 ls5e24QtVbAM87JfJzbZtcFSgYtdoT/uzoPGZcKu9jYveaNxYPaxv8uVMFP12lZQyRA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793138235;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:Message-ID:Subject:From:To:Cc:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=INM4lTecUqg3+ORjH8the43AegIL5wVO95lrhujQQt0=;
-	b=NpMJbzKr/+Ej9VTZg5EpFqK/hjAbKwTOhmTVjCDkabzQKnILhBPuB/nHvnvS3vOFK/2E
-	 PYyCbmwMSNGdKAiRexA1B2ZlzlH+Eu0zAJW5BjZXa4jdUG2eJgng93TEBhUgju9db6ji4
-	 CtRtgeWVmi7wvKRZgOO+gv8P/xQ6PqFYf9PzY+PwU0EGEksftips8uD9BNQ2k3mu597VJ
-	 l9yzSe9N30dbkMnHKWM2mRYwgQL5dwBWItA1LwZBizJVA7DTDbHjgFf9rhYzOAoVtQzQa
-	 2XgMUH2L17lz1PBFTo00ujRmPIQt3pthFRZNNMFbCcDbsYl9IPqTBCLCk4vqRGqBJeA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793140892;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=36BYKCF164tXZn3FsLSkOB63KBQCKvHjKoR2T7jC1As=;
+	b=fU1bcoaiMy3VodHFOpQqsv4O8/IMKk8SNjc1dsvaODG0oWNckAZaxh8aCt6bgcC5htu4
+	 QINxQaw5vOZHMuV4iWjwiG6gCZZF+du3TyYoDqXSjdVnx0S1daFJkoD3pPcoEOLs6YRPm
+	 p5wv15efrIBCzn4xg4snMUAqIFN/2n5V99QaRK1VDrXxAgjMyaJmerzoe7jE7vCo47iKH
+	 S1r2luCYIKM56Gr4tzLjoc5Bmhf03kszcf5SuGkFtS1HXi2K7tydFsi6hUQWh0b+53Gz2
+	 Kc8fNIIkNMAK8E+vQoiggmrZylGYcEDECzXVnrCdvg8iywoautU/Y5pXHxYtAM7hPIg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=OPWEDSwI;
-	arc=none smtp.remote-ip=209.85.218.70
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com [209.85.218.70])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=By9twM0k;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86AB2606A31A
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 21:57:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 86AB2606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46CBA606A31E;
+	Tue, 27 Oct 2026 22:41:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=OPWEDSwI
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-c40aa03ded8so26392066b.2
-        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 14:57:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793138234; x=1793743034; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=INM4lTecUqg3+ORjH8the43AegIL5wVO95lrhujQQt0=;
-        b=OPWEDSwIo94pXLNO7GW/VvvkNuKk0SOrCfnZY0B/EfJRSZFt3yRUKQdtap3RO9t18G
-         gPXjPUOIHNRuI2FjW09NqBXtrOSt7f/4cyudF3x4bLlN2/HAwhei2OL2EcjINeYqu9gb
-         IazTAO2vXpCk7hvTKw9Y5IXKBI3iU+yr9fxuCEIVguCmjjlRNqiWQ9LFgRFj1H08bEWG
-         d6hrc6x/i91RkLClItqq/7iujjrBU3jMZrr8WnrXHi5+dbp9qMGhduV4OwhCyp0vYagU
-         x4T3Cj4M1jRIwwMnMhJpTmy0M24PI0EbSb3g6DPVJYGz3tp1JD7Ko7fjAX5KFs4tub12
-         lElQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793138234; x=1793743034;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=INM4lTecUqg3+ORjH8the43AegIL5wVO95lrhujQQt0=;
-        b=DO1JgR553jmaeUN1hatKqm6KAUwPHgWMo2rlcpFoxHK8rdRcDz37QahffDBYw8QbRj
-         KYXb2sO3cGxM7Z6dxkx8tQ8EtvlLQSnXf2XlKNTP6WSzrbefKBIUPhakpXHVgxxlu5Md
-         SzphmVfbhu9NJA2vgq2/syqn04WXawHaFueY5LVcmTZ73FeKrBh8bvDUJWexN2rkZNF2
-         jpVLFOtBrW0pE3RoDZiRyE7P5aqnaiUfpWFafiO43JWMQaUbfT9GTpBOWAmvS8WYCted
-         mGtNFCr7Y3OZNrZAaxZj0zHu3quDFDvGaf/AxH8nYm/qkcblAo7N7XJAToEfqmZlnZKd
-         vTPA==
-X-Forwarded-Encrypted: i=1; AKwUvBynnp7sgBzjvO73ljTRSeO6B3yHkLPkYQMgB2I14pd9r3Nt1ZmbcINxmDnaQqaQOur/2LPNZVBa2Og=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKdWAw9jCpw9RTJ2A6ktJpmK/0aJjSFNc87M7nUXqN8T2ecanTX
-	9z9EN20g13j4p+j2mzv3Agl7FybqLcNloh6IH3cDOnv322VGRebfxkktflXoR6v1o5QX4SNljBX
-	zsjZuAPfyDSvzDjMPag==
-X-Received: from ejkh2.prod.google.com ([2002:a17:906:7182:b0:c46:743f:a4b9])
- (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:907:e84b:b0:c2e:3a72:ffbd with SMTP id a640c23a62f3a-c49bdf71b7bmr44517166b.41.1793138233642;
- Tue, 27 Oct 2026 14:57:13 -0700 (PDT)
-Date: Tue, 27 Oct 2026 21:57:12 +0000
-In-Reply-To: <CALzav=dYKAP7pKfoPtz32X1cT_tH4LN0X47_jTO8_HOCT4Pi=w@mail.gmail.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=By9twM0k
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2F4B1F01825;
+	Tue, 27 Oct 2026 22:41:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793140891;
+	bh=36BYKCF164tXZn3FsLSkOB63KBQCKvHjKoR2T7jC1As=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=By9twM0khKiyjXxV0Yx0gmrjtdC4XEQPzMwUDl+Una0jfLlAUEm4jYcbm08BVHjQY
+	 PMAyhJ6MSrn6qWfGAs7OSIniRe1vJyzSMUnCSK4+sS5ogCsGxex4xW2wCncWk1TDyg
+	 m8erVmAzhMyDwbkh79AxfmDf5nW9diszeWU8Y4rFPEYVAWXRmn+b+1GTscQ6BDSEJR
+	 Gzpcv6o3EfAnCPBJuhgsgdwENi2BnGngjQBdQgaHjZJhtdY1fiQjW9aW60lQO+G8TN
+	 XVp3gfycemxjRqdGKuh6aNkpOLLXvGqAdyxszYvU7NO4z5Qv6nzzzD8iqeLTTu6HPG
+	 gTBIGzJ+M/neQ==
+Date: Tue, 27 Oct 2026 17:41:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Alex Deucher <alexander.deucher@amd.com>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	Oz Tiram <oz@shift-computing.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org, Lijo Lazar <lijo.lazar@amd.com>
+Subject: Re: [PATCH v4 1/3] PCI: Preserve the initial bus number in pci_bus
+Message-ID: <20261027224130.GA511803@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -79,130 +57,106 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261021152527.375070-1-tarunsahu@google.com> <20261021152527.375070-4-tarunsahu@google.com>
- <atlQ_Er0Ig7CCSxv@google.com> <CALzav=f00C4yOAseNunW8GgQTDUGWT927Qy=TLm-3-J0TEDH8Q@mail.gmail.com>
- <9huzzew0el59.fsf@tarunix.c.googlers.com> <at_CncIPYCxOVkLo@google.com>
- <auDT5MjXYq3lcQjE@google.com> <CALzav=dYKAP7pKfoPtz32X1cT_tH4LN0X47_jTO8_HOCT4Pi=w@mail.gmail.com>
-Message-ID: <9huztsm6958n.fsf@tarunix.c.googlers.com>
-Subject: Re: [RFC PATCH v2 3/4] liveupdate: Replace compatibility string with
- a 2-bit pair feature header
-From: tarunsahu@google.com
-To: David Matlack <dmatlack@google.com>, Pasha Tatashin <pasha.tatashin@soleen.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, joro@8bytes.org, 
-	Mike Rapoport <rppt@kernel.org>, Pratyush Yadav <pratyush@kernel.org>, maz@kernel.org, arnd@arndb.de, 
-	jgg@nvidia.com, robin.murphy@arm.com, loganodell@google.com, 
-	oupton@kernel.org, kevin.tian@intel.com, alex@shazbot.org, 
-	dwmw2@infradead.org, pbonzini@redhat.com, seanjc@google.com, will@kernel.org, 
-	Alexander Graf <graf@amazon.com>, Bjorn Helgaas <bhelgaas@google.com>, baolu.lu@linux.intel.com, 
-	linux-arm-kernel@lists.infradead.org, linux-arch@vger.kernel.org, 
-	sagis@google.com, linux-mm@kvack.org, kvmarm@lists.linux.dev, 
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org, kexec@lists.infradead.org, 
-	skhawaja@google.com, kvm@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261027-vfct-regression-v4-1-0e7190e39c2c@amd.com>
 
-David Matlack <dmatlack@google.com> writes:
+[+cc Lijo]
 
-> On Tue, Oct 27, 2026 at 9:40=E2=80=AFAM Pasha Tatashin
-> <pasha.tatashin@soleen.com> wrote:
->>
->> On 10-26 21:14, David Matlack wrote:
->> > On 2026-10-26 11:50 AM, tarunsahu@google.com wrote:
->> > > Right, Required bit should be source kernel payload property to tell
->> > > target kernel that the payload must be handled to correctly deserial=
-ize
->> > > the data. It should be source kernel (userspace) responsiblity to ma=
-ke
->> > > sure it understand the target kernel before doing liveupdate.
->> > >
->> > > Saying this, During deserialization, target kernel's required bit is=
- not
->> > > necessary. So I propose the following truth table.
->> > >
->> > > Source hdr  Target supported[i]  Action
->> > > ----------  -------------------  ----------------------------------
->> > > 00          0 or 1               Accept: feature absent in payload
->> > > 01          0                    Accept: ignore the feature data
->> > > 01          1                    Accept: use the feature data
->> > > 11          0                    Reject: -EOPNOTSUPP
->> > > 11          1                    Accept: use the feature data
->> > > 10          0 or 1               Reject: -EINVAL (invalid encoding)
->> >
->> > Yes, this matches what I had in mind for the semantics.
->> >
->> > To be explicit: the source kernel should set the bits for each Live
->> > Update based on what is actually preserved, rather than generating the
->> > header from a static per-kernel array. E.g. memfd would only mark a
->> > feature present for memfds that actually use it. That's what allows
->> > rollback to an older kernel as long as nothing being preserved depends
->> > on the new feature.
->> >
->> > But looking at this again, I think the required bit is redundant. Whet=
-her
->> > a feature can be safely ignored is a property of the feature itself, n=
-ot
->> > of any particular file. Every file that has a feature present will hav=
-e
->> > the same required bit for it. The only thing that actually varies per
->> > file is whether the feature is present.
->> >
->> > The required bit still has to be conveyed to the target somehow, since
->> > the kernel that needs it is the one that doesn't know about the featur=
-e.
->> > But it can be conveyed by the feature's number rather than an extra bi=
-t:
->> > split the flag space into required features and optional features, and
->> > assign each feature to one of them when it is defined. This is similar
->> > to the required_flags and optional_flags approach in struct pci_ser [1=
-].
->> >
->> > Keeping the same header shape as discussed with Pasha:
->> >
->> > struct kho_ser_hdr {
->> >     __u32 size;           /* Size of header + payload in bytes */
->> >     __u16 nr_required;    /* Number of required feature bits */
->> >     __u16 nr_optional;    /* Number of optional feature bits */
->> >     __u64 flags[];        /* Required bits, followed by optional bits =
-*/
->> > };
->> >
->> > Required feature N is bit N of flags[], and optional feature N is bit
->> > nr_required + N (using nr_required from the incoming header). The leng=
-th
->> > of flags[] is DIV_ROUND_UP(nr_required + nr_optional, 64). Both spaces
->> > are numbered contiguously, so there are no gaps, and up to 64 features
->> > still fit in a 16-byte header.
->> >
->> > Each bit just means the feature is present, so the truth table becomes=
-:
->> >
->> > Source bit       Target supports  Action
->> > ---------------  ---------------  ------------------------------
->> > Not set          -                Accept: feature absent
->> > Optional set     No               Accept: ignore the feature data
->> > Optional set     Yes              Accept: use the feature data
->> > Required set     No               Reject: -EOPNOTSUPP
->> > Required set     Yes              Accept: use the feature data
->> >
->>
->> I like this proposal. I bet most features are going to be either
->> optional or required, and even if we ever have a magical
->> sometimes-optional feature, it can have its own required flag. So, no
->> need to pay double the cost on every flag.
->>
->> Just need to make sure that optional features always start from 0, in
->> their own enum, so the offset can be computed correctly in the incoming
->> kernel.
->
-> Right. Instead of having a single 32-bit feature space where every
-> feature can either be optional or required, we have 2 16-bit feature
-> spaces, one for required features and one for optional features. Both
-> feature spaces span from 0 to 2^16-1, and then are packed into
-> flags[].
+On Tue, Oct 27, 2026 at 11:22:25AM -0500, Mario Limonciello wrote:
+> Bridge scans are split into two passes when bus numbers need reassigning.
+> Save the firmware secondary bus number on the bridge in pass 0, before it
+> is disabled. Use it to initialize number_initial when the child bus is
+> created in pass 1, before bus registration callbacks run.
+> 
+> Keep the saved secondary number on the bridge so a later rescan does not
+> replace the child's initial number with its reassigned runtime number.
+> 
+> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+> ---
+>  drivers/pci/probe.c | 6 ++++++
+>  include/linux/pci.h | 3 +++
+>  2 files changed, 9 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 27008e2ea5afc..3c03ac22223d9 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1012,6 +1012,7 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
+>  	bus->sysdata = bridge->sysdata;
+>  	bus->ops = bridge->ops;
+>  	bus->number = bus->busn_res.start = bridge->busnr;
+> +	bus->number_initial = bus->number;
+>  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+>  	if (bridge->domain_nr == PCI_DOMAIN_NR_NOT_SET)
+>  		bus->domain_nr = pci_bus_find_domain_nr(bus, parent);
+> @@ -1232,6 +1233,8 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  
+>  	/* Set up the primary, secondary and subordinate bus numbers */
+>  	child->number = child->busn_res.start = busnr;
+> +	child->number_initial = bridge && bridge->bridge_secondary_busnr ?
+> +		bridge->bridge_secondary_busnr : busnr;
+>  	child->primary = parent->busn_res.start;
+>  	child->busn_res.end = 0xff;
+>  
+> @@ -1418,6 +1421,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+>  
+>  	pci_dbg(dev, "scanning [bus %02x-%02x] behind bridge, pass %d\n",
+>  		secondary, subordinate, pass);
+> +	if (!pass && !dev->bridge_secondary_busnr)
+> +		dev->bridge_secondary_busnr = secondary;
 
+I think I was mistaken to suggest that pci_bus was the right place to
+store this.
 
-Okay sounds good. I will send the next version soon. Also I belive the
-design is decided, So I will drop the RFC tag also.
+It seems like we definitely need something in the pci_dev because we
+may clear the initial bus numbers in the first pass, so we need to
+stash the secondary bus number somewhere until the second pass
+allocates the pci_bus and we can save it here.
 
-~Tarun
+Since we have to have it in the pci_dev, I suspect maybe it would be
+enough to have it *only* there.  Maybe it could be set in
+pci_read_bridge_windows(), and drivers could find it via
+pdev->bus->self?
+
+>  	if (!primary && (primary != bus->number) && secondary && subordinate) {
+>  		pci_warn(dev, "Primary bus is hard wired to 0\n");
+> @@ -1470,6 +1475,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+>  			child = pci_add_new_bus(bus, dev, secondary);
+>  			if (!child)
+>  				goto out;
+> +			child->number_initial = secondary;
+>  			child->primary = primary;
+>  			pci_bus_insert_busn_res(child, secondary, subordinate);
+>  			child->bridge_ctl = bctl;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 5ffcf5ce8c966..c607818a98a87 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -363,6 +363,8 @@ struct pci_dev {
+>  	struct pci_slot	*slot;		/* Physical slot this device is in */
+>  
+>  	unsigned int	devfn;		/* Encoded device & function index */
+> +	/* Firmware secondary bus number saved across bridge scan passes */
+> +	u8		bridge_secondary_busnr;
+
+I think you're right to use "secondary" here so we don't perpetuate
+the "subordinate" misuse.  Maybe also include "initial" and make it
+"unsigned char" so it's the same as pci_bus.number?
+
+>  	unsigned short	vendor;
+>  	unsigned short	device;
+>  	unsigned short	subsystem_vendor;
+> @@ -724,6 +726,7 @@ struct pci_bus {
+>  	struct proc_dir_entry *procdir;	/* Directory entry in /proc/bus/pci */
+>  
+>  	unsigned char	number;		/* Bus number */
+> +	unsigned char	number_initial;	/* Bus number before reassignment */
+>  	unsigned char	primary;	/* Number of primary bridge */
+>  	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+>  	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
+> 
+> -- 
+> 2.43.0
+> 
