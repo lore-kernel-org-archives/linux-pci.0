@@ -1,56 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793079252;
-	b=yNu9li1y1JFzc+wQWXtcdxsIb+GEsyYu3M3cChZbY5vejY5RoKF6ssfPfqMMU8FFOgQ/
-	 qsfekvkSqW1PqIi5PJoILl7L7AMZ15LME/ogP3Apwgpe+uH7PFr/iheIKhAcnLEGI5zQQ
-	 XAmmecKjiZ09pRLvhyp9oMIzLtbjKi3Qcks6i+xOYYF3Rxg0xyly4aWFbpAnbZEpKWHA5
-	 8Z6V37+1e8gs7H5rKRhSN0LcUi6bJGe4+wbpqsSy4XOdoJBq4o1LcQh2ZZtTBKFK483t6
-	 yGcgnuwsgclOC5Hkl+glfou0sCnQYj2U0W55gbU30XSorx+tsa+6Zgwi894WDKyA5DA==
+	t=1793079267;
+	b=oe/01eGRgVJtfU5ZpAHks57waH1OqtbyH+xfTk5Db0ABrDxHaDQ+iIMuc1WaJNrxoZUP
+	 LoyI6u9dB9Q2dRapAYXZFEeQXBXOy7bVgv8I68KqV4zXGjNNFqIxPZJ+zqY3qwodfihkD
+	 ZVXaNzfOu1q4JWWe7aFKeSKTLdjdMyM4E6ButERPKT7zkpH5+ApSdBunWmIcxtd70NoDh
+	 LrUfpGUIr4iIZwgZ5yt5QlMkdkryMOIXBDA1g73x0jHDf3ojw6XjdeOfhByPh+bIGq3qj
+	 vLWdi3fIg3CYEV28FUlVyvvK3wMfH840o01Ula+ZynvAP37XMsrLKf5fKWMyBR5g4lA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793079252;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793079267;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=XFEdCphOwnT/+Z3qv7VWeCpsNui6xSEm6WDaBjRDmS4=;
-	b=iidXyd+eFF3uLcy9u4AbFy73V9dEZiHA59ef6lACp/4hJwCXA6qfOphiKSnu4iCGQGCp
-	 +7jRdSCKlF0qPdBJRZcCA8LMqq4CyNdxojmLa2PoPTrryeeZp1LWuPnqS9U0d32J9sPzo
-	 MtF0ZT2w35yFQr/qkp9ClbYQ8Bj6A1xPM7FazeY72q3qQJNEtm0PsdLsaX6OkORWx14wJ
-	 024ioYSa7PxwSLB/WYgrwxaD+6PPhvfQ8rOd7EoGs28D5ed8WOthQeS52i0QaUxJPvmzH
-	 IbMKfVpwXLTXyJdsXvhpR6iRJOAgTDyDkDJrEPEClRucnPZEGTFB4qpgGDqEu7n+PCA==
+	bh=yY5LP8ICr1JF2g7v9NnKIHypc3U29cN0UuFVz/ueM4Y=;
+	b=aJCd7W4XsdxKHvji5GGiBOG8o1QCEpygfPGmUEPstT/IYeRwbYLohX81kVl76zFOAAGy
+	 Qa/zZASR2BltYje4gmNPJ0DcKL8Qlfwq200irD/ai26d5IHZsr/va+9pn7rWUKyWTV6jp
+	 aDuEX43ZcjT0n+dSjxsrwB3ldzZvm587Xaurf8FNIEZmovzzVzHYM4Vr9Wq5o/ltu7/YE
+	 yIamEV5YorO4/w3JnDMJpQ3eVurHaSFwHXCEnTCx7M9LU0gmmY4hAK5CrQw82T8pLlhgO
+	 x81dx8cBieirKph2TRDUnz8V0hy9RGVZhX89+kB7ciCv7uhFDzIN0yJf1hB2gu4JQzg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VT2BJZ7d;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hLUs34fc;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B69C1606A31A;
-	Tue, 27 Oct 2026 05:34:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B75D606A31D;
+	Tue, 27 Oct 2026 05:34:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VT2BJZ7d
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 256DF1F01825;
-	Tue, 27 Oct 2026 05:34:11 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hLUs34fc
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED07C1F01825;
+	Tue, 27 Oct 2026 05:34:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793079251;
-	bh=XFEdCphOwnT/+Z3qv7VWeCpsNui6xSEm6WDaBjRDmS4=;
+	s=k20260515; t=1793079267;
+	bh=yY5LP8ICr1JF2g7v9NnKIHypc3U29cN0UuFVz/ueM4Y=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VT2BJZ7dhjF9CS7aFGZS1fRT8FaJ0WP+aOWTWbR1agcvXfX54ZWZkejw78C9QsYmd
-	 4LJLMVR52XsHaPXrk6hjKa34pJqVespvWgAUxvvJYMWIA2JNzrooPYowqKp1i/5X9c
-	 apLsEC4mnkwLDZhfl/S9uzsOlEXydNnDTpCg3nx2oQpGFVHlddZX9gyanq2UhgJNU4
-	 LLt4wz1+NzoS928wOhd3JlFMu288D4bOsLHH99QiDARtlSpTLTiXxNUmu8mLtw933n
-	 UE2BUESFiBst6WrpMNUtHnmUANV3qpA6sYYdbJVTAM3D3B8osEsC2Y/tutEhQrP+Go
-	 A84fjPE6TlE/g==
-Message-ID: <sashiko-outbox-186123@kernel.org>
+	b=hLUs34fc/902ITXB31PAbg4PZ4/JcjJ4VHF46IPQTHz5khvL6FkOjBc3o/faJ3WEz
+	 2vkZ7AaBydc2/14rTpHjOrFm65/P256OO8ZFQ8tMj1Fhvaad07SZwaqJA2220lPOLV
+	 zRaZXxKDQi5yEaCO1DSg/n0xxDMsyP9hnMQVZjEM+4WDJEk8PlV1cChEBnZ5mw8wR9
+	 IUfZif0nQfAy96JPKHWXIBTC+I7DKwb28KWDwYf559fn5WtU4+lAsOTNezOIyYL9wA
+	 62Qf5YY+Bi6QQ9PrNIrwwXcyRDzRkWbMGd7ug0ZpxzjphCjbRI4t/VEQi2iRL4ZPAo
+	 NE7RKeZuc61kw==
+Message-ID: <sashiko-outbox-186124@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 02/23] rust: create basic untrusted data API
+Subject: Re: [PATCH v5 08/23] rust: device: Expose Device from_raw()
+ publically
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com, linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org
 Cc: ojeda@kernel.org, gary@garyguo.net
-In-Reply-To: <20261027052536.1722081-3-alistair.francis@wdc.com>
+In-Reply-To: <20261027052536.1722081-9-alistair.francis@wdc.com>
 References: <20261027052536.1722081-1-alistair.francis@wdc.com>
- <20261027052536.1722081-3-alistair.francis@wdc.com>
+ <20261027052536.1722081-9-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 27 Oct 2026 05:34:10 +0000
+Date: Tue, 27 Oct 2026 05:34:26 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,97 +61,64 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Medium] rust: validate: from_mut() and from_mut_slice() bypass Untrusted=
- opacity
+- [Medium] rust: device: commit message claims to expose from_raw() instead=
+ of as_raw()
+- [Low] rust: device: missing #[inline] annotation on public Device::as_raw=
+()
 --
 
-commit 46cfb0c607f570933dd68037f09805a7bea851ee
-Author: Benno Lossin <lossin@kernel.org>
+commit 4612538f4ce0b7f345e904370c4f1a9efe8adc51
+Author: Alistair Francis <alistair.francis@wdc.com>
 
-rust: create basic untrusted data API
+rust: device: Expose Device from_raw() publically
 
-This commit introduces the Untrusted<T> wrapper type in kernel::validate to
-explicitly mark external data as untrusted and prevent unvalidated data from
-being directly read or used for kernel logic decisions.
+This commit changes the visibility of Device::as_raw() in
+rust/kernel/device.rs from pub(crate) to pub so it can be called from outsi=
+de
+the kernel crate.
 
-> diff --git a/rust/kernel/validate.rs b/rust/kernel/validate.rs
-> new file mode 100644
-> index 0000000000000..3c1fe37624573
-> --- /dev/null
-> +++ b/rust/kernel/validate.rs
-> @@ -0,0 +1,192 @@
-
-[ ... ]
-
-> +impl<T> Untrusted<T> {
-> +    /// Marks the data behind the given reference as untrusted.
-> +    ///
-> +    /// Unlike [`Untrusted::new`], this does not require moving the valu=
-e.
-> +    #[inline]
-> +    pub const fn from_ref(value: &T) -> &Self {
-> +        // SAFETY: `Untrusted<T>` transparently wraps `T`. The cast
-> +        // does not introduce interior mutability, as `Untrusted<T>`
-> +        // has interior mutability if and only if `T` has.
-> +        unsafe { &*from_ref(value).cast::<Self>() }
-> +    }
-> +
-> +    /// Marks the data behind the given mutable reference as untrusted.
-> +    ///
-> +    /// Unlike [`Untrusted::new`], this does not require moving the valu=
-e.
-> +    #[inline]
-> +    pub const fn from_mut(value: &mut T) -> &mut Self {
-> +        // SAFETY: Same reasoning as `from_ref()`.
-> +        unsafe { &mut *from_mut(value).cast::<Self>() }
-> +    }
-> +
-> +    /// Marks the given slice of data as untrusted.
-> +    #[inline]
-> +    pub const fn from_slice(value: &[T]) -> &[Self] {
-> +        // SAFETY: `Untrusted<T>` transparently wraps `T`. The cast
-> +        // does not introduce interior mutability either, as `Untrusted<=
-T>`
-> +        // has interior mutability if and only if `T` has.
-> +        unsafe { slice::from_raw_parts(value.as_ptr().cast::<Self>(), va=
-lue.len()) }
-> +    }
-> +
-> +    /// Marks the given mutable slice of data as untrusted.
-> +    #[inline]
-> +    pub const fn from_mut_slice(value: &mut [T]) -> &mut [Self] {
-> +        // SAFETY: Same reasoning as `from_slice()`.
-> +        unsafe { slice::from_raw_parts_mut(value.as_mut_ptr().cast::<Sel=
-f>(), value.len()) }
-> +    }
-> +}
+>     rust: device: Expose Device from_raw() publically
+>    =20
+>     We are going to call the from_raw() function later as part of the SPDM
+>     library, so expose it publically.
+>    =20
+>     Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
 
 [Severity: Medium]
-Do public Untrusted::from_mut() and Untrusted::from_mut_slice() allow safe
-code to bypass the opacity guarantee of Untrusted<T>?
+Should the commit subject and message refer to Device::as_raw() instead of
+from_raw(), and fix the typo "publically" to "publicly"?
 
-Because mutable references are invariant in T, converting &mut T into
-&mut Untrusted<T> (or &mut [T] into &mut [Untrusted<T>]) allows callers to
-write unvalidated Untrusted<T> values directly into a plain, trusted T or [=
-T]
-variable without validation:
+In rust/kernel/device.rs, Device::from_raw() was already public prior to th=
+is
+patch:
 
-    let mut trusted: u8 =3D 0;
-    *Untrusted::from_mut(&mut trusted) =3D untrusted_byte;
+    pub unsafe fn from_raw<'a>(ptr: *mut bindings::device) -> &'a Self {
+        // SAFETY: Guaranteed by the safety requirements of the function.
+        unsafe { &*ptr.cast() }
+    }
 
-Similarly, a caller with a plain mutable slice buf: &mut [u8] can pass
-Untrusted::from_mut_slice(buf) to a function expecting &mut [Untrusted<u8>]
-(such as the read_from_userspace(buf: &mut [Untrusted<u8>]) pattern shown in
-the documentation) and then read the unvalidated bytes directly from buf
-after the call returns.
+Whereas the diff below actually exposes Device::as_raw() publicly so that
+callers in lib/rspdm/lib.rs and lib/rspdm/state.rs can pass the raw device
+pointer to C callbacks.
 
-Since DerefMut on Untrusted<[T]> and Untrusted<Vec<T, A>> only converts an
-already-untrusted container into &mut [Untrusted<T>], should from_mut_slice=
-()
-be private and from_mut() be removed or kept private?
+> diff --git a/rust/kernel/device.rs b/rust/kernel/device.rs
+> index 2291d85b6849e..a355ac9803410 100644
+> --- a/rust/kernel/device.rs
+> +++ b/rust/kernel/device.rs
+> @@ -262,7 +262,7 @@ pub unsafe fn drvdata_borrow<T>(&self) -> Pin<&T> {
+> =20
+>  impl<Ctx: DeviceContext> Device<Ctx> {
+>      /// Obtain the raw `struct device *`.
+> -    pub(crate) fn as_raw(&self) -> *mut bindings::device {
+> +    pub fn as_raw(&self) -> *mut bindings::device {
+
+[Severity: Low]
+This isn't a bug, but since Device::as_raw() in rust/kernel/device.rs is a
+small one-line accessor in the kernel crate now exposed across crate
+boundaries, should it be annotated with #[inline]?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261027052536.1722=
-081-1-alistair.francis@wdc.com?part=3D2
+081-1-alistair.francis@wdc.com?part=3D8
