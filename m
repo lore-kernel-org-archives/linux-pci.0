@@ -1,54 +1,61 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793136907;
-	b=SiMY/1edsLCjoRtdgcjumH8WvJKEOwCEPzPaN+d5F4a7i0vyNVu3qlBw/foZ+E+hc44m
-	 DQsQlo4k3GhtCuxl6SqVRdrsMxSGmPNlXcxxRDuM2OOjwjCYcT4vt4HUtIV2DRzarssXm
-	 Fa1d242US1j+L8g/W/RQ/sdTOOA6vdUmlo+zt+5FTQffZ7C7+UfmhSgR9NEkLElksaDVE
-	 NnZq1hWlFjULxH9lrBzQInnSQbaZSAH8xx+rsNf1O9tKECfDjBXkSZPJbJyq68HRo5vGt
-	 bH+FvM/UrY0azOHoi7gOGGfvB3oy1FeepxTW2ubu2CfeadXdZvvKkiTO3pPqZQkUj/w==
+	t=1793137214;
+	b=YraHjxCi4jrADFs6Q6Jan7Cp7qyaopHah08OMJ0uhbCBX9O85xIZSKO2YU4LAMGFResq
+	 28YVdEdIE6Xwz+eqg+I0BxEmpiw1dylwzouAKaUtOz+tiGml/4aklZo62Qg1XJsIK01EO
+	 8lgpiO3g9mor0MgWmMfhKZydG5p7uLFeuV/aiX2HzEGw8Npw7x01jdDgwi3dxhx3xF2Y2
+	 b1r2UBgVVkFc9xRaTWHxDQox8WeVyYEXfZglOygZpKKX9/jOlMSwryg6ZnfDVI/n+3nmS
+	 b9IIw4cET6pcvc4GjhullRhV9pGCREzDyLlaG4EYjJhkkffKO3f4uHfsfxvXwV8i26w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793136907;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793137214;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=/8w/iCK1HPZD38BEPPuHo99rAtBuTlOymGNTilYwAK4=;
-	b=BmRBT/9IKlEQArN9JVJVRyXGnPxirHyda45ZdKsCnC63c+5LbYdoUNY2Ys3sNGmQ28MY
-	 vSPQtlw2X+hbrBYED/kBkiKNV/WNrcTwxCMETdl9wcl5iU+fW1xdpL/6hebmxB3UjZ6Zx
-	 2exf0WgzMiAA0kqqc7X+oGxsu5sCuK6c0oPV7SIz7J+eNlczwLzyTWMLLP8Gx5QzuYqow
-	 wHiAwV5VlEiRtSElUpb1k4WyXG30fJNs0YJDrKBS5woCAGi6ULCiX2gQTKzWZrG9H7gj2
-	 dX3YQ+P/ykIR2xBdLJfr6k0Ws6c45IgCHgw/lIgx2AZy3n+XaIrY9K1gH9918G/1uQA==
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=F9FEofSoUSLMuDf15+WCUoOYCD7og7XvQVtByxgDU1A=;
+	b=wrDe9eqmzXx86yFLBcfT6ukLqQkzhpozUoIvKV6B6Bz3AvI2Mckt7wInKyNFcNGHIvRx
+	 tLVaM6ZHOpivp4FGjKrdD5Mv8Sxd9uzjucJPeuT9p7P0ebV895VkOOy0+vV6sN2d5RNwR
+	 B43eamTpr6UeZqSP3guR8BIMfTrmK/+3BCeqYg8goFHkC2dxxDb8TkICLJT0HEOog5I0L
+	 3aHg37r8X3PB71m2iz9mEH5AxyEnUaKziDPMnLvYum4633dMMhZjIZPl/zQ92U60PD8mt
+	 jAE3GsB1L3ZX0uwdK8OKFwVONFhEYXrSSZhX1HjaVxuXv0Eh2q4Z64J6eUw/o+y4/Lg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mtzTk72w;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IujTEz5i;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4799606A31E
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 21:35:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69992606A31A;
+	Tue, 27 Oct 2026 21:40:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mtzTk72w
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20A1F1F01825;
-	Tue, 27 Oct 2026 21:35:06 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IujTEz5i
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13BD01F01825;
+	Tue, 27 Oct 2026 21:40:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793136906;
-	bh=/8w/iCK1HPZD38BEPPuHo99rAtBuTlOymGNTilYwAK4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=mtzTk72w48RuPtLPUksTWomRRFeVGxlQ4eUe4f6Ix1SyYFgF0DU8Ij8e+ZNtamIYa
-	 gt9Q213s2tvqlQxdSFvz7mqLtpsNVr2Uj55mezKWmJsZzkyLmZyEf4/aYQXEQ7x4+i
-	 w8AsniS14IEPOss6xrrcZl33kJKRp9FbEjbAbLGawDwarmNM+L6Pf17cqBn7PJTCOO
-	 /vNduuJ29BnC2Z19TtEy4qGVt5DkoPyGHOEW8eOGQoeANVFMUdr5eGngNz748hjlkl
-	 cDq+g67DeKLBUcNjHjIoXRoqkeaYl/WMezeYch+O0SYRDuhLJt45YZUMflM0DwoHHQ
-	 rT6IdopeS1SSw==
-Date: Tue, 27 Oct 2026 16:35:04 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukasz Laguna <lukasz.laguna@intel.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	michal.winiarski@intel.com, djbw@kernel.org, brett.creeley@amd.com,
-	anthony.l.nguyen@intel.com, przemyslaw.kitszel@intel.com,
-	pabeni@redhat.com, andrew+netdev@lunn.ch, davem@davemloft.net,
-	edumazet@google.com, kuba@kernel.org
-Subject: Re: [PATCH v2 02/13] PCI/IOV: Introduce VF iterators
-Message-ID: <20261027213504.GA456799@bhelgaas>
+	s=k20260515; t=1793137214;
+	bh=F9FEofSoUSLMuDf15+WCUoOYCD7og7XvQVtByxgDU1A=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=IujTEz5iUJJ8fLWRNgswwtRnTCYdpMxhrlitVPuCT32SzFTcFnPci0d0/lWxLkKcA
+	 +pSqNESCKFi9kTJHVm4lxMoirRODOdyNoYPKN0u173eEpwFVUq4xy4GRzfQ2bo6D8D
+	 1fQcKGu84IbHFNMxkTvuyMxGSc//Dl52HSfcusk1KtCE8USl9jkVtmd8Oo9nYEPLsv
+	 KGPH38edv/r7PQ8aGHwnWAMiGAUarLTbX2RAG6iL0vfeKxJUUCNhkZ7g5xovCEYg0Z
+	 h0XYI/mkZnv53QJ/b31UGrsg/sTekZe2+wxwOVhMUYkMcyNfXs8ZOgr3xEL6kQLsmr
+	 2hOR2siSQGkmA==
+Date: Tue, 27 Oct 2026 16:40:10 -0500
+From: Rob Herring <robh@kernel.org>
+To: Navid Ghahremani <ghahramani.navid@gmail.com>
+Cc: linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+	stefandoesinger@gmail.com, krzk@kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 12/24] dt-bindings: PCI: Add ZTE ZX279128S host
+ controller
+Message-ID: <20261027214010.GA1212169-robh@kernel.org>
+References: <20261014072109.1759502-1-ghahramani.navid@gmail.com>
+ <20261014072109.1759502-13-ghahramani.navid@gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,98 +67,118 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261027160446.858300-3-lukasz.laguna@intel.com>
+In-Reply-To: <20261014072109.1759502-13-ghahramani.navid@gmail.com>
 
-On Tue, Oct 27, 2026 at 05:04:35PM +0100, Lukasz Laguna wrote:
-> Introduce helpers to iterate over the enabled VFs of a PF. Add
-> pci_get_vf() and pci_get_vf_reverse() to retrieve the next enabled VF
-> of a PF in ascending or descending VF ID order, along with
-> for_each_pci_vf(), for_each_pci_vf_reverse(), and
-> for_each_pci_vf_continue_reverse() built on top of them. The helpers
-> return each VF with a reference held, matching existing PCI device
-> lookup APIs.
+On Wed, Oct 14, 2026 at 08:20:52AM +0100, Navid Ghahremani wrote:
+> Add Device Tree binding for the DesignWare PCIe host controller on the
+> ZTE ZX279128S SoC, using standard clocks, resets, and phys properties.
 > 
-> This provides a common and convenient way to iterate over a PF's enabled
-> VFs and avoids duplicating the iteration logic in drivers.
-> 
-> Assisted-by: LLM
-> Signed-off-by: Lukasz Laguna <lukasz.laguna@intel.com>
+> Signed-off-by: Navid Ghahremani <ghahramani.navid@gmail.com>
 > ---
->  drivers/pci/iov.c   | 63 +++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h | 57 ++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 120 insertions(+)
+>  .../bindings/pci/zte,zx279128s-pcie.yaml      | 121 ++++++++++++++++++
+>  1 file changed, 121 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/zte,zx279128s-pcie.yaml
 > 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index eb019201faed..a437370c4e36 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -70,6 +70,69 @@ struct pci_dev *pci_iov_get_virtfn(struct pci_dev *dev, int id)
->  }
->  EXPORT_SYMBOL_GPL(pci_iov_get_virtfn);
->  
-> +/**
-> + * pci_get_vf() - Return the first or next existing VF of a PF
-> + * @dev: PCI PF whose VFs are being iterated
-> + * @from: Previous VF returned by this function, or %NULL to return the first VF
-> + *
-> + * Iterate over existing VFs of @dev in ascending VF ID order, skipping VF IDs
-> + * with no device present. If a VF is found, its reference count is incremented.
-> + * A new iteration is started by passing %NULL as the @from argument. Otherwise,
-> + * iteration continues after @from, and the reference count on @from is
-> + * decremented.
-> + *
-> + * Return: a pointer to the first or next VF, or %NULL if no further VF is found.
-> + */
-> +struct pci_dev *pci_get_vf(struct pci_dev *dev, struct pci_dev *from)
-> +{
-> +	int id = 0;
+> diff --git a/Documentation/devicetree/bindings/pci/zte,zx279128s-pcie.yaml b/Documentation/devicetree/bindings/pci/zte,zx279128s-pcie.yaml
+> new file mode 100644
+> index 0000000000..dc0214511f
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/zte,zx279128s-pcie.yaml
+> @@ -0,0 +1,121 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/pci/zte,zx279128s-pcie.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
 > +
-> +	if (from) {
-> +		id = pci_iov_vf_id(from) + 1;
-> +		pci_dev_put(from);
-> +	}
+> +title: ZTE zx279128s PCIe host controller
 > +
-> +	for (; id < pci_num_vf(dev); id++) {
-> +		from = pci_iov_get_virtfn(dev, id);
-> +		if (from)
-> +			return from;
-> +	}
+> +maintainers:
+> +  - Navid Ghahremani <ghahramani.navid@gmail.com>
 > +
-> +	return NULL;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_get_vf);
+> +description:
+> +  The ZTE zx279128s has two PCIe host controllers based on the Synopsys
+> +  DesignWare PCIe IP, each with one lane. Their clocks, resets and PHYs are
+> +  controlled through the SoC's Top CRM blocks.
 > +
-> +/**
-> + * pci_get_vf_reverse() - Return the last or previous existing VF of a PF
-> + * @dev: PCI PF whose VFs are being iterated
-> + * @from: Previous VF returned by this function, or %NULL to return the last VF
-> + *
-> + * Same semantics as pci_get_vf(), except iteration proceeds in descending VF
-> + * ID order.
-> + *
-> + * Return: a pointer to the last or previous VF, or %NULL if no further VF is
-> + * found.
-> + */
-> +struct pci_dev *pci_get_vf_reverse(struct pci_dev *dev, struct pci_dev *from)
-> +{
-> +	int id = pci_num_vf(dev);
+> +allOf:
+> +  - $ref: /schemas/pci/pci-host-bridge.yaml#
+> +  - $ref: /schemas/pci/snps,dw-pcie-common.yaml#
 > +
-> +	if (from) {
-> +		id = pci_iov_vf_id(from);
-> +		pci_dev_put(from);
-> +	}
+> +properties:
+> +  compatible:
+> +    const: zte,zx279128s-pcie
 > +
-> +	while (id > 0) {
-> +		id--;
-> +		from = pci_iov_get_virtfn(dev, id);
-> +		if (from)
-> +			return from;
-> +	}
+> +  reg:
+> +    items:
+> +      - description: Data Bus Interface (DBI) registers
+> +      - description: Controller wrapper registers
+> +      - description: PCIe configuration space region
+> +
+> +  reg-names:
+> +    items:
+> +      - const: dbi
+> +      - const: ctrl
+> +      - const: config
+> +
+> +  interrupts:
+> +    maxItems: 1
+> +
+> +  clocks:
+> +    items:
+> +      - description: PCIe controller clock
+> +
+> +  clock-names:
+> +    items:
+> +      - const: pcie
 
-Seems slightly odd to use different loop control in pci_get_vf() and
-pci_get_vf_reverse().  I think I would use "while" in pci_get_vf() to
-match, obviously with id++ at the tail.
+Drop. No point in -names for 1 entry.
 
-> +	return NULL;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_get_vf_reverse);
+> +
+> +  resets:
+> +    items:
+> +      - description: PCIe controller reset
+> +
+> +  reset-names:
+> +    items:
+> +      - const: core
+
+Drop
+
+> +
+> +  phys:
+> +    maxItems: 1
+> +
+> +  phy-names:
+> +    items:
+> +      - const: pcie
+
+Drop
+
+> +
+> +  reset-gpios:
+> +    maxItems: 1
+> +    description: Optional board GPIO reset line for downstream endpoints.
+
+Is this for PERST#? If so, make that clear.
+
+> +
+> +  enable-gpios:
+> +    maxItems: 1
+> +    description: Optional second board GPIO enable line driven together with reset-gpios.
+> +
+> +required:
+> +  - reg
+> +  - reg-names
+> +  - interrupts
+> +  - '#interrupt-cells'
+> +  - interrupt-map
+> +  - interrupt-map-mask
+> +  - clocks
+> +  - clock-names
+> +  - resets
+> +  - reset-names
+> +  - phys
+> +  - phy-names
+> +
+> +unevaluatedProperties: false
