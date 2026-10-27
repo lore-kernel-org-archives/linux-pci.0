@@ -1,61 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793101818;
-	b=WMFGLTK2R8MI4cppWoLlFetsJmnUaRSfEoxQlRZanXXS4vuY485ZEXH5x9q86Lcmkr+R
-	 /KaU8yVoH6iA4APThOY+8bKtR3b+N4RIJ91mKbkYt88elSXwnPr8C67lyGe3NKgN+cY83
-	 DiNVhVkQ7A9iQQLSBorgv/ut9pWxMitclFH+oJq/IbFs6sRg5j+B7SfiA0OOciCXsKl2g
-	 ta5GXD0VLHIBOpm2FgXOlKKrnRZTR8I/1TmgPsrAPcXp3ZqfNPiwtowpgoOeDv6wS4rOd
-	 FXtT4Ti4NqRxsC+bwEpfbGQiiaCE94Mr10C4YbVBQ5OguRyZcAI+8XNBvRi0KQ8IIWw==
+	t=1793102027;
+	b=yrv9Mbh9rOGZCQN/It2lqUOvkDicavqWsSOf8GCOzgzmsrKQTZnSPUhkqv/7FRRNpJYT
+	 c70yQAPHtKB5z6SRw18xmOuLj33/o7OLDI2dzEatIfuDUZhfK0Ul3QjWxdEwAhzm6TcGT
+	 axih7JX3SddofCj08X8E4QnIZLvjW2QOxJN4CYBYYv/uK0/yH2Vp6H7DiZIGtnzv8Q0F/
+	 uohS70XW8EkZ14JT05MGW7zuZzlp8WYyXPPwjNwCGh72J7G5zawT73MD6IRE6L/Vy/j6W
+	 maPiefqt1C3EgfIaflSW9A2HQ/PQI+5eA5L29UWg6QTGHqZ9ma8tppgb6mur9EdF2iw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793101818;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793102027;
 	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
 	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=8Pox6L4wQ+PxjTQjIVCbNIBdH2zdMOEyFCO2vv40EVg=;
-	b=pp+SIkO0YPjaqid78aFgUzo9+ze93upK+B/N5Sj/LyTEb6ciVYI+6XiJGawKw78AV/P3
-	 kPgbDzDueL+r7uAa//Sz3BS/De767v5UKVpy+klT4fHyWdnxohd7EDmKhOvE4xAkAZteD
-	 LtXZiv3muyeD3COueEOtSBFvl3sAUTcVF9CyPAtXfzJX2es2SXXo33c2rrjt+cTwK50dW
-	 vkqQjOxdsKdmd1MvjDr6BjYxFsgA1VpQ/TXoSGuKh7exIOLEJBSvffTMHxquLA6VYaWXw
-	 TA76ygOkc39OCz4bePnuUlkBwm20wTJxkGh3f9jKRjobjX/EvA4hGUk5OwX/Vx9IKYA==
+	bh=dJfiG1Iomn/Als90jreTRRE3FGx9BaAVSsyWgPeYmUk=;
+	b=s5N5TMQJymsMHEgSmntzAg18qEm+z60gJGKHm25XA0PSXELJP92Kb+6gxnNwnHuGtOc1
+	 V1yS5Rn8lpEz1CthBkWB/IqKtB3htE3kp9q3hdPYcMZvy8uPCc1k9dJKsvk8n71vm8YuA
+	 UIvAlYKnthN/0S4yjhjGIC9/BwCUMR11OsxmpmLv3IilEJhm7C81blx2+SHUE7/Fk0qhu
+	 7dv5duEY86SOVZkSGPAYVke0oQTC0fwpSAYhHWWfmoE+kixQcUfirnhDmRBnaXbiKwt8S
+	 6pNqeWN5U4XV/cJN57xVnJpVbnkmoH0BFv43wI4Syd0xhy7fFL0umBg12lzGG9mH8ag==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NsHHqYpX;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Owm4O8Cg;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 408A8606A321;
-	Tue, 27 Oct 2026 11:50:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB9C5606A31A
+	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 11:53:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NsHHqYpX
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 125611F031E0;
-	Tue, 27 Oct 2026 11:50:13 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Owm4O8Cg
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0280D1F01825;
+	Tue, 27 Oct 2026 11:53:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793101817;
-	bh=8Pox6L4wQ+PxjTQjIVCbNIBdH2zdMOEyFCO2vv40EVg=;
+	s=k20260515; t=1793102026;
+	bh=dJfiG1Iomn/Als90jreTRRE3FGx9BaAVSsyWgPeYmUk=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=NsHHqYpXd5msR9zaaOhwOo6UyCW063Bia4SGHgWuDKhf1+KoS/qL+TijXekj0mw/W
-	 ZEOR924III+3WYDmMBGE3Gtqf+BPP74P6Ga9f76aqftd+jEOR9cNxrCjz7Nuf1ufc9
-	 S9aD4uymhsn0IYxa3sEFNSSGKOUH8aEEs6bjNYZqWpCQabzwQ1qqB6sHjRnfpfnisJ
-	 yrGZjb6CIFG4VG0QksUf5qdJqAEGdRWU25ys3VV3P0c025bnKaP5TfIprol82herAu
-	 GkwT5FDFmOk5j9ZQY1IrpjGEqTaRr7mstA7LgFQPsMy8NYPOMPjHpUTM5VykAu+jyf
-	 NF7YdYgrke5qw==
+	b=Owm4O8Cgxa5ntbnWs3OC+0Uad9JnU5pJ9bAWdGy5qekbPVqRtQldiO5DFNx7gsYGl
+	 zjzlBaYGJVodzBlxXUQtmZxxMFdW6GkJ/d5GR/Gbb4Of30AZQMirbe5jeTSJhFgv8m
+	 g08NIjrA2/O+ahXxwqpryy4wCMJ9wzYw0NHKQwO22zLWGS2T+5z71MB7ELlXLQm97m
+	 t/sIYgvnOXATlqSaxWQPfCUcF90hmMPGWpQluFpQPUXcUB2Z/AMefMdZawTT4lItd1
+	 pAWfx5sOudYoxDtuwFgi9aiV/uhEhizAj8skGLR0xmmexTQB7C4VnfKIeh1IQbL/T3
+	 WDxvpGJHhphRw==
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Marek Vasut <marek.vasut+renesas@mailbox.org>, 
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
- Yuho Choi <oss.patchbox@gmail.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>, 
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
- linux-kernel@vger.kernel.org
-In-Reply-To: <20260924010418.726980-1-oss.patchbox@gmail.com>
-References: <20260924010418.726980-1-oss.patchbox@gmail.com>
-Subject: Re: [PATCH v2] PCI: rcar: Release temporary device tree node
- reference
-Message-Id: <179310180828.5889.10256778854026128027.b4-ty@b4>
-Date: Tue, 27 Oct 2026 17:20:08 +0530
+To: Bjorn Helgaas <bhelgaas@google.com>, 
+ Shawn Lin <shawn.lin@rock-chips.com>
+Cc: linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org
+In-Reply-To: <1790664898-207928-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1790664898-207928-1-git-send-email-shawn.lin@rock-chips.com>
+Subject: Re: [PATCH] PCI: dw-rockchip: Enable INTx affinity support
+Message-Id: <179310201852.16692.17318855369732407934.b4-ty@b4>
+Date: Tue, 27 Oct 2026 17:23:38 +0530
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -68,27 +61,27 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=330;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=312;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=mnZxg1es0t8jDK+5ygiJyrtcXXWqwNs5TLiPImjvoyU=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq4I/1Yio4iVvpt050d2evAWM81+I7FWBtENDj0
- CSBW4PI8kaJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauCP9QAKCRBVnxHm/pHO
- 9W8yB/98em5OFW66fxPSxXwM817NNPhKffPJWY/1nmkaKvu5V3K0xvjXgz70SNLdyATJHl85f1Z
- aM1dJrZ5/BsHb7WL+A84z9zkbvyjm3vHpsKAifnYb48yV3F+B1y8FXVr6rhBaHYY2HH8bb5XLMW
- 8z6BMC5XjMyDM1/ujsKqlKQwVRMT3K70QmJR7Ytf556Q0iGJYsCSAgpHrXZlPMFXIO9N+TVnfU6
- gf6HUdcnm/0qq67u6G4JX6rEEgn9CrV1MgbtQasUJqL/V788LrCtJo2DCt8Etsd7giRYDXS4vmh
- kpuNwt/85UqODgUcTQJ1r/YsdUW39V6Qm0ajX6gFH/my4+2f
+ bh=Ln4DWbgUCH/2gfmwbpXsUFycVVdbQrpXj6f1Z3vneE8=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq4JDHDBZec5crnF0BSQHWIdxBK8PZtqtj2kyXM
+ qM2PwAvl2iJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauCQxwAKCRBVnxHm/pHO
+ 9ehIB/4tfu7NjWjmZ9W5XSIfDoj9uWXIUt3w8zQndV10pbutrnNj7mhqMlAJFNT8RhvHxp8hxK2
+ sHSuycy7Tn36YRnImK/gzgUda1teP5L8J9uJuf6HO9hnrTOy4yH8S4gTvJ7E4UciWKMzOq1+aQj
+ amtNorxvCa8AOog6xckB2CvG2JVpmWCVn1dv05OOFkAcMg+rb4NvZN8X76lvawtf/gncfqN1wGv
+ /FooAYihOQ99CeUvIg4Ibz10/0xV/JBM1zk0Jdnei3/Vk5QsawLW6/tR2dd6D6G7iIEcy8rnAK5
+ uSI+nvm7urGzS1fe3KYgc973nv4swWwjPfG/qUfwaxhQy+GP
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 
 
-On Wed, 23 Sep 2026 21:04:11 -0400, Yuho Choi wrote:
-> PCI: rcar: Release temporary device tree node reference
+On Tue, 29 Sep 2026 14:54:58 +0800, Shawn Lin wrote:
+> PCI: dw-rockchip: Enable INTx affinity support
 
 Applied, thanks!
 
-[1/1] PCI: rcar: Release temporary device tree node reference
-      commit: 186da40837a4a2472b8afbf7dbccbe1b1e0f16bf
+[1/1] PCI: dw-rockchip: Enable INTx affinity support
+      commit: 77daa4d0f47dc34a44cf9b8141478c4c2a4eab7b
 
 Best regards,
 -- 
