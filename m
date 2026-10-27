@@ -1,58 +1,63 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793097614;
-	b=nqYCtbtYPRNUBhjkENPYN7xSzw8PGQk3LILDeEs8+kmhDVJkP7qIa1AXeinXK3I3DkPz
-	 xb1VQNn22Du43EQm/q90ddTmv0UnFYMU0dSes2G8q0Up7qM32lzKX4fkv21H4zcejA8kw
-	 zLxGCYR3jVsCp0g6HE+VSTY/U1Co8E1e+z47hQd/BQzkCVHkNcIztT+v9O6jgzy5AwmFP
-	 6bxgJdWwNFFhbTKx79NIU2hgWSpUoYE1kdWt0d2WL3TZTLSVvUUnbNSPoO+UZ6nMV8lSh
-	 SOVC6oQaAStJKisHdbyJObK4lWshUNI81E5caLklLvbvlqQsvHSgZPY7PXloIetBu2g==
+	t=1793101179;
+	b=n2WGrvLLLokaKvIHcI7AyBmr6R4OYFJ58xUgb6wLEq4Hq5SnWQvnasgja9R+Dkp3wT4g
+	 CqKa519itrMwQIJ74G8Ku/UXcVhHML4AwTi1SVGIj5Hp8n6AxfFWie4ZDvpI7JOqWHnqN
+	 IHPNC6R97tnIGvkk/y8FvBOtSFYnQj5FfWQKqokaRv4jDicB2Li+/zoGuiiiFTXo8rTNj
+	 V2KcExAwhfEycedGASs24t79CmW6XN741xbtCkXyCPTxl5Bz+xdJI7RNoeUBzG15RaDPC
+	 vRrgoAQpbKUXBM7s3WJnoJb+PnPAfFhJ83Lx158XQN/nL+xKNfhi5UXygDueKU7aHKQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793097614;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=lJ8w6RICVC2rJQWO2YwEqy5AlXDtvGnBkAjzZ4fE/rY=;
-	b=yLCJfl+XbvXgGkk+rsgTrVcqEbiTmxnzIPaYptAVAvAj+GsBU5bD/hcD9HNL2Ep9wOzv
-	 7WfFnZwqLHlsTeKfQemMq79AicArCYEQqZh88oEKYluA/z3X6gJNA2FQI0jHLoTP+G7ua
-	 NxeAWbWQp48b6s2IBWeBkwTofhtCmyIEA7D49x5A4+TXeo+XPruCIsqxydiaOzTR/dGFX
-	 ijrDa4Cpy4oTFDQrJoTpCJBX0zp4e1V+8M7itreRYiUiRK5OGPkYqL8Z++jGeAeuTwN8N
-	 +tIYxTAzFKARNSRnLq377Ec6OCqrZSMyKHqCTwj1oXbi28hNKnQCRMrlpa2iy68pKSg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793101179;
+	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
+	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 X-Mailer:X-Developer-Signature:X-Developer-Key;
+	bh=ESrymycrercx4WKj26TQ7uSZll8hEJb6wB1OeQMp6h4=;
+	b=kWykNqz1HrjlWjPFWRRFNLCp9yWEkKSH1CkdL0a1rph9AYeKFNqDWqX/MRAovmG2w09W
+	 s1eQ3xZgpSlfK5Ds6C58wS3WoxOGX0WtPhg9BaY5XB9Dg0NkRI9pJasOQP9r+VjCmi9am
+	 5g7ek7heMfkMlxzUVTYfUKGBWu1CprIW2dDRMsdp6xlSlYSbRarkiBT7jm2ut/UAecY8S
+	 U18k35x5OE7NPhImTWWGvIN9Y96nEDKN3n0e3k25CGwt9eLYPb/q15/tTRSOq0gCUyI3b
+	 TanaSRb7OSEsUmj2J5HyiiV4cxQ2z1hUVvIpB48JYqzBEBzyMgTDBy58jdqMrzjLXtg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ArOtR5Fr;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=D2rTnLxW;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C9CC606A328;
-	Tue, 27 Oct 2026 10:40:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0AD8606B5C2;
+	Tue, 27 Oct 2026 11:39:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ArOtR5Fr
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A6B61F01825;
-	Tue, 27 Oct 2026 10:40:11 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=D2rTnLxW
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C9CE1F01441;
+	Tue, 27 Oct 2026 11:39:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793097614;
-	bh=lJ8w6RICVC2rJQWO2YwEqy5AlXDtvGnBkAjzZ4fE/rY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ArOtR5FrPUw+T0ZItDKpF/wMow2WobDGJ1egLFPjYf4HWItg85vnTpQhqurXvLakI
-	 JVWKvdi0ckDVJNF84xKnUW9/lNMmq/lYnnDQULzZ98/qCelywCbgmO+l4zHKMg2vvm
-	 vLZIQwTuAxVbWK/hbiqrlWz2VA2RW1mk9agPD21lq/k5eM435bunH7MSr6Y4Vw9pBE
-	 PY1D2jx/GOtzNIhbVtTw3Z2tJVWapV6ch2yR/y/O1U8c59lXWWZN3VCZ58OKCxLnaO
-	 KOlEEh+iZOypd5geihe3nlkSAx5qX/ltnRWwzH1QbasdSlSXN+punzpesK8EBwpb5w
-	 H5hh0fSbLBMPg==
-Date: Tue, 27 Oct 2026 11:40:07 +0100
-From: Thorsten Blum <blum@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>, Jesse Barnes <jbarnes@hobbes.lan>,
-	Lukas Wunner <lukas@wunner.de>, Ingo Molnar <mingo@elte.hu>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RESEND v2] x86/early-quirks: Scan all functions in
- early_pci_scan_bus()
-Message-ID: <auB_h07OAckfI7gV@kernel.org>
-References: <20260916100206.92853-2-blum@kernel.org>
- <20261026183718.GA335290@bhelgaas>
+	s=k20260515; t=1793101179;
+	bh=ESrymycrercx4WKj26TQ7uSZll8hEJb6wB1OeQMp6h4=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=D2rTnLxWreQ1s1Y6cgPUBRVLtKP6JYx2+VP+nxQNv+ttH/zBqn6TRNVrO4BgtCVmL
+	 tkg1nK8xAeznPqS1pqWXKBdCmXnVNlXseqTH6utPH5M3go51Ab8vCls9tgNQypRLPT
+	 bIviSrxGui+cdC/lk9EIeY2IxjBOiictbxdSipI424d3eF6UBpy+V2XX9B6tc0lXrz
+	 XTg9vRkaUYk6UdP0vFlQ+cVUv0Ay4+xGKUwMbzbCGkxiUxrXMs57YTGeadLfbaKX8W
+	 KbTgJOUwIHpiVSrLU0vn4AlDNEq5PydPRKq/ewB/gg07hexkpbVxQxbebkogkvq7YB
+	 G556og/lLTaog==
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Fuad Tabba <fuad.tabba@linux.dev>
+Cc: Rob Herring <robh@kernel.org>, Ray Jui <rjui@broadcom.com>, 
+ Scott Branden <sbranden@broadcom.com>, 
+ bcm-kernel-feedback-list@broadcom.com, 
+ Marek Vasut <marek.vasut+renesas@mailbox.org>, 
+ Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>, 
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, Will Deacon <will@kernel.org>, 
+ Fuad Tabba <fuad.tabba@linux.dev>
+In-Reply-To: <20260923180703.3901185-1-fuad.tabba@linux.dev>
+References: <20260923180703.3901185-1-fuad.tabba@linux.dev>
+Subject: Re: [PATCH v2] PCI: iproc: Use __free(device_node) in
+ iproc_pcie_msi_enable()
+Message-Id: <179310116074.5889.9680127168162481618.b4-ty@b4>
+Date: Tue, 27 Oct 2026 17:09:20 +0530
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,49 +67,33 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261026183718.GA335290@bhelgaas>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=345;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=AMfRuaK4nK36sJGSTedCARE9MAMDElaKKgH32J7UJkw=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq4I1wvm+ljiS61ncvUtkHNTAGJfy2y5saSepTU
+ j4SfktlDWKJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauCNcAAKCRBVnxHm/pHO
+ 9Qw/CACCDBzEYt25olPXuF1nIV7tYt36WXS35jOKneSXhrBxNZEaoCMUM5CXDWPx1H3r46uryS1
+ eoVjDr7BOHqL9+d8miPMDYgRti1HfbHkQA0jLKfe8cQos4nvIdD7VNtAsb50YxNo59pgAYegLnn
+ eliaQ4hh0jgJaBIVkluiHBfGnagZ+SWaMdUIijc1e9lUhtwRbj8lrKrr37BhKDbDm0dju5fouk4
+ 90/9hG4dWN/QA5uz4Imf94X7J/2ZN/aegkyWQ9+3bwm+9//IBe4huQcvbHXnpyOepBQOl1Q2t/g
+ Qu3wsWVc+XFuB1Xyg5l1zh0IecZFFe83lujk9jJwKebC4TJ6
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-Hi Bjorn,
 
-On Mon, Oct 26, 2026 at 01:37:18PM -0500, Bjorn Helgaas wrote:
-> On Wed, Sep 16, 2026 at 12:02:07PM +0200, Thorsten Blum wrote:
-> > early_pci_scan_bus() stops scanning a PCI slot when check_dev_quirk()
-> > returns nonzero, which avoids probing functions 1-7 on single-function
-> > devices, but also stops scanning when a function is absent on a
-> > multifunction device.
-> > 
-> > This can skip early quirks on multifunction devices with holes in their
-> > function numbering.
-> > 
-> > On iMac13,1 and iMac13,2, the BCM4331 AirPort card is behind root port
-> > 00:1c.3, also documented by the model list in commit abb2bafd295f
-> > ("x86/quirks: Add early quirk to reset Apple AirPort card").
-> > 
-> > Public lspci output for 2012 iMacs [1][2] shows that 00:1c.0, 00:1c.2,
-> > 00:1c.3 and 00:1c.4 are present, but 00:1c.1 is missing. The old code
-> > stops at 00:1c.1 and never reaches 00:1c.3, so the AirPort reset quirk
-> > is silently skipped on these machines.
-> > 
-> > Check function 0 first, and if it indicates a multifunction device, scan
-> > functions 1-7 independently so that absent functions do not cause later
-> > ones to be skipped.
-> > 
-> > Fixes: 15650a2f644a ("x86/PCI: fixup early quirk probing")
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Thorsten Blum <blum@kernel.org>
-> > Link: https://forum.libreelec.tv/thread/26799-wifi-not-detected-on-2012-imac-in-11-0/ [1]
-> > Link: https://zoringroup.com/forum/5/7170/ [2]
-> > Reviewed-by: Lukas Wunner <lukas@wunner.de>
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Let me know if you'd prefer this to be merged via the PCI tree.
+On Wed, 23 Sep 2026 19:07:03 +0100, Fuad Tabba wrote:
+> PCI: iproc: Use __free(device_node) in iproc_pcie_msi_enable()
 
-Thanks for the Ack.
+Applied, thanks!
 
-I'd appreciate it if you could take this through the PCI tree.
+[1/1] PCI: iproc: Use __free(device_node) in iproc_pcie_msi_enable()
+      commit: f27468551f99d80c1f08be5194e9e520beb23908
 
-Thanks,
-Thorsten
+Best regards,
+-- 
+மணிவண்ணன் சதாசிவம்
+
+
