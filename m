@@ -1,57 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793118406;
-	b=KdmIgL+yQS9U+igTtTUEAKoLkkjQup2zEbaza/pRxyNCkyiTQTfP7a9nYG7mzBFB7hIg
-	 cpC8hitjvTbUUSrnylyJdXSU30bUjMp16l3D89ixuab8EewxAwPSH8cPUQMDkRo/4Jp7+
-	 2SF/AVx8ARbUO9eIDwvOIQ9l1iaTw3AffbsYqut4ZZueZkgToWe1ktD74zc0E2lKyOGcp
-	 WOadhZ2s1iGHoZGPEYiiP2/xus5EdtgWjInYkWm6RAfB4juGLluJrmNml+FAVWT9K17tZ
-	 gR+7Gxebkjz9mqo2BSFfhHzqJ8Qyx0jmckaWGcU6qCmCcNIn8X3PbALN5C6vsia/47w==
+	t=1793118439;
+	b=h5x8Ln38tslcLve0bFjgs5uu9SlhnDpguhX75Ln7VCX0KwfSMuXEPkE2GBqltY5rVTfN
+	 cuk107hj2dSkV5ql8gM32tKQM3r7m8a3Nkss5mGEZxo+PmSajEgr/JXbJMi8OfrSzWarq
+	 vqu0u3DgmQxG/NRIpi7ChXodtWv0HirKmZK3iAEdZMq6LAhjcflzUCcQS1DV+Vm/ir0bW
+	 xG73nRUdKZi2Z9WLuEKRbIVb6pQx04NHKGSZMBfgwoMssWYlKjfvdCOlElsRGOo1tDunG
+	 Ji5KxEADcQoDl18BNTqWUARmTnyOca2xlJajT9qodK34Gw/go8hgn1DklnQvExctsmg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793118406;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=v+jT1ar5EDEARWTrZzRXUSQAn5y/GjkZLhzphpIcRPY=;
-	b=lnFwXHylsybRs/l1IzvM0PCf9H63fYBI5JAkSj4/GL14nyoccMEcQgUzbfG/fNG0SznG
-	 78Na9xT6SOjfQkRSt0Fwk+4H1lirQOJgvHIl35VBLBEW8Vl0dJ498+bbrtu5UVNJY5h2y
-	 vDPlgdO5thUTXcGa3PofUSsOf9tiNf4O6tnpBKwdAzPDEqRpwAqUrYOzOyTevUfhfQk5B
-	 Ku77z/ACCq78w2AjRs2hjwXMZFDc1FLU2apOB1B+q2sHHPLAj9GSR4OpMeGmDp1JEoGXx
-	 ZI55G/qRrrwVoATgsnZT+Kro06KjzHAK1OFNv1uti68oXAbAeLoa4T9dBCYSsB60V3g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793118439;
+	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
+	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 X-Mailer:X-Developer-Signature:X-Developer-Key;
+	bh=0neYk5YrzikJjtW8ZXq29ALRyYZ/j0M4VHLdoq0EH3s=;
+	b=J09hGdWdhQ/ypUPrWmqFSBt7haS4pb9AMkXVYgoMNfQ/RZ2CVTjw0LxtvBkBLW5Tvfpv
+	 H4IGPadeFKSMt0cNrhygHYeBEE21/tqAPUqPP05BRyFLnrfLGuC8QJ1fD4v4wA8bOuPCT
+	 FF98F0pVszp1k+clwcX9dHITiJ+Gy5OWV7a8w4ofhx7gFxqoa2F6SZX+qwSBqUN0vVlza
+	 K6Ma+maspwDGWEyPBzyqoTAv5H8T7obRs9M3+XxbzwlnuK11Irf1/PV3XDHrycNZYkBMA
+	 BbB29PaAPDD2qgeshmv8ESVr3w3f6uyBYkTyFTYtbssW2p5wzDtcNJBDjPkTgWafWyg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GSQv9uqV;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XdZujaRj;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 327BB606A31D
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 16:26:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DF3C606A31A;
+	Tue, 27 Oct 2026 16:27:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GSQv9uqV
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B88FB1F01828;
-	Tue, 27 Oct 2026 16:26:45 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XdZujaRj
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98FC61F01825;
+	Tue, 27 Oct 2026 16:27:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793118405;
-	bh=v+jT1ar5EDEARWTrZzRXUSQAn5y/GjkZLhzphpIcRPY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GSQv9uqVdOaGPYIewj+O0vdXk9QgFekBUgSsH7dbyD2SH11nhsQwnNAjw11Oj/GxW
-	 bgNF5xVifjT2vfFup5epKLpqJy0dE0Q2nXn7YsVsHMv8n9p0Gnlu+bjDPHFmhFvvOl
-	 WNdF16VRvXv3mxX7KDxHqbwfbfzYaFJmXWs0dIs8lssBpcVJkGYS2sxGXacTRDgoHK
-	 geTyCW5LYLyRBpDYlCQQ9/58piDJ379FIlUZrgem7obu97G9ErA5w0JdCg0ed4+14a
-	 vf9DebYbs+U2SS5cVztaZmhklYEGkzaRegDRMakAjOEj8YcSROcFK7gW2jY20CtXP6
-	 E436fVCh8sQLQ==
-Message-ID: <sashiko-outbox-186910@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 3/3] drm/radeon: Match VFCT using initial PCI bus
- number
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Mario Limonciello" <mario.limonciello@amd.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261027-vfct-regression-v4-3-0e7190e39c2c@amd.com>
-References: <20261027-vfct-regression-v4-0-0e7190e39c2c@amd.com>
- <20261027-vfct-regression-v4-3-0e7190e39c2c@amd.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 27 Oct 2026 16:26:45 +0000
+	s=k20260515; t=1793118439;
+	bh=0neYk5YrzikJjtW8ZXq29ALRyYZ/j0M4VHLdoq0EH3s=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=XdZujaRj4O5z8foVBYdwhtk7pEGZ0SMFB+QidK1Qx8Fx7eUnjLyrXUkfs3YwZdzaO
+	 AIuoyY9s5ByV8uDtnz7pL0yt75d1psMuK1r3gvEjRULw00dcw5Bi0KxgG6CDv9CdBB
+	 lAPO/auka0BC0Rxv+lDjicwtqAAgnrs4SON8K5RRReQDwjB0a9DOdMpkEr4XVnecrE
+	 0FsGqAk6tC2ajtJtYA2AjZQusgzf4pIu6xYsZwefsCYs5Pb6NJ/DlFSFOL3wyzzocf
+	 I8mFGtPZTDbQabMkM2maMGWem7yM7pHoVHn23lJyF3M51RQyoxq3O6xWInuyCtddK6
+	 n4lnbOiCU4W1A==
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: linux-pci@vger.kernel.org, Jeff Barnes <jeffbarnes@linux.microsoft.com>
+Cc: minghuan.Lian@nxp.com, mingkai.hu@nxp.com, roy.zang@nxp.com, 
+ lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, 
+ bhelgaas@google.com, Zhiqiang.Hou@nxp.com, 
+ easwar.hariharan@linux.microsoft.com, linuxppc-dev@lists.ozlabs.org, 
+ linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev, 
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+In-Reply-To: <20261008173641.199142-1-jeffbarnes@linux.microsoft.com>
+References: <20261008173641.199142-1-jeffbarnes@linux.microsoft.com>
+Subject: Re: [PATCH v3] Revert "PCI: layerscape: Change default error
+ response behavior"
+Message-Id: <179311842858.16692.9389173908526877581.b4-ty@b4>
+Date: Tue, 27 Oct 2026 21:57:08 +0530
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,20 +62,34 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=350;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=oSZljKFgqNZT5ufuzpZRuVDIEd35DWYMJ1TbziJ9xds=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq4NDgZ5zady26m9K6haj/wBnaklC2m6VON1Uth
+ fthEm/97AmJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauDQ4AAKCRBVnxHm/pHO
+ 9Rg0B/0Yp4irU5NLfav7GFd57ZBMTVchSr4AOx/QhQT/NYiTpWZbAXk3PqQ+jiDyz6ve1sACZcb
+ FIik6/0SbB2ZHYg1vpCv+QvsGauCZJkRCpE/LgYO1EcILA5JuIH57hoNl7Fs+Mh3H7qMSGv1IsE
+ FBhn5M4BFnz87Y882zs/nUXVmlLRc90xr08qKclMYfJzlv0m0l4hrtfdyY5v+Z6E/15HVuKxTNS
+ YzwOzzj7rETJVPX04kItadmv6KoQGSfYCZOEF2o5gdlTF/YfQg3cuavMRHDMFxHSa0BWMHTbKtk
+ ZlAgEgsj6CoZVQ8ZeG14PtPR9eX2G2DuV6jeEGI+vzN8aHQZ
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-> VFCT records the PCI bus number from BIOS POST. The current bus number
-> can change after PCI core renumbers the bus, while accepting a mismatch
-> based only on device identity can select the wrong VFCT image when
-> matching devices are present. Compare against the bus number captured
-> from the firmware bus assignment before bridge renumbering.
->=20
-> Fixes: 4059e2f02c8a ("drm/radeon: Fix VFCT bus number matching with soft =
-filter")
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 
-Sashiko has reviewed this patch and found no issues.
+On Thu, 08 Oct 2026 13:36:41 -0400, Jeff Barnes wrote:
+> Revert "PCI: layerscape: Change default error response behavior"
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261027-vfct-regre=
-ssion-v4-1-0e7190e39c2c@amd.com?part=3D3
+Applied, thanks!
+
+[1/1] Revert "PCI: layerscape: Change default error response behavior"
+      commit: d981c566d283ca074df2e485078b369cff088349
+
+Best regards,
+-- 
+மணிவண்ணன் சதாசிவம்
+
 
