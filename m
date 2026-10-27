@@ -1,111 +1,44 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=156.224.83.189
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793059276;
-	b=M3Ow9ialpKitHcxRJFKKLahykDOI8rQR9HlbF7NJZQCTgDPTANoK0s2zz15mEojJx/Kn
-	 7s1bt08lhocABATevv6V3Zau62Z3BdPuHV4+t7hF4XxqCc4xl1/TV8hUcBHh+nHAgA4v6
-	 1LoOfpTxtlb43ccbd7e7hb5B3IeQ2AIpEUgb4t5PO1lEArztFX6pR9xqfoXXy58S2DrZ8
-	 0eYLOlYXZhXJW6sWqSHy9bAbbLe6zdR+kd07RxPTqR9zHKhWcIG1DVHIytU7ZjUDSfhV/
-	 SrxQGvgXRkq+vvNXOM9OypS81zxoayPmQRbN+fY8m5Qyf/NI0XIE/Kr1uRKNzwenEjQ==
+	t=1793061866;
+	b=0fWHakblrSm30dCEo5BI3eoYmCPYyVev4NQ4o/2aqlWCKS+7xnGCjyCJp6DRdwQ/UPRh
+	 lXhN/eAkJJkOflBUmP70PoJgNYFpnoCr49oVs+AvwD5t7+7KTHgYMwLeCbNzwsbe76hC4
+	 z0W8xyFE3Wk1MiyQdrWbSp3N+GK22dyIYE1hXGxeo93yrTw+GTWzhSmYlXgdumHcxtqJW
+	 mr9XR1ki7sWke2aLi5gASbryk6qZu3j5CPll5wEZjbsRenf4DZ2YQcBroVfwhyY0NTSzt
+	 9RA7yJdjbsIFy+/GCIE7xtXieGCHbTiWFfKZMGnUgmNyCmXjWHJRxDPbaxtDhRNuP6w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793059276;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=ixKouDoUlCLHB71PytJx4w1v0AUAxSqI48/quFxSDg4=;
-	b=wCbvl/SWdDtn/hbi+U/5/FfQDViHulDpBRvwckYxexmmVtYXdcX2Ys3cqh8p6xJ3rLEr
-	 JQR+x13twePn9LuYUcFc1AtpEVlaejl41Dbnfkr5/ZefdNN2arto5UYbaA2oAgpeLEzkI
-	 BWvc9DHvnXYyQ4hi4Qhunt3+v/mHcSClS+ETMqLNmk20wT2Fdd/cZooZ69LELpRcLVVeG
-	 pFJ9YLPc/RMPtQTN/KjG8X0N2JjKpfz+n3rv1TMzVhBYsvlV1q0TCHhZO28n7q7uTDCYX
-	 y5Fb+/QoDw7tM2zEyrJlQIafJm5caoM6k5ciQaYqr0EVZPXixkzUiVBiOgweiocny2g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793061866;
+	h=DMARC-Filter:Received:Message-ID:Date:MIME-Version:User-Agent:Cc:
+	 Subject:To:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:X-HM-Spam-Status:
+	 DKIM-Signature;
+	bh=5/VwNhxDqFDjAFzXiE0EgjT10Of3veuyQvr8j5Q5Fl8=;
+	b=J6rYea9syoYaAtkKVZE2/ZG/7LrEoCC5IZWfKHDMytZIIvWXa9GsXpTfCZqNsZTJtM0t
+	 k76Uc1I2t8f/Cf2oS1XYGJDYyFo7aL3zRCOqtYGKHKa6RArRhv0iGLsOiresiSH8K6bU0
+	 4ZqjFSfoTg1iXjXXsJ5BBr/1qveGJeYTkSLnBDQMptCDYlvmccN702xGey4dcaBuEj1w+
+	 f/JD4yTXeNiCvMwFpW/MAxFoNnfkt3hqGZR7aABYdKgkFHSyguJjL50GYWR5OWMwO74O3
+	 wUiMrZLoNZ089DuU9Cog5WFh+AMfp97IOAVTJOyMZZkV506FZmfPh+ysBTJMQ7YusJw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=Vhs5p+fb;
-	arc=none smtp.remote-ip=209.85.216.50
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=rock-chips.com;
+	spf=pass smtp.mailfrom=rock-chips.com;
+	dkim=pass header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=DzxT93fh;
+	arc=none smtp.remote-ip=156.224.83.189
+Received: from mail-m83189.xmail.ntesmail.com (mail-m83189.xmail.ntesmail.com [156.224.83.189])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CD20606A31F
-	for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 00:01:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1CD20606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33F20606A31B;
+	Tue, 27 Oct 2026 00:44:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 33F20606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=Vhs5p+fb
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-3ada4c06b7bso1691820a91.2
-        for <linux-pci@vger.kernel.org>; Mon, 26 Oct 2026 17:01:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1793059275; x=1793664075; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=ixKouDoUlCLHB71PytJx4w1v0AUAxSqI48/quFxSDg4=;
-        b=Vhs5p+fbS6ae+l/V72p15FTxjt8th/Pt4+vhSDsaWCBVIhu2VWTSEEwme6W2CrRIIt
-         cm87wM+c/ZRZC3L1HetmJmH1r+zVfT3MtnIynEH0k4t8oPu8slybgWLsNI0r3ACWpJIJ
-         SmsXQWzbCod8Z3Gizsh+Y0Srp2XHy6jaVfadtmBorwjvPBXoJVhFtE9owsQi57MQebug
-         UPCpLmXOjD6ZYp43TKFvRhqJzIcLFzqb/gvvX41zqbVT8EEp/KexvctLrQKvA5Jusvov
-         k/xKcC5W1T9FavAmx3V7rmvKGZP/DeQ3/hKM/asq8UvkuR84O8G8HuKh6SgVoVDWdyof
-         Bxxg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793059275; x=1793664075;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ixKouDoUlCLHB71PytJx4w1v0AUAxSqI48/quFxSDg4=;
-        b=zg+9kifRc9dYAvnv8aGMQsjlAfFEEFOXGPHyWxhgHFwmSCxCljpEPcK60v7zNQHsC4
-         iL5XV/hWMy4gq1XN+8yV/W37bm+1tq54USh5P+gIQtnPx0ps7lOsOypmuXLxwaEawSi7
-         O9jyq1iskAqetiWMqzHCXfvjCp0dZ6VBKH77SRD9FjQd55Cq4WMO5z3afUIjyE4M3rjd
-         SkTR5chZzg7H7o3Q9alQiKHbVoIF78grS43r+ntRdarFeLD7Hdyj3Hm/g2s7GtSyA26I
-         WMFnEKFN5VJQaGYBHpvfS3oPhlCOuSuf1Gk/WhJdtNOnlv6yHyVhvS0KuSNe3Y8xc+Y5
-         gcZw==
-X-Forwarded-Encrypted: i=1; AKwUvByqhj6wBcM8yK3VcTA4ueDol758WlzGgYppoY83buOajzsVR5sPnKBDnSgiR+oQZvCQOrOCy1obVuk=@vger.kernel.org
-X-Gm-Message-State: AFq9FYIAq3WRuwoFrxc/ulz871KlNal0LC/irEFpRZTGPabLWZfvMM+D
-	YlFIpYLkmdjtcg8QULVhTmXNFhmqr3GIISJ6Qv4aeDnX/2b5ISEOneh+xIIrT1HT+w==
-X-Gm-Gg: AYBFou0uAgaJrsYNa7HagmhMM6xeNZ/71Js3EfTNMe2e+0/ReiXv+EG+cb+3VXtspoe
-	NvXsNs9N40fR+HSXSXh6PMtBLZtm1u7/413heSZIx8FN2kFafYyjblIlseAQnk7qfaXEf10su/w
-	t7CUI4M8U/d3SzbGdHv1S8sYDyk3rC5x8TbCh3QJAVIfWqpMPT7hNso2QW2fwPQmtAo1pnye+LF
-	OVIifEjxLj25M5xHRNS23+1G2pLSQInMDlGoZnIocn51cm4dJ42xK1Z+aFw/55W6R0FDff9Df74
-	m3hw7lGWLsC1u08K5SmpbHHK96g8xYT7nuqeu1bjHGjLUt5rndItlZRAYNtzqZKoDwTp5gwXtSC
-	O4XQO30SAvlu3kcKkjmEO21lT80GWdc3KlPvszZPqkN0ojtRshg7EZzMCRjknzL5hKx8LOmyqgM
-	KgGtcPD31VBmrkzYXQTYFPHvKepe6MQKoddhSnrbUtb4lyQPiPLrtIQJFoaoJnuW4D4hgJwwtAd
-	UYT75vpqsZIqMgfk/Pt+dlHkRVJ7PYarLz6eoRx+se5QOtv3BkZ/86c+AvYQyy42i0tjuPf5Muy
-	3/l2RGsqIiheJRYBhPM1oDtjGhliSVIXroZF+yIvNvevxJ3wKYzugd3VbEoofeGouNH/2Pc=
-X-Received: by 2002:a17:90b:528c:b0:3a0:e4ce:31fd with SMTP id 98e67ed59e1d1-3adead444ecmr7102022a91.10.1793059274755;
-        Mon, 26 Oct 2026 17:01:14 -0700 (PDT)
-Received: from google.com (192.150.203.35.bc.googleusercontent.com. [35.203.150.192])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae4066cf2dsm1119900a91.16.2026.10.26.17.01.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2026 17:01:14 -0700 (PDT)
-Date: Tue, 27 Oct 2026 00:01:10 +0000
-From: David Matlack <dmatlack@google.com>
-To: tarunsahu@google.com
-Cc: Andrew Morton <akpm@linux-foundation.org>, joro@8bytes.org,
-	Mike Rapoport <rppt@kernel.org>,
-	Pratyush Yadav <pratyush@kernel.org>, maz@kernel.org, arnd@arndb.de,
-	jgg@nvidia.com, robin.murphy@arm.com, loganodell@google.com,
-	oupton@kernel.org, kevin.tian@intel.com, alex@shazbot.org,
-	dwmw2@infradead.org, pbonzini@redhat.com, seanjc@google.com,
-	will@kernel.org, Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Alexander Graf <graf@amazon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, baolu.lu@linux.intel.com,
-	linux-arm-kernel@lists.infradead.org, linux-arch@vger.kernel.org,
-	sagis@google.com, linux-mm@kvack.org, kvmarm@lists.linux.dev,
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, skhawaja@google.com, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH v2 3/4] liveupdate: Replace compatibility string with
- a 2-bit pair feature header
-Message-ID: <at_pxoULR1Tp5anN@google.com>
-References: <20261021152527.375070-1-tarunsahu@google.com>
- <20261021152527.375070-4-tarunsahu@google.com>
- <atlQ_Er0Ig7CCSxv@google.com>
- <CALzav=f00C4yOAseNunW8GgQTDUGWT927Qy=TLm-3-J0TEDH8Q@mail.gmail.com>
- <9huzzew0el59.fsf@tarunix.c.googlers.com>
- <at_CncIPYCxOVkLo@google.com>
- <9huzecdcghxu.fsf@tarunix.c.googlers.com>
+	dkim=pass (1024-bit key, unprotected) header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=DzxT93fh
+Received: from [172.16.12.48] (unknown [61.154.14.86])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 526dfc65c;
+	Tue, 27 Oct 2026 08:44:12 +0800 (GMT+08:00)
+Message-ID: <ff204558-dc22-4d38-b0dc-2c727f983f9f@rock-chips.com>
+Date: Tue, 27 Oct 2026 08:44:09 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -115,130 +48,78 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9huzecdcghxu.fsf@tarunix.c.googlers.com>
+User-Agent: Mozilla Thunderbird
+Cc: shawn.lin@rock-chips.com, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas
+ <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+ Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+ linux-rockchip@lists.infradead.org, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RFC 0/2] PCI: rockchip-host: Retry training and hot-reset
+ a JMB585 on RK3399
+To: Igor Velkov <iav@iav.lv>
+References: <20261024-rockchip-pcie-resume-v1-0-58e54a5cf5f1@iav.lv>
+ <4316c1da-f7ff-4fa5-a330-512800474e45@rock-chips.com>
+ <20261026-rockchip-pcie-shawn-reply-1@iav.lv>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <20261026-rockchip-pcie-shawn-reply-1@iav.lv>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa17ad0966603a4kunmdefc543f472a32
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkZGkJLVk9LH0IYHUNPSRodQlYVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUJCSU
+	5LVUpLS1VKQktCWQY+
+DKIM-Signature: a=rsa-sha256;
+	b=DzxT93fhhkUwadv+bNoSjWR3pa5Fg+2lO5H9x8aSzNv8PZ+Qij6U/dj5xWoWHaGEJ7t4dnDPK6w9r5pe6dQJwgGwOTd768UARevM+xTQPOP53tGaz1hrcKKHOiDtaMitWBQMU76SNQ0Dbod6URXqogHljnpFuJAa1C0tI+KJP2I=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=5/VwNhxDqFDjAFzXiE0EgjT10Of3veuyQvr8j5Q5Fl8=;
+	h=date:mime-version:subject:message-id:from;
 
-On 2026-10-26 11:28 PM, tarunsahu@google.com wrote:
-> David Matlack <dmatlack@google.com> writes:
-
-> > But looking at this again, I think the required bit is redundant. Whether
-> > a feature can be safely ignored is a property of the feature itself, not
-> > of any particular file. Every file that has a feature present will have
-> > the same required bit for it. The only thing that actually varies per
-> > file is whether the feature is present.
+在 2026/10/27 星期二 2:28, Igor Velkov 写道:
+> Hi Shawn,
 > 
-> The required bit is subsystem property not the per-file. e.g. memfd_luo,
-> it is set at compile time for a kernel. So every file will get that required
-> bit set. It is not per file property.
+> On 2026/10/26, Shawn Lin wrote:
+>> The host cannot distinguish this case.
 > 
-> struct u8 memfd_luo_feature_state {
->        [MEMFD_LUO_CORE_FEATURE] = LUO_FEATURE_REQUIRED
-> }
-
-Right, whether a feature is required is a static property of the
-feature.  That's exactly why it's redundant to send it in every header.
-
-> > The required bit still has to be conveyed to the target somehow, since
-> > the kernel that needs it is the one that doesn't know about the feature.
-> > But it can be conveyed by the feature's number rather than an extra bit:
-> > split the flag space into required features and optional features, and
-> > assign each feature to one of them when it is defined. This is similar
-> > to the required_flags and optional_flags approach in struct pci_ser [1].
-> >
-> > Keeping the same header shape as discussed with Pasha:
-> >
-> > struct kho_ser_hdr {
-> >     __u32 size;           /* Size of header + payload in bytes */
-> >     __u16 nr_required;    /* Number of required feature bits */
-> >     __u16 nr_optional;    /* Number of optional feature bits */
-> >     __u64 flags[];        /* Required bits, followed by optional bits */
-> > };
-> >
-> > Required feature N is bit N of flags[], and optional feature N is bit
-> > nr_required + N (using nr_required from the incoming header). The length
-> > of flags[] is DIV_ROUND_UP(nr_required + nr_optional, 64). Both spaces
-> > are numbered contiguously, so there are no gaps, and up to 64 features
-> > still fit in a 16-byte header.
-> >
-> > Each bit just means the feature is present, so the truth table becomes:
-> >
-> > Source bit       Target supports  Action
-> > ---------------  ---------------  ------------------------------
-> > Not set          -                Accept: feature absent
-> > Optional set     No               Accept: ignore the feature data
-> > Optional set     Yes              Accept: use the feature data
-> > Required set     No               Reject: -EOPNOTSUPP
-> > Required set     Yes              Accept: use the feature data
-> >
-> > There is no invalid encoding left to check.
+> The controller seems to tell before the config read. On 26 Oct the
+> link came back 2.9-4.5 ms after a hot reset in ~50 cases, all fine,
+> and 10.9-35.4 ms in 8, each followed by an abort on the next config
+> read. PCIE_CLIENT_BASIC_STATUS0 read 0x240 after each of 4 slow links
+> and 0x1240 after each of 16 fast ones. What does bit 12 mean, and can
+> the driver rely on it after link training?
 > 
+
+I have no idea about it. The PCIE_CLIENT_BASIC_STATUS0 says:
+
+14:12  	RO  max_payload_size
+
+So you are saying different MPS in different cases, not linking status.
+
+
+>> You've tried PERST# with the patch 1 applied. So perhaps it's doesn't
+>> help.
 > 
-> IIUC, I believe this will not work.
+> Patch 1 pulses PERST# only after a training timeout. With PERST# in
+> the DT a slow link still occurred (25 ms, then an abort).
+> Re-initializing the port, without PERST# or a power cycle, brought
+> each of 4 slow links back in 2.9 ms with the endpoint answering.
 > 
-> To Communicate between source and target, We are defining a protocol, A
-> protocol which will be standard for all the kernel. And each bit location in
-> flags must have the same meaning in both the source and target kernel.
+>> I've attached a vendor's debug patch, perhaps you could try it without
+>> your patch.
 > 
-> Now in you approach, If Source kernel send feature N to target kernel,
-> target kernel must understand Nth bit as the same feature. Even though
-> the bit position in your approach is not fixed but they are fixed
-> relative to their starting point.
+> It hooks do_serror() only and registers after pci_host_probe(). Here
+> both SErrors and synchronous external aborts occur, at probe and on
+> resume (the cover had that wrong), so we will move the hook before
+> pci_host_probe() when we try it.
 
-I think you misunderstood the proposal. I'm not proposing to pack only
-the set bits, and I'm not proposing that each feature have a bit in both
-ranges.
+Yep.
 
-In my proposal, there is no such thing as "feature N", there is
-"required feature N" and "optional feature N".  Required feature N can
-be found at bit position flags[N]. Optional feature N can be found at
-flags[nr_required + N].
-
-In more detail:
-
- - Each feature is defined as either required or optional, once, when
-   the feature is added. That choice is permanent.
-
- - Each feature gets exactly one bit, in its range, and that bit is
-   always at the same position whether or not it is set. Required
-   feature N is bit N. Optional feature N is bit nr_required + N.
-
- - nr_required and nr_optional are the number of features of each kind
-   the source kernel knows about, not the number of bits set. They tell
-   the target where the optional range starts and how long flags[] is.
-
- - A set bit means the feature is present in this file's payload. A clear
-   bit means it is absent.
-
- - There is no invalid or reserved encoding to define. Each bit just
-   means "present".
-
- - The target doesn't need a supported table. Required features are only
-   ever appended, so it rejects any required bit at or beyond its own
-   MEMFD_LUO_NR_REQUIRED. Optional bits need no validation; the target
-   just checks the ones it knows about.
-
-> For the current appraoch and V3 [2]. Think the below one as msb is
-> required bit and lsb is feature present in payload bit.
 > 
-> 00  FEATURE_ABSENT / DEPRECATED
-> 01  FEATURE_OPTIONAL
-> 11  FEATURE_REQUIRED
-> 10  IS INVALID (analogy: required set but feature is not present) which can
-> have different meaning in future if in future, a need arises to reuse this
-> field.
-
-In v3, 0b10 is reserved and not checked by the target. That means an
-older kernel will silently accept it, so the only meaning it could ever
-safely take on is "safe to ignore", which is what 0b01 already means.
-A reserved encoding is only useful if older kernels reject it, and at
-that point it's no different from adding a new required feature.
-
-> Deserialization can happen per feature from right to left. without
-> jumping back and forth.
+> _______________________________________________
+> Linux-rockchip mailing list
+> Linux-rockchip@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-rockchip
 > 
-> Because of all these reasons, I believe current approach presented in
-> V3 [2] is the better. It is close to your PCI series with two flags
-> field for required and optional except I combined both field into one
-> flags. In your above approach you do have two counts but not having gaps
-> (which is wrong) and the way you proposed to parse with an offset is different.
+
