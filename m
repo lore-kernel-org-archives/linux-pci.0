@@ -1,86 +1,86 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.42
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793148938;
-	b=HJDwHzYeBAHyGIvOsQSJKYGtKBUSI0k6s9fZF2HM0Ne1jtShM19g2Lj6Q/F4xL7T5E15
-	 eqnPyq5JJeW35714x3ieJJtmirePiqtdHq2Ej2781Kcz5zydxGFvONTteo4CqF71txDDE
-	 R4AECoHxTtE22nWyBQ51ign/rJkqbeK0SQ/J9TCnr75I3/UW5UUwGXPhvmsWY1WDTFdlj
-	 jXX4KNH8O3W1lB+2GX/HQf9ltzkjPa9OT/wX36BRopZZHdNmzKIpLv9maQNJ/xWkv9SpD
-	 Kib1Pn/62EnZNc4hQJ0tsIAdV7tQ1cUUHqC3UkYXnCFRyjzk/m8CKcgYrABpA2LXwcg==
+	t=1793148953;
+	b=0JEW51pEiiHSdHEsMHcT9v2+Q9nnmGYxEb1asZa/peVBO69ppbHJlghqzh9HU9Zg4TEn
+	 5fZNkAN/Bj9e/qh5PzRhZo7cpOeKc88wYaNboYx96WZ04kMVAvxtnvmQotYp9RMEzfIG7
+	 uS8TB+8UcgmAMz4fy+oZvqLX6DkiyLhKj7oaqdOaNiLahLgSiIErEau5JoV+35c11QIUW
+	 NQKaaCkaS4QDPw5D7UUWOoEtwuZAw4CinGmcKwnA3n9neb6yTjwvpWrdfA/C+uhJLB8Mf
+	 MDR1aN1ly4j3PP4nRcoPpw2SYJ1hPI1jPhLdMel2jAFAOfhi2WTc9RZz5zaLpBtHpnA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793148938;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793148953;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=HzH8rykX5lmcZm9pB6FHq6gj3hJ7Y5hZ3zn+8svQBtg=;
-	b=EXv8yDEN6eYPSyhe+n0R+mUE+JBEn30PqT6bVOPQfFVNoJ/PK+U8taLosf3n25Wozvdp
-	 I4ROxxcGGC252YtC1KqmukELrOVski/TALJMP6ORH4EE4lnNxWIZyx15H5foVDBSyI48p
-	 k94ZDn+annv/ktlLppiBiZRzg1kAz5ELRp0CLeLUsjhhirT6mLcFAdbed9mrkXoQeIAux
-	 eJdU4UugPxjPNwFchJUS3WxspjLZ2o+XRZBozQEcstyK7p1ciVMMTeQrtzHnRWPgWr2V+
-	 J4ub5Ve99y6S60CBVZvD7ow7HrEt6zU6qpR6SNly8lSjEtPox3XtHjUVteJEYH5LkKQ==
+	bh=PAsTokA7Hgc1ku+L2Oft5fOaAKv9i/M7eJ7+DNq9b9k=;
+	b=BmoUcP8SKwhSKKOOxnhN0VmX1V2ii8HygmXbj/ForA20xFaoRB2KWsMzxgm8LqsuIhxn
+	 Z3OUzhClATsz1X+Z7LIZP6lQVnUxbIRbyp7fhFG3lD/b7PElclCUTyPHKv+xlUtkCL7fw
+	 z6oFTSAO0B38yg/b3D1rbf6pQNr0bwx92IwIw2YNg9JM+D5nqb4bBKa7OwqvCNPqragk2
+	 fo3MVYHn5pYOYA2ZxAz/+R9bhjXAQqwriXgIqDlpNRmuA6V+y6lcHmHYczZV0kEY5PK6d
+	 3MWk8M1scNMR2Cd2r7720b4uJKt/XZYAfVu8rp8Kp8rDvaDy1joHSWJMipU3b7+FTKg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=0Hs2emRg;
-	arc=none smtp.remote-ip=209.85.128.53
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=f0BmF++g;
+	arc=none smtp.remote-ip=209.85.128.42
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1736606A31A
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 00:55:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E1736606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DCF5606A31D
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 00:55:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4DCF5606A31D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=0Hs2emRg
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4a218c463d1so2884405e9.0
-        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 17:55:37 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=f0BmF++g
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4a2084d62cdso3363325e9.1
+        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 17:55:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793148936; x=1793753736; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793148952; x=1793753752; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=HzH8rykX5lmcZm9pB6FHq6gj3hJ7Y5hZ3zn+8svQBtg=;
-        b=0Hs2emRg91qIM8PJTETU1uctThZ6xzoZy7RfV4IYtkSbB2npBvofG0LkEmloIA+7Qw
-         uyIKtxOwqYlIuVFJ5OoVN/atFvsTck/gM4njkRSG1rTHwODgoXb+piapKtOWlvsGamVW
-         q0ur5ex1UJV99FnY2ePxOIJ5rWi7wLSr4IgZYvB3A1tndimjxAIR8Atc3rwyVLprsVFQ
-         kZZltfPSpi2/pymLQ555h1m+q6P9WSQIteP+7U5nSG7KX66gZGUQPkdnczFvr81I412q
-         mXh6+TjzjOck86MyH1Tw9fyMZt6C5noj3lBZRebvxAD2ZuEbcUuxzJ6NHJxfuFxdA+w1
-         r8FA==
+        bh=PAsTokA7Hgc1ku+L2Oft5fOaAKv9i/M7eJ7+DNq9b9k=;
+        b=f0BmF++gIrsae/Hwij3CebxuoKhvrOBcBTXvCW+7m0+oSZrjytHilILdtPW5mHckP2
+         WJvkHYZMRkfSoBZnikgve/4H89OlmdjltI3qdNzVGdNvhqo9G9p98Klk9RLildbUad3y
+         wF/rFPODp2pGcnK3OCisBYNUREk0IiRPrCwe6BssXbdD0f5504jWthwc2aqLRN6K6PcY
+         /U/b9127bd3JyvSz5p9LrwMY3qcXxLiYMM2a0TR/vFMcqf4g5WPXZCCxnbzG7StN8kl0
+         EQ3N6iJ9s78Jwyw/8+h1VaEzVX2V/jvSIoAmU/4dMqxNE+OS6S5bo7hNrJmBdqcSQCNh
+         Tb8w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793148936; x=1793753736;
+        d=1e100.net; s=20260707; t=1793148952; x=1793753752;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=HzH8rykX5lmcZm9pB6FHq6gj3hJ7Y5hZ3zn+8svQBtg=;
-        b=tYqW4lfM8Qgnkc1tSKvIhR4fUgc1vspl9imlXPg8hKilzh7HSvuxH3JOsHnnZtEdUf
-         cjjuCdLpPY/jgErJzPVaCqqf9XxGvfc57V3Ses8VVj0drR+QOfTQ4Lv5M5DjEl7pXFjC
-         aV2NtlmqGheJw7khphQ+2gv0GQs7/AaEA1LseOVplhvTDOm/SAmUlPLKDG8vI2Tft1zB
-         ESTgMmZ1Hs1wkhXiwIgnIDzHG7RKLequeWXSbzD7UDRxy9AkfghkSvikqGVSdJULNFub
-         o46AinGbkGmW3cguaSGS7ULYARuGnCGgYcHRHqjA0Wrt4hCu8okyCs7CN8H76L+IgHfF
-         ww6A==
-X-Forwarded-Encrypted: i=1; AKwUvBzHAgZpZbow4f7KizKITBA6FBVPHjjEjpE2kw+dovK+pB675AIkl3w3yqEZyE5pkUWqLAKpN4azyIA=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLj9ZZCxzOOBqHim1jOsnF6JGZhMijvxb2YnZ09T6gFCfW0aNsO
-	UjchyHIaWOeDG2DhpW7nNjG51HrGIgWtX55VRop76Z7wZOFfrNEs+7o+
-X-Gm-Gg: AYBFou1sibguuOBvNvPRGxHlfZWADkqU1NQqYTD1j9A5iKYZ812J4FpWE9aY6o8Eraa
-	H4B85HqCuCfm0gDvBUx81ATiPxoDUZBCZzUCU2dwIhWCmPsNDkyvwMWDMKQuHWvouBnkRzvB9DX
-	gJlX+Y75o37jp0upxFhJ919/jp0epp9hXzz+kV2i6dKJPtOheuKTNkw+LfJ/DyOb/6EKdv76eEk
-	A/HEnZ7hbingyXYGbVRYu5sxNfS/BwemO9FPhSVTlW4ZIy4AgqHLwpa9zLitnbgYjW0MVqMDgy4
-	rs+smDXakn39uNUe8zox0bTDDm/uXU9ViK+jmcO8MICP4U3genbPtEFyIwM6z4osxfup1ICd0bG
-	1ycuX87QE01yPtowcfYVS7RORAZ7QXRbgADH9vuSUmH3ixakrylBNKc9Fhf6fNPr+k5mxxkyC9L
-	z+SY9HjrB9fTu2qdhXp9ZgqHw+h3htICCNXBiVQvBKy2wa6Wk6vnMApyr9oaDMWg/khJe7xfDvM
-	jB2HzCUTbdmIqaCy2FzNS5h6+XROroXlHF+T31reI426JY+90USB+Ig+U1yFdjvTAPtP4yjfSya
-	aWPMTd3ay+iLTGBFku6y9Y3wAAqNZ3fR4THuaygMYYYn/fheqJ1s+aGiEiW/aZ5PoJxHnjkAG4n
-	Yqg81HMJMmTc2FlyVfpPCTJw1c0jSIYZRUpBwZY6AW9Kgpw==
-X-Received: by 2002:a05:600c:a11:b0:4a1:e11f:b2e1 with SMTP id 5b1f17b1804b1-4a966773233mr13027905e9.15.1793148935956;
-        Tue, 27 Oct 2026 17:55:35 -0700 (PDT)
+        bh=PAsTokA7Hgc1ku+L2Oft5fOaAKv9i/M7eJ7+DNq9b9k=;
+        b=rGZQKhYVeyGYpWXqRoUHrTLlIdQg4M7t6cAMCKI0R8OiY4NbWYQJqPfld19GEhOTgC
+         cqbqIAb8jUBzvvXx/1twMG9NptuL5hXj4MTJYfvPgpm1D6cOiamGzr6rdkLzXZO0TOZY
+         aqUCqj4R4j8P75v+mpuSVQGc/DxQy4BuP/a1ncYTyezvGfJIdSGdHJkev85ZhduciuHN
+         21LKqbyoRAw6S1JDsQaUau/PRMEF8hNcPljFgKJzRCSYTNDlbdvCTJEQP3br8Tes1oSN
+         MQsIPPBzKX9EQOIKADn20OKSuY0eqgu+1igvoh1f7fX4svsRl6+OE/w4DhH5Bx3heFEf
+         GU2Q==
+X-Forwarded-Encrypted: i=1; AKwUvBzM7B7eJ+QVZ1rnIOk9IbkShMdLIeJbMKGC/G57hvBeUNbk8hgGgaIdRZp/py+n0DIGWGpT3ESTl3c=@vger.kernel.org
+X-Gm-Message-State: AFq9FYLNzlxtyht3aHTFNtxaByMqTWLWmeR4RoCURdxYIDPxN3NPbfPO
+	k0I9BQ+e7d2L2oKrYwlrHi6EBSnj+28e4vpHuR05RrPx/kbuWWjjdyU7
+X-Gm-Gg: AYBFou3d3LKEmNcAOfZAUc5zhqutCJGLcFjG98XYeO7nx7HvxoSdJBkGC9sjM5ZNGx+
+	B7xNf5CilVz0PHQDrhR2VbAzJPumMFiOB2MwlnqXnmgxjOVdW9Bcvd8D4MbEe3Fe0LIJ/FD0aFP
+	PVbFcbXZgcVellGS1BrO8QyoWM7svIuGRiB/D8uoae8Jaz4m4NWcvxR3cUkmjcTQgmL19/pAXsK
+	0T+N4k/tA0rhxUDAYHws3BpXMQEkgSpAh73A9tGr8AVN97drKM9CGVxaK5HqoTKilI880XcBUeY
+	Kre63OFBFAo5rcwDnNhbPOz6gX3UGszw7lfQObWqRsrcLmSl/5Xl5zGvZ5U1EkVSPvcY1STP96G
+	ezO7FnYay2pIu5r23+N1fiwJuMUIv6WJepdaKHDGNnAo/nXurW3Gnt6xWHiciLMu+i6/IRJL2Lb
+	hdVe5Erkr1xZlLUjlU4xkoIeoIjwsN1qoqeFd1fCxD1qpHNBy9uzS13AVP2bLpXwq3+GQSGFgjQ
+	zlOilKc1zwpEy27oy/veMRjfqYjlEa3q3/aGD8BJkJlhi3n+gBRTnyhB8TUm30XMqIt83slfCDy
+	XK7ATW4nzWwjfOz9yuM9KiLbi2v+TeEIiN1tUsvMhTStD1v716iCsRwBjIH+I75pjJvB39Qr717
+	vAMCo2/xjBeB+aw0W5ef9XVf/OHB0D57Qlto15yt2rHQB5A==
+X-Received: by 2002:a05:600c:3b1e:b0:4a2:10f9:37ce with SMTP id 5b1f17b1804b1-4a9665870e9mr14042925e9.15.1793148951455;
+        Tue, 27 Oct 2026 17:55:51 -0700 (PDT)
 Received: from tachyon.internal (2.155.41.158.dyn.user.ono.com. [2.155.41.158])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a978d57b39sm13261575e9.10.2026.10.27.17.55.33
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e3ecd8dcfsm25111999f8f.50.2026.10.27.17.55.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Oct 2026 17:55:34 -0700 (PDT)
+        Tue, 27 Oct 2026 17:55:50 -0700 (PDT)
 From: =?UTF-8?q?Enrique=20Hern=C3=A1ndez=20Bello?= <ehbello@gmail.com>
-To: manivannan.sadhasivam@oss.qualcomm.com
+To: iav@iav.lv
 Cc: shawn.lin@rock-chips.com,
 	lpieralisi@kernel.org,
 	kwilczynski@kernel.org,
@@ -93,13 +93,13 @@ Cc: shawn.lin@rock-chips.com,
 	linux-rockchip@lists.infradead.org,
 	linux-arm-kernel@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
-	iav@iav.lv
+	manivannan.sadhasivam@oss.qualcomm.com
 Subject: Re: [PATCH v2] PCI: rockchip: Skip the Tpvperl wait when power is already valid
-Date: Wed, 28 Oct 2026 00:55:32 +0000
-Message-ID: <20261028005532.2399083-1-ehbello@gmail.com>
+Date: Wed, 28 Oct 2026 00:55:48 +0000
+Message-ID: <20261028005548.2399155-1-ehbello@gmail.com>
 X-Mailer: git-send-email 2.56.0
-In-Reply-To: <179196286749.38040.5597453767131590054.b4-reply@b4>
-References: <20260911211559.207990-1-ehbello@gmail.com> <179196286749.38040.5597453767131590054.b4-reply@b4>
+In-Reply-To: <20261016-h64-pcie-resume-tpvperl@iav.lv>
+References: <20260911211559.207990-1-ehbello@gmail.com> <179196286749.38040.5597453767131590054.b4-reply@b4> <20261016-h64-pcie-resume-tpvperl@iav.lv>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -111,119 +111,81 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On Wed, 14 Oct 2026 12:57:47 +0530, Manivannan Sadhasivam wrote:
-> This is hard to believe. First of all, Tpvperl is the min time specified by
-> the CEM spec to allow the power to be stable, not the max.
+On Thu, 16 Oct 2026 01:21 +0300, Igor Velkov wrote:
+> A data point from a Kobol Helios64 (RK3399, JMB585 on pcie0, ep-gpios as in
+> the mainline DTS):
+> - Enumeration at boot works with and without this patch.
 
-Agreed, and the patch should not have implied otherwise. Waiting longer than
-Tpvperl breaks no requirement, and I am not claiming the current code
-violates the spec. What the patch rests on is only your next point: that the
-wait is redundant when the supplies are already up.
+Thank you -- this is the most useful thing anyone could have sent. It says
+that on a second RK3399 board with the same endpoint chip the patch causes
+no boot regression, and that your board does not have the failure I am
+chasing. Both halves matter: the first is the thing I could not test, and
+the second says the failure is not simply "RK3399 plus JMB585".
 
-> Maybe the issue is with the delay between PERST# assert and deassert?
+The boards differ in ways that could matter here: ROCK Pi 4 has
+vpcie3v3-supply = <&vcc3v3_pcie>, which is regulator-always-on, and no 12V
+supply; Helios64 drives pcie_power from a GPIO and feeds vpcie12v from
+vcc12v_dcin. On your board the endpoint's rails may genuinely come up with
+the probe rather than seconds earlier, which would make the sleep do what it
+was written to do.
 
-That is exactly the variable this patch changes, and I buried it under the
-power-validity argument. Let me restate the mechanism in those terms,
-because I think we agree on it.
+That distinction now has measurements behind it. I instrumented the driver
+with two module parameters, one sleeping before the gpiod acquisition and
+one in place of the existing msleep, plus a ktime delta across the two
+gpiod_set_value() calls, so the PERST# pulse the endpoint sees can be set
+and read on one kernel. On ROCK Pi 4C the pulse is 1 ms without the sleep
+and 108 ms with it, and what decides enumeration is the pulse width alone:
+delaying the assertion by 200 ms changes nothing, while 100 ms inside the
+assertion fails every time (0 of 5). Since vcc3v3_pcie here is
+regulator-always-on, Tpvperl is met in the failing configurations too, so it
+cannot be the discriminator -- the wait being redundant is only why it is
+safe to skip.
 
-PERST# is asserted when the GPIO is acquired, not at the top of
-rockchip_pcie_host_init_port():
+If your board genuinely powers the slot at probe, you would expect no
+pulse-width sensitivity at all, which is consistent with it enumerating
+either way. If you ever want to check that directly, the two-knob patch is
+throwaway but small, and I am happy to send it off-list.
 
-  pcie-rockchip.c:
-	rockchip->perst_gpio = devm_gpiod_get_optional(dev, "ep", GPIOD_OUT_LOW);
+> - Resume from s2idle fails in rockchip_pcie_resume_noirq. On plain v7.3-rc7
+>   with the mainline DTB, 13 cycles pass and the 14th fails [...]
+>   On an Armbian kernel with this patch [...] the first resume ends in a
+>   synchronous external abort in rockchip_pcie_rd_conf from pci_power_up.
 
-and it is released at the end of the init sequence:
+Two things, one agreeing with you and one asking for more.
 
-  pcie-rockchip-host.c:
-	gpiod_set_value_cansleep(rockchip->perst_gpio, 0);	/* already low */
-	rockchip_pcie_init_port(rockchip);			/* PHY, clocks */
-	... register writes, Gen1 training enable ...
-	msleep(PCIE_T_PVPERL_MS);
-	gpiod_set_value_cansleep(rockchip->perst_gpio, 1);	/* release */
+Agreeing: the failure happens on plain v7.3-rc7 without the patch, so it is
+a pre-existing resume bug and not something this patch introduces. Your
+conclusion that it does not depend on the Tpvperl wait is supported by your
+own first measurement.
 
-So the low pulse spans the regulator enables, the PHY init and the register
-writes, and commit c47f90be4c89 added 100 ms to the end of it. Removing that
-sleep does not shorten the time power has been valid -- which, as you say,
-is seconds by then -- it shortens the PERST# assertion by 100 ms. That is
-the only behavioural difference the patch makes at probe, and it is what the
-boot statistics in the commit message measure.
+Asking: the with-patch run is on an Armbian kernel and the without-patch run
+is on mainline v7.3-rc7, so the comparison is between two kernels, not
+between two values of one condition. "First resume aborts" versus "13 cycles
+pass" is a big enough difference that I do not want to attribute it to
+either kernel without a same-kernel A/B. If you are willing, the cheapest
+version is one kernel with the patch applied and the resume hunk neutered,
+i.e. in rockchip_pcie_resume_noirq() replace
 
-> But claiming that the Endpoint doesn't tolerate this 100ms delay, but still
-> several seconds of the boot delay is quite hard to believe.
+	rockchip->supplies_pre_enabled = rockchip_pcie_supplies_enabled(rockchip);
 
-The endpoint is not held in reset for seconds. Before this driver probes,
-the pin is in whatever state the bootloader left it; the reset the endpoint
-sees is the pulse the driver applies, from the gpiod acquisition above to
-the release, and c47f90be4c89 made that pulse 100 ms longer. Whether that
-crosses a threshold in this particular endpoint's firmware is what the
-measurements below address.
+with
 
-> Is the PERST# signal polarity on the board DTS correct?
+	rockchip->supplies_pre_enabled = false;
 
-As far as I can tell, yes. ROCK Pi 4 declares
+so the full wait is always performed on resume and only the probe path
+differs. If your first resume then survives, the resume hunk is the problem
+and I will drop it: the failure this patch is about is at probe, and the
+resume re-evaluation came out of an automated review of v1 rather than out
+of any measurement of mine. I would rather ship the narrow change that was
+measured.
 
-	ep-gpios = <&gpio4 RK_PD3 GPIO_ACTIVE_HIGH>;
+> - Plain v7.3-rc7 also hit an asynchronous SError during the bus scan at probe
+>   in 1 of 4 boots.
 
-and the driver acquires the line with GPIOD_OUT_LOW and releases it with
-gpiod_set_value(..., 1). PERST# is active low at the connector, so logical
-low is physical low is reset asserted: the DTS polarity and the driver's use
-of it agree. The Kobol Helios64 that Igor reports on uses the same polarity
-(GPIO_ACTIVE_HIGH) with the same SoC and the same endpoint chip, and does
-not show the boot failure, so polarity does not separate the two boards
-either.
-
-> I do agree that the Tpvperl delay is *redundant* if the supplies are already
-> enabled by the bootloader. But I do not agree that it causes the Endpoint to
-> not respond.
-
-You were right, and the two claims needed separating. I have now run that
-experiment, so here is the data rather than the argument.
-
-I instrumented the driver with two module parameters, one sleeping before
-the gpiod acquisition (so before PERST# is asserted) and one in place of the
-existing msleep (so inside the assertion), plus a ktime delta across the two
-gpiod_set_value() calls to measure the pulse the endpoint actually sees. One
-kernel, both knobs writable at runtime, and the host driver rebound through
-unbind/bind to re-run the whole probe -- I checked first that a rebind
-reproduces the cold-boot failure, and it does, identically.
-
-  before assert   after assert   measured pulse   trials   enumerated
-  0 ms            0 ms            1-11 ms              5        5
-  0 ms           10 ms           ~18 ms                3        3
-  0 ms           15 ms           24-47 ms              4        4
-  0 ms           20 ms           ~28 ms                3        1
-  0 ms          100 ms          ~108 ms                4        0
-  200 ms          0 ms            6-11 ms              5        5
-  200 ms        100 ms          ~108 ms                1        0
-
-Compare each 200 ms row with its 0 ms counterpart: delaying the assertion
-changes nothing either way -- 5 of 5 with a short pulse, 0 of 4 and 0 of 1
-with a long one -- while widening the pulse decides the outcome every time.
-So it is the delay between assert and deassert, exactly as you guessed.
-
-And your objection holds in a way I had not appreciated. vcc3v3_pcie on this
-board is regulator-always-on and regulator-boot-on, so the supplies have
-been valid for seconds before the driver probes in *every* row above,
-including the failing ones. Tpvperl is therefore met whether the sleep runs
-or not, which means it cannot be what distinguishes a working configuration
-from a failing one. The redundancy of the wait is only the licence to drop
-it; it was never the explanation. The commit message had that backwards.
-
-Two caveats I should state rather than smooth over. The threshold is noisy,
-not a cliff: at 15 ms one trial measured a 47 ms pulse and still enumerated,
-while 20 ms fails at ~28 ms. Across every configuration with the sleep at
-15 ms or less it enumerated 17 of 17; around 28 ms it fails more often than
-not; at ~108 ms it has never once worked, in 5 attempts (3 cold boots and
-2 rebinds). And the failure is not a missing
-device: the unanswered config read comes back as an external abort, so the
-board dies with an asynchronous SError in rockchip_pcie_rd_conf() rather
-than just enumerating nothing.
-
-v3 therefore leads with the pulse width and demotes Tpvperl to the reason
-the sleep can safely be skipped. The code is unchanged from v2: the two
-cannot be had together in general, since on a board that powers the slot at
-probe time the assertion does have to outlast Tpvperl, so skipping the wait
-only where the supplies are already up is the conservative form of the fix.
-
-Thanks for pushing back on this -- the causal claim deserved it, and the
-alternative you proposed turned out to be the right one.
+That one I recognise. On ROCK Pi 4 a config read that gets no usable
+completion comes back as an external abort rather than as all-ones, which is
+why a non-responding endpoint takes the machine down instead of just failing
+enumeration. Yours is during the bus scan on an unpatched kernel, so it
+looks like the same root-port behaviour showing up independently of this
+patch. If you have the log with the faulting address I would be interested,
+but it belongs in its own thread rather than this one.
