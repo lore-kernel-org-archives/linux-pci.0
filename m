@@ -1,135 +1,143 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.remote-ip=192.198.163.14
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=fail;
-	t=1793196322;
-	b=Ggn4M3FfpaMcU+FKH40AdCtoBsOb+YhANGPNXbYV6UN+4UHg/zvE7p4SmYfQ1IEN0S04
-	 5aYm6ixwyT/RNtnZUdM43u0pMxEe4BLeWTintFyfhcU8voYu2PPLlN8MrV99q0/O2h/wr
-	 YZKP995T+tcFoh9Q9uCUGOrtzkbDoa1rwTsfs7RerwqHvzh1COQfsTDjVNhBDK5SiT7sp
-	 YFGx2Atn4UhQEPlEZV+hYo/Wjf/Ie9ibHcQBs34w5KKVAE/GwM02ADg0RBbn07jDbthto
-	 tB8TD5EI94R2A9Ab0N00giAMSgSE6JJgX1Z7NQRe0nZvko/Cp4kVuidixnmpPealWtw==
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.83.21
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793197603;
+	b=G77mkdDU9zVH1bPJpgI3ho9XKYUbqxq/ZyCeV+hoWJ7WoU72YeanpAZ2/PNNmen74aEg
+	 uAf/p7oj5KaleLCMoAhiycafDeI8UyNDKvPLmwNB6aMIClgWKVt5qip83JOn6jsi5Khoe
+	 2afzyaWIouhhFsM0ZMgF/ypFTtITzbYjhDnI5REIrzIV3nej1p5RpFZ8tJAZ5wko1Q5oM
+	 rsslzOyQH5jFSJPeBaEjkPnCcs0IRr09PtNpF88GvAAjBaKnOA4V+G4MW1qk4elbw/PaS
+	 TNsx9RgSPYpvknO1wmeTCzu/pnxQxsHfTLrMrrVjZreZT07laIboqZuFrbCkIegHZnw==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793196322;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Received:
-	 Received:Received:Received:Message-ID:Date:User-Agent:Subject:To:CC:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793197603;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:Content-Type:Content-Disposition:
+	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
 	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-Exchange-RoutingPolicyChecked:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
 	 X-MS-Exchange-CrossTenant-Network-Message-Id:
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
 	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped:X-OriginatorOrg;
-	bh=FLmuHdz34Pcvx1bgPTOhiVUtWxvzafZqgdRRPS+9ecQ=;
-	b=igGkFJdIBVWeAf68UKWQMX4iVjzQDt/aOUefO2IDdovdsBeZ2deS9/1BN4UFa98rWdD2
-	 BY7mnOFUTH1w/Ii+NNKNjSOlNLU1TM8RIld+eAOJTKe6O1hdlxcnTgOkLhYvAtVfKbC4j
-	 zvvyHNQC/tv5ekNWaF0jfbzIRmfXNLH+aTcLa+diHJm+ZmMqTQDqOhNIbtbc3gJagu+6X
-	 qKzue3FaO6qYPq+AGIHc3V+BHLmW8jRNBFiEB7WxSnmUXWaIMBqYr4h4vodGIZKyBWcKS
-	 CO6sck+fDBYbJomRlchQyVzfTALqZmfUYwVS7dJKKgwPFXJl8THtya7exGkQ1Fdb5KA==
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=PugH5ADTgWBNgCzo2c+KFwnk0r1PS5zDUpNv2SsWnUo=;
+	b=e2YwDzOM4V+sC9NuoKhk2XkbWltNXlMh4wc3DnXzM02Q6qUTUxRjBL+ULtyrrbSQP0ja
+	 USQ89hwOQrLaNAgvJd06ooKONhpOjkSqWJeSV779Ll+hZw512Jp8OgHgSz1a1lLz8yml0
+	 kW3sL/pv0E4DBhKvSKtb/A0Gq8LVYthzmYz3sFOP/HhsAHWe3xY1ccgBpxkPgNH8n6+0x
+	 fdly20ws2wwzy0X+iPT/XrXsAyU4RyKSJiXGZ2XZQuUfwlJsal/+lrCEifMcC3YnDpuqs
+	 L9850BWpcuNuFRS7R5m6J6isO+5QcuGqhp+gUHRy8dRTo+6oXBX2S4E6lJCcT9uOeGg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=gS02D44P;
-	arc=fail smtp.remote-ip=192.198.163.14
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=oss.nxp.com;
+	spf=pass smtp.mailfrom=oss.nxp.com;
+	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=iWAMacif;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.83.21
+Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazon11013021.outbound.protection.outlook.com [52.101.83.21])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 244C5606A31E
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 14:05:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 244C5606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D739606A327;
+	Wed, 28 Oct 2026 14:26:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9D739606A327
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=gS02D44P
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793196322; x=1824732322;
-  h=message-id:date:subject:to:cc:references:from:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=Py0npMDzu4YOTfHvLAVLsTRHVj+UJSq/mvgkt+7ihzg=;
-  b=gS02D44Pkd621FP3RekK7T1jjE4jjfVGxpXj2n0i48jn8wkIVK2FbtSj
-   glQGrYkCjE5xUxyv9cOSe4m9YUeXT6vsvxVk2bEI24l/mhi7tFND7aUeS
-   jx374sKoR0kK84LKDG/EqrYbqgHOuIHHLdIzRwD3JlXddFl0YtX+g3adT
-   7fwZHcFrEWnIJP66TfyPMKKsn/8mv9SqVrLKD0M2wwFZkIQD6uqK4SR9f
-   GWkp90k8HIefaLdVQqls6+7yviBX+sDtIj7MspcTslf2tGWkESaTJh5qO
-   lc7E9K0tfHKxcj2boOIj5+u7C/ONvTPXA+shBbgGcKf4rqD5cnv/9c2MA
-   Q==;
-X-CSE-ConnectionGUID: 4ZNqehBWTGKr+uxwg6Do0Q==
-X-CSE-MsgGUID: atDjW4KLRsOijZ0ewNahxA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11949"; a="1943408"
-X-IronPort-AV: E=Sophos;i="6.27,182,1787036400"; 
-   d="scan'208";a="1943408"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2026 07:05:20 -0700
-X-CSE-ConnectionGUID: iY0J6N8oTASxKVKESO2t3Q==
-X-CSE-MsgGUID: /5ixC/KwQAa0C+O9uQY9ig==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,182,1787036400"; 
-   d="scan'208";a="4711795"
-Received: from fmsmsx902.amr.corp.intel.com ([10.18.126.91])
-  by orviesa008.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2026 07:05:20 -0700
-Received: from FMSMSX902.amr.corp.intel.com (10.18.126.91) by
- fmsmsx902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Wed, 28 Oct 2026 07:05:19 -0700
-Received: from fmsedg902.ED.cps.intel.com (10.1.192.144) by
- FMSMSX902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56 via Frontend Transport; Wed, 28 Oct 2026 07:05:19 -0700
-Received: from PH0PR06CU001.outbound.protection.outlook.com (40.107.208.26) by
- edgegateway.intel.com (192.55.55.82) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Wed, 28 Oct 2026 07:05:18 -0700
+	dkim=pass (2048-bit key, unprotected) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=iWAMacif
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=oQqbfoQeJgMqeZoTi59yZvEuk/HZznRQSGg/vIiOt06ZogAtLEA/2+wdl3iva0M3F7dWGyCf2JXtc6U/+194IRGlQdC4HU78WRf94Oq6yBtXx2oWJlEDpVSwuRnPza4wNV/6Ct5Ml1tJgWIcSjF6QTe5XlsJfju6iu+YHMGab4YhisJQ9cvGxOLxOYqVvAEvqoHMD+mGfFQqUQPqlALVCB6KgjIOX+9gIHRBtsNuZxadBQj3hp3L0Yf36EdAj3pnXX8jWDPgpKnLxlJA+g24Rlo6/UF0ogk7neDzMX8qXgL6PUu1fJ0yiB/nOclHdPaRp1UMlJgSJihn+xDhXE5fuA==
+ b=EUzwkxM+5U4c4djubNdkw5RXK63QafpWqgHpEtrm0fB5uAsxWrwmazQpKzNwQxPUVBDDCz6BVTiAqFuNGaF8kLJqDzY2LFJlU3nSjFHYvJr9yRgfZG83AcuyjjEcnrg/l/G1o98ikYXsdXWpHZH2H7sqB9fFXfT4zEVf0Bkd8NhNGUW8WwEABmVD7f4ZP6hNtRSWsXVJycIzu9zNS+llo/+5yhFGnH3xnpOP8N/brtbFQefVDOlYH6fBCuooh9Vccb79i/9BGUwIL2ofT+0zg0QAfav/N7B2U3+VD6+PyzUQZ+PVdyin/3eT1UH4BANC/CqW+yKQ+gDCwhr4DMu7yw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=FLmuHdz34Pcvx1bgPTOhiVUtWxvzafZqgdRRPS+9ecQ=;
- b=RUQlPROYHcBIUCLjtvSGOcGzQX9lTuHkwQ2Be0GsEVJ2LSfeAR+W0PyyuoVL0zxeg17rAKFchC5RtbyytxUKPFTsQmPQpyxnGe9T8SYrv6d0PHZEqMV8QgyceqHdWz3hHUsW2EHj81YZ+22/0An80qQuhtvFWW27MabshPqG4fwQQVvfwePlkOYU5UtIUQh06lZJLkqkpwhefcnZ4M2s2vGDY0GP2pnm4XkwUmaWnPq1sChLr0Sn7UUkBv5vI+YZoEHFaQ+glSm4/7iLJIU+zzGDanYvaBIxowf0p5F309yZ5mHc4Q7HDNb/xogajwAzdY/ds73Tdd3Uhr8fwCsytw==
+ bh=PugH5ADTgWBNgCzo2c+KFwnk0r1PS5zDUpNv2SsWnUo=;
+ b=JQVpgOrqGZHrVNs3QTVt/HbATgeZfHtJ9PnI3eXo63FfaG6+8FrdQTiFPYg9VGIBUlEakFTMP9UR90QodP8KS5UHgXtd7Ob7HqWex7BJxFX7aSiU1hYdQZtXuXiojj9SkELkMEIiY7EjLNuuuYx0sKb0qYcjMHiCiQH6KZUh2lWMC7JOrB1WDJumNTw5O6Run61xTI7YDuNNSnB5iTDiaPP/nyDEcYig1v0fmAkTbvm+Uut1w7ZPLC16CwFUA9JLCbauy1lv4jGFp8xE0hbUpP5nASzwvBaQ/CL9R62TRQnNg+8/7OOks+hmeIyGJ7UHtOmfWUHEXedfEze41eOEug==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PugH5ADTgWBNgCzo2c+KFwnk0r1PS5zDUpNv2SsWnUo=;
+ b=iWAMacifbwocz+lHil0qO84MTMkMOvglnubW7bzl47kSj8aDd/2iJBVrA0AMZXLeOWpYpL1FngTp/a/DVauU9sHv2cwkDIQdvc/zSe96Vv9BV7o5/ztL7qeb5o9UGh+CfwlLY1c24Y8s7sq2ClColacayPq6oRGDMU9Lsf+cau0+iTPd+NvPDgt+1oYH2DgFfb9rLGSMx2lVizp8slVdtYwuEYnppE13e2paZvpU4TJvtAPC5NjcJTe6682OuHhdu3nO070j3rAwPrnlkd786Z/ryrx31b9WrEDMMwSZIj5V/aX7fYfMPVWNVnI2ffGsXF9IO+d1moDU4MP68ODO3g==
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from IA1PR11MB6195.namprd11.prod.outlook.com (2603:10b6:208:3e9::8)
- by DSWPR11MB9822.namprd11.prod.outlook.com (2603:10b6:8:4e1::5) with
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from MI3PR04MB12438.eurprd04.prod.outlook.com (2603:10a6:290:76::14)
+ by PAXPR04MB9186.eurprd04.prod.outlook.com (2603:10a6:102:232::18) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.8; Wed, 28 Oct
- 2026 14:05:17 +0000
-Received: from IA1PR11MB6195.namprd11.prod.outlook.com
- ([fe80::9ca6:19ac:7036:d391]) by IA1PR11MB6195.namprd11.prod.outlook.com
- ([fe80::9ca6:19ac:7036:d391%5]) with mapi id 15.21.0546.021; Wed, 28 Oct 2026
- 14:05:16 +0000
-Message-ID: <769b5216-b2ff-45d0-b265-9252d7becfbf@intel.com>
-Date: Wed, 28 Oct 2026 15:05:12 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 04/13] PCI/IOV: Allow VF drivers to handle resets
-To: Weili Qian <qianweili@huawei.com>, <sashiko-reviews@lists.linux.dev>,
-	<linux-pci@vger.kernel.org>, <wangzhou1@hisilicon.com>,
-	<liulongfang@huawei.com>
-CC: <michal.winiarski@intel.com>, <bhelgaas@google.com>, <alex@shazbot.org>,
-	<kevin.tian@intel.com>
-References: <20261027160446.858300-1-lukasz.laguna@intel.com>
- <20261027160446.858300-5-lukasz.laguna@intel.com>
- <sashiko-outbox-186926@kernel.org>
- <0576e676-b9b5-422b-8bbf-0643065c1bd5@intel.com>
- <3464fe3b-8a9a-cbe0-c96b-e4929ec46264@huawei.com>
-Content-Language: en-US
-From: "Laguna, Lukasz" <lukasz.laguna@intel.com>
-In-Reply-To: <3464fe3b-8a9a-cbe0-c96b-e4929ec46264@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: VI6PEPF00000219.AUTP296.PROD.OUTLOOK.COM
- (2603:10a6:808:1::8c9) To IA1PR11MB6195.namprd11.prod.outlook.com
- (2603:10b6:208:3e9::8)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.22; Wed, 28 Oct
+ 2026 14:26:37 +0000
+Received: from MI3PR04MB12438.eurprd04.prod.outlook.com
+ ([fe80::c715:c32:8bb1:b70b]) by MI3PR04MB12438.eurprd04.prod.outlook.com
+ ([fe80::c715:c32:8bb1:b70b%6]) with mapi id 15.21.0546.021; Wed, 28 Oct 2026
+ 14:26:36 +0000
+Date: Wed, 28 Oct 2026 09:26:13 -0500
+From: Frank Li <Frank.li@oss.nxp.com>
+To: "Rob Herring (Arm)" <robh@kernel.org>
+Cc: Bjorn Andersson <andersson@kernel.org>, Stephen Boyd <sboyd@kernel.org>,
+	Brian Masney <bmasney+clk@redhat.com>,
+	Jerome Brunet <jbrunet+clk@baylibre.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	Rob Clark <robin.clark@oss.qualcomm.com>,
+	Dmitry Baryshkov <lumag@kernel.org>,
+	Abhinav Kumar <abhinav.kumar@linux.dev>,
+	Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>,
+	Marijn Suijten <marijn.suijten@somainline.org>,
+	Frank Li <Frank.Li@nxp.com>, Vinod Koul <vkoul@kernel.org>,
+	Yinbo Zhu <zhuyinbo@loongson.cn>, Linus Walleij <linusw@kernel.org>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Jonathan Cameron <jic23@kernel.org>,
+	David Lechner <dlechner@baylibre.com>,
+	Nuno =?iso-8859-1?Q?S=E1?= <nuno.sa@analog.com>,
+	Andy Shevchenko <andy@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Kevin Hilman <khilman@baylibre.com>,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+	Tiffany Lin <tiffany.lin@mediatek.com>,
+	Andrew-CT Chen <andrew-ct.chen@mediatek.com>,
+	Yunfei Dong <yunfei.dong@mediatek.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Andrzej Hajda <andrzej.hajda@intel.com>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Christian Marangi <ansuelsmth@gmail.com>,
+	Eric Anholt <eric@anholt.net>,
+	Kuogee Hsieh <quic_khsieh@quicinc.com>, Peng Fan <peng.fan@nxp.com>,
+	Aakarsh Jain <aakarsh.jain@samsung.com>,
+	Abhinav Kumar <quic_abhinavk@quicinc.com>,
+	linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	linux-rpi-kernel@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org,
+	freedreno@lists.freedesktop.org, imx@lists.linux.dev,
+	dmaengine@vger.kernel.org, linux-gpio@vger.kernel.org,
+	linux-iio@vger.kernel.org, linux-amlogic@lists.infradead.org,
+	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH] dt-bindings: Fix property name typos in if/then schemas
+Message-ID: <auIGBc2Wo21H6Rdm@SMW015318>
+References: <20261028120216.2657397-1-robh@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261028120216.2657397-1-robh@kernel.org>
+X-ClientProxiedBy: PH7PR02CA0020.namprd02.prod.outlook.com
+ (2603:10b6:510:33d::28) To MI3PR04MB12438.eurprd04.prod.outlook.com
+ (2603:10a6:290:76::14)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -140,261 +148,286 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: IA1PR11MB6195:EE_|DSWPR11MB9822:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4160998e-ea2d-4545-2579-08df34fc7e4b
+X-MS-TrafficTypeDiagnostic: MI3PR04MB12438:EE_|PAXPR04MB9186:EE_
+X-MS-Office365-Filtering-Correlation-Id: ee112b64-b16e-4703-361e-08df34ff7912
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|23010399003|376014|4143699003|5023799004|11063799006|56012099006|261022105027099003|261009223027099003|261022075727099003|261021121427099003|261026121527099003|261026140227099003|261021123027099003|10067099003|22082099003|18002099003|6133799003|3023799007;
-X-Microsoft-Antispam-Message-Info: 6Pg6eDlJ+S0mqBywA8l48Fegl3c86IVlWpV8OEZ8WvRLOYoGfDkd/wrXbiKpAMPjfaeHmeG10KDMYzUYzdYmQBOSqcroaaXGjZe8tDfUmMIjgu4Vs5mVEjua+EoHr5PzoMOmh/riCFa940Jre6IAANdvrzlAk/DIyqGffGLkx2PLCD1mrTh8Y2la45Dd0xMn6jXr4D/kPpDCKBB9FAT8wBYWvHzeZKhRtGmL2yc+m4KQvUez00CB3MVnbs9h9WoTBUL87Me0YNerza3zb6esrY+uS4JALgUG7o25zeApltHpJUimMr90Qt64mh5mXVQquf1fl/aIdZn8rLgMxacjcBtpny1zCkatTjAuUaPYw5WKHIBg2Vpq1GuOH24HO9sKiTnZcVOfOmyrIt2Mmr1Zhm0fJSmWzsVDciS5RS4wZM34+iqOV8X8UjM+1X9/Arj8AaywtEExgircQ0SIFp12uKSnaHOSOOql6cxU2xQ1ZrlXE0DLzPiSJvURucK0pc2xaLhcYU6T2TtCgYoF2j16NNV+PQpb0lPsfxuEXyrSsBlX0KpcqFUV2ESZe4FCqjDKndWwTuMvGlkpVMedftT3mBR99LteoTnWgbbWLswmDzf9aSTOuFOVotskidrdLr83
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR11MB6195.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(23010399003)(376014)(4143699003)(5023799004)(11063799006)(56012099006)(261022105027099003)(261009223027099003)(261022075727099003)(261021121427099003)(261026121527099003)(261026140227099003)(261021123027099003)(10067099003)(22082099003)(18002099003)(6133799003)(3023799007);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|366016|376014|19092799006|7416014|1800799024|261026140227099003|11063799006|56012099006|261026121527099003|261022105027099003|261022075727099003|261021121427099003|261021123027099003|261009223027099003|10067099003|22082099003|18002099003|6133799003|3023799007;
+X-Microsoft-Antispam-Message-Info:
+	PJnUc1WGA8a9fo4wsN9yLiJ6vA5jbebBB+U2liGAOGkTaLqzc0fWb10tCiLjM+PF0yRnGzgQiNOWoSMDuKujWM3xjbJA6IVi9NRE/dO5lLDsDFuBmfACI3ffyL0XkEZ/xlItnJ67Y4Ha0xSMz9+FYO0EpiSULbJdz/HyuG0CHYgCAxnr4Mpq7eK5DldLlG6ieUrgtIR+peeX/B3VHg7e/A6NrJrtluh4szGpg8NRmKHyLVPL61pUHNX5Gmq8iNNZVCT+UXLonwxybLqKBxSLIvqujHrPfMcceSIYn2HOBlQz4CTjRrRYPon1QgttoLy1ZOmYYrAHGFtWRctZ1DwxXgyrOLR+EC1kNPbXDd1asyBBYGRzFd9nOQN9aXi8d19wiphqDemPt7KMbMTgM10sA9zsZ1bpULDbGdFUEumnzPVJ4XRWuzz6/uUnn7XATiPeOMe9S9SKsfeo+DkambXEmRxt9Xutj2bpMe1WTI26z33ni/vrf/C+03GWnXzx5HHB5AlnOukvwgpf12LTEPc6ORhOOsAuP9B4tAco03CEg2JxkLhdgRJ14QjDKGfY+TFR1QfhL63l6W84q2EkVc0dfKIrj2kTvrHW5XzY+YbjrDcLTlERuxAdA85BwC1U6GdzJNCOULrhRJuWV6xFpK49Vjn0HpJwA67A9d14uN5sMao=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MI3PR04MB12438.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(376014)(19092799006)(7416014)(1800799024)(261026140227099003)(11063799006)(56012099006)(261026121527099003)(261022105027099003)(261022075727099003)(261021121427099003)(261021123027099003)(261009223027099003)(10067099003)(22082099003)(18002099003)(6133799003)(3023799007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?MklPU2NtM0I3eXZaRlFINklPaW1GbkY2SHp5c3JJVlFaTkpjVC9wL28zUGtQ?=
- =?utf-8?B?Q3h5U3JjZUR3YXpxWkF0cmxwaFlSQjVuZUQrVXpMdTZ1Z1BLR1NlNEFuSW5v?=
- =?utf-8?B?eWd0NUROWWE1b3JHWGlNU0x3d3FVdWQvNk9UaFJ2R3dJOW9LZzBVM045bHJy?=
- =?utf-8?B?eHUvMHJjWEc2YXNlRXd5VU5kNHJBa1V1NzZTdzN5dDR2TU13dzB0a0gzOW9Q?=
- =?utf-8?B?b0VLL0VsM3BnalFPMFVtUEwxS0I1Z2hEdUM0OFJ5WDNNNmEyQitHRHMydzJj?=
- =?utf-8?B?R0RiV0RNNmhiRE8rekMrNnExNFJZQk1jUzlHWVl0WTlKSGdrMDhOVmp3aHp6?=
- =?utf-8?B?RHpjZlFDNG1tQjhISTRLMkpyMkhERUh3Q3NYdHBWZ2FuWFlGV1ptWmJia0FF?=
- =?utf-8?B?SFU1SWh5WENpRC9JNU9uTldHT0RwK3Jxbk95SUdmVGpULzR5YXhWdzNwRk5D?=
- =?utf-8?B?TFFTNCtzUExpN2pudXR1UFZtYTNuVjVQMXRzYngzNjZaWGJWT3hOZmc4bk9r?=
- =?utf-8?B?cUw4eStnWjZUYkJjKzgwdXhSTlBiQlBCV2UwVWpIUFpoamN4R2FRNHE2YU5G?=
- =?utf-8?B?K1VBeWo0TE0wZWNQSS9FYzFOL2VpN25hdlFjaG9waldoWmtpS29LbXU5RXRP?=
- =?utf-8?B?MlNYNEtxc0ROVE1IaXkzRjUwMmEyMTZhbEtMbFBqNlByVWJSN0ZhWS84cm5O?=
- =?utf-8?B?cXlKaEdjek51aFdrTHdlL21rbDdGbGNDUUJVQVJNbjEvQWRRa2U5Qy9oSDBQ?=
- =?utf-8?B?Nk9vZ3FQRi9jeXlUb2VHdVJRUGo4QzRvRW4zV21NUU9WTll1NWtjUXFTT3JJ?=
- =?utf-8?B?ditxZVpKK0FScE5Nd0JWSG1BalVRb2xBQnQ1RDdZbno1NGdNdFAwUi9jVEV2?=
- =?utf-8?B?dFFIdjFEUkc3aFdpRkdkTi9EN0FORUd0TUNJbWlidnJwT0cwNjdyaHV1OXE4?=
- =?utf-8?B?OVJVVmltM2J2QWZyM3hucDF4VWs5TGVsMTVBVW9JY0ZiS3dLNUxtUEQycE5I?=
- =?utf-8?B?eG5kSEs3VGlJSW5nWThud0xZbUFKT3hHS3hQMkkyaUpISjZSenhIZmUvSXha?=
- =?utf-8?B?MW1pcXZZQ2dNd0hmeW9pcDFrT3pWQ0JuSjRFcUFuakRUU0lHOWpLNTcrV3RI?=
- =?utf-8?B?N3lHdTFrd0tlWGc5T0t2ZmlOblFSS2lZMkRIMFlRMW56Y3cyWklXRVE0L01w?=
- =?utf-8?B?L2RFS04vMWdtUG45NWpDMUc1ZlBwcUc3eGw0eU81Z3ZCMi9pMUtIdkNTQzB1?=
- =?utf-8?B?Y1FldUcvNWR4THN6UjdZOHpZaTFocnRlUFNjWVBUTFV1emNscjRCcEtycUpp?=
- =?utf-8?B?OHREWVMycG1ucXRuSGNKc3M1WlRMTituUytGZW5UVDVEWElzVUxqOHlTT2E2?=
- =?utf-8?B?elhVY1l2N2tnbjFkN0hUUHZXQXZHK2JOSkZ3cFNGZUlZMTc1Q2dCa0NRSFEw?=
- =?utf-8?B?ZSsyWTNYV292SEpjRERWOGpHOC9pNkFFaS9OdXRIZnJuK2tBd0Mxb3I3TW4w?=
- =?utf-8?B?NnA4eG1UekJmTWVOdnVlVVZmQThlOXh1UmtzNjZhbmwrdmwzMlBoSnFuMFpJ?=
- =?utf-8?B?V3lRVmErMWMwbmROL1JUUy9URHVoWDJOS2hUeE0vdzc0Q3dGNmNDSlVGY0to?=
- =?utf-8?B?QzZPUFZRQUp5dFJNenRCWjk1RlU3Wng5TDExWXljZkVqVXBpb1JEWTM3OStF?=
- =?utf-8?B?TUREdDNwaFVBd0YyYTZRcndMd0VUSXYzREh5bTY2eTNhN2xhY3VkQjN5WWdw?=
- =?utf-8?B?VjNLUFFKWHY2MWU3SUhwYXNVaEl6aStiK3FOb3NaSkkwVDZHa1puNHZRRzBW?=
- =?utf-8?B?Z0Rmd3RDbnJSTkE4cjhjMmRBcDhVRVV1WTNBN1l2WWJHSjU3LzZub293aUVh?=
- =?utf-8?B?T3BBMzBwa21KL2lOa3Y5Wm9aS3pTd3JvVndDaTZ0b2k1dkdmYU5MZVR0YXFU?=
- =?utf-8?B?TVhpK0g1VHhSYjdsM0ZSbktFQVA1R3FwZVlKV3IyQkM5aVF5QXluUGFpRkxq?=
- =?utf-8?B?ZDJHKzhoa3BFRS9UcWcxdkU5OStZVlNaUDl1VzRmNWNOeTJpQjRtcXNuYW96?=
- =?utf-8?B?d2pEencwUWxYTCtBaFZpQVZSd29UVklWVHZxVkorcUs2bUdYZk0wVmNoWmd1?=
- =?utf-8?B?UXljeXlyZVEvMTJVZER5QjdqSHpEZnR5ejhzdTVqaTg0NUhGdE1nN0UyNVFi?=
- =?utf-8?B?VUI1OWRMK0NXenFTWitIVzBFbVRuU2xrRlVteTlNSEZ1T1FLMGtsM01CNS9D?=
- =?utf-8?B?VjRoNC9ZRmNZcnlZWlIwVXVrcjQ5bk5oL2M5U1FCMDZsVDZ4akQwTjZaOGlq?=
- =?utf-8?B?NnpWekE4NXgwaDhHMFQ5STJsajh3RnJ6Nm9lV3I3aEUwZWpHWXgwUT09?=
-X-Exchange-RoutingPolicyChecked: atY9cViKCY+R1kmlAZbkXOjiIBy09BOwJfe5GnyIq3NBVN3UCjG7b99n2e7KmXuffCHSXq4QIv0ZV3GTLK1RwxQCDFc6+HAuH/CkEy2UwdFbY86kXzaGc03cgSSD5N8DSriqioS+NA8szT/J7mqRlcLFyD1MJF0+fyeful2uGtI7/N0GgbKCKQGZb1+yYPA8cAwecfr7cRYR/N9iJjzqZoXokwQHw59y8fruWFBcsddptvfhCrNZMF+JOHD8lzjcwJgCRAn+MMZUyo72+iVXUoZ2F4d9RcCZop5Y2GEKwKs0QeOZwgw9CjrDKXlTgXS8Qs9YXgrzsrKnlp9tnQ3/pA==
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4160998e-ea2d-4545-2579-08df34fc7e4b
-X-MS-Exchange-CrossTenant-AuthSource: IA1PR11MB6195.namprd11.prod.outlook.com
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?yhoz00PVsJqtF9EPEGywCcxhtZzWfcPJ2a+fSI+CijO6DYTWCvNdLXi+bPrn?=
+ =?us-ascii?Q?ZeKh1fIb0GP+Ummi+pEAjQls/FlH+Ad7FEMSo092qWc02Bak1tfgK/u2V3ka?=
+ =?us-ascii?Q?BDo1wVM+Ol2lHwOpGD4BijqT9l5cuKnZsRg4oPOaOrkpq/Sx/x3pX22AFbGb?=
+ =?us-ascii?Q?lNwJ58LQgM3x/PYjuCD7uOIVk1KalCYg2NWMjEWhDboCjEcYi04A8K865dbG?=
+ =?us-ascii?Q?YrQiocw+U3/PvvEiHkxs8l4Wkpc4cyoWB0OBhcnjXO9TCs3R4t7kW3Pn0nJO?=
+ =?us-ascii?Q?YbLS8uJsgFmoiP5kM8mCvXrg7yG9KQQvYtnVuMLRiU0juAaOnmFvxGdR9N2B?=
+ =?us-ascii?Q?Ghhx05bRvwK8vxSiry9NEJW0ZSx0yRNrmSkfTv9g9FbnDNYwz+DTZe2QNyL1?=
+ =?us-ascii?Q?B7radpUCui8gAMsbtKAgrWpPGimcDJqjj5osDs2/PUGyGqLM0YVkCY3DbGxp?=
+ =?us-ascii?Q?2dtRofJqYRg84QCxQvk2VrVVEA/WBrgJgkIMytJB5x3wX5Q3MNHYjwwBYnfk?=
+ =?us-ascii?Q?2ALEbNV3i+KzF0Pj0eqydxYwWMm3UTzim1htmPTLKchI+OP2HKDGvQ+Ohwla?=
+ =?us-ascii?Q?w6lTA15BaP46alY0xfFr2SGNX1gGfQP6RAmPwHf2jOyS1I3gUDQyfxuAb/ub?=
+ =?us-ascii?Q?KxWOW/7WXvJJJRWyERMjyxjPrJ5F0SpGo7kzY8ktCDOEgxp2l68VyFNdN8Ej?=
+ =?us-ascii?Q?icQufBWl9ibG5SXMJS1l5Xv7B4nxGD4B/zM0+1I53UtU+A3AEuKIeBju2id2?=
+ =?us-ascii?Q?X47vCHaO6QON+9yxQUAkUA60GlsiyUZEdOGywnDVTAlP5JRWsYTAdUSw09K9?=
+ =?us-ascii?Q?eV0gJw+s7LdP/SPj5AvY0nbMAREN5L/hKf/GdB9eniNOtQ3qCluDNDjshpTi?=
+ =?us-ascii?Q?K832WPxVIQ2eNy2mJZ2TPH52cGmKm+/wZwMPGyi2uHd2um1lvM4rQZ2FNZ5X?=
+ =?us-ascii?Q?swyeD1c1MXhKbMiJEYAKcItRhVC/94cauWDUVVWujZbfMieGv4sDJRPtLjGl?=
+ =?us-ascii?Q?n/66c7UWc/k5hUjIUV/7NnyznpkJ97C502iOz2eU1ZOK3l6qsEaH/HwbUh6g?=
+ =?us-ascii?Q?TdTmie/iU8eKDSd2N3xtL+h00IStPlZND/eem85Y/zJFxK4G0R5LreUL3ANp?=
+ =?us-ascii?Q?yQSzyyTvJW9ltrGUVpTjDDdr1drGRKjIuhexOF1b/bFBJExTrUUjnJcDcKGS?=
+ =?us-ascii?Q?9xDz59VM3PapXAL6dE3vd5iDby3TZzJtNAFdHsJ/j4NVkHYS4pvclaeW+mx7?=
+ =?us-ascii?Q?rynV/rKj2Kqz/rLdbRLnWUD2DyW7gsfZzF5it0yVFQI4DhTlKkLus8K9xh/t?=
+ =?us-ascii?Q?Loxo1CYtDQEir6vQEzA5Fkq53rihfyDYPgpM0vSLCTC4QL+oZ7dJ1h2cFRNO?=
+ =?us-ascii?Q?AsLLXWCovcCX+0cSQa32ja0rSe1XjONdqIcrCyBJQjsy13618dMiKIp0DoHv?=
+ =?us-ascii?Q?kdHcr9J/e348pElrKJzUgXNv2UZvnGFZaJ19sBWCbop2tasK/bapL7iXMrP3?=
+ =?us-ascii?Q?/Tc+e6sH84p7OHRrxFZj2bHZs9E4ANbG5Khv0PZ7RwpT+BjfDBLSoZht3Qok?=
+ =?us-ascii?Q?TMwmGoggaCWkowZNqzQ0+ZNvXKZz12AWOMN9XIjkDNn05/3dDRPFgjRJNvRT?=
+ =?us-ascii?Q?+6moCkdl500/4XQUaE28rAzSkv9AvzOJ4q2IXjLCzvNxXovL5KmDTCuiLMPH?=
+ =?us-ascii?Q?uxjOrKGHTFDcdB57snUoBua/nYypyM/OCICX2xm5Ypq/RAksaW+hbBxYxlF2?=
+ =?us-ascii?Q?JiVQzMzKGVIAAUNgBLWs8LmwMuHZdZ8rUDcuVFV5SXN7t1QhNkQv?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ee112b64-b16e-4703-361e-08df34ff7912
+X-MS-Exchange-CrossTenant-AuthSource: MI3PR04MB12438.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Oct 2026 14:05:16.7195
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Oct 2026 14:26:36.4955
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ww6Xv5FuPAbj35q2rT1AZhr4xss+uMqAyEGfqfvpsj4JHA61ujhgmWWygic2+wDkIH8ZdDZHoOX89SLG6zOVBg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DSWPR11MB9822
-X-OriginatorOrg: intel.com
+X-MS-Exchange-CrossTenant-UserPrincipalName: ZH/uQIX74lyS4VQF0juYZ9Pq0oADROx4SlEDjn+RN7+ybXxf6O0CUlCrijxHFlbr6RQysbMT6euZyhNsqJNUkY84246+IuBVQr6rei29eBcSZtkNXqcpcgdGna8PnrEF
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB9186
 
-
-On 10/28/2026 09:52, Weili Qian wrote:
+On Wed, Oct 28, 2026 at 07:02:12AM -0500, Rob Herring (Arm) wrote:
+> Property names within if/then schemas currently go unchecked whether
+> they have a type defined or match what's in the top-level schema. Adding
+> a check finds a number of instances of typos. The typos result in the
+> schema having no effect on constraints.
 >
-> Thanks for adding us.
+> With this, fix the mediatek,vcodec-encoder 'clocks' count constraint
+> exposed by the name correction.
 >
-> We've reviewed the series and confirmed that it conflicts with QM's 
-> existing PF↔VF reset coordination. QM currently handles PF FLR through 
-> driver-specific mechanisms: the PF notifies all VFs before reset an 
-> each VF stops itself and acknowledges back. The new 
-> reset_prepare()/reset_done() calls on each VF before the PF's 
-> introduce a second path that contends with QM's QM_RESETTING bit lock 
-> across reset_prepare/reset_done, causing timeouts on both host-side 
-> VFs (QM driver) and passthrough VFs (hisi-acc-vfio-pci driver).
+> Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+> ---
+>  .../devicetree/bindings/clock/qcom,kpss-gcc.yaml     |  2 +-
+>  .../bindings/display/brcm,bcm2711-hdmi.yaml          |  2 +-
+>  .../bindings/display/msm/dp-controller.yaml          |  2 +-
+>  .../devicetree/bindings/display/msm/hdmi.yaml        |  4 ++--
+>  Documentation/devicetree/bindings/dma/fsl,edma.yaml  |  2 +-
+>  .../devicetree/bindings/gpio/loongson,ls-gpio.yaml   |  2 +-
+>  .../bindings/iio/adc/amlogic,meson-saradc.yaml       |  2 +-
+>  .../bindings/media/mediatek,vcodec-encoder.yaml      | 12 ++++--------
+>  .../devicetree/bindings/media/samsung,s5p-mfc.yaml   |  2 +-
+>  .../devicetree/bindings/pci/mediatek-pcie.yaml       | 12 ++++++------
+>  10 files changed, 19 insertions(+), 23 deletions(-)
 
-Thanks for the quick review and for confirming the issue.
-
->
-> We support the direction of this series and will adapt QM and 
-> hisi-acc-vfio-pci to work with the PCI core's unified VF handling.
-
-Great, thanks. Once you have the patches, I'm happy to include them in 
-the next revision of this series.
-
->
-> Additionally, we notice that passthrough VFs bound to generic vfio-pci 
-> do not receive reset_prepare/reset_done notification. We're wondering 
-> whether there's a way to uniformly cover both host-side and 
-> passthrough VFs in the PCI core.
-
-With this series, the PCI core handles all VFs regardless of the bound 
-driver, so VFs bound to vfio-pci are covered at the PCI level. Generic 
-vfio-pci just doesn't implement .reset_prepare() / .reset_done(). I 
-don't think there's more we can do on the PCI core side.
-
-Covering it would require vfio-pci to implement these callbacks, plus a 
-new VFIO uAPI to notify userspace / guest about the reset. There's an 
-RFC series [1] adding such uAPI for PCI error recovery, and resets 
-initiated by host could probably be handled in a similar way, but that 
-needs more analysis and is beyond the scope of this series.
-
-Thanks,
-Lukasz
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
 
 >
-> Thanks,
-> Weili
+> diff --git a/Documentation/devicetree/bindings/clock/qcom,kpss-gcc.yaml b/Documentation/devicetree/bindings/clock/qcom,kpss-gcc.yaml
+> index 88b7672123a0..ed347096df46 100644
+> --- a/Documentation/devicetree/bindings/clock/qcom,kpss-gcc.yaml
+> +++ b/Documentation/devicetree/bindings/clock/qcom,kpss-gcc.yaml
+> @@ -62,7 +62,7 @@ then:
+>      - '#clock-cells'
+>  else:
+>    properties:
+> -    clock: false
+> +    clocks: false
+>      clock-names: false
+>      '#clock-cells': false
 >
-> On 2026/10/28 0:51, Laguna, Lukasz wrote:
->>
->>
->> Adding HiSilicon QM and hisi-acc-vfio-pci maintainers.
->>
->> Hi Zhou, Weili, Longfang,
->>
->> The series [1] adds generic handling of VFs across a PF reset in the 
->> PCI core. On PF reset, the core now saves / restores all subordinate 
->> VFs config state, and notify their drivers via .reset_prepare() / 
->> .reset_done(), as VF state is lost on PF reset anyway.
->>
->> Sashiko points out above [2], that this conflicts with the 
->> driver-specific VF handling in HiSilicon QM and hisi-acc-vfio-pci. It 
->> seems to be a valid point.
->>
->> Could you please take a look and share your thoughts?
->>
->> [1] 
->> https://lore.kernel.org/linux-pci/20261027160446.858300-1-lukasz.laguna@intel.com/
->> [2] https://lore.kernel.org/linux-pci/sashiko-outbox-186926@kernel.org/
->>
->> Thanks,
->> Lukasz
->>
->> On 10/27/2026 17:34, sashiko-bot@kernel.org wrote:
->>> Thank you for your contribution! Sashiko AI review found 1 potential 
->>> issue(s) to consider:
->>> - [High] PCI/IOV: calling VF reset_prepare() before PF breaks 
->>> hisi_qm PF FLR
->>> -- 
->>>
->>> commit b82e20ef0c7a057bbb242268e11b3dd9218fd7d8
->>> Author: Michał Winiarski <michal.winiarski@intel.com>
->>>
->>> PCI/IOV: Allow VF drivers to handle resets
->>>
->>> This commit updates PCI function, bus, and slot reset handling to lock
->>> enabled VFs, notify VF drivers via .reset_prepare() and 
->>> .reset_done(), and
->>> save and restore VF configuration state across PF resets.
->>>
->>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>> index d8e7c7d8e4021..d088302547c34 100644
->>>> --- a/drivers/pci/pci.c
->>>> +++ b/drivers/pci/pci.c
->>> [ ... ]
->>>
->>>> @@ -5171,6 +5202,17 @@ static void pci_dev_save_and_disable(struct 
->>>> pci_dev *dev)
->>>>           return;
->>>>         pci_save_state(dev);
->>>> +}
->>>> +
->>>> +static void pci_dev_save_and_disable(struct pci_dev *dev)
->>>> +{
->>>> +    struct pci_dev *vf;
->>>> +
->>>> +    for_each_pci_vf(dev, vf)
->>>> +        pci_dev_reset_prepare_and_save(vf);
->>>> +
->>>> +    pci_dev_reset_prepare_and_save(dev);
->>> [Severity: High]
->>> Does calling .reset_prepare() on each VF before the PF here cause a
->>> self-blocking timeout and reset failure on HiSilicon QM devices
->>> (hisi_hpre, hisi_sec2, hisi_zip, and hisi_acc_vfio_pci) when 
->>> resetting a PF
->>> with enabled VFs?
->>>
->>> In pci_dev_save_and_disable(), pci_dev_reset_prepare_and_save(vf) 
->>> runs for
->>> every VF and then pci_dev_reset_prepare_and_save(dev) runs for the 
->>> PF in the
->>> same thread before any .reset_done() callback is invoked in
->>> pci_dev_restore().
->>>
->>> When VFs are bound to hisi_acc_vfio_pci (where hisi_acc_vdev->pf_qm 
->>> points
->>> to the PF's struct hisi_qm), the first VF's .reset_prepare() sets 
->>> the reset
->>> bit on the shared PF qm->misc_ctl and holds it until .reset_done():
->>>
->>> drivers/vfio/pci/hisilicon/hisi_acc_vfio_pci.c:
->>> hisi_acc_vf_pci_reset_prepare() {
->>>     struct hisi_acc_vf_core_device *hisi_acc_vdev = 
->>> hisi_acc_drvdata(pdev);
->>>     struct hisi_qm *qm = hisi_acc_vdev->pf_qm;
->>>     ...
->>>     while (test_and_set_bit(QM_RESETTING, &qm->misc_ctl)) {
->>>         msleep(1);
->>>         if (++delay > QM_RESET_WAIT_TIMEOUT) {
->>>             dev_err(dev, "reset prepare failed\n");
->>>             return;
->>>         }
->>>     }
->>> }
->>>
->>> Similarly, when VFs are bound to hisi_hpre, hisi_sec2, or hisi_zip on
->>> Kunpeng920, hisi_qm_reset_prepare() -> qm_reset_prepare_ready() 
->>> acquires the
->>> same bit on pf_qm->misc_ctl via qm_wait_reset_finish(pf_qm) and only 
->>> clears
->>> it in hisi_qm_reset_done() -> qm_reset_bit_clear():
->>>
->>> drivers/crypto/hisilicon/qm.c:
->>> qm_reset_prepare_ready() {
->>>     struct pci_dev *pdev = qm->pdev;
->>>     struct hisi_qm *pf_qm = pci_get_drvdata(pci_physfn(pdev));
->>>
->>>     if (qm->ver < QM_HW_V3)
->>>         return qm_wait_reset_finish(pf_qm);
->>>
->>>     return qm_wait_reset_finish(qm);
->>> }
->>>
->>> Because the first VF's .reset_done() has not run yet, every 
->>> subsequent VF's
->>> .reset_prepare() and the PF's own hisi_qm_reset_prepare() will spin 
->>> waiting
->>> for that bit on pf_qm->misc_ctl until the timeout expires, log an 
->>> error, and
->>> return early without stopping the remaining VFs or the PF prior to the
->>> hardware reset.
->>>
->>> On Kunpeng930 (where qm->ver >= QM_HW_V3) with host-bound VFs, each 
->>> VF's
->>> hisi_qm_reset_prepare() sets the bit on its own vf_qm->misc_ctl. 
->>> When the PF
->>> subsequently runs hisi_qm_reset_prepare(), it notifies VFs via 
->>> mailbox and
->>> waits for them:
->>>
->>> drivers/crypto/hisilicon/qm.c:
->>> hisi_qm_reset_prepare()
->>>    -> qm_try_stop_vfs()
->>>         -> qm_ping_all_vfs()
->>>         -> qm_wait_vf_prepare_finish()
->>>
->>> Each VF's mailbox work handler (qm_pf_reset_vf_process() ->
->>> qm_pf_reset_vf_prepare() -> qm_reset_prepare_ready(vf_qm)) then 
->>> tries to
->>> acquire the bit on vf_qm->misc_ctl that is already held by that VF's 
->>> own
->>> .reset_prepare(), timing out and causing the PF reset preparation to 
->>> fail as
->>> well.
->>>
->>
->> .
->>
+> diff --git a/Documentation/devicetree/bindings/display/brcm,bcm2711-hdmi.yaml b/Documentation/devicetree/bindings/display/brcm,bcm2711-hdmi.yaml
+> index c1cefd547391..fd4d598f6ff8 100644
+> --- a/Documentation/devicetree/bindings/display/brcm,bcm2711-hdmi.yaml
+> +++ b/Documentation/devicetree/bindings/display/brcm,bcm2711-hdmi.yaml
+> @@ -145,7 +145,7 @@ allOf:
+>              - description: CEC stuck at low interrupt
+>              - description: Hotplug connected interrupt
+>              - description: Hotplug removed interrupt
+> -        interrupts-names:
+> +        interrupt-names:
+>            items:
+>              - const: cec-tx
+>              - const: cec-rx
+> diff --git a/Documentation/devicetree/bindings/display/msm/dp-controller.yaml b/Documentation/devicetree/bindings/display/msm/dp-controller.yaml
+> index 094a6383bb77..f72d1b354007 100644
+> --- a/Documentation/devicetree/bindings/display/msm/dp-controller.yaml
+> +++ b/Documentation/devicetree/bindings/display/msm/dp-controller.yaml
+> @@ -304,7 +304,7 @@ allOf:
+>          clocks:
+>            minItems: 6
+>            maxItems: 6
+> -        clocks-names:
+> +        clock-names:
+>            minItems: 6
+>            maxItems: 6
+>
+> diff --git a/Documentation/devicetree/bindings/display/msm/hdmi.yaml b/Documentation/devicetree/bindings/display/msm/hdmi.yaml
+> index dfec6c3480f3..02d27ccad024 100644
+> --- a/Documentation/devicetree/bindings/display/msm/hdmi.yaml
+> +++ b/Documentation/devicetree/bindings/display/msm/hdmi.yaml
+> @@ -113,7 +113,7 @@ allOf:
+>              - const: core
+>              - const: master_iface
+>              - const: slave_iface
+> -        core-vcc-supplies: false
+> +        core-vcc-supply: false
+>
+>    - if:
+>        properties:
+> @@ -136,7 +136,7 @@ allOf:
+>              - const: core
+>              - const: alt_iface
+>              - const: extp
+> -        hdmi-mux-supplies: false
+> +        hdmi-mux-supply: false
+>
+>    - if:
+>        properties:
+> diff --git a/Documentation/devicetree/bindings/dma/fsl,edma.yaml b/Documentation/devicetree/bindings/dma/fsl,edma.yaml
+> index f609038e35ae..0260d177c7d0 100644
+> --- a/Documentation/devicetree/bindings/dma/fsl,edma.yaml
+> +++ b/Documentation/devicetree/bindings/dma/fsl,edma.yaml
+> @@ -172,7 +172,7 @@ allOf:
+>              const: fsl,imx7ulp-edma
+>      then:
+>        properties:
+> -        clock:
+> +        clocks:
+>            minItems: 2
+>            maxItems: 2
+>          clock-names:
+> diff --git a/Documentation/devicetree/bindings/gpio/loongson,ls-gpio.yaml b/Documentation/devicetree/bindings/gpio/loongson,ls-gpio.yaml
+> index 69852444df23..07c8b233c6bd 100644
+> --- a/Documentation/devicetree/bindings/gpio/loongson,ls-gpio.yaml
+> +++ b/Documentation/devicetree/bindings/gpio/loongson,ls-gpio.yaml
+> @@ -80,7 +80,7 @@ allOf:
+>          - resets
+>      else:
+>        properties:
+> -        "#interrupts-cells": false
+> +        "#interrupt-cells": false
+>          interrupt-controller: false
+>          resets: false
+>
+> diff --git a/Documentation/devicetree/bindings/iio/adc/amlogic,meson-saradc.yaml b/Documentation/devicetree/bindings/iio/adc/amlogic,meson-saradc.yaml
+> index 70ab4e140e71..535213ba0c5e 100644
+> --- a/Documentation/devicetree/bindings/iio/adc/amlogic,meson-saradc.yaml
+> +++ b/Documentation/devicetree/bindings/iio/adc/amlogic,meson-saradc.yaml
+> @@ -92,7 +92,7 @@ allOf:
+>      else:
+>        properties:
+>          nvmem-cells: false
+> -        mvmem-cel-names: false
+> +        nvmem-cell-names: false
+>          clocks:
+>            minItems: 4
+>          clock-names:
+> diff --git a/Documentation/devicetree/bindings/media/mediatek,vcodec-encoder.yaml b/Documentation/devicetree/bindings/media/mediatek,vcodec-encoder.yaml
+> index 4505e66876a2..52f471a070d5 100644
+> --- a/Documentation/devicetree/bindings/media/mediatek,vcodec-encoder.yaml
+> +++ b/Documentation/devicetree/bindings/media/mediatek,vcodec-encoder.yaml
+> @@ -110,19 +110,15 @@ allOf:
+>
+>      then:
+>        properties:
+> -        clock:
+> -          items:
+> -            minItems: 1
+> -            maxItems: 1
+> +        clocks:
+> +          maxItems: 1
+>          clock-names:
+>            items:
+>              - const: venc_lt_sel
+>      else:
+>        properties:
+> -        clock:
+> -          items:
+> -            minItems: 1
+> -            maxItems: 1
+> +        clocks:
+> +          maxItems: 1
+>          clock-names:
+>            items:
+>              - const: venc_sel
+> diff --git a/Documentation/devicetree/bindings/media/samsung,s5p-mfc.yaml b/Documentation/devicetree/bindings/media/samsung,s5p-mfc.yaml
+> index b46cc780703c..4488d5ca9b9c 100644
+> --- a/Documentation/devicetree/bindings/media/samsung,s5p-mfc.yaml
+> +++ b/Documentation/devicetree/bindings/media/samsung,s5p-mfc.yaml
+> @@ -174,7 +174,7 @@ allOf:
+>              - const: mfc
+>          iommus:
+>            maxItems: 2
+> -        iommus-names: false
+> +        iommu-names: false
+>
+>  examples:
+>    - |
+> diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie.yaml
+> index c009a7a52bc6..7c40361f95ec 100644
+> --- a/Documentation/devicetree/bindings/pci/mediatek-pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.yaml
+> @@ -127,7 +127,7 @@ allOf:
+>          phy-names:
+>            const: pcie-phy1
+>
+> -        power-domain: false
+> +        power-domains: false
+>
+>        required:
+>          - resets
+> @@ -150,7 +150,7 @@ allOf:
+>            minItems: 2
+>            maxItems: 2
+>
+> -        reset: false
+> +        resets: false
+>
+>          reset-names: false
+>
+> @@ -171,7 +171,7 @@ allOf:
+>          clocks:
+>            minItems: 6
+>
+> -        reset: false
+> +        resets: false
+>
+>          reset-names: false
+>
+> @@ -193,7 +193,7 @@ allOf:
+>          clocks:
+>            minItems: 6
+>
+> -        reset: false
+> +        resets: false
+>
+>          reset-names: false
+>
+> @@ -215,7 +215,7 @@ allOf:
+>          clock-names:
+>            maxItems: 1
+>
+> -        reset: false
+> +        resets: false
+>
+>          reset-names: false
+>
+> @@ -223,7 +223,7 @@ allOf:
+>
+>          phy-names: false
+>
+> -        power-domain: false
+> +        power-domains: false
+>
+>          mediatek,pbus-csr: false
+>
+> --
+> 2.53.0
+>
 >
