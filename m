@@ -1,55 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=80.241.56.171
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=80.241.56.151
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793208107;
-	b=d4U0imr/MWQnaR7A4R8rCAibe3jNvdF80vV9tYi/uwwWkbMoiKYQz5TxySShHC4zur5a
-	 M3+2G8quUwTBsx1ixiobM89BTcdbWF96oO1OmFb1iQOxSInLKnBZmQ7gBt5qCMg7TlPRZ
-	 X1IXEm5aNgtnPiYyQrhw5GGcgN+y6zpcSu0UEcFN9F/ilkML3yGqkliVY+fFLEFunCoZn
-	 DI+YZTRYRgs9a9HE8gHTsdsGBCRG6jeXl9DPy0VF7nZdtHqNJxe2tUA8o+CuUeoaghU42
-	 PG0qjsPTJM3VouRFG4oSOh8wBkDnXOw4WIw5V/VbWkIsRb+O44FR30Ts5tNIu6BPdaw==
+	t=1793208116;
+	b=TLTw1kAkZUptv/u3Gn4PmAws40wwqCI/7ChOSkq2tAB3FxIXbAih6aBZb0F9FwWByP0F
+	 GlRZ7oSTca/iEjjYxZtRv0CM8DBmrb83HYX3FNi9Mvu/3hrAUE42RbgZ0kas1U81zSRzE
+	 gQgi13dGQyzdkBG0izKdrDjE1Y8Xe74F5ldjp8AnNNnmto+/8nZ7lBO/mDDF4hBXA515U
+	 GKSegS7x/hE24IrFNc3s10D7dQSEDSGhljrHr7DPdwMWjHsOlh+Q/Om0VDcwUooAKie4W
+	 TjEcJ+weJft77yOAdPqpFl7Jfd0geNDgup3JRvbC1MjOkc60x1wEFre5QLEC4YZlApg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793208107;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793208116;
 	h=DMARC-Filter:Received:DKIM-Signature:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:MIME-Version:Content-Type:
+	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:X-MBO-RS-META:X-MBO-RS-ID;
-	bh=6tw1/IKvQRm7RH6uU3JHi893MfeaI2rkP9wXHgR/3Zg=;
-	b=3YnnYNBv1UHwjBT2eNfzQupNQ2AXqKuZ8Jne8Mz4ix0kABI/S3HaIq0/qGika/qUGSdS
-	 lCwYjt3fQGjKXnJN4A+jB7GluehG/ioM91V07qV3V4h6kkDjeIdAlD4pEf2Cnow07+zBm
-	 vS9zFjpFlx/V4SJntU7Ykjj9R3IfSQTXeF+Wooie+SDW54N9d17CIJEX7dtHGaTXkKtzX
-	 h2Dth3jR9Nnv7M5Own2Iw8LApZ15qeNUDrl3yUSJxIpJhIY0kRbqGq7N1GmN7iQ/TOvLr
-	 bJsJ0eiTU6bsT8XRCLnlsRHNYrahrMs6xJVN1rSBn0JF2NcYeIQwkaOfhQTdz5g1SxQ==
+	bh=d3kAaHXfzgfs105nLyPzinHExM33Kf5Erj2iCSynZSY=;
+	b=AcFv7otbZxSDIFEh2/UG+OEyJfahFb7saXM3lRH+oTxFLt5xKDjHWZQskrK20Zx5ZWHg
+	 9kvbMNhlFVQmUIknwrBSI/Or7REvQpjW/wYOwchjRxvLg7kHS+oyrw0kJ7zGbXgVMsqMx
+	 hYbUbBNvpTUf2tC6fhhWkwqr8nIKsJ03aTkFF0FsoXMLDHUZXOAAzeGBwtK5DoyGUgLV1
+	 54Jmh4Ui0DvQmwHlNtfjU9vaQK/XwSvMU3Xgo06koUGC4W0GaNFG/FCyB1p4QgBFs7+AI
+	 A/BzRFU57NiUPS6Wgzb0OGvQYTQIDUWj6sXDon5eL/rbLivCp0YjGQTNPAhQtSj4h/A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=mailbox.org;
 	spf=pass smtp.mailfrom=mailbox.org;
-	dkim=pass header.d=mailbox.org header.i=@mailbox.org header.a=rsa-sha256 header.s=mail20150812 header.b=qMfKC5XB;
-	arc=none smtp.remote-ip=80.241.56.171
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+	dkim=pass header.d=mailbox.org header.i=@mailbox.org header.a=rsa-sha256 header.s=mail20150812 header.b=UrobJ1EV;
+	arc=none smtp.remote-ip=80.241.56.151
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F208606A31A;
-	Wed, 28 Oct 2026 17:21:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4F208606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B456606A339;
+	Wed, 28 Oct 2026 17:21:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9B456606A339
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=mailbox.org header.i=@mailbox.org header.a=rsa-sha256 header.s=mail20150812 header.b=qMfKC5XB
+	dkim=pass (2048-bit key, unprotected) header.d=mailbox.org header.i=@mailbox.org header.a=rsa-sha256 header.s=mail20150812 header.b=UrobJ1EV
 Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519MLKEM768 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4jFDgB5DFjzMlCD;
-	Wed, 28 Oct 2026 18:21:42 +0100 (CET)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4jFDgH2chWz8vNb;
+	Wed, 28 Oct 2026 18:21:47 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1793208102;
+	t=1793208107;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=6tw1/IKvQRm7RH6uU3JHi893MfeaI2rkP9wXHgR/3Zg=;
-	b=qMfKC5XBxBrGNvDI8EHB/8VZ1xeKXDCNpLZ2olAVS0ACrohTp90eSyDMXXm883fO2SdIzJ
-	1znkCrET61MFuWhuiQkNtXv1Enarvbi5COCBWqR41arnl2BzENfH4eFmumbuTsb9kvhpe1
-	hO+Kig/j52an61Rj6JH0abqGAAZ/5CDRChPyCIC04NqDUyf6sVeLTRSxh6Ty39144ly+TA
-	3K/eZ0e6EAd49P0c0V0TtRAxkS+iyDZs0zw/9WUrfrE0V0zdfmvFT9WFIYr1l4a3ZI16q1
-	9YxG6ciwiTRXYATqb5EbfayLke4JqWxU1DXV5E6hkaJMobhP0FNykERKK1PKug==
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=d3kAaHXfzgfs105nLyPzinHExM33Kf5Erj2iCSynZSY=;
+	b=UrobJ1EVK4JzxO7qh768gSiromXelw0Du7MgpFoBYf4xKvqOxmgaPge9/AlCXbapLLTISa
+	JrbaX6HChgXPtomVXxrce8Lc70dtrpEaLq2LSTlP5NiA/TB67Ah1PaTgTL+2dKtHNJD4EL
+	BpHeNJmmWoF+9HVnslKYCn3WcIoVCbMEWFtG4HFrpxfwoXdj5yTEffvFTlGI0n45Wti3Dj
+	l9PTO3+iAMTDxN19IkfwFbISlmmwJvvoUFYVL8AyaskP7JK220rht9QWtRSXoWlGmREdIW
+	LT+DszHybuN7MVO5EgjXJKieg9n3SnmYPRZRxpdffA6R9JOV14NmyxJ/WuzTfw==
 From: Marek Vasut <marek.vasut+renesas@mailbox.org>
 To: linux-pci@vger.kernel.org
 Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
@@ -78,10 +79,12 @@ Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
 	linux-kernel@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH 1/2] PCI: dwc: rcar-gen4: Replace pe_rst GPIO PERST with GPIO reset aux driver
-Date: Wed, 28 Oct 2026 18:21:08 +0100
-Message-ID: <20261028172133.20903-1-marek.vasut+renesas@mailbox.org>
+Subject: [PATCH 2/2] PCI: rcar-gen4: Inline rcar_gen4_pcie_host_perst_assert() again
+Date: Wed, 28 Oct 2026 18:21:09 +0100
+Message-ID: <20261028172133.20903-2-marek.vasut+renesas@mailbox.org>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261028172133.20903-1-marek.vasut+renesas@mailbox.org>
+References: <20261028172133.20903-1-marek.vasut+renesas@mailbox.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -93,59 +96,12 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-MBO-RS-META: odfpnsetw339jyxm6kjtatmjh8o3gowi
-X-MBO-RS-ID: 6b39a3b04a49b99ec66
+X-MBO-RS-META: bb6ub54kefq59r3m69zx5bnoque3gcz7
+X-MBO-RS-ID: de08f5814a00ddbcd13
 
-There is currently one user of core DWC PCIe struct gpio_desc *pe_rst
-field, which is R-Car Gen4 driver. This driver already does convoluted
-handling of both GPIO controlled PERST# and reset controller controlled
-PERST#. Simplify the situation using reset GPIO aux driver.
-
-First, eliminate the pe_rst GPIO from DWC core, so it is not in the
-way, this is the easy top half of this patch.
-
-Second, deal with the resets using reset GPIO aux driver in the R-Car
-Gen4 PCIe driver. The R-Car Gen4 PCIe driver currently handles two
-variants of DT description which can be passed to it:
-
-1) Combined mandatory PCIe core resets and optional GPIO PERST#:
-   pciec@nnn {
-       compatible = "renesas,r8a779g0-pcie", "renesas,rcar-gen4-pcie";
-       ...
-       resets = <&reset 624>, <&reset 1121>;
-       reset-names = "pwr", "core";
-       reset-gpios = <&gpio2 2 GPIO_ACTIVE_LOW>; // This is GPIO PERST#
-       ...
-   };
-   The PCIe core resets are requested already in pcie-designware.c
-   dw_pcie_get_resets(), but the reset-gpios GPIO PERST# has to be
-   handled later, in R-Car Gen4 PCIe driver host .init callback,
-   to avoid interference with the core dw_pcie_get_resets(). The
-   GPIO PERST# has to be requested by index since there is no
-   reset-names entry for it, using the first unused reset index.
-
-2) Separate mandatory PCIe core resets and optional reset controller PERST#:
-   pciec@nnn {
-       compatible = "renesas,r8a78000-pcie4", "renesas,rcar-gen5-pcie4";
-       ...
-       resets = <&reset 345>;
-       reset-names = "pwr";
-       ...
-       pciec40_rp: pci@0,0 {
-           compatible = "pciclass,0604";
-           ...
-           resets = <&reset 815>; // This is reset controller PERST#
-           reset-names = "perst";
-       };
-   };
-   The PCIe core resets are requested already in pcie-designware.c
-   dw_pcie_get_resets(), and root port reset controller PERST# used
-   to be handled in rcar_gen4_pcie_get_resources(), but now the root
-   port reset controller PERST# has to be handled later, in R-Car Gen4
-   PCIe driver host .init callback, to avoid interference with the core
-   dw_pcie_get_resets().
-
-Ultimately, this simplifies both the core and the R-Car Gen4 PCIe driver.
+The rcar_gen4_pcie_host_perst_assert() no longer has any purpose,
+inline reset_control_assert()/reset_control_deassert() back into
+the rest of the code and drop rcar_gen4_pcie_host_perst_assert().
 
 Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 ---
@@ -176,241 +132,58 @@ Cc: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 Cc: linux-renesas-soc@vger.kernel.org
 ---
-NOTE: Thanks Bartosz for helping me figure the GPIO reset aux driver out
----
- drivers/pci/controller/dwc/Kconfig           |   1 +
- drivers/pci/controller/dwc/pcie-designware.c |   4 -
- drivers/pci/controller/dwc/pcie-designware.h |   1 -
- drivers/pci/controller/dwc/pcie-rcar-gen4.c  | 107 ++++++++++++++-----
- 4 files changed, 83 insertions(+), 30 deletions(-)
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c | 17 +++--------------
+ 1 file changed, 3 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 0a0d56fcf0ac9..d65cf1e9d842b 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -350,6 +350,7 @@ config PCIE_RCAR_GEN4_HOST
- 	depends on PCI_MSI
- 	select PCIE_DW_HOST
- 	select PCIE_RCAR_GEN4
-+	select RESET_GPIO
- 	help
- 	  Say Y here if you want PCIe controller (host mode) on R-Car Gen4 SoCs.
- 	  To compile this driver as a module, choose M here: the module will be
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 12f102f48d5d5..b09c01853d807 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -104,10 +104,6 @@ static int dw_pcie_get_resets(struct dw_pcie *pci)
- 	if (ret)
- 		return ret;
- 
--	pci->pe_rst = devm_gpiod_get_optional(pci->dev, "reset", GPIOD_OUT_HIGH);
--	if (IS_ERR(pci->pe_rst))
--		return PTR_ERR(pci->pe_rst);
--
- 	return 0;
- }
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 6d788aa000117..9dc86b66e415d 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -575,7 +575,6 @@ struct dw_pcie {
- 	struct clk_bulk_data	core_clks[DW_PCIE_NUM_CORE_CLKS];
- 	struct reset_control_bulk_data	app_rsts[DW_PCIE_NUM_APP_RSTS];
- 	struct reset_control_bulk_data	core_rsts[DW_PCIE_NUM_CORE_RSTS];
--	struct gpio_desc		*pe_rst;
- 	bool			suspended;
- 	struct debugfs_info	*debugfs;
- 	enum			dw_pcie_device_mode mode;
 diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-index fceecbd16355c..d3bf01485e11d 100644
+index d3bf01485e11d..9a64a9f4ab0d1 100644
 --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
 +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -401,7 +401,6 @@ static void rcar_gen4_pcie_unprepare(struct rcar_gen4_pcie *rcar)
- static int rcar_gen4_pcie_get_resources(struct rcar_gen4_pcie *rcar)
- {
- 	struct device *dev = rcar->dw.dev;
--	struct device_node *root_port;
- 
- 	rcar->phy_base = devm_platform_ioremap_resource_byname(rcar->pdev, "phy");
- 	if (IS_ERR(rcar->phy_base)) {
-@@ -411,18 +410,8 @@ static int rcar_gen4_pcie_get_resources(struct rcar_gen4_pcie *rcar)
- 			return PTR_ERR(rcar->phy);
- 	}
- 
--	root_port = of_get_next_available_child(dev->of_node, NULL);
--	if (root_port) {
--		rcar->perst = of_reset_control_get_optional_exclusive(root_port, "perst");
--		of_node_put(root_port);
--		if (IS_ERR(rcar->perst))
--			return dev_err_probe(dev, PTR_ERR(rcar->perst), "Failed to get PERST#\n");
--	}
--
- 	/* Renesas-specific registers */
- 	rcar->base = devm_platform_ioremap_resource_byname(rcar->pdev, "app");
--	if (IS_ERR(rcar->base))
--		reset_control_put(rcar->perst);
- 
- 	return PTR_ERR_OR_ZERO(rcar->base);
- }
-@@ -594,19 +583,84 @@ static int rcar_gen4_pcie_enable_device(struct pci_host_bridge *bridge,
+@@ -652,17 +652,6 @@ static int rcar_gen4_pcie_host_perst_get(struct dw_pcie *dw)
  	return 0;
  }
  
-+static int rcar_gen4_pcie_host_perst_get(struct dw_pcie *dw)
-+{
-+	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-+	struct device_node *root_port;
-+	struct device *dev = dw->dev;
-+	struct reset_control *perst;
-+	int index;
-+
-+	/*
-+	 * Handle two forms of DT which can be passed to this driver:
-+	 *
-+	 * 1) Combined mandatory PCIe core resets and optional GPIO PERST#:
-+	 *    pciec@nnn {
-+	 *        compatible = "renesas,r8a779g0-pcie", "renesas,rcar-gen4-pcie";
-+	 *        ...
-+	 *        resets = <&reset 624>, <&reset 1121>;
-+	 *        reset-names = "pwr", "core";
-+	 *        reset-gpios = <&gpio2 2 GPIO_ACTIVE_LOW>; // This is GPIO PERST#
-+	 *        ...
-+	 *    };
-+	 *    The PCIe core resets are requested already in pcie-designware.c
-+	 *    dw_pcie_get_resets(), but the reset-gpios GPIO PERST# has to be
-+	 *    handled at this point here. The GPIO PERST# has to be requested
-+	 *    by index since there is no reset-names entry for it, using the
-+	 *    first unused reset index.
-+	 *
-+	 * 2) Separate mandatory PCIe core resets and optional reset controller PERST#:
-+	 *    pciec@nnn {
-+	 *        compatible = "renesas,r8a78000-pcie4", "renesas,rcar-gen5-pcie4";
-+	 *        ...
-+	 *        resets = <&reset 345>;
-+	 *        reset-names = "pwr";
-+	 *        ...
-+	 *        pciec40_rp: pci@0,0 {
-+	 *            compatible = "pciclass,0604";
-+	 *            ...
-+	 *            resets = <&reset 815>; // This is reset controller PERST#
-+	 *            reset-names = "perst";
-+	 *        };
-+	 *    };
-+	 *    The PCIe core resets are requested already in pcie-designware.c
-+	 *    dw_pcie_get_resets(), but the root port reset controller PERST#
-+	 *    has to be handled at this point here using subnode request.
-+	 */
-+	index = reset_control_get_count(dev);
-+	if (index < 0)
-+		return index;
-+
-+	/* Attempt to request GPIO PERST# in PCIe controller node. */
-+	perst = of_reset_control_get_exclusive_by_index(dev->of_node, index);
-+	if (!IS_ERR(perst))
-+		goto exit;
-+
-+	/* No GPIO reset, test for root port subnode. */
-+	root_port = of_get_next_available_child(dev->of_node, NULL);
-+	if (!root_port)
-+		return dev_err_probe(dev, -EINVAL, "Failed to get PERST# in root port\n");
-+
-+	/* Attempt to request reset controller PERST# in root port subnode. */
-+	perst = of_reset_control_get_optional_exclusive(root_port, "perst");
-+	of_node_put(root_port);
-+	if (IS_ERR(perst))
-+		return dev_err_probe(dev, PTR_ERR(perst), "Failed to get PERST#\n");
-+
-+exit:
-+	rcar->perst = perst;
-+	return 0;
-+}
-+
- static void rcar_gen4_pcie_host_perst_assert(struct dw_pcie_rp *pp, bool assert)
- {
- 	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
- 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
- 
--	if (dw->pe_rst) {
--		gpiod_set_value_cansleep(dw->pe_rst, assert);
--	} else {
--		if (assert)
--			reset_control_assert(rcar->perst);
--		else
--			reset_control_deassert(rcar->perst);
--	}
-+	if (assert)
-+		reset_control_assert(rcar->perst);
-+	else
-+		reset_control_deassert(rcar->perst);
- }
- 
+-static void rcar_gen4_pcie_host_perst_assert(struct dw_pcie_rp *pp, bool assert)
+-{
+-	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
+-	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
+-
+-	if (assert)
+-		reset_control_assert(rcar->perst);
+-	else
+-		reset_control_deassert(rcar->perst);
+-}
+-
  /* Host mode */
-@@ -616,6 +670,10 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
- 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
- 	int ret;
- 
-+	ret = rcar_gen4_pcie_host_perst_get(dw);
-+	if (ret)
-+		return ret;
-+
+ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
+ {
+@@ -677,7 +666,7 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
  	if (pp->bridge)
  		pp->bridge->enable_device = rcar_gen4_pcie_enable_device;
  
-@@ -623,7 +681,7 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
+-	rcar_gen4_pcie_host_perst_assert(pp, true);
++	reset_control_assert(rcar->perst);
  
  	ret = rcar->drvdata->init(rcar);
  	if (ret)
--		return ret;
-+		goto err_init;
+@@ -698,7 +687,7 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
  
- 	/*
- 	 * According to the section 3.5.7.2 "RC Mode" in DWC PCIe Dual Mode
-@@ -646,6 +704,8 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
+ 	msleep(PCIE_T_PVPERL_MS);	/* pe_rst requires 100msec delay */
  
- err:
+-	rcar_gen4_pcie_host_perst_assert(pp, false);
++	reset_control_deassert(rcar->perst);
+ 
+ 	return 0;
+ 
+@@ -714,7 +703,7 @@ static void rcar_gen4_pcie_host_deinit(struct dw_pcie_rp *pp)
+ 	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
+ 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
+ 
+-	rcar_gen4_pcie_host_perst_assert(pp, true);
++	reset_control_assert(rcar->perst);
  	rcar->drvdata->deinit(rcar);
-+err_init:
-+	reset_control_put(rcar->perst);
- 	return ret;
+ 	reset_control_put(rcar->perst);
  }
- 
-@@ -656,6 +716,7 @@ static void rcar_gen4_pcie_host_deinit(struct dw_pcie_rp *pp)
- 
- 	rcar_gen4_pcie_host_perst_assert(pp, true);
- 	rcar->drvdata->deinit(rcar);
-+	reset_control_put(rcar->perst);
- }
- 
- static const struct dw_pcie_host_ops rcar_gen4_pcie_host_ops = {
-@@ -830,7 +891,7 @@ static int rcar_gen4_pcie_probe(struct platform_device *pdev)
- 
- 	err = rcar_gen4_pcie_prepare(rcar);
- 	if (err)
--		goto err_prepare;
-+		return err;
- 
- 	err = rcar_gen4_add_dw_pcie(rcar);
- 	if (err)
-@@ -841,9 +902,6 @@ static int rcar_gen4_pcie_probe(struct platform_device *pdev)
- err_unprepare:
- 	rcar_gen4_pcie_unprepare(rcar);
- 
--err_prepare:
--	reset_control_put(rcar->perst);
--
- 	return err;
- }
- 
-@@ -867,7 +925,6 @@ static void rcar_gen4_pcie_remove(struct platform_device *pdev)
- 
- 	rcar_gen4_remove_dw_pcie(rcar);
- 	rcar_gen4_pcie_unprepare(rcar);
--	reset_control_put(rcar->perst);
- }
- 
- static int r8a779f0_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable)
 -- 
 2.53.0
 
