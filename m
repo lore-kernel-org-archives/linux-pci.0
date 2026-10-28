@@ -1,47 +1,44 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=156.224.81.22
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793153506;
-	b=a7+uOLa6ZzKL7j0AI6o68dLnvcYeY191l30OxNqlj3kc1Wrh/EIdKyKn2LfD1X9GUUHI
-	 gADYGozL0QCADwrgNZvKL8wUvIIQ3i/yEx5DhAjAioLcpPisuCcYZ3Xrvkj2x4+E+hrWq
-	 UcUfnmr7EgMBPl2RkO+BPRm9eMns7ZUJb0ozX1JgAsMsJJb6KxiQgPbsLPst3LdNNZgYU
-	 1LYjkfjrAQ5Koq3z64tavK+YW4AycgSkp3OAUVMjltdKYKfI802KhmNp+lKKUMDd2u7k/
-	 xvC03jRFAt7BFSLHCWFZb2n+JYtnTGIaiwRW91C7tN7tp55u4YsAuL3JFUajgII5GNA==
+	t=1793154088;
+	b=FNY+VKK1KWnXnDZ5DTKoqPmoH/DBJeV8lJWoRzF5f1N2bTCXC4KMnVVeBZLw1VlYQnuv
+	 AihEI8b5veGuqgUCV2gtMQ9M+BsZIgGE3nRPxdxNaEZtVqgEDermMtHkSx45Nm5wfEkiH
+	 uG4fPAI1XCxnZ2LUMxmLjeSE/zs4UP4QQCvyyXdf88bzV8IkD7Lxxp4T4ciLwDWXndK4s
+	 +j/0y6dXSPUM1MXrc9VDWWcMkyReuxWixHZPLyh1ddjqbjB/k5yuma2zaATOsyYGkWJO6
+	 vITsJ4T90iXa+jqtV6hMOhY+7NEyrzMshXC0NFQJVP70K0Fv+vaZbewgyJ/3jXnAyPQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793153506;
-	h=DMARC-Filter:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-CM-TRANSID:
-	 X-Coremail-Antispam:X-CM-SenderInfo;
-	bh=dRf6oI9OjFWY1cb4Veae1z+HSgCdbz4ogw7DjgHpwGM=;
-	b=B09TjISVevEf+ZFWoDBxUpiiKD4DC1rPJJPHYbc+lnn8Zs/RuySCRWco4J/wkQSL+GZo
-	 mJ8hJ/rcdyyU+2/C0UaaBCJ2oG+oeQEq/HbANMHkMafW9GyB1nDzlDixu0x9NpJSyE3b3
-	 yrnazxT/6GtALSnhy8FA0pG+9xwtqlZU5TT0jRARWQfRsfoNaSiAU6aaLC8UzC0Zf1dzk
-	 Q4UzHXD5NHpBkxodPL/SPozqPDvlCAk4nIe2p9k60QarouDD4SHNxo3/+8K6hNyI753hH
-	 lVPKhVfXIq904xg+7vZnTlyqFhckOYG90liHYdPxwyr8F8J+B/C3FozAnw2SYQ8po4g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793154088;
+	h=DMARC-Filter:Received:Message-ID:Date:MIME-Version:User-Agent:Cc:
+	 Subject:To:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:X-HM-Spam-Status:
+	 DKIM-Signature;
+	bh=yNHKjhci1gy/pCPG8FfXM4uD8fUDi3UIHMZ1Loq+UU8=;
+	b=HMpdDezEjgc2D6p39KBlm1amBgE6YLSD6GuJ14kmHul5pinE4O9OhGmy92Ou7SHvwTK0
+	 ejvG/GmVG0hJE4gBEvGClaPPODPtd3DhYPTY3yOMGOuZkuJI8QmnqtdlvD6n1RK/rw69N
+	 ++KMbvJuO6qy3qixOQ1qSOqrEphMQ0Dnbv64aQjAomMEG13RWlKVVBbCEpHRrNbXs2B9c
+	 1Eo/FcDUfqx9iL4s6errNAMQcMPVmS99KMLIwgsesFRKjzhr5NOQxnoZRDVV9x4R934xQ
+	 yc/VbvNJ4WpjzvPBPY1ZaKI+5OGVQ6fl2setav6VTiyP9laZsLizgu4e6oSOJ3/Ip8Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=163.com;
-	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=qYpt+RJw;
-	arc=none smtp.remote-ip=220.197.31.4
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+	dmarc=pass header.from=rock-chips.com;
+	spf=pass smtp.mailfrom=rock-chips.com;
+	dkim=pass header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=ChbgGRda;
+	arc=none smtp.remote-ip=156.224.81.22
+Received: from mail-m8122.xmail.ntesmail.com (mail-m8122.xmail.ntesmail.com [156.224.81.22])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFC69606A31D;
-	Wed, 28 Oct 2026 02:11:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EFC69606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0845C606A31A;
+	Wed, 28 Oct 2026 02:21:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0845C606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=qYpt+RJw
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=dRf6oI9OjFWY1cb4Veae1z+HSgCdbz4ogw7DjgHpwGM=;
-	b=qYpt+RJwRCF0KX/+Je23SE2RJtdg8sWfRlTJBYkgQjazqIosKZrPy7BmiKqm9R
-	lMeSBT6H/smy5N567aYskw3soxO2lZEjFu6+3moV22mJgNt2lfVoA1/U+RSmdIP+
-	eNPBKt+kFxH/QXb7xPiQMm1mkDGc1IgvPyHBAIFAj2h4o=
-Message-ID: <9a761c42-9edd-48f4-b3a4-c275b603cc3e@163.com>
-Date: Wed, 28 Oct 2026 10:10:33 +0800
+	dkim=pass (1024-bit key, unprotected) header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=ChbgGRda
+Received: from [172.16.12.48] (unknown [61.154.14.86])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 529689659;
+	Wed, 28 Oct 2026 10:21:14 +0800 (GMT+08:00)
+Message-ID: <95aeecc0-2794-4cc6-a635-5c042afc1405@rock-chips.com>
+Date: Wed, 28 Oct 2026 10:21:14 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -52,66 +49,61 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 00/16] PCI: dwc: Cache PCIe capability offset
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
- mani@kernel.org, jingoohan1@gmail.com, imx@lists.linux.dev,
- linuxppc-dev@lists.ozlabs.org, linux-amlogic@lists.infradead.org,
- linux-rockchip@lists.infradead.org, linux-arm-msm@vger.kernel.org,
- sophgo@lists.linux.dev, linux-riscv@lists.infradead.org,
- spacemit@lists.linux.dev, linux-tegra@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20261027231534.GA520774@bhelgaas>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20261027231534.GA520774@bhelgaas>
+Cc: shawn.lin@rock-chips.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+ mani@kernel.org, manivannan.sadhasivam@oss.qualcomm.com,
+ bhelgaas@google.com, robh@kernel.org, heiko@sntech.de, dlemoal@kernel.org,
+ linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org, iav@iav.lv
+Subject: Re: [PATCH v3] PCI: rockchip: Don't lengthen PERST# when power is
+ already valid
+To: =?UTF-8?Q?Enrique_Hern=C3=A1ndez_Bello?= <ehbello@gmail.com>
+References: <20261028005603.2399220-1-ehbello@gmail.com>
+ <cf541723-eb4c-4ba6-92c5-33baafc20e7c@rock-chips.com>
+ <20261028015923.2436122-1-ehbello@gmail.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <20261028015923.2436122-1-ehbello@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wD33x2jWeFqyfNqDQ--.48494S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Ar4DJr17Xr4kCw1xZw47urg_yoW8Xr4kpF
-	Wjgrs2yF4kXrn2vanF93Wj93W7AF9Iy3y3CanxG34avr90vF4IgF40vrW3GF9Fyrs29r4a
-	yFWjq3s8Gas8AFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U4UDXUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7ASSNmrhWaRq6QAA35
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa1804fc91103a4kunma6c4c0125b2f1
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaHx5DVh1IHh9CHUhJSB4aSFYVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUpLSU
+	9PT0hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=ChbgGRdaxijZR8KSKUvfal1CoRHVY7Efis8YUv4CvZkGOOQ9ep4+V5XBRTk/O3wdft+rGE5oYntRLWujhiU2sBAr2Xq6/IqEK3kaRRClrPQc267MmCJQWAa90mhSb+ath4NiHQnQrpC8uKCcDQkzY2QZNBi3i1FuPkyPoNTC9O0=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=yNHKjhci1gy/pCPG8FfXM4uD8fUDi3UIHMZ1Loq+UU8=;
+	h=date:mime-version:subject:message-id:from;
 
-
-
-On 10/28/26 07:15, Bjorn Helgaas wrote:
-> On Tue, Oct 27, 2026 at 08:28:11PM +0800, Hans Zhang wrote:
->> Hi,
->>
->> The DWC PCIe core and its platform drivers repeatedly call
->> dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) to obtain the offset of the
->> PCI Express Capability structure, including in paths that run more than
->> once such as link polling, suspend/resume and interrupt handlers.
->>
->> Add a cached pcie_cap field to struct dw_pcie and a
->> dw_pcie_get_pcie_cap() helper that performs the lookup on first use and
->> caches the result, then convert the core and the 14 platform drivers
->> that use PCI_CAP_ID_EXP.
->>
->> After this series, dw_pcie_find_capability(..., PCI_CAP_ID_EXP) no
->> longer appears in drivers/pci/controller/dwc/ outside of the helper
->> itself.
->> ...
+在 2026/10/28 星期三 9:59, Enrique Hernández Bello 写道:
+> On Wed, 28 Oct 2026 09:34:04 +0800, Shawn Lin wrote:
 > 
->> base-commit: 4352b8aee98005853aa63f57d6377282de17a33f
+
+...
+
 > 
-> This does indeed apply cleanly on 4352b8aee980 ("Merge tag
-> 'i3c/for-7.3' of git://git.kernel.org/pub/scm/linux/kernel/git/i3c/linux"),
-> but that's pretty old and not really useful any more.
+>> Furthermore, even with the same power supply design, different endpoints
+>> may behave differently. What if a particular device requires a longer
+>> reset pulse to work reliably? How would we handle that?
 > 
-> PCI topic branches are typically based on -rc1, but of course v7.4-rc1
-> hasn't been tagged.  Until it is, you can use pci/main as a good base.
-> It's currently 17bb0e2f6c80 ("Merge tag 'pci-v7.4-changes' of
-> git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci"), so
-> drivers/pci/ in v7.4-rc1 will be pretty close to that.
+> The only floor the spec gives is T_PERST, 100 us of active PERST#, and v4
+> started guaranteeing that explicitly with an fsleep() rather than relying on
+> the 100 ms. Beyond that there is no required minimum to preserve.
+> 
+> And the short pulse is not new behaviour: from the driver's introduction
+> until c47f90be4c89 in v6.11-rc1 there was no wait before the de-assert at
+> all, so the pulse was only as long as the register writes in between took.
+> That is what every endpoint on this driver saw for years. The 100 ms pulse
+> is the recent change, and it is what broke this one. If some device turns
+> out to need longer, that seems like a quirk for that device rather than a
+> reason to keep a default that regressed another.
+> 
 
-Hello Bjorn,
+Was it possible to add a DT property for configurable delay? I came
+across several EPs need quite a longer wait time, so add it in the
+vendor tree for dwc-based IP[1]. That could be applied here to slove
+your cases and others', and might avoid regression.
 
-Will rebase on pci/main.
-
-Best regards,
-Hans
-
-
+[1] 
+https://github.com/rockchip-linux/kernel/blob/develop-6.12/drivers/pci/controller/dwc/pcie-dw-rockchip.c#L865
