@@ -1,57 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793157858;
-	b=XmLqevT3LduVf2C3fOPy3mhhzdN/YvvwgX607emdcFjmfe6w/nhXHHcv1ktbgKjbHE7P
-	 1FrymJ/nFUSh+uUa3O4sModCEfKmJEoDW1OE1YSX7Hyj+Slr4a5k2nQK36Pmri0mhhTaD
-	 ZxBxFewIS9pXu1rL4UMnH2Xc8y7ErwYNGVV5gd3RNLFmUMV73V0aWhz31tSeU0I8bhc25
-	 9LL7U+W9PW5N7EiBie3Ed5glr0DkKfyTEDNwn1Alx5bfK75s2iOtDsl9aUjSQKgAglIL0
-	 ikl2xukPSlkNW/jCuoP56tgNMuvzGFUU7G2lGT8rks8pyBIr0KbJh0ht/BGcbRiOoUA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793157858;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=yR8qZ8SZpHw52Fu3wnStdm935PTS8eQ6L5yFKzzQ3Go=;
-	b=g7xgHoaqHdgs6TJ9T4aLYDvVzrJC4Ic1HYsVN/i/5wESVwWQouf0vOSXkfIHbMBh/GTR
-	 RmauY0gy4ZjbM95KbkJxJV78PSYFj9yOBvvzkr01PId833VWeUN/iURQcFHFU2wIkR+n9
-	 1eA6SilhOp94rXXMLHd7TzsneCwq+1+FQltz/Y8T75wBDzVem9oMySoyltCki0/eR1anX
-	 JOAgQfMV1U8I8zN+0saV5SWEC3/+7ZHrirT8bHVj5Bon+CKzF5VpPQjsb/eLkjZAMm1NP
-	 mUr0KvaN6N/Y7d2xBLHigs0OdZPdeoA5Z6IuFtV2Tf1KdE0DT0knbmJrVB5m7R06pnA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YUye5fSF;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=136.143.169.15
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793164119;
+	b=YhFQAid+EGbkclTn6v91gme7RxUB0bVeDwpMsgutidjuv1wEP1kec3rXvoTjyCYDZ2ju
+	 4LedD4b8HF7L/BCAbBue6vVEU0Y2t7k8NjuSItis+uI1s6iZG3+SnxXaoiPszJbofrl5h
+	 XNu3USk6mZLCfw4HT/fvtjQ0QUY+O590jvoaLLSKkJ6xqp/mplH4odho4Hw+yxnbgmDxi
+	 D6UIL6W692k7m0+UK5txHIkK+sBPDN+lXHIzoKWWpK4KKbszfpksbERNPfl/dwHb+CwfJ
+	 jQSRIzxgrBtHOmSI6mSkT6yYfMvtLcJZswDCd513W++CP0llCyoYGLd/ItoHvEtdNkQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793164119;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-ID:In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=pU1kLn/e7S5gHH4LSe4wUg2uRsyVInrWCYyeusC2FTU=;
+	b=5CYjvJH4SJl77xircB9qw/Q4vyBZdpYLaB5NKetzHdJDhoaYkjMCvGL+PHhsUofxLPHD
+	 L7PolDd2PH+YgXEtmg2s1VSQvrvriyxXz4oW0zu2zxo6Mw1EqKUMKNThS67CdmGNPklyA
+	 VwBtwEof2oj4I+oL0KHUOXbfbTTlPj5Vzsy93enVDMmlDwC6yvZCs5PoFk+0gEIiMdecc
+	 1A6LTnIbrsC9CexKAX4igYgEjqIz21Cb2HDxXuZn9lWThOVi3olgoUaBOFkvCvoAhvQUn
+	 evIIqcZp43UJsaf7TBWJAVb0gakFM/kIhPlFjOGCU/IPjPRJuK4RVDRvUrtduv3Nnlg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=none header.from=iav.lv;
+	spf=pass smtp.mailfrom=iav.lv;
+	dkim=pass header.d=iav.lv header.i=@iav.lv header.a=rsa-sha256 header.s=zoho header.b=DNFiuBby;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=136.143.169.15
+Received: from sender-op-o15.zoho.eu (sender-op-o15.zoho.eu [136.143.169.15])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 955F8606A31E
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 03:24:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1F18606A31A;
+	Wed, 28 Oct 2026 05:08:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B1F18606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iav.lv
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iav.lv
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YUye5fSF
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FA491F01825;
-	Wed, 28 Oct 2026 03:24:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793157858;
-	bh=yR8qZ8SZpHw52Fu3wnStdm935PTS8eQ6L5yFKzzQ3Go=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=YUye5fSF1rviYC1zGbVgoUucVwXJTawAHwm/uZ/oTcK9Oa6csHz/SLPvcXeWjQS3K
-	 ofuqffgz8Zo0Ba0WqX1dF7Ub92kXs5kGEYhuL3ofUz++kv9nnKFd2iHffHqE7ScBo/
-	 oHe6r915CcWty8bzQU6edrmyjuIbQ6qxI5DVPcmkxn6J0mKA/G9wMn9RzeC689VsRY
-	 odCCKfkKNoy5Z6hO3qVzPc5GZc0XFOjs5hriN9+pprJ4pEl65WRlKeosgdEpX2M1l4
-	 7KkZuLU9dhditBU2mLr2/bvu7YCAQrFUgS/ErTiKebTZB8YdTXLkrsVxzobNAgSjek
-	 qi+yldP6eyUGQ==
-Message-ID: <sashiko-outbox-187418@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 15/16] PCI: dwc: tegra194: Use cached PCIe capability
- offset
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Hans Zhang" <18255117159@163.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261028030652.2917756-16-18255117159@163.com>
-References: <20261028030652.2917756-1-18255117159@163.com>
- <20261028030652.2917756-16-18255117159@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 28 Oct 2026 03:24:17 +0000
+	dkim=pass (1024-bit key, unprotected) header.d=iav.lv header.i=@iav.lv header.a=rsa-sha256 header.s=zoho header.b=DNFiuBby
+ARC-Seal: i=1; a=rsa-sha256; t=1793164081; cv=none; 
+	d=zohomail.eu; s=zohoarc; 
+	b=YxtRGSao/0ViiHH7k1+F6DOeV5dS4qbM78G3BRBGRbpY2aNDK+8x1iBguAIrgdmMFm8DvdVkOcu5tIf5bXYvxuuQZ6f0q5zqc+yc4Bwh7hmNgjzFl0NVIVVGvKyY+pPlTsXMsmzVEBfuHvyOxciFTq3Kp5XcgzZWTQjI/w/jJ6U=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+	t=1793164081; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=pU1kLn/e7S5gHH4LSe4wUg2uRsyVInrWCYyeusC2FTU=; 
+	b=bq7gza7UWXBfvlXnk7Zq1SIGhbbphHJrUCOV99cSnVozr5gmbhNi83812xQI9nEjaWz+ayVCbjZE8wvbWTJXogcZtCbJDmGuZs+jvHE8Jea3dvUtdReiU41BQWxN0DgNlGBRYdVjIc/60CBNqgWzK+hyib44wwZWtEu6CLvA9wM=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+	dkim=pass  header.i=iav.lv;
+	spf=pass  smtp.mailfrom=iav@iav.lv;
+	dmarc=pass header.from=<iav@iav.lv>
+DKIM-Signature: a=rsa-sha256; b=DNFiuBbyry0dtEQCG82ninBQPHF20PnwvMwpfxS4EBju8nxnKxWPUVb3+QeqB7fEFtxwBoXVGL/Q5pimjSFB9T8EMdzxXa8Se4NR78rGHnq7LXEyIySrTXW9oG30AIDxE3Buw0BtGstcxBfBHy5AjL8Oyz04Pn/KEda3X55mhx4=; c=relaxed/relaxed; s=zoho; d=iav.lv; v=1; bh=pU1kLn/e7S5gHH4LSe4wUg2uRsyVInrWCYyeusC2FTU=; h=Content-Description:Content-ID:Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:List-Subscribe:List-Post:List-Owner:List-Id:List-Archive:List-Help:List-Unsubscribe:MIME-Version:Message-ID:Resent-Sender:Resent-Cc:Resent-Date:Resent-To:Reply-To:Resent-Message-ID:Resent-From:Sender:Subject:To:Date:From:Message-Id:Reply-To:Subject:To:Cc;
+Received: by smtp.zoho.eu with SMTPS id 1793164080508149.31550770494346;
+	Wed, 28 Oct 2026 06:08:00 +0100 (CET)
+From: Igor Velkov <iav@iav.lv>
+To: Enrique Hernández Bello <ehbello@gmail.com>
+Cc: shawn.lin@rock-chips.com, lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, bhelgaas@google.com, robh@kernel.org, heiko@sntech.de, dlemoal@kernel.org, linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, manivannan.sadhasivam@oss.qualcomm.com, iav@iav.lv
+Subject: Re: [PATCH v2] PCI: rockchip: Skip the Tpvperl wait when power is already valid
+Date: Wed, 28 Oct 2026 07:10:00 +0200
+Message-ID: <20261028-h64-tpvperl-ab-skip@iav.lv>
+In-Reply-To: <20261028005548.2399155-1-ehbello@gmail.com>
+References: <20260911211559.207990-1-ehbello@gmail.com> <179196286749.38040.5597453767131590054.b4-reply@b4> <20261016-h64-pcie-resume-tpvperl@iav.lv> <20261028005548.2399155-1-ehbello@gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,24 +63,19 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-> Replace the two dw_pcie_find_capability(&pcie->pci, PCI_CAP_ID_EXP)
-> calls in tegra_pcie_dw_host_init() and pex_ep_event_pex_rst_deassert()
-> with dw_pcie_get_pcie_cap() so that the driver-private pcie_cap_base is
-> filled from the same cached value.
->=20
-> tegra_pcie_dw_host_init() is called from .start_link, i.e. after the
-> controller has been initialized, and the PERST# deassert handler runs
-> after the endpoint has been brought out of reset with its clocks and
-> power enabled. The helper therefore performs its single DBI read at the
-> same point as the open coded search, and the private copy keeps working
-> unchanged.
->=20
-> Signed-off-by: Hans Zhang <18255117159@163.com>
+On Wed, 28 Oct 2026 00:55:48 +0000, Enrique Hernández Bello wrote:
+> If your first resume then survives, the resume hunk is the problem
+> and I will drop it
 
-Sashiko has reviewed this patch and found no issues.
+Since the next version keeps the full wait on resume, it no longer
+changes the resume path, so I'll skip the A/B and test that version
+on Helios64 instead: boots plus s2idle cycles, results in reply to it.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261028030652.2917=
-756-1-18255117159@163.com?part=3D15
+The probe SError is in the cover letter of my rockchip-host RFC:
+https://lore.kernel.org/r/20261024-rockchip-pcie-resume-v1-0-58e54a5cf5f1@iav.lv
 
+Igor
