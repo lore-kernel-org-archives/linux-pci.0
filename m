@@ -1,145 +1,105 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.43
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.46
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793206240;
-	b=vKiY5ovT6CT56KWBPH9t/3aRuGDYWCDrNZBJlTCSb+wF0IywiB87SPxrmAbIvUmy7rBo
-	 9bggcMp+veVvEpmRhDECPoKbVL6O+njx75lEodk6sWZ58G0iekzw7avX6EpMMT84GYgii
-	 r/VMQ1WAtZkVrZuNadFylp1P9YNGaya3bL0UuXGEOppXUtotAl39N8afIk6NSzrETs3jl
-	 u3McaZsCOZcS8mfoJwnriVEPSkJK2pgqfOKUDDCKAfjlYNuTRXl6ozxUeJFzs33YM5UTO
-	 RLq5umxriN+T3pJm3hW0pv/wvHdyI1L1FkPEHOwCdybi+v1llN3/FeaQCc23LTGdyRA==
+	t=1793207487;
+	b=mEJZWdBY54JYEejhsMRbw4Y3i8Lz6ZyiVM8Kp6Joy/tp8hdyLdXXt3fOx6RbrkDKEtdC
+	 2N4thfJEjL9XWyE4r/Vcdd60MPM9Un6MTpq812sqTgZ0g5x1LxNdt1AoQ/G/d0XBqbNSV
+	 I1wuqVXwz98XOHu1IIatArbLBpEsFAO8ritX4mWL/57hvliDyI480l+cJLKdEbBeUTVv6
+	 DBzhx1aBD9SR23/Wf0G4d5k0qKrEeTe/EeGU5V156N8a4xJ36jdX2VuJuz8eS98MJdAkD
+	 j5YHKg3BQSIc+OEsFdh8GobfUXmKA91xeIxE9L42lBdfuoRTCpOtxJOvHsG1uhBvlmw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793206240;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793207487;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Message-ID:X-Google-Original-Message-ID:Date:From:To:Cc:Subject:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=4bFPaFC4sn5I0ZmpvEnIMtoAAhYqi+gI/vKT8dEg8LI=;
-	b=zC3jRczaIkxCVrs3LjQfiHLA3oJUesyfQ1kQOBDkoeglhFoiCRMVz5aD6zDXDcd7h/Fa
-	 gDgsqZRlKrT45Y0dhYYvI73j33JAAXfd61oDYjLdLGa+t2nF/hBwWVpo90LSzfrAeZtzT
-	 4XfA1vwHKUI/jq7KK7mGfe3QGGBHEEtmq6OxKPuqZR6S4NlS+yr9kOYgSbnXRihhyHZGU
-	 5y73U2mgiSavfDY5nPP9f7WjYWJJ9JAsceKI2Ea3upp6yEJgA8efe0jdbThabyzCCCY2j
-	 kgkp4MmZJFwhxxJH4rnJndlFVR4TxNzsn8HK9CvUHqfF/rWLc11hdF1gD3/P7bMl9Jg==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=OBAS8LSYWCRFarKET5k50Emev7tmcCz5Lq+Z90k9nVI=;
+	b=006411tE9PgSvPDia5LdEizyqiPN0EhPUB8vlmyQaVlyHAhPZ3j0qSh3mq6xBDqZfQEg
+	 EB4FwjPpuQChcODM5l29WpRSpfPeVXBlNWuCcfv7QE/gEozF4u4TUnUH776WhJQwnoOSN
+	 YsRMrjm6P+WAIEM44o7lBxYgLulzjTVgh7ddFxpga7XbdWij99rHtj3+z2RnXzqn5aG1o
+	 cRpwWVgPFRaU5TIGJzlwmmDpUNNrA1GnIp4Ln/JLKBSbQby0P59wNxhAVFCCIo2h13YOw
+	 sP7RjqR5l5E3qGhLXhqvzhMNNI5VAdQwOQTkrqABCHM87Wfqm3HXnXNnWoVz080BTtw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=bvVViE7s;
-	arc=none smtp.remote-ip=209.85.128.43
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=mmkcO1JN;
+	arc=none smtp.remote-ip=209.85.128.46
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 428D9606A32C
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 16:50:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 428D9606A32C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4C29606A31D
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 17:11:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E4C29606A31D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=bvVViE7s
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4a1b07c3c5fso11173195e9.1
-        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 09:50:40 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=mmkcO1JN
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4a215e64962so13795145e9.1
+        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 10:11:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793206239; x=1793811039; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:subject:cc:to:from:date:message-id:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=4bFPaFC4sn5I0ZmpvEnIMtoAAhYqi+gI/vKT8dEg8LI=;
-        b=bvVViE7sfBqKWfi/kLDJYlnvzOUXPLQxwi7WE8YcmF6ZlMSeeXt5LVtwTgYjpBwkt8
-         SYP3vMcQXr/owFcgMM1gE2QwZ/DTceP96Ogemeuc3wSVYptLjbh5WQ0zOa/QFUl5Bsyv
-         t91KeRJRSejTTfSC30ERKT+SYsNtmNlFP19tG7VGrb/Fyrtxkv8HCWTMM4co1xxufiUC
-         fsayYomNX2KXae5ip40Tnzxu0+b09pZZ8pnmB2UJbRFHhmlzRF7my1fWETNYJaMtDwI5
-         xLbeFqSzSFzkr23lLp9iNBgX8plx3P3KNsPgixIQp18S34Dqr3UjM2Pb0SImAbIC4Wby
-         52og==
+        d=gmail.com; s=20260707; t=1793207485; x=1793812285; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=OBAS8LSYWCRFarKET5k50Emev7tmcCz5Lq+Z90k9nVI=;
+        b=mmkcO1JNN7XK0kk9rUyfJsIkeuA6S9rPXoVmVjclVsR9+UUP5tIwhTnb6+dYlT3iNS
+         HizHtW1P57YqRbzyHS+4jFtxAzrAzJmkO+Tux3Eisaqp9+wmbaoIZpBq4qlNuxWbDPYF
+         h2rw/+3GO5gg9tiBP7bjGjLjs/T4iwXCF8jkmKe7NH32VuqdcUmjge5gWefB1I4VG6Xh
+         s6/qoPGgLvmhNWebT9rpgWGHuEQG3qwYL0NLT9tAmsRUWhgz9lHaZL6rbSYN3FWu1MY9
+         RkDw/LyR+NC2RPS7+/DvGlJvxsqJ8nlKo53bX6doJUETJqp+6YZG/vxYzORAt2KaoHA2
+         5k1A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793206239; x=1793811039;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:subject:cc:to:from:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=4bFPaFC4sn5I0ZmpvEnIMtoAAhYqi+gI/vKT8dEg8LI=;
-        b=ByoMTKXpdx7XvZx60vCGiaE/XjfItcPbDpR4RdcyNyAO73JE5ryUgJmgyy5e+RXVe5
-         NPzLTW5BoBdmWYbw9jgImBGicUN/flzyn4i4bLnf18WgD52CcPhP7gw3e5Uwe+lq/MDO
-         yr7xWsm7pTD5R7bQFmyM4ZrnBYx+aZwPzA9x7g1iBD0WD0nvI/CiLuH9Q1eHwssk2q36
-         P48DPNHxAjD8ysMmrehys64YTMFXFqfaLkhGlsyoY3dm07FZxH1gL/J11jkQEn2RCzbd
-         1Zjj9ZG8p/h514HEIR5f9xdi16AxVc6rIsWdyrTeF+RJDZwditUtLcXQ+SnG5JIkWMRc
-         RNTQ==
-X-Forwarded-Encrypted: i=1; AKwUvBymEygJKd0wlAXAtNuYTBaJ/BctWw3vKSi8YYCNH86sI0KvmjVYlAD83pJ3ORL2y18inaqTcyiI5CI=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKPmL1rO3765pZz1raChd/SmLKPIymLcQCyKe4hbxRYkXbCA6xR
-	GhxoYHrHMUAx92RYLCzgTtpGZ97Glvc9yCsAagWkuiV62p+Dpd896FMM
-X-Gm-Gg: AYBFou1YUw8TxTXMnZPvV6RjcTJelGTTsTphhSvdDFnHUADBvgZykMQkWnOFzNcO0Fy
-	1P7Fth7V6o7YibDyoWnvB9ar191Ssu012XV55Se6EEf8FSciYOuvXZ5oAER4diAt38Vf9yU5vqu
-	ikZPPboF9M2ona+RL4PUVrg6MuK29ucOw86kYxtXsClUSGFetdC44bjh4xpvjcOpE023GXf/dmI
-	Z5d+SAl8xDcj/aaSR+BGg2MszIVZkz2ahUewO0k9mDwG/ErdLzH+MK7CTbtWXHJk9ezea0Yp7aI
-	+uxniVl4cxcBxmVTchLmc7dVdci/ZHANb5bUaZ26pBwspSogRm8i96S6lh0L9fXNY1ngJUfUTvK
-	0/lRd/ooycbGIU9erL+Z0bpSppx6j8uqmonPogw2gA125bDfifiz3zooZ/upakOMSuXN6krxPYh
-	UoolEcfsI32Q6ssz+Dtd+CcTl501rJ10iPalNzkWTdMAe4sE/LB1a8Tj3ZnVTw5RY6Wdn7V/Nlb
-	r7zPbFU84RDQZkSn/YMO3faQLuiHh9wFulT5jCYtgMmHl9YrNFR4nPLNqd6d4dHsWBD2ciAVvKa
-	WKI6cn+mraidNsFOo+7R4ifUmu2F0LEsBE2VBHCm7ROyGx/B8SVBsLCuQEskaUZfQB9/cODFgbB
-	xCif8oZh0Ew7SCBWd
-X-Received: by 2002:a05:600c:630e:b0:4a6:7d6:821f with SMTP id 5b1f17b1804b1-4a9678bff9cmr62960175e9.29.1793206238343;
-        Wed, 28 Oct 2026 09:50:38 -0700 (PDT)
-Received: from Ansuel-XPS. (93-34-92-187.ip49.fastwebnet.it. [93.34.92.187])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e3ebc4d76sm29895785f8f.12.2026.10.28.09.50.35
+        d=1e100.net; s=20260707; t=1793207485; x=1793812285;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=OBAS8LSYWCRFarKET5k50Emev7tmcCz5Lq+Z90k9nVI=;
+        b=Ya2GNL5THmtt9SaNNFkPXacDsf0SJIkIGtRrtrLGww/tdY4QfN0oFgFjn+YYt7Z6Cn
+         R3GUEI2Zj/AVd9RTktBMJTnR/+8iM8OBwnPxlCZK1IRXZvtFarX0SjEcUavk4CwRnStD
+         Xw/KyDUGqk+lVSN4Pv5lLyVi6m7fSgbTmutbc2Y21TF1d27vQ3HyBhUprhMGoPXsuzI+
+         ZwVeTlVKWZOkq0MHA2hG5n6nZWrZezhRS/5DacBZjhP8LCMOoROkeoaO/jefvXh1dpLE
+         rGNsG21ukirlQgFKRRF7B2E4qAxEkZqwFzQyMmQwF9b9g6CItK8LYBEKZIZlF2AblJ0W
+         aRQQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwqWJfMOaP9tPFdBwrLGav4qG2SAAIW1/hB7+dXN5BAk3j7yjurWQ/Rwk7HHYHEMFe2QE3wl652/VA=@vger.kernel.org
+X-Gm-Message-State: AFq9FYIJRY4g/QXW0KqsC9SnOrpAS5uF/B1C5ovJBC4pKJ7NjNyZhpsW
+	r0EfOpN7tvPpXlT1IHAHbdE4MQ+peb3J23jf2R5N9WQVff0PpZEaO8nWgjenRuQe8bw=
+X-Gm-Gg: AYBFou0Cab6zCUzbW6witzgpRmhUaRd4Ok1wvVDG3u8hdJU38orCBfNCYK4SkpWn07N
+	CVFO3c9AgCpHWXPizsBUyDDMmC9TZ8noLgNuo7r/vwn1wqHT71IgGT4deJ+3QMTRQO5yHnXLJea
+	zI8nw03wwHcESEXT2IpM0Bs+7Pcmo0b0HYMNBx6oKKoIr77plX8qMkaNU2PQ2lbnH6TDPW+WPkZ
+	qwpVuQcqWxXwdSYwiK28Z+XA5iP+uWjiH0ZFkQ/xwj2fYmEzeLbJXlTpTZkJ49mgbvVPdgI0Kky
+	6jADvB6ffHR+sN2xrl/bYgGSVaCGgoItY/7B09qmmldItbv9hFQA+EKchK3fRDBIugEvhpyFDBL
+	Vlfa+Nl3MSBvMCoZUGNWd5Qhg8tHO8dc8XQm/FwLSEjXRsPY5ofDvKKFpjWusoNy60yFalLt4Ku
+	GhU21zDUkMAhjcRf1BygSrYgQPFqqAFO90oIGqvQ81PzCQVfY/DdA+Xky3J1nTrtIoF3xGCom4K
+	FsUhkbipNxhcWH7GhvF9+f6Bsh8gfewsqH/MY2GWsB4KsyHLNxzf5W5E22k4jF800gGmKn4SLCI
+	7UnTC8ZKcZHFdUu93gpl/xSulk7H+hcF/j8chIftJuFClVBalu6EHzIQQh1tD+1brDzY9v80Czu
+	KQshW1B2LsJhd+nPqWUhID/1fr9m1kUHjFCWzGmLW/6cNAw==
+X-Received: by 2002:a05:600d:8492:b0:4a5:5fb9:5d35 with SMTP id 5b1f17b1804b1-4a9672f7853mr41963935e9.21.1793207485112;
+        Wed, 28 Oct 2026 10:11:25 -0700 (PDT)
+Received: from tachyon.internal (2.155.41.158.dyn.user.ono.com. [2.155.41.158])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4aa813d2950sm4897195e9.8.2026.10.28.10.11.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2026 09:50:37 -0700 (PDT)
-Message-ID: <6ae227dd.6c7231db.220083.ae75@mx.google.com>
-X-Google-Original-Message-ID: <auIn2SfzeFL2CJn-@Ansuel-XPS.>
-Date: Wed, 28 Oct 2026 17:50:33 +0100
-From: Christian Marangi <ansuelsmth@gmail.com>
-To: "Rob Herring (Arm)" <robh@kernel.org>
-Cc: Bjorn Andersson <andersson@kernel.org>, Stephen Boyd <sboyd@kernel.org>,
-	Brian Masney <bmasney+clk@redhat.com>,
-	Jerome Brunet <jbrunet+clk@baylibre.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-	Florian Fainelli <florian.fainelli@broadcom.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Rob Clark <robin.clark@oss.qualcomm.com>,
-	Dmitry Baryshkov <lumag@kernel.org>,
-	Abhinav Kumar <abhinav.kumar@linux.dev>,
-	Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>,
-	Marijn Suijten <marijn.suijten@somainline.org>,
-	Frank Li <Frank.Li@nxp.com>, Vinod Koul <vkoul@kernel.org>,
-	Yinbo Zhu <zhuyinbo@loongson.cn>, Linus Walleij <linusw@kernel.org>,
-	Bartosz Golaszewski <brgl@kernel.org>,
-	Jonathan Cameron <jic23@kernel.org>,
-	David Lechner <dlechner@baylibre.com>,
-	Nuno =?iso-8859-1?Q?S=E1?= <nuno.sa@analog.com>,
-	Andy Shevchenko <andy@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Kevin Hilman <khilman@baylibre.com>,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-	Tiffany Lin <tiffany.lin@mediatek.com>,
-	Andrew-CT Chen <andrew-ct.chen@mediatek.com>,
-	Yunfei Dong <yunfei.dong@mediatek.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Andrzej Hajda <andrzej.hajda@intel.com>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Eric Anholt <eric@anholt.net>,
-	Kuogee Hsieh <quic_khsieh@quicinc.com>, Peng Fan <peng.fan@nxp.com>,
-	Aakarsh Jain <aakarsh.jain@samsung.com>,
-	Abhinav Kumar <quic_abhinavk@quicinc.com>,
-	linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	linux-rpi-kernel@lists.infradead.org,
+        Wed, 28 Oct 2026 10:11:24 -0700 (PDT)
+From: =?UTF-8?q?Enrique=20Hern=C3=A1ndez=20Bello?= <ehbello@gmail.com>
+To: shawn.lin@rock-chips.com
+Cc: lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	manivannan.sadhasivam@oss.qualcomm.com,
+	bhelgaas@google.com,
+	robh@kernel.org,
+	heiko@sntech.de,
+	dlemoal@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
 	linux-arm-kernel@lists.infradead.org,
-	freedreno@lists.freedesktop.org, imx@lists.linux.dev,
-	dmaengine@vger.kernel.org, linux-gpio@vger.kernel.org,
-	linux-iio@vger.kernel.org, linux-amlogic@lists.infradead.org,
-	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH] dt-bindings: Fix property name typos in if/then schemas
-References: <20261028120216.2657397-1-robh@kernel.org>
+	linux-kernel@vger.kernel.org,
+	iav@iav.lv
+Subject: Re: [PATCH v3] PCI: rockchip: Don't lengthen PERST# when power is already valid
+Date: Wed, 28 Oct 2026 17:11:22 +0000
+Message-ID: <20261028171122.3422629-1-ehbello@gmail.com>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <95aeecc0-2794-4cc6-a635-5c042afc1405@rock-chips.com>
+References: <20261028005603.2399220-1-ehbello@gmail.com> <cf541723-eb4c-4ba6-92c5-33baafc20e7c@rock-chips.com> <20261028015923.2436122-1-ehbello@gmail.com> <95aeecc0-2794-4cc6-a635-5c042afc1405@rock-chips.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -149,24 +109,44 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261028120216.2657397-1-robh@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Oct 28, 2026 at 07:02:12AM -0500, Rob Herring (Arm) wrote:
-> Property names within if/then schemas currently go unchecked whether
-> they have a type defined or match what's in the top-level schema. Adding
-> a check finds a number of instances of typos. The typos result in the
-> schema having no effect on constraints.
-> 
-> With this, fix the mediatek,vcodec-encoder 'clocks' count constraint
-> exposed by the name correction.
-> 
-> Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+On Wed, 28 Oct 2026 02:21:14 +0000, Shawn Lin wrote:
 
-For KPSS:
+> Was it possible to add a DT property for configurable delay? I came
+> across several EPs need quite a longer wait time, so add it in the
+> vendor tree for dwc-based IP[1]. That could be applied here to slove
+> your cases and others', and might avoid regression.
+>
+> [1]
+> https://github.com/rockchip-linux/kernel/blob/develop-6.12/drivers/pci/controller/dwc/pcie-dw-rockchip.c#L865
 
-Reviewed-by: Christian Marangi <ansuelsmth@gmail.com>
+Thanks -- that is a better shape than mine, and I will do it.
 
--- 
-	Ansuel
+I will mirror the vendor driver: rockchip,perst-inactive-ms for the pulse, and
+rockchip,s2r-perst-inactive-ms for the resume path, since the two paths want
+different values here as well.
+
+One thing I would rather ask than guess: should the default stay at
+PCIE_T_PVPERL_MS, with affected boards setting the property, or should the
+default be the spec minimum, with the property there for endpoints that need
+longer?
+
+What makes me ask is where T_PVPERL is measured from. It runs from power
+stable to PERST# inactive, so on a board whose slot rails are regulator-
+always-on it is already satisfied seconds before the driver touches the
+GPIO, and the 100 ms then only widens the pulse. The one pulse-width floor
+the spec gives is T_PERST, 100 us.
+
+On my board that difference decides whether the JMB585 answers config reads at
+all: 0 of 5 boots with a 100 ms pulse, 5 of 5 with a short one, with the
+power-settling time held constant across both.
+
+Keeping the current default is the safer change and I am happy to do that. I
+would just rather we did it knowingly, instead of carrying a number that was
+only ever right for boards which power the slot at the moment they assert
+PERST#.
+
+Secondary question: do you want the vendor-prefixed names, or would the DT
+binding maintainers prefer something generic, given the timing comes from the
+CEM spec rather than from Rockchip?
