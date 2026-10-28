@@ -1,56 +1,103 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.176
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793182280;
-	b=czpPfBfJE7yS6Wo28W3Oy5QUypTZFl6AEqpBOwAFjrq2AFLEJFqORygxBvQG/wf38B+w
-	 DHuT6jc0+MSiDeCv8hoy8i+A8BH29HgcVOFuQVoaNrX6W7+09G9rhnUc/6kviOhM+Rhh+
-	 j6FLmXHlZeBkD/cOoX8ro2+y7ftEkvoEIByjaY83+YYYQ/nJhDUmwfh8CeRKMzOSoGKwZ
-	 0HnutyYWKfeRPqPEpQWWHjk9Zq+2TUJlJU8a4XeFNJjlM+WTKCQ3Ji0c+ocqMOfggj1eV
-	 snb24uEzMi0WaIoe0eb+56W6TYj3gyFLjLwBgbmedvxOJiXCHu4XQ/vUWlCXZftNx8w==
+	t=1793183682;
+	b=yeQbRlBK9+ZNVqLe3Nqpjy9W0QgpFQuRXD27tHAa+SYapbqTlhfGOik4SObFkt3f3e4S
+	 lUX4sVP/Uuy6lMtDnLoRFISCeFCdPXMDtCxQBESS2eVoVPwL/94og2JF6j9VagrBLMEPB
+	 2wQLB6mhkaOIPQOj8ENyquWrb/jJpTccP3wcmw6JGIijxU+xvp0wrIgB/T9CM6Rsu7vmX
+	 bJV67X7DgaamXcPgk1PUdWEt4CZJWJKN5B9J0xqf5VAw6iWzGeQfcOshoKJyQBZ00nQQH
+	 MAoWNMyvAnEJbyRA++8xfIj2Z2+rSJitjIakqPR8Sc9qbTzx1cOyvV2IqC91umdqcJw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793182280;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=wKAjcb7WscKylN3dM3agjz60NMabSDUoSZkp5VOu6bI=;
-	b=InMW4zZAjX0DSPMuD/PP+N3YMogPO0VTj4y6OFR/KQfrvXYqJZ/1G3n6EKN448R3ZZOy
-	 PkvkUJKZE6wfO2iuemtM8SKjq/BP98e1zER+84QMm8oqBeLb74kukhuYNHMqx+xGeVcp8
-	 pvEtU1QvnjgemsX57aTvfOlroLNwzP8iCGCOUfaLQ4g4HPJrxN2Z2G/+ZstKPIxLlF202
-	 pS5qYQckuYVpSTZzoAiLiIeGIQrrS90acw55PEXqPNilwSLgV5q3cS8a6aVmnSULBJXbk
-	 fe6QJ//jV08RoOE9MRWVQXxFn26yY9xKm1+FrwDdBw7mlGz436j9TvqLX+7Td0COWuw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793183682;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=fJvqHOk07FUa6s5/fD4Hq7cD2mBklo9gU81ggaCJZwE=;
+	b=R2ptLMEyM3Q1IusXg2nvRR8pjeCmAMY9osJ+iFoDcK9M9YIrhIcdlBXd499wzI6jdQZl
+	 64YNCouh2SmwdnQ/U0zMHVJNpH3MBb21CQ4VjATmez/SSkI3kb8HSUKD6OMny6d5M1uCI
+	 Eboq/QqqNEy1WAwJaBcaQk8+MZRITvv+mMKw5GPruWWQZsbqk4msJTWPMCh4QTJYmSk2X
+	 X+SikpIDJxNJAHZqtmYOut8SSpYhGl/0xhNU6QwRmvZp0Mym/Ba4IaNUagvG8SyYyowge
+	 ZXNlMYy+9rAkmc3dUDWJuhBCIpHLAsF8kCBjoJfXOFnmo/zCNUgEyu5V2kn2eVmQ4nA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fUt0Cozx;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=w6jgn5KW;
+	arc=none smtp.remote-ip=74.125.82.176
+Received: from mail-dy1-f176.google.com (mail-dy1-f176.google.com [74.125.82.176])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAD47606A321
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 10:11:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 314CE606A31C
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 10:34:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 314CE606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fUt0Cozx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C03D1F01825;
-	Wed, 28 Oct 2026 10:11:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793182279;
-	bh=wKAjcb7WscKylN3dM3agjz60NMabSDUoSZkp5VOu6bI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fUt0CozxOUvHEOTHKmO4C4dpGO5Df+TZH8Tc26NLczy9Pr+z1NvFSzY3bu8KdCh+X
-	 JoIjC62u6DdHwA0+dzZoniE5h7nFbEYDdz1sQtWi1ooVTigCYkX3Lc+M8K1yiGFeev
-	 Q8GJc/vrCrUc1Y8lLdWrm1fcXFD2kzkb5fLKpElXxKMbTNmDb9d7ZqwLj5uilQAaYE
-	 qBYz6BLMaFC7m/Ao8YvqA/bfT/P4NTmmouphAUHgi90vSusSDCuo0Jo7/2Km6gg5bU
-	 2WB1oZrSAQDK84IJ4iPlS/pwljM2rGkR0kc0z84DvNcx4kB+Q9DfubgWYKshwf7Xm4
-	 kytzKC2DTuA3w==
-Message-ID: <sashiko-outbox-187730@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI/VGA: Fix boot device detection after framebuffer
- relocation
-Reply-To: sashiko-reviews@lists.linux.dev
-To: wuqianhai@loongson.cn
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org
-In-Reply-To: <20261028094634.766723-1-wuqianhai@loongson.cn>
-References: <20261028094634.766723-1-wuqianhai@loongson.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 28 Oct 2026 10:11:18 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=w6jgn5KW
+Received: by mail-dy1-f176.google.com with SMTP id 5a478bee46e88-3550c917fd3so1152272eec.0
+        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 03:34:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793183676; x=1793788476; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=fJvqHOk07FUa6s5/fD4Hq7cD2mBklo9gU81ggaCJZwE=;
+        b=w6jgn5KWCIwipZN2DshlTNs0liLS/ACzw5DyHXPoxLQ4oTK1oEx7VkDiOvx6IILqnd
+         f7nk/OB1aod2dHo2Yt0MX4QxqAYaMrQVq2/c/iRHFrbqBnQX7h7iHvYjiq+7WePyBtjS
+         0Yrr5pCBq+/xEweDG/fAAK5VmgQu26vpjDup3pVI1+FiUFv83HSOKfv2+vdQ0ZryyfQg
+         DHkLJWXYBp4QbA0kCOm5N/O/Kso10becOMPmaNqdHqENg4r4WhSFBo1BuRBRxJ4EfELN
+         KcpqG0saxptR0HHs7zQiFmdKKB791rJ4/l8P3mnR8QpvXXumMayWED1Ha0NhdzeNavfr
+         kX8A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793183676; x=1793788476;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=fJvqHOk07FUa6s5/fD4Hq7cD2mBklo9gU81ggaCJZwE=;
+        b=w+CJSa+dER/cpfHCOgwZ3WRLvO+MH8pjiCcNCR58j7LUOnq20l5rnxrlwkTB3xQ4SE
+         n30/Yf9h68Jqgqzgv4XGhYi6WdXWt/BLuUKeJQwCb04oGJyQ35d+p94gUVF8pCjgJ4dK
+         azoGeNpGixgcUM3yFs4kaaitgUAS/0mDvMCCrj8N6rEl6//vx/Ecp8ICQhDDe2n3vtDE
+         jwHrSXAO9CbS467kbgj9+U8IxSeOw2bY8jtbWCiSaBX26Gui41SuD1UCKPiScKGBdImU
+         ID+HSVJ9MT+qLfSQAjEiKFTVC47YV5CEhVFEvq8aopzs40ZiRoJ/udXbRF1T1RPHjOis
+         M6WA==
+X-Forwarded-Encrypted: i=1; AKwUvBzBKoCYVyA0TGUlS9mxH1LZWow1dE3IJ5Z1HxYwle9jk9RSjI4S9E9ItExgYEaqDZweZF+/z8U+M7E=@vger.kernel.org
+X-Gm-Message-State: AFq9FYLx0BZd2oXbdOi4lN4jfwMnkXnTU/LA6ip9x7DijdlMM2aOCFSl
+	w2g0sqb013OVplpyxMsVRnnMyFYmTfXLAMuOzs3q0RCy5tDbEXWmX+mv
+X-Gm-Gg: AYBFou2eXqQJq6O+gxqUgksPDCjeWAWk+m2BQL5V1b8EH9EiA9g72Fxwr3R5H3JOxks
+	64gsmH90bbs6IgsinHgHLd+IGG/3SyVLsV51kIADoDKQiJi+EJeqeQkaWSDUmDS5iGUyYRVLXcO
+	oL3hnujl8nLUI9S+baC+cZEmcqnY1ZgQycWOqW9SubVxdrvEao6uTe7SCGeWj69wnr8M02gALPI
+	4wWuvhXMC2Xsdn2q52gSflRtG09Oj2mhD0pRjyWq76FUS6SmM26MeXgiRveaDC3XCz79S5GLekv
+	yKCeyJl+YUCY4d/zwsACBJ8vxFEHubKZ4sfCOdzbh+PxERBn2fp7nysU0fUS1AgaqcHn1hWEwpd
+	sa8eERl7W0zKeZebQy/xfNUnY0ofoHwR1oLN9RKBLtDk9Su6QEziHn1sGWmT75z05sQOuLYTKUE
+	pZGjMaHdCwzO/aet0wlM4gNB6YbVpznEkzghRJJzepGSX8H1ubRd0L/utXzoiFm1ptZroN6GFH7
+	cFx+hpk6es3/rnx8tIASnLDSjxRTWZtrewLcOJKiTs8bvaIsMgj0sBX0LahIWC7rX4k1tnv3Syx
+	B4vHPNJgpJbrMzC0bNYHPsF5ktUrihyiMt6rzbpLczgE5T1wuvI=
+X-Received: by 2002:a05:7300:2406:b0:35c:8b96:94d9 with SMTP id 5a478bee46e88-36a203bd31bmr2926356eec.19.1793183675982;
+        Wed, 28 Oct 2026 03:34:35 -0700 (PDT)
+Received: from localhost.localdomain ([103.177.252.84])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a2399b05dsm5723047eec.25.2026.10.28.03.34.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Oct 2026 03:34:35 -0700 (PDT)
+From: Sreeraj S Kurup <sreekuttan2156239@gmail.com>
+To: mani@kernel.org
+Cc: angelogioacchino.delregno@collabora.com,
+	bhelgaas@google.com,
+	kwilczynski@kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	lpieralisi@kernel.org,
+	matthias.bgg@gmail.com,
+	robh@kernel.org,
+	ryder.lee@mediatek.com,
+	sreekuttan2156239@gmail.com
+Subject: Re: [PATCH v4] PCI: mediatek: Fix integer truncation and handle oversized resources
+Date: Wed, 28 Oct 2026 10:34:00 +0000
+Message-ID: <20261028103400.2532-1-sreekuttan2156239@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <kfnxuro5xf4mhokabg773zcyp7otcjxwpzcn3dlo6y3kpv4uv4@bne4qf3vcif5>
+References: <kfnxuro5xf4mhokabg773zcyp7otcjxwpzcn3dlo6y3kpv4uv4@bne4qf3vcif5>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,151 +106,21 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] PCI/VGA: premature and duplicate screen_info_apply_fixups() in vga=
-_arb_device_init()
-- [Medium] PCI/VGA: undefined reference to screen_info_apply_fixups() when =
-!SCREEN_INFO
---
+Hi Mani,
+ 
+Thanks for the review.
+ 
+I've addressed your comments in v5:
+ 
+- Removed the redundant zero-size check.
+- Changed `fls64(size - 1)` to `fls64(size)`.
+- Kept the full resource size calculation and added validation to reject oversized windows rather than silently clamping the size order.
 
-commit da40d2d05299ef123ed4789d2ecb58829165fbe3
-Author: wuqianhai <wuqianhai@loongson.cn>
-
-PCI/VGA: Fix boot device detection after framebuffer relocation
-
-This commit calls screen_info_apply_fixups() in vga_arb_device_init() so th=
-at
-screen_info's lfb_base is updated before VGA devices are registered and
-checked by vga_is_firmware_default().
-
-> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
-> index 3e58b2c05c854..aca594651f580 100644
-> --- a/drivers/pci/vgaarb.c
-> +++ b/drivers/pci/vgaarb.c
-> @@ -1527,6 +1527,14 @@ static int __init vga_arb_device_init(void)
->  	int rc;
->  	struct pci_dev *pdev;
-> =20
-> +	/*
-> +	 * PCI resource assignment may have relocated the firmware
-> +	 * framebuffer BAR. Update screen_info's lfb_base so that
-> +	 * vga_is_firmware_default() can match it against the boot
-> +	 * device's relocated resource.
-> +	 */
-> +	screen_info_apply_fixups();
-
-[Severity: Medium]
-Will calling screen_info_apply_fixups() unconditionally in
-vga_arb_device_init() fail to link when CONFIG_PCI=3Dy, CONFIG_VGA_ARB=3Dy,=
- and
-CONFIG_SCREEN_INFO=3Dn?
-
-In drivers/pci/Kconfig, VGA_ARB only selects SCREEN_INFO on x86:
-
-drivers/pci/Kconfig:
-	config VGA_ARB
-		bool "VGA Arbitration" if EXPERT
-		default y
-		depends on !S390
-		select SCREEN_INFO if X86
-
-which matches the CONFIG_X86 guard in vga_is_firmware_default():
-
-drivers/pci/vgaarb.c:vga_is_firmware_default() {
-#if defined CONFIG_X86
-	return pdev =3D=3D screen_info_pci_dev(&sysfb_primary_display.screen);
-#else
-	return false;
-#endif
-}
-
-However, include/linux/screen_info.h declares screen_info_apply_fixups() as=
- an
-external function whenever CONFIG_PCI is enabled, while
-drivers/video/Makefile only builds screen_info_pci.o when CONFIG_SCREEN_INFO
-is enabled:
-
-include/linux/screen_info.h:
-#if defined(CONFIG_PCI)
-void screen_info_apply_fixups(void);
-struct pci_dev *screen_info_pci_dev(const struct screen_info *si);
-#else
-static inline void screen_info_apply_fixups(void)
-{ }
-
-drivers/video/Makefile:
-obj-$(CONFIG_SCREEN_INFO)         +=3D screen_info.o
-...
-screen_info-$(CONFIG_PCI)         +=3D screen_info_pci.o
-
-On non-x86 architectures with CONFIG_PCI=3Dy, CONFIG_VGA_ARB=3Dy, and
-CONFIG_SCREEN_INFO=3Dn, doesn't this result in an undefined reference to
-screen_info_apply_fixups()?
-
-[Severity: High]
-Also, is subsys_initcall_sync(vga_arb_device_init) the right place in the
-initcall sequence to call screen_info_apply_fixups()?
-
-Upstream vga_is_firmware_default() in drivers/pci/vgaarb.c only calls
-screen_info_pci_dev() under CONFIG_X86. On x86, subsys_initcall(pci_subsys_=
-init)
-runs pcibios_resource_survey() -> pcibios_allocate_dev_resources(). When the
-firmware framebuffer BAR has a resource conflict and awaits reassignment,
-pcibios_allocate_dev_resources() saves the firmware address and resets
-r->start to 0 while keeping resource_size(r) intact:
-
-arch/x86/pci/i386.c:pcibios_allocate_dev_resources() {
-	...
-	/* We'll assign a new address later */
-	pcibios_save_fw_addr(dev, idx, r->start);
-	r->end -=3D r->start;
-	r->start =3D 0;
-	...
-}
-
-The new BAR address on x86 is not assigned until
-fs_initcall(pcibios_assign_resources) -> pci_assign_unassigned_resources(),
-which runs after subsys_initcall_sync(vga_arb_device_init).
-
-When screen_info_apply_fixups() runs at subsys_initcall_sync while a
-conflicting BAR has pr->start =3D=3D 0, pr->start !=3D screen_info_lfb_res_=
-start is
-true and __screen_info_relocation_is_valid(si, pr) succeeds because
-resource_size(pr) is unchanged:
-
-drivers/video/screen_info_pci.c:screen_info_apply_fixups() {
-	if (screen_info_lfb_pdev) {
-		struct resource *pr =3D &screen_info_lfb_pdev->resource[screen_info_lfb_b=
-ar];
-
-		if (pr->start !=3D screen_info_lfb_res_start) {
-			if (__screen_info_relocation_is_valid(si, pr)) {
-				__screen_info_set_lfb_base(si, pr->start + screen_info_lfb_offset);
-				pr_info("Relocating firmware framebuffer to offset %pa[d] within %pr\n",
-					&screen_info_lfb_offset, pr);
-			}
-			...
-		}
-	}
-}
-
-Wouldn't this clobber si->lfb_base to 0 + screen_info_lfb_offset with a
-[mem 0x00000000-...] message before fs_initcall(pcibios_assign_resources)
-assigns the actual BAR address, while still failing to match in
-vga_is_firmware_default()?
-
-Similarly, for PCI host bridges probed at device_initcall via
-pci_host_probe(), vga_arb_device_init() runs before the PCI bus is scanned
-and before VGA devices are added via pci_notify().
-
-Finally, since screen_info_apply_fixups() does not update
-screen_info_lfb_res_start or clear screen_info_lfb_pdev after applying the
-fixup, won't calling it in both vga_arb_device_init() and
-device_initcall(sysfb_init) in drivers/firmware/sysfb.c cause the relocation
-and log messages to run twice?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261028094634.7667=
-23-1-wuqianhai@loongson.cn?part=3D1
+ 
+I'll send the updated patch shortly.
+ 
+Best regards,
+Sreeraj
