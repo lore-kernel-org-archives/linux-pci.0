@@ -1,54 +1,145 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793203780;
-	b=rG57S3dsyqASjugQKQkmXSAxWTGqRr/hA2m7nrAzj+XlfnxtcbLFNe993jffrBxYoFVK
-	 QNLgz8cZVLu3CHWMy0obiyciX+avhlVa+QiYx+JT7mNz9tXm+6Qg1QQt8IhKpOtHVN8IC
-	 Ei6w6wRgiHJuS+Wk4kPyAgPFL0v2XX9EyrgKtJFHmey3KQRgBOlCrBGOIzS8XTucaNoYs
-	 QUJdtj3DXkviR12bAo6GKoltzywbrodggumuD38f4MnxOftwhnh5jKq7c0Oq+zrU6Vn6G
-	 3ki6aLPrJXVjPfc7yrTkjdsM/2EFmx4ZFqUm+FGiFvw1DANcO12GjyErSGPEkkCxtgQ==
+	t=1793206240;
+	b=vKiY5ovT6CT56KWBPH9t/3aRuGDYWCDrNZBJlTCSb+wF0IywiB87SPxrmAbIvUmy7rBo
+	 9bggcMp+veVvEpmRhDECPoKbVL6O+njx75lEodk6sWZ58G0iekzw7avX6EpMMT84GYgii
+	 r/VMQ1WAtZkVrZuNadFylp1P9YNGaya3bL0UuXGEOppXUtotAl39N8afIk6NSzrETs3jl
+	 u3McaZsCOZcS8mfoJwnriVEPSkJK2pgqfOKUDDCKAfjlYNuTRXl6ozxUeJFzs33YM5UTO
+	 RLq5umxriN+T3pJm3hW0pv/wvHdyI1L1FkPEHOwCdybi+v1llN3/FeaQCc23LTGdyRA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793203780;
-	h=Received:DKIM-Signature:Received:X-Gm-Message-State:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:
-	 X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:Subject:To:Cc:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=zNxy4TxKEn9W0ao1LVIid/JgYPfZELsjFwGZuxfMh4E=;
-	b=GMlsfkrNDm0fCUNBxFiznWdOMxK5OeWhbK7Q8yUC3/COBXdZVZddZ3K8hCt92w6DK3zO
-	 3xztekFHb6oCLGu3PfZkAtln+1gkbcy9G5JzUZ9G0ExNvPZGVZpG3njEtJ5epAu1+FUGe
-	 qWwI3ezOfbmOs3wHJizDxmtO8YQFdhYeAIpZz2LCvur33k/HhHVESBvFw+cuYrg+tFrfF
-	 1VcI2dd+2Duk12BitsbTh8dH4LGSNRzaaRJ6xle/I82w3FeJG0sL2rJEpiGHY+8aPekfp
-	 zY0RNMqwmmSKf6eiPh2NClk5lhmdXc25SuDZBuf1S5Q5G1ms6wWm46uxEgEXkoZx2lQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793206240;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Message-ID:X-Google-Original-Message-ID:Date:From:To:Cc:Subject:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=4bFPaFC4sn5I0ZmpvEnIMtoAAhYqi+gI/vKT8dEg8LI=;
+	b=zC3jRczaIkxCVrs3LjQfiHLA3oJUesyfQ1kQOBDkoeglhFoiCRMVz5aD6zDXDcd7h/Fa
+	 gDgsqZRlKrT45Y0dhYYvI73j33JAAXfd61oDYjLdLGa+t2nF/hBwWVpo90LSzfrAeZtzT
+	 4XfA1vwHKUI/jq7KK7mGfe3QGGBHEEtmq6OxKPuqZR6S4NlS+yr9kOYgSbnXRihhyHZGU
+	 5y73U2mgiSavfDY5nPP9f7WjYWJJ9JAsceKI2Ea3upp6yEJgA8efe0jdbThabyzCCCY2j
+	 kgkp4MmZJFwhxxJH4rnJndlFVR4TxNzsn8HK9CvUHqfF/rWLc11hdF1gD3/P7bMl9Jg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BCbi5gX6;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=bvVViE7s;
+	arc=none smtp.remote-ip=209.85.128.43
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D854606A31D
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 16:09:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 428D9606A32C
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 16:50:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 428D9606A32C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BCbi5gX6
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA9B51F01306
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 16:09:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793203779;
-	bh=zNxy4TxKEn9W0ao1LVIid/JgYPfZELsjFwGZuxfMh4E=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=BCbi5gX6+ASNOLCcSx55hoaYyYBWW0Cb1GBSeTpC9W9Lj6yvTBmk6n9XF6HlQpTae
-	 yK8NjGTO6CMH2MCf3ShVLEp0YlTLQBjnHw3gDtNQ9aHjMh3JaXrylWbGOqrU2G52yH
-	 /SCI4HD6l73515cSoPu3Fzsgp+ALMg7d3xNojCF+TVJSZPDsVqOnYwIKqmhRechG6e
-	 8J9hkRdo+XheIqbBcMPGBikm45XnznxhPIMbGBSMbsuv4/2stxz/0y83Lu/kgDPFlH
-	 bsUr0xcakhuPipi/0puXuhDX6wbuCaVcNdzxpQnsrGOILOcv5ii85jnBXjPw9lr5Ld
-	 Hm3kGpVQ/dC0Q==
-Received: by mail-lf1-f43.google.com with SMTP id 2adb3069b0e04-5bfa7c09c9eso996529e87.2
-        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 09:09:39 -0700 (PDT)
-X-Gm-Message-State: AFq9FYLevxKh/nM7m6ZejdoGEFx2/SIy6FfJIofjh+uson7ZqhCtCamE
-	aoNtXjXifuQt4ZeQFEH0KMn4tzJWd5aWllc2wDhv4CYQRGARRR6vopsBOAQUHO+4UGZ9BMSrRXS
-	K/EzPL1OcsK1VPfG+MJd0HWo6xvFt8aQ=
-X-Received: by 2002:a05:6512:618a:b0:5bf:a172:db38 with SMTP id
- 2adb3069b0e04-5bfcad74135mr1174502e87.59.1793203778257; Wed, 28 Oct 2026
- 09:09:38 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=bvVViE7s
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4a1b07c3c5fso11173195e9.1
+        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 09:50:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793206239; x=1793811039; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:subject:cc:to:from:date:message-id:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=4bFPaFC4sn5I0ZmpvEnIMtoAAhYqi+gI/vKT8dEg8LI=;
+        b=bvVViE7sfBqKWfi/kLDJYlnvzOUXPLQxwi7WE8YcmF6ZlMSeeXt5LVtwTgYjpBwkt8
+         SYP3vMcQXr/owFcgMM1gE2QwZ/DTceP96Ogemeuc3wSVYptLjbh5WQ0zOa/QFUl5Bsyv
+         t91KeRJRSejTTfSC30ERKT+SYsNtmNlFP19tG7VGrb/Fyrtxkv8HCWTMM4co1xxufiUC
+         fsayYomNX2KXae5ip40Tnzxu0+b09pZZ8pnmB2UJbRFHhmlzRF7my1fWETNYJaMtDwI5
+         xLbeFqSzSFzkr23lLp9iNBgX8plx3P3KNsPgixIQp18S34Dqr3UjM2Pb0SImAbIC4Wby
+         52og==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793206239; x=1793811039;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:subject:cc:to:from:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=4bFPaFC4sn5I0ZmpvEnIMtoAAhYqi+gI/vKT8dEg8LI=;
+        b=ByoMTKXpdx7XvZx60vCGiaE/XjfItcPbDpR4RdcyNyAO73JE5ryUgJmgyy5e+RXVe5
+         NPzLTW5BoBdmWYbw9jgImBGicUN/flzyn4i4bLnf18WgD52CcPhP7gw3e5Uwe+lq/MDO
+         yr7xWsm7pTD5R7bQFmyM4ZrnBYx+aZwPzA9x7g1iBD0WD0nvI/CiLuH9Q1eHwssk2q36
+         P48DPNHxAjD8ysMmrehys64YTMFXFqfaLkhGlsyoY3dm07FZxH1gL/J11jkQEn2RCzbd
+         1Zjj9ZG8p/h514HEIR5f9xdi16AxVc6rIsWdyrTeF+RJDZwditUtLcXQ+SnG5JIkWMRc
+         RNTQ==
+X-Forwarded-Encrypted: i=1; AKwUvBymEygJKd0wlAXAtNuYTBaJ/BctWw3vKSi8YYCNH86sI0KvmjVYlAD83pJ3ORL2y18inaqTcyiI5CI=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKPmL1rO3765pZz1raChd/SmLKPIymLcQCyKe4hbxRYkXbCA6xR
+	GhxoYHrHMUAx92RYLCzgTtpGZ97Glvc9yCsAagWkuiV62p+Dpd896FMM
+X-Gm-Gg: AYBFou1YUw8TxTXMnZPvV6RjcTJelGTTsTphhSvdDFnHUADBvgZykMQkWnOFzNcO0Fy
+	1P7Fth7V6o7YibDyoWnvB9ar191Ssu012XV55Se6EEf8FSciYOuvXZ5oAER4diAt38Vf9yU5vqu
+	ikZPPboF9M2ona+RL4PUVrg6MuK29ucOw86kYxtXsClUSGFetdC44bjh4xpvjcOpE023GXf/dmI
+	Z5d+SAl8xDcj/aaSR+BGg2MszIVZkz2ahUewO0k9mDwG/ErdLzH+MK7CTbtWXHJk9ezea0Yp7aI
+	+uxniVl4cxcBxmVTchLmc7dVdci/ZHANb5bUaZ26pBwspSogRm8i96S6lh0L9fXNY1ngJUfUTvK
+	0/lRd/ooycbGIU9erL+Z0bpSppx6j8uqmonPogw2gA125bDfifiz3zooZ/upakOMSuXN6krxPYh
+	UoolEcfsI32Q6ssz+Dtd+CcTl501rJ10iPalNzkWTdMAe4sE/LB1a8Tj3ZnVTw5RY6Wdn7V/Nlb
+	r7zPbFU84RDQZkSn/YMO3faQLuiHh9wFulT5jCYtgMmHl9YrNFR4nPLNqd6d4dHsWBD2ciAVvKa
+	WKI6cn+mraidNsFOo+7R4ifUmu2F0LEsBE2VBHCm7ROyGx/B8SVBsLCuQEskaUZfQB9/cODFgbB
+	xCif8oZh0Ew7SCBWd
+X-Received: by 2002:a05:600c:630e:b0:4a6:7d6:821f with SMTP id 5b1f17b1804b1-4a9678bff9cmr62960175e9.29.1793206238343;
+        Wed, 28 Oct 2026 09:50:38 -0700 (PDT)
+Received: from Ansuel-XPS. (93-34-92-187.ip49.fastwebnet.it. [93.34.92.187])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e3ebc4d76sm29895785f8f.12.2026.10.28.09.50.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Oct 2026 09:50:37 -0700 (PDT)
+Message-ID: <6ae227dd.6c7231db.220083.ae75@mx.google.com>
+X-Google-Original-Message-ID: <auIn2SfzeFL2CJn-@Ansuel-XPS.>
+Date: Wed, 28 Oct 2026 17:50:33 +0100
+From: Christian Marangi <ansuelsmth@gmail.com>
+To: "Rob Herring (Arm)" <robh@kernel.org>
+Cc: Bjorn Andersson <andersson@kernel.org>, Stephen Boyd <sboyd@kernel.org>,
+	Brian Masney <bmasney+clk@redhat.com>,
+	Jerome Brunet <jbrunet+clk@baylibre.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	Rob Clark <robin.clark@oss.qualcomm.com>,
+	Dmitry Baryshkov <lumag@kernel.org>,
+	Abhinav Kumar <abhinav.kumar@linux.dev>,
+	Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>,
+	Marijn Suijten <marijn.suijten@somainline.org>,
+	Frank Li <Frank.Li@nxp.com>, Vinod Koul <vkoul@kernel.org>,
+	Yinbo Zhu <zhuyinbo@loongson.cn>, Linus Walleij <linusw@kernel.org>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Jonathan Cameron <jic23@kernel.org>,
+	David Lechner <dlechner@baylibre.com>,
+	Nuno =?iso-8859-1?Q?S=E1?= <nuno.sa@analog.com>,
+	Andy Shevchenko <andy@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Kevin Hilman <khilman@baylibre.com>,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+	Tiffany Lin <tiffany.lin@mediatek.com>,
+	Andrew-CT Chen <andrew-ct.chen@mediatek.com>,
+	Yunfei Dong <yunfei.dong@mediatek.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Andrzej Hajda <andrzej.hajda@intel.com>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Eric Anholt <eric@anholt.net>,
+	Kuogee Hsieh <quic_khsieh@quicinc.com>, Peng Fan <peng.fan@nxp.com>,
+	Aakarsh Jain <aakarsh.jain@samsung.com>,
+	Abhinav Kumar <quic_abhinavk@quicinc.com>,
+	linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	linux-rpi-kernel@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org,
+	freedreno@lists.freedesktop.org, imx@lists.linux.dev,
+	dmaengine@vger.kernel.org, linux-gpio@vger.kernel.org,
+	linux-iio@vger.kernel.org, linux-amlogic@lists.infradead.org,
+	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH] dt-bindings: Fix property name typos in if/then schemas
+References: <20261028120216.2657397-1-robh@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -58,200 +149,24 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <d4aaa5e8-7366-461c-94b1-ccf3631c8bf9@6bit.com>
- <b859285b-e43e-43f2-a4f7-af82705d3513@6bit.com> <CAJZ5v0h8ke_CE1Y_nesgOU8L-R6WcPaoxFjjRp0rfyRdg+Lj1Q@mail.gmail.com>
- <c9672648-d01d-4063-b0e2-df38c3868eea@6bit.com> <CAJZ5v0i0XL0iBHE0OcM0sw8_KKBAapinJ-ZOqztn9-8=RCgxQw@mail.gmail.com>
-In-Reply-To: <CAJZ5v0i0XL0iBHE0OcM0sw8_KKBAapinJ-ZOqztn9-8=RCgxQw@mail.gmail.com>
-From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
-Date: Wed, 28 Oct 2026 17:09:26 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0hOCtJMdH8VuTcMXV112JwonZg07oUrJXCHZ6JqtRHo3w@mail.gmail.com>
-X-Gm-Features: AclHuK9dMc6H2Y7UBbksEDryxAqR0SF-1y3j70LPpwOIopLFtjIzaVV7ErV8brc
-Message-ID: <CAJZ5v0hOCtJMdH8VuTcMXV112JwonZg07oUrJXCHZ6JqtRHo3w@mail.gmail.com>
-Subject: =?UTF-8?Q?Re=3A_=5BREGRESSION_6=2E16=5D_r8169_RTL8168h=2F8111h_fails_to_?=
-	=?UTF-8?Q?probe_=E2=80=94_=22Unable_to_change_power_state_from_D3cold_to_D0=22_?=
-	=?UTF-8?Q?=E2=80=94_bisected_to_4d4c10f763d7?=
-To: linux-pci@vger.kernel.org
-Cc: Josh Perry <josh@6bit.com>, Mario Limonciello <superm1@kernel.org>, mario.limonciello@amd.com, 
-	bhelgaas@google.com, hkallweit1@gmail.com, nic_swsd@realtek.com, 
-	netdev@vger.kernel.org, regressions@lists.linux.dev, 
-	Keng-Yu Lin <keng-yu.lin@hpe.com>, Linux PM <linux-pm@vger.kernel.org>, 
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261028120216.2657397-1-robh@kernel.org>
 
-On Fri, Oct 23, 2026 at 9:33=E2=80=AFPM Rafael J. Wysocki (Intel)
-<rafael@kernel.org> wrote:
->
-> On Thu, Oct 22, 2026 at 11:33=E2=80=AFPM Josh Perry <josh@6bit.com> wrote=
-:
-> >
-> > On 10/22/26 04:50, Rafael J. Wysocki (Intel) wrote:
-> > > On Thu, Oct 22, 2026 at 3:37=E2=80=AFAM Josh Perry <josh@6bit.com> wr=
-ote:
-> > >>
-> > >> On 6/11/26 19:07, Josh Perry wrote:
-> > >>> #regzbot introduced: 4d4c10f763d7
-> > >>>
-> > >>> Since v6.16 one of two onboard RTL8168h/8111h NICs on this board fa=
-ils
-> > >>> to probe on boot; the device drops to D3cold and the driver can't b=
-ring
-> > >>> it back:
-> > >>>
-> > >>>     r8169 0000:02:00.0 eth0: RTL8168h/8111h, 00:2b:67:48:40:01, XID=
- 541,
-> > >>> IRQ 137
-> > >>>     r8169 0000:04:00.0: Unable to change power state from D3cold to=
- D0,
-> > >>> device inaccessible
-> > >>>     r8169 0000:04:00.0: Mem-Wr-Inval unavailable
-> > >>>     r8169 0000:04:00.0: error -EIO: PCI read failed
-> > >>>     r8169 0000:04:00.0: probe with driver r8169 failed with error -=
-5
-> > >>>
-> > >>> The board has two identical RTL8168h NICs (both XID 541): 0000:02:0=
-0.0
-> > >>> and 0000:04:00.0. Only 04:00.0 fails =E2=80=94 its sibling 02:00.0,=
- on a
-> > >>> different root port, probes and works normally on the very same ker=
-nel
-> > >>> and boot. The failing NIC then does not appear (no enp4s0), taking =
-the
-> > >>> machine's WAN offline. This strongly suggests the problem is port/
-> > >>> topology-specific rather than device- or driver-specific: the upstr=
-eam
-> > >>> port behind 04:00.0 is placed in D3cold and the endpoint cannot be
-> > >>> resumed to D0.
-> > >>>
-> > >>> Hardware: RTL8168h/8111h, XID 541, PCI 04:00.0 (onboard 1GbE).
-> > >>> Platform: Lenovo ThinkCentre M90n-1 (11AHS0B200), BIOS M2AKT49A
-> > >>> (2026-03-25, latest available). Firmware is current, so this is not=
- a
-> > >>> platform-firmware issue.
-> > >>>
-> > >>> Bisection: v6.15 good, v6.16 bad (verified by booting both). I then
-> > >>> reverted 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when
-> > >>> initializing") together with its follow-up 907a7a2e5bf4 ("PCI/PM: S=
-et up
-> > >>> runtime PM even for devices without PCI PM") on top of 6.16.7: the =
-NIC
-> > >>> probes and links at 1Gbps/Full normally, with no workaround:
-> > >>>
-> > >>>     r8169 0000:04:00.0 eth1: RTL8168h/8111h, 00:2b:67:48:40:02, XID=
- 541,
-> > >>> IRQ 138
-> > >>>     r8169 0000:04:00.0 enp4s0: Link is Up - 1Gbps/Full - flow contr=
-ol rx/tx
-> > >>>
-> > >>> Workaround: booting an unmodified v6.16+ kernel with pcie_port_pm=
-=3Doff
-> > >>> also restores the NIC, which is consistent with the upstream port b=
-eing
-> > >>> placed in D3cold and the device failing to resume to D0 after the
-> > >>> explicit-D0 init change.
-> > >>>
-> > >>> The follow-up 907a7a2e5bf4 does not fix this resume case: v6.18.33 =
-is
-> > >>> still affected (retested today on current firmware).
-> > >>>
-> > >>> Happy to test patches or provide full dmesg / lspci.
-> > >>
-> > >>
-> > >> Hey guys,
-> > >>
-> > >> Thanks, and apologies for the slow follow-up. Multiple of you asked =
-me
-> > >> to test on the latest mainline.
-> > >>
-> > >> I had a chance to do just that today with the latest mainline v7.3.
-> > >> Verdict is that it's still broken, same messages as in the original
-> > >> report. pcie_port_pm=3Doff on the same build still works around it.
-> > >>
-> > >> dmesg, "sudo lspci -vvv" and the sysfs PM state for both boots (same
-> > >> v7.3 build, only the command line differs) are attached here:
-> > >>
-> > >>     https://bugzilla.kernel.org/show_bug.cgi?id=3D222179
-> > >>
-> > >> New detail from the failing boot: the root port above the dead NIC
-> > >> (00:1d.3) is in D0 but its link shows DLActive-, and the endpoint's
-> > >> config space reads all-ones ("Unknown header type 7f"). With
-> > >> pcie_port_pm=3Doff the port shows DLActive+ and the NIC is in D0 at
-> > >> 2.5GT/s x1. So the port seems to come back but the link to 04:00.0
-> > >> doesn't retrain.
-> > >>
-> > >> #regzbot link: https://bugzilla.kernel.org/show_bug.cgi?id=3D222179
-> > >
-> > > Please also try v7.3 with this patch applied:
-> > >
-> > > https://lore.kernel.org/linux-pci/20261015020811.1132314-1-keng-yu.li=
-n@hpe.com/raw
-> >
-> > No dice, unfortunately. Same issue:
-> >
-> >    r8169 0000:04:00.0: Unable to change power state from D3cold to D0,
-> > device inaccessible
-> >    r8169 0000:04:00.0: Mem-Wr-Inval unavailable
-> >    r8169 0000:04:00.0: error -EIO: PCI read failed
-> >    r8169 0000:04:00.0: probe with driver r8169 failed with error -5
-> >
-> > Same state as unpatched v7.3: root port 00:1d.3 in D0 with LnkSta
-> > DLActive- and ASPM L1 enabled, 04:00.0 config space reads all-ones
-> > ("Unknown header type 7f"), and the correctable RxErr on 00:1d.3 at
-> > ~9.7s. The PCI/r8169 dmesg lines match the unpatched boot line for line=
-.
-> >
-> > I attached the same info for the patch run to the bugzilla ticket.
->
-> Thanks for the info!
->
-> Let's see what can be deduced from it.
->
-> First of all, the device is clearly accessible in pci_pm_init() and
-> then it somehow drops off the bus.  However, the complaint about the
-> failing power state change is not from the initial power-up.  It is
-> printed after setting the driver for the device, so most likely it
-> comes from pci_enable_device() triggered by rtl_init_one().
-> Interestingly enough, that message also says that the device's power
-> state before the attempted transition to D0 is D3cold, but that is not
-> the power state in which the initial power-up leaves it.  Had the
-> initial power-up left the device in D3cold, it would have printed an
-> "Unable to change power state" message which it doesn't do, so most
-> likely right after the initial power-up the device is actually in D0.
->
-> Since pcie_port_pm=3Doff makes a difference, the problem is most likely
-> related to what happens to the failing device's parent port.  Namely,
-> pcie_port_pm=3Doff simply prevents the port from going into D3cold which
-> indicates that the failing device drops off the bus because its parent
-> port goes into D3cold.  Indeed, that may be happening because the port
-> probes after the failing device has been initialized and if user space
-> flips the "power/control" attribute of the failing device from "on" to
-> "auto" after probing the port and before probing the device itself,
-> the port will suspend and go into D3cold.  Moreover, the device under
-> it is still in D0 when that happens because pci_pm_runtime_suspend()
-> does not change the power states of unbound devices (there is even a
-> comment in that function regarding the parent of an unbound device
-> possibly going into D3cold while the device is still in D0).  If that
-> happens, the pci_update_current_state() call in
-> pci_enable_device_flags() will update current_state for the device to
-> D3cold.
->
-> Of course, I'm not sure if this is what really happens and it still
-> needs to be figured out why things started to fail after introducing
-> the initial power-up.  I'd prefer to use the BZ ticket for
-> investigating it though.
+On Wed, Oct 28, 2026 at 07:02:12AM -0500, Rob Herring (Arm) wrote:
+> Property names within if/then schemas currently go unchecked whether
+> they have a type defined or match what's in the top-level schema. Adding
+> a check finds a number of instances of typos. The typos result in the
+> schema having no effect on constraints.
+> 
+> With this, fix the mediatek,vcodec-encoder 'clocks' count constraint
+> exposed by the name correction.
+> 
+> Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
 
-And so it turns out that turning off an ACPI power resource associated
-with a PCIe root port other than the one holding the affected NIC
-causes the clock of that NIC to be gated which means that this is a
-platform firmware issue (the shared clock should be represented as a
-shared power resource in the ACPI tables).  The older kernels hide
-this issue because they never flip the ACPI power resource in question
-on and off in the default configuration, but it can be provoked with
-the help of the runtime PM sysfs interface of the PCIe root port in
-question.
+For KPSS:
 
-A patch from Mario to add a quirk preventing D3cold from being used
-for root ports on the affected system is available:
+Reviewed-by: Christian Marangi <ansuelsmth@gmail.com>
 
-https://bugzilla.kernel.org/attachment.cgi?id=3D311295&action=3Ddiff&collap=
-sed=3D&headers=3D1&format=3Draw
+-- 
+	Ansuel
