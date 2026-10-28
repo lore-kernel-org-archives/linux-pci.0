@@ -1,72 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793156884;
-	b=CVAvN/17CxogrWHq9wt66lm9toyUqIjd+sMNzTtjf2BnrCMjfNYeX1Y9b0hIfwZrdyHp
-	 L0qL6SP6FxtUr24XlrAlAgYCu2y4C3QTpUWLUBXwV5BfVrfMjnaocMNgIQbDc5fO0pbIg
-	 mTKQDquPhZE5p/Q08qEWLfjVz2xNKdKhzGl4O1bf1R49DVyAm8TwFaL81js4Oif0T1/Tk
-	 Mwld0PtGqIgUznKcb0CTcobj4H+vKUc4DRPST+029jJ6ZRy4xnHSlzn5KjH8WwdWDF8mm
-	 HJ9whLWTlHEV1SsHSGeUdfemRwOSKSKiTKIRd89hzKYB4c8zZjpxwiDEFFFXhsqLqSw==
+	t=1793157082;
+	b=E1KvfgnH7nyUUm7SBUFpjVFa4X0a/ammflOe058pMTXmkKZZHISFxS/wXV2FrhSzDo2/
+	 yo7QaPCdZ8vKwvbkpnBM0ijL7c/HbZRWuYwUXN9pSsJ9B7Navv63jEVjCKOxpH5nnc5Eb
+	 mMdSSdQ+9o0YbmcVdfQ/mbVZ8Xf0S9wQu5fHcAvW2U1MJZOiQtMQ8sD/VsbJL+UpGygAU
+	 9ZbhbDI0AXE9Y2UhTabrwHgou1ixAx8rx2FCu+nrzsQyajuHsqeyds3jRbWdYlFdVx3GN
+	 u1c6fK96o7HKIuYNma1G0QZdonuNNmhYbEdTmXICm9itlJZy00X9lAztxSWZSFVY+Xg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793156884;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
-	 X-CM-SenderInfo;
-	bh=uGOww8cTZ+dmcRduWhvlBtmVa5S9Xqh7rcDtCCMSFaU=;
-	b=IVTFTu1LOdT8mocFyr2+hYjfd5dTv4LO13kZRjKtVILdrlvs+Cslnr7cfGStFijgUhPc
-	 adcpezR7y+LfShGSKzaD8JCbQxX9NvMhXu/beVGwqzSf+btPNSOVbkV4UyptywrxQqE6w
-	 oyzi4E1m9d/oCYRuggSWpmBHDOrswW64qiJZ9N4C4xxo7ih+ZXo6pRsDfWogsKj4Aiznt
-	 O4K1dxT0sWmqUgYFUOzqUYe9kOc4/CNT35kV7jCUGGZlBiIzw8D2WdnKegxos0XdSWGjt
-	 wpeZYSbmDrGEocFoYeOSh+wVNgZUPX/3/wbg757Sv//lzTaOyOBuOzKjVGajoQqW0hw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793157082;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=hUNeRVCEnO0JTksqOdjf7g4pijUrwdIVAArsIbB+j5E=;
+	b=BwT0JB+pbuJLIKGmsV3j9b4+y/IXz4WUgyFBxiJbk5JwTtooaH5sk8fENxkbisDe9/iD
+	 X/Zs9sxnpqLB2VSPXzcfUIJ4arZ1uxAHcQdibu+3SDqkXS7fZ7r2BlVWQlPuOQrl6jEv1
+	 +fxh7izda/X9ORXF+3rMQrvZkjxqkxLGQ9JBo6aXeRbXnhsBd0/xMnmg7B9sEpyIseRTD
+	 0T2KS5/3vuwZLpqEV98sgATbT3nJMqYc5c6Nhb2pKv3gY2U+xtqAdk+xrzvr6VdmDteoB
+	 nH114JKKJs/CzlTWvxNbXcnpe2G4K3tIXjuYZmhH1yhYNE7mGcI2DlZzL4KQJXuT4Pw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=163.com;
-	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=RSwjLMSz;
-	arc=none smtp.remote-ip=117.135.210.2
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MUe3m0Xs;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC672606A325;
-	Wed, 28 Oct 2026 03:08:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DC672606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 360C3606A31A
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 03:11:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=RSwjLMSz
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=uG
-	Oww8cTZ+dmcRduWhvlBtmVa5S9Xqh7rcDtCCMSFaU=; b=RSwjLMSzAQnxak8cmk
-	7cG9+kuYA6fM6xiN80akLhw8s7Dr7paowbfmps8cOdj+m4q4E3/iC+HYPXjScxR7
-	CJJfX/W9z09f3QH56i8pO5ywPoHHyAS3UdLaxVepcGDglSHUjPxK4SmXu7KmviBi
-	lwzcQRd5cGDFhgdUvc+MwLEC0=
-Received: from Precision-7960.. (unknown [])
-	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wDXT8PnZuFq9rwVDg--.12376S2;
-	Wed, 28 Oct 2026 11:07:20 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: bhelgaas@google.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	jingoohan1@gmail.com
-Cc: imx@lists.linux.dev,
-	linuxppc-dev@lists.ozlabs.org,
-	linux-amlogic@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org,
-	sophgo@lists.linux.dev,
-	linux-riscv@lists.infradead.org,
-	spacemit@lists.linux.dev,
-	linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v5 16/16] PCI: dwc: ultrarisc: Use cached PCIe capability offset
-Date: Wed, 28 Oct 2026 11:06:52 +0800
-Message-ID: <20261028030652.2917756-17-18255117159@163.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261028030652.2917756-1-18255117159@163.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MUe3m0Xs
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E3DD1F01828;
+	Wed, 28 Oct 2026 03:11:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793157081;
+	bh=hUNeRVCEnO0JTksqOdjf7g4pijUrwdIVAArsIbB+j5E=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=MUe3m0XsJy144ILKVyF+jIrs/evlOb9bxzxU8dMEecNvP9WFOKdkH2tUXWm19uzHr
+	 YTxX968o8Zj7GWqI9VVhl52R0tnKWk5Ex+wxfo1Z9hS/WFEPaHNR+74K0vnKnYM1NC
+	 qQlWtm3AY8ZP+z0UJ1KccjZPw4NwTh1B+Xfm2p555lPMD+Tm0Wsqu4OFt7//kAzEs1
+	 0LmssviESTRAX/aayNMnAI6PBCvRMbNxuhMwOIxX2Iy2PNZwmg9c6C4Mhcce0W7JK4
+	 QmqceoZdtt9Vr51CXBhzjwwe81PH6NCleVSPnlFdT2oMqrevNo7i4NU7FQr1GDaVXh
+	 R48PRY5/7w+8g==
+Message-ID: <sashiko-outbox-187393@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 03/16] PCI: dwc: imx6: Use cached PCIe capability
+ offset
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Hans Zhang" <18255117159@163.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261028030652.2917756-4-18255117159@163.com>
 References: <20261028030652.2917756-1-18255117159@163.com>
+ <20261028030652.2917756-4-18255117159@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 28 Oct 2026 03:11:21 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -75,39 +60,23 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDXT8PnZuFq9rwVDg--.12376S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Cr18Aw18ur17KF4rWF47XFb_yoW8JFy3pa
-	yaqr1YyF1kJr4Yyws2ka4DWF12q3ZxAryDJan7Kr13ZFyakrWUX34vk34rtFnFkF4UKr1Y
-	kw4FyFy7G3WrXwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pirWriUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AnmimrhZunUcQAA3o
 
-ultrarisc_pcie_host_init() runs from the .init callback with the
-controller already enabled. Replace the capability search with
-dw_pcie_get_pcie_cap(). Since the lookup is performed lazily at the
-point of use, the driver no longer depends on any earlier caching step
-and the offset is always valid here.
+> Replace the two dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) calls in
+> imx_pcie_ltssm_enable() and imx_pcie_start_link() with
+> dw_pcie_get_pcie_cap().
+>=20
+> Both functions run with the controller powered and clocked: they are
+> reached either from the host .start_link callback or, in Endpoint mode,
+> after the PERST# deassert path has enabled the resources. The helper
+> therefore performs the DBI read at the same point as the replaced call
+> and caches the result for later invocations, which is useful for
+> suspend/resume where the link is started again.
+>=20
+> Signed-off-by: Hans Zhang <18255117159@163.com>
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
----
- drivers/pci/controller/dwc/pcie-ultrarisc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Sashiko has reviewed this patch and found no issues.
 
-diff --git a/drivers/pci/controller/dwc/pcie-ultrarisc.c b/drivers/pci/controller/dwc/pcie-ultrarisc.c
-index 523f454c6c524..915305bd88df4 100644
---- a/drivers/pci/controller/dwc/pcie-ultrarisc.c
-+++ b/drivers/pci/controller/dwc/pcie-ultrarisc.c
-@@ -56,7 +56,7 @@ static int ultrarisc_pcie_host_init(struct dw_pcie_rp *pp)
- 	FIELD_MODIFY(PORT_FLT_SF_MASK, &val, PORT_FLT_SF_VAL_64);
- 	dw_pcie_writel_dbi(pci, TIMER_CTRL_MAX_FUNC_NUM, val);
- 
--	cap_exp = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-+	cap_exp = dw_pcie_get_pcie_cap(pci);
- 	val = dw_pcie_readl_dbi(pci, cap_exp + PCI_EXP_LNKCTL2);
- 	FIELD_MODIFY(PCI_EXP_LNKCTL2_TLS, &val, PCI_EXP_LNKCTL2_TLS_16_0GT);
- 	dw_pcie_writel_dbi(pci, cap_exp + PCI_EXP_LNKCTL2, val);
--- 
-2.43.0
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261028030652.2917=
+756-1-18255117159@163.com?part=3D3
 
