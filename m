@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793157082;
-	b=E1KvfgnH7nyUUm7SBUFpjVFa4X0a/ammflOe058pMTXmkKZZHISFxS/wXV2FrhSzDo2/
-	 yo7QaPCdZ8vKwvbkpnBM0ijL7c/HbZRWuYwUXN9pSsJ9B7Navv63jEVjCKOxpH5nnc5Eb
-	 mMdSSdQ+9o0YbmcVdfQ/mbVZ8Xf0S9wQu5fHcAvW2U1MJZOiQtMQ8sD/VsbJL+UpGygAU
-	 9ZbhbDI0AXE9Y2UhTabrwHgou1ixAx8rx2FCu+nrzsQyajuHsqeyds3jRbWdYlFdVx3GN
-	 u1c6fK96o7HKIuYNma1G0QZdonuNNmhYbEdTmXICm9itlJZy00X9lAztxSWZSFVY+Xg==
+	t=1793157164;
+	b=1QOZpr7Dlx8Uvr4giCjWd+u8HOk+mQNCaNvVVT6nuJ6NB+64Yk+lWr1WTRapsZ2nwTeS
+	 tTL3T8Fa20PnF51DLgtjRaEg3diBYEF3Q5XKLlABUH2VxWM3NvU5evOiFssHgzgndtZ2k
+	 1FLJDJNFlHJpnukutYLyV3W+lpT7ALLUoPZJYP6Q3Fi7uMWjbs1a595i9FdeQyOdacMnQ
+	 t0JI1Byht4ItgIJYG9m61R1FlV0HKjQVzu4x/VL2OzKKx9SEDhiV6yOG/p7mk7JBg8svi
+	 h5E65TP43gmhVtcOl4sQA7erw1Hu3t9ojoqcGb/6otXnWeKCEKOqnEwlAyG1QpyduYw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793157082;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793157164;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=hUNeRVCEnO0JTksqOdjf7g4pijUrwdIVAArsIbB+j5E=;
-	b=BwT0JB+pbuJLIKGmsV3j9b4+y/IXz4WUgyFBxiJbk5JwTtooaH5sk8fENxkbisDe9/iD
-	 X/Zs9sxnpqLB2VSPXzcfUIJ4arZ1uxAHcQdibu+3SDqkXS7fZ7r2BlVWQlPuOQrl6jEv1
-	 +fxh7izda/X9ORXF+3rMQrvZkjxqkxLGQ9JBo6aXeRbXnhsBd0/xMnmg7B9sEpyIseRTD
-	 0T2KS5/3vuwZLpqEV98sgATbT3nJMqYc5c6Nhb2pKv3gY2U+xtqAdk+xrzvr6VdmDteoB
-	 nH114JKKJs/CzlTWvxNbXcnpe2G4K3tIXjuYZmhH1yhYNE7mGcI2DlZzL4KQJXuT4Pw==
+	bh=+O8Nhhs2X4esOpM5ShigU1X2QYOzI1/3uhaqfh1ytxQ=;
+	b=K4XiqEkSLI0693u8kremlHm227KFzpNqGDWITx5LZGwZPFud5oDw2Io7Y4+4kUju91XE
+	 yjDXwbRw0DY0FnoJBV3Z8m0Uxs2hM3K2bHPitBU+BDkRoPlzTwcCpMQa/2UbgwHXLiqbQ
+	 2OXKy9Q8khZJRXTnLaM1SalAAt5Zb2YaGBG8NNZR4ETVpGFz6eIbghUIaeSYPja4id6m2
+	 yM7Fq8Zb1fmzNQlYWJQoB3cHa1GvfCFWWhBKntWp2czEBCBor/wzhhU2GFTpwPwyp0s/H
+	 MXVR4mBssLU3pi2O+r5c9ZwoqDr70/0AN2EvaZA3ce8wvZkGN4SLtH60Izbc0PeYiPQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MUe3m0Xs;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UDdlWsfI;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 360C3606A31A
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 03:11:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABE2F606A31D
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 03:12:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MUe3m0Xs
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E3DD1F01828;
-	Wed, 28 Oct 2026 03:11:21 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UDdlWsfI
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F87D1F031E4;
+	Wed, 28 Oct 2026 03:12:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793157081;
-	bh=hUNeRVCEnO0JTksqOdjf7g4pijUrwdIVAArsIbB+j5E=;
+	s=k20260515; t=1793157163;
+	bh=+O8Nhhs2X4esOpM5ShigU1X2QYOzI1/3uhaqfh1ytxQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=MUe3m0XsJy144ILKVyF+jIrs/evlOb9bxzxU8dMEecNvP9WFOKdkH2tUXWm19uzHr
-	 YTxX968o8Zj7GWqI9VVhl52R0tnKWk5Ex+wxfo1Z9hS/WFEPaHNR+74K0vnKnYM1NC
-	 qQlWtm3AY8ZP+z0UJ1KccjZPw4NwTh1B+Xfm2p555lPMD+Tm0Wsqu4OFt7//kAzEs1
-	 0LmssviESTRAX/aayNMnAI6PBCvRMbNxuhMwOIxX2Iy2PNZwmg9c6C4Mhcce0W7JK4
-	 QmqceoZdtt9Vr51CXBhzjwwe81PH6NCleVSPnlFdT2oMqrevNo7i4NU7FQr1GDaVXh
-	 R48PRY5/7w+8g==
-Message-ID: <sashiko-outbox-187393@kernel.org>
+	b=UDdlWsfIcTF3VRo6GSZdQQdkw+xPMGFew4PYv4HCmfkCuaB94pxW5gZ/FUOg7Gipx
+	 KwJyt+46hohFXGUpkun6JN/bL2kJ17wZLpzj2KUtDwyGFJMjcIyJhIKJ5Se7Wnou7M
+	 w8xzKpxfEFCcDdElRrB8BJlg3Zc1RvJLy1src3NZ0FbCiCkWjvyt4255Q7x6X5xTou
+	 KRo/bnTbHo0Jf6YpXz6YgJdSrlrllGgpRmr55XrKMMAL9+nx11E3J2jx+IRvHRmqjD
+	 3aZAEeMySHBM1bbnKW8vgsiP/lQnaqmGiNpzx+6jpbeIlpcgSjJauW8UVkn1B/2KJI
+	 IDj4dEmBb/SnA==
+Message-ID: <sashiko-outbox-187395@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 03/16] PCI: dwc: imx6: Use cached PCIe capability
+Subject: Re: [PATCH v5 05/16] PCI: dwc: meson: Use cached PCIe capability
  offset
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hans Zhang" <18255117159@163.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261028030652.2917756-4-18255117159@163.com>
+In-Reply-To: <20261028030652.2917756-6-18255117159@163.com>
 References: <20261028030652.2917756-1-18255117159@163.com>
- <20261028030652.2917756-4-18255117159@163.com>
+ <20261028030652.2917756-6-18255117159@163.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 28 Oct 2026 03:11:21 +0000
+Date: Wed, 28 Oct 2026 03:12:42 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,16 +61,14 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> Replace the two dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) calls in
-> imx_pcie_ltssm_enable() and imx_pcie_start_link() with
-> dw_pcie_get_pcie_cap().
+> Replace the dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) calls in
+> meson_set_max_payload() and meson_set_max_rd_req_size() with
+> dw_pcie_get_pcie_cap() and store the offset in a u8, which is the type
+> used everywhere else for a capability offset.
 >=20
-> Both functions run with the controller powered and clocked: they are
-> reached either from the host .start_link callback or, in Endpoint mode,
-> after the PERST# deassert path has enabled the resources. The helper
-> therefore performs the DBI read at the same point as the replaced call
-> and caches the result for later invocations, which is useful for
-> suspend/resume where the link is started again.
+> Both functions are called from meson_pcie_host_init(), which runs after
+> the controller clocks and resets have been enabled, so the first lookup
+> happens exactly where the open coded search used to happen.
 >=20
 > Signed-off-by: Hans Zhang <18255117159@163.com>
 
@@ -78,5 +76,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261028030652.2917=
-756-1-18255117159@163.com?part=3D3
+756-1-18255117159@163.com?part=3D5
 
