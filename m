@@ -1,58 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.198
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793208465;
-	b=V/FPqeX3fZwjxETwwkbyf/295qQW3nnXlKTyytwaiL6wzoJj1UYVBIMEXvejxn7Lp0Q8
-	 y4KkfbujPviV2LjcgMa2KTBHO9ASQKfJgMn4AqBFg0crczJwPBjX2x1BrdwcE9XLuiRaz
-	 fKFeqkXjPyIBVIJKVWNX24GxayU7uNpjbFr8i2NEGoB2oxB/p/BMOkpSbPruGtM3dyowp
-	 muC6r+G8VQQKVCUwRME54hpeXoM104+mjam3WXHhyrrGXmrbE1KoigetQpxEdPeU25aex
-	 l19wmW2150xfjXXI9Wn0nsmN9Igo+g9UYuRLIdoKqMA9VwJM4pmjOlIaSDstgdknTsQ==
+	t=1793208640;
+	b=aL8Uj1KP9TUWHWldKsqEIech/6KlShdTFn9FoqUf8D49I3ayNeSmkolY+YdhjnWGD3+v
+	 hm4u8wK3L0C48iKeHSCC8/SJDTZayrxSbFOrC287vCuBuMAMEFzA9hVpdKHms/qVvXxrr
+	 m61BIPL7CAx3JSkAn8k64VnOxxGwokwoU/y+1VwIT7Ep4kZwkpUxDi48BwAQbIupCL1BM
+	 OGqORxSBiQCKX+fbS6g+BmvNt9ZRuMtXKMUQ8i6mzhpYHaqESvCDTJfx1LRaPxPmpVWcP
+	 359geTHtybmsn+K0tQ5dycC54EDdmVqx8XkGG7DGqRfRVNbqsNFvp2LGRYiVED1ziag==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793208465;
-	h=DMARC-Filter:Received:DKIM-Signature:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-MBO-RS-META:X-MBO-RS-ID;
-	bh=fyriXkBqv5S2RoZ4yqnZmH7bFaART5tOxZLSG19Qwtk=;
-	b=Jcga+NypUYV1svpimvtLE+SIaLfiNCmO28qLMM7YRLsG19ULd2aFE8V1CuVoaGw0xzoK
-	 c6KPMomUesSlk+dTrws1S6NT4N3jmedULPTSOCZYqBdfTtHfssMxbKiMvJ1tGuOLwMCrc
-	 z0E8DiDyBnlDlSILZCtUJ9FU8xnDsgEWgJYho7KKi+lHQUV7f2E9wli8ZqBNrTT4ZKza0
-	 0U1XTI397ev/bUMc8ftNgnORtm2qqMBSm51RKztgu3otZ0UMq7O36n2I0gCR8ez3xwfQa
-	 keL5G06OrGNH4jemj8e4XPg8tjYjRmJl5zjgaBx3/atH9hRxReUXHN9O/anlLqJgwFg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793208640;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
+	 Content-Type;
+	bh=aT/pVU6IgIaYwku4adsSNoBoyYJO/ByS0tjhWNwyOaU=;
+	b=FWC2U60UE49PceUFVECO2YUZMSb61IB/RVy+wb81Ed9f78FnqhBW8N/C9xVfgZeE4WLw
+	 gswbHojWVABOjSPqjSdFuk44koX1oNf00WB2+Yqx/iynp1Idw2t/1v6PTMZcZveVYuh2x
+	 eJJmVYyGlTaG+tzWPORFXwsKPcft7F+Fe1ZfRS0BX4BwlhRh9hQiJQp9JwfhxE52Kl2gk
+	 bkTbMy6Syy3R21U6e0RGlv2plMqXy84SIOvPk2Ch5bZ+bg9DFCYXaDGpOq8FyLvCXpkw1
+	 LvepEOstfNd0a/dDe0iFW+Zhav+0x4ToQOh7sukh46nz7v7NLtXWXvGpqvWrjzqLQvQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mailbox.org;
-	spf=pass smtp.mailfrom=mailbox.org;
-	dkim=pass header.d=mailbox.org header.i=@mailbox.org header.a=rsa-sha256 header.s=mail20150812 header.b=eTjhGW8f;
-	arc=none smtp.remote-ip=80.241.56.161
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b="i8oSMlu/";
+	arc=none smtp.remote-ip=209.85.210.198
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14B96606A31A;
-	Wed, 28 Oct 2026 17:27:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 14B96606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEEE1606A31E
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 17:30:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BEEE1606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=mailbox.org header.i=@mailbox.org header.a=rsa-sha256 header.s=mail20150812 header.b=eTjhGW8f
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519MLKEM768 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4jFDp54FPZzKm4R;
-	Wed, 28 Oct 2026 18:27:41 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1793208461;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fyriXkBqv5S2RoZ4yqnZmH7bFaART5tOxZLSG19Qwtk=;
-	b=eTjhGW8fFANlswC7YarJtfWZk3+ehT6dErNfDPmdEH2KbTgN0BDFm5G1Lms8i06TDg6LRF
-	JevReuY7h6zbfU8rQqOXORf8VS4/L4Zi3EROcs1Kr7ZDALcEq53UvNSo7AWZ4mHEhv81pK
-	AaifYmPk3+q4FamDcNk1+yNNRIfkRRNzMRqx3ggHmTFY7pNyWagyQ8w3lOjqbCAqVvU0DL
-	9tCj3nRlOpoC8p7uOXKJgchfrGclBSaVh0xud0cDxhbWJFtgSoCfsc6cCToEqxgkCmhPxR
-	wU9q+48JzZn8u3JZh+zrYDrs8Am/3UUHN+JfeJZUN+JxgosAnZRyNs0KgVFHaw==
-Message-ID: <18b4e960-caa1-48b0-a5aa-f3585274787d@mailbox.org>
-Date: Wed, 28 Oct 2026 18:27:36 +0100
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=i8oSMlu/
+Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-8a065d0e9deso1042077b3a.0
+        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 10:30:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1793208639; x=1793813439; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=aT/pVU6IgIaYwku4adsSNoBoyYJO/ByS0tjhWNwyOaU=;
+        b=i8oSMlu/WkbIYGthAShj23qls5PPa/cxrQ80XRTY7eJl6stpBqjqTJoVWruuxGySrD
+         Zet9b9zdF8MYfRamF8DMgs5eTpbkL70dL230V2a5giSqkRbElhM3zmNCyl4TDOU21mF3
+         I3RNxSFADpGlcEccnqECxbVl5H2SzwAJeGg4F424R0B03qLvEhXDR1Tb1gRgpRx2Iuc/
+         CUw3ZMIVtBZO67OfWZ5JBfhx6S+/MgGHU3Bb5FrcpxKbCCCeWZaNkCWf+3RcGagxU3zQ
+         V4DU3aAnNuK+8QFF6wVKtsVW16pHwRNHSQD0WqALj+8lM+nCIiN80jMQl1OaLNpyOFrH
+         QWVQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793208639; x=1793813439;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=aT/pVU6IgIaYwku4adsSNoBoyYJO/ByS0tjhWNwyOaU=;
+        b=CfRwF0s7N7CQ+JVG69BoctfGZVvDXR8P+aVZNAgVpGRwru2JOKiyD3n8ja5ADc/nlM
+         zo3a+pT/+aYCww0SarfyJBQojX8vWNhOAfZktSWdgwt0oAPbYHz4Rl7Aiksx8wo5kRr1
+         GfCBs6PyTVDMZw5C1f3LnsUg41YXhcUEnk+R9jVMO8tQbzpOXhetNEwEkYXeVz1sy+ya
+         VcI4VlW88qVFgaknRcaPImRIJ8a3nszSgY2+8WIsh7rwM3WkpNX/IRFtqZuOx2rmQR7W
+         s8w+SI07mbk+JdX7q+cIVzs8yDlXBI/O3d7ftZNSMhUEwzg98B+B8zk6xtQwPeHocKRX
+         GSLw==
+X-Forwarded-Encrypted: i=1; AKwUvBzxVbYk/ldTUuvvdGpSN0vajPTdrjfbwIBvw4qmhuAr0LvgTyn4z5KRKTfzmVMiExS6+nJF5VFTulk=@vger.kernel.org
+X-Gm-Message-State: AFq9FYLxsqOVSe75wWCui7PMS614kPXGDFJWjDLrGovVZt5pH/GmmqSK
+	m9fiz772WuaQeXugzCj+LOYzZ5TWZxnM4Cm29bBTyVahb3P0+0ndyVcNsnc+vDlmzYBi07xtybw
+	97LXiLovJXAtNN7AA/mUUuJnPSo3z9GVzVw==
+X-Received: from pfaq14.prod.google.com ([2002:a05:6a00:a88e:b0:89b:34dc:b094])
+ (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a00:2e93:b0:883:7868:94d7 with SMTP id d2e1a72fcca58-8a82efe49c7mr111145b3a.10.1793208638703;
+ Wed, 28 Oct 2026 10:30:38 -0700 (PDT)
+Date: Wed, 28 Oct 2026 17:30:38 +0000
+In-Reply-To: <20261027230853.GA519764@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,68 +78,46 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] PCI: dwc: rcar-gen4: Replace pe_rst GPIO PERST with
- GPIO reset aux driver
-To: linux-pci@vger.kernel.org, Bartosz Golaszewski <brgl@kernel.org>
-Cc: =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Alex Elder <elder@riscstar.com>,
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
- Frank Li <Frank.Li@nxp.com>, Geert Uytterhoeven <geert+renesas@glider.be>,
- Jingoo Han <jingoohan1@gmail.com>, Koichiro Den <den@valinux.co.jp>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Magnus Damm <magnus.damm@gmail.com>, Manivannan Sadhasivam
- <mani@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>,
- Randolph Lin <randolph@andestech.com>, Rob Herring <robh@kernel.org>,
- Sherry Sun <sherry.sun@nxp.com>, Siddharth Vadapalli <s-vadapalli@ti.com>,
- Vidya Sagar <vidyas@nvidia.com>, Vincent Guittot
- <vincent.guittot@linaro.org>, Wilfred Mallawa <wilfred.mallawa@wdc.com>,
- Xincheng Zhang <zhangxincheng@ultrarisc.com>,
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
- linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-References: <20261028172133.20903-1-marek.vasut+renesas@mailbox.org>
-Content-Language: en-US
-From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <20261028172133.20903-1-marek.vasut+renesas@mailbox.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MBO-RS-META: 6aodyibmnz1i7rqmk15yrgtpx7718x9q
-X-MBO-RS-ID: 9ebc450d80878dcba81
+Mime-Version: 1.0
+References: <20261012-fix-aer-mask-override-v1-0-49a0d7aeaea0@google.com>
+ <20261012-fix-aer-mask-override-v1-1-49a0d7aeaea0@google.com> <20261027230853.GA519764@bhelgaas>
+X-Mailer: git-send-email 2.56.0.313.g2479322e68-goog
+Message-ID: <20261028173038.292999-1-rathodpriyank@google.com>
+Subject: Re: [PATCH 1/2] PCI/AER: Make aer_mask_override effective for
+ injected errors
+From: Priyank Rathod <rathodpriyank@google.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, lukas@wunner.de, 
+	sathyanarayanan.kuppuswamy@linux.intel.com, ilpo.jarvinen@linux.intel.com, 
+	dave.jiang@intel.com, prarit@redhat.com, ying.huang@linux.alibaba.com, 
+	terry.bowman@amd.com, corbet@lwn.net, jic23@kernel.org, 
+	danielmaraboo@gmail.com, linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 10/28/26 6:21 PM, Marek Vasut wrote:
+Hi Bjorn,
 
-[...]
+Thank you for reviewing the patch!
 
-> 1) Combined mandatory PCIe core resets and optional GPIO PERST#:
->     pciec@nnn {
->         compatible = "renesas,r8a779g0-pcie", "renesas,rcar-gen4-pcie";
->         ...
->         resets = <&reset 624>, <&reset 1121>;
->         reset-names = "pwr", "core";
->         reset-gpios = <&gpio2 2 GPIO_ACTIVE_LOW>; // This is GPIO PERST#
->         ...
->     };
+On Tue, Oct 27, 2026 at 06:08:53PM -0500, Bjorn Helgaas wrote:
+> Can you start with a one- or two-sentence description of what's going
+> on here?  Evidently injecting some errors doesn't work as expected
+> today?  As long as the justification is compelling and the code is
+> readable, I don't think we need quite as much detail about every
+> little implementation detail.
 
-[...]
+Good point, thank you.  Would a shorter commit log like the following
+look better to you?
 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-> index 12f102f48d5d5..b09c01853d807 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> @@ -104,10 +104,6 @@ static int dw_pcie_get_resets(struct dw_pcie *pci)
->   	if (ret)
->   		return ret;
->   
-> -	pci->pe_rst = devm_gpiod_get_optional(pci->dev, "reset", GPIOD_OUT_HIGH);
-> -	if (IS_ERR(pci->pe_rst))
-> -		return PTR_ERR(pci->pe_rst);
-Bartosz, alternatively, I wonder if there is any way to request the 
-reset-gpios as reset controller reset here already. That might be even 
-cleaner, but I don't think there is anything like 
-devm_reset_control_bulk_get_optional_exclusive_and_also_request_the_gpio_reset() 
-or devm_reset_control_get_optional_exclusive_gpio_reset() . Maybe 
-something like that could be added to the reset subsystem instead ?
+  aer_mask_override=1 is supposed to allow injecting masked errors, but
+  aer_inject() corrupts the hardware Mask registers with "&= !" and
+  restores them before irq_inject_interrupt(), so aer_isr() still drops
+  the error as masked.  Emulate aer_mask_override in config space reads
+  and writes instead of modifying the hardware Mask registers, and
+  document the parameter with MODULE_PARM_DESC().
 
-Thank you for your help !
+I am happy to send a v2 with this updated commit message, unless you
+prefer to adjust it directly when applying.
+
+Thanks,
+Priyank
