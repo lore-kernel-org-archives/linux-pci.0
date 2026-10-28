@@ -1,48 +1,48 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.5
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.2
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793156863;
-	b=WbDSxOnt6S4QvhbWjW6fvDR4u1Ihl6fky69SWcs7GHJZH5781c17JHBlBL7IUo8VgqdQ
-	 xYuEpMTUfZ+/V66vT913CD4sGFcW+a9e+zDekST7KA5nzhPk704r8u/qVy6WhDpG1AKAt
-	 g09TcXrTUEcKWPnTxsOzSQzzp7hoorMntN/b1b/dLfQ8GeVLXqIvUkLas7DNzmyYhDtSx
-	 iKOcjW7ni8mmYcC9rkc+R+6Sbys6s3Guf9+xhP4MhBkFRLTW+w7NIHSZHV4yH/wFYnAYN
-	 GawT+FoijZvpyQo4tr9/VhYKxz0YWJO+jxlwnbbdLlRblPDN0DZjFnTCCYR1t7X6G/A==
+	t=1793156859;
+	b=NC4LFfjF/Nn5s3RjycXSfX/KhbIkvAp+qxRGVf7DfSk0iPEFi/QcQIM6+pS8bJl4t+tL
+	 sEfPdtdcoOgTnlGjp3XqZbB2vyhsr2bMLHrdl/dUbw6aoOOrlz4B25XGWH04aIUHRDT50
+	 uEly3jndTVv2P7pd/eUA47aCvy2Xk0XeHuMsDniHQFc1vFjd/K6+SNs8r5T0O2+T1nNwO
+	 YLucR9gCvol71ypqQOoCKmr76CN6U7enavt7zsq5l271IHfVM8lO5GthIrIJvNQDw6iOA
+	 q6mOsviJPY+LIlTvuejh2dqSXr7UL3Bx3MMlv9Av5OoRbZ9BvXClh7BTt7iNyj9nOxA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793156863;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793156859;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
 	 X-CM-SenderInfo;
-	bh=nw4a8GdF8Rm29zjnqIJ6ENwjtf0jPmRW0n0sSDEi4cM=;
-	b=EMH9/3gCKSHa1n5pIW2HBZkzfnk+r/kwr0IVlr2NHmDSYfVG1ycDJ8oHRLVgYn7GIBsl
-	 yP7BeZfz+i/ARccYPM7YlJwmz17Os07wSt0vei+ZzAz/4aIvX1fFBZXlE9hqZc0Yq1d4K
-	 /rwwI03sbDaTp5kYW4/Cx30ACdyk3Tx31XMnOw3tY03KZcR+9uGacvLUzX12ibmdoelm6
-	 p0wdSBnMvGE6ZngdmrZZro6wYRvir43jUX8rq9zI0ARIQHrlwXdN4hqrf6/ny0P5k1Eb5
-	 4XYFrDTp5HbRRQhsArv5HPtY0jfytnXaGekxHFjIFzlXY1sxS0CNNUamOdaWYE+wmxA==
+	bh=H7/WiFVVM2Ct9E/WSDPj/g8wukhy3907IvTWxmVmjP8=;
+	b=gCPeS0otFoIlQvYkaKD62z5AIZrjO9mhk6pB0lWPL62uFnlK5n/BOtTBgxgerflhQP4V
+	 xErv4kTjCZxdDk/zZLGvrqv3kmDscXnJQNDkAO8OuH6J3H8F4EhcTUY+f4VMQA6bzc628
+	 t1PSfRST8YLbyml1LEYeEPTJhhaB4OJjGdwHiFNbST1/HpLpAY43P25Uh2fCCKc4em4IP
+	 +8J6LUZaaWB3o+apbfQriYI35s0+bn7Lsqc3FNBnwwX+xpc7mu66QstUkaC4efFLUTWL6
+	 Z2EsipeZnCOX1fnYDk1XM1LBMUpcXPuqXiWwvt9edoRjenOZa734OJVPgwCCnVrxfsw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=163.com;
 	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=mfHPLhUE;
-	arc=none smtp.remote-ip=117.135.210.5
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=JIC+3XoR;
+	arc=none smtp.remote-ip=117.135.210.2
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 586FB60A260B;
-	Wed, 28 Oct 2026 03:07:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 586FB60A260B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE446606A337;
+	Wed, 28 Oct 2026 03:07:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CE446606A337
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=mfHPLhUE
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=JIC+3XoR
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=nw
-	4a8GdF8Rm29zjnqIJ6ENwjtf0jPmRW0n0sSDEi4cM=; b=mfHPLhUEBNSyABWGzy
-	f3gCIUpgfmhhwV89Nf+l+zP5PJdFVM30klupuAmjToA4LdU+y+paXyoXz7EwhF01
-	l08XZyiSLPaSvAOtRaReUJfutCxQ1qwwDBRGp2orAr+N1vlLpashVmPD72Oc54Nq
-	UbBpmG7egMdLUrQjb2Q2FLJx4=
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=H7
+	/WiFVVM2Ct9E/WSDPj/g8wukhy3907IvTWxmVmjP8=; b=JIC+3XoR2kMfR2J5D9
+	4N+FL69uSijetsI0O8w8D2AZoMtL1Jt/dnuesm2kuf2eUnlJp5EAKz1Nu2X5IVQU
+	KlthXBDV+VqqhunuHfHwETE/YVqsEaiWt+aw/J++XDvj4nOzOTGsauxX7V7bddpL
+	9gn5lHSqmjA4pkU4IKALE7+2c=
 Received: from Precision-7960.. (unknown [])
-	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wDnD07QZuFqZiY4DA--.60713S9;
-	Wed, 28 Oct 2026 11:07:04 +0800 (CST)
+	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wDnD07QZuFqZiY4DA--.60713S6;
+	Wed, 28 Oct 2026 11:07:01 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -60,10 +60,11 @@ Cc: imx@lists.linux.dev,
 	linux-tegra@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v5 07/16] PCI: dwc: eswin: Use cached PCIe capability offset
-Date: Wed, 28 Oct 2026 11:06:43 +0800
-Message-ID: <20261028030652.2917756-8-18255117159@163.com>
+	Hans Zhang <18255117159@163.com>,
+	Frank Li <Frank.Li@nxp.com>
+Subject: [PATCH v5 04/16] PCI: dwc: layerscape-ep: Use cached PCIe capability offset
+Date: Wed, 28 Oct 2026 11:06:40 +0800
+Message-ID: <20261028030652.2917756-5-18255117159@163.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261028030652.2917756-1-18255117159@163.com>
 References: <20261028030652.2917756-1-18255117159@163.com>
@@ -77,36 +78,51 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDnD07QZuFqZiY4DA--.60713S9
-X-Coremail-Antispam: 1Uf129KBjvdXoWruF45Aw18JF1fAr1xWw1rZwb_yoWDCwcE9a
-	4qkrZrAr4UGF9Ik3WSvw4fZF9Fya4xZw1j9a4rJF9xZFn2gr1jvFnFqFWDAFnru3WkJr93
-	Jr1qvFyIkFWUJjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRNE_MPUUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xnihmrhZtnE5QAA3D
+X-CM-TRANSID:_____wDnD07QZuFqZiY4DA--.60713S6
+X-Coremail-Antispam: 1Uf129KBjvJXoW7uFyrXr45GF17AF43Cw13XFb_yoW8WF1fpF
+	Z8JF1Ykr18JF4SgFnF9a1DWr13GF9xAFW7Ja97Kw1avFyav3yUG3s0yryftFn7KFZFkF1a
+	v3y5tFW5uw4rAFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piLZ2-UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xbhhWrhZtbEBwAA3h
 
-eswin_pcie_link_up() is the .link_up callback, so it is called on every
-link state poll. Replace the dw_pcie_find_capability() call with
-dw_pcie_get_pcie_cap() so that the capability list is walked only once,
-and store the offset in a u8 as everywhere else.
+Replace the dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) calls in
+ls_pcie_ep_probe() and ls_pcie_ep_event_handler() with
+dw_pcie_get_pcie_cap().
 
+The probe reads the Link Capabilities register to save the values
+configured by the Reset Configuration Word anyway, so the offset is
+cached there. The link down event handler runs in hardirq context and
+can then simply reuse the cached value instead of walking the
+capability list every time the link goes down.
+
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/dwc/pcie-eswin.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pci-layerscape-ep.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-eswin.c b/drivers/pci/controller/dwc/pcie-eswin.c
-index 1bb44696057e4..d08277e8cc690 100644
---- a/drivers/pci/controller/dwc/pcie-eswin.c
-+++ b/drivers/pci/controller/dwc/pcie-eswin.c
-@@ -84,7 +84,7 @@ static int eswin_pcie_start_link(struct dw_pcie *pci)
+diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+index 527c57114dcfe..113be247b01b0 100644
+--- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
++++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+@@ -84,7 +84,7 @@ static irqreturn_t ls_pcie_ep_event_handler(int irq, void *dev_id)
  
- static bool eswin_pcie_link_up(struct dw_pcie *pci)
- {
--	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-+	u8 offset = dw_pcie_get_pcie_cap(pci);
- 	u16 val = dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKSTA);
+ 	if (val & PEX_PF0_PME_MES_DR_LUD) {
  
- 	return val & PCI_EXP_LNKSTA_DLLLA;
+-		offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++		offset = dw_pcie_get_pcie_cap(pci);
+ 
+ 		/*
+ 		 * The values of the Maximum Link Width and Supported Link
+@@ -268,7 +268,7 @@ static int __init ls_pcie_ep_probe(struct platform_device *pdev)
+ 
+ 	platform_set_drvdata(pdev, pcie);
+ 
+-	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	offset = dw_pcie_get_pcie_cap(pci);
+ 	pcie->lnkcap = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
+ 
+ 	ret = dw_pcie_ep_init(&pci->ep);
 -- 
 2.43.0
 
