@@ -1,105 +1,103 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.44
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793208673;
-	b=w76UtRIu12tLiF57ppsMWdFM6kxQQMP++cEQ8rbfp3ovHKsXlihunLdh/ZQrpxWwHcg8
-	 jro8LmqEPV8F/kQkY96vHwzyKaJWsb1XZGV3m+hi18C5QRfAoVZpGpM/THWVg3l5CibRu
-	 3v4GmSuuG/TXsaXtGIcP5q6zK0d8qwCwkTJvJrUHo99aN0fA7axHqLlGVilgF++PDpG5O
-	 eKAdO06Y0MtgGE9HgzEZLbA7zAYJPdklwKG1368F1XQT4jjkhK5pwdrsRie9TIdPLNPvs
-	 B0mruTm1HHCqy00gpZJ1HyaxYr3M0VzRJUAveHHBaT+K19538Wv0DuU6RVueNODbkgQ==
+	t=1793208682;
+	b=Meq1CQNkgtVhX1GIE7eTCMA/44FMqILGeZ6/KnUXO7XTCEhVcSGQC5eHvGnC9Tu2epCY
+	 U60b+H88PCe16ePZXayIrcg3A6NRPce//Az1H6vy+1CkXQi0nHSDNRdVLiBffMFHNOUTh
+	 K2kmYQftses6isopui+ma0kr1yU2P5t4Wpu2mvTFzSFQ2wuwHGGw6UIaxTSZ9iOEYFKIO
+	 2YGVQDjkRfEiXdj4FkuTPZl2h0s67BVe5kqRHU8P25f9iG4FbakDp6sAwMC5aKQh/kHJL
+	 8+c69hfLl/S9sZ/lHNWEduFAjedC9QNNigM3X3vQ/JCKwt0tvXVyju3/CbT/9g4Lzfg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793208673;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793208682;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=A+RGXs8/Ail6qHnGbLflY644jEJYQOYM38RZLvyetKE=;
-	b=YxidSJ3ktcsuW7ramD8ldjmG2DnkfHWZ+feXo+FXPpUSTVDbhk+MDc55YrBbsCcLS+z1
-	 97/YyVGgGCzN4zAAACqQF17hnHdW5qMdDyeDpymf3OnqMR5XxI0tyAqw2SXkLTKptLtX2
-	 8mSsoMnT7qJb4q/zxIba8cx9Dvk0No2x4ooX8Yf3Mv64R4xaLVnYGpJR3xtJTvYwQYSso
-	 k+wOnVHQoM0nCKu4dPKxPIPJZy9Bl/2pMFMBfVKG2gY56qn+guCnIqTjCchn/KGfUIeiR
-	 Q66VmQJezj8lYWHKSWUu6IP9MzvPq+1dWtmHqMJZphz4kjoc9kfp2S1dyF8YZC6xlwQ==
+	bh=tTbN8QdJzbNFg7HFB2EoFWXNNo+FJ0ZvprR3p/0DA4Q=;
+	b=GBoLG1AIG1M8pKSFe+r4XEQ+8zIVXBviQPWQEyND+bERi/J4HZoAz6LRUJ1bkwG2zeFw
+	 GaDFHvvf68PkDJkC79iJQWpEdb66Twcyjj5UUGx8MNy0A+xZtWOdu1RC328QENfu4aC9/
+	 I22DqEoZcAM1j7TNQjl/s95InpycJeaRjs97u5rlJ7AldhlAvqam0K0TurwKqe5Zuvb55
+	 16iU/3WoY+5SiR8N9U7F6hkmv/tOxFV47cxfD+d5t02DrNLwZghNtaqtJSS2W06T9hgsz
+	 XQLxl2Xsko9eNzJukglSUaibLf4+z8OnJ2CV6pmsw451U41J/wg3QcM3Wl8I5qPEeQw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ufleonBH;
-	arc=none smtp.remote-ip=209.85.221.48
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Rj5AXwlI;
+	arc=none smtp.remote-ip=209.85.128.44
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18891606A31A
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 17:31:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 18891606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85F02606A325
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 17:31:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 85F02606A325
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ufleonBH
-Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-48afcd7ba9bso955325f8f.3
-        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 10:31:12 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Rj5AXwlI
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-4a9a8d6cea8so11568785e9.1
+        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 10:31:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793208671; x=1793813471; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793208681; x=1793813481; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=A+RGXs8/Ail6qHnGbLflY644jEJYQOYM38RZLvyetKE=;
-        b=ufleonBH+H9d/tOno1mA/pxQ9SgKTe49I8fCqrQqRsv9NChzWGdaQBtCxPwlzBVOYp
-         HEwR72xzxyezHU6WBAhtovrTrx3KqZMKdxC+/NdhAVnyda2XRk0XbVJSpDtsZYmQaSxW
-         gryas7ImdzqPFK9J66feGiF0DibWyxN/9p/uhc4OBOGZySknSPXvWFlliQw9WfFmolXa
-         6Ym4+ZsPc2TEFd0JvB+J0ZVQOmqnI7YI8y04jyEKQGD83c/vonoi/YbCtaJBhlBFuoX6
-         Ms5PyHf+Vfc1ubEUq9EUBU3fXC6okM/Ic3olgmuBrF1Y/nvoxgkYAuT1pJ0Tt/AAoePE
-         RoxA==
+        bh=tTbN8QdJzbNFg7HFB2EoFWXNNo+FJ0ZvprR3p/0DA4Q=;
+        b=Rj5AXwlIRL1sM/sCWx/9TgqY1uZioctwcdwe23Su+an66Dqioq2hXH34IGZMtMjlNZ
+         c6HbI5Xmhd+ZP7Hx+cWqoi3dAjlmxXVC7112rgscq4+HMiIJfKSx/VQEKYCCOUBqlwGC
+         jHFBJeolrICukui6tBM3wuMTuKAcFUABKr41L84uYmWOSobC1okBV45oSHMP3bsdJSiB
+         TZtr3QzQC9aLP5v8PgFq/XoD662rug3mQtnh2w0Tpn0ADA2Ad3eFdht2hOUY/8mDvavl
+         yuGhdRax/mp5lm6KtXyqMkEsnAWnfZWLE84MspzN2kgfK0YIDikLfZwBTP6ZxuSfqdmV
+         fYSg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793208671; x=1793813471;
+        d=1e100.net; s=20260707; t=1793208681; x=1793813481;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=A+RGXs8/Ail6qHnGbLflY644jEJYQOYM38RZLvyetKE=;
-        b=zT2uLqIpYNfMNlKy21OMp4qeKDCVX1I1bJE9jAKXQxyK/gkpTukAZ3au7FgTNBfSq9
-         dxFh8Y+PNJR9HU5p/quGwFSfXoPq30I/W+9TspJ5N1fCY6xe8Mo/YE0YXwZxRJqISA0X
-         zrmiQ1I0q8Vqo4TmyZK6naNEX9noyEW94Q3ziRz8+yYjBMQl5eca80XuntX/fWIpiTF/
-         7O/ukTx5DxYdEGLZjH2so5bv/INYJiBhRWA3E8rbhCjxGjCPJlyWW9dX3XUpu0tyfskD
-         X1rTPWUOE+dm1NBicJIphcOOQFzrh9iyHl9cuA0QuyDuubF6bZYasT8ChRE/JM9eMp5N
-         zt+g==
-X-Forwarded-Encrypted: i=1; AKwUvBz9Ue+Mj9IkpBQURjBwbtQhovtc+uRggoJvl4W/pQjIXKMUo8z5rlLaFiECV6vHQ0JfaBag+L3wKxg=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLSDUoyrfywI47AngbslQJDJDyfaZTwKgRGcWOGfg1z3RkDWMiz
-	MuxQZ5Ymoyeus9txVvNGHzISOKD5xVMpDSWALLmvvviYvmUQicH4q9G3
-X-Gm-Gg: AYBFou3OAiLDXG9XAC1CE/zOU1tzXpUc14RYR1BcXvaZilku6lrk62Q2TQpp22nY0OZ
-	69qBIAX4sYG0Wlj9jGVuxgatnnevlP58ZVIxvQahDNoSe+8cy8OQ5840e/Ghfz6BWHpLTePS/aA
-	6EuMckI2/a7WRNMIZjgxDM77wyLsi6JCH1KInafN5W819w3eiMdDsPOCPy21jJuuJ6t0i+V/2lz
-	5I8NsAIJ7Uph/IVjkCQLE73Dpx7To9nMz8SncDLhhMdM4Nku4BG4ddvDAfK2AaZ7B0dUd5MAW4+
-	NIA4rsn/7o9QIUEUIzXkqhKfXhXmxaImUx234aZ2hExRl++Be+vRizrPX7D9nRCG2gsu5ngBGPp
-	uIDnWoJPHLZ+pMJ3eQzsgvn1Hg1+MGo7jlGVNrNOd2CPXeRK468loOV0xS/reqx/uUh2phDxL+z
-	kyqS+m6XppteqjCChkmg1Q87DKH7wYI2usywnlfhGWjbRfGl8zwM1e63FhtZ59YxluJs7J8+CTJ
-	uhASWK8wnZTSc3ucOYsTsC8ZjCiZ7KzemcrLrRUkV7C2GT+05LnRyZPhoFLetpxjesfh1BNHfa7
-	sRh6j/KLLX/xzMP2yhGtPwHeUXRiwqjoTFtKIBvwgl/u5GU1jOJq034cQUvp9ytdtaJbosjtQ6D
-	8d0C1FTPil/X7Etl7x/rfqYmu9W2u/QBz7zzQB2rcdOCAuNDVyAAZmj+jR1fyk0KSB6k=
-X-Received: by 2002:a5d:588a:0:b0:48e:25e1:5eb8 with SMTP id ffacd0b85a97d-48e5d58d590mr7802427f8f.3.1793208671431;
-        Wed, 28 Oct 2026 10:31:11 -0700 (PDT)
+        bh=tTbN8QdJzbNFg7HFB2EoFWXNNo+FJ0ZvprR3p/0DA4Q=;
+        b=c+WaG4hO8uJY6WneQwvdjsryCWuhZ8mpzfYFuPAA/h2D+PaCHkdBr9VCK0Eu08hr6P
+         ly7CbSyKJQUp5mZVgF017MNX+0iU6crA+T4ExJ6SfHVclH1bShR2nsJtP9cH0b2soYb+
+         w6xo0gv4sDDaGv9jVeDiRfFsTC+vlyXmZPoRCp0F0qfTbdMQ37xn/ytpIdT8RdOU9sI4
+         Vu3AB7LCJMGs/2IeylYb2gN6g8X7iSJS934tRAgtE3Icz/o7zzimCdPKWdTd19FGuDGU
+         iyToGoEkX79wS8gM9xTj8ss5M2Q8Hm8WE6po/uWstkrtaunVQq/9YCyCT6UtrT0d1e6z
+         dlvg==
+X-Forwarded-Encrypted: i=1; AKwUvBzEtvWwFdm8ZlrZj/sO+o+M7Cq6AaHMTo+51EmWdrm/hfAQJWDSp6mMWaXvE40cmqCAmJvsYflMEH8=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJbImkoQkl6+8KHCgeNcjtKF7Sl+YIcgisMlz8QIetBykvvGsqT
+	cWkTqVjg/qU7fwzJDIQoPnNwG3qk3AVzJJEasxFGTfmxy4gQiDL8qDm1
+X-Gm-Gg: AYBFou1kmriw3jm24hNYhV/f7iRBYQIZ+YDgXzJA0mHuBsz8k6y5GLn8cwO0Nzli8/D
+	D7k4XLcce9JKvCyfEiJyKU4F27OWdTQDhbp/lEY1einQpkL/xeSsn5Q7cqNNvhCLABu9GG88oPF
+	phBZ+dxzWmGRCxUDFk8wQVj8ytN0rdrJXpgq6T8KndbcC4D0TgwdzZd4H2fwiLVRMidtv5MJi+8
+	c5glzTNk8nxNKajgNjq6XonyoaI0HUQiFFwNwd9EWo2Cy7UAeDPRrgdvqenZ1pAtKasoPHHIKdN
+	qoxrfAqjaeSMs3WIo8sNrQyO4zwBPte9pwaSr0SphmQ7pu64fCYypxYpeDQRKC8bixltqySLUNX
+	hXvmNPK51QbPZJVqAOS1f1vjduxH7OthRK1QUYdDQX4MqdpIhk0WREQyHaQkKKPR/HjqgOWxUZe
+	eEh+A7yar2x5VuyInUry9Q9n0Wt5Yit01ApJ4Snks1LHYhSz6DXo3afr9X3y6bjUp1c+iK1e/rC
+	Ter1IBs3ZUJ+5VA2WXaTP8pNt50CyvW6y//gvC1fGCLFVv8wWv82grmiRy/Xjq8uHG2+B4JUdqN
+	og++dEyPLYpJcWCBu4ImY41SAPO8W0uRaaK7Deys5JPpllC6oGh1BZz/lomGkzFpGrjRcueTbMl
+	uim7IA9jcW7Tf6zQHoFq3ukyFbYd04i75f67pxTkt0AVsmA==
+X-Received: by 2002:a05:600c:1546:b0:49e:6581:7baf with SMTP id 5b1f17b1804b1-4aa86a42518mr6057825e9.2.1793208680690;
+        Wed, 28 Oct 2026 10:31:20 -0700 (PDT)
 Received: from tachyon.internal (2.155.41.158.dyn.user.ono.com. [2.155.41.158])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e3ebc39a8sm30601206f8f.11.2026.10.28.10.31.09
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4aa80285b2dsm6496175e9.13.2026.10.28.10.31.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2026 10:31:10 -0700 (PDT)
+        Wed, 28 Oct 2026 10:31:19 -0700 (PDT)
 From: =?UTF-8?q?Enrique=20Hern=C3=A1ndez=20Bello?= <ehbello@gmail.com>
 To: iav@iav.lv
 Cc: shawn.lin@rock-chips.com,
 	lpieralisi@kernel.org,
 	kwilczynski@kernel.org,
 	mani@kernel.org,
-	manivannan.sadhasivam@oss.qualcomm.com,
 	bhelgaas@google.com,
 	robh@kernel.org,
 	heiko@sntech.de,
-	dlemoal@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-rockchip@lists.infradead.org,
 	linux-arm-kernel@lists.infradead.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: rockchip: Skip the Tpvperl wait when power is already valid
-Date: Wed, 28 Oct 2026 17:31:08 +0000
-Message-ID: <20261028173108.3457165-1-ehbello@gmail.com>
+Subject: Re: [PATCH RFC 0/2] PCI: rockchip-host: Retry training and hot-reset a JMB585 on RK3399
+Date: Wed, 28 Oct 2026 17:31:17 +0000
+Message-ID: <20261028173117.3457220-1-ehbello@gmail.com>
 X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261028-h64-tpvperl-ab-skip@iav.lv>
-References: <20260911211559.207990-1-ehbello@gmail.com> <179196286749.38040.5597453767131590054.b4-reply@b4> <20261016-h64-pcie-resume-tpvperl@iav.lv> <20261028005548.2399155-1-ehbello@gmail.com> <20261028-h64-tpvperl-ab-skip@iav.lv>
+In-Reply-To: <ff204558-dc22-4d38-b0dc-2c727f983f9f@rock-chips.com>
+References: <20261024-rockchip-pcie-resume-v1-0-58e54a5cf5f1@iav.lv> <4316c1da-f7ff-4fa5-a330-512800474e45@rock-chips.com> <20261026-rockchip-pcie-shawn-reply-1@iav.lv> <ff204558-dc22-4d38-b0dc-2c727f983f9f@rock-chips.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -111,20 +109,30 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On Wed, 28 Oct 2026 05:10:00 +0000, Igor Velkov wrote:
+You said both SErrors and synchronous external aborts occur. In my logs which
+of the two you get tracks the cluster the access runs on, which might be worth
+a look before you move the hook.
 
-> Since the next version keeps the full wait on resume, it no longer
-> changes the resume path, so I'll skip the A/B and test that version
-> on Helios64 instead: boots plus s2idle cycles, results in reply to it.
+Every asynchronous SError in rockchip_pcie_rd_conf landed on CPU4 or CPU5, the
+A72s, across six boots on two different kernels. The one time the same read
+aborted synchronously it was on CPU3, an A53. They also carry different ISS:
+0xbf000002 for these config-read aborts, against 0xbf000000 for the unrelated
+runtime SErrors on this board.
 
-Thank you -- that coverage is worth a lot, but hold off a little, because the
-shape is changing again.
+That is one synchronous case, so not a law, but it is cheap for you to test:
+pin enumeration to an A53 and see whether your aborts all become synchronous.
 
-Shawn Lin has asked for a DT property for the PERST# pulse rather than a
-decision taken in the driver, matching rockchip,perst-inactive-ms and
-rockchip,s2r-perst-inactive-ms in the vendor dwc driver, and I have agreed. So
-the version to test is that one, not the probe-only patch I was about to send.
+It matters because only the synchronous form can be repaired. When it arrives
+as an SError the load has retired and there is no destination register left to
+write all-ones into, so no fixup can help.
 
-Whether the default changes or stays at PCIE_T_PVPERL_MS is still open, so I
-will put the DT snippet to set on a Helios64 in the cover letter instead of
-leaving it to guesswork.
+I prototyped the synchronous half in September: an exception-table entry
+consulted from do_sea(), with the driver substituting the all-ones the PCI core
+expects rather than only surviving. arm32 has had that for years --
+imx6q_pcie_abort_handler() in dwc/pci-imx6.c decodes the faulting instruction
+and makes a read look like all-ones, under #ifdef CONFIG_ARM -- and arm64 has
+no equivalent path. It only ever worked for me with enumeration pinned to an
+A53, which is what made me look at the cluster in the first place.
+
+Not proposing anything, and not reviving that prototype. Yours if any of it
+is useful.
