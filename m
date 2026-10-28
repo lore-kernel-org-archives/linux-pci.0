@@ -1,45 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793200043;
-	b=UwX6ILm+OK1S7mvUvW9siCPvmT1rLJoqILUy1vgYhcOvkXyi02bzWrGMYK9wnw8gzCSj
-	 h64doLwdJWZq8ASGcyuqRrcTznEMCpiPRQYBNAbP85bvw1xKp8VBi4YDRLruhGMoJErEU
-	 H4eW+pJLF+kUGt9N/8UxEWlUBze6BgfWE+nFb+yuBYbWek1zLcYh//Hct/d6kxQuN7KTw
-	 KZvuKwQ28jy7hCH4WnulDBUUE1ZXsL8RDz9aOb0VLfe/mNl4QVgdzi3Ai+Q7EFQ1XKT8W
-	 YAywIPiL5aCzkwXGmylrCoatLxvEygo9/0F7R9M7n0TauiNhH1K5pJzqL0tGM1vtA4g==
+	t=1793200513;
+	b=iQyTb2ZgKwsNc3mVmOX4L2jha47HpYNos6iAFFaCP9N6/YbWYdsBRSaeM9SgY1wO41m8
+	 S13t9p/Ec5hojv3CpV5ARNFdWXcQL3XX0trAbB8BdPzWdj30A6X2Df948Y7hIwiEz+iR0
+	 lTmeRS+SIdJmJnvWQYioYgvO61p8QUnx7wSgvJ/Dw8SrG+SnsjTUIRvHaT0iv5ra4eBk7
+	 9cP9GLoZZAq1qYhBZSnbIc+RmFTzwyJ7OkLYrvZ5ORQKol43DuATwgAcTvAHYTkvyWBGd
+	 eqRBA1q/ZYF0D9fiZXqGPYzXmhG4BhJLHP4XMGDNkEhpBbP7fyjrD7t68Vfa8rYxdkA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793200043;
-	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To:User-Agent;
-	bh=zAexHz8E5bpDPAsaNW7aRPuUlLOJ5C/B47iIBOhDko0=;
-	b=GlNLpUA15yGslJwcnljSgwtTQv9M0wm7vUYw8zTDJ9cbwuj0I4aENG99E6xZgmk4BX/o
-	 Qrd3CVUOkNGc4vFcNoSCt1PAE5Nmnhuy9NlrDETp90Dod229Q7eKNOAElV7epsHIpx46P
-	 tyPS8F7cIjrcfx9lrrui9DNm1Rfag+w/gFH9hA4kdyrtpqzdWKT3F2F0McLyuoajqb/HY
-	 PMhVMFVoh6pZhrvXLCPlnrKvZh6hcxj/dlBfrHvWo5PiCMD2eLjByxH7seLiMqVM5PrOv
-	 D9yT+XtsP7eRD5mwyqdrXvXGucfw2xlwU9Q59HhoqaiXJx0IzQc+1qT80ciHQJ3rG8A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793200513;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=k+Fp/OwTzx46JAuGLMEAEXDppUMAlCveEqpA/Wat0tI=;
+	b=3NkMm86U9JMWD8M00+F69CqLox3MhsBzFiATd+dkeWAnxHuFJR50v8tkpDQYIn8zHUVG
+	 SYO4ROcc9WzJ0nq3U18U6S+slz10YcpLTcA/bZ2Za9auvoN6B4rBzza0Fq6tgRbn5M4F5
+	 bSz4xe3NqDwvGwJfQAlUTUhziABEhzHw7GOt2zJxsNu0iNbBPXFzQcfBRLIBI5srVV1Y2
+	 v+5YVyVKVl9ObRqkvgU5bmBrj3ZYgvzmo+6jkJqtjqjbJBeTQehk506Q/vFLBzD4/gvXk
+	 greyxH87oe1mLelUadaKZPLMSaEZGdcQOJom9cZTRI1lBpfJA0JSYdqtSrIMsvchPsg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=lst.de;
-	spf=pass smtp.mailfrom=lst.de;
-	arc=none smtp.remote-ip=213.95.11.211
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WRcreA69;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8FE6606A31C
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 15:07:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B8FE6606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 718E768AFE; Wed, 28 Oct 2026 16:07:12 +0100 (CET)
-Date: Wed, 28 Oct 2026 16:07:12 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Fengnan <changfengnan@bytedance.com>
-Cc: Keith Busch <kbusch@meta.com>, linux-nvme@lists.infradead.org,
-	hch@lst.de, linux-pci@vger.kernel.org, tglx@kernel.org,
-	namjain@linux.microsoft.com, Keith Busch <kbusch@kernel.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95C99606A31E
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 15:15:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WRcreA69
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F15321F01825;
+	Wed, 28 Oct 2026 15:15:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793200513;
+	bh=k+Fp/OwTzx46JAuGLMEAEXDppUMAlCveEqpA/Wat0tI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=WRcreA69M7B6WlrKXcfPu2ir2tg4ZREnbq+/kwGIkfG9ufiIDD0pqsLDo5ZwmGO4a
+	 xmw+fveC27GyQe+vNrnIGMJGZ21L+mnYtKB/0lGkcbZm5QVUaYWm6+CJyLWyto5zh6
+	 HEOZ6dSJt7cPhEhlSBSAD7Xrasod2f7PwHh4eIoZD0uqfYneXnQctimVih52OTD2IC
+	 KhPldbarVr0SKDknGHB6wQD97XVUH9zzi5dNW5LlzxkOrtcdM7C4KkfhNQIhiVTd7S
+	 Mx2uLEPiUt+gCeHvatvKITCkoLiOiIhBX7o+ldeGhmF24vmZw+iMKLJUgYVdwblzNw
+	 g+navrRppGaEQ==
+Date: Wed, 28 Oct 2026 09:15:11 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Fengnan <changfengnan@bytedance.com>, Keith Busch <kbusch@meta.com>,
+	linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+	tglx@kernel.org, namjain@linux.microsoft.com
 Subject: Re: [RFC PATCH 0/3] nvme-pci: dynamic interrupt moderation
-Message-ID: <20261028150712.GA16374@lst.de>
-References: <20261013223543.395054-1-kbusch@meta.com> <16e8bc03-42c2-4bc8-bce9-dab49aad66b8@bytedance.com>
+Message-ID: <auIRf1QATQjVDtkH@kbusch-mbp>
+References: <20261013223543.395054-1-kbusch@meta.com>
+ <16e8bc03-42c2-4bc8-bce9-dab49aad66b8@bytedance.com>
+ <20261028150712.GA16374@lst.de>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -52,20 +63,24 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <16e8bc03-42c2-4bc8-bce9-dab49aad66b8@bytedance.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20261028150712.GA16374@lst.de>
 
-On Thu, Oct 22, 2026 at 05:43:54PM +0800, Fengnan wrote:
-> Hi Keith:
+On Wed, Oct 28, 2026 at 04:07:12PM +0100, Christoph Hellwig wrote:
+> On Thu, Oct 22, 2026 at 05:43:54PM +0800, Fengnan wrote:
+> > Hi Keith:
+> > 
+> > I made some modifications to DIM and then implemented a solution
+> > using the DIM framework. 
+> > Based on current testing, the results are now comparable to those of
+> > the previous patch.
+> > Here are the preliminary test results:
+> > https://docs.google.com/spreadsheets/d/1e8LQPnaDhmv50XlAM3XxI0TMQkhbk0bTZwlJP1Hzzdk/edit?gid=188992110#gid=188992110
+> > 
+> > If you agree with this approach, I’ll continue testing and optimizing.
 > 
-> I made some modifications to DIM and then implemented a solution
-> using the DIM framework. 
-> Based on current testing, the results are now comparable to those of
-> the previous patch.
-> Here are the preliminary test results:
-> https://docs.google.com/spreadsheets/d/1e8LQPnaDhmv50XlAM3XxI0TMQkhbk0bTZwlJP1Hzzdk/edit?gid=188992110#gid=188992110
-> 
-> If you agree with this approach, I’ll continue testing and optimizing.
+> І can't speak for Keith, but I'd really love to see this going forward!
 
-І can't speak for Keith, but I'd really love to see this going forward!
-
+Same! This is a great problem to solve, but I'm just sorry I don't have
+more cycles to work on the cause. I can quickly respin the msix noflush
+pre-patches to address the naming issues tglx mentioned, and we can take
+nvme in whichever direction has the best performance.
