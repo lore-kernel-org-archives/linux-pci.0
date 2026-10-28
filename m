@@ -1,48 +1,48 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.5
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793156866;
-	b=Bk+fZUS1fyPvSOD4apoZGmXEtasPQNNBI0ybzQxiDpOOQoGMWuQ/rGYvpgjQZ0Zoq11x
-	 tWvsEXY9YkNpEK6mitdYHO4gIIZGkeb1rXxSxV+yDSNbkT5LycTHey8483iSFzGRaGAFz
-	 oPU+XTdorG2QgSCQ/5V7S++vvBWQI54+UKfacmjtLn3ZB9JJY15EnPLTtTmnZ0ohWDq0O
-	 A7vVKlO4PTHErskoMiVvbA13z61VZu2tfITe5uw28YYfmKuHQfBVyp5FxKa1sGBbZ2Dxa
-	 LClaqTxa7fzYN1Nytv0rnjMK6ceStWUpVCVuBvuiFKkoTwECBpodHjA1A7gd2FkPekQ==
+	b=P1viI4skymmP52gIiItA2jmKOb6ydC8b4zcEuIq2XvjTvAcoE1CJZK7xfN8U4LRDElM6
+	 tZnGrMaFCU1nhK7IlZXX0VYV/8AJXrbkvSJP/ZP0pcuUiW9thaWCTa7p1OjtzB99N+OVX
+	 xGaDd3S2TiGApmqwbq7Ief/cWODZGVQqQrnElaecGaSKuxlj1V7Unj/ZTRQRUv4XYZqzD
+	 gDtPDdYK4ZDnGSdUZWhXb1QvlqgRCcGZp8v984RNPqWeiA9EX7IcHs9O874FNaOtQnFoW
+	 y0NDb2xhC/HVisQRxD/rV+HJ+fZLI0sfOKZuU+vSuA3JrbYyHbQDHsSCGpuWmp6ECRQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793156866;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
 	 X-CM-SenderInfo;
-	bh=lAmxH5StbC92YG4VwJJRjtxwLxu+DmfhuOFV/GCQrHU=;
-	b=Pbn6tqDUnEK5mpNnkwRCYji1d4Ct4qOO4zMr58z5F8eB3Z1JoYetdbUsOyxLQb0xyJ3C
-	 W5iGig1vsX682bCQ6ZU2B6HIX8uvnrZMbYl2TGIrKK6vRiG45PPA9MLEDAMmap0zrBqnM
-	 Ig+dby9xIjqY5PRalr9NedW2O2vBV7akXzHNBRjvg/l1Ua4OQl6BV99rMpGKBJZDe5ukW
-	 LiR36cRis5NfllTHECdxeC63sPDgPEsAjBsAHi/BvxCs1dSz0tDYGIecW/qm2nkVgZSlU
-	 kMgeafwoSqJwLNoqcuY2e9c2dURdqlr4JAijUCKO9Z55SgHDrzbHlqQuhwe9Spqowpw==
+	bh=tIbcK9QjGE9c4lpPc7mfj5ekNF6tijyVodhkpLjG8sQ=;
+	b=WsrMp65xls3NqtZeb4LDP7zhL5PYcVA9OvFw+PQWJHvAEqk+jy1o3S/257pttRinmQyi
+	 EDqcnbBfgW4rpPAnw+jBmbk1RwTGG0B6ffEqCNE+uXxCPfdcRqG+FQjzGnFR9CC7W/K1O
+	 cXqsu8SSfWIKAUFdObGwDRLux+FK4/0PgNh+MIi2cogoCzaXorYXeGh7lMbgmlAHMkYiI
+	 BwMqu9nYzB2QqtmeKx+FsoL5/309JHhJdiZtB3KCSHdigmqdNtpwIIrddiCd7hIhNqajf
+	 zcMty/2/a28z4GEVB7mHniNDZaX688ev0LaGKmjKwnrOZADz8O/c7aYZ8+j6BHjzkCQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=163.com;
 	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=IQAGmgt4;
-	arc=none smtp.remote-ip=117.135.210.2
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=ntWlrT6R;
+	arc=none smtp.remote-ip=117.135.210.5
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08DAA60A261C;
-	Wed, 28 Oct 2026 03:07:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 08DAA60A261C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4650E60A381F;
+	Wed, 28 Oct 2026 03:07:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4650E60A381F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=IQAGmgt4
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=ntWlrT6R
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=lA
-	mxH5StbC92YG4VwJJRjtxwLxu+DmfhuOFV/GCQrHU=; b=IQAGmgt4PNZWbso6+V
-	pffK2rsO3R0sJtHr69fYShXhUdAZQYnX+4I+/tJXe36UNjjKRCZS8pASyZkOJqZw
-	5wAgwiIxCroZtGVTERPriDLYCOVguaN84E1UpII75b3Y/1GlQdZMPZiBlolV1mrd
-	meokRbdBJrzjJFIhQr1h7lQwk=
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=tI
+	bcK9QjGE9c4lpPc7mfj5ekNF6tijyVodhkpLjG8sQ=; b=ntWlrT6RoX39yXz/iz
+	soOJfC3ZjqPIOY9BC7rCiihN+Sx0E8bdQeKbCipvfVhYucPlj5BKbE8uRXngQdxH
+	VrPPc4aAqWYvJBuslL+Q9zmHFU1XaHFhpMbSljPOwF8e5hWPyNLK3RWGkwU0XW/k
+	de8OUC/uSB085wBRFkveHKwKM=
 Received: from Precision-7960.. (unknown [])
-	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wDnVwncZuFqLzE4DA--.33198S8;
-	Wed, 28 Oct 2026 11:07:15 +0800 (CST)
+	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wDnVwncZuFqLzE4DA--.33198S5;
+	Wed, 28 Oct 2026 11:07:12 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -61,9 +61,9 @@ Cc: imx@lists.linux.dev,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v5 14/16] PCI: dwc: spear13xx: Use cached PCIe capability offset
-Date: Wed, 28 Oct 2026 11:06:50 +0800
-Message-ID: <20261028030652.2917756-15-18255117159@163.com>
+Subject: [PATCH v5 11/16] PCI: dwc: qcom: Use cached PCIe capability offset
+Date: Wed, 28 Oct 2026 11:06:47 +0800
+Message-ID: <20261028030652.2917756-12-18255117159@163.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261028030652.2917756-1-18255117159@163.com>
 References: <20261028030652.2917756-1-18255117159@163.com>
@@ -77,35 +77,111 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDnVwncZuFqLzE4DA--.33198S8
-X-Coremail-Antispam: 1Uf129KBjvdXoWruw17Zr17XFWkuFW5ZF47Jwb_yoWDCFXE93
-	s8WFnrAr4UGFy5GFnFyryrXryYva4fWw1jga9aqFZxAFn7Xw1kWr92qrZrAF95Cr1DXF97
-	Jr1qvF4rJ3y8KjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRM89NtUUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7APkiGrhZuPTEwAA3N
+X-CM-TRANSID:_____wDnVwncZuFqLzE4DA--.33198S5
+X-Coremail-Antispam: 1Uf129KBjvJXoWxZry3GrWfWr18CFW3ZFyxZrb_yoW5KFy5p3
+	yYvrn0kF4UJrZ7WFn2yFZ3Xr1avrn8ArW7CayxK34aqFy3tryUGa1jyrySyFn3CFZ2kFy7
+	Gr1Utr17Wan5Zr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziDPEhUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6wDkiGrhZuDG+wAA33
 
-spear13xx_pcie_host_init() runs from the .init callback with the
-controller already enabled. Replace the capability search with
-dw_pcie_get_pcie_cap() and store the offset in a u8.
+Convert the dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) users in the
+Qualcomm host driver to dw_pcie_get_pcie_cap():
+
+  qcom_pcie_clear_aspm_l0s()
+  qcom_pcie_set_slot_cap()
+  qcom_pcie_post_init_2_3_3()
+  qcom_pcie_post_init_2_9_0()
+  qcom_pcie_link_up()
+  qcom_pcie_icc_opp_update()
+
+Note that the .post_init callbacks of struct qcom_pcie_ops run from
+qcom_pcie_host_init() before qcom_pcie_clear_aspm_l0s(), so relying on
+that function to populate the cache would have left the offset
+uninitialized for them. Doing the lazy lookup inside each function
+makes the ordering irrelevant: the capability is searched exactly where
+the register is accessed, i.e. where the open coded
+dw_pcie_find_capability() call used to be, and every one of these paths
+runs after qcom_pcie_init_*() has enabled clocks, resets and power.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/dwc/pcie-spear13xx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-qcom.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-spear13xx.c b/drivers/pci/controller/dwc/pcie-spear13xx.c
-index 01794a9d3ad29..6e4c11b497d45 100644
---- a/drivers/pci/controller/dwc/pcie-spear13xx.c
-+++ b/drivers/pci/controller/dwc/pcie-spear13xx.c
-@@ -122,7 +122,7 @@ static int spear13xx_pcie_host_init(struct dw_pcie_rp *pp)
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index d903f10211c23..dfd2d10414ec9 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -379,13 +379,13 @@ static int qcom_pcie_start_link(struct dw_pcie *pci)
+ static void qcom_pcie_clear_aspm_l0s(struct dw_pcie *pci)
  {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pci);
--	u32 exp_cap_off = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-+	u8 exp_cap_off = dw_pcie_get_pcie_cap(pci);
+ 	struct qcom_pcie *pcie = to_qcom_pcie(pci);
+-	u16 offset;
++	u8 offset;
  	u32 val;
  
- 	spear13xx_pcie->app_base = pci->dbi_base + 0x2000;
+ 	if (!pcie->cfg->no_l0s)
+ 		return;
+ 
+-	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	offset = dw_pcie_get_pcie_cap(pci);
+ 
+ 	dw_pcie_dbi_ro_wr_en(pci);
+ 
+@@ -398,7 +398,7 @@ static void qcom_pcie_clear_aspm_l0s(struct dw_pcie *pci)
+ 
+ static void qcom_pcie_set_slot_cap(struct dw_pcie *pci)
+ {
+-	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	u8 offset = dw_pcie_get_pcie_cap(pci);
+ 	u32 val;
+ 
+ 	dw_pcie_dbi_ro_wr_en(pci);
+@@ -998,7 +998,7 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
+ static int qcom_pcie_post_init_2_3_3(struct qcom_pcie *pcie)
+ {
+ 	struct dw_pcie *pci = pcie->pci;
+-	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	u8 offset = dw_pcie_get_pcie_cap(pci);
+ 	u32 val;
+ 
+ 	/* Force PHY out of lowest power state */
+@@ -1362,7 +1362,7 @@ static int qcom_pcie_init_2_9_0(struct qcom_pcie *pcie)
+ static int qcom_pcie_post_init_2_9_0(struct qcom_pcie *pcie)
+ {
+ 	struct dw_pcie *pci = pcie->pci;
+-	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	u8 offset = dw_pcie_get_pcie_cap(pci);
+ 	u32 val;
+ 	int i;
+ 
+@@ -1410,7 +1410,7 @@ static int qcom_pcie_post_init_2_9_0(struct qcom_pcie *pcie)
+ 
+ static bool qcom_pcie_link_up(struct dw_pcie *pci)
+ {
+-	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	u8 offset = dw_pcie_get_pcie_cap(pci);
+ 	u16 val = readw(pci->dbi_base + offset + PCI_EXP_LNKSTA);
+ 
+ 	return val & PCI_EXP_LNKSTA_DLLLA;
+@@ -1785,14 +1785,15 @@ static int qcom_pcie_icc_init(struct qcom_pcie *pcie)
+ 
+ static void qcom_pcie_icc_opp_update(struct qcom_pcie *pcie)
+ {
+-	u32 offset, status, width, speed;
++	u8 offset;
++	u32 status, width, speed;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct dev_pm_opp_key key = {};
+ 	unsigned long freq_kbps;
+ 	struct dev_pm_opp *opp;
+ 	int ret, freq_mbps;
+ 
+-	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	offset = dw_pcie_get_pcie_cap(pci);
+ 	status = readw(pci->dbi_base + offset + PCI_EXP_LNKSTA);
+ 
+ 	/* Only update constraints if link is up. */
 -- 
 2.43.0
 
