@@ -1,79 +1,155 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.156.1
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793220617;
-	b=UEuQwDkM/3djMmgA3IQlxddFbbehyp3FFsCBUV2NEK05BunkqFRSl9lBUiEEiXtgCg78
-	 5bAUJQ2269Ei1jknbb2x2llc6DcMGV+HsFzSz2oDjF41tRcx7Z9A28Q3QIF5KSBFOAppf
-	 Uiyd9XZPVvWF/EpnHg5e2x2pia9utvGdLA7FzFhRx1pU7Z4np8/VXmLyjofretm7NKdKW
-	 cRHh7Em2nkPxzvghLlSDEncrfFjiEgU6Xp520y11C1DTv4b+JzEh6jCOcEuC9PJM734R7
-	 xYTskYLJPJBCxhOtpiSvqxvMuEU9QowQxSwTEQWTOp7KQBpZEo4sYHWUxK6DKxJE5rA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793220617;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
-	 Received:Received:Received:Received:MIME-Version:Date:From:To:Cc:
-	 Subject:In-Reply-To:References:Message-ID:X-Sender:Content-Type:
-	 Content-Transfer-Encoding:X-TM-AS-GCONF:X-Proofpoint-Reinject:
-	 X-Proofpoint-Spam-Info:X-Proofpoint-Spam-Details-Enc:
-	 X-Proofpoint-ORIG-GUID:X-Authority-Analysis:X-Proofpoint-GUID:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=3J+m5zssHO30+gGvjgsMEVpbwVkuGxWjmnZLOzezkqg=;
-	b=pQQDeVX6YIXiVCgdIiQTXZjmbH8OUEfZEfp94MI7g4Li343TUo5IeIh9UqzfX20BQQ2U
-	 QDcH2Wv6N720hASB50zkHnKmjszpQh9yaTDqUQVdwBwUkPa9KSw1AgneGSJWGhrs60+Ae
-	 Jd3+1pMx/hkcbzDYt8xfZQch2R6LV/YHkofJHGwAu7y7fV450f/uNH6zt8Bo0F6A3oBgN
-	 Prk7Sn9LYP4Fxo//j0vyNiMg0Gns1DXv/Dz0Gsc+hpQQTRjNGVACHf+lKvPYm2asiuBH/
-	 0QWzZ3yPCNNT0J2PxlrHE9q896RTeweNb6U7Emr7t4WHu7O1KhsTK8OplU2aQObjXfw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.ibm.com;
-	spf=pass smtp.mailfrom=linux.ibm.com;
-	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=go0Fx3+N;
-	arc=none smtp.remote-ip=148.163.156.1
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.228.40
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793225139;
+	b=sXhrHfmeDj6JKet+W6MEhodg+uVnwrytY/XkSnOnTF1JiTdtw+fz6Ea60o/IADMQhlp3
+	 kYO7zeh+2BVx/QQNUxfbVw+jL1IHSarCGJDLEFrv4xdyZyfDhZL3FoIT0tsWq7knj3ShG
+	 Mt8wnsTBqc4e5GcoSxO9P/0ETVUwzGASzbOse6j9lSARnqVXdcr0EvcMxrJgh/nt3rZP0
+	 hAGXZIcp/WfL2apR+wtIHL2yHh029tl0bLm0VDEUyC4SYWGapUs3bHgmO0Rv9NsYTlkZk
+	 DzDO/LogaIFMbCyygBhYAsqwZvg3C6YiQ83fP28W1vObZfgPvd5uy9Om8oNKpzB7aZw==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793225139;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
+	 Thread-Topic:Thread-Index:Date:Message-ID:References:In-Reply-To:
+	 Accept-Language:Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
+	 x-ms-publictraffictype:x-ms-traffictypediagnostic:
+	 x-ms-office365-filtering-correlation-id:x-ms-exchange-senderadcheck:
+	 x-ms-exchange-antispam-relay:x-microsoft-antispam:
+	 x-microsoft-antispam-message-info:x-forefront-antispam-report:
+	 x-ms-exchange-antispam-messagedata-chunkcount:
+	 x-ms-exchange-antispam-messagedata-0:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-AuthAs:X-MS-Exchange-CrossTenant-AuthSource:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-originalarrivaltime:
+	 X-MS-Exchange-CrossTenant-fromentityheader:
+	 X-MS-Exchange-CrossTenant-id:X-MS-Exchange-CrossTenant-mailboxtype:
+	 X-MS-Exchange-CrossTenant-userprincipalname:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=TerczV2OfPmSSyQcYr0YCw7W6tlATuvXwCd60FgD+4E=;
+	b=SYFaR2mRtsk5Y05kI9omRznfVPsoatGknOdux5Z1vaif1FguBJQYJgmFgHfevfqzkfPI
+	 QQx9q7k1qYk8B/hDWm1P2SS2usLqRx+qUTNBjcM9Wd0FZVnWflrROuLOPGLxlpc3gD+Bs
+	 BBae+vAPgXs9IMcSBGX/ROLnh0Xm5E6DNUg5ZIwqoXsKeYQjH1ZAVfAcvjAPPENiMMrq1
+	 Beqtoa6dMRhfJ61qE7j7oZ0vX+5/SjNqYXu2czOwrxZdEoRUqEpPPz6mmn2ElfpOxm4CH
+	 DjabfGnBne8L0Qxgm7kuaOWWl13iYN/PdcnMkelpKwDstLAJ5TprXavATONkgjmVK8Q==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=renesas.com;
+	spf=pass smtp.mailfrom=renesas.com;
+	dkim=pass header.d=renesas.com header.i=@renesas.com header.a=rsa-sha256 header.s=selector1 header.b="oGz7B/r8";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.228.40
+Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11010040.outbound.protection.outlook.com [52.101.228.40])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0091606A31E;
-	Wed, 28 Oct 2026 20:50:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F0091606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30C66606A31A;
+	Wed, 28 Oct 2026 22:05:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 30C66606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=go0Fx3+N
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69SJYsnp2340162;
-	Wed, 28 Oct 2026 20:50:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=3J+m5z
-	ssHO30+gGvjgsMEVpbwVkuGxWjmnZLOzezkqg=; b=go0Fx3+NOkNNIrw4Ln4G5+
-	n1hVw44Bg5eoxTwZuoZ1R8LgTQbs6pxo9Pyx77Kqpglb/tAN5HtBfVkzBPbTtg+S
-	lM8gxpWaLWvaZEwC6TrV7UkdWbJDmj0mBrz6YyMf89fwA4thgPY86YsIWVtBONqt
-	AzKDOgfZdanBt4b7QJjxPvSRblpD8+vCnWwa/W3cnyMQVObeIbf+XJEFCUhIwpcV
-	tAGpd0tz12wl7SHtYL80zcN/4F125F5OM0qWl8D905bYiiWvzFWyYLLQoAvyTjJO
-	45eenpUAlPJww7erptCqOOBuPeDXQbmNLQI13+eeU0USi4g00NjOIirTq5AAlRoA
-	==
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hgm646y1u-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Wed, 28 Oct 2026 20:50:14 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 69SInkCG1983966;
-	Wed, 28 Oct 2026 20:50:13 GMT
-Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4hk55pc1wu-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 28 Oct 2026 20:50:13 +0000 (GMT)
-Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
-	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 69SKoCPs22545028
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 28 Oct 2026 20:50:12 GMT
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 7F9075805C;
-	Wed, 28 Oct 2026 20:50:12 +0000 (GMT)
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id A589058054;
-	Wed, 28 Oct 2026 20:50:11 +0000 (GMT)
-Received: from ltc.linux.ibm.com (unknown [9.5.196.140])
-	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Wed, 28 Oct 2026 20:50:11 +0000 (GMT)
+	dkim=pass (1024-bit key, unprotected) header.d=renesas.com header.i=@renesas.com header.a=rsa-sha256 header.s=selector1 header.b=oGz7B/r8
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=N/D+rlIjAkSEQmnfsEdUQ29nEEQOQsy8yY2e0rRrxRBGUQ5UNmP6aS9XCREaA4hhxeVxuY8QIQ5x4ozVs22XZAUFz633plfih7D1PB2fUp88rtTHLrtSiPf5oWyp8ow1ax6kXuieFML2sVi0gHXDHV/uHUi6wRviT1EjMZnVAK1cJjqKiJe5R90cyiasN/BWbhPK9INdyhcvT3d3TwO601Eb0vyg0sL7NGe/Ikhnv5OZjpOrEeA4+t6dCiFLeTZecLMvCUD/ey+maGi5FSJAGWvozlppqlfBD6a9tkxJWyvJ4sPSVHZX7OiH5tOBf2tY+qH8qD4FJnnCK+QYHSzSFQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=TerczV2OfPmSSyQcYr0YCw7W6tlATuvXwCd60FgD+4E=;
+ b=VO6vcAXHNJ5v8ZFIuCMvARHrk376uwEgMdR3KdVvlE4a++iUo7PEb/F8nX+MHGZaiPeW32GMKKIzuuqcE9Z66akevNH/hgQw6rc4D091SRn1m1R5u92Zlpf9v7O67MzNecX9gevjABvT3kbA6eD9rUpy6OxC+jP5b2HP4ey/bZlY8h3fh6JV/ThF0CDvgxisf7SzmNvrl7goU6nxZ48GL79p5tT1X8krHtec9YcfLidsQ2xOB9b/yyEsQWTMRmslIrhMTCIerYqq0K1/sA57Z+DUTW0hNU1+Mng/UOsauswW0tcUfOLxKyp5wgHZ0TcfeFopNvkOQH3ZwWidmLn3Dg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=renesas.com; dmarc=pass action=none header.from=renesas.com;
+ dkim=pass header.d=renesas.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=renesas.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=TerczV2OfPmSSyQcYr0YCw7W6tlATuvXwCd60FgD+4E=;
+ b=oGz7B/r800ccXzOq9mwnXnPeM/fia/Qj5dgNgOuYzLrYEoe0cj9xG9VGAm7sEqS0KmDZJf/YwofjNRqpYgjYt6xM7dh+AFa7zOp2/esO5pbOMNb3m9YFVmK9S94Vk9+Vl7EcxlBt94tfMvcBpvyU6OoA5JYsxuDNJLVP/IAG7Gc=
+Received: from OSCPR01MB12769.jpnprd01.prod.outlook.com (2603:1096:604:33c::9)
+ by TYRPR01MB16229.jpnprd01.prod.outlook.com (2603:1096:405:2e8::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.8; Wed, 28 Oct
+ 2026 22:05:34 +0000
+Received: from OSCPR01MB12769.jpnprd01.prod.outlook.com
+ ([fe80::aa72:ef1b:2a85:fc2f]) by OSCPR01MB12769.jpnprd01.prod.outlook.com
+ ([fe80::aa72:ef1b:2a85:fc2f%5]) with mapi id 15.21.0569.007; Wed, 28 Oct 2026
+ 22:05:32 +0000
+From: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+CC: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, "lpieralisi@kernel.org"
+	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+	"mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-renesas-soc@vger.kernel.org"
+	<linux-renesas-soc@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] PCI: rzg3s-host: Fix NVMe resume errors after s2idle
+Thread-Topic: [PATCH] PCI: rzg3s-host: Fix NVMe resume errors after s2idle
+Thread-Index: AQHdVLkK6u3U9T6uNEGkg6n6nYooc7cRgdKAgAIj1CA=
+Date: Wed, 28 Oct 2026 22:05:32 +0000
+Message-ID:
+ <OSCPR01MB127691959282E653259A2CC7CD36F2@OSCPR01MB12769.jpnprd01.prod.outlook.com>
+References: <20261005110224.17160-1-ovidiu.panait.rb@renesas.com>
+ <179310709974.16692.1197178939539578162.b4-reply@b4>
+In-Reply-To: <179310709974.16692.1197178939539578162.b4-reply@b4>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=renesas.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: OSCPR01MB12769:EE_|TYRPR01MB16229:EE_
+x-ms-office365-filtering-correlation-id: 87129723-a1f1-49ec-7edf-08df353f95ff
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|366016|1800799024|376014|23010399003|261028144727099003|6133799003|18002099003|22082099003|5023799004|56012099006|4143699003|11063799006|10067099003|261026121527099003|261022075727099003|261021121427099003|261009223027099003|261009221227099003|261026140227099003|38070700021|261022105027099003;
+x-microsoft-antispam-message-info:
+ Wqd6/vTL5DXDt1G5V+D0gQghg0pEVqEUmk4uLz/is3WEMF5po/gvxPOuEHB4V/sTMrPE2NGogZ/6D3s+KaXS9CkmjL5to5ABuvF9hRxXKkqSIb4h84SvcAf9FU5hW1sKDCwBw2rhzD5ZMmREokwkB52Uu9RZNdUqY/kvYAIYD55zgi16aMsNco1CAeezwzHrJnSxwBjnY8rPWO6o+odfvZtjHv6Uat5QJOhPM28SXcqMFN5tFyhIn/4Ir5RYjQDyQKJcdPFp7X/VHcO50ipe1ef+h28kQ7eU4p+/G1IE+F0bJIiS578yW0GAtYZcoQvOhW/x/VOpfMcLRj1C+AJG+eqNF47WHLbfdaAcTDdsagazYgBz9nzw6+Vh3paEBKGkAVa0Fdawaoa2Rgpz4fgXwT27D60IvT9vW+pU0qMvcfI6zWgmt4tXog2ojk4EzpKQTs0tNVF0fH6Uv93VEPCVUGrqUudjJPzspTNVedjzWtezrBkdjWz8X9f1f4/e65ybKbvdyI45LZOurpfBhIgyy9c8Tn4kbM1KfBMUjTyAIdMpVP6qApD6aYhwQuSbqqRQiEsHtIols3pnP/APQP5cjDvovTRA1yd8pW3bwZOL/amse5wqouSunfENVLSC36v2RmQ8c9XPKQGirzZ8NF1zSJUzhY21wTd5oT6gmc9G954=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OSCPR01MB12769.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(23010399003)(261028144727099003)(6133799003)(18002099003)(22082099003)(5023799004)(56012099006)(4143699003)(11063799006)(10067099003)(261026121527099003)(261022075727099003)(261021121427099003)(261009223027099003)(261009221227099003)(261026140227099003)(38070700021)(261022105027099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?UTV4SlJtU3B5SDJEV255b3QwQ3o0NE5CTUFlb2E4RFVCaUJoYjlGazhUTzdK?=
+ =?utf-8?B?NERRMnIrTkMyMGFWU1pGUDM1VEdUdys3YXMrcGl6eGtGNmMwY2REbHJUNWpp?=
+ =?utf-8?B?cHpJbzV0bGp1L1dsUjBmdGhkVHQzeGozQUFEYmR3dExTaW1WajZZaVhsOUVv?=
+ =?utf-8?B?Z2x4Q2U5Y2FqYlJ4QVFXL3BjdHhISEpKT0VLOFd6bDNDa2w0czZGNCtaMEJB?=
+ =?utf-8?B?ekEreGxZanRNTHV2Z1RTQ3lQZjNwelcxbmV2eUFnaXlXRE5URzVMRi9qWlZw?=
+ =?utf-8?B?anRUa0VGS1QvZEh6ZElQRlc0R0RFN01SR25kWEJ5ajNsckZDZ2h2MXIyQ0FQ?=
+ =?utf-8?B?U1NQcU1jWGVLZkMwMFBpU0o2dDJnRjdrMWhxeGpkTmc0bU5ZeTQ2V0RTRVpX?=
+ =?utf-8?B?Z2QwUHRiL1FGK0VxTW43ZHlLSVZtWDdJaGZNTXRkeUc2RTNaRGQ5bDdSa014?=
+ =?utf-8?B?YjVVeTVTZFVtMjdabEhKcGw3c3N3MlhQSkkrZk8yVGZ4QTUyQlBKbkNyUk1S?=
+ =?utf-8?B?eGpRZVhKUEhTYThqd1V4cENsWVY2S1VyVzVISDI3UzhpWlBrcFhwYzNodlYz?=
+ =?utf-8?B?d3NxdFQrN0dmbjZoTTBrdDh1ZDVvR1lhbm54dWltK0tHQVBRZnBpMUYzSGI0?=
+ =?utf-8?B?b2hLdm9KVmlWSVFoU0sxVUFpZTBKWTA3SXJwTjljemcwUlFEK1lQc1lOSmY1?=
+ =?utf-8?B?Rlp1VUgvb1JEaTFvbzA1cnlzUm0zZDlxZXp0NzJmcUxnOE5BL2crbnpNM0Qy?=
+ =?utf-8?B?azUyanNvSDNtRlh6M0FUTG1OWTkzcml2dVBtUk5WMHhUNExnZUdpZ09sTTJ0?=
+ =?utf-8?B?VURUTW5LMnFETDZLQk9JV3cwL21KaWNDc0VBOU01UEcxeHVqQ0V1UWREY1k5?=
+ =?utf-8?B?TFVHR24xeGRXR3dzQi9wQnU2Wm9PSk5valIwTTB4NFAvSzBMMUoxYzFVampI?=
+ =?utf-8?B?dEtFRFI0NHNKQVRidkhxRTU4aXduNURsT3dtN1NCdjRicFlNdkxzWk1Hd3ZD?=
+ =?utf-8?B?TXFFNDd4VEdBdzhjQkt0WHdIbG9FTTR6ZFRBaStXVm1tUzcyWDhZNGlVZlB1?=
+ =?utf-8?B?SWtuU0lkbkhFY1cvTjdWYWlxTXRLT0d2UTZMMTRENW9uWm1lazdlZS9PN3FD?=
+ =?utf-8?B?WTU3Z1lrWmNtUTRRUUZNTFFhMlJtaHY4OVM0WGFKUCszL2J6WjY2QkxvWGJ5?=
+ =?utf-8?B?WlRqaW5WS2toemxOZTRkVHVNYW1mTjFRaUVoSTBWYitwM1NiRGNnNXRyOVR6?=
+ =?utf-8?B?S1UyWm8wN1YwcmVkTS9pVXdlandneVJMV3JnVmY1SVVMdm14WlYzbTMySlFv?=
+ =?utf-8?B?VXF5Yk5iOVkrZkIraG5NdzJJdzRoWjZHS3oxamdSWTlpTEhmZ2dLNHJKMkdG?=
+ =?utf-8?B?UkxwYURPUkNtaVVBVlVmN2l5ZmxaQWtqRTI1Y1NORkhLaW5FSlhPWlNMcWJm?=
+ =?utf-8?B?ZmpPVUNCeWZ4dG1VQzNUZkJqRHRIVjFEaW11bWdXUnJKK3R6bzZ6NTRGNSts?=
+ =?utf-8?B?d2lwRzg0bmk4NEFPQnlXRW1RYXNUUUxSdmdwZzZhc29LazhnVGx5Szh1ajNM?=
+ =?utf-8?B?R3ZDMjg5MWE1MVVkZWI2T3NXckl6N1A0WGNmd0R4T0srSnRiMTRxbEZjSjdk?=
+ =?utf-8?B?WmJIRG5BamFTZHozOTdUekh5RDluVzVuMHorSlZxSDVCRDZ1V0hNbUJPc0lC?=
+ =?utf-8?B?WXhROFZLUWQ0MDFoRzJDWFNCL2hsMjl2dStRZlZUSk5nVVpJbk9Yb2hjTk9M?=
+ =?utf-8?B?dFlPWGhDSTgyOVo3UDhmUEp2VlREVWVWdEh2ejNEK2JHbHNXWkE4aHR6blM0?=
+ =?utf-8?B?QkxtamZEOW1RaGhPaUg3cjNnVjZKZHZkc0VRZEh3SnVUemIreWg0UGw4QWVI?=
+ =?utf-8?B?ekRIRWNuZjVEZmlXd3hWQzVnM21tMDhqT21xTURldGJYZlFtcEEwVzFpemVX?=
+ =?utf-8?B?cTVUZzFkNjJNQmwvTzlkWXFhdXpPTWlSczBNNEFzdXM4VFlsZ2dmSGRPOWhN?=
+ =?utf-8?B?L0ovNjZmTWQyYXFvSGpoMGFoaWRmMlNDVkhJUnhldG85N0ZWaW1CbHBDaVI4?=
+ =?utf-8?B?VjhPU2l0UHhCR0ZyRlFteHRDQjRKa2xnUnhYdHNaRWM3Q3RkbDRYN0E3bGZw?=
+ =?utf-8?B?UW9pYm4ycjg3S3A3dHoxQlR3ODhEZEx4TTJCaVIxNjltbFRXcHJuNEdnVlJ2?=
+ =?utf-8?B?S3J0RzAyM3V1SWZ6UFVOR3AydDdML0tvWmFmT25sdlBPN2Z6czBkcXpuUzEz?=
+ =?utf-8?B?WENnWkgrOTV3YjJWNVZDdFlhZ0xhSjMrdmp4U0ZNTFBRMzQ5WGtibk41MzJC?=
+ =?utf-8?B?NFRZZTFGb2FBdFEwT2F2UGtYN3Z5aG9nMy8wSkFQK29TaC9WbXVpTE92YUwz?=
+ =?utf-8?Q?DBUu1uw+KGsPqN6A=3D?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -83,107 +159,66 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Wed, 28 Oct 2026 15:50:11 -0500
-From: Wen Xiong <wenxiong@linux.ibm.com>
-To: Michal Pecio <michal.pecio@gmail.com>
-Cc: mathias.nyman@intel.com, Bjorn Helgaas <bhelgaas@google.com>,
-        gregkh@linuxfoundation.org, linux-usb@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        wenxiong@us.ibm.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V3] xhci: Reset TI USB controller on xhci shutdown
-In-Reply-To: <20261028103616.29110069.michal.pecio@gmail.com>
-References: <20261021160608.8229-1-wenxiong@linux.ibm.com>
- <20261028103616.29110069.michal.pecio@gmail.com>
-Message-ID: <c10dd783a61e66023b04aac7829c66ae@linux.ibm.com>
-X-Sender: wenxiong@linux.ibm.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDI4MDA4MiBTYWx0ZWRfX601frCAB19/q
- uI/YX55lZDL46lwWnclqvOCWBrF4GSZJ30O7k5FmAE90xoWvjJVKtmQ0K4njkWF1eXM7fbBBMy/
- iku+wZ3kD7Efj5mY0LIdQ/Xaam08lZY=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDI4MDA4MiBTYWx0ZWRfX43KXMdpUq/rL
- 9e3OQmfoHHGFh0wSriTm+Nzt4QfloGu4utUAL3uPGrNk0hxV/ye4mgAbixY8zYrxzHLcVq0jHMx
- gWA8zrb5IcCT4gLxCAfRBgkYHlD2OjyXrvIsTFixdnFIRZEvmgItbWxe48XLXMeTSHOaozSf57p
- 82xJf3zeouc/3adjbj01urlfnoinAdAzLFe0/1XvXysBgJvbsH5YGps7ViLk90FyF3JwGQCvxCi
- FVqYf1vMCJNFg5uvOAc/Ivtnq1c97UpVAQaGpmlbFM9FrFRhemAXgre80fgT5prRcDQl0Hw9uOb
- 65yhfZpAl3VqwkquCM4vJebV+ctsQVfyw+j3qgsyL6HgdZzDFydY+1r9QVskr7CgvAfOY+E62EX
- VVOZ65TvVtGhv8rAxCYzyrbQar/W6To9wWA1Dx7aK+kyKacUDF4WYXGYaO/41iAZ3EgBcB7BJV4
- R9GZZ2n60kVt/mCviXw==
-X-Proofpoint-ORIG-GUID: w1D2aPIGsQzg6O2eGCeEIUcG8ZgfXFVc
-X-Authority-Analysis: v=2.4 cv=Uu32pOwB c=1 sm=1 tr=0 ts=6ae26006 cx=c_pps
- a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
- a=kj9zAlcOel0A:10 a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=1VaoIupEdHR5eMkdamIA:9
- a=CjuIK1q_8ugA:10
-X-Proofpoint-GUID: ochY4GT0oiw3AJipYFMkE2_mabINeyr9
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-28_06,2026-10-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 impostorscore=0 priorityscore=1501 spamscore=0 adultscore=0
- lowpriorityscore=0 malwarescore=0 clxscore=1015 suspectscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610280082
+X-OriginatorOrg: renesas.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: OSCPR01MB12769.jpnprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 87129723-a1f1-49ec-7edf-08df353f95ff
+X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Oct 2026 22:05:32.5552
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: VlIrhv2n+WImwjiojX4a67O5R9wd/s9gllNJNFODEeXdAmk2pYFGcu+ZgWaz/iNPU0Mizdtov2wioTfpyEpy2kjbxovKVjF2fVfpv7hnuu0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYRPR01MB16229
 
-
-> I tried to make this code a bit more "proper", by moving the
-> pci_reset_function_locked() call to xhci-pci.c from xhci.c.
-> 
-> I found that when I actually run this, I get a warning from PCI:
-> 
->   unlocked secondary bus reset via: __pci_reset_function_locked
-> 
-
-Hi Michal,
-
-How about we add check TI/failling usb controller in xhci_halt and 
-xhci_pci_shutdown?
-
-Thanks,
-Wendy
-diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
-index a8889081ae82..af6ca5447f22 100644
---- a/drivers/usb/host/xhci-pci.c
-+++ b/drivers/usb/host/xhci-pci.c
-@@ -950,6 +950,10 @@ static void xhci_pci_shutdown(struct usb_hcd *hcd)
-         /* Yet another workaround for spurious wakeups at shutdown with 
-HSW */
-         if (xhci->quirks & XHCI_SPURIOUS_WAKEUP)
-                 pci_set_power_state(pdev, PCI_D3hot);
-+
-+       /* TI XHCI controllers do not come back after kexec without this 
-hack */
-+       if (xhci->quirks & XHCI_HALT_FAIL_TO_RESET)
-+               pci_reset_function_locked(pdev);
-  }
-  
-/*-------------------------------------------------------------------------*/
-diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.cW
-index a9e47e178c28..67108692a354 100644
---- a/drivers/usb/host/xhci.c
-+++ b/drivers/usb/host/xhci.c
-@@ -120,6 +120,8 @@ void xhci_quiesce(struct xhci_hcd *xhci)
-   */
-  int xhci_halt(struct xhci_hcd *xhci)
-  {
-+       struct usb_hcd *hcd = xhci_to_hcd(xhci);
-+       struct pci_dev *pdev = to_pci_dev(hcd->self.controller);
-         int ret;
-
-         xhci_dbg_trace(xhci, trace_xhci_dbg_init, "// Halt the HC");
-@@ -130,6 +132,11 @@ int xhci_halt(struct xhci_hcd *xhci)
-         if (ret) {
-                 if (!(xhci->xhc_state & XHCI_STATE_DYING))
-                         xhci_warn(xhci, "Host halt failed, %d\n", ret);
-+
-+               if (pdev->vendor == PCI_VENDOR_ID_TI &&
-+                               pdev->device == 0x8241)
-+                       xhci->quirks |= XHCI_HALT_FAIL_TO_RESET;
-+
-                 return ret;
-         }
-
-
+SGkgTWFuaXZhbm5hbiwNCg0KPiANCj4gT24gMjAyNi0xMC0wNSAxMTowMiArMDAwMCwgT3ZpZGl1
+IFBhbmFpdCB3cm90ZToNCj4gPiBPbiB0aGUgUmVuZXNhcyBSWi9WMkggcGxhdGZvcm0sIHdoZW4g
+QVNQTSBpcyBlbmFibGVkLCByZXN1bWluZyBmcm9tDQo+IHMyaWRsZQ0KPiA+IHdpdGggYW4gTlZN
+ZSBTU0QgY29ubmVjdGVkIGZhaWxzIHdpdGg6DQo+ID4NCj4gPiAgIG52bWUgbnZtZTA6IEkvTyB0
+YWcgMjcgKDAwMWIpIG9wY29kZSAweDkgKEFkbWluIENtZCkgUUlEIDAgdGltZW91dCwNCj4gcmVz
+ZXQgY29udHJvbGxlcg0KPiA+ICAgbnZtZSBudm1lMDogRGlzYWJsaW5nIGRldmljZSBhZnRlciBy
+ZXNldCBmYWlsdXJlOiAtMTkNCj4gPg0KPiA+IFRoaXMgaGFwcGVucyBiZWNhdXNlIGR1cmluZyBz
+MmlkbGUsIHdoZW4gQVNQTSBpcyBlbmFibGVkLCBudm1lX3N1c3BlbmQoKQ0KPiA+IGRvZXMgbm90
+IHNodXQgdGhlIGRyaXZlIGRvd24uIEl0IGxlYXZlcyBpdCBpbiBEMCwgcHV0cyBpdCBpbiBpdHMg
+bG93ZXN0DQo+ID4gTlZNZSBwb3dlciBzdGF0ZSwgc28gdGhhdCByZXN1bWUgb25seSBoYXMgdG8g
+cmVzdG9yZSB0aGUgcHJldmlvdXMgcG93ZXINCj4gPiBzdGF0ZSBpbnN0ZWFkIG9mIGEgZnVsbCBy
+ZWluaXRpYWxpemF0aW9uLiBUaGlzIGFzc3VtZXMgdGhlIGRyaXZlIGtlZXBzDQo+ID4gaXRzIGNv
+bnRleHQgb3ZlciB0aGUgc3VzcGVuZC4NCj4gPg0KPiA+IEhvd2V2ZXIsIHJ6ZzNzX3BjaWVfc3Vz
+cGVuZF9ub2lycSgpIGRvZXNuJ3QgdGFrZSB0aGlzIGludG8gYWNjb3VudCBhbmQNCj4gPiBpdCBh
+bHdheXMgcG93ZXJzIGRvd24gdGhlIGNvbnRyb2xsZXIgYW5kIGFzc2VydHMgdGhlIGNvbnRyb2xs
+ZXIgcmVzZXRzLA0KPiA+IGluY2x1ZGluZyBQRVJTVCMuIFRoYXQgcmVzZXRzIHRoZSBkcml2ZSwg
+YW5kIHRoZSBjb21tYW5kIHRoZSBOVk1lIGRyaXZlcg0KPiA+IHNlbmRzIG9uIHJlc3VtZSBuZXZl
+ciBjb21wbGV0ZXMuDQo+ID4NCj4gPiBUbyBmaXggdGhpcywgc2ltaWxhciB0byB0aGUgZHdjIGRy
+aXZlciwgdXNlDQo+ID4gcGNpX2hvc3RfY29tbW9uX2QzY29sZF9wb3NzaWJsZSgpIHRvIGNoZWNr
+IGlmIHRoZSBjb250cm9sbGVyIHNob3VsZCBiZQ0KPiA+IHBvd2VyZWQgZG93biBhbmQga2VlcCB0
+aGUgY29udHJvbGxlciBydW5uaW5nIG90aGVyd2lzZS4gRG8gdGhpcyBvbmx5IGZvcg0KPiA+IHMy
+aWRsZSwgYXMgZGVlcCBzbGVlcCBjb3VsZCBwb3dlciBvZmYgdGhlIFNvQyBhbmQgbmVpdGhlciB0
+aGUgcG93ZXINCj4gZG9tYWluDQo+ID4gbm9yIHRoZSBkcml2ZXIgd2lsbCByZXN0b3JlIHRoZSBj
+b250cm9sbGVyIGNsb2NrcyBhbmQgcmVzZXRzIG9uIHJlc3VtZS4NCj4gPg0KPiA+IEZpeGVzOiA3
+ZWY1MDJmYjM1YjIgKCJQQ0k6IEFkZCBSZW5lc2FzIFJaL0czUyBob3N0IGNvbnRyb2xsZXIgZHJp
+dmVyIikNCj4gPiBTaWduZWQtb2ZmLWJ5OiBPdmlkaXUgUGFuYWl0IDxvdmlkaXUucGFuYWl0LnJi
+QHJlbmVzYXMuY29tPg0KPiA+IC0tLQ0KPiA+IE5vdGU6IHRoaXMgZml4IGRlcGVuZHMgb24gdGhl
+IGZvbGxvd2luZyBzZXJpZXM6DQo+ID4gaHR0cHM6Ly9sb3JlLmtlcm5lbC5vcmcvYWxsLzIwMjYx
+MDAyMTEwOTM1LjIwMDQzNDktMS0NCj4gY2xhdWRpdS5iZXpuZWFAa2VybmVsLm9yZy8NCj4gPg0K
+PiA+ICBkcml2ZXJzL3BjaS9jb250cm9sbGVyL3BjaWUtcnpnM3MtaG9zdC5jIHwgOCArKysrKysr
+Kw0KPiA+ICAxIGZpbGUgY2hhbmdlZCwgOCBpbnNlcnRpb25zKCspDQo+ID4NCj4gPiBkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9wY2llLXJ6ZzNzLWhvc3QuYw0KPiBiL2RyaXZl
+cnMvcGNpL2NvbnRyb2xsZXIvcGNpZS1yemczcy1ob3N0LmMNCj4gPiBpbmRleCBlZWEyMTU4MTg2
+MzMuLjlmYzFhNWE0YmVkOCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9jb250cm9sbGVy
+L3BjaWUtcnpnM3MtaG9zdC5jDQo+ID4gKysrIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9wY2ll
+LXJ6ZzNzLWhvc3QuYw0KPiA+IEBAIC0yMjcyLDYgKzIyNzIsMTQgQEAgc3RhdGljIGludCByemcz
+c19wY2llX3Byb2JlKHN0cnVjdA0KPiBwbGF0Zm9ybV9kZXZpY2UgKnBkZXYpDQo+ID4gIHN0YXRp
+YyBpbnQgcnpnM3NfcGNpZV9zdXNwZW5kX25vaXJxKHN0cnVjdCBkZXZpY2UgKmRldikNCj4gPiAg
+ew0KPiA+ICAgICAgIHN0cnVjdCByemczc19wY2llX2hvc3QgKmhvc3QgPSBkZXZfZ2V0X2RydmRh
+dGEoZGV2KTsNCj4gPiArICAgICBzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpicmlkZ2UgPSBwY2lf
+aG9zdF9icmlkZ2VfZnJvbV9wcml2KGhvc3QpOw0KPiA+ICsgICAgIGJvb2wgcG1lX2NhcGFibGU7
+DQo+ID4gKw0KPiA+ICsgICAgIGlmICghcG1fc3VzcGVuZF92aWFfZmlybXdhcmUoKSAmJg0KPiAN
+Cj4gRm9yIGNoZWNraW5nIFMyUiwgeW91IG5lZWQgdG8gdXNlOg0KPiANCj4gICAgICAgICBpZiAo
+cG1fc3VzcGVuZF90YXJnZXRfc3RhdGUgIT0gUE1fU1VTUEVORF9NRU0pDQo+IA0KDQpXaWxsIHVw
+ZGF0ZSBpbiB2Mi4NCg0KPiA+ICsgICAgICAgICAhcGNpX2hvc3RfY29tbW9uX2QzY29sZF9wb3Nz
+aWJsZShicmlkZ2UsICZwbWVfY2FwYWJsZSkpIHsNCj4gPiArICAgICAgICAgICAgIGRldmljZV9z
+ZXRfYXdha2VfcGF0aChkZXYpOw0KPiANCj4gV2h5PyBUbyBrZWVwIHBvd2VyIGRvbWFpbiBPTj8g
+VGhpcyBpcyBub3QganVzdGlmaWVkIGluIHRoZSBjb21taXQgbWVzc2FnZS4NCj4gDQoNClRoaXMg
+d2FzIGFkZGVkIHNvIHRoYXQgdGhlIGNsb2NrcyBhcmUgbm90IHR1cm5lZCBvZmYgYnkgdGhlIFBN
+IGRvbWFpbi4NCg0KSSdsbCBhZGQgYSBub3RlIGluIHRoZSBjb21taXQgbWVzc2FnZSBmb3IgdGhp
+cyBpbiB2Mi4NCg0KVGhhbmtzLA0KT3ZpZGl1DQoNCj4gLSBNYW5pDQo+IA0KDQo=
