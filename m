@@ -1,75 +1,105 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.198
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.48
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793208640;
-	b=aL8Uj1KP9TUWHWldKsqEIech/6KlShdTFn9FoqUf8D49I3ayNeSmkolY+YdhjnWGD3+v
-	 hm4u8wK3L0C48iKeHSCC8/SJDTZayrxSbFOrC287vCuBuMAMEFzA9hVpdKHms/qVvXxrr
-	 m61BIPL7CAx3JSkAn8k64VnOxxGwokwoU/y+1VwIT7Ep4kZwkpUxDi48BwAQbIupCL1BM
-	 OGqORxSBiQCKX+fbS6g+BmvNt9ZRuMtXKMUQ8i6mzhpYHaqESvCDTJfx1LRaPxPmpVWcP
-	 359geTHtybmsn+K0tQ5dycC54EDdmVqx8XkGG7DGqRfRVNbqsNFvp2LGRYiVED1ziag==
+	t=1793208673;
+	b=w76UtRIu12tLiF57ppsMWdFM6kxQQMP++cEQ8rbfp3ovHKsXlihunLdh/ZQrpxWwHcg8
+	 jro8LmqEPV8F/kQkY96vHwzyKaJWsb1XZGV3m+hi18C5QRfAoVZpGpM/THWVg3l5CibRu
+	 3v4GmSuuG/TXsaXtGIcP5q6zK0d8qwCwkTJvJrUHo99aN0fA7axHqLlGVilgF++PDpG5O
+	 eKAdO06Y0MtgGE9HgzEZLbA7zAYJPdklwKG1368F1XQT4jjkhK5pwdrsRie9TIdPLNPvs
+	 B0mruTm1HHCqy00gpZJ1HyaxYr3M0VzRJUAveHHBaT+K19538Wv0DuU6RVueNODbkgQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793208640;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793208673;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
-	 Content-Type;
-	bh=aT/pVU6IgIaYwku4adsSNoBoyYJO/ByS0tjhWNwyOaU=;
-	b=FWC2U60UE49PceUFVECO2YUZMSb61IB/RVy+wb81Ed9f78FnqhBW8N/C9xVfgZeE4WLw
-	 gswbHojWVABOjSPqjSdFuk44koX1oNf00WB2+Yqx/iynp1Idw2t/1v6PTMZcZveVYuh2x
-	 eJJmVYyGlTaG+tzWPORFXwsKPcft7F+Fe1ZfRS0BX4BwlhRh9hQiJQp9JwfhxE52Kl2gk
-	 bkTbMy6Syy3R21U6e0RGlv2plMqXy84SIOvPk2Ch5bZ+bg9DFCYXaDGpOq8FyLvCXpkw1
-	 LvepEOstfNd0a/dDe0iFW+Zhav+0x4ToQOh7sukh46nz7v7NLtXWXvGpqvWrjzqLQvQ==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=A+RGXs8/Ail6qHnGbLflY644jEJYQOYM38RZLvyetKE=;
+	b=YxidSJ3ktcsuW7ramD8ldjmG2DnkfHWZ+feXo+FXPpUSTVDbhk+MDc55YrBbsCcLS+z1
+	 97/YyVGgGCzN4zAAACqQF17hnHdW5qMdDyeDpymf3OnqMR5XxI0tyAqw2SXkLTKptLtX2
+	 8mSsoMnT7qJb4q/zxIba8cx9Dvk0No2x4ooX8Yf3Mv64R4xaLVnYGpJR3xtJTvYwQYSso
+	 k+wOnVHQoM0nCKu4dPKxPIPJZy9Bl/2pMFMBfVKG2gY56qn+guCnIqTjCchn/KGfUIeiR
+	 Q66VmQJezj8lYWHKSWUu6IP9MzvPq+1dWtmHqMJZphz4kjoc9kfp2S1dyF8YZC6xlwQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b="i8oSMlu/";
-	arc=none smtp.remote-ip=209.85.210.198
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ufleonBH;
+	arc=none smtp.remote-ip=209.85.221.48
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEEE1606A31E
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 17:30:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BEEE1606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18891606A31A
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 17:31:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 18891606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=i8oSMlu/
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-8a065d0e9deso1042077b3a.0
-        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 10:30:39 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ufleonBH
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-48afcd7ba9bso955325f8f.3
+        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 10:31:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793208639; x=1793813439; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=aT/pVU6IgIaYwku4adsSNoBoyYJO/ByS0tjhWNwyOaU=;
-        b=i8oSMlu/WkbIYGthAShj23qls5PPa/cxrQ80XRTY7eJl6stpBqjqTJoVWruuxGySrD
-         Zet9b9zdF8MYfRamF8DMgs5eTpbkL70dL230V2a5giSqkRbElhM3zmNCyl4TDOU21mF3
-         I3RNxSFADpGlcEccnqECxbVl5H2SzwAJeGg4F424R0B03qLvEhXDR1Tb1gRgpRx2Iuc/
-         CUw3ZMIVtBZO67OfWZ5JBfhx6S+/MgGHU3Bb5FrcpxKbCCCeWZaNkCWf+3RcGagxU3zQ
-         V4DU3aAnNuK+8QFF6wVKtsVW16pHwRNHSQD0WqALj+8lM+nCIiN80jMQl1OaLNpyOFrH
-         QWVQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793208639; x=1793813439;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20260707; t=1793208671; x=1793813471; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=aT/pVU6IgIaYwku4adsSNoBoyYJO/ByS0tjhWNwyOaU=;
-        b=CfRwF0s7N7CQ+JVG69BoctfGZVvDXR8P+aVZNAgVpGRwru2JOKiyD3n8ja5ADc/nlM
-         zo3a+pT/+aYCww0SarfyJBQojX8vWNhOAfZktSWdgwt0oAPbYHz4Rl7Aiksx8wo5kRr1
-         GfCBs6PyTVDMZw5C1f3LnsUg41YXhcUEnk+R9jVMO8tQbzpOXhetNEwEkYXeVz1sy+ya
-         VcI4VlW88qVFgaknRcaPImRIJ8a3nszSgY2+8WIsh7rwM3WkpNX/IRFtqZuOx2rmQR7W
-         s8w+SI07mbk+JdX7q+cIVzs8yDlXBI/O3d7ftZNSMhUEwzg98B+B8zk6xtQwPeHocKRX
-         GSLw==
-X-Forwarded-Encrypted: i=1; AKwUvBzxVbYk/ldTUuvvdGpSN0vajPTdrjfbwIBvw4qmhuAr0LvgTyn4z5KRKTfzmVMiExS6+nJF5VFTulk=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLxsqOVSe75wWCui7PMS614kPXGDFJWjDLrGovVZt5pH/GmmqSK
-	m9fiz772WuaQeXugzCj+LOYzZ5TWZxnM4Cm29bBTyVahb3P0+0ndyVcNsnc+vDlmzYBi07xtybw
-	97LXiLovJXAtNN7AA/mUUuJnPSo3z9GVzVw==
-X-Received: from pfaq14.prod.google.com ([2002:a05:6a00:a88e:b0:89b:34dc:b094])
- (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a00:2e93:b0:883:7868:94d7 with SMTP id d2e1a72fcca58-8a82efe49c7mr111145b3a.10.1793208638703;
- Wed, 28 Oct 2026 10:30:38 -0700 (PDT)
-Date: Wed, 28 Oct 2026 17:30:38 +0000
-In-Reply-To: <20261027230853.GA519764@bhelgaas>
+        bh=A+RGXs8/Ail6qHnGbLflY644jEJYQOYM38RZLvyetKE=;
+        b=ufleonBH+H9d/tOno1mA/pxQ9SgKTe49I8fCqrQqRsv9NChzWGdaQBtCxPwlzBVOYp
+         HEwR72xzxyezHU6WBAhtovrTrx3KqZMKdxC+/NdhAVnyda2XRk0XbVJSpDtsZYmQaSxW
+         gryas7ImdzqPFK9J66feGiF0DibWyxN/9p/uhc4OBOGZySknSPXvWFlliQw9WfFmolXa
+         6Ym4+ZsPc2TEFd0JvB+J0ZVQOmqnI7YI8y04jyEKQGD83c/vonoi/YbCtaJBhlBFuoX6
+         Ms5PyHf+Vfc1ubEUq9EUBU3fXC6okM/Ic3olgmuBrF1Y/nvoxgkYAuT1pJ0Tt/AAoePE
+         RoxA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793208671; x=1793813471;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=A+RGXs8/Ail6qHnGbLflY644jEJYQOYM38RZLvyetKE=;
+        b=zT2uLqIpYNfMNlKy21OMp4qeKDCVX1I1bJE9jAKXQxyK/gkpTukAZ3au7FgTNBfSq9
+         dxFh8Y+PNJR9HU5p/quGwFSfXoPq30I/W+9TspJ5N1fCY6xe8Mo/YE0YXwZxRJqISA0X
+         zrmiQ1I0q8Vqo4TmyZK6naNEX9noyEW94Q3ziRz8+yYjBMQl5eca80XuntX/fWIpiTF/
+         7O/ukTx5DxYdEGLZjH2so5bv/INYJiBhRWA3E8rbhCjxGjCPJlyWW9dX3XUpu0tyfskD
+         X1rTPWUOE+dm1NBicJIphcOOQFzrh9iyHl9cuA0QuyDuubF6bZYasT8ChRE/JM9eMp5N
+         zt+g==
+X-Forwarded-Encrypted: i=1; AKwUvBz9Ue+Mj9IkpBQURjBwbtQhovtc+uRggoJvl4W/pQjIXKMUo8z5rlLaFiECV6vHQ0JfaBag+L3wKxg=@vger.kernel.org
+X-Gm-Message-State: AFq9FYLSDUoyrfywI47AngbslQJDJDyfaZTwKgRGcWOGfg1z3RkDWMiz
+	MuxQZ5Ymoyeus9txVvNGHzISOKD5xVMpDSWALLmvvviYvmUQicH4q9G3
+X-Gm-Gg: AYBFou3OAiLDXG9XAC1CE/zOU1tzXpUc14RYR1BcXvaZilku6lrk62Q2TQpp22nY0OZ
+	69qBIAX4sYG0Wlj9jGVuxgatnnevlP58ZVIxvQahDNoSe+8cy8OQ5840e/Ghfz6BWHpLTePS/aA
+	6EuMckI2/a7WRNMIZjgxDM77wyLsi6JCH1KInafN5W819w3eiMdDsPOCPy21jJuuJ6t0i+V/2lz
+	5I8NsAIJ7Uph/IVjkCQLE73Dpx7To9nMz8SncDLhhMdM4Nku4BG4ddvDAfK2AaZ7B0dUd5MAW4+
+	NIA4rsn/7o9QIUEUIzXkqhKfXhXmxaImUx234aZ2hExRl++Be+vRizrPX7D9nRCG2gsu5ngBGPp
+	uIDnWoJPHLZ+pMJ3eQzsgvn1Hg1+MGo7jlGVNrNOd2CPXeRK468loOV0xS/reqx/uUh2phDxL+z
+	kyqS+m6XppteqjCChkmg1Q87DKH7wYI2usywnlfhGWjbRfGl8zwM1e63FhtZ59YxluJs7J8+CTJ
+	uhASWK8wnZTSc3ucOYsTsC8ZjCiZ7KzemcrLrRUkV7C2GT+05LnRyZPhoFLetpxjesfh1BNHfa7
+	sRh6j/KLLX/xzMP2yhGtPwHeUXRiwqjoTFtKIBvwgl/u5GU1jOJq034cQUvp9ytdtaJbosjtQ6D
+	8d0C1FTPil/X7Etl7x/rfqYmu9W2u/QBz7zzQB2rcdOCAuNDVyAAZmj+jR1fyk0KSB6k=
+X-Received: by 2002:a5d:588a:0:b0:48e:25e1:5eb8 with SMTP id ffacd0b85a97d-48e5d58d590mr7802427f8f.3.1793208671431;
+        Wed, 28 Oct 2026 10:31:11 -0700 (PDT)
+Received: from tachyon.internal (2.155.41.158.dyn.user.ono.com. [2.155.41.158])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e3ebc39a8sm30601206f8f.11.2026.10.28.10.31.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Oct 2026 10:31:10 -0700 (PDT)
+From: =?UTF-8?q?Enrique=20Hern=C3=A1ndez=20Bello?= <ehbello@gmail.com>
+To: iav@iav.lv
+Cc: shawn.lin@rock-chips.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	manivannan.sadhasivam@oss.qualcomm.com,
+	bhelgaas@google.com,
+	robh@kernel.org,
+	heiko@sntech.de,
+	dlemoal@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: rockchip: Skip the Tpvperl wait when power is already valid
+Date: Wed, 28 Oct 2026 17:31:08 +0000
+Message-ID: <20261028173108.3457165-1-ehbello@gmail.com>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261028-h64-tpvperl-ab-skip@iav.lv>
+References: <20260911211559.207990-1-ehbello@gmail.com> <179196286749.38040.5597453767131590054.b4-reply@b4> <20261016-h64-pcie-resume-tpvperl@iav.lv> <20261028005548.2399155-1-ehbello@gmail.com> <20261028-h64-tpvperl-ab-skip@iav.lv>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -78,46 +108,23 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261012-fix-aer-mask-override-v1-0-49a0d7aeaea0@google.com>
- <20261012-fix-aer-mask-override-v1-1-49a0d7aeaea0@google.com> <20261027230853.GA519764@bhelgaas>
-X-Mailer: git-send-email 2.56.0.313.g2479322e68-goog
-Message-ID: <20261028173038.292999-1-rathodpriyank@google.com>
-Subject: Re: [PATCH 1/2] PCI/AER: Make aer_mask_override effective for
- injected errors
-From: Priyank Rathod <rathodpriyank@google.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, lukas@wunner.de, 
-	sathyanarayanan.kuppuswamy@linux.intel.com, ilpo.jarvinen@linux.intel.com, 
-	dave.jiang@intel.com, prarit@redhat.com, ying.huang@linux.alibaba.com, 
-	terry.bowman@amd.com, corbet@lwn.net, jic23@kernel.org, 
-	danielmaraboo@gmail.com, linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Hi Bjorn,
+On Wed, 28 Oct 2026 05:10:00 +0000, Igor Velkov wrote:
 
-Thank you for reviewing the patch!
+> Since the next version keeps the full wait on resume, it no longer
+> changes the resume path, so I'll skip the A/B and test that version
+> on Helios64 instead: boots plus s2idle cycles, results in reply to it.
 
-On Tue, Oct 27, 2026 at 06:08:53PM -0500, Bjorn Helgaas wrote:
-> Can you start with a one- or two-sentence description of what's going
-> on here?  Evidently injecting some errors doesn't work as expected
-> today?  As long as the justification is compelling and the code is
-> readable, I don't think we need quite as much detail about every
-> little implementation detail.
+Thank you -- that coverage is worth a lot, but hold off a little, because the
+shape is changing again.
 
-Good point, thank you.  Would a shorter commit log like the following
-look better to you?
+Shawn Lin has asked for a DT property for the PERST# pulse rather than a
+decision taken in the driver, matching rockchip,perst-inactive-ms and
+rockchip,s2r-perst-inactive-ms in the vendor dwc driver, and I have agreed. So
+the version to test is that one, not the probe-only patch I was about to send.
 
-  aer_mask_override=1 is supposed to allow injecting masked errors, but
-  aer_inject() corrupts the hardware Mask registers with "&= !" and
-  restores them before irq_inject_interrupt(), so aer_isr() still drops
-  the error as masked.  Emulate aer_mask_override in config space reads
-  and writes instead of modifying the hardware Mask registers, and
-  document the parameter with MODULE_PARM_DESC().
-
-I am happy to send a v2 with this updated commit message, unless you
-prefer to adjust it directly when applying.
-
-Thanks,
-Priyank
+Whether the default changes or stays at PCIE_T_PVPERL_MS is still open, so I
+will put the DT snippet to set on a Helios64 in the cover letter instead of
+leaving it to guesswork.
