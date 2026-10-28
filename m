@@ -1,56 +1,113 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.176
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793149979;
-	b=nTBJKf4Em178FmX7KQTLQEs/GEK09nCUjt/9dB4Vhv6TT6mU5LAIM/xNAv655G1w+tXb
-	 Hw8tSkbTeBCyF46uNU0FaI5edrQzBgbY6dwgynlAMJVOviPhxS9wP7ZMY47mHiKHpeNgC
-	 Zuv5Q/lHFEYGS25vx717uzbz1qyaeK8eW5uKQjihmsbUDCcJBjGWJBM+HnLbYX0r+rK5E
-	 BRhpjtEEphxQiLavRkLWUkEICCIlVqTkTMW16zgmh6EjcbyCi64ES6Ha8k0u/c0mAwvOP
-	 ZRI7v3BXUeuGs8wQdiT1Cx4Ga3Pz/8yNucAzGBjjv3kPuskIYJDyGDMwTJbjGNRGlqA==
+	t=1793150369;
+	b=IJ9HA0yr37fLuEpmlQ5PRRMG+Z0nIw0TX5tSQsZw8VIpw2tZJAS+EVJKBJcXDbVUAqK4
+	 bxoxXWCrCyMQarEL6wMFvYTxwd7/rHKIPQvIlANjfk2U4hwXPK9wznRjUNxBz/tJKGr08
+	 aP5MKGXWZRTL/qJJtUtQc17KvP8hm+fWgnBEja71CUehROM/lVTav2QTm3p5DfpI01aYU
+	 QP058f3Bh49XDqtCI2uwYP7ic2Uh4BPkMDTwBj2xr2DLyaDSh2yp8jQL3p73AkkP8rfkU
+	 5TRZSiNPWRiLfsisYGpKTtHf48nW5Y/XR8UTj7yw7T9kjWvcrUifeexGZmpzSV+EeKg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793149979;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=MQc208is34wWIIeh09uVYYvGbmXO5iwqqMrf5NSTTno=;
-	b=4weH804+oIj5Mfda+b1mrYU1Xtn0ZPbsW1Mqs0ACAXxtSJf7lI6ZEpla/hjv2UtdYb7b
-	 njRNiHpLRnE0AA6Q+Tp2t0cycErJQpvpMdO48uXqtifKSJYLZZiwwr/6PvaH71CtNBNn0
-	 Ql9Kr68qWLw0mmM6xdHLvi2GyqU6xhoj69NhdxDmw88BlBAvuTNJ+HbskWxu4KGjoS0H6
-	 i53KxN5WYgD3dQR/ovmQnMakwU/uDlB4rowPVqq5iFslLhXMpzE6FoX2jYnji4xIRlA28
-	 G6mB0AgOvjWZfcgn4MicAKITXQ55JlNe3yGtCgBTvLm1d3B64fyiG4X8IPtQIfAGKlA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793150369;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=QGQE3LAYpEwlaN5IMebgHt/LGKiGCVPD/r8B3CD/Y/o=;
+	b=hww9g55bTRhE8WoE7AGXap3OwiEYhkdaipk5txoBHiwMG367eKIf1cJJwEIFIqz2YCqk
+	 wtogesAXK7jYNPlQk4anQImSOvfOFWxfu86X+Dh0AaxVb/duzjH0gbtNufYtFobftFVNo
+	 C0VWs8js34VefqH8ZZAjxTKgAlKm6AVFZ33kHzZNQBP56x9NZvnoQdvcRX1K9+NK04o2I
+	 PtzQO2sxL8I8y2EfJporSd+GZYO9yUte+LZ80kN2TMf4Upk3xUqN7vuI11hV8+Y3kHzpb
+	 icAc8aAw8XJ7xUybUAkPkLep3f3RoDPJGRNz8rLvx5joSgKWNtXlij91YLZeDJlunCg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XkxZ5VjX;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	arc=none smtp.remote-ip=74.125.82.176
+Received: from mail-dy1-f176.google.com (mail-dy1-f176.google.com [74.125.82.176])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 341C0606A31A
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 01:12:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XkxZ5VjX
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 953721F01829;
-	Wed, 28 Oct 2026 01:12:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793149978;
-	bh=MQc208is34wWIIeh09uVYYvGbmXO5iwqqMrf5NSTTno=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XkxZ5VjXGSTA3dBmuLwtpk+SmeMlQadiuwi6qO4L2gAPccrnyl1ZTCXFbTVMPvwmY
-	 cqy+j1r5rzLy6DxeDUoyRJt/gVR3fTCu7KSVtlBN4VXYfJzAOAkKQFnUxn6TWG61Eo
-	 jRVjixrMasD+eyPffaeYkluLOixx3duLmY03Qnc5sshIjPE78CbFpInUuQtohHFHaz
-	 A5G/FKHHO+rEZfX59hbJ9Cyyv6MA7C7D+6R4efcpv1gzMS3uQhLjcDv0jT7rqsZ3bh
-	 9qvYC6tVGAdBdcb7+w8uLOX4nKY5vgzxPoz3dvazb7UvuCINdBz1qsqfVGZ3Qt7ooe
-	 2bWd/zYqtJ18w==
-Message-ID: <sashiko-outbox-187305@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3] PCI: rockchip: Don't lengthen PERST# when power is
- already valid
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?RW5yaXF1ZSBIZXJuw6FuZGV6IEJlbGxv?= <ehbello@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261028005603.2399220-1-ehbello@gmail.com>
-References: <20261028005603.2399220-1-ehbello@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 28 Oct 2026 01:12:58 +0000
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46958606A31A
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 01:19:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 46958606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-dy1-f176.google.com with SMTP id 5a478bee46e88-36661f953e4so729003eec.1
+        for <linux-pci@vger.kernel.org>; Tue, 27 Oct 2026 18:19:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793150368; x=1793755168; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=QGQE3LAYpEwlaN5IMebgHt/LGKiGCVPD/r8B3CD/Y/o=;
+        b=h1TpY2BsShnknbHatxj/gkM/Q/3/CKzKz9pjSzaP3JN3Y1TA9yMEzkHEavgQ67JW4/
+         7LLgSzyonsaWbGqdcnfcmRG0M9ffhLCRiyY3tchJ/wF9CBKKhLpNImF3K4uPUkuGCGIi
+         GCnGGdOicWsqzQiNokqoYkglKfShaQyctGxrpBNIwAbQqMB79X7rI+miRj/m+RAJZLcZ
+         Hq1tFtkbVIYR9dVRj/JUE/VyF4Vt49WaHsnGLoERz9//rfjinmkFBga5zTY5dNkf4CBj
+         xxqhXoDA3AuAiNi1Wss+Xa84OHvM1p0h24CezQWiqaU21d78gh1Ka2S6lTcGBzqwLSoW
+         fDrA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793150368; x=1793755168;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=QGQE3LAYpEwlaN5IMebgHt/LGKiGCVPD/r8B3CD/Y/o=;
+        b=jXzwWMzBfXauB4B1PjSfLJ4wXoYn1MPdlnWZQvH/O7QjPH+RJz6Q3L7cnb/CG0cn3m
+         /7qjzchQBhSvh7tpZ+3QU4EFOvmrXfMHMb8qh7yxN1cyHEZpLqR8dJZRhyug5xw0Hgg8
+         xe5GDVtLWj1hY+UEn6N7GX3jirIrJE5fSSf78GuNv4c96c/EMPDZU0riLfr+XqCkbiDy
+         LpmbPKGBYxqxQyKrdmal2Fp87/C0SRiEq/pdMKYaTqcYnf/kUL7dZ71eSYvIQ3q+j8d+
+         7/7n1YhIARezA0ndlvYX6ImhQFYNWbgeq4yjEZinfBIkemraBthqNbjNKmo23ziFs0m5
+         Ussg==
+X-Forwarded-Encrypted: i=1; AKwUvBx0v/820EBaMGV0242//R2SLSePCAWgutSfQ5vOaZL/3rP3fyTtDcuGMnvt5782W1evGblyNx5voEM=@vger.kernel.org
+X-Gm-Message-State: AFq9FYKx93Tffr7ZRssO1nRYYRCUQHy+9xOS2Z+4Pe76qe46ttuiOchS
+	EqP97SMMV63fTOLGgO9zZm3flUPyzcQQBByaMRti1ysdHzUuGeIxMus=
+X-Gm-Gg: AYBFou31ar064pgdatIvqf+oChNLenAspvcXgnXZfSHhOisMAcuPQLcccpg2ZPWe9Nm
+	JqGrcYpKxooIgif+ZOickYWkOmamveb5UbRurAQuJMqVtgBWjYpLrzBOc8za6vvGnfMuQfaHkmY
+	l7DXw3ODSiHerjJvipyzM2p26yq9T2mM+RSG09iP9dWukodYkefuRDPfYuX+oQnNnC9LNqs9XQW
+	Pb7FQA/MvwkdKmE1p2MU9EWogfH6IJAxfrTPWPuvcLZHCTgcMAoGr+qO8SsKaBbB3mdqlEQoL+Q
+	JC+XbY7KxG9JGfGOCr6v9MtKQ2FThSAwmg0YNgU1SBwzN82OlHevfYrGpJ1T7yWH1nHE7rLYZkW
+	Q97lz5tW2MwumBMnHq8fwonIDOnpKfVlwiALwWrYcy6WKsZnLXESqUDrgdKvh9+8EYuBtM9IZvc
+	B0A3orAb+4W/mdZJq9yL70vNBQSuiIF5Er6jkNUAQPL8oM/++EUIMdgKvmjE3U3JcMKuyIZUats
+	Jb1eiPFqMOCvRbSjhqYgNSGo2hUIpCsecHZ0M6auUehtyXvuLo0BKr/UYpFPvumfCtjzowsI5O8
+	BMih1tMVwHN5YLA4lqcjnPAB8dSZz05h5ANBg5L1ATSm1zOWMvN3YwJNM9w/cIhSYsSnMX0WBKW
+	jF8l53TR5/TKT
+X-Received: by 2002:a05:7300:fd0f:b0:367:363f:6fe4 with SMTP id 5a478bee46e88-36a20440ad5mr1939920eec.32.1793150368183;
+        Tue, 27 Oct 2026 18:19:28 -0700 (PDT)
+Received: from at-Standard-PC-Q35-ICH9-2009 ([106.202.115.199])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a2392ecfdsm821863eec.17.2026.10.27.18.19.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Oct 2026 18:19:27 -0700 (PDT)
+From: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
+To: atharvatiwarilinuxdev@gmail.com
+Cc: airlied@gmail.com,
+	alexander.deucher@amd.com,
+	amd-gfx@lists.freedesktop.org,
+	bhelgaas@google.com,
+	bp@alien8.de,
+	christian.koenig@amd.com,
+	dave.hansen@linux.intel.com,
+	dev@deq.rocks,
+	dri-devel@lists.freedesktop.org,
+	hansg@kernel.org,
+	harry.wentland@amd.com,
+	helgaas@kernel.org,
+	hpa@zytor.com,
+	ilpo.jarvinen@linux.intel.com,
+	kenneth.feng@amd.com,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	mingo@redhat.com,
+	platform-driver-x86@vger.kernel.org,
+	simona@ffwll.ch,
+	siqueira@igalia.com,
+	sunpeng.li@amd.com,
+	tglx@kernel.org,
+	x86@kernel.org
+Subject: Re: [PATCH 02/13] PCI: Disable pcie port and access on D3 on specific amd devices
+Date: Tue, 27 Oct 2026 21:19:14 -0400
+Message-ID: <20261028011915.8217-1-atharvatiwarilinuxdev@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20261028000841.6816-1-atharvatiwarilinuxdev@gmail.com>
+References: <20261028000841.6816-1-atharvatiwarilinuxdev@gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,92 +116,11 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] PCI: rockchip: missing T_PERST-CLK delay in rockchip_pcie_host_i=
-nit_port()
---
+> I did not know about, i will try to remove the ignore_access code, and
+> will tell you the results, i added it as a failsafe
 
-commit 3ad27c7e477b1d892784f009b205c0444bfcd8fb
-Author: Enrique Hern=C3=A1ndez Bello <ehbello@gmail.com>
+I tested, and yes it works without ignore_access code, but we still need no_pcie_port.
 
-PCI: rockchip: Don't lengthen PERST# when power is already valid
-
-This commit checks whether all PCIe voltage supplies are already enabled
-before the driver enables them during probe and resume, and skips the
-PCIE_T_PVPERL_MS sleep before deasserting PERST# when power was already val=
-id
-to avoid lengthening the PERST# pulse.
-
-> diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/co=
-ntroller/pcie-rockchip-host.c
-> index 5b071bdc4f903..2bfbd3481c5b2 100644
-> --- a/drivers/pci/controller/pcie-rockchip-host.c
-> +++ b/drivers/pci/controller/pcie-rockchip-host.c
-> @@ -315,7 +315,9 @@ static int rockchip_pcie_host_init_port(struct rockch=
-ip_pcie *rockchip)
->  	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
->  			    PCIE_CLIENT_CONFIG);
-> =20
-> -	msleep(PCIE_T_PVPERL_MS);
-> +	if (!rockchip->supplies_pre_enabled)
-> +		msleep(PCIE_T_PVPERL_MS);
-> +
->  	gpiod_set_value_cansleep(rockchip->perst_gpio, 1);
-
-[Severity: Medium]
-When rockchip->supplies_pre_enabled is true during rockchip_pcie_probe() ->
-rockchip_pcie_host_init_port() or rockchip_pcie_resume_noirq() ->
-rockchip_pcie_host_init_port(), does skipping msleep(PCIE_T_PVPERL_MS)
-without a fallback fsleep(PCIE_T_PERST_CLK_US) violate the PCIe CEM
-T_PERST-CLK timing requirement?
-
-Commit c47f90be4c89 ("PCI: rockchip-host: Fix rockchip_pcie_host_init_port()
-PERST# handling") added msleep(PCIE_T_PVPERL_MS) to satisfy both T_PVPERL
-(100 ms after power is stable) and T_PERST-CLK (PCIE_T_PERST_CLK_US, 100 us
-minimum after the reference clock is stable before deasserting PERST#).
-
-Even when the voltage regulators are already enabled,
-rockchip_pcie_host_init_port() calls rockchip_pcie_init_port() in
-drivers/pci/controller/pcie-rockchip.c, which resets the PHY via phy_init()=
- ->
-rockchip_pcie_phy_init() and then configures and locks the 100 MHz reference
-clock PLL in phy_power_on() -> rockchip_pcie_phy_power_on() in
-drivers/phy/rockchip/phy-rockchip-pcie.c:
-
-	phy_wr_cfg(rk_phy, PHY_CFG_CLK_TEST, PHY_CFG_SEPE_RATE);
-	phy_wr_cfg(rk_phy, PHY_CFG_CLK_SCC, PHY_CFG_PLL_100M);
-
-	err =3D regmap_read_poll_timeout(rk_phy->reg_base,
-				       rk_phy->phy_data->pcie_status,
-				       status,
-				       !(status & PHY_PLL_OUTPUT),
-				       200, 100000);
-
-and then polls PCIE_CLIENT_SIDE_BAND_STATUS in rockchip_pcie_init_port():
-
-	err =3D readx_poll_timeout(rockchip_pcie_read_addr,
-				 PCIE_CLIENT_SIDE_BAND_STATUS,
-				 regs, !(regs & PCIE_CLIENT_PHY_ST),
-				 RK_PHY_PLL_LOCK_SLEEP_US,
-				 RK_PHY_PLL_LOCK_TIMEOUT_US);
-
-Once rockchip_pcie_init_port() returns with the reference clock stable,
-rockchip_pcie_host_init_port() only performs a few APB MMIO register access=
-es
-(and rockchip_pcie_set_power_limit(), which is a no-op when vpcie3v3 is
-absent) before deasserting rockchip->perst_gpio. Additionally, on the
-rockchip_pcie_resume_noirq() path, PERST# is only asserted at the start of
-rockchip_pcie_host_init_port(), so if the PLL lock poll loops succeed on th=
-eir
-first read, the active PERST# pulse width is also not guaranteed to meet
-PCIE_T_PERST_US (100 us).
-
-Should an else branch with fsleep(PCIE_T_PERST_CLK_US) be used when
-rockchip->supplies_pre_enabled is true so the 100 us reference clock
-stabilization delay before PERST# deassertion is still met?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261028005603.2399=
-220-1-ehbello@gmail.com?part=3D1
