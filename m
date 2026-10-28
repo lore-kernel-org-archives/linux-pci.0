@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793157329;
-	b=0H+xHpnY9hVe4kFVtNsUSQwXAfpF1I8DSiKbBycVSjQCT05c357o35USVruVo6nSMaGb
-	 OIYo6IxIaVquB57znuKnuyFlpzGuBVeCK2gcMKGAWCwsIezVOm9abx6pniI5cc9p3Yaxu
-	 NkswSYgmlDcVqLLIxPb6nspPGIuBOlGr8fJD5bCRcpol1ppzG1iAVS8JDnbfFnVIb39zM
-	 e9qytfqSt+6PX7LJJ61l4oZi2uYcUZ7h57YxEyRH+Zkdh5X7nehryRYBUZPUP/FDxLE5V
-	 eVYfyIfW9+30nFc8fmkd+oocsF1F5uHcxE8c/5Fwad/6da6MOA0XoMB5HdCTuUj3GeA==
+	t=1793157385;
+	b=uwJ5hgY/gjRgv/REuQBUhCANyoto26pv+U3XeBxIwJihCGF0j2ozbWi/j8Bg6P4DuTak
+	 KcsL5jAdH9CIiaYJfonySVN1lTLaABB2cuvFnco0m8eTZkh/sEJF9NHZcwooDxeasD0e3
+	 szNcUH2BAoFJPbB0+tLT3kj/BHBfbpVNCZdOi7UbHIx7GyM8S6i4CBvp13z1rtf5oNb3G
+	 91XEDbsDvJQ5R9YQqL5hKgwsBUTa19X+9a9FtdPmKG7oeO3qSsrr096khec08O0x4bCWU
+	 fI+V0R/5f26vJexvNQuW9Rm2A9+6uElbXANc1MLaEzEhsbFSQFK+y0P4HFb+r/sNVkA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793157329;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793157385;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=JKVE0oHbGCK3KEheqHakd016WqeZ7tntTKiPfLYIsd4=;
-	b=w2xKkVJcmVAeZUtseGxNenpU1kq3vEEKdIBFmS69JmaCZIMjhavmIMRcjITcWgStEIFM
-	 lrLOtL4ofu2iRagrNHVYmAP2oMXMWlGTmhzYbtvCqn38222lrIN3qNoYTM/KbIYY019Or
-	 Xmh3GDoahUdF4QP49GvOd2ZuAnR8oukJ+7c0rubDJDN5/XJpFiHUP6q6uuEJe7tXzKkGX
-	 wkfTSuqBEUIkRmtn23K14zHf3sK90iTldCq28Ig59jJnZNfVW1n9jmS2s2LHln/gKjjTV
-	 c4IcRBNhfwZ2Q0GjRd7wpPkNI6To/Z/YtCLu92wKWwr6mDdyQDYtwo/L5k1lHzUi1fw==
+	bh=ygXTgk5xD3JFLYW1Z40kjbYGFjl5GKNoQ+QBPbOVGWE=;
+	b=mLM0uGCwT417pn25sz3q5OZi9gt9+QFOhuITNcaqyYnLf3pdzOnIgib+WL/Y8pMtpFd/
+	 7Mmx+uYlW8eRCNTcfflMmSN8gITBKQEhIciFcpNVtaJhTPFQAXTwk7m+bCgzLORTlB+C7
+	 ihDY3VhQtjQ03hM+5MOV8XGjjWR0F710smVMlkGE/SvEcHCIF804EE0JGXN9ibYiYIoBl
+	 iQsk6UIkN0uAfYLfQg4A2DOkE9HgXvl4fyVhHOLf5ZHqmbQDm1Aibpzr8fquF1I339hNz
+	 WNcEViyUN0Mckp6Ci66cb9feqso5/+KZZjp0GWDWjpVqWMRqBxmd/nozQmFaWEeFgqg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iu5NUdQz;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=grtY2zP5;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2D55606A31A;
-	Wed, 28 Oct 2026 03:15:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4972D606A31A
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 03:16:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iu5NUdQz
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D3B01F01829;
-	Wed, 28 Oct 2026 03:15:28 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=grtY2zP5
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B89CD1F01828;
+	Wed, 28 Oct 2026 03:16:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793157328;
-	bh=JKVE0oHbGCK3KEheqHakd016WqeZ7tntTKiPfLYIsd4=;
+	s=k20260515; t=1793157384;
+	bh=ygXTgk5xD3JFLYW1Z40kjbYGFjl5GKNoQ+QBPbOVGWE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=iu5NUdQzyd7a65Ku7fJTWRV6m0p2do9Nc/2AJoVNOZJ8x/+qEsVuXsHO4hcXq8ZRh
-	 Qb6v2CdqHDwdFXPILzwmPmA3FmGjyQVxKBKPJlt91xPR/r60oVIJDw6+p0n5QDkwis
-	 Ksn/qvTJdAdajxJT1oOx2S9YPAudrYYLNY+kiTeG9liPpVK+vllNbk1eUpWHunYx9v
-	 U6W+e6/qGXHvA5VWBmqaGOtgc67E++1XrC6nvEtUKIUkfJd633umj7+nHQLfif9Our
-	 DU2lKE8+lami6PdQsZmOpB0wbrmLYKjHf/MfU170DApb/WinuidsiqQ+MdiFePL3fz
-	 8i0UtSgno10lQ==
-Message-ID: <sashiko-outbox-187403@kernel.org>
+	b=grtY2zP5psniBGpyvg2xibjA7xVNBaLzCHYotw3lo1w0vyjqQ+l2a1OhxNxh6TJUM
+	 x5BVt+qGhfxgdAh/dD/bGBAx0Fd1jEnRAipR45v4sPtsccFwRtiytcY8a5QwZj3JzK
+	 EntLFjATONIohF1mJNiCxbw8BwGYkTE2DysubwQuJkXUotoU6OkoMS6Vj/E1rS0rzv
+	 RfVZ5I/sVTkMAKE6AQsedWlZbldCJveo9Jo2mNwAg/juz65Yjsd5Fx9bzhSRh1Wnwe
+	 fqfSFKsLdznbXv66yp8SmgtsJvUdvnvnhsmCSQcLcbNQLS6jP8rHC9nTkINxzsF1LE
+	 dcUa/ctev2P+w==
+Message-ID: <sashiko-outbox-187406@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 01/16] PCI: dwc: Add pcie_cap field and caching
- helper
+Subject: Re: [PATCH v5 10/16] PCI: dwc: qcom-ep: Use cached PCIe capability
+ offset
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hans Zhang" <18255117159@163.com>
-Cc: imx@lists.linux.dev, linux-amlogic@lists.infradead.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org, neil.armstrong@linaro.org
-In-Reply-To: <20261028030652.2917756-2-18255117159@163.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261028030652.2917756-11-18255117159@163.com>
 References: <20261028030652.2917756-1-18255117159@163.com>
- <20261028030652.2917756-2-18255117159@163.com>
+ <20261028030652.2917756-11-18255117159@163.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 28 Oct 2026 03:15:27 +0000
+Date: Wed, 28 Oct 2026 03:16:24 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,74 +61,26 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] PCI: dwc: unconfirmed offset returned in dw_pcie_get_pcie_cap()
---
+> Replace the three dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) calls in
+> the qcom-ep driver with dw_pcie_get_pcie_cap().
+>=20
+> qcom_pcie_perst_deassert() is the point where the controller resources
+> have just been enabled and DBI becomes accessible, so the offset is
+> looked up and cached there. Both the L0s and the L1 exit latency are
+> then programmed using that same cached offset instead of walking the
+> capability list again.
+>=20
+> qcom_pcie_ep_icc_update() may run from the global IRQ handler, which is
+> requested before the PERST# IRQ. The helper performs its lookup at that
+> point of use, i.e. exactly where the open coded search happened before,
+> so this change neither adds nor moves a DBI access and does not
+> introduce a new race with the PERST# handler.
+>=20
+> Signed-off-by: Hans Zhang <18255117159@163.com>
 
-commit c6fcd840cdb57dd351ea1787cae915ad3164fb13
-Author: Hans Zhang <18255117159@163.com>
-
-PCI: dwc: Add pcie_cap field and caching helper
-
-This commit adds a pcie_cap field to struct dw_pcie and introduces a
-dw_pcie_get_pcie_cap() helper that lazily looks up and caches the PCI
-Express Capability offset on first use once confirmed via a DBI read-back.
-
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/c=
-ontroller/dwc/pcie-designware.h
-> index 6d788aa000117..dede6b3966585 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-[ ... ]
-> @@ -832,6 +834,42 @@ static inline void dw_pcie_dbi_ro_wr_dis(struct dw_p=
-cie *pci)
->  	dw_pcie_writel_dbi(pci, reg, val);
->  }
-> =20
-> +/**
-> + * dw_pcie_get_pcie_cap() - Return the PCIe Capability offset
-> + * @pci: DWC instance
-> + *
-[ ... ]
-> + * Return: the offset of the PCIe Capability, or 0 if it could not be
-> + * found or has not been confirmed yet.
-> + */
-> +static inline u8 dw_pcie_get_pcie_cap(struct dw_pcie *pci)
-> +{
-> +	u8 cap =3D READ_ONCE(pci->pcie_cap);
-> +
-> +	if (!cap) {
-> +		cap =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> +		if (cap && dw_pcie_readb_dbi(pci, cap) =3D=3D PCI_CAP_ID_EXP)
-> +			WRITE_ONCE(pci->pcie_cap, cap);
-> +	}
-> +
-> +	return cap;
-> +}
-
-[Severity: Medium]
-In drivers/pci/controller/dwc/pcie-designware.h, the kernel-doc for
-dw_pcie_get_pcie_cap() states that it returns 0 if the capability could not
-be found or has not been confirmed yet.
-
-However, when pci->pcie_cap is 0 and transient DBI data causes
-dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) to return a non-zero offset cap
-while the confirmation check dw_pcie_readb_dbi(pci, cap) =3D=3D PCI_CAP_ID_=
-EXP
-evaluates to false, pci->pcie_cap is left as 0, but the unconfirmed non-zero
-cap is still returned to the caller.
-
-Callers that guard DBI writes on a non-zero return (such as
-rockchip_pcie_enable_l0s()) or cache a non-zero return in driver state (such
-as tegra_pcie_dw_host_init() setting pcie->pcie_cap_base when
-!pcie->pcie_cap_base) will then consume or permanently store the unconfirmed
-offset.
-
-Should dw_pcie_get_pcie_cap() return 0 when the confirmation read-back fail=
-s,
-or should the kernel-doc comment be updated to match the implementation?
+Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261028030652.2917=
-756-1-18255117159@163.com?part=3D1
+756-1-18255117159@163.com?part=3D10
+
