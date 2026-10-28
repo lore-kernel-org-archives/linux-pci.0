@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793157573;
-	b=eqYSLW2+OJUMttCDhSIVGUrMcaFa7aJNCOfMVGDZLN13Bi2xNLI4OhmfnrjmyYbD1Scy
-	 BObyejt7mt5WOTW2tXYd3HLkVcuAfVLp7M2ZXE9tt7X61IpE6mWsoJBI+b4VECfB1ywkn
-	 giVKTJVqjvuvKYe0Nzpmp7/Ham+OCpZjakmtuxoFfAaV/EWAXPHeclTWDeYMFn++mFEbm
-	 fPlqQtl+BVtzROgdxCmM9HQoCtHybSYoyNLqTtM0gyQtwIXZSryX/dbNwOxGdk20pTVpU
-	 TvJ+cdKi1hRJGmkDhDqG//BJSTB1t2jfHXVyoVZhtJKzbDMKbvRL0GCPL9iKLK//8ng==
+	t=1793157858;
+	b=XmLqevT3LduVf2C3fOPy3mhhzdN/YvvwgX607emdcFjmfe6w/nhXHHcv1ktbgKjbHE7P
+	 1FrymJ/nFUSh+uUa3O4sModCEfKmJEoDW1OE1YSX7Hyj+Slr4a5k2nQK36Pmri0mhhTaD
+	 ZxBxFewIS9pXu1rL4UMnH2Xc8y7ErwYNGVV5gd3RNLFmUMV73V0aWhz31tSeU0I8bhc25
+	 9LL7U+W9PW5N7EiBie3Ed5glr0DkKfyTEDNwn1Alx5bfK75s2iOtDsl9aUjSQKgAglIL0
+	 ikl2xukPSlkNW/jCuoP56tgNMuvzGFUU7G2lGT8rks8pyBIr0KbJh0ht/BGcbRiOoUA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793157573;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793157858;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=y/1l3tyv0dX/suZCe5Jdbgr9pRVU8jOSz2x6fY45qfo=;
-	b=KwKhbn9QUIJxda3yAYsCVKlP1snGVZDlbfX1/EQkp6c+/y/6oEBQWQdw/PtED5Lwx/cg
-	 55kZkQ6TsYBXB4iQTV06JLibsHLhDZ/7VTcsh1RxTqBSFEWDTybw4dG0+YKHYjPKn6QJm
-	 P+VyLBkfSWwME0gFEivyicToO3vnim6f1IuBnnRSOhH2uwgEXsZmHUNWUfJSmiCA/lVOZ
-	 OkhBp5zq8gMp0ovDYh9RQxbVi1Ne5VXRML78cDN6rtB/QF5IkgYzHhXiT9IVovCdzGZl1
-	 GgpGvMTlWsCtFaOFO7XsFDYU0ZOGWmcmlQjkjarzI7nOEC9iPCu2UfnAq/zCnxzNlTw==
+	bh=yR8qZ8SZpHw52Fu3wnStdm935PTS8eQ6L5yFKzzQ3Go=;
+	b=g7xgHoaqHdgs6TJ9T4aLYDvVzrJC4Ic1HYsVN/i/5wESVwWQouf0vOSXkfIHbMBh/GTR
+	 RmauY0gy4ZjbM95KbkJxJV78PSYFj9yOBvvzkr01PId833VWeUN/iURQcFHFU2wIkR+n9
+	 1eA6SilhOp94rXXMLHd7TzsneCwq+1+FQltz/Y8T75wBDzVem9oMySoyltCki0/eR1anX
+	 JOAgQfMV1U8I8zN+0saV5SWEC3/+7ZHrirT8bHVj5Bon+CKzF5VpPQjsb/eLkjZAMm1NP
+	 mUr0KvaN6N/Y7d2xBLHigs0OdZPdeoA5Z6IuFtV2Tf1KdE0DT0knbmJrVB5m7R06pnA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="RxMxz+7/";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YUye5fSF;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DC3C606A31A
-	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 03:19:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 955F8606A31E
+	for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 03:24:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RxMxz+7/
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5DA31F01825;
-	Wed, 28 Oct 2026 03:19:32 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YUye5fSF
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FA491F01825;
+	Wed, 28 Oct 2026 03:24:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793157573;
-	bh=y/1l3tyv0dX/suZCe5Jdbgr9pRVU8jOSz2x6fY45qfo=;
+	s=k20260515; t=1793157858;
+	bh=yR8qZ8SZpHw52Fu3wnStdm935PTS8eQ6L5yFKzzQ3Go=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RxMxz+7/Ipp5dB0rDLCajQchpHKNiBhZY6XzjQvB5ed9Vs5meE4smwljYe19A1c+V
-	 mfQjlMzbZXD84BnPlvS1bNSyiACtBC9/uY9mwrYxWqAbqHuOzN7REY3TWg4dodwsdL
-	 rf3Dd2O4Tg9pZnZ6HOEllyQzoq3TLlaORBkj+/xVIfRCCvEQvJA/IeTwrKXsoydZiv
-	 yDhlRXc4x+6/z4n60oYFYqBlDFLteJs80/U+YFFOf7OedSpNByptlBnTS/Q5it0Co+
-	 nj0Dt81Lnv7rV3hbi1pK2dboOOD2mQ6Xzd+rICh7ARit8IUgNg4V9CeuUJ+wmRc+29
-	 WLDsCcCC0hLjA==
-Message-ID: <sashiko-outbox-187415@kernel.org>
+	b=YUye5fSF1rviYC1zGbVgoUucVwXJTawAHwm/uZ/oTcK9Oa6csHz/SLPvcXeWjQS3K
+	 ofuqffgz8Zo0Ba0WqX1dF7Ub92kXs5kGEYhuL3ofUz++kv9nnKFd2iHffHqE7ScBo/
+	 oHe6r915CcWty8bzQU6edrmyjuIbQ6qxI5DVPcmkxn6J0mKA/G9wMn9RzeC689VsRY
+	 odCCKfkKNoy5Z6hO3qVzPc5GZc0XFOjs5hriN9+pprJ4pEl65WRlKeosgdEpX2M1l4
+	 7KkZuLU9dhditBU2mLr2/bvu7YCAQrFUgS/ErTiKebTZB8YdTXLkrsVxzobNAgSjek
+	 qi+yldP6eyUGQ==
+Message-ID: <sashiko-outbox-187418@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 16/16] PCI: dwc: ultrarisc: Use cached PCIe
- capability offset
+Subject: Re: [PATCH v5 15/16] PCI: dwc: tegra194: Use cached PCIe capability
+ offset
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hans Zhang" <18255117159@163.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261028030652.2917756-17-18255117159@163.com>
+In-Reply-To: <20261028030652.2917756-16-18255117159@163.com>
 References: <20261028030652.2917756-1-18255117159@163.com>
- <20261028030652.2917756-17-18255117159@163.com>
+ <20261028030652.2917756-16-18255117159@163.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 28 Oct 2026 03:19:32 +0000
+Date: Wed, 28 Oct 2026 03:24:17 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,11 +61,17 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> ultrarisc_pcie_host_init() runs from the .init callback with the
-> controller already enabled. Replace the capability search with
-> dw_pcie_get_pcie_cap(). Since the lookup is performed lazily at the
-> point of use, the driver no longer depends on any earlier caching step
-> and the offset is always valid here.
+> Replace the two dw_pcie_find_capability(&pcie->pci, PCI_CAP_ID_EXP)
+> calls in tegra_pcie_dw_host_init() and pex_ep_event_pex_rst_deassert()
+> with dw_pcie_get_pcie_cap() so that the driver-private pcie_cap_base is
+> filled from the same cached value.
+>=20
+> tegra_pcie_dw_host_init() is called from .start_link, i.e. after the
+> controller has been initialized, and the PERST# deassert handler runs
+> after the endpoint has been brought out of reset with its clocks and
+> power enabled. The helper therefore performs its single DBI read at the
+> same point as the open coded search, and the private copy keeps working
+> unchanged.
 >=20
 > Signed-off-by: Hans Zhang <18255117159@163.com>
 
@@ -73,5 +79,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261028030652.2917=
-756-1-18255117159@163.com?part=3D16
+756-1-18255117159@163.com?part=3D15
 
