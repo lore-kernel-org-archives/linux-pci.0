@@ -1,47 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793265542;
-	b=eo9JREOBYahrPQJnNbscyK7i1FNlyQl/gFAaQp3o4N883vHEgwLEZcKup6kEm8bCQJyp
-	 860hrTPDQFfCUf4hX6p+7DVVpoU0hku3BarHdxumrJgMdlIwVMfh9LxgvkdhyAsOidxY9
-	 dd+05jCKpXqG44h0RRmGXoAO1/D/0Pkk0bsBPm5fmK4tEwIlOM0emlaO7FCXjdSj2xCAc
-	 i79ijaja7i3mOm+BvzVy0Ej7hU7Eq9N/XqD6aGWRQB/wbOyJPACyunakmwboVY3VG3++y
-	 TiKlACC4TjFOyp6kMWAfNOxC5md2QMUuA1PHQWwyMav5tAJ1jMOS2RhhZOrBBhJWjOg==
+	t=1793265577;
+	b=HqfbWxPWDwYzWStJpDizznHChhQxIjc5AueINJJRZgBy+0rNx8LwiYlgGxdiDBDiMcbp
+	 NMjSOnU0WZP7OCOr8xq09RoRw7HniNCacYH3ZuMP3cSq3Dqm3PgLdpHKLFpmqosPBNY7a
+	 3lzdhvlSHxAHJmEr8RPsl/U8GN3hdbTXCUr86H/wwZFFth0uxNL1cb4gwpJBlClae50Z5
+	 L/hWCCIEPkW6dev3ldzqVqWatJYTCLC8jYMPm9bfra+2rFaP2kQEBBa1WqtHGx+qah9Zg
+	 y2qOLYkpJNnJpYMcgBNzhfQaJQwZz6Qj6R5g3l4H2/vhAFZ5m/CRmDaO2snPg9s24mQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793265542;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793265577;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=K8/wO6efzf7QfGo7UjnxZLJIdIjLyvIF1IuitRjLdAk=;
-	b=vththT5gsrzeea3duE4T96M++2eWmLPE8EDOwJqyo+pDsKwPcUgfxZr9lYI8tGsjmyqu
-	 Gx2axxxxs9szgaYnckoShSf4nr4Tu1inLsVaPqIcvBFvLu3laY9jHWe2+1RuXfkKJgrMC
-	 SIzyCcQQFo7f5hT6hu/WAv7t4tURwmvdnko80jLo2PbLjZEL99wVOV9wVUk2rHqYQUG96
-	 IerRUxpDqNfRpCit0oFEgqNpR6Mci6dXYmfw4aYr4WeMuL0dEYzfs8T4ArCNGijM/Yl1F
-	 41vSOjDoGyHgB6UTXSpmWbQ0OzpguXb2aT7MeTGYvDv+Edhs4hn6xIfccMNqEQuNSwg==
+	bh=V2e+D7RolMrPpU0f9XMQkrgGvr/8cN5nFds9RUQu7TE=;
+	b=Sbf7g0bIBaU4e+gSnxa6EWI097dL85/AhXQ3crFvsXIF8fMA6ufT2jbHir9N7da0Oryw
+	 ZvAZSklF3uQKqc/uIxI3LTH10droWGuyNaPda/Gm9RHIG0gRAM15/sYaBao/c/Cd8tlGc
+	 vnA9K0c2Vm76ltuQ1HBfU+6c3FSWs8TDn+dNGo2wluW62v7MDIrKe/76MSXAxGwzSlHnF
+	 Pk5OjXcUGXAv0bSngbyNtTtGp0z+Sfabtfil7KBIvmJY/KiU7eiGG13ZPxqcGn5xsM26M
+	 M9z3TWifqFAm1y+jjZbspP8VXmVEoUAzPyQ5ZHWliMsLdgC28rvb0ozZOH/Ri2eCZ9w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RLEdbc1y;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MrPFzEFM;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA559606A31C;
-	Thu, 29 Oct 2026 09:19:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12D78606A31E;
+	Thu, 29 Oct 2026 09:19:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RLEdbc1y
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D26C1F01828;
-	Thu, 29 Oct 2026 09:18:59 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MrPFzEFM
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F0611F031E4;
+	Thu, 29 Oct 2026 09:19:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793265541;
-	bh=K8/wO6efzf7QfGo7UjnxZLJIdIjLyvIF1IuitRjLdAk=;
+	s=k20260515; t=1793265576;
+	bh=V2e+D7RolMrPpU0f9XMQkrgGvr/8cN5nFds9RUQu7TE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RLEdbc1ym6XGbIUVf1ivgJKSb+SzFDM0KeXRD/81WAKkE3jYIES4xuIodf6G6F1vA
-	 gxBbC/J4PC47yAW1NU5uojI0DCLwMOxbo7haqo9dZVWptYL7vKSw6Pgnqupc0rP1NX
-	 uosEiLfsRBzyXMxMS+i9VVLIuUD+wArZVIUoSg91didLC3f3Et4kelKklTpZkNlkef
-	 hYFK7FWy/wOrdFdTsZdPNmVJg6DqUrA9IX6hedsxkwrPe8x5R5Hp3m74rcx0a3OY3p
-	 z+7l/obYvsh5xrNHDLO7tZ6nC6ViBR2rGTjkNMHHMIjbBJaRv+4NXWw0H8x5a5TkiX
-	 9kOGF86wP7y7Q==
-Message-ID: <sashiko-outbox-189021@kernel.org>
+	b=MrPFzEFMqPBq8TD5KQJje4l7j0OgD1al1rv+AOFrxexwd97Ooch9lQOoMcKg+7HaC
+	 YvUoLPFmRi3McMAfXva0jWfc3aIi11SqpyRhG3y9Y+txEC+1wojOTsj7823Z6MJUsN
+	 YdN5aF9TyNww2LwZKqAdfUV7Au9CYdrbr1Rmvf/CxeZ5ZK0qJ+QztNoFWrS6jmimvw
+	 EmugMEqBtv+uqkMDLpjikNSUEWHs6ffK9wPHbTtXJLNYiQ2QZyP3u2P2boEMgaGaW6
+	 5zEN1we27EZX61xua4afsgPbCU5paobE/Yw2zC016ihS8/Ts+nWbWw4qllPC+GJy1G
+	 65u4OhBZuJAUA==
+Message-ID: <sashiko-outbox-189024@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH 12/14] hwmon/macsmc: add more types
+Subject: Re: [RFC PATCH 10/14] power/supply: add support for x86 macs in
+ macsmc-power
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Atharva Tiwari" <atharvatiwarilinuxdev@gmail.com>
 Cc: "Bjorn Helgaas" <bhelgaas@google.com>, "Thomas Gleixner" <tglx@kernel.org>, "Ingo
@@ -61,12 +62,12 @@ Cc: "Bjorn Helgaas" <bhelgaas@google.com>, "Thomas Gleixner" <tglx@kernel.org>, 
  Kasatkin" <dmitry.kasatkin@gmail.com>, "Eric Snowberg" <eric.snowberg@oracle.com>, "Paul
  Moore" <paul@paul-moore.com>, "James Morris" <jmorris@namei.org>, "Serge E.
  Hallyn" <serge@hallyn.com>, linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-leds@vger.kernel.org, mfd@lists.linux.dev, linux-rtc@vger.kernel.org, linux-watchdog@vger.kernel.org, keyrings@vger.kernel.org, linux-security-module@vger.kernel.org
-In-Reply-To: <20261029085504.3547-13-atharvatiwarilinuxdev@gmail.com>
+In-Reply-To: <20261029085504.3547-11-atharvatiwarilinuxdev@gmail.com>
 References: <20261029085504.3547-1-atharvatiwarilinuxdev@gmail.com>
- <20261029085504.3547-13-atharvatiwarilinuxdev@gmail.com>
+ <20261029085504.3547-11-atharvatiwarilinuxdev@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 29 Oct 2026 09:18:58 +0000
+Date: Thu, 29 Oct 2026 09:19:34 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -76,182 +77,299 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 8 potential issue(=
 s) to consider:
-- [Medium] hwmon: 32-bit integer overflow when scaling values in macsmc_hwm=
-on_read_key()
+- [High] power: supply: macsmc: NULL deref in macsmc_power_remove() without=
+ battery
+- [High] power: supply: macsmc: notify handler UAF and ref leak in macsmc_p=
+ower_probe()
+- [High] power: supply: macsmc: unchecked power supplies in macsmc_power_ac=
+pi_notify()
+- [Medium] power: supply: macsmc: uninitialized adapter_status in macsmc_po=
+wer_probe()
+- [Medium] power: supply: macsmc: missing swab16() for B0TE on ACPI Macs
+- [Medium] power: supply: macsmc: missing else in macsmc_power_probe() batt=
+ery check
+- [Medium] power: supply: macsmc: 32-bit overflow in macsmc_battery_acpi_re=
+ad()
+- [Low] power: supply: macsmc: build failure when CONFIG_ACPI is disabled
 --
 
-commit 8d01f24623ebf973c1f3f366376ae2ac53217c82
+commit 14a9bd57ae09c9ca5072f486dd3745277286ab3b
 Author: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
 
-hwmon/macsmc: add more types
+power/supply: add support for x86 macs in macsmc-power
 
-This commit adds support for reading common integer (ui8, si8, ui16, si16,
-ui32, si32) and fixed-point (fp* and sp*) SMC key data types in
-macsmc_hwmon_read_key(), and allows writing fpe2 keys for fan speed control
-in macsmc_hwmon_write_key().
+This commit adds support for Intel Macs to the macsmc-power driver,
+exposing battery and AC adapter sensors as well as charge limit controls
+on ACPI-based Apple systems.
 
-> diff --git a/drivers/hwmon/macsmc-hwmon.c b/drivers/hwmon/macsmc-hwmon.c
-> index 1500ec2cc9f83..2e74dcd6651b3 100644
-> --- a/drivers/hwmon/macsmc-hwmon.c
-> +++ b/drivers/hwmon/macsmc-hwmon.c
-> @@ -221,6 +221,313 @@ static int macsmc_hwmon_read_key(struct apple_smc *=
-smc,
->  			*val =3D (long)ioft;
->  		break;
->  	}
+> diff --git a/drivers/power/supply/macsmc-power.c b/drivers/power/supply/m=
+acsmc-power.c
+> index ced37a7019981..1d64d8185ed7b 100644
+> --- a/drivers/power/supply/macsmc-power.c
+> +++ b/drivers/power/supply/macsmc-power.c
 
 [ ... ]
 
-> +	/* unsigned 16-bit integer */
-> +	case __SMC_KEY('u', 'i', '1', '6'): {
-> +		u16 ui16 =3D 0;
+> @@ -322,6 +362,198 @@ static int macsmc_battery_get_capacity_level(struct=
+ macsmc_power *power)
+
+[ ... ]
+
+> +static int macsmc_battery_acpi_read(struct apple_smc *smc, smc_key key, =
+int *val,
+> +	int scale)
+> +{
+> +	int ret;
+> +	struct apple_smc_key_info info;
 > +
-> +		ret =3D apple_smc_read_u16(smc, sensor->macsmc_key, &ui16);
+> +	ret =3D apple_smc_get_key_info(smc, key, &info);
+> +	if (ret)
+> +		return ret;
+> +
+> +	switch (info.type_code) {
+> +	/* 32-bit IEEE 754 float */
+> +	case __SMC_KEY('f', 'l', 't', ' '): {
+> +		int flt_ =3D 0;
+> +
+> +		ret =3D macsmc_battery_acpi_read_f32_scaled(smc, key, &flt_, scale);
 > +		if (ret)
 > +			return ret;
 > +
-> +		*val =3D ui16 * scale;
+> +		*val =3D flt_;
 > +		break;
 > +	}
-> +	/* signed 16-bit integer */
-> +	case __SMC_KEY('s', 'i', '1', '6'): {
-> +		s16 si16 =3D 0;
 > +
-> +		ret =3D apple_smc_read_s16(smc, sensor->macsmc_key, &si16);
+> +	/* 3.13 fixed point decimal */
+> +	case __SMC_KEY('f', 'p', '3', 'd'): {
+> +		u16 fp3d;
+> +
+> +		ret =3D apple_smc_read_u16(smc, key, &fp3d);
 > +		if (ret)
 > +			return ret;
 > +
-> +		*val =3D si16 * scale;
-> +		break;
-> +	}
-> +	/* unsigned 32-bit integer */
-> +	case __SMC_KEY('u', 'i', '3', '2'): {
-> +		u32 ui32 =3D 0;
-> +
-> +		ret =3D apple_smc_read_u32(smc, sensor->macsmc_key, &ui32);
-> +		if (ret)
-> +			return ret;
-> +
-> +		*val =3D ui32 * scale;
-> +		break;
-> +	}
-> +	/* signed 32-bit integer */
-> +	case __SMC_KEY('s', 'i', '3', '2'): {
-> +		s32 si32;
-> +
-> +		ret =3D apple_smc_read_s32(smc, sensor->macsmc_key, &si32);
-> +		if (ret)
-> +			return ret;
-> +
-> +		*val =3D si32 * scale;
-> +		break;
-> +	}
-> +	/* 2.14 unsigned fixed point decimal */
-> +	case __SMC_KEY('f', 'p', '2', 'e'): {
-> +		u16 fp2e;
-> +
-> +		ret =3D apple_smc_read_u16(smc, sensor->macsmc_key, &fp2e);
-> +		if (ret)
-> +			return ret;
-> +
-> +		*val =3D mult_frac(be16_to_cpu(fp2e), scale, BIT(14));
+> +		*val =3D mult_frac(be16_to_cpu(fp3d), scale, BIT(13));
 > +		break;
 > +	}
 
 [ ... ]
 
-> +	/* 1.14 signed fixed point decimal */
-> +	case __SMC_KEY('s', 'p', '1', 'e'): {
-> +		s16 sp1e;
+> +	/* 3.12 signed fixed point decimal */
+> +	case __SMC_KEY('s', 'p', '3', 'c'): {
+> +		s16 sp3c;
 > +
-> +		ret =3D apple_smc_read_s16(smc, sensor->macsmc_key, &sp1e);
+> +		ret =3D apple_smc_read_s16(smc, key, &sp3c);
 > +		if (ret)
 > +			return ret;
 > +
-> +		*val =3D mult_frac((s16)be16_to_cpu(sp1e), scale, BIT(14));
-> +		break;
-> +	}
-
-[ ... ]
-
-> +	/* 15.0 signed fixed point decimal */
-> +	case __SMC_KEY('s', 'p', 'f', '0'): {
-> +		s16 spf0;
-> +
-> +		ret =3D apple_smc_read_s16(smc, sensor->macsmc_key, &spf0);
-> +		if (ret)
-> +			return ret;
-> +
-> +		*val =3D (s16)be16_to_cpu(spf0) * scale;
+> +		*val =3D mult_frac((s16)be16_to_cpu(sp3c), scale, BIT(12));
 > +		break;
 > +	}
 
 [Severity: Medium]
-Can these scaling calculations in macsmc_hwmon_read_key() overflow 32-bit
-integers and corrupt sensor readings when called from macsmc_hwmon_read()?
+Can the mult_frac() calls for the fp3d and sp3c types overflow a 32-bit
+signed int when scale is 1000000?
 
-In macsmc_hwmon_read(), scale is 1000000 for hwmon_power and 1000 for
-hwmon_temp, hwmon_in, and hwmon_curr, while the scale parameter in
-macsmc_hwmon_read_key() has type int:
+Inside mult_frac(x, n, d):
 
-drivers/hwmon/macsmc-hwmon.c:macsmc_hwmon_read() {
-	...
-	case hwmon_power:
-		/* SMC returns power in Watts with acceptable precision to scale to uW */
-		ret =3D macsmc_hwmon_read_key(hwmon->smc,
-					    &hwmon->power.sensors[channel],
-					    1000000, val);
+    typeof(x_) q =3D x_ / d_;
+    typeof(x_) r =3D x_ % d_;
+    q * n_ + r * n_ / d_;
+
+Because x is u16 or s16 and scale is int (1000000), r * n_ is evaluated as
+a 32-bit signed int multiplication before being converted to unsigned long
+for division by BIT(13) (8192) or BIT(12) (4096). Whenever the fractional
+remainder r is 2148 or larger, r * 1000000 exceeds INT_MAX and wraps around,
+producing corrupted (and often negative) current, voltage, or power reading=
+s.
+
+[ ... ]
+
+> @@ -359,36 +594,71 @@ static int macsmc_battery_get_property(struct power=
+_supply *psy,
+>  		break;
+>  	case POWER_SUPPLY_PROP_TIME_TO_FULL_NOW:
+>  		ret =3D apple_smc_read_u16(power->smc, SMC_KEY(B0TF), &vu16);
+> -		val->intval =3D vu16 =3D=3D 0xffff ? 0 : vu16 * 60;
+> +		if (power->smc->is_acpi)
+> +			val->intval =3D vu16 =3D=3D 0xffff ? 0 : swab16(vu16) * 60;
+> +		else
+> +			val->intval =3D vu16 =3D=3D 0xffff ? 0 : vu16 * 60;
+>  		break;
+
+[Severity: Medium]
+In macsmc_battery_get_property(), POWER_SUPPLY_PROP_TIME_TO_EMPTY_NOW right
+above this case reads SMC_KEY(B0TE) into vu16 without byte-swapping when
+power->smc->is_acpi is true:
+
+	case POWER_SUPPLY_PROP_TIME_TO_EMPTY_NOW:
+		ret =3D apple_smc_read_u16(power->smc, SMC_KEY(B0TE), &vu16);
+		val->intval =3D vu16 =3D=3D 0xffff ? 0 : vu16 * 60;
 		break;
-}
 
-First, in the mult_frac() calls for the unsigned (fp2e through fp88) and
-signed (sp1e through spd2) fixed-point types, the first argument has a 16-b=
-it
-type (u16 from be16_to_cpu() or s16 from (s16)be16_to_cpu()):
+Since macsmc_power_probe() registers POWER_SUPPLY_PROP_TIME_TO_EMPTY_NOW on
+ACPI Macs when B0TE is present, should B0TE also apply swab16(vu16) on ACPI
+systems just like B0TF does here?
 
-include/linux/math.h:
-#define mult_frac(x, n, d)	\
-({				\
-	typeof(x) x_ =3D (x);	\
-	typeof(n) n_ =3D (n);	\
-	typeof(d) d_ =3D (d);	\
-				\
-	typeof(x_) q =3D x_ / d_;	\
-	typeof(x_) r =3D x_ % d_;	\
-	q * n_ + r * n_ / d_;	\
-})
+[ ... ]
 
-Because typeof(x_) is a 16-bit integer, q and r are promoted to 32-bit sign=
-ed
-int, and n_ (scale) is also a 32-bit signed int. Both q * n_ and r * n_ are
-evaluated as 32-bit signed int multiplications before dividing by d_
-(unsigned long from BIT(n)). When scale is 1000000, any remainder r >=3D 21=
-48
-(possible for fp2e, fp3d, fp4c, sp1e, sp2d, and sp3c) or quotient |q| >=3D =
-2148
-(possible for spc3 and spd2) overflows 32-bit signed int into a negative
-value, which then converts to a huge unsigned long when divided by BIT(n).
+> @@ -634,6 +1003,23 @@ static int macsmc_power_event(struct notifier_block=
+ *nb, unsigned long event, vo
+>  	return NOTIFY_DONE;
+>  }
+> =20
+> +static void macsmc_power_acpi_notify(acpi_handle handle, u32 event, void=
+ *context)
+> +{
+> +	struct macsmc_power *power =3D context;
+> +
+> +	if (event =3D=3D 0x80) {
+> +		acpi_status status =3D acpi_evaluate_integer(power->adapter->handle, "=
+_PSR", NULL,
+> +								&power->adapter_status);
+> +		if (ACPI_FAILURE(status))
+> +			return;
+> +
+> +		power->adapter_status =3D !!power->adapter_status;
+> +		power_supply_changed(power->batt);
+> +		power_supply_changed(power->ac);
+> +	}
+> +}
 
-Second, for the signed sp* types (sp1e through spd2), passing a signed x_ w=
-ith
-an unsigned long divisor BIT(n) causes x_ / d_ and x_ % d_ inside mult_frac=
-()
-to be evaluated as unsigned division and modulo whenever x_ is negative,
-corrupting negative readings.
+[Severity: High]
+What happens in macsmc_power_acpi_notify() if either power->batt or
+power->ac failed to register during macsmc_power_probe()?
 
-Third, for ui16, si16, ui32, si32, and spf0, the multiplications by scale
-(such as ui16 * scale, si32 * scale, and (s16)be16_to_cpu(spf0) * scale) are
-all evaluated in 32-bit arithmetic before widening to long *val, which
-overflows when scale is 1000000 (for values >=3D 2148 on signed/16-bit type=
-s or
->=3D 4295 on ui32) or 1000 (for 32-bit types).
+In macsmc_power_probe(), if devm_power_supply_register() fails for one of
+the supplies, the failed pointer is set to NULL and probe continues as long
+as the other supply succeeded. Unlike macsmc_power_event(), which checks
+if (power->batt) and if (power->ac), macsmc_power_acpi_notify() passes both
+pointers unconditionally to power_supply_changed(), which immediately
+dereferences the pointer.
 
-Would it make sense to widen scale (or cast the operands and divisors to
-signed long / s64) so that the multiplications and mult_frac() divisions are
-performed in 64-bit signed arithmetic?
+> +
+> +
+>  static int macsmc_power_probe(struct platform_device *pdev)
+>  {
+>  	struct device *dev =3D &pdev->dev;
+> @@ -670,15 +1056,19 @@ static int macsmc_power_probe(struct platform_devi=
+ce *pdev)
+>  	 * Check for battery presence.
+>  	 * B0AV is a fundamental key.
+>  	 */
+> +	if (smc->is_acpi && apple_smc_read_flag(power->smc, SMC_KEY(BBIN), &fla=
+g) =3D=3D 0 && flag)
+> +		has_battery =3D true;
+> +
+>  	if (apple_smc_read_u16(power->smc, SMC_KEY(B0AV), &vu16) =3D=3D 0 &&
+>  	    macsmc_battery_get_status(power) > POWER_SUPPLY_STATUS_UNKNOWN)
+>  		has_battery =3D true;
+
+[Severity: Medium]
+Should the second battery check be an else if (!smc->is_acpi && ...) branch?
+
+As written, ACPI Macs always fall through to the second check and call
+macsmc_battery_get_status(power), which queries Apple Silicon SMC keys
+(CH0R, CHCE, CHCC, AC-i, BSFC, CHNC, CHSC) even when smc->is_acpi is true
+and BBIN indicated no battery is present.
+
+[ ... ]
+
+> @@ -858,9 +1297,26 @@ static int macsmc_power_probe(struct platform_devic=
+e *pdev)
+>  	if (!power->batt && !power->ac)
+>  		return -ENODEV;
+> =20
+> -	power->nb.notifier_call =3D macsmc_power_event;
+> -	blocking_notifier_chain_register(smc->event_handlers, &power->nb);
+> +	if (!smc->is_acpi) {
+> +		power->nb.notifier_call =3D macsmc_power_event;
+> +		blocking_notifier_chain_register(smc->event_handlers, &power->nb);
+> +	} else if (power->has_battery) {
+> +		power->adapter =3D acpi_dev_get_first_match_dev("ACPI0003", NULL, -1);
+> +		if (!power->adapter)
+> +			return -ENODEV;
+> =20
+> +		ret =3D acpi_dev_install_notify_handler(power->adapter, ACPI_DEVICE_NO=
+TIFY,
+> +					macsmc_power_acpi_notify, power);
+> +		if (ret)
+> +			return ret;
+> +
+> +		acpi_status status =3D acpi_evaluate_integer(power->adapter->handle, "=
+_PSR", NULL,
+> +					&power->adapter_status);
+> +		if (ACPI_FAILURE(status))
+> +			return -EIO;
+> +
+> +		power->adapter_status =3D !!power->adapter_status;
+> +	}
+>  	return 0;
+>  }
+
+[Severity: High]
+If acpi_evaluate_integer() fails here in macsmc_power_probe(), does this
+leave macsmc_power_acpi_notify() installed with a freed power context
+pointer?
+
+acpi_dev_install_notify_handler() is not devm-managed, so returning -EIO
+causes devres to free power while the ACPI notify handler remains registered
+on power->adapter; a subsequent 0x80 notify event will then dereference
+freed memory in macsmc_power_acpi_notify(). In addition,
+acpi_dev_get_first_match_dev() takes a reference on power->adapter via
+get_device(), which is never released with acpi_dev_put() on these error
+paths or in macsmc_power_remove().
+
+[Severity: Medium]
+Also in macsmc_power_probe(), devm_power_supply_register() is called for
+both power->batt and power->ac before power->adapter is looked up and before
+_PSR is evaluated into power->adapter_status.
+
+Because __power_supply_register() queries the supply properties during
+registration, won't the initial reads of POWER_SUPPLY_PROP_STATUS in
+macsmc_battery_acpi_get_status() and POWER_SUPPLY_PROP_ONLINE in
+macsmc_ac_get_property() always observe power->adapter_status as 0 even when
+AC power is connected? Furthermore, evaluating _PSR directly into
+power->adapter_status and normalizing it in place afterwards allows
+concurrent property reads to observe the unnormalized value.
+
+> =20
+>  static void macsmc_power_remove(struct platform_device *pdev)
+>  {
+>  	struct macsmc_power *power =3D dev_get_drvdata(&pdev->dev);
+> =20
+> -	blocking_notifier_chain_unregister(power->smc->event_handlers, &power->=
+nb);
+> +	if (!power->smc->is_acpi)
+> +		blocking_notifier_chain_unregister(power->smc->event_handlers, &power-=
+>nb);
+> +	else
+> +		acpi_dev_remove_notify_handler(power->adapter, ACPI_DEVICE_NOTIFY,
+> +				macsmc_power_acpi_notify);
+>  }
+
+[Severity: High]
+On desktop Intel Macs without a battery (where power->smc->is_acpi is true
+and power->has_battery is false), power->adapter is never initialized in
+macsmc_power_probe() and remains NULL.
+
+When macsmc_power_remove() runs on those machines, won't passing
+power->adapter to acpi_dev_remove_notify_handler() cause a NULL pointer
+dereference when it accesses adev->handle?
+
+[Severity: Low]
+Finally, does this driver still build when CONFIG_ACPI is disabled (for
+example, on arm64 Apple Silicon configs with CONFIG_ACPI=3Dn)?
+
+In include/acpi/acpi_bus.h, the full definition of struct acpi_device as
+well as acpi_evaluate_integer(), acpi_dev_install_notify_handler(), and
+acpi_dev_remove_notify_handler() are only provided under #ifdef CONFIG_ACPI
+without !CONFIG_ACPI stubs, so dereferencing power->adapter->handle and
+calling those functions in macsmc_power_acpi_notify(), macsmc_power_probe(),
+and macsmc_power_remove() will fail to compile when CONFIG_ACPI is not
+enabled.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029085504.3547=
--1-atharvatiwarilinuxdev@gmail.com?part=3D12
+-1-atharvatiwarilinuxdev@gmail.com?part=3D10
