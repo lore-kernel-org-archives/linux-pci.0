@@ -1,50 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=114.242.206.163
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793245218;
-	b=fQRyybotaQ54/pFoNtGJPsV3v13A8J2kDpcJMBmNlECweOEDgMcl/c6KZ5Gr4xryLUxI
-	 bLkS1ejbijSF38FsYnIqtbnsIXSkRl0FqEgkoGkDwOt0DD9OJUecmLRcOmYTTdtUhnEXA
-	 RMoXgsAl1girWaaqYN4WNEiAVmSgI27+3xy7Wp0O65AhTZsk+M8XQp4E8dW0p94YElLDN
-	 zYjW/eaSyNiOunTLVS1DPEtynnbN5NUHixdPjcofaA3dv1hQCu4MFTBDvOkGQpYkeDSKI
-	 BRLhcGyfJyo/Q3DcyjCZER03ykFfayZbgSAiRTWQdk/7pmlmUe5B2o3+Vqh3vKvdKiw==
+	t=1793245290;
+	b=Wh8QYBJiPGSNS8BZ0sRjznD2N63J+WMO7eB+nsIu0HRNW0/QmB8o14wMvuxPEwobUP83
+	 KX12HxF/TJ6ot8rqo1MNUcFw+ksyRCK0TgqclEI2gpHruM1yRzGsoQ0q/olZVDczjrDwK
+	 y5/CCUGprwzk4ZwcgsiN9maQPM9C1C32eljE2o0RsYwo98GiwGNmF/dK3nWyFE0ZktvnN
+	 9Lj2NAIfThHwXvvhkVqdfev7hf9VHpZpkEFEBZoXmQH5xBWp3izKqfiLCeNVlB4bwEfjt
+	 0YA6iR4yCtvjYwDrsElSkVJh4JS/qrNmem/b8W8/N1ScuVsjxOaK1rY101tPn/UBrGA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793245218;
-	h=DMARC-Filter:Received:Received:From:To:Cc:Subject:Date:Message-Id:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-CM-TRANSID:X-CM-SenderInfo:
-	 X-Coremail-Antispam;
-	bh=Q6YeiifV/84lte1fx4gsumMxZCBv00tuDX4EIGhZpJU=;
-	b=ln34bbb5zX5xdaMb7IXIOq3nmrq5yUfw8pbCSKYOam2SI5B/M4ctrHYBHmg5WQN4Ot5q
-	 OxT67RDwxcOu9zdJNTtH4VK0etOmcFDp5ZECoY9UnbnpgSb+iox9mSdzQZqdE5aGeK4LK
-	 ZP3HFXHSZREAR3wih2sDE1QTJdJOBzY3Y0xDuz2vHmpw5QR7jYPooV/wXaT44+QeTTH6N
-	 V+ZgaKa5dTj+kJuGHg3QIOmQZ9OP2QO0sDRGT7BcAmnwcDjEwRttGSz53eMvkcNKGYW21
-	 4rf0S7JdoZRedUj14Z9Or3aF7UEmXEWv3u3SNZZwGnoakDx3D0vp82eQtyAuQjMnVhQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793245290;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=mrtL8XqUGqE1N4DFlL2acGMVTdfHOFSmCAt9VWogr8g=;
+	b=iFef1fHrGJx2GCIIKdH+nCZVpI4x2xm5coKeA+QEoVCFcU/Tg12jlYwZk8QshGMBg4wL
+	 EH0Prv6egx5YN56HbqtmQ0O/emDg/BgsWCQ1ybG2X+lot+Ch6iIpmyjQNto4Ngvzg75Sm
+	 RXecIV7E6P1pX0BP50ajRXQos9jCUEDkxtAOliBk3PADr8w+f4dmO3XIMl9if40CCKtdF
+	 MgIkLa55N45lySGD7K4hdNrlxJWzyowYe5GdN/gtJnaduV2Lm4T7prglOJ4kZC2A/Y0We
+	 m4D7Bt1nKOB7eoDDopXrICeUlCUy6hYobBmsCQcKi8aib7AT2Hh3m0xLtiFgriqaF/g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=loongson.cn;
-	spf=pass smtp.mailfrom=loongson.cn;
-	arc=none smtp.remote-ip=114.242.206.163
-Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B1401606A31C;
-	Thu, 29 Oct 2026 03:40:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B1401606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=loongson.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=loongson.cn
-Received: from loongson.cn (unknown [10.20.42.172])
-	by gateway (Coremail) with SMTP id _____8AxdvAdwOJqHFQaAA--.10538S3;
-	Thu, 29 Oct 2026 11:40:13 +0800 (CST)
-Received: from ubuntu.loongson.cn (unknown [127.0.0.1])
-	by front1 (Coremail) with SMTP id qMiowJBxrM4bwOJqfRAxAA--.11881S2;
-	Thu, 29 Oct 2026 11:40:11 +0800 (CST)
-From: wuqianhai@loongson.cn
-To: helgaas@kernel.org
-Cc: tzimmermann@suse.de,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/VGA: Fix boot device detection after framebuffer relocation
-Date: Thu, 29 Oct 2026 11:39:14 +0800
-Message-Id: <20261029033914.978276-1-wuqianhai@loongson.cn>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20261028231514.GA577494@bhelgaas>
-References: <20261028231514.GA577494@bhelgaas>
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="o06ggW/X";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A8DD606A31A
+	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 03:41:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=o06ggW/X
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACC0B1F01825;
+	Thu, 29 Oct 2026 03:41:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793245289;
+	bh=mrtL8XqUGqE1N4DFlL2acGMVTdfHOFSmCAt9VWogr8g=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=o06ggW/X6TaJUBDtcEEO7OAvhJaLLPiKwNSefmxaAM7LUkbEqmAm+EjAcQrkeW8rx
+	 +Annuw9XkaJ+87RBjRmS5daPo570H190eWwYNeGnnTLmDLRlYv0BbA5uVd+Eg/Gmi+
+	 CDfxDtP2Jiy1amIKHBldx+C1txLuQCeJlWz3gb+MEnz0UaqWec+AFFUIGv+XoQfj3Y
+	 v2i31dsyhsr+yJZVwy5rAtiSRF343WcdqQtvv8JIskOilQpWRl8GucXV5W9FlOgj7A
+	 mA/wtQILshY7CkLnushMNPbnXLs/lMYmw8u6q7bpsuDpAWwzkoD9Ot8fWovzaVuyek
+	 yZ5vMRUG+Pr1Q==
+Message-ID: <sashiko-outbox-188675@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 5/6] arm64: tegra: Add node for the GB10B GPU on
+ Tegra264
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Mikko Perttunen" <mperttunen@nvidia.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261029-b4-t264-igpu-pci-v1-5-4d843dda0b02@nvidia.com>
+References: <20261029-b4-t264-igpu-pci-v1-0-4d843dda0b02@nvidia.com>
+ <20261029-b4-t264-igpu-pci-v1-5-4d843dda0b02@nvidia.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 29 Oct 2026 03:41:28 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -53,53 +60,17 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qMiowJBxrM4bwOJqfRAxAA--.11881S2
-X-CM-SenderInfo: 5zxtxtpqkdxqxorr0wxvrqhubq/
-X-Coremail-Antispam: 1Uk129KBj9xXoW7XFyUtw1fuFy8XFyxJw1kJFc_yoWkKFb_ua
-	yxAasrGr18Way0ka4kK3WrAw4xu3y0vrWrGan7JrySgFyktFn2g3WSkw1fZr1xG3yUtF4D
-	KFWDtF13Z34fuosvyTuYvTs0mTUanT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUj1kv1TuYvT
-	s0mT0YCTnIWjqI5I8CrVACY4xI64kE6c02F40Ex7xfYxn0WfASr-VFAUDa7-sFnT9fnUUI
-	cSsGvfJTRUUUb4kYFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20EY4v20x
-	vaj40_Wr0E3s1l1IIY67AEw4v_JrI_Jryl8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWUCVW8JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-	WUJVW8JwA2z4x0Y4vEx4A2jsIE14v26F4j6r4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
-	Gr0_Gr1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l57IF6xkI12xvs2x26I8E6xACxx1l5I
-	8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AK
-	xVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lw4CEc2x0rVAKj4
-	xxMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
-	Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x
-	0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWU
-	JVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIx
-	AIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxU2sXoUUUUU
 
-Hi Bjorn,
+> While the integrated GB10B GPU on Tegra264 is on the PCI bus, it
+> requires a BPMP power domain to be enabled or it won't enumerate on the
+> bus. Therefore, describe it and the power domain in the device tree to
+> allow the power domain to be enabled prior to enumeration.
+>=20
+> Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
 
-Thanks for the detailed analysis.
+Sashiko has reviewed this patch and found no issues.
 
-You're right that screen_info_fixup_lfb()/screen_info_apply_fixups()
-stores a PCI bus address in screen_info_lfb_res_start and compares it
-with the CPU address in pdev->resource[].start, which is broken on
-systems where bus and CPU addresses differ.
-
-On LoongArch, though, bus and CPU addresses are identical: with modern
-firmware, acpi_prepare_root_resources() takes the PCIH path and leaves
-the window offset at 0 (see commit 49f33840dcc9).  So the existing
-screen_info_apply_fixups() works correctly for LoongArch, and the
-address-space confusion you describe does not trigger there.
-
-I've sent a v2 that:
-- enables vga_is_firmware_default() for LoongArch,
-- restricts the screen_info_apply_fixups() call to LoongArch so x86 and
-  other architectures are unaffected,
-- makes VGA_ARB select SYSFB on LoongArch to avoid the undefined
-  reference when CONFIG_SCREEN_INFO is not set.
-
-The general bus != CPU problem in screen_info_pci.c is still worth
-fixing for ARM and friends, but I'd rather keep that separate from this
-LoongArch enablement.  Happy to help with that follow-up if useful.
-
-Regards,
-wuqianhai
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029-b4-t264-ig=
+pu-pci-v1-0-4d843dda0b02@nvidia.com?part=3D5
 
