@@ -1,54 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.47
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793287579;
-	b=Ta6/V8/c3GTIrMnkiu0qBrjDjx3ZSr5dWaBSGTnAo+q+EeB2UJDnlvLNcW5ZLZu/uZ5M
-	 anHYYouKhC3Sq9E6t+1HDMtyQW1RY8fmW4ks4ZYsMRyPqC8oqPX0aphv7fKTQQzf0hDO/
-	 raUItD4+/9kIURSlv9QvpPfv7uz6SX+6I42XL7XlwuyavSNSvDyaPveDFG86sesgrKpea
-	 1aLz9BQKj/zXXadedPmVqJB2dN+U/r5AZNii3EPAndFpd+u4A6L6ilaH70ug2BdjZLSl1
-	 whR+pC/YSZRl6cbd9fd1h1B0Tk2bpkZnQUIKkpXmFbhJRiF16GZB0xsDOatQkjE43PQ==
+	t=1793287760;
+	b=j6bPtK4lPRCXRY4TRGM0Ew2gBGQIFx8EvW1yeb0uP80ObJc9J2DA0XwdymMAMpTwoCSY
+	 KJWKsY9xB9zglcUOWj2sk6TtyU788BDCLa2PPv9PTsnQ2N0fyNjQYv3re+iYEoSgVrAo0
+	 HI/tW8ytTYvgpiZHKqJnO6+/aBQJQ1X7AvT7irP0QeSEpsfEHYH2LN/3Jvy68N6BFSvQK
+	 XGe/BgpRohX8zAxEVPIcnCniSUnp8DH8d3shZI56JSZX1PyZF0t0b2p6aTGkODpFH924l
+	 PQpx0+ayNBL0eAXvC19dUadu8yEyeQCzWtyWe3URvwa+ltzWunXPkLfLzU+EuhYZyLA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793287579;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=mpW7Rx8PuBJeOKNX2dQ8d9XnAjnbB8743kHyv8YBQHw=;
-	b=AGpeemJD0gy43HIeu8icj9tJ9VDC0p86P9L8WVyK6GTVCjqifDhV7tIiJIGYqmb5vDmS
-	 YgtvTVBWAGSOrTBLaxuQateKAFq2lx9qvduEjZ9FullBFMv0WvDmaVHAw0tfTXyG3pDQl
-	 Z9hLJxkcTp48DGbFdb8URbokjbYNhmUEcWI8qMQ0hgdKh0MDz7aSDcn8cWD3toEBdI5A/
-	 LyvCtP8ko9krCx1nPxtHuVW3aKymmBLbPt+5zLH+ZxaF88vdrRS+69qZc0ApZYLOyQ4lt
-	 /oHTtRSemTjTN6mpLdirb1hFxMiFAx81wxzn97X+5rQxUSTkP4HGZp60C2v8AXjDifw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793287760;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=YToyvZk34yrk+TaQWFeLoYWs0xKK8iCkFtinElmzF+8=;
+	b=LNWj7RqlS0UVj5dOpAKQ5T7Kp6YfpjX1pSMA11elhjH6TTYzkaEC4V/zf9KuVO2y9euU
+	 BWZquEJuFRtzAcmzbTrn5iKzrYDvPbw4yURtamLTF/D58geTGd+9sGK7j9ivTs6Cb7Byi
+	 w4KhLT9AUd3VA98WpY+pRld37FOeLaXjuCLWSSh+363eptJ/NiMA6FKbioOJNtgPZyfkC
+	 huA6s0NOay6yom46K4uZjgsveo6yrqPvftzhmfWBqmdzBq9VPmkSmhOQ0ncHcBk+ionjF
+	 SiIjCKtIqRC3vDSjUyzojEo14DVxnsv/2xmjxxP6TM0V3giMlGxGNM0zI9ERymQakkg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="CFHq/4I7";
-	arc=none smtp.remote-ip=91.218.175.47
-Received: from mta0.migadu.com (out-47.mta0.migadu.com [91.218.175.47])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BO0c6qDo;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D734606A31D
-	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 15:26:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6D734606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DF57606A31A;
+	Thu, 29 Oct 2026 15:29:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=CFHq/4I7
-X-Envelope-To: linux-pci@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=vYqatMBexbASiH/pDoDg+soUpC7jr6OsHv3SiCXY0DQ=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793287570; v=1; x=1793892370;
- b=CFHq/4I7/Ryp9pDrYCokipvX9Q3IBM65pbtpLZ0ZnxwtpVp4/KZergKO2A6hs85u2EgK1XI4
- salYWiH7GwXrPHodZwh3cocV/ZBi2TKG3EyzBZ710vT60x7aM4qAx1NbVH12ki0e43SO8KIm1bB
- HywAW1I7jNTMsiGuMH2y4/qo=
-X-Envelope-To: linux-pci@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 7378328bbc0346d2;
-	Thu, 29 Oct 2026 15:26:09 +0000
-X-Mizu-Trace-ID: 7378328bbc0346d2
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <12988c8e-95ad-4989-a6de-e02af3c9ef1b@linux.dev>
-Date: Thu, 29 Oct 2026 20:55:53 +0530
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BO0c6qDo
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 790661F01816;
+	Thu, 29 Oct 2026 15:29:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793287759;
+	bh=YToyvZk34yrk+TaQWFeLoYWs0xKK8iCkFtinElmzF+8=;
+	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
+	b=BO0c6qDojjdakwinkAlHGGs04tJRm82CeXV4hZ8j+F6BnTR0wgC2BH5pk1RJAHMrT
+	 UOEZywlbXd5zTuO9mz+MwypwB8Viz+hNwi9e+OJCMlGMIlHX3cHy+hYlzlkPjuWZ0A
+	 DdCCy2Hbg+l4z2N1DrQ05Mmt6Dor7cqHfnq0YR95LLYPy4knQrMWv7UWf6FpDEsOcS
+	 iR3Aqam7z19u3juC1izWaRIJL2momj9aH0K3RwGPeo/F2cZk1XWHsLiydu7m+iThRj
+	 fcSy2kirRXH69KCSYbGdFoxUTGyzGyEH/85s3lpJX6DZPGa36TQBV5lHm8uNFMqpvi
+	 7W9f9m9QYlU+g==
+Message-ID: <sashiko-outbox-189605@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v16 15/18] PCI/CXL: Restore CXL state after PCI reset
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Srirangan Madhavan" <smadhavan@nvidia.com>, linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20261029145703.2185231-16-smadhavan@nvidia.com>
+References: <20261029145703.2185231-1-smadhavan@nvidia.com>
+ <20261029145703.2185231-16-smadhavan@nvidia.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 29 Oct 2026 15:29:19 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -57,75 +58,101 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 14/14] mfd/macsmc: add ioctl to access smc keys
-To: Sasha Finkelstein <k@chaosmail.tech>,
- Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
-Cc: alexandre.belloni@bootlin.com, andy@kernel.org, asahi@lists.linux.dev,
- bhelgaas@google.com, bp@alien8.de, brgl@kernel.org,
- dave.hansen@linux.intel.com, dlechner@baylibre.com,
- dmitry.kasatkin@gmail.com, eric.snowberg@oracle.com, griffin@kroah.com,
- hansg@kernel.org, hpa@zytor.com, ilpo.jarvinen@linux.intel.com,
- j@jannau.net, jarkko@kernel.org, jic23@kernel.org, jmorris@namei.org,
- lee@kernel.org, lenb@kernel.org, linusw@kernel.org,
- linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-gpio@vger.kernel.org, linux-hwmon@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-pm@vger.kernel.org, linux-rtc@vger.kernel.org,
- linux-watchdog@vger.kernel.org, linux@roeck-us.net, mfd@lists.linux.dev,
- mingo@redhat.com, neal@gompa.dev, nuno.sa@analog.com, paul@paul-moore.com,
- pavel@kernel.org, platform-driver-x86@vger.kernel.org, rafael@kernel.org,
- roberto.sassu@huawei.com, serge@hallyn.com, sre@kernel.org, sven@kernel.org,
- tglx@kernel.org, wim@linux-watchdog.org, x86@kernel.org, zohar@linux.ibm.com
-References: <525E5B4D-A947-4567-9FCD-5FFF2CA8B161@chaosmail.tech>
- <20261029143926.1246-1-atharvatiwarilinuxdev@gmail.com>
- <0683C803-C578-4C55-B893-BC03EBF9A9F1@chaosmail.tech>
-Content-Language: en-US
-From: Aditya Garg <aditya.garg@linux.dev>
-In-Reply-To: <0683C803-C578-4C55-B893-BC03EBF9A9F1@chaosmail.tech>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] PCI/CXL: missing __must_hold(cxl_region_quiesce) on __cxl_reset_exe=
+cute()
+--
 
+commit da830bbfe7ea5fbc66b29d8fb48ea9c9acd0a112
+Author: Srirangan Madhavan <smadhavan@nvidia.com>
 
-On 10/29/26 8:23 PM, Sasha Finkelstein wrote:
-> On Oct 29, 2026, at 15:39, Atharva Tiwari <atharvatiwarilinuxdev@gmail.com> wrote:
->> 1. The patch is required, atleast on intel macs, as without writing GPU and CPU
->> states to smc, the system gives PROCHOT signal under small load
->> , and heats up a lot.
-> 
-> In that case, why are you exposing a generic smc key interface instead
-> of one that just does that? If you think that this data should be set
-> from userspace - whitelist the set of keys that are needed.
-> 
+PCI/CXL: Restore CXL state after PCI reset
 
-Whitelisting will create an endless cycle of upstreaming new keys. But 
-considering T2 no longer is receiving updates, Asahi would be happy to 
-send their keys they wish to be whitelisted right ;)>
->> 2. the smc dosent expose keys of nature that can physically damage the system
->> it only exposes power/volt data, and the most you can poke is reboot
->> keys and gpu/cpu p-states.
-> 
-> Are you willing to make that claim for every smc-equipped device, not
-> just T2? Are you willing to make the same claim for future versions of
-> smc firmware?
+This commit restores the PCI configuration needed for HDM access, cached HDM
+decoder settings, and CXL Device DVSEC state after a CXL device reset. It a=
+lso
+handles restoration failures by disabling the device in the saved PCI comma=
+nd
+state.
 
-Fair enough. We can restrict it to T2 Macs, and Asahi can later adopt if 
-useful?>
->> 3. If a person is randomly touching keys, Its their problem and not ours.
->>
->> 4. There are a lot of things that can mess the system way more and permanently
->> than smc (undervolting for example), but they are not safe guarded, why
->> should this be then?
-> 
-> I think it is inadvisable to leave a loaded footgun around and then
-> blame the user for using it. As an "OS Vendor" you have a duty of care
-> to your users.
+> diff --git a/drivers/pci/cxl.c b/drivers/pci/cxl.c
+> index 9a298e90586da..58bbd5b47539f 100644
+> --- a/drivers/pci/cxl.c
+> +++ b/drivers/pci/cxl.c
 
-It would say the "duty of care" argument is more of a philosophical 
-thing than a technical argument here. Still, I respect that but there 
-needs to be a balance between adding features and respecting the duty. 
-It seems various vendors have different views in determining the 
-balance. The above 2 arguments look like a good balance. What do you think?
+[ ... ]
 
+> @@ -232,6 +233,162 @@ void pci_cxl_hdm_cache_release(struct pci_dev *pdev)
+
+[ ... ]
+
+> +/* Caller holds the region lock and keeps device traffic isolated. */
+> +static int pci_cxl_restore_state(struct pci_dev *pdev,
+> +			  const struct cxl_hdm_info *snapshot, u16 *command)
+> +	__must_hold(cxl_region_quiesce)
+> +{
+> +	device_lock_assert(&pdev->dev);
+> +	cxl_restore_pci_state_for_hdm_restore(pdev, command);
+> +	return cxl_restore_state(pdev, snapshot);
+> +}
+> +
+>  /*
+>   * CXL r4.0 sec 9.7.2 defines the reset completion timeout encodings.
+>   * Sec 9.7.3 leaves config-space access behavior undefined for 100 ms af=
+ter
+> @@ -412,7 +569,9 @@ static int cxl_clear_memory(struct pci_dev *pdev, int=
+ dvsec, bool initiate)
+>  }
+> =20
+>  static int __cxl_reset_execute(struct pci_dev *pdev, int dvsec, u16 cap,
+> -			      struct cxl_hdm_quiesce *q)
+> +			      const struct cxl_hdm_info *snapshot,
+> +			      struct cxl_hdm_quiesce *q,
+> +			      u16 *command)
+>  {
+>  	int rc, rc2;
+> =20
+> @@ -437,10 +596,15 @@ static int __cxl_reset_execute(struct pci_dev *pdev=
+, int dvsec, u16 cap,
+>  		pci_err(pdev, "failed to clear CXL Reset Memory Clear: %d\n", rc2);
+>  	rc =3D rc ?: rc2;
+> =20
+> +	if (!rc)
+> +		rc =3D pci_cxl_restore_state(pdev, snapshot, command);
+> +
+>  	rc2 =3D cxl_hdm_quiesce_flush(q);
+
+[Severity: Low]
+Does __cxl_reset_execute() also need the __must_hold(cxl_region_quiesce)
+annotation to avoid compiler context-analysis (-Wthread-safety) warnings wh=
+en
+context analysis is enabled?
+
+Both its caller cxl_reset_quiesced() and its callees pci_cxl_restore_state()
+and cxl_hdm_quiesce_flush() are annotated with
+__must_hold(cxl_region_quiesce), while __cxl_reset_execute() itself is not:
+
+  cxl_reset_execute()
+    cxl_region_quiesce_lock()
+    cxl_reset_quiesced()                [__must_hold(cxl_region_quiesce)]
+      __cxl_reset_execute()             [unannotated]
+        pci_cxl_restore_state()         [__must_hold(cxl_region_quiesce)]
+        cxl_hdm_quiesce_flush()         [__must_hold(cxl_region_quiesce)]
+    cxl_region_quiesce_unlock()
+
+Relatedly, in include/cxl/hdm.h:
+
+  void cxl_region_quiesce_lock(void);
+  void cxl_region_quiesce_unlock(void);
+
+the prototypes omit the __acquires(cxl_region_quiesce) and
+__releases(cxl_region_quiesce) annotations that are present on the definiti=
+ons
+in drivers/cxl/core/hdm_state.c, which also prevents context analysis from
+seeing the lock acquisition in cxl_reset_execute().
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029145703.2185=
+231-1-smadhavan@nvidia.com?part=3D15
