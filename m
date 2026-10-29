@@ -1,50 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=54.204.34.129
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=54.254.200.128
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793268882;
-	b=qQ/7MFUHP6+xAn5J2n/A1H0ntfPYnIn0GCi4xviXBaRgKhtcy0KRV7D3lxcZuAIbl/Tv
-	 rCMVgwT5IcQ+qOCdSbBrS6Gboi79pUUOUUA6dYJjavzQYnKfL/nG46IfmoEnbTSJgE1wo
-	 P6CZzOCq+CxI3fvbafZ6uDeA3yMrhKDMiWyDV1tyMM4C4Abkafo9NdfmuOdlwMUGtaVt9
-	 sDtfubt8DfJnJ7hhpxSMVqBYxJzQVvkqxMa6KmAT8NcEkVNSwjuN9UYxIR59+C83PwzHx
-	 6f6x4LGA9rnWHlAhBoWbDref1Bas2hge1Dk3xZdMpMm5L6uEweI7dZNZoME9dZSWmbw==
+	t=1793268915;
+	b=wyvh6Wrr/sQaDqi7bcce6fZvDZsUkZYHbd2BAm5zFZQIV0eauPb/3vt1xWcflzZu8iQl
+	 LjbMKIi1QS7iP2pVd2UED06sYcTzMDVgxJY0UXtDkRV7uueASyXdqWRPD6maxCAwvFE77
+	 XGxLuH2ZoMoZBxYRj32QMAgJS4+gdzca5p6DvY9aGYb8m2GmMnqOmVwc59860vnyTDDxl
+	 Cq9Upw2Uwj3V4Bmcur7Zdmx1nxm6txSiwJT1jifNUerY2P3cFsCAxq1EGNHLBBoOIbOy9
+	 2OptQcrmZdLsaJDp8ILc/d2aUj6UEp7nMpinPbxr+hB9Fdphg2YXiMutQRt+lkPgrHg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793268882;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793268915;
 	h=DMARC-Filter:X-QQ-mid:X-QQ-Originating-IP:Received:X-QQ-SSF:
-	 X-QQ-GoodBg:X-BIZMAIL-ID:EX-QQ-RecipientCnt:From:Date:Subject:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
-	 References:In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:
+	 X-QQ-GoodBg:X-BIZMAIL-ID:EX-QQ-RecipientCnt:From:Subject:Date:
+	 Message-Id:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:
 	 X-Developer-Key:X-QQ-SENDSIZE:Feedback-ID:X-QQ-XMAILINFO:X-QQ-XMRINFO:
 	 X-QQ-RECHKSPAM;
-	bh=ZTQjA8zljN1ZEB/RMOcOmcshPHsNIzGWEobToCZYhQU=;
-	b=HRl10gTTXa/ZEGkOgxJlWYw9KpsukdEPkh+y7fYZOPUbwdJCTOF+aq0ZpoDXDb4UFnpR
-	 ErhPzvCQd/bAIycZmecre5eyRJMeKwOIEUaT9GeKpjHJiCEpgqng08pKIblaG/fscf3p8
-	 5zpRn4OjXdEPkjfDc0yrKvt62BPy7Vf5+GFXXKbArthCdkYMg8BWZAuQOF4BL9oa7mhNl
-	 X8CXYdNT2JFyalaMMuS9q1txddL1KwOOpB68YaN20qfDj8oFZ3c2D4v7oxamehWPYFz1H
-	 X8MwBbf1WGUemDgFhKbPydooBbrBkrw8FxHH/SVgVMr4b1OuRu0T8HgpkTxL9NJveSQ==
+	bh=W534XL0fIHUo2xBHH8CbjpPEd8rz8kzBGaOUMyx9pCc=;
+	b=gdEQCYEPH5+Bap0l6yfiUJvfXtPml3y/Lj+mjgs103+3NSesErwOgWrY9O3zk4A1vRrg
+	 jMPEW1b7JqbnjAsnzBGZLGW+nNfwozsBJyrszEkATqFbC6nnNmal8iJEBXT4cpHO2yFAr
+	 hCLuH+Z1EcQ2nQteL8V1TV1z0KVrHFVp+DT4AxuG2MQh0hgGDzMBAbkatUKxO9gcNFD8s
+	 UNrWQydl0wOgXFTgj/+q1Osyp2cth+9WYUepJ+fjniISvX0DCxB0QHE7jxRWe+hr1FVFt
+	 oQ6cXoa7+gdzbIbkKMNrF+QRcpkerwa0k3sQBgKt0hdoAzlBePMCHdAv/g4vh+8e68w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=radxa.com;
 	spf=pass smtp.mailfrom=radxa.com;
-	arc=none smtp.remote-ip=54.204.34.129
-Received: from smtpbguseast1.qq.com (smtpbguseast1.qq.com [54.204.34.129])
+	arc=none smtp.remote-ip=54.254.200.128
+Received: from smtpbgsg2.qq.com (smtpbgsg2.qq.com [54.254.200.128])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CF3F606A31A;
-	Thu, 29 Oct 2026 10:14:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6CF3F606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92A8A606A321;
+	Thu, 29 Oct 2026 10:15:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 92A8A606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=radxa.com
-X-QQ-mid: zesmtpip4t1793268844tcabb610e
-X-QQ-Originating-IP: sMMrFrowwf6ZzoovnqFE/cAgzaCLtmR+197kXHsgFbE=
+X-QQ-mid: zesmtpip4t1793268826ta0a5c79c
+X-QQ-Originating-IP: ev2Ej5asX813a6CgU0vqNzHqkbXxOv1EU01Mx6bLOL0=
 Received: from [192.168.30.244] ( [localhost])
 	by bizesmtp.qq.com (ESMTP) with 
-	id ; Thu, 29 Oct 2026 18:14:01 +0800 (CST)
+	id ; Thu, 29 Oct 2026 18:13:38 +0800 (CST)
 X-QQ-SSF: 0000000000000000000000000000000
 X-QQ-GoodBg: 0
-X-BIZMAIL-ID: 12288290236240033629
-EX-QQ-RecipientCnt: 31
+X-BIZMAIL-ID: 11110707060909330439
+EX-QQ-RecipientCnt: 33
 From: Xilin Wu <sophon@radxa.com>
-Date: Thu, 29 Oct 2026 18:13:38 +0800
-Subject: [PATCH v4 4/4] firmware: qcom: scm: Allow QSEECOM for Radxa Dragon
- Q8B
+Subject: [PATCH v4 0/4] arm64: dts: qcom: Add support for Radxa Dragon Q8B
+Date: Thu, 29 Oct 2026 18:13:34 +0800
+Message-Id: <20261029-q8b-dts-v4-0-e8e7438f5545@radxa.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -56,9 +56,13 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261029-q8b-dts-v4-4-e8e7438f5545@radxa.com>
-References: <20261029-q8b-dts-v4-0-e8e7438f5545@radxa.com>
-In-Reply-To: <20261029-q8b-dts-v4-0-e8e7438f5545@radxa.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/2WPQW7DIBBFr2KxLtUABmOvco+qiwGGhqpxHHCsV
+ FHuXuJUrdXu5kv/zby5skI5UWFDc2WZllTScayhfWqY3+P4RjyFmpkEaaAHwU/W8TAXjgqj17F
+ 31klW21OmmC7rppfXRy5n905+vuPfjUyncz0xP2rMYSHuj4dDmodGaIFCtdiSIW9MNH1wttNQZ
+ wATtYQudtgHtlUbmlVMQ8eLt9LCZeKn88SnNPo5f3CNzmKVJKXjsCh2N9unMh/z5/ryIlaRf98
+ tggPvAoEz2KkAdpcxXPC5yq47FvnDCYD+l5OVo4BCkA6E1v3l1IaTG05VzmhtehMi+VZvudvt9
+ gVntevlqAEAAA==
+X-Change-ID: 20260901-q8b-dts-a3afc5f9b8b2
 To: Bjorn Helgaas <bhelgaas@google.com>, 
  Andrzej Hajda <andrzej.hajda@intel.com>, 
  Neil Armstrong <neil.armstrong@linaro.org>, Robert Foss <rfoss@kernel.org>, 
@@ -77,60 +81,159 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  dri-devel@lists.freedesktop.org, devicetree@vger.kernel.org, 
  linux-arm-msm@vger.kernel.org, linux-gpio@vger.kernel.org, 
  Stephen Chen <stephen@radxa.com>, Junhao Xie <bigfoot@radxa.com>, 
- dragon@radxa.com, Xilin Wu <sophon@radxa.com>
+ dragon@radxa.com, Xilin Wu <sophon@radxa.com>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>, 
+ Daniele Briguglio <hello@superkali.me>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=731; i=sophon@radxa.com;
- h=from:subject:message-id; bh=ha+6AXBZg8vPgpy9CUy+X6vPtWkIMSbkDFJ7rZDLj7g=;
- b=owGbwMvMwCVmdFg0fe08Iz/G02pJDFmPZcIF+TNUXRbej6+7dv2upr+XYqPri+crHjdPdv0Tv
- fNXnuvmjlIWBjEuBlkxRRaFeIa57JW5156KlerBzGFlAhnCwMUpABP5v5Hhf82uiXcrO+dMPuC1
- rtS5cb1jZLHGkRnym8pqQ56/Szg0x5Thn+Yk/tj3/yL0pnOkCYtH54jW75xTWXhGpjbOlWFlhs5
- LTgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5416; i=sophon@radxa.com;
+ h=from:subject:message-id; bh=RgOmRQN8UXUUlOJ5kDJ8nDI75yvgfp9MJNYPBSQG7xo=;
+ b=owGbwMvMwCVmdFg0fe08Iz/G02pJDFmPZYIvaEsuqfR5cIb9SuZE5SwxrwB1r4TVoVoyes//r
+ mjoOZ3cUcrCIMbFICumyKIQzzCXvTL32lOxUj2YOaxMIEMYuDgFYCK+/IwMU+cpn7Y8PnGDtaBL
+ UrnMww63NZcu9bQrLXv0eo/JlpreWkaGuxU301667rxpzso2LYR7/evnx3Z8mtFYbFaiOed3iO4
+ CJgA=
 X-Developer-Key: i=sophon@radxa.com; a=openpgp;
  fpr=205F009D07796DD6E516752E32C31567AD9E324E
 X-QQ-SENDSIZE: 520
 Feedback-ID: zesmtpip:radxa.com:qybglogicsvrsz:qybglogicsvrsz3b-0
-X-QQ-XMAILINFO: MV4bJPEodRzJHjFtEiJzheNZeVnpZocpvDF71bWg4qc5xWWHy0WAqCVG
-	rLgJEkAtTJ3ngmrZxpd5ICdZm7U67ojUsSxLRiigrudORLVbxWGjMGDK8rfdOsOi4jSgTcF
-	sFlLPFkoBL4TY/a2S8J0r6sMnTKyezo/74lyhhgAdnVPAmh+GsKjgCbFmk5Um4N/+PtkGsR
-	eSl7WqtbUEtiX2pXptfrJjOV7mL/41Lv6flqdTUm/rZnAfrq5PtfPFpDAbG6i62SLyExeqX
-	2QaQrN0yqTVArmN9gE2W+uSnOZvCm2qGx5/LX+lQgH/aai+DE7tL3ax9fxBspAkMnsrpPM0
-	2qUSM3f55XVlZa7GWgW1KiHjwnUC5Z3T3Fbl0KWfSBlbws8gCLlzCbXt6M5In+C9wjqidE/
-	4gAJAWi7V68U+vIsgQkoa6KQNfk2GtS8um7/LNrB49BGpjfRw+TqyJIFHUevyIo/Ymnd4WU
-	BczHvaA3wbq4om60fmMeY1KTrg3KYWL4CRoHCfS1J4n682Srj778Sa+YhyRjFCgW4gVoa4y
-	us81CE92LFUKazK/xx4YRm68aR0PGL9BFADEX3wPvq72I5QjpQtmcXhdWvqDAMV8FbVgCZW
-	ViXqKUAQ3K0bCaNLRIPB5WV2GqCuOTTfQlnSZmcHCn5iCXMJvkHgj3fKKRcPw4+Y+49ox0F
-	Oluh+mbl2EMJFKxb67OsTTvwc9e3DajoB5h7FJo30bXMrqVnifzW9wYCJ85rzPV0E8dfGgB
-	IWNrK1/sN6jrvW5CF9/IC1OdRnGs4WX02N8BqoEM0VCeWEy8CQeqLOlwXt6hOe8JStLl1Se
-	YAVp5brUAa8a3+RgRKXSTu7A2uIyEJPdf+rV1ZTjlrU46uDi8AvIlxr6L338YWmBuXGVRcp
-	wkDxGfUlroaUdMETcpc18zSz0OvsHk5g4h8mXTBFwzLNe7RaEGWTpR/nVi4yha4UroPiYCG
-	fyif+6H2y1cz+Kos4Sua5v3HDaEkCDqXspiKwcq/UO9GGlNT4abYjnK0O7gLgQc3dfr+CGs
-	We/vBIEN/Qr+ukDWYWCCuVGstCI7LoMZaQZ4/45RPXwAejuNVSdow90sR2zKDrhpNNzpzQB
-	wlVqhYj6uAGHk1tU5sFU5EyENCSddiQSCbCQilNpm+hFD+Xgz0iO/vHKRuUaHfKMkdqgVdf
-	B4U83QcRpvIPR4w=
-X-QQ-XMRINFO: NI4Ajvh11aEjEMj13RCX7UuhPEoou2bs1g==
+X-QQ-XMAILINFO: NaxljGsqHyovZsgRx5c8kBfij5TCt4enoFe4zCl6cJsS4Ls7JNXSERmD
+	IWzloxP/07OvXeU2EFpCszGt7FqGnp0o1WFqkiZm5huia4bKZtD4wOp5Bn1vYMLAi5QAqzc
+	b0xy+8m0q7dRYTG1eNK+ibZSe1TbVRHGwv56GjEuFkbvnU2Xed/zWYKGOedlvsyPwsQVwZM
+	9pDTfmtCYM1MP8+nkHPST0kd2x2AAOzf000ABjGjfb+YwHcZ4PXUxNNG36HxZtu/3U0GqQQ
+	EAtWmRLakzq5nhedLK4j3MYt/Hd3Y0ahBj6JXb+GODoBMrsNPYPlrDckumM1at++l6JuS4q
+	zbzohraLror/H0yoMBozQ4QxZc+28+Kj7G7o8d0EXICYiZUN8+JWVZZkbYXUaNo84Ul6DKd
+	UQEYQo3CjXDWLYPQ+SJP9OdhjA940jqHq1n8iErMCOf3CsiUmvUed7tnu8ea76N6Ityiu8p
+	pRzfS9QSxXIHgdZltKWHvQtMqVlKNgq/0EyocRzLGBXbEtM60Ru7ROKHDsAGc/rjeoYudE+
+	/1os7tLdfIRYEUtq1hff6CFRWqjB0mlVrYDnitTU96siScJ0yUXuPueJeSpExc5GIi9w6Lm
+	YKuV8hpKOks5HN0NYrgwkN3C6HPFXPe1KKZmuVHCm/dATmhwNVUR8dG7WTdfIW5BlnmjnPz
+	sBMKnb8F9+CuxygG3u3rmWc0+t24AM2xAAinymQDg4qaskqfruEPEVHW72zChisPcCsz71Z
+	/eWIn+ShYz4XbA53pZ04ZGxeOYertgGaz67KFwBFuO9JODcbIQXyEFFGqxVfW0fGaaTpZkp
+	ObOvm8cIlgR7MOd4zsDmV7qDG4FYZOwiks8krFLLC+ojjt4wxdxilw4hBhoehw2+hAVHyFH
+	Q/rTpQMB64xVBD2to9KIPDj2CDxSvPoujlyKBdcl17H3YUsPn3Y0bgQUpZ9Ve5CECkFanKp
+	Vq8LMn30EJHb+4i7clIQJg1mzxHcl11foILAsyXsCILw5ZmdRJL0ppLDwUOJf8VxbO4IYvP
+	tMFtqgakflt359m5hHcDwBp/THHaSxp4ZxMhRGHRbxtSGNt779RzmmIIYOy2HEHfmWQukdT
+	6aza1qzvDogRFsZYonisUpjPZnoRayriwWh0SKQ896k/vAz2EG4Ja4pCyjwd2Xgr/w0Vf0d
+	KIBajTjpGxHz27YO7PaV3a5rEm/qp7e6/5nipx8mCW9ZO5k=
+X-QQ-XMRINFO: NS+P29fieYNwqS3WCnRCOn9D1NpZuCnCRA==
 X-QQ-RECHKSPAM: 0
 
-Add Radxa Dragon Q8B to the QSEECOM allowlist for enabling access to
-efivars and uefi bootloader.
+Hi,
+
+The Radxa Dragon Q8B is a single-board computer based on the Qualcomm
+Snapdragon 8cx Gen 3 (SC8280XP) platform.
+
+The board provides UFS and microSD storage, two M.2 M-key slots, an M.2
+E-key slot, a QPS615/TC9563 PCIe switch, USB Type-C ports with DisplayPort
+alternate mode, USB Type-A ports, HDMI 2.1 output, headset audio and
+a 40-pin expansion header.
+
+This series adds the initial device tree support for the board. It
+describes the regulators, storage, PCIe topology, USB and display outputs,
+audio, remote processors, thermal sensors, RTC, EEPROM and expansion
+header. Build targets for both the regular and EL2 device trees are
+included.
+
+The TC9563 power-control driver powers off external downstream ports whose
+device tree nodes have status = "disabled". On the Dragon Q8B,
+config-space reads to these powered-off port functions raise an Arm SError
+instead of returning an all-ones PCI error response, preventing the board
+from completing boot.
+
+The PCI OF change to skip config-space reads for unavailable DT-described
+bridge functions has been split out into a separate two-patch series for
+the PCI tree. Disabled endpoint functions remain discoverable so PCI
+fixups can still be applied, while driver binding continues to be
+suppressed later.
+
+The onboard HDMI output is provided by a Chrontel CH7218A DisplayPort 1.4
+to HDMI 2.1 protocol converter. The device boots its firmware from on-chip
+flash and requires no host-side configuration.
+
+The PCIe ECAM and 64-bit memory windows are defined in the shared
+SC8280XP DTSI for all five controllers. The board DTS inherits these
+SoC resources.
+The SA8540P PCIe2a and PCIe3a address maps are kept unchanged.
+
+The series also documents the board compatible. The SC8280XP TLMM binding
+change allowing gpio-line-names has already been applied and is no longer
+included in this series.
+
+The PCI change is required before applying the board DTS patch; otherwise
+the disabled TC9563 downstream ports cause a boot-time SError.
 
 Signed-off-by: Xilin Wu <sophon@radxa.com>
 ---
- drivers/firmware/qcom/qcom_scm.c | 1 +
- 1 file changed, 1 insertion(+)
+Changes in v4:
+- Add the missing pinctrl configuration for Bluetooth UART2. (Sashiko)
+- Link to v3: https://patch.msgid.link/20261029-q8b-dts-v3-0-655696dfec45@radxa.com
 
-diff --git a/drivers/firmware/qcom/qcom_scm.c b/drivers/firmware/qcom/qcom_scm.c
-index 43e250faea75..0cb6f8e3a5d3 100644
---- a/drivers/firmware/qcom/qcom_scm.c
-+++ b/drivers/firmware/qcom/qcom_scm.c
-@@ -2266,6 +2266,7 @@ static const struct of_device_id qcom_scm_qseecom_allowlist[] __maybe_unused = {
- 	{ .compatible = "qcom,x1e80100-crd" },
- 	{ .compatible = "qcom,x1e80100-qcp" },
- 	{ .compatible = "qcom,x1p42100-crd" },
-+	{ .compatible = "radxa,dragon-q8b" },
- 	{ }
- };
- 
+Changes in v3:
+- Rebase onto next-20261027.
+- Drop tested-by tag in the dt binding patch
+- Drop CH7218A patches which have been applied
+- Mark vcc_5v_s regulator as boot on
+- Add the device to the QSEECOM allowlist
+- Move PCIe ECAM and 64-bit memory windows to a separate SoC DTSI patch
+  covering all five SC8280XP controllers; preserve the original SA8540P
+  PCIe2a and PCIe3a register and memory windows.
+- Format the board DTS with dtfmt and fix subnode and audio-routing layout.
+- Drop forced output states from the SBU pinctrl configurations.
+- Explain why full-pwr-cycle is needed to recover the SD card state left
+  by boot firmware.
+- Link to v2: https://patch.msgid.link/20261009-q8b-dts-v2-0-eda11e5dea8b@radxa.com
 
--- 
-2.56.0
+Changes in v2:
+- Describe the TC9563 embedded GPIO controller and use its GPIOs 2 and 3
+  for the external downstream port PERST# reset lines.
+- Drop "PCI: of: Avoid config reads for disabled bridge nodes"; split it
+  into a separate two-patch PCI series, including the kernel-doc fix.
+- Drop "dt-bindings: pinctrl: qcom,sc8280xp-tlmm: allow gpio-line-names"
+  because it has already been applied.
+- Link to v1: https://patch.msgid.link/20260901-q8b-dts-v1-0-7de0b6a73d08@radxa.com
+
+To: Andrzej Hajda <andrzej.hajda@intel.com>
+To: Neil Armstrong <neil.armstrong@linaro.org>
+To: Robert Foss <rfoss@kernel.org>
+To: Laurent Pinchart <Laurent.pinchart@ideasonboard.com>
+To: Jonas Karlman <jonas@kwiboo.se>
+To: Jernej Skrabec <jernej.skrabec@gmail.com>
+To: Luca Ceresoli <luca.ceresoli@bootlin.com>
+To: David Airlie <airlied@gmail.com>
+To: Simona Vetter <simona@ffwll.ch>
+To: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+To: Maxime Ripard <mripard@kernel.org>
+To: Thomas Zimmermann <tzimmermann@suse.de>
+To: Rob Herring <robh@kernel.org>
+To: Krzysztof Kozlowski <krzk+dt@kernel.org>
+To: Conor Dooley <conor+dt@kernel.org>
+To: Bjorn Andersson <andersson@kernel.org>
+To: Konrad Dybcio <konradybcio@kernel.org>
+To: Abel Vesa <abelvesa@kernel.org>
+Cc: dri-devel@lists.freedesktop.org
+Cc: devicetree@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-arm-msm@vger.kernel.org
+
+---
+Xilin Wu (4):
+      arm64: dts: qcom: sc8280xp: enable PCIe ECAM and 64-bit memory
+      dt-bindings: arm: qcom: document Radxa Dragon Q8B
+      arm64: dts: qcom: sc8280xp: add Radxa Dragon Q8B
+      firmware: qcom: scm: Allow QSEECOM for Radxa Dragon Q8B
+
+ Documentation/devicetree/bindings/arm/qcom.yaml    |    1 +
+ arch/arm64/boot/dts/qcom/Makefile                  |    2 +
+ arch/arm64/boot/dts/qcom/sa8540p.dtsi              |    9 +
+ .../boot/dts/qcom/sc8280xp-radxa-dragon-q8b.dts    | 2053 ++++++++++++++++++++
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi             |   25 +-
+ drivers/firmware/qcom/qcom_scm.c                   |    1 +
+ 6 files changed, 2081 insertions(+), 10 deletions(-)
+---
+base-commit: 151a134a4e6ec66f69db8750c66006f5207f7a9d
+change-id: 20260901-q8b-dts-a3afc5f9b8b2
+prerequisite-change-id: 20260507-sc8280xp-qup-pinctrl-5ab8af9be35f:v3
+prerequisite-patch-id: d799218553d1a8d44d83ab7d5c36a9ba7dd05e92
+
+Best regards,
+--  
+Xilin Wu <sophon@radxa.com>
 
