@@ -1,75 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.17
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793294648;
-	b=t4aWNKb3o5vM3fwaPNJsHvK8/hUeBmjoocsKNBCh9rrLTulP0Q+HwtCbzni9B7libZGk
-	 iGUKDHn6OX4NcVIX4VmOkM7WQCeLkboHjkBXlvQbKHWQQUj2UhzE3jZ8t6S3+aSox5BFN
-	 rTqz2Lx3T2Ai8W1UQ5Z3/dsGKzg5aZnrhdFDvpqM51W9FRq7L81IUkS+oxJ10WgzzGkpa
-	 H0R0DVo+8D7a//FyO2y3FH91chsgekxX9gg8BMreO9+NfhYOUYPut/8X8hrhdCproI7tE
-	 BKFDB0zGzxkPCM04iIXprx66zXiSuYLqgLcBJKxmn/Dgvqzi8DeDL9/uMkIk3mF/sQg==
+	t=1793294706;
+	b=WjEIuoOzUkB1mYJX44rBDiJEQVcG9sSKs1fAAnYkrLsVInQ6h3v4NC0dlRViyiNvOjyy
+	 UhRp+3sTudcKhgsHVEASHVbu936coNhoHYfGPc1UwBi/GMQ6pQ92n/FBCjkCkBj0Ax627
+	 8eYbCPB0RI+3aE4q5R5xG+EhEdYjkgmywmQcoWrCMD96rCR2Zq0Bkx3vwiI1LeIEI3Qlg
+	 +ID/uTUnss9aBBYBDK51zWfV8idhc7fCeeqy4vH3G98rQJAV4ztO/OiTrgz2rTGsyV66q
+	 SFFk/mbOiEYuo/5UJmN3nAE+7VKZ4R/DmXtP82Zp0lq4T5HQJxH4wNGPSHqYAxMxdDg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793294648;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793294706;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
 	 Cc:Subject:Message-ID:User-Agent;
-	bh=hDKtmXJJFUQuaUi+prw1hzq3ZpIecb/SSHKPT2tEvHU=;
-	b=aO08jloSouxIYaNW6g5YILnrRySQXaMxio8yz1QlfmvLmYpmupGTS6WkTeD2xJdQJAcR
-	 mu1BrUWuye7D9kpQrn6qpgTB90vfn6yep52c4gi4SnCZ9+90g3pgLdGJCoReGlLCJ+7UI
-	 eG3fjnoS4PaOhZosAVdWA/rLhijOv8rv4qgdVXSk6poHjTY5lEMxAM13ZFVlzTkQ1FOt4
-	 Pm/KeamDE6QJ9f/nNUnbYxrk6XzZwK1mKZ720mF5zq2bm1Sao0+FTCb0WvjERDpxENNLM
-	 l3/3IKjKVnxP3aWaFVetVJlkclpfQI7Eob+R9TfL7dR5y2Ivss32XacH6c6ykBccumQ==
+	bh=JjZ78DUALHo5yoUmEKUbMU4MAUU/TAtZ6AhcvNYeTAE=;
+	b=e1WJKklxIVQCqco6955FdxvYiGL2r3TRWWfk3vVIzgsg2gUSMfnrHkCo/7/fwGvNz+Gh
+	 JwMUry4UhPApJ0FXWax806Z8p3l3mgR5cgICVMyJPbY9E7eP0rYDeZ0Japu5Q9kwvoZuy
+	 qYqW9ioNJVG2eLrDDeAL4EqKNYGXr4ZggoMxNyMKbsPdY0HOlVjUJUg0FjAI/loFP0a/s
+	 KWz2SWbnIQ/32BM6uOHFJOYi6ppcxzucS2b9n58Nm3ITQYl9N7/mHXtVrSwmPwP62iebD
+	 Fyhu/DRJlqM4xrA4IJcn6iUeDaHmAsjiELfCVo8LfsWl0trsa+HY1E+64s/rzegy/Cw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=intel.com;
 	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=RoXM5HCb;
-	arc=none smtp.remote-ip=198.175.65.17
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=EQEa6Ytf;
+	arc=none smtp.remote-ip=192.198.163.18
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4D73606A31E
-	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 17:24:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E4D73606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58210606A31D
+	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 17:25:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 58210606A31D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=RoXM5HCb
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=EQEa6Ytf
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793294648; x=1824830648;
+  t=1793294705; x=1824830705;
   h=date:from:to:cc:subject:message-id;
-  bh=OOSkBVHwl4Fotr5NfDFOwqH2BKTZf1Qx3qmhfUrAjjI=;
-  b=RoXM5HCb5RuQHWVPwI9Tr+QoLuF+aLGid1CD4Jk9rK/YUjLclJ1Cc3Rw
-   bXJCcdq+ePgspv8/VghPRPNvlCpbUxFF1vxaJC371Tam4/keDRPZ6nuXi
-   dVX76kI425xa4cJFJWRdTG7D7FKM5DmR6i0Wa+YdXo8BqPcCrCPooa763
-   kUDPagwrD2zfYqzWXV9mAlZnLUscjRCBWF9qKEn2VyM7i0Y+Hx7rWXTZ9
-   FeB05VxzF2fXWM90dRMMbp8lPp7CVzvjo7eL4WemAebAFGyTeLo+esLS9
-   nRhz95PFOs2JOb9ARSABhe3ZE+S0CXlK8YV81kFBaYo/jmkdf6knPOmCQ
+  bh=L9kmL+ZqaSIeO3E9yXxFsNKt1pptHiEzQWV6RFqBqlQ=;
+  b=EQEa6YtfRNiOHq2u5+MYNspVTJ0C9kucuqaCvPvOtT1G+pCgLbzuDLDK
+   yPrtbpqtWs80YK7K5c81L0c8jKTsYOgC54w/W0S59K4GtwEmWYrrYLHUj
+   52lik8zVx139HvusWAqMD9kpJhr5WO5iA9vlvIEWUMuXxGuhriOkjDxkv
+   5UMGdpfBmU0wy+sh9sKdhBAeqXCqRLeFpvXNIJXM1a0381AZtl41UAV3G
+   q8M9zGcc4dYhlvuuxwVCNJwav42OOJk5HpzqxzBarVkZa512N57mHQnO4
+   xyaA8ZGCWlSMOxU4ECQvarG3DXYIadsfcRKh+bYZhQiFUsS1+8Iw5xy5M
    g==;
-X-CSE-ConnectionGUID: mRoyeZfERyWwHBSsELFBwg==
-X-CSE-MsgGUID: gPJZJtiYSdW05FtShcToWA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11950"; a="2063686"
+X-CSE-ConnectionGUID: A8S8lkXdQh22eUEaVpa48Q==
+X-CSE-MsgGUID: 2/VvGhLVT820rtHj3uX3zg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11950"; a="2078341"
 X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
-   d="scan'208";a="2063686"
-Received: from fmviesa011.fm.intel.com ([10.60.135.151])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 10:24:06 -0700
-X-CSE-ConnectionGUID: eME5aVXASbastiwmexHKSA==
-X-CSE-MsgGUID: 6AiI33bTRTi15Cbo3rvAIg==
+   d="scan'208";a="2078341"
+Received: from fmviesa012.fm.intel.com ([10.60.135.152])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 10:25:04 -0700
+X-CSE-ConnectionGUID: ny/s/MVrQFW8fc5PG4z5cQ==
+X-CSE-MsgGUID: 9b1pV0KuTziMwxkG8Fq8rg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
-   d="scan'208";a="7039814"
+   d="scan'208";a="6986194"
 Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by fmviesa011.fm.intel.com with ESMTP; 29 Oct 2026 10:24:03 -0700
+  by fmviesa012.fm.intel.com with ESMTP; 29 Oct 2026 10:25:03 -0700
 Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1xMTr6-00000000aZe-3ImB;
-	Thu, 29 Oct 2026 17:24:00 +0000
-Date: Fri, 30 Oct 2026 01:23:45 +0800
+	id 1xMTs4-00000000aZq-3h72;
+	Thu, 29 Oct 2026 17:25:00 +0000
+Date: Fri, 30 Oct 2026 01:24:07 +0800
 From: kernel test robot <lkp@intel.com>
 To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller:dwc-rockchip] BUILD SUCCESS
- 91823e6933aa459ae089e1b2c8f1a0ad1e9eccec
-Message-ID: <202610300142.WKBMe8As-lkp@intel.com>
+Subject: [pci:controller:iproc] BUILD SUCCESS
+ f27468551f99d80c1f08be5194e9e520beb23908
+Message-ID: <202610300103.tq634fmD-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -80,12 +80,12 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-rockchip
-branch HEAD: 91823e6933aa459ae089e1b2c8f1a0ad1e9eccec  PCI: dw-rockchip: Enable INTx affinity support
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/iproc
+branch HEAD: f27468551f99d80c1f08be5194e9e520beb23908  PCI: iproc: Use __free(device_node) in iproc_pcie_msi_enable()
 
-elapsed time: 2556m
+elapsed time: 2557m
 
-configs tested: 326
+configs tested: 320
 configs skipped: 21
 
 The following configs have been built successfully.
@@ -241,7 +241,6 @@ openrisc                           allnoconfig    clang-24
 openrisc          de0_nano_multicore_defconfig    gcc-16.2.0
 openrisc                             defconfig    gcc-16.2.0
 openrisc                     or1ksim_defconfig    clang-24
-openrisc                        virt_defconfig    clang-24
 parisc                            alldefconfig    gcc-16.2.0
 parisc                            allmodconfig    gcc-16.2.0
 parisc                             allnoconfig    clang-24
@@ -269,13 +268,11 @@ powerpc                  mpc8315_rdb_defconfig    gcc-16.2.0
 powerpc                  mpc834x_itx_defconfig    clang-24
 powerpc                       pasemi_defconfig    clang-24
 powerpc                       ppc44x_defconfig    clang-24
-powerpc                       ppc64e_defconfig    clang-24
 powerpc               randconfig-1000-20261028    clang-19
 powerpc               randconfig-1000-20261029    clang-17
 powerpc               randconfig-1001-20261028    clang-19
 powerpc               randconfig-1001-20261029    clang-17
 powerpc                     sam440ep_defconfig    clang-22
-powerpc                     sam440ep_defconfig    clang-24
 powerpc                     socrates_defconfig    gcc-16.2.0
 powerpc                   storcenter_defconfig    clang-24
 powerpc                      tqm8548_defconfig    gcc-16.2.0
@@ -284,7 +281,6 @@ powerpc64             randconfig-1000-20261028    clang-19
 powerpc64             randconfig-1000-20261029    clang-17
 powerpc64             randconfig-1001-20261028    clang-19
 powerpc64             randconfig-1001-20261029    clang-17
-riscv                             alldefconfig    clang-24
 riscv                             allmodconfig    clang-24
 riscv                              allnoconfig    clang-24
 riscv                             allyesconfig    clang-24
@@ -310,7 +306,6 @@ sh                                   defconfig    gcc-14
 sh                         dreamcast_defconfig    clang-22
 sh                             hp6xx_defconfig    clang-24
 sh                                j2_defconfig    clang-24
-sh                  kfr2r09-romimage_defconfig    clang-24
 sh                           polaris_defconfig    gcc-16.2.0
 sh                    randconfig-1000-20261028    gcc-11.5.0
 sh                    randconfig-1000-20261029    gcc-10.5.0
@@ -348,7 +343,6 @@ um                    randconfig-1000-20261028    gcc-12
 um                    randconfig-1000-20261029    clang-24
 um                    randconfig-1001-20261028    gcc-12
 um                    randconfig-1001-20261029    clang-24
-um                            x86_64_defconfig    clang-24
 um                            x86_64_defconfig    gcc-14
 x86_64                            allmodconfig    clang-22
 x86_64                             allnoconfig    clang-24
