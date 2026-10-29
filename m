@@ -1,56 +1,103 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.45
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793292893;
-	b=YTwxUzdJo4ZT1y/ZMMBMRWbgOPJyMOA1pugIXrEtE5LFopf5UYnxRpU/WXWwTv9b6cRu
-	 QqhM6aUKlMs8bK2zbX/BNSnsizPocQ1UHY2yG3X7gk7UI8epR99HHvQpb5ic6+LvdAj6g
-	 UXmTqMY/HlpWYe6uRAaXHpPKtRxUlKy5f9gSPv4Qj/tuY1WSLeJILUCPFdPj2J4N9Fz/e
-	 ZHQAnID98KDUd99J7dXJg32ocbIxgzs8+jwCIK+6/sckvxfPHxtxh3fP+HBwe7+D7exEC
-	 VCo4Ft7pe6V5lKuI+0a4lPJKls7tbj1bUjwa+sRrG4TfcYkh6+BRIbWJQPQPYsWYpyQ==
+	t=1793293128;
+	b=t8zZdJwHj+6PKl2ifkSF82aTXvx4WaMxyINkFFzkpJ7lROYFivJ2/iZataj2h18xlmqX
+	 cd8Y5KmO4gsb5pChKjjNWTX/tERaDeMLP50PW+qK80wV1ZzSw0eB+CbNF8j8sYkO4yK77
+	 Vfcl6utvAL74X18yDNLPWepFqCcOSADuR2z/OUPlJMxzwYh/Z6hQCQoBacIxXP53ukM1U
+	 6/GmIJmHlal/U2KUrGKlj9gFwYEF5zwhTbRo28MJlz7FZHs7AgYO9Lg9DSu1KBxTXrzZw
+	 qjpcs8bteSDP+sUwT6moRCi7CBVq0TUwZlVgi0sWkiKxoZIrNLCGEOE8iW8EmilZ9Gw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793292893;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=C4748HbglnNYxcnNqXiiKvHo7SH7ZX2aG7oQF8WllVM=;
-	b=gAbqp5zeYuIOIPpJwoubZNISM7DAGFpjplLfrzskSdU5khULZ3yd8lQPrucyhX1jpx+Y
-	 m/q/wznigQEV/2M2q1UOL7rodEaLbbDZJgazsyiIetUh1bu+XBhXwt+EDG6/W8L7loSk/
-	 krwI7TToiDzJUKvQX49lvIHgoUQGSAFhmyvteY7zhNkv0E+EuhDXerMiDviCWl8lT5o83
-	 KUMEdt0j9EBmG2mzk4ZYKxeqIo/XupZu53hsKFcnnMd8qFoCrz4NYQNSphJQ76m7h3Nlr
-	 Tbgdq0D0eeBqtWGifsqnMhb79TCOJPBOWjGzuS8BFiE27cifTFUbuTcEwG+E6vs7OKw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793293128;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=6bXwD83MIjcipNSA+r7WlJ6caQoTXebpCKMfW1alQus=;
+	b=BdzjvEQ8Kr6RdEpmpx3GFY1sQwAsnBDDiSmWjdXTuCHE1oC10boglA+nYHhlolzA3VP5
+	 0zYMAzczYzB29LOpI3FFw1SEBADc5I7AB7kws8Q9t4q+mEIBDPdgoUZ87nxxlIsflNe7z
+	 nYWCH+w1OO/Nqtr41E59J25rTT1gkTzAFkzeqT1Ln+oWuBSdHXSVz0HgigDOCEpcL+0S2
+	 RHJ2mSwA9JwIRWmKHd1ZrUqNP5t2JILuCKZ2VKtS09z8d/D6A5Ji7TenZ7Iqy68lQtVDK
+	 eA/4OqHlH8BFcBQt33ZPSzF2Zv86lStXyIdVgWiy9PBwvZ2cRkO82a3+k4op25PRMnA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GAkRXJCO;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=none header.from=ziepe.ca;
+	spf=pass smtp.mailfrom=ziepe.ca;
+	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b="bD+Ng8/3";
+	arc=none smtp.remote-ip=209.85.219.45
+Received: from mail-qv1-f45.google.com (mail-qv1-f45.google.com [209.85.219.45])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5523F606A31C;
-	Thu, 29 Oct 2026 16:54:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3941606A31D
+	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 16:58:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D3941606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GAkRXJCO
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07E331F01816;
-	Thu, 29 Oct 2026 16:54:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793292893;
-	bh=C4748HbglnNYxcnNqXiiKvHo7SH7ZX2aG7oQF8WllVM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GAkRXJCOOvuu/m8Qx+OLboNWdpMxsgRS2gXJp9mFhUGatcCYDIbAtzBQHNPfP+k67
-	 07Q6giPscpnYYI9ZdcIgk0Hv3YHsYFl77HQU0uMQDYpHqJ9SG+m6SP3i7yKJFYdH3o
-	 XmlzS5JI9tZ9gS2dC6FP+iEzVsRMXfToUwNjq+/0SwarMt5J89thUb5hgA/PKXn2OV
-	 zeEwDdwWFGTbr0Ta9X1tSUJR3Fk4Xw4Vq9lsbUbd0rBXrz+3KX4s+mCV1CYWMFyzlK
-	 KzfkSxhAhcsQFFFpzhdNrcTtQpnW5v8P9PP+hnjfMpy1T8u+aHe2Ex9ySl6wv7kQf7
-	 HXwpScue1ktbw==
-Message-ID: <sashiko-outbox-189689@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 5/8] ath11k: use KVM MSI domain for VM passthrough
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
-In-Reply-To: <20261029163713.1366077-6-jtornosm@redhat.com>
+	dkim=pass (2048-bit key, unprotected) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=bD+Ng8/3
+Received: by mail-qv1-f45.google.com with SMTP id 6a1803df08f44-917bab38b14so27335846d6.3
+        for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 09:58:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1793293127; x=1793897927; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=6bXwD83MIjcipNSA+r7WlJ6caQoTXebpCKMfW1alQus=;
+        b=bD+Ng8/3nCI/5cWKn4WtKDSPWVPk5hBHIuiXrkbElN6K0EOo4e5w1LTNRGXFCd00f3
+         Jwfuew8Cj4qAcC63JhH+tGRH1YbHRvVxo6YW9k0/RoNCcXvNHdO3fsL+p7srQoYK9gCP
+         dfIog/jvfA00buTc5IwNKM0mn0X83lr8anz+4kAo53fSHXwsNNNdjWFm0piYuWrBYoZT
+         NEyIp44fVuFUY+ogZEPcdT044X6lvUV5KwJmKj0lUb1J7R9YDLAK8t4ELBxxSsUNCqeo
+         tOzcJKDGtISKyS59KFnafl4w5KnGawAuTFyuO966T/FFgj03i6Xr3IlIcSNbesHZFjI3
+         lwSw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793293127; x=1793897927;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=6bXwD83MIjcipNSA+r7WlJ6caQoTXebpCKMfW1alQus=;
+        b=mYmEn40a5ivqSO6d9iBv/6d6bm34ZvCogpK2Lc9X90v5SeHhhM8FY0uWQ6onrmi6N9
+         pkvUl+APWePF2Bqm0h2aSCHczO+KMhztZ6rx5hcYd8c2nSk4dVREbJAyceaz0Kj5ztTo
+         07adJtzgmlDw637PusE6vnhCJUdtZLyTHYV1Y7doPy6V3f1fpdjbhQhSfDP51M9TAxmD
+         KI/kz6SQw/Zd7hVV+W/k7T+wfDbrcGro41/InkcXVCrgJ2A//E7kJ3W+DnbNZ+UvfHHL
+         1K0UJouxzG9dQDBVtiUZZnzWs09OZdFg5R2VEWBegDa+a7rycs75u33+o/PoYpv0R/h0
+         5Xqg==
+X-Forwarded-Encrypted: i=1; AKwUvBwEqI22ena4O46NNn/zVdyWCZ3T0tzeC5j6a36o2D1WikEK22jPxJGrYBGJXX+dpsZ4or4ZTl2m5b0=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJsvE+E41mUl194jigT2L4zK8d5FvhuDLHUWjDYDUENmjsg3zDB
+	JPHjtV8dgQ3IuxzTcIxZbGdO5a/3KX7f3FHvcqAmW9/kUjII3O5fsoXxORVfFgVf4G0=
+X-Gm-Gg: AYBFou0QZA5b6IloiKlFEG8tpkiABrpFUuGwgj2eIbNnRY2OHtl2uv0JoKZLdd32wDh
+	SMezKvkqz+euMDnRRfwcTNB7f+se8pB0NyoDezs2fpmqbLaMcjxTDxka1zAlRpmqtnUI1FrseuF
+	4/HdBAE03vZdHhExaV+4CkzEZH93f2wzRQJW/nAwRVG+/gsfUcxxtofN6N3cPjvm4ZXMcnnNLDs
+	pEzvDOWxu+mfBHkxPxXs8ctN1E3skcm165U69SGwMuIED6JFPQT/UeP/rvTQ+xhubMGvMtqI6Wd
+	bNuas2CBq9KtLTgCBZlORRRTbW91E9QofugYa2QWH9UvyI8gDHcpAZAeQru3t3SZ/7++Gr0VSU8
+	Th+Q7OGQi/arsvTICRD/ugQYyiBGUMc/e1nITVVG7JTBAfFt9WZ84xPjO0SgXkZJhPF5D+SoJML
+	K9PStsau0yYOGThsP4z3gecRVAdleO24IxbGKbeGkvNn2ud134RSQW5nfHxih5QQ9Us9nP+SbNM
+	pswbEh8rJbedXzcSobi1EcYY1mSp2UZF24i+gOp7kJTZrkjJ6kJBTYD025kxv/JWiS+YiacV/hK
+	iCWnawIo3cLQip5ZJWRzaan1+BCoBGKF1KTmQjd9yVsKwJ6KcGYdrE2g9fPQnIWOxS7CFvAmpsV
+	mt++TlhV8RnDbmQQrZSqzjZ9ISRwW/lov
+X-Received: by 2002:a05:620a:298c:b0:93f:38c7:70f4 with SMTP id af79cd13be357-94408aa100cmr927645385a.26.1793293126718;
+        Thu, 29 Oct 2026 09:58:46 -0700 (PDT)
+Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-944209818c7sm8131885a.3.2026.10.29.09.58.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 29 Oct 2026 09:58:46 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1xMTSf-0000000G2uI-1sK7;
+	Thu, 29 Oct 2026 13:58:45 -0300
+Date: Thu, 29 Oct 2026 13:58:45 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: alex@shazbot.org, pbonzini@redhat.com, seanjc@google.com,
+	bhelgaas@google.com, jjohnson@kernel.org, johannes@sipsolutions.net,
+	mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
+	robh@kernel.org, vkuznets@redhat.com, kevin.tian@intel.com,
+	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 2/8] KVM: add PCI MSI hypercall for VFIO passthrough
+Message-ID: <20261029165845.GQ1685504@ziepe.ca>
 References: <20261029163713.1366077-1-jtornosm@redhat.com>
- <20261029163713.1366077-6-jtornosm@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 29 Oct 2026 16:54:52 +0000
+ <20261029163713.1366077-3-jtornosm@redhat.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,139 +106,89 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261029163713.1366077-3-jtornosm@redhat.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] wifi: ath11k: hard dependency on pci-kvm-msi breaks module load on=
- baremetal
-- [Low] wifi: ath11k: vmlinux link failure when PCI_KVM_MSI_DOMAIN=3Dm and =
-ATH11K_PCI=3Dy
---
+On Thu, Oct 29, 2026 at 05:37:07PM +0100, Jose Ignacio Tornos Martinez wrote:
+> Some PCI devices (e.g. Qualcomm WiFi adapters) have firmware that
+> programs MSI addresses directly into device BAR registers, bypassing
+> the standard PCI config MSI path. When these devices are passed
+> through to VMs via VFIO, the firmware programs the guest virtual MSI
+> address instead of the host physical IRTE address, causing DMAR faults
+> and non-functional interrupts.
+> 
+> Add a KVM hypercall (KVM_HC_PCI_MSI_ALLOC) that allows a guest to
+> request the host's physical MSI address/data for a VFIO-assigned PCI
+> device. The hypercall is dispatched from the x86 hypercall handler to
+> a VFIO backend that:
+> 
+> 1. Finds the host PCI device matching the guest's vendor:device ID
+>    using vfio_file_find_pci_device() (introduced in a previous patch)
+> 2. Reads the host MSI address/data from the device's msi_desc or
+>    by walking the IRQ domain compose chain
+> 3. Returns the result to the guest via a GPA response buffer
 
-commit fd35a9fb43489e50093e9e8bd845b666d46403f3
-Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+This is not quite what I suggested, this still relies on the host
+setting up the msi using the trapped MSI emulation, which is the
+primary hack..
 
-ath11k: use KVM MSI domain for VM passthrough
+Was it too hard to make this an 'allocate msi' operation?
 
-When CONFIG_PCI_KVM_MSI_DOMAIN is enabled, this patch uses
-kvm_pci_msi_wait_ready() and kvm_pci_msi_get_address() in
-ath11k_pci_power_up() to obtain the host physical MSI address for VM
-passthrough, and adds a pre-softdep on pci-kvm-msi.
+> The VFIO handler is connected to the KVM instance via a function
+> pointer (pci_msi_alloc) in struct kvm, set when the VFIO device is
+> created and cleared on release. This avoids a hard dependency between
+> KVM and VFIO subsystems.
 
-> diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless=
-/ath/ath11k/pci.c
-> index 7e29ebaf97731..31889e5caa8d7 100644
-> --- a/drivers/net/wireless/ath/ath11k/pci.c
-> +++ b/drivers/net/wireless/ath/ath11k/pci.c
-> @@ -7,6 +7,9 @@
->  #include <linux/module.h>
->  #include <linux/msi.h>
->  #include <linux/pci.h>
-> +#if IS_ENABLED(CONFIG_PCI_KVM_MSI_DOMAIN)
-> +#include <linux/pci-kvm-msi.h>
-> +#endif
->  #include <linux/of.h>
->  #include <linux/time.h>
->  #include <linux/vmalloc.h>
-> @@ -855,6 +858,13 @@ static int ath11k_pci_power_up(struct ath11k_base *a=
-b)
-> =20
->  	ath11k_pci_msi_enable(ab_pci);
-> =20
-> +#if IS_ENABLED(CONFIG_PCI_KVM_MSI_DOMAIN)
-> +	if (kvm_pci_msi_wait_ready(ab_pci->pdev, 500) > 0)
-> +		kvm_pci_msi_get_address(ab_pci->pdev, &ab->pci.msi.addr_lo,
-> +					&ab->pci.msi.addr_hi,
-> +					&ab->pci.msi.ep_base_data);
-> +#endif
+I feel like VFIO shouldn't be involved here, for the purpose of MSI
+all we need is to inform KVM what struct pci_device * is at a vBDF and
+then KVM can do the interrupt bits. Maybe this is already happening?
 
-[Severity: Low]
-Will vmlinux fail to link when CONFIG_ATH11K_PCI=3Dy and
-CONFIG_PCI_KVM_MSI_DOMAIN=3Dm?
-
-In drivers/pci/controller/Kconfig, PCI_KVM_MSI_DOMAIN is defined as a
-tristate option:
-
-config PCI_KVM_MSI_DOMAIN
-	tristate "KVM PCI passthrough MSI domain"
-	depends on X86_64 && KVM_GUEST && PCI_MSI
-	select IRQ_MSI_LIB
-
-And in drivers/net/wireless/ath/ath11k/Kconfig, ATH11K_PCI is also tristate
-without a dependency on PCI_KVM_MSI_DOMAIN:
-
-config ATH11K_PCI
-	tristate "Atheros ath11k PCI support"
-	depends on ATH11K && PCI
-
-When CONFIG_ATH11K_PCI=3Dy and CONFIG_PCI_KVM_MSI_DOMAIN=3Dm,
-IS_ENABLED(CONFIG_PCI_KVM_MSI_DOMAIN) evaluates to true in
-drivers/net/wireless/ath/ath11k/pci.c, so ath11k_pci_power_up() emits direct
-calls from built-in code to kvm_pci_msi_wait_ready() and
-kvm_pci_msi_get_address(), which are only exported by the loadable module
-pci-kvm-msi.ko.
-
-Should ATH11K_PCI add a dependency such as:
-
-	depends on PCI_KVM_MSI_DOMAIN || !PCI_KVM_MSI_DOMAIN
-
-or should this be guarded with IS_REACHABLE(CONFIG_PCI_KVM_MSI_DOMAIN)?
-
+> +	case KVM_HC_PCI_MSI_ALLOC: {
+> +		struct msi_msg msg = {};
+> +		struct {
+> +			u32 address_lo;
+> +			u32 address_hi;
+> +			u32 data;
+> +			u32 reserved;
+> +		} resp;
 > +
->  	ret =3D ath11k_mhi_start(ab_pci);
->  	if (ret) {
->  		ath11k_err(ab, "failed to start mhi: %d\n", ret);
-> @@ -1350,6 +1360,9 @@ module_exit(ath11k_pci_exit);
-> =20
->  MODULE_DESCRIPTION("Driver support for Qualcomm Technologies PCIe 802.11=
-ax WLAN devices");
->  MODULE_LICENSE("Dual BSD/GPL");
-> +#if IS_ENABLED(CONFIG_PCI_KVM_MSI_DOMAIN)
-> +MODULE_SOFTDEP("pre: pci-kvm-msi");
-> +#endif
+> +		if (vcpu->kvm->pci_msi_alloc == NULL) {
+> +			ret = -KVM_ENOSYS;
+> +			break;
+> +		}
 
-[Severity: High]
-Does this prevent ath11k_pci.ko from loading on baremetal or with devices
-not listed in kvm_msi_devids when both CONFIG_ATH11K_PCI=3Dm and
-CONFIG_PCI_KVM_MSI_DOMAIN=3Dm?
+Yet here it is called alloc?
 
-Because ath11k_pci_power_up() in drivers/net/wireless/ath/ath11k/pci.c
-directly calls kvm_pci_msi_wait_ready() and kvm_pci_msi_get_address(),
-ath11k_pci.ko has a hard ELF symbol dependency on pci-kvm-msi.ko.
-MODULE_SOFTDEP("pre: pci-kvm-msi") only instructs modprobe to attempt
-loading pci-kvm-msi before ath11k_pci, and does not make symbol resolution
-optional.
+Nothing should use vendor/device ID either, it should all be drive on
+vBDF.
 
-In drivers/pci/controller/pci-kvm-msi.c, kvm_pci_msi_init() refuses to load
-the module on baremetal or when no matching device in kvm_msi_devids is
-found (which also omits ath11k devices such as QCA6390 0x1101 and QCN9074
-0x1104):
+> +	irq = pci_irq_vector(pdev, vector);
+> +	if (irq <= 0) {
+> +		memset(msg, 0, sizeof(*msg));
+> +		return 0;
+> +	}
+> +
+> +	irqd = irq_get_irq_data(irq);
+> +	if (!irqd) {
+> +		memset(msg, 0, sizeof(*msg));
+> +		return 0;
+> +	}
+> +
+> +	desc = irq_get_msi_desc(irq);
+> +	if (desc) {
+> +		*msg = desc->msg;
 
-static int __init kvm_pci_msi_init(void)
-{
-	struct pci_dev *pdev =3D NULL;
-	struct pci_dev *first =3D NULL;
-	int ret;
+And this isn't alloc, it is some query..
 
-	if (!kvm_para_available())
-		return -ENODEV;
+I think kvm maintainers would insist on a complete API here if this is
+the direction.
 
-	for_each_pci_dev(pdev) {
-		if (pci_match_id(kvm_msi_devids, pdev)) {
-			first =3D pdev;
-			break;
-		}
-	}
+I probably would not have selected this, it is why I suggested
+virtio-msi or something that could be optional and seperate from the
+core KVM guest ABI.
 
-	if (!first) {
-		pr_info("kvm-pci-msi: no matching devices found\n");
-		return -ENODEV;
-	}
+But maybe there is interest in doing it this way?
 
-When kvm_pci_msi_init() returns -ENODEV, pci-kvm-msi.ko is not loaded, so
-the kernel module loader cannot resolve kvm_pci_msi_wait_ready and
-kvm_pci_msi_get_address when loading ath11k_pci.ko.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029163713.1366=
-077-1-jtornosm@redhat.com?part=3D5
+Jason
