@@ -1,55 +1,48 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.180.94
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793257397;
-	b=BvP6u2D56pDyGM6dHV0hOAMISc2EcmNSXMXi8ZSinvWtnLEQp3k5q3VrjszDFxm135+4
-	 1WF7AiZr5SsenTxaJmvU1ZBmLeNFggzobs9/xDjPSpFehaSCNUaXZR5Gb7u/qNUhEgL92
-	 SbsQvGA1fAVghRrIiLB+ElLWZv3DnlziUqpUDsRzFyo5h34rjy5NmhxXRkunrQm0oiNKZ
-	 CowGAgeXpfJSA57W6VUddSOi3JslHqPXUnDjbA3OjtVgTVY1cTFuM9Ne2PmXbYEpH2eiB
-	 Gcdx++Yjreo8XyBOmX7blQ4VOFcAF4hU9KAaItu3q7SM8lJDembDsBHwVeAax96v0iQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793257397;
-	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:Feedback-ID:X-Zoho-CM-AccountID:
-	 X-ZohoMailClient;
-	bh=siAtoA3LmwM66cto6wEnaQCAaHagsf4O0rPv61+/NIY=;
-	b=oqb7I7y5Tx5mG4bfjb3FtutTmYRgCDUPxwdiPoByUEy6r1kNfqz42OScQti4NkSdEoMR
-	 1tecYpkzKoZvz2I5Ev6LCbM0gxl1AabNh6CSt+gor86RUQW/VQ2vcp4KcaWVnuDGYg0KR
-	 hOYk10OBss+ZTn6mfwIyANH+RvUhExJvghg30c0ELnj9qKys6PmyMGfubMvetipq5IKGq
-	 sBiG8IsqBDLFwPVbvbbNCfj55MEMZsMAHJX6BdTStmwlVi3f4JREZxhG4dvBDWLw8JOD6
-	 hrNzzvLDw5otqwYD2XgOLTJr1+XWo5GZF2iOX4E8v9EuMwQYARmSLdDOWDaQXobwTPg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=zohomail.com;
-	spf=pass smtp.mailfrom=zohomail.com;
-	dkim=pass header.d=zohomail.com header.i=@zohomail.com header.a=rsa-sha256 header.s=zm2022 header.b=QOzAm7gt;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.180.94
-Received: from sender6-pp-o94.zoho.com (sender6-pp-o94.zoho.com [165.173.180.94])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793259368;
+	b=zfC1SdMg7MlIbg04hWgZjQpKzS/Ait4PNaKVSIqkS0q6/47E6P1YkAo/Gf2iZOtAzQUB
+	 m2NnrEA7hZ/Hv0d/1TpLXkCn29/zu3Zl1CivYzlZIbr9zalBzgu8uWKINW0TdpDodfK68
+	 6WoctUcUmrAKfN/yc79P3kvG2t3UjzhZ1gBXgdO1snlHSAxgb3egg93Ww/2tCuMbMFlP0
+	 5kk7mXOs40PvNPbqZB5SFD6+imv/1ivr2DbpIx7tA8aSWbtDQNc5N5C944a3Dwb61GSj5
+	 8Jzg7WruHRo2teJtBT7b8/ApybvnsNd3i9HmAMT9DgwHs+NP1wSkLPmBbaBAJm6qNcA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793259368;
+	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:
+	 X-Mailer:X-Developer-Signature:X-Developer-Key;
+	bh=0gBUd5jJHGj2LvC1m8ir7f7MkneqJ2TxhRwTgxUGW4s=;
+	b=qdZv5mhGx2RjBHA+EJdL4DhNlMA2WSW3N0cgG54ZOiY75mdOT+a1xfCbx4gydDuVxP0T
+	 xDE6Hw4UG8BHCN58YGTGASNJ1Vu0KmqTT5r8UjrGA2Qapg7aylPusxeiQir7AFLsnb3N+
+	 99iUo8Dh8xEFM4m85HKvnLAn6aZjnZeYkRXyi3aP7gFTW64muY8Ln7ba21mV01bJS0YWW
+	 fKJf7erQUXSIJUNdjLJLbFhIwSayPn4QhzIWIIHNiQTF0ZG1ZGw3Vpkybqq7XNO9t6RBF
+	 y1lDKEEqtemDYDbGo2R3fYcI4kKch3nfn1AZpRNO63qo7ee8bya+k4DUtgF4vvactcQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YEnPCkwA;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9471606A31E;
-	Thu, 29 Oct 2026 07:03:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D9471606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zohomail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB738606A320;
+	Thu, 29 Oct 2026 07:36:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=zohomail.com header.i=@zohomail.com header.a=rsa-sha256 header.s=zm2022 header.b=QOzAm7gt
-ARC-Seal: i=1; a=rsa-sha256; t=1793257384; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=bDX0ikBnqRfvx0lJHIydfPHNQCLV9MSPR12BgbmRBOirqQesxNVKu1mJsZRtjlhqTpySEe7Z3sZc2IjTyXTFfAItRDPAUCQ1eSZ9981/bIKryFW4tUMy5UmAQYGwlnD9mGJZK8RBs/s+5tPJsPBau3TilVqx4xSV2qVxJ5AuKnE=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1793257384; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=siAtoA3LmwM66cto6wEnaQCAaHagsf4O0rPv61+/NIY=; 
-	b=jiH3gRfJfHAw88YOTuYlK4bfOkfZmlFb1O+LBUNf9k2T/Ptk4UXNCUWJVV5ubUcoU+J40I2hyfyEdJPchfUS7eaIXLvmKdS0WeMiGY/fYYOawrFkdDSMKPZpgnBtOe11+yVLAhniMXNBf0nZx2NbVGg4f0tWCjA1/tCpiVDfjOw=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=zohomail.com;
-	spf=pass  smtp.mailfrom=ming.li@zohomail.com;
-	dmarc=pass header.from=<ming.li@zohomail.com>
-DKIM-Signature: a=rsa-sha256; b=QOzAm7gtHmJvMP6qJpIhb4y52Te/5xkhHQnMnilgtXh2fl37Zagu9d6sCwEoGhP9LCYBYZyjIn3qzxGh1qinU/4SnJm0nUzjO6OL5YH7VNPXEKrr4JAneH0KA0iwPz280eM+sPVrUPNKDeeUZDGoD8pyLXPlPAe+718406ZPc4Q=; c=relaxed/relaxed; s=zm2022; d=zohomail.com; v=1; bh=siAtoA3LmwM66cto6wEnaQCAaHagsf4O0rPv61+/NIY=; h=Content-Description:Content-ID:Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:List-Subscribe:List-Post:List-Owner:List-Id:List-Archive:List-Help:List-Unsubscribe:MIME-Version:Message-ID:Resent-Sender:Resent-Cc:Resent-Date:Resent-To:Reply-To:Resent-Message-ID:Resent-From:Sender:Subject:To:Date:From:Message-Id:Reply-To:Subject:To:Cc;
-Received: by smtp.zohomail.com with SMTPS id 1793257383109417.86376047976523;
-	Thu, 29 Oct 2026 00:03:03 -0700 (PDT)
-Message-ID: <d80771e0-29c5-4a32-9887-72a56190c9b9@zohomail.com>
-Date: Thu, 29 Oct 2026 15:02:55 +0800
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YEnPCkwA
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FE051F01825;
+	Thu, 29 Oct 2026 07:36:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793259367;
+	bh=0gBUd5jJHGj2LvC1m8ir7f7MkneqJ2TxhRwTgxUGW4s=;
+	h=From:Date:Subject:To:Cc;
+	b=YEnPCkwAU2o1DTOBBoPs8ZS3s6493xl3T1xVf7fVU0LBDzMU7LFXmXZMmgcFZD35W
+	 wV0Iq7lYIhKBNjeiBm+AfAg4wFiAxJw18IO+1LRrCPLnKQ+XbFcfgkpPQlFnqSBBE6
+	 x8cso0m9D2/iv0/2jFlmUHVlDENej0MvwAh5owg4LEbovxjCnTYtL+uekLgROYvDGL
+	 4IRgf0T3rofH6gpPn0e1gMbpz0HAQ6r9vQKFZhdPe9RnEk/DQsfk7UeusdAzUAYwOm
+	 0RBKYq1Go5/jBkYwWDeLNaH7GqNJKVqxCzk5gx5tcjVndgMVroRM6ObucLraFX6f9/
+	 oZ9BV411ONL7A==
+From: Eugen Hristev <ehristev@kernel.org>
+Date: Thu, 29 Oct 2026 09:25:19 +0200
+Subject: [PATCH] PCI: iproc: Fix MSI shutdown operations
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,524 +52,119 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v15 09/16] PCI/CXL: Cache endpoint HDM state during PCI
- enumeration
-To: Srirangan Madhavan <smadhavan@nvidia.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
- Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>,
- Jonathan Cameron <jic23@kernel.org>, Vishal Verma
- <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
- alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20261011021422.3428136-1-smadhavan@nvidia.com>
- <20261011021422.3428136-10-smadhavan@nvidia.com>
-From: Li Ming <ming.li@zohomail.com>
-In-Reply-To: <20261011021422.3428136-10-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Feedback-ID: zu08011227403eb141366044df6aa1131e00003495e3f25ea589af0f55595944b9af85efbb9220a397eda728:ZohoMail
-X-Zoho-CM-AccountID: abd763e7b9fa23acf4f42a44f9876d2d993e05abdb9290f9ccb1008c977bf7f0
-X-ZohoMailClient: External
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261029-iproc-shutdown-v1-1-05f828561116@kernel.org>
+X-B4-Tracking: v=1; b=H4sIAN704moC/yXMOQqAMBBA0avI1AZiBEGvIhZZRh2LRDJuELy7U
+ ctX/J+AMRIydEWCiAcxBZ9RlQXYWfsJBblsUFI1lVStoDUGK3jeNxdOL7QxxmItldMacrRGHOn
+ 6hv3wm3ezoN3eC9z3A1e4wtNyAAAA
+X-Change-ID: 20261029-iproc-shutdown-abbbce302daa
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>, 
+ Scott Branden <sbranden@broadcom.com>, 
+ Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, 
+ Marc Zyngier <maz@kernel.org>, Vikram Prakash <vikramp@broadcom.com>
+Cc: Anup Patel <anup.patel@broadcom.com>, linux-pci@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ Eugen Hristev <ehristev@kernel.org>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2980; i=ehristev@kernel.org;
+ h=from:subject:message-id; bh=e5i4rIOHYC9b5xjEEnkOG0yjqcJV2VKbsARhJj7+xXg=;
+ b=owGbwMvMwCXWkjcnuXne3fmMp9WSGLIefY8vLihv/frkyqmaySpJRtLzut+4mM5RenRkzcJfk
+ R8aatnudJSwMIhxMciKKbJUm/yrFe7f4X7S1VIFZg4rE8gQBi5OAZhIgyMjQ5v/ndtBcqW17+be
+ mHlir6L0O/N/H5pm93+bcP+4zOVfctsYvukFLTzJ9q+Gz+iMx56yXUKPv0ppzZ7A0lWytdcxpHc
+ rPwA=
+X-Developer-Key: i=ehristev@kernel.org; a=openpgp;
+ fpr=AB184498D27A77B65D7852C81EB31E020EAC2FC8
 
+On reboot, shutting down iPROC leaves MSI irqs enabled and not
+cleaned up. This can lead to IRQs being served after the iPROC
+was shutdown.
+Fix it by implementing an MSI shutdown procedure, and call it
+before the iPROC shutdown.
 
-在 2026/10/11 10:14, Srirangan Madhavan 写道:
-> Cache HDM state in pci_dev->hdm after BAR resource setup and before driver
-> binding, so reset can restore it without a bound CXL driver.
->
-> Save the HDM register location, decoder settings, and Device DVSEC state.
-> Validate capability reads and decoder counts, and restore PCI_COMMAND
-> after temporary MMIO access, reporting restoration failures.
->
-> Keep PCI discovery separate from shared HDM helpers. Move cxl_rwsem into
-> built-in state code and protect cache publication with its DPA lock, so
-> the cache remains usable when cxl_core is modular.
->
-> Link: https://git.kernel.org/pub/scm/linux/kernel/git/djiang/linux.git/commit/?id=b12baa1105f33cc1a10f9c9c0c6376194397d9f3
-> Suggested-by: Dave Jiang <dave.jiang@intel.com>
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> Assisted-by: LLM
-> ---
->   MAINTAINERS                  |   1 +
->   drivers/cxl/core/Makefile    |   3 +-
->   drivers/cxl/core/hdm.c       |   5 -
->   drivers/cxl/core/hdm_regs.c  |  99 ++++++++++++++++
->   drivers/cxl/core/hdm_state.c |  64 ++++++++++
->   drivers/cxl/core/pci.c       |  17 ++-
->   drivers/cxl/core/regs.c      |   9 ++
->   drivers/cxl/cxl.h            |   3 -
->   drivers/pci/Makefile         |   1 +
->   drivers/pci/bus.c            |   1 +
->   drivers/pci/cxl.c            | 223 +++++++++++++++++++++++++++++++++++
->   drivers/pci/pci.h            |   8 ++
->   drivers/pci/probe.c          |   1 +
->   include/cxl/cxl.h            |   6 +
->   include/cxl/hdm.h            |  12 ++
->   include/cxl/pci.h            |  13 ++
->   tools/testing/cxl/Kbuild     |   1 -
->   17 files changed, 454 insertions(+), 13 deletions(-)
->   create mode 100644 drivers/cxl/core/hdm_state.c
->   create mode 100644 drivers/pci/cxl.c
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index c2414447892c..b874340b0265 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -6572,6 +6572,7 @@ S:	Maintained
->   F:	Documentation/driver-api/cxl
->   F:	Documentation/userspace-api/fwctl/fwctl-cxl.rst
->   F:	drivers/cxl/
-> +F:	drivers/pci/cxl.c
->   F:	include/cxl/
->   F:	include/uapi/linux/cxl_mem.h
->   F:	tools/testing/cxl/
-> diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
-> index 6703c1729396..9a77e68d44ce 100644
-> --- a/drivers/cxl/core/Makefile
-> +++ b/drivers/cxl/core/Makefile
-> @@ -1,6 +1,6 @@
->   # SPDX-License-Identifier: GPL-2.0
->   obj-$(CONFIG_CXL_BUS) += cxl_core.o
-> -obj-$(subst m,y,$(CONFIG_CXL_BUS)) += hdm_regs.o
-> +obj-$(subst m,y,$(CONFIG_CXL_BUS)) += hdm_regs.o hdm_state.o regs.o
->   obj-$(CONFIG_CXL_SUSPEND) += suspend.o
->   
->   ccflags-y += -I$(srctree)/drivers/cxl
-> @@ -8,7 +8,6 @@ CFLAGS_trace.o = -DTRACE_INCLUDE_PATH=. -I$(src)
->   
->   cxl_core-y := port.o
->   cxl_core-y += pmem.o
-> -cxl_core-y += regs.o
->   cxl_core-y += memdev.o
->   cxl_core-y += mbox.o
->   cxl_core-y += pci.o
-> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
-> index b57257efbf4e..a0d8f6a66810 100644
-> --- a/drivers/cxl/core/hdm.c
-> +++ b/drivers/cxl/core/hdm.c
-> @@ -17,11 +17,6 @@
->    * for enumerating these registers and capabilities.
->    */
->   
-> -struct cxl_rwsem cxl_rwsem = {
-> -	.region = __RWSEM_INITIALIZER(cxl_rwsem.region),
-> -	.dpa = __RWSEM_INITIALIZER(cxl_rwsem.dpa),
-> -};
-> -
->   static int add_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld)
->   {
->   	int rc;
-> diff --git a/drivers/cxl/core/hdm_regs.c b/drivers/cxl/core/hdm_regs.c
-> index b6ee4becde8d..f0b360867655 100644
-> --- a/drivers/cxl/core/hdm_regs.c
-> +++ b/drivers/cxl/core/hdm_regs.c
-> @@ -2,6 +2,7 @@
->   /* Copyright (c) 2026 NVIDIA Corporation & Affiliates */
->   #include <linux/delay.h>
->   #include <linux/bug.h>
-> +#include <linux/device.h>
->   #include <linux/errno.h>
->   #include <linux/export.h>
->   #include <linux/kernel.h>
-> @@ -174,3 +175,101 @@ int cxl_hdm_unpack_decoder(struct cxl_decoder_config *config, int id,
->   	return 0;
->   }
->   EXPORT_SYMBOL_FOR_MODULES(cxl_hdm_unpack_decoder, "cxl_core");
-> +
-> +/**
-> + * cxl_hdm_decoder_count_mapped() - read the decoder count of a mapped block
-> + * @dev: device for error reporting
-> + * @hdm: mapped HDM decoder capability
-> + * @size: size of the mapping
-> + *
-> + * Return: the decoder count, or a negative errno if the count is reserved or
-> + * the mapping cannot hold every decoder.
-> + */
-> +int cxl_hdm_decoder_count_mapped(struct device *dev, void __iomem *hdm,
-> +				 resource_size_t size)
-> +{
-> +	int count;
-> +
-> +	count = cxl_hdm_decoder_count(readl(hdm + CXL_HDM_DECODER_CAP_OFFSET));
-> +	if (count < 0)
-> +		return count;
-> +
-> +	/* The last decoder's target-list high register must fit in the mapping. */
-> +	if (CXL_HDM_DECODER0_TL_HIGH(count - 1) + sizeof(u32) > size) {
-> +		dev_err(dev, "CXL HDM decoder count exceeds mapped register block\n");
-> +		return -ENXIO;
-> +	}
-> +
-> +	return count;
-> +}
-> +
-> +/* Read one endpoint decoder; a disabled decoder keeps only its id. */
-> +static int cxl_hdm_read_decoder_settings(struct device *dev,
-> +					 struct cxl_endpoint_decoder_settings *settings,
-> +					 void __iomem *hdm, int id)
-> +{
-> +	u64 base, size;
-> +	u32 ctrl;
-> +	int rc;
-> +
-> +	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
-> +	base = ((u64)readl(hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id)) << 32) |
-> +	       readl(hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
-> +	size = ((u64)readl(hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id)) << 32) |
-> +	       readl(hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
-> +	rc = cxl_hdm_unpack_decoder(&settings->config, id, ctrl, base, size);
-> +	if (rc) {
-> +		dev_err(dev,
-> +			"CXL HDM decoder %d has invalid configuration: %d\n",
-> +			id, rc);
-> +		return rc;
-> +	}
-> +
-> +	if (!(settings->config.flags & CXL_DECODER_F_ENABLE))
-> +		*settings = (struct cxl_endpoint_decoder_settings) {
-> +			.config.id = id,
-> +		};
-> +	else
-> +		settings->skip =
-> +			((u64)readl(hdm + CXL_HDM_DECODER0_SKIP_HIGH(id)) << 32) |
-> +			readl(hdm + CXL_HDM_DECODER0_SKIP_LOW(id));
-> +
-> +	return 0;
-> +}
-> +
-> +/**
-> + * cxl_hdm_read_state() - read endpoint HDM decoder state
-> + * @dev: device for error messages
-> + * @hdm: mapped HDM decoder capability
-> + * @info: state to fill; @info->decoder_count must be set
-> + *
-> + * Return: 0 on success, or a negative errno if a decoder holds an invalid
-> + * configuration or the decoder count changed while reading.
-> + */
-> +int cxl_hdm_read_state(struct device *dev, void __iomem *hdm,
-> +		       struct cxl_hdm_info *info)
-> +{
-> +	int count;
-> +	int rc;
-> +
-> +	info->global_ctrl = readl(hdm + CXL_HDM_DECODER_CTRL_OFFSET);
-> +	for (int i = 0; i < info->decoder_count; i++) {
-> +		rc = cxl_hdm_read_decoder_settings(dev, &info->settings[i],
-> +						    hdm, i);
-> +		if (rc)
-> +			return rc;
-> +	}
-> +
-> +	/*
-> +	 * A changed decoder count means the snapshot no longer describes the
-> +	 * complete hardware state. Reject it rather than publish a partial cache.
-> +	 */
-> +	count = cxl_hdm_decoder_count(readl(hdm + CXL_HDM_DECODER_CAP_OFFSET));
-> +	if (count != info->decoder_count) {
-> +		dev_err(dev, "CXL HDM decoder count changed from %d to %d\n",
-> +			info->decoder_count, count);
-> +		return -ENXIO;
-> +	}
-> +
-> +	return 0;
-> +}
-> diff --git a/drivers/cxl/core/hdm_state.c b/drivers/cxl/core/hdm_state.c
-> new file mode 100644
-> index 000000000000..9a31f5996c74
-> --- /dev/null
-> +++ b/drivers/cxl/core/hdm_state.c
-> @@ -0,0 +1,64 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +/* Copyright (c) 2026 NVIDIA Corporation & Affiliates */
-> +#include <linux/cleanup.h>
-> +#include <linux/export.h>
-> +#include <linux/slab.h>
-> +
-> +#include <cxl/hdm.h>
-> +#include "cxl.h"
-> +#include "core.h"
-> +
-> +/*
-> + * CXL state that must stay available while no CXL driver is bound: the CXL
-> + * locks and the per-device HDM cache filled during PCI enumeration.
-> + */
-> +struct cxl_rwsem cxl_rwsem = {
-> +	.region = __RWSEM_INITIALIZER(cxl_rwsem.region),
-> +	.dpa = __RWSEM_INITIALIZER(cxl_rwsem.dpa),
-> +};
-> +EXPORT_SYMBOL_FOR_MODULES(cxl_rwsem, "cxl_core");
-> +
-> +/* A published cache is usable only if its HDM register block was mapped. */
-> +bool cxl_hdm_cache_present(struct cxl_hdm_info *const *slot)
-> +{
-> +	guard(rwsem_read)(&cxl_rwsem.dpa);
-> +	return *slot && (*slot)->hdm_size;
-> +}
-> +
-> +/**
-> + * cxl_hdm_cache_publish() - publish HDM state read during enumeration
-> + * @slot: cache pointer owned by the device, for example &pci_dev->hdm
-> + * @info: state to publish
-> + *
-> + * Ownership of @info passes to @slot, or @info is freed if another caller
-> + * published first.
-> + */
-> +void cxl_hdm_cache_publish(struct cxl_hdm_info **slot,
-> +			   struct cxl_hdm_info *info)
-> +{
-> +	struct cxl_hdm_info *new __free(kfree) = info;
-> +
-> +	guard(rwsem_write)(&cxl_rwsem.dpa);
+Assisted-by: Github Copilot
+Fixes: 3bc2b2348835 ("PCI: iproc: Add iProc PCIe MSI support")
+Signed-off-by: Eugen Hristev <ehristev@kernel.org>
+---
+ drivers/pci/controller/pcie-iproc-msi.c | 16 ++++++++++++++++
+ drivers/pci/controller/pcie-iproc.c     |  3 +++
+ drivers/pci/controller/pcie-iproc.h     |  4 ++++
+ 3 files changed, 23 insertions(+)
 
-Why we need to holding cxl_rwsem.dpa in cxl_hdm_cache_publish() and 
-cxl_hdm_cache_present()? I guess the lock is used to protect the struct 
-cxl_hdm_info of a pci device assignment. But struct cxl_hdm_info 
-allocation only happens during pci_bus_add_device()-> 
-pci_cxl_hdm_cache_init(). If I understand correctly, holding pci_dev 
-lock is enough.
+diff --git a/drivers/pci/controller/pcie-iproc-msi.c b/drivers/pci/controller/pcie-iproc-msi.c
+index 9ba242ab9596..1d19db67f314 100644
+--- a/drivers/pci/controller/pcie-iproc-msi.c
++++ b/drivers/pci/controller/pcie-iproc-msi.c
+@@ -651,6 +651,22 @@ int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node)
+ }
+ EXPORT_SYMBOL(iproc_msi_init);
+ 
++void iproc_msi_shutdown(struct iproc_pcie *pcie)
++{
++	struct iproc_msi *msi = pcie->msi;
++	unsigned int index;
++
++	if (!msi)
++		return;
++
++	iproc_msi_disable(msi);
++	iproc_msi_read_reg(msi, IPROC_MSI_CTRL, msi->nr_irqs - 1);
++
++	for (index = 0; index < msi->nr_irqs; index++)
++		disable_irq(msi->grps[index].gic_irq);
++}
++EXPORT_SYMBOL(iproc_msi_shutdown);
++
+ void iproc_msi_exit(struct iproc_pcie *pcie)
+ {
+ 	struct iproc_msi *msi = pcie->msi;
+diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
+index afb3aa38ac6b..6f3dc2f81a1c 100644
+--- a/drivers/pci/controller/pcie-iproc.c
++++ b/drivers/pci/controller/pcie-iproc.c
+@@ -756,8 +756,11 @@ static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
+ 
+ int iproc_pcie_shutdown(struct iproc_pcie *pcie)
+ {
++	dev_dbg(pcie->dev, "quiescing MSI before PCIe reset\n");
++	iproc_msi_shutdown(pcie);
+ 	iproc_pcie_perst_ctrl(pcie, true);
+ 	msleep(500);
++	dev_dbg(pcie->dev, "PCIe shutdown complete\n");
+ 
+ 	return 0;
+ }
+diff --git a/drivers/pci/controller/pcie-iproc.h b/drivers/pci/controller/pcie-iproc.h
+index c4443f236ca3..54e6e365774e 100644
+--- a/drivers/pci/controller/pcie-iproc.h
++++ b/drivers/pci/controller/pcie-iproc.h
+@@ -114,6 +114,7 @@ int iproc_pcie_shutdown(struct iproc_pcie *pcie);
+ 
+ #ifdef CONFIG_PCIE_IPROC_MSI
+ int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
++void iproc_msi_shutdown(struct iproc_pcie *pcie);
+ void iproc_msi_exit(struct iproc_pcie *pcie);
+ #else
+ static inline int iproc_msi_init(struct iproc_pcie *pcie,
+@@ -121,6 +122,9 @@ static inline int iproc_msi_init(struct iproc_pcie *pcie,
+ {
+ 	return -ENODEV;
+ }
++static inline void iproc_msi_shutdown(struct iproc_pcie *pcie)
++{
++}
+ static inline void iproc_msi_exit(struct iproc_pcie *pcie)
+ {
+ }
 
-snip
+---
+base-commit: 6d0933ae9d46674a6ea63a87e9e9ab4e662670c9
+change-id: 20261029-iproc-shutdown-abbbce302daa
 
-> +static struct cxl_hdm_info *cxl_pci_hdm_read_info(struct pci_dev *pdev,
-> +						  struct cxl_register_map *map,
-> +						  int dvsec)
-> +{
-> +	struct cxl_hdm_info *info;
-> +	u16 command;
-> +	int rc;
-> +
-> +	guard(pci_dev)(pdev);
-> +
-> +	rc = pci_read_config_word(pdev, PCI_COMMAND, &command);
-> +	if (rc)
-> +		return ERR_PTR(pcibios_err_to_errno(rc));
-> +
-> +	if (command & PCI_COMMAND_MEMORY)
-> +		return __cxl_pci_hdm_read_info(pdev, map, dvsec);
-> +
-> +	rc = pci_write_config_word(pdev, PCI_COMMAND,
-> +				   command | PCI_COMMAND_MEMORY);
-> +	if (rc)
-> +		return ERR_PTR(pcibios_err_to_errno(rc));
-> +
-> +	info = __cxl_pci_hdm_read_info(pdev, map, dvsec);
-> +	rc = pci_write_config_word(pdev, PCI_COMMAND, command);
-> +	if (!rc)
-> +		return info;
-> +
-> +	pci_err(pdev,
-> +		"failed to restore PCI_COMMAND after CXL HDM cache init: %d\n",
-> +		pcibios_err_to_errno(rc));
-> +	if (IS_ERR(info))
-> +		return info;
-> +
-> +	kfree(info);
-> +	return ERR_PTR(pcibios_err_to_errno(rc));
-> +}
-> +
-> +static int __pci_cxl_hdm_cache_init(struct pci_dev *pdev)
-> +{
-> +	struct cxl_register_map map = { };
-> +	u16 dvsec, cap;
-> +	int rc;
-> +
-> +	/* Avoid duplicate MMIO reads when the cache is already present. */
-> +	if (cxl_hdm_cache_present(&pdev->hdm))
-> +		return 0;
-> +
-> +	rc = cxl_pci_device_dvsec(pdev, &dvsec, &cap);
-> +	if (rc == -ENOTTY)
-> +		return 0;
-> +	if (rc)
-> +		return rc;
-> +	if (!(cap & PCI_DVSEC_CXL_MEM_CAPABLE) ||
-> +	    !cxl_dvsec_hdm_count_valid(FIELD_GET(PCI_DVSEC_CXL_HDM_COUNT, cap)))
-> +		return 0;
-> +
-> +	rc = cxl_find_regblock(pdev, CXL_REGLOC_RBI_COMPONENT, &map);
-> +	if (rc)
-> +		return rc;
-> +	if (map.bar < 0 || map.bar >= PCI_STD_NUM_BARS ||
-> +	    !cxl_pci_bar_assigned(pdev, map.bar))
-> +		return -ENODEV;
-> +
-> +	struct cxl_hdm_info *read_info =
-> +		cxl_pci_hdm_read_info(pdev, &map, dvsec);
-Should move read_info definition to the top of the function if we don't 
-need scope-based cleanup helper for the variable.
-> +	if (IS_ERR(read_info))
-> +		return PTR_ERR(read_info);
-> +
-> +	/* Another initializer may have published while we read MMIO. */
-> +	cxl_hdm_cache_publish(&pdev->hdm, read_info);
-> +
-> +	return 0;
-> +}
-Like what I said above, if we can use pci_dev lock in 
-cxl_hdm_cache_present(), since cxl_pci_hdm_read_info() also needs to 
-hold pci_dev lock, I think we can hold pci_dev lock at the beginning of 
-this function, then you don't need cxl_hdm_cache_publish() anymore. 
-Assigning read_info to pdev->hdm directly is enough.
-> +
-> +void pci_cxl_hdm_cache_init(struct pci_dev *pdev)
-> +{
-> +	int rc;
-> +
-> +	rc = __pci_cxl_hdm_cache_init(pdev);
-> +	if (rc)
-> +		pci_dbg(pdev, "CXL HDM cache init failed: %d\n", rc);
-> +}
-> +
-> +void pci_cxl_hdm_cache_release(struct pci_dev *pdev)
-> +{
-> +	cxl_hdm_cache_release(&pdev->hdm);
-> +}
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index ba3c3fddddc2..9e218f236e66 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -730,6 +730,14 @@ static inline void pci_doe_destroy(struct pci_dev *pdev) { }
->   static inline void pci_doe_disconnected(struct pci_dev *pdev) { }
->   #endif
->   
-> +#ifdef CONFIG_CXL_RESET
-> +void pci_cxl_hdm_cache_init(struct pci_dev *pdev);
-> +void pci_cxl_hdm_cache_release(struct pci_dev *pdev);
-> +#else
-> +static inline void pci_cxl_hdm_cache_init(struct pci_dev *pdev) { }
-> +static inline void pci_cxl_hdm_cache_release(struct pci_dev *pdev) { }
-> +#endif
-> +
->   #ifdef CONFIG_PCI_NPEM
->   void pci_npem_create(struct pci_dev *dev);
->   void pci_npem_remove(struct pci_dev *dev);
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 27008e2ea5af..cb52357344ed 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2484,6 +2484,7 @@ static void pci_release_dev(struct device *dev)
->   	struct pci_dev *pci_dev;
->   
->   	pci_dev = to_pci_dev(dev);
-> +	pci_cxl_hdm_cache_release(pci_dev);
->   	pci_release_capabilities(pci_dev);
->   	pci_release_of_node(pci_dev);
->   	pcibios_release_device(pci_dev);
-> diff --git a/include/cxl/cxl.h b/include/cxl/cxl.h
-> index b29374b34cfa..3e70f74685b6 100644
-> --- a/include/cxl/cxl.h
-> +++ b/include/cxl/cxl.h
-> @@ -27,6 +27,7 @@ enum cxl_devtype {
->   
->   struct cxl_region;
->   struct cxl_hdm_info;
-> +struct pci_dev;
->   
->   enum cxl_decoder_type {
->   	CXL_DECODER_DEVMEM = 2,
-> @@ -149,6 +150,8 @@ struct cxl_pmu_reg_map {
->    * @base: virtual base of the register-block-BAR + @block_offset
->    * @resource: physical resource base of the register block
->    * @max_size: maximum mapping size to perform register search
-> + * @bar: PCI BAR containing the register block
-> + * @bar_offset: register block offset relative to @bar
->    * @reg_type: see enum cxl_regloc_type
->    * @component_map: cxl_reg_map for component registers
->    * @device_map: cxl_reg_maps for device registers
-> @@ -159,6 +162,8 @@ struct cxl_register_map {
->   	void __iomem *base;
->   	resource_size_t resource;
->   	resource_size_t max_size;
-> +	int bar;
-> +	resource_size_t bar_offset;
->   	u8 reg_type;
->   	union {
->   		struct cxl_component_reg_map component_map;
-> @@ -167,6 +172,7 @@ struct cxl_register_map {
->   	};
->   };
->   
-> +
->   /**
->    * struct cxl_dpa_perf - DPA performance property entry
->    * @dpa_range: range for DPA address
-> diff --git a/include/cxl/hdm.h b/include/cxl/hdm.h
-> index d5e7efd2ffc0..af7cef649446 100644
-> --- a/include/cxl/hdm.h
-> +++ b/include/cxl/hdm.h
-> @@ -23,6 +23,7 @@ struct cxl_endpoint_decoder_settings {
->    * @hdm_offset: offset of the HDM decoder capability in @hdm_bar
->    * @hdm_size: size of the HDM decoder register block
->    * @global_ctrl: HDM decoder global control register
-> + * @dvsec: config space offset of the CXL Device DVSEC
->    * @dvsec_ctrl: CXL DVSEC control register
->    * @dvsec_ctrl_valid: whether @dvsec_ctrl contains valid state
->    * @settings: per-endpoint-decoder programming state
-> @@ -36,9 +37,20 @@ struct cxl_hdm_info {
->   	resource_size_t hdm_offset;
->   	resource_size_t hdm_size;
->   	u32 global_ctrl;
-> +	u16 dvsec;
->   	u16 dvsec_ctrl;
->   	bool dvsec_ctrl_valid;
->   	struct cxl_endpoint_decoder_settings settings[] __counted_by(decoder_count);
->   };
-> +struct device;
-> +
-> +int cxl_hdm_decoder_count_mapped(struct device *dev, void __iomem *hdm,
-> +				 resource_size_t size);
-> +int cxl_hdm_read_state(struct device *dev, void __iomem *hdm,
-> +		       struct cxl_hdm_info *info);
-> +bool cxl_hdm_cache_present(struct cxl_hdm_info *const *slot);
-> +void cxl_hdm_cache_publish(struct cxl_hdm_info **slot,
-> +			   struct cxl_hdm_info *info);
-> +void cxl_hdm_cache_release(struct cxl_hdm_info **slot);
->   
->   #endif /* __CXL_HDM_H__ */
-> diff --git a/include/cxl/pci.h b/include/cxl/pci.h
-> index 3e0000015871..b15d7e415e27 100644
-> --- a/include/cxl/pci.h
-> +++ b/include/cxl/pci.h
-> @@ -4,6 +4,8 @@
->   #ifndef __CXL_CXL_PCI_H__
->   #define __CXL_CXL_PCI_H__
->   
-> +#include <linux/types.h>
-> +
->   /* Register Block Identifier (RBI) */
->   enum cxl_regloc_type {
->   	CXL_REGLOC_RBI_EMPTY = 0,
-> @@ -19,4 +21,15 @@ struct pci_dev;
->   
->   int cxl_pci_setup_regs(struct pci_dev *pdev, enum cxl_regloc_type type,
->   		       struct cxl_register_map *map);
-> +int cxl_find_regblock(struct pci_dev *pdev, enum cxl_regloc_type type,
-> +		      struct cxl_register_map *map);
-> +int cxl_setup_regs(struct cxl_register_map *map);
-> +/*
-> + * CXL r4.0 sec 8.1.3.1: a CXL.mem capable device reports one or two HDM
-> + * ranges. 00b is illegal when Mem_Capable is set and 11b is reserved.
-> + */
-> +static inline bool cxl_dvsec_hdm_count_valid(unsigned int hdm_count)
-> +{
-> +	return hdm_count == 1 || hdm_count == 2;
-> +}
->   #endif
-> diff --git a/tools/testing/cxl/Kbuild b/tools/testing/cxl/Kbuild
-> index 2be1df80fcc9..e80500f457a9 100644
-> --- a/tools/testing/cxl/Kbuild
-> +++ b/tools/testing/cxl/Kbuild
-> @@ -55,7 +55,6 @@ obj-m += cxl_core.o
->   
->   cxl_core-y := $(CXL_CORE_SRC)/port.o
->   cxl_core-y += $(CXL_CORE_SRC)/pmem.o
-> -cxl_core-y += $(CXL_CORE_SRC)/regs.o
->   cxl_core-y += $(CXL_CORE_SRC)/memdev.o
->   cxl_core-y += $(CXL_CORE_SRC)/mbox.o
->   cxl_core-y += $(CXL_CORE_SRC)/pci.o
+Best regards,
+--  
+Eugen Hristev <ehristev@kernel.org>
+
