@@ -1,55 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793260552;
-	b=IBxEroORmaE5b488UM8TaY/dL4r2cxGAMXvyeIWX2ntVdNn8XQxx1seGAofl6+m4lbhZ
-	 UCWx75zMJ51vNhFOX3J7S14x8IF1xc7zaOFcEtssUHF6R990nbyzrYzFow+q7dTyjRA1Q
-	 Ol/AvdOeELFLFEk0bZf4EerjpXPy+qB7Urevv3kY48yZBfhXmeW1yXEoZXg3EK3VVccE9
-	 amIzYQKfXw6bWTl4AxhiWsPOTVkIof421Cxcn9I6HYBvq+iSOlVE4+qigA4RdwZii9VTF
-	 UtO2KcRqgREUtiK53vkWoOr6rQZyRUZxGnSSEKuDt7LLINCbhYfq8cYWgNQwoUAPuUQ==
+	t=1793261430;
+	b=weJMrBaoYTXObJr7H7twDk3B72NSGcHfjaF/vXbya//jc8NnU4rRFPH3wmEkD0W8i5W8
+	 WPaEujA4DMmCBPYg5XMgKWEqM3GKa6R8uiAvwpEddFXPoBWUwmM29O598qkTQpqZ2Hjix
+	 Z/i/gkbUEN3Nx5lLg2QCsrCOdn1JMnlzxEp6z/Xl7MYta2OzQViwXcbgszKBgmy2XmeFD
+	 EVGDkHwtsEHPuXGmwvdzCZlyMi3g6mdps2u44pJyskxwix1cIcZEW4u0XO0hgkXbt1KJa
+	 wOsAPoTVpE/UXlBWquqWjhECl5jjOeL2ApFj1VjZxWc/PaFegd6W2IGWpszXUKuBctw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793260552;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=LjweFMGE1nz/B5oPlO3R6MsdId+nlcPtdLyaxHqLGmk=;
-	b=dcKWOBN1JSplhEt1BQCIr7N/iUy4oTCqmqX+F1xVjsCA23GcywMR41TpLmAZBfxrNrI4
-	 aVLU9iwZP9r5qD97cFFNPN26JbndmpqyVu7j3SqTvixRfYeahc+u5rgK7mHx/O60uye2c
-	 FaRtLprF44Jo+TVAv1Gzol3fh4XoFAtns6fA+BUlZQrm7LgTuwjSZrIDQJlhoPNsuUG4n
-	 QJquXIivFwfFjoCP9jOtAgBGR6f3mUWcbtCjXe3kRBnNSEVXT3jo2ivz123r3k7V3N0jq
-	 6lR/VhFx4s4CiPNfzKwxGJoxvGaEkgPO4lzlX/JqmnbAO9kKbR/9naGSUQXZEe6FYww==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793261430;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:Autocrypt:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding:X-Spam-Flag:
+	 X-Spam-Level:X-Spamd-Result:X-Spam-Score;
+	bh=5rBZ0kFvUh2i3PD86rsaq90lGhsDruIK+LJgf4TiufE=;
+	b=FSPVQ44FcmBZ+x1uOT0s1D0XaznArRw2ojVp5gQMeBuRfQQx2QZIxQLg2BzBzWLZkXP1
+	 D7s2yVPRJlzNcmwBZtfatOsG2JXlvXA+dBf3sxocKKZ4oFjEi74CpMhq5S5A0KPYqE/rW
+	 KW0NmLHlnX5imFsXhv+wH9PGiYO3pB93PUnd+7TFZ4EY1v5cmTeIhjobNAEfcJZPS0r8G
+	 or2NmQBrqXnXERxFc9yLEYkf30KKC1UauIKzJNxjZ1i61qjW08lf27M7fHYSnCJ/jhOkp
+	 5PTfTz2l7Ihz22ZcNAY9e+FuugX+NJH1fmdvF3zkQsg1afGLEicODkKlAtgQEcxQ3wg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DZp7NbP3;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=suse.de;
+	spf=pass smtp.mailfrom=suse.de;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=fJqSyjMR;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b="mT+3/vZE";
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=fJqSyjMR;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b="mT+3/vZE";
+	arc=none smtp.remote-ip=195.135.223.131
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1F89606A31A
-	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 07:55:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E9DB606A31F;
+	Thu, 29 Oct 2026 08:10:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1E9DB606A31F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DZp7NbP3
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D6861F01828;
-	Thu, 29 Oct 2026 07:55:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793260551;
-	bh=LjweFMGE1nz/B5oPlO3R6MsdId+nlcPtdLyaxHqLGmk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DZp7NbP3C0I+ANUnYHFYRyfIbj/MRo2KQ4PQf0Q5JJgWaAuqm1edcg8Ui4yQWFHaG
-	 0NSX4BpkmAUtwV2gFKT3Ftzmhw73dfXhPZizFHAMRPRXbXjnsHaZToIS0ZC0ddSIPG
-	 ZH6tGvDaK8FTcoiA15Cxe/XTiyYaGeIFmtwpz1uyMc6h7mMA/TZBpn3eWMspsrRECm
-	 sUTv8qRGja3tGeTvP0JzmlTzshmkH5q8eHC+0v+VPo8G3bg/wbSsCWqDamGP/hn5fU
-	 5Zi/Yk1cEC+ob0emjT9QDhU8Sgp8LzjwgUmt+0R2ZeIJ+4ajLatZnaWfN29Z+Ip8zC
-	 eo3MAC2+9ROFA==
-Message-ID: <sashiko-outbox-188923@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: iproc: Fix MSI shutdown operations
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Eugen Hristev" <ehristev@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261029-iproc-shutdown-v1-1-05f828561116@kernel.org>
-References: <20261029-iproc-shutdown-v1-1-05f828561116@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 29 Oct 2026 07:55:50 +0000
+	dkim=pass (1024-bit key, unprotected) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=fJqSyjMR;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=mT+3/vZE;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=fJqSyjMR;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=mT+3/vZE
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 1AB351F385;
+	Thu, 29 Oct 2026 08:10:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1793261428; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=5rBZ0kFvUh2i3PD86rsaq90lGhsDruIK+LJgf4TiufE=;
+	b=fJqSyjMR123MaZQ++4XcOMlHl3DGd8R/7vEzojiPss9ZF4DefVlIxSzLA9+rKt9UfgFTNb
+	LL7QBh/a6lsec0KelDwGMENnoJC2fUn3jaPCnJRCLt97g1ghdsT3fZsBM5dV+ek3nQjPSa
+	pqGgft5un3mV+q0kVIpPNOwx6S96wMQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1793261428;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=5rBZ0kFvUh2i3PD86rsaq90lGhsDruIK+LJgf4TiufE=;
+	b=mT+3/vZEIfsBnC6J3GUTIoeq8FKF3UhUq5yQcaqSTDW/qVydR8OWHyyOdIeBbQuQse+1z3
+	zweUVYwqht1iZsCA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1793261428; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=5rBZ0kFvUh2i3PD86rsaq90lGhsDruIK+LJgf4TiufE=;
+	b=fJqSyjMR123MaZQ++4XcOMlHl3DGd8R/7vEzojiPss9ZF4DefVlIxSzLA9+rKt9UfgFTNb
+	LL7QBh/a6lsec0KelDwGMENnoJC2fUn3jaPCnJRCLt97g1ghdsT3fZsBM5dV+ek3nQjPSa
+	pqGgft5un3mV+q0kVIpPNOwx6S96wMQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1793261428;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=5rBZ0kFvUh2i3PD86rsaq90lGhsDruIK+LJgf4TiufE=;
+	b=mT+3/vZEIfsBnC6J3GUTIoeq8FKF3UhUq5yQcaqSTDW/qVydR8OWHyyOdIeBbQuQse+1z3
+	zweUVYwqht1iZsCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C1E8F13419;
+	Thu, 29 Oct 2026 08:10:27 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id v4IaHnP/4mpvMgAAD6G6ig
+	(envelope-from <tzimmermann@suse.de>); Thu, 29 Oct 2026 08:10:27 +0000
+Message-ID: <905d902c-461f-4a0e-9ac2-0ad02fe9cabe@suse.de>
+Date: Thu, 29 Oct 2026 09:10:27 +0100
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -58,187 +105,164 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] PCI/VGA: Enable firmware default device detection on
+ LoongArch
+To: wuqianhai@loongson.cn, bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ javierm@redhat.com, dri-devel@lists.freedesktop.org
+References: <20261028094634.766723-1-wuqianhai@loongson.cn>
+ <20261029033440.973077-1-wuqianhai@loongson.cn>
+Content-Language: en-US
+From: Thomas Zimmermann <tzimmermann@suse.de>
+Autocrypt: addr=tzimmermann@suse.de; keydata=
+ xsBNBFs50uABCADEHPidWt974CaxBVbrIBwqcq/WURinJ3+2WlIrKWspiP83vfZKaXhFYsdg
+ XH47fDVbPPj+d6tQrw5lPQCyqjwrCPYnq3WlIBnGPJ4/jreTL6V+qfKRDlGLWFjZcsrPJGE0
+ BeB5BbqP5erN1qylK9i3gPoQjXGhpBpQYwRrEyQyjuvk+Ev0K1Jc5tVDeJAuau3TGNgah4Yc
+ hdHm3bkPjz9EErV85RwvImQ1dptvx6s7xzwXTgGAsaYZsL8WCwDaTuqFa1d1jjlaxg6+tZsB
+ 9GluwvIhSezPgnEmimZDkGnZRRSFiGP8yjqTjjWuf0bSj5rUnTGiyLyRZRNGcXmu6hjlABEB
+ AAHNJ1Rob21hcyBaaW1tZXJtYW5uIDx0emltbWVybWFubkBzdXNlLmRlPsLAjgQTAQgAOAIb
+ AwULCQgHAgYVCgkICwIEFgIDAQIeAQIXgBYhBHIX+6yM6c9jRKFo5WgNwR1TC3ojBQJftODH
+ AAoJEGgNwR1TC3ojx1wH/0hKGWugiqDgLNXLRD/4TfHBEKmxIrmfu9Z5t7vwUKfwhFL6hqvo
+ lXPJJKQpQ2z8+X2vZm/slsLn7J1yjrOsoJhKABDi+3QWWSGkaGwRJAdPVVyJMfJRNNNIKwVb
+ U6B1BkX2XDKDGffF4TxlOpSQzdtNI/9gleOoUA8+jy8knnDYzjBNOZqLG2FuTdicBXblz0Mf
+ vg41gd9kCwYXDnD91rJU8tzylXv03E75NCaTxTM+FBXPmsAVYQ4GYhhgFt8S2UWMoaaABLDe
+ 7l5FdnLdDEcbmd8uLU2CaG4W2cLrUaI4jz2XbkcPQkqTQ3EB67hYkjiEE6Zy3ggOitiQGcqp
+ j//OwE0EWznS4AEIAMYmP4M/V+T5RY5at/g7rUdNsLhWv1APYrh9RQefODYHrNRHUE9eosYb
+ T6XMryR9hT8XlGOYRwKWwiQBoWSDiTMo/Xi29jUnn4BXfI2px2DTXwc22LKtLAgTRjP+qbU6
+ 3Y0xnQN29UGDbYgyyK51DW3H0If2a3JNsheAAK+Xc9baj0LGIc8T9uiEWHBnCH+RdhgATnWW
+ GKdDegUR5BkDfDg5O/FISymJBHx2Dyoklv5g4BzkgqTqwmaYzsl8UxZKvbaxq0zbehDda8lv
+ hFXodNFMAgTLJlLuDYOGLK2AwbrS3Sp0AEbkpdJBb44qVlGm5bApZouHeJ/+n+7r12+lqdsA
+ EQEAAcLAdgQYAQgAIAIbDBYhBHIX+6yM6c9jRKFo5WgNwR1TC3ojBQJftOH6AAoJEGgNwR1T
+ C3ojVSkIALpAPkIJPQoURPb1VWjh34l0HlglmYHvZszJWTXYwavHR8+k6Baa6H7ufXNQtThR
+ yIxJrQLW6rV5lm7TjhffEhxVCn37+cg0zZ3j7zIsSS0rx/aMwi6VhFJA5hfn3T0TtrijKP4A
+ SAQO9xD1Zk9/61JWk8OysuIh7MXkl0fxbRKWE93XeQBhIJHQfnc+YBLprdnxR446Sh8Wn/2D
+ Ya8cavuWf2zrB6cZurs048xe0UbSW5AOSo4V9M0jzYI4nZqTmPxYyXbm30Kvmz0rYVRaitYJ
+ 4kyYYMhuULvrJDMjZRvaNe52tkKAvMevcGdt38H4KSVXAylqyQOW5zvPc4/sq9c=
+In-Reply-To: <20261029033440.973077-1-wuqianhai@loongson.cn>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Spamd-Result: default: False [-13.29 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-0.998];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_NONE(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:url,bootlin.com:url,loongson.cn:email]
+X-Spam-Score: -13.29
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] PCI: iproc: disable_irq() on chained GIC IRQs in iproc_msi_shutdow=
-n()
-- [High] PCI: iproc: NULL dereference in iproc_msi_shutdown() after failed =
-MSI init
-- [Medium] PCI: iproc: uninforced MMIO flush in iproc_msi_shutdown() via re=
-adl_relaxed()
+Hi
+
+Am 29.10.26 um 04:34 schrieb wuqianhai@loongson.cn:
+> From: wuqianhai <wuqianhai@loongson.cn>
+>
+> On LoongArch, PCI resource assignment completes during subsys_initcall
+> (acpi_init), before vga_arb_device_init() runs.  By that time the
+> firmware framebuffer BAR may already have been relocated, leaving
+> screen_info's lfb_base stale.  Enable vga_is_firmware_default() for
+> LoongArch and refresh screen_info in vga_arb_device_init() before the
+> boot device is matched.
+>
+> Unlike x86, sysfb_primary_display is only defined when CONFIG_SYSFB is
+> enabled on LoongArch, so have VGA_ARB select SYSFB there.
+>
+> Signed-off-by: wuqianhai <wuqianhai@loongson.cn>
+> ---
+> Changes in v2:
+> - Add VGA_ARB's select of SYSFB for LoongArch to avoid an undefined
+>    reference when CONFIG_SCREEN_INFO is not set.
+> - Restrict the screen_info_apply_fixups() call to CONFIG_LOONGARCH so
+>    x86 and other architectures are unaffected.
+> - Enable vga_is_firmware_default() for LoongArch.
+> ---
+>   drivers/pci/Kconfig  |  1 +
+>   drivers/pci/vgaarb.c | 12 +++++++++++-
+>   2 files changed, 12 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 0c7408509ba2..55cc60f5d312 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -256,6 +256,7 @@ config VGA_ARB
+>   	default y
+>   	depends on !S390
+>   	select SCREEN_INFO if X86
+> +	select SYSFB if LOONGARCH
+>   	help
+>   	  Some "legacy" VGA devices implemented on PCI typically have the same
+>   	  hard-decoded addresses as they did on ISA. When multiple PCI devices
+> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+> index 3e58b2c05c85..1b7e915629f9 100644
+> --- a/drivers/pci/vgaarb.c
+> +++ b/drivers/pci/vgaarb.c
+> @@ -566,7 +566,7 @@ EXPORT_SYMBOL(vga_put);
+>   
+>   static bool vga_is_firmware_default(struct pci_dev *pdev)
+>   {
+> -#if defined CONFIG_X86
+> +#if defined(CONFIG_X86) || defined(CONFIG_LOONGARCH)
+>   	return pdev == screen_info_pci_dev(&sysfb_primary_display.screen);
+>   #else
+>   	return false;
+> @@ -1527,6 +1527,16 @@ static int __init vga_arb_device_init(void)
+>   	int rc;
+>   	struct pci_dev *pdev;
+>   
+> +#if defined(CONFIG_LOONGARCH)
+> +	/*
+> +	 * On LoongArch, PCI resource assignment completes during
+> +	 * subsys_initcall (acpi_init), before the VGA arbiter runs.  Refresh
+> +	 * screen_info so vga_is_firmware_default() can match the relocated
+> +	 * BAR.
+> +	 */
+> +	screen_info_apply_fixups();
+> +#endif
+
+No per-arch defines in generic code.  All the setup should work the same 
+on all architectures.  All global screen-info state should be maintained 
+by drivers/firmware/sysfb.c. Otherwise the framebuffer setup gets even 
+more convoluted than it already is.
+
+My question is why does vga_is_firmware_default() run before 
+sysfb_init()? [1] Does acpi_init call into it? [1] 
+https://elixir.bootlin.com/linux/v7.3/source/drivers/firmware/sysfb.c#L225
+
+
+Apart from that, we can decouple screen_info_apply_fixups() from 
+sysfb_init().  After relocation happens, the PCI code could call the 
+helper directly and let it update the global screen_info.
+
+Best regards
+Thomas
+
+
+> +
+>   	rc = misc_register(&vga_arb_device);
+>   	if (rc < 0)
+>   		pr_err("error %d registering device\n", rc);
+
+-- 
 --
+Thomas Zimmermann
+Graphics Driver Developer
+SUSE Software Solutions Germany GmbH
+Frankenstr. 146, 90461 Nürnberg, Germany, www.suse.com
+GF: Stefan Gaiser, Jochen Jaser, Abhinav Puri, (HRB 36809, AG Nürnberg)
 
-commit 1301129335cfb36f33fd6263460f6c8ea506e1a1
-Author: Eugen Hristev <ehristev@kernel.org>
 
-PCI: iproc: Fix MSI shutdown operations
-
-This commit adds an iproc_msi_shutdown() helper and calls it from
-iproc_pcie_shutdown() prior to asserting PCIe reset so that MSI interrupts
-are disabled and quiesced on reboot or shutdown.
-
-> diff --git a/drivers/pci/controller/pcie-iproc-msi.c b/drivers/pci/contro=
-ller/pcie-iproc-msi.c
-> index 9ba242ab95967..1d19db67f3142 100644
-> --- a/drivers/pci/controller/pcie-iproc-msi.c
-> +++ b/drivers/pci/controller/pcie-iproc-msi.c
-> @@ -651,6 +651,22 @@ int iproc_msi_init(struct iproc_pcie *pcie, struct d=
-evice_node *node)
->  }
->  EXPORT_SYMBOL(iproc_msi_init);
-> =20
-> +void iproc_msi_shutdown(struct iproc_pcie *pcie)
-> +{
-> +	struct iproc_msi *msi =3D pcie->msi;
-> +	unsigned int index;
-> +
-> +	if (!msi)
-> +		return;
-
-[Severity: High]
-Can iproc_msi_shutdown() dereference NULL pointers in msi->reg_offsets or
-msi->grps if iproc_msi_init() failed earlier during probe?
-
-In drivers/pci/controller/pcie-iproc-msi.c, iproc_msi_init() assigns
-pcie->msi =3D msi right after allocating msi, before validating msi->nr_irqs
-and pcie->type or allocating msi->bitmap and msi->grps:
-
-drivers/pci/controller/pcie-iproc-msi.c:iproc_msi_init() {
-	msi =3D devm_kzalloc(pcie->dev, sizeof(*msi), GFP_KERNEL);
-	if (!msi)
-		return -ENOMEM;
-
-	msi->pcie =3D pcie;
-	pcie->msi =3D msi;
-	...
-	msi->nr_irqs =3D of_irq_count(node);
-	if (!msi->nr_irqs) {
-		dev_err(pcie->dev, "found no MSI GIC interrupt\n");
-		return -ENODEV;
-	}
-	...
-	if (msi->nr_irqs < msi->nr_cpus) {
-		dev_err(pcie->dev,
-			"not enough GIC interrupts for MSI affinity\n");
-		return -EINVAL;
-	}
-	...
-	default:
-		dev_err(pcie->dev, "incompatible iProc PCIe interface\n");
-		return -EINVAL;
-	}
-	...
-	msi->bitmap =3D devm_bitmap_zalloc(pcie->dev, msi->nr_msi_vecs,
-					 GFP_KERNEL);
-	if (!msi->bitmap)
-		return -ENOMEM;
-
-	msi->grps =3D devm_kcalloc(pcie->dev, msi->nr_irqs, sizeof(*msi->grps),
-				 GFP_KERNEL);
-	if (!msi->grps)
-		return -ENOMEM;
-}
-
-Unlike the free_irqs error label at the bottom of iproc_msi_init(), those
-early error returns leave pcie->msi non-NULL. Because iproc_pcie_setup() in
-drivers/pci/controller/pcie-iproc.c treats iproc_pcie_msi_enable() failure
-as non-fatal and continues probing the host bridge:
-
-drivers/pci/controller/pcie-iproc.c:iproc_pcie_setup() {
-	if (IS_ENABLED(CONFIG_PCI_MSI))
-		if (iproc_pcie_msi_enable(pcie))
-			dev_info(dev, "not using iProc MSI\n");
-}
-
-a subsequent reboot or shutdown calling iproc_pcie_shutdown() ->
-iproc_msi_shutdown() will see a non-NULL pcie->msi and dereference
-uninitialized msi->reg_offsets or msi->grps (as well as underflowing
-msi->nr_irqs - 1 when msi->nr_irqs is 0).
-
-> +
-> +	iproc_msi_disable(msi);
-> +	iproc_msi_read_reg(msi, IPROC_MSI_CTRL, msi->nr_irqs - 1);
-
-[Severity: Medium]
-Is iproc_msi_read_reg() sufficient here to guarantee that the posted MMIO
-writes from iproc_msi_disable() have completed before disabling the IRQs?
-
-In drivers/pci/controller/pcie-iproc-msi.c, iproc_msi_read_reg() uses
-readl_relaxed():
-
-static inline u32 iproc_msi_read_reg(struct iproc_msi *msi,
-				     enum iproc_msi_reg reg,
-				     unsigned int eq)
-{
-	struct iproc_pcie *pcie =3D msi->pcie;
-
-	return readl_relaxed(pcie->base + msi->reg_offsets[eq][reg]);
-}
-
-On ARM and ARM64, readl_relaxed() does not include an I/O read barrier
-(__iormb()), and the return value of iproc_msi_read_reg() is discarded
-without any dependent operation or barrier before the loop below. Without a
-non-relaxed readl() or an explicit read barrier, will the CPU wait for the
-MMIO read response from the controller before executing the subsequent IRQ
-teardown?
-
-> +
-> +	for (index =3D 0; index < msi->nr_irqs; index++)
-> +		disable_irq(msi->grps[index].gic_irq);
-
-[Severity: High]
-Does calling disable_irq() on msi->grps[index].gic_irq actually mask or
-stop these interrupts when they are registered as chained handlers?
-
-In drivers/pci/controller/pcie-iproc-msi.c, iproc_msi_irq_setup() registers
-each msi->grps[i].gic_irq using irq_set_chained_handler_and_data() rather
-than request_irq():
-
-drivers/pci/controller/pcie-iproc-msi.c:iproc_msi_irq_setup() {
-	for (i =3D cpu; i < msi->nr_irqs; i +=3D msi->nr_cpus) {
-		irq_set_chained_handler_and_data(msi->grps[i].gic_irq,
-						 iproc_msi_handler,
-						 &msi->grps[i]);
-		...
-	}
-}
-
-Chained interrupts replace desc->handle_irq directly with iproc_msi_handler
-and do not set _IRQ_DISABLE_UNLAZY. When iproc_msi_shutdown() calls
-disable_irq(msi->grps[index].gic_irq), __irq_disable() in kernel/irq/chip.c
-performs a lazy disable if the irq_chip does not implement .irq_disable
-(which is the case for ARM GICv2 and GICv3):
-
-kernel/irq/chip.c:__irq_disable() {
-	if (irqd_irq_disabled(&desc->irq_data)) {
-		if (mask)
-			mask_irq(desc);
-	} else {
-		irq_state_set_disabled(desc);
-		if (desc->irq_data.chip->irq_disable) {
-			desc->irq_data.chip->irq_disable(&desc->irq_data);
-			irq_state_set_masked(desc);
-		} else if (mask) {
-			mask_irq(desc);
-		}
-	}
-}
-
-Because mask is false and chip->irq_disable is NULL, __irq_disable() only
-sets IRQD_IRQ_DISABLED in software without masking the GIC interrupt in
-hardware. Furthermore, unlike standard flow handlers (such as
-handle_fasteoi_irq()), iproc_msi_handler() is invoked directly via
-generic_handle_irq_desc() and does not check irqd_irq_disabled(), nor does
-it set IRQD_IRQ_INPROGRESS for synchronize_irq() to wait on. Also,
-iproc_msi_init() only sets up chained handlers for online CPUs via
-for_each_online_cpu(), whereas this loop runs across all 0 .. msi->nr_irqs.
-
-Should iproc_msi_shutdown() instead tear down the chained handlers using
-iproc_msi_irq_free() (which calls irq_set_chained_handler_and_data() with
-NULL, masking the GIC line under desc->lock and resetting desc->handle_irq),
-similar to what iproc_msi_exit() does?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029-iproc-shut=
-down-v1-1-05f828561116@kernel.org?part=3D1
