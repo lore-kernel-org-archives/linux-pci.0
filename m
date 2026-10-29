@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793265385;
-	b=yKh+q9Edv/HutNnY19ygxqpXktlFyUCSE+EkIFgjz3S/brCk7BLgjXWDApK7tQwkxzQ1
-	 UmlOmjJb/elUAsc2Zz8prwyR5jATvTTMb6HLNp6PQr1JkMP5DCxrXehq/f2gb7dLKYTw0
-	 j+vAo2bXRjtACzLbc9L7j8GhyWCNgTiNdesIX6hV4Ih6TkIFUmimw0UOZNyRc4dtLaxt+
-	 eicC15l7Z5eOqr6FikIya21ftxNASML8OGbO0TotEWbnIhaPSnidT6IPWn7hOsIzhR4o+
-	 ZsF+ppBp4IlxCiZP6MByZy5Z5XnCAtfEDD4QSZz8ALxdS5A5YinjUroW10/EVzwd1Uw==
+	t=1793265388;
+	b=A7MhxM7azyWfDgEvFdYLTQyqcLiHPBNOwDIKPBWAUW64Ox2fe12O7j0tQ2t1rvGnT9ik
+	 c99c8lg1kuiBY1jqmuDtn3G2d8gVxnnUFfxUUCVPV48K7Kt3exjLsR6XE5drpSHkcnpk/
+	 LVqTRne1L4Q4C6mHN0HEWgYGS8KJBInAB8+l/gYRk/u9RdxJLeVan9F62xrkg5Wf3wLMd
+	 YAWPx6DDUm0yVTz6+W3Ao2+AGsaC5G+e4kcF2nrO2HMTdDTuOjEuRMrvqk4QQ7bK6LBoU
+	 Zk5VVzML7eObFu0222bPV5vfVVUXbiEkZvtLVq409Uh1Kowl5DauLEzYVRAknMNOWsg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793265385;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793265388;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=dGHNi/NZnZGReejnQ5XVpgXrV8Ai0qujer2PftKvzu4=;
-	b=X/lZMS4MQzazRyiPUmEIWih63Kf+CkO29KozVMS6kLdq+u/mZpjnf3u7jbNeWKfF0LmW
-	 HyCHSNZdi/V/xt1Zrb9+BJvWwtAr90uCddRgyvJmQ6T5A9TMVZSodavjcvQhn5dvSapZY
-	 e8WbyWgoZHRWjt4NSe3BsyT2RCtjDnuz/8stmv3dOqI6/rsInmLcOfmX0+zC9d6uFL7kO
-	 BIH66J0/XyA32sITw1E3wrjZDt2wAo2RXORtFsFE7AXjO3JM3X3WSjD893KEW4b8svBzM
-	 Mx2+SZINFRsq4x03rcF/A8mYRvFS+TkAa/UXXy6IPDYFtRlx5MXSp1kTK3dkdBnWUmg==
+	bh=YNgX5SFBiaSwcUYiUIFMJCezPEVB23e8ZTa3oJkkbD0=;
+	b=S5LfK4SybmKWKh9nlkmDLI7jx/CDm7e0ZKbhpFIgEv2rdd6aVcm1RpqctO8tSW/oADUQ
+	 j/WR3yTTgj3E/HIXaQfyCZVtodSb9CYmotnCxze4D7aJcnTb77Trky8EUAMbhXIgFsuXp
+	 Q5EuKg8Ff2wKvxf6k58MwtrgqFh6HdIjKVm1MDIGkBlFyIBfM2yHCmKvk8oBFCBaR+NPE
+	 Kcu8KTOoWkLNo1djX9ogxWuDNGZ+TjghZsqRhYfE/ZsCiaCPQ2Ti0s/+FLbTAG0KTbt0U
+	 fASQBCtyaAyRtdrznr/bIZE/XQuIRpKdMcsH9GX3KK6e2F9AvQQfJK0nyyyTgJhTI1w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jKUfiBzX;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Qc5QJZSw;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 171EC606A31E;
-	Thu, 29 Oct 2026 09:16:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF8B8606A32A;
+	Thu, 29 Oct 2026 09:16:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jKUfiBzX
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2EFD1F01825;
-	Thu, 29 Oct 2026 09:16:22 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Qc5QJZSw
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F19B1F01825;
+	Thu, 29 Oct 2026 09:16:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793265384;
-	bh=dGHNi/NZnZGReejnQ5XVpgXrV8Ai0qujer2PftKvzu4=;
+	s=k20260515; t=1793265387;
+	bh=YNgX5SFBiaSwcUYiUIFMJCezPEVB23e8ZTa3oJkkbD0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jKUfiBzXW0isL1VxjwcNLWqKKgN54t2RVWOBRihFqvh8HhGryskTaPMxb7zkkklom
-	 P+HPTEl8rFtMuU1aGrZEYiLACeEZscTIUTgo+eYvNXxprKlQg/zJcwl/G+PbmU4QKf
-	 d83A/vvPco4zBc3aKcSRL6jGIWEaemmEH99hhggpMO8c6d7riU6cYie3KBJAKoulVA
-	 D2s41nfJg7JYISdL3HvHJa71FSf6UhWm0eStvpxCBFQPhuesGgGvZcNpXaENDgHIJm
-	 v04l2luYkKnx/BOG8PURuxgZbC+XW0N9vtiUiIshErOnzS6L7azBnHJK8xsUy0KRRF
-	 UsLdmdGqF1h4Q==
-Message-ID: <sashiko-outbox-189014@kernel.org>
+	b=Qc5QJZSwpHJgdtfKCiV3SajWICNMXRPg6ELzvOWJ5HKkW3B377mfi8xb/12Pkf9F/
+	 y1cyPB3nECoJHTXSeJ9l/hGLYPsoWbwaNe+xPkYI2sW66nzzSU/eQed6EnXKCDxotc
+	 YInhS4duiisDGcWl6M5kVbFfTDtqagPwskeQlYyd2PADGH72BTRDlfq2HKi8BQESCZ
+	 /yektBzMjdMy92Qkl3voE42/7DU18fmIWwyz7vQVUpn/EdKRmfOBS1l3AUez/fByy1
+	 45tiMiCZqG8bb5Vnu6b2chTGjmYtgyo/bJa9v3TVse45tqI9f9X/60/R2fZyGXPAsp
+	 BIAFGrYyrTJkw==
+Message-ID: <sashiko-outbox-189015@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH 09/14] treewide: disable other rtc's in t2 macs
+Subject: Re: [RFC PATCH 06/14] leds: add support for macsmc kbl
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Atharva Tiwari" <atharvatiwarilinuxdev@gmail.com>
 Cc: "Bjorn Helgaas" <bhelgaas@google.com>, "Thomas Gleixner" <tglx@kernel.org>, "Ingo
@@ -61,12 +61,12 @@ Cc: "Bjorn Helgaas" <bhelgaas@google.com>, "Thomas Gleixner" <tglx@kernel.org>, 
  Kasatkin" <dmitry.kasatkin@gmail.com>, "Eric Snowberg" <eric.snowberg@oracle.com>, "Paul
  Moore" <paul@paul-moore.com>, "James Morris" <jmorris@namei.org>, "Serge E.
  Hallyn" <serge@hallyn.com>, linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-leds@vger.kernel.org, mfd@lists.linux.dev, linux-rtc@vger.kernel.org, linux-watchdog@vger.kernel.org, keyrings@vger.kernel.org, linux-security-module@vger.kernel.org
-In-Reply-To: <20261029085504.3547-10-atharvatiwarilinuxdev@gmail.com>
+In-Reply-To: <20261029085504.3547-7-atharvatiwarilinuxdev@gmail.com>
 References: <20261029085504.3547-1-atharvatiwarilinuxdev@gmail.com>
- <20261029085504.3547-10-atharvatiwarilinuxdev@gmail.com>
+ <20261029085504.3547-7-atharvatiwarilinuxdev@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 29 Oct 2026 09:16:22 +0000
+Date: Thu, 29 Oct 2026 09:16:25 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -76,116 +76,194 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-- [High] rtc: acpi_tad_probe() and cmos_do_probe() miss CONFIG_MACSMC_ACPI =
-check
-- [High] rtc: cmos_do_probe() leaves x86 CMOS wallclock callbacks active on=
- T2 Macs
+- [High] leds: macsmc: sleeping SMC write registered as non-blocking bright=
+ness_set
+- [Medium] leds: macsmc: non-standard LED name breaks kbd_backlight discove=
+ry
+- [Medium] leds: macsmc: missing suspend/resume handling loses backlight st=
+ate
+- [Low] leds: macsmc: commit prefix, drv naming, and Makefile sort order vi=
+olations
 --
 
-commit 8f32ab6b5995f6b8ccbfee083b09d400a56632a7
+commit 62f13fe6413b6947c13026e13a39c022cd83dde2
 Author: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
 
-treewide: disable other rtc's in t2 macs
+leds: add support for macsmc kbl
 
-This commit disables the ACPI TAD real-time clock capability and aborts
-probing the CMOS RTC driver on Apple T2 Macs when CONFIG_RTC_DRV_MACSMC is
-enabled, leaving macsmc-rtc as the active RTC.
+This commit adds a LED class driver for the Apple SMC keyboard backlight on
+Intel Macs and registers the macsmc-led MFD cell when the LKSB key is prese=
+nt,
+intended to replace the keyboard backlight support in applesmc.
 
-> diff --git a/drivers/acpi/acpi_tad.c b/drivers/acpi/acpi_tad.c
-> index 45459a4cafae3..a137a39e5e67f 100644
-> --- a/drivers/acpi/acpi_tad.c
-> +++ b/drivers/acpi/acpi_tad.c
+>     leds: add support for macsmc kbl
+>    =20
+>     Add a LED class driver to control the keyboard backlight.
+>    =20
+>     This replaces the keyboard backlight support in applesmc.
+>    =20
+>     Signed-off-by: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
+
+[Severity: Low]
+This isn't a bug, but should the commit subject follow the LED subsystem
+convention of including the driver prefix and capitalizing the description,
+such as "leds: macsmc: Add support for keyboard backlight"?
+
 [ ... ]
-> @@ -845,6 +846,9 @@ static int acpi_tad_probe(struct platform_device *pde=
-v)
->  		return -ENODEV;
->  	}
-> =20
-> +	if (IS_ENABLED(CONFIG_RTC_DRV_MACSMC) && has_apple_t2_chip)
-> +		caps &=3D ~ACPI_TAD_RT;
+
+> diff --git a/drivers/leds/Makefile b/drivers/leds/Makefile
+> index 4d4b089156e24..7c38dbef42390 100644
+> --- a/drivers/leds/Makefile
+> +++ b/drivers/leds/Makefile
+> @@ -12,6 +12,7 @@ obj-$(CONFIG_LEDS_KUNIT_TEST)		+=3D led-test.o
+>  obj-$(CONFIG_LEDS_88PM860X)		+=3D leds-88pm860x.o
+>  obj-$(CONFIG_LEDS_ACER_A500)		+=3D leds-acer-a500.o
+>  obj-$(CONFIG_LEDS_ADP5520)		+=3D leds-adp5520.o
+> +obj-$(CONFIG_LEDS_MACSMC)		+=3D leds-macsmc.o
+>  obj-$(CONFIG_LEDS_AN30259A)		+=3D leds-an30259a.o
+
+[Severity: Low]
+This isn't a bug, but the platform drivers section in drivers/leds/Makefile
+is kept sorted alphabetically. Should leds-macsmc.o be placed in alphabetic=
+al
+order right before leds-max5970.o?
+
+> diff --git a/drivers/leds/leds-macsmc.c b/drivers/leds/leds-macsmc.c
+> new file mode 100644
+> index 0000000000000..f38ef2113aced
+> --- /dev/null
+> +++ b/drivers/leds/leds-macsmc.c
+
+[ ... ]
+
+> +static enum led_brightness macsmc_led_get_brightness(struct led_classdev=
+ *cdev)
+> +{
+> +	struct macsmc_led *drv =3D container_of(cdev, struct macsmc_led, cdev);
+> +
+> +	return drv->brightness;
+> +}
+> +
+> +static void macsmc_led_set_brightness(struct led_classdev *cdev, enum le=
+d_brightness value)
+> +{
+> +	struct macsmc_led *drv =3D container_of(cdev, struct macsmc_led, cdev);
+> +
+> +	drv->brightness =3D (u8) value;
+> +
+> +	apple_smc_write_u16(drv->smc, SMC_KEY(LKSB), drv->brightness);
+> +}
+> +
+> +static int macsmc_led_probe(struct platform_device *pdev)
+> +{
+> +	struct macsmc_led *drv;
+
+[Severity: Low]
+This isn't a bug, but could the private data pointer be named ddata instead
+of drv in macsmc_led_get_brightness(), macsmc_led_set_brightness(), and
+macsmc_led_probe() to match the LED subsystem naming convention?
+
+> +
+> +	drv =3D devm_kzalloc(&pdev->dev, sizeof(*drv), GFP_KERNEL);
+> +	if (!drv)
+> +		return -ENOMEM;
+> +
+> +	drv->smc =3D dev_get_drvdata(pdev->dev.parent);
+> +
+> +	drv->cdev.name =3D "macsmc-led";
+
+[Severity: Medium]
+Will setting drv->cdev.name to "macsmc-led" in macsmc_led_probe() cause a
+regression for userspace tools discovering the keyboard backlight?
+
+In drivers/hwmon/applesmc.c, which this driver replaces, the LED class devi=
+ce
+is registered with the name "smc::kbd_backlight":
+
+    static struct led_classdev applesmc_backlight =3D {
+        .name            =3D "smc::kbd_backlight",
+        .default_trigger =3D "nand-disk",
+        .brightness_set  =3D applesmc_brightness_set,
+    };
+
+Documentation/leds/leds-class.rst also specifies that keyboard backlight LED
+devices should use kbd_backlight as the function suffix so that userspace
+consumers (such as upower and systemd-backlight) can identify them under
+/sys/class/leds/. Should this keep "smc::kbd_backlight" to preserve UAPI
+compatibility?
+
+> +	drv->cdev.max_brightness =3D 255;
+> +	drv->cdev.brightness_get =3D macsmc_led_get_brightness;
+> +	drv->cdev.brightness_set =3D macsmc_led_set_brightness;
 
 [Severity: High]
-Could checking only IS_ENABLED(CONFIG_RTC_DRV_MACSMC) in acpi_tad_probe()
-and cmos_do_probe() leave T2 Macs without any registered RTC device when
-CONFIG_MACSMC_ACPI is disabled?
+Can registering macsmc_led_set_brightness() on drv->cdev.brightness_set in
+macsmc_led_probe() sleep in atomic context when an atomic LED trigger or
+software blink timer fires?
 
-In drivers/rtc/Kconfig, RTC_DRV_MACSMC only depends on MFD_MACSMC_CORE:
+When software blinking or an atomic trigger updates the LED, the call chain
+led_timer_function() or led_trigger_event() -> led_set_brightness_nosleep()=
+ ->
+led_set_brightness_nopm() -> __led_set_brightness() invokes the
+brightness_set callback synchronously without deferring to
+set_brightness_work:
 
-config RTC_DRV_MACSMC
-	tristate "Apple Mac System Management Controller RTC"
-	depends on MFD_MACSMC_CORE
+    /* Use brightness_set op if available, it is guaranteed not to sleep */
+    if (!__led_set_brightness(led_cdev, value))
+        return;
 
-However, on x86 T2 Macs, the macsmc-rtc MFD child device is only registered
-via apple_smc_acpi_probe() -> apple_smc_probe(), which requires
-CONFIG_MACSMC_ACPI in drivers/platform/x86/Kconfig:
+However, macsmc_led_set_brightness() calls apple_smc_write_u16() ->
+apple_smc_write():
 
-config MACSMC_ACPI
-	tristate "Apple SMC (System Management Controller) ACPI Backend"
-	depends on MFD_MACSMC_CORE && ACPI && !SENSORS_APPLESMC
+    int apple_smc_write(struct apple_smc *smc, smc_key key, const void *buf=
+, size_t size)
+    {
+        guard(mutex)(&smc->mutex);
+        return smc->be->write(smc->be_cookie, key, buf, size);
+    }
 
-When CONFIG_RTC_DRV_MACSMC is enabled alongside CONFIG_SENSORS_APPLESMC (or
-when CONFIG_MACSMC_ACPI is otherwise disabled), macsmc-rtc is never
-instantiated, yet acpi_tad_probe() and cmos_do_probe() will still disable
-both the ACPI TAD RTC and the CMOS RTC.
+This acquires a sleeping mutex and calls apple_smc_acpi_write(), which slee=
+ps
+via wait_for_completion_timeout() and fsleep(). Unlike applesmc, which queu=
+ed
+a work item on a workqueue in applesmc_brightness_set(), this sleeps direct=
+ly
+in the caller's context and also discards any error returned by
+apple_smc_write_u16().
 
-Should both checks also verify IS_ENABLED(CONFIG_MACSMC_ACPI)?
+Should macsmc_led_set_brightness() be registered via
+drv->cdev.brightness_set_blocking instead, and return the result of
+apple_smc_write_u16()?
 
-> diff --git a/drivers/rtc/rtc-cmos.c b/drivers/rtc/rtc-cmos.c
-> index fa04ece151b8b..bdb436e24bb82 100644
-> --- a/drivers/rtc/rtc-cmos.c
-> +++ b/drivers/rtc/rtc-cmos.c
-[ ... ]
-> @@ -944,6 +945,9 @@ cmos_do_probe(struct device *dev, struct resource *po=
-rts, int rtc_irq)
->  		.priv =3D &cmos_rtc,
->  	};
-> =20
-> +	if (IS_ENABLED(CONFIG_RTC_DRV_MACSMC) && has_apple_t2_chip)
-> +		return -ENODEV;
+> +	drv->cdev.dev =3D &pdev->dev;
+> +
+> +	return devm_led_classdev_register(&pdev->dev, &drv->cdev);
+> +}
 
-[Severity: High]
-When cmos_do_probe() returns -ENODEV here, what happens to the x86
-architectural wallclock callbacks in x86_platform?
+[Severity: Medium]
+Does omitting suspend and resume handling here cause the keyboard backlight
+state to be lost across system suspend or hibernation?
 
-In arch/x86/kernel/x86_init.c, x86_platform defaults to the legacy CMOS
-routines:
+In drivers/hwmon/applesmc.c, applesmc_pm_resume() and applesmc_pm_restore()
+restore the saved brightness to the hardware key on resume:
 
-	.get_wallclock			=3D mach_get_cmos_time,
-	.set_wallclock			=3D mach_set_cmos_time,
+    static int applesmc_pm_resume(struct device *dev)
+    {
+        if (smcreg.has_key_backlight)
+            applesmc_write_key(BACKLIGHT_KEY, backlight_state, 2);
+        return 0;
+    }
 
-These are invoked by read_persistent_clock64() and
-update_persistent_clock64() in arch/x86/kernel/rtc.c, which call
-mc146818_get_time() and mc146818_set_time() directly on CMOS I/O ports
-0x70/0x71 regardless of whether the rtc-cmos driver probed.
-
-During NTP synchronization in kernel/time/ntp.c, sync_hw_clock() tries the
-persistent clock before falling back to the RTC class device:
-
-	/* Try the legacy RTC first. */
-	res =3D update_persistent_clock64(to_set);
-	if (res !=3D -ENODEV)
-		goto rearm;
-
-	/* Try the RTC class */
-	res =3D update_rtc(&to_set, &offset_nsec);
-
-Because mach_set_cmos_time() -> mc146818_set_time() writes to the CMOS ports
-and returns 0 (or -EINVAL, never -ENODEV), sync_hw_clock() will take the
-goto rearm path and never call update_rtc() to update macsmc-rtc.
-
-Similarly, timekeeping_init(), timekeeping_suspend(), and
-timekeeping_resume() call read_persistent_clock64(), which will still read
-the non-working CMOS clock via mach_get_cmos_time(). If that returns a
-non-zero timestamp, persistent_clock_exists is set to true and
-timekeeping_rtc_skipsuspend() causes rtc_suspend() to skip macsmc-rtc across
-suspend and resume.
-
-Should x86_platform.get_wallclock and x86_platform.set_wallclock also be
-redirected to x86_init_noop / x86_wallclock_noop on T2 Macs when macsmc-rtc
-is used?
+Because macsmc_led_probe() does not set LED_CORE_SUSPENDRESUME in
+drv->cdev.flags (and macsmc_led_driver does not define PM callbacks), the
+keyboard backlight is not turned off on suspend or restored on resume. Note
+ also that if LED_CORE_SUSPENDRESUME is enabled, the custom brightness_get
+callback returning drv->brightness would return 0 during resume after
+led_classdev_suspend() sets the brightness to 0, unless the LED core's
+cached brightness is used instead of a custom brightness_get callback.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029085504.3547=
--1-atharvatiwarilinuxdev@gmail.com?part=3D9
+-1-atharvatiwarilinuxdev@gmail.com?part=3D6
