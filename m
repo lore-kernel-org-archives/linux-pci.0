@@ -1,57 +1,113 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793246310;
-	b=vkwhZrd+Wb7Xjqo6q280m26FMuCwe9qyQHtY19XcbholpRQnwjO8MLZ+JI/PjpDr6ma0
-	 yuLYWhVtUD3SStF3yfIcy+UiO3EW2gm6wtQWfJ/JRrNiznO7oo13TyocLC/whABp7KVQn
-	 921eGJiTlMUeU2VYpmjXIJ+6+d3ayt4XIjBCbKHpzMx8xmKkIrWyy1nGrAiMJA2CEQTfQ
-	 699kO043ute5i7+Gv08IyPkMlpHLBhA3GQWg8n7O98Veh8rBqcECg3Kqr1pOfqQnDXuB7
-	 9xlKyugcv6MS5X23dSViNo3mtbj+8KarIdqW7Jk9UbTNzMz9SJg3Q0/bx056i3btPOg==
+	t=1793247589;
+	b=esYw6h+WOGghUgxwMLkTXGacaX32l3dyMpREHjGW+Kfr8L8HuFE1hNSoZCrjIR1FtqGJ
+	 IeBVKiAWx29eSeg1C4rWUnde4+nhseQyDMAj6mK1uw1m1MKO9gYgKo+4vBI8Zrtx9Iwi8
+	 jrL/1tNDpq8i8PEsaGEyCLXrRRmjoeYM46oA/Lv69W0aPsPlGQXVA0/1o80EsOG2LQpLy
+	 k4ygIwCfnxOFDhkd6S2ubld/RpPz2MWycPv+smwk3jzumnWJw33Gp+Z4QtSScbFgXj6JO
+	 yYp5PMFQVs2e2iDsoaQ4G1kmUZz5ZYBPdrJsLBYlALU2Nl5Ib+iO1+B0fHkXrYtGAyg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793246310;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=aWBIHPyajz2PmP7M6aK7NOpqzSa1zCnMqTM3proafIU=;
-	b=RAekcEW1W5qU59p24rYAMy8byTZ/FvvPDboUTMaYS9BQROqQdddtjKd6+5d1KdCXZxph
-	 6NfOwNTH7wfKWu/aZwnCG7KZ+l0qpHSYgif6zDhJ6WG+BYngErwq4vhysRou9Fhy7rjVf
-	 HCTpOJ9H0i3r9beWfM2od/5epFcnVzfnS8EHuLyglrqCtrKT+KfwuttB564H0I1MZueTS
-	 lZ8fdlAFr+x3v5MAF5IieZxznZBgZX/t4z3a7fA0lt6dQZHpUbH4Ff32jZDGexhMKfE/j
-	 6tNM3knqXREqaEF7C++mf8v0QYOF4J3n5iVeMmfIC+kz457qfcRRJupkUsx2xVTbQHw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793247589;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:From:Date:
+	 Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Proofpoint-Spam-Details-Enc:
+	 X-Authority-Analysis:X-Proofpoint-Spam-Info:X-Proofpoint-GUID:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=Sz+6Kcub7kDVCrdSqvP71/UKnkp6RLiDhWqxwmv1ciI=;
+	b=zdG135yDFQ22dmRHDgqKf59CV/Jq+K+bNkJDrmzgPMp0DOgMVZSyG/sRcFDSiGVf2GZp
+	 +Ob1zmBn6L9X3NGK5KP0KCtZZ7We9dWCKPvomcuJNN1WS9HQGzp3i+LLCTa8P6m7acCTM
+	 LswCTY7ZUnVDqMf7QlOLkm9BT9jTX/tjGyUXEu/FUNUpGCrtcftb+811BbtxKpPObkh72
+	 /Ph1Cv+Hgbt5Kz/VP+AcPt68g7AazX4ij0xe3pBfLIdZs4mwd6EtoJGFE7qAux2TTRwl2
+	 0uHhinJG9l/SRW1C5uQKIoQ6xBTJs7mqEG5uZlz0qzP5OF+Keeq3/DFB7xXHzlVYNvw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TuQWYejq;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=j3HLayWF;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=cTOXfXHW;
+	arc=none smtp.remote-ip=205.220.180.131
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCA21606A31A
-	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 03:58:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35527606A329
+	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 04:19:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 35527606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TuQWYejq
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C7271F01828;
-	Thu, 29 Oct 2026 03:58:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793246309;
-	bh=aWBIHPyajz2PmP7M6aK7NOpqzSa1zCnMqTM3proafIU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TuQWYejqJ/vq54V0sRrkPRFOD5LGkGLn0haZKe+NYWff6lZSnTI6kltkttLQ90iXd
-	 XoDF4Z+m/0jvouMmPhYKmtW+CoI+O4IP9wNbWhnX3tq8l9hvvEN0ZFybVn+oVU+uxG
-	 ojN6Lbb1+lFXKWTyVd0mFa4GvxlM9CNRxOg59g0Ky1b6O7lCDlvzz399Imta+0QkAG
-	 lapCR+NUoddJehLEsHXLFmIRX2YizgxrHbTg8A0UliIuOUQCw2/EUQGfUmYDL4UKj0
-	 tiUWDoY+MVUD3W0DkHsH1Ydpa+EPjPFsUDXnbSizvQctBquooPOwu0VvHzE+5fQquE
-	 OOQrXPK6MqIkQ==
-Message-ID: <sashiko-outbox-188688@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI/VGA: Enable firmware default device detection on
- LoongArch
-Reply-To: sashiko-reviews@lists.linux.dev
-To: wuqianhai@loongson.cn
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org
-In-Reply-To: <20261029033440.973077-1-wuqianhai@loongson.cn>
-References: <20261028094634.766723-1-wuqianhai@loongson.cn>
- <20261029033440.973077-1-wuqianhai@loongson.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 29 Oct 2026 03:58:28 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=j3HLayWF;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=cTOXfXHW
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69T1jZnt3376873
+	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 04:19:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	Sz+6Kcub7kDVCrdSqvP71/UKnkp6RLiDhWqxwmv1ciI=; b=j3HLayWFhlPDjyAj
+	j9hwoWTnp0m48SVsdVRhPsqD+ifwAsEo7+UpuiuD4gkOVYZqBYoIShf66N6ATYnB
+	CDhqptJGWFq+SxEm1J/MT/4ofbuUDXlpUlLG1mWFNfz0iRq8lj5PQeGjkeBW1DLL
+	GV9XNuCeylU6MCOqtQdJvAdC0ZA7K2z6xwAP7tw3RQ3z/wEVB8Br4xGpvSTuM6jt
+	ExZOAwGhG+mHTNugz449fwKr7rK6eU3BtLEn0e5JyEzr0slTsYprgl8svC6Ue5rN
+	lHuZT3TydThfXI5T9mzBAW92JxBSfPfCw9cVgtroH4HcLXlbzoIYXQH/bA2Z4cMV
+	1uLVaw==
+Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hktmp8v3b-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 04:19:47 +0000 (GMT)
+Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-33713e5e6daso1984079eec.0
+        for <linux-pci@vger.kernel.org>; Wed, 28 Oct 2026 21:19:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1793247587; x=1793852387; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Sz+6Kcub7kDVCrdSqvP71/UKnkp6RLiDhWqxwmv1ciI=;
+        b=cTOXfXHWzTZsbxpvsKTfL1m8HCdQwbZBadnRLQSnw3zedns/N3Lh4aekzMoQ9RJD6n
+         9kZXA+5nDsBIJMrJkkl4iKyN2FkQUzB5Fgt4OkmLRmfxNnoH6DXs4do+DeZRtY4zAlrQ
+         3RZVWFe8hVqIahL7mkGX8V6ZBDRoQK7cK0vztFX0PWz5dzkX5YowlA7yiUfoGTN07LQK
+         vbSXbuLvLJPzaPIhyqfoZI+C+mrAYhjj5qnEKYYWPiO285T/bkggF/XerITGmU08NPg2
+         8HmuzVp+T9Wvqi2C3Jpa0eS/2nxIzningD1Wv/rnh+3YY3I+3MKtUIjQk8W4V72y23Si
+         x1Sw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793247587; x=1793852387;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Sz+6Kcub7kDVCrdSqvP71/UKnkp6RLiDhWqxwmv1ciI=;
+        b=pWpiy9h5SKcw45tAGd6nCCuD3YU3IrqK58dwuLSi0eXChxgxpKDCfU6SCdaK5GUkeG
+         RAYHXsgMQExHd14GFky8akL7NeP9LXiRQJJwwBtV6MyHHcvC5uBeZhoSFsapiIflY0vT
+         I7IdYmYBdj4J1SGUtxboBplpwOb7LAlZtorq8s3/gekhz0+dbmrdeUFcnQUsZbDou3xb
+         66UhAUEY4Hv9okS+FubFkwOPLk3YAnLUSPBHqlD1l9RSUORIDZQRiIP5XhjDVUU1rCKP
+         MQylkb+e978NWmcej+swmWU2Kfu1we+LvdJbbNj4rzobRyIbSmCS8filoWiM3ik75fde
+         iqEw==
+X-Forwarded-Encrypted: i=1; AKwUvBxgDmy1ZCqrVnBffMwwbkT6x2ukC1IgyLdEg0dxvfSZz9DSaTNtHGD4G/5jeitKiBg+phwmfkuo64k=@vger.kernel.org
+X-Gm-Message-State: AFq9FYK+CN+tArPHpU8G8OoUhyDCE89Nlr4iTx1S+QA1LhGEU5vVievr
+	T0qpvAboEl4HD0Xk70VtMT6ZFeRpCoJe3GigoM9hEhyIrQ8IhNRDT/pjgHuZygA8TMVS17XFY5I
+	66BNnKB3MjUChH+twUegRAoP9H8OgA2+UxMOkZqCuOb9x0f6rIOwYe8rhcLOkNhU=
+X-Gm-Gg: AYBFou2Ya5JYg+E15Q0RFdeC/1gonEdooFKUpuMQqcu8/z9CtYU7vMWzo1VVATUJkEh
+	gn3N96yWxG+rBUEzxNXjTuvviwapQFuUV2+Sm6gqWhYnL9MInahAlP3WGR3FYR7boLZjDZj25Cm
+	fvxJ3jE9E1/l1DvxEvfNfW7jEKcPmxE8uOnk8uwoRHkunJ6+HOBytAmUr77KvfssQu8tKPMDf/V
+	PzfGhTOF/dVl2y94ycLlde5HHMeI2uSnqDcZbNmfSrvQHKmLLwFEC0PCFT7JnogSKbdzvaRMM7X
+	8uU/tvv89ZzUzQ54f5wUgcSIDqgpxpWLcKgT/x5+03DMnbF4ANB5/jxbVWOElACWgUhAJr/Li4L
+	zfMlTFYsi/WY6lzB1Pe3wdlKv0PkT1qjXNeXeW6j+Qui6DtivOVpkCJtJYu2TDfo8683h+KZPEO
+	AN+vzqtJM=
+X-Received: by 2002:a05:693c:6016:b0:36a:1add:64aa with SMTP id 5a478bee46e88-36a2036d285mr5438531eec.9.1793247586777;
+        Wed, 28 Oct 2026 21:19:46 -0700 (PDT)
+X-Received: by 2002:a05:693c:6016:b0:36a:1add:64aa with SMTP id 5a478bee46e88-36a2036d285mr5438496eec.9.1793247586125;
+        Wed, 28 Oct 2026 21:19:46 -0700 (PDT)
+Received: from hu-krichai-hyd.qualcomm.com ([202.46.23.25])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a237be80csm27504539eec.2.2026.10.28.21.19.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Oct 2026 21:19:45 -0700 (PDT)
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Date: Thu, 29 Oct 2026 09:49:27 +0530
+Subject: [PATCH v7 1/3] PCI: host-common: Fix early bus-walk exit in
+ d3cold_possible()
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,180 +116,114 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261029-shutdown-v7-1-3fd7a76a6991@oss.qualcomm.com>
+References: <20261029-shutdown-v7-0-3fd7a76a6991@oss.qualcomm.com>
+In-Reply-To: <20261029-shutdown-v7-0-3fd7a76a6991@oss.qualcomm.com>
+To: Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: konrad.dybcio@oss.qualcomm.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793247578; l=2329;
+ i=krishna.chundru@oss.qualcomm.com; s=20230907; h=from:subject:message-id;
+ bh=Z62C1KjgkUfHo1yhmxjksV4K46Bz6P+GsVAjd37UQdg=;
+ b=Iw7LeukSpt3ZcOOgYAGwfrqVem8LSplH+ckiEld+aTBOcm5/X8ru5QHX0hg+feBVnO8nouRWy
+ M5L7nVlaI7TA5T3pLpwySqagPe9UYZQ6vEtQbeIgfqLM79bq9UlXSrN
+X-Developer-Key: i=krishna.chundru@oss.qualcomm.com; a=ed25519;
+ pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDI5MDAxNSBTYWx0ZWRfX6NhkYnJbWceX
+ LydV34khw3cu4eHPgKwtLhbcRdUqg3dgtM3l6S60LNb7TeMpynq4/IX+yet+mhlAXk6ExrDFrFT
+ h65pzR61lwYxyYDrbnDejGuw69J3Ssn1J1Pmj7wVeCvKMcfPv85wdovmrjX7J6/F/2qOF+lBToq
+ 4C01dn316RkyJAZlp7h81hjm7iefGgQsalv53sqr25Lr/8w8MBErL7jrabhNosuLiSytNczWwf0
+ Y5u7AKw4SDENWT+Lmm8GZEAHXLvBgytyPp23eD9+OC1owBjAneF+KjPB3o2X+QqGl5Wx2cIyfHc
+ SxCBFmY2sRgFWklGgkLcYAPhCRnmCV6s4l4KJW/BLBTyut5XKGNzZaxXLuwxLAdyk9HsSf4E0QB
+ 87T2SfgoU4TN0jJJPxt3+NYabrnsQMXb2hPBRRVLdBAE2Di9w82vobmar9c0njbTreWac+C/t44
+ GdnjKYP5TREPFuYSxCg==
+X-Authority-Analysis: v=2.4 cv=crYOAF4i c=1 sm=1 tr=0 ts=6ae2c963 cx=c_pps
+ a=cFYjgdjTJScbgFmBucgdfQ==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
+ a=EUspDBNiAAAA:8 a=RIIKlrP-v3AzcS8hWasA:9 a=QEXdDO2ut3YA:10
+ a=scEy_gLbYbu1JhEsrz4S:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDI5MDAxNSBTYWx0ZWRfXzappBgqeuSfJ
+ OsdYIwuaDWQLfK4X9y/zFzCwGGOM+dwHOcKfdeZbf58Zr29dPsV8UsmhsqAKxb+IQABmkJ/m97v
+ svVIR0E4Fq9RHlyAKLVPFWCmV5VjL3c=
+X-Proofpoint-GUID: uv7NnvgT1nKKnwD7wx8p1MvBbukf8oGZ
+X-Proofpoint-ORIG-GUID: uv7NnvgT1nKKnwD7wx8p1MvBbukf8oGZ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-29_01,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 malwarescore=0 lowpriorityscore=0 impostorscore=0 clxscore=1015
+ adultscore=0 suspectscore=0 priorityscore=1501 bulkscore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610290015
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] PCI/VGA: pci_fixup_vgadev() overrides vga_is_firmware_default() on=
- LoongArch
-- [Medium] PCI/VGA: duplicate non-idempotent screen_info_apply_fixups() cal=
-l on LoongArch
-- [Medium] PCI/VGA: vga_is_firmware_default() fails to match Loongson integ=
-rated DC
---
+__pci_host_common_d3cold_possible() returns -EOPNOTSUPP for the first
+downstream device it finds outside PCI_D3hot, and pci_walk_bus() aborts
+the walk as soon as its callback returns nonzero. Any device enumerated
+after the disqualifying one -- including a wakeup-enabled, PME-from-D3cold
+capable endpoint -- is then never visited, so pme_capable can come back
+false even though such a device exists on the bus.
 
-commit 6de860408bce3c5a20f5a4c23b073eafdc942117
-Author: wuqianhai <wuqianhai@loongson.cn>
+Since pci_host_common_d3cold_possible() already returns false whenever
+any device disqualifies D3cold, aborting the walk buys nothing for the
+plain suspend path: the overall bool result is unaffected. But it
+silently drops pme_capable detection for any device ordered after the
+disqualifying one.
 
-PCI/VGA: Enable firmware default device detection on LoongArch
+This matters for the upcoming shutdown path in particular: unlike plain
+suspend, shutdown forces the link into L2/D3cold regardless of whether
+pci_host_common_d3cold_possible() itself allows it (see the following
+"force_d3cold" changes), so at shutdown time it's common for an
+endpoint to still be in D0 and disqualify D3cold while a later,
+PME-capable device is never visited. dw_pcie_suspend_noirq() still
+uses "pme_capable" to set pci->pp.skip_pwrctrl_off, so an inaccurate
+result here can cause Vaux/wakeup support to be dropped for a device
+that actually supports PME from D3cold.
 
-This commit enables vga_is_firmware_default() on LoongArch, selects
-CONFIG_SYSFB from CONFIG_VGA_ARB for LoongArch, and calls
-screen_info_apply_fixups() in vga_arb_device_init() so relocated firmware
-framebuffer BARs can be matched when selecting the default boot VGA device.
+Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+---
+ drivers/pci/controller/pci-host-common.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
 
-> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
-> index 3e58b2c05c854..1b7e915629f97 100644
-> --- a/drivers/pci/vgaarb.c
-> +++ b/drivers/pci/vgaarb.c
-> @@ -566,7 +566,7 @@ EXPORT_SYMBOL(vga_put);
-> =20
->  static bool vga_is_firmware_default(struct pci_dev *pdev)
->  {
-> -#if defined CONFIG_X86
-> +#if defined(CONFIG_X86) || defined(CONFIG_LOONGARCH)
->  	return pdev =3D=3D screen_info_pci_dev(&sysfb_primary_display.screen);
+diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
+index a23907a875e5..c2c852c64aa8 100644
+--- a/drivers/pci/controller/pci-host-common.c
++++ b/drivers/pci/controller/pci-host-common.c
+@@ -275,21 +275,16 @@ static int __pci_host_common_d3cold_possible(struct pci_dev *pdev,
+ 		return 0;
+ 
+ 	if (pdev->current_state != PCI_D3hot)
+-		goto exit;
++		*flags &= ~PCI_HOST_D3COLD_ALLOWED;
+ 
+ 	if (device_may_wakeup(&pdev->dev)) {
+-		if (!pci_pme_capable(pdev, PCI_D3cold))
+-			goto exit;
+-		else
++		if (pci_pme_capable(pdev, PCI_D3cold))
+ 			*flags |= PCI_HOST_PME_D3COLD_CAPABLE;
++		else
++			*flags &= ~PCI_HOST_D3COLD_ALLOWED;
+ 	}
+ 
+ 	return 0;
+-
+-exit:
+-	*flags &= ~PCI_HOST_D3COLD_ALLOWED;
+-
+-	return -EOPNOTSUPP;
+ }
+ 
+ /**
 
-[Severity: High]
-On LoongArch systems with a Loongson display controller (PCI device IDs
-0x7a06, 0x7a36, or 0x7a46) and one or more discrete VGA devices, will
-pci_fixup_vgadev() in arch/loongarch/pci/pci.c later overwrite the firmware
-default VGA device selected here?
+-- 
+2.34.1
 
-During ACPI boot on LoongArch, PCI enumeration runs in
-subsys_initcall(acpi_init), and vga_arb_device_init() runs next at
-subsys_initcall_sync:
-
-vga_arb_device_init()
-  vga_arbiter_add_pci_device()
-    vga_is_boot_device()
-      vga_is_firmware_default()
-    vga_set_default_device(pdev)
-
-After vga_arb_device_init() finishes, pci_apply_final_quirks() in
-drivers/pci/quirks.c runs at fs_initcall_sync and invokes the
-DECLARE_PCI_FIXUP_FINAL hooks in arch/loongarch/pci/pci.c:
-
-static void pci_fixup_vgadev(struct pci_dev *pdev)
-{
-	struct pci_dev *devp =3D NULL;
-
-	while ((devp =3D pci_get_class(PCI_CLASS_DISPLAY_VGA << 8, devp))) {
-		if (devp->vendor !=3D PCI_VENDOR_ID_LOONGSON) {
-			vga_set_default_device(devp);
-			dev_info(&pdev->dev,
-				"Overriding boot device as %X:%X\n",
-				devp->vendor, devp->device);
-		}
-	}
-}
-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LOONGSON, PCI_DEVICE_ID_LOONGSON_DC1,=
- pci_fixup_vgadev);
-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LOONGSON, PCI_DEVICE_ID_LOONGSON_DC2,=
- pci_fixup_vgadev);
-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LOONGSON, PCI_DEVICE_ID_LOONGSON_DC3,=
- pci_fixup_vgadev);
-
-Because pci_fixup_vgadev() unconditionally calls vga_set_default_device(dev=
-p)
-for every non-Loongson VGA device without checking whether a firmware defau=
-lt
-device was already chosen, won't it clobber vga_default whenever firmware
-selected a Loongson display device or the first of multiple non-Loongson
-discrete GPUs as the primary display?
-
-[Severity: Medium]
-Also in vga_is_firmware_default() in drivers/pci/vgaarb.c, can this pointer
-comparison ever match when the firmware framebuffer resides on Loongson
-integrated graphics (such as on LS7A1000, LS7A2000, or LS2K2000)?
-
-As shown in lsdc_get_dedicated_vram() in drivers/gpu/drm/loongson/lsdc_drv.=
-c,
-the integrated graphics subsystem is split across two PCI functions:
-
-	/*
-	 * The GPU has 00:06.0 as its BDF, while the DC has 00:06.1
-	 * This is true for the LS7A1000, LS7A2000 and LS2K2000.
-	 */
-	pdev_gpu =3D pci_get_domain_bus_and_slot(pci_domain_nr(pdev_dc->bus),
-					       pdev_dc->bus->number,
-					       PCI_DEVFN(6, 0));
-	...
-	base =3D pci_resource_start(pdev_gpu, 2);
-	size =3D pci_resource_len(pdev_gpu, 2);
-
-When the firmware framebuffer is placed in integrated VRAM,
-screen_info_pci_dev(&sysfb_primary_display.screen) matches BAR 2 of the
-companion GPU device at 00:06.0 (PCI_DEVICE_ID_LOONGSON_GPU1/2/3).
-
-However, vga_arb_device_init() and pci_notify() filter devices using
-pci_is_vga(pdev), so only the VGA-class Display Controller function at
-00:06.1 (PCI_DEVICE_ID_LOONGSON_DC1/2/3, whose BAR 0 only maps MMIO
-registers) is passed to vga_is_firmware_default(pdev). Doesn't comparing
-pdev (00:06.1) against screen_info_pci_dev() (00:06.0) always evaluate to
-false for the integrated display controller?
-
->  #else
->  	return false;
-> @@ -1527,6 +1527,16 @@ static int __init vga_arb_device_init(void)
->  	int rc;
->  	struct pci_dev *pdev;
-> =20
-> +#if defined(CONFIG_LOONGARCH)
-> +	/*
-> +	 * On LoongArch, PCI resource assignment completes during
-> +	 * subsys_initcall (acpi_init), before the VGA arbiter runs.  Refresh
-> +	 * screen_info so vga_is_firmware_default() can match the relocated
-> +	 * BAR.
-> +	 */
-> +	screen_info_apply_fixups();
-> +#endif
-
-[Severity: Medium]
-With CONFIG_VGA_ARB selecting CONFIG_SYSFB on LoongArch, calling
-screen_info_apply_fixups() here in vga_arb_device_init() at
-subsys_initcall_sync means screen_info_apply_fixups() will be called a seco=
-nd
-time when sysfb_init() in drivers/firmware/sysfb.c runs at device_initcall:
-
-drivers/firmware/sysfb.c:sysfb_init() {
-	...
-	screen_info_apply_fixups();
-
-	mutex_lock(&disable_lock);
-	if (disabled)
-		goto unlock_mutex;
-	...
-}
-
-Looking at screen_info_apply_fixups() in drivers/video/screen_info_pci.c:
-
-void screen_info_apply_fixups(void)
-{
-	struct screen_info *si =3D &sysfb_primary_display.screen;
-
-	if (screen_info_lfb_pdev) {
-		struct resource *pr =3D &screen_info_lfb_pdev->resource[screen_info_lfb_b=
-ar];
-
-		if (pr->start !=3D screen_info_lfb_res_start) {
-			if (__screen_info_relocation_is_valid(si, pr)) {
-				__screen_info_set_lfb_base(si, pr->start + screen_info_lfb_offset);
-				pr_info("Relocating firmware framebuffer to offset %pa[d] within %pr\n",
-					&screen_info_lfb_offset, pr);
-			} else {
-				pr_warn("Invalid relocating, disabling firmware framebuffer\n");
-			}
-		}
-	}
-}
-
-Because screen_info_apply_fixups() neither updates screen_info_lfb_res_start
-nor clears screen_info_lfb_pdev after applying the fixup, won't the second
-call in sysfb_init() re-run the relocation logic and print a duplicate
-message whenever the framebuffer BAR was relocated, or emit a spurious
-warning if a built-in GPU driver probed earlier in device_initcall and
-resized the BAR after calling sysfb_disable()?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029033440.9730=
-77-1-wuqianhai@loongson.cn?part=3D1
