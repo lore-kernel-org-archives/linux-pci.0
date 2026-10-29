@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793238095;
-	b=tKhGeVUFv/GegHEgJWuLXWFmEdKosiPiC4j0WAXmsVIWgNBQxk4WkOGFxemmejYzQzG5
-	 yyWFhuPPAaHlbncQjzWwkt5FHImPM1zh7FXgfQtbZbBnpQh2mJiCiC7QqDD37QAvk8WCo
-	 iBFGRu8M6znXznbkcsp35Z3zFzVZW5z4P9NzcFDA+ENq+Mt8vuHzjI8gYARKE5G6Eb3fn
-	 PRI/H2ojqiFo3iwKFBT5D/tuUOQM07b1Hz30Kf1Ea0qDhuMFwgvRNb//daq7SxO44aYwc
-	 BuNf7jUWJU63UOIqqd5yEUVwhj8qC9NypEAkFZsaVDBPwNE3qVLdcp+37wwldjxNonw==
+	t=1793238233;
+	b=GCDFR3VVAioBLhMgrA7QeEPHp95Umt/Lpm/M7aSBJKJ+X7rUK0cfqJIP1Ftbp5zm9s21
+	 lrtKbPpcgix0AxM6Xb2yRLT4no7Lq+aBnNL/J1znc6dYaaZp3ZPDODV4WuiDbd/EUA6av
+	 spbmHBiQqBWZmUOPSrzHcBOwJkaQ1m7zOarNIcsgICfsdEaDiXc4N2v420cz1/xabmHXP
+	 7F1riBL42ahhuMJPDE6YInqSkSCdW2VHgNqe57FFaF0TdiW1OltJj8Y96gYYjtAdtG4ld
+	 iOIZ7voHj7k1qECNjQCdkIb5dErma11lU8YoyTNCPiBOGWrQODjOnT+cNsGr1kqTKDg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793238095;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793238233;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=+Un0ZTWXf40atHdCz4/9dtBWaLJdCxZtxT5kqKuYgVg=;
-	b=iw0imAe3k5Au7lAWm8SVNYZT0cLnDkRmnUTOfhRCcBkMGH7Xu6BFWHEj4neDU52FYi0o
-	 06ELZZpS8dbCgru368wH2cXZtqsUsFfFMRDrSYuZ7Ex33C4p+b1NJEwQgGHRjJitbamnt
-	 B9AMQieUDIGrFF0DSsV2HmhjNkV/vsb2MKYb5MEfbiTvHRRIl7eNx9ekIdOHxQcclr/lv
-	 aKyuuab9pa91XJn3GAi18bvyM5CaE40ZTDUdRg9XA/jXon573MNsD3wDfOXmqrWHxDA8M
-	 KoJVEUv1uzn0fw3BN0I96RMAO80o9hTKGrSWrFl/KM8cWt3NJDdwsIlM1/TrJ+5LLXg==
+	bh=cU6fWzxqIAG0/8IcsnMUwJlUEJ1D7idJVfe++rlbV94=;
+	b=ykl8MmFjpA9W3HzbBZRF4p9IXGgOAYsR7I9U+RzyWs1oPWOM+f6A8DmsDWghBFojqNbn
+	 rNaPNjQ4GKkZwHYtZ/uq62xZ22goL5u7BEZdAq9vV6GINsjIrQRUf2zMRNwZPTIhWgluK
+	 r3XbJpmiZTYWnXPRGW/K2xPXwX6UEmkXd0j1UQ5DrNrv4uuWef63NL37dlOQiZC4Obf/m
+	 1Vwz1ijRk8y6N7/ZPP8WVJpv6XujTecpFyICAeYFdraGNmIJlwreXARAKjN6siwT6Tk/H
+	 9GaSgq9pz56XveMHXi8jDvyEdFM4n3uoKmAN2KhdbWXmR9y3tIRrSa+PIKWniYmQJLA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k10ybUKv;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="GR6fS/Rz";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23E50606A324
-	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 01:41:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1AA3606A31A
+	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 01:43:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k10ybUKv
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C178B1F031E0;
-	Thu, 29 Oct 2026 01:41:34 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GR6fS/Rz
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CDEF1F01825;
+	Thu, 29 Oct 2026 01:43:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793238094;
-	bh=+Un0ZTWXf40atHdCz4/9dtBWaLJdCxZtxT5kqKuYgVg=;
+	s=k20260515; t=1793238232;
+	bh=cU6fWzxqIAG0/8IcsnMUwJlUEJ1D7idJVfe++rlbV94=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=k10ybUKvYC/CADhYxFbAYkthkgqJqXn53rzPu741/wt/VhXk0BRIZuaunsVwSKNnq
-	 16i6gEkOl24kT4wMK4K5/SzQlHOCTQKFod+ilnokGeaCecFs0SqdYZYKiArz7Zy6Ra
-	 TRBMPSrxSkOaIsh9HF2UYG3lfD+bw0becAXPRMb0QX6X9O9Cu8k5y48nqdLlQTjx9g
-	 c15DnKGi51N+mh7Z+LXaWNPC3TR83irj7TE44JpMJDb5PbtglrZpPZVhl6xxOSxs3J
-	 9c9BV2zryaGwxOETf0A0/4DwElXhg+AUGvPrWELRigmLwJxftf/WHYRXriyKq7OGjd
-	 ACtbyPUpxWMlg==
-Message-ID: <sashiko-outbox-188600@kernel.org>
+	b=GR6fS/Rz1w2PfmTEMwEXcGblSFR8EbsHPmNCifYWUzn025RWpicBdQnvz0Or8q8Zu
+	 5sPpP9bew6a+uGz9qTwJ1Qe8Z25GK6Rzcf7AtwJKHEtSaOqFCKWONEw0MWO5Q4nZdO
+	 c2Gnu4l0G6CjV9U23cUOv819ziHVyF5e+LI7mo4+IgtADs7oSV2Jh5qZdCZkFXiHc5
+	 SW93Mwik4ejk/x0LlOqocKym73jOZbL6jyQThBP4jwdpkm4nuC3DxIy5kSvz/ICLQo
+	 bLj+1dvn89m39qHeI7ICWkbpN/I33HPhIoL50yRjjl8A2RJ+3SQSL4xtL+1nEKngK1
+	 qeMcWK7UFzk4Q==
+Message-ID: <sashiko-outbox-188607@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 2/2] docs/zh_CN: PCI: Update the pci_device_id header
- reference
+Subject: Re: [PATCH v4 1/2] Documentation: Update after split of
+ <linux/mod_devicetable.h>
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Karl Mehltretter" <kmehltretter@gmail.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <203f4407e5ed5335cda17a74fa6aeac311a572d5.1793221199.git.kmehltretter@gmail.com>
+In-Reply-To: <006464b404e9836e64c22689a8cdb4c34f43c87e.1793221199.git.kmehltretter@gmail.com>
 References: <cover.1793221199.git.kmehltretter@gmail.com>
- <203f4407e5ed5335cda17a74fa6aeac311a572d5.1793221199.git.kmehltretter@gmail.com>
+ <006464b404e9836e64c22689a8cdb4c34f43c87e.1793221199.git.kmehltretter@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 29 Oct 2026 01:41:34 +0000
+Date: Thu, 29 Oct 2026 01:43:51 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,18 +61,58 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> struct pci_device_id moved from <linux/mod_devicetable.h> to
-> <linux/device-id/pci.h>. Update the header reference in the Chinese PCI
-> guide to match its new location.
->=20
-> Fixes: ad428f5811bd ("mod_devicetable.h: Split into per subsystem headers=
-")
-> Assisted-by: LLM
-> Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] Documentation: basics.rst omits kernel-doc for arm_smccc.h
+--
 
-Sashiko has reviewed this patch and found no issues.
+commit 1e9cc1a9a128cf0749229f0053d8a9b4210d892b
+Author: Uwe Kleine-K=C3=B6nig (The Capable Hub) <u.kleine-koenig@baylibre.c=
+om>
+
+Documentation: Update after split of <linux/mod_devicetable.h>
+
+This patch updates documentation references after struct definitions in
+include/linux/mod_devicetable.h were split into bus-specific headers under
+include/linux/device-id/.
+
+> diff --git a/Documentation/driver-api/basics.rst b/Documentation/driver-a=
+pi/basics.rst
+> index 3b182cfdf1350..84f701b84e4fc 100644
+> --- a/Documentation/driver-api/basics.rst
+> +++ b/Documentation/driver-api/basics.rst
+> @@ -10,9 +10,36 @@ Driver Entry and Exit points
+>  Driver device table
+>  -------------------
+> =20
+> -.. kernel-doc:: include/linux/mod_devicetable.h
+> +.. kernel-doc:: include/linux/device-id/amba.h
+> +   :internal:
+> +.. kernel-doc:: include/linux/device-id/cdx.h
+> +   :internal:
+
+[Severity: Low]
+Should include/linux/device-id/arm_smccc.h also be included here in the
+Driver device table section of Documentation/driver-api/basics.rst?
+
+The commit message notes that basics.rst lists all headers that have
+kernel-doc annotations and are not described elsewhere (with acpi.h left
+out). However, include/linux/device-id/arm_smccc.h (which is included by
+include/linux/mod_devicetable.h) defines struct arm_smccc_device_id with a
+kernel-doc comment:
+
+/**
+ * struct arm_smccc_device_id - Arm SMCCC bus device identifier
+ * @func_id: SMCCC function identifier
+ */
+struct arm_smccc_device_id {
+	__u32 func_id;
+};
+
+Since arm_smccc.h is not referenced elsewhere under Documentation/ and is
+skipped between amba.h and cdx.h, struct arm_smccc_device_id is omitted when
+generating the documentation.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1793221199.gi=
-t.kmehltretter@gmail.com?part=3D2
-
+t.kmehltretter@gmail.com?part=3D1
