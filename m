@@ -1,56 +1,76 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.17
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793293611;
-	b=dZQTsMJzSGbjRXBYW3pg2YruvvVaq5l2FmhS2ldVzP0EJf96awUrBfh6wx6BXwsRmdFm
-	 fchi9Wx/GaFtGI3ws0Jsi7kUvU4URiPrlshtW6VpeZuzsOyRLWLsPnpGxej+nF3AxaQRk
-	 rnk4y/pdoEwMnlZrz29dai82wVe6BhFI0ZEH6ze7lMgmg4JTBF5Xr2oSzrT0+W0dJ/W6X
-	 b0z2eifV5h2xR4e8+jBO01WaKnzPcwnY7s38vWgE82tXnXgnvH1C/gKkbyM0bmaqRbTUO
-	 rfi+Ctt7t7tfPavPdaoEq6sEWFyYIVBbwgG3+qYiNZaNN9qDqArmTEz8iL9ITRtitcw==
+	t=1793294647;
+	b=mKyPpvkHYaxQJFvQ4aXZBpgp7YhxXoBpWgDrS6SDGz+bdgFgo/7PY5/5KsyDMli6BMs+
+	 STDbRIRbTUU2OJ7HBh1vuZJ5rSvLuitH5vUFWLb75Y3J0KmEg9kGO3osKD7dktHC19ka6
+	 5IAUNIzq1dl7YKihtjixBUoAYlaMcO9U1NsN0GkxjGlVQgfmzG/IASPrG2ypVoOc0oRZw
+	 LUjtkA+z36seadbJY1cjYC02HeG95qbsZ4sCENQZ3lNWSGurgy1QmqZsfWOeL9dDk//yo
+	 Czzy2Z9KLN6xILYJ85sTRyUce8YyW5dE0X6NyME9AFyzbgFip8RC2vT58ZXLR/7rnQA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793293611;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=hqkcRhbg6p6G4OiMh1Urw9NTIjXWW9NK4+69SzpS4Qc=;
-	b=GOsnnxtlkwXK3uJVbH6MwnvTV9i0t5+gbj5APzwgnSpbS16q6gpo2fvRRpYvf4ECER+8
-	 G/0mAelauShpQ0umv/pgoNEMpmd39lGhPz07MGEULu3faZcnBUTe8HLcRRg9jUHT2faHB
-	 MslpBQ8CRWnS1pjL5CcTSk4vjBMvs3zrXgY24zcyT+im8kKaLwJnfQZ49yyxsbEIXUX9S
-	 jqNWhdnjcMXJhzFV5+CVrP7qJ8CUOI/hGUvAvewpPGo7yau3KgRvFocb+8Rn0+elPpc1U
-	 LTYHjXFgFBJpZo7cR6NvOA9iCSZmci9nzYgfjkX66hfsDsFylPzP/EmeCO9Cwcs6ZrA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793294647;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:User-Agent;
+	bh=juUoIwCKBYiM3kV48/iHOyPGIBr5U7vg/2PiOZITCP4=;
+	b=Tq1+JaJ44sfEvk77CkPjoyBqh1O15HUZ4p4S3yGlqEdSh7oj8s4+hNeeZel0oFtQoddx
+	 ZNt2xsucc8sU5GYzAReDaGuXQCW+dth+Pqd3PB+hvA6agCUiPp2dDzn3dWt9BnOtir36Q
+	 PilLiOVFvQ8DtMzeh16+Uy+X3kCM2S/gpKmnGCVKbpols2scN8KNdOZnNpNyryfhAkKJ4
+	 5fRpuAa7gG1vSAdimdNzCzfP3q+M9GIcr5LCVYzwiogqbjBy9/5YTwzWZy4Bv1I2I0Jti
+	 A059v3NOdoft+riMu7xCaz83Ii/NF7GlIoIXaBj98HNPxcMi8OqUnsu3T7TdlVzzdrw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Sk4EVqEB;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=iXL0QoMq;
+	arc=none smtp.remote-ip=198.175.65.17
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4040A606A322;
-	Thu, 29 Oct 2026 17:06:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95447606A323
+	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 17:24:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 95447606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Sk4EVqEB
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B01061F01816;
-	Thu, 29 Oct 2026 17:06:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793293610;
-	bh=hqkcRhbg6p6G4OiMh1Urw9NTIjXWW9NK4+69SzpS4Qc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Sk4EVqEBx2lOsW2goUkQRflKlJgnbMO7VwU5x25Ugz2sN+dF1H9jqXRJYn8s0Oux6
-	 5PGG8TlltNQnDtWt8II2Oc6go/el/0Ga6377nUML7CBb1WjUfjMhcQw3HCBB+zeWWi
-	 4YnsbXIBgceBHxUM5TS/CMITlPRBKA5Y6cLoTwLHgxpqDByy2m78sLi0BASWA5vCiV
-	 PLZFV0LfHr5D0TKtTZKrU1I0rHDTFoCEjJVo51Bzcgj/yqZbud0A71Cwwz2ouhRis4
-	 uWf0lLOqzIzFzTCd4uBJFlOSjQsRK1XjxW0DeV+SzfrTAoEctjrpnYS/i5K35yDZ18
-	 amaKF2kvu9S2w==
-Message-ID: <sashiko-outbox-189718@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 3/8] PCI: add KVM MSI domain guest module
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
-In-Reply-To: <20261029163713.1366077-4-jtornosm@redhat.com>
-References: <20261029163713.1366077-1-jtornosm@redhat.com>
- <20261029163713.1366077-4-jtornosm@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 29 Oct 2026 17:06:50 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=iXL0QoMq
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793294646; x=1824830646;
+  h=date:from:to:cc:subject:message-id;
+  bh=KJ1pvR6r8CEJiKcaZL5WaRTSUHrqJYuq+ztpUqU1yHY=;
+  b=iXL0QoMqdGi2QfmL14kA4PfJuCxX9ZP2WvZuqCppNWpk6fWXhSvc9uIR
+   aKg9SMnymWIMDTgOJ4on9S3Zr/EvV+AJ2JPp1QdbYTLRV/Rcfc5Ak4yD8
+   lRMadJNQe90iLpdUegE/D2rXGCgmgna0FwXHSgxkwqjUhzPsnFcr7KhIi
+   UO3muECokDjo274BwxwpUNdP9K2r303Hau5QhgPnhjb1iACUu9DBbpy+q
+   sQ54174+HJEAZfnh8cIFvXE9Jdr2AzpoDeCiUfxZWpJsarDvwY+YVS+OC
+   2tzlMzEcAGmWhcL7reeTWjgw9V4KJnRSZRk2J5dr71fiBpsWV/m8NNMVx
+   w==;
+X-CSE-ConnectionGUID: pLq36N0eQmK+NxUfWNXZ2A==
+X-CSE-MsgGUID: Dr8RWCMpSgCFCUs/JcLWZQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11950"; a="2063682"
+X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
+   d="scan'208";a="2063682"
+Received: from fmviesa011.fm.intel.com ([10.60.135.151])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 10:24:05 -0700
+X-CSE-ConnectionGUID: jlwFX3e2TCu8K7bQohLs6w==
+X-CSE-MsgGUID: ZASt0evhQPCjLRgQrTYRgw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
+   d="scan'208";a="7039811"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by fmviesa011.fm.intel.com with ESMTP; 29 Oct 2026 10:24:03 -0700
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xMTr6-00000000aZa-35U6;
+	Thu, 29 Oct 2026 17:24:00 +0000
+Date: Fri, 30 Oct 2026 01:23:04 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:controller:dwc-layerscape] BUILD SUCCESS
+ 89d2ac4da7df75921130caa82a52c31c755cdf29
+Message-ID: <202610300101.CK9MXhpI-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,604 +80,345 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 9 potential issue(=
-s) to consider:
-- [High] PCI: kvm-msi: use-after-free on module unload in kvm_pci_msi_exit()
-- [High] PCI: kvm-msi: broken IRQ affinity in kvm_pcie_init_dev_msi_info()
-- [High] PCI: kvm-msi: host MSI message corrupts guest config in kvm_compos=
-e_msi_msg()
-- [High] PCI: kvm-msi: global kvm_msi_ctx clobbered in kvm_pcie_domain_allo=
-c()
-- [High] PCI: kvm-msi: init failure in kvm_pci_msi_init() breaks hotplug an=
-d modprobe
-- [High] PCI: kvm-msi: race and use-after-free on kvm_data in kvm_pcie_doma=
-in_free()
-- [Medium] PCI: kvm-msi: missing stubs in pci-kvm-msi.h break modular link
-- [Medium] PCI: kvm-msi: kvm_pci_msi_wait_ready() polls until timeout on hy=
-percall error
-- [Medium] PCI: kvm-msi: missing device_lock() in kvm_msi_attach_device()
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-layerscape
+branch HEAD: 89d2ac4da7df75921130caa82a52c31c755cdf29  Revert "PCI: layerscape: Change default error response behavior"
+
+elapsed time: 2556m
+
+configs tested: 326
+configs skipped: 21
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                              allnoconfig    gcc-16.2.0
+alpha                             allyesconfig    gcc-16.2.0
+alpha                                defconfig    gcc-16.2.0
+arc                               allmodconfig    clang-24
+arc                                allnoconfig    gcc-16.2.0
+arc                               allyesconfig    clang-19
+arc                               allyesconfig    clang-24
+arc                               allyesconfig    gcc-16.2.0
+arc                                  defconfig    gcc-16.2.0
+arc                             hsdk_defconfig    clang-24
+arc                      nsimosci_hs_defconfig    gcc-16.2.0
+arc                   randconfig-1000-20261028    gcc-8.5.0
+arc                   randconfig-1000-20261029    clang-24
+arc                   randconfig-1001-20261028    gcc-8.5.0
+arc                   randconfig-1001-20261029    clang-24
+arm                                allnoconfig    gcc-16.2.0
+arm                               allyesconfig    clang-24
+arm                          assabet_defconfig    clang-24
+arm                          axm55xx_defconfig    gcc-16.2.0
+arm                                  defconfig    gcc-16.2.0
+arm                       footbridge_defconfig    gcc-16.2.0
+arm                            h3600_defconfig    clang-24
+arm                        imx_v4_v5_defconfig    gcc-16.2.0
+arm                            imxrt_defconfig    gcc-16.2.0
+arm                    milbeaut_m10v_defconfig    gcc-16.2.0
+arm                             mps2_defconfig    clang-24
+arm                         multi_v5_defconfig    clang-24
+arm                          nhk8815_defconfig    clang-24
+arm                   randconfig-1000-20261028    gcc-8.5.0
+arm                   randconfig-1000-20261029    clang-24
+arm                   randconfig-1001-20261028    gcc-8.5.0
+arm                   randconfig-1001-20261029    clang-24
+arm                   randconfig-1002-20261028    gcc-8.5.0
+arm                   randconfig-1002-20261029    clang-24
+arm                   randconfig-1003-20261028    gcc-8.5.0
+arm                   randconfig-1003-20261029    clang-24
+arm                          s3c6400_defconfig    gcc-16.2.0
+arm                        spear13xx_defconfig    clang-24
+arm                         spear3xx_defconfig    gcc-16.2.0
+arm                     vt8500_v6_v7_defconfig    gcc-16.2.0
+arm64                             allmodconfig    clang-24
+arm64                              allnoconfig    gcc-16.2.0
+arm64                                defconfig    gcc-16.2.0
+arm64                 randconfig-1000-20261028    clang-22
+arm64                 randconfig-1000-20261029    gcc-8.5.0
+arm64                 randconfig-1001-20261028    clang-22
+arm64                 randconfig-1001-20261029    gcc-8.5.0
+arm64                 randconfig-1002-20261028    clang-22
+arm64                 randconfig-1002-20261029    gcc-8.5.0
+arm64                 randconfig-1003-20261028    clang-22
+arm64                 randconfig-1003-20261029    gcc-8.5.0
+csky                              allmodconfig    gcc-16.2.0
+csky                               allnoconfig    gcc-16.2.0
+csky                                 defconfig    gcc-16.2.0
+csky                  randconfig-1000-20261028    clang-22
+csky                  randconfig-1000-20261029    gcc-8.5.0
+csky                  randconfig-1001-20261028    clang-22
+csky                  randconfig-1001-20261029    gcc-8.5.0
+hexagon                           allmodconfig    gcc-16.2.0
+hexagon                            allnoconfig    gcc-16.2.0
+hexagon                              defconfig    gcc-16.2.0
+hexagon               randconfig-1000-20261028    clang-17
+hexagon               randconfig-1000-20261029    clang-24
+hexagon               randconfig-1001-20261028    clang-17
+hexagon               randconfig-1001-20261029    clang-24
+i386                              allmodconfig    clang-22
+i386                               allnoconfig    gcc-16.2.0
+i386                              allyesconfig    clang-22
+i386        buildonly-randconfig-1000-20261028    clang-22
+i386        buildonly-randconfig-1000-20261029    gcc-14
+i386        buildonly-randconfig-1001-20261028    clang-22
+i386        buildonly-randconfig-1001-20261029    gcc-14
+i386        buildonly-randconfig-1002-20261028    clang-22
+i386        buildonly-randconfig-1002-20261029    gcc-14
+i386        buildonly-randconfig-1003-20261028    clang-22
+i386        buildonly-randconfig-1003-20261029    gcc-14
+i386        buildonly-randconfig-1004-20261028    clang-22
+i386        buildonly-randconfig-1004-20261029    gcc-14
+i386        buildonly-randconfig-1005-20261028    clang-22
+i386        buildonly-randconfig-1005-20261029    gcc-14
+i386                                 defconfig    gcc-16.2.0
+i386                  randconfig-1000-20261028    gcc-14
+i386                  randconfig-1000-20261029    clang-22
+i386                  randconfig-1001-20261028    gcc-14
+i386                  randconfig-1001-20261029    clang-22
+i386                  randconfig-1002-20261028    gcc-14
+i386                  randconfig-1002-20261029    clang-22
+i386                  randconfig-1003-20261028    gcc-14
+i386                  randconfig-1003-20261029    clang-22
+i386                  randconfig-1004-20261028    gcc-14
+i386                  randconfig-1004-20261029    clang-22
+i386                  randconfig-1005-20261028    gcc-14
+i386                  randconfig-1005-20261029    clang-22
+i386                  randconfig-1006-20261028    gcc-14
+i386                  randconfig-1006-20261029    clang-22
+i386                  randconfig-1007-20261028    clang-22
+i386                  randconfig-1007-20261029    clang-22
+i386                  randconfig-1008-20261028    clang-22
+i386                  randconfig-1008-20261029    clang-22
+i386                  randconfig-1009-20261028    clang-22
+i386                  randconfig-1009-20261029    clang-22
+i386                  randconfig-1010-20261028    clang-22
+i386                  randconfig-1010-20261029    clang-22
+i386                  randconfig-1011-20261028    clang-22
+i386                  randconfig-1011-20261029    clang-22
+i386                  randconfig-1012-20261028    clang-22
+i386                  randconfig-1012-20261029    clang-22
+i386                  randconfig-1013-20261028    clang-22
+i386                  randconfig-1013-20261029    clang-22
+loongarch                         allmodconfig    clang-19
+loongarch                         allmodconfig    clang-24
+loongarch                          allnoconfig    gcc-16.2.0
+loongarch                            defconfig    clang-24
+loongarch             randconfig-1000-20261028    clang-17
+loongarch             randconfig-1000-20261029    clang-24
+loongarch             randconfig-1001-20261028    clang-17
+loongarch             randconfig-1001-20261029    clang-24
+m68k                              allmodconfig    gcc-16.2.0
+m68k                               allnoconfig    gcc-16.2.0
+m68k                              allyesconfig    clang-24
+m68k                           amiga_defconfig    clang-22
+m68k                        bvme6000_defconfig    gcc-16.2.0
+m68k                                 defconfig    clang-24
+m68k                         m5272c3_defconfig    clang-24
+m68k                        m5275evb_defconfig    clang-22
+m68k                        m5282evb_defconfig    clang-24
+m68k                         stmark2_defconfig    clang-24
+microblaze                         allnoconfig    gcc-16.2.0
+microblaze                        allyesconfig    gcc-16.2.0
+microblaze                           defconfig    clang-24
+mips                              allmodconfig    gcc-16.2.0
+mips                               allnoconfig    gcc-16.2.0
+mips                              allyesconfig    gcc-16.2.0
+mips                            ip32_defconfig    gcc-16.2.0
+mips                        lemote2f_defconfig    clang-22
+mips                            mtx1_defconfig    gcc-16.2.0
+mips                           rm200_defconfig    clang-24
+nios2                             allmodconfig    clang-20
+nios2                              allnoconfig    clang-24
+nios2                                defconfig    clang-24
+nios2                 randconfig-1000-20261028    clang-17
+nios2                 randconfig-1000-20261029    clang-24
+nios2                 randconfig-1001-20261028    clang-17
+nios2                 randconfig-1001-20261029    clang-24
+openrisc                          allmodconfig    clang-20
+openrisc                           allnoconfig    clang-24
+openrisc          de0_nano_multicore_defconfig    gcc-16.2.0
+openrisc                             defconfig    gcc-16.2.0
+openrisc                     or1ksim_defconfig    clang-24
+openrisc                        virt_defconfig    clang-24
+parisc                            alldefconfig    gcc-16.2.0
+parisc                            allmodconfig    gcc-16.2.0
+parisc                             allnoconfig    clang-24
+parisc                            allyesconfig    clang-17
+parisc                               defconfig    gcc-16.2.0
+parisc                randconfig-1000-20261028    clang-19
+parisc                randconfig-1000-20261029    clang-17
+parisc                randconfig-1001-20261028    clang-19
+parisc                randconfig-1001-20261029    clang-17
+parisc64                             defconfig    clang-24
+powerpc                           allmodconfig    gcc-16.2.0
+powerpc                            allnoconfig    clang-24
+powerpc                      asp8347_defconfig    clang-24
+powerpc                       bamboo_defconfig    clang-24
+powerpc                       bamboo_defconfig    gcc-16.2.0
+powerpc                  canyonlands_defconfig    clang-22
+powerpc                       cm5200_defconfig    clang-24
+powerpc                      ep8248e_defconfig    clang-22
+powerpc                           g5_defconfig    clang-24
+powerpc                     ge_imp3a_defconfig    clang-24
+powerpc                         icon_defconfig    gcc-16.2.0
+powerpc                   iss476-smp_defconfig    gcc-16.2.0
+powerpc                    motionpro_defconfig    clang-24
+powerpc                  mpc8315_rdb_defconfig    gcc-16.2.0
+powerpc                  mpc834x_itx_defconfig    clang-24
+powerpc                       pasemi_defconfig    clang-24
+powerpc                       ppc44x_defconfig    clang-24
+powerpc                       ppc64e_defconfig    clang-24
+powerpc               randconfig-1000-20261028    clang-19
+powerpc               randconfig-1000-20261029    clang-17
+powerpc               randconfig-1001-20261028    clang-19
+powerpc               randconfig-1001-20261029    clang-17
+powerpc                     sam440ep_defconfig    clang-22
+powerpc                     sam440ep_defconfig    clang-24
+powerpc                     socrates_defconfig    gcc-16.2.0
+powerpc                   storcenter_defconfig    clang-24
+powerpc                      tqm8548_defconfig    gcc-16.2.0
+powerpc                         warp_defconfig    gcc-16.2.0
+powerpc64             randconfig-1000-20261028    clang-19
+powerpc64             randconfig-1000-20261029    clang-17
+powerpc64             randconfig-1001-20261028    clang-19
+powerpc64             randconfig-1001-20261029    clang-17
+riscv                             alldefconfig    clang-24
+riscv                             allmodconfig    clang-24
+riscv                              allnoconfig    clang-24
+riscv                             allyesconfig    clang-24
+riscv                                defconfig    gcc-16.2.0
+riscv                 randconfig-1000-20261028    gcc-11.5.0
+riscv                 randconfig-1000-20261029    gcc-10.5.0
+riscv                 randconfig-1001-20261028    gcc-11.5.0
+riscv                 randconfig-1001-20261029    gcc-10.5.0
+s390                              allmodconfig    clang-17
+s390                               allnoconfig    clang-24
+s390                              allyesconfig    gcc-16.2.0
+s390                                 defconfig    gcc-16.2.0
+s390                  randconfig-1000-20261028    gcc-11.5.0
+s390                  randconfig-1000-20261029    gcc-10.5.0
+s390                  randconfig-1001-20261028    gcc-11.5.0
+s390                  randconfig-1001-20261029    gcc-10.5.0
+sh                                allmodconfig    gcc-16.2.0
+sh                                 allnoconfig    clang-24
+sh                                allyesconfig    clang-17
+sh                                allyesconfig    gcc-16.2.0
+sh                          ap325rxa_defconfig    gcc-16.2.0
+sh                                   defconfig    gcc-14
+sh                         dreamcast_defconfig    clang-22
+sh                             hp6xx_defconfig    clang-24
+sh                                j2_defconfig    clang-24
+sh                  kfr2r09-romimage_defconfig    clang-24
+sh                           polaris_defconfig    gcc-16.2.0
+sh                    randconfig-1000-20261028    gcc-11.5.0
+sh                    randconfig-1000-20261029    gcc-10.5.0
+sh                    randconfig-1001-20261028    gcc-11.5.0
+sh                    randconfig-1001-20261029    gcc-10.5.0
+sh                           rsk7201_defconfig    clang-22
+sh                            se7206_defconfig    gcc-16.2.0
+sh                            se7619_defconfig    clang-24
+sh                            se7721_defconfig    gcc-16.2.0
+sh                            se7751_defconfig    gcc-16.2.0
+sh                    sh7724_generic_defconfig    gcc-16.2.0
+sh                         sh7785lcr_defconfig    gcc-16.2.0
+sh                             titan_defconfig    clang-24
+sparc                             alldefconfig    gcc-16.2.0
+sparc                              allnoconfig    clang-24
+sparc                                defconfig    gcc-16.2.0
+sparc                 randconfig-1000-20261028    gcc-12
+sparc                 randconfig-1000-20261029    clang-24
+sparc                 randconfig-1001-20261028    gcc-12
+sparc                 randconfig-1001-20261029    clang-24
+sparc                        sparc64_defconfig    clang-24
+sparc64                           allmodconfig    clang-20
+sparc64                              defconfig    gcc-14
+sparc64               randconfig-1000-20261028    gcc-12
+sparc64               randconfig-1000-20261029    clang-24
+sparc64               randconfig-1001-20261028    gcc-12
+sparc64               randconfig-1001-20261029    clang-24
+um                                alldefconfig    gcc-16.2.0
+um                                allmodconfig    clang-17
+um                                 allnoconfig    clang-24
+um                                allyesconfig    gcc-16.2.0
+um                                   defconfig    gcc-14
+um                              i386_defconfig    gcc-14
+um                    randconfig-1000-20261028    gcc-12
+um                    randconfig-1000-20261029    clang-24
+um                    randconfig-1001-20261028    gcc-12
+um                    randconfig-1001-20261029    clang-24
+um                            x86_64_defconfig    clang-24
+um                            x86_64_defconfig    gcc-14
+x86_64                            allmodconfig    clang-22
+x86_64                             allnoconfig    clang-24
+x86_64                            allyesconfig    clang-22
+x86_64      buildonly-randconfig-1000-20261028    clang-22
+x86_64      buildonly-randconfig-1000-20261029    gcc-14
+x86_64      buildonly-randconfig-1001-20261028    clang-22
+x86_64      buildonly-randconfig-1001-20261029    gcc-14
+x86_64      buildonly-randconfig-1002-20261028    clang-22
+x86_64      buildonly-randconfig-1002-20261029    gcc-14
+x86_64      buildonly-randconfig-1003-20261028    clang-22
+x86_64      buildonly-randconfig-1003-20261029    gcc-14
+x86_64      buildonly-randconfig-1004-20261028    clang-22
+x86_64      buildonly-randconfig-1004-20261029    gcc-14
+x86_64      buildonly-randconfig-1005-20261028    clang-22
+x86_64      buildonly-randconfig-1005-20261029    gcc-14
+x86_64                               defconfig    gcc-14
+x86_64                                   kexec    clang-22
+x86_64                randconfig-1000-20261028    clang-22
+x86_64                randconfig-1000-20261029    clang-22
+x86_64                randconfig-1001-20261028    clang-22
+x86_64                randconfig-1001-20261029    clang-22
+x86_64                randconfig-1002-20261028    clang-22
+x86_64                randconfig-1002-20261029    clang-22
+x86_64                randconfig-1003-20261028    clang-22
+x86_64                randconfig-1003-20261029    clang-22
+x86_64                randconfig-1004-20261028    clang-22
+x86_64                randconfig-1004-20261029    clang-22
+x86_64                randconfig-1005-20261028    clang-22
+x86_64                randconfig-1005-20261029    clang-22
+x86_64                randconfig-1006-20261028    gcc-14
+x86_64                randconfig-1006-20261029    gcc-14
+x86_64                randconfig-1007-20261028    gcc-14
+x86_64                randconfig-1007-20261029    gcc-14
+x86_64                randconfig-1008-20261028    gcc-14
+x86_64                randconfig-1008-20261029    gcc-14
+x86_64                randconfig-1009-20261028    gcc-14
+x86_64                randconfig-1009-20261029    gcc-14
+x86_64                randconfig-1010-20261028    gcc-14
+x86_64                randconfig-1010-20261029    gcc-14
+x86_64                randconfig-1011-20261028    gcc-14
+x86_64                randconfig-1011-20261029    gcc-14
+x86_64                randconfig-1012-20261028    gcc-12
+x86_64                randconfig-1012-20261029    clang-22
+x86_64                randconfig-1013-20261028    gcc-12
+x86_64                randconfig-1013-20261029    clang-22
+x86_64                randconfig-1014-20261028    gcc-12
+x86_64                randconfig-1014-20261029    clang-22
+x86_64                randconfig-1015-20261028    gcc-12
+x86_64                randconfig-1015-20261029    clang-22
+x86_64                randconfig-1016-20261028    gcc-12
+x86_64                randconfig-1016-20261029    clang-22
+x86_64                randconfig-1017-20261028    gcc-12
+x86_64                randconfig-1017-20261029    clang-22
+x86_64                                rhel-9.4    clang-22
+x86_64                            rhel-9.4-bpf    gcc-14
+x86_64                           rhel-9.4-func    clang-22
+x86_64                     rhel-9.4-kselftests    clang-22
+x86_64                          rhel-9.4-kunit    gcc-14
+x86_64                            rhel-9.4-ltp    gcc-14
+x86_64                           rhel-9.4-rust    clang-22
+xtensa                             allnoconfig    clang-24
+xtensa                            allyesconfig    clang-20
+xtensa                   cadence_csp_defconfig    clang-24
+xtensa                        common_defconfig    gcc-16.2.0
+xtensa                randconfig-1000-20261028    gcc-12
+xtensa                randconfig-1000-20261029    clang-24
+xtensa                randconfig-1001-20261028    gcc-12
+xtensa                randconfig-1001-20261029    clang-24
+
 --
-
-commit 56d70781d8bf9094f446115196e63d6a77876b7c
-Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-
-PCI: add KVM MSI domain guest module
-
-This commit adds a guest-side PCI MSI IRQ domain driver for KVM virtual
-machines that intercepts MSI composition and provides kvm_pci_msi_wait_read=
-y()
-and kvm_pci_msi_get_address() to obtain host physical MSI addresses via a K=
-VM
-hypercall for devices whose firmware programs MSI addresses into BAR regist=
-ers.
-
-> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kcon=
-fig
-> index d246bbe37948e..cdf65d1c26741 100644
-> --- a/drivers/pci/controller/Kconfig
-> +++ b/drivers/pci/controller/Kconfig
-> @@ -248,6 +248,18 @@ config PCI_HYPERV_INTERFACE
->  	  drivers to have a common interface with the Hyper-V PCI frontend
->  	  driver.
-> =20
-> +config PCI_KVM_MSI_DOMAIN
-> +	tristate "KVM PCI passthrough MSI domain"
-> +	depends on X86_64 && KVM_GUEST && PCI_MSI
-> +	select IRQ_MSI_LIB
-
-[ ... ]
-
-> diff --git a/drivers/pci/controller/pci-kvm-msi.c b/drivers/pci/controlle=
-r/pci-kvm-msi.c
-> new file mode 100644
-> index 0000000000000..e2b0a4114aa88
-> --- /dev/null
-> +++ b/drivers/pci/controller/pci-kvm-msi.c
-
-[ ... ]
-
-> +struct kvm_msi_ctx {
-> +	struct pci_dev *pdev;
-> +	struct irq_domain *domain;
-> +	u32 devid;
-> +	unsigned int first_virq;
-> +	unsigned int nr_irqs;
-> +};
-> +
-> +static struct kvm_msi_ctx kvm_msi_ctx;
-> +
-> +int kvm_pci_msi_wait_ready(struct pci_dev *pdev, unsigned long timeout_m=
-s)
-> +{
-> +	struct kvm_msi_response resp =3D {};
-> +	struct kvm_msi_irq_data *kvm_data;
-> +	unsigned int max_retries;
-> +	struct irq_data *irqd;
-> +	struct msi_desc *desc;
-> +	unsigned int retries;
-> +	long hret;
-> +	int i;
-> +
-> +	if (!kvm_para_available())
-> +		return 0;
-> +
-> +	if (!kvm_msi_domain)
-> +		return 0;
-> +
-> +	if (!pdev || !kvm_msi_ctx.pdev || kvm_msi_ctx.pdev !=3D pdev)
-> +		return 0;
-> +
-> +	max_retries =3D timeout_ms / KVM_MSI_POLL_INTERVAL_MS;
-> +	if (!max_retries)
-> +		max_retries =3D 1;
-> +
-> +	for (retries =3D 0; retries < max_retries; retries++) {
-> +		memset(&resp, 0, sizeof(resp));
-> +		hret =3D kvm_hypercall3(KVM_HC_PCI_MSI_ALLOC,
-> +				      kvm_msi_ctx.devid, 0,
-> +				      slow_virt_to_phys(&resp));
-> +
-> +		if (hret =3D=3D 0 && resp.address_lo !=3D 0)
-> +			goto ready;
-> +
-> +		msleep(KVM_MSI_POLL_INTERVAL_MS);
-> +	}
-> +
-> +	pr_err("kvm-pci-msi: %s wait timed out after %lu ms\n",
-> +	       pci_name(pdev), timeout_ms);
-> +	return -ETIMEDOUT;
-
-[Severity: Medium]
-Should kvm_pci_msi_wait_ready() in drivers/pci/controller/pci-kvm-msi.c
-check for negative hypercall return values before sleeping and retrying?
-
-In ____kvm_emulate_hypercall() in arch/x86/kvm/x86.c, KVM_HC_PCI_MSI_ALLOC
-returns negative error codes on permanent failures, such as -KVM_ENOSYS when
-the host kernel does not implement the hypercall or has no kvm-vfio device
-(vcpu->kvm->pci_msi_alloc =3D=3D NULL), and -KVM_EINVAL when the PCI device=
- is not
-found in kvm-vfio. It returns 0 with msg.address_lo =3D=3D 0 only when the =
-VFIO
-device exists on the host and is waiting for MSI enablement.
-
-Because the polling loop only checks whether hret =3D=3D 0 && resp.address_=
-lo !=3D 0
-and ignores hret < 0, running a guest on an older KVM host or with a device
-not backed by kvm-vfio will sleep for the full timeout_ms duration on every
-device power-up or reset and log a timeout error.
-
-> +
-> +ready:
-> +	pr_info("kvm-pci-msi: %s host addr=3D%08x:%08x data=3D%08x\n",
-> +		pci_name(pdev), resp.address_hi, resp.address_lo,
-> +		resp.data);
-> +
-> +	for (i =3D 0; i < kvm_msi_ctx.nr_irqs; i++) {
-> +		irqd =3D irq_domain_get_irq_data(kvm_msi_ctx.domain,
-> +						kvm_msi_ctx.first_virq + i);
-> +		if (!irqd)
-> +			continue;
-> +		kvm_data =3D irqd->chip_data;
-> +		if (!kvm_data)
-> +			continue;
-> +
-> +		kvm_data->msg.address_lo =3D resp.address_lo;
-> +		kvm_data->msg.address_hi =3D resp.address_hi;
-> +		kvm_data->msg.data =3D resp.data + i;
-> +		kvm_data->cached =3D true;
-> +	}
-> +
-> +	desc =3D irq_get_msi_desc(pdev->irq);
-> +	if (desc) {
-> +		desc->msg.address_lo =3D resp.address_lo;
-> +		desc->msg.address_hi =3D resp.address_hi;
-> +		desc->msg.data =3D resp.data;
-> +	}
-> +
-> +	return 1;
-> +}
-> +EXPORT_SYMBOL_GPL(kvm_pci_msi_wait_ready);
-
-[ ... ]
-
-> +static void kvm_compose_msi_msg(struct irq_data *data, struct msi_msg *m=
-sg)
-> +{
-> +	struct kvm_msi_irq_data *kvm_data =3D data->chip_data;
-> +
-> +	if (kvm_data && kvm_data->cached) {
-> +		*msg =3D kvm_data->msg;
-> +		return;
-> +	}
-> +
-> +	kvm_parent_compose_msi_msg(data, msg);
-> +}
-
-[Severity: High]
-Won't overwriting desc->msg in kvm_pci_msi_wait_ready() and returning the
-cached host physical MSI message from kvm_compose_msi_msg() in
-drivers/pci/controller/pci-kvm-msi.c corrupt the guest's virtual PCI MSI
-config space when MSI state is restored or recomposed?
-
-In a KVM guest with VFIO passthrough, the PCI config space MSI capability
-(PCI_MSI_ADDRESS_LO, PCI_MSI_ADDRESS_HI, PCI_MSI_DATA) is emulated by QEMU
-VFIO. QEMU traps guest config writes from __pci_write_msi_msg(), decodes th=
-em
-as a guest virtual APIC MSI message (guest vCPU APIC ID and guest IDT vecto=
-r),
-and updates KVM's GSI routing table (KVM_SET_GSI_ROUTING). Only the device's
-BAR MMIO registers programmed by firmware need the host's physical IOMMU IR=
-TE
-MSI address and data.
-
-Because kvm_pci_msi_wait_ready() overwrites desc->msg with the host's physi=
-cal
-IRTE address/data and sets kvm_data->cached =3D true so kvm_compose_msi_msg=
-()
-returns kvm_data->msg, any subsequent PCI config space write by the guest M=
-SI
-core will write the host's physical IRTE message into QEMU's emulated PCI
-config space:
-
-1. On PCI reset or resume, __pci_restore_msi_state() calls
-   __pci_write_msi_msg(entry, &entry->msg), writing the overwritten desc->m=
-sg
-   to PCI config space.
-
-2. If an IRQ is freed and re-requested (msi_domain_activate()) or recomposed
-   (msi_domain_set_affinity()), irq_chip_compose_msi_msg() calls
-   kvm_compose_msi_msg(), which returns the cached host IRTE message to
-   pci_msi_domain_write_msg() -> __pci_write_msi_msg().
-
-On Intel VT-d interrupt remapping, the host IRTE data for subhandle 0 is 0,=
- so
-QEMU interprets the config space write as a guest APIC MSI targeting guest
-vector 0, corrupting KVM GSI routing and breaking interrupt delivery to the
-guest.
-
-> +
-> +static struct irq_chip kvm_msi_irq_chip =3D {
-> +	.name			=3D "KVM-MSI",
-> +	.irq_compose_msi_msg	=3D kvm_compose_msi_msg,
-> +	.irq_set_affinity	=3D irq_chip_set_affinity_parent,
-> +	.irq_ack		=3D irq_chip_ack_parent,
-> +};
-> +
-> +static int kvm_pcie_domain_alloc(struct irq_domain *d, unsigned int virq,
-> +				 unsigned int nr_irqs, void *arg)
-> +{
-> +	struct irq_alloc_info *info =3D arg;
-> +	struct kvm_msi_irq_data *kvm_data;
-> +	struct msi_desc *desc;
-> +	struct pci_dev *pdev;
-> +	u32 devid;
-> +	int ret;
-> +	int i;
-> +
-> +	ret =3D irq_domain_alloc_irqs_parent(d, virq, nr_irqs, arg);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	desc =3D info->desc;
-> +	if (!desc || !desc->dev || !dev_is_pci(desc->dev)) {
-> +		ret =3D -EINVAL;
-> +		goto err_free_parent;
-> +	}
-> +
-> +	pdev =3D to_pci_dev(desc->dev);
-> +	devid =3D ((u32)pdev->vendor << 16) | pdev->device;
-> +
-> +	for (i =3D 0; i < nr_irqs; i++) {
-> +		kvm_data =3D kzalloc_obj(*kvm_data);
-> +		if (!kvm_data) {
-> +			ret =3D -ENOMEM;
-> +			goto err_free_data;
-> +		}
-> +
-> +		kvm_data->devid =3D devid;
-> +		kvm_data->vector =3D desc->msi_index + i;
-> +
-> +		irq_domain_set_info(d, virq + i, virq + i,
-> +				    &kvm_msi_irq_chip, kvm_data,
-> +				    handle_edge_irq, NULL, "KVM-MSI");
-> +	}
-> +
-> +	kvm_msi_ctx.pdev =3D pdev;
-> +	kvm_msi_ctx.devid =3D devid;
-> +	kvm_msi_ctx.first_virq =3D virq;
-> +	kvm_msi_ctx.nr_irqs =3D nr_irqs;
-> +	kvm_msi_ctx.domain =3D d;
-
-[Severity: High]
-What happens in kvm_pcie_domain_alloc() in drivers/pci/controller/pci-kvm-m=
-si.c
-when more than one matching PCI device is present in the VM, or when a devi=
-ce
-allocates multiple MSI-X vectors?
-
-1. kvm_pci_msi_init() and kvm_msi_bus_notify() attach kvm_msi_domain to all
-   PCI devices matching kvm_msi_devids, but kvm_msi_ctx is a single global
-   structure that kvm_pcie_domain_alloc() overwrites on every allocation. If
-   a second matching device probes and allocates MSI vectors, it overwrites
-   kvm_msi_ctx.pdev, causing subsequent calls to kvm_pci_msi_wait_ready() or
-   runtime calls to kvm_pci_msi_get_address() for the first device to fail =
-the
-   kvm_msi_ctx.pdev !=3D pdev check and return 0.
-
-2. kvm_pcie_msi_parent_ops sets MSI_FLAG_PCI_MSIX in supported_flags. For
-   MSI-X, __msi_domain_alloc_irqs() calls __irq_domain_alloc_irqs() ->
-   kvm_pcie_domain_alloc() once per MSI-X descriptor with nr_irqs =3D 1. Ea=
-ch
-   vector allocation overwrites kvm_msi_ctx.first_virq =3D virq and
-   kvm_msi_ctx.nr_irqs =3D 1, losing all earlier vectors so
-   kvm_pci_msi_wait_ready() only populates the last vector with vector 0's
-   data (and irq_get_msi_desc(pdev->irq) returns NULL for MSI-X because
-   pdev->irq is not set).
-
-3. Conversely, for Multi-MSI, kvm_pcie_msi_parent_ops.supported_flags omits
-   MSI_FLAG_MULTI_PCI_MSI, so msi_lib_init_dev_msi_info() masks out
-   MSI_FLAG_MULTI_PCI_MSI from pci_msi_template even when the parent domain
-   supports it.
-
-> +
-> +	return 0;
-> +
-> +err_free_data:
-> +	for (i--; i >=3D 0; i--) {
-> +		kvm_data =3D irq_data_get_irq_chip_data(
-> +				irq_domain_get_irq_data(d, virq + i));
-> +		kfree(kvm_data);
-> +	}
-> +err_free_parent:
-> +	irq_domain_free_irqs_parent(d, virq, nr_irqs);
-> +	return ret;
-> +}
-> +
-> +static void kvm_pcie_domain_free(struct irq_domain *d, unsigned int virq,
-> +				 unsigned int nr_irqs)
-> +{
-> +	struct kvm_msi_irq_data *kvm_data;
-> +	int i;
-> +
-> +	if (kvm_msi_ctx.first_virq =3D=3D virq) {
-> +		kvm_msi_ctx.pdev =3D NULL;
-> +		kvm_msi_ctx.nr_irqs =3D 0;
-> +	}
-> +
-> +	for (i =3D 0; i < nr_irqs; i++) {
-> +		kvm_data =3D irq_data_get_irq_chip_data(
-> +				irq_domain_get_irq_data(d, virq + i));
-> +		kfree(kvm_data);
-> +	}
-> +	irq_domain_free_irqs_top(d, virq, nr_irqs);
-> +}
-
-[Severity: High]
-Can kvm_pci_msi_wait_ready() or kvm_pci_msi_get_address() race with
-kvm_pcie_domain_free() in drivers/pci/controller/pci-kvm-msi.c and trigger a
-use-after-free on kvm_data?
-
-kvm_pcie_domain_alloc() and kvm_pcie_domain_free() run under
-domain->root->mutex, whereas kvm_pci_msi_wait_ready() and
-kvm_pci_msi_get_address() read kvm_msi_ctx, call irq_domain_get_irq_data(),
-and dereference irqd->chip_data (kvm_data) without holding any lock.
-
-In kvm_pci_msi_wait_ready(), kvm_msi_ctx.pdev !=3D pdev is checked only onc=
-e at
-entry before the loop calls msleep(KVM_MSI_POLL_INTERVAL_MS). Meanwhile,
-kvm_pcie_domain_free() calls kfree(kvm_data) before irq_domain_free_irqs_to=
-p()
-clears irq_data->chip_data and unmaps the virq. If a device's IRQs are freed
-(or another device probes or unwinds) while kvm_pci_msi_wait_ready() is
-sleeping or while kvm_pci_msi_get_address() is running, they can read or wr=
-ite
-freed kvm_data memory.
-
-> +
-> +static const struct irq_domain_ops kvm_pcie_domain_ops =3D {
-> +	.alloc	=3D kvm_pcie_domain_alloc,
-> +	.free	=3D kvm_pcie_domain_free,
-> +};
-> +
-> +static bool kvm_pcie_init_dev_msi_info(struct device *dev,
-> +				       struct irq_domain *domain,
-> +				       struct irq_domain *real_parent,
-> +				       struct msi_domain_info *info)
-> +{
-> +	struct irq_chip *chip =3D info->chip;
-> +
-> +	if (!msi_lib_init_dev_msi_info(dev, domain, real_parent, info)) {
-> +		pr_err("kvm-pci-msi: msi_lib_init_dev_msi_info failed for %s\n",
-> +		       dev_name(dev));
-> +		return false;
-> +	}
-> +
-> +	info->ops->msi_prepare =3D pci_msi_prepare;
-> +
-> +	chip->irq_set_affinity =3D irq_chip_set_affinity_parent;
-> +	chip->irq_retrigger =3D irq_chip_retrigger_hierarchy;
-> +	chip->flags |=3D IRQCHIP_MOVE_DEFERRED;
-> +
-> +	return true;
-> +}
-
-[Severity: High]
-Does overwriting chip->irq_set_affinity with irq_chip_set_affinity_parent in
-kvm_pcie_init_dev_msi_info() in drivers/pci/controller/pci-kvm-msi.c break
-guest MSI interrupt delivery whenever IRQ affinity is set or changed?
-
-In msi_lib_init_dev_msi_info() in drivers/irqchip/irq-msi-lib.c, the
-per-device MSI irq_chip's irq_set_affinity callback is initialized to
-msi_domain_set_affinity():
-
-	if (!chip->irq_set_affinity && !(info->flags & MSI_FLAG_NO_AFFINITY))
-		chip->irq_set_affinity =3D msi_domain_set_affinity;
-
-msi_domain_set_affinity() calls parent->chip->irq_set_affinity() and then
-calls irq_chip_compose_msi_msg() and irq_chip_write_msi_msg()
-(pci_msi_domain_write_msg() -> __pci_write_msi_msg()) so that the updated
-guest virtual APIC target CPU and vector are written to PCI config space and
-trapped by QEMU VFIO to update KVM's GSI routing.
-
-By overwriting chip->irq_set_affinity on the per-device MSI chip with
-irq_chip_set_affinity_parent (while kvm_msi_irq_chip also uses
-irq_chip_set_affinity_parent), any affinity change (such as
-ath11k_pci_set_irq_affinity_hint() -> irq_set_affinity_and_hint() during pr=
-obe
-or irqbalance in userspace) delegates directly to x86_vector_domain's
-apic_set_affinity(). That allocates a new guest vector/CPU and returns
-IRQ_SET_MASK_OK without ever composing or writing the new MSI message to PCI
-config space, leaving msi_desc->msg and QEMU/KVM GSI routing pointing to the
-old guest vector.
-
-[ ... ]
-
-> +static void kvm_msi_attach_device(struct pci_dev *pdev)
-> +{
-> +	if (pdev->driver) {
-> +		dev_warn(&pdev->dev,
-> +			 "kvm-pci-msi: driver already bound (%s), unbind/rebind needed\n",
-> +			 pdev->driver->name);
-> +		return;
-> +	}
-> +
-> +	dev_info(&pdev->dev,
-> +		 "kvm-pci-msi: attaching KVM MSI domain [%04x:%04x]\n",
-> +		 pdev->vendor, pdev->device);
-> +	dev_set_msi_domain(&pdev->dev, kvm_msi_domain);
-> +}
-
-[Severity: Medium]
-Can kvm_msi_attach_device() in drivers/pci/controller/pci-kvm-msi.c race wi=
-th
-concurrent driver probe or unbind when called from kvm_pci_msi_init() witho=
-ut
-holding device_lock(&pdev->dev)?
-
-In drivers/pci/pci-driver.c, local_pci_probe() and pci_device_remove() set =
-and
-clear pdev->driver under device_lock(&pdev->dev). When kvm_pci_msi_init()
-iterates over existing PCI devices with for_each_pci_dev(pdev) and calls
-kvm_msi_attach_device(pdev) without holding device_lock(&pdev->dev), a
-concurrent unbind or failed probe can clear pdev->driver between the
-if (pdev->driver) check and the pdev->driver->name dereference, or a
-concurrent probe can race with dev_set_msi_domain(&pdev->dev, kvm_msi_domai=
-n)
-while setting up MSI vectors.
-
-[ ... ]
-
-> +static int __init kvm_pci_msi_init(void)
-> +{
-> +	struct pci_dev *pdev =3D NULL;
-> +	struct pci_dev *first =3D NULL;
-> +	int ret;
-> +
-> +	if (!kvm_para_available())
-> +		return -ENODEV;
-> +
-> +	for_each_pci_dev(pdev) {
-> +		if (pci_match_id(kvm_msi_devids, pdev)) {
-> +			first =3D pdev;
-> +			break;
-> +		}
-> +	}
-> +
-> +	if (!first) {
-> +		pr_info("kvm-pci-msi: no matching devices found\n");
-> +		return -ENODEV;
-> +	}
-> +
-> +	ret =3D kvm_msi_create_domain(first);
-> +	pci_dev_put(first);
-> +	if (ret)
-> +		return ret;
-> +
-> +	pdev =3D NULL;
-> +	for_each_pci_dev(pdev) {
-> +		if (pci_match_id(kvm_msi_devids, pdev))
-> +			kvm_msi_attach_device(pdev);
-> +	}
-> +
-> +	bus_register_notifier(&pci_bus_type, &kvm_msi_nb);
-> +
-> +	pr_info("kvm-pci-msi: ready, domain created for %zu device types\n",
-> +		ARRAY_SIZE(kvm_msi_devids) - 1);
-> +	return 0;
-> +}
-
-[Severity: High]
-Won't returning -ENODEV from kvm_pci_msi_init() in
-drivers/pci/controller/pci-kvm-msi.c prevent dependent wireless drivers from
-loading and break PCI hotplug?
-
-1. When CONFIG_PCI_KVM_MSI_DOMAIN=3Dm, consumer modules (such as ath11k_pci=
-.ko
-   and ath12k.ko) reference the exported symbols kvm_pci_msi_wait_ready() a=
-nd
-   kvm_pci_msi_get_address(). When modprobe loads pci-kvm-msi.ko on baremet=
-al
-   (!kvm_para_available()) or when no device in kvm_msi_devids is currently
-   present (!first, for example with other ath11k/ath12k PCI IDs or before
-   hotplug), kvm_pci_msi_init() returns -ENODEV. That causes pci-kvm-msi.ko
-   to fail to load, which in turn prevents ath11k_pci.ko and ath12k.ko from
-   loading due to unresolved symbols.
-
-2. Because bus_register_notifier(&pci_bus_type, &kvm_msi_nb) is only reached
-   if a matching PCI device already exists when kvm_pci_msi_init() runs,
-   hotplugging a matching VFIO PCI device later will never attach
-   kvm_msi_domain.
-
-3. In kvm_msi_attach_device(), if pdev->driver is already bound at init tim=
-e,
-   it warns that unbind/rebind is needed and skips dev_set_msi_domain().
-   However, kvm_msi_bus_notify() only acts on BUS_NOTIFY_ADD_DEVICE (which
-   fires on device_add(), not on driver unbind/rebind), so unbinding and
-   rebinding the driver never attaches kvm_msi_domain.
-
-> +
-> +static void __exit kvm_pci_msi_exit(void)
-> +{
-> +	struct fwnode_handle *fwnode;
-> +
-> +	bus_unregister_notifier(&pci_bus_type, &kvm_msi_nb);
-> +
-> +	if (kvm_msi_domain) {
-> +		fwnode =3D kvm_msi_domain->fwnode;
-> +		irq_domain_remove(kvm_msi_domain);
-> +		irq_domain_free_fwnode(fwnode);
-> +		kvm_msi_domain =3D NULL;
-> +	}
-> +}
-
-[Severity: High]
-Doesn't kvm_pci_msi_exit() in drivers/pci/controller/pci-kvm-msi.c leave
-dangling pointers to the freed kvm_msi_domain on attached PCI devices when =
-the
-module is unloaded?
-
-During kvm_pci_msi_init() and kvm_msi_bus_notify(), kvm_msi_attach_device()
-overwrites pdev->dev.msi.domain with kvm_msi_domain via dev_set_msi_domain()
-without saving the original parent MSI domain. In addition, when a driver
-allocates MSI vectors via pci_alloc_irq_vectors() ->
-pci_setup_msi_device_domain() -> msi_create_device_irq_domain(), a per-devi=
-ce
-child irq_domain is created in pdev->dev.msi.data->__domains with
-domain->parent pointing to kvm_msi_domain, and that child domain persists
-across pci_free_irq_vectors() and driver unbind until the pci_dev is remove=
-d.
-
-When kvm_pci_msi_exit() runs on module unload, it calls
-irq_domain_remove(kvm_msi_domain) (which frees kvm_msi_domain) without
-removing per-device child MSI domains or restoring pdev->dev.msi.domain on
-attached PCI devices:
-
-1. Any subsequent driver probe, MSI allocation (msi_create_device_irq_domai=
-n()
-   dereferencing parent =3D dev->msi.domain and
-   parent->msi_parent_ops->init_dev_msi_info), or PCI device removal will
-   dereference the freed kvm_msi_domain and unmapped module callbacks.
-
-2. Reloading pci-kvm-msi after rmmod causes kvm_msi_create_domain() to call
-   dev_get_msi_domain(&ref_dev->dev), which returns the freed kvm_msi_domain
-   from the previous load and passes it as info.parent to
-   msi_create_parent_irq_domain().
-
-> diff --git a/include/linux/pci-kvm-msi.h b/include/linux/pci-kvm-msi.h
-> new file mode 100644
-> index 0000000000000..cc615e913a3bf
-> --- /dev/null
-> +++ b/include/linux/pci-kvm-msi.h
-> @@ -0,0 +1,13 @@
-> +/* SPDX-License-Identifier: GPL-2.0-only */
-> +/* SPDX-FileCopyrightText: Copyright Red Hat */
-> +
-> +#ifndef _LINUX_PCI_KVM_MSI_H
-> +#define _LINUX_PCI_KVM_MSI_H
-> +
-> +#include <linux/pci.h>
-> +
-> +int kvm_pci_msi_wait_ready(struct pci_dev *pdev, unsigned long timeout_m=
-s);
-> +int kvm_pci_msi_get_address(struct pci_dev *pdev, u32 *addr_lo, u32 *add=
-r_hi,
-> +			     u32 *data);
-> +
-> +#endif /* _LINUX_PCI_KVM_MSI_H */
-
-[Severity: Medium]
-Should include/linux/pci-kvm-msi.h provide static inline fallback stubs
-guarded by IS_REACHABLE(CONFIG_PCI_KVM_MSI_DOMAIN)?
-
-Because PCI_KVM_MSI_DOMAIN is a tristate Kconfig option, a built-in consumer
-driver (=3Dy) calling kvm_pci_msi_wait_ready() or kvm_pci_msi_get_address()
-under IS_ENABLED(CONFIG_PCI_KVM_MSI_DOMAIN) when CONFIG_PCI_KVM_MSI_DOMAIN=
-=3Dm
-(or an unguarded caller when CONFIG_PCI_KVM_MSI_DOMAIN=3Dn) will fail to li=
-nk
-vmlinux with undefined references to kvm_pci_msi_wait_ready() and
-kvm_pci_msi_get_address().
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029163713.1366=
-077-1-jtornosm@redhat.com?part=3D3
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
