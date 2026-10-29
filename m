@@ -1,74 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.70
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=18.194.254.142
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793266751;
-	b=nCbkB4YgEHeiw4+gkrRugDX7SLhsBcvPGzcqa5WcdO8/a6vVqkgiIN+3VENqzRhBFgMo
-	 n37qB4oF3Q3zK6LulhPjWHQCi9oCfF9kpZmLqS7zvZb5f7R7jy53sUimRV9QY4Sj/R/cS
-	 I94RG+Hjj5MuSUgNDyGIIRo31pXjHuofEPzdiNGTjr8oI/4tmFo9KfF4N7dkykReQM0iS
-	 7vFgQUFtsa3oHbhTHp/2VlGf+p3gml4vFR3hrdrCWjjV4kZg0RsOApfqAi3x0SOBVxccr
-	 aVAhr/pb5lYow4sSAkF2kNtgeIqtESIWoZEoVxS/wxvRdZTUxLC/ByAYJbOCofqBduw==
+	t=1793267115;
+	b=xoH2AKDUWBoYGeWN+zA/C0Y36R3WE6dpXQmnQTZhcG2zfEm+DBZhup+lnO4p6uYE1+1f
+	 SEdGB5SLlncXl1wOLqax+azdyT8neAqGxaN0mH4g/4pKtLuBgEHc+PNldXd5fhV/nb5+5
+	 vKB3fGJKQlvnkj+9egG5vD1xtYwWC8tOwjqGeU2hrf29R1V/0/8u85EIns394Qit7RYMd
+	 wXeN+WNXTg8EsZ0mbuGe0jx11f5Bdai2DJEB/be/ECwsOXbZT58QQhd/sBZK4/q7jWNQI
+	 aB4ftWrc7KuY16rdMyDHv16iDKXn8c5qWxU5RCAnEbZPn8bMfAFaT5+ZGbVHsTlMT1A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793266751;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=PcL3zpHa7AYugiRyyb7NpDw034Q1hpktWo6bN7DugIU=;
-	b=JKEv2vs4f4waevPDqG+tLHIwZScigLae5QrSXHwTTwnh1+LcN7WV7ZJJVpGpsc/B3yNs
-	 pKRAxLp0tJpxUW5j1MeC6HSnfUDpe8vSU52mw7o9a4iA5sykejLTeS5WikcH+4iH5iuSE
-	 I0+V1RoRJvZ+EMe6dGuOucCbUDCy7V/4eQV1Li31AaBfasCgOJcMR8+wtp2NmBNbRJFtj
-	 EmRkHpSVxtXbeJnCmKV69Qfbi5WuRS25JFwcxI+zUr+1+aXnPF12CqsCPHu0wHP1CcvoO
-	 EURC0+qpA0mKD1oME/Q2sPNzv3RoEhJwNpGPvkyhYv9BWrWhoBuSvhManpwZHkWm8nw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793267115;
+	h=DMARC-Filter:X-QQ-mid:X-QQ-Originating-IP:Received:X-QQ-SSF:
+	 X-QQ-GoodBg:X-BIZMAIL-ID:EX-QQ-RecipientCnt:From:Date:Subject:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
+	 References:In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:
+	 X-Developer-Key:X-QQ-SENDSIZE:Feedback-ID:X-QQ-XMAILINFO:X-QQ-XMRINFO:
+	 X-QQ-RECHKSPAM;
+	bh=I6pGS9HlPdajy6JVHzNvNG5YnPfZi+MQBITdwkrjbpg=;
+	b=3spxHI+sQt0oB4PG7RBGdN7dALuCy3OFB6Y9hzBMDLekehA9KWycd5yMznKn+8ztT2oF
+	 6uVryobl/Y0ysQTrKwPrEvI0zMGFntq6aLBzjqgd0jLHSpLvViIRPg+Sh0/IC7v8D0Gm5
+	 UgNL6B0W7OREZLjpN1oZFXpYE/cB7P3s7sXR6V6zMy7Eh4mDW9znlMQZg917b1YkFWcVL
+	 F8/nWTX4e7jaFDotZnhpNWnRYIWmubIYAIGUr6WAntzl3ZlOG1kFgwoEiMIBqdb0YKhyr
+	 hoIBWSZpseqRZN9ncf3mosdO+QyjPJKWRr3nbJnbr8dVWW1VLip8KvKhSiTktESc2Ww==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=mnqssr4s;
-	arc=none smtp.remote-ip=209.85.218.70
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com [209.85.218.70])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=radxa.com;
+	spf=pass smtp.mailfrom=radxa.com;
+	arc=none smtp.remote-ip=18.194.254.142
+Received: from smtpbgeu2.qq.com (smtpbgeu2.qq.com [18.194.254.142])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD157606A31D
-	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 09:39:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DD157606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=mnqssr4s
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-c40aa03ded8so219305866b.2
-        for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 02:39:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793266748; x=1793871548; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=PcL3zpHa7AYugiRyyb7NpDw034Q1hpktWo6bN7DugIU=;
-        b=mnqssr4sy85sTM5I1SQd4goGVuPTJave/vSgtCX8lV15FogmRLumtMJhi20D6+gWyO
-         gSVdi2qaXgwS9AX6hGIGnnK5GP44LCs+4CZ1LXaBiLq58Oytxbo71BHpNaVFxLfvYxTm
-         Hg+HqCI1TOY6Suu/y35Bv9tyC8jm++8m3UffZZYDzXswrqKufX1rDVC+cLHXn0wNkqDk
-         ELxdB9FEd26PkhmbtOvhorA75FFGJJzYLzQC1F3M4smLIhPEav69bn4lwQ6T8ASqeOfl
-         r3zttS9HjjFUCUlWZSEZOuLmtxgu4PP4WWQ+b2w4sGcbXxE65vGclxMdXvN6kptk13jZ
-         w7+Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793266748; x=1793871548;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=PcL3zpHa7AYugiRyyb7NpDw034Q1hpktWo6bN7DugIU=;
-        b=NgcsPAuFn5fiKCAiIQFlqOnTg2UQFtGg9UoyXDKxpr/pfIVocUqSPpzI/lm/P9Xrlm
-         LPRjPo2gQlJDOstJKCsOVHKrNFMKMNFe359bHnzSeuI8zEzmypkYxLX7zVGY0m41dl/+
-         i+fesVkgymjeBD+ZgUUNIJ+SPydD9e4n3/9CyPC1YZU+1SRN5eX+oCvUTbQvo2V7i/2D
-         tOhRqELF5nAjwlsnzWrcxhp8aPer+xVjD3J35VvgvRGmXGuOTR5YL7wg7JMJb+FvEXRd
-         +3MPNZvwrezmByrkwl86/BSwBpZtX+NcUZl6OjFpVwH2u0oj+eaSvejIQ6yLG3pfReEO
-         a+pw==
-X-Forwarded-Encrypted: i=1; AKwUvBwazXtf7FQgIBFj966CwZiWeDC+QMlTtLZ0wwZGNbdcfcboGclaW/8TrtxGNUYujybWytoSMpUFQuw=@vger.kernel.org
-X-Gm-Message-State: AFq9FYK0hk8dNs0pzlE9j/TDoIVXbsIr8Q/zxtNiVEFRUQh3R9rznZbR
-	eDScv2GZz1nIQ5Mb04+8nEu+XRIr4qauloSCfHkHtzBDTg0W4LWWP201e4g1VLknzmFtqYQ/TQC
-	S6O9anVrL6rKAK5jlqA==
-X-Received: from ejta22.prod.google.com ([2002:a17:906:6d56:b0:c39:4b00:1779])
- (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:907:6d29:b0:c2e:3f49:df04 with SMTP id a640c23a62f3a-c49bdb68d6dmr420820666b.1.1793266748065;
- Thu, 29 Oct 2026 02:39:08 -0700 (PDT)
-Date: Thu, 29 Oct 2026 09:39:06 +0000
-In-Reply-To: <20261020164435.80499-7-djeffery@redhat.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2E2C606A31D;
+	Thu, 29 Oct 2026 09:45:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B2E2C606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=radxa.com
+X-QQ-mid: zesmtpip4t1793267081t50177237
+X-QQ-Originating-IP: NhZPlk1+WIs/nEBYGHCH1CYwxEn5UdbQk/jw1hYepC4=
+Received: from [192.168.30.244] ( [localhost])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Thu, 29 Oct 2026 17:44:38 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 0
+X-BIZMAIL-ID: 16080051997495535406
+EX-QQ-RecipientCnt: 31
+From: Xilin Wu <sophon@radxa.com>
+Date: Thu, 29 Oct 2026 17:44:28 +0800
+Subject: [PATCH v3 1/4] arm64: dts: qcom: sc8280xp: enable PCIe ECAM and
+ 64-bit memory
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -77,379 +53,185 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261020164435.80499-1-djeffery@redhat.com> <20261020164435.80499-7-djeffery@redhat.com>
-Message-ID: <9huzpkws977p.fsf@tarunix.c.googlers.com>
-Subject: Re: [PATCH 6/9] driver core: async device shutdown infrastructure
-From: tarunsahu@google.com
-To: David Jeffery <djeffery@redhat.com>, driver-core@lists.linux.dev, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Danilo Krummrich <dakr@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, Stuart Hayes <stuart.w.hayes@gmail.com>, 
-	Laurence Oberman <loberman@redhat.com>, Bjorn Helgaas <helgaas@kernel.org>, kexec@lists.infradead.org, 
-	Ewan Milne <emilne@redhat.com>, John Meneghini <jmeneghi@redhat.com>, 
-	"Lombardi, Maurizio" <mlombard@redhat.com>, Bart Van Assche <bvanassche@acm.org>, 
-	John Garry <john.g.garry@oracle.com>, Jeremy Allison <jallison@ciq.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, Pasha Tatashin <tatashin@google.com>, 
-	David Jeffery <djeffery@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261029-q8b-dts-v3-1-655696dfec45@radxa.com>
+References: <20261029-q8b-dts-v3-0-655696dfec45@radxa.com>
+In-Reply-To: <20261029-q8b-dts-v3-0-655696dfec45@radxa.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, 
+ Andrzej Hajda <andrzej.hajda@intel.com>, 
+ Neil Armstrong <neil.armstrong@linaro.org>, Robert Foss <rfoss@kernel.org>, 
+ Laurent Pinchart <Laurent.pinchart@ideasonboard.com>, 
+ Jonas Karlman <jonas@kwiboo.se>, Jernej Skrabec <jernej.skrabec@gmail.com>, 
+ Luca Ceresoli <luca.ceresoli@bootlin.com>, David Airlie <airlied@gmail.com>, 
+ Simona Vetter <simona@ffwll.ch>, 
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+ Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>, 
+ Bartosz Golaszewski <brgl@kernel.org>, Linus Walleij <linusw@kernel.org>, 
+ Abel Vesa <abelvesa@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ dri-devel@lists.freedesktop.org, devicetree@vger.kernel.org, 
+ linux-arm-msm@vger.kernel.org, linux-gpio@vger.kernel.org, 
+ Stephen Chen <stephen@radxa.com>, Junhao Xie <bigfoot@radxa.com>, 
+ dragon@radxa.com, Xilin Wu <sophon@radxa.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5116; i=sophon@radxa.com;
+ h=from:subject:message-id; bh=ZKeyJhuJk5Q9HhRIB0I7m7yyN1y8Ot222NY5V9safMA=;
+ b=owGbwMvMwCVmdFg0fe08Iz/G02pJDFmPRRu90jdsX59iVaX6QvHgk1Ufind9aOY/9/UNe5oC7
+ +SENR8Wd5SyMIhxMciKKbIoxDPMZa/MvfZUrFQPZg4rE8gQBi5OAZjIsU8M/+ztjvXcF7Gfc1hq
+ 0x0PliafqMx5eZc6VO57pd5NznefZcLIcCLMpP2ekk1MrsSN7bqGkzbcVS0+4mlxwFH3mlfFk85
+ 4PgA=
+X-Developer-Key: i=sophon@radxa.com; a=openpgp;
+ fpr=205F009D07796DD6E516752E32C31567AD9E324E
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpip:radxa.com:qybglogicsvrsz:qybglogicsvrsz3b-0
+X-QQ-XMAILINFO: MLnLowx4CbXM9c1jenNX3SLALNkVFZdBwcEO69+0Tmm7Bc7ofMOr5fA2
+	AYZNxxgbjTgyC6EYnrs1e6N7+9UGWU7y0vb2ORZS6/FjidWq8t/C3i5n3WlvmsfIzgu/0Cn
+	gDCo+yXaA9V47I/QvpWAZ9iwf5U6QLUgkOGjyCCCLK4TIJypnmzzxQbo3qQvAA421yfB/Rm
+	4JjjzyTzSka6J0cizxw2P6E4D3f0lzbiI7ahyT+4OOBvVbz5jg8yt3/+Ucg8CLXUnmXMSiK
+	9u+0hiqSGqqtLHjC8ztWN4ngSYo1sfC21PHu+3Mzn6lUhRJqGa4IZwwPBiHild+OHVyjWXw
+	o1cLzrB1yIqJyPDQXyBlobY5DHASpPmDHoAt1a4/xsffydRHr5W0CHSRjfTD1ickNbWJ70M
+	YjQ5VgKbpe0bfN5yFUOOJroTLeG1fka9NAnziztyUWa5ruAygRTyY7KtiYW/RyjyqUetro8
+	41kXQ9wMwdoNVvVo351mYcfgN/Kn5BXnZ2lyEJ18pb1zcEA6EBS8123Zf9FWd1/3XvRrrZ/
+	I+ZZcdAojphKb3utsLHbE2QbNmrMUN4B+LA8c8UTPYPb9Rcs0dqsHllbphK3Rj5PMqIbbnn
+	/PGBtE1nK87Uojy94Xk/ibXASLMjRvd4oGBWdIvLyk0AJhu2Wg9TI9tdflKm7BTV+eh+l10
+	n51G/RYtJooviI83HaD3E6XxbBEzHq5xfDNAHJ3I/yTK2kidTuwav1CXIyz/JD2InuBCr+P
+	B4PGX2T2w/0F5+i9ecTfNKq8uY90m3T+cL4C0miJzjXwfzgmp2TXN1R3gVqgm4f6jExsalV
+	eGYmyoeiYUG0oLVsKN+F3SqQg9SS64vpg/qS8MQpdaGrYHXEc4vbe7u7e8tMgrKJ1Ddmm7c
+	lIWY0ZmprRyf/pdiQlMQVQBCfealHtjRFKRa3yY/qejYdPAxiLUH0tGOYlIcr7/psNydnJK
+	AuojOiYbgKVyHKEBM94AsowNcXE6xFNk2aPFq175iSqWxw6odjxz+1SNa3OlxJgFUiWY4sy
+	8/yv/KrBY0MNVkIBRj9rFmUAt1z6lLhKJG3kgfT7KEemb3xflw5p5TdNlhEEiVOYrzN+kpi
+	TeN5xRhesAA0VY9Yj70k7Wa2OvMRLRg65TzHblcm+rifx66hwXqQMc=
+X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
+X-QQ-RECHKSPAM: 0
 
+Enable ECAM to avoid reprogramming iATU on every downstream configuration
+access, reducing latency and CPU utilization. Add 64-bit memory windows
+for devices with large BARs, such as discrete GPUs.
 
+Preserve the SA8540P PCIe2a and PCIe3a address maps to avoid regressions
+due to firmware differences.
 
-Incase, a device was never probed with a driver, and still part of kset
-list, then it does not have shutdown call, so shutdown_one_device is
-just no-op. In case this device is a child of a device marked async,
-parent device keep on waiting on this device. do you think we should
-optimize this case by something like this?
+Signed-off-by: Xilin Wu <sophon@radxa.com>
+---
+ arch/arm64/boot/dts/qcom/sa8540p.dtsi  |  9 +++++++++
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 25 +++++++++++++++----------
+ 2 files changed, 24 insertions(+), 10 deletions(-)
 
-
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -4848,13 +4848,35 @@ static bool wants_async_shutdown(struct device *dev)
-  return async_shutdown_enabled && dev_async_shutdown(dev);
- }
+diff --git a/arch/arm64/boot/dts/qcom/sa8540p.dtsi b/arch/arm64/boot/dts/qcom/sa8540p.dtsi
+index 23888029cc11..e5393a237497 100644
+--- a/arch/arm64/boot/dts/qcom/sa8540p.dtsi
++++ b/arch/arm64/boot/dts/qcom/sa8540p.dtsi
+@@ -180,6 +180,15 @@ &gpu_smmu {
  
-+static bool device_has_shutdown(struct device *dev)
-+{
-+ const struct device_driver *drv = READ_ONCE(dev->driver);
+ &pcie2a {
+ 	compatible = "qcom,pcie-sa8540p";
++	reg = <0x0 0x01c20000 0x0 0x3000>,
++	      <0x0 0x3c000000 0x0 0xf1d>,
++	      <0x0 0x3c000f20 0x0 0xa8>,
++	      <0x0 0x3c001000 0x0 0x1000>,
++	      <0x0 0x3c100000 0x0 0x100000>,
++	      <0x0 0x01c23000 0x0 0x1000>;
 +
-+ return (dev->class && dev->class->shutdown_pre) ||
-+       (dev->bus && dev->bus->shutdown) ||
-+       (drv && drv->shutdown);
-+}
-+
-+static void __shutdown_one_device(struct device *dev);
-+static void wait_for_shutdown_dependencies(struct device *dev, bool async);
-+
- static int wait_for_device_shutdown(struct device *dev, void *data)
- {
-  bool async = *(bool *)data;
++	ranges = <0x01000000 0x0 0x00000000 0x0 0x3c200000 0x0 0x100000>,
++		 <0x02000000 0x0 0x3c300000 0x0 0x3c300000 0x0 0x1d00000>;
  
-- if (!dev->p || !device_is_registered(dev))
-+ if (!dev->p || !device_is_registered(dev) ||
-+    completion_done(&dev->p->complete))
-  return 0;
+ 	linux,pci-domain = <0>;
  
-+ if (async && !device_has_shutdown(dev)) {
-+ wait_for_shutdown_dependencies(dev, async);
-+
-+ device_lock(dev);
-+ if (!device_has_shutdown(dev))
-+ __shutdown_one_device(dev);
-+ device_unlock(dev);
-+ }
-+
-  if (async || wants_async_shutdown(dev))
-  wait_for_completion(&dev->p->complete);
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index d17475c3e66c..0c4abf60d1d2 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -2161,13 +2161,14 @@ pcie4: pcie@1c00000 {
+ 			      <0x0 0x30000000 0x0 0xf1d>,
+ 			      <0x0 0x30000f20 0x0 0xa8>,
+ 			      <0x0 0x30001000 0x0 0x1000>,
+-			      <0x0 0x30100000 0x0 0x100000>,
++			      <0x4 0x00000000 0x0 0x10000000>,
+ 			      <0x0 0x01c03000 0x0 0x1000>;
+ 			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			ranges = <0x01000000 0x0 0x00000000 0x0 0x30200000 0x0 0x100000>,
+-				 <0x02000000 0x0 0x30300000 0x0 0x30300000 0x0 0x1d00000>;
++				 <0x02000000 0x0 0x40000000 0x4 0x10000000 0x0 0x10000000>,
++				 <0x03000000 0x4 0x20000000 0x4 0x20000000 0x0 0x20000000>;
+ 			bus-range = <0x00 0xff>;
  
-@@ -4879,7 +4901,7 @@ static void wait_for_shutdown_dependencies(struct device *dev, bool async)
+ 			dma-coherent;
+@@ -2273,13 +2274,14 @@ pcie3b: pcie@1c08000 {
+ 			      <0x0 0x32000000 0x0 0xf1d>,
+ 			      <0x0 0x32000f20 0x0 0xa8>,
+ 			      <0x0 0x32001000 0x0 0x1000>,
+-			      <0x0 0x32100000 0x0 0x100000>,
++			      <0x4 0x40000000 0x0 0x10000000>,
+ 			      <0x0 0x01c0b000 0x0 0x1000>;
+ 			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			ranges = <0x01000000 0x0 0x00000000 0x0 0x32200000 0x0 0x100000>,
+-				 <0x02000000 0x0 0x32300000 0x0 0x32300000 0x0 0x1d00000>;
++				 <0x02000000 0x0 0x40000000 0x4 0x50000000 0x0 0x10000000>,
++				 <0x03000000 0x4 0x60000000 0x4 0x60000000 0x0 0x20000000>;
+ 			bus-range = <0x00 0xff>;
  
- static void __shutdown_one_device(struct device *dev)
- {
-- if (!dev->p || dev->p->dead)
-+ if (!dev->p || dev->p->dead || completion_done(&dev->p->complete))
-  return;
+ 			dma-coherent;
+@@ -2383,13 +2385,14 @@ pcie3a: pcie@1c10000 {
+ 			      <0x0 0x34000000 0x0 0xf1d>,
+ 			      <0x0 0x34000f20 0x0 0xa8>,
+ 			      <0x0 0x34001000 0x0 0x1000>,
+-			      <0x0 0x34100000 0x0 0x100000>,
++			      <0x4 0x80000000 0x0 0x10000000>,
+ 			      <0x0 0x01c13000 0x0 0x1000>;
+ 			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			ranges = <0x01000000 0x0 0x00000000 0x0 0x34200000 0x0 0x100000>,
+-				 <0x02000000 0x0 0x34300000 0x0 0x34300000 0x0 0x1d00000>;
++				 <0x02000000 0x0 0x40000000 0x4 0x90000000 0x0 0x10000000>,
++				 <0x03000000 0x4 0xa0000000 0x4 0xa0000000 0x0 0x20000000>;
+ 			bus-range = <0x00 0xff>;
  
-  /* Don't allow any more runtime suspends */
+ 			dma-coherent;
+@@ -2496,13 +2499,14 @@ pcie2b: pcie@1c18000 {
+ 			      <0x0 0x38000000 0x0 0xf1d>,
+ 			      <0x0 0x38000f20 0x0 0xa8>,
+ 			      <0x0 0x38001000 0x0 0x1000>,
+-			      <0x0 0x38100000 0x0 0x100000>,
++			      <0x4 0xc0000000 0x0 0x10000000>,
+ 			      <0x0 0x01c1b000 0x0 0x1000>;
+ 			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			ranges = <0x01000000 0x0 0x00000000 0x0 0x38200000 0x0 0x100000>,
+-				 <0x02000000 0x0 0x38300000 0x0 0x38300000 0x0 0x1d00000>;
++				 <0x02000000 0x0 0x40000000 0x4 0xd0000000 0x0 0x10000000>,
++				 <0x03000000 0x4 0xe0000000 0x4 0xe0000000 0x0 0x20000000>;
+ 			bus-range = <0x00 0xff>;
+ 
+ 			dma-coherent;
+@@ -2606,13 +2610,14 @@ pcie2a: pcie@1c20000 {
+ 			      <0x0 0x3c000000 0x0 0xf1d>,
+ 			      <0x0 0x3c000f20 0x0 0xa8>,
+ 			      <0x0 0x3c001000 0x0 0x1000>,
+-			      <0x0 0x3c100000 0x0 0x100000>,
++			      <0x5 0x00000000 0x0 0x10000000>,
+ 			      <0x0 0x01c23000 0x0 0x1000>;
+ 			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			ranges = <0x01000000 0x0 0x00000000 0x0 0x3c200000 0x0 0x100000>,
+-				 <0x02000000 0x0 0x3c300000 0x0 0x3c300000 0x0 0x1d00000>;
++				 <0x02000000 0x0 0x40000000 0x5 0x10000000 0x0 0x10000000>,
++				 <0x03000000 0x5 0x20000000 0x5 0x20000000 0x0 0xe0000000>;
+ 			bus-range = <0x00 0xff>;
+ 
+ 			dma-coherent;
 
-~Tarun
+-- 
+2.56.0
 
-David Jeffery <djeffery@redhat.com> writes:
-
-> Patterned after async suspend, allow devices to mark themselves as wanting
-> to perform async shutdown. Devices using async shutdown wait only for their
-> dependencies to shutdown before executing their shutdown routine.
->
-> Sync shutdown devices are shut down one at a time and will only wait for an
-> async shutdown device if the async device is a dependency.
->
-> Enabled by default, async shutdown can be explicitly enabled or disabled
-> by using the kernel parameter "core.async_shutdown=<bool>"
->
-> Signed-off-by: David Jeffery <djeffery@redhat.com>
-> Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
-> Signed-off-by: Tarun Sahu <tarunsahu@google.com>
-> Tested-by: Laurence Oberman <loberman@redhat.com>
-> ---
->  .../admin-guide/kernel-parameters.txt         |  10 ++
->  drivers/base/base.h                           |   2 +
->  drivers/base/core.c                           | 141 +++++++++++++++++-
->  include/linux/device.h                        |   2 +
->  4 files changed, 154 insertions(+), 1 deletion(-)
->
-> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-> index 68647ff4bdd2..6532bd0bbfdf 100644
-> --- a/Documentation/admin-guide/kernel-parameters.txt
-> +++ b/Documentation/admin-guide/kernel-parameters.txt
-> @@ -995,6 +995,16 @@ Kernel parameters
->  			seconds. A value of 0 disables the blank timer.
->  			Defaults to 0.
->  
-> +	core.async_shutdown=
-> +			[KNL]
-> +			Format: <bool>
-> +			Enable or disable asynchronous shutdown support. When
-> +			enabled, on system shutdown unrelated devices flagged
-> +			as async shutdown compatible may be shut down in
-> +			parallel and asynchronously. When disabled, device
-> +			shutdown is performed serially and synchronously.
-> +			Enabled by default.
-> +
->  	coredump_filter=
->  			[KNL] Change the default value for
->  			/proc/<pid>/coredump_filter.
-> diff --git a/drivers/base/base.h b/drivers/base/base.h
-> index a5b7abc10ff0..40dbf588a5d6 100644
-> --- a/drivers/base/base.h
-> +++ b/drivers/base/base.h
-> @@ -103,6 +103,7 @@ struct driver_private {
->   *			   dev_err_probe() for later retrieval via debugfs
->   * @device: pointer back to the struct device that this structure is
->   *	    associated with.
-> + * @complete: completion for device shutdown ordering
->   * @dead: This device is currently either in the process of or has been
->   *	  removed from the system. Any asynchronous events scheduled for this
->   *	  device should exit without taking any action.
-> @@ -119,6 +120,7 @@ struct device_private {
->  	const struct device_driver *async_driver;
->  	char *deferred_probe_reason;
->  	struct device *device;
-> +	struct completion complete;
->  	u8 dead:1;
->  };
->  #define to_device_private_parent(obj)	\
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 93605698affc..7fee6043dd37 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -9,6 +9,7 @@
->   */
->  
->  #include <linux/acpi.h>
-> +#include <linux/async.h>
->  #include <linux/blkdev.h>
->  #include <linux/cleanup.h>
->  #include <linux/cpufreq.h>
-> @@ -37,6 +38,11 @@
->  #include "physical_location.h"
->  #include "power/power.h"
->  
-> +static bool async_shutdown = true;
-> +module_param(async_shutdown, bool, 0644);
-> +MODULE_PARM_DESC(async_shutdown, "Enable asynchronous device shutdown support");
-> +static bool async_shutdown_enabled;
-> +
->  /* Device links support. */
->  static LIST_HEAD(deferred_sync);
->  static unsigned int defer_sync_state_count = 1;
-> @@ -3627,6 +3633,7 @@ static int device_private_init(struct device *dev)
->  	klist_init(&dev->p->klist_children, klist_children_get,
->  		   klist_children_put);
->  	INIT_LIST_HEAD(&dev->p->deferred_probe);
-> +	init_completion(&dev->p->complete);
->  	return 0;
->  }
->  
-> @@ -3925,6 +3932,7 @@ bool kill_device(struct device *dev)
->  	if (dev->p->dead)
->  		return false;
->  	dev->p->dead = true;
-> +	complete_all(&dev->p->complete);
->  	return true;
->  }
->  EXPORT_SYMBOL_GPL(kill_device);
-> @@ -4903,6 +4911,40 @@ int device_change_owner(struct device *dev, kuid_t kuid, kgid_t kgid)
->  	return error;
->  }
->  
-> +static bool wants_async_shutdown(struct device *dev)
-> +{
-> +	return async_shutdown_enabled && dev_async_shutdown(dev);
-> +}
-> +
-> +static int wait_for_device_shutdown(struct device *dev, void *data)
-> +{
-> +	bool async = *(bool *)data;
-> +
-> +	if (!dev->p || !device_is_registered(dev))
-> +		return 0;
-> +
-> +	if (async || wants_async_shutdown(dev))
-> +		wait_for_completion(&dev->p->complete);
-> +
-> +	return 0;
-> +}
-> +
-> +static void wait_for_shutdown_dependencies(struct device *dev, bool async)
-> +{
-> +	struct device_link *link;
-> +	int idx;
-> +
-> +	device_for_each_child(dev, &async, wait_for_device_shutdown);
-> +
-> +	idx = device_links_read_lock();
-> +
-> +	dev_for_each_link_to_consumer(link, dev)
-> +		if (!device_link_flag_is_sync_state_only(link->flags))
-> +			wait_for_device_shutdown(link->consumer, &async);
-> +
-> +	device_links_read_unlock(idx);
-> +}
-> +
->  static void __shutdown_one_device(struct device *dev)
->  {
->  	if (!dev->p || dev->p->dead)
-> @@ -4926,6 +4968,8 @@ static void __shutdown_one_device(struct device *dev)
->  			dev_info(dev, "shutdown\n");
->  		dev->driver->shutdown(dev);
->  	}
-> +
-> +	complete_all(&dev->p->complete);
->  }
->  
->  static void shutdown_one_device(struct device *dev)
-> @@ -4955,6 +4999,88 @@ static void shutdown_one_device(struct device *dev)
->  	put_device(dev);
->  }
->  
-> +static void async_shutdown_handler(void *data, async_cookie_t cookie)
-> +{
-> +	struct device *dev = data;
-> +
-> +	wait_for_shutdown_dependencies(dev, true);
-> +	shutdown_one_device(dev);
-> +}
-> +
-> +static bool shutdown_device_async(struct device *dev)
-> +{
-> +	if (async_schedule_dev_nocall(async_shutdown_handler, dev))
-> +		return true;
-> +
-> +	dev_clear_async_shutdown(dev);
-> +	return false;
-> +}
-> +
-> +
-> +static void start_async_shutdown_devices(void)
-> +{
-> +	struct device *dev, *next, *ndev, *needs_put = NULL;
-> +	bool clear_async = false;
-> +
-> +	if (!async_shutdown_enabled)
-> +		return;
-> +
-> +	spin_lock(&devices_kset->list_lock);
-> +restart:
-> +	list_for_each_entry_safe_reverse(dev, next, &devices_kset->list,
-> +					 kobj.entry) {
-> +		if (wants_async_shutdown(dev)) {
-> +			if (clear_async) {
-> +				dev_clear_async_shutdown(dev);
-> +				continue;
-> +			}
-> +			/* one device reference for this function */
-> +			get_device(dev);
-> +			/* another to pass to the async task */
-> +			get_device(dev);
-> +
-> +			if (!list_entry_is_head(next, &devices_kset->list,
-> +						kobj.entry))
-> +				ndev = get_device(next);
-> +			else
-> +				ndev = NULL;
-> +			spin_unlock(&devices_kset->list_lock);
-> +
-> +			if (shutdown_device_async(dev)) {
-> +				spin_lock(&devices_kset->list_lock);
-> +				list_del_init(&dev->kobj.entry);
-> +				spin_unlock(&devices_kset->list_lock);
-> +			} else {
-> +				/*
-> +				 * async failed, clean up extra reference
-> +				 * and run shutdown from the sync shutdown loop
-> +				 */
-> +				clear_async = true;
-> +				put_device(dev);
-> +			}
-> +			put_device(dev);
-> +
-> +			if (needs_put)
-> +				put_device(needs_put);
-> +			needs_put = ndev;
-> +			spin_lock(&devices_kset->list_lock);
-> +			/*
-> +			 * If the next device has been marked dead while the
-> +			 * spinlock was released, or if it has been unlinked
-> +			 * from the list, it may no longer be on the
-> +			 * devices_kset list. Restart the list walk to be safe.
-> +			 */
-> +			if (ndev && (ndev->p->dead || list_empty(&ndev->kobj.entry)))
-> +				goto restart;
-> +		}
-> +	}
-> +
-> +	spin_unlock(&devices_kset->list_lock);
-> +
-> +	if (needs_put)
-> +		put_device(needs_put);
-> +}
-> +
->  /**
->   * device_shutdown - call ->shutdown() on each device to shutdown.
->   */
-> @@ -4968,6 +5094,14 @@ void device_shutdown(void)
->  
->  	cpufreq_suspend();
->  
-> +	async_shutdown_enabled = async_shutdown;
-> +
-> +	/*
-> +	 * Start async device threads where possible to maximize potential
-> +	 * parallelism and minimize false dependency on unrelated sync devices
-> +	 */
-> +	start_async_shutdown_devices();
-> +
->  	spin_lock(&devices_kset->list_lock);
->  	/*
->  	 * Walk the devices list backward, shutting down each in turn.
-> @@ -4986,11 +5120,16 @@ void device_shutdown(void)
->  		list_del_init(&dev->kobj.entry);
->  		spin_unlock(&devices_kset->list_lock);
->  
-> -		shutdown_one_device(dev);
-> +		if (!wants_async_shutdown(dev) || !shutdown_device_async(dev)) {
-> +			wait_for_shutdown_dependencies(dev, false);
-> +			shutdown_one_device(dev);
-> +		}
->  
->  		spin_lock(&devices_kset->list_lock);
->  	}
->  	spin_unlock(&devices_kset->list_lock);
-> +
-> +	async_synchronize_full();
->  }
->  
->  /*
-> diff --git a/include/linux/device.h b/include/linux/device.h
-> index aee79fd6b32b..1ebafa798462 100644
-> --- a/include/linux/device.h
-> +++ b/include/linux/device.h
-> @@ -612,6 +612,7 @@ enum struct_device_flags {
->  	DEV_FLAG_OF_NODE_REUSED = 7,
->  	DEV_FLAG_OFFLINE_DISABLED = 8,
->  	DEV_FLAG_OFFLINE = 9,
-> +	DEV_FLAG_ASYNC_SHUTDOWN = 10,
->  
->  	DEV_FLAG_COUNT
->  };
-> @@ -829,6 +830,7 @@ __create_dev_flag_accessors(dma_coherent, DEV_FLAG_DMA_COHERENT);
->  __create_dev_flag_accessors(of_node_reused, DEV_FLAG_OF_NODE_REUSED);
->  __create_dev_flag_accessors(offline_disabled, DEV_FLAG_OFFLINE_DISABLED);
->  __create_dev_flag_accessors(offline, DEV_FLAG_OFFLINE);
-> +__create_dev_flag_accessors(async_shutdown, DEV_FLAG_ASYNC_SHUTDOWN);
->  
->  #undef __create_dev_flag_accessors
->  
-> -- 
-> 2.55.0
