@@ -1,81 +1,81 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.7
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793256990;
-	b=fvyVLiyPmhVPCerN9MM1u+QjMWv1g6lZt23OWBGgeQEdigvzNAHbhSHp4ahJMpxpNRuk
-	 k1Z4jSoCP1MYlRdys6YgG5LDE8yAGcyvWnYQVzHG5QNCsGXMzQixxt5zEf8sfPmFBfAOb
-	 ZxFucIs5596BqYZ8WIJfZt/a3xNnyNAwN9/hbUWG8s9ObPYgq5R7cKQmE3KoiqWJ8tMsy
-	 HNF+RAQ9ZCQMBbb3m1kVOy6LbgYUpA+B9y3Rfbplwq+LnfUDUcG+h4Zvm4/hBPC5hhlk1
-	 TooIJUrNtZY4pFB0qCYi/24KUAWRFbrjZ5JUJjYTv2TYkHlAu6coD/PH5GLflFQmIsA==
+	t=1793257259;
+	b=MjHhsnnGWXfEGu4qm2PO9+VDhnWgP0qsXknKU5doYXUGsgWTzCPaW8fbUijOces6zcuo
+	 pz0ZktHLAnugEWzSZsgySQGbEv4dpqESvn7XKuU/5z2t0kyeDLdyanwRaxnp57oAxdfE+
+	 AdeRS90D9kSh/ciqoFzRjCk/srkZTBu2PlWaePw5AzfegNqrOkoKSQHftDn8YfOiek4nG
+	 yB3w8FLH0YQyy3s6J9Ba91KN9Bbmy7P8PNpipDTPb5i4Lx4nFy0OrsCdhEOT3LBEJSyUb
+	 qkqLjGgd4qFbhe9QbDHB94t0mZPrrwgEZamJKq5MMY3f6xvlefjWVVFwcUlPDXpEk/w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793256990;
-	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
-	 References:Date:Message-ID:MIME-Version:Content-Type;
-	bh=xm/82lb0vdE7UE3lfCTgpLvIz8gxwRlNqpIHYX74QDw=;
-	b=tpneloS6o9r/ytRfCtaa0DjjrzZjGB3GcICM+kj8tjoZA9PztuRv4ZoJW6CV+L2ZPgjJ
-	 eSVujhm/cjdpYywo5M756nMrmjLMnYTQEYIXY6S3aKXK+DyPCRmtmxEub33lnE98tDfNg
-	 Id8JyYlTGyqrx0MZQXRGxZL3PBNzsKBkjMspb/DYKJrtHM+n0EohmdAe/iVJlvn/l6KJp
-	 sStg/LP66siC2Mw5hvrCsXDwMww7P91vGTzLrCKHOi8xGaBjX7BKPZHYilErZsLCc9R8M
-	 xJN9aRT7BWE5HnA/VjPwCG7qqI5+lnJW4vDk1Lk1oS8U843pa3ibhDQEDlJu6pEs2eg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793257259;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=ZuN5MwAENUFjH9htip5mrQQ6tsKd1OWYru7lWDeA8gE=;
+	b=euHBW0vgmoVzlnxtxL2hybKiaPvSokFod4x4Cw0QeM3Z7eeyXwuRc69nkPQnJ+yS/0GX
+	 rUDIIPifLtAR7nmGhJGimO85XjNkiM3gqRKxSNNTU9c4A7iDvO5lPd2q/RG8X5DL1+RfL
+	 ceKbOPI12jDFrjYAWl9N72ISMh6dQT75f0iVgzkHPlg8ZTeyENzQYMZvnWeMXxR7eehUL
+	 OS87TOfORgQIraa4EXp/uLJP60xxzTCgkuu8BIhfjXPsbkmBBf/CLicbvknZzgD9pzUC4
+	 CYYQDIs4DIfAZYfnrlKOnXeRj8f8kcf8PN/x/5vIKHWuvmXppChCN+eyx4WJ1Roz/mg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="G2/AnfBb";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=H9eCC52t;
+	arc=none smtp.remote-ip=192.198.163.7
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2A50606A31A;
-	Thu, 29 Oct 2026 06:56:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9A28606A31A;
+	Thu, 29 Oct 2026 07:00:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D9A28606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=G2/AnfBb
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6283E1F01828;
-	Thu, 29 Oct 2026 06:56:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793256989;
-	bh=xm/82lb0vdE7UE3lfCTgpLvIz8gxwRlNqpIHYX74QDw=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=G2/AnfBbNO0zt72CeeVhNXL+8QKSwpiUw2d2rwFl8G/YCRD/OBkWfpRV5O5cQWu7s
-	 3MvWhAeryn2J3r0LyEzJ2ys0PLv4CImqow6yugeYzfPhpPwhu9ARflIlrlZwo8xNqP
-	 eW18BVZ3W4tXZpE8e0MBKdd5cU6ADvGfDmYp3nwG8NV4XMaZgGKRuz5PA6DOe5e873
-	 5Nyv75DXTI8lAWMWHynNwRtnHZl+wQht+ZAwyWWlgoPHdhCMBZ7H4tJRA2/m2a7r/z
-	 OjBvGLMs1WERnExaZMc/hhgstmCojzyA/PUO7Kw4pycWBzbM3inTRQ8z8PL7aDRNOs
-	 n2R3XweWme1Aw==
-X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
-From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: iommu@lists.linux.dev, Alex Williamson <alex@shazbot.org>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	Joerg Roedel <joro@8bytes.org>,
-	Jonathan Cameron <jic23@kernel.org>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Krishna Reddy <vdumpa@nvidia.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Nicolin Chen <nicolinc@nvidia.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Samuel Ortiz <sameo@rivosinc.com>,
-	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-	Steven Price <steven.price@arm.com>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Thierry Reding <thierry.reding@kernel.org>,
-	Vasant Hegde <vasant.hegde@amd.com>,
-	Will Deacon <will@kernel.org>,
-	Xu Yilun <yilun.xu@linux.intel.com>, kvm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-coco@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v7 09/16] tsm: Remove the device from lookup before PCI
- teardown
-In-Reply-To: <179321444108.2412245.9613928294789740313.b4-review@b4>
-References: <20261008055955.4014342-1-aneesh.kumar@kernel.org>
- <20261008055955.4014342-10-aneesh.kumar@kernel.org>
- <179321444108.2412245.9613928294789740313.b4-review@b4>
-Date: Thu, 29 Oct 2026 12:26:17 +0530
-Message-ID: <yq5abj8datbi.fsf@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=H9eCC52t
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793257258; x=1824793258;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=RsYIa3SqFjpZb1UpYbTUmweoNbFTAIhFfW6r4GISlO4=;
+  b=H9eCC52t7MSNlgANPVWjfqnqTp4NwRo7GO09RErj5ZQfepDc40YdRXi1
+   MuPfdxIrSyfdshyqn+JnM99yb2G9COG2T/u44DpOh1Tv+Oiyodmuclq9Y
+   aum4n7cDBJftxRTud9YXt6WfsHzvlCaTlffoYdat0ZbnEYKvjvaWZN4j1
+   m3ac/LSWKf5DKpoyn41Kly791nP0mdzoMPs1eR4740Ld1O4El8Ye5ay/G
+   YUUqlHs39W+YWI0JykmFTXvSHD/46LQIVuu/QBsWAQB1iP1QeXa2ZR7Qm
+   UifVcaBV1jNHJ+k4M+fjK4dbsq/xBbZQEtg1kG6Llng94qXg4APY/jB4P
+   A==;
+X-CSE-ConnectionGUID: xxQeEcWQQL2SBUDE5AaENQ==
+X-CSE-MsgGUID: 870wGdFSTVWyuUGdgGLuPw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11949"; a="1880186"
+X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
+   d="scan'208";a="1880186"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 00:00:57 -0700
+X-CSE-ConnectionGUID: Qzg3tDeBSbqe5NpeZV+b0g==
+X-CSE-MsgGUID: VdkRB7fnTnmInUtVd2+VTw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
+   d="scan'208";a="5584505"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by fmviesa010.fm.intel.com with ESMTP; 29 Oct 2026 00:00:55 -0700
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xMK84-00000000ZiS-1BTl;
+	Thu, 29 Oct 2026 07:00:52 +0000
+Date: Thu, 29 Oct 2026 15:00:27 +0800
+From: kernel test robot <lkp@intel.com>
+To: wuqianhai@loongson.cn, bhelgaas@google.com
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	wuqianhai <wuqianhai@loongson.cn>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, tzimmermann@suse.de,
+	javierm@redhat.com, dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH] PCI/VGA: Fix boot device detection after framebuffer
+ relocation
+Message-ID: <202610291418.tlsEIHSu-lkp@intel.com>
+References: <20261028094634.766723-1-wuqianhai@loongson.cn>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -85,99 +85,39 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261028094634.766723-1-wuqianhai@loongson.cn>
 
-Jason Gunthorpe <jgg@nvidia.com> writes:
+Hi,
 
->> [ ... 22 lines skipped ... ]
->> -static struct tsm_dev *tsm_register_pci_or_reset(struct tsm_dev *tsm_dev,
->> -						 struct pci_tsm_ops *pci_ops)
->> +static int tsm_register_pci(struct tsm_dev *tsm_dev, struct pci_tsm_ops *pci_ops)
->>  {
->>  	int rc;
->>  
->>  	if (!pci_ops)
->> -		return tsm_dev;
->> +		return 0;
->
-> Aside unrelated to this series: Do we need this NULL pci_ops stuff? I
-> don't know what it was imagined to do, but now that we have split
-> things up attestation subsystem I wonder if it would ever be useful?
->
-> It is quite a maze of unused layers in here..
->
+kernel test robot noticed the following build errors:
 
+[auto build test ERROR on pci/next]
+[also build test ERROR on pci/for-linus linus/master v7.3 next-20261028]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Agreed. I'll remove it; we can always add it back if a use case arises.
+url:    https://github.com/intel-lab-lkp/linux/commits/wuqianhai-loongson-cn/PCI-VGA-Fix-boot-device-detection-after-framebuffer-relocation/20261028-174634
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+patch link:    https://lore.kernel.org/r/20261028094634.766723-1-wuqianhai%40loongson.cn
+patch subject: [PATCH] PCI/VGA: Fix boot device detection after framebuffer relocation
+config: loongarch-allnoconfig (https://download.01.org/0day-ci/archive/20261029/202610291418.tlsEIHSu-lkp@intel.com/config)
+compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261029/202610291418.tlsEIHSu-lkp@intel.com/reproduce)
 
->
->>  
->>  	tsm_dev->pci_ops = pci_ops;
->>  	rc = pci_tsm_register(tsm_dev);
->>  	if (rc) {
->> +		tsm_dev->pci_ops = NULL;
->  [Severity: Medium]
->  Does this unprotected write to tsm_dev->pci_ops introduce a race condition?
->
-> And of course sashiko finds races in all this unused complexity...
->
->> [ ... 14 lines skipped ... ]
->> @@ -96,15 +95,22 @@ struct tsm_dev *tsm_register(struct device *parent, struct pci_tsm_ops *pci_ops)
->>  	if (rc)
->>  		return ERR_PTR(rc);
->>  
->> -	return tsm_register_pci_or_reset(no_free_ptr(tsm_dev), pci_ops);
->> +	rc = tsm_register_pci(tsm_dev, pci_ops);
->> +	if (rc) {
->> +		device_del(dev);
->  [Severity: Medium]
->  Can this error path lead to a use-after-free if PCI registration fails?
->
->  Since device_add() is called prior to tsm_register_pci() in tsm_register(), 
->  the device is already exposed via class_find_device(). If a concurrent 
->  connect_store() finds the device and proceeds to pci_tsm_connect() before 
->  this error path cleans it up, it will attach the PCI context to tsm_dev.
->
-> Fun. Usually device_add should be the last thing in any driver flow,
-> not the first.  There should not be any device_del on error paths.
->
-> Because of races like this...
->
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202610291418.tlsEIHSu-lkp@intel.com/
 
-I now have:
+All errors (new ones prefixed by >>):
 
-struct tsm_dev *tsm_register(struct device *parent, struct pci_tsm_ops *pci_ops)
-{
-	struct tsm_dev *tsm_dev __free(put_tsm_dev) = alloc_tsm_dev(parent);
-	struct device *dev;
-	int rc;
+>> ld.lld: error: undefined symbol: screen_info_apply_fixups
+   >>> referenced by vgaarb.c
+   >>>               drivers/pci/vgaarb.o:(vga_arb_device_init) in archive vmlinux.a
 
-	if (IS_ERR(tsm_dev))
-		return tsm_dev;
-
-	dev = &tsm_dev->dev;
-	rc = dev_set_name(dev, "tsm%d", tsm_dev->id);
-	if (rc)
-		return ERR_PTR(rc);
-
-	/* Complete PCI registration before exposing the TSM to class lookup. */
-	rc = tsm_register_pci(tsm_dev, pci_ops);
-	if (rc)
-		return ERR_PTR(rc);
-
-	rc = device_add(dev);
-	if (rc) {
-		if (pci_ops)
-			pci_tsm_unregister(tsm_dev);
-		return ERR_PTR(rc);
-	}
-
-	/* Notify TSM userspace that PCI/TSM operations are now possible. */
-	if (pci_ops)
-		kobject_uevent(&dev->kobj, KOBJ_CHANGE);
-
-	return no_free_ptr(tsm_dev);
-}
-
--aneesh
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
