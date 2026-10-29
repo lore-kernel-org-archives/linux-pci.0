@@ -1,76 +1,106 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793294708;
-	b=xUpX6/qlNGmnLipU4C3WMeZPnZURAKDF6sCX0MHlCJ0wYYNeWi0mYxqU+VIeOqajKY7n
-	 h8oU9S/7ciLrnMajJtAicXTcNXuewRpKqefNIH2+xdqxuMjLsS6oyp7gpiHib45ZyL4lJ
-	 pGvF5Retu4Rk1kkMkBTcQRPtcMWd3QHfYC01nW5sGUrmIeL7P8oANZ+SG7mIjvCBZm2wx
-	 BpowQSq/mL+wNmASqN5I2mrhyFYwPnoV76QUwPEJn9FPISi1b+sc6QDE0pOWyZZx1gE/L
-	 cKSHrX1sRzO4t5WghHhI+Im1LBOIwG+arumHJK3nV6GbGv8smmle93hIfa9CjCdItcQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793294708;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
-	 Cc:Subject:Message-ID:User-Agent;
-	bh=4mQ4u5NETGyv9pCi7ksB5tzDGYK9I3P2OxEdtWev43Q=;
-	b=4Auyt3aazDmXhwVXinkzJJ8TraCOx6IN/D9d4PpLhk6w42Z1YfW1IigXmZ64onl/CYjS
-	 9yPKiGi1Hg4a4MVt03SGXEpFiseU6YzJsexUzIEnQaCi9oaaf7oZRVMZzbB+yiU5f72gM
-	 H3oTAr2a0yBtWzRTnq6zfvoxzmDX2dTu36HY/E1djcPCJpTccpU2CfIHYOo8wFITETNUY
-	 gN9sloSyY9FwoLfjdMKyjF213xrao+QbfDSPY06ymTmcP7GUK2a6fRHG7Ij5AJM6WqogR
-	 qKGqwXJdWOebjo1lDITGEodRjFgY/eepHrym1vDGFa9IFNjOvULG7hDc1VgDF4ZUzfg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=UrODy942;
-	arc=none smtp.remote-ip=192.198.163.18
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.229.49
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793294928;
+	b=NKJMvpdrbdu8hXUc6KhNvJMuMbjvlJsVMQgJO6hujgwE5nFT3VzeiGz/9yEe0CJ9kJbs
+	 ilcRhOslPgwV4muc0TaYvvwRM+kbl9s8AamvNhUpDFXBZcK9Flv0tifhoGzHM3y1Q7Eyz
+	 tKAPaZ6RRvfhKsoSlAakfcSU09WysRqMIXi9+fXrqCEIHxRiqgLZ/2e5seV8xNHzssl44
+	 qTx4CLoWkcz1nBVs55vrvvoNL674JAUf1/VQyFn38+qdlcMO8xMOrnJnJB8s6LluQE1Ns
+	 8iwcB8OWZ8oPtiXpK3aXAfY23+n7jQ2VN2c3OIGwmp9c5WiWP0uuqsUIyiS8eacKHMQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793294928;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:
+	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding:X-EOPAttributedMessage:
+	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:Content-Type:
+	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
+	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
+	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-Id:
+	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=mJi6WWhgZ95pB0ZMYJUrCPhVGLd8d518FOi60KUqsEg=;
+	b=KIsi4Mg/JaR8z8qAHtrZEJ00paopt94iRc5cy1/Qw8dDzeqpuLSG3KSvo+nesu8eLdKX
+	 swJhHpRbAphbgmn8k9rmyhqAfA5GtFfXHYgUfGTC5OxyX2E7yYb4s5/qXJmRMs4oWY3Tv
+	 J4mi5wL8/AAxg4zIudOqazvqwjj5BqhfVE4A/wtBwusl+Svon7ls1/mb21y75TU2zOTNm
+	 u3upEKEm1jEh5S4NUbqIB4ZI6s98LMl3A5pDdIyCzacsmt+EXjwbm7zA45LSQp0lrrSHc
+	 YeVNC5/0990rYS4gJ46TQAHoGWINDmp1CfAzziRt8GLJmtcB8/YXspWMMQ/3F20dxTw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=renesas.com;
+	spf=pass smtp.mailfrom=renesas.com;
+	dkim=pass header.d=renesas.com header.i=@renesas.com header.a=rsa-sha256 header.s=selector1 header.b=mpFpYnNN;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.229.49
+Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11010049.outbound.protection.outlook.com [52.101.229.49])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A81E5606A31E
-	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 17:25:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A81E5606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 246FA606A31A;
+	Thu, 29 Oct 2026 17:28:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 246FA606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=UrODy942
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793294706; x=1824830706;
-  h=date:from:to:cc:subject:message-id;
-  bh=xdL8EYSCau160t7FUdCvjTWvHyU+smwwV360x+rYUYM=;
-  b=UrODy942Fk/ulvqrFV1N5FxxmAovIRTswlgXT9n2ltEI1gmFt697P/JU
-   7TjMP1agH5OG6QSZC3AjAFOi77zNeHVRA6c41S5+59JX6Awr7mUDwyNWF
-   0n38fMqCPeA24X0d+ylXhjuLZREb4FgIQ8rdSN1vJgFAVZf2twlgRhZ+e
-   pZUZdcSRYBMD+DX9P0h9/Dl1slBZ/pjfH8mPkpL9dyAQ99Yc5/iDwdhKK
-   XO5LecEU1iZ+kYinWvQZOUm/HCnZfiYlYjLezC7ni8IWrpMH0VfA0EojG
-   RLLeTcAsaNF2Ico8Xu8av+0DbsXB2YKWjw7+9r9/skK+ipa1EDPNZlx+f
-   w==;
-X-CSE-ConnectionGUID: 8Zj9MqmJRHuKb8ASqh7mlg==
-X-CSE-MsgGUID: cBUyO8k1TACu+QxEpeWVZw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11950"; a="2078339"
-X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
-   d="scan'208";a="2078339"
-Received: from fmviesa012.fm.intel.com ([10.60.135.152])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 10:25:04 -0700
-X-CSE-ConnectionGUID: lpdVKuMZTnSPdnlqRGNBiw==
-X-CSE-MsgGUID: puo1/sfMQDSbI5QvP0l34w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
-   d="scan'208";a="6986193"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by fmviesa012.fm.intel.com with ESMTP; 29 Oct 2026 10:25:03 -0700
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xMTs4-00000000aZs-3nuG;
-	Thu, 29 Oct 2026 17:25:00 +0000
-Date: Fri, 30 Oct 2026 01:24:26 +0800
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller:rcar-host] BUILD SUCCESS
- 186da40837a4a2472b8afbf7dbccbe1b1e0f16bf
-Message-ID: <202610300122.OPHWmqid-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (1024-bit key, unprotected) header.d=renesas.com header.i=@renesas.com header.a=rsa-sha256 header.s=selector1 header.b=mpFpYnNN
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=LOOxYUVNWeb00bzJvfHU6FMtpNKGeN5jiqe0MgMRh7qRqgtKvai57gB9Sq47/Iq7wFKPFfZPUvveR0hs8dPy+i5wc255ZZ2E+t7flo0tQSWQrUZMZ2VY9iOBcOst0nhFTApaZvuAJMMZw4kfZ20854odZnN3iUZBMKhgl133+KUWFLcPDMu2mEAVRGhqs02prgpdIb41bYFd6phWul1Ya7hE2Sc/oQ6/CFWbEacd/gABr9QbNU48ogMGOmGZSEO7nJGnoC9eWOAokaWagaGUAKhOfh6QOWQ9tl4fi0qFoQDgNBB2mlQYU2ACyoxuCz4WGklGUFTPenC1asGZklsccg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=mJi6WWhgZ95pB0ZMYJUrCPhVGLd8d518FOi60KUqsEg=;
+ b=HHjousS2LX2BZTYhqFbG1sPFqfe8AxlItElPQBCWOXGirI14z88hchbf+cMXaT0uIpczim8/aYKgoAbQ5LV27wGELmEZ0t38rMY6nVZ5GVO/nJ56IScE5wgND9bYY3EnQyAPUpEvo7a9mNQ6XFAa1hgtaETNHm/fzGJu/X3B/A9JPAvwEcCFP4gGmlz+wTFx5suhukU/GTYJCHJ4Iu4f/obWY2IGj4mmgkv3mQ40EOBZN08hlqBPNt+b7DO8YBBgnVlYu1lTYkwJRczfaZ8BY6463CzMu/gsrd2W4hvhOImHH9Jn+/EV3JuDjdMMJG/ChCQUksjZujfcfP9M2CyNkw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 8.62.32.50) smtp.rcpttodomain=bp.renesas.com smtp.mailfrom=renesas.com;
+ dmarc=pass (p=none sp=none pct=100) action=none header.from=renesas.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=renesas.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=mJi6WWhgZ95pB0ZMYJUrCPhVGLd8d518FOi60KUqsEg=;
+ b=mpFpYnNNPQZbqNiQe9pwnO9sj41Jh07sOFSm2EcT9KTvN6X6JeEEktDFibSoSJklxQ/0ApiQt3K21GUz0TvYYKMSiregTbWuHat3BOIW6hHMIcBbqkjcYyc6oGYAMVHG2F3xWoxGWsKHqBnxCHZrArF8aKv6QZs2dRDO86CHIYk=
+Received: from TY6P286CA0015.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:3b9::12)
+ by OS9PR01MB14003.jpnprd01.prod.outlook.com (2603:1096:604:361::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.9; Thu, 29 Oct
+ 2026 17:28:43 +0000
+Received: from TYO1EPF00005022.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:3b9:cafe::4a) by TY6P286CA0015.outlook.office365.com
+ (2603:1096:405:3b9::12) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.569.9 via Frontend Transport; Thu, 29
+ Oct 2026 17:28:43 +0000
+X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
+ is 8.62.32.50) smtp.mailfrom=renesas.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=renesas.com;
+Received-SPF: Pass (protection.outlook.com: domain of renesas.com designates
+ 8.62.32.50 as permitted sender) receiver=protection.outlook.com;
+ client-ip=8.62.32.50; helo=ejcrelay004p.adwin.renesas.com; pr=E
+Received: from ejcrelay004p.adwin.renesas.com (8.62.32.50) by
+ TYO1EPF00005022.mail.protection.outlook.com (10.167.240.7) with Microsoft
+ SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id 15.21.569.4
+ via Frontend Transport; Thu, 29 Oct 2026 17:28:43 +0000
+Received: from vm01.adwin.renesas.com (unknown [10.226.93.3])
+	by ejcrelay004p.adwin.renesas.com (Postfix) with ESMTP id 0AD923000E97;
+	Fri, 30 Oct 2026 02:28:39 +0900 (JST)
+From: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+To: claudiu.beznea.uj@bp.renesas.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+Subject: [PATCH v2] PCI: rzg3s-host: Fix NVMe resume errors after s2idle
+Date: Thu, 29 Oct 2026 17:28:30 +0000
+Message-ID: <20261029172831.9409-1-ovidiu.panait.rb@renesas.com>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -79,340 +109,97 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TYO1EPF00005022:EE_|OS9PR01MB14003:EE_
+Content-Type: text/plain
+X-MS-Office365-Filtering-Correlation-Id: 6d0b7543-fcf2-4acc-3341-08df35e21480
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|36860700016|82310400026|23010399003|376014|1800799024|6133799003|18002099003|13003099007|56012099006|261028144727099003|11063799006|5023799004|261022075727099003|261022105027099003|261021121427099003|10067099003|261009223027099003|261009221227099003|261026140227099003|261026121527099003;
+X-Microsoft-Antispam-Message-Info:
+	eXO9uA8EvnRAiHUzJ5L7xo6JaGFFyp8KdXqwpJcuXNrhf708dwswExIVdtrC8c5vyZtsv8QsZ5yWOkguPlBv9SC1R84sQ5TRUg3IsbnBzEKxrhNSFFd39HiTNTR9aEr5E8vO5Z2TxKct1Uwvd/VNBq0tUhevB5xJaN3LFGbFuEk5d+Z7mRblm80E+jNgleandHHTK7i4yjnmk/tm4a99M29pzzqtj8fn84cIFPZCUTe1ot37pjTnsp7jB2/l6WNk05mPKrXXHcE+h/gj63KYyEkjpzoh3lFh4leul7b/f4HrQey2sWlkdSoqEMcT6mmcoAAgIIa1R6bwlZC3Qqy1rbnYLtvEl/CRXJruj0pweTray34o5iJcMIvaToL59Wv++ShU996SueghVmu2lq7ObGtH/6uf6tXn5NCCoOG9hP4QGkVoSEKQpbJjnBYH2ym9ztRrzoPhupxWKabPYLR5zOLnIY7FVpsOXVn6n+RPBt8loBTGTaJUIAQcs9xEn8cBQmZNTHI+7hX0188yRkv7Z5OZXobNEwv5iyGgc5Iqs0EKAHihRzTGIAgetJcWourZCz1WqhCzQ8JERXpCjYiGTo8SK/jPihZ7zJx1Es3xGArV3VIEESrMEl38zVG8tUjD9Y63mJoctFRTRjWdgFMC6w==
+X-Forefront-Antispam-Report:
+	CIP:8.62.32.50;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:ejcrelay004p.adwin.renesas.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700016)(82310400026)(23010399003)(376014)(1800799024)(6133799003)(18002099003)(13003099007)(56012099006)(261028144727099003)(11063799006)(5023799004)(261022075727099003)(261022105027099003)(261021121427099003)(10067099003)(261009223027099003)(261009221227099003)(261026140227099003)(261026121527099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	xuObVSYLksJJi/QiJrEUf/jbBY/vBT+Ye0h9Nj6WFZ65u119UZCPIVW67wWgF3jYfaFlynGIAuZHCuH21yKzPhlzGCO5EPMfjjxcI92Rw44FrcoUEmHzZCMWYIAvLRhFFEeDM32wufJC1BMSFs/KHMQMb4PcwLEbppjFoajlz7D+QlwChrJReHnSeuOcDvV4f1doQm+5P69lDnUc3ALWaFueeAbHmXWBTgTTUGN69D9mZjxs8YIse2LQJO0iPhUwl69FxhWlpqGBwxIIBCZmw6dcvnit6AdLMe7dsd2RIFuX2S7d8LTd+dELldhkCJ89V+7u0K1sMt3rhJm9t9tHvbdmvFbZJHzQXS0gsg7XCMTmPRq27meoCIIRTwuXFPAqZvWYQqy0Zd0ITTaxVfB83yFhJb8SMH8ofN9k1/sYWgn9GQjFzpxNJZG2/K98maO+
+X-OriginatorOrg: renesas.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Oct 2026 17:28:43.2217
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6d0b7543-fcf2-4acc-3341-08df35e21480
+X-MS-Exchange-CrossTenant-Id: 53d82571-da19-47e4-9cb4-625a166a4a2a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=53d82571-da19-47e4-9cb4-625a166a4a2a;Ip=[8.62.32.50];Helo=[ejcrelay004p.adwin.renesas.com]
+X-MS-Exchange-CrossTenant-AuthSource: TYO1EPF00005022.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS9PR01MB14003
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/rcar-host
-branch HEAD: 186da40837a4a2472b8afbf7dbccbe1b1e0f16bf  PCI: rcar: Release temporary device tree node reference
+On the Renesas RZ/V2H platform, when ASPM is enabled, resuming from s2idle
+with an NVMe SSD connected fails with:
 
-elapsed time: 2557m
+  nvme nvme0: I/O tag 27 (001b) opcode 0x9 (Admin Cmd) QID 0 timeout, reset controller
+  nvme nvme0: Disabling device after reset failure: -19
 
-configs tested: 320
-configs skipped: 21
+This happens because during s2idle, when ASPM is enabled, nvme_suspend()
+does not shut the drive down. It leaves it in D0, puts it in its lowest
+NVMe power state, so that resume only has to restore the previous power
+state instead of a full reinitialization. This assumes the drive keeps
+its context over the suspend.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+However, rzg3s_pcie_suspend_noirq() doesn't take this into account and
+it always powers down the controller and asserts the controller resets,
+including PERST#. That resets the drive, and the command the NVMe driver
+sends on resume never completes.
 
-tested configs:
-alpha                              allnoconfig    gcc-16.2.0
-alpha                             allyesconfig    gcc-16.2.0
-alpha                                defconfig    gcc-16.2.0
-arc                               allmodconfig    clang-24
-arc                                allnoconfig    gcc-16.2.0
-arc                               allyesconfig    clang-19
-arc                               allyesconfig    clang-24
-arc                               allyesconfig    gcc-16.2.0
-arc                                  defconfig    gcc-16.2.0
-arc                             hsdk_defconfig    clang-24
-arc                      nsimosci_hs_defconfig    gcc-16.2.0
-arc                   randconfig-1000-20261028    gcc-8.5.0
-arc                   randconfig-1000-20261029    clang-24
-arc                   randconfig-1001-20261028    gcc-8.5.0
-arc                   randconfig-1001-20261029    clang-24
-arm                                allnoconfig    gcc-16.2.0
-arm                               allyesconfig    clang-24
-arm                          assabet_defconfig    clang-24
-arm                          axm55xx_defconfig    gcc-16.2.0
-arm                                  defconfig    gcc-16.2.0
-arm                       footbridge_defconfig    gcc-16.2.0
-arm                            h3600_defconfig    clang-24
-arm                        imx_v4_v5_defconfig    gcc-16.2.0
-arm                            imxrt_defconfig    gcc-16.2.0
-arm                    milbeaut_m10v_defconfig    gcc-16.2.0
-arm                             mps2_defconfig    clang-24
-arm                         multi_v5_defconfig    clang-24
-arm                          nhk8815_defconfig    clang-24
-arm                   randconfig-1000-20261028    gcc-8.5.0
-arm                   randconfig-1000-20261029    clang-24
-arm                   randconfig-1001-20261028    gcc-8.5.0
-arm                   randconfig-1001-20261029    clang-24
-arm                   randconfig-1002-20261028    gcc-8.5.0
-arm                   randconfig-1002-20261029    clang-24
-arm                   randconfig-1003-20261028    gcc-8.5.0
-arm                   randconfig-1003-20261029    clang-24
-arm                          s3c6400_defconfig    gcc-16.2.0
-arm                        spear13xx_defconfig    clang-24
-arm                         spear3xx_defconfig    gcc-16.2.0
-arm                     vt8500_v6_v7_defconfig    gcc-16.2.0
-arm64                             allmodconfig    clang-24
-arm64                              allnoconfig    gcc-16.2.0
-arm64                                defconfig    gcc-16.2.0
-arm64                 randconfig-1000-20261028    clang-22
-arm64                 randconfig-1000-20261029    gcc-8.5.0
-arm64                 randconfig-1001-20261028    clang-22
-arm64                 randconfig-1001-20261029    gcc-8.5.0
-arm64                 randconfig-1002-20261028    clang-22
-arm64                 randconfig-1002-20261029    gcc-8.5.0
-arm64                 randconfig-1003-20261028    clang-22
-arm64                 randconfig-1003-20261029    gcc-8.5.0
-csky                              allmodconfig    gcc-16.2.0
-csky                               allnoconfig    gcc-16.2.0
-csky                                 defconfig    gcc-16.2.0
-csky                  randconfig-1000-20261028    clang-22
-csky                  randconfig-1000-20261029    gcc-8.5.0
-csky                  randconfig-1001-20261028    clang-22
-csky                  randconfig-1001-20261029    gcc-8.5.0
-hexagon                           allmodconfig    gcc-16.2.0
-hexagon                            allnoconfig    gcc-16.2.0
-hexagon                              defconfig    gcc-16.2.0
-hexagon               randconfig-1000-20261028    clang-17
-hexagon               randconfig-1000-20261029    clang-24
-hexagon               randconfig-1001-20261028    clang-17
-hexagon               randconfig-1001-20261029    clang-24
-i386                              allmodconfig    clang-22
-i386                               allnoconfig    gcc-16.2.0
-i386                              allyesconfig    clang-22
-i386        buildonly-randconfig-1000-20261028    clang-22
-i386        buildonly-randconfig-1000-20261029    gcc-14
-i386        buildonly-randconfig-1001-20261028    clang-22
-i386        buildonly-randconfig-1001-20261029    gcc-14
-i386        buildonly-randconfig-1002-20261028    clang-22
-i386        buildonly-randconfig-1002-20261029    gcc-14
-i386        buildonly-randconfig-1003-20261028    clang-22
-i386        buildonly-randconfig-1003-20261029    gcc-14
-i386        buildonly-randconfig-1004-20261028    clang-22
-i386        buildonly-randconfig-1004-20261029    gcc-14
-i386        buildonly-randconfig-1005-20261028    clang-22
-i386        buildonly-randconfig-1005-20261029    gcc-14
-i386                                 defconfig    gcc-16.2.0
-i386                  randconfig-1000-20261028    gcc-14
-i386                  randconfig-1000-20261029    clang-22
-i386                  randconfig-1001-20261028    gcc-14
-i386                  randconfig-1001-20261029    clang-22
-i386                  randconfig-1002-20261028    gcc-14
-i386                  randconfig-1002-20261029    clang-22
-i386                  randconfig-1003-20261028    gcc-14
-i386                  randconfig-1003-20261029    clang-22
-i386                  randconfig-1004-20261028    gcc-14
-i386                  randconfig-1004-20261029    clang-22
-i386                  randconfig-1005-20261028    gcc-14
-i386                  randconfig-1005-20261029    clang-22
-i386                  randconfig-1006-20261028    gcc-14
-i386                  randconfig-1006-20261029    clang-22
-i386                  randconfig-1007-20261028    clang-22
-i386                  randconfig-1007-20261029    clang-22
-i386                  randconfig-1008-20261028    clang-22
-i386                  randconfig-1008-20261029    clang-22
-i386                  randconfig-1009-20261028    clang-22
-i386                  randconfig-1009-20261029    clang-22
-i386                  randconfig-1010-20261028    clang-22
-i386                  randconfig-1010-20261029    clang-22
-i386                  randconfig-1011-20261028    clang-22
-i386                  randconfig-1011-20261029    clang-22
-i386                  randconfig-1012-20261028    clang-22
-i386                  randconfig-1012-20261029    clang-22
-i386                  randconfig-1013-20261028    clang-22
-i386                  randconfig-1013-20261029    clang-22
-loongarch                         allmodconfig    clang-19
-loongarch                         allmodconfig    clang-24
-loongarch                          allnoconfig    gcc-16.2.0
-loongarch                            defconfig    clang-24
-loongarch             randconfig-1000-20261028    clang-17
-loongarch             randconfig-1000-20261029    clang-24
-loongarch             randconfig-1001-20261028    clang-17
-loongarch             randconfig-1001-20261029    clang-24
-m68k                              allmodconfig    gcc-16.2.0
-m68k                               allnoconfig    gcc-16.2.0
-m68k                              allyesconfig    clang-24
-m68k                           amiga_defconfig    clang-22
-m68k                        bvme6000_defconfig    gcc-16.2.0
-m68k                                 defconfig    clang-24
-m68k                         m5272c3_defconfig    clang-24
-m68k                        m5275evb_defconfig    clang-22
-m68k                        m5282evb_defconfig    clang-24
-m68k                         stmark2_defconfig    clang-24
-microblaze                         allnoconfig    gcc-16.2.0
-microblaze                        allyesconfig    gcc-16.2.0
-microblaze                           defconfig    clang-24
-mips                              allmodconfig    gcc-16.2.0
-mips                               allnoconfig    gcc-16.2.0
-mips                              allyesconfig    gcc-16.2.0
-mips                            ip32_defconfig    gcc-16.2.0
-mips                        lemote2f_defconfig    clang-22
-mips                            mtx1_defconfig    gcc-16.2.0
-mips                           rm200_defconfig    clang-24
-nios2                             allmodconfig    clang-20
-nios2                              allnoconfig    clang-24
-nios2                                defconfig    clang-24
-nios2                 randconfig-1000-20261028    clang-17
-nios2                 randconfig-1000-20261029    clang-24
-nios2                 randconfig-1001-20261028    clang-17
-nios2                 randconfig-1001-20261029    clang-24
-openrisc                          allmodconfig    clang-20
-openrisc                           allnoconfig    clang-24
-openrisc          de0_nano_multicore_defconfig    gcc-16.2.0
-openrisc                             defconfig    gcc-16.2.0
-openrisc                     or1ksim_defconfig    clang-24
-parisc                            alldefconfig    gcc-16.2.0
-parisc                            allmodconfig    gcc-16.2.0
-parisc                             allnoconfig    clang-24
-parisc                            allyesconfig    clang-17
-parisc                               defconfig    gcc-16.2.0
-parisc                randconfig-1000-20261028    clang-19
-parisc                randconfig-1000-20261029    clang-17
-parisc                randconfig-1001-20261028    clang-19
-parisc                randconfig-1001-20261029    clang-17
-parisc64                             defconfig    clang-24
-powerpc                           allmodconfig    gcc-16.2.0
-powerpc                            allnoconfig    clang-24
-powerpc                      asp8347_defconfig    clang-24
-powerpc                       bamboo_defconfig    clang-24
-powerpc                       bamboo_defconfig    gcc-16.2.0
-powerpc                  canyonlands_defconfig    clang-22
-powerpc                       cm5200_defconfig    clang-24
-powerpc                      ep8248e_defconfig    clang-22
-powerpc                           g5_defconfig    clang-24
-powerpc                     ge_imp3a_defconfig    clang-24
-powerpc                         icon_defconfig    gcc-16.2.0
-powerpc                   iss476-smp_defconfig    gcc-16.2.0
-powerpc                    motionpro_defconfig    clang-24
-powerpc                  mpc8315_rdb_defconfig    gcc-16.2.0
-powerpc                  mpc834x_itx_defconfig    clang-24
-powerpc                       pasemi_defconfig    clang-24
-powerpc                       ppc44x_defconfig    clang-24
-powerpc               randconfig-1000-20261028    clang-19
-powerpc               randconfig-1000-20261029    clang-17
-powerpc               randconfig-1001-20261028    clang-19
-powerpc               randconfig-1001-20261029    clang-17
-powerpc                     sam440ep_defconfig    clang-22
-powerpc                     socrates_defconfig    gcc-16.2.0
-powerpc                   storcenter_defconfig    clang-24
-powerpc                      tqm8548_defconfig    gcc-16.2.0
-powerpc                         warp_defconfig    gcc-16.2.0
-powerpc64             randconfig-1000-20261028    clang-19
-powerpc64             randconfig-1000-20261029    clang-17
-powerpc64             randconfig-1001-20261028    clang-19
-powerpc64             randconfig-1001-20261029    clang-17
-riscv                             allmodconfig    clang-24
-riscv                              allnoconfig    clang-24
-riscv                             allyesconfig    clang-24
-riscv                                defconfig    gcc-16.2.0
-riscv                 randconfig-1000-20261028    gcc-11.5.0
-riscv                 randconfig-1000-20261029    gcc-10.5.0
-riscv                 randconfig-1001-20261028    gcc-11.5.0
-riscv                 randconfig-1001-20261029    gcc-10.5.0
-s390                              allmodconfig    clang-17
-s390                               allnoconfig    clang-24
-s390                              allyesconfig    gcc-16.2.0
-s390                                 defconfig    gcc-16.2.0
-s390                  randconfig-1000-20261028    gcc-11.5.0
-s390                  randconfig-1000-20261029    gcc-10.5.0
-s390                  randconfig-1001-20261028    gcc-11.5.0
-s390                  randconfig-1001-20261029    gcc-10.5.0
-sh                                allmodconfig    gcc-16.2.0
-sh                                 allnoconfig    clang-24
-sh                                allyesconfig    clang-17
-sh                                allyesconfig    gcc-16.2.0
-sh                          ap325rxa_defconfig    gcc-16.2.0
-sh                                   defconfig    gcc-14
-sh                         dreamcast_defconfig    clang-22
-sh                             hp6xx_defconfig    clang-24
-sh                                j2_defconfig    clang-24
-sh                           polaris_defconfig    gcc-16.2.0
-sh                    randconfig-1000-20261028    gcc-11.5.0
-sh                    randconfig-1000-20261029    gcc-10.5.0
-sh                    randconfig-1001-20261028    gcc-11.5.0
-sh                    randconfig-1001-20261029    gcc-10.5.0
-sh                           rsk7201_defconfig    clang-22
-sh                            se7206_defconfig    gcc-16.2.0
-sh                            se7619_defconfig    clang-24
-sh                            se7721_defconfig    gcc-16.2.0
-sh                            se7751_defconfig    gcc-16.2.0
-sh                    sh7724_generic_defconfig    gcc-16.2.0
-sh                         sh7785lcr_defconfig    gcc-16.2.0
-sh                             titan_defconfig    clang-24
-sparc                             alldefconfig    gcc-16.2.0
-sparc                              allnoconfig    clang-24
-sparc                                defconfig    gcc-16.2.0
-sparc                 randconfig-1000-20261028    gcc-12
-sparc                 randconfig-1000-20261029    clang-24
-sparc                 randconfig-1001-20261028    gcc-12
-sparc                 randconfig-1001-20261029    clang-24
-sparc                        sparc64_defconfig    clang-24
-sparc64                           allmodconfig    clang-20
-sparc64                              defconfig    gcc-14
-sparc64               randconfig-1000-20261028    gcc-12
-sparc64               randconfig-1000-20261029    clang-24
-sparc64               randconfig-1001-20261028    gcc-12
-sparc64               randconfig-1001-20261029    clang-24
-um                                alldefconfig    gcc-16.2.0
-um                                allmodconfig    clang-17
-um                                 allnoconfig    clang-24
-um                                allyesconfig    gcc-16.2.0
-um                                   defconfig    gcc-14
-um                              i386_defconfig    gcc-14
-um                    randconfig-1000-20261028    gcc-12
-um                    randconfig-1000-20261029    clang-24
-um                    randconfig-1001-20261028    gcc-12
-um                    randconfig-1001-20261029    clang-24
-um                            x86_64_defconfig    gcc-14
-x86_64                            allmodconfig    clang-22
-x86_64                             allnoconfig    clang-24
-x86_64                            allyesconfig    clang-22
-x86_64      buildonly-randconfig-1000-20261028    clang-22
-x86_64      buildonly-randconfig-1000-20261029    gcc-14
-x86_64      buildonly-randconfig-1001-20261028    clang-22
-x86_64      buildonly-randconfig-1001-20261029    gcc-14
-x86_64      buildonly-randconfig-1002-20261028    clang-22
-x86_64      buildonly-randconfig-1002-20261029    gcc-14
-x86_64      buildonly-randconfig-1003-20261028    clang-22
-x86_64      buildonly-randconfig-1003-20261029    gcc-14
-x86_64      buildonly-randconfig-1004-20261028    clang-22
-x86_64      buildonly-randconfig-1004-20261029    gcc-14
-x86_64      buildonly-randconfig-1005-20261028    clang-22
-x86_64      buildonly-randconfig-1005-20261029    gcc-14
-x86_64                               defconfig    gcc-14
-x86_64                                   kexec    clang-22
-x86_64                randconfig-1000-20261028    clang-22
-x86_64                randconfig-1000-20261029    clang-22
-x86_64                randconfig-1001-20261028    clang-22
-x86_64                randconfig-1001-20261029    clang-22
-x86_64                randconfig-1002-20261028    clang-22
-x86_64                randconfig-1002-20261029    clang-22
-x86_64                randconfig-1003-20261028    clang-22
-x86_64                randconfig-1003-20261029    clang-22
-x86_64                randconfig-1004-20261028    clang-22
-x86_64                randconfig-1004-20261029    clang-22
-x86_64                randconfig-1005-20261028    clang-22
-x86_64                randconfig-1005-20261029    clang-22
-x86_64                randconfig-1006-20261028    gcc-14
-x86_64                randconfig-1006-20261029    gcc-14
-x86_64                randconfig-1007-20261028    gcc-14
-x86_64                randconfig-1007-20261029    gcc-14
-x86_64                randconfig-1008-20261028    gcc-14
-x86_64                randconfig-1008-20261029    gcc-14
-x86_64                randconfig-1009-20261028    gcc-14
-x86_64                randconfig-1009-20261029    gcc-14
-x86_64                randconfig-1010-20261028    gcc-14
-x86_64                randconfig-1010-20261029    gcc-14
-x86_64                randconfig-1011-20261028    gcc-14
-x86_64                randconfig-1011-20261029    gcc-14
-x86_64                randconfig-1012-20261028    gcc-12
-x86_64                randconfig-1012-20261029    clang-22
-x86_64                randconfig-1013-20261028    gcc-12
-x86_64                randconfig-1013-20261029    clang-22
-x86_64                randconfig-1014-20261028    gcc-12
-x86_64                randconfig-1014-20261029    clang-22
-x86_64                randconfig-1015-20261028    gcc-12
-x86_64                randconfig-1015-20261029    clang-22
-x86_64                randconfig-1016-20261028    gcc-12
-x86_64                randconfig-1016-20261029    clang-22
-x86_64                randconfig-1017-20261028    gcc-12
-x86_64                randconfig-1017-20261029    clang-22
-x86_64                                rhel-9.4    clang-22
-x86_64                            rhel-9.4-bpf    gcc-14
-x86_64                           rhel-9.4-func    clang-22
-x86_64                     rhel-9.4-kselftests    clang-22
-x86_64                          rhel-9.4-kunit    gcc-14
-x86_64                            rhel-9.4-ltp    gcc-14
-x86_64                           rhel-9.4-rust    clang-22
-xtensa                             allnoconfig    clang-24
-xtensa                            allyesconfig    clang-20
-xtensa                   cadence_csp_defconfig    clang-24
-xtensa                        common_defconfig    gcc-16.2.0
-xtensa                randconfig-1000-20261028    gcc-12
-xtensa                randconfig-1000-20261029    clang-24
-xtensa                randconfig-1001-20261028    gcc-12
-xtensa                randconfig-1001-20261029    clang-24
+To fix this, similar to the dwc driver, use
+pci_host_common_d3cold_possible() to check if the controller should be
+powered down and keep the controller running otherwise. To keep the
+controller running, also call device_set_awake_path(), so that the PM
+domain does not turn off the controller clocks.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Do this only for s2idle. In s2ram the SoC could be powered off, and
+neither the PM domain nor the driver would restore the controller
+clocks and resets on resume. In hibernation, the controller must be
+reinitialized on restore.
+
+Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
+Signed-off-by: Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+---
+v2 changes:
+- Replaced pm_suspend_via_firmware() check with a pm_suspend_target_state
+check.
+- Updated the commit message to mention why device_set_awake_path() is
+needed.
+
+Note: This fix depends on this series:
+https://lore.kernel.org/all/20261019065025.2146539-1-claudiu.beznea@kernel.org/
+
+ drivers/pci/controller/pcie-rzg3s-host.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+index f6823c9bc414..996a51f2ba96 100644
+--- a/drivers/pci/controller/pcie-rzg3s-host.c
++++ b/drivers/pci/controller/pcie-rzg3s-host.c
+@@ -2450,6 +2450,14 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+ {
+ 	struct rzg3s_pcie_host *host = dev_get_drvdata(dev);
++	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
++	bool pme_capable;
++
++	if (pm_suspend_target_state == PM_SUSPEND_TO_IDLE &&
++	    !pci_host_common_d3cold_possible(bridge, &pme_capable)) {
++		device_set_awake_path(dev);
++		return 0;
++	}
+ 
+ 	return rzg3s_pcie_host_stop(host);
+ }
+-- 
+2.34.1
+
