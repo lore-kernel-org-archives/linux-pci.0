@@ -1,81 +1,93 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.14
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793280671;
-	b=NhPfNF0eQZTd+sFm5aybzG/FRk0RYJntF+K6Gj3Vy5wNsz5s29NjQmnuJ8NwgXqXQpad
-	 x/ixNl9MHrP0M8QhxFspvoS8ZsY1CxjrU+7+G2YCKNseYBzUWq/BML+rfF/kYFgzXBs2c
-	 JzgUjx8X8GDwDQCvOqq+5xKtOyz1S+hS9jOMX4CxP9anVSaojFU1cS34nD7umJJ4+uErf
-	 LCSpK29xax6VviQRTtlDK5NtMMgksBRWAZVZMzsweqLi4MvE0yTqOYHTaRq9dJTFBl+fk
-	 6DfFfaYSAjmYpMn+iXay2NlD7rt7/pScljd/SEmEktN27xnDgyv3fK1t8MrT5QYhYuQ==
+	t=1793281933;
+	b=1Mb92YSvSiPGcsJvgq0W7sS+lbh811onYXV3S8h/WnTr4gxEmzWaGXwvJo7BUnifsGAO
+	 N83/wa7AHDpGchz60h6dc9X4p2+OPPyxykEbsVMksdEDqjiQShO1VxQ1pfVGC0feEAjh6
+	 D2HhHr+f3uzJde8d12GkoSW/7y9ILg9qmmir/PdbdSRCSVo2zOdPIe1/stehaeeZ8eUzo
+	 zO1EYNjoHJlM7tsGvpboXDsqxIftEElgyg6wij0tLTEWcE69fc3dtkOF2Q9XKKY2sf87y
+	 nzKScih+S9OqprE2FO2cDXefwBD5cWZVXuubfAbojBQ7SR+BYZL+D/ZpzD6Zkfr9fpQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793280671;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793281933;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
-	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=b+AFuhWnPDJSLYhPZ4qjpkT+CV2kwG8ni2hQRfb7t5c=;
-	b=nbOcJE78CH7mSOynfPKQVoKOgtpevwa9PuLxs5dFCVbP7jtG3ynp3oEbn2d8+dVXryHC
-	 NEswD/ELKIwBedSA152ms9U+g5uqj5medbDvdeQSZ6vgya1RV9hYDKz62N/Pkxtv1rj0/
-	 PTCRbpMOWuUmCnibOpHHLvfc+FZKOOg8Fa6ERq6J9aFpn30fbg2JfFq2Q7iLF3xVkQGQ7
-	 GqncZulvEhNbBiqb4uuKu4DGqwgoHZ/gumXlHtN4zS+NsHe8yCW/ejb/oYYk8NcNt8CSO
-	 N2cMEvGMRzyyZ8JDFVM0XP/MJ+omt0XFyp6Y9fYLkowRmnLx1DWRbCUoMc1R+VZStew==
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:Organization;
+	bh=fiYy2vTwpLDrlQVF2bfioYkNAY8mLKXanFZid5k6LXM=;
+	b=RgNeDXO2CWzqOWBIDgehF2hzJSX/jHzqTv+Y+4EU9HbjvCsZ0n+bHhOWU6wEz4FHs8Uh
+	 NhurXmd/OmKq6feGjOW1truMSJbSwI1MTYPYjPcViu9fgBvrKbfQndvonbG/3nMSnANPS
+	 eVCJa0cE9rUAqA3DlN4SjldhkxJd6d+FCTVBGQF3TgeNH+Eu6Bix+tlguap+eYZz8VOZC
+	 u2IcNTPQfg6QDKCL1HDYqQuoc7QfePIPTp7USkpA9wfdGE67hrH4fxnlKLHAox+P6i0FS
+	 IgTg9YssmbAX/He9Uz1OEdn+ipJm0bjw3TPPiDllVreJw/+43uhjgDoVmBx/rhAVOOA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=ICrif33P;
-	arc=none smtp.remote-ip=198.175.65.9
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b="dsSHVz/n";
+	arc=none smtp.remote-ip=192.198.163.14
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C0A9606A321;
-	Thu, 29 Oct 2026 13:31:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8C0A9606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE0A7606A31E;
+	Thu, 29 Oct 2026 13:52:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EE0A7606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=ICrif33P
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=dsSHVz/n
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793280670; x=1824816670;
+  t=1793281932; x=1824817932;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=zbPNXzmKH5aiAeKH/1F04rnmfk563h7HnAZF0WYRyrA=;
-  b=ICrif33PAkFdKQhDpW7b0nvjVyoca7qh1NCgdBw3WJE8wcaYy14ZjlSQ
-   5VhkdDnGtKRKqu+JGhhsCrK1b2a9j+9NgCSf9roGWpLqy9eB7JuNA33wL
-   C5n5C0PSxKmVrvEjvqX1fFYq4iMVIh79IdWy65Ywy+4eIbgGF9cMJFs88
-   ARaeSWCdBwy6Ok4xQNv/WjSyUuSsgBiTPHDh6oHFT2P3Oe1TfUmaUC2x0
-   zvrMaVVST4f0vCNv0wrhO/uOKze7C8/L3r+5rB5wFtCNYBs+E+yMHCq1i
-   5uRzLWYBvXlxmbgIpYeYV+ZJSjj/2vvTCX4B+XznrD/TM/qFmf0wMl1HE
+  bh=U94VdwwjFB9jKBOkaYX9zN0PXeIX1J2yl40K0ESXQXc=;
+  b=dsSHVz/nUIO49Cto3b+mdvCVSme4XJd+WtK8n0FPCdOtyNTXNRBhC0vU
+   /p/LiYD6JJDIQTi1k0ODaJRS1PfXXoX6jR15dJuN03yOGKXQ8C8ArwyBW
+   u/Fz4aMf4YpFQRMc71JLVpS7F2TYwzBRP7yfaczPAHUJYIjw3nNdYfDuF
+   a9Z0gEO/Xd9FBiIcZOw8KPl+sH5yE8cjRrN+3DrxKcSNighrV1Xp0LGYN
+   hCxVuBuIe7MbVFAneD0RjczmM/jMn0xV1zrwIWNUsm1BBG1/Ol4bt0XH9
+   0LxzeuN2sK/GI/4OkfQjNaTiINY6QsofBUSrY6fP7AeQWZapji5+z7zC6
    Q==;
-X-CSE-ConnectionGUID: TWDiercORcaZmkk7YwIQ6Q==
-X-CSE-MsgGUID: 9huVO9KVSNWr7rd/HvbIOQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11949"; a="1906435"
+X-CSE-ConnectionGUID: mRVEWDs+RK6x2Ea8jvYs5w==
+X-CSE-MsgGUID: 4iuenIDUQECD62aM3qgEQQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11949"; a="2059148"
 X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
-   d="scan'208";a="1906435"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 06:31:10 -0700
-X-CSE-ConnectionGUID: ZVqDH6SwSAi+mVyeV+cHmw==
-X-CSE-MsgGUID: r8hmop+ZR1uxXaDTAZ6hKw==
+   d="scan'208";a="2059148"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 06:52:11 -0700
+X-CSE-ConnectionGUID: qmwkKEejSbOwMDbQsEFCDw==
+X-CSE-MsgGUID: rQIvHgtORdOxcclt9Xz7iA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
-   d="scan'208";a="5035807"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by orviesa007.jf.intel.com with ESMTP; 29 Oct 2026 06:31:08 -0700
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xMQDg-00000000aAi-3BfQ;
-	Thu, 29 Oct 2026 13:31:04 +0000
-Date: Thu, 29 Oct 2026 21:30:15 +0800
-From: kernel test robot <lkp@intel.com>
-To: wuqianhai@loongson.cn, bhelgaas@google.com
-Cc: oe-kbuild-all@lists.linux.dev, wuqianhai <wuqianhai@loongson.cn>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tzimmermann@suse.de, javierm@redhat.com,
-	dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH] PCI/VGA: Fix boot device detection after framebuffer
- relocation
-Message-ID: <202610292159.Ls5pkJAS-lkp@intel.com>
-References: <20261028094634.766723-1-wuqianhai@loongson.cn>
+   d="scan'208";a="5286011"
+Received: from ncintean-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.129])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 06:52:06 -0700
+Date: Thu, 29 Oct 2026 15:52:03 +0200
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Marek Vasut <marek.vasut@mailbox.org>
+Cc: linux-pci@vger.kernel.org, Bartosz Golaszewski <brgl@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Alex Elder <elder@riscstar.com>, Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Jingoo Han <jingoohan1@gmail.com>, Koichiro Den <den@valinux.co.jp>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Randolph Lin <randolph@andestech.com>,
+	Rob Herring <robh@kernel.org>, Sherry Sun <sherry.sun@nxp.com>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Vidya Sagar <vidyas@nvidia.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+	Xincheng Zhang <zhangxincheng@ultrarisc.com>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: dwc: rcar-gen4: Replace pe_rst GPIO PERST with
+ GPIO reset aux driver
+Message-ID: <auNPg8kAs2_O2_9R@ashevche-desk.local>
+References: <20261028172133.20903-1-marek.vasut+renesas@mailbox.org>
+ <18b4e960-caa1-48b0-a5aa-f3585274787d@mailbox.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -87,53 +99,27 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261028094634.766723-1-wuqianhai@loongson.cn>
+In-Reply-To: <18b4e960-caa1-48b0-a5aa-f3585274787d@mailbox.org>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-Hi,
+On Wed, Oct 28, 2026 at 06:27:36PM +0100, Marek Vasut wrote:
+> On 10/28/26 6:21 PM, Marek Vasut wrote:
 
-kernel test robot noticed the following build errors:
+[...]
 
-[auto build test ERROR on pci/next]
-[also build test ERROR on pci/for-linus linus/master v7.3 next-20261028]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> Bartosz, alternatively, I wonder if there is any way to request the
+> reset-gpios as reset controller reset here already. That might be even
+> cleaner, but I don't think there is anything like
+> devm_reset_control_bulk_get_optional_exclusive_and_also_request_the_gpio_reset()
+> or devm_reset_control_get_optional_exclusive_gpio_reset() . Maybe something
+> like that could be added to the reset subsystem instead ?
 
-url:    https://github.com/intel-lab-lkp/linux/commits/wuqianhai-loongson-cn/PCI-VGA-Fix-boot-device-detection-after-framebuffer-relocation/20261028-174634
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/20261028094634.766723-1-wuqianhai%40loongson.cn
-patch subject: [PATCH] PCI/VGA: Fix boot device detection after framebuffer relocation
-config: microblaze-defconfig (https://download.01.org/0day-ci/archive/20261029/202610292159.Ls5pkJAS-lkp@intel.com/config)
-compiler: microblaze-linux-gcc (GCC) 16.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261029/202610292159.Ls5pkJAS-lkp@intel.com/reproduce)
+It's already there, if I'm not mistaken, one describes reset-gpios in DT,
+and reset-gpio driver takes care of this.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202610292159.Ls5pkJAS-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   microblaze-linux-ld: drivers/pci/vgaarb.o: in function `vga_arb_device_init':
->> drivers/pci/vgaarb.c:1536:(.init.text+0x10): undefined reference to `screen_info_apply_fixups'
+-- 
+With Best Regards,
+Andy Shevchenko
 
 
-vim +1536 drivers/pci/vgaarb.c
-
-  1524	
-  1525	static int __init vga_arb_device_init(void)
-  1526	{
-  1527		int rc;
-  1528		struct pci_dev *pdev;
-  1529	
-  1530		/*
-  1531		 * PCI resource assignment may have relocated the firmware
-  1532		 * framebuffer BAR. Update screen_info's lfb_base so that
-  1533		 * vga_is_firmware_default() can match it against the boot
-  1534		 * device's relocated resource.
-  1535		 */
-> 1536		screen_info_apply_fixups();
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
