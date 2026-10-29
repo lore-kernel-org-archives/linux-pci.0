@@ -1,93 +1,139 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.44
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793281933;
-	b=1Mb92YSvSiPGcsJvgq0W7sS+lbh811onYXV3S8h/WnTr4gxEmzWaGXwvJo7BUnifsGAO
-	 N83/wa7AHDpGchz60h6dc9X4p2+OPPyxykEbsVMksdEDqjiQShO1VxQ1pfVGC0feEAjh6
-	 D2HhHr+f3uzJde8d12GkoSW/7y9ILg9qmmir/PdbdSRCSVo2zOdPIe1/stehaeeZ8eUzo
-	 zO1EYNjoHJlM7tsGvpboXDsqxIftEElgyg6wij0tLTEWcE69fc3dtkOF2Q9XKKY2sf87y
-	 nzKScih+S9OqprE2FO2cDXefwBD5cWZVXuubfAbojBQ7SR+BYZL+D/ZpzD6Zkfr9fpQ==
+	t=1793284789;
+	b=32SlEu1dNTmGd4queh+HJthA3BEwkuB/JMeUK5ypyeTWlNgIEP7vQ80EYDYH8M5b8lK9
+	 AxuBi3PaKz9xsXEDuKvwzBDmi7PlbHV6W/AXLTJ/z3+t+MgnTyMG9yFfLHqK2o4x56vja
+	 J+0kX2PSv5CN3qkIRJXaXiRPq5C2Pp4S7AO0yzgBiKqHna3f0JF4nUb+H6rWp2J417nV0
+	 xb+EpJf7q0yfyovu03gBAybbLiMi5BNrBnowY38mSfvV9WjEQphjXxpLJ/TDGLO2gkcEf
+	 nEYIowt9udL7xlKRVRwKSS7zhCbqvXQM5tHNXVDRH7Y09cDcxKeuY35ENLsaRM77nTA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793281933;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To:Organization;
-	bh=fiYy2vTwpLDrlQVF2bfioYkNAY8mLKXanFZid5k6LXM=;
-	b=RgNeDXO2CWzqOWBIDgehF2hzJSX/jHzqTv+Y+4EU9HbjvCsZ0n+bHhOWU6wEz4FHs8Uh
-	 NhurXmd/OmKq6feGjOW1truMSJbSwI1MTYPYjPcViu9fgBvrKbfQndvonbG/3nMSnANPS
-	 eVCJa0cE9rUAqA3DlN4SjldhkxJd6d+FCTVBGQF3TgeNH+Eu6Bix+tlguap+eYZz8VOZC
-	 u2IcNTPQfg6QDKCL1HDYqQuoc7QfePIPTp7USkpA9wfdGE67hrH4fxnlKLHAox+P6i0FS
-	 IgTg9YssmbAX/He9Uz1OEdn+ipJm0bjw3TPPiDllVreJw/+43uhjgDoVmBx/rhAVOOA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793284789;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=uBDKsqEMUUI4osJISoF5o/4t2sYaPTTraFXlQxWlPBk=;
+	b=DxG4zh/FP4P6ji5psvxdXNbe8us7rADjQVUp2lg9rA2VI5uXVTPQLKXatVocfYVG0W4P
+	 1QetLurqWemYoRdldECAd5NzVxJQC/A50cbT68oEz6ze0hgQgiifPxgnHQkKkflkGL6G0
+	 au1vgamx1O/wuSSjZINL77wmYG7rfe1971K+t4okONRMzix8G+jWDomNV3bn6SAKpZrdL
+	 DdOzB2+V0ZyqSCFgGP/wd7O3q8xYa52dUlWdcuOPxliHoIg3tvG4Mbw+05QKBZ3xIj/9M
+	 2uYMWThjK3+2bbcdEpOhsE4PXSEqNZwVOd0NHxtAILemjXjOUhepmCu9jB7lbp2VSgA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b="dsSHVz/n";
-	arc=none smtp.remote-ip=192.198.163.14
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=fPTlg3YK;
+	arc=none smtp.remote-ip=74.125.82.44
+Received: from mail-dl1-f44.google.com (mail-dl1-f44.google.com [74.125.82.44])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE0A7606A31E;
-	Thu, 29 Oct 2026 13:52:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EE0A7606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54533606A32A
+	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 14:39:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 54533606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=dsSHVz/n
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793281932; x=1824817932;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=U94VdwwjFB9jKBOkaYX9zN0PXeIX1J2yl40K0ESXQXc=;
-  b=dsSHVz/nUIO49Cto3b+mdvCVSme4XJd+WtK8n0FPCdOtyNTXNRBhC0vU
-   /p/LiYD6JJDIQTi1k0ODaJRS1PfXXoX6jR15dJuN03yOGKXQ8C8ArwyBW
-   u/Fz4aMf4YpFQRMc71JLVpS7F2TYwzBRP7yfaczPAHUJYIjw3nNdYfDuF
-   a9Z0gEO/Xd9FBiIcZOw8KPl+sH5yE8cjRrN+3DrxKcSNighrV1Xp0LGYN
-   hCxVuBuIe7MbVFAneD0RjczmM/jMn0xV1zrwIWNUsm1BBG1/Ol4bt0XH9
-   0LxzeuN2sK/GI/4OkfQjNaTiINY6QsofBUSrY6fP7AeQWZapji5+z7zC6
-   Q==;
-X-CSE-ConnectionGUID: mRVEWDs+RK6x2Ea8jvYs5w==
-X-CSE-MsgGUID: 4iuenIDUQECD62aM3qgEQQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11949"; a="2059148"
-X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
-   d="scan'208";a="2059148"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 06:52:11 -0700
-X-CSE-ConnectionGUID: qmwkKEejSbOwMDbQsEFCDw==
-X-CSE-MsgGUID: rQIvHgtORdOxcclt9Xz7iA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
-   d="scan'208";a="5286011"
-Received: from ncintean-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.129])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 06:52:06 -0700
-Date: Thu, 29 Oct 2026 15:52:03 +0200
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Marek Vasut <marek.vasut@mailbox.org>
-Cc: linux-pci@vger.kernel.org, Bartosz Golaszewski <brgl@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Alex Elder <elder@riscstar.com>, Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Jingoo Han <jingoohan1@gmail.com>, Koichiro Den <den@valinux.co.jp>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Randolph Lin <randolph@andestech.com>,
-	Rob Herring <robh@kernel.org>, Sherry Sun <sherry.sun@nxp.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>,
-	Vidya Sagar <vidyas@nvidia.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
-	Xincheng Zhang <zhangxincheng@ultrarisc.com>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: dwc: rcar-gen4: Replace pe_rst GPIO PERST with
- GPIO reset aux driver
-Message-ID: <auNPg8kAs2_O2_9R@ashevche-desk.local>
-References: <20261028172133.20903-1-marek.vasut+renesas@mailbox.org>
- <18b4e960-caa1-48b0-a5aa-f3585274787d@mailbox.org>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=fPTlg3YK
+Received: by mail-dl1-f44.google.com with SMTP id a92af1059eb24-1846bc43c28so2543451c88.0
+        for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 07:39:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793284788; x=1793889588; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=uBDKsqEMUUI4osJISoF5o/4t2sYaPTTraFXlQxWlPBk=;
+        b=fPTlg3YKi8LCEYl7MWaRXbl+fOsMT8EooFaEX/qteZRl8FsZt88RyX9Nz4rh62atDU
+         N2mi9nkHHOJC4qFeiUXhTHbjbhHQHXOF+NhhfCQK6iUf4J/Q9ypFok7z2wgCKAPn6EjK
+         xZ9kY5ZnP4n+8lX6/VsHr77Tn99+eesUK7yOJOQntEtEMQGRE1D1vlqqCLeQI7lI9/6d
+         T6b6GWLz4O6TATQ+xATuCOZzKNxV75JOEocPZj36+KoGY18UuoHpbDZjja7BkGHZcM0B
+         8XE+KTQjlqXnRe4OF7u9IeoFkO5y9EWni2EDctTAKHudHO9Rp8OhbT05Vxxf/IOtY+cj
+         QvZA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793284788; x=1793889588;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=uBDKsqEMUUI4osJISoF5o/4t2sYaPTTraFXlQxWlPBk=;
+        b=FdRSrmC5AZxbBMmAw9sPUkSoLlW8y3L2w+tkVBlMtEhgdxCd6yStKfjCgyfdxGitsr
+         heoQzR6FrSKWwk8cuXAmKV3CoRAAY8EsjZEbjY8kNoEg8GoHUDbkqKUnPk5OZmCTp0hL
+         EkXurlhKJe7vcQRErLyIF9Co5gwOtD1lzDo9N0soBXQwsfc13gwWBuHpqo4n1Yxx4Scx
+         +Uul5qwJ+CWSmVlERQruQ1kePMGEBQ7a9En47y+U/8fV/M/MP7DHAwn8nEBc5VxmD1Am
+         YN9atvdxWMpW4g6FKBEse5uwmgB9CYCJUFhZKBFwCiqmXjWz5tdoF5zG7F0nSFs05XVm
+         6kpQ==
+X-Forwarded-Encrypted: i=1; AKwUvBytgsKqigaSqKPdWYFu0i/DQAIfHeBvnwjG/X9t8a1gIiOsD9Uag1oIM8TSTIFvCCbtjuaGhkguNwY=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJKjaiURyfhfhBZ1KHBGedz8iZQn0TDg2OmJzYVgL5q308mjvC5
+	NzbdVznXZx6j/7cNgk6Te66KVt+aiOsblohmvEQLk50IRssPwBVT9n8=
+X-Gm-Gg: AYBFou1s3Xz39MgII2Kwpk3526ykeAje4kEampgG6tGJZYKW5G28XGxocX3GT1kQcP5
+	mzeSYzOW0lWZHnOclncKmtu8Jp0vCV0xhMvrBDd/HAUUnWwrRYQH6mXwwY842vDFxqAnHT15Jlq
+	rL9ZcmdFeHfWlSAvosILQ+oIBiKEpsXoq8LpqVzAVBXD3Y7PeBCh0HLWofGPvUdY/5kZRNisdSj
+	/GYaA0XmKODJL96ENlAGhC1VBr1mFJfXpXWE5mdbb3mequUDnBUfTPTUeubb2sO0Ufk1T+8ZWML
+	I+mjYyTK++btnbXzpEZKooUF/p3q81KXXiHh9VHfWbfFnU0v21J0HNQmmHaB01uvY2D1QlJW2w5
+	g9pV0d3hpAvzb4i/j22HVcaLV5IWNqpNH6jt8wVYStCV47n7vMS6Y4WHcy6wzOZDz1OzMBLzc44
+	DwFGcNKcDZP/y0MK97FxuBM1RuH5G0dpdWjza8JJR+vPtKcz5gL1gZpjl2qM+zlxnPSUIPoruIz
+	bc8JsalT00ddLmw61cMPjKaee8y2esWotv3Oc87mtptR43AkjEUJZ0AoSyTY/6514mTSH1jLmDE
+	sgGD5Q5M+pufrPoDAmbeQt8bHt48gmdT7ZZT+jbKGb4ZgUTjvbtvPByi2SKcI/ZlK3o=
+X-Received: by 2002:a05:7022:ed07:b0:1a4:c892:b14f with SMTP id a92af1059eb24-1a6ced8e7afmr7393000c88.29.1793284788293;
+        Thu, 29 Oct 2026 07:39:48 -0700 (PDT)
+Received: from at-Standard-PC-Q35-ICH9-2009 ([106.202.115.216])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1a75cdd21c3sm15396439c88.4.2026.10.29.07.39.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 29 Oct 2026 07:39:47 -0700 (PDT)
+From: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
+To: k@chaosmail.tech
+Cc: alexandre.belloni@bootlin.com,
+	andy@kernel.org,
+	asahi@lists.linux.dev,
+	atharvatiwarilinuxdev@gmail.com,
+	bhelgaas@google.com,
+	bp@alien8.de,
+	brgl@kernel.org,
+	dave.hansen@linux.intel.com,
+	dlechner@baylibre.com,
+	dmitry.kasatkin@gmail.com,
+	eric.snowberg@oracle.com,
+	griffin@kroah.com,
+	hansg@kernel.org,
+	hpa@zytor.com,
+	ilpo.jarvinen@linux.intel.com,
+	j@jannau.net,
+	jarkko@kernel.org,
+	jic23@kernel.org,
+	jmorris@namei.org,
+	lee@kernel.org,
+	lenb@kernel.org,
+	linusw@kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-gpio@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	linux-rtc@vger.kernel.org,
+	linux-watchdog@vger.kernel.org,
+	linux@roeck-us.net,
+	mfd@lists.linux.dev,
+	mingo@redhat.com,
+	neal@gompa.dev,
+	nuno.sa@analog.com,
+	paul@paul-moore.com,
+	pavel@kernel.org,
+	platform-driver-x86@vger.kernel.org,
+	rafael@kernel.org,
+	roberto.sassu@huawei.com,
+	serge@hallyn.com,
+	sre@kernel.org,
+	sven@kernel.org,
+	tglx@kernel.org,
+	wim@linux-watchdog.org,
+	x86@kernel.org,
+	zohar@linux.ibm.com
+Subject: Re: [RFC PATCH 14/14] mfd/macsmc: add ioctl to access smc keys
+Date: Thu, 29 Oct 2026 10:39:26 -0400
+Message-ID: <20261029143926.1246-1-atharvatiwarilinuxdev@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <525E5B4D-A947-4567-9FCD-5FFF2CA8B161@chaosmail.tech>
+References: <525E5B4D-A947-4567-9FCD-5FFF2CA8B161@chaosmail.tech>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -97,29 +143,24 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <18b4e960-caa1-48b0-a5aa-f3585274787d@mailbox.org>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
+Content-Transfer-Encoding: 8bit
 
-On Wed, Oct 28, 2026 at 06:27:36PM +0100, Marek Vasut wrote:
-> On 10/28/26 6:21 PM, Marek Vasut wrote:
+> This should either be dropped from the series, or be hidden behind a
+> `melt_my_mac`-style module flag, or switched to a whitelist approach.
+> We do not know what keys will be introduced in new smc firmware
+> versions, and there are already keys that should not be randomly poked
+> at.
 
-[...]
+1. The patch is required, atleast on intel macs, as without writing GPU and CPU
+	states to smc, the system gives PROCHOT signal under small load
+	, and heats up a lot.
 
-> Bartosz, alternatively, I wonder if there is any way to request the
-> reset-gpios as reset controller reset here already. That might be even
-> cleaner, but I don't think there is anything like
-> devm_reset_control_bulk_get_optional_exclusive_and_also_request_the_gpio_reset()
-> or devm_reset_control_get_optional_exclusive_gpio_reset() . Maybe something
-> like that could be added to the reset subsystem instead ?
+2. the smc dosent expose keys of nature that can physically damage the system
+	it only exposes power/volt data, and the most you can poke is reboot
+	keys and gpu/cpu p-states.
 
-It's already there, if I'm not mistaken, one describes reset-gpios in DT,
-and reset-gpio driver takes care of this.
+3. If a person is randomly touching keys, Its their problem and not ours.
 
--- 
-With Best Regards,
-Andy Shevchenko
-
-
+4. There are a lot of things that can mess the system way more and permanently
+	than smc (undervolting for example), but they are not safe guarded, why
+	should this be then?
