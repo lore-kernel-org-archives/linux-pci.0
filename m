@@ -1,54 +1,108 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.8
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793279863;
-	b=LfMHXJw5JO6F7EksIDmHCB3xr7nQIzYCGWNThm7bRfSi3zrcqmDxasHpDpKraRXENhAn
-	 FWF64alcWGE8J8UqZ1p4/Dp96G0LP/BqfStR17Z4Nb6WgCJPmboiY/GIDRr+6vKAQ1YeT
-	 FFO1WS5Z49AZvEvNWbXtG2UhAU1d3KcnPVIzix4zjhgrbEyuqhAdXleyK98KU65/FQyWb
-	 CLJy7F28bN4snRRTxP0he3kT2GQ0/iuhu64wNzIbs1CvehOHxA3h1LXKw5S43F7rADVcO
-	 EUKAtfdefiNooMiKV8nP3eJtwbsHVafSUjJYy+QOAjld51sqy0HROd5hKwcOkzvw5bQ==
+	t=1793280625;
+	b=oxYq2OYKfVJox8F1eNs7yGZKIGbd3c7bxFtgDq4sEkxrC4/XcUEiiM+Y+pBtdPUVBVvt
+	 W90h9bYKMfGRFdo14YTO6C0hQ76ZZqLE2lUlga5V86PUo47Z5M+nZbriRGS6O8CbIr3u+
+	 nnElu7rBtyL7VPM0CIO6mane9BBUKh8zif2heaUi5o2MOtnMm5ypA2VvXELMUrEVJZNHK
+	 Z0uoKHvJwP7zx3OEaEdGJt1QCAsUXd/L9jVoKoLaSfxughMRezmd17nhr/yCUdbc5CG9U
+	 4p9iU9ZgsB4jo3h5R8vkTQ+s20TJTedt6gjn2QHGTAlUHxv0izqwKnakIcA8gojY9Rw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793279863;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=aAGWgSUb0ydTyO589PzjqXAAAMQ5aws9tMzkXWJlies=;
-	b=rRRFYqjfYvx6NHwqVFLzqMEz/XDKSGOIq4NAN3wYX1yeC/gcLJc8gXPxadpW1JERbiWf
-	 vUw+4ttO5xdXW6aHlbzMGHyWh194O8QR2EcepEwELo54aU3uhRKgqxWsNZpNVa/1X7S3b
-	 8L/nEF5hs4hB6j/rvF4YcjXjEwUARMJLvEAkVBNtlo01xarDzjMfdOorGCbgEimLWWn1P
-	 5KzUjEKMgBf1MwmrzjgtKHCfj3TSx5ajrkvfZwYX0NeNuZHAF+s5ChYEZnmhJJrHmoPSG
-	 Z8E/+fJYBG+rDIwhRWir0SuG7l4oOFn3qZ4TSRkWEQWSEvtfvOhH/VJpsOKHSYDB7Vw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793280625;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:Organization;
+	bh=Mb2nUQU4M00SSUzZJSeoQpnNXAraCq7x3LdAKS30Euw=;
+	b=av59mA0JFVoyz4HJOq9OYY+bqom6HCJpdGpiVJZgY+AAAAPVDwFOBscIb2eE9diepS8a
+	 838mm8Qv1AJ5Ew7hqXjfDP08UFl5ExS2cKSlAhmM755PQbQ8sFnI93jLjEkU1AMzcega6
+	 I+P/CSQSOQqFPMkAYQI6/W7WEU+yng1qLG1kRzE4F5mquQXMfMaeL/nl9G6o74heCvQEa
+	 rpQqU7kMzF8FNOkada1v+mxwpETZCFwUIYkuux5HVTxkEX/osFBJflMCLDKoUROsZnXWa
+	 2Ob+h0uRQla21ncH85NoA+sTZKMIRLVybaHkb40iHT2q74gjkm7C+1c0AnHdWhQsHdA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iHXE0NuY;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=moKhVdIW;
+	arc=none smtp.remote-ip=192.198.163.8
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92583606A31A
-	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 13:17:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67996606A326;
+	Thu, 29 Oct 2026 13:30:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 67996606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iHXE0NuY
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04EFA1F01828;
-	Thu, 29 Oct 2026 13:17:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793279863;
-	bh=aAGWgSUb0ydTyO589PzjqXAAAMQ5aws9tMzkXWJlies=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=iHXE0NuYiAiDBHnDV479/SkYDqiBfyKrvlvNl+p8rqc1xAxVvOgXALJoVPTlgW5JW
-	 Q9lPaFXLMt0dLLTYIjqe2dM2a4ozPifpRO/xoQ5GX4zmRqcgr4FZnlgz3n9fT0fm97
-	 SrIBU+fLiMgo+2Anq7X50v2Se6YsCtOwRox5Aw0XdDxVi+DHTua1OgQwhEcv7M8qKW
-	 arDcjGBy/Gdxfwrtmp/igaEmzigO3XOn34nEkyKIc66qlvAFyyZpM3Ox7VImhN0vfr
-	 /HVik/BEU8ynWYh07c2505xsrjKcbQ/dC+aq84VKdUmXNWSqiISoKEw3SpJotO15qz
-	 I7nAuscnIjr9Q==
-Message-ID: <sashiko-outbox-189364@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: exynos: Handle PHY initialization errors
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sreeraj S Kurup" <sreekuttan2156239@gmail.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261029131006.2744-1-sreekuttan2156239@gmail.com>
-References: <20261029131006.2744-1-sreekuttan2156239@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 29 Oct 2026 13:17:42 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=moKhVdIW
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793280624; x=1824816624;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=XiB/P3z67uNi54hQwr+HoGceAi4KeJ58DpxovBSc0bg=;
+  b=moKhVdIWHTlYBTM27yPpptcYvWfZxeoV5vQDl8tROPJHxcy1XOyrsLiH
+   UEC0pOG8yTIBOxOxX+8Sx3MfPvthNhhSVbg7hmXMLdY75L0ynvudB2qUB
+   xwDw8dlq+JFqmrEH1vF2p5uZ15A+7QpDyhHdm3QkceUndx7CjaFFhUM69
+   MGYS36fDRAR2PqPL1vCXsKjhaE/atqXAWFvoXUpwofjuL2spLHNDxelfM
+   4s5Iqm0+JQ+1YT0Rz6kf+pLQU6USwnYQL+Zb3tysqKRg5FvDcKhZdVdhv
+   IUM8pJpk+riQyMmNtQTeyuROg0DxK1r+WJdKbdMqvpLe47T3qLyVJqwQX
+   A==;
+X-CSE-ConnectionGUID: X1a7bbI8SnWe9Ef4aSkLOQ==
+X-CSE-MsgGUID: CjMqrJc6RY20tCJkecc5HQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11949"; a="1915313"
+X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
+   d="scan'208";a="1915313"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 06:30:23 -0700
+X-CSE-ConnectionGUID: pazyI6DLSZO+QuLDn2CgVg==
+X-CSE-MsgGUID: Eiw0OS5rRee86K4uWKSdfA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
+   d="scan'208";a="5273644"
+Received: from ncintean-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.129])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 06:30:12 -0700
+Date: Thu, 29 Oct 2026 15:30:09 +0200
+From: Andy Shevchenko <andriy.shevchenko@intel.com>
+To: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>, Linus Walleij <linusw@kernel.org>,
+	Bartosz Golaszewski <brgl@kernel.org>, Sven Peter <sven@kernel.org>,
+	Janne Grunau <j@jannau.net>, Neal Gompa <neal@gompa.dev>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Jonathan Cameron <jic23@kernel.org>,
+	David Lechner <dlechner@baylibre.com>,
+	Nuno =?iso-8859-1?Q?S=E1?= <nuno.sa@analog.com>,
+	Andy Shevchenko <andy@kernel.org>, Lee Jones <lee@kernel.org>,
+	Pavel Machek <pavel@kernel.org>,
+	Griffin Kroah-Hartman <griffin@kroah.com>,
+	Hans de Goede <hansg@kernel.org>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Sebastian Reichel <sre@kernel.org>,
+	Alexandre Belloni <alexandre.belloni@bootlin.com>,
+	Wim Van Sebroeck <wim@linux-watchdog.org>,
+	Jarkko Sakkinen <jarkko@kernel.org>,
+	Mimi Zohar <zohar@linux.ibm.com>,
+	Roberto Sassu <roberto.sassu@huawei.com>,
+	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+	Eric Snowberg <eric.snowberg@oracle.com>,
+	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
+	"Serge E. Hallyn" <serge@hallyn.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-gpio@vger.kernel.org, asahi@lists.linux.dev,
+	linux-arm-kernel@lists.infradead.org, linux-hwmon@vger.kernel.org,
+	linux-iio@vger.kernel.org, linux-leds@vger.kernel.org,
+	mfd@lists.linux.dev, platform-driver-x86@vger.kernel.org,
+	linux-pm@vger.kernel.org, linux-rtc@vger.kernel.org,
+	linux-watchdog@vger.kernel.org, linux-integrity@vger.kernel.org,
+	keyrings@vger.kernel.org, linux-security-module@vger.kernel.org
+Subject: Re: [RFC PATCH 03/14] watchdog: add driver for apple smc
+Message-ID: <auNKYRpfqrtKa50O@ashevche-desk.local>
+References: <20261029085504.3547-1-atharvatiwarilinuxdev@gmail.com>
+ <20261029085504.3547-4-atharvatiwarilinuxdev@gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -57,112 +111,79 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261029085504.3547-4-atharvatiwarilinuxdev@gmail.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] PCI: exynos: double phy_exit() on probe error after exynos_pcie_ho=
-st_init()
-- [High] PCI: exynos: unchecked exynos_pcie_host_init() in exynos_pcie_resu=
-me_noirq()
---
+On Thu, Oct 29, 2026 at 04:52:00AM -0400, Atharva Tiwari wrote:
+> Add a watchdog driver for the SMC on Intel Macs. It can
+> reset the machine if the system stops responding. It works
+> on both newer and older SMC versions.
 
-commit e723b41ff1e9114786c14ad5226542ae1f9e3a1b
-Author: Sreeraj S Kurup <sreekuttan2156239@gmail.com>
+...
 
-PCI: exynos: Handle PHY initialization errors
-
-This commit checks the return values of phy_init() and phy_power_on() in
-exynos_pcie_host_init() and calls phy_exit() if phy_power_on() fails.
-
-> diff --git a/drivers/pci/controller/dwc/pci-exynos.c b/drivers/pci/contro=
-ller/dwc/pci-exynos.c
-> index e3c05ade381bb..5ad07c0be8e51 100644
-> --- a/drivers/pci/controller/dwc/pci-exynos.c
-> +++ b/drivers/pci/controller/dwc/pci-exynos.c
-> @@ -225,13 +225,21 @@ static int exynos_pcie_host_init(struct dw_pcie_rp =
-*pp)
->  {
->  	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
->  	struct exynos_pcie *ep =3D to_exynos_pcie(pci);
-> +	int ret;
-> =20
->  	pp->bridge->ops =3D &exynos_pci_ops;
-> =20
->  	exynos_pcie_assert_core_reset(ep);
-> =20
-> -	phy_init(ep->phy);
-> -	phy_power_on(ep->phy);
-> +	ret =3D phy_init(ep->phy);
-> +	if (ret)
-> +		return ret;
+> --- a/drivers/watchdog/Kconfig
+> +++ b/drivers/watchdog/Kconfig
+> @@ -1810,6 +1810,17 @@ config SIEMENS_SIMATIC_IPC_WDT
+>  	  To compile this driver as a module, choose M here: the module will be
+>  	  called simatic-ipc-wdt.
+>  
+> +config MACSMC_WDT
+> +	tristate "Apple SMC Watchdog"
+> +	depends on X86 && MACSMC_ACPI
+> +	select WATCHDOG_CORE
+> +	help
+> +	  This driver adds support for Watchdogs in Intel macs Using
+> +	  Apple SMC.
 > +
-> +	ret =3D phy_power_on(ep->phy);
-> +	if (ret) {
-> +		phy_exit(ep->phy);
-> +		return ret;
-> +	}
+> +	  To compile this driver as a module, choose M here: the module will be
+> +	  called macsmc_wdt.
+> +
+>  # M68K Architecture
+>  
+>  config M54xx_WATCHDOG
+> diff --git a/drivers/watchdog/Makefile b/drivers/watchdog/Makefile
+> index 9ac406677..f142a5d8d 100644
+> --- a/drivers/watchdog/Makefile
+> +++ b/drivers/watchdog/Makefile
+> @@ -158,7 +158,7 @@ obj-$(CONFIG_NIC7018_WDT) += nic7018_wdt.o
+>  obj-$(CONFIG_MLX_WDT) += mlx_wdt.o
+>  obj-$(CONFIG_KEEMBAY_WATCHDOG) += keembay_wdt.o
+>  obj-$(CONFIG_SIEMENS_SIMATIC_IPC_WDT) += simatic-ipc-wdt.o
+> -
+> +obj-$(CONFIG_MACSMC_WDT) += macsmc_wdt.o
+>  # M68K Architecture
+>  obj-$(CONFIG_M54xx_WATCHDOG) += m54xx_wdt.o
 
-[Severity: High]
-Does this cause an unbalanced phy_exit(ep->phy) call when probe fails in
-exynos_pcie_probe() -> exynos_add_pcie_port() -> dw_pcie_host_init() ->
-exynos_pcie_host_init()?
+In moth files the entries seems misplaced to me. Also, why did you touch
+the blank line?
 
-When phy_init(ep->phy) fails, ep->phy->init_count remains 0, and when
-phy_power_on(ep->phy) fails, phy_exit(ep->phy) in exynos_pcie_host_init()
-decrements ep->phy->init_count back to 0. Both dw_pcie_host_init() and
-exynos_add_pcie_port() return that negative error code to
-exynos_pcie_probe():
+...
 
-drivers/pci/controller/dwc/pci-exynos.c:exynos_pcie_probe() {
-	...
-	ret =3D exynos_add_pcie_port(ep, pdev);
-	if (ret < 0)
-		goto fail_probe;
+> +struct macsmc_wdt {
+> +	struct apple_smc *smc;
+> +	bool has_oswd; /* Newer version of watchdogs in macsmc */
+> +	struct watchdog_device wdd;
+> +};
 
-	return 0;
+Try with `pahole`.
 
-fail_probe:
-	phy_exit(ep->phy);
-	regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
+...
 
-	return ret;
-}
+> +	.probe = macsmc_wdt_probe,
+> +	.driver = {
+> +		.name = "macsmc-wdt"
 
-Because fail_probe unconditionally calls phy_exit(ep->phy), phy_exit() in
-drivers/phy/phy-core.c decrements ep->phy->init_count from 0 to -1, which
-prevents phy_init() from invoking phy->ops->init() on subsequent probe
-attempts.
+Always add a comma to non-terminator entries in the initializers
+(yes, there are some exceptions, but it's not the case here).
 
-[Severity: High]
-What happens during system resume in exynos_pcie_resume_noirq() if
-exynos_pcie_host_init() returns early with an error here?
+> +	},
 
-In exynos_pcie_host_init(), exynos_pcie_assert_core_reset(ep) is called
-before phy_init(ep->phy) and phy_power_on(ep->phy). Returning early skips
-exynos_pcie_deassert_core_reset(ep) and exynos_pcie_enable_irq_pulse(ep),
-leaving the PCIe core held in reset and the PHY off, while
-exynos_pcie_resume_noirq() does not check the return value of
-exynos_pcie_host_init(pp):
+-- 
+With Best Regards,
+Andy Shevchenko
 
-drivers/pci/controller/dwc/pci-exynos.c:exynos_pcie_resume_noirq() {
-	...
-	ret =3D regulator_bulk_enable(ARRAY_SIZE(ep->supplies), ep->supplies);
-	if (ret)
-		return ret;
 
-	/* exynos_pcie_host_init controls ep->phy */
-	exynos_pcie_host_init(pp);
-	dw_pcie_setup_rc(pp);
-	exynos_pcie_start_link(pci);
-	return dw_pcie_wait_for_link(pci);
-}
-
-Should exynos_pcie_resume_noirq() check the return value of
-exynos_pcie_host_init(pp) and disable ep->supplies before returning the
-error instead of calling dw_pcie_setup_rc(pp) and exynos_pcie_start_link(pc=
-i)
-while the controller core is in reset?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029131006.2744=
--1-sreekuttan2156239@gmail.com?part=3D1
