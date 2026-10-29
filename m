@@ -1,88 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793292261;
-	b=qamUF4xvc1Hu3tNZayI1+H7NWzPDj3OCTf9J2Mlv5DskAEeBzx99cmp1s6K1I7sYbilC
-	 rhw8kIs9CznCTp/5z/tqHq1gD/PafhQ+WLvfEPzC5QEJr9O1INOtQN+5Blvtl+PvKem7R
-	 3FF5AUq9z61lhozGmJ9+DdJyjmTbzttLOeoWfoofIYPiAPc58lnXiNN0GFs0ww8fmYenC
-	 mNlytYNsI10ZBikdBjRaSFyv/43ONX+M6gt6NFoXsDle6RaIcLdu5d5uxMwdzQGFkfQFo
-	 wxGK1ieK6T7cqCqAa2jD0I4cGcvCvrsaqWwBQuoUsLRXQ5YgH8hvPUY8G3CTBjkXHYA==
+	t=1793292314;
+	b=k9PN6jlSv2eyiHDIx5jcSeT61Dv0TIRPXD9JrceJLIMF8Q0TmOKov5cQvdN507T6mb8t
+	 L+iDXjN3BZYKfW1E+iPX+JQn65Xddmmfw7MlQh7Q8jYwt12NqRDo53c13VzBVf0G7GSXm
+	 s3dR2in3glVWNYMXIdKQVm4erp+JVyCmDwPMmG+3wteoJ0WELLDvpPudBf4Zq6Ukrka+P
+	 lNyFXCZpnZduJNIoa7YAcabItDCYKHGmdtpCq2XPms7UbTFtvxplTHfSshy0he4nsj0uA
+	 adgqarL+nYtWik725eNo9SoCjeIeXmwrg8/PcBb+AdpXnsVvLX/lURq39sg1KXH0uiQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793292261;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-Scanned-By;
-	bh=ukzCygZvukvs7xtNwXeIg6EW4nYVim1PfE4vJaFRyh4=;
-	b=CA1w0SzN5RB5QEnQPpvojh5Df9eOi7GqIfEYwx+wMA5pcMHXC2RJj/g5BEw4MBUJdJnT
-	 W8iChaoGiwk/W3p3V3skrXJ0fGq7UHSd1O+pTeEi78OjjVcF1Nqok39qH3Lj3qpSVgO3c
-	 wiDp4TlT2C+l6VWXD/o+zYcpZqreAE17PfUrAcOWspXpRc6bPCv9aoB69sLTFo48NK03o
-	 eNFqLRTnhkLTnfhkgZqjU8vnwSgqitrMIuNdJhbcEQUlhZzvIQrUWqoE+/y9wCEUSHeFH
-	 mD4GAmG1QY1E6yWUx0sNgAlylf5sNncvIn5APyuXIY3walb0Yl4Jk/Wi1VvyVn7ECfQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793292314;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=8FjjOsXf5z9Tt1Kqhs0sKNFOSjmAhcAFmnSn8YWvTIY=;
+	b=mXFOIoDCgiusEISEIMQOMq6SbsGXiXbC1qKVjCvgtJ03/ntG73yqV9oSuOAN4xZ6jjqI
+	 joNrXjSA+Oa1+ImmVvzvDj6wTQacJH5QvmDiah2sXHQqe7NudRtVrDLVAY7aBDHYuXP/x
+	 5kMKcbZi5gpscFiduUhLDoZylP+gUH8+RfbjGk+agPbPx987fKD4T4Jna9vZSNDw5YlnN
+	 SpK3AMtgPs+nstQrlmd6rySIFjoFMlQJbg4NPE2QvvNODMcKvstYmaHAoGE1WYRj3vmBH
+	 6sA9KnGM2eg2JEo/edoeHJYma486EmpAmNONM0klkRmyUf0rto/DNxWNkdtKgQJRVGg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=RO2eNF8m;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PpHLH41i;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D223606A31E
-	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 16:44:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0D223606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA383606A324
+	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 16:45:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=RO2eNF8m
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793292260;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ukzCygZvukvs7xtNwXeIg6EW4nYVim1PfE4vJaFRyh4=;
-	b=RO2eNF8mmJZjaalrN+KllEzd/2AUOi8UO9zO/ECMLwA9DKn5PAOewh9TQiMXgGzOyMRICt
-	Zs8vMagb3Y+jC+X4jxq+2rrqiZBlXRGfRNqSjUmgaCY0gwancOBFpSsXNBLAx8Qn4UeODH
-	1p/M1RwrQIuqTJBqH3vhCYuhqoTKYOU=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-646-2S1eWF6uO1-heGXZBdtGng-1; Thu,
- 29 Oct 2026 12:44:10 -0400
-X-MC-Unique: 2S1eWF6uO1-heGXZBdtGng-1
-X-Mimecast-MFC-AGG-ID: 2S1eWF6uO1-heGXZBdtGng_1793292247
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3C6BF195FE10;
-	Thu, 29 Oct 2026 16:44:07 +0000 (UTC)
-Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 704E41955F01;
-	Thu, 29 Oct 2026 16:44:03 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: jgg@ziepe.ca
-Cc: alex@shazbot.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	bhelgaas@google.com,
-	jjohnson@kernel.org,
-	johannes@sipsolutions.net,
-	jtornosm@redhat.com,
-	kevin.tian@intel.com,
-	kvm@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	mani@kernel.org,
-	skolothumtho@nvidia.com,
-	yishaih@nvidia.com
-Subject: Re: [PATCH 0/7] Enable Qualcomm WiFi PCIe passthrough to VMs
-Date: Thu, 29 Oct 2026 17:44:02 +0100
-Message-ID: <20261029164402.1366695-1-jtornosm@redhat.com>
-In-Reply-To: <20261014150047.GO14213@ziepe.ca>
-References: <20261014150047.GO14213@ziepe.ca>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PpHLH41i
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 272D91F01816;
+	Thu, 29 Oct 2026 16:45:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793292313;
+	bh=8FjjOsXf5z9Tt1Kqhs0sKNFOSjmAhcAFmnSn8YWvTIY=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=PpHLH41ina4lNLrm4ETuYucC0WXkVH4uC9nuQS04476jBt7Mj4dhgDtRtgf9e0XE0
+	 63Dqj37GDuZ6lDM+xxTQbxSSk/iqaFko+IJVnrldstyMcsq16BrJVSiBs8hobUJ26A
+	 sZAh4CO9vCPQov38McNDe8L+SYSgvw5yXoxGd/ZAWA552KlPFxWgNjW3J/Fbc6ycrC
+	 Vm8ZeAO+3ZueeLJBsZ0kKqUwmI7tf9MQ/o12elwvwObBzvmw0eE6QtGk+fMtpOg1PK
+	 dUMwGPd4KbEa0GWYIZm6PI4neYHPv77cDfWGJmAna5Rx4GB1qpxjaNbPjZ/jx7PIdd
+	 iXUTZeNteVvEg==
+Message-ID: <sashiko-outbox-189672@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 4/8] ath11k: add PCIe link recovery retry
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261029163713.1366077-5-jtornosm@redhat.com>
+References: <20261029163713.1366077-1-jtornosm@redhat.com>
+ <20261029163713.1366077-5-jtornosm@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 29 Oct 2026 16:45:12 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -91,19 +59,29 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-Hi Jason,
+> When ath11k devices are passed through to VMs via PCIe passthrough,
+> the PCIe link may not stabilize immediately after global reset due to
+> virtualization layer timing variations. This causes MHI initialization
+> to fail with "BHI offset: 0xffffffff is out of range" errors because
+> the device is read before it's ready.
+>=20
+> Currently, ath11k_pci_soc_global_reset() just warns if the link is
+> down but continues anyway, leading to inevitable MHI failures.
+>=20
+> This patch adds:
+> 1. A retry loop (up to 5000ms) to wait for the PCIe link to recover
+>    after global reset (similar to the existing ath12k LTSSM retry logic)
+> 2. Proper error propagation to prevent continuing with a dead link
+>=20
+> This is especially important for VM environments where timing can vary
+> significantly from bare metal.
+>=20
+> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 
-I have studied your analysis and tried to follow your guidelines
-for the KVM paravirtualization approach.
-You can find the proposal in v3:
-https://lore.kernel.org/all/20261029163713.1366077-1-jtornosm@redhat.com/T/#t
+Sashiko has reviewed this patch and found no issues.
 
-Thanks
-
-Best regards
-Jose Ignacio
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029163713.1366=
+077-1-jtornosm@redhat.com?part=3D4
 
