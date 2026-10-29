@@ -1,108 +1,81 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.9
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793280625;
-	b=oxYq2OYKfVJox8F1eNs7yGZKIGbd3c7bxFtgDq4sEkxrC4/XcUEiiM+Y+pBtdPUVBVvt
-	 W90h9bYKMfGRFdo14YTO6C0hQ76ZZqLE2lUlga5V86PUo47Z5M+nZbriRGS6O8CbIr3u+
-	 nnElu7rBtyL7VPM0CIO6mane9BBUKh8zif2heaUi5o2MOtnMm5ypA2VvXELMUrEVJZNHK
-	 Z0uoKHvJwP7zx3OEaEdGJt1QCAsUXd/L9jVoKoLaSfxughMRezmd17nhr/yCUdbc5CG9U
-	 4p9iU9ZgsB4jo3h5R8vkTQ+s20TJTedt6gjn2QHGTAlUHxv0izqwKnakIcA8gojY9Rw==
+	t=1793280671;
+	b=NhPfNF0eQZTd+sFm5aybzG/FRk0RYJntF+K6Gj3Vy5wNsz5s29NjQmnuJ8NwgXqXQpad
+	 x/ixNl9MHrP0M8QhxFspvoS8ZsY1CxjrU+7+G2YCKNseYBzUWq/BML+rfF/kYFgzXBs2c
+	 JzgUjx8X8GDwDQCvOqq+5xKtOyz1S+hS9jOMX4CxP9anVSaojFU1cS34nD7umJJ4+uErf
+	 LCSpK29xax6VviQRTtlDK5NtMMgksBRWAZVZMzsweqLi4MvE0yTqOYHTaRq9dJTFBl+fk
+	 6DfFfaYSAjmYpMn+iXay2NlD7rt7/pScljd/SEmEktN27xnDgyv3fK1t8MrT5QYhYuQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793280625;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793280671;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To:Organization;
-	bh=Mb2nUQU4M00SSUzZJSeoQpnNXAraCq7x3LdAKS30Euw=;
-	b=av59mA0JFVoyz4HJOq9OYY+bqom6HCJpdGpiVJZgY+AAAAPVDwFOBscIb2eE9diepS8a
-	 838mm8Qv1AJ5Ew7hqXjfDP08UFl5ExS2cKSlAhmM755PQbQ8sFnI93jLjEkU1AMzcega6
-	 I+P/CSQSOQqFPMkAYQI6/W7WEU+yng1qLG1kRzE4F5mquQXMfMaeL/nl9G6o74heCvQEa
-	 rpQqU7kMzF8FNOkada1v+mxwpETZCFwUIYkuux5HVTxkEX/osFBJflMCLDKoUROsZnXWa
-	 2Ob+h0uRQla21ncH85NoA+sTZKMIRLVybaHkb40iHT2q74gjkm7C+1c0AnHdWhQsHdA==
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=b+AFuhWnPDJSLYhPZ4qjpkT+CV2kwG8ni2hQRfb7t5c=;
+	b=nbOcJE78CH7mSOynfPKQVoKOgtpevwa9PuLxs5dFCVbP7jtG3ynp3oEbn2d8+dVXryHC
+	 NEswD/ELKIwBedSA152ms9U+g5uqj5medbDvdeQSZ6vgya1RV9hYDKz62N/Pkxtv1rj0/
+	 PTCRbpMOWuUmCnibOpHHLvfc+FZKOOg8Fa6ERq6J9aFpn30fbg2JfFq2Q7iLF3xVkQGQ7
+	 GqncZulvEhNbBiqb4uuKu4DGqwgoHZ/gumXlHtN4zS+NsHe8yCW/ejb/oYYk8NcNt8CSO
+	 N2cMEvGMRzyyZ8JDFVM0XP/MJ+omt0XFyp6Y9fYLkowRmnLx1DWRbCUoMc1R+VZStew==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=intel.com;
 	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=moKhVdIW;
-	arc=none smtp.remote-ip=192.198.163.8
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=ICrif33P;
+	arc=none smtp.remote-ip=198.175.65.9
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67996606A326;
-	Thu, 29 Oct 2026 13:30:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 67996606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C0A9606A321;
+	Thu, 29 Oct 2026 13:31:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8C0A9606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=moKhVdIW
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=ICrif33P
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793280624; x=1824816624;
+  t=1793280670; x=1824816670;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=XiB/P3z67uNi54hQwr+HoGceAi4KeJ58DpxovBSc0bg=;
-  b=moKhVdIWHTlYBTM27yPpptcYvWfZxeoV5vQDl8tROPJHxcy1XOyrsLiH
-   UEC0pOG8yTIBOxOxX+8Sx3MfPvthNhhSVbg7hmXMLdY75L0ynvudB2qUB
-   xwDw8dlq+JFqmrEH1vF2p5uZ15A+7QpDyhHdm3QkceUndx7CjaFFhUM69
-   MGYS36fDRAR2PqPL1vCXsKjhaE/atqXAWFvoXUpwofjuL2spLHNDxelfM
-   4s5Iqm0+JQ+1YT0Rz6kf+pLQU6USwnYQL+Zb3tysqKRg5FvDcKhZdVdhv
-   IUM8pJpk+riQyMmNtQTeyuROg0DxK1r+WJdKbdMqvpLe47T3qLyVJqwQX
-   A==;
-X-CSE-ConnectionGUID: X1a7bbI8SnWe9Ef4aSkLOQ==
-X-CSE-MsgGUID: CjMqrJc6RY20tCJkecc5HQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11949"; a="1915313"
+  bh=zbPNXzmKH5aiAeKH/1F04rnmfk563h7HnAZF0WYRyrA=;
+  b=ICrif33PAkFdKQhDpW7b0nvjVyoca7qh1NCgdBw3WJE8wcaYy14ZjlSQ
+   5VhkdDnGtKRKqu+JGhhsCrK1b2a9j+9NgCSf9roGWpLqy9eB7JuNA33wL
+   C5n5C0PSxKmVrvEjvqX1fFYq4iMVIh79IdWy65Ywy+4eIbgGF9cMJFs88
+   ARaeSWCdBwy6Ok4xQNv/WjSyUuSsgBiTPHDh6oHFT2P3Oe1TfUmaUC2x0
+   zvrMaVVST4f0vCNv0wrhO/uOKze7C8/L3r+5rB5wFtCNYBs+E+yMHCq1i
+   5uRzLWYBvXlxmbgIpYeYV+ZJSjj/2vvTCX4B+XznrD/TM/qFmf0wMl1HE
+   Q==;
+X-CSE-ConnectionGUID: TWDiercORcaZmkk7YwIQ6Q==
+X-CSE-MsgGUID: 9huVO9KVSNWr7rd/HvbIOQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11949"; a="1906435"
 X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
-   d="scan'208";a="1915313"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 06:30:23 -0700
-X-CSE-ConnectionGUID: pazyI6DLSZO+QuLDn2CgVg==
-X-CSE-MsgGUID: Eiw0OS5rRee86K4uWKSdfA==
+   d="scan'208";a="1906435"
+Received: from orviesa007.jf.intel.com ([10.64.159.147])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 06:31:10 -0700
+X-CSE-ConnectionGUID: ZVqDH6SwSAi+mVyeV+cHmw==
+X-CSE-MsgGUID: r8hmop+ZR1uxXaDTAZ6hKw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
-   d="scan'208";a="5273644"
-Received: from ncintean-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.129])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 06:30:12 -0700
-Date: Thu, 29 Oct 2026 15:30:09 +0200
-From: Andy Shevchenko <andriy.shevchenko@intel.com>
-To: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Len Brown <lenb@kernel.org>, Linus Walleij <linusw@kernel.org>,
-	Bartosz Golaszewski <brgl@kernel.org>, Sven Peter <sven@kernel.org>,
-	Janne Grunau <j@jannau.net>, Neal Gompa <neal@gompa.dev>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Jonathan Cameron <jic23@kernel.org>,
-	David Lechner <dlechner@baylibre.com>,
-	Nuno =?iso-8859-1?Q?S=E1?= <nuno.sa@analog.com>,
-	Andy Shevchenko <andy@kernel.org>, Lee Jones <lee@kernel.org>,
-	Pavel Machek <pavel@kernel.org>,
-	Griffin Kroah-Hartman <griffin@kroah.com>,
-	Hans de Goede <hansg@kernel.org>,
-	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Sebastian Reichel <sre@kernel.org>,
-	Alexandre Belloni <alexandre.belloni@bootlin.com>,
-	Wim Van Sebroeck <wim@linux-watchdog.org>,
-	Jarkko Sakkinen <jarkko@kernel.org>,
-	Mimi Zohar <zohar@linux.ibm.com>,
-	Roberto Sassu <roberto.sassu@huawei.com>,
-	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-	Eric Snowberg <eric.snowberg@oracle.com>,
-	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
-	"Serge E. Hallyn" <serge@hallyn.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-gpio@vger.kernel.org, asahi@lists.linux.dev,
-	linux-arm-kernel@lists.infradead.org, linux-hwmon@vger.kernel.org,
-	linux-iio@vger.kernel.org, linux-leds@vger.kernel.org,
-	mfd@lists.linux.dev, platform-driver-x86@vger.kernel.org,
-	linux-pm@vger.kernel.org, linux-rtc@vger.kernel.org,
-	linux-watchdog@vger.kernel.org, linux-integrity@vger.kernel.org,
-	keyrings@vger.kernel.org, linux-security-module@vger.kernel.org
-Subject: Re: [RFC PATCH 03/14] watchdog: add driver for apple smc
-Message-ID: <auNKYRpfqrtKa50O@ashevche-desk.local>
-References: <20261029085504.3547-1-atharvatiwarilinuxdev@gmail.com>
- <20261029085504.3547-4-atharvatiwarilinuxdev@gmail.com>
+   d="scan'208";a="5035807"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by orviesa007.jf.intel.com with ESMTP; 29 Oct 2026 06:31:08 -0700
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xMQDg-00000000aAi-3BfQ;
+	Thu, 29 Oct 2026 13:31:04 +0000
+Date: Thu, 29 Oct 2026 21:30:15 +0800
+From: kernel test robot <lkp@intel.com>
+To: wuqianhai@loongson.cn, bhelgaas@google.com
+Cc: oe-kbuild-all@lists.linux.dev, wuqianhai <wuqianhai@loongson.cn>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	tzimmermann@suse.de, javierm@redhat.com,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH] PCI/VGA: Fix boot device detection after framebuffer
+ relocation
+Message-ID: <202610292159.Ls5pkJAS-lkp@intel.com>
+References: <20261028094634.766723-1-wuqianhai@loongson.cn>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -114,76 +87,53 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261029085504.3547-4-atharvatiwarilinuxdev@gmail.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
+In-Reply-To: <20261028094634.766723-1-wuqianhai@loongson.cn>
 
-On Thu, Oct 29, 2026 at 04:52:00AM -0400, Atharva Tiwari wrote:
-> Add a watchdog driver for the SMC on Intel Macs. It can
-> reset the machine if the system stops responding. It works
-> on both newer and older SMC versions.
+Hi,
 
-...
+kernel test robot noticed the following build errors:
 
-> --- a/drivers/watchdog/Kconfig
-> +++ b/drivers/watchdog/Kconfig
-> @@ -1810,6 +1810,17 @@ config SIEMENS_SIMATIC_IPC_WDT
->  	  To compile this driver as a module, choose M here: the module will be
->  	  called simatic-ipc-wdt.
->  
-> +config MACSMC_WDT
-> +	tristate "Apple SMC Watchdog"
-> +	depends on X86 && MACSMC_ACPI
-> +	select WATCHDOG_CORE
-> +	help
-> +	  This driver adds support for Watchdogs in Intel macs Using
-> +	  Apple SMC.
-> +
-> +	  To compile this driver as a module, choose M here: the module will be
-> +	  called macsmc_wdt.
-> +
->  # M68K Architecture
->  
->  config M54xx_WATCHDOG
-> diff --git a/drivers/watchdog/Makefile b/drivers/watchdog/Makefile
-> index 9ac406677..f142a5d8d 100644
-> --- a/drivers/watchdog/Makefile
-> +++ b/drivers/watchdog/Makefile
-> @@ -158,7 +158,7 @@ obj-$(CONFIG_NIC7018_WDT) += nic7018_wdt.o
->  obj-$(CONFIG_MLX_WDT) += mlx_wdt.o
->  obj-$(CONFIG_KEEMBAY_WATCHDOG) += keembay_wdt.o
->  obj-$(CONFIG_SIEMENS_SIMATIC_IPC_WDT) += simatic-ipc-wdt.o
-> -
-> +obj-$(CONFIG_MACSMC_WDT) += macsmc_wdt.o
->  # M68K Architecture
->  obj-$(CONFIG_M54xx_WATCHDOG) += m54xx_wdt.o
+[auto build test ERROR on pci/next]
+[also build test ERROR on pci/for-linus linus/master v7.3 next-20261028]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-In moth files the entries seems misplaced to me. Also, why did you touch
-the blank line?
+url:    https://github.com/intel-lab-lkp/linux/commits/wuqianhai-loongson-cn/PCI-VGA-Fix-boot-device-detection-after-framebuffer-relocation/20261028-174634
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+patch link:    https://lore.kernel.org/r/20261028094634.766723-1-wuqianhai%40loongson.cn
+patch subject: [PATCH] PCI/VGA: Fix boot device detection after framebuffer relocation
+config: microblaze-defconfig (https://download.01.org/0day-ci/archive/20261029/202610292159.Ls5pkJAS-lkp@intel.com/config)
+compiler: microblaze-linux-gcc (GCC) 16.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261029/202610292159.Ls5pkJAS-lkp@intel.com/reproduce)
 
-...
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202610292159.Ls5pkJAS-lkp@intel.com/
 
-> +struct macsmc_wdt {
-> +	struct apple_smc *smc;
-> +	bool has_oswd; /* Newer version of watchdogs in macsmc */
-> +	struct watchdog_device wdd;
-> +};
+All errors (new ones prefixed by >>):
 
-Try with `pahole`.
-
-...
-
-> +	.probe = macsmc_wdt_probe,
-> +	.driver = {
-> +		.name = "macsmc-wdt"
-
-Always add a comma to non-terminator entries in the initializers
-(yes, there are some exceptions, but it's not the case here).
-
-> +	},
-
--- 
-With Best Regards,
-Andy Shevchenko
+   microblaze-linux-ld: drivers/pci/vgaarb.o: in function `vga_arb_device_init':
+>> drivers/pci/vgaarb.c:1536:(.init.text+0x10): undefined reference to `screen_info_apply_fixups'
 
 
+vim +1536 drivers/pci/vgaarb.c
+
+  1524	
+  1525	static int __init vga_arb_device_init(void)
+  1526	{
+  1527		int rc;
+  1528		struct pci_dev *pdev;
+  1529	
+  1530		/*
+  1531		 * PCI resource assignment may have relocated the firmware
+  1532		 * framebuffer BAR. Update screen_info's lfb_base so that
+  1533		 * vga_is_firmware_default() can match it against the boot
+  1534		 * device's relocated resource.
+  1535		 */
+> 1536		screen_info_apply_fixups();
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
