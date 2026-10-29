@@ -1,72 +1,80 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793265982;
-	b=DcZepHrnXX8YJdc9e9HD7qOVxavh3/zK+DM/CdKzDUTljXxDLIij1ks1eJQqduUp4YgS
-	 I+xBoYp9B3rihZlLcOB5G+BIBt17ynsB3aE03e3tmsENYn5ih798XU/AQ8H4/T6j8aoAh
-	 zO0+BXmfA6pPW452oIa44Wuv5FRPlsUazeZQJvMIzoGrv5du58oOq7kK4kZB7+d21JkU3
-	 Ce+jru1nKC1lfVltEy5PGPRsA6Xn0R/lX8sTzvP6R2klOV4LCvfMX42wv/mpj5yvd/c32
-	 Ur81WBlHa4CFVH6SCCbUHfr2YeWxvBuPEf6waTJAlu8YC8NI0n2Vd/7mVZnMGLGhndw==
+	t=1793266665;
+	b=Eq9lzaH1zC3y6qPmVFHH8N7pTUyvYr4QEi3e97VpAudYAmfXtBLG2mQFLJKtk7zTxSNF
+	 MqhskGvUVXYazeq5chbY6BBSDqLvbqCX9q3KqIxgqysFEpLor1AtWJ7pIlGswUlMf6we9
+	 d532RcBkbMjni4yuG2AXmFPRAnZ3xel9AYvViSNAGQGPt297eZlTicIdczIHodXA4ry3x
+	 vzHrOhq8CYB2aHv4uwBQmS46WQiuQNa2EzfJLsEuubm4kFXUjmy20rXwfFaIxO81/QKoE
+	 t0WJXcztOSM03vDHBV75HzKVQnRNExsSlawgxzkq0v9vOmbRCdXHOEKCFsXB3+2s85g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793265982;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=4Xbj3/i9atnWntAjbez4qPemNAtJuDYWyOhE+0HbibQ=;
-	b=lZq5PA9tNGZXqZp24T3P5uztBLJxCGBQINgBPU06Kp8S0Jmfn/Im0D1FmbgKMaZqC2Dn
-	 CsQ3WJA+FSw+XcYw7L/mAl/bJuDeHKV7IUYYcKpR0CrnOCmaXiBwU9hvirNuHmkRA1buK
-	 dhxJq86d32WrAZUMHsiKKp6hEJw3XiRKMlGadabBie8NzScBBxP/xuqsIewgrwIGRBwDp
-	 InmLE8MmWXpSD8qalhYa2tNfLPpELVoumuop3F1ooUKbMo+HU5RruBcmVDjoC7eYSXGg+
-	 x+9sELWjpkEBgrsGv0Cz3wnQBrVu3Mv8CfoSOUHGjvuV8fhFKKRhaA5GsaGe1o/HYMg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793266665;
+	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
+	 References:Date:Message-ID:MIME-Version:Content-Type;
+	bh=b1L/YgA0unso+/Lv8s9MhtgPB5X7wkfHZu4ut24TmCk=;
+	b=YGULWsnAegFdkuZ+MwhXT0AtaXSrXoYLBV13KypWv2uehQo3SCZ3ZgHkTT3DtbuBrP3+
+	 FNAUefGK6G8DrrracbGIADNxIW0h5G93A9mMENlQo0khnH5cp7Y8gqUfR3qTL4B8nTwh0
+	 jd4NgGXhxhcQ5JVrCb4RY6wnpLqhrMGgjWU0D/+22qUGrhWEoJf+HT7os9iRKyMWwn5X4
+	 uCHuzOmWonaboU0J9nHe1mqBrowNdQuxHk+ywsKcEKvApN3gMCZ1kGZTpChkmHXd42jx9
+	 ir9XDXU3j4/dDpoVwFmul9E/2v5NWjImf0Yw+J4vaFh0F+vbFufytLK9MLFGLCwqalQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ja91PU4v;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GYVH+Mm9;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3EB6606A31D;
-	Thu, 29 Oct 2026 09:26:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EAA160A2609;
+	Thu, 29 Oct 2026 09:37:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ja91PU4v
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D64B1F01825;
-	Thu, 29 Oct 2026 09:26:19 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GYVH+Mm9
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31D2D1F01829;
+	Thu, 29 Oct 2026 09:37:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793265981;
-	bh=4Xbj3/i9atnWntAjbez4qPemNAtJuDYWyOhE+0HbibQ=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ja91PU4vPbX6rgW3/SqQiH2C6ahMYlFn1iM6Yhk5K2vsH1AUrHvwaGV0losZneLPc
-	 fkPuK0pVqZdLmW0pnU61e0jrAM3xHVc7rt+gZByXNX2jssRbiGf7zzpJ0TeyD9NS4s
-	 36k58aSpT2pqxM589jOx5Mvq5xI9Ph8In1/NYDGdLPpaFE8yKd2lrkDxm82ET9xuJX
-	 TPSnSkwvymOwucPYiKI7/qqjfT8MF6aps9Xp6WPuxjToTXg6bepqbIX9SArnXiGiy8
-	 Q54QoRp37OpUs72qZCw8uiJBVzrw7Waq3mjq2e5UG7SKpMbkFmwzX4HnMeJAMisnrk
-	 7sKxUnqKW19zA==
-Message-ID: <sashiko-outbox-189036@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH 14/14] mfd/macsmc: add ioctl to access smc keys
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Atharva Tiwari" <atharvatiwarilinuxdev@gmail.com>
-Cc: "Bjorn Helgaas" <bhelgaas@google.com>, "Thomas Gleixner" <tglx@kernel.org>, "Ingo
- Molnar" <mingo@redhat.com>, "Borislav Petkov" <bp@alien8.de>, "Dave Hansen" <dave.hansen@linux.intel.com>, x86@kernel.org, "H.
- Peter Anvin" <hpa@zytor.com>, "Rafael J. Wysocki" <rafael@kernel.org>, "Len
- Brown" <lenb@kernel.org>, "Linus Walleij" <linusw@kernel.org>, "Bartosz
- Golaszewski" <brgl@kernel.org>, "Sven Peter" <sven@kernel.org>, "Janne
- Grunau" <j@jannau.net>, "Neal Gompa" <neal@gompa.dev>, "Guenter Roeck" <linux@roeck-us.net>, "Jonathan
- Cameron" <jic23@kernel.org>, "David Lechner" <dlechner@baylibre.com>,
- =?utf-8?b?TnVubyBTw6E=?= <nuno.sa@analog.com>, "Andy Shevchenko" <andy@kernel.org>, "Lee
- Jones" <lee@kernel.org>, "Pavel Machek" <pavel@kernel.org>, "Griffin
- Kroah-Hartman" <griffin@kroah.com>, "Hans de Goede" <hansg@kernel.org>,
- =?utf-8?b?SWxwbyBKw6RydmluZW4=?= <ilpo.jarvinen@linux.intel.com>, "Sebastian
- Reichel" <sre@kernel.org>, "Alexandre Belloni" <alexandre.belloni@bootlin.com>, "Wim
- Van Sebroeck" <wim@linux-watchdog.org>, "Jarkko Sakkinen" <jarkko@kernel.org>, "Mimi
- Zohar" <zohar@linux.ibm.com>, "Roberto Sassu" <roberto.sassu@huawei.com>, "Dmitry
- Kasatkin" <dmitry.kasatkin@gmail.com>, "Eric Snowberg" <eric.snowberg@oracle.com>, "Paul
- Moore" <paul@paul-moore.com>, "James Morris" <jmorris@namei.org>, "Serge E.
- Hallyn" <serge@hallyn.com>, linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-leds@vger.kernel.org, mfd@lists.linux.dev, linux-rtc@vger.kernel.org, linux-watchdog@vger.kernel.org, keyrings@vger.kernel.org, linux-security-module@vger.kernel.org
-In-Reply-To: <20261029085504.3547-15-atharvatiwarilinuxdev@gmail.com>
-References: <20261029085504.3547-1-atharvatiwarilinuxdev@gmail.com>
- <20261029085504.3547-15-atharvatiwarilinuxdev@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 29 Oct 2026 09:26:19 +0000
+	s=k20260515; t=1793266665;
+	bh=b1L/YgA0unso+/Lv8s9MhtgPB5X7wkfHZu4ut24TmCk=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=GYVH+Mm9omq5BAsPPLcumqvOBUW7yKv6qRkJyIck5tFwfRa1tUfjtE1geDCpsmBEP
+	 2RwHK9Cy8sS2rBXuKXJvctC4Bq6C2jK6S/gBMA9x1sxt6ydKYVAFfAqpCKD+Lbm+RW
+	 CTkFLp+EHxcq2Q+0N+MiEyq8LgEaRZKBHMQZslmLTNkQz52CiV4VANY5UuxTSJYiXc
+	 HSEiViC0iMwJEQOI2/cy1vL8wqYF36gfQSfNXAqFM2CsYJ00Xwib/fXPCJXdfkBwli
+	 uFbEJD7BvWk6qn89ZMam6ipKB0JOazajL/SM6VxCjG3IQq3Hghn8AUsKjF5s6ntxKr
+	 WS9/dwDL4KSwQ==
+X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
+From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: iommu@lists.linux.dev, Alex Williamson <alex@shazbot.org>,
+	Alexey Kardashevskiy <aik@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Joerg Roedel <joro@8bytes.org>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Krishna Reddy <vdumpa@nvidia.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Nicolin Chen <nicolinc@nvidia.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Samuel Ortiz <sameo@rivosinc.com>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Steven Price <steven.price@arm.com>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>,
+	Thierry Reding <thierry.reding@kernel.org>,
+	Vasant Hegde <vasant.hegde@amd.com>,
+	Will Deacon <will@kernel.org>,
+	Xu Yilun <yilun.xu@linux.intel.com>, kvm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-coco@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v7 10/16] iommufd: Add the vdevice TSM request ioctl
+In-Reply-To: <179321444123.2412245.6955528563980811144.b4-review@b4>
+References: <20261008055955.4014342-1-aneesh.kumar@kernel.org>
+ <20261008055955.4014342-11-aneesh.kumar@kernel.org>
+ <179321444123.2412245.6955528563980811144.b4-review@b4>
+Date: Thu, 29 Oct 2026 15:07:34 +0530
+Message-ID: <yq5a1p98c0f5.fsf@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -75,292 +83,187 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
-- [High] mfd: macsmc: use-after-free in apple_smc_fops_ioctl() after device=
- unbind
-- [Medium] mfd: macsmc: size_t in ioctl payload breaks compat_ioctl in appl=
-e_smc_fops
-- [Medium] mfd: macsmc: incomplete write blocklist in apple_smc_fops_ioctl()
-- [Low] mfd: macsmc: return -ENOTTY for unknown cmd in apple_smc_fops_ioctl=
-()
-- [Low] mfd: macsmc: commit subject violates MFD prefix and capitalization =
-rules
---
+Jason Gunthorpe <jgg@nvidia.com> writes:
 
-commit 352ee7db8cfde297319806ac2e104b433cfad104
-Author: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
-
-mfd/macsmc: add ioctl to access smc keys
-
-This commit registers a /dev/smc miscdevice in macsmc-core to allow
-userspace to read, write, and query Apple SMC keys via ioctls, while
-blocking writes to a static list of keys managed by kernel drivers.
-
->     mfd/macsmc: add ioctl to access smc keys
+>> [ ... 300 lines skipped ... ]
+>> +/**
+>> + * enum iommu_vdevice_tsm_guest_req_op - Guest TSM request operations
+>> + * @TSM_REQ_VALIDATE_MMIO: Validate and map a guest MMIO range for the trusted
+>> + *                         device.
+>> + * @TSM_REQ_SET_TDI_STATE: Transition the trusted device to the unlocked,
+>> + *                         locked, or running state.
+>> + * @TSM_REQ_SEV_ENABLE_DMA: Enable DMA for an SEV device.
+>> + * @TSM_REQ_SEV_DISABLE_DMA: Disable DMA for an SEV device.
+>> + * @TSM_REQ_READ_OBJECT: Read bytes from a device object, such as a certificate,
+>> + *                       measurement, or interface report.
+>> + * @TSM_REQ_REGEN_OBJECT: Regenerate a device object, such as a measurement or
+>> + *                        interface report.
+>> + * @TSM_REQ_OBJECT_INFO: Query the size of a device object.
+>> + * @TSM_REQ_MAX: One past the last request operation; not a command.
+>> + *
+>> + * The request payload and response format depend on the TVM architecture.
+>> + */
+>> +enum iommu_vdevice_tsm_guest_req_op {
+>> +	TSM_REQ_VALIDATE_MMIO = 1,
+>> +	TSM_REQ_SET_TDI_STATE,
+>> +	TSM_REQ_SEV_ENABLE_DMA,
+>> +	TSM_REQ_SEV_DISABLE_DMA,
+>> +	TSM_REQ_READ_OBJECT,
+>> +	TSM_REQ_REGEN_OBJECT,
+>> +	TSM_REQ_OBJECT_INFO,
+>> +	TSM_REQ_MAX,
+>> +};
 >
->     Add a /dev/smc device so userspace can talk to the SMC
->     directly. Some keys that need to be written aren't handled by
->     any driver, or affect several drivers at once, so they
->     can't be exposed cleanly through the kernel interfaces.
+> This is still no where close to being well defined enough.
 >
->     Keys already managed by kernel drivers can't be written this
->     way, to avoid conflicts.
+> Everything here must tie back to defined spec references, listed in
+> the comments.
 >
->     Signed-off-by: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
+> I cannot guess what data is passed over any of these APIs, how things
+> like "REGEN_OBJECT" select which object to regen, or what the format
+> of those objects even is. The formats of req/resp are never specified.
+>
 
-[Severity: Low]
-This isn't a bug, but the MFD subsystem convention uses the prefix format
-"mfd: <driver>: <Capitalized description>". Should the commit subject be
-formatted as "mfd: macsmc: Add ioctl to access SMC keys"?
+The request and response payload formats are specific to each CoCo
+backend. Since iommufd treats the payloads as opaque and does not
+validate their contents, what would documenting those formats here
+achieve?
 
-> diff --git a/drivers/mfd/macsmc-core.c b/drivers/mfd/macsmc-core.c
-> index bc4200f574bd5..a30f7386ef9cd 100644
-> --- a/drivers/mfd/macsmc-core.c
-> +++ b/drivers/mfd/macsmc-core.c
+The limited validation is intended to prevent this from becoming a
+general-purpose multiplexer ioctl. It restricts the ioctl to a defined
+set of guest-initiated operations that the host forwards to the
+firmware. The path is essentially:
 
-[ ... ]
+guest -> vmexit -> VMM -> iommufd ioctl -> TSM backend -> firmware 
 
-> @@ -112,6 +115,144 @@ static void apple_smc_disable_notifications(void *d=
-ata)
->  	smc->be->disable_notifications(smc->be_cookie);
->  }
-> =20
-> +static long apple_smc_fops_ioctl(struct file *file, unsigned int cmd, un=
-signed long arg)
-> +{
-> +	struct apple_smc *smc =3D file->private_data;
-> +	void __user *argp =3D (void __user *)arg;
-> +	int ret;
-> +
-> +	switch (cmd) {
+> The comment for this should probably be *enormous*. Every arch should
+> explain what they do on every one of these ops, and it should be
+> identical if it is structured like this.
+>
 
-[ ... ]
+That would require documenting a significant amount of backend-specific
+detail in iommufd. Could we instead require each TSM backend's
+guest_request callback to document its request and response formats?
 
-> +	case IOCTL_SMC_WRITE: {
-> +		struct ioctl_smc_rw_payload payload;
-> +		struct apple_smc_key_info info;
-> +
-> +		if (copy_from_user(&payload, argp, sizeof(payload)))
-> +			return -EFAULT;
-> +
-> +		ret =3D apple_smc_get_key_info(smc, payload.key, &info);
-> +		if (ret < 0)
-> +			return ret;
-> +
-> +		if (payload.size !=3D info.size)
-> +			return -EINVAL;
-> +
-> +		if (payload.size > 32)
-> +			return -EINVAL;
-> +
-> +		switch (payload.key) {
-> +		case __SMC_KEY('C', 'H', '0', 'I'):
-> +		case __SMC_KEY('C', 'H', '0', 'C'):
-> +		case __SMC_KEY('C', 'H', '0', 'K'):
-> +		case __SMC_KEY('C', 'H', '0', 'B'):
-> +		case __SMC_KEY('C', 'H', 'T', 'E'):
-> +		case __SMC_KEY('C', 'H', 'L', 'S'):
-> +		case __SMC_KEY('B', 'C', 'L', 'M'):
-> +		case __SMC_KEY('M', 'B', 'S', 'E'):
-> +		case __SMC_KEY('C', 'L', 'K', 'L'):
-> +		case __SMC_KEY('C', 'L', 'K', 'O'):
-> +		case __SMC_KEY('O', 'S', 'W', 'D'):
-> +		case __SMC_KEY('N', 'A', 'T', 'J'):
-> +		case __SMC_KEY('N', 'A', 'T', 'i'):
-> +		case __SMC_KEY('N', 'E', 'S', 'N'):
-> +		case __SMC_KEY('M', 'O', 'C', 'N'):
-> +		case __SMC_KEY('L', 'K', 'S', 'B'):
-> +		case __SMC_KEY('N', 'T', 'O', 'K'):
-> +		case __SMC_KEY('N', 'T', 'A', 'P'):
-> +		case __SMC_KEY('F', '0', 'T', 'g'):
-> +		case __SMC_KEY('F', '1', 'T', 'g'):
-> +		case __SMC_KEY('F', '0', 'M', 'd'):
-> +		case __SMC_KEY('F', '1', 'M', 'd'):
-> +		case __SMC_KEY('F', 'S', '!', ' '):
-> +			return -EPERM;
-> +		}
 
-[Severity: Medium]
-Does this static blocklist miss other keys actively managed by MFD child
-drivers?
+> I have a strong guess almost none of this is actually general, but
+> lets find out.
+>
+> You can also put enum kdocs directly before each enum which helps alot
+> when they get as big as this stuff has to get.
+>
+> My guesses with no information
+> 1) VALIDATE_MMIO why would the hypervisor ever need this? Guest
+>    validates MMIO through secure communication to the secure world.
+>
 
-In drivers/hwmon/macsmc-hwmon.c, macsmc_hwmon_create_fan_acpi() registers
-all fans up to FNum using keys F<num>Tg and F<num>Md, and
-macsmc_hwmon_create_fan() registers fan keys from DT on Apple Silicon:
+With VFIO PCI BARs backed by guest_memfd, the VMM can validate that the
+IPA and PA values provided by the guest belong to the VFIO device. We
+previously also used this operation to ask the CoCo TSM backend to map
+the device memory (the BAR regions). I have removed this operation from
+the latest series because that responsibility is now split between the
+VMM and guest_memfd. TDX and SNP still need to be updated accordingly.
 
-drivers/hwmon/macsmc-hwmon.c:macsmc_hwmon_create_fan_acpi() {
-	const char num_char =3D num + '0';
-	...
-	ret =3D macsmc_hwmon_create_sensor_acpi(smc, &fan->set,
-			__SMC_KEY('F', num_char, 'T', 'g'), NULL, 0);
-	if (ret)
-		return ret;
+> 2) TDI_STATE I thought at least RMM did this with an RSI?
+>
 
-	if (apple_smc_key_exists(smc, __SMC_KEY('F', num_char, 'M', 'd'))) {
-		ret =3D macsmc_hwmon_create_sensor_acpi(smc, &fan->mode,
-				__SMC_KEY('F', num_char, 'M', 'd'), NULL, 0);
-}
+CCA uses RHI. The RHI reaches the VMM, which issues the ioctl to
+complete the request.
 
-On systems with more than two fans, fans 2 and above remain writable via
-IOCTL_SMC_WRITE, which bypasses the min/max RPM validation in
-macsmc_hwmon_write_fan() and desynchronizes hwmon->fan.fans[channel].manual.
+> 3) ENABLE/DISABLE DMA, see #1, must not be done by hypervisor
+>    See my reply to Alexey:
+>    https://lore.kernel.org/linux-iommu/20261022123058.GC3008132@nvidia.com/
+>
+> 4) READ/REGEN/INFO, what are the objects? What format are they in? How
+>    do you select them?
+>
 
-Similarly, drivers/gpio/gpio-macsmc.c (registered as macsmc-gpio) manages
-and writes PMU GPIO keys gP00..gPff in macsmc_gpio_set():
+These objects are cached by the hypervisor. For CCA, they include the
+certificate, measurement, interface report, and VCA. They are read in
+response to guest requests. The requests reach the VMM through an
+RHI, and the VMM issues the ioctl to read the requested object. REGEN
+refreshes the objects/evidence at the guest's request.
 
-drivers/gpio/gpio-macsmc.c:macsmc_gpio_set() {
-	struct macsmc_gpio *smcgp =3D gpiochip_get_data(gc);
-	smc_key key =3D macsmc_gpio_key(offset);
-	int ret;
+>    Does this overlap with attestation subsystem? Should attestation
+>    subsystem be used to access the SPDM related data?
+>
 
-	value |=3D CMD_OUTPUT;
-	ret =3D apple_smc_write_u32(smcgp->smc, key, CMD_OUTPUT | value);
-}
 
-None of the gPxx keys are filtered here either, allowing userspace to
-modify GPIO outputs behind the kernel driver's back.
+I had hoped we could use it, but I could not find an easy way to
+integrate the two. We need a simple way to read these evidence objects
+into userspace. I am not yet sure whether evidence-get can be used for
+that, since it does more than simply read the objects; it also updates
+evidence.generation, among other things.
 
-[ ... ]
+>
+> Update the comment to explain all this, don't need to answer here.
+>
+> We really need to do these defines along with implementations, that
+> probably will settle alot of the questions above.
+>
+>> +
+>> +/**
+>> + * struct iommu_vdevice_tsm_req - ioctl(IOMMU_VDEVICE_TSM_REQ)
+>> + * @size: sizeof(struct iommu_vdevice_tsm_req)
+>> + * @vdevice_id: vDevice ID the guest request is for
+>> + * @op: One of enum iommu_vdevice_tsm_guest_req_op, excluding TSM_REQ_MAX
+>> + * @tvm_arch: One of enum iommu_vdevice_tsm_guest_tvm_arch
+>> + * @req_len: Size in bytes of the input payload at @req_uptr, at most INT_MAX
+>> + * @resp_len: Size in bytes of the output buffer at @resp_uptr, at most INT_MAX
+>> + * @req_uptr: Userspace pointer to the guest-provided request payload
+>> + * @resp_uptr: Userspace pointer to the guest response buffer
+>> + * @out_tsm_code: TSM-specific result code returned by the TSM implementation
+>> + *
+>> + * Forward a TSM request to the TSM bound vDevice. This is intended for
+>> + * guest TSM/TDISP message transport where the host kernel only marshals
+>> + * bytes between userspace and the TSM implementation.
+>> + *
+>> + * The request operation is guest initiated. The vDEVICE implementation
+>> + * declares the TVM architecture and operations it accepts; iommufd checks
+>> + * both before forwarding the request.
+>> + *
+>> + * The request payload is read from @req_uptr/@req_len. If a response is
+>> + * expected, userspace provides @resp_uptr/@resp_len as writable storage for
+>> + * response bytes returned by the TSM path.
+>> + *
+>> + * The ioctl is only suitable for commands and results that the host kernel
+>> + * has no use, the host is only facilitating guest to TSM communication.
+>> + */
+>> +struct iommu_vdevice_tsm_req {
+>> +	__u32 size;
+>> +	__u32 vdevice_id;
+>> +	__u32 op;
+>> +	__u32 tvm_arch;
+>> +	__u32 req_len;
+>> +	__u32 resp_len;
+>> +	__aligned_u64 req_uptr;
+>> +	__aligned_u64 resp_uptr;
+>> +	__aligned_u64 out_tsm_code;
+>> +};
+>
+> Should the viommu_id be passed in as well, or we know it implicitly
+> from the vdevice_id?
+>
 
-> +	default:
-> +		return -EINVAL;
-> +	}
-> +}
+We get final callback via
 
-[Severity: Low]
-Should the default case in apple_smc_fops_ioctl() return -ENOTTY instead of
--EINVAL for unrecognized ioctl commands?
+vdev->viommu->ops->vdevice_tsm_req
 
-> +
-> +static int apple_smc_fops_open(struct inode *inode, struct file *file)
-> +{
-> +	struct miscdevice *misc =3D file->private_data;
-> +
-> +	file->private_data =3D container_of(misc, struct apple_smc, miscdev);
-> +	return 0;
-> +}
-> +
-> +static const struct file_operations apple_smc_fops =3D {
-> +	.owner		=3D THIS_MODULE,
-> +	.open		=3D apple_smc_fops_open,
-> +	.unlocked_ioctl	=3D apple_smc_fops_ioctl,
-> +	.compat_ioctl	=3D compat_ptr_ioctl,
-> +	.llseek		=3D noop_llseek,
-> +};
-> +
-> +static void apple_smc_misc_unregister(void *data)
-> +{
-> +	misc_deregister(data);
-> +}
-> +
->  int apple_smc_probe(struct device *dev, const struct apple_smc_backend_o=
-ps *ops,
->  		void *cookie, struct blocking_notifier_head *event_handlers, bool is_a=
-cpi)
->  {
-> @@ -150,6 +291,20 @@ int apple_smc_probe(struct device *dev, const struct=
- apple_smc_backend_ops *ops,
->  	if (ret)
->  		return ret;
-> =20
-> +	smc->miscdev.minor =3D MISC_DYNAMIC_MINOR;
-> +	smc->miscdev.name =3D "smc";
-> +	smc->miscdev.fops =3D &apple_smc_fops;
-> +	smc->miscdev.parent =3D dev;
-> +	smc->miscdev.mode =3D 0600;
-> +
-> +	ret =3D misc_register(&smc->miscdev);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ret =3D devm_add_action_or_reset(dev, apple_smc_misc_unregister, &smc->=
-miscdev);
-> +	if (ret)
-> +		return ret;
-> +
+>
+> I think this is probably a fine generic API, it should probably not be
+> "TSM request" so that the other viommu people can reuse the transport.
+>
+> I would probably try to stick to exactly like the other APIs do with a
+> single enum. Two enums for op/arch is saying already that the ops are
+> not well defined.
+>
+> So maybe strip this patch out to have no tsm stuff, define no ops and
+> just give a command transport into the viommu driver?
+>
 
-[Severity: High]
-Can this trigger a use-after-free in apple_smc_fops_ioctl() if the backend
-device is unbound (or if a subsequent devm_mfd_add_devices() call in
-apple_smc_probe() fails) while /dev/smc is open?
+Are you suggesting one ioctl per each guest request ops?
 
-In apple_smc_probe(), smc is allocated via devm_kzalloc(dev, sizeof(*smc),
-GFP_KERNEL), and smc->be_cookie is similarly devm-allocated on the backend
-device. When /dev/smc is opened, apple_smc_fops_open() stores a raw pointer
-to smc in file->private_data, and misc_open() only pins apple_smc_fops.owner
-(macsmc-core, not the backend driver).
-
-When the device is unbound or probe fails after misc_register(), devres
-runs apple_smc_misc_unregister() -> misc_deregister(&smc->miscdev) and then
-frees both smc and smc->be_cookie. Because misc_deregister() does not wait
-for in-flight ioctls or revoke already-open file descriptors, any concurrent
-or subsequent call to apple_smc_fops_ioctl() on the open file will
-dereference freed memory via file->private_data when locking smc->mutex and
-invoking smc->be callbacks with smc->be_cookie.
-
-> diff --git a/include/linux/mfd/macsmc.h b/include/linux/mfd/macsmc.h
-> index 4b4368b99adb6..29fd7b20ce9c8 100644
-> --- a/include/linux/mfd/macsmc.h
-> +++ b/include/linux/mfd/macsmc.h
-
-[ ... ]
-
-> @@ -141,8 +144,32 @@ struct apple_smc {
-> =20
->  	struct mutex mutex;
->  	spinlock_t lock;
-> +
-> +	struct miscdevice miscdev;
-> +};
-> +
-> +struct ioctl_smc_rw_payload {
-> +	smc_key key;
-> +	size_t size;
-> +	u8 buf[32];
-> +};
-> +
-> +struct ioctl_smc_index_payload {
-> +	int index;
-> +	smc_key key;
-> +};
-> +
-> +struct ioctl_smc_info_payload {
-> +	smc_key key;
-> +	struct apple_smc_key_info info;
->  };
-> =20
-> +#define APPLE_SMC_MAGIC 'S'
-> +#define IOCTL_SMC_READ           _IOWR(APPLE_SMC_MAGIC, 1, struct ioctl_=
-smc_rw_payload)
-> +#define IOCTL_SMC_WRITE          _IOW(APPLE_SMC_MAGIC, 2, struct ioctl_s=
-mc_rw_payload)
-> +#define IOCTL_SMC_GET_KEY_INDEX  _IOWR(APPLE_SMC_MAGIC, 3, struct ioctl_=
-smc_index_payload)
-> +#define IOCTL_SMC_GET_KEY_INFO   _IOWR(APPLE_SMC_MAGIC, 4, struct ioctl_=
-smc_info_payload)
-
-[Severity: Medium]
-Does using size_t in struct ioctl_smc_rw_payload break 32-bit compat ioctls
-even though apple_smc_fops sets .compat_ioctl =3D compat_ptr_ioctl?
-
-On 64-bit kernels, size_t is 8 bytes with 8-byte alignment, which adds 4
-bytes of padding after key (placing size at offset 8, buf at offset 16, and
-making sizeof(struct ioctl_smc_rw_payload) =3D=3D 48). In 32-bit userspace,
-size_t is 4 bytes with 4-byte alignment (placing size at offset 4, buf at
-offset 8, and making sizeof(struct ioctl_smc_rw_payload) =3D=3D 40). Because
-IOCTL_SMC_READ and IOCTL_SMC_WRITE encode the struct size, 32-bit compat
-callers will pass a command number with size 40 that fails to match the
-64-bit kernel's command number, or have mismatched field offsets and copy
-8 bytes past the userspace struct if invoked with the 64-bit command number.
-
-Also, since these ioctl structs and macros form a userspace ABI, should they
-be placed in a header under include/uapi/ using fixed-size UAPI types (__u3=
-2,
-__u8) with explicit padding rather than in the kernel-internal
-include/linux/mfd/macsmc.h header?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029085504.3547=
--1-atharvatiwarilinuxdev@gmail.com?part=3D14
+-aneesh
