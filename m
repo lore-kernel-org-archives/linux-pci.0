@@ -1,48 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793265193;
-	b=hTcyqdgkHJjCcbFPQ7KLcn077gjOtvbWcsNtmc9BPkm6ev7PSRgOxqjuAR9Z8XAeU/Zh
-	 IxMTxysuBwkQlvm74oGpjYoHcuPOQ3Pg8Pb5SiseZIAWGcsFkKylnXVPNWCnWiDxLcW8q
-	 /9UfzvPgvGYxvXxcikRXb1ZquUOkZpDetutftF0HBgy60RpjgONQbB0LAFhcpMtjD301u
-	 +NTicXtaQA6xyTm+/ud/qL15UH+MKxf2YKqcjmNK9rnrb3ABr1IvRTCQHsiM5x+MHPYcV
-	 ba9EAowbnn/ItSVlczD5rQEeInKBl3s+YtNLsHOO9yqPvFtji8uHGHzduZCtu21ZVYw==
+	t=1793265352;
+	b=kXENxGMUcvKS5l+UyCDvMSovHbbAKWvSKPy0w8i2xlydutKK/NeSYSDrFzUaRyVv2GzF
+	 1sk7H5/cSX3xBlKbkrGgqc/21afr3zth3jwlvLgSt+G9FHub38u68tx7+N34Yp6gdep40
+	 /aXlGQ6k3EjGE50CIJxIVSA90QJIn0uZuLuMYCEy2Zh6dQFxNMB/LzVi5FO2fhGu+Vifg
+	 9nUkNOD3mFl7oRDdmkt5isTZHWqZc/h0NpXnbCUi02yfIIN7b0FpZqMgDfB8Qi1sfaLGD
+	 mFh6oXp2nRqLGmYASGMAJta6Ou0wZo20HjUiCtmZ1E6QYlAEFqDBVVAaq/ya9fm1Ecg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793265193;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793265352;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=mSkWD197l6SdZ1PFc0zg6L/iSD0NHxPgBeNtnPjXuPQ=;
-	b=Hxuu+GMfGZNo7qso6dc/2KVlU0d2+N20j6L41iSJseWkLjl26HgvvTsZqYbDE26EIfGZ
-	 lehcpCUJLOrYtK7IOGalvBRyqEP7rH2lmmUHZMebQKLBspjXqLBBval0uITVlUawei2Rz
-	 oGN4tvczXvzgIgI/DpeAMcsj6nfqrq5pDUYkqp+Ie+OoQh4m1ybTRY7LRYXae5Lq3sPVk
-	 5RzUE2RntkwqAO7ozqYp1RxXUWJb0zQQ2m4DptBdHNAwvj14OphKgIrSlf6qDZdciT1o/
-	 RpLEtGTRNalGNgipwW/ZLknhlLSMCm+RF70xTX5aw98Mgr3MbbkSKdzkzo63744YDgg==
+	bh=YvxwrRsi9DJ63HuWkLKPGzYGzmHIDab3JdLRqCRRUxI=;
+	b=xJVKXHVct+hjHWkv2mDiphabXSodqcPZX2NNknSnrYPLOgG3F0d6SvtL943FxCxtlRP8
+	 ItNoX5Yawb/wKgZnCWrsGyFT80G+GWHamxf0VbKv3EWbCdfElMk+ER6XmlTS/03yJqtmj
+	 e+I8Qz0bFfhWBrUyTWlWU/0l/Jfa+h5ltQr610Onc+S5Sf6t3f3p7KCXBgsW65Lc0Ru/l
+	 IILnM1O1/3O4RG/HXvdvqVc8eeJ6QNZCNRlcuFV+ZQJhL+iU0B8oVhCBe5mgOrKMrMgID
+	 D40idD13vpvR9mAolgIq7evjzo7VHgn7cKJSFaRUqhIYM5ndycD9cONOZhFxSh/3aDA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=H794KHoW;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="hi5SHs/Q";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1812D606A31F;
-	Thu, 29 Oct 2026 09:13:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC8FD606A31A;
+	Thu, 29 Oct 2026 09:15:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=H794KHoW
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BE4C1F01825;
-	Thu, 29 Oct 2026 09:13:11 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hi5SHs/Q
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AC3A1F01825;
+	Thu, 29 Oct 2026 09:15:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793265192;
-	bh=mSkWD197l6SdZ1PFc0zg6L/iSD0NHxPgBeNtnPjXuPQ=;
+	s=k20260515; t=1793265351;
+	bh=YvxwrRsi9DJ63HuWkLKPGzYGzmHIDab3JdLRqCRRUxI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=H794KHoW2vrBAmP4DDCbKqlnsxH1oUuwC5deCeV6vA0p0aJOGwCKZdUeD0dpzDLSz
-	 LMV7shcr0Rp6sXehaNuu57F+RVkKv/NOCAxGH+Hp/3KwrEtLVaKNRy0pvzSwvLuYKM
-	 38umQt1xC2yUDE+ZhjHLC3su73j8I9u5RLgsXcKhhDMhTusCAu9r5Nk/HvUwDFM7xu
-	 YxxeC4d6KXZOsfyvB9Bsrsxc5TAMX4We1gA5html5nROZUzoe2o73G0+AdVz59kKJg
-	 eLxwS9s5FawU8oMxNrCdkb/41X19+N3MoCI0Ct5T/y/VmL9dJQRCt7WGc9wYdXzgx2
-	 QNxRovfoPvzBg==
-Message-ID: <sashiko-outbox-189006@kernel.org>
+	b=hi5SHs/QhiZ5zOLYZ1BUTOivYLQ+HichWGyXeOxVDvu+pS2E61RaoCzxIYZs70ZPw
+	 f2LcV5Pvng1GucTr1ppsGXeNKvZrvrYLf4gOK7BQ1JcZTOO5dgb6+/Xq3wUgQnpjZh
+	 IuOkQiz+qspqnloDbakygcZ6lnOl2KuE6PiKrlcBaSJiJoix8YWEQidIydEwFnyWKL
+	 4G2ppHSmUrQvm+Y0XOzZMPDCYcN9FJ1Ej3AfSvgwmM0jDGBG6IlJMRYwRyvmkQ0JK/
+	 7IWEBuxO1f1Zid3/aceoHUleTMBqO4q+uUPJSux+nR4fi8cvs8mJDJ2VQRK0OrcOYl
+	 Rfut5junY7jKQ==
+Message-ID: <sashiko-outbox-189013@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH 11/14] acpi: disable battery and adapter for x86
- apple machines
+Subject: Re: [RFC PATCH 07/14] rtc: add support for x86 macs in macsmc-rtc
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Atharva Tiwari" <atharvatiwarilinuxdev@gmail.com>
 Cc: "Bjorn Helgaas" <bhelgaas@google.com>, "Thomas Gleixner" <tglx@kernel.org>, "Ingo
@@ -62,12 +61,12 @@ Cc: "Bjorn Helgaas" <bhelgaas@google.com>, "Thomas Gleixner" <tglx@kernel.org>, 
  Kasatkin" <dmitry.kasatkin@gmail.com>, "Eric Snowberg" <eric.snowberg@oracle.com>, "Paul
  Moore" <paul@paul-moore.com>, "James Morris" <jmorris@namei.org>, "Serge E.
  Hallyn" <serge@hallyn.com>, linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-leds@vger.kernel.org, mfd@lists.linux.dev, linux-rtc@vger.kernel.org, linux-watchdog@vger.kernel.org, keyrings@vger.kernel.org, linux-security-module@vger.kernel.org
-In-Reply-To: <20261029085504.3547-12-atharvatiwarilinuxdev@gmail.com>
+In-Reply-To: <20261029085504.3547-8-atharvatiwarilinuxdev@gmail.com>
 References: <20261029085504.3547-1-atharvatiwarilinuxdev@gmail.com>
- <20261029085504.3547-12-atharvatiwarilinuxdev@gmail.com>
+ <20261029085504.3547-8-atharvatiwarilinuxdev@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 29 Oct 2026 09:13:10 +0000
+Date: Thu, 29 Oct 2026 09:15:49 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -77,145 +76,161 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-- [High] acpi: sbs: SMBus hang and probe failure in acpi_sbs_probe() on App=
-le x86
-- [High] acpi: missing CONFIG_MACSMC_ACPI check disables battery and AC on =
-x86 Macs
+- [High] rtc: macsmc: uninitialized u64 clkl and wrong mask in macsmc_rtc_p=
+robe()
+- [High] rtc: macsmc: positive return on ACPI write failure in macsmc_rtc_s=
+et_time()
+- [Medium] rtc: macsmc: shift underflow when clkr is zero in macsmc_rtc_pro=
+be()
+- [Low] rtc: macsmc: missing kernel-parameters.txt entry for force_clkm
 --
 
-commit a9ef8c0ab923a26344436713c10dccfd42ea84d9
+commit a291b39ce81e3a636ffdc1d72c951eb114ad04ea
 Author: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
 
-acpi: disable battery and adapter for x86 apple machines
+rtc: add support for x86 macs in macsmc-rtc
 
-This commit skips the ACPI SBS, battery, and AC adapter drivers on x86 Apple
-machines when CONFIG_MACSMC_POWER is enabled to avoid registering duplicate
-power supply devices.
+This commit adds support for Intel T2 Macs to the macsmc-rtc driver. On the=
+se
+machines, the driver reads the clock rate and RTC offset from the SMC rather
+than NVMEM, and optionally reads the clock via the asynchronous CLKL SMC ke=
+y.
 
-> diff --git a/drivers/acpi/sbs.c b/drivers/acpi/sbs.c
-> index f10bbf13c242f..b12f2acc0a15d 100644
-> --- a/drivers/acpi/sbs.c
-> +++ b/drivers/acpi/sbs.c
-> @@ -634,6 +634,9 @@ static int acpi_sbs_probe(struct platform_device *pde=
-v)
->  	int result =3D 0;
->  	int id;
+> diff --git a/drivers/rtc/rtc-macsmc.c b/drivers/rtc/rtc-macsmc.c
+> index 8fe8830669569..37395c64cbb5e 100644
+> --- a/drivers/rtc/rtc-macsmc.c
+> +++ b/drivers/rtc/rtc-macsmc.c
+[ ... ]
+> @@ -20,13 +23,54 @@
+>  /* 32768 Hz clock */
+>  #define RTC_SEC_SHIFT 15
 > =20
-> +	if (IS_ENABLED(CONFIG_MACSMC_POWER) && x86_apple_machine)
-> +		return -ENODEV;
+> +static bool force_clkm;
+> +module_param(force_clkm, bool, 0644);
+> +MODULE_PARM_DESC(force_clkm, "Force CLKM Key, instead of trying to use C=
+LKL");
+
+[Severity: Low]
+Should the new rtc_macsmc.force_clkm module parameter also be documented in
+Documentation/admin-guide/kernel-parameters.txt?
+
+[ ... ]
+> @@ -66,14 +121,20 @@ static int macsmc_rtc_set_time(struct device *dev, s=
+truct rtc_time *tm)
+>  	u64 ctr =3D 0, off =3D 0;
+>  	int ret;
+> =20
+> -	ret =3D apple_smc_read(rtc->smc, SMC_KEY(CLKM), &ctr, RTC_BYTES);
+> +	if (rtc->async_rtc && !force_clkm)
+> +		ret =3D macsmc_rtc_read_clkl(rtc, &ctr);
+> +	else
+> +		ret =3D apple_smc_read(rtc->smc, SMC_KEY(CLKM), &ctr, RTC_BYTES);
+>  	if (ret < 0)
+>  		return ret;
+>  	if (ret !=3D RTC_BYTES)
+>  		return -EIO;
+> =20
+>  	/* This sets the offset such that the set second begins now */
+> -	off =3D (rtc_tm_to_time64(tm) << RTC_SEC_SHIFT) - ctr;
+> +	off =3D (rtc_tm_to_time64(tm) << rtc->shift) - ctr;
+> +	if (rtc->smc->is_acpi)
+> +		return (apple_smc_write(rtc->smc, SMC_KEY(CLKO), &off, RTC_BYTES) !=3D=
+ RTC_BYTES);
+
+[Severity: High]
+What happens when apple_smc_write() fails in macsmc_rtc_set_time()?
+
+Because struct rtc_class_ops.set_time is expected to return 0 on success and
+a negative error code on failure, returning the boolean comparison result
+evaluates to 1 when apple_smc_write() returns a negative errno or a short
+write.
+
+In the rtc_dev_ioctl() -> rtc_set_time() -> macsmc_rtc_set_time() call chai=
+n:
+
+drivers/rtc/interface.c:rtc_set_time() {
+    ...
+	else if (rtc->ops->set_time)
+		err =3D rtc->ops->set_time(rtc->dev.parent, tm);
+    ...
+	return err;
+}
+
+a return value of 1 is either overwritten by 0 if update IRQs are enabled or
+returned to userspace from the RTC_SET_TIME ioctl as a non-negative value,
+causing a failed hardware clock update to be reported as success. Should th=
+is
+propagate negative error codes from apple_smc_write() and return -EIO on a
+size mismatch?
+
+[ ... ]
+> @@ -102,18 +165,40 @@ static int macsmc_rtc_probe(struct platform_device =
+*pdev)
+[ ... ]
+> +	if (rtc->smc->is_acpi) {
+> +		ret =3D apple_smc_read_u32(rtc->smc, SMC_KEY(CLKR), &clkr);
+> +		if (ret < 0 || clkr =3D=3D 0xFFFFFFFF)
+> +			rtc->shift =3D RTC_SEC_SHIFT;
+> +		else
+> +			rtc->shift =3D ffs(clkr) - 1;
+
+[Severity: Medium]
+Can clkr be 0 if the SMC returns a zero value for the CLKR key in
+macsmc_rtc_probe()?
+
+If apple_smc_read_u32() succeeds with clkr =3D=3D 0, ffs(0) returns 0 and
+ffs(clkr) - 1 underflows the uint8_t field rtc->shift to 255. That causes
+subsequent shifts by rtc->shift in macsmc_rtc_probe(), macsmc_rtc_get_time(=
+),
+and macsmc_rtc_set_time() to shift 64-bit integers by 255 or 271 bits:
+
+	rtc->rtc_dev->range_min =3D S64_MIN >> (rtc->shift + (64 - RTC_BITS));
+	rtc->rtc_dev->range_max =3D S64_MAX >> (rtc->shift + (64 - RTC_BITS));
+
+Also, if apple_smc_read_u32() fails after partially modifying clkr, the
+dev_info() call below only checks clkr !=3D 0xFFFFFFFF and will log the
+corrupted clkr value instead of 32768 even though rtc->shift fell back to
+RTC_SEC_SHIFT. Would it make sense to guard against !clkr as well?
+
 > +
->  	device =3D ACPI_COMPANION(&pdev->dev);
->  	if (!device)
->  		return -ENODEV;
-> @@ -655,14 +658,12 @@ static int acpi_sbs_probe(struct platform_device *p=
-dev)
-> =20
->  	result =3D 0;
-> =20
-> -	if (!x86_apple_machine) {
-> -		result =3D acpi_manager_get_info(sbs);
-> -		if (!result) {
-> -			sbs->manager_present =3D 1;
-> -			for (id =3D 0; id < MAX_SBS_BAT; ++id)
-> -				if ((sbs->batteries_supported & (1 << id)))
-> -					acpi_battery_add(sbs, id);
-> -		}
-> +	result =3D acpi_manager_get_info(sbs);
-> +	if (!result) {
-> +		sbs->manager_present =3D 1;
-> +		for (id =3D 0; id < MAX_SBS_BAT; ++id)
-> +			if ((sbs->batteries_supported & (1 << id)))
-> +				acpi_battery_add(sbs, id);
->  	}
+> +		if (apple_smc_key_exists(rtc->smc, SMC_KEY(CLKL))) {
+> +			u64 clkl;
+> +
+> +			ret =3D apple_smc_read(rtc->smc, SMC_KEY(CLKL), &clkl, RTC_BYTES);
+> +			if (ret =3D=3D RTC_BYTES && clkl !=3D 0xFFFFFFFFFFFFFFFFULL)
+> +				rtc->async_rtc =3D true;
+> +		}
 
 [Severity: High]
-What happens on x86 Apple machines when CONFIG_MACSMC_POWER is disabled?
+Does this read uninitialized stack memory and check against the wrong senti=
+nel
+mask in macsmc_rtc_probe()?
 
-When CONFIG_MACSMC_POWER=3Dn, acpi_sbs_probe() does not return early on
-x86_apple_machine, and removing the !x86_apple_machine check causes it to
-call acpi_manager_get_info(sbs) -> acpi_smbus_read(..., ACPI_SBS_MANAGER, .=
-..).
+Here clkl is an uninitialized 8-byte u64 on the stack, but apple_smc_read()
+only writes RTC_BYTES (6 bytes) into &clkl, leaving the upper 2 bytes
+uninitialized when evaluating clkl !=3D 0xFFFFFFFFFFFFFFFFULL.
 
-Commit 9faf6136ff46 ("ACPI / SBS: Disable smart battery manager on Apple")
-and commit 630b3aff8a51 guarded this call because accessing ACPI_SBS_MANAGER
-on Apple hardware causes the SMBus and EC controller to hang for several
-minutes when unplugging the AC adapter. Doesn't removing the
-!x86_apple_machine check reintroduce this controller hang whenever
-CONFIG_MACSMC_POWER is disabled?
+In addition, because CLKL is a 48-bit (6-byte) value, its all-ones invalid
+sentinel is 0xffffffffffffULL, as checked in macsmc_rtc_read_clkl():
 
-In addition, by removing the !x86_apple_machine condition around
-acpi_manager_get_info(sbs), the preceding result =3D 0 assignment becomes a
-dead store, and sbs->manager_present remains 0 only when
-acpi_manager_get_info(sbs) returns a non-zero error:
+static int macsmc_rtc_read_clkl(struct macsmc_rtc *rtc, u64 *ctr)
+{
+	u64 request =3D 0xffffffffffffULL;
+	u64 response =3D 0;
+	...
+				if (response !=3D 0xffffffffffffULL) {
+					*ctr =3D response;
+					return RTC_BYTES;
+				}
 
-	result =3D acpi_manager_get_info(sbs);
-	if (!result) {
-		sbs->manager_present =3D 1;
-		...
-	}
-
-	if (!sbs->manager_present)
-		acpi_battery_add(sbs, 0);
-
-	acpi_smbus_register_callback(sbs->hc, acpi_sbs_callback, sbs);
-end:
-	if (result)
-		acpi_sbs_remove(pdev);
-	return result;
-
-When acpi_manager_get_info(sbs) fails with a non-zero result, the
-!sbs->manager_present fallback registers battery 0 and the SMBus callback,
-but because result is still non-zero at the end label, acpi_sbs_remove(pdev)
-immediately tears everything back down and fails the probe. Should the
-!x86_apple_machine check be kept?
-
-> diff --git a/drivers/acpi/x86/utils.c b/drivers/acpi/x86/utils.c
-> index 418951639f511..9f3b9b7d9c27c 100644
-> --- a/drivers/acpi/x86/utils.c
-> +++ b/drivers/acpi/x86/utils.c
-> @@ -14,6 +14,7 @@
->  #include <linux/dmi.h>
->  #include <linux/pci.h>
->  #include <linux/platform_device.h>
-> +#include <linux/platform_data/x86/apple.h>
->  #include <asm/cpu_device_id.h>
->  #include <asm/intel-family.h>
->  #include "../internal.h"
-> @@ -608,6 +609,9 @@ bool acpi_quirk_skip_acpi_ac_and_battery(void)
->  	long quirks =3D 0;
->  	int i;
-> =20
-> +	if (IS_ENABLED(CONFIG_MACSMC_POWER) && x86_apple_machine)
-> +		return true;
-
-[Severity: High]
-Should both acpi_quirk_skip_acpi_ac_and_battery() and acpi_sbs_probe() also
-check IS_ENABLED(CONFIG_MACSMC_ACPI)?
-
-In drivers/power/supply/Kconfig, MACSMC_POWER only depends on
-MFD_MACSMC_CORE:
-
-config MACSMC_POWER
-	tristate "Apple SMC Battery and Power Driver"
-	depends on MFD_MACSMC_CORE
-
-However, on x86 Apple machines, the macsmc-power MFD device is only
-registered when apple_smc_acpi_probe() in drivers/platform/x86/macsmc-acpi.c
-probes the SMC device, which is controlled by CONFIG_MACSMC_ACPI in
-drivers/platform/x86/Kconfig:
-
-config MACSMC_ACPI
-	tristate "Apple SMC (System Management Controller) ACPI Backend"
-	depends on MFD_MACSMC_CORE && ACPI && !SENSORS_APPLESMC
-
-If a kernel is built with CONFIG_MACSMC_POWER enabled and CONFIG_MACSMC_ACPI
-disabled (for example, whenever CONFIG_SENSORS_APPLESMC is enabled), won't
-checking only IS_ENABLED(CONFIG_MACSMC_POWER) disable the ACPI SBS, battery,
-and AC adapter drivers on x86 Macs without any macsmc-acpi backend built to
-instantiate macsmc-power?
+Even if clkl is zero-initialized to 0, reading 6 bytes of 0xff into it
+produces 0x0000ffffffffffffULL, which will never equal 0xFFFFFFFFFFFFFFFFULL
+and will erroneously set rtc->async_rtc =3D true. Should clkl be initialize=
+d to
+0 and compared against 0xffffffffffffULL?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029085504.3547=
--1-atharvatiwarilinuxdev@gmail.com?part=3D11
+-1-atharvatiwarilinuxdev@gmail.com?part=3D7
