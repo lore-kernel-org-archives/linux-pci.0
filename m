@@ -1,50 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=18.194.254.142
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=54.243.244.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793267115;
-	b=xoH2AKDUWBoYGeWN+zA/C0Y36R3WE6dpXQmnQTZhcG2zfEm+DBZhup+lnO4p6uYE1+1f
-	 SEdGB5SLlncXl1wOLqax+azdyT8neAqGxaN0mH4g/4pKtLuBgEHc+PNldXd5fhV/nb5+5
-	 vKB3fGJKQlvnkj+9egG5vD1xtYwWC8tOwjqGeU2hrf29R1V/0/8u85EIns394Qit7RYMd
-	 wXeN+WNXTg8EsZ0mbuGe0jx11f5Bdai2DJEB/be/ECwsOXbZT58QQhd/sBZK4/q7jWNQI
-	 aB4ftWrc7KuY16rdMyDHv16iDKXn8c5qWxU5RCAnEbZPn8bMfAFaT5+ZGbVHsTlMT1A==
+	t=1793267122;
+	b=3yg/cv9c43pz7C40L4Lw3Rbgy+6LgEBR+LlGSrQbmaCAZXNz0AGJAnJxr7sfLvdG65q6
+	 lGgtQqTdFUTa/jpwZhDN9SQ6VP4qZW79+y2iZxOCl9D7sXVKSywf0PkKMujaEpdfqq0Xv
+	 K6ujHuah1qwGABOGzxABuEMxL3K8oVfAC3W5Hq4EbareuhpGUX15zcXTezbMVEparbzOh
+	 yPYiTXhYikkfrmBoF1pykG36GL5XvwnoeNjKceeRe2F6HV1pFjzifkWnS0xLJw7Pytx6q
+	 SQWLmIrMfpI83VnsDYeYk7vz8RpqwG69M86rkRyu2YkF14p5Bg5Z/l95+s1l2gjCBQQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793267115;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793267122;
 	h=DMARC-Filter:X-QQ-mid:X-QQ-Originating-IP:Received:X-QQ-SSF:
 	 X-QQ-GoodBg:X-BIZMAIL-ID:EX-QQ-RecipientCnt:From:Date:Subject:
 	 MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
 	 References:In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:
 	 X-Developer-Key:X-QQ-SENDSIZE:Feedback-ID:X-QQ-XMAILINFO:X-QQ-XMRINFO:
 	 X-QQ-RECHKSPAM;
-	bh=I6pGS9HlPdajy6JVHzNvNG5YnPfZi+MQBITdwkrjbpg=;
-	b=3spxHI+sQt0oB4PG7RBGdN7dALuCy3OFB6Y9hzBMDLekehA9KWycd5yMznKn+8ztT2oF
-	 6uVryobl/Y0ysQTrKwPrEvI0zMGFntq6aLBzjqgd0jLHSpLvViIRPg+Sh0/IC7v8D0Gm5
-	 UgNL6B0W7OREZLjpN1oZFXpYE/cB7P3s7sXR6V6zMy7Eh4mDW9znlMQZg917b1YkFWcVL
-	 F8/nWTX4e7jaFDotZnhpNWnRYIWmubIYAIGUr6WAntzl3ZlOG1kFgwoEiMIBqdb0YKhyr
-	 hoIBWSZpseqRZN9ncf3mosdO+QyjPJKWRr3nbJnbr8dVWW1VLip8KvKhSiTktESc2Ww==
+	bh=ngdVk19IWkwlW/Xsxleb20R0fUdw6REuM7F5mAZ4T9U=;
+	b=Ys77iwiW7/cDIIH+yoUW7/x7UOjmoJF9VN7gwk4AkCPuBlMOPrSksDlwt59XkGaZHtSa
+	 zRQSQwH+fYaHYK6/VeYjvq/CH2hYuNWV6p7XMsNBLSiK6I00I17VxPQMdjG/98F0AJ2yB
+	 3OtZtK2GwcME6+CMeXQLKF7ALq2++n+njqkLqWH/UKxY6Rt1KpGcuUIGQM5ZbM/jhI+sn
+	 3yG0ZqumkVMnkZDvse/iOgIaMEL3UJxpynJC2a9tWe/mIy5ow+axruf9i4G+IYlHEFpMO
+	 uV0j/rQE/UQbXCyU0wI+mkCyKGO88OpbmPvupu3FjQsJqMZmIBYkBKmN/DXd26CAHbA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=radxa.com;
 	spf=pass smtp.mailfrom=radxa.com;
-	arc=none smtp.remote-ip=18.194.254.142
-Received: from smtpbgeu2.qq.com (smtpbgeu2.qq.com [18.194.254.142])
+	arc=none smtp.remote-ip=54.243.244.52
+Received: from smtpbguseast3.qq.com (smtpbguseast3.qq.com [54.243.244.52])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2E2C606A31D;
-	Thu, 29 Oct 2026 09:45:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B2E2C606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74739606A31C;
+	Thu, 29 Oct 2026 09:45:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 74739606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=radxa.com
-X-QQ-mid: zesmtpip4t1793267081t50177237
-X-QQ-Originating-IP: NhZPlk1+WIs/nEBYGHCH1CYwxEn5UdbQk/jw1hYepC4=
+X-QQ-mid: zesmtpip4t1793267086tbaccd795
+X-QQ-Originating-IP: EzBRUw09562Hw7xzSIwX67EesubeAfqs9OrY/6NZ7y8=
 Received: from [192.168.30.244] ( [localhost])
 	by bizesmtp.qq.com (ESMTP) with 
-	id ; Thu, 29 Oct 2026 17:44:38 +0800 (CST)
+	id ; Thu, 29 Oct 2026 17:44:43 +0800 (CST)
 X-QQ-SSF: 0000000000000000000000000000000
 X-QQ-GoodBg: 0
-X-BIZMAIL-ID: 16080051997495535406
-EX-QQ-RecipientCnt: 31
+X-BIZMAIL-ID: 13163984408901113754
+EX-QQ-RecipientCnt: 32
 From: Xilin Wu <sophon@radxa.com>
-Date: Thu, 29 Oct 2026 17:44:28 +0800
-Subject: [PATCH v3 1/4] arm64: dts: qcom: sc8280xp: enable PCIe ECAM and
- 64-bit memory
+Date: Thu, 29 Oct 2026 17:44:29 +0800
+Subject: [PATCH v3 2/4] dt-bindings: arm: qcom: document Radxa Dragon Q8B
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -56,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261029-q8b-dts-v3-1-655696dfec45@radxa.com>
+Message-Id: <20261029-q8b-dts-v3-2-655696dfec45@radxa.com>
 References: <20261029-q8b-dts-v3-0-655696dfec45@radxa.com>
 In-Reply-To: <20261029-q8b-dts-v3-0-655696dfec45@radxa.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, 
@@ -77,160 +76,62 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  dri-devel@lists.freedesktop.org, devicetree@vger.kernel.org, 
  linux-arm-msm@vger.kernel.org, linux-gpio@vger.kernel.org, 
  Stephen Chen <stephen@radxa.com>, Junhao Xie <bigfoot@radxa.com>, 
- dragon@radxa.com, Xilin Wu <sophon@radxa.com>
+ dragon@radxa.com, Xilin Wu <sophon@radxa.com>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5116; i=sophon@radxa.com;
- h=from:subject:message-id; bh=ZKeyJhuJk5Q9HhRIB0I7m7yyN1y8Ot222NY5V9safMA=;
- b=owGbwMvMwCVmdFg0fe08Iz/G02pJDFmPRRu90jdsX59iVaX6QvHgk1Ufind9aOY/9/UNe5oC7
- +SENR8Wd5SyMIhxMciKKbIoxDPMZa/MvfZUrFQPZg4rE8gQBi5OAZjIsU8M/+ztjvXcF7Gfc1hq
- 0x0PliafqMx5eZc6VO57pd5NznefZcLIcCLMpP2ekk1MrsSN7bqGkzbcVS0+4mlxwFH3mlfFk85
- 4PgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=859; i=sophon@radxa.com;
+ h=from:subject:message-id; bh=KHvssF0xBmxgfBrsMVKXU7Qx0Wh+vcWm5edVG9ChHrI=;
+ b=owGbwMvMwCVmdFg0fe08Iz/G02pJDFmPRRvZGT8/tDNgmvCucuWOxU9P3ns9d/0ltUu+G2InJ
+ FZVnA9W6ShlYRDjYpAVU2RRiGeYy16Ze+2pWKkezBxWJpAhDFycAjARZxlGhk2FEkWvvi25tvty
+ xPETdi2pm339bM7+krPc3DJJcskxW06G32zKM8ozrxbM80pnn/Nz7vXPRtXBnz6yar7+IC25ft8
+ eNR4A
 X-Developer-Key: i=sophon@radxa.com; a=openpgp;
  fpr=205F009D07796DD6E516752E32C31567AD9E324E
 X-QQ-SENDSIZE: 520
 Feedback-ID: zesmtpip:radxa.com:qybglogicsvrsz:qybglogicsvrsz3b-0
-X-QQ-XMAILINFO: MLnLowx4CbXM9c1jenNX3SLALNkVFZdBwcEO69+0Tmm7Bc7ofMOr5fA2
-	AYZNxxgbjTgyC6EYnrs1e6N7+9UGWU7y0vb2ORZS6/FjidWq8t/C3i5n3WlvmsfIzgu/0Cn
-	gDCo+yXaA9V47I/QvpWAZ9iwf5U6QLUgkOGjyCCCLK4TIJypnmzzxQbo3qQvAA421yfB/Rm
-	4JjjzyTzSka6J0cizxw2P6E4D3f0lzbiI7ahyT+4OOBvVbz5jg8yt3/+Ucg8CLXUnmXMSiK
-	9u+0hiqSGqqtLHjC8ztWN4ngSYo1sfC21PHu+3Mzn6lUhRJqGa4IZwwPBiHild+OHVyjWXw
-	o1cLzrB1yIqJyPDQXyBlobY5DHASpPmDHoAt1a4/xsffydRHr5W0CHSRjfTD1ickNbWJ70M
-	YjQ5VgKbpe0bfN5yFUOOJroTLeG1fka9NAnziztyUWa5ruAygRTyY7KtiYW/RyjyqUetro8
-	41kXQ9wMwdoNVvVo351mYcfgN/Kn5BXnZ2lyEJ18pb1zcEA6EBS8123Zf9FWd1/3XvRrrZ/
-	I+ZZcdAojphKb3utsLHbE2QbNmrMUN4B+LA8c8UTPYPb9Rcs0dqsHllbphK3Rj5PMqIbbnn
-	/PGBtE1nK87Uojy94Xk/ibXASLMjRvd4oGBWdIvLyk0AJhu2Wg9TI9tdflKm7BTV+eh+l10
-	n51G/RYtJooviI83HaD3E6XxbBEzHq5xfDNAHJ3I/yTK2kidTuwav1CXIyz/JD2InuBCr+P
-	B4PGX2T2w/0F5+i9ecTfNKq8uY90m3T+cL4C0miJzjXwfzgmp2TXN1R3gVqgm4f6jExsalV
-	eGYmyoeiYUG0oLVsKN+F3SqQg9SS64vpg/qS8MQpdaGrYHXEc4vbe7u7e8tMgrKJ1Ddmm7c
-	lIWY0ZmprRyf/pdiQlMQVQBCfealHtjRFKRa3yY/qejYdPAxiLUH0tGOYlIcr7/psNydnJK
-	AuojOiYbgKVyHKEBM94AsowNcXE6xFNk2aPFq175iSqWxw6odjxz+1SNa3OlxJgFUiWY4sy
-	8/yv/KrBY0MNVkIBRj9rFmUAt1z6lLhKJG3kgfT7KEemb3xflw5p5TdNlhEEiVOYrzN+kpi
-	TeN5xRhesAA0VY9Yj70k7Wa2OvMRLRg65TzHblcm+rifx66hwXqQMc=
-X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
+X-QQ-XMAILINFO: NvGGTAUhB2iWRMMuathoo0YoVBwmcgiVS86ohs5zMGJ3/NamnJQzlcZB
+	xML/j6rrsqJM+FX0eIvbYYbnkJlBVo3Len+YTlu9C0DxrwOiGI4JudwaDS52W5lggX0ngRQ
+	A/HTTCbWfc0THOAs20ExFcjveCQnTe5i7W9MNhKybs9exMQWP0m6fe2f9xoR5AWeEppypHZ
+	ixpk3o4nYoCxnQ+43U5qk7J+0dGgl+e4cWql4aUPHBGiFegTqH4wOtIdrSrov0e0emv0aLy
+	hIqKeDc6c4uy6ekcQ2c2WaKaPcwiSdnPdKUShI6p47+a78ZhUGKsz6NnS9y/i9SytYKDlJw
+	4v06lfFZqFvGULjZreoCpIHHBYd1VKP8jsTU7TF1DxMxTP+wP5nqzakUrQXEyIzpiWk5SUz
+	AuXlH1hHYyD1M8V0tLYgRlawx86ZLOOXluEObXs93xligdsZLEoM95aOyPtV4uQtQMO9zYG
+	Q3W6A5Gwsef2AlpbtOdhFeRDs3ZjILxdDvbRIlUa8lCbjIDasQnhN9b3LBurs5dK/I+3LQ4
+	DWEb/Eblj5XIO6Yc4skZ45OuF3wGEFAGsbhcNn8W6Nz95yP31rAekmROXHRUciYjF691k3C
+	ZzgRWNdoi9z+c/3x+39DKCRAPVpEaIs5CMdzkMa+F4ysvH8ibrIxfU8MOyNUmQW71RuUJTH
+	ylFt4shXSBe1bUPSEYcw0YYe/r9Q28UXUvffS/AxT1y20NrpNMVvmEKdOLCC5JIk7wx6tfC
+	bDMSOthTOm5FmfjWGjq/uNx+41vJtko1osGslAO+U0/oxmBOEaymV1ZA0wRjsNUxiJOxtjj
+	a/DxT4eo88qAVek7HI/3UNiWKR/WkXsuMVk4mD8BnGFk5qsIG1Tuu9SsvS+Dm1sGeJMUlLx
+	rZ+BeN+H6WkKJGq0wNWTDJ8mpTwYQfW6DnMIyHjDi8FfuoEyCwXRFmRuSACX1I0WtStEJ6A
+	4hkYSJsQOuA60lGEuSSTNUjjrkNsC6/ylW2OpBiqG92JFmNWYbI5E2xMgi62ftaidGRmJTV
+	t0KX2s1XXHcw+Kra/2FWDt5ft5IfjcxdScbf0UTCvG2R/mhcKp0uG+3K2A07uVbPUH3S8KW
+	qImiMY5TY0x
+X-QQ-XMRINFO: MSVp+SPm3vtSI1QTLgDHQqIV1w2oNKDqfg==
 X-QQ-RECHKSPAM: 0
 
-Enable ECAM to avoid reprogramming iATU on every downstream configuration
-access, reducing latency and CPU utilization. Add 64-bit memory windows
-for devices with large BARs, such as discrete GPUs.
+The Radxa Dragon Q8B is a single-board computer based on the Qualcomm
+SC8280XP platform.
 
-Preserve the SA8540P PCIe2a and PCIe3a address maps to avoid regressions
-due to firmware differences.
+Document its radxa,dragon-q8b compatible.
 
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 Signed-off-by: Xilin Wu <sophon@radxa.com>
 ---
- arch/arm64/boot/dts/qcom/sa8540p.dtsi  |  9 +++++++++
- arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 25 +++++++++++++++----------
- 2 files changed, 24 insertions(+), 10 deletions(-)
+ Documentation/devicetree/bindings/arm/qcom.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/sa8540p.dtsi b/arch/arm64/boot/dts/qcom/sa8540p.dtsi
-index 23888029cc11..e5393a237497 100644
---- a/arch/arm64/boot/dts/qcom/sa8540p.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sa8540p.dtsi
-@@ -180,6 +180,15 @@ &gpu_smmu {
+diff --git a/Documentation/devicetree/bindings/arm/qcom.yaml b/Documentation/devicetree/bindings/arm/qcom.yaml
+index 121ca557ce1e..f28645b0088e 100644
+--- a/Documentation/devicetree/bindings/arm/qcom.yaml
++++ b/Documentation/devicetree/bindings/arm/qcom.yaml
+@@ -937,6 +937,7 @@ properties:
+               - microsoft,blackrock
+               - qcom,sc8280xp-crd
+               - qcom,sc8280xp-qrd
++              - radxa,dragon-q8b
+           - const: qcom,sc8280xp
  
- &pcie2a {
- 	compatible = "qcom,pcie-sa8540p";
-+	reg = <0x0 0x01c20000 0x0 0x3000>,
-+	      <0x0 0x3c000000 0x0 0xf1d>,
-+	      <0x0 0x3c000f20 0x0 0xa8>,
-+	      <0x0 0x3c001000 0x0 0x1000>,
-+	      <0x0 0x3c100000 0x0 0x100000>,
-+	      <0x0 0x01c23000 0x0 0x1000>;
-+
-+	ranges = <0x01000000 0x0 0x00000000 0x0 0x3c200000 0x0 0x100000>,
-+		 <0x02000000 0x0 0x3c300000 0x0 0x3c300000 0x0 0x1d00000>;
- 
- 	linux,pci-domain = <0>;
- 
-diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-index d17475c3e66c..0c4abf60d1d2 100644
---- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-@@ -2161,13 +2161,14 @@ pcie4: pcie@1c00000 {
- 			      <0x0 0x30000000 0x0 0xf1d>,
- 			      <0x0 0x30000f20 0x0 0xa8>,
- 			      <0x0 0x30001000 0x0 0x1000>,
--			      <0x0 0x30100000 0x0 0x100000>,
-+			      <0x4 0x00000000 0x0 0x10000000>,
- 			      <0x0 0x01c03000 0x0 0x1000>;
- 			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			ranges = <0x01000000 0x0 0x00000000 0x0 0x30200000 0x0 0x100000>,
--				 <0x02000000 0x0 0x30300000 0x0 0x30300000 0x0 0x1d00000>;
-+				 <0x02000000 0x0 0x40000000 0x4 0x10000000 0x0 0x10000000>,
-+				 <0x03000000 0x4 0x20000000 0x4 0x20000000 0x0 0x20000000>;
- 			bus-range = <0x00 0xff>;
- 
- 			dma-coherent;
-@@ -2273,13 +2274,14 @@ pcie3b: pcie@1c08000 {
- 			      <0x0 0x32000000 0x0 0xf1d>,
- 			      <0x0 0x32000f20 0x0 0xa8>,
- 			      <0x0 0x32001000 0x0 0x1000>,
--			      <0x0 0x32100000 0x0 0x100000>,
-+			      <0x4 0x40000000 0x0 0x10000000>,
- 			      <0x0 0x01c0b000 0x0 0x1000>;
- 			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			ranges = <0x01000000 0x0 0x00000000 0x0 0x32200000 0x0 0x100000>,
--				 <0x02000000 0x0 0x32300000 0x0 0x32300000 0x0 0x1d00000>;
-+				 <0x02000000 0x0 0x40000000 0x4 0x50000000 0x0 0x10000000>,
-+				 <0x03000000 0x4 0x60000000 0x4 0x60000000 0x0 0x20000000>;
- 			bus-range = <0x00 0xff>;
- 
- 			dma-coherent;
-@@ -2383,13 +2385,14 @@ pcie3a: pcie@1c10000 {
- 			      <0x0 0x34000000 0x0 0xf1d>,
- 			      <0x0 0x34000f20 0x0 0xa8>,
- 			      <0x0 0x34001000 0x0 0x1000>,
--			      <0x0 0x34100000 0x0 0x100000>,
-+			      <0x4 0x80000000 0x0 0x10000000>,
- 			      <0x0 0x01c13000 0x0 0x1000>;
- 			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			ranges = <0x01000000 0x0 0x00000000 0x0 0x34200000 0x0 0x100000>,
--				 <0x02000000 0x0 0x34300000 0x0 0x34300000 0x0 0x1d00000>;
-+				 <0x02000000 0x0 0x40000000 0x4 0x90000000 0x0 0x10000000>,
-+				 <0x03000000 0x4 0xa0000000 0x4 0xa0000000 0x0 0x20000000>;
- 			bus-range = <0x00 0xff>;
- 
- 			dma-coherent;
-@@ -2496,13 +2499,14 @@ pcie2b: pcie@1c18000 {
- 			      <0x0 0x38000000 0x0 0xf1d>,
- 			      <0x0 0x38000f20 0x0 0xa8>,
- 			      <0x0 0x38001000 0x0 0x1000>,
--			      <0x0 0x38100000 0x0 0x100000>,
-+			      <0x4 0xc0000000 0x0 0x10000000>,
- 			      <0x0 0x01c1b000 0x0 0x1000>;
- 			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			ranges = <0x01000000 0x0 0x00000000 0x0 0x38200000 0x0 0x100000>,
--				 <0x02000000 0x0 0x38300000 0x0 0x38300000 0x0 0x1d00000>;
-+				 <0x02000000 0x0 0x40000000 0x4 0xd0000000 0x0 0x10000000>,
-+				 <0x03000000 0x4 0xe0000000 0x4 0xe0000000 0x0 0x20000000>;
- 			bus-range = <0x00 0xff>;
- 
- 			dma-coherent;
-@@ -2606,13 +2610,14 @@ pcie2a: pcie@1c20000 {
- 			      <0x0 0x3c000000 0x0 0xf1d>,
- 			      <0x0 0x3c000f20 0x0 0xa8>,
- 			      <0x0 0x3c001000 0x0 0x1000>,
--			      <0x0 0x3c100000 0x0 0x100000>,
-+			      <0x5 0x00000000 0x0 0x10000000>,
- 			      <0x0 0x01c23000 0x0 0x1000>;
- 			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			ranges = <0x01000000 0x0 0x00000000 0x0 0x3c200000 0x0 0x100000>,
--				 <0x02000000 0x0 0x3c300000 0x0 0x3c300000 0x0 0x1d00000>;
-+				 <0x02000000 0x0 0x40000000 0x5 0x10000000 0x0 0x10000000>,
-+				 <0x03000000 0x5 0x20000000 0x5 0x20000000 0x0 0xe0000000>;
- 			bus-range = <0x00 0xff>;
- 
- 			dma-coherent;
+       - items:
 
 -- 
 2.56.0
