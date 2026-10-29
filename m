@@ -1,47 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793265612;
-	b=r1/8IhNpk3Anndnka9xNxEqwilTnFNtr4/Kkl2h+dkt2BjNhEUikXWmP1B4LTMJCXpee
-	 WbnJn9l3Cev+M9UPCIeInMXTzdoJl3TQW68TeHlnhADp0V0USHM5YA6qX8+tSH11UqbpZ
-	 Pbe7ur9BiOb8PfYLOwM+4OAWWJFk71NseL6yJiQCOu5AYWsieYT1vdsw83isZErgWAoiQ
-	 7y2L8RoHrsZ9pzksZp1hVbanA7quqGwsIrHEvx5S8PtveXqfl/GKhMkwxBzJtP9UaIE7T
-	 qn+TmUDlZXFlhy9RZCk0kVsoopQ7ZtX+8PKzke0iftUy3UrmJXCpiUr1BIvowMkQ4/g==
+	t=1793265630;
+	b=jPqp1k8IVPt5o/GJGRcANxkoi4BzIFWEH23WStQS9TKAlEiNiE+0KytUJvhiKhqxzslz
+	 Gnwvvw8fPoFzfKDZh5pKiavxvioXlSLOM+/6IvGlaHTrlNrfngJLmvw2PGodIv51NnbJO
+	 +Pts/6v37C6iqfiqBDWhB1sF+tpBVN0mgU1vsnlxvx939lQ1cchgorRYNsdXa2NnmaSUK
+	 asUkbAZEMCSLY10vWS1jkCT0iO45bNgzajIja/CA7HQJj0v+wHqtF0pGc/QlDWZJ5C0Sw
+	 6NwiUfkRjvETFmusaGROz4a9GXQ4/NwVTA6ovzegWbOyM/zrGxzNbnb5SJPVZ7QYnnA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793265612;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793265630;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=HSMs+yYFKEoS2+MTkImUlsUWlkmJUy2dSIxHLs9A0FQ=;
-	b=f8NQMuBaRTVFv2z5pVcmZH9Ox7CNzYM34cqoalPuBnfZdxwsB8tPpwHB/WhQ5TFyz3pW
-	 6fUAyh3zxB8qI+aEe3qJFN/+Gzfsb41GSpHqZk2l8wuZB5Thtp7ADlDKrJLhydbl3+z74
-	 W3J6BHkJOOAKXl6cH/OqkAVmwV31ht347kBxR7FEwIM4Z96NdYkNcxKwNJZZ4CtmvxVxX
-	 QKtsSLQi5Y6Rgt2i22K4tXPulVVpSLzlJVcUYWML9wPesLJETnk1pLARKYg+dZZI+gL87
-	 IiHrGwM7exCL52MqRfQ1aPAg8WdtWGgcuTFVXyu2iMrE2y5Hfl5WpPOC1/POGkqUhJg==
+	bh=5RR5kihfrdPaS8RZVjjuFZs4WwUuezwWmmbVwCww+l0=;
+	b=jGSQ8MU/ISfIxqXjCmgDUPmdi1W7WfPKeIgZzU9fSOrwoPfXiqpXST9Q+JBIvparoNwn
+	 f1gZ+CacE4jy9iOizikMDZTfJyTS3LblkvvtrldLGMnqemN+X0AihQz2zGRN0olBG5aZq
+	 lQQC1NCw2GeNSvcqUG1taVIB8zDrSxAscyNea6JWxOsuVbmFdJAror08L0BJIMC5yaY0E
+	 XQRN1+r6PP7LALswsdMiLIGS/O2k+d9Gey+1OKkDulYmJd3r6miGqnGD+SEs1uTCWW7Ry
+	 bYot02HerfayNScnebfe55Xn0SxSv6LnQCOCi8facNRuLaSphhf2ZKpIFZvSlamCNZg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bVyYfG1Q;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AQZUrT35;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F174606A32C;
-	Thu, 29 Oct 2026 09:20:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20B11606A326;
+	Thu, 29 Oct 2026 09:20:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bVyYfG1Q
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECB441F031E0;
-	Thu, 29 Oct 2026 09:20:09 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AQZUrT35
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A8B01F01829;
+	Thu, 29 Oct 2026 09:20:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793265611;
-	bh=HSMs+yYFKEoS2+MTkImUlsUWlkmJUy2dSIxHLs9A0FQ=;
+	s=k20260515; t=1793265630;
+	bh=5RR5kihfrdPaS8RZVjjuFZs4WwUuezwWmmbVwCww+l0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bVyYfG1QjV4KwYvB1w6R0Xm1uZK7uW7sw0JvQ6Rl5GrGbcO1IRmmIm3I8g66VKzGO
-	 S8WWTXbV2o1yGVfZrivlj6Hm9B4ERrhI6LiTp05Ojk9CG6kJ7s+MPE4qAzuTDLgsAI
-	 WaB6xAnJQlolAR0f+KodZBdDIvSskH5YFrjxFzrVyNeanZPUYH/RPb0EUhk+6+dQ2M
-	 yilaSV9jfx6UMuIwiBkdxdos0tnrusk9mFr2LpzIiJ/zcb27+oFnKcd70kAZKh+Mkc
-	 DghFY6+XBp23szIzwvqp/J9Rdmu/JqkwTWLcFhy0zwliJzrWJAjBfU+qEEB5DfoLvu
-	 Hb6ot/oRW2xiA==
-Message-ID: <sashiko-outbox-189026@kernel.org>
+	b=AQZUrT35scEV2G6+eTUjxU/qbIMLP//HkL2hnNJrwPX6x54RXVlIMIu0gOboH6z12
+	 qc2v5XZWXfg1vIaaq42QH119j+lsIfDhJ18K0uaAfCSfvQN2zX1dV40Nn9zVcNKqi7
+	 kAw3Aq4v/EXyHojggFeVNZWnzb4Lwh3+5VPNfI33HWAm7DdrKHh8hmArFVdEcVfvpn
+	 zF/rlwZ9zz7kDipZ7x8ZAAlcUkFxikyS16BA9MsVVIyb22zOjs0p8lA1HLA/YJmP5q
+	 Dcuo6ZgvGmPh9MNwGfxSSfmJDoUJMxRUgbMWDBLk77j9QlBckIvU5WrElJXW5WH3vd
+	 3yKurh9FrmNtQ==
+Message-ID: <sashiko-outbox-189027@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH 01/14] treewide: Add backend for macsmc
+Subject: Re: [RFC PATCH 13/14] hwmon: add support for x86 macs in
+ macsmc-hwmon
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Atharva Tiwari" <atharvatiwarilinuxdev@gmail.com>
 Cc: "Bjorn Helgaas" <bhelgaas@google.com>, "Thomas Gleixner" <tglx@kernel.org>, "Ingo
@@ -61,12 +62,12 @@ Cc: "Bjorn Helgaas" <bhelgaas@google.com>, "Thomas Gleixner" <tglx@kernel.org>, 
  Kasatkin" <dmitry.kasatkin@gmail.com>, "Eric Snowberg" <eric.snowberg@oracle.com>, "Paul
  Moore" <paul@paul-moore.com>, "James Morris" <jmorris@namei.org>, "Serge E.
  Hallyn" <serge@hallyn.com>, linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-leds@vger.kernel.org, mfd@lists.linux.dev, linux-rtc@vger.kernel.org, linux-watchdog@vger.kernel.org, keyrings@vger.kernel.org, linux-security-module@vger.kernel.org
-In-Reply-To: <20261029085504.3547-2-atharvatiwarilinuxdev@gmail.com>
+In-Reply-To: <20261029085504.3547-14-atharvatiwarilinuxdev@gmail.com>
 References: <20261029085504.3547-1-atharvatiwarilinuxdev@gmail.com>
- <20261029085504.3547-2-atharvatiwarilinuxdev@gmail.com>
+ <20261029085504.3547-14-atharvatiwarilinuxdev@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 29 Oct 2026 09:20:09 +0000
+Date: Thu, 29 Oct 2026 09:20:27 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -76,209 +77,230 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
-- [High] mfd: macsmc: Kconfig split disables Apple SMC drivers in arm64 def=
-config
-- [Medium] mfd: macsmc: missing notification cleanup on apple_smc_probe() e=
-rror
-- [Low] mfd: macsmc: endianness type mismatch in apple_smc_probe() #KEY read
+- [High] hwmon: macsmc: NULL pointer dereference in DT sensor label handling
+- [High] hwmon: macsmc: macsmc_hwmon_create_fan_acpi() treats positive read=
+ return as error
+- [High] hwmon: macsmc: unchecked fan setup in macsmc_hwmon_populate_sensor=
+s_acpi()
+- [High] hwmon: macsmc: endianness bug in macsmc_hwmon_write_old_fan_manual=
+()
+- [Medium] hwmon: macsmc: macsmc_hwmon_write_fan() swallows target write er=
+rors with > 0
 --
 
-commit f3824312f6532aec08553002200ae557d8b3b0da
+commit 4bcde7b8b0bda2dbb66c2bfcaa1b0806af093c48
 Author: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
 
-treewide: Add backend for macsmc
+hwmon: add support for x86 macs in macsmc-hwmon
 
-This commit splits the Apple SMC driver into a core MFD driver
-(drivers/mfd/macsmc-core.c) and an RTKit backend driver
-(drivers/soc/apple/macsmc-rtkit.c) so that additional SMC backends such as
-ACPI on Intel Macs can share the core and sub-drivers.
+This commit adds support for Intel Macs to macsmc-hwmon, exposing readable
+sensor names for temperature, power, current, and voltage keys, as well as
+fan speed reporting and manual control on ACPI platforms.
 
+> diff --git a/drivers/hwmon/macsmc-hwmon.c b/drivers/hwmon/macsmc-hwmon.c
+> index 2e74dcd6651b3..29e43ff4b4feb 100644
+> --- a/drivers/hwmon/macsmc-hwmon.c
+> +++ b/drivers/hwmon/macsmc-hwmon.c
 [ ... ]
-
-> diff --git a/drivers/mfd/Kconfig b/drivers/mfd/Kconfig
-> index 87ed55c155f03..c58cc3315f22a 100644
-> --- a/drivers/mfd/Kconfig
-> +++ b/drivers/mfd/Kconfig
-> @@ -339,24 +339,15 @@ config MFD_LOCHNAGAR
->  	help
->  	  Support for Cirrus Logic Lochnagar audio development board.
-> =20
-> -config MFD_MACSMC
-> -	tristate "Apple Silicon System Management Controller (SMC)"
-> -	depends on ARCH_APPLE || COMPILE_TEST
-> -	depends on OF
-> -	depends on APPLE_RTKIT
-> +config MFD_MACSMC_CORE
-> +	tristate "Apple System Management Controller (SMC) Core"
->  	select MFD_CORE
+> @@ -47,7 +52,7 @@ MODULE_PARM_DESC(fan_control,
+>  struct macsmc_hwmon_sensor {
+>  	struct apple_smc_key_info info;
+>  	smc_key macsmc_key;
+> -	char label[MAX_LABEL_LENGTH];
+> +	char *label;
+>  	u32 attrs;
+>  };
 
 [Severity: High]
-Does removing this symbol without updating arch/arm64/configs/defconfig or
-providing defaults cause a regression where all Apple SMC drivers become
-disabled on arm64 builds?
+Will changing sensor->label from an inline char array to a pointer cause a
+null pointer dereference on Device Tree platforms during
+macsmc_hwmon_probe() -> macsmc_hwmon_populate_sensors()?
 
-In arch/arm64/configs/defconfig:
+In macsmc_hwmon_populate_sensors(), the sensor arrays are allocated with
+devm_kcalloc(), leaving sensor->label initialized to NULL. When
+macsmc_hwmon_create_sensor() runs for a Device Tree node with a label
+property, it still writes directly to sensor->label using sizeof(char *):
 
-    CONFIG_MFD_MACSMC=3Dm
+drivers/hwmon/macsmc-hwmon.c:macsmc_hwmon_create_sensor() {
+	...
+	ret =3D of_property_read_string(sensor_node, "label", &label);
+	if (ret)
+		dev_dbg(dev, "No label found for sensor %s\n", key);
+	else
+		strscpy_pad(sensor->label, label, sizeof(sensor->label));
+}
 
-With that symbol removed and neither the new core option nor the new rtkit
-backend option in drivers/soc/apple/Kconfig having a default, running
-olddefconfig or building arm64 defconfig drops the unrecognized symbol and
-disables the core, backend, and all dependent sub-drivers (gpio, reset,
-hwmon, power supply, and rtc).
+And if a Device Tree sensor node does not have a label property,
+sensor->label remains NULL when macsmc_hwmon_populate_sensors() immediately
+dereferences it across the current, power, temperature, and voltage loops:
 
-Should arch/arm64/configs/defconfig be updated and/or should the rtkit
-backend select the core option and default to m or y when the Apple platform
-dependencies are enabled?
+drivers/hwmon/macsmc-hwmon.c:macsmc_hwmon_populate_sensors() {
+	...
+	if (!macsmc_hwmon_create_sensor(hwmon->dev, hwmon->smc, key_node, sensor))=
+ {
+		sensor->attrs =3D HWMON_C_INPUT;
 
-[ ... ]
-
-> diff --git a/drivers/mfd/macsmc-core.c b/drivers/mfd/macsmc-core.c
-> new file mode 100644
-> index 0000000000000..b8905c834c448
-> --- /dev/null
-> +++ b/drivers/mfd/macsmc-core.c
-> @@ -0,0 +1,164 @@
-
-[ ... ]
-
-> +int apple_smc_probe(struct device *dev, const struct apple_smc_backend_o=
-ps *ops,
-> +		void *cookie, struct blocking_notifier_head *event_handlers, bool is_a=
-cpi)
-> +{
-> +	struct apple_smc *smc;
-> +	__be32 count;
-> +	int ret;
-> +
-> +	smc =3D devm_kzalloc(dev, sizeof(*smc), GFP_KERNEL);
-> +	if (!smc)
-> +		return -ENOMEM;
-> +
-> +	smc->dev =3D dev;
-> +	smc->be_cookie =3D cookie;
-> +	smc->be =3D ops;
-> +	smc->is_acpi =3D is_acpi;
-> +	smc->event_handlers =3D event_handlers;
-> +	mutex_init(&smc->mutex);
-> +	spin_lock_init(&smc->lock);
-> +
-> +	ret =3D apple_smc_read_u32(smc, SMC_KEY(#KEY), &count);
-> +	if (ret < 0)
-> +		return ret;
-> +	smc->key_count =3D be32_to_cpu(count);
-
-[Severity: Low]
-Doesn't passing &count (declared as __be32) to apple_smc_read_u32() trigger
-a sparse endianness warning?
-
-In include/linux/mfd/macsmc.h, apple_smc_read_u32() expects a host-endian
-u32 * pointer:
-
-    static inline int apple_smc_read_u32(struct apple_smc *smc, smc_key key=
-, u32 *p)
-    {
-        int ret =3D apple_smc_read(smc, key, p, sizeof(*p));
-        return (ret < 0) ? ret : ((ret !=3D sizeof(*p)) ? -EINVAL : 0);
-    }
-
-Previously, apple_smc_probe() called apple_smc_read() directly with &count,
-which took a void * buffer. Should apple_smc_probe() either call
-apple_smc_read() as before or use a helper that accepts __be32?
+		if (*sensor->label)
+			sensor->attrs |=3D HWMON_C_LABEL;
+	...
+}
 
 [ ... ]
-
-> diff --git a/drivers/mfd/macsmc.c b/drivers/soc/apple/macsmc-rtkit.c
-> similarity index 70%
-> rename from drivers/mfd/macsmc.c
-> rename to drivers/soc/apple/macsmc-rtkit.c
-> index 514cba7dc897a..eaebeb1be3734 100644
-> --- a/drivers/mfd/macsmc.c
-> +++ b/drivers/soc/apple/macsmc-rtkit.c
-
-[ ... ]
-
-> @@ -458,49 +450,32 @@ static int apple_smc_probe(struct platform_device *=
-pdev)
->  		return -EIO;
+> @@ -599,6 +605,23 @@ static int macsmc_hwmon_read_fan(struct macsmc_hwmon=
+ *hwmon, u32 attr, int chan,
 >  	}
-> =20
-> -	dev_set_drvdata(&pdev->dev, smc);
->  	BLOCKING_INIT_NOTIFIER_HEAD(&smc->event_handlers);
-> =20
-> -	ret =3D apple_smc_read(smc, SMC_KEY(#KEY), &count, sizeof(count));
-> -	if (ret >=3D 0 && ret !=3D sizeof(count))
-> -		ret =3D -EINVAL;
-> -	if (ret < 0)
-> -		return dev_err_probe(smc->dev, ret, "Failed to get key count");
-> -	smc->key_count =3D be32_to_cpu(count);
-> -
->  	/* Enable notifications */
-> -	apple_smc_write_flag(smc, SMC_KEY(NTAP), true);
-> -	ret =3D devm_add_action_or_reset(dev, apple_smc_disable_notifications, =
-smc);
-> -	if (ret)
-> -		return ret;
-> +	apple_smc_rtkit_rw_locked(smc, SMC_KEY(NTAP), &flag, sizeof(flag), NULL=
-, 0);
-> =20
-> -	ret =3D devm_mfd_add_devices(smc->dev, PLATFORM_DEVID_NONE,
-> -				   apple_smc_devs, ARRAY_SIZE(apple_smc_devs),
-> -				   NULL, 0, NULL);
-> -	if (ret)
-> -		return dev_err_probe(smc->dev, ret, "Failed to register sub-devices");
-> -
-> -
-> -	return 0;
-> +	return apple_smc_probe(dev, &apple_smc_rtkit_backend_ops, smc,
-> +			&smc->event_handlers, false);
 >  }
+> =20
+> +static int macsmc_hwmon_write_old_fan_manual(struct macsmc_hwmon *hwmon,=
+ u8 val, int channel)
+> +{
+> +	int ret;
+> +	u16 buf;
+> +
+> +	ret =3D apple_smc_read_u16(hwmon->smc, __SMC_KEY('F', 'S', '!', ' '), &=
+buf);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (val)
+> +		buf |=3D BIT(channel);
+> +	else
+> +		buf &=3D ~BIT(channel);
+> +
+> +	return apple_smc_write_u16(hwmon->smc, __SMC_KEY('F', 'S', '!', ' '), c=
+pu_to_be16(buf));
+> +}
+
+[Severity: High]
+Should buf be converted with be16_to_cpu() after apple_smc_read_u16() in
+macsmc_hwmon_write_old_fan_manual()?
+
+Because apple_smc_read_u16() reads raw big-endian bytes into buf without
+byte-swapping, modifying BIT(channel) on the unswapped value and then
+passing cpu_to_be16(buf) to apple_smc_write_u16() swaps the high and low
+bytes of the manual fan bitmask on little-endian systems. For example, once
+fan 0 is placed in manual mode (0x0001 big-endian, read into buf as 0x0100),
+clearing BIT(0) on buf is a no-op and writes 0x0001 big-endian back to the
+SMC, leaving fan 0 stuck in manual mode.
+
+>  static int macsmc_hwmon_write_fan(struct device *dev, u32 attr, int chan=
+nel,
+>  				  long val)
+>  {
+[ ... ]
+> @@ -625,7 +649,10 @@ static int macsmc_hwmon_write_fan(struct device *dev=
+, u32 attr, int channel,
+>  	if (val >=3D min && val <=3D max) {
+>  		if (!hwmon->fan.fans[channel].manual) {
+>  			/* Write 1 to mode key for manual control */
+> -			ret =3D macsmc_hwmon_write_key(hwmon->smc,
+> +			if (hwmon->fan.has_old_manual)
+> +				ret =3D macsmc_hwmon_write_old_fan_manual(hwmon, 1, channel);
+> +			else
+> +				ret =3D macsmc_hwmon_write_key(hwmon->smc,
+>  						     &hwmon->fan.fans[channel].mode, 1);
+>  			if (ret < 0)
+>  				return ret;
+> =20
+>  			hwmon->fan.fans[channel].manual =3D true;
+>  		}
+>  		return macsmc_hwmon_write_key(hwmon->smc,
+> -					      &hwmon->fan.fans[channel].set, val);
+> +					      &hwmon->fan.fans[channel].set, val) > 0;
 
 [Severity: Medium]
-If apple_smc_probe() fails before registering the
-apple_smc_disable_notifications() cleanup action, won't SMC notifications
-remain enabled on the error path?
+Why is the return value of macsmc_hwmon_write_key() compared with > 0 here
+in macsmc_hwmon_write_fan()?
 
-In apple_smc_rtkit_probe(), notifications are enabled before calling
-apple_smc_probe(). Inside apple_smc_probe() in drivers/mfd/macsmc-core.c,
-several operations can fail and return early before
-devm_add_action_or_reset() is called:
+The relational comparison turns any negative error code returned by
+macsmc_hwmon_write_key() into 0, causing hwmon_attr_store() to treat failed
+writes to the fan target key as successful.
 
-    smc =3D devm_kzalloc(dev, sizeof(*smc), GFP_KERNEL);
-    if (!smc)
-        return -ENOMEM;
-    ...
-    ret =3D apple_smc_read_u32(smc, SMC_KEY(#KEY), &count);
-    if (ret < 0)
-        return ret;
-    smc->key_count =3D be32_to_cpu(count);
+[ ... ]
+> @@ -871,6 +1475,57 @@ static int macsmc_hwmon_create_fan(struct device *d=
+ev, struct apple_smc *smc,
+>  	return 0;
+>  }
+> =20
+> +static int macsmc_hwmon_create_fan_acpi(struct apple_smc *smc,
+> +					struct macsmc_hwmon_fan *fan, int num)
+> +{
+> +	const char num_char =3D num + '0';
+> +	int ret;
+> +
+> +	ret =3D macsmc_hwmon_create_sensor_acpi(smc, &fan->now,
+> +			__SMC_KEY('F', num_char, 'A', 'c'), NULL, 0);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (apple_smc_key_exists(smc, __SMC_KEY('F', num_char, 'I', 'D'))) {
+> +		char buf[17];
+> +
+> +		ret =3D apple_smc_read(smc, __SMC_KEY('F', num_char, 'I', 'D'), buf, 1=
+6);
+> +		if (ret)
+> +			return ret;
 
-    ret =3D apple_smc_get_key_by_index(smc, 0, &smc->first_key);
-    if (ret < 0)
-        return ret;
+[Severity: High]
+Does checking if (ret) after apple_smc_read() cause
+macsmc_hwmon_create_fan_acpi() to abort on success whenever the F%dID key is
+present?
 
-    ret =3D apple_smc_get_key_by_index(smc, smc->key_count - 1, &smc->last_=
-key);
-    if (ret < 0)
-        return ret;
+On ACPI platforms, apple_smc_read() delegates to apple_smc_acpi_read(),
+which returns the positive number of bytes read (16) on success:
 
-    dev_set_drvdata(dev, smc);
+drivers/platform/x86/macsmc-acpi.c:apple_smc_acpi_read() {
+	...
+	if (ret < 0)
+		return ret;
 
-    ret =3D devm_add_action_or_reset(dev, apple_smc_disable_notifications, =
-smc);
+	return size;
+}
 
-Previously, notifications were only enabled after reading the key count and
-the devm cleanup action was registered immediately afterward. In addition,
-apple_smc_disable_notifications(), apple_smc_enter_atomic(),
-apple_smc_write_atomic(), and apple_smc_rw() in drivers/mfd/macsmc-core.c
-unconditionally call backend ops without checking if the callback pointer is
-null.
+When F%dID exists and is read, ret is 16, so macsmc_hwmon_create_fan_acpi()
+returns 16 early before initializing fan->label, the min/max/target/mode
+sensors, and fan->attrs.
 
-Could notification enabling and its devm cleanup action be kept together
-(or guarded for backends that do not implement all callbacks)?
+[ ... ]
+> @@ -990,6 +1645,101 @@ static int macsmc_hwmon_populate_sensors(struct ma=
+csmc_hwmon *hwmon,
+[ ... ]
+> +static int macsmc_hwmon_populate_sensors_acpi(struct macsmc_hwmon *hwmon)
+> +{
+> +	int ret, i;
+> +
+> +	ret =3D apple_smc_read_u8(hwmon->smc, SMC_KEY(FNum), &hwmon->fan.count);
+> +	if (hwmon->fan.count && !ret) {
+> +		hwmon->fan.fans =3D devm_kcalloc(hwmon->dev, hwmon->fan.count,
+> +				sizeof(struct macsmc_hwmon_fan), GFP_KERNEL);
+> +		if (!hwmon->fan.fans)
+> +			return -ENOMEM;
+> +
+> +		hwmon->fan.has_old_manual =3D apple_smc_key_exists(hwmon->smc,
+> +				__SMC_KEY('F', 'S', '!', ' '));
+> +
+> +		for (i =3D 0; i < hwmon->fan.count; i++) {
+> +			macsmc_hwmon_create_fan_acpi(hwmon->smc, &hwmon->fan.fans[i], i);
+> +			if (ret)
+> +				return ret;
+> +		}
+> +	}
+
+[Severity: High]
+Was ret meant to capture the return value of macsmc_hwmon_create_fan_acpi()
+in macsmc_hwmon_populate_sensors_acpi()?
+
+Because ret is not assigned when calling macsmc_hwmon_create_fan_acpi(),
+if (ret) always checks the stale 0 from apple_smc_read_u8(), ignoring fan
+initialization failures and leaving hwmon->fan.fans[i].attrs as 0.
+
+Also, if apple_smc_read_u8() fails after modifying hwmon->fan.count,
+hwmon->fan.count can remain non-zero while hwmon->fan.fans is still NULL,
+which would later dereference NULL in macsmc_hwmon_create_infos() ->
+macsmc_hwmon_populate_fan_configs().
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029085504.3547=
--1-atharvatiwarilinuxdev@gmail.com?part=3D1
+-1-atharvatiwarilinuxdev@gmail.com?part=3D13
