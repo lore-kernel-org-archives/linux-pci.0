@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793301893;
-	b=ojdCSFQME/V8xWiPmQQ7txINuSGiTnRBGxR5wtlWQISVvd9JYTPNoGOtMfmGmWNJnVmI
-	 lx0CzzmCV3+i+RHRHDyY3+d400ClyraUzFErza2zdYqt3NU5sY6PtZxp3anonvuimmHZp
-	 whYOH9s1cw1yS71JaYjG7jzpxs4ekCOJb2ifYaYdnu85q1ffD70KOaV+xJIXSngo/jpOc
-	 5RS999vPl10NFlX8TEeiqJqBMKHMqVIn3X0xjbYGarhAZ7MvrrmqwLXoNldHxETb7kWnB
-	 Bdpsr1qaR/sa7DTd/4hDb+QUJiIUcALtwY+pycGFJ7L6J/dAEXO0UYTfx9CcCAQ4WyQ==
+	t=1793301965;
+	b=hNMrYsAo9KhJxc8b7G2TOknJO5ZfgCwQ4t7qGRmUHapWk1NKhhqRTOzTDzrY428PxHtL
+	 qjQ3I2uBlZwzTQv8oIFalgQvz3VD++6xfB8vUreZ9O3sJWdENpaIj6v23fd1jhY2H0qYa
+	 79NhGqWSzHG/Gp/B+IbIG59uubvGVpXMol6ryVOolbiVQy4KTe7cRd5H4LpqFRIsBsOXG
+	 TpbMOmmwU8JgYANf87wIVr8Q2sy5zPaWYzmIfU9QYiI5MC2uQOFaKSK2pfDsAwVU/R7C3
+	 rO/AF3zOuI4aP9IB9qzcMBj4ZmiPVdWkF934sQ9k49W6wqqHBgQ+qeADwK96+9pICMQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793301893;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793301965;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=iHn1Kx7ZRTJp3w3C/HPS2RFL58IifG2L82teHwy0AnY=;
-	b=Mg62FsFQ9QXmMgJnCOhSRHxf5RmpKKTADavE56B9ayZYbvXyQCSPYglXMhzKW+8/N4xV
-	 8ILYhKNYzh4MN6by6IuPtI5rNlVZ+DCHEge7hAH507IaUvExLEW3li6dsCb/V5pX225fy
-	 ko9R3XvQSQs10ADJepZxAshAh5mCMTiBG57WDIicdp1jY6zH20APA2L8M6RgNcYaQ2yl9
-	 y7v5k8GgoTBL7zTVDfLpIIwQmnh2MNxoivgHDsxHXxgMN4NNGganEyKyudMTsN8gXYE/i
-	 Mcx0EDRdnYDvLgSIRqhBJv3EWmE83ZL6yNTxEe9+1R1gmtp6p7egjnWDBs/rot6l47A==
+	bh=QZ4GEkTyMhYI276R8ZrcVlrXD0GQvtw2Cl2N7klm9B8=;
+	b=IA8F4YZKLXvdPPoK6CWb0dj+zBws/a2CHZeYJ+GqzoDFGE8WBU2MRTHT60D1U8cSWVCo
+	 +wt4IDdVgEvAZWDoNU+xv3tKGj3BdP1m4w3MCZs2Xq0Q5cu2zI/7NcstxDCkKOcFSR0Ej
+	 9TuaVtMzUrDkzubDuarPAY6FRbPAsyVzUE1ulGn7E9QOHKKKWwt72fJpMIMezrSekfPvf
+	 tW+SC8De6uMgerJ/WNeaWQLxnCrUuRW49aqqzIVz13AimaGOJWjN/UPl90FHx0dsqRLYl
+	 e87s3gyAKgbMe7tvNZNVDC1eNqnZS7WUUY8LWnlZPKmxrIlvRenmwuDa1+z4v46xZSA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kbi2MAUN;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Hkz316u/";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68848606A321
-	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 19:24:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22A67606A31A
+	for <linux-pci@vger.kernel.org>; Thu, 29 Oct 2026 19:26:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kbi2MAUN
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27A871F01824;
-	Thu, 29 Oct 2026 19:24:53 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Hkz316u/
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 798EC1F01816;
+	Thu, 29 Oct 2026 19:26:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793301893;
-	bh=iHn1Kx7ZRTJp3w3C/HPS2RFL58IifG2L82teHwy0AnY=;
+	s=k20260515; t=1793301964;
+	bh=QZ4GEkTyMhYI276R8ZrcVlrXD0GQvtw2Cl2N7klm9B8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kbi2MAUN4XdwZuC36xGM6gxu0gkByUUo8Fq1KAkU5pwQVrDVtB0oppk2UvYHWcaJW
-	 VxyWPH2D8lnOw2sqO5yCxbtc7epLrO9k8NolJjAi23GamNUo1IsmXOmLhLGF675RY8
-	 D1gddnbZx6H5HL+2/m3bF5wE9PDKtyBq08Z2qpu50xbbQX1YXrcEtXVrNFW4TsUHxO
-	 U1PRUdOwMJbb7B7EoxZYfQ7zXDCO0idFfGkEfWyiwoB0rswG3+esQofsTee1c0XfI2
-	 4Pcb+X8Zy6CAKKjgRyz5ianJzyn1PokvtBMrhPzHxP1ZEJMIAIjA/D2Dmvj/hXXvWv
-	 mGHqGCGixO5Kw==
-Message-ID: <sashiko-outbox-189874@kernel.org>
+	b=Hkz316u/1KlFy4d7ULs3CeSzVa5JWIE9747XUI3E32Wa8BgeyraeXQv2zfuz+8vbQ
+	 LGPmK4vqRH9rNuc0S/PZ4rYYJ8m+bWEtUiOgkDwPg6t11tyO4liXVo6DbsU4r24Frd
+	 IIRMx2kwNkto0E7HMafhFXGHofrSXyAseTOtOdBGRYqe77/560LHs/QvoTJReRwvQn
+	 kmpzPvAznUpGp7bTaBwRWeBCf+uNGBD57cQdpVTC0kl7czUHGRkaV40luBGxHTmztt
+	 j9RTIrfDr/THo9CxBMRQPwLA5ENxIb1z9Du09pu8hdVbGauFY0uyV4yh2cemfWKukH
+	 fvywGgdDUPieQ==
+Message-ID: <sashiko-outbox-189876@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 5/5] PCI/sysfs: Use user config accessors for
- serial_number
+Subject: Re: [PATCH v2 3/5] PCI: Add
+ pcie_capability_user_read_{word,dword}()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Matthew Wood" <thepacketgeek@gmail.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261029192032.1325629-6-thepacketgeek@gmail.com>
+In-Reply-To: <20261029192032.1325629-4-thepacketgeek@gmail.com>
 References: <20261029192032.1325629-1-thepacketgeek@gmail.com>
- <20261029192032.1325629-6-thepacketgeek@gmail.com>
+ <20261029192032.1325629-4-thepacketgeek@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 29 Oct 2026 19:24:52 +0000
+Date: Thu, 29 Oct 2026 19:26:04 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,27 +61,17 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> serial_number_show() reads the device serial number with pci_get_dsn(),
-> which uses the kernel config accessors which don't check
-> block_cfg_access, so a read that races with a reset goes to the device
-> mid-reset and can fail with -EIO or report an all-ones serial number.
+> pcie_capability_read_word() and pcie_capability_read_dword() use the
+> kernel config accessors which don't check block_cfg_access, so they
+> can't be used for reads on behalf of userspace that should wait for a
+> reset (or other pci_cfg_access_lock() holder) to finish.
 >=20
-> Do the capability walk and DSN reads with the user config accessors
-> instead, as the "config" attribute does, so each access waits for any
-> pci_cfg_access_lock() holder (e.g. pci_reset_function()) to finish.
-> Also wrap the reads in pci_config_pm_runtime_{get,put}() like the other
-> attributes that read config space.
+> Add pcie_capability_user_read_word() and
+> pcie_capability_user_read_dword() helpers, which provide the same function
+> using the user config accessors.
 >=20
-> A reset can still start between two accesses, but the next access just
-> waits for it to finish, and the DSN capability is unchanged by a reset.
->=20
-> Add a check that both DSN reads are successful, unlike pci_get_dsn(),
-> and fail with -EIO instead of reporting an all-ones serial number if
-> the device is disconnected between the capability walk and the reads.
->=20
-> Unlike pci_find_ext_capability(), the walk doesn't check dev->cfg_size
-> first. serial_number is only visible if pci_get_dsn() found the DSN
-> capability when the device was added, and cfg_size is final by then.
+> These are for use within the PCI core, so they are declared in
+> drivers/pci/pci.h and not exported.
 >=20
 > Signed-off-by: Matthew Wood <thepacketgeek@gmail.com>
 
@@ -89,5 +79,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029192032.1325=
-629-1-thepacketgeek@gmail.com?part=3D5
+629-1-thepacketgeek@gmail.com?part=3D3
 
