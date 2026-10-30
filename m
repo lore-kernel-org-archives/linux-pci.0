@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.195.53
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.198.3
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793380415;
-	b=flsXfQh5HS8BpztkS3dIILaWJvYjwvzl/QyiZZ6DWW/ae/DvMBwFBi8B0gjlWURGaf3L
-	 RP1h0PdsygP/TScTHnaBFYsYgYNw7d+b2e1lz4e6M4zq5fJR28Q4mU0EJpc0eUkcDtiFB
-	 qCClK4YlQTpAgZBlqPoA6uNfBqlBWUe2C4uWLIX6CKOTG50SOw0GOHIPywbHTQt53QN65
-	 BE4rMiAtrVbHXdpJlOS7NvzhmugN7WS1OP4q68DltP7iZ3Bw24uT0xjm+m4dexg+m9W7k
-	 kLQo7u7qVZSdqnvPdwD2N7sQ857eUcKcaqo+ALfJa4XDQE8T5qxuwDf4eYkbGPdyBQA==
+	t=1793380422;
+	b=ex7NfVzgrw8jAeatS7H0ckHvvVY+jhR2HyE8KpnVklEI1hHOzLzOV8pNe4yTHVlD4XmG
+	 Xc0/Vz7nrhw/81IZXcfmAz5kZEwQQX7JqLwoelsmV3iQjoMsHsyDUjXT74n4hZIvucOcf
+	 DJqaGyDHSWhGZGmelAp9435kHwFqlzydt6xMZATRebqaFVKjFw6A4ZABjtllvadUZy9X4
+	 QmHYrG+oZtEp9BvQ5s4ayhKBu3jSqlFIYg3hsLwRxSPWh1xtQdLMX6IzTWfI6vzLyDdjd
+	 YeJY/LQJ2joGJATMU3KiDh35Lh6u6Vn4VFvIRs0Qy7utHIIyqt7qiyvGh9qKazI5gWA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793380415;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793380422;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
 	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
@@ -26,71 +26,72 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=tVkH+Hxl7VP4uBseTBKue215wso22jw2O586kVovWWE=;
-	b=0RRvUWSq6Fx9L/NmBgVtqqcYTO9HEBSn4jvLVvy3sIoEuIgd7ml8Gd0iKseJsdDbZtxH
-	 nr6lRm7oubWUiNOgr7v8Hy66jPjDEsPj2faCI4h7YOtOR+FdX5tpFTMTOEsg5oVSVjfu+
-	 0DakCU/yBOKrUuj/60tuDw7kyX69ECVTjjj+0Oeq1+rDXXL3Nlc4OMoG4mn7RbAWO0jDX
-	 Lcdzl0Wcbx/fnzIhqLE8XNTH0aNsCxMQ55qRcU3hxMsbk4UQOzsj6DZRxpgtN6dcXMARk
-	 ucpTfL7lDW8WNGhsQQEVvRPST2JzroD4hFk4NALVmltHhXGENgJTq+0XjZZapNteqAg==
+	bh=hmKETW54F/8Nm+2y59K4seadmz7NGjll7gw6nPcM694=;
+	b=pzzMporDwVsLNX1eN3nrsgyLFrUWXUO4x7RB2NHltngZNSKhfLKjW/8z3XHn07VhSMWQ
+	 Dmwy2gk7BTEJSMSbdqYKcKDnJaWxRDNyjy2Vh+tehOSNM7pBfOE7mJgguw41/4CR+sKKz
+	 m8OiGskOAxS0eSraXWry20vS5PIlAV4BsF0i97WL0a1DUPc+t6/Mofdzw8m4b7YhSWcMv
+	 yLnWEz44DOa6zTIQn/PI8QhVdobADqRFu0wkPb/Sd4F6Zrn3MMAvNNM41k5uY0HNsnkIe
+	 FqlcW44BHHwPc21+0WkIMsUVGICHihoYdEcB+hml+eSy+djA04pyHbNP2T/fPRMyLHw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nvidia.com;
 	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b="p/Kz+4pl";
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.195.53
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012053.outbound.protection.outlook.com [40.93.195.53])
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=W3UAZtfU;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.198.3
+Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010003.outbound.protection.outlook.com [40.93.198.3])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A85A606A32A;
-	Fri, 30 Oct 2026 17:13:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0A85A606A32A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4698606A31E;
+	Fri, 30 Oct 2026 17:13:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E4698606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=p/Kz+4pl
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=W3UAZtfU
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Qiz4NSCdv4rXL+Opz/6K4nXoNUrnY71ecnlJc+U/wCgGV/IGE0lDfGj3mdek55pBmiFDQ/luP9gqVjbr5yVJ6V2BQCqG/A7DP+mh3ff1nEhE1WQo6M3xEPLLZJbTxBm0FaB4FH+aoMRjxTvxBt3EUXyaQGg4B1vD8QYEzI6Xcsrc7jR1UK5B1CM+0gP3QCbKvlHmM2FBtcGbSpZr1+aP2xA/vKymj5mFkasEcUJEVEJHm6hMGuEmm1ysOAgduH05AtzsXHJv8lNrLi798h0z5hdS+yzxUHdttcH4M02yUpwSFyq3/sfZl91+oop2EDl6YvGIemb4wiUtXFtYyXB1nA==
+ b=apTQSVOlkXFDQmQBtqX7uv55DW73i1pm+DRv6QcDpjtzSFAzv3hNeBNAm9SUy7lNulu2ykyt34vR0Rzl+5wsAJb5z2ACWbgEyrs8jPb3ryo46Zzu40UOK0l0JS/9D+cD8e+fC+JfFDZqDRQqNHVFUDGXcixpXTVL2fto11wmzCPutO3/+H6lmDkWheFyQ3W2Q6jjeZy3hT/2ohS4f+TA2aACEhIqOHfU/smB3JJb5SEx4bnBCd948zz4ZKRNQCXG8+TSl026fP1tFlkHpdKAcT0yLZ0E12vk7XOVlvzdb51ALhv4ezQbhhtEq8k8kHA4anBct/lTCnoaDvvEJVberg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=tVkH+Hxl7VP4uBseTBKue215wso22jw2O586kVovWWE=;
- b=UNVrZ5n9PCpO0A/ddztQz7GD+RslTu51eWN8bIq6pv0KmuT4HMIGZstjxKHx5+HIzOZElZRXpfxjB0bj4IJrYnGPOxHtf8hrsNt6hl7ZWUYltMS+p8khTf/Y5/PDRFfh08IFzK9Cyr365Q6hfEON0+M/aqex/h+b99kH+r2hgyYSHsWQDDr/e9m/bOx2mtCDyVD+Uq0hnMYNwcsQFOkqLTWjrv0HEWtH9W+ztkP3J9zehvdQFzhTa3j6sUTkb0KzM9PwQvYeRCLoekynJLY+YdA+hx8kM90FEsageCTNLWBqVUV6CpVfp5h0WnRdPDfOuNvXqCwfJl5IVf38AoPGLQ==
+ bh=hmKETW54F/8Nm+2y59K4seadmz7NGjll7gw6nPcM694=;
+ b=t6nXKbhdnA2ORiC4z6/xE99UzBOm1elu+GsA4tpR1xXOzQopLI8ACm/2mBYvzzeNcm23kdoDecBPWp2u+mMF7hN56AWSxCi2HtLhSACWEKSV03aa0W+brX5hffIwAu6x4lnpWsExalZueIBxJc/jz9lfbac/3y4OHfL/6J6hlbZ2dfMlINoIJU8QmAWtLCbiPGZMrzObDIVARUkmEOaKf8BOta2SjpGLvKKTQs/zJHgYWjhoi9mIqB1RNe5Lud/cagEOLzuIN1qw51Sv+/Jjhovazhl3bwcJVCui9umhqzBy3DPbhbsibL4b8wKIwVyv8sOa/LjVMkKS/u5qDSI+1g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
+ 216.228.117.161) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tVkH+Hxl7VP4uBseTBKue215wso22jw2O586kVovWWE=;
- b=p/Kz+4plIyApxbjvJcg/sQDHncR2tlSuSY7DiqeohISSn1utadoANQ6Z/EJRvohsOOwfaFYs16DYSEDXOIWbdAS/m/YCeR22B027SVJOEm2ZKtIXuqC3NmnXpknZkI4dZOPLH8MJIsoWsjHCmdcw0yQDraG9XT+Z3JhyUpgzjuVcQqLBaUapJ9fDpndiGvQM2ifWv0cP3CqXvZ6H1f48d+ARGp5FfUTNHXkAwXwXvNa6dX9iI7O7yR0BOPiLA1qdOVAXrbQjxmP8Qp89Cpdr0AA50kMNmlv+TdOqvUrP6PDwictEV2hHu2bYRilvGQ4T8hKJo/OTJD5lMJwFuyCm0w==
-Received: from DS7P221CA0024.NAMP221.PROD.OUTLOOK.COM (2603:10b6:8:25c::18) by
- CY8PR12MB7753.namprd12.prod.outlook.com (2603:10b6:930:93::13) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.569.9; Fri, 30 Oct 2026 17:13:29 +0000
-Received: from DS2PEPF00006E1F.namprd05.prod.outlook.com
- (2603:10b6:8:25c:cafe::a0) by DS7P221CA0024.outlook.office365.com
- (2603:10b6:8:25c::18) with Microsoft SMTP Server (version=TLS1_3,
+ bh=hmKETW54F/8Nm+2y59K4seadmz7NGjll7gw6nPcM694=;
+ b=W3UAZtfUYw7rlIyQyg9ogq1bx6O6iECk2voWQ08BYFxAeV9mYaLA5vCcXt76ZRuoqVB9B7E1nJEcB0XG9ZRRX7FwetAngL3F4iQwzrzk5bgYZl4VIXpT2TLBQJoBtyy6NT4/5FiJbPffmHTZDQXSM7Z9GxtEK3p6swsEHcIjwvq4mAEswwhsezIi4oeX4KWhpd260u4Rt4jS4G5eXokkFgOHPFzDo3M/RjvnziGyu8EXz/ppxJvK9rjoAA5K3jgZeNJk6ddq4dH+2MuFcCmKGp71ct0ysZZcwgMZ4vb77wFUCuR22501OD849m0RfKIvs+hPHBYCMH6PBpCKd4EHwA==
+Received: from DS1PR04CA0012.namprd04.prod.outlook.com (2603:10b6:8:44f::7) by
+ PH8PR12MB999320.namprd12.prod.outlook.com (2603:10b6:510:42f::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.9; Fri, 30 Oct
+ 2026 17:13:27 +0000
+Received: from CY5PEPF00000E7A.namprd02.prod.outlook.com
+ (2603:10b6:8:44f:cafe::34) by DS1PR04CA0012.outlook.office365.com
+ (2603:10b6:8:44f::7) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.21.569.10 via Frontend Transport; Fri,
- 30 Oct 2026 17:13:29 +0000
+ 30 Oct 2026 17:13:26 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- DS2PEPF00006E1F.mail.protection.outlook.com (10.167.23.212) with Microsoft
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ CY5PEPF00000E7A.mail.protection.outlook.com (10.167.247.42) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.569.4 via Frontend Transport; Fri, 30 Oct 2026 17:13:29 +0000
+ 15.21.569.4 via Frontend Transport; Fri, 30 Oct 2026 17:13:26 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Fri, 30 Oct
- 2026 10:13:06 -0700
+ 2026 10:13:02 -0700
 Received: from xinmengs-dev-vm-linux.nvidia.com (10.126.231.37) by
  rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Fri, 30 Oct 2026 10:13:03 -0700
+ 15.2.2562.56; Fri, 30 Oct 2026 10:12:59 -0700
 From: Simon Song <xinmengs@nvidia.com>
 To: <dakr@kernel.org>, <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
 	<rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
@@ -110,9 +111,9 @@ CC: <alex@shazbot.org>, <jgg@nvidia.com>, <yishaih@nvidia.com>,
 	<work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
 	<kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
 	<peter@colberg.org>, <xinmengs@nvidia.com>
-Subject: [PATCH v5 5/9] rust: pci: drop driver data before remove returns
-Date: Fri, 30 Oct 2026 10:12:23 -0700
-Message-ID: <20261030171230.196717-6-xinmengs@nvidia.com>
+Subject: [PATCH v5 4/9] rust: pci: add num_vf(), to return number of VFs
+Date: Fri, 30 Oct 2026 10:12:22 -0700
+Message-ID: <20261030171230.196717-5-xinmengs@nvidia.com>
 X-Mailer: git-send-email 2.43.7
 In-Reply-To: <20261030171230.196717-1-xinmengs@nvidia.com>
 References: <20261030171230.196717-1-xinmengs@nvidia.com>
@@ -131,80 +132,68 @@ X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS2PEPF00006E1F:EE_|CY8PR12MB7753:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8d9e2800-d8ad-4251-4a35-08df36a91e48
+X-MS-TrafficTypeDiagnostic: CY5PEPF00000E7A:EE_|PH8PR12MB999320:EE_
+X-MS-Office365-Filtering-Correlation-Id: 57674366-b062-437f-ede3-08df36a91ca9
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|82310400026|23010399003|376014|7416014|1800799024|6133799003|18002099003|22082099003|56012099006|261028144727099003|11063799006|261021121427099003|261021123027099003|10067099003|261022105027099003|261026121527099003|261026140227099003;
+	BCL:0;ARA:13230040|376014|82310400026|36860700016|23010399003|7416014|1800799024|6133799003|18002099003|22082099003|11063799006|56012099006|10067099003|261021121427099003;
 X-Microsoft-Antispam-Message-Info:
-	ZHwQMM4srWHNfUH8wLIhLBylwm0WrYA4fUkXCO0r+etUGFp96kNCFukfKDedXR8d0ZcLYOHFIs7c4ieNdC64keflbsccWuyveuDoQ8vepBF/CIyeqSZM3wnggmlu++vxkJBx4Ld4gpcZ590GngVIUNmgq0wY+y6ZF4QZ2G08wgfe3+Rt4um4hsYBgM5EsY2G9PgU7sWptzo7BSeCIjUTbY9G81lspmtPyWVGJdKHgHHFN071xfP5sp0Z3FxO4w3dw8nQCwwgEy9Tj8RB0Pn0qNxMd3kcLnhtUskuGiBUZX4hASCrVUW8SZ5FgPa/UBlVd9UWYzBdMIfJ5V35IL+Cn8sDRM6Bc9a7Nv4WH7hTMXETNMmqeZ4aTH8J52Et2JguWfZIrH65Yb1KYNVioraBO8JuMtSwBOXMVzrwHf1+oDtPu8iFzggWcaMdzr1gxsKrgO3MDjQnNgQLbgRECh6FjFZZn99j1HFzSkeTI67z3QZ5du1/RKF/bqDO7ago8n/+iYuLkZ62lXTO29f3m5pMHwO+VFkAGc/CravnaJ7b5SoQSp46NpSjmK82wb8DdhsXTYiEpFzJq+7cuGWIgnWBDN6EfwWRuPDe9KR09WRG0DSJ4EI2EvicYtMf/FR6V/+C8cnxCPTCYjsb1lISAQhxRsX6q3YiAsc+yeo/AhdQwePFRj2TBLuSV6CfMJcJa+L0PfLJraKpqDsxzD2OpuVV9g==
+	52muTwgm1l80+KUZ5mp2EghoRoUJx1773Vim77zZ4cPiE5C5rN24rE4a/WavLBlLvofeuYTrpQiNMoMgpw9KgalYv8Rfex83ot+0XvxjbiCPR3F0/LPMz9H9xqspIjlhs6eXFNqPSI+gZea8peyr14kvJfumpP8i7jGe0NP7kc5AOGpzcyVpE9hJOadfkbcRa5ipZSMZwYof5vxRdtfSE/3gHsotQ1Bcv6c83VVIoPlq+B3Xb0/wmXkokwr6iTvIQaE1woejZeJppFENqSQik1bJ/B38EMonEBQFK8QouxqfUxBZUldNqg/Y/cx9RVQXqLrvBJp/SwmBzpbncrUJJVBlKhQnD9hsc31g55wDhF+hK+ESkM3XABIfTQiBZxovwLdFbZcnS4Eu1aCqRIy3QrInYcEEqYdi7KvLvbpqWCywsx2aSauyk+qeO6+NXGYaGxym5yHoZXPOzrJ/a8TYFM29NhQckS8dvFYtkgvsFiv2qR2Zs6nzp53CaoUC9mA8BuoN6/g03iMQC8wlF4ZU6rAdZGYM/MCs77f2FJZqMgiM/yduGswoxz8S42VcxHo6zn3P+E9BVKyZcDQUpJ5/xo4KQkAM1obqNZlMo6pB1JOQsxWxnABbBrasZt4zvxltonenX2tQeOXroPX0eDcNHYI5Y1zaJr7jm8ePTc/nGl1NOfwJXBr8H/b69N+pxzZRjgZsXcZh6MJOqNLHUVYcBA==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(82310400026)(23010399003)(376014)(7416014)(1800799024)(6133799003)(18002099003)(22082099003)(56012099006)(261028144727099003)(11063799006)(261021121427099003)(261021123027099003)(10067099003)(261022105027099003)(261026121527099003)(261026140227099003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(82310400026)(36860700016)(23010399003)(7416014)(1800799024)(6133799003)(18002099003)(22082099003)(11063799006)(56012099006)(10067099003)(261021121427099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	3XawJBgYAtEQS1K+k+dbLX/J3y4QWWi79FSOLXaCPhEj36RfsUGxFAsR79yUfgxvAKe9vskxKd42MyDVoeFUx4XM33UjwQvvkjDph0VhvYTK0y9XZkgq0mKB/MFoFFFR3VU8wtH2eG/pzoOQ3RR2DlyQWR6UjQPlFakmjeJS5GDREXl7P+6FJ9FbyauJRoLli0IxzBQ5aGKIQAxhOP0TZzdbJ/EMtWK2kd74matOa2P3x7fRhnN3hQL4GfCLom3YcXxKb0oWDVS6i54rrhAOZXLHGdgMBghYA1kT/SZjcZH75gg9M3fbc82FvvdZUHU149bWzs82tRst4nbNNDM/F6PZwFiKtEP6XLLVrXf3a+O/ZbudlUS/tp3aeiZAzwHVdngBnd6skib1J1RH4BEwWfdABgpLhRmpERXdWMoF7vvQVivZ8u/hbh6rd8PaEk9a
+	/NzmnC/0t80HJs5hR72KWEGTGLH6oWPfNWT/v/MR/sZJq5FBHDnvXQd4yx9VGqpcMR7d3FTKu+bGjoA5LQ0PgJ7XP/z3fZCp3KhpHn+wEPT0CBXBRaCdHFFEtZAhMyXJdlBnMZVItjNB1v+Ck6vgIpFN7uMxyZos5OiQUFxl0oBhNzM3Ks21L832s+esmcol4T6WvBIZ32waVhVmW7Yh7AEfwObrrVJUzigIzNBKoc6IBg3fW29jOSFq8ezt0Cpe+w1uBevxbr6iG6XGvBBoQ+dW+jSfodX/EqsqQ05hBQx/JToBCwZBfzua7JuytsXMjrlQR70u9W27FSf4sHVTUSweI7dXs49TOz66rcc0BZAECvwI1/kAJyYvchI+qkGcRjiRwCbdnb4/AJ64ZOWR6j27vxIUmR2ul7BAS+zLuRYpRoDm5COuhemLqV7M7EuH
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Oct 2026 17:13:29.4350
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Oct 2026 17:13:26.7501
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8d9e2800-d8ad-4251-4a35-08df36a91e48
+X-MS-Exchange-CrossTenant-Network-Message-Id: 57674366-b062-437f-ede3-08df36a91ca9
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	DS2PEPF00006E1F.namprd05.prod.outlook.com
+	CY5PEPF00000E7A.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR12MB7753
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB999320
 
-From: Zhi Wang <zhiw@nvidia.com>
+From: Peter Colberg <peter@colberg.org>
 
-Drop PCI private data before the remove callback returns, so its
-destructors run within PCI core's removal context.
+Add a method to return the number of Virtual Functions (VF) enabled for
+a Physical Function (PF).
 
-Call unbind while private data remains installed, then take and release
-the data. Taking it clears drvdata, so post_unbind does not release it
-again. All borrows must end before the data is removed.
+Expose the query in the PCI core callback context and return u16,
+matching the type of the VF count stored by the PCI core.
 
-Suggested-by: Danilo Krummrich <dakr@kernel.org>
+Signed-off-by: Peter Colberg <peter@colberg.org>
 Signed-off-by: Zhi Wang <zhiw@nvidia.com>
 Signed-off-by: Simon Song <xinmengs@nvidia.com>
 ---
- rust/kernel/device.rs | 4 ++--
- rust/kernel/pci.rs    | 6 ++++++
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ rust/kernel/pci/iov.rs | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/rust/kernel/device.rs b/rust/kernel/device.rs
-index 2291d85b684..1f6bb58396e 100644
---- a/rust/kernel/device.rs
-+++ b/rust/kernel/device.rs
-@@ -243,8 +243,8 @@ impl<Ctx: InternalBoundContext> Device<Ctx> {
-     ///
-     /// # Safety
-     ///
--    /// - Must only be called after a preceding call to [`Device::set_drvdata`] and before the
--    ///   device is fully unbound.
-+    /// - The data stored by [`Device::set_drvdata`] must still be installed and remain valid
-+    ///   for the returned borrow.
-     /// - The type `T` must match the type of the `ForeignOwnable` previously stored by
-     ///   [`Device::set_drvdata`].
-     pub unsafe fn drvdata_borrow<T>(&self) -> Pin<&T> {
-diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-index 9e1d02588af..8092f56ee2b 100644
---- a/rust/kernel/pci.rs
-+++ b/rust/kernel/pci.rs
-@@ -150,6 +150,12 @@ extern "C" fn remove_callback(pdev: *mut bindings::pci_dev) {
-         let data = unsafe { pdev.as_ref().drvdata_borrow::<T::Data<'_>>() };
+diff --git a/rust/kernel/pci/iov.rs b/rust/kernel/pci/iov.rs
+index 6f8f95ed618..1ff0ce94f16 100644
+--- a/rust/kernel/pci/iov.rs
++++ b/rust/kernel/pci/iov.rs
+@@ -11,6 +11,17 @@
+     prelude::*, //
+ };
  
-         T::unbind(pdev, data);
++impl Device<device::Core<'_>> {
++    /// Returns the number of Virtual Functions (VF) enabled for a Physical Function (PF).
++    #[inline]
++    pub fn num_vf(&self) -> u16 {
++        // SAFETY: `self.as_raw()` is valid and this call runs in the PCI core callback context.
++        unsafe { bindings::pci_num_vf(self.as_raw()) }
++            .try_into()
++            .expect("pdev->sriov->num_VFs is u16")
++    }
++}
 +
-+        // SAFETY: The driver's unbind callback has returned, and no callbacks retain a borrow.
-+        let data = unsafe { pdev.as_ref().drvdata_obtain::<T::Data<'_>>() };
-+
-+        // Drop private data before returning to PCI core, while its removal context is valid.
-+        drop(data);
-     }
- }
- 
+ impl Device<device::CoreInternal<'_>> {
+     /// Enable the Single Root I/O Virtualization (SR-IOV) capability for this device,
+     /// where `nr_virtfn` is number of Virtual Functions (VF) to enable.
 -- 
 2.43.7
 
