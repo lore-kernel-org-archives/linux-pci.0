@@ -1,56 +1,32 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793381168;
-	b=nscqIRQ/KbAyxkxn021P3gw08PnvR/mMzINCZBO9aWWyIL45RnsRmPWQubAV6oBgcXyj
-	 UynzLdNAi7AjQ7QOi7VdNN+kPO8vVPUNcQNsPlOvOd4SXAe7eggSJmhHaPI2FgP5jHvXz
-	 IWdDXs9d59JPr6B8naOwWwSnV42fSdBCwPT1MmfwYOWBZQZi22vSMfWmao3CNVAzPdF8a
-	 m0e6qljuAQQMauYQPGb357eb/d+oEuUeFw4bXv59iToRPqEDB4SOZIDiMI+8MyEPeisOi
-	 dzeRiUw7unrp7PVxr+zrdNHIMIuWeLgHcHCa9AwXBNyRUX7xcG27NREe68cgWuKsW6Q==
+	t=1793381219;
+	b=FyaZYGh405ZXDFOmOS0dLxcjQiF4XUi/MYXxb3X2SZZGGPnygIQvOFVlE79zRdsshUQZ
+	 df8jXjQij5bDYM4gCTFuxxyDvLnm5cweKgWgklQqriWfP1pexLQBHqFMCPzWZbW8CBQ5+
+	 c1qRMhG1A2tV95Kx6zI/0dYLj5PNlcnLBfzAvjgWda2mFpuxhtrpqitcoAPcbV63aoRjh
+	 UoGz00lU3eu0Qrg3zG9aLrwDpagwQdYps9ajNANSjKaeiN6yvgBKhRkkh7HlY2HDUU0m6
+	 ZeBA2rcsu/GdoOgZNCdfsm5UCKClWgkCM5MXXHPklCCYG9P0KbjKYzJT5M6TN0yvOXQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793381168;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=txQ/G97PjVZ5Ok80PODaAz6sqAwf6s+Iuvre8HARFnE=;
-	b=3aR3QFWBDTMQk1uoJmUc63+26Q+YR5UqUdyIPoOsuSvWYeuSCPJqJEtbDLYrM09djRzO
-	 fbgxCyZRgdzUqSEgVJFfuuNEML7nrWEuxco88Wr7zUD8hDjsABkOaFUR2ZqDwXPUCFmSO
-	 yqYQo9yn1RFqF0t26YKxuaexiW6rdnTnZFE+v60FDcs6f7ol5pOW6IF23jZrykbN2mVwE
-	 zvkLGpTE7kWad/EySeTDRMtRUwAyRK+ZiSA/JbhGzTs5M3NR28ZduL4KX6VHmgYkIWw8R
-	 CsvBeIwXvaqzU2nKF949/M42F9O6aW0uXSc4OdRazfkJSAm2oUalw1WWPFvsPgmZfnw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793381219;
+	h=Received:MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:
+	 From:To:Cc:In-Reply-To:References:Date:Message-Id:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key;
+	bh=YhbJ8D2d+C8fizOD46DNtygIdiUNjhRR7atea0pI5YQ=;
+	b=No25HpsyNLL+dMKjp2nDvVUUbsfvcstxRj5dcIoN/z4fcJ3sh4b6VyL0QmTiHATGW47U
+	 fmfXFvxcVvROMmiS4wOsBD29AAy87VFcclF9Txa3pTbjr7xhFrlmKXRkOSjY+f9aqVJuz
+	 ESDtYdAlKDCL4fMdtLpoJUBt90agn1pK3BOpnmPKWCZZVOLNAcD3zXc1nOYSXOCDXKHEd
+	 7VQM92bk9+fvbf9Ba++GZkleEomAHP1At8mOqE2q4kqU+nJV54RZ8V2FttDjVXEUbHA4m
+	 vFMWgZbawu5UOYnN8GpA/CT1XePgpYyabhABbailYsua1fMdx55QNq+KJjqdKJGaACw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="R2/Eyp00";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A537E606A31C
-	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2026 17:26:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=R2/Eyp00
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 386C91F0093A;
-	Fri, 30 Oct 2026 17:26:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793381167;
-	bh=txQ/G97PjVZ5Ok80PODaAz6sqAwf6s+Iuvre8HARFnE=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=R2/Eyp00+xVhZfjBx3brgUgs/mJ4QPTu/Ope88Eqm6MPQgoeFPoKuv3wdOPwalyxB
-	 /lsgYZyM4r+x9E9Q1Sq452T+ixWx8jOQrFUtC4+VKwKCM/0+uJAYCixw1AAgw3tKCU
-	 Pt9UOW6hLvUpfgog4M3mo4OjvkJrXg4xhGHFyz9/9i53alF4vh3PTziWrXTgUwx14o
-	 8YwtS1TIGT0JI9APJGkUvsJ3lnqDXCj4vQKx7gOltILDoZpefwu9VXofbQ8QPcP2Cs
-	 bYnb+lL5AHKZ1Okq+cIpAp+esfBUz0rBEpepJXHA05xs7+VD5BLEPH4SuzN9kNgJuu
-	 wEafNJWV6z27g==
-Message-ID: <sashiko-outbox-191336@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 9/9] samples: rust: add Rust SR-IOV PF and VF driver
- samples
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Simon Song" <xinmengs@nvidia.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261030171230.196717-10-xinmengs@nvidia.com>
-References: <20261030171230.196717-1-xinmengs@nvidia.com>
- <20261030171230.196717-10-xinmengs@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 30 Oct 2026 17:26:06 +0000
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA5EA606A31C;
+	Fri, 30 Oct 2026 17:26:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 204F11F0093A;
+	Fri, 30 Oct 2026 17:26:49 +0000 (UTC)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,40 +35,58 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 2/2] PCI: hv: add vPCI device reset support
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+Cc: linux-hyperv@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, 
+ Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>, 
+ Jonathan Corbet <corbet@lwn.net>, Randy Dunlap <rdunlap@infradead.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, linux-doc@vger.kernel.org, 
+ linux-pci@vger.kernel.org
+In-Reply-To: <20261016235940.942090-2-hamzamahfooz@linux.microsoft.com>
+References: <20261016235940.942090-1-hamzamahfooz@linux.microsoft.com>
+ <20261016235940.942090-2-hamzamahfooz@linux.microsoft.com>
+Date: Fri, 30 Oct 2026 22:56:34 +0530
+Message-Id: <179338119431.40615.13050660588258613007.b4-reply@b4>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=931;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=F/vonyMHkkf6/znlM2q7XlW+hKZ4W9pOk2toRa9yycY=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq5NNYklnr1vxye2qRCcRcak1Vc4Joft4KqfrJx
+ AtKxC79joKJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauTTWAAKCRBVnxHm/pHO
+ 9drqB/9VIly4BY/vi7aWo8dM6wz1w721vk4eggDZ8vkwhipW/hvReHueDRlqINRnXhO3IdAVtKO
+ FzNdioYYUtwsdFCyGXFdix1KZKCbghfYStb+TEwOjsZ6IZjBKc1NpipxkWKvkr09v804+eMV4IA
+ wzieHb/ziLm0nzXkmTyYcL46GQxWe9uGDP3/oSjH50RWAw+yU3A08nuVPDCnVUOHb56kuOTfmgH
+ jCubO/9K7/BGM8rUv4pOEHTaqpS9kClBCY0CILtypv9jxU/NHHHOSwRsaem1GfJ8bF4SI3IuhHn
+ oOSi69hYdrdLBdt+8w7Xvo94AGSZBnRL2ghTHiNt3psTWilS
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-> From: Peter Colberg <peter@colberg.org>
->=20
-> Add separate PF and VF driver modules that demonstrate SR-IOV using
-> QEMU's 82576 (igb) emulation.
->=20
-> The PF publishes a pinned API object in its private data and exposes a
-> submit_request() helper. The VF calls this helper with its Bound device
-> borrow. The helper performs the typed registration lookup in the PF
-> crate, keeping the API object and its lifetime encoding private.
->=20
-> Adapt the nova-core/nova-drm rules in drivers/gpu/Makefile, preserving
-> their metadata, export-selection and MODVERSIONS recipes with the sample
-> object names and paths. Set the PF crate name explicitly because its Rust
-> root file has a _main suffix.
->=20
-> Keep the helper out of line so the VF module has a real symbol dependency
-> on the PF module. The module loader therefore holds the PF module while
-> the VF module is loaded, and modprobe loads the dependency automatically.
->=20
-> Each driver has its own module registration. The VF module can be unloaded
-> and reloaded while the PF remains bound. Unbinding the PF disables SR-IOV
-> and removes its VFs before releasing the registered data. The shared
-> Kconfig option builds both drivers as modules or both into the kernel.
->=20
-> Link: https://www.qemu.org/docs/master/system/devices/igb.html
-> Signed-off-by: Peter Colberg <peter@colberg.org>
-> Co-developed-by: Zhi Wang <zhiw@nvidia.com>
-> Signed-off-by: Zhi Wang <zhiw@nvidia.com>
-> Signed-off-by: Simon Song <xinmengs@nvidia.com>
+On 2026-10-16 19:59 -0400, Hamza Mahfooz wrote:
+> Hyper-V vPCI protocol version 1.5 adds a RESET_DEVICE request for
+> projected PCI functions. Negotiate the new protocol version and, when it
+> is in use, implement the pci_host_bridge::reset_root_port() callback by
+> issuing the request through the vPCI VMBus channel.
+> 
+> Hyper-V has no Root Ports and exposes projected functions directly on
+> the root bus, so PCI core uses the callback for the "bus" reset method
+> of a function that is the only one on its vPCI bus.
+> 
+> Use the existing VMBus response path. Return -ENOTTY when the host
+> reports STATUS_NOT_SUPPORTED so PCI core may try another reset method.
+> 
+> Co-developed-by: Wei Liu <wei.liu@kernel.org>
+> Signed-off-by: Wei Liu <wei.liu@kernel.org>
+> Signed-off-by: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
 
-Sashiko has reviewed this patch and found no issues.
+Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261030171230.1967=
-17-1-xinmengs@nvidia.com?part=3D9
+- Mani
+
 
