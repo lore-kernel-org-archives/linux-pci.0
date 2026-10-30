@@ -1,94 +1,104 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.remote-ip=52.101.66.41
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=fail;
-	t=1793377317;
-	b=YD70B8qcGoyN0kDB7tMbRZywmLB7/5ETEPmLhdGF8mciIzGQGbky7lDcYNcE5w811KHr
-	 b571Rks95ApUZqu+8vZhc3ziBrsOFIH9Zt6zkeyMzqnPDj4e/swdWAb+ndWiZG9EPiv4T
-	 E7U8fIBQXslG4H4yl5LZny8nL973A3yykVeDy5oegbPyWGqwr0II0CsCZ4NPe46hsJ/eN
-	 pjWQx2AYVSszLmT1VxL5qnZbFk0kN5nVrfsWo0gD0kIyTySHnjRJv/QlRxW7tzpJoQUeH
-	 i8mAMMfTSyNMwq7Znx4ugMdGxNpChnqlZSYpfJopcwA+yhW2k4RXikITEJRrU0amUcA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793377317;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=UTtjKxF2T0IX9ouY9tuZOJvPeey75dou+vmla+aoLT8=;
-	b=rli0vB/AsA2LWENszEq6wzJ8LXaveJEQuYKLdHX8zkkeFTLcqphXDXgHG7LOfTM6PDNk
-	 ht6r5bSPlXqq0Zr98FPxV22LmexxbxTUAFpufA6iCwMr7lbEJjhsIzuBpAwZFYSMcrodF
-	 MooI2hYPIlx7NOpllfB+7cWzuXXCxBqWvu8bTFVRbFW5W7HY8oUVIgVKBEEVDsI25Mgy0
-	 0n3OS0flnHA1WBMy7Gz1vyJMrQbhT2QHIaHol/CD1vqXnsx3LfztsaEmUWBhD1G+LiMZl
-	 rJyCMm1tDqxnRkk/QFjplhSwk7pmEyc7+kaV9gEp4dMOB0Jd3BZTieuVIlLoDboQVpg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.nxp.com;
-	spf=pass smtp.mailfrom=oss.nxp.com;
-	dkim=fail reason="signature verification failed" header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=eAlDgFPm;
-	arc=fail smtp.remote-ip=52.101.66.41
-Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012041.outbound.protection.outlook.com [52.101.66.41])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.170
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793378254;
+	b=5DBjpqRBr1NYvV6RtZJCrJ+Ry7HsPD5SqganVnaYSSCfKofbkFiTZxun2yM+sKzHqn0H
+	 D1cXWsXenzuI9sucj91ohBYXsuyX/2sH+BQYB2TGPv2i/DnXxuvZTsEPA5ZJy852FzZ5U
+	 Y9Mz+YYThBVXezOPNqrFdb1IeSTlA09bCaS5XClmWl0stb2tH4Q3UXEtFG/b/C1k+M7VU
+	 fXg2HDgdruzGF/yoCfuuYxcj1it4ZNXM3Ox5TA/RAbSxqfWyGYNFvYxnpPBLdhOQHF0fP
+	 9Si31kiBMhvd+mnYIZAxBqtJsqfek0z1YqSyuUvVq8ZPEe0GHcEHIAVBLrmg2xQJR7g==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793378254;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=XcZ9lbstnk1GTs2qJHkiYVcgAWVuc0rERzcXapVspqI=;
+	b=dgmHrgD2/Y1lO+GWvPZasPBGXRlk5OGFa1qpBmnNQFalvLPNYY7aUB521BTG2KJJeJiJ
+	 TplRKpwoGSbT9p/JvWQ0WEDMtSOLoU5UKClYUz9CIcTiTp91x34amy8shmHt1NTjQewUA
+	 T7Bi4MnyTRuCIXcQsxh/xpw00IGJpa3EyonLaCOKyhHS2fBrlStB3M08ttTLP/9k97WDO
+	 uGoYD4k4xBdyMQqj0iB0dsupx0AKJE1PuDyu9ubVh1OMx49SQNhfpgmxLAM1iNNe3LS1b
+	 xjcget9Wr4DfVrC5yKXLvNZ24IpOZyBxpzdeWzl2d2GmR7MPzJHsWf8UqFbShMc2nVg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=EDTIGh6t;
+	arc=none smtp.remote-ip=74.125.82.170
+Received: from mail-dy1-f170.google.com (mail-dy1-f170.google.com [74.125.82.170])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C51A606A31D;
-	Fri, 30 Oct 2026 16:21:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1C51A606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EEF4606A330
+	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2026 16:37:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8EEF4606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key, unprotected) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=eAlDgFPm
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=golF9hoeWP2g9MM+u0Bpxxre99USUnIxCAr8yXPwCxxSXrUJ52/JUSPy5ry+6v+CKe+aFo9cgxRjyv++GQsms+8a5Ip7N5PCuiKKJkTDjhVOhmMPAq7RDUkG94ZR3WEKPJSmsGOr4qZOqyobHGxPq+wKRYdevTMNvUmaISNZvYbi+JJk4UXxbw+5/qdqL3t+Vk6pgWXXk672MJVKBuC6kRF1VTBh/kRPHOwBa+kpOt2DfYbHPADlyYZI+7Oe/LCi5NDmcF2V4HDZ5z7ZRNyty6lhOzi4qrHzOAO7yTKEX5c+TFjzGO9K+7PDF+ei7hjWXPa57VPjJ1NtC4VTwD+yKA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BXaztg16ndQQfh9VlyF1OOIr59N0HBot+AXXoJwW410=;
- b=evFc+SUva9TP8VhwZlhDfmQZGIa093uGyFJ8xucQGrkPenwaKrOv6MN/37c0cMNz6Tvyq31u+YbASJnpxo7rkzXYGMZURfI3EHjD5rZ+hU6G15ca55nWlA87drY0M76WCSQ2pj6++1K0ad9CJDuj8u/qxWSol3QVw2OBt9LbPWPdE/Wvjix/8UipvPOnJ9fbqn5KO+NjYsVqSnQwWXY1SCaTboHWRlru0d16/85cZtZMYxk7GJFeQrU/VYNCveCuY3aNfsoNsWOwdgjwrgtxl333bMimaDR3+j0IqQYsgwlUX7wiHaUoKZQdVDJy+KAZqYZKPNrtG/w3+gnPkSvWVQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BXaztg16ndQQfh9VlyF1OOIr59N0HBot+AXXoJwW410=;
- b=eAlDgFPmHzLRKCYtJdus4wOsdheyfbrYBq9Sx3swgJo+fz17/V55Gsnwv2ogr2W6kczbKVfb/LI+EoFWEbWnGJ2dUCTslrtN6191GODd3bPjE91zBk+em+NSNtAB3ZluqfobrVULsSUGO9XEyMMTEcxvldxYoCPCQNUsEkQycd0xqm6aNkcEn3z/XZ9ioPpZLe3j62Au76NQLsLbcjO3jnx/SYV2WH27p/veltIiy58nuJAI5VP2aopAQVACv/D5exqhqBieR4XEuQxWqt4E9y8bJFshkxvjqWHE14hbAiC7MYCah3L4OnkXFA4C/Kk1mXJfA/D7R3xymqQgtVyWiw==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from AMBPR04MB12445.eurprd04.prod.outlook.com
- (2603:10a6:20b:75e::21) by GVSPR04MB634494.eurprd04.prod.outlook.com
- (2603:10a6:150:719::19) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.9; Fri, 30 Oct
- 2026 16:21:51 +0000
-Received: from AMBPR04MB12445.eurprd04.prod.outlook.com
- ([fe80::ba23:1fa4:ce58:ff06]) by AMBPR04MB12445.eurprd04.prod.outlook.com
- ([fe80::ba23:1fa4:ce58:ff06%3]) with mapi id 15.21.0569.008; Fri, 30 Oct 2026
- 16:21:51 +0000
-Date: Fri, 30 Oct 2026 12:21:45 -0400
-From: Frank Li <Frank.li@oss.nxp.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: Koichiro Den <den@valinux.co.jp>, dmaengine@vger.kernel.org,
-	linux-pci@vger.kernel.org, vkoul@kernel.org, Frank.Li@kernel.org
-Subject: Re: [PATCH v6 2/5] dmaengine: dw-edma: Reclaim LL entries from
- hardware progress
-Message-ID: <auTEGSSGk3M1mx4h@lizhi-Precision-Tower-5810>
-References: <20261030150742.2586776-1-den@valinux.co.jp>
- <20261030150742.2586776-3-den@valinux.co.jp>
- <sashiko-outbox-191180@kernel.org>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <sashiko-outbox-191180@kernel.org>
-X-ClientProxiedBy: DS7P220CA0014.NAMP220.PROD.OUTLOOK.COM (2603:10b6:8:223::6)
- To AMBPR04MB12445.eurprd04.prod.outlook.com (2603:10a6:20b:75e::21)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=EDTIGh6t
+Received: by mail-dy1-f170.google.com with SMTP id 5a478bee46e88-3535a54bed9so1478645eec.1
+        for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2026 09:37:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793378253; x=1793983053; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=XcZ9lbstnk1GTs2qJHkiYVcgAWVuc0rERzcXapVspqI=;
+        b=EDTIGh6t3kgeWK6ADWnUzoLCmhtmB9/PL04H+WPsDvVHeo1HknTrMTUYkoAW1mQTQT
+         p698ah5LqbJiQY1Rc8Q22G5bo5pWUaPrBs+eYXQ4Xr5MtRfzeDQqJ5+oR940dKjS1OWk
+         0iIfu1Pau7DmBW/IJVoADYLGOdzwUZOd3k2fI8P5TPiBf7xHsbrC4ag0CqphbLB8FUZQ
+         lgzuDLUttlJkp2dzun+dgTa7sbgoBnuyL+DTGkfjs0eSW4bpF6Tnj8Em97MHXxAe7LK2
+         QXMqCJem/1yEYcL5Xj5QQdGSQLj/He0fZWjp9R8U2Q2gmSb44qDhsPR+VN3WnpQo8GBy
+         QBpA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793378253; x=1793983053;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=XcZ9lbstnk1GTs2qJHkiYVcgAWVuc0rERzcXapVspqI=;
+        b=CQ8B7Q/ifFU+EdatD0LdbPew0uT9K2zwA1Sw6IrRfhv0J1nEyamNp28NCnyZNedujP
+         tRZDNwvIIhptmcmAleQz/rsBiOHOPMN3+aRRp/ryY2ZsdVq/SNf12DHQjn7QzTXDzHp4
+         /ZIUbsIzZMQRLp7EoVWQK+zSFR77SLNsjqCwl2DRdbw9oYEtyF8rB4ogTp83t6corrpl
+         2//wpv68eBOU43GOdavS0BT+3HR2hdPNduyqKpBo0azvXl2oAFBap/k9XAp5GZkkfTH+
+         wsqfnLdZsWMfN3gRLxxDPLCMc6X4ZL6bfzyC5YZdaIE0jlqifA28PvArzgqQX7IdEAuB
+         S1ag==
+X-Forwarded-Encrypted: i=1; AKwUvBw0+Dl/aWYnYWPslX1T+68N+NBTfSNA/gN4j530AWMD/XaEKk1QU9TojgdbYZNFT1c0Aa1t4VpPa88=@vger.kernel.org
+X-Gm-Message-State: AFq9FYI8s1a2BAwdQQAExfwOaNm16dpJwj+zE7R5Tg1ZnT8/MCajKIug
+	dCTntnMkAl+74qYSqSxUwHYtkkVszZJCKsYjsl0YagoSWBmRAzL2HK7R
+X-Gm-Gg: AYBFou146Mod6n1Ecc5xNUsGNArWQqWe45pTPWT5JHO6Wdbwayv4WUql3TIaJOjo5Yz
+	V+AgFTkeJPMP5L+an45B09tTrOXE2qiTLNXbeu7JTpeH9sqscKCihwQEf1ZlFtTb+LLh9SpCcSd
+	rIncuAGVMQaIoEbpO89Odd6XYm765XkUwRO7aqiuTYizjDeUMp9fvlCVesjlFR60B8bGYicCCHr
+	7xUvgD7S+s7dOjS6VczD8GkXIeT2xsVGcsCRNzF+xCcRMvxWX2bf2L1j20BgFQ8ExIWYQmAnMUI
+	d0VvnNIoipjKwcMKC1LMVeFIFY5883bKjEYBrbxhV/au5+Bxs3FfinMDA2wSZUVG2G/d3ztb1FJ
+	hDJFuUncgUAnQ1qSbi4doF1Bmm92kiZz3TTi6sOaQwiENHKkHpn5iHq42i30SSdNQhpXbhCXRtc
+	jBoHuIWDIKg9NcibuP9eGHe5tgeBarWVBdqntniYPUQLNSabmSQMxENS16zgtc25REVFfFG0yL+
+	KPg/GFVPelvRzHRzIzjuxe8H7JgxHuU1Bb0kMGLTpXkQeRdSoq/r4h5R66jiNYufHJWgsFEHM7S
+	EWtYiffGaYLFOqrWKmXAioDFb3y8wOnLFb22X2NVVFwQoeU1Zw==
+X-Received: by 2002:a05:7300:fe41:b0:34c:fb30:3e30 with SMTP id 5a478bee46e88-36a42401960mr3906559eec.7.1793378252415;
+        Fri, 30 Oct 2026 09:37:32 -0700 (PDT)
+Received: from localhost.localdomain ([103.170.55.71])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a4294419dsm8458708eec.18.2026.10.30.09.37.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 30 Oct 2026 09:37:31 -0700 (PDT)
+From: Sreeraj S Kurup <sreekuttan2156239@gmail.com>
+To: sreekuttan2156239@gmail.com
+Cc: alim.akhtar@samsung.com,
+	bhelgaas@google.com,
+	jingoohan1@gmail.com,
+	krzk@kernel.org,
+	kwilczynski@kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org,
+	lpieralisi@kernel.org,
+	mani@kernel.org,
+	peter.griffin@linaro.org,
+	robh@kernel.org
+Subject: [PATCH v4] PCI: exynos: Handle PCIe PHY initialization errors
+Date: Fri, 30 Oct 2026 16:36:54 +0000
+Message-ID: <20261030163654.2733-1-sreekuttan2156239@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20261029131006.2744-1-sreekuttan2156239@gmail.com>
+References: <20261029131006.2744-1-sreekuttan2156239@gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -98,149 +108,227 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AMBPR04MB12445:EE_|GVSPR04MB634494:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1e70992e-1a80-4a4c-4735-08df36a1e7bc
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|19092799006|23010399003|376014|366016|1800799024|6133799003|18002099003|22082099003|56012099006|11063799006|4143699003|5023799004|261026140227099003|261026121527099003|261026135527099003|261028144727099003|10067099003|261021123027099003|261021121427099003|261022105027099003|261022075727099003|261009223027099003;
-X-Microsoft-Antispam-Message-Info:
-	QT3V69iYEN5H1du9qQpHcaVF9HnTTnXpNzUJu9SGiKZPeqxhKs6z9zWwAaykX9oOs4qNXxXqozjuHOPLtNh5pb2USqwKOz2CwSOqPlzkCnYFNnR9IUoG3MvR36TuCx4eLCAvgfVNsX8E2Nh9ufIvKwJAOFxl8tXrW0+sgJszmiNgW8qnX6u3WbkSgIZn7j1QzEJv26hszlujD/HgrL+x+RE30FcNoSEQEIHTXaW8slXs7uNNL4apGDWBr+/W8ut8cKJQtVh5aay7kwY33uL6PvwqZPHCnQhffEMPqGwZt7BOT0Ky+Bhbu64hIYsNEBjwRWcTTvi5vJEHROCreYqL0d6xA7KteCNhBQ9NjfC8xpKGBdhxIoZaSJWJgkI59OZfAxjEuNFsfTANF9b5Jv7LYXGUYwofY7Koj/G9P1yzwlEy0rURJucEN47x0DeWdiyUxGINBuWbVdcAiHaXcg+BmIAwNvhKhkxiv89QJ9ryVCmPq19p3DGVog+yPM33GnHzNIP7FAzQ3ClLmQ1+L2kaO25Mzqowpnee/uJzhlHkuTi9t2SnT5JQhpz0/LtzrhXTngjRApgkQWr0TB8KtAaXK7KdVTX8mm0mCaF0gIQ9L8w=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AMBPR04MB12445.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(23010399003)(376014)(366016)(1800799024)(6133799003)(18002099003)(22082099003)(56012099006)(11063799006)(4143699003)(5023799004)(261026140227099003)(261026121527099003)(261026135527099003)(261028144727099003)(10067099003)(261021123027099003)(261021121427099003)(261022105027099003)(261022075727099003)(261009223027099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?iso-8859-1?Q?b7n0c4r+Cc5gnycVCD/QrT96ne7PL3kWcBDz/YyBwmBzL1a6pxLjbLlAE+?=
- =?iso-8859-1?Q?tas+A4IM9pdkEin7sYHFbfjBMmpTogLMEWaL/l2pGCV2ylBQZjdbj+dMzX?=
- =?iso-8859-1?Q?0GXMoYmISzgv++xv1t46/LUsLZgaIx3+AUFFmjfbTxgU1JUdarskcn5+Q4?=
- =?iso-8859-1?Q?fehANLGfna0pwTgI1slHmspNVOsRnZgPifSU0i/QmZAQ55dLQ0Clg26Hd0?=
- =?iso-8859-1?Q?CwB6im0PfilNhhWlNIwiXK1UNShlf79VUuW7CjsWhP22w9h/Nw/gM+FGE/?=
- =?iso-8859-1?Q?HG6ZUIbxE0Etdd3rC6e1/0K/Uc/ZoWH81tu5HruwnA3nYbY5eIzl1BsMS3?=
- =?iso-8859-1?Q?U6d53MlyAwJ8WYpHLftGnvsplPjh7cownZNtQDpvVg2llojWUj0dtigP1Y?=
- =?iso-8859-1?Q?NhC7x/ujnI2NuovdRllqm2st/wYf8J5TREDqr7UOP9Y+fdO16HHoXNrcfV?=
- =?iso-8859-1?Q?3xkjGoEthwWNBGHb9RVH3HKy5O8yK4smquaG7RtNRG/KvsALI0nnLheuRG?=
- =?iso-8859-1?Q?TTXzWsrQsGeLLdYjdLlrXaa2U1Zo2aJ5meXhW//Vr1mNbPl5nU5eprFxjX?=
- =?iso-8859-1?Q?Cx0TXVpCaTn9QElhrrQulkR2PP3GXv71uyxTIFeVUdk/s+ZK+qLzaU041S?=
- =?iso-8859-1?Q?Mh1NYuFqRG8lP063/jVjn7TLa+Cyn/L+NbQ3uPs3mYE/uqGnLC6MMKiuaz?=
- =?iso-8859-1?Q?LVJfP0otlBZTOmATQdbtd4u+2mU/M1Zi1kVPo31tYpF85X2rJX9hgGsU5o?=
- =?iso-8859-1?Q?9th0z6AuZ/txSldzrKvkIXHQhHZjQB8S0tDqSXCojV5EljHTxDkWdj8w4E?=
- =?iso-8859-1?Q?dHNy7G/fZX7KbLMpv7TBUYITm1+EzPrJbsQaXoN2DkagtRhcnpmkEYoax/?=
- =?iso-8859-1?Q?PjU22S1BhOKBoC15rCYZMyAKURY+8qYpMBTi1Ajj/LFTuQZ/c4v42YeZNb?=
- =?iso-8859-1?Q?mXhlAGwS//XCQGHXh0Ot3R7oyJDVjn7KMdYMd7JqcuI+M+8Kl/E/lB6RRw?=
- =?iso-8859-1?Q?a6mBfLq8pzPXWUcwTcssfPqA60q+aY6gArPWKjehRkCsJXUk/MQQlewsBD?=
- =?iso-8859-1?Q?BJWro/pCZmy5Kd/F6+7RVOGMHO1pFpXSZm6vFORqW0/0bjBgufa1xri869?=
- =?iso-8859-1?Q?6szPPfVGdnJKWco9RA3ZJRccWJaafll5hG0z2W07eSpPEjZVX+SqNjbBwF?=
- =?iso-8859-1?Q?h1UMQvoh9nukCEN6zdQSkbG1lPl1CJl4emGgdeH/TNlUZhXzF9P5cL1EmI?=
- =?iso-8859-1?Q?q8UnMrF4BmCzQ90rWYk0/8dD7KfC3HbRz+X5Fsg5zZwsYKqbhYEOKiP64e?=
- =?iso-8859-1?Q?Nmh196zqUCg4gbwtsJpDXAdSJDxTwdMw2suQO1waOhOyKocLGgpW62Qepr?=
- =?iso-8859-1?Q?pAxhRF+4mYaavs4IKRsDVMzeAaDRUXQ6yu7TIFpX2mS96rS7WS5EwrAL/g?=
- =?iso-8859-1?Q?LpEbBm9ZxcgSjGz1UsrZPeOcgE2GaF2qX4bSjY4sOuKHQfdfmmtfFWEfop?=
- =?iso-8859-1?Q?6dwCXsaY9O9B9UMsroNo65I/s2iSoWUlIH+OBD9jc5GnoboO2k/mTAIYEl?=
- =?iso-8859-1?Q?RKINhX9HPkm3C+iomNKzGViGbCyrA3QKGUpl0hkPPVtEaQuolDQlbgvvmk?=
- =?iso-8859-1?Q?I96D5rY0OMpo6Jokf5PH5wlWVgVJ5lUAR7PmM6QcxyFBQZUFMONu4JRqOV?=
- =?iso-8859-1?Q?XcBHZZPZ0qUl9NoUEVb2tIkbu6eicIUeTgmBBaiZKc5fBtkXWctdAk2DRZ?=
- =?iso-8859-1?Q?tGSh08sCnJ8GAWYMOyIHyL6ZXjz1gG+5tqqGmmvQPJnx5jD/mQk3fJ5JkL?=
- =?iso-8859-1?Q?+eNZfiMCLCERG9qDXkrxJWAkREyMT2Y=3D?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1e70992e-1a80-4a4c-4735-08df36a1e7bc
-X-MS-Exchange-CrossTenant-AuthSource: AMBPR04MB12445.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Oct 2026 16:21:51.5907
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: pblko3BnlM1fjRS5vkgc0ZALtLz1mj5M3hTsSnCeLmCCDuCD+Y7MIKonaEkCSJFDaX1bc//N/XzXc+fC+jp1BkFroILHIAoueKS4ylNI0xcWpWau2wS1LZyrkV7ixYcG
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVSPR04MB634494
+Content-Transfer-Encoding: 8bit
 
-On Fri, Oct 30, 2026 at 03:39:11PM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [High] dmaengine: dw-edma: callbacks scheduled on STOP in dw_edma_ll_advance()
-> --
+Check the return values of "phy_init()" and "phy_power_on()" to
+avoid continuing PCIe host initialization when PHY setup fails.
 
-Need fix all sashiko report problem or provide explain.
+Track the PHY initialization and power state to ensure cleanup is
+performed only when appropriate, avoiding double calls to
+"phy_exit()" on probe failure.
 
-Frank
+Also check the return value of "exynos_pcie_host_init()" during
+resume and abort the resume sequence if PHY initialization fails.
 
->
-> commit cb11666c731e633531785427e3b24bbfbd73eb2b
-> Author: Koichiro Den <den@valinux.co.jp>
->
-> dmaengine: dw-edma: Reclaim LL entries from hardware progress
->
-> This commit updates the linked-list completion handling to use DMA_LLP to
-> advance ll_done and reclaim completed ring entries in issue order. It also
-> defers STOP and PAUSE completion until the channel stops.
->
-> > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-> > index b08bb31657c9e..74613c95ae112 100644
-> > --- a/drivers/dma/dw-edma/dw-edma-core.c
-> > +++ b/drivers/dma/dw-edma/dw-edma-core.c
->
-> [ ... ]
->
-> > @@ -283,6 +345,45 @@ static void dw_edma_core_ch_maybe_doorbell(struct dw_edma_chan *chan)
-> >  	dw_edma_core_ch_doorbell(chan);
-> >  }
-> >
-> > +/*
-> > + * Must be called with vc.lock held.
-> > + *
-> > + * HDMA does not update LLP continuously. Only use it to track running
-> > + * transfers when handling an interrupt.
-> > + */
-> > +static void dw_edma_ll_advance(struct dw_edma_chan *chan, bool event)
-> > +{
-> > +	bool stopped = dw_edma_ll_stopped(chan);
-> > +
-> > +	if (stopped || event)
-> > +		dw_edma_ll_consume(chan, dw_edma_core_ll_cur_idx(chan),
-> > +				   stopped);
-> > +
-> > +	if (chan->request != EDMA_REQ_NONE) {
-> > +		/* Wait for the channel to stop before completing STOP or PAUSE. */
-> > +		if (!stopped)
-> > +			return;
-> > +
-> > +		if (chan->request == EDMA_REQ_STOP) {
-> > +			dw_edma_finish_termination(chan);
->
-> [Severity: High]
-> Does calling dw_edma_ll_consume() in drivers/dma/dw-edma/dw-edma-core.c
-> before checking chan->request == EDMA_REQ_STOP cause completion callbacks to
-> be scheduled on a channel that is being terminated?
->
-> When dw_edma_device_terminate_all() is called while an LL channel is actively
-> transferring, it defers termination by setting chan->request = EDMA_REQ_STOP.
-> When the interrupt fires:
->
-> dw_edma_irq_work()
->   dw_edma_ll_interrupt()
->     dw_edma_ll_advance(chan, true)
->       dw_edma_ll_consume()
->         list_del(&vd->node);
->         vchan_cookie_complete(vd);
->
-> In dw_edma_ll_consume(), any descriptor in chan->vc.desc_issued whose bursts
-> finished before the channel stopped is removed from chan->vc.desc_issued,
-> placed on chan->vc.desc_completed, and has chan->vc.task scheduled via
-> vchan_cookie_complete() to run its completion callback.
->
-> When dw_edma_ll_advance() then checks chan->request == EDMA_REQ_STOP and
-> calls dw_edma_finish_termination(), dw_edma_terminate_all_descs() only cleans
-> up descriptors still on chan->vc.desc_issued and chan->vc.desc_submitted,
-> leaving the descriptors already moved to chan->vc.desc_completed to invoke
-> their callbacks.
->
-> By comparison, the non-LL handler dw_edma_done_interrupt_locked() checks
-> EDMA_REQ_STOP and calls dw_edma_finish_termination() without calling
-> vchan_cookie_complete(), matching commit 99109a51efd2 ("dmaengine: dw-edma:
-> Terminate all descriptors without callbacks").
->
-> Should dw_edma_ll_advance() check for EDMA_REQ_STOP before calling
-> dw_edma_ll_consume() so that terminated descriptors do not schedule
-> completion callbacks?
->
-> --
-> Sashiko AI review · https://sashiko.dev/#/patchset/20261030150742.2586776-1-den@valinux.co.jp?part=2
+Signed-off-by: Sreeraj S Kurup <sreekuttan2156239@gmail.com>
+---
+v4:
+ - Fix invalid return in void exynos_pcie_remove() and ensure regulator cleanup
+ - Add core reset deassertion on error in exynos_pcie_suspend_noirq()
+ - Prevent regulator leaks in exynos_pcie_resume_noirq() error recovery path
+v3:
+ - Address review feedback on PHY and regulator state tracking
+ - Avoid powering down the controller when link detection fails
+v2:
+ - Track PHY initialization and power state to prevent duplicate cleanup
+ - Handle host initialization failures during resume
+
+ drivers/pci/controller/dwc/pci-exynos.c | 115 +++++++++++++++++++++---
+ 1 file changed, 104 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pci-exynos.c b/drivers/pci/controller/dwc/pci-exynos.c
+index e3c05ade381b..5b8d8f1ce8dc 100644
+--- a/drivers/pci/controller/dwc/pci-exynos.c
++++ b/drivers/pci/controller/dwc/pci-exynos.c
+@@ -11,6 +11,7 @@
+ 
+ #include <linux/clk.h>
+ #include <linux/delay.h>
++#include <linux/device.h>
+ #include <linux/interrupt.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+@@ -55,8 +56,34 @@ struct exynos_pcie {
+ 	struct clk_bulk_data		*clks;
+ 	struct phy			*phy;
+ 	struct regulator_bulk_data	supplies[2];
++	bool phy_initialized;
++	bool phy_powered;
++	bool supplies_enabled;
+ };
+ 
++static int exynos_pcie_phy_exit(struct exynos_pcie *ep)
++{
++	int ret;
++
++	if (ep->phy_powered) {
++		ret = phy_power_off(ep->phy);
++		if (ret)
++			return ret;
++
++		ep->phy_powered = false;
++	}
++
++	if (ep->phy_initialized) {
++		ret = phy_exit(ep->phy);
++		if (ret)
++			return ret;
++
++		ep->phy_initialized = false;
++	}
++
++	return 0;
++}
++
+ static void exynos_pcie_writel(void __iomem *base, u32 val, u32 reg)
+ {
+ 	writel(val, base + reg);
+@@ -225,13 +252,23 @@ static int exynos_pcie_host_init(struct dw_pcie_rp *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct exynos_pcie *ep = to_exynos_pcie(pci);
++	int ret;
+ 
+ 	pp->bridge->ops = &exynos_pci_ops;
+ 
+ 	exynos_pcie_assert_core_reset(ep);
+ 
+-	phy_init(ep->phy);
+-	phy_power_on(ep->phy);
++	ret = phy_init(ep->phy);
++	if (ret)
++		return ret;
++
++	ep->phy_initialized = true;
++
++	ret = phy_power_on(ep->phy);
++	if (ret)
++		return ret;
++
++	ep->phy_powered = true;
+ 
+ 	exynos_pcie_deassert_core_reset(ep);
+ 	exynos_pcie_enable_irq_pulse(ep);
+@@ -314,6 +351,7 @@ static int exynos_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
++	ep->supplies_enabled = true;
+ 	platform_set_drvdata(pdev, ep);
+ 
+ 	ret = exynos_add_pcie_port(ep, pdev);
+@@ -323,8 +361,19 @@ static int exynos_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ 
+ fail_probe:
+-	phy_exit(ep->phy);
+-	regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
++	if (exynos_pcie_phy_exit(ep))
++		dev_err(&pdev->dev, "failed to exit PCIe PHY\n");
++
++	if (ep->supplies_enabled) {
++		int err;
++
++		err = regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
++		if (err)
++			dev_err(&pdev->dev, "failed to disable regulators: %d\n", err);
++		else
++			ep->supplies_enabled = false;
++
++	}
+ 
+ 	return ret;
+ }
+@@ -332,24 +381,48 @@ static int exynos_pcie_probe(struct platform_device *pdev)
+ static void exynos_pcie_remove(struct platform_device *pdev)
+ {
+ 	struct exynos_pcie *ep = platform_get_drvdata(pdev);
++	int ret;
+ 
+ 	dw_pcie_host_deinit(&ep->pci.pp);
+ 	exynos_pcie_assert_core_reset(ep);
+-	phy_power_off(ep->phy);
+-	phy_exit(ep->phy);
+-	regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
++
++	ret = exynos_pcie_phy_exit(ep);
++	if (ret)
++		dev_err(&pdev->dev, "failed to exit PCIe PHY: %d\n", ret);
++
++	if (ep->supplies_enabled) {
++		ret = regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
++		if (ret)
++			dev_err(&pdev->dev, "failed to disable regulators: %d\n", ret);
++		else
++			ep->supplies_enabled = false;
++	}
+ }
+ 
+ static int exynos_pcie_suspend_noirq(struct device *dev)
+ {
+ 	struct exynos_pcie *ep = dev_get_drvdata(dev);
++	int ret;
+ 
+ 	exynos_pcie_assert_core_reset(ep);
+-	phy_power_off(ep->phy);
+-	phy_exit(ep->phy);
+-	regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
++
++	ret = exynos_pcie_phy_exit(ep);
++	if (ret)
++		goto err_deassert_reset;
++
++	if (ep->supplies_enabled) {
++		ret = regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
++		if (ret)
++			goto err_deassert_reset;
++
++		ep->supplies_enabled = false;
++	}
+ 
+ 	return 0;
++
++err_deassert_reset:
++	exynos_pcie_deassert_core_reset(ep);
++	return ret;
+ }
+ 
+ static int exynos_pcie_resume_noirq(struct device *dev)
+@@ -358,13 +431,33 @@ static int exynos_pcie_resume_noirq(struct device *dev)
+ 	struct dw_pcie *pci = &ep->pci;
+ 	struct dw_pcie_rp *pp = &pci->pp;
+ 	int ret;
++	int err;
+ 
+ 	ret = regulator_bulk_enable(ARRAY_SIZE(ep->supplies), ep->supplies);
+ 	if (ret)
+ 		return ret;
+ 
++	ep->supplies_enabled = true;
++
+ 	/* exynos_pcie_host_init controls ep->phy */
+-	exynos_pcie_host_init(pp);
++	ret = exynos_pcie_host_init(pp);
++	if (ret) {
++		err = exynos_pcie_phy_exit(ep);
++		if (err)
++			dev_err(dev, "failed to exit PCIe PHY during resume error: %d\n", err);
++
++		if (ep->supplies_enabled) {
++			err = regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
++			if (err)
++				dev_err(dev, "failed to disable regulators: %d\n", err);
++			else
++				ep->supplies_enabled = false;
++		}
++
++		return ret;
++
++	}
++
+ 	dw_pcie_setup_rc(pp);
+ 	exynos_pcie_start_link(pci);
+ 	return dw_pcie_wait_for_link(pci);
+-- 
+2.55.0
+
