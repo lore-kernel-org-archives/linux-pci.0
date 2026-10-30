@@ -1,104 +1,108 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.217.50
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793383788;
-	b=2DRL142Mi6Tso36qEiY1DBdDiLdGH/yL5Qsp21GDaMj24lz/+rO5VoJNn67fCzuETiwS
-	 DKZU7oZTTM5TCowKUxthWTN0HCxA1ozp43w64E014nTOUDMlU20mJVivmimLzN3uddXeE
-	 8+k2Cd8zv8XlUBChT6S8L+bOeTbsY+jr/TvE6c4r9Ol6/JcKOw9aK7KdY7lyywlXJrQ9Y
-	 SnLVIPcxr4aSmw0cy+IxvzlzVafJvg5hL6G3GdIbO4GW33G2aogeHWwmmTbT5/Y5/QwuN
-	 ebhLeK6O7w+O4LXAJ2u+SeQ5Al+t6knBwXg+RPNfx4mNeGNMbe7QqkX6P0QoBdgIxeA==
+	t=1793384152;
+	b=whr8cOk/j1RTUf2/aCgKmpdd89qd8Wc/jDoOeG1uVEd/PfGhtHtMqUgHT4mkJIyZz21d
+	 OZdFnyODys6tqo1sw92P4+rUcETksscLADo1BKh9aQXXQdeLUsWeWnI9hh8BQAi/HB47t
+	 Eg6srrgtcKURXVpnVOtNVE8csWMejPj+ta87KVeCuQfby/OlygxFZb7V/iyMtu/9rpDmY
+	 R5KIXE8+bnaGi1rJOYKSHmtBuRDViTPD0Y/gnsCd3diYu000sIJGXZOFc3TG9iP5XQlyS
+	 6k+G4aPhqnCS13JJFNbM4V/wmMQZOMU6PcGVf6V513sLMAgS9Er+a5lulNtaBF004DA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793383788;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793384152;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=vqkl7ANx1lNN2+P4c0UcTgWL5h2sI3titmgKVx7tV7s=;
-	b=QqpwodqIla9hx4yKols8Bo9sexLrCNIctZ8MfRE1uBLVGuk/03BPE44MxrBE9+U43njd
-	 /rO4/qpkIzCCmkahwt2NQm/TjOlXq3eQmbLH3pMzFjEvU7aD3ULfEWxVGj9X4bhluS+YM
-	 oXKs7x7qTInN7wigBq1HuVWr6K55nDbvS83MtiYzTGFN+lCpfO7trY896sAJZwZfVsl3n
-	 p57J2W3fF+se4pHazRo4MjROf6akkbqq+O/7+p0kHrjz+7ZyIrnEGcjL60Z3AlNTrMNmV
-	 YPo39/wjhEY0blMjzcHrzQI6Utyhm2jD/BiRr7/fEkwxOGKbOcBrmz24zTCP+BC0ZSQ==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=JT98i7tTE8+7Wnceh3gOSujC6CU3HNUaQsZFPRUss18=;
+	b=YyuNHIfZyY7us75sU2hEtkr1rVoTprK3iLLoEviohm/eaE0pQKDCYQEnpDXY0dj4P5QM
+	 ZLocZQ42MxwEPhmwh0AYYOElgr1BchQ73ndPf2BVblftuJXTlVx6ybJdqXOpej+Y3EQLS
+	 Aje/+0cmpMWDGJqllOlElg2BWE+W52D19R+ByWm8QRlb9fGakfGpufF/a9/XO6mb9/mEs
+	 97iFuL4W7EwIdwyDOIuXXTFRV/T/AS796eg8qA5W7unw/548hRgMyhCbq/qyRss4XgHic
+	 ujDJ+6FEEWZgl7OPwi4wvUPBkm8W2ZjD0t/k9unPUqUBaMVWRsYr2cecmmIJ+COSKag==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ZB0sNyCS;
-	arc=none smtp.remote-ip=74.125.82.48
-Received: from mail-dl1-f48.google.com (mail-dl1-f48.google.com [74.125.82.48])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="ZPH/T5pR";
+	arc=none smtp.remote-ip=209.85.217.50
+Received: from mail-vs1-f50.google.com (mail-vs1-f50.google.com [209.85.217.50])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6688B606A31D
-	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2026 18:09:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6688B606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88B1D60A2613
+	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2026 18:15:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 88B1D60A2613
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ZB0sNyCS
-Received: by mail-dl1-f48.google.com with SMTP id a92af1059eb24-1a2af4c8d00so14786c88.0
-        for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2026 11:09:48 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ZPH/T5pR
+Received: by mail-vs1-f50.google.com with SMTP id ada2fe7eead31-7ccb2ffe333so668916137.2
+        for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2026 11:15:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793383787; x=1793988587; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=vqkl7ANx1lNN2+P4c0UcTgWL5h2sI3titmgKVx7tV7s=;
-        b=ZB0sNyCSxhJsCJ673miFRQ4KDpfbxclGphz5djJP4RL5Lx443eRSDPw0ID9EKWCHuO
-         Qf2LKh12HngOoVSEs6BvBen+vQEhQZlUiAUdjImZRv5UqHmFtWRrWA2EP7haOyliIgeB
-         me7SIIKcfJ4+RiPYVIS0THhNkaWsHFmGdbwgaHGB4LJOrxcaJRNxp1cxXL4ke1PXKVjg
-         0LIKjDrbrVXiVLnoAKYUklWR8grEUgWdxuA+GVxzaw7prut48sJ75YvEfYpj+hvLm+eC
-         /XzxcNCsznvRXFm0DkyX8OoN4WvkrukVUCI2anoWFyo227jaHkm8CHYaRCd8QLz9ZFsk
-         S+KQ==
+        d=gmail.com; s=20260707; t=1793384150; x=1793988950; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=JT98i7tTE8+7Wnceh3gOSujC6CU3HNUaQsZFPRUss18=;
+        b=ZPH/T5pRfv2+n+jrlvc1xzTgmkP9ezwXLCPxSoTv85g9I71iFVopojwBNDCMbkYClz
+         jPAUCw3GQ2Drj8Va2jKGS9KdendiE92pyS+Z0uKnp9AjJLz7nAqkxwwrp13TWA2uXrLW
+         cPp+oVbnIaz4uXhMDM0wrEm7I3nVic/4wcMQupvwL6GNjAYRk2VnTVeGn8++twir0gj9
+         qWTSXNNL0Shj/HnI1qByT/ggqvYgqyayWXIt3F8e6GZIdzQlxAXB5Iy5I1lPcIOmDVz+
+         C+sdi6PJbu5PwqMod7t2iXYzoO4e2ORDuJ0IcCePtlIr0AZ7MaG4UIcbN/tq4os+/52A
+         d9wQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793383787; x=1793988587;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=vqkl7ANx1lNN2+P4c0UcTgWL5h2sI3titmgKVx7tV7s=;
-        b=OInEMfEJ1C8xNR5uE7XgfT45WTY5FmJwDfVLofDCFe2J2kvjYfYFoCE6Cv11BGXLYH
-         RFfO8AwnJwNf65DQD7ZSZ5SeeH6TbaL/xGZiG1WuuIEFtBqTEMRpbe8xRXsPsO34dTyG
-         SxPFk+Maqvq7i9SlfrR7irnAF/4r9bM1TWTM0pl55RgCkyOCjKPOomBPUZahdmAFp0mQ
-         e+BCgAZvyR2RJ2SPqLRdd5P4Nuq+PcZKwYSCEYY/Avx6lJImRySh+t/9yAW03nvrNrE5
-         3dE2Cjt9rnL/7RAZJYYD+jjjF2564Qzna9fVbOMxqwlm4yxrvGso4YLLrFlx//k7eQ2C
-         P5qQ==
-X-Forwarded-Encrypted: i=1; AKwUvBz0ECmdTYeuJRRahN/lq4tM0h8fZzjerLbdONrGOgvTMBgTRX9mPYMSuwIGnhxO6Hhmcp/iUW12VaM=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLqlFak5ONk/lhq7VE2KSSg+ru7HCZFhVdVrKIyotibKlfJ1gns
-	WT9PXu5QMCAr3FXZ3Gmylj84B5ApWIk4fQKvBoc+ySdT8R0rbThYcQiN
-X-Gm-Gg: AYBFou0pgABhJNUL5wBoBUeUz5A+pDnVJtzy98VdMnzHpf1wL8dTNzBWxI+l6kNyYi9
-	044ypfV03ji0cvWscVytHLFrF5CcxT3KxKJon4ntfvJxHMlDmPT4UyxC8EotQl2fo5MmI8TcSYo
-	zYOFABI6rud7WYzc6cPKACN4DDW3/LiOTGBGYPPIpENZgetk9ceAwuaWp92FRtaIvTqOxhqPHM+
-	fYq1IGw3Mni+njlUnDYJFNCDPN2hUjfgT1WBMWdESFk+mnlKwEODO89GiTq1YWSVZ+pzGAPoSVW
-	dH1StRvlLryMjKYVpD8Vr4sg+7Tm9zXDtubktotHd6oFcqbJ9Lj1fSQZTIPYoHiOV+LnOodCSYB
-	ClMNqLrs4l6hV/Tj36CyYfrHPeiBXkgb9+dr3fFNrrCjJ6wJSUbSJFy+BIWxa7FJy+7u8uPLC/5
-	nF4jU0YVwMK5jDGK/8dth67bnU6vPcdaOCNvQGXRC+6u/6yPJ3aXXTCDbhHMzqa9Ldxt0+WVRfC
-	LStlx8yx7ILEyUOYV/A5Tx7OwJ/Oa4EdWM9rmEZsUFH4xJZV3IsI8PZhXKl+cWAfYueZYql86qI
-	hxwGCJaV8ww5Qh4zop2by/ikZm3tuLHCE6Y74p5qBKko4xit5YXhLO1wAaekZoQxwJxTkfE=
-X-Received: by 2002:a05:701b:42d1:10b0:188:9ae5:162e with SMTP id a92af1059eb24-1ac5cdf9ae0mr4451889c88.40.1793383787373;
-        Fri, 30 Oct 2026 11:09:47 -0700 (PDT)
-Received: from localhost.localdomain ([103.170.55.71])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1ac18458fa3sm9695510c88.4.2026.10.30.11.09.42
+        d=1e100.net; s=20260707; t=1793384150; x=1793988950;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=JT98i7tTE8+7Wnceh3gOSujC6CU3HNUaQsZFPRUss18=;
+        b=HI/nWr2NQ76yCZwNJJ+rXe+M0nN2d/Y6HKFu+PgQs0+FKBxDgPj0p0q6IoPVjwVzjK
+         dZ3fo6XdVb51MJsqYGb/zk9HAO5KLff7MojUQA0HhyPgCLtSX47zBtrKYJ2YeAjHmNHE
+         IwxI1ABLbKAvRVB4hNdfMhDmXsTuTm/qVWhLDuHgTe+MLe29H3dHWamqf9eIihIuuTv2
+         4WKUFqnHk9qw0sZImFywhX7iGJhUXcbMOQQ/3yxCp49pyploS/5a3J5p4P904hg3utBn
+         d3QA2jjIW0ejo4qLRDkxAVw4Q7HhK5KSeUShFN9JJkZWaLR8j9vYQzFCxTlrKvWNnTbM
+         A9dw==
+X-Forwarded-Encrypted: i=1; AKwUvBxmj8ZPdrFS95DD/6MNnfJUlFZCQ4RCOOU1tEF3LtuJCGQVPx+ItjrQZYEOkZS8qE2RW3CJl4oHzx0=@vger.kernel.org
+X-Gm-Message-State: AFq9FYLbfdL5zyPrVEE5hgJfDk8g6Ly57pNumE/zWNHG1Rj3HgRtS2dF
+	LoJmC5O0ltcJxC3x0xImhUKsEJzZny8bTojUeSi7EWBPdd/ITVq0zfC4
+X-Gm-Gg: AYBFou2I731Z6pMz4ehpu227WZc0rNS3QCI9NLHpmNQnA+7W7rFv3Pj7mWuSyYJOJGx
+	2KBfoJmGUNzVyMVy6j+pPt68r/OhGXjzGaakASdjBvEGuqL4akWj9w2R+194qpATHiSN/2OfH7m
+	yd+BApPYw6QEvm4wqqPFOa4/67Zi/nsDDPYh2aYdlpem852PK7jSsDx8SrMAeTcSxkUIVJ3V5Tt
+	6bKPZE1ZYuhgSOM7XdL8QTB32xpm13fzUVuJrSwMBJ+iEXeyaUve4sHDwT0HEbbPG64PYYiWEmL
+	zSNmvQxibZ1OXuyZdwgVjrBaEssyXoHjlqFFlq6+uis+bW7u4LqGLeBTeHruY+EnHxDSQZ/W9I3
+	Jdmh6bqGKV8LnvIajxOWc8HSOd0SicXSIiSj+Zo2jJnxggFftgOnhX1DlcLZ1GJe8l8ftQCSoqb
+	xxLZEH/94ZdCm5DT61weB+v/rqNOEW+ishaaKXlVXBKIjCaXYl4IwZeDnh8E1vwFHUKh8UMkwie
+	6v/eMnOWikr5s3b8IJYDzxGoceyqPYDkCK8liVEXlI+P9zT5J8xxDKDXC/NRAH0Z0tc0BQ46WRn
+	P34x+z43AG+2v7Az63udntq8ARKuy7w75cAy66lo8ieYggDOtYL21D27imf0Vgfz1U5hzUUkwVw
+	vs+OIsJvMseO2KjfsiynHZW3v9NKEZp85ZJ9rtwPRRCUaQzkGeokveXcV0TdoOcSeX5fTQpzv2M
+	9JRIw=
+X-Received: by 2002:a05:6102:441a:b0:7c3:881f:b775 with SMTP id ada2fe7eead31-7d072cac30amr1845875137.24.1793384150011;
+        Fri, 30 Oct 2026 11:15:50 -0700 (PDT)
+Received: from ututo.. ([2803:9810:87dd:de10:2772:b6de:3686:bd70])
+        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-7d077393404sm3017737137.2.2026.10.30.11.15.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 30 Oct 2026 11:09:46 -0700 (PDT)
-From: Sreeraj S Kurup <sreekuttan2156239@gmail.com>
-To: sreekuttan2156239@gmail.com
-Cc: alim.akhtar@samsung.com,
-	bhelgaas@google.com,
-	jingoohan1@gmail.com,
-	krzk@kernel.org,
+        Fri, 30 Oct 2026 11:15:49 -0700 (PDT)
+From: Lucas Costa <2000.costalucas@gmail.com>
+To: dakr@kernel.org,
+	ojeda@kernel.org
+Cc: bhelgaas@google.com,
 	kwilczynski@kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
+	boqun@kernel.org,
+	gary@garyguo.net,
+	bjorn3_gh@protonmail.com,
+	lossin@kernel.org,
+	a.hindborg@kernel.org,
+	aliceryhl@google.com,
+	tmgross@umich.edu,
+	daniel.almeida@collabora.com,
+	tamird@kernel.org,
+	acourbot@nvidia.com,
+	work@onurozkan.dev,
+	lyude@redhat.com,
 	linux-pci@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	lpieralisi@kernel.org,
-	mani@kernel.org,
-	peter.griffin@linaro.org,
-	robh@kernel.org
-Subject: [PATCH v6] PCI: exynos: Handle PCIe PHY initialization errors
-Date: Fri, 30 Oct 2026 18:09:01 +0000
-Message-ID: <20261030180902.2589-1-sreekuttan2156239@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261029131006.2744-1-sreekuttan2156239@gmail.com>
-References: <20261029131006.2744-1-sreekuttan2156239@gmail.com>
+	rust-for-linux@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] samples: rust: add QEMU EDU sample driver
+Date: Fri, 30 Oct 2026 15:15:39 -0300
+Message-ID: <20261030181540.102665-1-2000.costalucas@gmail.com>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -110,233 +114,570 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Check the return values of "phy_init()" and "phy_power_on()" to
-avoid continuing PCIe host initialization when PHY setup fails.
+Add a Rust PCI driver sample for QEMU's educational ("edu") device.
+It exercises the Rust PCI, IRQ, and DMA abstractions: MMIO
+identification/liveness checks, interrupt status handling, an
+MSI-backed factorial computation with a bounded wait, a coherent-DMA
+round trip, and PCI config-space reads.
 
-Track the PHY initialization and power state to ensure cleanup is
-performed only when appropriate, avoiding double calls to
-"phy_exit()" on probe failure.
+Also add the PCI teardown helpers and Completion timeout support used
+by the sample.
 
-Also check the return value of "exynos_pcie_host_init()" during
-resume and abort the resume sequence if PHY initialization fails.
+Run QEMU with `-device edu` to probe it.
 
-Signed-off-by: Sreeraj S Kurup <sreekuttan2156239@gmail.com>
+Signed-off-by: Lucas Costa <2000.costalucas@gmail.com>
 ---
-v6:
- - Prevent state/reference count desynchronization in exynos_pcie_phy_exit()
- by ensuring both phy_power_off() and phy_exit() attempt cleanup even if one
- fails
- - Assert core reset on post-init probe failures in fail_probe if PHY/host
- initialization was reached
-v5:
- - Avoid PM core state desynchronization in exynos_pcie_suspend_noirq()
- by logging teardown errors and returning 0 instead of aborting suspend
- on teardown failure
-v4:
- - Fix invalid return in void exynos_pcie_remove() and ensure regulator cleanup
- - Add core reset deassertion on error in exynos_pcie_suspend_noirq()
- - Prevent regulator leaks in exynos_pcie_resume_noirq() error recovery path
-v3:
- - Address review feedback on PHY and regulator state tracking
- - Avoid powering down the controller when link detection fails
-v2:
- - Track PHY initialization and power state to prevent duplicate cleanup
- - Handle host initialization failures during resume
+ rust/kernel/pci.rs              |  14 ++
+ rust/kernel/pci/id.rs           |   8 +-
+ rust/kernel/sync/completion.rs  |  20 +-
+ samples/rust/Kconfig            |  11 +
+ samples/rust/Makefile           |   1 +
+ samples/rust/rust_driver_edu.rs | 423 ++++++++++++++++++++++++++++++++
+ 6 files changed, 474 insertions(+), 3 deletions(-)
+ create mode 100644 samples/rust/rust_driver_edu.rs
 
- drivers/pci/controller/dwc/pci-exynos.c | 115 +++++++++++++++++++++---
- 1 file changed, 104 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pci-exynos.c b/drivers/pci/controller/dwc/pci-exynos.c
-index e3c05ade381b..0085c3ed0c2f 100644
---- a/drivers/pci/controller/dwc/pci-exynos.c
-+++ b/drivers/pci/controller/dwc/pci-exynos.c
-@@ -11,6 +11,7 @@
+diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
+index 3ec897709e89..810703d7a2fb 100644
+--- a/rust/kernel/pci.rs
++++ b/rust/kernel/pci.rs
+@@ -445,6 +445,20 @@ pub fn pci_class(&self) -> Class {
+         // SAFETY: `self.as_raw` is a valid pointer to a `struct pci_dev`.
+         Class::from_raw(unsafe { (*self.as_raw()).class })
+     }
++
++    /// Disable bus-mastering for this device.
++    #[inline]
++    pub fn clear_master(&self) {
++        // SAFETY: `self.as_raw` is guaranteed to be a pointer to a valid `struct pci_dev`.
++        unsafe { bindings::pci_clear_master(self.as_raw()) };
++    }
++
++    /// Disable the device.
++    #[inline]
++    pub fn disable_device(&self) {
++        // SAFETY: `self.as_raw` is guaranteed to be a pointer to a valid `struct pci_dev`.
++        unsafe { bindings::pci_disable_device(self.as_raw()) };
++    }
+ }
  
- #include <linux/clk.h>
- #include <linux/delay.h>
-+#include <linux/device.h>
- #include <linux/interrupt.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-@@ -55,8 +56,35 @@ struct exynos_pcie {
- 	struct clk_bulk_data		*clks;
- 	struct phy			*phy;
- 	struct regulator_bulk_data	supplies[2];
-+	bool phy_initialized;
-+	bool phy_powered;
-+	bool supplies_enabled;
- };
+ impl<'a> Device<device::Core<'a>> {
+diff --git a/rust/kernel/pci/id.rs b/rust/kernel/pci/id.rs
+index dbaf301666e7..2747d92be91b 100644
+--- a/rust/kernel/pci/id.rs
++++ b/rust/kernel/pci/id.rs
+@@ -154,9 +154,13 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
  
-+static int exynos_pcie_phy_exit(struct exynos_pcie *ep)
-+{
-+	int ret = 0;
-+	int err;
+ /// Once constructed, a `Vendor` contains a valid PCI Vendor ID.
+ impl Vendor {
+-    /// Create a Vendor from a raw 16-bit vendor ID.
++    /// Create a [`Vendor`] from a raw 16-bit vendor ID.
++    ///
++    /// Prefer one of the named [`Vendor`] constants where one exists. This is intended for
++    /// vendor IDs that have no dedicated constant, e.g. test or emulated devices whose IDs
++    /// are not shared between multiple drivers and thus do not belong in `pci_ids.h`.
+     #[inline]
+-    pub(super) fn from_raw(vendor_id: u16) -> Self {
++    pub const fn from_raw(vendor_id: u16) -> Self {
+         Self(vendor_id)
+     }
+ 
+diff --git a/rust/kernel/sync/completion.rs b/rust/kernel/sync/completion.rs
+index 35ff049ff078..83a22d25b61d 100644
+--- a/rust/kernel/sync/completion.rs
++++ b/rust/kernel/sync/completion.rs
+@@ -6,7 +6,12 @@
+ //!
+ //! C header: [`include/linux/completion.h`](srctree/include/linux/completion.h)
+ 
+-use crate::{bindings, prelude::*, types::Opaque};
++use crate::{
++    bindings,
++    prelude::*,
++    time::Delta,
++    types::Opaque, //
++};
+ 
+ /// Synchronization primitive to signal when a certain task has been completed.
+ ///
+@@ -111,4 +116,17 @@ pub fn wait_for_completion(&self) {
+         // SAFETY: `self.as_raw()` is a pointer to a valid `struct completion`.
+         unsafe { bindings::wait_for_completion(self.as_raw()) };
+     }
 +
-+	if (ep->phy_powered) {
-+		err = phy_power_off(ep->phy);
-+		if (err)
-+			ret = err;
-+		else
-+			ep->phy_powered = false;
-+	}
++    /// Wait for completion of a task, with a timeout.
++    ///
++    /// Returns `true` if the task completed before `timeout` elapsed, and `false` otherwise.
++    pub fn wait_for_completion_timeout(&self, timeout: Delta) -> bool {
++        let timeout = timeout.as_millis().clamp(0, u32::MAX as i64) as u32;
++        let jiffies = crate::time::msecs_to_jiffies(timeout);
 +
-+	if (ep->phy_initialized) {
-+		err = phy_exit(ep->phy);
-+		if (err)
-+			ret = err;
-+		else
-+			ep->phy_initialized = false;
-+	}
++        // SAFETY: `self.as_raw()` is a pointer to a valid `struct completion`.
++        let remaining = unsafe { bindings::wait_for_completion_timeout(self.as_raw(), jiffies) };
 +
-+	return ret;
++        remaining != 0
++    }
+ }
+diff --git a/samples/rust/Kconfig b/samples/rust/Kconfig
+index 31d62533ef25..b654751041fa 100644
+--- a/samples/rust/Kconfig
++++ b/samples/rust/Kconfig
+@@ -190,4 +190,15 @@ config SAMPLE_RUST_HOSTPROGS
+ 
+ 	  If unsure, say N.
+ 
++config SAMPLE_RUST_DRIVER_EDU
++	tristate "QEMU EDU Driver"
++	depends on PCI
++	help
++	  This option builds the Rust QEMU EDU PCI driver sample.
++
++	  To compile this as a module, choose M here:
++	  the module will be called rust_driver_edu.
++
++	  If unsure, say N.
++
+ endif # SAMPLES_RUST
+diff --git a/samples/rust/Makefile b/samples/rust/Makefile
+index b986b681cde5..57d944baa781 100644
+--- a/samples/rust/Makefile
++++ b/samples/rust/Makefile
+@@ -17,6 +17,7 @@ obj-$(CONFIG_SAMPLE_RUST_DRIVER_AUXILIARY)	+= rust_driver_auxiliary.o
+ obj-$(CONFIG_SAMPLE_RUST_DRIVER_SERDEV)		+= rust_driver_serdev.o
+ obj-$(CONFIG_SAMPLE_RUST_CONFIGFS)		+= rust_configfs.o
+ obj-$(CONFIG_SAMPLE_RUST_SOC)			+= rust_soc.o
++obj-$(CONFIG_SAMPLE_RUST_DRIVER_EDU) += rust_driver_edu.o
+ 
+ rust_print-y := rust_print_main.o rust_print_events.o
+ 
+diff --git a/samples/rust/rust_driver_edu.rs b/samples/rust/rust_driver_edu.rs
+new file mode 100644
+index 000000000000..f21619e7bdc7
+--- /dev/null
++++ b/samples/rust/rust_driver_edu.rs
+@@ -0,0 +1,423 @@
++// SPDX-License-Identifier: GPL-2.0
++
++//! Rust QEMU EDU driver sample (based on QEMU's edu device).
++//!
++//! To make this driver probe, QEMU must be run with `-device edu`.
++
++use kernel::{
++    device::{
++        Bound,
++        Core, //
++    },
++    dma::{
++        Coherent,
++        CoherentBox,
++        Device as _,
++        DmaMask, //
++    },
++    io::{
++        poll::read_poll_timeout,
++        register,
++        register::Array,
++        Io, //
++    },
++    irq::{
++        self,
++        Flags,
++        Registration, //
++    },
++    pci,
++    prelude::*,
++    sync::Completion,
++    time::Delta,
++    types::ScopeGuard, //
++};
++
++mod regs {
++    use super::*;
++
++    register! {
++        pub(super) IDENTIFICATION(u32) @ 0x0 {
++            31:0 version;
++        }
++
++        pub(super) LIVENESS(u32) @ 0x4 {
++            31:0 value;
++        }
++
++        pub(super) FACTORIAL(u32) @ 0x8 {
++            31:0 value;
++        }
++
++        pub(super) STATUS(u32) @ 0x20 {
++            7:7 irq_on_done;     // 0x80: raise an IRQ when the factorial is done
++            0:0 computing;       // 0x01: set while a factorial is being computed
++        }
++
++        pub(super) INTERRUPT_STATUS(u32) @ 0x24 {
++            31:0 status;
++        }
++
++        pub(super) INTERRUPT_RAISE(u32) @ 0x60 {
++            31:0 raise;
++        }
++
++        pub(super) INTERRUPT_ACK(u32) @ 0x64 {
++            31:0 ack;
++        }
++
++        // The EDU DMA registers are documented as 64-bit, but QEMU's edu device
++        // accepts 4-byte accesses to these registers and zero-extends the
++        // written value, and this driver only uses addresses/counts that fit in
++        // 32 bits (a 28-bit DMA mask), so a single `u32` access per register is
++        // correct and sufficient here.
++        pub(super) DMA_SRC_ADDR(u32) @ 0x80 {
++            31:0 src;
++        }
++
++        pub(super) DMA_DST_ADDR(u32) @ 0x88 {
++            31:0 dst;
++        }
++
++        pub(super) DMA_CNT(u32) @ 0x90 {
++            31:0 size;
++        }
++
++        pub(super) DMA_CMD(u32) @ 0x98 {
++            31:0 cmd;
++        }
++    }
++
++    pub(super) const END: usize = 0x9C;
 +}
 +
- static void exynos_pcie_writel(void __iomem *base, u32 val, u32 reg)
- {
- 	writel(val, base + reg);
-@@ -225,13 +253,23 @@ static int exynos_pcie_host_init(struct dw_pcie_rp *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct exynos_pcie *ep = to_exynos_pcie(pci);
-+	int ret;
- 
- 	pp->bridge->ops = &exynos_pci_ops;
- 
- 	exynos_pcie_assert_core_reset(ep);
- 
--	phy_init(ep->phy);
--	phy_power_on(ep->phy);
-+	ret = phy_init(ep->phy);
-+	if (ret)
-+		return ret;
++type Bar0<'bound> = pci::Bar<'bound, { regs::END }>;
 +
-+	ep->phy_initialized = true;
++struct SampleDriverData<'bound> {
++    pdev: &'bound pci::Device,
++    // Held for the lifetime of the bound device so the BAR mapping stays alive;
++    // all register access happens during probe, so the field is never read again.
++    #[expect(dead_code)]
++    bar: Bar0<'bound>,
++}
 +
-+	ret = phy_power_on(ep->phy);
-+	if (ret)
-+		return ret;
++struct SampleDriver;
 +
-+	ep->phy_powered = true;
- 
- 	exynos_pcie_deassert_core_reset(ep);
- 	exynos_pcie_enable_irq_pulse(ep);
-@@ -314,6 +352,7 @@ static int exynos_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
-+	ep->supplies_enabled = true;
- 	platform_set_drvdata(pdev, ep);
- 
- 	ret = exynos_add_pcie_port(ep, pdev);
-@@ -323,8 +362,22 @@ static int exynos_pcie_probe(struct platform_device *pdev)
- 	return 0;
- 
- fail_probe:
--	phy_exit(ep->phy);
--	regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
-+	if (ep->phy_initialized || ep->phy_powered)
-+		exynos_pcie_assert_core_reset(ep);
++// The QEMU EDU device's PCI IDs. These are specific to this emulated device and are not
++// shared with any other driver, so they are kept local here rather than in `pci_ids.h`.
++// `0x1234` is QEMU's conventional vendor ID, which has no dedicated `pci::Vendor` constant.
++const VENDOR_ID_QEMU: u16 = 0x1234;
++const DEVICE_ID_EDU: u32 = 0x11e8;
 +
-+	if (exynos_pcie_phy_exit(ep))
-+		dev_err(&pdev->dev, "failed to exit PCIe PHY\n");
++kernel::pci_device_table!(
++    PCI_TABLE,
++    <SampleDriver as pci::Driver>::IdInfo,
++    [(
++        pci::DeviceId::from_id(pci::Vendor::from_raw(VENDOR_ID_QEMU), DEVICE_ID_EDU),
++        ()
++    )]
++);
 +
-+	if (ep->supplies_enabled) {
-+		int err;
++impl SampleDriverData<'_> {
++    /// The value the EDU device reports from its `IDENTIFICATION` register.
++    const EDU_ID: u32 = 0x010000ed;
 +
-+		err = regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
-+		if (err)
-+			dev_err(&pdev->dev, "failed to disable regulators: %d\n", err);
-+		else
-+			ep->supplies_enabled = false;
++    /// Confirm we are really talking to an EDU device by reading its ID register.
++    fn identification(bar: &Bar0<'_>) -> Result {
++        if bar.read(regs::IDENTIFICATION).version().get() != Self::EDU_ID {
++            return Err(ENODEV);
++        }
 +
-+	}
- 
- 	return ret;
- }
-@@ -332,22 +385,42 @@ static int exynos_pcie_probe(struct platform_device *pdev)
- static void exynos_pcie_remove(struct platform_device *pdev)
- {
- 	struct exynos_pcie *ep = platform_get_drvdata(pdev);
-+	int ret;
- 
- 	dw_pcie_host_deinit(&ep->pci.pp);
- 	exynos_pcie_assert_core_reset(ep);
--	phy_power_off(ep->phy);
--	phy_exit(ep->phy);
--	regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
++        Ok(())
++    }
 +
-+	ret = exynos_pcie_phy_exit(ep);
-+	if (ret)
-+		dev_err(&pdev->dev, "failed to exit PCIe PHY: %d\n", ret);
++    /// Liveness check: the EDU device inverts (bitwise NOT) whatever we write to the
++    /// `LIVENESS` register, so writing `x` and reading back `!x` proves MMIO works.
++    fn liveness(bar: &Bar0<'_>) -> Result {
++        let pattern: u32 = 0xdead_beef;
 +
-+	if (ep->supplies_enabled) {
-+		ret = regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
-+		if (ret)
-+			dev_err(&pdev->dev, "failed to disable regulators: %d\n", ret);
-+		else
-+			ep->supplies_enabled = false;
-+	}
- }
- 
- static int exynos_pcie_suspend_noirq(struct device *dev)
- {
- 	struct exynos_pcie *ep = dev_get_drvdata(dev);
-+	int ret;
- 
- 	exynos_pcie_assert_core_reset(ep);
--	phy_power_off(ep->phy);
--	phy_exit(ep->phy);
--	regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
++        bar.write_reg(regs::LIVENESS::zeroed().with_value(pattern));
 +
-+	ret = exynos_pcie_phy_exit(ep);
-+	if (ret)
-+		dev_err(dev, "failed to exit PCIe PHY during suspend: %d\n", ret);
++        let readback = bar.read(regs::LIVENESS).value().get();
 +
-+	if (ep->supplies_enabled) {
-+		ret = regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
-+		if (ret)
-+			dev_err(dev, "failed to disable regulators during suspend: %d\n", ret);
-+		else
-+			ep->supplies_enabled = false;
-+	}
- 
- 	return 0;
- }
-@@ -358,13 +431,33 @@ static int exynos_pcie_resume_noirq(struct device *dev)
- 	struct dw_pcie *pci = &ep->pci;
- 	struct dw_pcie_rp *pp = &pci->pp;
- 	int ret;
-+	int err;
- 
- 	ret = regulator_bulk_enable(ARRAY_SIZE(ep->supplies), ep->supplies);
- 	if (ret)
- 		return ret;
- 
-+	ep->supplies_enabled = true;
++        if readback != !pattern {
++            return Err(EIO);
++        }
 +
- 	/* exynos_pcie_host_init controls ep->phy */
--	exynos_pcie_host_init(pp);
-+	ret = exynos_pcie_host_init(pp);
-+	if (ret) {
-+		err = exynos_pcie_phy_exit(ep);
-+		if (err)
-+			dev_err(dev, "failed to exit PCIe PHY during resume error: %d\n", err);
++        Ok(())
++    }
 +
-+		if (ep->supplies_enabled) {
-+			err = regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
-+			if (err)
-+				dev_err(dev, "failed to disable regulators: %d\n", err);
-+			else
-+				ep->supplies_enabled = false;
-+		}
++    /// Exercise the interrupt registers at the MMIO level.
++    ///
++    /// Writing a bitmask to `INTERRUPT_RAISE` asserts those bits in
++    /// `INTERRUPT_STATUS` (and, if an IRQ is enabled, makes the device raise an
++    /// interrupt); writing the same bitmask to `INTERRUPT_ACK` clears them
++    /// again. Here we raise a test bit, confirm the status register reflects it,
++    /// then acknowledge it and confirm it clears -- all without registering a
++    /// handler. Wiring up MSI and an actual IRQ handler is a later step.
++    fn interrupt_status(bar: &Bar0<'_>) -> Result {
++        let pattern: u32 = 0x0000_0001;
 +
-+		return ret;
++        bar.write_reg(regs::INTERRUPT_RAISE::zeroed().with_raise(pattern));
 +
-+	}
++        if bar.read(regs::INTERRUPT_STATUS).status().get() != pattern {
++            return Err(EIO);
++        }
 +
- 	dw_pcie_setup_rc(pp);
- 	exynos_pcie_start_link(pci);
- 	return dw_pcie_wait_for_link(pci);
++        bar.write_reg(regs::INTERRUPT_ACK::zeroed().with_ack(pattern));
++
++        if bar.read(regs::INTERRUPT_STATUS).status().get() != 0 {
++            return Err(EIO);
++        }
++
++        Ok(())
++    }
++
++    /// Make the edu device compute a factorial and inform the cpu
++    /// of completion via an IRQ
++    fn factorial_irq(pdev: &pci::Device<Bound>, bar: &Bar0<'_>) -> Result {
++        let operand: u32 = 6;
++
++        let msi = pci::IrqTypes::default().with(pci::IrqType::Msi);
++        let vectors = pdev.alloc_irq_vectors(1, 1, msi)?;
++
++        let registration = KBox::pin_init(
++            unsafe {
++                Registration::new(
++                    vectors.index(0)?.into(),
++                    Flags::TRIGGER_NONE,
++                    c"rust_driver_edu",
++                    try_pin_init!(EduIrq {
++                        done <- Completion::new(),
++                        bar,
++                    }? Error),
++                )
++            },
++            GFP_KERNEL,
++        )?;
++
++        // Arm the "raise an IRQ when done" bit, then start the computation.
++        bar.write_reg(regs::STATUS::zeroed().with_irq_on_done(true));
++        bar.write_reg(regs::FACTORIAL::zeroed().with_value(operand));
++
++        // Sleep until the handler calls `complete_all()` from IRQ context.
++        if !registration
++            .handler()
++            .done
++            .wait_for_completion_timeout(Delta::from_secs(1))
++        {
++            bar.write_reg(regs::STATUS::zeroed());
++
++            let pending = bar.read(regs::INTERRUPT_STATUS).status().get();
++            bar.write_reg(regs::INTERRUPT_ACK::zeroed().with_ack(pending));
++
++            registration.synchronize();
++
++            return Err(ETIMEDOUT);
++        }
++
++        let result = bar.read(regs::FACTORIAL).value().get();
++
++        if result != factorial_helper(operand) {
++            return Err(EIO);
++        }
++
++        Ok(())
++    }
++
++    /// Tests a full DMA round-trip, writing from RAM -> device buffer,
++    /// and then from device buffer -> RAM
++    fn dma_test(pdev: &pci::Device<Core<'_>>, bar: &Bar0<'_>) -> Result {
++        const DEV_BUF: u32 = 0x40_000;
++        const LEN: usize = 512;
++        const CMD_START: u32 = 1 << 0;
++        const CMD_TO_RAM: u32 = 1 << 1;
++
++        unsafe { pdev.dma_set_mask_and_coherent(DmaMask::new::<28>())? };
++
++        let mut src: CoherentBox<[u8]> = CoherentBox::zeroed_slice(pdev.as_ref(), LEN, GFP_KERNEL)?;
++        src.fill(0xa5);
++
++        let src: Coherent<[u8]> = src.into();
++
++        let dst: Coherent<[u8]> =
++            CoherentBox::<[u8]>::zeroed_slice(pdev.as_ref(), LEN, GFP_KERNEL)?.into();
++
++        let src_dma = src.dma_address() as u32;
++        let dst_dma = dst.dma_address() as u32;
++
++        let wait_dma = || {
++            read_poll_timeout(
++                || Ok(bar.read(regs::DMA_CMD).cmd().get()),
++                |cmd| *cmd & CMD_START == 0,
++                Delta::from_millis(10),
++                Delta::from_secs(1),
++            )
++        };
++
++        // 1) RAM -> device internal buffer. CMD is written last: it triggers the transfer.
++        bar.write_reg(regs::DMA_SRC_ADDR::zeroed().with_src(src_dma));
++        bar.write_reg(regs::DMA_DST_ADDR::zeroed().with_dst(DEV_BUF));
++        bar.write_reg(regs::DMA_CNT::zeroed().with_size(LEN as u32));
++        bar.write_reg(regs::DMA_CMD::zeroed().with_cmd(CMD_START));
++        if wait_dma().is_err() {
++            // The EDU device cannot abort an in-flight DMA. Keep the buffer
++            // alive so the device cannot write to freed memory.
++            core::mem::forget(src);
++            return Err(ETIMEDOUT);
++        }
++
++        // 2) device internal buffer -> RAM, landing in `dst`.
++        bar.write_reg(regs::DMA_SRC_ADDR::zeroed().with_src(DEV_BUF));
++        bar.write_reg(regs::DMA_DST_ADDR::zeroed().with_dst(dst_dma));
++        bar.write_reg(regs::DMA_CNT::zeroed().with_size(LEN as u32));
++        bar.write_reg(regs::DMA_CMD::zeroed().with_cmd(CMD_START | CMD_TO_RAM));
++        if wait_dma().is_err() {
++            // The EDU device cannot abort an in-flight DMA. Keep the buffer
++            // alive so the device cannot write to freed memory.
++            core::mem::forget(dst);
++            return Err(ETIMEDOUT);
++        }
++
++        // Transfer completed, check dst is the expected value
++        let out = unsafe { dst.as_ref() };
++        if out.iter().any(|&b| b != 0xa5) {
++            return Err(EIO);
++        }
++
++        Ok(())
++    }
++
++    fn config_space(pdev: &pci::Device<Bound>) {
++        let config = pdev.config_space();
++
++        // Some PCI configuration space registers.
++        register! {
++            VENDOR_ID(u16) @ 0x0 {
++                15:0 vendor_id;
++            }
++
++            REVISION_ID(u8) @ 0x8 {
++                7:0 revision_id;
++            }
++
++            BAR(u32)[6] @ 0x10 {
++                31:0 value;
++            }
++        }
++
++        dev_info!(
++            pdev,
++            "edu config space read8 rev ID: {:x}\n",
++            config.read(REVISION_ID).revision_id()
++        );
++
++        dev_info!(
++            pdev,
++            "edu config space read16 vendor ID: {:x}\n",
++            config.read(VENDOR_ID).vendor_id()
++        );
++
++        dev_info!(
++            pdev,
++            "edu config space read32 BAR 0: {:x}\n",
++            config.read(BAR::at(0)).value()
++        );
++    }
++}
++
++impl pci::Driver for SampleDriver {
++    type IdInfo = ();
++    type Data<'bound> = SampleDriverData<'bound>;
++
++    const ID_TABLE: pci::IdTable<Self::IdInfo> = &PCI_TABLE;
++
++    fn probe<'bound>(
++        pdev: &'bound pci::Device<Core<'_>>,
++        _info: Option<&'bound Self::IdInfo>,
++    ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound {
++        dev_dbg!(
++            pdev,
++            "Probe Rust QEMU EDU driver sample (PCI ID: {}, 0x{:x}).\n",
++            pdev.vendor_id(),
++            pdev.device_id()
++        );
++
++        pdev.enable_device_mem()?;
++        pdev.set_master();
++
++        let cleanup = ScopeGuard::new(|| {
++            pdev.clear_master();
++            pdev.disable_device();
++        });
++
++        let bar = pdev.iomap_region_sized::<{ regs::END }>(0, c"rust_driver_edu")?;
++
++        SampleDriverData::identification(&bar)?;
++        SampleDriverData::liveness(&bar)?;
++        SampleDriverData::interrupt_status(&bar)?;
++        SampleDriverData::factorial_irq(pdev, &bar)?;
++        SampleDriverData::dma_test(pdev, &bar)?;
++        SampleDriverData::config_space(pdev);
++
++        dev_info!(pdev, "EDU device probed: all checks passed.\n");
++
++        cleanup.dismiss();
++
++        Ok(SampleDriverData { pdev, bar })
++    }
++}
++
++impl Drop for SampleDriverData<'_> {
++    fn drop(&mut self) {
++        dev_dbg!(self.pdev, "Remove Rust QEMU EDU driver sample.\n");
++
++        self.pdev.clear_master();
++        self.pdev.disable_device();
++    }
++}
++
++/// Per-interrupt state shared between process context and IRQ context.
++///
++/// The factorial computation signals `done` from the IRQ handler; the process
++/// context that started it waits on the same [`Completion`].
++#[pin_data]
++struct EduIrq<'bar, 'bound> {
++    #[pin]
++    done: Completion,
++    bar: &'bar Bar0<'bound>,
++}
++
++impl irq::Handler for EduIrq<'_, '_> {
++    // Runs in IRQ context when the EDU device raises its interrupt.
++    fn handle(&self) -> irq::IrqReturn {
++        let pending = self.bar.read(regs::INTERRUPT_STATUS).status().get();
++
++        if pending == 0 {
++            return irq::IrqReturn::None;
++        }
++
++        self.bar
++            .write_reg(regs::INTERRUPT_ACK::zeroed().with_ack(pending));
++        self.done.complete_all();
++
++        irq::IrqReturn::Handled
++    }
++}
++
++// Helper functions
++fn factorial_helper(n: u32) -> u32 {
++    if n <= 1 {
++        return 1;
++    }
++
++    n * factorial_helper(n - 1)
++}
++
++kernel::module_pci_driver! {
++    type: SampleDriver,
++    name: "rust_driver_edu",
++    authors: ["Lucas Costa"],
++    description: "Rust QEMU EDU driver",
++    license: "GPL v2",
++}
 -- 
-2.55.0
+2.43.0
 
