@@ -1,100 +1,192 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.61.3
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=198.175.65.9
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793343746;
-	b=o3qy7Rqf6FQ0kGJOUKUJjCvPW3XfFhHsMTT8Du3V8URIkHedw/LveBe9PJcgBW7de9td
-	 XpELMdkEgnoj2Nw5jX8GlWv4SlKnKHIFklTJTA0IqziqFsbFgdB+/GFLuvIOcRJj5Qi9y
-	 aXetJzVDNmyY7EKRl7GtHFxDMWaDDLxcKyv7BBpaHHKFfBL3SkXyBF3zoKekzoMMWCTx8
-	 9TcRR0PLtS98v3+cRlxm9zxBXj0usE4GtG7UewgkIhALGQYvb8+fZgRGO1Q4vsielqIwM
-	 fq0kACfexLEeER1xBtuHO3QEVUra5Z+rZqo6OxuuoXsxja+Xx2jBbxgFkya+yiFtSGg==
+	t=1793346121;
+	b=wYugfiJHzW/J9gaqwIwcxpSwJZM/74E7fx7Aec31mAUmLK8qBaL7bus6SnmVI5Yvz0Zf
+	 c7OVmyYoJjuQZ5+tDh/w/9hv/2pm2vCBrFUw/psQZPwx7X4m5MXGKfjsdyyBaiPgTFWek
+	 tFgQr5T7Pp1FRNqYC+ebQrf5eAeFudyF+XGq5GyLYSfceGi0ViTdtMwO8YkEqkrcM7h3S
+	 SI7GzJMxRfAZOE0T/K3BHXjT6RpobsxZv7zCV2uELoCD/TcJmluJsopl5HBAqUVMiC5B8
+	 DjV/QjPpaeQR1bD89nneQ3X9h3MODtO9wIe8DqK/cvIpLQQareOGPHbG0VlA4soCjRA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793343746;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:Content-Type:Content-Disposition:
-	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793346121;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Received:
+	 Received:Received:Received:From:To:CC:Subject:Thread-Topic:
+	 Thread-Index:Date:Message-ID:References:In-Reply-To:Accept-Language:
+	 Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
+	 x-ms-publictraffictype:x-ms-traffictypediagnostic:
+	 x-ms-office365-filtering-correlation-id:x-ms-exchange-senderadcheck:
+	 x-ms-exchange-antispam-relay:x-microsoft-antispam:
+	 x-microsoft-antispam-message-info:x-forefront-antispam-report:
+	 x-ms-exchange-antispam-messagedata-chunkcount:
+	 x-ms-exchange-antispam-messagedata-0:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version:
+	 X-Exchange-RoutingPolicyChecked:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-AuthSource:
 	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=Ve3LmqEeleB/KHxIsan85p3UOM4eP1dC03eA4E6LXtg=;
-	b=Ux5YXu27H695pNGjg5e/L/7cH68IYblFbB1npiyfE8K1pjl++EevP6GfQMC7EvJWH9TJ
-	 ndm8UbGX39dgppQ1ovKaWQ02CTJPyIvV33BfCVPkJniouooAaYbAzGcnMgF9bLCbBwpaf
-	 z/rKzOxMkzBBSZLJ8k8BTK2ULUEPo7RoWWWuheslH6Rdt+VzgJXIBQml44c52nuvQWn+q
-	 7lHl5/Kp6pO3N6JgHDCc5RH0Gkfv+ASMwPotYYD9q8RlaguEaaSvu2UQwIfTEtpYgrDpk
-	 v0pBAYtmZoHMZE12bTXiXP+tNLD2T6giSzgOP1CuM1KNpQGChtTIVup2BuuE08gJrhQ==
+	 X-MS-Exchange-CrossTenant-originalarrivaltime:
+	 X-MS-Exchange-CrossTenant-fromentityheader:
+	 X-MS-Exchange-CrossTenant-id:X-MS-Exchange-CrossTenant-mailboxtype:
+	 X-MS-Exchange-CrossTenant-userprincipalname:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped:X-OriginatorOrg;
+	bh=fIe2fVLq47lhu7tJbuwi/qLYYo/NCjmCC2mb46YXLSk=;
+	b=Ba+a/YCDcflVbqp/TuE8XQXBlpB6y4cWhh2fDI6tMX7MjQqFNz4FShfbdfYoxFeBYMHb
+	 lXV0bxJLRwWRrA0a6luzFWwTcqH1j+B0Nux93dDQheGjTYpmv371rWoE4fBh+Yp9H+ml4
+	 7DFsrF6Q8YgFiVk0gKmxAOkiAuXmg/kUM6ZjXsKE4UOcByUNo0heglT9ro7H8d8f7FQPj
+	 LE1gII611RDgCuCl2e+U5uuF8+I0XanT4i3w/rhS70BeSdvGzkO1XPMkpXEFkv5oFz4/M
+	 yfFsYvrVUbiVRr4HfGQHbBbl6F9L1OOTsMOq3LVQduA5spIiYDlkFcM49ZjTwFUYVsQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=Jub4acev;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.61.3
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010003.outbound.protection.outlook.com [52.101.61.3])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=eBEKwnrH;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=198.175.65.9
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA67F606A31A;
-	Fri, 30 Oct 2026 07:02:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DA67F606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C4F1606A31C;
+	Fri, 30 Oct 2026 07:41:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6C4F1606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=Jub4acev
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=eBEKwnrH
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793346114; x=1824882114;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=JKuq+enupRH8FUVKxT7u/K6ba3meoMAfmz2a+OPEpEc=;
+  b=eBEKwnrHd2ggrAuGZl193k6CKv6MhnPl14+deIyZx9nlM1zmBMmBp/o2
+   lCpSkE/6Bp9Eh87WU5mpjY+SsLUHQHSmCRf4hQObdYMgbxnG9fVxWg7K6
+   Kk+trCghWiUWNzWKt6ZQHmp6hw37EF9F7qvDeUAw/IMq2+XW/wLd+lQK5
+   Qc+uWygBhNz6FZ/WB99CpqejogsXOpAAIwW4euRfgDQJH3FwKL9EG17bP
+   AeXr96t/CglvQoSO15ykXZB/DgxtsPwgnu8hmiy1cX2pfouY0FxFzhG7m
+   Cf9PzCzS5Oyg4psl2N4Q0Lk70hNmn3PQjY+fczbtM4IbaP1iRAr82tfh7
+   Q==;
+X-CSE-ConnectionGUID: AdEcf4AIQ5Os79k8nlLVWw==
+X-CSE-MsgGUID: 7ZH4BG13TCutV+5MxyVBYQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11950"; a="1989550"
+X-IronPort-AV: E=Sophos;i="6.27,185,1787036400"; 
+   d="scan'208";a="1989550"
+Received: from fmviesa012.fm.intel.com ([10.60.135.152])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2026 00:41:53 -0700
+X-CSE-ConnectionGUID: 2PLduTI8QomvMyhx61Gx/A==
+X-CSE-MsgGUID: gzGB7z25RKec2sknnjShxw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,185,1787036400"; 
+   d="scan'208";a="7152501"
+Received: from orsmsx903.amr.corp.intel.com ([10.22.229.25])
+  by fmviesa012.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2026 00:41:53 -0700
+Received: from ORSMSX902.amr.corp.intel.com (10.22.229.24) by
+ ORSMSX903.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.56; Fri, 30 Oct 2026 00:41:51 -0700
+Received: from ORSEDG902.ED.cps.intel.com (10.7.248.12) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.56 via Frontend Transport; Fri, 30 Oct 2026 00:41:51 -0700
+Received: from CH4PR04CU002.outbound.protection.outlook.com (40.107.201.46) by
+ edgegateway.intel.com (134.134.137.112) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.56; Fri, 30 Oct 2026 00:41:46 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=OwvAb8h2+sQYs6dACBtNCdZks8XlNGdwFwxkBr3UgnvlLvXNj3LfdYQEDVRHwWZTXKuv6b41nyskb6yTrJIA8WrskDbVHXfbGdxga/HtbE/DU88n+iLSLq/eM4ztYT5YRKhvwTjOEsBZns20BZsb0knVTq/B9VwAhbaSv2Sm8DfJx8QiMo/N767N7mj6PVg6SOPpf5x6dHfC/iZNz7rpp/32MfxY/wyTQTuJ+R3VszTskBmUIUvpdNnEx8OJh11DSKCabpypvBNFq3uJXkniGvtuFYX+UL/1nzQ+4qUcPJqfyTWjSd6GSTW4QiT+hm1242GEBlinAIFZzz3YKxRATQ==
+ b=rhgt1yE+bTw2ktzMCE6BK9O/EC1QJ8XX3EVxGb0C/90b76qBZj9imaIhU+TcNYGcsKvbK3JCk28iyEziCxnD7AJvFB236nRgDVfFlmeKzCL3Vq2LnflUDIEvhw/q5oNdjUERKxzmZ6/CHyHdxWPRqxGVfuzvwxmv8GubufeqgaVsqgjWqwo9JJD4aqc8rx5B2xIpzeCZ2Z7A2o2ZDcWNm1jVRaEijbzCKEfNYaZrJFFLBSmkKg5ctwUbVQQPgDoQ/SUGIBf5ydavEX1UUO18lPysHPEWmgt0ONK/78cbxKklA7e/EVj7YYkFRcg9WL4bNTIQJOFTS0Fbm+zkYmL4Rw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Ve3LmqEeleB/KHxIsan85p3UOM4eP1dC03eA4E6LXtg=;
- b=M9LJOjGvqoGn/vnAGvgdhVhqdhL44+qF/SKgMv/GzfEuYy5N7Y6sIUhuFwOFsz/rbuft1n8/pjTNKQ3pqrKQKTcxNNF90HzcQ55hWu+RBB9torZFW/XhhBNwnGUvkkzEJNmCcJ36oMCeQKJkuunYa1w32uNSwA1yePDZoaG4U5hTWc+uVrPFQPcoHrQBaACNcdUBk2MlSdV1gQGjoNes9wjmGIKeORMbTD7Sr3PkQYlk44XWA/ta9hG51kHYgH03II30pFH08XGs+JzINpr22dT2VqwB8opNFWkgGEJM4aF9CnMVVPECL6ejSQ5G/4090qVbbtmLhlrmLtzAXEL5Ng==
+ bh=fIe2fVLq47lhu7tJbuwi/qLYYo/NCjmCC2mb46YXLSk=;
+ b=NakxpWkvT6FnLJpP9hTVPgJCMjf7GG3tDPcL30Oah2rx8qE9LN+kmWuNAwM7YyuUCEiF3UPuatRpsVgS5D0qfcJBSt4rYGmcs3mWBwPmBf25N0D0n6dxO8Gku6oD5gH6XDsCx4wQnB2tOman4+Lh4R8gT+d/QeP7dXMpB9hb3pmKhed3v7cdttbEAlRnhCJaHGphMUVcYgE3bRkxK0CD8dtunxW9IYF20UEiAPFLZFVQhuEm8IeIwFRZpft58P5tmY1bZVKpBu4tzfohbdei3uK6cPnj497tHGaQXfuZyMH8TnKnno/jiQmbbSM8xqLt0EQ+mpYVDxTwWOOEWZp1dA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Ve3LmqEeleB/KHxIsan85p3UOM4eP1dC03eA4E6LXtg=;
- b=Jub4acevXqG1rkxRlBAiQQDNkwe1JfK2bXAWosBHtKqTCrpU9p99/WmG4H2FdGeAptL9U2m6KP+lI+odGorMWkgl30hv2Y9soFw/DFg2HxyWZhY1ag/UzY4uDQ5kp/kAcnA3CfX8H3LSNW5PSVuioOQi2ZXiDsgENU90YPohBzLhetbfinGykq9q/rkwsIFlNZpH0P4qmgrz2bslOxGxVff8N2qDOMEamOLh1Kb4zSkzQPRSasZlWu1YzeiRZa4Qc+hsjcEo/6xK2xIcnRKvPWw5+Jnzv9G4+1/XU6otf7MPvHC42d8+IY1B3Xk+/APq5dk/PHzalh4ehTuhufvaBg==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BL0PR12MB2370.namprd12.prod.outlook.com (2603:10b6:207:47::27)
- by SJ0PR12MB6854.namprd12.prod.outlook.com (2603:10b6:a03:47c::13) with
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from CO1PR11MB4835.namprd11.prod.outlook.com (2603:10b6:303:9e::22)
+ by MW4PR11MB5910.namprd11.prod.outlook.com (2603:10b6:303:189::5) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.10; Fri, 30 Oct
- 2026 07:02:22 +0000
-Received: from BL0PR12MB2370.namprd12.prod.outlook.com
- ([fe80::86cf:c3ec:2cf5:74c8]) by BL0PR12MB2370.namprd12.prod.outlook.com
- ([fe80::86cf:c3ec:2cf5:74c8%5]) with mapi id 15.21.0569.008; Fri, 30 Oct 2026
- 07:02:21 +0000
-Date: Fri, 30 Oct 2026 15:02:16 +0800
-From: Richard Cheng <icheng@nvidia.com>
-To: Srirangan Madhavan <smadhavan@nvidia.com>
-Cc: Alison Schofield <alison.schofield@intel.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>, 
-	Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>, 
-	Jonathan Cameron <jic23@kernel.org>, Vishal Verma <vishal.l.verma@intel.com>, 
-	linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Li Ming <ming.li@zohomail.com>, Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com, 
-	alwilliamson@nvidia.com, Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>, 
-	Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>, Jiandi An <jan@nvidia.com>, 
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v16 10/18] cxl: Build register block helpers into the
- kernel
-Message-ID: <auRA3DPi6U5-LwxT@MWDK4CY14F>
-References: <20261029145703.2185231-1-smadhavan@nvidia.com>
- <20261029145703.2185231-11-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261029145703.2185231-11-smadhavan@nvidia.com>
-X-ClientProxiedBy: SI1PR02CA0047.apcprd02.prod.outlook.com
- (2603:1096:4:1f5::15) To BL0PR12MB2370.namprd12.prod.outlook.com
- (2603:10b6:207:47::27)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.22; Fri, 30 Oct
+ 2026 07:41:37 +0000
+Received: from CO1PR11MB4835.namprd11.prod.outlook.com
+ ([fe80::d051:d948:c209:9225]) by CO1PR11MB4835.namprd11.prod.outlook.com
+ ([fe80::d051:d948:c209:9225%6]) with mapi id 15.21.0569.009; Fri, 30 Oct 2026
+ 07:41:36 +0000
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Jason Gunthorpe <jgg@nvidia.com>, Aneesh Kumar K.V
+	<aneesh.kumar@kernel.org>
+CC: "iommu@lists.linux.dev" <iommu@lists.linux.dev>, Alex Williamson
+	<alex@shazbot.org>, Alexey Kardashevskiy <aik@amd.com>, Bjorn Helgaas
+	<bhelgaas@google.com>, Catalin Marinas <catalin.marinas@arm.com>, Jacob Pan
+	<jacob.pan@linux.microsoft.com>, Joerg Roedel <joro@8bytes.org>, "Jonathan
+ Cameron" <jic23@kernel.org>, Jonathan Hunter <jonathanh@nvidia.com>, "Krishna
+ Reddy" <vdumpa@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Nicolin Chen
+	<nicolinc@nvidia.com>, Robin Murphy <robin.murphy@arm.com>, Samuel Ortiz
+	<sameo@rivosinc.com>, Shameer Kolothum
+	<shameerali.kolothum.thodi@huawei.com>, Steven Price <steven.price@arm.com>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>, Suzuki K Poulose
+	<suzuki.poulose@arm.com>, Thierry Reding <thierry.reding@kernel.org>, "Vasant
+ Hegde" <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>, Xu Yilun
+	<yilun.xu@linux.intel.com>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "linux-coco@lists.linux.dev"
+	<linux-coco@lists.linux.dev>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-tegra@vger.kernel.org"
+	<linux-tegra@vger.kernel.org>
+Subject: RE: [PATCH v7 10/16] iommufd: Add the vdevice TSM request ioctl
+Thread-Topic: [PATCH v7 10/16] iommufd: Add the vdevice TSM request ioctl
+Thread-Index: AQHdVuqLnkDudTU10ECPGJY5vEDWKLcTcUiAgADzIwCAADjrgIABMt5Q
+Date: Fri, 30 Oct 2026 07:41:36 +0000
+Message-ID: <CO1PR11MB48352ED3E4DEB3A8B4F089AB8C6D2@CO1PR11MB4835.namprd11.prod.outlook.com>
+References: <20261008055955.4014342-1-aneesh.kumar@kernel.org>
+ <20261008055955.4014342-11-aneesh.kumar@kernel.org>
+ <179321444123.2412245.6955528563980811144.b4-review@b4>
+ <yq5a1p98c0f5.fsf@kernel.org> <20261029130117.GH3040767@nvidia.com>
+In-Reply-To: <20261029130117.GH3040767@nvidia.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: CO1PR11MB4835:EE_|MW4PR11MB5910:EE_
+x-ms-office365-filtering-correlation-id: 12747bfd-aa90-4270-cbbe-08df36593a07
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|7416014|1800799024|23010399003|366016|376014|261026140227099003|4143699003|38070700021|261026130827099003|11063799006|261028144727099003|56012099006|3023799007|261021135927099003|261021121427099003|261021123027099003|261022115727099003|261022105027099003|261022113327099003|261009223027099003|261021130227099003|261026121527099003|261022075727099003|10067099003|22082099003|18002099003|6133799003;
+x-microsoft-antispam-message-info: ogTmrhSNkPSlZjFB35IcW14qQniKrbW7EJGtNOF7Jqhkx20umU7txUBiHe+iKwrqJ+wRreEqkGlB1/omCPdTSEILKy1YY6dRaIBaqxAx08QX7bTpztKEZCBM11XjA1pq2CTgEfidtdZA8GNx+jWWO61BhLxHmeDL1lvUTXuMQnlSUFRdDuWonj/WXGr/Y19c3KMh7Y5xY1uWGmIT6Cj4jzglu0D1dUqIQfO3iMS7WSsuFyomLr0McLYiVxVHzw2S4Yw2XkLFUoifLDtUnZoQN5/bHib+vRcQsDltBdXstz9AsiOvjb6QZhW6iXCp+G0hbzYqEv/ihRtgHS8PeDeUtrY/VPWbBlxkotgprnlXWYTDXF7WdW2P9opqnRWcvzAc1ufI1/AWtFNs+YpLmmcLwY+bhdMJBxd8NmjgMEKZb2kyHW9NejRBP24tHmEDve4XS9vEunRRxaFwXIM5cHqFQy9sGW201oj3S2dT6Eh+Ys+RDFd4IddsI2L+MFc7zC2hFq3Ny+FYGGNGktoWDFpiVJFDs+nR+JzeXxEjjA3rHg5JQx5qSYVJ6+ilJrbOgo+Uct7RdA40hfqaJMbk2Lf8rz4MNoUSOLdySn+I3LEYbEP0GLh7TdhdMy6mGYKDLtNf+GgpDZuXCokkr+qxdBYTi4BLsdMWCM3q+QbTwpIPIyw=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CO1PR11MB4835.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(23010399003)(366016)(376014)(261026140227099003)(4143699003)(38070700021)(261026130827099003)(11063799006)(261028144727099003)(56012099006)(3023799007)(261021135927099003)(261021121427099003)(261021123027099003)(261022115727099003)(261022105027099003)(261022113327099003)(261009223027099003)(261021130227099003)(261026121527099003)(261022075727099003)(10067099003)(22082099003)(18002099003)(6133799003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?KUO6kthG4mYxd3JTUJauyRaPjbaggDfcN8K9mBQhr6apIdvKYo72RyuJuMb/?=
+ =?us-ascii?Q?GqoIA5kigtJi84vm7KocC/7oKWRQEOffI5Zc0Hv4gPKSJorBTOELREcjBwYi?=
+ =?us-ascii?Q?a1gOZGNBUfUWonnlga5q5rWr80YYQKpsoiN7ooIJTg0gcQNcVfN7l+ujZiZh?=
+ =?us-ascii?Q?ELeomI2db7/LINblPZd88kJYDVylI/Wt1s9dVLGUv06AVgQY739uHPjn6TXB?=
+ =?us-ascii?Q?dI0qfIu8iB4/NnCRF3rXQhrc03t1zF8mdtlDZMKdWVqAEgabd4l5JbrWXAPO?=
+ =?us-ascii?Q?QRi+HB5A6GAOvaAKS1nv8Nn0aTrXjkMkKq2J3ILmi3HQFBZ2+Yq+NCoE8Usj?=
+ =?us-ascii?Q?nXKFtVlH5DYfVWutI75om2eJ89AeUttNLzYha7MEUFs5M2bXKHP444w3UTC/?=
+ =?us-ascii?Q?f/cNjgi4B4ijDylwL5IEDw+1OLjV33VpmPfdmhhohWa/BxvKxX62fLNUQOpB?=
+ =?us-ascii?Q?/an8Qd92KANIZHyrHTy/A/SbmoGnl+t4WCDusnCU6aYw0IvgrSPXlz1M2cK1?=
+ =?us-ascii?Q?fqlBdokxl4SlxchEqFJVV4jxdEbbCpHON8pkYJysznW99GmT8c4ANsma38Sz?=
+ =?us-ascii?Q?8hs1gJeoiVVZu+t8oHEQhuy8jaAvln20qElIWYdU7CxMuxBuNhurDWMK0tt0?=
+ =?us-ascii?Q?IvurPldC4E+aTsumY0qKPbKDMFIfO3z4ouw9k1CIULNQj/oxn2tNm3B8ZLXV?=
+ =?us-ascii?Q?3WhduALfTY7pGM4D22/lRoOeiJP7NZBij9p+ATLkS4+AxTjbHdWs6SjfsFBx?=
+ =?us-ascii?Q?Ot7VJ79npC750ISMXa7Oswnz/OHVo/zlEFGeJPA3z80K9SI2kJWcvctRzo+i?=
+ =?us-ascii?Q?Bhf6Un+OaRXEU41PSPbzRg7dwByZ8ygqCweNuyYvJyZM0FtSNc5rcSkjhdfW?=
+ =?us-ascii?Q?RXawaw1/v7SjTMfKVNin3xH5uctVtHeWd6/jiMMIC4+M2DyXmqa5z/KWKlJ5?=
+ =?us-ascii?Q?wT+WeVrQ6JOjtCyF0nQJWoBtbGN0NVBD4jC84sLOXhFT5jqar8Aot5c06ZeZ?=
+ =?us-ascii?Q?5OMHGqE/mh10ZdDy2WuxRKycemt6SFcMpFXg6EHQIzEUR6XeGcM9qdLEMxpS?=
+ =?us-ascii?Q?7Kzc99jGqJSbU8X1YW5H+n+vwrtBNelnpieFMZ8MtsNkr9qD88gLVHi1erK+?=
+ =?us-ascii?Q?8KFsHZjAAsc80jqq/1y8PDpHIJWHJtd5FFEEZ1C19UNOJMBIY8MlEbkES2xq?=
+ =?us-ascii?Q?ZuJnO4ugUnerpKEbVe+pUumJ/HLreyNntMTo4IluAxoiAN6tnWopYS0TonHd?=
+ =?us-ascii?Q?OSQYxiPSHHTLW0DywLmzogczBSG1+dGq0tHSvLSxhLs/MY73ICoeYCWPgxLw?=
+ =?us-ascii?Q?sv8sTg5EIPCgU/oKJauaULAitEWNxRAE1zzRHkrC/nvzNrGv4lBoEUK/02s0?=
+ =?us-ascii?Q?oewdSJCoGQiQ7NBGcMeJ2XiKzY2CZDNY5aWjAe7aAjavZyUrwvYYFXtpoj/i?=
+ =?us-ascii?Q?C4QwgdmsDGnEQz0tzDeXl3brdg2f2QTRoEMdmzzpHFplzs0lwVvRIGssv1GZ?=
+ =?us-ascii?Q?Y9SblOF6Ge+4FhQt3ihMS0AReby49cqGiDNmgGlCd5nh9RDwiVASsa7yEF1d?=
+ =?us-ascii?Q?uEjjV1V9BtIwnF/AboOL/1mOk7jyTj0wgcE0CDzOtOHm0i81+5okKtFY/E/R?=
+ =?us-ascii?Q?UXz57ACm7bxxk1tcHWRJiXCsOa6cVnfbZLNM8kNttb0bxW2sflAK7fOhn6DA?=
+ =?us-ascii?Q?5DRUw9NDoAEYkOhuM7C1VSN/rY3KBg0dwXhhB6cHlnDsgyAqZxz0v+c7Iogp?=
+ =?us-ascii?Q?ycW89BPi+A=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -104,251 +196,167 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL0PR12MB2370:EE_|SJ0PR12MB6854:EE_
-X-MS-Office365-Filtering-Correlation-Id: c0f0fcb0-75bd-4b03-9aa9-08df3653be71
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|7416014|1800799024|366016|260925022911599003|260925021911599003|260925021311599003|4143699003|5023799004|11063799006|56012099006|261009223027099003|261026140227099003|261026121527099003|261028144727099003|261021123027099003|261021121427099003|261022105027099003|261022075727099003|10067099003|22082099003|18002099003|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	dfC9xkFKp6uZSoeC7QZwKuYlJfbrciAISeh+wnJ3GRnocHwj06zmcoCeKkz65/zqcyfgBeWpyWQ71XNzORTOhYBRmRd/hQhn1C2BMf2D9dRLEPUT+mZZAcTt0nsvr1mWs2/Pfe0BTQoNv39I24lc1J44TrxsB7KOrdVsl8sWcjw/B5v+MVyX+dwdd5mekk3Ga1gi5PeRu755YKuboY3oW1tLv5QfSxe3aUmaaLmoSeiHNI9ZFOeJRmlPIA7THjdSaZL+InZCssBxJGi78F+ZSQugkBX0VoygWt9lVhNOG3sXpMUYVjfOnARpaV7MQaKAfNX5k2CILODGeiMrkAtQRcz+wEzSvvFg1CiIvMegTnUzV7em//JVHoqlysNkei5EaFRYP+ZPHqyfASichi/79o2QwZusCUiHT8B/6jOEPcAwqeI/NKUxkW2/zHx8b7EGjMfIDiUS6wP14wkkTQZsd1dJ87V1j9OOIAXuZ3zydnhEGr5Qp0g3Vc+KORHpLRWPRGQQ5e8UmKGifNueL7/c5VFNFUkA4IJwUvt+zEk02T32NMPe1qQrnntHorZZkj9ejCIQ08JRp+6ftF2bawi/CNK5nBTWHmvelrc878Eo6cqxVj2YF1bBpbtJFKUMonuefxMr8izdQeDqULp3HUHinmavv6M4ZzeZk93sbTBz/Zg=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB2370.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(1800799024)(366016)(260925022911599003)(260925021911599003)(260925021311599003)(4143699003)(5023799004)(11063799006)(56012099006)(261009223027099003)(261026140227099003)(261026121527099003)(261028144727099003)(261021123027099003)(261021121427099003)(261022105027099003)(261022075727099003)(10067099003)(22082099003)(18002099003)(6133799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?6MTnYO4f+LGcgYPssn+9NzQf3BdBHFmVvdqcBj8mkTVAi4vYKnse5W01V0p5?=
- =?us-ascii?Q?7NOsac4aM+CY4fVtuWHhHwr7Q6EE1Ak6WHfNgpn882jk3SsRo/cswwSMB8Mf?=
- =?us-ascii?Q?RXcNAwqqOejCI3veoRKAI6MN8qjXlk/qAX3EkWDRjquASkjudhYWeTm6UneL?=
- =?us-ascii?Q?2PybK+9zU9n0fya4cNm9xLvZJPhn3TsvkM9mYf5+fyq6egTpm5CH3gOOKIqW?=
- =?us-ascii?Q?3Ux2JO9fFks6uxEmtKmXHqgKJ7pqj5D9kEw7snObLDESc7HPJPaEgruu3KdQ?=
- =?us-ascii?Q?q9bKK+b35NcTh2zIbD2FC9kUwJbjkxiiWyDyxbc3xeuNDFn07xRNz6n9WAYI?=
- =?us-ascii?Q?GDdqVfpCG4EsfiT8A98ENXVLn6004A482e2zEYAZM1dkX/KsECvrOldVXkhk?=
- =?us-ascii?Q?x7926lgpBQ+y5B9/riqai10hNFN0nGm+k9Khdqi1HwMAJiIjD7E3OYd510oT?=
- =?us-ascii?Q?SG5qdesRbnR+ZbfOlBPVOd/YQ+mKIyz/YuKWNMm2XpXqlgsrS1VCu3jnk+cS?=
- =?us-ascii?Q?85AxPpeiNO/uyqPeXQ9+AMMu0Vzvzxpe+y+FmytoQUl7u8hUzId0Fa+37GZ4?=
- =?us-ascii?Q?HnmGYVqnK27jLCl/O1C9ktBMZYlMhPmXOqNajbROvflI0qAH4ZQ2Yca3y/Lo?=
- =?us-ascii?Q?2fAgujM5eRczePR24BWDRTYCOjZsimG5Rc0MIZr6XTUBwBCWqThUTu9NW+DQ?=
- =?us-ascii?Q?TjSd0ZM8LyJdzp9kPCyCP61w1ZjaVJhvqw/7UaIrMTTMlqULD4bMC5oGP79l?=
- =?us-ascii?Q?zMijcsN3caqWmPVBmcDvwX75NBZb+e94DNy0Csc8DsWaS0apkyQ7vE9GkOEH?=
- =?us-ascii?Q?br63+9rUNAUjdGgkqkmvTfVZn0pnNX92CFBoXyW2FmgA4c4ipH0wHpHCXeAh?=
- =?us-ascii?Q?VAQ13uGzZOVw0jFj8IA3fAnh2hJwsBxo+sPUTcqinQlidKNEz0vfm/cDK0g4?=
- =?us-ascii?Q?ypOg2XyvdpCBhnLAvN/QHRakwri57h8XsMeSkHlHXVu+WwgmjIESuPW5j819?=
- =?us-ascii?Q?20TzVeqvaxwm3r/GZMSGaMiLlZuG1a/rR7yFQNu7nXhGGVB+1fpEQD9zaM+o?=
- =?us-ascii?Q?1l0Tlekw0v0NWHhYsOz1vsHUYUnQkUsJ+mQWy9nFiDN6wPLULr5koXjHV39E?=
- =?us-ascii?Q?RoSpjW4rhohVQMLDx3Cz40heYfwMIehWvw0F1xK6uXCRzQRq4pgrye034XiG?=
- =?us-ascii?Q?atPpGA3sbaW2FyUS+Bcb4o26NY0PlYMzwZ8uNze/eoZp/nd/hfvSW5DJC2mB?=
- =?us-ascii?Q?uG2zsThXqihrSuj1sb4jUXDVviNCdqhewQPulCznQE5exRSSL26tm7egTHxm?=
- =?us-ascii?Q?zaTLTj+5WLSCL/nVOOfGgT4ZlJGrrMvhKAyRLE2xlhBjDA6YoHnJvg2y8ifX?=
- =?us-ascii?Q?zqYHUSRUj3/oJIo5MpTZz5kFAefafttvfSZdDCUFbI/aQpibe4EDzcFtXgV4?=
- =?us-ascii?Q?7qZSyIC4sY/sj0jQddgQEkTgYWUyOUkGxIMQdE9jlVDdd4DtMDobDDrh4loF?=
- =?us-ascii?Q?28t7Mi6B2N11fGJ2JmJDjLeer1KiXDJ9USFBUzna3QCThe1zlYq86YVELctT?=
- =?us-ascii?Q?bJRFj+yeuHYftFTarIW4OL2btfvLMfRQyi91F4JNA744KT8++ylyywo1e+BR?=
- =?us-ascii?Q?p4jZBaViXeaUIRBRJrDrOGGDIijgnthNOV9If02YgORuchhhIPDsKfbzy6IM?=
- =?us-ascii?Q?VJkitdRjGUJd5SWpm0Bw4f+8ER4R1NnI3NAm2FssWG8BFIRSr01ScZCVx1NW?=
- =?us-ascii?Q?elaZuCmj7Q=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c0f0fcb0-75bd-4b03-9aa9-08df3653be71
-X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB2370.namprd12.prod.outlook.com
+X-Exchange-RoutingPolicyChecked: 0wzsDmfhTX7cShrk6qolmuPvgOd4L7vN4IBLhSD7/REJaxBie5Z6CTsX+HS0DtDLk+J49M0FLXo00Q+W9Snmv5ctZg8fDyj4WFmEL1DmxSsHRIqYK5Yw0zFCiv0mcaAu5Use7oguEhf0xqwJh0UVqPgszWBOHjwbH3gb27u4eTTIBd9g+JuOrATgV0P+CAjw8jYz7NmM/yGKVWCxxvuuSFHE+4Yc/vcWfWTd9ch6Xrz6HiXbTVe2mj6EdrhzoErDtUuyS7Ew5Ax0u/KHdDMFBabe1shxEXqNSxl+dLf3ZOjCUwomOL3HWxsVB1FEQo6IlB8U2pVbn2bz/wGuJ4H5kw==
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Oct 2026 07:02:21.8466
+X-MS-Exchange-CrossTenant-AuthSource: CO1PR11MB4835.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 12747bfd-aa90-4270-cbbe-08df36593a07
+X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Oct 2026 07:41:36.2524
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: yqLxK3AVwscJHyEEyFA29IOEgimCnveWZbwx4VSm2wiGOVqrpYl5kzRX48vSwRoGwaF3bKmgZIuJ9w6HogAxVg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR12MB6854
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: q8vpM9GeVXOfZKkUsJdJ89rycxnu7e96gT1q1sZrZIGSLBLviIlTmIn0SiL4lBuckcOpvT7d5IF/pUYTPec/xw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR11MB5910
+X-OriginatorOrg: intel.com
 
-On Thu, Oct 29, 2026 at 02:56:55PM +0800, Srirangan Madhavan wrote:
-> Build register discovery with the built-in HDM helpers so PCI enumeration
-> can use it even when cxl_core is modular. Export the interfaces used by
-> cxl_core and preserve the BAR and offset in the register map.
-> 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> From: Jason Gunthorpe <jgg@nvidia.com>
+> Sent: Thursday, October 29, 2026 9:01 PM
+>=20
+> On Thu, Oct 29, 2026 at 03:07:34PM +0530, Aneesh Kumar K.V wrote:
+> > Jason Gunthorpe <jgg@nvidia.com> writes:
+> >
+> > >> [ ... 300 lines skipped ... ]
+> > >> +/**
+> > >> + * enum iommu_vdevice_tsm_guest_req_op - Guest TSM request
+> operations
+> > >> + * @TSM_REQ_VALIDATE_MMIO: Validate and map a guest MMIO range
+> for the trusted
+> > >> + *                         device.
+> > >> + * @TSM_REQ_SET_TDI_STATE: Transition the trusted device to the
+> unlocked,
+> > >> + *                         locked, or running state.
+> > >> + * @TSM_REQ_SEV_ENABLE_DMA: Enable DMA for an SEV device.
+> > >> + * @TSM_REQ_SEV_DISABLE_DMA: Disable DMA for an SEV device.
+> > >> + * @TSM_REQ_READ_OBJECT: Read bytes from a device object, such as a
+> certificate,
+> > >> + *                       measurement, or interface report.
+> > >> + * @TSM_REQ_REGEN_OBJECT: Regenerate a device object, such as a
+> measurement or
+> > >> + *                        interface report.
+> > >> + * @TSM_REQ_OBJECT_INFO: Query the size of a device object.
+> > >> + * @TSM_REQ_MAX: One past the last request operation; not a
+> command.
+> > >> + *
+> > >> + * The request payload and response format depend on the TVM
+> architecture.
+> > >> + */
+> > >> +enum iommu_vdevice_tsm_guest_req_op {
+> > >> +	TSM_REQ_VALIDATE_MMIO =3D 1,
+> > >> +	TSM_REQ_SET_TDI_STATE,
+> > >> +	TSM_REQ_SEV_ENABLE_DMA,
+> > >> +	TSM_REQ_SEV_DISABLE_DMA,
+> > >> +	TSM_REQ_READ_OBJECT,
+> > >> +	TSM_REQ_REGEN_OBJECT,
+> > >> +	TSM_REQ_OBJECT_INFO,
+> > >> +	TSM_REQ_MAX,
+> > >> +};
+> > >
+> > > This is still no where close to being well defined enough.
+> > >
+> > > Everything here must tie back to defined spec references, listed in
+> > > the comments.
+> > >
+> > > I cannot guess what data is passed over any of these APIs, how things
+> > > like "REGEN_OBJECT" select which object to regen, or what the format
+> > > of those objects even is. The formats of req/resp are never specified=
+.
+> > >
+> >
+> > The request and response payload formats are specific to each CoCo
+> > backend. Since iommufd treats the payloads as opaque and does not
+> > validate their contents, what would documenting those formats here
+> > achieve?
+>=20
+> Well if thats the case then no, this is entirely inappropriate.
+>=20
+> iommufd requires every single struct to be documented and
+> described. We do not do undocumented opaque structs into drivers.
+>=20
+> So figure out exactly what needs to flow here, give it driver specific
+> names for driver specific content and document everything.
+>=20
+> This should be done patch by patch as the drivers implement their
+> stuff.
 
-Reviewed-by: Richard Cheng <icheng@nvidia.com>
+some could still be generalized, e.g. setting the TDI state. There
+doesn't sound a good reason to have vendor specific format for
+that.
 
-> ---
->  drivers/cxl/core/Makefile |  3 +--
->  drivers/cxl/core/regs.c   |  9 +++++++++
->  drivers/cxl/cxl.h         |  3 ---
->  include/cxl/cxl.h         |  6 ++++++
->  include/cxl/pci.h         | 13 +++++++++++++
->  tools/testing/cxl/Kbuild  |  1 -
->  6 files changed, 29 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
-> index 9971efb237fb..9a77e68d44ce 100644
-> --- a/drivers/cxl/core/Makefile
-> +++ b/drivers/cxl/core/Makefile
-> @@ -1,6 +1,6 @@
->  # SPDX-License-Identifier: GPL-2.0
->  obj-$(CONFIG_CXL_BUS) += cxl_core.o
-> -obj-$(subst m,y,$(CONFIG_CXL_BUS)) += hdm_regs.o hdm_state.o
-> +obj-$(subst m,y,$(CONFIG_CXL_BUS)) += hdm_regs.o hdm_state.o regs.o
->  obj-$(CONFIG_CXL_SUSPEND) += suspend.o
->  
->  ccflags-y += -I$(srctree)/drivers/cxl
-> @@ -8,7 +8,6 @@ CFLAGS_trace.o = -DTRACE_INCLUDE_PATH=. -I$(src)
->  
->  cxl_core-y := port.o
->  cxl_core-y += pmem.o
-> -cxl_core-y += regs.o
->  cxl_core-y += memdev.o
->  cxl_core-y += mbox.o
->  cxl_core-y += pci.o
-> diff --git a/drivers/cxl/core/regs.c b/drivers/cxl/core/regs.c
-> index 20c2d9fbcfe7..def3c20d1a7a 100644
-> --- a/drivers/cxl/core/regs.c
-> +++ b/drivers/cxl/core/regs.c
-> @@ -200,6 +200,7 @@ void __iomem *devm_cxl_iomap_block(struct device *dev, resource_size_t addr,
->  
->  	return ret_val;
->  }
-> +EXPORT_SYMBOL_FOR_MODULES(devm_cxl_iomap_block, "cxl_core");
->  
->  int cxl_map_component_regs(const struct cxl_register_map *map,
->  			   struct cxl_component_regs *regs,
-> @@ -285,6 +286,8 @@ static bool cxl_decode_regblock(struct pci_dev *pdev, u32 reg_lo, u32 reg_hi,
->  	}
->  
->  	map->reg_type = reg_type;
-> +	map->bar = bar;
-> +	map->bar_offset = offset;
->  	map->resource = pci_resource_start(pdev, bar) + offset;
->  	map->max_size = pci_resource_len(pdev, bar) - offset;
->  	return true;
-> @@ -309,6 +312,7 @@ static int __cxl_find_regblock_instance(struct pci_dev *pdev, enum cxl_regloc_ty
->  	*map = (struct cxl_register_map) {
->  		.host = &pdev->dev,
->  		.resource = CXL_RESOURCE_NONE,
-> +		.bar = -1,
->  	};
->  
->  	regloc = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-> @@ -339,6 +343,8 @@ static int __cxl_find_regblock_instance(struct pci_dev *pdev, enum cxl_regloc_ty
->  	}
->  
->  	map->resource = CXL_RESOURCE_NONE;
-> +	map->bar = -1;
-> +	map->bar_offset = 0;
->  	if (index == CXL_INSTANCES_COUNT)
->  		return instance;
->  
-> @@ -518,6 +524,7 @@ u16 cxl_rcrb_to_aer(struct device *dev, resource_size_t rcrb)
->  
->  	return offset;
->  }
-> +EXPORT_SYMBOL_NS_GPL(cxl_rcrb_to_aer, "CXL");
->  
->  static resource_size_t cxl_rcrb_to_linkcap(struct device *dev, struct cxl_dport *dport)
->  {
-> @@ -634,6 +641,7 @@ resource_size_t __rcrb_to_component(struct device *dev, struct cxl_rcrb_info *ri
->  
->  	return component_reg_phys;
->  }
-> +EXPORT_SYMBOL_NS_GPL(__rcrb_to_component, "CXL");
->  
->  resource_size_t cxl_rcd_component_reg_phys(struct device *dev,
->  					   struct cxl_dport *dport)
-> @@ -642,3 +650,4 @@ resource_size_t cxl_rcd_component_reg_phys(struct device *dev,
->  		return CXL_RESOURCE_NONE;
->  	return __rcrb_to_component(dev, &dport->rcrb, CXL_RCRB_UPSTREAM);
->  }
-> +EXPORT_SYMBOL_NS_GPL(cxl_rcd_component_reg_phys, "CXL");
-> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-> index 688350c7c5fb..ad4e80be2bd7 100644
-> --- a/drivers/cxl/cxl.h
-> +++ b/drivers/cxl/cxl.h
-> @@ -239,9 +239,6 @@ enum cxl_regloc_type;
->  int cxl_count_regblock(struct pci_dev *pdev, enum cxl_regloc_type type);
->  int cxl_find_regblock_instance(struct pci_dev *pdev, enum cxl_regloc_type type,
->  			       struct cxl_register_map *map, unsigned int index);
-> -int cxl_find_regblock(struct pci_dev *pdev, enum cxl_regloc_type type,
-> -		      struct cxl_register_map *map);
-> -int cxl_setup_regs(struct cxl_register_map *map);
->  struct cxl_dport;
->  int cxl_dport_map_rcd_linkcap(struct pci_dev *pdev, struct cxl_dport *dport);
->  
-> diff --git a/include/cxl/cxl.h b/include/cxl/cxl.h
-> index 341a7c52894a..206acf5845e1 100644
-> --- a/include/cxl/cxl.h
-> +++ b/include/cxl/cxl.h
-> @@ -27,6 +27,7 @@ enum cxl_devtype {
->  
->  struct cxl_region;
->  struct cxl_hdm_info;
-> +struct pci_dev;
->  
->  enum cxl_decoder_type {
->  	CXL_DECODER_DEVMEM = 2,
-> @@ -150,6 +151,8 @@ struct cxl_pmu_reg_map {
->   * @base: virtual base of the register-block-BAR + @block_offset
->   * @resource: physical resource base of the register block
->   * @max_size: maximum mapping size to perform register search
-> + * @bar: PCI BAR containing the register block
-> + * @bar_offset: register block offset relative to @bar
->   * @reg_type: see enum cxl_regloc_type
->   * @component_map: cxl_reg_map for component registers
->   * @device_map: cxl_reg_maps for device registers
-> @@ -160,6 +163,8 @@ struct cxl_register_map {
->  	void __iomem *base;
->  	resource_size_t resource;
->  	resource_size_t max_size;
-> +	int bar;
-> +	resource_size_t bar_offset;
->  	u8 reg_type;
->  	union {
->  		struct cxl_component_reg_map component_map;
-> @@ -168,6 +173,7 @@ struct cxl_register_map {
->  	};
->  };
->  
-> +
->  /**
->   * struct cxl_dpa_perf - DPA performance property entry
->   * @dpa_range: range for DPA address
-> diff --git a/include/cxl/pci.h b/include/cxl/pci.h
-> index 3e0000015871..b15d7e415e27 100644
-> --- a/include/cxl/pci.h
-> +++ b/include/cxl/pci.h
-> @@ -4,6 +4,8 @@
->  #ifndef __CXL_CXL_PCI_H__
->  #define __CXL_CXL_PCI_H__
->  
-> +#include <linux/types.h>
-> +
->  /* Register Block Identifier (RBI) */
->  enum cxl_regloc_type {
->  	CXL_REGLOC_RBI_EMPTY = 0,
-> @@ -19,4 +21,15 @@ struct pci_dev;
->  
->  int cxl_pci_setup_regs(struct pci_dev *pdev, enum cxl_regloc_type type,
->  		       struct cxl_register_map *map);
-> +int cxl_find_regblock(struct pci_dev *pdev, enum cxl_regloc_type type,
-> +		      struct cxl_register_map *map);
-> +int cxl_setup_regs(struct cxl_register_map *map);
-> +/*
-> + * CXL r4.0 sec 8.1.3.1: a CXL.mem capable device reports one or two HDM
-> + * ranges. 00b is illegal when Mem_Capable is set and 11b is reserved.
-> + */
-> +static inline bool cxl_dvsec_hdm_count_valid(unsigned int hdm_count)
-> +{
-> +	return hdm_count == 1 || hdm_count == 2;
-> +}
->  #endif
-> diff --git a/tools/testing/cxl/Kbuild b/tools/testing/cxl/Kbuild
-> index 2be1df80fcc9..e80500f457a9 100644
-> --- a/tools/testing/cxl/Kbuild
-> +++ b/tools/testing/cxl/Kbuild
-> @@ -55,7 +55,6 @@ obj-m += cxl_core.o
->  
->  cxl_core-y := $(CXL_CORE_SRC)/port.o
->  cxl_core-y += $(CXL_CORE_SRC)/pmem.o
-> -cxl_core-y += $(CXL_CORE_SRC)/regs.o
->  cxl_core-y += $(CXL_CORE_SRC)/memdev.o
->  cxl_core-y += $(CXL_CORE_SRC)/mbox.o
->  cxl_core-y += $(CXL_CORE_SRC)/pci.o
-> -- 
-> 2.43.0
-> 
+Then if your suggestion of using the attestation subsystem here
+can work, those OBJECT related operations are generalized too.
+
+In the end the set of vendor specific definition here might be small.
+
+> > > My guesses with no information
+> > > 1) VALIDATE_MMIO why would the hypervisor ever need this? Guest
+> > >    validates MMIO through secure communication to the secure world.
+> > >
+> >
+> > With VFIO PCI BARs backed by guest_memfd, the VMM can validate that the
+> > IPA and PA values provided by the guest belong to the VFIO device.
+>=20
+> Why? Who cares? It isn't a trusted validation, and there is a RSI that
+> duplicates this?
+
+TDX doesn't require this. It's a guest call directly to the secure world.
+
+>=20
+> > We previously also used this operation to ask the CoCo TSM backend
+> > to map the device memory (the BAR regions). I have removed this
+> > operation from the latest series because that responsibility is now
+> > split between the VMM and guest_memfd. TDX and SNP still need to be
+> > updated accordingly.
+>=20
+> Right, it should happen automatically as part of lock.
+>=20
+> > > 2) TDI_STATE I thought at least RMM did this with an RSI?
+> >
+> > CCA uses RHI. The RHI reaches the VMM, which issues the ioctl to
+> > complete the request.
+
+same for TDX, using GHCI to reach the VMM.
+
+>=20
+> And then the seq numbers check that this went through OK?
+
+which seq numbers in your mind?
+
+>=20
+> > > 3) ENABLE/DISABLE DMA, see #1, must not be done by hypervisor
+> > >    See my reply to Alexey:
+> > >    https://lore.kernel.org/linux-
+> iommu/20261022123058.GC3008132@nvidia.com/
+
+Not required by TDX.=20
+
+> > >
+> > > 4) READ/REGEN/INFO, what are the objects? What format are they in? Ho=
+w
+> > >    do you select them?
+> >
+> > These objects are cached by the hypervisor. For CCA, they include the
+> > certificate, measurement, interface report, and VCA. They are read in
+> > response to guest requests. The requests reach the VMM through an
+> > RHI, and the VMM issues the ioctl to read the requested object. REGEN
+> > refreshes the objects/evidence at the guest's request.
+>=20
+> > >    Does this overlap with attestation subsystem? Should attestation
+> > >    subsystem be used to access the SPDM related data?
+> > >
+> >
+> >
+> > I had hoped we could use it, but I could not find an easy way to
+> > integrate the two. We need a simple way to read these evidence objects
+> > into userspace. I am not yet sure whether evidence-get can be used for
+> > that, since it does more than simply read the objects; it also updates
+> > evidence.generation, among other things.
+>=20
+> It should not do that, the generation has to follow the locked state,
+> not the evidence collection.. See my remark to Dave
+>=20
+> I think the bigger issue was it had to use the VDEV flavour not the
+> PDEV flavor of RMM commands, and it isn't obvious how we switch from
+> PDEV to VDEV mode on the hypervisor..
+
+Can you elaborate this part in a general way? Want to better understand it
+in the TDX context...
