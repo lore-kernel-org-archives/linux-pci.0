@@ -1,56 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793380666;
-	b=nRuXSNzhRdlrIb4WsvSAsjCB8QUdw620WJ8mM2nwczi7m4kj1yIvpZkoEC6tCx7VBSA2
-	 oB0Lu6S4E7QibcrR6vW87z5+83GV9kBUJQOYhugE1Scy4HHEL4myUZmGz9BfpHqZbW6vg
-	 zSHDCLyPgrSDe0DTkOa6VpNH+K33YKBShA8RMWYGDPjFjuxM5zBNEGalqUEPfB1PwRXgW
-	 6eMFZPVpAAP35wUUnyq0OOztN1MmHvO4O7SGHq5++uZ762zV2xlffjh5DCbAsrILfd9Us
-	 ptMTVLvs7QdynSzHZCxJaYuduwCpgUyuhTK+obgo1ZgykBDSAboT9A68udaEaGyOCYA==
+	t=1793380863;
+	b=uKmLg9u9yIUXci6T2AFTvgnetZRr5WtdxhBGn2UQ8A/4kadRR8SEHqq3PGBNFOWyXaxV
+	 T8iSgGAQEd8zNhneeInEH66lz+zeisPhIXMHL636bVUpifRyfDm+GFZzqz44dqX5k5G4y
+	 5nYACJ6+FyYM7JP7aDCBK/XlfsVxKHXa2DzP2Cr0eXZLI7Ch/Yc7LfPr+MIFzy9hLH74p
+	 X2peSFzuX1VN0LhaNewuzvMo8iJGc2MiDhxg7e5uS9oXpcxRydvXoyD7SN2d5NI2dkiD/
+	 9VvENU71MYWNaMOx+8uOOCtrMH7vfDabbwlCCdw9Lb91q10gEcokMVjxG6sivS6Tk/A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793380666;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793380863;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=vqX6zQOG30c3EjV+8rAA7lJtQFQ7OyFFxMiho0c8Yks=;
-	b=s5N8DS8X1akaaa3jNekjHRHA+jN6kuLBg+qS6e4zwTIRMGs7xBaXWKNMRjSQEAbvqZTd
-	 /Ksl8UmKCxm5KSoDDZk7qK5tXGYpfjMySGkcn9X1Lr86a0ub6Yu2wWXp4KUcTf98yPvOA
-	 rbthIdjd0/lCPe6eyRI+rWv487vXZRZl+ECzJg7/44iGdWOHZlIwauU9zIBu6w1VaQrQ2
-	 u0pQchSRtm3GUVm56EHJkxdVg5t3mxeHOBuZH8zocB1eydvp40MHtz55Zb5Rv/65OwoyR
-	 p3VGNYJhdGCXm2/fog5wV7NvzGJnHjYh25xSfXDCQFbbcE9jrXRXeqmUCQVeYF1yGIw==
+	bh=3ffqIt+vlxR3qCmeJYyJcXrTpPgwHFiS9VNH/c+hjcM=;
+	b=w72vKNMscBY0sgxjx46LY+Lp7SGxCRaNxFHrXGCQuLoU3zmZ9SmKeuJkDnpakjN+IRFd
+	 TLB+bX+7wOZ2HMcOl0ti+KD1NcMVxxSRdIyEJ5T40eFpUmklVB5n5OIQkrQXKrRol/ax9
+	 fdm8sLeQX+r5E9JueED4EDioijQOfkTWpEc/wE1IswqRtfWoXolyN6Mz7of+CYe9EHW2v
+	 KieSOd//ViVBu2dy7usQNqPMtfLkBMVmwTN8LSOaR14vRoFgtyDRvbjLV4mHuiQXtgcpi
+	 St/dso6NTFNGA+ALLLftnLbIcYnLnenCG0w/WRgn4dDxJwi12tQ3K5GgI0kFUpil6Qg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VW2y2L8i;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JjVC0lGU;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDC94606A31C
-	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2026 17:17:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D2F4606A31C
+	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2026 17:21:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VW2y2L8i
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 461471F000C1;
-	Fri, 30 Oct 2026 17:17:45 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JjVC0lGU
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5AF81F000C1;
+	Fri, 30 Oct 2026 17:21:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793380665;
-	bh=vqX6zQOG30c3EjV+8rAA7lJtQFQ7OyFFxMiho0c8Yks=;
+	s=k20260515; t=1793380862;
+	bh=3ffqIt+vlxR3qCmeJYyJcXrTpPgwHFiS9VNH/c+hjcM=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=VW2y2L8iTf2skPhsO1oMm9n7sGDVsZyypNt7Ver3VZHGKNPlAqih1ZAMENfaacfrk
-	 j07KwRFU8J4P0cxKJEG6RptBO2mjvoRyFyCESz0dRq6UJPodw+Y38BMpcC5hIA5J6J
-	 8zNDsDeyK9qmOQ2Sp3oG8/T+ctGYsT7Tai0cFidVneKatNGdHIcJSHSWYgnEe+Fx06
-	 7IvkEE/0ERjov0Y3pzITbV49xFQ686uEDVySGUSIxQFu49d1qeTZLM8OAXNBRdiNRf
-	 6vd0MrMzcanHiXluXLEoJGSdlEi5woNoG7rekzn0CJ8h26vwPvNgfFJ2K2V86CdMOT
-	 iPL78eF87tbMA==
-Message-ID: <sashiko-outbox-191319@kernel.org>
+	b=JjVC0lGUAGaZauKuP9O6wbvmyRZrhDoQbNbtUEiSrWC0fw7tK4m4ZAq3oPMJhc5QR
+	 dZXZ+T9CtaLc7y0I9TPhquB+7mLIN8Q61ZdjgKXhOkeCPaNxS0aCxNiq/LoYjAA2E6
+	 pMjPkg4pmoXuPiS2VUS1jo/XxK+g+iiaOqQXnNlQxOTsXflkrnj53WSDEabkKDvRH0
+	 3RUIMBfOcKcySP8D5rjenJhLAvs6Vtl0p/aasjg4V0ntDoqXBTil1hn49Dbeo6qLni
+	 KiRv6eGArrjWfnGkXZtOBarpD5e1GHc1HkCYyrmJbX8QsgTYvXa64eD7RARsZYV0qM
+	 Gx7JXtbldRrHg==
+Message-ID: <sashiko-outbox-191324@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 2/9] rust: pci: add vtable attribute to pci::Driver
- trait
+Subject: Re: [PATCH v5 4/9] rust: pci: add num_vf(), to return number of VFs
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Simon Song" <xinmengs@nvidia.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261030171230.196717-3-xinmengs@nvidia.com>
+In-Reply-To: <20261030171230.196717-5-xinmengs@nvidia.com>
 References: <20261030171230.196717-1-xinmengs@nvidia.com>
- <20261030171230.196717-3-xinmengs@nvidia.com>
+ <20261030171230.196717-5-xinmengs@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 30 Oct 2026 17:17:44 +0000
+Date: Fri, 30 Oct 2026 17:21:02 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,11 +61,12 @@ Precedence: list
 
 > From: Peter Colberg <peter@colberg.org>
 >=20
-> Add the #[vtable] attribute to pci::Driver and its implementations to
-> support the optional sriov_enable() and sriov_disable() callbacks
-> introduced later in this series.
+> Add a method to return the number of Virtual Functions (VF) enabled for
+> a Physical Function (PF).
 >=20
-> Suggested-by: Danilo Krummrich <dakr@kernel.org>
+> Expose the query in the PCI core callback context and return u16,
+> matching the type of the VF count stored by the PCI core.
+>=20
 > Signed-off-by: Peter Colberg <peter@colberg.org>
 > Signed-off-by: Zhi Wang <zhiw@nvidia.com>
 > Signed-off-by: Simon Song <xinmengs@nvidia.com>
@@ -75,5 +75,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261030171230.1967=
-17-1-xinmengs@nvidia.com?part=3D2
+17-1-xinmengs@nvidia.com?part=3D4
 
