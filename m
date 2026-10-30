@@ -1,55 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793380863;
-	b=uKmLg9u9yIUXci6T2AFTvgnetZRr5WtdxhBGn2UQ8A/4kadRR8SEHqq3PGBNFOWyXaxV
-	 T8iSgGAQEd8zNhneeInEH66lz+zeisPhIXMHL636bVUpifRyfDm+GFZzqz44dqX5k5G4y
-	 5nYACJ6+FyYM7JP7aDCBK/XlfsVxKHXa2DzP2Cr0eXZLI7Ch/Yc7LfPr+MIFzy9hLH74p
-	 X2peSFzuX1VN0LhaNewuzvMo8iJGc2MiDhxg7e5uS9oXpcxRydvXoyD7SN2d5NI2dkiD/
-	 9VvENU71MYWNaMOx+8uOOCtrMH7vfDabbwlCCdw9Lb91q10gEcokMVjxG6sivS6Tk/A==
+	b=OQOOzj3wCcxdBnhcPsSqbwcCx91g+snJkMdyBfvUaToILjdFw3e96Z9hKsMGkBXkBf2t
+	 r/Tf31xSbsdHoPkZxljuF29LkaPiJ5hWrZQvD9hRxxoh6Wis4h9qGy2fCIphbfNG68JHJ
+	 FZ9cAkjFwkGUBNl+N7ZaepzRFs9yX2hj5IcTFNZpZ1eEvBOkqstLLSqqofafv7JpGTZ/J
+	 FjS9iAsANT81MiEh7BG0+2OEe+tG8+Pl+ovaWmxZIAwdjWIrOiA5GCzvaIDVYiTwwLSNe
+	 a5Hne3m0ZdHAq8fnPK/UETi3gJGXv3RaSIXKnMBODltQnOP+Biw0eRUQqI36Qmvuheg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793380863;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=3ffqIt+vlxR3qCmeJYyJcXrTpPgwHFiS9VNH/c+hjcM=;
-	b=w72vKNMscBY0sgxjx46LY+Lp7SGxCRaNxFHrXGCQuLoU3zmZ9SmKeuJkDnpakjN+IRFd
-	 TLB+bX+7wOZ2HMcOl0ti+KD1NcMVxxSRdIyEJ5T40eFpUmklVB5n5OIQkrQXKrRol/ax9
-	 fdm8sLeQX+r5E9JueED4EDioijQOfkTWpEc/wE1IswqRtfWoXolyN6Mz7of+CYe9EHW2v
-	 KieSOd//ViVBu2dy7usQNqPMtfLkBMVmwTN8LSOaR14vRoFgtyDRvbjLV4mHuiQXtgcpi
-	 St/dso6NTFNGA+ALLLftnLbIcYnLnenCG0w/WRgn4dDxJwi12tQ3K5GgI0kFUpil6Qg==
+	bh=Xw++z2bWKsuKUWAjFjfbRWQ9JTz0TTozbnWJhhbnsNU=;
+	b=vsJ7AKC3jaw+LM7tRmKC7pmKxboaWEwt6I3s4gSZWzd95U0925WOKLX3w3eGBumx2Tzg
+	 Tj6uS3zfop3kZNDwuaO2CN8Gqk6+V40roqVopQasQkQf6AXvc/XCfZcUxWrK8m7hOeCGn
+	 O4qt/pZLqPaxRz0vYfQimU0oFB83sN3jn/oOIfoZbKn+7344ftInIxBfY3E5P04gIsgwU
+	 ozycNFF/n+LtCYA0tZYBhBXpVYMUk1lj77QEoXf9wTAMPRfroL9qF1OzGaDGqfR/CLONX
+	 u0U1Aj3fZp4R0FGH0joK1WpnQQj13F3X+Ce5UTvXHsIy7kh2zPkbqs1mecluqQbVuig==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JjVC0lGU;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=g+DARjqw;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D2F4606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A10AF606A31D
 	for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2026 17:21:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JjVC0lGU
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5AF81F000C1;
-	Fri, 30 Oct 2026 17:21:02 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=g+DARjqw
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58AE51F0093A;
+	Fri, 30 Oct 2026 17:21:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793380862;
-	bh=3ffqIt+vlxR3qCmeJYyJcXrTpPgwHFiS9VNH/c+hjcM=;
+	s=k20260515; t=1793380863;
+	bh=Xw++z2bWKsuKUWAjFjfbRWQ9JTz0TTozbnWJhhbnsNU=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=JjVC0lGUAGaZauKuP9O6wbvmyRZrhDoQbNbtUEiSrWC0fw7tK4m4ZAq3oPMJhc5QR
-	 dZXZ+T9CtaLc7y0I9TPhquB+7mLIN8Q61ZdjgKXhOkeCPaNxS0aCxNiq/LoYjAA2E6
-	 pMjPkg4pmoXuPiS2VUS1jo/XxK+g+iiaOqQXnNlQxOTsXflkrnj53WSDEabkKDvRH0
-	 3RUIMBfOcKcySP8D5rjenJhLAvs6Vtl0p/aasjg4V0ntDoqXBTil1hn49Dbeo6qLni
-	 KiRv6eGArrjWfnGkXZtOBarpD5e1GHc1HkCYyrmJbX8QsgTYvXa64eD7RARsZYV0qM
-	 Gx7JXtbldRrHg==
-Message-ID: <sashiko-outbox-191324@kernel.org>
+	b=g+DARjqwDxycgulgu04Y5EiANk7TYysqi3Xgl8765Saiq2JoSbH5CnRdgB61F86l4
+	 YBj3ppl/t/Bru3zXWR6BAPcZ9V+kFTMtCyaUBUehJDNsXbzx+gmecxykjkgl04xHIU
+	 /kxVv4ucuQaMd+zp0efBpbbNVvnm8QvEp+sbmbmonkMlrZkEvz+1zA6ohp2eOJVMSc
+	 npOdvqqUPaue3E0czbZmRuICiYc+kGSgfagm4S9DB0uTBPm/rfXebvzt3URrsruEX9
+	 IA42ChSksiqUX657CGc8bGX5+4ANP8j5nyixOeJvwJ42IbjNEJwCKeYzCBYme2wooi
+	 JdHP0HBmfTkAw==
+Message-ID: <sashiko-outbox-191325@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 4/9] rust: pci: add num_vf(), to return number of VFs
+Subject: Re: [PATCH v5 5/9] rust: pci: drop driver data before remove
+ returns
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Simon Song" <xinmengs@nvidia.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261030171230.196717-5-xinmengs@nvidia.com>
+In-Reply-To: <20261030171230.196717-6-xinmengs@nvidia.com>
 References: <20261030171230.196717-1-xinmengs@nvidia.com>
- <20261030171230.196717-5-xinmengs@nvidia.com>
+ <20261030171230.196717-6-xinmengs@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 30 Oct 2026 17:21:02 +0000
+Date: Fri, 30 Oct 2026 17:21:03 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,15 +60,16 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> From: Peter Colberg <peter@colberg.org>
+> From: Zhi Wang <zhiw@nvidia.com>
 >=20
-> Add a method to return the number of Virtual Functions (VF) enabled for
-> a Physical Function (PF).
+> Drop PCI private data before the remove callback returns, so its
+> destructors run within PCI core's removal context.
 >=20
-> Expose the query in the PCI core callback context and return u16,
-> matching the type of the VF count stored by the PCI core.
+> Call unbind while private data remains installed, then take and release
+> the data. Taking it clears drvdata, so post_unbind does not release it
+> again. All borrows must end before the data is removed.
 >=20
-> Signed-off-by: Peter Colberg <peter@colberg.org>
+> Suggested-by: Danilo Krummrich <dakr@kernel.org>
 > Signed-off-by: Zhi Wang <zhiw@nvidia.com>
 > Signed-off-by: Simon Song <xinmengs@nvidia.com>
 
@@ -75,5 +77,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261030171230.1967=
-17-1-xinmengs@nvidia.com?part=3D4
+17-1-xinmengs@nvidia.com?part=3D5
 
