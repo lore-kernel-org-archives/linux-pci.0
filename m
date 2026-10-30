@@ -1,100 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.62.0
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793349499;
-	b=bEO8z2zQmiB8zpWLeNwkO2tBVUchvBDJ5UWFHVqWNLjzxUFoYrzGrFspgZbUdnbbchWG
-	 yJLTKbs8XGT5bfGsNg6hrMqQm473A/8tMraAZQJbO+3wtEymxa2/QfqxHBcSCupXU2MBL
-	 QFrSw5gSntTOCIyWqwv0n/96C84jGrkhqdvbPrzdCOLif3dEvHdvmWzhmP1anZyqOnT6D
-	 ap4kFcU3mWfhGVrOzcPsrwh3/8PZAUijtCVUxZucOR0MmNwqH6VH0pOvWu+wsNBZ3QrQE
-	 1swLXjPkXan6x8PCVJfLnsBCBZbrn8vcACfJibVpRDX8DrduqACacuZ8Ta0uqqeTBWQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793349499;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:Content-Type:Content-Disposition:
-	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=kSJ2bzk0G3jjCkWkJf1+zSUor+YkNxMPIfKZygUQytc=;
-	b=C1uZfX+WWZih5LcWotIM3vEidLurHlwOGazepcegPxOr1tzZF+e28ax1X4JSQ2wCc3CF
-	 ecy9KFccJ1b4YPvYm1KIY5r9oYsL1TmdD0a9BFgNdUlO1qDwKXEMdLenuQNnAuUcZ/EBZ
-	 3wJRLRIfrrU8B4+8QYAJH5/gAMX/nEyS5rQrLJgUz0oeJkzpbybwCVh7bxTsBJp3e35cA
-	 jTamALrh6fcBKQqt/4hlpH5EKVJEAKSFAV7BtaBf/pjnX9YkSDRbAPPTnQ31tvUMrnULw
-	 Ee1ud/7iqCTz94h0CZIMMIiQTNgBdne5PfdzMb2tv1c5uWDlBOsL/X8fpc3KwvmN+ZA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=T9WhWsIP;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.62.0
-Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011000.outbound.protection.outlook.com [52.101.62.0])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793350104;
+	b=FoiJF1RHF/512MzUJP1bAS+BDe3Oz/7L/moIYNrBikBsXMaRLqIBabFpUHKfRI5SSpLC
+	 xpqGmyCu2UGUSag01I83nP8t/8bsGemjNwffT1SqUWsAGFmEnGzXuJ/vWgmxgKdy8vRSv
+	 2ZqWsWTs+IZbUW8sTkiYaEUNcqL6sUujbqNOmIZSqnDmqsLzU2WqLTUao1ejffn7d2X7M
+	 ADCm7qDdSSUvbE6ij4MV4d/1Yz8636u6gtbBoBe+DRRcHz63O4py1G7c93akBKTTpDGE9
+	 Vim/iywqLhr4bdQxRMKP1N1cfPkCBTTubfIuq79GTwnRmRb4SY6xAh0zLROeuxRsSHw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793350104;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:Autocrypt:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding:X-Spam-Flag:
+	 X-Spam-Level:X-Spamd-Result:X-Spam-Score;
+	bh=X74vjL11XQ3Te4wrqiaM5qH4BI5a2H/PHF7diUdGWVQ=;
+	b=DgDq+9wpqPqcr/uP4ypHHa/zvBXaxC0Ub0zN3XonyZhH2qi3E6cGz9DLIHbK0WAunKJa
+	 9l1KgLDERVu/fgVR+a2b6Tgy3HryMH0Lh+P1JG69tT4VaYYrxVqmSnsnJg/RYFjTcL0AQ
+	 iqAxo2zHBms1Q3w1Ryrqb2+ifLQjDfI+NXktL8RKC8LRfE6zeO1ter+OjAdMBVyhIcDNP
+	 3CqT5+pD0rpUFIV0AkZRTl7oo5oxU0Y6LvfCdTRe7dNUBxQo0UcWZuheJj/mZXxs93xRa
+	 LYXtWW5oPMc0Rv3uFnmvcPJtdcwdhs+hE8w2x8uiSki6F2MYwAcdUlU8bmRgdV3mjdA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=suse.de;
+	spf=pass smtp.mailfrom=suse.de;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=rotSSlWX;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=oUUdM6IJ;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=IfdshaT9;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=N6G91PuC;
+	arc=none smtp.remote-ip=195.135.223.130
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE2E3606A323;
-	Fri, 30 Oct 2026 08:38:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EE2E3606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D561A606A31A;
+	Fri, 30 Oct 2026 08:48:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D561A606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=T9WhWsIP
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=n+QqCoItqA99X0DTfYkf8ceWPfyU45wEb0ROKNF0r9Ifa97v9h9xwibXTf/jsXMOiIbbx4vUuq2+vPW3p81eHvaOIHsCZbR02M44qSuJDUinWHGZ8gF4YW8rkjndLgNQW9qLzogAqoagNlgWbENzvrizEM2JED+gpcTRSvl5Yu+FzXqrOmhwfHzbnAcw8Xk3dvJcLg8jhoeEjrxow2wJOkjx694hE5y6eTivUkVJNaLiX5HVw8zbWD8ArhdRKsmJtt2Qe9uMYJt6xUCxPFULPNThhqyauswTVde6q7FADBK1yp1EqvOcu0vw0ka3bAVOgPPcjdnmBuVPNb3TRTraOA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kSJ2bzk0G3jjCkWkJf1+zSUor+YkNxMPIfKZygUQytc=;
- b=HclzBLwaN+xn0TTTHT38HXCNute+y2l3twDliGma9rL4xJtdNeZVYYYZunT+xfTY+kGyHfso98OCqxtuaC0jHJX7bnvWhCY7vTUiivnA/hVFzMTS5naWBkJms6qmgoRwFu5/gKFqP3rMgRYlxSPWdLrpEm1YJHgPvVD28Vn/f3gJaGdA+vFu/YL4aY/IxRf2MPPvoZu5Mmyc33whD2ONCgBYvUcKO6uMkmvOrxzp4w3eYIENBas/o5+1cvv5jeHjSmDhIHRkanOXuqX1uWH6WWNPe6qUQiZkT8Gf7cT/JocHF2P/YViGqpMth4rxv+gcS1ZaK2ANSjviDmOViGR8GA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kSJ2bzk0G3jjCkWkJf1+zSUor+YkNxMPIfKZygUQytc=;
- b=T9WhWsIP8BsYdFj1PEkg0R3DPeGmWCpyxuWcm01bYMz/xWfSQl2z8C8kTCfpUuzYBzjSV6bpwEJpwVJ/nSqFXKgZh+3FphVe7QpZR6uZ079yXAjxrwe+kLVXOSqdAfMXshFVXbAd5tFZifSsRQ5q9qa4/HrnOByKD+4sQBU1FbapPsPQ/4PXyd9CIiHP8kT7L3O+tcrlm59AdX+caPkU37uCsJFH/w5ctlr/8tIHUDgcQknqa3cssgHd3qRhe13waE+ftVnIHQjRXNqSA/V3ZdFxNaePX71eutAbHTVdmjLoqTPTxjNrEr2L/UnYtzAZ7P/39dkmKLZPiopXj8Tg7A==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BL0PR12MB2370.namprd12.prod.outlook.com (2603:10b6:207:47::27)
- by FT1PR12MB155092.namprd12.prod.outlook.com (2603:10b6:170:3d::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.10; Fri, 30 Oct
- 2026 08:38:03 +0000
-Received: from BL0PR12MB2370.namprd12.prod.outlook.com
- ([fe80::86cf:c3ec:2cf5:74c8]) by BL0PR12MB2370.namprd12.prod.outlook.com
- ([fe80::86cf:c3ec:2cf5:74c8%5]) with mapi id 15.21.0569.008; Fri, 30 Oct 2026
- 08:38:03 +0000
-Date: Fri, 30 Oct 2026 16:37:57 +0800
-From: Richard Cheng <icheng@nvidia.com>
-To: Srirangan Madhavan <smadhavan@nvidia.com>
-Cc: Alison Schofield <alison.schofield@intel.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>, 
-	Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>, 
-	Jonathan Cameron <jic23@kernel.org>, Vishal Verma <vishal.l.verma@intel.com>, 
-	linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Li Ming <ming.li@zohomail.com>, Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com, 
-	alwilliamson@nvidia.com, Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>, 
-	Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>, Jiandi An <jan@nvidia.com>, 
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v16 14/18] PCI/CXL: Reject reset with unsafe function
- scope
-Message-ID: <auRXPsGjIZgOv2lN@MWDK4CY14F>
-References: <20261029145703.2185231-1-smadhavan@nvidia.com>
- <20261029145703.2185231-15-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261029145703.2185231-15-smadhavan@nvidia.com>
-X-ClientProxiedBy: SI3PR03CA0001.apcprd03.prod.outlook.com
- (2603:1096:4:297::16) To BL0PR12MB2370.namprd12.prod.outlook.com
- (2603:10b6:207:47::27)
+	dkim=pass (1024-bit key, unprotected) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=rotSSlWX;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=oUUdM6IJ;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=IfdshaT9;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=N6G91PuC
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id E0AEB222B4;
+	Fri, 30 Oct 2026 08:48:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1793350102; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=X74vjL11XQ3Te4wrqiaM5qH4BI5a2H/PHF7diUdGWVQ=;
+	b=rotSSlWXK0hL7aZIOf0DmFXIJPx2Jqohniz29FeMJWt6JT2qadt/JclWCMFTzDRZepKLjn
+	BJDoiVDnyZa4WiuNy6AkgxZG+AhwN0qNXvtfNOoL6gV0WMvOrWfkhLyHebbuAINHNuftXx
+	NVU9Rbumo6YXpltMSy+0xfJxiJq7V0Y=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1793350102;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=X74vjL11XQ3Te4wrqiaM5qH4BI5a2H/PHF7diUdGWVQ=;
+	b=oUUdM6IJO+dXK7Ftwi2ota7uQR+uthePhTVmZK3ivyOr0nJNSRyWvXQJPUke6AJzKoyqMK
+	rqkh7hdRAoCwMUBQ==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1793350100; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=X74vjL11XQ3Te4wrqiaM5qH4BI5a2H/PHF7diUdGWVQ=;
+	b=IfdshaT98dt83MyTmNogjG61HaNd1YAOctwvatW20aRfOENdqs1wAdmuAZSA+PITOL1JS9
+	I+e+1U0M/EDPC/+0Tzua9KOh0p00BQRjyXThRgzmWnabRohXKW0z0TDls0wXqoWiDso2nF
+	9EOjGZpF9QydCEpcFhn6f9++eHs2pgs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1793350100;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=X74vjL11XQ3Te4wrqiaM5qH4BI5a2H/PHF7diUdGWVQ=;
+	b=N6G91PuCtcM+qOUAtQPVGq0n89vn9CYjhlaUeartRJhc2caCE4uZYudfJXriLjeLZ2CYB+
+	jEqKlsVZSUVz3ZBQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 8B7C0132C9;
+	Fri, 30 Oct 2026 08:48:20 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id CcebGNRZ5GoCMwAAD6G6ig
+	(envelope-from <tzimmermann@suse.de>); Fri, 30 Oct 2026 08:48:20 +0000
+Message-ID: <4379fd92-ac4f-45c2-9f4a-eaabe4b7f981@suse.de>
+Date: Fri, 30 Oct 2026 09:48:19 +0100
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -104,107 +106,146 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL0PR12MB2370:EE_|FT1PR12MB155092:EE_
-X-MS-Office365-Filtering-Correlation-Id: faadad28-ec97-4852-b67a-08df36611c5a
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|7416014|366016|1800799024|260925022911599003|260925021911599003|260925021311599003|11063799006|4143699003|56012099006|261009223027099003|261021121427099003|10067099003|18002099003|22082099003|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	i6PEsg+1bMJ2eFkwgdERxzKDpxMlaeh2RD5JtNvs9ycf0DxulUeE7p5wccL/ONfu1t5lrE7pXDDbz7Dg8HB62aqJIkNKI01ZqV9cEjkdKeaLawa8TjDiGFqvJKpNnkvYXwl7dwVF3f0WpEvf81845cfTTAso8hObil9gKjXa2ZQ7209irTkCIIERP5Iltrt4iw+whA6SObalzs8eT+1qS0rd85wfJ1Hmcrd0334slN3UWPmpcuZxReYm6GnICkS93HigF1rg1zXAhkacm4/+YQxmlS8i3rizv2CvTvZzNSFDSrrjh0kailvxk2YtwqyhkdZScqaGWhuptkq6npQUB46jV3snHayakgw+mAyDzpBJ8nDtv/OXOkYCAUagxF9mrOThNAYbfBIxnB119pYOJfjohpm/tddEhJoV/DbCoE1CZPyI8W06rKhhLPkPyOH4z5zPDiwKChQs9A2ybhqIyjo/kuU+1v2/74g0mXHmqnVFcXKeoUdX/zW8ijXsOMUD8uxqaL0EhItgGfaDWLJKXKFvGPmeqwgOKHDBlzBBPvnTKT+OpkGCKGHkyVA3959eu0NQBOxLErOogGg6mfcOsxmpqhMHB3Ftx6/esc5wlFdu2G1ZSvz7DDReVtH05lAFSHEVbDHwXFB2I5TFkov2aG+MeBTioCRz7y20L+0xClg=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB2370.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(366016)(1800799024)(260925022911599003)(260925021911599003)(260925021311599003)(11063799006)(4143699003)(56012099006)(261009223027099003)(261021121427099003)(10067099003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?4+JiIezbMNbZqsdEGUoE3urKKKjIv6J1W8sujn7F0FDAFZFUOypt7/s3bh6X?=
- =?us-ascii?Q?sNW4Ajx2jLSNx4e5vjEi/lOV4N6qar5PYdiaCM2qfXN2J89o6vx1D0ypG+TZ?=
- =?us-ascii?Q?A1TybhgD9V8WRSlyT3QV2WU8klgigIFOdz7lPA4odhW2AWz0EVJbF2z2Ndi7?=
- =?us-ascii?Q?K/h8eptj2mqwm3ufB7iN1wZo9sFyNUvyPxe3/90oKJXu4Dp0ghO2xdAUbnYV?=
- =?us-ascii?Q?nRuCLh60QGU93yMbqfKbRHLkeSakVpKGLsVXko4CybLGgfEb+yvCFdgp2aq+?=
- =?us-ascii?Q?5fJ/MYBOEQmsd0xnnwALA+DFuouGrd89YCq3r+BnzcJ9khSfW5pEY0HpIuga?=
- =?us-ascii?Q?ZBCIoH086OsKZgyihiMcSiWdw70KenFlr0tzMJl+bN//9rTwkozQKDDo1cnl?=
- =?us-ascii?Q?hFp7NqrgwQfiXbPrZvSvz3xmO/hMgRn4bQEP7VqCYLxJGvPcYRgkYeg+uleR?=
- =?us-ascii?Q?NKJRB3Mrcqv0RaLyQMlF3hJdS6YQWH4474k57M/u+l5V+p0obTQhYgu/xqbm?=
- =?us-ascii?Q?W6FhyQXyX24HXDaPD4V1xc1AP2uGuVbc5BPfRspkznGL6kBXKS/piYicmAba?=
- =?us-ascii?Q?dCQfljNTLokkpmZgrM9hfvV8RPgoU7ckTCHfG9pBodWSZDXgSF6z3byWpJj9?=
- =?us-ascii?Q?kLNwJx3dGCPfZK0fEzZvQzGpSNQ+f20znWCUdCxQ6MHZpUkegJr6bXdOZfsq?=
- =?us-ascii?Q?HTbVuWSKYiSpXV+GiuGSdYCZhvKIhO7CmJQQq4iGHt2TJ5l70BbO/3KKnRaj?=
- =?us-ascii?Q?2q+nyo3kNUiHbEjxKwYvFTOJ4EdJenpmUvCrMxg6h6CZv/G/VVJP4VfF3Vfx?=
- =?us-ascii?Q?bDj9pSKPqhxGh27xH6rXmQT0o/otzt67WRUWQOqQ+445vW3YQj3+yqA6WFBq?=
- =?us-ascii?Q?vbYV+IA7q6w/TfpphFrAODlcKhpTDRRsdNHjqWY63UIFW3ifBveldhpAARdF?=
- =?us-ascii?Q?lhn1yA+XcZnkxtOwHxUHu9+DYSmm/yBRpPXu1Y+d8LZ8xfUbUkGXHT4FwmSS?=
- =?us-ascii?Q?ziG1niBzOhC6clw6i26KfHs4Q3ZLk6Cxhq/NQYQ9NlQV8S2SM+hk7GV0S5jR?=
- =?us-ascii?Q?sWZoDO54z05FDb65/Yb2zzkTNuVamoohpL99lpU8o1CHwNVG7wd5OxS2FvlC?=
- =?us-ascii?Q?jtMtAswELOdRm55lrrZkGfOVC//2OcqOnL3rmhDyn2gPsZz6QXd7jZsbtNRW?=
- =?us-ascii?Q?F17FZv07kdHT5su353qMSFsUzmky00Dog+sUy2iyhyt6kw8iJ5IWl0KbSxXm?=
- =?us-ascii?Q?z86t4MSrzfsk93LSs8ZsQb4yPsf/CD7FERV8o2Z8zPg2e8n4GApfMwk2Ai32?=
- =?us-ascii?Q?d2q5RtPj3i2G2fXB73+R4+ex3kmNU7jfo5lAqxQlmjtQONnwQQVD9nuwG21n?=
- =?us-ascii?Q?/yXCEBylBxrhAgVTobGdoCxGcrYta1SWg9AKpWd+Cla6N9UkW96Dn2n65esC?=
- =?us-ascii?Q?5B0WlhgfYufW8kUvsMxzJmkvlJcVh/xDDIM4qyzsUj3/bnhJIQydJIP8pBtR?=
- =?us-ascii?Q?5nJTXKWVznCNIF02bRanUmHyWBYV3sp9LxUditdLY4ZnL6uSDghA9bH3E36W?=
- =?us-ascii?Q?z9/harvMJIzPa5nBIyL2MZG8zvfPx8Ksz4C3Btl6sR/lX8uGUjuP/RNfQ+2A?=
- =?us-ascii?Q?qf3OzVoJBOIVv29BthXOmeGXo6UmirvCIrLQQK+ZeMqhTJv1KJHF0+u9vQfK?=
- =?us-ascii?Q?cxOnaa5jrBJyTWXNIfBkcyCXUfmZsKZgpjl7ey8auVUX4KaGkVfm4Wzpl1NF?=
- =?us-ascii?Q?zjSVlxuEEQ=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: faadad28-ec97-4852-b67a-08df36611c5a
-X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB2370.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Oct 2026 08:38:02.9052
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: lHjJ4hl/yO/A1B9b4UDMMgfkM0SfloBAqROmf2cY9dC5HqwLlmcrmxYlOAz5arUDiStOeiekC1K+JYWDm+b4eQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: FT1PR12MB155092
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] x86/video: Preserve the default VGA fallback for legacy
+ modes
+To: Hengyu Liang <hengyul@cs.unc.edu>, x86@kernel.org
+Cc: mario.limonciello@amd.com, aaron.ma@canonical.com,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ dri-devel@lists.freedesktop.org
+References: <20261029162311.3389523-1-hengyul@cs.unc.edu>
+Content-Language: en-US
+From: Thomas Zimmermann <tzimmermann@suse.de>
+Autocrypt: addr=tzimmermann@suse.de; keydata=
+ xsBNBFs50uABCADEHPidWt974CaxBVbrIBwqcq/WURinJ3+2WlIrKWspiP83vfZKaXhFYsdg
+ XH47fDVbPPj+d6tQrw5lPQCyqjwrCPYnq3WlIBnGPJ4/jreTL6V+qfKRDlGLWFjZcsrPJGE0
+ BeB5BbqP5erN1qylK9i3gPoQjXGhpBpQYwRrEyQyjuvk+Ev0K1Jc5tVDeJAuau3TGNgah4Yc
+ hdHm3bkPjz9EErV85RwvImQ1dptvx6s7xzwXTgGAsaYZsL8WCwDaTuqFa1d1jjlaxg6+tZsB
+ 9GluwvIhSezPgnEmimZDkGnZRRSFiGP8yjqTjjWuf0bSj5rUnTGiyLyRZRNGcXmu6hjlABEB
+ AAHNJ1Rob21hcyBaaW1tZXJtYW5uIDx0emltbWVybWFubkBzdXNlLmRlPsLAjgQTAQgAOAIb
+ AwULCQgHAgYVCgkICwIEFgIDAQIeAQIXgBYhBHIX+6yM6c9jRKFo5WgNwR1TC3ojBQJftODH
+ AAoJEGgNwR1TC3ojx1wH/0hKGWugiqDgLNXLRD/4TfHBEKmxIrmfu9Z5t7vwUKfwhFL6hqvo
+ lXPJJKQpQ2z8+X2vZm/slsLn7J1yjrOsoJhKABDi+3QWWSGkaGwRJAdPVVyJMfJRNNNIKwVb
+ U6B1BkX2XDKDGffF4TxlOpSQzdtNI/9gleOoUA8+jy8knnDYzjBNOZqLG2FuTdicBXblz0Mf
+ vg41gd9kCwYXDnD91rJU8tzylXv03E75NCaTxTM+FBXPmsAVYQ4GYhhgFt8S2UWMoaaABLDe
+ 7l5FdnLdDEcbmd8uLU2CaG4W2cLrUaI4jz2XbkcPQkqTQ3EB67hYkjiEE6Zy3ggOitiQGcqp
+ j//OwE0EWznS4AEIAMYmP4M/V+T5RY5at/g7rUdNsLhWv1APYrh9RQefODYHrNRHUE9eosYb
+ T6XMryR9hT8XlGOYRwKWwiQBoWSDiTMo/Xi29jUnn4BXfI2px2DTXwc22LKtLAgTRjP+qbU6
+ 3Y0xnQN29UGDbYgyyK51DW3H0If2a3JNsheAAK+Xc9baj0LGIc8T9uiEWHBnCH+RdhgATnWW
+ GKdDegUR5BkDfDg5O/FISymJBHx2Dyoklv5g4BzkgqTqwmaYzsl8UxZKvbaxq0zbehDda8lv
+ hFXodNFMAgTLJlLuDYOGLK2AwbrS3Sp0AEbkpdJBb44qVlGm5bApZouHeJ/+n+7r12+lqdsA
+ EQEAAcLAdgQYAQgAIAIbDBYhBHIX+6yM6c9jRKFo5WgNwR1TC3ojBQJftOH6AAoJEGgNwR1T
+ C3ojVSkIALpAPkIJPQoURPb1VWjh34l0HlglmYHvZszJWTXYwavHR8+k6Baa6H7ufXNQtThR
+ yIxJrQLW6rV5lm7TjhffEhxVCn37+cg0zZ3j7zIsSS0rx/aMwi6VhFJA5hfn3T0TtrijKP4A
+ SAQO9xD1Zk9/61JWk8OysuIh7MXkl0fxbRKWE93XeQBhIJHQfnc+YBLprdnxR446Sh8Wn/2D
+ Ya8cavuWf2zrB6cZurs048xe0UbSW5AOSo4V9M0jzYI4nZqTmPxYyXbm30Kvmz0rYVRaitYJ
+ 4kyYYMhuULvrJDMjZRvaNe52tkKAvMevcGdt38H4KSVXAylqyQOW5zvPc4/sq9c=
+In-Reply-To: <20261029162311.3389523-1-hengyul@cs.unc.edu>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Spamd-Result: default: False [-13.29 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-0.998];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	RCPT_COUNT_SEVEN(0.00)[7];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:url,unc.edu:email,bootlin.com:url,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Score: -13.29
 
-On Thu, Oct 29, 2026 at 02:56:59PM +0800, Srirangan Madhavan wrote:
-> The per-device PCI reset interface must not reset sibling functions.
-> Reject cxl_reset and cxl_bus for VFs, multifunction devices, and PFs with
-> enabled VFs.
-> 
-> Suggested-by: Alex Williamson <alwilliamson@nvidia.com>
-> Link: https://lore.kernel.org/linux-cxl/20260626160846.426e71b6@nvidia.com/
-> Link: https://lore.kernel.org/linux-cxl/6a50441e2bb5e_3cabcb1003e@djbw-dev.notmuch/
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Hi
 
-Reviewed-by: Richard Cheng <icheng@nvidia.com>
+Am 29.10.26 um 17:23 schrieb Hengyu Liang:
+> Commit 596b3678326d ("x86/video: Only fall back to vga_default_device()
+> without screen info") made video_is_primary_device() rely exclusively
+> on screen_info resources whenever any are available.
+>
+> However, screen_info_resources() also returns legacy I/O and memory
+> ranges for VGA text modes. These ranges are not PCI BARs, so the resource
+> lookup fails and the default VGA fallback is skipped.
 
+If the BIOS booted in text mode or VGA graphics mode, the rsp device is 
+still the primary display device. So the current matching code is not 
+necessarily incorrect. (But also not necessarily correct either. :)
+
+
+>
+> On a SeaBIOS QEMU guest with bochs and VKMS, the boot VGA loses its DRM
+> boot_display attribute and fbcon leaves the console on VKMS. This can
+> be checked with:
+>
+>      cat /sys/class/drm/card1/boot_display
+>      stty -F /dev/tty1 size
+>
+> Without the fix, boot_display is missing and tty1 is 48 rows by 128
+> columns. With it, boot_display contains 1 and tty1 is 50 rows by 160
+> columns.
+>
+> Use resource-based selection only for linear framebuffers. Fall back to
+> vga_default_device() for legacy display modes, while keeping EFI and
+> VESA framebuffer ownership authoritative.
+>
+> Fixes: 596b3678326d ("x86/video: Only fall back to vga_default_device() without screen info")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Hengyu Liang <hengyul@cs.unc.edu>
 > ---
->  drivers/pci/cxl.c | 3 +++
->  drivers/pci/pci.c | 3 +++
->  2 files changed, 6 insertions(+)
-> 
-> diff --git a/drivers/pci/cxl.c b/drivers/pci/cxl.c
-> index 4a8969145f8b..9a298e90586d 100644
-> --- a/drivers/pci/cxl.c
-> +++ b/drivers/pci/cxl.c
-> @@ -515,6 +515,9 @@ int cxl_reset_function(struct pci_dev *pdev, bool probe)
->  	    !(ctrl & PCI_DVSEC_CXL_MEM_ENABLE))
->  		return -ENOTTY;
->  
-> +	if (pdev->is_virtfn || pdev->multifunction || pci_num_vf(pdev))
-> +		return -ENOTTY;
-> +
->  	if (probe)
->  		return 0;
->  
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b2879a6be5f8..9031060423cc 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5026,6 +5026,9 @@ static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
->  	if (!dvsec)
->  		return -ENOTTY;
->  
-> +	if (dev->is_virtfn || dev->multifunction || pci_num_vf(dev))
-> +		return -ENOTTY;
-> +
->  	if (probe)
->  		return 0;
->  
-> -- 
-> 2.43.0
-> 
+> Tested in QEMU/KVM with identical KASAN configs: SeaBIOS VGA text mode
+> (with and without VKMS), VESA, and OVMF with one and two virtual GPUs.
+> All 26 guest-only helper checks pass, including EFI/VESA framebuffer
+> ownership, missing framebuffer resources, and addresses above 4 GiB.
+> Also build-tested x86-32 with/without CONFIG_SCREEN_INFO, and x86-64
+> without CONFIG_SCREEN_INFO.
+>
+>   arch/x86/video/video-common.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/arch/x86/video/video-common.c b/arch/x86/video/video-common.c
+> index 8ed82fff7638..b8f83346dfe8 100644
+> --- a/arch/x86/video/video-common.c
+> +++ b/arch/x86/video/video-common.c
+> @@ -45,7 +45,7 @@ bool video_is_primary_device(struct device *dev)
+>   
+>   #ifdef CONFIG_SCREEN_INFO
+>   	numres = screen_info_resources(si, res, ARRAY_SIZE(res));
+> -	if (numres > 0) {
+> +	if (numres > 0 && __screen_info_has_lfb(screen_info_video_type(si))) {
+>   		for (i = 0; i < numres; ++i) {
+>   			if (!(res[i].flags & IORESOURCE_MEM))
+>   				continue;
+
+Further below in that code is a call to pci_find_resource(). [1]  Why 
+does it match with vkms?  Vkms is not even on a PCI device.
+
+[1] 
+https://elixir.bootlin.com/linux/v7.3/source/arch/x86/video/video-common.c#L53
+
+Best regards
+Thomas
+
+
+>
+> base-commit: c339f4010dea8b0d754f84ace70cd1b089878ef8
+
+-- 
+--
+Thomas Zimmermann
+Graphics Driver Developer
+SUSE Software Solutions Germany GmbH
+Frankenstr. 146, 90461 Nürnberg, Germany, www.suse.com
+GF: Stefan Gaiser, Jochen Jaser, Abhinav Puri, (HRB 36809, AG Nürnberg)
+
+
