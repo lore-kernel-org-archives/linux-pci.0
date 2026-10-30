@@ -1,77 +1,32 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=65.109.113.108
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793338456;
-	b=xy+mTeAn/aKYsC9MNh4pFJwVpwX6XDoi/SfLf5CmwWaYimPQBtzCs8N/o16AzFAJ5TvT
-	 ZCNbK4yZ33u79bp3/G9Yb8sjUNT0VUzDHfstQq8yHyGY6atQp45St/+9cMPQTxDX557u0
-	 ZUD5Ob1OJVbLr0elhSngEHvFimt9C0gBEJ8/BcQXhdeCzb8pA8QdFwqd3MjEfBEwKbAp4
-	 g98WPJH2h/fhTohXWdPIQaAHyRPDSZ0jJ8ImTYHuims3NoXP3BW5FWnosE9K/O+pqs/SV
-	 vHYdHIggAq0ikcslIqRyszbntZz8p/mO+bVlKX2tyQp1DRm1F5IzfrTfxK8VGMUGEaA==
+	t=1793340432;
+	b=v9Kvxx8D96E7xRy/h5N4FmxWJ9n8yd3X51/cfsn8uqcud6IqpNaNrCmYpjwMCqj5Nb+O
+	 aZQUXMFHpijKPTYdnJ2R1XaKM8nBAhnR2iBD6byzJ9sBYRLwCyO29ktEgAiYybBKq9ptn
+	 4fdxelEE1iCSvOTr1By/68VZL/UMTIgvXas6PSyW6krmlS20EWhdLwIXLZTFPwx3cwfYk
+	 nRZYEhMkDxxLkPdoCxW4FZm66ID70bK51jiOT5nzRb4LMHP7wnAJqgLUmIyzr846xyYfX
+	 MXjlZuMIGM3M3BIX3oNoEhuUeOnyMvUCRSrWuwj9iKSU74XtiVxAdre3JS6NFIOQMnA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793338456;
-	h=DMARC-Filter:Received:X-Virus-Scanned:Received:DKIM-Signature:
-	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=mSF4SGZPS2CDzaKvvs/6H+aTKl4UYtTySMgMP/nGH+Q=;
-	b=qdblJ+qLvEcleXddn7icRy04waDfsIzudN7rrw3dEvJw3drW/WDrp6KSvfsGace3p9ab
-	 Drr56t+tADxaaL90YeAg9eTiKdnppFdOtPxULlLheV48yHiYNxyp5BJ8r+e9a752weV/P
-	 CfOBYP4tT6evO+OO9ZlkFE9fWr+zJrqLAHWke7sOfIUUo/LwQyySlZ3BkqsSX5FmGkLWL
-	 NId6iUWc/L04zeb5Mbuv63/RPaDQ8WEllN5YMlDtJbgFVJiMhnkhWHyrv6RLJEOGdcE+Q
-	 Tbj6gMwSp//uXfkdUVDQzSf1Iy6OtcFHBU4W2g8QxEmlwdx+/Z0LvsxwY3n52wZIy5A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793340432;
+	h=Received:MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:
+	 From:To:Cc:In-Reply-To:References:Date:Message-Id:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key;
+	bh=MjJjLX/qV1+lyxi0iixx5duL/lrS5HdRSjax3k0IDWQ=;
+	b=gI7kMNtEHsKIlgeNG0qmPwhaaddRmslOQFjc/DgwwqOAMeFDHRlJHgI1b2CbuEWlPUKL
+	 wipmPzZjP/tqyyNV0EFIMV9U+98kdTtXetjuaKradyT2rWBDFiWu36C5GT92NAzMEh0GN
+	 fbzzWVePkYBquoGRrTiCKNX8i86AZiZ2yD+psTKuLneCx4cbqr23tHn9RWGZObCP07NNC
+	 yLnZceHemNcDc3Qxxf6KrHCdsAvVm5EO9V0eq+BuBdpxv1+FwZy9KJnApxnFLfQ6ponIn
+	 3B5wC/fKRoXfzgRWvCKFxF3sFPXS6Bc+skMfOO8oK5GgbKEW/yAD/e0tS+LjOS3jATQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=alien8.de;
-	spf=pass smtp.mailfrom=alien8.de;
-	dkim=pass header.d=alien8.de header.i=@alien8.de header.a=rsa-sha256 header.s=alien8 header.b=AqVZcw9p;
-	arc=none smtp.remote-ip=65.109.113.108
-Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 875F7606A31E;
-	Fri, 30 Oct 2026 05:34:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 875F7606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (4096-bit key, unprotected) header.d=alien8.de header.i=@alien8.de header.a=rsa-sha256 header.s=alien8 header.b=AqVZcw9p
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id 89DB040E04D6;
-	Fri, 30 Oct 2026 05:34:12 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
-Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
-	header.d=alien8.de
-Received: from mail.alien8.de ([127.0.0.1])
-	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id i4pfNfqK1sze; Fri, 30 Oct 2026 05:34:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
-	t=1793338448; bh=mSF4SGZPS2CDzaKvvs/6H+aTKl4UYtTySMgMP/nGH+Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AqVZcw9p1+5S1S7HgvPNff56JVxj7Eq28TIv2ohiPqPrGlBnjtFe4h3zRcEsSPk16
-	 zUISLeO/wToHBdLBKZhm6HAn2PPM+gY69OytGcnQfGvWWmXRGHkueqRut7VE0KHtRt
-	 jZaYeyeK2z23onvqGz5/01td0aWJWigWhJlmm/+TV8JEQcCtHx7x2eHhTrYftkmlVf
-	 XyQ5l9APzEnYz/0M/EwSOUc+sG7od5Wf9iXuz7Oi5b4u5L+rEKuqbR4Cbb1lN3l8EQ
-	 WRjjt065wQmSEtDPB1d18ONOS7+KdmfAUl8PGiQUNHa0KE9j3Ce+9vpQBK0gMG78SB
-	 H65MzfQNE3rK4GMXP1UAnw14Pj0j03AFmKgyD3kyUWAeTYxdhb+zGU8MAFgGuQUUaL
-	 jue3QGKh5QmChjn7gUfelvO0o1nOb04UbFZKXm2MttMtTI70tYOyz+CGkPdXvuLDUr
-	 F2lPtXFBkmN0eiFjeRDgsdm6ZK0fhXjyzkm25iuMKMeez2yPHzX5F2NMMqnTjPhna2
-	 74qvDSNhYaaTWzYWGe8IhD8PTI8pHMCZcTONu8LMSAmhUDaMn93Y8FeW1n28h1zEdO
-	 zIGZ2V8sk2VJm2bWrnzkwFAPFP4vM3oGXcSjBRjjNaLwCK7LvO1TucixSLqwV8zF7f
-	 BTCUXvJxciVUqGzVPM03QzXQ=
-Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::48])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id EA24340E04D5;
-	Fri, 30 Oct 2026 05:33:59 +0000 (UTC)
-Date: Thu, 29 Oct 2026 22:33:56 -0700
-From: Borislav Petkov <bp@alien8.de>
-To: Hengyu Liang <hengyul@cs.unc.edu>
-Cc: x86@kernel.org, mario.limonciello@amd.com, tzimmermann@suse.de,
-	aaron.ma@canonical.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH] x86/video: Preserve the default VGA fallback for legacy
- modes
-Message-ID: <20261030053356.GJauQsRF8Rl_co7FOv@fat_crate.local>
-References: <20261029162311.3389523-1-hengyul@cs.unc.edu>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F5A2606A31A;
+	Fri, 30 Oct 2026 06:07:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC29F1F000C1;
+	Fri, 30 Oct 2026 06:07:03 +0000 (UTC)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -81,52 +36,85 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20261029162311.3389523-1-hengyul@cs.unc.edu>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH] PCI: rcar-gen4: Isolate 256B MRRS limit only to R-Car
+ Gen4 SoC PCIe controller
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Cc: linux-pci@vger.kernel.org, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ Geert Uytterhoeven <geert+renesas@glider.be>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ Magnus Damm <magnus.damm@gmail.com>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
+ linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+In-Reply-To: <20261028172208.20948-1-marek.vasut+renesas@mailbox.org>
+References: <20261028172208.20948-1-marek.vasut+renesas@mailbox.org>
+Date: Fri, 30 Oct 2026 11:36:42 +0530
+Message-Id: <179334040211.5551.2573230628622674128.b4-reply@b4>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2036;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=4edNlj4hhxIn12ce5F/wVnHs7h2/NapSUJQfe8DP0lo=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq5DQBPrEWzsVqr9VNbSLmlTUCdQKwXi+BG4lKw
+ MN5aHrzsfeJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauQ0AQAKCRBVnxHm/pHO
+ 9ZIwCACiov7Ld7Mb4yli0vS5531D50cP0nq2vYpavxqmIm7S9AkB0tXBACbuDl5QiweQ+29fkGh
+ 4Q/LskrsSQfg8Uwn91FIjMDeq61kQaR3AAZAffLB9/p3cYv/+Qa0b2Zsegjy6ah0bvosAqYgpab
+ 7F57Vsweo8IshJbVCVHvUU1ZrfjvTmbN9biN8SNQrnHAJACTjH9mXIInVmlfR6Yhlq9GCOExsYt
+ KSinPu+I/Is+bPUKBz4aR34mwBrtgY4f1KyrtBJmXRpgPOTDCT4woF8R2aZUMDA19VXqDXrpa3S
+ /VTXzq7sztb4djdXE5EsYLLvskXoXiN0ogJEZpVgBtYmk8Dr
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-On Thu, Oct 29, 2026 at 12:23:11PM -0400, Hengyu Liang wrote:
-> Commit 596b3678326d ("x86/video: Only fall back to vga_default_device()
-> without screen info") made video_is_primary_device() rely exclusively
-> on screen_info resources whenever any are available.
+On 2026-10-28 18:21 +0100, Marek Vasut wrote:
+> The R-Car Gen5 SoC PCIe4 controller is not affected by the 256B MRRS
+> limitation that was present on R-Car Gen4 SoC PCIe controller. Apply
+> the 256B MRRS limitation workaround to R-Car Gen4 SoC PCIe controller
+> only. For details of the 256B MRRS limitation, please refer to commit
+> f0a5c6bd797c ("PCI: rcar-gen4: Limit Max_Read_Request_Size to 256 Bytes") .
 > 
-> However, screen_info_resources() also returns legacy I/O and memory
-> ranges for VGA text modes. These ranges are not PCI BARs, so the resource
-> lookup fails and the default VGA fallback is skipped.
-> 
-> On a SeaBIOS QEMU guest with bochs and VKMS, the boot VGA loses its DRM
-> boot_display attribute and fbcon leaves the console on VKMS. This can
-> be checked with:
-> 
->     cat /sys/class/drm/card1/boot_display
->     stty -F /dev/tty1 size
-> 
-> Without the fix, boot_display is missing and tty1 is 48 rows by 128
-> columns. With it, boot_display contains 1 and tty1 is 50 rows by 160
-> columns.
-> 
-> Use resource-based selection only for linear framebuffers. Fall back to
-> vga_default_device() for legacy display modes, while keeping EFI and
-> VESA framebuffer ownership authoritative.
-> 
-> Fixes: 596b3678326d ("x86/video: Only fall back to vga_default_device() without screen info")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Hengyu Liang <hengyul@cs.unc.edu>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 > ---
-> Tested in QEMU/KVM with identical KASAN configs: SeaBIOS VGA text mode
-> (with and without VKMS), VESA, and OVMF with one and two virtual GPUs.
-> All 26 guest-only helper checks pass, including EFI/VESA framebuffer
-> ownership, missing framebuffer resources, and addresses above 4 GiB.
-> Also build-tested x86-32 with/without CONFIG_SCREEN_INFO, and x86-64
-> without CONFIG_SCREEN_INFO.
+> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+> Cc: Magnus Damm <magnus.damm@gmail.com>
+> Cc: Manivannan Sadhasivam <mani@kernel.org>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-renesas-soc@vger.kernel.org
+> ---
+>  drivers/pci/controller/dwc/pcie-rcar-gen4.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
 > 
->  arch/x86/video/video-common.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> index 9a64a9f4ab0d1..1e4405181eef3 100644
+> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+> @@ -99,6 +99,7 @@ struct rcar_gen4_pcie_drvdata {
+>  	int (*ltssm_control)(struct rcar_gen4_pcie *rcar, bool enable);
+>  	int (*speed_control)(struct rcar_gen4_pcie *rcar);
+>  	enum dw_pcie_device_mode mode;
+> +	bool mrrs_256b_limit;
+>  };
+>  
+>  struct rcar_gen4_pcie {
+> @@ -663,7 +664,7 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
+>  	if (ret)
+>  		return ret;
+>  
+> -	if (pp->bridge)
+> +	if (rcar->drvdata->mrrs_256b_limit && pp->bridge)
+>  		pp->bridge->enable_device = rcar_gen4_pcie_enable_device;
 
-Queued, thx.
+I'd suggest moving this check inside enable_device() callback to make it clear
+where exactly the skipping happens.
 
--- 
-Regards/Gruss,
-    Boris.
+- Mani
 
-https://people.kernel.org/tglx/notes-about-netiquette
