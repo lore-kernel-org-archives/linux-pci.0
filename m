@@ -1,81 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793360672;
-	b=c3lChteatUb+fYCoLZ6MvutcfB0Zaa3I2zHbnXPUUi5wkXqL1pjDVp9u7wGGtnKnrrRt
-	 eCeZzPcRmAcYAHRjD0f0Kszo68sM2H2zeRfH4A1rIbxD9QqZSS4Wcukm/EuB2fO4SWZJ6
-	 SAvsrlwX4GqH/r+qAx/EHDVG3o3PdB4yOLfk2NtwV6SMfR1HEUHpok4MW93a45iiJ6zgC
-	 I2b/F7GEz7fOoG+SVpJ5l2GHoHVG2ZWmAGvBoGM4xCMf3JrJQacaaWVNTS8za9nKyH5XL
-	 8ibEet+qL/GI+18VFJxQoQraoJfGnedfbwCcuq6Af7oCeyRHgYMYzY0n9tBDes7kliQ==
+	t=1793360669;
+	b=S7GqeanAMDSsIpWuWbAZTQy6l0NsoFV/SwZNlZYxwAYv5t9rNydu/D6RupPwofE9gA7m
+	 s2CAlInjiGGChCLod2CfkaQugta/T6yD6U5bALNPlYgr7kgRItAAGwtP3g5mkXyapPQ8X
+	 LfJaZWfely+/QbE9oJ2qIXIUptTEPFQdcOthd489yE8LsbLr8am2ecYDVGkXz+kA9LVBL
+	 p7V3mTdyRMCbt6TBIz79x5DHQXMQAuvv4OQQ9bih8JN9dRLF5Du5UV26w9Y62sH1+VCWY
+	 z6eAQUkTQEZTSaAVIwuBiz+56Lte6rMCWpH9GNsLRbjpeDsxt/8VjLGUdvTnWf8sNtA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793360672;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793360669;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=u22L97/jeI13IB20ysbQZcY423yThcHnEYQlKHEzxLc=;
-	b=gS+kucei7Z6HMG27q7M5/Sl5rccD69VDEuloR30z8M2jdkfjA0STkSQkd1Eh43Otlxm2
-	 Nvi55IkfWFQtrsqwEbqP3mZREBSluMhvSoAjAyX6qfn0HGvl0C+4nAZHLP9Yrz/00d779
-	 QBPNxeaJeBJ5F2rwgsaP9jcesyp3+XyGb2eTFhknTMyWW7rtotv2/yF2AJL5f93kU8sW0
-	 Dl9AQMzk1CFqSZgtiGcO85XJ0jnhB7a/DsvMkanlw4tIuQi3GgiV+ip2h8m/sCCPbtwnY
-	 k6YAzGqPaSnX+vHUVbhdtTCGb8SZADCzxAGtPI8y/7c1zWkzXrkWkqffilswO36nRrQ==
+	bh=DpTDFSree3Cxk/D2Qxb1KtBNeieq6f1ZN5i6RF8Q5TM=;
+	b=T2jkVHWK5h6t3qAHl/QGYsFMdZ2KOhC3RQZV3kk6JvGdLglJXH21QFaKR33AK2iZ7Iy9
+	 DOPFEMQVR8yZuKcfWtGnTT99Rk+77xQmocF/Ur2dms6u+kD5Cgs9v01PBo1Ajoblxxzs5
+	 Wv1fXx4sdHTa+S0BwSxIeERMX8W6B9SFIBKYxcPCeXBWva7dxMpYDlJw281n0vcfl8SFa
+	 9U15gZOUn5tok+XG7YnaDb873lXMN67sHa5EnsX73X75D9RBDP8w2JsmM+RUcre9No6zc
+	 eXFAu9GcvJmNwf9IMCXqxV2a20X1/Id5xxG6fMVgHsBEZixfQ+H6x5VZKOBa2so+7HA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=POEHrrX+;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OVQFq7eq;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C84F8606A31A;
-	Fri, 30 Oct 2026 11:44:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F020606A32D;
+	Fri, 30 Oct 2026 11:44:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=POEHrrX+
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C4AD1F0093A;
-	Fri, 30 Oct 2026 11:44:30 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OVQFq7eq
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F1C21F000C1;
+	Fri, 30 Oct 2026 11:44:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793360671;
-	bh=u22L97/jeI13IB20ysbQZcY423yThcHnEYQlKHEzxLc=;
+	s=k20260515; t=1793360669;
+	bh=DpTDFSree3Cxk/D2Qxb1KtBNeieq6f1ZN5i6RF8Q5TM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=POEHrrX+sPBo41n1mG2oZ7jZsPptJNOYuklpaJCho15lUx/hky0vAto0IGN9wUGU6
-	 ND1CBDe5rZnFil1HZM1tjiLOFUAleLd3OoRXz2gYSIc3S0vbxzEcjwCfDh4zVMpSsf
-	 EQlNPouP+PVpC+k2CwhIb/KtciGpEkUOTO8XdOVMGJFbCRhD4vWJqa17k4GdbY1Vlc
-	 +22QWJSEiJS+ic6dfb3qVSAJmBMrYs3nndjOrrxn5UsvH0+zvXfwafKrObb+dlFg75
-	 QjOl3vEY9Q5kPpMymCryWXA4Z8a6csZvMkbqWCkAqIOAa8OUIZNXAetDK6xKKo0Mfo
-	 yZ+wl5iCt+jdg==
-Date: Fri, 30 Oct 2026 12:44:28 +0100
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: "Rob Herring (Arm)" <robh@kernel.org>
-Cc: Bjorn Andersson <andersson@kernel.org>, 
-	Stephen Boyd <sboyd@kernel.org>, Brian Masney <bmasney+clk@redhat.com>, 
-	Jerome Brunet <jbrunet+clk@baylibre.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Florian Fainelli <florian.fainelli@broadcom.com>, 
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, Rob Clark <robin.clark@oss.qualcomm.com>, 
-	Dmitry Baryshkov <lumag@kernel.org>, Abhinav Kumar <abhinav.kumar@linux.dev>, 
-	Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>, 
-	Marijn Suijten <marijn.suijten@somainline.org>, Frank Li <Frank.Li@nxp.com>, Vinod Koul <vkoul@kernel.org>, 
-	Yinbo Zhu <zhuyinbo@loongson.cn>, Linus Walleij <linusw@kernel.org>, 
-	Bartosz Golaszewski <brgl@kernel.org>, Jonathan Cameron <jic23@kernel.org>, 
-	David Lechner <dlechner@baylibre.com>, Nuno =?utf-8?B?U8Oh?= <nuno.sa@analog.com>, 
-	Andy Shevchenko <andy@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>, 
-	Kevin Hilman <khilman@baylibre.com>, Martin Blumenstingl <martin.blumenstingl@googlemail.com>, 
-	Tiffany Lin <tiffany.lin@mediatek.com>, Andrew-CT Chen <andrew-ct.chen@mediatek.com>, 
-	Yunfei Dong <yunfei.dong@mediatek.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, 
-	Marek Szyprowski <m.szyprowski@samsung.com>, Andrzej Hajda <andrzej.hajda@intel.com>, 
-	Ryder Lee <ryder.lee@mediatek.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Christian Marangi <ansuelsmth@gmail.com>, 
-	Eric Anholt <eric@anholt.net>, Kuogee Hsieh <quic_khsieh@quicinc.com>, 
-	Peng Fan <peng.fan@nxp.com>, Aakarsh Jain <aakarsh.jain@samsung.com>, 
-	Abhinav Kumar <quic_abhinavk@quicinc.com>, linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	linux-rpi-kernel@lists.infradead.org, linux-arm-kernel@lists.infradead.org, 
-	freedreno@lists.freedesktop.org, imx@lists.linux.dev, dmaengine@vger.kernel.org, 
-	linux-gpio@vger.kernel.org, linux-iio@vger.kernel.org, linux-amlogic@lists.infradead.org, 
-	linux-media@vger.kernel.org, linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH] dt-bindings: Fix property name typos in if/then schemas
-Message-ID: <20261030-musical-modest-butterfly-e7734f@quoll>
-References: <20261028120216.2657397-1-robh@kernel.org>
+	b=OVQFq7eqKG529VBOc/jO+cib/pp2kbyG1EjsxMXt7na8IIN8Y14GWB1tIrUEFfEhl
+	 gikZa5wkwtZm4XnNuXAzyjAHLYwZr14j9BBzWiRH7KqNgsrYd9N/ExkR2qIFjlms2P
+	 wP5xZYRA1Zt3xo5/7wkRG+KkQMyil1rMKkoeCswuuyyx8WolJ2ajAH9yMyZa51m96/
+	 n9s1r+jHtuZYP0CpHqwW/BxekParj4RbHycUsuAbwr/semsJrKEX29nJHQWLas2XLG
+	 bgnrG2r6YqT580wVRdeDXjmzFC14L+kMFRfZyeQcyoik1NyYEqC47GujLyMkyDVs1o
+	 CWnxQ38vFDZlQ==
+Date: Fri, 30 Oct 2026 12:44:21 +0100
+From: Bartosz Golaszewski <brgl@kernel.org>
+To: Mikko Perttunen <mperttunen@nvidia.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Thierry Reding <thierry.reding@kernel.org>, Jonathan Hunter <jonathanh@nvidia.com>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH 4/6] PCI: tegra264: Power endpoint devices before
+ enumeration
+Message-ID: <qlyd6q5o4ubkq23bn7xhgo2jmsfvhrzvp5fqvobq55ivzh4ie4@wbvvspjde25s>
+References: <20261029-b4-t264-igpu-pci-v1-0-4d843dda0b02@nvidia.com>
+ <20261029-b4-t264-igpu-pci-v1-4-4d843dda0b02@nvidia.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -85,27 +62,19 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261028120216.2657397-1-robh@kernel.org>
+In-Reply-To: <20261029-b4-t264-igpu-pci-v1-4-4d843dda0b02@nvidia.com>
 
-On Wed, Oct 28, 2026 at 07:02:12AM -0500, Rob Herring (Arm) wrote:
-> Property names within if/then schemas currently go unchecked whether
-> they have a type defined or match what's in the top-level schema. Adding
-> a check finds a number of instances of typos. The typos result in the
-> schema having no effect on constraints.
+On Thu, Oct 29, 2026 at 12:32:06PM +0900, Mikko Perttunen wrote:
+> Add calls into the PCI pwrctrl framework to do required power sequencing
+> for endpoint devices before attempting to enumerate them, and select
+> PCI_PWRCTRL_GENERIC in Kconfig.
 > 
-> With this, fix the mediatek,vcodec-encoder 'clocks' count constraint
-> exposed by the name correction.
+> This is required for the integrated GB10B GPU on Tegra264 that requires
+> a power domain to be enabled before it appears on the PCI bus.
 > 
-> Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+> Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
 > ---
-
-I just git grepped kernel sources and weirdly no one made a typo in
-"clocks" of forgetting the second letter. We became way too polite :).
-
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-
-Best regards,
-Krzysztof
-
+ 
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
