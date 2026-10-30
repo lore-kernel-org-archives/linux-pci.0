@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.201.35
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.208.36
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793331924;
-	b=pdaLTe5GCdOTJealFLG6jPW5zAwWgR5pwzw6+B0mL0EK5bSCwxSxUeaWOQ6SUO2C6pMI
-	 CKPQtvUTwWBlodFee2gNaJ70D9JJ/KUuMafuHKVTfagSwMEbMakrscD8wDndmbvh7PzEW
-	 xdZmP2G5MRSsZL/BFbvgoCMhN7bQnuFzk083pkdJOcp9eckUVI9dhm62VmGOQlUr4TRRR
-	 /KpcR4fGZ70qxA7HGjjhJmSW3BQWgKBvQbA2u4XpqG6piwTlTx/7koJKTJgitoH0ZgaVv
-	 QFFPBz8IC6aM7MUrkI4tnFqpymiPvjz7UnC0vI6vex4uI1q0wBEbGW4VLLW6fhbNIBw==
+	t=1793332891;
+	b=LRTmyAM5/CXeBVegb/xGJveLrsO7br73rBqM8hMhbWyzHEK0s/LBuqwVJuCT6W9jRt3e
+	 c/+865YQLYgKxDMEQ1nas96eCj/Vw+8TtEZnHmDX8mZAqtbPR0wToeCYFort9LP2wuIwA
+	 U/5YHuP2xQvsLIAtxeR8GPi0YSYOAitie2qxBkLdzE0eK2NSBSl2Dyej7Ms3DeHe5gGmr
+	 F3Q4FOJMrTnsnwzqA/WxFpXnXEW2gKHyKjRGFpWGSgzfM+xTDZTnXWw+pmhpesnePXwnM
+	 LbtwFCogeAXCgiM8BJddOKUSSalUU0ZMHYJM6vzWdN9ngnNGC4Ke5vwY04S5GSV2fwA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793331924;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793332891;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
 	 Subject:Message-ID:References:Content-Type:Content-Disposition:
 	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
@@ -24,55 +24,55 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
 	 X-MS-Exchange-CrossTenant-UserPrincipalName:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=9iO97Oi7QWwwJoY7UsU0jpzfq7hMJk5B5JFmVeswpa4=;
-	b=WumoEU7UoxJVBqfuzbUMK0uDYHH4TULaGnm/you7Kt37fNi2UfPu/5x6s7UcpH3huOzx
-	 zrhmtCrV+UAyD0H3dNxANjTA4LgLDkgbVWilMhM0+enIhHf48/XiZ3LqSZyU1N9ttHLpg
-	 lfXCijYSMDOcuxI3VkI+pKEKdFoVWKNBhsw6jlXlPcBBBKTUHhZJBZYBBZuxcQkeZY03e
-	 DiU3Uy7GatsccOsPLts9aNytv+J7+TsCO5N5J9cRZnZzbTgHDsoadmtMMOeebxiG/SLqk
-	 ird3+/8DLbO/0G9dpuybm+wwomZ+DDqRTgdjzW7mc4wQdNurjilhZcc1ET9di5hIj7g==
+	bh=+6h+Ci6ZeSApgdoe8JezmVOYOetsZnnVxqSc5I8ht1E=;
+	b=Aj3m+DpyV4R0RjIgBYlvZEal/dbwqBgcwnsmpebMeOv5eGWWKzAdSSrLK6mhh5s79Him
+	 O4K+trzrra3lSqx+cD7TXT0iI5sL0UYpEJeODal/USol4Dt3mGzI7EMZt4qY44Ubf8cIo
+	 MFV+Um3Gqe7JtFjOhDPQHuC/0COBjALCKF5FlFjv74/lVo9w/9tZ4yBnIOsb7YJ+OOMjj
+	 r0DCMEyiAYcrC+HGcPZsZQKVVuxiTksg1aZPMME719aAtMALXkFaDQh+n+jEvGq4W/2k2
+	 CZJrvV4SjcRJEFNfLv98IVeyhRc2M68HmMm3H3R3r+f/9ONTeBx3d6k8TQmluj3XOXg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nvidia.com;
 	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=FBwvZrBj;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.201.35
-Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013035.outbound.protection.outlook.com [40.93.201.35])
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=LjdPHO99;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.208.36
+Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011036.outbound.protection.outlook.com [40.107.208.36])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37098606A31A;
-	Fri, 30 Oct 2026 03:45:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 37098606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47CBD606A31C;
+	Fri, 30 Oct 2026 04:01:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 47CBD606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=FBwvZrBj
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=LjdPHO99
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=jPbNC78ZjpvwS1hecVvGbpkj9ig6gSwy9iqnVjKpE2CF09if7PC2D55qx4hcNh5fMGu/HE3N7/RShHgaWdBLNyDD7YDOu35fW0iQfe2onT82Si21N/ajrF1OsDb/kTxCpB05NejtA3PqLjf5kYabYtaQ4rC2U6L/GjUEVXrRqnPKp5vVOsHGPGNlT0lihRW9V2NQ9RFSoYMtq5VybcyOL6mktkLBGgoIuJ8E8EFci+3gRJmBresQysSgYjFGY5J65LTEdjkkYMDzpjE1keXQJPJVCO42HsTLdmDtpzqgky10YGMFPGTPdXxHgudFO0+PkuB5sbUjvxaI/4cC3Vg30g==
+ b=gD1jazxq/LKPuelp+e565hlcsTRVCHek/Jj8FGzQfBPvUdx3NWAkl7aicjW6Uo9OfNX5LFrG6NZ8Wv9wb2jISQv5QGwLp3VMhC1syagN2JbbaOeNotAH/QouuGDCtuXJp67wV/1rpmkbB3uOwtIM96iKno2tGYfnuarQuZTwwtQfwRYYh9PoEWThF7NgvbgeAZZ5vSrQMWMd/IAepA4UzKuM30AHhr4GC6zcC24VvwZINJClHgNjFY9F1ehMc4oAr1yfoFyZwed9SbnzLRAf9KFNzz/Y3VnQ31vnqeyqmWc6G4DtoG60miViiMM6L016KJR8Seh/HS4S4EBPv/lL3w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=9iO97Oi7QWwwJoY7UsU0jpzfq7hMJk5B5JFmVeswpa4=;
- b=Fj+Lp6LHXImyA0ZDVaAv/rCf6fKQ3I7bFi8Xa0W+EDlCEpo5tULHSulBjHDdJzJ4aCwH1FssO5UPVOoOj9ZAYYl+GwzXkJFc8/PmPpzhsNKCHhHJbS6ix2aUhg4BxP69DpXoqXHK450iiwvXUuSjqsQTgNL1Gp9nQh+kAG5tnVClWo1ud3Fk5WhCJGCF6DxL+5QL6+ox8Btwj8jQvQH7YHROjBmCXE7rI99w+xDRkhxSwMbu2YAUS5ESHl3MqvwE6SGnKV15Iw7OoH2qInFaojue4k6voKubt5/qOPS9q4QMX1FQfcabINSgsJYB9LNUylaF817Hvyb7ji2wQTZfNg==
+ bh=+6h+Ci6ZeSApgdoe8JezmVOYOetsZnnVxqSc5I8ht1E=;
+ b=qKcpEfPIQfxGcqC48R4duiXeLWCYUQWg+gjpOtmwwEFUkzZcUv/ivl0EfM+jd7x4L5RhvzGXdut/VS+LsSfwUfAQ1I39jSpnMDKNqQAUCsR1X2QhgbT0cLQQ+VbE7YzQo8tU2mEJSPF75B8QCxNRyZQRfTmBac5Af5IyGFX/3Y0Ehsh8Ukpbtk2kuWGuIsA+3Kt8x/FQ3nHAiF7KneNCA3tuEiqeOdLKtW0AWslGmiSM4OHqeWNQ1d86NGNhMazFahdOR7T4ct95JBvNkD3G2SEETHDQuqqn4ows/7esB3J3lSZQWXN/5d8ah1F2i6mUVa6N02J9FwpVHcr/t6uIsQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9iO97Oi7QWwwJoY7UsU0jpzfq7hMJk5B5JFmVeswpa4=;
- b=FBwvZrBjPDTJY4HplBoLF9iPogzpSz/ypLtlrPf1R3tcP+FDiU9PAbWoTJYmY5s8Fvrmuykcvt0Y+ostdUg+Y1XTNCOlZY2E507b58TZ1R5cGkabJ27cwG5LGIH0/a6ssRuMNliRljKjB/lTawHEmHAFPfKNoRJu009LK5ebdOs1gWNxOmjc0z/2aG1Z8UGS0cqEHR/6uBKr9kBBX2Pem3NJqv47jawG3PmVefMM67PeBA32JZcS04TVMYic0A4U4T3pEgV+Zogxk9ychoDbUVukMv9OyqON3I7ZsE0jMpluTZafqLKQD69uR4K1AWk6fz7eDIa6MVK84gP8HniUOA==
+ bh=+6h+Ci6ZeSApgdoe8JezmVOYOetsZnnVxqSc5I8ht1E=;
+ b=LjdPHO99gkbja5iaJh8sWuqCMws2WKzko8UZcGujIM0cvtSsH/9BgEawgTTo5YM24L42TrTyc5wNA62+r7GmclO3t1ACRyRBkLYpzTER5f7t+jNnZ8/Z3gV734IHk0zQMZzSYwJ2sxeKZeNQdsmyMR8cHOKf0n0mAP+7+Yc6jD+hh12tS4afBUvTbaSAA+KUQK4bQ6Q7BbNvP0HwyXcW/eBL62n6n2dnbaEkZCTN75tgfjNqG9/cYG8GKEX6jOgUOWKFVr6wcFAUsnm7OnUXy5zTQEEAiOn4v7X2mIQPS2RF2Pltj2j2NALkMKA+F56zcpFKZtQYmViGdAVVjeCIpA==
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from BL0PR12MB2370.namprd12.prod.outlook.com (2603:10b6:207:47::27)
- by LV3PR12MB9404.namprd12.prod.outlook.com (2603:10b6:408:219::9) with
+ by CH3PR12MB8902.namprd12.prod.outlook.com (2603:10b6:610:17d::5) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.9; Fri, 30 Oct
- 2026 03:45:15 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.20; Fri, 30 Oct
+ 2026 04:01:24 +0000
 Received: from BL0PR12MB2370.namprd12.prod.outlook.com
  ([fe80::86cf:c3ec:2cf5:74c8]) by BL0PR12MB2370.namprd12.prod.outlook.com
  ([fe80::86cf:c3ec:2cf5:74c8%5]) with mapi id 15.21.0569.008; Fri, 30 Oct 2026
- 03:45:15 +0000
-Date: Fri, 30 Oct 2026 11:45:07 +0800
+ 04:01:23 +0000
+Date: Fri, 30 Oct 2026 12:01:15 +0800
 From: Richard Cheng <icheng@nvidia.com>
 To: Srirangan Madhavan <smadhavan@nvidia.com>
 Cc: Alison Schofield <alison.schofield@intel.com>, 
@@ -84,16 +84,16 @@ Cc: Alison Schofield <alison.schofield@intel.com>,
 	alwilliamson@nvidia.com, Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>, 
 	Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>, Jiandi An <jan@nvidia.com>, 
 	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v16 13/18] cxl: Validate and synchronize HDM ranges
- around reset
-Message-ID: <auQRSOGWEDzB_qjF@MWDK4CY14F>
+Subject: Re: [PATCH v16 06/18] cxl: Move HDM decoder helpers to built-in code
+Message-ID: <auQWe9cuI9_SO9Ex@MWDK4CY14F>
 References: <20261029145703.2185231-1-smadhavan@nvidia.com>
- <20261029145703.2185231-14-smadhavan@nvidia.com>
+ <20261029145703.2185231-7-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261029145703.2185231-14-smadhavan@nvidia.com>
-X-ClientProxiedBy: TP0P295CA0056.TWNP295.PROD.OUTLOOK.COM (2603:1096:910:3::7)
- To BL0PR12MB2370.namprd12.prod.outlook.com (2603:10b6:207:47::27)
+In-Reply-To: <20261029145703.2185231-7-smadhavan@nvidia.com>
+X-ClientProxiedBy: SI2PR01CA0050.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:193::21) To BL0PR12MB2370.namprd12.prod.outlook.com
+ (2603:10b6:207:47::27)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -104,614 +104,350 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL0PR12MB2370:EE_|LV3PR12MB9404:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0db36299-7a27-4f6c-cdff-08df3638356a
+X-MS-TrafficTypeDiagnostic: BL0PR12MB2370:EE_|CH3PR12MB8902:EE_
+X-MS-Office365-Filtering-Correlation-Id: a3b07d2a-3713-4fd7-0ca1-08df363a766d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|376014|23010399003|1800799024|6133799003|18002099003|22082099003|56012099006|11063799006|5023799004|261022105027099003|261022075727099003|10067099003|261022113327099003|261021123027099003|261021121427099003|4143699003|261009223027099003|261026121527099003|261026140227099003|261028144727099003;
+	BCL:0;ARA:13230040|7416014|366016|376014|23010399003|1800799024|261026121527099003|4143699003|11063799006|56012099006|261021121427099003|261022105027099003|261022075727099003|261022113327099003|261009223027099003|10067099003|261021123027099003|18002099003|22082099003|261028144727099003|261026140227099003|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	SQg1Q3rqwQ9781fP+97y8Jr9g4aC28LcRzBTU/Mr406uOKcMyjYQ7p4hhnx7t4g6rHlG07xnlBx2yTdTk2Uno4jB4FCUb84fzwYFCn+d7/5Ot0HbdvFio8r97AeOW9iAD4AcC0Si6cegj+Nimsk4nRx92azY6NdU9dstMvWRQU9Kib2XY0mCw7QF2lWlMM+K+8VTJDWd2bLzcFm+8w/OYDlsaTB+dMnw/q7o3k72S22CCKgpKuaJGDxdWBvIocZySkgearQievV27MAs5bwSTykeFT3dGNkzQzyQlSQAxQajQzqVxew+e/xwLMYHksq+RpyMVBelxQGs8OIRBkfY2KU304Ht374u73W9PVBkhPkJGAFymQTUIz8l/2XJmasA8VEI4EeWkF848dnAjqDRIa2V3FsV1scfb3RNlcq4mok7eYrxqu+IswRLK8u8yeCg3wjmcm7LGIRk8yWPsoG+SXVugQX/6KhMaWC9VCM5kEIFTsE02PNOwWSc+rTvVSv7AS/Jfd4hVugd0UJ/kHBywVMqbDm5TFCEiuvmgjYAj0cagFiGw5sBelOcueTdk3iKylWscQolQqXCuO6ABGDg4eCF2qw9mWVYQLVO63eKNT6yzUevKPFVdfuzlD4TDT95rYb/Nh/1Dy9Aa76FBHWv74cl5bNmtJ7e2Zu2/87a9Wg=
+	stt75GXwM3qkfOxpU7q+GFv8YBImOvWz5U3ZzosdDeNLJNYNtIBIopGTKSg6YulrO364XFFJ1SPWhMbRzl3m64zPgMplNiQX3CwbL+SDM3awOZa/G95XLBDVAX6SQLwvZnejl+mhJkGId3dUmWB9LM5XiVClKq/IgsSf16w7Z8Op752s5V6XxPyB/17aXIxyTyvIelfVPf9epmGv4XPfVAFiqqg9xMXvAIDw4KFdnq1qk0qLGONHJ5SkMQ4oE/1nFlsyINV0YaBhCFPieny2Nyu0qV9EF4XcdN2oqAXJqT5u4L7HNNXOGspBu+1LwrNk8X5coni8OyLPl3VX2d6ErN28dli1WmA0J7UhNYHxMFzgFHxyI2ZgC4kVticX9z1XwxRiS2lwr+QwNS9T37hvR1w8+f/PAk6lF2sSoNzJsARa6NAFlO2DAJoeRl4ScIoZ0w3WbT0H6obB8ni+IUP2+wxWI4WjifkCN983YUtn93tk1CyO2lg90uKInA9LEguWTFjuJxpW3aTSGC7gy9/aTu5/hrAYid46JesGeyZgyRS9p2IKWTXUkJjHWCknyq7EXuQSF+k98Lpz7qXvyvVXmwRU3tJMec37NFkCPaLpHZLMkwY4SSEYPaeu9oP702PZVlzlBzVO//Em2lrdBaO+08HzME8cfYUpd8JWHN9loEE=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB2370.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(23010399003)(1800799024)(6133799003)(18002099003)(22082099003)(56012099006)(11063799006)(5023799004)(261022105027099003)(261022075727099003)(10067099003)(261022113327099003)(261021123027099003)(261021121427099003)(4143699003)(261009223027099003)(261026121527099003)(261026140227099003)(261028144727099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB2370.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(366016)(376014)(23010399003)(1800799024)(261026121527099003)(4143699003)(11063799006)(56012099006)(261021121427099003)(261022105027099003)(261022075727099003)(261022113327099003)(261009223027099003)(10067099003)(261021123027099003)(18002099003)(22082099003)(261028144727099003)(261026140227099003)(6133799003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?6oD7kpmXokMLQeJ1o4FZWFc4y8MYr1qlzZzqp9So1x0xInVyHgMLXQTndmy3?=
- =?us-ascii?Q?CleJ3hIaqsP+RAfM7de+8EH9OKL/hxvGkaVJC9L0vBLVSrN2Tm9h9v9W1ePi?=
- =?us-ascii?Q?mv3jfoQIpGv6oA5yUTZZJUnqE8LyALrFhlSA7erJOSrzMkyTUB+OblQMv0e/?=
- =?us-ascii?Q?BCdUFRMYE4JPRoZzTGCEaIXtAzsPLuVZMfxFmnXNLOuCIsnZQlJBrbTb68+q?=
- =?us-ascii?Q?HwPYKX8yOdUn0rtq2pFIWZ1TF1rU1gRoqyRPnUPEthVKlmROM5Q0d6oCi5Vn?=
- =?us-ascii?Q?DCsc3xwxTZEUoe0dhfWjXC43vmXWy4BY05nbB/JRDrBDxrkZHhNqEGxdLKDB?=
- =?us-ascii?Q?CXGcgbW+v13i/1g1ZBG+VQdy8BH/02AxVu8Ah384BWXbJJ8pwEuCcKU0G5ho?=
- =?us-ascii?Q?V6j4AOEK2I/rqwgb+VRO0PTyA36kbHkZevG3gVEzhmthg4hTLG6AfqrJEQPJ?=
- =?us-ascii?Q?/P7cyM06aZHWxo09k4u/6XW18JsjeCmrHse7kNMEB6FOaEpmdHVbDQaR8kBZ?=
- =?us-ascii?Q?IbW5fywcVRjECk/Rqg71F7/352QebzuckrH594hUgBuTUj1xs9NG0VkUMKvL?=
- =?us-ascii?Q?BGsZdDeB102KV8Dey+eAJwPlpvvzEuKxpN3pBH0jEPqixi2cnLqyiy4LTLU1?=
- =?us-ascii?Q?M9Hway/EMrAVLaee3zrgAZQBKp29AwjMjaGzDIf4atLgeK5wT9Kv8CRpPlIc?=
- =?us-ascii?Q?Ka1GweCiPE3vscneglasjKFFaLPvu8UkULoegrxue8RaxdAt/atGVt8l/cGa?=
- =?us-ascii?Q?t6UTcv4OGecW4C+KAc7y5/R5glyYAL1FZNFJuZzPgI0HJQnqImCn3mQKFizc?=
- =?us-ascii?Q?0l3aqUG+3I/TtHbBIXH8uwCsklIfnEKanq8xzaN9pjtUTe9oiv5hSxOPxuVa?=
- =?us-ascii?Q?8+FP2fOCNuiVGzAvBqcBVzMoIhLS3ybIcg2bKUwkBHqeaNDVWWHVhbPzBL7s?=
- =?us-ascii?Q?95nyAizS7cI+OTpuOvS3NwwPe/0GwIFC5vkVhoB968BNhA1t/C2aEzf68DAF?=
- =?us-ascii?Q?iIW00R2tEOQazc/zW1Ncs3TsXqoBYazEucQPE4nN5uUakgoXnRKT6NE6IOs4?=
- =?us-ascii?Q?Z3i+TL9bBxhnjMyWp2QoYARgK/Hm1kPzaje8FCYz3ThfD2XecjLRo3iKqpRS?=
- =?us-ascii?Q?RljBXsivV3OWGCpNtuULlO/ZMSGbDCFE5JCG/ZQCpO9XYd2JwTBghjYSb0nH?=
- =?us-ascii?Q?cB3YKCWIDRFI0zZCTr4XizGx0z9xNBAcpRAd9BCWJCbiEmln2TVrdN3tA1Bb?=
- =?us-ascii?Q?T0IOWGJqTR1Nr46GlssmPSIILqIwZ4k47Ui/lE8yzQtTQ/EmSgMSv9DqZ1R3?=
- =?us-ascii?Q?uN7ZBFDt4seQi6fArhm1LLtbVSy5lRPWAvoRSOvbsGzl/+g1QzbvZF51mjRR?=
- =?us-ascii?Q?79FMXMai99DdIr+sA3/Vwp8C22p1XqmYrdrAG1R+rsEfXGjiPIr2sfXmvpYL?=
- =?us-ascii?Q?APAoROJom/mKi6UNvrQuf/uyrcPgaDAeJ0xDhUUXonKBf0YeJx4xoOTN5CkM?=
- =?us-ascii?Q?Eks+nmJHLGnXyEl2NYeIOAWH3yAnABUT7mTsFLtIAz8A+euLw7Vak+O9fTyV?=
- =?us-ascii?Q?CkzQrdMcQL1RONjXk4E6C+3+hsWhIEwBG6/19W/FQbBIUNWo5Bm8Ny2TnCvU?=
- =?us-ascii?Q?HALLr+B94//nYc9J+yEop6G0H91eW3kmcIC4W4ObgstxaIqrJD1OSg0pJN3X?=
- =?us-ascii?Q?xc6jq//ZllaYSJpPOfM5tziRsErhnMZWzi6Wf7sGmwcSvkMYhwqCgNWfLVTW?=
- =?us-ascii?Q?nX7ZOh0Ddw=3D=3D?=
+	=?us-ascii?Q?emmSg+EUvNQRflZ4HYildnBroRuel3b0Uy+lo/Y14xOV83NeVQXtRcjIrR+a?=
+ =?us-ascii?Q?hASLDM0ZlW+Ba6S55EfR+EEek+9On2IYuNVQeg6xcK/+fdWwwBcpGW7d71ol?=
+ =?us-ascii?Q?lPCXWb+GXpbmI/+zdlXwxdwzZubPomQ4NwX9rFvMtitPK62uYXVKcf9EUmtV?=
+ =?us-ascii?Q?WV1oj2LoMLGXCsnmCeA6HymNN8xt220iUXDiaaBgyIs6emRfPO/P1vHrdBKC?=
+ =?us-ascii?Q?zcRGmoMaBkA7c15O+Ko3IbRg3HcpNeteaVqkBbgL8FJML4QSiDJh6sopXdBo?=
+ =?us-ascii?Q?K0NPkBQWk+wOhhi909HQVYy/bGcTMhx+oZeDj/ofZII7Bbrz3EHekExOpX/y?=
+ =?us-ascii?Q?QBttgvn/v+PB2s7RwowS3ZVuiC/ikyCDVKLPNK/+9egNx20jo2ksxpysoBjj?=
+ =?us-ascii?Q?VrsNRuq+8EBGrtyexrPygtbfjRX8XXqISd7if6bq575k6odxT0zM3ejZLL9B?=
+ =?us-ascii?Q?w/ZEq/P+Yp1SQtBejfjSs1D5TPE4vYqC/4o5c3gupDPIwbu8L5HV9rLfknvO?=
+ =?us-ascii?Q?53hRaq9+S0naOFV/zacxu+U2RhMtjU9FGfMP/I7nZdDuVvo4IEVz8nSKkGcG?=
+ =?us-ascii?Q?dYiruxOCsQgSV8QOZv/tkMRkNzf/kO4rjrvEXi1JP468S4ZM7M85wsqI98lM?=
+ =?us-ascii?Q?HOvWVRK59gHxjuZiRnMub9m8vplo+W57Co3qA1F3EUPVxbMTQ/1YYLbHoumm?=
+ =?us-ascii?Q?+7W3VbK0sHrEGJy1qfpr5lZ9ikqjEBxp9N/YWsl2qSHCIi1+7O1EFxD4/fuz?=
+ =?us-ascii?Q?v+yAdyFxvLspUJomGuSX0g+eKf1j+wnTc1d9MoJ0TpEBc1EbPgtiq5/r+jEj?=
+ =?us-ascii?Q?uEAZwBL64Ar7SMflYXbsreV1xiNfSArqXiss4naUvT9lAoDoUOhX2jDDlbsf?=
+ =?us-ascii?Q?Jht3OpyrJ9Nsxd04dlE5+KmEEDOEFEB57R+OeHzzKdQDunAFqVXCM8e6Eskb?=
+ =?us-ascii?Q?C0hprfXX6ATNa7FPqsMw4ZFI/OqndV32F7ceNeGp4x8pDw7Lk1NsMmdj7Kpn?=
+ =?us-ascii?Q?TNopzd8O3jFHnO2I3gM3O1LWJFmPkeYupW34EoH6dGX3aD+cwPuVCr3cnJ52?=
+ =?us-ascii?Q?pryr/5Q5w8MX3v5QcU8NE2jTaPe7f8uX411RUuicdxXJXTb1574WlMdMguBS?=
+ =?us-ascii?Q?Lvlxfgi3Rz0aom7C1ksuonw+nIqWS+Q/jHIA6gvLpodCIojA7GE975HEnVPM?=
+ =?us-ascii?Q?GNNVFKTZWfU2XJWEo72pQqzuJcNIZYseZTMRno6tRC4GHp27wKLnWMEYIAAr?=
+ =?us-ascii?Q?NxjIyyFviPqSR1id3du2hYCYIXZ+hCdUg1J0BKyY1XeVnZm8RbU8gzrI9f5F?=
+ =?us-ascii?Q?UlEG9GCv4IKK0Yxrysg6Xg9+wp0fF9H4/4W8HDJ6EnZGa5IxTlLvgAC+0q5w?=
+ =?us-ascii?Q?epjsDo+tWr5ZI0gs8ZviS5mZS2cozdS1O34np/Y5zhdbVaoFOoNNVjiZ/WMd?=
+ =?us-ascii?Q?dO+fJN70slv7cPv0jY0mBX3IUjY3Z8yu1FdL6OB2873Na9qbWjU6lDe953PA?=
+ =?us-ascii?Q?Hi+yEsKgv4tAOHAPTNDnKTuVwq7H5HX3CbsHkbyDR/juLF3nBJRXCDEL4YAK?=
+ =?us-ascii?Q?2UYug/e9GfC3kLppe2802pcxaxnWixZ9ViDD+ukwm/fKPAWz2xV+0dfLhgdr?=
+ =?us-ascii?Q?HoojaNChXUZqc3qOo0+fgsOZKuTwEKcvA51iBq5+ZrlaXpmEx5N6m7eTtOts?=
+ =?us-ascii?Q?PtGjdOx0x9rgRPPVZW1Eyf5HQ934v9n01L8+nmo0Y1HtFu9ne1lncnP/SmQD?=
+ =?us-ascii?Q?MzKWCOMlwQ=3D=3D?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0db36299-7a27-4f6c-cdff-08df3638356a
+X-MS-Exchange-CrossTenant-Network-Message-Id: a3b07d2a-3713-4fd7-0ca1-08df363a766d
 X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB2370.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Oct 2026 03:45:15.4030
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Oct 2026 04:01:23.6945
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: OY1/kG/SpeXL/YEisdpc4DDbUnYVL2fuhBh5nLUCjLaW12H9ni3wvYs2w9Uup9xjrywPnEzxRitoEFgqXenHXg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR12MB9404
+X-MS-Exchange-CrossTenant-UserPrincipalName: urIqVHA9Ck8xgqRvTSHzrBhozyigftolQDwi5s4UbajPJZwqqLpAE8o2huMjcgZa2yQL3ypw9VstF6Vf88Y93w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8902
 
-On Thu, Oct 29, 2026 at 02:56:58PM +0800, Srirangan Madhavan wrote:
-> Refuse reset unless enabled system-physical HDM ranges can be reserved
-> exclusively and CPU-cache invalidation is available. Invalidate before
-> reset and again before ending IOMMU exclusion, holding range reservations
-> until the second invalidation completes. A later patch places state
-> restoration before the second invalidation.
+On Thu, Oct 29, 2026 at 02:56:51PM +0800, Srirangan Madhavan wrote:
+> The PCI core will restore HDM decoders after a reset, possibly while no
+> CXL driver is loaded, so it cannot call into cxl_core.
 > 
-> Reject normalized-addressing decoders because their cached ranges are not
-> system physical addresses. Ignore zero-size decoders because they map no
-> address range. Refuse reset when the device decodes memory through its
-> DVSEC ranges instead of HDM decoders, since the cache holds no range to
-> reserve for that memory.
+> Move the HDM register programming helpers from hdm.c to hdm_regs.c and
+> build that file into the kernel whenever CXL_BUS is enabled, including
+> when CXL_BUS is modular. Export only the symbols that cxl_core uses.
 > 
-> Hold the global cxl_rwsem.region write lock across snapshot, reset and
-> restoration to keep the decoder state and reserved ranges stable. This also
-> blocks region and decoder sysfs, region probe, poison operations, sanitize
-> and region-aware event tracing across CXL devices. The Memory Clear wait is
-> capped at 20 seconds; cache flushes and other reset work extend the hold.
-> 
-> Allow the existing CXL_REGION_INVALIDATION_TEST option to bypass missing
-> CPU cache invalidation for test environments without a provider.
+> Keep the DPA lock assertion in the normal decoder programming caller so
+> the register helpers do not depend on cxl_rwsem. Leave cxl_rwsem in
+> cxl_core until built-in cache management needs it.
 > 
 > Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> Assisted-by: LLM
-> 
+> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+> Reviewed-by: Li Ming <ming.li@zohomail.com>
+>
+
+Reviewed-by: Richard Cheng <icheng@nvidia.com>
+ 
 > ---
-> Reference branch: https://git.kernel.org/pub/scm/linux/kernel/git/djiang/linux.git/commit/?id=5944c6e61f14c0dd28d54537be15edb2cadb0e8b
+> Reference branch: https://git.kernel.org/pub/scm/linux/kernel/git/djiang/linux.git/commit/?id=e0b476ea99567fb5aa416eac0cf61bca20724880
 > ---
->  drivers/cxl/Kconfig          |   3 +-
->  drivers/cxl/core/hdm_state.c | 245 ++++++++++++++++++++++++++++++++++-
->  drivers/pci/cxl.c            |  86 ++++++++++--
->  include/cxl/hdm.h            |  44 ++++++-
->  4 files changed, 367 insertions(+), 11 deletions(-)
+>  drivers/cxl/core/Makefile   |   1 +
+>  drivers/cxl/core/hdm.c      | 102 +------------------------------
+>  drivers/cxl/core/hdm_regs.c | 118 ++++++++++++++++++++++++++++++++++++
+>  3 files changed, 121 insertions(+), 100 deletions(-)
+>  create mode 100644 drivers/cxl/core/hdm_regs.c
 > 
-> diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
-> index 8b08bfdc4982..e927e69a3f7b 100644
-> --- a/drivers/cxl/Kconfig
-> +++ b/drivers/cxl/Kconfig
-> @@ -226,7 +226,8 @@ config CXL_REGION_INVALIDATION_TEST
->  	  invalidation mechanism. For example usage of wbinvd is restricted to
->  	  bare metal x86. However, for testing purposes toggling this option
->  	  can disable that data integrity safety and proceed with enabling
-> -	  regions when there might be conflicting contents in the CPU cache.
-> +	  regions or performing CXL reset when there might be conflicting
-> +	  contents in the CPU cache.
+> diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
+> index ce7213818d3c..6703c1729396 100644
+> --- a/drivers/cxl/core/Makefile
+> +++ b/drivers/cxl/core/Makefile
+> @@ -1,5 +1,6 @@
+>  # SPDX-License-Identifier: GPL-2.0
+>  obj-$(CONFIG_CXL_BUS) += cxl_core.o
+> +obj-$(subst m,y,$(CONFIG_CXL_BUS)) += hdm_regs.o
+>  obj-$(CONFIG_CXL_SUSPEND) += suspend.o
 >  
->  	  If unsure, or if this kernel is meant for production environments,
->  	  say N.
-> diff --git a/drivers/cxl/core/hdm_state.c b/drivers/cxl/core/hdm_state.c
-> index 1140006de50d..cb7ec0f86ab1 100644
-> --- a/drivers/cxl/core/hdm_state.c
-> +++ b/drivers/cxl/core/hdm_state.c
-> @@ -1,8 +1,14 @@
->  // SPDX-License-Identifier: GPL-2.0-only
->  /* Copyright (c) 2026 NVIDIA Corporation & Affiliates */
->  #include <linux/cleanup.h>
-> +#include <linux/device.h>
+>  ccflags-y += -I$(srctree)/drivers/cxl
+> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
+> index af445f1b9798..2c373dfbc070 100644
+> --- a/drivers/cxl/core/hdm.c
+> +++ b/drivers/cxl/core/hdm.c
+> @@ -708,35 +708,6 @@ int cxl_dpa_alloc(struct cxl_endpoint_decoder *cxled, u64 size)
+>  	return devm_add_action_or_reset(&port->dev, cxl_dpa_release, cxled);
+>  }
+>  
+> -static void cxld_set_interleave(const struct cxl_decoder_config *config, u32 *ctrl)
+> -{
+> -	u16 eig;
+> -	u8 eiw;
+> -
+> -	/*
+> -	 * Input validation ensures these warns never fire, but otherwise
+> -	 * suppress unititalized variable usage warnings.
+> -	 */
+> -	if (WARN_ONCE(ways_to_eiw(config->interleave_ways, &eiw),
+> -		      "invalid interleave_ways: %d\n", config->interleave_ways))
+> -		return;
+> -	if (WARN_ONCE(granularity_to_eig(config->interleave_granularity, &eig),
+> -		      "invalid interleave_granularity: %d\n",
+> -		      config->interleave_granularity))
+> -		return;
+> -
+> -	u32p_replace_bits(ctrl, eig, CXL_HDM_DECODER0_CTRL_IG_MASK);
+> -	u32p_replace_bits(ctrl, eiw, CXL_HDM_DECODER0_CTRL_IW_MASK);
+> -	*ctrl |= CXL_HDM_DECODER0_CTRL_COMMIT;
+> -}
+> -
+> -static void cxld_set_type(const struct cxl_decoder_config *config, u32 *ctrl)
+> -{
+> -	u32p_replace_bits(ctrl,
+> -			  !!(config->target_type == CXL_DECODER_HOSTONLYMEM),
+> -			  CXL_HDM_DECODER0_CTRL_HOSTONLY);
+> -}
+> -
+>  static void cxlsd_set_targets(struct cxl_switch_decoder *cxlsd, u64 *tgt)
+>  {
+>  	struct cxl_dport **t = &cxlsd->target[0];
+> @@ -759,77 +730,6 @@ static void cxlsd_set_targets(struct cxl_switch_decoder *cxlsd, u64 *tgt)
+>  		*tgt |= FIELD_PREP(GENMASK_ULL(63, 56), t[7]->port_id);
+>  }
+>  
+> -/*
+> - * Per CXL 2.0 8.2.5.12.20 Committing Decoder Programming, hardware must set
+> - * committed or error within 10ms, but just be generous with 20ms to account for
+> - * clock skew and other marginal behavior
+> - */
+> -#define COMMIT_TIMEOUT_MS 20
+> -int cxld_await_commit(void __iomem *hdm, int id)
+> -{
+> -	u32 ctrl;
+> -	int i;
+> -
+> -	for (i = 0; i < COMMIT_TIMEOUT_MS; i++) {
+> -		ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> -		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMIT_ERROR, ctrl)) {
+> -			ctrl &= ~CXL_HDM_DECODER0_CTRL_COMMIT;
+> -			writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> -			return -EIO;
+> -		}
+> -		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMITTED, ctrl))
+> -			return 0;
+> -		fsleep(1000);
+> -	}
+> -
+> -	return -ETIMEDOUT;
+> -}
+> -
+> -static u32 cxl_hdm_write_range(void __iomem *hdm,
+> -			       const struct cxl_decoder_config *config)
+> -{
+> -	u64 size = range_len(&config->hpa_range);
+> -	u64 base = config->hpa_range.start;
+> -	int id = config->id;
+> -	u32 ctrl;
+> -
+> -	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> -	cxld_set_interleave(config, &ctrl);
+> -	cxld_set_type(config, &ctrl);
+> -
+> -	writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
+> -	writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
+> -	writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id));
+> -	writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
+> -	return ctrl;
+> -}
+> -
+> -void cxl_commit_start_endpoint(const struct cxl_endpoint_decoder_settings *settings,
+> -			       void __iomem *hdm)
+> -{
+> -	int id = settings->config.id;
+> -	u32 ctrl;
+> -
+> -	lockdep_assert_held(&cxl_rwsem.dpa);
+> -	ctrl = cxl_hdm_write_range(hdm, &settings->config);
+> -	writel(upper_32_bits(settings->skip), hdm + CXL_HDM_DECODER0_SKIP_HIGH(id));
+> -	writel(lower_32_bits(settings->skip), hdm + CXL_HDM_DECODER0_SKIP_LOW(id));
+> -	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> -}
+> -
+> -void cxl_commit_start_switch(const struct cxl_decoder_config *config,
+> -			     u64 targets, void __iomem *hdm)
+> -{
+> -	int id = config->id;
+> -	u32 ctrl;
+> -
+> -	lockdep_assert_held(&cxl_rwsem.dpa);
+> -	ctrl = cxl_hdm_write_range(hdm, config);
+> -	writel(upper_32_bits(targets), hdm + CXL_HDM_DECODER0_TL_HIGH(id));
+> -	writel(lower_32_bits(targets), hdm + CXL_HDM_DECODER0_TL_LOW(id));
+> -	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> -}
+> -
+>  static void
+>  cxl_endpoint_decoder_snapshot(struct cxl_endpoint_decoder *cxled,
+>  			      struct cxl_endpoint_decoder_settings *settings)
+> @@ -846,6 +746,8 @@ static void setup_hw_decoder(struct cxl_decoder *cxld, void __iomem *hdm)
+>  {
+>  	struct cxl_endpoint_decoder_settings settings;
+>  
+> +	lockdep_assert_held(&cxl_rwsem.dpa);
+> +
+>  	if (is_switch_decoder(&cxld->dev)) {
+>  		struct cxl_switch_decoder *cxlsd =
+>  			to_cxl_switch_decoder(&cxld->dev);
+> diff --git a/drivers/cxl/core/hdm_regs.c b/drivers/cxl/core/hdm_regs.c
+> new file mode 100644
+> index 000000000000..53d2f236e49c
+> --- /dev/null
+> +++ b/drivers/cxl/core/hdm_regs.c
+> @@ -0,0 +1,118 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/* Copyright (c) 2026 NVIDIA Corporation & Affiliates */
+> +#include <linux/delay.h>
+> +#include <linux/bug.h>
 > +#include <linux/errno.h>
->  #include <linux/export.h>
->  #include <linux/io.h>
-> +#include <linux/ioport.h>
-> +#include <linux/list.h>
-> +#include <linux/memregion.h>
-> +#include <linux/overflow.h>
->  #include <linux/pci.h>
->  #include <linux/rwsem.h>
->  #include <linux/slab.h>
-> @@ -13,7 +19,8 @@
->  
->  /*
->   * CXL state that must stay available while no CXL driver is bound: the CXL
-> - * locks and the per-device HDM cache filled during PCI enumeration.
-> + * locks, the per-device HDM cache filled during PCI enumeration, and the
-> + * region quiesce used around a reset.
->   */
->  struct cxl_rwsem cxl_rwsem = {
->  	.region = __RWSEM_INITIALIZER(cxl_rwsem.region),
-> @@ -132,3 +139,239 @@ void cxl_hdm_cache_release(struct cxl_hdm_info **slot)
->  	}
->  	kfree(info);
->  }
+> +#include <linux/export.h>
+> +#include <linux/kernel.h>
 > +
-> +/**
-> + * cxl_hdm_cache_dvsec_decode() - check for memory decoded by DVSEC ranges
-> + * @slot: cache pointer owned by the device
-> + *
-> + * Return: true if the published state shows CXL.mem enabled while HDM
-> + * decoders are globally disabled, so that the device decodes memory through
-> + * its DVSEC ranges, which the cache does not describe.
+> +#include <cxl/hdm.h>
+> +
+> +#include "cxl.h"
+> +#include "core.h"
+> +
+> +/*
+> + * HDM decoder register helpers are built in whenever CXL_BUS is enabled,
+> + * including when cxl_core is modular. Callers provide any required locking.
 > + */
-> +bool cxl_hdm_cache_dvsec_decode(struct cxl_hdm_info *const *slot)
-> +{
-> +	struct cxl_hdm_info *info;
 > +
-> +	guard(rwsem_read)(&cxl_rwsem.dpa);
-> +	info = *slot;
-> +	return info && (info->dvsec_ctrl & PCI_DVSEC_CXL_MEM_ENABLE) &&
-> +	       !(info->global_ctrl & CXL_HDM_DECODER_ENABLE);
+> +static void cxld_set_interleave(const struct cxl_decoder_config *config, u32 *ctrl)
+> +{
+> +	u16 eig;
+> +	u8 eiw;
+> +
+> +	/*
+> +	 * Input validation ensures these warns never fire, but otherwise
+> +	 * suppress unititalized variable usage warnings.
+> +	 */
+> +	if (WARN_ONCE(ways_to_eiw(config->interleave_ways, &eiw),
+> +		      "invalid interleave_ways: %d\n", config->interleave_ways))
+> +		return;
+> +	if (WARN_ONCE(granularity_to_eig(config->interleave_granularity, &eig),
+> +		      "invalid interleave_granularity: %d\n",
+> +		      config->interleave_granularity))
+> +		return;
+> +
+> +	u32p_replace_bits(ctrl, eig, CXL_HDM_DECODER0_CTRL_IG_MASK);
+> +	u32p_replace_bits(ctrl, eiw, CXL_HDM_DECODER0_CTRL_IW_MASK);
+> +	*ctrl |= CXL_HDM_DECODER0_CTRL_COMMIT;
 > +}
 > +
-> +/**
-> + * cxl_hdm_cache_snapshot() - copy the published HDM state
-> + * @slot: cache pointer owned by the device
-> + *
-> + * Return: a copy the caller frees with kfree(), ERR_PTR(-ENXIO) when nothing
-> + * is published, or another ERR_PTR() on failure.
-> + */
-> +struct cxl_hdm_info *cxl_hdm_cache_snapshot(struct cxl_hdm_info *const *slot)
+> +static void cxld_set_type(const struct cxl_decoder_config *config, u32 *ctrl)
 > +{
-> +	struct cxl_hdm_info *info, *copy;
-> +	size_t size;
-> +
-> +	guard(rwsem_read)(&cxl_rwsem.dpa);
-> +	info = *slot;
-> +	if (!info)
-> +		return ERR_PTR(-ENXIO);
-> +	if (info->decoder_count <= 0)
-> +		return ERR_PTR(-EINVAL);
-> +
-> +	size = struct_size(info, settings, info->decoder_count);
-> +	if (size == SIZE_MAX)
-> +		return ERR_PTR(-EOVERFLOW);
-> +
-> +	copy = kmemdup(info, size, GFP_KERNEL);
-> +	if (!copy)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	return copy;
-> +}
-> +
-> +void cxl_region_quiesce_lock(void)
-> +	__acquires(cxl_region_quiesce)
-> +	__context_unsafe(token maps to cxl_rwsem.region)
-> +{
-> +	down_write(&cxl_rwsem.region);
-> +	__acquire(cxl_region_quiesce);
-> +}
-> +
-> +void cxl_region_quiesce_unlock(void)
-> +	__releases(cxl_region_quiesce)
-> +	__context_unsafe(token maps to cxl_rwsem.region)
-> +{
-> +	__release(cxl_region_quiesce);
-> +	up_write(&cxl_rwsem.region);
+> +	u32p_replace_bits(ctrl,
+> +			  !!(config->target_type == CXL_DECODER_HOSTONLYMEM),
+> +			  CXL_HDM_DECODER0_CTRL_HOSTONLY);
 > +}
 > +
 > +/*
-> + * Bound the range twice: request_mem_region() takes resource_size_t while
-> + * cpu_cache_invalidate_memregion() takes size_t, and the two differ on
-> + * 32-bit builds with CONFIG_PHYS_ADDR_T_64BIT. range_len() can also reach
-> + * RESOURCE_SIZE_MAX + 1 for a full-width range, and wraps to zero when
-> + * resource_size_t is 64-bit, which the !len test catches.
+> + * Per CXL 2.0 8.2.5.12.20 Committing Decoder Programming, hardware must set
+> + * committed or error within 10ms, but just be generous with 20ms to account for
+> + * clock skew and other marginal behavior
 > + */
-> +static int cxl_hdm_range_validate(const struct range *hpa_range)
+> +#define COMMIT_TIMEOUT_MS 20
+> +int cxld_await_commit(void __iomem *hdm, int id)
 > +{
-> +	u64 len = range_len(hpa_range);
+> +	u32 ctrl;
+> +	int i;
 > +
-> +	if (!len)
-> +		return -EINVAL;
-> +	if (hpa_range->end > RESOURCE_SIZE_MAX || len > RESOURCE_SIZE_MAX ||
-> +	    len > SIZE_MAX)
-> +		return -EOVERFLOW;
-> +
-> +	return 0;
-> +}
-> +
-> +static int cxl_hdm_range_add(struct cxl_hdm_quiesce *q,
-> +			     const struct range *hpa_range)
-> +{
-> +	struct cxl_hdm_range *range, *next, *new_range;
-> +	int rc;
-> +
-> +	rc = cxl_hdm_range_validate(hpa_range);
-> +	if (rc)
-> +		return rc;
-> +
-> +	list_for_each_entry(range, &q->ranges, list)
-> +		if (range_contains(&range->hpa_range, hpa_range))
-> +			return 0;
-> +
-> +	new_range = kzalloc_obj(*new_range);
-> +	if (!new_range)
-> +		return -ENOMEM;
-> +
-> +	new_range->hpa_range = *hpa_range;
-> +	new_range->len = range_len(hpa_range);
-> +
-> +	list_for_each_entry_safe(range, next, &q->ranges, list) {
-> +		if (range_contains(hpa_range, &range->hpa_range)) {
-> +			list_del(&range->list);
-> +			kfree(range);
+> +	for (i = 0; i < COMMIT_TIMEOUT_MS; i++) {
+> +		ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMIT_ERROR, ctrl)) {
+> +			ctrl &= ~CXL_HDM_DECODER0_CTRL_COMMIT;
+> +			writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +			return -EIO;
 > +		}
-> +	}
-> +	list_add_tail(&new_range->list, &q->ranges);
-> +
-> +	return 0;
-> +}
-> +
-> +static int cxl_hdm_ranges_collect(struct cxl_hdm_quiesce *q,
-> +				  const struct cxl_hdm_info *snapshot)
-> +{
-> +	int rc;
-> +
-> +	for (int i = 0; i < snapshot->decoder_count; i++) {
-> +		const struct cxl_decoder_config *config =
-> +			&snapshot->settings[i].config;
-> +
-> +		/* A committed zero-size decoder maps no HPA. */
-> +		if (!(config->flags & CXL_DECODER_F_ENABLE) ||
-> +		    !range_len(&config->hpa_range))
-> +			continue;
-> +
-> +		if (config->flags & CXL_DECODER_F_NORMALIZED_ADDRESSING)
-> +			return -EOPNOTSUPP;
-> +
-> +		rc = cxl_hdm_range_add(q, &config->hpa_range);
-> +		if (rc)
-> +			return rc;
+> +		if (FIELD_GET(CXL_HDM_DECODER0_CTRL_COMMITTED, ctrl))
+> +			return 0;
+> +		fsleep(1000);
 > +	}
 > +
-> +	return 0;
+> +	return -ETIMEDOUT;
 > +}
+> +EXPORT_SYMBOL_FOR_MODULES(cxld_await_commit, "cxl_core");
 > +
-> +static int cxl_hdm_ranges_request(struct cxl_hdm_quiesce *q)
+> +static u32 cxl_hdm_write_range(void __iomem *hdm,
+> +			       const struct cxl_decoder_config *config)
 > +{
-> +	struct cxl_hdm_range *range;
+> +	u64 size = range_len(&config->hpa_range);
+> +	u64 base = config->hpa_range.start;
+> +	int id = config->id;
+> +	u32 ctrl;
 > +
-> +	lockdep_assert_held_write(&cxl_rwsem.region);
+> +	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +	cxld_set_interleave(config, &ctrl);
+> +	cxld_set_type(config, &ctrl);
 > +
-> +	list_for_each_entry(range, &q->ranges, list) {
-> +		const struct range *hpa_range = &range->hpa_range;
-> +
-> +		range->res = request_mem_region(hpa_range->start, range->len,
-> +						"cxl_reset");
-> +		if (!range->res)
-> +			return -EBUSY;
-> +	}
-> +
-
-Hi Srirangan,
-
-The spec explicitly requires no outstanding or new CXL.mem transaction after
-the affected HDM ranges are offlined.
-
-For this part, I don't see any guarantee that a successful request_mem_region()
-means all outstanding memory access have stopped and no new access can occur.
-
-I see you refuse to reset when resource reservation conflict, but nothing
-offline memory or directly stop CXL.mem traffic.
-
-I wonder if the implementation provide enough evidence that when request_mem_region()
-success means no new mem access or CXL.mem traffic will pop up ?
-
-Best regards,
-Richard Cheng.
-
-> +	return 0;
+> +	writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
+> +	writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
+> +	writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id));
+> +	writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
+> +	return ctrl;
 > +}
 > +
-> +static int cxl_hdm_ranges_invalidate(struct cxl_hdm_quiesce *q)
+> +void cxl_commit_start_endpoint(const struct cxl_endpoint_decoder_settings *settings,
+> +			       void __iomem *hdm)
 > +{
-> +	struct cxl_hdm_range *range;
-> +	int rc = 0;
+> +	int id = settings->config.id;
+> +	u32 ctrl;
 > +
-> +	lockdep_assert_held_write(&cxl_rwsem.region);
-> +
-> +	if (!cpu_cache_has_invalidate_memregion() &&
-> +	    IS_ENABLED(CONFIG_CXL_REGION_INVALIDATION_TEST)) {
-> +		pr_info_once("CXL reset: bypassing CPU cache invalidation for testing\n");
-> +		return 0;
-> +	}
-> +
-> +	list_for_each_entry(range, &q->ranges, list) {
-> +		const struct range *hpa_range = &range->hpa_range;
-> +		int rc2;
-> +
-> +		rc2 = cpu_cache_invalidate_memregion(hpa_range->start, range->len);
-> +		rc = rc ?: rc2;
-> +	}
-> +
-> +	return rc;
+> +	ctrl = cxl_hdm_write_range(hdm, &settings->config);
+> +	writel(upper_32_bits(settings->skip), hdm + CXL_HDM_DECODER0_SKIP_HIGH(id));
+> +	writel(lower_32_bits(settings->skip), hdm + CXL_HDM_DECODER0_SKIP_LOW(id));
+> +	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
 > +}
+> +EXPORT_SYMBOL_FOR_MODULES(cxl_commit_start_endpoint, "cxl_core");
 > +
-> +/**
-> + * cxl_hdm_quiesce_prepare() - take the HPA ranges of a device out of use
-> + * @q: quiesce state to initialize
-> + * @snapshot: HDM state from cxl_hdm_cache_snapshot()
-> + *
-> + * Reserve every enabled system-physical range in @snapshot exclusively, then
-> + * write back and invalidate CPU caches for them. Call
-> + * cxl_hdm_quiesce_destroy() afterwards whether or not this succeeds.
-> + *
-> + * Return: 0 on success, or a negative errno.
-> + */
-> +int cxl_hdm_quiesce_prepare(struct cxl_hdm_quiesce *q,
-> +			    const struct cxl_hdm_info *snapshot)
+> +void cxl_commit_start_switch(const struct cxl_decoder_config *config,
+> +			     u64 targets, void __iomem *hdm)
 > +{
-> +	int rc;
+> +	int id = config->id;
+> +	u32 ctrl;
 > +
-> +	lockdep_assert_held_write(&cxl_rwsem.region);
-> +	INIT_LIST_HEAD(&q->ranges);
-> +
-> +	if (!cpu_cache_has_invalidate_memregion() &&
-> +	    !IS_ENABLED(CONFIG_CXL_REGION_INVALIDATION_TEST))
-> +		return -ENXIO;
-> +
-> +	rc = cxl_hdm_ranges_collect(q, snapshot);
-> +	if (rc)
-> +		return rc;
-> +
-> +	rc = cxl_hdm_ranges_request(q);
-> +	if (rc)
-> +		return rc;
-> +
-> +	return cxl_hdm_ranges_invalidate(q);
+> +	ctrl = cxl_hdm_write_range(hdm, config);
+> +	writel(upper_32_bits(targets), hdm + CXL_HDM_DECODER0_TL_HIGH(id));
+> +	writel(lower_32_bits(targets), hdm + CXL_HDM_DECODER0_TL_LOW(id));
+> +	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
 > +}
-> +
-> +/* Evict lines fetched during reset before DMA exclusion ends. */
-> +int cxl_hdm_quiesce_flush(struct cxl_hdm_quiesce *q)
-> +{
-> +	return cxl_hdm_ranges_invalidate(q);
-> +}
-> +
-> +void cxl_hdm_quiesce_destroy(struct cxl_hdm_quiesce *q)
-> +{
-> +	struct cxl_hdm_range *range, *next;
-> +
-> +	list_for_each_entry_safe(range, next, &q->ranges, list) {
-> +		list_del(&range->list);
-> +		if (range->res)
-> +			release_mem_region(range->hpa_range.start,
-> +					   resource_size(range->res));
-> +		kfree(range);
-> +	}
-> +}
-> diff --git a/drivers/pci/cxl.c b/drivers/pci/cxl.c
-> index bfc31f821d01..4a8969145f8b 100644
-> --- a/drivers/pci/cxl.c
-> +++ b/drivers/pci/cxl.c
-> @@ -15,6 +15,7 @@
->  #include <linux/iommu.h>
->  #include <linux/jiffies.h>
->  #include <linux/kernel.h>
-> +#include <linux/memregion.h>
->  #include <linux/pci.h>
->  #include <linux/slab.h>
->  
-> @@ -23,6 +24,13 @@
->  
->  #include "pci.h"
->  
-> +struct cxl_pci_cache {
-> +	struct cxl_hdm_quiesce quiesce;
-> +	u16 saved_ctrl2;
-> +	/* A cache-policy write was attempted and may need undoing. */
-> +	bool cache_disabled;
-> +};
-> +
->  /* Find the CXL Device DVSEC and read its capability register. */
->  static int cxl_pci_device_dvsec(struct pci_dev *pdev, u16 *dvsec, u16 *cap)
->  {
-> @@ -331,6 +339,23 @@ static int cxl_reset_restore_cache_policy(struct pci_dev *pdev, int dvsec,
->  	return rc;
->  }
->  
-> +/* Shared range reservation, host invalidation, and device cache writeback. */
-> +static int cxl_reset_cache_prepare(struct pci_dev *pdev, int dvsec, u16 cap,
-> +				   const struct cxl_hdm_info *snapshot,
-> +				   struct cxl_pci_cache *cache)
-> +	__must_hold(cxl_region_quiesce)
-> +{
-> +	int rc;
-> +
-> +	rc = cxl_hdm_quiesce_prepare(&cache->quiesce, snapshot);
-> +	if (rc)
-> +		return rc;
-> +
-> +	/* Track an attempted change so partial failures still restore policy. */
-> +	cache->cache_disabled = true;
-> +	return cxl_reset_disable_cache(pdev, dvsec, cap);
-> +}
-> +
->  static int cxl_reset_wait_done(struct pci_dev *pdev, int dvsec, u16 cap)
->  {
->  	unsigned long deadline;
-> @@ -386,7 +411,8 @@ static int cxl_clear_memory(struct pci_dev *pdev, int dvsec, bool initiate)
->  				      PCI_DVSEC_CXL_RST_MEM_CLR_EN);
->  }
->  
-> -static int __cxl_reset_execute(struct pci_dev *pdev, int dvsec, u16 cap)
-> +static int __cxl_reset_execute(struct pci_dev *pdev, int dvsec, u16 cap,
-> +			      struct cxl_hdm_quiesce *q)
->  {
->  	int rc, rc2;
->  
-> @@ -411,29 +437,61 @@ static int __cxl_reset_execute(struct pci_dev *pdev, int dvsec, u16 cap)
->  		pci_err(pdev, "failed to clear CXL Reset Memory Clear: %d\n", rc2);
->  	rc = rc ?: rc2;
->  
-> +	rc2 = cxl_hdm_quiesce_flush(q);
-> +	if (rc2)
-> +		pci_err(pdev, "failed to invalidate CPU cache after CXL reset: %d\n", rc2);
-> +	rc = rc ?: rc2;
-> +
->  	pci_dev_reset_iommu_done(pdev);
->  	return rc;
->  }
->  
-> -static int cxl_reset_execute(struct pci_dev *pdev, int dvsec, u16 cap)
-> +static int cxl_reset_quiesced(struct pci_dev *pdev, int dvsec, u16 cap)
-> +	__must_hold(cxl_region_quiesce)
->  {
-> -	u16 saved_ctrl2;
-> +	struct cxl_hdm_info *snapshot __free(kfree) = NULL;
-> +	struct cxl_pci_cache cache = {};
->  	int rc, rc2;
->  
-> -	rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2, &saved_ctrl2);
-> +	rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2,
-> +				  &cache.saved_ctrl2);
->  	if (rc)
->  		return pcibios_err_to_errno(rc);
-> -	if (PCI_POSSIBLE_ERROR(saved_ctrl2))
-> +	if (PCI_POSSIBLE_ERROR(cache.saved_ctrl2))
->  		return -ENODEV;
->  
-> -	rc = cxl_reset_disable_cache(pdev, dvsec, cap);
-> +	snapshot = cxl_hdm_cache_snapshot(&pdev->hdm);
-> +	if (IS_ERR(snapshot)) {
-> +		pci_err(pdev, "CXL HDM decoder state unavailable: %ld\n",
-> +			PTR_ERR(snapshot));
-> +		return PTR_ERR(snapshot);
-> +	}
-> +
-> +	rc = cxl_reset_cache_prepare(pdev, dvsec, cap, snapshot, &cache);
-> +	if (rc && !cache.cache_disabled) {
-> +		pci_err(pdev, "failed to prepare CXL reset ranges: %d\n", rc);
-> +		cxl_hdm_quiesce_destroy(&cache.quiesce);
-> +		return rc;
-> +	}
->  	if (!rc)
-> -		rc = __cxl_reset_execute(pdev, dvsec, cap);
-> +		rc = __cxl_reset_execute(pdev, dvsec, cap, &cache.quiesce);
->  	/* Restore cache policy after any attempt to disable caching. */
-> -	rc2 = cxl_reset_restore_cache_policy(pdev, dvsec, saved_ctrl2);
-> +	rc2 = cxl_reset_restore_cache_policy(pdev, dvsec, cache.saved_ctrl2);
-> +	cxl_hdm_quiesce_destroy(&cache.quiesce);
->  	return rc ?: rc2;
->  }
->  
-> +static int cxl_reset_execute(struct pci_dev *pdev, int dvsec, u16 cap)
-> +{
-> +	int rc;
-> +
-> +	cxl_region_quiesce_lock();
-> +	rc = cxl_reset_quiesced(pdev, dvsec, cap);
-> +	cxl_region_quiesce_unlock();
-> +
-> +	return rc;
-> +}
-> +
->  int cxl_reset_function(struct pci_dev *pdev, bool probe)
->  {
->  	u16 dvsec, cap, ctrl;
-> @@ -460,5 +518,17 @@ int cxl_reset_function(struct pci_dev *pdev, bool probe)
->  	if (probe)
->  		return 0;
->  
-> +	/* The cache is owned by @pdev and does not require a bound CXL driver. */
-> +	if (!cxl_hdm_cache_present(&pdev->hdm))
-> +		return -ENOTTY;
-> +
-> +	/* Memory decoded through DVSEC ranges has no HPA ranges to quiesce. */
-> +	if (cxl_hdm_cache_dvsec_decode(&pdev->hdm))
-> +		return -ENOTTY;
-> +
-> +	if (!cpu_cache_has_invalidate_memregion() &&
-> +	    !IS_ENABLED(CONFIG_CXL_REGION_INVALIDATION_TEST))
-> +		return -ENOTTY;
-> +
->  	return cxl_reset_execute(pdev, dvsec, cap);
->  }
-> diff --git a/include/cxl/hdm.h b/include/cxl/hdm.h
-> index cfb55b10f8ac..7919d872a34d 100644
-> --- a/include/cxl/hdm.h
-> +++ b/include/cxl/hdm.h
-> @@ -3,10 +3,14 @@
->  #ifndef __CXL_HDM_H__
->  #define __CXL_HDM_H__
->  
-> +#include <linux/list.h>
->  #include <linux/types.h>
-> +
->  #include <cxl/cxl.h>
->  
-> +struct device;
->  struct pci_dev;
-> +struct resource;
->  struct cxl_endpoint_decoder;
->  
->  /**
-> @@ -45,7 +49,6 @@ struct cxl_hdm_info {
->  	bool dvsec_ctrl_valid;
->  	struct cxl_endpoint_decoder_settings settings[] __counted_by(decoder_count);
->  };
-> -struct device;
->  
->  int cxl_hdm_decoder_count_mapped(struct device *dev, void __iomem *hdm,
->  				 resource_size_t size);
-> @@ -59,5 +62,44 @@ int cxl_hdm_cache_check_decoder_count(struct pci_dev *pdev, int count);
->  void cxl_hdm_cache_publish(struct cxl_hdm_info **slot,
->  			   struct cxl_hdm_info *info);
->  void cxl_hdm_cache_release(struct cxl_hdm_info **slot);
-> +bool cxl_hdm_cache_dvsec_decode(struct cxl_hdm_info *const *slot);
-> +struct cxl_hdm_info *cxl_hdm_cache_snapshot(struct cxl_hdm_info *const *slot);
-> +
-> +/*
-> + * Region quiesce blocks CXL region commit and teardown, and with them decoder
-> + * reprogramming, while reset handling captures or restores HDM decoder state.
-> + */
-> +token_context_lock(cxl_region_quiesce);
-> +
-> +/**
-> + * struct cxl_hdm_range - HPA range held exclusively across a reset
-> + * @list: entry in &cxl_hdm_quiesce.ranges
-> + * @hpa_range: system physical address range decoded by the device
-> + * @len: length of @hpa_range
-> + * @res: reservation of @hpa_range, once requested
-> + */
-> +struct cxl_hdm_range {
-> +	struct list_head list;
-> +	struct range hpa_range;
-> +	u64 len;
-> +	struct resource *res;
-> +};
-> +
-> +/**
-> + * struct cxl_hdm_quiesce - HPA ranges held exclusively across a reset
-> + * @ranges: list of &struct cxl_hdm_range, see cxl_hdm_quiesce_prepare()
-> + */
-> +struct cxl_hdm_quiesce {
-> +	struct list_head ranges;
-> +};
-> +
-> +void cxl_region_quiesce_lock(void);
-> +void cxl_region_quiesce_unlock(void);
-> +int cxl_hdm_quiesce_prepare(struct cxl_hdm_quiesce *q,
-> +			    const struct cxl_hdm_info *snapshot)
-> +	__must_hold(cxl_region_quiesce);
-> +int cxl_hdm_quiesce_flush(struct cxl_hdm_quiesce *q)
-> +	__must_hold(cxl_region_quiesce);
-> +void cxl_hdm_quiesce_destroy(struct cxl_hdm_quiesce *q);
->  
->  #endif /* __CXL_HDM_H__ */
+> +EXPORT_SYMBOL_FOR_MODULES(cxl_commit_start_switch, "cxl_core");
 > -- 
 > 2.43.0
 > 
