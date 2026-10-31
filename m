@@ -1,91 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.178
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.15
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793418127;
-	b=M1TS/D5NthjCVDNqt98g7xyzWEN7kcnV9Uo6+zT1AruYAP7m1+ts5OwA62tVNsv9EGEk
-	 PFGnzD8KyyhI2k/ezQvB4KTNJKdxfi0pTqMo2b81XwJapYyqQ/1CrgKEpbSwACy62o7JA
-	 AxCmzq5uMg0w3NRLkQ0pMHZcv7ejYu8XQSS6n8VxaYY9QtuxrUaWlTXHXzIDFxctJawD6
-	 f+PUW96ydFTxuAxeJDTdWNbu4TFPMNJr5whDikxM3GFg8FBeDnMKW0dbaI/rrISGWbGcc
-	 O0oF/xI9iO4AhJgdDpzpxfizQfUsP0Ygk74NwCmaxr5iCYHN1hJRh1WukFMr2QLShkw==
+	t=1793418150;
+	b=W6meObZ2JnHpbPeSHdbV5sjA7gUo9ge9jGPw0E/BjOOpCkmWVy5wYC5fzfJs4bVlC67p
+	 1xAGP6dchIIQ5S8cX6VdpceC6wA+1LgzMxEfHthk4VDF/F3GxINJvkrDDFenTYZluFfpE
+	 3IbRNXyV040AfVXmTSMja+V9pzzlghd+Tbt9J+KyPdDSKmKcfNiijup3/w62VNJryqVc8
+	 +BSC4P8fyf8l19UBpsYuRS/bBr8NsMrRVRdPuK/kz5KibciN6IVgGaM6zUGjhtRDI80Hm
+	 3aGGTjXdFqEfwrY1i1uToqLOSMKRyHDSGcrGDCRhqgdUdoibOxYFPtAsj/FA2m09F+w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793418127;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=QDtA+So1//UVPjtoxC/QdiNqck5HolvlgMVETd7cnIU=;
-	b=R92v5hkJDIU24SjvHYOogwhHizssYVZY9v6ez1lHYlxTUXV6PdWm2P4bTyuTgX9/mgWI
-	 Oe5aue7bEEf76Txltk3izsBZuB8oQweHHPC3kZ+fusDWx5Htc+d3O4xmhzjO/P4sfHcp0
-	 kAQWx1zUT+EWWth6MOE3ure5B9xTJ2OkTvB6pLE+iINjLzKP5jpNbk819iHP8v5KiJgNT
-	 vRpQbjydKOnS1f/Bxz2ajVcEAqXqZzt7DaWDmnRSvJXrib04XZSukt3YL7lFZ0qIK6MKd
-	 k79a+OrQc2Rh4qSDGxHMq+nhZEA0jOIi1+HsMu/QPq83P2J6hU47+/LP95UIM5fJWfw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793418150;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=Ot9ndK0ejKVXddWQEZ2xSPgFjOHt7YNnn7ck0sFqpGc=;
+	b=ELNotG5b40ExqMIzmI18qDmyDVh00uJbwnCEUA5y5/ZMrnq3DCnzwKgb3visN+UkQ+o3
+	 6eGNqCjMqo+8CL97XCGJy6BGAa+gH6JoCFZxtbJRXhxUyZf/+hFi0T0plQ3Bg3mmoocM7
+	 4VmG/9XMKbWzdgREqwp2m0eK2qnPMFWajFaSVm7VS7PwUW0t8QKX4f0Jjh0juWShGnw4f
+	 jBXHaWavaL1FfwfOPmXaq1gqLCOL0Iwj0OjuZBIHM6Ci3+KW39mMauypqVWrKB1XnzxDW
+	 /le9/0ucsE0wzRmz4xAFCiEQkKrfhVfFdmApD5t0d5fk+xarsaPsBJzhaMLZ1ZpaQ2w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=kP+opc6I;
-	arc=none smtp.remote-ip=74.125.82.178
-Received: from mail-dy1-f178.google.com (mail-dy1-f178.google.com [74.125.82.178])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=iZj+Gxle;
+	arc=none smtp.remote-ip=198.175.65.15
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A7FC606A31A
-	for <linux-pci@vger.kernel.org>; Sat, 31 Oct 2026 03:42:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7A7FC606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36F2B606A320;
+	Sat, 31 Oct 2026 03:42:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 36F2B606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=kP+opc6I
-Received: by mail-dy1-f178.google.com with SMTP id 5a478bee46e88-369f33df08eso2760957eec.0
-        for <linux-pci@vger.kernel.org>; Fri, 30 Oct 2026 20:42:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793418127; x=1794022927; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=QDtA+So1//UVPjtoxC/QdiNqck5HolvlgMVETd7cnIU=;
-        b=kP+opc6IGf8YURkCpVxS45pdPMVFUM3u1RR1SiwUhdAHqOm5OnE6G9+8Q0gu921esf
-         wEppsxFvL9MR6aYmRp0MmKNIHI0tH8lPtXXU29V7mHddNMfv8KBmSyeeL9qJKXXzS9PT
-         jjnEaHYddeMyUPoOo/0CbumGBLJDxImQB9s3o9zJ/bJ9w8FZYTNbp4Y1quYwyxCdINnS
-         MMeBGHL6ylfCFA64VCLfxYGolgJiyc/kzEKSd627hG8vddkERIPhIdnLtQ6BH0G4px2W
-         NfurF7+K2Uih9TpNbOuu0pOQ+LrcUF0fAUzdj7DM0fwUDDO7sqnS5yLZ1ST92vS7q7WB
-         pl5g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793418127; x=1794022927;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=QDtA+So1//UVPjtoxC/QdiNqck5HolvlgMVETd7cnIU=;
-        b=APKptePup+fnKlSoG1E3GqoOLnNThKykyQmZZLQpXuXrEswBSm0AoNr4cxtZnwKW8D
-         /v0LJPUuCfCSDZpQ8HspPENqBLeMEs5ga0U8dQP5kHagnAbVbt44LT/P8XEiGjdrXbKi
-         F2jl5Iu2Ie9rweGB4TmlCnkdSWobaESO2cNf8KIvw9wiYL0WbVpvJGNcf+fJCe7LW34U
-         HkXWIBoN1gSfX14Oax2yGQxzsYClVmk5jD9Y7KqHYHmP+hFdKgwi1H165ltK4ZukQWnm
-         6+aYccvmO2kiuH4BGk706jJp5Ig2hxWsgMDJXQi26RkIalP3RmqE4JeGTvRRqdMsioys
-         DPlw==
-X-Forwarded-Encrypted: i=1; AKwUvBxoGYl9aW8saunSv3XJxZ51Ms52h29QNGGJtET4pXx/k5cUNVCDe1fZHYvqTCY7gfpru6g0+otUVYY=@vger.kernel.org
-X-Gm-Message-State: AFq9FYIDyWyvnaJYBQzTPLjfNcs/nBMI7q77BljDNXYP6fWYE2/iDV5Y
-	j1GyFMX8YOXws6hOU3i7Uarj5vTtgSxAUxX3rUUqWLqnJo4QeJP/5Nio
-X-Gm-Gg: AYBFou0ZnxKFnZljWerGQ52O8EHAWRCqnbSNkXHOkv3rdzxfrWS+rvi9KLmBrevp+6n
-	S/Qn6jS+qHD3xEH+5m2IzVYOi2tsgDv3euIIlW15l2GcMJaCNVODAWSUmrhQep9lFMdvL5EdGuM
-	OfiJ/06Sdno3iakItk8CRoXsfVL6R7VtuuuY/sZHI3Y+E4oCupgqkU6mwlAu+vp6eBYrLjPb09e
-	6TXiLv+3wniNPyzxtEGoEKMgSNStIwHJ9EQQP8IPhcwko5euzWxKJNgErtvKp5f644C6AsL33RD
-	wCw100GVh0Q4mxN+xy7k5m6NQR3tqH6lRVXDx+H31TrBiZECPujXdL+bPXJkO6QS8nSNfiQUTeq
-	SLN9e1/eNH3u6Q3FYyDn2u4Cw0tKjouY/DAHn/kyWYbNnogDpaA7QcBqpG/aFgR7BKapzUDeE4T
-	ONybcNZcKAEoMl488loap4d+sfaNdafozwBnj0zeSlMUH/A/AhCxE2lExOQtf6W8miomiQS0iFi
-	VHWj5SSIIcDm22AAC60uOJ18vdstSNZLCBDQouPL5mFTmAA+U0CztSvZK4Q/9hlONQXD/DPFyqS
-	xzuMXJZVQyqVqbl7mlKMsDqlMsXGhO6EFZswUfi+98LZC4bEls9e00jVXzNMey7XPKY=
-X-Received: by 2002:a05:693c:400f:b0:369:f72d:1010 with SMTP id 5a478bee46e88-36a423af96fmr6556347eec.18.1793418126563;
-        Fri, 30 Oct 2026 20:42:06 -0700 (PDT)
-Received: from asahi.tail4da9e3.ts.net ([218.48.198.193])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a42662f23sm14255325eec.2.2026.10.30.20.42.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 30 Oct 2026 20:42:06 -0700 (PDT)
-From: "Baek Kyu, Kim" <pocj8ur4in@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Baek Kyu, Kim" <pocj8ur4in@gmail.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: Do not cache Immediate Readiness from a failed config read
-Date: Sat, 31 Oct 2026 12:42:01 +0900
-Message-ID: <20261031034201.161511-1-pocj8ur4in@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=iZj+Gxle
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793418149; x=1824954149;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=aGlr3qfr6AZBSiPKZMalF/26FFfN/4Og7QmWbsUKYaY=;
+  b=iZj+GxleJQ/t80kZlt4Py+Sv9WKRZgrBIQZTZvQp368KbHLta9HgaBUY
+   j2S1aCYYYlOmjY4luHoZZR6M86rcbJw1g+a5ySg6MdhaI2gB1FcTZmYV+
+   iJdGLitSqKYm5c7BGKHvvuez7VOrtLKsmHW9Q8KAVaJklfiALgJdYZxB2
+   YfmFc159/+mlUb18WU/hnTzuPJATQy7+K0/atGWwa+b6YsHuDKF+ORzkb
+   LDUYnCN7+VmHhcUPs/A0TCe/uF89IZD2IRCGnkWGhw0HyPdjT30rD9fmQ
+   c0ldRKRzlS4Pma2eccemsWgylHSViKViE8Gqi1KWmUdwsBSFROCHTZk4e
+   w==;
+X-CSE-ConnectionGUID: suEEYPoxRdGL3hHxVMGbQQ==
+X-CSE-MsgGUID: oVcnGHnVQ6egT/K/QyFAag==
+X-IronPort-AV: E=McAfee;i="6800,10657,11951"; a="2188811"
+X-IronPort-AV: E=Sophos;i="6.27,186,1787036400"; 
+   d="scan'208";a="2188811"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2026 20:42:29 -0700
+X-CSE-ConnectionGUID: 1aS14UP0T/aO54Frxa2Eug==
+X-CSE-MsgGUID: GHsu/r0hSAa7KZcwxpde2Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,186,1787036400"; 
+   d="scan'208";a="5568194"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by orviesa001.jf.intel.com with ESMTP; 30 Oct 2026 20:42:25 -0700
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xMzz3-00000000cVO-2SRY;
+	Sat, 31 Oct 2026 03:42:21 +0000
+Date: Sat, 31 Oct 2026 11:41:43 +0800
+From: kernel test robot <lkp@intel.com>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, jgg@ziepe.ca,
+	alex@shazbot.org, pbonzini@redhat.com, seanjc@google.com,
+	bhelgaas@google.com, jjohnson@kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, johannes@sipsolutions.net,
+	mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
+	robh@kernel.org, vkuznets@redhat.com, kevin.tian@intel.com,
+	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Subject: Re: [PATCH v3 2/8] KVM: add PCI MSI hypercall for VFIO passthrough
+Message-ID: <202610311038.ydvb3F1w-lkp@intel.com>
+References: <20261029163713.1366077-3-jtornosm@redhat.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -95,43 +89,142 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261029163713.1366077-3-jtornosm@redhat.com>
 
-pci_imm_ready_init() uses PCI_STATUS even if pci_read_config_word() fails.
-The failed access leaves an all-ones response, whose Immediate Readiness
-bit is set. A later FLR then skips the wait even after config space has
-become accessible again, so early config restoration can be lost.
+Hi Jose,
 
-Leave imm_ready clear when the read fails or returns all ones. Keep the
-existing fast path for a valid status that advertises Immediate Readiness.
+kernel test robot noticed the following build errors:
 
-Fixes: d6112f8def51 ("PCI: Add support for Immediate Readiness")
-Signed-off-by: Baek Kyu, Kim <pocj8ur4in@gmail.com>
----
-An arm64 QEMU kernel used the PCI core enumeration and FLR paths with a
-synthetic endpoint. With one injected initial PCI_STATUS read failure,
-the baseline cached imm_ready=1 and restored config immediately; the
-endpoint dropped the writes. The change kept imm_ready=0, waited 103 ms,
-and restored the config value. No physical endpoint was tested.
+[auto build test ERROR on pci/next]
+[also build test ERROR on pci/for-linus linus/master next-20261030]
+[cannot apply to kvm/queue kvm/next ath/ath-next kvm/linux-next v7.3]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
- drivers/pci/probe.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+url:    https://github.com/intel-lab-lkp/linux/commits/Jose-Ignacio-Tornos-Martinez/vfio-add-helper-to-find-PCI-device-by-vendor-device-ID/20261029-173706
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+patch link:    https://lore.kernel.org/r/20261029163713.1366077-3-jtornosm%40redhat.com
+patch subject: [PATCH v3 2/8] KVM: add PCI MSI hypercall for VFIO passthrough
+config: s390-randconfig-1000-20261031 (https://download.01.org/0day-ci/archive/20261031/202610311038.ydvb3F1w-lkp@intel.com/config)
+compiler: s390-linux-gcc (GCC) 12.5.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261031/202610311038.ydvb3F1w-lkp@intel.com/reproduce)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 27008e2ea5af..eb4e17ebd055 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2642,7 +2642,10 @@ static void pci_imm_ready_init(struct pci_dev *dev)
- {
- 	u16 status;
- 
--	pci_read_config_word(dev, PCI_STATUS, &status);
-+	if (pci_read_config_word(dev, PCI_STATUS, &status) ||
-+	    PCI_POSSIBLE_ERROR(status))
-+		return;
-+
- 	if (status & PCI_STATUS_IMM_READY)
- 		dev->imm_ready = 1;
- }
--- 
-2.55.0
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202610311038.ydvb3F1w-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   arch/s390/kvm/arm64/../../../../virt/kvm/vfio.c: In function 'kvm_vfio_pci_msi_alloc':
+>> arch/s390/kvm/arm64/../../../../virt/kvm/vfio.c:438:48: error: 'struct irq_data' has no member named 'parent_data'
+     438 |                 for (pos = irqd; pos; pos = pos->parent_data) {
+         |                                                ^~
+--
+   arch/s390/kvm/s390/../../../../virt/kvm/vfio.c: In function 'kvm_vfio_pci_msi_alloc':
+>> arch/s390/kvm/s390/../../../../virt/kvm/vfio.c:438:48: error: 'struct irq_data' has no member named 'parent_data'
+     438 |                 for (pos = irqd; pos; pos = pos->parent_data) {
+         |                                                ^~
+
+
+vim +438 arch/s390/kvm/arm64/../../../../virt/kvm/vfio.c
+
+   361	
+   362	/**
+   363	 * kvm_vfio_pci_msi_alloc - Get physical MSI address/data for a VFIO device
+   364	 * @kvm: the VM instance
+   365	 * @devid: PCI vendor:device packed as (vendor << 16 | device)
+   366	 * @vector: MSI vector index
+   367	 * @msg: output MSI message (address + data)
+   368	 *
+   369	 * Walks VFIO files attached to this VM, uses vfio_file_find_pci_device()
+   370	 * to find the PCI device matching the given vendor:device ID, and returns
+   371	 * the host's physical MSI address/data for the requested vector.
+   372	 *
+   373	 * Returns 0 on success, negative errno on failure.
+   374	 */
+   375	int kvm_vfio_pci_msi_alloc(struct kvm *kvm, u32 devid,
+   376				     unsigned int vector, struct msi_msg *msg)
+   377	{
+   378		struct kvm_vfio_file *kvf;
+   379		struct kvm_vfio *kv = NULL;
+   380		struct vfio_device *vdev;
+   381		struct kvm_device *dev;
+   382		struct msi_desc *desc;
+   383		struct irq_data *irqd;
+   384		struct pci_dev *pdev;
+   385		u16 vendor = devid >> 16;
+   386		u16 device = devid & 0xffff;
+   387		int irq;
+   388	
+   389		scoped_guard(mutex, &kvm->lock) {
+   390			list_for_each_entry(dev, &kvm->devices, vm_node) {
+   391				if (dev->ops == &kvm_vfio_ops) {
+   392					kv = dev->private;
+   393					break;
+   394				}
+   395			}
+   396		}
+   397	
+   398		if (!kv)
+   399			return -ENODEV;
+   400	
+   401		guard(mutex)(&kv->lock);
+   402	
+   403		vdev = NULL;
+   404		list_for_each_entry(kvf, &kv->file_list, node) {
+   405			vdev = vfio_file_find_pci_device(kvf->file, vendor, device);
+   406			if (vdev)
+   407				break;
+   408		}
+   409	
+   410		if (!vdev)
+   411			return -ENODEV;
+   412	
+   413		pdev = to_pci_dev(vdev->dev);
+   414	
+   415		if (!pdev->msi_enabled && !pdev->msix_enabled) {
+   416			memset(msg, 0, sizeof(*msg));
+   417			return 0;
+   418		}
+   419	
+   420		irq = pci_irq_vector(pdev, vector);
+   421		if (irq <= 0) {
+   422			memset(msg, 0, sizeof(*msg));
+   423			return 0;
+   424		}
+   425	
+   426		irqd = irq_get_irq_data(irq);
+   427		if (!irqd) {
+   428			memset(msg, 0, sizeof(*msg));
+   429			return 0;
+   430		}
+   431	
+   432		desc = irq_get_msi_desc(irq);
+   433		if (desc) {
+   434			*msg = desc->msg;
+   435		} else {
+   436			struct irq_data *pos;
+   437	
+ > 438			for (pos = irqd; pos; pos = pos->parent_data) {
+   439				if (pos->chip && pos->chip->irq_compose_msi_msg) {
+   440					pos->chip->irq_compose_msi_msg(pos, msg);
+   441					break;
+   442				}
+   443			}
+   444			if (!pos) {
+   445				memset(msg, 0, sizeof(*msg));
+   446				return 0;
+   447			}
+   448		}
+   449	
+   450		return 0;
+   451	}
+   452	
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
