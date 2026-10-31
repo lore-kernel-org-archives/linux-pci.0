@@ -1,91 +1,62 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793431002;
-	b=NGscjfntchWmA1glpnV9CFG9GqoUD/XIPCKxvo7uujYsm0TH9DFEYcSRkjhihKuwU0xy
-	 XlV3yVUmJse9k3FSbSjYOrnEbo/MlZSvhIhk+Tbxb8lMQddq+q1l8WtP4imRdVT0++Bl2
-	 3MPmtE6uWHAIphMoIo0fgNSiSsYnDTEDww2adXTyR1ySaQJ6eGkSApMY8p61ZQl/F/huK
-	 SSVLv5QcpyHnvybyysf3pHCAjX6fQ/twLII5rQS4SoCOwLGI3opLiTong0f6NnvDGYz/V
-	 TGdjQ5vHL399EyK7XTR1PzTkZ32X8pAvmo6UdsLKUDhVwMekmdLi0cP41J0xL21ThQA==
+	t=1793431366;
+	b=BIy4ejSeXBrp+sTeZJGXfDx1NpT4kocxCZKDfNH71Fdno7PUOR5Lp8MJIFja7PLg2Mfj
+	 S145uh9slEqiXkmavALJYfZIS22f5sfXhKTkKepoLYmQ23YcIPe51SKf/0LfIOlhrLS20
+	 q6oVGQVgQYckdFhdnH8IknZWb/JNbSzy68iYFbePQkLO13TVGSm+rhgenM5J35i8SM6vV
+	 JBtnWAl/N+//qnbEb8tVPrj9mHXj53BWtyveweFjFzeKQQvXKxfmiShslfxDIJ2X3g9xY
+	 XQ0mVI0XyVi4aLj+MrLMJ8ASJNk16uqyu37o/oGK3PasfYDHcCO48HHLvLtJAkD0XBA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793431002;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:Subject:To:Cc:Date:Message-ID:X-Mailer:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=EMpi7YMzWk4HeX6dQlyB+/a72PJDktJNJTNgVwGcZck=;
-	b=RJ3DYloJrINlMHYPXRjzRYC/XAs7SrR8ypR1koZDixoyUOSqQgJWMIqmOI2TThHAvk7W
-	 sWz2M8yZg4iEexk9dXaPc41F3yvqkzwNyJbfG7Yv0YTGYiOShg+8lfysnqA+CqpWQ2YWD
-	 RuR/NvEzV2QVqOdtijfzTk8O+MQtYy4J7Xa6ZWAEKG8c6saQz2DkOqXWMAF2ivbDrX1Zj
-	 WuWq21BOTUv6pP4WPD1WBDlrrdgHT5CEfFRoTyl8utgG6byywbhZYLq0wHjhbpIOHraYW
-	 5jRNJ2sPgHATWGuqgyuWwSnfY4ohabk4meOVN67yYRGiSmvYbYmD9wSWLKrrM6OILQA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793431366;
+	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
+	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 X-Mailer:X-Developer-Signature:X-Developer-Key;
+	bh=5YS451aH7BjdUiL4Cdv8gmc07Um4Vxfbtd1cKp8cA1s=;
+	b=qRWAgStLul7nC2WpBw9sAqhbHFqpOzNqJUjngZW29t8gMzfgRByHAmzC1gl3oETdHcB1
+	 bRrX3P+UFyLfUIOEJgSoqwNm8ZqB5E1Uai3gdGaR8n20Op08o+k/2FIgUJJHImqWmBOiv
+	 Jqw3fzj8KgzvxKC8z+EYzvNnkToq4basnJWw1x+DoCFfHPtZxk0decnZjkFdddyvG8og/
+	 yOc8zNna0feCOq8KUS2V4Qyj6bzfdw9/0j6HlvbThTgqmvMElfeLHgCN2GslZ0O82fHoM
+	 y4KFQg9LEapiW4lHAqbLu0faW8xavMk3WMlRu/TpOhW6YIpiWdlFSdSqZyLq6J0iqBA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=fduIVDF3;
-	arc=none smtp.remote-ip=74.125.82.50
-Received: from mail-dl1-f50.google.com (mail-dl1-f50.google.com [74.125.82.50])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VuRSeiEi;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C197606A31C
-	for <linux-pci@vger.kernel.org>; Sat, 31 Oct 2026 07:16:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5C197606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B237E606A31A;
+	Sat, 31 Oct 2026 07:22:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=fduIVDF3
-Received: by mail-dl1-f50.google.com with SMTP id a92af1059eb24-15ea896ddc8so2490560c88.0
-        for <linux-pci@vger.kernel.org>; Sat, 31 Oct 2026 00:16:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793431001; x=1794035801; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :cc:to:subject:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=EMpi7YMzWk4HeX6dQlyB+/a72PJDktJNJTNgVwGcZck=;
-        b=fduIVDF3nDqRiwrh0X0Ymu+MELIvwuKYXvFFe4vM1e3Fu6ehOS4oL2liWR25h2Qxcc
-         UYQLkB+4ebk6qv/6CD1jxwilhx5uQpBN8wYhLca752TySc+w8wWjYFu2o/OlrvhfSZQv
-         UUmKgojy+/txQxpHUT6qfgAGrSy3VUCMgPpPm7S85mNzjBXp06NLVmXHBL9tbFW1ngu1
-         cu88gxLF59gkKuPydFcj6DEImGCaFlDXtlyEAqYl/3FhrJG8ROuK6eSK3eN3BPv7mjNr
-         RP6FcNGwSxaw2X2xgDAg1m7u2oTW0WWr8QfuqlooxVU679S4w+crl8YZTj6tl/7+XjZJ
-         aUnA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793431001; x=1794035801;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :cc:to:subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=EMpi7YMzWk4HeX6dQlyB+/a72PJDktJNJTNgVwGcZck=;
-        b=LdqWlEnJ1V9K0GPNMszh6/ejyT6j7+H7q9+mebOf9TttqYUlOB4D5Vh2Enzw/ybgPO
-         ULN2VC0RPE5q/5vJCRk4zEp7neJelyD+DvhgSPnYvWeKgi8vXgg3aR6gp9OZAuWSDS+J
-         903tD8Mbirzjt63jWh/kei8341aJQJo2o4ekwIOUneIk7/U+3HzTJXoB7jgrBYSSvwyl
-         czijQWB3KoUfYXth1goCtlP2juhIB0h/ehv9heQuE5Y2nJb0AlK4o4nnbMR8NDDuy4eX
-         baTnP9QjTNIlrhYoZH82WjJFQ3mmuupJZ1wlACEL8M84kcVJDLOauY2MqpZN+RbMYlSA
-         bt+Q==
-X-Forwarded-Encrypted: i=1; AKwUvBzvEYC2ipsPDlIBGS1np1NY96ujSL9NNCDhKIvQ9XyktR8AhygSVhhXy+LY9UxZyEALGvW3O+iTw7c=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJ4ViP3ZryUawZclJpQUuKfV0ywfbY5WrrnbPmBFuWrUUuIaDNo
-	KM5Wl4cusL3Wo/uL6hw8AjAkwsL/wNazvR15WHT5i2q3AscR8Iq39WqqYFKDueTeLGE=
-X-Gm-Gg: AYBFou1eijs38ITG5ItyU0pKsot65SXK9QP4ecLgh/b+ZRds+mC0cjSROesDaPAFnNb
-	9jm6VpX8sdXDw9UFgMfjN556bRnfHDIWn0ZYql+dAHQIjW+pUzZ/USRWjhyQ6J8DQkKcUjX1Tn2
-	9nwmi7YKPfOoKxW1p0DFhnvphRgRz1ry5ssnGJCLn6FpqtS5MDBsHGZhPyVNQ2E+wR3/Mb5r4PY
-	UDIerFaZxOBpZJ/7nRUM+KNvJxviO0bYxQYrSbEaQb4b2f8SKNAEvJQ7ljnCy2XNmBN3+Nf9oON
-	tcXV2d+npwImGgHrurHYXoYWD6DVSk+SnR6P1GZaIDieyn95X1NdS25kyoj97t17cBJ3CKjHP/b
-	uDmCyImJq2eSIjiIiyO9YjAe/4+V+A+ClqCbYwOWl409cmsWX0S+7jfWlOBv36JZo05bEZO+xlO
-	WHE8RZnvorv28sAWy3bYPfFezuLzRpQX3KmSKeHvang2995XyTHrBTApK4tyaSUnVjH/fvMxVOF
-	Knwpciq5VgpLOLXMCrqp/wl5AlKkIB9IFhnIHO0wS6MgWyj4T4VEXTl7eeR1eCr3+ZjVdI5NhCW
-	1pQja8/9T0e1+MZQJzfUQWYLiSKMgDYlajY=
-X-Received: by 2002:a05:693c:880e:10b0:369:987f:d15e with SMTP id 5a478bee46e88-36a4221b055mr6739264eec.2.1793431001300;
-        Sat, 31 Oct 2026 00:16:41 -0700 (PDT)
-Received: from [192.168.45.62] ([218.48.198.193])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a428af1dfsm14372952eec.7.2026.10.31.00.16.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 31 Oct 2026 00:16:40 -0700 (PDT)
-From: "Baek Kyu, Kim" <pocj8ur4in@gmail.com>
-Subject: [PATCH] PCI: Report configuration access errors when requesting FLR
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Baek Kyu, Kim" <pocj8ur4in@gmail.com>,
-    linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Sat, 31 Oct 2026 16:16:38 +0900
-Message-ID: <179343099854.144556.14547372045411279536.c116@gmail.com>
-X-Mailer: git-send-email compatible submission
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VuRSeiEi
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A4211F000C1;
+	Sat, 31 Oct 2026 07:22:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793431365;
+	bh=5YS451aH7BjdUiL4Cdv8gmc07Um4Vxfbtd1cKp8cA1s=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=VuRSeiEidT8Ilk/Ye7plYe6QYxyIXcaPjIJuHH9S9XB8xrTVh1sAkiEbSSv3edT/R
+	 wlIgUweauAiGkQry3C9uCdpqlbefPFYZkU97seHTFzNC60aYEAbT0i0BESyNe1Mzn8
+	 j+Va0rsjO0eyjB5v5tDXGl33p4jEfIE0IYlac+j6e1bqHkyFSMICcd8FWxF9YzJLv3
+	 JQ4anw8PLzxyBOQSjuXimLtPl38gezPWRH34ftAfMFFbwOCA33dmHOKCVoV1U9VKN9
+	 SQa17H6d///AD0Dpu2uHOK91QpHZV7hKmy8PlJYTetzfxMHaKqIwcc8gYOyKuSOAku
+	 ae6fhC0zwRbTA==
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: linux-pci@vger.kernel.org, 
+ Marek Vasut <marek.vasut+renesas@mailbox.org>
+Cc: =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ Geert Uytterhoeven <geert+renesas@glider.be>, 
+ Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ Magnus Damm <magnus.damm@gmail.com>, Rob Herring <robh@kernel.org>, 
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
+ linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+In-Reply-To: <20261017171845.225769-1-marek.vasut+renesas@mailbox.org>
+References: <20261017171845.225769-1-marek.vasut+renesas@mailbox.org>
+Subject: Re: [PATCH v2] PCI: rcar-host: Validate IO/MEM resource count in
+ DT ranges property
+Message-Id: <179343133806.4244.3780785790526005076.b4-ty@b4>
+Date: Sat, 31 Oct 2026 12:52:18 +0530
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -95,63 +66,33 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=358;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=dVE6tEVmuFHX+4AIwK5e18OMgpp2JH5syzMLOzqC6ug=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq5Zc5z+8PfoQqPy+RB2bMnEhIYaKda/FUQsVmd
+ IhC7LRwQ8uJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauWXOQAKCRBVnxHm/pHO
+ 9X6aB/49YrBp/hA5z2fQM8buhDGgAicYNBFgA4l3X+ZGWy3Azx4jMUCRNyLIz8PYviCVZsntYb5
+ HXlCGIIkbBVKSAaAme9PYU/RtOG/NBPTFBSmjkIm1sB1JsSgNYaILxWODZMWa+0R7vl/sq7sLbi
+ mOoNZC/ljPJa97TxbmMW8wAXsiIPUNinlP5vmV3BoSAIDQTtnHSWQT1Wr1HnS6ciU2vEFg79gtt
+ vnChbd2bi9/Kquv93/GQGHYeRTbLaj2/iBWkObO1vR6w1xVck1WvGsC00k/PK23UNB8apEI8hbT
+ xdl2GOMWPS47eiZXq/2aZt4vl0n2a9uZv0+buSeosoY8Ffs0
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-PCIe and AF FLR requests can fail after pci_dev_reset_iommu_prepare()
-succeeds. pcie_flr() and pci_af_flr() ignore the config access result.
-A failed request can then be reported as a successful reset when an
-Immediate Readiness device skips the wait or a later config read works.
 
-Check the request access in both paths and convert PCIBIOS_* errors to
-negative errno values. Use the existing done path so IOMMU cleanup still
-runs after a successful prepare. Leave successful requests and readiness
-handling unchanged.
+On Sat, 17 Oct 2026 19:18:10 +0200, Marek Vasut wrote:
+> PCI: rcar-host: Validate IO/MEM resource count in DT ranges property
 
-Fixes: 8dd7f8036c12 ("PCI: add support for function level reset")
-Fixes: 1ca887970a39 ("PCI: Extend pci_reset_function() to support PCI Advanced Features")
-Signed-off-by: Baek Kyu, Kim <pocj8ur4in@gmail.com>
----
-An arm64 QEMU/KVM kernel used a synthetic PCI host with the normal PCI
-enumeration and sysfs reset paths. A one-shot Device Control read
-failure (PCIBIOS_DEVICE_NOT_FOUND) after IOMMU prepare issued no FLR,
-but the original sysfs reset returned success. The change returned
--ENODEV while preserving the IOMMU cleanup path. No physical endpoint
-or ATS/IOMMU domain restoration was tested.
+Applied, thanks!
 
- drivers/pci/pci.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+[1/1] PCI: rcar-host: Validate IO/MEM resource count in DT ranges property
+      commit: f2cd763d71799392b2c500294df4c87201f29047
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index d79d2ee4ac69b..41fae1b1050c7 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4429,7 +4429,12 @@ int pcie_flr(struct pci_dev *dev)
- 		return ret;
- 	}
- 
--	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
-+	ret = pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
-+				       PCI_EXP_DEVCTL_BCR_FLR);
-+	if (ret) {
-+		ret = pcibios_err_to_errno(ret);
-+		goto done;
-+	}
- 
- 	if (dev->imm_ready)
- 		goto done;
-@@ -4506,7 +4511,11 @@ static int pci_af_flr(struct pci_dev *dev, bool probe)
- 		return ret;
- 	}
- 
--	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
-+	ret = pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
-+	if (ret) {
-+		ret = pcibios_err_to_errno(ret);
-+		goto done;
-+	}
- 
- 	if (dev->imm_ready)
- 		goto done;
+Best regards,
 -- 
-2.55.0
+மணிவண்ணன் சதாசிவம்
+
+
