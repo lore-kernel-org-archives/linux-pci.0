@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793431366;
-	b=BIy4ejSeXBrp+sTeZJGXfDx1NpT4kocxCZKDfNH71Fdno7PUOR5Lp8MJIFja7PLg2Mfj
-	 S145uh9slEqiXkmavALJYfZIS22f5sfXhKTkKepoLYmQ23YcIPe51SKf/0LfIOlhrLS20
-	 q6oVGQVgQYckdFhdnH8IknZWb/JNbSzy68iYFbePQkLO13TVGSm+rhgenM5J35i8SM6vV
-	 JBtnWAl/N+//qnbEb8tVPrj9mHXj53BWtyveweFjFzeKQQvXKxfmiShslfxDIJ2X3g9xY
-	 XQ0mVI0XyVi4aLj+MrLMJ8ASJNk16uqyu37o/oGK3PasfYDHcCO48HHLvLtJAkD0XBA==
+	t=1793431490;
+	b=d+yWuRJAO41E+HEZMtT5dAvQJC1/q4ldRIbchjmY2h1PqZXWANd6w8UGk2Ruhz9UrfY3
+	 y31Xd6HHZRkCPGYFNchrF5++ha6mw6K4RX7heRjSoe9nE66+0yFM7oT6jSyRhEHMRBx6U
+	 xeqMM/chNEG7Qs8X1UHVHe4A8wehlFaH61oQLWOGu4wVCSGXjk23Wr022EJa66uDy67HU
+	 MIi9NWEKAYNFVct9biY1/ZO4QcpoJhBYs0VxYMltMUbEDpTL0th5+enOV6Tqu5rpm6hRu
+	 WaGbIyiznnCPnPP58vPX8iKpK4FkHZjwJ/qzHhSPqJfV9LUxDUMxFTqLQI/7UTax6fw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793431366;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793431490;
 	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
 	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=5YS451aH7BjdUiL4Cdv8gmc07Um4Vxfbtd1cKp8cA1s=;
-	b=qRWAgStLul7nC2WpBw9sAqhbHFqpOzNqJUjngZW29t8gMzfgRByHAmzC1gl3oETdHcB1
-	 bRrX3P+UFyLfUIOEJgSoqwNm8ZqB5E1Uai3gdGaR8n20Op08o+k/2FIgUJJHImqWmBOiv
-	 Jqw3fzj8KgzvxKC8z+EYzvNnkToq4basnJWw1x+DoCFfHPtZxk0decnZjkFdddyvG8og/
-	 yOc8zNna0feCOq8KUS2V4Qyj6bzfdw9/0j6HlvbThTgqmvMElfeLHgCN2GslZ0O82fHoM
-	 y4KFQg9LEapiW4lHAqbLu0faW8xavMk3WMlRu/TpOhW6YIpiWdlFSdSqZyLq6J0iqBA==
+	bh=z308Uuy0CuNp+NrHVjt5QkqbLAOcCgTFjS7lHppI8DE=;
+	b=R/DswqQm1uKOXb/FfqgDEwEzudghek7+BN+Mi/13LHoO6QJfgpOHI/NrJhBaQ2zxTmY6
+	 mMIrmp+V+7TzV75uJPcCqR0E0gjP9TIeZbMIlSv1EsvdZVd8Yj3zH0Z85cqTAcGfMTde9
+	 v3ZmEqq+CzqA+tsp6lqGBK20Be5T1mv5xguzaM4oZw1lYft2syXvtN2z7wHSmnlJb+Otu
+	 iUejc2+DnNi7BQrxU6qFz2c0GyLCuSX3aWkMxgPEtJHKNKkx/RavVJsIWIHYvQ9BvdpPu
+	 9Z5MmjcEcQwhcsSwImMA6O9Y/G/r1GLjrwB1F2vpYLsd4TkDm//q7ODsUZ2eWuHKcWw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VuRSeiEi;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mArOBj9e;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B237E606A31A;
-	Sat, 31 Oct 2026 07:22:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F21BB606A31E;
+	Sat, 31 Oct 2026 07:24:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VuRSeiEi
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A4211F000C1;
-	Sat, 31 Oct 2026 07:22:39 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mArOBj9e
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAF271F00919;
+	Sat, 31 Oct 2026 07:24:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793431365;
-	bh=5YS451aH7BjdUiL4Cdv8gmc07Um4Vxfbtd1cKp8cA1s=;
+	s=k20260515; t=1793431489;
+	bh=z308Uuy0CuNp+NrHVjt5QkqbLAOcCgTFjS7lHppI8DE=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=VuRSeiEidT8Ilk/Ye7plYe6QYxyIXcaPjIJuHH9S9XB8xrTVh1sAkiEbSSv3edT/R
-	 wlIgUweauAiGkQry3C9uCdpqlbefPFYZkU97seHTFzNC60aYEAbT0i0BESyNe1Mzn8
-	 j+Va0rsjO0eyjB5v5tDXGl33p4jEfIE0IYlac+j6e1bqHkyFSMICcd8FWxF9YzJLv3
-	 JQ4anw8PLzxyBOQSjuXimLtPl38gezPWRH34ftAfMFFbwOCA33dmHOKCVoV1U9VKN9
-	 SQa17H6d///AD0Dpu2uHOK91QpHZV7hKmy8PlJYTetzfxMHaKqIwcc8gYOyKuSOAku
-	 ae6fhC0zwRbTA==
+	b=mArOBj9ebVmYSJXvxzakwhwnL8U1FBBCwqrN3/0zd2drpQSwkNNWjBSHdeIhDLNJr
+	 5/Eky3ONzfw58n5Px6hZAvD0ZV4njcHOWjpGhkgVs5W8ulVdGkpB7WOBqqDWMlGUw/
+	 UPHT3dYfyL4ejsEWMsdx1euJk3GQQo7TJI8vz02Ws6ZFKve8SA29cvRr4TacRHy3Tr
+	 MDQMo1ciP0MlNKfBUgMfd0Zvza7dYe8V9EwX48YuZkJm5zFbkyTZ102mn53TINKVje
+	 8xKuPS7AX6VNl/k4gotv2Oha8eBcFqreEPNUlx5hMuWwItYgUcc5pz/BN5GeQnpP6Q
+	 eH8BwlBT+8OpA==
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: linux-pci@vger.kernel.org, 
  Marek Vasut <marek.vasut+renesas@mailbox.org>
@@ -51,12 +51,11 @@ Cc: =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
  Magnus Damm <magnus.damm@gmail.com>, Rob Herring <robh@kernel.org>, 
  Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
  linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-In-Reply-To: <20261017171845.225769-1-marek.vasut+renesas@mailbox.org>
-References: <20261017171845.225769-1-marek.vasut+renesas@mailbox.org>
-Subject: Re: [PATCH v2] PCI: rcar-host: Validate IO/MEM resource count in
- DT ranges property
-Message-Id: <179343133806.4244.3780785790526005076.b4-ty@b4>
-Date: Sat, 31 Oct 2026 12:52:18 +0530
+In-Reply-To: <20261017172122.225861-1-marek.vasut+renesas@mailbox.org>
+References: <20261017172122.225861-1-marek.vasut+renesas@mailbox.org>
+Subject: Re: [PATCH] PCI: rcar-host: Free MSI IRQs on error
+Message-Id: <179343146971.4244.10697548642594569315.b4-ty@b4>
+Date: Sat, 31 Oct 2026 12:54:29 +0530
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -69,27 +68,27 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=358;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=298;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=dVE6tEVmuFHX+4AIwK5e18OMgpp2JH5syzMLOzqC6ug=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq5Zc5z+8PfoQqPy+RB2bMnEhIYaKda/FUQsVmd
- IhC7LRwQ8uJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauWXOQAKCRBVnxHm/pHO
- 9X6aB/49YrBp/hA5z2fQM8buhDGgAicYNBFgA4l3X+ZGWy3Azx4jMUCRNyLIz8PYviCVZsntYb5
- HXlCGIIkbBVKSAaAme9PYU/RtOG/NBPTFBSmjkIm1sB1JsSgNYaILxWODZMWa+0R7vl/sq7sLbi
- mOoNZC/ljPJa97TxbmMW8wAXsiIPUNinlP5vmV3BoSAIDQTtnHSWQT1Wr1HnS6ciU2vEFg79gtt
- vnChbd2bi9/Kquv93/GQGHYeRTbLaj2/iBWkObO1vR6w1xVck1WvGsC00k/PK23UNB8apEI8hbT
- xdl2GOMWPS47eiZXq/2aZt4vl0n2a9uZv0+buSeosoY8Ffs0
+ bh=OTmVYPHEflDQK8CNfMBEumrl+j3vcv7oQpl3h095BLE=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq5Ze7gjlO0+g/37XxgK+peM69ebiz9MIeNr4O6
+ Zt94QVZMz+JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauWXuwAKCRBVnxHm/pHO
+ 9evXB/9N/u8VxIx5Ia5fvvq0nbzIPVLoWUVGc1bej1CNRA/2EKTcHYyqZj8zuoFa7rXwmAcR1UJ
+ hwPQk+XMV3eARtdY56Vrgzz2V0ZuOJITk/J+xLkoE+W1EVcfz9vT48IEt9J3/3SxZW+GXES6W0h
+ uxpRViEbtAJgH9XHpq7xqTzXBI3Rq/QAAIFyTzq+HOsCumtQ+Y2GN9W+en5h+XexEotM20Ndkht
+ qnM7djLhOwPsYNUYhFEKQnC2SqUdmPnHr4xU7aRy57DTw1aitWeDRm3+nnxZ+6IsTNHuIoe7N+b
+ UTdRQkW/DbIEyYPpb36vK87kXqYj/WMuYsom53T7uEgDaFWv
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 
 
-On Sat, 17 Oct 2026 19:18:10 +0200, Marek Vasut wrote:
-> PCI: rcar-host: Validate IO/MEM resource count in DT ranges property
+On Sat, 17 Oct 2026 19:20:21 +0200, Marek Vasut wrote:
+> PCI: rcar-host: Free MSI IRQs on error
 
 Applied, thanks!
 
-[1/1] PCI: rcar-host: Validate IO/MEM resource count in DT ranges property
-      commit: f2cd763d71799392b2c500294df4c87201f29047
+[1/1] PCI: rcar-host: Free MSI IRQs on error
+      commit: bd3f9176579dd568257b6de8d7ba8f3ba2779028
 
 Best regards,
 -- 
