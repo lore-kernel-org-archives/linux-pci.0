@@ -1,119 +1,81 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.170
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793473826;
-	b=R9roJO9rk+1+3NZJDE19YwQxB24aOmRcegJvLClWsVtxvmyoHhoNBRg7+zKFTFCULj2E
-	 FTpuPg+BCwIhNnu5NV/MefkTPe8ZRbOmiMDSJuRPyBFsfHgzF7NrdVnzG3ue2jbcc1VaM
-	 YOD54yQnSb8kins8zsEYhwmupLR2NC9kme9YnWm7ONKFLKS3v87kF40SZobgpG8o89ArS
-	 F8dPUa+MykA0fbJD3I1FYDCrM7/uIlolliIBDnYIaeEdxFe9uTTJVxbgXqrAp9fFQpWmp
-	 zc3eUV2pduU5vLl1dGkNOuWmsHPoCToQB0HzJ4y7Fsq+Di+qmTty2EJJlCR1AZP98sA==
+	t=1793495270;
+	b=sV+nKmmp4mfUUU9VheKr89SkE1FlZhZSw2ACT3S4jXUblh4XX32LKLnxOZ3XvglC17GH
+	 gQ4ZL+oXAVT84ZAlvL63DpXzPE8vtpVQB+7LmBqM7+uAbrM2p5yG9nPxsgxxe99kgpCMb
+	 WkMmUyT3aSLPyncoudO0PayJD/wna7GM6JC/bWopzKqLWs10L0MQnHBUrS4B0XagnCy2p
+	 wWSbFWUWDmx2fYp0ABS4i1kD/VcSqU8gFmWfukTqTw599kLjiogcobhuBPXbQ06Ml1bzA
+	 TyAixXulQ4dVdvO9ynKFvh5LBZoV9M938wSkPnLCdpFt+Wtfhv7wlA6d9ApsqR9YKcg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793473826;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Content-Type:Date:Message-Id:Cc:Subject:From:To:In-Reply-To:
-	 References:MIME-Version:Content-Transfer-Encoding;
-	bh=P15p9Hb5w1tBvsdlJFg638wJNRLHIyW6DyqlyUCSHFc=;
-	b=ahqlE1oOCjNmYpmGLxniVAfbxGqrgJwxiQe6GZia3h8v/wuPbSjPt9++cZ4y5+UjYgUy
-	 6dPpGbOkRuDybOAUvT/YoAUmnpOjB9iNv2VPsknIiyHRrumjSpjwEgcelee2HEF7TpXkI
-	 BjrZfYAhXK6Fvulxivv0Kq5VekraWHlENMrl/w/qY0h1G9Znu3JBnqimG8dWvEOAjooSP
-	 YAgG+ywk64iEE0NbGeiXtz8cyBR3HSi1jnt6LtVnb61oUPqlsNFIh6E+ckfUU4fHDWEA+
-	 dJDwWgjvGiswT3snqrrfT4X43eQ7u/iXlI0CH0NKxWFBVirH66Uky4CiGytRHLxb52g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793495270;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 In-Reply-To:References:X-Mailer:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=o0dKNKFP2TnkjHjwq1OngqcbhclebE6bDgXM6dq7QKU=;
+	b=GRz/w0aoy0qF0RZFUBYZeUqAQZoMuOA9Vl8Uaj3osM+d+s3VOu+H9ryamds43U1rhq2C
+	 1Bi5WBvmTOXRxDohD+QMNQJ5TlkaswkbE2P8S8BPjJl6uru19Z15uWAUdBodTtVbpI+dR
+	 4ivIz+yxKVQ/D8+5MUAuNa8GQk0pDYdDKxb/N6wxFD2QmBLNKqtuQl3Q//ktm5iuSPEx1
+	 8OG5rFpmkyt8EJ3hqexEJxGJUH+VLIP6ZwCOXiATSzydR4nqBQgkBDE3k1fj9uV99QP1/
+	 Z0AKFjoInj7cwvAbIQKRoEa9vkTjZRAzCHF1OQv2MN7+qmF1NwnHA689xtIb3pn+MOQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nexthop.ai;
-	spf=pass smtp.mailfrom=nexthop.ai;
-	dkim=pass header.d=nexthop.ai header.i=@nexthop.ai header.a=rsa-sha256 header.s=google header.b=M0iRGKX4;
-	arc=none smtp.remote-ip=74.125.82.170
-Received: from mail-dy1-f170.google.com (mail-dy1-f170.google.com [74.125.82.170])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=a1eb1dRO;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9829606A320
-	for <linux-pci@vger.kernel.org>; Sat, 31 Oct 2026 19:10:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A9829606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nexthop.ai
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nexthop.ai
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF086606A31A;
+	Sun,  1 Nov 2026 01:07:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=nexthop.ai header.i=@nexthop.ai header.a=rsa-sha256 header.s=google header.b=M0iRGKX4
-Received: by mail-dy1-f170.google.com with SMTP id 5a478bee46e88-36a0f27c9f4so3123697eec.1
-        for <linux-pci@vger.kernel.org>; Sat, 31 Oct 2026 12:10:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=nexthop.ai; s=google; t=1793473825; x=1794078625; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to:to
-         :from:subject:cc:message-id:date:content-type:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=P15p9Hb5w1tBvsdlJFg638wJNRLHIyW6DyqlyUCSHFc=;
-        b=M0iRGKX4ZakyHPXgwlWKQuWrbvUmrEt1k4+8j+Da6Dso/Dh7GSCRhGjVKtDYwfzJrj
-         2HEAllh00C24MUCD82TGUaZz4bWnjiMTRhAzuWXvWqNUwh9NIMyFAIxSoJmQ4tgmhnAF
-         F245HULIR/4UBpfnm4XNgJVWo0HiMpt1bXAuHbkJDG9vLis8pelTxr1WpUiwasUmrW+0
-         9tOkzQntOI0UA8bT96YYn1nh7WxQBJCWb1rCljfbu4Ofk4oPQ7yUkax5ncCroyqti4PR
-         O+aX72UPS59IWB8w+y+J4RXBJLyCiSRq72tVighCAw7INgBmnyi41FWHKGgDOpB397rH
-         f/EA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793473825; x=1794078625;
-        h=content-transfer-encoding:mime-version:references:in-reply-to:to
-         :from:subject:cc:message-id:date:content-type:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=P15p9Hb5w1tBvsdlJFg638wJNRLHIyW6DyqlyUCSHFc=;
-        b=c6C8HcbhSY6iE2uCjiq0TPcs7lh8yXsmdUuP2+FqMZ8BuNtDKepS/9k1Cmqi3IY2ya
-         vUOS+TJksvOttAALQqgjS/skrzAOu9099xsbNizzaAgyVYHXKOdzE/5Y8CoYAxpUf9zv
-         ORe68a7ldP/WmJ567DNhYJe9aiKybhBHAUJJR545H7KZhcGujWH9Q2nCZAFfclV/XmSb
-         P2BpuLUDH1DB55jksrl2Fx1ynREiwOlFFU80IP1WJ+DWtLMzscYPLLE2smvA2/wvGZ8E
-         YmRFuUQCT54ZhYwyNY0LJjWc4MzFaI0/VTRwHpXl7d+RdR9dFo/zJmyfzIzNXV/0WqBM
-         MTcw==
-X-Forwarded-Encrypted: i=1; AKwUvBwuR5fdnAj5HdpNjqmsDzyTJZst9J3jaLT72YGz8qhOdayYvRoxRw17110WR3T3UFBwTOm/4BcI1W4=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLk3fNqRz5yigk7bpdxmFAMItss0W4NIwagf6NVwmb+vpX4auHG
-	+J5yOmb2H02tVgWr59mE+/umrZauk8sxvbA5jjnFeA+Xx5xECrgrkZ9t3M+5gFONsE8=
-X-Gm-Gg: AYBFou281JzkOFjsnG8AJBGhKHqfYEWJ5fZKY30p73SvhLKUBWRejTXdh4wYZIeSPq0
-	0dtvoizZI+k/TEB4FUKXq6wu/3NBrES6oiBW4VIyP99WB/1LfWQraSrvpxNY86QIsX4z/z0I8xR
-	fxJ7JhfSquulOXdQIxZp2bzPUntmosQupeyqOhX1U2TedNj5LhcuRrAm9iC1WANBFnlxnuwl0c2
-	FtvG8WYctDej9PQQITQMnL/dvgib8R69SoCM72VWq1iObNnn7bSD5LcysQh3QFe2d2bQe4gm7mz
-	3PkuCi5edCVoVV5UEtgjW34v24hMaKBLmJNBl+gf7BU/Z0gzcpe832Xq6YVRZhhXLnFPLXBRzYS
-	a/VJPMyhHPcm2z5B2i3Q8vlSRZMNQaRDIZprRbxR6iOz5o+NrA/dcX7RjGP73yVmsYt8tmm5yxX
-	MxQ5nkHM3VlB0Gg0mP3hWEu5X2L073Mnl8fyiUySQp0fMS1zol2FTi/e7897tMX3GeOzeDQn7xi
-	+303J2InvvVj8+lUzz1PDyh28JS9t5eFgKaeOt6Pt2wfwPujA/n71ioUS3or5hDNmV2k4WcLEcz
-	qiLn141IY768hN6W6BbZU4mUk7UNoyM4Yn52TcUkg8dXAFGFtcs=
-X-Received: by 2002:a05:701b:4515:20b0:166:5552:780a with SMTP id a92af1059eb24-1ac5b028b11mr7948547c88.8.1793473824427;
-        Sat, 31 Oct 2026 12:10:24 -0700 (PDT)
-Received: from localhost ([50.145.100.174])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1ac1b38ac58sm17384804c88.23.2026.10.31.12.10.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 31 Oct 2026 12:10:23 -0700 (PDT)
-Content-Type: text/plain; charset=UTF-8
-Date: Sat, 31 Oct 2026 12:10:22 -0700
-Message-Id: <DMJ9ERWOMF5G.3KVDIP2QE3A7J@nexthop.ai>
-Cc: "Richard Cheng" <icheng@nvidia.com>, "Andrew Lunn" <andrew@lunn.ch>,
- "Rob Herring" <robh@kernel.org>, "Saravana Kannan" <saravanak@kernel.org>,
- "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
- <rafael@kernel.org>, "Danilo Krummrich" <dakr@kernel.org>, "Bjorn Helgaas"
- <bhelgaas@google.com>, "Charles Keepax" <ckeepax@opensource.cirrus.com>,
- "Richard Fitzgerald" <rf@opensource.cirrus.com>, "David Rhodes"
- <david.rhodes@cirrus.com>, "Linus Walleij" <linusw@kernel.org>, "Andy
- Shevchenko" <andriy.shevchenko@linux.intel.com>, "Daniel Scally"
- <djrscally@gmail.com>, "Heikki Krogerus" <heikki.krogerus@linux.intel.com>,
- "Sakari Ailus" <sakari.ailus@linux.intel.com>, "Bartosz Golaszewski"
- <brgl@kernel.org>, "Len Brown" <lenb@kernel.org>, "Davidlohr Bueso"
- <dave@stgolabs.net>, "Jonathan Cameron" <jic23@kernel.org>, "Dave Jiang"
- <dave.jiang@intel.com>, "Alison Schofield" <alison.schofield@intel.com>,
- "Vishal Verma" <vishal.l.verma@intel.com>, "Dan Williams"
- <djbw@kernel.org>, "Ira Weiny" <iweiny@kernel.org>, "Li Ming"
- <ming.li@zohomail.com>, "Lizhi Hou" <lizhi.hou@amd.com>,
- <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-sound@vger.kernel.org>,
- <patches@opensource.cirrus.com>, <linux-gpio@vger.kernel.org>,
- <linux-acpi@vger.kernel.org>, <linux-cxl@vger.kernel.org>, "Allan Nielsen"
- <allan.nielsen@microchip.com>, "Horatiu Vultur"
- <horatiu.vultur@microchip.com>, "Daniel Machon"
- <daniel.machon@microchip.com>, "Steen Hegelund"
- <steen.hegelund@microchip.com>, "Luca Ceresoli"
- <luca.ceresoli@bootlin.com>, "Thomas Petazzoni"
- <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH v13 00/10] lan966x pci device: Add support for SFPs, PCI
- part
-From: "Abdurrahman Hussain" <abdurrahman@nexthop.ai>
-To: "Herve Codina" <herve.codina@bootlin.com>
-In-Reply-To: <20261012142826.159178-1-herve.codina@bootlin.com>
-References: <20261012142826.159178-1-herve.codina@bootlin.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=a1eb1dRO
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADE9E1F000C1;
+	Sun,  1 Nov 2026 01:07:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793495269;
+	bh=o0dKNKFP2TnkjHjwq1OngqcbhclebE6bDgXM6dq7QKU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=a1eb1dROmAhVQ61MQlal6Ap7Wbtl+Ngz2TIMIAwEsgCwttIY4YtbfkeB4YLLcsjlZ
+	 nz2xZEH1C/YJ9YaO/y6ogOD0fTzo/Me7AaL8H1e6qmsGqtN10cu2zlIWrgi/kBM+wB
+	 MLMQ5Nu7I9HGgwHt0MM4z7x8pDENFn2pbc5+hHJXjTo72OrLTLBFDOSBdGX3dhDSSR
+	 bBHJNI+ivrnkPZM/X8KAU/N3tBO5EDmY8B4PfVrayskaUDgvp1GxwKuytbBEbHXGe0
+	 YH8p3wDfYo7OWUEof1MPQcH304m2+9ot0CEYIxjGL8lrPtQDY3oiB2v6/T7dtKSTT+
+	 AiBAUdcvR+i4g==
+Date: Sun, 1 Nov 2026 01:07:37 +0000
+From: Jonathan Cameron <jic23@kernel.org>
+To: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
+ Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
+ <dave.hansen@linux.intel.com>, x86@kernel.org, "H. Peter Anvin"
+ <hpa@zytor.com>, "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown
+ <lenb@kernel.org>, Linus Walleij <linusw@kernel.org>, Bartosz Golaszewski
+ <brgl@kernel.org>, Sven Peter <sven@kernel.org>, Janne Grunau
+ <j@jannau.net>, Neal Gompa <neal@gompa.dev>, Guenter Roeck
+ <linux@roeck-us.net>, David Lechner <dlechner@baylibre.com>, Nuno
+ =?UTF-8?B?U8Oh?= <nuno.sa@analog.com>, Andy Shevchenko <andy@kernel.org>,
+ Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, Griffin
+ Kroah-Hartman <griffin@kroah.com>, Hans de Goede <hansg@kernel.org>, Ilpo
+ =?UTF-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Sebastian Reichel
+ <sre@kernel.org>, Alexandre Belloni <alexandre.belloni@bootlin.com>, Wim
+ Van Sebroeck <wim@linux-watchdog.org>, Jarkko Sakkinen <jarkko@kernel.org>,
+ Mimi Zohar <zohar@linux.ibm.com>, Roberto Sassu <roberto.sassu@huawei.com>,
+ Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, Eric Snowberg
+ <eric.snowberg@oracle.com>, Paul Moore <paul@paul-moore.com>, James Morris
+ <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-gpio@vger.kernel.org,
+ asahi@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
+ linux-hwmon@vger.kernel.org, linux-iio@vger.kernel.org,
+ linux-leds@vger.kernel.org, mfd@lists.linux.dev,
+ platform-driver-x86@vger.kernel.org, linux-pm@vger.kernel.org,
+ linux-rtc@vger.kernel.org, linux-watchdog@vger.kernel.org,
+ linux-integrity@vger.kernel.org, keyrings@vger.kernel.org,
+ linux-security-module@vger.kernel.org
+Subject: Re: [RFC PATCH 00/14] Add macsmc support for Intel Macs, replacing
+ applesmc
+Message-ID: <20261101010737.203951cd@jic23-hlaptop>
+In-Reply-To: <20261029085504.3547-1-atharvatiwarilinuxdev@gmail.com>
+References: <20261029085504.3547-1-atharvatiwarilinuxdev@gmail.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -123,34 +85,136 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hi Herve,
+On Thu, 29 Oct 2026 04:51:57 -0400
+Atharva Tiwari <atharvatiwarilinuxdev@gmail.com> wrote:
 
-On Mon, Oct 12, 2026 at 04:28:14PM +0200, Herve Codina wrote:
-> Patches 8 and 9 fix fw_devlink issues specific to PCI and the
-> device-tree nodes created during enumeration.
+> applesmc is very old, and all of its code is lumped into one
+> driver. Fan control, sensors, the light sensor, the motion
+> sensor and the keyboard backlight in a single file
+> with its own way of talking to the SMC. It is hard to extend
+> and to support new machines.
+> 
+> This series adds Intel Mac support to the macsmc drivers that
+> were written for Apple Silicon (the Asahi implementation).
+> The SMC works the same way on both platforms, so we share a
+> lot of code with Asahi. Only the way of talking to the SMC
+> differs.
+> 
+> To make that work, patch 1 splits the macsmc driver into a
+> common core and a backend. The existing RTKit code moves into
+> its own backend. Patch 2 adds an ACPI backend for Intel Macs
+> with I/O port, MMIO and interrupt support. After that, each
+> function gets its own small driver using the standard kernel
+> interfaces (hwmon, IIO, LEDs, power supply, RTC, watchdog),
+> instead of one large driver doing everything.
 
-We hit exactly this on x86 switch platforms with
-CONFIG_PCI_DYNAMIC_OF_NODES. A driver applies a device-tree overlay
-onto each Xilinx FPGA PCI endpoint and populates I2C controllers
-(xiic), watchdogs and GPIO blocks. Their interrupts go through small
-chained irqchips that are themselves fed by the FPGA's MSI vectors.
+Are we looking at ABI changes as a result of this? That
+tends to happen with split ups of unified drivers and mapping
+them to more standard kernel subsystems.
 
-Without this series, fw_devlink drops every supplier link under the
-synthesized PCI root bridge node ("Not linking ... might never become
-dev"), so the irqchips end up with no consumers. Unbinding one of them
-frees IRQ descriptors that the I2C controllers and the watchdog still
-hold. We get a remove_proc_entry "removing non-empty directory 'irq/N'"
-WARNING per IRQ, and the I2C controllers are dead until reboot.
-
-With the series applied on v7.3, the device links are created (up to
-32 consumers per irqchip), and unbinding an irqchip now unbinds its
-consumers first. I tested on two platforms, with 2 and 3 FPGAs (4 and
-7 irqchips). Repeated unload/reload of the irqchip driver was clean
-every time, and everything probed again afterwards.
-
-Tested-by: Abdurrahman Hussain <abdurrahman@nexthop.ai>
+What is the plan to handle them if so?
 
 Thanks,
-Abdurrahman
+
+Jonathan
+
+> 
+> On Intel Macs these drivers replace applesmc (hwmon, light
+> sensor, motion sensor and keyboard backlight) and acpi-sbs
+> (battery and adapter). They are mutually exclusive with the
+> drivers they replace, so only one is used at a time.
+> 
+> This is an RFC to get early feedback on the design. The macsmc
+> split and the Intel Mac backend touch fundamental parts, so I
+> would rather change them now if maintainers ask. After that I
+> will test the series on more macsand send it upstream as a
+> proper series.
+> 
+> The series is organised as follows:
+> 
+>   1      Split macsmc into a core and backends
+>   2      ACPI backend for Intel Macs
+>   3-6    New drivers: watchdog, IIO light and accelerometer,
+>          keyboard backlight LED
+>   7-9    RTC support for T2 Macs, a T2 detection flag, and
+>          disabling the broken ACPI RTCs
+>   10-11  Power supply support, replacing acpi-sbs
+>   12-13  hwmon support for Intel Macs
+>   14     ioctl for userspace access to SMC keys
+> 
+> 
+> Tested-on: MacBookPro16,1 , iMac20,1 , MacBookAir4,2 , MacBookPro12,1 ,
+> MacBookPro15,1
+> 
+> NOTE: Almost all drivers have been tested except the motion sensor
+> driver as i was not able to find any device that had one.
+> 
+> Atharva Tiwari (14):
+>   treewide: Add backend for macsmc
+>   platform/x86: add backend for macsmc in intel macs
+>   watchdog: add driver for apple smc
+>   iio/light: add new driver for macsmc
+>   iio/accel: add driver for apple SMS
+>   leds: add support for macsmc kbl
+>   rtc: add support for x86 macs in macsmc-rtc
+>   treewide: Add a flag to detect the Apple T2 chip
+>   treewide: disable other rtc's in t2 macs
+>   power/supply: add support for x86 macs in macsmc-power
+>   acpi: disable battery and adapter for x86 apple machines
+>   hwmon/macsmc: add more types
+>   hwmon: add support for x86 macs in macsmc-hwmon
+>   mfd/macsmc: add ioctl to access smc keys
+> 
+>  MAINTAINERS                                   |    2 +-
+>  arch/x86/kernel/quirks.c                      |   37 +
+>  drivers/acpi/acpi_tad.c                       |    4 +
+>  drivers/acpi/sbs.c                            |   17 +-
+>  drivers/acpi/x86/utils.c                      |    4 +
+>  drivers/gpio/Kconfig                          |    2 +-
+>  drivers/gpio/gpio-macsmc.c                    |   13 +-
+>  drivers/hwmon/Kconfig                         |    7 +-
+>  drivers/hwmon/macsmc-hwmon.c                  | 1126 ++++++++++++++++-
+>  drivers/iio/accel/Kconfig                     |   10 +
+>  drivers/iio/accel/Makefile                    |    1 +
+>  drivers/iio/accel/macsmc-accel.c              |  248 ++++
+>  drivers/iio/light/Kconfig                     |   11 +
+>  drivers/iio/light/Makefile                    |    1 +
+>  drivers/iio/light/macsmc-light.c              |  189 +++
+>  drivers/leds/Kconfig                          |   11 +
+>  drivers/leds/Makefile                         |    1 +
+>  drivers/leds/leds-macsmc.c                    |   69 +
+>  drivers/mfd/Kconfig                           |   15 +-
+>  drivers/mfd/Makefile                          |    2 +-
+>  drivers/mfd/macsmc-core.c                     |  362 ++++++
+>  drivers/platform/x86/Kconfig                  |   10 +
+>  drivers/platform/x86/Makefile                 |    1 +
+>  drivers/platform/x86/macsmc-acpi.c            |  642 ++++++++++
+>  drivers/power/reset/Kconfig                   |    2 +-
+>  drivers/power/supply/Kconfig                  |    2 +-
+>  drivers/power/supply/macsmc-power.c           |  751 ++++++++---
+>  drivers/rtc/Kconfig                           |    2 +-
+>  drivers/rtc/rtc-cmos.c                        |    4 +
+>  drivers/rtc/rtc-macsmc.c                      |  126 +-
+>  drivers/soc/apple/Kconfig                     |   14 +
+>  drivers/soc/apple/Makefile                    |    2 +
+>  .../macsmc.c => soc/apple/macsmc-rtkit.c}     |  185 ++-
+>  drivers/watchdog/Kconfig                      |   11 +
+>  drivers/watchdog/Makefile                     |    2 +-
+>  drivers/watchdog/macsmc_wdt.c                 |  140 ++
+>  include/linux/mfd/macsmc.h                    |  104 +-
+>  include/linux/platform_data/x86/apple.h       |    5 +
+>  .../platform_certs/keyring_handler.h          |    8 -
+>  security/integrity/platform_certs/load_uefi.c |   38 +-
+>  40 files changed, 3786 insertions(+), 395 deletions(-)
+>  create mode 100644 drivers/iio/accel/macsmc-accel.c
+>  create mode 100644 drivers/iio/light/macsmc-light.c
+>  create mode 100644 drivers/leds/leds-macsmc.c
+>  create mode 100644 drivers/mfd/macsmc-core.c
+>  create mode 100644 drivers/platform/x86/macsmc-acpi.c
+>  rename drivers/{mfd/macsmc.c => soc/apple/macsmc-rtkit.c} (70%)
+>  create mode 100644 drivers/watchdog/macsmc_wdt.c
+> 
+
