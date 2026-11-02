@@ -1,49 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793630792;
-	b=VNMPIixDPC7xnx24ImagaVLICgQ1oMfx0ZSj8HfYNYyHwlLhP7YynaWIRw/rdO94DuRp
-	 kdNc+FDihW4918YH2n0gYoGk0wncFuJgHX2QOOwo3+vftnXS65KV754vX9cEiAnYODAwj
-	 OearUcAC9GlUV4otqHGu1vKc4itb+pc8eLrPZ7SuI7vlAQ1GimTfx0qsKE4s8NvqU6XHz
-	 er2aRiwxbS+Agxbv1vhK7n7EZTeyvAzIwVps/OdVkDV8+/v0+f2+0+jVUzW9srCbVRxpu
-	 b2Z26etis4y5jkPeB95vYtOjKH428ACBiTkcp2EniAvYUo2q6oPdpv6hhtraEl9WvNA==
+	t=1793630838;
+	b=VFAwIfkApgRiSs6NFKFS8lrdH7jOaHFWekZouMDMCfe/UhNSkg5ml0izoeqh1xbLLZo1
+	 JY1wxfXyiXD8PEvLGBOg0TYjqpCObbW5S9loQqe0i4VlO7e7SF6In+MglsjW19gotElew
+	 Ic7gaPl5KtsXf26+AHswPLOsexMAXXrWJC8SSht2erBDrzBhML03uOyrBEvcoKUxi9PF4
+	 J2cqNobH8dRr1Ae18ws8SD4wcxreFvTPDWAfhMKHYTF23EDXVEysENWusXqrBvRpioUCr
+	 cl5XKzfoaMlw2poQbNk7Depqk6DqsKPe6znS6cIEdMDrIRuEnKvmcZAWbpmIsaDbPAA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793630792;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793630838;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer;
-	bh=8OUC3OpgPcYXff2v4b0WbdSVZE7XWpoJGNZRHA3e5A4=;
-	b=XPllilg3r+tc0lz4rs3Ycu3pEWL6/1QcmOYKIOlLj5DZex9ihiB72LC/xdA1BJMmpyJA
-	 Daz8EDNAOTGmeBVDakNa23FHfl5xESS22cFNK2PWm/ThJJroUU9ehmPesaVO3lNRRc/db
-	 JVMjPzEAkNBjel06clXm4i9Yp8JRuiINX4brc0NgV1W3OhxWc3cRgMdKjTIr7nf+0+hFP
-	 ytBbO8MbnukO+sPX2UXWKNdCOil6IproFhGVzyrrk2NqywuiTHttTaEv4LyI77ivh3QsP
-	 3U94wMJYXB5HsfcWUl13LA9pXeB3qnHuJg1XZ6iEgk5ulQfOo+Y6NHj1DbRv1PfOZAQ==
+	bh=HVagn+HE6BgGgxgbr+5XC5Y5Qcbb33m4Jb7EnpZPFUg=;
+	b=OOrX+5RutX2ZUn/YCZrMWgNIS0lOl6SM/TyDyGz2Dz0dWKU8sLZpgoHrptH+UlHTnyRr
+	 LZjay4Lt11J6CyFxAOPRBh9Xtc8amh5FTqB99zYy7mZPoPvo4otOt6UXxFI2DXPIYq4cE
+	 vehG4VkxjGdeMi1I1l+ulnYQFgY5/RcUG9pVZ90z7Qqy8YluakNZhTSFfNeu9hyEMO7tI
+	 sZzoDgVGw8UhK1GCHSllPQSBl1LNN0mY7w71Ok0E/FoOUUrQvV71egAiB0ygNXfExrRlB
+	 ni/qgu3/eE+nnBcAjMm/Q/fEj1NVXznLf/IOkgmNt0+xRm894m4eifFskwXz7wapfOA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XWvDNXOE;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="ZfP/Kahw";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60A07606C57C;
-	Mon,  2 Nov 2026 14:46:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F39186070CA8;
+	Mon,  2 Nov 2026 14:47:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XWvDNXOE
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5ACC31F00A1C;
-	Mon,  2 Nov 2026 14:46:14 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZfP/Kahw
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26EE81F00A1A;
+	Mon,  2 Nov 2026 14:46:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793630792;
-	bh=8OUC3OpgPcYXff2v4b0WbdSVZE7XWpoJGNZRHA3e5A4=;
+	s=k20260515; t=1793630833;
+	bh=HVagn+HE6BgGgxgbr+5XC5Y5Qcbb33m4Jb7EnpZPFUg=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=XWvDNXOEbgzkyZSZLEEf/fLDGQTJKwF0ltSxY/EL3lo82Mkr/aDxZgyoDMPnEDdLr
-	 5p9X0oQCHCkY63MlXypffIH/FgWzMKVYCEo4i3pEbfJuBXE7iGAORsSWwgE8jxQhAy
-	 4NKKegcYQITsSSiB9ubx16WR7JIBFMAtYwmdkdE/Zzf6jzzLfZ7rDbpHNZ3omVKKWs
-	 5YTo9uoKH3WQgJg5iglu6NkXshnM4oNeVvav8v5ihPYSLjDC/W/Dnb3rFkAiPkdkb/
-	 knAVm1KzmCTPRmBb4tIwPxCsIua2TX2REoD5qySaeeWkURDqxkkuEp88D6dK5T0/43
-	 GCmlt6X8Ltfhw==
+	b=ZfP/KahwDm10wm2TSGrtLVkg7xDUNnpz+rBBaInyM45cZNagos2iYqnrDed5HxIBA
+	 K+//mFWxDsWpOWe9Buj12+quSzkpcQzj2ngYZ9ZsEW0oSIiCRi7l1s6PLMfANxGQPz
+	 ES6j9Tp68ZCoex9QLLCdMUr2RP+/gA7nMafoF8zKWkoSoj6HU61hIGfIek8HtzVsMz
+	 WP7zxeoWb2ywthOOE6hEK8rHNlm6c5T599z/Oyvz7z8nNJFpq2Xxjua62S/Ez/3caV
+	 aKvdxGOQzTpkPCeB1AmIzk8MgvSvtRVAT8gs8GThhJQslYhMWBFvphDQuEoGKj/fJB
+	 b5NG8uh8YTrhw==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 15:43:27 +0100
-Subject: [PATCH RFC 36/38] selftests/proc: check that faulting sysctl
- accesses don't hold up removal
+Date: Mon, 02 Nov 2026 15:43:29 +0100
+Subject: [PATCH RFC 38/38] selftests/proc: check that a faulting readlink()
+ doesn't hold up removal
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -55,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-bugfixes-v1-36-59422ed3e465@kernel.org>
+Message-Id: <20261102-work-procfs-bugfixes-v1-38-59422ed3e465@kernel.org>
 References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
 In-Reply-To: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -92,86 +92,84 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  Chuck Lever <cel@kernel.org>
 X-Mailer: b4 0.17-dev
 
-Read, write and list /proc/sys/net/ipv6/conf/<dev>/ of a tun device
-with a buffer whose first page is backed by userfaultfd and remove the
-device while the task sleeps in its copy from or to userspace:
+Add the symlink case:
 
-- unregistering the table doesn't wait for a faulting read(), write()
-  or getdents64()
+- readlink() /proc/asound/<id> of a dummy card into a buffer backed by
+  userfaultfd
 
-- the read still gets the value that was produced before the removal
-  and the next read fails with -ENOENT
+- change the card's id through sysfs while the reader faults, which
+  removes the symlink with snd_card_mutex and info_mutex held
 
-- the write is copied in after the removal and fails with -ENOENT
+- expect that to finish without waiting for the reader
 
-- getdents64() still lists what it looked up before the removal and
-  fails with -ENOENT afterwards
-
-The tables are unregistered under RTNL, so a regression stalls each
-test for five seconds before it fails.
+Skipped without snd-dummy.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- tools/testing/selftests/proc/.gitignore            |   1 +
- tools/testing/selftests/proc/Makefile              |   1 +
+ tools/testing/selftests/proc/.gitignore            |   2 +
+ tools/testing/selftests/proc/Makefile              |   2 +
  tools/testing/selftests/proc/config                |   3 +
- .../selftests/proc/proc-remove-slow-sysctl.c       | 213 +++++++++++++++++++++
- 4 files changed, 218 insertions(+)
+ .../selftests/proc/proc-remove-slow-readlink.c     | 191 +++++++++++++++++++++
+ 4 files changed, 198 insertions(+)
 
 diff --git a/tools/testing/selftests/proc/.gitignore b/tools/testing/selftests/proc/.gitignore
-index 5b5e24e39cbd..7b8133492782 100644
+index 7b8133492782..e2566cc0ae07 100644
 --- a/tools/testing/selftests/proc/.gitignore
 +++ b/tools/testing/selftests/proc/.gitignore
-@@ -21,6 +21,7 @@
- /proc-uptime-001
+@@ -22,6 +22,8 @@
  /proc-uptime-002
  /proc-pidns
-+/proc-remove-slow-sysctl
+ /proc-remove-slow-sysctl
++/proc-remove-slow-reader
++/proc-remove-slow-readlink
  /read
  /self
  /setns-dcache
 diff --git a/tools/testing/selftests/proc/Makefile b/tools/testing/selftests/proc/Makefile
-index dae09f333455..bce6beca7274 100644
+index bce6beca7274..6a9bdc999f54 100644
 --- a/tools/testing/selftests/proc/Makefile
 +++ b/tools/testing/selftests/proc/Makefile
-@@ -32,5 +32,6 @@ TEST_GEN_PROGS += proc-multiple-procfs
- TEST_GEN_PROGS += proc-fsconfig-hidepid
+@@ -33,5 +33,7 @@ TEST_GEN_PROGS += proc-fsconfig-hidepid
  TEST_GEN_PROGS += proc-sysctl-readdir-churn
  TEST_GEN_PROGS += proc-pidns
-+TEST_GEN_PROGS += proc-remove-slow-sysctl
+ TEST_GEN_PROGS += proc-remove-slow-sysctl
++TEST_GEN_PROGS += proc-remove-slow-reader
++TEST_GEN_PROGS += proc-remove-slow-readlink
  
  include ../lib.mk
 diff --git a/tools/testing/selftests/proc/config b/tools/testing/selftests/proc/config
-index 68fbd2b35884..3edd3c437fe4 100644
+index 3edd3c437fe4..7b0e1d9be1a2 100644
 --- a/tools/testing/selftests/proc/config
 +++ b/tools/testing/selftests/proc/config
-@@ -1 +1,4 @@
- CONFIG_PROC_FS=y
-+CONFIG_IPV6=y
-+CONFIG_TUN=y
-+CONFIG_USERFAULTFD=y
-diff --git a/tools/testing/selftests/proc/proc-remove-slow-sysctl.c b/tools/testing/selftests/proc/proc-remove-slow-sysctl.c
+@@ -2,3 +2,6 @@ CONFIG_PROC_FS=y
+ CONFIG_IPV6=y
+ CONFIG_TUN=y
+ CONFIG_USERFAULTFD=y
++CONFIG_SOUND=y
++CONFIG_SND=y
++CONFIG_SND_DUMMY=m
+diff --git a/tools/testing/selftests/proc/proc-remove-slow-readlink.c b/tools/testing/selftests/proc/proc-remove-slow-readlink.c
 new file mode 100644
-index 000000000000..e1b1fd19a07a
+index 000000000000..3290225daecd
 --- /dev/null
-+++ b/tools/testing/selftests/proc/proc-remove-slow-sysctl.c
-@@ -0,0 +1,213 @@
++++ b/tools/testing/selftests/proc/proc-remove-slow-readlink.c
+@@ -0,0 +1,191 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * A read(), write() or getdents64() of /proc/sys that faults while copying
-+ * from or to userspace must not hold up unregistering the sysctl table.
-+ * /proc/sys/net/ipv6/conf/<dev>/ of a tun device is unregistered under RTNL
-+ * when the device's file is closed.
++ * A readlink() that faults while copying out the link must not hold up
++ * removal of the /proc symlink. Changing a sound card's id removes
++ * /proc/asound/<id> with snd_card_mutex and info_mutex held.
 + */
 +#define _GNU_SOURCE
++#include <dirent.h>
 +#include <errno.h>
 +#include <fcntl.h>
-+#include <linux/if.h>
-+#include <linux/if_tun.h>
++#include <limits.h>
 +#include <linux/userfaultfd.h>
 +#include <poll.h>
 +#include <pthread.h>
-+#include <sched.h>
++#include <stdio.h>
++#include <stdlib.h>
 +#include <string.h>
 +#include <sys/ioctl.h>
 +#include <sys/mman.h>
@@ -180,191 +178,169 @@ index 000000000000..e1b1fd19a07a
 +
 +#include "../kselftest_harness.h"
 +
-+#define TUN_NAME	"procslow0"
-+#define CONF_PATH	"/proc/sys/net/ipv6/conf/" TUN_NAME
-+#define MTU_PATH	CONF_PATH "/mtu"
-+#define BUF_PAGES	16
++#define CARD_ID		"Dummy"
++#define NEW_ID		"procslow"
++#define LINK_PATH	"/proc/asound/" CARD_ID
 +#define TIMEOUT_MS	5000
 +
-+enum sysctl_op {
-+	SYSCTL_READ,
-+	SYSCTL_WRITE,
-+	SYSCTL_GETDENTS,
-+};
-+
-+struct worker {
-+	enum sysctl_op op;
-+	int fd;
++struct reader {
 +	char *buf;
 +	size_t len;
 +	ssize_t ret;
-+	int err;
 +};
 +
-+struct closer {
-+	int tun;
++struct renamer {
++	const char *id_path;
++	const char *id;
 +	int done;
++	int ret;
 +};
 +
-+static void *work_thread(void *arg)
++static void *readlink_thread(void *arg)
 +{
-+	struct worker *w = arg;
++	struct reader *r = arg;
 +
-+	switch (w->op) {
-+	case SYSCTL_READ:
-+		w->ret = read(w->fd, w->buf, w->len);
-+		break;
-+	case SYSCTL_WRITE:
-+		w->ret = write(w->fd, w->buf, w->len);
-+		break;
-+	case SYSCTL_GETDENTS:
-+		w->ret = syscall(__NR_getdents64, w->fd, w->buf, w->len);
-+		break;
-+	}
-+	w->err = errno;
++	r->ret = readlink(LINK_PATH, r->buf, r->len);
 +	return NULL;
 +}
 +
-+static void *close_thread(void *arg)
++/* a new id removes the card's old /proc/asound/<id> link */
++static int set_id(const char *id_path, const char *id)
 +{
-+	struct closer *c = arg;
++	int fd, ret;
++
++	fd = open(id_path, O_WRONLY | O_CLOEXEC);
++	if (fd < 0)
++		return -errno;
++	ret = write(fd, id, strlen(id)) < 0 ? -errno : 0;
++	close(fd);
++	return ret;
++}
++
++static void *rename_thread(void *arg)
++{
++	struct renamer *r = arg;
 +	ssize_t ret;
 +
-+	close(c->tun);
-+	ret = write(c->done, "x", 1);
++	r->ret = set_id(r->id_path, r->id);
++	ret = write(r->done, "x", 1);
 +	return (void *)ret;
 +}
 +
-+FIXTURE(proc_sys_slow) {
-+	int tun;
-+	int uffd;
-+	char *buf;
-+	long psz;
++/* the sysfs id file of the card with @id */
++static int find_card(const char *id, char *id_path, size_t size)
++{
++	struct dirent *d;
++	int ret = -1;
++	DIR *dir;
++
++	dir = opendir("/sys/class/sound");
++	if (!dir)
++		return -1;
++	while (ret && (d = readdir(dir))) {
++		char cur[32];
++		FILE *f;
++
++		if (strncmp(d->d_name, "card", 4))
++			continue;
++		snprintf(id_path, size, "/sys/class/sound/%s/id", d->d_name);
++		f = fopen(id_path, "r");
++		if (!f)
++			continue;
++		if (fgets(cur, sizeof(cur), f)) {
++			cur[strcspn(cur, "\n")] = '\0';
++			if (!strcmp(cur, id))
++				ret = 0;
++		}
++		fclose(f);
++	}
++	closedir(dir);
++	return ret;
++}
++
++FIXTURE(dummy) {
++	char id_path[PATH_MAX];
++	bool renamed;
 +};
 +
-+FIXTURE_SETUP(proc_sys_slow)
++FIXTURE_SETUP(dummy)
++{
++	self->renamed = false;
++	if (access(LINK_PATH, F_OK) && system("modprobe -q snd-dummy"))
++		SKIP(return, "no snd-dummy");
++	if (access(LINK_PATH, F_OK))
++		SKIP(return, LINK_PATH ": %s", strerror(errno));
++	if (find_card(CARD_ID, self->id_path, sizeof(self->id_path)))
++		SKIP(return, "no sysfs id file for " CARD_ID);
++	if (access(self->id_path, W_OK))
++		SKIP(return, "%s: %s", self->id_path, strerror(errno));
++}
++
++FIXTURE_TEARDOWN(dummy)
++{
++	if (self->renamed && set_id(self->id_path, CARD_ID))
++		TH_LOG("couldn't name the card " CARD_ID " again");
++}
++
++TEST_F(dummy, remove_while_readlink_faults)
 +{
 +	struct uffdio_api api = { .api = UFFD_API };
 +	struct uffdio_register reg = {};
-+	struct ifreq ifr = {};
-+
-+	if (unshare(CLONE_NEWNET))
-+		SKIP(return, "unshare(CLONE_NEWNET): %s", strerror(errno));
-+
-+	self->tun = open("/dev/net/tun", O_RDWR | O_CLOEXEC);
-+	if (self->tun < 0)
-+		SKIP(return, "/dev/net/tun: %s", strerror(errno));
-+	strncpy(ifr.ifr_name, TUN_NAME, IFNAMSIZ - 1);
-+	ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
-+	ASSERT_EQ(ioctl(self->tun, TUNSETIFF, &ifr), 0);
-+	if (access(CONF_PATH, F_OK))
-+		SKIP(return, CONF_PATH ": %s", strerror(errno));
-+
-+	self->uffd = syscall(__NR_userfaultfd, O_CLOEXEC | O_NONBLOCK);
-+	if (self->uffd < 0)
-+		SKIP(return, "userfaultfd: %s", strerror(errno));
-+	ASSERT_EQ(ioctl(self->uffd, UFFDIO_API, &api), 0);
-+
-+	/* Only the first page of the buffer goes through userfaultfd. */
-+	self->psz = sysconf(_SC_PAGESIZE);
-+	self->buf = mmap(NULL, BUF_PAGES * self->psz, PROT_READ | PROT_WRITE,
-+			 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-+	ASSERT_NE(self->buf, MAP_FAILED);
-+	reg.range.start = (unsigned long)self->buf;
-+	reg.range.len = self->psz;
-+	reg.mode = UFFDIO_REGISTER_MODE_MISSING;
-+	ASSERT_EQ(ioctl(self->uffd, UFFDIO_REGISTER, &reg), 0);
-+}
-+
-+FIXTURE_TEARDOWN(proc_sys_slow)
-+{
-+}
-+
-+/*
-+ * Let @w sleep in its copy from or to the first page of the buffer, then
-+ * close the device. Unregistering the table must not wait for @w.
-+ */
-+static void stall_and_remove(struct __test_metadata *_metadata,
-+			     FIXTURE_DATA(proc_sys_slow) *self,
-+			     struct worker *w)
-+{
-+	struct closer c = { .tun = self->tun };
 +	struct uffdio_zeropage zero = {};
++	long psz = sysconf(_SC_PAGESIZE);
++	struct renamer rn = {};
++	struct reader r = {};
 +	struct uffd_msg msg;
 +	struct pollfd pfd;
-+	pthread_t wt, ct;
-+	int done[2];
++	pthread_t rt, nt;
++	int uffd, done[2];
++	char *buf;
 +
-+	w->buf = self->buf;
-+	ASSERT_EQ(pthread_create(&wt, NULL, work_thread, w), 0);
++	uffd = syscall(__NR_userfaultfd, O_CLOEXEC | O_NONBLOCK);
++	if (uffd < 0)
++		SKIP(return, "userfaultfd: %s", strerror(errno));
++	ASSERT_EQ(ioctl(uffd, UFFDIO_API, &api), 0);
 +
-+	pfd = (struct pollfd){ .fd = self->uffd, .events = POLLIN };
++	buf = mmap(NULL, psz, PROT_READ | PROT_WRITE,
++		   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
++	ASSERT_NE(buf, MAP_FAILED);
++	reg.range.start = (unsigned long)buf;
++	reg.range.len = psz;
++	reg.mode = UFFDIO_REGISTER_MODE_MISSING;
++	ASSERT_EQ(ioctl(uffd, UFFDIO_REGISTER, &reg), 0);
++
++	r.buf = buf;
++	r.len = psz;
++	ASSERT_EQ(pthread_create(&rt, NULL, readlink_thread, &r), 0);
++
++	/* The reader now sleeps in the copy of the link to userspace. */
++	pfd = (struct pollfd){ .fd = uffd, .events = POLLIN };
 +	ASSERT_EQ(poll(&pfd, 1, TIMEOUT_MS), 1);
-+	ASSERT_EQ(read(self->uffd, &msg, sizeof(msg)), sizeof(msg));
++	ASSERT_EQ(read(uffd, &msg, sizeof(msg)), sizeof(msg));
 +	ASSERT_EQ(msg.event, UFFD_EVENT_PAGEFAULT);
 +
++	/* Renaming the card removes the link that is being read. */
 +	ASSERT_EQ(pipe2(done, O_CLOEXEC), 0);
-+	c.done = done[1];
-+	ASSERT_EQ(pthread_create(&ct, NULL, close_thread, &c), 0);
++	rn.id_path = self->id_path;
++	rn.id = NEW_ID;
++	rn.done = done[1];
++	self->renamed = true;
++	ASSERT_EQ(pthread_create(&nt, NULL, rename_thread, &rn), 0);
 +	pfd = (struct pollfd){ .fd = done[0], .events = POLLIN };
 +	EXPECT_EQ(poll(&pfd, 1, TIMEOUT_MS), 1) {
-+		TH_LOG("unregistering " CONF_PATH " waited for the faulting task");
++		TH_LOG("removing " LINK_PATH " waited for the reader");
 +	}
 +
-+	zero.range.start = (unsigned long)self->buf;
-+	zero.range.len = self->psz;
-+	ASSERT_EQ(ioctl(self->uffd, UFFDIO_ZEROPAGE, &zero), 0);
-+	ASSERT_EQ(pthread_join(wt, NULL), 0);
-+	ASSERT_EQ(pthread_join(ct, NULL), 0);
-+}
++	zero.range.start = (unsigned long)buf;
++	zero.range.len = psz;
++	ASSERT_EQ(ioctl(uffd, UFFDIO_ZEROPAGE, &zero), 0);
++	ASSERT_EQ(pthread_join(rt, NULL), 0);
++	ASSERT_EQ(pthread_join(nt, NULL), 0);
++	EXPECT_EQ(rn.ret, 0);
 +
-+TEST_F(proc_sys_slow, read)
-+{
-+	struct worker w = {
-+		.op	= SYSCTL_READ,
-+		.len	= BUF_PAGES * self->psz,
-+	};
-+
-+	w.fd = open(MTU_PATH, O_RDONLY | O_CLOEXEC);
-+	ASSERT_GE(w.fd, 0);
-+	stall_and_remove(_metadata, self, &w);
-+
-+	/* The value was produced before the table went away, then nothing. */
-+	EXPECT_GT(w.ret, 0);
-+	EXPECT_EQ(read(w.fd, self->buf, self->psz), -1);
-+	EXPECT_EQ(errno, ENOENT);
-+}
-+
-+TEST_F(proc_sys_slow, write)
-+{
-+	struct worker w = {
-+		.op	= SYSCTL_WRITE,
-+		.len	= 5,
-+	};
-+
-+	w.fd = open(MTU_PATH, O_WRONLY | O_CLOEXEC);
-+	ASSERT_GE(w.fd, 0);
-+	stall_and_remove(_metadata, self, &w);
-+
-+	/* The table went away while the value was copied in. */
-+	EXPECT_EQ(w.ret, -1);
-+	EXPECT_EQ(w.err, ENOENT);
-+}
-+
-+TEST_F(proc_sys_slow, getdents)
-+{
-+	struct worker w = {
-+		.op	= SYSCTL_GETDENTS,
-+		.len	= BUF_PAGES * self->psz,
-+	};
-+
-+	w.fd = open(CONF_PATH, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
-+	ASSERT_GE(w.fd, 0);
-+	stall_and_remove(_metadata, self, &w);
-+
-+	/* What was looked up before the removal still arrives, then nothing. */
-+	EXPECT_GT(w.ret, 0);
-+	EXPECT_EQ(syscall(__NR_getdents64, w.fd, self->buf, self->psz), -1);
++	/* The link was read before it went away. */
++	EXPECT_GT(r.ret, 0);
++	EXPECT_EQ(readlink(LINK_PATH, buf, psz), -1);
 +	EXPECT_EQ(errno, ENOENT);
 +}
 +
