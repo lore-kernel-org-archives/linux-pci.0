@@ -1,75 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793638181;
-	b=qme12cZO5XrHtNarbOPp7x7PSFoj++4zeYXomjJIvlSLF9G2IquXN03s2ZR7oX9rfK4V
-	 rPJUnn7OJOdD0O6o+/+0iJJHGPvCeTcibWF1iym+JqU9BHGeDzRw+IR6YEr4I3QdbOR7g
-	 gNpxubRKABuJ4rl8z+PEZJfpImr1IDbL9sGljb9InwMxGgIFKGVGK8qLzljFso3sYrhd8
-	 y1jfvoAGdOz9JAWEBuvaPJJUv5GVbedUjj+wsUXCmRjR6IBpqAczv7JlL4XJO6UduzwBs
-	 oolVngoPfXSYGXf1D0xI4/wZ3y0dPPtb1GMI2u8IaAzG7EAWu7TwVoBUF3jPnslRd5A==
+	t=1793638183;
+	b=G0Ol/rlg0giYB9+OoENZ5aiaVW2vGRxXEoSILiUZ+yVkdrVv83nVylD1MSr/9GsQSZ+v
+	 6m1VeeoPS+gyjxwCBoP7h3ZK5XRziCbPU1F4hSFE+6tjny8cXfPHern1H65j4NU2MgQ/M
+	 ILFk5ZHjX8iQUZ2tIP1qLPir2dsFvzLwhn/AMSWLpxOy/1UuG2B27XjTcGXpRbMT5p8YW
+	 pFzFXl7Nqy0HnMnzVdAb4dKyqki7cz6gOJbbiUknLEDYE/os/k2OV3oao9Lr2b3I1uLfz
+	 tUIiQdqGfN483qkVLkspNHTNUBcXbXvmj/9YTYg8w/ga8qVf68BBIT34UevhrgluO+g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793638181;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793638183;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
 	 Cc:Subject:Message-ID:User-Agent;
-	bh=sdL6hg7CHnN1zjS++k61eX7hNZShQyaIYWxVfO8xrcU=;
-	b=heI2QQPU0x01IB/ynRoazqEX4TFmM4chGuQb0RHTOwkG7bPo/SxzHuhtycwa0ApghbLP
-	 yI4wpHUDUD2UBLmCbVz9lbPkVsFiZeJp4uwQxeIhFjB49typOXpLml/8h6BOXqwNHYAaQ
-	 JtWP1B4/cIBFRsGdoCVvbl2sdrC+F00ZJrEmxesPdtzIBZroOCY3aqkIV1qgFUIcqFEXp
-	 TvninoIdcc21GG59oaLFVL0G8t/8hFI6VjIO0u6AD81tZLQofkz+UOU/zOHWq5+ZLt3bK
-	 L6PPLuIQ9isQTFOHDapvSj92aYEOYr71V04HxEkZ8TiP9kVcyCxbUtCCSIGuFfH2NNw==
+	bh=OeeJZ5mT6SZ1loKA1lt9QWkxOvu+jVxNx4ICDSwpAa8=;
+	b=EI7zQNSmfvEq2WAtUeA03lygmkukgHx3IIwJE134uyFsC5B4exAhEuSxD+QYJWUvZSIZ
+	 73aRLuZVk5GocRNi/ZRa4gYs09ujDHcmwbB4vq3RD4z9Tx92yozqCddCObm7ZH1OCj23R
+	 +DN7LbbseDLP+Fv5U3EetOSMDgewBsC9AegOcDfKO1oKh5AvHRJzv74RePRNRxjDW7TIS
+	 eSgz9oNhFeyn4BXJFgsDl9DTN83ZWyTx2ye0ClnYArmg9Fdb3j3LeVXtPv7jOleptPZ8d
+	 pTBMmlUvhQFepd2VwEwDoeUh3M78luZBYRjqEdmKrqVxFtv9uztaMOZFse2806DOWig==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=intel.com;
 	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=TMhWoCqJ;
-	arc=none smtp.remote-ip=198.175.65.11
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b="GuWO/UQc";
+	arc=none smtp.remote-ip=198.175.65.16
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55C27606DEBC
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0CAB6072C4B
 	for <linux-pci@vger.kernel.org>; Mon,  2 Nov 2026 16:49:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 55C27606DEBC
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C0CAB6072C4B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=TMhWoCqJ
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=GuWO/UQc
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793638180; x=1825174180;
+  t=1793638181; x=1825174181;
   h=date:from:to:cc:subject:message-id;
-  bh=Z8jH9ph/S+Fu0D2Rxly/zGZH5J+nFcvN8h2lrWwzkqA=;
-  b=TMhWoCqJ2LQ8u1LM3JqL13CC2v0TAVEncf2GmoIJVev7fl+AD7w3lHfb
-   JAloiWSpGX2Z2RD51P8dLk8YJ26Ky7Mu4ayrXpldVgw5zXbfYcvQwfZsI
-   YWgidKE+Lx1po6j3Za9d0dLhnW2ZK6L7ZglJjzJQR4elVNXXi6eV2Hi2O
-   FcIz4dBf8NExvE6ehBIUwRuhhQP4KfYqaNcQTxVJQF0rIc5ZwMA5491Vr
-   z0KRAXQAr74IaUAgxRzvzIU+qh0tZ8o/JPCukC6OPfHuFc+kyGQaZ/AsK
-   JcuGXdVp5H4/N2kVSosjKZx+3dWJTVI0nQoGCbDk9LjUrXxEaRTrQlYHm
-   w==;
-X-CSE-ConnectionGUID: 0CHlZtThTpyI5xlvvNjATQ==
-X-CSE-MsgGUID: xBDxeHUfShyoc8IqURciWQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11954"; a="2217994"
+  bh=UEis+mNRDC1P1C56WFEV5f/GkEQb2b8YBN/1IUbnpeM=;
+  b=GuWO/UQcV5GshDw2BLju2ngXJ6q4V3jHTwAQg4I8+Ib4nVv7TkEL1kOv
+   XEpD1lnl20e1G4AVRlQKIOgmg8wXdfDbxU+DwBQT/ihCW4gckb9t1mpTB
+   YK6DpMbGWnJAe3hpkMfNuf5cGI2y7vioG3Tb6dAWr9+tF+QH3p4AdFlpU
+   ilK4dbpBv5pWaNCZ8CfexK/59CZXRt9PoSwohZGvDKYhuEEyk/paTvWYQ
+   v0NISa/Hb/2TKIj6qvrQJRUidbsQX1uyGOLjtq/pzHeYjAuoqIgL/qU67
+   ewjmdZtEbqs6S/JAgnWFECy7Wd25SnnR+b2abvImpTwpYqolSnXM+5Hsf
+   A==;
+X-CSE-ConnectionGUID: dHPQ6WyHQDibeFCAFigEuQ==
+X-CSE-MsgGUID: sm2Ad7VPQkioCs5imZlYIg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11954"; a="2333135"
 X-IronPort-AV: E=Sophos;i="6.27,191,1787036400"; 
-   d="scan'208";a="2217994"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Nov 2026 08:49:40 -0800
-X-CSE-ConnectionGUID: 34Iw5xjVS1OQgpMDZXZvvA==
-X-CSE-MsgGUID: XlHRIccRQtmUV2axockhgw==
+   d="scan'208";a="2333135"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Nov 2026 08:49:40 -0800
+X-CSE-ConnectionGUID: MbpXOtvRRG2GLw4d/cFPZQ==
+X-CSE-MsgGUID: cvWMJ58pSGOwwzoYfh4s/A==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,191,1787036400"; 
-   d="scan'208";a="6269017"
+   d="scan'208";a="6280960"
 Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by orviesa009.jf.intel.com with ESMTP; 02 Nov 2026 08:49:39 -0800
+  by fmviesa005.fm.intel.com with ESMTP; 02 Nov 2026 08:49:39 -0800
 Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1xNvE0-00000000hPx-2Tqq;
+	id 1xNvE0-00000000hPv-1yss;
 	Mon, 02 Nov 2026 16:49:36 +0000
-Date: Tue, 03 Nov 2026 00:48:59 +0800
+Date: Tue, 03 Nov 2026 00:48:53 +0800
 From: kernel test robot <lkp@intel.com>
 To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller:iproc] BUILD SUCCESS
- dd8e84aa9dd91fc55aca57af57b65f8e014779cc
-Message-ID: <20261103004859.a4HncfzT-lkp@intel.com>
+Subject: [pci:controller:dwc] BUILD SUCCESS
+ 8b0e01d77ef4ceedd96d00d28f3518037481d2cd
+Message-ID: <20261103004853.FtSDI4XV-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -80,8 +80,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/iproc
-branch HEAD: dd8e84aa9dd91fc55aca57af57b65f8e014779cc  PCI: iproc: Skip probing platform bus driver for BCMA-attached controllers
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc
+branch HEAD: 8b0e01d77ef4ceedd96d00d28f3518037481d2cd  PCI: dwc: Skip MEM outbound iATU setup for identity mappings
 
 elapsed time: 1976m
 
