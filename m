@@ -1,55 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=83.223.78.233
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793650715;
-	b=2zbsEjqkFsJwg3RicM4SbmpEaHowLDP9kClaLDQMVfUT8JKfoxDqVOeclPag/bU8wCcp
-	 6QJjmG3qHi7bSjw7ypyyEkViAjavDeh6FcyL5dQRdo/cJZElbjGc7AgY+WPssLMg3pIp4
-	 pvP+N2z6oRqo4hNCOVZlMVOtjrojqMEIMSnmIBObuKHJZERg9MF1meU3tWnXp/jx/t7Cn
-	 PMCF/Oxak+qnk5FmU+4ZqmOCQn+y5xFS5BzmKyiPGQbHPGktTfFT4/dDqp3gUStalNTk3
-	 9vN7Z/N+WG3kKprhVYqToGRyb+Laxjl8C4R6OnjNdnl37GpH68ZHE0GFfN9HCv0K9ag==
+	t=1793650849;
+	b=Z+sDEE9M8pdC1rm2WEXUnu4q/wDwDf23G8a48CdH3pOfcHKYaBCpiiAmKkpHAB7Ys+1V
+	 U8E5VdJGokdkXPOiLueYs6iJ2yP47LQgbMKSo7XKIxfthyPfz0wh433KxT9RJD2tp/I7T
+	 Ze3VfRsgHj+4V391cJ8AdqDXSbe1t8Gm77iVSSl5mWoxe3Tc2ujR6Eoz9pLJZzSqwq3J2
+	 PynWNwGhwIcCrY//WRecflFdOCIlzKCRooMMJpDGTBbVo9dxTUB+tEORraH66UESyOwEt
+	 M/OWTx9OA4qhFoWS0K53PaVvOjOyqn8WeuNfnZVzDAXmumBcvcBD6wrmwzAXg+Yen5w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793650715;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=hXX2GG9LofGhkgvbkMHFZ4qhS5HLRZFRNTe4hW+MggA=;
-	b=HYKwihGBE8pu6huK7aFPaUj/rxiu8/SSVlXfCEOFygzl+EikPZ24hwikdorwaAUcpRwE
-	 qcj4s1Ww3qUnDbO14Kh5Cnw+9YILIkR1D9w+x32IdAKB+yqvi3MZwzC9b16+BcPuxq+AY
-	 SfwEMynwI9yOTvnzHSLRfy78yJRFm8/LRIgZOrzlG0mdUQC+l60XDylmWKIO4g/4o68EE
-	 CukKZVd2u4qCsfM0zMk9X3Uwd39+KNE2G/su0oCWWcxurbGEEL1qGvcEoyRGEWqgE2dEu
-	 CFbbEXf5xKudA/STQRDsaghLayXG024EKoQhpHHz3LoEYR32SA8AvNg7O9D+7ul3Krw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793650849;
+	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=OTRmHEj02TtZoL+kyiWN5B6jSVLuuf5zLZHpzWRlffQ=;
+	b=WXWa7ETrbFD2lwgHlgIdfM+3H+PEZPE3Y8fPpQ8Y68iPWiHpB55Tb/ILLBNs4ZzB8irU
+	 ExqHgWI1QriqgSNuVvVE3Riw63UT8jVlqtuA/i6xtYaUT7voek9s4Yns8Sn/TwxKDtKNz
+	 Bv87J8eZ5HNxiTvYx2e05K0qNStkRF5u5izvUVHt8HgozYHEsasX9LsjEm1Ge4dTsLPN9
+	 UcF69dTOTZcbstRpKAA5d9n6Os4ePKE5qaWk4PPEfYl5WbIXKXQLXPqNP83RHyMOAV6Dk
+	 ggXV4IQjnQL9cBt5SYYI05RdkZK71eJUZEPXmkPoiu9lwaDUGFxdWi/Em77NO0DV9QA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mQynNZq4;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=none header.from=wunner.de;
+	spf=pass smtp.mailfrom=wunner.de;
+	arc=none smtp.remote-ip=83.223.78.233
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A027F606A332;
-	Mon,  2 Nov 2026 20:18:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mQynNZq4
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 492851F00A16;
-	Mon,  2 Nov 2026 20:18:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793650715;
-	bh=hXX2GG9LofGhkgvbkMHFZ4qhS5HLRZFRNTe4hW+MggA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=mQynNZq4RAEoU+zaL7vxiT3LkD/6Ep7CBvvo2yKgOuR4aYYFbLmejFWhbG6TwIJjN
-	 NeSSk+OkVnmPYIVT6orCq42Qcoe0GJSJcLu+23Z3nBQdbsLTy5WYQY8l31g8Tin2em
-	 BTVkMY1Utz7N4/K8LHXscOoHGOjLLwWauvSZidN91AbaAR6acmavjLyAbGzNVT8nTL
-	 INE5OM72qTUySSRpEXXKhFRrKQRm8Aq1ECBgiBLrhe7kH6IKTB9ypL4RUlH17rUw9w
-	 iJOnkCA63IAoqTMG4WGpH5U4JwXYOL0kPamsu7OAYbBtlAn/q0UptX/a+cgCA9VmIl
-	 cseBnJM5nj0IA==
-Date: Mon, 2 Nov 2026 14:18:34 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Felix Gu <ustc.gu@gmail.com>
-Cc: Bartosz Golaszewski <brgl@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Markus Elfring <Markus.Elfring@web.de>
-Subject: Re: [PATCH] PCI/pwrctrl: generic: Fix leak on clock error path
-Message-ID: <20261102201834.GA974502@bhelgaas>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC47C606A324;
+	Mon,  2 Nov 2026 20:20:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EC47C606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id 6CFAA78C3;
+	Mon, 02 Nov 2026 21:20:39 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 59103610CD9F; Mon,  2 Nov 2026 21:20:39 +0100 (CET)
+Date: Mon, 2 Nov 2026 21:20:39 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	rafael@kernel.org, terry.bowman@amd.com, kanie@linux.alibaba.com,
+	olof@lixom.net
+Subject: Re: [PATCH v15 1/4] PCI: Assume control of portdrv-related features
+ only when portdrv enabled
+Message-ID: <aujwl45XrkVT-zUx@wunner.de>
+References: <20261002211828.1293177-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <20261002211828.1293177-2-sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,62 +61,68 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261031-pwrctrl-v1-1-405af11c5662@gmail.com>
+In-Reply-To: <20261002211828.1293177-2-sathyanarayanan.kuppuswamy@linux.intel.com>
 
-[+cc Markus]
-
-On Sat, Oct 31, 2026 at 01:49:08AM +0800, Felix Gu wrote:
-> The devm release action for the slot supplies is registered after
-> devm_clk_get_optional().  If clock acquisition fails, probe returns
-> immediately, so the resources eallocated by of_regulator_bulk_get_all()
-> is never freed.
+On Fri, Oct 02, 2026 at 02:18:25PM -0700, Kuppuswamy Sathyanarayanan wrote:
+> Native control of PME, AER, DPC, and PCIe hotplug depends on the portdrv,
+> so default to native handling of them only when CONFIG_PCIEPORTBUS is
+> enabled.
 > 
-> Register the devm action right after of_regulator_bulk_get_all()
-> succeeds, so the resources are released on any subsequent probe failure.
+> Native control of LTR and SHPC hotplug does not depend on portdrv, so keep
+> defaulting those to native regardless.
 > 
-> Fixes: 9cb64f61ec7a9 ("PCI/pwrctrl: Add PCIe M.2 connector support")
-> Signed-off-by: Felix Gu <ustc.gu@gmail.com>
+> [bhelgaas: commit log]
+> Link: https://lore.kernel.org/r/fcbe8a624166a1101a755edfef44a185d32ff493.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com
+> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Applied to pci/pwrctrl for v7.5, thanks!
+This is now commit 6347fd9aee19 in Linus' tree and I think there's a problem:
 
-Fixed the eallocated->allocated and is->are commit log typos.
-
-> ---
->  drivers/pci/pwrctrl/generic.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/pwrctrl/generic.c b/drivers/pci/pwrctrl/generic.c
-> index 4b6cbbb52248..85d568b381e2 100644
-> --- a/drivers/pci/pwrctrl/generic.c
-> +++ b/drivers/pci/pwrctrl/generic.c
-> @@ -92,6 +92,10 @@ static int slot_pwrctrl_probe(struct platform_device *pdev)
+> +++ b/drivers/pci/probe.c
+> @@ -658,6 +658,8 @@ static const struct device_type pci_host_bridge_type = {
 >  
->  	slot->num_supplies = ret;
->  
-> +	ret = devm_add_action_or_reset(dev, devm_slot_pwrctrl_release, slot);
-> +	if (ret)
-> +		return ret;
+>  static void pci_init_host_bridge(struct pci_host_bridge *bridge)
+>  {
+> +	bool port_services = IS_ENABLED(CONFIG_PCIEPORTBUS);
 > +
->  	slot->clk = devm_clk_get_optional(dev, NULL);
->  	if (IS_ERR(slot->clk))
->  		return dev_err_probe(dev, PTR_ERR(slot->clk),
-> @@ -101,10 +105,6 @@ static int slot_pwrctrl_probe(struct platform_device *pdev)
->  	slot->pwrctrl.power_on = slot_pwrctrl_power_on;
->  	slot->pwrctrl.power_off = slot_pwrctrl_power_off;
->  
-> -	ret = devm_add_action_or_reset(dev, devm_slot_pwrctrl_release, slot);
-> -	if (ret)
-> -		return ret;
-> -
->  	pci_pwrctrl_init(&slot->pwrctrl, dev);
->  
->  	ret = devm_pci_pwrctrl_device_set_ready(dev, &slot->pwrctrl);
-> 
-> ---
-> base-commit: a39c950806213f6861d00f90729acaaa21f2d95a
-> change-id: 20261030-pwrctrl-6a85275b0c97
-> 
-> Best regards,
-> --  
-> Felix Gu <ustc.gu@gmail.com>
-> 
+>  	INIT_LIST_HEAD(&bridge->windows);
+>  	INIT_LIST_HEAD(&bridge->dma_ranges);
+>  	INIT_LIST_HEAD(&bridge->ports);
+> @@ -668,12 +670,12 @@ static void pci_init_host_bridge(struct pci_host_bridge *bridge)
+>  	 * may implement its own AER handling and use _OSC to prevent the
+>  	 * OS from interfering.
+>  	 */
+> -	bridge->native_aer = 1;
+> -	bridge->native_pcie_hotplug = 1;
+> +	bridge->native_aer = port_services;
+> +	bridge->native_pcie_hotplug = port_services;
+
+The commit is setting the native_pcie_hotplug bit up front based on
+CONFIG_PCIEPORTBUS.
+
+But there's an if-clause at the top of get_port_device_capability() which
+adds PCIE_PORT_SERVICE_HP to the port services used by a given PCIe port.
+
+Inside the if-clause is code to disable hotplug interrupts if the BIOS
+left them enable.
+
+Since the commit, if CONFIG_PCIEPORTBUS=n, the if-clause is no longer
+entered and so the interrupts are no longer disabled.
+
+I'm amazed sashiko didn't flag this.  I didn't spot it during review
+either, but noticed it when rebasing my development branch.  I still
+have a patch on that branch which I developed last year but which
+was ultimately not accepted (for good reasons).  Back then I already
+noticed that the interrupt disablement issue prevented simplification
+of native_pcie_hotplug initialization.  I forgot about it but had to
+revisit the patch when rebasing the development branch on top of your
+patches:
+
+https://lore.kernel.org/r/5eae82776d695e589b89aad500d8208b980347e5.1752390102.git.lukas@wunner.de
+
+Now what?  The offending patch is the first one in a series of three.
+Revert all three or can we somehow salvage this?
+
+Thanks,
+
+Lukas
