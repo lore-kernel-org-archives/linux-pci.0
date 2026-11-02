@@ -1,74 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.200
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.198
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793633841;
-	b=iZwb95HVOQz88uWhEmKnZabVg6/Mlzy+CIVj2MxiL2KyC0d9NregnsV4pKQ4GsbA2kXW
-	 5S7PpRqmmtVqgl6T6yK6abduh9iJ3ZyY484VO++F/j0L0lmKTZNi9O077RZmglwXIn67Z
-	 2Avl/fw1WWklRmUggQ/jfwHqHJ4X0K6cq7WJoKO+w/0o6FHbU6iQ2xJTBUpAtMqC10mmc
-	 jhAa1UPxGgltJKRsVHKnMdvpk+42WJ78q+8jbpxezFvZP4djlNoZOanYLGkpwkCG106Zr
-	 fPOEMJo3FUT3H5aLpZNbuTnvkozSK3upqPnjCcR0020RQOjfiywBJmJGfx4Dtdh8JGg==
+	t=1793633837;
+	b=RMZ4lAMoOF47PAqlrrxjB8Pdk7rPxeODVf2yNX4U33iYPnA6no8bS3TkluXy2olpE+fi
+	 CGPADvmz8lXqahh2LT1o3kKm4MKYtxgfIk9ewm+gjpFKMLGxXzTG1XbZFZWLEYRUS24WO
+	 OQC40/7edUweCM+h3qrpvW+MdBVUMQZGIVCO/piqhgCOgJZuqjKUmtRGQH0ugNxPBZl+P
+	 /1MLJX+DveXztw/fUpPxspzc0cTk8pXtnTU64zS+Rioh6mwexJbvvKncUDTyEs1XY1Sce
+	 ORMtVkE2Z6iM5V/G4eVPJM8dl5ySlxmZjjaYPyvuWq2JRww8inNK23DjbQ7jOdmZWVQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793633841;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793633837;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
 	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
 	 Content-Type;
-	bh=tylWbFCUgeCOXBn9trkYSMBYVlhA9mV6Qs1lbXsCOco=;
-	b=j3dP3UjlKu3pkEj2K8CyqKtq+irLgK44ikQ6pK1e38feKTpp7XrkzX5rp7ONCRrxMslu
-	 FSH6vVpsNjD2vp2pZeitDcnRBiULGTxIiWLDqwA8QSz3BP8pZdm46b7GhdNuEE1+YACam
-	 lQFZhl4g8oZXD6lsyCYil6odQIuCSd+cWnfJePhoYuvvC7/znbvkjg4Nko1cwCavJyuaq
-	 nq5y9iRLCfkOUjndetx/I8ZsxSRDj8x7P70e9zohPjXQ94YaffrytXKGWjO0YtUNg0bS/
-	 6iHZXacuvm2331yCpFBed/BSOa/jgBX22wGrdrMZ2AA/U03y6CQ8Vh9uto9hgpWyJZg==
+	bh=WePLvWtT/WZKO7Unx2RTF+SOz/N+MuUr8ckMVHiMFxQ=;
+	b=IydNKcVb+Vdvvh0oKvgYCZG074kr6Ye+OipDyhyMXc15slDvirjuIIcZ4+hLj1kuE1Es
+	 SrFa/9+/ly9Z8705IqpRaRTYeh2GoenJv85LVTHrwMw9huH+MdpwjcIJzmmekIydo3Mxw
+	 RRJCq4wsBM5I9vIJ5T9AWZs/nSOWtsx1TjeOAAMaQgsy1C93LLsHUeEr+QdzzU0imNp8k
+	 W+qOyFtknyblw9/QcqcG9WRVmGkf5lPzcbymm9QiZXeELtlgOZNA7WTkK4VKZqsePDzTZ
+	 nJSg59LWbpBsHsEk74dk6DLJ82w+KZq+iTdAPfN4gh71TyXrVf6NfCWlmA5+a6wmmUw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--vipinsh.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=NSzJydZv;
-	arc=none smtp.remote-ip=209.85.214.200
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Bnp2TJZB;
+	arc=none smtp.remote-ip=209.85.215.198
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B0F260EA5FB
-	for <linux-pci@vger.kernel.org>; Mon,  2 Nov 2026 15:37:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0B0F260EA5FB
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D066B60E7EFC
+	for <linux-pci@vger.kernel.org>; Mon,  2 Nov 2026 15:37:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D066B60E7EFC
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--vipinsh.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=NSzJydZv
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2e601800e58so51290035ad.2
-        for <linux-pci@vger.kernel.org>; Mon, 02 Nov 2026 07:37:21 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Bnp2TJZB
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cd68b8579f2so1173268a12.3
+        for <linux-pci@vger.kernel.org>; Mon, 02 Nov 2026 07:37:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793633840; x=1794238640; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1793633836; x=1794238636; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=tylWbFCUgeCOXBn9trkYSMBYVlhA9mV6Qs1lbXsCOco=;
-        b=NSzJydZvMVXYxTC62CIB6ze6cmzNxnlcYaAgAV5q0w8GPnprJgO1rjDotE1ldsqVF7
-         id7VY8rj8sVMHSKlTmzi/PwHWNeII+QwqojnCqdiqX3PxCO2GIn3vjlHmseHkMN5XYqg
-         BYPAspktX6r0+V8A2/zX1+AyJq1DpXHLE0LDtoRiJxXMg8DAr6vPt8WXhLgLQF8ebD15
-         QcofgRuBHeqjWN5y9E3jlhTLHW98sFut6vpM+lSkpNsQsFyL3sjc0/ACce80N8Qbe8HF
-         sfB8sbQFa0HOWibvXSBBCPqGq5tFavtJkOEq49CN4uJoCYR6CeAVMFVKwOily0i0nNoJ
-         IFzw==
+        bh=WePLvWtT/WZKO7Unx2RTF+SOz/N+MuUr8ckMVHiMFxQ=;
+        b=Bnp2TJZBhnZ3Fomnoglqh4+l87hRvNmKBCiTZ6jAjRxWpXxYXsMgUH/cOuHl2dUEDC
+         wJ28FoKeqWp3KhY3kQlFAu+HbXoVoKpftFYkfXzXm+aF5o8Yxg5mtJZ1b0uFCxMBxDgm
+         KFvTzBa3lyHrYP+mRgVoI+h7ot0pIJHFTheHL5nZjIDui8mUz6RHgdkN1TSB/BqCPeqi
+         xhJKJ+mimCLZP0IRb9FUgMCvIugwFwsw6AR1wrMrfwro8rW1hqu/148Rc/p7atFwmIRe
+         ZtvNYcFiobuA1Z5LTkhQZGhi14HkwUC/IuKyXu15Eajkx7JixVLOz31OkOV9Cyb4Hcko
+         IIXQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793633840; x=1794238640;
+        d=1e100.net; s=20260707; t=1793633836; x=1794238636;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=tylWbFCUgeCOXBn9trkYSMBYVlhA9mV6Qs1lbXsCOco=;
-        b=1TPksjxbttJ1JfOEfRZ0B/ryRm+SksZrQEmWOuWFkEGp556XgxyRNooE4CwAzNTt7z
-         1uCYYqYh99XIXga1A5Fe70G/BttIVP8Na3/XtENdmoekTOUKeFQE9ZY5+OKt+Zeczksk
-         Q/VY4V1VeVjaM/Zyxry6CPkyiV05pCL2IKQp5kzPXzTO67pdjNutLv5jDjpLXBBRyuYS
-         ziaUJul9IqKLJtsZ/nkRrKfnWzBy++knnxxkgQCNlv+IGMzGIWBTiwoVaKXP6lG/6d7F
-         KVUgz8DVPaJOQFWdwNA4PdcHylP1axNK+JPC15C2ttwlNDEkuRohrvqxtV8xlSoBwy2w
-         2wUA==
-X-Forwarded-Encrypted: i=1; AKwUvBzCp4y3sA3v71jR+aEIbbD/LRFV0LmIu+qDrsRs73eWQbrceM8z23wVljJxbP6RBjSIr1jz2q64++Q=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/DDiorBSC5dSHvnVaPYwAse00EZabdspkMqquchA7nHxyF8rzt
-	GJJEd9SBE/ML2t0590D2r0TsDXPGrEOe53d6whU/PzP6bczcKNZHIOTfKBXF7hzFdrsH3Srell6
-	Mmw22m2q7tg==
-X-Received: from plbix15.prod.google.com ([2002:a17:902:f80f:b0:2ea:a5c1:240f])
- (user=vipinsh job=prod-delivery.src-stubby-dispatcher) by 2002:a17:903:37c7:b0:2e8:b5b2:a9f9
- with SMTP id d9443c01a7336-2eb364e9f75mr92959155ad.37.1793633840266; Mon, 02
- Nov 2026 07:37:20 -0800 (PST)
-Date: Mon,  2 Nov 2026 07:36:48 -0800
+        bh=WePLvWtT/WZKO7Unx2RTF+SOz/N+MuUr8ckMVHiMFxQ=;
+        b=zccVZJcKGX8XrdPs2KBkZCJbPA07gVtetUTeiuB8NXSyKfBp18oRSy7dR+Vhd30B3y
+         HIm2Dw40u7mRsTdhOno6qLIur/pUWFpVbtJpO4G186f78oEmJGDfQCbe2dCVs48Q6kYt
+         wYXSX9lJ+c7QwkX5xUeX/3BU17QXhuABe+sKXpmWjOarUDtUKyX7a6b1vxBkprDFsxBs
+         buTRG0lqbdiL7Y0H5BoiTYr4Y8P+GLVZLJ6F1yVxQOawVilqiaQAowvPZ29sDZ1i44GH
+         Dp9XYHjyugDaleUXmGFyE8/7VmHWSDEw2f7wR73vll1ZWOsug90hGgJBNZQauuFlY6Gw
+         FXxg==
+X-Forwarded-Encrypted: i=1; AKwUvByA2jYAPG+SiWDlfa3bxTzMnvpj1AoaatzuiOZ2m2UgFgvAdzOzRZppGG0oArSfPV5yzdGBmtobUo0=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8FH/XB3StELHbqMy2DYMvPbCz7BDAj1CSFRbArkXUYdH6bMMsP
+	60UAAGUDMjHu4eUAAGsneVLm1rAbsY/aKTfHnvZlwlbCBj+U1E6wWwZX+RQGYFCThU2CClwMt5x
+	QFeEmvxCSpw==
+X-Received: from pjbcm14.prod.google.com ([2002:a17:90a:fa0e:b0:3a6:f87a:f3e1])
+ (user=vipinsh job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:3807:b0:3ad:a232:403f
+ with SMTP id 98e67ed59e1d1-3ae897aa79emr9013104a91.56.1793633835815; Mon, 02
+ Nov 2026 07:37:15 -0800 (PST)
+Date: Mon,  2 Nov 2026 07:36:44 -0800
 In-Reply-To: <20261102153656.1431701-1-vipinsh@google.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,8 +81,8 @@ Precedence: list
 Mime-Version: 1.0
 References: <20261102153656.1431701-1-vipinsh@google.com>
 X-Mailer: git-send-email 2.56.0.317.g454f8302e1-goog
-Message-ID: <20261102153656.1431701-20-vipinsh@google.com>
-Subject: [PATCH v6 19/27] vfio: selftests: Add Makefile support for TEST_GEN_PROGS_EXTENDED
+Message-ID: <20261102153656.1431701-16-vipinsh@google.com>
+Subject: [PATCH v6 15/27] docs: liveupdate: Add documentation for VFIO PCI
 From: Vipin Sharma <vipinsh@google.com>
 To: kexec@lists.infradead.org, linux-kernel@vger.kernel.org, 
 	linux-doc@vger.kernel.org, kvm@vger.kernel.org, linux-mm@kvack.org, 
@@ -104,48 +104,73 @@ Content-Type: text/plain; charset="UTF-8"
 
 From: David Matlack <dmatlack@google.com>
 
-Add Makefile support for TEST_GEN_PROGS_EXTENDED targets. These tests
-are not run by default.
-
-TEST_GEN_PROGS_EXTENDED will be used for Live Update selftests in
-subsequent commits. These selftests must be run manually because they
-require the user/runner to perform additional actions, such as kexec,
-during the test.
+Add documentation for preserving VFIO device files across a Live Update,
+generated from the kernel-doc comments in the code.
 
 Signed-off-by: David Matlack <dmatlack@google.com>
 Signed-off-by: Vipin Sharma <vipinsh@google.com>
 ---
- tools/testing/selftests/vfio/Makefile | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ Documentation/core-api/liveupdate.rst         |  1 +
+ .../driver-api/vfio_pci_liveupdate.rst        | 25 +++++++++++++++++++
+ MAINTAINERS                                   |  1 +
+ 3 files changed, 27 insertions(+)
+ create mode 100644 Documentation/driver-api/vfio_pci_liveupdate.rst
 
-diff --git a/tools/testing/selftests/vfio/Makefile b/tools/testing/selftests/vfio/Makefile
-index c2764fcef31d..ece2a3618f2b 100644
---- a/tools/testing/selftests/vfio/Makefile
-+++ b/tools/testing/selftests/vfio/Makefile
-@@ -34,16 +34,18 @@ LDFLAGS += -pthread
- LIBS_O := $(LIBVFIO_O)
- LIBS_O += $(LIBLIVEUPDATE_O)
+diff --git a/Documentation/core-api/liveupdate.rst b/Documentation/core-api/liveupdate.rst
+index 2bce2644eba2..20f1d2e20508 100644
+--- a/Documentation/core-api/liveupdate.rst
++++ b/Documentation/core-api/liveupdate.rst
+@@ -38,6 +38,7 @@ The following types of file descriptors can be preserved
+    :maxdepth: 1
  
--$(TEST_GEN_PROGS): $(OUTPUT)/%: $(OUTPUT)/%.o $(LIBS_O)
-+$(TEST_GEN_PROGS) $(TEST_GEN_PROGS_EXTENDED): $(OUTPUT)/%: $(OUTPUT)/%.o $(LIBS_O)
- 	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $< $(LIBS_O) $(LDLIBS) -o $@
+    ../mm/memfd_preservation
++   ../driver-api/vfio_pci_liveupdate
  
--TEST_GEN_PROGS_O = $(patsubst %, %.o, $(TEST_GEN_PROGS))
--$(TEST_GEN_PROGS_O): $(OUTPUT)/%.o: %.c
-+TESTS_O := $(patsubst %, %.o, $(TEST_GEN_PROGS))
-+TESTS_O += $(patsubst %, %.o, $(TEST_GEN_PROGS_EXTENDED))
+ Public API
+ ==========
+diff --git a/Documentation/driver-api/vfio_pci_liveupdate.rst b/Documentation/driver-api/vfio_pci_liveupdate.rst
+new file mode 100644
+index 000000000000..81077ea173d1
+--- /dev/null
++++ b/Documentation/driver-api/vfio_pci_liveupdate.rst
+@@ -0,0 +1,25 @@
++.. SPDX-License-Identifier: GPL-2.0-or-later
 +
-+$(TESTS_O): $(OUTPUT)/%.o: %.c
- 	$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c $< -o $@
- 
--TEST_DEP_FILES = $(patsubst %.o, %.d, $(TEST_GEN_PROGS_O) $(LIBS_O))
-+TEST_DEP_FILES = $(patsubst %.o, %.d, $(TESTS_O) $(LIBS_O))
- -include $(TEST_DEP_FILES)
- 
--EXTRA_CLEAN += $(TEST_GEN_PROGS_O) $(TEST_DEP_FILES)
-+EXTRA_CLEAN += $(TESTS_O) $(TEST_DEP_FILES)
- 
- endif
++====================================
++VFIO PCI Device Preservation via LUO
++====================================
++
++.. kernel-doc:: drivers/vfio/pci/vfio_pci_liveupdate.c
++   :doc: VFIO PCI Preservation via LUO
++
++VFIO PCI Preservation ABI
++=========================
++
++.. kernel-doc:: include/linux/kho/abi/vfio_pci.h
++   :doc: VFIO PCI Live Update ABI
++
++.. kernel-doc:: include/linux/kho/abi/vfio_pci.h
++   :internal:
++
++See Also
++========
++
++- :doc:`/core-api/liveupdate`
++- :doc:`/core-api/kho/index`
++- :doc:`/PCI/liveupdate`
++- :doc:`/driver-api/vfio`
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 167aa9d66ce8..2b62a0b8a48c 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -28661,6 +28661,7 @@ T:	git https://github.com/awilliam/linux-vfio.git
+ F:	Documentation/ABI/testing/debugfs-vfio
+ F:	Documentation/ABI/testing/sysfs-devices-vfio-dev
+ F:	Documentation/driver-api/vfio.rst
++F:	Documentation/driver-api/vfio_pci_liveupdate.rst
+ F:	drivers/vfio/
+ F:	include/linux/kho/abi/vfio_pci.h
+ F:	include/linux/vfio.h
 -- 
 2.56.0.317.g454f8302e1-goog
 
