@@ -1,22 +1,23 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.57.45
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.46.62
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793618127;
-	b=Abf0uEfnlYbQJcokklE38VFGtX+I7jXQOsHxGA28DCq88tsK7l3BKFQHFHZQZF3aA1za
-	 szVVpg4j1KLNQeH5yQjTA7oNEvnEwJOWoU8XxAqgx9j/6pxGKCzLkx81IcoDCXfRUhC1o
-	 di+V+VIivtZzOcYR96kDp9h5kHBFl1BCGm0JovV0KV/lmZ332ORV17vsoFvefLMszU1Jz
-	 L5FyjSa11b/Pro38QGplkfV1Lefcaotb0v50M5twp6yEyKZT3qGdsVtlAMKkoNtdt7q3x
-	 51hyAavlLVydTaz2mywUMg/W4caxbE93ZpNagBMPnnFwgc8oYLKHgZn4nnI2Wl+49fQ==
+	t=1793618145;
+	b=rxOEBSZfKh31ISnKzTa82l1cE8vlOgHhXfT2TQ82ngaZ96+W3qqQLX2PIgD9R9LH1BEW
+	 p66QkviQ7hI/6kF64lOy6vAZmCs6h0CaQWcYSfjSyoxBUSufnvlmOfeOFF6hmG3Z7WD7x
+	 cynGAC6IFK2Qb3H9dvqEFZ57hwscnxd9UVpHZcFEnjrcjlQfsaaI5T58f0dVNkjTuDe4A
+	 fBGHtJjVTtgi9OXtLlCFPUN1m52F+q+jXFCyVzzcXypamvuVHAhb4KPy7u/KZhX6RL/Zh
+	 lGfy/VGDmJiRnUz7jEKkRVh9Ly48b+ch83n24M/1BiuFLVmb3RKx9UzaIiycr3LQaqQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793618127;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793618145;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
-	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 X-NVConfidentiality:Content-Transfer-Encoding:Content-Type:
-	 X-Originating-IP:X-ClientProxiedBy:X-EOPAttributedMessage:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
+	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
+	 References:MIME-Version:X-NVConfidentiality:Content-Transfer-Encoding:
+	 Content-Type:X-Originating-IP:X-ClientProxiedBy:
+	 X-EOPAttributedMessage:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
 	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
 	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
 	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
@@ -26,82 +27,84 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=F7wKO/ra6CpzvAoT3lnf4hCZp0TV5QbDp/7Gz7nVQeM=;
-	b=GUfdunVYyaL+vsYLX/gn9nhnbymkc1ToMFtzYUckiUrLW9cGq+kRobqMCLRPxwkdQFlo
-	 H7rDqTVpeX7F6HZsH+MhEB+/nz+OjfgHhkbf5uvmSfmWJGUZdmxf4fcyH1YYW3LVA6EyW
-	 3MGikbjFKngroo1XC2aJBu9Dd3Mqqux5R0GHMNEeLh5B5bunj5VijxmVw5uSS7HSkpUbu
-	 PaPqpf6LE/9650isaScUD31rDjDQCMDh8DHs4tvSs8ow9AGt2T59pvrVEZbREQG5NI/Bh
-	 nJgR9JXGYw6D0LWs2Hhfl6rO7tmjpSo3RF2iboLqQFtfC2azFVnQlCnOK5k5ToE/9cg==
+	bh=8XRZ+cSv2fhxvZrUSPPEF+Dpsi6JHA27wJAME7tkJm8=;
+	b=mD1damBl3/1K6pwvMSnHsVNtGR1aVEsFwpnbiuxk9sGWnhdxrGCVcm9Y2KdPCRQ246eJ
+	 d0lo2uBE0pubsrLgyEvDCYnfjNBl2d4BZXRzlKHbUpAEJsiCErqne787Ak5/IsDhLHSBE
+	 0dATmDeJCTYogbOUN7ov7D/HK1pBn9VGanezuIWyT4nkds/pvkj6+tklbIk+CtFVs0fgb
+	 Iw9prCP2utFfTG/zcjac5Z3dHoivA3zTl/vX2fpBNWs4nN9jmSSpq0dDAEVoU2hjMAakq
+	 THobVvhOAEQUpUYMGYIr2SiM5xWAlurQS7C0EfjvHb826b4w4rjR0AHD8LvUNOGoMLg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nvidia.com;
 	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=ndkItt5y;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.57.45
-Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011045.outbound.protection.outlook.com [52.101.57.45])
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=JKUEQTnZ;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.46.62
+Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010062.outbound.protection.outlook.com [52.101.46.62])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F27D606A329;
-	Mon,  2 Nov 2026 11:15:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8F27D606A329
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B13E606A326;
+	Mon,  2 Nov 2026 11:15:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8B13E606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=ndkItt5y
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=JKUEQTnZ
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=L6XjQT9StpKVFjpN5oqrMWuUbRYgi2DTGWQO7pHn0h0747GeQGVg+xmaII043wfg6GEYL/5gzdDQlv/QHzWmGMvweyO+8QIoxyWEyfTiwCjkdViuQCsLTybAZBGP6zu7lW3kvQ00FByF4coBmTEHawTOnA+4M+S29sdE0if7qHrbFEeP5x1vZhys0ruPl/Qx9HJ2fzXDYviKYokItBuzXAAZLCoMB8RtUaYxY6yVAACTSY936M6ja+YwFftIlns2RgrNMGk93CMK+yJsnfveUrZBce6/P7+TPRTdpr6YpG6khRpvzZSEzRV9jygiYNPsBZ+UU/PMV1rkLH4MkOsh5w==
+ b=Ko0ZQdUrVePib62ew9JCuoIJrY9ihJUvSlMX71Ue+fMqm9NmepckIS9ipesPHE36tEvbCjv//WROJ9IwI4Iq/F+Hlj9N/l7U6mQZ7nXD68lTs+xZBqhj/BUYJiRx8Acd1XgbXfHyWXWexu25to4q6cKNIYXHaZ8EXQNLHnv0AGNYd3StB8WcKQnxzunUZIZzVWz/54mQ1YJfkEPAGXVh+wjTHjQHumXCvOmoz2g6Obhc36kqawXBBxMQCVlLWT1VulsATlyJJtuO5pyGxohMJxr7i/k8Ezcr/gvzvY7i+vMSdFhy+Is6xtjYOcu62Gv5JgiyXAJ5HjxPioxDAGerHw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=F7wKO/ra6CpzvAoT3lnf4hCZp0TV5QbDp/7Gz7nVQeM=;
- b=P+VKf8H3y395AcKtvNm2rWjUuhSpeb4EiKurxoJ8orFv50O7rZJbjZb8+Ep4c95HfrbAe7LF3Nn32fDWayIjCxaecSLXiEQNa7QZu+nE4Govyk7WibGWSN4BfpL3fOFYWMokND9wPEsPjJpCFKL5k2DKOdoyIKE8yCCRARkzL6IQpQXOuctI3j62MVNbW59Z+ZOKpumAd4kkun/E6kbuNuvPy8zDKzMYBblfCuXEhUwvqGASpbbD8B9AFY5JbF0VdDqMrQsAKg2CH8DcDeaJFR4s1pcDU11ZPGUcvkkKr7D9AF+wEl1HmJ+5DPYT2NaOx5mP6GxPNglD2zDPdQtPPA==
+ bh=8XRZ+cSv2fhxvZrUSPPEF+Dpsi6JHA27wJAME7tkJm8=;
+ b=CWM1LnI797JdAgDzya9mUG7e0/A2k8YNbrnI3vdN2kGhBFjFuEejYwdL32gz4C8qdV32rDl4pxG3l9P1gsvTr3M9uipCkNVyGANZhvGpZnp0+40TchhD4PMgJLCPf0f4077C3OMUkzDMdwPzT3047sF2yUFEiHRHgp85jmM9ss873PY2b9oq0Iaf/2+XLca7nm+XX3fUGt6Lzho8f2HlSNeaI/ROg8cmQlLKUIAAeh3yjvbCebKZL2jNebMZB3xzDPJh7T2L8gJDah59kBRmpHb7FKqdJhaH74KNDx1HAkHNSsK7OYfp2jeNUSbl75QSE0r2gAbmiDgjzNzhpYqOMw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=gmail.com smtp.mailfrom=nvidia.com;
+ 216.228.117.160) smtp.rcpttodomain=gmail.com smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=F7wKO/ra6CpzvAoT3lnf4hCZp0TV5QbDp/7Gz7nVQeM=;
- b=ndkItt5yMf0oGBck7b/6PIZnJch2QNMKouABHmp42ryb2MLkqEhKJku1yaC2nzYM5SFpjt8zPGUcaEV+ugEHbhvXCUISeH248jdZHFNfIL8kGVdHaf/Hd9B/lEiI3CFnf6b6Z74NJXPhTuL1vEA+ZSD61lX1ZMZuvELlorr6U0tRZHQatFkWZ63ml+raWWyY4pIcCILTQE6h5Zxhy1QR/TpHXygB56sh9N3y2EPxA8rmtQTGTIvC8snbM5hMEcm5RQnfxPzWXnBdqyuASC2kbupWLfJajpl9VOE2AwQ1QrfFF+SDtctpDfCa6qizAq22VGI1y4fGEp4zXQLo+0sHWg==
-Received: from BN9PR03CA0457.namprd03.prod.outlook.com (2603:10b6:408:139::12)
- by LV9PR12MB9758.namprd12.prod.outlook.com (2603:10b6:408:2bd::5) with
+ bh=8XRZ+cSv2fhxvZrUSPPEF+Dpsi6JHA27wJAME7tkJm8=;
+ b=JKUEQTnZWkpOeU87DlhV9BX/ppG0eJTrtUJl3aUvZ4qhhqEtrR2Z71S8oCB1R8WIP1DpH/JMt6LIxeeviRfPqs9WHL9AX+Gz3pp0iHYD7S9L1ESusF4LFjIRYTkhLLbsAoqWJhpqBmnFX54SigNcPKVuiHXZaLeMbNhbG1jEiYzFN7+FQVxCT5tqjMsHNJGTqKW96ipRYJIrkvvV6D75Gvg6A0STMscT+BdAB96vVzjURuL6hf3B1+OUDiuMIcqIjy+yR2AbiBRTMbQBaCWcNZNi6OkNHNtxuWjJfHt6bHRkxUn+Cqi3DsaNh4zjRkGHZavmg2pE9V/3j9lvoOdVRA==
+Received: from BY3PR05CA0045.namprd05.prod.outlook.com (2603:10b6:a03:39b::20)
+ by DS2PR12MB9590.namprd12.prod.outlook.com (2603:10b6:8:279::19) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.12; Mon, 2 Nov
- 2026 11:15:22 +0000
-Received: from BN1PEPF00018072.namprd04.prod.outlook.com
- (2603:10b6:408:139:cafe::9) by BN9PR03CA0457.outlook.office365.com
- (2603:10b6:408:139::12) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.472.20 via Frontend Transport; Mon, 2
- Nov 2026 11:15:22 +0000
+ 2026 11:15:39 +0000
+Received: from SJ1PEPF000037B5.namprd05.prod.outlook.com
+ (2603:10b6:a03:39b:cafe::6a) by BY3PR05CA0045.outlook.office365.com
+ (2603:10b6:a03:39b::20) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.592.8 via Frontend Transport; Mon, 2
+ Nov 2026 11:15:39 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- BN1PEPF00018072.mail.protection.outlook.com (10.167.245.200) with Microsoft
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ SJ1PEPF000037B5.mail.protection.outlook.com (10.167.244.200) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.592.5 via Frontend Transport; Mon, 2 Nov 2026 11:15:22 +0000
+ 15.21.592.5 via Frontend Transport; Mon, 2 Nov 2026 11:15:39 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Mon, 2 Nov
- 2026 03:15:07 -0800
+ 2026 03:15:21 -0800
 Received: from mmaddireddy-ubuntu.nvidia.com (10.126.231.37) by
  rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Mon, 2 Nov 2026 03:15:03 -0800
+ 15.2.2562.56; Mon, 2 Nov 2026 03:15:17 -0800
 From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 To: <jingoohan1@gmail.com>, <mani@kernel.org>, <lpieralisi@kernel.org>,
 	<kwilczynski@kernel.org>, <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
 CC: <robh@kernel.org>, <thierry.reding@kernel.org>, <jonathanh@nvidia.com>,
 	<vidyas@nvidia.com>, <cassel@kernel.org>, <linux-kernel@vger.kernel.org>,
 	<linux-tegra@vger.kernel.org>, <mmaddireddy@nvidia.com>
-Subject: [PATCH v3 0/4] PCI: dwc: Avoid full EP cleanup on PERST#
-Date: Mon, 2 Nov 2026 16:44:46 +0530
-Message-ID: <20261102111450.4010818-1-mmaddireddy@nvidia.com>
+Subject: [PATCH v3 3/4] PCI: tegra194: Notify Endpoint functions on PERST# assert
+Date: Mon, 2 Nov 2026 16:44:49 +0530
+Message-ID: <20261102111450.4010818-4-mmaddireddy@nvidia.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20261102111450.4010818-1-mmaddireddy@nvidia.com>
+References: <20261102111450.4010818-1-mmaddireddy@nvidia.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -118,116 +121,75 @@ X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN1PEPF00018072:EE_|LV9PR12MB9758:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2029dfe8-2ef3-4c14-d99c-08df38d2965f
+X-MS-TrafficTypeDiagnostic: SJ1PEPF000037B5:EE_|DS2PR12MB9590:EE_
+X-MS-Office365-Filtering-Correlation-Id: c70b7744-5492-4c15-60ba-08df38d2a05d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|36860700016|1800799024|82310400026|7416014|376014|261021123027099003|261021121427099003|261022105027099003|261009223027099003|261026140227099003|261026121527099003|261028144727099003|5023799004|11063799006|10067099003|56012099006|6133799003|13003099007|18002099003;
+	BCL:0;ARA:13230040|23010399003|376014|7416014|1800799024|82310400026|36860700016|261021121427099003|11063799006|56012099006|261009223027099003|261028144727099003|261026121527099003|261026140227099003|261022105027099003|10067099003|22082099003|18002099003|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	DyXt7qgH+fEXsnfE0lysCZIdOxsCldjj7dnAMMfEREMbqdNYkh3N5sxFbg6rVRB0PBkhp7gNAMsigFwnNt/GbtW+5pW1sdSdCvUuxSzHhpF0KtEL2jK7jGvifEQ+JcVdBsA2lpndp3kUCAVWqfu/z+f7RQ+4N2PVB07whSNvAHxSyDTmfC9G54zIIQeERrkJ103aABOCdc2rV16LDlgLoX8irU/i0sICnGJxaQJgpt/kMQmOi5315kXzg/wkPmaFO7GxaxK3AQHZ2+54Sh5YMAP/bJUxpEUDVKqiZ2pOgztfbQAgTLeZZj8sMGAkV7bZBr21xnk6WUsB0ncimwdJg0Lqip4UsFSnE/mVGGYc9Yom4csS5mJzaS8nuEIDgzT5SgK1u8e7zbmHhEr8PNN+eNUpwy03EXTVcBrP+ppivpdhWTAaRgYCUxcr18zjnO/T0GHo4VhrJZpD/0lQ9Nf2nJLFovwcIWNqHzN1TL0MQxfNhPPM5loiAuTeveAZt87d1ixPABCiV3V2YgcZw2kvZQomZrl+uFQ0RXQRgZCwH+JsnSj5J04/6nKboSQIp0WlEuY4HgFDCLIT5cWGHH2/x1lVsEKGMeA2bqkXsC/rBmCP6meJcmNCsK7F5hn0uAdn408jPi3GwdumQ72HhWpg4/IYG7LSv9hbYPouM2N2naShWXUDN9JZGrvjXhIWRdqYqPjp7qarsLHyeMc0h8zzYQ==
+	8B7ohw7AU9SfjdKWJMCxU+WGgtssu82NqHTqrwfsj2crZFuqAEeNBb4trCxIBDYJoKoGjb2oE4Tpku4hsHaCEg37ATXrV221zn1Bty5oWFcbHFpV5r9bP0ksrWjigqg7UTYgGrg77yc6adHxQMEjGhsqX9C2lncss/S3AB8CB0JA75TVtWAzJVmRpwjyqCKCWW9/xCUJ8X5F1WxyKy8QgWginvkfFfyXhD/7TtsLpjp9NhfAe+xt7CkmtlyzOL3Uc4ZGh5fvilKD3KV6UU5T+8jbeBbrr2GBJARcxbQeTvOBmPdwmELreUYlvtv0qG0crpqh2ZYztsAZT/5swYhCGPA3frvz3+5PZ17MH1SQQWKw5YsI4QTYMkc4ogoYG+YZZt32RsGcRfXn18axNL8e05fU5/UFnhOLQT6NryeLkZj5yfLMag8OeiRklq8Lq+gj6Jxl9ecZtGNUszSfGpeZG4MNeSa2pwFp27t4m7+lWHc/pidSPCIovexFMHpZVvxzvvaJh9TicQDkbDPIG8hERf9CV/SfbnpOWKLIpxFzgYivlapBy9ao0KKPoY3xY4Yvf5LxwKNsYVrqYcWFBqrlEPJ1yKMDBRuLAFMi5L5dhC90AxefMeMh3ErcL8KCnsLftS0b2BS6NiNVAuAvWG7iR0ZMplzGaZC3x6cJfXTOYLUPWRPSFhRmbE2VUFGuaLIpDF1ejylTTYTaKj7CWWvDaA==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(36860700016)(1800799024)(82310400026)(7416014)(376014)(261021123027099003)(261021121427099003)(261022105027099003)(261009223027099003)(261026140227099003)(261026121527099003)(261028144727099003)(5023799004)(11063799006)(10067099003)(56012099006)(6133799003)(13003099007)(18002099003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(1800799024)(82310400026)(36860700016)(261021121427099003)(11063799006)(56012099006)(261009223027099003)(261028144727099003)(261026121527099003)(261026140227099003)(261022105027099003)(10067099003)(22082099003)(18002099003)(6133799003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	13KQNs9zqhQMre9sG6Ij8o3AsjbFtc2v0bF+4qCxbQMHNYDEk6KPaJbIKFp/2Oclv2ciCEKkUvCrNUg5ekWDJQb7+lq6qqTxIYzF/gN7mDPitdkx0PFET50C+w76q7KoCu/DCDpeoPI5b4kex1oUc1eYdTUMT3rfZVPOOcJ0tZOEZWZY8NT7BHamxW+3AuJ8tz5oMBqOB8VCS3sU4hgI1jGSZEbbVVqEJmbYlyApvIvpf6Pt8miJshkYMjlMDVM0LdL8GUGU8k56AogTmAQ2zfyr3qkf38yO86XFh0EqoEtddemqzC+ilrTSQleS7mpuUCpCkWkgf10JFJ/qsPGHvaghUwY5utoQtWgxeOCpJd08voXUKvdfVYUvZx0LE5IUZ2WLChJKVJsGix1WundYuzPA+GaoRXyuEGQNaUMDsLumlA6hS/cWqjEFSdki7UA0
+	u6XVU78C2dbFzVYBaa1kxpBhaPvuD4KP5ejFJLxxfddq59voNb5CbRg9N3EG2VxA+k/XQKEAp18vg0sD3uxB0WEc34KYAc2xsiUQbe7if+Wb3CED8s9aXMDimGHDcUo1ZU2gpYesqwmdm93sryuU89UFKCFoOfGDJPZoViwyNyh8Tk0Wk1RLggGXRDXjlNs90XWXYP3O2plEIx2qFYTASu3mZHT9CCtPBFW5egBo2uRTwjJ66DdAA/yk8MWe5fRdC2pyrwL3oEeZP/7BtkPxNvZKof4GWtBwLWX19yK7vSUFCsikBnGK5xYKUYqFL0ARspr69sna+IQEIynYLTKWoJTpOduI7pDxF5sork3HDI9kgb4U33/8GX5BuPzJxgKVSh+tRkgsUud8Ej3xitBn4WUe1kRuqBEbY1w37h8lKNqk3KWY/ngVAs5fcKCqRw54
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Nov 2026 11:15:22.5394
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Nov 2026 11:15:39.4258
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2029dfe8-2ef3-4c14-d99c-08df38d2965f
+X-MS-Exchange-CrossTenant-Network-Message-Id: c70b7744-5492-4c15-60ba-08df38d2a05d
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BN1PEPF00018072.namprd04.prod.outlook.com
+	SJ1PEPF000037B5.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV9PR12MB9758
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS2PR12MB9590
 
-This series avoids repeating full DWC Endpoint software resource cleanup
-and initialization on every PERST# cycle while still restoring reset-lost
-hardware state on the following PERST# deassertion.
+Tegra powers down the Endpoint controller when the host asserts PERST#.
+Notify EPF drivers of link down before disabling the controller so their
+link_down callbacks can quiesce outstanding work. For example,
+pci_epf_test_link_down() synchronously cancels its command worker.
+Without this notification, the worker can remain active after the
+controller is powered down and while EPC resources are later removed.
 
-The current Tegra194/234 Endpoint flow runs the full DWC EP cleanup/init
-sequence for each PERST# cycle. The allocation bitmaps, outbound-address
-array and per-function descriptors already have allocation guards and can
-be reused. Repeated full cleanup/init also removes and recreates debugfs
-entries and unregisters and reprobes eDMA where present; eDMA detection
-allocates managed linked-list memory retained until device detach.
+Call pci_epc_linkdown() directly instead of dw_pcie_ep_linkdown(), which
+also reinitializes non-sticky DWC registers through DBI when the host
+may already have withdrawn REFCLK. The direct notification avoids that
+common DWC register reinitialization. It does not guarantee that EPF
+callbacks are register-free: they can access MMIO and must tolerate the
+hardware state at PERST# assertion, including unavailable DBI access.
 
-Patch 1 folds initial setup and reset recovery into the existing
-dw_pcie_ep_init_registers() API. It tracks successful resource setup and
-uses a private helper to restore reset-lost registers on subsequent calls.
-After hardware resets the iATU, cached outbound mapping state is reset so
-stale bookkeeping does not hide available windows. This does not disable
-or unmap live hardware windows.
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+Changes V2 -> V3:
+- No code changes from v2; rebased onto the current PCI main-based stack.
 
-Patch 2 removes the full DWC EP cleanup from Tegra PERST# deassertion,
-allowing the existing initialization API to retain software resources and
-restore registers. Patch 3 notifies EPFs of link down before powering off
-the controller on PERST# assertion, allowing their callbacks to quiesce
-work. It calls pci_epc_linkdown() directly to avoid the DWC linkdown
-helper's DBI register reinitialization after REFCLK may have disappeared.
-EPF callbacks can still access MMIO; the notification is not a guarantee
-of register-free execution.
+Changes V1 -> V2:
+- Clarify that the direct notification avoids common DWC DBI register
+  reinitialization, but EPF callbacks may still access hardware.
+- Add a comment explaining why dw_pcie_ep_linkdown() is not used.
+- Drop the unrelated pci_epc_deinit_notify() pointer cleanup.
+- Remove unrelated teardown and deferred-deinit discussion from the
+  commit message.
 
-Patch 4 requires PCI_ENDPOINT for the Tegra194 PCIe driver because the
-PERST# assertion handler now directly calls pci_epc_linkdown(), which has
-no stub when endpoint support is disabled. This fixes the build failure
-reported by the kernel test robot.
+ drivers/pci/controller/dwc/pcie-tegra194.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Hardware-dependent EPF deinitialization remains in the PERST# deassert
-path where REFCLK is available and core reset has been deasserted.
-
-This series is rebased onto the current PCI main-based patch stack,
-after the DWC register-field cleanup and Tegra Endpoint/Root Port
-corner-case fixes. The base commit is recorded below.
-
-Changes in v3:
-- Rebase onto the current PCI main-based patch stack.
-- No code changes to patches 1-3 compared with v2.
-- Add patch 4 to require PCI_ENDPOINT for the pci_epc_linkdown() call and
-  fix the CONFIG_PCI_ENDPOINT=n build failure reported by the kernel test
-  robot.
-
-Changes in v2:
-- Rename the outbound helper to dw_pcie_ep_reset_outbound_state() and
-  clarify that it invalidates software state after hardware reset rather
-  than disabling live iATU mappings.
-- Fold init/reinit selection into dw_pcie_ep_init_registers(). Remove the
-  separate init-or-reinit API and keep register restoration private.
-- Document the reset and quiescence prerequisites and retain full
-  initialization after dw_pcie_ep_cleanup() clears the resource-state flag.
-- Clarify which resources are retained and avoid implying that the
-  existing guarded allocations were repeated on every reset.
-- Keep Tegra's existing initialization call; only remove per-reset cleanup.
-- Narrow the linkdown notification's safety claim and remove unrelated
-  pointer cleanup and teardown discussion from patch 3.
-- Reword the resource-lifetime explanations in patches 1 and 2.
-
-Validation reported with v2 (patches 1-3 are unchanged):
-- ARM64 compilation of the DWC EP, host, core and Tegra objects passed.
-- Per-patch checkpatch and whitespace checks passed.
-- Verified Endpoint reset sequence multiple times.
-- Verified ./pci_endpoint_test tests after Endpoint reset sequence.
-
-v2: https://lore.kernel.org/linux-pci/20261021061903.1269605-1-mmaddireddy@nvidia.com/
-
-v1: https://lore.kernel.org/linux-pci/20260923072554.1141864-1-mmaddireddy@nvidia.com/
-
-Manikanta Maddireddy (4):
-  PCI: dwc: Reuse Endpoint resources after fundamental reset
-  PCI: tegra194: Avoid full Endpoint reinit on PERST#
-  PCI: tegra194: Notify Endpoint functions on PERST# assert
-  PCI: tegra194: Add PCI_ENDPOINT dependency
-
- drivers/pci/controller/dwc/Kconfig            |   1 +
- .../pci/controller/dwc/pcie-designware-ep.c   | 149 +++++++++++++-----
- drivers/pci/controller/dwc/pcie-designware.h  |   1 +
- drivers/pci/controller/dwc/pcie-tegra194.c    |   4 +-
- 4 files changed, 112 insertions(+), 43 deletions(-)
-
-
-base-commit: 0012b353452613344db3292f17c69ea512344949
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index 08d6f4c5220f..df679509677d 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -1740,6 +1740,9 @@ static void pex_ep_event_pex_rst_assert(struct tegra_pcie_dw *pcie)
+ 	if (ret)
+ 		dev_info(pcie->dev, "LTSSM state: 0x%x detect timeout: %d\n", val, ret);
+ 
++	/* Avoid the DBI register reinitialization in dw_pcie_ep_linkdown(). */
++	pci_epc_linkdown(pcie->pci.ep.epc);
++
+ 	/*
+ 	 * Deassert LTSSM state to stop the state toggling between
+ 	 * Polling and Detect.
 -- 
 2.34.1
 
