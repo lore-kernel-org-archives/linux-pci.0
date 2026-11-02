@@ -1,55 +1,59 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793650849;
-	b=Z+sDEE9M8pdC1rm2WEXUnu4q/wDwDf23G8a48CdH3pOfcHKYaBCpiiAmKkpHAB7Ys+1V
-	 U8E5VdJGokdkXPOiLueYs6iJ2yP47LQgbMKSo7XKIxfthyPfz0wh433KxT9RJD2tp/I7T
-	 Ze3VfRsgHj+4V391cJ8AdqDXSbe1t8Gm77iVSSl5mWoxe3Tc2ujR6Eoz9pLJZzSqwq3J2
-	 PynWNwGhwIcCrY//WRecflFdOCIlzKCRooMMJpDGTBbVo9dxTUB+tEORraH66UESyOwEt
-	 M/OWTx9OA4qhFoWS0K53PaVvOjOyqn8WeuNfnZVzDAXmumBcvcBD6wrmwzAXg+Yen5w==
+	t=1793651292;
+	b=pdetMhDQhPq4j8fQxgAmaloxN57ztOY9SJeS5ophzRlj07hIU8B3zPEjuK2GBMBizb9N
+	 La6ebPLlCo7qG794DbzvZ1ne/kE30hSBuCgGXMKUOON46a0LbO9usa9QRonCO6Ab9aX21
+	 USRm9ekL9BjWDfc0pDQ1GoxcykNRTUuiHROWmSGkhtxsEyr/CBJsDwArm6DkL69kQKjQU
+	 pdc/mE8iw/+GhB27CLsfBR3yIbZU4fsa2vBEhnwJ07vmyTWnftHK+inyaK2uDL8l/8+Fh
+	 CQsBX11JK0WKT9aRwvtSakvGmvJkFD0a+lHBgrM++HuekDq4FsWcm711eYtPY1t3EZw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793650849;
-	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=OTRmHEj02TtZoL+kyiWN5B6jSVLuuf5zLZHpzWRlffQ=;
-	b=WXWa7ETrbFD2lwgHlgIdfM+3H+PEZPE3Y8fPpQ8Y68iPWiHpB55Tb/ILLBNs4ZzB8irU
-	 ExqHgWI1QriqgSNuVvVE3Riw63UT8jVlqtuA/i6xtYaUT7voek9s4Yns8Sn/TwxKDtKNz
-	 Bv87J8eZ5HNxiTvYx2e05K0qNStkRF5u5izvUVHt8HgozYHEsasX9LsjEm1Ge4dTsLPN9
-	 UcF69dTOTZcbstRpKAA5d9n6Os4ePKE5qaWk4PPEfYl5WbIXKXQLXPqNP83RHyMOAV6Dk
-	 ggXV4IQjnQL9cBt5SYYI05RdkZK71eJUZEPXmkPoiu9lwaDUGFxdWi/Em77NO0DV9QA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793651292;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=kNIoXMIj0D6tWi8oDVr/cix9uEHn2FqNesf3emLKmwA=;
+	b=Ia7zPYNraX2AvTR5USXKqzJKDiXquKlDjDzZQOL16YsvRRY06wzlF78WZkv9H3B7Ak4e
+	 rUSYbzu//WVBN42U7Lin13IN+NFJtN4SMpI2csjgHqwppBZlTokPWceQGq5QAudZJnJG2
+	 sTiIk8Jp6nW5lQW8zHPF9f5NKDDOmlVQIh19A2skIAxTc7hESzHGdWSoWpADLGllNbJAk
+	 WYIDN/mEX3kPkkAmiA2qotNfcUsyPetU7ahaUTZnxMDtDSd5yCFBz8HYSs4uvf6fRx6mO
+	 Z3rEf243ef/UHqdbjYKqtw2JiZ9N0coF1YoK1KKUbMW9mPKl9CNn34vXjj6D1OWzoLw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=wunner.de;
-	spf=pass smtp.mailfrom=wunner.de;
-	arc=none smtp.remote-ip=83.223.78.233
-Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="LwqGN/5O";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC47C606A324;
-	Mon,  2 Nov 2026 20:20:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EC47C606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout2.hostsharing.net (Postfix) with ESMTPS id 6CFAA78C3;
-	Mon, 02 Nov 2026 21:20:39 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 59103610CD9F; Mon,  2 Nov 2026 21:20:39 +0100 (CET)
-Date: Mon, 2 Nov 2026 21:20:39 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rafael@kernel.org, terry.bowman@amd.com, kanie@linux.alibaba.com,
-	olof@lixom.net
-Subject: Re: [PATCH v15 1/4] PCI: Assume control of portdrv-related features
- only when portdrv enabled
-Message-ID: <aujwl45XrkVT-zUx@wunner.de>
-References: <20261002211828.1293177-1-sathyanarayanan.kuppuswamy@linux.intel.com>
- <20261002211828.1293177-2-sathyanarayanan.kuppuswamy@linux.intel.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 838DC606A324;
+	Mon,  2 Nov 2026 20:28:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LwqGN/5O
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C281C1F00A16;
+	Mon,  2 Nov 2026 20:28:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793651292;
+	bh=kNIoXMIj0D6tWi8oDVr/cix9uEHn2FqNesf3emLKmwA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=LwqGN/5ONoTdHIJf0oGXsaCmTm0ZoJmgimhJGGd5YL1IWtV3ZAZCKuENAPVbyXLVO
+	 TCk4hvjQoMayINfxHIWSzC/NuClx8w4pfjevEjDJXyyU0KgBLhcq6v9N0NX4MmCad0
+	 ZDzrkIXoKeOL4EvcS9i5WHW+hgjC7Ac9b9dSN3jzIYphBX6UmQH9REEROu2Vf3iZTG
+	 z4CIr1O0V5uiUy6TH5ZdvB+9mk7kYCZIiQ822FF5FPhRgA+0cICtxrTduFUd1u0FtI
+	 kNb+TiH9Pb3/ieVX6hm88QZ1+UMAtyYC9vmlyIaUYY/2tchw31HJ0DJ2HnYRz3EGdR
+	 h4g+XLF2we1hg==
+Date: Mon, 2 Nov 2026 14:28:10 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+Cc: linux-hyperv@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: use reset_root_port() for bus reset of devices
+ on a root bus
+Message-ID: <20261102202810.GA982665@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,68 +65,87 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261002211828.1293177-2-sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <20261016235940.942090-1-hamzamahfooz@linux.microsoft.com>
 
-On Fri, Oct 02, 2026 at 02:18:25PM -0700, Kuppuswamy Sathyanarayanan wrote:
-> Native control of PME, AER, DPC, and PCIe hotplug depends on the portdrv,
-> so default to native handling of them only when CONFIG_PCIEPORTBUS is
-> enabled.
+On Fri, Oct 16, 2026 at 07:59:39PM -0400, Hamza Mahfooz wrote:
+> The "bus" reset method resets a device by asserting Secondary Bus Reset
+> on its upstream bridge, so it is not available for a device on a root
+> bus, which has no upstream bridge.
 > 
-> Native control of LTR and SHPC hotplug does not depend on portdrv, so keep
-> defaulting those to native regardless.
+> Some platforms have no Root Ports and expose PCI devices directly on a
+> root bus, e.g., Hyper-V vPCI places each assigned PCI function directly
+> on the root bus of a virtual host bridge. Such a device has no reset
+> method at all if it supports neither FLR nor PM reset, even if the
+> platform is able to reset it.
 > 
-> [bhelgaas: commit log]
-> Link: https://lore.kernel.org/r/fcbe8a624166a1101a755edfef44a185d32ff493.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com
-> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> pci_host_bridge::reset_root_port() already allows a host bridge to reset
+> a device on a root bus in a platform-specific way, so far only in place
+> of a Secondary Bus Reset by a Root Port. Use it for the "bus" reset
+> method of a device that is the only device on a root bus, and wait for
+> the device to become ready afterwards, as is done for other reset
+> methods.
+> 
+> Signed-off-by: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
 
-This is now commit 6347fd9aee19 in Linus' tree and I think there's a problem:
+Applied both to pci/reset for v7.5, thanks!
 
-> +++ b/drivers/pci/probe.c
-> @@ -658,6 +658,8 @@ static const struct device_type pci_host_bridge_type = {
+> ---
+>  drivers/pci/pci.c | 32 ++++++++++++++++++++++++++++++--
+>  1 file changed, 30 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8cc6a89130b5..fd4e958d6b99 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4924,18 +4924,46 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_bridge_secondary_bus_reset);
 >  
->  static void pci_init_host_bridge(struct pci_host_bridge *bridge)
->  {
-> +	bool port_services = IS_ENABLED(CONFIG_PCIEPORTBUS);
+> +static int pci_root_bus_reset(struct pci_dev *dev, bool probe)
+> +{
+> +	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
+> +	int rc;
 > +
->  	INIT_LIST_HEAD(&bridge->windows);
->  	INIT_LIST_HEAD(&bridge->dma_ranges);
->  	INIT_LIST_HEAD(&bridge->ports);
-> @@ -668,12 +670,12 @@ static void pci_init_host_bridge(struct pci_host_bridge *bridge)
->  	 * may implement its own AER handling and use _OSC to prevent the
->  	 * OS from interfering.
->  	 */
-> -	bridge->native_aer = 1;
-> -	bridge->native_pcie_hotplug = 1;
-> +	bridge->native_aer = port_services;
-> +	bridge->native_pcie_hotplug = port_services;
-
-The commit is setting the native_pcie_hotplug bit up front based on
-CONFIG_PCIEPORTBUS.
-
-But there's an if-clause at the top of get_port_device_capability() which
-adds PCIE_PORT_SERVICE_HP to the port services used by a given PCIe port.
-
-Inside the if-clause is code to disable hotplug interrupts if the BIOS
-left them enable.
-
-Since the commit, if CONFIG_PCIEPORTBUS=n, the if-clause is no longer
-entered and so the interrupts are no longer disabled.
-
-I'm amazed sashiko didn't flag this.  I didn't spot it during review
-either, but noticed it when rebasing my development branch.  I still
-have a patch on that branch which I developed last year but which
-was ultimately not accepted (for good reasons).  Back then I already
-noticed that the interrupt disablement issue prevented simplification
-of native_pcie_hotplug initialization.  I forgot about it but had to
-revisit the patch when rebasing the development branch on top of your
-patches:
-
-https://lore.kernel.org/r/5eae82776d695e589b89aad500d8208b980347e5.1752390102.git.lukas@wunner.de
-
-Now what?  The offending patch is the first one in a series of three.
-Revert all three or can we somehow salvage this?
-
-Thanks,
-
-Lukas
+> +	/*
+> +	 * Bridges, e.g., Root Ports, are not eligible.  Check the header type
+> +	 * because dev->subordinate is not set up yet when the reset methods
+> +	 * are probed during enumeration.
+> +	 */
+> +	if (pci_is_bridge(dev) || !host->reset_root_port)
+> +		return -ENOTTY;
+> +
+> +	if (probe)
+> +		return 0;
+> +
+> +	rc = host->reset_root_port(host, dev);
+> +	if (rc)
+> +		return rc;
+> +
+> +	return pci_dev_wait(dev, "bus reset", PCIE_RESET_READY_POLL_MS);
+> +}
+> +
+>  static int pci_parent_bus_reset(struct pci_dev *dev, bool probe)
+>  {
+>  	struct pci_dev *pdev;
+>  
+> -	if (pci_is_root_bus(dev->bus) || dev->subordinate ||
+> -	    !dev->bus->self || dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
+> +	if (dev->subordinate || dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
+>  		return -ENOTTY;
+>  
+>  	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
+>  		if (pdev != dev)
+>  			return -ENOTTY;
+>  
+> +	if (pci_is_root_bus(dev->bus))
+> +		return pci_root_bus_reset(dev, probe);
+> +
+> +	if (!dev->bus->self)
+> +		return -ENOTTY;
+> +
+>  	if (probe)
+>  		return 0;
+>  
+> -- 
+> 2.56.0
+> 
