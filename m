@@ -1,48 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793632036;
-	b=Uq2mDBoOqDXzg14qm2ae/kwhWKg+xVjyNKVkz9RIC65rKplBQOH5fCHvuPqIeUqQJyWX
-	 UtUbq2YjKBKX4Lv9LUnW85RZfgosbUl3hLCAGPVduqoavjdQgRNJEfVLakBGXjw5uP8wx
-	 CQFRA7zmsiRShWdG8Um1W61A/H67uplLY4grumlVVZQW4+o1jLehYb1NKMBnl9pbCmIci
-	 HhfIzEjDII+43Q4am87WB0/V9li41wAbmi3SmwEJMZpzvZUbYXBCWYo6AHOk+1QgTxPG5
-	 r8lGGYNgtyyo1SgnoIQnH+mdrHRy82blHCHA5fe2XUzcx9uh2vLq3mfZvvQ8Sbh4utg==
+	t=1793632070;
+	b=ia1M7GP+uaZFHs5ac8tBoa1+n2lrYA4SxBJpjaLdNHIEFquzHJc/1re9CYQ0LT9Krx8j
+	 3hwjdv7TG49JjjGCUZRe4QJ/y1yluO9Jvpn+Pe/f0jM94P8T2UXUix1q18DTfvQ4us54R
+	 p1cxHTqhnDaUrxREefabW3StB5UlQJA7ZihqXHlHzjkG/qc2GurOkNvveEasjzPj6SJPj
+	 YU8TFooxLDcjjRjt2A4BGrddiLLclbvpi6O3nA9pq0aRF2hpKTA3wG5jrObGZqDkO9BrV
+	 k7I1g85br3sTec1Q99NRsKVKvPrsFnEk8mY1JM/s7y5U4wResNhNJCt92QgmEppuwsg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793632036;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793632070;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer;
-	bh=mGdLlGj/NJAJr68kXbSPslaJvhomImSQvB5hgldkHFg=;
-	b=uXwSx7SM7TnywRS2QyDW8cACsF62zMrmNfdUyRSmAd3DL4TrUy/XxxiN/SmjsSMAwcGk
-	 zZhrDapMcCdlsmA7elcSYs6H9mG9fvOog+SplyA/Jkg8v0zdkBl+y0R2jj6zG59augi/v
-	 0fIzd+a9QSD429KAj/k44qfhp33GcS28m6CxO0YEcurxdzjWz3SbYMzbZzwMN7va12lH3
-	 +Fg//SDoIc/b5NOvqS6PBnhctHkFxHnHyZ6Y+gevHhWWIqex2sCwamJ8j7OZ1Fl8sern+
-	 7rb0C4nel1rUClKm/jza1tYhUdzWIxX9PCc0Bp/xe8XJoAiZE+49IuF+jNI3QtYJiHA==
+	bh=lzi0v2Iw6r5Nf2GLOsMSQBwdPNX93e2TzGzGfD3oQvk=;
+	b=dCqC+geZgYa+16mFGtApa1HOqzz9b5NuIwVHT56mBNo6IlopgiFvWjFHhhqyGaGCKJY/
+	 GZbh/wyHMAuBDjq6/djbUyYyRvvD8Gf3KvE7gN4bwXcByYqKfDIGQgYSjumcUitg815Nh
+	 9ObIyVO/zNXU75lrQtRimuz+4iqToLA1XQHzDfwAoLnqQ8RFJcdrU6GRbmmHBotIwEdHy
+	 TQHHJyx1qKV3rqy2Jx1wxFV3S9RSbiEZglNM9aG03RGG/f20CGDsSxpx5t0SOaO6NmeNr
+	 JeRvke48lc+kWLgSuxexZwK3vDdd4Az5273sm+yeY+3qE0TTUK+9+hgldp9jdK/Ri7A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IzlZDjTa;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kIoUwWZI;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 815326072ED7;
-	Mon,  2 Nov 2026 15:07:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC56760A34CD;
+	Mon,  2 Nov 2026 15:07:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IzlZDjTa
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B26C51F00A16;
-	Mon,  2 Nov 2026 15:07:01 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kIoUwWZI
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C6921F00A18;
+	Mon,  2 Nov 2026 15:07:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793632036;
-	bh=mGdLlGj/NJAJr68kXbSPslaJvhomImSQvB5hgldkHFg=;
+	s=k20260515; t=1793632069;
+	bh=lzi0v2Iw6r5Nf2GLOsMSQBwdPNX93e2TzGzGfD3oQvk=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=IzlZDjTao7VjuIjRRsnw52RX/0AjF/WBmgT4NSpXmtjt4TJbN8zegt24j5DOlUa3Z
-	 44pMabJRvDCRlnweMnKPhfJPYcWc+E6OtpWq1y0Ac43VD4FbMRQP9qey5otxK1q5PL
-	 oT9zsk1HsUa3Ue3zXl6S6BVtFghJKXFiWTJwHmxl0PE/8ztq9iyqz6BcdrpCZDdpYi
-	 3XtzkYqJlHCU6ToIaLkgAjRlsjmuFBtw97UNIAceQYdi00vVfKPn4AuQDU9qRHk19M
-	 URA4zqhN0uKI8rAUpyUb++ZQsVmLXvF7KAChG6Fit1JA/MDvvneOl/7dLgJJZyJ32o
-	 yDuj9+i1oCVEA==
+	b=kIoUwWZIZJmPIDGcbCqUMn+ysgkkYH4B9KIOKwQcxHvHBenqGMDwfSExIyruQhbFw
+	 GSvSuGXqLlsS/+2bX4zY15r68FSJdvY7PhgxxV9bnP9Q3PrAcl12NmKthDnezkWdzA
+	 YQcdsHreaTBVFGkt5/ixU0O685iwRTrAmT2xH295OHXHJaGkHJFEIXEMqGqXCeqbKp
+	 nkpHGaPfZ7GY12qU7tMKJN88syBFW289W+duXDc1qru1IIyFkTan4orRc22NIVl3pP
+	 G9JHqYUFv0jVxFqVlQXSQgnsHBo0FeNBeFWC+sINyeJMsGIfziINB34GYCGOVyuJWO
+	 tkxpbHP0pDc6g==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 16:01:43 +0100
-Subject: [PATCH RFC 16/22] xtensa: simdisk: let procfs copy out reads
+Date: Mon, 02 Nov 2026 16:01:45 +0100
+Subject: [PATCH RFC 18/22] macintosh/via-pmu: let procfs copy in writes to
+ the options file
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -54,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-arch-v1-16-c9492ab08480@kernel.org>
+Message-Id: <20261102-work-procfs-arch-v1-18-c9492ab08480@kernel.org>
 References: <20261102-work-procfs-arch-v1-0-c9492ab08480@kernel.org>
 In-Reply-To: <20261102-work-procfs-arch-v1-0-c9492ab08480@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -91,45 +92,47 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  Chuck Lever <cel@kernel.org>
 X-Mailer: b4 0.17-dev
 
-Implement ->proc_read_buf() so procfs copies what is read to userspace
-after it unpinned the entry.
+Implement ->proc_write_buf() so procfs copies in what is written before
+it pins the entry, and parse the option from that copy. Writes larger
+than PAGE_SIZE - 1 bytes fail with -EINVAL now.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- arch/xtensa/platforms/iss/simdisk.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/macintosh/via-pmu.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/arch/xtensa/platforms/iss/simdisk.c b/arch/xtensa/platforms/iss/simdisk.c
-index b2f9e7f3ade3..b597d8642e8a 100644
---- a/arch/xtensa/platforms/iss/simdisk.c
-+++ b/arch/xtensa/platforms/iss/simdisk.c
-@@ -234,7 +234,7 @@ static int simdisk_detach(struct simdisk *dev)
- 	return err;
+diff --git a/drivers/macintosh/via-pmu.c b/drivers/macintosh/via-pmu.c
+index 49f929ae10e4..079c085be5d2 100644
+--- a/drivers/macintosh/via-pmu.c
++++ b/drivers/macintosh/via-pmu.c
+@@ -913,7 +913,7 @@ static int pmu_options_proc_show(struct seq_file *m, void *v)
  }
  
--static ssize_t proc_read_simdisk(struct file *file, char __user *buf,
-+static ssize_t proc_read_simdisk(struct file *file, char *buf,
- 			size_t size, loff_t *ppos)
+ static ssize_t pmu_options_proc_write(struct file *file,
+-		const char __user *buffer, size_t count, loff_t *pos)
++		char *buffer, size_t count, loff_t *pos)
  {
- 	struct simdisk *dev = pde_data(file_inode(file));
-@@ -250,7 +250,7 @@ static ssize_t proc_read_simdisk(struct file *file, char __user *buf,
- 	len = scnprintf(temp, PAGE_SIZE + 2, "%s\n", dev->filename ?: "");
- 	spin_unlock(&dev->lock);
+ 	char tmp[33];
+ 	char *label, *val;
+@@ -923,8 +923,7 @@ static ssize_t pmu_options_proc_write(struct file *file,
+ 		return -EINVAL;
+ 	if (count > 32)
+ 		count = 32;
+-	if (copy_from_user(tmp, buffer, count))
+-		return -EFAULT;
++	memcpy(tmp, buffer, count);
+ 	tmp[count] = 0;
  
--	len = simple_read_from_buffer(buf, size, ppos, temp, len);
-+	len = memory_read_from_buffer(buf, size, ppos, temp, len);
- 	kfree(temp);
- 	return len;
- }
-@@ -280,7 +280,7 @@ static ssize_t proc_write_simdisk(struct file *file, char *buf,
- }
+ 	label = tmp;
+@@ -958,7 +957,7 @@ static ssize_t pmu_options_proc_write(struct file *file,
  
- static const struct proc_ops simdisk_proc_ops = {
--	.proc_read	= proc_read_simdisk,
-+	.proc_read_buf	= proc_read_simdisk,
- 	.proc_write_buf	= proc_write_simdisk,
- 	.proc_write_size = PAGE_SIZE,
- 	.proc_lseek	= default_llseek,
+ static const struct proc_ops pmu_options_proc_ops = {
+ 	.proc_show	= pmu_options_proc_show,
+-	.proc_write	= pmu_options_proc_write,
++	.proc_write_buf	= pmu_options_proc_write,
+ };
+ #endif
+ 
 
 -- 
 2.53.0
