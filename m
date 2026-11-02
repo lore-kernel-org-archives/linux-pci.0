@@ -1,74 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.199
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.200
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793633826;
-	b=b3oqE5uJrXyFhpeqv5QCodG5OTnkIGzyFp1VcNHoii8R1Be6vmZ/fb21s5LT53i+0Pb9
-	 sVToHNxh7ULr+xoSpsxvJ472ESwhttElXbqKQU9m9EBt3zSGF5jCkuijp7CNOt9tzaJB2
-	 MMzxduVv4/3tWwt5gLyycO05eUrVHZQ4Ek+QUdAy14gjywpiLt+UGx8Ab4/d7TAisLnBA
-	 0xLA11LjkbKDm138EU2bXScgCvD0r7l8oIg1UeIUPMEqIbrcLyPwGhHgh1PeQOo7axUvp
-	 6tSN4KMFX3OforVDP18C2JImWRmkzCkR+abJNaU0oIOAFdTv1qcqL2yZUE+zcU9lYHQ==
+	t=1793633827;
+	b=iMYa5uC0eHevlAJ+aCXyaUfWfVgAU53vEuFdSAyH5ZxND+qDQn73uU8Wl2v1QxDiBjMu
+	 oBSgEKmO2kqgoxzZ4RGZd4rehjezQtcaQcgqfEgM/HjoCTvm17BM1t2MoQcyRSZGj1jgp
+	 XJKOpcpAgvoCxoB0tBAY4S/UCS+lmLXjzxczkCioFi2TP/grG5K+RN8F07wuR3liUwfNn
+	 dyYlk3d6/IzkwenHFwQ2u9UclXXp38INgs1NgPcVAvdQWsYwOUUDhBZkbq7YZ3OtIwXAQ
+	 e71K2z71rslszbt1d1Xh2pdE8g3i/7D8cMaS4WXdCLD5MDbw8Nw+qiqXZ1BFwglvXiA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793633826;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793633827;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
 	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
 	 Content-Type;
-	bh=YmR/P9susfgWpN3rWVzDSZpJhyqX0qvQbvTnkpaf48E=;
-	b=UJplgtqvFzynypTfZOCsMFCmnbqYNssV7dUwGvV496yLSWiBAuMGa5BpdWpJADBtEJYw
-	 sggKQ8cCqkCnTggGRWRLUSzoasxzXVR4ZQhbSqpUnf2/mzGdsSnhbREwa8YDhotsjDDnV
-	 qIriiWfdEH+6l4DdCncuQG+f1BdIS5klDcjY8qeIFcrHVmB3DMPZ07zm9FHXMSsVj97aO
-	 FzsXgULZXL829/K7KQG0XuniPiQo8BKdjuRgbF07tqB7xdzL6Yu0SGXlZ52YxOZsm8qIe
-	 tCc41t1n6KJAl3EdrmWsQJlAkq1xKmL1vymH/6ZIQDtoVfGlck3byPkfRvcO0SNNJFA==
+	bh=6CTI6wZf9fmjJK3hlmivlOQee38QTMnwowyyRsW/zh4=;
+	b=5FPZh5VCLa2cDN6llxonjPFKtAG7HUJtmYudpeAhtYMbgLkXMDm5XFuaWX/5fck9BBeP
+	 nlTePvvQq4Cil2mGhwzl8/U796Nc7VfPmDwIulgbeSWcKWMZdP+HknisWFzw+FC2pJh+y
+	 lWeNKxwdIjdRqAf6c+03N1eCKWDaAFPyLNgKE+Xx0AGd+tMA1q+EukMKa1RRk2ryLDJPF
+	 jkkQALAw68to6S2qglWaMOZXqScydcPi6UVtKt04oWVgnyM3kXCv6tXe/xTEUnwzHYKQ9
+	 /u19uuOaqjP9rMO/nAO8pSReywPmorH21kEtNoXiBoNGFBTURwlZreCXGlJs6xO2nFQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--vipinsh.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=MGfRWuh0;
-	arc=none smtp.remote-ip=209.85.214.199
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Hn2t6mwi;
+	arc=none smtp.remote-ip=209.85.214.200
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2024A60E34FE
-	for <linux-pci@vger.kernel.org>; Mon,  2 Nov 2026 15:37:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2024A60E34FE
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9EEA60E4084
+	for <linux-pci@vger.kernel.org>; Mon,  2 Nov 2026 15:37:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D9EEA60E4084
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--vipinsh.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=MGfRWuh0
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2e987ec84afso27011805ad.3
-        for <linux-pci@vger.kernel.org>; Mon, 02 Nov 2026 07:37:05 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Hn2t6mwi
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2e93f266d20so51211915ad.3
+        for <linux-pci@vger.kernel.org>; Mon, 02 Nov 2026 07:37:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793633825; x=1794238625; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1793633826; x=1794238626; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=YmR/P9susfgWpN3rWVzDSZpJhyqX0qvQbvTnkpaf48E=;
-        b=MGfRWuh0nAimPxPxxuPTWsBxmMpPf9c8Jkj5XumT7cI2yKlZzZGCb9BhKJE1H4nXwl
-         x4o+33wIlKpWRlQgnz4mBvmf3A9mUF//SGkPlgVTSawUTsTT2hXyXCu12xbtwD2yN9SS
-         itzLhHX4BbdxLi9iiUR3ll24JJvCb3dEBkSwsWNDvGS2l1IRwbiAtlPXQhlvQEuc+m8a
-         yTrNihdaHs7yx++aCuqpDmmMR0hTUhX0yNJDnwxN7C6LRbyRMgYuVSy7qZWigIpv3J3D
-         /IPdQV6isWwEx8A2uzeJD5t1mtlwKRHwOcNUPg+tMhx6AIQhTtf2hK2g4ifwe4d2yGkA
-         adug==
+        bh=6CTI6wZf9fmjJK3hlmivlOQee38QTMnwowyyRsW/zh4=;
+        b=Hn2t6mwiCOCnKJYHbSI4r7YEIwDSLpmn+wdiodbT/07QFRFvMJkMrHiKk4CmStrEA0
+         XV84XfE0Ppzrkm3RLpwzLkfwlXdZOODr/P0C900SEGtXO0Tyo2HUnp08E3pz+gUd+18M
+         wZU+PIInbM0X7xctljZpdMkDf0gRTxqpf2BWlzRqzXS1ZfGF+UCTsDBz5AGzdOomDShH
+         HxenHfUtDSgyBHAEV1k7a6oT+mCT38TZSVD4GLRGQT3hWAUYPRmQWyyW3RQ/4ow/Rv4S
+         GUxURDRrKgwtY6zD5OerG4lx3xqNngfAbAnKpsqjE70cooyzL49iLh5K+uzpBfGt0e+7
+         I7XA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793633825; x=1794238625;
+        d=1e100.net; s=20260707; t=1793633826; x=1794238626;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=YmR/P9susfgWpN3rWVzDSZpJhyqX0qvQbvTnkpaf48E=;
-        b=RqDXNkdgC2qNP/GwIHgSGAgk2h1OJAcVxrsWlm7OENdfsxlQwVVZrjBnqitvrHWu5r
-         MFGWsfJLzUT4d/lWGQmfCW7nKrWAnZQNnMjL8C9GPPl9nkNeWt+EFYrR81nH4r4lc1uq
-         cSiVejk8zm6fT3CiBMk3q4ZzW2WpbnS0tUJc2k+SAqai/6Vk/+j3czvbyg6pdRoyzCQ+
-         cQD+HxtSI/BvxD+auQFOJAf/nWW5KibR3idomI8PVoA8IKgZTL31HTTjCcDNtuc2M5ON
-         uYpV/WXY48Rokm/teBYXPefYQPR6xcog3WgGlYjpdBIFmfQn6Bo8Yc7slKRSaadGN10d
-         S0Xw==
-X-Forwarded-Encrypted: i=1; AKwUvByvaYeoburZTKIfSk/+i4BXQ+P1V6nP1jj0Vlro0MZWEj9j1uGxigAKzqbVbRjrGqJ2JL8L7R9cekI=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/KBtw15Nmx7rx3hfhY41eEL/TA+kBYdCkWt//TvEQOhPb6w0dH
-	1G4WBASsTOQ4uczQBUqW0GH+X+RlMdH5FF6CntvcVDne9A8/a/qDf48Mj62W9f3o0mwZOFGa1Mx
-	t1RjKnUvx0A==
-X-Received: from pldq13.prod.google.com ([2002:a17:902:c9cd:b0:2e8:2364:2533])
- (user=vipinsh job=prod-delivery.src-stubby-dispatcher) by 2002:a17:902:fd8d:b0:2e8:7686:4d46
- with SMTP id d9443c01a7336-2eb364552bemr101310195ad.34.1793633825121; Mon, 02
- Nov 2026 07:37:05 -0800 (PST)
-Date: Mon,  2 Nov 2026 07:36:34 -0800
+        bh=6CTI6wZf9fmjJK3hlmivlOQee38QTMnwowyyRsW/zh4=;
+        b=LwiSjMmQUtHn52YP/v9zn6Bff362J7Hrm6cCvqoMMYWrLisy4EeAWW86iPxffgu0fC
+         pQn/hC3bP0fcoL6mcmNtU4yHIDBMGZMwS9I6rnM+PfjWuF/kBIrF8rl/xy6fTqMiTY3y
+         5pDUJZgHks4/4r8gnMKxvsb32vINLzTna+Kdcb1YxbhLb6oxZ9JUjv6DP+mRpDUbec4Y
+         bP1YvyoJDGwCKYV8nTDgourvM4NtYZGuJ8tjwzDR/D3n8LN9cytrblVfOFmcjXLV7v00
+         leVO+AZj7tk2p8xkzLA6rlNGXLOkdB1r7Wln7H30y0oPhKWSKl7pxuBzZ59tR/1pOJmM
+         kKXw==
+X-Forwarded-Encrypted: i=1; AKwUvBxXepiWc+Jm3lwsAKPEpdH2x6JFa2BsCCPaSZsKlgOl8F7MQmwRJzGLdo5k3PXu3sl5sqso4i/mp7M=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9OFUgdONAy6QD9ffFCi7TV0ZS0uRz//g9PY54yxLWJrdgN2CpM
+	Z46RNAY6/f77ZbNNPnBHPkb01OvkkOorUN0c0yHbS23WArsCuVaFNip2G/pz47+PQiAr8hDxq3F
+	J/bwZNtr4UA==
+X-Received: from plct12.prod.google.com ([2002:a17:902:d28c:b0:2e5:712c:5c7])
+ (user=vipinsh job=prod-delivery.src-stubby-dispatcher) by 2002:a17:903:1b2b:b0:2e9:60fb:5e2b
+ with SMTP id d9443c01a7336-2eb364e5a41mr100336855ad.44.1793633826227; Mon, 02
+ Nov 2026 07:37:06 -0800 (PST)
+Date: Mon,  2 Nov 2026 07:36:35 -0800
 In-Reply-To: <20261102153656.1431701-1-vipinsh@google.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,8 +81,9 @@ Precedence: list
 Mime-Version: 1.0
 References: <20261102153656.1431701-1-vipinsh@google.com>
 X-Mailer: git-send-email 2.56.0.317.g454f8302e1-goog
-Message-ID: <20261102153656.1431701-6-vipinsh@google.com>
-Subject: [PATCH v6 05/27] PCI: liveupdate: Add helpers to preserve struct pci_saved_state
+Message-ID: <20261102153656.1431701-7-vipinsh@google.com>
+Subject: [PATCH v6 06/27] vfio: Add helpers to identify device files that can
+ be preserved
 From: Vipin Sharma <vipinsh@google.com>
 To: kexec@lists.infradead.org, linux-kernel@vger.kernel.org, 
 	linux-doc@vger.kernel.org, kvm@vger.kernel.org, linux-mm@kvack.org, 
@@ -102,398 +103,135 @@ Cc: ajayachandra@nvidia.com, alex@shazbot.org, amastro@fb.com,
 	yanjun.zhu@linux.dev, yi.l.liu@intel.com
 Content-Type: text/plain; charset="UTF-8"
 
-Drivers that keep a device running across Live Update need to hand the
-state they captured with pci_store_saved_state() to the next kernel,
-since the next kernel never sees the device in that state. VFIO, for
-example, captures it at first open and uses it to restore the device
-when the last user closes it.
+Add two helpers needed by vfio-pci Live Update support:
 
-struct pci_saved_state is private to the PCI core and its in-memory
-layout is not a stable ABI. Add helpers to serialize it into a
-caller-provided buffer and rebuild it in the next kernel with a stable
-struct pci_saved_state_ser ABI. Using caller-provided buffers allows
-drivers to embed the serialized saved state directly in their own
-KHO-preserved data with a single allocation and lifetime.
+1. vfio_file_is_bound_cdev(): checks whether a specific file is a VFIO
+   cdev device file that has been bound to an iommufd. Only the bound
+   cdev file keeps the device open; the device-level cdev_opened flag
+   cannot distinguish between the bound cdev file and a second, unbound
+   cdev file opened for the same device.
 
-Validate the serialized buffer and verify that the saved standard
-configuration header matches the live device before rebuilding the
-state: the vendor and device IDs must match, only Type 0 (Normal)
-headers are accepted, and BAR0-5 and the expansion ROM BAR address must
-equal the current hardware values. This ensures that restoring the
-saved state cannot write stale BAR addresses if resources were
-reassigned in the new kernel. Only the address bits of the ROM BAR are
-compared, since its enable and validation status bits may legitimately
-differ.
+2. vfio_device_is_noiommu(): move the existing helper out of line and
+   export it so vfio-pci can enforce that only devices in no-IOMMU mode
+   are preserved across Live Update.
+
+No functional change intended for existing callers.
 
 Signed-off-by: Vipin Sharma <vipinsh@google.com>
 ---
- Documentation/PCI/liveupdate.rst |   3 +
- drivers/pci/liveupdate.c         | 223 +++++++++++++++++++++++++++++++
- drivers/pci/pci.c                |   5 -
- drivers/pci/pci.h                |   6 +
- include/linux/kho/abi/pci.h      |  47 +++++++
- include/linux/pci_liveupdate.h   |   7 +
- 6 files changed, 286 insertions(+), 5 deletions(-)
+ drivers/vfio/device_cdev.c | 20 ++++++++++++++++++++
+ drivers/vfio/vfio.h        | 10 ----------
+ drivers/vfio/vfio_main.c   | 18 ++++++++++++++++++
+ include/linux/vfio.h       | 10 ++++++++++
+ 4 files changed, 48 insertions(+), 10 deletions(-)
 
-diff --git a/Documentation/PCI/liveupdate.rst b/Documentation/PCI/liveupdate.rst
-index 96b1d7f5df3a..b6cd9621b3b3 100644
---- a/Documentation/PCI/liveupdate.rst
-+++ b/Documentation/PCI/liveupdate.rst
-@@ -25,6 +25,9 @@ Live Update ABI
- .. kernel-doc:: include/linux/kho/abi/pci.h
-    :doc: PCI File-Lifecycle Bound (FLB) Live Update ABI
- 
-+.. kernel-doc:: include/linux/kho/abi/pci.h
-+   :doc: PCI Saved State Live Update ABI
-+
- .. kernel-doc:: include/linux/kho/abi/pci.h
-    :internal:
- 
-diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-index 6f92d4ddca2b..363453b06243 100644
---- a/drivers/pci/liveupdate.c
-+++ b/drivers/pci/liveupdate.c
-@@ -1036,3 +1036,226 @@ void pci_liveupdate_unregister_flb(struct liveupdate_file_handler *fh)
- 	liveupdate_unregister_flb(fh, &pci_liveupdate_flb);
+diff --git a/drivers/vfio/device_cdev.c b/drivers/vfio/device_cdev.c
+index 1d9515c967b0..23b229468151 100644
+--- a/drivers/vfio/device_cdev.c
++++ b/drivers/vfio/device_cdev.c
+@@ -200,6 +200,26 @@ void vfio_df_unbind_iommufd(struct vfio_device_file *df)
+ 	vfio_device_unblock_group(device);
  }
- EXPORT_SYMBOL_GPL(pci_liveupdate_unregister_flb);
-+
-+static const struct pci_cap_saved_data *pci_saved_cap_next(const struct pci_cap_saved_data *cap)
-+{
-+	return (const void *)cap + sizeof(*cap) + cap->size;
-+}
-+
-+/**
-+ * pci_liveupdate_saved_state_ser_size() - Size needed to serialize a saved state
-+ * @state: Saved state returned by pci_store_saved_state(), or NULL.
-+ *
-+ * Return: Number of bytes needed by pci_liveupdate_serialize_saved_state(), or
-+ * 0 if @state is NULL.
-+ */
-+size_t pci_liveupdate_saved_state_ser_size(const struct pci_saved_state *state)
-+{
-+	const struct pci_cap_saved_data *cap;
-+	size_t size;
-+
-+	if (!state)
-+		return 0;
-+
-+	size = sizeof(struct pci_saved_state_ser);
-+	for (cap = state->cap; cap->size; cap = pci_saved_cap_next(cap))
-+		size += sizeof(struct pci_cap_saved_data_ser) + cap->size;
-+
-+	return size;
-+}
-+EXPORT_SYMBOL_GPL(pci_liveupdate_saved_state_ser_size);
-+
-+/**
-+ * pci_liveupdate_serialize_saved_state() - Serialize a struct pci_saved_state
-+ * @state: Saved state returned by pci_store_saved_state().
-+ * @buf: Destination buffer.
-+ * @size: Size of @buf, must equal pci_liveupdate_saved_state_ser_size(@state).
-+ *
-+ * Drivers that keep a device running across Live Update can use this to hand
-+ * the state captured by pci_store_saved_state() (e.g. before the device was
-+ * handed to userspace) to the next kernel, which never sees the device in that
-+ * state.
-+ *
-+ * Return: 0 on success, -EINVAL if the arguments are invalid.
-+ */
-+int pci_liveupdate_serialize_saved_state(const struct pci_saved_state *state,
-+					 void *buf, size_t size)
-+{
-+	const struct pci_cap_saved_data *cap;
-+	struct pci_saved_state_ser *ser = buf;
-+	size_t off;
-+	u32 nr = 0;
-+
-+	if (!state || !buf || size != pci_liveupdate_saved_state_ser_size(state))
-+		return -EINVAL;
-+
-+	memset(buf, 0, size);
-+	ser->size = size;
-+	memcpy(ser->config_space, state->config_space, sizeof(ser->config_space));
-+
-+	off = sizeof(*ser);
-+	for (cap = state->cap; cap->size; cap = pci_saved_cap_next(cap)) {
-+		struct pci_cap_saved_data_ser *cap_ser = buf + off;
-+
-+		cap_ser->cap_nr = cap->cap_nr;
-+		cap_ser->extended = cap->cap_extended ? 1 : 0;
-+		cap_ser->size = cap->size;
-+		memcpy(cap_ser->data, cap->data, cap->size);
-+
-+		off += sizeof(*cap_ser) + cap->size;
-+		nr++;
-+	}
-+
-+	ser->nr_caps = nr;
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_liveupdate_serialize_saved_state);
-+
-+/* Read the byte at config space offset @where from a saved config header. */
-+static u8 pci_saved_config_byte(const u32 *config_space, int where)
-+{
-+	return config_space[where / 4] >> ((where % 4) * 8);
-+}
-+
-+/*
-+ * Compare the bits in @mask of the config space dword at offset @where with
-+ * the saved config header.
-+ */
-+static int pci_validate_saved_config_dword(struct pci_dev *dev,
-+					   const u32 *config_space, int where,
-+					   u32 mask)
-+{
-+	u32 val;
-+
-+	if (pci_read_config_dword(dev, where, &val) ||
-+	    (val & mask) != (config_space[where / 4] & mask))
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
-+static int pci_validate_saved_config_header(struct pci_dev *dev,
-+					    const u32 *config_space)
-+{
-+	u8 hdr_type;
-+	int bar;
-+
-+	if (config_space[PCI_VENDOR_ID / 4] !=
-+	    ((u32)dev->device << 16 | dev->vendor))
-+		return -EINVAL;
-+
-+	/* Only Type 0 (Normal) configuration headers are supported. */
-+	hdr_type = pci_saved_config_byte(config_space, PCI_HEADER_TYPE) &
-+		   PCI_HEADER_TYPE_MASK;
-+	if (hdr_type != PCI_HEADER_TYPE_NORMAL ||
-+	    dev->hdr_type != PCI_HEADER_TYPE_NORMAL)
-+		return -EINVAL;
-+
-+	/*
-+	 * Verify that BAR0-5 and the expansion ROM BAR address match the
-+	 * current hardware values so that restoring the saved state cannot
-+	 * write stale BAR addresses if resources were reassigned in the new
-+	 * kernel.
-+	 */
-+	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++) {
-+		if (pci_validate_saved_config_dword(dev, config_space,
-+						    PCI_BASE_ADDRESS_0 + bar * 4,
-+						    ~0U))
-+			return -EINVAL;
-+	}
-+
-+	/*
-+	 * Only the address bits of the ROM BAR are compared, since its enable
-+	 * and validation status bits may legitimately differ.
-+	 */
-+	return pci_validate_saved_config_dword(dev, config_space,
-+					       PCI_ROM_ADDRESS,
-+					       PCI_ROM_ADDRESS_MASK);
-+}
-+
-+/**
-+ * pci_liveupdate_deserialize_saved_state() - Rebuild a struct pci_saved_state
-+ * @dev: The PCI device the saved state belongs to.
-+ * @buf: Buffer written by pci_liveupdate_serialize_saved_state().
-+ * @size: Size of @buf in bytes.
-+ *
-+ * Validates @buf against the PCI Saved State Live Update ABI and @dev's
-+ * standard configuration header, and allocates a struct pci_saved_state that
-+ * can be passed to pci_load_saved_state() and freed with kfree(). @buf is not
-+ * modified or freed.
-+ *
-+ * Return: Newly allocated struct pci_saved_state on success, or an ERR_PTR() on
-+ * failure (-EINVAL if @buf is malformed or incompatible with @dev, -EOPNOTSUPP
-+ * if @buf uses an unsupported flag, -ENOMEM on allocation failure).
-+ */
-+struct pci_saved_state *pci_liveupdate_deserialize_saved_state(struct pci_dev *dev,
-+							       const void *buf,
-+							       size_t size)
-+{
-+	const struct pci_saved_state_ser *ser = buf;
-+	struct pci_cap_saved_data *cap;
-+	struct pci_saved_state *state;
-+	size_t off, state_size;
-+	u32 i;
-+
-+	if (!dev || !buf || size < sizeof(*ser))
-+		return ERR_PTR(-EINVAL);
-+
-+	if (ser->size != size)
-+		return ERR_PTR(-EINVAL);
-+
-+	if (ser->flags)
-+		return ERR_PTR(-EOPNOTSUPP);
-+
-+	if (pci_validate_saved_config_header(dev, ser->config_space))
-+		return ERR_PTR(-EINVAL);
-+
-+	off = sizeof(*ser);
-+	state_size = sizeof(*state) + sizeof(*cap);
-+
-+	for (i = 0; i < ser->nr_caps; i++) {
-+		const struct pci_cap_saved_data_ser *cap_ser;
-+		size_t entry_size;
-+
-+		if (size - off < sizeof(*cap_ser))
-+			return ERR_PTR(-EINVAL);
-+
-+		cap_ser = buf + off;
-+		if (!cap_ser->size || cap_ser->size > PCI_CFG_SPACE_EXP_SIZE ||
-+		    cap_ser->extended > 1)
-+			return ERR_PTR(-EINVAL);
-+
-+		entry_size = sizeof(*cap_ser) + cap_ser->size;
-+		if (size - off < entry_size)
-+			return ERR_PTR(-EINVAL);
-+
-+		off += entry_size;
-+		state_size += sizeof(*cap) + cap_ser->size;
-+	}
-+
-+	if (off != size)
-+		return ERR_PTR(-EINVAL);
-+
-+	state = kzalloc(state_size, GFP_KERNEL);
-+	if (!state)
-+		return ERR_PTR(-ENOMEM);
-+
-+	memcpy(state->config_space, ser->config_space, sizeof(state->config_space));
-+
-+	off = sizeof(*ser);
-+	cap = state->cap;
-+	for (i = 0; i < ser->nr_caps; i++) {
-+		const struct pci_cap_saved_data_ser *cap_ser = buf + off;
-+
-+		cap->cap_nr = cap_ser->cap_nr;
-+		cap->cap_extended = cap_ser->extended;
-+		cap->size = cap_ser->size;
-+		memcpy(cap->data, cap_ser->data, cap_ser->size);
-+
-+		off += sizeof(*cap_ser) + cap_ser->size;
-+		cap = (void *)cap + sizeof(*cap) + cap->size;
-+	}
-+
-+	return state;
-+}
-+EXPORT_SYMBOL_GPL(pci_liveupdate_deserialize_saved_state);
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e5b960ca26e6..192f6766cc31 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2032,11 +2032,6 @@ void pci_restore_state(struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_restore_state);
- 
--struct pci_saved_state {
--	u32 config_space[16];
--	struct pci_cap_saved_data cap[];
--};
--
- /**
-  * pci_store_saved_state - Allocate and return an opaque struct containing
-  *			   the device saved state.
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 037c1674f164..d10df3203725 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -244,6 +244,12 @@ struct pci_cap_saved_data {
- 	u32		data[];
- };
- 
-+/* Opaque to drivers, see pci_store_saved_state() */
-+struct pci_saved_state {
-+	u32 config_space[16];
-+	struct pci_cap_saved_data cap[];
-+};
-+
- struct pci_cap_saved_state {
- 	struct hlist_node		next;
- 	struct pci_cap_saved_data	cap;
-diff --git a/include/linux/kho/abi/pci.h b/include/linux/kho/abi/pci.h
-index c2e3a5949f73..3d0822f2067d 100644
---- a/include/linux/kho/abi/pci.h
-+++ b/include/linux/kho/abi/pci.h
-@@ -93,4 +93,51 @@ struct pci_ser {
- 	u64 devices;
- } __packed;
  
 +/**
-+ * DOC: PCI Saved State Live Update ABI
++ * vfio_file_is_bound_cdev - True if the file is a VFIO cdev file bound to an
++ *                           iommufd
++ * @file: File to check
 + *
-+ * Drivers that keep a PCI device running across a Live Update can hand the
-+ * state returned by pci_store_saved_state() to the next kernel by embedding a
-+ * struct pci_saved_state_ser in their own preserved data, produced and parsed
-+ * by the PCI core via pci_liveupdate_serialize_saved_state() and
-+ * pci_liveupdate_deserialize_saved_state().
-+ *
-+ * Like the FLB data above, this layout is a contract between kernels and is
-+ * extended by appending fields and defining bits in ``flags`` for features the
-+ * next kernel must understand, while recording the size of each entry. Unlike
-+ * the FLB data, it is embedded in a driver's preserved state rather than
-+ * referenced from struct pci_ser, and validation failures are reported to the
-+ * calling driver rather than panicking.
++ * Return: True if @file is a VFIO cdev device file on which
++ * VFIO_DEVICE_BIND_IOMMUFD has succeeded, false otherwise.
 + */
++bool vfio_file_is_bound_cdev(struct file *file)
++{
++	struct vfio_device_file *df = file->private_data;
 +
-+/**
-+ * struct pci_cap_saved_data_ser - A saved capability in a struct pci_saved_state_ser
-+ * @cap_nr: Capability ID (PCI_CAP_ID_* or PCI_EXT_CAP_ID_*).
-+ * @extended: 1 if @cap_nr is an extended capability ID, 0 otherwise.
-+ * @size: Size of @data in bytes, never 0.
-+ * @data: The saved registers.
-+ */
-+struct pci_cap_saved_data_ser {
-+	u16 cap_nr;
-+	u16 extended;
-+	u32 size;
-+	u8 data[];
-+} __packed;
++	if (file->f_op != &vfio_device_fops)
++		return false;
 +
-+/**
-+ * struct pci_saved_state_ser - Serialized struct pci_saved_state
-+ * @size: Size in bytes of this struct, including all entries in @caps.
-+ * @flags: Features a kernel must support to restore the state. None defined.
-+ * @nr_caps: Number of entries in @caps.
-+ * @config_space: The saved standard configuration header.
-+ * @caps: @nr_caps struct pci_cap_saved_data_ser entries.
-+ */
-+struct pci_saved_state_ser {
-+	u32 size;
-+	u32 flags;
-+	u32 nr_caps;
-+	u32 config_space[16];
-+	u8 caps[];
-+} __packed;
++	/* Paired with smp_store_release() in vfio_df_ioctl_bind_iommufd() */
++	return !df->group && smp_load_acquire(&df->access_granted);
++}
++EXPORT_SYMBOL_GPL(vfio_file_is_bound_cdev);
 +
- #endif /* _LINUX_KHO_ABI_PCI_H */
-diff --git a/include/linux/pci_liveupdate.h b/include/linux/pci_liveupdate.h
-index bb79348769b7..cfff200bce36 100644
---- a/include/linux/pci_liveupdate.h
-+++ b/include/linux/pci_liveupdate.h
-@@ -32,6 +32,7 @@ struct pci_liveupdate {
- };
- 
- struct pci_dev;
-+struct pci_saved_state;
- 
- #ifdef CONFIG_PCI_LIVEUPDATE
- int pci_liveupdate_register_flb(struct liveupdate_file_handler *fh);
-@@ -40,6 +41,12 @@ int pci_liveupdate_preserve(struct pci_dev *dev);
- void pci_liveupdate_unpreserve(struct pci_dev *dev);
- void pci_liveupdate_finish(struct pci_dev *dev);
- bool pci_liveupdate_is_incoming(struct pci_dev *dev);
-+size_t pci_liveupdate_saved_state_ser_size(const struct pci_saved_state *state);
-+int pci_liveupdate_serialize_saved_state(const struct pci_saved_state *state,
-+					 void *buf, size_t size);
-+struct pci_saved_state *pci_liveupdate_deserialize_saved_state(struct pci_dev *dev,
-+							       const void *buf,
-+							       size_t size);
- #else
- static inline int pci_liveupdate_register_flb(struct liveupdate_file_handler *fh)
+ int vfio_df_ioctl_attach_pt(struct vfio_device_file *df,
+ 			    struct vfio_device_attach_iommufd_pt __user *arg)
  {
+diff --git a/drivers/vfio/vfio.h b/drivers/vfio/vfio.h
+index 7728bc99b63d..12557d45dfee 100644
+--- a/drivers/vfio/vfio.h
++++ b/drivers/vfio/vfio.h
+@@ -185,16 +185,6 @@ static inline void vfio_group_cleanup(void)
+ 
+ #endif /* CONFIG_VFIO_GROUP */
+ 
+-static inline bool vfio_device_is_noiommu(struct vfio_device *vdev)
+-{
+-#if IS_ENABLED(CONFIG_VFIO_GROUP)
+-	if (vdev->group && vdev->group->type == VFIO_NO_IOMMU)
+-		return true;
+-#endif
+-
+-	return IS_ENABLED(CONFIG_IOMMUFD_NOIOMMU) && vdev->noiommu;
+-}
+-
+ #if IS_ENABLED(CONFIG_VFIO_CONTAINER)
+ /**
+  * struct vfio_iommu_driver_ops - VFIO IOMMU driver callbacks
+diff --git a/drivers/vfio/vfio_main.c b/drivers/vfio/vfio_main.c
+index 73a5c4f3751c..291460102cd1 100644
+--- a/drivers/vfio/vfio_main.c
++++ b/drivers/vfio/vfio_main.c
+@@ -1507,6 +1507,24 @@ struct vfio_device *vfio_device_from_file(struct file *file)
+ }
+ EXPORT_SYMBOL_GPL(vfio_device_from_file);
+ 
++/**
++ * vfio_device_is_noiommu - True if the VFIO device is registered in no-IOMMU
++ *                          mode
++ * @vdev: The VFIO device to check
++ *
++ * Return: True if @vdev is registered in no-IOMMU mode, false otherwise.
++ */
++bool vfio_device_is_noiommu(struct vfio_device *vdev)
++{
++#if IS_ENABLED(CONFIG_VFIO_GROUP)
++	if (vdev->group && vdev->group->type == VFIO_NO_IOMMU)
++		return true;
++#endif
++
++	return IS_ENABLED(CONFIG_IOMMUFD_NOIOMMU) && vdev->noiommu;
++}
++EXPORT_SYMBOL_GPL(vfio_device_is_noiommu);
++
+ /**
+  * vfio_file_is_valid - True if the file is valid vfio file
+  * @file: VFIO group file or VFIO device file
+diff --git a/include/linux/vfio.h b/include/linux/vfio.h
+index de3fa6e6bf2a..3cfbf1d73479 100644
+--- a/include/linux/vfio.h
++++ b/include/linux/vfio.h
+@@ -380,6 +380,7 @@ bool vfio_file_is_valid(struct file *file);
+ bool vfio_file_enforced_coherent(struct file *file);
+ void vfio_file_set_kvm(struct file *file, struct kvm *kvm);
+ struct vfio_device *vfio_device_from_file(struct file *file);
++bool vfio_device_is_noiommu(struct vfio_device *vdev);
+ 
+ #define VFIO_PIN_PAGES_MAX_ENTRIES	(PAGE_SIZE/sizeof(unsigned long))
+ 
+@@ -431,4 +432,13 @@ int vfio_virqfd_enable(void *opaque, int (*handler)(void *, void *),
+ void vfio_virqfd_disable(struct virqfd **pvirqfd);
+ void vfio_virqfd_flush_thread(struct virqfd **pvirqfd);
+ 
++#if IS_ENABLED(CONFIG_VFIO_DEVICE_CDEV)
++bool vfio_file_is_bound_cdev(struct file *file);
++#else
++static inline bool vfio_file_is_bound_cdev(struct file *file)
++{
++	return false;
++}
++#endif /* IS_ENABLED(CONFIG_VFIO_DEVICE_CDEV) */
++
+ #endif /* VFIO_H */
 -- 
 2.56.0.317.g454f8302e1-goog
 
