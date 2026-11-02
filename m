@@ -1,55 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793628673;
-	b=rr+IhrhNJFlmqkS0MXacgxC7v+EUy4e5FpypXbZvSXZstCK5r9t76AJgjIhN/YwoTfUP
-	 JbrqaJI7QFgij9BZIFmTjfXZMYlXO2b55GwP/y3Y5V1q+EYq5EQIscgXSJCSYi0+0vrL0
-	 h9ChrHqghPSIpgM0lAiCiGuuGIzVf+jzLN2qNpta2AAXbSiLY9TbzZOW3UkOLbuWqlc2c
-	 6B/E7g3vl0d2AozzKEfwKEsPEtLyQcs3c8tv9UXQ5IGI+cDsPcvlUQV5cRi5J+xy8I0gL
-	 hEhe54/eJeaaFq4ZvXjssuNx5wX0R+CqqLZwQWFOp648FFFKajydXYkjL459/FXa5aA==
+	t=1793628735;
+	b=VYwuW3OIsuLAnrczyOAJGvljvCk4wIkkf0h20eFisUJvB1pb5vtLmriN2/PcZb9a7Amv
+	 vY2kCm/lWkbDsIGwwxhHVZnWwM7q9n7edPz3f3fOAGYmPxDCWFVlSmhfDuf6neTZjaiLJ
+	 V5zUofaSxjz4WDRM8q+rlmwTsuv8ah4Mi4GQt30wuuZyYisUnpT2mrqgUSB9phonjuleD
+	 cUH+TTHLs2Zt2x0o6ZgfPl5Ffo67WDGS5m6Y8adzOHRAT4gXvkQYFcjL4KO8sIjxcSwp/
+	 4BAdDNyWYxL99v9drT6+L/tsvXClaSxgJPeTDKdGNIbbvudM8ufB4xc1+wt+NAKx6FA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793628673;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793628735;
 	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
 	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
 	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
 	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=vi44JuB66M4crD5hxja6G77GWCvRuh5Zid8iRQ6RjTk=;
-	b=wFNay9rLmkFRqVb6/zW6TrTBpxKN7cUl3QxYUq9OFg38IhPZ7MSagSnGneq43WT7Ra3U
-	 XC3VxJz5ZQVlVo6ii5Xm5XSd9KvaEeLrRU9fC7bLvzWF71MkiXaj7nmuj+HNvKiHKtVqb
-	 2rUjji+QqABSaLgn/77HBAbtiuLNZN0dVn6878ecxtu5jhL6ZaPncpnqDCCeaWiqbNYVk
-	 hwjKbCDfhtrGbVMwj1tDC2u4btMqzsg8QnxxAOuGF6oITxSMEpVnqVXD9ndPD4CbUcXy7
-	 ghPMIfM1t2sI1j+7qn1vNnxkGav1mpL7cwJQX1ErbIcgDhQrH4T8qA1nf+2ln6Ga/dQ==
+	bh=vtS+ahUD6/AMbO8dbmSrvXk0SZVNl3wA2+s8nuaM9cI=;
+	b=duM8AjWOK2lYyK3VRnNFSQuxQ15LPi18tkdjrIta1txlondicvP4ED0JRBJRPisoKdJJ
+	 LkIH4wwkR+7e9NsM4AQhnOhXakrTuaqKdJ9Arh+IR1W1KjOV5G6yMma+cGCL4XrThQaVD
+	 URvsJ/oEvFKmcgEQx1KBGVsp6hAi5Vj1zwsaKASNwkE1cM5PRat3zgH3TrAVQT8iDuVfW
+	 9Tk1yXX11m6IOupc/TecqP62ERVGfGzln6OogrX8bqfGhKt2ML2L/A9szH6DL5c+IOmST
+	 xPdqpq3kOp/G59dhYnlbTUpAuVeu8fatQpirRiiVzvOEmJ7NTein8upX+WWlABa2gVA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DdWjwxuB;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=os0Hj4Ug;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 292A9606A326
-	for <linux-pci@vger.kernel.org>; Mon,  2 Nov 2026 14:11:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81CDB606A332
+	for <linux-pci@vger.kernel.org>; Mon,  2 Nov 2026 14:12:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DdWjwxuB
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0EDA1F00A17
-	for <linux-pci@vger.kernel.org>; Mon,  2 Nov 2026 14:11:11 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=os0Hj4Ug
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B0131F00A1E
+	for <linux-pci@vger.kernel.org>; Mon,  2 Nov 2026 14:12:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793628671;
-	bh=vi44JuB66M4crD5hxja6G77GWCvRuh5Zid8iRQ6RjTk=;
+	s=k20260515; t=1793628735;
+	bh=vtS+ahUD6/AMbO8dbmSrvXk0SZVNl3wA2+s8nuaM9cI=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=DdWjwxuB7982hwQ17yBhal/0wUL2OpQfjLd3zGgXHVCBo1QHo1CplJS2vO+YXDXtp
-	 6T2Id+fIN9AC0SZBB919WwPdIkVh47xMGmTe2MUd/oEADEMnuBdO2justglx5RVzM3
-	 Its3oAFNk4vEsQVyvKUgGdoJNsK8X2XY+m0spyGwxBxokwRu3WDRauwXYtbPLlBANs
-	 j5q1wbpLtTO+pervlu7zlqR36IbBjFhniQeT+iwKRndfpCT+p3OO5ztmHLQc5ZmajT
-	 DvfwTMbkoBmJCYntYRlfXdEa+85pu8AP6InsCbAk+XkZFxT4vpstTpIjbw7wsl435t
-	 2sAObNhrvXTeg==
-Received: by mail-lf1-f43.google.com with SMTP id 2adb3069b0e04-5ba35c0df4fso3285043e87.0
-        for <linux-pci@vger.kernel.org>; Mon, 02 Nov 2026 06:11:11 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AKwUvBwVMxvzgzkhVXYwGlHriHZx8ed/qq9iVlCkICAMKM2mlbKXPYn+YF4SVCW44FqOQMc76AIKg/AT25M=@vger.kernel.org
-X-Gm-Message-State: APuU4Z8b/TmGBcK/BqFjmfSy71lt5y6aFTn8cuEqjhiM4noawPPS1FSH
-	v8EZhBO12EcR4w1DZ/1q0WyRBdSfCXiB3keF9FxYC7jE3pYdeN/TV2Wyj/5ET8E+5l7EfdHGWhO
-	SunN3CmUc3dCHzxg+DcxsZDaGqp2BPts=
-X-Received: by 2002:a05:6512:3b24:b0:5bb:7923:207e with SMTP id
- 2adb3069b0e04-5bfd957b635mr3266873e87.52.1793628670143; Mon, 02 Nov 2026
- 06:11:10 -0800 (PST)
+	b=os0Hj4UgpsiOSs6L4/4zhswoyy8R/fLoo0afC6lvSEJMaZ3Ig0pdSZS19dpynNfyJ
+	 sOFVf9bd5JSaz05iYdEyRngdsK0y+OL3+4HLbAjscI/nKZTdcarHO3ZNzjtv6UaL5b
+	 rJk98wpAC3KiDvxKg1CO6zAP792zAIvOV8ILT8RZUVOQBnrfzqyzpQH4Wbapfcw5Fh
+	 dvvWc6hiUNTwcxp615/MD3tO93O22N1ruDmf2xAPKXyPqli+TmyHKj6WTk9R96w1u3
+	 fCwqArObELc/h2LbrBTxxdu4qGQEUt6tMzANKBW55wK7a1cJEOxkZvvYojoEMUoZIe
+	 m6ul+S/Nas3tw==
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-5bcb0f245e0so2871286e87.3
+        for <linux-pci@vger.kernel.org>; Mon, 02 Nov 2026 06:12:15 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AKwUvBzaCR6xGWMYQ4yr2apNxg5CLlXNvt7xTDg4VoeTSTKoedSGRL2HIGDTFeRU6EFVoKevxaRHppddNFE=@vger.kernel.org
+X-Gm-Message-State: APuU4Z+QsYN9OgEpMSG6liCS3Vfn7mgbFgW+2geXA0aZSVcGmzT0JYbf
+	9LrNlgicdgaL14RE5+54KnYhmascp1FECgto+UhxYIW1/etOGJQ2pg3gLcJUdYBI1Yi+ut8u02k
+	vjh8yVpdTpGYWEiUMKNphmC6gqJbj5SU=
+X-Received: by 2002:a05:6512:a96:b0:5bc:d39d:b451 with SMTP id
+ 2adb3069b0e04-5bfd9520645mr3437142e87.9.1793628733573; Mon, 02 Nov 2026
+ 06:12:13 -0800 (PST)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,105 +59,94 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261102-superm1-kbz-222179-v1-0-c91a664ba251@kernel.org> <20261102-superm1-kbz-222179-v1-1-c91a664ba251@kernel.org>
-In-Reply-To: <20261102-superm1-kbz-222179-v1-1-c91a664ba251@kernel.org>
+References: <20261102-superm1-kbz-222179-v1-0-c91a664ba251@kernel.org> <20261102-superm1-kbz-222179-v1-2-c91a664ba251@kernel.org>
+In-Reply-To: <20261102-superm1-kbz-222179-v1-2-c91a664ba251@kernel.org>
 From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
-Date: Mon, 2 Nov 2026 15:10:58 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0jMA2AwzdcwFH7YW-q9LHopvKf_BfZHEpyGXq+=fMTYEA@mail.gmail.com>
-X-Gm-Features: AclHuK9HJv2fcCVOo5llT60Bp3HAHvTaGFzfiEmFxy8h3095W3Oz8AnHquG8ZGo
-Message-ID: <CAJZ5v0jMA2AwzdcwFH7YW-q9LHopvKf_BfZHEpyGXq+=fMTYEA@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI/PM: Disable bridge D3 on Lenovo ThinkCentre M90n-1
+Date: Mon, 2 Nov 2026 15:12:01 +0100
+X-Gmail-Original-Message-ID: <CAJZ5v0ikk6T2=5ii5EGkaMrNeWsmvw_uUjzLHvF3KCcx5QuWbg@mail.gmail.com>
+X-Gm-Features: AclHuK_y616LHZNNpN9vVI5OLDXWvIO35XjrED62YW0L-9gXoIlJ6613pW3AJ6w
+Message-ID: <CAJZ5v0ikk6T2=5ii5EGkaMrNeWsmvw_uUjzLHvF3KCcx5QuWbg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI/PM: Avoid D3cold for HP Spectre x360 Convertible
+ 15-ch0xx PCIe Ports
 To: Mario Limonciello <superm1@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, Mario Limonciello <mario.limonciello@amd.com>, 
 	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org, linux-pm@vger.kerenl.org, 
-	linux-kernel@vger.kernel.org, Joshua Perry <josh@6bit.com>, stable@vger.kernel.org
+	linux-kernel@vger.kernel.org, Tony Murray <murraytony@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
 On Mon, Nov 2, 2026 at 2:57=E2=80=AFPM Mario Limonciello <superm1@kernel.or=
 g> wrote:
 >
-> On the Lenovo ThinkCentre M90n-1 (board 314D), suspending the empty
-> Root Port 9 turns off a clock needed by the onboard RTL8168 behind
-> Root Port 12.  The NIC becomes inaccessible and r8169 fails to probe
-> with "Unable to change power state from D3cold to D0".
+> HP Spectre x360 Convertible 15-ch0xx is an Intel Kaby Lake-G system that
+> contains an AMD Polaris Radeon dGPU.
+> Attempting to use the dGPU fails with the following sequence:
 >
-> The RP09.PXP_._OFF method gates PCH SRC clock 1, which also supplies
-> the NIC behind Root Port 12.  Keeping Root Port 9 in D0 preserves
-> that clock and allows the NIC to probe.  Commit 4d4c10f763d7 ("PCI:
-> Explicitly put devices into D0 when initializing") exposed the firmware
-> bug on every boot by ensuring that the first runtime suspend executes
-> the power resource's _OFF method.
+> ```
+>   amdgpu 0000:01:00.0: not ready 1023ms after resume; waiting
+>   amdgpu 0000:01:00.0: not ready 2047ms after resume; waiting
+>   amdgpu 0000:01:00.0: not ready 4095ms after resume; waiting
+>   amdgpu 0000:01:00.0: not ready 8191ms after resume; waiting
+>   amdgpu 0000:01:00.0: not ready 16383ms after resume; waiting
+>   amdgpu 0000:01:00.0: not ready 32767ms after resume; waiting
+>   amdgpu 0000:01:00.0: not ready 65535ms after resume; giving up
+>   amdgpu 0000:01:00.0: Unable to change power state from D3cold to D0, de=
+vice inaccessible
+>   [drm:atom_op_jump [amdgpu]] *ERROR* atombios stuck in loop for more tha=
+n 20secs aborting
+> ```
 >
-> Add the board to bridge_d3_blacklist to prevent bridge D3 transitions.
-> Check the blacklist before platform_pci_bridge_d3(), since ACPI allows
-> D3 on the affected hotplug port and would otherwise bypass the quirk.
+> The issue is that the Root Port the dGPU is connected to can't handle the
+> transition from D3cold to D0 so the dGPU can't properly exit runtime PM.
 >
-> Fixes: 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when initializi=
-ng")
-> Reported-by: Joshua Perry <josh@6bit.com>
-> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=3D222179
-> Cc: stable@vger.kernel.org
+> The existing logic in pci_bridge_d3_possible() checks for systems that ar=
+e
+> newer than 2015 to decide that D3 is safe, but this system appears not to
+> work properly.
+>
+> Add the system to bridge_d3_blacklist to prevent D3cold from being used.
+>
+> Reported-and-tested-by: Tony Murray <murraytony@gmail.com>
+> Closes: https://gitlab.freedesktop.org/drm/amd/-/issues/3389
 > Signed-off-by: Mario Limonciello <superm1@kernel.org>
 
-As per the discussion in the bug entry
-
-Reviewed-by: Rafael J. Wysocki (Intel) <rafael@kernel.org>
+Acked-by: Rafael J. Wysocki (Intel) <rafael@kernel.org>
 
 > ---
->  drivers/pci/pci.c | 18 +++++++++++++++---
->  1 file changed, 15 insertions(+), 3 deletions(-)
+>  drivers/pci/pci.c | 18 ++++++++++++++++++
+>  1 file changed, 18 insertions(+)
 >
 > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 7c6f2aba81443..17ec7f065682d 100644
+> index 17ec7f065682d..151b98757ba57 100644
 > --- a/drivers/pci/pci.c
 > +++ b/drivers/pci/pci.c
-> @@ -3028,6 +3028,17 @@ static const struct dmi_system_id bridge_d3_blackl=
+> @@ -3039,6 +3039,24 @@ static const struct dmi_system_id bridge_d3_blackl=
 ist[] =3D {
->                         DMI_MATCH(DMI_BOARD_VERSION, "95.33"),
+>                         DMI_MATCH(DMI_BOARD_NAME, "314D"),
 >                 },
 >         },
 > +       {
 > +               /*
-> +                * Suspending Root Port 9 gates a clock used by the onboa=
-rd
-> +                * RTL8168 behind Root Port 12, making the NIC inaccessib=
-le.
+> +                * Changing power state of root port dGPU is connected fa=
+ils
+> +                * https://gitlab.freedesktop.org/drm/amd/-/issues/3229
 > +                */
-> +               .ident =3D "Lenovo ThinkCentre M90n-1",
+> +               .ident =3D "HP Spectre x360 Convertible 15-ch0xx",
 > +               .matches =3D {
-> +                       DMI_MATCH(DMI_BOARD_VENDOR, "LENOVO"),
-> +                       DMI_MATCH(DMI_BOARD_NAME, "314D"),
+> +                       DMI_MATCH(DMI_BOARD_VENDOR, "HP"),
+> +                       DMI_MATCH(DMI_BOARD_NAME, "83BB"),
+> +               },
+> +       },
+> +       {
+> +               .ident =3D "HP ZBook 15 G4",
+> +               .matches =3D {
+> +                       DMI_MATCH(DMI_BOARD_VENDOR, "HP"),
+> +                       DMI_MATCH(DMI_BOARD_NAME, "HP ZBook 15 G4"),
 > +               },
 > +       },
 >  #endif
 >         { }
 >  };
-> @@ -3073,6 +3084,10 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge=
-)
->                 if (bridge->is_thunderbolt)
->                         return true;
->
-> +               /* Firmware D3 support does not override known platform b=
-ugs. */
-> +               if (dmi_check_system(bridge_d3_blacklist))
-> +                       return false;
-> +
->                 /* Platform might know better if the bridge supports D3 *=
-/
->                 if (platform_pci_bridge_d3(bridge))
->                         return true;
-> @@ -3085,9 +3100,6 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
->                 if (IS_ENABLED(CONFIG_X86) && bridge->is_pciehp)
->                         return false;
->
-> -               if (dmi_check_system(bridge_d3_blacklist))
-> -                       return false;
-> -
->                 /*
->                  * Out of caution, we only allow PCIe ports from 2015 or =
-newer
->                  * into D3 on x86.
 >
 > --
 > 2.53.0
