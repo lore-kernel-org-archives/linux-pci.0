@@ -1,57 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793632333;
-	b=jXEX3QCHUYYiREnJ6lds5yVMsGO3i8gumQvKRSLjVMbs9KtH0fwXRZ3sFkj7dtsFWdks
-	 xYZWy7606999XnbLICBnTWAmKLr1Hh4lFIHlHvXoUDCHJhjjffLIymxq9y3eTuP1GVvgW
-	 IKKzxCHKDzbepZ3LramD+g7kjvg+gkVInvnaGX0c3cnrQglVGNYv6L62BsbX4DonThTyu
-	 ctyqKgvb1niY7+oTUVcaWmiJipM9VBLGRpA48egnZ/pgQ+Lq9NRNFUmuRh7NhDxOERnbh
-	 8k3oqJaIOEiVpKHz6Nr0Da58/M45NLDud80OJ75T8MGiFDTeSz74NJRYYUyRbxwJByg==
+	t=1793632325;
+	b=pZSTAdflWTGYj7432fkgxkR7tGeGhTJFU6gchSNc9IUDGmepNcz5sx3vX4C4oO6pKNek
+	 UvRRWQinPjQquMXaAFxsw5R3tdRIT+DwafnAJjKJnlRxMQILthOZVjZi54Y+HocJoX5nD
+	 0EAQt/ut/8/1n4cgtu62bsXOPZJGrKnEUIDqs+zO3Pb5AKFWBhG+3VfcBiuqMnj2MAcUs
+	 hhur2XdK7+wsoIp4fOm/BdsqOHeojC72Z+8DUn+A/wPgir5UKHDAATVjIIRUEQYob3lda
+	 3qZu1oysMY8S6/yUOl7MXOdanKiJdzlfofznvvLwk9ui3Vc+Mfe0/wqlEB+hCfavKnw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793632333;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=q/wXovheoAK1Ixoe6SDksEMIBdddeLFZIDpPCps09Co=;
-	b=z5QDClOJyHzhB1yGZr/+djxNM+2D6pX+movwXLgN4B3PbzawWHTzgf4bUMIpuKo53xgF
-	 Xt8VrCe+/2OXqne9taHoG2huuMzdPedPanZT86APCtZnbTxtursV/HC7354siv+PRCCfn
-	 BTDM5iiakcAGa3NyjqlNXd8oPj7HfwTTsgrBcllzQ+e9diyxlnPxBVnGmyuOShLnDHAbt
-	 NFoLez4jyq6QL5yrMEGCBlWYA61QXDlj/QekR3jMYpQHYTcX1XotI3QSamIJRHKjUNwRE
-	 K+u4ZuR8EnrkytDQ7QR3aFsMHKwRz9MgeIbzbiaVxPYEaWe8UDIWNssLqlUW2E9DeYg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793632325;
+	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
+	 X-Mailer:X-Developer-Signature:X-Developer-Key;
+	bh=ymYBzOXC+1qnPq3+H1dG+MOV1EJ0vnAFrYigKbllIFM=;
+	b=JlgA6hxLZP70WTCPIKitLa9GVDEtgZE11P0MND+kYuBPwCAjzfnJqJyNallNaY3EFJ29
+	 5lw17aXnQAQ+pQQf1z9e2u/7XVb7OhR3Y+IWksrr4kZ20bFZ209sD1ZJjSHz0hk3gz9z6
+	 IC+jR1jkS3qxPA4rIsuqxEtDhxcHZrX0EyO8uB/01DX22Miwf+0XMvpmiEsQgW5/U0U+w
+	 xNZRMEOJf9I71oyDV6ZOyLBCYiDZxdAFr1Y0LrRAFMcsOwx6SzHSiBejTacCtv2KdJ3Mx
+	 rCblRd+y4CkFl5WmWMqioABrbZIaxIeGEp8tUqFDaC4XDcex5ESK/jWyonX0dZiY8xw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NAafGUrm;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SkwsCH5N;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34DE5608F39C;
-	Mon,  2 Nov 2026 15:12:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D6306093289;
+	Mon,  2 Nov 2026 15:12:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NAafGUrm
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4841F1F00A20;
-	Mon,  2 Nov 2026 15:12:10 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SkwsCH5N
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA7A31F00A1A;
+	Mon,  2 Nov 2026 15:11:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793632332;
-	bh=q/wXovheoAK1Ixoe6SDksEMIBdddeLFZIDpPCps09Co=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=NAafGUrmUB80NI4pfSIO5N7n2LbUJveps/190gox8S2nxyOldzlUULvzP8yhX1UqB
-	 52Y1Si7kb1S5dvrzY5hp+LfaZ3oOmFu6J9iIFyI7nURDdY0O7WknQOyURyUp8d1hya
-	 W4OoH/9sV6HRtDvjMRezx1nlPnPdzzViOe090D1SO4hP4fx6Ygrh8e5AZyv1qf8Wcv
-	 8GNPFSUTNuE6G4UthVXqQGNrHhkM2xgyBKfDzvg6klF5ToVPn0iKFintT38Pyxviqh
-	 B6Q3D639ZQBlTr8jfLCkZA3uU1pbRViWhXTH+LqhpzS77uVY/yZF1bzUuHxBwgeM2G
-	 32cUGuZx8mZbQ==
-Date: Mon, 2 Nov 2026 16:12:07 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: mani@kernel.org, kwilczynski@kernel.org, linux-pci@vger.kernel.org,
-	kishon@kernel.org, Frank.Li@kernel.org, bhelgaas@google.com,
-	den@valinux.co.jp, thierry.reding@kernel.org, jonathanh@nvidia.com,
-	vidyas@nvidia.com, linux-tegra@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] PCI: endpoint: Clarify only_64bit for reserved
- BARs
-Message-ID: <auioRxW-fPSxqECO@ryzen>
-References: <20261102112306.4018464-1-mmaddireddy@nvidia.com>
- <20261102112306.4018464-3-mmaddireddy@nvidia.com>
+	s=k20260515; t=1793632325;
+	bh=ymYBzOXC+1qnPq3+H1dG+MOV1EJ0vnAFrYigKbllIFM=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc;
+	b=SkwsCH5NX6Vwuc8YrkplsbXUYGZlDfQ9CBIwHzcNKyVojyOkIh1miTD756wE+V94K
+	 qbWnPBCFoEsk5Vnl3IISVP4GtRJh7t/+O5UXryDxT4dLTsrhtBDQtWOzMD+XlPQhS1
+	 5THCVq9/EcREtyMc1/N5VSwvG3Q1CrUodeGrQPLGHFNfVpmv58FNgX24+XU26JY7OW
+	 sUsvQbz2VbjL7MwP3kVNJQ4yIC+/SktiBLhGC+6TRx0O6yviVfRR7mxZOD/Hx4nWfU
+	 5GaDkAcE0fW19SSj+Gk/9Y8llQ2bd+zIEgssZ8CrEgkZbej1DhvNKvROVGhxK2nbP0
+	 DIw+cl37jf3tQ==
+From: Christian Brauner <brauner@kernel.org>
+Date: Mon, 02 Nov 2026 16:07:13 +0100
+Subject: [PATCH RFC 06/23] md: let procfs own the seq_file of /proc/mdstat
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,19 +52,100 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261102112306.4018464-3-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261102-work-procfs-drivers-v1-6-a994bd4d3b1a@kernel.org>
+References: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
+In-Reply-To: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, 
+ Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
+ Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
+ NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
+ Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
+ Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
+ Greg Kroah-Hartman <gregkh@suse.de>, 
+ Joel Granados <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, 
+ Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
+ linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
+ linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+ linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, 
+ linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, 
+ ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
+ coreteam@netfilter.org, kexec@lists.infradead.org, 
+ linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
+ netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+ ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
+ linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ linux-cifs@vger.kernel.org, linux-fbdev@vger.kernel.org, 
+ linux-hwmon@vger.kernel.org, linux-mm@kvack.org, linux-sh@vger.kernel.org, 
+ linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
+ sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, 
+ linux-doc@vger.kernel.org, linux-serial@vger.kernel.org, 
+ linux-atm-general@lists.sourceforge.net, Takashi Iwai <tiwai@suse.de>, 
+ linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
+ linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
+ linux-debuggers@vger.kernel.org, 
+ "Christian Brauner (Amutable)" <brauner@kernel.org>, 
+ Chuck Lever <cel@kernel.org>
+X-Mailer: b4 0.17-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1303; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=98AwGD4IED7vI5/KgxxfmkGNQYsM7jyTpJ1BeJQdwqI=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9WG5wa9eb9mvKGcqFdjwLmF1n7FyoUu4/zTbeKoP9V
+ 5jBq1ePOkpZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACbyaQLD//zX1pfyeqN/TEhI
+ Ob3+1Rm/J2p79l/hyunq2m7Kda/Ix4uRoXfzjTPHbDmCeqqTG/in+s5mk9vmK2YguPrLjge1T+z
+ 2swMA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp;
+ fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-On Mon, Nov 02, 2026 at 04:53:06PM +0530, Manikanta Maddireddy wrote:
-> The only_64bit documentation describes how an EPF driver must configure a
-> BAR, but BAR_RESERVED must not be reprogrammed by an EPF driver.
-> 
-> Keep the existing configuration requirement and explain that only_64bit
-> also describes the hardware width of a reserved BAR. State explicitly
-> that its following BAR register holds the upper 32 bits and cannot be
-> used independently.
-> 
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Declare the seq_operations and let procfs open and free the seq_file.
+->proc_open() only records the event count for ->proc_poll() now.
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+---
+ drivers/md/md.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 680b34a63cb3..e642b763ebc2 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9141,18 +9141,13 @@ static const struct seq_operations md_seq_ops = {
+ 	.show   = md_seq_show,
+ };
+ 
++/* procfs opens the seq_file */
+ static int md_seq_open(struct inode *inode, struct file *file)
+ {
+-	struct seq_file *seq;
+-	int error;
+-
+-	error = seq_open(file, &md_seq_ops);
+-	if (error)
+-		return error;
++	struct seq_file *seq = file->private_data;
+ 
+-	seq = file->private_data;
+ 	seq->poll_event = atomic_read(&md_event_count);
+-	return error;
++	return 0;
+ }
+ 
+ static int md_unloading;
+@@ -9174,10 +9169,8 @@ static __poll_t mdstat_poll(struct file *filp, poll_table *wait)
+ }
+ 
+ static const struct proc_ops mdstat_proc_ops = {
++	.proc_seq_ops	= &md_seq_ops,
+ 	.proc_open	= md_seq_open,
+-	.proc_read	= seq_read,
+-	.proc_lseek	= seq_lseek,
+-	.proc_release	= seq_release,
+ 	.proc_poll	= mdstat_poll,
+ };
+ 
+
+-- 
+2.53.0
+
