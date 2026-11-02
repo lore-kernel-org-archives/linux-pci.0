@@ -1,49 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793629489;
-	b=KGYSkkcegaoYgUkblu0yaM2Sqj1eJBbGCAQcO1vYZD7/PUx8zKsBZYlyYJC80pJeFfrb
-	 22aBwqkEguaoPxbuOK7IUDPhaswnVbq1puqdJgxzL9vAP1UXzxfzKy4bpZ+lnNaFq64Gh
-	 qvkIz9OuX96w9cqCpgE7Sa+1mmftJVBIGRWHG/e4HcW1hF/C8sadiAcFv7gtJL6rzeSWF
-	 goYsnr1Zw4n7gwTl0hlTBbFiPaVLp6Ooz+UsnFr74v9AUSA+9O/Qma7N+1mfiTUSsyULB
-	 yws+PNILAPM2E3PbmqBTc+miOPkJVqtEeWAwOvqmDNOnG8WuMJpQwUE4JGNO3obxUrA==
+	t=1793629518;
+	b=QAmVDpBVyJIf+HnPeMGF6YrhiH76veIgnPRwVM3B7Pi/GYzpt5VB8sxowlDeE+te2Kfh
+	 7/tYDbaS5iVKbKz8tC4GiJLfWmDWd09efvCt30RQQlCE4YgCavCEwOQYAKNBuniIUwujG
+	 UWctq0fBYN8Nlxar3jVDcjeQq7zasM8K6G+4pA773nr7fK6E409Yk836tBC9nVtFzqucf
+	 Nq/Uj3R2fGdmxw0wyX3FxBEPer6m3fOZ0H92ou+EVeJ8zUm9XORwlia2wtbymwFX+VtTz
+	 /YjagexCbDkU89wilpWVQp/R/wEAqtmMZ9QIAZt5tJibSpV3ODqzGQVHJs5knsab9ug==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793629489;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793629518;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=S8IXtzTL1USde6aV/lVKsFPWulIUW0ciUvC5Tm4lMm4=;
-	b=YXI3j26QaQtxs0P08ZpzQGa0RtvYBhbxskyuDQ9TaEeo/Fgovnp+/aROSxz8CYog3jM1
-	 Ug7YxW6maW+1TUqE8YlzKWAtHaJn2RBUKFjFV6YIDPqPopreG1D9gpkAPubuD5Lp9+GHr
-	 070d5ZprFc2Z48fzDRjiPQP/mtD+ZIY4/cNWIU940ESBeaLzooFRKhfLPJHUNkAOUt9w2
-	 Samyk33rz8XFFXnlAT46B1ndl0uEX81+nmR/Xp1mMfRuRlNAwUXXPucHtCBJiPJDgfj7R
-	 qp0VX1jMb4gJp2r1fqrQOb2jmsMAwShLEQ7MrqMFiMsml5HkiherCHqd8dbN3a7bitA==
+	bh=JNpsr2x/IJiEDPfvFWvunpncxqTaLkfXU09AZqKel44=;
+	b=e2GiQnSJQsYMczxC8IXyz9HgxLeVc+oHvk4sQFbi2jfmo0tEvDp0wqujKXozM/UcxDc8
+	 OylrzDVNSWE1dVKOuKbKa9qzl47OLqKogTyRsqK0iLvPv0mQpGxwB20F7kDV+vPHECUI0
+	 7B5mM315oxTa79a6gGyqb+lccQI7VTz1cXJCuWjbiRnngs7/7wSfwKGz3rq3toqYz6WO1
+	 UPbxgDh92xtOPNQZc+zjMiWk9Gixcx3Spy1UUY4eXH9L2LjRtlejOvma+OTLCLPak7/By
+	 ROP3tF/Ebu0+oq3cAmE/yDk366sQ/yUxyotEVV+rdtNtFfNq5Ag0q/4xJceQD0VUZfg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eItiv4ZS;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="JDsGn/hF";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A3466070CAF;
-	Mon,  2 Nov 2026 14:24:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 610DA606A91F;
+	Mon,  2 Nov 2026 14:25:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eItiv4ZS
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A91FA1F00A17;
-	Mon,  2 Nov 2026 14:24:35 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JDsGn/hF
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C3D51F00A1B;
+	Mon,  2 Nov 2026 14:25:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793629488;
-	bh=S8IXtzTL1USde6aV/lVKsFPWulIUW0ciUvC5Tm4lMm4=;
+	s=k20260515; t=1793629518;
+	bh=JNpsr2x/IJiEDPfvFWvunpncxqTaLkfXU09AZqKel44=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=eItiv4ZSsA0o29cJddRhknzQ/bhOslnikosU7shAbLsc6vTsBfmDsItQHBMrbvVWd
-	 iPZbUolyR+DqkWlaAa0X2CnLcF2jyDfURGxamilT7KyJvcn1fKmbflZQF9mZNYHiZO
-	 V0ITbrToBCzB7hRC4b/UItl9wr2159FfzOymbnfHnOF2rwSD+IUlNRm9Mg0cMAS2zm
-	 5gwJPTLnvktaVBDt4cpf/GZOkyIf5vc3Gnqu0sv5l4CtGAi/V20ChSZvsil7rMsNnM
-	 0OhXFaQi0hOR9dRoU2RCfw23JXyWpcHF2yT6L1CDbIcvCpMbQZH6dQmQwY5xG0/KbE
-	 t+ML1xiLi3rHQ==
+	b=JDsGn/hFVn3jJgZZN+vxWeK27seUWBPs1wVOE+JNEu0HLhYAOJ2nqrTO6haz/TYj6
+	 YNU6ClCHb69/Mwz3VGSMP1SqtEUNb1kZQxwlphv0C3QTgmSWa3hvL0K6Nkv8/dDbQg
+	 lIAyZ/SG/ZBazLbZqMfdobAk/no6q8xju7R/ZEgKZSmu4XDjIlEdZse+5kbC/M3ZOb
+	 YtyZc+thQ9HPKnmDmp1ArUqwC6t6Rtew7taSAiLHDbNBCUSXLpeUtxzb4vHo6JVhmo
+	 9ttgQP7T/cJcSArxgsr9Ra6D/o7FD6CAOwSHHtHKTQ6QSDDqKkrHmSX0e7L0CksocJ
+	 AnCPlWoxZKPDA==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 15:21:28 +0100
-Subject: [PATCH RFC 13/38] scsi: core: NUL-terminate what is written to the
- host proc files
+Date: Mon, 02 Nov 2026 15:21:30 +0100
+Subject: [PATCH RFC 15/38] ntfs3: don't warn when a huge label is written
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -55,7 +54,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-bugfixes-v1-13-59422ed3e465@kernel.org>
+Message-Id: <20261102-work-procfs-bugfixes-v1-15-59422ed3e465@kernel.org>
 References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
 In-Reply-To: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -91,40 +90,51 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
  Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1011; i=brauner@kernel.org;
- h=from:subject:message-id; bh=jBwXVCCRpDjmnAajxR/zAvEvmAtZKAE0jCj6+Cnx3v0=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9mJOt8KzyxT3HqTxz47pOZlhlreHadWzKU9ECZ1HJM
- /eTjxsd7ShlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZjInBpGhnblJ+n8i6QvucrH
- 3L3hMeP2tqzHWnkyxe8aQsOergg+85jhr/wPVbOd51/rtnu/jeqzYHXMzjH9s/7NWaZa++nPtf+
- 38wEA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1211; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=hEYNyHmJEt75byF8qjmUEc5I4mCCp/IJRi5GCVbZqjw=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9mJO9tzXzBHuGhvXirewzzGdVv+3VvLvcMMAstP/LI
+ s3O1W3PO0pZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACZit4nhv0u6nc6mlExVhhyr
+ oJCt899GB1UJL32g2bLt+sHUcj+ddob/CXvLet7P7ZCO8VCLPuikff9GTLZ8i9e6xds2/Ct79T6
+ KFQA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-proc_scsi_host_write() copies what is written into a page and hands it
-to ->write_info() without terminating it. ppa and imm parse it with
-strncmp() and simple_strtoul(), which read on past what was written into
-whatever the page held before. Terminate the copy. A write is at most
-PROC_BLOCK_SIZE bytes, so the page always has room for that.
+ntfs3_label_write() allocates as many bytes as are written with plain
+kmalloc(). A write that is larger than what kmalloc() can hand out then
+trips the page allocator's warning, which panics a panic_on_warn kernel.
+Use memdup_user(), which fails such an allocation quietly with -ENOMEM
+like before.
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Fixes: 7832e123490a ("fs/ntfs3: Add support /proc/fs/ntfs3/<dev>/volinfo and /proc/fs/ntfs3/<dev>/label")
 Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/scsi/scsi_proc.c | 1 +
- 1 file changed, 1 insertion(+)
+ fs/ntfs3/super.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
-index fdc355d783da..dbd03360b5a4 100644
---- a/drivers/scsi/scsi_proc.c
-+++ b/drivers/scsi/scsi_proc.c
-@@ -80,6 +80,7 @@ static ssize_t proc_scsi_host_write(struct file *file, const char __user *buf,
- 		ret = -EFAULT;
- 		if (copy_from_user(page, buf, count))
- 			goto out;
-+		page[count] = '\0';
- 		ret = shost->hostt->write_info(shost, page, count);
- 	}
- out:
+diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c
+index 58ef6be3286b..b4479cd6bd65 100644
+--- a/fs/ntfs3/super.c
++++ b/fs/ntfs3/super.c
+@@ -552,15 +552,10 @@ static ssize_t ntfs3_label_write(struct file *file, const char __user *buffer,
+ 	if (sb_rdonly(sb))
+ 		return -EROFS;
+ 
+-	label = kmalloc(count, GFP_NOFS);
++	label = memdup_user(buffer, count);
++	if (IS_ERR(label))
++		return PTR_ERR(label);
+ 
+-	if (!label)
+-		return -ENOMEM;
+-
+-	if (copy_from_user(label, buffer, ret)) {
+-		ret = -EFAULT;
+-		goto out;
+-	}
+ 	while (ret > 0 && label[ret - 1] == '\n')
+ 		ret -= 1;
+ 
 
 -- 
 2.53.0
