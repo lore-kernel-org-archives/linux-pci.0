@@ -1,48 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793632325;
-	b=pZSTAdflWTGYj7432fkgxkR7tGeGhTJFU6gchSNc9IUDGmepNcz5sx3vX4C4oO6pKNek
-	 UvRRWQinPjQquMXaAFxsw5R3tdRIT+DwafnAJjKJnlRxMQILthOZVjZi54Y+HocJoX5nD
-	 0EAQt/ut/8/1n4cgtu62bsXOPZJGrKnEUIDqs+zO3Pb5AKFWBhG+3VfcBiuqMnj2MAcUs
-	 hhur2XdK7+wsoIp4fOm/BdsqOHeojC72Z+8DUn+A/wPgir5UKHDAATVjIIRUEQYob3lda
-	 3qZu1oysMY8S6/yUOl7MXOdanKiJdzlfofznvvLwk9ui3Vc+Mfe0/wqlEB+hCfavKnw==
+	t=1793632342;
+	b=yvQIZn0vzxqMKiAFJUsvtS0FkIKpxT5fmtEs+wAlRLinI5VTuA9GAAz6sO9S4HqkpkE9
+	 q91iNGzFtpi7fel64kCdfUfOyNvUv4DYeXonJrUqEtTtANNBOvgYqjbjTsPiXJnUFn08F
+	 IEPt/WaWMzCUlvp1Dm54bq6Wnz3ZdO0ODnXJum7Nc23FDVtw+RiyN+p6s/1Bg4Y0/wgXe
+	 7Z6/n/O297YCM1n2yKsWGAQFDM6IUc991b6jB2p1CAAwmoQJIMTyor0f58BR8YaomOiaB
+	 JNDZLnVeNfEIM3vZmF7KSzMbigHIIw38siFb/i09fsr4MUwXDIAKKueqjvgMM4l3jKw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793632325;
-	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
-	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=ymYBzOXC+1qnPq3+H1dG+MOV1EJ0vnAFrYigKbllIFM=;
-	b=JlgA6hxLZP70WTCPIKitLa9GVDEtgZE11P0MND+kYuBPwCAjzfnJqJyNallNaY3EFJ29
-	 5lw17aXnQAQ+pQQf1z9e2u/7XVb7OhR3Y+IWksrr4kZ20bFZ209sD1ZJjSHz0hk3gz9z6
-	 IC+jR1jkS3qxPA4rIsuqxEtDhxcHZrX0EyO8uB/01DX22Miwf+0XMvpmiEsQgW5/U0U+w
-	 xNZRMEOJf9I71oyDV6ZOyLBCYiDZxdAFr1Y0LrRAFMcsOwx6SzHSiBejTacCtv2KdJ3Mx
-	 rCblRd+y4CkFl5WmWMqioABrbZIaxIeGEp8tUqFDaC4XDcex5ESK/jWyonX0dZiY8xw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793632342;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=nl4XdaZz2uL0DXOtmdE1FRqZ6AJVOjmG7j1+imya4cY=;
+	b=rmBE1Yqj3ZZN/4HBW9+7uPfdRMnL18RwS/JKQK0SBBGmTc4GG54YhNMMa5476yAgJeD2
+	 IRv9jMBRe82FKKj0dI4vojWv6DnBn2KS2OEYNYDRJod/FTb3DIySQ+y9OZUERLy8yY6he
+	 YRlieFjrUjeSl3bgJj4tfpiUQyH6ZvvgFKO6KN5zhlW/6KCCYCygyN6qGLoaxxZwAmD4h
+	 rTXpjIrjrzcNMRYDVCaKx8M54Crqw38dwJMVCwWwmL9adMjAKYFq/v9RT9s870qKFoFjc
+	 TIqdlxbGjlOznPz3HUsWy7zTEnjEL5GvuqnxWrhFMLiR3o/bPIj3g6gidkqHzL2exyg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SkwsCH5N;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Qdv6+IgD;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D6306093289;
-	Mon,  2 Nov 2026 15:12:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 741F5606DEBB;
+	Mon,  2 Nov 2026 15:12:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SkwsCH5N
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA7A31F00A1A;
-	Mon,  2 Nov 2026 15:11:51 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Qdv6+IgD
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0E721F00A17;
+	Mon,  2 Nov 2026 15:12:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793632325;
-	bh=ymYBzOXC+1qnPq3+H1dG+MOV1EJ0vnAFrYigKbllIFM=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=SkwsCH5NX6Vwuc8YrkplsbXUYGZlDfQ9CBIwHzcNKyVojyOkIh1miTD756wE+V94K
-	 qbWnPBCFoEsk5Vnl3IISVP4GtRJh7t/+O5UXryDxT4dLTsrhtBDQtWOzMD+XlPQhS1
-	 5THCVq9/EcREtyMc1/N5VSwvG3Q1CrUodeGrQPLGHFNfVpmv58FNgX24+XU26JY7OW
-	 sUsvQbz2VbjL7MwP3kVNJQ4yIC+/SktiBLhGC+6TRx0O6yviVfRR7mxZOD/Hx4nWfU
-	 5GaDkAcE0fW19SSj+Gk/9Y8llQ2bd+zIEgssZ8CrEgkZbej1DhvNKvROVGhxK2nbP0
-	 DIw+cl37jf3tQ==
-From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 16:07:13 +0100
-Subject: [PATCH RFC 06/23] md: let procfs own the seq_file of /proc/mdstat
+	s=k20260515; t=1793632342;
+	bh=nl4XdaZz2uL0DXOtmdE1FRqZ6AJVOjmG7j1+imya4cY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Qdv6+IgDTuLTKP5nlxYiLM/rxYc6GJivp87oY9791L+gMKqtT35mwm66E6piqq7w6
+	 xe67kAm5esOSKFvQOGRv6oL0roIbYOjbHNYquK2Rw7AMdHom7rhHekuJJLyco9lZxY
+	 Uk7Zj45DIq9BnsoW+5ULnYB81c1wjITcnb4erxgXTn5WuK7A6U36P4DSPi41PG9rUD
+	 sC1l6TbS9cMJVyXmr0Z4CvvlHRs39JjIVUXQrlvV8Gh9Kf04OdgobM0g2Zv8jbeHdr
+	 PiNSSl1/NKel7/2xSyk7Pyc1bk7FtdmqZ2ty3gufwO4Fe5DH3vkg6j5Y+pcos6AQ2z
+	 Q5rZU4oAkCm8A==
+Date: Mon, 2 Nov 2026 16:12:17 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: mani@kernel.org, kwilczynski@kernel.org, linux-pci@vger.kernel.org,
+	kishon@kernel.org, Frank.Li@kernel.org, bhelgaas@google.com,
+	den@valinux.co.jp, thierry.reding@kernel.org, jonathanh@nvidia.com,
+	vidyas@nvidia.com, linux-tegra@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI: endpoint: Skip upper halves of 64-bit BARs
+ during search
+Message-ID: <auioURK_nCpmrgcn@ryzen>
+References: <20261102112306.4018464-1-mmaddireddy@nvidia.com>
+ <20261102112306.4018464-2-mmaddireddy@nvidia.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -52,100 +61,27 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-drivers-v1-6-a994bd4d3b1a@kernel.org>
-References: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
-In-Reply-To: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
-To: linux-fsdevel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, 
- Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
- Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
- NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
- Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
- Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
- Greg Kroah-Hartman <gregkh@suse.de>, 
- Joel Granados <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, 
- Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
- linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
- linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
- linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
- linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, 
- linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, 
- ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
- coreteam@netfilter.org, kexec@lists.infradead.org, 
- linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
- netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
- ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
- linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- linux-cifs@vger.kernel.org, linux-fbdev@vger.kernel.org, 
- linux-hwmon@vger.kernel.org, linux-mm@kvack.org, linux-sh@vger.kernel.org, 
- linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
- sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, 
- linux-doc@vger.kernel.org, linux-serial@vger.kernel.org, 
- linux-atm-general@lists.sourceforge.net, Takashi Iwai <tiwai@suse.de>, 
- linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
- linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
- linux-debuggers@vger.kernel.org, 
- "Christian Brauner (Amutable)" <brauner@kernel.org>, 
- Chuck Lever <cel@kernel.org>
-X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1303; i=brauner@kernel.org;
- h=from:subject:message-id; bh=98AwGD4IED7vI5/KgxxfmkGNQYsM7jyTpJ1BeJQdwqI=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9WG5wa9eb9mvKGcqFdjwLmF1n7FyoUu4/zTbeKoP9V
- 5jBq1ePOkpZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACbyaQLD//zX1pfyeqN/TEhI
- Ob3+1Rm/J2p79l/hyunq2m7Kda/Ix4uRoXfzjTPHbDmCeqqTG/in+s5mk9vmK2YguPrLjge1T+z
- 2swMA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp;
- fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261102112306.4018464-2-mmaddireddy@nvidia.com>
 
-Declare the seq_operations and let procfs open and free the seq_file.
-->proc_open() only records the event count for ->proc_poll() now.
+On Mon, Nov 02, 2026 at 04:53:05PM +0530, Manikanta Maddireddy wrote:
+> pci_epc_get_next_free_bar() skips the upper half of a 64-bit BAR only
+> when it is the starting BAR. If the search subsequently passes a
+> reserved or disabled 64-bit BAR, it can return its upper half as an
+> independent BAR because that slot has a default programmable descriptor.
+> 
+> For example, Tegra exposes a programmable 64-bit BAR0 and reserved
+> 64-bit BAR2 and BAR4. A search starting at BAR1 skips BAR1 and BAR2,
+> then incorrectly returns BAR3. The next search can similarly return
+> BAR5, causing the EPF test driver to allocate and program BARs that
+> belong to the reserved hardware windows.
+> 
+> Check each candidate's preceding descriptor inside the search loop so
+> upper halves are skipped throughout the search. With the Tegra layout,
+> BAR0 is the only available BAR and subsequent searches return NO_BAR.
+> 
+> Fixes: 27ce1d8ecb9b ("PCI: endpoint: Allow only_64bit on BAR_RESERVED")
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 
-Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
----
- drivers/md/md.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 680b34a63cb3..e642b763ebc2 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9141,18 +9141,13 @@ static const struct seq_operations md_seq_ops = {
- 	.show   = md_seq_show,
- };
- 
-+/* procfs opens the seq_file */
- static int md_seq_open(struct inode *inode, struct file *file)
- {
--	struct seq_file *seq;
--	int error;
--
--	error = seq_open(file, &md_seq_ops);
--	if (error)
--		return error;
-+	struct seq_file *seq = file->private_data;
- 
--	seq = file->private_data;
- 	seq->poll_event = atomic_read(&md_event_count);
--	return error;
-+	return 0;
- }
- 
- static int md_unloading;
-@@ -9174,10 +9169,8 @@ static __poll_t mdstat_poll(struct file *filp, poll_table *wait)
- }
- 
- static const struct proc_ops mdstat_proc_ops = {
-+	.proc_seq_ops	= &md_seq_ops,
- 	.proc_open	= md_seq_open,
--	.proc_read	= seq_read,
--	.proc_lseek	= seq_lseek,
--	.proc_release	= seq_release,
- 	.proc_poll	= mdstat_poll,
- };
- 
-
--- 
-2.53.0
-
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
