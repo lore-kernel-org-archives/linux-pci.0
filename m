@@ -1,49 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793632344;
-	b=0NEIMvvIYrpRFJ18AKkvpMH/H3fU5PkEN31lZY9tRtoTMdLfw3Gk51SE5JUnePQ3bABn
-	 j2qfeX1buAtGck6QFLVmOJ3HIj6+64EuH8POBy4uNRqZFT3otSftImUplovsSAElwpFm1
-	 p9Hylei3YnE4PTYwpDQAo3afjw/7DJBBlGUgxAMCba2Qxflvc8pU6GUMbt/bU9AuSOyLG
-	 Zf0KRHTyWQogowJskm7NCLVbpvd3IDppktABA1DuXaqOAvxYT6E6LtpUE0yvJlqcCL4U8
-	 lXUswRuyieel0pnIrLzUr+ZNymI0ry7M7C52RPGN83U8zl9bHYSJsW80x9/H9auiVyw==
+	t=1793632384;
+	b=CRNg9vYXXpRqWXx15E1id0Bn2WHaafX0h41S6e2NAL3rCBut8agvcfqQwR44e4ZA85zu
+	 dtSCypUuFujdLEeKUzAvwp+BaYkx0sE510VnTYid/S5tTBK5pmr0NPrRwSX3eLP05OE2S
+	 ogpdwC/c8WsZHTbDY/+4nSx/rIIKdOIh3CSRWo7sKg0J4nfIsZtl5ZJLiBzUAqNzQ3kI8
+	 PEFE+epLygEVvATaKgJOBgs05PhHq11/UjxhNBxEO5iwILkspMzHWZFsgzJxBkDHYkY+W
+	 2OACOmOBqLitlAt+OxSwzAOhSk7SDUdvgC7hqorUGHfNrb+dfWN1YWoj52jm4miwc6w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793632344;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793632384;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=RGxB3CLuL3hdMOFW6c8rETuQc0/Gu93ks+OA3zHK0Kk=;
-	b=37NohKSHcw+foYbAvmZRwPSBHw1IMzpv09BkgPu+jWlyY/wVcX2hqXggDPY7FSLvixUZ
-	 h5UYw8+oOUksJJ0tS1yn1kkQ6j6nqsdp6L4GzMWZUxl5Hze9KZINjnjPeMfH/Ai4ujSc5
-	 CGrdsM7KoN5z1R6MQUi1lVuOg8Qbl9GH3tcT1FC4QLeTrYuGNiZtR0tXZD8HimNTCNmdB
-	 Ak6kVH1S6ArXfVLRJsaz5Xp0DcJryl8EjIRu6U4OOxc8vyqmb9MJ8Cnh9QrbFNxV7as4J
-	 +KSE1xj8ZrW2sydVhmQ6OI0a+UXU08B5z9SnA0qDXQdi6hMdWS/p1JflAV1isUDAfjw==
+	bh=0F908CJPgWsUmGeEXwOdb+LqVbJ68uHDJ1pDvsTQFww=;
+	b=2vEIapxVmGK33hzibVSvWHp1OnwhYD7u9pR0hW7i7AE0RjVjKFzef+NuvG4aqw9fqZp/
+	 rMus/wCQLQdiAz3GMlJlPqUYTOtuNcbTJeJ6KCOe90hR2VLnq6Qj2BPUrMxhpb31Yb7Hz
+	 QO+HLL9cPgFbHSdFPVxeDlm+HV3sHW2oV3WQCsSbhqEq3PqxT0K1CD+g0OELnZv08Pzif
+	 lTO3icySgr/su+qWph4mqkmEvH0NWtu49/t+ZuG4wytwX97O/9tuN1PqYoL5eVfbGwg1h
+	 iP/HeaL8QyvfwvqsgQfqhazEcnCsbyl0fXFMYSFy4NLPsyHEeQZ1kvByQLE46HMf1kw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=edn0AYPt;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hB1+KIUN;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE858606DEBF;
-	Mon,  2 Nov 2026 15:12:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26826606A336;
+	Mon,  2 Nov 2026 15:13:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=edn0AYPt
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D82CE1F00A16;
-	Mon,  2 Nov 2026 15:12:08 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hB1+KIUN
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72FE71F00A16;
+	Mon,  2 Nov 2026 15:12:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793632343;
-	bh=RGxB3CLuL3hdMOFW6c8rETuQc0/Gu93ks+OA3zHK0Kk=;
+	s=k20260515; t=1793632383;
+	bh=0F908CJPgWsUmGeEXwOdb+LqVbJ68uHDJ1pDvsTQFww=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=edn0AYPt5jRwhzogids3xv0SIWD2ZJhmY0NQPvBljECs8aa0X00ejVbwi8wkj25C/
-	 2U5H4P82mtq9mk7Gq7o6e3/c1q4G3kbagk9jpohANeLaXrMVCD+eHlCpevZFWYYYSS
-	 zfdTR6xsYkavU1Yyn93mOd5uM9GVA/ziiwPly/tLPD8EKmEgx8k3MJ6ijWmLm10fQ5
-	 aAJwWIQlFfdnqETK+vq3WSm6gSr6XKfcJMe7u/+KEhkto92jBEq1FJaT413U5aWoNC
-	 fX2qVLNTgmiFU3l4keyd4RISYlleq5zE0TOEd/g/8NAtAr7PPLpG0OuAXPXHvgwwGx
-	 A5koDE6WAQthg==
+	b=hB1+KIUNyjEbaufWPwsUCeMJp7msq4zuBEN60a9O5elRG1b2/rFlP3YTkDeZbLt5o
+	 7GFV9HdREKNRcfcOalIomjHN+DuGMZHhn6rknHpTa3tT+DZMFRGXMfA02hly03O46p
+	 V2N2Qok2Ifuav4DftJTStutXTufDWTPS8H20slSlH8K8iOxpQ2j6zKHZoQK+Cqa+Mm
+	 WP5DYUA/m24WzubUhU3BE/pJR2GSBRAKw+06ZAK5laj5bIQXPmsUNZTzenFL6fHGwx
+	 eXLRQdsgA8M74MJxLFV6Uxn9eoXqxnqEvPHT85M/ywwVem0ohuPtIdOcZVhMsskDtT
+	 Oiv7mqzjJHJYw==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 16:07:14 +0100
-Subject: [PATCH RFC 07/23] s390/dasd: let procfs copy in writes to
- /proc/dasd/statistics
+Date: Mon, 02 Nov 2026 16:07:15 +0100
+Subject: [PATCH RFC 08/23] s390/cio: let procfs copy in writes
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -55,7 +54,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-drivers-v1-7-a994bd4d3b1a@kernel.org>
+Message-Id: <20261102-work-procfs-drivers-v1-8-a994bd4d3b1a@kernel.org>
 References: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
 In-Reply-To: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -91,82 +90,123 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
  Chuck Lever <cel@kernel.org>
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2121; i=brauner@kernel.org;
- h=from:subject:message-id; bh=tPoM7KW2jugAI3HBgjDAkvMMKrMKVevq5gq8BMZsIqc=;
- b=kA0DAAoWkcYbwGV43KIByyZiAGropzCjfwupU8fn9+VxtZv2ThSIu2nz9SfrAQKMYBoRl89VB
- Ih1BAAWCgAdFiEEQIc0Vx6nDHizMmkokcYbwGV43KIFAmropzAACgkQkcYbwGV43KL3vwEA7DgZ
- qwKtRcRruUUjfm5rBcGQ2NDy+57vyMOGubX9wNEBAPGDTMKrc7NwpMTdmoTSB/UBaD6PA7NAvur
- lg4LjKr4D
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3388; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=lEA79OgzD1RbbuI3leV0mq7RtW4au2plI+2F9ffJvH8=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9WG5gX1lbVGp1+7n6oZV+CxdFfRW5tVltZef/QtlzB
+ Z4NCik/O0pYGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACZy/wcjw1Y5VxW7pb/1p3xs
+ usT8+v+/yZtVHxWIr5ZZcuVE9cbYgpcMP2Z+sgxZnFYro/9KTNL9v9icFmv9Ly+Dt3stcL12+dQ
+ yVgA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Implement ->proc_write_buf() so procfs copies in what is written before
-it pins the entry, and parse the command from that copy. Commands longer
-than PAGE_SIZE - 1 bytes are rejected now instead of cut at 64k.
+Implement ->proc_write_buf() for cio_ignore and cio_settle so procfs
+copies in what is written before it pins the entry. cio_ignore parses
+the list from that copy, up to the first NUL like strncpy_from_user()
+handed it to it before. Writes larger than 64k still come up short, now
+through PROC_ENTRY_SHORT_WRITES. Writes to cio_settle larger than
+PAGE_SIZE - 1 bytes fail with -EINVAL now, it never looked at what was
+written.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/s390/block/dasd_proc.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+ drivers/s390/cio/blacklist.c | 33 ++++++++++-----------------------
+ drivers/s390/cio/css.c       |  4 ++--
+ 2 files changed, 12 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/s390/block/dasd_proc.c b/drivers/s390/block/dasd_proc.c
-index 86399427f01d..6c3bbb7dfe85 100644
---- a/drivers/s390/block/dasd_proc.c
-+++ b/drivers/s390/block/dasd_proc.c
-@@ -15,7 +15,6 @@
- #include <linux/slab.h>
- #include <linux/string.h>
- #include <linux/seq_file.h>
--#include <linux/vmalloc.h>
- #include <linux/proc_fs.h>
+diff --git a/drivers/s390/cio/blacklist.c b/drivers/s390/cio/blacklist.c
+index 4e02f78f6102..1ec7915be6b3 100644
+--- a/drivers/s390/cio/blacklist.c
++++ b/drivers/s390/cio/blacklist.c
+@@ -12,7 +12,7 @@
  
- #include <asm/debug.h>
-@@ -247,17 +246,15 @@ static int dasd_stats_proc_show(struct seq_file *m, void *v)
+ #include <linux/hex.h>
+ #include <linux/init.h>
+-#include <linux/vmalloc.h>
++#include <linux/sizes.h>
+ #include <linux/proc_fs.h>
+ #include <linux/seq_file.h>
+ #include <linux/ctype.h>
+@@ -355,39 +355,24 @@ cio_ignore_proc_seq_show(struct seq_file *s, void *it)
  }
  
- static ssize_t dasd_stats_proc_write(struct file *file,
--		const char __user *user_buf, size_t user_len, loff_t *pos)
-+		char *buffer, size_t user_len, loff_t *pos)
+ static ssize_t
+-cio_ignore_write(struct file *file, const char __user *user_buf,
++cio_ignore_write(struct file *file, char *buf,
+ 		 size_t user_len, loff_t *offset)
  {
- #ifdef CONFIG_DASD_PROFILE
--	char *buffer, *str;
-+	char *str;
- 	int rc;
+-	char *buf;
+-	ssize_t rc, ret, i;
++	ssize_t ret, i;
  
+ 	if (*offset)
+ 		return -EINVAL;
 -	if (user_len > 65536)
 -		user_len = 65536;
--	buffer = dasd_get_user_string(user_buf, user_len);
--	if (IS_ERR(buffer))
--		return PTR_ERR(buffer);
-+	/* strip linefeed */
-+	if (user_len && buffer[user_len - 1] == '\n')
-+		buffer[user_len - 1] = 0;
+-	buf = vzalloc(user_len + 1); /* maybe better use the stack? */
+-	if (buf == NULL)
+-		return -ENOMEM;
  
- 	/* check for valid verbs */
- 	str = skip_spaces(buffer);
-@@ -296,13 +293,11 @@ static ssize_t dasd_stats_proc_write(struct file *file,
- 		pr_info("The statistics have been reset\n");
- 	} else
- 		goto out_parse_error;
--	vfree(buffer);
- 	return user_len;
- out_parse_error:
- 	rc = -EINVAL;
- 	pr_warn("%s is not a supported value for /proc/dasd/statistics\n", str);
- out_error:
--	vfree(buffer);
- 	return rc;
- #else
- 	pr_warn("/proc/dasd/statistics: is not activated in this kernel\n");
-@@ -312,7 +307,7 @@ out_error:
+-	if (strncpy_from_user (buf, user_buf, user_len) < 0) {
+-		rc = -EFAULT;
+-		goto out_free;
+-	}
+-
+-	i = user_len - 1;
++	/* the parser never saw what follows a NUL */
++	i = strnlen(buf, user_len) - 1;
+ 	while ((i >= 0) && (isspace(buf[i]) || (buf[i] == 0))) {
+ 		buf[i] = '\0';
+ 		i--;
+ 	}
+ 	ret = blacklist_parse_proc_parameters(buf);
+ 	if (ret)
+-		rc = ret;
+-	else
+-		rc = user_len;
+-
+-out_free:
+-	vfree (buf);
+-	return rc;
++		return ret;
++	return user_len;
+ }
  
- static const struct proc_ops dasd_stats_proc_ops = {
- 	.proc_show	= dasd_stats_proc_show,
--	.proc_write	= dasd_stats_proc_write,
-+	.proc_write_buf	= dasd_stats_proc_write,
+ static const struct seq_operations cio_ignore_proc_seq_ops = {
+@@ -398,9 +383,11 @@ static const struct seq_operations cio_ignore_proc_seq_ops = {
  };
  
- /*
+ static const struct proc_ops cio_ignore_proc_ops = {
++	.proc_flags	= PROC_ENTRY_SHORT_WRITES,
+ 	.proc_seq_ops	= &cio_ignore_proc_seq_ops,
+ 	.proc_state_size = sizeof(struct ccwdev_iter),
+-	.proc_write	= cio_ignore_write,
++	.proc_write_buf	= cio_ignore_write,
++	.proc_write_size = SZ_64K,
+ };
+ 
+ static int
+diff --git a/drivers/s390/cio/css.c b/drivers/s390/cio/css.c
+index 54b8b8639694..efd3df3e90ba 100644
+--- a/drivers/s390/cio/css.c
++++ b/drivers/s390/cio/css.c
+@@ -1278,7 +1278,7 @@ static int __init channel_subsystem_init_sync(void)
+ subsys_initcall_sync(channel_subsystem_init_sync);
+ 
+ #ifdef CONFIG_PROC_FS
+-static ssize_t cio_settle_write(struct file *file, const char __user *buf,
++static ssize_t cio_settle_write(struct file *file, char *buf,
+ 				size_t count, loff_t *ppos)
+ {
+ 	int ret;
+@@ -1292,7 +1292,7 @@ static ssize_t cio_settle_write(struct file *file, const char __user *buf,
+ 
+ static const struct proc_ops cio_settle_proc_ops = {
+ 	.proc_open	= nonseekable_open,
+-	.proc_write	= cio_settle_write,
++	.proc_write_buf	= cio_settle_write,
+ };
+ 
+ static int __init cio_settle_init(void)
 
 -- 
 2.53.0
