@@ -1,56 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.7
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793601701;
-	b=wvSvNsC9vupUMe3PdTevkihz4KMPV8fEw6PHlAwIAMl064sWAEq10Al3e95jUcOnfs0O
-	 /z4cS+yOCa1/vy9ACsJU0LNsa4NEkgGd7rlPavNmnzBjVqIJJ7DWzdwe6S66nuZmxy27M
-	 naB98pT4oPkXiUrOG+srQrj9mBLj+v8ehukFMDxvMr38htu0mf4Xq1632B+eO53vmTg+k
-	 lsklngP+fDjUvGVqmFDGY0keQaSk+yzXbWlOF6uNEXctsmRXHoYeg0WYemI8xFgnthHsE
-	 YS6PPnG15kJjQ8ui+I+Zw8HIXQcFwZO7aMICbYO8IjFfKcVxUwkpD7sTgAqZP95QKgw==
+	t=1793601780;
+	b=aT4Gm758oaKd4ZyjJzkIyuFWB0H7FnxpFfV05JTr3XFOPcdxKWQWdZgfhZ7/6/avNqzz
+	 fuvX/yJrsWV6uL0ZqveAgjPfLWTc49SG4zYPnGOpvkA3qj8RlvYwWCML2WIHYpQL71EXY
+	 1uwZ7iR4f8E2Y5fqLzr4IDAaddRQKWgpysFqyNILIq/aIXcVYRZ2ZJIrn/DICtjdHHPJl
+	 mA6OYPyHExPQxzZfD4kYXkgJwQiNUPwcxkzTNQZmefbaAqKifLNw8WzjycbauZn4TINAE
+	 g02tUbx5Q2JwLm1s6M728L2zGT08abhnTkGeXrSEw1w29e98DHl4Dgs4W+g8dBjzK5g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793601701;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=WiKceO1dwbfD+8EqgIx6BHQIjk8n9LvnRwi88yPOh0I=;
-	b=2go67uQ1Aau6ngFB1vtwmsSKWQSDcFkvsXTkVAZlk1mlPiawLPSxGYla7qAbdOPwnAjR
-	 9LsQeA/BRsIdMWgubrIbaGvpEZ3za+8TcHif4eH7G1bTls8CO12Yf2dz1T2EKUa5wCKrQ
-	 tZ/XSjpNw20XR7/JIObqx7eXoXG0VMtpEYLib6ezPe8LlOxpxdcIkmEwjKZmBzCr+EH5E
-	 vYHxPAX+NRzGMrVXgn99SIVMuEN/GtjRFJAboFfWxwRlt4Acz7v+N/+YdHiAAjhBZ9m8B
-	 1nxfhdPWeNVf+WqfkvV/pBTDPvOOE4jheqacYfHnJ0ZyQMc2vRlHwmqAlBbo0OZ4uyw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793601780;
+	h=DMARC-Filter:DKIM-Signature:Date:From:To:Cc:Subject:X-Priority:
+	 X-Mailer:X-NTES-SC:Content-Transfer-Encoding:Content-Type:
+	 MIME-Version:Message-ID:X-Coremail-Locale:X-CM-TRANSID:
+	 X-CM-SenderInfo:X-Coremail-Antispam;
+	bh=kWZoFVAL8CDALinsDEDFexHPLbiz0T0JfrbwWbplEnM=;
+	b=SQPVWh5AAKB5pgPxFVSXJo19RuXrR7LE6Sez2qDiYTsaQhfgKBIHYnEfCl8o4Hk8SM56
+	 taeycS6k0YAG0YqZSJCcSKYvr/MpaEnHO5lK9FTp/7XQqMe5XgG3W42FffaNqSkdzVgcj
+	 8vMiC6DlgnqQh5GxhviqnitvUzxvbHLe0cjGtl2jl8wKYXPavenpNrTmh9yibol8zaUOO
+	 VqZcGUir+e8pY//wYGnggy0T7ltP6sdT0bmGccsivpp/g7eHKZkyuxpvl4i6aNEx0JQdi
+	 KkCisHk4YBmTV9p6M02Kj1ii35EEud++zUX/g2+h5XNmh5vBha6+96HspHAnoZmx6tg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=et61vvxM;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=126.com;
+	spf=pass smtp.mailfrom=126.com;
+	dkim=pass header.d=126.com header.i=@126.com header.a=rsa-sha256 header.s=s110527 header.b=Pyu4MBZu;
+	arc=none smtp.remote-ip=117.135.210.7
+Received: from m16.mail.126.com (m16.mail.126.com [117.135.210.7])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57F90606A324
-	for <linux-pci@vger.kernel.org>; Mon,  2 Nov 2026 06:41:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E545B606A324;
+	Mon,  2 Nov 2026 06:42:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E545B606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=126.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=et61vvxM
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B376B1F000C1;
-	Mon,  2 Nov 2026 06:41:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793601700;
-	bh=WiKceO1dwbfD+8EqgIx6BHQIjk8n9LvnRwi88yPOh0I=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=et61vvxM2vOZbGsUiCLYOTrg/Lcze9zaJ4IVivaBuEIJSGGun2h1yn4JQNSYJSYfU
-	 36Mcpt4ngr+kyOdix+jCPlbLgDtExkkGJwZR4IY6yIA2+xPh1OFSU836tv2/sWUQBI
-	 jImPcwSq+R7AofaL4Wu52SPOEQwE8/BhtMvJ3sNmcA+bIrFKDr9IgC0QoliNoiL8pO
-	 RPEqeiHhBam4eEoAul6DuF4+u70Rvfltc5qEtk/jBs30FXnaIXgv3uryVmR2yMru6A
-	 donh4ybuhMbF+Qr1lKWn3v9pbsSe5VHD+6CPKQ8QjyXgA7ujGAD+hKYCDnnuiu0Tf5
-	 Q65K0pe9BRtCw==
-Message-ID: <sashiko-outbox-192963@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: dwc: tegra194: Clear event counter masks before
- programming
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Hans Zhang" <18255117159@163.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261102063835.3831940-1-18255117159@163.com>
-References: <20261102063835.3831940-1-18255117159@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 02 Nov 2026 06:41:40 +0000
+	dkim=pass (1024-bit key, unprotected) header.d=126.com header.i=@126.com header.a=rsa-sha256 header.s=s110527 header.b=Pyu4MBZu
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
+	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
+	Message-ID; bh=kWZoFVAL8CDALinsDEDFexHPLbiz0T0JfrbwWbplEnM=; b=P
+	yu4MBZuZilzTMEmyy9k+wjS5vwUUlyFBHaep/RQdfwZ09ZsEG25LJ66na194GPmg
+	K07VZw1WVOPWXUbY7neiD41EMYC7fTQ6O2IjRnc/Qgu0oWHYN2vPa12GN90WRQNo
+	lgz7CpHvb7j90drTRI8VJxTyVQjh3CV0wHvJCAPg8E=
+Date: Mon, 2 Nov 2026 14:42:31 +0800 (CST)
+From: "Jing Lv" <lvjing_421@126.com>
+To: Helgaas <bhelgaas@google.com>, Gunthorpe <logang@deltatee.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: [PATCH] PCI/P2PDMA: Add HYGON to pci_p2pdma_whitelist
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
+ 20260511(2e539873) Copyright (c) 2002-2026 www.mailtech.cn 126com
+X-NTES-SC: AL_Qu2SAfqbvk8u5yaYbOkfmUwVj+k3XsqxuP8i24VXP5p6jAnj4Dw8b2RTOEXczNyWGy+QnRm5Vxhh19RTdLhgYLkgTk2JhXMcdXJLdD+kWBEA8g==
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,23 +60,31 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Message-ID: <3ead5562.4f02.1a19afeca3e.Coremail.lvjing_421@126.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:cSkvCgDHn8HXMOhq4E9aAA--.13638W
+X-CM-SenderInfo: poymx0tjbujia6rslhhfrp/xtbBqBcWo2roMNdIvAAA3b
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 
-> When programming the RAS-DES event counter control register, the code only
-> cleared the event-selection field before OR-ing in the new group, event,
-> and enable values. This leaves stale bits in the group-select and enable
-> fields from prior writes.
->=20
-> Clear all three field masks before programming the register so that stale
-> bits are not preserved across updates.
->=20
-> No functional change intended beyond ensuring the register is rewritten
-> without carrying over previous field values.
->=20
-> Signed-off-by: Hans Zhang <18255117159@163.com>
-
-Sashiko has reviewed this patch and found no issues.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261102063835.3831=
-940-1-18255117159@163.com?part=3D1
-
+CgpEZWFyIEJqb3JuIGFuZCBMb2dhbiwKCgpJIGFtIHdvcmtpbmcgb24gSHlnb24gQzg2LTRHIChP
+UE46IDc0OTApIHBsYXRmb3JtIHdpdGggVWJ1bnR1IDI0LjA0LjQgTFRTIChHTlUvTGludXggNi44
+LjAtNTMtZ2VuZXJpYykuIEl0IGhhcHBlbnMgY3Jvc3MtYnJpZGdlIHAycGRtYSBiZXR3ZWVuIEdQ
+VSBhbmQgU1NEIGlzIG5vdCBzdXBwb3J0ZWQuIFdpdGgge1BDSV9WRU5ET1JfSURfSFlHT04sIDB4
+MTQ4MCwgMH0gYWRkZWQgaW4gc3RydWN0IHBjaV9wMnBkbWFfd2hpdGVsaXN0LCB0aGVyZSBpcyBu
+byBwcm9ibGVtLiBJIG5vdGljZSB0aGVyZSBhcmUgc2ltaWxhciBjb2RlIGNoYW5nZXMgcmVjZW50
+bHksIGUuZy4sICJbUEFUQ0hdIFBDSS9QMlBETUE6IEFkZCBaaGFveGluIGhvc3QgYnJpZGdlcyB0
+byB3aGl0ZWxpc3QiIGFuZCAiW1BBVENIXSBQQ0kvUDJQRE1BOiBBZGQgQWxpYmFiYSBULUhFQUQg
+WWl0aWFuIDcxMCB0byB3aGl0ZWxpc3QiLiBJdCB3b3VsZCBiZSBhcHByZWNpYXRlZCBpZiB0aGUg
+Zml4IGNvdWxkIGJlIG1lcmdlZCB0byB0aGUgbGludXggcmVwbyAtLSBwbGVhc2UgaW52b2x2ZSBI
+eWdvbiBpbiB0aGUgY29tbXVuaXR5IGlmIGFwcHJvcHJpYXRlLgoKCgpXaXRoIHJlZ2FyZHMsCkpp
+bmcKCgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcDJw
+ZG1hLmMgYi9kcml2ZXJzL3BjaS9wMnBkbWEuYwppbmRleCAwYzM2MTU2MWI4NTUuLmU2NmZiN2U3
+MWJkYiAxMDA2NDQKLS0tIGEvZHJpdmVycy9wY2kvcDJwZG1hLmMKKysrIGIvZHJpdmVycy9wY2kv
+cDJwZG1hLmMKQEAgLTQ0Miw2ICs0NDIsOCBAQCBzdGF0aWMgY29uc3Qgc3RydWN0IHBjaV9wMnBk
+bWFfd2hpdGVsaXN0X2VudHJ5IHsKwqAgwqAgwqAgwqAge1BDSV9WRU5ET1JfSURfSU5URUwsICAg
+MHgyMDMzLCAwfSwKwqAgwqAgwqAgwqAge1BDSV9WRU5ET1JfSURfSU5URUwsICAgMHgyMDIwLCAw
+fSwKwqAgwqAgwqAgwqAge1BDSV9WRU5ET1JfSURfSU5URUwsICAgMHgwOWEyLCAwfSwKKyAgICAg
+ICAvKiBIeWdvbiBDODYtNEcgKE9QTjogNzQ5MCkgKi8KKyAgICAgICB7UENJX1ZFTkRPUl9JRF9I
+WUdPTiwgICAweDE0ODAsIDB9LArCoCDCoCDCoCDCoCB7fQrCoH07Cg==
