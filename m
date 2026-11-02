@@ -1,49 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793632673;
-	b=wPlEDUrdMCRmVa724n5D6Tl/hZ+1KdI7i+GDdKSAkYheMfUdJ+4QKsGP49lhZIn8ubtA
-	 IQk3dLXwICQgLwcl/1MXtTLfr1HCotlxatsE99A1Rd4utSKRtWXh3WWi498oH3MFkNm4H
-	 +Q4d4qY5yGpTt0pX/ZHnxaNEBWVuY33gRSRWIxQ4rXnLYXnuj1i7c0OPqgvL+OCKmKl0s
-	 d9NIJae5hv6wPn4Fy0PDJ7Vv0S/rqv0uo+CFT2lTfiHWtn3hfS4kQhkohzMID/Qidl+Ui
-	 NzFlYfd/JkqJSjseXagFl/ZaWyMJJdoR+htUX4aXEC9n+rK8UaSyOxTQTFLJwO4p1bw==
+	t=1793632767;
+	b=rey7DrqTj72lR0WxgPyc/JmYg+dJ7ygbML+265oq6OGGi2E3PjElPThwOcoY7OhD5jCK
+	 HCm3B5bnJjSgDjsQeqeWlAn1GAzbn1uFRHqflncr7Kbs1TYe1iDST6up+Fm1dYdi+8xgq
+	 JsGbsufD0W5q+uxC9WV1Hc/eFZ9jdE8K+wYZsaEZxvLHutbWlkw+jzge1sScq9nUpGdHU
+	 Wleyf3cGr5+m310tPKUiKyoDdNrTKEDAe6Me5g1iVvykCoiJ5hCbpo84jrJ9YVstO4wJv
+	 2Zh6pH2Q7NCLnoCyNlxQCjkZuyIEBDXFB7dkcJ4+Rvl9endcH+tTnSgsvMT02QX63xw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793632673;
-	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
-	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=qZN/E0hKCQd7OXCbkpVH+SDzGVUVvjPXCiNKFmCsSbY=;
-	b=nCGkYdb6+p0AQSvv4ozJ41/qjB4ykI0Am38uhUIVgawm1G/F00Sdouv6SKab9PYP7kkq
-	 DZHqMI0XGmiQwelGcD3foyTZBvptmCablzSI0dxP8zLPrCkOq+prH3OTAYNbkmO5c7MIo
-	 RemWGBxEk3tnvB5TrQrHrU4xI3R4BLcYlF5levZo6YZM1qpvPgS/suYzbe0bIru22jlqg
-	 kOwuiDjXGkpJX08iY/Yf38F55e86gq2qH2nrvcoZC0oXgImisgo89JeTqnCYG+UhLB/DY
-	 C3ftaVT9s0i4xnozslGQA5bVDJAyyivlUnIWUTTj2ApPh4M/1lHJ4F8qAa+Go5hETYQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793632767;
+	h=Received:DKIM-Signature:From:Subject:Date:Message-Id:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:
+	 In-Reply-To:References:To:Cc:X-Mailer:X-Developer-Signature:
+	 X-Developer-Key;
+	bh=Oc8DmgxGioqkR/9qk3a4pltP7ArAEGeuKF7qww97tvM=;
+	b=z6CxnV6oCHTyab/hP84lJ3/sgDnMlmoYmghKsPb85jao2aheSFPCauijLjMB/hp1955l
+	 4ebohMy5ahEcEgHr/OFCFCjrUXSxVEJ8drSiU9LUp/ApIZq1TDXdmcpfYKknADAOEMDpK
+	 5Kvy4ncH2H6KtFx9n0w6wz+1dUjCqoAPDHfNRhYj6/y0PBgD0XYecxu3hya8yiEe43wvx
+	 jR0VT3x9G2XTDOxyJazV0Hseyqzg8v6DISU86pkMdot/Bh0vLz9mmBtro6kFoakj7NfJi
+	 GJFpZkz0ek8tS8fY5NdY/c45ulGdD/VZR51TbCYuzYX0AtLhbXqQorEaAe+0WnYabqw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="OQ/4og82";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HiivqBNd;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97CDF606A598;
-	Mon,  2 Nov 2026 15:17:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53FF7606C553;
+	Mon,  2 Nov 2026 15:19:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OQ/4og82
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9321F1F00A16;
-	Mon,  2 Nov 2026 15:17:35 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HiivqBNd
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C54621F00A16;
+	Mon,  2 Nov 2026 15:19:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793632672;
-	bh=qZN/E0hKCQd7OXCbkpVH+SDzGVUVvjPXCiNKFmCsSbY=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=OQ/4og82Ht0aNZAQGurqlMIUKahbiaOSO5PTnwZlTZ+/ocmR8RnGh+7BqWAnUwmxI
-	 a4dmFM3OxaWot8+GB3b3K0aXXnMYg0FXhwxmSedCs/lUK1ucuE9GCf57/Pd8Xkf+6J
-	 ElkfN7bSwR+MP1p88q2Pe3ymWklXBBOZVT8Nbt//crP+X++/9/zskErTDjhfe2URMg
-	 EXRG4OhrQzBcqZyIUIoWocgzsoWWtT1MqjtF8N4Boij64fy0LA9RXEtYTDghtiYwDk
-	 8GI+MaMSHQl01ZUfoGNTF/MXZJ0ymMlkEauyjMW0ZXyiugQTjA5EHpamAXZhZjHzzA
-	 jmk4uEa8lPOQw==
+	s=k20260515; t=1793632767;
+	bh=Oc8DmgxGioqkR/9qk3a4pltP7ArAEGeuKF7qww97tvM=;
+	h=From:Subject:Date:In-Reply-To:References:To:Cc;
+	b=HiivqBNdbktMB3jIR2AZpFD8s6Tn7iHfe8kJ0WslNzaoAQW5kc7o0gRDBArnpxDsS
+	 CtfL51KKLRBSwt+j3D7V1//ejI98V61eo5T0NlexRsUi5c8pC1GbUMNrvk4YIwh8E5
+	 2lhDypmE88DBG1tieFL1FjjkiAc9DS68lntunq5HpGVUJiZJWOvuGdSub19BrAbLty
+	 mrA/DenKQtkX+TIPLm37CWzKJ4S67BQQ5VCO1dvBtJzcV1DDF470qP/7oLpQMpdRK1
+	 T/4sZq0Faz7QcfBjhDQAlwLqisGwJC3D3nAo8pdpGdJQsFprczR6CHYKoPi6OQI8eX
+	 km5AalwrjwlXw==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 16:07:29 +0100
-Subject: [PATCH RFC 22/23] ALSA: info: let procfs copy out reads of data
- entries
+Subject: [PATCH RFC 00/27] proc: convert the fs, kernel and mm entries
+Date: Mon, 02 Nov 2026 16:07:10 +0100
+Message-Id: <20261102-work-procfs-fs-v1-0-d09a996317b3@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -55,9 +56,14 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-drivers-v1-22-a994bd4d3b1a@kernel.org>
-References: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
-In-Reply-To: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/22OwU7DMAyGX6XymUxNmnVpr0g8AFe0Q+LYLKA1w
+ +kK0rR3J2XTTki+/L/sz98FCkmiAmNzAaEllZSnGvRTA3jw0zupFGsG05pe61ar7yyf6iQZuag
+ 6VvPAEa0bMEA9Oglx+vkDvsHryzPsb2U5hw/CeUWta8EXUkH8hIe1WqGbG3QTJS0k5Q4T+jpXq
+ flOfDiNzb9GmIWUY2+9ZasN8rjoxz/Mx2Oax6bfBu+4s4TO9YQ7Ewy2uxjRIXfR6S12xvVDhP3
+ 1+gsC/z1/IQEAAA==
+X-Change-ID: 20261101-work-procfs-fs-41f9fdc489cb
+In-Reply-To: <20261102-defizit-jobaussicht-kurios-7016c6e67442@brauner>
+References: <20261102-defizit-jobaussicht-kurios-7016c6e67442@brauner>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>, 
  Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
@@ -91,363 +97,154 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
  Chuck Lever <cel@kernel.org>
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=13379; i=brauner@kernel.org;
- h=from:subject:message-id; bh=W5FVoTEiqLzpH4N1OnkJ9iOTklCDyiLp/vkBPrzU6TM=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9WG74e1cUT59imXn2wS9vLSss/xW7H1bLfLHb2Oq0k
- r3RaptNHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABMxW8/IMNcnSWZVy6L/54Ou
- iPK+3X6QRy3wzTJhi9jMEF47LpGLPgz/U7U/nLie/X+/R7rbpmsrL7lGFa54eTjHTO1EEvP556p
- LuAE=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=8569; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=6lMrJQN91rnuCiXg2l4F0Y5JeubSe/EgzAgxv51kRnM=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9WG7I7/625f3h7Cqd5DNl2xf/OvlHY0/nxX2OC1eoq
+ c38/udvX0cpC4MYF4OsmCKLQ7tJuNxynorNRpkaMHNYmUCGMHBxCsBECo0Z/goyKdd8SMi1Y43f
+ /3aj6Iub5itcN6opMgkcrnwpe3DK1hMM//Q+yfyds/PFlb03GAyP//g85/4Pr0O5e65Xx839JOd
+ xK5QZAA==
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Implement ->proc_read_buf() for data entries so procfs copies what is
-read to userspace after it unpinned the entry. ->read() of struct
-snd_info_entry_ops fills procfs' buffer now. opl4 reads the sample
-memory into it without a vmalloc() buffer of its own, gus, cs46xx,
-emu10k1, scarlett2, cs4281 and mixart copy into it instead of to
-userspace. The driver guide still told raw callbacks to copy to and from
-userspace, so update its example as well. Data entries ask for
-PROC_ENTRY_FULL_READS so that reading all of an entry at once keeps
-working. A read that faults on its buffer in a later piece returns the
-pieces before it now instead of failing with -EFAULT.
+This converts the proc entries of jbd2, jfs, lockd, nfsd, ntfs3 and
+cifs, the irq affinity files, latencytop, lockdep, /proc/profile,
+/proc/pressure, kallsyms, /proc/modules, dynamic_debug, sysvipc,
+allocinfo, /proc/swaps and /proc/config.gz to what "proc: let procfs
+own the data path" set up: procfs owns the seq_file, copies in writes,
+copies out reads and copies ioctl arguments in and out, so the entries'
+code only ever runs with the entry pinned and never touches userspace
+memory.
 
-Unbinding a card then no longer waits for a reader that faults on its
-buffer.
+One patch per subsystem and method, in the order seq_file, write, read,
+ioctl. Where a write that is larger than anything the entry parses now
+fails with -EINVAL from procfs I've called that out in the commit.
+/proc/profile and /proc/pressure/* are never removed and are marked
+permanent, procfs calls into them without pinning. readprofile reads
+all of /proc/profile in one go, so it keeps reading straight into
+userspace. /proc/config.gz asks for PROC_ENTRY_FULL_READS so that
+reading all of it at once keeps working.
+
+The selftest unloads configs.ko while a reader of /proc/config.gz
+faults in procfs' copy to userspace. On a KASAN and lockdep kernel it
+fails without the series and passes with it. Build tested per commit on
+x86_64 and with W=1 on the touched objects. The proc and allocinfo
+selftests behave the same with and without the series and so do the
+entries I could get at in a VM.
+
+This is on top of "proc: let procfs own the data path". The other three
+conversion series don't depend on it and it doesn't depend on them.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- Documentation/sound/kernel-api/writing-an-alsa-driver.rst | 10 +++++-----
- include/sound/gus.h                                       |  2 +-
- include/sound/info.h                                      |  2 +-
- sound/core/info.c                                         |  6 +++---
- sound/drivers/opl4/opl4_proc.c                            | 12 +-----------
- sound/isa/gus/gus_dram.c                                  |  7 +++----
- sound/isa/gus/gus_mem_proc.c                              |  2 +-
- sound/pci/cs4281.c                                        | 10 ++++------
- sound/pci/cs46xx/cs46xx_lib.c                             |  5 ++---
- sound/pci/emu10k1/emuproc.c                               |  8 +++-----
- sound/pci/mixart/mixart.c                                 | 10 ++++------
- sound/usb/mixer_scarlett2.c                               |  9 ++++-----
- 12 files changed, 32 insertions(+), 51 deletions(-)
+Christian Brauner (27):
+      jbd2: let procfs own the seq_file of the info file
+      jfs: let procfs copy in writes to the loglevel file
+      lockd: let procfs copy in writes to nlm_end_grace
+      lockd: let procfs copy out reads of nlm_end_grace
+      nfsd: factor out setting up the exports seq_file
+      nfsd: let procfs own the seq_file of /proc/fs/nfs/exports
+      ntfs3: let procfs copy in writes to the label file
+      smb: client: let procfs own the seq_file of the smbdirect files
+      smb: client: let procfs copy in writes
+      genirq/proc: let procfs copy in the affinity masks
+      latencytop: let procfs copy in writes to /proc/latency_stats
+      locking/lockdep: let procfs own the seq_file of /proc/lock_stat
+      locking/lockdep: let procfs copy in writes to /proc/lock_stat
+      profiling: let procfs copy in writes to /proc/profile
+      profiling: mark /proc/profile permanent
+      sched/psi: let procfs own the seq_file of the pressure files
+      sched/psi: let procfs copy in trigger writes
+      sched/psi: mark the pressure files permanent
+      kallsyms: let procfs own the seq_file of /proc/kallsyms
+      module: procfs: let procfs own the seq_file of /proc/modules
+      dyndbg: let procfs copy in writes to /proc/dynamic_debug/control
+      ipc: let procfs own the seq_file of the sysvipc files
+      alloc_tag: let procfs own the seq_file of /proc/allocinfo
+      alloc_tag: let procfs copy the ioctl arguments of /proc/allocinfo
+      mm/swapfile: let procfs own the seq_file of /proc/swaps
+      kernel/configs: let procfs copy out reads of /proc/config.gz
+      selftests/proc: check that unloading configs doesn't wait for a reader
 
-diff --git a/Documentation/sound/kernel-api/writing-an-alsa-driver.rst b/Documentation/sound/kernel-api/writing-an-alsa-driver.rst
-index 86b64de03140..d4b4753879b6 100644
---- a/Documentation/sound/kernel-api/writing-an-alsa-driver.rst
-+++ b/Documentation/sound/kernel-api/writing-an-alsa-driver.rst
-@@ -3679,9 +3679,10 @@ For raw data, ``size`` field must be set properly. This specifies
- the maximum size of the proc file access.
- 
- The read/write callbacks of raw mode are more direct than the text mode.
--You need to use a low-level I/O functions such as
--:c:func:`copy_from_user()` and :c:func:`copy_to_user()` to transfer the
--data::
-+They get a kernel buffer that procfs copies to or from userspace, so they
-+just copy the data. The buffer holds at most a page and isn't zeroed, so
-+a read callback must return exactly what it copied into it; a larger
-+read comes back for the rest::
- 
-   static ssize_t my_file_io_read(struct snd_info_entry *entry,
-                               void *file_private_data,
-@@ -3690,8 +3691,7 @@ data::
-                               size_t count,
-                               loff_t pos)
-   {
--          if (copy_to_user(buf, local_data + pos, count))
--                  return -EFAULT;
-+          memcpy(buf, local_data + pos, count);
-           return count;
-   }
- 
-diff --git a/include/sound/gus.h b/include/sound/gus.h
-index 3feb42627de1..1b504f516ebf 100644
---- a/include/sound/gus.h
-+++ b/include/sound/gus.h
-@@ -594,7 +594,7 @@ void snd_gf1_uart_resume(struct snd_gus_card *gus);
- /* gus_dram.c */
- int snd_gus_dram_write(struct snd_gus_card *gus, char __user *ptr,
- 		       unsigned int addr, unsigned int size);
--int snd_gus_dram_read(struct snd_gus_card *gus, char __user *ptr,
-+int snd_gus_dram_read(struct snd_gus_card *gus, char *ptr,
- 		      unsigned int addr, unsigned int size, int rom);
- 
- /* gus_timer.c */
-diff --git a/include/sound/info.h b/include/sound/info.h
-index 32fc608d056c..b4b5bdd6898d 100644
---- a/include/sound/info.h
-+++ b/include/sound/info.h
-@@ -39,7 +39,7 @@ struct snd_info_entry_ops {
- 	int (*release)(struct snd_info_entry *entry,
- 		       unsigned short mode, void *file_private_data);
- 	ssize_t (*read)(struct snd_info_entry *entry, void *file_private_data,
--			struct file *file, char __user *buf,
-+			struct file *file, char *buf,
- 			size_t count, loff_t pos);
- 	ssize_t (*write)(struct snd_info_entry *entry, void *file_private_data,
- 			 struct file *file, const char *buf,
-diff --git a/sound/core/info.c b/sound/core/info.c
-index 09d4420202e5..9665600ca5ac 100644
---- a/sound/core/info.c
-+++ b/sound/core/info.c
-@@ -138,7 +138,7 @@ static loff_t snd_info_entry_llseek(struct file *file, loff_t offset, int orig)
- 	return offset;
- }
- 
--static ssize_t snd_info_entry_read(struct file *file, char __user *buffer,
-+static ssize_t snd_info_entry_read(struct file *file, char *buffer,
- 				   size_t count, loff_t * offset)
- {
- 	struct snd_info_private_data *data = file->private_data;
-@@ -277,9 +277,9 @@ static int snd_info_entry_release(struct inode *inode, struct file *file)
- 
- static const struct proc_ops snd_info_entry_operations =
- {
--	.proc_flags	= PROC_ENTRY_SHORT_WRITES,
-+	.proc_flags	= PROC_ENTRY_SHORT_WRITES | PROC_ENTRY_FULL_READS,
- 	.proc_lseek	= snd_info_entry_llseek,
--	.proc_read	= snd_info_entry_read,
-+	.proc_read_buf	= snd_info_entry_read,
- 	.proc_write_buf	= snd_info_entry_write,
- 	.proc_write_size = PAGE_SIZE,
- 	.proc_poll	= snd_info_entry_poll,
-diff --git a/sound/drivers/opl4/opl4_proc.c b/sound/drivers/opl4/opl4_proc.c
-index bdcae02a4dc2..b8b282cb0a02 100644
---- a/sound/drivers/opl4/opl4_proc.c
-+++ b/sound/drivers/opl4/opl4_proc.c
-@@ -5,7 +5,6 @@
-  */
- 
- #include "opl4_local.h"
--#include <linux/vmalloc.h>
- #include <linux/export.h>
- #include <sound/info.h>
- 
-@@ -33,21 +32,12 @@ static int snd_opl4_mem_proc_release(struct snd_info_entry *entry,
- 
- static ssize_t snd_opl4_mem_proc_read(struct snd_info_entry *entry,
- 				      void *file_private_data,
--				      struct file *file, char __user *_buf,
-+				      struct file *file, char *buf,
- 				      size_t count, loff_t pos)
- {
- 	struct snd_opl4 *opl4 = entry->private_data;
--	char* buf;
- 
--	buf = vmalloc(count);
--	if (!buf)
--		return -ENOMEM;
- 	snd_opl4_read_memory(opl4, buf, pos, count);
--	if (copy_to_user(_buf, buf, count)) {
--		vfree(buf);
--		return -EFAULT;
--	}
--	vfree(buf);
- 	return count;
- }
- 
-diff --git a/sound/isa/gus/gus_dram.c b/sound/isa/gus/gus_dram.c
-index 50fe738ee3ea..98b94db8e819 100644
---- a/sound/isa/gus/gus_dram.c
-+++ b/sound/isa/gus/gus_dram.c
-@@ -45,7 +45,7 @@ int snd_gus_dram_write(struct snd_gus_card *gus, char __user *buffer,
- 	return snd_gus_dram_poke(gus, buffer, address, size);
- }
- 
--static int snd_gus_dram_peek(struct snd_gus_card *gus, char __user *_buffer,
-+static int snd_gus_dram_peek(struct snd_gus_card *gus, char *_buffer,
- 			     unsigned int address, unsigned int size,
- 			     int rom)
- {
-@@ -67,15 +67,14 @@ static int snd_gus_dram_peek(struct snd_gus_card *gus, char __user *_buffer,
- 			while (size2--)
- 				*pbuffer++ = snd_gf1_peek(gus, address++);
- 		}
--		if (copy_to_user(_buffer, buffer, size1))
--			return -EFAULT;
-+		memcpy(_buffer, buffer, size1);
- 		size -= size1;
- 		_buffer += size1;
- 	}
- 	return 0;
- }
- 
--int snd_gus_dram_read(struct snd_gus_card *gus, char __user *buffer,
-+int snd_gus_dram_read(struct snd_gus_card *gus, char *buffer,
- 		      unsigned int address, unsigned int size,
- 		      int rom)
- {
-diff --git a/sound/isa/gus/gus_mem_proc.c b/sound/isa/gus/gus_mem_proc.c
-index 04c212882718..c939bfd5a966 100644
---- a/sound/isa/gus/gus_mem_proc.c
-+++ b/sound/isa/gus/gus_mem_proc.c
-@@ -18,7 +18,7 @@ struct gus_proc_private {
- 
- static ssize_t snd_gf1_mem_proc_dump(struct snd_info_entry *entry,
- 				     void *file_private_data,
--				     struct file *file, char __user *buf,
-+				     struct file *file, char *buf,
- 				     size_t count, loff_t pos)
- {
- 	struct gus_proc_private *priv = entry->private_data;
-diff --git a/sound/pci/cs4281.c b/sound/pci/cs4281.c
-index b831f1d50750..1444e39fdbc1 100644
---- a/sound/pci/cs4281.c
-+++ b/sound/pci/cs4281.c
-@@ -1104,25 +1104,23 @@ static void snd_cs4281_proc_read(struct snd_info_entry *entry,
- 
- static ssize_t snd_cs4281_BA0_read(struct snd_info_entry *entry,
- 				   void *file_private_data,
--				   struct file *file, char __user *buf,
-+				   struct file *file, char *buf,
- 				   size_t count, loff_t pos)
- {
- 	struct cs4281 *chip = entry->private_data;
- 	
--	if (copy_to_user_fromio(buf, chip->ba0 + pos, count))
--		return -EFAULT;
-+	memcpy_fromio(buf, chip->ba0 + pos, count);
- 	return count;
- }
- 
- static ssize_t snd_cs4281_BA1_read(struct snd_info_entry *entry,
- 				   void *file_private_data,
--				   struct file *file, char __user *buf,
-+				   struct file *file, char *buf,
- 				   size_t count, loff_t pos)
- {
- 	struct cs4281 *chip = entry->private_data;
- 	
--	if (copy_to_user_fromio(buf, chip->ba1 + pos, count))
--		return -EFAULT;
-+	memcpy_fromio(buf, chip->ba1 + pos, count);
- 	return count;
- }
- 
-diff --git a/sound/pci/cs46xx/cs46xx_lib.c b/sound/pci/cs46xx/cs46xx_lib.c
-index 797a5f09cade..2a4910e5b497 100644
---- a/sound/pci/cs46xx/cs46xx_lib.c
-+++ b/sound/pci/cs46xx/cs46xx_lib.c
-@@ -2741,13 +2741,12 @@ static inline void snd_cs46xx_remove_gameport(struct snd_cs46xx *chip) { }
- 
- static ssize_t snd_cs46xx_io_read(struct snd_info_entry *entry,
- 				  void *file_private_data,
--				  struct file *file, char __user *buf,
-+				  struct file *file, char *buf,
- 				  size_t count, loff_t pos)
- {
- 	struct snd_cs46xx_region *region = entry->private_data;
- 	
--	if (copy_to_user_fromio(buf, region->remap_addr + pos, count))
--		return -EFAULT;
-+	memcpy_fromio(buf, region->remap_addr + pos, count);
- 	return count;
- }
- 
-diff --git a/sound/pci/emu10k1/emuproc.c b/sound/pci/emu10k1/emuproc.c
-index f6186b5be049..acacce976415 100644
---- a/sound/pci/emu10k1/emuproc.c
-+++ b/sound/pci/emu10k1/emuproc.c
-@@ -382,7 +382,7 @@ static void snd_emu10k1_proc_acode_read(struct snd_info_entry *entry,
- 
- static ssize_t snd_emu10k1_fx8010_read(struct snd_info_entry *entry,
- 				       void *file_private_data,
--				       struct file *file, char __user *buf,
-+				       struct file *file, char *buf,
- 				       size_t count, loff_t pos)
- {
- 	struct snd_emu10k1 *emu = entry->private_data;
-@@ -415,10 +415,8 @@ static ssize_t snd_emu10k1_fx8010_read(struct snd_info_entry *entry,
- 		}
- 		tmp[idx] = val;
- 	}
--	if (copy_to_user(buf, ((char *)tmp) + (pos & 3), count))
--		res = -EFAULT;
--	else
--		res = count;
-+	memcpy(buf, ((char *)tmp) + (pos & 3), count);
-+	res = count;
- 	kfree(tmp);
- 	return res;
- }
-diff --git a/sound/pci/mixart/mixart.c b/sound/pci/mixart/mixart.c
-index f451554cff5f..c44001f0d320 100644
---- a/sound/pci/mixart/mixart.c
-+++ b/sound/pci/mixart/mixart.c
-@@ -1110,14 +1110,13 @@ static int snd_mixart_free(struct mixart_mgr *mgr)
-  */
- static ssize_t snd_mixart_BA0_read(struct snd_info_entry *entry,
- 				   void *file_private_data,
--				   struct file *file, char __user *buf,
-+				   struct file *file, char *buf,
- 				   size_t count, loff_t pos)
- {
- 	struct mixart_mgr *mgr = entry->private_data;
- 
- 	count = count & ~3; /* make sure the read size is a multiple of 4 bytes */
--	if (copy_to_user_fromio(buf, MIXART_MEM(mgr, pos), count))
--		return -EFAULT;
-+	memcpy_fromio(buf, MIXART_MEM(mgr, pos), count);
- 	return count;
- }
- 
-@@ -1126,14 +1125,13 @@ static ssize_t snd_mixart_BA0_read(struct snd_info_entry *entry,
-  */
- static ssize_t snd_mixart_BA1_read(struct snd_info_entry *entry,
- 				   void *file_private_data,
--				   struct file *file, char __user *buf,
-+				   struct file *file, char *buf,
- 				   size_t count, loff_t pos)
- {
- 	struct mixart_mgr *mgr = entry->private_data;
- 
- 	count = count & ~3; /* make sure the read size is a multiple of 4 bytes */
--	if (copy_to_user_fromio(buf, MIXART_REG(mgr, pos), count))
--		return -EFAULT;
-+	memcpy_fromio(buf, MIXART_REG(mgr, pos), count);
- 	return count;
- }
- 
-diff --git a/sound/usb/mixer_scarlett2.c b/sound/usb/mixer_scarlett2.c
-index ed5fe746d438..48557235c389 100644
---- a/sound/usb/mixer_scarlett2.c
-+++ b/sound/usb/mixer_scarlett2.c
-@@ -9763,7 +9763,7 @@ static ssize_t scarlett2_devmap_read(
- 	struct snd_info_entry *entry,
- 	void                  *file_private_data,
- 	struct file           *file,
--	char __user           *buf,
-+	char                  *buf,
- 	size_t                 count,
- 	loff_t                 pos)
- {
-@@ -9785,7 +9785,7 @@ static ssize_t scarlett2_devmap_read(
- 	while (count > 0) {
- 		/* SCARLETT2_USB_GET_DEVMAP reads only on block boundaries,
- 		 * so we need to read a whole block and copy the requested
--		 * chunk to userspace.
-+		 * chunk out of it.
- 		 */
- 
- 		__le32 req;
-@@ -9800,7 +9800,7 @@ static ssize_t scarlett2_devmap_read(
- 					 block_size,
- 					 entry->size - block_start);
- 
--		/* size of the chunk to copy to userspace */
-+		/* size of the chunk to copy out of the block */
- 		size_t copy_size = min_t(size_t, count, read_size - offset);
- 
- 		/* request the block */
-@@ -9810,8 +9810,7 @@ static ssize_t scarlett2_devmap_read(
- 		if (err < 0)
- 			return copied ? copied : err;
- 
--		if (copy_to_user(buf, resp_buf + offset, copy_size))
--			return -EFAULT;
-+		memcpy(buf, resp_buf + offset, copy_size);
- 
- 		buf += copy_size;
- 		pos += copy_size;
-
--- 
-2.53.0
+ fs/jbd2/journal.c                                  |  33 ++---
+ fs/jfs/jfs_debug.c                                 |  11 +-
+ fs/lockd/procfs.c                                  |  19 +--
+ fs/nfsd/nfsctl.c                                   |  41 ++++--
+ fs/ntfs3/super.c                                   |  27 ++--
+ fs/smb/client/cifs_debug.c                         |  71 ++++------
+ fs/smb/client/dfs_cache.c                          |  13 +-
+ ipc/util.c                                         |  14 +-
+ kernel/configs.c                                   |   7 +-
+ kernel/irq/proc.c                                  |  27 ++--
+ kernel/kallsyms.c                                  |  12 +-
+ kernel/latencytop.c                                |   5 +-
+ kernel/locking/lockdep_proc.c                      |  60 ++++----
+ kernel/module/procfs.c                             |  19 +--
+ kernel/profile.c                                   |  11 +-
+ kernel/sched/psi.c                                 |  82 ++++-------
+ lib/dynamic_debug.c                                |  34 +++--
+ mm/alloc_tag.c                                     |  75 ++++------
+ mm/swapfile.c                                      |  13 +-
+ tools/testing/selftests/proc/.gitignore            |   1 +
+ tools/testing/selftests/proc/Makefile              |   1 +
+ tools/testing/selftests/proc/config                |   4 +
+ .../proc/proc-remove-slow-config-reader.c          | 157 +++++++++++++++++++++
+ 23 files changed, 400 insertions(+), 337 deletions(-)
+---
+base-commit: 65ba8f34ec886ec72b2c07ddc8cf3d815c32869d
+change-id: 20261101-work-procfs-fs-41f9fdc489cb
+prerequisite-change-id: 20261101-work-procfs-core-8fa4a4f412cf:v1
+prerequisite-patch-id: 0474af12959624910718795bf86684383664c685
+prerequisite-patch-id: 540aa9ea28adcbc54d8264f66314e29e3b8c9d49
+prerequisite-patch-id: 2f7139d1c972c4439dccca610caa5f1288987a3d
+prerequisite-patch-id: b0031a7c4855b7ec38259c59f30f65101a8fc4b5
+prerequisite-patch-id: 0b7f226abf2b9ff41873a1aa55cf97747647d56b
+prerequisite-patch-id: f63e345f897619af54813958046617c655fb7daf
+prerequisite-patch-id: c0e21e762a2960e3324c5ab04634a7035e515fa6
+prerequisite-patch-id: fd59c71eadd8f39c58b3baea93567bc093bc9b0e
+prerequisite-patch-id: 5d52cc8a5c73e4c5ba16b8e24f51408c17583bf9
+prerequisite-patch-id: 1f9179284e2f3314d4b46ac5e989089a21c7576c
+prerequisite-patch-id: 10397bbf696bee16dc71eb79fff6c5e73842bcbc
+prerequisite-patch-id: 9b44279dcf08912238d2f6438a3328a778a79a0c
+prerequisite-patch-id: 16854b621a3a71dfc365aaf7abaa7f65adfe9f7e
+prerequisite-patch-id: ca42eea21fae1fd1cd3518ab057c74b61ffd68fe
+prerequisite-patch-id: 23255dc2be76b0479c083dbd4c897bfbb533aed5
+prerequisite-patch-id: 82129c687ebf0a41b369893b92f2c038420ab801
+prerequisite-patch-id: 56ad57a99a5bda075a9f4e844368974296744934
+prerequisite-patch-id: 288b3cbaa11e01a778cc3d7beb6c0549aacf59f2
+prerequisite-patch-id: a163b1549608652bfa5bd9ff93efa55b541010c4
+prerequisite-patch-id: 78f067c343177e52d49ddfe9ee2992e602549869
+prerequisite-patch-id: 19c12bc6e3fbed35acc1f657196b1a997f48cdfe
+prerequisite-patch-id: 5800c3076694bad719954b2ad4d7448c6e013bfd
+prerequisite-patch-id: 2a2f63d8843b159594b9eee6ddea028ce76a6270
+prerequisite-patch-id: 40a1951d57906c4a1b98a4bd96a814b80339b9c5
+prerequisite-patch-id: e2141077e69f20a2b27fab69c8d61d0686682f53
+prerequisite-patch-id: c4d6018c26c40dc549d88330d23ce48f872c2b7f
+prerequisite-patch-id: 6de8ec17746031bc6d1d9ac262c5be0f905fcd79
+prerequisite-patch-id: b87bcb167884605bff1fd0f2ed8a88942d07efd5
+prerequisite-patch-id: cfa9a8b4c67e20cfd22d77035bfd21ee96ab3298
+prerequisite-patch-id: abf3482ed2399b7b2e1ee72e937af05bb9200667
+prerequisite-patch-id: 02c175b2dee565a85b3308ecf2ec8e3c9a029e0f
+prerequisite-patch-id: 4ed6b3d3d45de49d4967e88ba4e7f03372775f55
+prerequisite-patch-id: dbe02fe3f784776fda5e7ae99f077bef0cd4b48d
+prerequisite-patch-id: 53edc9a95afff57c4acba40095a8054924261ea2
+prerequisite-patch-id: cf9ce0099005fd3bc31a1e15131d48e315ac3bee
+prerequisite-patch-id: 16a657a5d0046068dbace29e7ea046ac1441f46f
+prerequisite-patch-id: efeb2d6f7df71d5dede2c1d12fe999a28e38aab9
+prerequisite-patch-id: e6ffe2a5c3ee5645f56c8366b568fbc9f140848c
+prerequisite-patch-id: 117db27dcdef433de7c6be5e95973cac1e373927
+prerequisite-patch-id: a0844aa26ffb65ccb362b88ef6c2f4758e15edbf
+prerequisite-patch-id: 143fb91bddf33068b6ee11e205818c4c2815e23d
+prerequisite-patch-id: 6490e4da1cb2f543683bd164bc9a5a1c943057e7
+prerequisite-patch-id: cdefca57d3c552fb6f6b928699edd85f33be25fd
+prerequisite-patch-id: 2f0fdb970ddd760d85ff5d2caad0b96348270182
+prerequisite-patch-id: f2aa468ff5cbb1cabab3f70e1b8eeee0286cfb4a
+prerequisite-patch-id: 037030d95eeb7c49b1e43f638ec954f2cebbcfb1
+prerequisite-patch-id: 487141c49e2548310bfb6c2a0964a78f08b285a9
+prerequisite-patch-id: c3d3008819fa5629a18142ec9ba6d7024ade7fdb
+prerequisite-patch-id: ba15e7c86b60ccc2f0f7ee4c9bc99073068757bc
+prerequisite-patch-id: 9423f410b99853693db06c29f12f1c08278b050d
+prerequisite-patch-id: 4e7966978e4b11c4d843831f312cdcd5b848f00c
+prerequisite-patch-id: 3d24be1897a624d519ef144801f76d152c7528a9
+prerequisite-patch-id: 3b4d9fe7b26f6b7b9b3f7725ea333df357107c44
+prerequisite-patch-id: 7d9dd345428baeb88c862ef902612f7160dc1d8c
 
