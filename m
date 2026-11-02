@@ -1,49 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793632053;
-	b=Bm57XUzbIHY6m2XRvPtJxEgFTeqCJx2icyH61arEVzKwuKwU+NOY81PSttbMoWumuAoy
-	 0gdECkCehWk1rcRZ/MBnpvA7GrzcFpFEcT3JNq2xvIaacqqc+DnoLhb9nunbnC/VqnhKi
-	 JODlpfDfr1/DTFMKN3m1dKJuQuYwl8cbngmzo2FDDIxoBS+Am5RyKmVqhebvGVvFzPLEP
-	 jkJTmdYggDbfyNOVJiDe05OMhYebGEbXfxi3gA/R1nXmchTz/FYVQFvDp6v4PsMcvzGFK
-	 /MXxrRu/W1jyT8cOPVTXGjr78QUffHH/djF8YqZVdql4M6sabNfjnSTRJje6T7qretQ==
+	t=1793632087;
+	b=Oafs2T6oiw1nPiSxcae4J3MzP2/z/vfbvn9e6B3wth8NQKMDkvoPMaYmWHPwXqlD3zFf
+	 XaHTzmPH59FLIj8TcIKzmeR+WDzAngStGcHa11BHnVud0GPMSwQvOOz69dvs0QRHc3+yx
+	 0YV4sSJMXz1w378tLGyXZk3OOHcMaYKokrBOaJWtvdXBJpSc8NsFcetOPeCTk4lvIvKDL
+	 fWSCDDFRLeeGZigvWvAuHa/401CmMwTa01LrNpR0zgrI0fVQE9FK6LLvlakrOYj1MvFFG
+	 NV/MLlPryw0QZHflz5C7bNCX6ZrSVVt3WZ3B15FV6+ysQ0X9n9nccVdCogzI4SWSWyQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793632053;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793632087;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer;
-	bh=Jqve5dom8G0YagWg0DUi21Qt2CUJnz11dMCfHhOCDkM=;
-	b=XDQM61vmk7RB8hHMr6IGPT5Yh6RnzAp/lUH8IKlAj0MNj8YUcw/+6Qb6f6kXTO4d7nKr
-	 cOIE472y535r/PJ+4rZ4COrmp9fvXnbxSs7+oZ9z/GlsYnUz5SrTh0HfEEgpLYnlSih2d
-	 sZqCx0E95hTWjbuuEXbNA/ze2RPQdEdgw5BbF1Qycb8VZe8a8EQqb8OHrx1eY+HhZEMea
-	 IQFiGXF3M7tN2cz350RcCRqEPR6kRLYpNVJ7SbVBz7pwAYyXsI1wPNgjO7aSzldeg8Kqm
-	 4ogKhiLlC+jKdraSAIp7wXAQa2NLwdhYowAlq4x6loEUISnznCf3Qu+YskJDv/lQj0Q==
+	bh=6VXp+nvPq44Iibfd7M3dnZqyMxw2lTQeTkLffGnpGI8=;
+	b=kvMG4MIWbBHoRX205kjSVlHUkt9sMfiNHMN0z+vYMjVrgemKCNCgdwOne9NYPmrEa/aP
+	 80ocBBhfgcqd/oKLoXfAIxNdvti+JTC1XnSf3lmP07Awsv/N7imw3nG2GfpWDjmk7t2kS
+	 5TlIGgWOEUaH8iBzJhp0trgWZ2UaCI8AvxdfIiGUzt1LR691rcVAr+3icnrdxQ85hXgbo
+	 834vOyhWPvbpGZoxDZYkMVzgFeoPm4BDcK2BCJqEiJPufEHrNK2RoYpyY3u3nwCJsq+9F
+	 LNkBoKjhOX/M4mUXsnPNLvo/CNUmNrM8RropzSwNrWwEfUrks2eS4mhQHHVLssDrTBw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=htIvLzE5;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IJsS4rxO;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96A2A6072EC0;
-	Mon,  2 Nov 2026 15:07:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21FED60A0FF4;
+	Mon,  2 Nov 2026 15:08:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=htIvLzE5
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEC3F1F00A16;
-	Mon,  2 Nov 2026 15:07:19 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IJsS4rxO
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E8D31F00A1B;
+	Mon,  2 Nov 2026 15:07:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793632053;
-	bh=Jqve5dom8G0YagWg0DUi21Qt2CUJnz11dMCfHhOCDkM=;
+	s=k20260515; t=1793632087;
+	bh=6VXp+nvPq44Iibfd7M3dnZqyMxw2lTQeTkLffGnpGI8=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=htIvLzE5mRDE3y0tqv1kyv8W5k1g/Ii7ANwuWhratSAOFS7tbxL3BToIPDpZE85DE
-	 FNEsXXzLmfR4qQugMxmA9eyhIHm6Q6dJAmTZKLeIUK1bHgaHB6rg72WkRZftlCgoe6
-	 E2QfeUCqIA0Nboam57Dh1SlJUtOEamqW0FpuXdYHq09VCiD2DRiKvdUgmVI6MwZESI
-	 HWhsjmhK16tI0mtjDz6fsLrdm37sQrZUo7icVQ6YX0Qr2rzi5YjsmWINl56IQd0nMx
-	 zqjv85Bp1EemyFNq5w6kuaSNgOUZ321NOGqFqL1mOki6ZfyR8nruUh1khBiylH7rMN
-	 bCkpWmWU3eNXw==
+	b=IJsS4rxOrw0evPnx89c/k4QBxYWHpvmf5bC5nkZvS9heIkdiPMQ9+UGLYAqwXCeRo
+	 01xMhphWRq3Aq5SpmzQFwBYXFYqXKEaXV7aEPiCoGMFOQNxw7pWWisGb5yaQPmI5Sh
+	 tp1LULK9tthAvY5/hntPoT0wfDOVWswz1/lwzqVDgSpYEcKIVZ8JMYeE0wU54k61kO
+	 ToCwYStQ9aor3WEDfPrJ5VAU7p1igwmg/9f/J70vTmuPCQCbfb4H8bgp2jfpfxr9Bw
+	 Lja5YKZ94jQYHKXWFN6sFWb+EV8QZMwi+q9qWB4+h7zvBC2rh/ZxyN51W+VcpcOFR+
+	 oDn8HTPgDHHnA==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 16:01:44 +0100
-Subject: [PATCH RFC 17/22] ACPI: proc: let procfs copy in writes to
- /proc/acpi/wakeup
+Date: Mon, 02 Nov 2026 16:01:46 +0100
+Subject: [PATCH RFC 19/22] platform/x86: thinkpad_acpi: let procfs copy in
+ writes
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -55,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-arch-v1-17-c9492ab08480@kernel.org>
+Message-Id: <20261102-work-procfs-arch-v1-19-c9492ab08480@kernel.org>
 References: <20261102-work-procfs-arch-v1-0-c9492ab08480@kernel.org>
 In-Reply-To: <20261102-work-procfs-arch-v1-0-c9492ab08480@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -92,47 +92,57 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  Chuck Lever <cel@kernel.org>
 X-Mailer: b4 0.17-dev
 
-Implement ->proc_write_buf() so procfs copies in what is written before
-it pins the entry, and take the device name from that copy. Writes
-larger than PAGE_SIZE - 1 bytes fail with -EINVAL now.
+Implement ->proc_write_buf() so procfs copies in what is written to
+/proc/acpi/ibm/* before it pins the entry, and hand that copy to
+->write(). procfs already rejects writes larger than PAGE_SIZE - 1
+bytes.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/acpi/proc.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/platform/x86/lenovo/thinkpad_acpi.c | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/acpi/proc.c b/drivers/acpi/proc.c
-index b8a0bd4580e0..feb8283fd855 100644
---- a/drivers/acpi/proc.c
-+++ b/drivers/acpi/proc.c
-@@ -86,7 +86,7 @@ static void physical_device_enable_wakeup(struct acpi_device *adev)
+diff --git a/drivers/platform/x86/lenovo/thinkpad_acpi.c b/drivers/platform/x86/lenovo/thinkpad_acpi.c
+index 01e4c980fad6..b4f253da9536 100644
+--- a/drivers/platform/x86/lenovo/thinkpad_acpi.c
++++ b/drivers/platform/x86/lenovo/thinkpad_acpi.c
+@@ -881,33 +881,25 @@ static int dispatch_proc_show(struct seq_file *m, void *v)
+ }
  
- static ssize_t
- acpi_system_write_wakeup_device(struct file *file,
--				const char __user * buffer,
-+				char *buffer,
- 				size_t count, loff_t * ppos)
+ static ssize_t dispatch_proc_write(struct file *file,
+-			const char __user *userbuf,
++			char *buf,
+ 			size_t count, loff_t *pos)
  {
- 	struct acpi_device *dev, *tmp;
-@@ -96,8 +96,7 @@ acpi_system_write_wakeup_device(struct file *file,
- 	if (count > 4)
- 		count = 4;
+ 	struct ibm_struct *ibm = pde_data(file_inode(file));
+-	char *kernbuf;
+ 	int ret;
  
--	if (copy_from_user(strbuf, buffer, count))
--		return -EFAULT;
-+	memcpy(strbuf, buffer, count);
- 	strbuf[count] = '\0';
- 	sscanf(strbuf, "%s", str);
+ 	if (!ibm || !ibm->write)
+ 		return -EINVAL;
+-	if (count > PAGE_SIZE - 1)
+-		return -EINVAL;
  
-@@ -123,7 +122,7 @@ acpi_system_write_wakeup_device(struct file *file,
+-	kernbuf = memdup_user_nul(userbuf, count);
+-	if (IS_ERR(kernbuf))
+-		return PTR_ERR(kernbuf);
+-	ret = ibm->write(kernbuf);
++	ret = ibm->write(buf);
+ 	if (ret == 0)
+ 		ret = count;
  
- static const struct proc_ops acpi_system_wakeup_device_proc_ops = {
- 	.proc_show	= acpi_system_wakeup_device_seq_show,
--	.proc_write	= acpi_system_write_wakeup_device,
-+	.proc_write_buf	= acpi_system_write_wakeup_device,
+-	kfree(kernbuf);
+-
+ 	return ret;
+ }
+ 
+ static const struct proc_ops dispatch_proc_ops = {
+ 	.proc_show	= dispatch_proc_show,
+-	.proc_write	= dispatch_proc_write,
++	.proc_write_buf	= dispatch_proc_write,
  };
  
- void __init acpi_sleep_proc_init(void)
+ /****************************************************************************
 
 -- 
 2.53.0
