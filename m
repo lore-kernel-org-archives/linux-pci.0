@@ -1,59 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.15
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793651292;
-	b=pdetMhDQhPq4j8fQxgAmaloxN57ztOY9SJeS5ophzRlj07hIU8B3zPEjuK2GBMBizb9N
-	 La6ebPLlCo7qG794DbzvZ1ne/kE30hSBuCgGXMKUOON46a0LbO9usa9QRonCO6Ab9aX21
-	 USRm9ekL9BjWDfc0pDQ1GoxcykNRTUuiHROWmSGkhtxsEyr/CBJsDwArm6DkL69kQKjQU
-	 pdc/mE8iw/+GhB27CLsfBR3yIbZU4fsa2vBEhnwJ07vmyTWnftHK+inyaK2uDL8l/8+Fh
-	 CQsBX11JK0WKT9aRwvtSakvGmvJkFD0a+lHBgrM++HuekDq4FsWcm711eYtPY1t3EZw==
+	t=1793651911;
+	b=E0pmZquRDDIPRjKtlbx+n4KgF9VVFJX4q0gQcVbYo8qc+57rUdPaW9jVV8B00Er8C/5D
+	 2l6opTXpoDNYNve2JwdncIZque0Z4/kfqts5QD5FyRHwidLyw42b8X04UQ4WA868Rizer
+	 eaV8/bX7pCwYjnF0B8Fdsat8Q12yYwgVF/y+vckMNmL/rzAX9L1Uvpz8g+O1/GQ+jiDRm
+	 Vo07t8zpl1LFxHDczUePk/0CqaLwSxtrGuQhNFkIHgCBvdhbMKZsJ/zQMabeB7CYUDcmr
+	 509R+HPhPZWCSY5LXwzoVOyqmQxuKBIcQGcGFFzO2vTXHcY6vdi4SX6JSfmkChdnMdQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793651292;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=kNIoXMIj0D6tWi8oDVr/cix9uEHn2FqNesf3emLKmwA=;
-	b=Ia7zPYNraX2AvTR5USXKqzJKDiXquKlDjDzZQOL16YsvRRY06wzlF78WZkv9H3B7Ak4e
-	 rUSYbzu//WVBN42U7Lin13IN+NFJtN4SMpI2csjgHqwppBZlTokPWceQGq5QAudZJnJG2
-	 sTiIk8Jp6nW5lQW8zHPF9f5NKDDOmlVQIh19A2skIAxTc7hESzHGdWSoWpADLGllNbJAk
-	 WYIDN/mEX3kPkkAmiA2qotNfcUsyPetU7ahaUTZnxMDtDSd5yCFBz8HYSs4uvf6fRx6mO
-	 Z3rEf243ef/UHqdbjYKqtw2JiZ9N0coF1YoK1KKUbMW9mPKl9CNn34vXjj6D1OWzoLw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793651911;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=5LcGYg3nNUzRJnQm+K7RIrUIxDPgKMPd8NQr+QV64IA=;
+	b=rt//lZwKusPzuAImpeXPyi+fOrAvTC0ydGNAa0d/6xyBjEYbnRSsx6fKCd8kJ1jvAg8u
+	 qPryr+8lIfUoHjGojS8EuxsMJX45PTuj9QJozHAp5bHtfGH2KrdgJ+xUewEgqYIHr2z5c
+	 chKbKfCLN+bgba+LamZE7ckjlJuwzS1TSebHdEvqgy2PQO1fE7u0/vK1sJhEMFRWpJyJK
+	 v07Qqd9COUGSOWVBob4U9EotqNLffX2kItxlLWxCbv/MMzoCM2Xu2r4YxegXUhUejeP7G
+	 NU/LkCrvD6ZbkInUpGR1xoYs8KPU88r7V2dD1n1Sb8FCBlB5sd9TrA4KuBcQn3IaJdQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="LwqGN/5O";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=bRty8RaI;
+	arc=none smtp.remote-ip=198.175.65.15
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 838DC606A324;
-	Mon,  2 Nov 2026 20:28:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C78D0606A335;
+	Mon,  2 Nov 2026 20:38:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C78D0606A335
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LwqGN/5O
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C281C1F00A16;
-	Mon,  2 Nov 2026 20:28:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793651292;
-	bh=kNIoXMIj0D6tWi8oDVr/cix9uEHn2FqNesf3emLKmwA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=LwqGN/5ONoTdHIJf0oGXsaCmTm0ZoJmgimhJGGd5YL1IWtV3ZAZCKuENAPVbyXLVO
-	 TCk4hvjQoMayINfxHIWSzC/NuClx8w4pfjevEjDJXyyU0KgBLhcq6v9N0NX4MmCad0
-	 ZDzrkIXoKeOL4EvcS9i5WHW+hgjC7Ac9b9dSN3jzIYphBX6UmQH9REEROu2Vf3iZTG
-	 z4CIr1O0V5uiUy6TH5ZdvB+9mk7kYCZIiQ822FF5FPhRgA+0cICtxrTduFUd1u0FtI
-	 kNb+TiH9Pb3/ieVX6hm88QZ1+UMAtyYC9vmlyIaUYY/2tchw31HJ0DJ2HnYRz3EGdR
-	 h4g+XLF2we1hg==
-Date: Mon, 2 Nov 2026 14:28:10 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
-Cc: linux-hyperv@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: use reset_root_port() for bus reset of devices
- on a root bus
-Message-ID: <20261102202810.GA982665@bhelgaas>
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=bRty8RaI
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793651909; x=1825187909;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=BsPUYQg3UGlRUHhqrv/48JCqsDbQofqrAk+YJKsHA40=;
+  b=bRty8RaIKGLjcZPNfFKOb8TbxunK96n6g/dydFON/lGD2OH3wk7QWIe7
+   YFighgPuvN31wQ8ygFbeOX1HoT3kT9RuzNwVk9Nh6/hJWXuJpenpn16Dt
+   EzAGGFoUQBVzNSiBfinEfwuqu6XkxHUF3evf/kP76o+tBxzGRar+U6ATg
+   8lbxw1HAu6KW/moyjP2JnKHt3tg9MKCNEWq59f+DjffrJtz7PVs9gLksN
+   sxJaiU+xX1DlZnIcz1Sol6fbjBJwDfW4cS2GGU4ikINSF28zaskAusuAJ
+   VpswA/UsQEOSikBGDs+Dronz4s43DPgGsmf76DX6lqwaQ8/rE31Ysqk86
+   w==;
+X-CSE-ConnectionGUID: 35FUIAI4QGebNUG2UgmwUQ==
+X-CSE-MsgGUID: uc6DL1yESb6drhsPgsJc1A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11954"; a="2367856"
+X-IronPort-AV: E=Sophos;i="6.27,191,1787036400"; 
+   d="scan'208";a="2367856"
+Received: from fmviesa012.fm.intel.com ([10.60.135.152])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Nov 2026 12:38:29 -0800
+X-CSE-ConnectionGUID: lQ3qwfmDS+ak5HNmktJEew==
+X-CSE-MsgGUID: EigDHSgfT1WmnFjrAgSXFQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,191,1787036400"; 
+   d="scan'208";a="7998587"
+Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.80.90]) ([10.24.80.90])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Nov 2026 12:38:29 -0800
+Message-ID: <840c7598-f988-428a-8bea-4d66b0f4f4d7@linux.intel.com>
+Date: Mon, 2 Nov 2026 12:38:28 -0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,89 +72,110 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261016235940.942090-1-hamzamahfooz@linux.microsoft.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v15 1/4] PCI: Assume control of portdrv-related features
+ only when portdrv enabled
+To: Lukas Wunner <lukas@wunner.de>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, rafael@kernel.org,
+ terry.bowman@amd.com, kanie@linux.alibaba.com, olof@lixom.net
+References: <20261002211828.1293177-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <20261002211828.1293177-2-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <aujwl45XrkVT-zUx@wunner.de>
+Content-Language: en-US
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <aujwl45XrkVT-zUx@wunner.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, Oct 16, 2026 at 07:59:39PM -0400, Hamza Mahfooz wrote:
-> The "bus" reset method resets a device by asserting Secondary Bus Reset
-> on its upstream bridge, so it is not available for a device on a root
-> bus, which has no upstream bridge.
-> 
-> Some platforms have no Root Ports and expose PCI devices directly on a
-> root bus, e.g., Hyper-V vPCI places each assigned PCI function directly
-> on the root bus of a virtual host bridge. Such a device has no reset
-> method at all if it supports neither FLR nor PM reset, even if the
-> platform is able to reset it.
-> 
-> pci_host_bridge::reset_root_port() already allows a host bridge to reset
-> a device on a root bus in a platform-specific way, so far only in place
-> of a Secondary Bus Reset by a Root Port. Use it for the "bus" reset
-> method of a device that is the only device on a root bus, and wait for
-> the device to become ready afterwards, as is done for other reset
-> methods.
-> 
-> Signed-off-by: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
 
-Applied both to pci/reset for v7.5, thanks!
 
-> ---
->  drivers/pci/pci.c | 32 ++++++++++++++++++++++++++++++--
->  1 file changed, 30 insertions(+), 2 deletions(-)
+On 11/2/2026 12:20 PM, Lukas Wunner wrote:
+> On Fri, Oct 02, 2026 at 02:18:25PM -0700, Kuppuswamy Sathyanarayanan wrote:
+>> Native control of PME, AER, DPC, and PCIe hotplug depends on the portdrv,
+>> so default to native handling of them only when CONFIG_PCIEPORTBUS is
+>> enabled.
+>>
+>> Native control of LTR and SHPC hotplug does not depend on portdrv, so keep
+>> defaulting those to native regardless.
+>>
+>> [bhelgaas: commit log]
+>> Link: https://lore.kernel.org/r/fcbe8a624166a1101a755edfef44a185d32ff493.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com
+>> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8cc6a89130b5..fd4e958d6b99 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4924,18 +4924,46 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL_GPL(pci_bridge_secondary_bus_reset);
->  
-> +static int pci_root_bus_reset(struct pci_dev *dev, bool probe)
-> +{
-> +	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
-> +	int rc;
-> +
-> +	/*
-> +	 * Bridges, e.g., Root Ports, are not eligible.  Check the header type
-> +	 * because dev->subordinate is not set up yet when the reset methods
-> +	 * are probed during enumeration.
-> +	 */
-> +	if (pci_is_bridge(dev) || !host->reset_root_port)
-> +		return -ENOTTY;
-> +
-> +	if (probe)
-> +		return 0;
-> +
-> +	rc = host->reset_root_port(host, dev);
-> +	if (rc)
-> +		return rc;
-> +
-> +	return pci_dev_wait(dev, "bus reset", PCIE_RESET_READY_POLL_MS);
-> +}
-> +
->  static int pci_parent_bus_reset(struct pci_dev *dev, bool probe)
->  {
->  	struct pci_dev *pdev;
->  
-> -	if (pci_is_root_bus(dev->bus) || dev->subordinate ||
-> -	    !dev->bus->self || dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
-> +	if (dev->subordinate || dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
->  		return -ENOTTY;
->  
->  	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
->  		if (pdev != dev)
->  			return -ENOTTY;
->  
-> +	if (pci_is_root_bus(dev->bus))
-> +		return pci_root_bus_reset(dev, probe);
-> +
-> +	if (!dev->bus->self)
-> +		return -ENOTTY;
-> +
->  	if (probe)
->  		return 0;
->  
-> -- 
-> 2.56.0
+> This is now commit 6347fd9aee19 in Linus' tree and I think there's a problem:
 > 
+>> +++ b/drivers/pci/probe.c
+>> @@ -658,6 +658,8 @@ static const struct device_type pci_host_bridge_type = {
+>>  
+>>  static void pci_init_host_bridge(struct pci_host_bridge *bridge)
+>>  {
+>> +	bool port_services = IS_ENABLED(CONFIG_PCIEPORTBUS);
+>> +
+>>  	INIT_LIST_HEAD(&bridge->windows);
+>>  	INIT_LIST_HEAD(&bridge->dma_ranges);
+>>  	INIT_LIST_HEAD(&bridge->ports);
+>> @@ -668,12 +670,12 @@ static void pci_init_host_bridge(struct pci_host_bridge *bridge)
+>>  	 * may implement its own AER handling and use _OSC to prevent the
+>>  	 * OS from interfering.
+>>  	 */
+>> -	bridge->native_aer = 1;
+>> -	bridge->native_pcie_hotplug = 1;
+>> +	bridge->native_aer = port_services;
+>> +	bridge->native_pcie_hotplug = port_services;
+> 
+> The commit is setting the native_pcie_hotplug bit up front based on
+> CONFIG_PCIEPORTBUS.
+> 
+> But there's an if-clause at the top of get_port_device_capability() which
+> adds PCIE_PORT_SERVICE_HP to the port services used by a given PCIe port.
+> 
+> Inside the if-clause is code to disable hotplug interrupts if the BIOS
+> left them enable.
+> 
+> Since the commit, if CONFIG_PCIEPORTBUS=n, the if-clause is no longer
+> entered and so the interrupts are no longer disabled.
+
+I don't think this case changed. get_port_device_capability() is in
+portdrv.c, which is only built with CONFIG_PCIEPORTBUS=y:
+
+  obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o bwctrl.o
+
+So with CONFIG_PCIEPORTBUS=n, the if-clause was never entered, before or
+after this commit.
+
+With CONFIG_PCIEPORTBUS=y, native_pcie_hotplug still starts out as 1,
+so the clause still disables the hotplug interrupts when
+CONFIG_HOTPLUG_PCI_PCIE=n.
+
+Your patch was about setting native_pcie_hotplug from CONFIG_HOTPLUG_PCI_PCIE. 
+That would break the PCIEPORTBUS=y, HOTPLUG_PCI_PCIE=n case, as you said. 
+This commit uses CONFIG_PCIEPORTBUS instead.
+
+Did you see a case where the interrupts stay enabled with this commit?
+
+
+> 
+> I'm amazed sashiko didn't flag this.  I didn't spot it during review
+> either, but noticed it when rebasing my development branch.  I still
+> have a patch on that branch which I developed last year but which
+> was ultimately not accepted (for good reasons).  Back then I already
+> noticed that the interrupt disablement issue prevented simplification
+> of native_pcie_hotplug initialization.  I forgot about it but had to
+> revisit the patch when rebasing the development branch on top of your
+> patches:
+> 
+> https://lore.kernel.org/r/5eae82776d695e589b89aad500d8208b980347e5.1752390102.git.lukas@wunner.de
+> 
+> Now what?  The offending patch is the first one in a series of three.
+> Revert all three or can we somehow salvage this?
+> 
+> Thanks,
+> 
+> Lukas
+
+-- 
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
+
