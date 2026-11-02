@@ -1,65 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=194.117.254.33
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793605237;
-	b=I+T1nFGRR6O9uOK9+5pqvl6vrow8lapnYVkQ+rIbRsGeZ7U2Q4rTVu5Udm4UokkHzQgn
-	 g1mmJTD8TFB4pl61Tg4Mvamr7EnqoiDNnKvk7gYclzw1MxKuwPudMtrYluaFgYz3oG9Y0
-	 9ZCqR/VSQjXu0raKTme23otW/zVuUDs94NWcEk/lStKV3EgkxNUPzmSHr3iz4TujI14/1
-	 z/VGYDHeh881wOjFlKbx8tY+2ZJ9x6gfUFzdipcIsm61yVubHVoIbMZs5YMRka3egR657
-	 k0AtD1Vahvnb7HadrQPzzDcHZscSNQeOo7mKw8apPGOCE1gLmrZXKzFqF4swtxDNdrw==
+	t=1793605636;
+	b=K9XOsRciQDK1loZ9+ctCvghdpuw+Z/88mmrzixHgK0KZ2LXERlF+PyfNFDQEYVUOY/yy
+	 8OsNHoaP+fwJywgNuJEFl/k8dLDD1nGK9+5hNH5MroTc8yqFN8YeWefWEFf+cpu5s4wKg
+	 /jpeFSocqdD2UZIBJoiPmlvftOljrK0oUBdDIw68v4mhmpwi4MUV7SWu1BeG6qb3WaKGL
+	 7WqKW6R7eN3GYzF9X1yJi9ygSk5iiT0AcjBxC/Ohs7/m+LH34OhTdzq5wFoOTD7TbS9da
+	 Fh0FszONvUQLfnoK6Vb76AY4QajWP3HUurfHrYsFx0RCSSPk1SCERvmfy+8/F6jsN4Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793605237;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:X-UD-Smtp-Session:Date:
-	 From:To:Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=T2bfmfTVonHMt0v5AJiqh5Y6fVlqKVd5+FL2W2G2Mdg=;
-	b=OmJydRcsf+rQl0XJelrHDGmXouF8OVvqXjGPfnAxa48tVgyeAj3VvqwkC1woB+RHNOzH
-	 WnagYF7UxLmkk3A2G6scoQKE/9rIBWK5NvpRw67stC9LKRNHIs6y1NnDU2/H45E3vJdMH
-	 KXCPnCxuB/fcX9ga7F0+gL1XxFgLNh7gyA5+b79obSC9Pz0Ghq8FxUeFFyefSlhuws7i3
-	 MHrh2wEvpyjzkX/oQP6l1Th9res/vKnZXlNCmauxmzEY5+PCiOVH+AmWZODzMfAosotJH
-	 7UcyRX4JqqMQyDh6CxCe2uN/AyoZPoQ5+lk4URLcYInxWvR/h7yK2Pv4SjADhxohXHg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793605636;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
+	 Message-ID:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding:X-Scanned-By;
+	bh=CJbWBTkQs4ODLU2SOn+Ys6gLyVwtafR2qeYrx5uFG3c=;
+	b=CV5csxv+/1GsxV9pibl72L1xr8r2W24M0DgC/3d5s0LqntNo0Ay40uBNnOLI2v29QvD+
+	 I5o9G2DjuJe3jajQ+hHaT2P+Yv3XV3120Ma9eP1dOGpC/q0szKmnjpbIKPIqrdPkv6f+i
+	 XGAi0gOdW36B5L8bZ/rIO0TComrsKhlFxVD/GMIjY4IUC/kqXbQKLEikl1Bcqm/DlcTZk
+	 xxWhnt+uNYUJtsohj9qQvC+/xZP/oDTTr3KETZm8M8maZ1PuhZfRqHshLiRf0JzOLmH7P
+	 UWwxH1gaeIBAaorKNve7WsZOYZayWgINPi3y9+utAf6Zp7zpmwrsikbSSMGg0UsAzBw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=sang-engineering.com;
-	spf=pass smtp.mailfrom=sang-engineering.com;
-	dkim=pass header.d=sang-engineering.com header.i=@sang-engineering.com header.a=rsa-sha256 header.s=k1 header.b=XhbtJ0RB;
-	arc=none smtp.remote-ip=194.117.254.33
-Received: from mail.zeus03.de (zeus03.de [194.117.254.33])
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=SckGzZHl;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E6A4606A327
-	for <linux-pci@vger.kernel.org>; Mon,  2 Nov 2026 07:40:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9E6A4606A327
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sang-engineering.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sang-engineering.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44587606A326
+	for <linux-pci@vger.kernel.org>; Mon,  2 Nov 2026 07:47:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 44587606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sang-engineering.com header.i=@sang-engineering.com header.a=rsa-sha256 header.s=k1 header.b=XhbtJ0RB
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	sang-engineering.com; h=date:from:to:cc:subject:message-id
-	:references:mime-version:content-type:in-reply-to; s=k1; bh=T2bf
-	mfTVonHMt0v5AJiqh5Y6fVlqKVd5+FL2W2G2Mdg=; b=XhbtJ0RBIuOPALpr79Un
-	Bc+yAjR7lv11ORP12EJ8MD1Tjq+b5vVLSc2QImX4QGp2us2GS3tPq8RFg9ZyPnLF
-	My4NtQJ2veCzcWKnVr2+wfz7XnlLmqONJZbXN4ctre20206ewxwBUtb9w3pv+C7f
-	XWZjumqw67hXwXtGifoTqpyMjNItfxfcfxI8LPHxaper4kuNZRFNeFaIKOCUGs4s
-	xMjx0NWTllCvlq5s9PIfwK4v2ZAHkhxoG0NaZIesBzuuaDcdFH94cjxdmtOao1Ow
-	PGmEEkJ2Pi72Z2JAZGMBa+LP5KM3dy94aKTMz/82EjM5NtZg/ZBnq5rvCTOZTsP8
-	dQ==
-Received: (qmail 1033440 invoked from network); 2 Nov 2026 08:40:31 +0100
-Received: by mail.zeus03.de with ESMTPSA (TLS_AES_256_GCM_SHA384 encrypted, authenticated); 2 Nov 2026 08:40:31 +0100
-X-UD-Smtp-Session: l3s3148p1@aaWnQkZfiprB0HFD
-Date: Mon, 2 Nov 2026 09:40:30 +0200
-From: Wolfram Sang <wsa+renesas@sang-engineering.com>
-To: Claudiu Beznea <claudiu.beznea@kernel.org>
-Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	robh@kernel.org, bhelgaas@google.com, p.zabel@pengutronix.de,
-	geert+renesas@glider.be, magnus.damm@gmail.com,
-	claudiu.beznea@tuxon.dev, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-Subject: Re: [PATCH v7 00/14] PCI: rzg3s-host: Add PCIe hotplug support
-Message-ID: <aug-aSh4MtHR0m7a@shikoro>
-References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
- <atphAmy8ZIjY_JNC@ninjato>
- <f1df2818-be5c-4019-a86f-4e782a70d3fb@kernel.org>
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=SckGzZHl
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1793605635;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=CJbWBTkQs4ODLU2SOn+Ys6gLyVwtafR2qeYrx5uFG3c=;
+	b=SckGzZHlqcPQpW44wH/DJUGU94xPAs21ICp3uc8z/ROb3YEyOVVNvlUJq2bhIx956tmyYi
+	IQWZ+k+1tx7otVI4Qux70ycJDTNzjfaDjiH8mA015zU5hQ9+uPUVqmqZ/282fpfQ+s7o5B
+	qVLrVU12cESn5x3KHaBa7N1R1md0GGI=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-93-FF4iaEjJOfe4njgd1da7Zw-1; Mon,
+ 02 Nov 2026 02:47:11 -0500
+X-MC-Unique: FF4iaEjJOfe4njgd1da7Zw-1
+X-Mimecast-MFC-AGG-ID: FF4iaEjJOfe4njgd1da7Zw_1793605629
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8AA331964CD0;
+	Mon,  2 Nov 2026 07:47:06 +0000 (UTC)
+Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id CF1751956087;
+	Mon,  2 Nov 2026 07:46:58 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: jgg@ziepe.ca
+Cc: alex@shazbot.org,
+	ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org,
+	bhelgaas@google.com,
+	jjohnson@kernel.org,
+	johannes@sipsolutions.net,
+	jtornosm@redhat.com,
+	kevin.tian@intel.com,
+	kvm@vger.kernel.org,
+	kwilczynski@kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	lpieralisi@kernel.org,
+	mani@kernel.org,
+	pbonzini@redhat.com,
+	robh@kernel.org,
+	seanjc@google.com,
+	vkuznets@redhat.com
+Subject: Re: [PATCH v3 2/8] KVM: add PCI MSI hypercall for VFIO passthrough
+Date: Mon,  2 Nov 2026 08:46:57 +0100
+Message-ID: <20261102074657.27715-1-jtornosm@redhat.com>
+In-Reply-To: <20261029165845.GQ1685504@ziepe.ca>
+References: <20261029165845.GQ1685504@ziepe.ca>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -69,50 +95,47 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="UWEy+q2GwM1RTtG/"
-Content-Disposition: inline
-In-Reply-To: <f1df2818-be5c-4019-a86f-4e782a70d3fb@kernel.org>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
---UWEy+q2GwM1RTtG/
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> This is not quite what I suggested, this still relies on the host
+> setting up the msi using the trapped MSI emulation, which is the
+> primary hack..
+>
+> Was it too hard to make this an 'allocate msi' operation?
 
-Hi Claudiu,
+I tried this approach as a simpler mechanism to just read the necessary
+info from the host side. Ok, I will explore a true allocate operation
+for the next version.
 
-> I currently can't reproduce this on my side. Do you remember if you execu=
-ted
-> the below command before your test:
->=20
-> echo performance > /sys/module/pcie_aspm/parameters/policy
+> Yet here it is called alloc?
 
-I don't really recall, but I'd guess I did not. Sadly, I can test again
-only next week. But then, I'll do it and report back.
+> And this isn't alloc, it is some query..
 
-Happy hacking,
+You are right, the naming was misleading. The implementation was
+a query, not an allocation.
 
-   Wolfram
+> I feel like VFIO shouldn't be involved here, for the purpose of MSI
+> all we need is to inform KVM what struct pci_device * is at a vBDF and
+> then KVM can do the interrupt bits. Maybe this is already happening?
 
+> Nothing should use vendor/device ID either, it should all be drive on
+> vBDF.
 
---UWEy+q2GwM1RTtG/
-Content-Type: application/pgp-signature; name=signature.asc
+I appreciate the hint. I will explore the vBDF-based approach
+without VFIO in the MSI path.
 
------BEGIN PGP SIGNATURE-----
+> I probably would not have selected this, it is why I suggested
+> virtio-msi or something that could be optional and seperate from the
+> core KVM guest ABI.
+>
+> But maybe there is interest in doing it this way?
 
-iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAmroPmoACgkQFA3kzBSg
-KbYqfQ//aVYULKbkf/eGK0L8Y2/BFOX0TSgMTesZYIFqiXXyFfLd6j+UgYQUFj8J
-4iq9K4cqVXafdh5NUW8EG0nxkXnHAnKbTCCYncCZvcrJq3w+AiJiU/ucx6LhFkfI
-ZVxJHsWCtROGifv4ViRzZNwaCkl0PCtYCHC3d9MspaqlTchYkJ25qiryRgl63zCD
-Xby/IA+OD3FC81ixrE45MB4jkVPVkDqv3peHgvy5CO7ghrZY0dfscQjmbo2SIifD
-1ru4RT8UYKtCo+np9uDH4oEiibKVkhjt0VHgkIlVORtsiuQiBC/tAJ7LIPl8psgE
-981YBaXZNUWlhA/YA6ciObyfO5kVurzSML3wHjyoPsTQU9FfjdrupDJXEiIf+KLQ
-Vr6rUhISCJJi919e1DO/Wg07oqFpdqVNSIfQl6ri9gZk6a1uK9ROc3NrqTsjZSAz
-rHSY5AwAFaAgLfR+CfDcjRi4uzpyGapCpRzF4gInmRAqHG4BLDc4s5fCEqVvDY2v
-5KCNWQWf/x1NrUfTzyo9w3HolvuyroGVkiX9zmslkpxpjyabqt8ap0czmkf1LE8J
-o49i7yAHT0kYjqvB/tdCIo1vTxc14CBp78wafmbqS412nkH++xN8ZExdAXK2wOPa
-JhJ6toWtTcrS4DXTsDOMVCqWzgAJZymXu1uRHh55KK5TyBiqT54=
-=rN3u
------END PGP SIGNATURE-----
+Since there was no feedback from KVM maintainers, I will try to
+follow your guidance more closely for the next version.
 
---UWEy+q2GwM1RTtG/--
+Thank you for your help
+
+Best regards
+Jose Ignacio
+
