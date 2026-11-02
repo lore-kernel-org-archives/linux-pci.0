@@ -1,73 +1,67 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793654102;
-	b=Vl0jbq1YddNvBA8YmyzyA2STUSMZ4etYWnNi7jt1lpUo7xCEFcYuJjmDrQZuARKh/2tb
-	 Bgb3q01PgDlIKi2a11DWy4HSgXq222cHQTcgZSPQDzvxV2q5CZ8+VricdF3am1uwHQcwv
-	 H4Oc2AVCGsV/TjGKtRfW5WM654xKLKyc4rKw6C6TkA9JqHTCBC4J5v+LbGz3ZbjfZF3Ru
-	 uJ+1TwPV6/OrKDvv2uYKrfE4ZhSuKbnVIuB+FpQ/fE25Cg1hd6qzm5r0eecIbGkudbCer
-	 DZQnE3kFQ+aJXeXlCTdkGhXBvnSCqB7jNJVF2FiwkFGDpYlhMjwUwOB2Iuu0M+f739Q==
+	t=1793660786;
+	b=w9309LfwX4RD2jfJ44bxo4nXNYRUSrgVP7Coo6VvgwxKPGTXednudN6mZrY2Ucbvlvvu
+	 6Iu44mq5rOaVqaRtkPxuMTKP2JwU0Lybocy0NYkHzQ41KDpw66CSpgc56CG4+0+1NYRIg
+	 IhE2zSqg7FYuryzLR5TBOhytutRaE2qSntESevQ2KnOCiLD2q0uLmQAXu0AuPP8Iif/5A
+	 rlren6ne5aXD6zT6lqhtemTeOFtjbD/s3n3dUjDMwCzJXCznBZofUaV//MtEjA49JmA59
+	 MVVQ9o4bq47XcpMl3FaftuOPPsZtz9uwTv4FDBpgT1QfKFx07RssFnCAt7JQlaTnQjw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793654102;
-	h=Received:DKIM-Signature:Received:Received:X-ME-Sender:
-	 X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:Received:X-Mailer:
-	 MIME-Version:X-ThreadId:Date:From:To:Cc:Message-Id:In-Reply-To:
-	 References:Subject:Content-Type:Content-Transfer-Encoding;
-	bh=IboT5prE1F2zgLUjN3M8JJkwTsSKYt9w9Q1ZY5Lm5jE=;
-	b=hLYDz3PA19h9Y9dZiVnP5KwgeXd7vQh2nzZMMsKtGA4/+GXfXVeGyjgmnJBnNTyKGs7J
-	 CHvEMMxiBaFEd6reHxQ0goHYWX4Kz5PPYb7te+xj5lQLdKORtElHXzr6T3uCZXsLK8P8C
-	 b8praB0HyoY1n34SYZZcwGOSC+x7lsTk2gBBo5m3IZLJfwUQmMl81Q87wbeXNlba92r3/
-	 7oVKzyXOCAt/nuDAXFsp3JHi60/Jxt71HS33yRdxmND3M3hbuMLJD4OglFZZE+Nsl6xD+
-	 m4CbrgSgL+Au+9CGoMp4d3X/ZuUC5+OYZm/nOBkbkHjF3GPqz7Dczif4TUKQT7iZRAA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793660786;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=adIUxbBUAhPoTEgVJ2ZdQQ0sIkUjRLbD7ye6beWxzTc=;
+	b=f2vSFgl0gr6+7OuhdfwC+rtg15N23DYKxmG4kPTj33Xj/cuUJdNkEQm6u4S095KO0gcn
+	 KWdACu05ja9s3ftRnNYHARzUXIDgX8qBqKkDWohI9z4QZDYsaXwcg/IPa24C/q2yHw5w5
+	 SKOY6z1qj4UINHCrxIyddf8pwpRHPez5igzG97Ed6iV8u8w36OGiaESuSSsGCLJ5c8ovj
+	 CFCjUu6UuXnjdTUUXU90ljvEIBn+Dum4cDX9I1nbk31vbuP09fnEVFigtvXW9jovcTzN2
+	 0cej/6gaTLY0PzPzmxZH+4MBH9/LD/k6ENUD48UD0nXha68u9fxzUgxBPXUH+gBLx2w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="i4XS/+Qp";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ojb3Czh8;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC7B8606D834;
-	Mon,  2 Nov 2026 21:15:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 117CF606A324;
+	Mon,  2 Nov 2026 23:06:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i4XS/+Qp
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 405B91F00A1C;
-	Mon,  2 Nov 2026 21:14:59 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ojb3Czh8
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B1F21F00A16;
+	Mon,  2 Nov 2026 23:06:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793654101;
-	bh=IboT5prE1F2zgLUjN3M8JJkwTsSKYt9w9Q1ZY5Lm5jE=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject;
-	b=i4XS/+Qp/XJpkpHyhLatkkxrTnb76H0AyrbluP9UrYsSjjvFvYed65zWeP+n5bDMR
-	 T4jrppxwRxmsiUoLJtpEDBZOQUgSEb2I7JAqNJICoUtmRZqGDSr+AkbMY5KraB9hcp
-	 LJSetra0CCoguNvIXys8kMbF38qG79C7rZIljzi9OxsucTBr2qJtAKy2hNxphivV7X
-	 SqR7z4TvF6OS2jxQo3eWdNU0GD2TA876qUhcb25obxs7Qa0hq+gMR1c2AKZ0TYfXxl
-	 /PRnwvUkfYbroZLwoik/xUkslivJlp+q60cSPVqp80BDXlYt0jmnPbIlU0+2JbsucT
-	 rjIixFbj3/TrQ==
-Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 3FB84F4006B;
-	Mon,  2 Nov 2026 16:14:59 -0500 (EST)
-Received: from phl-imap-15 ([10.202.2.104])
-  by phl-compute-10.internal (MEProxy); Mon, 02 Nov 2026 16:14:59 -0500
-X-ME-Sender: <xms:U_3oagUAPKL0KahIhejOYJwKEPfYb6twqYG_HHugM7_eLn8Er-TgPg>
-    <xme:U_3oavZTuzGHMfK0qXbinG0nc7CYskrIhJQ5eHOz_Ha7XvQtwnXU_T7hJPsGo9qg4
-    BhXiwA3Pdzj3QiIOE4JzHYJnc55BkwZtZcinLkFBcrDsA6sylLxQvo7>
-X-ME-Proxy-Cause: dmFkZTGSCWblgfsMhzNjEIN00ph1bmXztXGhYrK6FQCSJysx8m5mqsCTJHkCuZD0tpZuBG
-    pYnx6qST1krVMCyjpYhoMBo2TltjSYVP2LKGOkZnOBb4t//k/nGoJ/SIXKKJyIATQl84il
-    BuXRlRV3aPeB88TAd/llIDq/9PMZ1EzorVjUV4ox06mXS/IOKUqdbOTFcr2gFtJFq3Gx7F
-    Zq0nEujwlkDiPcDOX28riG6oQW7iLTgD6BaMnfnV9H0ADvTknFe8adm4EFa+o6I1mSuG3K
-    LJ3epAVfTBg3DuzNRu88aZuYWYeuI7KoVJah/eioVIkx6sAoHZjqyTVRvcNhYqHYgvNdOh
-    F7RoapMXPpPy7fnRDGp1EnOzRafp7mYLbQvUWevKonPpL0zVugnrni/xwOB0ZUdq15K6LL
-    U4eIWAyGEDjfaCYO/Dppo1HoBBuP1Ugp4Zki+kXZHcTkA1gjEQVaV70KrwrPcut26vPd/h
-    q5yJSVyn3x/Ch0xklWbVCXPbWoaIS17brwWPL/guaVzJxizQ0P/jgX0plm53NXTsLd+70V
-    110yVl467ZsRMKGBWdC4JnWQHbcxAMHjeZkhkyAsfOuCVSLebxwzvInrQKLcoImyb5UwHY
-    pO0Oc+d4/j2oJCRnrCOkOe51eLIclfMVgyBLq7y/6qqZiV8XA97NvuTzr1lg
-X-ME-Proxy: <xmx:U_3oatxqYhX0hWpcSGJgdTO64UmbQLn1zkSvkgmn2QN3P9YNu5WJ0w>
-    <xmx:U_3oav5HgW2k6KeJbHXAdQUNPTjXcBKAkESvLUwa5JME7gNZc5c0tQ>
-    <xmx:U_3oasSgNqIt2BaGeBZ12VcERyFoy0lpk1cdl0eiT57vWKlvWpphXg>
-    <xmx:U_3oaifZ0cTDaYHT72Jch7KjTqrgvVpyqwgckwFzCeMt7Uwl9HyKaw>
-    <xmx:U_3oapwU7EvPML2sBaImLYgTk9SsDSGibfYemkcHEOBIYG1GVrkdWT-b>
-Feedback-ID: ifa6e4810:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id 181AE78273B; Mon,  2 Nov 2026 16:14:59 -0500 (EST)
-X-Mailer: MessagingEngine.com Webmail Interface
+	s=k20260515; t=1793660785;
+	bh=adIUxbBUAhPoTEgVJ2ZdQQ0sIkUjRLbD7ye6beWxzTc=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=ojb3Czh8KMIoL/VvdgllPD/Rn4ll3vpd8bSHNaVcp9Gk0+6ToD6NDryr4AR11vpi1
+	 XUxes3z4YCAm3nOVrM3z7fdOjZ+HdIJ58YE/s2Bvb3wYsSit40e6UpvA6SIWF3sftX
+	 Jc3/DQgmwFDC5HZv5EWJ0QdlR3mDmib6RntK/oytFM9qo31kP5HL6/YpxOxRsFiyEb
+	 YKTj6bbE/tAD2kBNwtfYEJPKAnI40oa2cJi9+zwtSQdFyTroKpSGQHcGuNo68X+NyM
+	 mmbQ8UKB15V9j5BA3mPSpinaIx19MwiqSRLws1EJRYkagmH16Q9QXcp38qBD646Zhd
+	 Jwbd2cKRXDFHQ==
+Date: Mon, 2 Nov 2026 17:06:24 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Vipin Sharma <vipinsh@google.com>
+Cc: kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org, kvm@vger.kernel.org, linux-mm@kvack.org,
+	linux-kselftest@vger.kernel.org, linux-pci@vger.kernel.org,
+	ajayachandra@nvidia.com, alex@shazbot.org, amastro@fb.com,
+	ankita@nvidia.com, apopple@nvidia.com, bhelgaas@google.com,
+	chrisl@kernel.org, christian.koenig@amd.com, corbet@lwn.net,
+	dmatlack@google.com, graf@amazon.com, jacob.pan@linux.microsoft.com,
+	jgg@nvidia.com, jgg@ziepe.ca, jrhilke@google.com,
+	julianr@linux.ibm.com, kees@kernel.org, kevin.tian@intel.com,
+	leon@kernel.org, leonro@nvidia.com, lukas@wunner.de,
+	mattev@meta.com, michal.winiarski@intel.com, parav@nvidia.com,
+	pasha.tatashin@soleen.com, praan@google.com, pratyush@kernel.org,
+	rananta@google.com, rdunlap@infradead.org, rientjes@google.com,
+	rodrigo.vivi@intel.com, rppt@kernel.org, saeedm@nvidia.com,
+	schnelle@linux.ibm.com, skhan@linuxfoundation.org,
+	skhawaja@google.com, vivek.kasireddy@intel.com, witu@nvidia.com,
+	yanjun.zhu@linux.dev, yi.l.liu@intel.com
+Subject: Re: [PATCH v6 05/27] PCI: liveupdate: Add helpers to preserve struct
+ pci_saved_state
+Message-ID: <20261102230624.GA1038787@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -77,61 +71,100 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-ThreadId: AlKaHQIBeldV
-Date: Mon, 02 Nov 2026 16:14:38 -0500
-From: "Chuck Lever" <cel@kernel.org>
-To: "Christian Brauner" <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
-Cc: "Linus Torvalds" <torvalds@linux-foundation.org>,
- "Jann Horn" <jannh@google.com>, "Josef Bacik" <josef@toxicpanda.com>,
- "Chris Mason" <mason@kernel.org>, "Jeff Layton" <jlayton@kernel.org>,
- NeilBrown <neil@brown.name>, "Eric Dumazet" <edumazet@kernel.org>,
- "Thomas Gleixner" <tglx@kernel.org>,
- "Alexander Viro" <viro@zeniv.linux.org.uk>,
- "Jonathan Corbet" <corbet@lwn.net>, "Christoph Hellwig" <hch@lst.de>,
- "Greg Kroah-Hartman" <gregkh@suse.de>,
- "Joel Granados" <joel.granados@kernel.org>, "Kees Cook" <kees@kernel.org>,
- "Jan Kara" <jack@suse.cz>, "Jan Kara" <jack@suse.com>,
- linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-s390@vger.kernel.org,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- linux-um@lists.infradead.org, linux-wireless@vger.kernel.org,
- "Linuxppc Dev" <linuxppc-dev@lists.ozlabs.org>, netdev@vger.kernel.org,
- ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org,
- coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org,
- linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org,
- dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net,
- jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org,
- linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org,
- linux-sh@vger.kernel.org, linux-usb@vger.kernel.org,
- samba-technical@lists.samba.org, sparclinux@vger.kernel.org,
- linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org,
- linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net,
- "Takashi Iwai" <tiwai@suse.de>, linux-input@vger.kernel.org,
- linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org
-Message-Id: <961e7e3d-2117-48ee-8a7e-a7a851ec8ef8@app.fastmail.com>
-In-Reply-To: <20261102-work-procfs-fs-v1-6-d09a996317b3@kernel.org>
-References: <20261102-work-procfs-fs-v1-0-d09a996317b3@kernel.org>
- <20261102-work-procfs-fs-v1-6-d09a996317b3@kernel.org>
-Subject: Re: [PATCH RFC 06/27] nfsd: let procfs own the seq_file of
- /proc/fs/nfs/exports
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261102153656.1431701-6-vipinsh@google.com>
 
+On Mon, Nov 02, 2026 at 07:36:34AM -0800, Vipin Sharma wrote:
+> Drivers that keep a device running across Live Update need to hand the
+> state they captured with pci_store_saved_state() to the next kernel,
+> since the next kernel never sees the device in that state. VFIO, for
+> example, captures it at first open and uses it to restore the device
+> when the last user closes it.
+> 
+> struct pci_saved_state is private to the PCI core and its in-memory
+> layout is not a stable ABI. Add helpers to serialize it into a
+> caller-provided buffer and rebuild it in the next kernel with a stable
+> struct pci_saved_state_ser ABI. Using caller-provided buffers allows
+> drivers to embed the serialized saved state directly in their own
+> KHO-preserved data with a single allocation and lifetime.
+> 
+> Validate the serialized buffer and verify that the saved standard
+> configuration header matches the live device before rebuilding the
+> state: the vendor and device IDs must match, only Type 0 (Normal)
+> headers are accepted, and BAR0-5 and the expansion ROM BAR address must
+> equal the current hardware values. This ensures that restoring the
+> saved state cannot write stale BAR addresses if resources were
+> reassigned in the new kernel. Only the address bits of the ROM BAR are
+> compared, since its enable and validation status bits may legitimately
+> differ.
+> 
+> Signed-off-by: Vipin Sharma <vipinsh@google.com>
 
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-On Mon, Nov 2, 2026, at 10:07 AM, Christian Brauner wrote:
-> Declare the seq_operations and let procfs open and free the seq_file.
-> ->proc_open() and ->proc_release() only set up ->private and take and
-> drop the reference to the network namespace now. Reading the file then
-> no longer holds up its removal.
->
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+A few nits below.
 
-Acked-by: Chuck Lever <cel@kernel.org>
+> +static const struct pci_cap_saved_data *pci_saved_cap_next(const struct pci_cap_saved_data *cap)
+> +{
+> +	return (const void *)cap + sizeof(*cap) + cap->size;
+> +}
+> +
+> +/**
+> + * pci_liveupdate_saved_state_ser_size() - Size needed to serialize a saved state
 
+Wrap to fit in 80 columns (75 or so is even nicer because it's a
+little more relaxed to read and typo fixes are less likely to rewrap).
 
--- 
-Chuck Lever (Come to NFS bake-a-thon! https://nfsv4bat.org)
+> + * @state: Saved state returned by pci_store_saved_state(), or NULL.
+> + *
+> + * Return: Number of bytes needed by pci_liveupdate_serialize_saved_state(), or
+> + * 0 if @state is NULL.
+> + */
+> +size_t pci_liveupdate_saved_state_ser_size(const struct pci_saved_state *state)
+
+I think pci_liveupdate_saved_state_ser_size() is connected with
+pci_liveupdate_serialize_saved_state() and
+pci_liveupdate_deserialize_saved_state().
+
+Would be nice if that were obvious from the names.
+
+They're also pretty long, which makes prototypes and uses very likely
+to wrap in awkward spots.
+
+> + * struct pci_cap_saved_data_ser - A saved capability in a struct pci_saved_state_ser
+> + * @cap_nr: Capability ID (PCI_CAP_ID_* or PCI_EXT_CAP_ID_*).
+> + * @extended: 1 if @cap_nr is an extended capability ID, 0 otherwise.
+> + * @size: Size of @data in bytes, never 0.
+> + * @data: The saved registers.
+> + */
+> +struct pci_cap_saved_data_ser {
+> +	u16 cap_nr;
+
+Maybe "cap_id" to avoid confusion with "nr_caps" or indexes into
+"caps[]" below?
+
+> +	u16 extended;
+> +	u32 size;
+> +	u8 data[];
+> +} __packed;
+> +
+> +/**
+> + * struct pci_saved_state_ser - Serialized struct pci_saved_state
+> + * @size: Size in bytes of this struct, including all entries in @caps.
+> + * @flags: Features a kernel must support to restore the state. None defined.
+> + * @nr_caps: Number of entries in @caps.
+> + * @config_space: The saved standard configuration header.
+> + * @caps: @nr_caps struct pci_cap_saved_data_ser entries.
+> + */
+> +struct pci_saved_state_ser {
+> +	u32 size;
+> +	u32 flags;
+> +	u32 nr_caps;
+> +	u32 config_space[16];
+> +	u8 caps[];
+
+I think it would be helpful if the names of "config_space[]" and
+"caps[]" hinted at the connection between them (both are in config
+space).  "config_space[]" by itself suggests it's complete, which it's
+not, so maybe there's a place for "hdr" or similar in it.
