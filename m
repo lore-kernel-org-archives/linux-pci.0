@@ -1,57 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.13
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793628283;
-	b=QRyfKy2PjVlviwLxf0wLl0/GgjFrAhQrp9ZoKbXL4cTvgtwEj2m6a9/0/JKYNskK4zqA
-	 FkyUC3Fu8DhkVOfazKIHu0kOlw7pzWCC4dZinDRYaIMNKIX6zSdUYSkYOlZ6tA1lcKJcy
-	 pUlo9v+aTNUMfU6jCKm3ZctK1jzkI9Zyl47phQXt2nF1Q73GEwGQyy6gzC+0zgCa4BJhO
-	 Wv2PA2ffQO8V8erxsWdYtMKLwNTaKbU6VFOhB8g1fyNGVSazYkLrIxWfvx9IBuoCwciRQ
-	 yBQJzhvSNYSWA4tkzWKoJntadATvFznOkAUc3V2oCtg/sPYEVH3TMkpLxAIlio4+aqQ==
+	t=1793628492;
+	b=S7N7APJM85YfWvgVfpkZr6YQoqUhpOQ5eeoTTacVEF+nglupZiXALtlsrOSaJFfBxm6j
+	 jUHH1m7w/UiLXbuGNqlMcRK3DPnybuT4s/TF6RiaBA/zTJthyHnlKFUwITSZik8TSIelq
+	 kVUdzEzxR/H2V8CzpCToGRBhReYXwPrTVKeDbdrbsDHUvziFv3MyZgO1PIFdouds75Tqs
+	 WdGjvsRCaayn3hfnC5KvI2x7rSCl99YxdHwG5NA3KG2mgdwHVMhOP4NQWXWC6HOdy/Ts3
+	 wsAoVXYGCUmPQxdPztubkhGrz0i6v4wxiGm20VZW/hfmAKbaY8YbWDhDQdcLPJ6KjFA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793628283;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=jZwPprS7WJAH6zpvBOxo7qWzCJehN1A5i/OJT0qAXl4=;
-	b=yOmPFr/lchlyoadWkAQxkossxiMKq/u4zYIf1EA75Z2fsEvneXlUfaAnI6+6AYVPoTdD
-	 D5Xd/4rPAonmIaV/R7JDyWU99NfaNBhjoLEGY26HE5zMgbFCUECHKYyksN6JfAq2Tzogm
-	 trxJT2F0kqyvosMrMMCxsfieEv46prQ1WEEyYBdj9o2z3II/dyDWtiBA4B8PuLhQS8m97
-	 yLvCIJu2x0auWzBwv28XUH2qgM8TaL5WTi9jk7JL303T7I+pyx0OTAkWVIWqEeQ6uFKuF
-	 KbWXw79tZRUCdgl78DpRXdI/96N1Vfz5WejPhoTLtbvTuFDclJ742RYjFUyyWVgv3vA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793628492;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To;
+	bh=V4QEgvHitIdfAeCE36htzg958qUwiPgq5ml5nbAo+zo=;
+	b=LT6LhSnEc1nUl0ILZlYMzjcwPXKwroc1jU+goY/IrS0tUWhNLMmmk+aczBNqJ1MM6XoG
+	 T6GXv25qnm2GPNpAmuw7oa677ujQcvSWm2mzGPCwencw+cdhHOPCokb+rktBbqTvqViD0
+	 RuUJqPSraGJAl44zylXger4RtjuT4x4av90QqQ+jdSeG3FM03gomVRArAVtJYOPHyNAG0
+	 8ldPwvYtfDhra2ub7A5HCmsn31dQq8IbL6dhhPH7pugkjGvd3mooB9/n/3Gxu3kf86WRV
+	 d8XQQnneeSmZP8itt0F+EKsK8gZRx2jtExlZyQlXbMZf7ny8xfflRVfJd22ZOrnb3sg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lc3EeSix;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=WzLGqLU5;
+	arc=none smtp.remote-ip=198.175.65.13
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9A09606A333
-	for <linux-pci@vger.kernel.org>; Mon,  2 Nov 2026 14:04:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E050606A326;
+	Mon,  2 Nov 2026 14:08:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9E050606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lc3EeSix
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C6401F00A1B;
-	Mon,  2 Nov 2026 14:04:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793628282;
-	bh=jZwPprS7WJAH6zpvBOxo7qWzCJehN1A5i/OJT0qAXl4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lc3EeSixLdL8dIL9OcVVh91a2q+hrX1A8WcTOsdYmOahqZ+15ET45moRDT7KAf8PG
-	 7Q6nDb5KIP3Eo3AqrA/OwolZGOeAcuLRxypfa/JA8v9ZlT7oySZIS4T2DLxGpoO1CD
-	 ip43qbQzZyC/QEGEM6zTp5rjxbeAjXIMupbtHkCM20uDg2TzNkCWx/3UqyXaJ4hIjh
-	 nViOcaGSSR1zK7kyLFXIu49DrTbHcG/bDeDUNaMskMzwSLA6YYcGtL5ivKpAHQ7lI3
-	 /DRmWkRkGJgYS7GvbPkp9TUs9c1bvk1KV6RCAYCmZWM++kmFUUaRwJ4T1bE42uw896
-	 pZGzKDDya4I6A==
-Message-ID: <sashiko-outbox-193522@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/2] PCI/PM: Avoid D3cold for HP Spectre x360
- Convertible 15-ch0xx PCIe Ports
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Mario Limonciello" <superm1@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261102-superm1-kbz-222179-v1-2-c91a664ba251@kernel.org>
-References: <20261102-superm1-kbz-222179-v1-0-c91a664ba251@kernel.org>
- <20261102-superm1-kbz-222179-v1-2-c91a664ba251@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 02 Nov 2026 14:04:41 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=WzLGqLU5
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793628492; x=1825164492;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=fBFlwh2qV0AVTnEzb76jIYehagiXYHVyFxCNit2x6bc=;
+  b=WzLGqLU5UmXIC2aBmOxhIOyuB9i3v4Uem14UdROUpPtyjOXgVWuJvtob
+   Q1dMnXfF4NcynM84IdTLDKUvUxHJplSrIeOJwoz95Ud1dR57VMd19jyeu
+   iuz57/chK99c4p+yGb6iQ0tvZ1XcCRfF7Ntpd9qWRsWZCIwFnky6PjScu
+   Vth3aNcfZgwR+qbMDvqoPbj+WzfRY30D0GmbBtDw+jjJBJdSlKTjTRpNM
+   WzzNmtOaHS5WgImz7iPJEUjzuyVXCMLn1XlUK3Vda066PXlApPgjqbX9S
+   VHoT0Pv0RDqcog/Q6NtXxXtgzm/YBHGkx+bUz2A07WYWYPZqw3hqtiMU8
+   g==;
+X-CSE-ConnectionGUID: 3IgteZ+0T0uqUfu+p2hS/Q==
+X-CSE-MsgGUID: 75SrerF6RLONxYevf5UOHA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11954"; a="2197644"
+X-IronPort-AV: E=Sophos;i="6.27,191,1787036400"; 
+   d="scan'208";a="2197644"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Nov 2026 06:08:11 -0800
+X-CSE-ConnectionGUID: Afjann7MR2OidHzs0VYlVg==
+X-CSE-MsgGUID: ZWzNrP8TQXaLBZCCPmKCXQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,191,1787036400"; 
+   d="scan'208";a="5980335"
+Received: from black.igk.intel.com ([10.91.253.5])
+  by orviesa008.jf.intel.com with ESMTP; 02 Nov 2026 06:08:08 -0800
+Received: by black.igk.intel.com (Postfix, from userid 1001)
+	id 704D799; Mon, 02 Nov 2026 15:08:07 +0100 (CET)
+Date: Mon, 2 Nov 2026 15:08:07 +0100
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Francisco =?utf-8?B?QmVsdHLDoW4gTWlsbGFsw6lu?= <fbeltranmillalen@gmail.com>
+Cc: andreas.noever@gmail.com, westeri@kernel.org, YehezkelShB@gmail.com,
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+	helgaas@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
+	lukas@wunner.de, d@rrell.co
+Subject: Re: [PATCH v3] thunderbolt: Call SXFP() on Apple systems with Alpine
+ Ridge when suspending
+Message-ID: <20261102140807.GW158991@black.igk.intel.com>
+References: <20261021141444.10632-1-fbeltranmillalen@gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,73 +82,365 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261021141444.10632-1-fbeltranmillalen@gmail.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Medium] PCI/PM: undocumented HP ZBook 15 G4 quirk with wrong DMI_BOARD_N=
-AME match
-- [Low] PCI/PM: wrong GitLab issue URL in comment for HP Spectre x360 quirk
---
+Hi,
 
-commit e809ddf27f4e25c996dc6c51452553c16b6c434f
-Author: Mario Limonciello <superm1@kernel.org>
+On Wed, Oct 21, 2026 at 11:14:44AM -0300, Francisco Beltrán Millalén wrote:
+> On Apple systems with Alpine Ridge, suspending to RAM with a device
+> connected to a Type-C port leaves the PCIe link to the upstream port of
+> the controller down on resume, and the ports are lost until reboot.
+> Calling the SXFP(0) ACPI method under the NHI before entering sleep
+> avoids that.
+> 
+> The firmware can set bit 26 of plug events CS_20 when it resumes the
+> NHI. While it is set SXFP(0) turns the router off and it does not come
+> back on resume, so clear the bit first and skip SXFP(0) if that fails.
+> 
+> Clearing the bit needs the control channel, which is already stopped
+> when the suspend_noirq hook of the NHI runs. So add a new NHI hook,
+> pre_suspend_noirq, that runs just before the domain is suspended, and
+> use it for Alpine Ridge.
+> 
+> Signed-off-by: Francisco Beltrán Millalén <fbeltranmillalen@gmail.com>
+> ---
+> Thanks for the review, Mika, and for the idea of moving this to pci.c.
+> 
+> I did not use the suspend_noirq hook in the end, because it runs too
+> late.  By the time it is called, the domain has been suspended and the
+> control channel is stopped, so bit 26 can no longer be cleared.  I also
+> tried clearing the bit earlier and calling SXFP(0) from suspend_noirq,
+> but then the side with the disk did not come back on resume.  I only
+> ran that once, so I did not go further with it.
+> 
+> Instead, this adds a new hook that runs just before the domain is
+> suspended, while the control channel still works.  That is about the
+> same point where v2 called SXFP(0).  ar_nhi_ops provides it with the
+> code you suggested.  If you would prefer another way, please let me
+> know.
+> 
+> v3:
+> - Renamed the function to tb_acpi_force_power(), and moved the Apple
+>   and Alpine Ridge checks to ar_nhi_ops in pci.c, as you suggested.
+>   tb.c is no longer changed.
+> - Use the new pre_suspend_noirq hook instead of suspend_noirq (see
+>   above).
+> - Return early when the ICM firmware is in use, as v2 only ran with the
+>   software connection manager.
+> - ar_nhi_ops keeps the other default NHI operations.
+> - Moved the declaration and added the empty line you asked for.
+> 
+> v2: https://lore.kernel.org/all/20261019202900.39062-1-fbeltranmillalen@gmail.com/
+> v1: https://lore.kernel.org/all/20261019134851.7496-1-fbeltranmillalen@gmail.com/
+> 
+> The note on v2 about SXFP(0) and the xHCI on the side with nothing
+> connected still applies, as SXFP(0) is called at about the same point.
+> 
+> Testing:
+> I tested it on a MacBookPro14,3 (two Alpine Ridge controllers, software
+> connection manager) with 6.18.49 and a backport of this patch.  The kernel also carried the PCI series I sent
+> alongside v2:
+> https://lore.kernel.org/all/20261019202445.38259-1-fbeltranmillalen@gmail.com/
+> and a local change equivalent to the ACPICA fix mentioned in v1,
+> without which the firmware does not set bit 26 here.  The old PCI
+> quirk was switched off.  All cycles were 30 second suspends to RAM.
+> 
+> - Three cycles with a USB 3 disk on one side or the other, after a
+>   first one that I don't count.  Both domains came back each time,
+>   with both upstream port links at 8 GT/s x4, and the disk could be
+>   read.  In each cycle SXFP(0) was called on both NHIs before their
+>   control channel was stopped.
+> - One cycle with nothing connected.  Both domains came back, and the
+>   disk worked at USB 3 speed when plugged into either port on one side
+>   afterwards.  In the lower port it first came up at USB 2 through the
+>   PCH xHCI, twice; with the connector flipped it came up at USB 3 on
+>   the controller's xHCI.  I think that is the cable.
+> 
+> There was no kernel WARNING during the whole boot.  The version for
+> your tree was only built (with W=1), not booted, so the default NHI
+> operations copied into ar_nhi_ops were not run here.
+> 
+> Not tested:
+> - Real Thunderbolt devices, only the USB 3 disk behind the
+>   controller's xHCI.
+> - Other Alpine Ridge variants.
+> - A suspend aborted after SXFP(0).
+> - An NHI that is runtime suspended when the system suspends.  Here
+>   both NHIs were always active.  If one is runtime suspended, the PM
+>   core may skip its suspend_noirq (direct_complete), and then SXFP(0)
+>   is not called.
+> - Suspend-to-idle and hibernation; the checks in
+>   tb_acpi_force_power() keep the patch out of both.
+> 
+> As noted in v1, a device plugged in while the system is suspended does
+> not wake it.  I did not repeat that with this version.
+> 
+>  drivers/thunderbolt/acpi.c    | 47 +++++++++++++++++++++++++++++++++++++++++++
+>  drivers/thunderbolt/domain.c  |  2 ++
+>  drivers/thunderbolt/nhi.h     |  3 +++
+>  drivers/thunderbolt/pci.c     | 45 +++++++++++++++++++++++++++++++++--------
+>  drivers/thunderbolt/switch.c  | 32 +++++++++++++++++++++++++++++
+>  drivers/thunderbolt/tb.h      |  4 ++++
+>  drivers/thunderbolt/tb_regs.h |  3 +++
+>  7 files changed, 128 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/thunderbolt/acpi.c b/drivers/thunderbolt/acpi.c
+> index 53546bc477a5..824938a459d5 100644
+> --- a/drivers/thunderbolt/acpi.c
+> +++ b/drivers/thunderbolt/acpi.c
+> @@ -8,6 +8,7 @@
+>  
+>  #include <linux/acpi.h>
+>  #include <linux/pm_runtime.h>
+> +#include <linux/suspend.h>
+>  
+>  #include "tb.h"
+>  
+> @@ -279,6 +280,52 @@ int tb_acpi_power_off_retimers(struct tb_port *port)
+>  	return tb_acpi_retimer_set_power(port, false);
+>  }
+>  
+> +/**
+> + * tb_acpi_force_power() - Call SXFP(0) when entering system sleep
+> + * @tb: Domain that is being suspended
+> + *
+> + * On Apple systems with Alpine Ridge the PCIe link to the upstream port
+> + * of the controller does not come up on resume from system sleep if a
+> + * device is connected, unless SXFP(0) ("Sx Force Power") under the NHI
+> + * is called before entering it. Bit 26 of plug events CS_20 must be
+> + * clear when SXFP(0) is called, otherwise the router is turned off and
+> + * does not come back on resume.
+> + *
+> + * Must be called with @tb->lock held, before the domain is suspended:
+> + * clearing the bit needs the control channel, and SXFP(0) does not help
+> + * once the router has been put to sleep.
+> + */
+> +void tb_acpi_force_power(struct tb *tb)
+> +{
+> +	struct tb_switch *sw = tb->root_switch;
+> +	struct acpi_device *adev;
+> +	acpi_status status;
+> +
+> +	if (tb_switch_is_icm(sw))
+> +		return;
+> +	/*
+> +	 * Only when firmware handles system suspend, as in
+> +	 * quirk_apple_poweroff_thunderbolt(): the OS does not know how to
+> +	 * power the controller back on. pm_suspend_in_progress() excludes
+> +	 * hibernation.
+> +	 */
+> +	if (!pm_suspend_in_progress() || !pm_suspend_via_firmware())
+> +		return;
+> +
+> +	adev = ACPI_COMPANION(tb->nhi->dev);
+> +	if (!adev || !acpi_has_method(adev->handle, "SXFP"))
+> +		return;
+> +
+> +	if (tb_switch_set_bit26(sw, false))
+> +		return;
+> +
+> +	tb_sw_dbg(sw, "ACPI: calling SXFP\n");
+> +	status = acpi_execute_simple_method(adev->handle, "SXFP", 0);
+> +	if (ACPI_FAILURE(status))
+> +		tb_sw_warn(sw, "ACPI: SXFP failed: %s\n",
+> +			   acpi_format_exception(status));
+> +}
+> +
+>  static bool tb_acpi_bus_match(struct device *dev)
+>  {
+>  	return tb_is_switch(dev) || tb_is_usb4_port_device(dev);
+> diff --git a/drivers/thunderbolt/domain.c b/drivers/thunderbolt/domain.c
+> index 12c88509a54f..a9a6d63bf414 100644
+> --- a/drivers/thunderbolt/domain.c
+> +++ b/drivers/thunderbolt/domain.c
+> @@ -533,6 +533,8 @@ int tb_domain_suspend_noirq(struct tb *tb)
+>  	 * we actually have stopped the domain and the control channel.
+>  	 */
+>  	mutex_lock(&tb->lock);
+> +	if (tb->nhi->ops->pre_suspend_noirq)
+> +		tb->nhi->ops->pre_suspend_noirq(tb->nhi);
 
-PCI/PM: Avoid D3cold for HP Spectre x360 Convertible 15-ch0xx PCIe Ports
+We should not call NHI things in TB side of code (that's domain and the
+routers, adapters etc). So this should be moved elsewhere.
 
-This commit adds DMI entries to bridge_d3_blacklist in drivers/pci/pci.c to
-prevent PCIe Root Ports from entering D3cold on the HP Spectre x360
-Convertible 15-ch0xx, where the AMD Polaris Radeon dGPU fails to transition
-back from D3cold to D0 during runtime PM resume.
+>  	if (tb->cm_ops->suspend_noirq)
+>  		ret = tb->cm_ops->suspend_noirq(tb);
+>  	if (!ret)
+> diff --git a/drivers/thunderbolt/nhi.h b/drivers/thunderbolt/nhi.h
+> index b2e2e2c413b2..6f66a2608d06 100644
+> --- a/drivers/thunderbolt/nhi.h
+> +++ b/drivers/thunderbolt/nhi.h
+> @@ -44,6 +44,8 @@ extern const struct dev_pm_ops nhi_pm_ops;
+>   * struct tb_nhi_ops - NHI specific optional operations
+>   * @init: NHI specific initialization
+>   * @add_links: Setup device links for tunneling native protocols
+> + * @pre_suspend_noirq: hook to run in suspend_noirq before the domain is
+> + *		       suspended, while the control channel is still running
+>   * @suspend_noirq: NHI specific suspend_noirq hook
+>   * @resume_noirq: NHI specific resume_noirq hook
+>   * @runtime_suspend: NHI specific runtime_suspend hook
+> @@ -60,6 +62,7 @@ extern const struct dev_pm_ops nhi_pm_ops;
+>  struct tb_nhi_ops {
+>  	int (*init)(struct tb_nhi *nhi);
+>  	bool (*add_links)(struct tb_nhi *nhi);
+> +	void (*pre_suspend_noirq)(struct tb_nhi *nhi);
+>  	int (*suspend_noirq)(struct tb_nhi *nhi, bool wakeup);
+>  	int (*resume_noirq)(struct tb_nhi *nhi);
+>  	int (*runtime_suspend)(struct tb_nhi *nhi);
+> diff --git a/drivers/thunderbolt/pci.c b/drivers/thunderbolt/pci.c
+> index e40d4d6af071..c25f33221df1 100644
+> --- a/drivers/thunderbolt/pci.c
+> +++ b/drivers/thunderbolt/pci.c
+> @@ -360,6 +360,27 @@ static const struct tb_nhi_ops pci_nhi_default_ops = {
+>  	.reset_interface = nhi_reset_interface,
+>  };
+>  
+> +/* Alpine Ridge specific NHI operations */
+> +
+> +static void ar_nhi_pre_suspend_noirq(struct tb_nhi *nhi)
+> +{
+> +	if (x86_apple_machine)
+> +		tb_acpi_force_power(dev_get_drvdata(nhi->dev));
+> +}
+> +
+> +static const struct tb_nhi_ops ar_nhi_ops = {
+> +	.add_links = nhi_pci_add_links,
+> +	.pre_suspend_noirq = ar_nhi_pre_suspend_noirq,
+> +	.pre_nvm_auth = nhi_pci_start_dma_port,
+> +	.post_nvm_auth = nhi_pci_complete_dma_port,
+> +	.request_ring_irq = nhi_pci_ring_request_msix,
+> +	.release_ring_irq = nhi_pci_ring_release_msix,
+> +	.shutdown = nhi_pci_release_irq,
+> +	.is_present = nhi_pci_is_present,
+> +	.init_interrupts = nhi_pci_init_msi,
+> +	.reset_interface = nhi_reset_interface,
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 17ec7f065682d..151b98757ba57 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3039,6 +3039,24 @@ static const struct dmi_system_id bridge_d3_blackl=
-ist[] =3D {
->  			DMI_MATCH(DMI_BOARD_NAME, "314D"),
->  		},
+This hook is now so please check that the patch applies to the latest next
+branch.
+
+> +};
+> +
+>  /* Ice Lake specific NHI operations */
+>  
+>  #define ICL_LC_MAILBOX_TIMEOUT	500 /* ms */
+> @@ -677,14 +698,22 @@ static struct pci_device_id nhi_ids[] = {
 >  	},
-> +	{
-> +		/*
-> +		 * Changing power state of root port dGPU is connected fails
-> +		 * https://gitlab.freedesktop.org/drm/amd/-/issues/3229
-> +		 */
-
-[Severity: Low]
-This isn't a bug, but the comment in bridge_d3_blacklist in
-drivers/pci/pci.c points to issue 3229 (which belongs to the earlier
-Hewlett-Packard HP Pavilion 17 Notebook PC/1972 entry). Should this
-reference https://gitlab.freedesktop.org/drm/amd/-/issues/3389 to match the
-Closes tag in the commit message?
-
-> +		.ident =3D "HP Spectre x360 Convertible 15-ch0xx",
-> +		.matches =3D {
-> +			DMI_MATCH(DMI_BOARD_VENDOR, "HP"),
-> +			DMI_MATCH(DMI_BOARD_NAME, "83BB"),
-> +		},
-> +	},
-> +	{
-> +		.ident =3D "HP ZBook 15 G4",
-> +		.matches =3D {
-> +			DMI_MATCH(DMI_BOARD_VENDOR, "HP"),
-> +			DMI_MATCH(DMI_BOARD_NAME, "HP ZBook 15 G4"),
-> +		},
-> +	},
-
-[Severity: Medium]
-Was the HP ZBook 15 G4 entry in bridge_d3_blacklist in drivers/pci/pci.c
-included here intentionally, given that the commit message only describes t=
-he
-HP Spectre x360 Convertible 15-ch0xx?
-
-Also, when pci_bridge_d3_possible() calls
-dmi_check_system(bridge_d3_blacklist), will DMI_MATCH(DMI_BOARD_NAME,
-"HP ZBook 15 G4") ever match on target hardware? On HP systems,
-DMI_BOARD_NAME holds a 4-character hex board ID (such as "83BB" or "1972" in
-the preceding entries), while "HP ZBook 15 G4" is the marketing string
-stored in DMI_PRODUCT_NAME.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261102-superm1-kb=
-z-222179-v1-0-c91a664ba251@kernel.org?part=3D2
+>  
+>  	/* Thunderbolt 3 */
+> -	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_NHI) },
+> -	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI) },
+> -	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_USBONLY_NHI) },
+> -	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_NHI) },
+> -	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_USBONLY_NHI) },
+> -	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_2C_NHI) },
+> -	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_4C_NHI) },
+> -	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_USBONLY_NHI) },
+> +	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_NHI),
+> +	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
+> +	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI),
+> +	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
+> +	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_USBONLY_NHI),
+> +	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
+> +	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_NHI),
+> +	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
+> +	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_USBONLY_NHI),
+> +	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
+> +	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_2C_NHI),
+> +	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
+> +	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_4C_NHI),
+> +	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
+> +	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_USBONLY_NHI),
+> +	  .driver_data = (kernel_ulong_t)&ar_nhi_ops },
+>  	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_TITAN_RIDGE_2C_NHI) },
+>  	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_TITAN_RIDGE_4C_NHI) },
+>  	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ICL_NHI0),
+> diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+> index 4b8bcba7bd2f..44141b19c1f2 100644
+> --- a/drivers/thunderbolt/switch.c
+> +++ b/drivers/thunderbolt/switch.c
+> @@ -4027,6 +4027,38 @@ int tb_switch_xhci_connect(struct tb_switch *sw)
+>  	return 0;
+>  }
+>  
+> +/**
+> + * tb_switch_set_bit26() - Set or clear bit 26 of plug events CS_20
+> + * @sw: Alpine Ridge router
+> + * @value: %true to set the bit, %false to clear it
+> + *
+> + * On Apple systems the firmware can set this bit when it resumes the
+> + * NHI. While it is set, SXFP(0) turns the router off and it does not
+> + * come back on resume.
+> + *
+> + * Return: %0 on success, negative errno otherwise.
+> + */
+> +int tb_switch_set_bit26(struct tb_switch *sw, bool value)
+> +{
+> +	unsigned int offset = sw->cap_plug_events + TB_PLUG_EVENTS_CS_20;
+> +	u32 val;
+> +	int ret;
+> +
+> +	ret = tb_sw_read(sw, &val, TB_CFG_SWITCH, offset, 1);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (!!(val & TB_PLUG_EVENTS_CS_20_BIT26) == value)
+> +		return 0;
+> +
+> +	if (value)
+> +		val |= TB_PLUG_EVENTS_CS_20_BIT26;
+> +	else
+> +		val &= ~TB_PLUG_EVENTS_CS_20_BIT26;
+> +
+> +	return tb_sw_write(sw, &val, TB_CFG_SWITCH, offset, 1);
+> +}
+> +
+>  /**
+>   * tb_switch_xhci_disconnect() - Disconnect internal xHCI
+>   * @sw: Router whose xHCI to disconnect
+> diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+> index e86845762e22..9900d0018174 100644
+> --- a/drivers/thunderbolt/tb.h
+> +++ b/drivers/thunderbolt/tb.h
+> @@ -1099,6 +1099,8 @@ int tb_switch_pcie_l1_enable(struct tb_switch *sw);
+>  int tb_switch_xhci_connect(struct tb_switch *sw);
+>  void tb_switch_xhci_disconnect(struct tb_switch *sw);
+>  
+> +int tb_switch_set_bit26(struct tb_switch *sw, bool value);
+> +
+>  int tb_port_state(struct tb_port *port);
+>  int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
+>  int tb_port_add_nfc_credits(struct tb_port *port, int credits);
+> @@ -1524,6 +1526,7 @@ int tb_acpi_init(void);
+>  void tb_acpi_exit(void);
+>  int tb_acpi_power_on_retimers(struct tb_port *port);
+>  int tb_acpi_power_off_retimers(struct tb_port *port);
+> +void tb_acpi_force_power(struct tb *tb);
+>  #else
+>  static inline bool tb_acpi_add_links(struct tb_nhi *nhi) { return false; }
+>  
+> @@ -1537,6 +1540,7 @@ static inline int tb_acpi_init(void) { return 0; }
+>  static inline void tb_acpi_exit(void) { }
+>  static inline int tb_acpi_power_on_retimers(struct tb_port *port) { return 0; }
+>  static inline int tb_acpi_power_off_retimers(struct tb_port *port) { return 0; }
+> +static inline void tb_acpi_force_power(struct tb *tb) { }
+>  #endif
+>  
+>  #ifdef CONFIG_DEBUG_FS
+> diff --git a/drivers/thunderbolt/tb_regs.h b/drivers/thunderbolt/tb_regs.h
+> index 92d893634d2b..0940e8b12d89 100644
+> --- a/drivers/thunderbolt/tb_regs.h
+> +++ b/drivers/thunderbolt/tb_regs.h
+> @@ -563,6 +563,9 @@ struct tb_regs_hop {
+>  #define TB_PLUG_EVENTS_CS_1_LOW_DPIN_DISABLE	BIT(5)
+>  #define TB_PLUG_EVENTS_CS_1_HIGH_DPIN_DISABLE	BIT(6)
+>  
+> +#define TB_PLUG_EVENTS_CS_20			0x14
+> +#define TB_PLUG_EVENTS_CS_20_BIT26		BIT(26)
+> +
+>  #define TB_PLUG_EVENTS_PCIE_WR_DATA		0x1b
+>  #define TB_PLUG_EVENTS_PCIE_CMD			0x1c
+>  #define TB_PLUG_EVENTS_PCIE_CMD_DW_OFFSET_MASK	GENMASK(9, 0)
