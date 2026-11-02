@@ -1,75 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.200
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793633827;
-	b=iMYa5uC0eHevlAJ+aCXyaUfWfVgAU53vEuFdSAyH5ZxND+qDQn73uU8Wl2v1QxDiBjMu
-	 oBSgEKmO2kqgoxzZ4RGZd4rehjezQtcaQcgqfEgM/HjoCTvm17BM1t2MoQcyRSZGj1jgp
-	 XJKOpcpAgvoCxoB0tBAY4S/UCS+lmLXjzxczkCioFi2TP/grG5K+RN8F07wuR3liUwfNn
-	 dyYlk3d6/IzkwenHFwQ2u9UclXXp38INgs1NgPcVAvdQWsYwOUUDhBZkbq7YZ3OtIwXAQ
-	 e71K2z71rslszbt1d1Xh2pdE8g3i/7D8cMaS4WXdCLD5MDbw8Nw+qiqXZ1BFwglvXiA==
+	t=1793633817;
+	b=H04jT7kXNHe/d9AlvD+HoQpYgzA0yn9RysoVtWs1sFIFJmmHZnRqOYOFK6bFbVjH3uNw
+	 /+s0AOl+sCA2UJfudK6KdqiNbxwqhEEUbVKBfH/nK4pca4x2nwf/j+CzuWrfSGmY61LvW
+	 NBfQ0VkOHjq5+YwBIUt++aaffpHLbqDDwQSMMnGGW8VOAsdaTdCL3Uqdh9w5Yt2o1z2p6
+	 oQJh9Pz4vgqQjDBc135ymdXr0sccyBXufFgRQnYEABYjDcCEXZVGkdx+K6XZ5mJH1V7qv
+	 nxD68EFGWfb93636a5Hc0E4DXPZVA6zV25rRA/z7reHmyaj+e7j9ZkZCTMl0SFobCxA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793633827;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
-	 Content-Type;
-	bh=6CTI6wZf9fmjJK3hlmivlOQee38QTMnwowyyRsW/zh4=;
-	b=5FPZh5VCLa2cDN6llxonjPFKtAG7HUJtmYudpeAhtYMbgLkXMDm5XFuaWX/5fck9BBeP
-	 nlTePvvQq4Cil2mGhwzl8/U796Nc7VfPmDwIulgbeSWcKWMZdP+HknisWFzw+FC2pJh+y
-	 lWeNKxwdIjdRqAf6c+03N1eCKWDaAFPyLNgKE+Xx0AGd+tMA1q+EukMKa1RRk2ryLDJPF
-	 jkkQALAw68to6S2qglWaMOZXqScydcPi6UVtKt04oWVgnyM3kXCv6tXe/xTEUnwzHYKQ9
-	 /u19uuOaqjP9rMO/nAO8pSReywPmorH21kEtNoXiBoNGFBTURwlZreCXGlJs6xO2nFQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793633817;
+	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
+	 X-Mailer:X-Developer-Signature:X-Developer-Key;
+	bh=S9tzR156ub0Ko3Mv53tQ+R8L9hVWUPj+OCS3UYlYhFM=;
+	b=K81AVEcDz51PfEn8pd82/Ml1o66NqeRfjIBqee6JQuS2I4nQmtfXFV2WH4ijXAYpdqEC
+	 b370JIGtlRd0advkOw3XEl++QLuzIMoROBgcLTdvVMEZYvAeASLidYQnQfPGYY61NjkN9
+	 qm0VI4Hgn7oPRSpZndq0nxZvWKSXJRqoRmem+0zek92XNfzRbsrbo/LPbNNMCmX8wHA1P
+	 Bh7gvcP9k1W5e6cfqHPhUsr3eFryJcc+zSa6qWMru8sXC8UWYimwGtYX/AbONbxEmfXf0
+	 c9Qc1fqwAyo9JORQIC+W448q65nnggeQraZk3NnSBz3/8CE8m0abnoXiAUiVpxSOlhQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--vipinsh.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Hn2t6mwi;
-	arc=none smtp.remote-ip=209.85.214.200
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Xv854kNM;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9EEA60E4084
-	for <linux-pci@vger.kernel.org>; Mon,  2 Nov 2026 15:37:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D9EEA60E4084
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--vipinsh.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9F4860A0FFF;
+	Mon,  2 Nov 2026 15:36:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Hn2t6mwi
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2e93f266d20so51211915ad.3
-        for <linux-pci@vger.kernel.org>; Mon, 02 Nov 2026 07:37:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793633826; x=1794238626; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=6CTI6wZf9fmjJK3hlmivlOQee38QTMnwowyyRsW/zh4=;
-        b=Hn2t6mwiCOCnKJYHbSI4r7YEIwDSLpmn+wdiodbT/07QFRFvMJkMrHiKk4CmStrEA0
-         XV84XfE0Ppzrkm3RLpwzLkfwlXdZOODr/P0C900SEGtXO0Tyo2HUnp08E3pz+gUd+18M
-         wZU+PIInbM0X7xctljZpdMkDf0gRTxqpf2BWlzRqzXS1ZfGF+UCTsDBz5AGzdOomDShH
-         HxenHfUtDSgyBHAEV1k7a6oT+mCT38TZSVD4GLRGQT3hWAUYPRmQWyyW3RQ/4ow/Rv4S
-         GUxURDRrKgwtY6zD5OerG4lx3xqNngfAbAnKpsqjE70cooyzL49iLh5K+uzpBfGt0e+7
-         I7XA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793633826; x=1794238626;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=6CTI6wZf9fmjJK3hlmivlOQee38QTMnwowyyRsW/zh4=;
-        b=LwiSjMmQUtHn52YP/v9zn6Bff362J7Hrm6cCvqoMMYWrLisy4EeAWW86iPxffgu0fC
-         pQn/hC3bP0fcoL6mcmNtU4yHIDBMGZMwS9I6rnM+PfjWuF/kBIrF8rl/xy6fTqMiTY3y
-         5pDUJZgHks4/4r8gnMKxvsb32vINLzTna+Kdcb1YxbhLb6oxZ9JUjv6DP+mRpDUbec4Y
-         bP1YvyoJDGwCKYV8nTDgourvM4NtYZGuJ8tjwzDR/D3n8LN9cytrblVfOFmcjXLV7v00
-         leVO+AZj7tk2p8xkzLA6rlNGXLOkdB1r7Wln7H30y0oPhKWSKl7pxuBzZ59tR/1pOJmM
-         kKXw==
-X-Forwarded-Encrypted: i=1; AKwUvBxXepiWc+Jm3lwsAKPEpdH2x6JFa2BsCCPaSZsKlgOl8F7MQmwRJzGLdo5k3PXu3sl5sqso4i/mp7M=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9OFUgdONAy6QD9ffFCi7TV0ZS0uRz//g9PY54yxLWJrdgN2CpM
-	Z46RNAY6/f77ZbNNPnBHPkb01OvkkOorUN0c0yHbS23WArsCuVaFNip2G/pz47+PQiAr8hDxq3F
-	J/bwZNtr4UA==
-X-Received: from plct12.prod.google.com ([2002:a17:902:d28c:b0:2e5:712c:5c7])
- (user=vipinsh job=prod-delivery.src-stubby-dispatcher) by 2002:a17:903:1b2b:b0:2e9:60fb:5e2b
- with SMTP id d9443c01a7336-2eb364e5a41mr100336855ad.44.1793633826227; Mon, 02
- Nov 2026 07:37:06 -0800 (PST)
-Date: Mon,  2 Nov 2026 07:36:35 -0800
-In-Reply-To: <20261102153656.1431701-1-vipinsh@google.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Xv854kNM
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 531081F00A18;
+	Mon,  2 Nov 2026 15:36:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793633816;
+	bh=S9tzR156ub0Ko3Mv53tQ+R8L9hVWUPj+OCS3UYlYhFM=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc;
+	b=Xv854kNMsGwo7y+d1KGrPoCvj8xhJsXdx+NPbr36bs+rW5xwmzoPtt2iRcwjhbEKU
+	 XfGn3WHT/EUTweyMuOntYcuRNkJ8rTxnpo6+2PE2yMcenfdCzl5eIgjm5/Mh5ebn7G
+	 fkhyKa0rXacAXgJ+DCsssER449+cBLCHyxVdSSLX+Dc8MDSqMopDEivA7yuiSDKGIt
+	 S+zxOV5qOgzsYi0jxj417k6xxIdELaXugUKSSeWJd0Mj/Dej88U0tMQwopSyTcFdVs
+	 +LuR+neBjXGs3pWPltnJUq6afbVpYXhNMgZlQFhveRD+FSFnPEgw7sZPZlNM5HmN/s
+	 Kl3S3hqMGw5FQ==
+From: Christian Brauner <brauner@kernel.org>
+Date: Mon, 02 Nov 2026 16:15:56 +0100
+Subject: [PATCH RFC 3/5] proc: only let permanent entries read straight
+ into userspace
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -78,160 +52,162 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261102153656.1431701-1-vipinsh@google.com>
-X-Mailer: git-send-email 2.56.0.317.g454f8302e1-goog
-Message-ID: <20261102153656.1431701-7-vipinsh@google.com>
-Subject: [PATCH v6 06/27] vfio: Add helpers to identify device files that can
- be preserved
-From: Vipin Sharma <vipinsh@google.com>
-To: kexec@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	linux-doc@vger.kernel.org, kvm@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kselftest@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: ajayachandra@nvidia.com, alex@shazbot.org, amastro@fb.com, 
-	ankita@nvidia.com, apopple@nvidia.com, bhelgaas@google.com, chrisl@kernel.org, 
-	christian.koenig@amd.com, corbet@lwn.net, dmatlack@google.com, 
-	graf@amazon.com, jacob.pan@linux.microsoft.com, jgg@nvidia.com, jgg@ziepe.ca, 
-	jrhilke@google.com, julianr@linux.ibm.com, kees@kernel.org, 
-	kevin.tian@intel.com, leon@kernel.org, leonro@nvidia.com, lukas@wunner.de, 
-	mattev@meta.com, michal.winiarski@intel.com, parav@nvidia.com, 
-	pasha.tatashin@soleen.com, praan@google.com, pratyush@kernel.org, 
-	rananta@google.com, rdunlap@infradead.org, rientjes@google.com, 
-	rodrigo.vivi@intel.com, rppt@kernel.org, saeedm@nvidia.com, 
-	schnelle@linux.ibm.com, skhan@linuxfoundation.org, skhawaja@google.com, 
-	vipinsh@google.com, vivek.kasireddy@intel.com, witu@nvidia.com, 
-	yanjun.zhu@linux.dev, yi.l.liu@intel.com
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261102-work-procfs-cleanup-v1-3-c40014bc12f5@kernel.org>
+References: <20261102-work-procfs-cleanup-v1-0-c40014bc12f5@kernel.org>
+In-Reply-To: <20261102-work-procfs-cleanup-v1-0-c40014bc12f5@kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, 
+ Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
+ Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
+ NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
+ Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
+ Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
+ Greg Kroah-Hartman <gregkh@suse.de>, 
+ Joel Granados <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, 
+ Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
+ linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
+ linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+ linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, 
+ linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, 
+ ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
+ coreteam@netfilter.org, kexec@lists.infradead.org, 
+ linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
+ netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+ ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
+ linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ linux-cifs@vger.kernel.org, linux-fbdev@vger.kernel.org, 
+ linux-hwmon@vger.kernel.org, linux-mm@kvack.org, linux-sh@vger.kernel.org, 
+ linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
+ sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, 
+ linux-doc@vger.kernel.org, linux-serial@vger.kernel.org, 
+ linux-atm-general@lists.sourceforge.net, Takashi Iwai <tiwai@suse.de>, 
+ linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
+ linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
+ linux-debuggers@vger.kernel.org, 
+ "Christian Brauner (Amutable)" <brauner@kernel.org>, 
+ Chuck Lever <cel@kernel.org>
+X-Mailer: b4 0.17-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3948; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=HAEx+xWoU7bRVFGL7mPvEVPlpuc3m3z2NxJgiNg4Kyk=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9WJlZf/pOH6N9WMJzv9uNpixmJcz8Ug/Ejvz11/239
+ 6GG0aykjlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgIncamf4X3St2856z96lFedd
+ LXNe81VttXmn+CW5oKrcbePRNO7QUwz/LLla1BTNtBU3uscdWNC45ueiHItPagqx/Q8zd6094Fv
+ ADgA=
+X-Developer-Key: i=brauner@kernel.org; a=openpgp;
+ fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Add two helpers needed by vfio-pci Live Update support:
+Every entry that can be removed implements ->proc_read_buf() now and
+procfs copies what is read to userspace after unpinning the entry.
+->proc_read() and ->proc_read_iter() are left for the entries that are
+never removed, kcore, kmsg, kpagecount, kpageflags, kpagecgroup and
+profile. procfs never pins those, so nothing can wait for them.
 
-1. vfio_file_is_bound_cdev(): checks whether a specific file is a VFIO
-   cdev device file that has been bound to an iommufd. Only the bound
-   cdev file keeps the device open; the device-level cdev_opened flag
-   cannot distinguish between the bound cdev file and a second, unbound
-   cdev file opened for the same device.
+Say so in struct proc_ops and refuse to register an entry that can be
+removed and has one of them. The read paths then don't need to pin the
+entry anymore.
 
-2. vfio_device_is_noiommu(): move the existing helper out of line and
-   export it so vfio-pci can enforce that only devices in no-IOMMU mode
-   are preserved across Live Update.
+PROC_ENTRY_PERMANENT is 0 in modules, so a module can't register an
+entry with one of them anymore.
 
-No functional change intended for existing callers.
-
-Signed-off-by: Vipin Sharma <vipinsh@google.com>
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/vfio/device_cdev.c | 20 ++++++++++++++++++++
- drivers/vfio/vfio.h        | 10 ----------
- drivers/vfio/vfio_main.c   | 18 ++++++++++++++++++
- include/linux/vfio.h       | 10 ++++++++++
- 4 files changed, 48 insertions(+), 10 deletions(-)
+ fs/proc/generic.c       |  4 ++++
+ fs/proc/inode.c         | 27 ++++++++-------------------
+ include/linux/proc_fs.h |  6 ++++++
+ 3 files changed, 18 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/vfio/device_cdev.c b/drivers/vfio/device_cdev.c
-index 1d9515c967b0..23b229468151 100644
---- a/drivers/vfio/device_cdev.c
-+++ b/drivers/vfio/device_cdev.c
-@@ -200,6 +200,26 @@ void vfio_df_unbind_iommufd(struct vfio_device_file *df)
- 	vfio_device_unblock_group(device);
- }
+diff --git a/fs/proc/generic.c b/fs/proc/generic.c
+index 413382efefc7..7c8def4ed9fc 100644
+--- a/fs/proc/generic.c
++++ b/fs/proc/generic.c
+@@ -443,6 +443,10 @@ static int pde_set_flags(struct proc_dir_entry *pde)
  
-+/**
-+ * vfio_file_is_bound_cdev - True if the file is a VFIO cdev file bound to an
-+ *                           iommufd
-+ * @file: File to check
-+ *
-+ * Return: True if @file is a VFIO cdev device file on which
-+ * VFIO_DEVICE_BIND_IOMMUFD has succeeded, false otherwise.
-+ */
-+bool vfio_file_is_bound_cdev(struct file *file)
-+{
-+	struct vfio_device_file *df = file->private_data;
-+
-+	if (file->f_op != &vfio_device_fops)
-+		return false;
-+
-+	/* Paired with smp_store_release() in vfio_df_ioctl_bind_iommufd() */
-+	return !df->group && smp_load_acquire(&df->access_granted);
-+}
-+EXPORT_SYMBOL_GPL(vfio_file_is_bound_cdev);
-+
- int vfio_df_ioctl_attach_pt(struct vfio_device_file *df,
- 			    struct vfio_device_attach_iommufd_pt __user *arg)
+ 	if (proc_ops->proc_flags & PROC_ENTRY_PERMANENT)
+ 		pde->flags |= PROC_ENTRY_PERMANENT;
++	/* These copy to userspace and only an entry that can't go away may. */
++	if (WARN_ON_ONCE((proc_ops->proc_read || proc_ops->proc_read_iter) &&
++			 !pde_is_permanent(pde)))
++		return -EINVAL;
+ 	if (proc_ops->proc_seq_ops) {
+ 		pde->seq_ops = proc_ops->proc_seq_ops;
+ 		pde->state_size = proc_ops->proc_state_size;
+diff --git a/fs/proc/inode.c b/fs/proc/inode.c
+index 971f2aecc006..a7f8818b0b74 100644
+--- a/fs/proc/inode.c
++++ b/fs/proc/inode.c
+@@ -460,35 +460,24 @@ static ssize_t pde_read_buf(struct proc_dir_entry *pde, struct kiocb *iocb,
+ static ssize_t proc_reg_read_iter(struct kiocb *iocb, struct iov_iter *iter)
  {
-diff --git a/drivers/vfio/vfio.h b/drivers/vfio/vfio.h
-index 7728bc99b63d..12557d45dfee 100644
---- a/drivers/vfio/vfio.h
-+++ b/drivers/vfio/vfio.h
-@@ -185,16 +185,6 @@ static inline void vfio_group_cleanup(void)
+ 	struct proc_dir_entry *pde = PDE(file_inode(iocb->ki_filp));
+-	ssize_t ret;
  
- #endif /* CONFIG_VFIO_GROUP */
- 
--static inline bool vfio_device_is_noiommu(struct vfio_device *vdev)
--{
--#if IS_ENABLED(CONFIG_VFIO_GROUP)
--	if (vdev->group && vdev->group->type == VFIO_NO_IOMMU)
--		return true;
--#endif
--
--	return IS_ENABLED(CONFIG_IOMMUFD_NOIOMMU) && vdev->noiommu;
+ 	if (pde_has_proc_read_buf(pde))
+ 		return pde_read_buf(pde, iocb, iter);
+-	if (!pde_pin(pde))
+-		return -EIO;
+-	ret = pde->proc_ops->proc_read_iter(iocb, iter);
+-	pde_unpin(pde);
+-	return ret;
 -}
 -
- #if IS_ENABLED(CONFIG_VFIO_CONTAINER)
- /**
-  * struct vfio_iommu_driver_ops - VFIO IOMMU driver callbacks
-diff --git a/drivers/vfio/vfio_main.c b/drivers/vfio/vfio_main.c
-index 73a5c4f3751c..291460102cd1 100644
---- a/drivers/vfio/vfio_main.c
-+++ b/drivers/vfio/vfio_main.c
-@@ -1507,6 +1507,24 @@ struct vfio_device *vfio_device_from_file(struct file *file)
+-static ssize_t pde_read(struct proc_dir_entry *pde, struct file *file, char __user *buf, size_t count, loff_t *ppos)
+-{
+-	const auto read = pde->proc_ops->proc_read;
+-	if (read)
+-		return read(file, buf, count, ppos);
+-	return -EIO;
++	/* only permanent entries have one, see pde_set_flags() */
++	return pde->proc_ops->proc_read_iter(iocb, iter);
  }
- EXPORT_SYMBOL_GPL(vfio_device_from_file);
  
-+/**
-+ * vfio_device_is_noiommu - True if the VFIO device is registered in no-IOMMU
-+ *                          mode
-+ * @vdev: The VFIO device to check
-+ *
-+ * Return: True if @vdev is registered in no-IOMMU mode, false otherwise.
-+ */
-+bool vfio_device_is_noiommu(struct vfio_device *vdev)
-+{
-+#if IS_ENABLED(CONFIG_VFIO_GROUP)
-+	if (vdev->group && vdev->group->type == VFIO_NO_IOMMU)
-+		return true;
-+#endif
-+
-+	return IS_ENABLED(CONFIG_IOMMUFD_NOIOMMU) && vdev->noiommu;
-+}
-+EXPORT_SYMBOL_GPL(vfio_device_is_noiommu);
-+
- /**
-  * vfio_file_is_valid - True if the file is valid vfio file
-  * @file: VFIO group file or VFIO device file
-diff --git a/include/linux/vfio.h b/include/linux/vfio.h
-index de3fa6e6bf2a..3cfbf1d73479 100644
---- a/include/linux/vfio.h
-+++ b/include/linux/vfio.h
-@@ -380,6 +380,7 @@ bool vfio_file_is_valid(struct file *file);
- bool vfio_file_enforced_coherent(struct file *file);
- void vfio_file_set_kvm(struct file *file, struct kvm *kvm);
- struct vfio_device *vfio_device_from_file(struct file *file);
-+bool vfio_device_is_noiommu(struct vfio_device *vdev);
+ static ssize_t proc_reg_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
+ {
+ 	struct proc_dir_entry *pde = PDE(file_inode(file));
+-	ssize_t rv;
  
- #define VFIO_PIN_PAGES_MAX_ENTRIES	(PAGE_SIZE/sizeof(unsigned long))
+-	if (!pde_pin(pde))
++	/*
++	 * Only permanent entries have one, see pde_set_flags(). Anything else
++	 * might be gone along with its ->proc_ops.
++	 */
++	if (!pde_is_permanent(pde) || !pde->proc_ops->proc_read)
+ 		return -EIO;
+-	rv = pde_read(pde, file, buf, count, ppos);
+-	pde_unpin(pde);
+-	return rv;
++	return pde->proc_ops->proc_read(file, buf, count, ppos);
+ }
  
-@@ -431,4 +432,13 @@ int vfio_virqfd_enable(void *opaque, int (*handler)(void *, void *),
- void vfio_virqfd_disable(struct virqfd **pvirqfd);
- void vfio_virqfd_flush_thread(struct virqfd **pvirqfd);
- 
-+#if IS_ENABLED(CONFIG_VFIO_DEVICE_CDEV)
-+bool vfio_file_is_bound_cdev(struct file *file);
-+#else
-+static inline bool vfio_file_is_bound_cdev(struct file *file)
-+{
-+	return false;
-+}
-+#endif /* IS_ENABLED(CONFIG_VFIO_DEVICE_CDEV) */
-+
- #endif /* VFIO_H */
+ /*
+diff --git a/include/linux/proc_fs.h b/include/linux/proc_fs.h
+index 64242a9aa117..17516b064922 100644
+--- a/include/linux/proc_fs.h
++++ b/include/linux/proc_fs.h
+@@ -17,6 +17,8 @@ struct seq_operations;
+ enum {
+ 	/*
+ 	 * All /proc entries using this ->proc_ops instance are never removed.
++	 * procfs calls into them without pinning them, so they may copy to
++	 * userspace themselves through ->proc_read() or ->proc_read_iter().
+ 	 *
+ 	 * If in doubt, ignore this flag.
+ 	 */
+@@ -72,6 +74,10 @@ struct proc_ioctl_arg {
+ struct proc_ops {
+ 	unsigned int proc_flags;
+ 	int	(*proc_open)(struct inode *, struct file *);
++	/*
++	 * These two are only for PROC_ENTRY_PERMANENT entries. Everything else
++	 * uses ->proc_read_buf().
++	 */
+ 	ssize_t	(*proc_read)(struct file *, char __user *, size_t, loff_t *);
+ 	ssize_t (*proc_read_iter)(struct kiocb *, struct iov_iter *);
+ 	/*
+
 -- 
-2.56.0.317.g454f8302e1-goog
+2.53.0
 
