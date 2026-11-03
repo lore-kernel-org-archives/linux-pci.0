@@ -1,123 +1,52 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.81
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793702481;
-	b=rNYQKEDqsmiP3MogOH/JR171y9Bs0RPAUwcIkgx4wTrTnXiX0EkZzzdiNOoeGUQkJk/N
-	 emtRRJKWq4qI4yD5eWKjFrg065QOuhwb0g69WMOfcom9AczxxmJltma8tJ60qZmDgFI9X
-	 PCFnKfrJzpIayLsjNj1HSXwQYPc1HnpU+UVHoPVucU7VypwaMApYrYxv0w/YEU7iS0B4a
-	 1aMbLFDImW5tkACbeKz65AcT0DCBaMAQoLT2qEitamQvh8IzAE10Fzlwl8LyXjw0f/GVf
-	 41fVQbwRW+xf5uThEmf7ALfYfLztxSin0PNIvk48UJoFuZWdj4cyOcsf3woGgeozWOA==
+	t=1793702553;
+	b=pwi4q8IaKqLXg2t211Rhc0LDv0mCkaTE4h5AtoQ0und2XAPv2CVq0E5ITSsMgOyDW2UB
+	 h4tHbkN6S00BpJ9EnWrOVeP9UX9amUNs4Y/HtYh3s9zQQBrHKVunnU8PxWbmG6BGKjbQv
+	 3tU7kBURZkUpNgc4qyZfXLX5cmhc/oMkX+PahD6sVByfoepfNPA8+eVmsP/FtibfAT72V
+	 LJjEM/dGkpd6QuLiW5gaqOfP6v1+COg/KOMR9FYXUoBoe2lOK+6Zv0prGUndn/TW6uhGL
+	 EN29zak5u6S6+2bnZ8lMDBk0tm0lOYYVe7znIMhpPyDI3Gxw/r+o7q2vyD6UyMeaFyA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793702481;
-	h=DMARC-Filter:Received:Received:Received:Date:Message-ID:From:To:Cc:
-	 Subject:In-Reply-To:References:User-Agent:MIME-Version:Content-Type:
-	 X-Rspamd-Pre-Result:X-Rspamd-Server:X-Spamd-Result:X-Spam-Flag:
-	 X-Spam-Score:X-Spam-Level:X-Rspamd-Queue-Id:X-Rspamd-Pre-Result:
-	 X-Rspamd-Action;
-	bh=n3928gBIWqHxVcE0Q0TQTSHKUQ5+JmJrD1oVco54lEw=;
-	b=HwjEIW3xc83Pm0CwR2K/jkKioKJQAd99tyX6Cj6/AI9N9iW/GZLJnxdXlQ0Md8xjAhXp
-	 UE7o9jZIB+LI63ZtxP6vN6y+Xa2ri8buth6IGDfiJmvMTMZhzbTH0SsXovYkLzVbKMXXq
-	 vFiXEDLAkZ+L9q6fw4jUwFncyR3YRX4/Enl/UY62hCFlYX14DcVGD2BOI8gPoV+9s44Gh
-	 NTh6As2zyA8On/8V/FwUCthQCAD8QE6ugtIC2CMxuUVLpLwWQObkkycenc7WWO7gIR9OU
-	 N7zwdfKQiWgR5tYfGnHvdPnsVNyCZZ3iwLafK2p+H23NKktgtnQh2Lj+IsH/Ghh3akA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793702553;
+	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
+	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
+	bh=6SH6uL3pqMWX7iR37l4I7tLX+tjbaLR2gdsfju8JZf0=;
+	b=j9GaBYARfcw+Ao9Vacj35B+Kk71GtTNOtd1cwP6gaGiMBDRDv9uLDxCHA+V7Sbd/NIIH
+	 LVIAIPmZdJVEBkcMbhlpPFJlr/ZnRx0fLXnC4YFCmMUVkqJ5PJqo7EvL1k1P7rInVCroU
+	 jJKAegl302/U1C4SCaBW/eZ8+Yt6GYQ3kvijtRcRHdmYvhVICrMqw2R3h0GbVwKXH/EvZ
+	 i3oxHs05dtwC1MxGtvLC6VNdHcNpDC96uCk9rHjT5N4ppXNvFgXNnjwJDpU71pqG83RWN
+	 1NZ34xts/+Rh4NxjprYK04bMEg6qKwurS+tih2Kz7O6AnGGTDdwBfu2R7i6eFRDzSXg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.de;
-	spf=pass smtp.mailfrom=suse.de;
-	arc=none smtp.remote-ip=195.135.223.130
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	dmarc=none header.from=iscas.ac.cn;
+	spf=pass smtp.mailfrom=iscas.ac.cn;
+	arc=none smtp.remote-ip=159.226.251.81
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23D3A606A81C;
-	Tue,  3 Nov 2026 10:41:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 23D3A606A81C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 8017122D12;
-	Tue,  3 Nov 2026 10:41:18 +0000 (UTC)
-Authentication-Results: smtp-out1.suse.de;
-	none
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A98D41350A;
-	Tue,  3 Nov 2026 10:41:17 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id fPJkIE266WqxEgAAD6G6ig
-	(envelope-from <tiwai@suse.de>); Tue, 03 Nov 2026 10:41:17 +0000
-Date: Tue, 03 Nov 2026 11:41:09 +0100
-Message-ID: <87ik2exkmy.wl-tiwai@suse.de>
-From: Takashi Iwai <tiwai@suse.de>
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Jann Horn <jannh@google.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Chris Mason <mason@kernel.org>,
-	Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Christoph Hellwig <hch@lst.de>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Joel Granados <joel.granados@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Jan Kara <jack@suse.com>,
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B778F60775F5;
+	Tue,  3 Nov 2026 10:42:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B778F60775F5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
+	by APP-03 (Coremail) with SMTP id rQCowAA3QpOWuulql8g7AA--.3191S2;
+	Tue, 03 Nov 2026 18:42:30 +0800 (CST)
+From: Wentao Liang <vulab@iscas.ac.cn>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-um@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	netdev@vger.kernel.org,
-	ntfs3@lists.linux.dev,
-	platform-driver-x86@vger.kernel.org,
-	coreteam@netfilter.org,
-	kexec@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	netfilter-devel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	ibm-acpi-devel@lists.sourceforge.net,
-	jfs-discussion@lists.sourceforge.net,
-	linux-alpha@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-cifs@vger.kernel.org,
-	linux-fbdev@vger.kernel.org,
-	linux-hwmon@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-sh@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	samba-technical@lists.samba.org,
-	sparclinux@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org,
-	linux-doc@vger.kernel.org,
-	linux-serial@vger.kernel.org,
-	linux-atm-general@lists.sourceforge.net,
-	Takashi Iwai <tiwai@suse.de>,
-	linux-input@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-modules@vger.kernel.org,
-	linux-debuggers@vger.kernel.org,
-	Chuck Lever <cel@kernel.org>,
+	Wentao Liang <vulab@iscas.ac.cn>,
 	stable@vger.kernel.org
-Subject: Re: [PATCH RFC 09/38] ALSA: info: don't write past the end of a data entry
-In-Reply-To: <20261102-work-procfs-bugfixes-v1-9-59422ed3e465@kernel.org>
-References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
-	<20261102-work-procfs-bugfixes-v1-9-59422ed3e465@kernel.org>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) Emacs/30.2 Mule/6.0
+Subject: [PATCH] PCI: keystone: drop host bridge reference in ks_pcie_quirk()
+Date: Tue,  3 Nov 2026 10:42:39 +0000
+Message-Id: <20261103104239.1373754-1-vulab@iscas.ac.cn>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -126,64 +55,101 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-Rspamd-Pre-Result: action=no action;
-	module=replies;
-	Message is reply to one we originated
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.00 / 50.00];
-	REPLY(-4.00)[]
-X-Spam-Flag: NO
-X-Spam-Score: -4.00
-X-Spam-Level: 
-X-Rspamd-Queue-Id: 8017122D12
-X-Rspamd-Pre-Result: action=no action;
-	module=replies;
-	Message is reply to one we originated
-X-Rspamd-Action: no action
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:rQCowAA3QpOWuulql8g7AA--.3191S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kw1rKFy7ur43Cr4DuFW8Xrb_yoW5Jr1Dpr
+	sIqa4YyFy8Xr4Yqw4xZ3WY9F15AFnayay5Xws7KryI9r15XFn8GF9rtasYqwn3AFZaq34U
+	Gw1Utr1rG3WkAFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9mb7Iv0xC_Kw4lb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I2
+	0VC2zVCF04k26cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rw
+	A2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xII
+	jxv20xvEc7CjxVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwV
+	C2z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
+	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWrXVW3AwAv7VC2z280aVAFwI0_Cr1j6r
+	xdMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VAI37AI020EjII2
+	zVCS5cI20VAGYxC7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026x
+	CaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_
+	JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r
+	yj6F1UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UMIIF0xvE42xK8VAvwI8IcIk0
+	rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8Jr0_Cr1UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Cr
+	1j6rxdYxBIdaVFxhVjvjDU0xZFpf9x07bOAw3UUUUU=
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiCRUAA2rpnIB7nwAAsk
 
-On Mon, 02 Nov 2026 15:21:24 +0100,
-Christian Brauner wrote:
-> 
-> snd_info_entry_write() clamps the count to what is left of the entry
-> by computing entry->size - pos as a size_t. For a position past the end
-> that wraps and the write goes to the driver unclamped, for opl4 into
-> sample memory outside of what the entry covers. At the end of the entry
-> the driver gets a count of 0 and vmalloc(0) warns. Before the clamp
-> moved into the common code the driver ignored such writes. Fail them
-> with -ENOSPC instead, like a block device does at the end of the
-> device. Returning 0 would make writers that use stdio retry forever.
-> 
-> Fixes: d97e1b78239c ("ALSA: info - Check file position validity in common layer")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+pci_get_host_bridge_device() takes a kobject reference on the host
+bridge device.  ks_pcie_quirk() returns without releasing it on every
+path after the lookup, including the AM654 PG1.0 path that only limits
+the MRRS, so the reference is leaked once for each enabled downstream
+device below an AM654 root complex.
 
-Reviewed-by: Takashi Iwai <tiwai@suse.de>
+Move the AM654 handling out of the enclosing conditional and release
+the reference through a single cleanup label.
 
+Fixes: 86f271f22bbb ("PCI: keystone: Add workaround for Errata #i2037 (AM65x SR 1.0)")
+Cc: stable@vger.kernel.org
+Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
+Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+---
+ drivers/pci/controller/dwc/pci-keystone.c | 45 +++++++++++++----------
+ 1 file changed, 26 insertions(+), 19 deletions(-)
 
-thanks,
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index edfbc32904cd..0c46887de0d5 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -579,26 +579,33 @@ static void ks_pcie_quirk(struct pci_dev *dev)
+ 	 * when MRRS is set to more than 128 bytes. Force the MRRS to
+ 	 * 128 bytes in all downstream devices.
+ 	 */
+-	if (pci_match_id(am6_pci_devids, bridge)) {
+-		bridge_dev = pci_get_host_bridge_device(dev);
+-		if (!bridge_dev || !bridge_dev->parent)
+-			return;
+-
+-		ks_pcie = dev_get_drvdata(bridge_dev->parent);
+-		if (!ks_pcie)
+-			return;
+-
+-		val = ks_pcie_app_readl(ks_pcie, PID);
+-		val &= RTL;
+-		val >>= RTL_SHIFT;
+-		if (val != AM6_PCI_PG1_RTL_VER)
+-			return;
+-
+-		if (pcie_get_readrq(dev) > 128) {
+-			dev_info(&dev->dev, "limiting MRRS to 128 bytes\n");
+-			pcie_set_readrq(dev, 128);
+-		}
++	if (!pci_match_id(am6_pci_devids, bridge))
++		return;
++
++	bridge_dev = pci_get_host_bridge_device(dev);
++	if (!bridge_dev)
++		return;
++
++	if (!bridge_dev->parent)
++		goto put_bridge;
++
++	ks_pcie = dev_get_drvdata(bridge_dev->parent);
++	if (!ks_pcie)
++		goto put_bridge;
++
++	val = ks_pcie_app_readl(ks_pcie, PID);
++	val &= RTL;
++	val >>= RTL_SHIFT;
++	if (val != AM6_PCI_PG1_RTL_VER)
++		goto put_bridge;
++
++	if (pcie_get_readrq(dev) > 128) {
++		dev_info(&dev->dev, "limiting MRRS to 128 bytes\n");
++		pcie_set_readrq(dev, 128);
+ 	}
++
++put_bridge:
++	pci_put_host_bridge_device(bridge_dev);
+ }
+ DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, ks_pcie_quirk);
+ 
+-- 
+2.34.1
 
-Takashi
-
-> ---
->  sound/core/info.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/sound/core/info.c b/sound/core/info.c
-> index c4d57d0809ad..982087bc8575 100644
-> --- a/sound/core/info.c
-> +++ b/sound/core/info.c
-> @@ -171,6 +171,8 @@ static ssize_t snd_info_entry_write(struct file *file, const char __user *buffer
->  	pos = *offset;
->  	if (!valid_pos(pos, count))
->  		return -EIO;
-> +	if (pos >= entry->size)
-> +		return count ? -ENOSPC : 0;
->  	if (count > 0) {
->  		size_t maxsize = entry->size - pos;
->  		count = min(count, maxsize);
-> 
-> -- 
-> 2.53.0
-> 
