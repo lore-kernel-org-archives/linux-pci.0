@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793719144;
-	b=fyP3gEZPlg2ep+KuRjd5RrelXFITwGpocqcm2mdlKEmZqgrZrNlTq7UkrXLTj/UslnB/
-	 RnHM8xyswYafaaP4jrCjTwwSyGM2PngHvRVnrQW2rv1V5ZXjpnqcuTHi+rZ4Z/x7ZzG+J
-	 A/wj98e/iEzQoxKu2jLAR71258KDdznZ6U6dq2g5JVx8ln458lIDjuYjq33bdotCjzAUk
-	 Yxq+VCn/j/vpuBqKMnlCisx+RdN7gT3VlWu4c6mIEie0JHrHRGElUIfYaVc9ffXa/XEqu
-	 XcQGQjjPSIUUNzZVpNWtBldaOSHmLHiN70lWenSD7LNZYxxNQOu28qLTXfkpZR/Rgug==
+	t=1793719139;
+	b=4IwdH3D1MD7gwlDZAz6CJIsUy+GYOZj57tripkY5CLRIjX+LkO87d7oB5Qo4uaUSW+qN
+	 k69tnHmunicfwO+rxY73mRZoLfz0h+7qu1iTZSeFKblCjll/9HkxZYqV4U4Xl+DhFfPzc
+	 ZIHmsrTbwkG2EaR/nR2MOvEHj+UFECdE1CzTpR/QrumLX466Pcgqs62xnuOTzlgwv1w97
+	 AUAWmotjArdKRNQnFYArHcl0cfKa/roVw1+PF5OUFPamPhCztZ2wh1BN7OJ86NEQD2WtD
+	 D6hzvxqbFTvLEeAs5B+iZSLJMoDIQsbUg21gVnhmGSpQHcVJTYetPt8y7Hs0mCCBAqw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793719144;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793719139;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=SjcUx5oTPLgTGLgzmcu2JufpKTLPRg1ew/w/ZvgHMGQ=;
-	b=jhDzujR0lxCQh2fNOGGfMyMXrzATyfz5Je9upCilOG2sPxHsU9LyXbXBOga6+8+tqdZI
-	 +hXpK+7auuALNtCvNUzULm4VCrUx2wadxJtYRvJowUm1cU7br2BLEQAoT+OAVA5W68A6G
-	 EsrBVmMtYpt0FYH390IxTUIc1wNXglkQWwjKzv9Lw9XA4DwHiyf5VEBQ+aEaJFkWUY0P8
-	 5k+t01XOwNToTWGvytA7aZ7r0NxSinNYN1/ow8nDz8p4fx2sqMsbBgPhGA5yzA3hW9xY6
-	 8WR7WxaIhgc9J28ZNm/oXWbZ1UdhCIjrBIjyyi9uT7ILpb/UbCpXTBUajCh3iCqfUAg==
+	bh=y9ivFE+8473vLZC4u44E0uCxK4vp/F+9XJkKNyMDnK4=;
+	b=w9fyS/mPgtFuM3kTHTeXM4vFZRtoCKA09KOyYRvxFJgVueT8DK8qZeDHFXjgmsSXKZU6
+	 ZlH5quxHn7ppgqEqhPoAYHlI8aQevAZ5br6Tg3gBbMDk68Jy/mVI5rm1i8N2r6VVPkvd+
+	 QRYw8RbCqwDZy2Gt30Q2I7lLIIEbeeAY47vxIhc7GHW3ooboUikcAwAfDWQ9nXU/MEu4k
+	 Egzc1BHLgGyBQxtqgolmuvLuc3XXIWRCUaGU6NFJJfgvN5yM5srcK1u8lFxpF1UgeQth7
+	 BBWfkKk12ge3CEhHE/EvKjesWKfDFwIE+LQijtb5IpaVFJ4CsZl2Q2ObIgMgXwnktPQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=H14nd5Zm;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bmtyXin2;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D68BD60A262B;
-	Tue,  3 Nov 2026 15:19:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84CE96083634;
+	Tue,  3 Nov 2026 15:18:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=H14nd5Zm
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23D181F000C1;
-	Tue,  3 Nov 2026 15:19:02 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bmtyXin2
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4A541F00A24;
+	Tue,  3 Nov 2026 15:18:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793719143;
-	bh=SjcUx5oTPLgTGLgzmcu2JufpKTLPRg1ew/w/ZvgHMGQ=;
+	s=k20260515; t=1793719139;
+	bh=y9ivFE+8473vLZC4u44E0uCxK4vp/F+9XJkKNyMDnK4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=H14nd5Zm0HOMmUow49/EVrlsioyc0r4b4F2o2FArNkwr7aVd2fSN+Yi+iAXccw4M5
-	 Hrez6lVhFAVFW//WwcipwXCOlWcXfetVqSC+Hja7cB2WYSUxxSs8b7ilDnEXXV+YgG
-	 Kzk5MCNjv/Z4vw0jG51MNllEeI7ATjJgL/15EIN1BVpT6LY+VCwu8YYlMt8wKRHZbJ
-	 okPPnQ07EmoHQPM37MzbUMh4PUpDYEr4ijJPybDBs9yFmhlOJHAw684kdnTGf75k1n
-	 dtWfihYM65eHFj7xYgCF6qY7OBa56KZmFdPeZl/oOc+JWcX05Z8c65nphAxmh0Tsxa
-	 rDXtJMpHvTgqA==
-Message-ID: <sashiko-outbox-195597@kernel.org>
+	b=bmtyXin2yjAbPM31f4YaReEle+vN1wPD4L+slbEGaUF6hX4+kf+dRrnuROs6GNc6M
+	 DRv8HDwijzmWY/67jIDFKq1BlkuwcODaUmGuLQwnpIvt9LjRoXP9PaI8gflmJ8i3wP
+	 c86SuDRl9Wm977S+NSsKVjwbigdIWRtwQE8i9H86bD+J23omOL2nXMQrYU7YT8HPQP
+	 GH2X2ncA/tHy+HPvYNSWnLpaZkCBCsb8oTwbY54v5R3heuFMWJyAAY4y1Iwt7Y5a72
+	 oJfgpcEoXbI+/0/Hn7wyfvMmS2DTYmtRsWGQMfw5jCqWG1J8Z46CbdL/IgCX7u9auF
+	 QiW2pizk1QYYQ==
+Message-ID: <sashiko-outbox-195595@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 17/23] usb: gadget: function: rndis: let procfs copy
- in writes
+Subject: Re: [PATCH RFC 15/23] hwmon: (dell-smm) let procfs copy the i8k
+ ioctl arguments
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -55,12 +55,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Iwai" <tiwai@suse.de>, linux-ext4@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261102-work-procfs-drivers-v1-17-a994bd4d3b1a@kernel.org>
+In-Reply-To: <20261102-work-procfs-drivers-v1-15-a994bd4d3b1a@kernel.org>
 References: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
- <20261102-work-procfs-drivers-v1-17-a994bd4d3b1a@kernel.org>
+ <20261102-work-procfs-drivers-v1-15-a994bd4d3b1a@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 15:19:01 +0000
+Date: Tue, 03 Nov 2026 15:18:57 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -70,10 +70,17 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> Implement ->proc_write_buf() so procfs copies in what is written to
-> /proc/driver/rndis-<n> before it pins the entry, and handle the
-> commands from that copy. Writes larger than PAGE_SIZE - 1 bytes fail
-> with -EINVAL now.
+> Implement ->proc_ioctl_buf() so procfs copies the arguments in before
+> it pins the entry and back out after unpinning it. The command numbers
+> in <uapi/linux/i8k.h> encode the wrong sizes, so the table lists what
+> is really copied: an int or the 16 bytes of the machine id out, and one
+> or two ints in.
+>=20
+> A NULL argument fails with -EFAULT now instead of -EINVAL, and so does
+> a bad pointer to SET_FAN from an unprivileged task, which got -EPERM
+> before, since procfs copies the argument in before the entry's own
+> checks run. 32-bit tasks can use the commands whose numbers don't
+> depend on the size of size_t.
 >=20
 > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
@@ -81,5 +88,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261102-work-procf=
-s-drivers-v1-0-a994bd4d3b1a@kernel.org?part=3D17
+s-drivers-v1-0-a994bd4d3b1a@kernel.org?part=3D15
 
