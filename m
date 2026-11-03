@@ -1,56 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793704032;
-	b=wkDxwYLcrafhQNN6l2Dd2Q2uF3Fm5JI/Ay0xB3T3T78wuHAAbtq3wyi+lnOojf2m5zCd
-	 klDzkmn6VDk6FxRWE0SOoWzSHfWO6tkE1BI8j2sccLgy3tcznSNBl+iQFhjlZxfC54aL5
-	 IFbehQjuaGRME4YD+y/8+K1GV9PSn9AWLck1CRBc2H2wPkdWVuhkZ2Fw6jQlk+g515So4
-	 7hDjug0onSGEzg+r5Qx1PgEyY+A2XbzQPrwlIo3cyU2K2yEbDLrIt9/UMHWF/Kz9jVcOi
-	 Np2aDTcAj82041olgMlKRf//j5EgzIA6VdwRPG1yuvNazkO7hD0Ew81s6PBa8FVqaAg==
+	t=1793704198;
+	b=AtPSeNmbi1xdA+zA22VUTWdbomxfBaH1/l14z/zMO0oLm/u7uoOhZiRuRAwgzpmZibuG
+	 N5eK/8D5+IoXLi47ymmfJvL6zCMiR+O6jl4wkd8EAl5MU5XBJxhRIgaUXMCXddmW3UKdN
+	 XBsv7ur1yI2OwIy0kIUmYmCXsNjWnu8mT8wBDQxSjvHWbm9hePt4v/hXnVCwO5pJgx6Kc
+	 zDYUfz8zjT4ifOu7mF17t7VFFdeOklLlJV5VtyhCrid7mWesxBpUQKHIu3/ZQtenrAEms
+	 ZZc+Jk2nRz27TdxwZOx9gA6EmxmpUaikF9hEFWOF+OpoOSdEL8zaiNSj2o0wgrdU/bg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793704032;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=VufiRBhB7eiuNM6tbNQyIOaETyuiGMibcekOp0wf2tU=;
-	b=Doz9GS/wC8KXRq9tHRaZOShMsj8ZET1tasLGeqkw/FcWz6ht2CNQYMQnivLYEvcZvd/1
-	 3uu9p+jg1JCN0/fvLc3ZDIRWFZK5LOLy1sxrUU7gzjFj1o8tKpfm5Kt8FmLBJD5WiCC/U
-	 zPeh/voPEmhg8NPE/W5VgKgh6vpI83kchel80BJFw1DhaUGNXmMPsDyiTWYGK3eyUz8dO
-	 pAaFPhGn0nxvlfhesBWV/V2YwSw/NHQCNnpYrQYUis0OIGyBtUUynOED/C8VcGdzn66O5
-	 G0JoqQH5tM11G9HrMTTe012o+8istIfBxDULypXo/CT70ULYxy9a8AjnetgrHhxANbg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793704198;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=aDcn00x3HCJLq7a35uucPjttQqk01CWu981mURwTv6E=;
+	b=prgQBUgYXZPKBLEzEPpD7V0W4Ykn/0ymJxiwtZL0qvzRC7wNPWMxFR1o1Xrm6VAWb3Ut
+	 YcM63PWHFTgy6xBvrXnbkZ+B7zF2oF20jvrPCdK8vxP7VdGyB/JiVk8kPUN9xLURWftkC
+	 BB9DFakfKt1IyU12pnh+tucTLcJX214jK8X8YPhdTXq/fcoU4x+seHS29heqnwrvPNuIx
+	 jG5MJBbkoQkSp4aymv6M+g8CWhkhfQ3Y4sB+1vSSL8zdcmzSG8urPYMm41z1tg85W7PZ3
+	 BQAx9r2oadcrh/hh/RJf+cZSsh+6NLjiHkGL4QjCyX81I5lUSsq4AGFJ0TJNc3iKBVQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="TO0ClN/S";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=C00YBWCH;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00FE36083627;
-	Tue,  3 Nov 2026 11:07:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E768606B11D;
+	Tue,  3 Nov 2026 11:09:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TO0ClN/S
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77D801F00A1A;
-	Tue,  3 Nov 2026 11:07:11 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=C00YBWCH
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0D4B1F00A1B;
+	Tue,  3 Nov 2026 11:09:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793704031;
-	bh=VufiRBhB7eiuNM6tbNQyIOaETyuiGMibcekOp0wf2tU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TO0ClN/SjUHbftbHB7HjlAMa6Rr795JjSDfBLQp06b4khgmEe4GZFr+krjj5G+/Sr
-	 JdWCyXmFCWgKxUS7805ncPDhNNvne4+wwMzBjlibSO8ldFpSnambbew0BjPM0zUAj8
-	 Dou/IM7emLf5H6/9C2ldzDfywSivRUJSh3OLwCYO0YRH0gVSSEM0zsIL45eIlPcrsj
-	 a2pJy/H8UPmMmS73RUKPuJ+ElUGpCtVEgjcQdchzyMVCXQwEo+U+xzZquVmx7YS0Le
-	 SCHX/xG5MvqbG3sC3gxqg7adSABWVTa/BjtWnFf9VYTzGwnGgulJrKqDAbkmxp4tGH
-	 ntxxwlqnvCCeQ==
-Message-ID: <sashiko-outbox-195109@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v12 14/19] PCI/P2PDMA: Test the ACS P2P routing walk
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Leon Romanovsky" <leon@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org
-In-Reply-To: <20261103-fix-p2p-acs-v4-0-v12-14-912101f93517@nvidia.com>
-References: <20261103-fix-p2p-acs-v4-0-v12-0-912101f93517@nvidia.com>
- <20261103-fix-p2p-acs-v4-0-v12-14-912101f93517@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 11:07:10 +0000
+	s=k20260515; t=1793704197;
+	bh=aDcn00x3HCJLq7a35uucPjttQqk01CWu981mURwTv6E=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=C00YBWCHcRN3w3WEARmmeZzRMqYKfN2blSHKYeslzgwEw0yZLUe21YW8gnYBKtPD9
+	 QUpjz3u5gDeH8iXWogZ/IFeAE5J/MiV26MHSAwj31SHS3M9a83zcqG5ROK5glr0RHX
+	 UbjpqoF1Gi1t+12qvMrSsbB5PelzHX0aKrzBEyoSWI+aWxixhGgQGoczSlb0JKfNAf
+	 iQ36pikIOsR0MwwG26gdRJiuXypquG+8h3+m+kUuPmUt3KJ5GZK0eFb9ELxR8i6k0N
+	 fiZ+HbxVqOsKbiD7n22LiD7dmfdv5sMGey7igMmigL1DjUirmthDTvneAWsgPcVhiq
+	 JGgvCDtb116/g==
+Date: Tue, 3 Nov 2026 12:09:54 +0100
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Wentao Liang <vulab@iscas.ac.cn>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, stable@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/IOV: drop PF reference if max VF bus computation
+ fails
+Message-ID: <20261103-easygoing-imported-pudu-ce7e77@quoll>
+References: <20261103104239.1373721-1-vulab@iscas.ac.cn>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,25 +56,69 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20261103104239.1373721-1-vulab@iscas.ac.cn>
 
-> From: Leon Romanovsky <leonro@nvidia.com>
->=20
-> Routing depends on which ports share each path, not just individual ACS
-> registers. Sibling functions without internal peer routes must use the ho=
-st
-> bridge even when redirect controls read as zero.
->=20
-> Drive the walk over fabricated switch and multifunction topologies with
-> fake configuration space. Cover directional controls, nested ports, TLP
-> attributes, hardwired isolation, ARI, PF/VF paths, forwarding failures,
-> translation blocking, host allowlisting and packed cache values. Keep
-> external peers and self-DMA independent of sibling routing restrictions.
->=20
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 
-Sashiko has reviewed this patch and found no issues.
+On Tue, 03 Nov 2026 10:42:39 +0000, Wentao Liang wrote:
+> sriov_init() takes a reference on the PF found on the bus and stores it
+> in iov->dev.  The reference is normally released by sriov_release()
+> through sriov_disable().  But if compute_max_vf_buses() fails, the
+> error path clears dev->sriov and frees the iov without dropping that
+> reference, so the PF device refcount is leaked once per failed SR-IOV
+> initialisation.
+> 
+> Release the PF reference on that path before freeing the iov.
+> 
+> Fixes: ea9a8854161d ("PCI: Set SR-IOV NumVFs to zero after enumeration")
+> Cc: stable@vger.kernel.org
+> Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
+> Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+> ---
+>  drivers/pci/iov.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103-fix-p2p-ac=
-s-v4-0-v12-0-912101f93517@nvidia.com?part=3D14
+Multiple things here:
+1. Your team ignored completely previous feedback. Multiple times.
+
+2. You use multiple identities with this email address, thus I doubt that we
+   speak with an actual person.
+
+3. Your bot does not even bother running checkpatch, right?
+
+4. Nothing of this was reproduced nor tested.
+
+5. Finally, the same feedback:
+You sent multiple independent patches, to multiple independent
+subsystems. The amount of these patches clearly suggest this was
+AI generated and most likely not tested.
+
+More importantly, you sent all this work without properly organizing
+relevant patches into patchsets. This makes reviewing difficult
+and might cause multiple reviewers to address the same issue.
+Replying to the entire set is impossible and requires handling each
+patch independently, instead of applying or discarding the set.
+Maintainers also won't see the bigger picture of your work. Quite
+worrying.
+
+This is on the verge of hostile patch: bomb us with so many
+contributions, we won't be able to handle them in efficient manner,
+like responding ONCE to ask you to slow down.  Considering all this
+is untested and LLM generated, I have even more doubts whether this
+should be considered for review.
+
+Please read kernel documentation BEFORE posting more work. It will
+explain you how to identify subsystems, how to organize your work per
+subsystem (so a patchset grouping multiple patches with a short cover
+letter), how to document the issue discovery method and what was
+or was not tested.
+
+Best regards,
+Krzysztof
+
+
+
 
