@@ -1,71 +1,73 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=204.191.154.188
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793724048;
-	b=CgzKZpbQwpeMyWBrDi3KTT8fRkUVee/dxY1YSESOlpM9HqXYFhEyzXSufHp5OtRB1N/B
-	 A/ZHwzFZmtS74ANAWgC0Qdsc3p2vzRylSVBxSKYBE7bsG2Gj6WudOa/ckoc4g6FMzl14f
-	 Fp3UbMS9IQqLMJbkChwM8lUYx3U3q3lruxNMyRaiyHFlYLHkdfcf//WWMfPFQAAvuno70
-	 4JrkgtgBgazZaYrhUd/21+O7+4sqAeo882O6FaHSzexo2rBtGyuoNHpBtpovmECHpJmVN
-	 4JutxRAGbthilE38FZR/J6ASMYU0RpdDdfZ6m9svUbEJ3t59kzanEJYiTnqDOiIl+SQ==
+	t=1793725292;
+	b=T4K2iceiBxpHwTEtVcH7POXcR45numn/20TZJfhH7pHSFWaHIskNPNCGNKWi0qXQz4xe
+	 lhL1AkoaP5g4JlXEh3yY/NSTAyKgZFpfXgyHDVJ4aSUVqDuHgX72mZI3fRsi/JAyqqPIj
+	 E3/QbDxDXY2iNSmqqjEA8vcjSDZEOw2+ttjM5AEKkZQBt93Yd3zKeCpwQYlbx8LZ4yDO2
+	 2vmH2jXK+UmyuP4SPJ0SZUnz4xOiC/kq+RLf+GJTqNYHUJCKoPwGFYcOmu6HNAlEFPCj/
+	 YX9WxU7KbLnDrVFP8IvblT0+IJV5b2pUGICIiZVNvkP8jn7luyVi1cR6BhocF/zRg+g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793724048;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=3/pwRZodtv5H9vRDvB09UF4TkDVIqcbW+/AB21sxSLI=;
-	b=FgyyR37QKb6g5dDdoFRb1gjKRZNCoqtQQHPr4EDCmDUoVNupZJbg/rsVv82hHIy/yzp5
-	 9lBMfEDCTRINmv0TyVbjfwkqLv5YKdu4rAG9JM8slUFsltrZ2F+XNEHYVeVGZfqCBQm7G
-	 ymfKy8KbiBBZ4wiywYpty0GXOYte6gseR6p6f7iVC+zpd4B44yDfEWTDVNZMu5Q6Q+aaw
-	 syAm87otK0QsTriSolo7NJN2cTz0o1zQIEEZvsMJ1eKnL+hIx7xRa+wIKElSn51gx7514
-	 hKQRyutHDFSjwqNKHaPoZdr4tTjC0KGfgeJqyTbdiiCtJxSFXN8LAC/Xa9Z/7TKCJPQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793725292;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:Cc:Date:
+	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding:X-SA-Exim-Connect-IP:X-SA-Exim-Rcpt-To:
+	 X-SA-Exim-Mail-From:X-Spam-Checker-Version:X-Spam-Level:X-Spam-Status:
+	 Subject:X-SA-Exim-Version:X-SA-Exim-Scanned;
+	bh=RchtkJFTw36chOPxEtH6cIti46A9gaK+Fmpg6WmFwbs=;
+	b=4MiQJrVdX2z96uFUI1g6/cYeREPDKl+tPLbb04DHKkP1rywIsfoS6LPwzcTzp8zF5FZi
+	 rQq1tFHCPwQChggEDM/xt1wdAgN5FQ6ebmxA6Ud+LYiSe9DsUeKJHamkK/I0jH55mg214
+	 9qYVPTF0TmYLSmOYjkQGm202D/BoK4caY2j5Z4jKhA4UiXrvnYK/CUDe9Zk1iqh8lxc8+
+	 gXqR6mn6PxM/vtcn3RTZE2wzBGqCIC9W6jvyiMuJhaNnVqKqjTGMqQxyujgXDh7kx3scW
+	 PWo5B+dChFvINQLaw9q4bNPity3koZwIL/BHq+pDXPfyLFF6AN4HWEnJr8mCW+2Ev4Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kcCk3E9D;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=deltatee.com;
+	spf=pass smtp.mailfrom=deltatee.com;
+	dkim=pass header.d=deltatee.com header.i=@deltatee.com header.a=rsa-sha256 header.s=20200525 header.b="foVlrp//";
+	arc=none smtp.remote-ip=204.191.154.188
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0055D606D836;
-	Tue,  3 Nov 2026 16:40:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C01D1606A330;
+	Tue,  3 Nov 2026 17:01:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C01D1606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kcCk3E9D
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BE5F1F00919;
-	Tue,  3 Nov 2026 16:40:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793724047;
-	bh=3/pwRZodtv5H9vRDvB09UF4TkDVIqcbW+/AB21sxSLI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=kcCk3E9DDzqb581VxJ5reyHZgYV3mxqJrzazBrWKk/8awLxY14WY1qQjIrfNtyW9+
-	 +fgInAFIOA8pbj4OnlZMuT+n3NlUcuq2yEYeXQNrWe8ebUqvrivCfRVtWDr/3yvXbz
-	 /BWBSYNXk+FF83ZDTD4OKx7IKTkClzRWexwwPPed/RG1Xv+LYlKNqShYqAnmueVcHC
-	 gTpUG+UUL6OOUv1NGnTCJgrYlEvrsdp0yuuXL06dDPAQlPxzRqYs0ah3iWC0gI9/Bt
-	 TyO0WuPIBe1MXUewf/anvSyELn8SkDADqP4mdxifTwWZEneQ2Nc7h/8SBuhSMroZc5
-	 ZN0fxv3D5A0Jw==
-Date: Tue, 3 Nov 2026 17:40:36 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, 
-	Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
-	Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, 
-	Eric Dumazet <edumazet@kernel.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Al Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
-	Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados <joel.granados@kernel.org>, 
-	Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, coreteam@netfilter.org, 
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
-	linux-usb@vger.kernel.org, samba-technical@lists.samba.org, sparclinux@vger.kernel.org, 
-	linux-m68k@lists.linux-m68k.org, linux-serial@vger.kernel.org, Takashi Iwai <tiwai@suse.de>, 
-	linux-input@vger.kernel.org, linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-modules@vger.kernel.org, Chuck Lever <cel@kernel.org>, tytso@mit.edu, 
-	dmitry.torokhov@gmail.com, Petr Pavlu <petr.pavlu@suse.com>, 
-	Anna Schumaker <anna@kernel.org>, yukuai@fygo.io, Heiko Carstens <hca@linux.ibm.com>, 
-	Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
-	Christian Borntraeger <borntraeger@linux.ibm.com>
-Subject: Re: [PATCH RFC 32/38] selftests/proc: check a sysctl listing while
- entries come and go
-Message-ID: <20261103-unwichtig-puten-tauglich-389f0d95257d@brauner>
-References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
- <20261102-work-procfs-bugfixes-v1-32-59422ed3e465@kernel.org>
- <sashiko-outbox-195504@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=deltatee.com header.i=@deltatee.com header.a=rsa-sha256 header.s=20200525 header.b=foVlrp//
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
+	Message-ID:Date:Cc:To:From:content-disposition;
+	bh=RchtkJFTw36chOPxEtH6cIti46A9gaK+Fmpg6WmFwbs=; b=foVlrp//IyLx1QBfkxVpzc1KCC
+	CGFzpNOKIKFhLC/XazHI8NMy7zTb/Gg02IimXseSDTbqt/bm8PY3YmVsl1pi9986E8uvrSGKAsmmR
+	XPnVXBY7uE9+wMyWl6J0UMLgmKwk2nuJQgoMPdOb5vxHLc1+432uLArZ5HhCabwmT+vS1msjh3PfG
+	xyqIaGrehKfHiddluH3TKmDcHbVeMrBUC3aKYjAz/4YC4HsX3Nl2z/PCrzJ/YHAepbOtRyS9tfugE
+	ZjqVOkn/gGeZdOc9gliF+k5NnOrlrAQat8c//FiA3EBkf805Op90zkXK3h0YM3QCnVoWZBTlNBRnz
+	BbtxfLLg==;
+Received: from donard.priv.deltatee.com ([172.16.1.31])
+	by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1xOHt3-000000092Tv-24jH;
+	Tue, 03 Nov 2026 11:01:30 -0600
+Received: from logang by donard.priv.deltatee.com with local (Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1xOHsC-00000001yXc-2loB;
+	Tue, 03 Nov 2026 11:00:36 -0600
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	dmaengine@vger.kernel.org,
+	Vinod Koul <vkoul@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Frank Li <Frank.li@nxp.com>,
+	Kelvin Cao <kelvin.cao@microchip.com>,
+	Logan Gunthorpe <logang@deltatee.com>
+Date: Tue,  3 Nov 2026 11:00:32 -0600
+Message-ID: <20261103170033.471034-2-logang@deltatee.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20261103170033.471034-1-logang@deltatee.com>
+References: <20261103170033.471034-1-logang@deltatee.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -75,11 +77,39 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <sashiko-outbox-195504@kernel.org>
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org, bhelgaas@google.com, Frank.li@nxp.com, kelvin.cao@microchip.com, logang@deltatee.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: [PATCH 1/2] dmaengine: switchtec-dma: Add Gen6 secure device IDs
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-On Tue, Nov 03, 2026 at 02:48:31PM +0000, sashiko-bot@kernel.org wrote:
-> - [Low] selftests/proc: proc-sysctl-readdir-churn duplicates proc-readdir-churn
+Add the device IDs for the Gen6 PFXs and PSXs secure switches
+(48XG6 and 64XG6) so switchtec-dma binds to their DMA functions.
 
-My appetite for churn due to "low" issues in tests is low.
+Based-on-a-patch-by: Kelvin Cao <kelvin.cao@microchip.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/dma/switchtec_dma.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/dma/switchtec_dma.c b/drivers/dma/switchtec_dma.c
+index a386c3a284e6..1af938bb40b3 100644
+--- a/drivers/dma/switchtec_dma.c
++++ b/drivers/dma/switchtec_dma.c
+@@ -1455,6 +1455,10 @@ static const struct pci_device_id switchtec_dma_pci_tbl[] = {
+ 	SW_ID(PCI_VENDOR_ID_MICROSEMI, 0x5452), /* PSXA 52XG5 */
+ 	SW_ID(PCI_VENDOR_ID_MICROSEMI, 0x5436), /* PSXA 36XG5 */
+ 	SW_ID(PCI_VENDOR_ID_MICROSEMI, 0x5428), /* PSXA 28XG5 */
++	SW_ID(PCI_VENDOR_ID_MICROSEMI, 0x6064), /* PFXs 64XG6 */
++	SW_ID(PCI_VENDOR_ID_MICROSEMI, 0x6048), /* PFXs 48XG6 */
++	SW_ID(PCI_VENDOR_ID_MICROSEMI, 0x6164), /* PSXs 64XG6 */
++	SW_ID(PCI_VENDOR_ID_MICROSEMI, 0x6148), /* PSXs 48XG6 */
+ 	SW_ID(PCI_VENDOR_ID_EFAR,      0x1001), /* PCI1001 16XG4 */
+ 	SW_ID(PCI_VENDOR_ID_EFAR,      0x1002), /* PCI1002 16XG4 */
+ 	SW_ID(PCI_VENDOR_ID_EFAR,      0x1003), /* PCI1003 16XG4 */
+-- 
+2.47.3
+
