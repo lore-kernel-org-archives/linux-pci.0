@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793731451;
-	b=xcrZlNucPHhQr05AW1oAHTRtNNYddYL3b/PxLd1F93GdmRrm6iA6NZxvtyWliiqaBLFs
-	 ZRHNitJBSBiCa4tXOa/6sgNaez6UfK+bdhwJnW4jGhxaN1kI4DXCjA5IxIoEx9+zAPfVu
-	 59VEtHIjsto+tuRbjmiDYtkGBwdvrQwsAp5uRd6ModwPp4+S9C2qzs4C6HEF6+TsfrJ2C
-	 ZOaPaUIkAxU1gLIG50xuszx74/5PeQyZbkDAP+FGcuH6Ix+0uODoVbk69vn6qc69daWoS
-	 eIzcPoAOJQ2aBBycMTqkjMSbFaKVxIw3qJb95gGRck0Y8SLdJLlzuZKUa1VywMS+y1A==
+	t=1793731472;
+	b=r6KMtYysF/msxAP+WolKSDKewQZJmdEfmsh92j1pzrEfg5GKY4jfGT6Hy3efGFI8tvYd
+	 Zb0ycDGOoCJnaKYYL92QdXBwl6rCGTYQDKkdaiRfJCg04LNSdn/Zq7ZqgLRS7yYlfWX4l
+	 3EBC4JFL1Bopv52ky7//Ne6Kba5na7FWoeBTetujKeHx+Xy6DpuHzDG1h2DxI7dUdr1+T
+	 MOEUI3P3rMZtPV/2vGHDztVJgrGSDSYjeyl7J0Qm1TRsHK6/Sc92FJ7/m4M9xv1aPd6M5
+	 3/O+6u0x+N8/qphcsqp2tBoDWlVseuTD30lG+FMQDxHrsipB9lVqffU5B2qc8Tfsb1Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793731451;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793731472;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=PgXIcyEKFnyeF/HLyWbTgOp8SsJJ+gNcg3iZUZWTrXs=;
-	b=PnS1XhL2G73Pilu4NvsJGtpBqI3Ah+agy0YVy8bcyLA0LBn9wE9m4dJaJ4w3kKRD65HI
-	 +2lg6IefUlo5shExS5wuAcSXodL28Fo5f9reo/9kkHzlHFVOfbq+PDIn+VJnXJISnBf8K
-	 3gqMG0U97EnXIHtJ20eUjxhtqI12MqLPOseYhhx15pO/d3rVlVCGg+UZtYpP9anYxNsHC
-	 b3hGM+3lDy3NAL52i66DgvN5D7HuENyY/V3WywHF8gDmuz3R3ETgp1/o4gMoQKMKhadta
-	 FJLV4TDQpqbH1GqGJVQWyFIrhGCsNeMIMyM1ASNg+AhiHYIL3AYVlznlKTZh+74lnUg==
+	bh=JgyZaPYGkU/56jV2mlgVZyZwYd4UbmuNnnj4Uw5GdYQ=;
+	b=uWH69OBfyJ1+5O/Svg7q3kYHmWIUIoFl6DlW8tbKaG9Hjw9YFwlsU4cMuf8mU3liq+CE
+	 XhFSiShT/eZdSNbsCQDkPs2IX/lm7069YPuuuFAsJsg4MNuQTh+rAPHLSMYFQNbOsALzR
+	 QsyY59VOppKq9fHKvfhNyTYRleo+QWBP8/tw+h7SU8k+u+NvbvsxQqCc4P7UDN0PQfjcR
+	 rTBpMav1PHiNswmJj6UlWARiNH1Dn5DvlDAc6HC8v0vIndwt2Uz3nJ/WjG0CXP3wQDDTv
+	 QFL2ghErqT/kk6NbRP+GkBWA5+qfCcLZUfSn/ZBvyKCTPUoEvKJZuli37+e3IS2ZgyA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NBnCNF5o;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F2wGX+uw;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DCB4606A31B
-	for <linux-pci@vger.kernel.org>; Tue,  3 Nov 2026 18:44:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F39A606A333
+	for <linux-pci@vger.kernel.org>; Tue,  3 Nov 2026 18:44:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NBnCNF5o
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D48AC1F000C1;
-	Tue,  3 Nov 2026 18:44:10 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F2wGX+uw
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A99B1F000C1;
+	Tue,  3 Nov 2026 18:44:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793731451;
-	bh=PgXIcyEKFnyeF/HLyWbTgOp8SsJJ+gNcg3iZUZWTrXs=;
+	s=k20260515; t=1793731471;
+	bh=JgyZaPYGkU/56jV2mlgVZyZwYd4UbmuNnnj4Uw5GdYQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=NBnCNF5ohorwU6p9PKKbpWxfbf3tVitWYiJtJmMND8i9wO2Ht3k1RhSGBFj3asKw1
-	 exume2qZ0azYwMsz1n4tbr/kPd8TVuJw6jwC/9orSQup5cwc2dFpv/fVaZXPbRpu4/
-	 R1/2iVvCFUXTXhUBN0h9nZh32EjpAJSOY2Ej4f6nF5gvt8xVXoWzM8gVfDOu1iAU6m
-	 4PV/VWXxo4aExl1k6sV/s2bjQExK9fVm0rgndn2VPk9wh9pz3vEbb7EynBhHN9umnG
-	 IOaQrQQpum988q8o2s4bYRctZc2Cxe9M3TCKhb1FjU6dGU47py7jDUpjy5j9Nb1rNz
-	 98iESXhOmu8jg==
-Message-ID: <sashiko-outbox-195858@kernel.org>
+	b=F2wGX+uwvDbZLa2keQtL5TcT2lEOLiMnPLyokMyO0hTGil4YOt9vDG5GsJMnpjNu0
+	 l3YdBqBMKV79ATdFjbopzPzp3Jm0NuYh6lZL2qwk4stiuuCaa8WnB0vsfzTgXBkyB5
+	 LmfuoigUOd3UJ6HF+5SOdHRim84CLU61chJzH5uZ2sH2QfyRY2yRDq5bwxhAUMkFu9
+	 cNs+SnaUsdoa5kzgxCEOGoQ677YvqWr3YP4+ju5n4uJJCxcGOL2ZQ2gsQ8Iyc07XD6
+	 0vghb07oj2hAH7JD1SHDfWiRJPzmZUiXayzgxpanJKOstqXb+PeXimICAOXRYQMZn0
+	 Nl8OtgKHvg74A==
+Message-ID: <sashiko-outbox-195859@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 2/5] PCI/CXL: Probe the underlying bus reset in
- cxl_reset_bus_function()
+Subject: Re: [PATCH v1 4/5] iommu: Pass in gdev's blocked state to
+ iommu_deinit_device()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nicolin Chen" <nicolinc@nvidia.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <6c09d2f78d4bb9db7f49fa14a6550f5176721121.1793729707.git.nicolinc@nvidia.com>
+In-Reply-To: <2e6bc70edf141ea3a067079951736d086740ca01.1793729707.git.nicolinc@nvidia.com>
 References: <cover.1793729707.git.nicolinc@nvidia.com>
- <6c09d2f78d4bb9db7f49fa14a6550f5176721121.1793729707.git.nicolinc@nvidia.com>
+ <2e6bc70edf141ea3a067079951736d086740ca01.1793729707.git.nicolinc@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 18:44:10 +0000
+Date: Tue, 03 Nov 2026 18:44:31 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,41 +61,25 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> cxl_reset_bus_function() reports "supported" to a probe after checking on=
-ly
-> that the upstream bridge carries a CXL port DVSEC. The underlying bus res=
-et
-> can still be unavailable, e.g. on a bus shared with other devices, so both
-> the reset_methods[] array and the reset_method sysfs node end up listing a
-> "cxl_bus" that is guaranteed to fail with -ENOTTY when it is attempted.
+> iommu_deinit_device() parks the device on the driver's release_domain and
+> passes group->domain to its attach_dev() callback as the old domain. That
+> is only correct while the device is still attached to group->domain.
 >=20
-> Probe the underlying pci_dev_reset_slot_function() and then, if it is not
-> applicable, pci_parent_bus_reset(). These are the same two checks that the
-> actual reset runs, so a shared-bus CXL device no longer advertises a meth=
-od
-> that can never succeed.
+> A subsequent change keeps a device blocked on group->blocking_domain after
+> a failed reset, so the old domain has to follow the device's blocked stat=
+e.
+> The group_device holding that state is freed by __iommu_group_free_device=
+()
+> before iommu_deinit_device() runs, so read it at the call site and pass it
+> in.
 >=20
-> Probing via pci_reset_bus_function() would not work: its cxl_sbr_masked()
-> check rejects every CXL port with a masked SBR, while the do-reset path in
-> this function unmasks the SBR before resetting. Such a port would wrongly
-> probe as unsupported.
+> No functional change.
 >=20
-> Move the port control register read above the probe branch as well, so th=
-at
-> probe runs the same checks. That read asserts no reset, and a failure mea=
-ns
-> the device cannot be reset this way, which is a probe-time answer.
->=20
-> Also pass an explicit PCI_RESET_DO_RESET at the do-reset call site, since
-> probe is always false at that point.
->=20
-> Fixes: 53c49b6e6dd2e ("PCI/CXL: Add 'cxl_bus' reset method for devices be=
-low CXL Ports")
 > Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1793729707.gi=
-t.nicolinc@nvidia.com?part=3D2
+t.nicolinc@nvidia.com?part=3D4
 
