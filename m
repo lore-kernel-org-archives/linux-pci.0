@@ -1,57 +1,123 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793702095;
-	b=LhOEhYVcn3HxW4L4h+KqcRrf9Q3RRLhvScIpsocjtsFp16MHQ5MxMcNAgGY5moL/tSas
-	 2qw7kjmrQZpvjtz1K1eYV9F9TwCPyAUhn6tkua742kWtD1Ee9PuifVAoM74JPKsvsHQtT
-	 bWRel4XJrR1ftJUicrrI3fShKO4Wiounggn8HA9FemH+FtjmAc1JZpWPyZCl3Ad3rNo8a
-	 qgvQ6Nl1ve+YDyEfpm+X8QLny5WNPSdeA9nLzpQdpbr7+ja7Q1o/DVNKOfTOmecG3Quim
-	 41nK7NLSftrGUx8B1AQkSov2I7sbDndko9JaeTV8U9YVsrFT0pN5MNED6QBPKW3BplQ==
+	t=1793702481;
+	b=rNYQKEDqsmiP3MogOH/JR171y9Bs0RPAUwcIkgx4wTrTnXiX0EkZzzdiNOoeGUQkJk/N
+	 emtRRJKWq4qI4yD5eWKjFrg065QOuhwb0g69WMOfcom9AczxxmJltma8tJ60qZmDgFI9X
+	 PCFnKfrJzpIayLsjNj1HSXwQYPc1HnpU+UVHoPVucU7VypwaMApYrYxv0w/YEU7iS0B4a
+	 1aMbLFDImW5tkACbeKz65AcT0DCBaMAQoLT2qEitamQvh8IzAE10Fzlwl8LyXjw0f/GVf
+	 41fVQbwRW+xf5uThEmf7ALfYfLztxSin0PNIvk48UJoFuZWdj4cyOcsf3woGgeozWOA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793702095;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=ukxvASRQHPXLmCBtFGTm4r2/mUdWWRyPzw9bZSdLupc=;
-	b=qNawMgpsW+HBFQbfguIcxJyfOB0hOIbX/uox3O7839yKLTqvBJ96ypBjrFJZkV7n6zVk
-	 U+/lcONZKfloNpdD862OFBFNFo2jP3CHx2ieCm4+xT6PG5Lz7CPTqn5gLlSbGzbS4+dKY
-	 krThdCOyViTFUp83mGyI45I56vR3M77O+LTWo6psmxpujTc1zJVQZUXxgeEtW0tPQVPhI
-	 Tc64Yh+XVWM1wNY/76TBbgjLEiqQ6UKHtk+WRvOZ5kxRkViged1QjOedYdUKEDGqby3kj
-	 CNDSzxOAez4xLJlLy+PZ7ywhzaBwN4whIgMSROQ5Y5Q1YgPeuzloe3pW5bqh9vdb17g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793702481;
+	h=DMARC-Filter:Received:Received:Received:Date:Message-ID:From:To:Cc:
+	 Subject:In-Reply-To:References:User-Agent:MIME-Version:Content-Type:
+	 X-Rspamd-Pre-Result:X-Rspamd-Server:X-Spamd-Result:X-Spam-Flag:
+	 X-Spam-Score:X-Spam-Level:X-Rspamd-Queue-Id:X-Rspamd-Pre-Result:
+	 X-Rspamd-Action;
+	bh=n3928gBIWqHxVcE0Q0TQTSHKUQ5+JmJrD1oVco54lEw=;
+	b=HwjEIW3xc83Pm0CwR2K/jkKioKJQAd99tyX6Cj6/AI9N9iW/GZLJnxdXlQ0Md8xjAhXp
+	 UE7o9jZIB+LI63ZtxP6vN6y+Xa2ri8buth6IGDfiJmvMTMZhzbTH0SsXovYkLzVbKMXXq
+	 vFiXEDLAkZ+L9q6fw4jUwFncyR3YRX4/Enl/UY62hCFlYX14DcVGD2BOI8gPoV+9s44Gh
+	 NTh6As2zyA8On/8V/FwUCthQCAD8QE6ugtIC2CMxuUVLpLwWQObkkycenc7WWO7gIR9OU
+	 N7zwdfKQiWgR5tYfGnHvdPnsVNyCZZ3iwLafK2p+H23NKktgtnQh2Lj+IsH/Ghh3akA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PU8IZPSG;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=suse.de;
+	spf=pass smtp.mailfrom=suse.de;
+	arc=none smtp.remote-ip=195.135.223.130
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99993607379D;
-	Tue,  3 Nov 2026 10:34:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PU8IZPSG
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33CEE1F0093A;
-	Tue,  3 Nov 2026 10:34:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793702095;
-	bh=ukxvASRQHPXLmCBtFGTm4r2/mUdWWRyPzw9bZSdLupc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PU8IZPSGt48klsHyuHjT7L1E2JvLVmsEQ6PK0DqG4rF/WsF7i6K8VIfUhkjjLlD12
-	 pEda7JdJaQhDXlZpEsUj035g5MbG4Og8GuSiMLaibizZc3S4iGeriU4d3lMxgyu+ZW
-	 wQL6eN7ok3I0WhTcU/W5oNpSMyofRZYrPVYOXUEIw5bLt40vWC6ZSlCoekl2l42u3H
-	 l48AoNe4PHEJqCTHHRJ1ThfWuY+6xmUu3k24iHi3h3hlqqBQWA6Lfr7GUwqQReJ+h9
-	 +tzJFhoPHu+Tl2mk9sNHtzGCECAYPcErIrWOsJalpI9jWKQVeKnRpdkdgmCK4ES05O
-	 m+ZP6GiADl+Ag==
-Message-ID: <sashiko-outbox-195058@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v12 10/19] PCI/P2PDMA: Reject Translated Requests
- blocked by Translation Blocking
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Leon Romanovsky" <leon@kernel.org>
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org, kvm@vger.kernel.org, media-ci@linuxtv.org
-In-Reply-To: <20261103-fix-p2p-acs-v4-0-v12-10-912101f93517@nvidia.com>
-References: <20261103-fix-p2p-acs-v4-0-v12-0-912101f93517@nvidia.com>
- <20261103-fix-p2p-acs-v4-0-v12-10-912101f93517@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 10:34:54 +0000
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23D3A606A81C;
+	Tue,  3 Nov 2026 10:41:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 23D3A606A81C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 8017122D12;
+	Tue,  3 Nov 2026 10:41:18 +0000 (UTC)
+Authentication-Results: smtp-out1.suse.de;
+	none
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A98D41350A;
+	Tue,  3 Nov 2026 10:41:17 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id fPJkIE266WqxEgAAD6G6ig
+	(envelope-from <tiwai@suse.de>); Tue, 03 Nov 2026 10:41:17 +0000
+Date: Tue, 03 Nov 2026 11:41:09 +0100
+Message-ID: <87ik2exkmy.wl-tiwai@suse.de>
+From: Takashi Iwai <tiwai@suse.de>
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Jann Horn <jannh@google.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Chris Mason <mason@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Christoph Hellwig <hch@lst.de>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Joel Granados <joel.granados@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Jan Kara <jack@suse.com>,
+	linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev,
+	platform-driver-x86@vger.kernel.org,
+	coreteam@netfilter.org,
+	kexec@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	ibm-acpi-devel@lists.sourceforge.net,
+	jfs-discussion@lists.sourceforge.net,
+	linux-alpha@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-cifs@vger.kernel.org,
+	linux-fbdev@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-sh@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	samba-technical@lists.samba.org,
+	sparclinux@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-doc@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net,
+	Takashi Iwai <tiwai@suse.de>,
+	linux-input@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-modules@vger.kernel.org,
+	linux-debuggers@vger.kernel.org,
+	Chuck Lever <cel@kernel.org>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH RFC 09/38] ALSA: info: don't write past the end of a data entry
+In-Reply-To: <20261102-work-procfs-bugfixes-v1-9-59422ed3e465@kernel.org>
+References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
+	<20261102-work-procfs-bugfixes-v1-9-59422ed3e465@kernel.org>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) Emacs/30.2 Mule/6.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,115 +126,64 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+X-Rspamd-Pre-Result: action=no action;
+	module=replies;
+	Message is reply to one we originated
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.00 / 50.00];
+	REPLY(-4.00)[]
+X-Spam-Flag: NO
+X-Spam-Score: -4.00
+X-Spam-Level: 
+X-Rspamd-Queue-Id: 8017122D12
+X-Rspamd-Pre-Result: action=no action;
+	module=replies;
+	Message is reply to one we originated
+X-Rspamd-Action: no action
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] PCI/P2PDMA: missing Intel SPT PCH ACS Control offset check for P=
-CI_ACS_TB
---
+On Mon, 02 Nov 2026 15:21:24 +0100,
+Christian Brauner wrote:
+> 
+> snd_info_entry_write() clamps the count to what is left of the entry
+> by computing entry->size - pos as a size_t. For a position past the end
+> that wraps and the write goes to the driver unclamped, for opl4 into
+> sample memory outside of what the entry covers. At the end of the entry
+> the driver gets a count of 0 and vmalloc(0) warns. Before the clamp
+> moved into the common code the driver ignored such writes. Fail them
+> with -ENOSPC instead, like a block device does at the end of the
+> device. Returning 0 would make writers that use stdio retry forever.
+> 
+> Fixes: d97e1b78239c ("ALSA: info - Check file position validity in common layer")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
-commit b8a9e833dab26624045a5e241b8edb8d281747c8
-Author: Leon Romanovsky <leon@kernel.org>
+Reviewed-by: Takashi Iwai <tiwai@suse.de>
 
-PCI/P2PDMA: Reject Translated Requests blocked by Translation Blocking
 
-This commit teaches P2PDMA to check ACS Translation Blocking across the
-ports traversed by a peer-to-peer route and reject Translated Requests
-when any port along the path blocks them.
+thanks,
 
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index 785e4668a2af5..fc4dea28c8606 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-[ ... ]
-> @@ -678,6 +691,39 @@ pci_acs_p2pdma_no_upstream_forwarding(struct pci_dev=
- *common)
->  	return NULL;
->  }
-> =20
-> +/*
-> + * Report whether any port between @client and @common rejects Translated
-> + * addresses. If @common is NULL, every port up to the host bridge is wa=
-lked.
-> + * A port whose ACS Control cannot be read counts as blocking, which wit=
-hdraws
-> + * only the Translated classes because an Untranslated Request is routed=
- by the
-> + * redirect controls instead.
-> + */
-> +static bool pci_p2pdma_path_blocks_translation(struct pci_dev *client,
-> +					       struct pci_dev *common)
-> +{
-> +	struct pci_dev *pdev;
-> +	u16 ctrl;
-> +
-> +	/*
-> +	 * @common is @client itself when the provider is the client or sits
-> +	 * below it. The Request never travels upstream then, so no port sees
-> +	 * it and none can reject its Address Type.
-> +	 */
-> +	if (client =3D=3D common)
-> +		return false;
-> +
-> +	for (pdev =3D pci_upstream_bridge(client); pdev && pdev !=3D common;
-> +	     pdev =3D pci_upstream_bridge(pdev)) {
-> +		if (!pci_acs_p2pdma_ctrl(pdev, &ctrl))
-> +			return true;
-> +
-> +		if (ctrl & PCI_ACS_TB)
-> +			return true;
-> +	}
+Takashi
 
-[Severity: Medium]
-When calc_map_type_and_dist() calls pci_p2pdma_path_blocks_translation()
-with common set to NULL (either when path.no_common_bridge is true or
-when checking path.tb_above_divergence from b_child up to the root bus),
-this loop walks all the way up to the Root Port.
-
-On Intel Sunrise Point, Union Point, and 7th/8th Gen Mobile PCH Root
-Ports matched by pci_quirk_intel_spt_pch_acs_match(), pdev->acs_cap is
-non-zero, but due to hardware errata the ACS Capability and Control
-registers are 32-bit dwords rather than 16-bit words. As a result,
-pci_quirk_enable_intel_spt_pch_acs() programs PCI_ACS_TB into
-pos + INTEL_SPT_ACS_CTRL (offset 8):
-
-drivers/pci/quirks.c:pci_quirk_enable_intel_spt_pch_acs() {
-	...
-	pci_read_config_dword(dev, pos + PCI_ACS_CAP, &cap);
-	pci_read_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, &ctrl);
-	...
-	if (pci_ats_disabled() || dev->external_facing || dev->untrusted)
-		ctrl |=3D (cap & PCI_ACS_TB);
-
-	pci_write_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, ctrl);
-	...
-}
-
-However, pci_acs_p2pdma_ctrl() reads the 16-bit word at pos + PCI_ACS_CTRL
-(offset 6), which on these Root Ports is the upper 16 bits of the 32-bit
-ACS Capability register (reading as 0):
-
-drivers/pci/p2pdma.c:pci_acs_p2pdma_ctrl() {
-	...
-	if (pci_read_config_word(pdev, pos + PCI_ACS_CTRL, ctrl) ||
-	    PCI_POSSIBLE_ERROR(*ctrl))
-		return false;
-
-	*ctrl =3D pci_acs_p2pdma_quirk_redirect(pdev, *ctrl);
-	return true;
-}
-
-Unlike pci_acs_p2pdma_no_upstream_forwarding(), which consults
-pci_dev_specific_acs_enabled() when walking to the Root Port,
-pci_p2pdma_path_blocks_translation() only inspects ctrl from
-pci_acs_p2pdma_ctrl().
-
-Won't pci_p2pdma_path_blocks_translation() miss PCI_ACS_TB on these
-Intel PCH Root Ports and allow calc_map_type_and_dist() to return
-PCI_P2PDMA_MAP_THRU_HOST_BRIDGE instead of
-PCI_P2PDMA_MAP_NOT_SUPPORTED for Translated Requests that the Root Port
-will reject?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103-fix-p2p-ac=
-s-v4-0-v12-0-912101f93517@nvidia.com?part=3D10
+> ---
+>  sound/core/info.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/sound/core/info.c b/sound/core/info.c
+> index c4d57d0809ad..982087bc8575 100644
+> --- a/sound/core/info.c
+> +++ b/sound/core/info.c
+> @@ -171,6 +171,8 @@ static ssize_t snd_info_entry_write(struct file *file, const char __user *buffer
+>  	pos = *offset;
+>  	if (!valid_pos(pos, count))
+>  		return -EIO;
+> +	if (pos >= entry->size)
+> +		return count ? -ENOSPC : 0;
+>  	if (count > 0) {
+>  		size_t maxsize = entry->size - pos;
+>  		count = min(count, maxsize);
+> 
+> -- 
+> 2.53.0
+> 
