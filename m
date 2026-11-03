@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793719123;
-	b=EYwKTfblOpIA9eAN/Ed9+s1POmG0+5p65+NWhjn8GTfVHqIt0y8DUtezNHEt4ZDqVf63
-	 ZnUh1k/pJe6NEJ78QsG7x9zJMAO6KF5Z3luFx5gYx9tiH33PLuXsEHG+nkzMdrA9zu3gu
-	 J61cq5+W5tpCLAdI6Jr/SJmqd5FN8MHsQVDkYNp+ucys87zBr2O72x+4br4aZEwJ/dGqV
-	 IXHoO4phtqzDoyCiKwWVFaomFa3Mbi/KXE9lppEyt/xWllW53pFECM4uGA3PcTFllVEbB
-	 Nz5L0UH2uACv5uvSf0tf1WPezPQAczCtap2MFKeagwcSQsZL6IjjD+fg+2iirvWr2pw==
+	t=1793719135;
+	b=kfU290hcJbgikTANxAUix0rHzwufQpjPbDHMavrwQWWM39OHX1LCJ6urAMd2G1e76Aqo
+	 pH+4uACq+kOeRm77q43Jddi4PnkSA5YgkzkIjUF4W7c3zPtoAVDLKvgTyCwbSD4+KQiDx
+	 1geRNs4ymnKmBvw7yLywN+EfGKjsbKjDyzkJH/cMqRJdQX+xEdwiIQUupMPVwT/vH7o+/
+	 bDFjaMQeeOHMrpuf65D4k6/vwHtNUORCuznjDCCHki7wZtL12xNYbMlh+a96tflmWK5Cs
+	 Tfbbi1mMg74wSQ5r6YBL55/u3dtxulHJAol6Ii7XglvAPrYA5tAKgFfgBcwor8Yz6nQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793719123;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793719135;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=DuUWXqjsSRZJqvPrRnnQUK8F6HwoSKU+vf+Jc0u1BP4=;
-	b=Cw9U7+/AwphgGgpqfs7+nlQJGJLNXYoXVMmKZQPN1DmWWpFIzhuJO2aXK1oGfCOXL4y8
-	 FOVBr4rOscR8925bwBAUWJfErQw9kW6VFq6l7PfCOnZarTK3g23Kz2NkREkBqR6qKYJvv
-	 vVQyNCXcZl/ClwyaWa31Xz0YfqUHK68F6MR2uVmECcr6ggNAGnVHdq1tah5T5hXXwr9J+
-	 7G4VZEEOBlNFqur44CjyoVXYon9tolW0GjUfQI96SnI8SxzYNcnLO09OyW552tP9AA7sc
-	 YbrgqHPP/dcl4xj6dLYCTbazpzTuChRFbyOlV9OgTK59EAGgcE1+Bu1TXWorlSIUn1A==
+	bh=iYYDAQ4EAaFTojHj2S/IS/DlVIcz9P9xTbXP/dOtwJQ=;
+	b=L3UhEqGlzy0tYexYaFJiSmffwPLGNwHcN3TrKn6rPtRSomybR3nKNPiSZo0Z/VsPghxp
+	 V1YGFTuF+GIxo9Y2qmGHYnN1ztZEDmGOxw+vBFr82aea9zuEcnciBPv6uA7z+oDWZCEoC
+	 IGuABAE0S7t9K/Dp8fSgxS5VYO4Xqw5MHHkdltMhu2eMbO6Mpj6AzwaCf7D8lmPawOD78
+	 7gmGm4tpNRUuOlXWoEm9A2jeJt6fYPuX6Pz5210ik3tPBdTwhAom8nadzXrzYe+TA1TKp
+	 E0Q8nFXZPdvBgdTn4cS8FFD4lJGGIPY+fwTCl9Jvfr2XzLAPAyPN5QeC813JMa3Iwag==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AM0tHmEK;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=E+3F0H5K;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AA05606FCE3;
-	Tue,  3 Nov 2026 15:18:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC17D6082BEF;
+	Tue,  3 Nov 2026 15:18:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AM0tHmEK
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D34361F00A1A;
-	Tue,  3 Nov 2026 15:18:41 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=E+3F0H5K
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 363BC1F00A15;
+	Tue,  3 Nov 2026 15:18:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793719123;
-	bh=DuUWXqjsSRZJqvPrRnnQUK8F6HwoSKU+vf+Jc0u1BP4=;
+	s=k20260515; t=1793719134;
+	bh=iYYDAQ4EAaFTojHj2S/IS/DlVIcz9P9xTbXP/dOtwJQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=AM0tHmEKokixtZONwfAH9GtAY9t8XyE8EQqFABZ4jT/4JvAwevkMeQijwg3GGuI6b
-	 +uRWlXfdEm1zAuo+7Xu83HaUoLhd7v44csfZ9YCQ9XFZDzwuUrIIJ5ZJSNbLwnlYGa
-	 m75nZBJXugcWf9XdVH2eCRknX8RVMsoXlE0Be3ASTz8tvYz7mmfB2q97Rx+lmFR/d/
-	 P3y+Pk1FjoR6TzepE4sGWFDJ+B5VBr3/cihd1PQ5ptIU6mTwzqamjpHrgXtwTmDqHD
-	 SsBfs8TF14zsa35s0UdWhnaIUoaZqYvGdNLbwEdyaDdYpcyIPY7xkys8bbdug4fGgR
-	 Z1HIudLH9yC6g==
-Message-ID: <sashiko-outbox-195588@kernel.org>
+	b=E+3F0H5KbEJBZo1I24LPwaX+Na4LHasmV3v4LtadaUaTQD3umUuYdZ8ca+KGfkDAP
+	 qNrBUn7y9LjD/oybvflZdkENEKMguqn2R1IipnoivrEj21pGQL6d8oVnm4Wp6n41QG
+	 I1WY6ZGFPNQVGJvuZZ2fT+xSlwX5FrZygE0DGw1KiLlprDoSQ68MdVoXik0agD95Df
+	 YT883GFnPCcBmGGBRCDtBQan08iKSCeJT9s0may3cbwXZTQ9qXWgpU3QOTOqeSphOQ
+	 RLFiG9EFcDDjvp+V5Qc+pKgtdVL7R/TU5Ji0CHKr0CSHpBLxQSyDoBcXjRSt0XfCLc
+	 ncHjXD9/H2xIA==
+Message-ID: <sashiko-outbox-195593@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 08/23] s390/cio: let procfs copy in writes
+Subject: Re: [PATCH RFC 13/23] scsi: sg: let procfs copy in writes
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -54,12 +54,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Iwai" <tiwai@suse.de>, linux-ext4@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261102-work-procfs-drivers-v1-8-a994bd4d3b1a@kernel.org>
+In-Reply-To: <20261102-work-procfs-drivers-v1-13-a994bd4d3b1a@kernel.org>
 References: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
- <20261102-work-procfs-drivers-v1-8-a994bd4d3b1a@kernel.org>
+ <20261102-work-procfs-drivers-v1-13-a994bd4d3b1a@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 15:18:40 +0000
+Date: Tue, 03 Nov 2026 15:18:52 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -69,13 +69,14 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> Implement ->proc_write_buf() for cio_ignore and cio_settle so procfs
-> copies in what is written before it pins the entry. cio_ignore parses
-> the list from that copy, up to the first NUL like strncpy_from_user()
-> handed it to it before. Writes larger than 64k still come up short, now
-> through PROC_ENTRY_SHORT_WRITES. Writes to cio_settle larger than
-> PAGE_SIZE - 1 bytes fail with -EINVAL now, it never looked at what was
-> written.
+> Implement ->proc_write_buf() for allow_dio and def_reserved_size so
+> procfs copies in what is written before it pins the entry, and parse
+> the number from that copy.
+>=20
+> kstrtoul_from_user() looked at the first 66 bytes of whatever was
+> written. Now the whole write is parsed, and anything larger than
+> PAGE_SIZE - 1 bytes fails with -EINVAL from procfs before the
+> capability check.
 >=20
 > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
@@ -83,5 +84,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261102-work-procf=
-s-drivers-v1-0-a994bd4d3b1a@kernel.org?part=3D8
+s-drivers-v1-0-a994bd4d3b1a@kernel.org?part=3D13
 
