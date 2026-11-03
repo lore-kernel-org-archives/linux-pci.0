@@ -1,57 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793702708;
-	b=uaSKJxWJQMmTqlkjOmHlWboMtakiN6AJ/I3QJVkjcImiv/vWJuz8Jh9aLKtHx6R0Zu9b
-	 PPQ7WkiegI4v8O1971HzYMILsmVek1YDWfWzIBD54unIepJpiA8jAvB+5ki9x96ax8KKB
-	 k7oy5x5RUKDvoY8mt3rYAizm7k90qlaad3GrqYOE8OsqV2kfJN9h1LXoQ91i7Ji/Z9Ab9
-	 9T4TZ3Day0j6FQtVDk1qZFmhSGb00GlqWxmMfsAf6Hbjh/qQbHn0tUNHHLLstZgCmE7GX
-	 0vf6N1h6WYGWyBTsyyCK+PgXWG6x/YcEpYU4KZ3FFcUn4Tr/JYejCt+6wQ925qf+LBw==
+	t=1793703420;
+	b=O82kA4U556vM0InfliPI9rTNFXM1JlWs5XPcN9Nn/ytOsZtHlPsipYTS3cQUIG/7lb0F
+	 m21IpHbUAGWIM5V143F49tqXIlmWwHOVmbeLFJvgjM9dSPzKc52r499nvIpEFbyPyB1VN
+	 xSHojuW26iNFJZMTqdBQQwgSL4z7c/yJoOKTklLvibnViyOJ5oWk8BU8jg13TbkMW1jqc
+	 TAO7J/1F9l4zoczAVBTTZ2+3UUxa/LiSlFoqSr0Ba/d6bagNwi8IGmxQD/xXoXCv92Tbz
+	 KILoI+/LgJIOzXbZfptmJYFbuYzuA4k5YPgIIB5fDdPRsZMmvS3ABhg7Jyxt34p2Ybw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793702708;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793703420;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=qnS50xnySAL/6F0jbhmiWNpPeJrO3ISpGQeuKxN4ZQY=;
-	b=a11BMtbVnNfyJyXEWCikr8MQ1E3OZ6Ulo56hWFt//1ImMlo+l07KHDLlXl2tDKxk4dLN
-	 NqdWi3wKytjrr75YpCSxHF9wZyr8VElVYWB4xv0nfbXCnuPEaY+z8/yo1e165MLzrUDB0
-	 MI9cyuWfOi6p8/U8uqgzfT3UD/Z9TOky3P4IxkhhnTRm2lFQyNu8OAsrvk2CU2TUCUki0
-	 zKX/PxiiY6ETctoDpmLrIHmZzc2KLxvYzexfsiqusZkPBm4u3knurW/pVkY+/AWJfsAdk
-	 q3Voj2vAhkuhcqcm7N/TjjU/MsEVXMK7m87ELUDVcLiq17cjktbOgvNzII71bo4a8Sg==
+	bh=T91WXvqO80bHM1PPk3yYe0S2ZHUwHOlHaYVZwVefpjE=;
+	b=IBZw1XB20ozZHwsienp3FTi+9GVBO+bEGB0gw+w+zPdNqtXB/2HKhWxawN00gnGZp8fT
+	 13X7cr37WiU7b6MhCmcRKwv54BfYbXjc2KszQ+d+KUis43b/z09PaX80KrCFPWyrY2aqC
+	 K6bTvE8p8gLbH7QKvpUwUKF24zCK50XqyGYRDuxzqfe8lP2oDnAhMdn+LTV3LLxQRjQHq
+	 qFXJBnHkMXJzmSlfXN+JScgniwB/ouWqUr47Klx77G1+Fp9Ep2Ia899LlC7ILDxWXBWki
+	 XLnCvQnuiIjWhSE+8XpfmTFhPMB5pTbiq6ejeglv4udpxM+usF84zLv5dYNiYBojipQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZahngiXW;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iJgqG6CM;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EB5660700A9;
-	Tue,  3 Nov 2026 10:45:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEA6D606BF97
+	for <linux-pci@vger.kernel.org>; Tue,  3 Nov 2026 10:56:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZahngiXW
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D671C1F00919;
-	Tue,  3 Nov 2026 10:45:07 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iJgqG6CM
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 422651F00A21;
+	Tue,  3 Nov 2026 10:56:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793702708;
-	bh=qnS50xnySAL/6F0jbhmiWNpPeJrO3ISpGQeuKxN4ZQY=;
+	s=k20260515; t=1793703419;
+	bh=T91WXvqO80bHM1PPk3yYe0S2ZHUwHOlHaYVZwVefpjE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZahngiXWtOzdD9btYHY2QEX7lG02wm0jFp1z6fypAdYkNQGyHqU1l1+7IYcfibP+w
-	 UCL3jCFhzOBN4WpnLkS5YHEZ5jaCnt+oZlCRiwuGbC/Mt59y+zEnxP1sT8JlNmVnbZ
-	 9M4dvMS3F+Bh3levPj5B+xmMjTCzuufpewvndiwMXs7qJBIvUKJdbv8Iz1B3XUV7ZO
-	 0YYHV1/y25oQSeJ4i4ktyNdWanUWR0wEnvP1RbvliOinnICyitt/qJ57I2LQmolTkz
-	 FY61wBNRj7Ui+UULXaq41Bm3BcDraFENkGpPWhmr4+hWli6FisIS3VMCICj5vPNdZo
-	 RORfz9yul/5Ig==
-Message-ID: <sashiko-outbox-195066@kernel.org>
+	b=iJgqG6CMKaLioi12vHuVKJfozbEeMKTcruYBZOymYcb6djx1F/v70u4clNlYq2X8m
+	 O8eZ32L5LUKlznO1qzKnR11AXSVxc0kswCmjVmbTpM/9NsxVgMkpkdJzFtXD1tHXoU
+	 NzvGkYDp+KRWhEoNJy+EDih2MA+gjAK7yc4GZz723sufs5K7YjoE7AQB2wYuW9mI70
+	 wBiXM0JW6aMaFIRiYmqIGkj3lPOPYJg7XzKbmF+w44c2I6itXcc9fcBbRkiq7Jenpz
+	 NTChBDoP/L42LE1ckP7nynNiMXKfeh4BuBurO5hWd9YjcQNu6EII5TgKaaAQWgaxlc
+	 z2MSh8OQ6G2dA==
+Message-ID: <sashiko-outbox-195087@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v12 11/19] PCI/P2PDMA: Route Translated Requests under
- Direct Translated P2P
+Subject: Re: [PATCH] PCI/IOV: drop PF reference if max VF bus computation
+ fails
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Leon Romanovsky" <leon@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org
-In-Reply-To: <20261103-fix-p2p-acs-v4-0-v12-11-912101f93517@nvidia.com>
-References: <20261103-fix-p2p-acs-v4-0-v12-0-912101f93517@nvidia.com>
- <20261103-fix-p2p-acs-v4-0-v12-11-912101f93517@nvidia.com>
+To: "Wentao Liang" <vulab@iscas.ac.cn>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261103104239.1373721-1-vulab@iscas.ac.cn>
+References: <20261103104239.1373721-1-vulab@iscas.ac.cn>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 10:45:07 +0000
+Date: Tue, 03 Nov 2026 10:56:58 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,25 +60,23 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> From: Leon Romanovsky <leonro@nvidia.com>
+> sriov_init() takes a reference on the PF found on the bus and stores it
+> in iov->dev.  The reference is normally released by sriov_release()
+> through sriov_disable().  But if compute_max_vf_buses() fails, the
+> error path clears dev->sriov and frees the iov without dropping that
+> reference, so the PF device refcount is leaked once per failed SR-IOV
+> initialisation.
 >=20
-> A Downstream Port with ACS Direct Translated P2P enabled routes a Request
-> whose Address Type is Translated "to the peer Egress Port without
-> redirection, regardless of ACS P2P Request Redirect and ACS P2P Egress
-> Control", per PCIe r7.0 sec 6.12.3. P2PDMA assumes every Request carries =
-an
-> Untranslated address, so it sends an ATS client through the host bridge
-> even where the fabric would route it straight to the peer.
+> Release the PF reference on that path before freeing the iov.
 >=20
-> Consult Direct Translated P2P for the PCI_P2PDMA_TLP_TRANSLATED classes.
->=20
-> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-> Tested-by: Tushar Dave <tdave@nvidia.com>
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+> Fixes: ea9a8854161d ("PCI: Set SR-IOV NumVFs to zero after enumeration")
+> Cc: stable@vger.kernel.org
+> Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
+> Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103-fix-p2p-ac=
-s-v4-0-v12-0-912101f93517@nvidia.com?part=3D11
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103104239.1373=
+721-1-vulab@iscas.ac.cn?part=3D1
 
