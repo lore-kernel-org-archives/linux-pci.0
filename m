@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793694662;
-	b=M14514aTPO9Pdo3iH8Qh+UHD0JDMlD+OBGvSiirnvUth7ctpNU5FA1dhAR1fAtyyadLN
-	 Ecrv5sNjcipExv8l3Af4xFkXtDkh2upUDIIjtN6+qr9PICn7HLw4/z3Wqkm14JQag/Bpz
-	 WnkywfUp/dMnsSHdlb4tGFp3U/YheXfdJfvtDVWOIp0k13oDhKCSaDdVPAGJHCBotMc5e
-	 pOwbKqov3Y1yPwIL0hIq5cOP/2n71S334SelMtUuuJ3orj4XHTT/WC4n8wJiY6AHl4SKl
-	 nZyMtmY/9LU20jea57cD2CSJUGyJlsCGBkc6ce7X94BL8CVfj13VubWWcDyBcZ5UVwg==
+	t=1793694671;
+	b=BeVQiDjVjlPudZBJN+RMs3Cb44HhmyA7bR8q7Li1IE8vq1BC2hKAZY1HUXjezs0ynvay
+	 GZQ4FbmJEX4ESiGQSJv0flA9g+ND2LdvllilVgnsP3a/khHqcxXxwsMTVf0n7HY+n7XAa
+	 WrAW5s4nxaxdgxlGbMS8LX4S6NlL7ixe7pL1RRFeMcNz0Z+Wahax7QZyECwhY9Afi8m1E
+	 0bE8xUtWz9Cl2lGmfIy+mIDcuiVGIB/9W9KVTd+zDmWtmZm9okV7XHywd/nwQC9+zVOrR
+	 4B5nScGqgIH1+CRPvogJkl/DuALB5jDg9oxmI74W/ubwlT+Ev9OCaoWRy0ucAauvvUQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793694662;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793694671;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=0xwsjkbSXSSTyI2rI/a+1PXEe23SosrNi933ag/Z6nA=;
-	b=O71/QdgVBb5TwAHbvn7QIO2/dlg/r0G2uVoyvoqZgS7XyBLBDHG9lu20SjOvBm0aRyO8
-	 EPYd41iPSvag2LN3w8z8V7L3FzWHEUN7rorLYhT1MkpWU0LwUS9bGYowG/Ja5nwKEX14J
-	 KkxCM/+y8ksKvqhE2J7nH4w+DkOlbAVzGOk8WuQM4pfzTjVnvzMXH5pN/QclqNMTdenpQ
-	 ui7Y12EdnAFS4yOb65Pew7ashvmUkDvPsZz+ytV6au89w71Mgj9VATQxAMCd2ltGXGBnh
-	 nJ2Z+0ldJTDSpEaL4x5z7sK6vMpUuIJzkC+sgdZRrlR/EqXmXhfaRul5e3MZflJGlfg==
+	bh=wXnkAnSkUB8TU0mCqEFR7BMJkIEXE+o6O4ozAYMG584=;
+	b=HtQwMWr0hvAzGMp1yoJqkLiSlzX2Ebklvx9seW/HV4kCE+AMtcDP6ncmLoon0wen1PAe
+	 DJt4HSysfAeNyA9z1CniZfJWloqf5JIp9x7CAizMvb2BNAhwBW8ADKJUIBMKfzgFbzWjh
+	 eGemSAlM2FlxSZirYVw5vXpW58J9ECemACBl3TFJOIzyees119dnf6EyV5vhHiqOuyrHU
+	 ouAGE3vWokjPHu4FnahZcEbwSN8wFYfvZnfBThFDTIjPXbni8xW36GwVwZN5ZOs239Rec
+	 5mu5dfvoEHdxkZGlJwbW62wfqE2ZrDE292XKgEy3wOcDSux0f6DysCD6n2Xoud/aefw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Owm+zTyO;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oGIS9tEj;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 801916082BF5;
-	Tue,  3 Nov 2026 08:31:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9581F606A975;
+	Tue,  3 Nov 2026 08:31:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Owm+zTyO
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EE0E1F00A16;
-	Tue,  3 Nov 2026 08:31:01 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oGIS9tEj
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96F631F000C1;
+	Tue,  3 Nov 2026 08:31:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793694662;
-	bh=0xwsjkbSXSSTyI2rI/a+1PXEe23SosrNi933ag/Z6nA=;
+	s=k20260515; t=1793694671;
+	bh=wXnkAnSkUB8TU0mCqEFR7BMJkIEXE+o6O4ozAYMG584=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Owm+zTyO5atm+4zp+LLi8r+qGoyULmtpm2S9rKaRqkdODMyZ7AvcTvwpL5PkucpYm
-	 k6J+RdkO41Em3fyOtMocecp+y1u7BGu+AfumbP0j33WwqnU0LPikEvoCgzgX6klXrZ
-	 174I5h2ZVHa6eViMebAUTMS3ASkgLAvtIjsEt13KMf1ix4BMAU7frYiaQ326XWLpem
-	 /T6SUVO8HvpAwNeDD9mWZTxtUJEX2OELazB4VbXiu+F4iGgxmLwq3soYmp/UQCOZQG
-	 7kvhIkiztzz0AWVoME0MzXIIFGFtHNr9fv3ahKyrb499PHj1GvtGze1B8UANxEMczP
-	 NEtWz0bApf+mQ==
+	b=oGIS9tEjNU8j5P24esA/Gk9o0DsShHtWsm+AkwecP5QD6LPP1v27fQPRIU3HJa1Q9
+	 BPuaICsHQlXm8N8h/Z8yNdQLkLMLSQNM0D+usAqjWeTcQKVyjY/m85nvzIyVA32fRB
+	 6FE2lP/ld9taIYmV2NpUsXoi0vcOvX0obXIEQEtocv/ZlasybyPp1iZ4Le+bvoszcO
+	 c6YJqQGK/GLbzzyezFe9Ckrotkco9VWSjrk2k8f9pHRabeRDax2pjH2K/4LhpjK9Ck
+	 4c9ttE7vBdN+FbjHVBkEXTPvv4hdYPmBRMd8VHlbGmDhtOy3dxX2BiYDALpjC1HP5a
+	 EZ1u/5AMQ0ktg==
 From: Leon Romanovsky <leon@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Logan Gunthorpe <logang@deltatee.com>,
@@ -69,9 +69,9 @@ Cc: linux-pci@vger.kernel.org,
 	Shuah Khan <skhan@linuxfoundation.org>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: [PATCH v12 12/19] PCI/P2PDMA: Log detailed ACS routing diagnostics
-Date: Tue,  3 Nov 2026 10:29:51 +0200
-Message-ID: <20261103-fix-p2p-acs-v4-0-v12-12-912101f93517@nvidia.com>
+Subject: [PATCH v12 19/19] PCI/P2PDMA: Test the routing of clients with ATS enabled
+Date: Tue,  3 Nov 2026 10:29:58 +0200
+Message-ID: <20261103-fix-p2p-acs-v4-0-v12-19-912101f93517@nvidia.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261103-fix-p2p-acs-v4-0-v12-0-912101f93517@nvidia.com>
 References: <20261103-fix-p2p-acs-v4-0-v12-0-912101f93517@nvidia.com>
@@ -90,392 +90,219 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-When P2PDMA rejects a mapping, existing warnings identify only the final
-ACS or host-bridge result. They omit topology, live controls, divergence
-ports, cache state, and intermediate routing decisions.
+A client that enables ATS for the whole device must never be handed a
+bus address, and Translation Blocking must reject its peer-to-peer
+traffic even when the caller asks for the default class. That has to
+hold for answers taken from the cache as well.
 
-Emit debug-level messages for verbose calculations and cache lookups.
-Report both paths, decoded ACS controls, directional decisions, host
-fallback, and the final mapping. The messages stay silent until enabled,
-and the existing warnings are unchanged.
+Cover those on the fabricated fabric, together with a client that
+declared per-mapping ATS keeping the per-class answers and a client
+without ATS answering for the Untranslated Requests it will issue.
 
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-Tested-by: Tushar Dave <tdave@nvidia.com>
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/pci/p2pdma.c | 218 +++++++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 196 insertions(+), 22 deletions(-)
+ drivers/pci/p2pdma.c       |   8 +--
+ drivers/pci/pci.h          |   6 +++
+ drivers/pci/pci_acs_test.c | 123 +++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 134 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 600c3ef7a36a..d9f6b05cb3c0 100644
+index a81cd37a1834..df664d43c502 100644
 --- a/drivers/pci/p2pdma.c
 +++ b/drivers/pci/p2pdma.c
-@@ -615,6 +615,40 @@ pci_acs_p2pdma_completion(u16 ctrl, unsigned int tlp_flags)
- 				   PCI_ACS_P2PDMA_DIRECT;
+@@ -1448,14 +1448,15 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
  }
+ EXPORT_SYMBOL_IF_KUNIT(calc_map_type_and_dist);
  
-+static const char *pci_acs_p2pdma_state_name(enum pci_acs_p2pdma_state state)
-+{
-+	switch (state) {
-+	case PCI_ACS_P2PDMA_DIRECT:
-+		return "direct";
-+	case PCI_ACS_P2PDMA_REDIRECT:
-+		return "redirect";
-+	case PCI_ACS_P2PDMA_BLOCKED:
-+		return "blocked";
-+	case PCI_ACS_P2PDMA_NOT_SUPPORTED:
-+		return "not-supported";
-+	}
-+
-+	return "invalid";
-+}
-+
-+static const char *pci_p2pdma_map_type_name(enum pci_p2pdma_map_type type)
-+{
-+	switch (type) {
-+	case PCI_P2PDMA_MAP_UNKNOWN:
-+		return "unknown";
-+	case PCI_P2PDMA_MAP_NONE:
-+		return "none";
-+	case PCI_P2PDMA_MAP_NOT_SUPPORTED:
-+		return "not-supported";
-+	case PCI_P2PDMA_MAP_BUS_ADDR:
-+		return "bus-address";
-+	case PCI_P2PDMA_MAP_THRU_HOST_BRIDGE:
-+		return "through-host-bridge";
-+	}
-+
-+	return "invalid";
-+}
-+
+-static unsigned int pci_p2pdma_client_tlp_flags(struct pci_dev *client,
+-						unsigned int tlp_flags)
++VISIBLE_IF_KUNIT unsigned int
++pci_p2pdma_client_tlp_flags(struct pci_dev *client, unsigned int tlp_flags)
+ {
+ 	if (client->ats_enabled)
+ 		return tlp_flags | PCI_P2PDMA_TLP_TRANSLATED;
+ 
+ 	return tlp_flags & ~PCI_P2PDMA_TLP_TRANSLATED;
+ }
++EXPORT_SYMBOL_IF_KUNIT(pci_p2pdma_client_tlp_flags);
+ 
  /*
-  * Read @pdev's ACS Control register, with Request and Completion Redirect
-  * taken from its ACS quirk if it has one. A device with neither has no
-@@ -623,21 +657,42 @@ pci_acs_p2pdma_completion(u16 ctrl, unsigned int tlp_flags)
-  * reads as all ones, which is what a device that does not answer returns;
-  * @ctrl is then meaningless.
+  * A client that translates every address it is handed cannot be handed a bus
+@@ -1467,7 +1468,7 @@ static unsigned int pci_p2pdma_client_tlp_flags(struct pci_dev *client,
+  * Take the Address Type from @tlp_flags rather than reading the ATS Enable
+  * bit again, so the policy and the class it applies to always agree.
   */
--static bool pci_acs_p2pdma_ctrl(struct pci_dev *pdev, u16 *ctrl)
-+static bool pci_acs_p2pdma_ctrl(struct pci_dev *pdev, const char *what,
-+				u16 *ctrl, bool verbose)
- {
--	int pos;
-+	int pos, ret;
+-static enum pci_p2pdma_map_type
++VISIBLE_IF_KUNIT enum pci_p2pdma_map_type
+ pci_p2pdma_client_map_type(struct pci_dev *provider, struct pci_dev *client,
+ 			   bool per_mapping, unsigned int tlp_flags,
+ 			   enum pci_p2pdma_map_type type)
+@@ -1486,6 +1487,7 @@ pci_p2pdma_client_map_type(struct pci_dev *provider, struct pci_dev *client,
  
- 	pos = pdev->acs_cap;
- 	if (!pos) {
-+		if (verbose)
-+			pci_dbg(pdev,
-+				"P2PDMA ACS: %s has no ACS capability\n", what);
- 		*ctrl = pci_acs_p2pdma_quirk_redirect(pdev, 0);
- 		return true;
- 	}
+ 	return PCI_P2PDMA_MAP_NOT_SUPPORTED;
+ }
++EXPORT_SYMBOL_IF_KUNIT(pci_p2pdma_client_map_type);
  
--	if (pci_read_config_word(pdev, pos + PCI_ACS_CTRL, ctrl) ||
--	    PCI_POSSIBLE_ERROR(*ctrl))
-+	ret = pci_read_config_word(pdev, pos + PCI_ACS_CTRL, ctrl);
-+	if (ret || PCI_POSSIBLE_ERROR(*ctrl)) {
-+		if (verbose)
-+			pci_dbg(pdev,
-+				"P2PDMA ACS: %s ACS Control read failed at %#x: %#x value=%#06x\n",
-+				 what, pos + PCI_ACS_CTRL, ret, *ctrl);
- 		return false;
-+	}
+ /* Whether the driver of @client called pcim_p2pdma_set_ats_per_mapping(). */
+ static bool pci_p2pdma_client_per_mapping(struct pci_dev *client)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 8c38817c967e..49a487e8a989 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -1148,6 +1148,12 @@ enum pci_p2pdma_map_type calc_map_type_and_dist(struct pci_dev *provider,
+ 						int *dist,
+ 						unsigned int tlp_flags,
+ 						bool verbose);
++unsigned int pci_p2pdma_client_tlp_flags(struct pci_dev *client,
++					 unsigned int tlp_flags);
++enum pci_p2pdma_map_type
++pci_p2pdma_client_map_type(struct pci_dev *provider, struct pci_dev *client,
++			   bool per_mapping, unsigned int tlp_flags,
++			   enum pci_p2pdma_map_type type);
+ #endif
  
- 	*ctrl = pci_acs_p2pdma_quirk_redirect(pdev, *ctrl);
-+	if (verbose) {
-+		pci_dbg(pdev,
-+			 "P2PDMA ACS: %s cap=%#x caps=%#06x ctrl=%#06x\n",
-+			 what, pos, pdev->acs_capabilities, *ctrl);
-+		pci_dbg(pdev,
-+			 "P2PDMA ACS: control bits SV=%u TB=%u RR=%u CR=%u UF=%u EC=%u DT=%u\n",
-+			 !!(*ctrl & PCI_ACS_SV), !!(*ctrl & PCI_ACS_TB),
-+			 !!(*ctrl & PCI_ACS_RR), !!(*ctrl & PCI_ACS_CR),
-+			 !!(*ctrl & PCI_ACS_UF), !!(*ctrl & PCI_ACS_EC),
-+			 !!(*ctrl & PCI_ACS_DT));
-+	}
-+
- 	return true;
+ #ifdef CONFIG_PCI_QUIRKS
+diff --git a/drivers/pci/pci_acs_test.c b/drivers/pci/pci_acs_test.c
+index 369444d2a04a..11c86949c3d1 100644
+--- a/drivers/pci/pci_acs_test.c
++++ b/drivers/pci/pci_acs_test.c
+@@ -1050,6 +1050,125 @@ static void acs_walk_unreadable_control_test(struct kunit *test)
+ 			PCI_P2PDMA_MAP_NOT_SUPPORTED);
  }
  
-@@ -674,7 +729,7 @@ static bool pci_acs_p2pdma_no_internal_route(struct pci_dev *pdev, u16 flag)
-  * query. Return the first port that cannot establish this route.
-  */
- static struct pci_dev *
--pci_acs_p2pdma_no_upstream_forwarding(struct pci_dev *common)
-+pci_acs_p2pdma_no_upstream_forwarding(struct pci_dev *common, bool verbose)
- {
- 	struct pci_dev *pdev;
- 	u16 ctrl;
-@@ -683,7 +738,8 @@ pci_acs_p2pdma_no_upstream_forwarding(struct pci_dev *common)
- 		if (!pci_acs_p2pdma_downstream_port(pdev))
- 			continue;
- 
--		if (!pci_acs_p2pdma_ctrl(pdev, &ctrl))
-+		if (!pci_acs_p2pdma_ctrl(pdev, "upstream forwarding", &ctrl,
-+					 verbose))
- 			return pdev;
- 
- 		/*
-@@ -700,6 +756,30 @@ pci_acs_p2pdma_no_upstream_forwarding(struct pci_dev *common)
- 	return NULL;
- }
- 
-+static void pci_p2pdma_log_path(const char *name, struct pci_dev *start,
-+				struct pci_dev *common)
++/*
++ * Route the way pci_p2pdma_map_type_tlp() does once it has a client: the
++ * client decides which flags apply, and the answer is then checked against
++ * what the client can be handed.
++ */
++static enum pci_p2pdma_map_type acs_client_map(struct acs_fabric *f,
++					       bool per_mapping,
++					       unsigned int tlp_flags)
 +{
-+	struct pci_dev *pdev, *upstream;
-+	int hop = 0, type;
++	enum pci_p2pdma_map_type type;
++	int dist;
 +
-+	for (pdev = start; pdev; pdev = upstream, hop++) {
-+		upstream = pci_upstream_bridge(pdev);
-+		type = pci_is_pcie(pdev) ? pci_pcie_type(pdev) : -1;
-+		pci_dbg(pdev,
-+			 "P2PDMA ACS: %s path hop=%d common=%u pcie=%u type=%d class=%#08x vendor=%04x device=%04x upstream=%s\n",
-+			 name, hop, pdev == common, pci_is_pcie(pdev), type,
-+			 pdev->class, pdev->vendor, pdev->device,
-+			 upstream ? pci_name(upstream) : "<none>");
-+
-+		/* Cached state only: the routing logs the ACS Control it reads. */
-+		if (pdev->acs_cap)
-+			pci_dbg(pdev, "P2PDMA ACS: ACS cap=%#x caps=%#06x\n",
-+				 pdev->acs_cap, pdev->acs_capabilities);
-+		else
-+			pci_dbg(pdev, "P2PDMA ACS: ACS capability absent\n");
-+	}
++	if (!per_mapping)
++		tlp_flags = pci_p2pdma_client_tlp_flags(f->client, tlp_flags);
++	type = calc_map_type_and_dist(f->provider, f->client, &dist, tlp_flags,
++				      false);
++	return pci_p2pdma_client_map_type(f->provider, f->client, per_mapping,
++					  tlp_flags, type);
 +}
 +
- /*
-  * Report whether any port between @client and @common rejects Translated
-  * addresses. If @common is NULL, every port up to the host bridge is walked.
-@@ -708,7 +788,8 @@ pci_acs_p2pdma_no_upstream_forwarding(struct pci_dev *common)
-  * redirect controls instead.
-  */
- static bool pci_p2pdma_path_blocks_translation(struct pci_dev *client,
--					       struct pci_dev *common)
-+					       struct pci_dev *common,
-+					       bool verbose)
- {
- 	struct pci_dev *pdev;
- 	u16 ctrl;
-@@ -723,11 +804,15 @@ static bool pci_p2pdma_path_blocks_translation(struct pci_dev *client,
- 
- 	for (pdev = pci_upstream_bridge(client); pdev && pdev != common;
- 	     pdev = pci_upstream_bridge(pdev)) {
--		if (!pci_acs_p2pdma_ctrl(pdev, &ctrl))
-+		if (!pci_acs_p2pdma_ctrl(pdev, "path hop", &ctrl, verbose))
- 			return true;
- 
--		if (ctrl & PCI_ACS_TB)
-+		if (ctrl & PCI_ACS_TB) {
-+			if (verbose)
-+				pci_dbg(pdev,
-+					"P2PDMA ACS: Translation Blocking rejects Translated Requests on this path\n");
- 			return true;
-+		}
- 	}
- 
- 	return false;
-@@ -1188,13 +1273,22 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
- 	enum pci_p2pdma_map_type map_type[PCI_P2PDMA_TLP_CLASSES];
- 	struct pci_dev *a = provider, *b = client, *bb;
- 	struct pci_dev *a_child = NULL, *b_child = NULL;
-+	struct pci_host_bridge *provider_host, *client_host;
- 	struct pci_p2pdma_acs_path path = {};
- 	struct pci_p2pdma *p2pdma;
- 	bool cpu_p2pdma, host_whitelisted = false;
-+	bool cache_store = false;
- 	bool host_fallback = false;
- 	unsigned int flags;
- 	int dist_a = 0;
- 	int dist_b = 0;
-+	void *old;
++/*
++ * A client with ATS enabled for the whole device translates whatever it is
++ * handed, so it never gets bus addresses even on a direct route, and
++ * Translation Blocking rejects it even when its caller asks for the default
++ * class.
++ */
++static void acs_client_ats_test(struct kunit *test)
++{
++	struct acs_fabric f = {};
 +
-+	if (verbose)
-+		pci_dbg(client,
-+			"P2PDMA ACS: begin provider=%s client=%s cache-index=%#lx\n",
-+			 pci_name(provider), pci_name(client),
-+			 map_types_idx(client));
- 
- 	/*
- 	 * Note, we don't need to take references to devices returned by
-@@ -1226,14 +1320,32 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
- 	 * request can only get to the peer through the host bridge.
- 	 */
- 	*dist = dist_a + dist_b;
-+	if (verbose) {
-+		pci_dbg(client,
-+			"P2PDMA ACS: no common upstream bridge provider-distance=%d client-distance=%d total=%d\n",
-+			 dist_a, dist_b, *dist);
-+		pci_p2pdma_log_path("provider", provider, NULL);
-+		pci_p2pdma_log_path("client", client, NULL);
-+	}
- 	path.no_common_bridge = true;
--	path.tb_on_path = pci_p2pdma_path_blocks_translation(client, NULL);
-+	path.tb_on_path = pci_p2pdma_path_blocks_translation(client, NULL,
-+							     verbose);
- 	for (flags = 0; flags < PCI_P2PDMA_TLP_CLASSES; flags++)
- 		map_type[flags] = pci_p2pdma_route(&path, flags);
- 	goto map_through_host_bridge;
- 
- check_paths_acs:
- 	*dist = dist_a + dist_b;
-+	if (verbose) {
-+		pci_dbg(client,
-+			"P2PDMA ACS: common=%s provider-divergence=%s client-divergence=%s provider-distance=%d client-distance=%d total=%d\n",
-+			 pci_name(a),
-+			 a_child ? pci_name(a_child) : "<none>",
-+			 b_child ? pci_name(b_child) : "<none>",
-+			 dist_a, dist_b, *dist);
-+		pci_p2pdma_log_path("provider", provider, a);
-+		pci_p2pdma_log_path("client", client, a);
-+	}
- 
- 	/*
- 	 * ACS P2P routing controls apply where a TLP can route toward the peer
-@@ -1241,11 +1353,12 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
- 	 * branch is upstream, so redirect controls do not affect the path.
- 	 */
- 	if (a_child && b_child) {
--		if (!pci_acs_p2pdma_ctrl(a_child, &path.cpl_ctrl))
-+		if (!pci_acs_p2pdma_ctrl(a_child, "completion", &path.cpl_ctrl,
-+					 verbose))
- 			path.unreadable = a_child;
- 		path.cpl_quirk = pci_acs_p2pdma_quirk(a_child, PCI_ACS_CR);
--		if (!pci_acs_p2pdma_ctrl(b_child, &path.req_ctrl) &&
--		    !path.unreadable)
-+		if (!pci_acs_p2pdma_ctrl(b_child, "request", &path.req_ctrl,
-+					 verbose) && !path.unreadable)
- 			path.unreadable = b_child;
- 		/*
- 		 * Two children of one Downstream or Root Port share a link.
-@@ -1258,14 +1371,28 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
- 			path.cpl_upstream =
- 				pci_acs_p2pdma_no_internal_route(a_child, PCI_ACS_CR);
- 			path.uf_blocked =
--				pci_acs_p2pdma_no_upstream_forwarding(a);
-+				pci_acs_p2pdma_no_upstream_forwarding(a, verbose);
- 		}
-+		if (verbose && !path.unreadable)
-+			pci_dbg(client,
-+				"P2PDMA ACS: class=strict request=%s at %s completion=%s at %s\n",
-+				 pci_acs_p2pdma_state_name(
-+					 pci_p2pdma_request_state(&path, 0)),
-+				 pci_name(b_child),
-+				 pci_acs_p2pdma_state_name(
-+					 pci_p2pdma_completion_state(&path, 0)),
-+				 pci_name(a_child));
-+	} else if (verbose) {
-+		pci_dbg(client,
-+			"P2PDMA ACS: peer divergence is incomplete; no ACS peer-routing controls evaluated\n");
- 	}
- 
--	path.tb_on_path = pci_p2pdma_path_blocks_translation(client, a);
-+	path.tb_on_path = pci_p2pdma_path_blocks_translation(client, a,
-+							     verbose);
- 	if (b_child)
- 		path.tb_above_divergence =
--			pci_p2pdma_path_blocks_translation(b_child, NULL);
-+			pci_p2pdma_path_blocks_translation(b_child, NULL,
-+							   verbose);
- 
- 	/*
- 	 * The walk and the config reads above serve every class; only the
-@@ -1294,6 +1421,19 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
- 		host_whitelisted = host_bridge_whitelist(provider, client,
- 							  verbose);
- 
-+	if (verbose) {
-+		provider_host = pci_find_host_bridge(provider->bus);
-+		client_host = pci_find_host_bridge(client->bus);
-+		pci_dbg(client,
-+			"P2PDMA ACS: host fallback cpu-support=%u whitelist=%s provider-host=%s client-host=%s same-host=%u\n",
-+			 cpu_p2pdma,
-+			 cpu_p2pdma ? "not-consulted" :
-+					(host_whitelisted ? "yes" : "no"),
-+			 provider_host ? dev_name(&provider_host->dev) : "<none>",
-+			 client_host ? dev_name(&client_host->dev) : "<none>",
-+			 provider_host && provider_host == client_host);
-+	}
++	acs_build_fabric(test, &f);
++	f.client->ats_enabled = 1;
 +
- 	if (!cpu_p2pdma && !host_whitelisted) {
- 		if (verbose)
- 			pci_warn(client, "cannot be used for peer-to-peer DMA as the client and provider (%s) do not share an upstream bridge or whitelisted host bridge\n",
-@@ -1305,11 +1445,32 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
- done:
- 	rcu_read_lock();
- 	p2pdma = rcu_dereference(provider->p2pdma);
--	if (p2pdma)
--		xa_store(&p2pdma->map_types, map_types_idx(client),
--			 xa_mk_value(pci_p2pdma_map_types_pack(map_type)),
--			 GFP_ATOMIC);
-+	if (p2pdma) {
-+		old = xa_store(&p2pdma->map_types, map_types_idx(client),
-+			       xa_mk_value(pci_p2pdma_map_types_pack(map_type)),
-+			       GFP_ATOMIC);
-+		cache_store = !xa_is_err(old);
-+	}
- 	rcu_read_unlock();
-+	if (verbose) {
-+		pci_dbg(client,
-+			"P2PDMA ACS: final provider=%s result=%s(%d) tlp-flags=%#x distance=%d unreadable=%s cache-store=%u index=%#lx\n",
-+			 pci_name(provider),
-+			 pci_p2pdma_map_type_name(map_type[tlp_flags]),
-+			 map_type[tlp_flags], tlp_flags, *dist,
-+			 path.unreadable ? pci_name(path.unreadable) : "<none>",
-+			 cache_store, map_types_idx(client));
-+		pci_dbg(client,
-+			"P2PDMA ACS: classes strict=%s relaxed=%s translated=%s translated+relaxed=%s\n",
-+			 pci_p2pdma_map_type_name(map_type[0]),
-+			 pci_p2pdma_map_type_name(
-+				 map_type[PCI_P2PDMA_TLP_RELAXED_CPL]),
-+			 pci_p2pdma_map_type_name(
-+				 map_type[PCI_P2PDMA_TLP_TRANSLATED]),
-+			 pci_p2pdma_map_type_name(
-+				 map_type[PCI_P2PDMA_TLP_TRANSLATED |
-+					  PCI_P2PDMA_TLP_RELAXED_CPL]));
-+	}
- 	return map_type[tlp_flags];
- }
++	KUNIT_EXPECT_EQ(test, acs_client_map(&f, false, 0),
++			PCI_P2PDMA_MAP_THRU_HOST_BRIDGE);
++
++	f.client_leaf->acs_cap = 0x100;
++	f.client_leaf->acs_capabilities = PCI_ACS_TB;
++	f.client_leaf_cfg.ctrl = PCI_ACS_TB;
++
++	KUNIT_EXPECT_EQ(test, acs_client_map(&f, false, 0),
++			PCI_P2PDMA_MAP_NOT_SUPPORTED);
++}
++
++/*
++ * The cache holds what the topology allows, filled when the client first
++ * asked. A client whose ATS was enabled after that must still be kept off the
++ * bus addresses the cache recorded.
++ */
++static void acs_client_ats_cached_test(struct kunit *test)
++{
++	enum pci_p2pdma_map_type type[PCI_P2PDMA_TLP_CLASSES], hit;
++	struct acs_fabric f = {};
++	unsigned long cached;
++	unsigned int flags;
++	int dist;
++
++	acs_build_fabric(test, &f);
++	for (flags = 0; flags < PCI_P2PDMA_TLP_CLASSES; flags++)
++		type[flags] = calc_map_type_and_dist(f.provider, f.client,
++						     &dist, flags, false);
++	cached = pci_p2pdma_map_types_pack(type);
++
++	f.client->ats_enabled = 1;
++	flags = pci_p2pdma_client_tlp_flags(f.client, 0);
++	hit = pci_p2pdma_map_types_unpack(cached, flags);
++
++	KUNIT_EXPECT_EQ(test,
++			pci_p2pdma_client_map_type(f.provider, f.client, false,
++						   flags, hit),
++			PCI_P2PDMA_MAP_THRU_HOST_BRIDGE);
++}
++
++/*
++ * A client that declared per-mapping ATS picks the Address Type per mapping,
++ * so it keeps the per-class answers even with ATS enabled.
++ */
++static void acs_client_ats_per_mapping_test(struct kunit *test)
++{
++	struct acs_fabric f = {};
++
++	acs_build_fabric(test, &f);
++	f.client->ats_enabled = 1;
++
++	KUNIT_EXPECT_EQ(test, acs_client_map(&f, true, 0),
++			PCI_P2PDMA_MAP_BUS_ADDR);
++	KUNIT_EXPECT_EQ(test,
++			acs_client_map(&f, true, PCI_P2PDMA_TLP_TRANSLATED),
++			PCI_P2PDMA_MAP_BUS_ADDR);
++
++	f.client_leaf->acs_cap = 0x100;
++	f.client_leaf->acs_capabilities = PCI_ACS_TB;
++	f.client_leaf_cfg.ctrl = PCI_ACS_TB;
++
++	KUNIT_EXPECT_EQ(test, acs_client_map(&f, true, 0),
++			PCI_P2PDMA_MAP_BUS_ADDR);
++	KUNIT_EXPECT_EQ(test,
++			acs_client_map(&f, true, PCI_P2PDMA_TLP_TRANSLATED),
++			PCI_P2PDMA_MAP_NOT_SUPPORTED);
++}
++
++/*
++ * A client with ATS disabled cannot issue Translated Requests, so a caller
++ * asking about them gets the answer for the Untranslated ones it will issue.
++ */
++static void acs_client_no_ats_test(struct kunit *test)
++{
++	struct acs_fabric f = {};
++
++	acs_build_fabric(test, &f);
++	f.dn1->acs_cap = 0x100;
++	f.dn1->acs_capabilities = PCI_ACS_RR | PCI_ACS_DT;
++	f.dn1_cfg.ctrl = PCI_ACS_RR | PCI_ACS_DT;
++
++	KUNIT_EXPECT_EQ(test,
++			acs_client_map(&f, false, PCI_P2PDMA_TLP_TRANSLATED),
++			PCI_P2PDMA_MAP_THRU_HOST_BRIDGE);
++}
++
+ static struct kunit_case pci_acs_test_cases[] = {
+ 	KUNIT_CASE_PARAM(pci_acs_p2pdma_request_test,
+ 			 acs_request_gen_params),
+@@ -1088,6 +1207,10 @@ static struct kunit_case pci_acs_test_cases[] = {
+ 	KUNIT_CASE(acs_walk_tb_above_divergence_test),
+ 	KUNIT_CASE(acs_walk_unreadable_control_test),
+ 	KUNIT_CASE(acs_map_types_pack_test),
++	KUNIT_CASE(acs_client_ats_test),
++	KUNIT_CASE(acs_client_ats_cached_test),
++	KUNIT_CASE(acs_client_ats_per_mapping_test),
++	KUNIT_CASE(acs_client_no_ats_test),
+ 	{}
+ };
  
-@@ -1640,13 +1801,21 @@ pci_p2pdma_map_type_tlp(struct p2pdma_provider *provider, struct device *dev,
- 	enum pci_p2pdma_map_type type;
- 	struct pci_p2pdma *p2pdma;
- 	struct pci_dev *client;
-+	bool provider_state;
- 	int dist;
- 
--	if (!pdev->p2pdma)
-+	if (!pdev->p2pdma) {
-+		pci_dbg(pdev,
-+			"P2PDMA ACS: map lookup rejected; provider state is absent\n");
- 		return PCI_P2PDMA_MAP_NOT_SUPPORTED;
-+	}
- 
--	if (!dev_is_pci(dev))
-+	if (!dev_is_pci(dev)) {
-+		dev_dbg(dev,
-+			"P2PDMA ACS: provider=%s map lookup rejected; client is not PCI\n",
-+			 pci_name(pdev));
- 		return PCI_P2PDMA_MAP_NOT_SUPPORTED;
-+	}
- 
- 	client = to_pci_dev(dev);
- 	cache_index = map_types_idx(client);
-@@ -1657,8 +1826,13 @@ pci_p2pdma_map_type_tlp(struct p2pdma_provider *provider, struct device *dev,
- 	if (p2pdma)
- 		cached = xa_to_value(xa_load(&p2pdma->map_types,
- 					     cache_index));
-+	provider_state = !!p2pdma;
- 	rcu_read_unlock();
- 	type = pci_p2pdma_map_types_unpack(cached, tlp_flags);
-+	pci_dbg(client,
-+		 "P2PDMA ACS: map lookup provider=%s index=%#lx tlp-flags=%#x cached=%s(%d) provider-state=%u\n",
-+		 pci_name(pdev), cache_index, tlp_flags,
-+		 pci_p2pdma_map_type_name(type), type, provider_state);
- 
- 	if (type == PCI_P2PDMA_MAP_UNKNOWN)
- 		return calc_map_type_and_dist(pdev, client, &dist, tlp_flags,
 
 -- 
 2.56.0
