@@ -1,20 +1,21 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=83.223.78.233
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793699111;
-	b=sf30WxcmJ9cqIxECZUgM1GKwF4KpmffTgkPo+q12C9/HBXWtIlscSh5iCTihzrkNvo/3
-	 H/QV4+kVMB/a53pQyZqYVcfiJTlGrarIPN3dSI5tupPbiEiAE3x0Y496UY+GIWUAxVIyV
-	 PcZY/a5/RhHf+e3O8iTNmeKBjaT0sJQr5e4Wo9xq7xfI6y74w9bscIu428ZVNTASwkoAa
-	 Z2vHCDNXM09wYlR49W6CwJEdHVPJm3IF+jhJp4taDsGD3tD/9s4wJVj8yBk1VtWDCu79P
-	 0tX2A1uxKnxnhF/jP8aiUDQwjH5qgqdEwREd0RASudmQ0HhI+iffDFYwwl1syrSJtdg==
+	t=1793699348;
+	b=4g1q9CChTBSoij66BELV5BV68Qmd6s81SsF9XRPeUkmqEy66CPUKiVgGxCQ52KcbeYAW
+	 SNh4jj/SVmelKnEFDraAJKzs0cTSb1i6WkAqk7S0j6ANUuIR+veWpumh0aTA6LFI5m4Co
+	 h9I7nD7EXybYcD8xNsLRvEA5mkWv1sVQ5NBOrC+yaJck/pqfOLINH+gQ7HrNOKf2Unvs2
+	 snmduVRtGrRW2GndzZ8e2faZX/KWTgEwwCfAsfV18KntpkR4KFjaxPQB2F+KFMd3Ir4KG
+	 fz3jiLjY2ybYY2PfR5AhaW9hsX/KTuLqlEL2L4g1TseWkB5c/ITwHdte1TqgXZwXiBw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793699111;
-	h=DMARC-Filter:Received:Received:Message-ID:From:Date:Subject:To:Cc;
-	bh=DFR/PANMtbsevfEku4Z3pizYVHHbGGcn40b739MWAyg=;
-	b=SKlEDz4TFKJous1GNVJVwIRj1Sgbj/eZz9hkU/IY7gMl8PGC72ePHZUnQeCHBLISuckg
-	 YTwXZuDsbrIfMgjspUak6kRZpcp+WKqxCM5L5fg3d7A39M82TjePE7YgqeONRtVORRH3r
-	 SdIGmj3ylxB342W4zhwOvPCFrspPfj099zAX87v/9nHTZKdk4/qiZ71nP/osZgyK0efY3
-	 8lvrX326nEPmXuaI8x9pkNuzb1fAV8pFMW35OnoT7vjKND0ZGOBzLemfESqNS3f3+WLYX
-	 PTYHKKnlqoWnLcE3DRtyr/aWHPvxEvLf3AyJnw+bCghyZ8K/bDHnlv4DHusboB+8XIw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793699348;
+	h=DMARC-Filter:Received:Received:Message-ID:In-Reply-To:References:
+	 From:Date:Subject:To:Cc;
+	bh=/ox8YTThMfnvCpUAm/RezoHGpMO/i532LX4gPnwxXYw=;
+	b=eZ6vRdTiVnaY6LVAW9jfcOlJ4VAGpH8JdwG/sUrYDw+XjT/HDEqjzt54pDMu++U27xSb
+	 JIv/ERIYmUFCg7Ycq4E9PK45/mql1c2e44KXRDPdz2AQwwNf95oYBl1WA0T++dHOksvpl
+	 5/AJp6i+P1iMxm1xZuJ6assWOIXHziqD7Ftg8khuEph9Ad+qp355KiScO0OKI7u7F94TG
+	 94ODW3WNlEa4udEUK6Wy8pg3H/T8eiLuoWAYU4vevFBzJfphXTIWLSOJMDKtkeo5mElmt
+	 dCG+PEG75hqPoyySh0heeo6HnE0rM6MC8THdUPrq393sFAuDJMd06GQ2UoNihFrWSVg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=none header.from=wunner.de;
 	spf=pass smtp.mailfrom=wunner.de;
@@ -23,9 +24,9 @@ Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C31FD606A331
-	for <linux-pci@vger.kernel.org>; Tue,  3 Nov 2026 09:45:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C31FD606A331
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 446E7606A327
+	for <linux-pci@vger.kernel.org>; Tue,  3 Nov 2026 09:49:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 446E7606A327
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
 Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
@@ -33,14 +34,17 @@ Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
 	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
 	 client-signature ECDSA (secp384r1) client-digest SHA384)
 	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout2.hostsharing.net (Postfix) with ESMTPS id 7CB471EC8;
-	Tue, 03 Nov 2026 10:45:06 +0100 (CET)
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id 5380910DC8;
+	Tue, 03 Nov 2026 10:49:05 +0100 (CET)
 Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 6DFA661C2345; Tue,  3 Nov 2026 10:45:06 +0100 (CET)
-Message-ID: <cover.1793697480.git.lukas@wunner.de>
+	id 4319B600B02F; Tue,  3 Nov 2026 10:49:05 +0100 (CET)
+Message-ID: <6de42407246d270c75126baa338761e6f21ab067.1793697480.git.lukas@wunner.de>
+In-Reply-To: <cover.1793697480.git.lukas@wunner.de>
+References: <cover.1793697480.git.lukas@wunner.de>
 From: Lukas Wunner <lukas@wunner.de>
-Date: Tue, 3 Nov 2026 10:45:00 +0100
-Subject: [PATCH 0/2] PCI/AER: Improve Error Source handling
+Date: Tue, 3 Nov 2026 10:45:01 +0100
+Subject: [PATCH 1/2] PCI/AER: Avoid NULL pointer deref on search for Error
+ Source
 To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
 Cc: Sourabh Jain <sourabhjain@linux.ibm.com>, Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org, Alex Deucher <alexander.deucher@amd.com>, Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>, Keith Busch <kbusch@kernel.org>, Maciej Grochowski <Maciej.Grochowski@sony.com>
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -52,23 +56,31 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-While analyzing log output provided by Alex, I noticed that the AER driver
-fails to find the error-signaling device if the Error Source ID register
-contains an invalid, non-zero value.  Patch [2/2] fixes that.
+A Root Port's subordinate bus may be NULL if the PCI core runs out of bus
+numbers on enumeration.  Yet when the AER driver searches for the source
+of an Error Message, it dereferences the subordinate pointer without
+checking for NULL.  Fix it.
 
-Also, a potential NULL pointer deref caught my eye in that portion of the
-code which is fixed by patch [1/2].  I believe this is hard to trigger,
-but the kernel should still handle it gracefully.
+Fixes: 28eb27cf0839 ("PCI AER: support invalid error source IDs")
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: stable@vger.kernel.org # v2.6.31+
+---
+ drivers/pci/pcie/aer.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Lukas Wunner (2):
-  PCI/AER: Avoid NULL pointer deref on search for Error Source
-  PCI/AER: Check validity of Error Source ID register
-
- drivers/pci/pci.h       |  7 ++++++-
- drivers/pci/pcie/aer.c  | 35 ++++++++++++++++++++++++++---------
- drivers/pci/pcie/rcec.c | 14 ++++++++++++++
- 3 files changed, 46 insertions(+), 10 deletions(-)
-
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index db4f607f889c..d492c7ce01e1 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -1251,7 +1251,7 @@ static bool find_source_device(struct pci_dev *parent,
+ 
+ 	if (pci_pcie_type(parent) == PCI_EXP_TYPE_RC_EC)
+ 		pcie_walk_rcec(parent, find_device_iter, e_info);
+-	else
++	else if (parent->subordinate)
+ 		pci_walk_bus(parent->subordinate, find_device_iter, e_info);
+ 
+ 	if (!e_info->error_dev_num)
 -- 
 2.53.0
 
