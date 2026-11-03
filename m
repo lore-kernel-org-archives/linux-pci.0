@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793695531;
-	b=XJbzY1JW9spPrMkZllVT44EN7uz7vYJPGxCbq125PYMjPsOFjyIl3ZCpGNt6rnzIy0B+
-	 M6GCsI1fR/JChKSrzKGCqR1Z1N0bQK8spGOJqQ2O45o+moPo9UBqAeWFj5YfUqpFpCVM9
-	 dWxJ55gFLi2VF6ZNvOmfvwl2enfD3WoIiLGTxUR0sWahQ4phgdkZDS05NtTCcPZp3brV2
-	 t5taj7QB2Hjnjuo7RiRtsb3PpbyjJBshPP5tt7eipeA0wOqpQvVJQtZ/2utDXpbPjqmC/
-	 A/HeY7KgMiPNEkHMCfRqYvL/JPoxwQEa+vvzoDbaWeNlndjonXmmwvMsoOcQQ+dtt4g==
+	t=1793696528;
+	b=h/1Ak1mIksKe7EauuJef0VOTBKNW68n88uKA1m9ka9UX+4ymB8ZBnuyIw8s4l1MIV3ku
+	 U+WSnmVu8E/te1M+7lWT4GlfVFbOK32cO4RQjBWI51HjMRBBzC7kWwYH5pnrD/hrV20M/
+	 slM1i2MN2IAVM1RwvxaA+WdDK5Y/Z/WP6v6wg5R7zdkCfPPI0zzQXRzHNUZWGsycp2ROF
+	 9bysa4TNxi+szQQnKrtelcdCJzpDmrF4162RPE28SFh9+/q9FF2kWwFKcAfqK3qCBieOV
+	 PSdD58JPZZYjGRoQZswwJFs12TJ/33iafRKcaXseIL2EHUofxL1oStSNbo1qzfYgq4g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793695531;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793696528;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=N/k3Z2oxYwWYYQ3hDZ2q/nSnk+cGWSITXdi5mL1nwAI=;
-	b=m79nyuSmPWw1b3BmnP4QjeAMT5m8gjB1EipOXGlaqaG2sldr1HVj0eQop6shq43oR1Dl
-	 aPtwuzHIVTSwM7nZ5UGhUqruLfNjKKpLhxxr7r3RUMPzeUwT6K0zHTDnJjalVXo4PoS7D
-	 7rW0maRNnvomPoNq84x5z/cF5dEr/1V/ovtJel7zk2/LQMMRqFOuHbvDGB9fqTCseZySB
-	 Mt3exJsbmdKaZmx1xU1nrWVbEtCxiObrikefOPYMKB54dxX220UXQe5bU1j+DVlhq3tOp
-	 a2nfCO/ThFKdR8JPc1aiZowGEG9wG0cLFH7DVNe/ek/F06mFqxMBzB3pmDdPt2zm7HA==
+	bh=jsJ7sW1KC3tBNSorCngbp70ttoW2hVFVPEq47Vp31e0=;
+	b=ZN2Qn5ko8wC9JltPQnEuTWeqhb6vjDdO/LnMR4jYdNTepZUbm1/dTSBdLvmD/V/5A8hy
+	 ulg0iF7o63EWcx/C/81XFvG1K2Fy165sIiUqiWd0PZ/KMDfIvrgBawMYY8Px3x7iES8sZ
+	 4+BAIWQ+JWyFi0XK+MODztEHJfUhF8hkikBOW/P1ZcqROEAdGYbcomnt//HHCdWxr2TDt
+	 4roJJC5RlkFbX8tThKdFHQ69L3aDcaXAVR+73M6SknwsvYt8GRuN/QWBA8xWDSQPawMIS
+	 vaEMV7uDK3Kmj5ojSrDxoewojPs4nO+uVsSQnsOtZhXI0g05NkefM1RLp5yZ2Nm7j9A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K5cQ3xln;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OmnsIqDy;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E850A606A326;
-	Tue,  3 Nov 2026 08:45:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 021DB606A332;
+	Tue,  3 Nov 2026 09:02:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K5cQ3xln
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C9261F00A1C;
-	Tue,  3 Nov 2026 08:45:30 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OmnsIqDy
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7525E1F00919;
+	Tue,  3 Nov 2026 09:02:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793695530;
-	bh=N/k3Z2oxYwWYYQ3hDZ2q/nSnk+cGWSITXdi5mL1nwAI=;
+	s=k20260515; t=1793696527;
+	bh=jsJ7sW1KC3tBNSorCngbp70ttoW2hVFVPEq47Vp31e0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=K5cQ3xlntBMbyC4tnB4IJ/Xc8BCWn94slHjZW5U3yKsWnTNYbHmMI1tWc56UD/5zj
-	 O1/ugZNPtJpsSjIUEo+6SeOS5Bt95TErXzthbm3+WUIonmqpnCbrUX5Dmu7/EBipIx
-	 PEkEdi6WmXO0dt0kApjo7v3vXlw5bp1T0ANGSMOcbp8kqW9l4n46LpzjJZHVQlc9s6
-	 eui3nPZZI9iKyH7a2PJuc4ZTXq9izSw72MfEToiWMmhC7+zqYaWtpYIGN3YyDkee5F
-	 mZglAIJZAeXZOjNqaUH6UiiSMn3e4Ho/D2CmVvgz+tq4VQyD2Cy/shGo2JRbsR+Wsx
-	 V4TnsUnyFTarA==
-Message-ID: <sashiko-outbox-194865@kernel.org>
+	b=OmnsIqDyj8Q1ATyHbCtWMwpt6GNAipQ0nNPEfwcR9BI1u3rvFsoPw11uzUvgOLvA7
+	 Az60Np7gmuBJV13144GqU76hKG+GHuZpgm91QN1jbqhXlJYTqZAPkxYHMCWMBj3rQd
+	 5TgHxInJozerVGm7r6aphmCP9E9C5CwCzX0C4bpMM3NAMJWfhANBPw8A9ubcbNuLfa
+	 52weTjgJzbhXphce6wxD0z7wsSuQpTSB8Yi0Kt/7V1qdCidnyLrwBzjDdjG6cryCvL
+	 XZVTWs6xK+KEKxbEY78NwJasHciMlsd4y1tBWdvXxZObYaHAsmgXn10q9KruoUSRVQ
+	 qP3z48NzIru/g==
+Message-ID: <sashiko-outbox-194913@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v12 02/19] PCI/P2PDMA: Document the TLP attribute
- assumptions
+Subject: Re: [PATCH v12 03/19] PCI/P2PDMA: Derive routing from directional
+ ACS controls
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Leon Romanovsky" <leon@kernel.org>
 Cc: linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org
-In-Reply-To: <20261103-fix-p2p-acs-v4-0-v12-2-912101f93517@nvidia.com>
+In-Reply-To: <20261103-fix-p2p-acs-v4-0-v12-3-912101f93517@nvidia.com>
 References: <20261103-fix-p2p-acs-v4-0-v12-0-912101f93517@nvidia.com>
- <20261103-fix-p2p-acs-v4-0-v12-2-912101f93517@nvidia.com>
+ <20261103-fix-p2p-acs-v4-0-v12-3-912101f93517@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 08:45:29 +0000
+Date: Tue, 03 Nov 2026 09:02:07 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,14 +63,15 @@ Precedence: list
 
 > From: Leon Romanovsky <leonro@nvidia.com>
 >=20
-> P2PDMA selects a mapping without receiving the Request's ordering or
-> Address Type attributes. Its ACS handles only strictly ordered Requests
-> carrying an Untranslated address.
+> pci_bridge_has_acs_redir() treats Request and Completion Redirect as
+> interchangeable. On asymmetric fabrics, a control for only the reverse TLP
+> direction can unnecessarily force P2PDMA through the host bridge.
 >=20
-> Document that the result is not defined for Relaxed Ordering or
-> ATS-translated Requests because those TLP attributes can select different
-> routes through the fabric.
+> Evaluate Request Redirect for the Requester's Requests and Completion
+> Redirect for the Completer's read Completions. Continue treating enabled
+> Egress Control conservatively as a Request redirect.
 >=20
+> Fixes: 52916982af48 ("PCI/P2PDMA: Support peer-to-peer memory")
 > Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 > Tested-by: Tushar Dave <tdave@nvidia.com>
 > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
@@ -79,5 +80,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103-fix-p2p-ac=
-s-v4-0-v12-0-912101f93517@nvidia.com?part=3D2
+s-v4-0-v12-0-912101f93517@nvidia.com?part=3D3
 
