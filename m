@@ -1,91 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793686070;
-	b=xcDb5/m9zZzafW3b3CW+raAou95at6QPGjs6scSMT9RII4TPTEbp6OpxN8RyvOOWPvYl
-	 hPEZ2Oi/zXc5THyEiNwEj5KSNd15CxWDGRcYZxKIcmYaOLwwOAM/owvD2nHO9tIYaOQz9
-	 FH9c/kjYgQKexRTWmHUxRrfh+cDkp0RR0S5K4owRz29X2zrly4f1tSMfGbO8m1yE0NMzb
-	 MHHwxkHYzUcLp7JZoGskjRl6yNO3gipmm+ySfT/Wzt5wLl15aYZro23aYCINdm62RLi9K
-	 F8rsuWJk3SsAgSiZ1s8KmhGcYLP6tAXMxBsLQktRmHKblKakyTL173FQBM1gkXBVzaQ==
+	t=1793686194;
+	b=Bt96SlqHTFh922z4ov9ZOrFslq2goqp0txSqCKA5bRKX6PDGtdkRxAOC/Q5AQCAgho4X
+	 rj/csPYVctimQKlwbuKLbpZ+aEQ5sb8Dbnh0BHYmrMJ/IhmrHIt1xMFlSUdAgxa9ZCXH6
+	 GwxPW4lsfB6uA83OKLhYn8Iev7bLpLTk6T39pH8R0e9uyapZ+x9Ad7bsnVSVqxGDFwnZy
+	 fku7IaMPjInnFqp8b7uksyPv0OlXG4KRaSW4NlO06/VdxpIenPRZ6ELfRtfCw7kdaloRb
+	 Ys4ni0R/kR3azCTejS+tlvLdKAy7MjK7iKoL4eFcIZOtGAO6ZpdlyV+3XABomNBZuZg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793686070;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-Scanned-By;
-	bh=wwMXdVcHWj7VNgwLkXURMtAFowP+ywwx/JvFKagWc38=;
-	b=FFISdh+VRElgPeMZ5BfQWw0l4YPUvskBFsBnDWqhjquAzS3DioyVDJUbZAihu1I6UJ/J
-	 xm9vLWaGMAKM09lL4NS/0yMzQRFk6qAqWDzjKi3S+JC6m9pzhQ5gezj/19FBxvdLucRYK
-	 h7llLTa0RcX3SbdGjUvO249dkmH0qrb14CdWyGur4RfWDAr+PYGTR4AwEbJgZKVe7/mMI
-	 SW6UhtzaTYCVqa//rN7pi0iM+rFy2Ftp10NDvzTkL1eFXoAIITgoe20KmWCmCtqUZ2o0w
-	 Ff0dFIJ7WT47kW2RsluOLup0jOd7B5vwRrg4fTh3Cng36qp/DyyPPE9W72fHDy5BoeA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793686194;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=FBRzD4tJ6kQ7flh6N+M+OyodxJMMm2lwDNaDNsp8K3U=;
+	b=Ea/lBlcbvOgoa9VUgqXrqgCz8y9tBi1MSmvIsgwD7OgpQsVHKg+ol5tB8FDaenE+DPk4
+	 J13UFECgo+9D7HW9XlqcTvgpTzaHwosH+85r+TXANoIz0+J/89+mnNGvsbB8gqoZnIC83
+	 JNjgmfbuqplOnmu915OdJGCA2BxIct9ihgFwErFTz0JRTTuIJW2dkjqvUJiA7pSVtdtWf
+	 ka8G5hqfx3k3f5INDr3wJmp32Rc82LtHACI53I5n6zT+DcYmg/JhSwSrxr4bTO0ucdefR
+	 BTgNyZsgZH+LtpMjTKlQ54EdbBLZKDoIq9I+7qMhQ2ADAEMToYgINtir31CPdbGUK1w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=VyEUwaa8;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=C5gdJKqq;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01C1E606A336
-	for <linux-pci@vger.kernel.org>; Tue,  3 Nov 2026 06:07:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 01C1E606A336
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7521606A32C
+	for <linux-pci@vger.kernel.org>; Tue,  3 Nov 2026 06:09:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=VyEUwaa8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793686069;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=wwMXdVcHWj7VNgwLkXURMtAFowP+ywwx/JvFKagWc38=;
-	b=VyEUwaa8rbLf2n42QLECOas5nqPNywDtqC4LKTRh4bTNhcJrhEkyeDA/IUe503qw3CsGY5
-	kkK45vp38nane5oTkYisDE1BF+NpPNi0RxeC5kbR7t/JlvC5X8vZk3wjCDTanMjiPfJxqM
-	yyZwixmPLjyIaEwdXXm8DOTfECrhL1c=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-231-5vqILIpvNNKt6mHTo7xz6g-1; Tue,
- 03 Nov 2026 01:07:43 -0500
-X-MC-Unique: 5vqILIpvNNKt6mHTo7xz6g-1
-X-Mimecast-MFC-AGG-ID: 5vqILIpvNNKt6mHTo7xz6g_1793686061
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D64391956044;
-	Tue,  3 Nov 2026 06:07:40 +0000 (UTC)
-Received: from jtornosm-thinkpadp1gen7.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C013A30000E3;
-	Tue,  3 Nov 2026 06:07:35 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: seanjc@google.com
-Cc: alex@shazbot.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	bhelgaas@google.com,
-	jgg@ziepe.ca,
-	jjohnson@kernel.org,
-	johannes@sipsolutions.net,
-	jtornosm@redhat.com,
-	kevin.tian@intel.com,
-	kvm@vger.kernel.org,
-	kwilczynski@kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	lpieralisi@kernel.org,
-	mani@kernel.org,
-	pbonzini@redhat.com,
-	robh@kernel.org,
-	vkuznets@redhat.com
-Subject: Re: [PATCH v3 2/8] KVM: add PCI MSI hypercall for VFIO passthrough
-Date: Tue,  3 Nov 2026 07:07:34 +0100
-Message-ID: <20261103060734.34199-1-jtornosm@redhat.com>
-In-Reply-To: <auilKFwKLjw-BnZM@google.com>
-References: <auilKFwKLjw-BnZM@google.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=C5gdJKqq
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E10A1F000C1;
+	Tue,  3 Nov 2026 06:09:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793686193;
+	bh=FBRzD4tJ6kQ7flh6N+M+OyodxJMMm2lwDNaDNsp8K3U=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=C5gdJKqqHH/3Tmta/rxceJPrsesnQ28UZ0CjVtqVISBsBIe+Zi+e5wwCkzzM6/EZe
+	 v7n9ydjpJq//WI5rVRL6NdA3jbHjhq/a6XliTZOzK3dOzhkrUVXu+SnVZZp0Sp1V3h
+	 rF2xuSCnbG28LpHwmwRFU3kqWHumsCDwR3EnTc+dC6gNiHPjK8ak2g9hGd1Qv29kN2
+	 v+WkpvtUAYrK9vYc903hfh6DIIhTZ0YmnuI2Vm1E9iMgktwfZIT8t3jvp3QNm+x/WD
+	 z0yNuAZjUiAwAjbuExlMSDhGPK9nDL+LECFJU5Ka0RMI8zQ+6qGsbzzG4FAb4ViH4o
+	 kdYRS4tqeRCmA==
+Message-ID: <sashiko-outbox-194606@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: rockchip-host: Enable async probe by default
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Igor Velkov" <iav@iav.lv>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261103-rockchip-pcie-async-v1-1-4dcadb94af64@iav.lv>
+References: <20261103-rockchip-pcie-async-v1-1-4dcadb94af64@iav.lv>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 03 Nov 2026 06:09:52 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -94,18 +58,27 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-Hi Sean,
+> From: Igor Velkov <iav@iav.lv>
+>=20
+> The probe waits for the link to come up, and with an empty slot it
+> holds the deferred-probe worker for about 0.7 s. On ROCK Pi 4 with
+> UHS-I enabled for the SD card, the I/O-domain driver then binds only
+> after the card has switched to 1.8 V, and tuning fails ("All phases
+> bad!").
+>=20
+> Probe asynchronously, as commit c0e1eb441b1d ("PCI: qcom: Enable async
+> probe by default") does for the Qualcomm host driver. This does not
+> order the I/O domain before dw_mmc in general; an explicit dependency
+> was proposed in [1] and not merged.
+>=20
+> Link: https://lore.kernel.org/all/20230904115816.1237684-1-s.hauer@pengut=
+ronix.de/ [1]
+> Signed-off-by: Igor Velkov <iav@iav.lv>
 
-Thanks for the feedback. Understood on both the NAK and the timing,
-apologies for the rush.
+Sashiko has reviewed this patch and found no issues.
 
-I am exploring the virtio-msi approach that Jason described, which
-would not require any KVM changes.
-
-Best regards
-Jose Ignacio
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103-rockchip-p=
+cie-async-v1-1-4dcadb94af64@iav.lv?part=3D1
 
