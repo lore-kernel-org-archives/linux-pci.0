@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793731430;
-	b=O5dTsrs422JQMlpcOwH7fgvtspXPeedMee9dE4vmFdv3Aj6C0WXsbNMCpvcmtq8V2FT7
-	 VaocGKQofP39tUnNuoCtHMV098LEUN7EQILoWcWb33+g4IKIdioxxUb3kLwlrkeeWOSau
-	 vLkb/O/4v3z7NH43lIJgiOa1t0RrpxFftIyNmESEfHUZn6AIjX/y2rm39FE+GOfI3PJVr
-	 sTM+sAhhRatK6u7GzctDAhYJpEz7CfKWc4D8HVCfUe6kuyfhnQ3hNSwPj0kwLsphf1F4X
-	 CsOg3FoQkzgu0GZ/lYyW56t7Gg1vbdf8egdk1WDwQqRXHVpJbk8y/96pKa0g8yT8ejA==
+	t=1793731451;
+	b=xcrZlNucPHhQr05AW1oAHTRtNNYddYL3b/PxLd1F93GdmRrm6iA6NZxvtyWliiqaBLFs
+	 ZRHNitJBSBiCa4tXOa/6sgNaez6UfK+bdhwJnW4jGhxaN1kI4DXCjA5IxIoEx9+zAPfVu
+	 59VEtHIjsto+tuRbjmiDYtkGBwdvrQwsAp5uRd6ModwPp4+S9C2qzs4C6HEF6+TsfrJ2C
+	 ZOaPaUIkAxU1gLIG50xuszx74/5PeQyZbkDAP+FGcuH6Ix+0uODoVbk69vn6qc69daWoS
+	 eIzcPoAOJQ2aBBycMTqkjMSbFaKVxIw3qJb95gGRck0Y8SLdJLlzuZKUa1VywMS+y1A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793731430;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793731451;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=2ELIPUxdYCas+giNcZHXG1XyrnNeubGowCuapGpU38I=;
-	b=tDlM41tYiWGM7kvNUFFYZ/6WnHMjzNSqWJX2uqpew8bXCvSWbcuJ3VeuhoyapPnU+G+g
-	 01zCcWuG/m6YRBt2SFU8WKAbH5sIhWOlYs8lgUUeXZnxo68QZIT6WnNDEWb2HeZGqz5s2
-	 Xq9tstR3x80JSf921N11wxhoMlGcqeLnOJtHwDE693eoMOEabpN0jC40lFlulq+imu8jn
-	 fu/7oW0znrDWwHnTkxpLj3k5BG0o22agsnNKDPziR9esvcUmQlFwjyb/JdEr2FqAgc76I
-	 sXEYHyo0vE6rxkExHJWV5cXHdgL/24GlbMbomB91ajhAw0u/wr4ZGQCMeHL7wMsi+9Q==
+	bh=PgXIcyEKFnyeF/HLyWbTgOp8SsJJ+gNcg3iZUZWTrXs=;
+	b=PnS1XhL2G73Pilu4NvsJGtpBqI3Ah+agy0YVy8bcyLA0LBn9wE9m4dJaJ4w3kKRD65HI
+	 +2lg6IefUlo5shExS5wuAcSXodL28Fo5f9reo/9kkHzlHFVOfbq+PDIn+VJnXJISnBf8K
+	 3gqMG0U97EnXIHtJ20eUjxhtqI12MqLPOseYhhx15pO/d3rVlVCGg+UZtYpP9anYxNsHC
+	 b3hGM+3lDy3NAL52i66DgvN5D7HuENyY/V3WywHF8gDmuz3R3ETgp1/o4gMoQKMKhadta
+	 FJLV4TDQpqbH1GqGJVQWyFIrhGCsNeMIMyM1ASNg+AhiHYIL3AYVlznlKTZh+74lnUg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="QDh51/pT";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NBnCNF5o;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1057A606A326
-	for <linux-pci@vger.kernel.org>; Tue,  3 Nov 2026 18:43:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DCB4606A31B
+	for <linux-pci@vger.kernel.org>; Tue,  3 Nov 2026 18:44:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QDh51/pT
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DFD01F000C1;
-	Tue,  3 Nov 2026 18:43:49 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NBnCNF5o
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D48AC1F000C1;
+	Tue,  3 Nov 2026 18:44:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793731429;
-	bh=2ELIPUxdYCas+giNcZHXG1XyrnNeubGowCuapGpU38I=;
+	s=k20260515; t=1793731451;
+	bh=PgXIcyEKFnyeF/HLyWbTgOp8SsJJ+gNcg3iZUZWTrXs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QDh51/pTwULs7nNLO/FXmDWaGzQlSn/VM3+lsfcnXx8kl6AYPem40MTyfOHspBUFn
-	 wnF4mSrfk6agxyGGUa3U3x1mdQArWOpo9RSdebBZX3D15KCY0oLE0z3pvgLIsM6ktB
-	 AOG3K81BO4e5q8LPMhfF0hrWQUluIyJkd/C5CGkC//KPoBfLlvkprsrdFa0U9yWIW6
-	 9JTlr7bLmq0M7AKBVaPS2EPrxx8FVg9TmGejpx3ZC56ZMCEpqsm/CBfdYJuLD26Ov/
-	 RgYryH5N7K2t+GvoIEpCjG1V0+oQqupI+HtDTc/rCc5xSC208zs4gSzgtktufC7SU+
-	 Mdvgo16Hzt6cQ==
-Message-ID: <sashiko-outbox-195857@kernel.org>
+	b=NBnCNF5ohorwU6p9PKKbpWxfbf3tVitWYiJtJmMND8i9wO2Ht3k1RhSGBFj3asKw1
+	 exume2qZ0azYwMsz1n4tbr/kPd8TVuJw6jwC/9orSQup5cwc2dFpv/fVaZXPbRpu4/
+	 R1/2iVvCFUXTXhUBN0h9nZh32EjpAJSOY2Ej4f6nF5gvt8xVXoWzM8gVfDOu1iAU6m
+	 4PV/VWXxo4aExl1k6sV/s2bjQExK9fVm0rgndn2VPk9wh9pz3vEbb7EynBhHN9umnG
+	 IOaQrQQpum988q8o2s4bYRctZc2Cxe9M3TCKhb1FjU6dGU47py7jDUpjy5j9Nb1rNz
+	 98iESXhOmu8jg==
+Message-ID: <sashiko-outbox-195858@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH v2 1/2] PCI: Allow hpmmiosize and hpmmioprefsize for
- specific hotplug bridges
+Subject: Re: [PATCH v1 2/5] PCI/CXL: Probe the underlying bus reset in
+ cxl_reset_bus_function()
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Maciej Grochowski" <Maciej.Grochowski@sony.com>
+To: "Nicolin Chen" <nicolinc@nvidia.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <7d68c3c861a92c944bcba84b0096f16550ca0403.1793724065.git.Maciej.Grochowski@sony.com>
-References: <cover.1793724065.git.Maciej.Grochowski@sony.com>
- <7d68c3c861a92c944bcba84b0096f16550ca0403.1793724065.git.Maciej.Grochowski@sony.com>
+In-Reply-To: <6c09d2f78d4bb9db7f49fa14a6550f5176721121.1793729707.git.nicolinc@nvidia.com>
+References: <cover.1793729707.git.nicolinc@nvidia.com>
+ <6c09d2f78d4bb9db7f49fa14a6550f5176721121.1793729707.git.nicolinc@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 18:43:49 +0000
+Date: Tue, 03 Nov 2026 18:44:10 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,92 +61,41 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] PCI: pbus_size_mem() adds children_add_size on top of scoped hp_=
-size
---
+> cxl_reset_bus_function() reports "supported" to a probe after checking on=
+ly
+> that the upstream bridge carries a CXL port DVSEC. The underlying bus res=
+et
+> can still be unavailable, e.g. on a bus shared with other devices, so both
+> the reset_methods[] array and the reset_method sysfs node end up listing a
+> "cxl_bus" that is guaranteed to fail with -ENOTTY when it is attempted.
+>=20
+> Probe the underlying pci_dev_reset_slot_function() and then, if it is not
+> applicable, pci_parent_bus_reset(). These are the same two checks that the
+> actual reset runs, so a shared-bus CXL device no longer advertises a meth=
+od
+> that can never succeed.
+>=20
+> Probing via pci_reset_bus_function() would not work: its cxl_sbr_masked()
+> check rejects every CXL port with a masked SBR, while the do-reset path in
+> this function unmasks the SBR before resetting. Such a port would wrongly
+> probe as unsupported.
+>=20
+> Move the port control register read above the probe branch as well, so th=
+at
+> probe runs the same checks. That read asserts no reset, and a failure mea=
+ns
+> the device cannot be reset this way, which is a probe-time answer.
+>=20
+> Also pass an explicit PCI_RESET_DO_RESET at the do-reset call site, since
+> probe is always false at that point.
+>=20
+> Fixes: 53c49b6e6dd2e ("PCI/CXL: Add 'cxl_bus' reset method for devices be=
+low CXL Ports")
+> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 
-commit 926f817ace771cfa772ae856e4b49cefab5e63e8
-Author: Maciej Grochowski <maciej.grochowski@sony.com>
-
-PCI: Allow hpmmiosize and hpmmioprefsize for specific hotplug bridges
-
-This commit extends the pci=3Dhpmmiosize=3D and pci=3Dhpmmioprefsize=3D boot
-parameters to accept per-bridge <size>@<pci_dev> entries, applying the
-specified size as a required minimum window size and head alignment in
-pbus_size_mem().
-
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index ed16ef7c26fa7..f3992859d90f2 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-[ ... ]
-> @@ -1349,6 +1351,27 @@ static void pbus_size_mem(struct pci_bus *bus, str=
-uct resource *b_res,
->  	win_align =3D pci_min_window_alignment(bus, b_res->flags);
->  	min_align =3D calculate_head_align(aligns, max_order);
->  	min_align =3D max(min_align, win_align);
-> +
-> +	/*
-> +	 * A hotplug size given for this bridge is a required minimum, not
-> +	 * optional space like the global size: aligned for the largest BAR
-> +	 * that fits in it, so it is in place before the devices that need
-> +	 * it appear below the bridge.
-> +	 */
-> +	if (bus->self &&
-> +	    pci_hotplug_dev_size(bus->self, b_res->flags, &hp_size)) {
-> +		if (hp_size) {
-> +			size =3D max(size, hp_size);
-> +			min_align =3D max_t(resource_size_t, min_align,
-> +					  rounddown_pow_of_two(hp_size));
-> +			pci_info(bus->self, "bridge window to %pR: reserving %s size %#lx ali=
-gn %#llx\n",
-> +				 &bus->busn_res,
-> +				 b_res->flags & IORESOURCE_PREFETCH ?
-> +				 "prefetchable" : "non-prefetchable",
-> +				 hp_size, (unsigned long long)min_align);
-> +		}
-> +	}
-> +
->  	size0 =3D calculate_memsize(size, realloc_head ? 0 : add_size,
->  				  0, win_align);
-
-[Severity: Medium]
-In pbus_size_mem(), when realloc_head is non-NULL, required child resources
-are summed into size while optional child resources (such as child hotplug
-bridges, SR-IOV BARs, or disabled ROMs) are accumulated into
-children_add_size via pbus_size_mem_optional().
-
-Subsequently, size1 is calculated as:
-
-	if (realloc_head && (add_size > 0 || children_add_size > 0)) {
-		add_align =3D max(min_align, add_align);
-		size1 =3D calculate_memsize(size, add_size, children_add_size,
-					  win_align);
-	}
-
-where calculate_memsize() computes max(size + children_add_size, min_size).
-
-Because size is overwritten with max(size, hp_size) before size1 is
-calculated, doesn't calculate_memsize() add children_add_size on top of
-hp_size rather than fitting those optional child resources within the
-hp_size minimum window? When hp_size > size and children_add_size > 0, size1
-becomes ALIGN(hp_size + children_add_size, win_align) even when
-size + children_add_size <=3D hp_size, queueing an extra add_size =3D size1=
- -
-size0 on realloc_head.
-
-By contrast, when realloc_head is NULL (such as in earlier passes of
-pci_assign_unassigned_root_bus_resources() with pci=3Drealloc),
-pbus_size_mem_optional() returns false and optional child resources are
-summed into size before size =3D max(size, hp_size), so they fit within
-hp_size.
-
-Would it make sense to keep size as the sum of required child resources and
-apply hp_size as a minimum to size0 and size1 instead (for example, passing
-max(add_size, hp_size) as min_size when computing size1)?
+Sashiko has reviewed this patch and found no issues.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1793724065.gi=
-t.Maciej.Grochowski@sony.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1793729707.gi=
+t.nicolinc@nvidia.com?part=3D2
+
