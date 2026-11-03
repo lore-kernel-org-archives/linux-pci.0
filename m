@@ -1,48 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793717258;
-	b=lVjrIV/BKmEi9LeHf6A75ESYimoH5v7VA7kP1V+VfDixMmxm82Jq63xHepR+fEwUKBFb
-	 e4sUv5u8O5xUmHbr0bfOp8mb5Kkj0vI0IsdRQ1yvpI9SRd7+TD0STTyEkdhbkYvvyHQu1
-	 otw8iy3JQyYRi2Ocrg6cXqaii99e1m6AekhmcLIfoQquF5+gZFM7b+YB6SrRsyG4P79MS
-	 xF/rv3M0jB1o/dnHzJL7bhDAJXOnWrN1WhWnp4WBXdS9a43seCOiJ8YTFWVBUGIFn7lIB
-	 efkbjSjHgwWC3xuHJtr3DwujF3Ss/lEipkRIZZyJYYWLoI+uUmc6GDV4FuIg3mbXglw==
+	t=1793717264;
+	b=CssBk1kxOM7c75U96bE6GopQUD8Kfg3igh1WKfoatsZKxqSu8d3e0XLxkuiaDPxrl+j8
+	 UP/zK75LXXBjM12kcMKzTkvBdVQHG78Owf2r5gps6hHtYUDsKuibh6MiSW3iM3mDGMy6E
+	 s0i0Ju22tZIzDcpPfnYzGAOXuUglrXJfCF7BKqudQL97mnvfkl0xyTBfuh4kC+shpOZwW
+	 PfBchokCGgc9VVLV6tRfTUfwNgKxW2XWPNWVh8BM+9cC2E8/bXehpE/F3m+Y67Z+E0zxY
+	 zylswRxhoynEnhwqnfFOYA7tf/HLOP0qFHlTb6njNgICbZvQ1xQARJBJtKgDGs0m3mg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793717258;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793717264;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=N05eG3DcsrZpQfqjL5D91LwnvEOvTP0/ov6vkT4Pvcs=;
-	b=ueNhz16KqETrw0MHsZ7aK3hfWpQ+B4cEBsr4T61+bGLTdkyNr+1uzz7oB8vUeUK6r7yC
-	 ccaZK77aoSSKcXYLQ3/n9mqXPWLorZs74j22/7ucqZdHUHPlfa7M9//A6B/LukbB+xbq+
-	 5AodtnsjMFQQe9lLewy9fzn3JTRtruuxOanHFm4OHYg9kSU1gEHPScdS/0LcFRAQXgF9l
-	 /82fl5yBl8QT+7cHA74DdAFRpUd5R+Ii8fCza0sbFYy+dyZa7YQVM4KM5TmzhxllWXuTA
-	 4sibO1+eGFnzKtMREzCPJqRCm3czJsLpmds6AEvRZG2EKnKJzMAZvVYcHtuOty/LSyw==
+	bh=qqwJwzLGJj1Hxu0TtHvbrL/TW26gUB/OdlTGsxg9/ZQ=;
+	b=kvLwCp61uiUIqXHxWB/J40oru9m2ZXxaSiAbNYuk/knqBfmF35xaGqlJlDsCJ/nlbjkQ
+	 XmJ6PqilajPHm00wY1tVZS1IIcYE+GexEQEVzqrV7kAfs4e02eA8lpzGIuBksOCfNLkH6
+	 Ow3rJuAsDT1cfLrL5hfkcE6p+DjKRGlsn4OtOI2iK/V6JhUVo5LyNvRy3jVOGDGZkV492
+	 j1qWOgAK+NAKxzApMW7gLN9bvJ4EWUPDjCfSak5QxykliWSuMpkwmke6Eq2Rv3G9mx3XE
+	 F6O/nwloX7Sst0wJlBrc69KW4p4yXBZUearM58ux6LtnM/HNDFKcnk2y2hVuZ6ixB4A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hasVYka7;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CDbtOSLZ;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9D14606A33E;
-	Tue,  3 Nov 2026 14:47:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADAF4606EEA9;
+	Tue,  3 Nov 2026 14:47:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hasVYka7
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E80461F00A1A;
-	Tue,  3 Nov 2026 14:47:35 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CDbtOSLZ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFE121F00919;
+	Tue,  3 Nov 2026 14:47:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793717257;
-	bh=N05eG3DcsrZpQfqjL5D91LwnvEOvTP0/ov6vkT4Pvcs=;
+	s=k20260515; t=1793717263;
+	bh=qqwJwzLGJj1Hxu0TtHvbrL/TW26gUB/OdlTGsxg9/ZQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hasVYka7WfTQX4gVG72LHVrtfNEhVp4P8ZtdcWyH+LgHzqiGmI0IYbQHO1iwq9m07
-	 y/1lwfnTHWCCY+cbAgh9hskIZQ97rVMlqM95iGbxPIOe3f8RS9bNGt+mxw9ntpVqb/
-	 scjaMJLEVTqoyjO6TjfG7nqX7032JBfqmizKNDbPX8HDDI6FUj87MgRMBXyr8hd/G6
-	 o/Ht1P5w/7ACphg2RTZAjkTSNTX/ebWs2gke1l0yWrd0iIR+fNLltdhYI899csOJwZ
-	 1y9qK6xl8eu6MrQZdcUR4uzY+8RNuZ/DmBvaIF0iaqRFYBY29TqHfRB0P45MNfIHFj
-	 usD+mtvrE3OkA==
-Message-ID: <sashiko-outbox-195477@kernel.org>
+	b=CDbtOSLZ+8yKwhiyTrZueHRtkbD/K4tLmmy4X+oFVLra5s9kAyEBcR1gnyiAxEwvb
+	 rbMmayi0VqbgvG1CWLN2RxUjLU0f7l4Pc6HAXZ+5Slm5w/5I4G5mgxQWFAxctBkeBi
+	 waGJQ835WDXjQZppvthgegMD7FtQID4nd08fdOYV6vgEWnTHahspHuoOQ/+33AFRYn
+	 66fjb+PlsNW//zyn3cyHMf9EzHPX71CXRYl5jssVED/E1mdo6WOQ44t+RR1+s26rfG
+	 K0gMlvNMOK7DFg/Trp8u+j9wNl3N53oxeHeaFuWlV6o0eOaUIlpaLpGuUZm1lL/tXu
+	 HrVyXF6yAozmQ==
+Message-ID: <sashiko-outbox-195480@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 05/38] platform/x86: toshiba_acpi: reject malformed
- brightness and fan writes
+Subject: Re: [PATCH RFC 08/38] powerpc/rtasd: zero the error log buffer
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -55,12 +54,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Iwai" <tiwai@suse.de>, linux-ext4@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261102-work-procfs-bugfixes-v1-5-59422ed3e465@kernel.org>
+In-Reply-To: <20261102-work-procfs-bugfixes-v1-8-59422ed3e465@kernel.org>
 References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
- <20261102-work-procfs-bugfixes-v1-5-59422ed3e465@kernel.org>
+ <20261102-work-procfs-bugfixes-v1-8-59422ed3e465@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 14:47:35 +0000
+Date: Tue, 03 Nov 2026 14:47:41 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -70,18 +69,12 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> When lcd_proc_write() and fan_proc_write() were refactored their checks
-> were inverted but the && stayed. They only fail if sscanf() didn't
-> parse anything and the value is out of range at the same time, and for
-> the brightness value < 0 && value > levels can't be true at all. So an
-> out of range brightness or fan setting is passed on to the hardware,
-> and so is the uninitialized value if nothing could be parsed.
+> rtas_log_read() hands out a whole slot of the error log but
+> pSeries_log_error() only fills in the sequence number and the event,
+> which is usually a lot shorter. The rest of the slot is whatever
+> vmalloc() left there. Use vzalloc().
 >=20
-> Restore the checks as they were before the refactoring.
->=20
-> Fixes: e1a949c1b988 ("toshiba_acpi: Refactor *{get, set} functions return=
- value")
-> Fixes: 3e07e5baa2af ("toshiba_acpi: Add set_fan_status function")
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
@@ -89,5 +82,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261102-work-procf=
-s-bugfixes-v1-0-59422ed3e465@kernel.org?part=3D5
+s-bugfixes-v1-0-59422ed3e465@kernel.org?part=3D8
 
