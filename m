@@ -1,79 +1,41 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.243.164.118
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793667070;
-	b=ija2czfE18FYGJq+wQMG/zmfkoob6aUFNUMATFlH+1QsxREruTkNgoFB5i/uvPC1uP6u
-	 YJSlsd3U+lpRJO3DLUfNQipI0VDZ5Ap3do9R/IDMSRXoz5sqv8Myt4Dh4Zk695rxzJnqW
-	 kZlmZISOJFqlUlhFSYqGxhqv+EYhAaVli4uqsh5cIbDen7Tp5F01u7gNFeN+sMbAONpjc
-	 k3QoqEWjyq1yETm9V+R/li+h8Ha2sN9qSmxhCWU9RYR7yV0ei6TFrSa8eszr6LD/4Cyng
-	 VK6HBd0AyXbW73pH/Uan+SEOqTtHNCpPAYTNE6qcgSCl+DGdG3TemhYa59xsPyrc3XQ==
+	t=1793674647;
+	b=B1r/AbEIdJzd2n6+yPWLFMeIYrVAzm0MARDtsPkpIB3s7odnJMsSmf5OXKQkYG3RnbW+
+	 uRTe588OO3XepwNpgWDp4RPmIG1i0axqgG3d1JadgaRyg0NDruO3HPskw0kWGy1MQAayi
+	 3rxuyN+m7k0Ph0S2Jm99eYPNXD5f+tSaDvvs8qft99YaMgt2o58GHNI/cvXDvmAJFuTa5
+	 bbd+L41h/oOIdBGwMJxs2iV+t+WY5aXxEXLWdeS0NiIo2pVianXzBk6CN8X3pdY4JnJmo
+	 msthdLK23ASHgFq/kp4Oy3dGN0Er/jaFYphaesjNJBndKtkn+YAmP+d2LbxVuBM9cKA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793667070;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=EO1BnMjokjrVLF0VNQ/IWD9QGwGccXm6vVRtGn7sXpk=;
-	b=cAHouzOjd9c99wtBDaGtx1CW6T0s152Ga7U7gbfTtY55nSw9PM4EpQF7zhPVi1pcIRC0
-	 CQa197qVXZQtI49Dca9Tkl0sU4PKgnqRHDF7j/ap3WM7vJVGhrOL+KJC26Cm7XMwZ5f4W
-	 bTnZqmEDMMolxHfLXCKcXbJyibMyE6nA6R4rO92xSiEkOnFwRY54wJUs9wxOSKTbVZINd
-	 7MR/nusCqM7SACOPcxEFtktDwcrqWOF+Xd/2akfSAjtTo90aid3gqJfAkugiq/MDCaMYE
-	 S4Yw2IBy515lldztzuRLt5Ahio+DVXRZlbhjs/5vsmkVSxbrBZtch3GQzNxsZRCxQNQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793674647;
+	h=DMARC-Filter:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-CM-TRANSID:X-CM-SenderInfo:
+	 X-Coremail-Antispam;
+	bh=K/VKNZTnoHlYdA52mhm/Cd/cZKCsJadbDnR229CP3IM=;
+	b=KZ5HJnky0zy/fTcM9DxdcaW6VTp+52gfxFH69ofqXvTluGfhj62BrPaPyTNsiqztvjTS
+	 8V/XkrKOkXlCslEdIB+yZFCLjU5I5CNEb/YL8CXjgSOogGrGZ0Rk2Qh0y1ZCsZFDj/f9X
+	 tL4f/cd8YUGYIYRnu5h5iwIciVa/T/0+Ix1/fHW0xLYMsyqSPtletKwZJqssw0KLtmrce
+	 9C9xk5LdZGv3Yht19tEi2XShfc185jsP7qHamQYXyRlM9bYi4aXduk/ge2KdOVTT/yrii
+	 0VEuYfG8GML7ug/GZ8tGBkvkn8s/SM/OHE4/0qQpES2bw6FZa8IY3A2L7t7QQB9bHbw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="gboT/HjU";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC66B606A324;
-	Tue,  3 Nov 2026 00:51:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gboT/HjU
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C77371F000C1;
-	Tue,  3 Nov 2026 00:51:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793667069;
-	bh=EO1BnMjokjrVLF0VNQ/IWD9QGwGccXm6vVRtGn7sXpk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=gboT/HjUJac115ml+P2hDry3Ye5G9XLfBh+ioyglojs3EcDKOzMJiP+9ksKymUoyO
-	 yiMsIAx9ytbxOjzfC3iiBiv9v048Jt2Pwn6Pb3Iap/t9zfd8QapuFHrbQ6OFPJF1nF
-	 +MeuoARLHDcdfoFnxUYlkSZ1Mw0JeEuTBFFzhgKJolU1o6AxG5IZ4freFEr6VSQE/o
-	 ggy8TsOSZ6gMOkli713pBkOfAT5kEx8YTmJxrgvGJXbHz5XbKbGrjSatdgxFk0atoK
-	 MiIiK+Jk+io3mNfr2KxkLQDILfLwtLyN9qxpJKrkPJX4QW16w2NvtB2DOgzSHrteUX
-	 5ax3+jjfvHADQ==
-Date: Mon, 2 Nov 2026 16:51:07 -0800
-From: Wei Liu <wei.liu@kernel.org>
-To: Naman Jain <namjain@linux.microsoft.com>
-Cc: Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H . Peter Anvin" <hpa@zytor.com>, Wei Liu <wei.liu@kernel.org>,
-	"K . Y . Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Dexuan Cui <decui@microsoft.com>,
-	Michael Kelley <mhklinux@outlook.com>,
-	Long Li <longli@microsoft.com>, Nam Cao <namcao@linutronix.de>,
-	Joerg Roedel <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Kees Cook <kees@kernel.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Radu Rendec <radu@rendec.net>,
-	Sean Christopherson <seanjc@google.com>,
-	Kai Huang <kai.huang@intel.com>, Dmitry Ilvokhin <d@ilvokhin.com>,
-	Shradha Gupta <shradhagupta@linux.microsoft.com>,
-	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-	Thierry Reding <treding@nvidia.com>,
-	Jiri Wiesner <jwiesner@suse.de>,
-	Daniel J Blueman <daniel@quora.org>, linux-hyperv@vger.kernel.org,
-	linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v6 0/4] x86/irq: Fix lost interrupts on CPU hot-unplug
-Message-ID: <20261103005107.GB1862133@liuwe-devbox-debian-v2.local>
-References: <20260923043023.3150498-1-namjain@linux.microsoft.com>
+	dmarc=none header.from=phytium.com.cn;
+	spf=pass smtp.mailfrom=phytium.com.cn;
+	arc=none smtp.remote-ip=162.243.164.118
+Received: from zg8tmtyylji0my4xnjqumte4.icoremail.net (zg8tmtyylji0my4xnjqumte4.icoremail.net [162.243.164.118])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 23B4C606A33A;
+	Tue,  3 Nov 2026 02:57:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 23B4C606A33A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=phytium.com.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=phytium.com.cn
+Received: from prodtpl.icoremail.net (unknown [10.12.1.20])
+	by hzbj-icmmx-6 (Coremail) with UTF8SMTP id AQAAfwAHXt2NTelqAijbAQ--.33440S2;
+	Tue, 03 Nov 2026 10:57:17 +0800 (CST)
+Received: from [10.22.77.56] (unknown [123.150.8.50])
+	by mail (Coremail) with SMTP id AQAAf8DwOXOFTelq9qL0AA--.19487S2;
+	Tue, 03 Nov 2026 10:57:10 +0800 (CST)
+Message-ID: <b49779cf-5132-4539-86c2-e4f806b1675d@phytium.com.cn>
+Date: Tue, 3 Nov 2026 10:57:09 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -83,40 +45,69 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260923043023.3150498-1-namjain@linux.microsoft.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] dt-bindings: PCI: Add linux,pci-domain-reuse property
+To: Krzysztof Kozlowski <krzk@kernel.org>, Will Deacon <will@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Wang Yinfeng <wangyinfeng@phytium.com.cn>, linux-pci@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org
+References: <20261102095150.2370959-1-cuichao1753@phytium.com.cn>
+ <20261102095150.2370959-2-cuichao1753@phytium.com.cn>
+ <8112d8ca-2234-490c-a4a2-c3b01adfbc88@kernel.org>
+From: Cui Chao <cuichao1753@phytium.com.cn>
+In-Reply-To: <8112d8ca-2234-490c-a4a2-c3b01adfbc88@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:AQAAf8DwOXOFTelq9qL0AA--.19487S2
+X-CM-SenderInfo: pfxlux1drrlkut6sx5pwlxzhxfrphubq/1tbiAQAHAGrnk0kFEwABsG
+Authentication-Results: hzbj-icmmx-6; spf=neutral smtp.mail=cuichao175
+	3@phytium.com.cn;
+X-Coremail-Antispam: 1Uk129KBjvJXoW7AF48CryrWr1UZw4DXF4xWFg_yoW8XrW8pF
+	WaqryDtFZ8XF10yw4vyw10vFWYkF4kJFW5J3WUGws8A398XF1UXrs29FW5u34UAF18ZrW0
+	vFWqq34kJFZ3ZaDanT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUj1kv1TuYvTs0mT0YCTnIWj
+	DUYxn0WfASr-VFAU7a7-sFnT9fnUUIcSsGvfJ3UbIYCTnIWIevJa73UjIFyTuYvj4RJUUU
+	UUUUU
 
-On Wed, Sep 23, 2026 at 04:30:19AM +0000, Naman Jain wrote:
-[...]
-> Changes since v1:
-> https://lore.kernel.org/all/20260728135117.2888175-1-namjain@linux.microsoft.com/#t
-> * Added Review tags
-> * Adding minor clarification in commit msg of patch 2 (Shradha)
-> 
-> Original RFC: https://lore.kernel.org/all/87y0f3jhd6.ffs@fw13/
-> 
-> Naman Jain (4):
->   x86/hyperv: Set irq_retrigger for root partition PCI/MSI irqchip
->   x86/irq: Use irq_chip_retrigger_hierarchy() in fixup_irqs()
->   x86/irq: Use irq_chip_retrigger_hierarchy() in msi_set_affinity()
->   x86/irq, iommu/amd, x86/hyperv, PCI: Drop redundant irq_retrigger
->     inits
-> 
 
-This series has been reviewed but not picked up. I queued it up to the
-hyperv tree. Let me know if you have objections.
+On 11/2/2026 6:00 PM, Krzysztof Kozlowski wrote:
+> On 02/11/2026 10:51, Cui Chao wrote:
+>> Add a new optional boolean property 'linux,pci-domain-reuse' for PCI
+>> host bridges.
+>>
+>> By default, the 'linux,pci-domain' property must be unique across all
+>> host bridges. This property allows a host bridge to explicitly opt-out
+>> of this uniqueness check, permitting multiple host bridges to reuse the
+>> same software domain number.
+> Why isn't this deducible from the compatibles?
+Hi Krzysztof,
 
-Wei
+Thanks.
 
->  arch/x86/kernel/apic/io_apic.c      |  2 --
->  arch/x86/kernel/apic/msi.c          |  4 +---
->  arch/x86/kernel/hpet.c              |  1 -
->  arch/x86/kernel/irq.c               | 18 ++++++++----------
->  drivers/iommu/amd/init.c            |  1 -
->  drivers/pci/controller/pci-hyperv.c |  1 -
->  6 files changed, 9 insertions(+), 18 deletions(-)
-> 
-> -- 
-> 2.43.0
-> 
+The compatible cannot express this. "pci-host-ecam-generic" only
+describes how configuration space is accessed; it does not describe
+whether two host bridge instances may share one Linux PCI domain.
+
+The same compatible is used on systems where every host bridge must
+have a unique domain and on this system where two RCs intentionally
+share a domain with disjoint bus ranges and resource windows.
+Comparing the compatible strings of the nodes therefore cannot
+distinguish our case.
+
+Adding a vendor-specific compatible only to trigger this Linux policy
+would not describe a different hardware programming model either.
+What actually makes reuse valid is the platform-level relationship:
+the bus ranges and resource windows are disjoint.
+
+If you prefer to avoid a new property, I can rework this to derive or
+validate reuse from the non-overlapping bus-range and resource layout
+instead. Would that be the preferred direction?
+
+-- 
+Best regards,
+Cui Chao.
+
