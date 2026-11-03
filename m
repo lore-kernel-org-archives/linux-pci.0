@@ -1,57 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793699616;
-	b=1Gz5jF3rLBI2cX5R6HvfkBB1bxTM0foPUCTEkwVvqkghFxV7RU55QDS5AjREwYWv30TQ
-	 SEs91l7ZBDKRn4SUMqmVfqwLlRD/gpv7NlG/xxYXcIL7cB3ygHUO28JNyvIKBRHPjKDjN
-	 3TP1PB0UgGN/b0ELvUKD/GsKq9GLtvbpQW8zJquS8dJNt8igY4eWEqYR7gqyJfljnyqOD
-	 abjSXV/0eTSl1DuZkMgSpqxoJlysRISps7az8vZBhb0vz8XKR2Gz8sGJMf4s/6FT5ZfVw
-	 DVWvubfCgrZd1Jvfes1LYQajLUSQxgHaby2EvUEbFr55l3+wtvyvrUamCUbX+i/Stew==
+	t=1793699815;
+	b=PrsZmH3LlW5sQ5JsHwr/IVogsStEmN3HsvAYUWk3trXpjw3gl1FAra1voZy0J52aN4G0
+	 EbkATPpgWZejvflS4A4x9Oo6ZpuRuo3seuvSKwTN8Ac2dLCjAmIzAk9V3UibZ5TYnYEhg
+	 awDbzHXAyIgUKx0nqZo+MdLX87Z6Ys9rECY08NJZB0xnUST1qDsfBuBteUFHJsqS1CLzd
+	 wIQH2UxT9CdCU/ElFekM1UKlBLjGlMyff7eDXNrodCNu8RbhQg+syohP+qUtQLFroe2sB
+	 C7F4DsUjRGJ5Cirpe/qPZhULz2wOToWbt47fjrQqiUg+z/KKrt8nekYqcuQkC61lu8Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793699616;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793699815;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=sEgS6M8l2DlGp0iy0oTdHaY42KKNYn6YbCYOh7uX8Uk=;
-	b=5aBTE8Zav5ZOo1tnQasVascYT5B3+yWi2piO5Pu5n80aanNH897e5ixLr6PYneQJD8yB
-	 rqIWjIkorUMumwW9QqdE4LFSxyw/FCnLOPYXwVFoYDirtOckcHSvp1Z7Uh1zMthXTekMB
-	 0BHqDeNkrA3m8C/+oqrSj8Iwopg8K5Tq/TGj/es60nstourUA6i4zUnQsyI+/tcR0W/P+
-	 b5CphHQBeHjsVixi21ZaJHkmiRJDl5d83xVZvEKrJVzDjV1BA28uJa2QaKHKJ5Ah3B8iP
-	 3g5bHPDGfKodUxwGCpi3z7k3z+a1ZcQnIpRJU6e+5ezEuYqZ/CxUBBNtay8OB3//rzA==
+	bh=CW/YVxXfP11r2QeGRogosfGOSndboPPIEi3HUmru9Yc=;
+	b=llCZ2cGYa0uKQQvKuN/i+UyUslGkqq468sy+KW5xUk6iSQ7fG8rTtQ6COso5aKo9ynis
+	 Ol6fHDM1BMI7iC6T0VypUV57QTnog02+R+OlAOT559CRnzOrosDBJIn99K7fAOZPRLeH0
+	 7brbYz/fJdmNcEA8w086noy143t7ubTYi0cnnOjRbPwkq70zRC5B3VwXixmszAfUFz7CX
+	 MaAVryT/ZCnk7pYo0LnRnDTSEpYWSFF7EklHLk/hfxctxv0PamrnkGHQz188AafZT1vnp
+	 F7hsf01D3x97b1uffTp2IZHba1XHdsDual1ib3fCeGPy5sOQF/otTZrFj3zIlxr+kNw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oTVFVc5h;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Y5twyuhw;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFA91606D802;
-	Tue,  3 Nov 2026 09:53:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF96F606C50B
+	for <linux-pci@vger.kernel.org>; Tue,  3 Nov 2026 09:56:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oTVFVc5h
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E5C11F000C1;
-	Tue,  3 Nov 2026 09:53:35 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Y5twyuhw
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B9031F000C1;
+	Tue,  3 Nov 2026 09:56:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793699615;
-	bh=sEgS6M8l2DlGp0iy0oTdHaY42KKNYn6YbCYOh7uX8Uk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=oTVFVc5hIWJekLNawgFtET2tFSYtyBQYWT+bAgibRD2zISfHRn13AzcPbzZ/k8B3s
-	 EcHXWfACvgcLZUFMQ4QVm9sQIv1ab1/XYFKYURDW7VjL8MQRq+Syjo3AR+pTlreZxa
-	 4OXb8R+rX5hMRKz2aG9lwy+wH/egdFwFi1gmni3IjQ5R/+3+DZzszpCg575weOzwjl
-	 aN9E8cBwcKFVupGL6JTaoWxMHE0hL2udlXwurHukhSinUs1xhwcD2p/vqytNhO5Ngj
-	 OF3Ocj8k/TDpsNkvDMq9zxEYxirGIK0wA/pdeWhnORXAIgdIjz3ZiGZEhByJgrO9dL
-	 GEzHblCuhBNIA==
-Message-ID: <sashiko-outbox-194977@kernel.org>
+	s=k20260515; t=1793699814;
+	bh=CW/YVxXfP11r2QeGRogosfGOSndboPPIEi3HUmru9Yc=;
+	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
+	b=Y5twyuhwwd9N09Jh8vLky26R4+g7soc8XQ5RgmHGem9CAEgCgCq+kBJi+9w5LwTHl
+	 0M0R7ujvBsn/pGvYu+8kjvot5E/Zgc7QXjhGB7zJINohuA+566c9qeCntsk2+k6boL
+	 DCvYlYyczeMVyyJ4Uaa4o9o1upfbxBvr8RVYw0NTLB9Y194NLf2BYEev+wC8Uv2H2L
+	 qwgDk2/JJA/cK7Fx2Wi6WwglX8XM2rbGud/A1KhusyMCZV/GF3P+GokzjfANajLLZl
+	 olVsbfZfYckgKvaKK+Ot3/c82wNeR74p11pBgbFRn3VLAinVL5ut6eIlc78JU1UXgx
+	 af+WBKoKHIxkA==
+Message-ID: <sashiko-outbox-194988@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v12 07/19] PCI/P2PDMA: Collect the path's ACS controls
- before deciding
+Subject: Re: [PATCH 1/2] PCI/AER: Avoid NULL pointer deref on search for
+ Error Source
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Leon Romanovsky" <leon@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org
-In-Reply-To: <20261103-fix-p2p-acs-v4-0-v12-7-912101f93517@nvidia.com>
-References: <20261103-fix-p2p-acs-v4-0-v12-0-912101f93517@nvidia.com>
- <20261103-fix-p2p-acs-v4-0-v12-7-912101f93517@nvidia.com>
+To: "Lukas Wunner" <lukas@wunner.de>, linux-pci@vger.kernel.org
+In-Reply-To: <6de42407246d270c75126baa338761e6f21ab067.1793697480.git.lukas@wunner.de>
+References: <cover.1793697480.git.lukas@wunner.de>
+ <6de42407246d270c75126baa338761e6f21ab067.1793697480.git.lukas@wunner.de>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 09:53:34 +0000
+Date: Tue, 03 Nov 2026 09:56:53 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,23 +60,17 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> From: Leon Romanovsky <leonro@nvidia.com>
+> A Root Port's subordinate bus may be NULL if the PCI core runs out of bus
+> numbers on enumeration.  Yet when the AER driver searches for the source
+> of an Error Message, it dereferences the subordinate pointer without
+> checking for NULL.  Fix it.
 >=20
-> calc_map_type_and_dist() combines ACS reads, routing decisions and
-> diagnostics. Adding decisions for different TLP attributes would duplicate
-> the walk or thread each attribute through its counters.
->=20
-> Collect the divergence controls, internal-route restrictions and upstream
-> forwarding state in struct pci_p2pdma_acs_path, then decide each direction
-> from it. Keep the existing rule that both directions must route directly
-> for bus addressing, and reject unusable upstream forwarding before
-> considering the host bridge.
->=20
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+> Fixes: 28eb27cf0839 ("PCI AER: support invalid error source IDs")
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103-fix-p2p-ac=
-s-v4-0-v12-0-912101f93517@nvidia.com?part=3D7
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1793697480.gi=
+t.lukas@wunner.de?part=3D1
 
