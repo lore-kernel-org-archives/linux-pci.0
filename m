@@ -1,58 +1,52 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=217.140.110.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=83.223.95.204
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793726892;
-	b=ozK48T9GTsAvBmAQ48SU8Lo8IcqY0e7R8rliKmjQ4sDX5IhY3lvvK3ozn54zdpH4x/sE
-	 J8bR5Q33vwGXGHxwPiHpJoiUV+hZIyHasGGhBq3U4N+OyRL2OYtgqRXFLbblUD7mz6pWr
-	 LN8gAJZDHXkLOlWjf3s1dn5T40KG+EugSEIZZrofuu+kNilXFF7blZ6bekDB83xsrOzuI
-	 b210RO0zxwrRzTqxIZBVZFkVSa2b4/uthFA54gk1TcaENyU1W6ylIXwJMcHrABjKb5vCM
-	 7VTSh6nUv2hxFrBleHTYPS/fNlwvHl6UnE4atMc7N0GvM33X7RhVsAHq19n3N3DwHsQ==
+	t=1793726954;
+	b=3sCHvx1Ls9l2WaKQGQiGAO3unzciQrSlMLaiFBaVwBCa4ck/ssyc5YwQIhZi36m5a8Vh
+	 /0W/QipKt39qOuDXgcRjZvtGnHMiCL7Hae4Xb3am0W51nbf6IkDHKbgqK2lg1CLGwMJqf
+	 cEhqWwLrmDq2ShvD9I6s2qcVyZh3VkLXExWmk6+2Sep81e/wJxQtxs6d0p/+evuHvZAul
+	 3UmONFYtPVCO3c8YwzWXNSUgccKdh/nI/gztCj6ps/9foYxSOW6rT61H3dDI404qLhJdv
+	 YWgci1DJfnW98d4grG9OZJECi/qae4R+/axldPcH4Giudo3f31NEbNMm5KRnqGT1etg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793726892;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=wyBAYDHyobxIW1sfQpfwkHHCUqn/oTPu5P/6lW0BfEA=;
-	b=dad7rB6+yL0wKsq/Y5wHH2zfjZ5YqAyr8wAYq2EVkDjjG8Uw55GTod7uUt/Fm9UP409Y
-	 UnA9jX7GK+57062Trfhj5SUHw3TBwlvxFAW3r8PHnf0aIaofztfpzxfhakZvErwbfjaoB
-	 YnoWTKMo/P8UY2mqUtmZK3tWUOknkesGRmODaPi1li8eC9KRZarRFEMvOV+3k1tLyalzL
-	 UzHfkyCtEassX90k7gDYNxCaReyJusH832mHbKlxNEr1vuutP+qPf2BN7X6fM0Z8fAxSq
-	 QjSs5BoMlcSj68zLVkWkhFQlpFKMdoHadAG+h0Voqs3ocwLjuWyDprzynh0M649rgUQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793726954;
+	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=cC12UYzCu8sy1bCE6Lezkt3f0flNvCrpYHTMzDNInOs=;
+	b=CxQhFHN+VRYMu22FY4jvd+M4qQZsQRV6pqkm7YLjRZUNHnTdeRjWUYgWAtlx8fKtzGCF
+	 aSYlbsGN4tlCnW1RnyUOeihy9BtuoDsjI0YkfZlCnDzfkhNYT1vGUfaOFl3oag1dXdarC
+	 6qI4Gpo4g/Lu8M1Vz76q9c3TIdNQKF/VeD/0kCeEdyRlUC6U4h41CqXll6Z80a6jUiDfO
+	 9+mseaJUp4WXRnDJKjPzYYYEpnGLNucqGyfdWvcstiFpY7QoLqst/FhG5Y0n2XPdWxXRr
+	 HzaMaUqf/dxGf6e9awe3ECaXk7PmILZFSPQx/5Zj6P+3z/GvXWHLRkkw2f2r5WWjTfQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=arm.com;
-	spf=pass smtp.mailfrom=arm.com;
-	dkim=pass header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=foss header.b="VE/2h/a3";
-	arc=none smtp.remote-ip=217.140.110.172
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 614B5606A31B;
-	Tue,  3 Nov 2026 17:28:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 614B5606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=foss header.b=VE/2h/a3
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 866261595;
-	Tue,  3 Nov 2026 09:28:07 -0800 (PST)
-Received: from e145574.cambridge.arm.com (e145574.arm.com [10.0.154.220])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPA id 7FE753F673;
-	Tue,  3 Nov 2026 09:28:09 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=arm.com; s=foss;
-	t=1793726890; bh=3lSa1YQ8IlpyBv/Ial1NOF3NIq5c9EjpL7iSEbZuVFw=;
-	h=From:To:Cc:Subject:Date:From;
-	b=VE/2h/a38n9qVnmzkHFZXYmCcraU1+bN5GRYGXoUMz+W0E7x3EZmy3nvg2BdWug+k
-	 bGiCCdptsGUCS98EgrvVEOgZOtUJkmnZLbLaUsMROCiIjr1YSXrY6v3kOpl4xIPQOr
-	 G1ftQT1KVDzOlYdvvQzLZ5wEM5+bXBog2CXWVvXo=
-From: John Garry <john.garry@arm.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org,
-	hkallweit1@gmail.com,
-	nic_swsd@realtek.com,
-	netdev@vger.kernel.org,
-	john.garry@linux.dev,
-	John Garry <john.garry@arm.com>
-Subject: [RFC PATCH] PCI: Avoid bus reset for Realtek RTL8126
-Date: Tue,  3 Nov 2026 17:27:58 +0000
-Message-ID: <20261103172758.1816004-1-john.garry@arm.com>
-X-Mailer: git-send-email 2.43.0
+	dmarc=none header.from=wunner.de;
+	spf=pass smtp.mailfrom=wunner.de;
+	arc=none smtp.remote-ip=83.223.95.204
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7ECE3606D80B
+	for <linux-pci@vger.kernel.org>; Tue,  3 Nov 2026 17:29:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7ECE3606D80B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout1.hostsharing.net (Postfix) with ESMTPS id 5218963D;
+	Tue, 03 Nov 2026 18:29:09 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 3DABC602D90B; Tue,  3 Nov 2026 18:29:09 +0100 (CET)
+Date: Tue, 3 Nov 2026 18:29:09 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI/AER: Check validity of Error Source ID register
+Message-ID: <auoZ5fjqShIeGzje@wunner.de>
+References: <cover.1793697480.git.lukas@wunner.de>
+ <27a3876874161204e7a37ab63e7b27ee9783261f.1793697480.git.lukas@wunner.de>
+ <sashiko-outbox-195012@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,43 +56,46 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <sashiko-outbox-195012@kernel.org>
 
-From testing on a Orion O6 board, a bus level reset for a RTL8126 may not
-recover:
-root@radxa-kernel:/sys/devices/pci0000:00/0000:00:00.0/0000:01:00.0# more reset_method
-bus
-root@radxa-kernel:/sys/devices/pci0000:00/0000:00:00.0/0000:01:00.0# echo 1 > reset
- r8169 0000:01:00.0: resetting
- r8169 0000:01:00.0: not ready 1023ms after bus reset; waiting
- r8169 0000:01:00.0: not ready 2047ms after bus reset; waiting
- r8169 0000:01:00.0: not ready 4095ms after bus reset; waiting
- r8169 0000:01:00.0: not ready 8191ms after bus reset; waiting
- r8169 0000:01:00.0: not ready 16383ms after bus reset; waiting
- r8169 0000:01:00.0: not ready 32767ms after bus reset; waiting
- SError Interrupt on CPU6, code 0x00000000be000011 -- SError
+On Tue, Nov 03, 2026 at 10:11:52AM +0000, sashiko-bot@kernel.org wrote:
+> > -	/*
+> > -	 * When bus ID is equal to 0, it might be a bad ID
+> > -	 * reported by Root Port.
+> > -	 */
+> > -	if ((PCI_BUS_NUM(e_info->id) != 0) &&
+> > +	/* Some Root Ports report an invalid Error Source ID */
+> > +	if (e_info->id_valid &&
+> >  	    !(dev->bus->bus_flags & PCI_BUS_FLAGS_NO_AERSID)) {
+> >  		/* Device ID match? */
+> >  		if (e_info->id == pci_dev_id(dev))
+> 
+> Can this cause a false positive match on the Root Port itself and skip
+> searching the subordinate hierarchy when a buggy Root Port reports 0x0000
+> (or loses the bus number of a downstream error source)?
+[...]
+> With this change, aer_isr_one_error_type() sets info->id_valid via
+> source_id_valid(), which returns true whenever pci_dev_id(root) == id. On
+> platforms where the Root Port itself is at 00:00.0 (such as many SoC PCIe
+> controllers or VMD domains), pci_dev_id(root) is 0x0000.
 
-Add a quirk to avoid this reset method.
+I am only aware of Intel and AMD silicon reporting an invalid Error Source
+ID, not of any ARM or other SoCs misbehaving in this way.  On Intel and
+AMD silicon, bus 0 is generally the root bus and never the subordinate
+bus of a Root Port, so an Error Source ID with bus 0 will continue to be
+considered invalid after this patch, unless it matches the Root Port's ID.
 
-Signed-off-by: John Garry <john.garry@arm.com>
----
-I'm sending as an RFC as I am not sure that this is an issue with the
-development board and not the controller.
+In the log output I've seen so far, the slot and function number of the
+invalid ID is always 0 and there's generally no Root Port at 0000:00:00.0
+on Intel and AMD platforms, so the Root Port's ID isn't matched.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7f1f47ea2ee4..69eef714838a 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3850,6 +3850,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1164, quirk_no_bus_reset);
- /* Intel DG1 0x4905 may not recover from bus reset */
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4905, quirk_no_bus_reset);
- 
-+/* Realtek RTL8126 may not recover from a bus reset */
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_REALTEK, 0x8126, quirk_no_bus_reset);
-+
- static void quirk_no_pm_reset(struct pci_dev *dev)
- {
- 	/*
--- 
-2.47.3
+It would be possible of course to always search the hierarchy if the Root
+Port's ID is found in the Error Source ID register, but I'm inclined not
+to do that unless there's a need.  If anybody knows that this can actually
+occur or feels strongly that it should be handled, please let me know.
 
+Thanks,
+
+Lukas
