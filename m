@@ -1,55 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.246.84.56
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.171.202.116
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793721407;
-	b=R0vV6Ub+ZfjA93zRHQtZ3Jh4sCN/KiDR4SV/LUmxp1Hhlp7sm7kXoJBWPHg6uqQk2BD9
-	 Rjzv58GViNuy15koBlIdI4l9JiLr0SumWqz8265oEyYnnTZ65cTt29nV6V2Ee9dwZ9c+v
-	 DCiwsaB3X0HVJYGiq6GwuTEMAmKgs6HDK4zmncUpUxXsgWe72kxjyscgUbEcofRg66GkQ
-	 DDAljfhIuIfzSgnvPBiTxSPZn897IEUdCT79lKrk01xpbbncpL6mKzYkqOPQiDyPCP6YU
-	 nHbgWDKOm+sNBLW+Vfte5qb6kq+iCyUjCpYdDjalj6n0rYuFQ0GR6nfIYy3+AYVyp5Q==
+	t=1793721418;
+	b=012L1EUbss4fNu05hqhPSv7maTHQppXOl0A89faLTEg3Qq9nEKlHBr29pQ4hMEplQRu3
+	 jeRC4m8nnu8Vs5nfmp0Monbm8ObHTpICs6l3HaxM212zrFA+WjMo/ZlSDg79gVlUJX2BW
+	 7sRDNXzrvuVuX5d3td/gmrZOeYHXrxquNh9cIVjfxFLVpvlLDfEsv+eTKuPeaCwrRZoqD
+	 MPCpAiEzFXTdY2RPHCDp2UDylmaiNRlmjCqH6Irlw27xl1brSs1RL4E6h/oyImZ/ohV3Z
+	 Avp/qPYnlkV3patvyPmeuY04eJ1mzc1QBY8a9qHw7GGH7K8G2CFhsoXNvbE/ErXZtRA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793721407;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793721418;
 	h=DMARC-Filter:Received:Received:Received:DKIM-Signature:From:To:Cc:
 	 Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-Last-TLS-Session-Version;
-	bh=ltVbVz/siAwcbuGvXLwt5fOuNRsRG0B8k83pnxiddeA=;
-	b=nRF6xAyZsJn20kLCik3MNQEzUQxqpL10CtECBBGUMv6CXIvSl1pyqe6rY82PyLhU6GlK
-	 RR5gsxmT6L+C5Eruxgv6DtP3fFbq+jjHnUfunBeK+n/M7LvUYs9BHFIL4VVF/vKdoxMXT
-	 FNyKwYoWyfOQuY3S9Er04R4coX3GvZxzn1CitpZwNdp+m9Q59v5DDljyFTTGljhitK2VT
-	 jE2bC0J+SGIru/mTmJrjWQLJsBXadknmaKq0R/KxlLS+sayX9NLr0k0uQC8OOacXjoERR
-	 d7+v6AIaYEjuPSI2d3TG5SYg3/14AiwqnxJSy1i0RSj7S0oYgZAd9Dnb+AZ0j4+W6cQ==
+	bh=1XKYfdbqsJLam0dCbIidPsphULfVj5+YnOb22JW5pYA=;
+	b=A4KV5FKFgc71hq1oE+QUIS4b/25Dg6HpZv4VZtm4+TWmaFsZAzpXJbbQjWhgknr3Z3PC
+	 NbdT3ny3Iph/yihLZ3uam2TE2ZzEPirWA7hrmKUicY6ZJNpGOxySBG89qdW84X8O0edql
+	 DaIlFyM/SVsljwlV2R3oR+Ots8HyFXnZeLKJJ9jC3I/zQj4uOJG8ZnpcxlUV61YRck4Lt
+	 YWqLvxB6tR/I3ucdXrBEXfscBBsrlhcbYcsg0fJgiooipPBdOAgKwSel46QcKDPWMRrb3
+	 TOHhzuvnvefFwm6S41PdyfpuTRk3m7/051DgpJ3nQOoNXqiQLkpv8t2XI/7d9CXEXTg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=bootlin.com;
 	spf=pass smtp.mailfrom=bootlin.com;
-	dkim=pass header.d=bootlin.com header.i=@bootlin.com header.a=rsa-sha256 header.s=dkim header.b=OkvMT0qd;
-	arc=none smtp.remote-ip=185.246.84.56
-Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
+	dkim=pass header.d=bootlin.com header.i=@bootlin.com header.a=rsa-sha256 header.s=dkim header.b=YLYHK3xR;
+	arc=none smtp.remote-ip=185.171.202.116
+Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA65E606D82F;
-	Tue,  3 Nov 2026 15:56:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CA65E606D82F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E973606A33F;
+	Tue,  3 Nov 2026 15:56:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8E973606A33F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=bootlin.com header.i=@bootlin.com header.a=rsa-sha256 header.s=dkim header.b=OkvMT0qd
+	dkim=pass (2048-bit key, unprotected) header.d=bootlin.com header.i=@bootlin.com header.a=rsa-sha256 header.s=dkim header.b=YLYHK3xR
 Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-02.galae.net (Postfix) with ESMTPS id 82F221A1435;
-	Tue,  3 Nov 2026 15:56:45 +0000 (UTC)
+	by smtpout-04.galae.net (Postfix) with ESMTPS id 0F8C4C49F46;
+	Tue,  3 Nov 2026 15:58:01 +0000 (UTC)
 Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 4AB6B6046C;
-	Tue,  3 Nov 2026 15:56:45 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 5568710329123;
-	Tue,  3 Nov 2026 16:56:34 +0100 (CET)
+	by smtpout-01.galae.net (Postfix) with ESMTPS id 739DA6046C;
+	Tue,  3 Nov 2026 15:56:56 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 71FB0103291E1;
+	Tue,  3 Nov 2026 16:56:43 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1793721402; h=from:subject:date:message-id:to:cc:mime-version:
+	t=1793721409; h=from:subject:date:message-id:to:cc:mime-version:
 	 content-transfer-encoding:in-reply-to:references;
-	bh=ltVbVz/siAwcbuGvXLwt5fOuNRsRG0B8k83pnxiddeA=;
-	b=OkvMT0qduiKcjweUuPaZ1/yRKtf3FYdVwJHRkg4iarDCT0lBJ5rl0nai4k3aT9GKczLVRv
-	WLsMGWHOWnyS6BJ8UwvyjyreA13rfDLUsf0x3IxxbFx4FeD/k4f+SlSUA+EwTpE7cAvxe2
-	+xNIPcULM6dy8u4lecYSSZTKz3wBG7J8q7c3wd0FyKa08GH7Zd32OZGkNQ3McN9eYkiEYu
-	SIH1ylpOYLY+USrXt5Z780GQ3IihfayArizHrTOm/MTKplmVo4Rvu+eLqxizp1UKyeXEBD
-	pp2i2oPIY645APHXj/KE9aPHLCm2H/mFptY99EG2V+NtRbEt3dBpcXLOdtP0jg==
+	bh=1XKYfdbqsJLam0dCbIidPsphULfVj5+YnOb22JW5pYA=;
+	b=YLYHK3xR2gUdfWNDGe+JX7m96EO+GxT7xKXWfRmptd9THeJ+r4xAHL48xd5IfBkb7jDaOE
+	zarNpm5WAq4Y8ZybJKbNvqWaDcz7VmSCrdAY2c4tveV5wTPlNYOTkEDxF7qyUj0NnbBNZf
+	HCwLAkmhamK5NDt0c880yX3oNIKn2VjiSd9IC/hc1ihH3TxkVXQUA2zTC6tbBRZrq6e5v6
+	jIs5z8yK9ZFhnawzLXdYNs7g8DtkQNuZsv8SCDugOQWg3VXWiahveRx6ZNsWyf3DzXSSb4
+	Uey6gvPLMmIVWnMLBsYSLRb81ohoMobFWJoni9jMQv51F+BALGKhVCLW0CI+UA==
 From: Herve Codina <herve.codina@bootlin.com>
 To: Abdurrahman Hussain <abdurrahman@nexthop.ai>,
 	Richard Cheng <icheng@nvidia.com>,
@@ -97,9 +97,9 @@ Cc: driver-core@lists.linux.dev,
 	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
 	Jonathan Cameron <jonathan.cameron@huawei.com>,
 	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: [PATCH v14 04/10] cxl/test: Use device_set_node()
-Date: Tue,  3 Nov 2026 16:55:10 +0100
-Message-ID: <20261103155540.365294-5-herve.codina@bootlin.com>
+Subject: [PATCH v14 05/10] cxl/test: Use fw_devlink_set_device()
+Date: Tue,  3 Nov 2026 16:55:11 +0100
+Message-ID: <20261103155540.365294-6-herve.codina@bootlin.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261103155540.365294-1-herve.codina@bootlin.com>
 References: <20261103155540.365294-1-herve.codina@bootlin.com>
@@ -115,9 +115,10 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Last-TLS-Session-Version: TLSv1.3
 
-The code set directly dev->fwnode.
+The code set directly fwnode.dev field.
 
-Use the dedicated helper to perform this operation.
+Use the dedicated fw_devlink_set_device() helper to perform this
+operation.
 
 Signed-off-by: Herve Codina <herve.codina@bootlin.com>
 Reviewed-by: Dave Jiang <dave.jiang@intel.com>
@@ -130,18 +131,18 @@ Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/tools/testing/cxl/test/cxl.c b/tools/testing/cxl/test/cxl.c
-index 3eb1051b1ee8..63e3d7d18d24 100644
+index 63e3d7d18d24..0d94c4309eee 100644
 --- a/tools/testing/cxl/test/cxl.c
 +++ b/tools/testing/cxl/test/cxl.c
-@@ -1747,7 +1747,7 @@ static void mock_companion(struct acpi_device *adev, struct device *dev)
- {
+@@ -1748,7 +1748,7 @@ static void mock_companion(struct acpi_device *adev, struct device *dev)
  	device_initialize(&adev->dev);
  	fwnode_init(&adev->fwnode, NULL);
--	dev->fwnode = &adev->fwnode;
-+	device_set_node(dev, &adev->fwnode);
- 	adev->fwnode.dev = dev;
+ 	device_set_node(dev, &adev->fwnode);
+-	adev->fwnode.dev = dev;
++	fw_devlink_set_device(&adev->fwnode, dev);
  }
  
+ #ifndef SZ_64G
 -- 
 2.56.0
 
