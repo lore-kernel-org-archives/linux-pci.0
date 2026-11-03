@@ -1,72 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.246.84.56
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793706218;
-	b=lU6gDL22fZIu5A5hfevWuUb4eQOVxtT1qvPUlj78KvOPNoDJawbTrGSIcp63PGbqErQJ
-	 DK1AQRqI7o4vseTAyBS9bxM+5NU5kYEewXh/MvKSC+bd3UxAyvBS7S/TxMNL6tyF7bCCL
-	 kT4AK1RzN+XViHCiEjqMeBQmS5sqzNCYnoD3acMRuBH96fyygnY6qGJ75R4HLvab8hwv1
-	 OjIyNYosw+W+iFgLHI0z2JAyS3fgCVDLfM+pFqB5zOd+S/gf+yedEMAxleSSl05jPbRAk
-	 mow1QHpd/nEGMuF4t11iy+gpgFfGKVYSElO/fvcSyGRGuy9HnORULp6EtItX27VlVpw==
+	t=1793706275;
+	b=2GVwzzLdyOj70EVOrO/e7WnWmdI5b8dybnetqkDsxLIdSH9A5S54OE50DGaiH3QXX6VT
+	 26UdR765Qhg0iV9R73vQDO5EMZVtWguHd4TDQuFpR9+ouXvgTyFVbktYnZy8nxwGX67ir
+	 iKFSKKMxu90tA5Sb9RnTmdQNxTMN1Adblg7kIbViPZFMrWa3YDTlgKOTokYDK+vsnWJ2r
+	 VEPdMlT5KH/BNCd57AleH2cyZ+OWrei6WN54KocGLS/GBTeBpRiyjcPmnw6mwBY13F9cT
+	 ks2VpvfIUgU5S3z0qu9sUaGwukskeAs4XB2oiOid7sCov3bazpY+7DR9LrbQ8KUjGcw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793706218;
-	h=DMARC-Filter:Received:Received:Received:DKIM-Signature:Date:From:To:
-	 Cc:Subject:Message-ID:In-Reply-To:References:Organization:X-Mailer:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:
-	 X-Last-TLS-Session-Version;
-	bh=ke2iiy+5bPFA2Qh7Wbg/X9FR3jHVJljstab3aXxJ3pk=;
-	b=nb7+owhc5OYmNCS8XWqoagERKxiKB/xsnR4X0C4AQQ0oygJdqctlJqldSp0HQDN7gMtc
-	 rDzNE4Tz80f6CwxU9eV468LZylaLpRy+JZJtDYqo2HGHpG/n6qy7wz7wa8fO5muBr4Vup
-	 fLzWlhgTQDpQiAjgo5a8y68dFi5tKs0OxiIpeawvkSv70nyv8y8LqLvEkQMks83KCG2LL
-	 yIC9V+BuoFdAAF3OdT9DYNuvGYuW+TRhOLH1lPff8Cmy0WIhLrxAhOvUqCIC8T6Dl81xw
-	 SpucWLqe80VFVrPclqncUuZlWjnkzy3SxFMPpH+HluYyccNDBHN7BrSJOGqcx64Cpiw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793706275;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=uGvDU/x4O0EaeT3yG1cX8VG0EuxZnyKi3/SSFPAmiBI=;
+	b=ThJ8H8AVc/1fIBFIAfB8HTahi9m4M66B0BP3AeCTAcHhrLaLmSbhYyZ+SmMp9t8Hbg+6
+	 4YZNdD4hIOBEEmYEL3fmLUMKbamERD8dwoMcqLLakOYRT+4CpbGPlzFTyZThb4wmnjRke
+	 EY+rIh862W9dBpOSSnW7iKatHoaiQ4kWsNpU+VP0lhYR7FxMzH+H9e01x52gnnWDy1EeZ
+	 r3og6962jYMi/tblFNRqhvo0kljsHcd3Tb1Le9kBugIvs0eIhMg6eonRPmIhpIXyVzo8Q
+	 RGwyG3pbxk03N5UZwqUIJHqs66Ge5b9sycwO7/ccD0hc6UyUk8M0JxsytaKgCaAoZfA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=bootlin.com;
-	spf=pass smtp.mailfrom=bootlin.com;
-	dkim=pass header.d=bootlin.com header.i=@bootlin.com header.a=rsa-sha256 header.s=dkim header.b=JjYBD9rD;
-	arc=none smtp.remote-ip=185.246.84.56
-Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mYF9IJ9B;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89E05606A33E;
-	Tue,  3 Nov 2026 11:43:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 89E05606A33E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB78E606A324
+	for <linux-pci@vger.kernel.org>; Tue,  3 Nov 2026 11:44:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=bootlin.com header.i=@bootlin.com header.a=rsa-sha256 header.s=dkim header.b=JjYBD9rD
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-02.galae.net (Postfix) with ESMTPS id C93C71A1427;
-	Tue,  3 Nov 2026 11:43:34 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 9BD936046C;
-	Tue,  3 Nov 2026 11:43:34 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 57C35103291E2;
-	Tue,  3 Nov 2026 12:43:25 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1793706209; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=ke2iiy+5bPFA2Qh7Wbg/X9FR3jHVJljstab3aXxJ3pk=;
-	b=JjYBD9rD0vsN/BIRrCSyjvM0/rLF7ga7LoE78CJtvmkvkA3NI9ACU6hCK9+SA+iGlzm2rz
-	uUGYJfvkH5Hd+zYkXRqJU2SmYGldH8R8uq49DCw/022mPwZKa2aMnZiU/qgMx95QMjMmOL
-	47emcUh+0g8jJFFw7wFTMQu2Wz+j46egu1+W01OR8oSRf08if6LL3Yigrgv4hqZtoA6WuG
-	PO7czrEGk5nmRibJMIvFudAIwYMDiVyge3qTAE6lLQd75nGpzV03JAzpDZ7K/fwlJIIomd
-	s5MRy6aa3zOjxWePs4OmSm1Rdi60bdsFLg5gk0MGxyrtU4AaAunTtjeBuzy8Tg==
-Date: Tue, 3 Nov 2026 12:43:23 +0100
-From: Herve Codina <herve.codina@bootlin.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Angel J <iamanaws@httpd.dev>, linux-pci@vger.kernel.org,
- bhelgaas@google.com, robh@kernel.org, lizhi.hou@amd.com,
- andrea.porta@suse.com, florian.fainelli@broadcom.com,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- regressions@lists.linux.dev, linux-rpi-kernel@lists.infradead.org
-Subject: Re: [PATCH v3] PCI: of_property: Omit bus properties without a
- subordinate bus
-Message-ID: <20261103124323.0f8b1071@bootlin.com>
-In-Reply-To: <20260918202045.GA1191948@bhelgaas>
-References: <20260918195540.GA1187209@bhelgaas>
-	<20260918202045.GA1191948@bhelgaas>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mYF9IJ9B
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AEFE1F000C1;
+	Tue,  3 Nov 2026 11:44:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793706274;
+	bh=uGvDU/x4O0EaeT3yG1cX8VG0EuxZnyKi3/SSFPAmiBI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=mYF9IJ9B8QxGpUXJnU1ZEIgPEzTq+ZiB/Aj/wz2gsO2KGQeFZ/PoS1V8y/w6duTZT
+	 NIFXIPCsiuKWw7FSD6uE6ezG1JYCvqMu7JTcaSuHgLaF5QQ4XEpWrTrlQGqFVAlcyK
+	 vc4cQs3N7RuWHYx9IO7pyoiI180GglJZQ6AK2u8/59F97C3A4kxGKlmu+YdM8ni880
+	 eAPNqu/DMQKjhhzt4sfOSjlesv9X4BkHS/OLOkSk56TQbBVH9BP3BgPOIMiXJ2pu/a
+	 YmTG7jDvvbmP8sYkDeesmGzz+FDzAw8rjPfCi/3xRJxCMMaCpe3PteqNvU6ualNt+H
+	 Fz+7w81RvM/Ig==
+Message-ID: <sashiko-outbox-195175@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI/ACPI: validate _HPX type 3 record lengths
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Kang Chen" <k.chen@smail.nju.edu.cn>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261103114112.74527-1-k.chen@smail.nju.edu.cn>
+References: <20261103114112.74527-1-k.chen@smail.nju.edu.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 03 Nov 2026 11:44:34 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -75,55 +58,30 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
 
-Hi Bjorn,
+> program_type3_hpx_record() computes the expected record length as
+> 3 + desc_count * 14 in 32 bits.  A firmware-provided desc_count of
+> 0x80000000 makes this wrap to 3, so the package count check passes for
+> a three-element record and the loop then walks far beyond the elements
+> array, feeding out-of-bounds data into PCI config space writes.  The
+> record is also indexed at fields[1] and fields[2] before its length has
+> been checked.
+>=20
+> Reject records with fewer than three elements, verify that fields[1]
+> and fields[2] are integers, and reject desc_count values for which the
+> expected length would overflow.  Reject revision or descriptor count
+> values that do not fit in 32 bits instead of silently truncating them.
+> Use an unsigned loop index and advance the register pointer explicitly
+> so the walk cannot overflow either.  In acpi_run_hpx(), reject records
+> that do not have at least the two elements needed to read the type and
+> revision.
+>=20
+> Fixes: f873c51a155a ("PCI/ACPI: Implement _HPX Type 3 Setting Record")
+> Signed-off-by: Kang Chen <k.chen@smail.nju.edu.cn>
 
-On Fri, 18 Sep 2026 15:20:45 -0500
-Bjorn Helgaas <helgaas@kernel.org> wrote:
+Sashiko has reviewed this patch and found no issues.
 
-> On Fri, Sep 18, 2026 at 02:55:40PM -0500, Bjorn Helgaas wrote:
-> > Author: Angel J <iamanaws@httpd.dev>
-> > 
-> > PCI: of_property: Omit bus properties without a subordinate bus
-> > 
-> > A bridge (a device with a Type 1 header) may not have a secondary bus
-> > allocated (pdev->subordinate), e.g., if there are no available bus numbers
-> > or the bridge secondary/subordinate bus numbers are not writable.
-> > 
-> > The dynamic OF helpers of_pci_prop_bus_range() and of_pci_prop_intr_map()
-> > dereference pdev->subordinate without checking it.  When
-> > CONFIG_PCI_DYNAMIC_OF_NODES is enabled, this can cause a NULL pointer
-> > dereference and early boot hang.
-> > 
-> > Generate 'bus-range' and 'interrupt-map' properties only when a subordinate
-> > bus exists.  Keep the node and its remaining properties for bridges without
-> > one.
-> > 
-> > The problem was latent since 407d1a51921e ("PCI: Create device tree node
-> > for bridge"), but wasn't reachable until 1f340724419e ("PCI: of: Create
-> > device tree PCI host bridge node"), which appeared in v6.15.  Before
-> > 1f340724419e, of_pci_make_dev_node() returned early because the parent OF
-> > node was missing.
-> > 
-> > Fixes: 407d1a51921e ("PCI: Create device tree node for bridge")
-> > Signed-off-by: Angel J <iamanaws@httpd.dev>
-> > [bhelgaas: move pdev->subordinate test to callees, commit log]
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: stable@vger.kernel.org	# v6.6+
-> > Link: https://patch.msgid.link/20260912043106.10715-1-iamanaws@httpd.dev  
-> 
-> I put this on pci/for-linus, planning to be in v7.3, but I would love
-> to have testing reports to make sure it still works as the v2 does.
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103114112.7452=
+7-1-k.chen@smail.nju.edu.cn?part=3D1
 
-I know it's too late to add a tag but well, just to mention my test somewhere:
-
-It works for the LAN966x use case. Tested with v7.4-rc1.
-
-Tested-by: Herve Codina <herve.codina@bootlin.com>
-
-Best regards,
-Hervé
