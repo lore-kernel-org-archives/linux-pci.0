@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793717309;
-	b=RqBvIweOAsWzmj/RufDI3YuDMQLgBsVZjoIx8RLCOpNHlb6XmSwEQ5/App8T4bo+A4To
-	 SENKZQKRjgxnjGU/WW/1n+XBjJWrnuCnEGY4yFleKdNF2kxwfjTFHfOhVFaTUP4QgVXe5
-	 ghKeR3J8xx0NYwO4iGw3413Biw6cw/pCtXUKmajj/IdSSpIgdl+r1ZYM5xLy7KpNruXjV
-	 QFih97qg/k8mFw4JbXvagTRZDVlUc8aMNqF4Ms3hVoVgxjHl7RaxJZBGAJCvgTaj/oJsH
-	 rCxvazyhHCS4pakfe2io9iU+ek/8x46kRwh07S/hqpNQB5YzcFITUyay2NG5yVZJwsA==
+	t=1793717316;
+	b=3S/f7lXmkrNi+xZiU4JYtkWoh61pK3hQOxuSE1iUKBnQJbomEoHoBYnFtSzl7UqJUj32
+	 sz6hK0MrH/UjBr5AVWRsIHBVYagwx/0Zdb1FDc23yWp3YYK9EJzhuw2vo3nthgwCMV5hp
+	 n0IjKWSi2BW3zxaTttbZB7rUZBqLOaYiNPk5sGx7q89KbVagKssANjaQ0e8bCx2aFhi2c
+	 shOZa5QJSv40p3zo6zOGOeH6KdUHGj2wgW4ic9LrGuY7s8yG5y4xKkNhrfHtDb5wvu91A
+	 eVEAfOHuUqqlc+Q6Z70AICEOyZMOnnBO9N9KuXTRBXrAsPDCj6tkdHTVjdt/WNAgsNg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793717309;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793717316;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=oZNMg0XOhOF82NdxKw8m3fuJZ/CwTFkJ3vKS6G2BA+8=;
-	b=c8l0nn379j/Ze26EqC6Kc8GsaXBkLle8I914+DBx7tA9mCKQVrwq1yXvvpmMgPCESC9o
-	 aZabRYzl6Pg7YFdbENiwGfjXhAkaGcVDLqoIjtetMaL+6qOAfGTMtGXzgFGjK6Yd4bymG
-	 FULh6RFA5mkzlUznoi82jgIa3MMNW1wnXhlVeo/MbZKzH8xDRWmbvJbWi+lVn+rgWDhoT
-	 E8pirJSMr8dhQ+pmY/eMoPyIFLUFCkcICaqXhiizkKQa3lnyKRdMPo+N6/gK4PWNRP4Xe
-	 osHIiJnebnrmfHmkb8VDt8MVU4N4bhPM9H8Hie/ZjT8E+QGgqlx+kR6PAODmCFHeeuQ==
+	bh=8ompXbSfKTmar/iuaOX9JIZ9dqke8qGTDkyO8zZl7i8=;
+	b=W4MzX7ttA0Wg5PdhL5B3SD2+DhSG1pU7hZ5tnFUR32aP9rWpK6HZ4jAkRv6EpR6P3Zsm
+	 gYdilldoOUjbXwoRPnGJyqCBbS7JSk4E6xem8oh5UdJZAtemZP+2p+v+6XScXbSEPX+Ab
+	 MqSU5bZFMI2gpUz1QYJ1JmPk7qelS4w+Ro44B38LbxGrevZ7/AactQRnPqS2MwkAT8E0H
+	 yGdSr0DXNjwS21SxiYUUXwNsmiLKjrmz6xCsUEUBc56w6B2EZDuqKY3eHElopwhfJGevv
+	 3l6Ns9sA9Lc0PcTM+D0OwAoPavkMi/+/4C8oK+nFH1YXO8yZswjSlGZHfVyv8X5K5vg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F8FNSykI;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="T/AbEilE";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44BC4606D80F;
-	Tue,  3 Nov 2026 14:48:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34AA86082BC7;
+	Tue,  3 Nov 2026 14:48:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F8FNSykI
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DCB31F000C1;
-	Tue,  3 Nov 2026 14:48:27 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=T/AbEilE
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5079B1F00919;
+	Tue,  3 Nov 2026 14:48:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793717308;
-	bh=oZNMg0XOhOF82NdxKw8m3fuJZ/CwTFkJ3vKS6G2BA+8=;
+	s=k20260515; t=1793717315;
+	bh=8ompXbSfKTmar/iuaOX9JIZ9dqke8qGTDkyO8zZl7i8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=F8FNSykIjsbIYyaW7wlpeo7Jpn0dKaAreMckL+hzdum+Nm9DhHKifm2w4cRC12Zuf
-	 FMphUuoK+hWmYUdPHNzO6H8bziy31o7b+pN218q2Hp1gBYtkbTvpEUQ+x2kYJUTGbU
-	 amr4aSwQRjTvoLEO8pBwqFwBIAflxH0WBNUru5M44VEqR+WrJF38qQzc5RNwaaY8rK
-	 U/bSSq6pCzSaxPBgrjZXz5mOFbKW0lxZLA/85eQV8QSkyLI5I1g237UjWtVW4FOz4i
-	 7eRL44CQhswG3W572187LfOOth0Bx8K25XUo4u38O9AE4bdxmCYBIrD7N596LhCSKY
-	 60DTPQ7Vz2Maw==
-Message-ID: <sashiko-outbox-195502@kernel.org>
+	b=T/AbEilEPu+993/i5YrlBe/LjW0S5UQfpCu5Iccbvzqd12sRlTgFWsgrSVjw2w1Ji
+	 feLhyt4/KDJ0nKFxA0iTxvtabCMgfYDOWi9/8DtzToqxMu4kRB3J0iRi9xaoOeAiQe
+	 bxCJ50IHJLdREO77IDUbG52cQ8VgBxK7kEVyzcedFS7bENBc+uy9QX+tlio1XnTzH5
+	 DAdRilCYdO6cIMJKRAY4DvOH9JBzziLKOpYIkd+hmD6OOYQHSsSMOdLVBXppMe1DNg
+	 BVkpW9rOFYDyLgabcNoUfGp6p/nPWyKE4kB6moR5RMrDeUbDs9DqAMXxdrGzppmBuD
+	 Pn7dOj5o6ylrg==
+Message-ID: <sashiko-outbox-195505@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 30/38] powerpc/pseries/lparcfg: return h_get_ppp()'s
- status as a long
+Subject: Re: [PATCH RFC 33/38] proc: sysctl: copy to and from userspace
+ without holding the table
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -55,12 +55,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Iwai" <tiwai@suse.de>, linux-ext4@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261102-work-procfs-bugfixes-v1-30-59422ed3e465@kernel.org>
+In-Reply-To: <20261102-work-procfs-bugfixes-v1-33-59422ed3e465@kernel.org>
 References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
- <20261102-work-procfs-bugfixes-v1-30-59422ed3e465@kernel.org>
+ <20261102-work-procfs-bugfixes-v1-33-59422ed3e465@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 14:48:26 +0000
+Date: Tue, 03 Nov 2026 14:48:33 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -70,22 +70,26 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> h_get_ppp() returns the status of the H_GET_PPP hcall as an unsigned
-> int. update_ppp() hands it on as its ssize_t result, and
-> lparcfg_write() turns the hcall statuses it knows into an errno and
-> returns anything else as it is. So when H_GET_PPP fails, say with
-> H_PARAMETER (-4), the status comes back as 4294967292 and a write to
-> /proc/powerpc/lparcfg reports that many bytes written.
+> proc_sys_call_handler() grabs the table, copies in what is written,
+> calls the handler and copies what it produced out to userspace before
+> it lets go of the table again. Unregistering a table waits until nobody
+> uses it anymore. So a reader or writer whose copy faults for as long as
+> it wants, with userfaultfd or a stalled FUSE mapping, keeps
+> unregister_sysctl_table() waiting, and its callers like to hold locks
+> while they do that. addrconf unregisters the ipv6 sysctls of a device
+> with RTNL held, so a stalled read of /proc/sys/net/ipv6/conf/<dev>/mtu
+> holds up every RTNL user until the reader gives up.
 >=20
-> Return the status as the long it is. lparcfg_write() then treats it
-> like the status of H_SET_PPP and an unknown one is at least negative.
-> Before commit 11529396ea31 ("powerpc/pseries: Split processor
-> entitlement retrieval and gathering to helper routines") a failed
-> H_GET_PPP turned into -EIO.
+> Copy in before grabbing the table and copy out after letting go of it,
+> like procfs and kernfs do for their files. The buffer is ours, nothing
+> needs the table for the copies.
 >=20
-> Reported-by: Chris Mason <mason@kernel.org>
-> Fixes: 11529396ea31 ("powerpc/pseries: Split processor entitlement retrie=
-val and gathering to helper routines")
+> That moves the allocation and the copy in before the permission check.
+> A write that can't be copied in, or a request that is too large, now
+> fails with -EFAULT or -ENOMEM where it used to fail with -EPERM.
+>=20
+> Fixes: 330d57fb98a9 ("[PATCH] Fix sysctl unregistration oops (CVE-2005-27=
+09)")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
@@ -93,5 +97,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261102-work-procf=
-s-bugfixes-v1-0-59422ed3e465@kernel.org?part=3D30
+s-bugfixes-v1-0-59422ed3e465@kernel.org?part=3D33
 
