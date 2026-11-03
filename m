@@ -1,56 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=204.191.154.188
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793734783;
-	b=nXCeMpBJXGokpVjfsn4NIh1vyJKfc3OF7RWvph50d3s/2yazpSKnJUGutfsCmNmklmLD
-	 faN02gLXEPCr/qAspFWGS8ll3+Za4T2s8Mgr8/TdqIwfYR6wWH1ZtCENO88rj6Z1vxiqi
-	 ld+XvtS9FNrXQ6FvMG1BtnkR24e57fJ1qRo77ztBoM3/AYYf6toHpmFHY6W8BCWPm+u/f
-	 VxDmHHb2Us/F5h5gw8PEZk2yRNZXkwpzStmc1YDhmO/Ub4ec/HrK5tcHaa3W8q4/Qh0jg
-	 bmrkUGWAqRdED3l/tlKEdjpm1YSkfpXudG/9OzyT9sVZwdMm8W21AEF7bdMK++E+HIA==
+	t=1793735051;
+	b=e0PNFG4wYjk8WKjAPcNSftKWrMYJE2UtAQqR0Kbtx69a5fHIVATE999AxwEOWbrcx2xA
+	 Ir14PMclP0gAnQBjoni0LS7ipaEe9V8eZfElqoCa/SyRbqQ20KEfu5DDWxIgYBRrxm4ww
+	 J6fFiOBk4ttFXw/tFUK+nTDRDpWjSW9j1fYJ2+K/tgm2eXl1ix05MF/FxDzHtuETEbukQ
+	 An+U+oCGZRQaDUtmGIcHXQOZ/Usl5QsMKM1RLCik+65dbPCMegHN44bmJuspyhqSVdRm8
+	 LLvyJ0VqCeWPjATT2hntTbj4KpgCjW35apoNHmOfuJ+9vcPovuRmX9DsCFugEsm51rw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793734783;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=EKx/64x7MpEz2kZ75juRlT0NBym9HYUjgk0HxKA9GFE=;
-	b=NKRUsRhxm/00U0/bbyLFF/V6GRzhVtGHR3/RCqnxP1nmFanltJMD2sIjbrBxAOFSNUjf
-	 awKcxJDXO0AocVpPITp7StxIUQPIfZcc600nrwckQdjyKck/mWsfTRvMi/j6EYw6oF5t+
-	 uW90Y4hSaqJfe9ipxRZf8BvjGTZ8OBI5rHYngohDU2ubJXIs9xCS+ZnEnQywaKYQh+HOG
-	 4H6DGTq09hRhHxiz303O28VSPqQmD3An5Us8xarZqWFNTvxk/Yy68B1aOlmGp3nGXUDnW
-	 LG81Dw8Km9GtOCx3i1thWy7CqbJ8PwnHXUjBM2nw99IaBXTUsbgDitjL1ttZDwgMAqA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793735051;
+	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-SA-Exim-Connect-IP:
+	 X-SA-Exim-Rcpt-To:X-SA-Exim-Mail-From:X-Spam-Checker-Version:
+	 X-Spam-Level:X-Spam-Status:Subject:X-SA-Exim-Version:
+	 X-SA-Exim-Scanned;
+	bh=S0XmN6tshnPoawF93CRRedHhxKwJV0Y18KTknk0yotg=;
+	b=PqfWk3LCYIw+r1mZvPKRLvosDTmYN7n3mgFmOp5QlUlXfLlqjoPxx50YwaNIr6NhIPNd
+	 aEn9YONvhbqfboSkgbRB2TAA4GgwVwpuU4pn/47eEFPZaNaxoyn+CqOf9USqfKj+LE2XY
+	 QB3VRUaA5MR0KScZ2xyzgkp9EOLP8yeg4JOCmHhj9OhMz0hZzcAtU0EX2UQB4YSVXemdb
+	 NAwYDBGBE5PnIZnNizhW6CRDi+NaEAX4330iq8DJ3Xqz4U+nQKTh9R4A6SBjab0aomUki
+	 vdO6Y8UBO/uBPiwA7DBZ1aEd5vg9W4xcJ1tN1AwZ1Vtih1m0tHqaNMioe3ixXdiDaOA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="ow//4osx";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=deltatee.com;
+	spf=pass smtp.mailfrom=deltatee.com;
+	dkim=pass header.d=deltatee.com header.i=@deltatee.com header.a=rsa-sha256 header.s=20200525 header.b=TZLCr9z+;
+	arc=none smtp.remote-ip=204.191.154.188
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90AA6606A31B
-	for <linux-pci@vger.kernel.org>; Tue,  3 Nov 2026 19:39:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0E7C606A324;
+	Tue,  3 Nov 2026 19:44:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A0E7C606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ow//4osx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A3321F000C1;
-	Tue,  3 Nov 2026 19:39:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793734783;
-	bh=EKx/64x7MpEz2kZ75juRlT0NBym9HYUjgk0HxKA9GFE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ow//4osx5+SXLdTSzOigg65WD1f2IN2NY3XjQ6VpqJBpDC7xbCWBdIRsoXni2RMj5
-	 90W01Yst8qvqfMVDwsRXkze5OvPUhAf885J2NXNhaqZoe4dXbJeJz/4IYcPXXu6RrT
-	 HTLoQMWFjvrZ0tzsnIfLPCrQNIKkMYq552VM4krY3k0oBYbKXP8ZkXIt3LO/Ihfolw
-	 2eS4X2wqydr5r3/653d9qtVMiMHXeZ3JKfBZpoO1XRy7bsXEXTH2BQfVnbYiq7zT4Z
-	 v7am+4/l818JrrrD42P24xhigK4wrMUAfJbw9w5FiNGw7wPqsJpESMKQRFSBUX/7tQ
-	 7T93ir2xveqTw==
-Message-ID: <sashiko-outbox-195930@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5] PCI/PME: Resume Catlow Lake Root Ports on PME with
- PME Status clear
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Kuppuswamy Sathyanarayanan" <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261103193136.2410148-1-sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <20261103193136.2410148-1-sathyanarayanan.kuppuswamy@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 19:39:42 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=deltatee.com header.i=@deltatee.com header.a=rsa-sha256 header.s=20200525 header.b=TZLCr9z+
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=S0XmN6tshnPoawF93CRRedHhxKwJV0Y18KTknk0yotg=; b=TZLCr9z+o6WE0S1r+mczSUC5UD
+	1P6F9Wc0r5t92jVV04FGIj28GSQTN48TdN8FdVvIpKiMo3xB+DrZ0JiWdRSjDzXpBm5Xq8FtyP0I7
+	6ATWX40xXi+PhDZHhGZp9BxDzfF7w/5DguE6cZdygOLOsFFdOtBKL17+ss6SCYeEtHXACBiBs34i7
+	jep+3AW1WLbVLeRmAq2Gv+10/bNnjuKWOM31PEjjbW8Mb1s/sTCX3tyNy5nygWpHeJuRgNE70nYV2
+	eD0TgBYUFK3S3oHcMaiQYrcYDHAA78L5+ImR28tTQhxlhppRqinbOiO2Zp29zNZ1rNekPRrj73h2Q
+	7biJ3i9w==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1xOKQT-0000000955z-0bta;
+	Tue, 03 Nov 2026 13:44:09 -0600
+Message-ID: <f0475646-fe86-4f88-a3cc-984db14b4666@deltatee.com>
+Date: Tue, 3 Nov 2026 12:44:05 -0700
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,41 +61,32 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ dmaengine@vger.kernel.org, Vinod Koul <vkoul@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.li@nxp.com>,
+ Kelvin Cao <kelvin.cao@microchip.com>
+References: <20261103183410.GA1124818@bhelgaas>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20261103183410.GA1124818@bhelgaas>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: helgaas@kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org, bhelgaas@google.com, Frank.li@nxp.com, kelvin.cao@microchip.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH 0/2] More switchtec device IDs
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-> Intel Catlow Lake PCH Root Ports do not set PME Status in the Root
-> Status register when they generate a PME for their own hotplug event.
-> The PME interrupt itself is delivered.  PMEs from devices below the Root
-> Port are reported correctly.
->=20
-> PME and hotplug share the same interrupt.  When a hotplug Root Port
-> runtime suspends to D3hot, pciehp disables hotplug interrupts and relies
-> on PME to resume the Port.  On a hot-add the Port signals PME, but Root
-> Status stays clear.  pcie_pme_irq() then returns IRQ_NONE.  pciehp_isr()
-> also returns IRQ_NONE because hotplug interrupts are disabled.  The Port
-> stays in D3hot and the new device is never enumerated.
->=20
-> Mark the affected Root Ports with a new PCI_DEV_FLAGS_PME_UNRELIABLE
-> flag.  If such a Port interrupts while not in D0 and PME Status is
-> clear, pcie_pme_irq() resumes the Port.  pciehp re-enables hotplug
-> interrupts on runtime resume, and pciehp_check_presence() finds the new
-> device.  pciehp itself is unchanged.
->=20
-> The workaround only applies to quirked Ports that are not in D0.  AER,
-> DPC and bandwidth notification also share the interrupt and stay enabled
-> in D3hot.  If one of them fires while a quirked Port is in D3hot, the
-> Port is resumed without need and runtime suspends again later.
->=20
-> This affects all steppings of the Catlow Lake PCH.  A public erratum is
-> not available yet.
->=20
-> Suggested-by: Lukas Wunner <lukas@wunner.de>
-> Link: https://lore.kernel.org/linux-pci/ara-_IPXV_i90if1@wunner.de/
-> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@lin=
-ux.intel.com>
 
-Sashiko has reviewed this patch and found no issues.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103193136.2410=
-148-1-sathyanarayanan.kuppuswamy@linux.intel.com?part=3D1
+On 2026-11-03 11:34, Bjorn Helgaas wrote:
+> Replaced v1 with these patches, thanks!
 
+Thanks! Sorry again for the extra noise.
+
+Logan
