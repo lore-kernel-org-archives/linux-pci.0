@@ -1,55 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.246.84.56
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.171.202.116
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793721391;
-	b=hNoxEqz8vOSXvoq5eiZENjntzPwrUY43ADlCFXjYKnERC1/UTAwfijOv0zU5zHHrfTEw
-	 D1oX0DDbExmHBqPev2i4TY3SKN/exNuveemPO8dfrSQZUPUYy0l+7hSpl6s9R1UV7NkBx
-	 dhOymVwDRSVaJ1/BDi3/Tfqxdcm+XXJXlY0I67mjWONrHgDQT/0f8/nnaONZanbtTWldI
-	 b7yAdCb7DYIBrw6tBB4R7oR/W8BoHw+j2MdmJ1X8dnkUensR9Ry+KvG4ecA+57m1aBISm
-	 GsUeN5YkflK/vkUN3H63GHoNOXDCbRFLfSa8CjvFlvFDjB5pw61PZhoANhuqGqYudgw==
+	t=1793721398;
+	b=wFnK99LfDCf+PqDdpC1D5VS22ARS5ceCEXyA5kgHNyQ8K76RqEnEz2LYzh8DOwIJ5DDV
+	 pSJ+IfSP2tU73yuS9fApd+r5QKzp1aR3GPrDNmpofB+qSVbAqH6LVI2S66za/h6dpZCYS
+	 3F3HJ2+8AAUyBc0awSr/oyq7DQaBsA8BDmsePqYnhLZOACrIPMurxFGbnO1n4NkyyCaEP
+	 mhKETxm+NRKLmyOVcVWcOlG3JL4pQsfLihPI+DQLuT7ZfSPABtEzuPjBhY6Co89MqgBxt
+	 YE5j9RWvjq+u4yQMpwU+kbfzUHDLCo7gDEj1kysEitZr5TkB5ZKxzsafShDZI3Mb+Jg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793721391;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793721398;
 	h=DMARC-Filter:Received:Received:Received:DKIM-Signature:From:To:Cc:
 	 Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-Last-TLS-Session-Version;
-	bh=oB3sTwsAdHOiMdO+oDSxWl+5SJeWmjDX6oqAwCndkkY=;
-	b=JOFgGuJW+XTfGN3ojtuKF6nLtGWm/Sd6ALpRWT8iUCECv4BoAN7uB6CKHq/fysLwhlMo
-	 Eahq8XHapuziiDlrxGQctsZE7WsntCMCaOTrpa6AlQPNg09lKCdifVyXOltJeigJk59KO
-	 wKWNgA82ist0PB2jC/2om8/VPN7nZ0zW52lZ4oJQ1Pr3X82qkIc02K6SPrZyfUMUBp/16
-	 UF8vPtt5Crbv4ru2EFy8MXriQxuZN6/2bECWMUjXwejRrzZyfu12ZoPeUOxXORReNQ4nr
-	 BVU11okQ/l3rrzhkvQ01F9Dqhkg/+iYm67UUpMljNhBn9SNdhmZQN5exDYPG3fJ9WDw==
+	bh=VtbvE/wi+r1db1317acIdezolGI3eGnw0B2xfIHOof4=;
+	b=z0lUF429p7bQ6naO/Gd+msSvJY8Cvp5G2FxSknxwpCYXh8eSeBrPN5xS6I2r6HmElm7p
+	 8fb9dmo3hWkx0Z8e9B2nMeFxZsV4kjUxJ9tcc1bY9VqhcX240vSI2nmGWe2HMHFKsGyY+
+	 EZ+8hEAWV3UJTye1VHbqsVmtYJaJWoX08uuld4fnQElNlm/rY0QiplAH2n6jqVKy4gi+P
+	 t04qlciha/DWQkPflCHohdh7T27EfMYQKmYh70u/ih+flmlssMeQ8NeiyeGCwseSaJFsK
+	 kO6ISsmxvdZBfwZAyvx+W2io5eecoEEIgQN9WH7FUlrKFuwl6SfKoq+hjj94u62Be6g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=bootlin.com;
 	spf=pass smtp.mailfrom=bootlin.com;
-	dkim=pass header.d=bootlin.com header.i=@bootlin.com header.a=rsa-sha256 header.s=dkim header.b=v9tTAZ6c;
-	arc=none smtp.remote-ip=185.246.84.56
-Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
+	dkim=pass header.d=bootlin.com header.i=@bootlin.com header.a=rsa-sha256 header.s=dkim header.b=WYnMHotI;
+	arc=none smtp.remote-ip=185.171.202.116
+Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21B5B606EEA8;
-	Tue,  3 Nov 2026 15:56:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 21B5B606EEA8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC2ED6082BE5;
+	Tue,  3 Nov 2026 15:56:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CC2ED6082BE5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=bootlin.com header.i=@bootlin.com header.a=rsa-sha256 header.s=dkim header.b=v9tTAZ6c
+	dkim=pass (2048-bit key, unprotected) header.d=bootlin.com header.i=@bootlin.com header.a=rsa-sha256 header.s=dkim header.b=WYnMHotI
 Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-02.galae.net (Postfix) with ESMTPS id D7BB51A1435;
-	Tue,  3 Nov 2026 15:56:28 +0000 (UTC)
+	by smtpout-04.galae.net (Postfix) with ESMTPS id 253EEC49F46;
+	Tue,  3 Nov 2026 15:57:41 +0000 (UTC)
 Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id A18A36046C;
-	Tue,  3 Nov 2026 15:56:28 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 50726103291F0;
-	Tue,  3 Nov 2026 16:56:20 +0100 (CET)
+	by smtpout-01.galae.net (Postfix) with ESMTPS id 890D76046C;
+	Tue,  3 Nov 2026 15:56:36 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 739F2103290E8;
+	Tue,  3 Nov 2026 16:56:26 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1793721385; h=from:subject:date:message-id:to:cc:mime-version:
+	t=1793721393; h=from:subject:date:message-id:to:cc:mime-version:
 	 content-transfer-encoding:in-reply-to:references;
-	bh=oB3sTwsAdHOiMdO+oDSxWl+5SJeWmjDX6oqAwCndkkY=;
-	b=v9tTAZ6cF/Weta5VUe9FddxuyK6xcAkKCtUEvpH8OZTR0iQ/8qlpKBLr9S+olLLXfIacbJ
-	OH79fsCT63vk775T9pByp1IcLz+h9jyeX3ERFxUrwagWN66HpBS8YHoqXqEj7QLDDlxcjl
-	pSXVExgHKXUG6reEO0LQiASd95p3XJNnDNkGBVlFgUA0FoPuJYhE9rDmS6KDCYMMpELKPA
-	ZM1ATBkwsNiVrMuZcwveuaBRyTBRD/UbYXPAiQahENH3zj0S+phdtQsJX6BaGdmCOFw2SV
-	aMDpZd+S13+MkR24750usTH4DX2Plnmz+SaW7RD66+JErWokkB1QgX1yzhpiAA==
+	bh=VtbvE/wi+r1db1317acIdezolGI3eGnw0B2xfIHOof4=;
+	b=WYnMHotIpxvyjJRNbVB6F10sQkLBnJohFPlIIBI+z7iRJf0qy22QM3xVJjrfeM8/Aw36bA
+	IOwxyiLoSsGxN+p6YP2Upe+ZCiGlrVAPMZwMnAALyqJxpO63qkUpI3xhwUvu8h5gQ8gdO2
+	c5uIFgr2WjRGxjmGVF1Cf9T2h1EHy1os/DFEW788CjXn5cR/pn3Gy5JJhVnieZuNL7idvJ
+	ADzk6Be/xcZrBxsqaNYKZ9QPUXz5uRW5YV/nwr+AsCvzgzI115r4GTNM2u3C9V+fLO6iDx
+	b9i+PP18FCbT1E79Cd5pCnBtL6vo+nbS4xYH9yojvb0aZKag/YcwUiHgjq/+Bg==
 From: Herve Codina <herve.codina@bootlin.com>
 To: Abdurrahman Hussain <abdurrahman@nexthop.ai>,
 	Richard Cheng <icheng@nvidia.com>,
@@ -95,11 +95,10 @@ Cc: driver-core@lists.linux.dev,
 	Steen Hegelund <steen.hegelund@microchip.com>,
 	Luca Ceresoli <luca.ceresoli@bootlin.com>,
 	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
 	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: [PATCH v14 02/10] drivers: core: Use fw_devlink_set_device()
-Date: Tue,  3 Nov 2026 16:55:08 +0100
-Message-ID: <20261103155540.365294-3-herve.codina@bootlin.com>
+Subject: [PATCH v14 03/10] pinctrl: cs42l43: Use fw_devlink_set_device()
+Date: Tue,  3 Nov 2026 16:55:09 +0100
+Message-ID: <20261103155540.365294-4-herve.codina@bootlin.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261103155540.365294-1-herve.codina@bootlin.com>
 References: <20261103155540.365294-1-herve.codina@bootlin.com>
@@ -122,36 +121,27 @@ operation.
 
 Signed-off-by: Herve Codina <herve.codina@bootlin.com>
 Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
+Reviewed-by: Charles Keepax <ckeepax@opensource.cirrus.com>
+Acked-by: Linus Walleij <linusw@kernel.org>
 Reviewed-by: Richard Cheng <icheng@nvidia.com>
 Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Tested-by: Abdurrahman Hussain <abdurrahman@nexthop.ai>
 ---
- drivers/base/core.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pinctrl/cirrus/pinctrl-cs42l43.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index cbe05197d4a0..09f4e9d7e03e 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -3756,7 +3756,7 @@ int device_add(struct device *dev)
- 	 * device and the driver sync_state callback is called for this device.
- 	 */
- 	if (dev->fwnode && !dev->fwnode->dev) {
--		dev->fwnode->dev = dev;
-+		fw_devlink_set_device(dev->fwnode, dev);
- 		fw_devlink_link_device(dev);
+diff --git a/drivers/pinctrl/cirrus/pinctrl-cs42l43.c b/drivers/pinctrl/cirrus/pinctrl-cs42l43.c
+index 8990fab0446c..563070aba3d8 100644
+--- a/drivers/pinctrl/cirrus/pinctrl-cs42l43.c
++++ b/drivers/pinctrl/cirrus/pinctrl-cs42l43.c
+@@ -576,7 +576,7 @@ static int cs42l43_pin_probe(struct platform_device *pdev)
+ 				return ret;
+ 
+ 			if (!child->dev)
+-				child->dev = priv->dev;
++				fw_devlink_set_device(child, priv->dev);
+ 			fwnode = child;
+ 		}
  	}
- 
-@@ -3931,7 +3931,7 @@ void device_del(struct device *dev)
- 	device_unlock(dev);
- 
- 	if (dev->fwnode && dev->fwnode->dev == dev)
--		dev->fwnode->dev = NULL;
-+		fw_devlink_set_device(dev->fwnode, NULL);
- 
- 	/* Notify clients of device removal.  This call must come
- 	 * before dpm_sysfs_remove().
 -- 
 2.56.0
 
