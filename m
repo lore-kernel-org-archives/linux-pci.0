@@ -1,53 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793704198;
-	b=AtPSeNmbi1xdA+zA22VUTWdbomxfBaH1/l14z/zMO0oLm/u7uoOhZiRuRAwgzpmZibuG
-	 N5eK/8D5+IoXLi47ymmfJvL6zCMiR+O6jl4wkd8EAl5MU5XBJxhRIgaUXMCXddmW3UKdN
-	 XBsv7ur1yI2OwIy0kIUmYmCXsNjWnu8mT8wBDQxSjvHWbm9hePt4v/hXnVCwO5pJgx6Kc
-	 zDYUfz8zjT4ifOu7mF17t7VFFdeOklLlJV5VtyhCrid7mWesxBpUQKHIu3/ZQtenrAEms
-	 ZZc+Jk2nRz27TdxwZOx9gA6EmxmpUaikF9hEFWOF+OpoOSdEL8zaiNSj2o0wgrdU/bg==
+	t=1793704240;
+	b=f6SWmIquBIQdfE8ITGe6mIAxVqcMzXENlUkKEIH8eGY4W94+bEX7X/ZVtG33gMwsSDWt
+	 gcdqGxOrzBdIesoauEBPL3XOvGN7NZtderOkL02GN1eFgnV45/UOw96J0hvt5hZ45RlX5
+	 c+L9INXM7X4H+f+06INpH8ra37K3yCZjfjSSSmIxKEVNcBiY30MKzktqQcW9vxZVDVAwD
+	 4LeKKLyWDyAPjd/I+UkC+B9gZPEwLZxNHcqKSXGo/XbgC94w1fz83KWrNUC85u3tanF6k
+	 k6XTpgs+kLvHxrr6dPEsGJ+SvTFPAC5OZ3kZZxe8te75dYskzUueP2XeRpIFXZYy25A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793704198;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793704240;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=aDcn00x3HCJLq7a35uucPjttQqk01CWu981mURwTv6E=;
-	b=prgQBUgYXZPKBLEzEPpD7V0W4Ykn/0ymJxiwtZL0qvzRC7wNPWMxFR1o1Xrm6VAWb3Ut
-	 YcM63PWHFTgy6xBvrXnbkZ+B7zF2oF20jvrPCdK8vxP7VdGyB/JiVk8kPUN9xLURWftkC
-	 BB9DFakfKt1IyU12pnh+tucTLcJX214jK8X8YPhdTXq/fcoU4x+seHS29heqnwrvPNuIx
-	 jG5MJBbkoQkSp4aymv6M+g8CWhkhfQ3Y4sB+1vSSL8zdcmzSG8urPYMm41z1tg85W7PZ3
-	 BQAx9r2oadcrh/hh/RJf+cZSsh+6NLjiHkGL4QjCyX81I5lUSsq4AGFJ0TJNc3iKBVQ==
+	bh=mEwIOTgOFQ/xOnsi+5g5rx2vlC8yYz8+GdpWkMmVPrc=;
+	b=M5aGdTaqZhRw9zakye1kEDaEsl4OGPkRz4+pQIQ/pQOtpkNutv67o/ipV7fogid4wNjs
+	 EfmFqpTqIu1Gigcd0p24wq6zxy1VBLohzdzDxGE8QkUz6xCaH5hfY+7KVSx9oXn5WIyZ/
+	 +neM+6ugFUPu5URmA2ampF/Co9I+qQqj7+0PnLdBiOarDl8ovtDCPpwuCwGN0j1q63srU
+	 uH5bvANK1ox6vwUgBBPMDP0wUU8beRazR97v8n7vYtdfnyEw2C5Zh1yqRx3DaRdPErGjy
+	 2UdblqfBS6lIQf8GIT706FTUW2xNbOBUwJ/jGBCyUcgf/9ZBPm4wWECgYXf2VLcwFQQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=C00YBWCH;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WEcBbzLs;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E768606B11D;
-	Tue,  3 Nov 2026 11:09:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EED9D606C5A8;
+	Tue,  3 Nov 2026 11:10:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=C00YBWCH
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0D4B1F00A1B;
-	Tue,  3 Nov 2026 11:09:56 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WEcBbzLs
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AC531F00A16;
+	Tue,  3 Nov 2026 11:10:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793704197;
-	bh=aDcn00x3HCJLq7a35uucPjttQqk01CWu981mURwTv6E=;
+	s=k20260515; t=1793704239;
+	bh=mEwIOTgOFQ/xOnsi+5g5rx2vlC8yYz8+GdpWkMmVPrc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=C00YBWCHcRN3w3WEARmmeZzRMqYKfN2blSHKYeslzgwEw0yZLUe21YW8gnYBKtPD9
-	 QUpjz3u5gDeH8iXWogZ/IFeAE5J/MiV26MHSAwj31SHS3M9a83zcqG5ROK5glr0RHX
-	 UbjpqoF1Gi1t+12qvMrSsbB5PelzHX0aKrzBEyoSWI+aWxixhGgQGoczSlb0JKfNAf
-	 iQ36pikIOsR0MwwG26gdRJiuXypquG+8h3+m+kUuPmUt3KJ5GZK0eFb9ELxR8i6k0N
-	 fiZ+HbxVqOsKbiD7n22LiD7dmfdv5sMGey7igMmigL1DjUirmthDTvneAWsgPcVhiq
-	 JGgvCDtb116/g==
-Date: Tue, 3 Nov 2026 12:09:54 +0100
+	b=WEcBbzLs1K5aUIsYHMJ2XMLN+Pda6ra/ttPYxWjgMByjya3S/NJC9neOKsIokWrtn
+	 7+mBFfW9Id1CwxEHDIWKWkKD25SiBpUgwHHEEHoIbKBOiTB+iIEDCXU2KEk2Obo61v
+	 J65p5zfpHdRzqnpPrnAdgJx9iyG3OSbI1KqPOAXVV5ZjxfWFLRhi4cgMKT78mo0TwZ
+	 Ifb3T9M0FYOcpoxx8Swh3BNtxQieQHNNfwJB8pgeF1F6Fl8jLqPlxejJgDrs9fEnsg
+	 1rqsNYOupVnG4N3FlN2zxKQQ2zfQlf8FVe2/CiJzpHX9q7EKjEyJRB15ka9JBbvjhe
+	 ZM3Hopxr7XdZQ==
+Date: Tue, 3 Nov 2026 12:10:37 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Wentao Liang <vulab@iscas.ac.cn>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, stable@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/IOV: drop PF reference if max VF bus computation
- fails
-Message-ID: <20261103-easygoing-imported-pudu-ce7e77@quoll>
-References: <20261103104239.1373721-1-vulab@iscas.ac.cn>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, stable@vger.kernel.org, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: keystone: drop host bridge reference in
+ ks_pcie_quirk()
+Message-ID: <20261103-natural-buzzard-of-ampleness-aaba0f@quoll>
+References: <20261103104239.1373754-1-vulab@iscas.ac.cn>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,26 +61,26 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261103104239.1373721-1-vulab@iscas.ac.cn>
+In-Reply-To: <20261103104239.1373754-1-vulab@iscas.ac.cn>
 
 
 On Tue, 03 Nov 2026 10:42:39 +0000, Wentao Liang wrote:
-> sriov_init() takes a reference on the PF found on the bus and stores it
-> in iov->dev.  The reference is normally released by sriov_release()
-> through sriov_disable().  But if compute_max_vf_buses() fails, the
-> error path clears dev->sriov and frees the iov without dropping that
-> reference, so the PF device refcount is leaked once per failed SR-IOV
-> initialisation.
+> pci_get_host_bridge_device() takes a kobject reference on the host
+> bridge device.  ks_pcie_quirk() returns without releasing it on every
+> path after the lookup, including the AM654 PG1.0 path that only limits
+> the MRRS, so the reference is leaked once for each enabled downstream
+> device below an AM654 root complex.
 > 
-> Release the PF reference on that path before freeing the iov.
+> Move the AM654 handling out of the enclosing conditional and release
+> the reference through a single cleanup label.
 > 
-> Fixes: ea9a8854161d ("PCI: Set SR-IOV NumVFs to zero after enumeration")
+> Fixes: 86f271f22bbb ("PCI: keystone: Add workaround for Errata #i2037 (AM65x SR 1.0)")
 > Cc: stable@vger.kernel.org
 > Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
 > Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
 > ---
->  drivers/pci/iov.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/pci/controller/dwc/pci-keystone.c | 45 +++++++++++++----------
+>  1 file changed, 26 insertions(+), 19 deletions(-)
 > 
 
 Multiple things here:
