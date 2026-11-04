@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793836464;
-	b=lUFia5wKtbVgK+QwP90deOIGabC1lS9XjXjKIyAGNepi1FMmyJCdNdlDkN7Ct0ozECWb
-	 tZxpesHktw75lb6e2/Cvgn94AeOIfFrmUn7SO2ASqx2lPQ6+li4BMwuCtJk5dL96I/goQ
-	 1j0uZwgKezYSEhRG7ISh+47+EmKyt5IR3D2KTZG23FwwpzCYtv1SoJp7OO9CK2xTNC8dt
-	 t+KgUi1v8lp3BgG9Z9KPhagWdWCV8EOI/G4JV7ef2wwzTb3Pstbydmv1sApVIOStQqMRb
-	 KFGkX8wmYMcophHTE6lXGN2JSX1wF3WkhltCt7YG8zQr1xjyVz903mWoZUBWobtvOmg==
+	t=1793836480;
+	b=AMZeVtUjVgEPJ4YmwoTDCbBfg9b/QSvNHFfiEVbI7Wu2iC8B6Pes3QtPWUkOivH1MI7H
+	 4nXpIXyxkKnq3OWr3ivQcZmhEZNjyUazDOq9XS8iC6ZKeJqPCEFWWqmiHuYQMM5WwxWYT
+	 wH94FgRrwW8sr+bzF1IiznKkENMq+mjH8wMIX69TH++fsgriK+yZ2lduBHiDJn3S+6idw
+	 HVjnhJlXwAZqTj3heUwN2YPyGr4WNBAfJs2d6miCBCd3OtC98Lb6I/0dltWwFjySb0ocL
+	 W3CBWZewxIYYKqaj6xL0uWE1D0KDszmn6xu36X8UEr6PPWCDcyrMKmmCS601Mm3+B7Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793836464;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793836480;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=ozQMldu3aYfjyln1LmjpkD9qtr/aMoVVdo4TlXw1p3c=;
-	b=QWyXNQ0O1WhTV8F7x/ERYveS9HkhT79Tdw9o00uJ4EseWLaGGf1sWCfqLzajEBGK5psl
-	 Vp/DVlwOR4kUcPwUczmmHQWQGbpLkVwiN4ktJXfMR/8ZRLEmg5ckLVav2kkmr/CKH/vzw
-	 KDoJgw+2BXGEJw0m9H9xDEfbXS0tiOpdEEQsHtgupM4bwtKZ1hAKp1XdMV+SNpeGmcNtk
-	 YdYYm+mf2smaTPDbSaa4OCLxZtyVOjK9QbD6SeRQqDxhCLjTYLQL9lkcIAwJWtaqPotlL
-	 gvtNMJ5JotG4/q6I4Exml7bnW7BW2MPPFQ6buacD6UNLk93t9j59cqsRU/ATcGZLgyA==
+	bh=pv6mUyKQ8GXEZHlPdkNIYdCRhYjqbkbp+YOqnzLqNFo=;
+	b=bmBTtUfiJ2ghM+4CGOY63xVzU7ZrOA6eSJDzTNo8IuzZFmCONGeSXxoXXq/ZGgZEsHNd
+	 K4gBfuyz4iT2HJevaMcEgpQaNgWezzL1gOvRo3yaxt3Ctm5sGDWTZIeXZkz83al+3f4tK
+	 lcPuHWnOHvle7xl78+3JdjaCoHnLym0Ae8vx7jCJ4nNtMQxe73X/JaMxXX/woJhCy5chE
+	 hr1fxR6OgWgSTgTjcLrnNHjypPvhkuaHuf4AfQnZG/0x0DLFpSugNwW3A7mw45W8GZwix
+	 EgrSQt0CqRgJ4IpcYSvFTDxl8VRuwQWnSxRLgTwBSkjRRqGyQrgU/PgLb9ZoLVFZuyQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="ZVz1wM+/";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bh7P3Gbn;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52780606A328
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 23:54:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28E18606A31B
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 23:54:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZVz1wM+/
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4D061F000C1;
-	Wed,  4 Nov 2026 23:54:23 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bh7P3Gbn
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58D0D1F000C1;
+	Wed,  4 Nov 2026 23:54:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793836463;
-	bh=ozQMldu3aYfjyln1LmjpkD9qtr/aMoVVdo4TlXw1p3c=;
+	s=k20260515; t=1793836479;
+	bh=pv6mUyKQ8GXEZHlPdkNIYdCRhYjqbkbp+YOqnzLqNFo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZVz1wM+/LhNnI78F3QZo/lKFi8KX38S8HkSr+ht+1p4T/PskgaQmkF1TIC3MgKkWC
-	 shgjbu1zkQjHPPNCix7AP5ryC1dgSsD/TFC40s88qLo49zxcbXdDt7dVbuj7z6o0P1
-	 j24gmr6yRl2pLMLC50Hv802Im2iVfQkmFAlDn4PgWeMcDp2tQuUbRStR7TYJRitX+Y
-	 yfEKxp9kzGdLtHWt2tvK0ToJreMzhce/6L9RYmMBV/Z6TUS48rPR+m/2yjdghCXUWc
-	 yQgeir0HE2ZendcpXg9/x/TUayX5Oxvzg+gngnS+BX8pIEl0jcBUj0xI+RO9MDWoLx
-	 OfCAeL4w9GESw==
-Message-ID: <sashiko-outbox-198316@kernel.org>
+	b=bh7P3Gbnn+42qDcr39fO0KP3nOqOFtRV6qrPqxwVLMCMUh/MCJWDuRR+QsyXw428z
+	 fQ4Y/2gwCHTua3ngIgrc/ihAN5leMsrgExgKZADprWFDhCJ2q01DK2iP36+KMsgAYN
+	 mNacZcVgt1yLXQrIycnDv2Zcrp6g6PlhZD59LDp55FI2izg6xn7XKrMHvMpV28lgWW
+	 ZpVIzDOkrAeVcedGXBTQH6PVzWLF9Z7seWKyf4YooOwAgKpZ5ZY2U8/BfyZ1ZWyEyB
+	 D/yhP/PRipX+dODoCTl+h69AXeyppwyAKGyT+3YqBJiMf2NTDvzLo8SSWdVszu/DR3
+	 fMO1Ld9G4Wi5Q==
+Message-ID: <sashiko-outbox-198318@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 2/9] PCI: dw-rockchip: Restore vpcie3v3 regulator
- handle
+Subject: Re: [PATCH v8 5/9] PCI: dw-rockchip: Add helper function for
+ controller mode
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Sebastian Reichel" <sebastian.reichel@collabora.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261105-rockchip-pcie-system-suspend-v8-2-0434b4f373bc@collabora.com>
+In-Reply-To: <20261105-rockchip-pcie-system-suspend-v8-5-0434b4f373bc@collabora.com>
 References: <20261105-rockchip-pcie-system-suspend-v8-0-0434b4f373bc@collabora.com>
- <20261105-rockchip-pcie-system-suspend-v8-2-0434b4f373bc@collabora.com>
+ <20261105-rockchip-pcie-system-suspend-v8-5-0434b4f373bc@collabora.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 23:54:23 +0000
+Date: Wed, 04 Nov 2026 23:54:39 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,19 +61,81 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> This reverts commit c930b10f17c0 ("PCI: dw-rockchip: Simplify regulator
-> setup with devm_regulator_get_enable_optional()"), which nicely cleaned
-> up the code.
->=20
-> The vpcie3v3 regulator handle is needed to disable the regulator during
-> system suspend (to be added in its own patch).
->=20
-> Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
-> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] PCI: dw-rockchip: missed rockchip_pcie_set_controller_mode() conver=
+sion
+--
 
-Sashiko has reviewed this patch and found no issues.
+commit 649877b47ab85eb175cd9bd067a5196956ea8d7a
+Author: Sebastian Reichel <sebastian.reichel@collabora.com>
+
+PCI: dw-rockchip: Add helper function for controller mode
+
+This commit introduces rockchip_pcie_set_controller_mode() to deduplicate
+setting the controller mode in PCIE_CLIENT_GENERAL_CON across RC and EP
+configuration functions.
+
+> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/=
+controller/dwc/pcie-dw-rockchip.c
+> index 92154a790ac09..c6a4649dae2e8 100644
+> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> @@ -695,6 +695,11 @@ static void rockchip_pcie_enable_enhanced_ltssm_cont=
+rol_mode(struct rockchip_pci
+>  	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_CTRL);
+>  }
+> =20
+> +static void rockchip_pcie_set_controller_mode(struct rockchip_pcie *rock=
+chip, u32 mode)
+> +{
+> +	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_SET_MODE(mode), PCIE_CLI=
+ENT_GENERAL_CON);
+> +}
+> +
+>  static int rockchip_pcie_configure_rc(struct platform_device *pdev,
+>  				      struct rockchip_pcie *rockchip)
+>  {
+> @@ -719,10 +724,7 @@ static int rockchip_pcie_configure_rc(struct platfor=
+m_device *pdev,
+>  	}
+> =20
+>  	rockchip_pcie_enable_enhanced_ltssm_control_mode(rockchip, false);
+> -
+> -	rockchip_pcie_writel_apb(rockchip,
+> -				 PCIE_CLIENT_SET_MODE(PCIE_CLIENT_MODE_RC),
+> -				 PCIE_CLIENT_GENERAL_CON);
+> +	rockchip_pcie_set_controller_mode(rockchip, PCIE_CLIENT_MODE_RC);
+> =20
+>  	irq =3D of_irq_get_byname(dev->of_node, "legacy");
+>  	if (irq < 0)
+> @@ -776,10 +778,7 @@ static int rockchip_pcie_configure_ep(struct platfor=
+m_device *pdev,
+>  	}
+> =20
+>  	rockchip_pcie_enable_enhanced_ltssm_control_mode(rockchip, true);
+> -
+> -	rockchip_pcie_writel_apb(rockchip,
+> -				 PCIE_CLIENT_SET_MODE(PCIE_CLIENT_MODE_EP),
+> -				 PCIE_CLIENT_GENERAL_CON);
+> +	rockchip_pcie_set_controller_mode(rockchip, PCIE_CLIENT_MODE_EP);
+
+[Severity: Low]
+This isn't a bug, but should rockchip_pcie_rc_reset_root_port() in
+drivers/pci/controller/dwc/pcie-dw-rockchip.c also be updated to use
+rockchip_pcie_set_controller_mode()?
+
+drivers/pci/controller/dwc/pcie-dw-rockchip.c:rockchip_pcie_rc_reset_root_p=
+ort() {
+	...
+	rockchip_pcie_enable_enhanced_ltssm_control_mode(rockchip, false);
+
+	rockchip_pcie_writel_apb(rockchip,
+				 PCIE_CLIENT_SET_MODE(PCIE_CLIENT_MODE_RC),
+				 PCIE_CLIENT_GENERAL_CON);
+	...
+}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105-rockchip-p=
-cie-system-suspend-v8-0-0434b4f373bc@collabora.com?part=3D2
-
+cie-system-suspend-v8-0-0434b4f373bc@collabora.com?part=3D5
