@@ -1,47 +1,110 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793822300;
-	b=IlIXiiXQJ3lBEOi+J6/f4cyQvpbVI73T5mgXRttLk2IckRBWVlfFL3wuT1Fpl7wI59Q+
-	 vSsvHuup9t6lw8LPANBJWorYMMeYlosN/swBuYgrH4+XN2CyoTgu+/2scMWubOW+NXDsQ
-	 qCWM+lRTC68UmKtHyoll0MKy/STR0Fm8aq4Xk/GjNXLZ4Sesi0qS2uW9RkRk/VOxXIjew
-	 EASXzP4qzbc2yzjLsEm9gXWrGkSyMUjOeBw3xiq+l4tnJCL7Avl65sfd0Nn77vjO911Hf
-	 Wn3Qgx5KPF+6dr4b6y774I6BzT7eVhPNAf5esAI0Ke9oCDDIMV5ayddvX9RTJHgVWxw==
+	t=1793822290;
+	b=2ZmaxJqqktbO6Fuitg1VElCmDf+hW48n5ibKk6cH40gmM09L+sxJ/Cgs4V/MCdlje5XM
+	 5N7hzwYvcGMkpXu3PDrTIOuRlGn0e9XxkiMpfo9oSoJrc7EKmHSD/6YisIjNFZxnRwhF2
+	 uHxmGDG2UD/bdeqs8KyJ69wGe1qZ5cMgUOMjJcl2bjkFmWxlKSJNKP/aMY9ojmsWl2uye
+	 fAJKTDlAM0mYy4KW/V0dFQlpve4WLQtEh+biwnCZhQ4z+i23XhTaqgaqmt6dOJJ3wBL+Z
+	 YygRfRRckvE9RBvx2QtZtZVOb8PJcnCjICLbwn9eGRH2uXKrH5lHn80W7QMKyeN91eQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793822300;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=57vfrI08RU+BjdVlt6HNqo3GZbH4J3dGXlSjxWrO5dY=;
-	b=MSmPk7/u6aipW/p1vOBJJzk72PZX5EMQ2BAXvG3RoIepxyziU5ktzUvNanGvRek5WiVT
-	 ksC5ce1baom69GOEQxuszazoG9UtaRLI2eIGNlHHHKjdw+uoupnn0aLH7hGZr2Z3zwFSw
-	 AW8xyK83uiWylKRspGaq09G1CF0WBlKCk0xJPCQNodB8nLC1IyurGSCtHBk3FpAZzCY0N
-	 TQ5haDyOGlU884MVHJEF+cT4OQ+J169tgHU5Hb5x21AeMX8YCaroqlbsy8Ie3+tP3sC61
-	 pA6hHMZc55iPi4Sze0tT40djFd2Nq1jOdr0w7h9uptqZp7aVHSarg/5ZjOTt5NzmGFw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793822290;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
+	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
+	bh=8JYviDqoWsEGN3uNb5Mh66eaw6snQ2TUUnHcmJoMJ80=;
+	b=CZuBdvvgAi3MeHoqt48NYUkGecb0mI4xpSqB+y+H+/ycklqT7A0+25qjDTmst6C6C5+q
+	 7Sdt1V9iwedQmXMAn8Rt5KzOQulK4elcNRG71whQcaU13DdtFrtygZyGgXdb03OCKvnv6
+	 eNNK91wt03Hwzh15BGx747z+QgJuWk2/ydkbT9Ye0QIkzNuhvvsXR82pA1CFJ+sqJUxLa
+	 os8Wz0N3iyJjHDaE/8dz6NtwDTtwH/PVyFEoq2CZEdK6h7a0oEAZnFpjLQVcz2Hxhl7/b
+	 uy1y6/7zD5xUNSWTMMrXNwsTaXn+/oCKRCjTzjK3XdxTbaZg3obTMDXbSwKkGuYxjVw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KhCF2oMx;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=omYmnILU;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 603D06079740;
-	Wed,  4 Nov 2026 19:58:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AF2C606EE99;
+	Wed,  4 Nov 2026 19:58:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KhCF2oMx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B98F1F000C1;
-	Wed,  4 Nov 2026 19:58:15 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=omYmnILU
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCB771F00A1A;
+	Wed,  4 Nov 2026 19:57:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793822300;
-	bh=57vfrI08RU+BjdVlt6HNqo3GZbH4J3dGXlSjxWrO5dY=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=KhCF2oMxoz87W+u3A5bPcohuwPziaHxHMdwPT9EHqJ1WeQ7Nwxoh++Ajbwa4VXkEf
-	 rftxIrr3F6NQKo+MYYg9bZOqAibrI8VBkMa1zVx7apyjbD/7FuNCXleWStsd5LAHiD
-	 5Ywpwm3UmY0EFN7vQkoIBuRcs/4XsyOuhJHfMtU9URbH+uwKPjzJQgTzjcLwxad9Z/
-	 px0i4V7Rg89xGist/Lg0p7U1XDvkFOGnCDelizxvwsQOoYOc1r3C6zDthUr6clx+o1
-	 4yrL1gdCU18Tg+KbxHhpIoEhrTYkbcsYS+RSxnWvDG46Uv2cJ7kkkBtJTQ0wjYEN7/
-	 nUe0GMemw82lQ==
-Message-ID: <de273977-8e8d-410e-8424-e99a0b4080b7@kernel.org>
-Date: Wed, 4 Nov 2026 21:58:13 +0200
+	s=k20260515; t=1793822288;
+	bh=8JYviDqoWsEGN3uNb5Mh66eaw6snQ2TUUnHcmJoMJ80=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=omYmnILU6n/a/8ypDuatFcm5Yn1YdJM3CRKKuli7fcBySnvTgN50xiis4mVllM49v
+	 PV+Quk0y9VPAUT7onGY2p/nLF2xkGIDIWXqi4tkrhVP7JJganO4BAn8bDHMRztyoBl
+	 kDuAQDvNJ8Uuc3JHKiaYHNXgDWLaFbsRCKaJ0zpPBvI9qjf+zzVVphC8QUnWa1gAS9
+	 TqNqVumOE5u8pqbbZNrZhXFAdBkCmBN9rMMWYN4XW4rPv+P/EOoobKcvq4QxkXRKVJ
+	 s5UQbq8xS22dtefS2Q7ckkJlMa6rIUtShtzwuWqlg+ImTJMyCWJ++E2LN9ezNnICps
+	 7WSbKOm7NJ/JQ==
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Jann Horn <jannh@google.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Chris Mason <mason@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Christoph Hellwig <hch@lst.de>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Joel Granados <joel.granados@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Jan Kara <jack@suse.com>,
+	linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev,
+	platform-driver-x86@vger.kernel.org,
+	coreteam@netfilter.org,
+	kexec@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	ibm-acpi-devel@lists.sourceforge.net,
+	jfs-discussion@lists.sourceforge.net,
+	linux-alpha@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-cifs@vger.kernel.org,
+	linux-fbdev@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-sh@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	samba-technical@lists.samba.org,
+	sparclinux@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-doc@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net,
+	Takashi Iwai <tiwai@suse.de>,
+	linux-input@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-modules@vger.kernel.org,
+	linux-debuggers@vger.kernel.org,
+	"Christian Brauner (Amutable)" <brauner@kernel.org>,
+	Chuck Lever <cel@kernel.org>
+Subject: [PATCH RESEND v2 01/13] atm: let procfs copy out reads of the device files
+Date: Wed,  4 Nov 2026 20:57:54 +0100
+Message-ID: <20261104-work-procfs-net-v2-1-221e2437fed1@kernel.org>
+In-Reply-To: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
+References: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -51,86 +114,59 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: iproc-msi: Bound events handled per IRQ
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
- Scott Branden <sbranden@broadcom.com>,
- Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-References: <20261016182124.GA1884550@bhelgaas>
- <309f6f13-b010-4818-936d-4b7b4b389239@kernel.org>
- <179338093960.40615.2809022600772649565.b4-reply@b4>
-Content-Language: en-US
-From: Eugen Hristev <ehristev@kernel.org>
-In-Reply-To: <179338093960.40615.2809022600772649565.b4-reply@b4>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: b4 0.17-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1517; i=brauner@kernel.org; h=from:subject:message-id; bh=gPjf1XFsI8l/uiq7gtBYaOS5PIZm1WCyT/xvmcgXYrk=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97lO2Xbpnsl62nNauWplf/xdYPBNLEnswIafyCd/XX xHhEwqnd5SyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEwkTZuR4eHSqRGfps/7dvOV 691dX8+Wbls1oSJgtmlB5Vsb0VvvEssY/hllnXhlJifSrl2270GVY8Ldju5SgRBVQfPATZXl+2b r8AIA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-On 10/30/26 19:22, Manivannan Sadhasivam wrote:
-> On 2026-10-16 23:10 +0300, Eugen Hristev wrote:
->> On 10/16/26 21:21, Bjorn Helgaas wrote:
->>> On Fri, Oct 16, 2026 at 03:18:53PM +0300, Eugen Hristev wrote:
->>>> Limit each iProc MSI parent IRQ to 16 event-queue entries.
->>>>
->>>> A continuously fed queue could otherwise keep the chained handler running
->>>> and starve other work. The budget still drains pending events and lets the
->>>> next parent interrupt continue processing, improving fairness and bounding
->>>> interrupt-handler latency.
->>>>
->>>> Without this starvation avoidance, one CPU can stall indefinitely
->>>> in the loop and not serve other interrupts, timers, etc.
->>>>
->>>> While testing it with an Ethernet NIC,  when too many MSI interrupts
->>>> come in, CPU might get starved:
->>>>
->>>> Connecting to host 192.168.30.1, port 5201
->>>> [  5] local 192.168.30.2 port 52586 connected to 192.168.30.1 port 5201
->>>> [ ID] Interval           Transfer     Bitrate         Retr  Cwnd
->>>> [  5]   0.00-1.00   sec   240 MBytes  2.01 Gbits/sec    2    334 KBytes
->>>> [  5]   1.00-2.00   sec  63.2 MBytes   531 Mbits/sec    1   1.41 KBytes
->>>> [  5]   2.00-3.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->>>> [  5]   3.00-4.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->>>> [  5]   4.00-5.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->>>> [  5]   5.00-6.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->>>> [  5]   6.00-7.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->>>> [  5]   7.00-8.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->>>> [  5]   8.00-9.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->>>> [  177.568497] rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
->>>> [  177.568913] rcu:     0-...!: (1 GPs behind) idle=28ac/1/0x4000000000000002 softirq=28922/28930 fqs=1
->>>> [  177.569457] rcu:     (detected by 1, t=5256 jiffies, g=21629, q=819 ncpus=4)
->>>> [  177.569870] Sending NMI from CPU 1 to CPUs 0:
->>>>
->>>> With this bounded approach, IRQ handler will complete and continue
->>>> to serve MSI events on the next handler invocation.
->>>
->>> Is there something unique about iproc that makes this an issue, or do
->>> we need to worry about this in every MSI interrupt handler?
->>>
->> This is not specific to iPROC, so in theory it can happen to any other
->> MSI interrupt handler. If the handler has no way to break the loop, and
->> the condition that generates the MSI IRQ happens continuously, the same
->> situation will happen.
-> 
->> Some other drivers e.g. take the IRQ state into a local variable, do the
->> task, clear it up, and don't care to read it again, like the iPROC is
->> doing, unless another MSI fires.
->>
-> 
-> You should rework the iproc handler to read head and tail outside of the loop
-> and handle the recorded events inside the loop. This will avoid using any
-> arbitrary max event limit and allow other handlers to also run.
+Implement ->proc_read_buf() so procfs copies what is read from
+/proc/net/atm/<dev> to userspace after it unpinned the entry. The
+drivers' ->proc_read() keep filling their page.
 
-Hi Mani,
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+---
+ net/atm/proc.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-Thanks for the feedback, I changed it as you said, sent a v2.
+diff --git a/net/atm/proc.c b/net/atm/proc.c
+index ca0fc6b90998..cea930b4b840 100644
+--- a/net/atm/proc.c
++++ b/net/atm/proc.c
+@@ -30,11 +30,11 @@
+ #include "resources.h"
+ #include "common.h" /* atm_proc_init prototype */
+ 
+-static ssize_t proc_dev_atm_read(struct file *file, char __user *buf,
++static ssize_t proc_dev_atm_read(struct file *file, char *buf,
+ 				 size_t count, loff_t *pos);
+ 
+ static const struct proc_ops atm_dev_proc_ops = {
+-	.proc_read	= proc_dev_atm_read,
++	.proc_read_buf	= proc_dev_atm_read,
+ 	.proc_lseek	= noop_llseek,
+ };
+ 
+@@ -246,7 +246,7 @@ static const struct seq_operations vcc_seq_ops = {
+ 	.show	= vcc_seq_show,
+ };
+ 
+-static ssize_t proc_dev_atm_read(struct file *file, char __user *buf,
++static ssize_t proc_dev_atm_read(struct file *file, char *buf,
+ 				 size_t count, loff_t *pos)
+ {
+ 	struct atm_dev *dev;
+@@ -267,8 +267,7 @@ static ssize_t proc_dev_atm_read(struct file *file, char __user *buf,
+ 			length = -EINVAL;
+ 	}
+ 	if (length >= 0) {
+-		if (copy_to_user(buf, (char *)page, length))
+-			length = -EFAULT;
++		memcpy(buf, (char *)page, length);
+ 		(*pos)++;
+ 	}
+ 	free_page(page);
 
-Eugen>
-> - Mani
-> 
+-- 
+2.53.0
 
