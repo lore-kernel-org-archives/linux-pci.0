@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793809043;
-	b=zkWXsAv5gETrWPaWWyqO3uRmZxc4cw4md2b7gMJqQcAHw+P9m3iaaA1sxgoF+mh/HddY
-	 avmeR0sXq8L1r4/+dt7JotWdDB91FQXBiHF83xARlDR4DNIoHkid9XgdQ2eUC2d8rQLBy
-	 6anIyK+QiQvTEoiBKv1W5AcohcJiO2itO9/JeL0NsM0fuR+xLItu1bamNLaP/pgDvE//N
-	 1b7znhkmC4zOSs1PLxs4nXw8eLXSSjPrEU2YjB8BSB44kHSKV9Xu7eCGsqY4MyCNn1hrA
-	 XVoT1Kx4RNWeMeILNG6nwMf06OJ2ikNdlpc6sPh/iwc3oIahHmdczaOzoEtA/ceLDrQ==
+	t=1793809052;
+	b=DK1P6h6wu0ZMEt+8d8IH6jBMyDgIiIOrH7Fi0alVtIQh8LSLDidIRrCnJ7/eVVfeJwDt
+	 je0XEzT9W+3hOHRQpeU8d8lfgjE3oRk6H2xluKac31cEkStP1akzxVM9oePu3BJfgXA4p
+	 blKAutGtPRwDpvqUt//Qqp1nY4MeXCAFnCICHXpGxSeIbcc6+Ufu5ngkw1hPbLlJ7zFlU
+	 AsUHsKDlX7G54AcTK9+zE1Mn0U0cTfG3CIK0L3eApQbIu+K2o7hnEg9aVa9Rr0JVlLgbl
+	 kw3iETeJa4gsPdAepDN841JQ1Xyh6M3Bxu8dsBOdD+QH/H3BuZzCW420rRW152JVR4g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793809043;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793809052;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=4rzUBJL6PXaRCv36yl9YaPhsjxgZ5+9Zl3Ygdn8k8k4=;
-	b=yGv6LfRFbLQZfniChrl+Nro8AK01ggk6zMHdgMajbXvSHrzAR7qLNj0lyXbOVufbJS6t
-	 BQ6KCY1k0MZHnJcEOSQzWMZRcXt7Ut4R6/R0x0ymevYXjP+XuOOnWGrgNKqcuVTBWt9ay
-	 To8MdWhaGUOrvswseFWFZDYQuQkhHw5/QwlPe5OdfH6wZZ/VnP0KlwU5tceqokAeFrsUN
-	 Mk4avLVHtC6V5gjN9KlgAu9Z8el9IKTT49FZgS7hGhIlRgADOsWXP8Tz2Hl0sM3VjIjSp
-	 K4qR/Omv/2CWZmKMxVezgRgOdivhjIi+3uZZbRcPO1/f7xK4ahfVHoX2RiafxQrwGYg==
+	bh=P/AkNQwfphMcdFB+D7s/aBW66xKWMUQ8Q7dzQy7UJpE=;
+	b=m3J4oV+EN1YE3bwMweE9grfJTnx5ZoV/EdjVRB9tCC77Yd3jbzJthgS5zKvKnPzd7Ass
+	 w8f3fRpA+qy076zhc2uYFtiz2jxcwcoJ1pEOaJX8n6q2Lde9XaYk9zAJq4XZF04CD8otR
+	 OjIrKVGWAudEP0A3TC/jHR1xQ712nSM9QqlD3X91nNrZ836NWAiIsw4addubxX9SIXKhJ
+	 fL9xRZG5QkonuhEZFXz4VnYqNjH/xbEqvoim1lCCWAtxdXItGub+ZyGsDz1xIVOxxLSDW
+	 zTt4tsrobu5IhjOS3B7Et1TPMuNUBbu9jXlZ9/gpb4GFzHx+fPbaAoDxtKT8RmD5/hw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="KDhS5/q5";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O0znDxqh;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA4C6606EE81;
-	Wed,  4 Nov 2026 16:17:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EF09606A33B;
+	Wed,  4 Nov 2026 16:17:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KDhS5/q5
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 637D71F00A02;
-	Wed,  4 Nov 2026 16:17:13 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O0znDxqh
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08CC81F00A17;
+	Wed,  4 Nov 2026 16:17:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793809042;
-	bh=4rzUBJL6PXaRCv36yl9YaPhsjxgZ5+9Zl3Ygdn8k8k4=;
+	s=k20260515; t=1793809052;
+	bh=P/AkNQwfphMcdFB+D7s/aBW66xKWMUQ8Q7dzQy7UJpE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=KDhS5/q5x835aCyV/6T100kf/ekvWjZ7bvn3PAGajQ2aZnaVNM3eSP008KZqVF64F
-	 HOpfwstGOE+8mtolfDL2onDXvp5/M1C+5plvUQhPok4nQPnL7HstZt6osLFiJJVmfz
-	 sqNRcCEIQMKl05vekrRd9dT0o91oBJ/MY4xsrvEmdRZCa/vyCaqCPcG3wTEcw7LQXY
-	 re96evTrihl/N9Qg8sPVD43kL4cNPfRgFBntVKQOBILga7i5okac2y0Rl0tLDnxQBo
-	 6Q+31hO9vHKxZz4IH0yMjr4epL2EWliHGvMB+Qveif+g0/57GGXEgAE/z+XESFe//4
-	 xin8p4JMwvQiw==
+	b=O0znDxqhlUZW1AMXKOYcAnB2EfAAEqvL1OkxoPqAKDXudVi06Vx6a0L7OQg41dKKX
+	 LN368MIol11IXpbt6wd0CJlcGZQsSBpxCCuQoRQ2nDsauTjKpPPQsEQCRkv3BsnmUd
+	 1s6Zup2fGZCzcUtgUYMUBnSTpGnbAz669dBwAwrvQnCGIc8UU7w0EwhwdExs+PVavR
+	 oWM/517qNBq/wBKBipsgrta6dPzaoTgF7ASNrWxBDTyxGyswGCJRUCv7zwRDX6Z8lz
+	 OJCDa29MRSQtAGaUo5cSqavNCagmTZ2eVpsle6lXl57i8Lq0lU194azhHTg/LzXWUu
+	 wU1nz8vOCmk1w==
 From: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
 To: iommu@lists.linux.dev
 Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
@@ -71,9 +71,9 @@ Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-tegra@vger.kernel.org
-Subject: [PATCH v8 03/15] virt: coco: tsm: Complete PCI registration before publishing the device
-Date: Wed,  4 Nov 2026 21:46:20 +0530
-Message-ID: <20261104161632.3547423-4-aneesh.kumar@kernel.org>
+Subject: [PATCH v8 04/15] virt: coco: tsm: Require PCI operations when registering a TSM
+Date: Wed,  4 Nov 2026 21:46:21 +0530
+Message-ID: <20261104161632.3547423-5-aneesh.kumar@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
 References: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
@@ -88,100 +88,56 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-tsm_register() calls device_add() before initializing and validating the
-PCI operations. This makes the new TSM discoverable through the class
-lookup while PCI registration can still fail. This ordering was introduced
-by commit 3225f52cde56 ("PCI/TSM: Establish Secure Sessions and Link
-Encryption").
+Reject a NULL pci_ops argument in tsm_register(). Every registered TSM
+then has PCI operations, so registration no longer needs separate paths
+for TSMs without them.
 
-An existing link TSM can keep the PCI connect attribute visible during
-registration of another TSM. A concurrent write naming the new TSM can
-therefore reach it through:
-
-  connect_store()
-    find_tsm_dev()
-      class_find_device()
-    is_link_tsm()
-    pci_tsm_connect()
-
-If the new backend supplies both link and device security operations,
-pci_tsm_register() rejects it before taking pci_tsm_rwsem. The registration
-thread then follows:
-
-  tsm_register()
-    tsm_register_pci()
-      pci_tsm_register() -> -EINVAL
-      tsm_dev->pci_ops = NULL
-    device_del()
-    put_tsm_dev() [cleanup guard]
-
-If connect has already attached a PCI context, its temporary device
-reference does not protect the stored tsm_dev pointer after the call
-returns. Registration cleanup can then free a TSM still referenced by
-that context. The original tsm_register_pci_or_reset() error path also
-had this problem: device_unregister() removed the class device and dropped
-its reference without tearing down an attached PCI context.
-
-Commit 37a73b0448ad ("tsm: Remove the device from lookup before PCI
-teardown") subsequently added the unlocked pci_ops reset shown above.
-That reset can also race with the connect path's accesses to pci_ops.
-
-Complete PCI registration before device_add() publishes the class device.
-On PCI registration failure, the TSM remains undiscoverable. If
-device_add() fails instead, unregister the PCI operations to roll back
-the counters and PCI sysfs visibility before releasing the device.
-
-With pci_ops initialized before device_add(), the class PCI attributes
-are created with the correct visibility, so remove the subsequent sysfs
-group update. Keep the PCI change notification after successful device
-publication.
-
-Fixes: 3225f52cde56 ("PCI/TSM: Establish Secure Sessions and Link Encryption")
 Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
 ---
- drivers/virt/coco/tsm-core.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+ drivers/virt/coco/tsm-core.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/virt/coco/tsm-core.c b/drivers/virt/coco/tsm-core.c
-index f79135986102..e370806d8436 100644
+index e370806d8436..e7807dc94807 100644
 --- a/drivers/virt/coco/tsm-core.c
 +++ b/drivers/virt/coco/tsm-core.c
-@@ -71,9 +71,6 @@ static int tsm_register_pci(struct tsm_dev *tsm_dev, struct pci_tsm_ops *pci_ops
- 			"PCI/TSM registration failure: %d\n", rc);
- 		return rc;
- 	}
+@@ -60,9 +60,6 @@ static int tsm_register_pci(struct tsm_dev *tsm_dev, struct pci_tsm_ops *pci_ops
+ {
+ 	int rc;
+ 
+-	if (!pci_ops)
+-		return 0;
 -
--	/* Notify TSM userspace that PCI/TSM operations are now possible */
--	kobject_uevent(&tsm_dev->dev.kobj, KOBJ_CHANGE);
- 	return 0;
- }
- 
-@@ -91,15 +88,22 @@ struct tsm_dev *tsm_register(struct device *parent, struct pci_tsm_ops *pci_ops)
- 	if (rc)
- 		return ERR_PTR(rc);
- 
--	rc = device_add(dev);
-+	/* Complete PCI registration before exposing the TSM to class lookup. */
-+	rc = tsm_register_pci(tsm_dev, pci_ops);
- 	if (rc)
- 		return ERR_PTR(rc);
- 
--	rc = tsm_register_pci(tsm_dev, pci_ops);
-+	rc = device_add(dev);
+ 	tsm_dev->pci_ops = pci_ops;
+ 	rc = pci_tsm_register(tsm_dev);
  	if (rc) {
--		device_del(dev);
-+		if (pci_ops)
-+			pci_tsm_unregister(tsm_dev);
+@@ -80,6 +77,9 @@ struct tsm_dev *tsm_register(struct device *parent, struct pci_tsm_ops *pci_ops)
+ 	struct device *dev;
+ 	int rc;
+ 
++	if (!pci_ops)
++		return ERR_PTR(-EINVAL);
++
+ 	if (IS_ERR(tsm_dev))
+ 		return tsm_dev;
+ 
+@@ -95,14 +95,12 @@ struct tsm_dev *tsm_register(struct device *parent, struct pci_tsm_ops *pci_ops)
+ 
+ 	rc = device_add(dev);
+ 	if (rc) {
+-		if (pci_ops)
+-			pci_tsm_unregister(tsm_dev);
++		pci_tsm_unregister(tsm_dev);
  		return ERR_PTR(rc);
  	}
-+
-+	/* Notify TSM userspace that PCI/TSM operations are now possible. */
-+	if (pci_ops)
-+		kobject_uevent(&dev->kobj, KOBJ_CHANGE);
-+
+ 
+ 	/* Notify TSM userspace that PCI/TSM operations are now possible. */
+-	if (pci_ops)
+-		kobject_uevent(&dev->kobj, KOBJ_CHANGE);
++	kobject_uevent(&dev->kobj, KOBJ_CHANGE);
+ 
  	return no_free_ptr(tsm_dev);
  }
- EXPORT_SYMBOL_GPL(tsm_register);
 -- 
 2.43.0
 
