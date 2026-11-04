@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793809052;
-	b=DK1P6h6wu0ZMEt+8d8IH6jBMyDgIiIOrH7Fi0alVtIQh8LSLDidIRrCnJ7/eVVfeJwDt
-	 je0XEzT9W+3hOHRQpeU8d8lfgjE3oRk6H2xluKac31cEkStP1akzxVM9oePu3BJfgXA4p
-	 blKAutGtPRwDpvqUt//Qqp1nY4MeXCAFnCICHXpGxSeIbcc6+Ufu5ngkw1hPbLlJ7zFlU
-	 AsUHsKDlX7G54AcTK9+zE1Mn0U0cTfG3CIK0L3eApQbIu+K2o7hnEg9aVa9Rr0JVlLgbl
-	 kw3iETeJa4gsPdAepDN841JQ1Xyh6M3Bxu8dsBOdD+QH/H3BuZzCW420rRW152JVR4g==
+	t=1793809062;
+	b=Afr+R6Ojb8Q63HoKSg5KANJlGgV2EoQYaoKvJSUrASUhnjbOfOHPJnI3figyJkMcAUWm
+	 vVCIQUU6ej4s2jBaBX4KzQojhh2go3K6jHEe8JLZ89bnBxBxDdzSC/oG0zjvhwdeoC2UP
+	 fwnEHJhVG9Z0WZdOTosSwbnDJJDUIqiZdnLMXaiLLgPMwQ8HhrRh7Ar5fmtzRRTwZfnGe
+	 pbi0c+F2gVqyRFk03tTocYoyzOsRun6HuNRN3TKT4vvwsO6zPpogYygxO7ECBq3AE4nWz
+	 bQ1Nz1JS95wlP+rH66jo2O+DvHapiZr4QTyk+rtRQ8Cr6b3bA32P0UgrF74sm50XKhg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793809052;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793809062;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=P/AkNQwfphMcdFB+D7s/aBW66xKWMUQ8Q7dzQy7UJpE=;
-	b=m3J4oV+EN1YE3bwMweE9grfJTnx5ZoV/EdjVRB9tCC77Yd3jbzJthgS5zKvKnPzd7Ass
-	 w8f3fRpA+qy076zhc2uYFtiz2jxcwcoJ1pEOaJX8n6q2Lde9XaYk9zAJq4XZF04CD8otR
-	 OjIrKVGWAudEP0A3TC/jHR1xQ712nSM9QqlD3X91nNrZ836NWAiIsw4addubxX9SIXKhJ
-	 fL9xRZG5QkonuhEZFXz4VnYqNjH/xbEqvoim1lCCWAtxdXItGub+ZyGsDz1xIVOxxLSDW
-	 zTt4tsrobu5IhjOS3B7Et1TPMuNUBbu9jXlZ9/gpb4GFzHx+fPbaAoDxtKT8RmD5/hw==
+	bh=jAWJHQIGnJ2Kk3giqYIVIkzM2se7YUrpnLQShJQtPJI=;
+	b=gcTOohlToPJ8I0wR18MnqxDk2hKJSQpC9NuN8EXctswvw0xlxUFgOZ+z5S97qqegxW3Q
+	 CA0HSJxO/mO7Mmg/oEgD3t4g4/Ko5VwR1X7HmA18Nog1/DZqFUyceHYjUut/1nM8Gv5F/
+	 6ln7XcGEBOK2PTFAGKg5nP03pTltn9fWHr7Dqawxi7bJbbOdQICJsgWCPqf+yWDKIAakI
+	 E7KO5WDPLSNTG+8DYurrFGlNmOggzFFUzwPhY1agbse5IwfxHFVOtMusO7HwYA0y39JOk
+	 eG+12Z1y4+mutUOkIw8sqlZw4HMCQfWM44lo0v4yqnXbxiUOpYqLrb9tOTysvvgXhfQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O0znDxqh;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UxbUAIAm;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EF09606A33B;
-	Wed,  4 Nov 2026 16:17:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17B8D606A328;
+	Wed,  4 Nov 2026 16:17:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O0znDxqh
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08CC81F00A17;
-	Wed,  4 Nov 2026 16:17:22 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UxbUAIAm
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B16721F0093A;
+	Wed,  4 Nov 2026 16:17:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793809052;
-	bh=P/AkNQwfphMcdFB+D7s/aBW66xKWMUQ8Q7dzQy7UJpE=;
+	s=k20260515; t=1793809061;
+	bh=jAWJHQIGnJ2Kk3giqYIVIkzM2se7YUrpnLQShJQtPJI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=O0znDxqhlUZW1AMXKOYcAnB2EfAAEqvL1OkxoPqAKDXudVi06Vx6a0L7OQg41dKKX
-	 LN368MIol11IXpbt6wd0CJlcGZQsSBpxCCuQoRQ2nDsauTjKpPPQsEQCRkv3BsnmUd
-	 1s6Zup2fGZCzcUtgUYMUBnSTpGnbAz669dBwAwrvQnCGIc8UU7w0EwhwdExs+PVavR
-	 oWM/517qNBq/wBKBipsgrta6dPzaoTgF7ASNrWxBDTyxGyswGCJRUCv7zwRDX6Z8lz
-	 OJCDa29MRSQtAGaUo5cSqavNCagmTZ2eVpsle6lXl57i8Lq0lU194azhHTg/LzXWUu
-	 wU1nz8vOCmk1w==
+	b=UxbUAIAmYCewmxqeQMrkO9aPtyrPTCCcZXkeo2LbHTwgnwEim0uqnCZZ0qP2gwMqT
+	 OTM98r0XSZj9ZqVa0qXvNXGLytyJkx8ZKDbXPgHEWS8qUJGE7vzUjeKc/l0Sw2kuIt
+	 ArkZAxvPshwoct/9HcwRtkWx6IXU8oCeDmm53iE2INV+M/+azkMKHUsec7ZpyeBt5Y
+	 Sa4esukhYx2VCLJDj62q4hVcM40o5MpQd4cWkPfeNcxL+1ClZ0XTwjm0zcwCBFlCFg
+	 JJN+T6dcmR1nXfgfwiagp2XrZmjnsU3PyBEVpB//eD+xZJ29ZFLOeEALp8wOKng1Rt
+	 zfyLQL5K36diw==
 From: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
 To: iommu@lists.linux.dev
 Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
@@ -70,10 +70,11 @@ Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
 	linux-coco@lists.linux.dev,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: [PATCH v8 04/15] virt: coco: tsm: Require PCI operations when registering a TSM
-Date: Wed,  4 Nov 2026 21:46:21 +0530
-Message-ID: <20261104161632.3547423-5-aneesh.kumar@kernel.org>
+	linux-tegra@vger.kernel.org,
+	Jason Gunthorpe <jgg@nvidia.com>
+Subject: [PATCH v8 05/15] iommufd/device: Associate KVM file pointer with iommufd_device
+Date: Wed,  4 Nov 2026 21:46:22 +0530
+Message-ID: <20261104161632.3547423-6-aneesh.kumar@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
 References: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
@@ -88,56 +89,123 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Reject a NULL pci_ops argument in tsm_register(). Every registered TSM
-then has PCI operations, so registration no longer needs separate paths
-for TSMs without them.
+From: Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
 
+TSM vDevice support needs access to the KVM associated with a VFIO device
+after the device has been bound to iommufd.
+
+Extend iommufd_device_bind() to accept the device's KVM file and store it
+in the iommufd_device. The KVM file reference is owned by VFIO and is
+already held for the duration of the device open path.
+
+Signed-off-by: Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
+Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
+[nicolinc: fix build error in iommufd_test_mock_domain()]
+Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+[aneesh.kumar: Switch to use kvm_file]
+Cc: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Kevin Tian <kevin.tian@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Will Deacon <will@kernel.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Alex Williamson <alex@shazbot.org>
+Cc: kvm@vger.kernel.org
 Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
 ---
- drivers/virt/coco/tsm-core.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ drivers/iommu/iommufd/device.c          | 7 ++++++-
+ drivers/iommu/iommufd/iommufd_private.h | 2 ++
+ drivers/iommu/iommufd/selftest.c        | 2 +-
+ drivers/vfio/iommufd.c                  | 3 ++-
+ include/linux/iommufd.h                 | 4 +++-
+ 5 files changed, 14 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/virt/coco/tsm-core.c b/drivers/virt/coco/tsm-core.c
-index e370806d8436..e7807dc94807 100644
---- a/drivers/virt/coco/tsm-core.c
-+++ b/drivers/virt/coco/tsm-core.c
-@@ -60,9 +60,6 @@ static int tsm_register_pci(struct tsm_dev *tsm_dev, struct pci_tsm_ops *pci_ops
+diff --git a/drivers/iommu/iommufd/device.c b/drivers/iommu/iommufd/device.c
+index 1b0bdf57ac8a..935f42616a65 100644
+--- a/drivers/iommu/iommufd/device.c
++++ b/drivers/iommu/iommufd/device.c
+@@ -295,6 +295,7 @@ static int iommufd_bind_noiommu(struct iommufd_device *idev)
+  * iommufd_device_bind - Bind a physical device to an iommu fd
+  * @ictx: iommufd file descriptor
+  * @dev: Pointer to a physical device struct
++ * @kvm_file: VM file if device belongs to a KVM VM
+  * @id: Output ID number to return to userspace for this device
+  *
+  * A successful bind establishes an ownership over the device and returns
+@@ -308,7 +309,9 @@ static int iommufd_bind_noiommu(struct iommufd_device *idev)
+  * The caller must undo this with iommufd_device_unbind()
+  */
+ struct iommufd_device *iommufd_device_bind(struct iommufd_ctx *ictx,
+-					   struct device *dev, u32 *id)
++					   struct device *dev,
++					   struct file *kvm_file,
++					   u32 *id)
  {
+ 	struct iommufd_device *idev;
  	int rc;
+@@ -319,6 +322,8 @@ struct iommufd_device *iommufd_device_bind(struct iommufd_ctx *ictx,
  
--	if (!pci_ops)
--		return 0;
--
- 	tsm_dev->pci_ops = pci_ops;
- 	rc = pci_tsm_register(tsm_dev);
- 	if (rc) {
-@@ -80,6 +77,9 @@ struct tsm_dev *tsm_register(struct device *parent, struct pci_tsm_ops *pci_ops)
+ 	idev->ictx = ictx;
+ 	idev->dev = dev;
++	/* VFIO holds the file reference while the device is open. */
++	idev->kvm_file = kvm_file;
+ 
+ 	if (!iommufd_device_is_noiommu(idev))
+ 		rc = iommufd_bind_iommu(idev);
+diff --git a/drivers/iommu/iommufd/iommufd_private.h b/drivers/iommu/iommufd/iommufd_private.h
+index eb2e85b27e42..2560b4faa6f9 100644
+--- a/drivers/iommu/iommufd/iommufd_private.h
++++ b/drivers/iommu/iommufd/iommufd_private.h
+@@ -509,6 +509,8 @@ struct iommufd_device {
+ 	struct list_head group_item;
+ 	/* always the physical device */
  	struct device *dev;
- 	int rc;
- 
-+	if (!pci_ops)
-+		return ERR_PTR(-EINVAL);
-+
- 	if (IS_ERR(tsm_dev))
- 		return tsm_dev;
- 
-@@ -95,14 +95,12 @@ struct tsm_dev *tsm_register(struct device *parent, struct pci_tsm_ops *pci_ops)
- 
- 	rc = device_add(dev);
- 	if (rc) {
--		if (pci_ops)
--			pci_tsm_unregister(tsm_dev);
-+		pci_tsm_unregister(tsm_dev);
- 		return ERR_PTR(rc);
++	/* ..and the VM file if available */
++	struct file *kvm_file;
+ 	bool enforce_cache_coherency;
+ 	struct iommufd_vdevice *vdev;
+ 	bool destroying;
+diff --git a/drivers/iommu/iommufd/selftest.c b/drivers/iommu/iommufd/selftest.c
+index 25387969ab75..b17cca7096b6 100644
+--- a/drivers/iommu/iommufd/selftest.c
++++ b/drivers/iommu/iommufd/selftest.c
+@@ -1071,7 +1071,7 @@ static int iommufd_test_mock_domain(struct iommufd_ucmd *ucmd,
+ 		goto out_sobj;
  	}
  
- 	/* Notify TSM userspace that PCI/TSM operations are now possible. */
--	if (pci_ops)
--		kobject_uevent(&dev->kobj, KOBJ_CHANGE);
-+	kobject_uevent(&dev->kobj, KOBJ_CHANGE);
+-	idev = iommufd_device_bind(ucmd->ictx, &sobj->idev.mock_dev->dev,
++	idev = iommufd_device_bind(ucmd->ictx, &sobj->idev.mock_dev->dev, NULL,
+ 				   &idev_id);
+ 	if (IS_ERR(idev)) {
+ 		rc = PTR_ERR(idev);
+diff --git a/drivers/vfio/iommufd.c b/drivers/vfio/iommufd.c
+index e9893d34d07b..3beb1b1bae36 100644
+--- a/drivers/vfio/iommufd.c
++++ b/drivers/vfio/iommufd.c
+@@ -123,7 +123,8 @@ int vfio_iommufd_physical_bind(struct vfio_device *vdev,
+ {
+ 	struct iommufd_device *idev;
  
- 	return no_free_ptr(tsm_dev);
- }
+-	idev = iommufd_device_bind(ictx, vdev->dev, out_device_id);
++	idev = iommufd_device_bind(ictx, vdev->dev, vdev->kvm,
++				   out_device_id);
+ 	if (IS_ERR(idev))
+ 		return PTR_ERR(idev);
+ 	vdev->iommufd_device = idev;
+diff --git a/include/linux/iommufd.h b/include/linux/iommufd.h
+index 3087f5b2def8..b03ce0187454 100644
+--- a/include/linux/iommufd.h
++++ b/include/linux/iommufd.h
+@@ -59,7 +59,9 @@ struct iommufd_object {
+ };
+ 
+ struct iommufd_device *iommufd_device_bind(struct iommufd_ctx *ictx,
+-					   struct device *dev, u32 *id);
++					   struct device *dev,
++					   struct file *kvm_file,
++					   u32 *id);
+ void iommufd_device_unbind(struct iommufd_device *idev);
+ 
+ int iommufd_device_attach(struct iommufd_device *idev, ioasid_t pasid,
 -- 
 2.43.0
 
