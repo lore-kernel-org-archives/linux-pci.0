@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.78
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.86
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793813149;
-	b=gl4AHi0SGMN83rNkQ4NICvEJmqovGE8TOtbufY1fTNzBv8SE7ydAUjjG09AnOAWg3wSD
-	 o/TB/KnIqRkNZqHoxyIKqvwIcUfOlgl+78jiIj8bZfyXkdWxtmlltJRAK2gXxdRYZVkb/
-	 Vz+NdKRKWq13ILEDspwx1/3TfaxSj/LpdWNFOlQvOZDyB1UcVA3Dg/DWpuKvnrYSY51SK
-	 0nixJh09WZhWt2ahqdekSwjKoXl9lRQ1uSCxeB3m4YVlGR3WyvMnBOkdPTy5DazyjHiXk
-	 xDiSWxw39GBI7C0C9HiD0i+RTsC8uFGd2wFROP7CCAFBWvRnKm5Uk+MpW5Tt7+y7G/Q==
+	t=1793813152;
+	b=uD0S9xRzC0Pt0wQyUUFNNvLuuAxykerCdICt1Nrln+WP+2KMgVXnb0/+tlgu9439N0Hh
+	 R2onSWds/fPfVCxskT+Ad2w+jw+nigIchc80EQ+o2yLWAeAW7K5ZoDH0St208ZtC8/vg1
+	 1jcPRSnmgkdf+yAGRhWhe4ENnULhn1eBUI6OgGRkATKSxdgd+9GkS1KTXb3zm5c9MgS5Q
+	 vxmygVheZHmHcFiPI9zvx7DgTU9wifPTZbpdPshlVn9oxXec9Dr0OuxySB8qslkIi3o4w
+	 6dUyZ7xp9FXt7XYN8bahdNklPUVDSmMiyMumaK7JQtUtKCGYp/l9mqNt7imQ5rpu6rw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793813149;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793813152;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=MxR3c48AzklxPRyTJpjhZAtl2/Qg2f+G50G0qs7v1Wg=;
-	b=E3iM3t+1zbh+DfiU9DW9iiFhctTWayaStvOndwhDV8dwKqLzLnjsI/Ay0ymMR7wqoo67
-	 GQKvdq/rZCSa9uTWo6Qn47KkE0zv9v58BTbeqsxsuR6g5RBpot4wgz1f/UFg9jN5S4MNn
-	 DxrlJ6tmfJz+R5OsyNAXLWdPnJibh+fIJze+fE1Xo3jw/P18ANCi9Zd85btj/Pf6cJoxl
-	 xF57aiPeGK8mcu3YkLTb+mmyYvSUnVvzo1j0ECgt8g0fnbma9vmr4mc9CCfAsbj5wrYOY
-	 q9O8GxLW1HXYKOwwBMG4aiBpPdddzHUZw8asmqJ0zHU2ZRTlM9CNjcTQM4jAhUa4PkQ==
+	bh=bd5pazkQFKyYKEGSIrWiOc6GEPTqyZzq9paOrIDWKRk=;
+	b=vATM0huEJX7q2va+uZ5vzKqu6ShearWBbsyFOiIhWZlkloaYdRRFQRp2WOeuCm0S9vhJ
+	 CV9Z1FcI/gXIH5iCBL3WUL2o8j/82fTHJKuoesPV5kyh5Nu+vikgJh8zQKIdLsCM3kQUi
+	 k+eQHp7pC6froX808cF6ul05UiVPJNZ+2PNQg8X/KdB/5neLZsbry2VEDXjBp5KQy7COH
+	 OMVmCpFTtoHYW8j32IAr6pNaBI21CF/YCfx5bPBXOZBlOZbKhkS3XV8n5u6E2aMtrm/1G
+	 T8zaucAqgUJyoEXW7kAjU9CcHwIiKWVu2pi3c09FLXc+IMMaIGV0LcLXHSY0C8CvsCg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="wsGa/rsO";
-	arc=none smtp.remote-ip=91.218.175.78
-Received: from mta0.migadu.com (out-78.mta0.migadu.com [91.218.175.78])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=YMRpIUBf;
+	arc=none smtp.remote-ip=91.218.175.86
+Received: from mta0.migadu.com (out-86.mta0.migadu.com [91.218.175.86])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 499DD606A329
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 17:25:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 499DD606A329
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3DD5606A329
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 17:25:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F3DD5606A329
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=wsGa/rsO
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=YMRpIUBf
 X-Envelope-To: linux-pci@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=MxR3c48AzklxPRyTJpjhZAtl2/Qg2f+G50G0qs7v1Wg=;
+DKIM-Signature: a=rsa-sha256; bh=bd5pazkQFKyYKEGSIrWiOc6GEPTqyZzq9paOrIDWKRk=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793813146; v=1; x=1794417946;
- b=wsGa/rsO78jClay5d3sxcOBtHBBN7fBmbamLWxfNz/pDSw19IMIKaInaViyCVPHdH/m+QTSI
- J/PJQpPdlQAnuBe2LYF+MOFeG3KwuGMoSHDvAnowVNyWhGn0u59PF0GtB2I5Hp5aolMBM92naHc
- DySQ7WwtxOYvO5Zj1JNblSYo=
+ t=1793813150; v=1; x=1794417950;
+ b=YMRpIUBfnwMjpobL1YZXYntr0uShvmm/gVsUQvDl8JotH/Fxvub4m/ceJEjRTI4vsdyZ9xl8
+ xdlkVcv+NmXFVI6W2kUZnXWaOglWNSfvv/yRCEw1C2lJw1l+nKV5A+arzK/W/O/BPkB4ahzpXm1
+ jS9oXOYhV431spqrq19YfZ7E=
 X-Envelope-To: linux-pci@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 9815f4b0805190e0;
-	Wed, 04 Nov 2026 17:25:46 +0000
-X-Mizu-Trace-ID: 9815f4b0805190e0
+Received: by smtp.migadu.com with ESMTPS id b823a6d435641782;
+	Wed, 04 Nov 2026 17:25:50 +0000
+X-Mizu-Trace-ID: b823a6d435641782
 X-Migadu-Flow: FLOW_OUT
 From: Junjie Cao <junjie.cao@linux.dev>
 To: shrihari.s@samsung.com
@@ -65,12 +65,12 @@ Cc: jic23@kernel.org,
 	vikash.k5@samsung.com,
 	anisa.su@samsung.com,
 	junjie.cao@linux.dev
-Subject: Re: [PATCH qemu v1 5/8] hw/pci: Wire SVC initialization into port realize functions
-Date: Wed,  4 Nov 2026 11:25:26 -0600
-Message-ID: <20261104172527.2172366-3-junjie.cao@linux.dev>
+Subject: Re: [PATCH qemu v1 7/8] hw/cxl: Wire SVC and Dev3 capabilities to CXL Type 3 device
+Date: Wed,  4 Nov 2026 11:25:27 -0600
+Message-ID: <20261104172527.2172366-4-junjie.cao@linux.dev>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <360067785.01793792402254.JavaMail.epsvc@epcpadp1new>
-References: <20261104115242.2035807-1-shrihari.s@samsung.com> <360067785.01793792402254.JavaMail.epsvc@epcpadp1new>
+In-Reply-To: <331418503.141793792283935.JavaMail.epsvc@epcpadp2new>
+References: <20261104115242.2035807-1-shrihari.s@samsung.com> <331418503.141793792283935.JavaMail.epsvc@epcpadp2new>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -82,12 +82,16 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Tested port capability enumeration and CXL RP/USP UIO gating on q35
-at cold boot and after system reset, with the full series on
-3c99db7705c1. The ioh3420,x-svc=on case reports an error instead of
-aborting.
+Tested Type-3 capability enumeration and UIO/SVC/flit dependency
+combinations at cold boot and after system reset on q35, with the
+full series on 3c99db7705c1.
 
-Also checked the CXL capability chains and USP HDM UIO advertisement
-on aarch64 virt using qtest.
+Linux UIO discovery and a 1-way UIO region commit also passed with
+Davidlohr's pcie-uio-rfc kernel [1]. For that kernel's UIO checks,
+QEMU used hdm-db=on and CFMWS restrictions=0x2d; the guest kernel
+enabled CONFIG_CXL_REGION_INVALIDATION_TEST to allow region setup
+in the VM.
+
+[1] https://github.com/davidlohr/linux/commit/4726547f45a612b2d953f5f4e13ab6fe34672c7c
 
 Tested-by: Junjie Cao <junjie.cao@linux.dev>
