@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793809082;
-	b=KI+CWR/g6k71HxtoqTgXMQi7UZ4L1fltaEg5RyPeqnpGr9dkXEEtQtLvlNcodBv9yq6Q
-	 jk/8uZcq4Gy+ZeI0WQwl0xKo7MtJGCTma7qWikB4IZqzsg5zgkTW9QtwjfxbvNld96IoE
-	 KTw0P7NlHGiOTlLrOCHwssJSW5sRGx8y76fAer7/7+QEtuHItorzYAsiGPUXlvc+RqJfC
-	 gX61hH1e2bWggQN0ZHVFElI/9r5PSNZoqhqXHn5XU09VKe/s0UNE0JtTajl8vKNDSKEIe
-	 QD6ArQg1yNRLwthpjV3KHyeA5G/EIGxSGzQpWQe4dCcWLWQ67zuZC4J3FgWVOoY3I8A==
+	t=1793809091;
+	b=epK3nMmQ/aikkac7zqPFIOwu2ZPaFDDqTbGvMaUakteGIhMBwTFZPPYLC21qsgTRfX8D
+	 yJ9kQaWKbDxMkQQBkyKaqFsXhBoc9TcxIf/5qRUS7G/zQxLCCKQ/DqFpdn+q8U91wJZk/
+	 qdnWniIV7gxMjdI/qE6cyg1pvv5iDvDtGmJfIwHX/36pmjlJN2Wf5r1acfwkQ62XjzqVE
+	 mJ0McDP3MyMFAbioIrG8Y4AXjFVRgU1O8l6RQNhN+q68rKIjncdAMJn/W9lR9aJCksDdS
+	 ZLVBh1boShdQYLImuCLEof1PRmwOKwZpgSNM30+wPK/LWM7R2EuzFLdJkz4CKZJpePg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793809082;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793809091;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=/f1LcAxGZ5k1BEQm6UZwU+tsAlnjik5nw5Pm2FDN7hg=;
-	b=2tt3D9tVGkofIeA2EoSE4XDMVitnrJNFFRA50RqsK42+HecpTE3KldvdbAhBv0joAs7E
-	 N8p9JE0CzK3fEjlTN+cBSQa+TcWeJCopMuioN5V6XeGqVRjjYlWQI42vr4zXemW4wctXa
-	 nXdzELBnHarUY51cX/Y6Wl5zcgOhDd1kABGznuGR05ob2On+eCj1tTWwzPYQxdeCM+JRg
-	 3NmdtXRsYG/q2XDB0zQzdGV6kdII4xYQDM77ZFX0ZcUAEOj8u4lDtwjoAp/UoN6UvIXV0
-	 4Df/Mcoh8WAqHgjK4PUGJi7vpWyzLC/PcHcoB2S11nr3yaZgnHkti7YNAg352O/VMaA==
+	bh=LyppPZNwxzZCDS704wCfWMjkL1sHrZGQgJ+n1Lrwr9E=;
+	b=jKTgLeEZqij4Ux6JN63S5nlMRMVrHBW59cRj9QqErmDiMFIxp61ZAs+8lOdEuQji67u9
+	 tQcD+Gev3N/+sR14a3+MFP6TlgBIv1EOLnLa3Rbuf5rjExz9vClDXES1eMjraGnJVPtAW
+	 JbQsjLhqMr/9vzpCgTIE/6F+lNl1nasAAbgtyv1WE4ZWDssLd/i/ceJqT2k6fAKH32OFG
+	 vdtZ5Swqofla0J3mWUkHNPmHlH6/gPhYbET3R6bkIih7Q2zOEFZnLvCqFBMPGLfUJbN97
+	 76KizrPK0C6r4lQTNEDVioVHkuDDVwrWz0vBNzOZj5eJZ8MciWYTNmkaQJqgefhPHuw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=c6Y6Owlb;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lFIa5Cs6;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB2BC606D809;
-	Wed,  4 Nov 2026 16:18:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A742606A33B;
+	Wed,  4 Nov 2026 16:18:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=c6Y6Owlb
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39F4D1F00A15;
-	Wed,  4 Nov 2026 16:17:51 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lFIa5Cs6
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20D7E1F000C1;
+	Wed,  4 Nov 2026 16:18:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793809081;
-	bh=/f1LcAxGZ5k1BEQm6UZwU+tsAlnjik5nw5Pm2FDN7hg=;
+	s=k20260515; t=1793809091;
+	bh=LyppPZNwxzZCDS704wCfWMjkL1sHrZGQgJ+n1Lrwr9E=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=c6Y6OwlboTn+mTB9qvAVKe0sIDapv7oSyuynqmDIbzugR+GnSyxwrkgR1bp445XIa
-	 WRz0q4vjTAnvgyy/rn0kEB49xRTFaWWi8UF+5ag5itjxmAd96n0jCW5ui8qcJE8yNC
-	 65tkqxVGDtt3n3ORY2YooiwldyhFVlEVlHgx8wCmD9m+6UIENgvZ50xEQG1odjkLfG
-	 iHx/E3WjmvJj9ffCvuCKazhhm1BjDY7gMf+jTwefDLz3xyhXAQ3Ld0tquiYjMdG1C4
-	 TP+TL6Bz+bW9AX7Q5X2LKx41dgXewvuPzYWN29XHJmCy+TrQ73eqb92o3nZi1t9tFm
-	 yqqT69LR6xnQQ==
+	b=lFIa5Cs6PjeJrs6dRTVYe0S7/VMsiUwYUuy+NoOl9nl6KqLVaIG/kTfcumisaG2a6
+	 W7ZW1yIwhFk8XJjaFeTv7LNCuSKa3HjAC7QKeTxug/sBmR3c8O4hv8FoK+GYn6/Wo2
+	 mh4N85TefQPwKQj7N53rZcnSvTmjNr6+QL1fiLzFqhTu2R86d2WsARnhP+Y6LXNVk5
+	 UoWII9n4AwUNaPcR07GOYX5zRi9XKiPw5Y+sQR7Ch4wKYtCxNZU/nYri//5CoxMEZA
+	 RR845wfaDqMNNw5Shp3oJVvJxvIk/KM/xziqmpZAjuG7avR7WWnUpMFH0pCv3Gn5bt
+	 2bkg1kGuKXTAA==
 From: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
 To: iommu@lists.linux.dev
 Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
@@ -70,11 +70,10 @@ Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
 	linux-coco@lists.linux.dev,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org,
-	Jason Gunthorpe <jgg@nvidia.com>
-Subject: [PATCH v8 07/15] iommufd/viommu: Keep a reference to the KVM file
-Date: Wed,  4 Nov 2026 21:46:24 +0530
-Message-ID: <20261104161632.3547423-8-aneesh.kumar@kernel.org>
+	linux-tegra@vger.kernel.org
+Subject: [PATCH v8 08/15] iommufd: Add a vDEVICE operation ioctl framework
+Date: Wed,  4 Nov 2026 21:46:25 +0530
+Message-ID: <20261104161632.3547423-9-aneesh.kumar@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
 References: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
@@ -89,91 +88,209 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Nicolin Chen <nicolinc@nvidia.com>
+Add IOMMU_VDEVICE_OP to execute operations on a vDEVICE using separate
+request and response buffers. Each operation defines its request and
+response formats, with response capacity checked before changing device
+state.
 
-The TSM vDevice operations need access to the KVM associated with the
-device's vIOMMU. Save the device's KVM file in the iommufd_viommu when the
-vIOMMU is allocated, and take a file reference so it remains valid for the
-lifetime of the vIOMMU.
+Look up the vDEVICE and check its supported_ops mask before dispatching
+an operation. Reject out-of-range operation numbers before testing the
+corresponding bit. Backends set the mask during vdevice_init().
 
-Release the reference when the vIOMMU is destroyed.
+This patch defines no operations. The default dispatch returns
+-EOPNOTSUPP; later patches can add operations independently.
 
-Reject vdevice allocation when the device's KVM association differs from
-the vIOMMU's, including when only one has a KVM association. Allow
-allocation when both associations are NULL.
-
-Based on an original patch by
-Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
-
-[nicolinc: hold kvm's users_count]
-Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
-[aneesh.kumar: Switch to use kvm_file]
 Cc: Jason Gunthorpe <jgg@ziepe.ca>
 Cc: Kevin Tian <kevin.tian@intel.com>
 Cc: Joerg Roedel <joro@8bytes.org>
 Cc: Will Deacon <will@kernel.org>
 Cc: Robin Murphy <robin.murphy@arm.com>
-Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
 ---
- drivers/iommu/iommufd/viommu.c | 10 ++++++++++
- include/linux/iommufd.h        |  1 +
- 2 files changed, 11 insertions(+)
+ drivers/iommu/iommufd/Makefile          |  1 +
+ drivers/iommu/iommufd/iommufd_private.h |  1 +
+ drivers/iommu/iommufd/main.c            |  3 +++
+ drivers/iommu/iommufd/viommu.c          | 36 +++++++++++++++++++++++++
+ include/linux/iommufd.h                 |  3 +++
+ include/linux/tsm.h                     |  1 +
+ include/uapi/linux/iommufd.h            | 33 +++++++++++++++++++++++
+ 7 files changed, 78 insertions(+)
 
+diff --git a/drivers/iommu/iommufd/Makefile b/drivers/iommu/iommufd/Makefile
+index 67207914bb6e..2b0ab70ab236 100644
+--- a/drivers/iommu/iommufd/Makefile
++++ b/drivers/iommu/iommufd/Makefile
+@@ -11,6 +11,7 @@ iommufd-y := \
+ 	viommu.o
+ 
+ iommufd-$(CONFIG_IOMMUFD_NOIOMMU) += hwpt_noiommu.o
++
+ iommufd-$(CONFIG_IOMMUFD_TEST) += selftest.o
+ 
+ obj-$(CONFIG_IOMMUFD) += iommufd.o
+diff --git a/drivers/iommu/iommufd/iommufd_private.h b/drivers/iommu/iommufd/iommufd_private.h
+index 63a6dcee21dc..0b336d6430f1 100644
+--- a/drivers/iommu/iommufd/iommufd_private.h
++++ b/drivers/iommu/iommufd/iommufd_private.h
+@@ -730,6 +730,7 @@ void iommufd_vdevice_destroy(struct iommufd_object *obj);
+ void iommufd_vdevice_abort(struct iommufd_object *obj);
+ int iommufd_hw_queue_alloc_ioctl(struct iommufd_ucmd *ucmd);
+ void iommufd_hw_queue_destroy(struct iommufd_object *obj);
++int iommufd_vdevice_op_ioctl(struct iommufd_ucmd *ucmd);
+ 
+ #ifdef CONFIG_IOMMUFD_TEST
+ int iommufd_test(struct iommufd_ucmd *ucmd);
+diff --git a/drivers/iommu/iommufd/main.c b/drivers/iommu/iommufd/main.c
+index 9a921b153162..e3a49897dac5 100644
+--- a/drivers/iommu/iommufd/main.c
++++ b/drivers/iommu/iommufd/main.c
+@@ -453,6 +453,7 @@ union ucmd_buffer {
+ 	struct iommu_veventq_alloc veventq;
+ 	struct iommu_vfio_ioas vfio_ioas;
+ 	struct iommu_viommu_alloc viommu;
++	struct iommu_vdevice_op vdevice_op;
+ #ifdef CONFIG_IOMMUFD_TEST
+ 	struct iommu_test_cmd test;
+ #endif
+@@ -516,6 +517,8 @@ static const struct iommufd_ioctl_op iommufd_ioctl_ops[] = {
+ 		 __reserved),
+ 	IOCTL_OP(IOMMU_VIOMMU_ALLOC, iommufd_viommu_alloc_ioctl,
+ 		 struct iommu_viommu_alloc, out_viommu_id),
++	IOCTL_OP(IOMMU_VDEVICE_OP, iommufd_vdevice_op_ioctl,
++		 struct iommu_vdevice_op, resp_uptr),
+ #ifdef CONFIG_IOMMUFD_TEST
+ 	IOCTL_OP(IOMMU_TEST_CMD, iommufd_test, struct iommu_test_cmd, last),
+ #endif
 diff --git a/drivers/iommu/iommufd/viommu.c b/drivers/iommu/iommufd/viommu.c
-index f7951057a1e5..0dbd382eeb98 100644
+index 0dbd382eeb98..cdbb597f3588 100644
 --- a/drivers/iommu/iommufd/viommu.c
 +++ b/drivers/iommu/iommufd/viommu.c
-@@ -1,6 +1,7 @@
+@@ -1,7 +1,11 @@
  // SPDX-License-Identifier: GPL-2.0-only
  /* Copyright (c) 2024, NVIDIA CORPORATION & AFFILIATES
   */
-+#include <linux/file.h>
++#include <linux/bits.h>
+ #include <linux/file.h>
++#include <linux/cleanup.h>
++#include <linux/tsm.h>
++
  #include "iommufd_private.h"
  
  void iommufd_viommu_destroy(struct iommufd_object *obj)
-@@ -11,6 +12,8 @@ void iommufd_viommu_destroy(struct iommufd_object *obj)
- 	if (viommu->ops && viommu->ops->destroy)
- 		viommu->ops->destroy(viommu);
- 	refcount_dec(&viommu->hwpt->common.obj.users);
-+	if (viommu->kvm_file)
-+		fput(viommu->kvm_file);
- 	xa_destroy(&viommu->vdevs);
+@@ -121,6 +125,38 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd *ucmd)
+ 	return rc;
  }
  
-@@ -82,6 +85,8 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd *ucmd)
- 	}
- 
- 	xa_init(&viommu->vdevs);
-+	if (idev->kvm_file)
-+		viommu->kvm_file = get_file(idev->kvm_file);
- 	viommu->type = cmd->type;
- 	viommu->ictx = ucmd->ictx;
- 	viommu->hwpt = hwpt_paging;
-@@ -171,6 +176,11 @@ int iommufd_vdevice_alloc_ioctl(struct iommufd_ucmd *ucmd)
- 		goto out_put_viommu;
- 	}
- 
-+	if (idev->kvm_file != viommu->kvm_file) {
-+		rc = -EINVAL;
-+		goto out_put_idev;
++int iommufd_vdevice_op_ioctl(struct iommufd_ucmd *ucmd)
++{
++	struct iommu_vdevice_op *cmd = ucmd->cmd;
++	struct iommufd_object *obj;
++	struct iommufd_vdevice *vdev;
++	int ret;
++
++	if (cmd->reserved)
++		return -EINVAL;
++
++	obj = iommufd_get_object(ucmd->ictx, cmd->vdevice_id,
++				 IOMMUFD_OBJ_VDEVICE);
++	if (IS_ERR(obj))
++		return PTR_ERR(obj);
++	vdev = container_of(obj, struct iommufd_vdevice, obj);
++
++	if (cmd->op >= BITS_PER_TYPE(vdev->supported_ops) ||
++	    !(vdev->supported_ops & BIT_ULL(cmd->op))) {
++		ret = -EOPNOTSUPP;
++		goto out_put_object;
 +	}
 +
- 	iommu_dev = iommufd_device_get_iommu_dev(idev);
- 	if (!iommu_dev || viommu->iommu_dev != iommu_dev) {
- 		rc = -EINVAL;
++	switch (cmd->op) {
++	default:
++		ret = -EOPNOTSUPP;
++	}
++
++out_put_object:
++	iommufd_put_object(ucmd->ictx, obj);
++	return ret;
++}
++
+ void iommufd_vdevice_abort(struct iommufd_object *obj)
+ {
+ 	struct iommufd_vdevice *vdev =
 diff --git a/include/linux/iommufd.h b/include/linux/iommufd.h
-index b03ce0187454..c15d80f611b9 100644
+index c15d80f611b9..d1fd7888fc91 100644
 --- a/include/linux/iommufd.h
 +++ b/include/linux/iommufd.h
-@@ -103,6 +103,7 @@ struct iommufd_viommu {
- 	struct iommufd_ctx *ictx;
- 	struct iommu_device *iommu_dev;
- 	struct iommufd_hwpt_paging *hwpt;
-+	struct file *kvm_file;
+@@ -125,6 +125,9 @@ struct iommufd_vdevice {
+ 	 */
+ 	u64 virt_id;
  
- 	const struct iommufd_viommu_ops *ops;
++	/* Supported vDEVICE operations; set by vdevice_init(). */
++	u64 supported_ops;
++
+ 	/* Clean up all driver-specific parts of an iommufd_vdevice */
+ 	void (*destroy)(struct iommufd_vdevice *vdev);
+ };
+diff --git a/include/linux/tsm.h b/include/linux/tsm.h
+index 381c53244c83..19dedf971f14 100644
+--- a/include/linux/tsm.h
++++ b/include/linux/tsm.h
+@@ -6,6 +6,7 @@
+ #include <linux/types.h>
+ #include <linux/uuid.h>
+ #include <linux/device.h>
++#include <uapi/linux/iommufd.h>
  
+ #define TSM_REPORT_INBLOB_MAX 64
+ #define TSM_REPORT_OUTBLOB_MAX SZ_16M
+diff --git a/include/uapi/linux/iommufd.h b/include/uapi/linux/iommufd.h
+index 010f47f7d3d2..3f7422e7cd91 100644
+--- a/include/uapi/linux/iommufd.h
++++ b/include/uapi/linux/iommufd.h
+@@ -58,6 +58,7 @@ enum {
+ 	IOMMUFD_CMD_VEVENTQ_ALLOC = 0x93,
+ 	IOMMUFD_CMD_HW_QUEUE_ALLOC = 0x94,
+ 	IOMMUFD_CMD_IOAS_NOIOMMU_GET_PA = 0x95,
++	IOMMUFD_CMD_VDEVICE_OP = 0x96,
+ };
+ 
+ /**
+@@ -1398,4 +1399,36 @@ struct iommu_hw_queue_alloc {
+ 	__aligned_u64 length;
+ };
+ #define IOMMU_HW_QUEUE_ALLOC _IO(IOMMUFD_TYPE, IOMMUFD_CMD_HW_QUEUE_ALLOC)
++
++/**
++ * struct iommu_vdevice_op - ioctl(IOMMU_VDEVICE_OP)
++ * @size: sizeof(struct iommu_vdevice_op)
++ * @vdevice_id: vDEVICE ID returned by IOMMU_VDEVICE_ALLOC
++ * @op: Operation number; no operations are currently defined
++ * @req_len: Size in bytes of the request at @req_uptr
++ * @resp_len: Response buffer capacity in bytes on input; bytes written on success
++ * @reserved: Must be zero
++ * @req_uptr: Userspace pointer to the operation-specific request
++ * @resp_uptr: Userspace pointer to the operation-specific response buffer
++ *
++ * Execute an operation on a vDEVICE. Each operation defines its request and
++ * response formats. Requests may be extended by appending fields; bytes beyond
++ * the kernel's supported request size must be zero. Response capacity must be
++ * checked before changing device state. The ioctl returns 0 on success or a
++ * negative error code.
++ *
++ * No operations are currently supported; the ioctl returns -EOPNOTSUPP.
++ */
++struct iommu_vdevice_op {
++	__u32 size;
++	__u32 vdevice_id;
++	__u32 op;
++	__u32 req_len;
++	__u32 resp_len;
++	__u32 reserved;
++	__aligned_u64 req_uptr;
++	__aligned_u64 resp_uptr;
++};
++
++#define IOMMU_VDEVICE_OP _IO(IOMMUFD_TYPE, IOMMUFD_CMD_VDEVICE_OP)
+ #endif
 -- 
 2.43.0
 
