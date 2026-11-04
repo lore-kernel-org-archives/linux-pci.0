@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793761658;
-	b=IJQ+Sz19dZFsXAhLcmMCK+2kGF5SWkCXnetQwM22cd1GXksnwOApZI9dNXVhCachaoAV
-	 4I335EFm0m2BN/yTA2qlgTR1HGJIps89lkiSyDZVJmlx1noaOKvUavBJ8pFZmir3YIjja
-	 Hz6g3vkVvl26sUT4gZ4n8YugazZ7fgWIqRdJ8HMo1y8VA84RMbWacplzsVDM9X91a13wk
-	 2bX2z4TcB/QEEX6J3WtFS5IuInP7kSBJ4bJKLpjPKFECdoDlAqEbnV20qulQd27tIkE7o
-	 G8BkUf3EJ1e26cQ0BkdC4xxG6hTlDnBSU81qThc83y/76WTCbZK4vGHWP4kXgVP4fmA==
+	t=1793761714;
+	b=sjp8aGS91Rrs7z7YMlldWeZHuz5ezf/QxHfOEMJHf3sFtl3MpggmBp8hN2CoP9nzE+B4
+	 lQf7HEJtcoXfh4qJ8ZP+VXnCA9b3v6CoJ2GpC2Oak1AY/ugPlRBYjA7W89tHSllsyCw+W
+	 N3sUk9rblXib1NRpGqXpDUT6jwMuYWBaAu7PLEPvQ/0Vt6KnyMIQJU0LBMt38oUqoLGVe
+	 ZIDaAUi7Nzd0DnpBzKIDDDS4BcuzulhwfHZSce5Y1tXP3AjaiaJUMiZcIRhFXCsUa/GmQ
+	 Py067ON9Uj6eOLYGtnfu2WU7OgQX5OLE1l0tWLazI+/bftH10qWWKmS8x43rhHkXNcA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793761658;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793761714;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=+Jg+a/NXV9oiPACO29t/EVvawS0Cg1TTybc8COcV79w=;
-	b=wzdCao04IPSFhs/pHaifioh0neNBE4UovBdNL1jdPqWc1yEfbMcHJtMpXoArH12jd2eF
-	 yuGmBItmj8a7ChbhhSCprzi1b2qg90zbwzLHXTRbSz7PhkjF7SHsegPAI9azJJ7IZl8x5
-	 HWZ5O8e1dQzhfjbE7n6gw1We+GCIk4y06Q2Gztgfve/QbrBEIiHlGaUL+zeuiM90XvK1E
-	 Q0dsUqyBfbVDkgLO/gZeuxbC2q2p8nY3BC3W9jbaD13FbpuU8b9MfngFUiA6S+5JN/T00
-	 UiLldQ7/KHUsDNmVFiqcwK7ayR9pdmxDTviYq5ka2cJDXMXXgAMc0RCCfXdp3hx2qNA==
+	bh=1BHT0zMk5QvZ2uYmucK/D2X47iwLEbM509NzKZ6Pok8=;
+	b=VpYrF73DmmJF9x/j/EWtc5km9mARoXN0zQl/uJnN2D3VLQS56bwASjLpjvyTO50WTae0
+	 9/24iNgoLuolAxtFmf01z/QFxtHD3Gn9pb17AK6VY8jyUn0YVdm1Bm8tl9N2aqI1bKUB/
+	 mP5dEaDBVIEkzLhoXq9+qe9u8QomXtKAFANSuzTOgALih8Q4qXLQ/uFazB2cD9zO+FWXz
+	 w46ttfleZhic6HAZUnwM/lt1kNFc/KVJFSi/CAp0vvLrIzwCvpxK/suUALOe5iNyYMEqo
+	 G6RZoOr9E+gsv9j4pQ7bqY3SHaa0TBSP5LaWdGstr34daWYQ3OhNfoZ1ZYci8tX/r4A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mrsBl+VH;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XpgEKnFh;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CE07606A31B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 03:07:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 857B5606A32E
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 03:08:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mrsBl+VH
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE9471F000C1;
-	Wed,  4 Nov 2026 03:07:37 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XpgEKnFh
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16F631F000C1;
+	Wed,  4 Nov 2026 03:08:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793761657;
-	bh=+Jg+a/NXV9oiPACO29t/EVvawS0Cg1TTybc8COcV79w=;
+	s=k20260515; t=1793761714;
+	bh=1BHT0zMk5QvZ2uYmucK/D2X47iwLEbM509NzKZ6Pok8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=mrsBl+VHfiRhhGoLjhU0dsF9PnEnNzoePLVoLh6w0FEFeTVNLKzBWdqBrXewSobJu
-	 vxzrAG89JBSrQDp9o8BvTXRUVoJYo8ZxAKwwraCGwwN3idjuIPvZicKZUumnydSum7
-	 SkimYS4z43Zij6vNh0u0TyQckMXl67xaSuhd973KrhLYIFgFs7QoLTxsyt2XzWRwzS
-	 T/H4BvvsTKajBBuKRyURwkrBjD1wIfAtPJpnbpu1dCBN6AC9MsXi48MqKOeM5QqzQq
-	 AZp0JZd5aDMRDq2Fnjk9PkQ9fYNCv4AoM7c8O4o0Fw9shvYctcVQpQxNVrAbGQ638l
-	 WppmcSmLbnQRA==
-Message-ID: <sashiko-outbox-196584@kernel.org>
+	b=XpgEKnFh2rrEdKJc522vHtF62/Z4U+rfr3obOSO7WozesfC1Fx7RHkXApPiOxPljG
+	 5Kmkp/6fsuDNgruJqV9KM7cfng6511xJ497XdhpIKEzHFwz08vQcZvBGxkjAsC2zrV
+	 dn0fngzGRF3yNkKgHFLIW45Lin3O1FVYXNjcrZq3Juo/t/dnrkHUkmVlf2knFc1jLK
+	 X7AIOyLurr8FaOsZlawDSy07gYSoPgRib0A9zdTPXy/2xCaI6kuAYWZDy/4MJklH4+
+	 yOpsz9+0K63Bz4E/fZ3M4uu5HaafkdQr56D/9xGsVDzizsN4uB10yCfGIwSsQdj9LL
+	 U0UtAJJNKQmZw==
+Message-ID: <sashiko-outbox-196586@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 22/25] dmaengine: sdxi: Encode copy and interrupt
- descriptors
+Subject: Re: [PATCH v4 13/25] dmaengine: sdxi: Add descriptor ring
+ management
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nathan Lynch" <nathan.lynch@amd.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261103-sdxi-base-v4-22-3668ccc7aab8@amd.com>
+In-Reply-To: <20261103-sdxi-base-v4-13-3668ccc7aab8@amd.com>
 References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
- <20261103-sdxi-base-v4-22-3668ccc7aab8@amd.com>
+ <20261103-sdxi-base-v4-13-3668ccc7aab8@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 03:07:37 +0000
+Date: Wed, 04 Nov 2026 03:08:33 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,14 +63,20 @@ Precedence: list
 
 > From: Nathan Lynch <nathan.lynch@amd.com>
 >=20
-> Add copy and interrupt descriptor layouts and encoders. Both encoders
-> accept operation-specific parameter structs.
+> Introduce software state and reservation helpers for driving an SDXI
+> submission queue. A spinlock serializes space checks and write-index
+> updates; blocking reservations use a bounded, killable wait.
 >=20
-> Copy descriptors are used to implement memcpy offload for the DMA
-> engine provider, and interrupt descriptors are used to signal the
-> completion of preceding descriptors in the ring.
+> Provide exact-size and bounded-size reservations, with descriptor access
+> through a ring slot carrying its index and ring state. Reservations
+> publish the write index and cannot be rolled back, so callers must
+> populate and publish every reserved slot.
 >=20
-> Conditionally expose sdxi_encode_size32() for unit testing.
+> Allocate and initialize ring state with each administrative or client
+> context, and free it during context release.
+>=20
+> The hardware read index bounds descriptor reuse. Completion handlers
+> wake blocked reservations as hardware consumes slots.
 >=20
 > Co-developed-by: Wei Huang <wei.huang2@amd.com>
 > Signed-off-by: Wei Huang <wei.huang2@amd.com>
@@ -80,5 +86,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103-sdxi-base-=
-v4-0-3668ccc7aab8@amd.com?part=3D22
+v4-0-3668ccc7aab8@amd.com?part=3D13
 
