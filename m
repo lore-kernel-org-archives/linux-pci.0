@@ -1,106 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.217.45
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793815226;
-	b=jyI16UzOeVhTIsUm7LeqDFfeRNP/T07YjeT93dCbgqAaI1XVrf5MhHGTFf0MU3DveDks
-	 V6SLrT+gtsRc1TuKcezMs0Ar8iKJ4UKgq3Ax+ZSkJ13W3csm11haIfxyLXPNuePcQqJZ5
-	 bYzQoXXwgxDVvrloHyxK9GwzykVhs+WG9Rp8fqTfV/coP5PEYrYucS738yn59jWDGCKkZ
-	 snLPN1bJrWpkLs4Xrtxo4Xb+F/gevXc3/jz8JVYghc/6XErDVBnOBHirzaWIgXmAKe7W+
-	 oG2ppHLomXiyaO++b2EYLgVtsbAC5X3ruquFfjVKAwUHwCEo39h8tPOcZVpJKPWZ4pQ==
+	t=1793815248;
+	b=2De9gT2orfI7GEADgYUuU4tXHRey7iq5/oBQAN3e7TiYi4OCbyOiMQakPOCJ8BlwBcln
+	 r134FItgs+iNz0PRdJSz/+MwKPvmv1RkTDsA459rWgrXKv/9sbLk1+5KyDwm6eCwdv0nL
+	 SgBP+wE4QeqPhBJGmF3+hwxV5dkquDD50lcuy7EfTZPkin3FAyl72j1dB6WwCdJSoAyzT
+	 nKNelZvR+eywFj4jM75GSXuvkjZZdwD5vQML7yFF3KVgJaUy37yHUPmm9/Sr8O75kcVEL
+	 3umcPCqK3tYATncAC2jndPC9cLQepedc64m/hbpPVndC4sBqV35fsQ/7d33QMsG232A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793815226;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=JAX2rOFX3ps0z7E54cgly2XJNYqW8YfGnVzidzlyKN4=;
-	b=Xwy7QA3LiucifwCdqUXHfWOKiMyxHL8pwOpMI4Pdy6rwlUgRkAm2SCmSdaQBxfQhryv2
-	 lUFlRgQBrR7t4DaHhpSHmWmUtMGF2SGZy0Hn5UCyuetpvWI0xO5QE746QdqBkkGfK23qZ
-	 RMXIiLEE3HOXxeBoS32ZCz3m5L3fsw7rAZVitkC3CVvPYbQhvUihcHsZgecb9rY7517Rf
-	 zL5zAeWMCHVar87UV9cvY5dARlrEalTbiOc44g4NejSo5o96GurG1pJMNV3RwLczepjCu
-	 mExYDsa4seCyfHSjNPpKGHT4FnYdTo7IOt+JLCKM2EcTlN5w9dWZQjsY/aqId0+JtPw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793815248;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=FNMewgzwxXMjzgYDlsVH+uOhn5G2WtJZ8n6lgExRd4A=;
+	b=Z76gs6IUiuX+GGFL4mH1UgAfNBVpnNLF3UmcbVke3hYZ6pKEG6dFEMcAWTgRwKA/Ks8E
+	 q132IGeh+sT4nAmwGbncWY7lbhwWWS/X4FpS7tsZnOTjhRmPKBPz5gM/+JXlwz6o3o13t
+	 +DZINYuMyB1rIFnMeHV9f3JfKvWxv0PrA8liKTbLTcTPG1PFWEulUT/tQ4g/hsDAx9tqJ
+	 If9d0cIdYJ+RtHIWivXxursBZztas0udwNqxHbI9mKC7LCUuidh3/v8myMugWQ7nJ1hUm
+	 ez2eXQvG2I74uITlib5I7LmN6LdBDB44xhRNaXGtO6/hrAQq1RND744fsDlxNzlTgFw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=soleen.com;
-	spf=pass smtp.mailfrom=soleen.com;
-	dkim=pass header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b=g5iMOwTh;
-	arc=none smtp.remote-ip=209.85.217.45
-Received: from mail-vs1-f45.google.com (mail-vs1-f45.google.com [209.85.217.45])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gTkEIzNc;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9417B6074A4A
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 18:00:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9417B6074A4A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B33C606B206;
+	Wed,  4 Nov 2026 18:00:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b=g5iMOwTh
-Received: by mail-vs1-f45.google.com with SMTP id ada2fe7eead31-7c3b6e8225dso617202137.2
-        for <linux-pci@vger.kernel.org>; Wed, 04 Nov 2026 10:00:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1793815224; x=1794420024; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=JAX2rOFX3ps0z7E54cgly2XJNYqW8YfGnVzidzlyKN4=;
-        b=g5iMOwThX+uE+7xsUaGHYp7csSg/cw1QC0Zn78GJVNHcZU7wyhpKG7ije+QTRwPjdC
-         zecPx0d+8hWLwKjLelfE4KxCT63+V2598YFacCCjm1WZI7lh1Dkl4ywNr552sqNsZfN0
-         1D2oFE502NTv+ISi+I51HLtxJyZ+7UTOzL+27rjsur7LECqPVVL3e5hJ9+rcWX3BGctn
-         hTVH/2y2Fy6ziFzdTOkp/akeK2x3V/pd1J1poAtcCCWbctt8AwcLGbTs3sIRXhWhbJFo
-         S/CFPMAQnuLl3iONSFxM9KIU04d3YWS5O8kA3yxJkA5qXnphvXd2ZgSnUwc9FSBBfTa8
-         ejxw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793815224; x=1794420024;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=JAX2rOFX3ps0z7E54cgly2XJNYqW8YfGnVzidzlyKN4=;
-        b=yVGqZ+YYE8ZQPCQVOuvO1ief7091+OnVuRN5ZZ3rHR6YCNg2ClMzzAW5A/ZJYyGKo9
-         JlUlmW8cuRpz1VFY4tP5P3hpnlHCbl8ojZU1iXlxLrDaS91aaxaYR+yfCMCH8gAke2av
-         zx0HB301mwx4+nH6QnO7O/iYbHvQagIybvclBo89DXDyiODgjSobOPpLtZewagp+GQ/R
-         O327WhuGM1NZFywbeJVvQkbQrkftpWkuo2nc0OYouLOaXdv3QxbES2/8F4tnGfQv0/48
-         MSX+WqXVHwKTL8wNxS2qBKaw1VOc1r5e8qHpDFgrEKZ9F7cG/IbHRZngrGdHuZWvy5GP
-         4sgQ==
-X-Forwarded-Encrypted: i=1; AKwUvBybvKB2oaWMvsTENGWTE0WiCl+v3T+6CfU0CR2BudFQLi7dEKaePSEkckdkwm9F8MuJQpBGeiENto8=@vger.kernel.org
-X-Gm-Message-State: APuU4Z+k4vYY04+p0I+749YBSFNgP0Wx/VqyDWOSWh+RM9A2/E7LdOIe
-	wmofUgPUm1XQ7tEhLaIr5Va0LmIrisk+orYe1nlH+WuL/yi5kKa9mbDELgi5HdOXEUo=
-X-Gm-Gg: AYBFou1kQfB+ofd8vwBdh0uyaaC/bg5LaI2d3I1+a7GafHbrpBaWaS7qgwtN7KWICfd
-	hlkgAu1GxSCOuzcAMtG853De6YFhMibcWNqba2a1amAJkSIeFuOF/wNT+1gwO/I20Ahmf/GrmDg
-	U4ndg9AKENwRQ6T8t9ydtGutuo3orpDYuVTpVBuC/NY3wp4sMuKVDAIAM4TIY4aDdQNEp3AHKB8
-	RK5r9A76ss4nJuASx34q1iufQgDC3nlWn8vDuxevd9t0W13acgjbnWvyrRGTfYk9yBdIfmQsDUv
-	iwtiEuHbl1pe+9fyxwEGztId02OUaQKof4uUNwJhBhQZjbtpRxXzrsRsZ7ApjZaAEKNVz8X1r4F
-	roq+21gJ/H8wwzCtJq9B6CThwEt2GFvJ+t4qIJGI4Esiye16PXXSRnsuF89eoZIv0MNPpyRoWCU
-	xLzG+EjBysQ2hx7Ed/HbBJeq3aHuZtf0LACLNKXBZ4vYQCkzrZ6XiyFLnSLdS2aA+9ng3cepmsY
-	Tiy3JIIe17Nhah6W4wTZMSoj3KeApOzm1NxT7MfRRP/iBKBmGgMsw2lG04p/MarvCgB9ytrVVnJ
-	NK1G3bFqbbi82zfC4QJilwQsEr3n/Q79TOuYp2qozCr5T4Nzkr72TEf1sGvh2WCD6cJP/90KGSj
-	/kuP1nvajFJ8ZkIijqgUAxqBQQJVQ
-X-Received: by 2002:a05:6102:fa0:b0:7c3:9982:67d7 with SMTP id ada2fe7eead31-7d072670942mr7469213137.16.1793815224323;
-        Wed, 04 Nov 2026 10:00:24 -0800 (PST)
-Received: from google.com (16.49.199.35.bc.googleusercontent.com. [35.199.49.16])
-        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-998d91d2a3asm2383636241.8.2026.11.04.10.00.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Nov 2026 10:00:23 -0800 (PST)
-Date: Wed, 4 Nov 2026 13:00:22 -0500
-From: Pasha Tatashin <pasha.tatashin@soleen.com>
-To: David Matlack <dmatlack@google.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
-	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
-	Alex Williamson <alex@shazbot.org>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Josh Hilke <jrhilke@google.com>, Leon Romanovsky <leonro@nvidia.com>, 
-	Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Randy Dunlap <rdunlap@infradead.org>, 
-	Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>, 
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v10 00/13] PCI: liveupdate: PCI core support for Live
- Update
-Message-ID: <autxCZPJ9yiE2ucq@google.com>
-References: <20261013162529.1928093-1-dmatlack@google.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gTkEIzNc
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D35441F000C1;
+	Wed,  4 Nov 2026 18:00:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793815248;
+	bh=FNMewgzwxXMjzgYDlsVH+uOhn5G2WtJZ8n6lgExRd4A=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=gTkEIzNcXJ6xrXZdIrw85UkWFf5j+aCZJERNdEBAXA186fP2Q8bQB9l0WrVf/Qrha
+	 S8dtaatTY0Zae5lup0cshFrVH8Et1f9ySy2IBtOXw5bLdbThVHkPlj6PP7zzH44eWR
+	 gy1/nDrXspCFSU9pHWWzjWAmTlxz9aBBTcVOQCLsS/ovg7FHbbbFfHmDQL+FO7RtbI
+	 ZRzD7BCwTZRocu1pNLOkxhBZoxrPF3O4ETm1bbpbfIUKck2U+U9HsB2hAICuFGZX+U
+	 Wo0/jMCoYl+hsSIRTCkkgi5E5M9MLyjsf2KGK4I7AY4p+35gOqEuw5f5H6wjvRNkDG
+	 rDpD/4DyjZyGA==
+Message-ID: <sashiko-outbox-197810@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v8 15/15] PCI/TSM: Wait for users during unregister
+Reply-To: sashiko-reviews@lists.linux.dev
+To: =?utf-8?b?QW5lZXNoIEt1bWFyIEsuViAoQXJtKQ==?= <aneesh.kumar@kernel.org>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20261104161632.3547423-16-aneesh.kumar@kernel.org>
+References: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
+ <20261104161632.3547423-16-aneesh.kumar@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 04 Nov 2026 18:00:47 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -109,132 +59,243 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261013162529.1928093-1-dmatlack@google.com>
 
-On 10-13 16:25, David Matlack wrote:
-> This series can be found on GitHub:
-> 
->   https://github.com/dmatlack/linux/tree/liveupdate/pci/base/v10
-> 
-> This series introduces support in the PCI core for Live Update, enabling
-> drivers to preserve PCI devices across a kexec-based kernel update
-> without interrupting the device. This functionality is critical for
-> minimizing downtime in environments where PCI devices (e.g., those
-> assigned to VMs via VFIO) must continue operating or maintain state
-> across a host kernel upgrade.
-> 
-> Specifically, this series allows preserved PCI devices to perform
-> uninterrupted memory transactions (DMA) targeting system memory
-> (specifically, preserved memfds) across a Live Update. These devices can
-> be behind a bridge but must not be VFs. Support for P2P and VF
-> preservation will be addressed in future series.
-> 
-> Series Overview
-> ---------------
-> 
-> This series implements the following to support PCI device preservation
-> across Live Update:
-> 
->   1. Set up a File-Lifecycle-Bound (FLB) handler to track and preserve
->      PCI-specific state (struct pci_ser) across Live Update using Kexec
->      Handover (KHO).
-> 
->   2. Add APIs for drivers to register devices for preservation
->      (outgoing) and for the PCI core to identify preserved devices
->      during enumeration (incoming)
-> 
->   3. Automatically preserve all upstream bridges for any preserved
->      endpoint. Use reference counting to ensure bridges remain preserved
->      as long as any downstream device is preserved.
-> 
->   4. Guarantee that preserved devices retain the same RequesterID (bus,
->      device, function) for the duration of their preservation by
->      inheriting secondary bus numbers, subordinate bus numbers, and ARI
->      Forwarding Enable on preserved bridges.
-> 
->   5. Guarantee that memory transactions to/from preserved devices are
->      routed consistently by inheriting Access Control Services (ACS)
->      flags across a Live Update, from the endpoint up to the root port.
-> 
->   6. Modify the PCI shutdown path to avoid disabling bus mastering on
->      preserved devices, thereby allowing preserved devices to perform
->      uninterrupted during kexec for Live Update.
-> 
->   7. Provide comprehensive documentation for the FLB API, device
->      tracking mechanisms, and the division of responsibilities between
->      the PCI core, drivers, and userspace.
-> 
-> Merge Plan
-> ----------
-> 
-> This series will be merged through liveupdate.git, matching the
-> agreed-upon tree in the MAINTAINERS entry for PCI LIVE UPDATE.
-> 
-> Testing
-> -------
-> 
-> This series was tested in conjunction with v5 of the VFIO PCI driver
-> series:
-> 
->   https://lore.kernel.org/kvm/20260714151505.3466855-1-vipinsh@google.com/
-> 
-> The full set of patches used for testing can be found on GitHub.
-> 
->   https://github.com/dmatlack/linux/tree/liveupdate/pci/base/v10-with-vfio
-> 
-> Testing was performed using the new VFIO selftests:
-> 
->   - vfio_pci_liveupdate_uapi_test
->   - vfio_pci_liveupdate_kexec_test
-> 
-> Both tests were run in a QEMU-based VM environment (using a single
-> virtio-net PCIe device connected to a root port to exercise bridge
-> support) and on bare metal using an Intel EMR server with 8x Intel DSA
-> PCIe devices and 1x NVMe device.
-> 
-> Future Work
-> -----------
-> 
-> Please see the PCI core Live Update Roadmap:
-> 
->   https://lore.kernel.org/linux-pci/20261001232133.560284-1-dmatlack@google.com/
-> 
-> Changelog
-> ---------
-> 
-> v10:
->  - Save and restore the ACS Egress Control Vector along with the ACS
->    Control register, sizing the save buffer from the HwInit Egress
->    Control Vector Size field (Alex) and drop Bjorn's R-b tag
->  - Make CONFIG_PCI_LIVEUPDATE depend on 64BIT from the first patch
->    rather than adding the dependency later in the series (Pratyush,
->    Mike)
->  - Reword kernel-doc comments to read better in the HTML docs and
->    spell out "reference count" (Mike)
->  - Replace the version number at the start of struct pci_ser with
->    required_flags and optional_flags, and record the size of struct
->    pci_dev_ser, so that the PCI FLB ABI can be extended (LPC BoF)
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] PCI/TSM: use-after-free in tsm_unregister() and sev_tsm_uninit()
+- [Low] PCI/TSM: mixing guard() and goto in pci_tsm_context_get() and pci_t=
+sm_init()
+--
 
-Hi Bjorn,
+commit b2546a16b6b6a681e70bba7a7e4c0fbd2665c584
+Author: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
 
-I am planning to target this series for the 7.5 merge window through the 
-liveupdate tree, as we previously agreed. However, there are still 6 
-patches that lack an Acked-by from you. I believe you might have 
-reviewed some of them before, but the tags were lost during subsequent 
-refactoring. Could you please take another look at the following to make 
-sure everything is in order for us to merge the series:
+PCI/TSM: Wait for users during unregister
 
-PCI: liveupdate: Set up FLB handler for the PCI core
-PCI: liveupdate: Track incoming preserved PCI devices
-PCI: liveupdate: Document driver binding responsibilities
-PCI: liveupdate: Auto-preserve upstream bridges across Live Update
-PCI: Save and restore the ACS Control register and Egress Control Vector
-PCI: liveupdate: Adopt ACS controls in incoming preserved devices
+This commit adds registration_lock and a user reference count to struct
+tsm_dev so that tsm_unregister() and pci_tsm_destroy() wait for active TSM
+users, including IOMMUFD virtual IOMMUs without vDEVICE objects, before
+tearing down PCI connections.
 
-Thanks!
+> diff --git a/drivers/crypto/ccp/sev-dev-tsm.c b/drivers/crypto/ccp/sev-de=
+v-tsm.c
+> index 46f2539d2d5ab..5c61ce74ee0f7 100644
+> --- a/drivers/crypto/ccp/sev-dev-tsm.c
+> +++ b/drivers/crypto/ccp/sev-dev-tsm.c
+> @@ -392,8 +392,8 @@ void sev_tsm_init_locked(struct sev_device *sev, void=
+ *tio_status_page)
+> =20
+>  void sev_tsm_uninit(struct sev_device *sev)
+>  {
+> -	if (sev->tsmdev)
+> -		tsm_unregister(sev->tsmdev);
+> +	if (sev->tsmdev && WARN_ON(tsm_unregister(sev->tsmdev)))
+> +		return;
+> =20
+>  	sev->tsmdev =3D NULL;
+>  }
 
--- 
-Pasha
+[Severity: High]
+Can a concurrent call to sev_tsm_uninit() while tsm_unregister() is waiting
+for TSM users trigger a use-after-free or premature teardown?
+
+In drivers/crypto/ccp/sev-dev.c, sev_firmware_shutdown() invokes
+sev_tsm_uninit() outside sev_cmd_mutex:
+
+drivers/crypto/ccp/sev-dev.c:sev_firmware_shutdown() {
+	if (sev->tio_status)
+		sev_tsm_uninit(sev);
+
+	sev_snp_unregister_verify_mitigation(sev);
+
+	mutex_lock(&sev_cmd_mutex);
+
+	__sev_firmware_shutdown(sev, false);
+
+	kfree(sev->tio_status);
+	sev->tio_status =3D NULL;
+
+	mutex_unlock(&sev_cmd_mutex);
+}
+
+Because tsm_unregister() now sleeps in tsm_wait_for_users() and
+sev->tsmdev is only cleared after tsm_unregister() returns, a concurrent
+caller of sev_firmware_shutdown() (such as sev_platform_shutdown() racing
+with sev_dev_destroy() or sev_pci_exit()) can see non-NULL sev->tio_status
+and sev->tsmdev and call tsm_unregister(sev->tsmdev) a second time.
+
+Additionally, if tsm_unregister() returns -ENODEV here, sev_tsm_uninit()
+returns early without clearing sev->tsmdev, and sev_firmware_shutdown()
+proceeds to run __sev_firmware_shutdown() and free sev->tio_status while
+the first caller is still blocked in tsm_wait_for_users() or disconnecting
+PCI devices in pci_tsm_unregister().
+
+> diff --git a/drivers/pci/tsm/core.c b/drivers/pci/tsm/core.c
+> index 2c77321fa7792..49256638c164c 100644
+> --- a/drivers/pci/tsm/core.c
+> +++ b/drivers/pci/tsm/core.c
+
+[ ... ]
+
+> @@ -343,24 +352,33 @@ struct pci_tsm_context *pci_tsm_context_get(struct =
+pci_dev *pdev,
+>  		return ERR_PTR(-EOPNOTSUPP);
+>  	/*
+>  	 * The vdevice can use a different PCI function from VIOMMU_ALLOC. The
+> -	 * module pin keeps the vIOMMU's TSM registered, but does not freeze th=
+is
+> +	 * caller must retain its tsm_get_device() reference until the context =
+is
+> +	 * released. This keeps the TSM registered, but does not freeze this
+>  	 * function's link. Match its current TSM before pinning the link below.
+>  	 */
+>  	if (pdev->tsm->tsm_dev !=3D viommu_tsm_dev)
+>  		return ERR_PTR(-EXDEV);
+> =20
+> +	if (!tsm_trylock_registration(viommu_tsm_dev))
+> +		return ERR_PTR(-ENODEV);
+> +
+>  	pf0 =3D to_pci_tsm_pf0(pdev->tsm);
+> -	if (!pf0)
+> -		return ERR_PTR(-ENXIO);
+> +	if (!pf0) {
+> +		context =3D ERR_PTR(-ENXIO);
+> +		goto out_unlock_registration;
+> +	}
+> =20
+>  	context =3D kzalloc_obj(*context);
+> -	if (!context)
+> -		return ERR_PTR(-ENOMEM);
+> +	if (!context) {
+> +		context =3D ERR_PTR(-ENOMEM);
+> +		goto out_unlock_registration;
+> +	}
+> =20
+> -	guard(mutex)(&pf0->lock);
+> +	mutex_lock(&pf0->lock);
+>  	if (pf0->removing) {
+>  		kfree(context);
+> -		return ERR_PTR(-ENODEV);
+> +		context =3D ERR_PTR(-ENODEV);
+> +		goto out_unlock_mutex;
+>  	}
+> =20
+>  	if (!pf0->dsm_context_users)
+> @@ -370,6 +388,10 @@ struct pci_tsm_context *pci_tsm_context_get(struct p=
+ci_dev *pdev,
+>  	context->pf0 =3D pf0;
+>  	context->pdev =3D pci_dev_get(pdev);
+>  	context->dsm_dev =3D pci_dev_get(pf0->base_tsm.pdev);
+> +out_unlock_mutex:
+> +	mutex_unlock(&pf0->lock);
+> +out_unlock_registration:
+> +	tsm_unlock_registration(viommu_tsm_dev);
+>  	return context;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_tsm_context_get);
+
+[ ... ]
+
+> @@ -842,11 +901,17 @@ void pci_tsm_init(struct pci_dev *pdev)
+>  		if (!dsm->tsm)
+>  			return;
+> =20
+> +		tsm_dev =3D dsm->tsm->tsm_dev;
+> +		if (!tsm_trylock_registration(tsm_dev))
+> +			return;
+> +
+>  		if (is_link_tsm(dsm->tsm->tsm_dev) &&
+>  		    to_pci_tsm_pf0(dsm->tsm)->removing)
+> -			return;
+> +			goto out_unlock_registration;
+> =20
+>  		probe_fn(pdev, dsm);
+> +out_unlock_registration:
+> +		tsm_unlock_registration(tsm_dev);
+>  	}
+>  }
+
+[Severity: Low]
+This isn't a bug, but pci_tsm_context_get() and pci_tsm_init() both use
+guard(rwsem_read)(&pci_tsm_rwsem) and now mix scope-based cleanup with
+goto-based error handling (and pci_tsm_context_get() converts
+guard(mutex)(&pf0->lock) back to manual mutex_lock() / mutex_unlock() with
+goto labels).
+
+Could these functions avoid mixing guard() with goto cleanup labels?
+
+> diff --git a/drivers/virt/coco/tsm-core.c b/drivers/virt/coco/tsm-core.c
+> index 92ce3337f1ea7..6bb373bc8bae0 100644
+> --- a/drivers/virt/coco/tsm-core.c
+> +++ b/drivers/virt/coco/tsm-core.c
+
+[ ... ]
+
+> +/**
+> + * tsm_unregister() - unregister a TSM after draining its users
+> + * @tsm_dev: TSM to unregister
+> + *
+> + * Blocks new users and waits for references acquired by tsm_get_device(=
+),
+> + * including vIOMMUs without vdevices, and pending DSM removals before t=
+earing
+> + * down PCI connections. The wait cannot be aborted by a signal; userspa=
+ce
+> + * must release the vIOMMUs and vdevices to let it finish.
+> + *
+> + * Return: 0 on success, or -ENODEV if unregistration has already starte=
+d.
+> + */
+> +int tsm_unregister(struct tsm_dev *tsm_dev)
+>  {
+> -	/* Remove the class lookup first. */
+> +	down_write(&tsm_dev->registration_lock);
+> +	if (tsm_dev->unregistering) {
+> +		up_write(&tsm_dev->registration_lock);
+> +		return -ENODEV;
+> +	}
+> +	tsm_dev->unregistering =3D true;
+> +
+>  	device_del(&tsm_dev->dev);
+> -	if (tsm_dev->pci_ops)
+> +	/* No new user references can be acquired while the write lock is held.=
+ */
+> +	tsm_put_user(tsm_dev);
+> +	tsm_wait_for_users(tsm_dev);
+> +
+> +	if (IS_ENABLED(CONFIG_PCI_TSM) && tsm_dev->pci_ops)
+>  		pci_tsm_unregister(tsm_dev);
+> +
+> +	up_write(&tsm_dev->registration_lock);
+>  	put_device(&tsm_dev->dev);
+> +	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(tsm_unregister);
+
+[Severity: High]
+Can the tsm_dev->unregistering check in tsm_unregister() cause a
+use-after-free on tsm_dev when two callers race to unregister the same
+device?
+
+tsm_register() initializes tsm_dev->dev with a single registration device
+reference. When a first caller enters tsm_unregister(), it holds
+down_write(&tsm_dev->registration_lock) across device_del(),
+tsm_wait_for_users(), and pci_tsm_unregister().
+
+If a second caller enters tsm_unregister() while the first caller is
+waiting for users to drain, the second caller blocks in
+down_write(&tsm_dev->registration_lock) without holding a device reference
+on tsm_dev->dev. Once all user references have been dropped and the first
+caller finishes:
+
+	up_write(&tsm_dev->registration_lock);
+	put_device(&tsm_dev->dev);
+
+put_device(&tsm_dev->dev) drops the final reference and frees tsm_dev via
+tsm_release(), while the second caller wakes from
+down_write(&tsm_dev->registration_lock), reads tsm_dev->unregistering, and
+calls up_write(&tsm_dev->registration_lock) on the freed tsm_dev.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104161632.3547=
+423-1-aneesh.kumar@kernel.org?part=3D15
