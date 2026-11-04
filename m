@@ -1,57 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793760987;
-	b=AIcGBeeqkbnGjcyGtsurA1UXwxq/4s397y7FuaIwbS8XmDAJb4/tvPwzkLtwfoN1DtWD
-	 M49RNalnWrwbfKtz68Fp6c1pLwXRFk+T+PkelOLHv0dXhUuJuTV3VKxqEWhE/7T1d01o3
-	 csVxf7suSiJYVymGRlyVzuvaUx9WQaLgWj4VLYJugwaCM1v9a58RWzfsOfTORgzGdquvo
-	 CX4WuzABld94aKZzRuTEyYUkHe8MDXvgH0Qd+x5iht0Y74U7WfbFsYiyGZ4H7wtPmBmQE
-	 P1sKLMucofbdzGXoa1FRJQ6uAu+KsZ2svbuqNg/DvBRGFyItXr1LESBeaQLAa1+TOmw==
+	t=1793760993;
+	b=3aX6IU9P8uSmVLQ+DE3n2uTlUnDraUDjMxyNZdNGl3zsh8chwFSr2F7TeNutE2cGJK8n
+	 9WJIaW3XpTaQnlFNLpttR4MREc6EO0r7KmGBOBLsqTWDuhieMQGMPDoz2EWyZ4Pcf5tbe
+	 78TuBTTZVXxt2/PJ4m08bH712/eJXm5LbSRK9zLuV2EWN4OxPw121w0Y89kytAgF4OL7O
+	 HYrwsypSvmbnZkSy2eLv6zfFFO7ynjBJZyHp0WDRPj+gxy/3kJZRtv+bIBavpgVWxmZ+h
+	 ieTEhO/6kdQZIobiQ28f64Wl/rnb4ivyCSXYx2Tfc9FBcr2l1RJkyNS3RuNOETqDiJQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793760987;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793760993;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=qcQwK8cZ9lWxsH1DQaLYIJ9uFi9nPIv9Go4ez8lWkPI=;
-	b=j3osCucLRzuQzceFBZ0cwLRWL/LSLPlHMVEt+mdUsPhisfJ0ymeJlZXIQe/URZun4gwk
-	 WO8w5e0Xpa9ApfIbbVZo7BU7cVjJFT+555ROSrBef10Dz1t7/oAkudulW6aNxymS4LxkJ
-	 XGP5aVW4VWtHMGsVaKflKzaiA7MASFYumP0FfV8/XRPDbID7dPBNb/WM9is1s2cjnBr2G
-	 8caEoePyfd7xB1di++5gYEnz7Jm95KpUJL6za8Ey/ZxmF+7DWYudaVh89bmi7uNhM9T4H
-	 zWfKJsTVUyjHQ9hCImGCE49J6tzmOHjgrTUA2ztEuAB0+gmRN3LAA+3ZExJMdrqGxLQ==
+	bh=34Tfyz8Xu6Jg4xiOOwwtWxXGP4dHXwSIrqISbH5P8bE=;
+	b=dAhhnz/p5XIrN1bfTVwTdYQ5ZHaJo2WqjOmydJIy+uKEXFFQnqiWDun1/kTzRTBb3wMe
+	 gNOp8SGhGybt7v3x1VQTD9szOlA+yXBsJHVqJsCY77TthsaWfSBi4Pt5K5UWKE0J5k3+s
+	 mrnhKcz4VvNVdWe2Ux6b0OqmkFNUz2PlTwPbj2DWzegRFR/f7O/Dvbr/He52S2f5HSax5
+	 b4HraUKe1LortE6p9dTnyqC/ND7i08uxrzj329s2x06wdaTPu35xlwsxdgUgQtLrzVBdY
+	 mg41HbBw/2iNRXCnB89nduyO3AUimUBhBrvaSgJe9/b3q/Qim1JZ/BYmQt81sDQ1gMA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="L2l/TdWA";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fBGnIbDu;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53C1F606A31B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 02:56:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8244606A31B
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 02:56:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=L2l/TdWA
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B696D1F000C1;
-	Wed,  4 Nov 2026 02:56:26 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fBGnIbDu
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 655291F00919;
+	Wed,  4 Nov 2026 02:56:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793760986;
-	bh=qcQwK8cZ9lWxsH1DQaLYIJ9uFi9nPIv9Go4ez8lWkPI=;
+	s=k20260515; t=1793760992;
+	bh=34Tfyz8Xu6Jg4xiOOwwtWxXGP4dHXwSIrqISbH5P8bE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=L2l/TdWAFvWgrrkQ7yQOgjMjHWmyywKKkj4rrWyLLgM5P/Z1zPQc6YLCgtwQKmhyY
-	 VC7NIkuBMa1CRbiCk23SFi5hWl8B9AT2qc1fiqxGdtqqOXN9wLWRpA5yjUtO0+EYTg
-	 uazkJM91R7FDOqPTdUrwqLvbRmprwZKYoTl91qeq/zuQRNFeA6eH6CpkCK1xBscxPk
-	 FU6Vx4EqEkIh48NudyDTIJN07cFGN+txl4Q93Ncz1Akr9RjSU/lZQoBluZgN0RVLV0
-	 kqF+Q7a8UTk/PfW6bwCV6MepqhylGq8Y1pTNSOEupWRqft5ldc1Si6sTIsVTYKc+Jl
-	 rgfjP5sU9LfVA==
-Message-ID: <sashiko-outbox-196549@kernel.org>
+	b=fBGnIbDu0q7r5HbcbqcyPPB33Q8KVNjRDLlNHu2n4xTksdMGcnX/cIxT4jWlB7P3D
+	 Xx+Ns3Usg16AELo/i1FLKGj3B6dZR3IV4csDow3fTK7K/LaR5TsKLB+37w2iiYKNva
+	 KGJ6PgAk8P6d3sauSGXH73OWAQwilCEiJG09kc50MEwvxpWQ/8NOAVoG+J1n0jZ8N4
+	 E07QIgyyTvMgH+vg1P9qmU/suwaRSwkazxvq6Yo9bhUsQuoyIDrSVDcEB6nLKFKYw2
+	 Y2d2qmKgYPb+lqtukYftSocjlDOL6RvshE6HgWVvS2x43tkSacHFiQn35RoWpfGblh
+	 vAF3IRVplykqA==
+Message-ID: <sashiko-outbox-196550@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 09/25] dmaengine: sdxi: Allocate administrative
- context
+Subject: Re: [PATCH v4 08/25] dmaengine: sdxi: Introduce submission queue
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nathan Lynch" <nathan.lynch@amd.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261103-sdxi-base-v4-9-3668ccc7aab8@amd.com>
+In-Reply-To: <20261103-sdxi-base-v4-8-3668ccc7aab8@amd.com>
 References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
- <20261103-sdxi-base-v4-9-3668ccc7aab8@amd.com>
+ <20261103-sdxi-base-v4-8-3668ccc7aab8@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 02:56:26 +0000
+Date: Wed, 04 Nov 2026 02:56:32 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,17 +62,22 @@ Precedence: list
 
 > From: Nathan Lynch <nathan.lynch@amd.com>
 >=20
-> Allocate the administrative context=E2=80=99s control structures and regi=
-ster
-> device-managed cleanup.
+> Add the sdxi_sq (submission queue) type and APIs that act on it. The
+> sq contains three control structures shared with hardware: descriptor
+> ring, write index, and context status block (which contains the read
+> index). Define the hardware context-status and generic descriptor
+> layouts, including assertions for their sizes.
 >=20
-> Co-developed-by: Wei Huang <wei.huang2@amd.com>
-> Signed-off-by: Wei Huang <wei.huang2@amd.com>
+> The descriptor ring requires only 64-byte alignment, so it's practical
+> to implement it as a flexible array member. The write index and context
+> status are small enough to place in the struct as well, so we have a
+> single DMA coherent allocation to manage.
+>=20
 > Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103-sdxi-base-=
-v4-0-3668ccc7aab8@amd.com?part=3D9
+v4-0-3668ccc7aab8@amd.com?part=3D8
 
