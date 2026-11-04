@@ -1,65 +1,65 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.34
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793792288;
-	b=hnHgow7vAmeK3F6Uxf/DGiQlVhngRMHON8U573hqBHEowklg5+a7qG9IBIqrQj0V8Ywp
-	 xF6NjO0aZhUx2UREtzd8Q7PkCedDa5ARSox1exwjEWWe5e3TUtLrFnQ+6O3AXe0BUWW4T
-	 lt65+7rEnJxi5wXuLbTUDqd7NnqFHMyNHYGqwwJGhyI0usrrUCFe9lPZvvUHBaYr7bwE0
-	 HPFzpNTzH4YpafP/sN5v2OyHA5nBaWR/3dzKYfuOzx6VSTxNu4q/xo+KhOThamv8ljP55
-	 cssO/tY6fihepv6f/jhmB8gYoO+FamlPywXFbKWv8jDeCFU6sr6yRWl8vEe3qU5x8dQ==
+	t=1793792293;
+	b=dEPiphq2ulzzwjlGs/kP9Y9qPWICtEUuKcciE8Rf4C9F1wrWGFt031+sQYjAVWE5SwKN
+	 c4KLqoO1bNbMWO/IhTbePiV5nN6QKT5gQNj5AncpAzJhkzGzE7y1v1NEvWjXmJ8VvG70W
+	 E5tRihogBP+2Vt+Cmoq9WH2F5u4CS2bF/YOFmUDVz24qy18UEhVRmp7399wxA7dk+0vMA
+	 LuQugNLSIBXzW/c9kEba229awezNKqsyvGFszYyxSf5J6ovHmRA0m7pdSE4RQnr97BylV
+	 nZOYZSiHHsob+IqkeHSnYVcWQMWhDy09oQLbpxi3rG7pXCyRwxwZfIVjKp1TWXAhHeg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793792288;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793792293;
 	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
 	 Received:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 In-Reply-To:MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:
-	 X-Msg-Generator:Content-Type:X-Sendblock-Type:CMS-TYPE:X-CPGSPASS:
-	 X-Hop-Count:X-CMS-RootMailID:References;
-	bh=1wM3zL+uTsyKlFjdgUfPHOt4NIoAKdyW2WiJddhSn+E=;
-	b=2oMU4oNEiiPlZ0sNwFzc7FltMjheU8MN19JtDy7bOYfND6CiK+OW3F3MPxETq7F6gsnI
-	 bQ7xyAC8MU0Ps9AMsK4mDJWQpvS8sUIxBqGs2M4XS4PkzvGASJgC0r6uwYCmJxY8aEpdc
-	 U1YX2r2v0AorA42dWAG74pSO/n0HTZf5vWoaJxEqW8n0jT9AFF/9+nFzeXXdQhDCvA5bd
-	 OSbGWUFjd8rIUawhSt5RQoN+Qj5dAu8pyoKfZRjU+dnclBBspw+XjhV8uiPlpWL9hnwj8
-	 iYJt3Ah6QZuUKYXCgZDdFDpGJYbrPHgsCXMHBG4te2eLNEN/lrXCNp+h0UP7GNPEBtA==
+	 MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:X-Msg-Generator:
+	 Content-Type:X-Sendblock-Type:CMS-TYPE:X-CPGSPASS:X-Hop-Count:
+	 X-CMS-RootMailID:References;
+	bh=zmRKQpwya0WeDnkSLxH41WMnOGAOdo1z/9sxMtTqa8s=;
+	b=29uB0PWxxN6BXMOAifleVqbSj9CdPlKh3odfFcrH4w/oJCIzdk+b2AnJzY6LU5MHIFIg
+	 abkZ4k2GKZgSrhBt/DU4QjEmOUlM+z394LsQD2FE9jCcWM++sUs7E6XsFUxUmwi5HTidS
+	 krwq0bu7n7ON7BFJUTHExNpmfJ7S3ZJBbVu0ML4DKqKao/J01WdrC5l6md5VDzSZzhFkY
+	 SsCuDpnZeYk678pfWKuRvZ54RZUxhkipyIZnjk7Q8tgeU0idhP7sficWrjXCP0dsvKIp1
+	 Z+mMQsFm42G0Ql5BgtC2UzxD7A/hts66csGORPJYm8ZJPt+GQhBtPM2FhNZwY9FCnig==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=samsung.com;
 	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=Yz5ETYsI;
-	arc=none smtp.remote-ip=203.254.224.33
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=OAPrPy3U;
+	arc=none smtp.remote-ip=203.254.224.34
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88E62606D820
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57CE8606D81E
 	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 11:38:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 88E62606D820
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 57CE8606D81E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=Yz5ETYsI
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20261104113804epoutp03272a38969bec7a58ae9b71d75d93b2b9~k1JQ0IUgc1674516745epoutp03C
+	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=OAPrPy3U
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20261104113804epoutp046afbda9f07857b7de69fa303c680af54~k1JQanXG62603026030epoutp04F
 	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 11:38:04 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20261104113804epoutp03272a38969bec7a58ae9b71d75d93b2b9~k1JQ0IUgc1674516745epoutp03C
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20261104113804epoutp046afbda9f07857b7de69fa303c680af54~k1JQanXG62603026030epoutp04F
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
 	s=mail20170921; t=1793792284;
-	bh=1wM3zL+uTsyKlFjdgUfPHOt4NIoAKdyW2WiJddhSn+E=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Yz5ETYsIBTMgELGDWS5D166NIZL7Xq2xhmqlMsmLr9BmIHJiCP9TKeRM+MDfdzSg0
-	 +9Icm8lxv2X2CnQFwQ8Sbgiabm82nc015aFdYDbv8LWT8clWEqaKehpgQgFDGt+A92
-	 x1N3VlbCbzjMv+tA60QHYIocXE0TS6kt73HST1bA=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	bh=zmRKQpwya0WeDnkSLxH41WMnOGAOdo1z/9sxMtTqa8s=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=OAPrPy3U9DD/q4Zmn4QgcYU0ya99z9eegJ3uA442BIQaMIf1yIvyr/cnMFz2Lseho
+	 7ioRjNf5FeUerelLsFgO8uLm0+jzoO5Jy9on0tnUcgGFnljuNQT9vQs3dN9nfnZU5+
+	 n53yUJrbSHtGenjYqLcfxgrxk4Q4xP6YX7SARNh8=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
 	epcas5p2.samsung.com (KnoxPortal) with ESMTPS id
-	20261104113803epcas5p286a75c22603e142bdc74cb66fa4a17a8~k1JQPq0IR1390013900epcas5p2S;
+	20261104113803epcas5p2341017fcd80d69eead253b606b64cbb0~k1JPqDB111368413684epcas5p2e;
 	Wed,  4 Nov 2026 11:38:03 +0000 (GMT)
 Received: from epcpadp2new (unknown [182.195.40.142]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4jKNjR6lKzz6B9m5; Wed,  4 Nov
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4jKNjR2Ftdz3hhT3; Wed,  4 Nov
 	2026 11:38:03 +0000 (GMT)
 Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20261104113044epcas5p2f8aa4ebe7305b60819571c1a8aefe295~k1C3UXcY22350023500epcas5p2I;
-	Wed,  4 Nov 2026 11:30:44 +0000 (GMT)
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+	20261104113003epcas5p43fd57f95a6f4b1a0c6ee2a8b1ab8cad5~k1CQXdYBE1209212092epcas5p4P;
+	Wed,  4 Nov 2026 11:30:03 +0000 (GMT)
 Received: from unvme-SYS-221H-TN24R.samsungds.net (unknown [107.99.40.127])
 	by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20261104113041epsmtip1e29814f825c506ece958cb88d08f6ee8~k1C0KytrG2364123641epsmtip1c;
-	Wed,  4 Nov 2026 11:30:41 +0000 (GMT)
+	20261104113000epsmtip1897ed5d551fbd717aefacc52fc6e28b6~k1CODHj-72358823588epsmtip14;
+	Wed,  4 Nov 2026 11:30:00 +0000 (GMT)
 From: Shrihari E S <shrihari.s@samsung.com>
 To: jic23@kernel.org, junjie.cao@linux.dev, linux-cxl@vger.kernel.org,
 	linux-pci@vger.kernel.org, qemu-devel@nongnu.org, anisa.su887@gmail.com,
@@ -68,12 +68,11 @@ Cc: shrihari.s@samsung.com, arun.george@samsung.com, cpgs@samsung.com,
 	dave@stgolabs.net, dongjoo.seo1@samsung.com, gost.dev@samsung.com,
 	s.neeraj@samsung.com, vikash.k5@samsung.com, anisa.su@samsung.com,
 	junjie.cao@intel.com
-Subject: [PATCH qemu v1 7/8] hw/cxl: Wire SVC and Dev3 capabilities to CXL
- Type 3 device
-Date: Wed,  4 Nov 2026 17:22:41 +0530
-Message-Id: <331418503.141793792283935.JavaMail.epsvc@epcpadp2new>
+Subject: [PATCH qemu v1 0/8] hw/pci: hw/cxl: Add UIO support in CXL and PCIe
+ stack.
+Date: Wed,  4 Nov 2026 17:22:34 +0530
+Message-Id: <1582071873.61793792283310.JavaMail.epsvc@epcpadp2new>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20261104115242.2035807-1-shrihari.s@samsung.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -84,97 +83,195 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20261104113044epcas5p2f8aa4ebe7305b60819571c1a8aefe295
+X-CMS-MailID: 20261104113003epcas5p43fd57f95a6f4b1a0c6ee2a8b1ab8cad5
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: REQ_APPROVE
 CMS-TYPE: 105P
 X-CPGSPASS: Y
 X-Hop-Count: 3
-X-CMS-RootMailID: 20261104113044epcas5p2f8aa4ebe7305b60819571c1a8aefe295
-References: <20261104115242.2035807-1-shrihari.s@samsung.com>
-	<CGME20261104113044epcas5p2f8aa4ebe7305b60819571c1a8aefe295@epcas5p2.samsung.com>
+X-CMS-RootMailID: 20261104113003epcas5p43fd57f95a6f4b1a0c6ee2a8b1ab8cad5
+References: <CGME20261104113003epcas5p43fd57f95a6f4b1a0c6ee2a8b1ab8cad5@epcas5p4.samsung.com>
 
-Add the SVC and Dev3 capabilities to the CXL type 3 device to make
-it work as a UIO completer. The x-uio option works together with
-the x-svc and x-256b-flit options: the device carries the UIO
-capability when all three are set, and logs a warning that UIO is
-not enabled when x-uio is set without x-svc and x-256b-flit.
+Hi All,
 
-Signed-off-by: Shrihari E S <shrihari.s@samsung.com>
-Signed-off-by: Dongjoo Seo <dongjoo.seo1@samsung.com>
----
- hw/mem/cxl_type3.c          | 29 +++++++++++++++++++++++++++++
- include/hw/cxl/cxl_device.h |  1 +
- 2 files changed, 30 insertions(+)
+This is the v1 of the "UIO feature enablement in Qemu" series, a
+follow up of RFC V2 [1] with the review comments addressed. The
+series adds enumeration and configuration support
+for the PCIe Unordered I/O (UIO) feature across the standard PCIe
+and the CXL stack of QEMU, and establishes the foundation for the
+OS to discover, negotiate and configure UIO capabilities on CXL
+ports and devices.
 
-diff --git a/hw/mem/cxl_type3.c b/hw/mem/cxl_type3.c
-index 778a18ddea..12430c77d2 100644
---- a/hw/mem/cxl_type3.c
-+++ b/hw/mem/cxl_type3.c
-@@ -17,6 +17,7 @@
- #include "hw/mem/memory-device.h"
- #include "hw/mem/pc-dimm.h"
- #include "hw/pci/pci.h"
-+#include "hw/pci/pcie_dev3.h"
- #include "hw/core/qdev-properties.h"
- #include "hw/core/qdev-properties-system.h"
- #include "qapi/error.h"
-@@ -1191,6 +1192,33 @@ void ct3_realize(PCIDevice *pci_dev, Error **errp)
-     pcie_doe_init(pci_dev, &ct3d->doe_comp, 0x1b0, doe_comp_prot, true,
-                   CXL_T3_MSIX_PCIE_DOE_COMPLIANCE);
- 
-+    /*
-+     * The HDM decoder UIO capability builds on the SVC and 256-byte
-+     * flit mode capabilities in the PCIe config space: the device
-+     * carries the UIO capability when it is configured for SVC and
-+     * 256-byte flit mode as well.
-+     */
-+    if (ct3d->uio_comp_capable && (!ct3d->svc || !ct3d->flitmode)) {
-+        warn_report("x-uio=on requires x-svc=on and x-256b-flit=on; "
-+                    "UIO will not be enabled on this device");
-+        ct3d->uio_comp_capable = false;
-+    }
-+
-+    if (ct3d->svc) {
-+        /* SVC capability of the type3 device */
-+        rc = pcie_svc_cap_init(pci_dev, 0x200 + PCI_ERR_SIZEOF,
-+                               ct3d->flitmode, errp);
-+        if ((rc >= 0) && ct3d->uio_comp_capable) {
-+            /*
-+             * The Dev3 Capability is placed after SVC in the PCIe
-+             * config space, and the device is initialized as a UIO
-+             * completer.
-+             */
-+            pcie_dev3_cap_init(pci_dev, 0x200 + PCI_ERR_SIZEOF + PCI_SVC_SIZEOF,
-+                               false, true, errp);
-+        }
-+    }
-+
-     /* Set default value for patrol scrub attributes */
-     ct3d->patrol_scrub_attrs.scrub_cycle_cap =
-                            CXL_MEMDEV_PS_SCRUB_CYCLE_CHANGE_CAP_DEFAULT |
-@@ -1556,6 +1584,7 @@ static const Property ct3_props[] = {
-                                 width, PCIE_LINK_WIDTH_16),
-     DEFINE_PROP_BOOL("x-256b-flit", CXLType3Dev, flitmode, false),
-     DEFINE_PROP_BOOL("hdm-db", CXLType3Dev, hdmdb, false),
-+    DEFINE_PROP_BOOL("x-svc", CXLType3Dev, svc, false),
-     DEFINE_PROP_BOOL("x-uio", CXLType3Dev, uio_comp_capable, false),
-     DEFINE_PROP_UINT16("chmu-port", CXLType3Dev, cxl_dstate.chmu[0].port, 0),
- };
-diff --git a/include/hw/cxl/cxl_device.h b/include/hw/cxl/cxl_device.h
-index e8480026c3..a095febf90 100644
---- a/include/hw/cxl/cxl_device.h
-+++ b/include/hw/cxl/cxl_device.h
-@@ -884,6 +884,7 @@ struct CXLType3Dev {
-     PCIExpLinkWidth width;
-     bool flitmode;
-     bool uio_comp_capable;
-+    bool svc;
- 
-     /* DOE */
-     DOECap doe_cdat;
+UIO is a transaction layer enhancement that relaxes the strict
+transaction ordering rules of PCIe and moves the ordering control
+from the fabric to the requester. UIO, introduced from PCIe 6.1,
+in CXL follows the CXL.io protocol, where a device sends read and
+write requests directly to the HDM decoder of a peer .mem device
+at the switch level and the host is bypassed in the data path. For
+that, the requester, the completer and the intermediate ports of
+the topology carry the UIO dependent capabilities:
+
+    - 256-byte flit mode
+    - Streamlined Virtual Channel (SVC) Extended Capability
+    - PCIe Device 3 Extended Capability
+
+In the example topology below, Dev A is the requester, Dev B and
+Dev C are the completers, and the root port and the switch ports
+sit in the data path as the intermediate ports:
+
+      __________________________________________
+     |                                          |
+     |              CXL Host Bridge             |
+     |              (Root Port/RC)              |
+     |__________________________________________|
+                         |
+      ___________________|______________________
+     |                                          |
+     |               CXL Switch                 |
+     |__________________________________________|
+        |                  |                 |
+     ___|____           ___|_____         ___|____
+    |        |         |         |       |        |
+    | Dev A  |         | Dev B   |       | Dev C  |
+    | (Req)  |         |(Target) |       |(Target)|
+    |________|         |_________|       |________|
+
+With all the dependent capabilities enabled on Dev A and Dev B and
+on the ports of the path between them, Dev A issues its CXL.io
+read and write requests to the HDM decoder of Dev B on the UIO
+virtual channel: the switch routes the requests from the
+downstream port of Dev A to the downstream port of Dev B, and the
+root port and the host bridge are bypassed in the data path.
+
+V1:
+
+    - x-256b-flit defaults to off on all port types, keeping the
+      config space and migration state compatible.
+    - x-uio is moved to the pxb-cxl host bridge; the CXL type 3
+      device warns and leaves UIO disabled at realize time when
+      x-uio is set without x-svc and x-256b-flit.
+    - SVC validates the Protocol Selected field of a guest's
+      Resource Control writes against the resource capability.
+    - The Flit Status bit of the Link Status 2 register is derived
+      again after a device reset, so it stays consistent with the
+      Flit Disable bit of the Link Control register.
+    - Series reduced from 10 to 8 patches; properties are defined
+       in the patches that use them.
+
+RFC V2:
+
+    - The Device 3 capability is added to the PCIe stack and wired
+      to the CXL type 3 device.
+    - The UIO related DVSEC registers are added to the CXL stack.
+    - UIO becomes a generic capability instead of being tied to the
+      type 3 device.
+    - The SVC capability is extended to the CXL type 3 device, and
+      the x-svc and x-uio properties are added.
+
+Contents
+--------
+
+New properties:
+
+    - x-256b-flit: enables 256-byte flit mode signaling (Flit
+                   Mode Supported, Flit Status), as an extension
+                   of the implementation from Davidlohr Bueso's
+                   patch series [2]. Accepted by all the ports
+                   derived from PCIEPort and by the CXL type 3
+                   device. Defaults to off.
+    - x-svc: adds the SVC capability to a port or to the CXL
+             type 3 device.
+    - x-uio: carries the UIO capability. On the pxb-cxl host
+             bridge it marks the root ports within the host
+             bridge as UIO capable; a CXL root port advertises
+             UIO when its parent host bridge carries x-uio and
+             its own x-svc and x-256b-flit are set; the CXL
+             type 3 device carries the UIO capability, with the
+             Device 3 capability, when x-uio, x-svc and
+             x-256b-flit are all set.
+
+Patches:
+
+1) Refactor the flitmode field from PCIESlot to PCIEPort and
+   default the x-256b-flit property to off.
+2) Move the x-256b-flit property from cxl_root_port to
+   pcie_root_port.
+3) Wire the UIO capability into the HDM decoder and DVSEC
+   registers, and add the x-uio property to the pxb-cxl host
+   bridge.
+4) Add the PCIe Streamlined Virtual Channel (SVC) extended
+   capability.
+5) Wire the SVC initialization into the port realize functions.
+6) Add the PCIe Device 3 extended capability.
+7) Wire the SVC and Device 3 capabilities to the CXL Type 3
+   device.
+8) Add documentation for the UIO options with an example
+   topology.
+
+Testing:
+
+Linux kernel enumeration on a q35 topology with a CXL switch and
+three type 3 devices: SVC and Dev3 capability discovery, HDM
+decoder UIO bits, flit mode status and the per-VC state of the
+UIO enablement path.
+
+Linux kernel series for this work is maintained separately and
+follows later.
+
+This series has been written on top of:
+
+Base commit: 3c99db7705c1a885c795b7c14f751c7a3ba29ed8
+Repository: https://gitlab.com/jic23/qemu
+Branch: cxl-2026-01-09-draft
+
+Future work:
+
+Provide UIO requester capability to the CXL Type 2 device for E2E testing.
+
+Thanks!
+
+References
+[1] https://lore.kernel.org/qemu-devel/1212772528.01787732102473.JavaMail.epsvc@epcpadp1new/
+[2] https://lore.kernel.org/all/20251103195209.1319917-2-dave@stgolabs.net/
+
+Shrihari E S and Dongjoo Seo (8):
+      hw/pci: Refactor flitmode from PCIESlot to PCIEPort
+      hw/pci: Move 'x-256b-flit' property from cxl_root_port to pcie_root_port
+      hw/cxl: Wire UIO capability into HDM decoder and DVSEC registers
+      hw/pci: Add PCIe Streamlined Virtual Channel (SVC) capability
+      hw/pci: Wire SVC initialization into port realize functions
+      hw/pci: Add PCIe Device3 capability support
+      hw/cxl: Wire SVC and Dev3 capabilities to CXL Type 3 device
+      cxl: Add documentation for CXL UIO support
+
+
+ docs/system/devices/cxl.rst               |  54 +++++++-
+ hw/cxl/cxl-component-utils.c              |  55 ++++++++-
+ hw/mem/cxl_type3.c                        |  36 +++++-
+ hw/pci-bridge/cxl_downstream.c            |  18 ++-
+ hw/pci-bridge/cxl_root_port.c             |  37 +++++-
+ hw/pci-bridge/cxl_upstream.c              |  26 ++++-
+ hw/pci-bridge/gen_pcie_root_port.c        |   3 +
+ hw/pci-bridge/pci_expander_bridge.c       |  17 ++-
+ hw/pci-bridge/pcie_root_port.c            |  15 +++
+ hw/pci-bridge/xio3130_downstream.c        |   6 +
+ hw/pci-bridge/xio3130_upstream.c          |  19 +++
+ hw/pci/meson.build                        |   2 +-
+ hw/pci/pci.c                              |   7 ++
+ hw/pci/pcie.c                             | 105 ++++++++++++++++-
+ hw/pci/pcie_dev3.c                        | 111 ++++++++++++++++++
+ hw/pci/pcie_svc.c                         | 185 ++++++++++++++++++++++++++++++
+ include/hw/cxl/cxl_component.h            |   2 +-
+ include/hw/cxl/cxl_device.h               |   2 +
+ include/hw/pci-bridge/cxl_upstream_port.h |   2 +-
+ include/hw/pci/pci_bridge.h               |   1 +
+ include/hw/pci/pcie.h                     |  11 ++
+ include/hw/pci/pcie_dev3.h                |  26 +++++
+ include/hw/pci/pcie_port.h                |   6 +-
+ include/hw/pci/pcie_regs.h                | 100 ++++++++++++++++
+ include/hw/pci/pcie_svc.h                 |  20 ++++
+ 25 files changed, 832 insertions(+), 34 deletions(-)
 -- 
 2.34.1
-
 
