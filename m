@@ -1,80 +1,78 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
 	t=1793760608;
-	b=b9IpV8w9Dj0O3eu8Lq7h+nX7voPE/tCthAWhryqJU7sTlunfYRiES7wDoYWYlWP85OET
-	 hgmnPjrajuww6nE1JvOWPiujXRJKFedhxfM2C8ApetPKYA3PglsdShAg4GtEJPFg7L3sX
-	 q30i6UOOKD+UroC1lLG0lTxbagosZ1ukzvU3KbYZFVrqH5S49SWxvE9SlXrOKZ/V3ISPP
-	 nHlKKMVXbS4nj4Dy44JKLI4DFobBksklGQAoFkMHlbEk7aHgO+ObUZWTc1ovzgTF3GQ/K
-	 +mub2LgI6H4DNZzcoJJpHZnzKlszdwWasfweXgIgEXVY9Fbo8EmIxelRTRQf5oYQ94Q==
+	b=frP/+xke21QuUduac2l1bhK2h5UyiW8j/9wxia6tCZB1agwtEcCt64GDO8DXe2u+AH6Q
+	 VEI+rp9aTty+ujMGAcvk5dElJvFz3RUlNCDwUE4Qw5p/4ooL/fMb7CXH7qYDvRY/IzMnM
+	 4uypFrPS3zLJDipEVtA9mrgqRNsGXPK/aXobdUQHb2VofhSh+A7povr9yRfhVDERAqkUi
+	 iTW9Q2mW6Zj4bTbJLfSEHupmZWQ78AKHoP/6v6FnSXDdLIEHSa5otrqpjMH08x6vIWmoq
+	 uVzuZ9EawmuoKpW0v1KmrX+mxlsDSnNPvfLC1yjuXUbDL21XCGncMPfHJegXCLQJsdA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793760608;
-	h=Received:DKIM-Signature:Received:From:Subject:Date:Message-Id:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
-	 X-Endpoint-Received:X-Original-From:Reply-To;
-	bh=Mk+aeTZExqTm3OSQiwVPEtQaTQx1bXWlHZmFmi0Xo4A=;
-	b=R1YnWgsDp1y4060cND2WMbt/ztkb/B8tYZIu6UB2LNdf3MSpJ0On6jr4HDG6uxOOG5Qk
-	 uen5AbsN7U7T6oExKdPkLEaC79Y4f5iHAi41e2mJ+Rsv4uzzuKNS/pOMRr8+xpVB4203t
-	 5tKGIz5B2ea+2lGUGXtGOtp15r5wZ/2x/qFF8Qa4TfQ+ziOYJIJh/7GPibdKtmaMz+m+Z
-	 ZjEIs94ne0/Z3qziIPewwV5fwdd4QEScP9WBsbHWnDsvTzc+7MOf9BsmGFGIF8seL4TrG
-	 St++Epxx7e9Z7d2LdGWn64VvrEgAFz/qpCGAnmvp67/Nt8klswBgkNNFOpxWzG/MDyw==
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=z05QpNxFqnV5r3iRv8P2nFmmc7sfyHNYyj21a/WgmXk=;
+	b=eWVJjg8ySN7qeFXTiBVUKYVGhyfi3c0rme2BxausSgBYsH7QfpCsUeDECZDK4tLOPoMj
+	 ddd0mfCz6EPXYtu5whXecfObv1cG4K9rrEWxIbTcq2sRKg5XSJ/lBsnfdRLEyFH8qIdE7
+	 4aZCl1rw27uL423NxihnSfkzJ4uIWKlyjke6yBFJDxDOGl9iiiTWwO78wp10f/NZ9jGyP
+	 s7s7g0rnyl5bZL33vS5TdexzKcIG6105jJKcPQvGfmkysbzW7TTbKP+/JD5Hrzy1fkRo/
+	 Ev2Vtb4Qw5Ry4W3v7DJpoeFu1s3+/QvOjQdv4o+ONLAnpqyHB6L8ncbN39HBjlU9OFQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=b33BBRHi;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OCL4jo3E;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D73C606D81B;
-	Wed,  4 Nov 2026 02:50:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 533AA606D823;
+	Wed,  4 Nov 2026 02:50:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=b33BBRHi
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OCL4jo3E
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1793760607;
-	b=1FVPJ2no+7sLp9nG7BMHQr0ndBDOfaPdSTcApVynBUbKc9gKEFDSAEkzPMUhXjvapLXG
-	 2g5o96oK44cStt/ihe4vjtk/8sn3P/Pf5QqJPssEqOGBtCIfjk05Ss5dSawZoL/xGmaYY
-	 MPlIMFDqX/73leuFDQYjzGYpKq9SgBTMzZ7Nq7i+G/nazCTFCO7TiRMeT8xG3yqk8KWmN
-	 RjIMn+J5pPhc+SFXlLXqXCSTvK/m7xRJJgkpIhi7+xIxT3QCgFXNQQp49PTy6+U1xDbzK
-	 vYQveOQvMIdoVgCqwZXDi54gLw402soT3a8WausQz45Jlj0LKxwv3tJnRbgsq9cvShg==
+	t=1793760608;
+	b=vk4Kh9pqtftPvALVPfOUwNjHS+0EwJiAfZ70qCEKaESk7QGDdBA4VIxjkxBF+Uh4Aj2K
+	 YK6UyhfF00RkcWqVp3ktC+TWIfeqeuAChyn8CXsqkQzAzcweemPmhqBDDtuLzcC7FeVvX
+	 YluFxe5f/Ei2ueB5RZfGSRJvmpI7R3jwzA7JYP1QkRyjBRc72MiIisnuXm0YO+DhgYxyp
+	 KiX3lui9jUOdY2lN++MTZxoKh9xgsgNwxKGuprgi6edhgo/gz2cuH8zfHhkdNd5nTQePN
+	 nhnadPvMF+p31KvRVlebrB18cm7XUCRqDxB1FdZRXF1iGafNFtAy3IpuMBcQ/88NNTQ==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1793760607;
-	h=DKIM-Signature:Received:From:Subject:Date:Message-Id:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
-	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To;
-	bh=Mk+aeTZExqTm3OSQiwVPEtQaTQx1bXWlHZmFmi0Xo4A=;
-	b=Wp4whmNklbj4bEykETY1ObDGCrMf0moT9JwXL7+xo0mF7Wp+TCgJ/WWXTkNr64wL2kSi
-	 I0lzJ6UQfEB/SeEhzI+1PB5cVI5VSZshi6ZExX/a5dot0QlSNV8MklFsboPVQmO+oDm0H
-	 d/vseHB2H1ZuncMjO1gb4eHJ8laKm7YSODnNMirATSrr47eXi/njUdtk/lBy25FiOH3e3
-	 GDn2RhVqmN5lmHG5FT3vKyY4mPcGE0FfbIUi4W+QrWaTyldu1Hcyx9BYi1nkk+CbnQNgx
-	 yMX0CSJNM06CXo5XkQTCr1I+fIG5vLg3ceW/TzaZGN4UffmjEEh2+X5hU7Dba2qOfWg==
+	c=relaxed/relaxed; t=1793760608;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=z05QpNxFqnV5r3iRv8P2nFmmc7sfyHNYyj21a/WgmXk=;
+	b=CLo50mcsVuaaATLSMWuYzcNSjz4qv4lfXTyhObIJFcyFTLv3+a78RppSZUhKCIIPrJBf
+	 aVgZE++T+v2GFqKyRdU44wxsJIKzisk/HKAXIfb1g+1YZf97/w1tKFOG0T0ph+HZt/GZs
+	 rf6qWLDijdBmXHS69ZQLgKKVRDafxfixyjRTSpsmLLw8Q4DIkfiKiPLmpP0qLP0Tf3J3R
+	 VSh98j7+o8eC5ISciK6I8rpSGmUb90jUW7vPRT6huygclvlMeOZrJWg5hdbIzBRMZS7Tt
+	 xZKilJMN/UrwMuzKW5UfNVTo+CSJGeBH/qeSCEWesNjzFNMg+IOGsOmeIOagD1tHzww==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id D55811F00919;
-	Wed,  4 Nov 2026 02:50:02 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 44F8D1F000C1;
+	Wed,  4 Nov 2026 02:50:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793760607;
-	bh=Mk+aeTZExqTm3OSQiwVPEtQaTQx1bXWlHZmFmi0Xo4A=;
-	h=From:Subject:Date:To:Cc:Reply-To;
-	b=b33BBRHiVfzNxbihR1L/xAe+laInYi8kJed+e/XqYlFe/aBP8Srv4afE2pXOA2L87
-	 J6/0i+pjWpQTX9t9o1ZnRP9AQhx7dK8Siw7Gs1NQEsWr0HhP51Rwta2paaEjuF+6hQ
-	 U1twVdismQszjaJejzwKpOea4SP0b21eB0T4j9OAiODvxYAGLEhcbJD2H+bWOks6Hk
-	 zA74QBelha+OL1NAd1Jmvp+uuOjFnmjJy9C/sDetffs1WZT3/3m6cUE5bs2Xzm0vfH
-	 sYEVBCDhxYMqYr+glyKYqLQgBAr4/msMGOaYfEo502buyaOMkm9JEgRHAm8j+0sclf
-	 iFiekvWql1zrQ==
+	s=k20260515; t=1793760608;
+	bh=z05QpNxFqnV5r3iRv8P2nFmmc7sfyHNYyj21a/WgmXk=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=OCL4jo3E26Ck42bhktCH3FOkWuk/ezGkwRSbj0StGkcRw2H+KqWW9Q3vaIO0UcqY9
+	 LGm0JfieWob6ik1d2xuRZcaLhnLGxSMQMllcVcVqhce/Q0pSur7YquulSkkCBO3O4w
+	 1lcAUfivgK9YwkxL8TNk/WqGp9k5RuVbj3/KT59buN147XiEDCrqYR8lLD3H/ejuKT
+	 B4K4s+8Jvz+C6uXE9h23VidkbR/JEQQSEiZiHf45slBnuj4sOuu36QsFUOidZVroza
+	 QU1A3AK4Hxa9M79bA3VUU0ZVaDiU4uRFGZVkWlVD4NYc0gX+c0A5kzs/BtHeR0RfaX
+	 HpWIMtuRearZw==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 317CF46BDE;
+	by lkml.kernel.org (Postfix) with ESMTP id A7F4B46C17;
 	Wed,  4 Nov 2026 02:50:02 +0000 (UTC)
 From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-Subject: [PATCH v4 00/25] dmaengine: Smart Data Accelerator Interface
- (SDXI) basic support
-Date: Tue, 03 Nov 2026 20:49:41 -0600
-Message-Id: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
+Date: Tue, 03 Nov 2026 20:49:50 -0600
+Subject: [PATCH v4 09/25] dmaengine: sdxi: Allocate administrative context
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -85,12 +83,9 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/13OzwrCMAwG8FeRnq0k/bN1nnwP8dA1qfagg1WGM
- vbuVkW2eQqB7/clo8jcJ85ivxlFz0PKqbuVxWw3Ilz87cwyUdmFAmXBoZaZHkm2PrOsNdWhiRT
- Y1qLkLynfu/75qRqwjONXNWAXakAJkkAb9Kga1fqDv9IudNd3RclXYBD+80joTGhtqGDOnwoY1
- O9OBRZx6VRxzjUhMmHNOq6dnl21/k8XZ0i74FVLMfLspml6AV4KTbMwAQAA
-X-Change-ID: 20250813-sdxi-base-73d7c9fdce57
+Message-Id: <20261103-sdxi-base-v4-9-3668ccc7aab8@amd.com>
+References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
+In-Reply-To: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
 To: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, 
  David Rientjes <rientjes@google.com>, John.Kariuki@amd.com, 
@@ -102,258 +97,295 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
  dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-pci@vger.kernel.org, Nathan Lynch <nathan.lynch@amd.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793760600; l=12419;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793760600; l=7313;
  i=nathan.lynch@amd.com; s=20260722; h=from:subject:message-id;
- bh=KldG2upmtPUxMc8dQVKIJu9jBq3M7jusAuPXMST8IYk=;
- b=nTO+gpoLwZ2VLQN/WMJzM6M/liRcBKGgRzckIbB+4zDIEPaeSu6+ONyBkn8XsbGC9Aatbshjc
- aRFS6xb8NggAsEthrm8kNYJHrmjYXxmUi0a4LsqBctHJfZmb1sX7f+P
+ bh=ABINdQLGoTQPFYNtfmhB61OIp2UOK7aQ9a1VYsTZZRo=;
+ b=nVYY71K6YMmzL140lSoldUv+xkDMY0LrGmJMCoLVUrWOtBJtYEBGb4s3N8OOfHZCg9zXHyBNc
+ AspT25OA9f/CGegQk4K0EG4DP6Svqrvlmkil53ngHEQ8CrMVmuY8bNF
 X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
  pk=pO5+BCw/TENGLvwX5NYZOZmZihcxjkxeFSMuk47erps=
 X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20260722 with
  auth_id=891
 X-Original-From: Nathan Lynch <nathan.lynch@amd.com>
 Reply-To: nathan.lynch@amd.com
+Content-Transfer-Encoding: 8bit
 
-The Smart Data Accelerator Interface (SDXI) is a vendor-neutral
-architecture for memory-to-memory data movement offload designed for
-kernel bypass and virtualization.
+From: Nathan Lynch <nathan.lynch@amd.com>
 
-General information on SDXI may be found at:
-https://www.snia.org/sdxi
+Allocate the administrative context’s control structures and register
+device-managed cleanup.
 
-This submission adds a driver with support for PCIe-hosted SDXI 1.0
-implementations and includes a DMA engine provider with memcpy
-capability.
-
-Planned future SDXI work (out of scope for this series):
-
-* Character device for exposing SDXI contexts to user space.
-
-* Support for operation types to be added in future SDXI revisions.
-
-* Greater configurability for control structures, e.g. descriptor ring
-  size.
-
-The latest released version of the SDXI specification is 1.0:
-https://www.snia.org/sites/default/files/technical-work/sdxi/release/SNIA-SDXI-Specification-v1.0a.pdf
-
-Starting with v4 the driver has been authored and modified with LLM
-assistance. The code has changed a lot in response to Sashiko reviews and
-it's been a long time since the last revision, so I dropped all
-Reviewed-by: tags.
-
+Co-developed-by: Wei Huang <wei.huang2@amd.com>
+Signed-off-by: Wei Huang <wei.huang2@amd.com>
+Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 ---
-Changes in v4:
-- Restructure the series to introduce helpers and resource management
-  before their first users, with separate patches for function
-  preparation, submission queues, and synchronized context release.
-  Introduce the PCI remove callback earlier so SR-IOV cleanup is
-  present from the initial PCI support. (Tycho Andersen)
-- Rework function stopping to handle already-stopped functions without
-  issuing a reset, wait for transient states, and escalate stalled
-  soft stops to hard stops. Fall back to PCI function reset; if that
-  fails, disable bus mastering and make a bounded attempt to drain
-  pending transactions. (Sashiko)
-- Sanitize inherited MMIO configuration before installing new control
-  structures: disable error logging, discard stale context and RKey
-  tables, clear error-log state, and disable supported mailbox
-  interrupts.
-- Stop/reset the function on activation failure and before freeing
-  client contexts during removal. (Sashiko)
-- Restore dma_set_mask_and_coherent() error checking and reject devices
-  lacking the 64-bit atomic MMIO capability. (Sashiko for DMA mask
-  error checking)
-- Use the device's advertised maximum buffer size for context
-  configuration and the DMA maximum segment size.
-- Consolidate each submission queue's descriptor ring, write index,
-  and context status into one DMA-coherent allocation.
-- Replace per-operation completion allocations with a fixed,
-  context-owned pool whose claims are independent of ring reuse.
-  Retain timed-out completion blocks until context teardown rather
-  than freeing memory the device may still access. (Sashiko)
-- Rework completion checking to distinguish pending, successful, and
-  failed operations. Read the signal with READ_ONCE() and endian
-  conversion, place dma_rmb() after observing the terminal signal,
-  and use read_poll_timeout() for polling. (Sashiko)
-- Replace reservation iterators with indexed slot access, add
-  variable-size reservations, and bound blocking reservations with
-  a killable timeout. (Sashiko for iterator and unbounded-wait issues)
-- Add sdxi_cxt_submit() to consolidate completion attachment, fencing,
-  valid-bit publication, and optional doorbell ringing. Derive
-  doorbell values from the current context write index.
-- Add context-update descriptor encoding. Require a stopped context
-  and complete update/sync before releasing its control structures;
-  retain its resources and ID until function teardown if release
-  fails. (Sashiko)
-- Rework DMA preparation to store copy parameters outside the ring.
-  Acquire completion claims and reserve ring space only when issuing,
-  then populate every reserved slot. This avoids ring holes when
-  prepared transactions are discarded. (Sashiko)
-- Issue DMA transactions in cookie order, batch copies behind shared
-  fenced completion interrupts, and queue work when ring or completion
-  capacity is unavailable.
-- Keep tx_status() read-only and retire transactions in cookie order
-  through a shared IRQ/synchronization reaper. Report observed
-  completion errors through tx_result as DMA_TRANS_ABORTED. (Sashiko)
-- Rework termination to cancel submitted and pending work and reap
-  published transactions without callbacks. Synchronize by polling
-  and reaping transactions, then always flush virt-dma callbacks,
-  eliminating the synchronization NOP reservation. (Sashiko)
-- Initialize the AKey IDA before fallible context allocations, and
-  sample the writable dma_channels parameter once during provider
-  setup. (Sashiko)
-- Expand KUnit coverage for completion-pool ownership, variable-size
-  ring reservations, and context-update encoding. Fix the ring test's
-  double advance and the context-stop test's incorrect union field.
-  Suppress expected input-validation WARNs under KUnit and remove
-  the dead size clamp. (Sashiko)
-- Link to v3: https://patch.msgid.link/20260605-sdxi-base-v3-0-4d38ca2bdffe@amd.com
+ drivers/dma/sdxi/Makefile  |   4 +-
+ drivers/dma/sdxi/context.c | 101 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/dma/sdxi/context.h |  36 ++++++++++++++++
+ drivers/dma/sdxi/device.c  |  12 ++++++
+ drivers/dma/sdxi/hw.h      |  27 ++++++++++++
+ drivers/dma/sdxi/sdxi.h    |   2 +
+ 6 files changed, 181 insertions(+), 1 deletion(-)
 
-Changes in v3:
-- Fix akey allocation error path in dma.c to return a proper
-  error value. (Tycho Andersen)
-- Disable SR-IOV in PCI removal. (TA)
-- Update the Rust list of PCI class codes simultaneously with the C
-  header. (Sashiko)
-- Properly build the bus-agnostic core support as a separate
-  module (sdxi-core) from the PCI driver (sdxi-pci). (Sashiko)
-- Add dependency on CONFIG_64BIT to simplify assumptions around MMIO
-  and control structure accesses. (Sashiko)
-- Use readq/writeq instead of ioread64/iowrite64 since we don't need
-  to handle port space. (Sashiko)
-- Correct vector allocation range to ensure the error IRQ index (0) is
-  reserved. (Sashiko)
-- Fix context control block dma pool allocation failure
-  check. (Sashiko)
-- Ensure device is in stopped state before clearing MMIO_CTL0
-  configuration during init. (Sashiko)
-- Add explicit alignment attributes to packed control structure
-  types. (Sashiko)
-- Rename prep_memcpy_polled() to prep_memcpy_nointr(). (Frank Li)
-- Link to v2: https://patch.msgid.link/20260511-sdxi-base-v2-0-889cfed17e3f@amd.com
+diff --git a/drivers/dma/sdxi/Makefile b/drivers/dma/sdxi/Makefile
+index 0006edf74d86..cdf8a455077b 100644
+--- a/drivers/dma/sdxi/Makefile
++++ b/drivers/dma/sdxi/Makefile
+@@ -1,6 +1,8 @@
+ # SPDX-License-Identifier: GPL-2.0
+ obj-$(CONFIG_SDXI_CORE) += sdxi-core.o
+-sdxi-core-y := device.o
++sdxi-core-y := \
++	context.o     \
++	device.o
+ 
+ obj-$(CONFIG_SDXI_PCI) += sdxi-pci.o
+ sdxi-pci-y := pci.o
+diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
+new file mode 100644
+index 000000000000..4132618ae17a
+--- /dev/null
++++ b/drivers/dma/sdxi/context.c
+@@ -0,0 +1,101 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * SDXI context management
++ *
++ * Copyright Advanced Micro Devices, Inc.
++ */
++
++#define pr_fmt(fmt)     "SDXI: " fmt
++
++#include <linux/bug.h>
++#include <linux/cleanup.h>
++#include <linux/device/devres.h>
++#include <linux/dma-mapping.h>
++#include <linux/dmapool.h>
++#include <linux/errno.h>
++#include <linux/slab.h>
++#include <linux/types.h>
++
++#include "context.h"
++#include "sdxi.h"
++#include "submission.h"
++
++#define DEFAULT_DESC_RING_ENTRIES 1024
++
++enum {
++	/*
++	 * The admin context always has ID 0. See SDXI 1.0 3.5
++	 * Administrative Context (Context 0).
++	 */
++	SDXI_ADMIN_CXT_ID = 0,
++};
++
++/*
++ * Free context and its resources. @cxt may be partially allocated but
++ * must have ->sdxi set.
++ */
++static void sdxi_free_cxt(struct sdxi_cxt *cxt)
++{
++	struct sdxi_dev *sdxi = cxt->sdxi;
++
++	if (cxt->cxt_ctl)
++		dma_pool_free(sdxi->cxt_ctl_pool, cxt->cxt_ctl,
++			      cxt->cxt_ctl_dma);
++	if (cxt->akey_table)
++		dma_free_coherent(sdxi->dev, sizeof(*cxt->akey_table),
++				  cxt->akey_table, cxt->akey_table_dma);
++	if (cxt->sq)
++		sdxi_sq_free(sdxi, cxt->sq);
++	kfree(cxt);
++}
++
++DEFINE_FREE(sdxi_cxt, struct sdxi_cxt *, if (_T) sdxi_free_cxt(_T))
++
++/* Allocate a context and its control structure hierarchy in memory. */
++static struct sdxi_cxt *sdxi_alloc_cxt(struct sdxi_dev *sdxi)
++{
++	struct device *dev = sdxi->dev;
++	struct sdxi_cxt *cxt __free(sdxi_cxt) = kzalloc(sizeof(*cxt), GFP_KERNEL);
++
++	if (!cxt)
++		return NULL;
++
++	cxt->sdxi = sdxi;
++
++	cxt->sq = sdxi_sq_alloc(sdxi, DEFAULT_DESC_RING_ENTRIES);
++	if (!cxt->sq)
++		return NULL;
++
++	cxt->akey_table = dma_alloc_coherent(dev, sizeof(*cxt->akey_table),
++					     &cxt->akey_table_dma, GFP_KERNEL);
++	if (!cxt->akey_table)
++		return NULL;
++
++	cxt->cxt_ctl = dma_pool_zalloc(sdxi->cxt_ctl_pool, GFP_KERNEL,
++				       &cxt->cxt_ctl_dma);
++	if (!cxt->cxt_ctl)
++		return NULL;
++
++	return_ptr(cxt);
++}
++
++static void free_admin_cxt(void *ptr)
++{
++	struct sdxi_dev *sdxi = ptr;
++
++	sdxi_free_cxt(sdxi->admin_cxt);
++}
++
++int sdxi_admin_cxt_init(struct sdxi_dev *sdxi)
++{
++	struct sdxi_cxt *cxt __free(sdxi_cxt) = sdxi_alloc_cxt(sdxi);
++	if (!cxt)
++		return -ENOMEM;
++
++	cxt->id = SDXI_ADMIN_CXT_ID;
++	cxt->sq->doorbell = sdxi->dbs + cxt->id * sdxi->db_stride;
++
++	sdxi->admin_cxt = no_free_ptr(cxt);
++
++	return devm_add_action_or_reset(sdxi->dev, free_admin_cxt, sdxi);
++}
+diff --git a/drivers/dma/sdxi/context.h b/drivers/dma/sdxi/context.h
+new file mode 100644
+index 000000000000..873ad49c3c86
+--- /dev/null
++++ b/drivers/dma/sdxi/context.h
+@@ -0,0 +1,36 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/*
++ * Copyright Advanced Micro Devices, Inc.
++ */
++
++#ifndef DMA_SDXI_CONTEXT_H
++#define DMA_SDXI_CONTEXT_H
++
++#include <linux/dma-mapping.h>
++#include <linux/types.h>
++
++#include "hw.h"
++#include "sdxi.h"
++#include "submission.h"
++
++/* Use a 4 KiB AKey table, the minimum architectural size. */
++struct sdxi_akey_table {
++	struct sdxi_akey_ent entry[SZ_4K / sizeof(struct sdxi_akey_ent)];
++};
++
++struct sdxi_cxt {
++	struct sdxi_dev *sdxi;
++	u16 id;
++
++	struct sdxi_cxt_ctl *cxt_ctl;
++	dma_addr_t cxt_ctl_dma;
++
++	struct sdxi_akey_table *akey_table;
++	dma_addr_t akey_table_dma;
++
++	struct sdxi_sq *sq;
++};
++
++int sdxi_admin_cxt_init(struct sdxi_dev *sdxi);
++
++#endif /* DMA_SDXI_CONTEXT_H */
+diff --git a/drivers/dma/sdxi/device.c b/drivers/dma/sdxi/device.c
+index acc955b088ba..f9787d7190d4 100644
+--- a/drivers/dma/sdxi/device.c
++++ b/drivers/dma/sdxi/device.c
+@@ -20,6 +20,7 @@
+ #include <linux/slab.h>
+ #include <linux/time.h>
+ 
++#include "context.h"
+ #include "hw.h"
+ #include "mmio.h"
+ #include "sdxi.h"
+@@ -289,6 +290,7 @@ static int sdxi_fn_activate(struct sdxi_dev *sdxi)
+ {
+ 	u64 version, cap0, cap1, ctl2, cxt_l2, lv01_ptr;
+ 	struct sdxi_cxt_L2_ent *L2_ent;
++	int err;
+ 
+ 	version = sdxi_read64(sdxi, SDXI_MMIO_VERSION);
+ 	dev_info(sdxi->dev, "SDXI %llu.%llu device found\n",
+@@ -349,6 +351,16 @@ static int sdxi_fn_activate(struct sdxi_dev *sdxi)
+ 			      sdxi->L1_dma >> ilog2(SZ_4K));
+ 	L2_ent->lv01_ptr = cpu_to_le64(lv01_ptr);
+ 
++	/*
++	 * SDXI 1.0 4.1.8.4 Administrative Context
++	 *
++	 * The admin context will not consume descriptors until we
++	 * write its doorbell later.
++	 */
++	err = sdxi_admin_cxt_init(sdxi);
++	if (err)
++		return err;
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/dma/sdxi/hw.h b/drivers/dma/sdxi/hw.h
+index 82a9c20d8bcf..d1917dad243f 100644
+--- a/drivers/dma/sdxi/hw.h
++++ b/drivers/dma/sdxi/hw.h
+@@ -62,12 +62,39 @@ static_assert(sizeof(struct sdxi_cxt_ctl) == 64);
+ /* SDXI 1.0 Table 3-5: Context Status (CXT_STS) */
+ struct sdxi_cxt_sts {
+ 	__u8 state;
++#define SDXI_CXT_STS_STATE GENMASK(3, 0)
+ 	__u8 misc0;
+ 	__u8 rsvd_0[6];
+ 	__le64 read_index;
+ } __packed __aligned(16);
+ static_assert(sizeof(struct sdxi_cxt_sts) == 16);
+ 
++/* SDXI 1.0 Table 3-6: CXT_STS.state Encoding */
++/* Valid values for FIELD_GET(SDXI_CXT_STS_STATE, sdxi_cxt_sts.state). */
++enum cxt_sts_state {
++	CXTV_STOP_SW  = 0x0,
++	CXTV_RUN      = 0x1,
++	CXTV_STOPG_SW = 0x2,
++	CXTV_STOP_FN  = 0x4,
++	CXTV_STOPG_FN = 0x6,
++	CXTV_ERR_FN   = 0xf,
++};
++
++/* SDXI 1.0 Table 3-7: AKey Table Entry (AKEY_ENT) */
++struct sdxi_akey_ent {
++	__le16 intr_num;
++#define SDXI_AKEY_ENT_VL BIT(0)
++#define SDXI_AKEY_ENT_IV BIT(1)
++#define SDXI_AKEY_ENT_INTR_NUM GENMASK(14, 4)
++	__le16 tgt_sfunc;
++	__le32 pasid;
++	__le16 stag;
++	__u8   rsvd_0[2];
++	__le16 rkey;
++	__u8   rsvd_1[2];
++} __packed __aligned(16);
++static_assert(sizeof(struct sdxi_akey_ent) == 16);
++
+ struct sdxi_desc {
+ 	union {
+ 		/*
+diff --git a/drivers/dma/sdxi/sdxi.h b/drivers/dma/sdxi/sdxi.h
+index 356a47ed39da..b7d754132268 100644
+--- a/drivers/dma/sdxi/sdxi.h
++++ b/drivers/dma/sdxi/sdxi.h
+@@ -51,6 +51,8 @@ struct sdxi_dev {
+ 
+ 	struct dma_pool *cxt_ctl_pool;
+ 
++	struct sdxi_cxt *admin_cxt;
++
+ 	bool has_mailbox;
+ 
+ 	const struct sdxi_bus_ops *bus_ops;
 
-Changes in v2:
-- Drop unneeded dma_set_mask_and_coherent() result check. (Frank Li)
-- Inline SDXI_DRV_DESC directly into MODULE_DESCRIPTION(). (FL)
-- Drop unneeded braces from simple conditionals. (FL)
-- Drop sdxi logging wrapper macros; use dev_dbg, dev_info etc
-  directly. (FL)
-- Reordering of commit message (patch 04, "Feature
-  discovery..."). (FL)
-- Use read_poll_timeout() for function start and stop routines. (FL)
-- Align multi-line FIELD_PREP() uses. (FL)
-- Drop sdxi_create_dma_pool() helper. (FL)
-- Remove unneeded dma_wmb() before iowrite64() to doorbell. (FL)
-- Use WRITE_ONCE() to update descriptor ring write index. (FL)
-- Make sdxi_completion_poll() eventually time out and adjust call
-  sites. (FL)
-- Remove vestigial sdxi_dma_unregister() declaration. (FL)
-- Reserve context ID before allocating context data structures instead
-  of after.
-- Update context ID class to transfer ownership of ID to context
-  object; sdxi_free_cxt() now responsible for releasing ID once
-  assigned.
-- Align small frequently-updated DMA pool objects to cacheline
-  boundaries.
-- Drop redundant dma_set_mask_and_coherent() from DMA provider.
-- Log unarchitected function status values in sdxi_dev_gsv().
-- Remove sdxi_to_dev(); the abstraction is unnecessary and sdxi->dev
-  is shorter.
-- Link to v1: https://patch.msgid.link/20260410-sdxi-base-v1-0-1d184cb5c60a@amd.com
-
-Changes in v1:
-- Reorder series and introduce functionality incrementally while
-  remaining buildable and functional at each step. (Jonathan Cameron)
-- Use devres APIs where possible for device resources (JC)
-- Use cleanup APIs to significantly reduce use of goto-oriented error
-  unwinding. (JC)
-- Drop SDXI_DEBUG config option. (JC)
-- Cite SDXI spec version and section number consistently throughout. (JC)
-- Combine local variable declarations of same type. (JC)
-- Mark descriptor structs __packed. (JC)
-- Use designated initializers in descriptor encoding functions. (JC)
-- Prefer dev_err_probe() over sdxi_err() in sdxi_pci_init(). (JC)
-- Prune unnecessary includes throughout source files. (JC)
-- Remove unnecessary/unhelpful comments in several places. (JC)
-- Remove SDXI spec material from "Add SNIA SDXI accelerator sub-class"
-  commit message and reword the remainder. (Bjorn Helgaas)
-- Remove unnecessary local for DMA_BIT_MASK() argument in
-  sdxi_pci_init(). (BH)
-- Use "{ }" for final null entry in id table, not "{ 0, }". (BH)
-- Replace sample descriptor submission code from the SDXI spec with an
-  improved API that has unit tests, eliminates a copy step for
-  callers, and can block until ring space becomes available if
-  desired.
-- Omit the error log facility for now; it can be reintroduced later.
-- Use a per-device xarray to allocate context IDs and map them to
-  context objects.
-- Implement interrupt-based completion signaling for memcpy operations
-  in the DMA engine provider, DMA provider code mostly rewritten.
-
-- Link to RFC: https://lore.kernel.org/r/20250905-sdxi-base-v1-0-d0341a1292ba@amd.com
-
----
-Nathan Lynch (25):
-      PCI: Add SNIA SDXI accelerator sub-class
-      MAINTAINERS: Add entry for SDXI driver
-      dmaengine: sdxi: Add PCI initialization
-      dmaengine: sdxi: Prepare function and sanitize MMIO state
-      dmaengine: sdxi: Feature discovery and initial configuration
-      dmaengine: sdxi: Configure context tables
-      dmaengine: sdxi: Allocate context control DMA pool
-      dmaengine: sdxi: Introduce submission queue
-      dmaengine: sdxi: Allocate administrative context
-      dmaengine: sdxi: Install administrative context
-      dmaengine: sdxi: Start functions on probe, stop on remove
-      dmaengine: sdxi: Add client context allocation API
-      dmaengine: sdxi: Add descriptor ring management
-      dmaengine: sdxi: Add unit tests for descriptor ring reservations
-      dmaengine: sdxi: Per-context access key (AKey) table entry allocator
-      dmaengine: sdxi: Add completion status block API
-      dmaengine: sdxi: Add unit tests for completion pool ownership
-      dmaengine: sdxi: Add context submission helper
-      dmaengine: sdxi: Encode context start, stop, update, and sync descriptors
-      dmaengine: sdxi: Add client context release with update and sync
-      dmaengine: sdxi: Provide context start and stop APIs
-      dmaengine: sdxi: Encode copy and interrupt descriptors
-      dmaengine: sdxi: Add unit tests for descriptor encoding
-      dmaengine: sdxi: MSI/MSI-X vector allocation and mapping
-      dmaengine: sdxi: Add DMA engine provider
-
- MAINTAINERS                         |   7 +
- drivers/dma/Kconfig                 |   2 +
- drivers/dma/Makefile                |   1 +
- drivers/dma/sdxi/.kunitconfig       |   4 +
- drivers/dma/sdxi/Kconfig            |  40 +++
- drivers/dma/sdxi/Makefile           |  17 ++
- drivers/dma/sdxi/completion.c       | 189 ++++++++++++
- drivers/dma/sdxi/completion.h       |  52 ++++
- drivers/dma/sdxi/completion_kunit.c | 131 ++++++++
- drivers/dma/sdxi/context.c          | 589 ++++++++++++++++++++++++++++++++++++
- drivers/dma/sdxi/context.h          | 122 ++++++++
- drivers/dma/sdxi/descriptor.c       | 220 ++++++++++++++
- drivers/dma/sdxi/descriptor.h       | 145 +++++++++
- drivers/dma/sdxi/descriptor_kunit.c | 537 ++++++++++++++++++++++++++++++++
- drivers/dma/sdxi/device.c           | 473 +++++++++++++++++++++++++++++
- drivers/dma/sdxi/dma.c              | 509 +++++++++++++++++++++++++++++++
- drivers/dma/sdxi/dma.h              |  11 +
- drivers/dma/sdxi/hw.h               | 257 ++++++++++++++++
- drivers/dma/sdxi/mmio.h             |  85 ++++++
- drivers/dma/sdxi/pci.c              | 153 ++++++++++
- drivers/dma/sdxi/ring.c             | 143 +++++++++
- drivers/dma/sdxi/ring.h             |  94 ++++++
- drivers/dma/sdxi/ring_kunit.c       | 147 +++++++++
- drivers/dma/sdxi/sdxi.h             | 138 +++++++++
- drivers/dma/sdxi/submission.h       |  66 ++++
- include/linux/pci_ids.h             |   1 +
- rust/kernel/pci/id.rs               |   1 +
- 27 files changed, 4134 insertions(+)
----
-base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
-change-id: 20250813-sdxi-base-73d7c9fdce57
-
-Best regards,
---  
-Nathan Lynch <nathan.lynch@amd.com>
+-- 
+2.56.0
 
 
