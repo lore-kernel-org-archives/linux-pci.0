@@ -1,47 +1,106 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793777029;
-	b=blRchioDa0FxImUIUJ0xysMN89/+jKh3phxdON28RIzrXiJOJKViAcnw0c9hhPef3MxV
-	 4vssbH+IhZuz+Y9pRJDJR+2knYFmfQSPJ9SB8YpZv26Mr1pY2/GsMkfMElvQsZ0yS2b+g
-	 vBFXSa/tP+dCjv3w5M4nGg/2hHVViRlG+Dem89mC7/11LyxEFbPCw0PwYVX5D1vfKzvC4
-	 jw5Suf9Bg0NyPwv1kT/VIjBo+f1ibuUH0rno1Tj1hyacaf5tIFPxhASy3vpkQ0HIJXCz+
-	 RnxfuZSm4vR3MTQNjdlSonPz8rqGR4zpLBxjnKiduUhNqDCYEbeTuaAQSb8SfDypMOA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793777029;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:From:Content-Language:Autocrypt:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=NBOQ40gBeaDYVe8Awm5p4ozUA0tAVvF4nJgh2RDLTZA=;
-	b=GrxOrvmy+ZOZu8qmU4a48j0nkkVr5CJceDQvJXHrffu4po/hifyNtmyMvsrYLfurl6ln
-	 tu/1vzYtL/V49yb939DkQfYn4+ezv3XhfGiPyh/ceJk3APAN3+FmhLrNQL8jffNBAcxB5
-	 mAuKYiWslmcV0hj60ZmTDa/hCrklxP235TjkDN6DRxv2IwRX3a5PFAz6p4Wsmi3QcKD/g
-	 /PoHAM8aVQhORSrRhO9TLV6djee0SXD3QV3oaigdy1fcm4wt3Q5KF2PYUJJFx/+Mhlehe
-	 hbtRmIhC449A7nIGX6CR4BPveXclhr1ofujD9DCx1ixW4OnbCdKqESC+dW08qnjei5A==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fAzoyO7l;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.194.5
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793780593;
+	b=Dg4+/DaU19Ty5E94+xK6bu89Q8GRFxWTfZosvEm4Bd5GjusU1vZOPyDlPpycX8A/ETkG
+	 bfglEtWota8zdhB8ldaBDS/gPEXOOnCV8exwnN1ujG/pj9287U6xVAUKQ9rdl8QXOuamF
+	 QQQ/MWeb5MAMHBXhEtRksZ9pWbCAzkellDRSpOiTwVcwxtVVy/qiwUMVwL3imdg5M9Faq
+	 B3g1AEdTsAt8x7GkXSoQgR4U9+4okiXQyAw3v9SMlSW9VHZwiE1CO+NzuVrrc0BYAPP7P
+	 JoOp35BaFvl7ctxAu+LWDLvJKMpcc0m98iK6pk295BMjFhggG8rtwOTnh9as4/EjxIg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793780593;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:
+	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
+	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
+	 References:MIME-Version:Content-Transfer-Encoding:Content-Type:
+	 X-EOPAttributedMessage:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-Id:
+	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=UQDVj9XiQcCABiv3yXPGxcXW7Jhj3NzlOWEBDsB6m+4=;
+	b=xRnw0eAlceAAHlnS8QlN+sy3uFr+7QLczJlExQjzd/ZLrR0wlyPOZUOpl8k3IsDCnSWo
+	 EvfnskylG+X/GD7eVHryQiFBpK9ejVmigMizX9KsbWGBOuVz0WCOz1Vr+ilqiPf7b6HDQ
+	 9BmK2KoRWyazzxeKPP3BckS5nC0z2Z0X7xUZ80uguPY5m7g5apCGGIDclquUa2Ei4tLE5
+	 15K/SUFH0Dj6NYlAc3boQM1dcL4CZuQ5oxbMb5+nfnXHvochx/3CNFsPOw3NLcw0cfDgm
+	 KFTwkV+qUwapfwv2aGNkiGP0YT1GYbij2EMK3swciZ6zB3rg3khmpcftGcM0wcVui/w==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=amd.com;
+	spf=fail smtp.mailfrom=amd.com;
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=SJtKhd37;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.194.5
+Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011005.outbound.protection.outlook.com [40.93.194.5])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01AEA606A31B;
-	Wed,  4 Nov 2026 07:23:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73626606A31B;
+	Wed,  4 Nov 2026 08:23:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 73626606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fAzoyO7l
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C3B71F000C1;
-	Wed,  4 Nov 2026 07:23:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793777028;
-	bh=NBOQ40gBeaDYVe8Awm5p4ozUA0tAVvF4nJgh2RDLTZA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=fAzoyO7l7JrQauRVoEzkU2YbVbg3GZqLoQ1vbvKVgH8kKLf+jgVdZxVK2J5pSVAQL
-	 igHw5zbRXGhLbFPt+6lEcO8n/DMrkktk0R1AX7yS00jD4BRA/50zagFe3mZ/c1n3zS
-	 XDzqw/t2zI2Is/qsU5wgGD+XARqXmJio2t4k4O/1/1DlI2m29fAlsYM94VHedruACU
-	 QT8dAv05U6y1yXEoOuDyxkHzcTTF/Z6pdNibFjrneUGC58mrUzESj2HUCPPF5jhi93
-	 TDrFG+NTMNMwg7Q8eQunznuVUUt2kQEY4UDVM7lVI4kwhKurhlq8vTVoKgRIh2K2Vt
-	 z5rnAZ5/U8I1A==
-Message-ID: <c0313537-532f-4c9c-86fb-067838829427@kernel.org>
-Date: Wed, 4 Nov 2026 08:23:42 +0100
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=SJtKhd37
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=TSisEOQKHRbC46z+R+AvvHIBdjxGd4KcegBDYisegbetWOoNjZoNci1d0KkhH277QLj3ra1P75jVgtFRz506f0BRd7qP5Sh4YAqMd+u9KvYi0Z93hjosOi1DfSqgMQUVY0Yl6yl1pQmdZpYNLy7k8j8U88fmZ0m1/iP3HsbO+qYKWr0wlIuNNgp4LtIj4l0sSE5OL3mFCktFLXBzh6pwcwBgWVcXmu+wEqUP5AJS5KvZFdULYuGVevWgPAgeuY8/gW9+Qn9I0wVtDFKkhoHzyFtH659Rbkrw5fm0Dp4qyl/XjO+d4DDag7UpU2movU13WC/1+LCwv6rLucDIxgc/XA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=UQDVj9XiQcCABiv3yXPGxcXW7Jhj3NzlOWEBDsB6m+4=;
+ b=s7yRD7zITmV7IYNJPsu4qe3kxicA3KIRCtKBinBbVZXEq+Y68ximkpytmKQqfnJNk7J8QiDBU8u2iSLo8R23PAA/Iuk/QCP25iHl9KjCAcCVxN+C1UPXqRev4W2ILPzOzcMbqG4YvffzYHEjnZn4C0jyMzHyE56Esyk+pAx8LOCOCfUgtVd5ZflX1WiXOLdPwcDQOmaDUtQLL1BjjJKlukMcQD0T4PvR/xMV4s+1vI9145R0lY9NaC8p/Ne3O+fzSzpIAX0hEYSz7rvZWaAZ9pvnaOlNzLZr1t9S+ww1cdF/p9NUNqaN8jNyYtVbXEJYnPNWg6YHOZT4lNNMHkvwEw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=UQDVj9XiQcCABiv3yXPGxcXW7Jhj3NzlOWEBDsB6m+4=;
+ b=SJtKhd37SrMHzJ4tHoHX/ne41uVyI5aZgXi2TpvdGpLzbU+jbHh6a2om41/0Dqei0oz/iJ4ax40ehZukqE5BxOgyIqX5K/40U8NZDWXdytkTlbLIXX9y/5t2YpRxYKcabqh/HJJRakkbpAIrwbpOP4sYbuqy/N57EJzrJ16KTu8=
+Received: from PH8PR15CA0001.namprd15.prod.outlook.com (2603:10b6:510:2d2::13)
+ by LV0PR12MB142838.namprd12.prod.outlook.com (2603:10b6:408:3de::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.8; Wed, 4 Nov 2026
+ 08:23:09 +0000
+Received: from CY8PEPF00000057.namprd21.prod.outlook.com
+ (2603:10b6:510:2d2:cafe::95) by PH8PR15CA0001.outlook.office365.com
+ (2603:10b6:510:2d2::13) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.592.9 via Frontend Transport; Wed, 4
+ Nov 2026 08:23:09 +0000
+X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
+ is 165.204.84.17) smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
+Received: from satlexmb07.amd.com (165.204.84.17) by
+ CY8PEPF00000057.mail.protection.outlook.com (10.167.247.20) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.615.2 via Frontend Transport; Wed, 4 Nov 2026 08:23:08 +0000
+Received: from satlexmb07.amd.com (10.181.42.216) by satlexmb07.amd.com
+ (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.53; Wed, 4 Nov
+ 2026 02:23:08 -0600
+Received: from xhddevverma40x.xilinx.com (10.180.168.240) by
+ satlexmb07.amd.com (10.181.42.216) with Microsoft SMTP Server id 15.2.2562.53
+ via Frontend Transport; Wed, 4 Nov 2026 02:23:05 -0600
+From: Devendra K Verma <devverma@amd.com>
+To: <mani@kernel.org>, <vkoul@kernel.org>, <frank.li@kernel.org>,
+	<den@valinux.co.jp>
+CC: <dmaengine@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <michal.simek@amd.com>, <devverma@amd.com>
+Subject: [PATCH RESEND v3 1/2] dmaengine: dw-edma: Sort Register Field Macros by Bit Position
+Date: Wed, 4 Nov 2026 13:53:01 +0530
+Message-ID: <20261104082302.3819409-2-devverma@amd.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261104082302.3819409-1-devverma@amd.com>
+References: <20261104082302.3819409-1-devverma@amd.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -51,114 +110,64 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] dt-bindings: PCI: Add linux,pci-domain-reuse property
-To: Cui Chao <cuichao1753@phytium.com.cn>, Will Deacon <will@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Wang Yinfeng <wangyinfeng@phytium.com.cn>, linux-pci@vger.kernel.org,
- devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-kernel@vger.kernel.org
-References: <20261102095150.2370959-1-cuichao1753@phytium.com.cn>
- <20261102095150.2370959-2-cuichao1753@phytium.com.cn>
- <8112d8ca-2234-490c-a4a2-c3b01adfbc88@kernel.org>
- <b49779cf-5132-4539-86c2-e4f806b1675d@phytium.com.cn>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- xsFNBFVDQq4BEAC6KeLOfFsAvFMBsrCrJ2bCalhPv5+KQF2PS2+iwZI8BpRZoV+Bd5kWvN79
- cFgcqTTuNHjAvxtUG8pQgGTHAObYs6xeYJtjUH0ZX6ndJ33FJYf5V3yXqqjcZ30FgHzJCFUu
- JMp7PSyMPzpUXfU12yfcRYVEMQrmplNZssmYhiTeVicuOOypWugZKVLGNm0IweVCaZ/DJDIH
- gNbpvVwjcKYrx85m9cBVEBUGaQP6AT7qlVCkrf50v8bofSIyVa2xmubbAwwFA1oxoOusjPIE
- J3iadrwpFvsZjF5uHAKS+7wHLoW9hVzOnLbX6ajk5Hf8Pb1m+VH/E8bPBNNYKkfTtypTDUCj
- NYcd27tjnXfG+SDs/EXNUAIRefCyvaRG7oRYF3Ec+2RgQDRnmmjCjoQNbFrJvJkFHlPeHaeS
- BosGY+XWKydnmsfY7SSnjAzLUGAFhLd/XDVpb1Een2XucPpKvt9ORF+48gy12FA5GduRLhQU
- vK4tU7ojoem/G23PcowM1CwPurC8sAVsQb9KmwTGh7rVz3ks3w/zfGBy3+WmLg++C2Wct6nM
- Pd8/6CBVjEWqD06/RjI2AnjIq5fSEH/BIfXXfC68nMp9BZoy3So4ZsbOlBmtAPvMYX6U8VwD
- TNeBxJu5Ex0Izf1NV9CzC3nNaFUYOY8KfN01X5SExAoVTr09ewARAQABzSVLcnp5c3p0b2Yg
- S296bG93c2tpIDxrcnprQGtlcm5lbC5vcmc+wsGPBBMBCgA5AhsDBgsJCAcDAgYVCAIJCgsE
- FgIDAQIeAQIXgBYhBJvQfg4MUfjVlne3VBuTQ307QWKbBQJp2mE8AAoJEBuTQ307QWKbeaIP
- /ihHTkTW4KsN/DQ945JJbyu5tI0J80Wue7QyyLPglyKfhgb5cLLNPpOC8cCIJsc7+W3i2P38
- s2c1cOH6CYGE7E9ur3Vfme8NW2S2I/Z8VC7bZnzyS23wT17LrsdS/qCpx4o8U+pt/xdXDKph
- EGRYrIEmMpUWvyYzyYKGIe25FtaayIIKpq8eZYyFcp2f/sG5IkOW5uZzHPMPdcm87jU7fyuQ
- rAU2vx9r+ulUfQ/q9Z2roC/ode3l7t2pN7BCBCsUDp6JCrUyZrtT1e7EbA0ZRP3aOBNk2P2E
- DQOgJGjGdO5Yx2Y9LFtltu6JbsBJHi1syGRX3AtQYOMc4Y1WGoeZJmMlvKj2ZqqXNkcWi2DS
- IQEWB0uW6CqFsBBIMGDa+6OzdaVO/uAVXWDWml02Men3CILdI1MbVjoh8ECqYUY7OQ+JJvNN
- vnliuq5WM3Ghd3jg/LZZrxXjdIginRHFQCjIJYLKpLZWm1/iDFedcfzqRNYmTtqscdCNHW41
- oT3Z7BmO9xwdjuwBS6nmS6JJwkbf5Ot2QR4pB/DRU7ZwjT1qHe+9r9gF32wXVQatHNGK/VVu
- sfwOnkdxCWkp/qb2gdQRmZh+SedStWshigH6sNfuHBloF/q+hjMRc8b2m326OZdrbSHwY1Sz
- vti8Hn7n8NjdHO9LKB7BIdjkA9DA5WsqOuVCzsFNBFVDXDQBEADNkrQYSREUL4D3Gws46JEo
- Z9HEQOKtkrwjrzlw/tCmqVzERRPvz2Xg8n7+HRCrgqnodIYoUh5WsU84N03KlLueMNsWLJBv
- BaubYN4JuJIdRr4dS4oyF1/fQAQPHh8Thpiz0SAZFx6iWKB7Qrz3OrGCjTPcW6eiOMheesVS
- 5hxietSmlin+SilmIAPZHx7n242u6kdHOh+/SyLImKn/dh9RzatVpUKbv34eP1wAGldWsRxb
- f3WP9pFNObSzI/Bo3kA89Xx2rO2roC+Gq4LeHvo7ptzcLcrqaHUAcZ3CgFG88CnA6z6lBZn0
- WyewEcPOPdcUB2Q7D/NiUY+HDiV99rAYPJztjeTrBSTnHeSBPb+qn5ZZGQwIdUW9YegxWKvX
- XHTwB5eMzo/RB6vffwqcnHDoe0q7VgzRRZJwpi6aMIXLfeWZ5Wrwaw2zldFuO4Dt91pFzBSO
- IpeMtfgb/Pfe/a1WJ/GgaIRIBE+NUqckM+3zJHGmVPqJP/h2Iwv6nw8U+7Yyl6gUBLHFTg2h
- YnLFJI4Xjg+AX1hHFVKmvl3VBHIsBv0oDcsQWXqY+NaFahT0lRPjYtrTa1v3tem/JoFzZ4B0
- p27K+qQCF2R96hVvuEyjzBmdq2esyE6zIqftdo4MOJho8uctOiWbwNNq2U9pPWmu4vXVFBYI
- GmpyNPYzRm0QPwARAQABwsF2BBgBCgAgAhsMFiEEm9B+DgxR+NWWd7dUG5NDfTtBYpsFAmna
- YUkACgkQG5NDfTtBYptX+BAApg32CkxwNucNEi8WfWA8oKkW0y8YDuY6ORMo9FWNGiT/OTy0
- vyJrLocrpn86zwfjVp+eCrssPYh8eqJfnWqmYv6ACQtHPYzPZQ3mSo8H97Z01oUxITzCxpXm
- ZkLgPIqtDPcC2E3dPM/fVxcyowM8XsaMA9wcsaUYrta8toOq2b9tKcjleKMfMrm0gQ9u7wUc
- QbLkwj6TCLOwucb07GXzLTNF9PZmaDUpKAZjMjmrW+le+SFvQbhamx0rxLWPR0NWntXpbCn+
- +ACch03p/JyTBVktxFsFyCt7pTPE1kEaeuXBTe/a2D9iQvRxRW19LvuO2e59/u1wYUiH/orz
- wbIC2S4dBsPAPihL3ztOU1yE86GPyQtSE0kU+/7snnLt4QGi6PChf3t5gnNjAzjUUovO8rgI
- c+5yN5heq5loYHgK6OQ9OlHzsPHO9e9MOQcKlFycs1pyijFGzDwdNUm/SchK8iWT2QApTx4A
- K9bCVaboTA2T77QYkRcRJYSsO1alGX0ome/hMLD1daXlkrNUp1HWa3K4iytLRXjCSIorWiGs
- n+q3krnpXu3TFkA8qtOFZMdnIiFuiq1yLT8hptsV5xh1TA2nsVvSYiaCr3q4s4BKjS/KrLDb
- qoxzw8ISjdUp4pA85vb6YLCmb39NgidD+7PmAr65lBNveIFynTgsja1rRQ4=
-In-Reply-To: <b49779cf-5132-4539-86c2-e4f806b1675d@phytium.com.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CY8PEPF00000057:EE_|LV0PR12MB142838:EE_
+X-MS-Office365-Filtering-Correlation-Id: dba39d5a-3697-40b0-183e-08df3a4cdbcb
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|36860700016|23010399003|376014|1800799024|10067099003|18002099003|22082099003|56012099006|11063799006|261102123227099003|261021123027099003|261021121427099003|261009223027099003;
+X-Microsoft-Antispam-Message-Info:
+	JE/f6Zhbu8TCZ6NoA3oz76aV/H868PYWybnGnJoN4LM7c5/minKaZ9l4cASO6ABocO4Yo4y4NYbfjHmezeyVrPU5eMgiCKDNNe4QwRFp593S916761QN92it2y8GYvK9cZ7WJUrmGc0MjJDYRy+IT+kFOuDotY2RxTsSwEQbRcQd3x72/zfFD/TYq5F08JyQ5HiT68t/sZIIj9WLLhAmf7Y9CpDbMlfq6wyIGBxrYsGuVS8a6K15LGHtPU/4Pwq39SwsRLxPvhBh6bJHcD6NwU6iuW9DiNoydL9Dc01+J3B407RMm6SGxLG8nX2c51nY3yrqeD7gopeJDfRXbkg9CkSaA1jGTFWDU6X6sKzUPBf3lizYOHKCWsZcoWSCEDg8kSs9zmppgRjXmsp3SkKjEMJ+IU1Zr22yAFiGjsaw1XuGkSGmipsW20jb8hL5M4EMnhoS0YioZux7HS2URADuyci6tY1IuxUVvagNmAJj96oftPqfYn98m+scGCSK1SXVPPhLbHR3S2ByPE5wuOeEiN2fkIYo19CVAeTi2K5ZY5JpP4HIYJjGc658WGWPWYjAZz+/kOqAqhPm1x/u+hghQdZiTluNKh9zGh5BfNP9o98R18dFpbxxNI+4SGrt6PPFRaUapNVEfAPxK+VVSwCbTMBbEIh5Z9TjXPxDf12LAZxtIdvbQbX7S9wcpMt81j0x2Rlbht2LEK7O4r1Svprc7A==
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(36860700016)(23010399003)(376014)(1800799024)(10067099003)(18002099003)(22082099003)(56012099006)(11063799006)(261102123227099003)(261021123027099003)(261021121427099003)(261009223027099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	IWdYWzdXpLxJhv4QYnHYvyx8Ojhe6XvaM5Y5DdJRCP35aHBGi1lJumC6EJbqqDC0K+WQfZMg9CqsFMJ1PUxh3gcr87AaGHMn9J1sAW3DRAk9it69l8FQNYDl3weL3C3ZeIYY1Ko2yGmT/GIfSoRRYPosjBwWqETm9eFq05GopXyNcSnwUI9xdPnuNkAvVwg6aTsdmjNKShwz2hxClE1DwRokAzTFdtaVVtujuMOYKt4JjlWsRq8Y5Com9VTUEDpi5W6seYqbxMDXQbuM0elqOLHdM2803wUXHgNnZCrTf0tC5zCfnSO1GScLZT39dcFl2sxUvtE6sE0un8oQILAPgNhLVTEvkH1v0QigPKBISGA8yM0oemYUyK+SbZ8ayvpSOc7Or96PqdqiSfX4wNY1tfX6PN/L68FSeTi/Bx+Htf4A3uPRcqlbKeUxXdxVrjGp
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2026 08:23:08.8847
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: dba39d5a-3697-40b0-183e-08df3a4cdbcb
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	CY8PEPF00000057.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV0PR12MB142838
 
-On 03/11/2026 03:57, Cui Chao wrote:
-> 
-> On 11/2/2026 6:00 PM, Krzysztof Kozlowski wrote:
->> On 02/11/2026 10:51, Cui Chao wrote:
->>> Add a new optional boolean property 'linux,pci-domain-reuse' for PCI
->>> host bridges.
->>>
->>> By default, the 'linux,pci-domain' property must be unique across all
->>> host bridges. This property allows a host bridge to explicitly opt-out
->>> of this uniqueness check, permitting multiple host bridges to reuse the
->>> same software domain number.
->> Why isn't this deducible from the compatibles?
-> Hi Krzysztof,
-> 
-> Thanks.
-> 
-> The compatible cannot express this. "pci-host-ecam-generic" only
+Sort register field macros by bit position to improve readability.
+No functional change.
 
-You have vendor specific compatibles, no?
+Signed-off-by: Devendra K Verma <devverma@amd.com>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+---
+Changes in v2:
+  o Rebased to dma/next branch as per reviewer's suggestion
 
-> describes how configuration space is accessed; it does not describe
-> whether two host bridge instances may share one Linux PCI domain.
-> 
-> The same compatible is used on systems where every host bridge must
-> have a unique domain and on this system where two RCs intentionally
-> share a domain with disjoint bus ranges and resource windows.
-> Comparing the compatible strings of the nodes therefore cannot
-> distinguish our case.
+Changes in v1:
+  o Corrected heading and body as per reviewer's suggestion
+---
+ drivers/dma/dw-edma/dw-edma-pcie.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-OK, so let's look at your DTS - where is it posted for upstream?
+diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+index fab4faf68b77..83f8353d89d0 100644
+--- a/drivers/dma/dw-edma/dw-edma-pcie.c
++++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+@@ -31,8 +31,8 @@
+ 
+ #define DW_PCIE_XILINX_MDB_VSEC_DMA_ID		0x6
+ #define DW_PCIE_XILINX_MDB_VSEC_ID		0x20
+-#define DW_PCIE_XILINX_MDB_VSEC_DMA_BAR		GENMASK(10, 8)
+ #define DW_PCIE_XILINX_MDB_VSEC_DMA_MAP		GENMASK(2, 0)
++#define DW_PCIE_XILINX_MDB_VSEC_DMA_BAR		GENMASK(10, 8)
+ /* AMD CPM6 (Xilinx) supported cap */
+ #define DW_PCIE_XILINX_CPM6_VSEC_CH_SEP		GENMASK(18, 16)
+ #define DW_PCIE_XILINX_MDB_VSEC_DMA_WR_CH	GENMASK(9, 0)
+-- 
+2.43.0
 
-> 
-> Adding a vendor-specific compatible only to trigger this Linux policy
-> would not describe a different hardware programming model either.
-> What actually makes reuse valid is the platform-level relationship:
-> the bus ranges and resource windows are disjoint.
-> 
-> If you prefer to avoid a new property, I can rework this to derive or
-> validate reuse from the non-overlapping bus-range and resource layout
-> instead. Would that be the preferred direction?
-> 
-
-This one is clear paste of LLM output to a message.
-
-
-Best regards,
-Krzysztof
