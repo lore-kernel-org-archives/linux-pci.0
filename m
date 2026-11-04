@@ -1,86 +1,70 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793781022;
-	b=reDI05crSu+ndiq/VgCwkqv+l4nGIsBGyUh1BIz6DJNq74C0BXV5n0cxMsUF4wQ7b9W2
-	 OS5xQeeYMTzW8W+bB8GCEbl1HYghM9YLwWFLq7dKURpQa6j78bYop6vF2qMmVAtOe/PIR
-	 IHWZB4ljpABnchQ5r0cWBPzMqksVtD+rDS51/tk75MOTRo+D9WbIZfMn2y2afHME/Iy3b
-	 qYSWjBtbs13QZ7my2sig1mj7lqW3UTidvapCcYdkiP9g1tKwUXXWgIy3kNiDkwdHAwdll
-	 Pvb2AI8Pvm2R8HHAiyBCIM0conqSPVB6E52i3eXSWTX58X9bAkp3yrA0kmnue3TLEdg==
+	t=1793781812;
+	b=jMcI174m7pNh7q9xa7hCDc9J3VYz3LDZv1+ywiCu7hL2P3vBjgMpNeuGG8Bc67BC0quc
+	 MDkW+gU/f5mWZL7sum7mMBc+iuc5sLWb59FTjpJEzjkZNVUNoXSsswzUpRbEZ0JFh16Jy
+	 xDnPZ9xqKhI6wfEfnpqFaRcy0bo3HdrG/FngHa4jrw3RiPu1WfW0NDzezZOS4O46giOgx
+	 qqnAR0LJsyD4k2P8PkomNzbt5jxNHOfbdFragNKkfycTx2AFi3DCqVxiko4jc9CYK3CUz
+	 4lLqFXIP3r9heDXsAX3ZUPo+uv9v0ffVmpGSPoDlDAzKSUkTMBRMoKqX+rQxuGy863w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793781022;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To:Organization;
-	bh=kSkN+y8opL5CBs5M/ciD6De9QJtjpJLB5HYNs+Lgc/o=;
-	b=EK9pv9ywO1ZFJv6N/etGSGEyD6xcxRJQwZ2YKZTFXiZEWUfI/VBtRm+4s41L/WRQWjX6
-	 F4GI2b+nFlvlcYsLFqS3vQSRTgTNzWkuXW918KuP6YoI0JihJKWDYq7PLCFvSlGOr7uXU
-	 i2338c7xz7xSvcFqIRqQBBLkTlui+6RNWYxMNczYS7aga2WGE82MmXh8V6LV0qL8LBISJ
-	 HGE2As0i4z4LtQ7IZlKKYK+alddk3TbtMfK2S/2XhUVZVVPNbIdCOjDT+2ozQb9c2BB+J
-	 9gdPci61dbFpmzG3T+YKboZ/aLSP2XfqTIthzq+rTaosJ4xpbMeaP1M56N9Ku3ndwig==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793781812;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=Xigaf6imL+kX8Ty8pKWbPmcjBYxPKbcCFWKP/SbOV1w=;
+	b=CP8037IFjVT+/rfWzNvY0WmRl60eddDNmMnr6nH/cNLvIdNPtCsoIc960fGO5R2zg3fS
+	 XseCBUH6bOf0MPf23l/PjWogYe5o9EUBZ0wZigmFuk/+ZxdIcAqeLWFTj9E650i1nAxlK
+	 +EitrDzr9ELVRA8pPv9iyzWrGCzu0YjQrbDRrLyB+Wphuj2Y+0K7itRjDTYZutgn0Vb3P
+	 UvcEJIMRCAeLMCHKrzOSi0MOZc9XYumibNFEL62IGAv8/4OIOUMOXABLLXPXOi2ah0HDM
+	 vT8Z0ZevE7G7K7PvJ8CgEgZhjIglaZmIPw1rvBUZjuARhlaAs0VgtGQuRT/LxlwUcbQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=A9hySeRX;
-	arc=none smtp.remote-ip=192.198.163.15
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SYR7aZGr;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7BC1606A326;
-	Wed,  4 Nov 2026 08:30:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A7BC1606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82513606A31B;
+	Wed,  4 Nov 2026 08:43:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=A9hySeRX
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793781022; x=1825317022;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=lItRH7Z12dB6U4PsmR4/sPVPKYSFiWRTUv3Y5oFAozw=;
-  b=A9hySeRXZAdDOZ4UTlSXRvh8mYvZoyP5DSZKykn9A+j+o19PoHLzKVBa
-   3/PdWGD61CllYklqXK0G2WGZ1j8eyOgPApG6oJIFxUcBHWq1J0az+3I5A
-   E8RDkPtmw3q5nFflZEnTgsrYq75NVv2h/aIK2GavdTeD7MDPWpkBkJHiB
-   9Sy7iqXoRK7/EIK/bFNorkIy4ZhuQJ1hzH9DD5bETUR71f9Oz5IuyAKly
-   9wwoYxUGWjZaK/FM2+UmkNqk+kYSoYxdIkKECvcYYp1tD/F65uOdeSAXX
-   F9qAN+JiZuFqCDc4LyiprS7OGN3r6AkPrCey2qDnagyeWXiTgO2wZlv4q
-   g==;
-X-CSE-ConnectionGUID: h3mY/OK0SeeDHNxuj9vTuA==
-X-CSE-MsgGUID: yl4qc/o7TmqgJPkOu1oiUg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11955"; a="2524950"
-X-IronPort-AV: E=Sophos;i="6.27,194,1787036400"; 
-   d="scan'208";a="2524950"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Nov 2026 00:30:21 -0800
-X-CSE-ConnectionGUID: XmIZj721Sp63rCxB6AtQ1w==
-X-CSE-MsgGUID: dOoOk3kdQ5ytHJ1HQFa2Kg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,194,1787036400"; 
-   d="scan'208";a="6561184"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.24])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Nov 2026 00:30:17 -0800
-Date: Wed, 4 Nov 2026 10:30:14 +0200
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Frank.Li@oss.nxp.com
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Jeff Hugo <jeff.hugo@oss.qualcomm.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Frank Li <Frank.Li@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Niklas Cassel <cassel@kernel.org>, Koichiro Den <den@valinux.co.jp>,
-	Christian Bruel <christian.bruel@foss.st.com>,
-	Marco Crivellari <marco.crivellari@suse.com>,
-	"open list:MHI BUS" <mhi@lists.linux.dev>,
-	"open list:MHI BUS" <linux-arm-msm@vger.kernel.org>,
-	"open list:PCI ENDPOINT SUBSYSTEM" <linux-pci@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>, imx@lists.linux.dev,
-	vkoul@kernel.org, Frank Li <Frank.Li@nxp.com>
-Subject: Re: [PATCH 1/1] PCI: replace chan->device->dev with
- dmaengine_get_provider_device()
-Message-ID: <aurtFju8dyFbRROh@ashevche-desk.local>
-References: <20261103212924.1780217-1-Frank.Li@oss.nxp.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SYR7aZGr
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C38B1F000C1;
+	Wed,  4 Nov 2026 08:43:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793781812;
+	bh=Xigaf6imL+kX8Ty8pKWbPmcjBYxPKbcCFWKP/SbOV1w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=SYR7aZGruhoHnrfiwYjxfz5dGJoVSDEEik/0zvtgRpyReS9Wbk26VTR5vN0qCQv9W
+	 y5RgeyQPrjeHzKvEKu3Nj6jBffjhDpTmnwyQGZXiRJo7gLVwI59jqv/i+zM+oj6vAv
+	 XCbuh4sq0+rIxSCKsxgyClZj/VKu/TMwKvhA+mlxcgS8e9HDpAfjHFF5N0ch2h4Tc0
+	 91rCYp2anJnZ1Hiuv0L5HqP32okJmg5j6P0tXnAVKH/eX/fag0H8xHDlOK0j49OtPC
+	 UPBAX3K5anx7jwggHKh+KlcKCY13k/bSK1Uxj2oAxM+0aLBf0g1XyGTX6dgAPwD0QJ
+	 dk69OhqIE6k4Q==
+Date: Wed, 4 Nov 2026 10:43:28 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
+	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
+	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>
+Subject: Re: [PATCH v12 00/19] PCI/P2PDMA: Route peer-to-peer DMA by TLP class
+Message-ID: <20261104084328.GP264423@unreal>
+References: <20261103-fix-p2p-acs-v4-0-v12-0-912101f93517@nvidia.com>
+ <20261103233742.GA1162403@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -92,67 +76,50 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261103212924.1780217-1-Frank.Li@oss.nxp.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
+In-Reply-To: <20261103233742.GA1162403@bhelgaas>
 
-On Tue, Nov 03, 2026 at 04:29:20PM -0500, Frank.Li@oss.nxp.com wrote:
+On Tue, Nov 03, 2026 at 05:37:42PM -0600, Bjorn Helgaas wrote:
+> On Tue, Nov 03, 2026 at 10:29:39AM +0200, Leon Romanovsky wrote:
+> > PCI P2PDMA applies Request and Completion Redirect throughout both paths.
+> > This misclassifies asymmetric and nested switches, and reports one answer
+> > for every kind of TLP.
+> > 
+> > Three ACS controls act on TLP attributes the Requester chooses rather
+> > than on the topology: Translation Blocking and Direct Translated P2P act on
+> > a Request's Address Type, and Completion Redirect skips Completions carrying
+> > Relaxed Ordering.
+> > 
+> > Evaluate each direction at the path divergence, decide every class from the
+> > one walk, and treat a client with ATS enabled as translating unless its
+> > driver declares per-mapping ATS.
+> > 
+> > This completes the P2PDMA side; dma-buf and mlx5 follow separately.
 > 
-> Use the dmaengine_get_provider_device() API instead of directly
-> accessing chan->device->dev to get the DMA provider device.
-> 
-> No functional change. Prepare make to struct dma_device private to the DMA
-> engine.
+> Is there a one- or two-sentence explainer of why we want this?  I'm
+> thinking in terms of what Linus will want in the merge request: a fix
+> for something that's broken or some new functionality.  It sounds like
+> this is solving a problem, but I don't know enough to translate the
+> nitty-gritty details to the higher-level user-visible problem or
+> feature.
 
-...
+Not AI; these are my own words with grammar fixes from AI:
 
->  Assisted-by: LLM
+"The existing implementation of PCI peer-to-peer assumed that all PCI TLPs were
+the same: ordered and carrying untranslated addresses. It did not account for
+the variety of traffic types defined by the PCI specification. As a result,
+only simple systems supported peer-to-peer transfers in the upstream kernel;
+real-world systems required out-of-tree patches and careful platform design.
 
-It's an obsolete tag. Please, replace it in a free-form explanation how AI was
-used in the comment block, below '---' line.
+The new code will allow peer-to-peer transfers between any two devices, for all
+types of PCI traffic, as long as the PCI path between them supports
+peer-to-peer.
 
-> Signed-off-by: Frank Li <Frank.Li@nxp.com>
-> ---
+This paves the way for PCI peer-to-peer support in VMs, which the upstream
+kernel does not currently support."
 
-...
+BTW:
+1. The patch "PCI/P2PDMA: Document the TLP attribute assumptions" attempts to
+   explain the current situation.
+2. The change is too large to present as a fix.
 
-> static bool pci_epf_mhi_filter(struct dma_chan *chan, void *node)
-
->  	memset(&caps, 0, sizeof(caps));
->  	dma_get_slave_caps(chan, &caps);
->  
-> -	return chan->device->dev == filter->dev && filter->dma_mask &
-> +	return dmaengine_get_provider_device(chan) == filter->dev && filter->dma_mask &
->  					caps.directions;
-
-While at it, fix indentation:
-
-	return dmaengine_get_provider_device(chan) == filter->dev &&
-	       (filter->dma_mask & caps.directions);
-
-...
-
-> static bool epf_dma_filter_fn(struct dma_chan *chan, void *node)
-
->  	memset(&caps, 0, sizeof(caps));
->  	dma_get_slave_caps(chan, &caps);
->  
-> -	return chan->device->dev == filter->dev
-> +	return dmaengine_get_provider_device(chan) == filter->dev
->  		&& (filter->dma_mask & caps.directions);
-
-Ditto.
-
-	return dmaengine_get_provider_device(chan) == filter->dev &&
-	       (filter->dma_mask & caps.directions);
-
-...
-
-Looking more at it, you probably want to deduplicate this code at some point.
-
-
--- 
-With Best Regards,
-Andy Shevchenko
-
-
+Thanks
