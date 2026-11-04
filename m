@@ -1,56 +1,110 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793821367;
-	b=AD+0819BUES4U/BOhPaE+w4ThhoiHv+8POrZGH89tiaszRR6XEq/JIX89JQgZ3ug6hMd
-	 NDlozl3AbPCBs6n9kx6dHqWiWfGe3JE5HbUGozXxWLgF1lX4SkzpgnUhuQM2P359M+TnG
-	 Yua06575B1g02AnQR8/ewLotQBlJWW1F4Xc3eSyGFnzG2d9agQlJj0kYiIYoi4jk99pC6
-	 FBHfwnPlo4Jb4i3pKuqgZBVjWEdHImm9Gao6I2Vg2EO9b7eHLVPDXc5KNUMLzufuiveiE
-	 z3dAlB7G81EvVpbQ8NFYmlNRqzph0l4+9JPPMHJJqNAhDh1aZgEuDbwW9DdYks5helA==
+	t=1793821361;
+	b=cldR3FGvNMm7vd7i9pCjQgzOgDTM1o14+Zn8P0eCHLZGXEb0rU7l7xURJNhodeZD32WR
+	 j/YYU6Hj9PxDbee7NBwQw/EoB1Kpz3d3/GGKNSTYsDqCBz4g4zg8HK0YsBaaN/0ciuK+j
+	 X3qHyd8ZgxSsicb0TWc6GINiPy68VY7HSMvdd84TJL3WgjiyVrvGaLKKk182V2nsMErON
+	 ELNopRiT7K1wPFTy8+AepsmDk3/deP+uX/iCffgl1JzRDUVdkT+hTmjQ5yxDVsKrjIJ3y
+	 G/bqCSH8nUyWwRS+cm3kbyij2KnhGVqf3PN6hiZEbOiRNQ9wn7FqjZkmkDzlG7XCedw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793821367;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=FNMRZJIkIwe4KWycNZr+veQeYIQs7uDOaOwwq73o4Q8=;
-	b=AlCn/35FYWE4B0I0YkHkjSZAyz9mC3zX5JtiH6e9qq3WyDdxuimXrTgedEt5U4Lib8YA
-	 05hxPP1XEOIWc0hXiqIgNc81VKf/LvUkDiin5DQ1nBkgCIqmP6VXA4f6xEubBJPQedk1y
-	 T8S/GAZkEDoBypf2Lo0FxAKmtMM9sdWKsFxccqIfzRbCNWkwXAeleVT++Vi5q1Ap9JWMh
-	 XXN/Ts5LwTlx8Dbx9tmBTMfL93nIpYh7AyoRY+atI5Tp904VcDG0Dyx1thLKtaIzAlBd5
-	 NX10JrqJ8ZR64mhFhuDaU6GNOLil/xyt4ExzVz24T5lrzRvkGXgrtCSxHnVkxwERuqg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793821361;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
+	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
+	bh=uhE82sMafPzxvfPBNz7KCycPN06o3nm9WBF7ozqhvvQ=;
+	b=YdYPpb9IrFcrXeZdI45tFECLEJaiIKEmtKMX3JA2QtT0J9pKbBmd8do4LqOI2mIieOkF
+	 TndrZBnYrQBdPNtXlcLVJJNJ60zS8FEuo+JPKQ8y2E1oh7vu7Z+Vq8WEvNzmDIJuy8WEH
+	 2IMz1GAGNmOZBYU6jvQ8zC4xog+E8VYWtD/S6oYQhWdarA9s6HAOlyVjl3zxQihMQrFb4
+	 XU8919Ek0/4MMOCevatDULvEGhSSiAnyYSRWLieeSFD1kO+ArZ/c8/19zOoJU/qz2y7QY
+	 7ks2HT0aqwfeWMVkcNAi80mplHZYynkxU8W6FATgK64jLPRVkrTSAijQnF7dJjcU5fQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OHqHBGOC;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CY3vhRi4;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEDD96072FA3
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 19:42:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8368B6086B9E;
+	Wed,  4 Nov 2026 19:42:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OHqHBGOC
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B23E41F00A18;
-	Wed,  4 Nov 2026 19:42:46 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CY3vhRi4
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43B831F000C1;
+	Wed,  4 Nov 2026 19:42:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793821366;
-	bh=FNMRZJIkIwe4KWycNZr+veQeYIQs7uDOaOwwq73o4Q8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=OHqHBGOC4smNkOu1yAJ/cyYI7wmVSGpmn+JoTN7FnyYV3O0mnJv7Jz4XLGZPnyFih
-	 i1BWhaHB3aOPfYO/qM7n5nMu9OMokpS5qM/MZIggDm0tQOb0lebSHaRWkQSYL21lEZ
-	 XU9jNpxu7LAEYgdB61KdHybXCxdnsjpEtdWdutLA4RGu72C7xK/NfeIQxuCMWnjzB0
-	 mX9gZLxVEEaD4ItayPNLKZoQuoBMR+Yd3p4RR09K6QnevUKbXhuY/kuq90H2HbTsTE
-	 jsKbzhsnO9JSzfUfjDsbY/ffpXJtUrkIYK/oqrZwgRCxCkNYJnX3My/S160SwIkMXq
-	 an/2ibtuZez1A==
-Message-ID: <sashiko-outbox-197975@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 08/10] PCI: dw-rockchip: Set broken L1SS resume flag
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sebastian Reichel" <sebastian.reichel@collabora.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261104-rockchip-pcie-system-suspend-v7-8-6ae6875939a2@collabora.com>
-References: <20261104-rockchip-pcie-system-suspend-v7-0-6ae6875939a2@collabora.com>
- <20261104-rockchip-pcie-system-suspend-v7-8-6ae6875939a2@collabora.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 19:42:46 +0000
+	s=k20260515; t=1793821361;
+	bh=uhE82sMafPzxvfPBNz7KCycPN06o3nm9WBF7ozqhvvQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=CY3vhRi4hQxkqcpQ1Mm/O3l6e+OzedeN/4+37SeNZjOvlqXmy34qriVvD3TH67ywH
+	 DQzl6FzuyIa5uiOv7Dc7vMjmQMkxqYHlBr0eMd+Xera9VB0QWJPHsXDK0rpkNzXBBK
+	 tX9Y7Jq5/fQhLGsvIaKNSEhYv51qK+oUfD0NCrdQZjRmHE0FizjDeNxZM3dzQpWJZy
+	 HRwBQTyj5k9AawVsBYNGBCFZHPpK+UsKw3yqcCB9jomRWBq8KMKMHMiOAFjbyWU1JH
+	 JbXTNMiiUjnz72MrV0u90yAZ2M59tRnRkIXF5dI/J/zo2XxESLkUQl4Q5E9EaHZPuO
+	 H5e07M+u+h5bw==
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Jann Horn <jannh@google.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Chris Mason <mason@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Christoph Hellwig <hch@lst.de>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Joel Granados <joel.granados@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Jan Kara <jack@suse.com>,
+	linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev,
+	platform-driver-x86@vger.kernel.org,
+	coreteam@netfilter.org,
+	kexec@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	ibm-acpi-devel@lists.sourceforge.net,
+	jfs-discussion@lists.sourceforge.net,
+	linux-alpha@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-cifs@vger.kernel.org,
+	linux-fbdev@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-sh@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	samba-technical@lists.samba.org,
+	sparclinux@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-doc@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net,
+	Takashi Iwai <tiwai@suse.de>,
+	linux-input@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-modules@vger.kernel.org,
+	linux-debuggers@vger.kernel.org,
+	"Christian Brauner (Amutable)" <brauner@kernel.org>,
+	Chuck Lever <cel@kernel.org>
+Subject: [PATCH RESEND v2 01/26] nubus: let procfs own the seq_file of the resource files
+Date: Wed,  4 Nov 2026 20:42:27 +0100
+Message-ID: <20261104-work-procfs-drivers-v2-1-245e54e87116@kernel.org>
+In-Reply-To: <20261104-work-procfs-drivers-v2-0-245e54e87116@kernel.org>
+References: <20261104-work-procfs-drivers-v2-0-245e54e87116@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,23 +113,53 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: b4 0.17-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1301; i=brauner@kernel.org; h=from:subject:message-id; bh=x7z4QEHcj9RNvDtDgoKANKctl9Sfloc7qmQpa+Y73Ns=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97ioOOa68o/Kq2fmOY5NWuTU8iP3ZEGF+bqWx4z+Wl OQWlcZPHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABP5yMrIcHHmjxMtv47deeBR f8hmwmHx04XBoiyTn7ROi1p5ovDEfjGGf0pS7v/tJ675tu3LE5ZOszvfVmhY9L9Rd7yQdf+7rII THxsA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-> During system suspend, the Rockchip RC driver effectively powers off the
-> controller. If the link is in L1SS and the endpoint asserts CLKREQ# to
-> exit L1SS, the time required to wake the system and restore the
-> PHY/REFCLK may exceed the L1SS exit timing (L10_REFCLK_ON +
-> T_COMMONMODE), resulting in Link Down (LDn) and a reset of the endpoint.
-> Set broken_l1ss_resume flag to indicate this limitation to the PCIe
-> framework. This results in pci_suspend_retains_context() returning false
-> and PCIe client can avoid relying on device state being preserved
-> during system suspend.
->=20
-> Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
-> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+Get the inode from the file instead of ->private, declare the show
+function and let procfs open and free the seq_file.
 
-Sashiko has reviewed this patch and found no issues.
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+---
+ drivers/nubus/proc.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-rockchip-p=
-cie-system-suspend-v7-0-6ae6875939a2@collabora.com?part=3D8
+diff --git a/drivers/nubus/proc.c b/drivers/nubus/proc.c
+index 3ea3d1738eae..cb21ad1d9964 100644
+--- a/drivers/nubus/proc.c
++++ b/drivers/nubus/proc.c
+@@ -107,7 +107,7 @@ nubus_proc_alloc_pde_data(unsigned char *ptr, unsigned int size)
+ 
+ static int nubus_proc_rsrc_show(struct seq_file *m, void *v)
+ {
+-	struct inode *inode = m->private;
++	struct inode *inode = file_inode(m->file);
+ 	struct nubus_proc_pde_data *pded;
+ 
+ 	pded = pde_data(inode);
+@@ -138,16 +138,8 @@ static int nubus_proc_rsrc_show(struct seq_file *m, void *v)
+ 	return 0;
+ }
+ 
+-static int nubus_rsrc_proc_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, nubus_proc_rsrc_show, inode);
+-}
+-
+ static const struct proc_ops nubus_rsrc_proc_ops = {
+-	.proc_open	= nubus_rsrc_proc_open,
+-	.proc_read	= seq_read,
+-	.proc_lseek	= seq_lseek,
+-	.proc_release	= single_release,
++	.proc_show	= nubus_proc_rsrc_show,
+ };
+ 
+ void nubus_proc_add_rsrc_mem(struct proc_dir_entry *procdir,
+
+-- 
+2.53.0
 
