@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793761376;
-	b=pTvxu8L6T6G1CXklI2TCwpia8WZFkXJ7Ex3JMt4Lw8A7V97rSFe52U7yJUbMhzndePYY
-	 mN8rlpvZrfxGRz+ogyAi9yWL/f30y7hse8G/9Vd6g1gk3d4rUWjI4kSrC4//ET8dz30a8
-	 BOfzQrW3B7u/fkLR/RYCkJQPrh4JGyWARyYptz2f6KFgAu4hvuVlCMokspnC+w3+NLRAo
-	 AfECSvR69ClJyM3PMaG5JJzCDTYC33pTyr31zUGIO3FZiz8Mwi2DoXvQ3JHS0cTU/uPO4
-	 I5q3r9zayy7M7U/+V+f2utBAZiyJ4w1Wg+luCdif8khDdgMC9v42+agAcWPCojmAO5Q==
+	t=1793761441;
+	b=dX3eCP73+v8CJ1bdziFqRLN2xFuOG/sY2nGw0MmS6XnC+tS/Y1chOfCFOCEB+MHHXCe8
+	 pBtLz/5/MzKxTFQOT9/C0Fp6d/1TVjDs2qIorI8ZHs88+s1hDZqrwqbf+4An0AvBEkDOW
+	 PpHin182xHAS6fLva357LmqHpZmTN4uKvmrl4LioxQr91RtbK0a7wYMLREXpyFlKzU4ee
+	 uzQmObHvQzenfbRgj8igg3x9zkSBnUWIVuYJtN2ERiLQlFgfZyeAf5Wn6U9ptmgKQh7xm
+	 EMtQ9HKwMcEFTnMKslJ8dKu3WZAYli7CjCNhwJbK9L+hqJpVnESWMOa7em/8g3YRP/A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793761376;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793761441;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=O6SIJl06X0hKWq006bz/Wp39eQ6GQs+lTEApu23MXDA=;
-	b=v8H9sRG/pmpBw0DhYrnMk7G1zY10VVrLy4/vQXtmnLXFFBPvdVTWP4fUJaS7xGMfo2dJ
-	 Vm3B2akHpsczvZ2qok7JqyKYU/d174vmM9ZKG8REIUG5JRQDBt6ObksEj5RGiixqJ/WT0
-	 ritJ1dsFkub77G+RkM936rsAA+cDTlP3QaUU9M8u+Va6Mu8pxagGZFzSDoP51VmCy8Zv4
-	 EFlVxHm/Huq5G1/BjdiArxch7q+tQDhr5PSbwGUzHpWe3GWutymT/gop3uJU8Dmt1nGnx
-	 +Gm14KFWh2OZo9KebjQKyQRMeqehpdTlNAdb0NUDPrtL77DFqmedaJaZELLx3+8uynQ==
+	bh=1sOte9aZMW/qw9DmxmK2+mtVdZCe7JgqWzYHqiqlwUI=;
+	b=vigXyxj+GMfVL+7RKiZtjEqS7ObAsgrRWJpSteqhRvXaep4122KSyF2XosxgjSoX9aea
+	 Q8k99Qo8vuKSqiEvQNzuzS8yWX9UR5aAm+FqIAGHkMDHROum9WRo6M4yEn9UFCRb50HTa
+	 h1uJQHXez3TJvYg19rCT9C0pW0UB915GHajKdBe7dZ5it9OFV8cqbdbkthglYWM4O6BVe
+	 Kg/fRQY92csyX51j/XUAuBBmTCjXe6f9ksCXnJ30kpPc4pon9pmToZD9j6RWPu6c7CR4N
+	 fYcYpLGxnQxxSx06BXHY5ViFSymqXYq2l++vCgyVDldVh6u4JraeIeLJAKpEC2+i8OA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LdL74kjo;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=a3RE81+1;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FF51606A31B;
-	Wed,  4 Nov 2026 03:02:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B6FE606A31B;
+	Wed,  4 Nov 2026 03:04:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LdL74kjo
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CE2D1F000C1;
-	Wed,  4 Nov 2026 03:02:55 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=a3RE81+1
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D67C41F000C1;
+	Wed,  4 Nov 2026 03:04:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793761375;
-	bh=O6SIJl06X0hKWq006bz/Wp39eQ6GQs+lTEApu23MXDA=;
+	s=k20260515; t=1793761441;
+	bh=1sOte9aZMW/qw9DmxmK2+mtVdZCe7JgqWzYHqiqlwUI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LdL74kjokfnaGMw7WzeyCGWpeyL7JH+xEGDpVVdJR1xHLKtrNzewkbLRSKLVcqUE+
-	 GBh6pi6Eh+vCCEzKy+/3JgsHlHpC59Hcblu99uTs3YrJ+aXB9R/7vtAdpIb9AmJlwz
-	 SBnWUcqgdnA055rEVJNvIdhWaorWTRE8rG6MLL8wjk4cWTl9AGdT5x66vrKg3tyF5p
-	 q1Qv1vrkP+9q+Kz/uObLRMjlbZAr4Vz2Suk6ik2zZ2NdNeiTtKCCrgiEDgB19hF7de
-	 PtZ9SwI1U5PyTV3POoedffbNldVTovp9oCcGxurGzvnzxQJp2+ZefH4cpcemxDQEkQ
-	 Gm3fDS0vVPNsA==
-Message-ID: <sashiko-outbox-196564@kernel.org>
+	b=a3RE81+1hdZ6trClar2PLmID2P/KoVj344ZTz5ghjlD2mAAA3DWDgKBbc6b45dhBq
+	 HJGMLv8RDs/j8t5x8OVtYIGG7DdvqAnJwmCnjSU11w0p5ZEIqPTu0raUXhFApZAqit
+	 EUIMY3ajwr4Cz49lHlSq+dN6rWlRBOmh9Xx25r96TPBvdGGStJ1TW+mUJyVJBHsnGD
+	 CcsOZ3IBgjKE6MT44hfqMriIIbM4YTIROpjlucEv8ssDTDZ7Jsf4GAE5LtjuUxJ5gR
+	 XvTk9gjJATMLEL6EV+aivZHmdK7Uqyr62mzOBIS7bXbFJR4SUwY4nSnnHPuAemMtwZ
+	 mZjscBciCbrJA==
+Message-ID: <sashiko-outbox-196576@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 14/25] dmaengine: sdxi: Add unit tests for descriptor
- ring reservations
+Subject: Re: [PATCH v4 11/25] dmaengine: sdxi: Start functions on probe,
+ stop on remove
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nathan Lynch" <nathan.lynch@amd.com>
 Cc: dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, vkoul@kernel.org, Frank.Li@kernel.org
-In-Reply-To: <20261103-sdxi-base-v4-14-3668ccc7aab8@amd.com>
+In-Reply-To: <20261103-sdxi-base-v4-11-3668ccc7aab8@amd.com>
 References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
- <20261103-sdxi-base-v4-14-3668ccc7aab8@amd.com>
+ <20261103-sdxi-base-v4-11-3668ccc7aab8@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 03:02:54 +0000
+Date: Wed, 04 Nov 2026 03:04:00 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,93 +63,58 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] dmaengine: sdxi: unused mock KUnit device in setup_device()
+- [High] dmaengine: sdxi: PF stopped before pci_disable_sriov() in sdxi_pci=
+_remove()
 --
 
-commit 73b5f711479c1dbab69a55b0e9eb01abd747309e
+commit 44d5d7973859c1db8741ba90d53413150ded9a60
 Author: Nathan Lynch <nathan.lynch@amd.com>
 
-dmaengine: sdxi: Add unit tests for descriptor ring reservations
+dmaengine: sdxi: Start functions on probe, stop on remove
 
-This commit adds hardware-independent KUnit tests for SDXI descriptor ring
-reservations, covering full-ring and single-slot reservations, invalid coun=
-ts,
-inconsistent indices, insufficient space, and bounded reservations across r=
-ing
-wrap.
+This commit activates the SDXI function during device registration by
+setting MMIO_CTL0.fn_gsr to GSRV_ACTIVE and polling for GSV_ACTIVE or
+GSV_ERROR, and stops the function via sdxi_unregister() on PCI removal.
 
-> diff --git a/drivers/dma/sdxi/ring_kunit.c b/drivers/dma/sdxi/ring_kunit.c
-> new file mode 100644
-> index 0000000000000..7df85fc5549c6
-> --- /dev/null
-> +++ b/drivers/dma/sdxi/ring_kunit.c
-> @@ -0,0 +1,147 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +/*
-> + * SDXI descriptor ring management tests.
-> + *
-> + * Copyright Advanced Micro Devices, Inc.
-> + */
-> +#include <kunit/device.h>
-> +#include <kunit/test-bug.h>
-> +#include <kunit/test.h>
-> +#include <linux/container_of.h>
-> +#include <linux/dma-mapping.h>
-> +#include <linux/module.h>
-> +#include <linux/overflow.h>
-> +#include <linux/packing.h>
-> +#include <linux/string.h>
-> +
-> +#include "ring.h"
-> +#include "submission.h"
-> +
-> +MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
-> +
-> +/* A submission queue backed by plain memory; no device or DMA required.=
- */
-> +static struct sdxi_sq *alloc_sq(struct kunit *t, u32 count)
-> +{
-> +	struct sdxi_sq *sq;
-> +
-> +	sq =3D kunit_kmalloc(t, struct_size(sq, ring, count),
-> +			   GFP_KERNEL | __GFP_ZERO);
-> +	if (sq)
-> +		sq->count =3D count;
-> +	return sq;
-> +}
+> diff --git a/drivers/dma/sdxi/pci.c b/drivers/dma/sdxi/pci.c
+> index 6a293db69199f..d196ab5cf6f1c 100644
+> --- a/drivers/dma/sdxi/pci.c
+> +++ b/drivers/dma/sdxi/pci.c
+> @@ -99,6 +99,7 @@ static int sdxi_pci_probe(struct pci_dev *pdev,
+> =20
+>  static void sdxi_pci_remove(struct pci_dev *pdev)
+>  {
+> +	sdxi_unregister(&pdev->dev);
+>  	pci_disable_sriov(pdev);
+>  }
 
-[ ... ]
+[Severity: High]
+Should pci_disable_sriov(pdev) be called before sdxi_unregister(&pdev->dev)
+in sdxi_pci_remove()?
 
-> +static int setup_device(struct kunit *t)
-> +{
-> +	struct device *dev =3D kunit_device_register(t, "sdxi-mock-device");
-> +
-> +	KUNIT_ASSERT_NOT_ERR_OR_NULL(t, dev);
-> +	t->priv =3D dev;
-> +	return 0;
-> +}
-> +
-> +static struct kunit_suite generic_desc_ts =3D {
-> +	.name =3D "SDXI descriptor ring management",
-> +	.test_cases =3D testcases,
-> +	.init =3D setup_device,
-> +};
+When SR-IOV virtual functions have been enabled via sriov_configure after PF
+registration, calling sdxi_unregister() first invokes sdxi_dev_stop() on the
+PF while the child VFs are still active and bound to their driver instances:
 
-[Severity: Low]
-As noted in the comment above alloc_sq(), the submission queue is backed by
-plain memory and does not require a struct device or DMA.
+sdxi_pci_remove()
+  sdxi_unregister()
+    sdxi_dev_stop()
+      sdxi->bus_ops->reset() -> sdxi_pci_reset()
+        pci_reset_function_locked()
 
-However, generic_desc_ts wires up setup_device() as its .init callback, whi=
-ch
-registers "sdxi-mock-device" via kunit_device_register() and stores it in
-t->priv before each test case (valid(), invalid(), and
-bounded_reservations()), even though nothing in ring_kunit.c ever reads
-t->priv.
+If the native MMIO stop sequence fails or times out, sdxi_dev_stop() falls
+back to sdxi_pci_reset() and issues a PF function-level reset (or clears bus
+mastering). A PF FLR clears PCI_SRIOV_CTRL_VFE in hardware and resets all V=
+Fs
+underneath their bound drivers, and pci_dev_restore() -> sriov_restore_stat=
+e()
+then re-enables PCI_SRIOV_CTRL_VFE with uninitialized post-reset VFs before
+pci_disable_sriov(pdev) runs to unbind and remove them.
 
-Is setup_device() needed here, or can it (along with the unused
-kunit/device.h, linux/container_of.h, linux/dma-mapping.h, linux/packing.h,
-and linux/string.h includes) be dropped?
+Calling pci_disable_sriov(pdev) before sdxi_unregister(&pdev->dev) would
+ensure all child VFs are unbound, stopped, and disabled before the PF itself
+is stopped or reset.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103-sdxi-base-=
-v4-0-3668ccc7aab8@amd.com?part=3D14
+v4-0-3668ccc7aab8@amd.com?part=3D11
