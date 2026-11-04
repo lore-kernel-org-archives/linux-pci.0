@@ -1,56 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793761291;
-	b=fxaqNfZLBKQxapCGfViSxa2POYtUK8tT4wk+mqMuVOyGI3r3DDy7RuaP6yp1LerhyimV
-	 9lE/wdfBF7idRRWnMNVmW5e6uenHO3TmLjOndMNLMJX+M3ciaxq+kOa2L7UMDb16WSz+x
-	 Bi+6arASwdN4696lJgnFqI49V0MFA3lS/4/rYZl9ZZhWO4r4PRmDBPvVVJXRkh8FDcMLn
-	 fBkn5w80OzkieuKJkvXioeXU6txYSqKZNUk6MT7dv4QXhGOGGWHvxbzKucpZyTGxEoOhG
-	 z7XfschSdLM/eB0GcJVg2Q869I2DjqNXZ2D+bii9IB++LyJ3gvxKjcIWYZ81iIETgOw==
+	t=1793761312;
+	b=LeJCXdqUlxekHqXmhimP04GFFRn183Q24oRWaK8hyBI3upTE67rN4ZhntFg62ZNdPAJz
+	 cffpAHmlDmSaN5eT62f4z1ZviSb2kxf5Tq4q0n4GF6766+HMYS0c8uF1gcreEb5o8Kkkl
+	 lbijdv7PExumRFBrT6j/2/ROaZBmBwx8Jp3/MQAl728qy9ZjYTU5ghqxn182wpm0xHQnV
+	 jRnP3zW00jNB+4vBtPBJRo7PWqZOer23IHkniV1QiUoAXlm8770qfvOmNOw/uPWvzED4h
+	 EK9Rscz+4Qvh9oYj8UL9CuwcT6Pt/xfJUyoPnQ3a+4k+Lp9nFPKmVBcuoFY0x5jpdOg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793761291;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793761312;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=pY2ISYcYmWFNpTE435F+SG20s6XWgNHJkpxUX2gD2rk=;
-	b=DA5ESqrjKBde3lMW+xnf8GS7lsbw34Or6670TCG2UT9ySTimqW9Mk4tjPJGCVuZT4DGN
-	 pn0NqiZgDxSLqrsKpPnDhbf3rC+j5bYzk3DSX3YbuFNVox6q32yU4DUjODRT+2REqEIg3
-	 yZFGS7aGvHunrm/CD9hfRERs40oIrYLmS/miHKbqhToIYwA+9cpuYZuXiXgzAo+Ydvimj
-	 DJimndu4dtHaW4k+lk14GInfTOfAXwi2R/nXrT+yaMsjc81ZQhL4ZvgvoA9SeBkOl7EUS
-	 PH7/awG1HOEHDpXybhJF7Oympsf2tqCX/2PoTTaewuafgkgmRX0iaVK8gIdz4GNUi7g==
+	bh=fd7q5j3zglffdnLAesXLcETfRuk+G5S/iXN23bY7r0o=;
+	b=qfHVOqOHGGSm/Vqu0+EKkYzG/f+89uOlJW/2E6DY+0x1Bro6KMNKrer8LDJP+BmyZFF2
+	 3muwT7TXt+pqvUDO66P+POwvHd1harwlj1Uxt8nTVsLGOacX9dySxZeR/9CMmxBWNjn4v
+	 YIThZgwo4oWMLMxAP0YbgF26uF1+wPA+f0QwYhPNmrs0Cs6YA6Muiz7Ye5/fm/FcfdSpL
+	 Xnzvkhi5OeoRLZtAj0rl0Pvw24dUs3WaVged0VmpUyz0GCKBV4ayYK6KzbOhd190Yp0Yi
+	 LjO9um6sdlEeu8swoMQkPixrogZV98HWyHQ47TkVdJ1boe3WXvGp5ChSPb4J57f8tiA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z+ONAvop;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JIishLPS;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37584606A31B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 03:01:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FB9D606A31B
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 03:01:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z+ONAvop
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECB3C1F00A02;
-	Wed,  4 Nov 2026 03:01:30 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JIishLPS
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AC711F000C1;
+	Wed,  4 Nov 2026 03:01:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793761291;
-	bh=pY2ISYcYmWFNpTE435F+SG20s6XWgNHJkpxUX2gD2rk=;
+	s=k20260515; t=1793761311;
+	bh=fd7q5j3zglffdnLAesXLcETfRuk+G5S/iXN23bY7r0o=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Z+ONAvopX4nGm+UkKkMt6/pe9m4Yh3ye6a0REqNkBFDFsMhA/V61Q17rKQKcTx9Rk
-	 zOdhz/Yvycos1czyxEvs6AxJxA2qYrjQlS4aWbq+biJt2ZtrGqpLFsZnMSELKn3i0e
-	 mDSFxQPX5irudPXEoeAzdEOD2BZWkdZ4GVgsv5Q7MCy5L193T3mgoSHeb6kVXMvNuP
-	 MWpCAnvXLXr6EmPvUG0e9uPE298L7dpCcIfqMofpsXwKmPSyswvaU7VlL0olWck1jf
-	 Axk+m6O0H5J5ePbeJuAhxwjjqb6cFrCd99+EwzsfR2oC3OyvDiTw7O4s8TEKB97oGg
-	 heZQiVCw0Qbqg==
-Message-ID: <sashiko-outbox-196560@kernel.org>
+	b=JIishLPS4Gao3W4ivcmRUQxprT36s1xtFMVJbkR2XP9AdYLRjlDA0DMLJm1Dyx86I
+	 hD/ZKj2tMqxyjYYOee5YQ4D/OVyIpw4bhq+tiDd0QiXTbjQN+w3Dc/WY9fne+XtydS
+	 Lg2J+K2OwCUK6kr93UgZMJJMmu6yeKS23hHpXLa+t+7RB7qagJEmnlV9K7qB1bBxmc
+	 BD75zfgdpcSIs6+kcM1OHJGyRTksu/gQOTiwiBLC21YxELzWPV2MlzHN8QrUF1bQrR
+	 fCv2zNRSH+LKy+8CjsTOTREyLowJ8TD5ew2kQTBCZHCUBrb5r0DPACsYzpLYvylooV
+	 bz7afn6IWbL/g==
+Message-ID: <sashiko-outbox-196561@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 18/25] dmaengine: sdxi: Add context submission helper
+Subject: Re: [PATCH v4 19/25] dmaengine: sdxi: Encode context start, stop,
+ update, and sync descriptors
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nathan Lynch" <nathan.lynch@amd.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261103-sdxi-base-v4-18-3668ccc7aab8@amd.com>
+In-Reply-To: <20261103-sdxi-base-v4-19-3668ccc7aab8@amd.com>
 References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
- <20261103-sdxi-base-v4-18-3668ccc7aab8@amd.com>
+ <20261103-sdxi-base-v4-19-3668ccc7aab8@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 03:01:30 +0000
+Date: Wed, 04 Nov 2026 03:01:51 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,20 +63,11 @@ Precedence: list
 
 > From: Nathan Lynch <nathan.lynch@amd.com>
 >=20
-> Add sdxi_cxt_submit() to consolidate optional fence and completion-status
-> block setup, valid-bit publication, and doorbell ringing. An optional
-> struct sdxi_completion input identifies storage already claimed and
-> initialized by the caller.
->=20
-> Introduce generic descriptor helpers for attaching completion storage,
-> setting completion-status mode, fencing, and publishing the valid bit.
-> Publishing orders prior descriptor writes before transferring ownership
-> to hardware; the helpers warn if a caller attempts to modify an already
-> valid descriptor.
->=20
-> Provide sdxi_cxt_attach_cst() for attaching completion storage without
-> publishing the descriptor, and sdxi_cxt_kick() for ringing a context
-> doorbell.
+> Add layouts and encoders for administrative context start, stop, update,
+> and synchronization descriptors. Parameters select the context range,
+> update level, and synchronization filter. Encoders set mandatory fields
+> and produce little-endian descriptors with VL clear; callers attach
+> completion storage and publish them.
 >=20
 > Co-developed-by: Wei Huang <wei.huang2@amd.com>
 > Signed-off-by: Wei Huang <wei.huang2@amd.com>
@@ -85,5 +77,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103-sdxi-base-=
-v4-0-3668ccc7aab8@amd.com?part=3D18
+v4-0-3668ccc7aab8@amd.com?part=3D19
 
