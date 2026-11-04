@@ -1,55 +1,103 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793802303;
-	b=2rYz+ulPCBr32IvOWXhhsiIDpCClqol11bFzGP9vliOdC5tvJFkuTZOuM2aRrVhsppJc
-	 R9WjANAoQpoAcj9Zw6TA/fD8499aV36xh4OW7b9pIYrZi2dZiEY6ZVDj3bc8NUyyrs64e
-	 95Zq4UgdZfoztUAVDttTnZhg7mMqTkwMG+z617nOFdX8Rn05uhVgDPLtoBy4AwfvJt7Fa
-	 s2In4HioiQWXz547STWJn0eLdorO8jlri+8XYnwEOy9QQsTJL/XJgAIOPGDluIxVInGHQ
-	 t4edauWDmSY8Hdqh3KO8ZYaDajgqoNflaaEgyeAlz8/tFOs0hSzBDhClMduioTDwEIQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793802303;
-	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
-	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
-	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=TvDBwQZo6/m82PHmQTlDUFZg6Jc+mwyR6EdZGMpMfhE=;
-	b=1pUBLobm1i88gNDwBeHjAW/xSu50EPrTa4AZqD5CHZWYlRmvZxK6oRejlIzyhBKuvUNr
-	 3tVUmIeVTrpsI9fN1byOgOMHNOa3DE8ObOD9+QPrTDZq/QnF7/1IDtJlz7ZtT6POcvdnR
-	 sgiixFn0MWU3SPuaNhk1MKSp21JeVemEmpgQT0raaD3Xf3G3GGL8wyfp4wcmy1+LiTDaA
-	 PfGlcvNnIH48bcned2+7oPyzd30h/2HPnC6CoXCJjugaxlVVFNjBA3w6uM9utqOily9/M
-	 45FcbQ86fJncozw/j8oJ4gqzIjFpk7gGdNHfCOS2q2RVjl84bcRJVnWtr5gMxbhpghg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nzidTxHN;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.66.2
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793804533;
+	b=MF9YHoaBXUVb1Z0kSt1HIYlWT5JN4VLpyF33ciV0pw4cmPm6wIpI+ibw+gS7/lPx7+zi
+	 ve9vDqtJSQxIzWPyUZUp6ce2b4JwgXyiTr8NtX9cslPRUlDSKK0GDxYz4MF8Ydqrfn+RA
+	 KNRMVEZmItDiNi7/Z08KLuV4oiBnn9H/5RauNmCggQ8PC6NY9oIuQNe9SlqQA2eOt0PNU
+	 2NbBODZwpSJAXRL0yS2cDO8UnyYutP9+UgDBQK56mP27uLfjl6mBWwCLJ07oBOtLeLo+q
+	 OPZ5wtJ2lkGlC+0cNmir+o2+gu54eg3OD9WNfHXykX2K9gnC7igO0VlXczSFYF5yXjQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793804533;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:Content-Transfer-Encoding:Content-Type:
+	 X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=eu5pEnwsFGM5r3QC9OQQ1ggmzdGcX/En8gFibw66SNE=;
+	b=f1+dpLxMagh25xlYfqRCAESlfC8iaaQrm25s6xdKThPB4eLRe9eyg2QNq1NWQboiIQBt
+	 wIOQD8drmPaPjd+1r7cH8jZTe3jFxMS88hU7wKT2Efv5EzWzh//1ACJ0zD2+6hDacdmGE
+	 yXEhhl6rrBBMOV5TFJ+MY2n6omJ8SWN73Ut6U0J3wfQMDnB1f9gUCbGM53mXVAttUzQho
+	 uRUh5J7QmzfgyzgZBtuzQ7M/XoPDtuC5r+Km+r5KXUHD4sulBkvHLLURah7zLfYtXyIz6
+	 E+nQV3wEFgWm18PsndzdIRRdxM66Ed4maOsEU4+1k/W34KLwtHU5T47/qyts2/zbbKg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.nxp.com;
+	spf=pass smtp.mailfrom=oss.nxp.com;
+	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=BXYnWjcL;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.66.2
+Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012002.outbound.protection.outlook.com [52.101.66.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1FB6606A32F
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 14:25:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00056606A326;
+	Wed,  4 Nov 2026 15:02:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 00056606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nzidTxHN
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AAA11F0093A
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 14:25:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793802302;
-	bh=TvDBwQZo6/m82PHmQTlDUFZg6Jc+mwyR6EdZGMpMfhE=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=nzidTxHN45nMUeY/+EhDtWby3M3540v2pvHyNJPaSNgg7AC/5/wPzILWuUal+Wka7
-	 WHuiievjTU3eQn8D2RQOSwK2J8l2ji1lC+cQHRCPCbsE1tm/POBmnlggSutqNjw0Pb
-	 MkRCBH5IALFPXpNmTz82YFyYFcFFbAIAbt8E4KNqbMyFqLROCnnsVy/H2krQ7PNkP3
-	 UaUJ0w9hy660b00bcKz3VJhT67hMlbKiPU5a1LgRitHphQCsIgfJ3YdqMLcnqit1rx
-	 nVtsri3j0+fVhBEkSDHbxZVWbLe/ZWrW5bVbpNNUQaRERbJ1vGPwtIW03VNVQdCFls
-	 tu62oMSyAAlOw==
-Received: by mail-lj1-f173.google.com with SMTP id 38308e7fff4ca-3ac97e45a79so6523861fa.3
-        for <linux-pci@vger.kernel.org>; Wed, 04 Nov 2026 06:25:02 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AKwUvBwK7Tf01uQJP/y2rsIuKB6WRHn+Ne1fMv5FrPTPDqcQc5I3uyZ28aIfG82BMmX4gTspSSnPTK7ZU9E=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9mexTtkrnZReglwJwR641nW+Hft8M7WKPnAIPY1ZIjAx4Fl4XI
-	jon15JVrgYOUwhmD7orUMddtOFfDvgwpzsfPZrnncz/0z0TyJ44CvXBQ3YMWkad6NNA/1Iuft2F
-	Y6FthDicW18OdnL1B8syVwL1je9ZRdEA=
-X-Received: by 2002:a05:6512:3a94:b0:5bf:d54c:1f1d with SMTP id
- 2adb3069b0e04-5bfd9599874mr5967891e87.52.1793802301013; Wed, 04 Nov 2026
- 06:25:01 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=BXYnWjcL
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=NgD9iXw7LAhNugNM5ZF6o/PyRGepgFQ9QPWX8JcMk9GX2lq7nEnh/tycznLUy/IhTzcelzYG+Bjh4xBrSAy/1gdSJbbT1sestxJg9R0i0pPekn2Z7yfFKTMI+s/BSJurGjRHvg+aoWISWaSwQwd/bYZcfjUo1v98Yj/miCTpelrcyShU+3jnTbrkJR4u2x4VZJqe3kdcqWhXGRm7UscUjPUQxFt1FlLvDhT1pKiIehwEEvqAQFUurZdqzO2ogCBuMCowt2AC6TTJFeRRhVR4CKTOs03p6T3z7hno2ihWsSxLB/yE+uhD4yJ5GUFylju8j6mft2ilpL93OyggFyBxjw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=eu5pEnwsFGM5r3QC9OQQ1ggmzdGcX/En8gFibw66SNE=;
+ b=d3kLZDUDTMV6haQEJQ5VpujiY01Mk7fnQU8UYdZYgV/Q+ec8xtatXrl+9cY63vKj4nDvfip2Gmff3pWe4QRftIrXuGNQC7mydXmnX4o6cOp2iycz4txGmRIO9uMvYnE7A0J/cbzkkXq+VrQ19EkNufva07/z6nPdyNUAvJ9QWLteD/uo560HhjzHkuOED9ZakgeRrbmQfYAvC9A/vWNkp5nfYz1OMYmHTvC1HmBzJj5JAP5fTQR2I1wvASnRoCrXPoz3ohdADUsfzPKYlZhnfwuudTaLIzUO+QEAgSxfPWvqdWZnOJeSvvBzYbej4meKGbATZ3xY+cu40VR9TK3h0Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=eu5pEnwsFGM5r3QC9OQQ1ggmzdGcX/En8gFibw66SNE=;
+ b=BXYnWjcL0l20mtkHIwELLCuqrcj9HFCoLnI5zeMfo35DsQFEShwJvMqiQ1JzSFmyTjF2rcy3AEkjysCg7mZV+jTizOhpvbv+MRsV/Zb6kZbVBj9bR5ALNMwJcO/xSaTKI3saxdZdlppKX9C7jcmf31YVrcKohe8ZLY9fb8q6S+VcD1cTF5PXBaOgpTJcNbibaxJ0holhE0FBXAfaFG3k/8/Pit+UY9FjfT/ey8EG+2S3jSudfc7/qKFbkfnhGRb6bUx/CrbcjNEI8WDyQ8FK+1MYtfGrxX8KCl4uyveb3LgphkL92aL2QCJNLrA/9v/+ieJgHWMG53CWM1QkHZ7IIA==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from MI3PR04MB12438.eurprd04.prod.outlook.com (2603:10a6:290:76::14)
+ by AMBPR04MB138695.eurprd04.prod.outlook.com (2603:10a6:20b:7de::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.8; Wed, 4 Nov 2026
+ 15:02:09 +0000
+Received: from MI3PR04MB12438.eurprd04.prod.outlook.com
+ ([fe80::c715:c32:8bb1:b70b]) by MI3PR04MB12438.eurprd04.prod.outlook.com
+ ([fe80::c715:c32:8bb1:b70b%6]) with mapi id 15.21.0592.007; Wed, 4 Nov 2026
+ 15:02:09 +0000
+From: Frank.Li@oss.nxp.com
+To: Manivannan Sadhasivam <mani@kernel.org>,
+	Jeff Hugo <jeff.hugo@oss.qualcomm.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Frank Li <Frank.Li@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Koichiro Den <den@valinux.co.jp>,
+	Niklas Cassel <cassel@kernel.org>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Christian Bruel <christian.bruel@foss.st.com>,
+	mhi@lists.linux.dev (open list:MHI BUS),
+	linux-arm-msm@vger.kernel.org (open list:MHI BUS),
+	linux-pci@vger.kernel.org (open list:PCI ENDPOINT SUBSYSTEM),
+	linux-kernel@vger.kernel.org (open list)
+Cc: imx@lists.linux.dev,
+	Frank Li <Frank.Li@nxp.com>
+Subject: [PATCH v2 1/1] PCI: Replace chan->device->dev with dmaengine_get_provider_device()
+Date: Wed,  4 Nov 2026 10:01:59 -0500
+Message-ID: <20261104150202.3224971-1-Frank.Li@oss.nxp.com>
+X-Mailer: git-send-email 2.43.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: PH7P221CA0018.NAMP221.PROD.OUTLOOK.COM
+ (2603:10b6:510:32a::17) To MI3PR04MB12438.eurprd04.prod.outlook.com
+ (2603:10a6:290:76::14)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,256 +107,109 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261103193136.2410148-1-sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <20261103193136.2410148-1-sathyanarayanan.kuppuswamy@linux.intel.com>
-From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
-Date: Wed, 4 Nov 2026 15:24:47 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0jCDGUL3ZzbOaiN2V0qeyPDDZGXaGmhrJhYCOToEo8p3w@mail.gmail.com>
-X-Gm-Features: AclHuK-zbzu2M6-J6vtZBI53zXXr4jA2ZGo354i2EqRYCxNRIruPVfgUbCGRoOY
-Message-ID: <CAJZ5v0jCDGUL3ZzbOaiN2V0qeyPDDZGXaGmhrJhYCOToEo8p3w@mail.gmail.com>
-Subject: Re: [PATCH v5] PCI/PME: Resume Catlow Lake Root Ports on PME with PME
- Status clear
-To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
-	Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
-	"H . Peter Anvin" <hpa@zytor.com>, Lukas Wunner <lukas@wunner.de>, 
-	Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J . Wysocki" <rafael@kernel.org>, 
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MI3PR04MB12438:EE_|AMBPR04MB138695:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2eaf32dd-0514-4e28-28d3-08df3a8499a5
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|19092799006|376014|7416014|1800799024|366016|23010399003|10067099003|18002099003|6133799003|921020|56012099006|11063799006|261021123027099003|261021121427099003|261028144727099003|261102123227099003|261026140227099003|261022105027099003|261009223027099003;
+X-Microsoft-Antispam-Message-Info:
+	lMxSI31W/SePkLG5HyRiemxupN4vtb1Y4sr4ueuTIjMZuzemjvirwxPa6VP7yH/zKtDhHPcSptIlxsN7Di39QcC35+QXhgeEwWetRin9WQ9uyymOHkv12aTbmKldoZ36c4Haw/m9xgI9lIOP+k696zukkCMjjwIlH6bPWy/n2u3JIUOyGLliaVc95PtMiD+wmDwhYVJ+XDwYTBWg40P+Ad2+EYcBYePspJcriGFC9nRQOw6zcEVotxB96Zuk3nCvZAjoUcfqiv6ViXgWPCAfH7fRthKFvXy9akq4i/SA4gRvEA43S82Xe3GJfMfc07otpCIyPnb0adV5UVXGjyNp8h22ioW/EdcEbgk0O0Z9OpOP2frUWTDjM7atT8YehkiJIgLZ64Q9odZYiI0K+hGzF7Vsbt0cfnUe69G2oo9r0FA5pqKtjq8paUvnlmqJVNUxngSJptCgjIXM5SrhRSTCvpESq+ulqsxYnKiVziadpMjwzB1DkeDCY9vdfaOuc6Y+oPu1fEjJcAJS+Hxesg4m8iBcB+PAx2tymT3qYKbxah14rMu83utNE9h5PmUGXGz/gMJnu9S1jrnzQ5HT1wp/G6G1wKYMdOZZOfzFDzlf9uQIQH+dCDm2PZdPfLjEt9gY21ZcRmp7nPSDbsmvt1CskY/3X46p/mq3x0Vf+2yQ657QM4iYjZiwEG0rx+QsihP7vf91vbWpWsKyQk6a5ud4mw==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MI3PR04MB12438.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(376014)(7416014)(1800799024)(366016)(23010399003)(10067099003)(18002099003)(6133799003)(921020)(56012099006)(11063799006)(261021123027099003)(261021121427099003)(261028144727099003)(261102123227099003)(261026140227099003)(261022105027099003)(261009223027099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?fpSxyqWaXZxtQLD4OuydqVpfo75ooeq+CecM4VyQSD7ltYy8M2nxqIZAiVcr?=
+ =?us-ascii?Q?J5xHhk42Psm+MWsS7qaZC5+B1BziU6F15nrggnv0/bxRdD9k1KHyjknlchNp?=
+ =?us-ascii?Q?G07j/3wM4IvIdpQvJ14+NIUuY4DyuTJwVFwngtfo6/AP+6BJ8q420656ZU74?=
+ =?us-ascii?Q?qJckZiGookUxg9tZ4hZ3feAXKy79NMS/W1PGe2FGxsVrdkiO3aShJrYsQ8Ah?=
+ =?us-ascii?Q?5ZEyW8XGXGF523hoYtJA+QGiHd+fpDWjKsLszIEFBJiNQF6wmwv5OenVe+bv?=
+ =?us-ascii?Q?d8ceqEmxFlVCVVFBt8TpSvTgJTTqztwlsjEivIwChgeYpWuDiNpDbNITAU3F?=
+ =?us-ascii?Q?paKiHgXSVxk3ArbFBbwXCDLcW8SJuOFHANQOCSNRbKUNyG8VZdmeBwlEe9NP?=
+ =?us-ascii?Q?zUeMDb9esaIg6mf5NIaiiQIqnGgoMHB4faRBt5983G7zNBrTCe9W+n2IuSAd?=
+ =?us-ascii?Q?7jNCpeWdTaveZYDBObI2P/6vkUULKYaInalwPZVlIvfHU1cKVN8Zicownpd7?=
+ =?us-ascii?Q?A6D1sHnR48cPihbEj7WhlKUzq3n7Itf7ziGf8677LmPvctJ6hJMsMwFzweY6?=
+ =?us-ascii?Q?CrThLIYP3GqzxVYtwDpYCtYXagJmfizWe5RoS1vFu3EaW+FEzhm+zeVH+4FC?=
+ =?us-ascii?Q?mzda1R13yTAorHB82w1dK+ju8TA6jcZFVF0E1JTJYRoTozjlDCrkEBCrd4be?=
+ =?us-ascii?Q?MU6RiBfLQa8UaNgadZ9DMjHwKtLSR0GmqopWMjaskYoKyXR8vvJyQcNeQ6tM?=
+ =?us-ascii?Q?O+PvgBcaM7z5lmaAt622c0uVELM3gPSZpuJvq3A1qMR5lo6uO4kzJ+iCmd9D?=
+ =?us-ascii?Q?E3PqpaNveLL95daWndJ7B1V4BsmvHYIXpCWBO+l8Y81CrOiQPSJBESNLVBds?=
+ =?us-ascii?Q?URb1i6Ea8kbcKqFG12jI7HkJDOcd/bUcB0my12uioOTrf9oa8KVy9DmTPYrE?=
+ =?us-ascii?Q?DUGhUhXeFlChDpjJBI070bTvBzXX0O6OG5eO4K5cc2/cT5exAFvyUDP6CuSV?=
+ =?us-ascii?Q?4kgcwgBRT5tTwzusJlVZRUugpm+szGIYfLRZWGlSGG4HD4Qx1GdA+/uSNo3I?=
+ =?us-ascii?Q?J/aUdugO207gu4SSfGRFEQ/+bPvQ7GX4jgG0mJ78RMWk6OEkVcL5pnpzCTgB?=
+ =?us-ascii?Q?Eo4vtastDafGPfoDtZ7Ds7fMWt9twML3mso+tjZupNlF5c0PKLxiwmua5c/f?=
+ =?us-ascii?Q?eSAbdirx7pR+Z8T1XBA0xNwtRRBfGWBOr6FXPsW2wJdAH8ZEyKkTR7g+le9P?=
+ =?us-ascii?Q?fjsHR2hffdoEOMO5J0SiFc6rqOz35IemddVxILkD0qIsftwPZkV1eXBpRFhT?=
+ =?us-ascii?Q?aiI2JNx1kGr0QEMiph7SSfteW6gKFKz/gPmbGX2Oawi+3oRdnGU/AOvPVdrx?=
+ =?us-ascii?Q?UkCWdTzAL7hQbY3u5wzcdgfWo5qSxrAOFzjkf+VoZhSWak4TGNqPOozfOgc3?=
+ =?us-ascii?Q?Ex0Pkk72CzKffDX1mC9IA1ilLdB24e1L5q6mB1NeDSiXJ6MKg4JG1bTCsESx?=
+ =?us-ascii?Q?taQdRD6DO32D47Q7Z6hzV6P3EO2Wz/V37XtodYQo9AXfVHkTVlHVX6daI7SU?=
+ =?us-ascii?Q?qVkzbFOxIrX6kjTRToYBB9A0GFStNcgOhR3jOjb5SZArO1AvlwnrPmJJ25wC?=
+ =?us-ascii?Q?Yp6CzSBvdqr57fr+UFzxaUz0aLqrA31p6w5NIUVHH1DvhEYPfJlIFPvAQ8+2?=
+ =?us-ascii?Q?w+5gcRNwrMmeSy45O5ccnp4VK6duf/Nsb4KC8yx3rY9crnRLlPplGQLUUBp6?=
+ =?us-ascii?Q?dq52XOGZ+4gluBpUs5qkgZ5tmFjioubhfL1icrTIEMS8MihAt6jD?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2eaf32dd-0514-4e28-28d3-08df3a8499a5
+X-MS-Exchange-CrossTenant-AuthSource: MI3PR04MB12438.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2026 15:02:09.8495
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: VczaqjUjI3bB5xEQzHinza9h+wMMo1t8amnWtkJBpFrHa9I081+dE1ZEHNHA5Yf+/4CT4mqplMCP4eI/s8R0g35Gt8APocG9l/Hikw/EdQnDVCTa4AeDUxP+jzlQV9Ba
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AMBPR04MB138695
 
-On Tue, Nov 3, 2026 at 8:31=E2=80=AFPM Kuppuswamy Sathyanarayanan
-<sathyanarayanan.kuppuswamy@linux.intel.com> wrote:
->
-> Intel Catlow Lake PCH Root Ports do not set PME Status in the Root
-> Status register when they generate a PME for their own hotplug event.
-> The PME interrupt itself is delivered.  PMEs from devices below the Root
-> Port are reported correctly.
->
-> PME and hotplug share the same interrupt.  When a hotplug Root Port
-> runtime suspends to D3hot, pciehp disables hotplug interrupts and relies
-> on PME to resume the Port.  On a hot-add the Port signals PME, but Root
-> Status stays clear.  pcie_pme_irq() then returns IRQ_NONE.  pciehp_isr()
-> also returns IRQ_NONE because hotplug interrupts are disabled.  The Port
-> stays in D3hot and the new device is never enumerated.
->
-> Mark the affected Root Ports with a new PCI_DEV_FLAGS_PME_UNRELIABLE
-> flag.  If such a Port interrupts while not in D0 and PME Status is
-> clear, pcie_pme_irq() resumes the Port.  pciehp re-enables hotplug
-> interrupts on runtime resume, and pciehp_check_presence() finds the new
-> device.  pciehp itself is unchanged.
->
-> The workaround only applies to quirked Ports that are not in D0.  AER,
-> DPC and bandwidth notification also share the interrupt and stay enabled
-> in D3hot.  If one of them fires while a quirked Port is in D3hot, the
-> Port is resumed without need and runtime suspends again later.
->
-> This affects all steppings of the Catlow Lake PCH.  A public erratum is
-> not available yet.
->
-> Suggested-by: Lukas Wunner <lukas@wunner.de>
-> Link: https://lore.kernel.org/linux-pci/ara-_IPXV_i90if1@wunner.de/
-> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@lin=
-ux.intel.com>
+From: Frank Li <Frank.Li@nxp.com>
 
-Makes sense to me.
+Use the dmaengine_get_provider_device() API instead of directly
+accessing chan->device->dev to get the DMA provider device.
 
-Acked-by: Rafael J. Wysocki (Intel) <rafael@kernel.org>
+No functional change. Prepare make to struct dma_device private to the DMA
+engine.
 
-> ---
-> Changes since v4:
->  * Moved the workaround from pciehp to the PME driver (Lukas). pciehp
->    now keeps clearing HPIE on suspend as before (Bjorn).
->  * Noted in the commit log and in pcie_pme_irq() that PME and hotplug
->    share the same interrupt (Bjorn).
->  * Dropped the PME Requester ID reference, since the code doesn't use
->    it (Bjorn).
->  * Dropped the "D3hot to D0 transitions" wording (Bjorn).
->  * Updated the quirk comment and message for the PME driver approach.
->  * Dropped Reviewed-by from Lukas since the approach changed.
->  * The v4 approach in pciehp also fixes the issue on Catlow Lake. I am
->    happy to go back to it if that is preferred.
->
-> Changes since v3:
->  * Moved quirk from drivers/pci/quirks.c to arch/x86/pci/fixup.c (Lukas)
->  * Renamed function to intel_pcie_pme_unreliable for x86-specific context=
-.
->  * Added Reviewed-by tag from Lukas
->
-> Changes since v2:
->  * Switched from pm_runtime_disable() to PCI_DEV_FLAGS_PME_UNRELIABLE
->    flag approach to avoid power regression (feedback from Rafael and Luka=
-s)
->  * Keep hotplug interrupts (HPIE) enabled during D3hot instead of
->    preventing D3hot entry entirely
->  * Port still enters D3hot for power savings; testing confirms no impact
->    on PC6 package C-state residency
->  * Modified pciehp to check pme_is_broken() before disabling/enabling
->    hotplug interrupts during suspend/resume
->  * Made quirk comment generic to cover both PME notification and status
->    update issues, with Catlow Lake specifics documented separately
->
-> Changes since v1:
->  * Removed hack in hotplug driver and disabled runtime PM on affected por=
-ts.
->  * Fixed the commit log and comments accordingly.
->
-> v4: https://lore.kernel.org/linux-pci/20260323223056.3119060-1-sathyanara=
-yanan.kuppuswamy@linux.intel.com/
-> v3: https://lore.kernel.org/linux-pci/20260316220807.2433661-1-sathyanara=
-yanan.kuppuswamy@linux.intel.com/
-> v2: https://lore.kernel.org/linux-pci/20260213231428.613164-1-sathyanaray=
-anan.kuppuswamy@linux.intel.com/
-> v1: https://lore.kernel.org/linux-pci/20260210172231.1465275-1-sathyanara=
-yanan.kuppuswamy@linux.intel.com/
->
->  arch/x86/pci/fixup.c   | 46 ++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/pcie/pme.c | 24 +++++++++++++++++++++-
->  include/linux/pci.h    |  2 ++
->  3 files changed, 71 insertions(+), 1 deletion(-)
->
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index 795d81c7a4de..eb3703e1cdbe 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -1180,3 +1180,49 @@ static void quirk_tuxeo_rp_d3(struct pci_dev *pdev=
-)
->  }
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1502, quirk_tuxeo_rp_d3);
->  #endif /* CONFIG_SUSPEND */
-> +
-> +/*
-> + * Intel Catlow Lake PCH Root Ports do not set PME Status in the Root
-> + * Status register for a PME they generate for their own hotplug events,
-> + * although the PME interrupt is delivered.  PMEs from devices below the
-> + * Port are reported correctly.
-> + *
-> + * pciehp disables hotplug interrupts when the Port runtime suspends and
-> + * relies on PME to resume it.  With PME Status clear, pcie_pme_irq()
-> + * ignores the interrupt, the Port stays in D3hot and the hot-add is
-> + * lost.  Mark these Ports so that the PME driver resumes them instead.
-> + */
-> +static void intel_pcie_pme_unreliable(struct pci_dev *dev)
-> +{
-> +       dev->dev_flags |=3D PCI_DEV_FLAGS_PME_UNRELIABLE;
-> +       pci_info(dev, "PME status unreliable, resuming port on PME interr=
-upt in D3hot\n");
-> +}
-> +/* Apply quirk to Catlow Lake PCH root ports (0x7a30 - 0x7a4b) */
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a30, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a31, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a32, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a33, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a34, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a35, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a36, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a37, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a38, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a39, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3a, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3b, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3c, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3d, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3e, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3f, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a40, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a41, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a42, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a43, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a44, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a45, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a46, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a47, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a48, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a49, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4a, intel_pcie_pme_unre=
-liable);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4b, intel_pcie_pme_unre=
-liable);
-> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-> index 4996cc4789f3..56c22e416788 100644
-> --- a/drivers/pci/pcie/pme.c
-> +++ b/drivers/pci/pcie/pme.c
-> @@ -276,11 +276,33 @@ static irqreturn_t pcie_pme_irq(int irq, void *cont=
-ext)
->         spin_lock_irqsave(&data->lock, flags);
->         pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
->
-> -       if (PCI_POSSIBLE_ERROR(rtsta) || !(rtsta & PCI_EXP_RTSTA_PME)) {
-> +       if (PCI_POSSIBLE_ERROR(rtsta)) {
->                 spin_unlock_irqrestore(&data->lock, flags);
->                 return IRQ_NONE;
->         }
->
-> +       if (!(rtsta & PCI_EXP_RTSTA_PME)) {
-> +               spin_unlock_irqrestore(&data->lock, flags);
-> +
-> +               /*
-> +                * Some Root Ports don't set PME Status for a PME they
-> +                * generate for their own hotplug events.  PME shares its
-> +                * interrupt with hotplug and the other Port services, so
-> +                * only do this while the Port is not in D0.  Then PME is
-> +                * the only interrupt it can signal for such events, so
-> +                * resume it and let pciehp pick up the event.
-> +                */
-> +               if ((port->dev_flags & PCI_DEV_FLAGS_PME_UNRELIABLE) &&
-> +                   port->current_state !=3D PCI_D0) {
-> +                       pci_dbg(port, "PME Status clear in %s, resuming P=
-ort\n",
-> +                               pci_power_name(port->current_state));
-> +                       pci_wakeup_event(port);
-> +                       pm_request_resume(&port->dev);
-> +                       return IRQ_HANDLED;
-> +               }
-> +               return IRQ_NONE;
-> +       }
-> +
->         pcie_pme_interrupt_enable(port, false);
->         spin_unlock_irqrestore(&data->lock, flags);
->
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index aa3765a20a96..d3915a3d59b9 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -266,6 +266,8 @@ enum pci_dev_flags {
->          * integrated with the downstream devices and doesn't use real PC=
-I.
->          */
->         PCI_DEV_FLAGS_PCI_BRIDGE_NO_ALIAS =3D (__force pci_dev_flags_t) (=
-1 << 14),
-> +       /* Root Port does not set PME Status for its own hotplug PMEs */
-> +       PCI_DEV_FLAGS_PME_UNRELIABLE =3D (__force pci_dev_flags_t) (1 << =
-15),
->  };
->
->  enum pci_irq_reroute_variant {
-> --
-> 2.43.0
->
+Signed-off-by: Frank Li <Frank.Li@nxp.com>
+---
+Change in v2
+- remove Assisted-by: LLM
+- fix indention
+---
+ drivers/pci/endpoint/functions/pci-epf-mhi.c  | 4 ++--
+ drivers/pci/endpoint/functions/pci-epf-test.c | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/endpoint/functions/pci-epf-mhi.c b/drivers/pci/endpoint/functions/pci-epf-mhi.c
+index 78f1fb1a6b0c7..80b4622446fcf 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-mhi.c
++++ b/drivers/pci/endpoint/functions/pci-epf-mhi.c
+@@ -646,8 +646,8 @@ static bool pci_epf_mhi_filter(struct dma_chan *chan, void *node)
+ 	memset(&caps, 0, sizeof(caps));
+ 	dma_get_slave_caps(chan, &caps);
+ 
+-	return chan->device->dev == filter->dev && filter->dma_mask &
+-					caps.directions;
++	return dmaengine_get_provider_device(chan) == filter->dev &&
++	       (filter->dma_mask & caps.directions);
+ }
+ 
+ static int pci_epf_mhi_dma_init(struct pci_epf_mhi *epf_mhi)
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index d4905aa8e4c01..ba2bc0c2f3f9c 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -238,8 +238,8 @@ static bool epf_dma_filter_fn(struct dma_chan *chan, void *node)
+ 	memset(&caps, 0, sizeof(caps));
+ 	dma_get_slave_caps(chan, &caps);
+ 
+-	return chan->device->dev == filter->dev
+-		&& (filter->dma_mask & caps.directions);
++	return dmaengine_get_provider_device(chan) == filter->dev &&
++	       (filter->dma_mask & caps.directions);
+ }
+ 
+ /**
+-- 
+2.43.0
+
