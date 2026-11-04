@@ -1,61 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=80.241.56.172
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793833549;
-	b=V+x55sw2PWbiuDjciJf+sfFKoJ8CNcMZeY3mnIJ0PxuahUDrGZNwVJzY+5whSUCGEu3J
-	 op2J5TtDTNRpn6aGe7Y8kVIIJKdM5LS8VQr4Sac3hiUS+QpiD9/Z0Gj2Oh9/YCAFLkamK
-	 63SLDt37pdDZUKw7CInSz700f3KOu+5VphNMb3SRq45ggG42fw4xMhnbqMgKV9wQtn+dU
-	 dNtXmUss6UFCAoWyF/4d1iUv/B6U1pJFRMC7N31N+yYmet+9xUzNmyfkLVrTeYr/7763E
-	 7m4LiHoy4WRDJggzEFG32JLBiucPkXtm2hii2tGP1mLO9cC0RC+7Mv1kjOi0i9g3OzA==
+	t=1793833545;
+	b=tOe8ieTTtOtR0SkemHw15oyjDAc2G0vkX+feoTcNSighUGr/lURGxm8FEqQ6A00F6Zg8
+	 wNgoZ+qIoTIkAlJ5Cr8sb7Q7qcCJjU0ybrcJg/C7ly3L1Ufj8Q0y+IophC2uGj+pxVkYY
+	 r2gWfXG1dOo1m6Uoo/qw8bSMBOPyTiYLbOsdWj/GwMM/vT12Yh7+2mX2WoMPL3wT1NeQd
+	 5w6lNmpWKoD+YdnqPw/4bzKoK8xToaxw6C/sDjZ0xwfogWzu7dRFlU0XpvldudzmjxU1Q
+	 HFi9gb4UPt4dDs94PznT3kAOhmYSOg2/qyZ3aJrqpIj/t25Wk1xT/9Ut1Coeb9SneNg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793833549;
-	h=DMARC-Filter:Received:DKIM-Signature:From:Date:Subject:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
-	 In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
-	 X-MBO-RS-ID:X-MBO-RS-META;
-	bh=jbTkdQmJKGsdTp05UextFv3WctlitFzbNsJ+32KHR6Q=;
-	b=gLf0p6bCz3SeYalfWr2e5ihtdLuoC3w76Ymm6Nu5upCpolKjUSvqyfF1OcUJTD6+VHg6
-	 Aw0wEbI1qi3oOIxi/H0rVJl4ib1AJ/o521zDTjWY7M2vkc73BmQPmIW+abaD9q1lZ+C/L
-	 ZGUPlNUwTLuIOWDwgk8iecK07q4StE3mAGHBmrZawJvpXOKRyJcSx5GeUAy9rTQKyyJRJ
-	 RPE/8UY93fxusLk/HUFGHdWZCBDYB67Tjj4Q4l1qZi03CoqZ+BIJmcdeWTiE4jDfqwXzx
-	 TjcLFpJNHKVJeuVMVuMsUBZ6VSZbNaDEsfX/d3wcsOjzvQ9U6j7cKrcNvh6Ij/JBDrw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793833545;
+	h=DMARC-Filter:Received:DKIM-Signature:From:Subject:Date:Message-Id:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
+	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
+	 X-MBO-RS-META:X-MBO-RS-ID;
+	bh=MR2cYY4Q14cb1mTzW3PW6d96tfmpHwQ/1UzDZFdsFbU=;
+	b=0KSQBuOY5qBm6lb9y4hhLwBVEhfzFpJp0mNFj/AiGBX6qbDyKkkTKTAvX8NnwrmCpnBh
+	 wJbGglGKpJMnJU1AwynWLSspE+bhphbNVlWPHQDu49oHBhGE8Nx9KBGqRzLIAwAIdHwfc
+	 754tZtpW92FEg48LyKrQI5sFFyKGKPdzYiY0143EGCNHFgnd/7IIBEKK9gL5ta1qew+Z2
+	 fmJlOPoJKXVc5dhyDo0RJjCuD4GYoH0lnXUBysVNYioKQSQq8/IOcogqElUqPk9JmKg+h
+	 Id4iamE88bVmtKm7NGEdxCy01L3Va+wtDH0RhVIBjiHU3A3XLYJpqPQctq3DYPkkOGg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=mailbox.org;
 	spf=pass smtp.mailfrom=mailbox.org;
-	dkim=pass header.d=mailbox.org header.i=@mailbox.org header.a=rsa-sha256 header.s=mail20150812 header.b="r/nfy1QZ";
-	arc=none smtp.remote-ip=80.241.56.161
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+	dkim=pass header.d=mailbox.org header.i=@mailbox.org header.a=rsa-sha256 header.s=mail20150812 header.b=oFr14maV;
+	arc=none smtp.remote-ip=80.241.56.172
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 219C4606EE88;
-	Wed,  4 Nov 2026 23:05:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 219C4606EE88
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB0E8606D80F;
+	Wed,  4 Nov 2026 23:05:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DB0E8606D80F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=mailbox.org header.i=@mailbox.org header.a=rsa-sha256 header.s=mail20150812 header.b=r/nfy1QZ
+	dkim=pass (2048-bit key, unprotected) header.d=mailbox.org header.i=@mailbox.org header.a=rsa-sha256 header.s=mail20150812 header.b=oFr14maV
 Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519MLKEM768 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4jKgyx1lmpzKn9v;
-	Thu, 05 Nov 2026 00:05:45 +0100 (CET)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4jKgyq5ZYHzMlMf;
+	Thu, 05 Nov 2026 00:05:39 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1793833545;
+	t=1793833539;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=jbTkdQmJKGsdTp05UextFv3WctlitFzbNsJ+32KHR6Q=;
-	b=r/nfy1QZ9Zdo/QU5jWEqE95NJuNq1IS3iuuQLRAui9DxFNWKnzC2hJKHPUxF8/BuWPt+rf
-	JfS74OEhxDx0nKNYLRH7JhzhsB0Ws0rtcbsaKqdomK1eIuv3HbYGqM2JzcA3EN4+wMOSnq
-	qi7q+8a8EAXa+e2oKQRVm46KzupY1xhhBF2HYLXKSso4YsFU/dTYeR1zuonqIEqGTqzmRj
-	eHZ8hNJMOMumaE2nkFhcHJAX3/9ltUEy8+DX2j42kWxJbtxYhlIs9Wt7joIXs+PwXQ4UE1
-	g/91ZZD+6GKFXS17YMRoh1AJNQo9//6OFi6rQEZ83PPskLDo8EXQi5y3QXHn6g==
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=MR2cYY4Q14cb1mTzW3PW6d96tfmpHwQ/1UzDZFdsFbU=;
+	b=oFr14maV/xph0azj+VRd+Nhmtar/Ej08MYiElqrREJDJg8Z+9X7ULd3usML13RV9A13d7c
+	ZoQw/16gQdiWVEfH0iSlKdGVLZ6uBkrnSF8rujd2NSqx3mvRQ1tAi+TlFdNGcWBMD46sL8
+	3xBEQgAZOjQjM70HfvUrTXmflauHbVmMANeYZrGMSvb2LXIHKXrnhxCZNag0CaOvEk6rqW
+	xNtg5zoZTTxEFiYmo9qdeK+52uxWvmusFMWwZmQec1YcdCGgboYUdSVWXMDuL9MyT8QnQp
+	/RWpupGuvf96jQppfZHi0euoIrVqiQiC8uER3qAuvVHe8YDd+bwhKSuRj15+6A==
 From: Maurice Hieronymus <mhi@mailbox.org>
-Date: Thu, 05 Nov 2026 00:05:34 +0100
-Subject: [PATCH v4 3/7] rust: pci: require an enable guard for
- `set_master()`
+Subject: [PATCH v4 0/7] samples: rust: add an EDU PCI driver sample (MMIO +
+ IRQ + DMA)
+Date: Thu, 05 Nov 2026 00:05:31 +0100
+Message-Id: <20261105-b4-rust-pci-edu-driver-v4-0-20ef027bb707@mailbox.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -67,9 +67,12 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261105-b4-rust-pci-edu-driver-v4-3-20ef027bb707@mailbox.org>
-References: <20261105-b4-rust-pci-edu-driver-v4-0-20ef027bb707@mailbox.org>
-In-Reply-To: <20261105-b4-rust-pci-edu-driver-v4-0-20ef027bb707@mailbox.org>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/4XQwW7CMAwG4FdBOc9T4iYZcNp7IA5N44CljXZOG
+ zGhvvsCQ2ITQhx/S/6s3yeVSZiyWi9OSqhw5v5Qg31ZqG7fHnYEHGtWqNFrbywECzLlEYaOgeI
+ EUbiQQENOx4AxtjqpujwIJT5e4M225j3nsZfvy51iztOnZDGggZqE9s0Et3Ld+2fLH6E/vvayU
+ 2e04B8I9UMIK+RT9H5pE3bG3kPNDVoafAg1FXJRB+dWlhyG/9D821voa6p/HK/l5/kHj0tqU2U
+ BAAA=
+X-Change-ID: 20260614-b4-rust-pci-edu-driver-3e50db2dda0f
 To: Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
  =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
  Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
@@ -88,71 +91,172 @@ Cc: John Hubbard <jhubbard@nvidia.com>, linux-pci@vger.kernel.org,
  nova-gpu@lists.linux.dev, dri-devel@lists.freedesktop.org, 
  Maurice Hieronymus <mhi@mailbox.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793833536; l=2151;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793833536; l=7850;
  i=mhi@mailbox.org; s=20260525; h=from:subject:message-id;
- bh=GNdyqXDLOCW4DpbKGxI85gc9zzXrjd6g32f2xdqiVUg=;
- b=/mQrjSkxD1o9FWDl3mwp3Nu2WFjB6B0Tke1XXJGm0Un5m3N6OJLvIHgbzxLWTyss8LYWKD72t
- jzhCdqjnX3EBt5dY9hlfCQLrQY0FxWuOXF4a1aac+z3LpkDbvAqGpIZ
+ bh=tjN14DZJEDbWu88sp9xGlCDPZD/MWKiGBNaWMN5FgVw=;
+ b=4cNaSjA3o64G3TwvLCa72Zdi/5/QEue8+2W1+1jH4sveFv8pO9yiVVuBiAR9ALcYaSmy6xX2d
+ 5w97Q2d7wYzCTj3dpZ2flVtCCguzbwOQG/UYJVDgX6x76bAFH+jCgmD
 X-Developer-Key: i=mhi@mailbox.org; a=ed25519;
  pk=AHlEkGG3hpXZHntlEzF42Ip/LFyXWOgsNUvaHqAnV80=
-X-MBO-RS-ID: 6683e78207fd56d81bc
-X-MBO-RS-META: 3tyocz9m1k3gjjsbdkbj7uiafebkha8n
+X-MBO-RS-META: r85b5xyrfd8ayp4369pqbao5z6m41phr
+X-MBO-RS-ID: 3e67244dc2d316f77ed
 
-Require a borrowed `DeviceEnableGuard` for the same device before enabling
-bus-mastering. Check device identity so a guard for another device cannot
-satisfy this requirement.
+The Rust sample drivers currently exercise PCI facilities in isolation:
+rust_driver_pci covers MMIO and rust_dma covers DMA, but there is no
+single in-tree example that combines memory-mapped I/O, interrupts and
+DMA in one driver.
 
-Keep `set_master()` on `Device<Core>` to retain callback synchronization:
-the guard is shareable, while `pci_set_master()` modifies device state
-without locking. Convert nova-core to pass its enable guard.
+This series adds one. It targets QEMU's `edu` device -- a small,
+well-documented educational PCI device that supports exactly these three
+facilities and ships with any recent QEMU (`-device edu`), so the sample
+runs without special hardware.
 
-Link: https://lore.kernel.org/rust-for-linux/DLNQ5C9BTIAJ.1XEWLZ13TU1VF@kernel.org
-Suggested-by: Danilo Krummrich <dakr@kernel.org>
+The sample maps BAR0, reads the PCI configuration space, and runs a set
+of MMIO self-tests (identification, liveness, factorial), allocates an
+MSI vector and registers an IRQ handler, and performs a DMA round-trip.
+The IRQ and DMA tests wait on a `Completion` signalled by the IRQ
+handler; the factorial test polls for completion.
+
+As requested by Danilo in the v2 review, the sample replaces
+rust_driver_pci, which it covers a superset of; the removal is the
+first patch.
+
+Prerequisites that had to be implemented:
+
+- pci: rework the device enabling API: replace enable_device_mem()
+  with enable_device(), which returns a DeviceEnableGuard that
+  disables the device again on drop, so the enable count stays
+  balanced across unbind/rebind. This follows the design Danilo
+  proposed in the review of the standalone patch [1], which this
+  series absorbs.
+- pci: keep `set_master()` on `Device<Core>` and require a borrowed
+  `DeviceEnableGuard` for the same device, preserving callback
+  synchronization while ensuring the device is enabled.
+- pci: add PCI_VENDOR_ID_QEMU (0x1234) to pci_ids.h and expose it as
+  Vendor::QEMU, so the sample can match the device.
+- completion: add complete(), so a single Completion can be reused to
+  wait for consecutive events (e.g. back-to-back DMA transfers).
+
+The series is based on rust/rust-next.
+
+Note: DeviceEnableGuard drops from a bound scope, so pci_disable_device()
+can race the pci_dev bitfield word as discussed in [1]; that race
+predates this series and is triggerable from sysfs today. The bitops
+conversion is under way separately on linux-pci [3].
+
+Tested with QEMU `-device edu`.
+
+Not taken from the v3 review (Sashiko):
+
+- The IRQ and DMA completion waits remain unbounded; missing
+  interrupts can block probe.
+- enable_device() uses pci_enable_device(), not
+  pci_enable_device_mem(): it is the single enable API Danilo proposed,
+  and enabling I/O decoding is harmless for memory-only devices.
+
+[1] https://lore.kernel.org/rust-for-linux/DJOEYVBS17MJ.1YD3TNGQBWHNK@kernel.org
+[2] https://lore.kernel.org/r/20260719153631.559341-1-dakr@kernel.org
+[3] https://lore.kernel.org/linux-pci/20260714-pci-dev-flags-v2-1-a1d7dc441cf3@mailbox.org/
+
 Signed-off-by: Maurice Hieronymus <mhi@mailbox.org>
 ---
- drivers/gpu/nova-core/driver.rs |  2 +-
- rust/kernel/pci.rs              | 12 ++++++++++--
- 2 files changed, 11 insertions(+), 3 deletions(-)
+Changes in v4:
+- Drop "rust: pci: make Vendor::from_raw() public" (and its R-b tags);
+  instead add PCI_VENDOR_ID_QEMU to pci_ids.h and expose it as
+  Vendor::QEMU (new patches 4-5) (Alice, John).
+- New patch: pci: require a borrowed enable guard for the same device
+  in `set_master()`, retaining `Device<Core>` callback synchronization;
+  convert nova-core. This enforces enabling before bus-mastering
+  (Danilo) while addressing the concurrency concern (Sashiko).
+- pci: mark DeviceEnableGuard #[must_use] and enable_device() #[inline]
+  (Sashiko, Fiona).
+- completion: reference complete() from wait_for_completion()'s docs
+  (Gary).
+- samples/edu: turn init() and the test helpers into methods on
+  EduDriverData; rename init() to selftest() (Danilo).
+- samples/edu: initialize EduDriverData in a single try_pin_init!(),
+  holding the IRQ vectors and registering the handler with
+  irq::Registration::new() instead of pci::Device::request_irq(); run
+  selftest() via pin_chain() (Danilo).
+- samples/edu: make the magic and DMA base constants local to their
+  users; check the magic via an IDENTIFICATION constant (Danilo).
+- samples/edu: describe the DMA and test IRQ bits as fields of
+  IRQ_STATUS/IRQ_RAISE/IRQ_ACK instead of a DMA_IRQ constant (Danilo).
+- samples/edu: model the DMA registers as a struct accessed through
+  io_project!()/io_write!().
+- samples/edu: compare the liveness pattern via a Not impl on
+  LIVENESS_CHECK (Danilo).
+- samples/edu: replace `as` casts with safe casts (Danilo).
+- samples/edu: return IrqReturn::None for interrupts that are not ours
+  (Sashiko).
+- samples/edu: depend on 64BIT for the 64-bit MMIO accesses (Sashiko).
+- samples/edu: expand the commit message and Kconfig help to describe
+  the sample's coverage, QEMU usage and the 64BIT requirement; mention
+  the MAINTAINERS entry in the commit message (Sashiko).
+- samples/edu: ack stale interrupts before registering the handler
+  (Sashiko).
+- samples/edu: spell out why the IRQ Registration is not leaked (Ewan).
+- Drop the dependency on Danilo's irq Registration rework [2], now in
+  mainline.
+- Rebase on rust-next; adapt to register!() `base:`, Option<&IdInfo>
+  in probe() and the Coherent read_val()/write_val() API.
+- Link to v3: https://lore.kernel.org/r/20260812-b4-rust-pci-edu-driver-v3-0-5d0b5594e52b@mailbox.org
 
-diff --git a/drivers/gpu/nova-core/driver.rs b/drivers/gpu/nova-core/driver.rs
-index f0aebfe705ba..94f207c6078d 100644
---- a/drivers/gpu/nova-core/driver.rs
-+++ b/drivers/gpu/nova-core/driver.rs
-@@ -107,7 +107,7 @@ fn probe<'bound>(
-         try_pin_init!(NovaCore {
-             _enable: {
-                 let enable = pdev.enable_device()?;
--                pdev.set_master();
-+                pdev.set_master(&enable)?;
-                 enable
-             },
- 
-diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-index 75efd5c5ee97..20f45ca960cd 100644
---- a/rust/kernel/pci.rs
-+++ b/rust/kernel/pci.rs
-@@ -516,10 +516,18 @@ pub fn enable_device(&self) -> Result<DeviceEnableGuard<'_>> {
-     }
- 
-     /// Enable bus-mastering for this device.
-+    ///
-+    /// Returns `EINVAL` if `enable` belongs to another device.
-     #[inline]
--    pub fn set_master(&self) {
--        // SAFETY: `self.as_raw` is guaranteed to be a pointer to a valid `struct pci_dev`.
-+    pub fn set_master(&self, enable: &DeviceEnableGuard<'_>) -> Result {
-+        if self.as_raw() != enable.dev.as_raw() {
-+            return Err(EINVAL);
-+        }
-+
-+        // SAFETY: `self` is a valid device in core context, and `enable`
-+        // keeps this device enabled for the duration of the call.
-         unsafe { bindings::pci_set_master(self.as_raw()) };
-+        Ok(())
-     }
- }
- 
+Changes in v3:
+- Absorb the device enabling rework [1] into this series, redesigned
+  around DeviceEnableGuard as proposed by Danilo; convert nova-core.
+- Remove rust_driver_pci, replaced by this sample (Danilo).
+- Add access to PCI configuration space (Danilo).
+- Rebase on rust/rust-next on top of Danilo's irq Registration rework
+  [2]; register the handler via pci::Device::request_irq().
+- Use vertical import style.
+- Link to v2: https://lore.kernel.org/r/20260620-b4-rust-pci-edu-driver-v2-0-6fd6684f2c14@mailbox.org
 
+Changes in v2:
+- pci: Vendor::from_raw(): collected Reviewed-by from Gary Guo;
+  wrapped code identifiers in the commit message in backticks (Gary).
+- pci: enable_device(): collected Reviewed-by from Fiona Behrens;
+  made enable_device_mem() #[inline] and added a cross-reference to
+  enable_device() in its docs (Fiona).
+- completion: complete(): tightened the doc comment per Gary's review
+  (emphasise "single", drop the internal-counter detail, drop the
+  complete_all comparison).
+- samples/edu: take &EduDriverData instead of &Arc<EduDriverData> in
+  init()/test_irq()/test_dma() (Ewan Chorynski).
+- samples/edu: simplify wait_until_compute_has_finished() to forward
+  read_poll_timeout()'s error via inspect_err() instead of returning a
+  hard-coded ETIMEDOUT (Ewan Chorynski / Miguel Ojeda).
+- samples/edu: Rebased on rust/rust-next and adapt to the updated
+  pci::Bar / device::Core lifetimes and pci::Driver::Data<'bound>, and
+  obtain the BAR via into_devres().
+- Link to v1: https://lore.kernel.org/r/20260614-b4-rust-pci-edu-driver-v1-0-e3f2471b595c@mailbox.org
+
+---
+Maurice Hieronymus (7):
+      samples: rust: remove the rust_driver_pci sample
+      rust: pci: rework device enabling API
+      rust: pci: require an enable guard for `set_master()`
+      PCI: Add QEMU vendor ID
+      rust: pci: add Vendor::QEMU
+      rust: completion: add complete()
+      samples: rust: add EDU PCI driver sample
+
+ MAINTAINERS                     |   2 +-
+ drivers/gpu/nova-core/driver.rs |   9 +-
+ include/linux/pci_ids.h         |   2 +
+ rust/kernel/pci.rs              |  45 +++-
+ rust/kernel/pci/id.rs           |   1 +
+ rust/kernel/sync/completion.rs  |  13 +-
+ samples/rust/Kconfig            |  14 +-
+ samples/rust/Makefile           |   2 +-
+ samples/rust/rust_driver_edu.rs | 475 ++++++++++++++++++++++++++++++++++++++++
+ samples/rust/rust_driver_pci.rs | 198 -----------------
+ 10 files changed, 547 insertions(+), 214 deletions(-)
+---
+base-commit: d89e1d186ec9271bf78e62771779e9fc03bf0fc3
+change-id: 20260614-b4-rust-pci-edu-driver-3e50db2dda0f
+
+Best regards,
 -- 
-2.54.0
+Maurice Hieronymus <mhi@mailbox.org>
 
