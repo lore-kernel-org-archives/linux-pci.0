@@ -1,59 +1,110 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793814903;
-	b=ljVCsrY2aeNSHN+y+SCJ7fxWcKZjGSeuzQmvqCJS4hNk7dXjKnG8in1lW+9IwPmvsl5b
-	 v0Nq1NILM+0AFF55cWunknGcP9aOqE3QAdtHHY4pTUoCHgx7Ve1obQ7Lqri1BteyD+bwW
-	 kYlQhDHpgq2fmZH8M9VnSMmcoM534ZZSFyVV3n41sILN06wUndhn4NNu3O311GS91pk/S
-	 j6M1vFPugnekao1rmzMYUSD2Tvy9Dhu+4voD/diIZ5US6Rr256n74Sg6XxIa2mwUh9VLZ
-	 4tPoVexQIDRKQlBrCeS8pkUTxuwXBKCakp+p6zqsrJv5Hrx0+44qwLO4pFV1q+A9qQw==
+	t=1793814885;
+	b=oMNjTjKcmgEW6yMpfpJ3qQtFTlGaQ6FjisdSc8kwMCFcDYtY8nkfxFX4NQSBmzojQlgX
+	 vJvcd5QrXhmdP2RVjjR3pCykapnib+3JrcqY0OM8qA3A0IapUjqOOQiEnjJztjqkdHMHb
+	 MaaDtzSo3NNaBNcV0A5rrPuQQCmTO1BRW0W7zIp1IgQART54SJFUgEKc6/ho9E+AHFunz
+	 GLERQk/OmGUR3R5g/1n+KRkeMmXl2HgwAdujYXHh/1jdtv12uSFNLcEPgr9uuyc1qgaof
+	 6TScOQb2GExPg1ERn853Iw4kBWRrRl9k4pgTnAdhQuPYCxEc2M3phiE3jgRjzqqSqxA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793814903;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=PY5BnPqOpEzILm/pwQ0SRDj3n4U4TC8x8WrWVFUHndU=;
-	b=IRN7/3KoHqWzXCB06uE2bMEsrtPYVpXugZAldEc/UA7oUijElte03u+JWYpixhWIAWMc
-	 noW2K3f7mDuBJL9PQIlcbiM6MYdsMqTLj118EOiMbh2ivYEw2oLlecEzC/tmG/NIWlFCF
-	 Xr2o4mpW3voo+U5KSk7EPM/BqVaSywinW3BnTksdUEJRI8fqvGCu0Rlabnt/tPmJryC2R
-	 97+7J1sS+db2O1pz/erSzCFneQkinHshrojVyp9F4EeCHLeQHIXd535BYNyP5sAEI8kPl
-	 oS1b4w09ub+YoOlnAKwQt6pYbzQuCkAr6xuqHfPqHsTkr1p0E3ET6nJZfr8Vu3qhV1w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793814885;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
+	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
+	bh=/kkSM5euWaBmFK3xxQcLv4mgEkXFSNdIObYnznwfIo0=;
+	b=4gBVQu6xXPMmp8SdmpwCqd7sI65wK0xeTX4/u6Dq+DmN/xPowelpWrHKZUAWg5IqmHol
+	 tUU0jDfAhUVzuOr5BKCV9PdI5Iruoki213ws0ksEiq+oXUYwevYQlPq3TrTxMb4BWzkRZ
+	 Hz9ZezFFaX4GwDzEzwzpO5d2U5f3K25HYWRywu8Caclt1HdZzzubvBsE01bgee1BEH6S0
+	 V894JpEF0jLtG7tiKNWsdY3IL3Q43hoYaTW84lsaKP0F31AVRVfzIUHqHyImCfwFFkdAL
+	 t5yWnz5FFClVT9VD/E3s4uyMQT4EHbVXT5AKVn4Aw7YqccKDIidfKcccZjFOQoiz4AA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GbYUuPrh;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z6GBQG3a;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3AE360A381F;
-	Wed,  4 Nov 2026 17:55:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DA0E606C905;
+	Wed,  4 Nov 2026 17:54:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GbYUuPrh
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B7781F00919;
-	Wed,  4 Nov 2026 17:55:02 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z6GBQG3a
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAB5C1F000C1;
+	Wed,  4 Nov 2026 17:54:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793814902;
-	bh=PY5BnPqOpEzILm/pwQ0SRDj3n4U4TC8x8WrWVFUHndU=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=GbYUuPrhlCfQxi95k6+MF9mey6QLrKubSnhR4tXl8lBqok54QNrcY4GOyIfpXXoug
-	 3lJEyKub1kW0RN3jb82yih1lpFC7wrj0MR/pVV9ibtOcwWvbviIl23BhIz+L6xhFIj
-	 QO9dskSMTgspJwCQHR60oocAKhpQUe9sGiQvr8sjsInyiGqI0/8Zuse1HOwFFFUG/u
-	 gjVwHU7AjembehxcvGhk/bt/LpYiH//FgSaNeuyHyGqFmJ6J1ZjofQTNSdqS0dbXDH
-	 zBBTVcQmWlQWWd392wVPVpnNxHUsYJ5a/dPjxpOAwgvtFMTOSwIs1V4I12QDbliXZu
-	 EbO0GEYY8mg+g==
-Date: Wed, 4 Nov 2026 11:55:00 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yuho Choi <oss.patchbox@gmail.com>
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: rcar: Release temporary device tree node
- reference
-Message-ID: <20261104175500.GA1357062@bhelgaas>
+	s=k20260515; t=1793814884;
+	bh=/kkSM5euWaBmFK3xxQcLv4mgEkXFSNdIObYnznwfIo0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=Z6GBQG3a+cE9+wQbayuod2AfwcA5eSI1rtdPAEkR6NsmPTw1AE/19Dxg/FB18Obf3
+	 XeQ2JrZZMlq292+9ChK0bIQZeBI8yTk2Y7w0ArULtzz4HoZpwmfFIWQXX01jOs2qz2
+	 dBa6XSwjjcSVxzrNHHQHUyzzPpTJ3n31iuGj1X6UVrBJaXhutOPCNLWDGPPyku7CsY
+	 ADhF22IYElhWlzbCL+rEi0mABGy1i40iw8REYvQq+3G3YTtbJWrStHhaTNtT19/eg/
+	 Y2DXQdQbQR0mASt8maUnvhPyhKOUgnLTqnfjby8Gs9PaSRK+KNbc19NmvAxKsJvlJb
+	 jl2nFD68jaEVQ==
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Jann Horn <jannh@google.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Chris Mason <mason@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Christoph Hellwig <hch@lst.de>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Joel Granados <joel.granados@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Jan Kara <jack@suse.com>,
+	linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev,
+	platform-driver-x86@vger.kernel.org,
+	coreteam@netfilter.org,
+	kexec@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	ibm-acpi-devel@lists.sourceforge.net,
+	jfs-discussion@lists.sourceforge.net,
+	linux-alpha@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-cifs@vger.kernel.org,
+	linux-fbdev@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-sh@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	samba-technical@lists.samba.org,
+	sparclinux@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-doc@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net,
+	Takashi Iwai <tiwai@suse.de>,
+	linux-input@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-modules@vger.kernel.org,
+	linux-debuggers@vger.kernel.org,
+	"Christian Brauner (Amutable)" <brauner@kernel.org>,
+	Chuck Lever <cel@kernel.org>
+Subject: [PATCH v2 33/51] selftests/proc: check a /proc listing while entries come and go
+Date: Wed,  4 Nov 2026 18:47:19 +0100
+Message-ID: <20261104-work-procfs-bugfixes-v2-33-bbf7d5546809@kernel.org>
+In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
+References: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,47 +114,317 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260924010418.726980-1-oss.patchbox@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: b4 0.17-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=9018; i=brauner@kernel.org; h=from:subject:message-id; bh=NzSqjSqcJKKkJ7jf3TwnqEZW3Bg2Bj/+2ncCZpJHWz8=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9znteUPfza18Zl1H306y789/998maHMe98ybzTa/LZ e7/2D687ShlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZjIxzcM/10mHY251p3WcXHP U1lhYVf/x9a7/IWf3ja4HKfZt1bWr4Xhr8jHyDNC91+GvAzI2e9Wfnz9rU0/6kyfbWNMMrCbZuM aygkA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-On Wed, Sep 23, 2026 at 09:04:11PM -0400, Yuho Choi wrote:
-> of_find_matching_node() returns a referenced node even when it is used
-> only as a boolean test. Drop the reference right after the match check.
+List /proc/net/dev_snmp6 of a new network namespace while a tun device
+comes and goes:
 
-I guess this actually fixes an of_node reference leak, right?
+- with a buffer that holds the dots and "lo", add a device whose name
+  sorts first, finish the listing: "lo" is listed once
 
-> Fixes: a115b1bd3af0 ("PCI: rcar: Add L1 link state fix into data abort hook")
-> Signed-off-by: Yuho Choi <oss.patchbox@gmail.com>
-> ---
-> Changes in v2:
-> - Use an explicit of_node_put() instead of __free(device_node) (Marek Vasut)
-> - Switch to my oss.patchbox address
-> 
-> v1: https://lore.kernel.org/all/20260801233841.469826-1-dbgh9129@gmail.com/
-> 
->  drivers/pci/controller/pcie-rcar-host.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-rcar-host.c b/drivers/pci/controller/pcie-rcar-host.c
-> index cd9171eebc289..1f5e33c802b5b 100644
-> --- a/drivers/pci/controller/pcie-rcar-host.c
-> +++ b/drivers/pci/controller/pcie-rcar-host.c
-> @@ -1122,7 +1122,11 @@ static const struct of_device_id rcar_pcie_abort_handler_of_match[] __initconst
->  
->  static int __init rcar_pcie_init(void)
->  {
-> -	if (of_find_matching_node(NULL, rcar_pcie_abort_handler_of_match)) {
-> +	struct device_node *np;
-> +
-> +	np = of_find_matching_node(NULL, rcar_pcie_abort_handler_of_match);
-> +	if (np) {
-> +		of_node_put(np);
->  #ifdef CONFIG_ARM_LPAE
->  		hook_fault_code(17, rcar_pcie_aarch32_abort_handler, SIGBUS, 0,
->  				"asynchronous external abort");
-> 
-> base-commit: f0100363d8c374bd8e9ea7c9ba02744f0b802ca4
-> -- 
-> 2.43.0
-> 
+- with that device added and a buffer that holds the dots and it,
+  remove it, finish the listing: "lo" is still listed
+
+- with that device added, stall getdents64() on a userfaultfd page
+  while it writes the device's entry, remove the device, finish the
+  listing: "lo" is still listed
+
+All three fail without the fix, the first lists "lo" twice, the other
+two not at all.
+
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+---
+ tools/testing/selftests/proc/.gitignore           |   1 +
+ tools/testing/selftests/proc/Makefile             |   1 +
+ tools/testing/selftests/proc/config               |   4 +
+ tools/testing/selftests/proc/proc-readdir-churn.c | 240 ++++++++++++++++++++++
+ 4 files changed, 246 insertions(+)
+
+diff --git a/tools/testing/selftests/proc/.gitignore b/tools/testing/selftests/proc/.gitignore
+index 9c9735570abf..8520c7878ea2 100644
+--- a/tools/testing/selftests/proc/.gitignore
++++ b/tools/testing/selftests/proc/.gitignore
+@@ -8,6 +8,7 @@
+ /proc-maps-race
+ /proc-multiple-procfs
+ /proc-net-dev-lseek
++/proc-readdir-churn
+ /proc-empty-vm
+ /proc-pid-vm
+ /proc-self-map-files-001
+diff --git a/tools/testing/selftests/proc/Makefile b/tools/testing/selftests/proc/Makefile
+index a7de2bb6d8be..e0c0d313f4d0 100644
+--- a/tools/testing/selftests/proc/Makefile
++++ b/tools/testing/selftests/proc/Makefile
+@@ -11,6 +11,7 @@ TEST_GEN_PROGS += proc-2-is-kthread
+ TEST_GEN_PROGS += proc-loadavg-001
+ TEST_GEN_PROGS += proc-maps-race
+ TEST_GEN_PROGS += proc-net-dev-lseek
++TEST_GEN_PROGS += proc-readdir-churn
+ TEST_GEN_PROGS += proc-empty-vm
+ TEST_GEN_PROGS += proc-pid-vm
+ TEST_GEN_PROGS += proc-self-map-files-001
+diff --git a/tools/testing/selftests/proc/config b/tools/testing/selftests/proc/config
+index 68fbd2b35884..052e365af5a9 100644
+--- a/tools/testing/selftests/proc/config
++++ b/tools/testing/selftests/proc/config
+@@ -1 +1,5 @@
+ CONFIG_PROC_FS=y
++CONFIG_NET_NS=y
++CONFIG_IPV6=y
++CONFIG_TUN=y
++CONFIG_USERFAULTFD=y
+diff --git a/tools/testing/selftests/proc/proc-readdir-churn.c b/tools/testing/selftests/proc/proc-readdir-churn.c
+new file mode 100644
+index 000000000000..fd9b504b60f5
+--- /dev/null
++++ b/tools/testing/selftests/proc/proc-readdir-churn.c
+@@ -0,0 +1,240 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * A listing of a /proc directory that takes more than one getdents64()
++ * must not show an entry twice or skip one when an entry is added or
++ * removed in between, and a listing must go on after an entry that is
++ * removed while it is being emitted. /proc/net/dev_snmp6/<dev> of a tun
++ * device comes and goes with the device.
++ */
++#define _GNU_SOURCE
++#include <dirent.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <limits.h>
++#include <linux/if.h>
++#include <linux/if_tun.h>
++#include <linux/userfaultfd.h>
++#include <poll.h>
++#include <pthread.h>
++#include <sched.h>
++#include <string.h>
++#include <sys/ioctl.h>
++#include <sys/mman.h>
++#include <sys/syscall.h>
++#include <unistd.h>
++
++#include "../kselftest_harness.h"
++
++#define SNMP6_DIR	"/proc/net/dev_snmp6"
++#define TUN_NAME	"a0"		/* sorts before "lo" */
++#define TUN_PATH	SNMP6_DIR "/" TUN_NAME
++#define SMALL_BUF	80		/* ".", ".." and one short name */
++#define NAMES		64
++
++static int tun_open(const char *name)
++{
++	struct ifreq ifr = {};
++	int fd;
++
++	fd = open("/dev/net/tun", O_RDWR | O_CLOEXEC);
++	if (fd < 0)
++		return -1;
++	strncpy(ifr.ifr_name, name, IFNAMSIZ - 1);
++	ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
++	if (ioctl(fd, TUNSETIFF, &ifr)) {
++		close(fd);
++		return -1;
++	}
++	return fd;
++}
++
++/* one getdents64() into @buf, the names appended to @names */
++static int list(int fd, char *buf, size_t size, char names[][NAME_MAX + 1],
++		int *n)
++{
++	long ret, off;
++	int got = 0;
++
++	ret = syscall(__NR_getdents64, fd, buf, size);
++	if (ret < 0)
++		return -errno;
++	for (off = 0; off < ret;) {
++		struct dirent64 *d = (void *)(buf + off);
++
++		if (*n < NAMES)
++			strcpy(names[(*n)++], d->d_name);
++		got++;
++		off += d->d_reclen;
++	}
++	return got;
++}
++
++static int count(char names[][NAME_MAX + 1], int n, const char *name)
++{
++	int i, c = 0;
++
++	for (i = 0; i < n; i++)
++		if (!strcmp(names[i], name))
++			c++;
++	return c;
++}
++
++/* removes the device once getdents64() faults on its entry, then resolves */
++struct stall {
++	int uffd;
++	int tun;
++	unsigned long addr;
++	unsigned long len;
++	int removed;
++};
++
++static void *stall_resolve(void *arg)
++{
++	struct stall *s = arg;
++	struct pollfd pfd = { .fd = s->uffd, .events = POLLIN };
++	struct uffdio_zeropage zero = {
++		.range = { .start = s->addr, .len = s->len },
++	};
++	struct uffd_msg msg;
++
++	if (poll(&pfd, 1, 10000) != 1)
++		return NULL;
++	if (read(s->uffd, &msg, sizeof(msg)) != sizeof(msg) ||
++	    msg.event != UFFD_EVENT_PAGEFAULT)
++		return NULL;
++	close(s->tun);
++	s->removed = access(TUN_PATH, F_OK) == -1;
++	ioctl(s->uffd, UFFDIO_ZEROPAGE, &zero);
++	return NULL;
++}
++
++FIXTURE(proc_readdir) {
++	int dir;
++	int n;
++	char names[NAMES][NAME_MAX + 1];
++	char buf[65536];
++};
++
++FIXTURE_SETUP(proc_readdir)
++{
++	int tun;
++
++	if (unshare(CLONE_NEWNET))
++		SKIP(return, "unshare(CLONE_NEWNET): %s", strerror(errno));
++	tun = open("/dev/net/tun", O_RDWR | O_CLOEXEC);
++	if (tun < 0)
++		SKIP(return, "/dev/net/tun: %s", strerror(errno));
++	close(tun);
++	self->dir = open(SNMP6_DIR, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
++	if (self->dir < 0)
++		SKIP(return, SNMP6_DIR ": %s", strerror(errno));
++	self->n = 0;
++}
++
++FIXTURE_TEARDOWN(proc_readdir)
++{
++	close(self->dir);
++}
++
++/* a device added in front of the position doesn't repeat an entry */
++TEST_F(proc_readdir, add_in_front)
++{
++	int tun;
++
++	/* ".", ".." and "lo" */
++	ASSERT_EQ(list(self->dir, self->buf, SMALL_BUF, self->names, &self->n), 3);
++	ASSERT_EQ(count(self->names, self->n, "lo"), 1);
++
++	tun = tun_open(TUN_NAME);
++	ASSERT_GE(tun, 0);
++	ASSERT_EQ(access(TUN_PATH, F_OK), 0);
++
++	while (list(self->dir, self->buf, sizeof(self->buf), self->names,
++		    &self->n) > 0)
++		;
++	EXPECT_EQ(count(self->names, self->n, "lo"), 1);
++	close(tun);
++}
++
++/* a device removed in front of the position doesn't skip an entry */
++TEST_F(proc_readdir, remove_in_front)
++{
++	int tun;
++
++	tun = tun_open(TUN_NAME);
++	ASSERT_GE(tun, 0);
++	ASSERT_EQ(access(TUN_PATH, F_OK), 0);
++
++	/* ".", ".." and the device, "lo" doesn't fit */
++	ASSERT_EQ(list(self->dir, self->buf, SMALL_BUF, self->names, &self->n), 3);
++	ASSERT_EQ(count(self->names, self->n, TUN_NAME), 1);
++
++	/* closing the device unregisters it and removes its entry */
++	close(tun);
++	ASSERT_EQ(access(TUN_PATH, F_OK), -1);
++
++	while (list(self->dir, self->buf, sizeof(self->buf), self->names,
++		    &self->n) > 0)
++		;
++	EXPECT_EQ(count(self->names, self->n, "lo"), 1);
++}
++
++/* the entry being emitted is removed meanwhile, the listing goes on */
++TEST_F(proc_readdir, remove_current)
++{
++	struct uffdio_api api = { .api = UFFD_API };
++	struct uffdio_register reg = {};
++	long page = sysconf(_SC_PAGESIZE);
++	struct stall s = {};
++	pthread_t thread;
++	char *map;
++	long ret, off;
++
++	s.uffd = syscall(__NR_userfaultfd, O_CLOEXEC | O_NONBLOCK);
++	if (s.uffd < 0)
++		SKIP(return, "userfaultfd: %s", strerror(errno));
++	ASSERT_EQ(ioctl(s.uffd, UFFDIO_API, &api), 0);
++
++	/* the first page is there, the second one faults */
++	map = mmap(NULL, 2 * page, PROT_READ | PROT_WRITE,
++		   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
++	ASSERT_NE(map, MAP_FAILED);
++	map[0] = 0;
++	s.addr = (unsigned long)map + page;
++	s.len = page;
++	reg.range.start = s.addr;
++	reg.range.len = s.len;
++	reg.mode = UFFDIO_REGISTER_MODE_MISSING;
++	ASSERT_EQ(ioctl(s.uffd, UFFDIO_REGISTER, &reg), 0);
++
++	s.tun = tun_open(TUN_NAME);
++	ASSERT_GE(s.tun, 0);
++	ASSERT_EQ(access(TUN_PATH, F_OK), 0);
++	ASSERT_EQ(pthread_create(&thread, NULL, stall_resolve, &s), 0);
++
++	/*
++	 * ".." ends right before the second page, so writing the record of
++	 * the device stalls until it has been removed.
++	 */
++	ret = syscall(__NR_getdents64, self->dir, map + page - 48, 48 + page);
++	ASSERT_EQ(pthread_join(thread, NULL), 0);
++	ASSERT_TRUE(s.removed);
++	ASSERT_GT(ret, 0);
++	for (off = 0; off < ret;) {
++		struct dirent64 *d = (void *)(map + page - 48 + off);
++
++		if (self->n < NAMES)
++			strcpy(self->names[self->n++], d->d_name);
++		off += d->d_reclen;
++	}
++	ASSERT_EQ(count(self->names, self->n, TUN_NAME), 1);
++
++	while (list(self->dir, self->buf, sizeof(self->buf), self->names,
++		    &self->n) > 0)
++		;
++	EXPECT_EQ(count(self->names, self->n, "lo"), 1);
++	munmap(map, 2 * page);
++	close(s.uffd);
++}
++
++TEST_HARNESS_MAIN
+
+-- 
+2.53.0
+
