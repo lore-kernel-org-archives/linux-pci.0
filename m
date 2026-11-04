@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.39.247.168
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793792446;
-	b=47CozS2hwxRWGHVb8VBausBzZjbZrguVPQ+HZG3Nl21LXNCawz93WDrjn0FpM3ZpQo0S
-	 M6lo7yvpwViJEe2qSle5s1Uwt1ALuBfleMyVKzW6MFhbrTHhbjsiJoLXfcp6GhAgBUWcw
-	 0Y2vH8eR4D6dTuph1lAPJunRXHs7o9mq/wl+C+cghnh6g9ALumX4S6hsnAkQ1OcD9j1Fr
-	 Gr4v6KyyGmB5w09vmw02cmnvDurupUGK0uG704+iMSoulw/HOeOzJ18gU5/U7bh3HEE3I
-	 CffuoRsJ0S/K+PWdgRAodNoOLX6CL2VfN/8Er0mCrT/on2o5m2rXWRq6K+DVcrCUjlA==
+	t=1793792449;
+	b=sVHotJO7VHNz+u1JLTs9fbteGDtdEnuGQhZYRvD85NPHc7NEkhqasbSPCU33pwg/EhIo
+	 +A8R9VTTUw+o2k17uBGA8VckdXbgAV+1rMe8bJLawdVhKsVdXHMHV6qcJegFsQ0zNqVGB
+	 xmLtTvOnL3a6sVXINjtnEk6wl48jOFFfzbB2NoCZtfkFLbZlORVqFTpTz6awv8mt4ZfEX
+	 9gbIqk+24s6Ilu4FqG/tlAr3vkMjiHXKLCviqnKkdIHz5CW6xrgLgc+7KWvJ/c2GUj3w6
+	 2R/h+YrSEraNlWrb4265JoFUKBw66evi+nHVB5LuOKrOa20DfgYSI3z0BUvyKDqZekQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793792446;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793792449;
 	h=DMARC-Filter:From:DKIM-Signature:Date:Subject:MIME-Version:
 	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
 	 In-Reply-To:To:Cc;
-	bh=GNEkLS7x3xup7k/Ojt7ZkvN366zwwDCNFWsahX9UKfI=;
-	b=WwPJt0jT4k6FuThN/FfNSRG1RGxKn5RkHKTa5F6McItyc6ZBeK37BDbn++ZnNkcUnG4l
-	 dhm8RNEgNe23tUmbG4OJaUioTMkjBC8XRalxMvPgCF2JCai77Kotl27Lt4+7wbdZMOJot
-	 AfKqQ4Wq0XShBO7Z8Y1Q/x0vIgLoRR2THBc0yEcZ9sPJe5HFyZSGQCkUzsL/dqgI4XlQH
-	 zStYsJPTYOC2B07KeDoFGJVSQSyBA6ZRRkjjLKuFxKDYVV9irxj+c0Uad+/vChcqqig8j
-	 PQ+PfJBsy6mhtS/2GtwPcEMnuRXB3HePrx0ENfLHYfI250VoD67hQo+dHz5W/0iCoHw==
+	bh=b8gdt5Gsl7of0UCwZA1LRvMWZqGY7tF4209QTmH/GcI=;
+	b=zxCKbQZg1RdY0I5NktZhYTQIzTzKyjIakxeWCiZAebilL9QMX8XUT0XZ8BkePu/TBjIf
+	 9ln9e76tlkTIdkZT+TeK5Z3gNh/Wrz7CreyeWugFlWXujMIKVJHgqEnroTnynj8jxSQgK
+	 ShpHn1K/rl4F1DF35g2xwJj2/vdmMaD8JpqdMBbqWvsYSqOLjgrgcev4vyNGvDQl3jbCZ
+	 20iUQ5K23D0jmxK20Us90J9sklGN+ELHWGWd9MZdQpqeHCLKLGuC6Am7WxTkl27/7uVeg
+	 F8aCSf9C+EzeC3o+vIy2IhxV0IDUzEuwg4wFEIUbqoIMCOyuHNxAeD5k/BNMZm6ISbg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=cyberchaos.dev;
 	spf=pass smtp.mailfrom=cyberchaos.dev;
-	dkim=pass header.d=cyberchaos.dev header.i=@cyberchaos.dev header.a=rsa-sha256 header.s=mail header.b=yWfisoRE;
+	dkim=pass header.d=cyberchaos.dev header.i=@cyberchaos.dev header.a=rsa-sha256 header.s=mail header.b=oCERtlr5;
 	arc=none smtp.remote-ip=195.39.247.168
 Received: from mail.cyberchaos.dev (mail.cyberchaos.dev [195.39.247.168])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59420606A32E;
-	Wed,  4 Nov 2026 11:40:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 59420606A32E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4590F606D811;
+	Wed,  4 Nov 2026 11:40:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4590F606D811
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cyberchaos.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cyberchaos.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=cyberchaos.dev header.i=@cyberchaos.dev header.a=rsa-sha256 header.s=mail header.b=yWfisoRE
+	dkim=pass (1024-bit key, unprotected) header.d=cyberchaos.dev header.i=@cyberchaos.dev header.a=rsa-sha256 header.s=mail header.b=oCERtlr5
 From: Yureka Lilian <yureka@cyberchaos.dev>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cyberchaos.dev;
-	s=mail; t=1793792439;
+	s=mail; t=1793792441;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=GNEkLS7x3xup7k/Ojt7ZkvN366zwwDCNFWsahX9UKfI=;
-	b=yWfisoRENsW64pUOMDbkEuV3yPacTgGGhFKf/9z38WVNVD16MXsFRiolhs5oFqdE/x0vAL
-	8GlEAtT85sRsNg2FbSLm02JsYYBSAgv3qzmpey/131p6h20seyO/y/kEiOjwCGUE1n1HRH
-	HIN8KtO9OTfcYh0xBgTHl7DpjWqY7Uk=
-Date: Wed, 04 Nov 2026 12:40:29 +0100
-Subject: [PATCH v2 1/3] PCI/pwrctrl: Export per-device APIs
+	bh=b8gdt5Gsl7of0UCwZA1LRvMWZqGY7tF4209QTmH/GcI=;
+	b=oCERtlr5rn8ngX0o9/IKhBD/Jw7b3jjwg1rmVSJ4QVDmkg7lj+zyv62AhgGsw0OQzhx+3y
+	CykiD1aHGSyrAQou3Nw/TbbxBFIfi9y+gIeidxEnRzUWi5q5v08DYKvtAhM7IYX4cDT+FZ
+	gBIiy/tLWikwG522MzWTdtNUHfqhMgE=
+Date: Wed, 04 Nov 2026 12:40:31 +0100
+Subject: [PATCH v2 3/3] arm64: dts: apple: t600x: Add PCIe pwren gpios
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -57,7 +57,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261104-apple-pcie-pwren-v2-1-216a4066965f@cyberchaos.dev>
+Message-Id: <20261104-apple-pcie-pwren-v2-3-216a4066965f@cyberchaos.dev>
 References: <20261104-apple-pcie-pwren-v2-0-216a4066965f@cyberchaos.dev>
 In-Reply-To: <20261104-apple-pcie-pwren-v2-0-216a4066965f@cyberchaos.dev>
 To: Bartosz Golaszewski <brgl@kernel.org>, 
@@ -73,145 +73,159 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  asahi@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
  devicetree@vger.kernel.org, Yureka Lilian <yureka@cyberchaos.dev>
 
-Export the `pci_pwrctrl_power_on_device()` and
-`pci_pwrctrl_power_off_device()` functions to allow PCIe host drivers
-to call manage power control on a per-port basis.
+For the MacBook Pro and Mac Studio devices using the M1 Pro/Max/Ultra
+SoCs, add the appropriate fixed regulators for enabling the peripherals
+connected to the PCIe ports (WiFi, SD card reader and USB xHCI), which
+are controlled by GPIOs connected to the SMC.
+Set the regulators as the power-supply of the respective PCIe port, so
+that the endpoints are powered on before probing the ports.
+
+Add the 'pciclass,0604' compatible string to the PCIe bridge nodes in
+the SoC to allow the pci-pwrctrl-generic driver to bind to them.
 
 Signed-off-by: Yureka Lilian <yureka@cyberchaos.dev>
 ---
- drivers/pci/pwrctrl/core.c  | 51 ++++++++++++++++++++++++++++++++++++++++-----
- include/linux/pci-pwrctrl.h |  4 ++++
- 2 files changed, 50 insertions(+), 5 deletions(-)
+ arch/arm64/boot/dts/apple/t600x-die0.dtsi      |  4 ++++
+ arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi | 16 +++++++++++++++
+ arch/arm64/boot/dts/apple/t600x-j375.dtsi      | 27 ++++++++++++++++++++++++++
+ 3 files changed, 47 insertions(+)
 
-diff --git a/drivers/pci/pwrctrl/core.c b/drivers/pci/pwrctrl/core.c
-index 0e2387cf4657..b59dbedf251b 100644
---- a/drivers/pci/pwrctrl/core.c
-+++ b/drivers/pci/pwrctrl/core.c
-@@ -191,7 +191,16 @@ static int __pci_pwrctrl_power_off_device(struct device *dev)
- 	return pwrctrl->power_off(pwrctrl);
- }
+diff --git a/arch/arm64/boot/dts/apple/t600x-die0.dtsi b/arch/arm64/boot/dts/apple/t600x-die0.dtsi
+index 122a566e75d1..635635c4bfbd 100644
+--- a/arch/arm64/boot/dts/apple/t600x-die0.dtsi
++++ b/arch/arm64/boot/dts/apple/t600x-die0.dtsi
+@@ -460,6 +460,7 @@ pcie0: pcie@590000000 {
+ 		pinctrl-names = "default";
  
--static void pci_pwrctrl_power_off_device(struct device_node *np)
-+/**
-+ * pci_pwrctrl_power_off_device - Power off pwrctrl devices
-+ *
-+ * @device_node: PCI port or device to operate on
-+ *
-+ * Recursively traverse all pwrctrl devices for the devicetree hierarchy
-+ * below the specified PCI port or device and power them off in a depth
-+ * first manner.
-+ */
-+void pci_pwrctrl_power_off_device(struct device_node *np)
- {
- 	struct platform_device *pdev;
- 	int ret;
-@@ -216,6 +225,7 @@ static void pci_pwrctrl_power_off_device(struct device_node *np)
+ 		port00: pci@0,0 {
++			compatible = "pciclass,0604";
+ 			device_type = "pci";
+ 			reg = <0x0 0x0 0x0 0x0 0x0>;
+ 			reset-gpios = <&pinctrl_ap 4 GPIO_ACTIVE_LOW>;
+@@ -479,6 +480,7 @@ port00: pci@0,0 {
+ 		};
  
- 	platform_device_put(pdev);
- }
-+EXPORT_SYMBOL_GPL(pci_pwrctrl_power_off_device);
+ 		port01: pci@1,0 {
++			compatible = "pciclass,0604";
+ 			device_type = "pci";
+ 			reg = <0x800 0x0 0x0 0x0 0x0>;
+ 			reset-gpios = <&pinctrl_ap 5 GPIO_ACTIVE_LOW>;
+@@ -498,6 +500,7 @@ port01: pci@1,0 {
+ 		};
  
- /**
-  * pci_pwrctrl_power_off_devices - Power off pwrctrl devices
-@@ -245,11 +255,21 @@ static int __pci_pwrctrl_power_on_device(struct device *dev)
- 	return pwrctrl->power_on(pwrctrl);
- }
+ 		port02: pci@2,0 {
++			compatible = "pciclass,0604";
+ 			device_type = "pci";
+ 			reg = <0x1000 0x0 0x0 0x0 0x0>;
+ 			reset-gpios = <&pinctrl_ap 6 GPIO_ACTIVE_LOW>;
+@@ -518,6 +521,7 @@ port02: pci@2,0 {
+ 		};
  
--/*
-+/**
-+ * pci_pwrctrl_power_on_device - Power on pwrctrl devices
-+ *
-+ * @device_node: PCI port or device to operate on
-+ *
-  * Power on the devices in a depth first manner. Before powering on the device,
-  * make sure its driver is bound.
-+ * Recursively traverse all pwrctrl devices for the devicetree hierarchy
-+ * below the specified PCI port or device and power them on in a depth
-+ * first manner.  Before powering on the device, make sure its driver is bound.
-+ *
-+ * Return: 0 on success, -EPROBE_DEFER if any pwrctrl driver is not bound, an
-+ * appropriate error code otherwise.
-  */
--static int pci_pwrctrl_power_on_device(struct device_node *np)
-+int pci_pwrctrl_power_on_device(struct device_node *np)
- {
- 	struct platform_device *pdev;
- 	struct device_node *child;
-@@ -296,6 +316,7 @@ static int pci_pwrctrl_power_on_device(struct device_node *np)
+ 		port03: pci@3,0 {
++			compatible = "pciclass,0604";
+ 			device_type = "pci";
+ 			reg = <0x1800 0x0 0x0 0x0 0x0>;
+ 			reset-gpios = <&pinctrl_ap 7 GPIO_ACTIVE_LOW>;
+diff --git a/arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi b/arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi
+index caded1636f3d..4f9dccf839ad 100644
+--- a/arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi
++++ b/arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi
+@@ -55,6 +55,20 @@ led-0 {
+ 			default-state = "keep";
+ 		};
+ 	};
++
++	vreg_pcie0_port0: regulator-pcie0-port0 {
++		compatible = "regulator-fixed";
++		regulator-name = "pwren-pcie0-port0";
++		gpio = <&smc_gpio 13 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++
++	vreg_pcie0_port1: regulator-pcie0-port1 {
++		compatible = "regulator-fixed";
++		regulator-name = "pwren-pcie0-port1";
++		gpio = <&smc_gpio 26 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
+ };
  
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(pci_pwrctrl_power_on_device);
+ &serial0 {
+@@ -176,6 +190,7 @@ &nco_clkref {
+ /* PCIe devices */
+ &port00 {
+ 	/* WLAN */
++	power-supply = <&vreg_pcie0_port0>;
+ 	bus-range = <1 1>;
+ 	wifi0: wifi@0,0 {
+ 		compatible = "pci14e4,4433";
+@@ -195,6 +210,7 @@ bluetooth0: bluetooth@0,1 {
  
- /**
-  * pci_pwrctrl_power_on_devices - Power on pwrctrl devices
-@@ -335,7 +356,17 @@ int pci_pwrctrl_power_on_devices(struct device *parent)
- }
- EXPORT_SYMBOL_GPL(pci_pwrctrl_power_on_devices);
+ &port01 {
+ 	/* SD card reader */
++	power-supply = <&vreg_pcie0_port1>;
+ 	bus-range = <2 2>;
+ 	sdhci0: mmc@0,0 {
+ 		compatible = "pci17a0,9755";
+diff --git a/arch/arm64/boot/dts/apple/t600x-j375.dtsi b/arch/arm64/boot/dts/apple/t600x-j375.dtsi
+index 8a1494949e4c..412b2fe109be 100644
+--- a/arch/arm64/boot/dts/apple/t600x-j375.dtsi
++++ b/arch/arm64/boot/dts/apple/t600x-j375.dtsi
+@@ -42,6 +42,30 @@ memory@10000000000 {
+ 		device_type = "memory";
+ 		reg = <0x100 0 0x2 0>; /* To be filled by loader */
+ 	};
++
++	/* WLAN/BT */
++	vreg_pcie0_port0: regulator-pcie0-port0 {
++		compatible = "regulator-fixed";
++		regulator-name = "pwren-pcie0-port0";
++		gpio = <&smc_gpio 13 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++
++	/* SD card reader */
++	vreg_pcie0_port1: regulator-pcie0-port1 {
++		compatible = "regulator-fixed";
++		regulator-name = "pwren-pcie0-port1";
++		gpio = <&smc_gpio 26 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++
++	/* USB xHCI */
++	vreg_pcie0_port3: regulator-pcie0-port3 {
++		compatible = "regulator-fixed";
++		regulator-name = "pwren-pcie0-port3";
++		gpio = <&smc_gpio 20 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
+ };
  
--static int pci_pwrctrl_create_device(struct device_node *np,
-+/**
-+ * pci_pwrctrl_create_device - Create pwrctrl devices
-+ *
-+ * @device_node: PCI port or device to operate on
-+ *
-+ * Recursively create pwrctrl devices for the devicetree hierarchy below
-+ * the specified PCI port or device in a depth first manner.
-+ *
-+ * Return: 0 on success, negative error number on error.
-+ */
-+int pci_pwrctrl_create_device(struct device_node *np,
- 				     struct device *parent)
- {
- 	struct platform_device *pdev;
-@@ -368,6 +399,7 @@ static int pci_pwrctrl_create_device(struct device_node *np,
+ &serial0 {
+@@ -356,6 +380,7 @@ &nco_clkref {
+ /* PCIe devices */
+ &port00 {
+ 	/* WLAN */
++	power-supply = <&vreg_pcie0_port0>;
+ 	bus-range = <1 1>;
+ 	wifi0: wifi@0,0 {
+ 		compatible = "pci14e4,4433";
+@@ -375,6 +400,7 @@ bluetooth0: bluetooth@0,1 {
  
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(pci_pwrctrl_create_device);
+ &port01 {
+ 	/* SD card reader */
++	power-supply = <&vreg_pcie0_port1>;
+ 	bus-range = <2 2>;
+ 	sdhci0: mmc@0,0 {
+ 		compatible = "pci17a0,9755";
+@@ -397,6 +423,7 @@ ethernet0: ethernet@0,0 {
  
- /**
-  * pci_pwrctrl_create_devices - Create pwrctrl devices
-@@ -396,7 +428,15 @@ int pci_pwrctrl_create_devices(struct device *parent)
- }
- EXPORT_SYMBOL_GPL(pci_pwrctrl_create_devices);
- 
--static void pci_pwrctrl_destroy_device(struct device_node *np)
-+/**
-+ * pci_pwrctrl_destroy_device - Destroy pwrctrl devices
-+ *
-+ * @device_node: PCI port or device to operate on
-+ *
-+ * Recursively destroy pwrctrl devices for the devicetree hierarchy below
-+ * the specified PCI port or device in a depth first manner.
-+ */
-+void pci_pwrctrl_destroy_device(struct device_node *np)
- {
- 	struct platform_device *pdev;
- 
-@@ -415,6 +455,7 @@ static void pci_pwrctrl_destroy_device(struct device_node *np)
- 
- 	of_node_clear_flag(np, OF_POPULATED);
- }
-+EXPORT_SYMBOL_GPL(pci_pwrctrl_destroy_device);
- 
- /**
-  * pci_pwrctrl_destroy_devices - Destroy pwrctrl devices
-diff --git a/include/linux/pci-pwrctrl.h b/include/linux/pci-pwrctrl.h
-index 1192a2527521..f27be6489b50 100644
---- a/include/linux/pci-pwrctrl.h
-+++ b/include/linux/pci-pwrctrl.h
-@@ -59,6 +59,10 @@ int pci_pwrctrl_create_devices(struct device *parent);
- void pci_pwrctrl_destroy_devices(struct device *parent);
- int pci_pwrctrl_power_on_devices(struct device *parent);
- void pci_pwrctrl_power_off_devices(struct device *parent);
-+int pci_pwrctrl_create_device(struct device_node *np, struct device *parent);
-+void pci_pwrctrl_destroy_device(struct device_node *np);
-+int pci_pwrctrl_power_on_device(struct device_node *np);
-+void pci_pwrctrl_power_off_device(struct device_node *np);
- #else
- static inline int pci_pwrctrl_create_devices(struct device *parent) { return 0; }
- static void pci_pwrctrl_destroy_devices(struct device *parent) { }
+ &port03 {
+ 	/* USB xHCI */
++	power-supply = <&vreg_pcie0_port3>;
+ 	bus-range = <4 4>;
+ 	status = "okay";
+ };
 
 -- 
 2.56.0
