@@ -1,56 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793833872;
-	b=kCuRNXOM25v7ttBVC2/9XJIHWZ+DLUsrOkL23xVEa9Q5sTyqSaS0qQkJSV+R050AX9/7
-	 JxX7df39YZkhJqrjTstdGIeOb8WfF8Gx7kxntpbQt6Htioeq34ZvtKWPLy+y6xD7CPPd7
-	 +4QCCOTqN8RshiIzXNeV6x1YXC4sDsCBR2EUT8K9ZGFhs6nZWHwMHcI1icVCP+E1oBwCB
-	 AZbhLu+LL6mtAhz+EPX4pgbERBfMisvtE6wGEdpm8C5KG4DEf7UcyyvpGCTIUO5APZe5M
-	 ZkXlsWakw1N7wHil1S65MNZ5F0zLBThuj6xQub4Izepzbl3E9FhgubCNX8xwJuU8O+g==
+	t=1793833885;
+	b=knHXjEUOgs0ae7h5sIRgUm6uJplADfcbwZC8qHrA4nn9E1WKhhEWQBoOHriBBYRpTl6C
+	 28lQDy1/zZCEeWi5vOPnFHWOU6rahydQgMGH8/Mkqx5CLVldlkHEQK2v1mWxcgOqKBiY6
+	 bxqOAvAUMABrPyTjKACQET8rWeYPRjuUpaKw6dZvrbrkpSw0nNGvEkhEnRP9u9l7YUjXG
+	 VL5v2YRNVjR1Bsm5SkfA2MSwXUlalnfrvJiPlNfGq2e4HvaQS0Mt9YewT5ctbxCzm9eb6
+	 /yg5sBGdieotyZTbEvOM6SGkkTCzFsZUvgJUY7tJ0CwojVU4/ari4MAfXBEDmkwE/LQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793833872;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793833885;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=BbCrcbUUaZ1nV2LYDI96ypvdX5x0h8sjRw0iFclTzaA=;
-	b=YPWaQxK9rWBLUPURlBTp/f033Tzpat6nyuLnQ6R/Ogc//16KgWKKGYRe6F714QLaZHWX
-	 9xPSiYg11KTXkbFquBilOZtXU0u+1aNblCLw31L2FHQGLjLHqwcAT0QCnXcHkMqj8uZff
-	 sGk2UjPlmgnNPfxFn3WmrTBZvtLVkFR+LPNMG4bx+KUiHWwfkPDlY9tstwZHCLx3yYyhz
-	 CSq5QlpUbw73ViunlzZZWTIVyPNyoGk/7oT5bgoDu1D9nSMcwDWvhiZiFQ46aNnBtra98
-	 /IqoPtg4qxJiLVP3MBBeUlklhdq4acDeVXAzIzVQ+ZY2rufpzShR/pZ2nGYWxPWpybw==
+	bh=B+T75TT93tfM4nAipEJBYUwEbLPy/SgUw/s/PN8HVGg=;
+	b=qtRtLgpPHGY47yzP/wAYkYCvLvBORFz5DN1X88nXBQnS/Iry/VOT5VSne+IempMnQpmC
+	 XHgOJOOdSE6b6AQS0duudTVQIRZki3IlWTYIcJ9H/dlt/OQClctEI/yF+NtunNlsHpp4Y
+	 AFI4AsXbntUvFXcVD0x03udU6vu70CdaG++AYM4X7otrdquQwbNxQSy+usWkdarzihe+w
+	 zQUsfxXSUE9nhqhZLfa1l2eZ/KoTLf5BRnBHslRBV9sioaF52gB1w9JWJvfPHyXlKP3pr
+	 4HK11MgE9ZsZdhbGoME1C+4dkU2weHlXG86QQHtsRlbK4gxjWywm7I84TsegpXam2BQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hVJYoMup;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=P8q+cIv9;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79954606A32D
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 23:11:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9050606A31B
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 23:11:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hVJYoMup
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C0651F000C1;
-	Wed,  4 Nov 2026 23:11:12 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=P8q+cIv9
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26F4A1F000C1;
+	Wed,  4 Nov 2026 23:11:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793833872;
-	bh=BbCrcbUUaZ1nV2LYDI96ypvdX5x0h8sjRw0iFclTzaA=;
+	s=k20260515; t=1793833884;
+	bh=B+T75TT93tfM4nAipEJBYUwEbLPy/SgUw/s/PN8HVGg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hVJYoMuptopVJpMJpbA+VUhhH3pIFR2HCTpJY0f+7ryGXqFOdxFt2wu4wbzzKqst9
-	 sXDmR++I59Dkl2GApfqb5RmOlt0kJserxdp+WV+lrLfKNUSDC279rW6hCM6TcUPE2V
-	 9owV1w4AeanzTmUZ5Zfr0HJ9FUh8GF/D1Nn8n1Db6rQbV+cBPWe1f1TIhFPT1gNf8S
-	 lP1d62DlWmO7iVjIAsuB/Y3cyZXbEdM5jIA/jHvbjJs5Dm6iiPklmK1z/8EKL2olZW
-	 4HXw+GIyUt1VAP8DbkW7W6KsnNwGHnoMp9Lm1uiBT9W5xLR/xSyVaDjHr8U68yvkkN
-	 3z9ePFV7CRS0Q==
-Message-ID: <sashiko-outbox-198272@kernel.org>
+	b=P8q+cIv9mhuFVU1zntcDE8s6YfksEG96lsCWghEL5yNjUQf+bD24HtgaAPmSRx63F
+	 lTVZhh7MYO3YrzEeCxg9k+OX7fFszcrzPlPG+hNUck8OdavIwIei1eCvMWvQlwH8Lk
+	 kOTsVVclTPRrMSNpnthApBVlGE75dkqlnIhYO6armaTJRzoHWKjxHTn5xnL1v0fF3I
+	 h6HeC1SQXFOmDfDvY4qTfLlv8VvVAY8TELxGSQGJM8iMqwQiLdX8Hge4L5+vQnNXt4
+	 i3bifTZnHeWw/23rLpvQybMg8/sY2/A7200gUR0rBAIqStifuW+xczPKUUasxnx0Up
+	 prFHRgHTUDAlA==
+Message-ID: <sashiko-outbox-198273@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 6/7] rust: completion: add complete()
+Subject: Re: [PATCH v4 3/7] rust: pci: require an enable guard for
+ `set_master()`
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Maurice Hieronymus" <mhi@mailbox.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261105-b4-rust-pci-edu-driver-v4-6-20ef027bb707@mailbox.org>
+In-Reply-To: <20261105-b4-rust-pci-edu-driver-v4-3-20ef027bb707@mailbox.org>
 References: <20261105-b4-rust-pci-edu-driver-v4-0-20ef027bb707@mailbox.org>
- <20261105-b4-rust-pci-edu-driver-v4-6-20ef027bb707@mailbox.org>
+ <20261105-b4-rust-pci-edu-driver-v4-3-20ef027bb707@mailbox.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 23:11:11 +0000
+Date: Wed, 04 Nov 2026 23:11:23 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,23 +61,22 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> The initial completion abstraction only added `complete_all()` and
-> `wait_for_completion()`. `complete_all()` marks the completion permanently
-> done, which makes a single `Completion` unsuitable for signalling the same
-> event repeatedly: once `complete_all()` has run, every subsequent
-> `wait_for_completion()` returns immediately without waiting.
+> Require a borrowed `DeviceEnableGuard` for the same device before enabling
+> bus-mastering. Check device identity so a guard for another device cannot
+> satisfy this requirement.
 >=20
-> Add `complete()`, which wakes a single waiter and increments the internal
-> counter by one. Paired one-to-one with `wait_for_completion()`, it allows
-> the same completion to be reused across multiple cycles, e.g. to wait for
-> consecutive DMA transfers to finish.
+> Keep `set_master()` on `Device<Core>` to retain callback synchronization:
+> the guard is shareable, while `pci_set_master()` modifies device state
+> without locking. Convert nova-core to pass its enable guard.
 >=20
-> Acked-by: Gary Guo <gary@garyguo.net>
+> Link: https://lore.kernel.org/rust-for-linux/DLNQ5C9BTIAJ.1XEWLZ13TU1VF@k=
+ernel.org
+> Suggested-by: Danilo Krummrich <dakr@kernel.org>
 > Signed-off-by: Maurice Hieronymus <mhi@mailbox.org>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105-b4-rust-pc=
-i-edu-driver-v4-0-20ef027bb707@mailbox.org?part=3D6
+i-edu-driver-v4-0-20ef027bb707@mailbox.org?part=3D3
 
