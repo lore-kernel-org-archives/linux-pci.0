@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.65
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793813139;
-	b=F8KbRPw0i95gStVLwgcPFcW56gFUVKYlnFXCGKQQxlKmuro0VJpAR+V5hO5W5tebPJpt
-	 yNvrO+MfAX6TCVp3BsE0OsK7BDTvkHNwsUJBxnoiNWrKKc/ezjbUKl6HiVd/nZGzx3es3
-	 oy1iRz6OYIgDIKTNVUeYSyAlr9fzSu7SsaYaxFWm7NAK8IxAdLT0e3gFvyW9mYPpRgdwp
-	 gc7wXwcY/W7cbCC+LTNC/mSf9tvhyLQfI0XkVsqNXoRYcRwSI65U5uQ3DuY5qZ28hFSRk
-	 sUJMl10pHx91brJgtTA+8gA52/gszghGzHPVvT60HrvSSyBVCCfbtcpSnyGEzHy6RdA==
+	t=1793813144;
+	b=S7YVsiJ+4Bttsy/uQ8+x+vZCeoF+2RLmeb7xUi08NPGPKEVRtmklJvTjEBN8PfH9b2EO
+	 GDiKR5sw5eKQ0TEKbeuptNS46jZsXQ01A/U3ECi+p85ftiWdu91MZEfUwBaYl0CJpTMI1
+	 IUAUjq5ZGiksgcGg4x3PGU/ygyZGMrPXSQDaYoeJUojce1/TMvYcWbbGyfJu+JA2eH4ar
+	 b5DWj+nVINq0b57ui9F2/LotW6LhViLeVtmN/eRjPbHCEw5r8d9YOMqoBMIg+BDuMs+WF
+	 ephrESoG5mTVHt4g7iBav4TL0W1V5llEc75v3ri02Uq4qQ2mlq+y7pTbDCXCNm3211Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793813139;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793813144;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=Xenqm7tT8aY2/8jh0immIrLobh1PPDktvJtMt0frxlE=;
-	b=V8M4sHvJ9xN5AMATEoBJ8/Rl8RCi0Xk/L2f8+jPe/aGO7KHKbPEKWjNuhmhM0pupeadk
-	 Ft+ruZQ6eP/8ao9cs0ARKi5bvsY5JGSuChsqcLU64Ojj1fNJu2TNZOlsKBfh/vhvOFbjV
-	 EnCV0Us5AqMlIxd+e4TRyisQgYmwqJ8Jr1VqHezwemhUnadZ45KoiZ1MmPMSmJ7UkihX6
-	 ddof+KijxiI5QYKnSUAUjIf+cobZyT5S+IrVUM+WVSVF7aJoyC7l4+A3uFPHmuGXyX5XB
-	 XmdW+EYbbbe49ejSSE9g2Fbv+wYocXvzzvGXuJVGisaGulbSaCrEgos2AI6h6RuKc2w==
+	bh=KvcV0c4jRWUZ56qd0nf0GVpOhs3x5p+gMgincRqh3Ic=;
+	b=iHPO9mA467ebECCvn6bFdD9t3CcCA96n4qRFUPOS2fm+FMmZ6m0WPAmJuU/yv3ijCFZ9
+	 IbrbaEHekWPcnBVw5RM1/LlLdcGRAkOMEWAkSIey6ojrT0z/7d7Pdu50k6p1xhPKgOpe0
+	 D4V5cS9v+yaJhPuq8Ne852VUw+hmRfTFCu+SDw0p21I1fEzGvZ6oGDqSRZJ4mIFgv5tD8
+	 YPutTUATOe1IniOAf0Uh9S0ypwN0GzK9H9HT4tzcOqVjqBK0u7DRWd/6RPrRC3yxGXfLA
+	 oJbWxh6mwg9ZuoPJk+fzX35OZCFHEzMr8yxu3AWzDABrIE52sadfpG9fqQe25dUk7YQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=uXUSWSDc;
-	arc=none smtp.remote-ip=91.218.175.65
-Received: from mta0.migadu.com (out-65.mta0.migadu.com [91.218.175.65])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=S0l21P3y;
+	arc=none smtp.remote-ip=91.218.175.72
+Received: from mta0.migadu.com (out-72.mta0.migadu.com [91.218.175.72])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2F3A606A330
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 17:25:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C2F3A606A330
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57BCD606A329
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 17:25:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 57BCD606A329
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=uXUSWSDc
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=S0l21P3y
 X-Envelope-To: linux-pci@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Xenqm7tT8aY2/8jh0immIrLobh1PPDktvJtMt0frxlE=;
+DKIM-Signature: a=rsa-sha256; bh=KvcV0c4jRWUZ56qd0nf0GVpOhs3x5p+gMgincRqh3Ic=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793813135; v=1; x=1794417935;
- b=uXUSWSDcK92X6GLIz+Jw8/CmM3fFrx5BxuYT63jVUmVZj9utLsJTCcBH7flqI+0vR1vD23BT
- htRa9gx2spS4Fn7iSpkFmg43hYbGFXMwkrPA2XwSe8yKjbYrdn1gydgu3TgKCzpUjrBmOjEOxGi
- SKdeRJqN7hQ7b6rVBHjjoTv8=
+ t=1793813141; v=1; x=1794417941;
+ b=S0l21P3yf/EePM9E9LVhImMS+NLGodZraKUntXJ5bfrGOm+j8hDq8LYrITNGVc5POFBrwkgL
+ II7V0CZCApoELbfDW2dddTvPJiZOjcSHmRPgmfzRO9zz1+vB68taSpBAlPZhh8e3+gMdQ6MGwY6
+ CFsrYE3xjvLHmwlM+ztltrHI=
 X-Envelope-To: linux-pci@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 3b99aa60dbfaf8f0;
-	Wed, 04 Nov 2026 17:25:35 +0000
-X-Mizu-Trace-ID: 3b99aa60dbfaf8f0
+Received: by smtp.migadu.com with ESMTPS id 4064cf3a45f60569;
+	Wed, 04 Nov 2026 17:25:40 +0000
+X-Mizu-Trace-ID: 4064cf3a45f60569
 X-Migadu-Flow: FLOW_OUT
 From: Junjie Cao <junjie.cao@linux.dev>
 To: shrihari.s@samsung.com
@@ -65,12 +65,12 @@ Cc: jic23@kernel.org,
 	vikash.k5@samsung.com,
 	anisa.su@samsung.com,
 	junjie.cao@linux.dev
-Subject: Re: [PATCH qemu v1 3/8] hw/cxl: Wire UIO capability into HDM decoder and DVSEC registers
-Date: Wed,  4 Nov 2026 11:25:24 -0600
-Message-ID: <20261104172527.2172366-1-junjie.cao@linux.dev>
+Subject: Re: [PATCH qemu v1 4/8] hw/pci: Add PCIe Streamlined Virtual Channel (SVC) capability
+Date: Wed,  4 Nov 2026 11:25:25 -0600
+Message-ID: <20261104172527.2172366-2-junjie.cao@linux.dev>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <1384010761.101793792283622.JavaMail.epsvc@epcpadp2new>
-References: <20261104115242.2035807-1-shrihari.s@samsung.com> <1384010761.101793792283622.JavaMail.epsvc@epcpadp2new>
+In-Reply-To: <603443293.161793792284076.JavaMail.epsvc@epcpadp2new>
+References: <20261104115242.2035807-1-shrihari.s@samsung.com> <603443293.161793792284076.JavaMail.epsvc@epcpadp2new>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -84,24 +84,22 @@ Content-Transfer-Encoding: 8bit
 
 Hi Shrihari,
 
-The switch/HB write mask opens UIG and UIW, but leaves ISP read-only.
-CXL 3.2 section 8.2.4.20.7 makes ISP writable on a UIO-capable switch
-or Host Bridge too.
+The protocol-selection checks now reject the bad writes from my previous
+review. The TC/VC map defaults need another change, though.
 
-With two UIO-enabled host bridges in a two-way CFMWS (4 KiB granularity),
-the switch below the second HB advertises UIO, but writing decoder 0
-Control with UIO=1, UIG=4, UIW=1 (two ways), ISP=1 reads back
-0x00144000 rather than 0x01144000. Software cannot configure the second
-position in the interleave set.
+On 3c99db7705c1 plus this series, Resource Control sets 1 and 2 read
+zero at cold boot and after a system reset on the tested CXL root,
+upstream and downstream ports and Type-3 devices. PCIe 6.2 section
+7.9.29.7 requires the TC/VC Map default to match Table 2-46:
+TC3 to VC3 and TC4 to VC4.
 
-Could R_CXL_HDM_DECODER0_CTRL_ISP_MASK be included alongside UIG and UIW
-in that switch/HB branch?
+Software that keeps the default map and only selects UIO and sets VC
+Enable writes 0x80000200, which reads back 0x200. Restoring defaults
+of 0x08 and 0x10 makes that read-modify-write produce 0x80000208 and
+0x80000210; both then retain VC Enable.
 
-It may also be worth diagnosing a partially configured host bridge:
-with x-uio=on and two RPs, one without SVC/flit, the HB reads 0x22382
-but that RP reads 0x312. The HB UIO bit is defined to cover all its
-root ports (8.2.4.20.1). A warning would make this inconsistent setup
-easier to spot.
+Could init and reset restore those map bits while leaving VC Enable
+clear?
 
 Many thanks,
 Junjie
