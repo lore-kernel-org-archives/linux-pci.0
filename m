@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793761957;
-	b=a+l5+YDIyhsmkgJwmzwGNIh7fIbBM+fTnxElkM+jkUbZZtZmNZiZopotTdCXxu5KDJK6
-	 gtMANJrPk8/THfNwwQX3UHWq0rj8f6gs/thGkX4mTmrwK6olLH5j7S4M9MQ/eOd8Bd3Jb
-	 AKKwvUgV9mrLlXq7Y2TEnpnqDKCjlsEmDvoYFsZv4rlx1eO9qUvNzz5gsh/ByfjGFc4N/
-	 qt3oTvEfx4SEdfwTPO0Ks1IFL3Ga5T7wd7keI8vz09dgm+UyQ+Z8oVZ0NwsHGerCDI3wH
-	 PHCBWs88K5/LRVHkixLabK1BOB5v/pW5knBk1Imr6G+uDpggd+IXacSrRz5k5kT7zVw==
+	t=1793762151;
+	b=w1PxhEePJyJA2ci65ZMphsRCr3hrLwb3Slecug01t24Jegft86v8LAuIm3f5AWNJE4kx
+	 TV9w5YXLOviMCYxNwQvAwbO9XLZrQjAqZQRX4E8onwC24MD3Ak4SgBtUzYEBBem7l8ogq
+	 1SAGdvQOyKrJivvWIqWuiJf5KpigBk1klweBSEu6SCcjJcK+jp/Okzy47NwpXrImd71qA
+	 XXupMqZp0XdK/I9I+BaGRAApnBql7hEeQTckheOqCxh8AlFZeYbgg7AOUWpMwpqYoNHLI
+	 QZ6PH8AvxoIrkoaEg4sJWVRRAWu+CSxWbu7KL+2Uy94nn3FIzhxNG55AH89h+bgNnLA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793761957;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793762151;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=Orpmto/mHaBAJNPssCHIy4GZRDD/5W3xu9CR3WTtqXc=;
-	b=FsGy/QkzudS01o5B6GNx5wGQKpTDJMT4efNYykhjAzroQKhBzgxGeyd/HKTQ6nYRgaxc
-	 +C/M4WLqwT4HIVbjUW5+p7naWFwUCTcIowmvN5RHIrMs0shos0xyTJhjtzI5Gj1g6+kE1
-	 YOdG5UT1YA/3i+SIQQyk0tnTOHBeadH9LqKH4u+mgrkM2ZS8DVSE9+VsgMyw8JRmygs2v
-	 iXQnWa6+CLg8zUY/WfsqRNpmyTox+3AvtyVz2BB/GRXpyEDCrK0juj5XEZp6PG4Hly3Ha
-	 7RpgeUegADG09TmX2XFkyDxoWEpPSAqpRKnJFp/cv4AvUKXLKlNni6DCiDp4Y2J43qQ==
+	bh=uYJF07BCGEEpbrc+vXQyQ6V28x6DgLk6q4sUVWA5mto=;
+	b=WnLy7tUSoBUqYGl/GNYr9aPA75mzabu7u1SS5oSplieWcvSjJUdPsp9rEHkcHW+XgJPb
+	 rd+EQeyjlH2kiY1fgCVFLs/VIipqzQlh0KHydUblvv1T+LXpcRYHgHVZHNdt5F+tNgI3x
+	 lAgcyCMLkjzNE0t3Cuzt9X3AVqu5VBSaAygrcRZIh+b9Oo5Wnavwc5Xc6viu4thyjfnLp
+	 HkvY29WZ1tUJ19g7r6SegIyNkCcR4hxH5EjFb+LAgxblOJ6rjX8++2CqH2ByVnQEom60O
+	 SrEBtDE5jvYJOndhOstuiXM7YTvp78VhD3WmTXGcWnkjQPyWxTNfGqVRc2tj2SWCd6Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Pie8GJs0;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="BiU/NEqc";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CF1C606A31B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 03:12:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BFF6606A31B;
+	Wed,  4 Nov 2026 03:15:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Pie8GJs0
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 178ED1F000C1;
-	Wed,  4 Nov 2026 03:12:37 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BiU/NEqc
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B63661F000C1;
+	Wed,  4 Nov 2026 03:15:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793761957;
-	bh=Orpmto/mHaBAJNPssCHIy4GZRDD/5W3xu9CR3WTtqXc=;
+	s=k20260515; t=1793762151;
+	bh=uYJF07BCGEEpbrc+vXQyQ6V28x6DgLk6q4sUVWA5mto=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Pie8GJs0WpD9Ct8Kri4XDnGrdm4SUE9i5OwrDau057XiVoNYQXH+UgmsvVRKsbtdi
-	 pBTNDcazcPMixX07VHiNzySWwYDBkQdcPP2XTVWvo47QdEn25DVx3IH8RIvwpK7LGZ
-	 VsU7cg/n4WCpYGXQFK9cSNJTAl04wXuGLy34TeYc7yhMxp3AsiLNg+cKZBzH3N5eaa
-	 Ky1LCOOiDOzj0VgMRdQdUTIBD7pokYQhP0J9lnpWKEpIyhau6xwafKFGc30Dx37gJQ
-	 IYdp+jN5JbbXQCdK3+5hcBa07N7EhfNqAmsoFANn0inUpoosC0jQkEKCoLI4JudI5M
-	 7OYEKUVjgJrcg==
-Message-ID: <sashiko-outbox-196589@kernel.org>
+	b=BiU/NEqcMeUMJ4Qb/pbwCr1zxm2CJZbHWhiwJwH1hNr8YPecLEug8V6U4Zq7LYj8U
+	 KTa0qsIfflzicX8Q9utWTVdk20+dQNficz9AgKK1BFIo9Q7IfsqDzXilsg02BT43Or
+	 h2S6THY4u4qCIfhiSp3IfiJDI5Z+WvXBhlJmzc2cC/J1rFNaJMLPynCbSlmapdKIdk
+	 tQtiS6IvC/jDzn12LEEFtT9crYBfRtcP94WQT8XStar48zWSZH3vax/tWqWBVSxCV0
+	 6PBOgYIOQjueiaqy22f7lFeCRB7rQUt6PRXGSj5wi/ZvfM4l813tkzY/+knJ5M3pDA
+	 X7xvV9jvUNx7Q==
+Message-ID: <sashiko-outbox-196592@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 20/25] dmaengine: sdxi: Add client context release
- with update and sync
+Subject: Re: [PATCH v4 24/25] dmaengine: sdxi: MSI/MSI-X vector allocation
+ and mapping
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nathan Lynch" <nathan.lynch@amd.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261103-sdxi-base-v4-20-3668ccc7aab8@amd.com>
+Cc: dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, vkoul@kernel.org, Frank.Li@kernel.org
+In-Reply-To: <20261103-sdxi-base-v4-24-3668ccc7aab8@amd.com>
 References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
- <20261103-sdxi-base-v4-20-3668ccc7aab8@amd.com>
+ <20261103-sdxi-base-v4-24-3668ccc7aab8@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 03:12:36 +0000
+Date: Wed, 04 Nov 2026 03:15:50 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,31 +61,79 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> From: Nathan Lynch <nathan.lynch@amd.com>
->=20
-> Invalidate an unused, stopped client context and synchronize hardware
-> caches before freeing its resources. Add administrative update, reservati=
-on, and
-> completion-polling helpers.
->=20
-> Claim completion-status storage before making an irrevocable ring
-> reservation. Return the claim if reservation fails, and release it after
-> consuming a terminal result. A timeout leaves hardware ownership
-> unresolved, so retain that block in the administrative pool until context
-> teardown, even if the device writes its terminal signal later. Repeated
-> timeouts can exhaust the pool, causing further claims to time out rather
-> than reuse outstanding status blocks.
->=20
-> If update or synchronization fails, retain the context and its ID for
-> cleanup after function shutdown. Device-wide teardown frees clients after
-> the best-effort function stop/reset path without submitting additional
-> administrative operations.
->=20
-> Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] dmaengine: sdxi: incomplete kernel-doc comments in sdxi.h
+--
 
-Sashiko has reviewed this patch and found no issues.
+commit fccd22f95bf4bdc550267ac2709b80e00e1e9267
+Author: Nathan Lynch <nathan.lynch@amd.com>
+
+dmaengine: sdxi: MSI/MSI-X vector allocation and mapping
+
+This commit allocates MSI/MSI-X vectors for the SDXI error log interrupt
+and client contexts, tracking non-reserved vectors with an IDA. It also
+adds helpers to allocate, free, and map device-relative vector indices to
+Linux IRQ numbers via a new get_irq bus operation.
+
+> diff --git a/drivers/dma/sdxi/sdxi.h b/drivers/dma/sdxi/sdxi.h
+> index aaa43eab00b33..07044d837d9af 100644
+> --- a/drivers/dma/sdxi/sdxi.h
+> +++ b/drivers/dma/sdxi/sdxi.h
+
+[ ... ]
+
+> @@ -69,6 +90,38 @@ struct sdxi_dev {
+>  	const struct sdxi_bus_ops *bus_ops;
+>  };
+> =20
+> +/**
+> + * sdxi_alloc_vector() - Allocate an interrupt vector.
+> + *
+> + * A vector that will have the same lifetime as the device does not
+> + * need to be released explicitly. Otherwise the vector must be
+> + * released with sdxi_free_vector().
+> + */
+> +static inline int sdxi_alloc_vector(struct sdxi_dev *sdxi)
+> +{
+> +	return ida_alloc_range(&sdxi->vectors, SDXI_MIN_VECTORS,
+> +			       sdxi->nr_vectors - 1, GFP_KERNEL);
+> +}
+> +
+> +/**
+> + * sdxi_free_vector() - Release a previously allocated index.
+> + */
+> +static inline void sdxi_free_vector(struct sdxi_dev *sdxi, unsigned int =
+nr)
+> +{
+> +	ida_free(&sdxi->vectors, nr);
+> +}
+> +
+> +/**
+> + * sdxi_vector_to_irq() - Translate an allocated interrupt vector to
+> + *                        Linux IRQ number suitable for passing to
+> + *                        request_irq() et al.
+> + */
+> +static inline int sdxi_vector_to_irq(struct sdxi_dev *sdxi, unsigned int=
+ nr)
+> +{
+> +	WARN_ON_ONCE(!ida_exists(&sdxi->vectors, nr));
+> +	return sdxi->bus_ops->get_irq(sdxi, nr);
+> +}
+
+[Severity: Low]
+sdxi_alloc_vector(), sdxi_free_vector(), and sdxi_vector_to_irq() in
+drivers/dma/sdxi/sdxi.h use the /** kernel-doc comment marker without
+describing the @sdxi and @nr parameters or including Return: sections for
+sdxi_alloc_vector() and sdxi_vector_to_irq().
+
+Running scripts/kernel-doc on drivers/dma/sdxi/sdxi.h (for example via
+make HEADER_CHECK=3Ddrivers/dma/sdxi headercheck) emits kernel-doc warnings
+for the undescribed parameters and missing return value descriptions.
+
+Should these comments document @sdxi, @nr, and Return:, or use regular /*
+comments instead?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103-sdxi-base-=
-v4-0-3668ccc7aab8@amd.com?part=3D20
-
+v4-0-3668ccc7aab8@amd.com?part=3D24
