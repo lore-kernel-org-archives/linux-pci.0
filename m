@@ -1,68 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793749064;
-	b=r/rQhe0JfnAm8CO8dkb63y+Eqqnt/9W1EajzMGaUJg4psFKTNhM3G6xTHYnhS5vAwDR6
-	 lieIoiFd/cor4HFBcy/JWr7sU43AwtsCtTz6iR3APh8Rcx42cyXjwkuKN1lHdlUQyYekx
-	 70b3Yw+Ppif6X4cMEze4TEKA/9/L+bq79CY6Mm54Z6XZ1XxH3a3DQXvVfxofroChlc2V6
-	 /ixQJyvPXhK33RgmUnBJ0OuiD4moHt2gSVDHqPrbaXmvmeuF4TZEl1YkaOKfL51ZCet87
-	 cdfk0x3BSrdcl8LSUTVXpTtfOnjNjqUswVDaVRtQSTr5vcEkRue5bVm6cLct+WgwgYQ==
+	t=1793753171;
+	b=lhps3zmRAIxY+kXyBnoFT8CI+zjtc5RFXbjVi88JusG9LZ3G9d7p2xeZSWCWHdbSz3WZ
+	 sNBVECsZ/WRd8/3uqurKvvAVdhzXJRCuaBk3P4uvkQ75cLs6Us2Q2p9z9NJEfrIqiwRhM
+	 cUj1HzWpFJJg3Fa6LjNzcFfbSubC3E7yXPExQwg0QJUcWdG31FrjvEMvjBti6FXvv8Gzs
+	 dm2Hs6eEHKKy6r0NaW2vJj2qONWrxxtecl4ZFtLsRPJBWqXr3csn7/WSvHKCr3BuPuGHT
+	 zYN3IZe0Sxo68WgovAnlSOEfELXEWhad5Ab8OA48KEVqqC/493jEH9waGlXUgmsR3VA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793749064;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793753171;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=4wfqiCZwxR1HfUPAhThr9gcJLD7YNx6kTBnqWyt9+bI=;
-	b=njvtOnwKJMW3FN6E5VQCdBguP09Ds5pf9MJKCtR9pJ0zGAyCuxqqdUOWV7AMIln08NMF
-	 UJGW2oP5jvEROg6J/XLt0muBhBopftNVP8rdOa97GTyO7WzaYagYKvuXRi/F//7UQ6w88
-	 pPCrMUlIEz6L8fM2NRPFm2loz87MBSNXswdnlmbvRF9OVqgoo2DqXIlmLNhL6s2hNDFEQ
-	 7MjdcE5yv/8ZqjWREXJLXK7jAdIveMBuafqu6yQ8mtiwREX2AY1HluswfrzeoPIpEBEG9
-	 Z8Ib6qJgHqwzRL5hh1FjKKIa2G1+KoReQfqdc+NUQ4FTL27qD+FJ5MJ40AAWbcq7GaA==
+	 MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=qotwDIV+dwawUH4U9PtLZflu8IFLEqef+DT+z1ntPP4=;
+	b=teDG7kJj1lGrs6Yu+/PavSYrPN9la8uusc4PZHSwoSe9YSZON8yirlwvzY1MMzDJ2eG8
+	 7oN70/qJhwxSqndCDD3T5fd1d5mS4FYySkBDLpuj7GkifbdziclC2zXXvml3jQ167vNCL
+	 ezlsOqMXCvam8NwXu7mLs4IjetKUxXhb03JYtJHx+7mkrdT0z7qmaynYIX7Dbe7yW93rr
+	 AVc5MHGtI9JV2dlwKDCdzWrBIykyIqbuAYHCRITs6vUyce4giu5moeS9VpfBYvscykHwm
+	 T/VrQx1POSNfUYjBME4FKaYDFUy3arSxSP2kmRLpQRTIzdilieixz0ZMxqnaFtx8qtw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OF6RH6Xa;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YW2ZyrP2;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC412606A31B;
-	Tue,  3 Nov 2026 23:37:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 537CB606A324
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 00:46:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OF6RH6Xa
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DFB01F000C1;
-	Tue,  3 Nov 2026 23:37:43 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YW2ZyrP2
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76C1B1F000C1;
+	Wed,  4 Nov 2026 00:46:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793749063;
-	bh=4wfqiCZwxR1HfUPAhThr9gcJLD7YNx6kTBnqWyt9+bI=;
+	s=k20260515; t=1793753170;
+	bh=qotwDIV+dwawUH4U9PtLZflu8IFLEqef+DT+z1ntPP4=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=OF6RH6XajejLEaRO0+BM9d4/sTm6iiR9bIeg3XYuSSa2A+LO5xgR2HmpjIEdeX6fW
-	 z3bMl5cSQIuuqrSouIOdJl+uCkv3nwz/KMTQPQT2lUg+vSbaQPIJ/CvQ83rOichkfM
-	 FwPnVMVNVwXi/9aVHMXY+pwwAcjESqhFUUmYjYdkPZbGWAntl3YDAvxuii2TG2PTMW
-	 +/GU17Tr0k9A7KTV7Q9vDfe/2OquHv4t5UckT5Psg3Q5BV26x76amGq8GcXRaGtN6Z
-	 3SmkHQLYucXN4npjf7JIu12aZwxaQ+1PB+0lCVi6LmUqhF5VtFlf2/NaOLxuO/uUMD
-	 9QxoYKERoXfwg==
-Date: Tue, 3 Nov 2026 17:37:42 -0600
+	b=YW2ZyrP2jAETL09SS7CObYbWB2IReAHHxNvB4BBaEfkJHs5+00wllPtJkfcta+9DS
+	 ngTWktlv/14hH+cm10zxyvcjyZ6Anj04x2yXZ88/pefNyaqP3ExFKIpwr5YJl5zQcH
+	 oZNTC25/eZkOcQFV1NjrnSsKBvlVV/aJXjfdHs3tpSTeDHgpS09jibEBqiU86/kYjd
+	 oGIRzICBOX8bPQQTILKGonEQkgtYg2L+DaoirtqCLTBOmGQnAWWodIqsjqVKkzp/GC
+	 aPq0ZLuPdxwbNoZj+d0roZcXy7+RjptQtm9j8i/LGlv84rRAfepM2XLPjWsvWmabiD
+	 K19WyAoYkJ4wg==
+Date: Tue, 3 Nov 2026 18:46:09 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
-	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: Re: [PATCH v12 00/19] PCI/P2PDMA: Route peer-to-peer DMA by TLP class
-Message-ID: <20261103233742.GA1162403@bhelgaas>
+To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
+Cc: Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+	Sourabh Jain <sourabhjain@linux.ibm.com>,
+	Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Keith Busch <kbusch@kernel.org>,
+	Maciej Grochowski <Maciej.Grochowski@sony.com>
+Subject: Re: [PATCH 2/2] PCI/AER: Check validity of Error Source ID register
+Message-ID: <20261104004609.GA1167435@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -72,29 +61,54 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261103-fix-p2p-acs-v4-0-v12-0-912101f93517@nvidia.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <97e38070-1ad1-74d3-3b60-7fd2ead00c42@linux.intel.com>
 
-On Tue, Nov 03, 2026 at 10:29:39AM +0200, Leon Romanovsky wrote:
-> PCI P2PDMA applies Request and Completion Redirect throughout both paths.
-> This misclassifies asymmetric and nested switches, and reports one answer
-> for every kind of TLP.
+On Tue, Nov 03, 2026 at 02:57:58PM +0200, Ilpo Järvinen wrote:
+> On Tue, 3 Nov 2026, Lukas Wunner wrote:
 > 
-> Three ACS controls act on TLP attributes the Requester chooses rather
-> than on the topology: Translation Blocking and Direct Translated P2P act on
-> a Request's Address Type, and Completion Redirect skips Completions carrying
-> Relaxed Ordering.
-> 
-> Evaluate each direction at the path divergence, decide every class from the
-> one walk, and treat a client with ATS enabled as translating unless its
-> driver declares per-mapping ATS.
-> 
-> This completes the P2PDMA side; dma-buf and mlx5 follow separately.
+> > Certain Intel and AMD Root Ports are known to populate the Error Source ID
+> > register with an invalid value.  The AER driver seeks to recognize such
+> > buggy silicon by assuming invalidity if the bus number is zero.  It then
+> > searches for the error-signaling device in the hierarchy below the Root
+> > Port.  This was introduced by commit 28eb27cf0839 ("PCI AER: support
+> > invalid error source IDs").
+> > 
+> > Alex has provided dmesg output which shows an invalid Error Source ID with
+> > a non-zero bus number.  The AER driver's heuristic fails to recognize its
+> > invalidity:
+> > 
+> >   pcieport 0000:00:07.1: AER: Correctable Error message received from 0000:01:00.0 (no details found)
+> > 
+> > The Root Port at 0000:00:07.1 has subordinate bus 04, so an error source
 
-Is there a one- or two-sentence explainer of why we want this?  I'm
-thinking in terms of what Linus will want in the merge request: a fix
-for something that's broken or some new functionality.  It sounds like
-this is solving a problem, but I don't know enough to translate the
-nitty-gritty details to the higher-level user-visible problem or
-feature.
+I always think "subordinate" is just slightly ambiguous because it's
+used for both "anything below this bridge" and the more specific
+"Subordinate Bus Number" (the highest numbered bus below the bridge).
+
+It's perfectly accurate as-is especially because in this case it looks
+like Secondary Bus Number and Subordinate Bus Number are *both* 04 for
+00:07.1.  But "secondary bus 04" seems less ambiguous to me.
+
+> > on bus 01 is obviously invalid.  The range of subordinate buses is cached
+> > and checking against it is cheap.
+> ...
+
+> > +	return root->subordinate->busn_res.start <= PCI_BUS_NUM(id) &&
+> > +	       root->subordinate->busn_res.end   >= PCI_BUS_NUM(id);
+> 
+> I kind of hate the order of this logic. I understand you're probably 
+> doing it for the alignment which has some value but...
+> 
+> ...For me, the more logical order would be to keep these in increasing 
+> order even if doing it results in losing the alignment:
+> 
+>    start <= val &&
+>    val <= end
+> 
+> Maybe that's just me and it's not an end of the world either way.
+
+I agree, I think "start <= val && val <= end" is more readable, though
+not quite as pretty.
