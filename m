@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793761174;
-	b=a45IrO3lIzcsaVzYNTnHyFfvLg3Racxc+HiYgTXBvoYiTicCjvrxRcAyGj6RVakQ+Gq5
-	 iz8dakIwIeE3JN6AhXMJHkw3wwCrwj5MJXNcnR1BzmaEtN3j/rcAwwDefZ5vPuq8caKx3
-	 cW/kyhRzuzRZZ8V3ZyG32JxJ/nnTasth9fbiDexkTfienAA8GGoHEnQLWf706NGWyb26T
-	 9lCo2rwkwvcsPyGDDbMqtazQJUMzuTtigkWs26Hy5aSWUtnA5MxZ0ADD5A/sz7bvPvkFN
-	 4Ofeq/wFdE2Q0JqWyELser7cdQckfi6UaXv5kBWWe1fZrbteTZqGQAi83MsuMt+K+iA==
+	t=1793761225;
+	b=r0i0fD/zsOLs0hj2kKOKmGbR561ZQYmD9SvaSG6qhYwotOPfMzGX+kT0jz9lSwAajDs8
+	 8qB866+5H27udIHgIgpas24Z+5ZLhnyZ+ZLBX/JOTqjzxFLJn8AsFf3BRUDMz7iWxBi4C
+	 nROc28KcFTDmPC+CR632yv/o8th+drwpLhBvYdD9xWLbA+UxDCbqitgq069JLJt3W0NcY
+	 0CfMUViexc5jTlTbiUrwnNfjPDRbNzSvjnmCKLDC/k8Ai05w5ymYgS6QwAcR/zt/SJSX3
+	 rnO87xtM3753ioDcr5ps24UfwQ8L+a097+zl9tF3uhPQe/yVtdSCyEWldk5YH+1FfRg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793761174;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793761225;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=3NPxcqt9gxB7n9rvXULH55857LvBhTkdMuUcfiBC1K8=;
-	b=yEkcLGMPXSYwISJc0OahZpmfCDKgN7cNKw3lnkXHuMfJYQAC/bFDaKB2Qbj2dE3aAvU8
-	 r01416QvFNsJsD7RGodoti8yAmHYwS6WeoK+JOumC6T4G+xm5FbXQHXNO93YdtvuNf7JV
-	 Dfpn20GLc98p29oO5/kP6O+rq0v09D+od3CFvv2bh2Q0UxK4Is/JUIihI8nsNp5OKVoWy
-	 Q9sgKEO3vKI1xHXrQOdAqJIHDIzlyztf5elE+ATn3elTrSd8rCECDuB1XBqiBWeYpRGdl
-	 Dtqz1M42vreurzn4GYEtHRfQu2898OddAlEwrcu3uEEwQZEd0M+pHiV8zBB9rGO2xGQ==
+	bh=bin8983MhxOsP+maoGOFG+UYYUSRGkGxM9UXEYHwP/w=;
+	b=r+Lgr7GraPm2TYA/JyRmsZE57JxdYyRx3Rxo4uyP8ObPN3Vn5gyEKyyrm5mhyVlh70Xe
+	 3W7jvUDVqtWQ+9Qf3U3Wn8tB4YYb8mHhf2pl/S5VLSlv//36PrR8sHYQ2yOtD0ivtqP++
+	 fAmpwiDMEpmjGAAb+D8qaosw9j2HA3ER5VulreqDBwP7kgydr2x0UQ4TWb9LGNuUGGOaR
+	 43JLXMhgfAFKQ07wtR074+OhukOTeoZU0vmVtjYUMGTItDHzkyMo4fQYEdKHTSp2L/c7J
+	 kDht94XoY4fK3IqUMR2oEXtVzNZbKPzjyWbUeNpMAebmKqvnBqayqNS48Okbt7DbpLg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hfyzxVy4;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="LWtB/PvL";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35A13606A31B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 02:59:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EEDF606A328
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 03:00:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hfyzxVy4
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E99FA1F000C1;
-	Wed,  4 Nov 2026 02:59:33 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LWtB/PvL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 917EC1F000C1;
+	Wed,  4 Nov 2026 03:00:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793761174;
-	bh=3NPxcqt9gxB7n9rvXULH55857LvBhTkdMuUcfiBC1K8=;
+	s=k20260515; t=1793761224;
+	bh=bin8983MhxOsP+maoGOFG+UYYUSRGkGxM9UXEYHwP/w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hfyzxVy4oCBWYMBRUZHm+YYF7cc+VfNAD6T4zpsc/Wg1ftcMUDUwP10tkYZzJ24OQ
-	 +zYsLLH90EiQbQf9WCQ2RXvFz/9FpTH4skO6wu1ggwQfz5JlhIBrkQdpBVdSJ4n38z
-	 mC34BiTA+u9kzTt72niqebWjqemMrDcfNjZrBMJCocF2iTc1PXud/4914VT0yNJnJD
-	 F+Kj/TNVPlY+BKsBwg2vfj9H0p0wk7Rei/OctykY7ufmIOOVURWrrMbFLtLA2HurAD
-	 i7d+xVLy5NKIA0Vc4sFIbR59WlqRoC8pMEdyhCil6SKNVf66r1fM+wb8Cx/pQpFA0Z
-	 8P71zH8asSnPw==
-Message-ID: <sashiko-outbox-196556@kernel.org>
+	b=LWtB/PvLhE1gCSYJF3YkN63fCVV1ypOTC/8PSs4cKRTtfohZLLWzDh83LB246Oj6z
+	 s24dHaCpAb6AuzXLacwXrkfIaSERA+LE9H4o6/cvJupV89WO9TpA7hQc4pWAUZ/Ofj
+	 eZZDvMZG9j74ex6/kEr1EerF51KjRuk7xoEPg84crI9vLJojU77v7YHFgLDQc51ycK
+	 ucEowJqjMLfs1TQNeK2geTtyKUsUA1KIboW0gyu9Z1XGBLObuqbmnbw/jj4LFLrphg
+	 ci8IpI0yQLbkLZnuVhxMq2PCmqNfs33O6iwHdT4A1xR0pXzqTIo+gSO1pxw61UGtAN
+	 viokbYQOfmWGw==
+Message-ID: <sashiko-outbox-196558@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 16/25] dmaengine: sdxi: Add completion status block
- API
+Subject: Re: [PATCH v4 17/25] dmaengine: sdxi: Add unit tests for completion
+ pool ownership
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nathan Lynch" <nathan.lynch@amd.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261103-sdxi-base-v4-16-3668ccc7aab8@amd.com>
+In-Reply-To: <20261103-sdxi-base-v4-17-3668ccc7aab8@amd.com>
 References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
- <20261103-sdxi-base-v4-16-3668ccc7aab8@amd.com>
+ <20261103-sdxi-base-v4-17-3668ccc7aab8@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 02:59:33 +0000
+Date: Wed, 04 Nov 2026 03:00:24 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,30 +63,23 @@ Precedence: list
 
 > From: Nathan Lynch <nathan.lynch@amd.com>
 >=20
-> Introduce completion status handling and a fixed-capacity pool owned by
-> each context. Only the 32-byte-aligned status blocks are DMA-visible;
-> a private bitmap and spinlock track claims independently of descriptor
-> ring indices.
+> Add hardware-independent KUnit coverage for completion-pool exhaustion
+> across a bitmap word boundary, arbitrary release and reuse, reinitializat=
+ion
+> of reused status blocks. Verify that a claimed block remains unavailable
+> until explicitly released, including after a simulated late device comple=
+tion.
+> Also cover release of an unpublished claim.
 >=20
-> Preallocate storage during context allocation. Claiming and initializing
-> a block cannot allocate memory and fails only when capacity is exhausted.
-> Provide a bounded, killable wait for administrative callers, and wake
-> waiters when blocks are returned. Release blocks only after consumption,
-> unpublished rollback, or hardware quiescence; destroy the pool only when
-> hardware and software no longer access it.
+> Provide test allocation helpers and KUnit-only exports so the tests exerc=
+ise
+> the production claim and release paths without a coherent-DMA device.
 >=20
-> Represent a completion-status block by its CPU pointer and DMA address.
-> Check the little-endian signal with READ_ONCE(), then use dma_rmb() before
-> consuming error status or operation results. Polling returns success,
-> -EIO for a terminal error, or -ETIMEDOUT without relinquishing ownership.
->=20
-> Co-developed-by: Wei Huang <wei.huang2@amd.com>
-> Signed-off-by: Wei Huang <wei.huang2@amd.com>
 > Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103-sdxi-base-=
-v4-0-3668ccc7aab8@amd.com?part=3D16
+v4-0-3668ccc7aab8@amd.com?part=3D17
 
