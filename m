@@ -1,110 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793820659;
-	b=f8tsC5e9sxpitXviONdxzrgZJwkPPeOd2L6o5n3XVrryXrOCzG7kYi/WAyyzFNOFe27b
-	 nzM6tH5eb6Tq0QGfIxTK884KVPZNJymxUGKIpya34HECBhS3zraoLHtRXeby3V16nqinR
-	 Yhq2LlRljO6lb4+lEkrVj62r47lGwHk4asTSyoZEiGokMDS7Pelm7ue+wo8YzGyjB5tty
-	 JD8/79Zxu6lmhmTtUmPn4Ze32j8DZ8SXkNC6Oik0ZgAzYpdbXjrCmAj//NqXD8vJBeCaB
-	 8b7uL/khxJEcFh36b5/JNnHtnazVLCxnJGx90GdwmBamoaeNPbNEGn/1qyA5n87PIhw==
+	t=1793820665;
+	b=ZpevuqP9EA+xNIRj6vGuax7szN8zPT7HSOYHGbrATkeLymi7fFZ9LaDTgwlX0LLsLzuP
+	 D8cDMauQ04CFRFh7ilI4ZPWBVqObOn30JGmhGAlAfbp4CyvCDYnP5OtId23hb3R1s/FuX
+	 KhRL8xSlc9cPQArU/yP89tZuDYh5JtgnfQSwB8nS4sDZxCwwZRVPFY8SHyNMbcP7EUKeV
+	 Me4fkpCQ2VBnPXkmWT6mGG0NagRz0sQWDtc2JIdQ+mQ8jJum8q0oAMA4yYxtmEzh0eExt
+	 IbwMaxOfR2ffQ/mDmfe+ajHzm2K0Ccu2KTWtn7xQ3CzzzlXc8Jh5zXQTTW3zYnaNbYA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793820659;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
-	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=u2X249K8Gv42gMme4huYd6C+95aEaWoamySHZXVPIjo=;
-	b=Pbl1aKbO98LGEl7ZR9L1G89il+VGPeHq2WS+JV41iaYqQHzo0X8UvcIdwo9SOyZG9i48
-	 9MOoOWm+nou5DnlMFO1YCioznk+jgEX0nucV0Wyj8HLWnQbwYZdh+Wk6EfVn7rlwvf5hr
-	 DDhDCxTapGvxxF1LU+pRxN4DMlGIByYnY8chX3WlCgGafQ4PO0T4wneGepg1xBueaMZBN
-	 eSLHAG3v4A/4Jl/n8QJsqv6IhdDA33/PHrkip8ob69LoPYm/Ip+gSRepAI4pfBNhXW9Ev
-	 +4s+60BIqrZNtAqgy2CG7gVSu15N3G1odCCu8/QrbP0975z+ORsJQkuz1UylYfHO8hg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793820665;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=jwx3QhLwc/9g/mbfZdLzSkTJBx3y+ljzvZd+xPIji84=;
+	b=TzqPJ0XkJ/tiGsUTjOvoWSY8lnMjv1o5dJS11kqPGcyTR0tmuZ+F9mhUcEFvGZoSOxHz
+	 0kmDAw0mwERRyPYjFsAIUGek0Apvqdw3Cox7OzXkcYd7WF3JEosYyXKMxJIGAV2V1cFOK
+	 3HFhHmA9nM2NiCUAfRFxN9NvEe7abeoTR8gHcnG5WtLbdDxlO8ujU6YjVlfFDR+FR5+BF
+	 ilWS8+9CFJXVDrYZss3gA0LTLPmNgKoLY0Oz2bA2aR7jineJuisawqOBSNT0TrNMAZPEc
+	 9BHCAfTuWdzp8RIVOeJf+qP5ERZB25YNj5ukiuqYUa+FP3CiIHaNqQYWxIOvJktmsvA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OMLUUnxm;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RasBxywd;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E45060960A9;
-	Wed,  4 Nov 2026 19:30:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7A81609766D
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 19:31:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OMLUUnxm
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A00C11F0093A;
-	Wed,  4 Nov 2026 19:30:46 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RasBxywd
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C0821F000C1;
+	Wed,  4 Nov 2026 19:31:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793820658;
-	bh=u2X249K8Gv42gMme4huYd6C+95aEaWoamySHZXVPIjo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=OMLUUnxmfEftMfptXH6aASt5Tju/99MVIqrfpjLsj+gTwl1dsyCFLVnKp80I6LuKO
-	 oV0QkRgTSnk8cZI+NetFJ+jomOknbAag3B6bMdcrBaXvZtck+/xvDa4BUJ2zie3Nl+
-	 JtAthSnHxj4wqZGdExdBuvFSspoTXOWRxDVg1T0H5FlP1TmWo+WfW5NXkRdAPOD/to
-	 FaY8dSSINRoeizDC8sYIFz0FPC+mWeUMnxUQ3X2aX90CpJQU6c09w6oMI8u7UP1as/
-	 taIX+tu/yWMo7E9CWiCSlS8Nu91tL7Ok4VCHWyN5iv9o3t3dpMoYVw8gZLA2ml/4cB
-	 AZLZ4sqr4PQ7w==
-From: Christian Brauner <brauner@kernel.org>
-To: linux-fsdevel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Jann Horn <jannh@google.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Chris Mason <mason@kernel.org>,
-	Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Christoph Hellwig <hch@lst.de>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Joel Granados <joel.granados@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Jan Kara <jack@suse.com>,
-	linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-um@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	netdev@vger.kernel.org,
-	ntfs3@lists.linux.dev,
-	platform-driver-x86@vger.kernel.org,
-	coreteam@netfilter.org,
-	kexec@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	netfilter-devel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	ibm-acpi-devel@lists.sourceforge.net,
-	jfs-discussion@lists.sourceforge.net,
-	linux-alpha@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-cifs@vger.kernel.org,
-	linux-fbdev@vger.kernel.org,
-	linux-hwmon@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-sh@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	samba-technical@lists.samba.org,
-	sparclinux@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org,
-	linux-doc@vger.kernel.org,
-	linux-serial@vger.kernel.org,
-	linux-atm-general@lists.sourceforge.net,
-	Takashi Iwai <tiwai@suse.de>,
-	linux-input@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-modules@vger.kernel.org,
-	linux-debuggers@vger.kernel.org,
-	"Christian Brauner (Amutable)" <brauner@kernel.org>,
-	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 06/23] proc: make room for more entry flags
-Date: Wed,  4 Nov 2026 20:30:44 +0100
-Message-ID: <20261104-work-procfs-core-v2-6-76ace653a773@kernel.org>
-In-Reply-To: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
-References: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
+	s=k20260515; t=1793820664;
+	bh=jwx3QhLwc/9g/mbfZdLzSkTJBx3y+ljzvZd+xPIji84=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=RasBxywdInPZILflN+SEZmrcD8GSlVtCR7Kc2/wmDMZ7v5roHdHlZ07oYCTR89BGU
+	 Jc+vSjZazQ8MnX3IeJwCzmzbD/sor7WTql/r7r02DVCnWzGt0CQ9H/YPoial19onM3
+	 AEJayICf3uZxN6k4ML+7BNueGiGmLPkolm02bUULzfRCNW3Ma+zI1sosz9Sfat9RI4
+	 LTHRZabrL1AD+K2M9+zoGlouWrzPcmAF8vZSp+s03vgVL001J7YMcede4snwdrR57+
+	 p96KqpdqeyPQdvC+RyYD/ZQPhCes09vmCMW6bX6ttEdd+o7miMy4IiWUKR2hJ4DQG8
+	 nxeEXXMFyQ3uw==
+Message-ID: <sashiko-outbox-197953@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v7 06/10] PCI: dw-rockchip: Add helper function for DDL
+ indicator
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Sebastian Reichel" <sebastian.reichel@collabora.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261104-rockchip-pcie-system-suspend-v7-6-6ae6875939a2@collabora.com>
+References: <20261104-rockchip-pcie-system-suspend-v7-0-6ae6875939a2@collabora.com>
+ <20261104-rockchip-pcie-system-suspend-v7-6-6ae6875939a2@collabora.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 04 Nov 2026 19:31:03 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -113,38 +60,16 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=723; i=brauner@kernel.org; h=from:subject:message-id; bh=mmFUc3YfLRQzskFnHhhj02Zv0+dhV+Q1flCEFZM8H8c=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bq/YE8ppefVCfjBLi91KVfu7F1mOL7llu6gh/f5jz ymR0dtYOkpZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACYi1s3I8C83q8EjxTXpWd7G o5PTjr90WyF7Xu/d+3XP7z3p5dvzaw0jw/O3O9s41xUbhTy4tslNTFiwcAZnoY5Ak3vOm7LqhTE tjAA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
 
-->flags of struct proc_dir_entry is a u8 and the next patches need more
-flags than it has room for, so make it a u16. Bit 6 stays free,
-vfs-7.5.mount takes it for PROC_ENTRY_CANT_MOUNT.
+> Remove code duplication and improve readability by introducing a new
+> function to setup the DLL indicator.
+>=20
+> Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
 
-No functional changes.
+Sashiko has reviewed this patch and found no issues.
 
-Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
----
- fs/proc/internal.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/proc/internal.h b/fs/proc/internal.h
-index 33776bc00ff0..7dea0237f08b 100644
---- a/fs/proc/internal.h
-+++ b/fs/proc/internal.h
-@@ -61,7 +61,7 @@ struct proc_dir_entry {
- 	struct rb_node subdir_node;
- 	char *name;
- 	umode_t mode;
--	u8 flags;
-+	u16 flags;
- 	u8 namelen;
- 	char inline_name[];
- } __randomize_layout;
-
--- 
-2.53.0
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-rockchip-p=
+cie-system-suspend-v7-0-6ae6875939a2@collabora.com?part=3D6
 
