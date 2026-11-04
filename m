@@ -1,70 +1,110 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793821950;
-	b=b7KzeYl8Vq5xgPwDFCnUDHogrtnGHqIxNrv6nbSTr+48iBmwLeGCVghaJt9zgm5WhaIx
-	 wQ3iX9Dpd0dsSAOYymSy+ER/v7ijrkxwkNvZsrRiJEKMAfEXFVV01bVa+Ny8j3NQH4z3W
-	 2G/gfVOaSfgno/COe2GvkopP2/n9QcURmC2vaqIY+k5N8KwHdGyJvZ5LBmX2COHKnHxoD
-	 B/WJlf2pBrBGS5CtTAzygsp1/LkXhuENpZhSgTfVms2tMkQkO/eZcKF3weom0l5NHRJdW
-	 HYnFd3EGr5Kn02yo4FRzO9Rc20KZyZGf4Uk4G9oLyLTnFt3UY71+Dx0REFneBIyYFhQ==
+	t=1793821941;
+	b=Krhld1d/5QMC4SFD0TLPW7Wd+rJmuTHLyzQgmUgrmGnY3g3nQ9/u2EG/vCI5u99pY5aF
+	 m2ZivemS21N3UvVF97+TI8XRt7eCM5zNM2vFSyMsxYHCkeoWtZHCulJfVSPcY5G+7OXm4
+	 eX961ANve9ZQizx8HeEzlwTublDO109g0hjNFGI8f3ZjB1Vs7LBB//zHHgG0mOMkCtPCG
+	 gDaq4fkPZXAbsC/D2+9UgXGNVMbw/znOimN3c82octETXJuOQBTnOu52cKZ2MKiw3d1Mn
+	 Fzi+CmrF6766a0Hkm6HpI2TEzYkU5hjc1zqbQRRd6/XOs1fLI/b0q7jd6Dlai28fY7g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793821950;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=L07m2wog8AXR293hC7wTAXwEB108EvydUujWlLJOS7k=;
-	b=AOYykXl4hEGw3/0XKaYth/8bEvRc0ZWXfDlNvCb/CjUcPZxx5isFefbhoYTeBrSHh8hb
-	 XjT6pJAKTnjLhUJshv/Q4KThswJle3zranTsaU1BZBlZoFc1o0PWo7K7lTGAh/GAcKGIV
-	 74aSzJ0SCg8tUBYiMuCU4YoHMNugJvNIrJ3Ya5IORYjeXUdkybfpxDuqW/muadLPDHnb3
-	 /Hwuz1oBUwaOV7ZJ7p9YqTuwfobOGdaq6nPL1xQvHzdAdC8/pmoFjadJcSA2/PnnFoTgH
-	 /TFrV3fqpGVpEyT4thGRgeCXJJiNNQyBLapgDed482D8T1zzvWdVfBw2PEzJ2K9+wOw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793821941;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
+	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
+	bh=cbUv3n1tBnI1k6VxTZ3ZcHd/CVUe8/cnvkVP6mlO6Yc=;
+	b=R6zqzMdpBDK1jsRwYfffo+o4fsJZh1Yo8HpMeQrujK3BCRfxtg4tE4J0jaBQ7ZU6uUMo
+	 4y1Xjy7ke6HLpndo9qydkvUVQ+kXQGa3QzEQ/JKnMJHzaINN31CfCBFT7XHBViFEo7Xjc
+	 txOjxgFOa64/FyqPjM+q4Ptq+k4un6YGXCFHIVUPSfPVrqSX6wa7A/mgl1UTQAqgvTKif
+	 95e4ZjRFhn6rXXkNkpia5wb7WFuh0zAxoQG91UPnoIzpomwgJTxjliq0com00KW0tpUWF
+	 w0qncbwL2g4Rf53MXtj0vMZs77ruLBL3KhxTORkE0uQ0m306pyXQRsw8UWUMpo9mgmw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Tngz3kAr;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=E4RqvCC3;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18C2E60D8785;
-	Wed,  4 Nov 2026 19:52:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33F5F609528C;
+	Wed,  4 Nov 2026 19:52:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Tngz3kAr
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 153AC1F000C1;
-	Wed,  4 Nov 2026 19:52:29 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=E4RqvCC3
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84F8E1F00919;
+	Wed,  4 Nov 2026 19:52:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793821949;
-	bh=L07m2wog8AXR293hC7wTAXwEB108EvydUujWlLJOS7k=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Tngz3kArIJr/FCTQecjk4Shv6JJTM59ST2VF34ZadkpeYJ07PybUi07DSlO5i+Lcc
-	 BR3xuLP685IVZSVeTudkEydtaHvNT27bijsHdB/DfS5Op1gyYMOzm/YIwALKmnGEEd
-	 pnaWfctGLzgd/kpEHK1zF1zzbJO/XvUGti+HfhqM7r3HJeHonwfpn2a+Z+2CKBMObQ
-	 Pw82Y1W0REeHcm1tHA4k+WLMNBeS+eYtyl8WFgweX/UB5AfA6xoO2ECFibwrwsSAEY
-	 UNVm8tllZewsPCCMrK9apq0WrX7YsjkklLlsnx8gLtWN3piM8BYXfNireITBbtAyGY
-	 uClTjhZd5Mc7Q==
-Date: Wed, 4 Nov 2026 21:52:25 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
-	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: Re: [PATCH v12 00/19] PCI/P2PDMA: Route peer-to-peer DMA by TLP class
-Message-ID: <20261104195225.GI478286@unreal>
-References: <20261104084328.GP264423@unreal>
- <20261104171412.GA1247928@bhelgaas>
+	s=k20260515; t=1793821940;
+	bh=cbUv3n1tBnI1k6VxTZ3ZcHd/CVUe8/cnvkVP6mlO6Yc=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=E4RqvCC33TjJz3vsdxt6gVY1KKu7vjxv4xFkRitk2vuws+TlWcgf7WMt9M4i+MGOG
+	 5RqBFuiDLeSXKpam105hMVUy3rhZtAy4+MdMi+B7rIZnwUE4pEJ3q3s5wEaYNPAvME
+	 KGEwRiAVWj2XYJWhDQNc2XFGUB4R7PXjlOfMJ1Wd48dn4EheS4oMJIcqJ7f5JQYPgB
+	 TSPocNG2UWf2+B18aoxxNlwBlUst0KSwQJOkoIQQZUfrJ7zcLgoYvoDopw5KBBJBn/
+	 8DxYWNnsXOWVRZ4gVxW8YDBrz4dlklthAuCncsHXYWBPclGriCH6RWHTj0lVCLeuJN
+	 1w/HFHcR3YoYQ==
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Jann Horn <jannh@google.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Chris Mason <mason@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Christoph Hellwig <hch@lst.de>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Joel Granados <joel.granados@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Jan Kara <jack@suse.com>,
+	linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev,
+	platform-driver-x86@vger.kernel.org,
+	coreteam@netfilter.org,
+	kexec@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	ibm-acpi-devel@lists.sourceforge.net,
+	jfs-discussion@lists.sourceforge.net,
+	linux-alpha@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-cifs@vger.kernel.org,
+	linux-fbdev@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-sh@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	samba-technical@lists.samba.org,
+	sparclinux@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-doc@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net,
+	Takashi Iwai <tiwai@suse.de>,
+	linux-input@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-modules@vger.kernel.org,
+	linux-debuggers@vger.kernel.org,
+	"Christian Brauner (Amutable)" <brauner@kernel.org>,
+	Chuck Lever <cel@kernel.org>
+Subject: [PATCH RESEND v2 10/30] genirq/proc: let procfs copy in the affinity masks
+Date: Wed,  4 Nov 2026 20:52:06 +0100
+Message-ID: <20261104-work-procfs-fs-v2-10-319e0f9a8aae@kernel.org>
+In-Reply-To: <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
+References: <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -74,79 +114,122 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261104171412.GA1247928@bhelgaas>
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: b4 0.17-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3770; i=brauner@kernel.org; h=from:subject:message-id; bh=WZPzG5+ElQbjbcTuZJJKbql/hLS5VpybW+Y2WsbSVy8=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97jFTOsnPsPqVcfq0tE/cqcL/tgpv8fLebHHL7+Kde 1dYK5Ofd5SyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAExEejPDf4d249cV1q+X8Xi5 lzKEZHld3P2sJ++tcMq/aU/+3/3eHMjwvy5Y6WGkzT+rx1e/T7mY5upvvFxP0ovZMPeTMvtUxrP urAA=
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-On Wed, Nov 04, 2026 at 11:14:12AM -0600, Bjorn Helgaas wrote:
-> On Wed, Nov 04, 2026 at 10:43:28AM +0200, Leon Romanovsky wrote:
-> > On Tue, Nov 03, 2026 at 05:37:42PM -0600, Bjorn Helgaas wrote:
-> > > On Tue, Nov 03, 2026 at 10:29:39AM +0200, Leon Romanovsky wrote:
-> > > > PCI P2PDMA applies Request and Completion Redirect throughout
-> > > > both paths.  This misclassifies asymmetric and nested switches,
-> > > > and reports one answer for every kind of TLP.
-> > > > 
-> > > > Three ACS controls act on TLP attributes the Requester chooses
-> > > > rather than on the topology: Translation Blocking and Direct
-> > > > Translated P2P act on a Request's Address Type, and Completion
-> > > > Redirect skips Completions carrying Relaxed Ordering.
-> > > > 
-> > > > Evaluate each direction at the path divergence, decide every
-> > > > class from the one walk, and treat a client with ATS enabled as
-> > > > translating unless its driver declares per-mapping ATS.
-> > > > 
-> > > > This completes the P2PDMA side; dma-buf and mlx5 follow
-> > > > separately.
-> > > 
-> > > Is there a one- or two-sentence explainer of why we want this?
-> > > I'm thinking in terms of what Linus will want in the merge
-> > > request: a fix for something that's broken or some new
-> > > functionality.  It sounds like this is solving a problem, but I
-> > > don't know enough to translate the nitty-gritty details to the
-> > > higher-level user-visible problem or feature.
-> > 
-> > Not AI; these are my own words with grammar fixes from AI:
-> > 
-> > "The existing implementation of PCI peer-to-peer assumed that all
-> > PCI TLPs were the same: ordered and carrying untranslated addresses.
-> > It did not account for the variety of traffic types defined by the
-> > PCI specification. As a result, only simple systems supported
-> > peer-to-peer transfers in the upstream kernel; real-world systems
-> > required out-of-tree patches and careful platform design.
-> 
-> Can we be any more specific?  E.g., what makes real-world systems
-> different from simple ones?  What does careful platform design mean?
-> Something about ordering beyond what PCIe requires?
+Implement ->proc_write_buf() for smp_affinity, smp_affinity_list and
+default_smp_affinity so procfs copies in what is written before it pins
+the entry, and parse the masks from that copy. A list of CPUs can be
+longer than a page on large machines, so the files take as much as
+memdup_user_nul() could copy in before. Anything larger fails with
+-EINVAL instead of -ENOMEM.
 
-I needed this series for GB300. I never asked to see for out-of-tree patches
-to enable P2P on that system, but P2P did not work with the upstream kernel
-without this series. In complex systems, the routing path between two
-devices can include multiple PCI bridges with ACS settings. In simple
-case, ACS will be 0 and not used.
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+---
+ kernel/irq/proc.c | 27 +++++++++++++++++----------
+ 1 file changed, 17 insertions(+), 10 deletions(-)
 
-Careful design ensures that P2P devices share common host bridge.
+diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
+index aa3d5544cfc1..fe683457a088 100644
+--- a/kernel/irq/proc.c
++++ b/kernel/irq/proc.c
+@@ -9,6 +9,7 @@
+ #include <linux/gfp.h>
+ #include <linux/proc_fs.h>
+ #include <linux/seq_file.h>
++#include <linux/slab.h>
+ #include <linux/interrupt.h>
+ #include <linux/kernel.h>
+ #include <linux/kernel_stat.h>
+@@ -134,8 +135,11 @@ static inline int irq_select_affinity_usr(unsigned int irq)
+ }
+ #endif
+ 
++/* lists of CPUs can outgrow a page, take what memdup_user_nul() took */
++#define IRQ_AFFINITY_WRITE_SIZE	(KMALLOC_MAX_SIZE - 1)
++
+ static ssize_t write_irq_affinity(int type, struct file *file,
+-		const char __user *buffer, size_t count, loff_t *pos)
++		char *buffer, size_t count, loff_t *pos)
+ {
+ 	unsigned int irq = (int)(long)pde_data(file_inode(file));
+ 	cpumask_var_t new_value;
+@@ -148,9 +152,9 @@ static ssize_t write_irq_affinity(int type, struct file *file,
+ 		return -ENOMEM;
+ 
+ 	if (type)
+-		err = cpumask_parselist_user(buffer, count, new_value);
++		err = cpulist_parse(buffer, new_value);
+ 	else
+-		err = cpumask_parse_user(buffer, count, new_value);
++		err = cpumask_parse(buffer, new_value);
+ 	if (err)
+ 		goto free_cpumask;
+ 
+@@ -177,25 +181,27 @@ free_cpumask:
+ }
+ 
+ static ssize_t irq_affinity_proc_write(struct file *file,
+-		const char __user *buffer, size_t count, loff_t *pos)
++		char *buffer, size_t count, loff_t *pos)
+ {
+ 	return write_irq_affinity(0, file, buffer, count, pos);
+ }
+ 
+ static ssize_t irq_affinity_list_proc_write(struct file *file,
+-		const char __user *buffer, size_t count, loff_t *pos)
++		char *buffer, size_t count, loff_t *pos)
+ {
+ 	return write_irq_affinity(1, file, buffer, count, pos);
+ }
+ 
+ static const struct proc_ops irq_affinity_proc_ops = {
+ 	.proc_show	= irq_affinity_proc_show,
+-	.proc_write	= irq_affinity_proc_write,
++	.proc_write_buf	= irq_affinity_proc_write,
++	.proc_write_size = IRQ_AFFINITY_WRITE_SIZE,
+ };
+ 
+ static const struct proc_ops irq_affinity_list_proc_ops = {
+ 	.proc_show	= irq_affinity_list_proc_show,
+-	.proc_write	= irq_affinity_list_proc_write,
++	.proc_write_buf	= irq_affinity_list_proc_write,
++	.proc_write_size = IRQ_AFFINITY_WRITE_SIZE,
+ };
+ 
+ #ifdef CONFIG_GENERIC_IRQ_EFFECTIVE_AFF_MASK
+@@ -217,7 +223,7 @@ static int default_affinity_show(struct seq_file *m, void *v)
+ }
+ 
+ static ssize_t default_affinity_write(struct file *file,
+-		const char __user *buffer, size_t count, loff_t *ppos)
++		char *buffer, size_t count, loff_t *ppos)
+ {
+ 	cpumask_var_t new_value;
+ 	int err;
+@@ -225,7 +231,7 @@ static ssize_t default_affinity_write(struct file *file,
+ 	if (!zalloc_cpumask_var(&new_value, GFP_KERNEL))
+ 		return -ENOMEM;
+ 
+-	err = cpumask_parse_user(buffer, count, new_value);
++	err = cpumask_parse(buffer, new_value);
+ 	if (err)
+ 		goto out;
+ 
+@@ -249,7 +255,8 @@ out:
+ 
+ static const struct proc_ops default_affinity_proc_ops = {
+ 	.proc_show	= default_affinity_show,
+-	.proc_write	= default_affinity_write,
++	.proc_write_buf	= default_affinity_write,
++	.proc_write_size = IRQ_AFFINITY_WRITE_SIZE,
+ };
+ 
+ static int irq_node_proc_show(struct seq_file *m, void *v)
 
-> 
-> ACS P2P Completion Redirect affects Relaxed Ordering (RO) Completions.
-> Translation Blocking and Direct Translated P2P affect Requests with
-> Translated addresses.
-> 
-> So I assume the existing P2P implementation breaks somehow when RO or
-> Translated addresses are used?  How does it break?
+-- 
+2.53.0
 
-Jason tried to document it in the comment above mlx5_umem_needs_ats().
-
-Thanks
-
-> 
-> > The new code will allow peer-to-peer transfers between any two
-> > devices, for all types of PCI traffic, as long as the PCI path
-> > between them supports peer-to-peer.
-> > 
-> > This paves the way for PCI peer-to-peer support in VMs, which the
-> > upstream kernel does not currently support."
-> > 
-> > BTW:
-> > 1. The patch "PCI/P2PDMA: Document the TLP attribute assumptions"
-> >    attempts to explain the current situation.
-> > 2. The change is too large to present as a fix.
