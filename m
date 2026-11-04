@@ -1,57 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793801377;
-	b=HLb/IRHD2rg5uBJRWhu9NQ4AGYOwHwvqhuitQwD/QxgJqE/XaCAHceu2dfBgqLXvNV3V
-	 eqiZd8vy5ZUAspaENK1PMCKPL4cadoiR9ZUJcwxIGeF8bwW29yEh52TNkqS+tTGOwx2Zr
-	 bIkz4/Cx5REFjJpehAwopyt6woiyZlyAs7ZPnzXWUYirNH4Zk9b5hjKVF5OYtEJ73jvEZ
-	 031IzoMHGUt4V//qasAsSKeldkbLUPdogsWhjaZxEekC/p0QF28vb0SkqkeYozCcZvl5x
-	 UOYbVzQc1Qlp4RYDXjgN8U3Pl9tKfn4Hl+B8HSL8aE801NrzzOfcqwX3AAxUu9zpl6A==
+	t=1793801642;
+	b=Pg8yLGVt6vpAESektTX8C1N235msOrJAVt5YqSA3kTV39hZNbfKyhOK7xaKtU/oe1rSR
+	 S6nyWTbgYouEgq3gNnfcEoHnlf4Iflgaup594mhYXfzgm1TeZDS4ZLIggcnOFhXYHZ6bn
+	 Gn4gJDcK1vmWH45l7JbdOVemqAjRZXWDAHBS7q/XNCsxywuayjeIAZzLm4cd4AkmwP+BN
+	 M/YxBo0yiUnMRWYEX2x+w9RMRrOrTdTfT3L/j21v5dv0p60+Rzkoh0gF64j+8V75nvVIe
+	 hR/bv/TRcK+izPLVaNsfxXeoqhPrxPGkun69Kjre9XY5TmE+OJ+Of7t76UDEtNsZbaQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793801377;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793801642;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=7OmBhYerWzk6088/+t/+9ffCYHDE0VMhfvqb+WQ0TmE=;
-	b=AIC4yyLmt9Fd/YhKEFhhO7TQul/IdgXF34qNQ2m/DaNym+2yFh89ykbAPqiRNepI64UZ
-	 R8DOHf1sc2CQicjFVbmBxeJIhg/RfmnT3bGq1wmLFTG8Fu5LcrROt3bSuFkinCNcMdsSS
-	 MfPoC3VgzyeUvM+Jl6i079wbKzIAxzxpheayE94ARHJDmASt9febbYg+JcATJ1LbZtJLc
-	 kwVgem1nZyF/AkB76r0wi6O+lKQbr2tVz67ykycKZZfCdMNIZGQ9zfCDZEFZ+QTxnb3Hy
-	 NuVZmWO6XZUqG1VBDKj3BtEuvUBtBecjRmmho7xSMdeQkO8ZdE53mhLNO4gfX8foyLw==
+	bh=77P9EAq2PFwdEZ3tNpwVw/7rlfb0oA4Xaf3gPKeAj9M=;
+	b=FGb17JInounQysvP/+QJ9Wh7NJEIxyJ2fcWbLKmrIamhdhx4wg5VaYR4PI+MghyLqBDj
+	 f1N6Up3VG8obLYQ1eb2ctZJvi41puqfZKDiqPr4kSu4wmr2enhP6MUQEF2H7ukCWTn+rL
+	 3tfforSTHrsVKac7qtBOE6bGLq94JH06Krci+yAVVvSYm/h4ofA1KJjA/I7XjSXnTd0HP
+	 rN2GbIjyg3hwZfS155XC4qt+a4WA/DDx8uAxkO12cIsOh2T6NtI/H1iyXAC8KXTmLs75a
+	 dTzPERtZPvIGK1N3XttPwvi/vFKkXpwXLuGe7JmTrqK+xtYMOX7n9ciBJy64VbIollg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eXzEjAcn;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eLVW82sr;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F1D3606A336
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 14:09:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EBE7606A336
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 14:14:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eXzEjAcn
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1B271F00A18;
-	Wed,  4 Nov 2026 14:09:36 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eLVW82sr
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BEA61F000C1;
+	Wed,  4 Nov 2026 14:14:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793801377;
-	bh=7OmBhYerWzk6088/+t/+9ffCYHDE0VMhfvqb+WQ0TmE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=eXzEjAcnqRwpQJl2GrXDECrqFbv2zUZPqovVAX389Ii4KsGzg3BUgYDPMN0R+Mvlr
-	 LSaLCia1+pgU9MsYgXncfxw8Zc67cgKzQ7YiXVn8qR1eCUM9AH3Jtkwmo8mDnWEAEo
-	 eexVxgDZDWwJ8srDUpM/NxTtlGC5SZ/JLGTRz7pBuuomb9Y30YjU1IWX2cmOF3g1jt
-	 4gCaQ61j+CpDe+Z/lcViL7YGqINw5Uef1CmTcd39C8HHfzUm+/hpzisaHIxbiYNdM0
-	 6dq3SeTnufKi8cKYd6DXEyNe1RqF1ubFwZRukV7kaI1cRdyH3HOSp2l7c7uTPZ8KUL
-	 JIPxZJlnvM2YA==
-Message-ID: <sashiko-outbox-197403@kernel.org>
+	s=k20260515; t=1793801641;
+	bh=77P9EAq2PFwdEZ3tNpwVw/7rlfb0oA4Xaf3gPKeAj9M=;
+	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
+	b=eLVW82srAdJ+zXE7KRQfsmwSjQz91dtefT18tVn3u+pPQ0zqHGgYrn1uTut/tIbho
+	 zuh9tLnD6K+9wkrmm81wYhJGngfPo2nexN8FIMIf17ba9Dd6Q1/4Yk6AXQQdsf87v7
+	 ww0ouaJyY0j8IzOnVE+kx/D3RcfxYKxRTnXn7A38xLsF5bXYQQbRmGFJ3F7ef7zWqp
+	 02cyXasb3n6deW20mDeEqKHlFd1qki/c7ucD0U00IVTx5eP4FUj02N88EgXj1hKPia
+	 C80YiukQjXH5gfCfCdqbZHjrbn47LQ1p8fnsTAFRRsKeluhmPasjHn561wPkWLyrYp
+	 YeoFNNEjtcEPg==
+Message-ID: <sashiko-outbox-197414@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH net-next v3 5/5] PCI: Create OF node for NXP ENETC
- pseudo-MAC functions
+Subject: Re: [PATCH] PCI: spacemit: Ignore PERST# bit for controllers
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Claudiu Manoil" <claudiu.manoil@nxp.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <e01cc93899ec6e774a568c72d1f38788f65c8577.1793712309.git.claudiu.manoil@nxp.com>
-References: <cover.1793712309.git.claudiu.manoil@nxp.com>
- <e01cc93899ec6e774a568c72d1f38788f65c8577.1793712309.git.claudiu.manoil@nxp.com>
+To: "Ali Tariq" <alitariq45892@gmail.com>, linux-pci@vger.kernel.org
+In-Reply-To: <20261104140750.761330-1-alitariq45892@gmail.com>
+References: <20261104140750.761330-1-alitariq45892@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 14:09:36 +0000
+Date: Wed, 04 Nov 2026 14:13:59 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,26 +58,23 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> NXP ENETCv4 pseudo-MAC (PPM) ports can be probed as pure PCI endpoints,
-> without any "ethernet" node in the static device tree. The ENETC4 driver
-> describes their fixed link by attaching a fixed-link node to the PCI
-> function's own OF node, which requires that node to exist.
+> The k1_pcie_init() does not set PCIE_IGNORE_PERSTN bit of the
+> control logic register, which causes controller to reset itself once
+> PERST# signal is asserted even when acting as host.
+> On Orange Pi RV2 (SpacemiT K1), this resets the controller and wipes
+> the IDs. k1_pcie_deinit() leaves PERST# asserted, so when k1_pcie_init()
+> runs again, its first DBI access hangs the CPU.
 >=20
-> Request the PCI core to synthesize a per-function OF node for these
-> devices by registering of_pci_make_dev_node() as a final fixup, following
-> the existing precedent for the Xilinx, Red Hat and EFAR devices. The
-> helper is a no-op when the function already has a static OF node, so this
-> has no effect on platforms that describe ENETC via static DT. It only
-> takes effect when CONFIG_PCI_DYNAMIC_OF_NODES is enabled.
+> Set PCIE_IGNORE_PERSTN bit of the control logic register of APMU
+> in k1_pcie_init() before enabling resources so controllers
+> dont end up resetting themselves when PERST# signal is asserted.
 >=20
-> Both ENETC4 PCI device IDs are covered (0xe101 and 0xe110), since either
-> can be instantiated as a pseudo-MAC port on S32N79.
->=20
-> Signed-off-by: Claudiu Manoil <claudiu.manoil@nxp.com>
+> Fixes: ff64e078e45f ("PCI: spacemit: Add SpacemiT PCIe host driver")
+> Signed-off-by: Ali Tariq <alitariq45892@gmail.com>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1793712309.gi=
-t.claudiu.manoil@nxp.com?part=3D5
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104140750.7613=
+30-1-alitariq45892@gmail.com?part=3D1
 
