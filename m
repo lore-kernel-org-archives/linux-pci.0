@@ -1,126 +1,107 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.198.66
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793819060;
-	b=yIFf6l/udEVWqdf2D9NjVr0dG8fALGQ86NsCCAsEr/zEYesJRBZGvVGzVDJx22SDDIwR
-	 cS/J4Lcr41PqXjxR1ExtxubbdPc0cH6HNjRcGd/sJqRjZhuLhO/pffQockT1XvQGobElM
-	 lhwdB19QF2E6T4LPvMMxItaupoKBGZJXnNd4Jk4HBSzJEEXt9Cb/U15ICLFnEhnK/IjF8
-	 wL6QKXcnW2+I3Z+zvNVToay5HZ/4ttEw7yUNnyqZ6l5JYnYL/PCn1yKTB3wDPGVi4XrLy
-	 OAHmiG+OLPUiYgM+ryU4unJGT1Xq8yVliNECkhSrzTrijrbbIHBIPmFmlBRsh+etwyg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793819060;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:
-	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
-	 Received:Received:Date:From:To:CC:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:
-	 X-NV-OnPremToCloud:X-EOPAttributedMessage:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-Id:
-	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=iYrdklKNnLC0CaKMc2+j29XmaGNeAqOsHG98T+Cel6w=;
-	b=4GBCnXO0V6SNuWg+ivBGlEDwklmFHZPTXd7QTT4NA/W8+jD2/FReRobGI3ZZP6OxV1Lm
-	 tSMJ5KXnjBAXvIYRAB8kvA4otYwSH82pNC3RCI54vvxfzV510AkhdfZ5Vu77dfXTBxg6V
-	 Wrll/LA1f96WB+DrTIfUmnTokS2uc9m26ORJmWDKtaq7eXEtiVYqQ2dRIL2UeQCQtwmdp
-	 NqoRXVplb/wB6xktNlZJdwrDwf9Bw4a9MDT0kNAt3eWhUuwzaaMiWuxfHLpvnfAldSqNt
-	 Sw4F8eHTiJbPWCaU9HAjy3WjPejo0ohBsm5kUDGu0fMYSeJM7P76i23nhPAwLn8wzCg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=uLUhRyEE;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.198.66
-Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010066.outbound.protection.outlook.com [40.93.198.66])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793819080;
+	b=pguKUzgu7/iFGHYRpmGZjf5UM7EVvax0Q7mY9ZLIy2BF1ERcs25S4EmfHAMM463iQNtk
+	 rrw+lHg0JSjvzfO44FvrWco6zWEbQj3MdVoEC6ojY2C37j9ofitZJ1u8cdy5keTwbU3sj
+	 fy00tMvWU8/9aveWXvBT2WwqgCFyLjE8HYfYNlGhoPJmbYdt81BYlZUZreFXt3EBdK9hK
+	 4Fh5KjRTLNOPntDPMNggQGz7zTHerW4UQAAxnYJkgmZiiwwSmmFetRAHoQ3PGuBSkin2E
+	 zg6pVCVU2V+y9q/TVUTcFHyZThlSp3e3WiRgCB8r4sA34lb2urnXsZoCU+qG10MOJOg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793819080;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
+	 MIME-Version:Content-Type:X-Developer-Signature:X-Developer-Key:
+	 Content-Transfer-Encoding;
+	bh=lAdqJZq7DckAfewXRPAVCUONZuQAofOCOPOWHFZTOPQ=;
+	b=03aQMa+HCJ28vBZBwhiOVdXANJJ9oJpjtYLQ3KApJxxqjqcLYqmIaPr5AAhwEQxUIX7K
+	 KWqJSPubBkDp0XGJBjDB4FluSQjeb5WNgqVHU+a7fF6V1LJ3A17PgJVrTCmFvDFbarDV2
+	 PUTp5Py5ljei0GOllurm2NEZaJW/9sGHb5j3HzV/nKW5opR0QZCMU5eiFrTSpano3KuJ5
+	 U+H/fLATaNC9WCQS0L7bnIIuyGiWJhZNylZ87uFyYOZ903LrDq6nWdqPen5VCj2NwWwSp
+	 itHL7e3BNHxqTl8jnuprPAUVdQmUsGnDGPEytdbN69r+Y8LDyLiLF+SL1yk3uYWH6uQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DiXkLasn;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAF74606A31B;
-	Wed,  4 Nov 2026 19:04:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EAF74606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42A7C606A33F;
+	Wed,  4 Nov 2026 19:04:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=uLUhRyEE
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=p5IAAwFAb9DEv+LrieosoQYFTTOX+Kfb1r/5cMcJwp608npS4a0PKcZzPjy8ltJp4NV4cPSt1Q+0XAA1NMbL+WaUavD6sHvGpyca8nN320PISaVoXG4Tq83MFsygRl1xRWfDBpFMl6UuhHapYeQw2EOAjB5UFg2SkIj4Y/fPU4+5FOp2S0fZCAbVQ/DRZOUs+0X8K0C/Xfn0ox7SFAbunT1g5LDvLETVeGPDdd8UqDcR3MMry8//+jXNU7BLKaNTwrMJUByly7WgnUKIGfk4bzasrLhFEraA3R0LMUsZiLDAC55RWgd6LeqG8P/6SuQ7NTIH511gADU9lNRlw7iksw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=iYrdklKNnLC0CaKMc2+j29XmaGNeAqOsHG98T+Cel6w=;
- b=ydGiWHy4B8QPI9y5Wgwz6ZjroePayqcEKQ/CkKQaz80xnt33kdIZ1n4YLkf7rHp19KWVJjYDpzgOeDqOGPXunZnZH9hH68oXjLuuJma8jID/vluTlve0i48CJ8YRYl/9lpR70GmhVWcr8Rtf8Hvv+N4Gw1kUjTytNA8F1pQvgPCI7OYMl60UO2dgDAL5IfEMj09nEuRiQ8FNJ4uK2kUO/e91BRyyDbx0MRdtS4Hc+DpSAyXI1OH7a6sCQVbAv5iJTgwHb9n8KQ/FdKe7+3fhNiJHqX/2p2BYrMHJ52MNkNcRJVpmgZ6V7zBS3zKweZQgHfP8R3AhEipZQOQQxJqQqA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iYrdklKNnLC0CaKMc2+j29XmaGNeAqOsHG98T+Cel6w=;
- b=uLUhRyEE0IXGOTJEPmIPmJU1SRTk3WSy8sBsvDCx5m48LOnOeOEfm4u7amRaHA/kudJwAPvOoD8Os67NPBQjcbzPyO0FnpIiwyDVt5x8s8jC2NJpbokTB/vgRwuW2RPUAljn/QJRAF5QxMpgS1uKzICQsAYrj08hMlu8gPrg2hkRP1Vo453VL+Nd/IXPi/ZFzKYupnIqcPzenUdVsKINdeTvBMrArVcXqbUSSWn2/RmCh9xWhQnoH23rxyyMFQdavWeLtVU1n+oqlLfVqBw0U/QNXpoFrK0ppsKofATQoow/HNTpA3DtugVXOD9s6C/y0rM67b6/lmK2mR4FA+k6UQ==
-Received: from CH2PR04CA0006.namprd04.prod.outlook.com (2603:10b6:610:52::16)
- by PH7PR12MB8124.namprd12.prod.outlook.com (2603:10b6:510:2ba::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.10; Wed, 4 Nov
- 2026 19:04:13 +0000
-Received: from CH01EPF000BE94D.namprd02.prod.outlook.com
- (2603:10b6:610:52:cafe::a7) by CH2PR04CA0006.outlook.office365.com
- (2603:10b6:610:52::16) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.592.10 via Frontend Transport; Wed, 4
- Nov 2026 19:04:12 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- CH01EPF000BE94D.mail.protection.outlook.com (10.167.244.202) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.592.5 via Frontend Transport; Wed, 4 Nov 2026 19:04:12 +0000
-Received: from rnnvmail204.nvidia.com (10.129.68.6) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Wed, 4 Nov
- 2026 11:03:49 -0800
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by rnnvmail204.nvidia.com
- (10.129.68.6) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Wed, 4 Nov
- 2026 11:03:49 -0800
-Received: from nvidia.com (10.127.8.9) by mail.nvidia.com (10.129.68.8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56 via Frontend
- Transport; Wed, 4 Nov 2026 11:03:44 -0800
-Date: Wed, 4 Nov 2026 11:03:41 -0800
-From: Nicolin Chen <nicolinc@nvidia.com>
-To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
-CC: <iommu@lists.linux.dev>, Alex Williamson <alex@shazbot.org>, "Alexey
- Kardashevskiy" <aik@amd.com>, Bjorn Helgaas <bhelgaas@google.com>, "Catalin
- Marinas" <catalin.marinas@arm.com>, Jacob Pan
-	<jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@ziepe.ca>, Joerg Roedel
-	<joro@8bytes.org>, "Jonathan Cameron" <jic23@kernel.org>, Jonathan Hunter
-	<jonathanh@nvidia.com>, "Kevin Tian" <kevin.tian@intel.com>, Krishna Reddy
-	<vdumpa@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Robin Murphy
-	<robin.murphy@arm.com>, Samuel Ortiz <sameo@rivosinc.com>, Shameer Kolothum
-	<shameerali.kolothum.thodi@huawei.com>, Steven Price <steven.price@arm.com>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>, Suzuki K Poulose
-	<suzuki.poulose@arm.com>, Thierry Reding <thierry.reding@kernel.org>, "Vasant
- Hegde" <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>, Xu Yilun
-	<yilun.xu@linux.intel.com>, <kvm@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <linux-coco@lists.linux.dev>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-tegra@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan
-	<skhan@linuxfoundation.org>, Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v8 13/15] iommufd/viommu: Allow vIOMMUs without a parent
- HWPT
-Message-ID: <auuBjRjQwXl7UvvO@nvidia.com>
-References: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
- <20261104161632.3547423-14-aneesh.kumar@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DiXkLasn
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED65F1F00A1A;
+	Wed,  4 Nov 2026 19:04:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793819079;
+	bh=lAdqJZq7DckAfewXRPAVCUONZuQAofOCOPOWHFZTOPQ=;
+	h=From:To:Cc:Subject:Date;
+	b=DiXkLasnKkCazgXjtl0yo39sGV+Bs41jy0U9vc9qazA5CkiKT/iBgZ8fEt5z2eEi9
+	 oolsufKOcX9//0g1iNEISwDqdj0AJv/jYiRaklcfSgZPROKW3M/UHZ5YJlCQnarqEi
+	 2HOIRavJO+g9paB/C2YYlAYVqmb2kgiut60CyfNdCFnL6BADsAW86gE+rCJv3jhKEU
+	 xhyHkA5QFEeZxb/jz3ezU8fpueKF4UZ9OCtOjslPoDhqLrhjroAW4ZVXzKIkJz9Hyg
+	 6s+UivkH9tasMyPtuGG54ILYcFnrqgSpO4qCMaV233B/QiysszNJThZr4+Y++vVfYT
+	 4RJQDhDv+jwNQ==
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Jann Horn <jannh@google.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Chris Mason <mason@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Christoph Hellwig <hch@lst.de>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Joel Granados <joel.granados@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Jan Kara <jack@suse.com>,
+	linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev,
+	platform-driver-x86@vger.kernel.org,
+	coreteam@netfilter.org,
+	kexec@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	ibm-acpi-devel@lists.sourceforge.net,
+	jfs-discussion@lists.sourceforge.net,
+	linux-alpha@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-cifs@vger.kernel.org,
+	linux-fbdev@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-sh@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	samba-technical@lists.samba.org,
+	sparclinux@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-doc@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	linux-input@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-modules@vger.kernel.org,
+	linux-debuggers@vger.kernel.org
+Subject: [PATCH RESEND v2 0/7] proc: move procfs to what kernfs does
+Date: Wed,  4 Nov 2026 20:04:22 +0100
+Message-ID: <20261104-work-procfs-v2-0-b45cd5789ac5@brauner>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -130,47 +111,141 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20261104161632.3547423-14-aneesh.kumar@kernel.org>
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH01EPF000BE94D:EE_|PH7PR12MB8124:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0b146ec5-1378-47df-7523-08df3aa669d0
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|1800799024|376014|7416014|36860700016|82310400026|18002099003|22082099003|4143699003|11063799006|56012099006|261021135927099003|10067099003;
-X-Microsoft-Antispam-Message-Info:
-	r2Ua3Q+2Tif3KwEI/FOhVtNcbyiuz6thtfs9vwRLmbYE1ZLVIh49hRphKWUPCiKk0+wIbwaIW7ujQSwfUKmZsDL3Zp+JFNR1O8GKPgH4vFhCloYNFzWST35bcBcy2gBUHDNVW9LHgevNZxB8a2MOiSSPDkJiuOEpduQ2ufc8t5m3Vy70OMzXUhBiJH3r1HG4cQ3PqPO14T92h/YLi055Pf2d9d+jjtT9yTwgorZHkHX/fIQoMGmVtdbZNQVv6b7UpgpqOQKsc+RudqnQgiMs197FEVCnksljDTcEKqrpN2co4Yo0DTRx5uK/kzS5AxmpQmxmzAjud5Vwfkz5/tCkviw9RrkIjMH3X1P5u4lLTR7H150egE9PS7u07uiJSW+kS0hzLNSBfblIn4nOHXFpVhKw2rwiq37fn29Psw8r16VlNjd7hABTWaD0TWqrI2HrUw+CQXr+G4dPYnjoVC5TvOlE9d/By7WwBvCq8lXYPEYZp8c/CrlxboKcikAtdWKCcWG6rQjdd68ktM+s6iZeyTbgbm2Wvygs6yRHSQtDUycQ3QwYknJxB+UMHOLkLR9rIk6M0qx7eV9VZcK/iBDhMQB6leyKuE/GSEKrpoG9mKhbNig0hjGTgK7IwbaGl/9BUKzT8LdsneTdmH358gMWJXWVSiopdHQAiw2/4bvAjcI8PZfiuMV0SssMk2OTyN2Quagu+fIO0muRhXI2GFrIqA==
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(376014)(7416014)(36860700016)(82310400026)(18002099003)(22082099003)(4143699003)(11063799006)(56012099006)(261021135927099003)(10067099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	N0ltwa1yXlZ9KAYHSJXEsDWdLJuQ0Eax9EBMOGnjIVBBjrJXrOz+Ljhw+Y09Y/Uu/+U/K5y2B3RWHF3V3aoyqFtk9uuCBWcAsHX1XKqm8VwbA9gbPl32F9ZPSIW/5uDjhlB4zp88C4AE8wDiKD9td6O84uYcnPavBUuUfVdr7vIM8yEspk7+GTgJA+OlxsxW+8dD367hCt1SS+sUHO1yzf8DFF6KpQy/qOsOY3PxdIqOlpxgSRWZUVChwjAE8FE16vB+fHUvokZ6ykp0W/VmooN+wbqzVLMquEeB/cZpTHTorgFE17OVFmqxt0drnoguubtHnRN5wDuRDw5SWzKDW2Z1UZbjju+9LzmUXAdEBX+jcRi5lusRVMvQcP/mAHKdzWFOXLQYZZCUQXTT1hWHCBwVz6JX//rY4ZOhuEYXJrXB3aMT0yKDghz0ylyx/2Vv
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2026 19:04:12.2941
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0b146ec5-1378-47df-7523-08df3aa669d0
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CH01EPF000BE94D.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB8124
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6699; i=brauner@kernel.org; h=from:subject:message-id; bh=vwrWu4QhJtoloSbOepgjr6FTno3vPTd4Ym/VDTikOkw=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bnTbzPPv56/PPZvrYp9W3z2QLB/JVrf+pVOeIXfyv BPyhavzOkpZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACby9y8jQ7vUhZjCtt8GL9Re MV4waA022Jc6RTTePbMrWSRxcvj9NYwMH5UzLmm1J8flNhaGGEtmzxJlNtGal3R0vXBtFP/N2H5 GAA==
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-On Wed, Nov 04, 2026 at 09:46:30PM +0530, Aneesh Kumar K.V (Arm) wrote:
-> VIOMMU_ALLOC currently requires a nesting parent HWPT_PAGING even when
-> the selected vIOMMU implementation has no use for one. This would force
-> implementations such as the following Arm Realm vIOMMU to create an
-> unused parent.
+This series aims to get rid of copying to and from userspace while pinning
+procfs entries allowing userspace to delay removal as long as it wants.
 
-IIRC, MSI on ARM still goes through the NS pathway. So, it wouldn't
-be "unused" if the device attaches to it (or its nested hwpts)?
+In essence, it aligns procfs with what kernfs is already doing. That
+gets rid of a big attack surface and a whole bug class in one go. The
+bounce buffer will come with some costs but luckily some codepaths (like
+readdir) have been so criminally slow and buggy that massaging them ends
+up speeding things up or at least leaving them on par with mainline even
+with a bounce buffer in the mix.
 
-By dropping the nesting parent from VIOMMU, it just simplifies the
-attachment to an S1 paging hwpt, right?
+There was a hackish and very narrow AI solution to a small part of this
+bug class which was sent off-list. In essence, it used a second
+buffering mechanism on top of seqfiles which was really nasty. It also
+didn't address any of the non-seqfile users.
 
-Nicolin
+If we want to get rid of the this whole bug class we need a bigger
+hammer. That means reworking how procfs handles data. So I tried to work
+through all of that. The series is now in a decent shape (I'm not saying
+"glorious" as there's so so many warts. If they were ironed out it could
+be a lot nicer but that's for another day.).
+
+I understand it's big but I think it is nicer to be able to look at the
+end result since we have some transitory states that are gone at the end
+of the series.
+
+I have polished this a bit more and have sorted out a few more bugs and
+tried to clean up some codepaths given the current constraints. Again, I
+think we could go a lot further there if we wanted to but I think that
+blows this out of proportion and at some point it becomes difficult to
+grasp the scope.
+
+So, remove_proc_entry() waits until every call into the procfs entry has
+returned. Most of those calls copy to or from userspace with the entry
+pinned.
+
+A reader or writer can induce a page fault in that copy take as long as
+it wants. For example, with userfaultfd or by punching holes into a
+memfd over and over. Plus, the callers of remove_proc_entry() like to
+hold locks while they wait. For example, addrconf holds RTNL when it
+removes /proc/net/dev_snmp6/<dev> and xt_hashlimit holds a mutex that
+all network namespaces share.
+
+So every network device with IPv6 gets a /proc/net/dev_snmp6/<dev> that
+everyone can read, and addrconf_ifdown() removes it with RTNL held. So
+any local user can keep RTNL for as long as their read stays stalled.
+Until then no device can be registered, removed or renamed and no
+network namespace can be created or torn down.
+
+If the caller lacks privileges for userfaultfd a FUSE mount in a user
+namespace whose daemon never answers is enough to stall the copy.
+Killing the reader ends it, but until then whoever removes the file sits
+in D state.
+
+xt_hashlimit removes the proc file of a table with hashlimit_mutex
+held. Every rule insert in every network namespace takes that mutex and
+so does network namespace cleanup. cleanup_net() runs on a single
+workqueue with pernet_ops_rwsem held, so a stalled reader also stops
+every later network namespace teardown and every module load that
+registers pernet operations. xt_recent does the same with recent_mutex.
+
+And of course, it's not specific to networking. remove_proc_entry(),
+proc_remove() and remove_proc_subtree() have over 200 callers and plenty
+of them hold locks. For example, a stalled reader of
+/proc/fs/ext4/<dev>/options holds up the unmount of that filesystem with
+s_umount held, and every sync(2) with it. The same goes for PCI
+hot-removal, for freeing IRQ descriptors, which CPU bring-up waits on,
+and for unplugging a USB sound card.
+
+And btw, syzbot has hit removal under locks before (cf. [1]), and the
+xt_recent deadlock fixed in (1) below is another one.
+
+Stalling the kernel in a copy to or from userspace is a well-known
+exploitation primitive. It's why unprivileged userfaultfd can't do it
+by default anymore since v5.11 (d0d4730ac2e4), and FUSE has been used
+the same way.
+
+This series touches just about every ->proc_read(), ->proc_write() and
+->proc_ioctl() in the tree, so I've split it up into seven series. They
+go out as replies to this mail:
+
+Part 1/7: proc: fix a few old bugs in /proc handlers (51 patches)
+
+    Bugs in the handlers and in procfs itself that are a lot older than
+    the conversion and that reviewing it turned up. Most of them are for
+    stable. They come first so they can go there on their own and the
+    conversion doesn't have to bother with that crap.
+
+Part 2/7: proc: let procfs own the data path (23 patches)
+
+    The procfs side. procfs owns the seq_file of an entry, copies in
+    writes, copies out reads and copies ioctl arguments in and out, and
+    only calls into an entry with it pinned. The open files procfs has
+    to know and the wait queue a pollable entry is polled on live in an
+    open node that only those entries get, the entry is pinned around
+    the vm_operations of its mappings, and lockdep checks the pin.
+    proc_create_seq() and friends and the plain seq_file users are
+    switched over here too.
+
+Part 3/7: proc: convert the arch and platform entries (23 patches)
+Part 4/7: proc: convert the driver entries (26 patches)
+Part 5/7: proc: convert the fs, kernel and mm entries (30 patches)
+Part 6/7: proc: convert the net entries and the kfifo samples (13 patches)
+
+Part 7/7: proc: drop the __user methods (6 patches)
+
+    Drops the old methods. kcore, kmsg and the kpage files, which are
+    never removed and keep reading straight into userspace, get
+    file_operations of their own, so nothing in struct proc_ops takes a
+    __user pointer anymore, and the new methods get the names kernfs
+    uses, ->proc_read(), ->proc_write() and ->proc_ioctl(). The last
+    patch takes the poll_table away from ->proc_poll(). This needs all
+    four conversion series.
+
+Parts 1 and 2 are the base. Parts 3 to 6 go on top of part 2 in any
+order and don't depend on each other. Part 7 needs all four.
+
+The series should all indicate cleanly what dependencies they have so b4
+should be able to pull it for review.
+
+With all of it on a KASAN and lockdep kernel the removal selftests of
+every part pass, the proc, pktgen and allocinfo selftests behave like
+without it and the bugs from (1) that reproduce in a VM are gone. Every
+patch builds on its own on x86_64 and i386, and with W=1 on the
+architectures it touches.
+
+[1]: https://lore.kernel.org/r/000000000000f24f4705b6988f3e@google.com
+[2]: https://lore.kernel.org/r/20231109212251.213873-7-johannes@sipsolutions.net
+
+---
+Link to v1: https://patch.msgid.link/20261102-defizit-jobaussicht-kurios-7016c6e67442@brauner
+
+-- 
+Christian Brauner <brauner@kernel.org>
