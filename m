@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793760612;
-	b=iaHSF8+LOYOB1Zg3RuWWNtWkWL9FBCHNJ0moIGp6QezitMMgQ37MkL4rwO7o7tk5Paw9
-	 IFGcQ/VcUo1L8LXKKGSwk9Ct2rInPMgdqeHgf/ebefMZm8DMUuFmTgPM7Q678TtqBrubS
-	 LFhfzr3tj4N9K93PEUZOtoGx2TwMt2aPe6T1ibU45jgDoU8BzIvjnuD5U31tV2LZxuseg
-	 r6Orl9JRfoNNUlab+7QQmqVGuX92L+hmI6uLuc83TZwdfRdjpV7GtGchh8lafMcsGlAgJ
-	 KorHvIaD/H3l4XgmTNaI8i+SR/A8SbRaHvqjRO4umEOn0RYKKNDlp3cUJpoTciwqFgQ==
+	t=1793760609;
+	b=XDlH714+kqo0L6FlWoxSizCT+BEZikfglHFCD1/eiO0afknn374vTRi3EdI+q3rt/XS7
+	 d/eXGKO5uHkowcZEwPvSlu8/EZ7cDTlprN6QS1KnZLVEr6mDfG6U1W928QoRarI0JpSWd
+	 oieFpriqnjkZjboURCXoTs7yynLo4Nc/rRUdGEeppGkxUwMP7ztPUjs2I6nYa3DXI3kLs
+	 kE14mKoFSo8M8GO/EvpfUr6QQ30s/Jiwq+9s2pN+3NunG5B+0MoFV0lW8ccEVUl6xFnjK
+	 NHRk3NClDcnkc6i959+AiWtEJ9rgNIqL2mDaRDOmTqPHWfBSPLQt+rnX0Ov0qZ31roA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793760612;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793760609;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=v3tom2/meHzCSXzSyf3WctlUBtWKz6mFCVzRtFGuF2E=;
-	b=k3Ia+ow6NuHgnQVJeMZMnImdADHlQorxMzfySIVeWezxGKImboQXYTQmSyBb1rBdzMrB
-	 /+v+Jz0zWOmvyINhQVmXYsLfSFpyeat1+BH7GYMvez9QTDNLHe57pqH4UxdTSp0tk9ESh
-	 NqI/SpTqv7tZWVbMwQOBqCs75rmxZdOrL2UvzKsBalt4vk7/qNqmcLfqdp2HrwbA7dZ2T
-	 28irlV0QR3cScSJLuGCJXrMdWbGw6k0mN2r7lcJrz2MQe0r51pntDuFQ7M/IRv+Y71Fp5
-	 z/qNZ+HtLJ2F7i0vUsnVuly7v14OIZOXX3l8dBYlZVuWcToXdHYg4bAQO7OHXij9Smw==
+	bh=nbu0ETZ4SVeog1IiuPh60r4POSjh7eMfeTtrnVaLN+k=;
+	b=mIYTymrLc8NcpNc2x9ncpwbhZysVZTNJXQ1fwNKbpzou5mD25lBwZo7O6pyUzcOaqLCX
+	 fm7FiggXqLvAKcTDETNo+/7MW8oIgYuqj9hDloFHVX1ZRbImAmwZntc2WeNPW8Tyhy6cN
+	 YPadbURAKMVN4MMBOyDdszCmS2lQWxKJxFAWbAciZZu7851XQglL5r3NycSZxhopGIVwV
+	 tE5Cnxy8Z4hCi20YMxGw+9cfZg9/iFrFbQolTDqGGjbfgRziovpPcoVAHRphvbcDXrjsZ
+	 0knoRHLqjL1PbrHtM7s22kaZvCfxVSbBSiF8K9qByGkegN28nsknyJdCWqmCeGCVT4g==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eOdZMB0X;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cibQNOKV;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 862EA606EEB2;
-	Wed,  4 Nov 2026 02:50:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F669606D816;
+	Wed,  4 Nov 2026 02:50:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eOdZMB0X
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cibQNOKV
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1793760612;
-	b=gEy78REI6BZH1eHf2Mgm6srRqJsA6AgmVuaw3yeR8NyJ6wqvBm3xgV7m+iPgaGdnAKS9
-	 fKIJITSy3dQIm35Mva1v2lnkR1mMMSXxKq8jDedcg5pg4ArgKfZbvmk6v6fCi2bUYoth7
-	 5qNrlRDJylACsk4elCGsMpM83whnmFMlBMJHSuH9ZoQEGvVoBg6qVNOh1IKlTot4R/ui5
-	 TlotU3CFu1zPKNM1unWaHiTZYCXcMQEbJMFdTbHeF1p01I5Fc4hkFZM7y5SJ0yxeQbcLM
-	 eagRx2K1UMJjGHFM29lkuuxdkRcalsHTKlXUu2rJGUzo6XU6GBLBIj6zQF05tuly2UQ==
+	t=1793760609;
+	b=fcmc/g0PIzxJz0YGPZ1Bs1tA75A4Sqz/yfI0AG/mckFcvsP+uFfGcW4xv6PdW/aVMmq8
+	 y2V7KzJTbfhild9SYMU37rzuJfD8clQImsbLKy1ehar+elHhoQBRqvX0J9lMdKe26AmYy
+	 svOIB3xduQyRIMefL6bQ1W478aryr8ujwLF918V0r3LF3h/tcEeymSNA8+jzJKu90u8a8
+	 RbnmvlcHiJpUQ9uhMK8KxTPpmAL7twBpe8Byu3WcQPGkjLRw2JZVfSCGgS6n1o2GebxKU
+	 Rh2AzhVXKNaHuovFgNVZU/uH2fA/HwruSiCDmPnPvyJRMhUF6AWhJGTaTLSR58mcZww==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1793760612;
+	c=relaxed/relaxed; t=1793760609;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=v3tom2/meHzCSXzSyf3WctlUBtWKz6mFCVzRtFGuF2E=;
-	b=ocz+VSlah7rILLgblKcBFXLMnKTZZHMb6wtJi2YYHfVKanhEfVcCwtSlbBLJeZZuk6gb
-	 PWZQLxW6jFrNA56o/Wpw4rzHKdbs2dBZT6085jSC3bf9IWmdY2huXkyEnGnjn7GSLCayh
-	 s2rtc2W3VCqxqEnU7Z597RapsJ3f+guSal2aNDY1W4tLw4ekZKyeXZlIp0rQsg4j4tYHR
-	 p3xUmkMI10U4c5hn76RUlaW4um7ye2rF8MQ7tBeUUrA+btZ1NhAaeWEAE4WHQQaj3hAav
-	 jVHNImV4lXdzZ6YgCV6Sp1RYwo1qYr37k3Mfz2i4ElQzsHMvCBrnCnd6jaIMlencOEQ==
+	bh=nbu0ETZ4SVeog1IiuPh60r4POSjh7eMfeTtrnVaLN+k=;
+	b=r+PBWiqc/kq4iapz558mVNlpXKinVvXPY9WOvP5Z25OTk7C6t4rLVZL8EMJG+L6YJlOb
+	 Ar945WscBmh53lkyJUWurrQbFx6/bv4V1wujEyVN3GklaUMJUr/A63dFPxb2wwUgKby/Y
+	 Zz8KAsdT+uKk2oPJ751bC/9C62CCMU96OU64lcgM5YxuanwlhAcODY3OTWsb4C3aFe6ck
+	 1VwS4Vw68nz43VkDsoSX7xMKrDrEnrTXC90SvlirCUBr8R+iwaDWvXF0d52AYwPr+dGDM
+	 BOslnnOeEFlbg2LUuCxanrKuq1j5acTnUFrBxE8HsR7tHTTDrULZbSHDSlBk7Hl8GVA==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id C03601F00A2C;
-	Wed,  4 Nov 2026 02:50:08 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 592121F00A15;
+	Wed,  4 Nov 2026 02:50:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793760612;
-	bh=v3tom2/meHzCSXzSyf3WctlUBtWKz6mFCVzRtFGuF2E=;
+	s=k20260515; t=1793760609;
+	bh=nbu0ETZ4SVeog1IiuPh60r4POSjh7eMfeTtrnVaLN+k=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=eOdZMB0XI2v7dG6XQrRFJmCHx3EeF6L6E5FFg6c7GLm41AGkxjlB5ynO8jqWPYn3s
-	 BVevWfP1i8aAJHI/I6i8CKmczr89P9mcgSh9G9ZfrAJYG9XfAJF9kkDUqh7hLi2klw
-	 +jN0rm4RUzguhMeGrzF8wZgHk72r9JyLi9+yO9l5SMXUMUI3c5f5O28Q8YoSIMTQ+e
-	 mErBSoaKaDutVKl3cvXRWjEafFy8Nd8FA+fXYms9691uBjll3OvlcSHlKEvyrHXG6E
-	 XlJhjqVWTdq3PXFfe4cLyqFGtA0Uq+IATpogNit2duxzrfK8NqeKnHyLOdXdDqqjmB
-	 V0/ZTL5JQJgjw==
+	b=cibQNOKVajOa/rrapTREdOq6YBYqXmAULtz+KWwJ/4ri7xcwCdFs0pn4Xw4UKwnAF
+	 ubjLyfZ7MEVv6a1zfPrMK0+Oe5wp4aO8zgDg7JGgqKCSVfDqlFS3axeNblD4V5Bj4I
+	 2q61un4HvAdKKhzmVbNymnyQRbAvtTUNmbGFTf53ekJfCf1w+8XMXMq35MHrC+zRRi
+	 NfjMdJBG/AXan37ckSb/IQ0B4Eq4101mQaum3Zm8g5GgUCuSP3l56w3mYhTuYoJI7C
+	 dsQB4wjSpLszn2hHsE8Joq7ds07PdFkRTD4QWlVCDqvPG2dnlpmr0Lj4q9tTFeN2bN
+	 RTo9fTPM33jlw==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 5E87A46C47;
+	by lkml.kernel.org (Postfix) with ESMTP id 0D5C146C2F;
 	Wed,  4 Nov 2026 02:50:03 +0000 (UTC)
 From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-Date: Tue, 03 Nov 2026 20:50:02 -0600
-Subject: [PATCH v4 21/25] dmaengine: sdxi: Provide context start and stop
- APIs
+Date: Tue, 03 Nov 2026 20:49:56 -0600
+Subject: [PATCH v4 15/25] dmaengine: sdxi: Per-context access key (AKey)
+ table entry allocator
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -84,7 +84,7 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261103-sdxi-base-v4-21-3668ccc7aab8@amd.com>
+Message-Id: <20261103-sdxi-base-v4-15-3668ccc7aab8@amd.com>
 References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
 In-Reply-To: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
 To: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>
@@ -98,11 +98,11 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
  dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-pci@vger.kernel.org, Nathan Lynch <nathan.lynch@amd.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793760600; l=3502;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793760600; l=3365;
  i=nathan.lynch@amd.com; s=20260722; h=from:subject:message-id;
- bh=WiX3Tqeldc4IPKX4oqsKJ8nPLPgMYEiqvrHy0gtdIWQ=;
- b=PtTdQnyKMzWBAsxUOJc7gmMZe9bigIh1gKSIz4okf4v0hkrfEmgTIgq13+mcmGN8GsUs3Qx+g
- vvn3qjSRNHyC6ovn7H2hIYLzlOZmmebOMeZoQJK9yxEYv00XSWhWWPM
+ bh=Zo1+a8sWpK/eHij843wg4qLlKt/M4ON13u/7GfMYhEU=;
+ b=6/z6E1PqghFJVOkrE9Ols1+6AvMJqWZ+JIjKzo7SPQUrQm/BI/iurlgHxWvy9d+xwVieJjPoD
+ qXKICVVYlG5BwSJpHweXjawcHEvAY5lKR91S8vAAwT+3F/nIwxlT+B9
 X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
  pk=pO5+BCw/TENGLvwX5NYZOZmZihcxjkxeFSMuk47erps=
 X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20260722 with
@@ -113,109 +113,106 @@ Content-Transfer-Encoding: 7bit
 
 From: Nathan Lynch <nathan.lynch@amd.com>
 
-Implement client context start and stop by submitting administrative
-descriptors. Starting waits for the start descriptor to finish; stopping
-submits stop followed by synchronization and waits for the latter.
+Each SDXI context has a table of access keys (AKeys). SDXI descriptors
+submitted to a context may refer to an AKey associated with that
+context by its index in the table. AKeys describe properties of the
+access that the descriptor is to perform, such as PASID or a target
+SDXI function, or an interrupt to trigger.
 
-Use the administrative reservation and polling helpers to claim status
-blocks before reserving descriptors, release consumed results, and retain
-timed-out blocks until context teardown. Expose these operations through
-struct sdxi_cxt for clients such as the DMAengine provider.
+Use a per-context IDA to keep track of used entries in the table.
+Provide sdxi_alloc_akey(), which claims an AKey table entry for the
+caller to program directly; sdxi_akey_index(), which returns the
+entry's index for programming into descriptors the caller intends to
+submit; and sdxi_free_akey(), which clears the entry and makes it
+available again.
+
+The DMAengine provider uses one AKey for copy-buffer access and completion
+interrupts.
 
 Co-developed-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 ---
- drivers/dma/sdxi/context.c | 61 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/dma/sdxi/context.h |  3 +++
- 2 files changed, 64 insertions(+)
+ drivers/dma/sdxi/context.c |  3 +++
+ drivers/dma/sdxi/context.h | 24 ++++++++++++++++++++++++
+ 2 files changed, 27 insertions(+)
 
 diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
-index 5ca99ac8080c..0979fa35346b 100644
+index b26eec3805fb..956bb06f9499 100644
 --- a/drivers/dma/sdxi/context.c
 +++ b/drivers/dma/sdxi/context.c
-@@ -364,6 +364,67 @@ int sdxi_admin_cxt_init(struct sdxi_dev *sdxi)
- 	return devm_add_action_or_reset(sdxi->dev, free_admin_cxt, sdxi);
+@@ -15,6 +15,7 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/dmapool.h>
+ #include <linux/errno.h>
++#include <linux/idr.h>
+ #include <linux/iommu.h>
+ #include <linux/slab.h>
+ #include <linux/types.h>
+@@ -57,6 +58,7 @@ static void sdxi_free_cxt(struct sdxi_cxt *cxt)
+ 				  cxt->akey_table, cxt->akey_table_dma);
+ 	if (cxt->sq)
+ 		sdxi_sq_free(sdxi, cxt->sq);
++	ida_destroy(&cxt->akey_ida);
+ 	kfree(cxt->ring_state);
+ 	kfree(cxt);
  }
+@@ -73,6 +75,7 @@ static struct sdxi_cxt *sdxi_alloc_cxt(struct sdxi_dev *sdxi)
+ 		return NULL;
  
-+int sdxi_start_cxt(struct sdxi_cxt *cxt)
-+{
-+	struct sdxi_cxt *adm = to_admin_cxt(cxt);
-+	struct sdxi_ring_resv resv;
-+	struct sdxi_completion comp;
-+	struct sdxi_slot start;
-+	int err;
-+
-+	might_sleep();
-+
-+	/* Administrative context activation is controlled by the function state. */
-+	if (WARN_ON(adm == cxt))
-+		return -EINVAL;
-+
-+	err = sdxi_cxt_reserve(adm, 1, &resv, &comp);
-+	if (err)
-+		return err;
-+
-+	start = sdxi_ring_resv_slot(&resv, 0);
-+	sdxi_encode_cxt_start(sdxi_slot_desc(start), &(const struct sdxi_cxt_start) {
-+			.range = sdxi_cxt_range_single(cxt->id),
-+		});
-+	sdxi_cxt_submit(adm, start, &comp, SDXI_CXT_SUBMIT_KICK);
-+
-+	return sdxi_cxt_poll_completion(adm, &comp);
-+}
-+
-+void sdxi_stop_cxt(struct sdxi_cxt *cxt)
-+{
-+	struct sdxi_cxt *adm = to_admin_cxt(cxt);
-+	struct sdxi_slot stop, sync;
-+	struct sdxi_ring_resv resv;
-+	struct sdxi_completion comp;
-+	int err;
-+
-+	might_sleep();
-+
-+	/* Administrative context stopping is controlled by the function state. */
-+	if (WARN_ON(adm == cxt))
-+		return;
-+
-+	err = sdxi_cxt_reserve(adm, 2, &resv, &comp);
-+	if (WARN_ON_ONCE(err))
-+		return;
-+
-+	stop = sdxi_ring_resv_slot(&resv, 0);
-+	sync = sdxi_ring_resv_slot(&resv, 1);
-+
-+	sdxi_encode_cxt_stop(sdxi_slot_desc(stop), &(const struct sdxi_cxt_stop) {
-+			.range = sdxi_cxt_range_single(cxt->id),
-+		});
-+	sdxi_encode_sync(sdxi_slot_desc(sync), &(const struct sdxi_sync) {
-+			.filter = SDXI_SYNC_FLT_STOP,
-+			.range = sdxi_cxt_range_single(cxt->id),
-+		});
-+	sdxi_cxt_submit(adm, stop, NULL, 0);
-+	sdxi_cxt_submit(adm, sync, &comp, SDXI_CXT_SUBMIT_KICK);
-+
-+	WARN_ON(sdxi_cxt_poll_completion(adm, &comp));
-+}
-+
- /*
-  * Temporary owner for context id until it can be assigned to a
-  * context object; enables scope-based cleanup.
+ 	cxt->sdxi = sdxi;
++	ida_init(&cxt->akey_ida);
+ 
+ 	cxt->ring_state = kzalloc_obj(*cxt->ring_state, GFP_KERNEL);
+ 	if (!cxt->ring_state)
 diff --git a/drivers/dma/sdxi/context.h b/drivers/dma/sdxi/context.h
-index 71eef2c6243b..acf41709c4de 100644
+index 14ce4f5f9b74..cad5a153ec22 100644
 --- a/drivers/dma/sdxi/context.h
 +++ b/drivers/dma/sdxi/context.h
-@@ -60,6 +60,9 @@ struct sdxi_cxt *sdxi_cxt_new(struct sdxi_dev *sdxi);
- int sdxi_cxt_exit(struct sdxi_cxt *cxt);
- void sdxi_client_cxts_exit(struct sdxi_dev *sdxi);
+@@ -6,7 +6,10 @@
+ #ifndef DMA_SDXI_CONTEXT_H
+ #define DMA_SDXI_CONTEXT_H
  
-+int sdxi_start_cxt(struct sdxi_cxt *cxt);
-+void sdxi_stop_cxt(struct sdxi_cxt *cxt);
++#include <linux/array_size.h>
+ #include <linux/dma-mapping.h>
++#include <linux/idr.h>
++#include <linux/string.h>
+ #include <linux/types.h>
+ 
+ #include "hw.h"
+@@ -32,6 +35,7 @@ struct sdxi_cxt {
+ 	struct sdxi_cxt_ctl *cxt_ctl;
+ 	dma_addr_t cxt_ctl_dma;
+ 
++	struct ida akey_ida;
+ 	struct sdxi_akey_table *akey_table;
+ 	dma_addr_t akey_table_dma;
+ 
+@@ -54,4 +58,24 @@ static inline bool sdxi_cxt_is_admin(const struct sdxi_cxt *cxt)
+ 	return cxt == to_admin_cxt(cxt);
+ }
+ 
++static inline struct sdxi_akey_ent *sdxi_alloc_akey(struct sdxi_cxt *cxt)
++{
++	unsigned int max = ARRAY_SIZE(cxt->akey_table->entry) - 1;
++	int idx = ida_alloc_max(&cxt->akey_ida, max, GFP_KERNEL);
 +
- enum sdxi_submit_flags {
- 	SDXI_CXT_SUBMIT_KICK  = BIT(0),
- 	SDXI_CXT_SUBMIT_FENCE = BIT(1),
++	return idx < 0 ? NULL : &cxt->akey_table->entry[idx];
++}
++
++static inline unsigned int sdxi_akey_index(const struct sdxi_cxt *cxt,
++					   const struct sdxi_akey_ent *akey)
++{
++	return akey - &cxt->akey_table->entry[0];
++}
++
++static inline void sdxi_free_akey(struct sdxi_cxt *cxt, struct sdxi_akey_ent *akey)
++{
++	memset(akey, 0, sizeof(*akey));
++	ida_free(&cxt->akey_ida, sdxi_akey_index(cxt, akey));
++}
++
+ #endif /* DMA_SDXI_CONTEXT_H */
 
 -- 
 2.56.0
