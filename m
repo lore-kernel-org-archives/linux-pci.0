@@ -1,92 +1,106 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.208.43
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793827992;
-	b=r0IlYhvG1S1zDP33SA+dDJMLjk8wMtcTFTeiRlzh+17HzqORQYgnUuiOMGM6I6VYXi2F
-	 yw48ob4GHuGOQObEGa5lv1CGUtG1AVWPtRQQ/SDvxuudw9O7hGr6DD7t9QXJrUxB6H7pm
-	 WFZrV0SFOlLhUI7im6HacJTROfWQM+YRt14auXJkj5BhLOd8f20GXwTkVDQehveZ5RT7i
-	 ZcF+MJ1nWxTugUYjaRGT5x/XxUXp8XzX6NFgkfj8nVV4eqhJi8RHGTcn9dBIqoDOODWtZ
-	 Lp3jk+jk5037Xj9AfNfiX873OekOjNXTXZuEDfdO1EeyUyGtT0PHOIGCA4wBD1Vy7yw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793827992;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:Content-Type:Content-Disposition:
-	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=z3d4nvRcvFNEOKESR3K7UWzlJ8ktE+p7y5zJfcTkRoE=;
-	b=r5vLZ43K/DhOMOpCVu2+GRPVbtRGnF/wz1X5Mru/QPgly1XSNeiAYLOgarkSKd13Pgij
-	 9qyzcGAL7r/i/pFOWG5XXZxwjtIuvfQ0Pht7F06GAaUEuwKpWb0QvXN8YGmB6d/GLXf/6
-	 220NMugWNmAFgfXxvdxk4DxIXJ51yWdpduf7pywOmOTfQwowYCeMgC00Wm76OUbi8U1PQ
-	 daqu4yLlbM1PIGEtGP7akBEbw2ewtCOU/I8I8wbfQg9AuHoOgRHeV35EREJ0PllLoZV2j
-	 2wQxgpn6YNpAV/vJ8RXRZL323thE3IMf9lIRAr6QEDhqk6nm3cUkIBEDpc87i8k6Mfw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=amd.com;
-	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=l+ukF+vV;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.208.43
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011043.outbound.protection.outlook.com [40.107.208.43])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.48
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793829533;
+	b=mWb42Zgc0nLV2YaEQNkIjF+cFmx2vRAVz2qa4X7lvCXJNfbKW69AO2Mjd8+Ts5pxYWb1
+	 hYLrUIARb/Uo8Pyh0Tcy8i3rIxzkhozhjyANj69caFOb3gfYsjkRkCRk8KJbkqHj4VTSv
+	 +0pfgvHHZG7vBbeN5yd16cJNH5ztzTIDWc79Ep5qb5bKKgJCVg6zEqHxzS0leHk5v01hJ
+	 EDv2PfHJjnagbZ3y/VyzKO+ibhz1+8kmYqjXLLiVGa1pfvykIRZgYZWXg0oB5XNA/FAO+
+	 9CYso7ldYHxFvZTcAKOWjUIzhSAr/HKpu8UO+y+eanolzTaQdiFBSu0xdBDSG8UA3Aw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793829533;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=+AqvPVUykAPDceQuc3GQUkBSHmzMNEYjFHX35nxghcw=;
+	b=UdSx3YedJxS86xQuvI+FA9ipglaoV/nBrW9lhtA4+wBMpI/sdkr1PvnO21zz7KOfrkro
+	 J2f1a7EOttXlq/+vShTAtTJVAlusdAci5IAhPulERV6DJz0DyGsQCYeSyXXMD2E3194TV
+	 Wt6oMmqMB2uD0pXMe5n/kc4q+dVt0mTb+NyJoCmpcBAmwzTDom8/Rjco90LHJw2FbT/D7
+	 fd5TYz+CNwdEUI38uUAoUwlfQp2zAwV65Ng3AVJ04L7PdQklg8jV5mfF2ot/79PnNajmy
+	 aHb1RWpWuMLl0srZerCPWmmidEnO2LKNpTF9MWNU2ssExmbK3faYJaUlDtdd/TC3tpg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Wu7cvwJK;
+	arc=none smtp.remote-ip=209.85.128.48
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC2BD606C902;
-	Wed,  4 Nov 2026 21:33:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DC2BD606C902
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65F3F6074F8A
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 21:58:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 65F3F6074F8A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=l+ukF+vV
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ZdP6UEwYIONZYKKonmUZIZK2xLOh+8E/9Hm98MjV/ZivYXhYgv8lWljO1bMFwe4Tw+PtVzvwAudv72vJ+2Lu28kPIprai0RNI00HRB7RXZ4jhX5mg/i1NLg/zvxyJpG6kVpK0gK7cP+X6+qHKYb94C3AkaGKfJnEPXi4oucSwVEZkNbXZSidQ/JdsxC9UmRb99s4zWqhQnEADXRFPxhi/9iNFxt0l615pY37Yk0y+xHFtF842r0Y8rBanYiiDEKMlY9DBbyzduGygxh3qWgb1ryaRx6HO19STJtf2M7UbE+TdlPrK6RPySbOY43vlWRN3TCiTcF6olo76tEIK8RD1Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=z3d4nvRcvFNEOKESR3K7UWzlJ8ktE+p7y5zJfcTkRoE=;
- b=antf2GDY4IoUshe+l1ZK9lG8+AG5ju18geUKQfynje1g7ZASxyFMqRauzoFCSFTZy1bVEiEnbvN4/yxoErY43c2eAVSuhnbm6W3gs8PlTrepp/M3Exm1Gj96XIutBrMwpN+E2midwiqs/0/lpKLgeUX9f83MiRWxn/Jo06FyTRmwCxRj1RGI5PAismRYTeC4qw9gJwfrPS8PJ9Rfmz10S64M1rF/AIEQQECMw4yuQoNqU2Y2PW0zJmQG3ChtsK9YybzvklcA1WSDFnS7okvNmhcrBPprgc01J5UzFAQn6632HacIbFu9OO1FHbSSnNHwNMiskh95vX6LM4B9BuXDhQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=z3d4nvRcvFNEOKESR3K7UWzlJ8ktE+p7y5zJfcTkRoE=;
- b=l+ukF+vVyIPMKk3iKxPVk1wkobsVVf+T9Uaw8ebWTRNd36lMEfsNNkwqzC4rFAlhVe7H+33BYCF2+O3fkCnaspACjjoi5B0NMm7yliTZqXeqAl/WyZFPYp0pRFZbtuwHajijGjURM12ArLv3sKiazpKxKLphnjdbnCWfS68nQAk=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from CH8PR12MB594730.namprd12.prod.outlook.com
- (2603:10b6:610:32e::18) by PH8PR12MB6748.namprd12.prod.outlook.com
- (2603:10b6:510:1c4::5) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.8; Wed, 4 Nov 2026
- 21:32:59 +0000
-Received: from CH8PR12MB594730.namprd12.prod.outlook.com
- ([fe80::c219:e548:cc1f:b733]) by CH8PR12MB594730.namprd12.prod.outlook.com
- ([fe80::c219:e548:cc1f:b733%6]) with mapi id 15.21.0592.009; Wed, 4 Nov 2026
- 21:32:57 +0000
-Date: Wed, 4 Nov 2026 15:32:55 -0600
-From: Wei Huang <wei.huang2@amd.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, skhan@linuxfoundation.org,
-	corbet@lwn.net, rdunlap@infradead.org, fengchengwen@huawei.com
-Subject: Re: [PATCH RFC 0/3] PCI/TPH: Expose CPU-to-Steering Tag mappings via
- debugfs
-Message-ID: <auukh0rUCTC8M7fc@weiserver>
-References: <20261001155551.4182899-1-wei.huang2@amd.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261001155551.4182899-1-wei.huang2@amd.com>
-X-ClientProxiedBy: CH0PR13CA0030.namprd13.prod.outlook.com
- (2603:10b6:610:b1::35) To CH8PR12MB594730.namprd12.prod.outlook.com
- (2603:10b6:610:32e::18)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Wu7cvwJK
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4a20a37703bso9155365e9.1
+        for <linux-pci@vger.kernel.org>; Wed, 04 Nov 2026 13:58:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793829532; x=1794434332; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=+AqvPVUykAPDceQuc3GQUkBSHmzMNEYjFHX35nxghcw=;
+        b=Wu7cvwJK7FYC7glKoKS2nr1VdeOxHSJ9luIIV9cnW/RaC2BQxx3D6fu05kILH5uOst
+         4jrJYzlaZCZAIGbifXue5Us2ZB4GOZrh2VmCSluFBPBdAviTckGMcghBZ6HO5LRhSJam
+         inXLIsVtwL5A+5aZBOQbfoGmnvcFqATd6lC2R+SzaAImATm8EC4oY2m5JinBpLJcKtnJ
+         619dLjonxEPW7jfwU/iNteSQWMANlquYjlkweStldBRu+wgblV0XA/di2RsB7MKKff6J
+         Qv3FUYIbl5RSs964ysTWuk9/958pQeeIoMBgaDpm78s8MMKjRxoTfiiGwLp8IHy7ci+8
+         CPCQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793829532; x=1794434332;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=+AqvPVUykAPDceQuc3GQUkBSHmzMNEYjFHX35nxghcw=;
+        b=lmFdiTR98MmZkbXIt61U6ZzYK/68Z+aAZNJoRS8qP27alNM5NWbk15QVmxo9a36qe3
+         a2lVJvJ9Qx2Pdrmrl/dcJgteucGWzYyJqItA226a+SD+YZ/TAV3nq8j6eDeLB5Zxh2+4
+         0srwaQwB1kE2NwG/wdwA4Lt7zuNfZseAzTHAAyjI+r8yPt1FQAD2Hs2yLTYNYhAM2THB
+         QtLKQIILUyuRGbjkMFiK2Az7HlNxMgCZqRnpaCt1YhmeictdN6mB9Vq1wHK11SKDKVnR
+         zPgzbqDArTSXAO6+Z3RLXpEa/UpDUdRhH4i+OLtxLM/xRvMMyZJUi2kmGkGsFVgKDfbN
+         Z9fw==
+X-Forwarded-Encrypted: i=1; AKwUvBxGaBooV/OGD5ZC4I+kdz6oiup2cHcfhMDTnxFDTkrlwccngZvfXFTBrtXzIsaJBa0sUCnh8G7Q0zE=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9E4ipd+EB0Pky85a0Rp1X+RSPpW+8bcqRAEwJximZNzwwGQqw/
+	HkbfzPS+NKdHtTxmJNFSA1FzcYBs1wg96Ud6okYw8FFD+24GuMPDaxV0
+X-Gm-Gg: AYBFou3+od1GXftX5OSJGfvRUQhb4O6k1tnw9MtvutCRz5XvYHBPqNfX2fPyR5xb912
+	bzWW75/4iDcYE9kM7JeskVwGeltI4e9BMQCuUd9p83upV/gOk2MEvqmcqUrjhcAOcPjuzCSadub
+	zHWLfujh6c6RdzoNV5SIfGmLa6O1iqtmoLCpBJDpb8fjEgd+rgKlkr6oIbQdFBGTRsILAHOCDV2
+	Ai8+G7RMh96gDbyaEGNGz1aDhLrzV2Q/2cnldgePQzi0t4lRGMMFmDRIe88TBZHEvizYSpEjdGK
+	lJww7eHlhLX2CPuwVUV2wkUxzoLZX1YCQqRAazAWEP7anJIr7AYhxDXcqHkwPhtpgGAisgFJNwT
+	MWN43P6PdgIyMyYfBN+K7DDh0z43ObfcVEOUo/9oAUuLMHtLc2o7bnKAqB4OImzIti0EghzvRbj
+	LOHFrih5Ze7pshiu0w0v6OPPdi1m5L6EnIYjZfZPCYNzmSZEJOpbDgGRI8mXD7KhNESORdIXziB
+	+wtMmsURNGDrGEhgsiYF923nsTG29pV0EGbt/zjd5kXnLk+du6GmzlEdDWfdLfTXV7IO3vmsR/l
+	vYSrKIiWUAgJhyocrO+e2XG4lSPFqFJF0V/KXjXKAgP5K0eP4okWjlSkv6Vp1pjlcsKzgjZWWqU
+	gcY3FJ6H+YkIiTix8VeR/OYLwh+dJyxaS7QDIWX8EMxOMQg==
+X-Received: by 2002:a05:600c:314a:b0:4a2:fd2:985d with SMTP id 5b1f17b1804b1-4ac1775316amr368381185e9.12.1793829531676;
+        Wed, 04 Nov 2026 13:58:51 -0800 (PST)
+Received: from tachyon.internal (2.155.41.158.dyn.user.ono.com. [2.155.41.158])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b56f5e65b0sm15526735e9.11.2026.11.04.13.58.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Nov 2026 13:58:51 -0800 (PST)
+From: =?UTF-8?q?Enrique=20Hern=C3=A1ndez=20Bello?= <ehbello@gmail.com>
+To: shawn.lin@rock-chips.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	bhelgaas@google.com
+Cc: robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	heiko@sntech.de,
+	dlemoal@kernel.org,
+	iav@iav.lv,
+	devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	=?UTF-8?q?Enrique=20Hern=C3=A1ndez=20Bello?= <ehbello@gmail.com>
+Subject: [PATCH v5 0/2] PCI: rockchip-host: Make the PERST# inactive delay configurable
+Date: Wed,  4 Nov 2026 21:58:45 +0000
+Message-ID: <20261104215848.2087944-1-ehbello@gmail.com>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -96,89 +110,80 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH8PR12MB594730:EE_|PH8PR12MB6748:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9b420df6-0512-4e89-1c56-08df3abb31a2
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|366016|1800799024|376014|11063799006|56012099006|261021123027099003|261021121427099003|261009223027099003|261026121527099003|261102123227099003|10067099003|18002099003|22082099003|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	GpKGp1WFRGxY4oO3uZWjoPtoFrYsL+k8ySQWuNql9ZGzX6naFEQ12D9R1nAt5IUyAor4+5mq66tIOp6GEbvBE2hbG88MQYmRPCjHF0E9EGcSiOWmeMHL5bb3+NQnEBZ1LsnfnHyid2NZ8p+gTnBm0VND45pfZ8bwbvnUMnPdwEGm/r9udcW0qX1JPULENm6Az6WwOfltHiiJ7VaoWWG9kIXiBoRUfH2s1c1BaszA0EMrAHt2kJUpD2UuDoDs+V+C4j0wI9i9HkGOWkxNvC77yyIgiJal0KihDYz4Vtuq7KxXpw94iDDMosHlPOTNQj3vGCBqrY1tdvorJz2xOLoS0XSCCkvIGmEhKo5exJj4bcgxqH1KiE1TFj0NSAb8CUoT2Yi8CFJPMq8TCRoR3bOWVKxJxbUishg1H2Xb9XOD9VsK6yU/SvrTds44SGL1IMO/5Ani9xcN5Md0pD514NBDZKQyhsi7KbZvgM/1ZhcGftkjUauvyBoM/WPSZvOACcZ9cBG3UsMW5qWM1VUaxhly3Sv+NUgT7OkOYVoRT7MeOAEh+TeiOw5NXFKn3kE9QelWFrvRN19wAVrnVURlmnycfZ2+HiM6s3I9nzNyL5M/I6ThkVSja2sjZbUKkw4fDIUtdie4y3u5SZWGb6QVA2TFtJUkl4W4nBP0hKvA7JoB7aw=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH8PR12MB594730.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(1800799024)(376014)(11063799006)(56012099006)(261021123027099003)(261021121427099003)(261009223027099003)(261026121527099003)(261102123227099003)(10067099003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?WeFFLU2eudvrrxggI1azgt251fwslV9KY9AJk0ecA3siUczc/NbgGM99sEOx?=
- =?us-ascii?Q?j7MPFfIPBqrsENLVdHLXH/n4zl6V9yvSufea4WJx2Hu20LY1SpCH8kFu/LQq?=
- =?us-ascii?Q?GPoefIfgZ3lueQlTIncWXuhBHa6dMW8DZJxcBCnazEE12lUG3OEdsUczpMeu?=
- =?us-ascii?Q?NRnpIj9YuJt4HnPX4+MBpcB0UnFAigPLuYg5XR24QR4ACLOx84F2v6fw4eNR?=
- =?us-ascii?Q?39Pczjmk9LmM6/z7cmwJNPmR7hNhHlmSyRotKm4gRZBR1nUZSJ7+0tA0vMlW?=
- =?us-ascii?Q?epAlT7emTvwgdD13G4eINhszQ05nERVFLhJQbQcxS5BhwZwNsFCb7WyQc07A?=
- =?us-ascii?Q?NwSIEQ70QAAVflujZNcyt4bY2t+RxNAJhnOHhmXC45nDdwijNz/cXeZCIHBl?=
- =?us-ascii?Q?HK18LJxNHOV+f8kp6v0VW2C6uWP/4tiQPslirUiKRtXzSLeGWQ7XjiQlgQ6H?=
- =?us-ascii?Q?bSYrF0Ej+H+XRMS8femdjin7z5Nu1OCYYWNZ2LlNDWP8BT6sg6OMIU1kSn8j?=
- =?us-ascii?Q?KUlr7MKMZErenNLw9U1mfhNfS+vhsUBc7kcHaGDeapxYHQ0+gfSce4pDXGzM?=
- =?us-ascii?Q?RjCkMSJqhCKPRf7szvJnjjP4tJn20Ej4BmL/XXg7nzyFQ6bnc4jUX9/zG+3r?=
- =?us-ascii?Q?DgOqY3qIC3YiK066yC7ShyZiHKPzg5upHeAL83So0gCKy6F0eCd36reTy21h?=
- =?us-ascii?Q?XMAqyMD1taGUFHhu1OkuGE6pJSvXJN1u+HaHRDwjQYh666TJZ4tIBlTCUbxX?=
- =?us-ascii?Q?sHXqC1WUcpZapkUiZSppl+QR9zpxBFoS4bpALz60i5ljmH0w4wO4q0t449JV?=
- =?us-ascii?Q?KKrRGu1y7JZy5sCIh0moNRdRgUrWihSurHTfsgA87LtjnxWibPafklFYIhfZ?=
- =?us-ascii?Q?maPYsYvcCu9cgt6msBO82uFJl82Z55Q2q6hfgICFhDrFwvuw6MiwxUUaq1Ze?=
- =?us-ascii?Q?j/y6rPrK/FCd9z5xyOX0v3M3TTbxx5S0xKimvY8V6y/N1bDLLID68g6Tn/IF?=
- =?us-ascii?Q?/Sp98qqJJmFx+O4HfV0USCx8wr0NM5S8wE8E4tdUR7VnbvmdrBKLXLRUX/Of?=
- =?us-ascii?Q?vWHe/84+lOjakPURsLX+Og8hx9b35czR82/p65GZ60p5lvr2dPjdcJ6RUwDc?=
- =?us-ascii?Q?mdvuekHtjdohDFuHCvuJz0j51pi82Ua4yxL9CkBDEANXa0Rd0PBhKqg3JsTf?=
- =?us-ascii?Q?X7bKSd9LTftiVee3FfZ7cbo5z0/JDa/cnL80xKCCCtqjjN5kcxG3D/xlyg9y?=
- =?us-ascii?Q?eIv2aGUfsDZPYAaki1WyvjTpwrMUac7/M85XLuJGifV0Aczk/+fBduFAQdSF?=
- =?us-ascii?Q?33gfOY/fuuQ7yodwWdQZNLprebGmotvKjsmHZrzXX2ATJzbZspM5F+M2g6ZC?=
- =?us-ascii?Q?DLmj8CkB0fFppWc5HHxBLQomomxGixB9VutZEQzAh6tyysvlGQMqjfWR1cnA?=
- =?us-ascii?Q?qoSEBHggE+kks9FjQj9dVXX0nfOlNsPyOss3mytRiIP9Nqfye877t6TY1Nvy?=
- =?us-ascii?Q?8yECge5Edot+FT8n/Bb++u67U0IheHUIbOOI5w4pNAxikhvcTsa+fyAcg171?=
- =?us-ascii?Q?ocBCh4YjylEp21O8uSvoov9jJccYcHlm8i4FzHBth/xktJ5JzRJ1nGTpj9ue?=
- =?us-ascii?Q?JvL8/mrqxpQFTUpCQz+Yk9oTwzXTKpGY1lsU5UewPFQ8AnHXTiaxtBemh8Bk?=
- =?us-ascii?Q?/D2fze0TjA+arrm0RnESbOm+SKdgLLk313feasFUSnK4MWmb?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9b420df6-0512-4e89-1c56-08df3abb31a2
-X-MS-Exchange-CrossTenant-AuthSource: CH8PR12MB594730.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2026 21:32:57.7025
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: UTa5igkrLo9odsu96Wet3jxnfGUIH2FAlaeOKSlRV42UpAp8bXPXqIIjIYANgNO+
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB6748
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hi Bjorn,
+rockchip_pcie_host_init_port() waits T_PVPERL, 100 ms, before releasing
+PERST#. The line has been asserted since the GPIO was acquired early in
+probe, so that wait is also the reset pulse width.
 
-Gentle ping on this patch series. Do you have any feedback, or would you be
-comfortable to add this support into PCI TPH?
+Endpoints do not agree on what they want there. Some need longer to settle;
+a JMB585 behind a ROCK Pi 4C stops answering configuration reads if the
+pulse is stretched that far. The measurements are in patch 2.
 
-Thanks,
--Wei
+So, as Shawn suggested, take the delay from the device tree instead of
+changing it for everyone. Patch 1 documents rockchip,perst-inactive-ms and
+rockchip,s2r-perst-inactive-ms, named after the properties the Rockchip
+vendor driver already carries for the dwc-based controllers; patch 2 reads
+them. The defaults leave current behaviour untouched, so there is no Fixes:
+tag and nothing to backport.
 
-On Thu, Oct 01, 2026 at 10:55:48AM -0500, Wei Huang wrote:
-> Add reusable per-device PCI debugfs directories and use them to expose
-> the firmware-provided CPU-to-Steering Tag mapping for each Root Port.
-> Factor the ACPI _DSM query path for reuse and document the new read-only
-> interface.
-> 
-> Wei Huang (3):
->   PCI/TPH: Factor out the ST _DSM evaluation
->   PCI: Add per-device debugfs directories
->   Expose the CPU/Steering Tag mapping via debugfs
-> 
->  Documentation/PCI/tph.rst |  32 ++++++
->  drivers/pci/Makefile      |   1 +
->  drivers/pci/debugfs.c     |  60 ++++++++++++
->  drivers/pci/pci.h         |  12 +++
->  drivers/pci/remove.c      |   1 +
->  drivers/pci/tph.c         | 201 ++++++++++++++++++++++++++++++++++----
->  include/linux/pci.h       |   3 +
->  7 files changed, 290 insertions(+), 20 deletions(-)
->  create mode 100644 drivers/pci/debugfs.c
-> 
-> -- 
-> 2.55.0
-> 
+There is no DT patch for my board in this series. Its JMB585 sits on a Radxa
+Penta SATA HAT, which is not described upstream, so the property belongs in
+an overlay.
+
+Tested on that board with the series backported to 6.18.58, the kernel
+Talos Linux ships; only the context of the #include hunk differs. One
+kernel build, two images that differ only in the overlay: with
+rockchip,perst-inactive-ms = <0>, the JMB585 enumerated on 4 boots out of
+4; without the property, all 3 boots hit the same SError in
+rockchip_pcie_rd_conf() during probe that the board hits without the
+series.
+
+Igor, since the defaults are unchanged, a Helios64 with no DT change should
+behave exactly like plain mainline. If you want to exercise the property
+as well:
+
+	&pcie0 {
+		rockchip,perst-inactive-ms = <10>;
+	};
+
+A wait of 0 to 15 ms enumerated 17 times out of 17 on my board, but your
+slot supply is a GPIO-switched regulator where mine is always on, so I
+would not take my numbers as a guide for yours.
+
+v4: https://lore.kernel.org/all/20261028014116.2432425-1-ehbello@gmail.com/
+v3 (discussion with Shawn): https://lore.kernel.org/all/20261028005603.2399220-1-ehbello@gmail.com/
+
+Changes in v5:
+- Take the delay from the device tree, as suggested by Shawn Lin, instead of
+  shortening the wait automatically when the slot supplies were found
+  already enabled.
+- Drop struct rockchip_pcie::supplies_pre_enabled and
+  rockchip_pcie_supplies_enabled() altogether. That also retires the hole
+  Shawn found in them: devm_regulator_get() returns a dummy regulator for an
+  absent rail and the dummy reports itself enabled, so the old test was
+  unconditionally true on a board describing none of its supplies, on resume
+  included.
+- Keep the 100 us floor from v4, now for any value a board asks for.
+- Split into a bindings patch and a driver patch.
+
+Changes in v4:
+- Hold PERST# for T_PERST-CLK in the shortened path. Old power does not
+  imply an old REFCLK: init_port() runs phy_init()/phy_power_on() on every
+  probe and resume, so the PLL relocks microseconds before the release.
+  Measured 72-75 us by ftrace, i.e. a real violation of the 100 us minimum.
+
+Enrique Hernández Bello (2):
+  dt-bindings: PCI: rockchip,rk3399-pcie: Add PERST# inactive delay
+    properties
+  PCI: rockchip-host: Make the PERST# inactive delay configurable
+
+ .../bindings/pci/rockchip,rk3399-pcie.yaml    | 15 +++++++++++
+ drivers/pci/controller/pcie-rockchip-host.c   | 26 ++++++++++++++++---
+ drivers/pci/controller/pcie-rockchip.h        |  2 ++
+ 3 files changed, 39 insertions(+), 4 deletions(-)
+
+-- 
+2.56.0
+
