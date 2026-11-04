@@ -1,110 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793822237;
-	b=wbN/uxM5xd+CdDABd6IVMSrjyEeyZzlmiKzm6LhxdWZtEQIIShA/hMgwmS/RRWdotfGK
-	 G8CQ0hJbY6pk5oAjBL3LJrO5V+VVm6bcYtMdWdsM+2U0T9c6IflCAmmh+rNVVzG1X0eNE
-	 y0I0xq6xnqYfhSfujAOSbC1zSQ+NQurYVgUv3iBU1aIBCTo6jbJH0v71V9uGLsG8Tesa1
-	 hWZEJKyqjWT/TpSDJPIM1XZeofylIf5+LrTAnzSebIl49BGK1C5e7cmytMb6IdNEN5+Ic
-	 12v0r9uoXn132sN5vEZd63OvqXLqcbdxwiC/e9YDO5OeEvdaPZSfSVXoDD3egT80vrw==
+	t=1793822250;
+	b=oBSC4shMQbXyiH0C/z3Rnh/eK3KxAnEINNDS3zvCmTY4Ucx8JagaAPC4bUtcLF8hDn2Q
+	 F2R7Doz7pVtKmzeLhJOpKF4ebOU4cBRJpCaJQrf4P436K00kZ/8OLdpF7is0t8h/bgVhO
+	 QUkhAtuTGlYMo0YrHajrAagOIzPD/2aCoVDRCjJ3bOmvahUQq3Ka51RoRogNU3blkXYSq
+	 ZuTrqIHuWDyGqF4eDvhuoiF/K+zGA6kHl44IaagieGg1IbYb+MA3VHH0KaJoMnL/RVX8F
+	 Bd/CogNw9tQzlJvm++tSCnOhf0KPM/rAWqM0tkctD2hLRJ48Plbn8shfD1YJPugmBlA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793822237;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
-	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=TlMRmMUMe8QjAR6CrqBxKOo0d6t3LuUXfgeBLoU2aVQ=;
-	b=KmKXLQ8PCD6BkJGVAN36tfKNKocCvkmXZi1yRVFJLAdEZVO9//PbPPU6UZMZ2qukz80r
-	 +eM6J4fMqWfg7HTWOvKmuBrY7MiGim9NozqKMmfBIqwMys6DO9SkoXO1Z8yq1VsBsjC2J
-	 MxDPznjUxRNIbiRfvuyuKXSFeeUWahRNMlpkMce/q7kGspvjHa9n9YQIIyIK9bjqZfAR5
-	 XX5cIdSDewV5OHuD8iFEYRqtl28xXPdLZbWlCVnDzUPkeZ34gzJSU9NkkhLzNV6YVWU7t
-	 50/iJiQ/DqcXUns1m4A09NGV5N6HQDjFMMzc9kwWpdKu3wXMewCeN8VrlzB75M1D7tg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793822250;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=SH6umq0q67z0mi+pij9P60DIf6mBd68NWFOfZUrLdAo=;
+	b=xHbpdebHiNsMxUilZwOykEjg+QNDCJMqK1Hxvbm7IBG3Z/Bo9erXYgzNW2tGyXfriSQf
+	 buq1l9YPHOfc8unY3Vp5DvB2BSv647ldN06mL5GjUQ1nwVTsQbETHKnI1N64tkRSZcvS7
+	 mh79nWBojIb8HLFILkWm02ElG7TC9CmHVD5e3Z1GJTC+/B+n8VcvgdRU2DLkNorOB2m8u
+	 LAUEUOGvgJjIl1PVinmJhBWWcwll0miI3WIV2m4JMEZ5CVBkYJOOWR3qsnZQSM/BKv/SC
+	 WGE5qysBETUBiTvTUBmxkAw638xk/+eaV9Nparx4DaOY246Trm+nObXBMvK47MJerbw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kqE7S5Xb;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VVdlqadB;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06E7B606D145;
-	Wed,  4 Nov 2026 19:57:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4874660A13C0
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 19:57:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kqE7S5Xb
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73B4E1F0093A;
-	Wed,  4 Nov 2026 19:57:04 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VVdlqadB
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 098341F00A02;
+	Wed,  4 Nov 2026 19:57:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793822236;
-	bh=TlMRmMUMe8QjAR6CrqBxKOo0d6t3LuUXfgeBLoU2aVQ=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=kqE7S5XbuPIKNWgp4NcZtfxZcKDOczdTyfF6Lb8nBkfcnxaRlqnGD+MaRgRQBXNdL
-	 cL1adcnEzbJdtGYfAsG5VHAqA4BETjnf58PLyPmqGWnQP0rpXnLeJ/+QmKPG7qeIKA
-	 hRq+/iIxd2JbJ+p/at2OkZrx4ySzYMev1Cd2Jsd7KGS4shN4u5UzGNl2aeD7+6rjz2
-	 Jz//M8FN+MIGMB8INEniatc1xDsyIDdvQxrW6TC6MgJiqUpNa9XPgFBq7Foxi5L6ah
-	 DogTh1A4WvscXityp0tTb9b/tpjyhIQ5HDNDc9RYmgXzkAUT8tucExiczCpS3FKXuW
-	 ZizaXv/BEuT+g==
-From: Christian Brauner <brauner@kernel.org>
-To: linux-fsdevel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Jann Horn <jannh@google.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Chris Mason <mason@kernel.org>,
-	Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Christoph Hellwig <hch@lst.de>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Joel Granados <joel.granados@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Jan Kara <jack@suse.com>,
-	linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-um@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	netdev@vger.kernel.org,
-	ntfs3@lists.linux.dev,
-	platform-driver-x86@vger.kernel.org,
-	coreteam@netfilter.org,
-	kexec@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	netfilter-devel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	ibm-acpi-devel@lists.sourceforge.net,
-	jfs-discussion@lists.sourceforge.net,
-	linux-alpha@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-cifs@vger.kernel.org,
-	linux-fbdev@vger.kernel.org,
-	linux-hwmon@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-sh@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	samba-technical@lists.samba.org,
-	sparclinux@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org,
-	linux-doc@vger.kernel.org,
-	linux-serial@vger.kernel.org,
-	linux-atm-general@lists.sourceforge.net,
-	Takashi Iwai <tiwai@suse.de>,
-	linux-input@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-modules@vger.kernel.org,
-	linux-debuggers@vger.kernel.org,
-	"Christian Brauner (Amutable)" <brauner@kernel.org>,
-	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 30/30] selftests/proc: check that unloading configs doesn't wait for a reader
-Date: Wed,  4 Nov 2026 20:57:02 +0100
-Message-ID: <20261104-work-procfs-fs-v2-30-319e0f9a8aae@kernel.org>
-In-Reply-To: <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
-References: <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
+	s=k20260515; t=1793822250;
+	bh=SH6umq0q67z0mi+pij9P60DIf6mBd68NWFOfZUrLdAo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=VVdlqadBLKbnDrYxXQyBO8l/eBXLDOpDZ+XuBICjtl4mlUW9u5AMnDoFrfflC0y2W
+	 Qj7ufz7DToPilQaaiGVZYozJWurz0Ffm8/oWnyTrJ4OLiXTKdc/3A5z4H4hU9S0/I3
+	 k+NRIt8R99KqipNE139+wbHpb5I+jIfNktOHY7RSNShWE24uUIaXMDOn5v6CZriurq
+	 FEWxvHf7JEjb0zkb+hY4w6k6QK280ylYsNv+Pi4ru6JlSEFIn57X/H0K3gFJ9Xmdcb
+	 Ei3/1e2w0ussRt5K75GlQySy+M0yuUjhK7ty+lR0IDqIk3XtkO/zzXAwiJl3rE/Hjr
+	 2efCh089cwMvA==
+Message-ID: <sashiko-outbox-197982@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v7 09/10] PCI: dw-rockchip: Add system PM support
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Sebastian Reichel" <sebastian.reichel@collabora.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261104-rockchip-pcie-system-suspend-v7-9-6ae6875939a2@collabora.com>
+References: <20261104-rockchip-pcie-system-suspend-v7-0-6ae6875939a2@collabora.com>
+ <20261104-rockchip-pcie-system-suspend-v7-9-6ae6875939a2@collabora.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 04 Nov 2026 19:57:29 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -113,235 +59,269 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=6975; i=brauner@kernel.org; h=from:subject:message-id; bh=Zaf7aQXhU8HLaVPdOPllMB8eHKp+Tuk66nG4inrKqtI=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97vHv7BDe1a4XkZsjGzjxhP5d1TaR9DwbEbXP7r+UK lx1gtQ7SlkYxLgYZMUUWRzaTcLllvNUbDbK1ICZw8oEMoSBi1MAJhIhzsjQ+O/84rDM6r9Orw9O bhF9KqEldSQrX6wjhOPqjMMJV2IaGf7XCCjtOGddIBLj/P/jR3XTdf+Epk/fMvvJmQWuDy6+if/ ODwA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
 
-Read /proc/config.gz into a buffer whose first page is backed by
-userfaultfd and unload configs.ko while procfs copies what was read to
-userspace:
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
+- [High] PCI: dw-rockchip: premature rst_gpio deassertion in rockchip_pcie_=
+resume()
+- [High] PCI: dw-rockchip: unclocked MMIO and double disable in rockchip_pc=
+ie_suspend()
+- [Medium] PCI: dw-rockchip: wrong IRQ mask and order in rockchip_pcie_resu=
+me()
+- [Low] PCI: dw-rockchip: signed shift overflow in rockchip_pcie_resume()
+--
 
-- removing the entry doesn't wait for the reader
+commit 941dec7d380bdb3a689bc84885404d2f2e8eef67
+Author: Sebastian Reichel <sebastian.reichel@collabora.com>
 
-- the reader still gets the page that was read before the removal, and
-  nothing more
+PCI: dw-rockchip: Add system PM support
 
-- and the next read fails with -EIO
+This commit adds noirq system suspend and resume callbacks for Rockchip
+DesignWare PCIe controllers in Root Complex mode. It saves and restores the
+legacy interrupt mask and sequences the PCIe link, PERST# GPIO, PHY, clocks,
+reset line, and 3.3V regulator across suspend and resume.
 
-The test loads configs.ko if it isn't there, skips if configs is built
-in or can't be unloaded, and loads it again afterwards. It needs
-CONFIG_IKCONFIG=m. kselftest-merge keeps the =y that other fragments
-ask for, so it skips there.
+> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/=
+controller/dwc/pcie-dw-rockchip.c
+> index 2e759f92b5c6f..75b40091bb953 100644
+> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
 
-Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
----
- tools/testing/selftests/proc/.gitignore            |   1 +
- tools/testing/selftests/proc/Makefile              |   1 +
- tools/testing/selftests/proc/config                |   2 +
- .../proc/proc-remove-slow-config-reader.c          | 157 +++++++++++++++++++++
- 4 files changed, 161 insertions(+)
+[ ... ]
 
-diff --git a/tools/testing/selftests/proc/.gitignore b/tools/testing/selftests/proc/.gitignore
-index a1994bda676c..ed863db1688f 100644
---- a/tools/testing/selftests/proc/.gitignore
-+++ b/tools/testing/selftests/proc/.gitignore
-@@ -21,6 +21,7 @@
- /proc-uptime-001
- /proc-uptime-002
- /proc-pidns
-+/proc-remove-slow-config-reader
- /proc-remove-slow-sysctl
- /proc-remove-slow-reader
- /proc-remove-mapped
-diff --git a/tools/testing/selftests/proc/Makefile b/tools/testing/selftests/proc/Makefile
-index 8fcab5af502b..95c9212fb670 100644
---- a/tools/testing/selftests/proc/Makefile
-+++ b/tools/testing/selftests/proc/Makefile
-@@ -33,6 +33,7 @@ TEST_GEN_PROGS += proc-fsconfig-hidepid
- TEST_GEN_PROGS += proc-sysctl-readdir-churn
- TEST_GEN_PROGS += proc-pidns
- TEST_GEN_PROGS += proc-remove-slow-sysctl
-+TEST_GEN_PROGS += proc-remove-slow-config-reader
- TEST_GEN_PROGS += proc-remove-slow-reader
- TEST_GEN_PROGS += proc-remove-mapped
- TEST_GEN_PROGS += proc-remove-slow-readlink
-diff --git a/tools/testing/selftests/proc/config b/tools/testing/selftests/proc/config
-index 992577d15295..15b307189392 100644
---- a/tools/testing/selftests/proc/config
-+++ b/tools/testing/selftests/proc/config
-@@ -11,3 +11,5 @@ CONFIG_SND=y
- CONFIG_SND_DUMMY=m
- CONFIG_MODULES=y
- CONFIG_MODULE_UNLOAD=y
-+CONFIG_IKCONFIG=m
-+CONFIG_IKCONFIG_PROC=y
-diff --git a/tools/testing/selftests/proc/proc-remove-slow-config-reader.c b/tools/testing/selftests/proc/proc-remove-slow-config-reader.c
-new file mode 100644
-index 000000000000..5f7bcb27b315
---- /dev/null
-+++ b/tools/testing/selftests/proc/proc-remove-slow-config-reader.c
-@@ -0,0 +1,157 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * A read that faults while procfs copies it to userspace must not hold up
-+ * removal of the /proc entry. Unloading configs.ko removes /proc/config.gz,
-+ * which isn't a seq_file.
-+ */
-+#define _GNU_SOURCE
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <linux/userfaultfd.h>
-+#include <poll.h>
-+#include <pthread.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <sys/ioctl.h>
-+#include <sys/mman.h>
-+#include <sys/syscall.h>
-+#include <unistd.h>
-+
-+#include "../kselftest_harness.h"
-+
-+#define CONFIG_PATH	"/proc/config.gz"
-+#define CONFIG_MODULE	"/sys/module/configs"
-+#define READ_PAGES	2
-+#define TIMEOUT_MS	5000
-+
-+struct reader {
-+	int fd;
-+	char *buf;
-+	size_t len;
-+	ssize_t ret;
-+};
-+
-+struct unloader {
-+	int done;
-+	int ret;
-+};
-+
-+static void *read_thread(void *arg)
-+{
-+	struct reader *r = arg;
-+
-+	r->ret = read(r->fd, r->buf, r->len);
-+	return NULL;
-+}
-+
-+static void *unload_thread(void *arg)
-+{
-+	struct unloader *u = arg;
-+	ssize_t ret;
-+
-+	u->ret = syscall(__NR_delete_module, "configs", O_NONBLOCK) ? -errno : 0;
-+	ret = write(u->done, "x", 1);
-+	return (void *)ret;
-+}
-+
-+FIXTURE(configs) {
-+	bool loaded;
-+};
-+
-+FIXTURE_SETUP(configs)
-+{
-+	self->loaded = false;
-+	if (access(CONFIG_PATH, R_OK) && system("modprobe -q configs"))
-+		SKIP(return, "no " CONFIG_PATH);
-+	if (access(CONFIG_PATH, R_OK))
-+		SKIP(return, CONFIG_PATH ": %s", strerror(errno));
-+	if (access(CONFIG_MODULE, F_OK))
-+		SKIP(return, "configs isn't a module");
-+	self->loaded = true;
-+}
-+
-+FIXTURE_TEARDOWN(configs)
-+{
-+	/* an ASSERT may have fired with the module unloaded */
-+	if (self->loaded && access(CONFIG_PATH, F_OK) &&
-+	    system("modprobe -q configs"))
-+		TH_LOG("couldn't load configs again");
-+}
-+
-+TEST_F(configs, remove_while_reader_faults)
-+{
-+	struct uffdio_api api = { .api = UFFD_API };
-+	struct uffdio_register reg = {};
-+	struct uffdio_zeropage zero = {};
-+	long psz = sysconf(_SC_PAGESIZE);
-+	struct unloader u = {};
-+	struct reader r = {};
-+	struct uffd_msg msg;
-+	struct pollfd pfd;
-+	pthread_t rt, ut;
-+	int uffd, done[2];
-+	char *buf, *ref;
-+	ssize_t ref_len;
-+
-+	r.fd = open(CONFIG_PATH, O_RDONLY | O_CLOEXEC);
-+	ASSERT_GE(r.fd, 0);
-+
-+	/* what the first page of a read looks like */
-+	ref = malloc(psz);
-+	ASSERT_NE(ref, NULL);
-+	ref_len = pread(r.fd, ref, psz, 0);
-+	ASSERT_GT(ref_len, 0);
-+
-+	uffd = syscall(__NR_userfaultfd, O_CLOEXEC | O_NONBLOCK);
-+	if (uffd < 0)
-+		SKIP(return, "userfaultfd: %s", strerror(errno));
-+	ASSERT_EQ(ioctl(uffd, UFFDIO_API, &api), 0);
-+
-+	/* Only the first page of the buffer goes through userfaultfd. */
-+	buf = mmap(NULL, READ_PAGES * psz, PROT_READ | PROT_WRITE,
-+		   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-+	ASSERT_NE(buf, MAP_FAILED);
-+	reg.range.start = (unsigned long)buf;
-+	reg.range.len = psz;
-+	reg.mode = UFFDIO_REGISTER_MODE_MISSING;
-+	ASSERT_EQ(ioctl(uffd, UFFDIO_REGISTER, &reg), 0);
-+
-+	r.buf = buf;
-+	r.len = READ_PAGES * psz;
-+	ASSERT_EQ(pthread_create(&rt, NULL, read_thread, &r), 0);
-+
-+	/* The reader now sleeps in the copy to userspace. */
-+	pfd = (struct pollfd){ .fd = uffd, .events = POLLIN };
-+	ASSERT_EQ(poll(&pfd, 1, TIMEOUT_MS), 1);
-+	ASSERT_EQ(read(uffd, &msg, sizeof(msg)), sizeof(msg));
-+	ASSERT_EQ(msg.event, UFFD_EVENT_PAGEFAULT);
-+
-+	/* Unloading configs.ko removes the file that is being read. */
-+	ASSERT_EQ(pipe2(done, O_CLOEXEC), 0);
-+	u.done = done[1];
-+	ASSERT_EQ(pthread_create(&ut, NULL, unload_thread, &u), 0);
-+	pfd = (struct pollfd){ .fd = done[0], .events = POLLIN };
-+	EXPECT_EQ(poll(&pfd, 1, TIMEOUT_MS), 1) {
-+		TH_LOG("removing " CONFIG_PATH " waited for the reader");
-+	}
-+
-+	zero.range.start = (unsigned long)buf;
-+	zero.range.len = psz;
-+	ASSERT_EQ(ioctl(uffd, UFFDIO_ZEROPAGE, &zero), 0);
-+	ASSERT_EQ(pthread_join(rt, NULL), 0);
-+	ASSERT_EQ(pthread_join(ut, NULL), 0);
-+	if (u.ret)
-+		SKIP(return, "unloading configs: %s", strerror(-u.ret));
-+
-+	/*
-+	 * The page that was read before the removal still arrives and the
-+	 * next piece isn't filled anymore, then nothing.
-+	 */
-+	EXPECT_EQ(r.ret, ref_len);
-+	EXPECT_EQ(memcmp(buf, ref, ref_len), 0);
-+	EXPECT_EQ(read(r.fd, buf, psz), -1);
-+	EXPECT_EQ(errno, EIO);
-+	free(ref);
-+}
-+
-+TEST_HARNESS_MAIN
+> @@ -1037,6 +1039,102 @@ static int rockchip_pcie_rc_reset_root_port(struc=
+t pci_host_bridge *bridge,
+>  	return ret;
+>  }
+> =20
+> +static int rockchip_pcie_suspend(struct device *dev)
+> +{
+> +	struct rockchip_pcie *rockchip =3D dev_get_drvdata(dev);
+> +	struct dw_pcie *pci =3D &rockchip->pci;
+> +	int ret;
+> +
+> +	if (rockchip->data->mode =3D=3D DW_PCIE_EP_TYPE)
+> +		return 0;
+> +
+> +	rockchip->intx =3D rockchip_pcie_readl_apb(rockchip, PCIE_CLIENT_INTR_M=
+ASK_LEGACY);
+> +
+> +	ret =3D dw_pcie_suspend_noirq(pci);
+> +	if (ret)
+> +		return ret;
+> +
+> +	gpiod_set_value_cansleep(rockchip->rst_gpio, 0);
+> +	rockchip_pcie_phy_deinit(rockchip);
+> +	clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
+> +	reset_control_assert(rockchip->rst);
+> +	if (rockchip->vpcie3v3)
+> +		regulator_disable(rockchip->vpcie3v3);
 
--- 
-2.53.0
+[Severity: High]
+What happens on a subsequent suspend if rockchip_pcie_resume() fails?
 
+During suspend, dw_pcie_suspend_noirq() sets pci->suspended =3D true, and
+rockchip_pcie_suspend() then powers off the PHY, disables clocks, asserts
+reset, and disables rockchip->vpcie3v3.
+
+If a later call to rockchip_pcie_resume() fails (for example, if
+dw_pcie_resume_noirq() returns -ETIMEDOUT when dw_pcie_wait_for_link() times
+out, or if regulator, PHY, reset, or clock initialization fails), the error
+unwind path in rockchip_pcie_resume() disables the clocks, asserts reset,
+deinitializes the PHY, and disables rockchip->vpcie3v3 while pci->suspended
+remains true:
+
+drivers/pci/controller/dwc/pcie-dw-rockchip.c:rockchip_pcie_resume() {
+	...
+	ret =3D dw_pcie_resume_noirq(pci);
+	if (ret) {
+		dev_err(dev, "failed to resume: %d\n", ret);
+		goto err_clear_rst_gpio;
+	}
+
+	return 0;
+
+err_clear_rst_gpio:
+	gpiod_set_value_cansleep(rockchip->rst_gpio, 0);
+err_disable_clk:
+	clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
+err_assert_reset:
+	reset_control_assert(rockchip->rst);
+err_deinit_phy:
+	rockchip_pcie_phy_deinit(rockchip);
+err_disable_regulator:
+	if (rockchip->vpcie3v3)
+		regulator_disable(rockchip->vpcie3v3);
+
+	return ret;
+}
+
+Because the PM core logs the noirq resume error, clears is_noirq_suspended,
+and continues resuming the system, won't child PCI device resume and the ne=
+xt
+call to rockchip_pcie_suspend() read APB/DBI registers while the controller
+clocks are disabled and reset is asserted (causing an SError on ARM64), and
+then call rockchip_pcie_phy_deinit(), clk_bulk_disable_unprepare(), and
+regulator_disable() a second time?
+
+> +
+> +	return 0;
+> +}
+> +
+> +static int rockchip_pcie_resume(struct device *dev)
+> +{
+> +	struct rockchip_pcie *rockchip =3D dev_get_drvdata(dev);
+> +	struct dw_pcie *pci =3D &rockchip->pci;
+> +	int ret;
+> +
+> +	if (rockchip->data->mode =3D=3D DW_PCIE_EP_TYPE)
+> +		return 0;
+> +
+> +	if (rockchip->vpcie3v3) {
+> +		ret =3D regulator_enable(rockchip->vpcie3v3);
+> +		if (ret) {
+> +			dev_err(dev, "regulator enable failed: %d\n", ret);
+> +			return ret;
+> +		}
+> +	}
+> +
+> +	ret =3D rockchip_pcie_phy_init(rockchip);
+> +	if (ret) {
+> +		dev_err(dev, "phy init failed: %d\n", ret);
+> +		goto err_disable_regulator;
+> +	}
+> +
+> +	ret =3D reset_control_deassert(rockchip->rst);
+> +	if (ret) {
+> +		dev_err(dev, "reset deassert failed: %d\n", ret);
+> +		goto err_deinit_phy;
+> +	}
+> +
+> +	ret =3D clk_bulk_prepare_enable(rockchip->clk_cnt, rockchip->clks);
+> +	if (ret) {
+> +		dev_err(dev, "clock init failed: %d\n", ret);
+> +		goto err_assert_reset;
+> +	}
+> +
+> +	rockchip_pcie_writel_apb(rockchip, FIELD_PREP_WM16(0xffff, rockchip->in=
+tx),
+> +				 PCIE_CLIENT_INTR_MASK_LEGACY);
+
+[Severity: Low]
+Could passing 0xffff to FIELD_PREP_WM16() trigger a signed shift overflow in
+rockchip_pcie_resume()?
+
+FIELD_PREP_WM16() preserves the type of _mask and shifts it left by 16:
+
+include/linux/hw_bitfield.h:
+#define FIELD_PREP_WM16(_mask, _val)					     \
+	({								     \
+		typeof(_val) __val =3D _val;				     \
+		typeof(_mask) __mask =3D _mask;				     \
+		__BF_FIELD_CHECK(__mask, ((u16)0U), __val,		     \
+				 "HWORD_UPDATE: ");			     \
+		(((typeof(__mask))(__val) << __bf_shf(__mask)) & (__mask)) | \
+		((__mask) << 16);					     \
+	})
+
+Because 0xffff is a signed int literal with bit 15 set, (__mask) << 16 shif=
+ts
+into the sign bit of a 32-bit signed int, triggering a UBSAN
+shift-out-of-bounds warning when CONFIG_UBSAN_SHIFT is enabled. Should this
+use PCIE_INTR_MASK (GENMASK(7, 0)) or an unsigned mask instead?
+
+> +
+> +	rockchip_pcie_enable_enhanced_ltssm_control_mode(rockchip, 0);
+> +	rockchip_pcie_set_controller_mode(rockchip, PCIE_CLIENT_MODE_RC);
+> +	rockchip_pcie_unmask_dll_indicator(rockchip);
+
+[Severity: Medium]
+Should rockchip_pcie_resume() be calling rockchip_pcie_unmask_dll_indicator=
+()
+here in Root Complex mode and before dw_pcie_resume_noirq()?
+
+Looking at rockchip_pcie_unmask_dll_indicator():
+
+drivers/pci/controller/dwc/pcie-dw-rockchip.c:rockchip_pcie_unmask_dll_indi=
+cator() {
+	u32 val;
+
+	/* unmask DLL up/down indicator and hot reset/link-down reset */
+	val =3D FIELD_PREP_WM16(PCIE_RDLH_LINK_UP_CHGED, 0) |
+	      FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
+	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
+}
+
+In RC mode, rockchip_pcie_configure_rc() and
+rockchip_pcie_rc_reset_root_port() only unmask PCIE_LINK_REQ_RST_NOT_INT, a=
+nd
+rockchip_pcie_configure_rc() only does so after dw_pcie_host_init() has
+configured the RC and brought up the link:
+
+drivers/pci/controller/dwc/pcie-dw-rockchip.c:rockchip_pcie_configure_rc() {
+	...
+	ret =3D dw_pcie_host_init(pp);
+	if (ret) {
+		dev_err(dev, "failed to initialize host\n");
+		return ret;
+	}
+
+	/* unmask hot reset/link-down reset */
+	val =3D FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
+	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
+}
+
+Because rockchip_pcie_rc_sys_irq_thread() only handles
+PCIE_LINK_REQ_RST_NOT_INT (whereas PCIE_RDLH_LINK_UP_CHGED is handled by
+rockchip_pcie_ep_sys_irq_thread()), won't calling
+rockchip_pcie_unmask_dll_indicator() before dw_pcie_resume_noirq() cause
+spurious pcie-sys-rc interrupts on link-up changes and allow link transitio=
+ns
+during resume link training to latch PCIE_LINK_REQ_RST_NOT_INT and trigger
+pci_host_handle_link_down() once IRQs are re-enabled?
+
+> +
+> +	ret =3D gpiod_set_value_cansleep(rockchip->rst_gpio, 1);
+> +	if (ret) {
+> +		dev_err(dev, "failed to set reset gpio: %d\n", ret);
+> +		goto err_disable_clk;
+> +	}
+> +
+> +	ret =3D dw_pcie_resume_noirq(pci);
+
+[Severity: High]
+Does setting rockchip->rst_gpio to 1 before dw_pcie_resume_noirq() cause a
+premature PERST# deassertion and reset glitch on resume?
+
+In rockchip_pcie_resume(), gpiod_set_value_cansleep(rockchip->rst_gpio, 1)
+deasserts PERST# before dw_pcie_resume_noirq() runs. Immediately afterward,
+dw_pcie_resume_noirq() calls dw_pcie_setup_rc() and
+dw_pcie_start_link() -> rockchip_pcie_start_link(), which drives
+rockchip->rst_gpio back to 0, enables LTSSM, waits PCIE_T_PVPERL_MS (100ms),
+and then drives rockchip->rst_gpio to 1:
+
+drivers/pci/controller/dwc/pcie-dw-rockchip.c:rockchip_pcie_start_link() {
+	struct rockchip_pcie *rockchip =3D to_rockchip_pcie(pci);
+
+	/* Reset device */
+	gpiod_set_value_cansleep(rockchip->rst_gpio, 0);
+
+	rockchip_pcie_enable_ltssm(rockchip);
+	...
+	msleep(PCIE_T_PVPERL_MS);
+
+	rockchip_pcie_ltssm_trace(rockchip, true);
+
+	gpiod_set_value_cansleep(rockchip->rst_gpio, 1);
+
+	return 0;
+}
+
+Won't driving rockchip->rst_gpio high before rockchip_pcie_start_link()
+produce a 0 -> 1 -> 0 -> 1 glitch on PERST# before the RC is configured,
+before LTSSM and refclk are enabled, and before PCIE_T_PVPERL_MS has elapse=
+d?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-rockchip-p=
+cie-system-suspend-v7-0-6ae6875939a2@collabora.com?part=3D9
