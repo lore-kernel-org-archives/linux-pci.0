@@ -1,55 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793813667;
-	b=HcFa5j+vzFPPJzAm5joXAICJxxyP5xUYKX/gD0h9H5aQsN+ktPq5ruTmFUnF7jor6w5v
-	 7cGEOriFC8HkysMAOMJULp9B38Rpo69oZ4Kx1u7gH2woUZiSAknl/azUfZNspSmUd1prX
-	 Z+T7ChWZ3WV1GWtUXheizToC/9tFO06NxfUD4aaY2ClgkgbN5Qj1PmZx2xVcVBvRsPh/1
-	 C/qeR4qQsWTn3AaAPl60oiwxG0lEuQNplFAjnssoX2Ak1eB8BPgn6a/7nXXWRPGls+D6Z
-	 GG0VFu8AOJE7X4E0pgwFuxBdVsR00zaBv+RcOmM61tm+azJor2z83vlUrkqB7vQm5iQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793813667;
-	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
-	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
-	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=AMOD33XmGyHm36xJWMnYgDFAfU9OylqTMFKngAIWEtA=;
-	b=3v/3se8lssaDm/TUuylLh2TZxQS50KmMwNymPgd0W4yi37IOGkxv6s02ETe/puXSjXpk
-	 xQ25djptbvw7O9eG8BSEUk8L6vtPErPCiiUn4zKedQNuMSSOhVZ03vk6rII3qx4sUPQlw
-	 TC5TeXpe4dgEP1pygoH1yhtgnb/tsg3NeGm36DyJk8awd8BSMf45Pe53xcq3b+WZMOmUp
-	 dkWxXrVLd9zkc8U3lDSuRM2AsisFJkx68XdfAf9ilDNnOHQDPxxP5UqqeiHc6XRi8Y697
-	 +2ItmNRNY6rhVbl5QUU6hmni9ji5JFcFcXUxxf+1LcoBBIhJ572IxO3+iPOstBvijWw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TuIdEGHN;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.162.62
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793813735;
+	b=LhqOrdx0DRmG91yP0OxHcGadddaIDaGNpfYflMdhWrOx0t1yNdEfhv/9deylnSh48w/g
+	 RY00fN3RBicEwXvUVWouB1Yb/xO1A7T3+Y4D1SPayZsCWWf+JCLy5Vd3X3lxu2ATdITyF
+	 thXBqiJ572k+jQ36QZ12lPokr1TcDeoR7rArlKMoxGHISk3Wac3iltjCmUP7gXNKD6nrE
+	 /Ln12CctgCphSKCxjkOtrQldLfD5ExR2c+KwEZLEMg0FAtfqGdtxe5rYwrrX3WpNx3r4m
+	 Y80LN7cOq0PXg/tZ9W3qXnXsCiqAsgnldsnxgovXuHjLxD0yUTCemVzzv2h1AEzrBLQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793813735;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:Content-Type:Content-Disposition:
+	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=OxGxdpzy3fOXvtteKey3N0WFb4e8fNOktDU3//UaKIc=;
+	b=nZe1gSPh72UU621bFGYzsRb7IzvU7J/2KxHubx0ZkaPUiUv7s7GT23+HD4pb8mEoiqj9
+	 M6kGqYKxAFs+/Lw93SbGIUSeAg4pOyDn7aLMxJ5B4QB31JjVh+mk/dXZgyFlkr74x5VaN
+	 ay/eVnPF3fGVucjFiVcyhNNCIaVqldwYJRQA0by3TbZ94DB3MLCNLp/4UqUPU6590s/7F
+	 FChU98IbuQK6Ym+4795V6Qah6aAgVGdEPCRfPwcjoD434eDo2YBxDISo7kwKkcbEtuy3s
+	 MH3E9KkxPE781rnQgTI3Y94j0UA/YkItj/DkuXNJ+kXkfD+lbq+Op31ngxQCEVwZY2w==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.nxp.com;
+	spf=pass smtp.mailfrom=oss.nxp.com;
+	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=NgD6cBRe;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.162.62
+Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013062.outbound.protection.outlook.com [40.107.162.62])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5469606A93E
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 17:34:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6FB4606A329;
+	Wed,  4 Nov 2026 17:35:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E6FB4606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TuIdEGHN
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56BF91F00A1B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 17:34:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793813666;
-	bh=AMOD33XmGyHm36xJWMnYgDFAfU9OylqTMFKngAIWEtA=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=TuIdEGHN+tlSpGP2tguvWW7kLlUQWLPYjJKJSOdpszP2pLOR7WrjdSkZZ/grMbqbK
-	 +lTr56mLL+WOdircBkePq+AP1VJ8IkK1jD+a+/cNVkOM5lTrA3ra2sVKICfCT0wVFa
-	 G7aUxkwbEYQTgmz4D8gML0l5sd+AeXfF/B+yunRHPHSfp3DhyhKMZ2MO8cmr1H2mgR
-	 d2oAbezChMlOpKySp6bD7YhtrL6rY8cs9aS9v0EePA62cXO8uXedgf6WJ2JQI3RfVB
-	 sVx/vx3dq4DLpiMPLoF4zMVjw7jCtMETWhYAirt1guo5pK4CX4JT893wQit46xG65K
-	 Y99CMV8/O64SQ==
-Received: by mail-vk1-f172.google.com with SMTP id 71dfb90a1353d-5eaabf28c06so687891e0c.2
-        for <linux-pci@vger.kernel.org>; Wed, 04 Nov 2026 09:34:26 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AKwUvBx5mwYKTUMwNmruqcVUMQlNBWUh0QUmQVpPmmCX4cX4IYzIpT+RC4AfIwZIvOcp6FJ763T4JlQk+vY=@vger.kernel.org
-X-Gm-Message-State: APuU4Z95ij0GX6F/GupzndegGDgI3TVqsln7Bs09b+/kjP44ZgGSDF7g
-	XKDFH6ggAXoByt4+kGyyuyOji15H3yv6IBpPP07wx7SNQNNB/zE0qSqzit8fQte7vjW9yjQnjel
-	2wZpn1rtd2ZkJXgxoz4arHHqdc57hTWw=
-X-Received: by 2002:a05:6122:180a:b0:5ec:5f1b:f725 with SMTP id
- 71dfb90a1353d-5ec689c4d7fmr8231097e0c.23.1793813664918; Wed, 04 Nov 2026
- 09:34:24 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=NgD6cBRe
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=nNP0bNjeITaWsASYQ1q6vKWlriku/PhROubxVGbB2gD1kLIa561MPF0/J0un90RThsbRG+FtSPGmPn47ISbO4pCe5zRCTQkz7IfCO/gry/GB4VX0PCTsgGo531Wx9X8sallR5G/NUg3QWIUV1Xeciy27X4Dwx70WF+Czcjm8fFwfePL35IulHhH4BIj6kk3zyT4v3/9N1ckH1RTVBVbhDl50FKPWXSx1l00QxMiDuxPoXhQkvGGjpKUxCzvgdZMmlf8Gw9o8jUqs5GIXtqxLSlabYJixXtBsp/T1z/n/ifglHDDL3d6VJl5+es3YmS6pW9OGFB2DCC/TRxhm6jvCDA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=OxGxdpzy3fOXvtteKey3N0WFb4e8fNOktDU3//UaKIc=;
+ b=uq8znzl1wRF6e8w9CDXFjvcRZc21biSXVkVK2BftBnQDqFZ7yoH6wjnhI6pl+ypVDzKkYCeLjdnk8kL/8tBMzaVdKk8p4DkSYUEA+8o6xQRWe8VkJm5NkOUo5hNauyJ3B+Z4+C8VyZH1nwSg4d+l9hE8z2toRilBxcwR9kiUxIgqenwtzYwQ8pb11K6X99ATpKc3jQbuF8HwQfFaV/ifWd66LnK+rT9o8g1Luyu/7ZapNGD5XHHTfC7iPk8nuyfIRcq80/E0bxPZnw4nzoqP9HUNAeDw7PUgZSg7B16ygUdnzwwPqYKq1g9BqP+caVDtTK/H0HHbGc/h0n+R7IMQiA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=OxGxdpzy3fOXvtteKey3N0WFb4e8fNOktDU3//UaKIc=;
+ b=NgD6cBReRwANNhe5Jyjrctx+yPiR9TlcMFgV6FKMthO/Zsv2Nj9Oygsx5iFhxYwUDOAUqR/iS5Emd7XzVJ4AzAolB+fC13EgWRnEpVRA+0kJdgbd/bvnuy1lEg8iaA2sZ0IlZ8ache2K8QkFQ5yrFO8Yy5hwKlEIHvgOFNryx8dBu8zk4IYky4yv/wUA92ZcZrn5j165VA3JOn70fa03i1TppXMd4JNMzlmyboiimorwTx8WDW6dpH/bxSRRf4xUe7yYRSyaKmDJ8Pb3Bg3I6i5ZS/pWIYYnmC48+Xkh5yCKI9oy7G/L5xUTU4MUm/Nc6qaSQk0lx1FQ/ZkRk7uJVA==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from MI3PR04MB12438.eurprd04.prod.outlook.com (2603:10a6:290:76::14)
+ by AS8PR04MB7591.eurprd04.prod.outlook.com (2603:10a6:20b:297::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.8; Wed, 4 Nov 2026
+ 17:35:32 +0000
+Received: from MI3PR04MB12438.eurprd04.prod.outlook.com
+ ([fe80::c715:c32:8bb1:b70b]) by MI3PR04MB12438.eurprd04.prod.outlook.com
+ ([fe80::c715:c32:8bb1:b70b%6]) with mapi id 15.21.0592.007; Wed, 4 Nov 2026
+ 17:35:32 +0000
+Date: Wed, 4 Nov 2026 11:35:23 -0600
+From: Frank Li <Frank.li@oss.nxp.com>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
+	Serge Semin <fancer.lancer@gmail.com>,
+	Cai Huoqing <cai.huoqing@linux.dev>,
+	Niklas Cassel <cassel@kernel.org>,
+	Devendra K Verma <devverma@amd.com>, dmaengine@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v7 3/7] dmaengine: dw-edma: Factor out descriptor
+ completion
+Message-ID: <auts2-ocM1pLv2nN@SMW015318>
+References: <20261104161227.1742005-1-den@valinux.co.jp>
+ <20261104161227.1742005-4-den@valinux.co.jp>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261104161227.1742005-4-den@valinux.co.jp>
+X-ClientProxiedBy: DS7PR03CA0341.namprd03.prod.outlook.com
+ (2603:10b6:8:55::23) To MI3PR04MB12438.eurprd04.prod.outlook.com
+ (2603:10a6:290:76::14)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,162 +103,126 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org> <20261104-work-procfs-bugfixes-v2-4-bbf7d5546809@kernel.org>
-In-Reply-To: <20261104-work-procfs-bugfixes-v2-4-bbf7d5546809@kernel.org>
-From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
-Date: Wed, 4 Nov 2026 18:34:10 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0gnefKDcBnLzxxXPLJkYRHN9pbYH9WVFAoUGuCSOPcW1A@mail.gmail.com>
-X-Gm-Features: AclHuK8WGpfSf3TpV-YfKcvDlenGAnmL4yQTyeV9z6QpHJtyVq4G8L84EjJ5Q2g
-Message-ID: <CAJZ5v0gnefKDcBnLzxxXPLJkYRHN9pbYH9WVFAoUGuCSOPcW1A@mail.gmail.com>
-Subject: Re: [PATCH v2 04/51] PNP: isapnp: don't go on when isapnp_cfg_begin() fails
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, 
-	Linus Torvalds <torvalds@linux-foundation.org>, Jann Horn <jannh@google.com>, 
-	Josef Bacik <josef@toxicpanda.com>, Chris Mason <mason@kernel.org>, 
-	Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
-	Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
-	Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, Greg Kroah-Hartman <gregkh@suse.de>, 
-	Joel Granados <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Jan Kara <jack@suse.com>, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
-	linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, ntfs3@lists.linux.dev, 
-	platform-driver-x86@vger.kernel.org, coreteam@netfilter.org, 
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
-	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net, 
-	jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
-	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
-	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, 
-	samba-technical@lists.samba.org, sparclinux@vger.kernel.org, 
-	linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
-	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
-	linux-debuggers@vger.kernel.org, Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MI3PR04MB12438:EE_|AS8PR04MB7591:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8896df66-ffc0-4c0e-6cf7-08df3a9a06a5
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|1800799024|7416014|23010399003|366016|19092799006|261021121427099003|11063799006|4143699003|56012099006|261022075727099003|261009223027099003|261021123027099003|261102123227099003|261026121527099003|10067099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	8u9uF6EJKJPlisJj03BzUWI8bVZKUUUccd95zs0LlbcnlGaIASWMK6fVMBlohZWUwMwIlsm2MnAq51w7ozTFxWdKp0qW13DxVkvPfcOCMeuryv+K03+OaKGr0VcvcfqeglVSAfJAbMXePnBjXqyw7PYw3z5B93XuoF38zgU9JUqOqQkn3osOIzBN6AM2NH5WhS6qFCn9I3h6C261cCZxdCiMJ2Avhsxcg2KlQx3fku3/JQBKRfcXFj4SgzsbOzdPx950PGecA1Ft/dE1jmVJfuaHQ+EdHbZ+D+ouHFhlbGmMWKj1PwaMyyuA1Ix9Po8/LKYz1MSctbcBeXz3dsa584891vII2tSS2rxqgk7zpmTXfO+RLRuwwGncIrnDE5aRivJq2qYip0HsKv+Z4zl9BTGAfiqSbZLgdzScxQ59eMkZrwlKUJgrFTsfX071wfxJAT9XBirqbzVl7o/5GXDde6SUrdXW6I1VFPpJEGRFoG60tizh6wZvUFeo3EO80fSv55qq8FY4n/YJ9s5I3wUvOT0SBQvqiHKzGU7m0TiVNLa/YlI/INjbowqIXjuxiMQzX2/h0AtIFWbsegH9fAlJqA2Cr2AcsgmpUcnS3FqTeBM=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MI3PR04MB12438.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(7416014)(23010399003)(366016)(19092799006)(261021121427099003)(11063799006)(4143699003)(56012099006)(261022075727099003)(261009223027099003)(261021123027099003)(261102123227099003)(261026121527099003)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?3xlhFdxL/TvyQE16U5lKi6kbXW6VwwAZ1cqJD2eFzDHlQ3N4N4itEJUPm80w?=
+ =?us-ascii?Q?dazJ9EgZdRIhZQ6JnPi+oTDHzOS+W07UCVgFrC/ycUZfBzZy15D7xfAhob43?=
+ =?us-ascii?Q?Mbv8iBnF85pv04Kt/Cwxz2zriH86qlK0N1/UdoxuWr42rF0aWMQo+5tiZByb?=
+ =?us-ascii?Q?fbfDghH1zR7XQcKdnpqp4j/Pvo9w1bASD84tGmPrzV6tKndE7JmMy47lRE5/?=
+ =?us-ascii?Q?vYPpApc1m/CLQnrwqxcd/n0Tcqx4t8lD5pbcsNmxnnHw4xoQDI2e7sFoixQV?=
+ =?us-ascii?Q?cmpWW98LLOW1vXqNprUfQOtXVUqbMmACG3BkWGhgBMEy0mrWsvwbM6+a8lee?=
+ =?us-ascii?Q?GXbeu05/4O8mRIYPIclA5rB83w7ObU+Tsrs+PJ6vnzOsbmqImg0VCe9EocLi?=
+ =?us-ascii?Q?BAHc+XTwM/17e7BlI3OfCMDZTfs7BS3uR9GOtksbClQbNhxRxHoimOk460Bv?=
+ =?us-ascii?Q?0lGdvZHuljZYaF+3jL/pejeIjCqg0lVjvi9a0l+f6XJIcKtnODDpH4hD2NEi?=
+ =?us-ascii?Q?0xM9iMpdIUBxNDhifbVNxMvopJpkRoCfC1xqwQm1Gn4wpdp6nVMKfXNm9ZNh?=
+ =?us-ascii?Q?3qnMLYU0lBsrefB+pVag7KyihYjtDY4RicMnoJlvAybnrkuXY5Gs4sUiRM80?=
+ =?us-ascii?Q?JVIC1N62knNHgWER6lthMwEOp+Ta+CZ0dwCszZdawfGfKRZiee/hvpEuS1S9?=
+ =?us-ascii?Q?SjXLhqPkpxELWTiNABDnx4PoycBsyQNutYwOYlcbrV8P3YQNj/4VU9hESeH0?=
+ =?us-ascii?Q?E2Rb5b6+SL/2BHuaZ+08dpOe9EsZ5gCnKkkanoOEYdAs7/wK0lew2dy/KYfb?=
+ =?us-ascii?Q?g5tUTx6vQlUYIaBixP0HuwlWsBPQnNyNq+fz3Sg3jeYOfkkRkPeSmRv0MR7k?=
+ =?us-ascii?Q?D6nEawiiPjgiQGarT6vRihh+ygxbvPbfFunY9UEA7kcFKMh/PPADjyQas2mL?=
+ =?us-ascii?Q?SEcMMzQpGLmwCsHE7fdVjt1KF/AJzD6Ors1fQM55lfAkRRE8d6w3WuQVjMlm?=
+ =?us-ascii?Q?GAvyLiHEVOJgprHdd42HTkl8b+9KJK0WG8KRZY3jitEcn2VnTewtYw7bJ971?=
+ =?us-ascii?Q?ZvOmjL89T8S6vNLslR9+6xNISjqs5sUMkP54TRTnj2t4GHZz7zk3fK18eoU3?=
+ =?us-ascii?Q?GeAS56vSzL2/EfARDG/84vz/++6o5g3Y3ny9TN3kjOQFlyZhDGmmf2s49FJa?=
+ =?us-ascii?Q?7smnMw+77kFrpaVi2Zx0oeZQromOE4wP7xx0Z0mejU2AwQjEffe/Z9OxMfsS?=
+ =?us-ascii?Q?FKpVHXobcgDCWUFAW5pL8QLTGgKB3gxJXvMlSaOPi3E9yAzigVHdyBPZEMH1?=
+ =?us-ascii?Q?Hojw6YazxOGZilcjRB+m0cwi0xB1lBzsizCh30RHWoix8n9G5hy0xEaoaNeB?=
+ =?us-ascii?Q?Mj70cJGoZwDmw7vgje1zGzCOF0T57e/hQIvxJVHspvj/tOKuIIisB0v5NyNR?=
+ =?us-ascii?Q?yQI+IYO/EvtkqjFyfKY8i6ckpkSlXD99MOZNkXmQl4l3ZYa+owXd6L+oXcHt?=
+ =?us-ascii?Q?/1fgnme1+g3Awd5K4Ud4YGfwKaclUp6DdPkJTQxEIao5Ok6rnFXqhWcmK2Iu?=
+ =?us-ascii?Q?eDeFzOR0ISnRc39jfPDwhmCXXnvmcG7KUmtq/N+wyRxjFkxtv/JrgBdCIRYf?=
+ =?us-ascii?Q?DS0f/M7qCXvbVsAwhwkSgdoawJXpCtNMeykrxWgJwVihniAYTSvZEPf68O/T?=
+ =?us-ascii?Q?pxDGO1/ZqvGCn1WQ1FnJh/jPKdlEsKXcMAu3AyUp5+Yu9po/RfDDOOmiIpOq?=
+ =?us-ascii?Q?g1AwlQa04+Fus35VMGrpoKrAzRRX6AB4ySDRgPL3FYDkHiheJSAh?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8896df66-ffc0-4c0e-6cf7-08df3a9a06a5
+X-MS-Exchange-CrossTenant-AuthSource: MI3PR04MB12438.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2026 17:35:32.2830
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: YjNj6HMQ2mmWVKnnk5H0kjk2n1w34N1a8MsIeVodfvCL2bqTnaTDXAiOaJJbTxGgIr/0kx0dGUIpOys2kYeLW65Zr5br+XVH/iXLPZD7x+DhKdKlxHX6vmJSX+6R6qg3
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR04MB7591
 
-On Wed, Nov 4, 2026 at 6:30=E2=80=AFPM Christian Brauner <brauner@kernel.or=
-g> wrote:
+On Thu, Nov 05, 2026 at 01:12:23AM +0900, Koichiro Den wrote:
+> Completing a descriptor takes three steps: record the callback result,
+> unlink it from the issued list and hand it to virt-dma.
 >
-> isapnp_cfg_begin() refuses a logical device number above 10 and a bad
-> card number with -EINVAL before it takes isapnp_cfg_mutex. The callers
-> that read and write the device's configuration, the proc file included,
-> don't look at that: they go on talking to whatever device the card
-> currently has selected and then unlock a mutex they never took in
-> isapnp_cfg_end(). isapnp_create_device() hands out logical device
-> numbers without a bound, so a card with twelve or more logical devices
-> gets there. Return the error instead.
+> Factor them into dw_edma_complete_vdesc() to avoid sprinkling
+> vchan_cookie_complete() calls throughout the driver.
 >
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
-
-Acked-by: Rafael J. Wysocki (Intel) <rafael@kernel.org>
-
+> No functional change.
+>
+> Suggested-by: Frank Li <Frank.Li@nxp.com>
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
 > ---
->  drivers/pnp/isapnp/core.c | 16 ++++++++++++----
->  drivers/pnp/isapnp/proc.c |  5 ++++-
->  sound/isa/es18xx.c        |  6 +++++-
->  3 files changed, 21 insertions(+), 6 deletions(-)
+
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+
+> Changes from v6:
+>   - New patch, per Frank's comment here:
+>     https://lore.kernel.org/r/auTL2mHwCt20uhII@SMW015318/
+>     "let vchan_cookie_complete() at one place only".
 >
-> diff --git a/drivers/pnp/isapnp/core.c b/drivers/pnp/isapnp/core.c
-> index 219f96f2aaaf..3591a2791c1a 100644
-> --- a/drivers/pnp/isapnp/core.c
-> +++ b/drivers/pnp/isapnp/core.c
-> @@ -853,7 +853,9 @@ static int isapnp_get_resources(struct pnp_dev *dev)
+>  drivers/dma/dw-edma/dw-edma-core.c | 17 +++++++++++------
+>  1 file changed, 11 insertions(+), 6 deletions(-)
 >
->         pnp_dbg(&dev->dev, "get resources\n");
->         pnp_init_resources(dev);
-> -       isapnp_cfg_begin(dev->card->number, dev->number);
-> +       ret =3D isapnp_cfg_begin(dev->card->number, dev->number);
-> +       if (ret)
-> +               return ret;
->         dev->active =3D isapnp_read_byte(ISAPNP_CFG_ACTIVATE);
->         if (!dev->active)
->                 goto __end;
-> @@ -887,10 +889,12 @@ __end:
->  static int isapnp_set_resources(struct pnp_dev *dev)
->  {
->         struct resource *res;
-> -       int tmp;
-> +       int tmp, ret;
+> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> index fb38d51037c5..e2f7af5969c6 100644
+> --- a/drivers/dma/dw-edma/dw-edma-core.c
+> +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> @@ -107,6 +107,15 @@ static void dw_hdma_set_callback_result(struct virt_dma_desc *vd,
+>  	res->residue = residue;
+>  }
 >
->         pnp_dbg(&dev->dev, "set resources\n");
-> -       isapnp_cfg_begin(dev->card->number, dev->number);
-> +       ret =3D isapnp_cfg_begin(dev->card->number, dev->number);
-> +       if (ret)
-> +               return ret;
->         dev->active =3D 1;
->         for (tmp =3D 0; tmp < ISAPNP_MAX_PORT; tmp++) {
->                 res =3D pnp_get_resource(dev, IORESOURCE_IO, tmp);
-> @@ -936,9 +940,13 @@ static int isapnp_set_resources(struct pnp_dev *dev)
->
->  static int isapnp_disable_resources(struct pnp_dev *dev)
->  {
-> +       int ret;
+> +/* Must be called with vc.lock held. */
+> +static void dw_edma_complete_vdesc(struct virt_dma_desc *vd,
+> +				   enum dmaengine_tx_result result)
+> +{
+> +	dw_hdma_set_callback_result(vd, result);
+> +	list_del(&vd->node);
+> +	vchan_cookie_complete(vd);
+> +}
 > +
->         if (!dev->active)
->                 return -EINVAL;
-> -       isapnp_cfg_begin(dev->card->number, dev->number);
-> +       ret =3D isapnp_cfg_begin(dev->card->number, dev->number);
-> +       if (ret)
-> +               return ret;
->         isapnp_deactivate(dev->number);
->         dev->active =3D 0;
->         isapnp_cfg_end();
-> diff --git a/drivers/pnp/isapnp/proc.c b/drivers/pnp/isapnp/proc.c
-> index c1f6e6bd0eb2..b3abab24050b 100644
-> --- a/drivers/pnp/isapnp/proc.c
-> +++ b/drivers/pnp/isapnp/proc.c
-> @@ -25,6 +25,7 @@ static ssize_t isapnp_proc_bus_read(struct file *file, =
-char __user * buf,
->         struct pnp_dev *dev =3D pde_data(file_inode(file));
->         int pos =3D *ppos;
->         int cnt, size =3D 256;
-> +       int ret;
+>  static void dw_edma_core_reset_ll(struct dw_edma_chan *chan)
+>  {
+>  	u32 i;
+> @@ -788,9 +797,7 @@ static void dw_edma_done_interrupt_locked(struct dw_edma_chan *chan)
 >
->         if (pos >=3D size)
->                 return 0;
-> @@ -37,7 +38,9 @@ static ssize_t isapnp_proc_bus_read(struct file *file, =
-char __user * buf,
->         if (!access_ok(buf, cnt))
->                 return -EINVAL;
->
-> -       isapnp_cfg_begin(dev->card->number, dev->number);
-> +       ret =3D isapnp_cfg_begin(dev->card->number, dev->number);
-> +       if (ret)
-> +               return ret;
->         for (; pos < 256 && cnt > 0; pos++, buf++, cnt--) {
->                 unsigned char val;
->                 val =3D isapnp_read_byte(pos);
-> diff --git a/sound/isa/es18xx.c b/sound/isa/es18xx.c
-> index 3cadbf7cf238..de1eda5a0656 100644
-> --- a/sound/isa/es18xx.c
-> +++ b/sound/isa/es18xx.c
-> @@ -1950,7 +1950,11 @@ static int snd_audiodrive_pnp_init_main(int dev, s=
-truct pnp_dev *pdev)
->         /* ok. hack using Vendor-Defined Card-Level registers */
->         /* skip csn and logdev initialization - already done in isapnp_co=
-nfigure */
->         if (pnp_device_is_isapnp(pdev)) {
-> -               isapnp_cfg_begin(isapnp_card_number(pdev), isapnp_csn_num=
-ber(pdev));
-> +               int ret =3D isapnp_cfg_begin(isapnp_card_number(pdev),
-> +                                          isapnp_csn_number(pdev));
-> +
-> +               if (ret)
-> +                       return ret;
->                 isapnp_write_byte(0x27, pnp_irq(pdev, 0));      /* Hardwa=
-re Volume IRQ Number */
->                 if (mpu_port[dev] !=3D SNDRV_AUTO_PORT)
->                         isapnp_write_byte(0x28, pnp_irq(pdev, 0)); /* MPU=
--401 IRQ Number */
->
+>  		desc = vd2dw_edma_desc(vd);
+>  		if (desc->start_burst >= desc->nburst) {
+> -			dw_hdma_set_callback_result(vd, DMA_TRANS_NOERROR);
+> -			list_del(&vd->node);
+> -			vchan_cookie_complete(vd);
+> +			dw_edma_complete_vdesc(vd, DMA_TRANS_NOERROR);
+>  			if (!chan->non_ll)
+>  				chan->ll_done = chan->ll_head;
+>  		}
+> @@ -838,9 +845,7 @@ static void dw_edma_abort_interrupt(struct dw_edma_chan *chan)
+>  	if (vd && chan->request == EDMA_REQ_STOP) {
+>  		dw_edma_terminate_all_descs(chan);
+>  	} else if (vd) {
+> -		dw_hdma_set_callback_result(vd, DMA_TRANS_ABORTED);
+> -		list_del(&vd->node);
+> -		vchan_cookie_complete(vd);
+> +		dw_edma_complete_vdesc(vd, DMA_TRANS_ABORTED);
+>  	}
+>  	if (!chan->non_ll)
+>  		dw_edma_core_reset_ll(chan);
 > --
-> 2.53.0
->
+> 2.54.0
 >
