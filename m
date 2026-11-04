@@ -1,80 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.12
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793754404;
-	b=Y/xMoQg2gj1oBD+I0OeqhBVxVtTIdAzUIkvM+dO6TqBJ3rM4xREq3kryCIGaLRg7fhx1
-	 41BBHkWX2Vl3tF/ABdi9GtJgvqo3eJzTS8fK5QlpwX8e3dLymmCA2s1nEOooxRrAIbaw5
-	 4zQvWjUF2UfPwR8/o93MwWjTnNfmdteQHFHaaJkRL+e81yj1zN9lQVU4HxuKH+o3hzc+b
-	 SXsSuQcrl0VZ1Rq19nhtlwpwbKRAFFL13nj8WZxN/kVKzEML+XnO+kikV724qJASo3+Y0
-	 NZCvfpY0C59Pkm61Q62GAjCUirdJStChCHh/3O7Pf6xQQdgkEM7o5YytDKas4ZNzI5g==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793754404;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:Date:To:cc:
-	 Subject:In-Reply-To:Message-ID:References:MIME-Version:Content-Type;
-	bh=nM390zJfDJhH3r1E7uK0oCMzgHFhkctGH9GBoslOWqg=;
-	b=J6RVCfBC0Tuohz9CyvhOy+1+tFm6rSu5m7RVzBxnL+gZRbZ0tdRoRTdMtZutsZOKM2MK
-	 XagqxL52G1U5R71RYDdRJPJdrBcuRkaDEWhDYYd7IsTAAU39CACjxKc+cr57G9XzUG7fP
-	 oWE/GtYF9ryPzhzAhOAmvhvUjLlkWMxmRfHeEdluh+eDern4oFmAfZh3FsLnglPr8iJUr
-	 fT0XKnJS5iCUhAmk48XTT0NGOwbXAhPEs/f0buzzDUkgNwzkX77foY8Su3HOL6aY9KDnI
-	 fPJqPYEvG6GJxC28tBOWTwEolbybtwpIulO8AI5rk8iyvv2M4vUtXiA1ZzsDYkur+bQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=E4K12+af;
-	arc=none smtp.remote-ip=198.175.65.12
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793760605;
+	b=LvtfgIqg7I2n1U7xs3rc9THEwySmUvR150pZISNLYqvh56tHbnC+3XV9oJohIMXs/dET
+	 PcZ3MzEu+4Pp3aieJyVX+xJBsFMj+eD+eN8U43c6Ru1Wuu0GcCKdjQ1pFHRVmSnIPyR+M
+	 FJfhiLl8rW19BEBO4QhaGgTp40hyw/Rf2jMBCvShbjQJPc34pMSdHIgtKUYViQh/940Gx
+	 1K12ni+F1Rvo4RduPgpbiARdCWBWMVCb2Ah8qzxTz2mMnVCCpA/DaUACeninry9qVSHtP
+	 lCH1Tw/bmm2GArUVt3LiAxweDkFLLDZ/mXyLi3xDoN6U55GIH+xjd0wFkhenp5H1bJg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793760605;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=h2iuBQh7Nu1EAXYpozHsIEa+ZvHEvGuRJS2h6+Yiqr4=;
+	b=tf9hlrl45ycZRR9Bohq/yVSlJI3323sesdc3BqlwrxnuhgSXfKQsR1dL1QWFqReLN3Wq
+	 9owh6h6Mi3kcxv6AyVByVwzxPkJG/4jFgHyal1uWympcwfdkZwVfVhEb8uag3sT4zWX/+
+	 dI61K21/k+mK6sq6kkNt840OLRvLvVat0n6mbmS3gpjwnFSI+m8P/ZV2nfqE1FMFdgen/
+	 hDnrMTko2iiYYAHQFojzm8/eyI+zqHUOv10IdVoCoPct6LIVuWyaVAlsRapl81lLKZ+Yi
+	 E+DpUmrHyN34HEcO8xjIyFH4GxJxkKlIsifSkFdFSS9xp48/NjXWgRmJPFIghiwqFjg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="CmE/4fxz";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56640606A31B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 01:06:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 56640606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37BD8606A332;
+	Wed,  4 Nov 2026 02:50:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=E4K12+af
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793754404; x=1825290404;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=85EkBDYhA8YsKy22XUqQ7C8WjlCRnrkM13drPAUQTiU=;
-  b=E4K12+afjP0XneMzzzJjd/YN4pmsSJFyaJ3vzXdkfmwLN8rzb1XZnMUW
-   roo2J8Dhh6dCYGt41fDlHtZnYIE5lQ6m9HmcjpltcO7Qqy4S68WPqWPgm
-   zV6dd0dXJ1oYEYArx7ZcPSw5jaSXrfA3MuUz1QyihGvn0H6PGS9lK9adH
-   6cG8tF1YVUwcLxW6xMu/wPuTUbyaGlC2Y2XWnfSaJFd90WvrzrlCcVs/t
-   ACX2qH4igyHa7sltQdmZq3FyMh1pUE5Ip5T9IS8/eX5hoqU5A6AsZQUbr
-   W5FHBRPMGGI5iYvDFEoRgH3xs02H4ENb/nNKbR2RC/oTPAhs29vwMgVny
-   g==;
-X-CSE-ConnectionGUID: ba97rocfTdO+i3dGFf1pGg==
-X-CSE-MsgGUID: O3uPMlFKSQG/7h4+ZE4xpQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11955"; a="2376722"
-X-IronPort-AV: E=Sophos;i="6.27,194,1787036400"; 
-   d="scan'208";a="2376722"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2026 17:06:43 -0800
-X-CSE-ConnectionGUID: A/iUfZu8T1OABz3P35Q1ig==
-X-CSE-MsgGUID: dp1Tb637Q66SJg7n9HNtJg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,194,1787036400"; 
-   d="scan'208";a="6916218"
-Received: from ettammin-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.245.225])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2026 17:06:39 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Wed, 4 Nov 2026 03:06:35 +0200 (EET)
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org, 
-    Sourabh Jain <sourabhjain@linux.ibm.com>, 
-    Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org, 
-    Alex Deucher <alexander.deucher@amd.com>, 
-    Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>, 
-    Keith Busch <kbusch@kernel.org>, 
-    Maciej Grochowski <Maciej.Grochowski@sony.com>
-Subject: Re: [PATCH 2/2] PCI/AER: Check validity of Error Source ID
- register
-In-Reply-To: <20261104004609.GA1167435@bhelgaas>
-Message-ID: <6cdf31f5-63ce-a232-5bdd-d45a67f0a384@linux.intel.com>
-References: <20261104004609.GA1167435@bhelgaas>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CmE/4fxz
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1793760605;
+	b=sJUDeQze5/8VtWCzj9L52SpRpVGLkT6UKJC5yIOlPiJT5KRw2cFrIlaYW3KrG6lTcNDb
+	 uEuEMcz3AMzZHJRvoMYOViiWqCdosQ/8aqHF//bDFBzlTHZJesj/u0lPyZlc16wpDj0H/
+	 u/EV09zZiD2t/ViEqHD6qIEmVYhcNIPxJZXN1w7TXWtQPQhkDS7VOzqr052Vv50dsTLW1
+	 S2RYK1KxHIzBwPPJUKOU23z1oaPcSZXBaA8frJU6a3aCh2Y2muCtMUjwLFJgEvhxHOpOW
+	 a03dk5gFx+wRuN+rbEXMRbUsYLy1uqYNJqkN129mNfXcM4m1lP97wjsisrqTFqDp8yQ==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1793760605;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=h2iuBQh7Nu1EAXYpozHsIEa+ZvHEvGuRJS2h6+Yiqr4=;
+	b=xpVmcP/V3GeC/FWRsj2u3ASoGF21WgehUIv/MdBdGVcGfoTJTYmd7KwvyoAc4ASjLZvM
+	 prXw1+8zHFaUT9m99lya54fSSxufD2SjPVi3/RcMSWCZfg9bvhVP4bUQ9mht4WMrfZl5d
+	 RqtWpCROcyIWr1tet/oLqfFoMjftFxlzsEv0YzLFWok0JOdqMANiFrOH07cbYP0OZvgAz
+	 7MaBlNRUaG4FGhOSl/wVSOqC6p7OIkMnYnOaKqWTVXXZFusZGQwM7T6EZj4jeNMd4Q46k
+	 o/JiZ56Y416ewQXPDiODYhn9bJFXzfOGyLziWGKJFTTkWtOzdReIeVmI/4YDopqd2pQ==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.kernel.org (Postfix) with ESMTPS id 272941F00A18;
+	Wed,  4 Nov 2026 02:50:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793760604;
+	bh=h2iuBQh7Nu1EAXYpozHsIEa+ZvHEvGuRJS2h6+Yiqr4=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=CmE/4fxzpBicgNX8ZPp4e0Ek2LSzXGrDJeUJkhoLt1U2WAj52G5eoC0/2bqgmoKXP
+	 XwgTnZq6+UOQZkPdkYEH14vroyOqaT2j7c8DcQiBAV9hrVKX5CwZWTYlt+f+MoZFPK
+	 ne4fI3+2+KA9Ng3gq7UXFU9gdKKh/E+yg/3f93DAhqB/abpEyckKf+otA4MO2i7z84
+	 34mvTxqDt4jI93vw4+FHDtWB9ttyDiV5sq65Qi+tBVvquVBGJvf/WQIhmWV1DPE39o
+	 NcZT74ar5W5+I1xe83RoPpfW3DwCBfjBMNDrjQNmfia4otCxMCH6MDO9Xied+EfMlU
+	 6GT6QssdI2WIA==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 8D36E46C0F;
+	Wed,  4 Nov 2026 02:50:02 +0000 (UTC)
+From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
+Date: Tue, 03 Nov 2026 20:49:48 -0600
+Subject: [PATCH v4 07/25] dmaengine: sdxi: Allocate context control DMA
+ pool
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -84,79 +83,132 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-547830596-1793754395=:1105"
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261103-sdxi-base-v4-7-3668ccc7aab8@amd.com>
+References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
+In-Reply-To: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
+To: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+ David Rientjes <rientjes@google.com>, John.Kariuki@amd.com, 
+ Jonathan Cameron <jic23@kernel.org>, Kinsey Ho <kinseyho@google.com>, 
+ Mario Limonciello <mario.limonciello@amd.com>, 
+ PradeepVineshReddy.Kodamati@amd.com, Shivank Garg <shivankg@amd.com>, 
+ Stephen Bates <Stephen.Bates@amd.com>, Tycho Andersen <tycho@kernel.org>, 
+ Wei Huang <wei.huang2@amd.com>, Wei Xu <weixugc@google.com>, 
+ dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-pci@vger.kernel.org, Nathan Lynch <nathan.lynch@amd.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793760600; l=2762;
+ i=nathan.lynch@amd.com; s=20260722; h=from:subject:message-id;
+ bh=lcVjPd4Rwww8qk6gAO1P0F0TrxoLRp+syl4wYn0CFBk=;
+ b=9k9rKM76Kj4Lg1H9W3A4pOLYAcUii7doRLKjnMN3/b1LKwk6+KVjBJ/GkvWFfnP2LH/xeXOCa
+ m2o78T0Ku1iAK6/d8JFLhymteBgS3n98S8tCHnoFPeOEsYgnk++KRHC
+X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
+ pk=pO5+BCw/TENGLvwX5NYZOZmZihcxjkxeFSMuk47erps=
+X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20260722 with
+ auth_id=891
+X-Original-From: Nathan Lynch <nathan.lynch@amd.com>
+Reply-To: nathan.lynch@amd.com
+Content-Transfer-Encoding: 7bit
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+From: Nathan Lynch <nathan.lynch@amd.com>
 
---8323328-547830596-1793754395=:1105
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Each SDXI context has a control block (CXT_CTL) that identifies its
+descriptor ring, context status block, and write index.
 
-On Tue, 3 Nov 2026, Bjorn Helgaas wrote:
+Define the CXT_CTL layout and create a DMA pool for them during
+function initialization.
 
-> On Tue, Nov 03, 2026 at 02:57:58PM +0200, Ilpo J=C3=A4rvinen wrote:
-> > On Tue, 3 Nov 2026, Lukas Wunner wrote:
-> >=20
-> > > Certain Intel and AMD Root Ports are known to populate the Error Sour=
-ce ID
-> > > register with an invalid value.  The AER driver seeks to recognize su=
-ch
-> > > buggy silicon by assuming invalidity if the bus number is zero.  It t=
-hen
-> > > searches for the error-signaling device in the hierarchy below the Ro=
-ot
-> > > Port.  This was introduced by commit 28eb27cf0839 ("PCI AER: support
-> > > invalid error source IDs").
-> > >=20
-> > > Alex has provided dmesg output which shows an invalid Error Source ID=
- with
-> > > a non-zero bus number.  The AER driver's heuristic fails to recognize=
- its
-> > > invalidity:
-> > >=20
-> > >   pcieport 0000:00:07.1: AER: Correctable Error message received from=
- 0000:01:00.0 (no details found)
-> > >=20
-> > > The Root Port at 0000:00:07.1 has subordinate bus 04, so an error sou=
-rce
->=20
-> I always think "subordinate" is just slightly ambiguous because it's
-> used for both "anything below this bridge" and the more specific
-> "Subordinate Bus Number" (the highest numbered bus below the bridge).
->=20
-> It's perfectly accurate as-is especially because in this case it looks
-> like Secondary Bus Number and Subordinate Bus Number are *both* 04 for
-> 00:07.1.  But "secondary bus 04" seems less ambiguous to me.
->=20
-> > > on bus 01 is obviously invalid.  The range of subordinate buses is ca=
-ched
-> > > and checking against it is cheap.
-> > ...
->=20
-> > > +=09return root->subordinate->busn_res.start <=3D PCI_BUS_NUM(id) &&
-> > > +=09       root->subordinate->busn_res.end   >=3D PCI_BUS_NUM(id);
-> >=20
-> > I kind of hate the order of this logic. I understand you're probably=20
-> > doing it for the alignment which has some value but...
-> >=20
-> > ...For me, the more logical order would be to keep these in increasing=
-=20
-> > order even if doing it results in losing the alignment:
-> >=20
-> >    start <=3D val &&
-> >    val <=3D end
-> >=20
-> > Maybe that's just me and it's not an end of the world either way.
->=20
-> I agree, I think "start <=3D val && val <=3D end" is more readable, thoug=
-h
-> not quite as pretty.
+Co-developed-by: Wei Huang <wei.huang2@amd.com>
+Signed-off-by: Wei Huang <wei.huang2@amd.com>
+Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
+---
+ drivers/dma/sdxi/device.c | 21 ++++++++++++++++++++-
+ drivers/dma/sdxi/hw.h     | 11 +++++++++++
+ drivers/dma/sdxi/sdxi.h   |  2 ++
+ 3 files changed, 33 insertions(+), 1 deletion(-)
 
-I suppose a local var could be used to shorten the derefs and it would=20
-even fit to a single line then.
+diff --git a/drivers/dma/sdxi/device.c b/drivers/dma/sdxi/device.c
+index baf55f6b6826..acc955b088ba 100644
+--- a/drivers/dma/sdxi/device.c
++++ b/drivers/dma/sdxi/device.c
+@@ -9,6 +9,7 @@
+ #include <linux/delay.h>
+ #include <linux/device.h>
+ #include <linux/dma-mapping.h>
++#include <linux/dmapool.h>
+ #include <linux/export.h>
+ #include <linux/iopoll.h>
+ #include <linux/jiffies.h>
+@@ -351,6 +352,24 @@ static int sdxi_fn_activate(struct sdxi_dev *sdxi)
+ 	return 0;
+ }
+ 
++static int sdxi_device_init(struct sdxi_dev *sdxi)
++{
++	struct device *dev = sdxi->dev;
++	size_t size, align;
++	int err;
++
++	size = align = sizeof(struct sdxi_cxt_ctl);
++	sdxi->cxt_ctl_pool = dmam_pool_create("CXT_CTL", dev, size, align, 0);
++	if (!sdxi->cxt_ctl_pool)
++		return -ENOMEM;
++
++	err = sdxi_fn_activate(sdxi);
++	if (err)
++		return err;
++
++	return 0;
++}
++
+ int sdxi_register(struct device *dev, const struct sdxi_bus_ops *ops)
+ {
+ 	struct sdxi_dev *sdxi;
+@@ -372,7 +391,7 @@ int sdxi_register(struct device *dev, const struct sdxi_bus_ops *ops)
+ 	if (err)
+ 		return err;
+ 
+-	return sdxi_fn_activate(sdxi);
++	return sdxi_device_init(sdxi);
+ }
+ EXPORT_SYMBOL_NS_GPL(sdxi_register, "SDXI");
+ 
+diff --git a/drivers/dma/sdxi/hw.h b/drivers/dma/sdxi/hw.h
+index 0551c2b52980..82c6b4a20cde 100644
+--- a/drivers/dma/sdxi/hw.h
++++ b/drivers/dma/sdxi/hw.h
+@@ -47,4 +47,15 @@ struct sdxi_cxt_L1_table {
+ };
+ static_assert(sizeof(struct sdxi_cxt_L1_table) == 4096);
+ 
++/* SDXI 1.0 Table 3-4: Context Control (CXT_CTL) */
++struct sdxi_cxt_ctl {
++	__le64 ds_ring_ptr;
++	__le32 ds_ring_sz;
++	__u8 rsvd_0[4];
++	__le64 cxt_sts_ptr;
++	__le64 write_index_ptr;
++	__u8 rsvd_1[32];
++} __packed __aligned(64);
++static_assert(sizeof(struct sdxi_cxt_ctl) == 64);
++
+ #endif /* DMA_SDXI_HW_H */
+diff --git a/drivers/dma/sdxi/sdxi.h b/drivers/dma/sdxi/sdxi.h
+index 856a3838eec3..356a47ed39da 100644
+--- a/drivers/dma/sdxi/sdxi.h
++++ b/drivers/dma/sdxi/sdxi.h
+@@ -49,6 +49,8 @@ struct sdxi_dev {
+ 	struct sdxi_cxt_L1_table *L1_table;
+ 	dma_addr_t L1_dma;
+ 
++	struct dma_pool *cxt_ctl_pool;
++
+ 	bool has_mailbox;
+ 
+ 	const struct sdxi_bus_ops *bus_ops;
 
---=20
- i.
+-- 
+2.56.0
 
---8323328-547830596-1793754395=:1105--
+
