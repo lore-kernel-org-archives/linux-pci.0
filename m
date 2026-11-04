@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793761141;
-	b=mMHexHuq6Afh8Kd2R8cmx5lpJ6DTOhZBgY9iSTrqd0S5nCW78+9lG1NwHvwB9B5DRduT
-	 y1zpkiPkzWZ3KDGAdSeqtoYlu0AsDNK7y1czNMI9m9+F1BJoJH6VhbNpkotFBGC02Tcfo
-	 9/2ZDiA7xe4li1Edly4V+96OaUKJHx4CH3KU5ZszZt9ILSASCd5E/+lhXApSHNYviOxuh
-	 22GCufNP5vYSKkSuiKIk0+ByQhqfdv/BLCfiI3sweuxfcyqbG3r00+fhY37mUOhg8JE86
-	 iuW67tKcuVuWirwnrwotqLhmKa/HmYqCNsgsxhdu4gEHAud2PID3gpwXa0xdLo62i6g==
+	t=1793761174;
+	b=a45IrO3lIzcsaVzYNTnHyFfvLg3Racxc+HiYgTXBvoYiTicCjvrxRcAyGj6RVakQ+Gq5
+	 iz8dakIwIeE3JN6AhXMJHkw3wwCrwj5MJXNcnR1BzmaEtN3j/rcAwwDefZ5vPuq8caKx3
+	 cW/kyhRzuzRZZ8V3ZyG32JxJ/nnTasth9fbiDexkTfienAA8GGoHEnQLWf706NGWyb26T
+	 9lCo2rwkwvcsPyGDDbMqtazQJUMzuTtigkWs26Hy5aSWUtnA5MxZ0ADD5A/sz7bvPvkFN
+	 4Ofeq/wFdE2Q0JqWyELser7cdQckfi6UaXv5kBWWe1fZrbteTZqGQAi83MsuMt+K+iA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793761141;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793761174;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=R7aM1rIngKataKOwN8SMel82tTsO3hce/70Ax37W9p0=;
-	b=0236JCvV1/xlUQIiRIn77TlR93KwCoBkEcLVVrp2vTbOzFHGSClxR24oEUz6IaithcaM
-	 2YELWMeTmkVjEZOvJFw2weu51OiKXlwP3kB2zpDHXsrKXE+Dt5qx/atwkq/7rlQNMpX6i
-	 K9L0hwve0Wi/zEe006a7xCKdHsv7eIUY+yWP0cBPx2xlzniefNyqSQG57rJbCd3zY1Eat
-	 BNKn2NO40xh/zcvod6kmbWU0daBdIDf6c30RxqRxqTRW9/FerOnX9zhfugf18+4IfFfKa
-	 QmSpzmh1dI4ZdoC/WYF9YSoehfMgo0d+PmL8zm8jNr9TWgklCEjUlJvqa9IOUX1PB8A==
+	bh=3NPxcqt9gxB7n9rvXULH55857LvBhTkdMuUcfiBC1K8=;
+	b=yEkcLGMPXSYwISJc0OahZpmfCDKgN7cNKw3lnkXHuMfJYQAC/bFDaKB2Qbj2dE3aAvU8
+	 r01416QvFNsJsD7RGodoti8yAmHYwS6WeoK+JOumC6T4G+xm5FbXQHXNO93YdtvuNf7JV
+	 Dfpn20GLc98p29oO5/kP6O+rq0v09D+od3CFvv2bh2Q0UxK4Is/JUIihI8nsNp5OKVoWy
+	 Q9sgKEO3vKI1xHXrQOdAqJIHDIzlyztf5elE+ATn3elTrSd8rCECDuB1XBqiBWeYpRGdl
+	 Dtqz1M42vreurzn4GYEtHRfQu2898OddAlEwrcu3uEEwQZEd0M+pHiV8zBB9rGO2xGQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VnjlIssM;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hfyzxVy4;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BDE2606A31B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 02:59:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35A13606A31B
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 02:59:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VnjlIssM
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC4F71F000C1;
-	Wed,  4 Nov 2026 02:59:00 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hfyzxVy4
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E99FA1F000C1;
+	Wed,  4 Nov 2026 02:59:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793761140;
-	bh=R7aM1rIngKataKOwN8SMel82tTsO3hce/70Ax37W9p0=;
+	s=k20260515; t=1793761174;
+	bh=3NPxcqt9gxB7n9rvXULH55857LvBhTkdMuUcfiBC1K8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VnjlIssMIt7JUTm4azoyEzgjvXF/QZZSc+k8SwNee4Q7W6D0axQFYEjATTW5sgJ67
-	 ny2oWTNhSJwHfvGR/UL8i4MGq1apvwD66MLAFhMZ37mdnQRkk6QCOkgO6ZPTHNODXi
-	 bvnbGvIyKtCqedcHICecZlkasLdi1iDs92H1U8z/jDyioU60YzgL8yffmen//T7346
-	 YyGTWQxSdabAXdMFGwj/LDzdW7A8WogzyubwUqTnEH8Xp80J2lm+1Nzl53llKm3FVW
-	 wqsMgedSFcZxr7GlDJLBX5PqMuq0UpnnU2Iethp3hjgVJ7OMGjTV/nb5TnF0Yd/Pi1
-	 UrEhe3OvrrJGQ==
-Message-ID: <sashiko-outbox-196554@kernel.org>
+	b=hfyzxVy4oCBWYMBRUZHm+YYF7cc+VfNAD6T4zpsc/Wg1ftcMUDUwP10tkYZzJ24OQ
+	 +zYsLLH90EiQbQf9WCQ2RXvFz/9FpTH4skO6wu1ggwQfz5JlhIBrkQdpBVdSJ4n38z
+	 mC34BiTA+u9kzTt72niqebWjqemMrDcfNjZrBMJCocF2iTc1PXud/4914VT0yNJnJD
+	 F+Kj/TNVPlY+BKsBwg2vfj9H0p0wk7Rei/OctykY7ufmIOOVURWrrMbFLtLA2HurAD
+	 i7d+xVLy5NKIA0Vc4sFIbR59WlqRoC8pMEdyhCil6SKNVf66r1fM+wb8Cx/pQpFA0Z
+	 8P71zH8asSnPw==
+Message-ID: <sashiko-outbox-196556@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 15/25] dmaengine: sdxi: Per-context access key (AKey)
- table entry allocator
+Subject: Re: [PATCH v4 16/25] dmaengine: sdxi: Add completion status block
+ API
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nathan Lynch" <nathan.lynch@amd.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261103-sdxi-base-v4-15-3668ccc7aab8@amd.com>
+In-Reply-To: <20261103-sdxi-base-v4-16-3668ccc7aab8@amd.com>
 References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
- <20261103-sdxi-base-v4-15-3668ccc7aab8@amd.com>
+ <20261103-sdxi-base-v4-16-3668ccc7aab8@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 02:59:00 +0000
+Date: Wed, 04 Nov 2026 02:59:33 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,21 +63,22 @@ Precedence: list
 
 > From: Nathan Lynch <nathan.lynch@amd.com>
 >=20
-> Each SDXI context has a table of access keys (AKeys). SDXI descriptors
-> submitted to a context may refer to an AKey associated with that
-> context by its index in the table. AKeys describe properties of the
-> access that the descriptor is to perform, such as PASID or a target
-> SDXI function, or an interrupt to trigger.
+> Introduce completion status handling and a fixed-capacity pool owned by
+> each context. Only the 32-byte-aligned status blocks are DMA-visible;
+> a private bitmap and spinlock track claims independently of descriptor
+> ring indices.
 >=20
-> Use a per-context IDA to keep track of used entries in the table.
-> Provide sdxi_alloc_akey(), which claims an AKey table entry for the
-> caller to program directly; sdxi_akey_index(), which returns the
-> entry's index for programming into descriptors the caller intends to
-> submit; and sdxi_free_akey(), which clears the entry and makes it
-> available again.
+> Preallocate storage during context allocation. Claiming and initializing
+> a block cannot allocate memory and fails only when capacity is exhausted.
+> Provide a bounded, killable wait for administrative callers, and wake
+> waiters when blocks are returned. Release blocks only after consumption,
+> unpublished rollback, or hardware quiescence; destroy the pool only when
+> hardware and software no longer access it.
 >=20
-> The DMAengine provider uses one AKey for copy-buffer access and completion
-> interrupts.
+> Represent a completion-status block by its CPU pointer and DMA address.
+> Check the little-endian signal with READ_ONCE(), then use dma_rmb() before
+> consuming error status or operation results. Polling returns success,
+> -EIO for a terminal error, or -ETIMEDOUT without relinquishing ownership.
 >=20
 > Co-developed-by: Wei Huang <wei.huang2@amd.com>
 > Signed-off-by: Wei Huang <wei.huang2@amd.com>
@@ -87,5 +88,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103-sdxi-base-=
-v4-0-3668ccc7aab8@amd.com?part=3D15
+v4-0-3668ccc7aab8@amd.com?part=3D16
 
