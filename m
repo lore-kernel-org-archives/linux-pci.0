@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793760611;
-	b=eF0nLhxEjQtd2jw0TO83wSGo1665UlXLyvS/VelMpUl3XYTdVFkn85PzXlhGh/LT0L3q
-	 9TjXmtCb+z+rLWdfAF4Xd+w2QhVHiTt6beIW7YGiqlex03ihj9Qvt1uvMpAHbsFMUlgdL
-	 iKYKKJ+AipcjIWZdXuQrWaFhLOSaFGl9vLu8byEGU4oGn6XRdHPatvVCdk71IM1oXXA4/
-	 yj4Nq/yCX7WrVAn91mX0nidoHoUy0wPtd4YOPiRPxGNWYWenXS0yTjgtLe74HBDQOkmlE
-	 2ezCBXpICvnVrGHEmbhIQiNCMRx/ivmJU7wSsL6EcmHMeuxEzMB1H1Pn8wgGc5EWyDA==
+	t=1793760613;
+	b=Os41R16AefoF0z46JF0INn8K4K/9RS3SddajqPgiit/90gQ7SM3bCikQjRp87kZxMKhM
+	 EtHGSqrR0OdRjMTCDCvp4uY7VENsbT2HXmb4DmyZSX3V466ERxe+7Dc4fRjLQgVbMy0kO
+	 rdFVZ7IDymflhYyWVn0rmaq3yyP96+t80oBDiAm6guj1ZTcjaQwZNwX8FGuFGruBJRred
+	 4a/28JyVijl4nI5ethlzKlzJKGqkQKeQyZhkIi1HszteMaHIke5kXL2vwJkrvGQLYObQI
+	 +yX6absQ90poF+9XYwqyPVSjLvCJIJx/AvNV3lqavP99/p4SXtSfc6XnirNtXRE+oSg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793760611;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793760613;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=P2Ub6/26n3BmgVxsCh8NpM+16I25q5aH0ME7udmeypQ=;
-	b=bM/nGqvH/NDp5GxeYYLLtNh7Q60g+hwIOFd8XqxBmwN6uNK1goTEqc1mMqtjtrInQk15
-	 Jq5iLUK405+D1+J+nY+UA7+ZFusrFaFusbfMASS3+gTDPOYO9w5b7VIc7+TrENHquyeUQ
-	 IH9G03EylJWY6iJ3tOBbiKykosDDmHNOm7BcK19x4+6UyHZzjcpX7xAQz0z5lvnXgkij1
-	 7BCdfVjYp8e5a3nOJ0tn2bcuFk+5uvCo5qSLdZVU2SB9lGOIcU0d8iUSmWDJN3N02/gfW
-	 sBwzeZ6UCK+xPZGnQSoKiIPSkVM3KUDb2S32xpIn70MNjX0JJjMXEWCrk7FBltzIvqA==
+	bh=pJkwV1AZ/ozwsddEeAyrFXDEUnf8mg/u8l9xIyCSEp0=;
+	b=xYOan/Hhx03O4JWeuSA9KsMvcU6+enFhjU796ypJbq+grFXL/yBth4kvJetKjwl9O6Eo
+	 eXaDToGewqR6fiVxfHVSHsmsQKh2m50IMTm7KA6nYiJtL2Q3KClkHXWtbeC1JiUW592HR
+	 dOc9grDlspiiMaj3yrE7GFq+0nggIqVgY3an3KvuBmaHoS17ann+lhqGnaq43tCmpAvtn
+	 zjfJs6jnvSIQWFO/3zsboiZRo/NTJV5GkkkaASgiBeZJiU3z59IEq5S3Q02nmBUoLYp/4
+	 1fwZd2TzDD4J28YldT+fPeCrkgywn2ovL5ge8PmPQsr9tSrjT0quKG751PJImpu1XEQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OtC6Z5dV;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WOfvVnfY;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BA4F606D824;
-	Wed,  4 Nov 2026 02:50:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A5CF606EEBE;
+	Wed,  4 Nov 2026 02:50:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OtC6Z5dV
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WOfvVnfY
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1793760611;
-	b=dx0pStVutO7zzS0rivPKQlGoXeOe5TCmEBAVWKEEnPycQbLVPmdDmGHIsP2Ywz0y00sf
-	 SMUz/fA8iAp6zID3gjZ+mblnbzqBFQhF69FrjX6rxzIlIDS5Yv+fOawcgDfSdOq6ssFeM
-	 7Nq8LXElrU+YucCoJc/L/Hc9saw1tNerdDLqdZbxrLDBjw/jkGNjtT3HpegotQtdITHcX
-	 xK8+yKHBuAd2OA1DkMEwktbMOlDxkaAEVt1VXU3Os911jyCWoWHQvwEbaLfVy6OfFLzFI
-	 eqToeputKKVklbeikk1IzfOCaX1heZd2iveV7+P7lbtyiADaamza6cUvLFdvln1KUxg==
+	t=1793760612;
+	b=KnfJmHw4ke+JBlczQciE9MSXmb9TMk3bbb2dcRuKjgMwdUe4eKjAflkR9lFYoT88tu42
+	 gQwHe41qT6ezMeAlmr/iGANevpe5U8ieC+fjey3+NO6SC4ApFaKam5xOLE4JyctVTahFi
+	 7GfjVWnEgNZnZMkwhFOcgHtfKROXv/UQEFbA2aBos/lPx/XOJA1wPnwKOTtrmjZVjxUtu
+	 8NA9JF9gb9KNDwh966XaBYBvk3lAwxUPv+ak0eli2V2elHWonS6QKckbuYtpGOyyHo4lK
+	 iQNcjbT1tS2KaEyvWKlePp67uPj5doF/54FhpqipLAJJV9VRpgrzmpeyBmQKUoQtA2A==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1793760611;
+	c=relaxed/relaxed; t=1793760612;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=P2Ub6/26n3BmgVxsCh8NpM+16I25q5aH0ME7udmeypQ=;
-	b=chEr84ivuxIdG1EIxoSwwxRdj0Ou3Fr785zcFEZeISHEP8ZbvfawX/oWCHM0jNY8oUvN
-	 tJ0AYbtbq0qTtVqW+oi5SfIrjhnZT4sIWiWwFhdc63bdIrVMWpqjKThjLY9BGGV3f/dxg
-	 SOYiUaPmRsDJdYoafVb9fNS0FU/SI8yh+Sg6j3DgK9HNtBany6FttDxY84Ak9V8OjwdVR
-	 RDoEwbL+sl6TKdebVZV1XbC5Dvaa/VeymddU/qqRHLvR8KkYdYRAX5BPwfzWlwt7xFMcU
-	 Bn/rVJp8IjT0ypes2LoCv8NGKnDdiB6QsPsH5JVESo1r1Y2m17XCBU17HSXi1Ry2N5g==
+	bh=pJkwV1AZ/ozwsddEeAyrFXDEUnf8mg/u8l9xIyCSEp0=;
+	b=jUR9albBI6MIstrc/p45no2GfgV5ChuW49UEIHezae68JTkrOtgXSjekCgAY4kr6lzoB
+	 Y7Ytobic+VsfofSjN80z766Pj02p2f8LugLYlMonWtzgBuCvaQ0kHc9hjF2X/kgJpZyD/
+	 rWhqcFPZ+pemvFHoVISUOnfukAXy160uw6M5hzOrvD77yUYEdJllyVmnTIqEqXN9Mzxc3
+	 JzXFG/MYANlTlbX2znvwBHT6nHj3ssqzE/VK4zvTL3adJkJwyGD0zFPNzMX2jiS5AL31u
+	 IrWYiH/VMVDM/tkDyDK3GpqVslosDeGqRJkf5jCCtfCedXEog8Mu1suxqKyWLdcKjPw==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 0B8E41F00A25;
-	Wed,  4 Nov 2026 02:50:07 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id C368C1F000C1;
+	Wed,  4 Nov 2026 02:50:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793760610;
-	bh=P2Ub6/26n3BmgVxsCh8NpM+16I25q5aH0ME7udmeypQ=;
+	s=k20260515; t=1793760612;
+	bh=pJkwV1AZ/ozwsddEeAyrFXDEUnf8mg/u8l9xIyCSEp0=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=OtC6Z5dVTdhd6y3C/VhCGl2aOCUuvCYKwZ7H3lWYPRp/mNOrv5ZwUuMRcVv+DKFZh
-	 dZS9ZGVEeZWOZNkEjAc9PD1kkb2D3GFTrg5QRZRyFZbKohSXYm5a8PQtvrhuaRKmCk
-	 rI3ZjlUU4IKBas6TkXdM19F9fuhPJmWaORO0RfgtGsP1n14W68kcsjvhS9Cnla/zTH
-	 Fa+ccS8xCQt2RNCu0zKI5C2X2URilC1YneA4gMLETzVikan9uY91mk+WY3NKwL3yEz
-	 bXqRDYYYiOnOI1CKFvtVygD00gZCY+NQEy07GON3LCKStQPAWz95yyidGarPbNCgqz
-	 sbe/Ierj7INAg==
+	b=WOfvVnfY0ZILuLXT+8VPVvHJ72N7TXrKbX6Tgkz9h0nTRrdbD2Zxr2+BN4iTcqO+H
+	 vYfRu9sXRHKL/NpBm5wVJOKU+al36C2G9bIKgdPjf+oyv02Uu+rfW6H20HxaLJz31a
+	 FFOiamyMFbmqG2Z4NNlkyZ28vFvUaTf1Lbtzoj/2p1g2FGI40jLlctnrgmaZp4rhwC
+	 Zb0d21dqf66BHamBBG9RW/MWCzGlCIWhIoF4JpApn1cPbGX/qTkYBD0Gydfl68F1S5
+	 OhpKRXaVt9fVf882F1/sbw83bONzij+mDXkdtVQB6JbL68HPQ0LYxtBDnMFl9L08Av
+	 u21pC+1AdgJYQ==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 282CC46C37;
+	by lkml.kernel.org (Postfix) with ESMTP id 6CB2146C4B;
 	Wed,  4 Nov 2026 02:50:03 +0000 (UTC)
 From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-Date: Tue, 03 Nov 2026 20:49:58 -0600
-Subject: [PATCH v4 17/25] dmaengine: sdxi: Add unit tests for completion
- pool ownership
+Date: Tue, 03 Nov 2026 20:50:03 -0600
+Subject: [PATCH v4 22/25] dmaengine: sdxi: Encode copy and interrupt
+ descriptors
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -84,7 +84,7 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261103-sdxi-base-v4-17-3668ccc7aab8@amd.com>
+Message-Id: <20261103-sdxi-base-v4-22-3668ccc7aab8@amd.com>
 References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
 In-Reply-To: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
 To: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>
@@ -98,11 +98,11 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
  dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-pci@vger.kernel.org, Nathan Lynch <nathan.lynch@amd.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793760600; l=8791;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793760600; l=6594;
  i=nathan.lynch@amd.com; s=20260722; h=from:subject:message-id;
- bh=UKgpOPnxXxSWuJws2LmbCd9jOGUCzGSR66fffU0Lkh8=;
- b=3ti8GbL21v0aKqtG7r5c2WMxCq0oj9m6meVHSn8qVMixURCdGrM6NUkJzKiK3UFPkyLzs1MQL
- ThDGJXOPTD7CEysRpnVptq0ap2UijQJYwaaJMsaQNvr0RJ3yp6R6i/H
+ bh=4OfmiWXNOOdRLke0kwqMsLzBi0UssOb0ELX27UixZjI=;
+ b=nM9DDTdToud/GBbjuwOI3PdKaLnIaSatmvPyRBB2V5ZWOKEpXjSrQIe6tw8QbLGHcbZaUA3l4
+ SiGaZOvnxOuDy/jrC2CoREW64JYKiGP3bRZ712u6L87WYsuSuitJhRR
 X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
  pk=pO5+BCw/TENGLvwX5NYZOZmZihcxjkxeFSMuk47erps=
 X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20260722 with
@@ -113,248 +113,242 @@ Content-Transfer-Encoding: 7bit
 
 From: Nathan Lynch <nathan.lynch@amd.com>
 
-Add hardware-independent KUnit coverage for completion-pool exhaustion
-across a bitmap word boundary, arbitrary release and reuse, reinitialization
-of reused status blocks. Verify that a claimed block remains unavailable
-until explicitly released, including after a simulated late device completion.
-Also cover release of an unpublished claim.
+Add copy and interrupt descriptor layouts and encoders. Both encoders
+accept operation-specific parameter structs.
 
-Provide test allocation helpers and KUnit-only exports so the tests exercise
-the production claim and release paths without a coherent-DMA device.
+Copy descriptors are used to implement memcpy offload for the DMA
+engine provider, and interrupt descriptors are used to signal the
+completion of preceding descriptors in the ring.
 
+Conditionally expose sdxi_encode_size32() for unit testing.
+
+Co-developed-by: Wei Huang <wei.huang2@amd.com>
+Signed-off-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 ---
- drivers/dma/sdxi/Makefile           |   1 +
- drivers/dma/sdxi/completion.c       |  37 ++++++++++
- drivers/dma/sdxi/completion.h       |   4 ++
- drivers/dma/sdxi/completion_kunit.c | 131 ++++++++++++++++++++++++++++++++++++
- 4 files changed, 173 insertions(+)
+ drivers/dma/sdxi/descriptor.c | 101 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/dma/sdxi/descriptor.h |  23 ++++++++++
+ drivers/dma/sdxi/hw.h         |  27 +++++++++++
+ 3 files changed, 151 insertions(+)
 
-diff --git a/drivers/dma/sdxi/Makefile b/drivers/dma/sdxi/Makefile
-index eacad504a816..d12eebe03870 100644
---- a/drivers/dma/sdxi/Makefile
-+++ b/drivers/dma/sdxi/Makefile
-@@ -10,4 +10,5 @@ obj-$(CONFIG_SDXI_PCI) += sdxi-pci.o
- sdxi-pci-y := pci.o
- 
- obj-$(CONFIG_SDXI_KUNIT_TEST) += \
-+	completion_kunit.o    \
- 	ring_kunit.o
-diff --git a/drivers/dma/sdxi/completion.c b/drivers/dma/sdxi/completion.c
-index c07a0fc101c8..dacd1cac6303 100644
---- a/drivers/dma/sdxi/completion.c
-+++ b/drivers/dma/sdxi/completion.c
-@@ -4,6 +4,7 @@
-  *
+diff --git a/drivers/dma/sdxi/descriptor.c b/drivers/dma/sdxi/descriptor.c
+index 424453ff7ba0..25b5d2862e79 100644
+--- a/drivers/dma/sdxi/descriptor.c
++++ b/drivers/dma/sdxi/descriptor.c
+@@ -5,14 +5,115 @@
   * Copyright Advanced Micro Devices, Inc.
   */
-+#include <kunit/visibility.h>
+ 
++#include <kunit/test-bug.h>
+ #include <kunit/visibility.h>
  #include <linux/bitfield.h>
- #include <linux/bitmap.h>
- #include <linux/dma-mapping.h>
-@@ -90,6 +91,7 @@ bool sdxi_cst_pool_get(struct sdxi_cst_pool *pool, struct sdxi_completion *comp)
- 	sdxi_cst_blk_init(comp->cst_blk);
- 	return true;
- }
-+EXPORT_SYMBOL_IF_KUNIT(sdxi_cst_pool_get);
++#include <linux/bug.h>
++#include <linux/range.h>
++#include <linux/sizes.h>
+ #include <linux/types.h>
+ #include <asm/byteorder.h>
  
- int sdxi_cst_pool_get_wait(struct sdxi_cst_pool *pool,
- 			 struct sdxi_completion *comp)
-@@ -116,7 +118,42 @@ void sdxi_cst_pool_put(struct sdxi_cst_pool *pool, struct sdxi_cst_blk *cst)
- 	spin_unlock_irqrestore(&pool->lock, flags);
- 	wake_up_all(&pool->wait);
- }
-+EXPORT_SYMBOL_IF_KUNIT(sdxi_cst_pool_put);
+ #include "hw.h"
+ #include "descriptor.h"
  
-+#if IS_ENABLED(CONFIG_SDXI_KUNIT_TEST)
-+/* Exercise allocation without requiring a device capable of coherent DMA. */
-+struct sdxi_cst_pool *sdxi_cst_pool_test_create(unsigned int count)
++VISIBLE_IF_KUNIT int __must_check sdxi_encode_size32(u64 size, __le32 *dest)
 +{
-+	struct sdxi_cst_pool *pool;
-+
-+	pool = kzalloc_obj(*pool, GFP_KERNEL);
-+	if (!pool)
-+		return NULL;
-+	pool->allocated = bitmap_zalloc(count, GFP_KERNEL);
-+	if (!pool->allocated) {
-+		kfree(pool);
-+		return NULL;
++	/*
++	 * Sizes are encoded as value - 1:
++	 * value    encoding
++	 *     1           0
++	 *     2           1
++	 *   ...
++	 *    4G  0xffffffff
++	 * See SDXI 1.0 Table 6-8: DSC_DMAB_COPY Descriptor Format,
++	 * for example.
++	 */
++	if (size > 0 && size <= SZ_4G) {
++		*dest = cpu_to_le32((u32)(size - 1));
++		return 0;
 +	}
-+	pool->blocks = kcalloc(count, sizeof(*pool->blocks), GFP_KERNEL);
-+	if (!pool->blocks) {
-+		bitmap_free(pool->allocated);
-+		kfree(pool);
-+		return NULL;
++
++	/* Inhibit warning stack traces while testing. */
++	if (!kunit_get_current_test()) {
++		WARN_ON_ONCE(size == 0);
++		WARN_ON_ONCE(size > SZ_4G);
 +	}
-+	pool->dma = 0x1000;
-+	sdxi_cst_pool_init(pool, count);
-+	return pool;
++
++	return -EINVAL;
 +}
-+EXPORT_SYMBOL_IF_KUNIT(sdxi_cst_pool_test_create);
++EXPORT_SYMBOL_IF_KUNIT(sdxi_encode_size32);
 +
-+void sdxi_cst_pool_test_destroy(struct sdxi_cst_pool *pool)
++int sdxi_encode_copy(struct sdxi_desc *desc, const struct sdxi_copy *params)
 +{
-+	kfree(pool->blocks);
-+	bitmap_free(pool->allocated);
-+	kfree(pool);
-+}
-+EXPORT_SYMBOL_IF_KUNIT(sdxi_cst_pool_test_destroy);
-+#endif
- 
- enum sdxi_completion_state sdxi_cst_blk_check(const struct sdxi_cst_blk *cst)
- {
-diff --git a/drivers/dma/sdxi/completion.h b/drivers/dma/sdxi/completion.h
-index f91f44b9b516..18c89701d1d6 100644
---- a/drivers/dma/sdxi/completion.h
-+++ b/drivers/dma/sdxi/completion.h
-@@ -34,6 +34,10 @@ int sdxi_cst_pool_get_wait(struct sdxi_cst_pool *pool,
- /* Release only after consumption, unpublished rollback, or hardware quiescence. */
- void sdxi_cst_pool_put(struct sdxi_cst_pool *pool, struct sdxi_cst_blk *cst);
- 
-+#if IS_ENABLED(CONFIG_SDXI_KUNIT_TEST)
-+struct sdxi_cst_pool *sdxi_cst_pool_test_create(unsigned int count);
-+void sdxi_cst_pool_test_destroy(struct sdxi_cst_pool *pool);
-+#endif
- 
- static inline void sdxi_cst_blk_init(struct sdxi_cst_blk *cst)
- {
-diff --git a/drivers/dma/sdxi/completion_kunit.c b/drivers/dma/sdxi/completion_kunit.c
-new file mode 100644
-index 000000000000..326e3d84da0d
---- /dev/null
-+++ b/drivers/dma/sdxi/completion_kunit.c
-@@ -0,0 +1,131 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/* Copyright Advanced Micro Devices, Inc. */
-+#include <kunit/test.h>
-+#include <linux/module.h>
++	u64 csb_ptr;
++	u32 opcode;
++	__le32 size;
++	int err;
 +
-+#include "completion.h"
++	err = sdxi_encode_size32(params->len, &size);
++	if (err)
++		return err;
++	/*
++	 * Reject overlapping src and dst. "Software ... shall not
++	 * overlap the source buffer, destination buffer, Atomic
++	 * Return Data, or completion status block." - SDXI 1.0 5.6
++	 * Memory Consistency Model
++	 */
++	if (range_overlaps(&(const struct range) {
++				   .start = params->src,
++				   .end   = params->src + params->len - 1,
++			   },
++			   &(const struct range) {
++				   .start = params->dst,
++				   .end   = params->dst + params->len - 1,
++			   }))
++		return -EINVAL;
 +
-+MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
++	opcode = (FIELD_PREP(SDXI_DSC_SUBTYPE, SDXI_DSC_OP_SUBTYPE_COPY) |
++		  FIELD_PREP(SDXI_DSC_TYPE, SDXI_DSC_OP_TYPE_DMAB));
 +
-+static void destroy_pool(void *pool)
-+{
-+	sdxi_cst_pool_test_destroy(pool);
-+}
++	csb_ptr = FIELD_PREP(SDXI_DSC_NP, 1);
 +
-+static struct sdxi_cst_pool *alloc_pool(struct kunit *test, unsigned int count)
-+{
-+	struct sdxi_cst_pool *pool = sdxi_cst_pool_test_create(count);
-+
-+	if (!pool || kunit_add_action_or_reset(test, destroy_pool, pool))
-+		return NULL;
-+	return pool;
-+}
-+
-+static void exhaustion(struct kunit *test)
-+{
-+	/* Cross a bitmap word boundary without filling the final word. */
-+	const unsigned int count = BITS_PER_LONG + 3;
-+	struct sdxi_completion *held, extra = {};
-+	struct sdxi_cst_pool *pool;
-+
-+	pool = alloc_pool(test, count);
-+	KUNIT_ASSERT_NOT_NULL(test, pool);
-+	held = kunit_kcalloc(test, count, sizeof(*held), GFP_KERNEL);
-+	KUNIT_ASSERT_NOT_NULL(test, held);
-+	for (unsigned int i = 0; i < count; i++) {
-+		KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &held[i]));
-+		KUNIT_EXPECT_EQ(test, held[i].cst_blk_dma % 32, 0);
-+		KUNIT_EXPECT_EQ(test, le64_to_cpu(held[i].cst_blk->signal),
-+				(u64)SDXI_CST_BLK_SIGNAL_INIT);
-+		for (unsigned int j = 0; j < i; j++) {
-+			KUNIT_EXPECT_PTR_NE(test, held[i].cst_blk, held[j].cst_blk);
-+			KUNIT_EXPECT_NE(test, held[i].cst_blk_dma, held[j].cst_blk_dma);
-+		}
-+	}
-+	KUNIT_EXPECT_FALSE(test, sdxi_cst_pool_get(pool, &extra));
-+	KUNIT_EXPECT_PTR_EQ(test, extra.cst_blk, NULL);
-+	for (unsigned int i = 0; i < count; i++)
-+		sdxi_cst_pool_put(pool, held[i].cst_blk);
-+}
-+
-+static void arbitrary_release(struct kunit *test)
-+{
-+	struct sdxi_completion held[5], comp;
-+	struct sdxi_cst_pool *pool;
-+	const unsigned int order[] = { 3, 1, 4, 0, 2 };
-+
-+	pool = alloc_pool(test, ARRAY_SIZE(held));
-+	KUNIT_ASSERT_NOT_NULL(test, pool);
-+	for (unsigned int i = 0; i < ARRAY_SIZE(held); i++)
-+		KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &held[i]));
-+
-+	/* A released block is reusable while all other owners retain theirs. */
-+	for (unsigned int i = 0; i < ARRAY_SIZE(order); i++) {
-+		unsigned int index = order[i];
-+
-+		sdxi_cst_pool_put(pool, held[index].cst_blk);
-+		KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &comp));
-+		KUNIT_EXPECT_PTR_EQ(test, comp.cst_blk, held[index].cst_blk);
-+		KUNIT_EXPECT_EQ(test, comp.cst_blk_dma, held[index].cst_blk_dma);
-+		KUNIT_EXPECT_FALSE(test, sdxi_cst_pool_get(pool, &comp));
-+	}
-+	for (unsigned int i = 0; i < ARRAY_SIZE(held); i++)
-+		sdxi_cst_pool_put(pool, held[i].cst_blk);
-+}
-+
-+static void reuse_initializes_status(struct kunit *test)
-+{
-+	const struct sdxi_cst_blk initial = {
-+		.signal = cpu_to_le64(SDXI_CST_BLK_SIGNAL_INIT),
++	*desc = (typeof(*desc)) {
++		.copy = (typeof(desc->copy)) {
++			.opcode = cpu_to_le32(opcode),
++			.size = size,
++			.akey0 = cpu_to_le16(params->src_akey),
++			.akey1 = cpu_to_le16(params->dst_akey),
++			.addr0 = cpu_to_le64(params->src),
++			.addr1 = cpu_to_le64(params->dst),
++			.csb_ptr = cpu_to_le64(csb_ptr),
++		},
 +	};
-+	struct sdxi_completion first, second;
-+	struct sdxi_cst_pool *pool;
 +
-+	pool = alloc_pool(test, 1);
-+	KUNIT_ASSERT_NOT_NULL(test, pool);
-+	KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &first));
-+	memset(first.cst_blk, 0xff, sizeof(*first.cst_blk));
-+	first.cst_blk->signal = cpu_to_le64(SDXI_CST_BLK_SIGNAL_TERMINAL);
-+	sdxi_cst_pool_put(pool, first.cst_blk);
-+	KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &second));
-+	KUNIT_EXPECT_PTR_EQ(test, first.cst_blk, second.cst_blk);
-+	KUNIT_EXPECT_MEMEQ(test, second.cst_blk, &initial, sizeof(initial));
-+	sdxi_cst_pool_put(pool, second.cst_blk);
++	return 0;
 +}
++EXPORT_SYMBOL_IF_KUNIT(sdxi_encode_copy);
 +
-+static void retained_completion(struct kunit *test)
++int sdxi_encode_intr(struct sdxi_desc *desc,
++		     const struct sdxi_intr *params)
 +{
-+	struct sdxi_completion timed_out, other;
-+	struct sdxi_cst_pool *pool;
++	u64 csb_ptr;
++	u32 opcode;
 +
-+	pool = alloc_pool(test, 1);
-+	KUNIT_ASSERT_NOT_NULL(test, pool);
-+	KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &timed_out));
-+	KUNIT_EXPECT_FALSE(test, sdxi_cst_pool_get(pool, &other));
-+	/* Even a late completion remains allocated until its owner releases it. */
-+	timed_out.cst_blk->signal = cpu_to_le64(SDXI_CST_BLK_SIGNAL_TERMINAL);
-+	KUNIT_EXPECT_FALSE(test, sdxi_cst_pool_get(pool, &other));
-+	sdxi_cst_pool_put(pool, timed_out.cst_blk);
-+	KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &other));
-+	/* A never-published claim can be returned without a terminal signal. */
-+	sdxi_cst_pool_put(pool, other.cst_blk);
-+	KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &other));
-+	sdxi_cst_pool_put(pool, other.cst_blk);
++	opcode = (FIELD_PREP(SDXI_DSC_SUBTYPE, SDXI_DSC_OP_SUBTYPE_INTR) |
++		  FIELD_PREP(SDXI_DSC_TYPE, SDXI_DSC_OP_TYPE_INTR));
++
++	csb_ptr = FIELD_PREP(SDXI_DSC_NP, 1);
++
++	*desc = (typeof(*desc)) {
++		.intr = (typeof(desc->intr)) {
++			.opcode = cpu_to_le32(opcode),
++			.akey = cpu_to_le16(params->akey),
++			.csb_ptr = cpu_to_le64(csb_ptr),
++		},
++	};
++
++	return 0;
 +}
++EXPORT_SYMBOL_IF_KUNIT(sdxi_encode_intr);
 +
-+static struct kunit_case completion_testcases[] = {
-+	KUNIT_CASE(exhaustion),
-+	KUNIT_CASE(arbitrary_release),
-+	KUNIT_CASE(reuse_initializes_status),
-+	KUNIT_CASE(retained_completion),
-+	{}
+ int sdxi_encode_cxt_start(struct sdxi_desc *desc,
+ 			  const struct sdxi_cxt_start *params)
+ {
+diff --git a/drivers/dma/sdxi/descriptor.h b/drivers/dma/sdxi/descriptor.h
+index 9138f7c85f3a..cf071a281941 100644
+--- a/drivers/dma/sdxi/descriptor.h
++++ b/drivers/dma/sdxi/descriptor.h
+@@ -9,6 +9,7 @@
+  */
+ 
+ #include <linux/bitfield.h>
++#include <linux/kconfig.h>
+ #include <linux/minmax.h>
+ #include <linux/ratelimit.h>
+ #include <linux/types.h>
+@@ -16,6 +17,10 @@
+ 
+ #include "hw.h"
+ 
++#if IS_ENABLED(CONFIG_KUNIT)
++int __must_check sdxi_encode_size32(u64 size, __le32 *dest);
++#endif
++
+ static inline void sdxi_desc_vl_expect(const struct sdxi_desc *desc, bool expected)
+ {
+ 	u8 vl = FIELD_GET(SDXI_DSC_VL, le32_to_cpu(desc->opcode));
+@@ -80,6 +85,24 @@ static inline struct sdxi_cxt_range sdxi_cxt_range_single(u16 nr)
+ 	return sdxi_cxt_range(nr, nr);
+ }
+ 
++struct sdxi_copy {
++	dma_addr_t src;
++	dma_addr_t dst;
++	u64 len;
++	u16 src_akey;
++	u16 dst_akey;
 +};
 +
-+static struct kunit_suite completion_tests = {
-+	.name = "SDXI completion pool",
-+	.test_cases = completion_testcases,
-+};
-+kunit_test_suite(completion_tests);
++int sdxi_encode_copy(struct sdxi_desc *desc,
++		     const struct sdxi_copy *params);
 +
-+MODULE_DESCRIPTION("SDXI completion pool tests");
-+MODULE_LICENSE("GPL");
++struct sdxi_intr {
++	u16 akey;
++};
++
++int sdxi_encode_intr(struct sdxi_desc *desc,
++		     const struct sdxi_intr *params);
++
+ struct sdxi_cxt_start {
+ 	struct sdxi_cxt_range range;
+ };
+diff --git a/drivers/dma/sdxi/hw.h b/drivers/dma/sdxi/hw.h
+index 51b2bcbeca90..71579eb3ac26 100644
+--- a/drivers/dma/sdxi/hw.h
++++ b/drivers/dma/sdxi/hw.h
+@@ -160,6 +160,25 @@ struct sdxi_desc {
+ 	static_assert(offsetof(struct tag_, csb_ptr) ==			\
+ 		      offsetof(struct sdxi_dsc_generic, csb_ptr))
+ 
++		/* SDXI 1.0 Table 6-8: DSC_DMAB_COPY Descriptor Format */
++		define_sdxi_dsc(sdxi_dsc_dmab_copy, copy,
++			__le32 size;
++			__u8 attr;
++			__u8 rsvd_0[3];
++			__le16 akey0;
++			__le16 akey1;
++			__le64 addr0;
++			__le64 addr1;
++			__u8 rsvd_1[24];
++		);
++
++		/* SDXI 1.0 Table 6-12: DSC_INTR Descriptor Format */
++		define_sdxi_dsc(sdxi_dsc_intr, intr,
++			__u8 rsvd_0[8];
++			__le16 akey;
++			__u8 rsvd_1[42];
++		);
++
+ 		/* SDXI 1.0 Table 6-14: DSC_CXT_START Descriptor Format */
+ 		define_sdxi_dsc(sdxi_dsc_cxt_start, cxt_start,
+ 			__u8 rsvd_0;
+@@ -215,11 +234,19 @@ static_assert(sizeof(struct sdxi_desc) == 64);
+ 
+ /* SDXI 1.0 Table 6-1: SDXI Operation Groups */
+ enum sdxi_dsc_type {
++	SDXI_DSC_OP_TYPE_DMAB    = 0x001,
+ 	SDXI_DSC_OP_TYPE_ADMIN   = 0x002,
++	SDXI_DSC_OP_TYPE_INTR    = 0x004,
+ };
+ 
+ /* SDXI 1.0 Table 6-2: SDXI Operation Groups, Types, and Subtypes */
+ enum sdxi_dsc_subtype {
++	/* DMA Base */
++	SDXI_DSC_OP_SUBTYPE_COPY    = 0x03,
++
++	/* Interrupt */
++	SDXI_DSC_OP_SUBTYPE_INTR = 0x00,
++
+ 	/* Administrative */
+ 	SDXI_DSC_OP_SUBTYPE_CXT_UPD      = 0x01,
+ 	SDXI_DSC_OP_SUBTYPE_CXT_START_NM = 0x03,
 
 -- 
 2.56.0
