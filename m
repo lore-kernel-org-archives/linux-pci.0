@@ -1,111 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793820244;
-	b=I0jKhwbAVyn45WwwJgqfm3DWnMdJ7h/3H66f4wmvDbMScT6XurKHZ1+Kr2Lp1Ly63/K2
-	 lStrUEICc3b8EgnNkIbQFJz4Kxryh3IRbOdYdkMNiaxU17eqEtSwJLhspQHwRglpCXdoW
-	 5d5dVhRk0x4Bbl96FJuIJaLAHgP/I97uN5dxptXOpp+4ISljgVzthiqx2+MjmAItfAPPW
-	 Qnx/8awcRRfJ5962DB7j6aiY8koDi+Y5FK3siOC+73/oAmGYU0sydT8WPncKuWmu04BT+
-	 +irnmN59emF182or8bNEchT6tfMdriHAzE0c2n69stNiYA8im5S3XFo9uGHNk8LyfXg==
+	t=1793820253;
+	b=TX6atVYi1zglEMAZd8pg2gu7PEvWZDkMiNK9KvQv43EWA3LxgUxWQx8Lian3Derit6WA
+	 RTeJGEaOak0D8JSF3TJIXG5dhLj/r3YDOMiMSwMXsfir2x5CvIsvpYs68mwWlJzIU+KiR
+	 uPXZhMM6DKZv7LqVVUDWQP4G89iZRhZhw81AYLuK6x+JQxcVRj2+vx0Ttn/fzNTQhdp4h
+	 Ip5Q0XvWlKnpgam2kPWgK3pbC0sJgL4PGFREkgV7/LsSZUcyF2qQT6FjUBgiVnktSRr3g
+	 giR1iLmRlEJjYIC+syx3SQUSIT5SyzyO1EXns5HHaMsl4D7O99FIinsb2uroS5mjn4g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793820244;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
-	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=H7K5JcYwiEwa4eeL0B3OVYVYuE4eo7ZLheZ5n77rVhE=;
-	b=EbtRDJD5wwlxKuCirkt+grrwBMfXIbuGf4MGREB4HaRdrJzpRS4i3Y6YiFPNgjiT/hR0
-	 sLslma2gLZ4Fz9wJxmZEI2urxHHBdlulLd3/NXt/TsP+sUTKkXFHHcZBM616qdvQSyL3M
-	 yo8wQDuioGvWpXb2bmth57hSaBC/VxYZXW5KS3SswWlAcAV52V7fL5iD06aKUylXszL4d
-	 P0x9s28EnpnXg5FiKg6pxBdbInJKfGs0th3pxCTnu4ajgOLInVFiDrhVZFzoZrjW5ltOa
-	 7BaPa0zHtpue/hz26xf+BCzvrPSlNeJi2lDWTFBypo23QxjJBcAvrHb5nIVrCh50Apw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793820253;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=yqWbS7bmtABGZQvYR4vX3FNpYVmw7I3lHWXomfTaRO8=;
+	b=VDNacnGRNYtU6VyC/4Wic9hRYlC7tbZjN7hfC0VHpMrg6Zu9dnQlt0R7h4tRF6k6uyxO
+	 B7vqnDKKBzZzRKScQRng2PnobkAJgWJ3Cdnt09dridBHN5nLAJuyqnnUOgmO85icsfmJn
+	 4It1Mkga0Acqu1QnQXqhF4OfmKQftYrQMClZTvIet1t6Z4XRufELJ7/xQwXhp6uvx+ZHi
+	 JarSlNCSFcsXGoHEvOkpQNY6J7sqIZjVSbV+S/YqyxgLw5i/FZvk9uhtZ3CYOXP7K/NZy
+	 A7ZPxz+UW+ei1qv47AzmAu0E4oFU0+UBt3nnY17jEaIlTPeho2pWIzlUY2L5+3/WmAA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bJLqHHf5;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=koepBkw4;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42BE0606E808;
-	Wed,  4 Nov 2026 19:24:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D794B606E822
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 19:24:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bJLqHHf5
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F1CE1F00919;
-	Wed,  4 Nov 2026 19:23:51 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=koepBkw4
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 434391F000C1;
+	Wed,  4 Nov 2026 19:24:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793820243;
-	bh=H7K5JcYwiEwa4eeL0B3OVYVYuE4eo7ZLheZ5n77rVhE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=bJLqHHf5qQ9r5k8j4lX0RizveOJ91Nhl7TYYnWVh4aogp5c4fTsQ8eax4sbt0OBxb
-	 3LGXXxrD9ytPYwt1XoRKnERbxW2Tn+UK8zRCJKkRYsyQfi/PuWkuv31fYn9LUwZYjP
-	 x1XP6KYsCrbos3zXmmN9K9ptP4sseCE+7dzR7OIE9G1wPs89kTqRfIMujdLyvnG/41
-	 wd0+mMF+XHreqHHSN22Y76usuZZQiXKs5/dT12lrJaMLmtKCOmIwzbp6lxJW0ddkkF
-	 tRH0k19+WCWkxOhMnoRLDydxLurlCjL+xTlICjmEBzFnzWlSjW6fSbK8/zIHPo72+P
-	 4oFpVAHjceUQQ==
-From: Christian Brauner <brauner@kernel.org>
-To: linux-fsdevel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Jann Horn <jannh@google.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Chris Mason <mason@kernel.org>,
-	Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Christoph Hellwig <hch@lst.de>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Joel Granados <joel.granados@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Jan Kara <jack@suse.com>,
-	linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-um@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	netdev@vger.kernel.org,
-	ntfs3@lists.linux.dev,
-	platform-driver-x86@vger.kernel.org,
-	coreteam@netfilter.org,
-	kexec@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	netfilter-devel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	ibm-acpi-devel@lists.sourceforge.net,
-	jfs-discussion@lists.sourceforge.net,
-	linux-alpha@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-cifs@vger.kernel.org,
-	linux-fbdev@vger.kernel.org,
-	linux-hwmon@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-sh@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	samba-technical@lists.samba.org,
-	sparclinux@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org,
-	linux-doc@vger.kernel.org,
-	linux-serial@vger.kernel.org,
-	linux-atm-general@lists.sourceforge.net,
-	Takashi Iwai <tiwai@suse.de>,
-	linux-input@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-modules@vger.kernel.org,
-	linux-debuggers@vger.kernel.org,
-	"Christian Brauner (Amutable)" <brauner@kernel.org>,
-	Chuck Lever <cel@kernel.org>,
-	stable@vger.kernel.org
-Subject: [PATCH RESEND v2 32/51] proc: resume readdir after the last name it returned
-Date: Wed,  4 Nov 2026 20:23:49 +0100
-Message-ID: <20261104-work-procfs-bugfixes-v2-32-021c84d852e0@kernel.org>
-In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
-References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
+	s=k20260515; t=1793820252;
+	bh=yqWbS7bmtABGZQvYR4vX3FNpYVmw7I3lHWXomfTaRO8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=koepBkw442MEnf4JWHnfkJbr2Y6+Vcg9867OEOAo9LqcLQx/X0u3+PXQ53aj6AdHj
+	 6BxIr0AQSKz8M46hXWbK6Az36OuJHNwPmYnqAWE9PzKPJwKAZgQahxAm66UXOxOwkT
+	 t/xzudbRBjF+LUXbjUEvzHPnFaAIL28cKmTKsyblm3XW9ulltPeOc0C6CrdX1GPEL5
+	 uGttQz9NhuoW4RKDwbTwJipZhUqrbiPgXqJVHfbLlf654Oj+9DO3s+4PQcsZgira42
+	 LUoBZ+sZ/9PZ8+fUFflkmx9FJx4UKLqiAuFh4do6x3koTXeiKXeyY6jmG7jxCDCs0v
+	 4/b22vppzVHLg==
+Message-ID: <sashiko-outbox-197943@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v7 05/10] PCI: dw-rockchip: Add helper function for
+ controller mode
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Sebastian Reichel" <sebastian.reichel@collabora.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261104-rockchip-pcie-system-suspend-v7-5-6ae6875939a2@collabora.com>
+References: <20261104-rockchip-pcie-system-suspend-v7-0-6ae6875939a2@collabora.com>
+ <20261104-rockchip-pcie-system-suspend-v7-5-6ae6875939a2@collabora.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 04 Nov 2026 19:24:11 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -114,220 +60,16 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7297; i=brauner@kernel.org; h=from:subject:message-id; bh=ZNOmyzOFl2t4htw30uUhDwZ021Jq9cqPFYbiLU1C/ng=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bvw8+c29B390vF6dzdjab31XjS+zOW6D/PbUDb2Sk i6yQqw2HaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABNJ8mdk2B3EIP33wna7rsrz 6TXqjfUtfy9d/9TA4Ln55+Ly5KB4T4a/kt9jDDrU5dJMlBQe2Rw/ObH6fKvKZfvDy3SzZ+dwPDj DBAA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
 
-proc_readdir_de() counts the entries of a directory and resumes a
-listing at the number getdents64() stopped at. The entries are sorted
-by name, so one that is added or removed in between shifts everything
-behind it by one. Listing /proc/net/dev_snmp6 with a buffer that holds
-".", ".." and "lo" and adding a device whose name sorts before "lo"
-makes the next call return "lo" a second time. Removing one that sorted
-before the position makes the next call skip an entry instead.
+> Remove code duplication and improve readability by introducing a new
+> function to setup the controller mode.
+>=20
+> Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
 
-Since commit 895b4c0c79b0 ("fs/proc: fix uaf in proc_readdir_de()") an
-entry that is removed while it is being emitted also ends the listing
-right there. pde_subdir_next() finds nothing after an erased entry, so
-proc_readdir_de() reports the end of the directory and the next call
-resumes by number, skipping another entry. For /proc itself
-proc_root_readdir() takes that as the end of the static entries and
-moves on to the pids, so the rest of the static entries is missing.
-And if the position is behind the last entry when a call starts
-proc_readdir_de() returns 0, so /proc then lists no pids at all.
+Sashiko has reviewed this patch and found no issues.
 
-So remember the name of the last entry a call emitted in the file and
-resume at the first entry after it, like kernfs resumes after the node
-it stopped at. An entry that was removed while it was emitted is
-continued after by its name as well. If the position was moved by a
-seek in between the listing counts from the start like before.
-
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Fixes: 895b4c0c79b0 ("fs/proc: fix uaf in proc_readdir_de()")
-Cc: stable@vger.kernel.org
-Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
----
- fs/proc/generic.c  | 89 ++++++++++++++++++++++++++++++++++++++++++++++--------
- fs/proc/internal.h |  1 +
- fs/proc/proc_net.c |  1 +
- fs/proc/root.c     |  1 +
- 4 files changed, 80 insertions(+), 12 deletions(-)
-
-diff --git a/fs/proc/generic.c b/fs/proc/generic.c
-index 9e59796349e1..588999058e66 100644
---- a/fs/proc/generic.c
-+++ b/fs/proc/generic.c
-@@ -87,6 +87,28 @@ static struct proc_dir_entry *pde_subdir_find(struct proc_dir_entry *dir,
- 	return NULL;
- }
- 
-+/* The first entry of @dir that sorts after @name. */
-+static struct proc_dir_entry *pde_subdir_after(struct proc_dir_entry *dir,
-+					       const char *name,
-+					       unsigned int len)
-+{
-+	struct rb_node *node = dir->subdir.rb_node, *after = NULL;
-+
-+	while (node) {
-+		struct proc_dir_entry *de = rb_entry(node,
-+						     struct proc_dir_entry,
-+						     subdir_node);
-+
-+		if (proc_match(name, de, len) < 0) {
-+			after = node;
-+			node = node->rb_left;
-+		} else {
-+			node = node->rb_right;
-+		}
-+	}
-+	return rb_entry_safe(after, struct proc_dir_entry, subdir_node);
-+}
-+
- static bool pde_subdir_insert(struct proc_dir_entry *dir,
- 			      struct proc_dir_entry *de)
- {
-@@ -278,6 +300,40 @@ struct dentry *proc_lookup(struct inode *dir, struct dentry *dentry,
- 	return proc_lookup_de(dir, dentry, PDE(dir));
- }
- 
-+/*
-+ * Where the next readdir resumes. The entries are counted, so one that is
-+ * added or removed in front of the position would shift what the next call
-+ * returns. The name of the last entry emitted doesn't move.
-+ */
-+struct proc_dir_cursor {
-+	loff_t pos;			/* the position behind the entry */
-+	unsigned int len;
-+	char name[NAME_MAX + 1];
-+};
-+
-+/* If this can't remember the entry the next call counts from the start. */
-+static void proc_dir_cursor_set(struct file *file, struct proc_dir_entry *de,
-+				loff_t pos)
-+{
-+	struct proc_dir_cursor *cursor = file->private_data;
-+
-+	if (!cursor) {
-+		cursor = kmalloc(sizeof(*cursor), GFP_KERNEL);
-+		if (!cursor)
-+			return;
-+		file->private_data = cursor;
-+	}
-+	cursor->pos = pos;
-+	cursor->len = de->namelen;
-+	memcpy(cursor->name, de->name, de->namelen);
-+}
-+
-+int proc_dir_release(struct inode *inode, struct file *file)
-+{
-+	kfree(file->private_data);
-+	return 0;
-+}
-+
- /*
-  * This returns non-zero if at EOF, so that the /proc
-  * root directory can use this and check if it should
-@@ -290,23 +346,26 @@ struct dentry *proc_lookup(struct inode *dir, struct dentry *dentry,
- int proc_readdir_de(struct file *file, struct dir_context *ctx,
- 		    struct proc_dir_entry *de)
- {
-+	struct proc_dir_cursor *cursor = file->private_data;
-+	struct proc_dir_entry *dir = de;
- 	int i;
- 
- 	if (!dir_emit_dots(file, ctx))
- 		return 0;
- 
--	i = ctx->pos - 2;
- 	read_lock(&proc_subdir_lock);
--	de = pde_subdir_first(de);
--	for (;;) {
--		if (!de) {
--			read_unlock(&proc_subdir_lock);
--			return 0;
--		}
--		if (!i)
--			break;
--		de = pde_subdir_next(de);
--		i--;
-+	if (cursor && cursor->pos == ctx->pos) {
-+		/* Resume after the last entry emitted, wherever it is now. */
-+		de = pde_subdir_after(dir, cursor->name, cursor->len);
-+	} else {
-+		/* Moved by a seek, count from the start like always. */
-+		de = pde_subdir_first(dir);
-+		for (i = ctx->pos - 2; de && i; i--)
-+			de = pde_subdir_next(de);
-+	}
-+	if (!de) {
-+		read_unlock(&proc_subdir_lock);
-+		return 1;
- 	}
- 
- 	do {
-@@ -319,8 +378,13 @@ int proc_readdir_de(struct file *file, struct dir_context *ctx,
- 			return 0;
- 		}
- 		ctx->pos++;
-+		proc_dir_cursor_set(file, de, ctx->pos);
- 		read_lock(&proc_subdir_lock);
--		next = pde_subdir_next(de);
-+		/* Removed in the meantime, go on after its name. */
-+		if (RB_EMPTY_NODE(&de->subdir_node))
-+			next = pde_subdir_after(dir, de->name, de->namelen);
-+		else
-+			next = pde_subdir_next(de);
- 		pde_put(de);
- 		de = next;
- 	} while (de);
-@@ -348,6 +412,7 @@ static const struct file_operations proc_dir_operations = {
- 	.llseek			= generic_file_llseek,
- 	.read			= generic_read_dir,
- 	.iterate_shared		= proc_readdir,
-+	.release		= proc_dir_release,
- };
- 
- static int proc_net_d_revalidate(struct inode *dir, const struct qstr *name,
-diff --git a/fs/proc/internal.h b/fs/proc/internal.h
-index df873df9afc5..04f7ce2b24ed 100644
---- a/fs/proc/internal.h
-+++ b/fs/proc/internal.h
-@@ -287,6 +287,7 @@ extern struct dentry *proc_lookup(struct inode *, struct dentry *, unsigned int)
- struct dentry *proc_lookup_de(struct inode *, struct dentry *, struct proc_dir_entry *);
- extern int proc_readdir(struct file *, struct dir_context *);
- int proc_readdir_de(struct file *, struct dir_context *, struct proc_dir_entry *);
-+int proc_dir_release(struct inode *, struct file *);
- 
- static inline void pde_get(struct proc_dir_entry *pde)
- {
-diff --git a/fs/proc/proc_net.c b/fs/proc/proc_net.c
-index b1f5eafb069a..dbcf87a257e1 100644
---- a/fs/proc/proc_net.c
-+++ b/fs/proc/proc_net.c
-@@ -351,6 +351,7 @@ const struct file_operations proc_net_operations = {
- 	.llseek		= generic_file_llseek,
- 	.read		= generic_read_dir,
- 	.iterate_shared	= proc_tgid_net_readdir,
-+	.release	= proc_dir_release,
- };
- 
- static __net_init int proc_net_ns_init(struct net *net)
-diff --git a/fs/proc/root.c b/fs/proc/root.c
-index 7fbbe92bf73a..dfee1caa26f7 100644
---- a/fs/proc/root.c
-+++ b/fs/proc/root.c
-@@ -441,6 +441,7 @@ static const struct file_operations proc_root_operations = {
- 	.read		 = generic_read_dir,
- 	.iterate_shared	 = proc_root_readdir,
- 	.llseek		= generic_file_llseek,
-+	.release	= proc_dir_release,
- };
- 
- /*
-
--- 
-2.53.0
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-rockchip-p=
+cie-system-suspend-v7-0-6ae6875939a2@collabora.com?part=3D5
 
