@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793809033;
-	b=Rp/xDKNSmW3zQ0yI4iG3T9FKJijnTceZQrM/3sUq94u/Iyfoow8PRpkHpyJsm07xKMFL
-	 MvjH0p6gz3dfDy64RavJ2oB0w5YNTn80ui/He7Q9KCgRd4Cn1cHLc5kZqpclGoyR0gg1f
-	 +HezPlYkDOC+6GXejxeVJDZOvBsYll9xJ0HnPYl3LXSYiVtIdbPpvMC2MfBSxhKL0rdQW
-	 X6rGipLg20pqAMot+QZJtgnJ2IngoDr9SfunHfaflKTN701MB8uslZUs9nwqHjB3t+Hp7
-	 IIfamOLMiA+Viymt/NabIutajrAELxGPeMAmGetPK69RnBfZ2v7HVAkEFbz+Gzb0IbQ==
+	t=1793809023;
+	b=HdRwNUABDee8esFJGQlruH2ShVZLTPSuXmizISeaSiHdaF2ATL4djMbOnPHgRy0Azbd0
+	 ndX0xqNTCSmpfKgjDRewKfrLz8Ec2dJW7ldICjNG3jlilABxZ0vQiFtyp5jeaUMTHthwN
+	 L20w+Opb5s0356fQcVWcbSzWEgRAYD0sgVbdm6uccOx0bbbEYvlqmNphQ4E6XztcXd3ea
+	 ZfNRfruOia+JAKRalI1Z/0zFMDh3t1YZnqswO/lgf5L2qmgCLrWPfX+7yBA5U6HpIR2UV
+	 UWcSisLiu4siF6DX+aEqNonNsvGJe+UwmDCv9zJ/3yhy+pFEGo2IjGzMyt/xKBj4WGQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793809033;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793809023;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=fyZRV4J6nax35QOw1ljlSPVHtJnA1c//c2H2SMY2yT0=;
-	b=icTInD49/jOvTWWBVZ2LYgIfQQLB1bcXdVGishjMWEJavhHgXtXQApNgJevg+vsWBKSO
-	 9lEJ1C7CXYNbOvaAFQtvHJeJLjRHikce3Yk0IyN87xYqfwwhaJNa9niB8iaZYJlV1ylAf
-	 0KNwkOY5CDK/Dx1dx54blWhQK3mx7wVMWN5WHYB8rDhgfHhA15ViU58ZeVOoSH8mHsc3n
-	 85F7BL9pFytU7CKm/v75nBotrgOMt9eH9UCv3VUuH/yRIwIPKNUjSZUzkdq4TMWTaycPC
-	 avZ7vRFoWzIaGuAE91wvv5hDfj5cQ+urdvCeG+77ePbL5MDrtmFhhfoRb/nQ73txJsw==
+	bh=VC0kuAI8YTTP8xqxIGPPjehsRscbtuqmLo3CRUhyHGY=;
+	b=CAZYzAS9e1WRqyVsUgPECbwXF+LiICQEk9YTQl0xYzCfSyhD985Urh8OBq06HP18L3eX
+	 9TLsAu4/xwFqp5zOm2QNwjbabhqoshhnM8AVHOXd8yk/ZPl0cqfqmoO4Kb+UgouNQ7tkj
+	 4C/nMfRSzuyT0jrAXlQHipBf3vTRMGuWdLDXyXCh0+2Da3tLb+7HWXy1x48bQf4bXKoQU
+	 2ui/GQAQv6kQmmeF3FGwubKt+LKjlTfhfge0phEqEw++3la9dTIMwPyQqLbdnamWMLcQW
+	 FBQfbRh1Vi0NBGKEoTZApuxWhmkXoRwPyAfQ54t9Oee3JMzWEcsvFg5ys5nRNk8QxDA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YFJS4SbE;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=G6PfgsQi;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9F61606D808;
-	Wed,  4 Nov 2026 16:17:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YFJS4SbE
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B87091F000C1;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72255606A32E;
 	Wed,  4 Nov 2026 16:17:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=G6PfgsQi
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 109AD1F00919;
+	Wed,  4 Nov 2026 16:16:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793809032;
-	bh=fyZRV4J6nax35QOw1ljlSPVHtJnA1c//c2H2SMY2yT0=;
+	s=k20260515; t=1793809023;
+	bh=VC0kuAI8YTTP8xqxIGPPjehsRscbtuqmLo3CRUhyHGY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=YFJS4SbEKuKwWiS76FBgOfVN9Pfo2nzfGuDF0zKiZyVtvf6Vuz4FHI2dpsXgHsqo6
-	 KAzYakMrl2inh6VQXAS4AMPEG0Qr5Qr7qG3dEUlNTo98MPyyx3IBe6SaL3nM7ZN2Xu
-	 ct7dEbNT/sqUneuGXFuHKe8JfDyFQ0e57rZT/wvx6yvbk5FfFJupyNX1DZHXP0nBQL
-	 hPxJGbZ4Bl1OxjVL1SS+M7wyoHNFQNeO6s++uVCtlbXo3VHStg528CRGALMW7C7mf9
-	 AlY0Z2fEbET/uz8OfsjXmutVtpIuzje6bxZcwDOfZ6RWWKCyqhYoobZ5/5/PxlyKrK
-	 M/GqFlnhSO4dQ==
+	b=G6PfgsQitDZ1twMbvHRuDjOQSiduhDAjzyHbaIUOA6txxiAu2D1QHpHqF0/SkSCSc
+	 sEoUEK79ryNJpGzvRuao/UGmwpcO7/Lf+tJTzvwJFZ59Ltkqe7WTpIj2vI6SbEjcTf
+	 gEsWQ6vV3YdSU+TpI3tPB2WQmGTxR14A6bHR5wZdepMyI4ffpQoUsnjEsghEou0lBI
+	 lhjNM2aE0+/Rq9F3VITQHpiDvyea+t8LHJ5lxExc+TfbmvQP7q/6ZqdSH2jcQbex8W
+	 MZmP+pS0wOCrYFfo4B8d5v9Lt6HFsyzBrHrXD/OvjVVvAUk6qg6TimK4glFad8+ebP
+	 pMer4fiajWMXg==
 From: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
 To: iommu@lists.linux.dev
 Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
@@ -71,9 +71,9 @@ Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-tegra@vger.kernel.org
-Subject: [PATCH v8 02/15] virt: coco: tsm: Remove the device from lookup before PCI teardown
-Date: Wed,  4 Nov 2026 21:46:19 +0530
-Message-ID: <20261104161632.3547423-3-aneesh.kumar@kernel.org>
+Subject: [PATCH v8 01/15] PCI/TSM: Move core code into its own directory
+Date: Wed,  4 Nov 2026 21:46:18 +0530
+Message-ID: <20261104161632.3547423-2-aneesh.kumar@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
 References: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
@@ -88,82 +88,92 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-PCI connect looks up a TSM by ID under pci_tsm_rwsem. Previously,
-tsm_unregister() released that lock after tearing down PCI state while
-the TSM was still in the class lookup. A racing connect could then
-attach a new PCI context that the teardown would never see.
+Multiple patch series modify drivers/pci/tsm.c, and some add new files
+to the PCI/TSM subsystem. Move tsm.c to tsm/core.c so these series can
+share the directory layout and reduce merge conflicts.
 
-Remove the device from the class lookup first, then take the PCI write
-lock to drain in-flight operations and destroy their contexts. Drop the
-device reference only after PCI teardown completes.
+Update the build rules, local header include, and MAINTAINERS entry for
+the new location.
 
-Fixes: 3225f52cde56 ("PCI/TSM: Establish Secure Sessions and Link Encryption")
+No functional change.
+
 Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
 ---
- drivers/virt/coco/tsm-core.c | 22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
+ Documentation/driver-api/pci/tsm.rst | 2 +-
+ MAINTAINERS                          | 2 +-
+ drivers/pci/Makefile                 | 2 +-
+ drivers/pci/tsm/Makefile             | 7 +++++++
+ drivers/pci/{tsm.c => tsm/core.c}    | 2 +-
+ 5 files changed, 11 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/pci/tsm/Makefile
+ rename drivers/pci/{tsm.c => tsm/core.c} (99%)
 
-diff --git a/drivers/virt/coco/tsm-core.c b/drivers/virt/coco/tsm-core.c
-index e784993353d8..f79135986102 100644
---- a/drivers/virt/coco/tsm-core.c
-+++ b/drivers/virt/coco/tsm-core.c
-@@ -56,26 +56,25 @@ static struct tsm_dev *alloc_tsm_dev(struct device *parent)
- 	return no_free_ptr(tsm_dev);
- }
+diff --git a/Documentation/driver-api/pci/tsm.rst b/Documentation/driver-api/pci/tsm.rst
+index 232b92bec93f..c95c513019b5 100644
+--- a/Documentation/driver-api/pci/tsm.rst
++++ b/Documentation/driver-api/pci/tsm.rst
+@@ -17,5 +17,5 @@ Subsystem Interfaces
+ .. kernel-doc:: include/linux/pci-tsm.h
+    :internal:
  
--static struct tsm_dev *tsm_register_pci_or_reset(struct tsm_dev *tsm_dev,
--						 struct pci_tsm_ops *pci_ops)
-+static int tsm_register_pci(struct tsm_dev *tsm_dev, struct pci_tsm_ops *pci_ops)
- {
- 	int rc;
+-.. kernel-doc:: drivers/pci/tsm.c
++.. kernel-doc:: drivers/pci/tsm/core.c
+    :export:
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 93abbb315065..561914074d01 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -28487,7 +28487,7 @@ S:	Maintained
+ F:	Documentation/ABI/testing/configfs-tsm-report
+ F:	Documentation/driver-api/coco/
+ F:	Documentation/driver-api/pci/tsm.rst
+-F:	drivers/pci/tsm.c
++F:	drivers/pci/tsm/
+ F:	drivers/virt/coco/guest/
+ F:	include/linux/*tsm*.h
+ F:	samples/tsm-mr/
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 41ebc3b9a518..211f195ff2c9 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -35,7 +35,7 @@ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+ obj-$(CONFIG_VGA_ARB)		+= vgaarb.o
+ obj-$(CONFIG_PCI_DOE)		+= doe.o
+ obj-$(CONFIG_PCI_IDE)		+= ide.o
+-obj-$(CONFIG_PCI_TSM)		+= tsm.o
++obj-$(CONFIG_PCI_TSM)		+= tsm/
+ obj-$(CONFIG_PCI_DYNAMIC_OF_NODES) += of_property.o
+ obj-$(CONFIG_PCI_NPEM)		+= npem.o
+ obj-$(CONFIG_PCIE_TPH)		+= tph.o
+diff --git a/drivers/pci/tsm/Makefile b/drivers/pci/tsm/Makefile
+new file mode 100644
+index 000000000000..464414c11a72
+--- /dev/null
++++ b/drivers/pci/tsm/Makefile
+@@ -0,0 +1,7 @@
++# SPDX-License-Identifier: GPL-2.0
++#
++# Makefile for the PCI/TSM infrastructure
++
++obj-$(CONFIG_PCI_TSM) += tsm.o
++
++tsm-y := core.o
+diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm/core.c
+similarity index 99%
+rename from drivers/pci/tsm.c
+rename to drivers/pci/tsm/core.c
+index 5fdcd7f2e820..76ef03a1b3ec 100644
+--- a/drivers/pci/tsm.c
++++ b/drivers/pci/tsm/core.c
+@@ -15,7 +15,7 @@
+ #include <linux/sysfs.h>
+ #include <linux/tsm.h>
+ #include <linux/xarray.h>
+-#include "pci.h"
++#include "../pci.h"
  
- 	if (!pci_ops)
--		return tsm_dev;
-+		return 0;
- 
- 	tsm_dev->pci_ops = pci_ops;
- 	rc = pci_tsm_register(tsm_dev);
- 	if (rc) {
-+		tsm_dev->pci_ops = NULL;
- 		dev_err(tsm_dev->dev.parent,
- 			"PCI/TSM registration failure: %d\n", rc);
--		device_unregister(&tsm_dev->dev);
--		return ERR_PTR(rc);
-+		return rc;
- 	}
- 
- 	/* Notify TSM userspace that PCI/TSM operations are now possible */
- 	kobject_uevent(&tsm_dev->dev.kobj, KOBJ_CHANGE);
--	return tsm_dev;
-+	return 0;
- }
- 
- struct tsm_dev *tsm_register(struct device *parent, struct pci_tsm_ops *pci_ops)
-@@ -96,15 +95,22 @@ struct tsm_dev *tsm_register(struct device *parent, struct pci_tsm_ops *pci_ops)
- 	if (rc)
- 		return ERR_PTR(rc);
- 
--	return tsm_register_pci_or_reset(no_free_ptr(tsm_dev), pci_ops);
-+	rc = tsm_register_pci(tsm_dev, pci_ops);
-+	if (rc) {
-+		device_del(dev);
-+		return ERR_PTR(rc);
-+	}
-+	return no_free_ptr(tsm_dev);
- }
- EXPORT_SYMBOL_GPL(tsm_register);
- 
- void tsm_unregister(struct tsm_dev *tsm_dev)
- {
-+	/* Remove the class lookup first. */
-+	device_del(&tsm_dev->dev);
- 	if (tsm_dev->pci_ops)
- 		pci_tsm_unregister(tsm_dev);
--	device_unregister(&tsm_dev->dev);
-+	put_device(&tsm_dev->dev);
- }
- EXPORT_SYMBOL_GPL(tsm_unregister);
- 
+ /*
+  * Provide a read/write lock against the init / exit of pdev tsm
 -- 
 2.43.0
 
