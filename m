@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793820616;
-	b=qB+qtQ89FxpzP/vADP12n+BlctH7MoKizuIAfaiHQloklFOS0oW1otMqb1FbEAcUfxHq
-	 rAz7YQuIR+caMYO0GnfFHBcQMuWJ1sT2+Wdq5lXLw4TOWLV55kpXk/gipfNX5DeCh/7T5
-	 uU2VY9vPMmHwV4LvYL3sjWiLUMymccgRLpqYsfHkk8xjoLbqGXjMwtEM5T7wAjyu2BB70
-	 wdeXl8NsLzsP8DpSeJ0xv31yPC/lxuCp9jaCxbAlZU/gP8WE6Ln97UxaXAVV/DOTn92qU
-	 nyQh/5CQeBgqdlk/WQhsrCZJhUUHfpmG+PON8r4VPaukhopNc95qLl6Ff7+vcJKgbSQ==
+	t=1793820644;
+	b=vxS687VVNtLz2J3mgPoI4r2DVNIKOutWXGwEXRBsP8UvvM+z2wLe2y3x7OnTprTt0F2B
+	 Izk8BGaJh+rnx3XPKyEOFB9fPeQpcw2HC1hGF64HrUmKVCgRMl7w7L0L5lQOQrF3zTq14
+	 qsFGAfkujaGwT7i2VpIdC2hhAXoWdP3OwlV74BBhz7prGzzArriQLgI//hFZVFIRy0AY0
+	 A6uYTYOJ4BQ8NcEqV9L4uL3kHDHemfaXk1BtB49V7CkKfS9huMlqkJ/eFNGzXaxusnglN
+	 7/f/rd1cKtx5Dt/GocYkGJTJ5Pq8wo7j8uFVqDT6JPqYQ8cOhhYaaB1K2Dsi/X21bqw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793820616;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793820644;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=wXVlMWiDTu+69WMCdmpXWiSSm+c28yN85IUhl+IubT8=;
-	b=H5Mdy7Uuukscocv+TsvTE+Ex1srBMbzUx3KXUxrVlfrFwmRwOhkoGgkGO6JB2yf3FUAC
-	 a/ltam8bUknm7Sx1MdrUZo7lDc9EgWoiy9e5ud1UvPSC5TWgn/WwEs4oY8cfoBWaC8Nd4
-	 RsXE78TT5BO+G8UrIUnIN1pgBFdHSD6+dzXveD4mUKkKG0oc6wHq2M4jCxwSf8A6S5BcQ
-	 evtADxkvQDitICpk7JdPszQ95Rh/EQq3f5WgZDOWuE5VeY49evS5ZSeBgtbKcfPeWjgMn
-	 DJHOAPLZ22J7+7ywRsVdpAf+dShj43pxonu9iQkRF8tMHu6hnlUfQnRcD+iUxam6e4A==
+	bh=SzS7eItWzxSO4z8YwuJ1uSgZgWQNzMZ6Ahb1OPoDZMo=;
+	b=AdEkvFnaFmBOohe4kFbp9P+A8Tabc5dMBfI723VNbP+tFWAAIb8+py2OQeYx576MeiU4
+	 Q/lfwYvIfKyicV9BHdQvhWvOycJWPjX564anlAD5uDYBFkj/CEKKaiQ7/HWuBLB/2KKIs
+	 m+VydJuIx6N2xF9t5G4iHINfsQZBD26IWoAH1wwQTWfws8fF35RWv0Nj3FsQ9kUeKUEWd
+	 PJW60KP91BuA7zmoUJdA0KcOccTpuCz+gRwRH7q2apn+HasSKpG0XXui3rvspArW9t7s+
+	 sRQL6gF8FHbEpJkgTc+c/oKZvybOKLgjimlCtX7ozH2cGPUsPBRahKTtp+gl8GAPjvA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=erxYLb1X;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MSurYKoG;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99B266076CD9;
-	Wed,  4 Nov 2026 19:30:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EA8F606BA1B;
+	Wed,  4 Nov 2026 19:30:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=erxYLb1X
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3DD31F00919;
-	Wed,  4 Nov 2026 19:30:03 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MSurYKoG
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 481671F00919;
+	Wed,  4 Nov 2026 19:30:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793820615;
-	bh=wXVlMWiDTu+69WMCdmpXWiSSm+c28yN85IUhl+IubT8=;
+	s=k20260515; t=1793820644;
+	bh=SzS7eItWzxSO4z8YwuJ1uSgZgWQNzMZ6Ahb1OPoDZMo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=erxYLb1X2DHiu8zWp8v0jRYZ5UGBGh+M5ta+MA4icX/zIpChkASF4X68Jon0h6gUC
-	 8nuq0rsoqvadx2nDVRRlBP2aj3ufS3vatM8TDiMeFwvrDbjUNZAnA9ofhKM5FJ6XdR
-	 sKm5V0II55oa6/vNBFqcvr+LbWPRO0kbZer+mED55WXozLJTUJG12joB4mMb5qG9J7
-	 VpqXXHbX8Uyy3Hnr9YOzD5moscAo3/2JptEeVKryH7YO1wOoswN1+5wJ5ax5tGm2mR
-	 +F9oKHdKLr81Lnpvjj/9p5jcmbN338nH1sT0ofHVHFecyj5pPtazwCt2Ap7nkxjs5Q
-	 Nyh8bzuW3jflg==
+	b=MSurYKoGAIDif/wqmX3FgZQwTiCgG+tnCgKSYLzdBWLORSkW/KjPSpiKICziP0EcS
+	 9/yDwVUJ1VGST3+eeKxnRmC58bkU95GtCGg+AOkVWOP9i8o2Yz9AE39KNjAznOzbNc
+	 LZBdV+hFzabshy2uKPlA9htHgRMl0TGCn72g9xRoa5pORuGv5ZoDbcZ71WsO2tgN9q
+	 HY7o5mrylylD9i2wPIprqH6i/TD3VA9kfg2WfMShh4s03pjBHfLeZZObOCd5gI9iT+
+	 wuoe26knPwtRVZbWwRHnhenA94dtRu+lIO1/zOPt0aT/nnoTDQAotVqxzmQAhPpzvf
+	 9fjgkLUVUYm7g==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -100,9 +100,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-debuggers@vger.kernel.org,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 03/23] proc: share the readdir cursor with sysctl
-Date: Wed,  4 Nov 2026 20:30:01 +0100
-Message-ID: <20261104-work-procfs-core-v2-3-76ace653a773@kernel.org>
+Subject: [PATCH RESEND v2 05/23] proc: keep the open files of an entry in an open node
+Date: Wed,  4 Nov 2026 20:30:30 +0100
+Message-ID: <20261104-work-procfs-core-v2-5-76ace653a773@kernel.org>
 In-Reply-To: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
 References: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -116,223 +116,213 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7727; i=brauner@kernel.org; h=from:subject:message-id; bh=T1jO1APZ3j3BQHDjVCpmuxMpr8V+h+I2OmQhvzCN9EY=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bi+58GPL4mlqj67P2u71ltNkzqaV66omL9vzZbrTm 6qaruBg345SFgYxLgZZMUUWh3aTcLnlPBWbjTI1YOawMoEMYeDiFICJLKxl+GfMdq5+mWH0iYYW pjurF5RIvVivMn2Ztpzp+jttleeahF4x/C9dvn1KMM+3u+sn3VvOYpmaw5XlpZepdd7umWXjkTf LRFkB
+X-Developer-Signature: v=1; a=openpgp-sha256; l=7650; i=brauner@kernel.org; h=from:subject:message-id; bh=23kBqn99A2yJqnmYF9LJE/l5cgOyT8JgYFtYwqrik1A=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bi9zNfkydcVJx960mhOT5vot8lzweI3irB1t/DfCv pW3/uSr7ihlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZiITzIjQ7NYYY7n1+XMz9/+ adnA/vfsjcjZc/L/TuKredHMeVzOZQPDX+FwB7+jVy7y9Wvbft6TbcDzeXOhX1Fv15PeN08Fbuh PYwMA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-proc_readdir_de() and proc_sys_readdir() both resume a listing after
-the last entry it emitted and each remembers that entry in the open
-file with a cursor of its own: the same struct, the same way of
-setting it, the same release. Keep one in generic.c and let sysctl
-use it.
+procfs remembers the open files of an entry that has a ->proc_release(),
+so that it can call the release hook when the entry is removed while
+files are still open. The list head for that and the lock that protects
+it sit in every struct proc_dir_entry, for the few entries that need
+them, and the next patches want to keep more there, the vm_operations
+of an entry's mappings for a start.
+
+Move the list into a struct pde_open_node that only those entries get.
+It is allocated when the entry is registered, whether an entry needs
+one follows from its proc_ops, and freed with the entry. So ->open is
+constant for the life of an entry, nothing has to look it up or pin it,
+and the removal path stays what it is. kernfs allocates its
+kernfs_open_node on the first open instead, but there every attribute
+can be polled and so every one of them would need one. In procfs the
+entries that need the node are the exception. Permanent entries don't
+get one, they are never removed, so their release hook only ever runs
+when a file is closed.
+
+The spinlock stays in the entry and now protects what hangs off ->open.
+Moving it behind the gid fills a hole, so struct proc_dir_entry shrinks
+from 160 to 144 bytes on x86_64 here, and it ends up at 160 bytes at
+the end of this series instead of the 184 it would have grown to with
+the read and write limits and the vm_operations of its mappings in it.
+That keeps 32 bytes of inline name instead of 8. 34 of the 68 /proc/net
+names a network namespace gets are longer than 7 characters.
 
 No functional changes.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/proc/generic.c     | 29 ++++++++++++-----------------
- fs/proc/internal.h    | 25 +++++++++++++++++++++++++
- fs/proc/proc_sysctl.c | 45 +++++----------------------------------------
- 3 files changed, 42 insertions(+), 57 deletions(-)
+ fs/proc/generic.c  | 20 +++++++++++++++++++-
+ fs/proc/inode.c    | 23 +++++++++++++----------
+ fs/proc/internal.h | 16 +++++++++++++---
+ 3 files changed, 45 insertions(+), 14 deletions(-)
 
 diff --git a/fs/proc/generic.c b/fs/proc/generic.c
-index e7264f0cf5ab..f6d620a5c3d2 100644
+index f6d620a5c3d2..84f064a651e4 100644
 --- a/fs/proc/generic.c
 +++ b/fs/proc/generic.c
-@@ -301,22 +301,16 @@ struct dentry *proc_lookup(struct inode *dir, struct dentry *dentry,
+@@ -40,6 +40,7 @@ void pde_free(struct proc_dir_entry *pde)
+ 		kfree(pde->data);
+ 	if (pde->name != pde->inline_name)
+ 		kfree(pde->name);
++	kfree(pde->open);
+ 	kmem_cache_free(proc_dir_entry_cache, pde);
  }
  
- /*
-- * Where the next readdir resumes. The entries are counted, so one that is
-- * added or removed in front of the position would shift what the next call
-- * returns. The name of the last entry emitted doesn't move.
-+ * Remember @name as the entry the listing is behind at @pos. If this can't
-+ * the next call counts from the start.
-  */
--struct proc_dir_cursor {
--	loff_t pos;			/* the position behind the entry */
--	unsigned int len;
--	char name[NAME_MAX + 1];
--};
+@@ -445,6 +446,18 @@ static void pde_set_flags(struct proc_dir_entry *pde)
+ 		pde->flags |= PROC_ENTRY_proc_lseek;
+ }
+ 
++/*
++ * procfs has to know the open files of an entry whose ->proc_release() it
++ * calls at removal. A permanent entry is never removed and skips all that,
++ * see proc_reg_open().
++ */
++static bool pde_needs_open_node(const struct proc_dir_entry *pde)
++{
++	if (!S_ISREG(pde->mode) || pde_is_permanent(pde))
++		return false;
++	return pde->proc_ops->proc_release;
++}
++
+ /* returns the registered entry, or frees dp and returns NULL on failure */
+ struct proc_dir_entry *proc_register(struct proc_dir_entry *dir,
+ 		struct proc_dir_entry *dp)
+@@ -454,6 +467,12 @@ struct proc_dir_entry *proc_register(struct proc_dir_entry *dir,
+ 
+ 	if (!S_ISDIR(dp->mode))
+ 		pde_set_flags(dp);
++	if (pde_needs_open_node(dp)) {
++		dp->open = kzalloc(sizeof(*dp->open), GFP_KERNEL);
++		if (!dp->open)
++			goto out_free_inum;
++		INIT_LIST_HEAD(&dp->open->files);
++	}
+ 
+ 	write_lock(&proc_subdir_lock);
+ 	dp->parent = dir;
+@@ -533,7 +552,6 @@ static struct proc_dir_entry *__proc_create(struct proc_dir_entry **parent,
+ 	ent->subdir = RB_ROOT;
+ 	refcount_set(&ent->refcnt, 1);
+ 	spin_lock_init(&ent->pde_unload_lock);
+-	INIT_LIST_HEAD(&ent->pde_openers);
+ 	proc_set_user(ent, (*parent)->uid, (*parent)->gid);
+ 
+ 	/* Revalidate everything under /proc/${pid}/net */
+diff --git a/fs/proc/inode.c b/fs/proc/inode.c
+index 8795add1898d..56eab69e1dcc 100644
+--- a/fs/proc/inode.c
++++ b/fs/proc/inode.c
+@@ -271,12 +271,13 @@ void proc_entry_rundown(struct proc_dir_entry *de)
+ 	if (atomic_add_return(BIAS, &de->in_use) != BIAS)
+ 		wait_var_event(&de->in_use, atomic_read(&de->in_use) == BIAS);
+ 
+-	/* ->pde_openers list can't grow from now on. */
 -
--/* If this can't remember the entry the next call counts from the start. */
--static void proc_dir_cursor_set(struct file *file, struct proc_dir_entry *de,
--				loff_t pos)
-+void proc_dir_cursor_set(struct file *file, const char *name, unsigned int len,
-+			 loff_t pos)
- {
- 	struct proc_dir_cursor *cursor = file->private_data;
- 
-+	if (len > NAME_MAX)
++	/* ->open->files can't grow from now on. */
++	if (!de->open)
 +		return;
- 	if (!cursor) {
- 		cursor = kmalloc(sizeof(*cursor), GFP_KERNEL);
- 		if (!cursor)
-@@ -324,8 +318,8 @@ static void proc_dir_cursor_set(struct file *file, struct proc_dir_entry *de,
- 		file->private_data = cursor;
+ 	spin_lock(&de->pde_unload_lock);
+-	while (!list_empty(&de->pde_openers)) {
++	while (!list_empty(&de->open->files)) {
+ 		struct pde_opener *pdeo;
+-		pdeo = list_first_entry(&de->pde_openers, struct pde_opener, lh);
++		pdeo = list_first_entry(&de->open->files, struct pde_opener, lh);
+ 		close_pdeo(de, pdeo);
+ 		spin_lock(&de->pde_unload_lock);
  	}
- 	cursor->pos = pos;
--	cursor->len = de->namelen;
--	memcpy(cursor->name, de->name, de->namelen);
-+	cursor->len = len;
-+	memcpy(cursor->name, name, len);
- }
+@@ -499,13 +500,13 @@ static int proc_reg_open(struct inode *inode, struct file *file)
+ 	 * 2) rmmod isn't blocked by opening file in /proc and sitting on
+ 	 *    the descriptor (including "rmmod foo </proc/foo" scenario).
+ 	 *
+-	 * Save every "struct file" with custom ->release hook.
++	 * Save every "struct file" with custom ->release hook. Those entries
++	 * have an open node, see proc_register().
+ 	 */
+ 	if (!use_pde(pde))
+ 		return -ENOENT;
  
- int proc_dir_release(struct inode *inode, struct file *file)
-@@ -346,7 +340,7 @@ int proc_dir_release(struct inode *inode, struct file *file)
- int proc_readdir_de(struct file *file, struct dir_context *ctx,
- 		    struct proc_dir_entry *de)
- {
--	struct proc_dir_cursor *cursor = file->private_data;
-+	const struct proc_dir_cursor *cursor;
- 	struct proc_dir_entry *dir = de;
- 	int i;
+-	const auto release = pde->proc_ops->proc_release;
+-	if (release) {
++	if (pde->open) {
+ 		pdeo = kmem_cache_alloc(pde_opener_cache, GFP_KERNEL);
+ 		if (!pdeo) {
+ 			rv = -ENOMEM;
+@@ -517,14 +518,14 @@ static int proc_reg_open(struct inode *inode, struct file *file)
+ 	if (open)
+ 		rv = open(inode, file);
  
-@@ -354,7 +348,8 @@ int proc_readdir_de(struct file *file, struct dir_context *ctx,
+-	if (release) {
++	if (pde->open) {
+ 		if (rv == 0) {
+ 			/* To know what to release. */
+ 			pdeo->file = file;
+ 			pdeo->closing = false;
+ 			pdeo->c = NULL;
+ 			spin_lock(&pde->pde_unload_lock);
+-			list_add(&pdeo->lh, &pde->pde_openers);
++			list_add(&pdeo->lh, &pde->open->files);
+ 			spin_unlock(&pde->pde_unload_lock);
+ 		} else
+ 			kmem_cache_free(pde_opener_cache, pdeo);
+@@ -547,8 +548,10 @@ static int proc_reg_release(struct inode *inode, struct file *file)
  		return 0;
+ 	}
  
- 	read_lock(&proc_subdir_lock);
--	if (cursor && cursor->pos == ctx->pos) {
-+	cursor = proc_dir_cursor_at(file, ctx->pos);
-+	if (cursor) {
- 		/* Resume after the last entry emitted, wherever it is now. */
- 		de = pde_subdir_after(dir, cursor->name, cursor->len);
- 	} else {
-@@ -378,7 +373,7 @@ int proc_readdir_de(struct file *file, struct dir_context *ctx,
++	if (!pde->open)
++		return 0;
+ 	spin_lock(&pde->pde_unload_lock);
+-	list_for_each_entry(pdeo, &pde->pde_openers, lh) {
++	list_for_each_entry(pdeo, &pde->open->files, lh) {
+ 		if (pdeo->file == file) {
+ 			close_pdeo(pde, pdeo);
  			return 0;
- 		}
- 		ctx->pos++;
--		proc_dir_cursor_set(file, de, ctx->pos);
-+		proc_dir_cursor_set(file, de->name, de->namelen, ctx->pos);
- 		read_lock(&proc_subdir_lock);
- 		/* Removed in the meantime, go on after its name. */
- 		if (RB_EMPTY_NODE(&de->subdir_node))
 diff --git a/fs/proc/internal.h b/fs/proc/internal.h
-index 268a0523be12..6b61d09ac5e5 100644
+index ab4d7bd1fb75..33776bc00ff0 100644
 --- a/fs/proc/internal.h
 +++ b/fs/proc/internal.h
-@@ -278,6 +278,31 @@ extern struct dentry *proc_lookup(struct inode *, struct dentry *, unsigned int)
- struct dentry *proc_lookup_de(struct inode *, struct dentry *, struct proc_dir_entry *);
- extern int proc_readdir(struct file *, struct dir_context *);
- int proc_readdir_de(struct file *, struct dir_context *, struct proc_dir_entry *);
+@@ -35,9 +35,6 @@ struct proc_dir_entry {
+ 	 */
+ 	atomic_t in_use;
+ 	refcount_t refcnt;
+-	struct list_head pde_openers;	/* who did ->open, but not ->release */
+-	/* protects ->pde_openers and all struct pde_opener instances */
+-	spinlock_t pde_unload_lock;
+ 	const struct inode_operations *proc_iops;
+ 	union {
+ 		const struct proc_ops *proc_ops;
+@@ -47,6 +44,8 @@ struct proc_dir_entry {
+ 		const struct seq_operations *seq_ops;
+ 		int (*single_show)(struct seq_file *, void *);
+ 	};
++	/* the open files procfs has to know, see struct pde_open_node */
++	struct pde_open_node *open;
+ 	proc_write_t write;
+ 	void *data;
+ 	unsigned int state_size;
+@@ -54,6 +53,8 @@ struct proc_dir_entry {
+ 	nlink_t nlink;
+ 	kuid_t uid;
+ 	kgid_t gid;
++	/* protects ->open->files and all struct pde_opener instances */
++	spinlock_t pde_unload_lock;
+ 	loff_t size;
+ 	struct proc_dir_entry *parent;
+ 	struct rb_root subdir;
+@@ -325,6 +326,15 @@ struct pde_opener {
+ 	bool closing;
+ 	struct completion *c;
+ } __randomize_layout;
 +
 +/*
-+ * Where the next readdir resumes. The entries are counted, so one that is
-+ * added or removed in front of the position would shift what the next call
-+ * returns. The name of the last entry emitted doesn't move. The directory's
-+ * file keeps it, see proc_dir_release().
++ * The open files of an entry whose ->proc_release() procfs has to call when
++ * the entry is removed while they are still open. Allocated with the entry,
++ * see proc_register().
 + */
-+struct proc_dir_cursor {
-+	loff_t pos;			/* the position behind the entry */
-+	unsigned int len;
-+	char name[NAME_MAX + 1];
++struct pde_open_node {
++	struct list_head files;		/* who did ->open, but not ->release */
 +};
-+
-+/* The entry to resume after, if the position is still the one behind it. */
-+static inline const struct proc_dir_cursor *
-+proc_dir_cursor_at(struct file *file, loff_t pos)
-+{
-+	const struct proc_dir_cursor *cursor = file->private_data;
-+
-+	if (cursor && cursor->pos == pos)
-+		return cursor;
-+	return NULL;
-+}
-+void proc_dir_cursor_set(struct file *file, const char *name, unsigned int len,
-+			 loff_t pos);
- int proc_dir_release(struct inode *, struct file *);
- 
- static inline void pde_get(struct proc_dir_entry *pde)
-diff --git a/fs/proc/proc_sysctl.c b/fs/proc/proc_sysctl.c
-index 6a92c33db9b5..c1e41a3f8f6b 100644
---- a/fs/proc/proc_sysctl.c
-+++ b/fs/proc/proc_sysctl.c
-@@ -787,36 +787,6 @@ out:
- 	return ret;
- }
- 
--/*
-- * Where the next readdir resumes. The entries are counted, so one that is
-- * registered or unregistered in front of the position would shift what
-- * the next call returns. The name of the last entry emitted doesn't move.
-- */
--struct sysctl_cursor {
--	loff_t pos;			/* the position behind the entry */
--	int len;
--	char name[NAME_MAX + 1];
--};
--
--/* If this can't remember the entry the next call counts from the start. */
--static void sysctl_cursor_set(struct file *file, const char *name, int len,
--			      loff_t pos)
--{
--	struct sysctl_cursor *cursor = file->private_data;
--
--	if (len > NAME_MAX)
--		return;
--	if (!cursor) {
--		cursor = kmalloc(sizeof(*cursor), GFP_KERNEL);
--		if (!cursor)
--			return;
--		file->private_data = cursor;
--	}
--	cursor->pos = pos;
--	cursor->len = len;
--	memcpy(cursor->name, name, len);
--}
--
- /*
-  * The inode number and type of the entry @d holds, instantiating its dentry
-  * if there is none. Needs the header pinned, proc_sys_make_inode() checks
-@@ -871,7 +841,7 @@ static int proc_sys_fill_dirent(struct file *file, struct sysctl_dirent *d)
- static int proc_sys_readdir(struct file *file, struct dir_context *ctx)
- {
- 	struct ctl_table_header *head = PROC_I(file_inode(file))->sysctl;
--	struct sysctl_cursor *cursor = file->private_data;
-+	const struct proc_dir_cursor *cursor;
- 	struct sysctl_dirent d = {};
- 	struct ctl_dir *ctl_dir;
- 	int err;
-@@ -888,7 +858,8 @@ static int proc_sys_readdir(struct file *file, struct dir_context *ctx)
- 	 * that moved the position away from it counts from the start, like
- 	 * seeking to an arbitrary position always did.
- 	 */
--	if (cursor && cursor->pos == ctx->pos) {
-+	cursor = proc_dir_cursor_at(file, ctx->pos);
-+	if (cursor) {
- 		err = sysctl_dir_next(ctl_dir, &d, cursor->name, cursor->len);
- 	} else {
- 		loff_t pos = 2;
-@@ -910,19 +881,13 @@ static int proc_sys_readdir(struct file *file, struct dir_context *ctx)
- 				break;
- 		}
- 		ctx->pos++;
--		sysctl_cursor_set(file, d.name, d.len, ctx->pos);
-+		proc_dir_cursor_set(file, d.name, d.len, ctx->pos);
- 		err = sysctl_dir_next(ctl_dir, &d, d.name, d.len);
- 	}
- 	sysctl_dir_done(&d);
- 	return err;
- }
- 
--static int proc_sys_dir_release(struct inode *inode, struct file *file)
--{
--	kfree(file->private_data);
--	return 0;
--}
--
- static int proc_sys_permission(const struct mnt_idmap *idmap,
- 			       struct inode *inode, int mask)
- {
-@@ -1002,7 +967,7 @@ static const struct file_operations proc_sys_dir_file_operations = {
- 	.read		= generic_read_dir,
- 	.iterate_shared	= proc_sys_readdir,
- 	.llseek		= generic_file_llseek,
--	.release	= proc_sys_dir_release,
-+	.release	= proc_dir_release,
- };
- 
- static const struct inode_operations proc_sys_inode_operations = {
+ extern const struct inode_operations proc_link_inode_operations;
+ extern const struct inode_operations proc_pid_link_inode_operations;
+ extern const struct super_operations proc_sops;
 
 -- 
 2.53.0
