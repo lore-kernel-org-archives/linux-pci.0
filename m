@@ -1,57 +1,76 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.65
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793813132;
-	b=eV5TA092wAvP9LXZZvHm/HTjElgIFlK7FM0NQkhtCVdpsof8xUMmdbjueWhISxLt2kOt
-	 vkD2roM2JfqSqZ0bj4mvJAjNVht4iNSGC1vJi7pluGK534kCbDxgSEjTXVcLJGhaXlhwJ
-	 plCRxWO1Rbwqd6bA1ufMrPGFPeWD3t1NkXueT1Aeu/P+nTMj5+3Sbed2+TxAht98rqgj4
-	 PTFEfnAa178dvJvaJlSpfNCTdhYq2Dy+xhZq6Wf97qYSZtHFS+uK45pLD49ynYupvpyh/
-	 WSOAL7bGc+eADg5imH6huE997PREK+GuUDbCx3u6EQ4CpPvRe/NXN/yewyiTBuqXS3Q==
+	t=1793813139;
+	b=F8KbRPw0i95gStVLwgcPFcW56gFUVKYlnFXCGKQQxlKmuro0VJpAR+V5hO5W5tebPJpt
+	 yNvrO+MfAX6TCVp3BsE0OsK7BDTvkHNwsUJBxnoiNWrKKc/ezjbUKl6HiVd/nZGzx3es3
+	 oy1iRz6OYIgDIKTNVUeYSyAlr9fzSu7SsaYaxFWm7NAK8IxAdLT0e3gFvyW9mYPpRgdwp
+	 gc7wXwcY/W7cbCC+LTNC/mSf9tvhyLQfI0XkVsqNXoRYcRwSI65U5uQ3DuY5qZ28hFSRk
+	 sUJMl10pHx91brJgtTA+8gA52/gszghGzHPVvT60HrvSSyBVCCfbtcpSnyGEzHy6RdA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793813132;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=eBPimX1ylcxp6OsWpjQD6PsGgDLC2TgV3+cej3N45ts=;
-	b=aIsH4fz6bu3iGh1krHHYdb3a7ZK0UoDpD80gPvyKU2QjGSSVN7vUVOJHjRup+KAj4/Zg
-	 kQNtYBDEV1vZMATZOoTZxakcsDUe4B91/sOv+yUq+Ga84zxbc6fkbtOObCB4WgTJzI6j1
-	 cps4lkNRBkzW7w1869u1fQHe/3P4yky0CPp7LiCEkwZn1d7bUj2X+Q4TCZRuTTAliFBK1
-	 tGmoiZY4PlFoSrSnlIRX9gfzQKe19f6DXLFf8wiHPB82vDdqDEugvNNo/r7upQTJlJ4Xc
-	 WhotUGqxC9itBeQ4ZhnAMJI3+IAGQt2y/gPZCwxn7yQQKSKlRNMxNhwC70UGZqQP5zw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793813139;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=Xenqm7tT8aY2/8jh0immIrLobh1PPDktvJtMt0frxlE=;
+	b=V8M4sHvJ9xN5AMATEoBJ8/Rl8RCi0Xk/L2f8+jPe/aGO7KHKbPEKWjNuhmhM0pupeadk
+	 Ft+ruZQ6eP/8ao9cs0ARKi5bvsY5JGSuChsqcLU64Ojj1fNJu2TNZOlsKBfh/vhvOFbjV
+	 EnCV0Us5AqMlIxd+e4TRyisQgYmwqJ8Jr1VqHezwemhUnadZ45KoiZ1MmPMSmJ7UkihX6
+	 ddof+KijxiI5QYKnSUAUjIf+cobZyT5S+IrVUM+WVSVF7aJoyC7l4+A3uFPHmuGXyX5XB
+	 XmdW+EYbbbe49ejSSE9g2Fbv+wYocXvzzvGXuJVGisaGulbSaCrEgos2AI6h6RuKc2w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IzEhm+rK;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=uXUSWSDc;
+	arc=none smtp.remote-ip=91.218.175.65
+Received: from mta0.migadu.com (out-65.mta0.migadu.com [91.218.175.65])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24C0E606A31B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 17:25:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2F3A606A330
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 17:25:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C2F3A606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IzEhm+rK
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D11D1F000C1;
-	Wed,  4 Nov 2026 17:25:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793813131;
-	bh=eBPimX1ylcxp6OsWpjQD6PsGgDLC2TgV3+cej3N45ts=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IzEhm+rKo5gXPzmKTkKgmwyRio2e28ywV84PyuAdCxPE/zSCHvi6PEoFFoqeUeBPh
-	 2G4zbEfqxg6MPFAzFq40rXL38R96r1DQ8wcrefzJJ4Z0CdPTdbYAURmWFytXrJZ7eg
-	 E3W7rtjvb0eWLirhhSSqHRD3sd1YPt/vevF4DIH6SLhBykEsbmdEJx5kPxx+L6Hsad
-	 3Vg3Px+CJgwPNqwTiBwq2FjFvimlxVM3dc6oQtYfmO1518VLeN9WiOhcWhqoHT/NUl
-	 d/YcBHWw2XBp2RKkI7e2fcTJzopheT/+PHvaAo8btZWlAnq8Fa7aH73z6mDbIXMyvz
-	 Gu/OJxTrzDHEw==
-Message-ID: <sashiko-outbox-197762@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 13/15] iommufd/viommu: Allow vIOMMUs without a parent
- HWPT
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?QW5lZXNoIEt1bWFyIEsuViAoQXJtKQ==?= <aneesh.kumar@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261104161632.3547423-14-aneesh.kumar@kernel.org>
-References: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
- <20261104161632.3547423-14-aneesh.kumar@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 17:25:30 +0000
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=uXUSWSDc
+X-Envelope-To: linux-pci@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Xenqm7tT8aY2/8jh0immIrLobh1PPDktvJtMt0frxlE=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793813135; v=1; x=1794417935;
+ b=uXUSWSDcK92X6GLIz+Jw8/CmM3fFrx5BxuYT63jVUmVZj9utLsJTCcBH7flqI+0vR1vD23BT
+ htRa9gx2spS4Fn7iSpkFmg43hYbGFXMwkrPA2XwSe8yKjbYrdn1gydgu3TgKCzpUjrBmOjEOxGi
+ SKdeRJqN7hQ7b6rVBHjjoTv8=
+X-Envelope-To: linux-pci@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 3b99aa60dbfaf8f0;
+	Wed, 04 Nov 2026 17:25:35 +0000
+X-Mizu-Trace-ID: 3b99aa60dbfaf8f0
+X-Migadu-Flow: FLOW_OUT
+From: Junjie Cao <junjie.cao@linux.dev>
+To: shrihari.s@samsung.com
+Cc: jic23@kernel.org,
+	linux-cxl@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	qemu-devel@nongnu.org,
+	anisa.su887@gmail.com,
+	mst@redhat.com,
+	marcel.apfelbaum@gmail.com,
+	arun.george@samsung.com,
+	cpgs@samsung.com,
+	dave@stgolabs.net,
+	dongjoo.seo1@samsung.com,
+	gost.dev@samsung.com,
+	s.neeraj@samsung.com,
+	vikash.k5@samsung.com,
+	anisa.su@samsung.com,
+	junjie.cao@linux.dev
+Subject: Re: [PATCH qemu v1 3/8] hw/cxl: Wire UIO capability into HDM decoder and DVSEC registers
+Date: Wed,  4 Nov 2026 11:25:24 -0600
+Message-ID: <20261104172527.2172366-1-junjie.cao@linux.dev>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <1384010761.101793792283622.JavaMail.epsvc@epcpadp2new>
+References: <20261104115242.2035807-1-shrihari.s@samsung.com> <1384010761.101793792283622.JavaMail.epsvc@epcpadp2new>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,34 +79,29 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-> VIOMMU_ALLOC currently requires a nesting parent HWPT_PAGING even when
-> the selected vIOMMU implementation has no use for one. This would force
-> implementations such as the following Arm Realm vIOMMU to create an
-> unused parent.
->=20
-> Add IOMMUFD_VIOMMU_NO_HWPT so an implementation can opt out. Require
-> hwpt_id to be zero in that case and pass a NULL parent domain to its
-> initialization callback. For implementations that require a HWPT, verify
-> that the parent supports nesting and its domain belongs to the device's
-> physical IOMMU driver before invoking viommu_init().
->=20
-> Reject nested domain and hardware queue allocation for a vIOMMU without
-> a parent, and document the two allocation modes in the UAPI.
->=20
-> Cc: Jason Gunthorpe <jgg@ziepe.ca>
-> Cc: Kevin Tian <kevin.tian@intel.com>
-> Cc: Jonathan Corbet <corbet@lwn.net>
-> Cc: Shuah Khan <skhan@linuxfoundation.org>
-> Cc: Randy Dunlap <rdunlap@infradead.org>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: Will Deacon <will@kernel.org>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
+Hi Shrihari,
 
-Sashiko has reviewed this patch and found no issues.
+The switch/HB write mask opens UIG and UIW, but leaves ISP read-only.
+CXL 3.2 section 8.2.4.20.7 makes ISP writable on a UIO-capable switch
+or Host Bridge too.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104161632.3547=
-423-1-aneesh.kumar@kernel.org?part=3D13
+With two UIO-enabled host bridges in a two-way CFMWS (4 KiB granularity),
+the switch below the second HB advertises UIO, but writing decoder 0
+Control with UIO=1, UIG=4, UIW=1 (two ways), ISP=1 reads back
+0x00144000 rather than 0x01144000. Software cannot configure the second
+position in the interleave set.
 
+Could R_CXL_HDM_DECODER0_CTRL_ISP_MASK be included alongside UIG and UIW
+in that switch/HB branch?
+
+It may also be worth diagnosing a partially configured host bridge:
+with x-uio=on and two RPs, one without SVC/flit, the HB reads 0x22382
+but that RP reads 0x312. The HB UIO bit is defined to cover all its
+root ports (8.2.4.20.1). A warning would make this inconsistent setup
+easier to spot.
+
+Many thanks,
+Junjie
