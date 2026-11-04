@@ -1,127 +1,105 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=202.12.124.144
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.225.137
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793800662;
-	b=BswVcIWkZP0UB97JUEOMEjU43CaHPW2iwnDPzwHvUklqahKvCNCAuHDmgrOqu6VTIb6N
-	 Rv4JqhGG/Fykr0m2UJN6YACJQz3ttcA4pN/WzJ9tohVRh24W3XhKtwsupPU79MfguLmqW
-	 zT1qrilNa+7Wt3gzpwaOwqUh1UWek4lCQCszuHdte6g6ovfW9OyQTTFLxUDih56bVYDlW
-	 IDVAepgfxnTanIsXOla0BAbLF9dIxvhUJMrCK1iQWDHwWaY9fcyUlcKPEc0IrS5PHbu1m
-	 WEBGnu2+nhcKhbgta3mpKE3m+rd1n3MzqUiiQ1vSbqV7XXd4t659/XjG5rS/tOCxJSg==
+	t=1793801370;
+	b=VpxdvSWvrJ8OtZt5qAPon4WK7m/HRzXeacniVZIgB5CSlyt+wGaWgpEMFa6H0uRmjKeX
+	 4MJWx0wmkXv6/SlOihqcYXDGglteNuPUDhYs7yMLnBsyhOuv9qZbNQ4QXD0/Gjvv3LR2e
+	 0DDM4SHQPSqPQR3+Ox1ITxFB7wwxhrYw91FhNOUy7nMQ93jqcjCO4+Kel8/gC+feTs575
+	 DrHID1DRqvGHBMyNtdWI30xYy+yGwNy62ucc2dcRPvvNFwvPcYsoaRmui5u8fiEyJIrcN
+	 +eyKh01QpqKwbuwcPG/A41UvxS2ZVZlkRvBkarnqUhnHaLWjEibEioRl/Vc77NWawnw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793800662;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
-	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
-	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
-	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=pVJOBVyN1nzMfTuUPIh7fW3RqgQ16G6DdcppUpEF4GU=;
-	b=Cu3Tl4LwB22Uh8fsbqdaFTVAnQO2OH8TeHD00AMdRro2La3XihKMDzlnPTmydPHRlba8
-	 EHsoObWQ1ERR7RjcYvXsafPHSW/mcxaKXf8v6QI+oAs7tmtBRM+L1mkYp4c+aSxX66PVf
-	 cN6qIqDuJA4XB4rj9U6iL1AP6Nbz2yywFQjHMQYjuGF9jBy4ooWh8vFJawNG2I14Z5JNK
-	 aPtK0dssgoUyu+EfVfruiNKAE5hE5isX6ULz1T7JcWpLTBE8Wy3Jn1tSzva/kqNT4UVBW
-	 rhR0NlpYgYN6oXm0lN+PBAhLTrwvhW3y4aDqN4naGXi+u2WWg0auPHPcnUrZwsyPY5g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793801370;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=feOTu3Fjg6/kqLdoArqxeRe79rB82tCPqWr5RYI27tE=;
+	b=F4BfChgfCaejFnPUB6RwEnjuMTWxNPIY7AjR3S3pL5ngdoNfTgQSYiN1WxqdX6t/MTgJ
+	 RZZ5RHD3Urdl7oSC/4ySB7sLZBG0xicMOXxSg5fzP6I9VBDQaVBY+VjgCJ6aGZc+bPjYT
+	 AaBGANmhBQQPIPAmravT/iIc+bRSNJ8Mn7eQRp4PEjRlzOexmGK6nId+Fonk5QzNsFLkx
+	 v1ClweUKcDEoPU6usvqBKfrezSZh6tWCKin8EwwbP5e1bTVyfbzYoNw1edhXFlFlPPDVg
+	 hohDHW/ICFFgcqym5ahSNy7UBpYly2KC29Kq0oqNJzdxuEViGIoQ0nwnIavZCHwr1HA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=jannau.net;
-	spf=pass smtp.mailfrom=jannau.net;
-	dkim=pass header.d=jannau.net header.i=@jannau.net header.a=rsa-sha256 header.s=fm1 header.b=L8v52Uvw;
-	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=CPDrHitx;
-	arc=none smtp.remote-ip=202.12.124.144
-Received: from fout-b1-smtp.messagingengine.com (fout-b1-smtp.messagingengine.com [202.12.124.144])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=s1KjPdAn;
+	arc=none smtp.remote-ip=74.125.225.137
+Received: from mail-wm2-f9.google.com (mail-wm2-f9.google.com [74.125.225.137])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA2ED606A31B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 13:57:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CA2ED606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jannau.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=jannau.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EDE6606A326
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 14:09:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4EDE6606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=jannau.net header.i=@jannau.net header.a=rsa-sha256 header.s=fm1 header.b=L8v52Uvw;
-	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=CPDrHitx
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfout.stl.internal (Postfix) with ESMTP id 0DE101D001B3
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 08:57:41 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-04.internal (MEProxy); Wed, 04 Nov 2026 08:57:41 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=jannau.net; h=cc
-	:cc:content-type:content-type:date:date:from:from:in-reply-to
-	:in-reply-to:message-id:mime-version:references:reply-to:subject
-	:subject:to:to; s=fm1; t=1793800659; x=1793887059; bh=pVJOBVyN1n
-	zMfTuUPIh7fW3RqgQ16G6DdcppUpEF4GU=; b=L8v52UvwfBya0U4L/hLgefxFc7
-	Bv8MakOfitQ5VKMAmJmqSjMUIK/ehSQPKG54ESvduD6M3Ro58MtTtGpWdhd69Hf7
-	Z4wkLvn67NtAs9F0QXngJ2XviqwTkrAyA7HiFTSAxkK2DwRKdMfXSEZ+3A5OykX1
-	OvGYm0mdGdBTTDuSiyy5/LLxK8Uti/7JmeXjRGL7c4R1De59/5YwGuAOQtUtWhas
-	FLSXUBptQhSOiSc7Im9LFep0RU+n9ZQCE2MRpBm6C4CdLBH8zVj1uudUOvDwfMBK
-	mhq5nAx/Qhj+7P/+nUponiKGNSGH/Mg2ywdetSfE9wLJXjLn46xFVuoE6HNQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-	1793800659; x=1793887059; bh=pVJOBVyN1nzMfTuUPIh7fW3RqgQ16G6Ddcp
-	pUpEF4GU=; b=CPDrHitxADwvO8yWW3vzVrOmW1fi2Bp+EuU1N+HtqRpP+bYKaLH
-	aPBeq5gVL1PmlTWVaSuQVRItQEWLRrE/Td1v1q6eeZp147O+nkeufy1n8vRacJZQ
-	0CFG8BuYae34rP9Pi7lTHXxOtYKNbxjtW3B5sMMkcDj5w2NPUNDNRyggfdWAeh7l
-	0fO1xxCtPDHSey8A1ThRQ01YshRqDXzb3fhLF6Fk4SnDRTHNAXnoodQRn7YCPO0B
-	VxoxyiB17DjlKWdb/DqnWWW5CEjoT74KBui1YcbPoxb1qlA6a54ztOqgYAWJsEnT
-	CBdy9fMHMFSJu7hHQV8BIGnd3+ysQMKN1lw==
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-08;
-	repo=github.com/dkim2wg/interop; date=2026-10-28; sw=lmtpprox;
-	action=sign d=jannau.net a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1793800659; d=jannau.net;
-	mf=PGpAamFubmF1Lm5ldD4=;
-	rt=PGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc+;
-	s=fm1:rsa-sha256:rYmB+DCMYL+CVGP0nWtwmshuBZmfW1cBffE9ttRnoXaQADo
-	UQMbL+VNMpyx7ZGFDsWnXOMdSuMhat4cjhLJWR9P2nzEA7ccR0vDZZC+D1voAxtk
-	mLjIRAcO12h6E+MEJBr9n7DkUk/St6RYN4fRMmR0yQbTBQ3XR1VOoh96GmIxYUdQ
-	7W7FFKeV6CIrex3N0yVZCza986zkurd3A83UAxFdAiv2LztvlSF3lrJ7DVnin6xw
-	x/TiVxhyTEzt0QQBWha8WAZ6+hZrsXw6CwVblIiU7JKTyNQE/6a1Bjai47CtWkuZ
-	WHZIoiDiwxhDfx6yrjfbLsOcuE0OeMEhjsi2bLw==;
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-08;
-	repo=github.com/dkim2wg/interop; date=2026-10-28; sw=lmtpprox;
-	action=mi-m=1; hc=12;
-	hn=cc,content-disposition,content-type,date,feedback-id,from,
-	in-reply-to,message-id,mime-version,references,subject,to;
-Message-Instance: m=1; h=sha256:jPnpz73r644i69BpyGpJ/GO8EOArrqrQTkhe87e5rqI=:6kPGA2OlUJ8QUP3bEVFSNVVOtzJuPCY7C4eDgjt8I/c=;
-X-ME-Sender: <xms:0jnraoQKc69w0bBkbaDZAZXQy77UiGgal1Hys0L1KV3M1kaBprRkBg>
-    <xme:0jnrahvRYoIc4ZY0-qBR70nO3Mp3aw8E9LuIjazDftJ7WC6Jg2aHVgAW2fiQ4_oIw
-    kb1W2qchjWmVc1wqdphFKbUCCbunXUWR62sy9CD86tF5Q_v-n7b7tA>
-X-ME-Received: <xmr:0jnrar_mtj3ZVlod5OfpqmlJAXfbqMYajmWUz7RCqpPKl6tNX_V1IOcWZ0tQugs7ym8i-H0y4Phe2XW-PMZZoUtt3yLZpD2_CTw>
-X-ME-Proxy-Cause: dmFkZTGYtjO4aH3k0GUhdhJVTPB3qrFzLiZiQHBavFm+qyc9b84XpgIocNt/s38ItmHaIr
-    GqsNRDwGCxT4YTMIQAv3zoBMKnpEkkA3i9WF8BKjANdRSzQG2hLv6Qs0JKtqeST+dlHHoa
-    ZrlG4qvomHojGb1bGfnU29JjdtpxzB9pJe2Fl2GBE7Wi7PzHoc5LWD5DSwHdZgpqiEIJZc
-    rbIQdYUzQdGGNiNEkbYVpihK1fBPf0A8WVGC+KER9Z2HArOBZwTme9TRosGFXRFCxpTja3
-    vXXb7QZTur9sE9cZ4huijN00ssbgQl7goKyer4AQoZ2zDW33Wl5kzOp3a8mxS1ZcjWWfm9
-    E7LX2YpTzHT3OFHTlME9YY2glNrptRVob6Pu9V5AwBfK1topzIsXaxidsPrUQdsiM4tqQ7
-    uIEuYM1ShQnakTVDG5dDI+lyDYdSCUblGWXMob0jdvgJtLuQweETZJ+rsnnLYN+Gd2xdSh
-    UKsdzePyEZq6grXnu4/EwvwFnXYm64z/wjDBKLic3aQOYOmAH9gtgzcNUugn9kMqur40iL
-    5aqUD12SMZEMhHH7Dlf/zclahrym08AaH45TqSTIxZ8JOC+tNpG3T+lMSeY5cMYhnPD1s/
-    OVU2JzgT/mimJnLUttb+CRQjKifCRcAAApRIg1Pe1VKANjA3kmBrCidUsq/Q
-X-ME-Proxy: <xmx:0jnraiay6RaDTQxCqFLyom7wDk8RDOE_jpvl-QjLyyedgKlG4ENJUA>
-    <xmx:0jnravqwVvOQSJoDEX3w0Sa6M0sj0LwlLFI0YlW5fFEMQe4ch8vBpg>
-    <xmx:0jnraiaSig5DrfOdPAr8SjPMI-8RGKx-e3s04kGc_wEOZMZyMSCWdA>
-    <xmx:0jnraq599amL-u632kWRc5g0dB3OPfBCJNBnHuWkVTHlGN_adVjR8A>
-    <xmx:0znraulP8X6b39yKmxcLijcbDquwDw9kAFYxNkDY3Q-rRigcgHA24NTE>
-Feedback-ID: i47b949f6:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 4 Nov 2026 08:57:38 -0500 (EST)
-Date: Wed, 4 Nov 2026 14:57:37 +0100
-From: Janne Grunau <j@jannau.net>
-To: Yureka Lilian <yureka@cyberchaos.dev>
-Cc: Bartosz Golaszewski <brgl@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=s1KjPdAn
+Received: by mail-wm2-f9.google.com with SMTP id 5b1f17b1804b1-4ad5d6045d4so3909955e9.0
+        for <linux-pci@vger.kernel.org>; Wed, 04 Nov 2026 06:09:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793801369; x=1794406169; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=feOTu3Fjg6/kqLdoArqxeRe79rB82tCPqWr5RYI27tE=;
+        b=s1KjPdAnYyMy1iRROee1OouXiivvuAG/RsHa1TnHBpdZEdZmryfksJthuvzAxDQapd
+         djAq2y0NJizSdN2XgujDaxVXqFvrM7CRbQx7RUuDVRk7mC4Ucot611VQGMP1dfcPUUMg
+         J2VrsIHUGKGcXEwqt93gH17iBZ3ZLXxsSN2x6XcCeid8StiKzVzx9W4tVUqpYac6ys5a
+         Ob0fWvFb1FAPCN3C2h8T0GrnihsbXGcRV7vGBFx6qVXWXwhv9C94Oezq9OfpHAyjqOWZ
+         RKAyd4q9GunzaHalSg0dPAbNu/KnrKSJHIMemt+Tema37Ytfl8sZ+26N9VFjzLzUWrPz
+         ZzkA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793801369; x=1794406169;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=feOTu3Fjg6/kqLdoArqxeRe79rB82tCPqWr5RYI27tE=;
+        b=yhXf534yk/TY67s4A9HSHOuxc8SxaThgOilWOARIIqds6IXOJnQ0cnal83vLk1Rg3o
+         VxTDcnLcT9q/YdDieXLj1aRXzBZTRnqnK8yuLS5T52SJDYLbB8hG4qed/DcWe1kaiHiL
+         rTXOkS/Li348fG4/GVWoyap6fNWDBfaRLhABKbGtBeN+NlX+jiU1pnP+HlBKomsppU58
+         GIL8183nuJQ0NZWahQjC5ntfAgwAaWzS0Cab+18KgCL0RBBYGXCmGpdMdby1BNp+urRA
+         4IQZb+rtI6A7iGI/dQ4yDGilz5QdbMX26gaxKCyJQQZgaYMzjpd5ZyI0KmvXG1biaMbm
+         Lz+A==
+X-Forwarded-Encrypted: i=1; AKwUvBzH2CKsUuwqzgSKfjr825sq2SpEVwUPzsA8rkBjepmmKpLhgd5L6blRkEgyWtS3Kj+N7fk3vJgds7A=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8bWZ3/M7Y+bK4YLk+l3HxLq2pHXJSXlmGNrJSZq5TzINkPdUtb
+	RSydLbzLmMk404PsYFO5Rdsp5vQ6Z4N/NBNsZ0nBqOFkE9NrqKGHXolk
+X-Gm-Gg: AYBFou1bpqrfOuLKZjxi5jUSgvLs6I6NLtd9FUZnzfx4xNZ5L3W5N08AAgl1+3YUvws
+	ZpXiC4u0/foYzZAHqRbvlgf8HGqSuZ2JAYbxLWNkX/5OZdahgNqzFsVWKWNwC82LF2XvMjnejFi
+	AXVdg5pTqjM5a59Izb8dXg+V053W5m2tYX0lwciOB4mvK2XC/4FKI9bSm7V4NPe7w4Ki13um/zc
+	dxOOw0N4MxOa6v9Wibji/6hf8nXmWwpSpsl2kya4ZgcA8Zux77+V8cFmdGUhvA1S+Xj+fVLES3Q
+	zll6pwbuw96ewb20DPBtIg13z/4UTCvEN4sYjSzI4tfd7ZfMTaM12W5lTEI51PSuFpNsf5Vuznj
+	oIVHOaVHcZjtmDauep+O6KERRsBK5jiXrZX+OjWP8R1bZgNPXvfcs0Eu2IIJMl/qBsMwMgX+jg9
+	/NLFcRGGu/fO7Bk5I3C3mwUyDfC0fCbtip4wxH/3aNP1jWm+NRpvgj5ARX8FrHyCBeq90dcwcVo
+	auMfyB9Zb95mwv8VgppJZliWQaA/kFVr+ax09AkjRGSjWEEG6Uc4NQh6Nwb1kHwn+9EaAfVr7+j
+	h+5azMkBirKKwgb8/lNVHXBZztjnt4ZW91E9vPnWbLjVbR8GnFBcKQ==
+X-Received: by 2002:a05:600c:a107:b0:4af:e04f:cbaa with SMTP id 5b1f17b1804b1-4afe04fcd89mr177944795e9.29.1793801368473;
+        Wed, 04 Nov 2026 06:09:28 -0800 (PST)
+Received: from workstation.. ([45.249.9.114])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b411de95b4sm40977605e9.0.2026.11.04.06.09.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Nov 2026 06:09:27 -0800 (PST)
+From: Ali Tariq <alitariq45892@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Marc Zyngier <maz@kernel.org>,
-	Sven Peter <sven@kernel.org>, Neal Gompa <neal@gompa.dev>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, asahi@lists.linux.dev,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 3/3] arm64: dts: apple: t600x: Add PCIe pwren gpios
-Message-ID: <20261104135737.GB756133@robin.jannau.net>
-References: <20261104-apple-pcie-pwren-v2-0-216a4066965f@cyberchaos.dev>
- <20261104-apple-pcie-pwren-v2-3-216a4066965f@cyberchaos.dev>
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	linux-pci@vger.kernel.org
+Cc: Ali Tariq <alitariq45892@gmail.com>,
+	Rob Herring <robh@kernel.org>,
+	Yixun Lan <dlan@kernel.org>,
+	Troy Mitchell <troy.mitchell@linux.spacemit.com>,
+	Ping-Ke Shih <pkshih@realtek.com>,
+	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
+	Alex Elder <elder@riscstar.com>,
+	Vladimir Oltean <vladimir.oltean@nxp.com>,
+	=?UTF-8?q?Uwe=20Kleine-K=C3=B6nig=20=28The=20Capable=20Hub=29?= <u.kleine-koenig@baylibre.com>,
+	Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	linux-riscv@lists.infradead.org (open list:RISC-V SPACEMIT SoC Support),
+	spacemit@lists.linux.dev (open list:RISC-V SPACEMIT SoC Support),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] PCI: spacemit: Ignore PERST# bit for controllers
+Date: Wed,  4 Nov 2026 19:07:45 +0500
+Message-Id: <20261104140750.761330-1-alitariq45892@gmail.com>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -131,98 +109,60 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20261104-apple-pcie-pwren-v2-3-216a4066965f@cyberchaos.dev>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Nov 04, 2026 at 12:40:31PM +0100, Yureka Lilian wrote:
-> For the MacBook Pro and Mac Studio devices using the M1 Pro/Max/Ultra
-> SoCs, add the appropriate fixed regulators for enabling the peripherals
-> connected to the PCIe ports (WiFi, SD card reader and USB xHCI), which
-> are controlled by GPIOs connected to the SMC.
-> Set the regulators as the power-supply of the respective PCIe port, so
-> that the endpoints are powered on before probing the ports.
-> 
-> Add the 'pciclass,0604' compatible string to the PCIe bridge nodes in
-> the SoC to allow the pci-pwrctrl-generic driver to bind to them.
-> 
-> Signed-off-by: Yureka Lilian <yureka@cyberchaos.dev>
-> ---
->  arch/arm64/boot/dts/apple/t600x-die0.dtsi      |  4 ++++
->  arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi | 16 +++++++++++++++
->  arch/arm64/boot/dts/apple/t600x-j375.dtsi      | 27 ++++++++++++++++++++++++++
->  3 files changed, 47 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/apple/t600x-die0.dtsi b/arch/arm64/boot/dts/apple/t600x-die0.dtsi
-> index 122a566e75d1..635635c4bfbd 100644
-> --- a/arch/arm64/boot/dts/apple/t600x-die0.dtsi
-> +++ b/arch/arm64/boot/dts/apple/t600x-die0.dtsi
-> @@ -460,6 +460,7 @@ pcie0: pcie@590000000 {
->  		pinctrl-names = "default";
->  
->  		port00: pci@0,0 {
-> +			compatible = "pciclass,0604";
->  			device_type = "pci";
+The k1_pcie_init() does not set PCIE_IGNORE_PERSTN bit of the
+control logic register, which causes controller to reset itself once
+PERST# signal is asserted even when acting as host.
+On Orange Pi RV2 (SpacemiT K1), this resets the controller and wipes
+the IDs. k1_pcie_deinit() leaves PERST# asserted, so when k1_pcie_init()
+runs again, its first DBI access hangs the CPU.
 
-`dt-check-style --mode strict` wants "device_type" before "compatible"
+Set PCIE_IGNORE_PERSTN bit of the control logic register of APMU
+in k1_pcie_init() before enabling resources so controllers
+dont end up resetting themselves when PERST# signal is asserted.
 
-> diff --git a/arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi b/arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi
-> index caded1636f3d..4f9dccf839ad 100644
-> --- a/arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi
-> +++ b/arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi
-> @@ -55,6 +55,20 @@ led-0 {
->  			default-state = "keep";
->  		};
->  	};
-> +
-> +	vreg_pcie0_port0: regulator-pcie0-port0 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "pwren-pcie0-port0";
-> +		gpio = <&smc_gpio 13 GPIO_ACTIVE_HIGH>;
-> +		enable-active-high;
-> +	};
-> +
-> +	vreg_pcie0_port1: regulator-pcie0-port1 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "pwren-pcie0-port1";
-> +		gpio = <&smc_gpio 26 GPIO_ACTIVE_HIGH>;
+Fixes: ff64e078e45f ("PCI: spacemit: Add SpacemiT PCIe host driver")
+Signed-off-by: Ali Tariq <alitariq45892@gmail.com>
+---
+Hang log: https://kernelci.cloud-v.co/scheduler/job/420
+Fixed Log: https://kernelci.cloud-v.co/scheduler/job/430
+---
+ drivers/pci/controller/dwc/pcie-spacemit-k1.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-Please do the t602x changes in the same commit. This file is included by
-t602x-j414-j416.dtsi and the M2 Pro/Max devices use different gpio pins.
-If they aren't overriden in the same commit this will toggled a random
-GPIO pin on M2 Pro/Max Macbook Pros.
+diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+index 92a71ea90ac3..af6028e8825a 100644
+--- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
++++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+@@ -47,6 +47,7 @@
+ 
+ #define PCIE_CONTROL_LOGIC			0x0004
+ #define PCIE_SOFT_RESET			BIT(0)
++#define PCIE_IGNORE_PERSTN		BIT(2)	/* 1: ignore PERST# */
+ 
+ struct k1_pcie {
+ 	struct dw_pcie pci;
+@@ -131,11 +132,19 @@ static int k1_pcie_init(struct dw_pcie_rp *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct k1_pcie *k1 = to_k1_pcie(pci);
+ 	u32 reset_ctrl;
++	u32 ctrl_logic;
+ 	u32 val;
+ 	int ret;
+ 
+ 	k1_pcie_toggle_soft_reset(k1);
+ 
++	/*
++	 * Ignore the PERST# signal so the controller does not reset
++	 * itself when it pulls PERST# low.
++	 */
++	ctrl_logic = k1->pmu_off + PCIE_CONTROL_LOGIC;
++	regmap_set_bits(k1->pmu, ctrl_logic, PCIE_IGNORE_PERSTN);
++
+ 	ret = k1_pcie_enable_resources(k1);
+ 	if (ret)
+ 		return ret;
+-- 
+2.34.1
 
-> diff --git a/arch/arm64/boot/dts/apple/t600x-j375.dtsi b/arch/arm64/boot/dts/apple/t600x-j375.dtsi
-> index 8a1494949e4c..412b2fe109be 100644
-> --- a/arch/arm64/boot/dts/apple/t600x-j375.dtsi
-> +++ b/arch/arm64/boot/dts/apple/t600x-j375.dtsi
-> @@ -42,6 +42,30 @@ memory@10000000000 {
->  		device_type = "memory";
->  		reg = <0x100 0 0x2 0>; /* To be filled by loader */
->  	};
-> +
-> +	/* WLAN/BT */
-> +	vreg_pcie0_port0: regulator-pcie0-port0 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "pwren-pcie0-port0";
-> +		gpio = <&smc_gpio 13 GPIO_ACTIVE_HIGH>;
-> +		enable-active-high;
-> +	};
-> +
-> +	/* SD card reader */
-
-this is included indirectly on t6020-j474.dts which doesn't have a card
-reader.
-
-> +	vreg_pcie0_port1: regulator-pcie0-port1 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "pwren-pcie0-port1";
-> +		gpio = <&smc_gpio 26 GPIO_ACTIVE_HIGH>;
-
-Same comment about the GPIO pins as for the Macbook Pros.
-
-I'm not sure if the cross-SoC generation device .dtsi files were a good
-idea even though the devices are very similar. I probably wouldn't
-repeat that but I don't think it's worth to untangle at this point.
-
-Janne
