@@ -1,57 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793760899;
-	b=aomaZgrUa/lGT62whakWb0CWCM1t1LaH+ARXTp+b5W4aX6zeX4E58cOCKhCM+Vj3hsRY
-	 3o1pS5F7lVfSob/JExohAziLMXe2lu9u4nfSQUgZhbbYy/OJmKZLEuKMJw1P6PDYXC+Ay
-	 MmFl97F60xbUZSwpbNXISRKusQ/goRKZhQnCzdpZnb+TdLzbjh2cdriMUQ9eRHqkdmUTe
-	 Ztsj9OtJBjpXc9UUqzRZUysrZyaMyTkD/WkUfpN9YBwyw4evpAiAtcEoDBkLUJsdzSnz1
-	 EDSFY0lWnD2WwAKvnozdhJpljyjWs6nDcDgKPkmj8JCW/YHGQE0A5kExRfbgqDvoWYg==
+	t=1793760939;
+	b=UOGPXaeypeJzsc1l56uGXVRpkfvM/UbCuJUM5QW6I/XcAxXcvzD5iInTsIMLC9OgKhNC
+	 7QcqN/93+ZWTTzzy0548wEf7/SvpbdF2qwuowkw0TmLQfGk3ATBX4FuRzNS6IFOOppNFU
+	 68zI0aHpf2nvbKfz2glhgUY6WCVx+XwgIUS/xcK6RP2r9zGmn858L2Kz9xQ9al21/ubLj
+	 WLzUx2RyrliLNnhiy7pWWHbQ2ex5aBmK6o/a4fYEwlHhDnPU21mrRCIOYBmkcPtJk72HH
+	 kswvsNZavAHVxV2OSANvdhbTOSm1DAaBz7tmW/w5rr5E4cPRTcpNbEiy1Tfs5JTcwYQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793760899;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793760939;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=DwQVCtaGZLEhCrp7ir+4oyNgvTmaUgS1QbZ+jPNp9Rw=;
-	b=0xO/5Kg6ByTzK9KPfS2/Ms6DEY0AFtjH5rHqDFPX9LTJ7MKaN3QhEGENtqIcYlRTpUbD
-	 kZMqG+EdfRxdt6XuxV6dFDIZYmYbHwA30ecb+WveNrUCbYN2wu9vNNwtt+pVSb1iRUB8e
-	 zQQbXtf0rD+sZ9pYJQhjndbfInHFXzav/DXmqEuHIAlZB5wUWk6EgVH0H7nR1Pv4wV6Ed
-	 gVijG96o+KpSO9gV2Vk5ANh7QO9vR8IUzKTbBCKW5DRmHPnFosxnUwKd6ECfzD2/j/aAU
-	 qhLlPtCzN3yPeeOXMAbx+iy2slf0pNviN6vnA2XX5+0r6deEbEAhjg52d5IBoUvK/Yg==
+	bh=Pef3bUE5hPWKofXWTSoSRyxs2cdCnXAmAUTuvomi+H0=;
+	b=5lp/fPIKZIErr/iPi8wh+QxB5Qv7K22o6mu9+L8IXSxZkeM+T9zHWfiyVjosZVETxh/P
+	 i6imS6Ph/bHC7hUyttLL9aD9t43qoF2VYZ7ADPcCowHaujiduddTwISXNKvT+c3/VC7eJ
+	 A/2wHtLWqg4/KLxk02xcKYd/bYH3N4pQPIK+J3Xy4oD3uvgZ94y6IIiI4PFLyq08pXwMs
+	 3hiGM7qhSFCXHi21Qz6XVyIZkLCdF81CkDOuYBzFWdBgGnIysucSboThZpTaesRdr5IKg
+	 U9lsFeIOBYOv9CoWJGnSsi9WQvKYtRoTDLyoe8f6QSvzgQI289IILORDCxHoeToSJJA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KzibyZvF;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ao6D3H65;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9475606A329
-	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 02:54:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C61D606A31B
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 02:55:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KzibyZvF
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36E681F000C1;
-	Wed,  4 Nov 2026 02:54:58 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ao6D3H65
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1A081F000C1;
+	Wed,  4 Nov 2026 02:55:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793760898;
-	bh=DwQVCtaGZLEhCrp7ir+4oyNgvTmaUgS1QbZ+jPNp9Rw=;
+	s=k20260515; t=1793760939;
+	bh=Pef3bUE5hPWKofXWTSoSRyxs2cdCnXAmAUTuvomi+H0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KzibyZvFYKxdeLcS2JlggUl2tCCuaKW1PI7yZVn9ANrrB2qbaaibmntUnPJ78eHyf
-	 IsvuNgaFQAkOonGRHk8dZ0qDL/j0uP5lj0j1PdYOy80nJY13SkW7U/wBx/722t6mjR
-	 Fb/vW6XoZaMY2U5QRqs56RTxWWgry5jQE0leaKXG5a5ldxMFzxYyphIJZVEZVp6U8t
-	 ObLW+gDVVxWEc7+vQ3Z3IE2Svg8cdib6HLy7VIKpHun/dbocTzPw4A5rPGiLsEytIm
-	 sOkC1om1OKt4j462IA27KyK+cDSJr21Dmfx3LLMn+l7XVCfqxdUux3ljjr62WFM/0a
-	 7Kz3laBy1o3Eg==
-Message-ID: <sashiko-outbox-196544@kernel.org>
+	b=ao6D3H65nuNxjz6UjyvdpYc3zs9xjNruVJaAj9YOVJkFPiSMIcwION+1yoO1VKkJ8
+	 Qi/JZl+cg2up/6OcN3SoisV/qOEJqwsnTmKY1hJiH/pny4mlI05u59moBTCyXzolxW
+	 8lr2wc99geyQotgdjzb73khBXO0XwOhSgfAO3sG9C4ZgRVgULSKWKUJ1/rhxOA/8re
+	 8sKSsjQdulqOt+XyQp5nl2ovo/hk1mCqkc6+M2zeYFpAJtdjCTTDOAw09b658QwgdG
+	 8IH6Kb5AvD9wDrEbDvi5hJUy9KfQinZaBMx2rJlZLt9xOccO7ZnY4coRh4jHg6ylTd
+	 YP7MCHZt8knRQ==
+Message-ID: <sashiko-outbox-196545@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 05/25] dmaengine: sdxi: Feature discovery and initial
- configuration
+Subject: Re: [PATCH v4 06/25] dmaengine: sdxi: Configure context tables
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nathan Lynch" <nathan.lynch@amd.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261103-sdxi-base-v4-5-3668ccc7aab8@amd.com>
+In-Reply-To: <20261103-sdxi-base-v4-6-3668ccc7aab8@amd.com>
 References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
- <20261103-sdxi-base-v4-5-3668ccc7aab8@amd.com>
+ <20261103-sdxi-base-v4-6-3668ccc7aab8@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 02:54:57 +0000
+Date: Wed, 04 Nov 2026 02:55:38 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,13 +62,17 @@ Precedence: list
 
 > From: Nathan Lynch <nathan.lynch@amd.com>
 >=20
-> Discover the stopped function's version, doorbell stride, supported
-> operation groups, and context and buffer limits. Apply the driver
-> configuration to MMIO_CTL2 after function preparation has removed
-> inherited state.
+> SDXI uses a two-level table hierarchy to track contexts. There is a
+> single level 2 table per function which enumerates up to 512 level 1
+> tables. Each level 1 table enumerates up to 128 contexts.
 >=20
-> Add capability fields and device bookkeeping. Report the SDXI version imp=
-lemented by the function.
+> Allocate and install the L2 table and a single L1 table, enough for
+> context IDs 0-127 (i.e. the admin context with reserved id 0, plus 127
+> client contexts). For now, to avoid dynamic management of additional
+> L1 tables, cap ctl2.max_cxt to 127.
+>=20
+> Since the table allocations are devres-managed, there is no
+> corresponding cleanup code required.
 >=20
 > Co-developed-by: Wei Huang <wei.huang2@amd.com>
 > Signed-off-by: Wei Huang <wei.huang2@amd.com>
@@ -79,5 +82,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103-sdxi-base-=
-v4-0-3668ccc7aab8@amd.com?part=3D5
+v4-0-3668ccc7aab8@amd.com?part=3D6
 
