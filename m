@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793809151;
-	b=rvoqBj9c1YW6JJsxJxJ9DdnAXGjpC8oUyS6TtUlFbNqd5HqTqi/asmiNo5QUDzFBymVo
-	 rnYSidow0bMYXs2PNRZtvo0kYCl8znoVoMQpGzMzu7bgVR+9L+sZizU8pt2WRNuRaEI09
-	 qoR82qyjKb3W/43yM8mrb8dxHzwdwjMGn0ciHfizWSVDBYdTS8Df8rt6neMNoUMd4f2Mj
-	 VPVclng0xNNnfEyBzk7bF1ZPKVwV97dhcFtyLVbLZZZYEnQOYiTRxaUXLHJcgj0JjffWk
-	 OkzGTE5M/7gr+OxgIo8arCldvD7udIIvY3E0Ih049UVUTyoUuwGGccwan0b0BADa3pA==
+	t=1793809141;
+	b=wVY32FvQcmx2iT5IkwMkG8fPH2mzho6v6wXGGHMUvCVMsMnXua6kw1S3ZHktz5XhbiJH
+	 IxA69Ar9Sh9cj1jLYuEVCaqZRQkSjh674csx9zeUWBDR4vPWuHhPMAIzy26orC4t6quz9
+	 f9CnMIIvMb8w5cBYdh/sgUEYjxIY6f/PrOytZcjBInvYN2LkWPWJHTYcYtLZugzORSZ5i
+	 I6LI2P7b6xSZ57gicwOaSIrmSn2vKIWE/L2OrbRgW2LZpGOW5YiaSpQYUPlwMTGYfBkgY
+	 R7z6hqX03k24fhFOIta5O8tk1HypG7bDybxvN4g/lhpsgqTcAYqP3CCQcSiGvbldQ9w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793809151;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793809141;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=FGQ0u7jzn+kyCxFK1KWnNVhUqaV+4FbacJhSazDjdG4=;
-	b=g2FnXdUpDz25aMWSpCClLhkBxaU932XXE4QgNSoVo+ydyhfxqvDyQ0S7rKly22iTU5j/
-	 FBdB6Dncc+2XaTI8PBB+IP6rlhQqSMJPwA7cKktkhWxCBeK9nSbOfby0BiTL1P84MYZgH
-	 jPC4ZFSz8J9r3WG48Rzy7X5U1Wj0mRjXYJPAuQaeJ1FNRFuqM+VMnl5mFpIkFFRh5rUxN
-	 r6OzKN1DsA47BlZ1iDWFf1fB65a6+j1sIa94VSfiTDsQWtjymqfvpwKmjlQZDbJmgCIZT
-	 KjHdtqu37rm4mcVTFEAQHr6cniz6CcllctIZzgX363jn2cZpARZwUs2F2pqichbZpIQ==
+	bh=TXAzu5TbcvU4BKGhbDPDQSThwdolGNVMNBohBK8Wkn0=;
+	b=YShBHBew7UDTJfyUVRX2moL/nanj2HPcGPgbqV85C1+XtNMocVheqwOevcl6Kij6Q3rD
+	 I1ndjwM6KVWLuJeyB4hsjNzdrILrhVOp46bnNODhXCIvSyHhdiVwu1+RR39ErWkrZODoO
+	 Wxg2q79jlbEbz+DIw81TW5/37GrXInXIXFaSwU4fh3GaA7Q883GaC2+3zgd5B7VRIRlLD
+	 +utdAeuKCgQwy8Oi6AKdveiPg/WSrukBJz7ZcZY/84lVEzcVWgAcMHjUbd/rNGsZ33xqW
+	 EOCj+2vStr/001IGBkLBE4DncyjzhxvXHnsJaPWRL0w5W92+zqZxXmOp53FVsdjAIUg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QnYNIAIb;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eQzIm5+w;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBD19606B8C0;
-	Wed,  4 Nov 2026 16:19:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 289D0606AAEE;
+	Wed,  4 Nov 2026 16:19:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QnYNIAIb
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A65F1F00A17;
-	Wed,  4 Nov 2026 16:19:01 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eQzIm5+w
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAA8A1F000C1;
+	Wed,  4 Nov 2026 16:18:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793809150;
-	bh=FGQ0u7jzn+kyCxFK1KWnNVhUqaV+4FbacJhSazDjdG4=;
+	s=k20260515; t=1793809140;
+	bh=TXAzu5TbcvU4BKGhbDPDQSThwdolGNVMNBohBK8Wkn0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=QnYNIAIbTw7/josn9/pIBviw92st1Bxm2Td3bbiggRG8tAXRvMHaNHObFeSkQ6FEq
-	 JXTEwIbQUGUnTZ8Xt6cE0QTGtY5eMlrjxOCMJ1rMgTyfyLm/N0pDC5WZ2MxS2FQb3r
-	 rXBYR/bSkAJiFpAwEE+lbHD/Rg+QMs88BPY47YLyf+l96PG/B6i8QqnjAqcEgImKIr
-	 rOhV6f9GHNQB5/YnRZVysUBCULzbsG4nzI/4R3XPSVeKEQLrTC4i+UQ92EVPD/6I17
-	 U/2syBEMa+iwT6oOkcHUgTKMI28iAG3tIEyBvdZy29cRyZWtejWEPwVKpKoHLhb9p1
-	 6O3UvAa4G+vWA==
+	b=eQzIm5+wDKnKEfR3c2Dj5RNjPRXkqOfe1YWtD7XwmtgoTNSw0hHrF9KrKBNfrSzu7
+	 bbWAiyph39DXU0AUFNPY2orwe927uHfFfJdR/Cli2hf8SHZY3z7hODn6+4Q6NcWF+i
+	 jLdhpDbC1dUcGR46HzKGDXIz4dBkTwOFNt5OrCgYAKfyMrXe2OUWPGtH4HUE3A3d0O
+	 GOrDszMsYGPmVjCh+sSacjxa1067zFdxLQLkTRUPKuncMw5xOkNtf/wseH2lDQojeD
+	 Gxs8La/CEUzisguhY1TwpPASf2nuNXA/CHe9JweCYkvrE+aXpw96QNd+Owp6Rv+lvq
+	 PsxPoIPVuNuZQ==
 From: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
 To: iommu@lists.linux.dev
 Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
@@ -71,10 +71,12 @@ Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-tegra@vger.kernel.org,
-	Jonathan Cameron <jonathan.cameron@huawei.com>
-Subject: [PATCH v8 14/15] PCI/TSM: Wait for device contexts before removing a DSM
-Date: Wed,  4 Nov 2026 21:46:31 +0530
-Message-ID: <20261104161632.3547423-15-aneesh.kumar@kernel.org>
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH v8 13/15] iommufd/viommu: Allow vIOMMUs without a parent HWPT
+Date: Wed,  4 Nov 2026 21:46:30 +0530
+Message-ID: <20261104161632.3547423-14-aneesh.kumar@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
 References: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
@@ -89,212 +91,349 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A PCI Device Security Manager (DSM) on physical function 0 (PF0) can be
-removed while a sibling function still has an IOMMUFD vDEVICE object.
-A vDEVICE represents a physical device within a virtual IOMMU for a guest
-and holds a PCI/TSM context for its lifetime.
+VIOMMU_ALLOC currently requires a nesting parent HWPT_PAGING even when
+the selected vIOMMU implementation has no use for one. This would force
+implementations such as the following Arm Realm vIOMMU to create an
+unused parent.
 
-The context holds PCI device references to both the assigned function and
-its DSM, but these references do not keep the PF0 Data Object Exchange
-(DOE) mailbox alive. Ignoring -EBUSY from link disconnect allows removal
-to reach pci_doe_destroy() while the context can still use the mailbox.
+Add IOMMUFD_VIOMMU_NO_HWPT so an implementation can opt out. Require
+hwpt_id to be zero in that case and pass a NULL parent domain to its
+initialization callback. For implementations that require a HWPT, verify
+that the parent supports nesting and its domain belongs to the device's
+physical IOMMU driver before invoking viommu_init().
 
-Reject new contexts and subfunction attachments once DSM removal starts.
-Wait for existing contexts to be released before disconnecting the link
-and allowing PCI removal to destroy the mailbox.
+Reject nested domain and hardware queue allocation for a vIOMMU without
+a parent, and document the two allocation modes in the UAPI.
 
-As with VFIO PCI removal, removal waits for userspace to release the
-device. This patch does not provide an eventfd notification to request
-that release.
-
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jonathan Cameron <jonathan.cameron@huawei.com>
-Cc: Alexey Kardashevskiy <aik@amd.com>
-Cc: Xu Yilun <yilun.xu@linux.intel.com>
-Cc: Lukas Wunner <lukas@wunner.de>
-Cc: Samuel Ortiz <sameo@rivosinc.com>
-Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
 Cc: Jason Gunthorpe <jgg@ziepe.ca>
 Cc: Kevin Tian <kevin.tian@intel.com>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Shuah Khan <skhan@linuxfoundation.org>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Will Deacon <will@kernel.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
 Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
 ---
- drivers/pci/tsm/core.c  | 75 ++++++++++++++++++++++++++++++++++++++---
- include/linux/pci-tsm.h |  9 +++--
- 2 files changed, 77 insertions(+), 7 deletions(-)
+ Documentation/userspace-api/iommufd.rst | 44 +++++++++---------
+ drivers/iommu/iommufd/hw_pagetable.c    | 14 ++++--
+ drivers/iommu/iommufd/viommu.c          | 62 +++++++++++++++----------
+ include/linux/iommufd.h                 | 13 ++++--
+ include/uapi/linux/iommufd.h            |  3 +-
+ 5 files changed, 81 insertions(+), 55 deletions(-)
 
-diff --git a/drivers/pci/tsm/core.c b/drivers/pci/tsm/core.c
-index 5ded1a5a4f7e..2c77321fa779 100644
---- a/drivers/pci/tsm/core.c
-+++ b/drivers/pci/tsm/core.c
-@@ -10,10 +10,13 @@
+diff --git a/Documentation/userspace-api/iommufd.rst b/Documentation/userspace-api/iommufd.rst
+index 763b23339480..723753c30e6d 100644
+--- a/Documentation/userspace-api/iommufd.rst
++++ b/Documentation/userspace-api/iommufd.rst
+@@ -82,11 +82,10 @@ Following IOMMUFD objects are exposed to userspace:
+   * Direct assigned invalidation queues
+   * Direct assigned interrupts
  
- #include <linux/bitfield.h>
- #include <linux/iommufd.h>
-+#include <linux/jiffies.h>
- #include <linux/module.h>
- #include <linux/pci.h>
- #include <linux/pci-doe.h>
- #include <linux/pci-tsm.h>
-+#include <linux/pid.h>
-+#include <linux/sched.h>
- #include <linux/slab.h>
- #include <linux/sysfs.h>
- #include <linux/tsm.h>
-@@ -355,7 +358,15 @@ struct pci_tsm_context *pci_tsm_context_get(struct pci_dev *pdev,
- 		return ERR_PTR(-ENOMEM);
+-  Such a vIOMMU object generally has the access to a nesting parent pagetable
+-  to support some HW-accelerated virtualization features. So, a vIOMMU object
+-  must be created given a nesting parent HWPT_PAGING object, and then it would
+-  encapsulate that HWPT_PAGING object. Therefore, a vIOMMU object can be used
+-  to allocate an HWPT_NESTED object in place of the encapsulated HWPT_PAGING.
++  A vIOMMU object may encapsulate a nesting parent HWPT_PAGING object to
++  support HW-accelerated virtualization features. Whether a parent is required
++  is determined by the selected vIOMMU implementation. Only a parent-backed
++  vIOMMU can be used to allocate an HWPT_NESTED object.
  
- 	guard(mutex)(&pf0->lock);
--	pf0->context_users++;
-+	if (pf0->removing) {
-+		kfree(context);
-+		return ERR_PTR(-ENODEV);
-+	}
-+
-+	if (!pf0->dsm_context_users)
-+		reinit_completion(&pf0->dsm_context_drain_complete);
-+
-+	pf0->dsm_context_users++;
- 	context->pf0 = pf0;
- 	context->pdev = pci_dev_get(pdev);
- 	context->dsm_dev = pci_dev_get(pf0->base_tsm.pdev);
-@@ -369,8 +380,12 @@ void pci_tsm_context_put(struct pci_tsm_context *context)
+   .. note::
  
- 	down_read(&pci_tsm_rwsem);
- 	mutex_lock(&pf0->lock);
--	if (!WARN_ON(!pf0->context_users))
--		pf0->context_users--;
-+	if (WARN_ON(!pf0->dsm_context_users))
-+		goto out_unlock;
-+
-+	if (!--pf0->dsm_context_users)
-+		complete_all(&pf0->dsm_context_drain_complete);
-+out_unlock:
- 	mutex_unlock(&pf0->lock);
- 	up_read(&pci_tsm_rwsem);
+@@ -226,9 +225,9 @@ creating the objects and links::
+      flag is set.
  
-@@ -418,7 +433,7 @@ static int __pci_tsm_disconnect(struct pci_dev *pdev)
- 	 * teardown.
- 	 */
- 	guard(mutex)(&tsm_pf0->lock);
--	if (tsm_pf0->context_users)
-+	if (tsm_pf0->dsm_context_users)
- 		return -EBUSY;
- 	pci_tsm_walk_fns_reverse(pdev, remove_fn, NULL);
- 	ops->disconnect(pdev);
-@@ -454,6 +469,10 @@ static ssize_t disconnect_store(struct device *dev,
- 	if (!sysfs_streq(buf, dev_name(&tsm_dev->dev)))
- 		return -EINVAL;
+ 4. IOMMUFD_OBJ_HWPT_NESTED can be only manually created via the IOMMU_HWPT_ALLOC
+-   uAPI, provided an hwpt_id or a viommu_id of a vIOMMU object encapsulating a
+-   nesting parent HWPT_PAGING via @pt_id to associate the new HWPT_NESTED object
+-   to the corresponding HWPT_PAGING object. The associating HWPT_PAGING object
++   uAPI, provided an hwpt_id or a viommu_id of a parent-backed vIOMMU object
++   via @pt_id to associate the new HWPT_NESTED object to the corresponding
++   HWPT_PAGING object. The associating HWPT_PAGING object
+    must be a nesting parent manually allocated via the same uAPI previously with
+    an IOMMU_HWPT_ALLOC_NEST_PARENT flag, otherwise the allocation will fail. The
+    allocation will be further validated by the IOMMU driver to ensure that the
+@@ -245,25 +244,28 @@ creating the objects and links::
+       of the object passed in via the @pt_id field of struct iommu_hwpt_alloc.
  
-+	if (is_link_tsm(tsm_dev) && is_pci_tsm_pf0(pdev) &&
-+	    to_pci_tsm_pf0(pdev->tsm)->removing)
-+		return -ENODEV;
-+
- 	rc = pci_tsm_disconnect(pdev);
- 	if (rc)
- 		return rc;
-@@ -664,6 +683,9 @@ int pci_tsm_pf0_constructor(struct pci_dev *pdev, struct pci_tsm_pf0 *tsm,
- 			    struct tsm_dev *tsm_dev)
- {
- 	mutex_init(&tsm->lock);
-+	init_completion(&tsm->dsm_context_drain_complete);
-+	tsm->dsm_context_users = 0;
-+	tsm->removing = false;
- 	tsm->doe_mb = pci_find_doe_mailbox(pdev, PCI_VENDOR_ID_PCI_SIG,
- 					   PCI_DOE_FEATURE_CMA);
- 	if (!tsm->doe_mb) {
-@@ -752,8 +774,47 @@ static void __pci_tsm_destroy(struct pci_dev *pdev, struct tsm_dev *tsm_dev)
+ 5. IOMMUFD_OBJ_VIOMMU can be only manually created via the IOMMU_VIOMMU_ALLOC
+-   uAPI, provided a dev_id (for the device's physical IOMMU to back the vIOMMU)
+-   and an hwpt_id (to associate the vIOMMU to a nesting parent HWPT_PAGING). The
+-   iommufd core will link the vIOMMU object to the struct iommu_device that the
+-   struct device is behind. And an IOMMU driver can implement a viommu_alloc op
+-   to allocate its own vIOMMU data structure embedding the core-level structure
+-   iommufd_viommu and some driver-specific data. If necessary, the driver can
+-   also configure its HW virtualization feature for that vIOMMU (and thus for
+-   the VM). Successful completion of this operation sets up the linkages between
+-   the vIOMMU object and the HWPT_PAGING, then this vIOMMU object can be used
+-   as a nesting parent object to allocate an HWPT_NESTED object described above.
++   uAPI, provided a dev_id identifying the device used to select the vIOMMU
++   implementation and, if the selected implementation requires a nesting
++   parent HWPT_PAGING, an hwpt_id. The hwpt_id must be zero for an
++   implementation that does not use a parent. A physical-IOMMU implementation
++   links the vIOMMU object to the struct iommu_device behind the device. Other
++   implementations, such as a TSM associated with the device, can provide their
++   own backing and device association. An implementation can allocate its own
++   vIOMMU data structure embedding the core-level structure iommufd_viommu and
++   some implementation-specific data. If necessary, it can also configure its
++   virtualization resources for that vIOMMU (and thus for the VM). A
++   parent-backed vIOMMU can be used as a nesting parent object to allocate an
++   HWPT_NESTED object described above.
  
- void pci_tsm_destroy(struct pci_dev *pdev)
- {
--	guard(rwsem_write)(&pci_tsm_rwsem);
-+	struct pci_tsm_pf0 *pf0 = NULL;
-+	struct completion *drained;
-+	bool interrupted = false;
-+	long rc;
-+
-+	down_write(&pci_tsm_rwsem);
-+	if (pdev->tsm &&
-+	    is_link_tsm(pdev->tsm->tsm_dev) && is_pci_tsm_pf0(pdev)) {
-+		pf0 = to_pci_tsm_pf0(pdev->tsm);
-+		drained = &pf0->dsm_context_drain_complete;
-+		mutex_lock(&pf0->lock);
-+		pf0->removing = true;
-+
-+		mutex_unlock(&pf0->lock);
-+		/* An unused DSM may never have completed dsm_context_drain_complete. */
-+		if (pf0->dsm_context_users)
-+			rc = try_wait_for_completion(drained);
-+		else
-+			rc = 1;
-+
-+		/* Context release needs the read side of pci_tsm_rwsem. */
-+		up_write(&pci_tsm_rwsem);
-+		while (rc <= 0) {
-+			if (interrupted) {
-+				rc = wait_for_completion_timeout(drained, HZ * 10);
-+			} else {
-+				rc = wait_for_completion_interruptible_timeout(drained,
-+									       HZ * 10);
-+				if (rc < 0) {
-+					interrupted = true;
-+					pci_warn(pdev, "Task \"%s\" (%d) blocked until vdevices are released\n",
-+						 current->comm, task_pid_nr(current));
-+				}
+ 6. IOMMUFD_OBJ_VDEVICE can be only manually created via the IOMMU_VDEVICE_ALLOC
+    uAPI, provided a viommu_id for an iommufd_viommu object and a dev_id for an
+    iommufd_device object. The vDEVICE object will be the binding between these
+    two parent objects. Another @virt_id will be also set via the uAPI providing
+    the iommufd core an index to store the vDEVICE object to a vDEVICE array per
+-   vIOMMU. If necessary, the IOMMU driver may choose to implement a vdevce_alloc
+-   op to init its HW for virtualization feature related to a vDEVICE. Successful
+-   completion of this operation sets up the linkages between vIOMMU and device.
++   vIOMMU. A physical-IOMMU implementation requires the device to be behind the
++   same iommu_device as the vIOMMU. Other implementations validate the device
++   association while initializing the vDEVICE. Successful initialization sets
++   up the linkage between the vIOMMU and device.
+ 
+ A device can only bind to an iommufd due to DMA ownership claim and attach to at
+ most one IOAS object (no support of PASID yet).
+diff --git a/drivers/iommu/iommufd/hw_pagetable.c b/drivers/iommu/iommufd/hw_pagetable.c
+index ae62db50885c..52e52ef089a2 100644
+--- a/drivers/iommu/iommufd/hw_pagetable.c
++++ b/drivers/iommu/iommufd/hw_pagetable.c
+@@ -306,6 +306,10 @@ iommufd_viommu_alloc_hwpt_nested(struct iommufd_viommu *viommu, u32 flags,
+ 		return ERR_PTR(-EOPNOTSUPP);
+ 	if (!user_data->len)
+ 		return ERR_PTR(-EOPNOTSUPP);
++	if (!viommu->hwpt)
++		return ERR_PTR(-EOPNOTSUPP);
++	if (!viommu->iommu_dev)
++		return ERR_PTR(-EOPNOTSUPP);
+ 	if (!viommu->ops || !viommu->ops->alloc_domain_nested)
+ 		return ERR_PTR(-EOPNOTSUPP);
+ 
+@@ -404,10 +408,12 @@ int iommufd_hwpt_alloc(struct iommufd_ucmd *ucmd)
+ 		struct iommufd_viommu *viommu;
+ 
+ 		viommu = container_of(pt_obj, struct iommufd_viommu, obj);
+-		iommu_dev = iommufd_device_get_iommu_dev(idev);
+-		if (!iommu_dev || viommu->iommu_dev != iommu_dev) {
+-			rc = -EINVAL;
+-			goto out_unlock;
++		if (viommu->iommu_dev) {
++			iommu_dev = iommufd_device_get_iommu_dev(idev);
++			if (!iommu_dev || viommu->iommu_dev != iommu_dev) {
++				rc = -EINVAL;
++				goto out_unlock;
 +			}
-+			if (!rc)
-+				pci_warn(pdev, "TSM connection is in use, waiting for vdevices\n");
+ 		}
+ 		hwpt_nested = iommufd_viommu_alloc_hwpt_nested(
+ 			viommu, cmd->flags, &user_data);
+diff --git a/drivers/iommu/iommufd/viommu.c b/drivers/iommu/iommufd/viommu.c
+index 1686f19c5060..6479083be095 100644
+--- a/drivers/iommu/iommufd/viommu.c
++++ b/drivers/iommu/iommufd/viommu.c
+@@ -17,7 +17,8 @@ void iommufd_viommu_destroy(struct iommufd_object *obj)
+ 		viommu->ops->destroy(viommu);
+ 	if (viommu->tsm_dev)
+ 		tsm_put_device(viommu->tsm_dev);
+-	refcount_dec(&viommu->hwpt->common.obj.users);
++	if (viommu->hwpt)
++		refcount_dec(&viommu->hwpt->common.obj.users);
+ 	if (viommu->kvm_file)
+ 		fput(viommu->kvm_file);
+ 	xa_destroy(&viommu->vdevs);
+@@ -31,11 +32,11 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd *ucmd)
+ 		.uptr = u64_to_user_ptr(cmd->data_uptr),
+ 		.len = cmd->data_len,
+ 	};
+-	struct iommufd_hwpt_paging *hwpt_paging;
++	struct iommufd_hwpt_paging *hwpt_paging = NULL;
+ 	struct tsm_dev *tsm_dev = NULL;
+ 	struct iommufd_viommu *viommu;
+ 	struct iommufd_device *idev;
+-	struct iommu_device *iommu_dev;
++	struct iommu_device *iommu_dev = NULL;
+ 	const struct iommufd_viommu_ops *ops;
+ 	size_t viommu_size;
+ 	int rc;
+@@ -47,11 +48,6 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd *ucmd)
+ 	if (IS_ERR(idev))
+ 		return PTR_ERR(idev);
+ 
+-	iommu_dev = iommufd_device_get_iommu_dev(idev);
+-	if (!iommu_dev) {
+-		rc = -EOPNOTSUPP;
+-		goto out_put_idev;
+-	}
+ 	tsm_dev = tsm_get_device(idev->dev);
+ 	if (IS_ERR(tsm_dev)) {
+ 		rc = PTR_ERR(tsm_dev);
+@@ -68,6 +64,11 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd *ucmd)
+ 			tsm_put_device(tsm_dev);
+ 			tsm_dev = NULL;
+ 		}
++		iommu_dev = iommufd_device_get_iommu_dev(idev);
++		if (!iommu_dev) {
++			rc = -EOPNOTSUPP;
++			goto out_put_idev;
 +		}
-+		down_write(&pci_tsm_rwsem);
-+	}
- 	__pci_tsm_destroy(pdev, NULL);
-+	up_write(&pci_tsm_rwsem);
- }
- 
- void pci_tsm_init(struct pci_dev *pdev)
-@@ -781,6 +842,10 @@ void pci_tsm_init(struct pci_dev *pdev)
- 		if (!dsm->tsm)
- 			return;
- 
-+		if (is_link_tsm(dsm->tsm->tsm_dev) &&
-+		    to_pci_tsm_pf0(dsm->tsm)->removing)
-+			return;
-+
- 		probe_fn(pdev, dsm);
+ 		if (!iommu_dev->ops->get_viommu_ops) {
+ 			rc = -EOPNOTSUPP;
+ 			goto out_put_idev;
+@@ -93,15 +94,22 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd *ucmd)
+ 		goto out_put_idev;
  	}
- }
-diff --git a/include/linux/pci-tsm.h b/include/linux/pci-tsm.h
-index 19e9e0ef3bbb..47ca2dff6c0d 100644
---- a/include/linux/pci-tsm.h
-+++ b/include/linux/pci-tsm.h
-@@ -1,6 +1,7 @@
- /* SPDX-License-Identifier: GPL-2.0 */
- #ifndef __PCI_TSM_H
- #define __PCI_TSM_H
-+#include <linux/completion.h>
- #include <linux/mutex.h>
- #include <linux/pci.h>
- #include <uapi/linux/iommufd.h>
-@@ -107,14 +108,18 @@ struct pci_tsm {
-  * struct pci_tsm_pf0 - Physical Function 0 TDISP link context
-  * @base_tsm: generic core "tsm" context
-  * @lock: mutual exclustion for pci_tsm_ops invocation
-- * @context_users: live per-function contexts on this PF0; a nonzero count
-+ * @dsm_context_users: live per-function contexts on this PF0; a nonzero count
-  *	blocks link disconnect
-+ * @dsm_context_drain_complete: completed when the last context is released
-+ * @removing: reject new contexts while the DSM is being removed
-  * @doe_mb: PCIe Data Object Exchange mailbox
-  */
- struct pci_tsm_pf0 {
- 	struct pci_tsm base_tsm;
- 	struct mutex lock;
--	unsigned int context_users;
-+	unsigned int dsm_context_users;
-+	struct completion dsm_context_drain_complete;
-+	bool removing;
- 	struct pci_doe_mb *doe_mb;
+ 
+-	hwpt_paging = iommufd_get_hwpt_paging(ucmd, cmd->hwpt_id);
+-	if (IS_ERR(hwpt_paging)) {
+-		rc = PTR_ERR(hwpt_paging);
+-		goto out_put_idev;
+-	}
+-
+-	if (!hwpt_paging->nest_parent) {
+-		rc = -EINVAL;
+-		goto out_put_hwpt;
++	if (ops->flags & IOMMUFD_VIOMMU_NO_HWPT) {
++		if (cmd->hwpt_id) {
++			rc = -EINVAL;
++			goto out_put_idev;
++		}
++	} else {
++		hwpt_paging = iommufd_get_hwpt_paging(ucmd, cmd->hwpt_id);
++		if (IS_ERR(hwpt_paging)) {
++			rc = PTR_ERR(hwpt_paging);
++			goto out_put_idev;
++		}
++		if (!hwpt_paging->nest_parent || !iommu_dev ||
++		    hwpt_paging->common.domain->owner != iommu_dev->ops) {
++			rc = -EINVAL;
++			goto out_put_hwpt;
++		}
+ 	}
+ 
+ 	viommu = (struct iommufd_viommu *)_iommufd_object_alloc_ucmd(
+@@ -119,7 +127,8 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd *ucmd)
+ 	viommu->tsm_dev = tsm_dev;
+ 	tsm_dev = NULL;
+ 	viommu->hwpt = hwpt_paging;
+-	refcount_inc(&viommu->hwpt->common.obj.users);
++	if (viommu->hwpt)
++		refcount_inc(&viommu->hwpt->common.obj.users);
+ 	INIT_LIST_HEAD(&viommu->veventqs);
+ 	init_rwsem(&viommu->veventqs_rwsem);
+ 	/*
+@@ -130,7 +139,7 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd *ucmd)
+ 	viommu->iommu_dev = iommu_dev;
+ 
+ 	rc = ops->viommu_init(viommu, idev->dev,
+-			      hwpt_paging->common.domain,
++			      hwpt_paging ? hwpt_paging->common.domain : NULL,
+ 			      user_data.len ? &user_data : NULL);
+ 	if (rc)
+ 		goto out_put_hwpt;
+@@ -140,7 +149,8 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd *ucmd)
+ 	rc = iommufd_ucmd_respond(ucmd, sizeof(*cmd));
+ 
+ out_put_hwpt:
+-	iommufd_put_object(ucmd->ictx, &hwpt_paging->common.obj);
++	if (hwpt_paging)
++		iommufd_put_object(ucmd->ictx, &hwpt_paging->common.obj);
+ out_put_idev:
+ 	if (tsm_dev)
+ 		tsm_put_device(tsm_dev);
+@@ -240,10 +250,12 @@ int iommufd_vdevice_alloc_ioctl(struct iommufd_ucmd *ucmd)
+ 		goto out_put_idev;
+ 	}
+ 
+-	iommu_dev = iommufd_device_get_iommu_dev(idev);
+-	if (!iommu_dev || viommu->iommu_dev != iommu_dev) {
+-		rc = -EINVAL;
+-		goto out_put_idev;
++	if (viommu->iommu_dev) {
++		iommu_dev = iommufd_device_get_iommu_dev(idev);
++		if (!iommu_dev || viommu->iommu_dev != iommu_dev) {
++			rc = -EINVAL;
++			goto out_put_idev;
++		}
+ 	}
+ 
+ 	mutex_lock(&idev->igroup->lock);
+@@ -463,7 +475,7 @@ int iommufd_hw_queue_alloc_ioctl(struct iommufd_ucmd *ucmd)
+ 	if (IS_ERR(viommu))
+ 		return PTR_ERR(viommu);
+ 
+-	if (!viommu->ops || !viommu->ops->get_hw_queue_size ||
++	if (!viommu->hwpt || !viommu->ops || !viommu->ops->get_hw_queue_size ||
+ 	    !viommu->ops->hw_queue_init_phys) {
+ 		rc = -EOPNOTSUPP;
+ 		goto out_put_viommu;
+diff --git a/include/linux/iommufd.h b/include/linux/iommufd.h
+index a4b29915d0ca..4d5995956cce 100644
+--- a/include/linux/iommufd.h
++++ b/include/linux/iommufd.h
+@@ -6,6 +6,7 @@
+ #ifndef __LINUX_IOMMUFD_H
+ #define __LINUX_IOMMUFD_H
+ 
++#include <linux/bits.h>
+ #include <linux/err.h>
+ #include <linux/errno.h>
+ #include <linux/iommu.h>
+@@ -102,6 +103,7 @@ void iommufd_ctx_get(struct iommufd_ctx *ictx);
+ struct iommufd_viommu {
+ 	struct iommufd_object obj;
+ 	struct iommufd_ctx *ictx;
++	/* Physical IOMMU backing, or NULL. */
+ 	struct iommu_device *iommu_dev;
+ 	struct iommufd_hwpt_paging *hwpt;
+ 	struct file *kvm_file;
+@@ -148,17 +150,19 @@ struct iommufd_hw_queue {
+ 	void (*destroy)(struct iommufd_hw_queue *hw_queue);
  };
  
++#define IOMMUFD_VIOMMU_NO_HWPT	BIT(0)
++
+ /**
+  * struct iommufd_viommu_ops - vIOMMU specific operations
++ * @flags: Properties needed by the core before vIOMMU initialization
+  * @get_viommu_size: Get the size of a driver-level vIOMMU structure for a given
+  *                   @dev corresponding to @viommu_type. Driver should return 0
+  *                   if vIOMMU isn't supported accordingly. It is required for
+  *                   driver to use the VIOMMU_STRUCT_SIZE macro to sanitize the
+  *                   driver-level vIOMMU structure related to the core one
+- * @viommu_init: Init the driver-level struct of an iommufd_viommu on a physical
+- *               IOMMU instance @viommu->iommu_dev, as the set of virtualization
+- *               resources shared/passed to user space IOMMU instance. Associate
+- *               it with a nesting @parent_domain.
++ * @viommu_init: Initialize the selected driver-level iommufd_viommu for @dev.
++ *               @parent_domain is the nesting parent, or NULL for an
++ *               implementation that does not use a parent HWPT.
+  * @destroy: Clean up all driver-specific parts of an iommufd_viommu. The memory
+  *           of the vIOMMU will be free-ed by iommufd core after calling this op
+  * @alloc_domain_nested: Allocate a IOMMU_DOMAIN_NESTED on a vIOMMU that holds a
+@@ -201,6 +205,7 @@ struct iommufd_hw_queue {
+  *                      does, it should set it to the @hw_queue->destroy pointer
+  */
+ struct iommufd_viommu_ops {
++	unsigned long flags;
+ 	size_t (*get_viommu_size)(struct device *dev,
+ 		enum iommu_viommu_type type);
+ 	int (*viommu_init)(struct iommufd_viommu *viommu, struct device *dev,
+diff --git a/include/uapi/linux/iommufd.h b/include/uapi/linux/iommufd.h
+index 3f7422e7cd91..12315bd75a6f 100644
+--- a/include/uapi/linux/iommufd.h
++++ b/include/uapi/linux/iommufd.h
+@@ -1138,7 +1138,8 @@ struct iommu_viommu_tegra241_cmdqv {
+  * @flags: Must be 0
+  * @type: Type of the virtual IOMMU. Must be defined in enum iommu_viommu_type
+  * @dev_id: The device's physical IOMMU will be used to back the virtual IOMMU
+- * @hwpt_id: ID of a nesting parent HWPT to associate to
++ * @hwpt_id: ID of a nesting parent HWPT to associate to. Must be zero when the
++ *           selected vIOMMU implementation does not use a parent HWPT
+  * @out_viommu_id: Output virtual IOMMU ID for the allocated object
+  * @data_len: Length of the type specific data
+  * @__reserved: Must be 0
 -- 
 2.43.0
 
