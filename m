@@ -1,94 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.84.53
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793792210;
-	b=t0+6oZ7NibbUiwuiUzKa/GUAor9A2itXzfIUC5FF+IXT4SWlVJ5mqorcYX6RF39Ov5dG
-	 lBTPfX6EvXrwi9/kGvgcFtUXfrxChLfOx6Y71SIpv5s7py2gw9hOruc+p/UdfUq1dzwTB
-	 MfVwOQ3PqE5TJbsr/0zdBUiHqdDbhlGzx/SbuJY5os/5PZgNbHbXF+Eg2pjbffmGditiS
-	 cMpzXc+pTYhn49fsxttdM1xzbMFLCd8EqLpUAK5nu9xMqE4vjiXaqxA3a8394MwBMMSV6
-	 IgN+TUTQmlSEuFF+njFarjrMF/IlIf745vqO9pJpz0Nq8kJ5MYt+oIY7WYjzzeGyWpg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793792210;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:Content-Transfer-Encoding:Content-Type:
-	 X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=IDZAFkpNWaQCslMLak6FnX2P04gbpIbOwbL8wNa9kp8=;
-	b=EsvGDJrucJByZad5eDeTf4cCaMfdAvYY/tEpzMHV0EIAXinsksKVDRdiqXluOoOyqzBo
-	 M7oFrMdu8dSvurRFyfip4ZRV17yFfvK3jcTKCvhOgn8daap07qDBVMyxtBxWgMXCvZUoC
-	 eNOHCOgp4VY64FQ+N1PF8EHyQ3ZjuTlY5UJp4VsSxIeSnwMwqdEaVwJnVst31BwrryYJe
-	 u/QeuT9tBrdyf9OQxGqP6VedFehxCC9dy2zapcv3Nfsg1M6KNkOVssponIVJCFcujTpqm
-	 ns2BVy6lgaOsZkO7nSHECX+0hxi3aS9/FezpQIXdj7xiRzAxnyF2SRedyArNMDH9dJA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.nxp.com;
-	spf=pass smtp.mailfrom=oss.nxp.com;
-	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=mx99o4FD;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.84.53
-Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010053.outbound.protection.outlook.com [52.101.84.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.33
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793792288;
+	b=hnHgow7vAmeK3F6Uxf/DGiQlVhngRMHON8U573hqBHEowklg5+a7qG9IBIqrQj0V8Ywp
+	 xF6NjO0aZhUx2UREtzd8Q7PkCedDa5ARSox1exwjEWWe5e3TUtLrFnQ+6O3AXe0BUWW4T
+	 lt65+7rEnJxi5wXuLbTUDqd7NnqFHMyNHYGqwwJGhyI0usrrUCFe9lPZvvUHBaYr7bwE0
+	 HPFzpNTzH4YpafP/sN5v2OyHA5nBaWR/3dzKYfuOzx6VSTxNu4q/xo+KhOThamv8ljP55
+	 cssO/tY6fihepv6f/jhmB8gYoO+FamlPywXFbKWv8jDeCFU6sr6yRWl8vEe3qU5x8dQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793792288;
+	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
+	 Received:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 In-Reply-To:MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:
+	 X-Msg-Generator:Content-Type:X-Sendblock-Type:CMS-TYPE:X-CPGSPASS:
+	 X-Hop-Count:X-CMS-RootMailID:References;
+	bh=1wM3zL+uTsyKlFjdgUfPHOt4NIoAKdyW2WiJddhSn+E=;
+	b=2oMU4oNEiiPlZ0sNwFzc7FltMjheU8MN19JtDy7bOYfND6CiK+OW3F3MPxETq7F6gsnI
+	 bQ7xyAC8MU0Ps9AMsK4mDJWQpvS8sUIxBqGs2M4XS4PkzvGASJgC0r6uwYCmJxY8aEpdc
+	 U1YX2r2v0AorA42dWAG74pSO/n0HTZf5vWoaJxEqW8n0jT9AFF/9+nFzeXXdQhDCvA5bd
+	 OSbGWUFjd8rIUawhSt5RQoN+Qj5dAu8pyoKfZRjU+dnclBBspw+XjhV8uiPlpWL9hnwj8
+	 iYJt3Ah6QZuUKYXCgZDdFDpGJYbrPHgsCXMHBG4te2eLNEN/lrXCNp+h0UP7GNPEBtA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=samsung.com;
+	spf=pass smtp.mailfrom=samsung.com;
+	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=Yz5ETYsI;
+	arc=none smtp.remote-ip=203.254.224.33
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02A1C606A326;
-	Wed,  4 Nov 2026 11:36:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 02A1C606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88E62606D820
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 11:38:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 88E62606D820
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=mx99o4FD
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=fOi49boszJCe6fcOzDELUvmjoNl5Ip/hVxXLygElAvsKCqN69DCpl6Nu4O1+C4KtV/9d7YHjvP2B2hf4v15xBSY2bTOs4n/sieyTdgE9Genwrl1uwb4pE2gm9n5FprioqoTdgSbcWDmM835H/D3goA8oZCvf5zzXvthEiG5vzmqBQ48uZC8A1GFZvHjPvBag3IA9ojCZ5jL8FgB2wTVTJw1Hj5Tdkh2J8ELD7falbXVeQ3NiMq/jwOWuZ5kyLAVgkWa7Wm9WG4sZs8TkpUtdF0bzavwL+LDwG3ARJBkd67iEoQbee+MPWGeGI3zksiJ+/EWs6hEMm9HVw7IvubeZzg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=IDZAFkpNWaQCslMLak6FnX2P04gbpIbOwbL8wNa9kp8=;
- b=RmNotyqzC7U7e4dIEIWzvK/Zgv2023odym6h2zrzEouSddyLSt3D29u2QutAhbjXkws0FtIRdWkzW2wHW3TRz1KmKtfcToSTTOztLz5clWPu+joWDNldXWK31HB2AAeNcKwh6P0+liwtYsBKL0E96+4w4gUsXdYxf0eOxc+arWcl0NQK4YsdO0jb7IR0+mravAa2cQ4LPrsFAstPcgG7aHJGVqXIbYyH+HomHf/Ay1DP2GBp1nGm0ow/1UPRYgFt1l/56FZ+EW05ENdKVXu7GuDNmAW8cijXipf/CUGXikW9uQiwS7fb5+MFgsKdwONtNNseYXQXWSHewdnHhqWw9A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IDZAFkpNWaQCslMLak6FnX2P04gbpIbOwbL8wNa9kp8=;
- b=mx99o4FDKPCUTiYscWcCRIcufP9WPZFWHY3afsMY+vnhqvhIg1s8pOOtsaedXyNWwokXWds5qeLg+iaRKRu8iRtSQ38aDxF4wYr9905IgYn+b7Fb7wmGQYJsG8TmpjvndE7sijnELzhij5ZkEXCH67REDAfeDCbq7TK/pKv2KLrdqSJCD/7WyoyumU4coFtrreATXO1PsDH+oWwk8grkwUY0XymqyTdc4Pn1fLzzbToAUIfnD2A9yPICj3XA1tpTFu2fpMlucJ9k5Ziqz3UPpFImjyog2nOAo3YGuiDf2PXzI868aiSrL6S6iLdHfXLggvcDXMepXZ8sCYz3m97ukA==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from AM8PR04MB7874.eurprd04.prod.outlook.com (2603:10a6:20b:24d::9)
- by AS4PR04MB9435.eurprd04.prod.outlook.com (2603:10a6:20b:4eb::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.9; Wed, 4 Nov 2026
- 11:36:47 +0000
-Received: from AM8PR04MB7874.eurprd04.prod.outlook.com
- ([fe80::ac38:1699:6f18:c5d9]) by AM8PR04MB7874.eurprd04.prod.outlook.com
- ([fe80::ac38:1699:6f18:c5d9%6]) with mapi id 15.21.0592.007; Wed, 4 Nov 2026
- 11:36:47 +0000
-From: "Peng Fan (OSS)" <peng.fan@oss.nxp.com>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: altera-msi: Convert to subsys_platform_driver()
-Date: Wed,  4 Nov 2026 19:32:35 +0800
-Message-ID: <20261104113235.1634024-1-peng.fan@oss.nxp.com>
-X-Mailer: git-send-email 2.51.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SI1PR02CA0015.apcprd02.prod.outlook.com
- (2603:1096:4:1f7::18) To AM8PR04MB7874.eurprd04.prod.outlook.com
- (2603:10a6:20b:24d::9)
+	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=Yz5ETYsI
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20261104113804epoutp03272a38969bec7a58ae9b71d75d93b2b9~k1JQ0IUgc1674516745epoutp03C
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 11:38:04 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20261104113804epoutp03272a38969bec7a58ae9b71d75d93b2b9~k1JQ0IUgc1674516745epoutp03C
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1793792284;
+	bh=1wM3zL+uTsyKlFjdgUfPHOt4NIoAKdyW2WiJddhSn+E=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=Yz5ETYsIBTMgELGDWS5D166NIZL7Xq2xhmqlMsmLr9BmIHJiCP9TKeRM+MDfdzSg0
+	 +9Icm8lxv2X2CnQFwQ8Sbgiabm82nc015aFdYDbv8LWT8clWEqaKehpgQgFDGt+A92
+	 x1N3VlbCbzjMv+tA60QHYIocXE0TS6kt73HST1bA=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPS id
+	20261104113803epcas5p286a75c22603e142bdc74cb66fa4a17a8~k1JQPq0IR1390013900epcas5p2S;
+	Wed,  4 Nov 2026 11:38:03 +0000 (GMT)
+Received: from epcpadp2new (unknown [182.195.40.142]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4jKNjR6lKzz6B9m5; Wed,  4 Nov
+	2026 11:38:03 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+	20261104113044epcas5p2f8aa4ebe7305b60819571c1a8aefe295~k1C3UXcY22350023500epcas5p2I;
+	Wed,  4 Nov 2026 11:30:44 +0000 (GMT)
+Received: from unvme-SYS-221H-TN24R.samsungds.net (unknown [107.99.40.127])
+	by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20261104113041epsmtip1e29814f825c506ece958cb88d08f6ee8~k1C0KytrG2364123641epsmtip1c;
+	Wed,  4 Nov 2026 11:30:41 +0000 (GMT)
+From: Shrihari E S <shrihari.s@samsung.com>
+To: jic23@kernel.org, junjie.cao@linux.dev, linux-cxl@vger.kernel.org,
+	linux-pci@vger.kernel.org, qemu-devel@nongnu.org, anisa.su887@gmail.com,
+	mst@redhat.com, marcel.apfelbaum@gmail.com
+Cc: shrihari.s@samsung.com, arun.george@samsung.com, cpgs@samsung.com,
+	dave@stgolabs.net, dongjoo.seo1@samsung.com, gost.dev@samsung.com,
+	s.neeraj@samsung.com, vikash.k5@samsung.com, anisa.su@samsung.com,
+	junjie.cao@intel.com
+Subject: [PATCH qemu v1 7/8] hw/cxl: Wire SVC and Dev3 capabilities to CXL
+ Type 3 device
+Date: Wed,  4 Nov 2026 17:22:41 +0530
+Message-Id: <331418503.141793792283935.JavaMail.epsvc@epcpadp2new>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20261104115242.2035807-1-shrihari.s@samsung.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -98,97 +83,98 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AM8PR04MB7874:EE_|AS4PR04MB9435:EE_
-X-MS-Office365-Filtering-Correlation-Id: cae1ce0f-6028-4be5-13d4-08df3a67c90b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|19092799006|23010399003|376014|1800799024|10067099003|18002099003|56012099006|11063799006|261022075727099003|261102123227099003|261009221227099003|261021123027099003|261021121427099003|261009223027099003;
-X-Microsoft-Antispam-Message-Info:
-	ZJ0D6SNotriTI5r6vf/lEW5eTg7vLtE6PycYtAjTOBe5YhXdNcu3BxffVpUvYfQGz+c+xeklHkYJXAzjrr7gq90PDrfsZPLJB0MSctS24s6LAjhWDdc+bjoeNMhqT5Y7Nvbhxp4SBzoAzebkQyPTl8gqx0tABmGYewlewUoE1m+46CamjrgWmB43T7GSWoAlca4r4IDuv3oa2bFmoXud8lTzNX7sjRsrL5Q+v7kKZRJjRg2sbUmqNTrPCACqga64UCBapYx7XCqdH+esNhdtF7LvT5iEM7L9873J76Kuc3Jtb4nvm0EkxTfinXXy/FmaQQDdA0nQhZ7ROiY1Fb2SwNr7wkZco2hl6ngoo6KJxmgEl/zA6MRJ8PGKRpGzuc+rLdVxuMfPESUTdPGqI5twYUJVCH3UhXTk2Pum4Ce/hhfllR0uQC97GBFQBXOjLxq+SKJHnmPRNyBqePu6oCNO+iI1NpVhhD9GpyDGQU89Cp53XuTYtDk0Y0MK3tSA8pFMw1sDC3c8yOmr55LefO61i/C31d27nRV9MpMdHWtVLkU3QiuUDGZqXcNAvtEyzBLRiWv+qWawVT0RjkpbHQKV4BLWQQbG9jXF7YexkQqGki+XRnP/Wa9FBxLjBNmTdjQSP2Vbl4m0RH0dvOUsBZXGSsFGQIDhCV23bHSbXHv+6zw=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM8PR04MB7874.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(23010399003)(376014)(1800799024)(10067099003)(18002099003)(56012099006)(11063799006)(261022075727099003)(261102123227099003)(261009221227099003)(261021123027099003)(261021121427099003)(261009223027099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?CW53Z4grS7sNCxgEkyJDSkFVDq4+jICP1a3J72YWLOIaStSbTaf0sHj5rDlE?=
- =?us-ascii?Q?5GOo+r1i+VCli3JhSqC04s+3Vo/XPCvKljxwkU+StaZRoVXGtuqt1qMgmby1?=
- =?us-ascii?Q?mCtOCcyALBt4/t1qTb5eONBVjsi3cr3CDwfk+EuDj0swQwJs1+yDB35x1oMj?=
- =?us-ascii?Q?zKJ8ZEmAXbUI45ZUPn8JB8UJWwSmSkG8ufHM1l4DxTP7kgXxpdlbNotLs0pQ?=
- =?us-ascii?Q?Mu92WU07DxCrujWF+XV+KJhENqfyXxK90PtryND9fprhhAB4fHIwo3zWTFRZ?=
- =?us-ascii?Q?NGOnG21IuS6wxh4ggSAf5PLeE3EQuwOd7EjXwyyhNb4gYiLLJfG90okmdL1/?=
- =?us-ascii?Q?Qy6kmlZyxKgc5c8kcuR+1thX0CnJTiVOdLVq33YcjBKlA1wPu631Crm9NwIm?=
- =?us-ascii?Q?UL5jiE50+vY4VuAYYTC7aS5WBFigeW08kerb8VHsUwQI7WiATfGXTkMR39Ph?=
- =?us-ascii?Q?Y6gwCXoLl6+ZxbZ7XZ+apKdIBuorVwC0jwl74LsvY8Ms9iXF7SYXoJe0ARbM?=
- =?us-ascii?Q?I+iTGjUX7e46YacuA0p9tPQAUHNTPG2fu+nPkUvC7Fi9juAvCI2LJsmm7GdT?=
- =?us-ascii?Q?mlrGmH3R3utrN4tsqB1tqcZAQ4c9qyS792s/a3wjIi6uwPB14veRJaA1ae3N?=
- =?us-ascii?Q?FdjAOxUoTEY64dKv9qpyTNPHzaDoJvUoodv0NWRT61WG/EV2AAXiCKFQCgRz?=
- =?us-ascii?Q?5Cv1i3sgzB5ebOocWST13Cp08BYFJfLokT6Tx9PVZb+Js/tpP1CfLcOQz4Uj?=
- =?us-ascii?Q?ULN0OA7n3rdBlDZEBaPAupFkmzwbslGHCRJoQPm27fvd/sEHS2EHY+y86U4/?=
- =?us-ascii?Q?NYmPjvwECaBER98IvCQf7j6a1L3OF1H0S3EUMSNNYyUd1r/qMf7jVNNd0DNC?=
- =?us-ascii?Q?zmxByxGctAurmw57EM5nN8PgpJniQCNXhgEwYpjPEgfLmVB1xAYIkvdDXOb7?=
- =?us-ascii?Q?sbo+tSjtL+PqIVRp2Xns5DcOoMeJu9BmnDMZT8YbkkCDGgbLQEZSzFcR6Y02?=
- =?us-ascii?Q?9Rx0CoRNWj/fDgEHDS2ySSxDKOUPssQWq1+MPzqM0YoFRLP9IL524FgKX7BU?=
- =?us-ascii?Q?V1Q58Vy4vBa5HkwuBMo/Ex/HsuizjxQPFOcCOj+YfZL/WdqZaD0YefdOFFLb?=
- =?us-ascii?Q?M6kXmzdAeWTsjs0ySzm3lIsnGAYA4xHA1cKyTPJFJNhcGgw8wkNeekIsK1bH?=
- =?us-ascii?Q?sB5yG0JEJhaRd26QgGsPYbtZ0Gxl7bHxtTa4LphFVCDBpV7U4bcvg02oUpCe?=
- =?us-ascii?Q?kNIxaq+lGzsKLSqQZZ0ePOMuLcL3N/v+zOmON5xj+Teei5YCim/mnQCsKdwK?=
- =?us-ascii?Q?fR9HqPeOpv1+t5hw2yeSeh31/UtycIbsehBtUnciF02vlZA6eEGyimoZ7+8e?=
- =?us-ascii?Q?G4ZbzpVK/eWzuFl1P+XBsM6sYjMxcSZO2yKtFovYuaSEJPZ1NsL31b23tq5j?=
- =?us-ascii?Q?GNhEA6Ajbyn55ggk9orEkVs0O/rRs04q+2bsHPacG64EyHgw8RcAaQpUGNXl?=
- =?us-ascii?Q?AaNuFVv+4+OsEJOyw5VAk7Scqr2hpIsK60aoBor3k8HK1C60LMYcYXPDjC0+?=
- =?us-ascii?Q?KMwzcRc7wHTNfNpf7sPPkbDfwcEZV+7QZl5F4mcmLv7Lgm6IMTSwtgE5lj8V?=
- =?us-ascii?Q?HQdgCirPKgb69frHUSkQzFFeu7eDD5MKKzdrfq5gm0d5eI87552gPY1FXDgI?=
- =?us-ascii?Q?Uer4/b3A5xWjUosOqUp77y8kxujjH2mYKx0Y3rKGbpintusZEj8LhL7Nd6Ix?=
- =?us-ascii?Q?tqrPuaO1EdboVgSf5RYNXAWCVzF+LmWfWmkwFEKYv2xCTejfhgS4?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cae1ce0f-6028-4be5-13d4-08df3a67c90b
-X-MS-Exchange-CrossTenant-AuthSource: AM8PR04MB7874.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2026 11:35:54.0307
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 9mSSodwrweOTOeC5qrX5IMUgTItNVBtXRtZ6dgsI4TKJdIcK28CZtD29AmXj4YcK4Vn1W/IUy2zYWeP/kENsXwz8Ws1xcaXfXwomghj/DfYCz/HpIXMPDqRlTwInZQjl
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS4PR04MB9435
+Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20261104113044epcas5p2f8aa4ebe7305b60819571c1a8aefe295
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20261104113044epcas5p2f8aa4ebe7305b60819571c1a8aefe295
+References: <20261104115242.2035807-1-shrihari.s@samsung.com>
+	<CGME20261104113044epcas5p2f8aa4ebe7305b60819571c1a8aefe295@epcas5p2.samsung.com>
 
-From: Peng Fan <peng.fan@nxp.com>
+Add the SVC and Dev3 capabilities to the CXL type 3 device to make
+it work as a UIO completer. The x-uio option works together with
+the x-svc and x-256b-flit options: the device carries the UIO
+capability when all three are set, and logs a warning that UIO is
+not enabled when x-uio is set without x-svc and x-256b-flit.
 
-Replace the open-coded subsys_initcall()/module_exit() platform driver
-registration with subsys_platform_driver().
-
-No functional change.
-
-Signed-off-by: Peng Fan <peng.fan@nxp.com>
+Signed-off-by: Shrihari E S <shrihari.s@samsung.com>
+Signed-off-by: Dongjoo Seo <dongjoo.seo1@samsung.com>
 ---
- drivers/pci/controller/pcie-altera-msi.c | 13 +------------
- 1 file changed, 1 insertion(+), 12 deletions(-)
+ hw/mem/cxl_type3.c          | 29 +++++++++++++++++++++++++++++
+ include/hw/cxl/cxl_device.h |  1 +
+ 2 files changed, 30 insertions(+)
 
-diff --git a/drivers/pci/controller/pcie-altera-msi.c b/drivers/pci/controller/pcie-altera-msi.c
-index ea2ca2e70f20..8c0696cbd4ae 100644
---- a/drivers/pci/controller/pcie-altera-msi.c
-+++ b/drivers/pci/controller/pcie-altera-msi.c
-@@ -267,18 +267,7 @@ static struct platform_driver altera_msi_driver = {
- 	.remove = altera_msi_remove,
- };
+diff --git a/hw/mem/cxl_type3.c b/hw/mem/cxl_type3.c
+index 778a18ddea..12430c77d2 100644
+--- a/hw/mem/cxl_type3.c
++++ b/hw/mem/cxl_type3.c
+@@ -17,6 +17,7 @@
+ #include "hw/mem/memory-device.h"
+ #include "hw/mem/pc-dimm.h"
+ #include "hw/pci/pci.h"
++#include "hw/pci/pcie_dev3.h"
+ #include "hw/core/qdev-properties.h"
+ #include "hw/core/qdev-properties-system.h"
+ #include "qapi/error.h"
+@@ -1191,6 +1192,33 @@ void ct3_realize(PCIDevice *pci_dev, Error **errp)
+     pcie_doe_init(pci_dev, &ct3d->doe_comp, 0x1b0, doe_comp_prot, true,
+                   CXL_T3_MSIX_PCIE_DOE_COMPLIANCE);
  
--static int __init altera_msi_init(void)
--{
--	return platform_driver_register(&altera_msi_driver);
--}
--
--static void __exit altera_msi_exit(void)
--{
--	platform_driver_unregister(&altera_msi_driver);
--}
--
--subsys_initcall(altera_msi_init);
-+subsys_platform_driver(altera_msi_driver);
- MODULE_DEVICE_TABLE(of, altera_msi_of_match);
--module_exit(altera_msi_exit);
- MODULE_DESCRIPTION("Altera PCIe MSI support driver");
- MODULE_LICENSE("GPL v2");
++    /*
++     * The HDM decoder UIO capability builds on the SVC and 256-byte
++     * flit mode capabilities in the PCIe config space: the device
++     * carries the UIO capability when it is configured for SVC and
++     * 256-byte flit mode as well.
++     */
++    if (ct3d->uio_comp_capable && (!ct3d->svc || !ct3d->flitmode)) {
++        warn_report("x-uio=on requires x-svc=on and x-256b-flit=on; "
++                    "UIO will not be enabled on this device");
++        ct3d->uio_comp_capable = false;
++    }
++
++    if (ct3d->svc) {
++        /* SVC capability of the type3 device */
++        rc = pcie_svc_cap_init(pci_dev, 0x200 + PCI_ERR_SIZEOF,
++                               ct3d->flitmode, errp);
++        if ((rc >= 0) && ct3d->uio_comp_capable) {
++            /*
++             * The Dev3 Capability is placed after SVC in the PCIe
++             * config space, and the device is initialized as a UIO
++             * completer.
++             */
++            pcie_dev3_cap_init(pci_dev, 0x200 + PCI_ERR_SIZEOF + PCI_SVC_SIZEOF,
++                               false, true, errp);
++        }
++    }
++
+     /* Set default value for patrol scrub attributes */
+     ct3d->patrol_scrub_attrs.scrub_cycle_cap =
+                            CXL_MEMDEV_PS_SCRUB_CYCLE_CHANGE_CAP_DEFAULT |
+@@ -1556,6 +1584,7 @@ static const Property ct3_props[] = {
+                                 width, PCIE_LINK_WIDTH_16),
+     DEFINE_PROP_BOOL("x-256b-flit", CXLType3Dev, flitmode, false),
+     DEFINE_PROP_BOOL("hdm-db", CXLType3Dev, hdmdb, false),
++    DEFINE_PROP_BOOL("x-svc", CXLType3Dev, svc, false),
+     DEFINE_PROP_BOOL("x-uio", CXLType3Dev, uio_comp_capable, false),
+     DEFINE_PROP_UINT16("chmu-port", CXLType3Dev, cxl_dstate.chmu[0].port, 0),
+ };
+diff --git a/include/hw/cxl/cxl_device.h b/include/hw/cxl/cxl_device.h
+index e8480026c3..a095febf90 100644
+--- a/include/hw/cxl/cxl_device.h
++++ b/include/hw/cxl/cxl_device.h
+@@ -884,6 +884,7 @@ struct CXLType3Dev {
+     PCIExpLinkWidth width;
+     bool flitmode;
+     bool uio_comp_capable;
++    bool svc;
+ 
+     /* DOE */
+     DOECap doe_cdat;
 -- 
-2.51.0
+2.34.1
+
 
