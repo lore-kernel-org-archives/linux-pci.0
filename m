@@ -1,110 +1,143 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.51
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793821539;
-	b=Iz7YUXabwUfSK87TVmkxBYgzKAMFKN7VTJavtRzSVaMkTH+Ssaa+wmRigb4NZ3FdEzuc
-	 oTnfHSdgu7yXbRuwgj/KQPMYokA6McJgB7Zf8CzVQMW+KFMfcGjcmi9fTMgMUUj2OTHcC
-	 eHqB7Xfwd3p5iGsnqOVNj1wp7cGG9WYraFfU/wP76Z77rS8OO4rgcEEJZlG3Hkw/hmN1p
-	 Vu1a33JLR8ngQ0Y0xIGu7JrY8PcYNbTCjCNetdJRhCjMoJ2rr5TrEswKdEbGtWhVIiMln
-	 RzH/FwdjRRxH0xKVBKp3xsPNHyjKuFMqmI0s6cSTN8RagG8Y/bjKDEmUlqycLqvPREQ==
+	t=1793821554;
+	b=K9/dx398gXenRDnFLqoGgt5yOH5B9gfjBM4idN8ru+t0crmbMDpvAss90fI69NmuYs2q
+	 0gvgeMeUYdo0NtKEz1agpPDheJmwjwnAK4LHwUL0T3A3zrdY5h7SqRWkyCw5OXm2YQHsy
+	 O53x9j/2rbarrifwxAPQ4HNDjsYUfOT7ndhTDj9N9Oy82CoFw01b56JhCUT+GXZTUHKZu
+	 VsAwF0sRnPHzNJU9nasW0kADG/faebM4wxrXzLBLVVwJoHTDF52ceimZ5jKCIcKyXMDSC
+	 OuNAJP2aRtGvRBlXqevM03XXC+1QnNuyzND2IdfiHL2nuxl6M4BkxftntQW4vwgMi2Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793821539;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
-	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=oFfWvBKtBhqs+rwLAKfNEZHrMKd6RrVgssTSPyI9nB8=;
-	b=FCafbCgwn45O1PrzXstT3tZZJMqb7MaRggGkXYHR3wr5dWum5BGajBGkdod3FIKuMgs6
-	 sT7KTf6+KkVqFbA1hoSv8XjCKWLN/ZSUi1gv6duz5rABWtWz3F06qpHGYadAjiTKWKTru
-	 9X4xUXwb9KnB50V5uVmAkVbtJcVtpwOZeC+MCh8NG+D7SqKKZRScNPdg7JalhpoL1NO64
-	 Q1zX5dSw9s2KFBsCanZ7biUxhAOKjZEyBKoLns12Lcbpx8IdQ+xdk5AWFH0JMzcjuoamG
-	 f1DRbEW9j8dyyux8o6w2+E4CM55qvphASM2jU21+wg2j93Pw4hwJaJGQKBfCU0uGOPQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793821554;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=EhMlWPoz5IUKIlQ1/wDPKCmLchJf0GRtbn42lO+mbmw=;
+	b=R2GnC6FO+hXOuqjfu//abOdwZogZmINvPjK8ETJ29e9IlNXJyNlVznjblHTT1wEPqBfI
+	 Bid+X+j78Ndwi7EtWb0zZGnwtU+BaJ2xubu9IDCr1YDx3JftOw00vIil/8hRFMdSGLgtg
+	 k47H6VpQiqGzxMqYB2772vpthtS5zB1M3Xyl3qpnLFryWwDLPkjSBzb7vm9kDTRtgmTXH
+	 fAldqS6df9JiT4aAyXPwaF9F9pzRN53+Jr6rwOneKv3oMhU1soh1q/HUaldNVe+niKqyi
+	 OV0i9dFG3h6CnGIsDY4GUJRDVmSh/ZJXA39JPXwGVREnABTJ4LJ/BsXSY0ceBkz1uxA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ju9Cdiwd;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=PhgChsRR;
+	arc=none smtp.remote-ip=74.125.82.51
+Received: from mail-dl1-f51.google.com (mail-dl1-f51.google.com [74.125.82.51])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9C5F60C54DF;
-	Wed,  4 Nov 2026 19:45:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C5736070ABB
+	for <linux-pci@vger.kernel.org>; Wed,  4 Nov 2026 19:45:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0C5736070ABB
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ju9Cdiwd
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A19331F00919;
-	Wed,  4 Nov 2026 19:45:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793821538;
-	bh=oFfWvBKtBhqs+rwLAKfNEZHrMKd6RrVgssTSPyI9nB8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=ju9Cdiwdukzo03f6p3hrq4bQpCrNgWvbzSyS1vs9NG/W3HaXXkao3M2u4LfrHoe8e
-	 wxtviWGSsoNjRsbvKzRys/CwzzFLfUcvMKaGQhYPmPxrbu1L7QiWnV3ZTrh/R1Otfg
-	 qrZBJdrHCIeziUsqnpGD0JFkLrcuH8m4/I4Ww7FZSJ/tfeBBZ2ylMzghmAuc9eeX6s
-	 vgBVV5T3IgnlsvU9YQnkv2d3jFbbKDOzj/iykYH1zv74/Pa9kQYvwQBnjIDHwdeuOQ
-	 S5F8Z7xCaT1zZASn9AYJ/xAtcbrp0J7I7xiLDkK+QT5iUpaPPLtpiC82DCigeWcdXX
-	 vjvXnJgaA/cBQ==
-From: Christian Brauner <brauner@kernel.org>
-To: linux-fsdevel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Jann Horn <jannh@google.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Chris Mason <mason@kernel.org>,
-	Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Christoph Hellwig <hch@lst.de>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Joel Granados <joel.granados@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Jan Kara <jack@suse.com>,
-	linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org,
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=PhgChsRR
+Received: by mail-dl1-f51.google.com with SMTP id a92af1059eb24-1b244fb7fffso1559756c88.1
+        for <linux-pci@vger.kernel.org>; Wed, 04 Nov 2026 11:45:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793821553; x=1794426353; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=EhMlWPoz5IUKIlQ1/wDPKCmLchJf0GRtbn42lO+mbmw=;
+        b=PhgChsRRxoaFlSlkRP6+eJT4KYEi14DqTMP0leDLu81FxLUk2LAC65QwDPBooqvAsn
+         iH6XkP8S1MK/SwZxO3AJkItw8VOGPpqeDmiiYKv7myO0lnlZgnop7KC9K2NAgM6ukplu
+         Gjsdpkx1k0Dhr49FqliSxtq+PV7zOW1rF8RqXf/q22186XabS9LOxL3XW958WfiYw+PV
+         JBjD6srBvq+hK2XBFDtCmpOIf+gS9iJ5nhxA+IIgHZhp3x3Dcb+TLxzecX64kH4ggJZ8
+         fI8gag+0WQBADwjfb6rFBnw2H4YR37v7+5aiBzykie/3yy5MmRaIYgT31jdFJ3lzFtA6
+         N3Mg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793821553; x=1794426353;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=EhMlWPoz5IUKIlQ1/wDPKCmLchJf0GRtbn42lO+mbmw=;
+        b=egALt4RpbYgGBHu9RcPFLEDOtgo5SeWgNNWlUPDI2fB3mbAyNrEVn+j201BcYsXDOU
+         nQcqeVJAr16q+TT+nyKOiasJ2PKFfTLExP8GN6wDJA6U3icF7p5DJapWJ+wuXtkk24v6
+         rsc/wvwEPF/Rq377Yk8nB1e8hLKZ6Gen/F/Y5Jk4QF8GVnGS2D2BPUKZ/niZPRBE3tIr
+         wqViY6c0Q+ZHV8R4fZ1tynV2zMnJFjky6YLvDzV307C7eOTo3Cleu1KOFCUZhL9iJNWx
+         60dDed0WXxFzR675KRqTH3TfOXs7+4cM//nsc0SUlvuk42m6LLaWSYGqXMhfvwGK90Zi
+         GDNQ==
+X-Forwarded-Encrypted: i=1; AKwUvByAIv+fVGCoVthE2Mxq/aEaMrd5uddruXpluGhGuEcZGG2I6CBvC6At9ccm+yWSU6CM8Hb8f1g3nC8=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8Lb9Gl2hMKaDKEqtTayAAPbgvjHp5MXQlYnhDkGXgEwdPVUywG
+	8hQ+5Yiqs1ONBrq6DgCf2TKga4FOyOlU2evwMkjIPdxGMpIwDKxA8tk=
+X-Gm-Gg: AYBFou1czCF8vCKz2ix5I8+XBSEyyT1Qtctf0qFSWJri7OcfK4AZzloHewRwpvv9epg
+	aWH2TaBOCZdUbtX+dWU4XKNZ19QRzW7QtOxS9Ba8DxzYoN16pPDNbtuazLn3Do6H6mm8RsHm3+e
+	Lr3mo5qv9Z2Ph7IIxfbWgy/fRjISfOVsO2sJ/oG6hylhLSM6bQfnsQz4M82vOiT8KPGOsks/8Bx
+	2bQSj0XGq+xYY8wlLKqswoJZSWzd6tinZakoD2OO0DCVMyQV+uOCBHjEIgPO21xyAlBr2eew4Pj
+	2oaySV+Pedjv3jxUUjnbTkaQ44F3ndP4dlPlflcNfwOor20AaVgTDLE0JntXes2gnjmgrn3VIYq
+	lKD9KamKBZNcPZyhOSWdiPY7alQlmX429muBiZhhNyKJUzJJ4yvw/UxMDVk4geXtw73WgG8jX75
+	mEJ7+hYf6+akD7aGtbqkr+CosWgTtJP9wnRAHvoivivBAPrG5VI887og2XfYGXiwPwum9TynQG7
+	O+s2TvcSbTVqIPUobqJJHTgCxCEFn3i+fJk+0X2BUvqqNRXxgZsmiVJy70oElFN1+Qeo/AkuL6x
+	S3v8bLwSJiusYLK4t12Q8U0nCGM6Mya3MW4ZQadU5pzywCUDXzDYpUovaGALsz4tqg==
+X-Received: by 2002:a05:7022:3a02:b0:1ad:e740:e51e with SMTP id a92af1059eb24-1ade740e699mr23857533c88.42.1793821552953;
+        Wed, 04 Nov 2026 11:45:52 -0800 (PST)
+Received: from at-Standard-PC-Q35-ICH9-2009 ([106.194.66.249])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36ca38a6160sm8652168eec.9.2026.11.04.11.45.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Nov 2026 11:45:52 -0800 (PST)
+From: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
+To: jic23@kernel.org
+Cc: alexandre.belloni@bootlin.com,
+	andy@kernel.org,
+	asahi@lists.linux.dev,
+	atharvatiwarilinuxdev@gmail.com,
+	bhelgaas@google.com,
+	bp@alien8.de,
+	brgl@kernel.org,
+	dave.hansen@linux.intel.com,
+	dlechner@baylibre.com,
+	dmitry.kasatkin@gmail.com,
+	eric.snowberg@oracle.com,
+	griffin@kroah.com,
+	hansg@kernel.org,
+	hpa@zytor.com,
+	ilpo.jarvinen@linux.intel.com,
+	j@jannau.net,
+	jarkko@kernel.org,
+	jmorris@namei.org,
+	keyrings@vger.kernel.org,
+	lee@kernel.org,
+	lenb@kernel.org,
+	linusw@kernel.org,
 	linux-acpi@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-um@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	netdev@vger.kernel.org,
-	ntfs3@lists.linux.dev,
-	platform-driver-x86@vger.kernel.org,
-	coreteam@netfilter.org,
-	kexec@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	netfilter-devel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	ibm-acpi-devel@lists.sourceforge.net,
-	jfs-discussion@lists.sourceforge.net,
-	linux-alpha@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
-	linux-cifs@vger.kernel.org,
-	linux-fbdev@vger.kernel.org,
+	linux-gpio@vger.kernel.org,
 	linux-hwmon@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-sh@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	samba-technical@lists.samba.org,
-	sparclinux@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org,
-	linux-doc@vger.kernel.org,
-	linux-serial@vger.kernel.org,
-	linux-atm-general@lists.sourceforge.net,
-	Takashi Iwai <tiwai@suse.de>,
-	linux-input@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-modules@vger.kernel.org,
-	linux-debuggers@vger.kernel.org,
-	"Christian Brauner (Amutable)" <brauner@kernel.org>,
-	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 13/26] scsi: sg: let procfs own the seq_file of allow_dio and def_reserved_size
-Date: Wed,  4 Nov 2026 20:45:24 +0100
-Message-ID: <20261104-work-procfs-drivers-v2-13-245e54e87116@kernel.org>
-In-Reply-To: <20261104-work-procfs-drivers-v2-0-245e54e87116@kernel.org>
-References: <20261104-work-procfs-drivers-v2-0-245e54e87116@kernel.org>
+	linux-iio@vger.kernel.org,
+	linux-integrity@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-leds@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	linux-rtc@vger.kernel.org,
+	linux-security-module@vger.kernel.org,
+	linux-watchdog@vger.kernel.org,
+	linux@roeck-us.net,
+	mfd@lists.linux.dev,
+	mingo@redhat.com,
+	neal@gompa.dev,
+	nuno.sa@analog.com,
+	paul@paul-moore.com,
+	pavel@kernel.org,
+	platform-driver-x86@vger.kernel.org,
+	rafael@kernel.org,
+	roberto.sassu@huawei.com,
+	serge@hallyn.com,
+	sre@kernel.org,
+	sven@kernel.org,
+	tglx@kernel.org,
+	wim@linux-watchdog.org,
+	x86@kernel.org,
+	zohar@linux.ibm.com
+Subject: [RFC PATCH 00/14] Add macsmc support for Intel Macs, replacing applesmc
+Date: Wed,  4 Nov 2026 14:45:32 -0500
+Message-ID: <20261104194532.8259-1-atharvatiwarilinuxdev@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20261101010737.203951cd@jic23-hlaptop>
+References: <20261101010737.203951cd@jic23-hlaptop>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -114,93 +147,22 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3098; i=brauner@kernel.org; h=from:subject:message-id; bh=VSyXtwS/L1yz+NXwjilFwHBHf/9gGBvzhq16zAIuGuA=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97mpK3v7SU35CpJ+xYm16aqH2yss8t52nRXwy2L6hU PiyM6N8RykLgxgXg6yYIotDu0m43HKeis1GmRowc1iZQIYwcHEKwEScShgZ/oS0JG41sBdwnT31 V9JTpX/eEnvWXFfxXHvv8uNV8wXXGzL8ZGzdvX7L3xQtdoGX5tttZ9355tPw6sDfkq152YVBvd6 fuAE=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-Pass the integer they show as the data of the entry and declare the
-show function, procfs then opens and frees the seq_file. That makes the
-open functions unnecessary.
+> Are we looking at ABI changes as a result of this? That
+> tends to happen with split ups of unified drivers and mapping
+> them to more standard kernel subsystems.
+> 
+> What is the plan to handle them if so?
+> 
+> Thanks,
+> 
+> Jonathan
 
-Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
----
- drivers/scsi/sg.c | 28 ++++++----------------------
- 1 file changed, 6 insertions(+), 22 deletions(-)
+Most of these changes now expose the stats using standard api's, so this
+should not be that big of a problem.
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 6551f1284d44..fb3ab74e8727 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -2288,26 +2288,18 @@ sg_get_dev(int dev)
- #ifdef CONFIG_SCSI_PROC_FS
- static int sg_proc_seq_show_int(struct seq_file *s, void *v);
- 
--static int sg_proc_single_open_adio(struct inode *inode, struct file *file);
- static ssize_t sg_proc_write_adio(struct file *filp, const char __user *buffer,
- 			          size_t count, loff_t *off);
- static const struct proc_ops adio_proc_ops = {
--	.proc_open	= sg_proc_single_open_adio,
--	.proc_read	= seq_read,
--	.proc_lseek	= seq_lseek,
-+	.proc_show	= sg_proc_seq_show_int,
- 	.proc_write	= sg_proc_write_adio,
--	.proc_release	= single_release,
- };
- 
--static int sg_proc_single_open_dressz(struct inode *inode, struct file *file);
- static ssize_t sg_proc_write_dressz(struct file *filp, 
- 		const char __user *buffer, size_t count, loff_t *off);
- static const struct proc_ops dressz_proc_ops = {
--	.proc_open	= sg_proc_single_open_dressz,
--	.proc_read	= seq_read,
--	.proc_lseek	= seq_lseek,
-+	.proc_show	= sg_proc_seq_show_int,
- 	.proc_write	= sg_proc_write_dressz,
--	.proc_release	= single_release,
- };
- 
- static int sg_proc_seq_show_version(struct seq_file *s, void *v);
-@@ -2348,9 +2340,11 @@ sg_proc_init(void)
- 	if (!p)
- 		return 1;
- 
--	proc_create("allow_dio", S_IRUGO | S_IWUSR, p, &adio_proc_ops);
-+	proc_create_data("allow_dio", S_IRUGO | S_IWUSR, p, &adio_proc_ops,
-+			 &sg_allow_dio);
- 	proc_create_seq("debug", S_IRUGO, p, &debug_seq_ops);
--	proc_create("def_reserved_size", S_IRUGO | S_IWUSR, p, &dressz_proc_ops);
-+	proc_create_data("def_reserved_size", S_IRUGO | S_IWUSR, p,
-+			 &dressz_proc_ops, &def_reserved_size);
- 	proc_create_single("device_hdr", S_IRUGO, p, sg_proc_seq_show_devhdr);
- 	proc_create_seq("devices", S_IRUGO, p, &dev_seq_ops);
- 	proc_create_seq("device_strs", S_IRUGO, p, &devstrs_seq_ops);
-@@ -2365,11 +2359,6 @@ static int sg_proc_seq_show_int(struct seq_file *s, void *v)
- 	return 0;
- }
- 
--static int sg_proc_single_open_adio(struct inode *inode, struct file *file)
--{
--	return single_open(file, sg_proc_seq_show_int, &sg_allow_dio);
--}
--
- static ssize_t 
- sg_proc_write_adio(struct file *filp, const char __user *buffer,
- 		   size_t count, loff_t *off)
-@@ -2386,11 +2375,6 @@ sg_proc_write_adio(struct file *filp, const char __user *buffer,
- 	return count;
- }
- 
--static int sg_proc_single_open_dressz(struct inode *inode, struct file *file)
--{
--	return single_open(file, sg_proc_seq_show_int, &def_reserved_size);
--}
--
- static ssize_t 
- sg_proc_write_dressz(struct file *filp, const char __user *buffer,
- 		     size_t count, loff_t *off)
+The worst possible thing that can happen is that, the user will have to
+change their fan daemon (macfand/t2fanrd to any other standard fan daemon).
 
--- 
-2.53.0
-
+And also, sorry for the late reply.
