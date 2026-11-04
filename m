@@ -1,78 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=fail;
-	t=1793760605;
-	b=4Mp8iWxzmnjfNT5rK5mQL7v8GMI0fgDKz16uUiznxutNN+Ixv211WitcxtqSmqEMWpH2
-	 5x+iuY60qL17Q2vfOtlBog/q9hedKL2zlChX0kjM9nyFuT6B8uZDa/dYYiZZJL6UFQkEt
-	 BoQHqSkRWYXMgPjqCs5Jnp4ma3LdEMKwhImlC/MpSLGST4ZAW9LsKWKKz/aufj2whjuvA
-	 F2zwlRfrdoD+Zmbu+4WJLs/jCWneaw5aIUhls0p4YAJ09WXMJUXNXvEXRex0gw2goCVj8
-	 Xt8Nf1HCFwuTP9tuKWG4UegE+mG29jvqtzkwLsgwXhtJGX7FV4mf8BQBaaaRYIB0gcg==
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793760611;
+	b=eF0nLhxEjQtd2jw0TO83wSGo1665UlXLyvS/VelMpUl3XYTdVFkn85PzXlhGh/LT0L3q
+	 9TjXmtCb+z+rLWdfAF4Xd+w2QhVHiTt6beIW7YGiqlex03ihj9Qvt1uvMpAHbsFMUlgdL
+	 iKYKKJ+AipcjIWZdXuQrWaFhLOSaFGl9vLu8byEGU4oGn6XRdHPatvVCdk71IM1oXXA4/
+	 yj4Nq/yCX7WrVAn91mX0nidoHoUy0wPtd4YOPiRPxGNWYWenXS0yTjgtLe74HBDQOkmlE
+	 2ezCBXpICvnVrGHEmbhIQiNCMRx/ivmJU7wSsL6EcmHMeuxEzMB1H1Pn8wgGc5EWyDA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793760605;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793760611;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=3yD+dcKqmuww3hA1uEpiASBnnVLgbgkRAyQqTjdD8Uc=;
-	b=JGqMfalEk7vbw8UwCQpRvloixrXKlxIlOCIIgEBU2am5vcYkv12nK03PpFIA/shD+4/F
-	 C71wHLhkWEKx9g6/8CZLDmfykcrhRZs2v1p300zZpUFj/rdjo0aoF/2ejNffMS+/TcsF8
-	 BQfXzqab5MuolRMUumGVufWuHdCHwNpoiOPNpeJ/pc7iLkSs/Bzs/eePWSLUGMocGWiFw
-	 IU/KNmvK47q5hvBJpK+PgLlKpmcR/eQDPsHRh2iRiSrhbGB6cAHQXznJ9FGz/afxVbbek
-	 BThVXBhm2e1YsqbAB21IZdtadNOVpLweQ4DzB+TvGGGH/7uHvk16Z5KXqX6vENcFdYg==
+	bh=P2Ub6/26n3BmgVxsCh8NpM+16I25q5aH0ME7udmeypQ=;
+	b=bM/nGqvH/NDp5GxeYYLLtNh7Q60g+hwIOFd8XqxBmwN6uNK1goTEqc1mMqtjtrInQk15
+	 Jq5iLUK405+D1+J+nY+UA7+ZFusrFaFusbfMASS3+gTDPOYO9w5b7VIc7+TrENHquyeUQ
+	 IH9G03EylJWY6iJ3tOBbiKykosDDmHNOm7BcK19x4+6UyHZzjcpX7xAQz0z5lvnXgkij1
+	 7BCdfVjYp8e5a3nOJ0tn2bcuFk+5uvCo5qSLdZVU2SB9lGOIcU0d8iUSmWDJN3N02/gfW
+	 sBwzeZ6UCK+xPZGnQSoKiIPSkVM3KUDb2S32xpIn70MNjX0JJjMXEWCrk7FBltzIvqA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HPwsZCgl;
-	arc=fail smtp.remote-ip=100.103.45.18
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OtC6Z5dV;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 185BA606A331;
-	Wed,  4 Nov 2026 02:50:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BA4F606D824;
+	Wed,  4 Nov 2026 02:50:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HPwsZCgl
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OtC6Z5dV
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1793760604;
-	b=25UuyUrLPlrfXqBmTJZgcBV07VI5kKKUWUBVAmULlkJQRKfs17vPsc7E2cgYylB2Y8AD
-	 ohkFTQ+YKNBiVX9dllOLF1LQC6hjZ2K78sBGPa+Jx+3bI8PZCz9bNtQgTudJboNsrM76n
-	 IFsuY7UvvMkr26dhOLwgpIeA7Tus4sVklAG3ouskobdNw9JdXHcQkyhSoMR5Vouo/BbQv
-	 IZUu57qzCVQG3XXcmkorak7TLvmoTTmBc+yX3UurcJNSlnhjyrk5x1hV0Ks76dDNJvr+Z
-	 AshBaJgWx5NYRv62wrMdKteUnV7EavTKP9xtCxzt2UqQv3CXrmeiBU20dNAh5/wcICg==
+	t=1793760611;
+	b=dx0pStVutO7zzS0rivPKQlGoXeOe5TCmEBAVWKEEnPycQbLVPmdDmGHIsP2Ywz0y00sf
+	 SMUz/fA8iAp6zID3gjZ+mblnbzqBFQhF69FrjX6rxzIlIDS5Yv+fOawcgDfSdOq6ssFeM
+	 7Nq8LXElrU+YucCoJc/L/Hc9saw1tNerdDLqdZbxrLDBjw/jkGNjtT3HpegotQtdITHcX
+	 xK8+yKHBuAd2OA1DkMEwktbMOlDxkaAEVt1VXU3Os911jyCWoWHQvwEbaLfVy6OfFLzFI
+	 eqToeputKKVklbeikk1IzfOCaX1heZd2iveV7+P7lbtyiADaamza6cUvLFdvln1KUxg==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1793760604;
+	c=relaxed/relaxed; t=1793760611;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=3yD+dcKqmuww3hA1uEpiASBnnVLgbgkRAyQqTjdD8Uc=;
-	b=z2tyiroUz95jWWNbrgkF38ly85GQSoPX+UgSeDlf4W1cnHTelUPce5+/+Ml86ucGTXqG
-	 iXF3VttTRqlFvEnyDqPi+81x4Y0DTCGDJTw8ZPy/hwM2XQ/jRYQ+8Yt0Y0qxUNQIG6Gux
-	 CdfmboaGrULZjI5++ALWwIdJz9HNjtKwrz/24Hc5RZ0AICXXuYZU38Sa32nzp1QnZHM9r
-	 vKrYwG1V3hp7PE66kaKxwXRyXV2qIAnzEWY8mTCTmKzId8lffZcmEb6X6/QynRRAX9WyI
-	 FyO8mZcOz3H5WUl1xbA3vLZuW6oApTnjH8xkHxVZxxVN899zkDAaPdJ2RxzPCeKX+Og==
+	bh=P2Ub6/26n3BmgVxsCh8NpM+16I25q5aH0ME7udmeypQ=;
+	b=chEr84ivuxIdG1EIxoSwwxRdj0Ou3Fr785zcFEZeISHEP8ZbvfawX/oWCHM0jNY8oUvN
+	 tJ0AYbtbq0qTtVqW+oi5SfIrjhnZT4sIWiWwFhdc63bdIrVMWpqjKThjLY9BGGV3f/dxg
+	 SOYiUaPmRsDJdYoafVb9fNS0FU/SI8yh+Sg6j3DgK9HNtBany6FttDxY84Ak9V8OjwdVR
+	 RDoEwbL+sl6TKdebVZV1XbC5Dvaa/VeymddU/qqRHLvR8KkYdYRAX5BPwfzWlwt7xFMcU
+	 Bn/rVJp8IjT0ypes2LoCv8NGKnDdiB6QsPsH5JVESo1r1Y2m17XCBU17HSXi1Ry2N5g==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id D57C71F00A02;
-	Wed,  4 Nov 2026 02:50:02 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 0B8E41F00A25;
+	Wed,  4 Nov 2026 02:50:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793760604;
-	bh=3yD+dcKqmuww3hA1uEpiASBnnVLgbgkRAyQqTjdD8Uc=;
+	s=k20260515; t=1793760610;
+	bh=P2Ub6/26n3BmgVxsCh8NpM+16I25q5aH0ME7udmeypQ=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=HPwsZCglWe7QBZB00ww+0NUHwOIsFUZSg5CuGIY4gshpiw1456G2Qr589eV2D983R
-	 JxE9r2OGIBuPcUDbgXgpDECNDEd7dfwM/6B2l0E7mUNtxPQNn2Qn2o+9Etk748KnlF
-	 tSEbOEh57kCA6Igkjlb2HB2ar+9H0MBhQQPq+qYTrhm3HuasJK63BRuHa+ghRiVOmz
-	 BPS4/hiw1B9JmVggUwDxEkAxR3NNXBfP7u+b31v0L3AX5bEqWzINFgVwP9BULY/wQU
-	 Y4E1l5X8JZ7Qt2nEaQ0wG2tReEeN6DhaquVjtxDWrPRXdLU7AhZTdXBnHhG608Ffx2
-	 EbX/7bDith4RA==
+	b=OtC6Z5dVTdhd6y3C/VhCGl2aOCUuvCYKwZ7H3lWYPRp/mNOrv5ZwUuMRcVv+DKFZh
+	 dZS9ZGVEeZWOZNkEjAc9PD1kkb2D3GFTrg5QRZRyFZbKohSXYm5a8PQtvrhuaRKmCk
+	 rI3ZjlUU4IKBas6TkXdM19F9fuhPJmWaORO0RfgtGsP1n14W68kcsjvhS9Cnla/zTH
+	 Fa+ccS8xCQt2RNCu0zKI5C2X2URilC1YneA4gMLETzVikan9uY91mk+WY3NKwL3yEz
+	 bXqRDYYYiOnOI1CKFvtVygD00gZCY+NQEy07GON3LCKStQPAWz95yyidGarPbNCgqz
+	 sbe/Ierj7INAg==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 586F746BFF;
-	Wed,  4 Nov 2026 02:50:02 +0000 (UTC)
+	by lkml.kernel.org (Postfix) with ESMTP id 282CC46C37;
+	Wed,  4 Nov 2026 02:50:03 +0000 (UTC)
 From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-Date: Tue, 03 Nov 2026 20:49:44 -0600
-Subject: [PATCH v4 03/25] dmaengine: sdxi: Add PCI initialization
+Date: Tue, 03 Nov 2026 20:49:58 -0600
+Subject: [PATCH v4 17/25] dmaengine: sdxi: Add unit tests for completion
+ pool ownership
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -83,7 +84,7 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261103-sdxi-base-v4-3-3668ccc7aab8@amd.com>
+Message-Id: <20261103-sdxi-base-v4-17-3668ccc7aab8@amd.com>
 References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
 In-Reply-To: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
 To: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>
@@ -97,11 +98,11 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
  dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-pci@vger.kernel.org, Nathan Lynch <nathan.lynch@amd.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793760600; l=8624;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793760600; l=8791;
  i=nathan.lynch@amd.com; s=20260722; h=from:subject:message-id;
- bh=G3UCYR9DSPW94dK47Tyi0Neumr+9wr3rIczfk03MNHk=;
- b=/OUsknNso5/Vp5Yk26z/FP7pgHYopjFoulaaOvxGn6RFkuh5ZsY26xMyks8yrDUrwcEPwj9KD
- l5w7Dv3T6WoAYp0F5ixGp3Vq7E1QU4IIKe6vIZkCDL+NyZOhIyb23Ux
+ bh=UKgpOPnxXxSWuJws2LmbCd9jOGUCzGSR66fffU0Lkh8=;
+ b=3ti8GbL21v0aKqtG7r5c2WMxCq0oj9m6meVHSn8qVMixURCdGrM6NUkJzKiK3UFPkyLzs1MQL
+ ThDGJXOPTD7CEysRpnVptq0ap2UijQJYwaaJMsaQNvr0RJ3yp6R6i/H
 X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
  pk=pO5+BCw/TENGLvwX5NYZOZmZihcxjkxeFSMuk47erps=
 X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20260722 with
@@ -112,314 +113,248 @@ Content-Transfer-Encoding: 7bit
 
 From: Nathan Lynch <nathan.lynch@amd.com>
 
-Add enough code to bind a SDXI device via the class code and map its
-control registers and doorbell region.
+Add hardware-independent KUnit coverage for completion-pool exhaustion
+across a bitmap word boundary, arbitrary release and reuse, reinitialization
+of reused status blocks. Verify that a claimed block remains unavailable
+until explicitly released, including after a simulated late device completion.
+Also cover release of an unpublished claim.
 
-Keep PCI resource setup in pci.c and register devices with the SDXI core
-through bus operations.
+Provide test allocation helpers and KUnit-only exports so the tests exercise
+the production claim and release paths without a coherent-DMA device.
 
-Co-developed-by: Wei Huang <wei.huang2@amd.com>
-Signed-off-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 ---
- drivers/dma/Kconfig       |   2 +
- drivers/dma/Makefile      |   1 +
- drivers/dma/sdxi/Kconfig  |  28 +++++++++++++
- drivers/dma/sdxi/Makefile |   6 +++
- drivers/dma/sdxi/device.c |  33 +++++++++++++++
- drivers/dma/sdxi/mmio.h   |  22 ++++++++++
- drivers/dma/sdxi/pci.c    | 100 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/dma/sdxi/sdxi.h   |  38 ++++++++++++++++++
- 8 files changed, 230 insertions(+)
+ drivers/dma/sdxi/Makefile           |   1 +
+ drivers/dma/sdxi/completion.c       |  37 ++++++++++
+ drivers/dma/sdxi/completion.h       |   4 ++
+ drivers/dma/sdxi/completion_kunit.c | 131 ++++++++++++++++++++++++++++++++++++
+ 4 files changed, 173 insertions(+)
 
-diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig
-index 01f96a8257e5..3e3b685895fd 100644
---- a/drivers/dma/Kconfig
-+++ b/drivers/dma/Kconfig
-@@ -772,6 +772,8 @@ source "drivers/dma/lgm/Kconfig"
- 
- source "drivers/dma/loongson/Kconfig"
- 
-+source "drivers/dma/sdxi/Kconfig"
-+
- source "drivers/dma/stm32/Kconfig"
- 
- # clients
-diff --git a/drivers/dma/Makefile b/drivers/dma/Makefile
-index f62d12b08e15..b375f9df9588 100644
---- a/drivers/dma/Makefile
-+++ b/drivers/dma/Makefile
-@@ -85,6 +85,7 @@ obj-$(CONFIG_XGENE_DMA) += xgene-dma.o
- obj-$(CONFIG_ST_FDMA) += st_fdma.o
- obj-$(CONFIG_FSL_DPAA2_QDMA) += fsl-dpaa2-qdma/
- obj-$(CONFIG_INTEL_LDMA) += lgm/
-+obj-$(CONFIG_SDXI_CORE) += sdxi/
- 
- obj-y += amd/
- obj-y += loongson/
-diff --git a/drivers/dma/sdxi/Kconfig b/drivers/dma/sdxi/Kconfig
-new file mode 100644
-index 000000000000..b91b44231a04
---- /dev/null
-+++ b/drivers/dma/sdxi/Kconfig
-@@ -0,0 +1,28 @@
-+config SDXI_CORE
-+	tristate "SDXI (Smart Data Accelerator Interface) support"
-+	# Doorbell updates require naturally-aligned 64-bit writes, per
-+	# SDXI 1.0 9 MMIO Control Registers.
-+	depends on 64BIT
-+	select DMA_ENGINE
-+	help
-+	  Enable support for Smart Data Accelerator Interface (SDXI)
-+	  Platform Data Mover devices. SDXI is a vendor-neutral
-+	  standard for a memory-to-memory data mover and acceleration
-+	  interface.
-+
-+	  This option is automatically selected by the SDXI PCI driver.
-+	  Enable it manually if you want to build the SDXI core for unit
-+	  testing without enabling the PCI driver.
-+
-+	  To compile this driver as a module, choose M here: the module
-+	  will be named "sdxi-core".
-+
-+config SDXI_PCI
-+	tristate "SDXI (Smart Data Accelerator Interface) PCI driver"
-+	depends on PCI_MSI && 64BIT
-+	select SDXI_CORE
-+	help
-+	  Enable support for PCI-hosted SDXI devices.
-+
-+	  To compile this driver as a module, choose M here: the module
-+	  will be named "sdxi-pci".
 diff --git a/drivers/dma/sdxi/Makefile b/drivers/dma/sdxi/Makefile
-new file mode 100644
-index 000000000000..0006edf74d86
---- /dev/null
+index eacad504a816..d12eebe03870 100644
+--- a/drivers/dma/sdxi/Makefile
 +++ b/drivers/dma/sdxi/Makefile
-@@ -0,0 +1,6 @@
-+# SPDX-License-Identifier: GPL-2.0
-+obj-$(CONFIG_SDXI_CORE) += sdxi-core.o
-+sdxi-core-y := device.o
-+
-+obj-$(CONFIG_SDXI_PCI) += sdxi-pci.o
-+sdxi-pci-y := pci.o
-diff --git a/drivers/dma/sdxi/device.c b/drivers/dma/sdxi/device.c
-new file mode 100644
-index 000000000000..0974a83bb45c
---- /dev/null
-+++ b/drivers/dma/sdxi/device.c
-@@ -0,0 +1,33 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * SDXI hardware device driver
-+ *
-+ * Copyright Advanced Micro Devices, Inc.
-+ */
-+
-+#include <linux/device.h>
-+#include <linux/export.h>
-+#include <linux/slab.h>
-+
-+#include "sdxi.h"
-+
-+int sdxi_register(struct device *dev, const struct sdxi_bus_ops *ops)
+@@ -10,4 +10,5 @@ obj-$(CONFIG_SDXI_PCI) += sdxi-pci.o
+ sdxi-pci-y := pci.o
+ 
+ obj-$(CONFIG_SDXI_KUNIT_TEST) += \
++	completion_kunit.o    \
+ 	ring_kunit.o
+diff --git a/drivers/dma/sdxi/completion.c b/drivers/dma/sdxi/completion.c
+index c07a0fc101c8..dacd1cac6303 100644
+--- a/drivers/dma/sdxi/completion.c
++++ b/drivers/dma/sdxi/completion.c
+@@ -4,6 +4,7 @@
+  *
+  * Copyright Advanced Micro Devices, Inc.
+  */
++#include <kunit/visibility.h>
+ #include <linux/bitfield.h>
+ #include <linux/bitmap.h>
+ #include <linux/dma-mapping.h>
+@@ -90,6 +91,7 @@ bool sdxi_cst_pool_get(struct sdxi_cst_pool *pool, struct sdxi_completion *comp)
+ 	sdxi_cst_blk_init(comp->cst_blk);
+ 	return true;
+ }
++EXPORT_SYMBOL_IF_KUNIT(sdxi_cst_pool_get);
+ 
+ int sdxi_cst_pool_get_wait(struct sdxi_cst_pool *pool,
+ 			 struct sdxi_completion *comp)
+@@ -116,7 +118,42 @@ void sdxi_cst_pool_put(struct sdxi_cst_pool *pool, struct sdxi_cst_blk *cst)
+ 	spin_unlock_irqrestore(&pool->lock, flags);
+ 	wake_up_all(&pool->wait);
+ }
++EXPORT_SYMBOL_IF_KUNIT(sdxi_cst_pool_put);
+ 
++#if IS_ENABLED(CONFIG_SDXI_KUNIT_TEST)
++/* Exercise allocation without requiring a device capable of coherent DMA. */
++struct sdxi_cst_pool *sdxi_cst_pool_test_create(unsigned int count)
 +{
-+	struct sdxi_dev *sdxi;
++	struct sdxi_cst_pool *pool;
 +
-+	sdxi = devm_kzalloc(dev, sizeof(*sdxi), GFP_KERNEL);
-+	if (!sdxi)
-+		return -ENOMEM;
-+
-+	sdxi->dev = dev;
-+	sdxi->bus_ops = ops;
-+	dev_set_drvdata(dev, sdxi);
-+
-+	return sdxi->bus_ops->init(sdxi);
++	pool = kzalloc_obj(*pool, GFP_KERNEL);
++	if (!pool)
++		return NULL;
++	pool->allocated = bitmap_zalloc(count, GFP_KERNEL);
++	if (!pool->allocated) {
++		kfree(pool);
++		return NULL;
++	}
++	pool->blocks = kcalloc(count, sizeof(*pool->blocks), GFP_KERNEL);
++	if (!pool->blocks) {
++		bitmap_free(pool->allocated);
++		kfree(pool);
++		return NULL;
++	}
++	pool->dma = 0x1000;
++	sdxi_cst_pool_init(pool, count);
++	return pool;
 +}
-+EXPORT_SYMBOL_NS_GPL(sdxi_register, "SDXI");
++EXPORT_SYMBOL_IF_KUNIT(sdxi_cst_pool_test_create);
 +
-+MODULE_AUTHOR("Wei Huang");
-+MODULE_AUTHOR("Nathan Lynch");
-+MODULE_DESCRIPTION("SDXI core");
-+MODULE_LICENSE("GPL");
-diff --git a/drivers/dma/sdxi/mmio.h b/drivers/dma/sdxi/mmio.h
++void sdxi_cst_pool_test_destroy(struct sdxi_cst_pool *pool)
++{
++	kfree(pool->blocks);
++	bitmap_free(pool->allocated);
++	kfree(pool);
++}
++EXPORT_SYMBOL_IF_KUNIT(sdxi_cst_pool_test_destroy);
++#endif
+ 
+ enum sdxi_completion_state sdxi_cst_blk_check(const struct sdxi_cst_blk *cst)
+ {
+diff --git a/drivers/dma/sdxi/completion.h b/drivers/dma/sdxi/completion.h
+index f91f44b9b516..18c89701d1d6 100644
+--- a/drivers/dma/sdxi/completion.h
++++ b/drivers/dma/sdxi/completion.h
+@@ -34,6 +34,10 @@ int sdxi_cst_pool_get_wait(struct sdxi_cst_pool *pool,
+ /* Release only after consumption, unpublished rollback, or hardware quiescence. */
+ void sdxi_cst_pool_put(struct sdxi_cst_pool *pool, struct sdxi_cst_blk *cst);
+ 
++#if IS_ENABLED(CONFIG_SDXI_KUNIT_TEST)
++struct sdxi_cst_pool *sdxi_cst_pool_test_create(unsigned int count);
++void sdxi_cst_pool_test_destroy(struct sdxi_cst_pool *pool);
++#endif
+ 
+ static inline void sdxi_cst_blk_init(struct sdxi_cst_blk *cst)
+ {
+diff --git a/drivers/dma/sdxi/completion_kunit.c b/drivers/dma/sdxi/completion_kunit.c
 new file mode 100644
-index 000000000000..2676736f3998
+index 000000000000..326e3d84da0d
 --- /dev/null
-+++ b/drivers/dma/sdxi/mmio.h
-@@ -0,0 +1,22 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+
-+/*
-+ * SDXI MMIO register offsets and layouts.
-+ *
-+ * Copyright Advanced Micro Devices, Inc.
-+ */
-+
-+#ifndef DMA_SDXI_MMIO_H
-+#define DMA_SDXI_MMIO_H
-+
-+#include <linux/bits.h>
-+
-+enum sdxi_reg {
-+	/* SDXI 1.0 9.1 General Control and Status Registers */
-+	SDXI_MMIO_CAP1       = 0x00208,
-+};
-+
-+/* SDXI 1.0 Table 9-7: MMIO_CAP1 */
-+#define SDXI_MMIO_CAP1_MMIO64 BIT_ULL(6)
-+
-+#endif  /* DMA_SDXI_MMIO_H */
-diff --git a/drivers/dma/sdxi/pci.c b/drivers/dma/sdxi/pci.c
-new file mode 100644
-index 000000000000..0778cde31f14
---- /dev/null
-+++ b/drivers/dma/sdxi/pci.c
-@@ -0,0 +1,100 @@
++++ b/drivers/dma/sdxi/completion_kunit.c
+@@ -0,0 +1,131 @@
 +// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * SDXI PCI device code
-+ *
-+ * Copyright Advanced Micro Devices, Inc.
-+ */
-+
-+#include <linux/bitfield.h>
-+#include <linux/dev_printk.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/err.h>
-+#include <linux/io.h>
-+#include <linux/iomap.h>
++/* Copyright Advanced Micro Devices, Inc. */
++#include <kunit/test.h>
 +#include <linux/module.h>
-+#include <linux/pci.h>
 +
-+#include "mmio.h"
-+#include "sdxi.h"
++#include "completion.h"
 +
-+enum sdxi_mmio_bars {
-+	SDXI_PCI_BAR_CTL_REGS = 0,
-+	SDXI_PCI_BAR_DOORBELL = 2,
-+};
++MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
 +
-+static struct pci_dev *sdxi_to_pci_dev(const struct sdxi_dev *sdxi)
++static void destroy_pool(void *pool)
 +{
-+	return to_pci_dev(sdxi->dev);
++	sdxi_cst_pool_test_destroy(pool);
 +}
 +
-+static int sdxi_pci_init(struct sdxi_dev *sdxi)
++static struct sdxi_cst_pool *alloc_pool(struct kunit *test, unsigned int count)
 +{
-+	struct pci_dev *pdev = sdxi_to_pci_dev(sdxi);
-+	struct device *dev = &pdev->dev;
-+	u64 cap1;
-+	int ret;
++	struct sdxi_cst_pool *pool = sdxi_cst_pool_test_create(count);
 +
-+	ret = pcim_enable_device(pdev);
-+	if (ret)
-+		return dev_err_probe(dev, ret, "failed to enable device\n");
-+
-+	ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
-+	if (ret)
-+		return dev_err_probe(dev, ret, "failed to set DMA mask\n");
-+
-+	sdxi->ctrl_regs = pcim_iomap_region(pdev, SDXI_PCI_BAR_CTL_REGS,
-+					    KBUILD_MODNAME);
-+	if (IS_ERR(sdxi->ctrl_regs))
-+		return dev_err_probe(dev, PTR_ERR(sdxi->ctrl_regs),
-+				     "failed to map control registers\n");
-+
-+	cap1 = readq(sdxi->ctrl_regs + SDXI_MMIO_CAP1);
-+	if (!FIELD_GET(SDXI_MMIO_CAP1_MMIO64, cap1))
-+		return dev_err_probe(dev, -EOPNOTSUPP,
-+				     "64-bit atomic MMIO access required\n");
-+
-+	sdxi->dbs = pcim_iomap_region(pdev, SDXI_PCI_BAR_DOORBELL,
-+				      KBUILD_MODNAME);
-+	if (IS_ERR(sdxi->dbs))
-+		return dev_err_probe(dev, PTR_ERR(sdxi->dbs),
-+				     "failed to map doorbell region\n");
-+
-+	pci_set_master(pdev);
-+	return 0;
++	if (!pool || kunit_add_action_or_reset(test, destroy_pool, pool))
++		return NULL;
++	return pool;
 +}
 +
-+static const struct sdxi_bus_ops sdxi_pci_ops = {
-+	.init = sdxi_pci_init,
-+};
-+
-+static int sdxi_pci_probe(struct pci_dev *pdev,
-+			  const struct pci_device_id *id)
++static void exhaustion(struct kunit *test)
 +{
-+	return sdxi_register(&pdev->dev, &sdxi_pci_ops);
++	/* Cross a bitmap word boundary without filling the final word. */
++	const unsigned int count = BITS_PER_LONG + 3;
++	struct sdxi_completion *held, extra = {};
++	struct sdxi_cst_pool *pool;
++
++	pool = alloc_pool(test, count);
++	KUNIT_ASSERT_NOT_NULL(test, pool);
++	held = kunit_kcalloc(test, count, sizeof(*held), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, held);
++	for (unsigned int i = 0; i < count; i++) {
++		KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &held[i]));
++		KUNIT_EXPECT_EQ(test, held[i].cst_blk_dma % 32, 0);
++		KUNIT_EXPECT_EQ(test, le64_to_cpu(held[i].cst_blk->signal),
++				(u64)SDXI_CST_BLK_SIGNAL_INIT);
++		for (unsigned int j = 0; j < i; j++) {
++			KUNIT_EXPECT_PTR_NE(test, held[i].cst_blk, held[j].cst_blk);
++			KUNIT_EXPECT_NE(test, held[i].cst_blk_dma, held[j].cst_blk_dma);
++		}
++	}
++	KUNIT_EXPECT_FALSE(test, sdxi_cst_pool_get(pool, &extra));
++	KUNIT_EXPECT_PTR_EQ(test, extra.cst_blk, NULL);
++	for (unsigned int i = 0; i < count; i++)
++		sdxi_cst_pool_put(pool, held[i].cst_blk);
 +}
 +
-+static void sdxi_pci_remove(struct pci_dev *pdev)
++static void arbitrary_release(struct kunit *test)
 +{
-+	pci_disable_sriov(pdev);
++	struct sdxi_completion held[5], comp;
++	struct sdxi_cst_pool *pool;
++	const unsigned int order[] = { 3, 1, 4, 0, 2 };
++
++	pool = alloc_pool(test, ARRAY_SIZE(held));
++	KUNIT_ASSERT_NOT_NULL(test, pool);
++	for (unsigned int i = 0; i < ARRAY_SIZE(held); i++)
++		KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &held[i]));
++
++	/* A released block is reusable while all other owners retain theirs. */
++	for (unsigned int i = 0; i < ARRAY_SIZE(order); i++) {
++		unsigned int index = order[i];
++
++		sdxi_cst_pool_put(pool, held[index].cst_blk);
++		KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &comp));
++		KUNIT_EXPECT_PTR_EQ(test, comp.cst_blk, held[index].cst_blk);
++		KUNIT_EXPECT_EQ(test, comp.cst_blk_dma, held[index].cst_blk_dma);
++		KUNIT_EXPECT_FALSE(test, sdxi_cst_pool_get(pool, &comp));
++	}
++	for (unsigned int i = 0; i < ARRAY_SIZE(held); i++)
++		sdxi_cst_pool_put(pool, held[i].cst_blk);
 +}
 +
-+static const struct pci_device_id sdxi_id_table[] = {
-+	{ PCI_DEVICE_CLASS(PCI_CLASS_ACCELERATOR_SDXI, 0xffffff) },
-+	{ }
-+};
-+MODULE_DEVICE_TABLE(pci, sdxi_id_table);
++static void reuse_initializes_status(struct kunit *test)
++{
++	const struct sdxi_cst_blk initial = {
++		.signal = cpu_to_le64(SDXI_CST_BLK_SIGNAL_INIT),
++	};
++	struct sdxi_completion first, second;
++	struct sdxi_cst_pool *pool;
 +
-+static struct pci_driver sdxi_driver = {
-+	.name = "sdxi",
-+	.id_table = sdxi_id_table,
-+	.probe = sdxi_pci_probe,
-+	.remove = sdxi_pci_remove,
-+	.sriov_configure = pci_sriov_configure_simple,
++	pool = alloc_pool(test, 1);
++	KUNIT_ASSERT_NOT_NULL(test, pool);
++	KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &first));
++	memset(first.cst_blk, 0xff, sizeof(*first.cst_blk));
++	first.cst_blk->signal = cpu_to_le64(SDXI_CST_BLK_SIGNAL_TERMINAL);
++	sdxi_cst_pool_put(pool, first.cst_blk);
++	KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &second));
++	KUNIT_EXPECT_PTR_EQ(test, first.cst_blk, second.cst_blk);
++	KUNIT_EXPECT_MEMEQ(test, second.cst_blk, &initial, sizeof(initial));
++	sdxi_cst_pool_put(pool, second.cst_blk);
++}
++
++static void retained_completion(struct kunit *test)
++{
++	struct sdxi_completion timed_out, other;
++	struct sdxi_cst_pool *pool;
++
++	pool = alloc_pool(test, 1);
++	KUNIT_ASSERT_NOT_NULL(test, pool);
++	KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &timed_out));
++	KUNIT_EXPECT_FALSE(test, sdxi_cst_pool_get(pool, &other));
++	/* Even a late completion remains allocated until its owner releases it. */
++	timed_out.cst_blk->signal = cpu_to_le64(SDXI_CST_BLK_SIGNAL_TERMINAL);
++	KUNIT_EXPECT_FALSE(test, sdxi_cst_pool_get(pool, &other));
++	sdxi_cst_pool_put(pool, timed_out.cst_blk);
++	KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &other));
++	/* A never-published claim can be returned without a terminal signal. */
++	sdxi_cst_pool_put(pool, other.cst_blk);
++	KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &other));
++	sdxi_cst_pool_put(pool, other.cst_blk);
++}
++
++static struct kunit_case completion_testcases[] = {
++	KUNIT_CASE(exhaustion),
++	KUNIT_CASE(arbitrary_release),
++	KUNIT_CASE(reuse_initializes_status),
++	KUNIT_CASE(retained_completion),
++	{}
 +};
 +
-+MODULE_IMPORT_NS("SDXI");
-+MODULE_AUTHOR("Wei Huang");
-+MODULE_AUTHOR("Nathan Lynch");
-+MODULE_DESCRIPTION("SDXI PCIe interface driver");
++static struct kunit_suite completion_tests = {
++	.name = "SDXI completion pool",
++	.test_cases = completion_testcases,
++};
++kunit_test_suite(completion_tests);
++
++MODULE_DESCRIPTION("SDXI completion pool tests");
 +MODULE_LICENSE("GPL");
-+module_pci_driver(sdxi_driver);
-diff --git a/drivers/dma/sdxi/sdxi.h b/drivers/dma/sdxi/sdxi.h
-new file mode 100644
-index 000000000000..d4c61ca2f875
---- /dev/null
-+++ b/drivers/dma/sdxi/sdxi.h
-@@ -0,0 +1,38 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+/*
-+ * SDXI device driver header
-+ *
-+ * Copyright Advanced Micro Devices, Inc.
-+ */
-+
-+#ifndef DMA_SDXI_H
-+#define DMA_SDXI_H
-+
-+#include <linux/compiler_types.h>
-+#include <linux/types.h>
-+
-+struct sdxi_dev;
-+
-+/**
-+ * struct sdxi_bus_ops - Bus-specific methods for SDXI devices.
-+ */
-+struct sdxi_bus_ops {
-+	/**
-+	 * @init: Map control registers and doorbell region, allocate
-+	 *        IRQ ranges. Invoked before bus-agnostic SDXI
-+	 *        function initialization.
-+	 */
-+	int (*init)(struct sdxi_dev *sdxi);
-+};
-+
-+struct sdxi_dev {
-+	struct device *dev;
-+	void __iomem *ctrl_regs;	/* virt addr of ctrl registers */
-+	void __iomem *dbs;		/* virt addr of doorbells */
-+
-+	const struct sdxi_bus_ops *bus_ops;
-+};
-+
-+int sdxi_register(struct device *dev, const struct sdxi_bus_ops *ops);
-+
-+#endif /* DMA_SDXI_H */
 
 -- 
 2.56.0
