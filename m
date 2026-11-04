@@ -1,61 +1,62 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.251.105.195
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793818610;
-	b=NIf0Q9b+txVSsxB51I9pfGRewM3eoQkaHVYb9Mw03ZZXZk0iIplo38+eJ7a7PeHgzkRt
-	 IurCPmtva4MWa4qdvklOQY25NASfkXorOqIwKAPGbQSvqOtUQUY35RjWkEFYEoToi1vHg
-	 itgQMhsJCbgagstTb8YzEOue31GM1Efpyl3xEMQJ+xiNPX7gNIkyiFu8kHTCK6UkxhshJ
-	 MbT0OI8nArGEZm3DbjG+MW5CetDhPSUdEELBgQYfZ9gsshNKaEBGSUqp/9swIK5yd34zO
-	 RVB3VEXf04aoEKdpwSFrQMtIFp5rLzn9mLRMuX24QCCrJMGfTap2PIjCV7+WOwK2eEQ==
+	t=1793818611;
+	b=0wnq3byMSOWzryyXpkfN8kJn05O1Og2EpZ0UcPZdpkU21A561B+wzZXkwwIEZ+BAUuzI
+	 yi9nd8JB1XVJs8E8izmFkpp4O3Oflq5SZ3mKOp2c4kjXHI2QVEaxEFL7ueB/TSe0HjqJC
+	 rVE6o0dMjuDonv0lK4zDiN582r05Qu5q8U1u8UNqqVEPclPXaUr4NcNyq3m91Z/I3t1Ti
+	 Qz5pmqWHwkFJ0XSsdHNYxtyREmlA0S7kdJHPyyRKmgDoOeTtjQVYg2aIXkNbVhE13GzTd
+	 cMdglGn8pvYnH4kBeHLTd1BBwBvrDH4onmTFyDwkmNBn9RokHZ6HCDAp9tntfJR0WPQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793818610;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793818611;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:From:Date:Subject:
 	 MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
 	 References:In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:
 	 X-Developer-Key;
-	bh=ih8e64eIFh4zy0l5Dkq2nWyyFdIYsw0j6wRXY/x4Y+s=;
-	b=BYfpBO0q2ugsC3i2cG988ROWPnMRs0OW9UUgKGb/IxLagH/TF+vJh5F7cp+DXXIiO2nU
-	 SrtHZC0W/+pFTsPiSI3sysl2dWvL2hCz/57yESmSGOLye8nj9etJgPDIe9bpyzYg8W6jF
-	 Q+xr0m9KPCGLxKkyMksftz13qNv88fL127cs/Wl38m3UjxLISzKGrfHd//C7kRRDCfGqv
-	 cH/Ea9sIkAC4Y48JuCA2RMRYeFyclfNLKJQljzXiyfnPp6gVe3LS5z+ulYBME1SjPlq4A
-	 zerOjlx2kaDV3RorlEMFJgaskN6xbbR2lf5Ma4me8qD6lQYGJbVxYkSZxoTAO/X9Txw==
+	bh=rxgX/NZJyDSaUF0l+bWb1KVC9zUm/fwoXq8hASaNyw8=;
+	b=QBbdmw0/ZqA6rm6nOIaOOx8f6RLlQtlvCTvxc1GNXEaXhkAuyM5QkpT6aUcAi7UKQmWT
+	 0bBx2j8wI9o3XvEjSTnz4eh53ZC87sepwfOjqDLXFhWGlC8xB72muyaFGWbg14Q5tKzjS
+	 224dJYNVQ6xro7B52Zw0l9Ivq9Hxm64W3HI/tTkFuJ/y/pE6BEcpQq+J7xkkCDlYH2fd+
+	 iykKJabLkQfXy127sWqksLyZGgylSRLscyOh7iVgHJYdwgR1xaeBmh21ELOFHQlBK1irl
+	 Oo+yFjf2AZqsuUfFu6Y1WtEi8SJAGNTVki12rJfXFezjcwn3LlTL/sbyVQhyI9EXBHg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=collabora.com;
 	spf=pass smtp.mailfrom=collabora.com;
-	dkim=pass header.d=collabora.com header.i=@collabora.com header.a=rsa-sha256 header.s=mail header.b="RYWhJ/eZ";
+	dkim=pass header.d=collabora.com header.i=@collabora.com header.a=rsa-sha256 header.s=mail header.b="JCZ/efHi";
 	arc=none smtp.remote-ip=148.251.105.195
 Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01F88606D80E;
-	Wed,  4 Nov 2026 18:56:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 01F88606D80E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DE89606A329;
+	Wed,  4 Nov 2026 18:56:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1DE89606A329
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=collabora.com header.i=@collabora.com header.a=rsa-sha256 header.s=mail header.b=RYWhJ/eZ
+	dkim=pass (2048-bit key, unprotected) header.d=collabora.com header.i=@collabora.com header.a=rsa-sha256 header.s=mail header.b=JCZ/efHi
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
 	s=mail; t=1793818601;
-	bh=UgCQbv933a+8c/5JcSutP3El6g81sTPPXpwKWLLRMhU=;
+	bh=QQAYFAnTkv/pKIj0b3J4mqLvwbwXUkjQ5XKgIr1HDrc=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=RYWhJ/eZm2n2bymxtcD7fBjz8FREigz8MXZeFIdGhpDC0dHgMFO/gfYXicA09TIgv
-	 PZdi4jDGARr5KI20VOE+OzKmBH21vbXAkAE9mayuaQY0XgE+rAya1rtSRR7RdGhQlp
-	 wb6Uy2ZYdItY/Rs41AOEkTcMEzYgfTsCP2KIgL5aSkjhVTQDG/lXetxYV76bQnMF9x
-	 a2VisSTmplOVYE5MkNc6woaNTuQhpNAtNgAJ4vaR3/GW0rvi2yj6z1tp00NrCGCgkr
-	 E77MiW2RoUtNGgP26WY97G2cAwHHsob0bbW9nIC9bqlP0dTzZz9t7yys9Cklf+pi0F
-	 R989LaW5mGyFg==
+	b=JCZ/efHiiifVEuMohhJVYz8qE0A67S6Cvc1gYvH9zJyZzirjvhqZu4DjmTFkvKaSF
+	 BoOnst6VXb7un24YYLMglkKkbGEWy7rzbm01vcwOu3AK11oyrrI4cFHW9Eg8+EpD4q
+	 AWO+u4H0onJrj6dkQx8adl0TrcXJATk/m/mxezDWLSeASoJrtIaSNuhd4v+XuxGoXU
+	 qqXbqXUFUsp2i0C9rjQ98IzFmqsuneRbNJrR3B5X5U2mKTLRGUzP+H0Fnrq6Y9+MbP
+	 VFnvDMsIAHGZWGS/0Vs8BU87DnBiCWSKIPTil1OoWi8IQkCr5W2Bl7/04miNE20JQ/
+	 EwwEZwucbyWtA==
 Received: from jupiter.universe (unknown [100.64.1.62])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange x25519)
 	(No client certificate requested)
 	(Authenticated sender: sre)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id 25E7717E0CE8;
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 7836917E0D58;
 	Wed, 04 Nov 2026 19:56:41 +0100 (CET)
 Received: by jupiter.universe (Postfix, from userid 1000)
-	id D4042480029; Wed, 04 Nov 2026 19:56:40 +0100 (CET)
+	id DC52B480038; Wed, 04 Nov 2026 19:56:40 +0100 (CET)
 From: Sebastian Reichel <sebastian.reichel@collabora.com>
-Date: Wed, 04 Nov 2026 19:56:39 +0100
-Subject: [PATCH v7 01/10] PCI: dw-rockchip: Fix LTSSM set functions
+Date: Wed, 04 Nov 2026 19:56:44 +0100
+Subject: [PATCH v7 06/10] PCI: dw-rockchip: Add helper function for DDL
+ indicator
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -67,7 +68,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261104-rockchip-pcie-system-suspend-v7-1-6ae6875939a2@collabora.com>
+Message-Id: <20261104-rockchip-pcie-system-suspend-v7-6-6ae6875939a2@collabora.com>
 References: <20261104-rockchip-pcie-system-suspend-v7-0-6ae6875939a2@collabora.com>
 In-Reply-To: <20261104-rockchip-pcie-system-suspend-v7-0-6ae6875939a2@collabora.com>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
@@ -84,64 +85,74 @@ Cc: Alexey Charkov <alchark@flipper.net>, linux-pci@vger.kernel.org,
  linux-kernel@vger.kernel.org, kernel@collabora.com, 
  Sebastian Reichel <sebastian.reichel@collabora.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1832;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1998;
  i=sebastian.reichel@collabora.com; h=from:subject:message-id;
- bh=UgCQbv933a+8c/5JcSutP3El6g81sTPPXpwKWLLRMhU=;
- b=owJ4nAFtApL9kA0DAAoB2O7X88g7+poByyZiAGrrf+hsXO6JR78y3RjTyxN0XGzP4b54bm3Ib
- KXd7tKTvCW4ZIkCMwQAAQoAHRYhBO9mDQdGP4tyanlUE9ju1/PIO/qaBQJq63/oAAoJENju1/PI
- O/qa9cMP/RUj/WrmWHxRhrK1r2tkhjRosB5MrFS7Loah6usEXbZuF+Eg1mxKJTRoTCJ6d/4Xc7J
- G7Qy4KyQe+rIFjbwvqblTo2P9Q4T8ofBPCRuEPuwinzPQHfjfTzMcN+wfqM+SzMrxMnTMAXKsG7
- vkwTLKwZwGtzvY3h4uiNwNHxNg5rL2eHfMw4TnqhFTsZ01INMLGu4k4TCYXQaz+IlRr1B5Y7R2H
- 3IVhAMVkf2q3xRyE83Mh2/9OSq2aNTed9mMyY0ZzkrK3XVjtK9DcoLO/OfrRwDXD5UZK398omUU
- voTPhb8RAf9L6IW6Flizt6JWdySZs48DZqa22S8LUmd5aw3vD0jTto16Q1Q8sXSDoY8VtOO9Rme
- yDZIKha/j2YW+eI2j9E0hs+tp95Xf+wFRNg2xcgIu2giTw3xgc/q/4BmFp4wdgIRkdM9Q+yD2Jj
- kBG14xxJjEFLKFGsVSZJmzGf6IEP66i9V/zDlPTGqWaxO0JNeHz8h5ZO07COp/YhftIdtof+rue
- mxmYUbTxtsqXfkA6SRFdshs1gHGyQvTfXC8ONriZOag/LR8eoNFiJVTv7r3AKxNiEtx1NndR0hN
- zUsuIdcjqszO+NVVtySF6WDVOMMUhZ93iddxt5Lw4U6gdSKywXCFRBlMRIXe00k3sj6Hh/R9jeM
- OlfeQjVNTnPbwiheRmxs4Yw==
+ bh=QQAYFAnTkv/pKIj0b3J4mqLvwbwXUkjQ5XKgIr1HDrc=;
+ b=owJ4nAFtApL9kA0DAAoB2O7X88g7+poByyZiAGrrf+hlASs/JMY/QpkQeL7gOYJZ7+g0jX7bk
+ npIxXbuj3ztWokCMwQAAQoAHRYhBO9mDQdGP4tyanlUE9ju1/PIO/qaBQJq63/oAAoJENju1/PI
+ O/qaAIAP/ifXji7ytsHrKBQb3pwhTwW0oBcsIMi98OWsF8SPdY6krk1bK98l0E3KE2GIww8Gh0H
+ DsDB+lLTMThbjV02FyPxgd9Tsvkfpc/Esjbsd7GUxDMqaFSjOBLmifv7CEaI7FH3w9dFeK5h9M5
+ K40oog1eUlR25wG823Mm1TJ6zcvZShgfxVOv58sxfOMNLDKZTAc/YWxPMN3DgXvzk/2uIVJG5Ku
+ 60S1ht+aRzRdSew3dBMqShlKOXBQuQTVeb9W/nrCZ1d6fM0B2e80ObkhNU3yhMeROHS+cu/jO0Z
+ IBaZcgLZCr1mZbrxOGU2HzGXXTECIlb+CC2I0B3FcAoKmtv6n7cxd4l1ltX32ZjUclqZYF9ykpP
+ tuY2KwpMFKDo+MVQ6K84t9wIB3Ysf/BmFiP4MKMMYU0oyJZsod63/UCOg9LDYFVS4U96NREefJH
+ oiwLY57ecUauIfVaxLWtvUdQH5S/oRnX6srWpbZc+PLsKBzWDB+X0zAxIuzZGdCQ5vKGU+ejoKp
+ addaHidF8AuRAzZeUx7aO5flgKu94CDqFOrT528Iud2h5SInVJAgC6MdMXMS6wOd0cy04g8tjzZ
+ FjzgU6cP8ibY66XU5GUy07RwDZk6vRd3zGVKXDNcbWvhGexrS7zUnkPTpeub4Ujp50TMD6SlLtF
+ yawPK4hKnl+I9FXiRWyIuTA==
 X-Developer-Key: i=sebastian.reichel@collabora.com; a=openpgp;
  fpr=EF660D07463F8B726A795413D8EED7F3C83BFA9A
 
-Before the Rockchip PCIe driver has been switched over to the
-FIELD_PREP_WM16 macro, PCIE_CLIENT_ENABLE_LTSSM and
-PCIE_CLIENT_DISABLE_LTSSM were setting bits with a mask of 0xc = 0b1100,
-which means BIT 2 and BIT 3. After the conversion it only sets bit 2,
-with bit 3 being handled by a separate define named
-PCIE_CLIENT_LD_RQ_RST_GRT. Apparently the conversion missed to make use
-of this new macros resulting in the third bit not being set.
+Remove code duplication and improve readability by introducing a new
+function to setup the DLL indicator.
 
-Fixes: 30e919570581 ("PCI: dw-rockchip: Switch to FIELD_PREP_WM16 macro")
 Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
 Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
 ---
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index bd86e32cc2b1..c35c5583c797 100644
+index 18dce2f52a27..f089dab4acf0 100644
 --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
 +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -322,14 +322,16 @@ static void rockchip_pcie_ltssm_trace(struct rockchip_pcie *rockchip,
- 
- static void rockchip_pcie_enable_ltssm(struct rockchip_pcie *rockchip)
- {
--	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_ENABLE_LTSSM,
--				 PCIE_CLIENT_GENERAL_CON);
-+	u32 val = PCIE_CLIENT_ENABLE_LTSSM | PCIE_CLIENT_LD_RQ_RST_GRT;
-+
-+	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_GENERAL_CON);
+@@ -700,6 +700,16 @@ static void rockchip_pcie_set_controller_mode(struct rockchip_pcie *rockchip, u3
+ 	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_SET_MODE(mode), PCIE_CLIENT_GENERAL_CON);
  }
  
- static void rockchip_pcie_disable_ltssm(struct rockchip_pcie *rockchip)
- {
--	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_DISABLE_LTSSM,
--				 PCIE_CLIENT_GENERAL_CON);
-+	u32 val = PCIE_CLIENT_DISABLE_LTSSM | PCIE_CLIENT_LD_RQ_RST_GRT;
++static void rockchip_pcie_unmask_dll_indicator(struct rockchip_pcie *rockchip)
++{
++	u32 val;
 +
-+	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_GENERAL_CON);
- }
++	/* unmask DLL up/down indicator and hot reset/link-down reset */
++	val = FIELD_PREP_WM16(PCIE_RDLH_LINK_UP_CHGED, 0) |
++	      FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
++	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
++}
++
+ static int rockchip_pcie_configure_rc(struct platform_device *pdev,
+ 				      struct rockchip_pcie *rockchip)
+ {
+@@ -760,7 +770,6 @@ static int rockchip_pcie_configure_ep(struct platform_device *pdev,
+ {
+ 	struct device *dev = &pdev->dev;
+ 	int irq, ret;
+-	u32 val;
  
- static bool rockchip_pcie_link_up(struct dw_pcie *pci)
+ 	if (!IS_ENABLED(CONFIG_PCIE_ROCKCHIP_DW_EP))
+ 		return -ENODEV;
+@@ -800,10 +809,7 @@ static int rockchip_pcie_configure_ep(struct platform_device *pdev,
+ 
+ 	pci_epc_init_notify(rockchip->pci.ep.epc);
+ 
+-	/* unmask DLL up/down indicator and hot reset/link-down reset */
+-	val = FIELD_PREP_WM16(PCIE_RDLH_LINK_UP_CHGED, 0) |
+-	      FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
+-	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
++	rockchip_pcie_unmask_dll_indicator(rockchip);
+ 
+ 	return ret;
+ }
 
 -- 
 2.53.0
