@@ -1,116 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=202.12.124.156
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.8
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793878602;
-	b=YAcVXEhSbtW5Xjkd2W1IY4pws75wsBcraGxs9Ohp4gqNXOq2qMr94ku5/OOKXGunQvuY
-	 cT5UpnhUlgvlpZDlv86eq1AZiPZAQ5PDJK3hAe58mOiEbT2Aj0ZqPb1r8yLJ7kkwV7NOv
-	 dnrtdRcZ4gXxZEjt6NdwCSb8qwHvFKWlvL+tA/ArOhlWf3Ws0xgWO0QX87ZAdP818Zmr8
-	 i4bsu/kU9svb+sW4DsrGYO4IS8O93optSjWOnkjF+kwCeDGCugQ+83d2VWMr3thzHVjS4
-	 XtRWPTqh5s2/0Ozdnncu/bIkO+7gB9Lj/oOHDcwA7Z/sKp3sHjiSOrkZ/1yQyEc7zoQ==
+	t=1793878599;
+	b=LU4Lw8iw3L4t8K/n9Hh6UJocvA+pzDOKA0VqDcJycGal9N9qVKv7jP40LTqCwmsDG66c
+	 GWerN5hzcQ+OcZNSUwp/UMiVhb4fXgnfGvP3sq8ArzqS60SepQ0IEOYh8eqyhMw+WdAHb
+	 xuhmdYlauENK5eAJsb4pjzkK9ziARyy8yFo+zbPd/4qvbxWMXT6dcmpey5FJuaTVwiTPy
+	 G7GetQSk5HEVd1DPBc2+4IddUJAVrFzwgoeYeBH4TsiBk2Nm6Ji/RB48GKXb6p72Ie8Mm
+	 ZLf3qzjHDrsWGIxEZth9e/Mbx6UQd/vShHRA42fUoWDV12vA+zsCez3IUmJSNvEmu1w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793878602;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
-	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
-	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
-	 Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
-	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=0744fbE1Bpjr7J49Vf8JkxMIqKOH5PrOiNWgzUuzsCs=;
-	b=c3UQBJUb2yBHgym3B+urUGoLTeZIYnOmkJa2QrBA7ZDIWUcPnPxXUN3o6tpdJlIIuPv4
-	 uA0EFjmDPP4Pw2gQGPurXlKwGhtDqUo2xKlXuomyZU5esvgyBwm9fXDftKTIleAJb6cqW
-	 DJCIlSebtAFp3fic8JdV0ywgaqiUaKAfzTeokuVkmdcW44tb0Edim7Q91E19Mw9Zza08E
-	 MT2gNTo4BE+1xT6/cCB3+r5RivHkz6tytXp4IlKFer80ycvUnubpssEFgKoEXsTGAqh5V
-	 lTK5PYjEGxYN4Jzd0cll+ZwNO9AaVTY14hHrrP++o7wBa2yJXQNA2Ve6ZQjy/X8i5tg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793878599;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=30J4sbOlYJiNq7Z4tRszcjWu8hBcWrg7tEn3jlctPwo=;
+	b=xRxzWa8Xy4evAl6NaL+mYks4IQacTnLfihp+tzxY8uHo+NLYRbz3tSNSLnEL+1FfvDD2
+	 D3UZh7Sdoe6MocHg6nC5GUObrjQ/GPDZebN/rvGlBt+1pRd49aXzeOiCNfAVhObDYPjqo
+	 SYF5bSg2fqmzfE6lfpcNInuPiYYpxbPm5jQMqdiSoPLRyOvQtnFWh3lLz86ILih1SIJts
+	 zAyaf9Iz+mUIYRg/rSH7RZB2uaEGoZgCQ8tPkFM8HvoH9nbKCfxaFijqflQL51ChPlssy
+	 7VDNqq3k9XuUeQNw96pJK2OJHqW/ogIy4nTJ9Ufw8pEGM3hW82pHdNSrea78h3Z3XpQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=jannau.net;
-	spf=pass smtp.mailfrom=jannau.net;
-	dkim=pass header.d=jannau.net header.i=@jannau.net header.a=rsa-sha256 header.s=fm1 header.b=iF77pKNw;
-	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=Cj2YxFAf;
-	arc=none smtp.remote-ip=202.12.124.156
-Received: from fhigh-b5-smtp.messagingengine.com (fhigh-b5-smtp.messagingengine.com [202.12.124.156])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=kH6kTpAi;
+	arc=none smtp.remote-ip=192.198.163.8
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 559E1606EE81
-	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 11:36:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 559E1606EE81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jannau.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=jannau.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79418606A336;
+	Thu,  5 Nov 2026 11:36:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 79418606A336
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=jannau.net header.i=@jannau.net header.a=rsa-sha256 header.s=fm1 header.b=iF77pKNw;
-	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=Cj2YxFAf
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id D86687A0134
-	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 06:36:41 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-02.internal (MEProxy); Thu, 05 Nov 2026 06:36:41 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=jannau.net; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1793878601;
-	 x=1793965001; bh=0744fbE1Bpjr7J49Vf8JkxMIqKOH5PrOiNWgzUuzsCs=; b=
-	iF77pKNweD1dK6m1YwvDTqDDPz8HwVFA04jmXsgA/Yn1KKsfPR6klOkrhaqtBCXV
-	R9zOH4nfTCXd6PkTKAzDPzwfyEnmoHaVc2AeXnp93k+a2ntnUiV++lTy4qzCB1Oz
-	JzI6mlnorzsIJD8GrSNzzqgyQx1owXkOFCnR0GHZBg8wPop9legez3MrjswL48ns
-	9mqCjNWe8foO0g+ZExmvEIoowQG6pOHjsnKD1Af2vhdKXK2KEojGSE+e9dZw+OQS
-	qbVZP4UcebhPIJYJs8yZsB4ngdA3QbU7d3AYTxKqa4e9oxDFp8+lqjhK2aGp/oHQ
-	uvdJ7CmaMUNBsWG6M8q16g==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1793878601; x=
-	1793965001; bh=0744fbE1Bpjr7J49Vf8JkxMIqKOH5PrOiNWgzUuzsCs=; b=C
-	j2YxFAfh/xZ3OCYkktvmPG97PKapZI2M8ceY2OB0vNri9B/jSqZJcuxzPP+ia6oR
-	LRS5Xd/+IazTT7PVJsgelAOr70UVTrV23STMDlSXSR00+SRt5oCEM2fnRJjoaWZi
-	Dl4x8BWlAS6DJt+yuApiab7UQOKXa0iFEooga81XeHbpfKFJpFK6WD/S9nAOZ35c
-	BqKA4rvsXqG59YQqFUdTHowfflVB+6RtE36qDbETYUChwtPMITSSHeVBrK61EaxG
-	8O+hgfmQzFzDla33wzjSET8xrwENmS2cKmDnFhNdcGZfOLTT13Y6VgHkAnedEbGg
-	Qtg5rtE5PDCaVCI/hHjog==
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
-	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
-	action=sign d=jannau.net a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1793878601; d=jannau.net;
-	mf=PGpAamFubmF1Lm5ldD4=;
-	rt=PGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc+;
-	s=fm1:rsa-sha256:GPRRjnONPpYN3ore8iQegshyCGvr8ABdcQo4YXxQcdCoPvF
-	9RpBnGnbc5a3uGLjB5xCHqiaScND3pxY7fi/yUIlDQ3BLYgm4KKfbzYCG4rPdvZh
-	Ij2H3qmNtv0Z8SjsM4Uf5TXeAirhPmuFuB4iS+6Xh+G/PibMJTpr605auQ0wN+Ii
-	m2dnkCTE1m7a4r22BxUFBU2uCFfSaJwsdgP4BwTiFN7XpcgLM2dsg1K6vw2wZmoR
-	neY4Pbl6hAMKqbjFnWEzXihWTauvJM3k4x+bQN3Y2l6Onl2bnBSwZhRTu+mDzcWP
-	Zh6EPGhTDzItReVJ/of5OO8lOFVlfiXqKtcxwIw==;
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
-	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
-	action=mi-m=1; hc=12;
-	hn=cc,content-transfer-encoding,content-type,date,feedback-id,
-	from,in-reply-to,message-id,mime-version,references,subject,to;
-Message-Instance: m=1; h=sha256:wFZU0B1PvfqDsZBXQbeBFsEUczixwzP5Dp0xKYC6DBc=:hpm8i9GpxRw7kXdH7PimUgLS/n22erqxsBm4zUk+AAI=;
-X-ME-Sender: <xms:SGrsai8h0iIPSQaRUCu0hzGUXfQUXhNeGN_I6Nzmga0ED32DGJgi2A>
-    <xme:SGrsah-TUhuqorXurBtDInAx5It7q8shvUB00k1i9simfwoijOA5Yhx33b59zzX_f
-    dCAClhyMnBAVaWhXz2TbNZLpKX8s0BUoyxEh4ZiySEg_KgOlWEFxwA>
-X-ME-Received: <xmr:SGrsaq1ySW9XpuhaldoCoIOs3gWOeAZTvWA9h8dDHQS0X2_trD6hDZcozFzbbYZvdKWEGjez4UlR_d46zZYG-wf88JsAoFeZKgA>
-X-ME-Proxy-Cause: dmFkZTFiB+Ef/4hhUELr0xJWI4RLreggeb5lOnSYygbUpmh2w1HzCIgOWn5JqSrKHbnJF6
-    Gu1E5HEoFycQcf9fEZZQ93o1mpIX6EUiid5vBGRrjChidySlNGfqHtpNB3U8jUEiqhLfm+
-    6xPvXbkcR2ibvNg4OOVM6aiptmnj/TBjEYU3MAKCpGrhxPUrXjXMmo51E4LLG/ceVfW8Tr
-    4gql17P4ewfgE57dF++9gDAvlAmy04Q63lix9EUpqSjLhUwBck5DsW/uy2pq/U97T8ijHs
-    +ZwSFDLQaHL0/V88gw6RsuWlYcPx9Yr/hGUZyb1Kz3jC9+2TNJOFxe7HAtdL+9BuLuBcqG
-    ulwjxzgZuO0Ym0wZltYpD9LL1uUDiSH1pGpwQgLbCjNxiBgUM2MzkVfy7z3XNDEAMqK97d
-    tEqCwp3j56ZctZQD2+wwTedCc5Sl0XiD1wvZ5KXUVUKf3FGZZeFHMWqd+Q/Sh525O2w47z
-    SoQOmIdDuw9GxwjgouRfqD9RuAuyiqgt2246VqgDUywUmFmHm7nUWJYml79G0O+T1GBe4P
-    Bo2QNbcnvjKkdD+fDYDlEyIv+aKGWVLLb9pj8WhTy3dR+wx22RNQb4XnIc93NrZnNVLeNz
-    4iAhT8pjgCCaGYvG19iXQc3phmP1+5MzI63qs3GZveXYjFSp2CTzf5c2wEjQ
-X-ME-Proxy: <xmx:SGrsah8Zm5m6Qv6HcN8_36QCX2BGhlTBigYD-d-lLwp6v4w3465PPw>
-    <xmx:SGrsarfUe_1Q4d6FDmOjq3DTIJwXne9P62dC5G2gkecYfqjdhpgCKQ>
-    <xmx:SGrsatFKjdUbG1kuJWqRPW31C0MbT1DK1d2MsWKPv8hHdz2yNpwvIQ>
-    <xmx:SGrsagCIIB4Og4_ybYRmzbRU07Y_tyNiqeYDViK-Dk6acBtBdsFA9w>
-    <xmx:SWrsaqSDqQlhxqZhH2veNj3DAFSVuaNxzJTIJoDKDcwBk37GVD8QC_Ef>
-Feedback-ID: i47b949f6:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 5 Nov 2026 06:36:40 -0500 (EST)
-From: Janne Grunau <j@jannau.net>
-Date: Thu, 05 Nov 2026 12:36:03 +0100
-Subject: [PATCH 6/7] arm64: dts: apple: t603x-j514-j516: Add PCIe device
- nodes
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=kH6kTpAi
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793878598; x=1825414598;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=J9dOmPMshDIpYmZ/TrqPMjz7mHsp3Z6+Ou1qHQ88q2c=;
+  b=kH6kTpAiQCWPXNnHfol4Ir8+s9VJjZqKUrEiOYYXZ519D9v6B5xP2gry
+   GnxiwbeLFhRczydH6mZJ0OLOiGGGZE6rGnuWsdi7YptLDmfnzWYK9ipH0
+   dFC+58sXrURL/5et1b81u3MYRwTIazl4W9H6PFyG6JrBjGDynR8P86946
+   XGW7UEKjEwT0v0iPok/BKikScign00RZapSIvNNIiIqAoLcjFjvBcwcNF
+   mL/HcsTXXDUec0Erc9ynncQVAqW6Z3TJ/1Z9sXlIVcBTPVZLkkuPAbbCG
+   vltsW6FpoPg9oXfRHm1xluCStSwpy0jt6Dfl66lBwsO3byRFQOjk4dw6n
+   g==;
+X-CSE-ConnectionGUID: cQ8hzN4ESnqlamJQ6T0ujw==
+X-CSE-MsgGUID: KjYgmGU8SNG9TKQz2y0m6w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11956"; a="2547422"
+X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
+   d="scan'208";a="2547422"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2026 03:36:37 -0800
+X-CSE-ConnectionGUID: NU49M+y7SoqJQQ7rq8Z1Cw==
+X-CSE-MsgGUID: /gbM1bnkQwynnPU6B2caeg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
+   d="scan'208";a="7163862"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by fmviesa003.fm.intel.com with ESMTP; 05 Nov 2026 03:36:29 -0800
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xOvlZ-00000000m7v-0S9w;
+	Thu, 05 Nov 2026 11:36:25 +0000
+Date: Thu, 5 Nov 2026 19:35:46 +0800
+From: kernel test robot <lkp@intel.com>
+To: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, Jann Horn <jannh@google.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Chris Mason <chris.mason@fusionio.com>,
+	Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>,
+	Christoph Hellwig <hch@lst.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joel Granados <joel.granados@kernel.org>,
+	Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>,
+	linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org,
+	coreteam@netfilter.org, kexec@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH RESEND v2 01/51] alloc_tag: don't remove /proc/allocinfo
+ under the codetag module lock
+Message-ID: <202611051923.pLSSWWkA-lkp@intel.com>
+References: <20261104-work-procfs-bugfixes-v2-1-021c84d852e0@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -120,207 +100,54 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261105-apple-m3-pcie-v1-6-e00a72a604f8@jannau.net>
-References: <20261105-apple-m3-pcie-v1-0-e00a72a604f8@jannau.net>
-In-Reply-To: <20261105-apple-m3-pcie-v1-0-e00a72a604f8@jannau.net>
-To: Sven Peter <sven@kernel.org>, Neal Gompa <neal@gompa.dev>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Mark Kettenis <kettenis@openbsd.org>, 
- Joshua Peisach <jpeisach@ubuntu.com>, 
- Michael Reeves <michael.reeves077@gmail.com>
-Cc: asahi@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
- linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Janne Grunau <j@jannau.net>, 
- Yureka Lilian <yureka@cyberchaos.dev>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5135; i=j@jannau.net;
- h=from:subject:message-id; bh=i5//AwfzRhKK6qCRpypnc7masCXqqKDqkfxufe4kIYA=;
- b=owGbwMvMwCW2UNrmdq9+ahrjabUkhqw3WRo7GuS6JrV4T2/luW3lWrrr1z4pHy/PvzzX1+U+7
- u5a6JPeMZGFQYyLwVJMkSVJ+2UHw+oaxZjaB2Ewc1iZQIZIizQwAAELA19uYl6pkY6Rnqm2oZ6h
- kY6xjhEDF6cATPWVKkaGpVMzTdYHHZs6lzktcY1Fk6/8hLwV902j5B9eWS0knmfwjuGf+m9v0/g
- jz4Ui3Evss5etrf+24khEcs2nRp8739ZvNFHnAwA=
-X-Developer-Key: i=j@jannau.net; a=openpgp;
- fpr=8B336A6BE4E5695E89B8532B81E806F586338419
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261104-work-procfs-bugfixes-v2-1-021c84d852e0@kernel.org>
 
-From: Yureka Lilian <yureka@cyberchaos.dev>
+Hi Christian,
 
-Add WiFi, Bluetooth and SD-Card reader device nodes to all M3 Pro and
-Max Macbook Pros.
-The bootloader will fill MAC addresses for the network devices, add
-Wifi and Bluetooth calibration data and set "apple,antenna-sku".
+kernel test robot noticed the following build warnings:
 
-Signed-off-by: Yureka Lilian <yureka@cyberchaos.dev>
-Signed-off-by: Janne Grunau <j@jannau.net>
----
- arch/arm64/boot/dts/apple/t6030-j514s.dts      |  8 +++++
- arch/arm64/boot/dts/apple/t6030-j516s.dts      |  8 +++++
- arch/arm64/boot/dts/apple/t6031-j514c.dts      |  8 +++++
- arch/arm64/boot/dts/apple/t6031-j516c.dts      |  8 +++++
- arch/arm64/boot/dts/apple/t6034-j514m.dts      |  8 +++++
- arch/arm64/boot/dts/apple/t6034-j516m.dts      |  8 +++++
- arch/arm64/boot/dts/apple/t603x-j514-j516.dtsi | 41 ++++++++++++++++++++++++++
- 7 files changed, 89 insertions(+)
+[auto build test WARNING on 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4]
 
-diff --git a/arch/arm64/boot/dts/apple/t6030-j514s.dts b/arch/arm64/boot/dts/apple/t6030-j514s.dts
-index 3ba2c9ca4347..f7c1307e76bd 100644
---- a/arch/arm64/boot/dts/apple/t6030-j514s.dts
-+++ b/arch/arm64/boot/dts/apple/t6030-j514s.dts
-@@ -20,3 +20,11 @@ / {
- &framebuffer0 {
- 	power-domains = <&ps_disp_cpu>;
- };
-+
-+&wifi0 {
-+	brcm,board-type = "apple,texa";
-+};
-+
-+&bluetooth0 {
-+	brcm,board-type = "apple,texa";
-+};
-diff --git a/arch/arm64/boot/dts/apple/t6030-j516s.dts b/arch/arm64/boot/dts/apple/t6030-j516s.dts
-index ab07bf7939ab..9f9609575ed0 100644
---- a/arch/arm64/boot/dts/apple/t6030-j516s.dts
-+++ b/arch/arm64/boot/dts/apple/t6030-j516s.dts
-@@ -20,3 +20,11 @@ / {
- &framebuffer0 {
- 	power-domains = <&ps_disp_cpu>;
- };
-+
-+&wifi0 {
-+	brcm,board-type = "apple,jura";
-+};
-+
-+&bluetooth0 {
-+	brcm,board-type = "apple,jura";
-+};
-diff --git a/arch/arm64/boot/dts/apple/t6031-j514c.dts b/arch/arm64/boot/dts/apple/t6031-j514c.dts
-index c1507158325e..8cc2224ee0fd 100644
---- a/arch/arm64/boot/dts/apple/t6031-j514c.dts
-+++ b/arch/arm64/boot/dts/apple/t6031-j514c.dts
-@@ -16,3 +16,11 @@ / {
- 	compatible = "apple,j514c", "apple,t6031", "apple,arm-platform";
- 	model = "Apple MacBook Pro (14-inch, M3 Max, 16 CPU cores, Nov 2023)";
- };
-+
-+&wifi0 {
-+	brcm,board-type = "apple,texa";
-+};
-+
-+&bluetooth0 {
-+	brcm,board-type = "apple,texa";
-+};
-diff --git a/arch/arm64/boot/dts/apple/t6031-j516c.dts b/arch/arm64/boot/dts/apple/t6031-j516c.dts
-index 841b2bb10b06..5dfe886d47a9 100644
---- a/arch/arm64/boot/dts/apple/t6031-j516c.dts
-+++ b/arch/arm64/boot/dts/apple/t6031-j516c.dts
-@@ -16,3 +16,11 @@ / {
- 	compatible = "apple,j516c", "apple,t6031", "apple,arm-platform";
- 	model = "Apple MacBook Pro (16-inch, M3 Max, 16 CPU cores, Nov 2023)";
- };
-+
-+&wifi0 {
-+	brcm,board-type = "apple,jura";
-+};
-+
-+&bluetooth0 {
-+	brcm,board-type = "apple,jura";
-+};
-diff --git a/arch/arm64/boot/dts/apple/t6034-j514m.dts b/arch/arm64/boot/dts/apple/t6034-j514m.dts
-index e31bd0bc0592..dfae771ec626 100644
---- a/arch/arm64/boot/dts/apple/t6034-j514m.dts
-+++ b/arch/arm64/boot/dts/apple/t6034-j514m.dts
-@@ -16,3 +16,11 @@ / {
- 	compatible = "apple,j514m", "apple,t6034", "apple,arm-platform";
- 	model = "Apple MacBook Pro (14-inch, M3 Max, 14 CPU cores, Nov 2023)";
- };
-+
-+&wifi0 {
-+	brcm,board-type = "apple,texa";
-+};
-+
-+&bluetooth0 {
-+	brcm,board-type = "apple,texa";
-+};
-diff --git a/arch/arm64/boot/dts/apple/t6034-j516m.dts b/arch/arm64/boot/dts/apple/t6034-j516m.dts
-index 4d6513558597..dc5c202a787b 100644
---- a/arch/arm64/boot/dts/apple/t6034-j516m.dts
-+++ b/arch/arm64/boot/dts/apple/t6034-j516m.dts
-@@ -16,3 +16,11 @@ / {
- 	compatible = "apple,j516m", "apple,t6034", "apple,arm-platform";
- 	model = "Apple MacBook Pro (16-inch, M3 Max, 14 CPU cores, Nov 2023)";
- };
-+
-+&wifi0 {
-+	brcm,board-type = "apple,jura";
-+};
-+
-+&bluetooth0 {
-+	brcm,board-type = "apple,jura";
-+};
-diff --git a/arch/arm64/boot/dts/apple/t603x-j514-j516.dtsi b/arch/arm64/boot/dts/apple/t603x-j514-j516.dtsi
-index bbee373044f9..403a9cb3979c 100644
---- a/arch/arm64/boot/dts/apple/t603x-j514-j516.dtsi
-+++ b/arch/arm64/boot/dts/apple/t603x-j514-j516.dtsi
-@@ -21,7 +21,9 @@ / {
- 	chassis-type = "laptop";
- 
- 	aliases {
-+		bluetooth0 = &bluetooth0;
- 		serial0 = &serial0;
-+		wifi0 = &wifi0;
- 	};
- 
- 	chosen {
-@@ -67,3 +69,42 @@ &serial0 {
- &fpwm0 {
- 	status = "okay";
- };
-+
-+/* PCIe devices */
-+
-+/*
-+ * Force the bus number assignments so that we can declare some of the
-+ * on-board devices and properties that are populated by the bootloader
-+ * (such as MAC addresses).
-+ */
-+&port00 {
-+	/* WLAN */
-+	bus-range = <1 1>;
-+
-+	wifi0: wifi@0,0 {
-+		compatible = "pci14e4,4433";
-+		reg = <0x10000 0x0 0x0 0x0 0x0>;
-+		/* To be filled by the loader */
-+		local-mac-address = [00 10 18 00 00 10];
-+		apple,antenna-sku = "XX";
-+	};
-+
-+	bluetooth0: bluetooth@0,1 {
-+		compatible = "pci14e4,5f71";
-+		reg = <0x10100 0x0 0x0 0x0 0x0>;
-+		/* To be filled by the loader */
-+		local-bd-address = [00 00 00 00 00 00];
-+	};
-+};
-+
-+&port01 {
-+	/* SD card reader */
-+	bus-range = <2 2>;
-+
-+	mmc@0,0 {
-+		compatible = "pci17a0,9755";
-+		reg = <0x20000 0x0 0x0 0x0 0x0>;
-+		cd-inverted;
-+		wp-inverted;
-+	};
-+};
+url:    https://github.com/intel-lab-lkp/linux/commits/Christian-Brauner/alloc_tag-don-t-remove-proc-allocinfo-under-the-codetag-module-lock/20261104-200606
+base:   6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+patch link:    https://lore.kernel.org/r/20261104-work-procfs-bugfixes-v2-1-021c84d852e0%40kernel.org
+patch subject: [PATCH RESEND v2 01/51] alloc_tag: don't remove /proc/allocinfo under the codetag module lock
+config: sh-randconfig-1001-20261105 (https://download.01.org/0day-ci/archive/20261105/202611051923.pLSSWWkA-lkp@intel.com/config)
+compiler: sh4-linux-gcc (GCC) 16.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261105/202611051923.pLSSWWkA-lkp@intel.com/reproduce)
 
--- 
-2.56.0
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202611051923.pLSSWWkA-lkp@intel.com/
 
+All warnings (new ones prefixed by >>):
+
+>> mm/alloc_tag.c:620:13: warning: 'shutdown_mem_profiling_async' defined but not used [-Wunused-function]
+     620 | static void shutdown_mem_profiling_async(void)
+         |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+vim +/shutdown_mem_profiling_async +620 mm/alloc_tag.c
+
+   613	
+   614	/*
+   615	 * A module's tags are reserved with the codetag module lock held for
+   616	 * writing, and a reader of /proc/allocinfo takes that lock with the entry
+   617	 * pinned. Removing the entry there would wait for that reader for good, so
+   618	 * let a work item do it.
+   619	 */
+ > 620	static void shutdown_mem_profiling_async(void)
+   621	{
+   622		if (!mem_profiling_support)
+   623			return;
+   624		shutdown_mem_profiling(false);
+   625		schedule_work(&remove_allocinfo_work);
+   626	}
+   627	
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
