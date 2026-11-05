@@ -1,52 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793915510;
-	b=zQuA20sOwZLOF5m/TZC/QZUzo4QNZ+/5xz5Z+FJffuU7Y+3p+hqeSGoXVTiXwlP8CmXw
-	 AUX2voxyUOiEE1ESWDq+fgKrN4+nk0MfXvDBJ7/rnjsBx+ecI/ju8XXUph+uFKqpb1QqX
-	 cU47UYfhKCVlDZHhZTWIVKBYfNTWYYpXbQo6EAl0JgQ70sTm7Tr+v6aQ4MaYXRQovUeud
-	 /QIBKFPTM1ASd3mtJjytfJ9JnHTssU8hLlNc7miQr0+sXx5cuAdaDHCGIBNpHiHb9N8kz
-	 3Kfg8oV7YBnTeipC2c1JPvPxO/GNRhd7Us3gKjwUZ08DxB19Tgsct3bd1budrNoM6uA==
+	t=1793919854;
+	b=WxMi0ypGtDijk0LFvoHCygnPOPJFAKGZOzqh7QpD6o1Ryli72cp4Iad5jXqeBtYISW4x
+	 2oQeX1SAQVLz155yLK6ua+dF/t+ooa6OvB+4kFt6IiXELvUzxig2+ClSjFQ5Pnt9FmGWE
+	 WUEX+EfW7riy5KGI7BetGgOK9VJXSV3K3RGYfG1kyZqYVagkvAX6aGTqjQjj1AjAb68B6
+	 Yoc6q0Juo96xWWlfT+fWRr7t0wOyxlb/HCjfGWC0Xsd+39fJrPotQ0tDWg11nRmVsn6XY
+	 PZzwczWLvhsQR+9qqSobyXefsF8/D6oTj+U5D0E2aMzbRua4/RQyt61oAvpPV0prSfw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793915510;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793919854;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=nn59pGKdS6ZAYSfKCAK/dFr8+eqz3gwLAlKcsw0ScZQ=;
-	b=Aw817pnO+EbSijbq7o2Dk87aZYYmGMpcWsEh9IKlmRb3xl1TTCw34HbCan6KidQ7yWuK
-	 7eBefxDVKcB/ryAhavc6zRwLOcTbKZbaEmpIRE0M7B5OY+9TpPNNIHRaH37dXYJgPlpcm
-	 KkFiTsqRh1B2gOkISGnq5h3qyplK0UjA8A2vSPPZYmTrx31Rh73hgPANj/4gCvGSwSpDi
-	 T7ljURFaWY6hpJy1WY/nLm9e88LQVvrbEpEPVOGeS5YxX+nS4ZLBR0My6R5bDFFjEfm9d
-	 DabTEr9Spwk8zezL8GK3HY+4aS/IHSz3gOIsa10XAZNx8LrmEZOjEoq2LZwRkZjbd9w==
+	bh=b6WzBUDutO2lD1ahYOBqGggoJ+tH7oqdGLJy3rjPKoo=;
+	b=bcfk1Vv3ff5Amfy9SSAOzT6g//Ds/GP8Hasvsq1coG0JHvDV7RjL0CChYA/4js2PJg4N
+	 lm3YNwC0ob4bANaTikdJqouT9hqURhtMqu6eG7FqsPgWL91QYspj4q4StJTeI00JALAL0
+	 KIYOyrxTGRgYAuPQQ92qmkXehBfDaJxrTWa8Y8N7phQnJs1M//KmO5xiyIPgjRGhbfu/s
+	 UsGnsjwjrGUv+pFBRg6z9pS/gEbvaDmAsl4jMEBglCjvj3QDqWmWnyE9wBKshjqfpfbLr
+	 oLXjUBIp7H0yToqSgF2pKm25FuKtJkSX1CKXfpgsateNgG1fWv0lHFZ7Hyoa+5q83pQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=e9QWj46W;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="l/3cijac";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C92D606A326;
-	Thu,  5 Nov 2026 21:51:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57501606A31B;
+	Thu,  5 Nov 2026 23:04:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=e9QWj46W
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABE521F0089F;
-	Thu,  5 Nov 2026 21:51:49 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=l/3cijac
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C924E1F0089F;
+	Thu,  5 Nov 2026 23:04:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793915509;
-	bh=nn59pGKdS6ZAYSfKCAK/dFr8+eqz3gwLAlKcsw0ScZQ=;
+	s=k20260515; t=1793919854;
+	bh=b6WzBUDutO2lD1ahYOBqGggoJ+tH7oqdGLJy3rjPKoo=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=e9QWj46WJmqKLLHeKyw0Yzz8G+RXC61IrMhy4Bas55drdXiGEYmRQwQhTbxK4pkW0
-	 ULAdE7Zd3tKO9VjaEfwhGmrchm/7jbCRDykhKwCJiPJeRaK5x/6JU+ok47BddiGFBD
-	 JckEzm0lGhIZT+uY0Ue+jHI2Ex2oKTbQVsk94uOrqei9hBITFU/dP2ngAyMlsRmSC5
-	 6wYQkd925iKUwnY6Z8gVHlhT9YMx1gxI4OBlnEJSMZEoaJhfcjQsB6RC6rRBCX3F/h
-	 d4YejkFDWeJkxO7LBAi/W9Nrs7G9zA6AeVd9hGTjGaL0pDwkuX7FmQB/etKrZtFlOA
-	 VgrBsWSQEU2oA==
-Date: Thu, 5 Nov 2026 15:51:48 -0600
+	b=l/3cijacEoj3ryM+3VWgQngDJh1ItuBMvCc2qntCoKzPUCJilUSe2FrdijlqXSclr
+	 zeOgsavwkWeY4MqvITCJQYXgAF5NVJbdzao/52T69QFGwJ9N68yK2WvL6x8jrzMUXe
+	 3MG1+c0o3qUrOdXvtm/s4jy3g6PkmMpbDp8zee0t36TeYLdZQEBtJmyjXwDH7tvD3H
+	 NflR4YwihyDKR0QEROaf4aDdaeY4Mj2QxJk1JN/YldhyQV7WX5FAMsUSYbQIhCG/zM
+	 KAAs8tuYsfWYLupVCg2cGD6eQjp+DoYI77JoiUN5TibF2wEQYI3yfjABtaMO7PG/Nh
+	 khmCKQ81OeyyQ==
+Date: Thu, 5 Nov 2026 17:04:12 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jennifer Chan <jenniferchan@meta.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	Lukas Wunner <lukas@wunner.de>, Jason Gunthorpe <jgg@nvidia.com>
-Subject: Re: [PATCH] PCI: Add d3cold delay quirk for NVIDIA LR10 NVSwitch
-Message-ID: <20261105215148.GA1566818@bhelgaas>
+To: Danny Gonzalez <digonzal@google.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, David Decotigny <decot@google.com>,
+	Sheena Mohan <sheenamo@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jason Gunthorpe <jgg@nvidia.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Joerg Roedel <joerg.roedel@amd.com>,
+	Nicolin Chen <nicolinc@nvidia.com>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Kevin Tian <kevin.tian@intel.com>
+Subject: Re: [PATCH] PCI/ATS: Disable ATS when ACS TB is set upstream
+Message-ID: <20261105230412.GA1450377@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -58,73 +63,157 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261105201010.2297078-1-jenniferchan@meta.com>
+In-Reply-To: <20261020181053.2646782-1-digonzal@google.com>
 
-[+cc Lukas, author of ac91e6980563, Jason in case NVIDIA knows
-anything]
+[+cc other folks interested in ATS]
 
-On Thu, Nov 05, 2026 at 12:10:10PM -0800, Jennifer Chan wrote:
-> On a Supermicro HGX A100 system (X12DGO-6), each of the six LR10
-> NVSwitches (10de:1af1) sits alone behind a PLX PEX 8725 (10b5:8725)
-> downstream port.  "nvidia-smi -r" resets all GPUs: NVML unbinds the
-> switches from the nvidia-nvswitch driver, resets each one through sysfs
-> (reset_method "bus", a Secondary Bus Reset of its port) and binds them
-> again.  The PCI core waits 100 ms after the link comes back, the switch
-> answers config reads and the reset completes.  When nvidia-nvswitch then
-> probes the switches, one fails in pci_enable_device() with
+On Tue, Oct 20, 2026 at 06:10:52PM +0000, Danny Gonzalez wrote:
+> Enabling ATS allows an endpoint to cache translations and initiate DMA
+> requests with Translated addresses, which an upstream bridge with ACS
+> Translation Blocking (PCI_ACS_TB) set will block as ACS Violations.
+> Because pci_enable_acs() preserves existing PCI_ACS_CTRL bits (e.g., from
+> firmware, a kexec kernel, or "pci=config_acs=") without relaxing them,
+> PCI_ACS_TB may remain set on upstream bridges.
 > 
->   Unable to change power state from D3cold to D0, device inaccessible
+> Update pci_ats_supported() to walk upstream bridges and return false if
+> any bridge has PCI_ACS_TB set, leaving the endpoint to use Untranslated
+> addresses.
 > 
-> four others fail to initialize with -EIO, and the NVSwitch fabric does
-> not come back.
+> Tested by booting a machine with an endpoint advertising the ATS Capability
+> behind a Root Port with PCI_ACS_TB set; verified ATS is disabled and the
+> system boots cleanly.
 
-Do you know where the -EIO is from?
+There was a v2 at
+https://lore.kernel.org/all/20261028233651.960835-1-digonzal@google.com,
+which added pci_ats_check_acs() in pci_dma_configure().  I thought
+that was a non-obvious way to make pci_ats_supported() return "false",
+and I proposed doing the checking in pci_ats_supported() directly to
+avoid adding the new pci_ats_check_acs() interface.
 
-> The same systems recover every time on a kernel that sleeps 1 s after
-> each Secondary Bus Reset, as pci_reset_secondary_bus() did before commit
-> ac91e6980563 ("PCI: Unify delay handling for reset and resume").  Adding
-> a 1 s sleep before the link wait on the PEX 8725 ports of the failing
-> kernel fixes it too.  Config reads already succeed at that point, so
-> pci_dev_wait() does not cover it, and the switch's state there is not
-> known.
+I'm responding to v1 because it *did* add the checking in
+pci_ats_supported().  But sashiko found some issues with it:
+https://lore.kernel.org/all/sashiko-outbox-179488@kernel.org.
 
-Ugh, a second is a long time to wait.  Does the kernel you're testing
-include e8df1d194c39 ("PCI: Don't treat ~0 as ready in pci_dev_wait()
-with RRS SV"), by chance?  It only appeared in v7.3, so it's pretty
-new.
-
-> Give LR10 a 1 s d3cold_delay, so that pci_bridge_wait_for_secondary_bus()
-> waits 1 s after the downstream link comes up before the switch is used.
-> This adds 1 s to each LR10 reset (about 6 s to an "nvidia-smi -r" on
-> these systems) and to D3cold resume of its port.  Resets issued further
-> up the hierarchy keep the default delay.
-> 
-> Fixes: ac91e6980563 ("PCI: Unify delay handling for reset and resume")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Jennifer Chan <jenniferchan@meta.com>
+> Signed-off-by: Danny Gonzalez <digonzal@google.com>
 > ---
->  drivers/pci/quirks.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/pci/ats.c | 28 ++++++++++++++++++++++++++++
+>  1 file changed, 28 insertions(+)
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 7f1f47ea2ee4..4a84095e736f 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -6569,12 +6569,14 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_TOSHIBA, 0x0220, of_pci_make_dev_node);
->   * after reset recovery or resume from D3cold:
->   *
->   * VideoPropulsion (aka Genroco) Torrent QN16e MPEG QAM Modulator
-> + * NVIDIA LR10 NVSwitch (HGX A100)
->   */
->  static void pci_fixup_d3cold_delay_1sec(struct pci_dev *pdev)
->  {
->  	pdev->d3cold_delay = 1000;
+> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> index 9cb23780093d..094f4f825acf 100644
+> --- a/drivers/pci/ats.c
+> +++ b/drivers/pci/ats.c
+> @@ -31,6 +31,24 @@ void pci_ats_init(struct pci_dev *dev)
+>  	dev->ats_cap = pos;
 >  }
->  DECLARE_PCI_FIXUP_FINAL(0x5555, 0x0004, pci_fixup_d3cold_delay_1sec);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, 0x1af1, pci_fixup_d3cold_delay_1sec);
 >  
->  #ifdef CONFIG_PCIEAER
->  static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
+> +static struct pci_dev *pci_acs_tb_path_blocked(struct pci_dev *dev)
+> +{
+> +	struct pci_dev *bridge;
+> +
+> +	for (bridge = pci_upstream_bridge(dev); bridge;
+> +	     bridge = pci_upstream_bridge(bridge)) {
+> +		u16 ctrl;
+> +
+> +		if (!bridge->acs_cap)
+> +			continue;
+> +		pci_read_config_word(bridge, bridge->acs_cap + PCI_ACS_CTRL,
+> +				     &ctrl);
+
+Sashiko noted that if bridge is inaccessible, this read sets ctrl to
+~0, so we think PCI_ACS_TB is set.  Maybe worth checking for
+PCI_POSSIBLE_ERROR() before using ctrl.
+
+> +		if (ctrl & PCI_ACS_TB)
+> +			return bridge;
+> +	}
+> +	return NULL;
+> +}
+> +
+>  /**
+>   * pci_ats_supported - check if the device can use ATS
+>   * @dev: the PCI device
+> @@ -40,12 +58,22 @@ void pci_ats_init(struct pci_dev *dev)
+>   */
+>  bool pci_ats_supported(struct pci_dev *dev)
+>  {
+> +	struct pci_dev *bridge;
+> +
+>  	if (!dev->ats_cap || dev->untrusted)
+>  		return false;
+>  
+>  	if (dev->is_virtfn)
+>  		return pci_ats_supported(pci_physfn(dev));
+>  
+> +	/* Do not allow ATS if any upstream bridge blocks translation */
+> +	bridge = pci_acs_tb_path_blocked(dev);
+> +	if (bridge) {
+> +		pci_warn_once(dev, "ATS disabled: upstream bridge %s has ACS Translation Blocking enabled\n",
+> +			      pci_name(bridge));
+
+I think I suggested it, but now I'm not sure the warning is
+worthwhile.  I think this might be too far down in the bowels for it
+to be useful.  And sashiko complained about the warn-once bit too,
+which is fair.
+
+> +		return false;
+> +	}
+> +
+
+Sashiko also noted problems if pci_ats_supported() returns different
+values in:
+
+  * intel_iommu_probe_device() vs intel_iommu_release_device()
+
+      Different values break rbtree 'info' management: _probe_device()
+      can put 'info' in the rbtree and _release_device() may fail to
+      remove it.
+
+      I think the fix is for intel_iommu_probe_device() to keep its own
+      bit in struct device_domain_info to say whether 'info' is in the
+      rbtree so _release_device() doesn't need pci_ats_supported().
+
+  * pci_dev_reset_iommu_prepare() vs pci_dev_reset_iommu_done()
+
+      Different values will make gdev->reset_depth, group->recovery_cnt,
+      group->domain, and gdev->blocked get out of sync.
+
+      I think it would be better if _iommu_prepare() and _iommu_done()
+      themselves tracked what _iommu_done() needs to do, for example
+      they could do something like this:
+
+        int pci_dev_reset_iommu_prepare(struct pci_dev *pdev, bool *restore)
+        {
+            if (!pci_ats_supported(pdev) || !dev_has_iommu(&pdev->dev)) {
+                *restore = false;
+                return 0;
+            }
+
+            *restore = true;
+            ...
+        }
+
+      Then pci_dev_reset_iommu_done() wouldn't need to call
+      pci_ats_supported() or dev_has_iommu(), and users would look like
+      this:
+
+        int pcie_flr(...)
+        {
+            bool restore;
+
+            ret = pci_dev_reset_iommu_prepare(dev, &restore);
+            ...
+            if (restore)
+                pci_dev_reset_iommu_done(dev);
+        }
+
+      Or I guess we could call pci_dev_reset_iommu_done()
+      unconditionally and pass it 'restore' and it could test it
+      internally.
+
+>  	return true;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_ats_supported);
 > -- 
-> 2.53.0-Meta
+> 2.56.0.218.g1ec904b173-goog
 > 
