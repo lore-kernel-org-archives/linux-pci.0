@@ -1,54 +1,66 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793906889;
-	b=tPhv+gQLcBBQi5l1gSEJrPEThM+KdoBBdFu+UydrC7MUqb/gkwO9GDgpy60YnrWz6FDL
-	 nMxxdajCst2eV3ui/e12gKFZ2skuCblYyFnXRUU5Skc6aXLHW7WOZ7I0bPQxlmJNNIUCR
-	 EBBzSsAEGDlL5OACF2tmFTt1MiSEuTIg8i0da4wiORUeHhe+vfUH8FSAdDdjOxTX4JsO9
-	 znEK3SrhgsypzYjSoHV3nA9llAPETl0u5hcQ5e5tMJD5SBS20PU8NmLlR6I15AxkpKzkq
-	 CgQeFOGTu3YXEhB8iwNo0nMOv3tZ+1N1IQ32OKyps98x0AEaYUtzCDYCRqkA0EPMahQ==
+	t=1793906932;
+	b=JHpkX9VbkZ0bl1NlaFWDCT6yGltysKgvkSxWXiZIJXn8YcMPsuArz5Wuwf0WcGB2TwLC
+	 2xZUE3fQmEn0lbmUlRayGa46TNJVIVipjp0tgS6aS5wqFxXC0r9cZrHQdnuSK3XBlapEK
+	 XOPc9lmWNWBp1ecxy3iwiEfDiR0vnsqYVsx52JpTMs5tAyCCR9FV4JYL3FHdYGQr4DVFC
+	 Sg+RcbjScc5UgNBIIN3uOrdhvXKrNI4iLpi/f98Bsv6JxAyo0L+T+JOlFA94FMQjmOTxS
+	 zOSiSeJI3k/amYtkay52r7IGyUkfO5vnJ8FOZ3neQbbzXPRP+5gZm9y1XOlpTfA4JyA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793906889;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=mO682UCX6enFS5CYcGGQSUIzBPvElDIKploJcGmXk3Q=;
-	b=SQkY8fvYg/5cHmcIhQsNoPYiAEXdmBHBTGEYh64ajivdr1rR+z242/8gDGJ0MNa5IASN
-	 I+UZZiekIiY5NMAXHtdJmc+fi42fKdUZzxW/bC/ILO9JSST+cDemxF+wZ8WfGxYfmfYdA
-	 +Vc84tXDS4VGyVYOuF4LDSBIEtliom7nguRLuV0vziaXbcXceEDL8SAI5ktn2CfstYWc8
-	 Cnvwoz5+kNnqqX04zRpyQQNPB78b6Oq79Opz+hq2c2sa7kzHWWjA3BsxZh2HtPaQXczjJ
-	 5Z5DFVBVCEgj6jIIuJrD2kqrPZjoAkDJnpoIYJjwnl55XLqKWRFboQIsKOZEpdmzdiA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793906932;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=VSHZyt2HX6jrf2329Ijyz/9CIcWqtdZcAyFYcq/4Bq8=;
+	b=Y13naW4aVV4A6cNCUSpOKaWlg2RPTdoaT4NHZ3dRFzn/dnG/NQ3n8KOsnqaywYt13daV
+	 40y7AVrCMyiHnV4tpFpI1cjHPftj/A6Wf16PEGEA6Mxp0wpHLYTagXqAZYMqkJo5h7nrd
+	 cSxqopi+UuHEaugF4WcHoDNYGiZPvpsnJjz/Yz5l6ygkvsIeqCE1hBvB+VfbcF489lMnr
+	 HEnAARKXU0d4qt9MIDOL/hf6bvcOUXqrSh3oApYTgWbTwpu++EQxfJZxEqkZEKP94YOqg
+	 BlRyO8MgzhwQ2NB6md86EXCHklOFGFuTIbqTexzCKb1CQJ0Fg7heUEwcnREQlTDpzNw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K0+F6HP3;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="bw/WUc87";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20ECA606A326;
-	Thu,  5 Nov 2026 19:28:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51774606A331;
+	Thu,  5 Nov 2026 19:28:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K0+F6HP3
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 848CB1F000C1;
-	Thu,  5 Nov 2026 19:28:07 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bw/WUc87
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69BD71F00A1A;
+	Thu,  5 Nov 2026 19:28:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793906887;
-	bh=mO682UCX6enFS5CYcGGQSUIzBPvElDIKploJcGmXk3Q=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=K0+F6HP31Z9thwXpi7+IZBF7hYc/SUDrj+EblqIsTI1pGumRdMdkCcAy5LyIj6Zy2
-	 SzxFlpMu/7oVAVu/noZRHf1doc3xjbMF/9GIJCOyEl3z0Jdfta4hOgAyDH952Zmc6s
-	 pmlqin65sg7ffWpXuDnzgKNCSGD7hc40NLFIzZudKBvsWO+KYMbGp+VzXoFL83aMGL
-	 d/tckltpVJaSs6+dHLVkZXICtmfmUKlrzmh/vdnCMIUH3YlIyU4Ge2iyqOCkz0aFFs
-	 eBaBo8xCXnQR9HVD7yTjr0TADNfa5aCEY+gI8ULypPfmPBnPXuNJkTaCJow2swZqFR
-	 710w1Lh0sYIqg==
-Date: Thu, 5 Nov 2026 13:28:06 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: xujiahao <xujiahao@cmss.chinamobile.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Shijith Thotton <sthotton@marvell.com>,
-	Vamsi Attunuru <vattunuru@marvell.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH] PCI: octep: size the interrupt name buffer for the full
- format range
-Message-ID: <20261105192806.GA1551537@bhelgaas>
+	s=k20260515; t=1793906932;
+	bh=VSHZyt2HX6jrf2329Ijyz/9CIcWqtdZcAyFYcq/4Bq8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=bw/WUc87dAK9OgwLDerM/G7Pe9RKageq/S7vyIMIV+dxKfDT/6+AqyOaZ6Fy24Sf5
+	 xZ0+NlTB1ife40KhyEO8/2i3RZt4uYwfQUof6r8FI5lnRq/LcyHfWASkm3/MjWrdRi
+	 BgQ8a/ZYKTrhKL/NQvAtS4X8/cdEouDrtzAKSt2JTd0adgchhl1YlumOBJltoAEeGN
+	 vYbB+LfXceHt3UW6QGLdXHtaAnZDe7rNdeXAjPjeo8fIdhcgFV0G7rwEhhGvDXSfkE
+	 wVgK162apTb1SAAInG0qnJMlwH5s5bUi5ICww4nLneNlWhcy3veuvsSne6hkFWvg7u
+	 jpKMdfeHfDQsw==
+Message-ID: <sashiko-outbox-199865@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH RESEND v2 02/51] scsi: esas2r: don't copy kernel
+ pointers out in EXPRESS_IOCTL_GET_MOD_INFO
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Christian Brauner" <brauner@kernel.org>
+Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
+ Bacik" <josef@toxicpanda.com>, "Chris Mason" <mason@kernel.org>, "Jeff
+ Layton" <jlayton@kernel.org>, NeilBrown <neil@brown.name>, "Eric Dumazet" <edumazet@kernel.org>, "Thomas
+ Gleixner" <tglx@kernel.org>, "Al Viro" <viro@zeniv.linux.org.uk>, "Jonathan
+ Corbet" <corbet@lwn.net>, "Christoph Hellwig" <hch@lst.de>, "Greg
+ Kroah-Hartman" <gregkh@suse.de>, "Joel Granados" <joel.granados@kernel.org>, "Kees
+ Cook" <kees@kernel.org>, "Jan Kara" <jack@suse.cz>, "Jan Kara" <jack@suse.com>, linux-s390@vger.kernel.org, coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-usb@vger.kernel.org, samba-technical@lists.samba.org, linux-m68k@lists.linux-m68k.org, linux-serial@vger.kernel.org, "Takashi
+ Iwai" <tiwai@suse.de>, linux-ext4@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, "Heiko
+ Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
+ Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
+In-Reply-To: <20261104-work-procfs-bugfixes-v2-2-021c84d852e0@kernel.org>
+References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
+ <20261104-work-procfs-bugfixes-v2-2-021c84d852e0@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 05 Nov 2026 19:28:50 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -57,34 +69,21 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261105092705.3099201-1-xujiahao@cmss.chinamobile.com>
 
-On Thu, Nov 05, 2026 at 05:27:04PM +0800, xujiahao wrote:
-> octep_hp_request_irq() formats the interrupt name with "octep_hp_%d"
-> into a 16-byte array.  The prefix is 9 bytes and a full-range %d
-> argument can add up to 11 more, so the worst case needs 21 bytes
-> including the terminator and 0-day reports:
-> 
->   drivers/pci/hotplug/octep_hp.c:312:53: warning: '%d' directive output
->   may be truncated writing between 1 and 10 bytes into a region of size 7
->   [-Wformat-truncation=]
->   note: 'snprintf' output between 11 and 20 bytes into a destination of
->   size 16
+> EXPRESS_IOCTL_GET_MOD_INFO fills in the addresses of the adapter, its
+> pci_dev and its Scsi_Host and copies the whole struct back to userspace.
+> Nothing in userspace can do anything with those addresses, and the
+> ioctl is reachable through /proc/scsi/esas2r/ATTONode, which is created
+> with mode 0444. Only pass the host number.
+>=20
+> Fixes: 26780d9e12ed ("[SCSI] esas2r: ATTO Technology ExpressSAS 6G SAS/SA=
+TA RAID Adapter Driver")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
-Thanks for including the warning text.  To make the git log more
-searchable, please keep the lines intact even though they are pretty
-long.
+Sashiko has reviewed this patch and found no issues.
 
-Also run "git log --oneline drivers/pci/hotplug/" and match the
-capitalization style.
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
+s-bugfixes-v2-0-021c84d852e0@kernel.org?part=3D2
 
-> The values passed today are OCTEP_HP_INTR_ENA and OCTEP_HP_INTR_DIS, so
-
-OCTEP_HP_INTR_ENA (0) and OCTEP_HP_INTR_DIS (1)
-
-> no truncation actually happens, but the buffer carries no margin over
-> the format's worst case.  Give it the room so the warning stops coming
-> back from builds that cannot narrow the argument.
