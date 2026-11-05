@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793878984;
-	b=z0eRpH7iTBCeFdh6i65iaR5W368bz9iT0HA2HyCkFe1OZAmPpDnFzJgM7CmL2lMftu39
-	 IwSrkOXPcXdE0plNXepsCStrk4lJcK3aa2Gem5ct8dZ0V4rse2Qxi2WN4K1r25Grmpbnc
-	 TTpJueTJdYfUv4OkI/dXElFtA1MMv3vlIUIfIZ4IScXutseR8HmaO5P9GnsFhoD50MMgr
-	 7WLKtsUmn4I/xatyPf2rZ+gZBwPSvFcG0G7XQXcbdoXSTCWaBKqh3G8I051zZHIkBS2i9
-	 XM7a2GVpaMbUjlH8y3HiZUQ7MatMV6gyBpDr0vf89gNW1PhCyCay+y0F5Jrni/cKZkQ==
+	t=1793878980;
+	b=PXPIfd/kD8d1isUquRVUhZxJMqitTJtF74xr1kxJ+4N4sLRH9ZGzz9u0uYqT7sGlEcJk
+	 EUdSvVhZDWMLU9EgDKEirZaGMm5qewG0Z3TMR6rmOtZslOdy6daSeAi5aQNMwEZilxWHR
+	 zJ23oGzbCmfVTvw2angaCmbg/8aNKbrVDLrELH9zpXmxcqRrUviYTMGvUINbzGc+AMrt2
+	 v2O3KRrlKQq1y7/SBCIZuuRdSzTKBuoy6Iv8gf07+tOz49viGNVAm4it7jpK78eW9+hgv
+	 GAJFJLPCgQ+YmgsaqqoMy5AXqnbL1KwMxcQtyx0Q0zhP+or54elWz10PV06pWiU2e5A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793878984;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793878980;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=cdCM073jR/DCJh2HUDXaqMPcxaAwWF1lPqWNiB/vLUE=;
-	b=dsn5bCWj1f9pte5inM8FDmMISp32FQpHI81rHX06sTIbcQ7LNtdy9m27rh70Lj5aWk3L
-	 AEeqCnb7GobfMd+cXMpSVeQzzYpLavMiew4cIYfFu29LUEn9J9AJ4z7qWIGMAV6j7sj5A
-	 1hNlStYU6XxNUmOcfFMZ6leM5Mvu9cxqjvpkveWMEsYEVX3Qrz4n6NA3Rf9G9z9f3VrGr
-	 eSePCsKKpM1K8Vy4m5GNKWtGnIdqnSzEUHDjeA8cxtY0MGLZz8ysv92NQ+jC/BothPdps
-	 b0MB+FOHKZGf+3qIBl+yd5wgEwqB+Mf0VmJmd1TYI2PtAjgZdL4hdRCkFU86TLUW8Xw==
+	bh=wh2ChqYF9XmNrt6b8ATpGBOGwb3/qYFuxeZ+hTus5/8=;
+	b=IODUXf09rZU4m1IVrAa/B1AAOrTQ4VXlt+Fdj04brOQZUo2mjNr7wm+EyVUcHuqsbF+W
+	 nqF9C06rUzVs6Y45gyouSq3T/1du0YddjMN4bUzgdVxx7n2UyG59QRhkYA3OuPm5TIIKR
+	 P335YGmsdumVbzNbMxUxMBbY2wE5qfhdTcYxCyDNZrboBBwDZ87f9eu5yQYq3tzpWlSho
+	 geiV3f/LfOKwnCUaMOow+4z1s+53xkGBbUdH9eyi8GjLC1Rp+4VqRdmVxI1ZtQxBM4uH6
+	 me9Gi5xRfRvrkUzJWbrk7EFVONggoiHtBT8k6IuQJKjJy/TuvtchEttGY59Di+FJq2g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eT9v7SQ2;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Hz+Q7l13;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1244B6082BFD;
-	Thu,  5 Nov 2026 11:43:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 218496082BC1;
+	Thu,  5 Nov 2026 11:43:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eT9v7SQ2
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BDD41F00A22;
-	Thu,  5 Nov 2026 11:43:02 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Hz+Q7l13
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29C471F00A15;
+	Thu,  5 Nov 2026 11:42:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793878983;
-	bh=cdCM073jR/DCJh2HUDXaqMPcxaAwWF1lPqWNiB/vLUE=;
+	s=k20260515; t=1793878980;
+	bh=wh2ChqYF9XmNrt6b8ATpGBOGwb3/qYFuxeZ+hTus5/8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=eT9v7SQ2y40A5UP/390xXLrJsObRzc3AcOzfvEdORBqVDMN/q52Qniru19gINalgH
-	 JGk2bwSuLsIXV5t3ZEyuFDYmjpnJlfua/IAzbcEYKlMQ5Aq5wfcSAOf0kujEuOt9ES
-	 ycVUHMFg5X9C8EHHPioe1DmIKzXEePWmQnnHd/tW7Jj8oMnr2C839yipt6Zd1dwzWU
-	 kPYZfW251UgxkBntPipWQEo67dbzvXXaaB5/NDGTShbtposKweytgxdFtDpGdHmU9w
-	 qY8WXx8BbQRVsbYSUZ0I2vuAS6Cz6sIr3afUL4xRDWaeTsB3YrW3TBviftXA2IGvMi
-	 lHmgYx8N1Gc0w==
+	b=Hz+Q7l13ehrAH4JfC/EmnFHGXEzuVKlpCJ2hy0jgirPvlXDfbh9TzTMxvSEM6ftXL
+	 V4gRcdHtqAxgaJGYxhvb9wFCVxSfrsAAeFspTWF18H2yAevJRWmbTRoiB1VxTBL26V
+	 drIvK0pp+5Vy5BVtDKiwEoAjO2KuKEYGtBLshn+pSKmASjMVYF2/2OfECXUV/zq7Vf
+	 DwdlYasjopA6fDNUUo1tirp/B5e/etym3wKTgkWVqF782WshoLHDVjRmtlDChPvjZY
+	 oRH4EFh4/hTEI4ToBhirlTH+z+6szkJ4Rr4SuE9x29hl4l1rkbr6TNhUpciGDZtZox
+	 s4g7D59du+NYA==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -82,9 +82,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	iommu@lists.linux.dev,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH 04/17] wifi: mac80211_hwsim: lock device for manual driver binding
-Date: Thu,  5 Nov 2026 13:42:17 +0200
-Message-ID: <20261105-device-trust-core-v1-4-1e536825b4eb@nvidia.com>
+Subject: [PATCH 07/17] cdx: Propagate DMA configuration errors
+Date: Thu,  5 Nov 2026 13:42:20 +0200
+Message-ID: <20261105-device-trust-core-v1-7-1e536825b4eb@nvidia.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
 References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
@@ -103,30 +103,32 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-The documented API contract for device_bind_driver() requires the device
-lock. mac80211_hwsim uses it for a newly created class device with no bus,
-so no automatic driver-core path can bind the device concurrently and the
-missing lock was safe.
+CDX reports successful DMA configuration when firmware setup defers or
+default-domain acquisition fails. Driver probing can then proceed without
+the required DMA setup or IOMMU ownership.
 
+Return the configuration result so driver core stops or defers probing
+instead of allowing a driver to use a rejected domain.
+
+Fixes: 2959ab247061 ("cdx: add the cdx bus driver")
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/net/wireless/virtual/mac80211_hwsim_main.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/cdx/cdx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-index e53714b81ec2c..b796da3dd54b3 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-@@ -5769,7 +5769,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 		goto failed_drvdata;
+diff --git a/drivers/cdx/cdx.c b/drivers/cdx/cdx.c
+index a118a89a7779d..0a030bf522690 100644
+--- a/drivers/cdx/cdx.c
++++ b/drivers/cdx/cdx.c
+@@ -367,7 +367,7 @@ static int cdx_dma_configure(struct device *dev)
+ 			arch_teardown_dma_ops(dev);
  	}
- 	data->dev->driver = &mac80211_hwsim_driver.driver;
-+	device_lock(data->dev);
- 	err = device_bind_driver(data->dev);
-+	device_unlock(data->dev);
- 	if (err != 0) {
- 		pr_debug("mac80211_hwsim: device_bind_driver failed (%d)\n",
- 		       err);
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ static void cdx_dma_cleanup(struct device *dev)
 
 -- 
 2.56.0
