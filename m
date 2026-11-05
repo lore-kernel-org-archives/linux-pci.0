@@ -1,56 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793885820;
-	b=hsHV4sPKuGOi1KtTbrAsr09GIuiTGUYZK5zULSE6IwQTp2RD9r/7t5eEdfWe6E+pawyv
-	 tt3/PQDlA1fsEQWMkbY+tR2rDfHpNKj32D+/PW89tkJ8DRnleD8YCXcZHXxFiwN00ia8/
-	 uCKzLe88xMO0tMPxmhx2gJM5tepHn5eS3TdBQIZlqxSIHGiARapqVd40vT/TnzG17gJfN
-	 A6cLCM3ol41ZscCK49psXrN5R4q2BJgrmOVRYABeHZab8aBiYvAtzAS7wyg5WI4DE2pjV
-	 5Di7S6TH5NkPjjebLtlAHnCehQESxNvnl5nsq1NXnTHMMjM3TcV6VqTO/KSqhDGk7wA==
+	t=1793885901;
+	b=IlQYr9WQwEMdOD3UVMg8oqLVbcD8bK+lnlCkGtKz0d2W5nBCMHjBktI+2KhgtXXdhRdV
+	 IlDdjdkyiIB9s42kWSN4LoDgn17AAvroMo3OHxp41y1Ukj4TGyiVNxlk/t3rolp0S6hc+
+	 0EEoGCVfJL+SxE880jURbzoXW852CONdZ+IKCi68QrY3JMLMTnuhk6od0LdYmCai+NyBQ
+	 bAKpXi3iQ/wM6rWgmofxvUcg6vh7jo2Ec+0ADWOqynujIwttWtvMripsDdiobUlvs2Nkv
+	 6IsffiTEYqEyHZpRK9QXshUCelldbGs1ebf69yMMO5gZ+Wdzzkg7WFu6qBzazSqh0KQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793885820;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793885901;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=K/2muAaJC1NvEvUWyOogF39v4c22VcLJHfb4Ii8tHIg=;
-	b=dN9hOmRbjeEsn6IY76qLKpz8qeNhdwG/k0sjEYTvMhA5jJ/ke98A8ydrTIt4vUE8kDks
-	 BMWvSVyChnyuAyd5D5262NFOnEh9qnk6uIi7paWjrbvkQaBRNtljhwaeVgNEXMEW9NasS
-	 fTL8P4TRacEQ1yo8evCc5+Rv9Cg2YGf7Yfi6OuoRizNlxdnVWRaTJ8tmC+mtzfGNrg1GK
-	 XiF7wZdUYt0a67x7yvUIivtb84qFJDIhD3MM7bz+aabmILJaosUOREfw0Xl8iXzLa8uBq
-	 Z9J7cUr85ZPOX5/lmK8o2hDFbnMt8oKXLLwB/KBjH1T7yxN+Z8FVxQYVjuJ0WjkpT4A==
+	bh=ewpNNzU8Ah3tpMIHp6kFnvUbqopq6WMDd5UjLg/FWjk=;
+	b=w+mwqhM36ShSB7UUGxUGHCi9yMUumNflDlXZAbE9eigSsCsvpa0PY2VlHW/aqIqWJol+
+	 SfbAaIYO8no+nW0eWEqd6N3reSUoJZc9wAPAfpqhxS/u7TgAwUnbmX/97hbC1aLEZVQva
+	 pWsp+jVssYRakZf4EvnTfQUnfvbgr/f2L5APlsrzf/rny+3tiPF/XeYquK2w3++SWWmmV
+	 Dx6ruLnYKJ8bOtvfQoTjNutxMt6L+oTB4CJdlC3iJh48l/6FFfxmcpUbHn68Z/ahrOKBj
+	 vSNUq83Fb4t9m7OnmYJjYJ+Ed7aUDOU3Jc7GHevic1SC6dteVMEtwnVRazpRxNIa/nA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jpZM9mWU;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EL4yOFN+;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0C54606A32C
-	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 13:36:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5195606A326
+	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 13:38:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jpZM9mWU
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E41B1F0093A;
-	Thu,  5 Nov 2026 13:36:59 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EL4yOFN+
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F0981F000C1;
+	Thu,  5 Nov 2026 13:38:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793885819;
-	bh=K/2muAaJC1NvEvUWyOogF39v4c22VcLJHfb4Ii8tHIg=;
+	s=k20260515; t=1793885900;
+	bh=ewpNNzU8Ah3tpMIHp6kFnvUbqopq6WMDd5UjLg/FWjk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jpZM9mWUaxHTqDb2erdbf6Ej1x5b85apVxSvyNUMSItep30FAV6ieIcAbIQvk6L8H
-	 4CdnnXapjlWwLjJVL/j3RYuFoROc8sz/9rtepPbdpJmJEwMEO3b+6j+pAI1II1yV0u
-	 rL6Bp8Zun+p4IIgHSK3HILUK7gWA58fC7SrHO79p0vA+/7l3whjM96l3xbGwh9ouIO
-	 yZpO0z6palpWeIinh0WQ8XtkygrkJyQBVR09VuA49a8DAzLWEypfSujdmL+gT5cpBC
-	 aRc0X11IyJxPD/XA9uZKStBMz4nncImCt21QS9z5El5sknpvlrQ6JNUK3wAuGySKa1
-	 lhGmeFp5R3tsA==
-Message-ID: <sashiko-outbox-199166@kernel.org>
+	b=EL4yOFN+kp2vb9qOKHZf0hW5Ajf2rMzyniHoBSi24yFtl6ZQ2zvpyFXv/aem5bEvz
+	 cWTRC5eEGM4nNVc75cBf05TzFFf4V6PLhg8vQMyURu74pX+NWHZOQsxK053icjbJv2
+	 iPA9QrSeDX6udpyxc5JguS/nog82/M0lCJekTIC6SkodiUkIl6mZxvasoMzxNyZrK/
+	 GEBWY9rgitaxaKyE1tU9ZJ2imwyRVtoKqqZYd1LDxk85nT/fpaA2SIUT+8js6v3Bl8
+	 B3SE5ZN4mU20UUrwONLZwunSpMgRUEqaMJ4QvI80tbYR8MWRTyO5yczuG41uGq8gf6
+	 qoVDwetMom03Q==
+Message-ID: <sashiko-outbox-199168@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 1/9] PCI: dw-rockchip: Fix LTSSM set functions
+Subject: Re: [PATCH v9 3/9] PCI: dw-rockchip: Move devm_phy_get out of
+ phy_init
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Sebastian Reichel" <sebastian.reichel@collabora.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261105-rockchip-pcie-system-suspend-v9-1-a2e55846649e@collabora.com>
+In-Reply-To: <20261105-rockchip-pcie-system-suspend-v9-3-a2e55846649e@collabora.com>
 References: <20261105-rockchip-pcie-system-suspend-v9-0-a2e55846649e@collabora.com>
- <20261105-rockchip-pcie-system-suspend-v9-1-a2e55846649e@collabora.com>
+ <20261105-rockchip-pcie-system-suspend-v9-3-a2e55846649e@collabora.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 13:36:59 +0000
+Date: Thu, 05 Nov 2026 13:38:19 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,15 +61,10 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> Before the Rockchip PCIe driver has been switched over to the
-> FIELD_PREP_WM16 macro, PCIE_CLIENT_ENABLE_LTSSM and
-> PCIE_CLIENT_DISABLE_LTSSM were setting bits with a mask of 0xc =3D 0b1100,
-> which means BIT 2 and BIT 3. After the conversion it only sets bit 2,
-> with bit 3 being handled by a separate define named
-> PCIE_CLIENT_LD_RQ_RST_GRT. Apparently the conversion missed to make use
-> of this new macros resulting in the third bit not being set.
+> By moving devm_phy_get() to the probe routine, rockchip_pcie_phy_init()
+> can be used to re-initialize the PCIe PHY, which is for example needed
+> after a system suspend/resume cycle.
 >=20
-> Fixes: 30e919570581 ("PCI: dw-rockchip: Switch to FIELD_PREP_WM16 macro")
 > Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
 > Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
 
@@ -76,5 +72,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105-rockchip-p=
-cie-system-suspend-v9-0-a2e55846649e@collabora.com?part=3D1
+cie-system-suspend-v9-0-a2e55846649e@collabora.com?part=3D3
 
