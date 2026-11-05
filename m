@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793907029;
-	b=K7PAqft9wIMdljuXKRG7d++VGFwzhkFLJma8GppuDBmR7RDfowE42Epa2oB4XzYM6N6t
-	 xHxJfcCNXouQB7MYOb6nGNX6eR8wUR8QJNLy2d/EkugM1V7m4aepJMvfTm00EJcGDdUky
-	 VOwxKs+9x17XnMuvp6BFbNj97XDfwMCWOD1/GJMYaZmWPPoV80+1DdXtLoWjnY9N1+M5+
-	 RCY/DcL7oSEzszyWGdyYQebHwDz31pNiZCwdgtxcBrfrLTDEQXGtlEIPis8ajXhxrveO3
-	 7+P9mPW5R6nriQ/hVAIpWlN7gCtrS1A4GFdf9encxmvcPr3AAmkQ616xORxJtQr0Buw==
+	t=1793907031;
+	b=YFp8Y7cRfEEu2BYryfDJiENLOLxc25Yn4rGjHCe5DZ3FLu+NzPs0ksOdwmEPAnHxLdt+
+	 Rh+9MY/wDz9raqas8zYjC+tXqClhhDKiVQ6bkWWl6mzEH9zpXV5wez9y+Eeg6ZTh2c08x
+	 AEXqmvhT8LGHBUy/iIAnc6pISWuL/SOOejiKH4o+NrrN2KFoHcKoZFKor5iklNGrDQ0uP
+	 fVoQI8z0jxuHMaSel16z1iQVBiF0EFxBrCLuGpOaYEoKiepVrtKnbdrte1hyFc1UznOq+
+	 vxmj8pVz3Azr3I12oIzr9gtKE6ooQDzgRDyfp+vZ9YArPBPVmQLSxy7WCk+WHZifL9Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793907029;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793907031;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=TUEa7eIRLkYlG50VJyzFVsWpbL0zjSyXV5JMm1JJ87k=;
-	b=RRA2GTDcIPQHue/19b5cKK2TayYvmMJFuumie/Y0d1BC2t2UcFMmjwzxEa41juGRtlyQ
-	 AZ51TKYi1j9S6qy+UduCq8zgGI7f09VfrAOd9Yz+V+MtZDdSnA4/NxZDHNOTWyzklqOuu
-	 wG+qmTx/RRZ4h/IjrLk+BxX+SaPXNtxuN/Z1UdGntdEOW8YvWnNRTfj+PLaFfXJh2biZc
-	 cbLQNKYpPr9/A71UwxUHf0RNLuz6F2Edp39wE1rhB9n1zIrJLBwjZWvmF2yNgiqCILoSG
-	 L55VCfa5R15U0g5+h5E2tqgdsZ9iDWxyhVYCuoGOSvfw3wSOLpIfxdmtsj7G9yqyBQQ==
+	bh=5aGzsp5KdgMuXiH4cPLLqfuaFSwdYC0fVhuh3RxhPKI=;
+	b=PAoX/MKDSBhocXuLFZpoUxxj4TG0OS2A7+79yay2f5zdHOCYcvDFyp4q9ApoIvpQhE1Z
+	 q36iGBaB0bzSJDEQbY3Rl5Tgv1pzjgK46khIIQ82gnkOjRpqL52OcAzoWoDGPKB1NcbjD
+	 yYjYZybpuXIlgSr18AVfQyHeYw8uXT4f5GVXpFR7vOTL1IGamBl62PhEraIcppjoFwyV1
+	 vHZWZv4bF64WCBEgmj4DXuPUypqLjdaOtAJTu6niQStoOQUBmfTxoj18LC00Kv8Sy2Fvc
+	 W7vl0sOyRCtmg5qCNEBy1B1aLCe8WsC/6QK/HKozPgZwmi6nWXB7N3lAbV8jljOdNHQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="EzE5K//c";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="K2B1lxv/";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44FCA606A336;
-	Thu,  5 Nov 2026 19:30:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8DB6606C887;
+	Thu,  5 Nov 2026 19:30:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EzE5K//c
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54F291F00A02;
-	Thu,  5 Nov 2026 19:30:27 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K2B1lxv/
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F19C1F00A16;
+	Thu,  5 Nov 2026 19:30:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793907028;
-	bh=TUEa7eIRLkYlG50VJyzFVsWpbL0zjSyXV5JMm1JJ87k=;
+	s=k20260515; t=1793907030;
+	bh=5aGzsp5KdgMuXiH4cPLLqfuaFSwdYC0fVhuh3RxhPKI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=EzE5K//cJCfees6tq1n/aL2ZXIFBE5phY+UQOmHq0vN8UPvYS/t9kkzR12V91SBSS
-	 mhS7JX+wWb8SSFsgjQLGWb/WG0xY7lURsW1aoepv/YNSVEiw0q1fXhrM33YsC2iYcX
-	 Y+waIrwUG/i8Vo4xsrxYyrlh/w1ZXi6PT5QOp69R3v0bZCzhRKgl7jMf/20Nx+KlzW
-	 0im/yzY5zXpuAl+QtNTMGdrxcjVY3ep9xLEZXfFos47R/RaVosKingXECZ1lFQe2/a
-	 3/8aSX9eI5PmGSLMxslCDj4GFhqROFpYezwD6KMYwTFTCdln5UIo/LVBxVD2dGdOQo
-	 DMN8N2/pVc/WQ==
-Message-ID: <sashiko-outbox-199911@kernel.org>
+	b=K2B1lxv/jKFYgwMG1NDGekYrwHfux9B7Lr7YpeIbjYFC35OEbhjW8Gpq8v4zquLqB
+	 Z4pB43t0ZFCbMfNEQFK14pwDCS+MJMSzNhKmk4jye3m4E8h1z5FlvpH2Ti6nWmlmXv
+	 PD4sVjRltWsq+GUhSR8G+N2nMA8hfy3KQopKQglQ52iAbw6oo1rkFrb2wRdkx4DFbD
+	 yAw1hWQRYtDcwJ1O5ly6RFK6tEeSZ1CDKnU+TKvYYEVsr5f+ntmDyz/BK/XOWfo5X+
+	 SdsaxDQDu2u1NgohRkw33LgDeTvk29zCkDLG7cFajkOaw7uVHNhan/wbprVyf7LjAW
+	 sAMrc6/lSDo7A==
+Message-ID: <sashiko-outbox-199912@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2 48/51] proc: sysctl: don't hold the tables
- while readdir copies to userspace
+Subject: Re: [PATCH RESEND v2 49/51] selftests/proc: check that faulting
+ sysctl accesses don't hold up removal
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -55,12 +55,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Iwai" <tiwai@suse.de>, linux-ext4@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261104-work-procfs-bugfixes-v2-48-021c84d852e0@kernel.org>
+In-Reply-To: <20261104-work-procfs-bugfixes-v2-49-021c84d852e0@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
- <20261104-work-procfs-bugfixes-v2-48-021c84d852e0@kernel.org>
+ <20261104-work-procfs-bugfixes-v2-49-021c84d852e0@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:30:26 +0000
+Date: Thu, 05 Nov 2026 19:30:29 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -70,32 +70,29 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> proc_sys_readdir() holds the directory's table for the whole readdir
-> and the table of each entry while dir_emit() copies its name to
-> userspace. Unregistering a table waits until nobody uses it anymore. So
-> a getdents64() whose buffer faults for as long as it wants keeps
-> unregister_sysctl_table() waiting, just like a stalled read() does.
-> Listing /proc/sys/net/ipv6/conf/<dev>/ that way holds up the removal of
-> the device under RTNL.
+> Read, write and list /proc/sys/net/ipv6/conf/<dev>/ of a tun device
+> with a buffer whose first page is backed by userfaultfd and remove the
+> device while the task sleeps in its copy from or to userspace:
 >=20
-> So don't take any table into use for a listing. A header counts what
-> refers to its memory, the inodes made for it, and unregistering doesn't
-> wait for those. readdir takes one of those references on the entry it is
-> at instead, which keeps the header around and nothing else. Under
-> sysctl_lock, where unregistering erases an entry, it finds the entry,
-> copies its name, follows a link to the entry it stands for and pins
-> that. Then it looks the dentry up, creates the inode if there is none,
-> [ ... ]
-> directory was done.
+> - unregistering the table doesn't wait for a faulting read(), write()
+>   or getdents64()
 >=20
-> Fixes: 77b14db502cb ("[PATCH] sysctl: reimplement the sysctl proc support=
-")
-> Cc: stable@vger.kernel.org
+> - the read still gets the value that was produced before the removal
+>   and the next read fails with -ENOENT
+>=20
+> - the write is copied in after the removal and fails with -ENOENT
+>=20
+> - getdents64() still lists what it looked up before the removal and
+>   fails with -ENOENT afterwards
+>=20
+> The tables are unregistered under RTNL, so a regression stalls each
+> test for five seconds before it fails.
+>=20
 > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
-s-bugfixes-v2-0-021c84d852e0@kernel.org?part=3D48
+s-bugfixes-v2-0-021c84d852e0@kernel.org?part=3D49
 
