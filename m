@@ -1,57 +1,89 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=156.67.10.101
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793889820;
-	b=u18ZhkgHYcprxAmlVzay2LqkMHYRvbucAng4++I02+tkV6e5PuBP1WJ458nd1Egi3vIe
-	 6544M5Re4icFDVINOy0+hMtggAkekHm/WHd4KeeBLMIIks5GBZRbdrWW/us57hDOQjQOS
-	 xU2l19MHUIwUE8wATCAdPNvlRuVqq4uW/rsyHVUwEXcLCZu8lkOhYcgkYs/luglW8REBr
-	 /7HCfIWw+G5udWDdffACiBSrIb9nS8U05+Ba/2EDicHAOYndH3oyVqyroAitUIsrHxzIy
-	 tPyLH40Ih6xcOGyFkpZIsJBLXNEKEtVazNNQR2xP9P4noqLXy5VKTIAQYe1uvxzS6Gw==
+	t=1793889880;
+	b=XSQiNwUw+vt9mjOUKSLVr4N9hfbbpLjKdIrLLP8OnWOh5aAw+2KYkDrZUJq2I+5HlV25
+	 DvvgTGx8ez0GMqXhHQeLvAlWMFfdhyJGkgoqC+WDNf78DWZQ3I7FgAcVOjP0/cxOx6y20
+	 AL0uCTQzK13hNNEBrP1k4UFVRUuxMGSH9U3Jx6r41STiVS1dWcdWnzApAmtEBk4PdLbi9
+	 F9nJoa6qtYs1+Qup/26iK8oqueSq7+mycyLd7zaKd3Mp579VQDAqSBGS8bwPwU26uz+Dj
+	 NyH76mGop5JVOE9Pc5G6ka6UqRRWt75OkwMGgsX5YiF9S3mk1Ad0XzLQgjdSZw1YTkQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793889820;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=M70OQDuXK+abJGMUE43Gfl7rDaTxBy+PUpescgSqPPw=;
-	b=3f3HyN6zHX97uyt0cAlWwxfvsIDlVosGoS/gmoWelc0JLWciH8J7S1mRbC5VYc/fmQTR
-	 kHB4/DAmdM7e3XeICWssV9tZl5rVv27vh5MAlJCpDMpt6EThDlFpXBYRqog+bdvpGQaaZ
-	 RiM/7pO3a3BlXaasROCk8alQRqH964biJWV5fUbU6Ovob9Ro/+LM8ZNn9+0ILUW9KYkQf
-	 jqKuMpA9iTbZuCPnX1jfpXFDkkQ2ocfok1D+6rMgQW5x26iwfo6B53DD+w/1drs3WCDMs
-	 5/32pU87L5OU7I3y2LxIwZKYqz8V4jxf0jnjatZfzoZT3k65SAB/TP7gUztrmHu20Vg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793889880;
+	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To;
+	bh=EWwMu9gaBRMOSzV/4G3fbg1rV1925IYruXnqky/bmUo=;
+	b=dOVEF8o4HCndzhOjHvCbYtqD3UbschVxLm0Yrl+PIodB6FzgxlNCX7TO96zcQe6jKHsh
+	 d67zS9BLvZ6n33sc6kRj6GdAJAh4h5CkUFS4T8UPy7ABN16wAxEbnYycfmGL13ZKkNffB
+	 7rNarXRBe0wb8SwYWGc/nTk12dHR2M8SUu7WuEBlwdd909l7KIK7+uRosM/BruFaQ51cg
+	 uDOvXRAJY2LKj8fFMZbXS8HBFCtT22wPyYfxPLPF2W31nPGUAWUsYYnMIcfrrUhvzSm7V
+	 jGulQ8xONsLtru1z6WZaxiMYN64RsMcSxLmtcyf+JUT9MvSYLuOgGIiFd61hgdq2DLA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kSC+QDU8;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=lunn.ch;
+	spf=pass smtp.mailfrom=lunn.ch;
+	arc=none smtp.remote-ip=156.67.10.101
+Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with UTF8SMTPS id 72F63606A31B;
-	Thu,  5 Nov 2026 14:43:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kSC+QDU8
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 2C2651F000C1;
-	Thu,  5 Nov 2026 14:43:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793889820;
-	bh=M70OQDuXK+abJGMUE43Gfl7rDaTxBy+PUpescgSqPPw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=kSC+QDU8YghkJtFS0cLl+FXR5kGvQmGksdDxWEQD6tFm97MuGJ1pn3ZS7pG/7rLVS
-	 5jfIYUpob8t1hHTzVtyYSby95FQO29OVXYfTzIMrOuD3KN/0fe9m/haB3Uo46aND4W
-	 m1/VVPWwUVWIBBIi+e16ZhqRqMLI6SkR3ZD07idmuCnQZ8P9igxpDaVAayQIeucoY0
-	 icUwZGifc7WRq4sxRyQfkZwiCzo23WALnKM6o/fJbVaLKrZxWXQjfMYTUyklb98WB2
-	 bweb8Q/tlIMxG4AL6XiDGN6J/g39odx88A0eHSsMpqUCAV94v00u9mR9WbMPoLYDEc
-	 exE4ROZHXypJQ==
-Date: Thu, 5 Nov 2026 15:43:36 +0100
-From: Bartosz Golaszewski <brgl@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Zhangfei Gao <zhangfei.gao@oss.qualcomm.com>, 
-	linux-pci@vger.kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, 
-	bhelgaas@google.com, krishna.chundru@oss.qualcomm.com, 
-	bartosz.golaszewski@oss.qualcomm.com, deepti.jaggi@oss.qualcomm.com, yadu.mg@oss.qualcomm.com, 
-	shengchao.guo@oss.qualcomm.com, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: qcom: Power on pwrctrl devices for firmware-managed
- hosts
-Message-ID: <twprfauh4hgbmmsmeejzpq7d75eqwsd22e26luzjix27ygtybr@nnxrapllp6fn>
-References: <20261105101521.434361-1-zhangfei.gao@oss.qualcomm.com>
- <auyUXp1Fgk2yC7fZ@debian>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B97C4606A332;
+	Thu,  5 Nov 2026 14:44:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B97C4606A332
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lunn.ch
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
+	s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
+	Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
+	bh=EWwMu9gaBRMOSzV/4G3fbg1rV1925IYruXnqky/bmUo=; b=uh6gWGZxzH/waVbLrmPklKtBNJ
+	6wOYmWomrUFQ8/UkMzR1teAAUIA0Mk0RyK2H2lwMScPZHQEUXeBgTnViHak2nIWwJ/yLMZgKiJUko
+	wxGiKspttlJq1BnxyjVTEGK1dnHu06AaKVR2E5Gdk0zcAzNZEkey2bfbvx3nyPNoTYT0=;
+Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
+	(envelope-from <andrew@lunn.ch>)
+	id 1xOygz-00EaZR-NP; Thu, 05 Nov 2026 15:43:53 +0100
+Date: Thu, 5 Nov 2026 15:43:53 +0100
+From: Andrew Lunn <andrew@lunn.ch>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Leon Romanovsky <leon@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
+	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-input@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH 10/17] driver core: Expose device trust authorization
+ through sysfs
+Message-ID: <54c9476c-9f76-4ea1-a73a-c9937d6b463c@lunn.ch>
+References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
+ <20261105-device-trust-core-v1-10-1e536825b4eb@nvidia.com>
+ <2026110514-bunkhouse-handset-6a3a@gregkh>
+ <20261105132729.GB8298@unreal>
+ <2026110535-engulf-precut-cf10@gregkh>
+ <9d896ebb-6892-4cac-a7c5-41def47f0be0@arm.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,26 +95,27 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <auyUXp1Fgk2yC7fZ@debian>
+In-Reply-To: <9d896ebb-6892-4cac-a7c5-41def47f0be0@arm.com>
 
-On Thu, Nov 05, 2026 at 08:07:18PM +0530, Manivannan Sadhasivam wrote:
-> On Thu, Nov 05, 2026 at 06:15:21PM +0800, Zhangfei Gao wrote:
-> > commit b921aa3f8dec ("PCI/pwrctrl: Switch to pwrctrl create, power
-> > on/off, destroy APIs") switched PCI pwrctrl users to explicit create and
-> > power control APIs, but only added the calls to the regular DesignWare
-> > host initialization path.
-> > 
-> > Firmware-managed hosts bypass that path and probe the ECAM host bridge
-> > directly. Endpoints already powered by firmware, such as NVMe devices,
-> > remain discoverable. Endpoints that rely on Linux pwrctrl and pwrseq,
-> > such as WCN7850, remain powered off and cannot be discovered.
-> > 
-> 
-> NACK. For FW initialized platforms, FW should power on the Endpoints before
-> booting Linux.
->
+> Yup, and that's true even in the PCI TDISP case - there's a major amount of
+> "communication" and "configuration" involved in that. The principle which
+> should (hopefully) generalise is that a bus/host controller driver can
+> always interrogate its child device to perform whatever attestation and
+> general configuration is appropriate, but we won't hand off any _control_ of
+> that device to a specific device driver (nor enable potentially-impactful
+> bus-level features like DMA, interrupts, etc. if relevant) without the
+> requisite agreement between the bus code and the user.
 
-Ah, sorry for the earlier tag. I should have known this and pointed it
-out.
+Maybe it would be good to list subsystems which the bus driver can
+use, and cannot use.
 
-Bart
+You list interrupts as potentially being dangerous. What about reset
+controllers, GPIOs, regulators? At least in the embedded world, the
+bus driver might need to enable power, set a clock ticking, and take
+the device out of reset via a GPIO, before the device pops into
+existence and will enumerate on the bus.
+
+I don't see why interrupts are dangerous, which makes it hard for me
+to determine if GPIOs and clocks, and regulators are also dangerous?
+
+   Andrew
