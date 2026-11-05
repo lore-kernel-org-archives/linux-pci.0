@@ -1,93 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793878965;
-	b=E23y5Dh0LvlTYSlflk1cfaRgsrBPIv9+AZEhejhMvfnKAfqAoVAyvRIgGErSxFWx/vkj
-	 +st3i3PxPs4XEkTfiFD/cxKdufe3nIpF64fmUAyY63sMm147/0TLp4kyVsvQcDNv8zN64
-	 kyu9v0JRfm3v0SjBOA3LLzYAo2E8JGiulJSUcGW3CS5izJj8K2ZQpH1Ql5RjwVr/zLBKX
-	 gvmTAcGmhh35JdBtKWhja5EhjWs8b9G+olBA6nW8JcwIgkPqPg5dp9/6/WiLWl4S++Hp1
-	 6gVWmn8wXwb+y3SpCMeoSnZ3w9MUE3WAnnmipYpAJfIUJkIYRdCWmRsNWVcsRpIuzYw==
+	t=1793878976;
+	b=2y/YY/yf/5hLcD1QeJImfHKbu3l2uh52YtBh4JcspsbfWlUri/1YMwXjS9k9zKsyaLk6
+	 O3GQBkVAEgOxl7blyQ2IoGykW6qb/DOYliQX3kp0rtcIr08O1ihfkLlFAgfpagOOR25cq
+	 i9Y9PeRFuFBxokeikTDfDmnI6u/lxTWuZRN7O10iYlnNnwxmj8w3Gs5GhlQeUz1eo3qiV
+	 UGI6IR7tMxWH5RWQRRh8FXBwag9U6DIBspRBctD64j5AqEhlaTpKjhuCra5sD6qp+t9fi
+	 BxmVT4cG2TwQ8xdDN66zu13XfxifTGBQVm/qcXKnGpJ+tdyDHJd199imZ0+20WpXaPg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793878965;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
-	 Content-Transfer-Encoding;
-	bh=Uf1oZV9pQvGrEUvi8XtIeuSa56tR9ySw+fDX7XP+CMk=;
-	b=mjBxzr0IRfTuHjOkaAF+dqa4VF6+2oTOm7oWlTM4Cnp/PBIG+aHEsTieoRVjaPPzLszR
-	 pD51WD6LFjcNcZVy2owVjEEK//i1cuhxkOK8EHOK0Oi/FMbOJsWOROo+oyu6S3MUUZWVy
-	 w4iaH6xwp21r4bFdttQpmYj2PgcYvMwYIhDqqriKEs5WlG5D1mwOKHNNC87sbXyzhD5qr
-	 VZMExZaVcs75Xy4GWV1Y+8ugUc2Pa9hxMjxQ4JE/45waLL0dhouX0s+DjWI4TQ+8kNODg
-	 GRH1N+ZzyDaYRECYWrTl90Hxzx7UM00k99yKVBhZf7oqXp/0O36sjn9qnkEND5wIcLQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793878976;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=Vsz4UyjlY+BuhJV95kmX0T3HN6I+F+RhqHGin7cX1WU=;
+	b=cTNoNvIUhxA0XZ9dCDYKrVvAe5ZfRQvwDIixEkU0zaAD48bWdP1n0wFuSWHKWjXuzBeZ
+	 NVpasdN7fiOZJoiOp8XdvVvfNBa4hWoAHpgiKbo1L0wbbCTxp59IVlZ5Ir1gWgZ5bZQ87
+	 290rjHIeosxWHfHhqbwYy7x7RXxQW4ZeisxYK4YqfvdMSa+U5pwHYrxJQnLs2KrXO7hH9
+	 SlHMmhyNpcig3CHRNwncM9eSFvHckgXdaepHHP6gV1+88RJTPp3R+Fm8Nmnfznen6gP5H
+	 nyZVaVRIHfRrm+LcyL7j5UouOW9TU1hsvQAB+DjN+bBnPynxHDqJodo4Ol+2KW1ELjQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RnInfvfx;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AlFQJRRE;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61CA9606D809;
-	Thu,  5 Nov 2026 11:42:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21422606EE9E;
+	Thu,  5 Nov 2026 11:42:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RnInfvfx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62A431F000C1;
-	Thu,  5 Nov 2026 11:42:44 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AlFQJRRE
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 701911F00A16;
+	Thu,  5 Nov 2026 11:42:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793878965;
-	bh=Uf1oZV9pQvGrEUvi8XtIeuSa56tR9ySw+fDX7XP+CMk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=RnInfvfxHXtvO4dD2rpgLRRjDe8FtQGLLRwQ8XylHDziicCqsNVQ5WQrmbaLGX6vY
-	 zCXyGQq/kPlFlMojAMi9XImf5AAA8FMsyc8xKVMxzmLW5CKJzFa+SCHdWImWnC50wO
-	 twOGlGdhGEOOmy8M7brqom2qCMFDApBMHYhcTP1rns8FA7AtPo3HgR+JWHD36IHylV
-	 VfgZjUiISKYbQeQTkbTweQ3xkeHCT/DWFVYl5hFXfmVJ0XG1MAvJbjghyIEDJsZXMF
-	 ekz3UjPPpd4mHzRAGT6qzsEjrEhh0pw6QnVTjASyaukekBZzUdAF0/whpYf2ASVRmf
-	 xp4H1OKTG4jkQ==
-From: Leon Romanovsky <leon@kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>,
-	Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>
-Cc: linux-kernel@vger.kernel.org,
-	driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org,
-	netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev,
-	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH 03/17] net: phy: Attach generic PHY drivers through the driver core
-Date: Thu,  5 Nov 2026 13:42:16 +0200
-Message-ID: <20261105-device-trust-core-v1-3-1e536825b4eb@nvidia.com>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
-References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
+	s=k20260515; t=1793878975;
+	bh=Vsz4UyjlY+BuhJV95kmX0T3HN6I+F+RhqHGin7cX1WU=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=AlFQJRRErFY6obqRNasqLcRdnazNttCrLasBkZYvMcuQxdkEH5D/Blt//Y7K/9g8E
+	 4CR6pMqK24Eeg3g/0ImWyKD7XBeGS2lZz9gNiXoRc4yoiaqBMUuZ+kZYg2mAs/t5q0
+	 7qP3RvaKAUtt68Jwld+KkxIHMkFGb8Wj1otOH+58USl+uxRDtESdnCTaGyHI6tMlqA
+	 MJwAnAffnUAQMAEX3k0cAG0j45Qo2CkNEOBy85WneWAlZsSzbRKPM/GUI20Zz93Lwd
+	 KpgjmbtaCZwmYU5jWlHAlqx6GOMSIfnJlekGIOwtkru+3vSJVLGDoiS3UDk95WCm0G
+	 dIiu1YVKMDx7g==
+Message-ID: <sashiko-outbox-198970@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 6/7] arm64: dts: apple: t603x-j514-j516: Add PCIe device
+ nodes
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Janne Grunau" <j@jannau.net>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
+In-Reply-To: <20261105-apple-m3-pcie-v1-6-e00a72a604f8@jannau.net>
+References: <20261105-apple-m3-pcie-v1-0-e00a72a604f8@jannau.net>
+ <20261105-apple-m3-pcie-v1-6-e00a72a604f8@jannau.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 05 Nov 2026 11:42:55 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -96,234 +60,86 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Mailer: b4 0.15-dev-18f8f
-Content-Transfer-Encoding: 8bit
 
-From: Leon Romanovsky <leonro@nvidia.com>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] arm64: dts: apple: wrong wifi0/bluetooth0 PCI IDs in t603x-j514-=
+j516.dtsi
+--
 
-The generic PHY fallback probes directly before publishing its binding,
-bypassing driver-core admission and supplier checks.
+commit 93b064f5082472a65526181caee83a837e8be25d
+Author: Yureka Lilian <yureka@cyberchaos.dev>
 
-Attach through the driver core so admission precedes functional setup.
-Callers hold RTNL, which a concurrent bind of a specific driver may wait
-for with the device lock held, so for this flow let's add
-device_driver_try_attach() so the attachment never waits for that lock.
+arm64: dts: apple: t603x-j514-j516: Add PCIe device nodes
 
-Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
----
- drivers/base/dd.c            | 65 +++++++++++++++++++++++++++++++++++++-------
- drivers/net/phy/phy_device.c | 39 +++++++++++++++++---------
- include/linux/device.h       |  2 ++
- 3 files changed, 83 insertions(+), 23 deletions(-)
+This commit adds PCIe device nodes for Wi-Fi, Bluetooth, and the SD-card
+reader to the M3 Pro and M3 Max MacBook Pro device trees, along with
+board-specific brcm,board-type properties.
 
-diff --git a/drivers/base/dd.c b/drivers/base/dd.c
-index 52123251965de..01026e02de92e 100644
---- a/drivers/base/dd.c
-+++ b/drivers/base/dd.c
-@@ -1046,6 +1046,25 @@ static void __device_driver_lock(struct device *dev, struct device *parent)
- 	device_lock(dev);
- }
- 
-+/*
-+ * __device_driver_trylock - __device_driver_lock() without sleeping
-+ *
-+ * Returns true if the locks were taken.
-+ */
-+static bool __device_driver_trylock(struct device *dev, struct device *parent)
-+{
-+	if (dev->type && dev->type->need_parent_lock && parent) {
-+		if (!device_trylock(parent))
-+			return false;
-+		if (!device_trylock(dev)) {
-+			device_unlock(parent);
-+			return false;
-+		}
-+		return true;
-+	}
-+	return device_trylock(dev);
-+}
-+
- /*
-  * __device_driver_unlock - release locks needed to manipulate dev->drv
-  * @dev: Device we will update driver info for
-@@ -1195,19 +1214,17 @@ void device_initial_probe(struct device *dev)
- 	subsys_put(sp);
- }
- 
--/**
-- * device_driver_attach - attach a specific driver to a specific device
-- * @drv: Driver to attach
-- * @dev: Device to attach it to
-- *
-- * Manually attach driver to a device. Will acquire both @dev lock and
-- * @dev->parent lock if needed. Returns 0 on success, -ERR on failure.
-- */
--int device_driver_attach(const struct device_driver *drv, struct device *dev)
-+static int __device_driver_attach(const struct device_driver *drv,
-+				  struct device *dev, bool trylock)
- {
- 	int ret;
- 
--	__device_driver_lock(dev, dev->parent);
-+	if (trylock) {
-+		if (!__device_driver_trylock(dev, dev->parent))
-+			return -EBUSY;
-+	} else {
-+		__device_driver_lock(dev, dev->parent);
-+	}
- 	ret = __driver_probe_device(drv, dev);
- 	__device_driver_unlock(dev, dev->parent);
- 
-@@ -1218,8 +1235,36 @@ int device_driver_attach(const struct device_driver *drv, struct device *dev)
- 		return -EAGAIN;
- 	return ret;
- }
-+
-+/**
-+ * device_driver_attach - attach a specific driver to a specific device
-+ * @drv: Driver to attach
-+ * @dev: Device to attach it to
-+ *
-+ * Manually attach driver to a device. Will acquire both @dev lock and
-+ * @dev->parent lock if needed. Returns 0 on success, -ERR on failure.
-+ */
-+int device_driver_attach(const struct device_driver *drv, struct device *dev)
-+{
-+	return __device_driver_attach(drv, dev, false);
-+}
- EXPORT_SYMBOL_GPL(device_driver_attach);
- 
-+/**
-+ * device_driver_try_attach - attach a specific driver without waiting for locks
-+ * @drv: Driver to attach
-+ * @dev: Device to attach it to
-+ *
-+ * Like device_driver_attach(), for callers that hold a lock which the holder
-+ * of the @dev or @dev->parent lock may wait for. Returns -EBUSY, before any
-+ * probing, if one of those locks is contended.
-+ */
-+int device_driver_try_attach(const struct device_driver *drv, struct device *dev)
-+{
-+	return __device_driver_attach(drv, dev, true);
-+}
-+EXPORT_SYMBOL_GPL(device_driver_try_attach);
-+
- static void __driver_attach_async_helper(void *_dev, async_cookie_t cookie)
- {
- 	struct device *dev = _dev;
-diff --git a/drivers/net/phy/phy_device.c b/drivers/net/phy/phy_device.c
-index 5d4508bcfbe99..8cc0de755bd08 100644
---- a/drivers/net/phy/phy_device.c
-+++ b/drivers/net/phy/phy_device.c
-@@ -1912,7 +1912,9 @@ int phy_attach_direct(struct net_device *dev, struct phy_device *phydev,
- 	struct device *d = &phydev->mdio.dev;
- 	struct module *ndev_owner = NULL;
- 	struct module *drv_owner;
-+	struct device_driver *drv;
- 	int irq = phydev->irq;
-+	bool bind_genphy;
- 	int err;
- 
- 	/* For Ethernet device drivers that register their own MDIO bus, we
-@@ -1939,16 +1941,16 @@ int phy_attach_direct(struct net_device *dev, struct phy_device *phydev,
- 	/* Assume that if there is no driver, that it doesn't
- 	 * exist, and we should use the genphy driver.
- 	 */
--	if (!d->driver) {
-+	drv = d->driver;
-+	bind_genphy = !drv;
-+	if (bind_genphy) {
- 		if (phydev->is_c45)
--			d->driver = &genphy_c45_driver.mdiodrv.driver;
-+			drv = &genphy_c45_driver.mdiodrv.driver;
- 		else
--			d->driver = &genphy_driver.mdiodrv.driver;
--
--		phydev->is_genphy_driven = 1;
-+			drv = &genphy_driver.mdiodrv.driver;
- 	}
- 
--	drv_owner = d->driver->owner;
-+	drv_owner = drv->owner;
- 	if (!try_module_get(drv_owner)) {
- 		phydev_err(phydev, "failed to get the device driver module\n");
- 		err = -EIO;
-@@ -1956,11 +1958,20 @@ int phy_attach_direct(struct net_device *dev, struct phy_device *phydev,
- 	}
- 	phydev->drv_owner = drv_owner;
- 
--	if (phydev->is_genphy_driven) {
--		err = d->driver->probe(d);
--		if (err >= 0)
--			err = device_bind_driver(d);
--
-+	if (bind_genphy) {
-+		/*
-+		 * RTNL is held, and a concurrent bind of a specific driver may
-+		 * wait for it with the device lock held. Never wait for that
-+		 * lock, and let the caller retry.
-+		 */
-+		err = device_driver_try_attach(drv, d);
-+		if (err == -EBUSY) {
-+			/* Another bind owns the PHY, so nothing was probed here. */
-+			irq = phydev->irq;
-+			err = -EPROBE_DEFER;
-+		} else if (err == -EAGAIN) {
-+			err = -EPROBE_DEFER;
-+		}
- 		if (err)
- 			goto error_module_put;
- 	}
-@@ -2071,8 +2082,6 @@ int phy_attach_direct(struct net_device *dev, struct phy_device *phydev,
- 	module_put(phydev->drv_owner);
- 	phydev->drv_owner = NULL;
- 	phydev->irq = irq;
--	phydev->is_genphy_driven = 0;
--	d->driver = NULL;
- error_put_device:
- 	put_device(d);
- 	if (ndev_owner != bus->owner)
-@@ -3813,6 +3822,8 @@ static int phy_probe(struct device *dev)
- 	int err = 0;
- 
- 	phydev->drv = phydrv;
-+	phydev->is_genphy_driven = phydrv == &genphy_driver ||
-+				 phydrv == &genphy_c45_driver;
- 
- 	/* Disable the interrupt if the PHY doesn't support it
- 	 * but the interrupt is still a valid one
-@@ -3949,6 +3960,7 @@ static int phy_probe(struct device *dev)
- out_reset:
- 	/* Re-assert the reset signal on error */
- 	phy_device_reset(phydev, 1);
-+	phydev->is_genphy_driven = 0;
- 
- 	return err;
- }
-@@ -3977,6 +3989,7 @@ static int phy_remove(struct device *dev)
- 	phy_device_reset(phydev, 1);
- 
- 	phydev->drv = NULL;
-+	phydev->is_genphy_driven = 0;
- 
- 	return 0;
- }
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 429e39f647cf9..4cf62d69eac4f 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -1314,6 +1314,8 @@ static inline void *dev_get_platdata(const struct device *dev)
-  */
- int __must_check device_driver_attach(const struct device_driver *drv,
- 				      struct device *dev);
-+int __must_check device_driver_try_attach(const struct device_driver *drv,
-+					  struct device *dev);
- int __must_check device_bind_driver(struct device *dev);
- void device_release_driver(struct device *dev);
- int  __must_check device_attach(struct device *dev);
+> diff --git a/arch/arm64/boot/dts/apple/t603x-j514-j516.dtsi b/arch/arm64/=
+boot/dts/apple/t603x-j514-j516.dtsi
+> index bbee373044f94..403a9cb3979c7 100644
+> --- a/arch/arm64/boot/dts/apple/t603x-j514-j516.dtsi
+> +++ b/arch/arm64/boot/dts/apple/t603x-j514-j516.dtsi
+[ ... ]
+> @@ -67,3 +69,42 @@ &serial0 {
+>  &fpwm0 {
+>  	status =3D "okay";
+>  };
+> +
+> +/* PCIe devices */
+> +
+> +/*
+> + * Force the bus number assignments so that we can declare some of the
+> + * on-board devices and properties that are populated by the bootloader
+> + * (such as MAC addresses).
+> + */
+> +&port00 {
+> +	/* WLAN */
+> +	bus-range =3D <1 1>;
+> +
+> +	wifi0: wifi@0,0 {
+> +		compatible =3D "pci14e4,4433";
+> +		reg =3D <0x10000 0x0 0x0 0x0 0x0>;
+> +		/* To be filled by the loader */
+> +		local-mac-address =3D [00 10 18 00 00 10];
+> +		apple,antenna-sku =3D "XX";
+> +	};
+> +
+> +	bluetooth0: bluetooth@0,1 {
+> +		compatible =3D "pci14e4,5f71";
+> +		reg =3D <0x10100 0x0 0x0 0x0 0x0>;
+> +		/* To be filled by the loader */
+> +		local-bd-address =3D [00 00 00 00 00 00];
+> +	};
+> +};
 
--- 
-2.56.0
+[Severity: Medium]
+Should wifi0 and bluetooth0 under port00 in
+arch/arm64/boot/dts/apple/t603x-j514-j516.dtsi use the Broadcom BCM4388
+PCIe IDs ("pci14e4,4434" and "pci14e4,5f72") instead of the BCM4387 IDs
+("pci14e4,4433" and "pci14e4,5f71")?
 
+In arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi (M1 Pro/Max), wifi0 and
+bluetooth0 use "pci14e4,4433" and "pci14e4,5f71", which
+arch/arm64/boot/dts/apple/t602x-j414-j416.dtsi (M2 Pro/Max) then
+overrides for BCM4388:
+
+&wifi0 {
+	compatible =3D "pci14e4,4434";
+};
+
+&bluetooth0 {
+	compatible =3D "pci14e4,5f72";
+};
+
+The base M3 MacBook Pro J504 in arch/arm64/boot/dts/apple/t8122-jxxx.dtsi
+also uses "pci14e4,4434" and "pci14e4,5f72" for wifi0 and bluetooth0. It
+looks like when the port00 node was copied from t600x-j314-j316.dtsi into
+t603x-j514-j516.dtsi, the overrides from t602x-j414-j416.dtsi were missed,
+leaving all six M3 Pro and M3 Max MacBook Pro device trees with the older
+BCM4387 compatible strings.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105-apple-m3-p=
+cie-v1-0-e00a72a604f8@jannau.net?part=3D6
