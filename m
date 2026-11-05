@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793908702;
-	b=Z4vFWTUSYRau9Vn34unrsh/775qYNKj+JSAiGn1OpZDBGJsX7S9MnzxNrKvOCK95lHCx
-	 v6oJr+H9u0aRlxq+Bs3+9W1qsjoDcFMsGN1/sXjjh2CUCNLld9scLsmtDMxenIRDx/+5b
-	 LMtjh5A4dPpEcqzmtGqgZJtvsez3A7UOOr6ZdjC7P85UUFHXFJX8166PuM4BdmDFz8r11
-	 /HSBlcaTZv6AvDCoyP0Syo+Gh2ObfPWCEhbt6iks8u68BwlrN2w+GvcsKndJi1F2DC0lk
-	 QQZKLi7il2SD+PyeTRQcN3h3Cugs2Os/PxO32nv0e1eLX4PTbNuKkeWNk4ba7NbVMbg==
+	t=1793908706;
+	b=k9KzX4p/6MU9C9MDHtvLANA01UpTADmYFTJvIx4AHSr/rjx0VfZ1O+0zOsgjChsJKkAR
+	 sCiiEWoXLxX5AEOf9c2Hz4HdbKOwA4i0Jejt0Dy/ei/kOePANV6EQTcqAcdkS8FWg0S2i
+	 IPsGXW5CBNblkprguQOJVOrnQ0AbHoBPJwcAfE+nH48iH1G0Wpd2P4ytefupcqCo3EP80
+	 pUvADs4WMb2XpSn5NeoUsaP/zZwBZPjWR6r0fGiXQlJuc597qEtBgUPug+4ee/qMKeZSz
+	 6gc94lQRYmwFSdSet1koysBHqOUcyCXz92Y/4fe8doOofhLVQjj4CH4M9mJLWsqKdMA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793908702;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793908706;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=7/aaKuldQgClq8ReLax1ykoSxafbF3ZgLD9HjMju1WU=;
-	b=kPiGIccfZZ/+DaSGFdEoYhOQ6cqMR8GucYz9CqoK+5Q+9JjGo0Qnz/iW1bdzpZKF/ufC
-	 9bi1sIp1W4PthXYV+I4bRz85N34cCldYHfb6hhQjzAVtFsYK0HAFAHehzSleaDKjJ9yvR
-	 xv2CcQpDNethcyxf5i06u5CSgrfsHNhT+0GqrUWtuYLVBLw64osK9OaNHQHnWIHsUaXV5
-	 NyaXxC+PHIvtO7hrpOH8DMA4r6+6TjOd5LCf5wEPRgzL1gOLuofqa2jqFTZuTmye+mH4h
-	 MFa6L6NsNvmEX8moSFwaEZGHBlfuDJdApbbAefBKCZSvfP1n02+yo73LqQ9mDZ8jDTQ==
+	bh=QCq+/Fw8y7pYoOo2Vq9cjoQwmb2wvkDQOJQ13WVM94g=;
+	b=CQxe1QtSKOaXL9cwrP/mFz0wswT7eZMGZyNxJSgDJH7EsTskO4eHVHPpEMrcCqSl1xOL
+	 CgiW/xNm1KKckgSlH904Wf43oa75bZzMKt/iRKLpIpimRw14NBL0fhITe5VhgD7y3ne3h
+	 jGanJweXNMzZc/DNn4WowipOenMpPuDRuo4uAbK+helEc7l7kj3Y8AQUGlRI3ti3Pr+0p
+	 7GD7jdqBJ/xLhR8SFX2NHYruJArLz3fQlXA6VqH47Ln/WM/mvIbYcXGg+mCw8Iw7fsPxS
+	 QoesTWhAHmIYuAJHrWNKw/JX1AKwugXF1GJ10iIyw6oP8wCy9NFC+pTFj7DWZhQsQvg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=an+GaGrP;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="i/CYgvco";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A4D6606EE81;
-	Thu,  5 Nov 2026 19:58:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12176606A6EB;
+	Thu,  5 Nov 2026 19:58:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=an+GaGrP
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D3891F008A1;
-	Thu,  5 Nov 2026 19:58:20 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i/CYgvco
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B6241F008A1;
+	Thu,  5 Nov 2026 19:58:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793908701;
-	bh=7/aaKuldQgClq8ReLax1ykoSxafbF3ZgLD9HjMju1WU=;
+	s=k20260515; t=1793908705;
+	bh=QCq+/Fw8y7pYoOo2Vq9cjoQwmb2wvkDQOJQ13WVM94g=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=an+GaGrP6TdrpWnLckWrPSepsWmHkQ5XptZk4tHL+HpcEfNPQTKp/wIE0YEjMyswu
-	 OrhN9uEyMFoYjQkeHuikFpy3e0zddTttGDFkpuIaMkcA6eGsZ9PG+nZXuKxpHyCsrC
-	 SNCEbh0wSxS6z/Jb7uu4cFZEto4+IHTnO2FVyeKD50/Tzzg7HbxicNYxazMsJsheZU
-	 1/idVdBK3MZnCoSpbo06TdxRXrO5ag6849zDW70fe0dwn4m5M5QgW3y7jxda2zX6CR
-	 doTY9qkj5Jd95Yv6hY1F0fz7SIzfsktjfoFB86+JK9Sn5qjY0BS4iz7RIoQ4TBqsQz
-	 j9OtHEdlaVesA==
-Message-ID: <sashiko-outbox-200059@kernel.org>
+	b=i/CYgvcoLrin2CTkYgx1vi8xFWzEuHmls5KosmtGQNdgSh85S9e4TB4IJC4eocMTL
+	 Ry67D7wOzIW8YL2JZzYC6aH0P/NGwi3UIy4d//bHBH0TkYaOuZmlG/oeY3JUaqz2Op
+	 S5FnuLuvQCwDKLXxJgeF4xsPIadF/qLWyf2YOU5FHq3Bb7qDVswvT3kN4m/IQO8Dov
+	 6q1EdR54MnceiWzoM8LUTSHx7pr1Sd7eleF7HBY0F1fhrsAnS+mEjp42ZLzCbflK30
+	 uAWYCeiyI2OnT/oCV11AVAdnPCpeiQDiVnRdPxM24JpNKbhLnIDBuxuEmZhiT+G5n4
+	 8xxH9tRkRDezA==
+Message-ID: <sashiko-outbox-200061@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2 25/30] alloc_tag: let procfs own the seq_file
- of /proc/allocinfo
+Subject: Re: [PATCH RESEND v2 27/30] mm/swapfile: let procfs own the
+ seq_file of /proc/swaps
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -55,12 +55,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Iwai" <tiwai@suse.de>, linux-ext4@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261104-work-procfs-fs-v2-25-319e0f9a8aae@kernel.org>
+In-Reply-To: <20261104-work-procfs-fs-v2-27-319e0f9a8aae@kernel.org>
 References: <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
- <20261104-work-procfs-fs-v2-25-319e0f9a8aae@kernel.org>
+ <20261104-work-procfs-fs-v2-27-319e0f9a8aae@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:58:19 +0000
+Date: Thu, 05 Nov 2026 19:58:23 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -70,9 +70,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> Declare the seq_operations and the size of the private state and let
-> procfs open and free the seq_file. ->proc_open() and ->proc_release()
-> only set up and destroy the ioctl lock now.
+> Declare the seq_operations and let procfs open and free the seq_file.
+> ->proc_open() only records the event count for ->proc_poll() now.
 >=20
 > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
@@ -80,5 +79,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
-s-fs-v2-0-319e0f9a8aae@kernel.org?part=3D25
+s-fs-v2-0-319e0f9a8aae@kernel.org?part=3D27
 
