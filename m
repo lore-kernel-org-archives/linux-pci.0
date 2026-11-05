@@ -1,89 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=156.67.10.101
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793889880;
-	b=XSQiNwUw+vt9mjOUKSLVr4N9hfbbpLjKdIrLLP8OnWOh5aAw+2KYkDrZUJq2I+5HlV25
-	 DvvgTGx8ez0GMqXhHQeLvAlWMFfdhyJGkgoqC+WDNf78DWZQ3I7FgAcVOjP0/cxOx6y20
-	 AL0uCTQzK13hNNEBrP1k4UFVRUuxMGSH9U3Jx6r41STiVS1dWcdWnzApAmtEBk4PdLbi9
-	 F9nJoa6qtYs1+Qup/26iK8oqueSq7+mycyLd7zaKd3Mp579VQDAqSBGS8bwPwU26uz+Dj
-	 NyH76mGop5JVOE9Pc5G6ka6UqRRWt75OkwMGgsX5YiF9S3mk1Ad0XzLQgjdSZw1YTkQ==
+	t=1793890033;
+	b=PFyrfosSIOYm/c9NmqjLA79u1meb8oMJIHRSzYVrR6h+46OvwR151tUsL7jz7IfIL3Rn
+	 uvbIeKcwUH52KuvFGaJmAltAR9SicaXGy/Xg/q6MfgAxu7a4Ftd+BkAtLnyd6DYoBRJa8
+	 WFK/JOHrVtngRygOVCsVqNTo8jdUibcPAqtIEfhITG+lpui6JM519OAJ5SOa8Ovpvv6Ef
+	 VgUNqepQyiv8zCkBxJowLtvctwkfkPA6wD7uYkUSA/S9wH7aFF4w06ppKD+IY9wJ/iNrj
+	 0wwW0htsTEgr15ZREACSu9qjLSo6Pr7g14lw06D6CDyvqZMiHETGDt6s/HBeR+aX94g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793889880;
-	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To;
-	bh=EWwMu9gaBRMOSzV/4G3fbg1rV1925IYruXnqky/bmUo=;
-	b=dOVEF8o4HCndzhOjHvCbYtqD3UbschVxLm0Yrl+PIodB6FzgxlNCX7TO96zcQe6jKHsh
-	 d67zS9BLvZ6n33sc6kRj6GdAJAh4h5CkUFS4T8UPy7ABN16wAxEbnYycfmGL13ZKkNffB
-	 7rNarXRBe0wb8SwYWGc/nTk12dHR2M8SUu7WuEBlwdd909l7KIK7+uRosM/BruFaQ51cg
-	 uDOvXRAJY2LKj8fFMZbXS8HBFCtT22wPyYfxPLPF2W31nPGUAWUsYYnMIcfrrUhvzSm7V
-	 jGulQ8xONsLtru1z6WZaxiMYN64RsMcSxLmtcyf+JUT9MvSYLuOgGIiFd61hgdq2DLA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793890033;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=8FCyqzY+hBP2p+wQrr/5G4gKJ7J4jjyIRtVzo9yY/5w=;
+	b=htREDUNKH8DGiHbt1yU7LIFkbt5R1KGbldJRkBh1b/DFfEalWYACOTzYWIgJRPhjafLz
+	 eBuX4KhUzUqHVPsW1dk7eGpcqj6wRXdMlXbRLl9xAY/32QCdDagNu8FEDSusd4WrDrnWh
+	 mov3ylD100GyrjNyhyFYvloKZy3CVjqQfKiwwM+LPCWPK05+QWIZ/L1ztv/T58aIXZLbA
+	 4xs9Gkv2D1YQHExnYaFe1CFuqW7TfPrZYYx538AtrOwS7au8Wp7+3s816SOQKwXV4VM3F
+	 Cr2x7pDt1A1McUSntD0NQfeMvOcg62g/IKuRWBx1Gz/MdFYyIW7oM+N2lhzPVBKvfpw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=lunn.ch;
-	spf=pass smtp.mailfrom=lunn.ch;
-	arc=none smtp.remote-ip=156.67.10.101
-Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="EsRmhc/+";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B97C4606A332;
-	Thu,  5 Nov 2026 14:44:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B97C4606A332
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lunn.ch
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
-	s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
-	Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
-	bh=EWwMu9gaBRMOSzV/4G3fbg1rV1925IYruXnqky/bmUo=; b=uh6gWGZxzH/waVbLrmPklKtBNJ
-	6wOYmWomrUFQ8/UkMzR1teAAUIA0Mk0RyK2H2lwMScPZHQEUXeBgTnViHak2nIWwJ/yLMZgKiJUko
-	wxGiKspttlJq1BnxyjVTEGK1dnHu06AaKVR2E5Gdk0zcAzNZEkey2bfbvx3nyPNoTYT0=;
-Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
-	(envelope-from <andrew@lunn.ch>)
-	id 1xOygz-00EaZR-NP; Thu, 05 Nov 2026 15:43:53 +0100
-Date: Thu, 5 Nov 2026 15:43:53 +0100
-From: Andrew Lunn <andrew@lunn.ch>
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Leon Romanovsky <leon@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH 10/17] driver core: Expose device trust authorization
- through sysfs
-Message-ID: <54c9476c-9f76-4ea1-a73a-c9937d6b463c@lunn.ch>
-References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
- <20261105-device-trust-core-v1-10-1e536825b4eb@nvidia.com>
- <2026110514-bunkhouse-handset-6a3a@gregkh>
- <20261105132729.GB8298@unreal>
- <2026110535-engulf-precut-cf10@gregkh>
- <9d896ebb-6892-4cac-a7c5-41def47f0be0@arm.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11194606A31B;
+	Thu,  5 Nov 2026 14:47:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EsRmhc/+
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F1F21F000C1;
+	Thu,  5 Nov 2026 14:47:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793890032;
+	bh=8FCyqzY+hBP2p+wQrr/5G4gKJ7J4jjyIRtVzo9yY/5w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=EsRmhc/+iUBrLqmFnkfHnpoLYm1uuSpgf5bJkhotqO5nUzixcQwTeNIjaPe4BZJVB
+	 T05LfdIveI1LpzjvAvIabdSiUa0IhppuhLXIQyBBYQT19kApZklN9hkF90UEXcjPQv
+	 DAjSeyZDqP5rK6O9RIXVaTkDgqedpBiAr5irCGrXEAX00dvRPUKbccyPpyvya/I/vO
+	 2jHhBZtWzPDycjyz+2nLPI8qWwZdmGjjuHGam8c2Xh60owdfrOeZnT7Qf1iOvGqB2L
+	 izMmjL2weeoMBaiBZHCTYRAGhNWzgMtY8sx4+7HBp5BLKa+ShfztsKndyzG0uip2w7
+	 VfKRypkHWE3mQ==
+Date: Thu, 5 Nov 2026 20:17:10 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Szymon Durawa <szymon.durawa@linux.intel.com>
+Cc: nirmal.patel@linux.intel.com, bhelgaas@google.com, robh@kernel.org, 
+	kwilczynski@kernel.org, lpieralisi@kernel.org, asutosh.pathak@linux.intel.com, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v9 0/7] VMD add second root bus support
+Message-ID: <auyWYoWOL5Lq9CsN@debian>
+References: <20261026205502.3502574-1-szymon.durawa@linux.intel.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -93,29 +58,57 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <9d896ebb-6892-4cac-a7c5-41def47f0be0@arm.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261026205502.3502574-1-szymon.durawa@linux.intel.com>
 
-> Yup, and that's true even in the PCI TDISP case - there's a major amount of
-> "communication" and "configuration" involved in that. The principle which
-> should (hopefully) generalise is that a bus/host controller driver can
-> always interrogate its child device to perform whatever attestation and
-> general configuration is appropriate, but we won't hand off any _control_ of
-> that device to a specific device driver (nor enable potentially-impactful
-> bus-level features like DMA, interrupts, etc. if relevant) without the
-> requisite agreement between the bus code and the user.
+On Mon, Oct 26, 2026 at 08:54:53PM +0000, Szymon Durawa wrote:
+> This series adds support for a second VMD root bus.
+> 
+> Today the VMD driver can enumerate and manage devices only behind the
+> first VMD root bus. Starting with Intel Arrow Lake, VMD may expose a
+> second root bus (BUS1), and devices behind that bus are not discovered
+> by the current driver.
+> 
+> The hardware model for Intel Arrow Lake VMD is slightly different
+> from earlier VMD generations:
+> 
+> - CFGBAR, MEMBAR1, and MEMBAR2 are shared by both VMD root buses.
+> - Root ports on BUS1 have PCI_PRIMARY_BUS hardwired to 0x80.
+> - Interrupt handling remains based on the existing VMD MSI/MSI-X and
+>   irq_domain model; this series does not introduce a separate interrupt
+>   domain for BUS1.
+> 
+> To support that layout, the series first refactors the current code so
+> resource setup, bus creation, and enumeration are split into helpers.
+> It then partitions the shared CFGBAR/MEMBAR apertures between BUS0 and
+> BUS1 and creates a second root bus in its own emulated PCI domain.
+> Reads of PCI_PRIMARY_BUS from BUS1 root port bridges are emulated to
+> return the actual root bus number, so PCI core bridge scanning does not
+> detect a mismatch and lose BUS1 subordinate device discovery. This
+> replaces the separate workaround patch used in v8.
+> 
+> Patch overview:
+> 
+> - Patches 1-4 extract helper functions for bus enumeration, CFGBAR and
+>   MEMBAR configuration, and root-bus creation.
+> - Patch 5 replaces hardcoded resource indices and constants with enums
+>   and defines.
+> - Patch 6 converts single-bus state (bus, busn_start, sysdata) into
+>   per-root-bus arrays.
+> - Patch 7 adds BUS1 resource partitioning, a separate PCI domain for
+>   BUS1, PCI_PRIMARY_BUS read emulation for BUS1 root ports, and
+>   second-root-bus support.
+> 
+> Tested on an Arrow Lake platform with NVMe devices present behind both
+> VMD root buses. With the series applied, devices behind BUS0 and BUS1
+> are enumerated and become visible to the kernel.
+> 
 
-Maybe it would be good to list subsystems which the bus driver can
-use, and cannot use.
+Series doesn't apply on top of v7.4-rc1. Please rebase and resend.
 
-You list interrupts as potentially being dangerous. What about reset
-controllers, GPIOs, regulators? At least in the embedded world, the
-bus driver might need to enable power, set a clock ticking, and take
-the device out of reset via a GPIO, before the device pops into
-existence and will enumerate on the bus.
+- Mani
 
-I don't see why interrupts are dangerous, which makes it hard for me
-to determine if GPIOs and clocks, and regulators are also dangerous?
-
-   Andrew
+-- 
+மணிவண்ணன் சதாசிவம்
