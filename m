@@ -1,83 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793906383;
-	b=rqEjoeBpdmISyp+f1AV0ZuCgI1OUW60VVGykwFVLItSoyQ4kz15Qdt7muA6P1Jags5Jn
-	 LHoLShzB7961HdEhPlXUpqytGMb7ZvKuSIeSTRw06RBNf/ZStKDhI+ts3ECW2PQWDoc4A
-	 t0OHYhHiQzXcV0zDjsAtOoZ6GeTR+CXlhQzFzCWm5AMTEDU5rQghCHHAneiwDfSw7XCYl
-	 fBd9O/ZqdLY6CQ6HuWOpu4FHK82vkKAbEYW6y6HujtjzTLYZ55ISuCdDj4sKr7gL5YPqF
-	 CKyd6J0/LxlutgWPyXNiiuJF6GCQhIHmOHObciNtZWQLBuMhs8JIIHrU7Isec1rz7sQ==
+	t=1793906608;
+	b=5RNYHHMLuMtqRvFBbUxunhamABfdh9lhNqtXVhUAyaq8cnRdhVKQ1YCxitPIdfR2ZsF4
+	 YLv9w+rA3e3RZPwk91JOCC14QyujKIDjzvdT2PT9AmHCEwRNxo3GwutxER9ylvszlrT5E
+	 K04rVVXrXv/PMIBc3hbzpyusmgLdnmOyI2jp5da87AnRhe0YSA8GhPZLLowxPVRuLsV9k
+	 I1BvUK8gJjiFpBVt5WDF0njWfW8gocAKpn9y8ROBX8jPQje4YOPBs6yUgEM1elNdm0q5h
+	 WGSE3o/PyThtge/wGpkZDB82rndjH+dE+82Q2nuw9Xdhdh/wkFp1/6TxpS18NSnEp6A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793906383;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=z/2gVRqDIy8aB19su2IOPKcJY2mNZmdhA03swHLZjYQ=;
-	b=cXnInZHsCibHY3+JyEDByQvS/OXbWrYvtEvEz5qD0r8kRfLFuBU2xcJH2UcQmWhnlbyv
-	 LxOf9zzSO1g/Q8/Yy+FiBneRB96EC5ljU5eZRNeD+YOVs35x/b6g0m8CHIOxNafAdrwiv
-	 QEz8N/cdKRpqckOPJavL8OekG6uA2p3zOBpa3SaOlNKd9fdNTHgLCaMA8Vh1of/SMpgNZ
-	 h2DfgREj0kryqZplYBWTeIMynYUgg6qjLqxrTh0xm+JOIK+Y25W4Y27ZGItEDseO/0CWw
-	 5IF8Ce1+kbgwAFoN8qz8h2NB+aojEIpv9R6jCIhZaUZLQpylKUiPUZif2+Z5aKf/XjA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793906608;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=c6logFtXvkjKajdate51tTXcoOZfAOhW4TsINn6/coM=;
+	b=KL0JX2LjuCteNkoerX594nsmwAil8OdxTbK3Bmk7JBwe3t8QFiym+KwZQ5K3QtQ3SNIP
+	 He2JDT/ywRADRxePbzaIuveCNb0XVMFllenpBvKGbZLFSlvyPTZ9HbAcTBKJ53yu8p5ow
+	 XRdno+mDTbVpadRH6yDRRAwDGtEjT5RNds/K27KlNOZcU0A/1SqMLd6HRS6dasakGdkX6
+	 14LgNVgcD4Wqpc/BtphIBfGVl4UNSA9E+e7EbU/Z0tDyFCu/KYNdXAGA+AnmzO39AA43n
+	 FqabG4uBMTqTtq7tcHppc1LLqf9ViemWs4qO8bIyThAiaQkDVEsHupk6lQbljieUjSQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jkEVYl84;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ooDu48kl;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98297606A31B;
-	Thu,  5 Nov 2026 19:19:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C841E606A330
+	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 19:23:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jkEVYl84
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60E871F000C1;
-	Thu,  5 Nov 2026 19:19:42 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ooDu48kl
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EC0B1F00A17;
+	Thu,  5 Nov 2026 19:23:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793906383;
-	bh=z/2gVRqDIy8aB19su2IOPKcJY2mNZmdhA03swHLZjYQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jkEVYl845iO1BRjDNjs7l3aLV0DOTx2Xh4dkDtjEQRAG/szywJJ5iA7F7EBeoCv3/
-	 Xr/XPb+CiVQa81KxX4rWfb+Ey7BCQrq8ZgEJKW4tmKtvqc9XOhUvqI6GMjdGyv5wa/
-	 fFT42EqhuLoCYvx7kmlRnDtoWkdemyj50Ko8jo+RL8euRPtleHPXYSTL2guiYPygpR
-	 LmQAT9/JCG5RJdfVN5vfVW2kDcNKd8AzICxKZa2tpcTEwInZ2buqjtKKyH4CQ2de5i
-	 NVLEPe8RHtRdddRsaEMdYbNggz8TadkiapRYLGxK2b9KrUeCLhPUE/vb3Yg0OCtBC2
-	 7ZypycQhGTlGQ==
-Date: Thu, 5 Nov 2026 21:19:40 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH 02/17] Input: serio - attach manual drivers through the
- driver core
-Message-ID: <20261105191940.GI8298@unreal>
-References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
- <20261105-device-trust-core-v1-2-1e536825b4eb@nvidia.com>
- <auy2plYVi723Qt42@google.com>
+	s=k20260515; t=1793906607;
+	bh=c6logFtXvkjKajdate51tTXcoOZfAOhW4TsINn6/coM=;
+	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
+	b=ooDu48kl8XwUGYzRsc64dLaXW+/TUD8ZY7XVEOALthQqcpbyFJi5PTFdXzNKUc5CY
+	 IsaC/IkcUhF5PhKx2/K4j4tcrcMpTrlEMHarJiWcwjMgb2WGqblxMYqctL1LCdhUU2
+	 4TY1FM6Xxx9pF+rnycmPUiMMbk6XZuTPN7dhlDltHiQn78d7Rz7wIfAXC+IjZRp0o0
+	 pZEN3Ij1B038/sj53GNwmd5o+iU+6o+KMcRwiikMq/49oA2m/z9s0sAlTQ49rME/Hb
+	 x2dxmzBDvub2D/5j6gmUx+hUYdSNM1D7Bay09pyPt0FeG/qNOJoTtTYmco3cOVtVKZ
+	 BoBymyPIxWC2w==
+Message-ID: <sashiko-outbox-199847@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v17 10/19] cxl: Build register block helpers into the
+ kernel
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Srirangan Madhavan" <smadhavan@nvidia.com>, linux-pci@vger.kernel.org
+In-Reply-To: <20261105185917.2667656-11-smadhavan@nvidia.com>
+References: <20261105185917.2667656-1-smadhavan@nvidia.com>
+ <20261105185917.2667656-11-smadhavan@nvidia.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 05 Nov 2026 19:23:27 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -86,79 +59,16 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <auy2plYVi723Qt42@google.com>
 
-On Thu, Nov 05, 2026 at 09:05:29AM -0800, Dmitry Torokhov wrote:
-> On Thu, Nov 05, 2026 at 01:42:15PM +0200, Leon Romanovsky wrote:
-> > From: Leon Romanovsky <leonro@nvidia.com>
-> > 
-> > Manual serio binding connects a driver before driver core can admit the
-> > device. A rejected binding therefore arrives after functional setup.
-> > 
-> > Keep the port ID check and use device_driver_attach() for the existing bus
-> > probe path. Driver core then serializes admission and handles probe failure
-> > before publishing the binding.
-> > 
-> > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
-> > ---
-> >  drivers/input/serio/serio.c | 24 +++---------------------
-> >  1 file changed, 3 insertions(+), 21 deletions(-)
-> > 
-> > diff --git a/drivers/input/serio/serio.c b/drivers/input/serio/serio.c
-> > index 54dd26249b027..604440244c1ca 100644
-> > --- a/drivers/input/serio/serio.c
-> > +++ b/drivers/input/serio/serio.c
-> > @@ -81,28 +81,10 @@ static int serio_match_port(const struct serio_device_id *ids, struct serio *ser
-> >  
-> >  static int serio_bind_driver(struct serio *serio, struct serio_driver *drv)
-> >  {
-> > -	int error;
-> > -
-> > -	if (serio_match_port(drv->id_table, serio)) {
-> > -
-> > -		serio->dev.driver = &drv->driver;
-> > -		if (serio_connect_driver(serio, drv)) {
-> > -			serio->dev.driver = NULL;
-> > -			return -ENODEV;
-> > -		}
-> > +	if (!serio_match_port(drv->id_table, serio))
-> > +		return 0;
-> >  
-> > -		error = device_bind_driver(&serio->dev);
-> > -		if (error) {
-> > -			dev_warn(&serio->dev,
-> > -				 "device_bind_driver() failed for %s (%s) and %s, error: %d\n",
-> > -				 serio->phys, serio->name,
-> > -				 drv->description, error);
-> > -			serio_disconnect_driver(serio);
-> > -			serio->dev.driver = NULL;
-> > -			return error;
-> > -		}
-> > -	}
-> > -	return 0;
-> > +	return device_driver_attach(&drv->driver, &serio->dev);
-> 
-> I am not sure how safe it is, serio (and gameport) have pretty elaborate
-> structure and locking rules because they can recurse into themselves (to
-> support case of Synaptics touch-pads with pass-through PS/2 ports).
-> 
-> But this call is for user-initiated probing anyways, I am not sure if it
-> even needs "trust" handling.
+> Build register discovery with the built-in HDM helpers so PCI enumeration
+> can use it even when cxl_core is modular. Export the interfaces used by
+> cxl_core and preserve the BAR and offset in the register map.
+>=20
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
 
-This patch does not change the locking; the lock was already held on paths such
-as the rescan path. This change makes that explicit.
+Sashiko has reviewed this patch and found no issues.
 
-Thanks
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105185917.2667=
+656-1-smadhavan@nvidia.com?part=3D10
 
-> 
-> ... And I even thinking if we really need to keep these custom
-> attributes or if I can rip them out in the future ...
-> 
-> Thanks.
-> 
-> -- 
-> Dmitry
-> 
