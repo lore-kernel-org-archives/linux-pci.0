@@ -1,80 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.150.252.152
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=54.243.244.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793846712;
-	b=1eJ3KQMjvKrSJ244dHniG3GGp5Nfzzp2l1+ABsJJJd3iVKLinWv5c8D+05hs7Y57Cp8x
-	 2xb8P7gWMg5oVJ33AoNNz73wdYdID6LqxKuMRWXl6V/KsapG5HMqwo60Ama1TOV0ANnCw
-	 QmWEQLJQpAhzP3ArI5+KDz9ANByTFKgAjxp8e1gmQ7MVjOURPggR26viC64z4EeYfPrdO
-	 IMZSmCR4jl5sSiKMUF+uStxMD5wTHmOQMTDYl+O/GNiFPKM0zlaZjo8JwppOngEarvHXx
-	 kJB7opPeoCLE6RyNelryNJoV58BZEOJZ4/6PHYqMEZVyST1vJYs10c4NDYXjMHCslxA==
+	t=1793847107;
+	b=e0R0ohGOrIZLRBaQfiob3D2l2EK2kMPSRq51koB2PDKQwEF7uXs89GFtrIViboW3wAca
+	 1BXqg4w1RRtZG+ekkgVytdoTvPc23Uj+eJy34AquvOIFyUpoOOmh0iVUeXsnOCF3N4aey
+	 UH37aHVOi3ErKhdl3LfRYVO6g/NuCxtO5U/RIGZ4r4vt8M23tSCbwkxsz1ue9Xpe/V1ln
+	 KXE88RVXO15xJzatGJ/AcCMYUN9yTaEJVoMvWcyoITQSYUU8MYDTFOz9RdtAW/JCbiDAK
+	 9NyOSZFrkIJKszqcHAI7Y3IWghpxpEoouxjnxrr3wC8M9cSuQwblQItuce5h00FPrqQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793846712;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Received:From:To:Cc:
-	 Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:X-Atmail-Id:
-	 X-atmailcloud-spam-action:X-atmailcloud-route;
-	bh=tzFYqkW4RAckviF2FfXB9njZbc/XIgTwvUSxuoCYB0w=;
-	b=Cns3XNt4ZRYfmiLqfQj8Peq6nsd/Atmzc10wWwnt4P3HvGnX2K5zw5PzkkOWb6JrZo/a
-	 Qzhes0xj6IpB+xDQTcMbFHrVhjP5/UY0IzUwqlm8glQl6ioBuLY3hlZ/tWO7gtn/LAgxe
-	 LYa6WYFL0OCJyw1ud9nOu9cxcnvE9WhiGxsHPajfwZotTBarVOJkOutEO7CwPCMyOM/Y5
-	 hSijbdGlSWmXKCxKsc5JtpCBw1dRR3udF1wjbxjl6hmpP2m4Hj/+On3i07GHpnrKvSpHa
-	 yu4FM4aPoQNhL0lfT1GYKuAttR5XoGcDDf6uNHVBumxKYS8OBcsHO+7NGNoywf3n4Lw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793847107;
+	h=DMARC-Filter:DKIM-Signature:X-QQ-mid:X-QQ-Originating-IP:Received:
+	 X-QQ-SSF:X-QQ-GoodBg:X-BIZMAIL-ID:EX-QQ-RecipientCnt:Mime-Version:
+	 Content-Transfer-Encoding:Content-Type:Date:Message-Id:Cc:Subject:
+	 From:To:X-Mailer:References:In-Reply-To:X-QQ-SENDSIZE:Feedback-ID:
+	 X-QQ-XMAILINFO:X-QQ-XMRINFO:X-QQ-RECHKSPAM;
+	bh=pSQlM765W4jXpSl/SCbV9elszf49mnxaxw8VUy+qP6Y=;
+	b=LvCWkyzu3UkqTtoGQxXyFjKbrNxgWjBFmFxK1hT93eRZNK1sQeN8i4miqu9Ef5N+w60b
+	 3+mzkeFWbD4INHifwpkIOVXR2Tx9CQ43wQGircaMaSlnwivYcixS6ORSLlzBWLME7ZldU
+	 rzAGP2vmnEQgc88P1TVkpAgq0Q8zLyG2Sn9PkAwNJhYXWJk/HfykYQNwvnkYBV5yT1lma
+	 b1rfxPob+leVj8YC+njVSgFuGgdvSL/CduVZiGG8Dp5w3RrKBZG3H9MXhCgW1e4Dpi5NQ
+	 3qv/5+zvH7RLunCAyGqu/p8mka0cIQaf8uSenaWkayeccP1jwMYfBfKQsgBN2tXEPmA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=internode.on.net;
-	spf=pass smtp.mailfrom=internode.on.net;
-	dkim=pass header.d=internode.on.net header.i=@internode.on.net header.a=rsa-sha256 header.s=202309 header.b=PRQ+QM6d;
-	arc=none smtp.remote-ip=103.150.252.152
-Received: from omr-01.pc5.atmailcloud.com (omr-01.pc5.atmailcloud.com [103.150.252.152])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=none header.from=linux.spacemit.com;
+	spf=none smtp.mailfrom=linux.spacemit.com;
+	dkim=pass header.d=linux.spacemit.com header.i=@linux.spacemit.com header.a=rsa-sha256 header.s=mxsw2412 header.b=sYfNqmEz;
+	arc=none smtp.remote-ip=54.243.244.52
+Received: from smtpbguseast3.qq.com (smtpbguseast3.qq.com [54.243.244.52])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47260606A32C;
-	Thu,  5 Nov 2026 02:45:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 47260606A32C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=internode.on.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=internode.on.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D216606A326
+	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 02:51:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6D216606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux.spacemit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.spacemit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=internode.on.net header.i=@internode.on.net header.a=rsa-sha256 header.s=202309 header.b=PRQ+QM6d
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=internode.on.net; s=202309; h=Content-Type:MIME-Version:Message-ID:Date:
-	Subject:To:From; bh=tzFYqkW4RAckviF2FfXB9njZbc/XIgTwvUSxuoCYB0w=; b=PRQ+QM6dA
-	aZyLIWoRYPrGecIJfNvLwcNFyu0UlLURj35f7jdmmUGxICDBw6kyyl5lWkXxyj981+Z1QbDFfiBNI
-	od4qnIB7uE1Dtuk6XAfgSMcBN6zQVhdmCGmTrCUhxbBy+dmc94XKD5+K4svfTU6O9WC2Lsrn+v0hL
-	MDLpriw/4/QKbwtCBtE9ZeIrn2yGFAP4vwN1/kOG2EMsI/PZG+eDwwbfElU1YjeKEZ1deazv0l9Yo
-	TLLIgLgK1HaN2R66zFkFa4RkEkuGabJ0IEZHJz7RcrHkEEnWtEZRsvj6dOJkRzQQvxFqPhfLtzotW
-	MAmzIq7oSjoEIWAPwl0sKwH8w==;
-Received: from cmr-tmc.internal.pc5.atmailcloud.com (cmr-tmc.internal.pc5.atmailcloud.com [192.168.1.2]) 
-	by omr-01.pc5.atmailcloud.com (Exim/cmr-tmc.i-0248c2ced204c1c85) with ESMTPS
-	(envelope-from <arthur.marsh@internode.on.net>)
-	id 1xOnTG-00000001cdh-2rLO ;
-	Thu, 05 Nov 2026 02:44:58 +0000
-Received: from 87.121.95.148.v4.dyn.launtel.au ([87.121.95.148] helo=localhost)
-	 by cmr-tmc.i-0248c2ced204c1c85 with esmtpsa
-	(envelope-from <arthur.marsh@internode.on.net>)
-	id 1xOnTE-0000000CYFq-3Ls3;
-	Thu, 05 Nov 2026 02:44:58 +0000
-Received: from amarsh04 by localhost with local (Exim 4.100.1)
-	(envelope-from <arthur.marsh@internode.on.net>)
-	id 1xOnTD-000000000Ah-0W62;
-	Thu, 05 Nov 2026 13:14:55 +1030
-From: Arthur Marsh <arthur.marsh@internode.on.net>
-To: vasant.hegde@amd.com
-Cc: alexander.deucher@amd.com,
-	bhelgaas@google.com,
-	felix.kuehling@amd.com,
-	iommu@lists.linux.dev,
-	jgg@ziepe.ca,
-	joro@8bytes.org,
-	linux-pci@vger.kernel.org,
-	mario.limonciello@amd.com,
-	robin.murphy@arm.com,
-	suravee.suthikulpanit@amd.com,
-	will@kernel.org
-Subject: [PATCH v2] iommu/amd: Force identity mode for selected GPUs only
-Date: Thu,  5 Nov 2026 13:14:36 +1030
-Message-ID: <20261105024454.654-1-user@am64>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260824085821.5422-1-vasant.hegde@amd.com>
-References: <20260824085821.5422-1-vasant.hegde@amd.com>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.spacemit.com header.i=@linux.spacemit.com header.a=rsa-sha256 header.s=mxsw2412 header.b=sYfNqmEz
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.spacemit.com;
+	s=mxsw2412; t=1793847101;
+	bh=pSQlM765W4jXpSl/SCbV9elszf49mnxaxw8VUy+qP6Y=;
+	h=Mime-Version:Date:Message-Id:Subject:From:To;
+	b=sYfNqmEz1KB3JD+2mn5JHSCXaRCKn1AlNsqGSrZlqG57rjWmBO0En+bMaamWLArP3
+	 PktNwor1/DVO7lvwQbFn+QYFrAW5eKB72Q5+Ld3GxBvI4yul/a/2LvR8V8Yx1Yr1rC
+	 +RmNdvhXYLkY5pLDervWzsJ0uHdg4slRhf5GZYfQ=
+X-QQ-mid: zesmtpsz2t1793847097t2b788bd9
+X-QQ-Originating-IP: BDByG9NYEZlnDz7mxM6v9n2dhLlOWgRPpDEX+pHQrWk=
+Received: from localhost ( [8.218.183.135])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Thu, 05 Nov 2026 10:51:35 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 0
+X-BIZMAIL-ID: 14892018786734316387
+EX-QQ-RecipientCnt: 13
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -83,87 +58,102 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Atmail-Id: arthur.marsh@internode.on.net
-Authentication-Results: cmr-tmc.au-east.atmailcloud.com; auth=pass smtp.auth=arthur.marsh@internode.on.net
-X-atmailcloud-spam-action: 
-X-atmailcloud-route: unknown
+Date: Thu, 05 Nov 2026 10:51:35 +0800
+Message-Id: <DMMXQ358UWUZ.35H3HEEEUW1V8@linux.spacemit.com>
+Cc: "Lorenzo Pieralisi" <lpieralisi@kernel.org>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Manivannan
+ Sadhasivam" <mani@kernel.org>, "Rob Herring" <robh@kernel.org>, "Bjorn
+ Helgaas" <bhelgaas@google.com>, "Yixun Lan" <dlan@kernel.org>, "Troy
+ Mitchell" <troy.mitchell@linux.spacemit.com>, <linux-pci@vger.kernel.org>,
+ <linux-riscv@lists.infradead.org>, <spacemit@lists.linux.dev>,
+ <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: spacemit: Ignore link partner PERST on K1
+From: "Encrow Thorne" <encrow.thorne@linux.spacemit.com>
+To: "Manivannan Sadhasivam" <manivannan.sadhasivam@oss.qualcomm.com>,
+ "Encrow Thorne" <encrow.thorne@linux.spacemit.com>
+X-Mailer: aerc 0.22.0-0-gc2f86b7abde3
+References: <20260924-spacemit-k1-pcie-fix-v1-1-002b5c1ba9fc@linux.spacemit.com> <179229759512.2114.3306580489141327360.b4-reply@b4>
+In-Reply-To: <179229759512.2114.3306580489141327360.b4-reply@b4>
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpsz:linux.spacemit.com:qybglogicsvrsz:qybglogicsvrsz3b-0
+X-QQ-XMAILINFO: M182XWJxg1fqJITtHxQLvebLEkcMXiMjIGfbBAk+TLCRDofSVABmYl36
+	aPmcxYs2y8KTHrbh4DpiBhapUf0M693EZ5yQ3BpC1/yngov892HyLbnCrm/IveR64wu15wH
+	lEsGXC66HuXIgZAw2Jr0p4HR//ajNazw2UeZQ+AmY/BydtEJtVQuQw/m23uV53lYE5VJfji
+	lUftQjmFcGMy8Fw9m3JjtNbNJSwmqF8z5N1cSBqF1IWAI9hX2yBJjXMtqw6gZfSqfHzpVo5
+	MK7k2BmcZcAqve79OL/udxyyzTp1a9oyG75hig83kzSUTUb+4mBns5PUfz3RxkRUdSHwUkz
+	iRrJRcFUXMimPlxBtP1ioW5+u7GqiPAXEOdH/1AmC4P/i/xvf1VCCpOzU2RCvJBOb/rdQT2
+	bwGYkrqIAc/xMZgYb702DXS0bzDGINvg1AOWoBWsv0RDO8gxkrfUnE62l090SXtpe8JC7CX
+	dBRAA/gs99RWEC+c6MB6/Ln6S39fWRAQURcinR6UHX03Vv76Rx5wcfWWLyabfv+jRs4tqik
+	KsVSIo10WW5XllOk4DWVmY+NtXsrXXIkjduyAIE6ZS6Aflho/5ionKNCztg2f/KBvPKouwp
+	bAWzJO9qN+w2J7xRBrnMMYDbquo4YMv/gmYdI5nz9wEm4HcTYzBcazJMJAXnzFm5Je4b60O
+	kr2Em8yZfWN0+cnIQvHvjdtBKYTE94by5lVkvIVUg4jOM37CojWCXZtJtHYNRXqaTLwBKxZ
+	APAetXi864MU5ZwD+/3TZ2awTNqVlR1u5xybP1nsqipt9+ISFOdEoQLoj1xS8zuFxJJCXL+
+	pGSI7HvIZ2lUAkSnkWMGbd1OQajzXUxAXbuB1MXpilDB5+0WDlzUK+kvmAzdqMAPpTk+nlP
+	Z7OpbRS4mB7Lo3aPngJnly+G8C/koLudDkDhs7zCyxap0+x3VZ7PqmdAX5WhEd5yLI61Y8w
+	utXHZCpwCl9nCtCiID+hwWhe11J4KJ/wGZpJgbJfVEOiZvsqlj3HLxj73
+X-QQ-XMRINFO: NyFYKkN4Ny6FuXrnB5Ye7Aabb3ujjtK+gg==
+X-QQ-RECHKSPAM: 0
 
-On a system using an APU (no discrete graphics card):
+On Sun Oct 18, 2026 at 12:26 PM CST, Manivannan Sadhasivam wrote:
+> On 2026-09-24 10:04 +0800, Encrow Thorne wrote:
+>> The K1 PCIe controller and PHY are affected by the PERST signal from
+>> the link partner during initialization. With some devices connected,
+>> this can prevent host initialization from progressing and cause the
+>> system to hang while probing the PCIe controller.
+>>=20
+>> Set PCIE_IGNORE_PERSTN before accessing the DBI registers. When set,
+>> this bit makes both the PCIe controller and PHY ignore the PERST
+>> signal from the link partner.
+>>=20
+>> This allows host initialization to complete without being affected by
+>> the link partner's PERST state.
+>>=20
+>> Signed-off-by: Encrow Thorne <encrow.thorne@linux.spacemit.com>
+>> ---
+>>  drivers/pci/controller/dwc/pcie-spacemit-k1.c | 8 ++++++++
+>>  1 file changed, 8 insertions(+)
+>>=20
+>> diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci=
+/controller/dwc/pcie-spacemit-k1.c
+>> index 0564c46e2f48..98f067e1ba81 100644
+>> --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+>> +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+>> @@ -44,6 +44,7 @@
+>> =20
+>>  #define PCIE_CONTROL_LOGIC			0x0004
+>>  #define PCIE_SOFT_RESET			BIT(0)
+>> +#define PCIE_IGNORE_PERSTN			BIT(2)
+>> =20
+>>  struct k1_pcie {
+>>  	struct dw_pcie pci;
+>> @@ -137,6 +138,13 @@ static int k1_pcie_init(struct dw_pcie_rp *pp)
+>>  	if (ret)
+>>  		return ret;
+>> =20
+>> +	/*
+>> +	 * When set to 1, the PCIe controller and PHY ignore the PERST signal
+>> +	 * from the link partner in both RC and EP modes.
+>> +	 */
+>
+Hi Mani
 
-model name      : AMD A10-6800K APU with Radeon(tm) HD Graphics
-stepping        : 1
-microcode       : 0x6001119
+> What? PERST# is an output signal to RC and input to Endpoint. PERST# is n=
+ot
+> controlled by the Endpoint, but only by the RC/host.
+>
+> - Mani
 
-I was getting the following, git-bisected back to:
+You are right; my earlier wording was misleading.
 
-commit bf5bdfd1f8d4ad5c6020468d09b68b09c2adc5c2 (HEAD)
-Author: Vasant Hegde <vasant.hegde@amd.com>
-Date:   Mon Aug 24 08:58:21 2026 +0000
+On K1, the PERST# pad input feeds back into the local controller's
+internal reset input even in RC mode. Thus, the RC can reset itself
+when asserting PERST# to reset the endpoint.
 
-    iommu/amd: Force identity mode for selected GPUs only
+PCIE_IGNORE_PERSTN masks this input path without affecting the
+RC's control of the external PERST# signal.
 
-I could only photograph and OCR the screen, so not a lot of data could be 
-captured:
-
-1.295232] </TASK>
-
-1.295233] Modules linked in:
-
-1.295237] CR2: 000000000000003c
-
-1.295242] ---[ end trace 0000000000000000 1---
-
-1.295245] RIP: 0010:amd_iommu_def_domain_type+0x76/0xb0
-
-1.295250] Code: ff 25 00 7f ff ff 3d 00 00 03 00 75 cb 83 02 01 75 3f 48 81
-
-ef do 00 00 00 48 8b 57 10 48 8b 42 10 48 85 со 74 04 48 8b 42 38 <66> 81 78 3c
-
-32 10 74 a6 55 31 ff 48 89 e5 e8 d7 ee 3c 00 5d 83 fo
-
-1.295253] RSP: 0018: ffffc90000027c20 EFLACS: 00010246
-
-1.295256] RAX: 000000 RBX: ffff888100f0d5c0
-
-RCX: 00000000ffffffff
-
-1.295258] RDX: ffff888100dd8000 RSI: ffffffff82437607
-
-RDI: ffff888100fc7000
-
-1.295260) RBP: ffffc90000027c60 R08: 0000000000000001
-
-R09: 0000000000000000
-
-1.295262] R10: 0000000003 R11: 0000000000000001
-
-R12: ffff888100fc70d0
-
-1.295264] R13: 0000000000000000 R14: ffff888100aedc48
-
-R15: 0000000000000000
-
-1.295266] FS: 000000000000(0000) CS:ffff8884acefe000(0000) knICS: 00000
-
-3000000000
-
-1.295269] CS: 0010 DS: 0000 ES: 0000 CRO: 0000000080050033
-
-1.295271] CR2: 000000000000003c CR3: 0000000002646000 CR4: 00000000000406f0
-
-1.295274] note: swapper/0[1] exited with irqs disabled
-
-1.295280) Kernel panic not syncing: Attempted to kill init! exitcode=0x00
-
-30009
-
-1.297262] ---[ end Kernel panic not syncing: Attempted to kill init! exit
-
-ode=0x00000009 1--- 
-
-I am happy to provide more details and test any patches.
-
-Arthur.
+Regards,
+Encrow Thorne
