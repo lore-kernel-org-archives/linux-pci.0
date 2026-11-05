@@ -1,55 +1,70 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=18.194.254.142
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793847244;
-	b=lvDOPxphmRdcN631gR3C4EFBeoKe2xWd8UkEAxFumm3Fg3tMOMREOJeRRPkmtCfSrx3T
-	 BqDpJt1h+J9fOcszE2cb15zsmL0Ztgpdg7oUB41RM14CHTUblrcrY4vyEN0tsx5mDvsF6
-	 2zM9vgxy0HKSsxb3IuvbtuaJ6556j4Uhe3YWNGHV9twVoij5UovZumo9uPkoTjmKa7VBp
-	 UsAgrjsEYvirYeAQ5BLdp9lpPAcfDCZJLjiMyBLpmHApdMLVVzhj/7LAJW/YXizzaRSK7
-	 oUFexNE1xSyaWf8ntIZxeWrhkOZxwP/Ocv3l+jUsDftQGuPuCkkwm8GyxZXQyvGkXHQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793847244;
-	h=DMARC-Filter:DKIM-Signature:X-QQ-mid:X-QQ-Originating-IP:Received:
-	 X-QQ-SSF:X-QQ-GoodBg:X-BIZMAIL-ID:EX-QQ-RecipientCnt:Mime-Version:
-	 Content-Transfer-Encoding:Content-Type:Date:Message-Id:From:To:Cc:
-	 Subject:X-Mailer:References:In-Reply-To:X-QQ-SENDSIZE:Feedback-ID:
-	 X-QQ-XMAILINFO:X-QQ-XMRINFO:X-QQ-RECHKSPAM;
-	bh=makHNIiYLvU4q0uL7GjudiJJsJnjWba7FoFQaU2CjTA=;
-	b=GT3qU8WH7Xco+56yZOoIeKw1lU8hgbaqVmcqGz5Dg4cnzY2xqxu54/FTa+yCSHs5U5G0
-	 FS/b4EZb3HJkg0wjpgskxD/6BWs3YpXh1vbnJAkOkte/E3XtPyMe8jco3ybdCvYHKj8iw
-	 WV3MnZYguLVEmLuC+PBPbx8LUL0cRD8hUONHewfcsZkt9U742jrJKWqp8sI86CyHFV3uK
-	 hWnwgnrnUv1G+8Cnx7IaV0qYQqZbxXcUIX+g9PbcentYjvj3/0rMJTn5qEhFVCRexkJsD
-	 U3zv8Pt4heMgmh+1IGusc400JVLyJS+ZKx+3AnWgkXqAOlYmRU3fuGtL0RMAxVNXgnQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=linux.spacemit.com;
-	spf=none smtp.mailfrom=linux.spacemit.com;
-	dkim=pass header.d=linux.spacemit.com header.i=@linux.spacemit.com header.a=rsa-sha256 header.s=mxsw2412 header.b=dG7Zq9oZ;
-	arc=none smtp.remote-ip=18.194.254.142
-Received: from smtpbgeu2.qq.com (smtpbgeu2.qq.com [18.194.254.142])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=136.143.169.17
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793848119;
+	b=A/PU3NnKoDgOM8X03hnNMiliI/FLn9yi2ctQoMaMk8G96jIo4wxn9WynApaXX8AsZ/V3
+	 QrcB1UXl5XKYiliQ3zERValTkTgQ/M42kFQsyMI97/HC/uoa0MoxdjYhW+ARsBMel/vBb
+	 /bSOPguTNDjDucZkRHB/qnV2n7lpMui+yO5I8fnrfyS1ntzG9t9ImBLqawvEGCi12ZLrG
+	 j3obU7GQo+NLpTGNaIOGGGQojlEOtlH7jb8Lob2FIPReO0SQlEKHDCS5iCWwKTgSp7j+/
+	 rab+B4WgwzZt+WGPNBzDqcAxEqGOo45ahvDlFLoZWvsN5ugbxl9rCOJH6IaImWYLZLQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793848119;
+	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
+	 Message-ID:In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=hfEBpFMF8c5rPBNt+LYZXTPFb+iq379xlL3xl7YzuZI=;
+	b=C7MhV8kOY/6MT0jzKSHcXXB0N5MMRQMXBPE1Xzb6Ypqn2PlKWpegGT8ST9mbFaBid58W
+	 hntNa9PWPYL4WhJOt1uAqnx2FAa1Ou1Z0/u7nbjZL4rHmAE176RivcUC+9mLjSnTFOO0f
+	 SHbDaLw844kMx5mm8hBKqZM78SeUc9jmwJnwuvnvbUu1k8NBaimqstwkI+k1s0i+fFr2L
+	 kxyV7llKww+hsvppfWqtDnA8+BFhk5sdpe3xna3vSV9QO4uQ91QToQ9RQe2t4SpMKs9ov
+	 2RWJ+fLurFzHjwhMDCQfWy165gfxxOSv9F4Xy73tiZRpLN3onxuK1Q+YSZLQ7Tz95Zw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=none header.from=iav.lv;
+	spf=pass smtp.mailfrom=iav.lv;
+	dkim=pass header.d=iav.lv header.i=@iav.lv header.a=rsa-sha256 header.s=zoho header.b=Ddr5K5OW;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=136.143.169.17
+Received: from sender-op-o17.zoho.eu (sender-op-o17.zoho.eu [136.143.169.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 507B2606A31B;
-	Thu,  5 Nov 2026 02:54:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 507B2606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux.spacemit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.spacemit.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB695606A31B;
+	Thu,  5 Nov 2026 03:08:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BB695606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iav.lv
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iav.lv
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.spacemit.com header.i=@linux.spacemit.com header.a=rsa-sha256 header.s=mxsw2412 header.b=dG7Zq9oZ
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.spacemit.com;
-	s=mxsw2412; t=1793847195;
-	bh=makHNIiYLvU4q0uL7GjudiJJsJnjWba7FoFQaU2CjTA=;
-	h=Mime-Version:Date:Message-Id:From:To:Subject;
-	b=dG7Zq9oZA0ud7MBYBH+jyazqhIvywclr/H2PHUIWbLqQtgC8ZftuNbA5f/kRf8fQG
-	 viEqytWRUhYALIER5ShHmLYL8H71SakkLFi++21zm+bo4NWPdIfr30Bt163GFGsr0V
-	 paN26fNUWLJLvDZByfK8p/ZLddlEsMip5GoCE0JI=
-X-QQ-mid: esmtpsz18t1793847187t057bf204
-X-QQ-Originating-IP: izYglXd86ZAHYwcrBOKCmCQvXih/anefE6LCbO6xayY=
-Received: from localhost ( [8.218.183.135])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Thu, 05 Nov 2026 10:53:05 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 0
-X-BIZMAIL-ID: 13090883998075243027
-EX-QQ-RecipientCnt: 12
+	dkim=pass (1024-bit key, unprotected) header.d=iav.lv header.i=@iav.lv header.a=rsa-sha256 header.s=zoho header.b=Ddr5K5OW
+ARC-Seal: i=1; a=rsa-sha256; t=1793848091; cv=none; 
+	d=zohomail.eu; s=zohoarc; 
+	b=dweLjTptpWryub+u0A2rm7quFnkZsfuwEn1YfeUjSPZrBBhfChz6c0erWuCI+A7SvcMiWdexpGaX1qegXm4dpuNn7KVDYR0Swor3TkoIhlJECNkGFxBm8jUrc5YDYv5S7jbo1HqoMqLF5DTykqk7gacey5ePzX/i1ZU5e5jETX8=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+	t=1793848091; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=hfEBpFMF8c5rPBNt+LYZXTPFb+iq379xlL3xl7YzuZI=; 
+	b=AMbcLk+ZQtnihV0m7CKlXkoNowxS+dg5LRYbh0AKoKvZolGhrPMWR4AAOrcY1YBJeJqU8Cd6BVeEmt+YLvE/ZyNcAcKmyQmurmjcubHNTp8THpeY8w/xyJXwyYXnOZGagUbk2jnkbDwHVBmcbhNxJR3w/AnXDPNft/EiIowOi/8=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+	dkim=pass  header.i=iav.lv;
+	spf=pass  smtp.mailfrom=iav@iav.lv;
+	dmarc=pass header.from=<iav@iav.lv>
+DKIM-Signature: a=rsa-sha256; b=Ddr5K5OW/fZiOVFEPxP2Ymmky5SUjWM+dPjGy+g6ixQm46wwKUmENwkvPmh+o2iSYMubHY4bkZyEajHvm6WznO12ENc26bBTyMHQfj3rE5S2p9ukecdP9FmBs/fk8aVPLPS9oel5f7GWbexwhvSLBWNGoxQjzf57IptVaE61rbA=; c=relaxed/relaxed; s=zoho; d=iav.lv; v=1; bh=hfEBpFMF8c5rPBNt+LYZXTPFb+iq379xlL3xl7YzuZI=; h=Content-Description:Content-ID:Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:List-Subscribe:List-Post:List-Owner:List-Id:List-Archive:List-Help:List-Unsubscribe:MIME-Version:Message-ID:Resent-Sender:Resent-Cc:Resent-Date:Resent-To:Reply-To:Resent-Message-ID:Resent-From:Sender:Subject:To:Date:From:Message-Id:Reply-To:Subject:To:Cc;
+Received: by smtp.zoho.eu with SMTPS id 1793848090260876.9732785997211;
+	Thu, 5 Nov 2026 04:08:10 +0100 (CET)
+Date: Thu, 05 Nov 2026 05:08:08 +0200
+From: Igor Velkov <iav@iav.lv>
+To: Sebastian Reichel <sebastian.reichel@collabora.com>
+Cc: iav@iav.lv, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>,
+ Philipp Zabel <p.zabel@pengutronix.de>, Jingoo Han <jingoohan1@gmail.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Liam Girdwood <lgirdwood@gmail.com>,
+ Mark Brown <broonie@kernel.org>, "Yury Norov (NVIDIA)" <yury.norov@gmail.com>,
+ Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
+ Alexey Charkov <alchark@flipper.net>, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org,
+ linux-kernel@vger.kernel.org, kernel@collabora.com
+Subject: Re: [PATCH v8 0/9] PCI: dw-rockchip: add system suspend support
+Message-ID: <20261105-dw-rockchip-suspend-v8-tested-by-1@iav.lv>
+In-Reply-To: <20261105-rockchip-pcie-system-suspend-v8-0-0434b4f373bc@collabora.com>
+References: <20261105-rockchip-pcie-system-suspend-v8-0-0434b4f373bc@collabora.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -58,64 +73,13 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 05 Nov 2026 10:53:05 +0800
-Message-Id: <DMMXR8IGD585.1QXMWPOMI19UL@linux.spacemit.com>
-From: "Encrow Thorne" <encrow.thorne@linux.spacemit.com>
-To: "Troy Mitchell" <troy.mitchell@linux.spacemit.com>, "Encrow Thorne"
- <encrow.thorne@linux.spacemit.com>, "Lorenzo Pieralisi"
- <lpieralisi@kernel.org>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, "Manivannan Sadhasivam" <mani@kernel.org>, "Rob
- Herring" <robh@kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>, "Yixun
- Lan" <dlan@kernel.org>
-Cc: <linux-pci@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
- <spacemit@lists.linux.dev>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: spacemit: Ignore link partner PERST on K1
-X-Mailer: aerc 0.22.0-0-gc2f86b7abde3
-References: <20260924-spacemit-k1-pcie-fix-v1-1-002b5c1ba9fc@linux.spacemit.com> <DLN6TV32A766.2BWYLKQW9ZYG5@linux.spacemit.com>
-In-Reply-To: <DLN6TV32A766.2BWYLKQW9ZYG5@linux.spacemit.com>
-X-QQ-SENDSIZE: 520
-Feedback-ID: esmtpsz:linux.spacemit.com:qybglogicsvrsz:qybglogicsvrsz3b-0
-X-QQ-XMAILINFO: OVxgrqsLORmRqorTkuJKvGn06tCDXz/QWhYmxmB9XDSmlKYv+Ro0IKB6
-	HZpp3NjZy7ys73+jQrpPyCL/vA4h/LuBy7/fvZlNqNGquqG76Sjicf5JwMMyaedwuD/wHG2
-	/F7blEh6v+bBoZpqmvJlaSbFsz5qUOxherz10lPaYNfyW4wUuhR5jqyy7vhUl96CtjCTzYt
-	tS8vAYAF8QS2B0iR7D4isZAZp7G3o8vLgxe8VutItplbcGjySNj910CkSUcL1j8nvdRJCRG
-	D7x125ElwMe9QegU0++f9QXZ1M3YZMSaJ4FoJHTrYCcMy7/3uClUt9ao0wp/0Y0qMsKLsKM
-	CvEIuq5fVi0jbFVI53sN+Cl3g1Un3urFE9X+/cqmB6dgjwEyKGpuSaGIpUW950ic+VZE3kA
-	VcKXt9tb6XrCdad7q/KlMWIPJ+V+263StKLiFJerXmQ5fqZlqSfDOz119lrPpHvNtRl9hus
-	mSY1rrKmHv3030SGBvFt5LE1QSbOXdITCRx2diC2NHde7Cqjh3UWqy80e3JaqjYLUbM0Iyk
-	Gsf1uIOOUZmzMah2P8S7JJaMqy7v6VqFlR0RH5VyrbZgoIF8Sl7gEqtorEC9oLi0lksI0x8
-	sHqCV4nnC/jgI6GAym6TATUGWojJp6dj3rN4nXISfsb41ERYhOTigV4xaR6KV6qqDiXp699
-	OEUnty3DS4H30X22KOhjxMeTsiTQzPhi0ZZ562Kcqvr2ZX8KKIQMnfP7d6fX2VTW9lBqX1x
-	yw4JTz4vaCy/FpUznLTsxwx/od1ClDNv2dzEdUaJt6E+QKbHK4xF+CAdzUwP+FshddH+x/8
-	icjJesqvjvMxwG3xVl1DpPBYYM3Ss2OuX+IG0+bEoGe9vXzkL7WubK5VKCWj6+0P1VYgbib
-	uhesW+qBN7VI7D7sCo+H/Bjwyp1oUNGaKc75lJpRs2w1k5YYC3BxIteGfJz877UyJEJh1uc
-	kJ0ZbYU0adrs9OGbvqdGSxBdFdSXn/BJPpheKDKWzfRrb7X2xaHnMJx26O9aKgXvLX6xE9G
-	IWa8dcs/MTzh4fkCxhDSS4V0ano8n7wLN2IZJfJg==
-X-QQ-XMRINFO: OD9hHCdaPRBwH5bRRRw8tsiH4UAatJqXfg==
-X-QQ-RECHKSPAM: 0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 
-On Thu Sep 24, 2026 at 10:23 AM CST, Troy Mitchell wrote:
-> On Thu Sep 24, 2026 at 10:04 AM +08, Encrow Thorne wrote:
->> The K1 PCIe controller and PHY are affected by the PERST signal from
->> the link partner during initialization. With some devices connected,
->> this can prevent host initialization from progressing and cause the
->> system to hang while probing the PCIe controller.
->>
->> Set PCIE_IGNORE_PERSTN before accessing the DBI registers. When set,
->> this bit makes both the PCIe controller and PHY ignore the PERST
->> signal from the link partner.
->>
->> This allows host initialization to complete without being affected by
->> the link partner's PERST state.
->>
->> Signed-off-by: Encrow Thorne <encrow.thorne@linux.spacemit.com>
-> Fix tag and reported-by tag [1]?
->
-> Link: https://lore.kernel.org/all/20260825052249.66921-1-bbanelli@gmail.c=
-om/ [1]
+Tested on ODROID-M1 (RK3568, NVMe on pcie3x2) with 7.3.1, Jonas'
+EHCI/OHCI clock patch and f845c1e2d2d4 ("PCI: dwc: Add suspend_poweroff
+flag for platforms with RC power loss") backported: s2idle 10/10,
+deep 10/10, the NVMe stays usable after resume.
 
-Thanks, I will add it in the next version.
-
+Tested-by: Igor Velkov <iav@iav.lv>
