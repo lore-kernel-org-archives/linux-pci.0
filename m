@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793906984;
-	b=Ej8P83s/WdGY0hSbUH5GByOVH0lXYGmc7BNG80TlsVCZJBqExocPxdfb+HVk5lIMBovT
-	 6fBcupEQunDZZbfTWmsQl5tBWpdCgKyySs+IEJwGmq2K78ouYiz6Wv5TwNpWSikB1IGdw
-	 K6+HkqZmezzoFre1nLIpy3QqKXKvUuS5cL6iO8aGN1TCam29E9rZyRlY9/WvhePZX8lp1
-	 yBrsyrySVS6NzzTSSQJ48+L7JIAe3hmkPM8toaBYKI8G8UkI2aDm/Zyrs1CvEOp+un2mx
-	 Aedtcy9QaA7X+EJA9eghoa1LeWVBG3v7X6yEmhRmdjBY8/ELwAxS9on0l3Qqw2c+iEg==
+	t=1793906992;
+	b=R/EOKgtAieTYuGwcTN/efWBtD00mCkGK8jttUydIR96fTje/SPEpiDWcJrZ2f9zCEfHM
+	 6IRfXv3zc+321mpGa0+3S7v9TzyazWhVO5UjiTD5MEre8UsM7KoK4VEQXiahvZRvsFjg0
+	 pWixzwzvuwM7QN/M1mhiMlrLh9v7F3SBVuw3lSnxqYkcsJ8MnWDf1fUgHGvG5J5cVeP4Q
+	 Ioov9nFl+THZ/s52ahGJO+yn6vBbdey3VHq5vUkMx7I+AfwQkeC1S+uyFFCalgfClzKc7
+	 Wf2g67v8Dtz96I9QrPLKsurAdyGzmXA7qCNuii7RL3AKJYVrkSy5n2B+IvLSYBdrEWw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793906984;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793906992;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=FD0zXeI/isP72fw/ayOidXLEWS0eS7g6u0vyIbhFYcI=;
-	b=BgaXxClQfoujgrkUP7245BSnA/DmUOiy7kY+/oAYkm24yvA5ujS/lZKNgeMsApkCzPdD
-	 xTkEri+LE6cLQVzahYJ0G9X0CrJStmUlXJLpb7FpM7iof8BQSWU7z/FUTuJTR85RtBxiw
-	 X3ketqofqwZQT/SJ35rbd8qJOiSbhW/H3JgPTFXPx1AV88nRV6WZ5o+5uYD8i7sBypSw+
-	 0h8vxT0Le899Ev1qY1q2rGOKikEjlk7/oiDocj1HUEn5Wo9u0PJHLeCop9K9gTvhTBT8D
-	 nxfVPFaPBm24VCLRZ8z2s18YJqcfWkF7DyuD0Jjd+Y7qNAWiqFdAtXf1piy8A7H1+Kg==
+	bh=Ru/qyz255iW10fX/xYGvqKwjOThmYmiF9XoSZGKM7R0=;
+	b=fpXXboGjJ2v2z7KLO/bOq8x9ZvAqtFocWHubUIxNVws2i5xDiiGv3OSkS1mWDpmReH6o
+	 qXYJIWRQ01TVz/M0x+QcjH0oD70vdNptslzFSboNuOP1toDi3rubQQEOz3RuZYIq34YQZ
+	 5PCphfkWlQasrL7Z1PCZLR9DsI6LXSaNhOLibat/35g8Xdp3KS7uGRYQPW6MDW4Y6oyXD
+	 eK/RehW9N4NG5MjJyXSeDwM3MiLbY5Ng8YnFa2MNYu6K/7vylsjEqFGDwA2oD6nFFuDDB
+	 HI0XgGBuCVJtb2ct5cfbeUS7BS8Wixd6H0vEx2P/SqHunj3TZ7kXWooEEQig4OlF2BQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=H1XBvOeH;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MJtgcSMf;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1783608363F;
-	Thu,  5 Nov 2026 19:29:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A56716082BCD;
+	Thu,  5 Nov 2026 19:29:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=H1XBvOeH
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2966B1F00A20;
-	Thu,  5 Nov 2026 19:29:42 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MJtgcSMf
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6C5C1F00A17;
+	Thu,  5 Nov 2026 19:29:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793906983;
-	bh=FD0zXeI/isP72fw/ayOidXLEWS0eS7g6u0vyIbhFYcI=;
+	s=k20260515; t=1793906991;
+	bh=Ru/qyz255iW10fX/xYGvqKwjOThmYmiF9XoSZGKM7R0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=H1XBvOeHKHmEnMkDZUHXEyfUtxCM50iTgTdglUxQp7JDN+qlEWTIsqSpbnUlpXjRN
-	 988hcRyCOI8UWFHz/f+qK5LDQHQXayVRQ3262j47Zn0Jqh760jpB+AGIZEjmyhHslx
-	 Qqs2Y14lCac9UjAE5y2LlNmPZovL0mIlxziAqVpEYWF7VcSH/XugirGbUWyl+1JJad
-	 +WoSrpl7AP1ruZ40/ApjycvpY+4AnxyaNTaAT+qJ2l5Ec76Lx2QiGxwb9aykDXG/Bj
-	 ZE2WhLZrYRFfMMBbtAErBrjrpSX00IacUpKBWO3AqMz+Y2+flePrBdhMVItf47L5ux
-	 lY1VLRG53p8sw==
-Message-ID: <sashiko-outbox-199890@kernel.org>
+	b=MJtgcSMfLpnK3zQ8ve5AytNoGwVGMCdIK3G/+WxnM1JzzDcQ8DAnN5v4DQpZqVkNE
+	 JIFRqjboUyRPr1h1Dl1DKUbwP7QphpfK/YvUU9TIXGy/tTS0d+xdV2MLivsLV8Dgu4
+	 UzSkOJsM/jDsL0ZM5k9XUlcPM1VkW2J4kRWeL7ktokcrjcRTTBioEI2YpgLZh5eP7W
+	 u6bhsGA2WwPT6st0KQcgRf2kcMXrl5bjJKLXx/8iPS2CkkO8y5/gPDeqZL10iGDxGi
+	 ryctgUStVMh1y8vZQVQju8TMtjpBqM9jPCUp5nhZiIt7GtigUzscvBis/aL4RTjcOy
+	 LOwDNub5ShbCw==
+Message-ID: <sashiko-outbox-199894@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2 27/51] um: NUL-terminate what is written to
- /proc/exitcode
+Subject: Re: [PATCH RESEND v2 31/51] proc: don't WARN about a name that is
+ already registered
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -55,12 +55,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Iwai" <tiwai@suse.de>, linux-ext4@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261104-work-procfs-bugfixes-v2-27-021c84d852e0@kernel.org>
+In-Reply-To: <20261104-work-procfs-bugfixes-v2-31-021c84d852e0@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
- <20261104-work-procfs-bugfixes-v2-27-021c84d852e0@kernel.org>
+ <20261104-work-procfs-bugfixes-v2-31-021c84d852e0@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:29:41 +0000
+Date: Thu, 05 Nov 2026 19:29:49 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -70,12 +70,26 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> exitcode_proc_write() copies up to sizeof(buf) bytes of the write into
-> buf and hands it to simple_strtol() without terminating it. So
-> "echo -n 5" parses whatever the stack held after the '5', and a write of
-> seven bytes or more reads past the end of buf. Terminate the copy.
+> proc_register() WARNs when the directory already has an entry of the
+> same name and fails the registration. Callers that pick their names
+> themselves should never get there but some take names from userspace.
+> pktgen creates a file for each device a writer of "add_device" adds,
+> named after the device. A device can have any name, including "pgctrl"
+> or "kpktgend_0", the names of pktgen's own files:
 >=20
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+>   ip link set lo name pgctrl
+>   ip link set pgctrl up
+>   echo "add_device pgctrl" > /proc/net/pktgen/kpktgend_0
+>=20
+>   proc_dir_entry 'pktgen/pgctrl' already registered
+>   WARNING: fs/proc/generic.c:404 at proc_register+0x555/0x8b0, CPU#0: bas=
+h/241
+>   Call Trace:
+>    proc_create_data+0x9f/0xf0
+> [ ... ]
+>=20
+> Reported-by: Chris Mason <mason@kernel.org>
+> Fixes: 6c2f91e077f1 ("proc: use WARN() rather than printk+backtrace")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
@@ -83,5 +97,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
-s-bugfixes-v2-0-021c84d852e0@kernel.org?part=3D27
+s-bugfixes-v2-0-021c84d852e0@kernel.org?part=3D31
 
