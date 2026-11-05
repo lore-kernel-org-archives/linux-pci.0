@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793906971;
-	b=FS1F34Tj75yAtQRdFUTvHJr/GliDBFue2uE3XsOORVg9W+zqFS3mKrzvGV55BCY5BbHd
-	 wjXAFExDqAfbQEadc+/tr4XsgWF2/jSPWAHm9eGybMOheoBBu8HkNp415lyq+WDBMOlX7
-	 Q++VzwhBCIH+f39rToypkd1p6Usqukhn+/7rh2MUax7r/4JLXaUHQPjV/Ua/dB7vkc3ed
-	 VuSsjF5LThQXaYOVoxf76lQX7Zvp/2Gj2HRcp3eUlTejhOrb36zLK/KtCrnSX1nJIWW6s
-	 EA67lPCUZ213uUnQ7QZKki/mMPP4/CLxBWpoCMEVkUORVTsn+g89D1csDee5Bzg7amQ==
+	t=1793906958;
+	b=QsR+DTdFbLRd1WTqkuZ4+XIcyMH/dR26OBcSlRcIRHe+Uq8dcVXtidOy1uihpFJezrcd
+	 exaQ7vm8a+ggh4Ym4u9DPEzsCizHtojlvqZ5NqilwN0OzM3Ujfu1K2a4ZtJAHGc1ooi6C
+	 kl0jqQIJWE2O7xfBW355qNB9PY5mNuM4DHg7Pa07jhtsMkSDWnHTnrfITZ/CMmYq+vIaV
+	 Asvp3hqskB3UAYIrOhoGr7/Xbe31LwsYsUvZqzLOEyvV20GjQY1RMCUJZRxmLm1t4dCS+
+	 Cp0OewQd0vjAogBL52R0oZofQNhONMItdss16yfzIoiJjcnTtjyHy4np9Gn1Hxi69rw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793906971;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793906958;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=S86yJ+B5qGfSA192YZydUPkrd91cCUN2X40z9NmB8To=;
-	b=k9hDWs8iF1VuiT1FTxrhkq5dYk9OnMVTjzNjomd+goEn1UB6+M/0J7UhDRAzgAEsCzYQ
-	 akChnlAepCcqk1heMcd56/vQ1DGy2NIoS5IYz0jrob1Tc9KNYn+mwljTgR4iknV154smo
-	 oecxJm/97cYm8REJha0y+oKSwCveggaOtN2qTSyIzClmOXupjXiAaFvEiWJvrwHr8US7I
-	 Nv8/tdVdU2fUDI8npeqJDrn0tUAee1UL5k5fG+Yv7w98P5nzAwQH+rqGuRjTsWYsFq1oh
-	 metMzE6g+ikQRgHVg35u6sOAuBFS5dnwpo6+vEgqyunrXRjwzUPux/iWSH0qcZjNLFg==
+	bh=2jOjP+w+HiO6pPFlf+UtXLVpbUo8fVoVCMG/gzgxPSY=;
+	b=ws5sFPOJy4jx5iNbCvJIHK32hAE/GTgH1eLx2Ni4DsH/mWEvDxfwi3Xzx6zrxBBUsFKt
+	 kN8AiB5WDHyfZbik3CE2864bHinJpOk7bzVnwCBjxiUJRSee407sUgALUHmlh1z7rd6dz
+	 OggYErAssf43Ans+1YksaJY/gFl6UCKn1I9GAM5+3R0NcIZxFY1UW2BRjBin1bv6zw+UO
+	 bd1/+2gTU1q/w2Z4Wxk5uoP3/CQYVP51IKCmJ4xTGNcZ/H7iSNj4GtQErdddzEmPbDZ8A
+	 teyt2pMptZnN//ENHnPHuaXXcFx/PtXAC9JIe0I5WmDHxj4fxmrMEu6XzcP62RXvk/w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SeuBgQaq;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="dlMl9M/r";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F17836082BF3;
-	Thu,  5 Nov 2026 19:29:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E485606D80F;
+	Thu,  5 Nov 2026 19:29:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SeuBgQaq
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C7321F00A02;
-	Thu,  5 Nov 2026 19:29:29 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dlMl9M/r
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1D611F00919;
+	Thu,  5 Nov 2026 19:29:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793906970;
-	bh=S86yJ+B5qGfSA192YZydUPkrd91cCUN2X40z9NmB8To=;
+	s=k20260515; t=1793906958;
+	bh=2jOjP+w+HiO6pPFlf+UtXLVpbUo8fVoVCMG/gzgxPSY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SeuBgQaqVWpGru3W9sij1Kx5fi/6U5rjetwB+P6G5tdeUO4escEUXQNsmkQ8RZJsR
-	 N3ad0PsJzqTqBNUpF1Gq9bKq4Gs6PPnGr2kbOldzxfmsAxwk/I0ywFs+3s9dEovcpK
-	 4fycBMvMdv+bDBbPSskelSCoXY5q3AokzQXZU4pI9d+YtuhY/MZRj5JY5FqeXz0QwH
-	 wFVR7pturO91QWS5cokIA+tbR6398bzKWWYmaM6GJBXeAUZ84sKfMtfLgH3UqLIkJu
-	 P5j0DmucSdoJn5dFSjExx6Tv1oP+zwkmPj0euNx6/FjN6JIUAcg6dGbM/GzyKStVRA
-	 /FuSc7MXCNWwg==
-Message-ID: <sashiko-outbox-199883@kernel.org>
+	b=dlMl9M/rPNxEZu6+Ri3OXa9FPI28S+nKPOVBymLRvAUIbEdACYesn7GaasG71a1si
+	 Jkdk1nguj1FW0I6rEhmRyL6rCf6iGgz0RsNmgA2Aax7T6dfl/bLd0reMK3dxl47No2
+	 cZOPksbLnHyzXhnv8X6aqtgNCaUxaH8zvMCcgysEle4NYPvSVucRgboVQsljfhslI1
+	 t38Nm+rBEGJUAgtRVOrBLiUgvSsBb85o5UOO6lhjVE/GMpZGzwjSdxGKJTR11kjWCO
+	 BXN98+TIo2Yx9dB8Tl/s4rDba6W5uK4F2hW8KmNF5r4lJJBlBYlOLW1lUh+7tDsUMj
+	 MzavIifWHwTQQ==
+Message-ID: <sashiko-outbox-199877@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2 20/51] powerpc/rtas_flash: don't read past the
- validate message
+Subject: Re: [PATCH RESEND v2 14/51] proc: sysctl: don't stop readdir at an
+ entry that is being unregistered
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -55,12 +55,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Iwai" <tiwai@suse.de>, linux-ext4@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261104-work-procfs-bugfixes-v2-20-021c84d852e0@kernel.org>
+In-Reply-To: <20261104-work-procfs-bugfixes-v2-14-021c84d852e0@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
- <20261104-work-procfs-bugfixes-v2-20-021c84d852e0@kernel.org>
+ <20261104-work-procfs-bugfixes-v2-14-021c84d852e0@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:29:28 +0000
+Date: Thu, 05 Nov 2026 19:29:16 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -70,14 +70,25 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> get_validate_flash_msg() adds up what snprintf() returns, which is the
-> length of the whole string and not what fit into msg. If the update
-> results the firmware hands back don't fit into what is left of the 256
-> bytes, the length ends up larger than msg and validate_flash_read()
-> copies whatever follows it on the stack to userspace. Use scnprintf().
+> proc_sys_fill_cache() creates the inode of an entry that has no dentry
+> yet. Since ace0c791e6c3 ("proc/sysctl: Don't grab i_lock under
+> sysctl_lock.") proc_sys_make_inode() refuses to do that once the table
+> is being unregistered and fails with -ENOENT. readdir takes every table
+> it lists into use and unregister_sysctl_table() marks the table as
+> being unregistered before it waits for readdir to let go of it. So an
+> entry that is unregistered right then makes proc_sys_fill_cache() fail,
+> proc_sys_readdir() stops there and returns 0. If that getdents64() call
+> hadn't emitted anything before that entry userspace sees the end of the
+> directory and never gets the entries behind it. A listing of
+> /proc/sys/net/ipv6/conf can end early that way while a device goes
+> away.
 >=20
-> Fixes: a94a14720eaf ("powerpc/rtas_flash: Fix validate_flash buffer overf=
-low issue")
+> So skip an entry whose table is being unregistered, like readdir
+> already skips a link it can't follow. Lookup treats such an entry as
+> gone too since ea5751ccd665 ("proc/sysctl: don't return ENOMEM on
+> lookup when a table is unregistering").
+>=20
+> Fixes: ace0c791e6c3 ("proc/sysctl: Don't grab i_lock under sysctl_lock.")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
@@ -85,5 +96,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
-s-bugfixes-v2-0-021c84d852e0@kernel.org?part=3D20
+s-bugfixes-v2-0-021c84d852e0@kernel.org?part=3D14
 
