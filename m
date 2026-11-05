@@ -1,58 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793893635;
-	b=Me39zY0iRVddeZa1uVdmQ4pHMg5F8WcpHFAglzm1s50pWO8GVDSjong0/i2C8rnPEbh/
-	 0S98Dcwrm/VtWVVwgYVD6MZosqKz3MC8iF8B9p7gsNLOb2aTkcJ889rPJFfmrS0ZmGOrK
-	 c3y5WbL+g+nGuVyl1+e1RF78ihW4bIzbQ4ngZaRD3++6jxRlqgexujZiknxmC1bbCo0hX
-	 JU2Y+SNEAi0udbDGmYnQB5cilvCg/Y9p3bR8QDGEjZc6nRCsUr6hzklktmNvunOWOMwc2
-	 YeSzn9PMAkvwDrASNr+sESEXMCUKaF9T2oTphMa3d1TPVfrlruagmfVaUkyieT5zQZg==
+	t=1793893765;
+	b=hf7AySnngbDwjw1tHN7VnSBauIinaHBkFfgY8EBcrOPgWmygpiM5un9SAe9+8vIJwjVY
+	 5armSP55iKJ8maDiJkFNhxUMrfskihDC4G3qyapWWFJIi5wR/zZuhEoizfIS44CEdIjg/
+	 yq6kC9mu8k/UKjdppe+20GdGUL74LCfGpXX0R5RjkKmqmpQRyvQQVhdBCxLuntrWjD8KL
+	 P+W5yMaBHwJLcXh2X93SYoaA8oA2jqZnUcI8Sg8w6lHAEOW2YSUFFEw4QPlX87AI8D+vG
+	 YWk/wKn9r7C3CIPAl60S55jwkfZKqCDQ7bBJeOswdDy1r9IvbaNR73I7URHKB5CfvnA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793893635;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793893765;
 	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
 	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=ofpeVWI3consGDzBWqgjB78mylADRIbQBjF1c/ZhASw=;
-	b=rmaQOimjHn1rr/cIrbYdfAN8soC6PsrKmsh9KLg4BAmI2E29xHMD7wQQcWBPSsDSoMGD
-	 /kH/fJ+e/FOmtZI/Ahhm/+K5gtVeqaMRDHBRkYOLlvqNgqo+06w8Ly/AacjwvXB5WLk3b
-	 lQTkvNBXQoj9q7uhFsz3F/OjjKAt80O36EX+yiKaDas6Ow4WTcAhWP5AZ7Vd7odDRd87R
-	 rSPRXbX8LOrFx5I075kkzr/9G+mRryYH3OiIVSeSjK3jpqOo7/HZCXzQxXl5NGbIt2Hu5
-	 SddUCtB4TYxzh4eCDQNw34Jymknw0iqeEut7Otr/b2ZDGS4bAlpODs9fOVQPRAscGuQ==
+	bh=9zFz7+PPYVZJTQ3/ZpvUrrZfGmrftPk/bCN7gEvbSq0=;
+	b=AETtiE/eQPohPq/gs3s70KXZTNpQrB17f3fccPMcsVmdhbOLDM3xP6gILebiPpcujUlQ
+	 1funWpm50W0hXZPhjruSPizaBkBzFKwT3is7lmNcpM0IVGGRzO1UA+oUXNROJJEyzagTW
+	 qevBE+wtkNTD+xhihzA7PJGh1u4bItEb5Y2l3xV4WN22Le8MrSwzvcUHzfleflM685/c9
+	 NFPtOLAe1CTQRZeorv8H0EQ4zQMGT4wNIZqZvp7zFF53+Ay2qRo/xyFTUECA2a5QqSLwR
+	 /EorLSLSXZtZ1ciusjdDu7YNvNdn57rtB9gw6S8zjfyTunNA+kL/ThyNZFO82GAl5aA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="h4FefPg/";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OSNdrXIG;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 491CD606A326;
-	Thu,  5 Nov 2026 15:47:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D18C60A2604;
+	Thu,  5 Nov 2026 15:49:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=h4FefPg/
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B5771F0093A;
-	Thu,  5 Nov 2026 15:47:14 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OSNdrXIG
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02ABD1F0093A;
+	Thu,  5 Nov 2026 15:49:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793893634;
-	bh=ofpeVWI3consGDzBWqgjB78mylADRIbQBjF1c/ZhASw=;
+	s=k20260515; t=1793893765;
+	bh=9zFz7+PPYVZJTQ3/ZpvUrrZfGmrftPk/bCN7gEvbSq0=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=h4FefPg/tCKfPxSNxbyzPRZaXt1/xvRCcjqzNiVIlnWnpX2M6KY8sfo+UcynUXX0f
-	 3UVQI7oIKdgTP9qeDN1bCi759hX4PmzikSt/fGtYGAxEQ8wYmneKz7WGwhgTa7gUQa
-	 BL3YjPD/sxdR1PLFV8U/ZzJLYQiong/qcZNQlxoSNUTB1E9qBUAt5585VTHKuYCsub
-	 MWBY+MKhM7NRdvusgjVsuB0A+5tAqcLYvvdzDwQlb0F7z9+eHmmKlX1stdNFqA4+L5
-	 GkFM1vM0bESYfsSH0wWbrRMLW6a41afoWRHCOeDnjepj2aAUzZq3GKvNtm0OZPXkNG
-	 dUElBpUJoIBsA==
+	b=OSNdrXIGBDn2Is4O7siYodKnF6Iu1De6KbdaZKjHTkJM55KXW2LoPCLXiuY1k4SiD
+	 cX6R4uzXZ/bQ6se4qLTfJ1nhHuJA4U0uZt+gbORDJJlBYEgE5KMznliYKl5op0yCAd
+	 c8o1ZLZu1u0Hs6eH3LFAnYLgj87vqUcRTVMkj5J41L+mZx8QWKcDszqmw/6Bdcts2Q
+	 ackzMWlpsvbyTObYJFhg0ty/pn+3AI/KBRUTKR8F/baansJZo1dQnIuERyQrj7mIDU
+	 FLaICm2DlhkRdbglE2eikwNh/f+5vXkYZaLYta8UCD6RTZm7ocmh5ouwCUUuRGPfIj
+	 oD5k9TgfJfpLw==
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Sreeraj S Kurup <sreekuttan2156239@gmail.com>
-Cc: angelogioacchino.delregno@collabora.com, bhelgaas@google.com, 
- kwilczynski@kernel.org, linux-arm-kernel@lists.infradead.org, 
- linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org, 
- linux-pci@vger.kernel.org, lpieralisi@kernel.org, matthias.bgg@gmail.com, 
- robh@kernel.org, ryder.lee@mediatek.com
-In-Reply-To: <20261028113453.2599-1-sreekuttan2156239@gmail.com>
-References: <20261028113453.2599-1-sreekuttan2156239@gmail.com>
-Subject: Re: [PATCH v6] PCI: mediatek: Fix integer truncation and handle
- oversized resources
-Message-Id: <179389361906.20463.1092137538074974205.b4-ty@b4>
-Date: Thu, 05 Nov 2026 21:16:59 +0530
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ "Peng Fan (OSS)" <peng.fan@oss.nxp.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20261104113235.1634024-1-peng.fan@oss.nxp.com>
+References: <20261104113235.1634024-1-peng.fan@oss.nxp.com>
+Subject: Re: [PATCH] PCI: altera-msi: Convert to subsys_platform_driver()
+Message-Id: <179389375533.20463.12488111572193444461.b4-ty@b4>
+Date: Thu, 05 Nov 2026 21:19:15 +0530
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -65,27 +63,27 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=362;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=329;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=/1VoRA0E/iREIYQ2KlRfA9WVvI28uaBTMEbmFin8Rz4=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq7KUBL9pngpeeZERhCqQgGAZZWRNID/qto5z6U
- BAN9sYMiQeJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauylAQAKCRBVnxHm/pHO
- 9UIRB/0cfs+uBOQN+I4FfZQqp9Y9Zm1HUrlhmtZ4uf7IUrC53DnL/ef1ErkkHDfA9y1Tufx/8w0
- xXZpjOvnOKFIE2WNMa7Ugwsa7oMuB+4p7PbqLEj91JdPfngrBdrOvOSGG9G31tGnJMpL2vO+ejt
- dmQZANpReW00TBYvu8EAE1MHptSsgQdzXFYj0yvWi6hW9it5NedZkzvDgphvEYSi1z4PgJcVk7D
- 1C85TZQ3fYLZYFvCo8zj94mjWtNX4cVXwzS4q9nABWav0YWQRiuwPWhmPWAdR7BR023XV3Fpvk/
- 01AglaQHIMq1hCblhGcj6hHgY2ZBb+uALmbE4YV9WybYywF0
+ bh=mMCsj8y6f7x9ED3OE/BGcTQuk1Ei20/hgMPU7FSA6LY=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq7KWEShu2lKVP4pBj6iLuhXI8B7hRgDCS7/Iu1
+ PldLG2B6vmJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCauylhAAKCRBVnxHm/pHO
+ 9XezCACLd7wJs5byf5/72l58wzI5+cXNFyMH/qLRR0Id5b4Qjp7XAe4QoTSOACSo0th9L1d6ROY
+ B8ddbpInDoId8NZ0ZVz8WObLpudXQKfoxlEea7jkx805Cnqt5Un4wEcvHn/Cuq8Wv1flmwGDuQL
+ LNTLMkv9dqjDiPj5cYWXwSnqd0v10nA7A2r3cos//M/8grFVO5G71jkr7cLKX9jImw9InQWLBfT
+ HnJ77ns+7FzfMJ5CauwLH9GXMYZdaNGKGxTo6gjkM40WNj/pbmSYd8bibuoy8d9xvbGash8c/Sd
+ RzW8M2UzQ6M463QFnyasL9d1vQu/1JnvC3gyZiRRTvO8A44Z
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 
 
-On Wed, 28 Oct 2026 11:34:53 +0000, Sreeraj S Kurup wrote:
-> PCI: mediatek: Fix integer truncation and handle oversized resources
+On Wed, 04 Nov 2026 19:32:35 +0800, Peng Fan (OSS) wrote:
+> PCI: altera-msi: Convert to subsys_platform_driver()
 
 Applied, thanks!
 
-[1/1] PCI: mediatek: Fix integer truncation and handle oversized resources
-      commit: 0abd664998828adc30df21c1ca052d3a5de910d9
+[1/1] PCI: altera-msi: Convert to subsys_platform_driver()
+      commit: e5b8af7c98f184590b82d505f8ade025ba7cafae
 
 Best regards,
 -- 
