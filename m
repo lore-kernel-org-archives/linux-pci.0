@@ -1,57 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=50.112.246.219
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793889263;
-	b=XZGcIVkO5qaLZo3QgytA7czsATuL/M3M/7zEysATM2Noz/NT8u0mWL4DWoP0ZAdVWapM
-	 XBETqDg+FwNzlGUogVyJ3CZ2Kmi+G7YUPS4RK4NpiLa3Z6sRFIWN8POTAjpmirSVKInqE
-	 7sDVqYf+h4BXoAHpNBEAL8hckdfEfEZBfRxrnOsMJg60g4jzjJk5WXqCMXFwFpWIBhcKP
-	 RyILu/d7y++DB17xfMr1SQxBFhKTr+2ZgzhNJgkKZrVA59LQNp+I+SEkiJkmUiuuwXYh3
-	 lJGHrez3JNqTsKATLgKQ2S5MKU24SnF28IFD3o2YJJS6EZ+8vhj6QXX15oGZjfLYlqA==
+	t=1793889384;
+	b=WvqZk0xDILZx3iN0ya5KHw/nP0mt1a7UsChGZ1hczjK3gSbLpWIVYc2pDkYBjYFNIu6U
+	 oRy2XBmaNZMuIu/pgRfb0hS1rSBAqfIWGZLzjT5oOzx8TzX7B9XJLj0WfA4buAqAte8qB
+	 wv9WZnM6dBC8Aq53dNztHT4jnHy3zVQnZ0/O/6xt6U0psi1eC913ksiO0aagzY4S9wJtz
+	 mpWXLZRERIHwd/JUlmY9JEAr+PY4eARw5uknRalZgJ136o2FKtbqlUlrI4bLqBkIs+dks
+	 pM+0xm2sGSpf1mQOX+LPlWV/6pmK13Huz0hfOj9Q4Y9UeGzXhRRx9VA5Vv1Fh+83wQw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793889263;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=w67WbtLwCDT6cPYNGAsC5XzoRVxETDpsQAGG+PvMA2o=;
-	b=luFRriyTHkmfHn/OhDhaSte5KsR+2qbyXENTpvNYKiR+Wl8WkSDuVO8JDCyCmOlh9Em+
-	 uK90dIVPO2J+Sp7FHUiKX0ZUSmKJakulFvhVAhWgMwMvB3FJh8CKgWzFRT8VVV/GzCKZa
-	 +XXoiB7vTkdjRaK/hgVkxFH4ie03E8Zywg5wxeJ3AWXwivSdvXFNeYl5h0W4dZy4WEtj+
-	 2691Sx/DOV9vnmc9ztM+QsCRpz/KEyLIu6ovs5bImjLRpXqkX0EV/GpnrMLJzezRiAicV
-	 BxvK/192WxawSREjjTCLDmrCp07+Cr35wrc4M6YzW67fNjDV17nog/Bx8cifIDfHmRA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793889384;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:Received:Received:X-Farcaster-Flow-ID:Received:Received:
+	 From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding:Content-Type:X-Originating-IP:
+	 X-ClientProxiedBy;
+	bh=RitqX72VBywyZ/8gIe4GxDQsV9RWlpPjVkp4R7+U95o=;
+	b=0TlkTBKJCu9rF7zs60hQSVXbJIkpRk2AIku3oxAdUQLxcpWAcZnOh9wqJkT8okmnBSSt
+	 Rxnnp2z94tDoLOmVxH9Ng3xLBzZKzZr2q24Y1SMXzF2pDcfhmifQES5EW29qzbgaj9k+t
+	 JbFDNbKjwhcZPerwdYq8YvHsFVQEsp5++2pidMmdz6LekudJl7sUmtHkCQanI78APlsLU
+	 eHl6cOmquERkwNZZ+8WkQu634oi87XiZTDJ0rba2yMtF2xwoAUGe35S8TSBd+9CGtMlCO
+	 84y88Qecly39/5GrN6+M8oewSvSrbCYEXi5p0f/FNN4ttT340gmoYRKnwCMjYoLDPfg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oHRC5L44;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=amazon.de;
+	spf=pass smtp.mailfrom=amazon.de;
+	dkim=pass header.d=amazon.de header.i=@amazon.de header.a=rsa-sha256 header.s=amazoncorp2 header.b=U5r8Inmr;
+	arc=none smtp.remote-ip=50.112.246.219
+Received: from pdx-out-015.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-015.esa.us-west-2.outbound.mail-perimeter.amazon.com [50.112.246.219])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A717A606A33C;
-	Thu,  5 Nov 2026 14:34:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E5DD606A328;
+	Thu,  5 Nov 2026 14:36:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4E5DD606A328
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oHRC5L44
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A82FF1F00919;
-	Thu,  5 Nov 2026 14:34:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793889262;
-	bh=w67WbtLwCDT6cPYNGAsC5XzoRVxETDpsQAGG+PvMA2o=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=oHRC5L44g9h8qK8SBDbqXCISMpG6T9DX8T7BE1e6vunXA3QSe12GzH4rZ8Y1GVZ9y
-	 nD1N97inxY5gVNYIhm4dFwPeHD1YqNoh0pl6T6Rf0pSPnaCUBkwFa0rWc0ZFzu+jhK
-	 qG4kS8u0pXktsYlTf1va+TxUP440Nkn3/7pGvCYv90ZTvykpuxzLF2XfdKLQR6zVzV
-	 1US7Ct6sGBKlaPvgJd8I+OTdjwdLctOWjwViwtG6Eq9xBfk0mkXHb4HYFY9vwuJ3hq
-	 GXXDoqKSR00efTaZXcFjdPd54cgCB5Vxmbl3rS6WI6a0KzlenQxCU6CugEKVb0x4px
-	 Gvmxy+tl1euxg==
-Date: Thu, 5 Nov 2026 20:04:19 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	konrad.dybcio@oss.qualcomm.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH v7 0/3] PCI: qcom: Implement shutdown() to avoid SMMU/NoC
- errors on reboot
-Message-ID: <auyT1HkNYFF9ro-p@debian>
-References: <20261029-shutdown-v7-0-3fd7a76a6991@oss.qualcomm.com>
+	dkim=pass (2048-bit key, unprotected) header.d=amazon.de header.i=@amazon.de header.a=rsa-sha256 header.s=amazoncorp2 header.b=U5r8Inmr
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.de; i=@amazon.de; q=dns/txt; s=amazoncorp2;
+  t=1793889384; x=1825425384;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=RitqX72VBywyZ/8gIe4GxDQsV9RWlpPjVkp4R7+U95o=;
+  b=U5r8InmrqfFszKgPS3ipFD/vHDLI/XAWFn5FxBMU5ueUyKa3PieHXqUJ
+   5UnRkxC3v4d2dKiRloChx0i/7w92FcskqwBHXgIjKC+1uK8+d0xLEj+Rd
+   9kNLJrtAIQyitkOuTb37BGG34LNCAw/Bv7WWwa9+KJCO+L6YtK7ib6C7v
+   KIAGFLhkc/uAHRsmPZaQukBVezr8aROsDea2DNFMOZJ6jhtktu8c86duN
+   0m8eG21l5yyCWM0aWpMhSzNBgEQZmjfL2rW7aIowmENeMMbE08sNei8sK
+   66Y0Kj4paOOE178vGu0YZhPM1t0h7QN78l1LnhP+tyvsl+Wvj/l+0Nuiq
+   Q==;
+X-CSE-ConnectionGUID: oYzvpLw9QEmc4MZKTbbi6Q==
+X-CSE-MsgGUID: w/FZ20HwTzKvNmnmiaxW/g==
+X-IronPort-AV: E=Sophos;i="6.27,197,1787011200"; 
+   d="scan'208";a="32977905"
+Received: from ip-10-5-6-203.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.6.203])
+  by internal-pdx-out-015.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2026 14:36:21 +0000
+Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.104:30175]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.44.80:2525] with esmtp (Farcaster)
+ id 698d68bb-711d-4975-bbc1-15ae946784b4; Thu, 5 Nov 2026 14:36:21 +0000 (UTC)
+X-Farcaster-Flow-ID: 698d68bb-711d-4975-bbc1-15ae946784b4
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56;
+ Thu, 5 Nov 2026 14:36:20 +0000
+Received: from dev-dsk-machaujo-1c-d6b511e2.eu-west-1.amazon.com
+ (10.253.100.8) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56; Thu, 5 Nov 2026
+ 14:36:17 +0000
+From: Joshua Machauer <machaujo@amazon.de>
+To: Srirangan Madhavan <smadhavan@nvidia.com>
+CC: Alison Schofield <alison.schofield@intel.com>, Bjorn Helgaas
+	<bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>, Davidlohr Bueso
+	<dave@stgolabs.net>, Ira Weiny <ira.weiny@intel.com>, Jonathan Cameron
+	<jic23@kernel.org>, Vishal Verma <vishal.l.verma@intel.com>,
+	<linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Li Ming <ming.li@zohomail.com>, "Alex
+ Williamson" <alex.williamson@redhat.com>, <vsethi@nvidia.com>,
+	<alwilliamson@nvidia.com>, Sai Yashwanth Reddy Kancherla
+	<skancherla@nvidia.com>, Vishal Aslot <vaslot@nvidia.com>, Manish Honap
+	<mhonap@nvidia.com>, Jiandi An <jan@nvidia.com>, Richard Cheng
+	<icheng@nvidia.com>, <linux-tegra@vger.kernel.org>
+Subject: Re: [PATCH v16 14/18] PCI/CXL: Reject reset with unsafe function scope
+Date: Thu, 5 Nov 2026 14:36:10 +0000
+Message-ID: <20261105143611.31563-1-machaujo@amazon.de>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20261029145703.2185231-15-smadhavan@nvidia.com>
+References: <20261029145703.2185231-1-smadhavan@nvidia.com> <20261029145703.2185231-15-smadhavan@nvidia.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,38 +94,48 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261029-shutdown-v7-0-3fd7a76a6991@oss.qualcomm.com>
+Content-Type: text/plain
+X-ClientProxiedBy: EX19D031UWC002.ant.amazon.com (10.13.139.212) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
 
-On Thu, Oct 29, 2026 at 09:49:26AM +0530, Krishna Chaitanya Chundru wrote:
-> During system shutdown/reboot, power/clocks to the PCIe controller get
-> removed regardless of link state. If the link is still up when that
-> happens, it can trigger SMMU or NoC errors.
-> 
-> This series adds a shutdown() callback to the Qualcomm PCIe host driver
-> that forces the link into L2/D3cold before shutdown proceeds, reusing
-> the existing suspend_noirq() path.
-> 
-> Patch 1 fixes pci_host_common_d3cold_possible()'s underlying bus walk,
-> which aborts as soon as it finds a device outside D3hot and can
-> therefore miss a later PME-capable device -- something that becomes
-> common once patch 3 starts forcing D3cold entry during shutdown while
-> endpoints may still be in D0.
-> 
-> Patch 2 adds a force parameter to  dw_pcie_suspend_noirq() so that callers can
-> set to make dw_pcie_suspend_noirq() force L2 entry during shutdown/
-> reboot, skipping the D3cold capability check that can otherwise leave
-> the link up if any endpoint hasn't suspended yet.
-> 
-> Patch 3 adds qcom_pcie_shutdown() and wires it up as .shutdown.
-> 
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+On Thu, Oct 29, 2026 at 02:56:59PM +0000, Srirangan Madhavan wrote:
+> @@ -515,6 +515,9 @@ int cxl_reset_function(struct pci_dev *pdev, bool probe)
+>  	    !(ctrl & PCI_DVSEC_CXL_MEM_ENABLE))
+>  		return -ENOTTY;
+>
+> +	if (pdev->is_virtfn || pdev->multifunction || pci_num_vf(pdev))
+> +		return -ENOTTY;
+> +
+>  	if (probe)
+>  		return 0;
 
-Please fix the build issue reported by kbot.
+[...]
 
-- Mani
+> @@ -5026,6 +5026,9 @@ static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
+>  	if (!dvsec)
+>  		return -ENOTTY;
+>
+> +	if (dev->is_virtfn || dev->multifunction || pci_num_vf(dev))
+> +		return -ENOTTY;
+> +
+>  	if (probe)
+>  		return 0;
 
--- 
-மணிவண்ணன் சதாசிவம்
+Could both checks go at the top of their functions, before the DVSEC
+lookups? None of the three conditions depends on what the lookups
+find.
+
+pci_init_reset_methods() probes every reset method for every device
+that is added, and enabling SR-IOV adds the VFs one after another.
+Where the checks are now, each VF probe walks the extended
+capabilities twice before it returns -ENOTTY: cxl_reset walks the
+VF's own list for the CXL Device DVSEC, and cxl_bus walks the
+upstream bridge's list for the CXL Port DVSEC. All VFs of a PF share
+that bridge, so its walk repeats once per VF with the same result.
+
+With the checks first, a VF returns -ENOTTY without a config read,
+and the result for every device stays the same.
+
+Thanks,
+Joshua
