@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793906987;
-	b=QIjKRFbvyhPfgR631kqXS06gmjq/GLAfBMtYKzI1YP9/p9mtp/imZYt3YkoBJ+7mVxqK
-	 T4D96XrL9e3b86aQWYoJnsDaEkDE6USYJJTQlXQ4NMX33ByN5VBia/S0+RCwTAzZ16TgH
-	 EDP4AaoEryctb5VV95RMJHKsQExyc95CVzsgW72kNA67aSNGtT3H/pBNZBL8JHg+KqxZK
-	 gr9dBWTQrw2pRaC5fjERewbdH7PektDhXeBrfyO64t3TAhCaeWoYuRnPs1FMWxF+Kt3jE
-	 MPr34mijiiH6RHxj9AgREMpwO0qQAlre6JrEi9QqhD6DIEMAQsIeLwZUS8v2XYsmLbA==
+	t=1793907020;
+	b=3H9OkWWhK4p9tp4VpM0FIVbuq5z1MR2GROuAiDGSNRZpRYGiGpdDX6HuS2KWBubs23lg
+	 og89IalqkehlDC23Oll8IE/nt8M1+TDQBrxWbgPJqKsvE4/82mHgnKdG9427gMfS4u+mM
+	 xGOOkgOsiJ6cUmYgQ34ynILQ8VL0LEuYeixhArRECpzUNpdMQldCtrRUsQO/70FJKL6ZD
+	 c3FvtSlzG7+gjSwtrucmQam2h6OEkt9pKM/pEz34wP+De+Kkq2HZUr3CDm1FaRWGUMtAR
+	 aDy/0c5iBn1U3Q8SD0GRKt073KyMNMXZu4IQTd7KCZDG1+wF+mqREOAIT0EraWvvMHg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793906987;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793907020;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=E7qO1H9A1A9rieSqfjYXZ8cAx/UooTrw7Di+0o9YRTQ=;
-	b=CZ5WGR06BH3clIRxhyKkp7GX4JZtz0SvZbZs6zQlduL8XCoHtn16ybR0t5W/To7VQcJ8
-	 eMu9QcUpUNhDGXYNLTCalndUqJthacUtRUpFmwYHe8Qr8xDBQxNVV9tC0Jm0hhtSwe432
-	 Yr2r4nlKKaEuB0lyywQUfv5t8NWd/bkPZ/HBVEZqlql7d4gpAKxLeP53cuocd+Lag44GU
-	 drjYjYC4P5p3ml2YfH0KXhpF2luxhYZxeVaKO1gIQtdq5WK4hP+bxZGywXkV4KNeUJ1pG
-	 3iAQYps0g0eviQVE9QdpaiJjfHOyiGRA/vigYPvc5jKQAnafLo34ya+MecAA3FpVLUw==
+	bh=y9V1CIpIY4360pJxVlHm+5yZoVNA43rbHggh2CYfgcQ=;
+	b=ggSStX3K3IMgM9SvO9DgJ8+przSCwikNA5+IcRkgWtUAId4tF/XsCXB0M345fLnescnb
+	 YH3SrEtKBrPyix6PxJXz0DCBun/XbQ+ScMD4zW07DxusNA+Qi9YvEuE0MrF9Cldt0sYJ5
+	 tXURrrV1/KwZL+QwJCLBAB4Ya7CESNhVlroMAyj9z+GKWwttS/Gy60u1tU66g+8taLXDQ
+	 5oxkezkIsMXeyj30WTr5arURmlIf4ftNLtIm9lYVleE8NJ0OZ1SEDaZwrHOyOcuo75vpa
+	 NT/Dk3w4y6VuBzA31wmrp5Yw63K3DoErIp3ttPAbWOQJS4n6QBg5XsyLmXus5pCccBA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LTnFsgeX;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=U6caPqpR;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B03160A261E;
-	Thu,  5 Nov 2026 19:29:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95457606B050;
+	Thu,  5 Nov 2026 19:30:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LTnFsgeX
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02EDB1F00A15;
-	Thu,  5 Nov 2026 19:29:45 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=U6caPqpR
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF0FC1F00A16;
+	Thu,  5 Nov 2026 19:30:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793906987;
-	bh=E7qO1H9A1A9rieSqfjYXZ8cAx/UooTrw7Di+0o9YRTQ=;
+	s=k20260515; t=1793907020;
+	bh=y9V1CIpIY4360pJxVlHm+5yZoVNA43rbHggh2CYfgcQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LTnFsgeXELuRS1S19Bt/pzQ+cb+pUBBhn3cNJZvSOUysjbUq7RfCfegDbQCabe1Pb
-	 qSe0NkrKJlORAbTMYxgPieHtNxM2nzEmoUwuiF3r26/1OK2XfIdOA+5L1tOq0YmoQv
-	 kS68U1ggMoMNz6N4N4yBl8B2pEM9tNDSdKY9SQ5yrP3x+RqPWA9Q56h+xU/e6TiGG8
-	 sl7lOr3tc8GVntL/4M2vfxQsKG06zotuUAj5ygmG4uiLR8oRC56KdW3GXGEqaLnYx+
-	 SXwoQ9Tsqzr3DNeN0YRvJ+KZeq2LgvQhPsotMl/HyES9FpciEvKivqFYkYflC1YUa1
-	 McABk20UGjloQ==
-Message-ID: <sashiko-outbox-199892@kernel.org>
+	b=U6caPqpRAcq7s3jABurFLTYAOyQNLF7KNwFcz7vL0owaKAFz2/Kmb1CSUDdsXURja
+	 KndJt79cCtvWCvNOTwi2inAusJtSM7xFcxVXh2P+h26yFHpcllhdCgktUZVCkwtiG9
+	 /H3yjzLcrbjdiUSj7RiWzxjqFY9BFACxF6rXGygYvdaL3HgamlM8WqSmnW73wwg/9a
+	 HWJvJwieWwnyodMNwSKhOSyeyO8OGNd1qplxfETbINtVIeYgtd4CJo1Ro5mX0HKNqx
+	 xq+lWhJhP5SWQhNMI4K00P+V9JGUm/enmo6/5lUN5kqo3zAD4JBvrPHNPgj7bQqo45
+	 NaifRmjsniAKg==
+Message-ID: <sashiko-outbox-199907@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2 29/51] proc: don't walk through a
- non-directory when resolving a name
+Subject: Re: [PATCH RESEND v2 44/51] proc: sysctl: resume readdir after the
+ last name it returned
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -55,12 +55,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Iwai" <tiwai@suse.de>, linux-ext4@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261104-work-procfs-bugfixes-v2-29-021c84d852e0@kernel.org>
+In-Reply-To: <20261104-work-procfs-bugfixes-v2-44-021c84d852e0@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
- <20261104-work-procfs-bugfixes-v2-29-021c84d852e0@kernel.org>
+ <20261104-work-procfs-bugfixes-v2-44-021c84d852e0@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:29:45 +0000
+Date: Thu, 05 Nov 2026 19:30:18 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -70,25 +70,31 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> __xlate_proc_name() walks the components of a name like "a/b/c" and
-> takes whatever it finds for "a" and "b" as the directory to go on in.
-> It never checks that they actually are directories. So
-> proc_create("file/x") hangs x into the subdir tree of the regular file
-> "file". Nobody can look x up there, but remove_proc_subtree() on the
-> file removes and frees x along with it, behind the back of whoever
-> registered x.
+> proc_sys_readdir() counts the entries of a directory and resumes a
+> listing at the number getdents64() stopped at. The entries are sorted
+> by name, so one that is registered or unregistered in between shifts
+> everything behind it by one. Listing /proc/sys/net/ipv4/conf with a
+> buffer that holds ".", ".." and "all" and registering a device whose
+> name sorts before "all" makes the next call return "all" a second time.
+> Unregistering one that sorted before the position makes it skip an
+> entry instead. So a listing that takes more than one call shows a name
+> twice, or not at all. Even the 64k buffer of ls needs a second call to
+> find the end of the directory, so a device that comes up right then
+> repeats the last entry.
 >=20
-> pktgen passes the name the writer of "add_device" picks to
-> proc_create_data(), and only the part in front of the '@' has to name
-> a network device:
+> So remember the name of the last entry a call emitted in the file and
+> resume at the first usable entry after it, like kernfs resumes after
+> the node it stopped at. The entry itself can't be pinned across calls,
+> unregistering waits for that. If the position was moved by a seek in
+> between the listing counts from the start like before, seeking to an
+> arbitrary position has never been better than that.
 >=20
->   echo "add_device lo@"   > /proc/net/pktgen/kpktgend_0
->   echo "add_device lo@/x" > /proc/net/pktgen/kpktgend_1
->   echo "rem_device_all"   > /proc/net/pktgen/kpktgend_0
-> [ ... ]
+> That also takes one walk down the tree to resume instead of a walk over
+> every entry in front of the position with a round trip through
+> sysctl_lock for each of them.
 >=20
-> Reported-by: Chris Mason <mason@kernel.org>
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Fixes: 77b14db502cb ("[PATCH] sysctl: reimplement the sysctl proc support=
+")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
@@ -96,5 +102,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
-s-bugfixes-v2-0-021c84d852e0@kernel.org?part=3D29
+s-bugfixes-v2-0-021c84d852e0@kernel.org?part=3D44
 
