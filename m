@@ -1,84 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.251.105.195
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793885254;
-	b=XtOptqmvAPKbfSDERbXweLGnAYI6Y0l/giP0JNGM3pGbPRmuI0bI+0EwIXuxpn+y06tq
-	 83OxUYTzZ8Z1LYttnSjLdUNwv1GPwj0pPjRJ/wegTQI3iPl3LRmjbziFzxQqcAyeLyTUl
-	 /l6GjpInOgHNlnQZ9nGRVpi3HHNJCj5CBZQJ+mbO/npSOTywhcfbfKRTMQSGdJBvdMoD5
-	 68D5znBQBrKMpvaljmK7VD8XRICua8J84/fDf1DpwCWaBsW/9UgjCNDAM2yl4eHbVBTfq
-	 X7s0VnjEglBurqzOTuBUWOu8OgrIbz4yuPKX0u1IXZbEhI/KA5w3NM+yPMdr8age6LQ==
+	t=1793885594;
+	b=AdacdGN0efjjX5iMfaNxzIEFw30oby1WK4ZdjwWhGX9iOX40UmWgl/5UJnFr6OscalL3
+	 DZZhQtb6d1WSQ0fW2PoLcqWX7h6RuqCQ2eMrb3GKVFAIhtDZBXSm47sCht+seP3ITKUYg
+	 E5lAfxZg7W76ueq+zky0xiseJNbkJTtkwXmSkG/3zwiloUnFJBxAJjALq7AFbCyFzL/CL
+	 yRpw0viVrzAqAJ52Rieyn2uNEApMyoutiP9pdiYcvBUN7IhoZCUfaDkw3KqUUJvBVbFqK
+	 5g4IVLoYkihRkV4a96CvwqAxKuGl0puETIOGmnFyLPY4Tj7CvJMx1KTCCqp/hRXgOyg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793885254;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=XrBQYJBKmN4p93auIZi3LsTAkyZ/pnTV+pc9s6RclDY=;
-	b=JliHrWjXpNiORv2vpVcgmX5Zm4u+cQw+Q+6Rp/kemFSm+2zdoek/iY0CmtXyzAtXWWiu
-	 YWkIm+A3RCukWHUKl43X7bGf3EeDQwsK6+kU1496fbD5/aMEbe87VyTcBrQbuE/G2i2Be
-	 fVLtjp2IVHTKXsoiC5TmnfsNAj8Um0N0vh14jbQei/X8+RA5ZEiya74txkMglbWMI3D/m
-	 Gz2JcSIUA9H/cltJvipwvbXEcUsIQTyYxWyY6GTKtnulDALj+c2+PYDSLco8PuHJpdsAP
-	 sp9X0GHiUREV49h8CmGQT1zVCvLk3SL0SA6fJ9hsptEFiumbaThqf15wHFhQe6WtV0w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793885594;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:From:Date:Subject:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
+	 References:In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:
+	 X-Developer-Key;
+	bh=Bd0quOoFJe0g9jNpT8SLzufibaLOJeXGBQUTTVHS5os=;
+	b=TGj7Z4brHopH0mmpVkhdDUqkefq0bbEwBlC94fIMgaK4Qg6m/wtWvkrbpFUoRFFYWU8/
+	 JmSmMLhaqCyP3alCVdx2NV3e+LtIja3JF0yh0s5Z6do+2KKM//bhAjMAJR8zjtZUrWVsF
+	 Y7cnLb5rdu1KxwKoHzIBGhcsOnxGzCCxS3QmW0FDez+CofnqA4mF8+pRpXJYYnpBYZCbC
+	 Hhm5V1Pj5VzNk0A7xcjghEDC6KvcMplorzEl8m8/L2GRmkXjl4jdaqqxj9sAbTJ81N24H
+	 b7ztbeKt2jZzcZfARjdUDjCs+LWlyNAYXfc8CEofsIRLyrTYQHxVl1LL2cosRr167EA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JK2Ti1jA;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=collabora.com;
+	spf=pass smtp.mailfrom=collabora.com;
+	dkim=pass header.d=collabora.com header.i=@collabora.com header.a=rsa-sha256 header.s=mail header.b=kSj0tvAE;
+	arc=none smtp.remote-ip=148.251.105.195
+Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3E7F606A326;
-	Thu,  5 Nov 2026 13:27:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57E23606A329;
+	Thu,  5 Nov 2026 13:33:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 57E23606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JK2Ti1jA
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 817331F00919;
-	Thu,  5 Nov 2026 13:27:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793885253;
-	bh=XrBQYJBKmN4p93auIZi3LsTAkyZ/pnTV+pc9s6RclDY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=JK2Ti1jA3utWAgrt6V4JUS7tslRWfNukRCd+/Vzfz7h/q0E1p8+7S8luP+VD4LAYD
-	 7SihzxrgOYXG8U0cQ7JZFx8YFxMoxO/yFemOAtRTazaDhuvYkS0K35sZZ0c3s+KU2o
-	 lM6rj29uyaswnmyP6F68EXwCsjKUiAKcRePanEbxomxutU+3yS3tkA3/QIf9brzDLh
-	 aiNB6ftZI1eeCWp3rSN9ZCx71+gQ3tsIMQUMJPinxAtG4Td8DrMeMVL0JEQVRFNoEM
-	 Rzz4qv5TtVwT799y7DIPLtMhY+Cx4FCS0D2NLbvyTBY2Aw7zKpeILiQrBovRfpIO9t
-	 OsoSWUhj/O7qA==
-Date: Thu, 5 Nov 2026 15:27:29 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH 10/17] driver core: Expose device trust authorization
- through sysfs
-Message-ID: <20261105132729.GB8298@unreal>
-References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
- <20261105-device-trust-core-v1-10-1e536825b4eb@nvidia.com>
- <2026110514-bunkhouse-handset-6a3a@gregkh>
+	dkim=pass (2048-bit key, unprotected) header.d=collabora.com header.i=@collabora.com header.a=rsa-sha256 header.s=mail header.b=kSj0tvAE
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+	s=mail; t=1793885591;
+	bh=8gAjDeFID8mO/dDQRifUwMLmNaFsmqSGIncrUFAKD1o=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
+	b=kSj0tvAEuq41sJ9BhzXdIqIOwIuWI93aN2UD9pyjRLUBfU0VeHlZYo+ewLRC9Cgcn
+	 Hs5ZqMsaNTHoDMl8+AjpHoxKQ9Kxf/a+75OXN0q5c/Ufaqwz+BTgpr8vF+A3YDaR1z
+	 O9yaelsz6YfxmNGQt7DbDU6VXb7cnI4j0KOrnMxx7QK88FJdv1CmcxwvVTI0GejIUQ
+	 lZ8LaWPBPmU+z0wiKls7L0WQ/wRmmXtAfjhkde4ARrP6rBM0qhJKSeLXIBjkygJlRc
+	 WFHS57US/G2wCMy9WWqiJvN8nmGpYwVPrDuMluog36wAewNRzLQZ2XNqpdtb0zb3UD
+	 XDR6T9+VygGXg==
+Received: from jupiter.universe (unknown [100.64.1.62])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: sre)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 416EA17E09FA;
+	Thu, 05 Nov 2026 14:33:11 +0100 (CET)
+Received: by jupiter.universe (Postfix, from userid 1000)
+	id E3C1F48002F; Thu, 05 Nov 2026 14:33:10 +0100 (CET)
+From: Sebastian Reichel <sebastian.reichel@collabora.com>
+Date: Thu, 05 Nov 2026 14:33:10 +0100
+Subject: [PATCH v9 2/9] PCI: dw-rockchip: Restore vpcie3v3 regulator handle
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -88,102 +65,111 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2026110514-bunkhouse-handset-6a3a@gregkh>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261105-rockchip-pcie-system-suspend-v9-2-a2e55846649e@collabora.com>
+References: <20261105-rockchip-pcie-system-suspend-v9-0-a2e55846649e@collabora.com>
+In-Reply-To: <20261105-rockchip-pcie-system-suspend-v9-0-a2e55846649e@collabora.com>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, 
+ Philipp Zabel <p.zabel@pengutronix.de>, Jingoo Han <jingoohan1@gmail.com>, 
+ Shawn Lin <shawn.lin@rock-chips.com>, Liam Girdwood <lgirdwood@gmail.com>, 
+ Mark Brown <broonie@kernel.org>, 
+ "Yury Norov (NVIDIA)" <yury.norov@gmail.com>, 
+ Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+Cc: Alexey Charkov <alchark@flipper.net>, linux-pci@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, kernel@collabora.com, 
+ Sebastian Reichel <sebastian.reichel@collabora.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2506;
+ i=sebastian.reichel@collabora.com; h=from:subject:message-id;
+ bh=8gAjDeFID8mO/dDQRifUwMLmNaFsmqSGIncrUFAKD1o=;
+ b=owJ4nAFtApL9kA0DAAoB2O7X88g7+poByyZiAGrshZaaFN74/4a1JqT1j4s/AeavAREvfMF84
+ ux7J010D30UrokCMwQAAQoAHRYhBO9mDQdGP4tyanlUE9ju1/PIO/qaBQJq7IWWAAoJENju1/PI
+ O/qaaqsQAJdzdyKe3Jk4MIaD1/dk+qZrCVFXk4CYaKghkrmBqLBiJSiHnbRVzk7E/X2QLpsVkcP
+ V0ZFWgSJNcmI7sNJcuVtcMqjN7aele1pBkjbjoCUhufNMRUc531M5k2K0wJIAfZ9AE5B2D/3QFx
+ pjKHcYqUbqieA3eNKamKH8FFOWZlIY2layRKQNyQvYeAYtmV+FZDULIrCFLPdmpIEpEgW7yUY+5
+ yDxovjp7hXZnTdzA5boJB1fd8/Y4dvGgGwzORTYPyiDihPaEDzRczoufPYKlZW8Z8SsrXQJLbMt
+ LqElqdGfINO6NDyezXq8DuCMh795BKa93O8MUquGZZOkz6i32N5GERbf7EXIducm4dM3Rl51N2H
+ Xh6zfSH/UVZWsrgCM9S985+JTKmSl3iS7imWFPRB0gmMcIfrXOrWxIqJxpTfuiBKlPWpEqU3xb/
+ fI48JPgIKinZ7gA1zqQ6sWOjuu8+DxzU2tQFB+FWpNnfehSUxsb5BfqGOcVqN247EKa2hRacUoZ
+ dpgTp4OBocbUowc52M03v0xgRzr21qF3Vd4CpYdwy2lXdZ58xd2xY6n5XIOHlzkCMR9JIK6ynWP
+ 46yCqmaYDGJ9VOO+aEzfgONKmDmdztx8WGQHKeNDqcDOQOI6TxPgDAQm0WMNc6p19PF/HGNk0dW
+ 3HU0IieibI7Etti/hHWstLA==
+X-Developer-Key: i=sebastian.reichel@collabora.com; a=openpgp;
+ fpr=EF660D07463F8B726A795413D8EED7F3C83BFA9A
 
-On Thu, Nov 05, 2026 at 08:10:14AM -0500, Greg Kroah-Hartman wrote:
-> On Thu, Nov 05, 2026 at 01:42:23PM +0200, Leon Romanovsky wrote:
-> > From: Leon Romanovsky <leonro@nvidia.com>
-> > 
-> > An initrd must authorize a disabled device after attestation even if a
-> > built-in driver already attempted to probe it.
-> > 
-> > Expose requested trust_policy and read-only active trust. Allow explicit
-> > disabled policy to advance once to adversary or full, fixing that decision
-> > immediately. Reject later policy changes, including for a device claimed
-> > before registration, while allowing same-value writes on live devices.
-> > Keep initial unrestricted selection separate from explicit authorization
-> > and bind-time commitment. Serialize writes with probing under the device
-> > lock. Include the attributes in device ownership changes.
-> > 
-> > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
-> > ---
-> >  Documentation/ABI/testing/sysfs-devices-trust |  51 +++++++++++++
-> >  MAINTAINERS                                   |   1 +
-> >  drivers/base/base.h                           |   6 ++
-> >  drivers/base/core.c                           |  15 +++-
-> >  drivers/base/trust.c                          | 102 ++++++++++++++++++++++++++
-> >  5 files changed, 174 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/Documentation/ABI/testing/sysfs-devices-trust b/Documentation/ABI/testing/sysfs-devices-trust
-> > new file mode 100644
-> > index 0000000000000..97e07a174769c
-> > --- /dev/null
-> > +++ b/Documentation/ABI/testing/sysfs-devices-trust
-> > @@ -0,0 +1,51 @@
-> > +What:		/sys/devices/.../trust
-> > +Date:		September 2026
-> > +Contact:	driver-core@lists.linux.dev
-> > +Description:
-> > +		(RO) The active trust level for the device. The values are
-> > +		"disabled", "adversary", and "full". Driver core resolves
-> > +		the level before DMA configuration and probe, and retains it
-> > +		through removal and DMA cleanup. Outside a bind transaction
-> > +		the level is "disabled". This does not imply that policy is
-> > +		writable or that the device has never operated.
-> > +
-> > +What:		/sys/devices/.../trust_policy
-> > +Date:		September 2026
-> > +Contact:	driver-core@lists.linux.dev
-> > +Description:
-> > +		(RW) The requested trust policy for the device. The initial
-> > +		value may be selected by the bus before the device is
-> > +		registered; otherwise it is "default". The policy is resolved
-> > +		to an active trust level before the device is probed.
-> > +
-> > +		The values are "default", "disabled", "adversary", and
-> > +		"full". "default" lets the bus select the active trust level.
-> > +		"disabled" prevents a functional driver from binding.
-> > +		"adversary" requests operation with the restrictions that the
-> > +		bus and DMA layers can enforce for a potentially malicious
-> > +		device; it does not isolate DMA by itself. "full" requests
-> > +		normal operation.
-> > +
-> > +		Before an operating level is committed, policy may change
-> > +		freely until "disabled" is selected. Explicit "disabled"
-> > +		blocks binding while allowing a later write of "adversary" or
-> > +		"full". Repeated rejected probes preserve this opportunity.
-> > +		Authorization immediately fixes the requested policy.
-> > +		Returning to "default" or "disabled", or selecting another
-> > +		mode, fails.
-> > +
-> > +		Successful resolution to an allowed level commits policy
-> > +		and operating level before driver or DMA setup. Both remain
-> > +		fixed for the device object's lifetime, including through
-> > +		failed or deferred probes, unbind, reset, and driver reload.
-> > +		Later binds must resolve to the same level, including when
-> > +		the policy is "default". A resolver error or disabled result
-> > +		before commitment leaves the policy's writability unchanged.
-> 
-> I understand you are aproaching this from a PCI point-of-view, but many
-> busses do not care or have DMA at all, and need to actually talk to the
-> device before being able to even "add" it to the kernel.  So you are
-> making a driver core-specific policy based on mentioning DMA here, when
-> really that should only be a bus-specific thing, right?  Some busses
-> might require DMA to happen (i.e. USB needs their host controllers to
-> use DMA to even talk to the device at all).
-> 
-> So can this be written to be more vague and generic and then put the
-> specifics in the bus-specific portion?
+This reverts commit c930b10f17c0 ("PCI: dw-rockchip: Simplify regulator
+setup with devm_regulator_get_enable_optional()"), which nicely cleaned
+up the code.
 
-Yes, of course. The main point is that drivers must not communicate with
-or configure hardware before attestation is approved. DMA is the PCI
-way to communicate with hardware.
+The vpcie3v3 regulator handle is needed to disable the regulator during
+system suspend (to be added in its own patch).
 
-Thanks
+Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
+Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+---
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c | 27 ++++++++++++++++++++-------
+ 1 file changed, 20 insertions(+), 7 deletions(-)
 
-> 
-> thanks,
-> 
-> greg k-h
+diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+index c35c5583c797..574d3dcfcf8b 100644
+--- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
++++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+@@ -113,6 +113,7 @@ struct rockchip_pcie {
+ 	unsigned int clk_cnt;
+ 	struct reset_control *rst;
+ 	struct gpio_desc *rst_gpio;
++	struct regulator *vpcie3v3;
+ 	struct irq_domain *irq_domain;
+ 	const struct rockchip_pcie_of_data *data;
+ 	bool supports_clkreq;
+@@ -844,15 +845,24 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 
+ 	/* DON'T MOVE ME: must be enable before PHY init */
+-	ret = devm_regulator_get_enable_optional(dev, "vpcie3v3");
+-	if (ret < 0 && ret != -ENODEV)
+-		return dev_err_probe(dev, ret,
+-				     "failed to enable vpcie3v3 regulator\n");
++	rockchip->vpcie3v3 = devm_regulator_get_optional(dev, "vpcie3v3");
++	if (IS_ERR(rockchip->vpcie3v3)) {
++		if (PTR_ERR(rockchip->vpcie3v3) != -ENODEV)
++			return dev_err_probe(dev, PTR_ERR(rockchip->vpcie3v3),
++					"failed to get vpcie3v3 regulator\n");
++		rockchip->vpcie3v3 = NULL;
++	} else {
++		ret = regulator_enable(rockchip->vpcie3v3);
++		if (ret)
++			return dev_err_probe(dev, ret,
++					     "failed to enable vpcie3v3 regulator\n");
++	}
+ 
+ 	ret = rockchip_pcie_phy_init(rockchip);
+-	if (ret)
+-		return dev_err_probe(dev, ret,
+-				     "failed to initialize the phy\n");
++	if (ret) {
++		dev_err_probe(dev, ret, "failed to initialize the phy\n");
++		goto disable_regulator;
++	}
+ 
+ 	ret = reset_control_deassert(rockchip->rst);
+ 	if (ret)
+@@ -885,6 +895,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
+ deinit_phy:
+ 	rockchip_pcie_phy_deinit(rockchip);
++disable_regulator:
++	if (rockchip->vpcie3v3)
++		regulator_disable(rockchip->vpcie3v3);
+ 
+ 	return ret;
+ }
+
+-- 
+2.53.0
+
