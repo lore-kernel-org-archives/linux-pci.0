@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793879006;
-	b=CHqwrVYwTYGAh91Y7axvELhVwMeQkAQQAEarlNOMVo06JDqEE30k7mb0PcZzPAxU4OzE
-	 b7/kZadRkiDCGuPaU90DkLwewjRQqREd1/sdadDMGsQEoFNivP55c6sdniPoM8Gwkwuyl
-	 8bWx8X1AzJgbohPOvtjpIcST5d9sfX1KMuMNYckzygkVhBOgG4JbQ2c7ao678wK3pqBTH
-	 bWqp2XCzfg8CrEU+b0rXNOtF9rp/hP5kmm6HnuVOel5mEC/vtynltkxrv+gmhVtgA4flP
-	 pzWya8TAXxBAN4tUjen1zABqU7uEipv8D9Nmfw9EEfBJSuiYdadHQuv10B4XTU+brRQ==
+	t=1793879022;
+	b=rtuSBc4rZQIz6lT3TJ7xLWB34JJQvOXO/JrK4714KJgL3QTzbAjowWMSEY1X2AVcaz86
+	 Kr07HjP+buIArFnR2tbjgR/uZdQJvQrtV+JEaSZm7fEtomcR0I0ODhobCvdb3lYutnu5z
+	 LH3i5vVcAiF6Zb1sFfCKbuGrbKqwcIZPSDojARjXXQthrF76xESg6rpAuWIvYgZi0jJqu
+	 T54HTgHb2NJ807z4zoHPO4WUQdus7UUKqVFUsatPLp4KVDee5BQAyEneR9CNrk8u21tcN
+	 QKhkXQ/IT0BYNCywm11+/acT0X8CVOkxBVqVpp4miInes2LgY4zDagUdX1wk7NQ9Siw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793879006;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793879022;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=vJ08kIh3fU2Kv3FC1ulY7FW/KTdOaU3pcZGA/RRKP8I=;
-	b=sBtet8eANWhwZaj/k4j2dhFycFSCRrxXVS1TazgSgwB54PbA1OpoqDipfKypOFyRulpT
-	 uZTOyKZ8fQPI+DYpuJBdB9fwVnUNq/SFLXJv+LWoFpn8XEbnN+/do3Tnf6EI7arHVQYbs
-	 eOaCoLk/Jc+oRb/JjqsspsYwuwD8ymI3Iuned1/8AP+pUc07eyaty4AFpq00ePuULopTC
-	 5oF9rlnptNJoQY1ebQwEypnf/5fuX0pIrPXdrZetiExjok9ZCHHW6zuZINR+1V/8FdXxD
-	 D/mgqpEDaT83FyyOb34ZjChrW8gkwjshyvPGMpL9J3j0qRTPfwhtyZoAApSHGXFRXtA==
+	bh=5Va3/azQ9PXXXOpNK50WHCSI2ZU8QZjrq5XIuHyen10=;
+	b=APA/9zixFFE84qJ9Vb8ACLDjAxFVR4YRYLeBO7YP9MPadkl1f6kogVHhNqQ/H9WVvPQX
+	 nZbsMU+onDCt20LAIRNs5UxSwzopMxJ5KXweQ4y2mPy8ksuKb5ZLAGsvuBGSeWiJiIyFN
+	 hptUHjtJLsRui+qxUXXKo/oJJvkvir4EYITtY6hlrPviHob+rm8GrwqPpmqhacNqUbCJs
+	 CuqoRILJ8ZwI2BPN7ugr1WN2VNWjRsDQs9pqo/DjMe1qo3NCLauGQB2mt5uZU9bqbzMGh
+	 OU4r5oOqbBWEdh2aMYrN3DFSIML6YNp68NLv0wMsbZsd12HXKbrNdiGS8vMNOIVi9cQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RW+ezBZ8;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kRjSFJ1P;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5598606A326;
-	Thu,  5 Nov 2026 11:43:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8C2A606EA24;
+	Thu,  5 Nov 2026 11:43:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RW+ezBZ8
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 938F61F000C1;
-	Thu,  5 Nov 2026 11:43:24 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kRjSFJ1P
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4253A1F000C1;
+	Thu,  5 Nov 2026 11:43:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793879005;
-	bh=vJ08kIh3fU2Kv3FC1ulY7FW/KTdOaU3pcZGA/RRKP8I=;
+	s=k20260515; t=1793879021;
+	bh=5Va3/azQ9PXXXOpNK50WHCSI2ZU8QZjrq5XIuHyen10=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=RW+ezBZ8pbJY1ZKGpmr3QCnCDE5qhcyfC/iDLw5CRPX55jSISwj+Onj7cqhJmJhBe
-	 p1xgkSVw2vuokOUt2b3KeFszOqqyKqEfQ7dCU0dEAR/VG2cHBIIIb+0GEQbcanvr44
-	 wnPH4XF60NVzfock8sZ4W7ku+xFR1fCx/yPLH4cZNcGI8f/lkuUFdy3pyhbdTa6v4W
-	 vzegHifVTFxVQh10YMzMr/BL5lO9k0XLFiaoHGGUfuzaJRyQcA7Kw4oKznvmdhFms8
-	 zwvCr3xGVhg5dLTtrSpf6r4ccx5ziMZNwZORATBBZ0tRaOsbJJobrZkQymYRu0vtA0
-	 jLz9I/1otcsuQ==
+	b=kRjSFJ1PS/XuTJRtI+OKVQrMj3Xga4CUaRtPDtQfr9Z3yJNwVOHUxqGTtNW99Hn5b
+	 bk2frKJKN7xihf6vFBnnJ8yCR60THHtxUEhz1N3Pp4ICefUv9vnaYu+fM7sVlMacvd
+	 sRiYqIZPdZOs1O+/Kv9B4x+ga9DvZIz/RdS0qh9yqTiLQongHGkpMttR07Y/C4OP14
+	 5wCfmLEvvPK+e0HmmoBCwx5SFmyz72XAoNMfwz91ZPs8jxyRyn5OrjjYaV1uGJUNKR
+	 bM+1y/m76yTMCZuVGzM2im026wlxKMlsCNTGFQJaE7BGbR4o/cMujhRr/cmitvUMyI
+	 e1GcCk5/cz+1A==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -82,9 +82,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	iommu@lists.linux.dev,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH 14/17] driver core: Add a global initial device trust policy
-Date: Thu,  5 Nov 2026 13:42:27 +0200
-Message-ID: <20261105-device-trust-core-v1-14-1e536825b4eb@nvidia.com>
+Subject: [PATCH 17/17] PCI: Replace untrusted state with device trust
+Date: Thu,  5 Nov 2026 13:42:30 +0200
+Message-ID: <20261105-device-trust-core-v1-17-1e536825b4eb@nvidia.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
 References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
@@ -103,161 +103,365 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-Confidential guests may require fresh userspace attestation before
-permitting any functional driver to probe. Listing individual devices on
-the command line leaves unlisted hardware free to probe, and initrd policy
-writes arrive too late for built-in drivers.
+Convert the PCI specific untrusted to use the common device trust
+level. Adversarial means the same thing untrusted does.
 
-A system-wide initial policy is needed to keep unlisted devices waiting
-for authorization while allowing explicit exceptions for devices needed
-to reach the initrd. Existing boot behavior must remain available when
-no global policy is selected.
+PCI discovery keeps the logic that set untrusted: it looks for removable
+PCI devices with arch_pci_dev_is_removable() and defaults them to an
+adversarial policy. Treat a disabled policy the same way when choosing
+the IOMMU domain. Do not record the ATS capability of such a device, as
+pci_ats_supported() rejected untrusted ones. Let the Intel write-buffer
+quirk apply, as it only adds flushing.
 
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- Documentation/ABI/testing/sysfs-devices-trust   |  7 +++--
- Documentation/admin-guide/kernel-parameters.txt | 23 ++++++++++++--
- drivers/base/base.h                             |  3 ++
- drivers/base/trust.c                            | 41 ++++++++++++++++++++-----
- 4 files changed, 62 insertions(+), 12 deletions(-)
+ drivers/iommu/amd/iommu.c   |  3 +--
+ drivers/iommu/dma-iommu.c   | 14 +++++---------
+ drivers/iommu/intel/iommu.c | 17 +++++------------
+ drivers/iommu/iommu.c       | 17 +++++++++--------
+ drivers/pci/ats.c           |  4 ++--
+ drivers/pci/pci.c           |  5 +++--
+ drivers/pci/probe.c         | 25 ++++++++++++++-----------
+ drivers/pci/quirks.c        |  7 ++++---
+ include/linux/device.h      |  5 +++++
+ include/linux/pci.h         | 30 ++++++++++++++++++++++--------
+ 10 files changed, 70 insertions(+), 57 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-devices-trust b/Documentation/ABI/testing/sysfs-devices-trust
-index c0ce905b625d0..6f52102a1dfbf 100644
---- a/Documentation/ABI/testing/sysfs-devices-trust
-+++ b/Documentation/ABI/testing/sysfs-devices-trust
-@@ -17,8 +17,11 @@ Description:
- 		value may be selected by the bus before the device is
- 		registered; otherwise it is "default". The policy is resolved
- 		to an active trust level before the device is probed.
--		A matching device_trust= kernel command-line entry overrides
--		the initial requested policy before registration.
-+		A non-default device_trust.default= kernel command-line value
-+		replaces the bus policy before registration. A matching
-+		device_trust= entry takes precedence over both, regardless
-+		of command-line order. Boot policy also applies to new devices
-+		discovered after boot.
- 		Otherwise, device_trust.driver= can initialize policy on the
- 		first binding attempt with a matching driver rule. A successful
- 		policy write, including the existing value, suppresses this
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index b1d6999a5befa..458f59a8af854 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -1267,9 +1267,8 @@ Kernel parameters
- 			/sys/bus/<bus>/devices/<device>. The first colon separates
- 			the bus name; further colons belong to the device name.
- 			Policies are default, disabled, adversary, and full.
--			Entries override bus-initialized requested policy;
--			unlisted devices retain their existing policy.
--			Per-device entries take precedence over device_trust.driver.
-+			Entries override device_trust.default, device_trust.driver,
-+			and bus-initialized policy, regardless of option order.
- 			The last entry for a device wins. If specified more than
- 			once, the last valid list replaces all earlier lists.
- 			Malformed lists are warned about and ignored in full.
-@@ -1285,6 +1284,24 @@ Kernel parameters
- 			device_trust=pci:0000:01:00.0=adversary,pci:0000:02:00.0=disabled
- 			See Documentation/driver-api/driver-model/device-trust.rst.
+diff --git a/drivers/iommu/amd/iommu.c b/drivers/iommu/amd/iommu.c
+index 960e1dc05ec69..e358bbb1f2baa 100644
+--- a/drivers/iommu/amd/iommu.c
++++ b/drivers/iommu/amd/iommu.c
+@@ -3401,8 +3401,7 @@ static int amd_iommu_def_domain_type(struct device *dev)
+ 	if (!dev_is_pci(dev))
+ 		return 0;
  
-+	device_trust.default=
-+			[KNL] Set initial trust policy for devices without a
-+			matching device_trust= entry, including hotplugged devices.
-+			A matching device_trust.driver= rule can replace this
-+			initial policy at the first binding attempt.
-+			Format: { default | disabled | adversary | full }
-+			default preserves bus-initialized policy (the default).
-+			Other values override bus-initialized policy before
-+			probing, including for built-in drivers.
-+			The last valid value wins; invalid values are warned
-+			about and ignored.
-+			Without a matching driver rule, disabled prevents binding
-+			until userspace authorizes each device by writing adversary
-+			or full to trust_policy. Boot-critical devices need explicit
-+			device or driver rules to operate before userspace. DMA
-+			containment remains a bus and IOMMU responsibility.
-+			See Documentation/driver-api/driver-model/device-trust.rst.
-+
- 	device_trust.driver=
- 			[KNL] Set initial device trust policy by driver name,
- 			including for drivers built into the kernel.
-diff --git a/drivers/base/base.h b/drivers/base/base.h
-index dd78857abf74f..5ff3217eb916e 100644
---- a/drivers/base/base.h
-+++ b/drivers/base/base.h
-@@ -193,6 +193,9 @@ bool device_trust_claim_allowed(const struct device *dev,
- 				const struct device_driver *drv,
- 				const char *device_options,
- 				const char *driver_options);
-+void device_trust_apply_boot_policy(struct device *dev,
-+				    enum device_trust_policy policy,
-+				    const char *options);
- #endif
+-	/* Always use DMA domain for untrusted device */
+-	if (to_pci_dev(dev)->untrusted)
++	if (pci_dev_default_is_restricted(to_pci_dev(dev)))
+ 		return IOMMU_DOMAIN_DMA;
  
- /* All active trust level transitions are serialized by the device lock. */
-diff --git a/drivers/base/trust.c b/drivers/base/trust.c
-index 4bcda888591a5..c2463b51c3a03 100644
---- a/drivers/base/trust.c
-+++ b/drivers/base/trust.c
-@@ -249,6 +249,7 @@ const struct attribute_group device_trust_attr_group = {
- 
- static const char *device_trust_cmdline __ro_after_init;
- static const char *device_trust_driver_cmdline __ro_after_init;
-+static enum device_trust_policy device_trust_default_policy __ro_after_init;
- 
- static int device_trust_parse_policy(const char *options, const char *target_bus,
- 				     const char *target_name,
-@@ -410,18 +411,44 @@ static int __init device_trust_driver_setup(char *str)
+ 	/* Apply device specific quirks */
+diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
+index 78742aeba932d..a48fb511bfe6f 100644
+--- a/drivers/iommu/dma-iommu.c
++++ b/drivers/iommu/dma-iommu.c
+@@ -589,16 +589,11 @@ static int iova_reserve_iommu_regions(struct device *dev,
+ 	return ret;
  }
- __setup("device_trust.driver=", device_trust_driver_setup);
  
-+static int __init device_trust_default_setup(char *str)
-+{
-+	int policy = match_string(device_trust_policy_names,
-+				  ARRAY_SIZE(device_trust_policy_names), str);
-+
-+	if (policy < 0) {
-+		pr_warn("device_trust: ignoring invalid default policy '%s'\n", str);
-+		return 1;
-+	}
-+
-+	device_trust_default_policy = policy;
-+	return 1;
-+}
-+__setup("device_trust.default=", device_trust_default_setup);
-+
-+VISIBLE_IF_KUNIT void device_trust_apply_boot_policy(struct device *dev,
-+						   enum device_trust_policy policy,
-+						   const char *options)
-+{
-+	if (dev->p && dev->p->trust_initialized)
-+		return;
-+
-+	if (policy != DEVICE_TRUST_POLICY_DEFAULT)
-+		dev->trust_policy = policy;
-+	if (options &&
-+	    device_trust_parse_cmdline(options, dev, &dev->trust_policy) > 0 &&
-+	    dev->p)
-+		dev->p->trust_policy_override = true;
-+}
-+EXPORT_SYMBOL_IF_KUNIT(device_trust_apply_boot_policy);
-+
- /**
-  * device_trust_init - Apply boot policy before registration or bus policy use
-  * @dev: unregistered device with its bus, name, and default policy set
-  */
- void device_trust_init(struct device *dev)
+-static bool dev_is_untrusted(struct device *dev)
+-{
+-	return dev_is_pci(dev) && to_pci_dev(dev)->untrusted;
+-}
+-
+ static bool dev_use_swiotlb(struct device *dev, size_t size,
+ 			    enum dma_data_direction dir)
  {
--	if (dev->p && dev->p->trust_initialized)
+ 	return IS_ENABLED(CONFIG_SWIOTLB) &&
+-		(dev_is_untrusted(dev) ||
++		(device_is_adversarial(dev) ||
+ 		 dma_kmalloc_needs_bounce(dev, size, dir));
+ }
+ 
+@@ -611,7 +606,7 @@ static bool dev_use_sg_swiotlb(struct device *dev, struct scatterlist *sg,
+ 	if (!IS_ENABLED(CONFIG_SWIOTLB))
+ 		return false;
+ 
+-	if (dev_is_untrusted(dev))
++	if (device_is_adversarial(dev))
+ 		return true;
+ 
+ 	/*
+@@ -1189,7 +1184,8 @@ static phys_addr_t iommu_dma_map_swiotlb(struct device *dev, phys_addr_t phys,
+ 	 * swiotlb_tbl_map_single() has initialized the bounce buffer proper to
+ 	 * the contents of the original memory buffer.
+ 	 */
+-	if (phys != (phys_addr_t)DMA_MAPPING_ERROR && dev_is_untrusted(dev)) {
++	if (phys != (phys_addr_t)DMA_MAPPING_ERROR &&
++	    device_is_adversarial(dev)) {
+ 		size_t start, virt = (size_t)phys_to_virt(phys);
+ 
+ 		/* Pre-padding */
+@@ -1790,7 +1786,7 @@ size_t iommu_dma_max_opt_mapping_size(void)
+ 
+ size_t iommu_dma_max_mapping_size(struct device *dev)
+ {
+-	if (dev_is_untrusted(dev))
++	if (device_is_adversarial(dev))
+ 		return swiotlb_max_mapping_size(dev);
+ 
+ 	return SIZE_MAX;
+diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
+index 5a2e705a2f2e0..66942a91b992f 100644
+--- a/drivers/iommu/intel/iommu.c
++++ b/drivers/iommu/intel/iommu.c
+@@ -2624,8 +2624,8 @@ static void __init platform_optin_force_iommu(void)
+ 		return;
+ 
+ 	/*
+-	 * If Intel-IOMMU is disabled by default, we will apply identity
+-	 * map for all devices except those marked as being untrusted.
++	 * If Intel-IOMMU is disabled by default, an external device could
++	 * otherwise receive an identity map despite its adversarial policy.
+ 	 */
+ 	if (dmar_policy_off()) {
+ 		pr_info("Intel-IOMMU force enabled due to platform opt in\n");
+@@ -3629,16 +3629,12 @@ static bool intel_iommu_is_attach_deferred(struct device *dev)
+ 	return translation_pre_enabled(info->iommu) && !info->domain;
+ }
+ 
+-/*
+- * Check that the device does not live on an external facing PCI port that is
+- * marked as untrusted. Such devices should not be able to apply quirks and
+- * thus not be able to bypass the IOMMU restrictions.
+- */
++/* Bypass quirks must not prevent later adversarial operation. */
+ static bool risky_device(struct pci_dev *pdev)
+ {
+-	if (pdev->untrusted) {
++	if (pci_dev_default_is_restricted(pdev)) {
+ 		pci_info(pdev,
+-			 "Skipping IOMMU quirk for dev [%04X:%04X] on untrusted PCI link\n",
++			 "Skipping IOMMU quirk due to trust policy [%04X:%04X]\n",
+ 			 pdev->vendor, pdev->device);
+ 		pci_info(pdev, "Please check with your BIOS/Platform vendor about this\n");
+ 		return true;
+@@ -4124,9 +4120,6 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163D, quirk_iommu_igfx);
+ 
+ static void quirk_iommu_rwbf(struct pci_dev *dev)
+ {
+-	if (risky_device(dev))
 -		return;
 -
--	if (device_trust_cmdline &&
--	    device_trust_parse_cmdline(device_trust_cmdline, dev,
--				       &dev->trust_policy) > 0 && dev->p)
--		dev->p->trust_policy_override = true;
-+	device_trust_apply_boot_policy(dev, device_trust_default_policy,
-+				       device_trust_cmdline);
+ 	/*
+ 	 * Mobile 4 Series Chipset neglects to set RWBF capability,
+ 	 * but needs it. Same seems to hold for the desktop versions.
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index b486b8bbd1fcd..8be2a246d4903 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -1879,7 +1879,7 @@ static int iommu_get_def_domain_type(struct iommu_group *group,
+ static int iommu_get_default_domain_type(struct iommu_group *group,
+ 					 int target_type)
+ {
+-	struct device *untrusted = NULL;
++	struct device *restricted = NULL;
+ 	struct group_device *gdev;
+ 	int driver_type = 0;
+ 
+@@ -1901,14 +1901,15 @@ static int iommu_get_default_domain_type(struct iommu_group *group,
+ 		driver_type = iommu_get_def_domain_type(group, gdev->dev,
+ 							driver_type);
+ 
+-		if (dev_is_pci(gdev->dev) && to_pci_dev(gdev->dev)->untrusted) {
++		if (dev_is_pci(gdev->dev) &&
++		    pci_dev_default_is_restricted(to_pci_dev(gdev->dev))) {
+ 			/*
+-			 * No ARM32 using systems will set untrusted, it cannot
+-			 * work.
++			 * No ARM32 using systems select a restricted trust
++			 * policy; it cannot work.
+ 			 */
+ 			if (WARN_ON(IS_ENABLED(CONFIG_ARM_DMA_USE_IOMMU)))
+ 				return -1;
+-			untrusted = gdev->dev;
++			restricted = gdev->dev;
+ 		}
+ 	}
+ 
+@@ -1924,11 +1925,11 @@ static int iommu_get_default_domain_type(struct iommu_group *group,
+ 			driver_type = IOMMU_DOMAIN_IDENTITY;
+ 	}
+ 
+-	if (untrusted) {
++	if (restricted) {
+ 		if (driver_type && driver_type != IOMMU_DOMAIN_DMA) {
+ 			dev_err_ratelimited(
+-				untrusted,
+-				"Device is not trusted, but driver is overriding group %u to %s, refusing to probe.\n",
++				restricted,
++				"Device trust policy restricts DMA, but driver is overriding group %u to %s, refusing to probe.\n",
+ 				group->id, iommu_domain_type_str(driver_type));
+ 			return -1;
+ 		}
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index 9cb23780093dd..c8c96acc26343 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -21,7 +21,7 @@ void pci_ats_init(struct pci_dev *dev)
+ {
+ 	int pos;
+ 
+-	if (pci_ats_disabled())
++	if (pci_ats_disabled() || pci_dev_default_is_restricted(dev))
+ 		return;
+ 
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
+@@ -40,7 +40,7 @@ void pci_ats_init(struct pci_dev *dev)
+  */
+ bool pci_ats_supported(struct pci_dev *dev)
+ {
+-	if (!dev->ats_cap || dev->untrusted)
++	if (!dev->ats_cap)
+ 		return false;
+ 
+ 	if (dev->is_virtfn)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7c6f2aba81443..b08adba03f96b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1016,8 +1016,9 @@ static void pci_std_enable_acs(struct pci_dev *dev, struct pci_acs *caps)
+ 	/* Upstream Forwarding */
+ 	caps->ctrl |= (dev->acs_capabilities & PCI_ACS_UF);
+ 
+-	/* Enable Translation Blocking for external devices and noats */
+-	if (pci_ats_disabled() || dev->external_facing || dev->untrusted)
++	/* Enable Translation Blocking when ATS is unavailable or restricted. */
++	if (pci_ats_disabled() || dev->external_facing ||
++	    !pci_dev_ats_permitted(dev))
+ 		caps->ctrl |= (dev->acs_capabilities & PCI_ACS_TB);
  }
- EXPORT_SYMBOL_GPL(device_trust_init);
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5b6960bbb35bc..139e6f7b4e022 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1738,24 +1738,27 @@ static void set_pcie_cxl(struct pci_dev *dev)
+ 
+ }
+ 
+-static void set_pcie_untrusted(struct pci_dev *dev)
++static void pci_set_default_trust_policy(struct pci_dev *dev)
+ {
+-	struct pci_dev *parent = pci_upstream_bridge(dev);
++	struct pci_dev *parent = pci_physfn(dev);
++
++	if (dev->dev.trust_policy != DEVICE_TRUST_POLICY_DEFAULT)
++		return;
++
++	if (parent == dev)
++		parent = pci_upstream_bridge(dev);
+ 
+ 	if (!parent)
+ 		return;
+-	/*
+-	 * If the upstream bridge is untrusted we treat this device as
+-	 * untrusted as well.
+-	 */
+-	if (parent->untrusted) {
+-		dev->untrusted = true;
++
++	if (device_policy_is_adversarial(&parent->dev)) {
++		dev->dev.trust_policy = DEVICE_TRUST_POLICY_ADVERSARY;
+ 		return;
+ 	}
+ 
+ 	if (arch_pci_dev_is_removable(dev)) {
+-		pci_dbg(dev, "marking as untrusted\n");
+-		dev->untrusted = true;
++		pci_dbg(dev, "setting adversarial trust policy\n");
++		dev->dev.trust_policy = DEVICE_TRUST_POLICY_ADVERSARY;
+ 	}
+ }
+ 
+@@ -2082,7 +2085,7 @@ int pci_setup_device(struct pci_dev *dev)
+ 
+ 	set_pcie_cxl(dev);
+ 
+-	set_pcie_untrusted(dev);
++	pci_set_default_trust_policy(dev);
+ 	device_trust_init(&dev->dev);
+ 
+ 	/* "Unknown power state" */
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 7f1f47ea2ee41..9ed3e7660bab2 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5525,8 +5525,8 @@ static void pci_quirk_enable_intel_rp_mpc_acs(struct pci_dev *dev)
+  * Currently this quirk does the equivalent of
+  * PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF
+  *
+- * TODO: This quirk also needs to do equivalent of PCI_ACS_TB,
+- * if dev->external_facing || dev->untrusted
++ * TODO: This quirk also needs to do the equivalent of PCI_ACS_TB when the
++ * device is external-facing or ATS is restricted by trust policy.
+  */
+ static int pci_quirk_enable_intel_pch_acs(struct pci_dev *dev)
+ {
+@@ -5567,7 +5567,8 @@ static int pci_quirk_enable_intel_spt_pch_acs(struct pci_dev *dev)
+ 	ctrl |= (cap & PCI_ACS_CR);
+ 	ctrl |= (cap & PCI_ACS_UF);
+ 
+-	if (pci_ats_disabled() || dev->external_facing || dev->untrusted)
++	if (pci_ats_disabled() || dev->external_facing ||
++	    !pci_dev_ats_permitted(dev))
+ 		ctrl |= (cap & PCI_ACS_TB);
+ 
+ 	pci_write_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, ctrl);
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 65ea07c9ac35b..870ce14924905 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -934,6 +934,11 @@ static inline bool device_iommu_mapped(struct device *dev)
+ 	return (dev->iommu_group != NULL);
+ }
+ 
++static inline bool device_policy_is_adversarial(const struct device *dev)
++{
++	return READ_ONCE(dev->trust_policy) == DEVICE_TRUST_POLICY_ADVERSARY;
++}
++
+ /* Get the wakeup routines, which depend on struct device */
+ #include <linux/pm_wakeup.h>
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aa3765a20a96c..087c63b177c85 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -490,14 +490,6 @@ struct pci_dev {
+ 	unsigned int	shpc_managed:1;		/* SHPC owned by shpchp */
+ 	unsigned int	is_thunderbolt:1;	/* Thunderbolt controller */
+ 	unsigned int	is_cxl:1;               /* Compute Express Link (CXL) */
+-	/*
+-	 * Devices marked being untrusted are the ones that can potentially
+-	 * execute DMA attacks and similar. They are typically connected
+-	 * through external ports such as Thunderbolt but not limited to
+-	 * that. When an IOMMU is enabled they should be getting full
+-	 * mappings to make sure they cannot access arbitrary memory.
+-	 */
+-	unsigned int	untrusted:1;
+ 	/*
+ 	 * Info from the platform, e.g., ACPI or device tree, may mark a
+ 	 * device as "external-facing".  An external-facing device is
+@@ -616,6 +608,28 @@ static inline struct pci_dev *to_pci_dev(const struct device *dev)
+ {
+ 	return container_of(dev, struct pci_dev, dev);
+ }
++
++static inline bool
++pci_dev_default_is_restricted(const struct pci_dev *pdev)
++{
++	enum device_trust_policy policy = READ_ONCE(pdev->dev.trust_policy);
++
++	return policy == DEVICE_TRUST_POLICY_DISABLED ||
++	       policy == DEVICE_TRUST_POLICY_ADVERSARY;
++}
++
++static inline bool pci_dev_ats_permitted(const struct pci_dev *pdev)
++{
++	enum device_trust_level level = device_get_trust_level(&pdev->dev);
++	enum device_trust_policy policy = READ_ONCE(pdev->dev.trust_policy);
++
++	if (level == DEVICE_TRUST_DISABLED)
++		return policy != DEVICE_TRUST_POLICY_ADVERSARY &&
++		       policy != DEVICE_TRUST_POLICY_DISABLED;
++
++	return level == DEVICE_TRUST_FULL;
++}
++
+ #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
+ #define for_each_pci_dev_reverse(d) \
+ 	while ((d = pci_get_device_reverse(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
 
 -- 
 2.56.0
