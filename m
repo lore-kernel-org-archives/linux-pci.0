@@ -1,54 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.7
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793890033;
-	b=PFyrfosSIOYm/c9NmqjLA79u1meb8oMJIHRSzYVrR6h+46OvwR151tUsL7jz7IfIL3Rn
-	 uvbIeKcwUH52KuvFGaJmAltAR9SicaXGy/Xg/q6MfgAxu7a4Ftd+BkAtLnyd6DYoBRJa8
-	 WFK/JOHrVtngRygOVCsVqNTo8jdUibcPAqtIEfhITG+lpui6JM519OAJ5SOa8Ovpvv6Ef
-	 VgUNqepQyiv8zCkBxJowLtvctwkfkPA6wD7uYkUSA/S9wH7aFF4w06ppKD+IY9wJ/iNrj
-	 0wwW0htsTEgr15ZREACSu9qjLSo6Pr7g14lw06D6CDyvqZMiHETGDt6s/HBeR+aX94g==
+	t=1793890220;
+	b=qUrpdFYcQgFJHEyJPokvaJyjxMle6ZDZygv6WNuP+3G7Ya7NwETl/gCNjWAmPzz34Isk
+	 O3X7UrdNyQRTLG5KMdBxo2xNOYW4GsXz6/F58kxYA+BLAmkG7bBnES2kfZq4J1RTYu8Nd
+	 IuI7gbhMGLSsTQvcruJGN/kdHBbaMgFGsOQKPBY60Fl5tcRmh669ghGlfx7x91mJp54iZ
+	 DtTHlrxhmh7pVj2YBqbHgT8bwNEDkTtqiPosqxfAfpPm/W3qlhBOVy3XwuW3MX+SLPHVZ
+	 KAHSGDTrn7sOfgPUBOGFCNNYZ645P/09UHqoF8YB27KR1/j6NmCYYjkUST4sRI6RvBg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793890033;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=8FCyqzY+hBP2p+wQrr/5G4gKJ7J4jjyIRtVzo9yY/5w=;
-	b=htREDUNKH8DGiHbt1yU7LIFkbt5R1KGbldJRkBh1b/DFfEalWYACOTzYWIgJRPhjafLz
-	 eBuX4KhUzUqHVPsW1dk7eGpcqj6wRXdMlXbRLl9xAY/32QCdDagNu8FEDSusd4WrDrnWh
-	 mov3ylD100GyrjNyhyFYvloKZy3CVjqQfKiwwM+LPCWPK05+QWIZ/L1ztv/T58aIXZLbA
-	 4xs9Gkv2D1YQHExnYaFe1CFuqW7TfPrZYYx538AtrOwS7au8Wp7+3s816SOQKwXV4VM3F
-	 Cr2x7pDt1A1McUSntD0NQfeMvOcg62g/IKuRWBx1Gz/MdFYyIW7oM+N2lhzPVBKvfpw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793890220;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=zngDh/hn+d+IfbRxuQD9941zh0dh76DUZmGv37oN1yw=;
+	b=HzMLGIqqVn2//dkvQAT22iGKMMeJt7UDh7uxzsQpUygD+qtPFM9tCQx9xfJhWIcVcFwz
+	 J5gars6JiHHJjX8YepJ8imlv2pLLYGboWD+nHUPbNvP2MBcMeAmhAvEC6Xjy3sKdeWhFP
+	 LQYPG0KEDK4FVLFn5tTeuix7rKExdFGmQS4yFwo1WwVJ3YO/F8SMkG4PXtLN3V2Gk7AHU
+	 PiBhR3SvD3lRgsBp6ikLCyDy3Ytoj4yLutedNRb+OZZisQ2YUq6D154s2sEj0l5z46GiO
+	 6nk402WnkMZlGr60ggNieF8eVbmK5cfo6xBHazWkSJps2WnrlCb4p5mnPZl3FKYNNWA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="EsRmhc/+";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=CaH54igg;
+	arc=none smtp.remote-ip=192.198.163.7
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11194606A31B;
-	Thu,  5 Nov 2026 14:47:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B667606A333;
+	Thu,  5 Nov 2026 14:50:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9B667606A333
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EsRmhc/+
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F1F21F000C1;
-	Thu,  5 Nov 2026 14:47:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793890032;
-	bh=8FCyqzY+hBP2p+wQrr/5G4gKJ7J4jjyIRtVzo9yY/5w=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=EsRmhc/+iUBrLqmFnkfHnpoLYm1uuSpgf5bJkhotqO5nUzixcQwTeNIjaPe4BZJVB
-	 T05LfdIveI1LpzjvAvIabdSiUa0IhppuhLXIQyBBYQT19kApZklN9hkF90UEXcjPQv
-	 DAjSeyZDqP5rK6O9RIXVaTkDgqedpBiAr5irCGrXEAX00dvRPUKbccyPpyvya/I/vO
-	 2jHhBZtWzPDycjyz+2nLPI8qWwZdmGjjuHGam8c2Xh60owdfrOeZnT7Qf1iOvGqB2L
-	 izMmjL2weeoMBaiBZHCTYRAGhNWzgMtY8sx4+7HBp5BLKa+ShfztsKndyzG0uip2w7
-	 VfKRypkHWE3mQ==
-Date: Thu, 5 Nov 2026 20:17:10 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Szymon Durawa <szymon.durawa@linux.intel.com>
-Cc: nirmal.patel@linux.intel.com, bhelgaas@google.com, robh@kernel.org, 
-	kwilczynski@kernel.org, lpieralisi@kernel.org, asutosh.pathak@linux.intel.com, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v9 0/7] VMD add second root bus support
-Message-ID: <auyWYoWOL5Lq9CsN@debian>
-References: <20261026205502.3502574-1-szymon.durawa@linux.intel.com>
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=CaH54igg
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793890220; x=1825426220;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=pR76mBghhXMOKm2t2fE0Nbyxh5lA9YdTCI2eN6g0oNY=;
+  b=CaH54iggLRDvQu+fJy5qc9rHlSnF6nsEVdBBbu3Ar6gIvJuB8AHBpkPM
+   kCA7K7QuaiBsHFbRWy9TTYTaWKa3D7Zt92JuZ/ksDLmMqCKsttD1DpZom
+   pkVIgwhUNfwLRm54cVXI0rSfvLC036msgNFCu8F4xD0jLJU64AJ8/51Qu
+   6BabFNr6P1nwSVwlm3ZlksDHdPa8gS8Nm3pLNYVRLO9CytwaN93oP88zt
+   CMOm2lBojG4H/vZuJGRvjmXoCkdBqh1xbiG8vEPM9udN0dDqdjQTboPRM
+   QleP0cr+b4qYN72v4nHfL9cyupgrhozEzja8wYoOC23dG7xOG85PP0/Ux
+   g==;
+X-CSE-ConnectionGUID: Upc1HOLNSC+zVEVTogBspw==
+X-CSE-MsgGUID: 1Mq3vmUnT22ZxrH0dNtgfg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2551306"
+X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
+   d="scan'208";a="2551306"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2026 06:50:19 -0800
+X-CSE-ConnectionGUID: /dk8MTNSRPGYLMVUiJXO/Q==
+X-CSE-MsgGUID: pVjBF9RvTTCjveglukFKDg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
+   d="scan'208";a="7151193"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by orviesa009.jf.intel.com with ESMTP; 05 Nov 2026 06:50:13 -0800
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xOyn4-00000000mLb-00W9;
+	Thu, 05 Nov 2026 14:50:10 +0000
+Date: Thu, 5 Nov 2026 22:49:53 +0800
+From: kernel test robot <lkp@intel.com>
+To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+	iommu@lists.linux.dev
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	"Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+	Alex Williamson <alex@shazbot.org>,
+	Alexey Kardashevskiy <aik@amd.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Joerg Roedel <joro@8bytes.org>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Krishna Reddy <vdumpa@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+	Nicolin Chen <nicolinc@nvidia.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Samuel Ortiz <sameo@rivosinc.com>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Steven Price <steven.price@arm.com>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>,
+	Thierry Reding <thierry.reding@kernel.org>,
+	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+	Xu Yilun <yilun.xu@linux.intel.com>, kvm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-coco@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v8 11/15] iommufd/viommu: Select vIOMMU operations before
+ allocation
+Message-ID: <202611052227.TxHIjde3-lkp@intel.com>
+References: <20261104161632.3547423-12-aneesh.kumar@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -58,57 +106,47 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261026205502.3502574-1-szymon.durawa@linux.intel.com>
+In-Reply-To: <20261104161632.3547423-12-aneesh.kumar@kernel.org>
 
-On Mon, Oct 26, 2026 at 08:54:53PM +0000, Szymon Durawa wrote:
-> This series adds support for a second VMD root bus.
-> 
-> Today the VMD driver can enumerate and manage devices only behind the
-> first VMD root bus. Starting with Intel Arrow Lake, VMD may expose a
-> second root bus (BUS1), and devices behind that bus are not discovered
-> by the current driver.
-> 
-> The hardware model for Intel Arrow Lake VMD is slightly different
-> from earlier VMD generations:
-> 
-> - CFGBAR, MEMBAR1, and MEMBAR2 are shared by both VMD root buses.
-> - Root ports on BUS1 have PCI_PRIMARY_BUS hardwired to 0x80.
-> - Interrupt handling remains based on the existing VMD MSI/MSI-X and
->   irq_domain model; this series does not introduce a separate interrupt
->   domain for BUS1.
-> 
-> To support that layout, the series first refactors the current code so
-> resource setup, bus creation, and enumeration are split into helpers.
-> It then partitions the shared CFGBAR/MEMBAR apertures between BUS0 and
-> BUS1 and creates a second root bus in its own emulated PCI domain.
-> Reads of PCI_PRIMARY_BUS from BUS1 root port bridges are emulated to
-> return the actual root bus number, so PCI core bridge scanning does not
-> detect a mismatch and lose BUS1 subordinate device discovery. This
-> replaces the separate workaround patch used in v8.
-> 
-> Patch overview:
-> 
-> - Patches 1-4 extract helper functions for bus enumeration, CFGBAR and
->   MEMBAR configuration, and root-bus creation.
-> - Patch 5 replaces hardcoded resource indices and constants with enums
->   and defines.
-> - Patch 6 converts single-bus state (bus, busn_start, sysdata) into
->   per-root-bus arrays.
-> - Patch 7 adds BUS1 resource partitioning, a separate PCI domain for
->   BUS1, PCI_PRIMARY_BUS read emulation for BUS1 root ports, and
->   second-root-bus support.
-> 
-> Tested on an Arrow Lake platform with NVMe devices present behind both
-> VMD root buses. With the series applied, devices behind BUS0 and BUS1
-> are enumerated and become visible to the kernel.
-> 
+Hi Aneesh,
 
-Series doesn't apply on top of v7.4-rc1. Please rebase and resend.
+kernel test robot noticed the following build warnings:
 
-- Mani
+[auto build test WARNING on 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4]
 
--- 
-மணிவண்ணன் சதாசிவம்
+url:    https://github.com/intel-lab-lkp/linux/commits/Aneesh-Kumar-K-V-Arm/PCI-TSM-Move-core-code-into-its-own-directory/20261104-214618
+base:   6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+patch link:    https://lore.kernel.org/r/20261104161632.3547423-12-aneesh.kumar%40kernel.org
+patch subject: [PATCH v8 11/15] iommufd/viommu: Select vIOMMU operations before allocation
+config: x86_64-allmodconfig (https://download.01.org/0day-ci/archive/20261105/202611052227.TxHIjde3-lkp@intel.com/config)
+compiler: clang version 22.1.8 (https://github.com/llvm/llvm-project ca7933e47d3a3451d81e72ac174dcb5aa28b59d1)
+rustc: rustc 1.96.0 (ac68faa20 2026-05-25)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261105/202611052227.TxHIjde3-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202611052227.TxHIjde3-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/iommu/amd/iommufd.c:81:40: warning: unused variable 'amd_viommu_ops' [-Wunused-const-variable]
+      81 | static const struct iommufd_viommu_ops amd_viommu_ops = {
+         |                                        ^~~~~~~~~~~~~~
+   1 warning generated.
+
+
+vim +/amd_viommu_ops +81 drivers/iommu/amd/iommufd.c
+
+757d2b1fdf5b7d6 Suravee Suthikulpanit 2026-01-15  76  
+757d2b1fdf5b7d6 Suravee Suthikulpanit 2026-01-15  77  /*
+757d2b1fdf5b7d6 Suravee Suthikulpanit 2026-01-15  78   * See include/linux/iommufd.h
+757d2b1fdf5b7d6 Suravee Suthikulpanit 2026-01-15  79   * struct iommufd_viommu_ops - vIOMMU specific operations
+757d2b1fdf5b7d6 Suravee Suthikulpanit 2026-01-15  80   */
+757d2b1fdf5b7d6 Suravee Suthikulpanit 2026-01-15 @81  static const struct iommufd_viommu_ops amd_viommu_ops = {
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
