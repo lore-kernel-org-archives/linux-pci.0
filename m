@@ -1,102 +1,88 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=156.67.10.101
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793890220;
-	b=qUrpdFYcQgFJHEyJPokvaJyjxMle6ZDZygv6WNuP+3G7Ya7NwETl/gCNjWAmPzz34Isk
-	 O3X7UrdNyQRTLG5KMdBxo2xNOYW4GsXz6/F58kxYA+BLAmkG7bBnES2kfZq4J1RTYu8Nd
-	 IuI7gbhMGLSsTQvcruJGN/kdHBbaMgFGsOQKPBY60Fl5tcRmh669ghGlfx7x91mJp54iZ
-	 DtTHlrxhmh7pVj2YBqbHgT8bwNEDkTtqiPosqxfAfpPm/W3qlhBOVy3XwuW3MX+SLPHVZ
-	 KAHSGDTrn7sOfgPUBOGFCNNYZ645P/09UHqoF8YB27KR1/j6NmCYYjkUST4sRI6RvBg==
+	t=1793890253;
+	b=YaP/OSMxw07/YYvPoYskwYy09LKQ+VkcUBLm2sap8KhPagUvcASBwGAX5CbBS/8pMgo1
+	 EXBu8vTh9DPwep2IzHBCjQrOpkgahLn2J4tNgR2LLMprj2nwONX4qgOZiWt50L2E09syZ
+	 ewlTL8xmv6WuiMCCXkdgxqLU4UnH1Xkq/Wh88r8BPsVsSe3iD2OngAMCyKGEdENFN4Jmg
+	 GZ/UH5JF2eSLs66f4T6QopIiAXHkVdCYyKxBgn2NecUCxjKv0srd67uzcqLF39hfsywVA
+	 n4/7uY8b6Vbvrpc2ayupyCf2Xky22AYx6/mQbeOXOckX3dySoQGRv4o/V2dCLXKIbdw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793890220;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
-	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=zngDh/hn+d+IfbRxuQD9941zh0dh76DUZmGv37oN1yw=;
-	b=HzMLGIqqVn2//dkvQAT22iGKMMeJt7UDh7uxzsQpUygD+qtPFM9tCQx9xfJhWIcVcFwz
-	 J5gars6JiHHJjX8YepJ8imlv2pLLYGboWD+nHUPbNvP2MBcMeAmhAvEC6Xjy3sKdeWhFP
-	 LQYPG0KEDK4FVLFn5tTeuix7rKExdFGmQS4yFwo1WwVJ3YO/F8SMkG4PXtLN3V2Gk7AHU
-	 PiBhR3SvD3lRgsBp6ikLCyDy3Ytoj4yLutedNRb+OZZisQ2YUq6D154s2sEj0l5z46GiO
-	 6nk402WnkMZlGr60ggNieF8eVbmK5cfo6xBHazWkSJps2WnrlCb4p5mnPZl3FKYNNWA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793890253;
+	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To;
+	bh=0QVs4UmW82faR41mfhaV+h9cFqICsfNx9N9UbV3NoAI=;
+	b=ra2CnasgvyUHBmR29AY4TKSkNzceAQhFfsISJ61slGBQ8mb7Mz6zDsV0Cd7Im6D/b9a1
+	 YMclkrH4N5DgFwgdSbLePiFf8QL/LexwFaxBAi+ZA5/EUrxAMtzMTDVvbpyb8BPCGTLDz
+	 0HKCPXcfwKxgtXotgDJ7mpxj7L0QBB782vG5G23qYmdEMwFfNQHNugIpBvAzOed3RtCBG
+	 WQYVkmbCJdavs0dIbd8edC/VPoczBZmJhtPsVZfDX7bG6C3gqFxQ7etazzG4oeQoTWWs/
+	 90lphiPYNDCTzo2VSB3rwmAAhs5bZgT4xK7Nfqto2dhQlG1mVi/l9f/a+cszECBNAlg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=CaH54igg;
-	arc=none smtp.remote-ip=192.198.163.7
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=lunn.ch;
+	spf=pass smtp.mailfrom=lunn.ch;
+	dkim=pass header.d=lunn.ch header.i=@lunn.ch header.a=rsa-sha256 header.s=20171124 header.b=DNoY4vhi;
+	arc=none smtp.remote-ip=156.67.10.101
+Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B667606A333;
-	Thu,  5 Nov 2026 14:50:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9B667606A333
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCCD1606A31B;
+	Thu,  5 Nov 2026 14:50:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CCCD1606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lunn.ch
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=CaH54igg
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793890220; x=1825426220;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=pR76mBghhXMOKm2t2fE0Nbyxh5lA9YdTCI2eN6g0oNY=;
-  b=CaH54iggLRDvQu+fJy5qc9rHlSnF6nsEVdBBbu3Ar6gIvJuB8AHBpkPM
-   kCA7K7QuaiBsHFbRWy9TTYTaWKa3D7Zt92JuZ/ksDLmMqCKsttD1DpZom
-   pkVIgwhUNfwLRm54cVXI0rSfvLC036msgNFCu8F4xD0jLJU64AJ8/51Qu
-   6BabFNr6P1nwSVwlm3ZlksDHdPa8gS8Nm3pLNYVRLO9CytwaN93oP88zt
-   CMOm2lBojG4H/vZuJGRvjmXoCkdBqh1xbiG8vEPM9udN0dDqdjQTboPRM
-   QleP0cr+b4qYN72v4nHfL9cyupgrhozEzja8wYoOC23dG7xOG85PP0/Ux
-   g==;
-X-CSE-ConnectionGUID: Upc1HOLNSC+zVEVTogBspw==
-X-CSE-MsgGUID: 1Mq3vmUnT22ZxrH0dNtgfg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2551306"
-X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="2551306"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2026 06:50:19 -0800
-X-CSE-ConnectionGUID: /dk8MTNSRPGYLMVUiJXO/Q==
-X-CSE-MsgGUID: pVjBF9RvTTCjveglukFKDg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="7151193"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by orviesa009.jf.intel.com with ESMTP; 05 Nov 2026 06:50:13 -0800
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xOyn4-00000000mLb-00W9;
-	Thu, 05 Nov 2026 14:50:10 +0000
-Date: Thu, 5 Nov 2026 22:49:53 +0800
-From: kernel test robot <lkp@intel.com>
-To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
-	iommu@lists.linux.dev
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	"Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
-	Alex Williamson <alex@shazbot.org>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Joerg Roedel <joro@8bytes.org>,
-	Jonathan Cameron <jic23@kernel.org>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Krishna Reddy <vdumpa@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Nicolin Chen <nicolinc@nvidia.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Samuel Ortiz <sameo@rivosinc.com>,
-	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-	Steven Price <steven.price@arm.com>,
+	dkim=pass (1024-bit key, unprotected) header.d=lunn.ch header.i=@lunn.ch header.a=rsa-sha256 header.s=20171124 header.b=DNoY4vhi
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
+	s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
+	Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
+	bh=0QVs4UmW82faR41mfhaV+h9cFqICsfNx9N9UbV3NoAI=; b=DNoY4vhiJHpefpc0K6k4ZEejnE
+	z7BMrzdQ39NWlIM0NCy3i0azEyJUm7qdCzDTWvFOnHtGFFojpS2FV6+ZhBEddcut8CT3kNR7w9vtJ
+	EbHP1y7vEIfqNZfBSV2OfralcPASt52j8xroqTNGzcNbawSyJl9tZWOJnJhANmXQBWjA=;
+Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
+	(envelope-from <andrew@lunn.ch>)
+	id 1xOynT-00Eacz-Jh; Thu, 05 Nov 2026 15:50:35 +0100
+Date: Thu, 5 Nov 2026 15:50:35 +0100
+From: Andrew Lunn <andrew@lunn.ch>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
 	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Thierry Reding <thierry.reding@kernel.org>,
 	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	Xu Yilun <yilun.xu@linux.intel.com>, kvm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-coco@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v8 11/15] iommufd/viommu: Select vIOMMU operations before
- allocation
-Message-ID: <202611052227.TxHIjde3-lkp@intel.com>
-References: <20261104161632.3547423-12-aneesh.kumar@kernel.org>
+	Robin Murphy <robin.murphy@arm.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
+	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-input@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH 03/17] net: phy: Attach generic PHY drivers through the
+ driver core
+Message-ID: <9866a873-e71d-48cd-9153-be1bfce51eda@lunn.ch>
+References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
+ <20261105-device-trust-core-v1-3-1e536825b4eb@nvidia.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -108,45 +94,24 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261104161632.3547423-12-aneesh.kumar@kernel.org>
+In-Reply-To: <20261105-device-trust-core-v1-3-1e536825b4eb@nvidia.com>
 
-Hi Aneesh,
+On Thu, Nov 05, 2026 at 01:42:16PM +0200, Leon Romanovsky wrote:
+> From: Leon Romanovsky <leonro@nvidia.com>
+> 
+> The generic PHY fallback probes directly before publishing its binding,
+> bypassing driver-core admission and supplier checks.
+> 
+> Attach through the driver core so admission precedes functional setup.
+> Callers hold RTNL, which a concurrent bind of a specific driver may wait
+> for with the device lock held, so for this flow let's add
+> device_driver_try_attach() so the attachment never waits for that lock.
 
-kernel test robot noticed the following build warnings:
+FYI: This code is fragile, and causes issues. I will need to stare
+long and hard at it before accepting it. So i'm unlikely to do that
+until the basic idea is accepted.
 
-[auto build test WARNING on 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4]
+I also wounder how a PHY is a threat. What is your threat model for an
+Ethernet PHY?
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Aneesh-Kumar-K-V-Arm/PCI-TSM-Move-core-code-into-its-own-directory/20261104-214618
-base:   6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
-patch link:    https://lore.kernel.org/r/20261104161632.3547423-12-aneesh.kumar%40kernel.org
-patch subject: [PATCH v8 11/15] iommufd/viommu: Select vIOMMU operations before allocation
-config: x86_64-allmodconfig (https://download.01.org/0day-ci/archive/20261105/202611052227.TxHIjde3-lkp@intel.com/config)
-compiler: clang version 22.1.8 (https://github.com/llvm/llvm-project ca7933e47d3a3451d81e72ac174dcb5aa28b59d1)
-rustc: rustc 1.96.0 (ac68faa20 2026-05-25)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261105/202611052227.TxHIjde3-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202611052227.TxHIjde3-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> drivers/iommu/amd/iommufd.c:81:40: warning: unused variable 'amd_viommu_ops' [-Wunused-const-variable]
-      81 | static const struct iommufd_viommu_ops amd_viommu_ops = {
-         |                                        ^~~~~~~~~~~~~~
-   1 warning generated.
-
-
-vim +/amd_viommu_ops +81 drivers/iommu/amd/iommufd.c
-
-757d2b1fdf5b7d6 Suravee Suthikulpanit 2026-01-15  76  
-757d2b1fdf5b7d6 Suravee Suthikulpanit 2026-01-15  77  /*
-757d2b1fdf5b7d6 Suravee Suthikulpanit 2026-01-15  78   * See include/linux/iommufd.h
-757d2b1fdf5b7d6 Suravee Suthikulpanit 2026-01-15  79   * struct iommufd_viommu_ops - vIOMMU specific operations
-757d2b1fdf5b7d6 Suravee Suthikulpanit 2026-01-15  80   */
-757d2b1fdf5b7d6 Suravee Suthikulpanit 2026-01-15 @81  static const struct iommufd_viommu_ops amd_viommu_ops = {
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+      Andrew
