@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793908691;
-	b=spDRZQIdQ3QEuZYbEYc+g6LVGKd26Y3QiBlwRugSyM/h7zLpPlkZZA/L5YXlqkwpQhuF
-	 5tK9d3vaSnI0jLDm4GRE4mJKaHuZK6Awqn5Gs45ogu20AOrrzslXfYumUH2XfQaGPdXJs
-	 TbUtYXVi1LEATDAjESSaGw5+M4CL+PX9yJeI+/jKvAm+MR3ymzEFTXzKxjxv9Oz1P0Zm2
-	 he+0gQyopOf0HyAwA0udGHyyOuez07B4FLYkRz5l6uQ4GeYJ77CK1PlNyv9Cl1pTzSKtJ
-	 18Q9Q3NF6+BBzs1me0DuJQYII++hX3fnVscqS8+z2lNkYGq6youedXQ11I+YNoMvL7A==
+	t=1793908693;
+	b=uGAAdxGIQdco+vQAMIU2YNkuFt5al6x2Sqqb+k835sGPPIgc8nYWakNsQ5HFFBZtyLxw
+	 nB6C7L9EG7FW3ps91P+mxBfg/rMwbaIhH/t5T5bfgDO/AXtKld9kbsV00Bw6u9yRuB1r4
+	 mDnV1aaquyCG/o/4DEY5WLDv/2/Png5NeYTXxPjxHQaf984Hz3Ml27BExfeEF6lLmMnDx
+	 eRvPLcMzatVxkzY4LZvkac+q9ekBkhzYmgF75ggkRGU949jAmaNAgEJmUUtsx6yBmUCJu
+	 B9g5PwvUxjqIJ7cm7tGEiXBGG/Rz6tPne78BvlPFx7r6B5AAN2O6bVXQPrndV5kM2RQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793908691;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793908693;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=VJM1TPMHTJ5mBUuyXhBiQ3F6ibJxzxb1q4lJPp3RzWY=;
-	b=NvPf9tB3jxHuc1xJY+qwbfsPrcLyPWyA5CRIJeYUc4dOgpvR6//Q+VLgmoNyLSwbE4Ut
-	 j461ud+NRwDG1WaLZFU7iq216bW36IgJJTNiuuPEavJx8CsvVkXYOc2morasFVS3HfFhD
-	 0JUYYADbnlIsFkBM/mvtvSbBkf3JGYVKVxKDVBn+tOXhmFP1vdg2+yiOzV2Yz9ABrBgeN
-	 4OFwz5OO8UNP6kPJIwQC6kWfcBlVVArjBhjEFmwCS1PI4HZTiy/m8uiuw6vlpEoyUlP90
-	 DfTBHJQuttNeyl+049ZBC3P7KcCHViHC6fJ8pZL0vTe3HKRS7XupWaznVf5DSdWTbTA==
+	bh=YYAZKkMFX6DHW8NngSlh8ql7fjU785sF7HqECiCsMnE=;
+	b=pHlv3m25lqq8atCn70ThvGWyCSAfo7kPRBXKWAmlOujv0m4jthhc2hTtHzUeEBIdb3Os
+	 1v2bRicF+ZMVP7jDYPei4I8AXbVElaxif79/Z2D0072ZNmzy57pSWEqKU8oBJkvroN/IT
+	 0nZaj9kGQzxlEo+HFlJyaFjskaNU+3wV9QNz7MX2GQC9kq3dcNnyec6wu0N85/OKrkj1P
+	 yA36ZowE90uqObBwgi+XpjtYM3CeTQRPqvv6ymz34iDWp79bk1LFj4NUh79r2BeBOb8Og
+	 aECgp5KU/k7LNi5iH1p5GTkXeP1feVtdAfJDfAyNbTlj99BU7Q0QMJhN1gcBraiWt7w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=R49qB2P0;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ghRyAMem;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CCE3606B061;
-	Thu,  5 Nov 2026 19:58:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16317606A6DA;
+	Thu,  5 Nov 2026 19:58:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=R49qB2P0
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B19A41F008A4;
-	Thu,  5 Nov 2026 19:58:09 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ghRyAMem
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AF031F0089F;
+	Thu,  5 Nov 2026 19:58:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793908691;
-	bh=VJM1TPMHTJ5mBUuyXhBiQ3F6ibJxzxb1q4lJPp3RzWY=;
+	s=k20260515; t=1793908692;
+	bh=YYAZKkMFX6DHW8NngSlh8ql7fjU785sF7HqECiCsMnE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=R49qB2P0qXLUlPstwwn/cwYKqB7OFfz4cOrfsP1tHpUFMXL/az8OchsolUY+GEzN8
-	 qPorB5vIYuDFFbNWXZE4dER721Q9iHKmNr9gTXfDYm5AJvXye0eCPOLB5v3lQH3wnt
-	 lPQrL8L7KfQOJJHq7nla/3TPNFRoqsbYIXYWjsoCrXCJKCIXzvkbiOVXSwuJWI0CoY
-	 O1TU2YPeucS7sioJZWTFApiz83C+NIGiwdWch89cqPQW8+W+41Rn/7BQvAoF14Rwa5
-	 cS6JRLtxWDf46VmERQg3QZMBNyOybQruZCkAsYR0VLJVVC6hEyS2CEDKwXXOsQKShk
-	 bBlenIqZvFSoQ==
-Message-ID: <sashiko-outbox-200054@kernel.org>
+	b=ghRyAMemqCpDi7g7rwz8fZ2fD4rQ64uE3KXgrCCHOvgfk5ulfB39FlQp35/h4yLvz
+	 dJdBvRlAWS/PTN7GeRmMV78w7VqDHy1yw1SgfdLtFs5/ro8pCEevp9I5o2mEV4hsre
+	 QbUCFmiC0JedW6U3cu7OBk36CzsUKVdpFd8AlKrLBUaNINm0Rq05xkuO59vGhcKc2W
+	 MbZC6M0cbvo1WoSsE5wbuIKHahbDptO0PVuWiY8t7K6A87m6Vc4FyueopwrwYcHZaN
+	 KqSAWANwgQUzptp7Pyc6sWx7RRBy4Y1o0Tz3+nWkyqFbUtHlNjL5USIuJJe5DNfQ2k
+	 Q92b2uhcE9aIg==
+Message-ID: <sashiko-outbox-200055@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2 20/30] sched/psi: let procfs own the wait
- queue of the pressure files
+Subject: Re: [PATCH RESEND v2 21/30] kallsyms: let procfs own the seq_file
+ of /proc/kallsyms
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -55,12 +55,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Iwai" <tiwai@suse.de>, linux-ext4@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261104-work-procfs-fs-v2-20-319e0f9a8aae@kernel.org>
+In-Reply-To: <20261104-work-procfs-fs-v2-21-319e0f9a8aae@kernel.org>
 References: <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
- <20261104-work-procfs-fs-v2-20-319e0f9a8aae@kernel.org>
+ <20261104-work-procfs-fs-v2-21-319e0f9a8aae@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:58:09 +0000
+Date: Thu, 05 Nov 2026 19:58:11 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -70,15 +70,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> A trigger on one of the /proc/pressure files has a wait queue of its
-> own for its poller, the cgroup pressure files use the queue of their
-> kernfs node through kernfs_generic_poll() and kernfs_notify(). procfs
-> owns the queue of its pressure files now, so use it the same way: the
-> poll_wait() is procfs', and a trigger that fires wakes the pollers of
-> its file with proc_poll_notify(). Like for the cgroup files every
-> poller of the file is woken when any trigger on it fires, and each
-> reports the state of its own trigger. psi_trigger_poll() doesn't need
-> the file anymore.
+> Declare the seq_operations and the size of the iterator and let procfs
+> open and free the seq_file. ->proc_open() only initializes the iterator
+> now.
 >=20
 > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
@@ -86,5 +80,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
-s-fs-v2-0-319e0f9a8aae@kernel.org?part=3D20
+s-fs-v2-0-319e0f9a8aae@kernel.org?part=3D21
 
