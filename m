@@ -1,54 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.204
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.150.252.152
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793844847;
-	b=f2Gnvv8ebC9CJp7GBd9cEbo8mFPg1NR7vEOaSas5BKZErzdRl0QrGUS1iK1c8cH0LNQI
-	 R91gcVUFvwfqlc34gll3BEdktRh7CTq5iHjI8cwk8vuNHx2BSAu5HBzwMV0AC3+HRrLt9
-	 u5PuF1jn8mTwI4xrrLIO5T8zAdLibE2X81wbAlN/iVaLCQge8gJVrUjAXeWSPi0PN321x
-	 J3RhyAyH6PAuLa6OVXasYZvohO2YMVf13m2hFSHrJjuozxN8vYlJ5AqKMKYcNahMsa0wv
-	 amJSCfrpWWt/aaCA7Iq/SIBBKahybyWfin56Wzv6K6kPtE4tg2ymI5s5Z7uEMEqeN1A==
+	t=1793846712;
+	b=1eJ3KQMjvKrSJ244dHniG3GGp5Nfzzp2l1+ABsJJJd3iVKLinWv5c8D+05hs7Y57Cp8x
+	 2xb8P7gWMg5oVJ33AoNNz73wdYdID6LqxKuMRWXl6V/KsapG5HMqwo60Ama1TOV0ANnCw
+	 QmWEQLJQpAhzP3ArI5+KDz9ANByTFKgAjxp8e1gmQ7MVjOURPggR26viC64z4EeYfPrdO
+	 IMZSmCR4jl5sSiKMUF+uStxMD5wTHmOQMTDYl+O/GNiFPKM0zlaZjo8JwppOngEarvHXx
+	 kJB7opPeoCLE6RyNelryNJoV58BZEOJZ4/6PHYqMEZVyST1vJYs10c4NDYXjMHCslxA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793844847;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=tXeq94tKXH8bHOz1amsH5XRU51n2PYOOTkgxfF1PjyI=;
-	b=N6tcRyTdY1UcCp504rFRYO5csoK7Vuu4gZKcYM7kBscaNdecXDmLSJ8ncmywxxqqsGS7
-	 L61AhyAHJGEKmomqjKnwhX8atCuXtQox7gYUpbaVlcf6lcAvF6p+ckCJv4Nedf2QDbWe6
-	 kAbGYvXTzqSzErMJl5sRc0fiwOdKrquFhjjDZalOw0eV+mplX4SyfqOY74RDh1VLvAI3n
-	 2DKU2jSHMJ//3JK7jkCx35Hy2S+OJgrVXlTGdBvXHqYi30pUVcgh66Mj3U79rLpFEZqja
-	 lVkvzsIhFBr6Qn3shvfQIcORhd8bSK+JdtXbmkyv7zwmBIMWpj03eqC0KA6Tmn0fgDA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793846712;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Received:From:To:Cc:
+	 Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:X-Atmail-Id:
+	 X-atmailcloud-spam-action:X-atmailcloud-route;
+	bh=tzFYqkW4RAckviF2FfXB9njZbc/XIgTwvUSxuoCYB0w=;
+	b=Cns3XNt4ZRYfmiLqfQj8Peq6nsd/Atmzc10wWwnt4P3HvGnX2K5zw5PzkkOWb6JrZo/a
+	 Qzhes0xj6IpB+xDQTcMbFHrVhjP5/UY0IzUwqlm8glQl6ioBuLY3hlZ/tWO7gtn/LAgxe
+	 LYa6WYFL0OCJyw1ud9nOu9cxcnvE9WhiGxsHPajfwZotTBarVOJkOutEO7CwPCMyOM/Y5
+	 hSijbdGlSWmXKCxKsc5JtpCBw1dRR3udF1wjbxjl6hmpP2m4Hj/+On3i07GHpnrKvSpHa
+	 yu4FM4aPoQNhL0lfT1GYKuAttR5XoGcDDf6uNHVBumxKYS8OBcsHO+7NGNoywf3n4Lw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=j2sTp789;
-	arc=none smtp.remote-ip=91.218.175.204
-Received: from mta0.migadu.com (out-204.mta0.migadu.com [91.218.175.204])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=internode.on.net;
+	spf=pass smtp.mailfrom=internode.on.net;
+	dkim=pass header.d=internode.on.net header.i=@internode.on.net header.a=rsa-sha256 header.s=202309 header.b=PRQ+QM6d;
+	arc=none smtp.remote-ip=103.150.252.152
+Received: from omr-01.pc5.atmailcloud.com (omr-01.pc5.atmailcloud.com [103.150.252.152])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05D2D606A329
-	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 02:14:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 05D2D606A329
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47260606A32C;
+	Thu,  5 Nov 2026 02:45:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 47260606A32C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=internode.on.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=internode.on.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=j2sTp789
-X-Envelope-To: linux-pci@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=l5hRS8qgzR0WOCPLF0tQbQ+of37lp1oZsgw+XUQqwhg=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793844844; v=1; x=1794449644;
- b=j2sTp789TAzH4+lGZ7lYWfaDwj4tzc9cwnz9VymVYz+93eIx1j2P1wIewQP0NcIfVbJQKLyf
- 0DO8NIIghKzDouBSBnDym1wAnQyGpqJsD9irj2dQSZrGObeDZJB96QtjMGxheDIwPErfv1cfpzT
- zdnAQ3fG/Xx2Ge3hDWonFfXo=
-X-Envelope-To: linux-pci@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 7ce234fbb2517b84;
-	Thu, 05 Nov 2026 02:14:03 +0000
-X-Mizu-Trace-ID: 7ce234fbb2517b84
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <fc4939cc-84ec-4c5c-88a7-658ca800377d@linux.dev>
-Date: Thu, 5 Nov 2026 10:15:13 +0800
+	dkim=pass (2048-bit key, unprotected) header.d=internode.on.net header.i=@internode.on.net header.a=rsa-sha256 header.s=202309 header.b=PRQ+QM6d
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=internode.on.net; s=202309; h=Content-Type:MIME-Version:Message-ID:Date:
+	Subject:To:From; bh=tzFYqkW4RAckviF2FfXB9njZbc/XIgTwvUSxuoCYB0w=; b=PRQ+QM6dA
+	aZyLIWoRYPrGecIJfNvLwcNFyu0UlLURj35f7jdmmUGxICDBw6kyyl5lWkXxyj981+Z1QbDFfiBNI
+	od4qnIB7uE1Dtuk6XAfgSMcBN6zQVhdmCGmTrCUhxbBy+dmc94XKD5+K4svfTU6O9WC2Lsrn+v0hL
+	MDLpriw/4/QKbwtCBtE9ZeIrn2yGFAP4vwN1/kOG2EMsI/PZG+eDwwbfElU1YjeKEZ1deazv0l9Yo
+	TLLIgLgK1HaN2R66zFkFa4RkEkuGabJ0IEZHJz7RcrHkEEnWtEZRsvj6dOJkRzQQvxFqPhfLtzotW
+	MAmzIq7oSjoEIWAPwl0sKwH8w==;
+Received: from cmr-tmc.internal.pc5.atmailcloud.com (cmr-tmc.internal.pc5.atmailcloud.com [192.168.1.2]) 
+	by omr-01.pc5.atmailcloud.com (Exim/cmr-tmc.i-0248c2ced204c1c85) with ESMTPS
+	(envelope-from <arthur.marsh@internode.on.net>)
+	id 1xOnTG-00000001cdh-2rLO ;
+	Thu, 05 Nov 2026 02:44:58 +0000
+Received: from 87.121.95.148.v4.dyn.launtel.au ([87.121.95.148] helo=localhost)
+	 by cmr-tmc.i-0248c2ced204c1c85 with esmtpsa
+	(envelope-from <arthur.marsh@internode.on.net>)
+	id 1xOnTE-0000000CYFq-3Ls3;
+	Thu, 05 Nov 2026 02:44:58 +0000
+Received: from amarsh04 by localhost with local (Exim 4.100.1)
+	(envelope-from <arthur.marsh@internode.on.net>)
+	id 1xOnTD-000000000Ah-0W62;
+	Thu, 05 Nov 2026 13:14:55 +1030
+From: Arthur Marsh <arthur.marsh@internode.on.net>
+To: vasant.hegde@amd.com
+Cc: alexander.deucher@amd.com,
+	bhelgaas@google.com,
+	felix.kuehling@amd.com,
+	iommu@lists.linux.dev,
+	jgg@ziepe.ca,
+	joro@8bytes.org,
+	linux-pci@vger.kernel.org,
+	mario.limonciello@amd.com,
+	robin.murphy@arm.com,
+	suravee.suthikulpanit@amd.com,
+	will@kernel.org
+Subject: [PATCH v2] iommu/amd: Force identity mode for selected GPUs only
+Date: Thu,  5 Nov 2026 13:14:36 +1030
+Message-ID: <20261105024454.654-1-user@am64>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260824085821.5422-1-vasant.hegde@amd.com>
+References: <20260824085821.5422-1-vasant.hegde@amd.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -58,189 +84,86 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RESEND v2 01/51] alloc_tag: don't remove /proc/allocinfo
- under the codetag module lock
-To: Christian Brauner <brauner@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
- Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>,
- Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>,
- NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>,
- Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
- Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>,
- Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados
- <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>,
- Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>,
- linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-um@lists.infradead.org, linux-wireless@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org,
- ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org,
- coreteam@netfilter.org, kexec@lists.infradead.org,
- linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
- netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org,
- ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net,
- linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-cifs@vger.kernel.org, linux-fbdev@vger.kernel.org,
- linux-hwmon@vger.kernel.org, linux-mm@kvack.org, linux-sh@vger.kernel.org,
- linux-usb@vger.kernel.org, samba-technical@lists.samba.org,
- sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
- linux-doc@vger.kernel.org, linux-serial@vger.kernel.org,
- linux-atm-general@lists.sourceforge.net, Takashi Iwai <tiwai@suse.de>,
- linux-input@vger.kernel.org, linux-raid@vger.kernel.org,
- linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org,
- linux-debuggers@vger.kernel.org, Chuck Lever <cel@kernel.org>,
- stable@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- Suren Baghdasaryan <surenb@google.com>
-References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
- <20261104-work-procfs-bugfixes-v2-1-021c84d852e0@kernel.org>
-Content-Language: en-US
-From: Hao Ge <hao.ge@linux.dev>
-In-Reply-To: <20261104-work-procfs-bugfixes-v2-1-021c84d852e0@kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Atmail-Id: arthur.marsh@internode.on.net
+Authentication-Results: cmr-tmc.au-east.atmailcloud.com; auth=pass smtp.auth=arthur.marsh@internode.on.net
+X-atmailcloud-spam-action: 
+X-atmailcloud-route: unknown
 
-Cc Suren
+On a system using an APU (no discrete graphics card):
 
-Hi Christian
+model name      : AMD A10-6800K APU with Radeon(tm) HD Graphics
+stepping        : 1
+microcode       : 0x6001119
 
-On 2026/11/5 03:06, Christian Brauner wrote:
-> codetag_alloc_module_section() takes the codetag type's mod_lock for
-> writing and calls reserve_module_tags() with it held. When that can't
-> reserve the tags, because the section's alignment doesn't fit, because
-> there are too many tags for the page flag bits or because the memory
-> for them can't be allocated, it shuts memory allocation profiling down
-> and removes /proc/allocinfo, still with mod_lock held.
-> 
-> remove_proc_entry() waits until every reader of the entry has let go of
-> it, and a reader of /proc/allocinfo takes mod_lock for reading in
-> allocinfo_start() while it holds the entry. So a module load that hits
-> one of those paths while /proc/allocinfo is being read waits for the
-> reader and the reader waits for the module load, for good.
-> 
-> Let a work item remove the entry in that case. The profiling is shut
-> down right away like before, the file just goes a moment later.
-> 
-> Fixes: 4835f747d3ed ("alloc_tag: support for page allocation tag compression")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+I was getting the following, git-bisected back to:
 
-Thanks.
+commit bf5bdfd1f8d4ad5c6020468d09b68b09c2adc5c2 (HEAD)
+Author: Vasant Hegde <vasant.hegde@amd.com>
+Date:   Mon Aug 24 08:58:21 2026 +0000
 
-is this a problem you have hit in practice?
-Sashiko discovered this issue earlier and reported it as follows:
+    iommu/amd: Force identity mode for selected GPUs only
 
-> diff --git a/mm/alloc_tag.c b/mm/alloc_tag.c
-> index 2070e682fe106..112a014d4b890 100644
-> --- a/mm/alloc_tag.c
-> +++ b/mm/alloc_tag.c
-> @@ -950,10 +950,12 @@ static void *reserve_module_tags(struct module *mod, unsigned long size,
->  		int grow_res;
->  
->  		module_tags.size = offset + size;
-> -		if (mem_alloc_profiling_enabled() && !tags_addressable()) {
-> +		if (!tags_addressable()) {
->  			shutdown_mem_profiling(true);
-This is a pre-existing issue, but does this shutdown_mem_profiling(true) call
-introduce an AB-BA deadlock between /proc/allocinfo file readers (pde->in_use)
-and module loading (cttype->mod_lock)?
-A user reading /proc/allocinfo acquires the procfs in_use reference in
-use_pde(), then blocks on down_read(&alloc_tag_cttype->mod_lock) in
-allocinfo_start().
-Concurrently, if a module loads and tags_addressable() fails,
-codetag_alloc_module_section() holds down_write(&cttype->mod_lock) and calls
-shutdown_mem_profiling(true), which removes the proc entry. This removal waits
-indefinitely for the in_use reference to drop to zero, hanging both procfs
-reads and module loading.
-> -			pr_warn("With module %s there are too many tags to fit in %d page flag bits. Memory allocation profiling is disabled!\n",
-> -				mod->name, NR_UNUSED_PAGEFLAG_BITS);
-> +			pr_warn_once("With module %s there are too many tags to fit in %d page flag bits. Memory allocation profiling is disabled!\n",
-> +				     mod->name, NR_UNUSED_PAGEFLAG_BITS);
-> +			release_module_tags(mod, false);
-> +			return ERR_PTR(-EAGAIN);
->  		}
->  
->  		grow_res = vm_module_tags_populate();
+I could only photograph and OCR the screen, so not a lot of data could be 
+captured:
 
-I previously sent a patch with a comparable idea, though Sashiko remained unconvinced.
+1.295232] </TASK>
 
-[patch]: https://lore.kernel.org/all/20260817062726.106511-3-hao.ge@linux.dev/
+1.295233] Modules linked in:
 
-[Sashiko's objections]: https://sashiko.dev/#/patchset/20260817062726.106511-1-hao.ge@linux.dev
+1.295237] CR2: 000000000000003c
 
-Could this patch perhaps wait for mine? No worries if this is inconvenient.
+1.295242] ---[ end trace 0000000000000000 1---
 
-Best regards                                                                                                                                                                                                                                                                  
-Hao
+1.295245] RIP: 0010:amd_iommu_def_domain_type+0x76/0xb0
 
-> ---
->  mm/alloc_tag.c | 27 ++++++++++++++++++++++++---
->  1 file changed, 24 insertions(+), 3 deletions(-)
-> 
-> diff --git a/mm/alloc_tag.c b/mm/alloc_tag.c
-> index 82e2c3448dcf..7d7ad6704953 100644
-> --- a/mm/alloc_tag.c
-> +++ b/mm/alloc_tag.c
-> @@ -15,6 +15,7 @@
->  #include <linux/seq_file.h>
->  #include <linux/string_choices.h>
->  #include <linux/vmalloc.h>
-> +#include <linux/workqueue.h>
->  #include <linux/kmemleak.h>
->  #include <uapi/linux/alloc_tag.h>
->  
-> @@ -604,6 +605,26 @@ static void shutdown_mem_profiling(bool remove_file)
->  	mem_profiling_support = false;
->  }
->  
-> +static void remove_allocinfo_file(struct work_struct *work)
-> +{
-> +	remove_proc_entry(ALLOCINFO_FILE_NAME, NULL);
-> +}
-> +static DECLARE_WORK(remove_allocinfo_work, remove_allocinfo_file);
-> +
-> +/*
-> + * A module's tags are reserved with the codetag module lock held for
-> + * writing, and a reader of /proc/allocinfo takes that lock with the entry
-> + * pinned. Removing the entry there would wait for that reader for good, so
-> + * let a work item do it.
-> + */
-> +static void shutdown_mem_profiling_async(void)
-> +{
-> +	if (!mem_profiling_support)
-> +		return;
-> +	shutdown_mem_profiling(false);
-> +	schedule_work(&remove_allocinfo_work);
-> +}
-> +
->  void __init alloc_tag_sec_init(void)
->  {
->  	struct alloc_tag *last_codetag;
-> @@ -855,7 +876,7 @@ static void *reserve_module_tags(struct module *mod, unsigned long size,
->  		align = 1;
->  
->  	if (!ensure_alignment(align, &prepend)) {
-> -		shutdown_mem_profiling(true);
-> +		shutdown_mem_profiling_async();
->  		pr_err("%s: alignment %lu is incompatible with allocation tag indexing. Memory allocation profiling is disabled!\n",
->  			mod->name, align);
->  		return ERR_PTR(-EINVAL);
-> @@ -905,14 +926,14 @@ unlock:
->  
->  		module_tags.size = offset + size;
->  		if (mem_alloc_profiling_enabled() && !tags_addressable()) {
-> -			shutdown_mem_profiling(true);
-> +			shutdown_mem_profiling_async();
->  			pr_warn("With module %s there are too many tags to fit in %d page flag bits. Memory allocation profiling is disabled!\n",
->  				mod->name, NR_UNUSED_PAGEFLAG_BITS);
->  		}
->  
->  		grow_res = vm_module_tags_populate();
->  		if (grow_res) {
-> -			shutdown_mem_profiling(true);
-> +			shutdown_mem_profiling_async();
->  			pr_err("Failed to allocate memory for allocation tags in the module %s. Memory allocation profiling is disabled!\n",
->  			       mod->name);
->  			return ERR_PTR(grow_res);
-> 
+1.295250] Code: ff 25 00 7f ff ff 3d 00 00 03 00 75 cb 83 02 01 75 3f 48 81
+
+ef do 00 00 00 48 8b 57 10 48 8b 42 10 48 85 со 74 04 48 8b 42 38 <66> 81 78 3c
+
+32 10 74 a6 55 31 ff 48 89 e5 e8 d7 ee 3c 00 5d 83 fo
+
+1.295253] RSP: 0018: ffffc90000027c20 EFLACS: 00010246
+
+1.295256] RAX: 000000 RBX: ffff888100f0d5c0
+
+RCX: 00000000ffffffff
+
+1.295258] RDX: ffff888100dd8000 RSI: ffffffff82437607
+
+RDI: ffff888100fc7000
+
+1.295260) RBP: ffffc90000027c60 R08: 0000000000000001
+
+R09: 0000000000000000
+
+1.295262] R10: 0000000003 R11: 0000000000000001
+
+R12: ffff888100fc70d0
+
+1.295264] R13: 0000000000000000 R14: ffff888100aedc48
+
+R15: 0000000000000000
+
+1.295266] FS: 000000000000(0000) CS:ffff8884acefe000(0000) knICS: 00000
+
+3000000000
+
+1.295269] CS: 0010 DS: 0000 ES: 0000 CRO: 0000000080050033
+
+1.295271] CR2: 000000000000003c CR3: 0000000002646000 CR4: 00000000000406f0
+
+1.295274] note: swapper/0[1] exited with irqs disabled
+
+1.295280) Kernel panic not syncing: Attempted to kill init! exitcode=0x00
+
+30009
+
+1.297262] ---[ end Kernel panic not syncing: Attempted to kill init! exit
+
+ode=0x00000009 1--- 
+
+I am happy to provide more details and test any patches.
+
+Arthur.
