@@ -1,95 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.53.43
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793849540;
-	b=A6h20PukI4lMGr6UvKUaM9u4vMf7f4iBop+aAkzalAptkkezUgCp0HgTIRJVgCFUL6h2
-	 LqaRpZEE/kxPSuCy4FUH5hlzbGKS3tgXdVlCW6pFhvnFsJUSYdBv8xRpGYSO+7IlQMJDW
-	 YVYZBs9lODZCc6QYKXBhoRZCzc02CyF1tG2YlzFn5Ho1pnUtBnW3TAZ7CSFZDptooiQUz
-	 wQ6siplnn0CYsRu37P95qmdyATLGtyUww5g3QTJtsjvgtHMWqQvZ1ANBgbGwsY+f+4yyG
-	 2i4FoF6rMB/TyjAiZ1Vobqy+S7Lv9xCddY2ySaxdi/OIsEFeJpZ1Xg8t8l2+z41x3FQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793849540;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=7MYestwEH6gs4526EB4JudsUxk0g4agf5zvx66ESjY4=;
-	b=ZvQ7rPOHadq+PYD9VL99Qtbk//xZmMAOYG2G845uILswivtW4n8vv4GPILrKmYROPfNj
-	 tKd/GTd/io0sa75sGKuPOH+/daOTjjiRiMvjXYkMKrlcwFuCMSQoUX+s2Lwtfhs6ttbDp
-	 4gcRbS0RRPF+t+/pObWB0R68fNwlMaaQMTPW3VY3EGX/ORdDCt/8grna8CTk1pVTWm4aw
-	 x6t7jqJ+sFV/OpPlgUGZcURrZyD1xl9ONpOFf3hz3pkB4shsU/sHu7JHZRKikwjWDQ+lj
-	 ko8hcsw8GyB69cMLSNP0/IOWiNkVWZxnrj6YFydByxAL1MmBG1gO5tjcTnlSipfJgFg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=amd.com;
-	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=MT68VWS+;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.53.43
-Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazon11012043.outbound.protection.outlook.com [52.101.53.43])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.70.43.166
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793849580;
+	b=G5koVCjf15q9MPx9XlV7XcbawEWlx7WXqWzvVnkTnbrTpI7JPFtbj9szTLiCPuxqd6dv
+	 ewaXqGnP84EnlQUSnr14EsQR8RX3UhNm/0KIlHLggSFRBEQql3PHjiJBzI3dwWluoBDaG
+	 l7Hd49GTqCm2VLxH4jamoGKCpTwL0OEVRWPqvfjeMIVzs5KUnd3oFjynrFyEDTdMklCIO
+	 C8WuDghz9Wrgxunm4yYHqQnG74MzSEhKz70MWR3+p0L8P6txgNeCudB+v+M4nEpTblXCU
+	 rVOAynWDkI+/V9hjqU8dqBxcj8t8RzFuIl83e9KVU+/Ve0yfagrDgR7InnzSU7LMmMw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793849580;
+	h=DMARC-Filter:DKIM-Signature:Date:To:From:Cc:Subject:Message-ID:
+	 In-Reply-To:References:Feedback-ID:X-Pm-Message-ID:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=jIzkVeBI9b3PEm/Tr6PfIipXlg8et2MLSXZyIQ53oIE=;
+	b=Bt1mxh0aRyrjQrkxkAfpyFaPNSrMRwBdRjLQnKFJUwmiBuFtW4w5HI4W5mQMsAAgFpsA
+	 ssHy12nv1et3RKSi268BeS4LOA1JGtpvHR68pn7uOrkP/DfIMy7LmJp+jfNj/hDV9mw7S
+	 FAHrgGMvk3leB4k0H4c42OcBZQ93f5zz32+x2chnRqlitU/4cu0NUKd2DkqKnhnqdLdu7
+	 VZzqV89SLgiuQrmCQvBrlbGxhdX9MYWI370G3wJRzxkLYfEgF5seoQZWpSqJE5I25jZl3
+	 tYsNdSfpyCf9A3ehW3YuvLskfosTF8W/jHPS7eP5c8vBhwdUdZPs1WmJGa4ede1S0nw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=protonmail.com;
+	spf=pass smtp.mailfrom=protonmail.com;
+	dkim=pass header.d=protonmail.com header.i=@protonmail.com header.a=rsa-sha256 header.s=protonmail3 header.b=lwFiiNKB;
+	arc=none smtp.remote-ip=185.70.43.166
+Received: from mail-43166.protonmail.ch (mail-43166.protonmail.ch [185.70.43.166])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAED9606A31B
-	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 03:32:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AAED9606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B33C1606A326;
+	Thu,  5 Nov 2026 03:32:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B33C1606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=MT68VWS+
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=r3qFiB/vxlt46D2MQKWzB2tp5EOQCiLF9gsR1mzwh7iDoQqymNIHAvEIDymPlSYA/E2ocnXHhDoUzIgkB7FFMGwefLgPYN7ALGl/E+GKT6OKQMkkRD/omshJ6NGz0c72SNNipmsztgzesAXBnq93lcda8XqjB+JfGPFDOP8VJoVEmQcn//4R9GNo1rvII9SSaAMSs/gW3NLeaxHQaJ3xyYwMUtArEeDj/KYHt4QNo5SK6F1CSr/8njclZNkwUixOz5duMNCT4tdCHeyKwt+MqYCy4rEqSp6BpAYKGp0EZK2sHieIJIgJ+9Fe6V2c0SMusJYYFeLBiTsexPfl1TlWCQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7MYestwEH6gs4526EB4JudsUxk0g4agf5zvx66ESjY4=;
- b=QuD+7EnqXketY8VJB2wVLUzp6iljiP9nSAi2oR3mIL+SoAG7VtO+8mGCEKYMpr0521vXOBzuYlSej3SH1FCziUlaIAS44kovG6Jx1PzgiQHGwEjs2W6qRCGPdLms+Eaq+O4HEPaFAifH3Me70i66ZSuWagOgPZ3nsdtigxzsAWIdJbk2et0n+pe6xViwrKUV+2hz4hZe8Hx5OsdczNZYPRvmXEqKGO856PMr+s6MA8BrkMFYc4u02K6j0CPII8XnZhsCloOrUF4FZaXRpAfaarwpwd5sZLyHQtbktJikv04SmRAa/hQvE5eKUzIz59xJuhvZYi6zpIWkujFIjUS1fw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7MYestwEH6gs4526EB4JudsUxk0g4agf5zvx66ESjY4=;
- b=MT68VWS+P4Pv4uJsTqEB8AnEv53MqincCZh4hrUx3YfUuwIgfwduLO+HNxDRLO/SV0HwP3PMZF4xYZt2Tu3xOTiXpjWZyBJGyeh66En7hLW1KXY35n9mZdA3XMrYEQFAAnwiSMDJC7gnlIxdURnw8oer1bey2K7Y/N6MvXXIYYQ=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from BL4PR12MB9505.namprd12.prod.outlook.com (2603:10b6:208:591::16)
- by CH3PR12MB647349.namprd12.prod.outlook.com (2603:10b6:610:365::24) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.10; Thu, 5 Nov
- 2026 03:32:17 +0000
-Received: from BL4PR12MB9505.namprd12.prod.outlook.com
- ([fe80::73aa:eb8c:a86b:5a83]) by BL4PR12MB9505.namprd12.prod.outlook.com
- ([fe80::73aa:eb8c:a86b:5a83%5]) with mapi id 15.21.0592.009; Thu, 5 Nov 2026
- 03:32:17 +0000
-Message-ID: <c03d9f24-789a-4f19-b3a1-b189df7b2d2b@amd.com>
-Date: Thu, 5 Nov 2026 09:02:09 +0530
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] iommu/amd: Force identity mode for selected GPUs only
-To: Arthur Marsh <arthur.marsh@internode.on.net>
-Cc: alexander.deucher@amd.com, bhelgaas@google.com, felix.kuehling@amd.com,
- iommu@lists.linux.dev, jgg@ziepe.ca, joro@8bytes.org,
- linux-pci@vger.kernel.org, mario.limonciello@amd.com, robin.murphy@arm.com,
- suravee.suthikulpanit@amd.com, will@kernel.org
-References: <20260824085821.5422-1-vasant.hegde@amd.com>
- <20261105024454.654-1-user@am64>
-Content-Language: en-US
-From: Vasant Hegde <vasant.hegde@amd.com>
-In-Reply-To: <20261105024454.654-1-user@am64>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: MA5P287CA0265.INDP287.PROD.OUTLOOK.COM
- (2603:1096:a01:1f1::10) To BN5PR12MB9511.namprd12.prod.outlook.com
- (2603:10b6:408:2a9::14)
+	dkim=pass (2048-bit key, unprotected) header.d=protonmail.com header.i=@protonmail.com header.a=rsa-sha256 header.s=protonmail3 header.b=lwFiiNKB
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
+	s=protonmail3; t=1793849576; x=1794108776;
+	bh=jIzkVeBI9b3PEm/Tr6PfIipXlg8et2MLSXZyIQ53oIE=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=lwFiiNKBs+wTOTOekItXMHg+620VO3If6nc9oABez1PyHXOZNYoMFQz9a1D+YilRe
+	 N2tsOooKbaLFpTa3OvMNA0oD/ZuphvcB/qNOM4/+9tUaw/cXZt3M3ycSQ4Dgeusysm
+	 +D6UE9xLk7qaJ8RCusMdArzoNblhhBEnSrMip24WMpTpx7m46AfAnNiLrl2Aaj03ut
+	 2NV7mybIcLBPfJBo0D8s0N8HNC93JoADYXSxfHOABXEoxicv5efOGwjWwR7LroNI2E
+	 uWzgj7pYcvvMEwqs+qFIY38SqQEAzsfdGImScwHSSmXfUGbpQ9FhkJZ7zfofTqzI7H
+	 LeAGk8vJrv6eQ==
+Date: Thu, 05 Nov 2026 03:32:49 +0000
+To: "adrian.hunter@intel.com" <adrian.hunter@intel.com>, "bhelgaas@google.com" <bhelgaas@google.com>, "rafael@kernel.org" <rafael@kernel.org>
+From: Kyle Baedke <kylebaedke@protonmail.com>
+Cc: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [BUG] Genesys GL9750 (17a0:9750) does not respond after its PCIe  slot is powered back on from D3cold, on s2idle resume and at runtime  (ASUS Vivobook 14 Flip TP3407SA, kernel 7.3.1)
+Message-ID: <vqOfI4cXijz1Ft480-_mX3XkrTT_-oQ78Xy6CPrXD_r5R06i7H03y3szJFA7JAVs9YsW93_hUQ0hz5bTYItb7RUml3cGwxPmW9gPFIcNY-8=@protonmail.com>
+In-Reply-To: <x4G_0cgWnHWJtmgP4iX3hFfwwbWDyVuO9Ps8Pv_Rnq4VguufBRLzZex1IxGuTtaYfU7tS7U8RbKjB2I54HxfEmPk3gzKWvYDAyuZXrtWbDU=@protonmail.com>
+References: <x4G_0cgWnHWJtmgP4iX3hFfwwbWDyVuO9Ps8Pv_Rnq4VguufBRLzZex1IxGuTtaYfU7tS7U8RbKjB2I54HxfEmPk3gzKWvYDAyuZXrtWbDU=@protonmail.com>
+Feedback-ID: 212527205:user:proton
+X-Pm-Message-ID: e3f05f633c40ddf18529b7d5aa15b834ff41ae80
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -99,87 +64,170 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL4PR12MB9505:EE_|CH3PR12MB647349:EE_
-X-MS-Office365-Filtering-Correlation-Id: 6560b525-1080-421c-2837-08df3aed63d9
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|23010399003|376014|1800799024|10067099003|22082099003|18002099003|11063799006|56012099006|4143699003|261026140227099003|261028144727099003|261022105027099003|261009223027099003|261009221227099003|261021123027099003|261022075727099003;
-X-Microsoft-Antispam-Message-Info:
-	Y372mMRWXCmfPT0uL3EXffo/Y70o76VyRFk9sNx8XMokWlZDz0fTwEN6QTtdvUI000c1w/8sHySNHgSTOIjvfHnh2OkLGiUDVf68wskq6UiyxtJEFv7OeWLHlrbUyfdg8doewEhCu0pZWrNC2rxW6+0/poWfAg4FX58yaZ4603nBpXM/qj1EGbrT0WkC6CGSu4XREAYy8owLuZIcdIp7XaUJwqhqWw3/OV0nzjKN8osAKvvnJRQlZ+KMbDEp0zRT2FL53+5ND/nmkrorptX9zq2+slAOmaIUsdbwYghxlFOxoDC2+29onYui7lEwS5g0v61d910zINPFIRFToB63eAgyfmNzHhWKcRGvvMbUJGkgwjEiM5UTUPjWcGcPaIAaxFgXlwVIvKPn7CvIHuCx4Cu4IFVVGD+zsMXOEJk05c3Sxgu/cpUi7YayKjHFttYygpEZ0C12Ggk5KTvSrXUR3aOSDdfy0f9QoLbZuZTsgiw/JmW8y96J0ppC87ArhL5RVG2zXQXoI7YNhSIHlUXTLJMUNg4Vt4Ku/Zw5h1gktE9KxMJ9skf/QaDyuh0nbWlaz0a+RBtMuIs4jqBBx5y0vco9AxXiVvUiZQMFjXvl13dHYheUj6JkiRzJYNxlYlG8
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL4PR12MB9505.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(376014)(1800799024)(10067099003)(22082099003)(18002099003)(11063799006)(56012099006)(4143699003)(261026140227099003)(261028144727099003)(261022105027099003)(261009223027099003)(261009221227099003)(261021123027099003)(261022075727099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?Z3hUS0Q0UzNkWHR5V0wzZEgzZ05IeDhrWkpkajJCV1kyUDVQdUV6ZTdCcVdN?=
- =?utf-8?B?SktSV1M5Q2tzb0RwNzU4Nm1zU0xJeTc3NXhMUCt5ZmVmYU5JeVdlWGRSSENV?=
- =?utf-8?B?VlVFdTFoaGwycmRGSUVZcy9COVc2c3BFQ0NUeXBZWjVxL3FJcEdnOGpyKzV2?=
- =?utf-8?B?dmljSElxTmpLemNuR3l4R0FRcDFibzVSUGpVbHJIS0dOVmw4c3N1MUVQdHFh?=
- =?utf-8?B?WlhqYmpjT1hPdlBHM3RSTlQ3aXJtdExQcGVnejRIVGdkMmxLQWRTQzAxanhu?=
- =?utf-8?B?cGlidlFRRTdmZXpNeVRDb0sreUZoa3dkNHF0YWVEZmpZTk0vTnhYckQ1NjNZ?=
- =?utf-8?B?T00xUzlPME43b05JTm96RHZMbWhObnY4YU1BdFlQYzFqMXBhMXk0a3JqL0RS?=
- =?utf-8?B?b3pEOHArcmxudU9HWUJRRmRrNDR0dWIrZGVlZTZqemVYRlA5SjZIMzBMSklQ?=
- =?utf-8?B?azBMZkExdmFiZVM5K213TmFsd0RQS2E0Mkc1OEliR2ppRlBleHIyU1MyWnZT?=
- =?utf-8?B?djViOUc1VjB4Qjd5UDZLL0ZOME02VVR1V1lFQ0p6clYyUFhKV25TTEZCTURU?=
- =?utf-8?B?VVFEV2VaQ1E5TGZpeEV4YVBiTVZqcHROTVpiRzdnbzFuSjd3am1yL0V4M2U4?=
- =?utf-8?B?QVRVRVZ6QUNjNE1sa2hTRzhkMXR6UzFVazlSNlRTZVVxUmRCSUFVcVptNHQz?=
- =?utf-8?B?ejAvSXlSdUNpbndSaEU3Y09abWowcTFnWTVLYy9SMGg2NWYrSUdPTDNuTmtL?=
- =?utf-8?B?eUhFU1pwSVRPcFcwbVUxeUJMejJRdTlTMHM3MGtRVG44THZNYWNxL2xlWWJB?=
- =?utf-8?B?eFhUdU9yTmltak1SOTl2MlNZemErNHhpT1drdUpPWFhZdnVmSDlicEFaTy85?=
- =?utf-8?B?cHY5Vm9KZGhPZjNDSERLWjZ0KzBiVXhHYWxVVjdIQ1pqa1JxKzRDNFBESVUy?=
- =?utf-8?B?enRob1Z4Z1NCNHJhNUdZWndVMzZlN3ZyWFREdllRa3VQZUQ0Y09oZ3NiWU01?=
- =?utf-8?B?L3U5SC9oSFVhaGtNci85YisxdmZaYUVyRDRsR0Q2VkhSUFdIRkRualFIbmxl?=
- =?utf-8?B?ZXk5YkxKYkpIUTlsL0Roc3BlcmhaNVhuN2EwVk1YaTZqTUpJVFVyVnhnNmIy?=
- =?utf-8?B?elRHS0FYaEFiNHhKMVEyeG1MeWJQc2h4SkRhTCt1SVNIZkt0WTZqaGtyN1VZ?=
- =?utf-8?B?eGRhWms5QXJSLzZYcjB3Qlh2czRTZS9KeEZKa240WFZtWUNod2M3b3dVTlI2?=
- =?utf-8?B?MVA3MHBucENya2VHd3RGQnRtME5yb21ybjNqOFF1UmFpL2ljamtGcmFBdEVR?=
- =?utf-8?B?eWhHVnJ6MkdnSldtckUwcU56NHRPdElzbGl3NGtYSzd4cUlTeVEySmhla0pj?=
- =?utf-8?B?NmdUNmhQUHhwckd2QTIvSXBpVHczVzRjSytDOEFnUnRqVHdPWCtZMi8rZWg2?=
- =?utf-8?B?SzFaUHRCMkdjRlNTZStpVVZSM3B0aEFHVW9KYXJKSm0yRnlCWXdqdFNvMDFD?=
- =?utf-8?B?STFad0lta0dGbzRqRU1EeWpCM0haZ0hpd2l3MmN5Rklrb1J3VHpwdXh0VmlO?=
- =?utf-8?B?SkhHQmR2bnVyd3dGRHhPVUVxamVITHh0aUdtQUVIblMxRDBydDlEODFCZEJs?=
- =?utf-8?B?emJxQmNFTXkyVkhxR1dqQ2FkT2xrSDlaSS9KOVVQTzI3M1l4UTFQc2tpRHZ1?=
- =?utf-8?B?ZzVBOWljeTVsc0V1aDVDWFUyTU1TY2kwS0U0d0JUTWpHa0pzckhuZCt5V080?=
- =?utf-8?B?Rml4ZVVJNGcwVlhQYXhzdjNhK2U4TEREYmRMKzJ4cXMvSWdacG9pVWs0bkxF?=
- =?utf-8?B?WWNwbEJxZTJQZkRGSVNQT25GSnVhZ0NQb2swYzZSNDdTVGlCd0ZodG5NbUhx?=
- =?utf-8?B?eXVnc0VsT0l5dzBBdjRuSHdodnZUOXdYK2tYSko1MWVHSFluTlc5Sy9jNzBE?=
- =?utf-8?B?K1FpTC9jV3RwMWhHTGpFU2Q1d3R0SzVEZVBQU0tvZzYrTkE0aENxTlBzaXVN?=
- =?utf-8?B?Q3RGeVVPNjdSbjhDK3p2YjQxZzNzSldVYmpsRFRydmhMYnNnaTI1Qm9DWk01?=
- =?utf-8?B?a0RQSjEvTkYvN3NNUDlBNGQxTHM2ZmJ2QStwOFpjV0F2UDF3S0ZDUXMvUWtW?=
- =?utf-8?B?dk5yQjdJdFhtTHROZStrdElkaHB2dDVMZkdUTmhDS2Z2Q0dTY2xRNGQ5bE9m?=
- =?utf-8?B?QlExa1VVbEtQd3VkcmxLbWE0VG5LK3JDZUM0djBmeFdqa3hOam43SkNvSHZE?=
- =?utf-8?B?SDhoQ3B3b2llTFNqZ00xK2cxdTA2a01zSWU5dTBrRXpZcTlISjMwYlA5dVg5?=
- =?utf-8?Q?POFNF9s1UCngiMZrvW?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6560b525-1080-421c-2837-08df3aed63d9
-X-MS-Exchange-CrossTenant-AuthSource: BN5PR12MB9511.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Nov 2026 03:32:17.1183
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: OLiV4lHQZ+GAny4phyODgTE4rgbZ9vLfvja1N5knsf/DVc57mEFLG5fgn8kRm1nyoOaWh10NAMy3VIyPWArqxg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB647349
-
-Arthur,
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
 
 
-On 11/5/2026 8:14 AM, Arthur Marsh wrote:
-> On a system using an APU (no discrete graphics card):
-> 
-> model name      : AMD A10-6800K APU with Radeon(tm) HD Graphics
-> stepping        : 1
-> microcode       : 0x6001119
-> 
-> I was getting the following, git-bisected back to:
-
-Yeah. Unfortunately this patch introduced a regression. Can you please try below
-patch?
-
-https://lore.kernel.org/linux-iommu/20261103151607.435642-1-jean-christophe@guillain.net/
-
--Vasant
-
+On Wednesday, November 4th, 2026 at 2:52 PM, Kyle Baedke <kylebaedke@proton=
+mail.com> wrote:
+First copy was in html mode this should be in plaintext
+> The GL9750 SD host controller in my laptop is dead after its PCIe slot ha=
+s
+> been powered off and back on through the root port's ACPI power resource.
+> This happens on resume from s2idle, and I can also reproduce it at runtim=
+e
+> with no sleep involved. In both cases the link below the root port never
+> comes up, so the device reads as all-ones. The sdhci errors are a
+> consequence of that. I'm writing to the sdhci maintainers because the
+> device is driven by sdhci-pci-gli, but the failure occurs before the
+> driver can talk to the device.
+>=20
+> =3D=3D System =3D=3D
+>=20
+> =C2=A0 Laptop: =C2=A0 =C2=A0ASUS Vivobook 14 Flip TP3407SA
+> =C2=A0 BIOS: =C2=A0 =C2=A0 =C2=A0TP3407SA.308, 03/05/2026 (the latest ava=
+ilable)
+> =C2=A0 Kernel: =C2=A0 =C2=A07.3.1 (NixOS 26.11), x86_64
+> =C2=A0 Device: =C2=A0 =C2=A00000:2c:00.0 =C2=A0Genesys Logic GL9750 [17a0=
+:9750] rev 1,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0subsystem 1043:202f
+> =C2=A0 Upstream: =C2=A0root port 0000:00:1c.4 (ACPI \_SB.PC00.RP05), link=
+ 2.5GT/s x1
+> =C2=A0 Cmdline: =C2=A0 intel_iommu=3Don iommu=3Dpt pcie_aspm.policy=3Dpow=
+ersave
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0(the relevant parameters)
+> =C2=A0 Sleep: =C2=A0 =C2=A0 /sys/power/mem_sleep =3D [s2idle] deep. Selec=
+ting "deep" (S3)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0hangs the machine and nee=
+ds power to be cut to recover, so
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0s2idle is the only usable=
+ sleep mode.
+>=20
+> The root port's ACPI node has power resources (power_resources_D0 and
+> power_resources_D3hot in sysfs). The endpoint's ACPI node has none.
+>=20
+> Other firmware/kernel messages seen at boot:
+>=20
+> =C2=A0 ACPI: \_SB_.PEPD: Duplicate LPS0 _DSM functions (mask: 0x1)
+> =C2=A0 pci 0000:00:1c.4: mask Replay Timer Timeout Correctable Errors due=
+ to
+> =C2=A0 =C2=A0 =C2=A0 0000:2c:00.0 hardware defect
+>=20
+> =3D=3D Symptom =3D=3D
+>=20
+> After the slot is powered back on, config space reads of the device retur=
+n
+> ffff, the port's Link Status stays 0x1011 (Data Link Layer Link Active =
+=3D 0,
+> not training), and sdhci reports:
+>=20
+> =C2=A0 mmc0: sdhci: Version: 0x0000ffff =C2=A0 (register dump is all 0xff=
+)
+> =C2=A0 mmc0: enable PCI MSI failed, error=3D-22
+> =C2=A0 mmc0: Reset 0x1 never completed.
+> =C2=A0 mmc0: 3.3V regulator output did not become stable
+> =C2=A0 mmc0: Controller never released inhibit bit(s).
+>=20
+> On a healthy boot the port's Link Status is 0x3011.
+>=20
+> =3D=3D Resume trace =3D=3D
+>=20
+> Captured with rtcwake -m mem -s 15 (s2idle), pm_debug_messages=3D1 and
+> dynamic debug enabled for drivers/pci/*, drivers/acpi/power.c and
+> drivers/acpi/device_pm.c:
+>=20
+> =C2=A0 [ =C2=A0145.370215] sdhci-pci 0000:2c:00.0: PCI PM: Suspend power =
+state: D3hot
+> =C2=A0 [ =C2=A0145.406917] ACPI: \_SB_.PC00.RP05.PXP_: ACPI: PM: Power re=
+source turned off
+> =C2=A0 [ =C2=A0145.406948] pcieport 0000:00:1c.4: PCI PM: Suspend power s=
+tate: D3cold
+> =C2=A0 ...
+> =C2=A0 [ =C2=A0159.865842] ACPI: \_SB_.PC00.RP05: PM: Power state change:=
+ D3cold -> D0
+> =C2=A0 [ =C2=A0160.263869] ACPI: \_SB_.PC00.RP05.PXP_: ACPI: PM: Power re=
+source turned on
+> =C2=A0 [ =C2=A0160.264234] ACPI: \_SB_.PC00.RP05: PM: Power state changed=
+ to D0
+> =C2=A0 [ =C2=A0160.264241] pcieport 0000:00:1c.4: power state changed by =
+ACPI to D0
+> =C2=A0 [ =C2=A0160.276459] pcieport 0000:00:1c.4: ready 0ms after power u=
+p D3hot->D0uninitialized
+> =C2=A0 [ =C2=A0160.276866] pcieport 0000:00:1c.4: waiting 100 ms for down=
+stream link, after activation
+> =C2=A0 [ =C2=A0161.297053] pcieport 0000:00:1c.4: Data Link Layer Link Ac=
+tive not set in 100 msec
+> =C2=A0 [ =C2=A0161.303943] sdhci-pci 0000:2c:00.0: restore config 0x3c: 0=
+xffffffff -> 0x000001ff
+> =C2=A0 [ =C2=A0161.321478] mmc0: enable PCI MSI failed, error=3D-22
+> =C2=A0 [ =C2=A0161.421611] mmc0: Reset 0x1 never completed.
+> =C2=A0 [ =C2=A0161.741170] mmc0: 3.3V regulator output did not become sta=
+ble
+>=20
+> The slot was off for about 15 s (145.407 to 160.264), so this is not a
+> short-off-time problem.
+>=20
+> =3D=3D Reproduction without suspend =3D=3D
+>=20
+> From a healthy boot (device alive, no SD card inserted):
+>=20
+> =C2=A0 echo 1 =C2=A0 =C2=A0> /sys/bus/pci/devices/0000:2c:00.0/remove
+> =C2=A0 echo 1 =C2=A0 =C2=A0> /sys/bus/pci/devices/0000:00:1c.4/d3cold_all=
+owed
+> =C2=A0 echo auto > /sys/bus/pci/devices/0000:00:1c.4/power/control
+> =C2=A0 # the root port's power_state reached D3cold after about 2 s
+> =C2=A0 sleep 1
+> =C2=A0 echo on =C2=A0 > /sys/bus/pci/devices/0000:00:1c.4/power/control
+> =C2=A0 # port is D0 again, but its Link Status is 0x1011 (DLActive =3D 0)
+> =C2=A0 echo 1 =C2=A0 =C2=A0> /sys/bus/pci/rescan =C2=A0 =C2=A0 # repeated=
+ once per second for 15 s
+>=20
+> The device never reappears, and Link Status stays 0x1011 for the whole
+> 15 s. This uses only a 1 s off time.
+>=20
+> =3D=3D What I tried =3D=3D
+>=20
+> Suspend variants, each run with rtcwake -m mem -s 15 (s2idle), no SD card
+> inserted. All of these failed on the first cycle:
+>=20
+> =C2=A0 - no changes
+> =C2=A0 - endpoint power/control=3Don
+> =C2=A0 - root port power/control=3Don
+> =C2=A0 - endpoint link/l1_2_aspm and link/l1_2_pcipm set to 0
+> =C2=A0 - endpoint link/l1_aspm, l1_1_aspm, l1_2_aspm, l1_1_pcipm, l1_2_pc=
+ipm
+> =C2=A0 =C2=A0 all set to 0
+> =C2=A0 - endpoint removed before suspend, rescanned after resume
+>=20
+> This one passed 10/10 cycles (device alive 2 s and 8 s after resume, port
+> Link Status 0x3011 each time):
+>=20
+> =C2=A0 - d3cold_allowed=3D0 on both the endpoint and the root port, set j=
+ust
+> =C2=A0 =C2=A0 before suspend and restored to 1 right after resume
+>=20
+> Recovery attempted after a failed resume, with the root port held in D0
+> (power/control=3Don) and the rescan polled for 15 s per stage. None broug=
+ht
+> the device back, and Link Status stayed 0x1011 throughout:
+>=20
+> =C2=A0 - remove + rescan
+> =C2=A0 - secondary bus reset on the root port, then rescan
+> =C2=A0 - Link Disable / enable on the root port, then rescan
+>=20
+> =3D=3D Questions =3D=3D
+>=20
+> 1. Is this a known issue with this device or this platform's slot power-o=
+n
+> =C2=A0 =C2=A0method?
+> 2. What additional tracing would help (ACPI AML debugging, GPIO/pinctrl
+> =C2=A0 =C2=A0state before and after the power resource turns on, anything=
+ else)?
+>=20
+> I can build and test patches on this machine.
+>=20
+> Thanks,
+> Kyle
+>=20
+> Sent with Proton Mail secure email.
