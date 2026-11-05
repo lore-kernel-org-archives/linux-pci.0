@@ -1,48 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793907334;
-	b=wiaFY3WiWxo9ae9Unpz7zcFk/tZto564HaLOXVPrMQbAwIR4XBoYMvn4wL/tPvZ9+9x5
-	 Fa8rZkA2gwH19iOwNfntKHb8awYG49G1OSsn4nXbPNwgBsXzeK8q4BHiOYWcd1VLaCgLf
-	 s1iqHe0vwHlp27Ll8bbRiecHDPM8xZIBR4gjUHS3/yu8MNLoC9kiV8o3hQv5dUe5BFLne
-	 JD7ITPq4kpsRhSpvT5JuwJc2vMsQIvpuSRml0SXflB/Fs4BNnay/WsmVqv0KZewEXhCpA
-	 +XVLcYEJISHXT22zPVoSQW0LzLwcqJUr9Q6R/8E3IB2imO+bXU7GqST9qSqK5NmQeMQ==
+	t=1793907340;
+	b=F0Q5SiGRCjnWQKcqULvfuOxu5jRVrx+HmlW+Dn7ih+WkaZjdBKqyVCMbRa9HU3Fw10UN
+	 dbMYn7REr0Rkrk4c/Zuxi9c2EiRo6J9IcOfmtR5YzEhS9xrOyzGnMYMyc4yUuyBfpmRCK
+	 usFV+Sf6RpxpGdG02BVJ4xydPm5+znCDKt4C9q6HqDAyJ8PpNhXbCqbHqWdG1sbHe9aUk
+	 7k6XDltE40Wcwr9PsY1nXpSOnAniQOkACBPu8UqurdhcjJd7P+9UpQ6Fdl3bJ+9lSEmRS
+	 d6N9F+V/xa3W5Th7JFHnsbVhlPvR91YXl6hZq1Y1qyinELZfu6QgCkfEn7Kvvx7tX/Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793907334;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793907340;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=mQEVulUxsU61vokIx6jmHabvMPsxzjhVa8rHi8fRknI=;
-	b=jr0dFLsRP6yGaJ1AVuDUQlqg51Bruv4GFGGUK8wS7JX2/Bl/5T9Gl+phjqp5RWSOoUq3
-	 DFcTrsjhChCvWGP1IqLBm/DCjxg2t4gRsHNM2aOmEFZZeHkdtIPMzlFZ4bewk8tsZ5C1z
-	 VOPD0Jz1LvfHOUOQoxVfRnT2G9PnD4j0IrZAkKK1m5edHZWDW6Mw/RXUod5QsZlD+yZ1U
-	 c7VEMQsWSbjyJRzH1M2c34BDCNKwSJttxrsWZX768aeStjI90J4d2GnElf11io5ddN+cF
-	 o9v4vGrxVOqHo2SSSGIwwNuI4qu5MsfABnA+WEqGfUuEK5sU0ytmqyJkMTWaV51/Yww==
+	bh=aroUg095/6TmMJBeZjgIoSTvyvzHjk9A05ABR3Cu2L0=;
+	b=UJYN7LLnLwJZvLfW/KYxV8PRtPgy7vB78zPIA8kAzjGoozJC6YSSQ73TWM3agbMdM19g
+	 e1CaPgF8v9n7SGfHa1YdlmM0lm/5e2EW2QJ61Hl/ktSINmETn7gpyU52zm6/hWGzH+F5b
+	 aP57Qaa/i5DUjZGAQCvyAwTACig2uHGf9IUBJiHRCi5JJntJivJXluXKnQIz0CXDp1bxM
+	 9Ba3YMTrvRIrSoPECothAgRo3EzYnaSSIO1RBHwyTt0LY6N4cWOOhBi5XW6mTSVJmzV4Z
+	 TehkJ34VPKt1VtrrnbT8gaxZ4aZ66TA9FfwYRhKDeE69zRPkGUJIu1JrqHHq6E15syA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FJPRbspg;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="aCFaxZX/";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 199CB606F58C;
-	Thu,  5 Nov 2026 19:35:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C92BB606F954;
+	Thu,  5 Nov 2026 19:35:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FJPRbspg
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D02E1F0089E;
-	Thu,  5 Nov 2026 19:35:32 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aCFaxZX/
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F18721F0089F;
+	Thu,  5 Nov 2026 19:35:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793907333;
-	bh=mQEVulUxsU61vokIx6jmHabvMPsxzjhVa8rHi8fRknI=;
+	s=k20260515; t=1793907339;
+	bh=aroUg095/6TmMJBeZjgIoSTvyvzHjk9A05ABR3Cu2L0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=FJPRbspgI9rk/ntnFT1Cz7ur8bIM5VssB3TQzm0TW2aoD1RFCmBj9VlLj4hJBQb4/
-	 3/FDXpGt5pRBVYUQLnI6BUhnjhk0qTTW2X6mOTlAQFnrxBKc9wf8/43w9BURk4upJW
-	 3VNEO+qgIAG0bqC5kDBUhoD0IF2gAAKd+DE2AwVQh6jvyFihiqkp2dzzMcl5jFJ5r0
-	 i2c/y7bCjMI/F9vPg2NyoywBBItlJhG9YfDhWfHMm4cLjcGerM7HRyFf623GBrcyEz
-	 CHLXwj/sU544msIsOKcRsTFRCBV/+2TizsDpFZX0Bbjbrdl++J4WiLF9eJNZcq1/bk
-	 FneIVv4bPKAOw==
-Message-ID: <sashiko-outbox-199939@kernel.org>
+	b=aCFaxZX/pXJMPefHJpV09W2+w61KUBSGqPrg6CbRySAMTOMm4JaDr3tcTx2cKIuLk
+	 JUa1MBKLWQC0ZETuEO66QAJpJgqhbjOyxojVM6ivSCYHHkGowBxttDYjM2eIGpwnEJ
+	 APEOw5JcwA0jVhqdTOcM8vG9gm6Rdg56kD7z39j9iMGTnOcL8jgcdJyaHFK4JxakLN
+	 DPKfZb5NAMv6q/AFJDp3292ogJxaCXKsP0BD31LNcI437rpmGwZLQz5zNGjx6DHRiH
+	 nhsuxsTVQ4aM+It/sbt2s0keUKgj1g/u2y0gxfWVs6QUw26QAPF72OyrzpNfLCn3PY
+	 1jEvLMm8/QQ/A==
+Message-ID: <sashiko-outbox-199942@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2 09/23] proc: let procfs own the seq_file of
- DEFINE_PROC_SHOW_ATTRIBUTE() files
+Subject: Re: [PATCH RESEND v2 12/23] seq_file: add seq_preallocate()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -55,12 +54,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Iwai" <tiwai@suse.de>, linux-ext4@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261104-work-procfs-core-v2-9-76ace653a773@kernel.org>
+In-Reply-To: <20261104-work-procfs-core-v2-12-76ace653a773@kernel.org>
 References: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
- <20261104-work-procfs-core-v2-9-76ace653a773@kernel.org>
+ <20261104-work-procfs-core-v2-12-76ace653a773@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:35:31 +0000
+Date: Thu, 05 Nov 2026 19:35:37 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -70,7 +69,12 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> Declare the show function and let procfs open the seq_file.
+> single_open_size() allocates the buffer itself because it does the
+> single_open() too. A file whose seq_file is opened by somebody else,
+> like procfs does now, needs to do that after the fact. Add
+> seq_preallocate() for that and use it in single_open_size().
+>=20
+> No functional changes.
 >=20
 > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
@@ -78,5 +82,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
-s-core-v2-0-76ace653a773@kernel.org?part=3D9
+s-core-v2-0-76ace653a773@kernel.org?part=3D12
 
