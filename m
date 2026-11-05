@@ -1,56 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793907517;
-	b=JrV2q2pt8bT6SCy3BTKx0H6/pUpDJqOPMmzqVtBIh7d5OtOrveTlZv0kYUiBu++/0QAt
-	 yC15DUeV3nqPjPO0JVfZSp6tp9TfgES1O37xgnFgFnYkGUx1v2bBeqBNjIDVtqNergHbR
-	 PMqAjWbAUDz95qFYEsigHeA7kLpnluZMicVdvNkmDEShiQoAN48JEvKRqUEaKxxS6f4e+
-	 WyY9c21vh3H3xAeTm7UBO3uUzV2UltnQgHFzAUcv82YjSVsck+GBLq5OJwF/ZHpqA5CNt
-	 BtO2SO9kthmZl6Oy0EhrZ32PuLQK8U/qhR3U1dwNkpoKEtviNHmMqykGrl1ukkLPXOQ==
+	t=1793907677;
+	b=VzGTf7i3MUkbf1zzrnUUo2RfzdOg92Qe7jOi4HpqUTod5ZD8wYuf3KDLRTkkOlHsOQWY
+	 ucRcUysFoXQJrh2RwqhTMkUJ9GoT3Fs5pl2Ifax59R7M0Nx5sziB+Pqa1Yznyzp6M32j/
+	 yUsSiQEbvyCZE8I6iIMtq+vCzKt+nYN0+SEN5/xkKovkgdOiUajlR9qGDsbhcAGu1si2K
+	 xB+yjr6qOzBTehpoEZTSkxGF0SdpVp0elCGGGwV5PE3WCuHWI6relKI+i6vjzCconOxeJ
+	 EE5e0vWz+abWBAZOblPxMrEMK4TuGItuSHw1JDVAb75dKA2B4PB2DytjE/3JmnyyBqQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793907517;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=Ail0wxJJaekbARnGqO/Bu3sZ6+e8TGtnnAphFMmqEAo=;
-	b=xOdoO3qA5KEVIKo6k+vGYXoOascFZcQ3FzpzXYblTSUrP7m/LkPVsArPDZXgVNB8rNvX
-	 56XAr1EfEUA0TlLaEbtg0+sKb69lXgMBAe6Zk4yJD6EjaG5kDv6sc/DnrT0uPfqprlrMW
-	 WcQYf83wisPCM18AQpxu4s4/P48IDGMNxBCTeXWRK/Rl9vtDM8rgBrcLFfzHMLRMoAwJG
-	 8h7Un06paE4eFcUUJuiDEnLFfI+APj0QmEQgxJIBHYwe2aQKFhpnkssVEbr08He1O0l3A
-	 k1etitznqpO85X0zsohFjLIbmZannH8qmYvMG9gPZPYaGcS6Mnb6arAL7kYZ20QfgTg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793907677;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=7xOA7/MFtPGvMkCRzH2IZM+Zp+q2YHj/nln8ZoTRBwY=;
+	b=1GBwoZoA4vxp4nmhTaOOC912Ofv+0d/hGZfL0hVv47HNvNlFSNOP6D7F8Pr0FZq26EkN
+	 1fQ5PB/Q1MS9WfHFe+gT4nN3P4yQIRyG7YDbRQenVS2HdX5VIu/dF6I8o3YBRhNnDH+rr
+	 hEestZBI9ySvTgaZFM28WPkRrQr9pyF5C9q2bNJNSdCPZS6S6pJKUZ5RMmHrh55ZzZPyk
+	 W6bX3cJ9GMQwVggm/FzouYEcQWXSWH7vYbuPGKTuK8rrGM5tJDyASU1dJrY08m8VtnE9+
+	 OoR2YT4yemacv9XsB56DDTWpUT+Xt+yYCrbxm41IXjxtR4k8D6wzD2DflWa1JN47+pw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Gv/n5AxX";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PagCPc1K;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7CAA606C8BC
-	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 19:38:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A433260772A9;
+	Thu,  5 Nov 2026 19:41:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Gv/n5AxX
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10BA81F008A1;
-	Thu,  5 Nov 2026 19:38:36 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PagCPc1K
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45CD61F0089F;
+	Thu,  5 Nov 2026 19:41:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793907516;
-	bh=Ail0wxJJaekbARnGqO/Bu3sZ6+e8TGtnnAphFMmqEAo=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=Gv/n5AxXTxoR24fOELK/r0w7IMCpq2VTaCoxBtlmxt5oAZ8Hio8k0L/rxwt+vSyQj
-	 dXVtIpWSrNmBCWRPjgOLhS0rWqKFIiRIwpfBcANX+9jxkCAjHTHJdMWugYgM6OZ84q
-	 Of0qV1OKQycLe2mWct1aJsfZ8FdjGok5NZVjJnH1c9EN2fCzljt3zffH/cIzQ4RH0Z
-	 k+OdXDrv2nia4Us71+hBwRrYxgp4ckFkSMKCx+6XAQf4ze2dSKc935Ees/l1YTZF2J
-	 UnoEuWs/uiqtJcOX6cveGB62Yta5GX3lxKlTz5Fnjf+2MZ1R52PT5OJUJFt3i2u0J+
-	 i4mKmLTYPpVVw==
-Message-ID: <sashiko-outbox-199960@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v17 19/19] cxl: Add KUnit checks for HDM decoder
- unpacking
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Srirangan Madhavan" <smadhavan@nvidia.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261105185917.2667656-20-smadhavan@nvidia.com>
-References: <20261105185917.2667656-1-smadhavan@nvidia.com>
- <20261105185917.2667656-20-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:38:35 +0000
+	s=k20260515; t=1793907677;
+	bh=7xOA7/MFtPGvMkCRzH2IZM+Zp+q2YHj/nln8ZoTRBwY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=PagCPc1KLJLvqSP1ak2XTtOPSr3K9Q5Ap2/nOehIHIEciNiB8UdpA5afRCvNwzLH+
+	 9EgbfaeT61Yqk6r+hWYx7RTy5aa35aam1ySzOL6dKjUN1CicPkZFkQC0ognTOsud0/
+	 4MM1q5mqwz+5na33Q5pThHnO6dPG5NT2b80JCa7/qHdLEIde0gdnEqZQh/rWIVioRP
+	 1NzPcag3YCPc66Mxx95xh4VjFI4uS0+80hwkVqvj8V4u7IuJgk7vtAEA9p/loGt5qi
+	 kszJsuHBMOqZrPhPL/yA8DsE04t1jXsuF+dqDe9tuGl4Ha5HFZtgGrGnsCeFmVPxBq
+	 SowR5BhKazQSQ==
+Date: Thu, 5 Nov 2026 13:41:16 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <kbusch@meta.com>
+Cc: tglx@kernel.org, bhelgaas@google.com, maz@kernel.org, lrizzo@google.com,
+	hch@lst.de, changfengnan@bytedance.com, namjain@linux.microsoft.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org, Keith Busch <kbusch@kernel.org>
+Subject: Re: [PATCH 2/2] PCI/MSI: Implement irq_mask_noflush() for MSI-x
+Message-ID: <20261105194116.GA1553387@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,21 +56,17 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261105182706.3700908-3-kbusch@meta.com>
 
-> Test cxl_hdm_unpack_decoder() without a PCI device or HDM MMIO. Cover
-> range boundaries and overflow, an all-ones base, zero-size and uncommitted
-> decoders, and a locked host-only decoder with 12-way interleave.
->=20
-> Run the checks as a KUnit suite rather than during cxl_test module loadin=
-g,
-> so a failure does not prevent unrelated CXL mock tests from running. An
-> uncommitted decoder has no meaningful target type, so do not check it.
->=20
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+On Thu, Nov 05, 2026 at 10:27:06AM -0800, Keith Busch wrote:
+> From: Keith Busch <kbusch@kernel.org>
+> 
+> Skip the read-back that flushes the MSI-x mask write. Parent domains
+> that mask on behalf of PCI/MSI keep using their own irq_mask().
 
-Sashiko has reviewed this patch and found no issues.
+When you respin it,
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105185917.2667=
-656-1-smadhavan@nvidia.com?part=3D19
-
+s/MSI-x/MSI-X/ to match spec usage
