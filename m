@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793906932;
-	b=JHpkX9VbkZ0bl1NlaFWDCT6yGltysKgvkSxWXiZIJXn8YcMPsuArz5Wuwf0WcGB2TwLC
-	 2xZUE3fQmEn0lbmUlRayGa46TNJVIVipjp0tgS6aS5wqFxXC0r9cZrHQdnuSK3XBlapEK
-	 XOPc9lmWNWBp1ecxy3iwiEfDiR0vnsqYVsx52JpTMs5tAyCCR9FV4JYL3FHdYGQr4DVFC
-	 Sg+RcbjScc5UgNBIIN3uOrdhvXKrNI4iLpi/f98Bsv6JxAyo0L+T+JOlFA94FMQjmOTxS
-	 zOSiSeJI3k/amYtkay52r7IGyUkfO5vnJ8FOZ3neQbbzXPRP+5gZm9y1XOlpTfA4JyA==
+	t=1793906934;
+	b=W4VsGG0YcUFNWt52bEgwnHTTHSXFlWb0c1XUbn0pyIx01bFOJztFqq+U6m/A8HlPAIFx
+	 HLRiXdYs7PsiFpal7Ivo056AECN+dBZvtCasaMdNA4BahSP7SRgfb+nIjPxk0M+1N/NCv
+	 hqE4q5yt+SUiNkxyoQm1gs5epsyc4epSr8raR6GCVIxklVmjj1GR5FnMrLw22UeseKHi4
+	 S3wqhETpkv0ygenGqRIXUwjyTUxXWGJubY1H4i5RbQGzkywbMiZHoyh9AwdQeJH9PMirK
+	 LTD4ZdRH6WS3ol/SK1NZx2MVpvj7QnR1DdhG7jS9nwEU8hz+pcNZSn26ClmfAOwrVyw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793906932;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793906934;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=VSHZyt2HX6jrf2329Ijyz/9CIcWqtdZcAyFYcq/4Bq8=;
-	b=Y13naW4aVV4A6cNCUSpOKaWlg2RPTdoaT4NHZ3dRFzn/dnG/NQ3n8KOsnqaywYt13daV
-	 40y7AVrCMyiHnV4tpFpI1cjHPftj/A6Wf16PEGEA6Mxp0wpHLYTagXqAZYMqkJo5h7nrd
-	 cSxqopi+UuHEaugF4WcHoDNYGiZPvpsnJjz/Yz5l6ygkvsIeqCE1hBvB+VfbcF489lMnr
-	 HEnAARKXU0d4qt9MIDOL/hf6bvcOUXqrSh3oApYTgWbTwpu++EQxfJZxEqkZEKP94YOqg
-	 BlRyO8MgzhwQ2NB6md86EXCHklOFGFuTIbqTexzCKb1CQJ0Fg7heUEwcnREQlTDpzNw==
+	bh=Dl7+6TE3klHc2brN+bZbN2jvo5bJeOK9y0vggKbBQEw=;
+	b=Z+0xtmtj1bzxUfDd1/gPpiFrsuzpUym6eRk65dz/ZPNV9EKKwYlkyrAXI2om9zDUcWh9
+	 TYJOjzaXF862EIaqZhnnjwQoeJRy9S3yD8UJDZgpmnmumd5ehIxPFAb3b+dhw9KvBBp1z
+	 loXTJAUtiZtj0+E84ojRVtB/UxHFKpbeOokXcFT9owVlRUCKV9z1/SrLNjFmOs2nVC2tg
+	 8XHjbxVWhYVNEbtM5D+o9jTbJdO9EBb7sUt9TtCzAhWq+0q5rFL7u5wjSLQ2cZgWgys5h
+	 IamwR4oVCSdBkRkemsMX2LVY6N5J9nGCux+xU5OpOHWrOHb78zl/H9lAOfno5bQ7xFQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="bw/WUc87";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jS5u1c3K;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51774606A331;
-	Thu,  5 Nov 2026 19:28:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63869606D82D;
+	Thu,  5 Nov 2026 19:28:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bw/WUc87
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69BD71F00A1A;
-	Thu,  5 Nov 2026 19:28:50 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jS5u1c3K
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73A841F00919;
+	Thu,  5 Nov 2026 19:28:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793906932;
-	bh=VSHZyt2HX6jrf2329Ijyz/9CIcWqtdZcAyFYcq/4Bq8=;
+	s=k20260515; t=1793906934;
+	bh=Dl7+6TE3klHc2brN+bZbN2jvo5bJeOK9y0vggKbBQEw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bw/WUc87dAK9OgwLDerM/G7Pe9RKageq/S7vyIMIV+dxKfDT/6+AqyOaZ6Fy24Sf5
-	 xZ0+NlTB1ife40KhyEO8/2i3RZt4uYwfQUof6r8FI5lnRq/LcyHfWASkm3/MjWrdRi
-	 BgQ8a/ZYKTrhKL/NQvAtS4X8/cdEouDrtzAKSt2JTd0adgchhl1YlumOBJltoAEeGN
-	 vYbB+LfXceHt3UW6QGLdXHtaAnZDe7rNdeXAjPjeo8fIdhcgFV0G7rwEhhGvDXSfkE
-	 wVgK162apTb1SAAInG0qnJMlwH5s5bUi5ICww4nLneNlWhcy3veuvsSne6hkFWvg7u
-	 jpKMdfeHfDQsw==
-Message-ID: <sashiko-outbox-199865@kernel.org>
+	b=jS5u1c3K7ImMy0Crh/Iyk2SB/21MWY/WEpvgJVP8JqocmivL2vqyijNAqT7WiHjiW
+	 6Ua6xCh3Ij5H7KLcgaQqR8ixyHADZco61udOB+jlfTExiv59U4z+85rPVir6KFx0I1
+	 ObSC7TmsTyRLViUk/SGlKk2mUSVLDinXNea60PUpTBUb3+Z2hC3lUIZS8S2tOJbqUr
+	 AKLtI1OGNz8Uwoag5jqRzukuHqTD25SiOWs27vYk4NAWf9jGI4TCW+iBo9EUmmHNnG
+	 9mVPo4N3xUODMaacXqbONIqxB5Wjo2lV603RHlVY2XtZFGaIEcNZr1t9RV/1OvaXBn
+	 v83WwqOK20reg==
+Message-ID: <sashiko-outbox-199866@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2 02/51] scsi: esas2r: don't copy kernel
- pointers out in EXPRESS_IOCTL_GET_MOD_INFO
+Subject: Re: [PATCH RESEND v2 03/51] ALSA: cs46xx: hand the region to the
+ region proc files
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -55,12 +55,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Iwai" <tiwai@suse.de>, linux-ext4@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261104-work-procfs-bugfixes-v2-2-021c84d852e0@kernel.org>
+In-Reply-To: <20261104-work-procfs-bugfixes-v2-3-021c84d852e0@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
- <20261104-work-procfs-bugfixes-v2-2-021c84d852e0@kernel.org>
+ <20261104-work-procfs-bugfixes-v2-3-021c84d852e0@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:28:50 +0000
+Date: Thu, 05 Nov 2026 19:28:52 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -70,14 +70,13 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> EXPRESS_IOCTL_GET_MOD_INFO fills in the addresses of the adapter, its
-> pci_dev and its Scsi_Host and copies the whole struct back to userspace.
-> Nothing in userspace can do anything with those addresses, and the
-> ioctl is reachable through /proc/scsi/esas2r/ATTONode, which is created
-> with mode 0444. Only pass the host number.
+> snd_cs46xx_proc_init() stores the chip in the private data of the five
+> region entries, but snd_cs46xx_io_read() reads that back as the region,
+> so a read of /proc/asound/cardN/CS46xx_BA0 and friends copies from
+> whatever sits at the region's offset in struct snd_cs46xx instead of
+> the mapped registers. Store the region.
 >=20
-> Fixes: 26780d9e12ed ("[SCSI] esas2r: ATTO Technology ExpressSAS 6G SAS/SA=
-TA RAID Adapter Driver")
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
@@ -85,5 +84,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
-s-bugfixes-v2-0-021c84d852e0@kernel.org?part=3D2
+s-bugfixes-v2-0-021c84d852e0@kernel.org?part=3D3
 
