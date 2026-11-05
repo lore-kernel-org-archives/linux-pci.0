@@ -1,59 +1,120 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.45
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793837615;
-	b=lRxrJi5Y05Yc3Dy57B1IHaDGb3hwS06XTDe0Dyl9GtWPkd8kyXPpRKjzcWr0ULkTS+wZ
-	 sU9W2ifGUwPfSfJzlab019Ej+1NNKrITzx1H/QNotzzaq6KNuVavBsA3uy5ZdbkYGgiHE
-	 deJLvbRxwRKVpEXvAhq+40k+yAmn1+1cniTrs4vPoQ4PHk83vKsGfdzGERlWHKeVPkjot
-	 Jd+wREh+Y9RXGmlaPRgNIO6B09PsWMOAMaaKUicJ6Ulj+5Pih8ntVUcNC4lRliHSp8C+7
-	 du8ottjgM3nb1Mdl7OsdHPqwiHhptXfACeh5OfePE2hV0ikbliK+YuZRS3QelcsO8sQ==
+	t=1793839778;
+	b=DRHDt9iSqR3mTbrCXgnL83zbTQVBb16reH+ujvJIxRp/XJg8nulZq+Wtb2g31QO6tOgY
+	 dsNfNA+aXlzh8upQjvPLHnF//Uqp1LFu4Dz/uuplYBEw41YL16XgMqPbGVhFc/Yp2G4Pq
+	 kTIdFmM9wRz7X0nIYnHYwfUPsxlq3j6TnyYEFsc5tg3YjuqFsGPFGS0U6yWVyf5lmTQk+
+	 o2tuUhCGHPWok0ES9rRE9FQA07YC+9gpsPgYJDtXfT59eaCPP0Hsvsn+w+0f8FcZXBYaJ
+	 kGsthzmoQ2Ero0TUF5hBTBtFz/bFWqMb5kZ3KBrxIKXEC+3psl3TSuGFEdzkZ7u/yBQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793837615;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=orqNvCIr/GD7TIfy/qrX+MEjo8QabahDm8euaMSc6BA=;
-	b=EdVz1pUdlnOMOODZQ1UIypLPwPfyg9zls5dTr5hT9wA2m6ettm/4KKBOC5NnFk2WAJbq
-	 e1pV/+jkQ7YKA4ACGv2mTDCW33HksPUlcbRuqNVG0IWFsU04bYJ0ur0D+Ig4OuxE0/zu7
-	 TGHtRgSoLRj3fUOMGxnGDIlXebsc/2FuoPezNiCHCcWH+iSllQMxyaHM2BAzp28U7ATMq
-	 GwmlmnxwWktUOxFYja/Gt7pdlp9dDNesXb/fNGuY11+6aNQwJNN2rYwJWc7bkgUy4yJVB
-	 M46naarMZu1gV6QrL2oWmWHj/rSBFSUHGEwAUyrI41Za3FthnohHEGLDsnke21TqxTg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793839778;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=LRIt6wL5JukeI7CutNHrB30kNWGfRXMCU9CjLoUJZrc=;
+	b=Fmxasf6GdBTXwOyaY7YofElOdZPuJoIOEhXcPsuvVGJg38A//r7nzI/eh/r+lK9BFalP
+	 parRxUhFK+ICgwlhdgQDArV0+jlia/nz9nezIW9rQVrrSV/sX7v5S66y8T5re7vzLBYg5
+	 aEYL846bssVgArVIWK+c/SUAmfMKcffUE9pIqXjWI23jHLEo34NbQ3WTuDOZyK6bGdWCs
+	 gulGFZaPHUcLv6RRsygxzYizE4PF5Ae0oKtfHU5ylxDFDIKhA4rDRMS/7GFrhHINYwOq/
+	 9uu+umQrzhbCnsNoaeFxW9i7WB2ywSg08noYzNssw/u03S9Lu5RSJcUQVfTuAOsZUpQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JT5VLO7c;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=none header.from=ziepe.ca;
+	spf=pass smtp.mailfrom=ziepe.ca;
+	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=Vrr7HJ5Z;
+	arc=none smtp.remote-ip=209.85.222.45
+Received: from mail-ua1-f45.google.com (mail-ua1-f45.google.com [209.85.222.45])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAD43606A333;
-	Thu,  5 Nov 2026 00:13:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E0E6606A32F
+	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 00:49:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8E0E6606A32F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JT5VLO7c
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BADC1F00919;
-	Thu,  5 Nov 2026 00:13:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793837614;
-	bh=orqNvCIr/GD7TIfy/qrX+MEjo8QabahDm8euaMSc6BA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=JT5VLO7cllg7mmJOzhQ5x2Ody9G1mMMBNmw2jsxCje8IhTlkJVfJAk3hlf/pZznu8
-	 5FIsPH/ftaR4HBsCCHA2COCVqaXqkO50Fz0hbeKMHJbjmKjo8rblvMjeXToTy0FLwL
-	 XiKh/AwUxBshDk8b3WpuC77CzNb3pz5qx0PbxH2OgWDubJDqLYeLV6j7aQYOvd6rZN
-	 fy4nNviJ1u0gblzJK7MrFOr0ml1JyfeetmZXbQFHtt1aQuhnm+14OEmF0MnHe3nzJw
-	 mjGb1GvvQhU3QMNcrMgnBDPgC7+BvN/pLC4K3tIaCfhl4j1gU7gjVRy41Htog3pARf
-	 8bLfx9TaGkOBA==
-Date: Wed, 4 Nov 2026 18:13:33 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Nicolin Chen <nicolinc@nvidia.com>
-Cc: joro@8bytes.org, will@kernel.org, robin.murphy@arm.com,
-	"Rafael J. Wysocki" <rafael@kernel.org>, lenb@kernel.org,
-	bhelgaas@google.com, alex@shazbot.org, jgg@nvidia.com,
-	kevin.tian@intel.com, baolu.lu@linux.intel.com,
-	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-	patches@lists.linux.dev, pjaroszynski@nvidia.com, vsethi@nvidia.com,
-	etzhao1900@gmail.com, Danny Gonzalez <digonzal@google.com>
-Subject: Re: [PATCH v8 5/5] PCI: Suspend iommu function prior to resetting a
- device
-Message-ID: <20261105001333.GA1478880@bhelgaas>
+	dkim=pass (2048-bit key, unprotected) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=Vrr7HJ5Z
+Received: by mail-ua1-f45.google.com with SMTP id a1e0cc1a2514c-9903fde8db8so344165241.2
+        for <linux-pci@vger.kernel.org>; Wed, 04 Nov 2026 16:49:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1793839776; x=1794444576; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=LRIt6wL5JukeI7CutNHrB30kNWGfRXMCU9CjLoUJZrc=;
+        b=Vrr7HJ5ZqhVHrUH4gQ1nhUYTf6eI4jAFUgOXuIroG+8vYSC8wq9FMKyRpAS0X3S8Ia
+         X1WvaOw/i4Kvigi7NNddiUqbBVXB0bl8fUKtHXcRmXnwjafymJGOic0zOT0I6oSflaLk
+         NOUATYSym2MCrlG4yos53f9Oevky9c0aEBqEq6qkq82K/dxjsJuVvv0TmlNCrPGnNsvZ
+         FAiUD7z3B7GJMVLpYW2SE1rjX1GAd8E6xXhVi7LPD3Ev25HhFl5bCAGXS/2HTyk1k0Wu
+         WdSBZyZbyw2N/RIxEj2XlnVmCNcH65D4QX9iezm0KOHSHS4RBEb3WjnO1Olgkp9XzRqW
+         1OLQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793839776; x=1794444576;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=LRIt6wL5JukeI7CutNHrB30kNWGfRXMCU9CjLoUJZrc=;
+        b=Izjpo9yh8H0u9OFx4iTokvKzD1gX+B/Y2P2mX7k8HOYnsW0gl68n8UyEY2BTdvF4LG
+         WZDuV38zGWcX+BWXYv0k1Tga5fkT2wxSRhNxMXGoADkRhF8M9gnwD+SZY8RFYXPd4JUb
+         l5rBnFqb8ZjFo6sSxYVzus0nNj31fNbHmUSLvdTUCqltBQ5WgD6Whg+ml1N87eELr4zA
+         nzFiIwgtIAPxxJbipCucKBYo8AizRsePMvHOzlAHEnPncxwYsz5nwTiWraF2X9NwbQxY
+         cyBmBpea5xWQZeRwpEHwM/PL/ASLgLiKWZQQ8JEnwVjb/9a2nBZlXT6d4aZQrVde7t3Z
+         OdEg==
+X-Forwarded-Encrypted: i=1; AKwUvByijAx3iE2zWe66nzX77MXMv4oduVOZ6VstdqK2MbI3ESNzZk90Rwx1pkO+6IYlpVMvVTlNntVeWk0=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/fS2rbSFXUqmIAnZpKqHkFrcaSZ66DbuDWygYfnbqjBiL8M01H
+	9R8uQAuozbcTgWHMm9y3YxQzy9GUIazQACh7lj5dYCJBlQjeWx3K2Q3AoAwJfRFQcfM=
+X-Gm-Gg: AYBFou32Iu7uWYHk2XSJau5bs70fVBewr7mTeNLzOQhyKNT5nEldsn/lpPWOjCWkG3Y
+	JaHZ8WIO5+zrXte7BerBTuyKH4ASgcgUIJfThG8d1NO1xXrNMda+Lv2IGQ5U947k1ZjoYxKoF29
+	iQQKmhlcTFB4XUsR+Ey7/dAsJDsC8/RpTdZxmB62Lp/oP/cNk5rJmc7qYo3rg58DsP24JuCIOja
+	ebH/PM6h1LCCXISK12LAWeJEtNIhLRU7fDT0OQozcG/cIb5gVpe0PzOT1JinwEBy58W3eSCLZJT
+	CnyFjFH2tOaRg0XlRgKdnVrDAmdMXRoW989OL9hWxgYIYV41cA8ks8HPn2NrirYk+hsLu4mQgoK
+	a9En724eS+jUiqwYNvrA0UUtsNoGROur3hlFpuIuHV47fgenyH+geMa9ERRLCln5i16RhGuvpod
+	I2CUED5X8K1qAHdfr74j85hunyhZjMOzRjOSNTPiBL18Gwgpi6ilSYOTVt/u6ZzFgGRMoKdoFu3
+	R932SDvyd8Q+JQ1lMYv+ne0bqvNlddHytNB/sEMDMk4joYIQS//PArpPkq0WE8k0yVY1m7tdwbB
+	2hsXjbtLmhEl0Ph/ZF0F8T7UAuysx4mUO6D1uD8LGnslgHkkJToYRzCZmfv7jV8flznGssKpi6/
+	XOOOzfiB0Yh4=
+X-Received: by 2002:a05:6102:5126:b0:7cc:56a:58e0 with SMTP id ada2fe7eead31-7d0725e16d4mr6016853137.21.1793839776242;
+        Wed, 04 Nov 2026 16:49:36 -0800 (PST)
+Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-998d9a9ca31sm3266318241.10.2026.11.04.16.49.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Nov 2026 16:49:35 -0800 (PST)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1xOlfb-00000000cqL-0257;
+	Wed, 04 Nov 2026 20:49:35 -0400
+Date: Wed, 4 Nov 2026 20:49:34 -0400
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Jacob Pan <jacob.pan@linux.microsoft.com>
+Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+	iommu@lists.linux.dev, Alex Williamson <alex@shazbot.org>,
+	Alexey Kardashevskiy <aik@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Joerg Roedel <joro@8bytes.org>, Jonathan Cameron <jic23@kernel.org>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Krishna Reddy <vdumpa@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+	Nicolin Chen <nicolinc@nvidia.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Samuel Ortiz <sameo@rivosinc.com>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Steven Price <steven.price@arm.com>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>,
+	Thierry Reding <thierry.reding@kernel.org>,
+	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+	Xu Yilun <yilun.xu@linux.intel.com>, kvm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-coco@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v8 12/15] iommufd/viommu: Allow PCI TSM backends to
+ provide vIOMMU operations
+Message-ID: <20261105004934.GE3889730@ziepe.ca>
+References: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
+ <20261104161632.3547423-13-aneesh.kumar@kernel.org>
+ <20261104152351.00002565@linux.microsoft.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -65,42 +126,30 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <auvHyrZmMXLTFyz9@nvidia.com>
+In-Reply-To: <20261104152351.00002565@linux.microsoft.com>
 
-On Wed, Nov 04, 2026 at 04:03:22PM -0800, Nicolin Chen wrote:
-> On Wed, Nov 04, 2026 at 05:55:00PM -0600, Bjorn Helgaas wrote:
-> > On Mon, Dec 15, 2025 at 01:42:20PM -0800, Nicolin Chen wrote:
-> > > @@ -4885,10 +4919,20 @@ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
-> > >  		return -ENOTTY;
-> > >  	}
-> > >  
-> > > +	rc = pci_dev_reset_iommu_prepare(dev);
-> > > +	if (rc) {
-> > > +		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", rc);
-> > > +		return rc;
-> > > +	}
-> > 
-> > Unlike the other reset functions, this one calls
-> > pci_dev_reset_iommu_prepare() even when probe==true, i.e., we don't
-> > want to actually perform the reset, we just want to know whether the
-> > reset method might work.
-> > 
-> > It's at least unnecessary to call pci_dev_reset_iommu_prepare() and
-> > pci_dev_reset_iommu_done() in that case, and maybe even problematic
-> > because the pci_init_reset_methods() probe happens from
-> > pci_init_capabilities(), which is pretty early during PCI enumeration
-> > of the device.
-> > 
-> > I know this has already been merged as f5b16b802174 ("PCI: Suspend
-> > iommu function prior to resetting a device"), and I'm not sure whether
-> > we should do anything about it.  I wonder if we should just skip the
-> > prepare/done when probe==true?
-> 
-> I've posted a fix for a few times actually. The latest one was
-> posted yesterday after a split:
-> https://lore.kernel.org/linux-iommu/c66d5221a8e4356316d4f614c8584a80dc9d71b6.1793729707.git.nicolinc@nvidia.com/
+On Wed, Nov 04, 2026 at 03:23:51PM -0800, Jacob Pan wrote:
 
-Well, that's embarrassing ;)
+> I am thinking MSHV/pKVM can register an assignment-only tsm_dev to
+> leverage this? Could PCI/TSM support this role without device-security?
 
-I acked the PCI patches there on the assumption that they'll go via
-the IOMMU tree since the interesting bits are there.
+It is certainly not what TSM was originally imagined for, but with our
+new arrangement, yah maybe so?
+
+TSM basically just becomes this weird overlay driver on the PCI device
+that does stuff. Some of the stuff it might do:
+ - Register an attestation subsystem device to do SPDM
+ - Register to allow iommufd to create a viommu
+ - Some status sysfs ?
+ - ??
+
+It all seems separable and composable to me, so if you don't want to
+launch an attestation subsystem device because there is no SPDM then I
+think that might be OK?
+
+Another option would be to somehow obtain the viommu from the kvm file
+descriptor and rely on the fd to handle the module pinning/etc. I
+don't know how to do that nicely with the way the modules work
+though..
+
+Jason
