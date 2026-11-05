@@ -1,48 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793906997;
-	b=Qw5wOQ/kcSv9dANOZ48H7kUe3j1sEqf9sW8UCC+jzShQIr6Iq/WRYK9yAV5oCBIGYidJ
-	 hi8UJX1ZG+o4ggIpTI0H1UcuBN/sQY573JwRsykz2OCutq+9i1/1orcppkTwl/O91IRPE
-	 SCZAVG9XuxuG/KDT322ZcBarcI87Uj7SttkIxgKogsv6AS5DcCNarC93CFyHUD8XDGAVd
-	 o6pdAg/HOJINpXNH9J3HJB4nX1gR5CkQRx6V/L2/1Fe+BB0oBZD1EC2FA8zZbdDplHN5d
-	 NZ2KSN0XKZV7H8lRzf9P6sZAz8IXsIQxM4aF76LHjFGEC0ZicBACEJ8MjdT+6RQwSGA==
+	t=1793907004;
+	b=q/rOt2p1xcGTt+qw/jJIXEnasQDw4sGfyFqkhy0do5AJKxIcAX6bB/cwqieWAQ/vu0+s
+	 9+lPa8Z42FuMNWypAPZ3BweexnMCfFBbxfwi1IKJOpD7th6PHa2Fe0+cV/ylcfaju3ZB9
+	 liF3I4Lymnt1kH4x81g6dyPEXEzvr8/AAX7LS6PKe+jVziLKzq13c8TWjedV5o+/DHmff
+	 Dw3z4Kjv2kLmC6E8CZS0cWNxScVZBYadfMBEkcJ02cPi70tY8snZOzWyVQjvLGEF+/nS9
+	 P6oXkR4B/nzvMLz/oiXE+e9g/OoPP+P8oNYsm7ekuD4ZooK7GlPoVIRl6p/yYYULUyw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793906997;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793907004;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=zcV+i6POJg+RrsF6YRGTS13AdWK24kXKpMKXUTzyEiA=;
-	b=OFFnrDprIY87Ln0zwhKf8OPKEhRwDUMrI50F4A5Mmc0hSlgm+SJ4KiltQQ4afcZg3Bxx
-	 dVsmtbF+zxlnvo9nhZjQJb7vDqm5eSoTlWrvVw+etPRSf00RdLYXFSxQt9bWJX4BALgiF
-	 xpTpad5axxkSeTP3cVy/17QRGuWxjfItxuzTOmlTXdF1FBzbmBkV7etNTcPomk2Ti4f0R
-	 4EJY0dSvy67qOz3eSYQzsBC7yM4gra5ZiJdwbZCdpxPHVYc9RVD2rqzkX2fWVeq3bREEl
-	 M+/HTcd1oxY32TBRpYaFjaTYqns7euDhi/PE1QpcOuJkee9hnv9FJ425UAygzAweKWw==
+	bh=bT7cdtBA3g4ZjNdxCADmBOubkwzRkbH+TQ0hoqO6tiY=;
+	b=fabEpdKLLxh6bMqs/EpdPyd2tRq/1uXeRE3/Cth9yk08k1snbqxEEzc9pVofI/qEtgm8
+	 7gawkova9bRviP5d30RkSbZ74KNlGSvj6b0sKX+Xtt69ZJly3pMGXPDyPbRKRdKhN1eyG
+	 jURGt6RAC5pkSUKeoOWmrC+cAxXUgMbBeFCE/UQ8UtC+1+7Y4Cj9h61KDDcnHJrjXLIBo
+	 m1nnm0CCCD8uVxlY8sU8uW9QUzh7FttL2Mtt08NuzXx/chOxIQABsktq7FeoujbAApKc1
+	 05dPqJ0+5op+6/bu0nPxPrH7axV7Q4PFEWZCs9CHaFOuzJ2cM9jMQOAwlNwsaZ5BL6A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hkIp2rMW;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZFkFtso3;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64BDC608363F;
-	Thu,  5 Nov 2026 19:29:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFC9D60A5BDA;
+	Thu,  5 Nov 2026 19:30:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hkIp2rMW
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5E721F00A1A;
-	Thu,  5 Nov 2026 19:29:54 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZFkFtso3
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 551AC1F00A17;
+	Thu,  5 Nov 2026 19:30:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793906996;
-	bh=zcV+i6POJg+RrsF6YRGTS13AdWK24kXKpMKXUTzyEiA=;
+	s=k20260515; t=1793907003;
+	bh=bT7cdtBA3g4ZjNdxCADmBOubkwzRkbH+TQ0hoqO6tiY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hkIp2rMWDRL8aX8FKreCHiJ+F7j4BKfzXmJc6PZ0eOL44V9Bx9anECeImDIf3eWQZ
-	 CQsJtA+hT+ZN+BsjMDC+4Myk7YdWXtDiWz3ec+ntbhm3ExMby94rd/l77DkKdkzhbp
-	 M8ZtpbEVGaVz0Fx3Tr1w0TZ9yJ69+1Fn6/egkNAAHbcoKwUUjIp8R30wCoxDFTv9XV
-	 Mj2kudWFsx5lEkvVc1J1kV40ftb635ECGnH4cjLmWAO2ghIVDG6bpdIpREJUYlfZPR
-	 qAFtvcqf+3EGNnSIARNIkc7P/WD2CkFmNpfiuMmYjjTmUT9PU8swjMoXDeK1ufevJ/
-	 yOPbsNDq5GkUw==
-Message-ID: <sashiko-outbox-199896@kernel.org>
+	b=ZFkFtso3C96AnTUnqfat70nSvPWig/+mlWw5M0UhnuCp5QJxgxNGQrORhQlrQkJ/y
+	 hC3IYuBkO3IUK23KYNgrztoNyDYmU4MR+D9gL2C8VjvK7vkMSvevOunoGmfWD0JNml
+	 vsF9OIiPC1HM3aRMk6Mbu6p74Dq5+9CvuKroZEovRvm/WILib1QicWaO1x2FWXQ/Gh
+	 4URR7CizufYYPnmywgHmy0LbSoLzZeP9pgnBeUiBSkH3rjb0o92yRGCn9Np6O+kLCX
+	 Go0H2HcVBVV+M9zicMMj4k9ffVIUnGBdI26ePeddA9J3Se+pxAShijM1YnU9ctvKg+
+	 O8G91Qj2o2VRQ==
+Message-ID: <sashiko-outbox-199899@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2 33/51] selftests/proc: check a /proc listing
- while entries come and go
+Subject: Re: [PATCH RESEND v2 36/51] proc: don't let NOMMU map procfs files
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -55,12 +54,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Iwai" <tiwai@suse.de>, linux-ext4@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261104-work-procfs-bugfixes-v2-33-021c84d852e0@kernel.org>
+In-Reply-To: <20261104-work-procfs-bugfixes-v2-36-021c84d852e0@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
- <20261104-work-procfs-bugfixes-v2-33-021c84d852e0@kernel.org>
+ <20261104-work-procfs-bugfixes-v2-36-021c84d852e0@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:29:54 +0000
+Date: Thu, 05 Nov 2026 19:30:00 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -70,27 +69,32 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> List /proc/net/dev_snmp6 of a new network namespace while a tun device
-> comes and goes:
+> Every procfs file has a ->mmap since commit 786d7e1612f0 ("Fix
+> rmmod/read/write races in /proc entries"), whether the entry has a
+> ->proc_mmap or not. On NOMMU validate_mmap_request() takes that to mean
+> the file can be mapped. procfs has no ->mmap_capabilities so a regular
+> file gets NOMMU_MAP_COPY, and a private mapping never calls ->mmap at
+> all. Instead do_mmap() takes nommu_region_sem for writing and
+> do_mmap_private() reads the file into the copy with kernel_read().
 >=20
-> - with a buffer that holds the dots and "lo", add a device whose name
->   sorts first, finish the listing: "lo" is listed once
+> Reading /proc/maps takes nommu_region_sem as well:
 >=20
-> - with that device added and a buffer that holds the dots and it,
->   remove it, finish the listing: "lo" is still listed
+>   mmap(NULL, 4096, PROT_READ, MAP_PRIVATE, open("/proc/maps", O_RDONLY), =
+0)
 >=20
-> - with that device added, stall getdents64() on a userfaultfd page
->   while it writes the device's entry, remove the device, finish the
->   listing: "lo" is still listed
+>   do_mmap()                          // down_write(&nommu_region_sem)
+>   -> do_mmap_private()
+>      -> kernel_read()
+> [ ... ]
 >=20
-> All three fail without the fix, the first lists "lo" twice, the other
-> two not at all.
->=20
+> Reported-by: Chris Mason <mason@kernel.org>
+> Fixes: 786d7e1612f0 ("Fix rmmod/read/write races in /proc entries")
+> Cc: stable@vger.kernel.org
 > Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
-s-bugfixes-v2-0-021c84d852e0@kernel.org?part=3D33
+s-bugfixes-v2-0-021c84d852e0@kernel.org?part=3D36
 
