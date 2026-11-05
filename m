@@ -1,129 +1,111 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.217.44
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.181
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793898126;
-	b=RF9eXIa8Dp50gTbpa9yII9bqR9jAy3sVdfSNFKLW6bG/t85qW6oS2QQt/XuyobnstdmH
-	 c8J510schCfzjo0d7PdzxsPhXMGkLfxAuu8j1kDBjHC+6hwEtmwkgP/Yef3JaprG+vLYB
-	 OR+Jg4+4G20nfl/nImi8LcTsjAlJHvMS7m6iWN5BwCsD8ykkLx7sdHWiO4TT/jLOV/Dq8
-	 OBmDuunxbI5MNv4oxEju/FGc94jjcMFrl6tph5dtCfAnNSbCcwyAYhVTkKD5bBNEqhrdF
-	 6BzzLMP9dq7kb5hFKS2GhV7BxUvmO1MTVTjiEaHIuddLOPxqYwuGuo3CgqDMdqGYQLw==
+	t=1793898335;
+	b=mAfr4KY1qSQPk/a/i6g8uA6FHFtwU4+chQ3ZUJl0SWU1dz1n9eiYGVNGtutFDWaOikJ/
+	 ywCqHmDd7LuY8OUe3snT/oztMzZzl576QWeODFu2x1D6cxPlfFgygcINhYz5qs/YxldcW
+	 U31+zlMWQh1p8cxzVM1DF2xM9DoaUC8X1kiFHFDVLQwHm7ucoiA8iV5DBTrDTHjL2bqy8
+	 peROyfAx7jWyDaTsrbYtAziBXM/he4wBlpLMgpv6XOFEUHYaAgG6cNHuwq8kKMNBt+1WO
+	 MrmwgEHSrNSRNFBBYQ7/pgToOtBnvkuGz0OWy6WuI6WQhyg31WWfd/zrcainrtWo4WQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793898126;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793898335;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
 	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=E1zVtHMFtNJFSrWULrvIbtVVqDsU9/hCEAvj/Fm4m+Y=;
-	b=2bjMYKEaST3quJhq+97K2yJEyFK7r117pY25UpgQwj2PaVDHRp1EJpk3iWhxrlxPnWpK
-	 qo+GOZI3a2ygiuLnQC+mQrxjzxUJH5Cgr2tnuSkyxI9A62UK+ZZvXOD8mrt41Ic9ih/Ku
-	 HKt2WRc9rLrRgdBCghvscLn29rfwq/6NGgDCHIWwnMjml+aIrhx28RcOniJKJBTSwP0FM
-	 dqxIhWArmSuPeC4w1Bw6IpuJheU9mTebtOJM32IyfrrfU2cxktjT5vtRXHSCT1ByT1WYb
-	 mR95vD5g8Pkqt4VSzLd+8V8Ru3ljWDS23FP4jc0w8/757eXUSUoMGhxKy0ZL2t5CcfA==
+	bh=t7Mrcemi56BF5iayGoRjCtdHcIwbWskinGPPufbe/aA=;
+	b=L+w3p2YIoNE1HkR8VCRDPBMJbJNY0BDt2lp7MyqOgdKdSnAPoRLvs6ZtvfxPK/97yA5Q
+	 60ZzhCqk2IYUy/+tJuP1TllCUTsEMhTDa0KczizBgv9gPiEBl04COhdleoejb/rNlTqU6
+	 q5cGspKbTyIvWTGM4wmvh4dyVhjGsu29WI+Ohyq/38ThNulUuhy/K9CL3D/ONWnR0rm0r
+	 dkF07tBps2cTYWFdHOSPl4NTI25G8I8RfwMZYT4P2ALhE+x94JO2NXrqlFAgrpbBhm0Vk
+	 NzlWIgXVw4HXOd5EuHm1lxy+Rd7y/M0KHT8velYr0u2NQdgjUntFV/CDOxYzg5sgidw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=ziepe.ca;
-	spf=pass smtp.mailfrom=ziepe.ca;
-	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b="UT/D8aSt";
-	arc=none smtp.remote-ip=209.85.217.44
-Received: from mail-vs1-f44.google.com (mail-vs1-f44.google.com [209.85.217.44])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ezhGUhXo;
+	arc=none smtp.remote-ip=74.125.82.181
+Received: from mail-dy1-f181.google.com (mail-dy1-f181.google.com [74.125.82.181])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 137D4606A33A
-	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 17:02:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 137D4606A33A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98245606D808
+	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 17:05:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 98245606D808
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=UT/D8aSt
-Received: by mail-vs1-f44.google.com with SMTP id ada2fe7eead31-7c3b6e8225dso1351511137.2
-        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2026 09:02:05 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ezhGUhXo
+Received: by mail-dy1-f181.google.com with SMTP id 5a478bee46e88-3645f0f3fcdso3516056eec.0
+        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2026 09:05:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1793898125; x=1794502925; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793898335; x=1794503135; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=E1zVtHMFtNJFSrWULrvIbtVVqDsU9/hCEAvj/Fm4m+Y=;
-        b=UT/D8aStYb7dPEp/Z1PTR1znD76pBm0Z1nPlORuFlgDbzwSX/aHEaMIKgxREgduhMs
-         7b184i+9WuyWU3kP4ECdvxL5tqJCBp+sE58xftFr07RVMuYSe2D0AHX1L8wkHJuC4lcP
-         6d7IEtulMVc64pTkfBc/dFTnsuyCXdHVpF//V/K2Xgp9mPmSNI4/p7tLi2H5V42yljeY
-         GtO1ChQ2JjqDeaKC4B9biWxL+z3aUuPX/f+FWBrD4U/FW4Q80YjAWhMK/Up13oskn2O3
-         3V6ObKXKjzYpPS1tL8mHYVexmV3sD/kfJUj7ToJWfvaytzTBimAL6fO0bssiuf+AQf9l
-         4B+A==
+        bh=t7Mrcemi56BF5iayGoRjCtdHcIwbWskinGPPufbe/aA=;
+        b=ezhGUhXoIUl09y6+rx0VThMrADfNJzLtbjELvheIq2XUjEVn+F/n+Ri2C53TV9L6Aq
+         JdGhkEmCnwmkPVTv0OB6x5RGwGBQJHUjt1KyKJv1eSBurgKo52RA3J8/QRIyxJZsDOQU
+         n7s5HLJdofzUUsrlUP5HhN1OEHjO1pTWgNUtwsTp5+pkRYp1fI+C+uqlY+LxQRirvNrb
+         Ex3MFhTRMHWMTtME2TIEuo7EsT/3ZplABIXud7NOWlPeo0lDAdVbld/IOwaCZ8vfz4uj
+         z22wAGLVFJBUWinFMtheNWfoQbFjMbEjptQEjYgl4R/mPdYwQwSpcnETlWlj/Aj3CrCr
+         m0dQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793898125; x=1794502925;
+        d=1e100.net; s=20260707; t=1793898335; x=1794503135;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=E1zVtHMFtNJFSrWULrvIbtVVqDsU9/hCEAvj/Fm4m+Y=;
-        b=zQWIznN30EAGNDZKf9uRhlstD17GIwZ8YmywFMFt45cbNdPBCctLpdecPTFIe8BC2S
-         2njL212CNhWHlnKTp0mp9qBKwGcqieMLYmaUNCkjGCtFajmUGWzcqJHL/V6uPszHZ8mJ
-         S6mssNct1sSzyO66tNsqRKwZoKVP1ewosrAsHkaEZVgS1BC2Fy8Ntn6KR0HZRufYd4gy
-         GMQ2ZO2l9R3oZlM0dmpjyv4+op5uigurOLPPqeN++tyAdl0hVfGXwnykdQYZQN6PXC19
-         z7Gsk/RfV/DHa4vqUv8pKskmcIRFbZ9buOHH0AQzXFeaK/6cmkMSFqKmu7zFNjAKODKx
-         DMOg==
-X-Forwarded-Encrypted: i=1; AKwUvBwT4lxbjRvADz6yLFdxRAPfwXW8awAOzlcjJHFbKSdbAeJFmE4VHeJ7P2+CL7f75EygDyTbM+bYiuM=@vger.kernel.org
-X-Gm-Message-State: APuU4Z8anP+PLoxAp6pkTcXauF2R+oiia/4G7Lr0mKaNLbso+PP1A1sP
-	MOOdILeJifpX0UgV209RVixGo+n+K18R19DmMeY5mXt3a8YQ6mXEe6SkEDfbxKOdtlk=
-X-Gm-Gg: AYBFou0dCrj4HIcjQLB2LPJOBsCCgnkJubpwtZ6WEdFRP19UkmjVHGpoPqh+eHyQXSL
-	annuwOKq33j4AKN6cjt1izSc7hKQWSeF1MrTY+rnRfuVxg3zStBIKUf0heh57VMv/n3LEeIkUxS
-	rxglNRwe/b1pSjzR5JyfYZI4tqSk+hdE9KMafU6Ju7P1Yb/82SIFE4WWPYGst7jwSl2mNunrpT2
-	B0K6IZ4pmbBKbqJp4T3UfD3mYj8A251uHmA2sEvt1hv+bUaD0rZQer9QgpzGRgqnelAcVCKrsXu
-	PvQD55AZEq5rmlEYcSWWAjNuvpHB9M8bMltDf8L343yI/hTR+zyPVv18/cSdLdx3xMXSVl/RLru
-	o9WK7badKS3ImnTjwYwOvBd4sAH2xyVvZXjTaq6n6KlfU/gTbH0KpX8B0CcmcXJMZFDKPSk4akH
-	EkrQft8ppfGfRFTeVADGXPniQtvQ5ndCPujoIcwfYnh4BN5IqL8qCd0/VosEWbz5CTQVAsf7lG1
-	Lb3hZbZVaHc/fvk9OpFbGR0lfaCsE2YG9NTpoYTAqpOfLu2kV/zoO0x1Da+YpkFYx/KqhMTsY4L
-	owtSqECeb1o0gGVflyVwaoqw7j8Z92TDEmR+eTjoAwIxqbzwJ2kPfe9lWL6a39WbzineIjh/hwt
-	hx+wHNuLp7Jgh+QogqWpj84bgpzQpHQ0=
-X-Received: by 2002:a05:6102:2c1b:b0:7cc:2bb7:1335 with SMTP id ada2fe7eead31-7d2a16c7f35mr120203137.33.1793898124846;
-        Thu, 05 Nov 2026 09:02:04 -0800 (PST)
-Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
-        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-7d26fd3e101sm4619225137.3.2026.11.05.09.02.04
+        bh=t7Mrcemi56BF5iayGoRjCtdHcIwbWskinGPPufbe/aA=;
+        b=bWfeAp+t6cMpyl1Z8jFRXSK5sRh12Qaysvg5ngtqmaYjgKozU4LmTbqWwdtxMm6SiN
+         +uE1RftwLY9MftFCi+1Hjg53UzAJWJzW8zIvey5QnyLquBKWVnwNWoraA/hcs1GClao1
+         fqzBPzwbGevN18V9sZnLuvdK8S0SqE012oZ2Njk6XWgRezAzthECllvya72mDrZURrP8
+         ZIUtkSawa54/EmYu4zy22LNvT/5amNEesf0IBIuwXbp3o8wsBh3+4Qb6h/5/NxGxLuzG
+         UR9HTSoDrq9zz2saWpF6PVukI6TyucXXD/+vNTgkhyqTrxJ+VEGGnLTaa6aXOoxAVqI1
+         nR/Q==
+X-Forwarded-Encrypted: i=1; AKwUvBw0pH2Zhl9Yjt9jCRtmZm7E2AALjbjnb9ASuIKb2+wtG4T3q6bhePNxlDVNGO67BVY2GrXSsXPzbcA=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8NQoAaN6SjmGK9G0rqxvLRIn5m5EgTjLsYaVPYU/6IhGr+sD8g
+	YAOKINfVH36dKrXFzYqDF5jfF/OfypwPpI61fK+wlsXLUlWKBQ5WzjGu
+X-Gm-Gg: AYBFou1m+77JwUmGxb92EoX7TsRJBKX51ZOW1abPwysZfpQNw+YiHp0iSsef38UsfxS
+	h+lhIVeJ7xUZdkRcE70QYbuvnV/3QfUdvQAv7NG66m4WkB0U48yv66jQk//KSSO+ElRiB39zsR1
+	Lek3sHITa2zsrKCLDNOtdkSHPgVBKR7o2uKZDQ0I4N7vPXouKhujUf+zrRYEb6lW7rhn/tyQvai
+	5MxPuDh1VNPIOd4b/Znr12L5E1cvkpWtAMVDzMj56WeTVOOMgLL8UpiQQ1k0PHbT4e3xxmS9Ilh
+	nCKSR2ekl3CKgh6/vFwEIo6UOPwJEMc8OodXZPfFV0qPeYNN2CPTDm+zoZOdPQ6bb3x7EmdqHqd
+	YyQgRhByBXUpIu+Nh48/Y9aBiauXKsRK/tW6+ulenRmwcdKunAxGOdxzx2ptRhIFPkdpU5IDym0
+	fxIqy5aqe/BqiEVHtrEA7YGwrW9QEy/YR5Op7lJDYp57Oc5Qd84ztCXQ4v5mRowHr3sRcFNazpu
+	BDk4nP88SFH8y6lx+OG78anMtsjJ+zQyi654s9doMcEAxLI+zXx9GV9jL/RzHj8SrQYB+OYW0Rs
+	GYC3l26yeViKP8wUgDZyXM7MQMTmHHS533TojHv+UeQerVlKORpS+7DUg6ph2IEfuokRsdymfGv
+	oYTRw6RrGfWX0+YI=
+X-Received: by 2002:a05:7300:fa0d:b0:36d:7feb:8bd3 with SMTP id 5a478bee46e88-36d7feb8e1amr5835338eec.11.1793898334471;
+        Thu, 05 Nov 2026 09:05:34 -0800 (PST)
+Received: from google.com ([2a00:79e0:2ebe:8:c8f4:b7d9:252f:4483])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36ca3989670sm23943795eec.25.2026.11.05.09.05.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Nov 2026 09:02:04 -0800 (PST)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xP0qh-0000000388I-28Zd;
-	Thu, 05 Nov 2026 13:02:03 -0400
-Date: Thu, 5 Nov 2026 13:02:03 -0400
-From: Jason Gunthorpe <jgg@ziepe.ca>
+        Thu, 05 Nov 2026 09:05:33 -0800 (PST)
+Date: Thu, 5 Nov 2026 09:05:29 -0800
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
 To: Leon Romanovsky <leon@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev
-Subject: Re: [PATCH 10/17] driver core: Expose device trust authorization
- through sysfs
-Message-ID: <20261105170203.GC663069@ziepe.ca>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, Andrew Lunn <andrew@lunn.ch>, 
+	Heiner Kallweit <hkallweit1@gmail.com>, Russell King <linux@armlinux.org.uk>, 
+	"David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, 
+	Paolo Abeni <pabeni@redhat.com>, Johannes Berg <johannes@sipsolutions.net>, 
+	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Randy Dunlap <rdunlap@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	"Joerg Roedel (AMD)" <joro@8bytes.org>, Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>, 
+	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>, 
+	Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>, 
+	Lu Baolu <baolu.lu@linux.intel.com>, Johan Hovold <johan@kernel.org>, 
+	Eric Dumazet <edumazet@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Nipun Gupta <nipun.gupta@amd.com>, 
+	Nikhil Agarwal <nikhil.agarwal@amd.com>, Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>, 
+	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev, linux-input@vger.kernel.org, 
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org, 
+	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-pci@vger.kernel.org, iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH 02/17] Input: serio - attach manual drivers through the
+ driver core
+Message-ID: <auy2plYVi723Qt42@google.com>
 References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
- <20261105-device-trust-core-v1-10-1e536825b4eb@nvidia.com>
+ <20261105-device-trust-core-v1-2-1e536825b4eb@nvidia.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -135,48 +117,68 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261105-device-trust-core-v1-10-1e536825b4eb@nvidia.com>
+In-Reply-To: <20261105-device-trust-core-v1-2-1e536825b4eb@nvidia.com>
 
-On Thu, Nov 05, 2026 at 01:42:23PM +0200, Leon Romanovsky wrote:
-> +		(RW) The requested trust policy for the device. The initial
-> +		value may be selected by the bus before the device is
-> +		registered; otherwise it is "default". The policy is resolved
-> +		to an active trust level before the device is probed.
-> +
-> +		The values are "default", "disabled", "adversary", and
-> +		"full". "default" lets the bus select the active trust level.
-> +		"disabled" prevents a functional driver from binding.
+On Thu, Nov 05, 2026 at 01:42:15PM +0200, Leon Romanovsky wrote:
+> From: Leon Romanovsky <leonro@nvidia.com>
+> 
+> Manual serio binding connects a driver before driver core can admit the
+> device. A rejected binding therefore arrives after functional setup.
+> 
+> Keep the port ID check and use device_driver_attach() for the existing bus
+> probe path. Driver core then serializes admission and handles probe failure
+> before publishing the binding.
+> 
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+> ---
+>  drivers/input/serio/serio.c | 24 +++---------------------
+>  1 file changed, 3 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/input/serio/serio.c b/drivers/input/serio/serio.c
+> index 54dd26249b027..604440244c1ca 100644
+> --- a/drivers/input/serio/serio.c
+> +++ b/drivers/input/serio/serio.c
+> @@ -81,28 +81,10 @@ static int serio_match_port(const struct serio_device_id *ids, struct serio *ser
+>  
+>  static int serio_bind_driver(struct serio *serio, struct serio_driver *drv)
+>  {
+> -	int error;
+> -
+> -	if (serio_match_port(drv->id_table, serio)) {
+> -
+> -		serio->dev.driver = &drv->driver;
+> -		if (serio_connect_driver(serio, drv)) {
+> -			serio->dev.driver = NULL;
+> -			return -ENODEV;
+> -		}
+> +	if (!serio_match_port(drv->id_table, serio))
+> +		return 0;
+>  
+> -		error = device_bind_driver(&serio->dev);
+> -		if (error) {
+> -			dev_warn(&serio->dev,
+> -				 "device_bind_driver() failed for %s (%s) and %s, error: %d\n",
+> -				 serio->phys, serio->name,
+> -				 drv->description, error);
+> -			serio_disconnect_driver(serio);
+> -			serio->dev.driver = NULL;
+> -			return error;
+> -		}
+> -	}
+> -	return 0;
+> +	return device_driver_attach(&drv->driver, &serio->dev);
 
-For making this more general:
+I am not sure how safe it is, serio (and gameport) have pretty elaborate
+structure and locking rules because they can recurse into themselves (to
+support case of Synaptics touch-pads with pass-through PS/2 ports).
 
-"disabled" prevents a driver from binding and informs the kernel to
-provide containment of the device. For example a PCIe device should be
-unable to DMA to memory.
+But this call is for user-initiated probing anyways, I am not sure if it
+even needs "trust" handling.
 
-> +		"adversary" requests operation with the restrictions that the
-> +		bus and DMA layers can enforce for a potentially malicious
-> +		device; it does not isolate DMA by itself. "full" requests
-> +		normal operation.
+... And I even thinking if we really need to keep these custom
+attributes or if I can rip them out in the future ...
 
+Thanks.
 
-"adversary" informs the kernel that the userspace wants to opt into
-any security defenses the kernel may have to restrict and further
-validate interactions with the device. This may have a performance or
-functional cost compared to "full". As an example the DMA API and
-IOMMU layers will avoid exposing unrelated nearby memory to the device
-during DMA.
-
-> +		Successful resolution to an allowed level commits policy
-> +		and operating level before driver or DMA setup. Both remain
-
-"before driver startup"
-
-> +		fixed for the device object's lifetime, including through
-> +		failed or deferred probes, unbind, reset, and driver reload.
-> +		Later binds must resolve to the same level, including when
-> +		the policy is "default". A resolver error or disabled result
-> +		before commitment leaves the policy's writability unchanged.
-
-Not sure what "resolver error" is.
-
-Jason
+-- 
+Dmitry
