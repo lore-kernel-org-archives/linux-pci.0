@@ -1,112 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.180
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=67.231.145.42
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793910900;
-	b=4JgOWyiMcTnv04b3uYbNOZdoTTOCiI9sIrhU7EjIXTTFsPrWuv21Zfnq5oK98Nd378nb
-	 D45OXAVz+Y712gOd4SIYdDW4hRTtbEwl1mLM063d4XYoaze9u+4NNTKsooDwm5uJj4UYH
-	 uZRR+kxkiadMVIjXrYHmfZH+S3/jyT18tzONk70Ocw5NM/f+C7b7uHIFGPxq2SRw3ye/u
-	 Z5tK2rHCDZoKjKOyiaQgpi+Jro1EdYKAOR7ysF1C1kgKyBgs6edq8QX/g2Dxy2vn8nZl8
-	 0sNon4CQdXd5BmkXpkLf8aAHBAtSU5/lpEXs4Ph+VOAr0RRbbKi/GyqRWe8TGF+xzcw==
+	t=1793912550;
+	b=p/LUuLskTDNQox3BH7XtUZaurJvFF/E6BRT0T22I9tFswRqrLA22yHjc1iRXt348WTaN
+	 +s8nr+YBWfEOi+bRJ5dsOjVqU5ulBepAl2kUeia1VnKEsAnSZthtq/6Na0pgxTzJFEZKE
+	 hi58Bq1xFh3yyZZPQYAgO2XED3eu86hQjSqMORW4OTaJgJFI1CFqW0OxmYbKL6yldZAmP
+	 yNa5W+4s8Lus5ssplPrZb+6mfdBuMK9Rgj5pfxfRCP/bn3WUtD1rMkeg5coCuWyeGlLH2
+	 eNk3X8+3hjsiDgro5rqCYTo4TTDYZyiEaOsWSAvrOecpQqhk6bQqVKBNExW7I9n4ApQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793910900;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=aFjl/l4WKV+VfugNVUlnSUSxj2ZFcfM53muFdv6vcfQ=;
-	b=i4mCApgieNH6HqrMLdxRabS80mK//EHFE8Qjuyp4wzqpOCgSUdkRjKk9m5i+bFBwvzPf
-	 Zarw/qYfSKL73/uAcHyq0twT1glx/L1P4gj08DlSNrP3ZSV0gHNXMSmKb5gS3cra9FwN/
-	 6YZPbYao5FKWH2DFlxEM6c4SS1Dc6166OMnqMSFewd1vPtGD7XIE0rfLD5hMkEJEmxN5X
-	 6ve6qGvLhvJ3xaDvrUrt3NvntBPT66SW72qGAM/JkGhChksU49RcCuwG+kSJayN4cBaBJ
-	 W4yv8Y1w1lNmKtvU9Bv6Nl+59lyRztYF873UaVDsvrK6DimMmRo2Rr6K0r0gdPbHxRQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793912550;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:From:
+	 To:CC:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding:X-FB-Internal:Content-Type:
+	 X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Info:
+	 X-Authority-Analysis:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-Virus-Version;
+	bh=Nh/PNfZJ+4poa+/4MlOKZcsiZSQUMnjoP1xeoBQtGHs=;
+	b=oA3G7j5MZXMrACPXYLMXFih7xz/WiUGTnvInfIfpKnE5sfd96LjBdQ7ThDbQMsdd3+4/
+	 Apc1CkOBQSXPHbzKbbQQ0vSd7JW+Il7yRU2pXjrVggyoOx/1Fq8Mt7UH0Srei229RbV4F
+	 K0C7tYN6Dsd8+DcFNleRt9cVp1vKYlM8blyvmWrwTg3CG68uL78Mj9pwPl519/k/lJr5P
+	 TaW5sxORE6pURMlaioN6OfaU+UlEfCznRyqOh93KFmNCP8d0wTc8hHRUHlYPVnaI69FIe
+	 S9rICnGW8VIC+/x6J9sd/3Q5Yy91MgE2WwbeSJgFSGFA3noCMcCasGAq3F2lF2lvb1Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=tfDV8RqH;
-	arc=none smtp.remote-ip=74.125.82.180
-Received: from mail-dy1-f180.google.com (mail-dy1-f180.google.com [74.125.82.180])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=meta.com;
+	spf=pass smtp.mailfrom=meta.com;
+	dkim=pass header.d=meta.com header.i=@meta.com header.a=rsa-sha256 header.s=pps82601-s2048-2026-q3 header.b="NhbQ/54N";
+	arc=none smtp.remote-ip=67.231.145.42
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA484606A32D
-	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 20:34:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BA484606A32D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC27E606A31B
+	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 21:02:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EC27E606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=tfDV8RqH
-Received: by mail-dy1-f180.google.com with SMTP id 5a478bee46e88-353804b591eso4388096eec.0
-        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2026 12:34:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793910899; x=1794515699; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=aFjl/l4WKV+VfugNVUlnSUSxj2ZFcfM53muFdv6vcfQ=;
-        b=tfDV8RqHdxq2Tir67Fgi3R8YmRMnkFni198pbJyN+2f/wlgyg1u3H/zAskp5NHkOv7
-         tIdkAuAZ8WUJ1kMmFVB+y6fHOz8B/caj8wD6aThvegmX02BzNu06iJykZNQp0y6aCkds
-         RlikDnWVU951ugzrT3mYdlzvFKlHh7U4jsRYSXIG1h4+jf8Ji6Bx4VcBvQSsJCCbdeY9
-         mB7Z2NGEfuJN8Celqb7oNC5peWi2IHdFiN3NSUJbZlwldHAE4GnOhIkhY+aC2WxclROa
-         S4gSdge+AsM35XlqkfzkRHJ1/+Vy2cjQlMpoMljhOELSER57fCOwoNKU+WxKYNt0B3OE
-         B7JQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793910899; x=1794515699;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=aFjl/l4WKV+VfugNVUlnSUSxj2ZFcfM53muFdv6vcfQ=;
-        b=surC1zTW5cQD23PB9P4JCCR2mYLyoAZk7IxxOfN/ISrZMX19os0BI8YpTvb9qdETof
-         /vGkpBNu4bI2S8KtjJB4lqmJGKLUnsx+VwxJod2P0X7bxO1Tp0d/NSEtipnr6aXflHtc
-         UZeKzq+luNk4zEgmoRdg7mrb+X2YUX+9MTWEdSiZTu0xxHm6CwsGDxAH7ozInt4rW1W/
-         lehsBOR9wo0qevbObtUGmMm7Pwu0kzg2vj3BwN+efQHSbdu3C64PJx7InELnHMlZ7JQm
-         Pq2tJGogq+cLWah9+ps79eGIKgHumh/u855+X6q2YdziV7YZSTuSexAE+HnkylQgDRQR
-         l7UQ==
-X-Forwarded-Encrypted: i=1; AKwUvBw14JmXC0UF5hkn/QASsy/UAwH5tbY44/8jRcOnw32aHN6eoXzca5XC2bR0JnzirSdS/Sreks8W/zs=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/KEH7Q8E53bYCipa0eSGqsOe4ZBrK6CYJiIMFzRSPsABkv6V9e
-	sPTCn7QTd5Vn506e1pr7UBLi/OHWA5MtEbrBZGahbQ0lqayHLH7458g+
-X-Gm-Gg: AYBFou1nQKlCsT597oX8I212nTsnqgaa07xSWg7sPtonLhH3AmXY4ejHQzX7qBPuI5S
-	Ctg9CpRWINA7BsJ0K7SMK1ieXZUDUpL1yIqJJNw8omzrmXBZdvkab0+ABYuS7nbjMRxfOqtPM7N
-	QAuVxuvMWBIYtYhg8nQnwbRox3DsZxWxwlY8l4T18epvey0lt3V8WV5b2D0xDvQ0toQ6uGpzUGG
-	muwBvskD4GIJmxh6/gHf2OfidvD6mEzb5ANyujxxOHxsqzIU9JTHnteIdbdPjxHBXsimeuueG7y
-	cZJyB5K4kIp2xoi0pBhnBo5KteNe8W/zgoOYBm+bgc3INDqPSZ2VuUT8UwnxUvaCtWtNAgK9nrO
-	P9akRTV6uQZbe/usJStsiRPIbHwZmWMrB/5gy/DJYS3oIxEvYME0jbxVhOPQKNWbh9QZFdLcOSX
-	dokr7mfWpk9g8e8BO6UYsyzBNEbbW8LZWQBJk3SZaOUCPnaNEbs2XvzHHeqSacir+azez8jz6dD
-	jrfvS+kxeCHCiq8PwmswRfbtzUYdCKMYWCM6Zq/v3R1jStM4WNNrCJ+wKPqC1qGxTzFFwvbA+bk
-	pQOly1Aq/dlCa5KQuNgTxCqOa+dHtkqfwx+6W3GGfigH6GIUDfeI+9PZTZfwc/FZRcs03TQ=
-X-Received: by 2002:a05:701b:2050:20b0:166:5552:780a with SMTP id a92af1059eb24-1b25d31e5a2mr163714c88.8.1793910898553;
-        Thu, 05 Nov 2026 12:34:58 -0800 (PST)
-Received: from google.com ([2a00:79e0:2ebe:8:c8f4:b7d9:252f:4483])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36f722ed274sm649631eec.18.2026.11.05.12.34.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Nov 2026 12:34:57 -0800 (PST)
-Date: Thu, 5 Nov 2026 12:34:53 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, Andrew Lunn <andrew@lunn.ch>, 
-	Heiner Kallweit <hkallweit1@gmail.com>, Russell King <linux@armlinux.org.uk>, 
-	"David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, 
-	Paolo Abeni <pabeni@redhat.com>, Johannes Berg <johannes@sipsolutions.net>, 
-	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Randy Dunlap <rdunlap@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	"Joerg Roedel (AMD)" <joro@8bytes.org>, Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>, 
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>, 
-	Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>, 
-	Lu Baolu <baolu.lu@linux.intel.com>, Johan Hovold <johan@kernel.org>, 
-	Eric Dumazet <edumazet@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Nipun Gupta <nipun.gupta@amd.com>, 
-	Nikhil Agarwal <nikhil.agarwal@amd.com>, Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>, 
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev, linux-input@vger.kernel.org, 
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org, 
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-pci@vger.kernel.org, iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH 02/17] Input: serio - attach manual drivers through the
- driver core
-Message-ID: <auzno3uoL5Pfojfl@google.com>
-References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
- <20261105-device-trust-core-v1-2-1e536825b4eb@nvidia.com>
- <auy2plYVi723Qt42@google.com>
- <20261105191940.GI8298@unreal>
+	dkim=pass (2048-bit key, unprotected) header.d=meta.com header.i=@meta.com header.a=rsa-sha256 header.s=pps82601-s2048-2026-q3 header.b=NhbQ/54N
+Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A5L2Khx794341
+	for <linux-pci@vger.kernel.org>; Thu, 5 Nov 2026 13:02:29 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=pps82601-s2048-2026-q3; bh=Nh/PNfZJ+
+	4poa+/4MlOKZcsiZSQUMnjoP1xeoBQtGHs=; b=NhbQ/54NdkTTqYzT4zKGaqa7N
+	dhTKqyKik6osO2OHCwsfUDXZFjj4MqYM5fXkmun8tkYV/ZC5LQDO+dyLtl1EbKg2
+	N8JnOoJkUZLrke5Qhl5583kono1icC+lqrvfvXcmhY3JmN6ZFuESMgwKfbID/605
+	IyJq1dMeTthVcA8T2oWljZgka4S5bTN0fCQXYL7wbVFfsXUfcpMcqgIJrWYmFt8E
+	FAXUvpcC24oXo7698TpgfhL9JZCyedCik8Z4Em/INNUmJoD/3dZCpf9b+s5wtPnd
+	QltcTIoHANEErB5/MN5sfOtSmjnuru6qmuF5o6Y/VfHq8aMFpZUBuEmC7imxg==
+Received: from maileast.thefacebook.com ([163.114.135.16])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4hrb4ehejf-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2026 13:02:28 -0800 (PST)
+Received: from twshared9449.02.snb2.facebook.com (2620:10d:c0a8:1b::8e35) by
+ mail.thefacebook.com (2620:10d:c0a9:6f::237c) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.2.2562.56; Thu, 5 Nov 2026 21:02:27 +0000
+Received: by devvm9890.eag0.facebook.com (Postfix, from userid 139328)
+	id 247EB540BD2E; Thu,  5 Nov 2026 13:02:15 -0800 (PST)
+From: Jennifer Chan <jenniferchan@meta.com>
+To: <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Jennifer Chan
+	<jenniferchan@meta.com>, <stable@vger.kernel.org>
+Subject: [PATCH] PCI: Add d3cold delay quirk for NVIDIA LR10 NVSwitch
+Date: Thu, 5 Nov 2026 12:10:10 -0800
+Message-ID: <20261105201010.2297078-1-jenniferchan@meta.com>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -116,79 +76,87 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261105191940.GI8298@unreal>
+Content-Transfer-Encoding: quoted-printable
+X-FB-Internal: Safe
+Content-Type: text/plain
+X-Proofpoint-GUID: dk-j0afleBmw2WV0FOTsr9RgJlYMwrvg
+X-Proofpoint-ORIG-GUID: dk-j0afleBmw2WV0FOTsr9RgJlYMwrvg
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA1MDA4MyBTYWx0ZWRfX3/3bXDYToD/e
+ PUzp0r0O2YFkgkc4512ENK/ew6gK3bq0RezaCWAZsqqO33H3NVieUcVtkj61uE+sgLt9dDxz9+e
+ CiExFFqCf9mkx1DVe0HMtDw+HJO9kow=
+X-Authority-Analysis: v=2.4 cv=DJ8acCNb c=1 sm=1 tr=0 ts=6aeceee5 cx=c_pps
+ a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
+ a=zJRp6_cAMcgA:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
+ a=tpM8CJlwf7uhpglF1g9U:22 a=VwQbUJbxAAAA:8 a=VabnemYjAAAA:8
+ a=AQQVFG2uCnKRw25fG-IA:9 a=gKebqoRLp9LExxC7YDUY:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA1MDA4MyBTYWx0ZWRfX33tjhHSPTEUb
+ QuH3pFBVnYeIJqgASwOrLMe0pqyMF9oO5FtV0q5dd63QJssJs2J5GhZ/kiwose4DTbidO/hAhjf
+ UL9V2/JxB69NllNNLEZ85ItLG+ZH2Re7iSUzkG9fV/F+TUyxVA+ntMp7BmXIMe/MuBNaiBDQNgr
+ SHPUbw9ih/Z1E456kUFxyWFtCAxTFLvdQ8a5SLAbw6vWumvZ6CnvWVNmtZcl34RCcs0qbF+KBJB
+ pwTRFEP6oZ7/PhCO0MNYq5pmA26sRjo/MblrukwUuf2CEvL55mwRsEbmjlzOrlESsgs7DT4ewkg
+ 91PbFZjs4DtvqxJnRj4zx/P0M1G70IThD28mFhejsrvXGCFiVSw9jAiyKDn3MVZ5WJGJZjcObQk
+ v8r8ha78ORlxpha9YWSd/wZ6Atm8kMUdmaeWLNEh91ZC2Tpd8ih+HJ0e/wYfYLU5Dpoq0tlwt48
+ 1yDrSpnjLNX4ZuEhBvw==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-05_05,2026-11-04_01,2025-10-01_01
 
-On Thu, Nov 05, 2026 at 09:19:40PM +0200, Leon Romanovsky wrote:
-> On Thu, Nov 05, 2026 at 09:05:29AM -0800, Dmitry Torokhov wrote:
-> > On Thu, Nov 05, 2026 at 01:42:15PM +0200, Leon Romanovsky wrote:
-> > > From: Leon Romanovsky <leonro@nvidia.com>
-> > > 
-> > > Manual serio binding connects a driver before driver core can admit the
-> > > device. A rejected binding therefore arrives after functional setup.
-> > > 
-> > > Keep the port ID check and use device_driver_attach() for the existing bus
-> > > probe path. Driver core then serializes admission and handles probe failure
-> > > before publishing the binding.
-> > > 
-> > > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
-> > > ---
-> > >  drivers/input/serio/serio.c | 24 +++---------------------
-> > >  1 file changed, 3 insertions(+), 21 deletions(-)
-> > > 
-> > > diff --git a/drivers/input/serio/serio.c b/drivers/input/serio/serio.c
-> > > index 54dd26249b027..604440244c1ca 100644
-> > > --- a/drivers/input/serio/serio.c
-> > > +++ b/drivers/input/serio/serio.c
-> > > @@ -81,28 +81,10 @@ static int serio_match_port(const struct serio_device_id *ids, struct serio *ser
-> > >  
-> > >  static int serio_bind_driver(struct serio *serio, struct serio_driver *drv)
-> > >  {
-> > > -	int error;
-> > > -
-> > > -	if (serio_match_port(drv->id_table, serio)) {
-> > > -
-> > > -		serio->dev.driver = &drv->driver;
-> > > -		if (serio_connect_driver(serio, drv)) {
-> > > -			serio->dev.driver = NULL;
-> > > -			return -ENODEV;
-> > > -		}
-> > > +	if (!serio_match_port(drv->id_table, serio))
-> > > +		return 0;
-> > >  
-> > > -		error = device_bind_driver(&serio->dev);
-> > > -		if (error) {
-> > > -			dev_warn(&serio->dev,
-> > > -				 "device_bind_driver() failed for %s (%s) and %s, error: %d\n",
-> > > -				 serio->phys, serio->name,
-> > > -				 drv->description, error);
-> > > -			serio_disconnect_driver(serio);
-> > > -			serio->dev.driver = NULL;
-> > > -			return error;
-> > > -		}
-> > > -	}
-> > > -	return 0;
-> > > +	return device_driver_attach(&drv->driver, &serio->dev);
-> > 
-> > I am not sure how safe it is, serio (and gameport) have pretty elaborate
-> > structure and locking rules because they can recurse into themselves (to
-> > support case of Synaptics touch-pads with pass-through PS/2 ports).
-> > 
-> > But this call is for user-initiated probing anyways, I am not sure if it
-> > even needs "trust" handling.
-> 
-> This patch does not change the locking; the lock was already held on paths such
-> as the rescan path. This change makes that explicit.
+On a Supermicro HGX A100 system (X12DGO-6), each of the six LR10
+NVSwitches (10de:1af1) sits alone behind a PLX PEX 8725 (10b5:8725)
+downstream port.  "nvidia-smi -r" resets all GPUs: NVML unbinds the
+switches from the nvidia-nvswitch driver, resets each one through sysfs
+(reset_method "bus", a Secondary Bus Reset of its port) and binds them
+again.  The PCI core waits 100 ms after the link comes back, the switch
+answers config reads and the reset completes.  When nvidia-nvswitch then
+probes the switches, one fails in pci_enable_device() with
 
-Does this enforce synchronous probing?
+  Unable to change power state from D3cold to D0, device inaccessible
 
-Anyway, I would like to get rid of this special probing in serio core.
-Given that the code path is only triggered by explicit user request I do
-not believe we need to worry about supporting trust notion here, so
-please drop it from the series.
+four others fail to initialize with -EIO, and the NVSwitch fabric does
+not come back.
 
-Thanks.
+The same systems recover every time on a kernel that sleeps 1 s after
+each Secondary Bus Reset, as pci_reset_secondary_bus() did before commit
+ac91e6980563 ("PCI: Unify delay handling for reset and resume").  Adding
+a 1 s sleep before the link wait on the PEX 8725 ports of the failing
+kernel fixes it too.  Config reads already succeed at that point, so
+pci_dev_wait() does not cover it, and the switch's state there is not
+known.
 
--- 
-Dmitry
+Give LR10 a 1 s d3cold_delay, so that pci_bridge_wait_for_secondary_bus()
+waits 1 s after the downstream link comes up before the switch is used.
+This adds 1 s to each LR10 reset (about 6 s to an "nvidia-smi -r" on
+these systems) and to D3cold resume of its port.  Resets issued further
+up the hierarchy keep the default delay.
+
+Fixes: ac91e6980563 ("PCI: Unify delay handling for reset and resume")
+Cc: stable@vger.kernel.org
+Signed-off-by: Jennifer Chan <jenniferchan@meta.com>
+---
+ drivers/pci/quirks.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 7f1f47ea2ee4..4a84095e736f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -6569,12 +6569,14 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_TOSHIBA, 0x=
+0220, of_pci_make_dev_node);
+  * after reset recovery or resume from D3cold:
+  *
+  * VideoPropulsion (aka Genroco) Torrent QN16e MPEG QAM Modulator
++ * NVIDIA LR10 NVSwitch (HGX A100)
+  */
+ static void pci_fixup_d3cold_delay_1sec(struct pci_dev *pdev)
+ {
+ 	pdev->d3cold_delay =3D 1000;
+ }
+ DECLARE_PCI_FIXUP_FINAL(0x5555, 0x0004, pci_fixup_d3cold_delay_1sec);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, 0x1af1, pci_fixup_d3cold_d=
+elay_1sec);
+=20
+ #ifdef CONFIG_PCIEAER
+ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
+--=20
+2.53.0-Meta
+
