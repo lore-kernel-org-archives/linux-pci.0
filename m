@@ -1,57 +1,93 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793878976;
-	b=2y/YY/yf/5hLcD1QeJImfHKbu3l2uh52YtBh4JcspsbfWlUri/1YMwXjS9k9zKsyaLk6
-	 O3GQBkVAEgOxl7blyQ2IoGykW6qb/DOYliQX3kp0rtcIr08O1ihfkLlFAgfpagOOR25cq
-	 i9Y9PeRFuFBxokeikTDfDmnI6u/lxTWuZRN7O10iYlnNnwxmj8w3Gs5GhlQeUz1eo3qiV
-	 UGI6IR7tMxWH5RWQRRh8FXBwag9U6DIBspRBctD64j5AqEhlaTpKjhuCra5sD6qp+t9fi
-	 BxmVT4cG2TwQ8xdDN66zu13XfxifTGBQVm/qcXKnGpJ+tdyDHJd199imZ0+20WpXaPg==
+	t=1793878962;
+	b=wT/XadydeQeBuFy7DsD0UiYk3ADtVruFucXZiTw6VfhKGJQc4b8RhxTetjPod8inJKx3
+	 NWljKmjdq4aAIuog0RcsVVb9fyaX6/kJha+rNFZ58j6Tz+vfT6dZ27JlGkqhHltY2cCRa
+	 KHV0hc+vsIJ/brgRIRZXV49BxwXbwZvtpt7uY+oWRy9X5oXG+IF1rRoSXn27F5h79gyhm
+	 oBPpv2tHMv/65ZtR04lyf6sBubcpBhs0LiXLhmHDxSkvIkFCL5L9RRKN82aOpIR0OXSo3
+	 Z4YJDbmp8CaP8RZB3RY6JXsYeTZi4epCLA5pj1cKswX0j3NNnYPVunio6Qg7S5o1hDQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793878976;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=Vsz4UyjlY+BuhJV95kmX0T3HN6I+F+RhqHGin7cX1WU=;
-	b=cTNoNvIUhxA0XZ9dCDYKrVvAe5ZfRQvwDIixEkU0zaAD48bWdP1n0wFuSWHKWjXuzBeZ
-	 NVpasdN7fiOZJoiOp8XdvVvfNBa4hWoAHpgiKbo1L0wbbCTxp59IVlZ5Ir1gWgZ5bZQ87
-	 290rjHIeosxWHfHhqbwYy7x7RXxQW4ZeisxYK4YqfvdMSa+U5pwHYrxJQnLs2KrXO7hH9
-	 SlHMmhyNpcig3CHRNwncM9eSFvHckgXdaepHHP6gV1+88RJTPp3R+Fm8Nmnfznen6gP5H
-	 nyZVaVRIHfRrm+LcyL7j5UouOW9TU1hsvQAB+DjN+bBnPynxHDqJodo4Ol+2KW1ELjQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793878962;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
+	 Content-Transfer-Encoding;
+	bh=q/Qxk6NeWhoD49CZMGNhUQK3Ye1Uhy5tudrbI2veMqg=;
+	b=yb/G7HuF7PCveQrq8XpHxXMQP5cLmcZM+Q3BnW7nJRmA4zqX5m4dcTxPMTlQGlU5HYSV
+	 es5zV4yyq74IaL2xbFJQVFQf4xKMsJk/npuFmFjXyd3006lSFBvWe+ciKblzLJdK1UUC3
+	 XX9SXL01B0jHXHIHUuOrfTjD9xMo+q6Cvui1fLaho2K/WXV53sbCz/1Yi3vrm3v2liPVC
+	 bReLypLFxz+79BjztdX1ur4Tn8diBK5c2OqVvgf0VoSekFbGoZGYr13I5kkmEJ/pduYoZ
+	 dAoEZqGM9qHjdvY6ov+eMRzezNgpryq0lw/aSbD9b4b6AN+TD8wQKFBdkbNWwE4WMtw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AlFQJRRE;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UW7yjrIx;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21422606EE9E;
-	Thu,  5 Nov 2026 11:42:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26D1E606A337;
+	Thu,  5 Nov 2026 11:42:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AlFQJRRE
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 701911F00A16;
-	Thu,  5 Nov 2026 11:42:55 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UW7yjrIx
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E152E1F000C1;
+	Thu,  5 Nov 2026 11:42:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793878975;
-	bh=Vsz4UyjlY+BuhJV95kmX0T3HN6I+F+RhqHGin7cX1WU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=AlFQJRRErFY6obqRNasqLcRdnazNttCrLasBkZYvMcuQxdkEH5D/Blt//Y7K/9g8E
-	 4CR6pMqK24Eeg3g/0ImWyKD7XBeGS2lZz9gNiXoRc4yoiaqBMUuZ+kZYg2mAs/t5q0
-	 7qP3RvaKAUtt68Jwld+KkxIHMkFGb8Wj1otOH+58USl+uxRDtESdnCTaGyHI6tMlqA
-	 MJwAnAffnUAQMAEX3k0cAG0j45Qo2CkNEOBy85WneWAlZsSzbRKPM/GUI20Zz93Lwd
-	 KpgjmbtaCZwmYU5jWlHAlqx6GOMSIfnJlekGIOwtkru+3vSJVLGDoiS3UDk95WCm0G
-	 dIiu1YVKMDx7g==
-Message-ID: <sashiko-outbox-198970@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 6/7] arm64: dts: apple: t603x-j514-j516: Add PCIe device
- nodes
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Janne Grunau" <j@jannau.net>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
-In-Reply-To: <20261105-apple-m3-pcie-v1-6-e00a72a604f8@jannau.net>
-References: <20261105-apple-m3-pcie-v1-0-e00a72a604f8@jannau.net>
- <20261105-apple-m3-pcie-v1-6-e00a72a604f8@jannau.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 11:42:55 +0000
+	s=k20260515; t=1793878961;
+	bh=q/Qxk6NeWhoD49CZMGNhUQK3Ye1Uhy5tudrbI2veMqg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=UW7yjrIxoMuhKqJCMOf168PwSNa9h/+jej36Fcd/LWKz5NuA9QtRSYRCMSNZd7xvT
+	 jjcrXib9VxfxHay7RdARYM8NeU7zB0bpwGwwYgzD0CvNPnXv/GLWtp2jAQT48bHD7c
+	 tyeFBzdliTt5BAw3wlKkrQR+vugiNfVUR38D88DQyDcjJfsvxOt8nVfm/MhstM8+TS
+	 AK53IyoMUg23I94IuY9b8bE+ecVbmF/PCb3YYyz3iMsn0TvN96HrYZhD0ZXbDQn4U8
+	 ZQ+r3uBNwMmpMzz06/7ItmYDusnSaVPAiPDlo7jBWoXZuaJurDJCWMhQghPLntFzVc
+	 IF5WqejG+eXSg==
+From: Leon Romanovsky <leon@kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>,
+	Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Johan Hovold <johan@kernel.org>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>
+Cc: linux-kernel@vger.kernel.org,
+	driver-core@lists.linux.dev,
+	linux-input@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	iommu@lists.linux.dev,
+	Jason Gunthorpe <jgg@ziepe.ca>
+Subject: [PATCH 02/17] Input: serio - attach manual drivers through the driver core
+Date: Thu,  5 Nov 2026 13:42:15 +0200
+Message-ID: <20261105-device-trust-core-v1-2-1e536825b4eb@nvidia.com>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
+References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,86 +96,62 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: b4 0.15-dev-18f8f
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] arm64: dts: apple: wrong wifi0/bluetooth0 PCI IDs in t603x-j514-=
-j516.dtsi
---
+From: Leon Romanovsky <leonro@nvidia.com>
 
-commit 93b064f5082472a65526181caee83a837e8be25d
-Author: Yureka Lilian <yureka@cyberchaos.dev>
+Manual serio binding connects a driver before driver core can admit the
+device. A rejected binding therefore arrives after functional setup.
 
-arm64: dts: apple: t603x-j514-j516: Add PCIe device nodes
+Keep the port ID check and use device_driver_attach() for the existing bus
+probe path. Driver core then serializes admission and handles probe failure
+before publishing the binding.
 
-This commit adds PCIe device nodes for Wi-Fi, Bluetooth, and the SD-card
-reader to the M3 Pro and M3 Max MacBook Pro device trees, along with
-board-specific brcm,board-type properties.
+Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+---
+ drivers/input/serio/serio.c | 24 +++---------------------
+ 1 file changed, 3 insertions(+), 21 deletions(-)
 
-> diff --git a/arch/arm64/boot/dts/apple/t603x-j514-j516.dtsi b/arch/arm64/=
-boot/dts/apple/t603x-j514-j516.dtsi
-> index bbee373044f94..403a9cb3979c7 100644
-> --- a/arch/arm64/boot/dts/apple/t603x-j514-j516.dtsi
-> +++ b/arch/arm64/boot/dts/apple/t603x-j514-j516.dtsi
-[ ... ]
-> @@ -67,3 +69,42 @@ &serial0 {
->  &fpwm0 {
->  	status =3D "okay";
->  };
-> +
-> +/* PCIe devices */
-> +
-> +/*
-> + * Force the bus number assignments so that we can declare some of the
-> + * on-board devices and properties that are populated by the bootloader
-> + * (such as MAC addresses).
-> + */
-> +&port00 {
-> +	/* WLAN */
-> +	bus-range =3D <1 1>;
-> +
-> +	wifi0: wifi@0,0 {
-> +		compatible =3D "pci14e4,4433";
-> +		reg =3D <0x10000 0x0 0x0 0x0 0x0>;
-> +		/* To be filled by the loader */
-> +		local-mac-address =3D [00 10 18 00 00 10];
-> +		apple,antenna-sku =3D "XX";
-> +	};
-> +
-> +	bluetooth0: bluetooth@0,1 {
-> +		compatible =3D "pci14e4,5f71";
-> +		reg =3D <0x10100 0x0 0x0 0x0 0x0>;
-> +		/* To be filled by the loader */
-> +		local-bd-address =3D [00 00 00 00 00 00];
-> +	};
-> +};
+diff --git a/drivers/input/serio/serio.c b/drivers/input/serio/serio.c
+index 54dd26249b027..604440244c1ca 100644
+--- a/drivers/input/serio/serio.c
++++ b/drivers/input/serio/serio.c
+@@ -81,28 +81,10 @@ static int serio_match_port(const struct serio_device_id *ids, struct serio *ser
+ 
+ static int serio_bind_driver(struct serio *serio, struct serio_driver *drv)
+ {
+-	int error;
+-
+-	if (serio_match_port(drv->id_table, serio)) {
+-
+-		serio->dev.driver = &drv->driver;
+-		if (serio_connect_driver(serio, drv)) {
+-			serio->dev.driver = NULL;
+-			return -ENODEV;
+-		}
++	if (!serio_match_port(drv->id_table, serio))
++		return 0;
+ 
+-		error = device_bind_driver(&serio->dev);
+-		if (error) {
+-			dev_warn(&serio->dev,
+-				 "device_bind_driver() failed for %s (%s) and %s, error: %d\n",
+-				 serio->phys, serio->name,
+-				 drv->description, error);
+-			serio_disconnect_driver(serio);
+-			serio->dev.driver = NULL;
+-			return error;
+-		}
+-	}
+-	return 0;
++	return device_driver_attach(&drv->driver, &serio->dev);
+ }
+ 
+ static void serio_find_driver(struct serio *serio)
 
-[Severity: Medium]
-Should wifi0 and bluetooth0 under port00 in
-arch/arm64/boot/dts/apple/t603x-j514-j516.dtsi use the Broadcom BCM4388
-PCIe IDs ("pci14e4,4434" and "pci14e4,5f72") instead of the BCM4387 IDs
-("pci14e4,4433" and "pci14e4,5f71")?
+-- 
+2.56.0
 
-In arch/arm64/boot/dts/apple/t600x-j314-j316.dtsi (M1 Pro/Max), wifi0 and
-bluetooth0 use "pci14e4,4433" and "pci14e4,5f71", which
-arch/arm64/boot/dts/apple/t602x-j414-j416.dtsi (M2 Pro/Max) then
-overrides for BCM4388:
-
-&wifi0 {
-	compatible =3D "pci14e4,4434";
-};
-
-&bluetooth0 {
-	compatible =3D "pci14e4,5f72";
-};
-
-The base M3 MacBook Pro J504 in arch/arm64/boot/dts/apple/t8122-jxxx.dtsi
-also uses "pci14e4,4434" and "pci14e4,5f72" for wifi0 and bluetooth0. It
-looks like when the port00 node was copied from t600x-j314-j316.dtsi into
-t603x-j514-j516.dtsi, the overrides from t602x-j414-j416.dtsi were missed,
-leaving all six M3 Pro and M3 Max MacBook Pro device trees with the older
-BCM4387 compatible strings.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105-apple-m3-p=
-cie-v1-0-e00a72a604f8@jannau.net?part=3D6
