@@ -1,57 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793894708;
-	b=Z/VoYuj8Pv/EKrTnfjM9IutdIlkSduXni13gHtvxECLhdI3Z78qxYgypQW3C0ITvwA1L
-	 dM6c+0XZwePkUlenq7aT1+OUAwYA3xcdHT2IQawVljtXtl04uHcnkh2FW92bVpnSfiIrF
-	 XRVfyfdV2T/IbeN5UiStVZLm6KQNuAe1PCvT1DBjQ5laktMJoMz6jKny/laUcQdw2gxfw
-	 w1ecsD/GsTJtn/Ct+gvSSyV4ZMStDVIV6bH8/Jtz9wS530qn8ykkHs0n8Pcvqcbl8HJvx
-	 Y9kdXzswftkDef65PkfCzUYfjhAtZ581EmA8gUkmvmHzKFkQm1lYNTNpNKHBLWytmeQ==
+	t=1793894780;
+	b=sVj77Lfn0vNVJoaL/Q/y+DK6EovdYCT6Fe26VVEc22uAhkPohIz0IXy7Cm4zgky2D92f
+	 TI4g3ylcx7aRhCvQUcid04HLjNBnAhWs3q+Xc9xLdVY6fy8+wxw3ADZ5jKYIwpXBQIWq/
+	 PwUif4KInBr1ykagI7Clevs2H804napUnacDW4YvvWPLw+pdsniPtrI570Q3q5vviB0Sm
+	 8ZbxVR2pW86GSNfyKxhvOGbYokNFv7a4sSNNz5PFUzL3F3G9XuV22s8PiZGKRTEze+Cy6
+	 Q59jI04FpEV5nsbqKb3+AblJYuXwENaEg56xAKRutV8czHVBP19McR1qzt/ww/ccfFw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793894708;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793894780;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=LQryCqHznad3TbpaeSo1ITP3E37VaIaXeeVCZq/moHo=;
-	b=lldaqiupUmyqUECqihR22Wk7rYLuXz4XL+xlfY4Wr5XW+hpdsGRi0R2dFRt1JaJB6Kha
-	 3IpstuCrb8y06elv8I6zrd/6/qPQgZypZqvOu4IsRAZzD3zpEAhwedKbiAg9UvjBcobkJ
-	 Vg7+ItbJT99+v2B1x28TConYHbbk3RZis4jtyLzobCmXvchvKy1nRB/u3IwwBL4pGYE1v
-	 mBmbIs39znPXFyvLpPipkEyxtDjAWaCzmw3W8p6aMGTMX+L0ux8XOtvGngacTC6V9Rv0u
-	 KrEMkba5jCHD3VEMGroUcal+ka6Sif/6HPDVy5Jm3HRXnxKq6/1FFjZpVWF+U7yNC6A==
+	bh=1OBuTbtxOzrSypFQt0h3xmCQ4ln8aIZkQlga43QybaA=;
+	b=M19TPvip/pTtzNlF/yW7/AXCYpYZ/m6EtzvoSgt6bFB18HTSqPP/pmKYj49Zqx017BlM
+	 fVTuYJn5bsjrabe2k+3tRSqUKmZHR38uxlC8/OdY++fd4HAVUeJhB5353l2gap2PoAigy
+	 EuJqnoJzT7oYujZIrOChQZe3NgsrzY4YAXN2JGlfZIX7BQ9aRy9bUn4hI3DCgrQ+w7Cd2
+	 eKLRuLtr3JfegvpD0mWOQjPMKcTfjPapAmci/m0eyBu9ZmLOqHI3zKvkFCUxYhKecmQy4
+	 DNDmu0cduBStOosoZctDgm3PZem6jzpGpiNQAHLWQ3wIJsZSA7r2g1EMadXlydZNzDQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ijFlF2KC;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IkINU0OO;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 084916071D5A
-	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 16:05:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A760606A333
+	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 16:06:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ijFlF2KC
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA4CA1F00A16;
-	Thu,  5 Nov 2026 16:05:07 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IkINU0OO
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB7441F00919;
+	Thu,  5 Nov 2026 16:06:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793894707;
-	bh=LQryCqHznad3TbpaeSo1ITP3E37VaIaXeeVCZq/moHo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ijFlF2KCl9iM++ZQEEboShjFEOjg+uSn+JQ0StdjgOhIYhkklk8mCAb6ZDbhYZcK7
-	 DJ2JR1y2F0gyBE2QdVHZ/t2NvJPg9TwEeIxNtuQyh1NqxYkjktEHRwdEfMRTqWKx7b
-	 xcwvbtvsD80pQCONrpL8bQ2mJbiY/z+FXGSsrqV8frjil6HGo0jE8uVeLTTXNxYNkn
-	 XreMiTxA+SLcXe/ruTHcJktTzctvclhTlLrQuNUruL7CBhfFqoILH7n3h7Xowg4Ckn
-	 DZ5AA80yDybXfJT/dy2SlmH3QUI2vywkgSHWFLv5OPV7S8t7OtH9DwVSnS7ZFV/dff
-	 4H2lbu3029bWQ==
-Message-ID: <sashiko-outbox-199404@kernel.org>
+	s=k20260515; t=1793894779;
+	bh=1OBuTbtxOzrSypFQt0h3xmCQ4ln8aIZkQlga43QybaA=;
+	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
+	b=IkINU0OOU6GupibC5prP0qt/9vA0p52X6YPDXmFfiMuXZ/SY/yHEKM5DdISALP5sQ
+	 IbW54N+4JSVyOEWQgVmKmH405e7H1oOmkftSLNyjSBEUosaFyS45/0PgfkYGoWm/fx
+	 rEDfLjeVbJJmImpXnqtkXiFim/pV3OHmk7EkpWWFk9zLJCZSTmvcaQXK/PiFTGfZTK
+	 khviBeq+TruUKHgfUhwJZkiZstS7iCs49kR3rW/98of0X3IZ2/q7iMIBovP5GcWr/R
+	 tq3RkXJRyzs8OLqkw1pQH1BPnc+64U+Sp5Ki1VMWW1mWKVhO4541iqxAxMYj6jS2ok
+	 auhG4GKBWoIAw==
+Message-ID: <sashiko-outbox-199409@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 1/4] PCI: of: avoid allocations in
- of_pci_prop_compatible()
+Subject: Re: [RFC PATCH] PCI/ASPM: Handle missing link state in sysfs reads
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Alex Elder" <elder@riscstar.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261105153801.435566-2-elder@riscstar.com>
-References: <20261105153801.435566-1-elder@riscstar.com>
- <20261105153801.435566-2-elder@riscstar.com>
+To: =?utf-8?b?UG91bGluLCBMb3Vpcw==?= <poulin.louis@student.oaklandcc.edu>, linux-pci@vger.kernel.org
+In-Reply-To: <CAGQButuh2zJ9dvNc4ioqaSh32EGChc9Z3HORr9DwnNd90=zgCg@mail.gmail.com>
+References: <CAGQButuh2zJ9dvNc4ioqaSh32EGChc9Z3HORr9DwnNd90=zgCg@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 16:05:07 +0000
+Date: Thu, 05 Nov 2026 16:06:19 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,24 +58,31 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> Three compatible strings are formatted in of_pci_prop_compatible().
-> Their sizes are known in advance, and the largest is 16 bytes.
+> From: Louis H. Poulin II <poulin.louis@student.oaklandcc.edu>
 >=20
-> Rather than dynamically allocating the space for those strings, just
-> set aside a buffer on the stack large enough to hold all three.
+> InputPlumber can hit a NULL pointer dereference at l0s_aspm_show()
+> while reading PCIe sysfs attributes on an ASUS TUF GAMING X870-PLUS
+> WIFI. The same fault was seen on downstream OGC kernels
+> 7.2.9-ogc3.1.fc44 and 7.2.15-ogc1.1.fc45. The latter logged:
 >=20
-> This avoids a problem that Sashiko pointed out, where an allocation
-> failure would cause subsequent crash because strlen() is called
-> unconditionally in of_changeset_add_prop_string_array().
+>   BUG: kernel NULL pointer dereference, address: 0000000000000030
+>   RIP: 0010:l0s_aspm_show+0x47/0x80
+>     dev_attr_show+0x1f/0x50
+>     sysfs_kf_seq_show+0xa8/0x110
+>     seq_read_iter+0x132/0x4c0
 >=20
-> Reported-by: Sashiko <sashiko-bot@kernel.org>
-> Link: https://lore.kernel.org/sashiko-reviews/a647bd56-7dc8-4fec-9d96-834=
-622054cdf@riscstar.com
-> Signed-off-by: Alex Elder <elder@riscstar.com>
+> The faulting instruction reads at offset 0x30 with a NULL base
+> register, consistent with accessing the ASPM state through a NULL
+> [ ... ]
+> ZhaoJinming previously proposed NULL checks for the ASPM and clock
+> power-management sysfs callbacks.
+>=20
+> Link: https://lkml.iu.edu/hypermail/linux/kernel/2607.3/04295.html
+> Signed-off-by: Louis H. Poulin II <poulin.louis@student.oaklandcc.edu>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105153801.4355=
-66-1-elder@riscstar.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/CAGQButuh2zJ9dvNc4i=
+oqaSh32EGChc9Z3HORr9DwnNd90=3DzgCg@mail.gmail.com?part=3D1
 
