@@ -1,56 +1,63 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793914486;
-	b=N0cQJFx1h1AM8FoHbvOrMQ1/CwI7BjbtN7VPJdjZI2Pog0D1qqLNOSWuLKItVHsu33EJ
-	 ZF36eAeSXL3KNOfWUeuO8Q9CLrl9D/ed2pGacxiQ/K7B41jvJ4srnqSZZ42K0AgUjVSYM
-	 DlIzMwXkYNZQCcxggE77Ivn0GLsVRxd8xuatqBJI0zH63HDsI5sd1AublkkLLL2BHP9rs
-	 Y/LGM+7WkwAO0SPPg0b3RaAXUHgT9mGqJNXc6n2UGnDMaFpBfQ6a53lmoBR6J0h1UehBa
-	 lDkDffz92MpUXD6rcmXFQk5XLRGoJXTwFMUFbFDriJfLog5mZ7WHlviQ8ZMxxr1ffhQ==
+	t=1793914729;
+	b=4t+gap+HaKp7y2u+U9DU6ZWRaJJBKqeN7OZi2JAwUJ5tpoVm5NgSzP380GER6W/WyaTs
+	 OMTjbiLiH0BqmOVKMf01A1jhONxsyEgIWu3f+XTvRDRf1FtPrpM8cjI+N15b+6f+StLzX
+	 7dwVQR+IJcuys4VlJhY9hfwofo8e6nfsLvqk5m3v3tG/ZNejBytipzSBUEMCjT/9VULs0
+	 m667nEtSriOlKKfp4rvplgST5px25qy1GhiT8m97v2Ca6T6XstuqNlcnL6JyjSdtAMvPd
+	 q0zetu4k9shjj6EbWebauActqrrl4jgTN6C4bFi1pHyHYWU3cw3kNkDe2g69eHNsWgQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793914486;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793914729;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=xfM3oTZbA9GZfIiLkeTZfWkJk5oDQ4tBo9T8XwJOZPU=;
-	b=AEJqMKAX584+/hVwmtj9rgWALO+xTZFE/IwAN+RiY4+BckBCibfDXS4WJMraxpMpupW2
-	 PdYDTVqOm6d3B3A6Mp/Cr31QZq55AKRWh+ENX5Tw3QeS9szX5DdUa60fLhrTiIhLIpDIa
-	 qGHrVckNNPnMVkl8bu46d/tRTFn3nqmgsSLXX45aLet+dMK4BPnLILspdAkMEQhN0X3Qq
-	 3MyevnqopZBXKFKmap0YtBfJJf8dB/FzRTqY9pr6BfksrY1CPADR0CAQzuInDctqL/6so
-	 +YgvEXNuRfFlurTKIrze9BfcawvLHvDHoTIWv3hW5IUvfFO2pCFSJG5s0ZzliPNgoGg==
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=OG3uAdRsKsnCgp4y6ps7Sg3KysoNOneAEH7kqGaywLk=;
+	b=lsHn6fvrwNZT61aZ+LXhtNS85tSooqTDF4MxEq2iw28zEcDoY4NEYy6bNbjTBnmBafqE
+	 26f0LYv+S/zMx9cBzXaoT589TvR4YuZJcXv8PGukyP46SS1mXr/pWEAxeO9G5WgvlZg10
+	 9zjCFSXNLxrC3VuPu4tPN5zmwKq9XUVynPACBMDLK2Pv0r0VyPnBKpC5nJ8AxK9WSeQ6w
+	 ovEKlTqjejeSphJnfdd8DEzCcsPhNsXH+bQM6STbTAZUfl4x0Mx3LC4+T0lkujsCjNlDX
+	 n4wFyZWW/Z6uDCaKmmfgUpx8VBePeHalvRBRsYMzL3Dd5swV9Efx4WL1b7CtYuwWE/A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="EL3/zERs";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XGjc7uJ3;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 230C8606D807;
-	Thu,  5 Nov 2026 21:34:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 119FF606A326;
+	Thu,  5 Nov 2026 21:38:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EL3/zERs
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 896461F008A3;
-	Thu,  5 Nov 2026 21:34:45 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XGjc7uJ3
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67AB71F0089F;
+	Thu,  5 Nov 2026 21:38:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793914486;
-	bh=xfM3oTZbA9GZfIiLkeTZfWkJk5oDQ4tBo9T8XwJOZPU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=EL3/zERsH+cbk7IV/pDuFDuqpTebsPKLJGaF5sFwfHJ2pqeVL98PBgNHgWNyA84u/
-	 ECLQx00rP21PC3k2HGylRrt7lO0S6DluhRxAS+z9wYF0qMl4mGLKyAf/WMRv7VcLUS
-	 n9RUd/Qv92d924lZUTbrtjeRSw1vlasbgnYveeTzeDEFcFyEJhg+X+m96p9sFJYq77
-	 y5Tbn7sPUBKGk2eB1KMVHCZ9phZtsQwN9V9xOLTNRM7a3ApQyE4G+6jQcBgQcJkB4n
-	 T/5LUXvkwtzW0808JaKfNJ/uukppKrBy+VksxTsQCYbyOFSTIpsg+FkPpoUgoxMRTV
-	 oCAYZbG9eqZ4w==
-Date: Thu, 5 Nov 2026 14:34:44 -0700
-From: Keith Busch <kbusch@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Keith Busch <kbusch@meta.com>, tglx@kernel.org, bhelgaas@google.com,
-	maz@kernel.org, lrizzo@google.com, hch@lst.de,
-	changfengnan@bytedance.com, namjain@linux.microsoft.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 2/2] PCI/MSI: Implement irq_mask_noflush() for MSI-x
-Message-ID: <auz2dGjVIBgiMNBS@kbusch-mbp>
-References: <20261105182706.3700908-3-kbusch@meta.com>
- <20261105194116.GA1553387@bhelgaas>
+	s=k20260515; t=1793914728;
+	bh=OG3uAdRsKsnCgp4y6ps7Sg3KysoNOneAEH7kqGaywLk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=XGjc7uJ3Jhwrp/iwFo3hEPaDKdaFdkiYPdKOQDlg6QQS6Xo/1LtSxo6vgDV7jxac4
+	 4EH0psVYsPNjiKM7Pk4vtuhYeQ9ILJvrFiK32rvmKXL/YQ/J1KmIBroXbMV+zIPltx
+	 ePArzOOdnXK0EeNxfoz9gNbfv1aFUcKL8aUagADAtk0EdCq2fdGXCQWwkvMlGlF7t4
+	 7feuM4k6zPQD8jEglIgf1r5qXCkIswlu1OZszqDpWL85RkxWXExapYBrZGAtTX+9+f
+	 Bw0DKgQjSc6vXQN8jlma79kTnHD5MnoCNZ4hsixGwpS7JMgmQ+O9zB0fGhTL9I9cBQ
+	 Q/kvMzWVmx5kw==
+Date: Thu, 5 Nov 2026 15:38:47 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Frank Li <Frank.li@oss.nxp.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Jeff Hugo <jeff.hugo@oss.qualcomm.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Frank Li <Frank.Li@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Koichiro Den <den@valinux.co.jp>, Niklas Cassel <cassel@kernel.org>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Christian Bruel <christian.bruel@foss.st.com>,
+	"open list:MHI BUS" <mhi@lists.linux.dev>,
+	"open list:MHI BUS" <linux-arm-msm@vger.kernel.org>,
+	"open list:PCI ENDPOINT SUBSYSTEM" <linux-pci@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>, imx@lists.linux.dev,
+	Frank Li <Frank.Li@nxp.com>
+Subject: Re: [PATCH v2 1/1] PCI: Replace chan->device->dev with
+ dmaengine_get_provider_device()
+Message-ID: <20261105213847.GA1565775@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,18 +69,21 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261105194116.GA1553387@bhelgaas>
+In-Reply-To: <auz2EAk-b-ZsX6PW@SMW015318>
 
-On Thu, Nov 05, 2026 at 01:41:16PM -0600, Bjorn Helgaas wrote:
-> On Thu, Nov 05, 2026 at 10:27:06AM -0800, Keith Busch wrote:
-> > From: Keith Busch <kbusch@kernel.org>
-> > 
-> > Skip the read-back that flushes the MSI-x mask write. Parent domains
-> > that mask on behalf of PCI/MSI keep using their own irq_mask().
+On Thu, Nov 05, 2026 at 03:33:04PM -0600, Frank Li wrote:
+> On Wed, Nov 04, 2026 at 03:27:10PM -0600, Bjorn Helgaas wrote:
+> > On Wed, Nov 04, 2026 at 10:01:59AM -0500, Frank.Li@oss.nxp.com wrote:
+> > > From: Frank Li <Frank.Li@nxp.com>
+> > >
+> > > Use the dmaengine_get_provider_device() API instead of directly
+> > > accessing chan->device->dev to get the DMA provider device.
+> > >
+> > > No functional change. Prepare make to struct dma_device private to the DMA
+> > > engine.
+> >
+> > "Prepare to make ..." I assume?
 > 
-> When you respin it,
-> 
-> s/MSI-x/MSI-X/ to match spec usage
+> Yes, Do you need me respin it or you can fix when apply?
 
-Oh, sorry, the messages crosses on the wire so the v2 retains the MSI-x
-syntax. I can respin it, but don't want to rapid fire another version.
+I'm sure Mani can fix it.
