@@ -1,56 +1,65 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793907303;
-	b=E+sfsCC139NBshU/sxO++oXCJpPsbUFZXdP+UaNllo+YnPSyRvWXI9FjoABKVmI4mQL8
-	 lF5ApiAEejlJzy5S9NTytPuDPazqrupi/HKqhKL0BiBK1pYAO9GvE3Li/GD+01MXTV6zv
-	 w/j7zNyE5L59Zy30Aqrzx+16h51FYBGKkJhwFXWYePHJuNCbSDmq75zpRWc2QSe8nxOo4
-	 iBq0Rd970bMJdgO5bZfsyKjuNpELhOFjvqu6s5hfwKmpX+E+NyW1aOg5ZYOnt/mIgWHnk
-	 h6ZL1ZmkHks+BIIrbb8YeraTW+S3O/kHzBA0HjTIa2bLlbd7sKfEtEczmjixf7cHmPg==
+	t=1793907316;
+	b=YPDtmjWc/NhI8FhgmpGz4zHtOdbv4IhoHvTP2f0PXmSl8eBOuXsJXbCYtcUBncGWQsTf
+	 4C7fJo9FJbgc2P8w4uIonNbyK8jnBOnggQADR50QpG9WTZQouOKmHhyVfUi/jyEED3kmm
+	 H/lrjXNg0dfFmjkrHwkXT7wCGWciBCFC3XGRUHq7WluZoF4o/+EjW5orJpW0rLRHJ0NVl
+	 VMvUd9tOiOpbjQrNZTaAKrx8UsDH708VdD9sTZIDasBkr/tKfJqGBc7G5AJ3Q59R0z8+E
+	 fMwHb0/p/98Jp9an8QK5htm3tNKp1YTEy85MtQblM3lhImisoyJWhnCZ+DCHonplxfQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793907303;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793907316;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=r2u3FuTaMSganup+OansOJGDXA0Y0adq+ALvKMF49uw=;
-	b=26L9Z/x7pya1yogTTFxia05XUjdOcIIPdpfxT4ocuQm2Q/ibzLMvPV7E5SgVWt0659cH
-	 U9i7pS3zALEd/kAN86jR1RuZw5UVtceeM+YNt5LgmoqR7ejMT3+nfx0itGmhdLnhu1ukI
-	 lyePoFk250oJbIvLkanpicTtD1oJk/a/wolMJaaMoPgs0IkXGUJyKsxOqpmTwaBbMUGBG
-	 iaI+faeN+WSmdKGRd0Pg238HKejfNuTnm2SLzwR6d4JLBl3badrUatWDLtcXtzjVSz7BY
-	 rDBhGQ2rdPQ/ywcgtkxWiKMuhL45OgVPzU82SFTKI6Hb+5n3mWvOUr0H5xWCpKyjuQQ==
+	bh=6hoRvIBjdvZcFdce6OvLL9wYKZneWoJGVeTND16Hg0g=;
+	b=N7jvtC3GxIg9zUZRIOOJRNxmWNQs2fTZwwF9CDzDLyFm6/bHR+h9R/DrABG3cq5k3Sh8
+	 QD6jDEAJE+Od8ct+3VFx6EmUvB/xqm8/2FdRqNrOQ0XvVtC+KVuwqFiwggDkD/DZjUOl9
+	 gAspL2aV3VR+PWyf0qHMnaW7F1qTLo+E3oknTnQa+5akJR0loDNB0OfvOxNPHSsrCVY5Q
+	 VsbjYwnqIfxeWRb9VXVeEEvcFtzYebSqf+AQx2GHlGbioJUxFj1ewfp1GljXkeaqM77dU
+	 TQ1CWJuIi4dsQp6hUq1z9k5PZTxuFcFTWGSlyLt86DOQBGbcBzoQ0wB4ZtYx4jBecYw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="ncuef/j5";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="H/IGA7VD";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6063C606D51D
-	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 19:35:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1C4A6077281;
+	Thu,  5 Nov 2026 19:35:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ncuef/j5
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 784321F0089E;
-	Thu,  5 Nov 2026 19:35:02 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=H/IGA7VD
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24FE91F0089F;
+	Thu,  5 Nov 2026 19:35:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793907302;
-	bh=r2u3FuTaMSganup+OansOJGDXA0Y0adq+ALvKMF49uw=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=ncuef/j5Vv2u58TThJGDqmYEsWmUSMV56W7jvFmf8qqf5mcBiV1OR3djDzxpUQqWE
-	 x3qhQsMqplGuSaFifD69ZsFDuUxfu8+l8qz9gs7BH/5jINNIvGynwXNbseaxERfmXK
-	 Mr1s+5ZwGE7vRNN0/7lzVwojNKidBr+dV9wo62Bnx7o0TKXiL5MZW6pzf34S8RVUkX
-	 mvLbbVQmH8kZgHhjbU/A2aqnTnuEi8izC59NIa7q6IxMn5GQxkOX7++qZEc5jY6/+X
-	 ZtE7nL2Njc3loNDBL2gtUrzEDMjAaxYQSMCDVSxk8E3CFkVrCJT+pDl2V07hBrNTMp
-	 9nG/HAXmlItEA==
-Message-ID: <sashiko-outbox-199930@kernel.org>
+	s=k20260515; t=1793907315;
+	bh=6hoRvIBjdvZcFdce6OvLL9wYKZneWoJGVeTND16Hg0g=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=H/IGA7VDolTlFuDSzsR9PpNCLOc+MOL9Jlb497kin2aM9CsKSdGuinZsObzzhjKLu
+	 vZB5+O9pGI8nVCo/32oLJsm4VfhHALYRw69cQLc/OwWudG08CrlbhwGxTj7hUqCvjm
+	 zVfPAInrWuotxqB48n1/G7DlipPyNWJuwaJ2BWS/mluZe9QG+3hr62O+EHJHS7JbdH
+	 R5EBZoDlSrf8ybUt+J6V3XvBz3x5hj9FNHwo4MzJlMjxhvX4Q3MmE7R6Wst9YwTNGO
+	 WDDxetp3K1AY572xeDhT4SHRoltfwdfx2B4GtWjR4CUKwVTi5TNf8KO6vilhKxp27B
+	 EnYkpbISY24IQ==
+Message-ID: <sashiko-outbox-199931@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v17 16/19] PCI/CXL: Expose CXL Reset as a PCI reset
- method
+Subject: Re: [PATCH RESEND v2 01/23] proc: drop the compat file operations
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Srirangan Madhavan" <smadhavan@nvidia.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261105185917.2667656-17-smadhavan@nvidia.com>
-References: <20261105185917.2667656-1-smadhavan@nvidia.com>
- <20261105185917.2667656-17-smadhavan@nvidia.com>
+To: "Christian Brauner" <brauner@kernel.org>
+Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
+ Bacik" <josef@toxicpanda.com>, "Chris Mason" <mason@kernel.org>, "Jeff
+ Layton" <jlayton@kernel.org>, NeilBrown <neil@brown.name>, "Eric Dumazet" <edumazet@kernel.org>, "Thomas
+ Gleixner" <tglx@kernel.org>, "Al Viro" <viro@zeniv.linux.org.uk>, "Jonathan
+ Corbet" <corbet@lwn.net>, "Christoph Hellwig" <hch@lst.de>, "Greg
+ Kroah-Hartman" <gregkh@suse.de>, "Joel Granados" <joel.granados@kernel.org>, "Kees
+ Cook" <kees@kernel.org>, "Jan Kara" <jack@suse.cz>, "Jan Kara" <jack@suse.com>, linux-s390@vger.kernel.org, coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-usb@vger.kernel.org, samba-technical@lists.samba.org, linux-m68k@lists.linux-m68k.org, linux-serial@vger.kernel.org, "Takashi
+ Iwai" <tiwai@suse.de>, linux-ext4@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, "Heiko
+ Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
+ Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
+In-Reply-To: <20261104-work-procfs-core-v2-1-76ace653a773@kernel.org>
+References: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
+ <20261104-work-procfs-core-v2-1-76ace653a773@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:35:02 +0000
+Date: Thu, 05 Nov 2026 19:35:12 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,17 +69,27 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> Register cxl_reset with the PCI reset-method interface and place it before
-> FLR, which does not reset CXL.cache or CXL.mem protocol state.
+> procfs has both sets of file operations twice, with and without
+> ->compat_ioctl(), and picks the one with it for entries that have
+> ->proc_compat_ioctl(). That's from commit 778f3dd5a13c ("Fix procfs
+> compat_ioctl regression") when a file without ->compat_ioctl() went
+> through the translation tables in fs/compat_ioctl.c and one with it
+> didn't. Those tables are gone since commit 77b9040195de ("compat_ioctl:
+> simplify the implementation"). compat_sys_ioctl() answers -ENOTTY for a
+> file without ->compat_ioctl() now, which is what
+> proc_reg_compat_ioctl() answers for an entry without
+> ->proc_compat_ioctl().
 >=20
-> Return -ENOTTY when device capabilities, function scope, cached HDM state,
-> or required cache synchronization do not permit a safe reset.
+> So always set ->compat_ioctl() and drop the second set of file
+> operations and the flag that picked it.
 >=20
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> No functional changes.
+>=20
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105185917.2667=
-656-1-smadhavan@nvidia.com?part=3D16
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
+s-core-v2-0-76ace653a773@kernel.org?part=3D1
 
