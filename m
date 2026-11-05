@@ -1,55 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793874074;
-	b=Noa6nIQtGeCO/6lw8poJvApLUqKBYLc88AMR3PIIIUwczyYBS8CMCcW5B86SZJXLUiCC
-	 LdvRL4/JB6wSuRnMgCmbi/0Fb8Fe3taXfdvF7kw+/LmnChtsdl9qHuOqaAHeE2gDyPnr4
-	 fGqcIDn1xl+OpVarcixeJ0p0AG0cnB5W4NMVc2nyACAlrbxKBkG2IsVojgPfGupBL9Dek
-	 AoN6efiE2b9NqYPewdJ9uV39A7qnCFg42riCWaHzTwQD7KVOBb8FiI9znXl2zrOzCDqQ+
-	 7LZ9Zujy5HAVU37a440hCpo/t3G2TnyYaFhFHdkKK9IldRzQBBp+XhIGXe9Vm8UEGOQ==
+	t=1793874095;
+	b=QAIHdM6YDHRy+6jUQf6dohWYSlG0pedpG1gjRK0RY/ImyPQ3iUbGgGWOutECTI6dZalM
+	 qTZMvZ7xIbj+h1y64yPCduuCoCPjAucLbWMoP/6eq2ReXVbrrvneRb6Sk6mQq5d+tWA1C
+	 N8XYow5xSDdUCw37aoW20mdgMY7LkUFC8u0vHj+Y4l9S6jSf8Psaa5SOqA1goxYNRVL/X
+	 tPZEtZmi8oo0SX/3/kVJ4yt3lKDeY2HARfY/JKA/xuwedtmgvYaARRNOR1DhbPrl0iXE0
+	 vCesKDkFaehm8nf57Ug9R6NQ3EeDQ1uP/pYI8sOiSzEyh4fgXqNayHhY9aqV8gIRKAA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793874074;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793874095;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=rycshPMxBLQTebfgXnzrTIk1/i2j8dLx1M9C85/E5WM=;
-	b=E308mNo3NcZuwnWIhGlmfjPxWgzFErIZlV7+f3PhXEmT4l3lsVu1ncikNTzSNQTDD3YE
-	 GOfoWZEorEMI5BvK9WS/rZ1rr8o7G2thmy/YTADd6dP9TbO1scdVexzk3uAYjY43rOPdh
-	 7I2N0oM9amjkkmSqTJYbqZJXRjnbJyttrP7NBJD7MywnFx9gpDkh7uPzYzqDByp9OWoq9
-	 2qBQVtjq0YSdq5j1Ha1vtEmkWWRubraUtY1tGJRg5BNOuI3MPyFY0+JH5+w8yyhdr64Dj
-	 +QiXqmdZ0h/X++7mHzC+TN2ATUblseZ1NLAJdHmXTFedq2vT7pfoIauteZRlr353Hag==
+	bh=s1K1EQLqOXj3fT22EwpIZjKDQB4P0bMP3Y6DY3YtSYw=;
+	b=OO8ZPAh5caYolVUS7I0PZ34Ne3s8hzuuMoiI2Tg9Ijaztu1zhKBR8ukcj7i43Ju5a+2I
+	 glwJ53Fsq6D8/vpj2BhQyYU/QXZU/ZkDHroeicEAJjQY0K+BUIrQ+3vrO1TjBzOVez4SE
+	 IovmdjbYpebWaKDXaivZkYoeQjyyvdq2J7Z5EaC99e1zdr7wodnxhOSq4rIm+3azB7j5+
+	 3I1AQF8lr7xzbgWYiVBwPeYhSRXafZMoluDD+camSvLSLGu7NefINI63ciVvPFFTiENbJ
+	 2BYP5QhTDWzXwA32WMuFaKNWh+CIf9oIEPvsZiT2uZ84NiOSVxyf10tLFxztHDJJsDA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="kQ1nq/ys";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lnQiSwWv;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5101E606D807
-	for <linux-pci@vger.kernel.org>; Thu,  5 Nov 2026 10:21:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F9C2606D80D;
+	Thu,  5 Nov 2026 10:21:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kQ1nq/ys
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 139D61F00919;
-	Thu,  5 Nov 2026 10:21:14 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lnQiSwWv
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCB3D1F00A15;
+	Thu,  5 Nov 2026 10:21:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793874074;
-	bh=rycshPMxBLQTebfgXnzrTIk1/i2j8dLx1M9C85/E5WM=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=kQ1nq/ysGR5m/+mqu/94nqGgHJLPL+YsNDZs7ikI1/gWRJQqp7Ee+7vVyUFscq9zV
-	 anv0GCDZqhTR5coOKRLANiSbDKNgE0TM4Dwf/8cjItN0wmmDqQquicxbu4UvSJMNib
-	 DleNXNX9oAohSByy87d29hgPZt/G2pZtFbu5KF0FY9fOW4RFksVLrn3olY4Nd7LAKB
-	 1G5npu9JZpzreAr17CiMTzzhsS6Rv36s3ydKM2CN2v+4lyrFTLvvmTBnkhTViT5hX5
-	 jdYzs87PJu/qIyM24TqjVLH56vld+fnoFztd3fdZ7xFeeA94D8FajIXl3OLK+E0r0m
-	 OxuM4kurolE5A==
-Message-ID: <sashiko-outbox-198843@kernel.org>
+	s=k20260515; t=1793874094;
+	bh=s1K1EQLqOXj3fT22EwpIZjKDQB4P0bMP3Y6DY3YtSYw=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=lnQiSwWvV9jmq564ZRuFhV0GTcDcLnNk/tqpvNXUNnEfIXJ+ZSzHRtnF4U23RdpYU
+	 T5+1Xkrm0aktRojYvAVELcupRcifYKwVIJtGDNLYDwjyt5SxvBDFyAOp5VCRH8VrX1
+	 Z4nuroYGhFU36xk9adXweuO65fVG8bVjZPvh8QS95skH9k9FT8rHcN4/gOd0Hz4wsI
+	 PsFJXCRqpq+h+wcr4e1Itet6tZYXQrmY54ANpq+4OtEm0XwmOtJmrCiXtl9RYLM5nm
+	 9hCmr2d58gZPyekWhjg+TszjY99Sc/2d1yCjPjBF7y+GZ7obZ0WwHXJBAsM9JAizyM
+	 PsfQKwlONOaWQ==
+Message-ID: <sashiko-outbox-198844@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: qcom: Power on pwrctrl devices for
- firmware-managed hosts
+Subject: Re: [PATCH v13 03/19] PCI/P2PDMA: Derive routing from directional
+ ACS controls
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Zhangfei Gao" <zhangfei.gao@oss.qualcomm.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261105101521.434361-1-zhangfei.gao@oss.qualcomm.com>
-References: <20261105101521.434361-1-zhangfei.gao@oss.qualcomm.com>
+To: "Leon Romanovsky" <leon@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org
+In-Reply-To: <20261105-fix-p2p-acs-v4-0-v13-3-3dd065907c3b@nvidia.com>
+References: <20261105-fix-p2p-acs-v4-0-v13-0-3dd065907c3b@nvidia.com>
+ <20261105-fix-p2p-acs-v4-0-v13-3-3dd065907c3b@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 10:21:13 +0000
+Date: Thu, 05 Nov 2026 10:21:34 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,26 +61,24 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> commit b921aa3f8dec ("PCI/pwrctrl: Switch to pwrctrl create, power
-> on/off, destroy APIs") switched PCI pwrctrl users to explicit create and
-> power control APIs, but only added the calls to the regular DesignWare
-> host initialization path.
+> From: Leon Romanovsky <leonro@nvidia.com>
 >=20
-> Firmware-managed hosts bypass that path and probe the ECAM host bridge
-> directly. Endpoints already powered by firmware, such as NVMe devices,
-> remain discoverable. Endpoints that rely on Linux pwrctrl and pwrseq,
-> such as WCN7850, remain powered off and cannot be discovered.
+> pci_bridge_has_acs_redir() treats Request and Completion Redirect as
+> interchangeable. On asymmetric fabrics, a control for only the reverse TLP
+> direction can unnecessarily force P2PDMA through the host bridge.
 >=20
-> Create and power on pwrctrl devices before probing the host bridge, and
-> release them on errors.
+> Evaluate Request Redirect for the Requester's Requests and Completion
+> Redirect for the Completer's read Completions. Continue treating enabled
+> Egress Control conservatively as a Request redirect.
 >=20
-> Fixes: b921aa3f8deca ("PCI/pwrctrl: Switch to pwrctrl create, power on/of=
-f, destroy APIs")
-> Signed-off-by: Zhangfei Gao <zhangfei.gao@oss.qualcomm.com>
+> Fixes: 52916982af48 ("PCI/P2PDMA: Support peer-to-peer memory")
+> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+> Tested-by: Tushar Dave <tdave@nvidia.com>
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105101521.4343=
-61-1-zhangfei.gao@oss.qualcomm.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105-fix-p2p-ac=
+s-v4-0-v13-0-3dd065907c3b@nvidia.com?part=3D3
 
