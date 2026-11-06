@@ -1,72 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793984047;
-	b=MSBzWfdSTqiHkkbA788nauMrLQ7DW3Dh+qKHNu+nOCskw9rW7QaPRgRh59FviCU8c0Ef
-	 QvIUb5qi6Vf8Zj/SsIZZ2uIt7A/Yyaqnx105jTvz7Wuij1x58/UClSJXUjIOD9mZaEJ6G
-	 rr6rwrf/9K16rpIS/DHYdFn2RbTslgkb/Jpg/pTe2DUR+WTr2Jtx7hvX/VGkJCMpqfhOy
-	 f/VdXe/SFmoJh4fFYOVUidw76GsAUERAo/WebNrBz5VXbHYxo8WPuQRDp6EACOA6RaHpR
-	 CMRHCHV4o6u8Ky6zVF5WzaHREsR3CugH/dWd9MpOFoR34DvTfSKiz7toJrs1ToyVU1A==
+	t=1793984208;
+	b=h02OhAMww7E7JSDqOqqkK1UF2JjwsJxss+asae0FBEJvIwCF1evPLE7e16z0ECIMrxPR
+	 z6NhBZKW0Uv1aSMAsfO2QwdPQuBcV/M6BG6M0F0xrw4ilpyIieg7D8O72TOP62KDrIIYk
+	 zqTnVtyO/B6zV86hGlB3fksTQwC9tkCRFo8g+r2dM7Vy5PQ0zgm1ORiwVcj+4erHyWVLg
+	 7MlnTrL7SDX4PYsbzRP3KeJKStYOZ11n1xMMneNrPGnWZOTbHjWn5qx8qSrxErRRDNynG
+	 dZCTocH78LmgieToF+SFp4LHdM6/1oRvkt6s+7y3GINHmTJCDvNZcCGgbB+v3FLvyDA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793984047;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793984208;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=nXkPku4ECf8+FOGTi2fh40tjvx3x65bjc12ogntMkA4=;
-	b=Egl5YKmLKkiA8Esn9ryrEu97gIxQwfgb5cg4qAbajP91x0mcJexr+DgxSi4goxucqD6/
-	 vdEmPleNNgGgl+GDhp25cyaZfpSn7az+zABHrVXTXxSeP/UEwQl1vbebAhQluHASskes1
-	 GNI0hl54Fn9mqehNb40HbLScnQF/tyE+/j/d8RKJ1Gp7j/mrsy0kuFKxV/MnaDjzh7ZsD
-	 m5MFEWx5RU/+57LfXAWBgB6fJ5T4r8826JVpPn8NqxaJyMlwNIPLFASkHMltfvrqEYOLs
-	 5y7JZIBMi8Ugkaa6BFSpY9qc1SxR8O/ULLXgYi+GOZViu+GKXTeQly+FxfGs9GKvZXA==
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=UMoPahHv2EIHkQEJjh5Tshzm/BTxLvso7C8eR52i+G4=;
+	b=xA1kLNUQZGsPNwOXJDs24jAEhnMbg+KwJTEC6eP6FLMiP1qvwND0Ko3/Kz5dOI0fF4s3
+	 Ln78O38NQR1EiiUjqpDwWu1p1GSBKfpz9DdWq2wB7ZtuT7pbdAngfaxcMtpcP1PUAiy4H
+	 JDPtyjoFKst3LEWY5Z9WCCT1Z2Lzp95GUv9ETMfkFZ5KVtIPKOI9XCdq04nExn7HtwP1o
+	 Qb8Bzoi4o8cIYRhQsUrG/rsadTfH6WWhBcGnd7OeOjNMUW/Qg7RcD/hBkG05QdOBFwZvT
+	 Z8Qk3C/18CF2IZDhR/ZguMVAPff4dJeuPt6Nlc43Y/8H/6wJWAF9aQJLC1SyRm8tXZQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i1119sdt;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AI1VXYlb;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96FAA606A329;
-	Fri,  6 Nov 2026 16:54:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A295A606A32C;
+	Fri,  6 Nov 2026 16:56:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i1119sdt
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 091041F0089F;
-	Fri,  6 Nov 2026 16:54:07 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AI1VXYlb
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B72DD1F0089F;
+	Fri,  6 Nov 2026 16:56:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793984047;
-	bh=nXkPku4ECf8+FOGTi2fh40tjvx3x65bjc12ogntMkA4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=i1119sdtyhZsM8PknNa5avXoFmwzuiIke35BTEuBCbNCWkS1ohvh7y+6wQBsbEoEZ
-	 eQN9eAW3mlCLhMojmvKcjCddRof0kSNMlSGm0Nxzci1Wz1Evx5ClpIWyVGUnTgxZAy
-	 +RSLh79efseypAACmsCIdx3vtldAar2qEpK0SL2kAmGE3DoZM26Dg4q+wniBl2mlEl
-	 U47AsA8uBcLZZXF6M060ruX673Yl4gxPbYsXSophDui+G3AlB/dInW2YmwLlO1rnAu
-	 9DhP0Jo9QGK10F23c77M9ZwltzFkGUnsvcnC4rTSQz74vN0pSFcjjlTUzxiLdd8CLt
-	 k4vobAlpOj4xw==
-Date: Fri, 6 Nov 2026 10:54:06 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v10 04/13] PCI: liveupdate: Document driver binding
- responsibilities
-Message-ID: <20261106165406.GA1632826@bhelgaas>
+	s=k20260515; t=1793984208;
+	bh=UMoPahHv2EIHkQEJjh5Tshzm/BTxLvso7C8eR52i+G4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=AI1VXYlbGHKHBSDeYRPa9IfNna+l0TQHpTzeMjjLxqEtHsr1KUrWx3LjcHDD2EsHG
+	 Yt2z+K3hQchT6TrSnr2E5e971gHRhO08bC1flVFfNKFN2BwCSojbig5o6XgMZ1xjJN
+	 QKS2nlzPe8fqTHeW+MRJ0cg0f+k9RZhUkismQhDXEQMSr6B6tr32DI4nkdvppZVSik
+	 jJdi3wftovQmwF2tl8gyrJ4K8RBaoICTVulwRxUuBsk5apX2nuI0AuNJ/rx+wAJ7cq
+	 93KRStOvSJKCghD/E/i2SyXdr+rPUNNhbwLbwnA4qNgQp3M7Wu+h8FkLe4WVmmJ83a
+	 a/JcOXxrCyf3Q==
+Date: Fri, 6 Nov 2026 09:56:46 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: Shameer Kolothum <skolothumtho@nvidia.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, alex@shazbot.org, jgg@ziepe.ca,
+	kevin.tian@intel.com, kbusch@meta.com, michal.winiarski@intel.com,
+	satyanarayana.k.v.p@intel.com, sonangp@nvidia.com,
+	ankita@nvidia.com, nathanc@nvidia.com, mochs@nvidia.com
+Subject: Re: [RFC PATCH v2 00/16] vfio/pci: Handle PCI error recovery and
+ report state to userspace
+Message-ID: <au4GznJ7p1k0kdcD@kbusch-mbp>
+References: <20260929173305.204856-1-skolothumtho@nvidia.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -78,50 +62,26 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261013162529.1928093-5-dmatlack@google.com>
+In-Reply-To: <20260929173305.204856-1-skolothumtho@nvidia.com>
 
-On Tue, Oct 13, 2026 at 04:25:20PM +0000, David Matlack wrote:
-> Document how driver binding works during a Live Update and what the PCI
-> core expects of drivers and users. Note that this is only a description
-> of the current division of responsibilities. These can change in the
-> future if we decide.
+On Tue, Sep 29, 2026 at 06:32:49PM +0100, Shameer Kolothum wrote:
+> Hi,
 > 
-> Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com>
-> Reviewed-by: Pranjal Shrivastava <praan@google.com>
-> Reviewed-by: Samiullah Khawaja <skhawaja@google.com>
-> Signed-off-by: David Matlack <dmatlack@google.com>
+> Currently, vfio-pci signals the error eventfd from error_detected() and
+> returns PCI_ERS_RESULT_CAN_RECOVER, including for permanent failure. It
+> has no slot_reset() or resume() callback, so userspace is not notified
+> when host recovery completes or whether the device was reset.
+> 
+> This series adds opt-in host PCI error recovery for vfio-pci. It blocks
+> device access during recovery, restores device state after a host reset,
+> and reports recovery status to userspace. The kernel runs host recovery
+> and the VMM decides how to recover the guest.
 
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+We've been experiementating with this recently. It turns out that doing
+a meaningful recovery on the user space side is a bit more difficult
+than initially thought, but we can at least get more deterministic
+behavior with these notifications and gracefully stop affected
+processes. I don't think there is much else the kernel side can do to
+make this go any better, so this series looks good to us.
 
-> ---
->  drivers/pci/liveupdate.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
-> 
-> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> index a1d9b2b1f9e3..d6b659b346bb 100644
-> --- a/drivers/pci/liveupdate.c
-> +++ b/drivers/pci/liveupdate.c
-> @@ -123,6 +123,20 @@
->   *
->   *  * The device cannot be a Virtual Function (VF).
->   *  * The device cannot be behind a PCI-to-PCI bridge.
-> + *
-> + * Driver Binding
-> + * ==============
-> + *
-> + * In the outgoing kernel, the driver must ensure that it does not release a
-> + * device between pci_liveupdate_preserve() and pci_liveupdate_unpreserve().
-> + *
-> + * In the incoming kernel, the driver must ensure that it does not release a
-> + * preserved device between probe() and pci_liveupdate_finish().
-> + *
-> + * It is the user's responsibility to ensure that incoming preserved devices are
-> + * bound to the correct driver. The PCI core does not protect against a device
-> + * getting preserved by driver A in the outgoing kernel and then getting bound
-> + * to driver B in the incoming kernel.
->   */
->  
->  #define pr_fmt(fmt) "PCI: liveupdate: " fmt
-> -- 
-> 2.56.0.385.gd3acb90ef8-goog
-> 
+Acked-by: Keith Busch <kbusch@kernel.org>
