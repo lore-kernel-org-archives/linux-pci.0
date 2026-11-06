@@ -1,66 +1,66 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.12
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793972724;
-	b=bfrSihhx6XNWwfl1f0eHwT/ZKI5AZbMmtJ/DfDCn3eMAC2odIKL9NpucqS14nWdLcGNm
-	 l3m2UBLsgHDOE5HqyTIGenSNUwJSGfsFkjlIkOdkshFyWYdN+3Xp3qZ6HezLd1PTwHxf5
-	 QaS+vQdIAr3AEDnLSigJiL3pkbRnjqdFENfYtRZO6KylHhF1/NkO7k2Rht8eYc0UlGG7d
-	 kHgTjDLuIUjYz2c+R5wsLSiEPJDSKEfOWwd12/yv1WvWpo2bb6VfDToKgZerFymzFqxH1
-	 AFUu5oFHqDe8bs99UbfJQ4iOVhp2jCMywaiQiWd9qyK8lbeqeLMFwPNMYaQaehKbb1A==
+	t=1793972734;
+	b=GzQbp/gX8hULMMqAZWIDVHrYgiGbKNi15eABE2kGWYx411pZEwFYWJmjoWSxD5Ceu5xn
+	 WUY4uno7hNoQwRcSXBctZGDEBDZBeUoXwYqXX4FvCJvqadMtd0g6nSXCADN097WL0yujE
+	 CO/oNVDShToKkyLbklzqaE3vi/6yXCJoxOPfHcElL8rR/dO7PoxYwFlLy8Y3NvVoHAnZF
+	 tnSvWCO7ozibXIjWQB08INQBE3hHMq9ebiNu4tW7abETMOWwDyCkunKPSlB5o6qXgGOlO
+	 gzSebjA7nDwWxwMXgNwLXrskgVllbox3XaaKqCwQaANkIRWnxbI+lnGSOthtbA7CiJw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793972724;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793972734;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=rx7gGWe+qVjnuJYaCuf3PNKK+ddgMsbwCNHflbLARwg=;
-	b=gvher7n2lihMWZImEVdOEnH1XdJDWiTtML7FsPU3qw+gXqWUywP0SfyjzPghwiBCUCYh
-	 xxdU1GU82o2AORvbFinSMMtcSsdf/BiKnd6SYtAQNjEM+8A2jM6NGr+9Gt8BgrI6pU9RK
-	 M6qIj9X5IgGP7Wh3g+IPnkpGKdoD/G3Z+Oium+5FYSaWdM1uES9DArGboaW52DwmHjCe3
-	 Fr4jnbJAJWsv90G0WNZgiiu0FB8S52F7kD1R6Wpbrt1D2PLBfbJwJWzOzyJkVYCBubOSw
-	 g6kmhuyPM9cNotohPN4ZqUelSl7mOqu9eiNFuwvtmu6QHfrRVeZdtLVd/sBxuNoLRjQ==
+	bh=UFwXQwxVpHxsg2Cs/qfLUW4k+9FSMUZHDI/9ORiqiYQ=;
+	b=IK/Rf6ZlbJuAj/BABMXteVVEZVEfuLH0RT2k0nLjbxdWQ/Y/CXIkcjZaDGdcVcyicYcJ
+	 Z/Lo2gIm6WYcLLVEBWhKrrzZPcvkZf+8zet5G5m0HhP7howlSOOL6E+2y7cnNUc9HJy4T
+	 sVuEAN7TtorCievzS7fZjgcs1mb6r1w8jkfeFaUA2zSOKFjMgZezRzlpTpiK/DzsVUxxe
+	 4We+iX10+CZhUecN4VstM5GEn0Y0zSVFKqbjM9Skop1IXqwpb35XWPVQ7Rhm397v3tD3A
+	 ASupjr2SNlykm1AymD5tUe6kc3dolqqS6KDMnPAZ8uBUzs0vzL288Er7ZXI+dGjVhkA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.intel.com;
 	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Et9fL52Y;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=R3Vl0eoS;
 	arc=none smtp.remote-ip=198.175.65.12
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D522606A333;
-	Fri,  6 Nov 2026 13:45:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5D522606A333
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B683606EEB5;
+	Fri,  6 Nov 2026 13:45:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1B683606EEB5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Et9fL52Y
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=R3Vl0eoS
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793972723; x=1825508723;
+  t=1793972734; x=1825508734;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=T4yGvXzWmKxa4531S1rrSDgyYW3DGI1nzB/fVYkEmEs=;
-  b=Et9fL52Y0qNFm43atOHmpqnkysvJjlR1imntmkfbmHuUZKnzRm0NfqC6
-   O87vhL6kYC0iCyFQ47FypBFP25XAzr7t0OEcpaVhvpNFMu2anmHdGaJ2c
-   PlymsfapV006otXYS/cV4wgzu6pTTDH48mPnxAuf2hIBMIO6omGvWxyBG
-   KsHRy0fydf3aLhEXncLShyXGlgN/vHqMFeyKeO59E2Ds7IVPUyUerwEry
-   JFm7B6009qIP6y73O3mfGrVax0kaimSYqPnHZRAbe7FSmEYBUmsyw/rOC
-   PUdlla89QOoGfJAsbqbZRm/UQK6GWnl8lm3XzNLTlhPPy1Kip6YHjHQB8
-   Q==;
-X-CSE-ConnectionGUID: vOh0j7LsRE6mWUzhLBZ0fw==
-X-CSE-MsgGUID: cE8Anu/hTZm3lGTdMUTLpA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2662035"
+  bh=3O5ekmB1dHv+tm3BCy6+VTlJkA1PwoegDkJR0441j9A=;
+  b=R3Vl0eoSqYhvCQSHnBiYQUzo2dK+eMu54HczeRBgViaFopXNR6Fpab5N
+   /y7+O17x/Du7/ts4C28KoK9Qy0j+EZXacyxUwHz0iayIVWMdOAA7aK/Kz
+   SuNGVYSifGvhiFTf0z+f6/ITPZUU0ZgoIDuao3JKEjvbyKhkQEvRvH7mi
+   EA0mBEl4b4G8V3drVC4v9KUBvmuT7UVlRxeV3nEYUnw98b8y+1CdhEXiS
+   8LtCFo3GV1bSgwTanXSEYsgy1J0RkmplbW7kkveU1ZsRnE8KpG3DRHGbc
+   cr2hQjKYlHAsnns2zgQelOuFO426G86V3KF/aUZsEQGLD+S8ztF+6hERA
+   g==;
+X-CSE-ConnectionGUID: KDn424GwTxij1uBhaSkIQQ==
+X-CSE-MsgGUID: 4zGSTjFOSd28LkslVzpJ3g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2662098"
 X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="2662035"
-Received: from fmviesa012.fm.intel.com ([10.60.135.152])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:45:22 -0800
-X-CSE-ConnectionGUID: BsGBMQ4JR6GY88O+RbhffA==
-X-CSE-MsgGUID: SaRM3n8vRAqJ564RAPZjFw==
+   d="scan'208";a="2662098"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:45:33 -0800
+X-CSE-ConnectionGUID: fPT31InaRi6PkCcfkz3Xhg==
+X-CSE-MsgGUID: 8dwdWGURRqOBEEXAFsgeVg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="9028391"
+   d="scan'208";a="7843846"
 Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.104])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:45:07 -0800
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:45:29 -0800
 From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
 	Geramy Loveless <gloveless@jqluv.com>,
@@ -72,52 +72,13 @@ To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
 	Rob Herring <robh@kernel.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
 	Mesih Kilinc <Mesih.Kilinc@sony.com>,
-	Richard Henderson <richard.henderson@linaro.org>,
-	Matt Turner <mattst88@gmail.com>,
-	Magnus Lindholm <linmag7@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Helge Deller <deller@gmx.de>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-	Shrikanth Hegde <sshegde@linux.ibm.com>,
-	Yoshinori Sato <ysato@users.sourceforge.jp>,
-	Rich Felker <dalias@libc.org>,
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Chris Zankel <chris@zankel.net>,
-	Max Filippov <jcmvbkbc@gmail.com>,
-	David Airlie <airlied@redhat.com>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	Simona Vetter <simona@ffwll.ch>,
 	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	linux-alpha@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-m68k@lists.linux-m68k.org,
-	linux-mips@vger.kernel.org,
-	linux-parisc@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	linux-sh@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	intel-gfx@lists.freedesktop.org
-Cc: Sashiko <sashiko-bot@kernel.org>
-Subject: [PATCH v5 08/14] PCI: Honor alignment overrides
-Date: Fri,  6 Nov 2026 15:43:29 +0200
-Message-ID: <20261106134341.39493-9-ilpo.jarvinen@linux.intel.com>
+	linux-kernel@vger.kernel.org
+Cc: Eric Auger <eric.auger@redhat.com>,
+	Nikolas Joshua Britton <nbritton@exabit.io>
+Subject: [PATCH v5 09/14] PCI: Place resources to either edge of the window
+Date: Fri,  6 Nov 2026 15:43:30 +0200
+Message-ID: <20261106134341.39493-10-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261106134341.39493-1-ilpo.jarvinen@linux.intel.com>
 References: <20261106134341.39493-1-ilpo.jarvinen@linux.intel.com>
@@ -133,473 +94,410 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-pci=resource_alignment argument can override the default alignment for
-the resource. The remainder code introduced in the commit 9036bd0efcb6
-("PCI: Align head space better") can move remainder space (non-aligning
-part of the size) before the aligning left edge which results in
-violating the requested alignment.
+PCI resource assignment phase is based on a greedy algorithm. The
+resources are assigned in descending order of required alignment.
+Because the PCI BARs are power-of-two sized resources, it mostly works
+(bridge windows and VF BARs are composite resources that might not
+necessarily have power-of-two size but internally they are still
+composed of BARs).
 
-Introduce struct pci_resreq_data to hold device and user-given alignment
-to be able to honor it in pci_align_resource(). When user-given alignment
-is found, any remainder movement is skipped.
+The resource assignment prior to the commit 9036bd0efcb6 ("PCI: Align
+head space better") placed resources towards the left edge of the
+window. Tha commit altered assignment for resources whose size is not a
+perfect multiple of the required alignment by moving the remainder
+before the left edge of the window if possible.
 
-PowerNV will not be able to use the current remainder logic after this
-change because on it pcibios_default_alignment() always results in
-setting min_align but this code is in a transient state and the problem
-will be fixed by an upcoming change that rewrites the resource
-placement algorithm with a more generic approach.
+The behavior after the commit 9036bd0efcb6 ("PCI: Align head space
+better") may result in problems when a bridge window consists of one
+large alignment resource and a composite one with a smaller alignment
+(this is a typical setup for GPU's PF BAR and VF BARs). The resource
+with the largest alignment is assigned first and placed such that the
+remainder space is left of the assigned resource, which effectively
+splits the remaining space into two. While the VF BAR could fit to the
+remaining space, it requires contiguous free space that is no longer
+there because the large resource is now in the middle.
+
+In this log excerpt, BAR 2 is placed in the middle of the window blocking
+the larger VF BAR 2 from fitting anywhere:
+
+pci 0000:03:01.0: bridge window [mem 0xa9f8000000-0xbfffffffff 64bit pref]: assigned
+pci 0000:04:00.0: BAR 2 [mem 0xb000000000-0xb7ffffffff 64bit pref]: assigned
+pci 0000:04:00.0: VF BAR 2 [mem size 0xe00000000 64bit pref]: can't assign; no space
+pci 0000:04:00.0: VF BAR 2 [mem size 0xe00000000 64bit pref]: failed to assign
+
+The old behavior, despite being greedy, naturally consumed space from
+the left edge leaving the remainder space adjacent to the other free
+space. When remainder space is at the left edge of the window, the
+greedy algorithm should instead assign to the right edge of the window.
+(If both ends do align, either end works equally.)
+
+While defining window edge aware resource assignment algorithm, one
+additional thing is useful to note. In DT setups the bridge
+windows/root bus resources are often very precisely sized, with right
+edge of the window having much smaller alignment than the left edge.
+They also often come with a small BAR that should be placed to the
+right edge to not block bridge window placed to the left edge of the
+window. The bridge window may be entirely optional at this point
+because of hotplug. The resource assignment fallback phase assigns
+mandatory resources first and in such a case, small BAR gets assigned
+first.
+
+One example where mandatory BAR 0 blocks bridge windows from fitting
+(both bridge windows wouldn't fit because of qemu not providing enough
+space for both bridge windows but one should fit like it was originally
+set up by the platform):
+
+pci_bus 0000:0a: root bus resource [mem 0x10a00000-0x10c00fff window]
+pci 0000:0a:00.0: [1b36:000c] type 01 class 0x060400 PCIe Root Port
+pci 0000:0a:00.0: BAR 0 [mem 0x10c00000-0x10c00fff]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0d]
+pci 0000:0a:00.0:   bridge window [mem 0x10a00000-0x10bfffff]
+pci 0000:0a:00.0: enabling Extended Tags
+pci 0000:0a:00.0: bridge window [mem 0x00100000-0x000fffff 64bit pref] to [bus 0b-0d] add_size 200000 add_align 100000
+pci 0000:0a:00.0: bridge window [mem 0x00100000-0x000fffff] to [bus 0b-0d] add_size 200000 add_align 100000
+pci 0000:0a:00.0: bridge window [mem 0x10a00000-0x10bfffff]: assigned
+pci 0000:0a:00.0: bridge window [mem size 0x00200000 64bit pref]: can't assign; no space
+pci 0000:0a:00.0: bridge window [mem size 0x00200000 64bit pref]: failed to assign
+pci 0000:0a:00.0: BAR 0 [mem 0x10c00000-0x10c00fff]: assigned
+pci 0000:0a:00.0: bridge window [mem 0x10a00000-0x10bfffff]: releasing
+pci 0000:0a:00.0: BAR 0 [mem 0x10c00000-0x10c00fff]: releasing
+pci 0000:0a:00.0: BAR 0 [mem 0x10a00000-0x10a00fff]: assigned
+pci 0000:0a:00.0: bridge window [mem size 0x00200000]: can't assign; no space
+pci 0000:0a:00.0: bridge window [mem size 0x00200000]: failed to assign
+pci 0000:0a:00.0: bridge window [mem size 0x00200000 64bit pref]: can't assign; no space
+pci 0000:0a:00.0: bridge window [mem size 0x00200000 64bit pref]: failed to assign
+pci_bus 0000:0a: Some PCI device resources are unassigned, try booting with pci=realloc
+
+To achieve best generalization of the approach, the selection algorithm
+avoids consuming space from the window edge that can fit largest
+aligning resources in the future, whenever possible. This approach has
+certain level of preference towards the right edge to keep the largest
+alignment available (which is usually at the left edge), which
+unfortunately may uncover platform issues.
+
+The candidate selection compares the properties of the remaining free
+space using cmp_free_candidate() that compares (in decreasing order of
+priority):
+
+ 1. the largest contiguous free space,
+ 2. the largest naturally aligning power-of-two-sized address range
+    within,
+ 3. the largest alignment of the start address for the naturally
+    aligning free space range (from check 2).
+ 4. the largest alignment of the start address of the free space.
+
+This precedence is a balancing act. In cases where not all resources
+fit, having check 2 before 1 could be helpful for getting optional
+resources assigned (when retrying assignments with mandatory resources
+first and then assigning optional resources on best-effort basis). It
+may be useful to revisit the order or add logic to pick the precedence
+on a case-by-case basis once we get large scale experience and problem
+reports.
 
 Fixes: 9036bd0efcb6 ("PCI: Align head space better")
-Reported-by: Sashiko <sashiko-bot@kernel.org>
-Link: https://lore.kernel.org/linux-pci/20260923133202.07DF61F000FF@smtp.kernel.org/
-Acked-by: Rodrigo Vivi <rodrigo.vivi@intel.com>
+Reported-by: Alexey Fomenko <alexey.fomenko@intel.com>
+Tested-by: Alexey Fomenko <alexey.fomenko@intel.com>
+Reported-by: Eric Auger <eric.auger@redhat.com>
+Tested-by: Eric Auger <eric.auger@redhat.com>
+Tested-by: Nikolas Joshua Britton <nbritton@exabit.io>
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
 
-Jani Nikula <jani.nikula@intel.com> did ack this with a condition that
-there is a proper review done by somebody else so I've not yet included
-his tag.
+Both reports are private discussions (Eric's report started as public
+and produced another fix but further problem was only visible in the
+privately sent logs after that). Thus no links.
+---
+ drivers/pci/pci.h       |   4 +
+ drivers/pci/setup-bus.c |   4 -
+ drivers/pci/setup-res.c | 219 ++++++++++++++++++++++++++++++++++++----
+ 3 files changed, 204 insertions(+), 23 deletions(-)
 
- arch/alpha/kernel/pci.c          |  3 ++-
- arch/arm/kernel/bios32.c         |  5 +++--
- arch/m68k/kernel/pcibios.c       |  4 ++--
- arch/mips/pci/pci-generic.c      |  5 +++--
- arch/mips/pci/pci-legacy.c       |  5 +++--
- arch/parisc/kernel/pci.c         |  5 +++--
- arch/powerpc/kernel/pci-common.c |  5 +++--
- arch/sh/drivers/pci/pci.c        |  5 +++--
- arch/x86/pci/i386.c              |  5 +++--
- arch/xtensa/kernel/pci.c         |  5 +++--
- drivers/char/agp/intel-gtt.c     |  5 ++++-
- drivers/gpu/drm/i915/i915_gmch.c |  5 +++--
- drivers/pci/pci.c                |  4 ++--
- drivers/pci/pci.h                |  2 ++
- drivers/pci/setup-res.c          | 33 ++++++++++++++++++++++++++------
- include/linux/pci.h              | 15 +++++++++++++--
- 16 files changed, 79 insertions(+), 32 deletions(-)
-
-diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-index 11df411b1d18..c5d725a9781f 100644
---- a/arch/alpha/kernel/pci.c
-+++ b/arch/alpha/kernel/pci.c
-@@ -128,7 +128,8 @@ pcibios_align_resource(void *data, const struct resource *res,
- 		       const struct resource *empty_res,
- 		       resource_size_t size, resource_size_t align)
- {
--	struct pci_dev *dev = data;
-+	struct pci_resreq_data *rr = data;
-+	struct pci_dev *dev = rr->dev;
- 	struct pci_controller *hose = dev->sysdata;
- 	unsigned long alignto;
- 	resource_size_t start = res->start;
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index ac0e890510da..3e61826f07fb 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -564,7 +564,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				       resource_size_t size,
- 				       resource_size_t align)
- {
--	struct pci_dev *dev = data;
-+	struct pci_resreq_data *rr = data;
-+	struct pci_dev *dev = rr->dev;
- 	resource_size_t start = res->start;
- 	struct pci_host_bridge *host_bridge;
- 
-@@ -578,7 +579,7 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				start, size, align);
- 
- 	if (res->flags & IORESOURCE_MEM)
--		return pci_align_resource(dev, res, empty_res, size, align);
-+		return pci_align_resource(rr, res, empty_res, size, align);
- 
- 	return start;
- }
-diff --git a/arch/m68k/kernel/pcibios.c b/arch/m68k/kernel/pcibios.c
-index 7a9e60df79c5..3024408412bc 100644
---- a/arch/m68k/kernel/pcibios.c
-+++ b/arch/m68k/kernel/pcibios.c
-@@ -31,14 +31,14 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				       resource_size_t size,
- 				       resource_size_t align)
- {
--	struct pci_dev *dev = data;
-+	struct pci_resreq_data *rr = data;
- 	resource_size_t start = res->start;
- 
- 	if ((res->flags & IORESOURCE_IO) && (start & 0x300))
- 		start = (start + 0x3ff) & ~0x3ff;
- 
- 	if (res->flags & IORESOURCE_MEM)
--		return pci_align_resource(dev, res, empty_res, size, align);
-+		return pci_align_resource(rr, res, empty_res, size, align);
- 
- 	return start;
- }
-diff --git a/arch/mips/pci/pci-generic.c b/arch/mips/pci/pci-generic.c
-index c2e23d0c1d77..7f3ecb91b85b 100644
---- a/arch/mips/pci/pci-generic.c
-+++ b/arch/mips/pci/pci-generic.c
-@@ -25,7 +25,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				       const struct resource *empty_res,
- 				       resource_size_t size, resource_size_t align)
- {
--	struct pci_dev *dev = data;
-+	struct pci_resreq_data *rr = data;
-+	struct pci_dev *dev = rr->dev;
- 	resource_size_t start = res->start;
- 	struct pci_host_bridge *host_bridge;
- 
-@@ -39,7 +40,7 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				start, size, align);
- 
- 	if (res->flags & IORESOURCE_MEM)
--		return pci_align_resource(dev, res, empty_res, size, align);
-+		return pci_align_resource(rr, res, empty_res, size, align);
- 
- 	return start;
- }
-diff --git a/arch/mips/pci/pci-legacy.c b/arch/mips/pci/pci-legacy.c
-index dae6dafdd6e0..82d4b01db64e 100644
---- a/arch/mips/pci/pci-legacy.c
-+++ b/arch/mips/pci/pci-legacy.c
-@@ -55,7 +55,8 @@ pcibios_align_resource(void *data, const struct resource *res,
- 		       const struct resource *empty_res,
- 		       resource_size_t size, resource_size_t align)
- {
--	struct pci_dev *dev = data;
-+	struct pci_resreq_data *rr = data;
-+	struct pci_dev *dev = rr->dev;
- 	struct pci_controller *hose = dev->sysdata;
- 	resource_size_t start = res->start;
- 
-@@ -70,7 +71,7 @@ pcibios_align_resource(void *data, const struct resource *res,
- 		if (start & 0x300)
- 			start = (start + 0x3ff) & ~0x3ff;
- 	} else if (res->flags & IORESOURCE_MEM) {
--		start = pci_align_resource(dev, res, empty_res, size, align);
-+		start = pci_align_resource(rr, res, empty_res, size, align);
- 
- 		/* Make sure we start at our min on all hoses */
- 		if (start < PCIBIOS_MIN_MEM + hose->mem_resource->start)
-diff --git a/arch/parisc/kernel/pci.c b/arch/parisc/kernel/pci.c
-index 96950fe9c2b7..36a3a439f609 100644
---- a/arch/parisc/kernel/pci.c
-+++ b/arch/parisc/kernel/pci.c
-@@ -193,7 +193,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				       resource_size_t size,
- 				       resource_size_t alignment)
- {
--	struct pci_dev *dev = data;
-+	struct pci_resreq_data *rr = data;
-+	struct pci_dev *dev = rr->dev;
- 	resource_size_t align, start = res->start;
- 
- 	pci_dbg(dev, "%pR: pcibios_align_resource(%lx, 0x%llx, 0x%llx)\n",
-@@ -205,7 +206,7 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 	if (align > alignment)
- 		start = ALIGN(start, align);
- 	else
--		start = pci_align_resource(dev, res, empty_res, size, alignment);
-+		start = pci_align_resource(rr, res, empty_res, size, alignment);
- 
- 	return start;
- }
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 4fc52c21fe5d..23594759cfe2 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1131,7 +1131,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				       resource_size_t size,
- 				       resource_size_t align)
- {
--	struct pci_dev *dev = data;
-+	struct pci_resreq_data *rr = data;
-+	struct pci_dev *dev = rr->dev;
- 	resource_size_t start = res->start;
- 
- 	if (res->flags & IORESOURCE_IO) {
-@@ -1140,7 +1141,7 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 		if (start & 0x300)
- 			start = (start + 0x3ff) & ~0x3ff;
- 	} else if (res->flags & IORESOURCE_MEM) {
--		start = pci_align_resource(dev, res, empty_res, size, align);
-+		start = pci_align_resource(rr, res, empty_res, size, align);
- 	}
- 
- 	return start;
-diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-index 878a27a1acfb..279f2770ff4b 100644
---- a/arch/sh/drivers/pci/pci.c
-+++ b/arch/sh/drivers/pci/pci.c
-@@ -172,7 +172,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				       resource_size_t size,
- 				       resource_size_t align)
- {
--	struct pci_dev *dev = data;
-+	struct pci_resreq_data *rr = data;
-+	struct pci_dev *dev = rr->dev;
- 	struct pci_channel *hose = dev->sysdata;
- 	resource_size_t start = res->start;
- 
-@@ -186,7 +187,7 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 		if (start & 0x300)
- 			start = (start + 0x3ff) & ~0x3ff;
- 	} else if (res->flags & IORESOURCE_MEM) {
--		start = pci_align_resource(dev, res, empty_res, size, align);
-+		start = pci_align_resource(rr, res, empty_res, size, align);
- 	}
- 
- 	return start;
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index e2de26b82940..4178ae4380c2 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -156,7 +156,8 @@ pcibios_align_resource(void *data, const struct resource *res,
- 		       const struct resource *empty_res,
- 		       resource_size_t size, resource_size_t align)
- {
--	struct pci_dev *dev = data;
-+	struct pci_resreq_data *rr = data;
-+	struct pci_dev *dev = rr->dev;
- 	resource_size_t start = res->start;
- 
- 	if (res->flags & IORESOURCE_IO) {
-@@ -165,7 +166,7 @@ pcibios_align_resource(void *data, const struct resource *res,
- 		if (start & 0x300)
- 			start = (start + 0x3ff) & ~0x3ff;
- 	} else if (res->flags & IORESOURCE_MEM) {
--		start = pci_align_resource(dev, res, empty_res, size, align);
-+		start = pci_align_resource(rr, res, empty_res, size, align);
- 
- 		/* The low 1MB range is reserved for ISA cards */
- 		if (start < BIOS_END)
-diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
-index 305031551136..4e8ad4a3c9fe 100644
---- a/arch/xtensa/kernel/pci.c
-+++ b/arch/xtensa/kernel/pci.c
-@@ -42,7 +42,8 @@ pcibios_align_resource(void *data, const struct resource *res,
- 		       const struct resource *empty_res,
- 		       resource_size_t size, resource_size_t align)
- {
--	struct pci_dev *dev = data;
-+	struct pci_resreq_data *rr = data;
-+	struct pci_dev *dev = rr->dev;
- 	resource_size_t start = res->start;
- 
- 	if (res->flags & IORESOURCE_IO) {
-@@ -55,7 +56,7 @@ pcibios_align_resource(void *data, const struct resource *res,
- 		if (start & 0x300)
- 			start = (start + 0x3ff) & ~0x3ff;
- 	} else if (res->flags & IORESOURCE_MEM) {
--		start = pci_align_resource(dev, res, empty_res, size, align);
-+		start = pci_align_resource(rr, res, empty_res, size, align);
- 	}
- 
- 	return start;
-diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
-index bcc26785175d..06990fad8e48 100644
---- a/drivers/char/agp/intel-gtt.c
-+++ b/drivers/char/agp/intel-gtt.c
-@@ -1038,10 +1038,13 @@ static struct agp_memory *intel_fake_agp_alloc_by_type(size_t pg_count,
- 
- static int intel_alloc_chipset_flush_resource(void)
- {
-+	struct pci_resreq_data rr;
- 	int ret;
-+
-+	pci_init_resreq_data(&rr, intel_private.bridge_dev);
- 	ret = pci_bus_alloc_resource(intel_private.bridge_dev->bus, &intel_private.ifp_resource, PAGE_SIZE,
- 				     PAGE_SIZE, PCIBIOS_MIN_MEM, 0,
--				     pcibios_align_resource, intel_private.bridge_dev);
-+				     pcibios_align_resource, &rr);
- 
- 	return ret;
- }
-diff --git a/drivers/gpu/drm/i915/i915_gmch.c b/drivers/gpu/drm/i915/i915_gmch.c
-index b0ef6ef577a3..f11ed5509095 100644
---- a/drivers/gpu/drm/i915/i915_gmch.c
-+++ b/drivers/gpu/drm/i915/i915_gmch.c
-@@ -38,6 +38,7 @@ static int mchbar_reg(struct drm_i915_private *i915)
- static int
- intel_alloc_mchbar_resource(struct drm_i915_private *i915)
- {
-+	struct pci_resreq_data rr;
- 	u32 temp_lo, temp_hi = 0;
- 	u64 mchbar_addr;
- 	int ret;
-@@ -55,12 +56,12 @@ intel_alloc_mchbar_resource(struct drm_i915_private *i915)
- 	/* Get some space for it */
- 	i915->gmch.mch_res.name = "i915 MCHBAR";
- 	i915->gmch.mch_res.flags = IORESOURCE_MEM;
-+	pci_init_resreq_data(&rr, i915->gmch.pdev);
- 	ret = pci_bus_alloc_resource(i915->gmch.pdev->bus,
- 				     &i915->gmch.mch_res,
- 				     MCHBAR_SIZE, MCHBAR_SIZE,
- 				     PCIBIOS_MIN_MEM,
--				     0, pcibios_align_resource,
--				     i915->gmch.pdev);
-+				     0, pcibios_align_resource, &rr);
- 	if (ret) {
- 		drm_dbg(&i915->drm, "failed bus alloc: %d\n", ret);
- 		i915->gmch.mch_res.start = 0;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7c6f2aba8144..8c40f86d75ee 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -6507,8 +6507,8 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
-  * RETURNS: Resource alignment if it is specified.
-  *          Zero if it is not specified.
-  */
--static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
--							bool *resize)
-+resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
-+						 bool *resize)
- {
- 	int align_order, count;
- 	resource_size_t align = pcibios_default_alignment();
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 77efa4c5c960..e6e2afcceb33 100644
+index e6e2afcceb33..31ffae9ce557 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -515,6 +515,8 @@ void devm_pci_alloc_host_bridge_release(void *data);
- struct device *pci_get_host_bridge_device(struct pci_dev *dev);
- void pci_put_host_bridge_device(struct device *dev);
+@@ -115,6 +115,10 @@ struct pcie_tlp_log;
+ #define PCI_BUS_BRIDGE_MEM_WINDOW	1
+ #define PCI_BUS_BRIDGE_PREF_MEM_WINDOW	2
  
-+resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
-+						 bool *resize);
- void pci_resize_resource_set_size(struct pci_dev *dev, int resno, int size);
- int pci_do_resource_release_and_resize(struct pci_dev *dev, int resno, int size,
- 				       int exclude_bars);
++#define PCI_RES_TYPE_MASK \
++	(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH |\
++	 IORESOURCE_MEM_64)
++
+ #define PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
+ 				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
+ 
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index c3c229ed320a..5f8320cac504 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -32,10 +32,6 @@
+ #include <linux/acpi.h>
+ #include "pci.h"
+ 
+-#define PCI_RES_TYPE_MASK \
+-	(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH |\
+-	 IORESOURCE_MEM_64)
+-
+ unsigned int pci_flags;
+ EXPORT_SYMBOL_GPL(pci_flags);
+ 
 diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 376f09630a4a..9c55b9f9462c 100644
+index 9c55b9f9462c..ea256eb806a5 100644
 --- a/drivers/pci/setup-res.c
 +++ b/drivers/pci/setup-res.c
-@@ -248,6 +248,20 @@ static int pci_revert_fw_address(struct resource *res, struct pci_dev *dev,
- 	return 0;
+@@ -13,8 +13,12 @@
+  *	     Resource sorting
+  */
+ 
++#include <linux/align.h>
+ #include <linux/kernel.h>
+ #include <linux/export.h>
++#include <linux/limits.h>
++#include <linux/log2.h>
++#include <linux/minmax.h>
+ #include <linux/pci.h>
+ #include <linux/errno.h>
+ #include <linux/ioport.h>
+@@ -274,10 +278,112 @@ resource_size_t pci_resource_alignment(const struct pci_dev *dev,
+ 	return resource_alignment(res);
  }
  
-+/*
-+ * TODO: Improve PCI resource assignment interface so that callers outside PCI
-+ * core do not need to know about this detail.
-+ */
-+void pci_init_resreq_data(struct pci_resreq_data *rr, struct pci_dev *dev)
++static resource_size_t pci_max_natural_size(const struct resource *res,
++					    resource_size_t *max_align)
 +{
-+	bool dummy;
++	resource_size_t powof2, natural_start, natural_end;
++	resource_size_t size = resource_size(res);
 +
-+	memset(rr, 0, sizeof(*rr));
-+	rr->dev = dev;
-+	rr->min_align = pci_specified_resource_alignment(dev, &dummy);
++	*max_align = 1;
++	if (!size)
++		return 0;
++
++	powof2 = rounddown_pow_of_two_u64(size);
++	natural_start = ALIGN(res->start, powof2);
++	/* end = ~0 first overflows, then -1 brings it back */
++	if (natural_start >= ALIGN_DOWN(res->end + 1, powof2) - 1) {
++		powof2 = max(powof2 / 2, 1U);
++		/*
++		 * Corner case: with start at an odd alignment multiple, there
++		 * are two powof2 sized blocks.
++		 */
++		natural_start = ALIGN(res->start, powof2);
++		natural_end = ALIGN_DOWN(res->end + 1 - powof2, powof2);
++		*max_align <<= max(natural_start ? __ffs64(natural_start) : 0,
++				   natural_end ? __ffs64(natural_end) : 0);
++
++	} else if (natural_start) {
++		*max_align <<= __ffs64(natural_start);
++	}
++
++	/* Normal PCI resources cannot have align 1. */
++	if (*max_align == 1) {
++		/*
++		 * Zero address has infinite alignment, return the largest
++		 * representable number even if it's not a power of two.
++		 */
++		*max_align = RESOURCE_SIZE_MAX;
++	}
++
++	return powof2;
 +}
-+EXPORT_SYMBOL_GPL(pci_init_resreq_data);
 +
- resource_size_t pci_resource_alignment(const struct pci_dev *dev,
- 				       const struct resource *res)
- {
-@@ -265,17 +279,21 @@ resource_size_t pci_resource_alignment(const struct pci_dev *dev,
-  * before res->start if there's enough free space there. This enables
-  * tighter packing for resources.
++struct free_candidate_info {
++	resource_size_t size;
++	resource_size_t natural_size;
++	resource_size_t max_align;
++	resource_size_t left_align;
++};
++
+ /*
+- * For mem bridge windows, try to relocate tail remainder space to space
+- * before res->start if there's enough free space there. This enables
+- * tighter packing for resources.
++ * Select resource placement based on the remaining free space. Pick the
++ * candidate with which the remaining free space has (in decreasing order of
++ * priority):
++ *
++ *   1. the largest contiguous free space,
++ *   2. the largest naturally aligning power-of-two-sized address range within,
++ *   3. the largest alignment of the start address for the naturally aligning
++ *      free space range (from check 2),
++ *   4. the largest alignment of the start address of the free space.
++ */
++static int cmp_free_candidate(const struct free_candidate_info *a,
++			      const struct free_candidate_info *b)
++{
++	if (a->size != b->size)
++		return a->size < b->size ? -1 : 1;
++	if (a->natural_size != b->natural_size)
++		return a->natural_size < b->natural_size ? -1 : 1;
++	if (a->max_align != b->max_align)
++		return a->max_align < b->max_align ? -1 : 1;
++	if (a->left_align != b->left_align)
++		return a->left_align < b->left_align ? -1 : 1;
++
++	return 0;
++}
++
++/**
++ * pci_align_resource - Places resource into empty space range
++ * @rr: PCI resource request data
++ * @res: Candidate range calculated by caller (not among @rr->dev's resources!)
++ * @empty_res: Full free space range
++ * @size: Required size for the resource
++ * @align: Required alignment (see below for details)
++ *
++ * Places resource inside @empty_res honoring @size and @align.
++ *
++ * Returns: start address for the resource.
++ */
++/*
++ * Following candidate logic only applies to mem resources currently. For
++ * composite resources not divisible by @align, @align does not apply to
++ * non-aligning remainder part giving some leeway for its placement. There
++ * are 4 candidate positions:
++ *
++ *           W0WWW0WWW0WWW
++ * 0.         AAAAr
++ * 1.        rAAAA
++ * 2.             AAAAr
++ * 3.                rAAAA
++ *
++ * W = bridge window
++ * 0 = bridge window offset matching align
++ * A = aligning part of size (size rounded down by align)
++ * r = non-aligning remainder
++ *
++ * Candidates 0 & 2 and 1 & 3 may degenerate to the same address range.
++ *
++ * Select resource placement based on the remaining free space. Candidates 0
++ * & 1 check only right edge free space and 2 & 3 the left edge.
   */
--resource_size_t pci_align_resource(struct pci_dev *dev,
-+resource_size_t pci_align_resource(struct pci_resreq_data *rr,
+ resource_size_t pci_align_resource(struct pci_resreq_data *rr,
  				   const struct resource *res,
- 				   const struct resource *empty_res,
- 				   resource_size_t size,
+@@ -286,31 +392,106 @@ resource_size_t pci_align_resource(struct pci_resreq_data *rr,
  				   resource_size_t align)
  {
-+	struct pci_dev *dev = rr->dev;
- 	resource_size_t remainder, start_addr;
+ 	struct pci_dev *dev = rr->dev;
+-	resource_size_t remainder, start_addr;
++	unsigned long type = res->flags & PCI_RES_TYPE_MASK;
++	struct free_candidate_info best_info = {};
++	resource_size_t aligning, remainder;
++	struct resource candidate[4];
++	unsigned int i;
++	int best = -1;
  
  	if (!(res->flags & IORESOURCE_MEM))
  		return res->start;
  
-+	if (rr->min_align)
-+		return res->start;
-+
- 	if (IS_ALIGNED(size, align))
+-	if (rr->min_align)
+-		return res->start;
+-
+-	if (IS_ALIGNED(size, align))
++	/*
++	 * Not using large enough align when minimum alignment is in use is
++	 * a caller-side problem which likely caused also mis-sizing the
++	 * corresponding window so do not attempt to solve it here (nor
++	 * possibly make the problem worse by applying remainder relocation
++	 * below).
++	 *
++	 * Practical impact of this is expected to be around zero (or the
++	 * callers would have been already fixed).
++	 *
++	 * TODO: Fix all callers and remove this.
++	 */
++	if (rr->min_align > align) {
++		pci_dbg(dev, "%pR: minimum alignment exceeds align (%llx > %llx)\n",
++			res,
++			(unsigned long long)rr->min_align,
++			(unsigned long long)align);
+ 		return res->start;
++	}
+ 
+ 	remainder = size - ALIGN_DOWN(size, align);
+-	/* Don't mess with size that doesn't align with window size granularity */
+-	if (!IS_ALIGNED(remainder, pci_min_window_alignment(dev->bus, res->flags)))
+-		return res->start;
+-	/* Try to place remainder that doesn't fill align before */
+-	if (res->start < remainder)
+-		return res->start;
+-	start_addr = res->start - remainder;
+-	if (empty_res->start > start_addr)
++	aligning = size - remainder;
++	if (!aligning)
  		return res->start;
  
-@@ -306,18 +324,21 @@ resource_size_t __weak pcibios_align_resource(void *data,
- 					      resource_size_t size,
- 					      resource_size_t align)
- {
--	struct pci_dev *dev = data;
-+	struct pci_resreq_data *rr = data;
- 
--	return pci_align_resource(dev, res, empty_res, size, align);
-+	return pci_align_resource(rr, res, empty_res, size, align);
+-	pci_dbg(dev, "%pR: moving candidate start address below align to %llx\n",
+-		res, (unsigned long long)start_addr);
+-	return start_addr;
++	candidate[0] = DEFINE_RES(ALIGN(empty_res->start, align), size, type);
++	candidate[1] = DEFINE_RES(ALIGN(empty_res->start, align) - remainder,
++				  size, type);
++	candidate[2] = DEFINE_RES(ALIGN_DOWN(empty_res->end + 1 - remainder, align) -
++				  aligning, size, type);
++	candidate[3] = DEFINE_RES(ALIGN_DOWN(empty_res->end + 1, align) - size,
++				  size, type);
++
++	for (i = 0; i < ARRAY_SIZE(candidate); i++) {
++		struct free_candidate_info info;
++		struct resource remaining;
++
++		if ((candidate[i].start > candidate[i].end) ||
++		    !__resource_contains_unbound(empty_res, &candidate[i])) {
++			pci_dbg(dev, "%pR: candidate %u not within free space %pR\n",
++				&candidate[i], i, empty_res);
++			continue;
++		}
++
++		if (rr->min_align &&
++		    !IS_ALIGNED(candidate[i].start, rr->min_align)) {
++			pci_dbg(dev, "%pR: candidate %u skipped due to alignment lower bound %llx\n",
++				&candidate[i], i,
++				(unsigned long long)rr->min_align);
++			continue;
++		}
++
++		remaining.flags = type;
++		if (i <= 1) {
++			remaining.start = candidate[i].end + 1;
++			remaining.end = empty_res->end;
++		} else {
++			remaining.start = empty_res->start;
++			remaining.end = candidate[i].start - 1;
++		}
++
++		info.size = resource_size(&remaining);
++		info.natural_size = pci_max_natural_size(&remaining,
++							 &info.max_align);
++		info.left_align = remaining.start ?
++				  (1ULL << __ffs64(remaining.start)) :
++				  RESOURCE_SIZE_MAX;
++		pci_dbg(dev, "%pR: candidate %u free space size=%llx natural_size=%llx max_align=%llx left_align=%llx\n",
++			&candidate[i], i,
++			(unsigned long long)info.size,
++			(unsigned long long)info.natural_size,
++			(unsigned long long)info.max_align,
++			(unsigned long long)info.left_align);
++		if ((best < 0) || cmp_free_candidate(&info, &best_info) > 0) {
++			best = i;
++			best_info = info;
++		}
++	}
++
++	/* None fits? Return address where size definitely won't fit. */
++	if (best < 0)
++		return empty_res->end;
++
++	pci_dbg(dev, "%pR: candidate %u selected (free space %pR), size: %llx + %llx, align: %llx\n",
++		&candidate[best], best, empty_res,
++		(unsigned long long)aligning,
++		(unsigned long long)remainder,
++		(unsigned long long)align);
++
++	return candidate[best].start;
  }
  
- static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 		int resno, resource_size_t size, resource_size_t align)
- {
- 	struct resource *res = pci_resource_n(dev, resno);
-+	struct pci_resreq_data rr;
- 	resource_size_t min;
- 	int ret;
- 
-+	pci_init_resreq_data(&rr, dev);
-+
- 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
- 
- 	/*
-@@ -329,7 +350,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 */
- 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
- 				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
--				     pcibios_align_resource, dev);
-+				     pcibios_align_resource, &rr);
- 	if (ret == 0)
- 		return 0;
- 
-@@ -341,7 +362,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
- 					     IORESOURCE_PREFETCH,
--					     pcibios_align_resource, dev);
-+					     pcibios_align_resource, &rr);
- 		if (ret == 0)
- 			return 0;
- 	}
-@@ -354,7 +375,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 */
- 	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
--					     pcibios_align_resource, dev);
-+					     pcibios_align_resource, &rr);
- 
- 	return ret;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index aa3765a20a96..c945f5753e7c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1221,12 +1221,23 @@ int __must_check pcibios_enable_device(struct pci_dev *, int mask);
- /* Architecture-specific versions may override this (weak) */
- char *pcibios_setup(char *str);
- 
--/* Used only when drivers/pci/setup.c is used */
-+/**
-+ * struct pci_resreq_data - Data passed to pcibios_align_resource()
-+ * @dev: PCI device
-+ * @min_align: Minimum alignment bound (from pci=resource_alignment or arch)
-+ */
-+struct pci_resreq_data {
-+	struct pci_dev *dev;
-+	resource_size_t min_align;
-+};
-+
-+void pci_init_resreq_data(struct pci_resreq_data *rr, struct pci_dev *dev);
-+
- resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				       const struct resource *empty_res,
- 				       resource_size_t size,
- 				       resource_size_t align);
--resource_size_t pci_align_resource(struct pci_dev *dev,
-+resource_size_t pci_align_resource(struct pci_resreq_data *rr,
- 				   const struct resource *res,
- 				   const struct resource *empty_res,
- 				   resource_size_t size,
+ /*
 -- 
 2.47.3
 
