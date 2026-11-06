@@ -1,66 +1,66 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.9
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793972684;
-	b=lXnjhgXAwg77K2pg0aIRK4YDH4QFXPdfwC2K5+4QrDvIDB7se7vo1Xatuqceffa/24C+
-	 /pbOiqQGyDSPYase+pMEoIS6iYHdSAPsIsk2dninA42YTYHsCDeuhUPg4uf/GvQOmQmxv
-	 ZyaFUgEMxduE3icfhd9K2BIZDjjOEsCbZXBOogiWPUvQPUKMgNVwB56F7Td4ahLVm/e3x
-	 PgQd4tRDzL77igVzZMDjok9WN4uUSR30Zfy6G2rBkz8f4MyKJkHFpO+qmhkJ9ez1N44SL
-	 Fzb5yfUekdc3Slm3eaWT3jW11W5aSe3F+c8JPKhLTSJ8H+XDChSI5NBv11bXSWWvkaA==
+	t=1793972692;
+	b=rBaZy68UBvUymS95lLLRTrgHhDGhClCvYoUPucqKjMHNlu7F70wlwPg7vz+gQMYtRqum
+	 USl4/6fKaTP4Kwms+rDL6TgXFQobDlWg4vt6qM8WHVaXOsAPF0nBHp5ajdW0HKlNgscbn
+	 22oQQaazHXSbUzpPyGcSz8yXbd4LlCCu1kEhTe+vPKPx0gtWiEQlgjtuojl+r46KR2Tni
+	 WvdjUlKJ9us6bVRYlyqgTJDXe3iPfpJJyP4vfv/7YnMbpa5yq6CtgfOwjiwNpY9pD54bK
+	 +1jUtiFY6RaXC7UFQk9sSKIB+ojN8Z6sdSIwZxZBgZawo04tpBax0v5SFQPX2BgLC6Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793972684;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793972692;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=3aiWoJyoj47vxzUtInABSlrx48HXt8yxdTO+XR8WueA=;
-	b=oXvK37PnEwsYDnTFYwgOQqBbnzTLrP3CwxC1Mhz4XSUUC5LjBUlwQNL5oL9ZUfuzMQey
-	 BRae9PRvQGfpYi3nXwDcr9LNXfddj7o0mkn7dl5Slq8hittNFlN1keUbvSFQm5eQ5bIN5
-	 7kbWXgYVAakPHSf6fKCdac8SQ7FvV2JyT9RDkeyEJwK2tVDsze2ffCIk5Q+BnzNIJ7W9e
-	 WuRdWH8XKxcmN1gqSRD1CEUF01C7AVIX14+OoLaYOF8eOvplhKekWhTFcPG0xMPUJVL5t
-	 /PhcuVoBAK/n3xS5qR3v/PXrgCHSs3R2ScxU0Fb9jvLSdbLwChxOPWyipWf3aCMql5Q==
+	bh=9gheLm+VrTCNAQ4UGXyx+paCO9Wy4x6FjdUJiEV/0ok=;
+	b=Kt/ivJk/YFFQFA+xsdzbTVn9RoeUT7WqJ4AK9iKmic9ZQMa43DXI0yDb9+F/+DCF0gOU
+	 FyRM6HVjvGjCMfy1rD24V3HkAIPX5FnR0DEBvcZC+ni/5koSU4ek7iy1GEn7O7hGMl/23
+	 eH7/dpY8/JI8sDyg+mo8QKCMyvTiu9t89fZ0RxElGSkQh1aew3nDBTYK7IpLXd/Mp4JWc
+	 pEftAlYNFdz9qe5FnlyCRaZe7DjpFyLI5Scp6veu+UmTpS+Ob5IXnjcPZ2xYC4glaQshj
+	 5xgJTcAsItptKG7+uNLeli/RW4LKqHsudt44mLzN0zUY5WbavvlmtbwoKxcBq/DapBg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.intel.com;
 	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=lmNtehmK;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=WrDJ6y23;
 	arc=none smtp.remote-ip=198.175.65.9
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2CC4606EE92;
-	Fri,  6 Nov 2026 13:44:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E2CC4606EE92
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2B796082BDA;
+	Fri,  6 Nov 2026 13:44:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A2B796082BDA
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=lmNtehmK
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=WrDJ6y23
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793972684; x=1825508684;
+  t=1793972691; x=1825508691;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=x7BvifrTv8VEW0FbDwYC1KCgZFCRCkTZa/DG9DMNxHE=;
-  b=lmNtehmKrvj+rROtmR5+eiboVqfEIXCfo/EAAsMdH3ugadhvvJ2eg6ly
-   7BOYIZ7vybpY8Wka8cA8HEUHSoJL4R+obdR2d+eMFnPjBWCCFd7WLnJNO
-   8DlMeR0IK/VD5dyKHObDTqBj0Pq1Y8sxLNamJPZOpnvwB1daZpwGFbUkf
-   TNqogMuVnRzvoAREjbhPZKHJSTtWW/L9+czZwtwg779BcklJXudMV5Gxd
-   wg6e9AWpIfSiaWXAbhwmuS6SB59/d3jfQhCcz2DIdve3qxAwr9AZvbGz2
-   HMZgtMt+NBPpkj289uzuRPeA8AFXqVC8B8+084JFsSjfkTrUtEX56jU+W
-   g==;
-X-CSE-ConnectionGUID: dEUVGwjyQsevG705ETkmrg==
-X-CSE-MsgGUID: 4XS/UDJbQ7uz2Dk/pNEOtA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2686087"
+  bh=XHgZ5n+nW4s1dR5oYDFTayexC/qFFLbAZBEfXhXqasY=;
+  b=WrDJ6y23p3WOX743NsY72wsuP9ZlueTV1Frzsk8i3mKeD06dqI16P/wB
+   kQDS2WyJ2SSVeb3x791CqY3qMlQo50aiappwJ5+7gYrHRGIOCPCMcEiv+
+   EFBvZ8Niq6ryYU5CUyMJrj6KLiAoPP5FLkbdS1HQAverBiNwbfizUYmtg
+   XRav9pT0cNgdeBA+SeBVqpW6+CyDY2xXLxC/1hr8xz4IGjGymO8NLPo78
+   G0PMBpaYSkUo5W2qMLHLMdpsRYmbHkTCxVuI/VQUHDwAbKFzZ7vU2romq
+   AO/LlFQwPKMUkj6tBoU9dLFU6D15djKo30mcIXpFouqMTdA6WILhzt6zz
+   Q==;
+X-CSE-ConnectionGUID: MAirx4cBQcmDZKBWnAVkpQ==
+X-CSE-MsgGUID: yCNcYQOeRguG1RzRtmveOw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2686101"
 X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="2686087"
+   d="scan'208";a="2686101"
 Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:44:43 -0800
-X-CSE-ConnectionGUID: pcQsxNrrSKC8kpQOIT6RIg==
-X-CSE-MsgGUID: KgxtFAYISdOBo4eUwBi49A==
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:44:51 -0800
+X-CSE-ConnectionGUID: 9mfABZk4RF6M1osGH5gH6w==
+X-CSE-MsgGUID: ID03V2v2StCsauG0W7IEDg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="7327654"
+   d="scan'208";a="7327664"
 Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.104])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:44:39 -0800
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:44:48 -0800
 From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
 	Geramy Loveless <gloveless@jqluv.com>,
@@ -73,11 +73,10 @@ To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
 	Mesih Kilinc <Mesih.Kilinc@sony.com>,
 	linux-kernel@vger.kernel.org
-Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v5 05/14] PCI: Prevent zero align from reaching __ffs64()
-Date: Fri,  6 Nov 2026 15:43:26 +0200
-Message-ID: <20261106134341.39493-6-ilpo.jarvinen@linux.intel.com>
+Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH v5 06/14] linux/log2.h: Add 64-bit roundup/down_pow_of_two_u64() variants
+Date: Fri,  6 Nov 2026 15:43:27 +0200
+Message-ID: <20261106134341.39493-7-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261106134341.39493-1-ilpo.jarvinen@linux.intel.com>
 References: <20261106134341.39493-1-ilpo.jarvinen@linux.intel.com>
@@ -93,45 +92,111 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-The bridge window sizing algorithm calculates order from alignment
-using __ffs64(). __ffs*() is undefined for zero input.
+Generic sounding roundup_pow_of_two() and rounddown_pow_of_two() are
+internally based on fls_long() that limits types to unsigned long. The
+type limitation is unexpected and undocumented.
 
-pci_resource_alignment() & resource_alignment() have a number potential
-ways ways to return 0, in fact, resource_alignment() intentionally does
-that if neither SIZEALIGN nor STARTALIGN is set.
+Worse yet, the typing seems also inconsistent between
+__builtin_constant_p() and __roundup/down_pow_of_two() branches, the
+former using full 64-bit size and the latter truncating type.
 
-Thus, ensure zero align is always properly dealt with in
-pbus_size_mem(). pdev_sort_resources() already has a similar check for
-values returned from pci_resource_alignment() (though it is not using
-__ffs*()).
+The most sensible way seems to be eventually changing types such that
+the return type for roundup/down_pow_of_two() is the same as the input
+but it requires auditing all the existing callers that have mixed
+input/output types.
 
-Cc: stable@vger.kernel.org
+As a stopgap solution, add roundup/down_pow_of_two_u64() that do not
+unexpectedly truncate 64-bit input.
+
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- drivers/pci/setup-bus.c | 3 +++
- 1 file changed, 3 insertions(+)
+ include/linux/log2.h | 52 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f4358322f766..9d167e7773a1 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1309,6 +1309,8 @@ static void pbus_size_mem(struct pci_bus *bus, struct resource *b_res,
- 				continue;
+diff --git a/include/linux/log2.h b/include/linux/log2.h
+index e17ceb32e0c9..87fd91be2075 100644
+--- a/include/linux/log2.h
++++ b/include/linux/log2.h
+@@ -57,6 +57,16 @@ unsigned long __roundup_pow_of_two(unsigned long n)
+ 	return 1UL << fls_long(n - 1);
+ }
  
- 			align = pci_resource_alignment(dev, r);
-+			if (!align)
-+				goto bad_alignment;
- 			/*
- 			 * aligns[0] is for 1MB (since bridge memory
- 			 * windows are always at least 1MB aligned), so
-@@ -1317,6 +1319,7 @@ static void pbus_size_mem(struct pci_bus *bus, struct resource *b_res,
- 			 */
- 			order = max_t(int, __ffs64(align) - __ffs(SZ_1M), 0);
- 			if (order >= ARRAY_SIZE(aligns)) {
-+bad_alignment:
- 				pci_warn(dev, "%s %pR: disabling; bad alignment %#llx\n",
- 					 r_name, r, (unsigned long long) align);
- 				r->flags = 0;
++/**
++ * __roundup_pow_of_two_u64() - round up to nearest power of two
++ * @n: value to round up
++ */
++static inline __attribute__((const))
++u64 __roundup_pow_of_two_u64(u64 n)
++{
++	return 1ULL << fls64(n - 1);
++}
++
+ /**
+  * __rounddown_pow_of_two() - round down to nearest power of two
+  * @n: value to round down
+@@ -67,6 +77,16 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
+ 	return 1UL << (fls_long(n) - 1);
+ }
+ 
++/**
++ * __rounddown_pow_of_two_u64() - round down to nearest power of two
++ * @n: value to round down
++ */
++static inline __attribute__((const))
++u64 __rounddown_pow_of_two_u64(u64 n)
++{
++	return 1ULL << (fls64(n) - 1);
++}
++
+ /**
+  * const_ilog2 - log base 2 of 32-bit or a 64-bit constant unsigned value
+  * @n: parameter
+@@ -163,6 +183,23 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
+ 	__ilog2_u64(n)			\
+  )
+ 
++/**
++ * roundup_pow_of_two_u64 - round the given value up to nearest power of two
++ * @n: parameter
++ *
++ * round the given value up to the nearest power of two
++ * - the result is undefined when n == 0
++ * - this can be used to initialise global variables from constant data
++ */
++#define roundup_pow_of_two_u64(n)			\
++(						\
++	__builtin_constant_p(n) ? (		\
++		((n) == 1) ? 1 :		\
++		(1ULL << (ilog2((n) - 1) + 1))	\
++				   ) :		\
++	__roundup_pow_of_two_u64(n)		\
++ )
++
+ /**
+  * roundup_pow_of_two - round the given value up to nearest power of two
+  * @n: parameter
+@@ -180,6 +217,21 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
+ 	__roundup_pow_of_two(n)			\
+  )
+ 
++/**
++ * rounddown_pow_of_two_u64 - round the given value down to nearest power of two
++ * @n: parameter
++ *
++ * round the given value down to the nearest power of two
++ * - the result is undefined when n == 0
++ * - this can be used to initialise global variables from constant data
++ */
++#define rounddown_pow_of_two_u64(n)		\
++(						\
++	__builtin_constant_p(n) ? (		\
++		(1ULL << ilog2(n))) :		\
++	__rounddown_pow_of_two_u64(n)		\
++ )
++
+ /**
+  * rounddown_pow_of_two - round the given value down to nearest power of two
+  * @n: parameter
 -- 
 2.47.3
 
