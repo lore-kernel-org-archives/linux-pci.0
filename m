@@ -1,74 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.198
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.69
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793925786;
-	b=KLmTX8MbkwpMmRg/K0TOqIt4SpWTVPRSNn3Hcu2SW3jLA+jIG+swAxab6QEv85PBV6YE
-	 iqkzXueHVv6C/M1TomoBRX12Bi/UeljRFD6M/A7g+vn2K4F8jSOmuE37UrMegBS6Gx6qX
-	 MUt5TtS2UXIQRK1bTXPvMflDdXPRfnlSLRlaOfl2CqSZDFDnNB7uRZyj5to3/UaHTRm4K
-	 2hQqiL5fXcl97FedC46IAVFMorz8ZwFz/sphEyoE3do5IfeE1XdhG9ff0esfB15dOqpqE
-	 6Emv207Y0/278AQrsDxw7anyHjT8M0xylVepEene9V3E75N0vaeVeOMrCtRVC+KuWiQ==
+	b=SN0nblq41HWZxcbVnC7s+m9gJsa29dYIJdUfq0EDcKjkXCK1XnR3FJ67xeVmh21JnkSk
+	 dBamXoLMgTFR9QMqlrLInOrKpc0A5CzGaGKxfggtnSvOQZuOG4mrURpafISifOZU+d90g
+	 fhI07UJQWRLLgIkq73krnIESTXqZhgLw4xaUlMtu3AMSZPUmO+cnxiOcbNfKVibltCVCL
+	 cKyKa9Y1KykUsVO41ZPhGuu1JPupGIodzJHnzqpTLkv+0YQ655CQshR8BJtbZdFB5QJTy
+	 n3K5oIVQxdefNdDzknm09nYcxyL7AvRzD8gg2/FYy9qMBcD+wxvOuVSDI6HvIflMnUQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793925786;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
 	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
 	 Content-Type;
-	bh=SqwfwAiEqbASiUZ5fLcpwdF4bH2r5Wh+f0RbnIc3OoY=;
-	b=2PRQ8FiYE8auf3R/HNcA8E3ihv7nOWdyIsiZZ7nOC2TZmlkIahdjsVr5L+1sA+pfMpQj
-	 KygrJXAUz2A3zzbXOuXB1KKYgCYKPVSReho+8wEf3Vr8Eeeji73ha0DroBVbZ22MJZaeq
-	 +FStS1ULE2sp411RtiKvQBL07dEGshMqy0DB8qZkTG/NQ6mVuh4Mj4WO1jfvrBVGMRZA/
-	 6s+z+ve0DQOEocjm621U6nYQ1ZAh/9HsNoOz3GSispNoFtUgqKrCYxz8A2sPS4rbywGyx
-	 7JHjcwdSp8+iFzNifSmrngrvGS8Z+2EcLW3ATDtobUPtju27RwE5D1vpojkVjm3TvQA==
+	bh=ddBqCr/aEaadxkJlxFoZmLz139RBeJBOYwKmQVBOEIY=;
+	b=e8IOgeaMo4YRxRAtln8Wp/YDg+lVEyx/JUbg7luquR4Sbvp6T35EOp6nZ2W027hkKjwl
+	 oCcjxdWGOwvqs+Mz18tSMRfeCREQh6ExuwT5tKNatXEnGFaW4o5EWV+XNUdz7V/+MbGW6
+	 r/ifbx0lEdCeBo51YlQ+KXpI4rqHECSaZTLgvX7N83CdunoJAwyGb99EPOOxjvuhdgm37
+	 6j7eyWB38uRPTmRli3Ht2I2U62C9hK8DCKMJPVlfjmnT6cU+kEJfLHT8h1WAYX6mrEWIl
+	 aMIbbN/xM0cHXqgOtKR/IojwYNbj7v7yJJYOcRP/vaQNsqvzjarJ3Jol2ngcpM6POeQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=jGDWKhHV;
-	arc=none smtp.remote-ip=209.85.167.198
-Received: from mail-oi1-f198.google.com (mail-oi1-f198.google.com [209.85.167.198])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=GRXD3J3V;
+	arc=none smtp.remote-ip=209.85.210.69
+Received: from mail-ot1-f69.google.com (mail-ot1-f69.google.com [209.85.210.69])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 533A1606A32C
-	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 00:43:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 533A1606A32C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78151606A32E
+	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 00:43:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 78151606A32E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=jGDWKhHV
-Received: by mail-oi1-f198.google.com with SMTP id 5614622812f47-5384e381fbbso55504b6e.2
-        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2026 16:43:05 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=GRXD3J3V
+Received: by mail-ot1-f69.google.com with SMTP id 46e09a7af769-84478a97bfbso331782a34.0
+        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2026 16:43:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793925784; x=1794530584; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1793925785; x=1794530585; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=SqwfwAiEqbASiUZ5fLcpwdF4bH2r5Wh+f0RbnIc3OoY=;
-        b=jGDWKhHVG4/AClDmwQXrpibu+KxDT2CPI1gbNVdSt7DHrQCGOngHcXxgvfPl6CZKcd
-         k/EP33TgczVojx0ysMNp15fo/CamsS0+lA0pLeJFJVTlg8iDSXV99r/tXj1y9Ghz3wee
-         15meTMJcDEaua6D4A+bUk8h0O+OaspNrA9fs1Ti4LudM/Ja54kJp1m6TL7fydr5y2ugH
-         2mKuZyH29ppp66IA1Z+8oaeIA0DSBwuauTuxXTN7HEwk3+TL7K4QRLWWN6jmqX4KT3SR
-         9GgCZXDTjOhBaNASW5zCXBorlzLC0Dddity+FUZ5nWbJTucKYm36562CNnY6HX+6i3r8
-         uWiQ==
+        bh=ddBqCr/aEaadxkJlxFoZmLz139RBeJBOYwKmQVBOEIY=;
+        b=GRXD3J3VOcw4yv/Vrvlmc3RGpi31lT5MppCPnPUi/kZ6+en1QhpIi/gHunKi3NU+7D
+         I41HoHyhAjHakKs6kVhSRTfJh1vxqz9vVp55WuHs5Fn5aoEb9Nu8eWmHE10+gUaG7UiG
+         5mvzx296xi4VXPJipSajDJSuQfy21T18LyYHbTT1tpI7JrwxYMHYmX27+hmjwhH/x5rH
+         g3wSNZ9BqAGqF+GJsOMtmfLprgg5yjVMsfHI5WkuHVOYbBpmloYhRA7cOjlsUUp855Av
+         OJf+YqG+dK+3au2b3skaY9vPuLF92rpVe8BjWCJqSPGWBf4iKLMycdhtEKJXZVGCAuzT
+         dC7Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793925784; x=1794530584;
+        d=1e100.net; s=20260707; t=1793925785; x=1794530585;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=SqwfwAiEqbASiUZ5fLcpwdF4bH2r5Wh+f0RbnIc3OoY=;
-        b=AT/IBjq78FDJbDBur338XAKYRqmjmb2vIiod5jh5aH2UzChXAU7co7d6u1KiZQ6r15
-         cUexvXbfEBAR1zjmO55GccBlJ/kjryq+eXZgGJJTsjJ2vuQu/NVwvvvS8RsBDxMg3C65
-         aosrjyYpqhUi4a7lo7v60Og7NvOzv53j2LDB9UNpumqjj/Bx8hdOW2AVp1Wb3uNo/V9C
-         zdf36LlEcg7Q+cNNz4esw+U5ZRU4EGbC1Wyrp10pOW9RMwLyYXRuEH0L7J9+hl+K4F5I
-         LVRReKlWVHPQRpW8aLNTapcLq35KPKbLaDQ8sIMiECIfVBcGJXqda1Cvvi2OknrgjvPz
-         1BpQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzG3IowSrYTW8cNl8b6nEIEKkl+nnzjiaKExIfIt3zkDAtGTA+3AXVFdJC/3EJhsSelYxJiDAo8dnM=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9xgTIMy/JjvEq7mHIsotC2N28w3nl6WjFWlzd8TbKm/bzUkj8I
-	srRVMdrSMj8hU/apFiY2mPJi6vu1XC+J0ZUTVUFOucBp4rXe53gCI5dqn76V89WHqNU5OqhhVvz
-	M15oZ6WGq8xsXqg==
-X-Received: from ilbec12.prod.google.com ([2002:a05:6e02:470c:b0:53b:d168:b69])
+        bh=ddBqCr/aEaadxkJlxFoZmLz139RBeJBOYwKmQVBOEIY=;
+        b=HrnRhY2sF8wLkjFIsgcr94W4WZqJIOo9OX2jOYD86IFWxaX3h77nt44LsGUlPFTe7G
+         M7FMcV56ig2H3F9QdBgTDm5BjXBup3jXNVApuAnSMDSeIFrxj06FhJ/ih8Xj1rEhUlco
+         y/gKtcmLNkM/LmK7MnD92/f/08S5h2IcZTYGG+BPe9GQQHY5lt/THcUsq7bQtM6ya6ou
+         7GZ/XB6U0HSjq6GkmxUmW+Gp99chBsgy/+V5oFdPHLqXteA2phy++srHWBvATervJ/qB
+         ezuVD7omhpdkB/sIJTsHXV9/F95DO/EC8a8Ho+reSD97+DKFy8wPYEIthTNMP8OvbDR9
+         6slw==
+X-Forwarded-Encrypted: i=1; AKwUvBxiHbbfCaTiAiDba0EBqY1/VKydcRLpTLsGwJQNMvljyXUEHSZc83gJbPP5KZqQpN4LJQ+7Bd9gGMA=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/vTTKm2eaZexP8VcTlei/g9YbIllQVRvLSZUnANh2m4f8aLfH2
+	KgH3eUeHKGnWfvf7hBK8BN2StpP3eukdSnc78EBxR0twgzuD+X5rhnG/vgeXA6DTDadWLONwbAf
+	rJz5idU6czIH8aA==
+X-Received: from iobmm23-n1.prod.google.com ([2002:a05:6602:7117:10b0:9ca:dec8:c75d])
  (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6808:2218:b0:50a:7162:87df with SMTP id 5614622812f47-567e098e3f0mr811203b6e.2.1793925783998;
- Thu, 05 Nov 2026 16:43:03 -0800 (PST)
-Date: Fri,  6 Nov 2026 00:42:07 +0000
+ 2002:a05:6808:1987:b0:4f3:68d6:f131 with SMTP id 5614622812f47-567e099488cmr858385b6e.2.1793925785214;
+ Thu, 05 Nov 2026 16:43:05 -0800 (PST)
+Date: Fri,  6 Nov 2026 00:42:08 +0000
 In-Reply-To: <20261106004218.604799-1-dmatlack@google.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,8 +81,8 @@ Precedence: list
 Mime-Version: 1.0
 References: <20261106004218.604799-1-dmatlack@google.com>
 X-Mailer: git-send-email 2.56.0.455.g6c5a503b38-goog
-Message-ID: <20261106004218.604799-7-dmatlack@google.com>
-Subject: [PATCH v2 06/17] PCI/ASPM: Save LTR state in the saved capability store
+Message-ID: <20261106004218.604799-8-dmatlack@google.com>
+Subject: [PATCH v2 07/17] PCI/ASPM: Save L1SS state in the saved capability store
 From: David Matlack <dmatlack@google.com>
 To: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
 	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
@@ -97,116 +97,140 @@ Cc: Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>,
 	Vipin Sharma <vipinsh@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Save and restore the LTR maximum latency registers through the per-device
-saved capability store instead of a private pci_cap_saved_state buffer.
+Save and restore the L1 PM Substates control registers through the
+per-device saved capability store instead of a private pci_cap_saved_state
+buffer.
 
-Reserve the DWORD by its configuration space offset during device setup,
-in pci_reserve_ltr_state(), and keep accessing the registers a DWORD at
-a time because some devices only support DWORD access to them.
+pci_restore_aspm_l1ss_state() needs both the Upstream and Downstream
+Port's saved L1SS configuration, and had to fetch two buffers and decode
+each by index. Read the saved values by configuration space offset
+instead, which names the register at every use. Add
+pci_read_saved_l1ss_ctl() to read one device's pair, so that the Port
+and the device below it are read the same way.
+
+Reserve PCI_L1SS_CTL1 and PCI_L1SS_CTL2 with a single request in
+pci_reserve_aspm_l1ss_state(), since they are adjacent DWORDs. Skip the
+reservation when the device has no L1SS capability, which
+pci_add_ext_cap_save_buffer() did implicitly.
 
 No functional change intended.
 
 Signed-off-by: David Matlack <dmatlack@google.com>
 ---
- drivers/pci/pci.c       |  8 +-------
- drivers/pci/pci.h       |  1 +
- drivers/pci/pcie/aspm.c | 31 ++++++++++++++++---------------
- 3 files changed, 18 insertions(+), 22 deletions(-)
+ drivers/pci/pcie/aspm.c | 63 ++++++++++++++++++++---------------------
+ 1 file changed, 30 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6cf4a64cb7e6..29d9474db1ae 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3742,15 +3742,9 @@ int pci_add_ext_cap_save_buffer(struct pci_dev *dev, u16 cap, unsigned int size)
-  */
- void pci_allocate_cap_save_buffers(struct pci_dev *dev)
- {
--	int error;
--
- 	pci_reserve_pcie_state(dev);
- 	pci_reserve_pcix_state(dev);
--
--	error = pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_LTR,
--					    2 * sizeof(u16));
--	if (error)
--		pci_err(dev, "unable to allocate suspend buffer for LTR\n");
-+	pci_reserve_ltr_state(dev);
- 
- 	pci_allocate_acs_save_buffer(dev);
- 	pci_allocate_vc_save_buffers(dev);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 206e0d04e06e..0daa2439db5e 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -1151,6 +1151,7 @@ int pcie_retrain_link(struct pci_dev *pdev, bool use_lt);
- 
- /* ASPM-related functionality we need even without CONFIG_PCIEASPM */
- void pci_save_ltr_state(struct pci_dev *dev);
-+void pci_reserve_ltr_state(struct pci_dev *dev);
- void pci_restore_ltr_state(struct pci_dev *dev);
- void pci_configure_aspm_l1ss(struct pci_dev *dev);
- void pci_save_aspm_l1ss_state(struct pci_dev *dev);
 diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 02922b887ec6..39adf2cad331 100644
+index 39adf2cad331..2978fde87af6 100644
 --- a/drivers/pci/pcie/aspm.c
 +++ b/drivers/pci/pcie/aspm.c
-@@ -30,8 +30,6 @@
- void pci_save_ltr_state(struct pci_dev *dev)
+@@ -68,24 +68,29 @@ void pci_restore_ltr_state(struct pci_dev *dev)
+ 	pci_restore_cap_dword(dev, ltr + PCI_LTR_MAX_SNOOP_LAT);
+ }
+ 
+-void pci_configure_aspm_l1ss(struct pci_dev *pdev)
++static void pci_reserve_aspm_l1ss_state(struct pci_dev *pdev)
  {
- 	int ltr;
--	struct pci_cap_saved_state *save_state;
--	u32 *cap;
+ 	int rc;
  
- 	if (!pci_is_pcie(dev))
- 		return;
-@@ -40,31 +38,34 @@ void pci_save_ltr_state(struct pci_dev *dev)
- 	if (!ltr)
- 		return;
+-	pdev->l1ss = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_L1SS);
+-
+-	rc = pci_add_ext_cap_save_buffer(pdev, PCI_EXT_CAP_ID_L1SS,
+-					 2 * sizeof(u32));
++	/* PCI_L1SS_CTL1 and PCI_L1SS_CTL2 are adjacent DWORDs */
++	rc = pci_reserve_saved_cap(pdev, pdev->l1ss + PCI_L1SS_CTL1, 2 * sizeof(u32));
+ 	if (rc)
+-		pci_err(pdev, "unable to allocate ASPM L1SS save buffer (%pe)\n",
++		pci_err(pdev, "unable to reserve ASPM L1SS save state (%pe)\n",
+ 			ERR_PTR(rc));
+ }
  
--	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_LTR);
--	if (!save_state) {
--		pci_err(dev, "no suspend buffer for LTR; ASPM issues possible after resume\n");
-+	/* Some broken devices only support dword access to LTR */
-+	pci_save_cap_dword(dev, ltr + PCI_LTR_MAX_SNOOP_LAT);
++void pci_configure_aspm_l1ss(struct pci_dev *pdev)
++{
++	pdev->l1ss = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_L1SS);
++	if (!pdev->l1ss)
++		return;
++
++	pci_reserve_aspm_l1ss_state(pdev);
 +}
 +
-+void pci_reserve_ltr_state(struct pci_dev *dev)
-+{
-+	int ltr, rc;
-+
-+	ltr = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_LTR);
-+	if (!ltr)
- 		return;
--	}
- 
--	/* Some broken devices only support dword access to LTR */
--	cap = &save_state->cap.data[0];
--	pci_read_config_dword(dev, ltr + PCI_LTR_MAX_SNOOP_LAT, cap);
-+	rc = pci_reserve_saved_cap(dev, ltr + PCI_LTR_MAX_SNOOP_LAT, sizeof(u32));
-+	if (rc)
-+		pci_err(dev, "unable to reserve LTR save state (%pe)\n",
-+			ERR_PTR(rc));
- }
- 
- void pci_restore_ltr_state(struct pci_dev *dev)
+ void pci_save_aspm_l1ss_state(struct pci_dev *pdev)
  {
+ 	struct pci_dev *parent = pdev->bus->self;
 -	struct pci_cap_saved_state *save_state;
- 	int ltr;
 -	u32 *cap;
  
--	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_LTR);
- 	ltr = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_LTR);
--	if (!save_state || !ltr)
-+	if (!ltr)
- 		return;
- 
- 	/* Some broken devices only support dword access to LTR */
+ 	/*
+ 	 * If this is a Downstream Port, we never restore the L1SS state
+@@ -102,32 +107,32 @@ void pci_save_aspm_l1ss_state(struct pci_dev *pdev)
+ 	 * Save L1 substate configuration. The ASPM L0s/L1 configuration
+ 	 * in PCI_EXP_LNKCTL_ASPMC is saved by pci_save_pcie_state().
+ 	 */
+-	save_state = pci_find_saved_ext_cap(pdev, PCI_EXT_CAP_ID_L1SS);
+-	if (!save_state)
+-		return;
+-
 -	cap = &save_state->cap.data[0];
--	pci_write_config_dword(dev, ltr + PCI_LTR_MAX_SNOOP_LAT, *cap);
-+	pci_restore_cap_dword(dev, ltr + PCI_LTR_MAX_SNOOP_LAT);
+-	pci_read_config_dword(pdev, pdev->l1ss + PCI_L1SS_CTL2, cap++);
+-	pci_read_config_dword(pdev, pdev->l1ss + PCI_L1SS_CTL1, cap++);
++	pci_save_cap_dword(pdev, pdev->l1ss + PCI_L1SS_CTL2);
++	pci_save_cap_dword(pdev, pdev->l1ss + PCI_L1SS_CTL1);
+ 
+ 	/*
+ 	 * Save parent's L1 substate configuration so we have it for
+ 	 * pci_restore_aspm_l1ss_state(pdev) to restore.
+ 	 */
+-	save_state = pci_find_saved_ext_cap(parent, PCI_EXT_CAP_ID_L1SS);
+-	if (!save_state)
+-		return;
++	pci_save_cap_dword(parent, parent->l1ss + PCI_L1SS_CTL2);
++	pci_save_cap_dword(parent, parent->l1ss + PCI_L1SS_CTL1);
++}
+ 
+-	cap = &save_state->cap.data[0];
+-	pci_read_config_dword(parent, parent->l1ss + PCI_L1SS_CTL2, cap++);
+-	pci_read_config_dword(parent, parent->l1ss + PCI_L1SS_CTL1, cap++);
++/*
++ * Read a device's saved L1 substate configuration.
++ *
++ * Return: true if both registers had a saved value, false otherwise.
++ */
++static bool pci_read_saved_l1ss_ctl(struct pci_dev *dev, u32 *ctl1, u32 *ctl2)
++{
++	return pci_read_saved_cap_dword(dev, dev->l1ss + PCI_L1SS_CTL1, ctl1) &&
++	       pci_read_saved_cap_dword(dev, dev->l1ss + PCI_L1SS_CTL2, ctl2);
  }
  
- void pci_configure_aspm_l1ss(struct pci_dev *pdev)
+ void pci_restore_aspm_l1ss_state(struct pci_dev *pdev)
+ {
+-	struct pci_cap_saved_state *pl_save_state, *cl_save_state;
+ 	struct pci_dev *parent = pdev->bus->self;
+-	u32 *cap, pl_ctl1, pl_ctl2, pl_l1_2_enable;
++	u32 pl_ctl1, pl_ctl2, pl_l1_2_enable;
+ 	u32 cl_ctl1, cl_ctl2, cl_l1_2_enable;
+ 	u16 clnkctl, plnkctl;
+ 
+@@ -142,18 +147,10 @@ void pci_restore_aspm_l1ss_state(struct pci_dev *pdev)
+ 	if (!pdev->l1ss || !parent->l1ss)
+ 		return;
+ 
+-	cl_save_state = pci_find_saved_ext_cap(pdev, PCI_EXT_CAP_ID_L1SS);
+-	pl_save_state = pci_find_saved_ext_cap(parent, PCI_EXT_CAP_ID_L1SS);
+-	if (!cl_save_state || !pl_save_state)
++	if (!pci_read_saved_l1ss_ctl(pdev, &cl_ctl1, &cl_ctl2) ||
++	    !pci_read_saved_l1ss_ctl(parent, &pl_ctl1, &pl_ctl2))
+ 		return;
+ 
+-	cap = &cl_save_state->cap.data[0];
+-	cl_ctl2 = *cap++;
+-	cl_ctl1 = *cap;
+-	cap = &pl_save_state->cap.data[0];
+-	pl_ctl2 = *cap++;
+-	pl_ctl1 = *cap;
+-
+ 	/* Make sure L0s/L1 are disabled before updating L1SS config */
+ 	pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &clnkctl);
+ 	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &plnkctl);
 -- 
 2.56.0.455.g6c5a503b38-goog
 
