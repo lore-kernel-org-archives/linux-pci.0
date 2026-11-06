@@ -1,72 +1,32 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793990434;
-	b=y6ltOxRrRcaxKjY22iMXxamjFH3U9s2Uydzs4wc2XkKDfa/geDb9egx88taVQRGo3Xwf
-	 VOvIKgGmrg5Rp4DpFj5vO69XOpuS4GXEGw06Jzse82AGQWDqJSsYhBhf7xMWJaR1pEGx7
-	 Aw1LKGj/GYlLIVZILJPgKWq3KRsfTps/os6HKj+7wwp5YMC5OhQrezFzZJrQ/GnglkhDq
-	 fn3L8NfA9KY1Kf5BxPxe+d6Xj8GQT+w9I/2ZABtcAwq+EZvT7fw4BbQVh/S7ohHvAw36Y
-	 DDoxi3P7fesB4VXk94ZvFgl2nBLaJVjsjqKrq5xrJefkOJmJFoDOHGRgCsCSU1697Nw==
+	t=1793994022;
+	b=iqdb8zk7Ntq8lLmkbplqYfhll1t8Ri4yC9p9ApWDU79E7hdMJqMsN1+eaLO9LAE4BxUg
+	 FEU92snpKpz2M+2pSTHCAmLP7HMeG8P4TOgv2EYjbdOcgRHyKIMmuXt+qGaEq3HG7W+ej
+	 aDNp9RD2RvPh66kTipYEFWaaxF6Kxf74ZpK3IMbLahEsV6vJPWFtmGyMtkqA83oIHh6vz
+	 PNfyqJX9OwI6HcEAWOLeAlQnGI0n/VKovA0NOd/Naha5FrY7oekIxMLeqPBh4lGsuQOLG
+	 Px5RBjyk8N7vtz94qA/jmE16DBsx61BDgJlXnXkWVi1d+40gQSfavY6VOTcP0DpSTUw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793990434;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=d9rgt/0ZjW9cJWRqIx3PEfjuDN/5drVoS4iqtSrIJtI=;
-	b=xlWSyfifxWAFUYSGr7EX8EQRrcRq/4SYNMFZeH08FCNfvpvHGJfnPj5lLjZutUc1z0Dg
-	 xzjlOd6CsYU8nJT6UBcucmnuE8WKUlQELL4GUZljLHFjTMkg8u2kQM8vvNBhfkzwMOOLe
-	 ErdHzovNYG1UREibX/8BLyUSjT585wSRtu3AQoam7JWr1ByAoXeDFD5QoJ9JfbyxhoPD1
-	 /p4hxE8V+WRr5NiLAPFF5+C9gYxD/rj2y7Kk7Gggb3eEPPSsRDY5ZgWqIdfAAN4zzshIO
-	 gcvIRt7m75Xt2MtBy/LBbmjwhmGkQAYNcj8I3pNmOMpUimMdNHQiE9IddhfJ9T83e9g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793994022;
+	h=Received:MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:
+	 From:To:Cc:In-Reply-To:References:Date:Message-Id:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key;
+	bh=MOpDpeNgb/GGPkym8lq255jwdO03Yv3VcEF5RByy9tE=;
+	b=UQVls6hY7PDXdsJQO8A7eb4DxLuvIPyoJJ+YYpo7aicThMzcW7Gd80bpM3tg+pBC4FyL
+	 hFQ2Is0GenaK0ayT/qmE+YBRfI/27SvhMrv+9EO+DTJPAPLfWIBYNxJ5D6hYEyyKRtTMq
+	 6gI5JeXxLH+zctPg3SqyItNpg9lxgRbj62WrkANPen7OrOqxJKOPyB4CUMpwbuSJwG87H
+	 5NVKa5oSXlrPIfS1cLQNghxe3vxA1u8AfYSLaGDhNiiGgXWoerKV6smzx5MBVXgKtjYGZ
+	 1RmelSdbx0HAL7aDiDQ+Sjv3N1awmI1eKe5bEgep7AUB4EMGOApJeI+O+UJYClcbmdw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oY+DYiQh;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 045AF606A33C;
-	Fri,  6 Nov 2026 18:40:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oY+DYiQh
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A60B31F0089F;
-	Fri,  6 Nov 2026 18:40:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793990433;
-	bh=d9rgt/0ZjW9cJWRqIx3PEfjuDN/5drVoS4iqtSrIJtI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=oY+DYiQhz2qhURLJX4BDC/kmudYeEjDpY0mTplMC7by/77+JSrwJ3cPy0pAcpZY97
-	 fZehsr6eSagi1hfvJzy6tX6lqz29+bGYK3xSKa0OTnst9MaQ5j8E/D30O63P4HUDk2
-	 1xT7ZDqhrzrXp+rAMioUXloF0PcDNOLqEyE1lY6PX0Jf63xyCqAwU8+rJ1zfx8gvnK
-	 Ab3RFED9RMqASj9LT1swYH4CwBPe0jo1CtmL2IXstISB9dUcaO1BVKpTO/pd9kGcwQ
-	 ttaapWVgo9M3UfMpozYSTbixGW+reEsNu8DqEFOQLmf10nJD4nZksup2s2GpGl5JYp
-	 hlebewHwXEDBg==
-Date: Fri, 6 Nov 2026 12:40:32 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v10 05/13] PCI: liveupdate: Auto-preserve upstream
- bridges across Live Update
-Message-ID: <20261106184032.GA1640926@bhelgaas>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 773B2606A326;
+	Fri,  6 Nov 2026 19:40:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8B8D1F0089F;
+	Fri,  6 Nov 2026 19:40:21 +0000 (UTC)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -76,109 +36,112 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DMOC3XV68W0K.3FGK4UZ87838R@google.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v5 01/16] PCI: dwc: Add pcie_cap field and caching
+ helper
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: Hans Zhang <18255117159@163.com>
+Cc: sashiko-reviews@lists.linux.dev, imx@lists.linux.dev, 
+ linux-amlogic@lists.infradead.org, linux-pci@vger.kernel.org, 
+ Frank.Li@kernel.org, neil.armstrong@linaro.org
+In-Reply-To: <3773fc58-a6ab-4f8d-a9a1-c865217afe84@163.com>
+References: <20261028030652.2917756-1-18255117159@163.com>
+ <20261028030652.2917756-2-18255117159@163.com>
+ <sashiko-outbox-187403@kernel.org>
+ <3773fc58-a6ab-4f8d-a9a1-c865217afe84@163.com>
+Date: Sat, 07 Nov 2026 01:10:16 +0530
+Message-Id: <179399401605.55876.3520713514569261990.b4-reply@b4>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3038;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=1tMG3qbjDNeqUpxfEBEvQAkk2kZSTgYVoHa4KZ6UwNk=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq7i0gBLa0hX8gTIugn2MLgSu3YqcqnGaKfSliE
+ khZL5oFTgSJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCau4tIAAKCRBVnxHm/pHO
+ 9QLzB/98XUV9FjvnZTWHvlQLojLVfWOzHoACcUgVHDiCq/7ZVYkJoCtPGTWAeY87dvCUBo8RYxk
+ GUtJUQAxM6Kdbfc6bvVhkdbMJYgzw1ARlnHSM6rFe5ZNxhO2wJRzRu1dylIg15lRDsjgsHOUdyE
+ n2GGcV/wmgckVB9+3Hlyhd8KlTcrWPkrsSAJzS7C6H5CM1gDz3iKCkE8iCv1BjaUaTWDnbZwxYe
+ Da2RS37T9+o5tqMzFNLfUDIl9bPiJUQiv5rzK0BkpGvdZ4r7mzK50bFeFJXVeDVl27SvwL2gsj8
+ WHO1wGfB+Zd5qVajvJelHygoWeU2HgRGKSpzR93/kohcOiXL
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-On Fri, Nov 06, 2026 at 06:20:36PM +0000, David Matlack wrote:
-> On Fri Nov 6, 2026 at 5:34 PM UTC, Bjorn Helgaas wrote:
-> > On Tue, Oct 13, 2026 at 04:25:21PM +0000, David Matlack wrote:
-> >>  static int pci_liveupdate_preserve_device(struct pci_flb_outgoing *outgoing,
-> >>  					  struct pci_dev *dev)
-> >>  {
-> >> -	struct pci_dev_ser *dev_ser;
-> >> -
-> >>  	if (dev->is_virtfn) {
-> >>  		pci_warn(dev, "Cannot preserve Virtual Functions\n");
-> >>  		return -EINVAL;
-> >>  	}
-> >>  
-> >> -	if (dev->liveupdate.outgoing) {
-> >> +	/*
-> >> +	 * Endpoint devices should not be preserved more than once.
-> >> +	 * Bridges are preserved once for every downstream device that
-> >> +	 * is preserved.
-> >> +	 */
-> >> +	if (dev->liveupdate.outgoing && !dev->subordinate) {
-> >>  		pci_warn(dev, "Device is already preserved\n");
-> >>  		return -EBUSY;
-> >>  	}
-> >>  
-> >> -	if (!pci_is_root_bus(dev->bus)) {
-> >> -		pci_warn(dev, "Cannot preserve devices behind bridges\n");
-> >> +	if (dev->liveupdate.outgoing && !dev->liveupdate.outgoing->refcount) {
-> >> +		pci_WARN(dev, 1, "Preserved device with 0 refcount!\n");
-> >>  		return -EINVAL;
-> >>  	}
-> >>  
-> >> -	dev_ser = pci_flb_alloc_dev_ser(outgoing);
-> >> -	if (IS_ERR(dev_ser))
-> >> -		return PTR_ERR(dev_ser);
-> >> +	if (!dev->liveupdate.outgoing) {
-> >> +		struct pci_dev_ser *dev_ser;
-> >>  
-> >> -	pci_info(dev, "Device will be preserved across next Live Update\n");
-> >> -	outgoing->ser->nr_devices++;
-> >> -	outgoing->ser->devices = kho_block_set_head_pa(&outgoing->block_set);
-> >> +		dev_ser = pci_flb_alloc_dev_ser(outgoing);
-> >> +		if (IS_ERR(dev_ser))
-> >> +			return PTR_ERR(dev_ser);
-> >>  
-> >> -	dev_ser->domain = pci_domain_nr(dev->bus);
-> >> -	dev_ser->bdf = pci_dev_id(dev);
-> >> -	dev_ser->refcount++;
-> >> +		pci_info(dev, "Device will be preserved across next Live Update\n");
-> >> +		outgoing->ser->nr_devices++;
-> >
-> > This looks a little funny because prior to this patch, nr_devices was
-> > always incremented in pci_liveupdate_preserve_device() and always
-> > decremented in pci_liveupdate_unpreserve_device().  Now it's only
-> > incremented once (per device) in pci_liveupdate_preserve_device(), so
-> > it looks unbalanced.
-> >
-> > My guess is this is because previously we didn't expect to preserve
-> > bridges at all, and now pci_liveupdate_preserve_device() might be
-> > called several times for a bridge, and it's all just fine, but it's a
-> > little subtle.
+On 2026-10-28 11:18 +0800, Hans Zhang wrote:
 > 
-> Right. nr_devices counts struct pci_dev_ser entries that are in use, so
-> it goes up when a device's refcount goes from 0 to 1 (the entry is
-> allocated) and down when it goes from 1 to 0 (the entry is released).
-> For endpoints that is every preserve/unpreserve call, but a bridge is
-> preserved once per preserved device below it, so most calls for a
-> bridge only change its refcount.
 > 
-> > I suppose the "(dev->liveupdate.outgoing && !dev->subordinate)" test
-> > above is what allows us to just increment refcount each time a bridge
-> > is preserved.  And the test around pci_flb_alloc_dev_ser() is doing
-> > basically the same thing.  I wonder if there's a way to connect them
-> > more explicitly.
+> On 10/28/26 11:15, sashiko-bot@kernel.org wrote:
+> > Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> > - [Medium] PCI: dwc: unconfirmed offset returned in dw_pcie_get_pcie_cap()
+> > --
+> > 
+> > commit c6fcd840cdb57dd351ea1787cae915ad3164fb13
+> > Author: Hans Zhang <18255117159@163.com>
+> > 
+> > PCI: dwc: Add pcie_cap field and caching helper
+> > 
+> > This commit adds a pcie_cap field to struct dw_pcie and introduces a
+> > dw_pcie_get_pcie_cap() helper that lazily looks up and caches the PCI
+> > Express Capability offset on first use once confirmed via a DBI read-back.
+> > 
+> >> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> >> index 6d788aa000117..dede6b3966585 100644
+> >> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> >> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> > [ ... ]
+> >> @@ -832,6 +834,42 @@ static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
+> >>   	dw_pcie_writel_dbi(pci, reg, val);
+> >>   }
+> >>   
+> >> +/**
+> >> + * dw_pcie_get_pcie_cap() - Return the PCIe Capability offset
+> >> + * @pci: DWC instance
+> >> + *
+> > [ ... ]
+> >> + * Return: the offset of the PCIe Capability, or 0 if it could not be
+> >> + * found or has not been confirmed yet.
+> >> + */
+> >> +static inline u8 dw_pcie_get_pcie_cap(struct dw_pcie *pci)
+> >> +{
+> >> +	u8 cap = READ_ONCE(pci->pcie_cap);
+> >> +
+> >> +	if (!cap) {
+> >> +		cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> >> +		if (cap && dw_pcie_readb_dbi(pci, cap) == PCI_CAP_ID_EXP)
+> >> +			WRITE_ONCE(pci->pcie_cap, cap);
+> >> +	}
+> >> +
+> >> +	return cap;
+> >> +}
+> > 
+> > [Severity: Medium]
+> > In drivers/pci/controller/dwc/pcie-designware.h, the kernel-doc for
+> > dw_pcie_get_pcie_cap() states that it returns 0 if the capability could not
+> > be found or has not been confirmed yet.
+> > 
+> > However, when pci->pcie_cap is 0 and transient DBI data causes
+> > dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) to return a non-zero offset cap
+> > while the confirmation check dw_pcie_readb_dbi(pci, cap) == PCI_CAP_ID_EXP
+> > evaluates to false, pci->pcie_cap is left as 0, but the unconfirmed non-zero
+> > cap is still returned to the caller.
+> > 
+> > Callers that guard DBI writes on a non-zero return (such as
+> > rockchip_pcie_enable_l0s()) or cache a non-zero return in driver state (such
+> > as tegra_pcie_dw_host_init() setting pcie->pcie_cap_base when
+> > !pcie->pcie_cap_base) will then consume or permanently store the unconfirmed
+> > offset.
+> > 
+> > Should dw_pcie_get_pcie_cap() return 0 when the confirmation read-back fails,
+> > or should the kernel-doc comment be updated to match the implementation?
+> > 
 > 
-> Agreed, both points come from the same thing being spread out. I think
-> both can be fixed by splitting pci_liveupdate_preserve_device() into
-> "already preserved" and "first preservation" cases, and moving the
-> nr_devices accounting into helpers that allocate and release the
-> struct pci_dev_ser, so it is visibly paired:
+> Hi,
 > 
-> 	if (dev_ser) {
-> 		/*
-> 		 * Endpoints can only be preserved once. Bridges are
-> 		 * preserved once for every preserved device below them.
-> 		 */
-> 		if (!dev->subordinate) {
-> 			pci_warn(dev, "Device is already preserved\n");
-> 			return -EBUSY;
-> 		}
-> 		...
-> 	} else {
-> 		dev_ser = pci_liveupdate_alloc_dev_ser(outgoing, dev);
-> 		if (IS_ERR(dev_ser))
-> 			return PTR_ERR(dev_ser);
-> 	}
+> We have already replied to Bjorn before. According to the specification, 
+> the value of pcie_cap is not equal to 0.
 > 
-> 	dev_ser->refcount++;
-> 
-> with pci_liveupdate_unpreserve_device() calling a matching
-> pci_liveupdate_free_dev_ser() when the refcount drops to 0.
 
-I think that would be good.
+Then please update the stale the kernel doc.
+
+- Mani
+
+
