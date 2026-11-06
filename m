@@ -1,74 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.198
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.71
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793925803;
-	b=vF6dGBzAytpzWTJuI8vg9nxGdm9tw5emb5ruMOUvbhcrWFCKkhop7WInkpksO0ZfMS+8
-	 Yb78WMTuZ1GIbFuBuNYih9hGUDuw/5Fgr3rE4x9hmvAQ1krwRb5OnWa3dVBMhKXe+Dbw4
-	 xg8uS5JQ6t9AYylfDgqOpmNA+3nxtRXiSuBv6oOi4/guFKNaWGw2+DBdYZMqNc1FXmJNe
-	 7xwTRDk8AOLD5DA17l06oWE6d70D4i67wAnqleShkAqcJ+el7IYpoB/UIDkXMEeJlSkzT
-	 mPjtAiVqY3VwsxmTJs7zNsEfxrOjkZkZ9UgnvCZbr1+ntYTLtAeqTHE6xN7nb3ncLnQ==
+	t=1793925791;
+	b=TASxyVhmvxEodFTRGYGxRm2w5wwKRu20qXUp7e8Bhkw807hK9g12s3CbSCt3x4ws3/ye
+	 /EhzAeGTYxTttwiOnNJQm1Q8sDQNpB9ofO7eTzPhrWqkMC/jjYO1WLqrJCHzd89W6aIwD
+	 OGoUDv+Mhl6JurMAv3hkKX5SZJW1+/1sRA50J3DGmTTLrAKVFqV87BwBy6uexoj/3M12w
+	 4niC9c9mP0SPhT6qs4GbNrdHB18qx3GxXatj/dzPR+y3KhaTvEDNv/4iYqO+QkkHamm5C
+	 COFdpaZWkXZOjXNgFKVVB4q2MYPGeXYGh2TCkbm7nWtNzJ1GbgSiY6X485NuPQkO7xQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793925803;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793925791;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
 	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
 	 Content-Type;
-	bh=jjSXIgXOyhHFXs7xglb6RCi5mzea7rcfoR/tpBA6uG4=;
-	b=gCVGpWLC+SBbp+OzWHLLRTHu5iMAX2vIK+eJ5MvGky4ngkmCZyKdlBo/JYArlqYnXtG9
-	 riUvtgrFeeT9anayoGvnvM3E5OWQgQcMSZByuUGVY+FQoJ34Ms8yAuE4iOWARheJm6JMu
-	 cKX0c3WYaBkiXr6eITF+ZmScAmSgjXmsV3lVTJJ7Lbi2PhoxyKM2ZN9UdMesN9d8Gavlh
-	 JPYnthk3NyY5zdd9NmwAqvCBLBudJKl/vpERIvsdb/VNqCnH9fTPs85EpIWmkM+8J2cIl
-	 a8BHeb3+4ty2Efw982MfSjQtI6ilhxNUWTTdf6N/EiQrEBCWt4H+0I0lDhgOYxG457w==
+	bh=VfIh1JSY3MeIq0CEtKa0epmsvwLqQj8oYtgMnnQZzbo=;
+	b=UKacSANG+/d8CyW3JQC3KU2MPN+ivcqvkD+ST6rqajOH3rClFFQb03YQWcp5Gd+Kz7Yc
+	 ToxSEtc3Mh4Qa1of/1XW6mHXWbEMz6jUFKEFimmeJmWKnSRMIvBidRARlGUcwgoWffsnm
+	 PFG8JdCEb/sFbM53i44ZYdjlgQCXitnYTTwrYChW5n4zR3O+ewx6CUt6j5W9a/Tlx5a2Q
+	 zK7OhPw8YNJmVp/K+hLf+Ny2jv3T5l3JEpehbmPgMC4Jv9bVhMUlTEXMWhXzASrYSsd9R
+	 rSxHLM5HwGt4k7ekPmbfjYDPtsGsElMilLjkLqLVEdkBjL/AIlm7s3DraOvXKhl96Ig==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=TCHTaSLD;
-	arc=none smtp.remote-ip=209.85.167.198
-Received: from mail-oi1-f198.google.com (mail-oi1-f198.google.com [209.85.167.198])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=p+nSHsB3;
+	arc=none smtp.remote-ip=209.85.210.71
+Received: from mail-ot1-f71.google.com (mail-ot1-f71.google.com [209.85.210.71])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A87B36082BD2
-	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 00:43:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A87B36082BD2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F71A606A33A
+	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 00:43:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7F71A606A33A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=TCHTaSLD
-Received: by mail-oi1-f198.google.com with SMTP id 5614622812f47-4cc89e86e4dso86930b6e.2
-        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2026 16:43:17 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=p+nSHsB3
+Received: by mail-ot1-f71.google.com with SMTP id 46e09a7af769-844195cc415so304043a34.1
+        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2026 16:43:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793925797; x=1794530597; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1793925790; x=1794530590; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=jjSXIgXOyhHFXs7xglb6RCi5mzea7rcfoR/tpBA6uG4=;
-        b=TCHTaSLDTMhg1F7OkjS+TS2DSNVLTYo0hDZFR8GavFaZ1LJNZ0B7t7eRxMNaydfNgL
-         uKJGOfn2lhOgbo5sK8b7AnPRaDIOx9FooA2ll8Ce9FI3EXiZI3ks28IqmPZ8U/LxxsFF
-         NxOoLayovGPEi9W+EPCrxlJMJ+WJ9sOMnLihG1IFpUgdiWXwYHNTrbBhnZQx9u9B71Ee
-         v6cKVE/ZORVLlT81wrXr+wCOKEPrFCq33z4s0oJ5qhf17cPejQY9S6L8UEHtuHJ2STTu
-         C+b2U0uAhDG/uTp0Z3R28V5Vj4qc9gBSuwbMlo9b4dWayrPl0KyLndQ3inyVPB2F4yZZ
-         zLyw==
+        bh=VfIh1JSY3MeIq0CEtKa0epmsvwLqQj8oYtgMnnQZzbo=;
+        b=p+nSHsB3NVQ3/VN95+llHuQrwOSf9rabn1to0JLMo69u9oII+ko+BKDLNSxxg8aQQQ
+         Keh6EvXI12h8ds93cvj8jDWZhLHgcPKL1nWrnOxV3QnEI8baNcksmI31Ptyl4jRmyMXm
+         I0+nHgmB+x2jOovCBjRp2gaB0B36guv3bsx9azgkxvoiE2kkPNMtpudNu/axRRkm+ZBU
+         dx/g4XMPLCKgGByzOc955d0LaXHbegZ2C3ZPYajpTBwXphKQeO2vQWFDQG9bC8YEHi1Q
+         b6gjKyxu5LwzwkmuljzQg3J8SUkhF/quNbhyO8jV0ugz5iKh4vi3sDDJBGZpm9DgxJc2
+         C3Kg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793925797; x=1794530597;
+        d=1e100.net; s=20260707; t=1793925790; x=1794530590;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=jjSXIgXOyhHFXs7xglb6RCi5mzea7rcfoR/tpBA6uG4=;
-        b=ZiZi/5NxB30S5vCubf1NtgzNs1cLv5MJgHy4z7vUfJ5HsgF1gTxrjpM9DjlWQP9MGf
-         wiQKMkM0VjDTXpi5Rz+GtIPxwbIgxmdQQSptJwQOBv2cyQDe3fYAYXsghcrXba63pYG+
-         3y3W/Tv3SmBBUeydCw4DUhpzC7HRIxnwZTznAsPxIf14ZdxTc9tvP+J4RBEh3Nq1eVGa
-         TsiTpF0DypsMj+5hC1dJg8WxOtRw75xpGgPx1csvn7h4WS72TR2CTtiXg6c6avn6oaqf
-         D/Pphb0TWQ78l0uBv7MbBaosAplMfYSEqHowo5pn/E2nmHNe6y4zKNRDzPrCEpsoLx3N
-         1RRw==
-X-Forwarded-Encrypted: i=1; AKwUvBwNbK2WnVg1ru6v0Ois/uF/OGUuMh8a/ntqbxyeiIDQKr2FvhMSVjlEvHW6/PODGnSHNYYbh9QG4Yg=@vger.kernel.org
-X-Gm-Message-State: APuU4Z93n7suW/O7Mj+T2vPzsXu/cXszXl5P+BqbjJqmZXgzpL951F/9
-	mKFOZO6nLLE0Bf62JIP6FXCIBnVial0lU44BqfVrGYt8g41PrdvjNM2sKFZnDnr+mY/CRLF8t+w
-	da2E3vHXAPSFw6g==
-X-Received: from ioy12.prod.google.com ([2002:a05:6602:a10c:b0:9e0:f441:f5dd])
+        bh=VfIh1JSY3MeIq0CEtKa0epmsvwLqQj8oYtgMnnQZzbo=;
+        b=yoLaDdSUnKU/HgAp68qPij4tyPxBP5Djgo3P3F7O/7PV3w1L3CwT0otEFfcqebqmRS
+         iqT+6Vn4AM+hL8Ym7N9z++e5eh9EEDjls75MGxUKm8qzsjisZROkq1WUNmfcofYjY88v
+         T2kHkZ+s59Mx/st36kQ3MY95G1ktRxhsRH+GNewDK46X1TVTQCb7gsU/X1plFvkf3GBv
+         6gzoPxsyXvIMT2avT944yjadYJzuscolg8OXAGESbCWKoB/QZ2Od0COXKofq+z201ZsN
+         LCZo+Yl4pkaxgXk+72z0vL/faKWYlyTjl9RMpKVjZtqiLhNeGyWOLvlxs0r9j1JKhCLN
+         9bVA==
+X-Forwarded-Encrypted: i=1; AKwUvBwTprLPl0ZvZvDdVzl3WFsV9TGxnV1Dn3SfkmAiUwEbVeysafJf/mvU5D5qh0pjwYI+DIkHFlfJv2s=@vger.kernel.org
+X-Gm-Message-State: APuU4Z+n+fGJKbygwem3F6C4qIclYsHqazSrOQAQ2283aHDgr5qYKeFt
+	TEYbn9sfmvlP1UMMRafpd5g+3WlLlWww7MIITAkw+yt2nItiRWFSc6neLWBwMNivv9x9VmLD9fc
+	fMQlL6Qbo9IG8ag==
+X-Received: from ioo11-n1.prod.google.com ([2002:a05:6602:864b:10b0:9e2:221a:fd83])
  (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6808:6f89:b0:4f6:5279:5c89 with SMTP id 5614622812f47-567e15b703bmr658717b6e.47.1793925796333;
- Thu, 05 Nov 2026 16:43:16 -0800 (PST)
-Date: Fri,  6 Nov 2026 00:42:17 +0000
+ 2002:a05:6808:1a21:b0:561:fa43:1b2f with SMTP id 5614622812f47-567e0fc17c3mr657310b6e.20.1793925790093;
+ Thu, 05 Nov 2026 16:43:10 -0800 (PST)
+Date: Fri,  6 Nov 2026 00:42:12 +0000
 In-Reply-To: <20261106004218.604799-1-dmatlack@google.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,8 +81,8 @@ Precedence: list
 Mime-Version: 1.0
 References: <20261106004218.604799-1-dmatlack@google.com>
 X-Mailer: git-send-email 2.56.0.455.g6c5a503b38-goog
-Message-ID: <20261106004218.604799-17-dmatlack@google.com>
-Subject: [PATCH v2 16/17] PCI: Remove the per-capability save buffers
+Message-ID: <20261106004218.604799-12-dmatlack@google.com>
+Subject: [PATCH v2 11/17] PCI/DPC: Save DPC state in the saved capability store
 From: David Matlack <dmatlack@google.com>
 To: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
 	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
@@ -97,292 +97,93 @@ Cc: Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>,
 	Vipin Sharma <vipinsh@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Delete struct pci_cap_saved_state, struct pci_cap_saved_data,
-pci_dev.saved_cap_space and the helpers that managed them. Every capability
-now saves its registers in the offset-indexed capability store, so nothing
-is left to find, allocate or free.
+Save and restore the DPC Control register through the per-device saved
+capability store instead of a private pci_cap_saved_state buffer.
 
-Drop pci_free_cap_save_buffers() from pci_release_capabilities();
-pci_saved_caps_release() already frees the one remaining allocation.
+Key the save and restore paths off pdev->dpc_cap rather than
+pci_is_pcie(). The old code relied on the save buffer existing only when
+the capability did, and the store has no per-capability entry to check.
 
-pci_store_saved_state() and pci_load_saved_state() no longer have to append
-and consume the records of the capabilities that still had a buffer, so the
-blob they exchange is now just the saved DWORDs.
+Reserve the register in pci_reserve_dpc_state(), called from
+pci_dpc_init().
+
+No functional change intended.
 
 Signed-off-by: David Matlack <dmatlack@google.com>
 ---
- drivers/pci/pci.c   | 136 +-------------------------------------------
- drivers/pci/pci.h   |  19 -------
- drivers/pci/probe.c |   1 -
- include/linux/pci.h |   1 -
- 4 files changed, 1 insertion(+), 156 deletions(-)
+ drivers/pci/pcie/dpc.c | 37 +++++++++++++++----------------------
+ 1 file changed, 15 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ab1e1d6847fc..d2a9718b6a65 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1802,28 +1802,6 @@ static const u16 pcie_saved_regs[] = {
- 	PCI_EXP_SLTCTL2,
- };
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index b7f79266f66d..16203e9ef240 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -45,34 +45,18 @@ static const char * const rp_pio_error_string[] = {
  
--static struct pci_cap_saved_state *_pci_find_saved_cap(struct pci_dev *pci_dev,
--						       u16 cap, bool extended)
--{
--	struct pci_cap_saved_state *tmp;
--
--	hlist_for_each_entry(tmp, &pci_dev->saved_cap_space, next) {
--		if (tmp->cap.cap_extended == extended && tmp->cap.cap_nr == cap)
--			return tmp;
--	}
--	return NULL;
--}
--
--struct pci_cap_saved_state *pci_find_saved_cap(struct pci_dev *dev, char cap)
--{
--	return _pci_find_saved_cap(dev, cap, false);
--}
--
--struct pci_cap_saved_state *pci_find_saved_ext_cap(struct pci_dev *dev, u16 cap)
--{
--	return _pci_find_saved_cap(dev, cap, true);
--}
--
- static void pci_reserve_pcie_state(struct pci_dev *dev)
+ void pci_save_dpc_state(struct pci_dev *dev)
  {
- 	unsigned int i;
-@@ -2017,32 +1995,12 @@ EXPORT_SYMBOL(pci_restore_state);
-  *
-  * Laid out so that the position of every value is described by the device's
-  * configuration space rather than by the kernel.
-- *
-- * Capabilities that have not moved to the saved capability store yet keep
-- * their own buffer, and their records trail @dword_val until the last of
-- * those buffers goes away. Both areas vary in length and only one of them
-- * can be a flexible array member, so the records are reached with
-- * pci_saved_state_records() rather than declared here.
-  */
- struct pci_saved_state {
- 	unsigned long	dword_map[BITS_TO_LONGS(PCI_CFG_SPACE_EXP_DWORDS)];
- 	u32		dword_val[];
--	/* struct pci_cap_saved_data cap[] follows dword_val */
- };
- 
--/*
-- * The records that follow the saved DWORDs, one per capability that still has
-- * its own save buffer, terminated by an empty record.
-- */
--static struct pci_cap_saved_data *
--pci_saved_state_records(struct pci_saved_state *state)
--{
--	unsigned int nr_dwords = bitmap_weight(state->dword_map,
--					       PCI_CFG_SPACE_EXP_DWORDS);
--
--	return (struct pci_cap_saved_data *)&state->dword_val[nr_dwords];
--}
--
- /**
-  * pci_store_saved_state - Allocate and return an opaque struct containing
-  *			   the device saved state.
-@@ -2054,11 +2012,8 @@ struct pci_saved_state *pci_store_saved_state(struct pci_dev *dev)
- {
- 	DECLARE_BITMAP(map, PCI_CFG_SPACE_EXP_DWORDS);
- 	struct pci_saved_caps *caps = &dev->saved_caps;
--	struct pci_cap_saved_state *tmp;
--	struct pci_cap_saved_data *cap;
- 	struct pci_saved_state *state;
- 	unsigned int dword, nr_dwords, i = 0;
--	size_t size;
- 
- 	if (!dev->state_saved)
- 		return NULL;
-@@ -2070,14 +2025,7 @@ struct pci_saved_state *pci_store_saved_state(struct pci_dev *dev)
- 
- 	nr_dwords = bitmap_weight(map, PCI_CFG_SPACE_EXP_DWORDS);
- 
--	size = struct_size(state, dword_val, nr_dwords);
--
--	/* Room for the buffers that are left, and for the terminator */
--	size += sizeof(struct pci_cap_saved_data);
--	hlist_for_each_entry(tmp, &dev->saved_cap_space, next)
--		size += sizeof(struct pci_cap_saved_data) + tmp->cap.size;
--
--	state = kzalloc(size, GFP_KERNEL);
-+	state = kzalloc(struct_size(state, dword_val, nr_dwords), GFP_KERNEL);
- 	if (!state)
- 		return NULL;
- 
-@@ -2092,15 +2040,6 @@ struct pci_saved_state *pci_store_saved_state(struct pci_dev *dev)
- 			pci_read_saved_cap_dword(dev, dword * sizeof(u32), val);
- 	}
- 
--	cap = pci_saved_state_records(state);
--	hlist_for_each_entry(tmp, &dev->saved_cap_space, next) {
--		size_t len = sizeof(struct pci_cap_saved_data) + tmp->cap.size;
--
--		memcpy(cap, &tmp->cap, len);
--		cap = (struct pci_cap_saved_data *)((u8 *)cap + len);
--	}
--	/* Empty record terminates the list */
--
- 	return state;
- }
- EXPORT_SYMBOL_GPL(pci_store_saved_state);
-@@ -2113,7 +2052,6 @@ EXPORT_SYMBOL_GPL(pci_store_saved_state);
- int pci_load_saved_state(struct pci_dev *dev,
- 			 struct pci_saved_state *state)
- {
--	struct pci_cap_saved_data *cap;
- 	unsigned int dword, i = 0;
- 
- 	dev->state_saved = false;
-@@ -2140,19 +2078,6 @@ int pci_load_saved_state(struct pci_dev *dev,
- 		pci_write_saved_cap_dword(dev, off, val);
- 	}
- 
--	cap = pci_saved_state_records(state);
--	while (cap->size) {
--		struct pci_cap_saved_state *tmp;
--
--		tmp = _pci_find_saved_cap(dev, cap->cap_nr, cap->cap_extended);
--		if (!tmp || tmp->cap.size != cap->size)
--			return -EINVAL;
--
--		memcpy(tmp->cap.data, cap->data, tmp->cap.size);
--		cap = (struct pci_cap_saved_data *)((u8 *)cap +
--		       sizeof(struct pci_cap_saved_data) + cap->size);
--	}
--
- 	dev->state_saved = true;
- 	return 0;
- }
-@@ -3652,56 +3577,6 @@ void pci_ea_init(struct pci_dev *dev)
- 		offset = pci_ea_read(dev, offset);
- }
- 
--static void pci_add_saved_cap(struct pci_dev *pci_dev,
--	struct pci_cap_saved_state *new_cap)
--{
--	hlist_add_head(&new_cap->next, &pci_dev->saved_cap_space);
--}
--
--/**
-- * _pci_add_cap_save_buffer - allocate buffer for saving given
-- *			      capability registers
-- * @dev: the PCI device
-- * @cap: the capability to allocate the buffer for
-- * @extended: Standard or Extended capability ID
-- * @size: requested size of the buffer
-- */
--static int _pci_add_cap_save_buffer(struct pci_dev *dev, u16 cap,
--				    bool extended, unsigned int size)
--{
--	int pos;
 -	struct pci_cap_saved_state *save_state;
+-	u16 *cap;
 -
--	if (extended)
--		pos = pci_find_ext_capability(dev, cap);
--	else
--		pos = pci_find_capability(dev, cap);
+-	if (!pci_is_pcie(dev))
+-		return;
 -
--	if (!pos)
--		return 0;
--
--	save_state = kzalloc(sizeof(*save_state) + size, GFP_KERNEL);
+-	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_DPC);
 -	if (!save_state)
--		return -ENOMEM;
--
--	save_state->cap.cap_nr = cap;
--	save_state->cap.cap_extended = extended;
--	save_state->cap.size = size;
--	pci_add_saved_cap(dev, save_state);
--
--	return 0;
--}
--
--int pci_add_cap_save_buffer(struct pci_dev *dev, char cap, unsigned int size)
--{
--	return _pci_add_cap_save_buffer(dev, cap, false, size);
--}
--
--int pci_add_ext_cap_save_buffer(struct pci_dev *dev, u16 cap, unsigned int size)
--{
--	return _pci_add_cap_save_buffer(dev, cap, true, size);
--}
--
- /**
-  * pci_reserve_saved_caps - reserve room to save capability registers
-  * @dev: the PCI device
-@@ -3715,15 +3590,6 @@ void pci_reserve_saved_caps(struct pci_dev *dev)
- 	pci_reserve_vc_state(dev);
++	if (!dev->dpc_cap)
+ 		return;
+ 
+-	cap = (u16 *)&save_state->cap.data[0];
+-	pci_read_config_word(dev, dev->dpc_cap + PCI_EXP_DPC_CTL, cap);
++	pci_save_cap_word(dev, dev->dpc_cap + PCI_EXP_DPC_CTL);
  }
  
--void pci_free_cap_save_buffers(struct pci_dev *dev)
--{
--	struct pci_cap_saved_state *tmp;
--	struct hlist_node *n;
+ void pci_restore_dpc_state(struct pci_dev *dev)
+ {
+-	struct pci_cap_saved_state *save_state;
+-	u16 *cap;
 -
--	hlist_for_each_entry_safe(tmp, n, &dev->saved_cap_space, next)
--		kfree(tmp);
--}
+-	if (!pci_is_pcie(dev))
+-		return;
 -
- /**
-  * pci_configure_ari - enable or disable ARI forwarding
-  * @dev: the PCI device
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 5a03561515ee..bc92b037b9d1 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -237,26 +237,7 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
- int pci_bus_error_reset(struct pci_dev *dev);
- int pci_try_reset_bridge(struct pci_dev *bridge);
+-	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_DPC);
+-	if (!save_state)
++	if (!dev->dpc_cap)
+ 		return;
  
--struct pci_cap_saved_data {
--	u16		cap_nr;
--	bool		cap_extended;
--	unsigned int	size;
--	u32		data[];
--};
--
--struct pci_cap_saved_state {
--	struct hlist_node		next;
--	struct pci_cap_saved_data	cap;
--};
--
- void pci_reserve_saved_caps(struct pci_dev *dev);
--void pci_free_cap_save_buffers(struct pci_dev *dev);
--int pci_add_cap_save_buffer(struct pci_dev *dev, char cap, unsigned int size);
--int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
--				u16 cap, unsigned int size);
--struct pci_cap_saved_state *pci_find_saved_cap(struct pci_dev *dev, char cap);
--struct pci_cap_saved_state *pci_find_saved_ext_cap(struct pci_dev *dev,
--						   u16 cap);
- 
- /* DWORDs of the configuration space header, i.e. pci_dev.saved_config_space */
- #define PCI_STD_HEADER_DWORDS	(PCI_STD_HEADER_SIZEOF / sizeof(u32))
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index c04adf606ab9..0a86de920225 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2475,7 +2475,6 @@ static void pci_release_capabilities(struct pci_dev *dev)
- 	pci_aer_exit(dev);
- 	pci_rcec_exit(dev);
- 	pci_iov_release(dev);
--	pci_free_cap_save_buffers(dev);
- 	pci_saved_caps_release(dev);
+-	cap = (u16 *)&save_state->cap.data[0];
+-	pci_write_config_word(dev, dev->dpc_cap + PCI_EXP_DPC_CTL, *cap);
++	pci_restore_cap_word(dev, dev->dpc_cap + PCI_EXP_DPC_CTL);
  }
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2c27124c81e5..6ba724e1f04e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -549,7 +549,6 @@ struct pci_dev {
+ static DECLARE_WAIT_QUEUE_HEAD(dpc_completed_waitqueue);
+@@ -400,6 +384,16 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 	return IRQ_HANDLED;
+ }
  
- 	spinlock_t	pcie_cap_lock;		/* Protects RMW ops in capability accessors */
- 	u32		saved_config_space[16]; /* Config space saved at suspend time */
--	struct hlist_head saved_cap_space;
- 	struct pci_saved_caps saved_caps; /* Saved capability registers */
++static void pci_reserve_dpc_state(struct pci_dev *pdev)
++{
++	int rc;
++
++	rc = pci_reserve_saved_cap(pdev, pdev->dpc_cap + PCI_EXP_DPC_CTL, sizeof(u16));
++	if (rc)
++		pci_err(pdev, "unable to reserve DPC save state (%pe)\n",
++			ERR_PTR(rc));
++}
++
+ void pci_dpc_init(struct pci_dev *pdev)
+ {
+ 	u16 cap;
+@@ -408,8 +402,7 @@ void pci_dpc_init(struct pci_dev *pdev)
+ 	if (!pdev->dpc_cap)
+ 		return;
  
- #ifdef CONFIG_HOTPLUG_PCI_PCIE
+-	if (pci_add_ext_cap_save_buffer(pdev, PCI_EXT_CAP_ID_DPC, sizeof(u16)))
+-		pci_err(pdev, "unable to allocate suspend buffer for DPC\n");
++	pci_reserve_dpc_state(pdev);
+ 
+ 	pci_read_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_CAP, &cap);
+ 	if (!(cap & PCI_EXP_DPC_CAP_RP_EXT))
 -- 
 2.56.0.455.g6c5a503b38-goog
 
