@@ -1,76 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.17
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793970937;
-	b=jfHIrEjUX9rlYczFGwCX6gFglsWNisIUS/LzD8pDByMOrOlRjBwkF9RMWjgpjRuT2QgA
-	 +cKMhJ31iISDIThO4XhUvJZht0DkQxW7WVlSMSWI1oyhlhXkZLHK0rgB5wq6kHck+TaEB
-	 NO3sQvgTXhGXbx75X107ySOmwMpE2LHZ1byNqKPfvO3H96U4qAieK27MORvz8tTogzMLI
-	 tDc5rZTbKKLpUSQmkXeYMQLLbTWDmMbg+7FIyibaocLLNS6+QE0m2Mbdln2Rz15jAR1at
-	 AuBgBmtNsuj7KWSAqu1GZSfZ157r1wSY4iHFOEb7AycT5ZbsbP5/QxVjFcOCvO7HFhQ==
+	t=1793972636;
+	b=2QE2GKfZwphfk/skXMki+V4rEegO4XIYwWUQvzlUnGNrpUmGm/LFWuivqqywY5wbmdnG
+	 d5DgnYNXwodjMlLydIRldNPOAnv47b0aLmneTNkEOyy+zSrogg+YdjxDIx5f3E+p7rIJC
+	 EMvyjEmdrqA58vggXcS8SgXhO08gy82FK0yduMSnS5vVwU2r8aZnzz/QVQyVCTKUST/QL
+	 Iiv7dM5UlnuFX7PgN4zu0ILFsaH8XKdXYScrxj5jFSWm7aTfRj5xsPi8aPjMLEllbAb5e
+	 OA80kJWT1nk8ZMlXjtzqhJH5y9EDOyBTpzI/P25iPJbAbn509IETj+Tj/bADzghoTLQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793970937;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793972636;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
-	 Cc:Subject:Message-ID:User-Agent;
-	bh=B0PVCflTHEP5iLK0C5G63ERr9hVqst2s1sYglMkTcDw=;
-	b=jJEoGJXaSQMwcWi3M387xgX12L3NiY8bWNd7Q53G5iTkd39jisJgp1ONONxwirku1j15
-	 QzagxAjFVcnYehD5sDR85Kh5WRuus7FNaFFiUAag06nMNIWmank/RGQgM/ugx0HqJugfM
-	 YlY/VJPU9wTgVHIK1qY603pSOREkqVPS39FbsAQwwEQVL+ryhXHrAFVrrQCXgKRbzEKI3
-	 yb3qmgXMukui0wHJbSlNWGYv5NWUz5ijHV3Whqyr0Tuti7i8AMwLGDtepwGxegVkLrb36
-	 /HaCgeZh2zuueCu8tA3y6UQqW4HxGlNeISQ6OfVaLli1HwaD0UW8eW8rvpjmOTUgXig==
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=A2HQVLi/niQOn9liXTHTxJVCiAMeXHKl3UTtnPtj3+g=;
+	b=TqxgNhcW1IGUGI1KugAQOAC5K0+DnXtFDhZhgTzZYcO9wMj/XpqbZArBXAtdLynB01r5
+	 6L3U2eOKsR02rONJGMuKGl+gr2XdydHsbRA/OVaxWPf1CdeoSObRi1WM6BBG0Vt5zz0oL
+	 DhwH8N/pc/eL5B5JbJ/oCJqIV7w8DaZVS0L2fGGCPus6T84jYL9LJF0r29RnWunUhO7eE
+	 GVjVRyrAzQPJ3oW3qzsl0/KywrzADiLixcPN3AFxUPL3lIrE5Z5HrGNWOqaRvsyMT1LmV
+	 2nTM0C/QaW6WmcMbbDYT04AwuOqKSCDA5nv9qnBI9rmFnD/LGSfybmb1A5mg2puDhxQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=bthmP4eT;
-	arc=none smtp.remote-ip=198.175.65.19
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Jd9UneNS;
+	arc=none smtp.remote-ip=198.175.65.17
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0880606A33B
-	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 13:15:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F0880606A33B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5010606A326;
+	Fri,  6 Nov 2026 13:43:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B5010606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=bthmP4eT
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Jd9UneNS
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793970937; x=1825506937;
-  h=date:from:to:cc:subject:message-id;
-  bh=UooDex2TchyaCcNMTizFxOFjGrAunA73WC7zbX5IREE=;
-  b=bthmP4eTvBh/YnhCsm2f21c9R87bIVt4e29BHDb3LtnxhRA2yxhquPS2
-   hHTjEQwPgz3NSRtPWefLKlciaRrmlV2FyOakUuaiCPFK5fh6+orfyYIQK
-   5L1Ch790craxhSFc0oRBhBfaY1aKF/vlMhfkbxvQedvDJpp2Go9jTnQqz
-   A3x/f8301INeD2feWWFppY+Pk09mK51jGW51d7gbgMiP/UMYMZEM3SR0k
-   mkgMyTxZoDEoH4OQqGBEkzLxil7sidE4mfVYxvNy7BSVUW0y3LWXpxTSo
-   krbqZoW3ZGpOFd36p055m8hskuLEqxSksldEXqA2ppClxHcIGFjLWVhWl
-   g==;
-X-CSE-ConnectionGUID: +1zMxcO3T8SOSznqS+o2Bw==
-X-CSE-MsgGUID: rO69NenfScWxYvUwMcdthg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2823184"
+  t=1793972634; x=1825508634;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=ogwsI8rx7GLy4TXfzfm/FL+dP+W5KRDZUqwE/jbY1ec=;
+  b=Jd9UneNSEOaUagShBcDtjgBEjq4aFCiFvZBOQfoAAbUKnQvmWCuuvhkv
+   zDXfDi1WXhh0WoTf9BuBgc78cZpUwlMwSiIhJW42LzuqATCw748mcO7Q/
+   MTnsyvGhGMalCiuhesVUq5IpIJwxIU9MwDSEbWVD561d9AASb3wwVXUKT
+   SvyrJshMMJkYFjSGPhS0qY9afZotl1VBAW/PADICQoSxxut+d5c2q3bzi
+   VvPqxx/p4NRou/hyEoTVY1yCPwEMg5/bSaB1K5/wB2yklgM9yBYpQ9MOo
+   dxqLAne0YiQ19LQyY85R3Q/yGEZIitULqCOyJClegK28PStIL+yRtTzI0
+   Q==;
+X-CSE-ConnectionGUID: tqdw2B0bT6SnB2OH+siDaw==
+X-CSE-MsgGUID: /I2MdxMPSQK0N+edleHG8Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2812191"
 X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="2823184"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:15:37 -0800
-X-CSE-ConnectionGUID: iY4aXar5SwKgoC5d65rfFQ==
-X-CSE-MsgGUID: LbRM8540S++kY0aR5WSncg==
+   d="scan'208";a="2812191"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:43:54 -0800
+X-CSE-ConnectionGUID: 1YzqR4PXRxiSGmBZUUkihA==
+X-CSE-MsgGUID: HngEHbAwSTqU/yLxrs6eeA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="7176712"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by orviesa005.jf.intel.com with ESMTP; 06 Nov 2026 05:15:36 -0800
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xPJn3-00000000pJ3-0Eyh;
-	Fri, 06 Nov 2026 13:15:33 +0000
-Date: Fri, 06 Nov 2026 21:14:46 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:next] BUILD SUCCESS
- 21e09cde4165aa86de15da9d14b28e3317abe59a
-Message-ID: <20261106211446.etCYg680-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+   d="scan'208";a="7609713"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.104])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:43:51 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
+	Geramy Loveless <gloveless@jqluv.com>,
+	Eric Auger <eauger@redhat.com>,
+	Alexey Fomenko <alexey.fomenko@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Rob Herring <robh@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	Mesih Kilinc <Mesih.Kilinc@sony.com>
+Cc: linux-kernel@vger.kernel.org,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH v5 00/14] PCI: Resource placement algorithm fixes
+Date: Fri,  6 Nov 2026 15:43:21 +0200
+Message-ID: <20261106134341.39493-1-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 2.47.3
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -79,324 +86,185 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-branch HEAD: 21e09cde4165aa86de15da9d14b28e3317abe59a  Merge branch 'pci/controller/rcar-host'
+V4 got quite many comments from sashiko, some of them were a bit
+sketchy (bogus scenarios such as IOV BARs on a bridge) but there was
+still good feedback hidden under the clearly flawed facade.
 
-elapsed time: 1099m
+There have been major changes so any retesting is appreciated (the
+4 candidates patch is largely the same so I kept the Tested-by tags but
+everything around has been changing so even that is on the borderline
+when it comes to the validity of the existing tags).
 
-configs tested: 304
-configs skipped: 5
+I ended up dropping the nested window fix which I had anyway realized
+would not be necessary with the current resource code. I had earlier
+planned to change the resource side code to only try start addresses
+that qualify to size+align requirements and had thus kept the nested
+win fix. But it just makes PCI side more complicated requiring extra
+tweaks and checks. With that patch dropped, pci_align_resource() can
+alone decide the placement making the code much simpler.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Second major change is rewriting the gap calculation, which required
+including pbus_size_mem() refactoring that I was planning on doing
+anyway.
 
-tested configs:
-alpha                              allnoconfig    gcc-16.2.0
-alpha                             allyesconfig    gcc-16.2.0
-alpha                                defconfig    gcc-16.2.0
-alpha                 randconfig-2200-20261105    gcc-9.5.0  smatch
-alpha                randconfig-r2102-20261105    clang-17   cocci
-arc                               allmodconfig    clang-24
-arc                               allmodconfig    gcc-16.2.0
-arc                                allnoconfig    gcc-16.2.0
-arc                               allyesconfig    clang-24
-arc                           axs103_defconfig    clang-19
-arc                                  defconfig    gcc-16.2.0
-arc                         nsim_700_defconfig    gcc-16.2.0
-arc                   randconfig-1000-20261106    gcc-8.5.0
-arc                   randconfig-1001-20261106    gcc-8.5.0
-arc                   randconfig-2000-20261105    gcc-8.5.0
-arc                   randconfig-2001-20261105    gcc-8.5.0
-arc                   randconfig-2002-20261105    gcc-8.5.0
-arc                   randconfig-2003-20261105    gcc-8.5.0
-arc                   randconfig-2004-20261105    gcc-8.5.0
-arc                   randconfig-2005-20261105    gcc-8.5.0
-arc                   randconfig-2200-20261105    gcc-8.5.0  smatch
-arc                  randconfig-r2109-20261105    gcc-16.2.0 cocci
-arm                                allnoconfig    gcc-16.2.0
-arm                               allyesconfig    clang-24
-arm                         clps711x_defconfig    clang-24
-arm                                  defconfig    gcc-16.2.0
-arm                          lpc32xx_defconfig    clang-17
-arm                             mps2_defconfig    clang-24
-arm                   randconfig-1000-20261106    gcc-8.5.0
-arm                   randconfig-1001-20261106    gcc-8.5.0
-arm                   randconfig-1002-20261106    gcc-8.5.0
-arm                   randconfig-1003-20261106    gcc-8.5.0
-arm                   randconfig-2000-20261105    clang-24
-arm                   randconfig-2001-20261105    clang-24
-arm                   randconfig-2002-20261105    clang-24
-arm                   randconfig-2200-20261105    gcc-15.3.0 smatch
-arm                  randconfig-r2108-20261105    gcc-16.2.0 cocci
-arm                              rpc_defconfig    gcc-16.2.0
-arm64                             allmodconfig    clang-24
-arm64                              allnoconfig    gcc-16.2.0
-arm64                                defconfig    gcc-16.2.0
-arm64                 randconfig-1000-20261106    clang-17
-arm64                 randconfig-1001-20261106    clang-17
-arm64                 randconfig-1002-20261106    clang-17
-arm64                 randconfig-1003-20261106    clang-17
-arm64                 randconfig-2000-20261105    clang-24
-arm64                 randconfig-2001-20261105    clang-24
-arm64                 randconfig-2002-20261105    clang-24
-arm64                 randconfig-2200-20261105    clang-20   smatch
-csky                              allmodconfig    gcc-16.2.0
-csky                               allnoconfig    gcc-16.2.0
-csky                                 defconfig    gcc-16.2.0
-csky                  randconfig-1000-20261106    clang-17
-csky                  randconfig-1001-20261106    clang-17
-csky                  randconfig-2000-20261105    clang-24
-csky                  randconfig-2001-20261105    clang-24
-csky                  randconfig-2200-20261105    gcc-9.5.0  smatch
-csky                 randconfig-r2105-20261105    clang-17   cocci
-csky                 randconfig-r2106-20261105    gcc-16.2.0 cocci
-hexagon                           alldefconfig    clang-24
-hexagon                           allmodconfig    gcc-16.2.0
-hexagon                            allnoconfig    gcc-16.2.0
-hexagon                              defconfig    gcc-16.2.0
-hexagon               randconfig-1000-20261106    gcc-14.4.0
-hexagon               randconfig-1001-20261106    gcc-14.4.0
-hexagon               randconfig-2000-20261105    clang-24
-hexagon               randconfig-2001-20261105    clang-24
-hexagon               randconfig-2200-20261105    clang-17   smatch
-hexagon              randconfig-r2101-20261105    clang-17   cocci
-hexagon              randconfig-r2110-20261105    gcc-16.2.0 cocci
-i386                              allmodconfig    clang-22
-i386                               allnoconfig    gcc-16.2.0
-i386                              allyesconfig    clang-22
-i386        buildonly-randconfig-1000-20261106    clang-22
-i386        buildonly-randconfig-1001-20261106    clang-22
-i386        buildonly-randconfig-1002-20261106    clang-22
-i386        buildonly-randconfig-1003-20261106    clang-22
-i386        buildonly-randconfig-1004-20261106    clang-22
-i386        buildonly-randconfig-1005-20261106    clang-22
-i386                                 defconfig    gcc-16.2.0
-i386                  randconfig-1000-20261106    gcc-14
-i386                  randconfig-1001-20261106    gcc-14
-i386                  randconfig-1002-20261106    gcc-14
-i386                  randconfig-1003-20261106    gcc-14
-i386                  randconfig-1004-20261106    gcc-14
-i386                  randconfig-1005-20261106    gcc-14
-i386                  randconfig-1006-20261106    gcc-14
-i386                  randconfig-1007-20261106    gcc-14
-i386                  randconfig-1008-20261106    gcc-14
-i386                  randconfig-1009-20261106    gcc-14
-i386                  randconfig-1010-20261106    gcc-14
-i386                  randconfig-1011-20261106    gcc-14
-i386                  randconfig-1012-20261106    gcc-14
-i386                  randconfig-1013-20261106    gcc-14
-i386                  randconfig-2200-20261105    clang-22   smatch
-loongarch                         allmodconfig    clang-24
-loongarch                          allnoconfig    gcc-16.2.0
-loongarch                            defconfig    clang-24
-loongarch             randconfig-1000-20261106    gcc-14.4.0
-loongarch             randconfig-1001-20261106    gcc-14.4.0
-loongarch             randconfig-2000-20261105    gcc-16.2.0
-loongarch             randconfig-2001-20261105    gcc-16.2.0
-loongarch             randconfig-2200-20261105    gcc-16.2.0 smatch
-m68k                              allmodconfig    gcc-16.2.0
-m68k                               allnoconfig    gcc-16.2.0
-m68k                              allyesconfig    clang-24
-m68k                              allyesconfig    gcc-16.2.0
-m68k                                 defconfig    clang-24
-m68k                        m5329evb_defconfig    clang-24
-m68k                       m54418evb_defconfig    clang-19
-m68k                          nettel_defconfig    gcc-16.2.0
-m68k                  randconfig-2200-20261105    gcc-8.5.0  smatch
-microblaze                         allnoconfig    gcc-16.2.0
-microblaze                        allyesconfig    gcc-16.2.0
-microblaze                           defconfig    clang-24
-microblaze            randconfig-2200-20261105    gcc-9.5.0  smatch
-microblaze           randconfig-r2103-20261105    clang-17   cocci
-mips                              allmodconfig    gcc-16.2.0
-mips                               allnoconfig    gcc-16.2.0
-mips                              allyesconfig    gcc-16.2.0
-mips                   cavium_octeon_defconfig    gcc-16.2.0
-mips                          db1xxx_defconfig    gcc-16.2.0
-mips                       loongson3_defconfig    gcc-16.2.0
-mips                     maltaup_xpa_defconfig    clang-19
-mips                  randconfig-2000-20261105    gcc-9.5.0
-mips                  randconfig-2001-20261105    gcc-9.5.0
-mips                  randconfig-2002-20261105    gcc-9.5.0
-mips                  randconfig-2200-20261105    gcc-11.5.0 smatch
-mips                 randconfig-r2107-20261105    gcc-16.2.0 cocci
-nios2                             allmodconfig    clang-20
-nios2                              allnoconfig    clang-24
-nios2                                defconfig    clang-24
-nios2                 randconfig-1000-20261106    gcc-14.4.0
-nios2                 randconfig-1001-20261106    gcc-14.4.0
-nios2                 randconfig-2000-20261105    gcc-16.2.0
-nios2                 randconfig-2001-20261105    gcc-16.2.0
-nios2                 randconfig-2200-20261105    gcc-9.5.0  smatch
-openrisc                          allmodconfig    clang-20
-openrisc                           allnoconfig    clang-24
-openrisc                    de0_nano_defconfig    clang-19
-openrisc                             defconfig    gcc-16.2.0
-openrisc                   or1klitex_defconfig    clang-24
-openrisc                   or1klitex_defconfig    gcc-16.2.0
-openrisc              randconfig-2000-20261105    gcc-9.5.0
-openrisc              randconfig-2001-20261105    gcc-9.5.0
-openrisc              randconfig-2002-20261105    gcc-9.5.0
-openrisc              randconfig-2200-20261105    gcc-16.2.0 smatch
-openrisc             randconfig-r2104-20261105    clang-17   cocci
-openrisc                  simple_smp_defconfig    gcc-16.2.0
-parisc                            allmodconfig    gcc-16.2.0
-parisc                             allnoconfig    clang-24
-parisc                            allyesconfig    clang-17
-parisc                               defconfig    gcc-16.2.0
-parisc                randconfig-1000-20261106    clang-19
-parisc                randconfig-1001-20261106    clang-19
-parisc                randconfig-2000-20261105    gcc-16.2.0
-parisc                randconfig-2001-20261105    gcc-16.2.0
-parisc                randconfig-2200-20261105    gcc-15.3.0 smatch
-parisc64                             defconfig    clang-24
-powerpc                           allmodconfig    gcc-16.2.0
-powerpc                            allnoconfig    clang-24
-powerpc                      ep8248e_defconfig    clang-24
-powerpc                       ep88xc_defconfig    clang-17
-powerpc                     gamecube_defconfig    clang-19
-powerpc                      kmeter1_defconfig    gcc-16.2.0
-powerpc                       mgcoge_defconfig    clang-17
-powerpc                      mpc512x_defconfig    gcc-16.2.0
-powerpc                   mpc885_ads_defconfig    clang-19
-powerpc                       pcm030_defconfig    gcc-16.2.0
-powerpc               randconfig-1000-20261106    clang-19
-powerpc               randconfig-1001-20261106    clang-19
-powerpc               randconfig-2000-20261105    clang-18
-powerpc               randconfig-2001-20261105    clang-18
-powerpc               randconfig-2002-20261105    clang-18
-powerpc               randconfig-2200-20261105    clang-17   smatch
-powerpc                      redwood_defconfig    gcc-16.2.0
-powerpc                     sam440ep_defconfig    gcc-16.2.0
-powerpc                      tqm8555_defconfig    clang-19
-powerpc                  xes_mpc85xx_defconfig    clang-17
-powerpc64             randconfig-1000-20261106    clang-19
-powerpc64             randconfig-1001-20261106    clang-19
-powerpc64             randconfig-2000-20261105    clang-18
-powerpc64             randconfig-2001-20261105    clang-18
-powerpc64             randconfig-2002-20261105    clang-18
-powerpc64             randconfig-2200-20261105    clang-24   smatch
-riscv                             allmodconfig    clang-24
-riscv                              allnoconfig    clang-24
-riscv                             allyesconfig    clang-24
-riscv                                defconfig    gcc-16.2.0
-riscv                 randconfig-1000-20261106    gcc-14.4.0
-riscv                 randconfig-1001-20261106    gcc-14.4.0
-riscv                 randconfig-2200-20261105    clang-24   smatch
-s390                              alldefconfig    clang-17
-s390                              allmodconfig    clang-17
-s390                               allnoconfig    clang-24
-s390                              allyesconfig    gcc-16.2.0
-s390                                 defconfig    gcc-16.2.0
-s390                  randconfig-1000-20261106    gcc-14.4.0
-s390                  randconfig-1001-20261106    gcc-14.4.0
-s390                  randconfig-2000-20261105    clang-24
-s390                  randconfig-2001-20261105    clang-24
-s390                  randconfig-2002-20261105    clang-24
-s390                  randconfig-2003-20261105    clang-24
-s390                  randconfig-2004-20261105    clang-24
-s390                  randconfig-2005-20261105    clang-24
-s390                  randconfig-2200-20261105    clang-24   smatch
-sh                                allmodconfig    gcc-16.2.0
-sh                                 allnoconfig    clang-24
-sh                                allyesconfig    clang-17
-sh                                   defconfig    gcc-14
-sh                  kfr2r09-romimage_defconfig    clang-17
-sh                             migor_defconfig    clang-24
-sh                    randconfig-1000-20261106    gcc-14.4.0
-sh                    randconfig-1001-20261106    gcc-14.4.0
-sh                    randconfig-2000-20261105    gcc-16.2.0
-sh                    randconfig-2001-20261105    gcc-16.2.0
-sh                    randconfig-2002-20261105    gcc-16.2.0
-sh                    randconfig-2003-20261105    gcc-16.2.0
-sh                    randconfig-2004-20261105    gcc-16.2.0
-sh                    randconfig-2005-20261105    gcc-16.2.0
-sh                    randconfig-2200-20261105    gcc-13.5.0 smatch
-sh                         sh7757lcr_defconfig    gcc-16.2.0
-sh                              shx3_defconfig    clang-17
-sparc                              allnoconfig    clang-24
-sparc                                defconfig    gcc-16.2.0
-sparc                 randconfig-1000-20261106    gcc-15.3.0
-sparc                 randconfig-1001-20261106    gcc-15.3.0
-sparc                 randconfig-2000-20261105    clang-24
-sparc                 randconfig-2001-20261105    clang-24
-sparc                 randconfig-2200-20261105    gcc-16.2.0 smatch
-sparc64                           allmodconfig    clang-20
-sparc64                              defconfig    gcc-14
-sparc64               randconfig-1000-20261106    gcc-15.3.0
-sparc64               randconfig-1001-20261106    gcc-15.3.0
-sparc64               randconfig-2000-20261105    clang-24
-sparc64               randconfig-2001-20261105    clang-24
-sparc64               randconfig-2200-20261105    gcc-8.5.0  smatch
-um                                alldefconfig    gcc-16.2.0
-um                                allmodconfig    clang-17
-um                                 allnoconfig    clang-24
-um                                allyesconfig    gcc-16.2.0
-um                                   defconfig    gcc-14
-um                              i386_defconfig    gcc-14
-um                    randconfig-1000-20261106    gcc-15.3.0
-um                    randconfig-1001-20261106    gcc-15.3.0
-um                    randconfig-2000-20261105    clang-24
-um                    randconfig-2001-20261105    clang-24
-um                    randconfig-2200-20261105    clang-19   smatch
-um                   randconfig-r2100-20261105    clang-17   cocci
-um                   randconfig-r2111-20261105    gcc-16.2.0 cocci
-um                            x86_64_defconfig    gcc-14
-x86_64                            alldefconfig    clang-19
-x86_64                            allmodconfig    clang-22
-x86_64                             allnoconfig    clang-24
-x86_64                            allyesconfig    clang-22
-x86_64      buildonly-randconfig-1000-20261106    gcc-13
-x86_64      buildonly-randconfig-1001-20261106    gcc-13
-x86_64      buildonly-randconfig-1002-20261106    gcc-13
-x86_64      buildonly-randconfig-1003-20261106    gcc-13
-x86_64      buildonly-randconfig-1004-20261106    gcc-13
-x86_64      buildonly-randconfig-1005-20261106    gcc-13
-x86_64                               defconfig    gcc-14
-x86_64                                   kexec    clang-22
-x86_64                randconfig-1000-20261106    clang-22
-x86_64                randconfig-1001-20261106    clang-22
-x86_64                randconfig-1002-20261106    clang-22
-x86_64                randconfig-1003-20261106    clang-22
-x86_64                randconfig-1004-20261106    clang-22
-x86_64                randconfig-1005-20261106    clang-22
-x86_64                randconfig-1006-20261106    clang-22
-x86_64                randconfig-1007-20261106    clang-22
-x86_64                randconfig-1008-20261106    clang-22
-x86_64                randconfig-1009-20261106    clang-22
-x86_64                randconfig-1010-20261106    clang-22
-x86_64                randconfig-1011-20261106    clang-22
-x86_64                randconfig-1012-20261106    gcc-14
-x86_64                randconfig-1013-20261106    gcc-14
-x86_64                randconfig-1014-20261106    gcc-14
-x86_64                randconfig-1015-20261106    gcc-14
-x86_64                randconfig-1016-20261106    gcc-14
-x86_64                randconfig-1017-20261106    gcc-14
-x86_64                randconfig-2100-20261105    gcc-14     cocci
-x86_64                randconfig-2101-20261105    gcc-14     cocci
-x86_64                randconfig-2102-20261105    gcc-14     cocci
-x86_64                randconfig-2103-20261105    gcc-14     cocci
-x86_64                randconfig-2104-20261105    gcc-14     cocci
-x86_64                randconfig-2105-20261105    gcc-14     cocci
-x86_64                randconfig-2200-20261105    clang-22   smatch
-x86_64                                rhel-9.4    clang-22
-x86_64                            rhel-9.4-bpf    gcc-14
-x86_64                           rhel-9.4-func    clang-22
-x86_64                     rhel-9.4-kselftests    clang-22
-x86_64                          rhel-9.4-kunit    gcc-14
-x86_64                            rhel-9.4-ltp    gcc-14
-x86_64                           rhel-9.4-rust    clang-22
-xtensa                             allnoconfig    clang-24
-xtensa                            allyesconfig    clang-20
-xtensa                   nommu_kc705_defconfig    clang-24
-xtensa                randconfig-1000-20261106    gcc-15.3.0
-xtensa                randconfig-1001-20261106    gcc-15.3.0
-xtensa                randconfig-2000-20261105    clang-24
-xtensa                randconfig-2001-20261105    clang-24
-xtensa                randconfig-2200-20261105    gcc-8.5.0  smatch
-xtensa                     xip_kc705_defconfig    clang-17
+As with v4, the quirk is not included and one approach should still
+be selected to solve the Genoa/Zen4 iomem blackhole but that's not
+likely the one I proposed within my series so I left it out.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+This series also does not attempt to address cases where user alignment
+override does not propagate to window size calculations and thus not
+into the align given to resource placement code (reported by sashiko).
+These are pre-existing issues and while they should be fixed
+eventually, I've no plans on increasing the scope and complexity of
+this series that is focused on solving real regressions caused by the
+commit 9036bd0efcb6 ("PCI: Align head space better").
+
+For those who haven't read the previous version intros (no changes
+from v4 in this):
+
+This series generalizes the resource placement algorithm. The commit
+9036bd0efcb6 ("PCI: Align head space better") special cased one
+composite resource remainder case to fix a regression (in a long chain
+of regression fixes). Unfortunately, it introduced another regression
+(or a few, to be more accurate).
+
+Instead of building more special tricks, generalize the PCI resource
+placement algorithm so it returns placement that gives better chances
+for the greedy assignment algorithm to find suitable space for
+subsequent assignments.
+
+In short words, the new approach tries to find a placement for the
+current resource that blocks as little of the free space range as
+possible, considering both alignment and continuous free span of the
+remaining free space.
+
+In addition, the series corrects composite resource sizing to account
+for gaps that have to be added due to alignment constraints and
+remainder space not fully connecting (filling space all the way to
+the bridge window align).
+
+More detailed explanations in the patches themselves.
+
+Unfortunately, this also causes yet another regression due to shuffling
+resources around. I've left my quirk out of this version as it seems
+the least likely approach to be used to resolve the issue. Some approach
+should still be applied but that decision seems largely independent of
+this series. The main part of the quirk discussion is here:
+
+  https://lore.kernel.org/linux-pci/20261013130948.6231-9-ilpo.jarvinen@linux.intel.com/
+
+I find it likely that after this series the resources are packed tight
+enough to solve also
+  https://bugzilla.kernel.org/show_bug.cgi?id=220016
+from more than a year back but that remains to be seen (if we can still
+get the reporter to test it).
+
+
+I planning on making another series to properly honor
+pci=resource_alignment and improve locking as I realized the current
+approach allows parameter change to race with the fitting and
+assignment algorithm.
+
+v5:
+- Reordered series, "simple" patches first
+- Added patch to skip resource with IORESOURCE_DISABLED
+- Added patches to fix __ffs*() (__ffs64 & zero handling)
+- Fix 2 more 1UL -> 1ULL, renamed roundup/down funcs to _u64
+- Rework considering user/arch min align, always take it into
+  account during placement if present (sashiko)
+- Rename pci_init_pci_resreq_data() -> pci_init_resreq_data() and make
+  it non-inline func
+- Drop nested window fix (unnecessary and w/o complexity is less)
+- Rename .user_align -> .min_align
+- Use struct to store candidate selection parameters
+- Rework candidate selection precedence
+- Calculate odd-multiple starting "2 blocks resource" using both blocks
+- Add a tie breaker to candidate selection using alignment of the left
+  edge
+- Do not use candidate logic if there's no full block or
+  rr->min_align > align (the latter is due to pre-existing problems
+  elsewhere).
+- If no candidate is possible, return right edge of the empty res
+  (not strictly necessary because one of the candidates is at res->start
+   and the caller should use large enough align if user align is present
+   but it doesn't hurt either)
+- Refactor pbus_size_mem() to support the new gap calculation
+- Reworked gap calculation entirely
+- Added debug print to sizing function
+- Fix many grammar errors / typos / consistency improvements
+
+v4:
+- Drop my own quirk patch (one approach should still be picked!)
+- Use 1ULL to not lose bits in 32-bit case (sashiko)
+- Copy avail flags from full_avail.flags (sashiko)
+- Always return "resize" from pci_specified_resource_alignment() (sashiko)
+
+v3:
+- Add roundup/down_pow_of_two64() (new patch) to avoid problems if
+  resource_size_t is 64-bit and unsigned long is 32-bit + use __ffs64()
+  (multiple potential issues mentioned by sashiko)
+- Do not print res->parent in parisc debug code as the resource is never
+  in the resource tree (found by sashiko).
+- Do not override user-alignment with the remainder moves (sashiko)
+- Consider optional sizes properly when sizing bridge window gaps (sashiko)
+- Move genoa quirk under arch/x86/
+- Rename quirk's static resource variable
+
+v2:
+- Add patch to cleanup parisc debug print (do dyndbg conversion)
+- Add patch to prevent remainder tricks when alignment override is used
+  (found by sashiko)
+- Do not use PCIBIOS_MIN_IO/MEM but 1U as min align. The former seem
+  address space lower bounds even if parisc arch code misleadingly
+  uses them for ALIGN() call.
+- Fix res->end + 1 overflow case (found by sashiko)
+- Tweak debug print formatting
+- Reworked the iomem black hole quirk (now based on the bridge)
+
+
+Ilpo Järvinen (14):
+  resource: Mark free space assigned
+  parisc/PCI: Clean up resource debug print & use dynamic debug
+  PCI: Don't size or assign disabled BARs
+  PCI: Use __ffs64() for resource_size_t typed align
+  PCI: Prevent zero align from reaching __ffs64()
+  linux/log2.h: Add 64-bit roundup/down_pow_of_two_u64() variants
+  PCI: Derive aligns[] array size in a define
+  PCI: Honor alignment overrides
+  PCI: Place resources to either edge of the window
+  PCI: Separate align/raw size calculation from pbus_size_mem()
+  PCI: Calculate bridge window with optional sizes from scratch
+  PCI: Move size/align calculation fully into __pbus_size_mem()
+  PCI: Fix composite resource sizing
+  PCI: Add debug printing to window sizing
+
+ arch/alpha/kernel/pci.c          |   3 +-
+ arch/arm/kernel/bios32.c         |   5 +-
+ arch/m68k/kernel/pcibios.c       |   4 +-
+ arch/mips/pci/pci-generic.c      |   5 +-
+ arch/mips/pci/pci-legacy.c       |   5 +-
+ arch/parisc/kernel/pci.c         |  20 +--
+ arch/powerpc/kernel/pci-common.c |   5 +-
+ arch/sh/drivers/pci/pci.c        |   5 +-
+ arch/x86/pci/i386.c              |   5 +-
+ arch/xtensa/kernel/pci.c         |   5 +-
+ drivers/char/agp/intel-gtt.c     |   5 +-
+ drivers/gpu/drm/i915/i915_gmch.c |   5 +-
+ drivers/pci/pci.c                |   4 +-
+ drivers/pci/pci.h                |   6 +
+ drivers/pci/setup-bus.c          | 263 ++++++++++++++++++++-----------
+ drivers/pci/setup-res.c          | 246 ++++++++++++++++++++++++++---
+ include/linux/log2.h             |  52 ++++++
+ include/linux/pci.h              |  15 +-
+ kernel/resource.c                |   3 +-
+ 19 files changed, 510 insertions(+), 151 deletions(-)
+
+
+base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+-- 
+2.47.3
+
