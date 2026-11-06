@@ -1,74 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.199
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.198
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793925789;
-	b=q3iAt9kZB92YrvZ6XHxaQOtflZ47kOYr15i1s2n7In3yWj8XdvRL/m0GezVNI5RIk8o4
-	 BCul3XHfyAShTA3jCon+cbi8C0omWjACVaMRXylrkjSVVTjTY81F3eAnhZFZ74lk9gTOL
-	 7Mh4zR8lgZ0uILpf46tUfbCcLctyH0BJfaTJy4E7oj/6oP8+JWfBHMxx7jkEgRkvuXnMo
-	 VliURmvCyoYaQQlxafFjLep+qlXRSsBcq3JYHdjPJZNentzjDCixJaVVkPFG8awmvHvFu
-	 puliqFLwRawgmgOXTKFWwMHyYQ0jIrMNILQyIjDbSOPUyGKPaK/spe857UdJxiWJwPw==
+	t=1793925785;
+	b=KSL/Tqq5hyZwywu2BjEHICVzHyCFfkq2RUYQQHLU9KWksofbfLxyNlMWs2KfpZqlUN4g
+	 4fjQ1p9KW8ygIzNmIruZMWyiFinOvBeS7Nhy1w76tfSELODQ3dKZXtyjPK27sEOu1HNhT
+	 XYLxyEwZvE+x0oRlpAX4QYrD1jZy543C5CHg/Rn9DQfO/rQVzsiVDCZHeGGz/dL83Z/mX
+	 ys4oSVgoZDEpXkQ4TTtcmNAdekG51WoB7lg1m99HAybF3SnNi3Y7mnH+Sskx6TXQVEMUy
+	 l4kRcwsbbAPiOcl9Sqy4e07PTPlR9Z0qiw/J8ZockLNagBjlAlREJNwF4rilm2X5afQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793925789;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793925785;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
 	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
 	 Content-Type;
-	bh=iHjhOa1kArquGp6NzqJKIMKukUgu91Ev2XX32EWf/dM=;
-	b=xuPmFJUraHwvoCei3hzMEHffiixBZrnzKoHxH0zdyBH3inim5KL0vxAcqjm/l6ZoR2Vw
-	 utnH8ervmm2B7h3da3HkOi820ZBjmI6e7e0RNQmTRs5GwBTX6EBTttYI84uey2jmrEQFR
-	 nJhsMT61nA6zaV5AWTxBKXktCB9dbKHCLh4BnYMSiao8orgyaRz0EZS0eRYJcDCoyd0s4
-	 vYjJLCNcjcn2LOia7sjOYJ0oGSG5Xd9dbZFMI2QVA22Q14MKiPmRVU0cS0ZAJg9gVyGmC
-	 IoHI2OZu8L63rnJ/jlaQbK4V+H1leDvbTnebxWhL0MQOHF10p8B2/WuxB3AQ+BWleDA==
+	bh=clDl87D5pggy1VDwhZUzZxM8yGbSHZ+6BQixZZJAVUs=;
+	b=f+hNB9k2dQdPR1LAFaBrurtlqCtgbBU1dzMgoDAuLj0cIYyRzspEk1fTHaEpL54y+zo+
+	 cnhw1ZSvXsu3n0LxlAjLRRQFErbOgeK0fxqetqNvvNHIugIqj1TuUYfA4P1Jd2cneD5qr
+	 gGv3nF2D3LGFjeU9npcA9d9elXQ/50pnb4mBhrJLFhyk6OaJN0o0GKsRDcqf9xGESgKq4
+	 w4uSlBbSUnfZ7XYf7Ii4/Sm1AnFPePUgyuRXrCljyUSkhLmXn5HPE2lEJ6FWH8TKcN9G3
+	 I1h1qUyCLpORdAOj3iKdrbQr8CBvl5MzFR2gASbeU+TWe1tVqqFiadXINgldbYRt3nA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=XEzLTg5L;
-	arc=none smtp.remote-ip=209.85.167.199
-Received: from mail-oi1-f199.google.com (mail-oi1-f199.google.com [209.85.167.199])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=LKd1GHhC;
+	arc=none smtp.remote-ip=209.85.167.198
+Received: from mail-oi1-f198.google.com (mail-oi1-f198.google.com [209.85.167.198])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3F6E606D80E
-	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 00:43:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D3F6E606D80E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11D2A606A338
+	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 00:43:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 11D2A606A338
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=XEzLTg5L
-Received: by mail-oi1-f199.google.com with SMTP id 5614622812f47-4cc89e86e4dso86782b6e.2
-        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2026 16:43:08 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=LKd1GHhC
+Received: by mail-oi1-f198.google.com with SMTP id 5614622812f47-4dab94dc3e7so133058b6e.0
+        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2026 16:43:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793925788; x=1794530588; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1793925783; x=1794530583; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=iHjhOa1kArquGp6NzqJKIMKukUgu91Ev2XX32EWf/dM=;
-        b=XEzLTg5LO+6fZIlCzp7Ttw4D0M1RQeoXWDGHhSssqYAuqqjYS+cfVidU04GIqomibB
-         wabtjdC8BVjVhCmmK516sQqRf6ODgThpJCMx8T5JSXv+17u6KOw/0+t3f+ikkALuzW3C
-         2X/w3T6QV/fc/h47bpBSUn6DVJsZxHY2df15Y7HZy8lO0VLuDF7Zk53WNRADLCmnCBdv
-         yYSZWnw2v0PRQnktGmZUjkTp78gZ/Gn7YL32SfML0rPaWzkTqz3yrAdI0H3Xoqx1TJqQ
-         fzniFPjSu9USmkbFkogfNYqoZKdgNK83EUOOc2BhtvYi5jTlosvtH6ayj3mRCqVZ2mAw
-         ZWNQ==
+        bh=clDl87D5pggy1VDwhZUzZxM8yGbSHZ+6BQixZZJAVUs=;
+        b=LKd1GHhCX7SaMEw3wOg+ZX7DtaCsfH+3CR3zO3v2rIG7sPNWFfG0BYp96sO2+fcX43
+         8bdokgHhBKU1I+OCKMrOFgOQ6liW4MvZkGOz3f5YJKjWwhCz9WWdHSnQc5/1G0l7ktTp
+         LcZTDrL9r2eabx1HDEn4knmIsyR6b2TZwKJ/0ZvqT3uygBktktAWOd/ffPGoVzFltyK9
+         fx4Vmm0qBWYsZ7DW+WnJ9IzyxvKOr3YZLOPdJ8xF2AodUsR/nLd5mShuPVYGRAP19mRJ
+         40L9ot0LiHg0l9SLjZpcsAFGo4U2DpAm8UNxTXUtxNlrer8/h27oJxmNMHibbN4Bf8Y8
+         RV+A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793925788; x=1794530588;
+        d=1e100.net; s=20260707; t=1793925783; x=1794530583;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=iHjhOa1kArquGp6NzqJKIMKukUgu91Ev2XX32EWf/dM=;
-        b=0L+3vcayDrLYlngwLpJ6ccXi5KddwxAKrYW7/79EocNjF3n4R4cLJua1p1GD9Nb3zn
-         MPUuuP6xcAEJt34+4bJb01LbfJF+LtzMTevkGGpAIzE1/uLlNrMWjHQYDDNZRTW/+tVZ
-         wFcdR3zKjy/8+yK6w8mMHoCS99jmLNJ/cqh1+UwlrCb9bif7h+TvbMSSqdXLoHCX78mz
-         v89jC6AU3/Lfnznj9YJXKD9aQbJzM4gFXv4EMKvTJW/VgCgN36e8Ws+FXQsPhznKoBss
-         AeQfkRgsoUYDNaO3n7wb4W/T3a5vJ8q3e572kASzlhQAlKm651YcPICM6Gya7S3tAGjm
-         mgSA==
-X-Forwarded-Encrypted: i=1; AKwUvBxu9MfOZg0mM7ZeO2R6MywN7uZ+2ZjRE7Ae5NozHbVGP0BBeyySO3L+aSjMGwMPE6S3D75H1fjqS+w=@vger.kernel.org
-X-Gm-Message-State: APuU4Z8xkB2Dc/8EJlGr3BJRXaXOmAnzeyWlijuX6f7MG+hWWnfo/QXs
-	6KYc+/iSDXkJpPDpM8hgdR5lF9fmtkTtMnaya4g8BR4w81bQODlXskwCcuajAeOIQkTVk5tYjOn
-	O/uQ3PkRKkLXwug==
-X-Received: from jabfi10.prod.google.com ([2002:a05:6638:630a:b0:61a:c6d0:4104])
+        bh=clDl87D5pggy1VDwhZUzZxM8yGbSHZ+6BQixZZJAVUs=;
+        b=WVV5am07l0Y8uqiMpuUzjB3kpeI9nfkK4efr7cS315wClpE5kpjO8qgeLuBnYr6CfM
+         Q2Qm/cbxAcgip6f4SQhEVSUSUAf8DKEzdd823k9qSd9k6UWun931zk6AwZXxtOnmgbwi
+         g58CkS3Yxve7INXrlFBZIQzbcCqGVfqhcmAdFssPRJHlzb6D/UzXrZ5QsaOU0UcTV/39
+         AeHeTEaxNl/L6oK86CDbuaeS2SJ7v2vgyqiwq0JvF+XpoIhbW1JrGMeHfPrAWtY+RGa9
+         8i3YfdjiwWy+JBPy3HiTLDP8TsnYZlzplcV+ngv4rugHLKOVZYyECH7qFrjb53V0kJDE
+         ME4A==
+X-Forwarded-Encrypted: i=1; AKwUvBzGtnEmCMccA1WtyfwqVbFzHmp2soCr8EP+ccF5lQpSDwFYdEHn4cNDyn54DJuDZiJEWjg4/KSiQdg=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9UubrJr+Uj/pqmDx2f6EDho+dfJCd3uVH0jdvdnlDc8cfT0I77
+	YTWiwUlmDUXGZOZJ70YvXtNBpYFLIKbsfaq+zO4mLStZeeCXNDGx9WHUMTtyQScl0KSOxEdb0FX
+	XrBhFjFGRmdYN/g==
+X-Received: from iofl4-n1.prod.google.com ([2002:a05:6602:8384:10b0:9e3:4909:2e0c])
  (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6808:4f66:b0:4b2:8d7b:41b8 with SMTP id 5614622812f47-567e1440ea0mr750093b6e.18.1793925787537;
- Thu, 05 Nov 2026 16:43:07 -0800 (PST)
-Date: Fri,  6 Nov 2026 00:42:10 +0000
+ 2002:a05:6808:3197:b0:564:4f93:707f with SMTP id 5614622812f47-567e1038170mr654365b6e.24.1793925782556;
+ Thu, 05 Nov 2026 16:43:02 -0800 (PST)
+Date: Fri,  6 Nov 2026 00:42:06 +0000
 In-Reply-To: <20261106004218.604799-1-dmatlack@google.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,8 +81,8 @@ Precedence: list
 Mime-Version: 1.0
 References: <20261106004218.604799-1-dmatlack@google.com>
 X-Mailer: git-send-email 2.56.0.455.g6c5a503b38-goog
-Message-ID: <20261106004218.604799-10-dmatlack@google.com>
-Subject: [PATCH v2 09/17] PCI/PTM: Save PTM state in the saved capability store
+Message-ID: <20261106004218.604799-6-dmatlack@google.com>
+Subject: [PATCH v2 05/17] PCI: Save PCI-X state in the saved capability store
 From: David Matlack <dmatlack@google.com>
 To: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
 	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
@@ -97,93 +97,112 @@ Cc: Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>,
 	Vipin Sharma <vipinsh@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Save and restore the PTM Control register through the per-device saved
+Save and restore the PCI-X Command register through the per-device saved
 capability store instead of a private pci_cap_saved_state buffer.
 
-Reserve the register in pci_reserve_ptm_state(), called from
-pci_ptm_init(), and report a refused reservation. pci_ptm_init() ignored
-the return value of pci_add_ext_cap_save_buffer(), so a failed
-allocation left PTM state unsaved without any message. An allocation
-failure is now reported once by pci_saved_caps_finalize().
+Reserve the register by its configuration space offset during device
+setup, in pci_reserve_pcix_state(), so that the save and restore paths
+no longer have to locate a buffer.
+
+Make pci_save_pcix_state() void, so pci_save_state() no longer fails with
+-ENOMEM when the PCI-X save buffer is missing. A failure to allocate the
+store is reported once during device setup instead.
 
 No other functional change intended.
 
 Signed-off-by: David Matlack <dmatlack@google.com>
 ---
- drivers/pci/pcie/ptm.c | 38 +++++++++++++++-----------------------
- 1 file changed, 15 insertions(+), 23 deletions(-)
+ drivers/pci/pci.c | 47 ++++++++++++++++++++---------------------------
+ 1 file changed, 20 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
-index bd3bd39f6372..fc653d2d1ec5 100644
---- a/drivers/pci/pcie/ptm.c
-+++ b/drivers/pci/pcie/ptm.c
-@@ -34,6 +34,16 @@ static struct pci_dev *pci_upstream_ptm(struct pci_dev *dev)
- 	return NULL;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index fde1dcd99e94..6cf4a64cb7e6 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1900,40 +1900,40 @@ static void pci_restore_pcie_state(struct pci_dev *dev)
+ 	}
  }
  
-+static void pci_reserve_ptm_state(struct pci_dev *dev)
-+{
-+	int rc;
-+
-+	rc = pci_reserve_saved_cap(dev, dev->ptm_cap + PCI_PTM_CTRL, sizeof(u32));
-+	if (rc)
-+		pci_err(dev, "unable to reserve PTM save state (%pe)\n",
-+			ERR_PTR(rc));
+-static int pci_save_pcix_state(struct pci_dev *dev)
++static void pci_save_pcix_state(struct pci_dev *dev)
+ {
+ 	int pos;
+-	struct pci_cap_saved_state *save_state;
+ 
+ 	pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
+ 	if (!pos)
+-		return 0;
++		return;
+ 
+-	save_state = pci_find_saved_cap(dev, PCI_CAP_ID_PCIX);
+-	if (!save_state) {
+-		pci_err(dev, "buffer not found in %s\n", __func__);
+-		return -ENOMEM;
+-	}
++	pci_save_cap_word(dev, pos + PCI_X_CMD);
 +}
+ 
+-	pci_read_config_word(dev, pos + PCI_X_CMD,
+-			     (u16 *)save_state->cap.data);
++static void pci_reserve_pcix_state(struct pci_dev *dev)
++{
++	int pos, rc;
+ 
+-	return 0;
++	pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
++	if (!pos)
++		return;
 +
- /*
-  * Find the PTM Capability (if present) and extract the information we need
-  * to use it.
-@@ -53,7 +63,7 @@ void pci_ptm_init(struct pci_dev *dev)
- 
- 	dev->ptm_cap = ptm;
- 	atomic_set(&dev->ptm_enable_cnt, 0);
--	pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_PTM, sizeof(u32));
-+	pci_reserve_ptm_state(dev);
- 
- 	pci_read_config_dword(dev, ptm + PCI_PTM_CAP, &cap);
- 	dev->ptm_granularity = FIELD_GET(PCI_PTM_GRANULARITY_MASK, cap);
-@@ -90,36 +100,18 @@ void pci_ptm_init(struct pci_dev *dev)
- 
- void pci_save_ptm_state(struct pci_dev *dev)
- {
--	u16 ptm = dev->ptm_cap;
--	struct pci_cap_saved_state *save_state;
--	u32 *cap;
--
--	if (!ptm)
-+	if (!dev->ptm_cap)
- 		return;
- 
--	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_PTM);
--	if (!save_state)
--		return;
--
--	cap = (u32 *)&save_state->cap.data[0];
--	pci_read_config_dword(dev, ptm + PCI_PTM_CTRL, cap);
-+	pci_save_cap_dword(dev, dev->ptm_cap + PCI_PTM_CTRL);
++	rc = pci_reserve_saved_cap(dev, pos + PCI_X_CMD, sizeof(u16));
++	if (rc)
++		pci_err(dev, "unable to reserve PCI-X save state (%pe)\n",
++			ERR_PTR(rc));
  }
  
- void pci_restore_ptm_state(struct pci_dev *dev)
+ static void pci_restore_pcix_state(struct pci_dev *dev)
  {
--	u16 ptm = dev->ptm_cap;
+-	int i = 0, pos;
 -	struct pci_cap_saved_state *save_state;
--	u32 *cap;
--
--	if (!ptm)
--		return;
--
--	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_PTM);
--	if (!save_state)
-+	if (!dev->ptm_cap)
- 		return;
+-	u16 *cap;
++	int pos;
  
--	cap = (u32 *)&save_state->cap.data[0];
--	pci_write_config_dword(dev, ptm + PCI_PTM_CTRL, *cap);
-+	pci_restore_cap_dword(dev, dev->ptm_cap + PCI_PTM_CTRL);
+-	save_state = pci_find_saved_cap(dev, PCI_CAP_ID_PCIX);
+ 	pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
+-	if (!save_state || !pos)
++	if (!pos)
+ 		return;
+-	cap = (u16 *)&save_state->cap.data[0];
+ 
+-	pci_write_config_word(dev, pos + PCI_X_CMD, cap[i++]);
++	pci_restore_cap_word(dev, pos + PCI_X_CMD);
  }
  
- /* Enable PTM in the Control register if possible */
+ /**
+@@ -1953,11 +1953,7 @@ int pci_save_state(struct pci_dev *dev)
+ 	dev->state_saved = true;
+ 
+ 	pci_save_pcie_state(dev);
+-
+-	i = pci_save_pcix_state(dev);
+-	if (i != 0)
+-		return i;
+-
++	pci_save_pcix_state(dev);
+ 	pci_save_dpc_state(dev);
+ 	pci_save_aer_state(dev);
+ 	pci_save_ptm_state(dev);
+@@ -3749,10 +3745,7 @@ void pci_allocate_cap_save_buffers(struct pci_dev *dev)
+ 	int error;
+ 
+ 	pci_reserve_pcie_state(dev);
+-
+-	error = pci_add_cap_save_buffer(dev, PCI_CAP_ID_PCIX, sizeof(u16));
+-	if (error)
+-		pci_err(dev, "unable to preallocate PCI-X save buffer\n");
++	pci_reserve_pcix_state(dev);
+ 
+ 	error = pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_LTR,
+ 					    2 * sizeof(u16));
 -- 
 2.56.0.455.g6c5a503b38-goog
 
