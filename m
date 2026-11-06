@@ -1,55 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.62.57.210
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793954105;
-	b=nwzW4g9j9hMvHIa53v+X0ryIfLrNgjqHa54e00LTQRtYN3RL3zDYm6aplY4j4MfwHu6a
-	 Btj5G7zVU1pA9U48lc/lvI5Fp14WLHBie3AT4ROuglaYSLvmzT+NL7qhBHi24tQCfmIrH
-	 BeeyYDnIGVCHEXJ9ASP7LL3icaVqFxUBH/gWt/LlwYkkF73usf3UyBVq0gHPotgDO6vwd
-	 K0h/mK9BXlORiuWrkiiJSAHwQfzIKyKjl43AQVvKhNOznPjVOgUoJmD0NfNsLlOkh2Z85
-	 rYC/ZbCoMIQyrPCXW3is3SXznDODG+pNMfVXC/3UbxJ1Kiz9rykB+njqcyz4TwIzAFg==
+	t=1793955431;
+	b=b0G4nAxxiecYxkT8/BLOvzElgXCqCRP5qUlqWSgSrXd/2q9JzCrwFi2h/V61EVOKyuZx
+	 JIH+HO0/AH4yYr3cFbiF2jjaq+KoB/+GzCKdIYEco47lHwYV2QxghJBeMJo0WIExpgVzH
+	 1Y4AoibloZTwsfNBy/ps1LxLXBijjGBTrhuB57ywjKXplfwoySEZJkFy1JhgChyRC6uFZ
+	 yKsoJvDntO7eNzLW2+y3Q9xFOcom54pn4HqODt0jUwPaK0WcdqLkgSPSe8qzADxNRMZBI
+	 TNqlkYSQjIQZU2/c7CWDvvVsxSn5nJf6jjA0AK0KVyEO4Qqz9CK7ks1zwhPQXmpBQXw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793954105;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=EViaPbfeiFT+cakbLSjG3Gy1kD8eEwriPljcaWhz8WM=;
-	b=FxJ48iEdlSAQ0yGx2zAxxK4pSgm8bQ7vQAeAzqUxRFxtwhUWvN8ebNxoENQqM51BYxqw
-	 GymzhueFHvPjKtIOmFwp3wO90xwYWvyXMqJ+NdDfiYRKnMpn84pRc13dKbzufov527g0X
-	 BbrFNBOD+vQHdTEcXgtkX24o9fsMXeCyVrpK8TOWCP1ItKRoFY+5zuTwXX4W6HKA+QSG/
-	 uZh7jQ6ehiwEV6PkPwyFtU1EOyNQxZ9cUII3P0EMvEO5F/rhysGyAdSn/RDOg96kvWzd2
-	 UakiQHF1NtdPwJQzeW+tt5t9zCxA2sL6nUYuPMrLW0TErVply5KsWXKYyDHDZ2ZFN4A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793955431;
+	h=DMARC-Filter:DKIM-Signature:Received:X-QQ-mid:Message-ID:
+	 X-QQ-XMAILINFO:X-QQ-XMRINFO:From:To:Cc:Subject:Date:X-OQ-MSGID:
+	 X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=uEDgoWpPDYrGMjWs1+sKQhmAR0GJCys8+3dlCw7BcnU=;
+	b=KtvCfB737Isoe4t2t0AXRBt3p8NxSj7fpKspf0vpfiQFlYVUW8G++C3mDq3BeZJG3HbL
+	 kqlrKetaTNumdmti7LYb+ZCqFiG9xo0WEr2/Btq6ufTFRjV+hZd+3j5LlymanoiHMreMw
+	 ieZF0Mh46trb4ZxoI7lCPEqF7vcI0r3C5371zRrf4dFU3HCFoOD0kX/g39MF9MQexm+qW
+	 Wl1zPpk/QT+hoPG+GGmQOxp4a23fevHKVxv0IbvCQ4mu12OQm38IlUeoVqYtO+oa1w7o1
+	 PhU2cAxoIOoX4+I+svE1NTYWdpOz8pCGZ1yU1h8n/pVrRCeOLyJ1yl8/qocndcqzmiA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F2Jn4X+U;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=foxmail.com;
+	spf=pass smtp.mailfrom=foxmail.com;
+	dkim=pass header.d=foxmail.com header.i=@foxmail.com header.a=rsa-sha256 header.s=s201512 header.b=INhjR+Bm;
+	arc=none smtp.remote-ip=162.62.57.210
+Received: from out162-62-57-210.mail.qq.com (out162-62-57-210.mail.qq.com [162.62.57.210])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4368E606A326
-	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 08:35:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFECA606A32D;
+	Fri,  6 Nov 2026 08:57:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BFECA606A32D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foxmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F2Jn4X+U
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 991F51F0089F;
-	Fri,  6 Nov 2026 08:35:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793954104;
-	bh=EViaPbfeiFT+cakbLSjG3Gy1kD8eEwriPljcaWhz8WM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=F2Jn4X+UnlFW2vXFTOKkAA7nMlErrk2F18rSxS8EyV4feKPMRhVizOCEsMfuc1SYt
-	 XbRvqOJslEuPXxkdl6HJI5kyVWtXQQ/kodSBCm5SJlqg1G7BfEl9ZHwQ5pHpJYl5Ax
-	 nF6fQQrHQIOZltbiAQxXsjHN6Xh8LLG2muJ6nYvMz11TJcj3a/Ly0ULPqKMSEZpVZS
-	 N2ppTBZMebFYU8ZDHoLbDii/p0jHn5ILMQewA4uBKr+mMQlGWiwOg7PSYwNRPcodgg
-	 tDDykEkQ9whj7j72Hivw2UlgEdE8KAgLstEgfXew5VNFym5oUuKa3CxqJm5n+StwWl
-	 qt0f5G0WwLrog==
-Message-ID: <sashiko-outbox-201069@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI/DPC: Increase recovery timeout to 60 seconds
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?Wml5b3UgV2FuZyAoTGVub3ZvKQ==?= <ziyou.dev@foxmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <tencent_0EA784F33CA15095806009C26E9DD624B809@qq.com>
-References: <tencent_0EA784F33CA15095806009C26E9DD624B809@qq.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 06 Nov 2026 08:35:04 +0000
+	dkim=pass (1024-bit key, unprotected) header.d=foxmail.com header.i=@foxmail.com header.a=rsa-sha256 header.s=s201512 header.b=INhjR+Bm
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
+	s=s201512; t=1793955424;
+	bh=uEDgoWpPDYrGMjWs1+sKQhmAR0GJCys8+3dlCw7BcnU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=INhjR+BmgTb5N19c61aPE7YkxRBzvtRTBEWmoMQFMKuZnisrZVgqoKACnYeTZCode
+	 CZf1GcPM3rg0iKKVkndSyJNsZyUkX0kUTGbdMGjZj9f+jFlEPGGAnrxOpGFBty/rm/
+	 kE/xa+TFugVlOIzuUSxvMARp3uEby8tMTZX7Q/0A=
+Received: from localhost.localdomain ([107.173.101.132])
+	by newxmesmtplogicsvrszc56-0.qq.com (NewEsmtp) with SMTP
+	id E3B13271; Fri, 06 Nov 2026 16:56:59 +0800
+X-QQ-mid: xmsmtpt1793955419t0yph4opv
+Message-ID: <tencent_BB887B4DB8D2131AF5026893E0FE567D6D05@qq.com>
+X-QQ-XMAILINFO: NnIX2CK8LSsJ+PVchsWyqFT3XBXG4OJi5KeUOwaKhov+0XNVCXqslTH62lDdP9
+	 eZmkMK8SxI81xBWPoXasa5PWUJKvzJmAZ4BR4LqdB5EFMfFDie2dDpN97acrKaqAyPz9KAI7Jr+Z
+	 N2Eal5XPrD65XaAZnThqZeQrRAiAeiW8jo083DH0BowNSp/usgKmTaRQKgCIe5OlhMHHAqUmYxIn
+	 P2uGAOVXkXAG8AzRdBWyBIiC15WOfM3nekMeNBvBLVj/krt/2WlyROaE4o9cgr7FStwFEl9rvQ4r
+	 JNpVkTVOEBMFAfGMnqD6igsI0d8gsZD+NJCpxDlQxJQrUIPdFki62PnV6zAr9n/4lYMEb5nZuQ6Z
+	 bxNib1wVhvwyKG/lMrO2Gx7c4EXEZJHlPSs1gWyQEm3Nh6pORTeInEYoTiPvgAMH1J0Isz002Hdo
+	 fx1K6wj8IWUvV/6fEiePKLatFQ2pf9N91Ej9bzoqe5DDNNRZerT+LrPCHmptodhJulZFhmwAxcx5
+	 xJEtE6UCvyo6MhEPFh5h8PSczTV+yIzumRmeNBanaxycP2533IWnh0QVFKQSpgrsiAcNPDahu3K7
+	 rRoxlzrGrQkmlKjtHHgFKZ5Fu2gUFdINaCjN0LAu0cq8p8yTmoKa3O65dEfXilpew0eoG+hWonMo
+	 LuFiC/A56MTqLozWTbm9QH9IuBCzF0zSCDvql3hVTRKVCgUj1t1keyBBXKcQjPQqe2Yqp/PywoIP
+	 a3glvH7K9FmtNONXPU10k445KHQWl/Uo+xFaDI4wut2EEo6lWy5yThxEXyBmEEJH0veU1e60ym3v
+	 EGLvvXfICVFYNZxNXK76MF3WNyCqVpx774xqsLar14eJKT6qPLH+vZiem7IRTYcmeZCWCxj/Xc8U
+	 W/JXcIlLgJo4xSLIQabjDFtaDiGarWgQEPpzMCaPYO0q/LEaXKmj5AVh3A1t4poYBy1+FWo5bKJz
+	 Ni7EyGMcb0YsFpeHzLlLwV8APsPXisnmCSdGZENzSOffOfdLM4qeljycw4mGeRcRJbv6BE64dyti
+	 iUTzGXdPmecjm8FSJFf27VLzUJSPhEN286A0KDF+br8UrijPx0I1sQUrHVPgOoOj7TgWY+cw==
+X-QQ-XMRINFO: NS+P29fieYNwqS3WCnRCOn9D1NpZuCnCRA==
+From: "Ziyou Wang (Lenovo)" <ziyou.dev@foxmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lukas Wunner <lukas@wunner.de>,
+	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	"Ziyou Wang (Lenovo)" <ziyou.dev@foxmail.com>
+Subject: [PATCH v2] PCI/DPC: Increase recovery timeout to 60 seconds
+Date: Fri,  6 Nov 2026 16:56:55 +0800
+X-OQ-MSGID: <20261106085655.1841186-1-ziyou.dev@foxmail.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261106082612.1840817-1-ziyou.dev@foxmail.com>
+References: <20261106082612.1840817-1-ziyou.dev@foxmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -58,48 +83,103 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [High] PCI/DPC: undeclared PCIE_RESET_READY_POLL_MS in
-  pci_dpc_recovered()
---
+Some NVMe devices need more than 5 seconds to recover after DPC
+containment, but pci_dpc_recovered() waits only 4 seconds.  If the device
+hasn't recovered by then, pciehp reports "device recovery failed" and
+the device is re-enumerated.
 
-commit 9107bdc3c03dade9f834df49cdbc6c47d0a15a44
-Author: Ziyou Wang (Lenovo) <ziyou.dev@foxmail.com>
+Move PCIE_RESET_READY_POLL_MS definition from pci.c to pci.h so it can be
+used in dpc.c.  Use PCIE_RESET_READY_POLL_MS (60 seconds) as the timeout
+so pciehp waits as long as pci_dev_wait() does, which is sufficient for
+all known devices.
 
-PCI/DPC: Increase recovery timeout to 60 seconds
+Tested with INNOGRIT NVMe SSD [1dbe:5668] with ACS Fatal error
+injection:
 
-This commit increases the DPC recovery wait timeout in pci_dpc_recovered()
-from 4 seconds to PCIE_RESET_READY_POLL_MS (60 seconds).
+Upstream kernel (7.3.0-master+, 4s timeout):
+  [123.018691] nvme: not ready 1023ms after DPC; waiting
+  [124.106690] nvme: not ready 2047ms after DPC; waiting
+  [125.642703] pciehp: Slot(64): Link Down
+  [126.218696] AER: subordinate device reset failed
+  [126.218700] AER: device recovery failed
+  Device re-enumerated as nvme1
 
-> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-> index 2b779bd1d861b..df1c469fa24cd 100644
-> --- a/drivers/pci/pcie/dpc.c
-> +++ b/drivers/pci/pcie/dpc.c
-> @@ -116,12 +116,13 @@ bool pci_dpc_recovered(struct pci_dev *pdev)
->  		return false;
-> =20
->  	/*
-> -	 * Need a timeout in case DPC never completes due to failure of
-> -	 * dpc_wait_rp_inactive().  The spec doesn't mandate a time limit,
-> -	 * but reports indicate that DPC completes within 4 seconds.
-> +	 * Wait for DPC recovery completion.  Use PCIE_RESET_READY_POLL_MS
-> +	 * (60s) to match pci_dev_wait() timeout.  Some devices need >5 seconds
-> +	 * to recover after DPC containment.  The 4 second timeout is too short.
->  	 */
-> -	wait_event_timeout(dpc_completed_waitqueue, dpc_completed(pdev),
-> -			   msecs_to_jiffies(4000));
-> +	wait_event_timeout(dpc_completed_waitqueue,
-> +			   dpc_completed(pdev),
-> +			   msecs_to_jiffies(PCIE_RESET_READY_POLL_MS));
+With this patch (60s timeout):
+  [74.894811] nvme: not ready 1023ms after DPC; waiting
+  [75.982813] nvme: not ready 2047ms after DPC; waiting
+  [78.094810] nvme: ready 4095ms after DPC
+  [78.094816] nvme: restart after slot reset
+  [78.111620] AER: device recovery successful
+  Device works normally
 
-[Severity: High]
-Does this fail to build when CONFIG_PCIE_DPC and CONFIG_HOTPLUG_PCI_PCIE
-are enabled?  PCIE_RESET_READY_POLL_MS is defined locally in
-drivers/pci/pci.c rather than in drivers/pci/pci.h, so it is undeclared in
-drivers/pci/pcie/dpc.c.
+Fixes: a97396c6eb13 ("PCI: pciehp: Ignore Link Down/Up caused by DPC")
+Cc: stable@vger.kernel.org
+Signed-off-by: Ziyou Wang (Lenovo) <ziyou.dev@foxmail.com>
+---
+ drivers/pci/pci.c      |  1 -
+ drivers/pci/pci.h      | 10 ++++++++++
+ drivers/pci/pcie/dpc.c | 11 ++++++-----
+ 3 files changed, 16 insertions(+), 6 deletions(-)
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/tencent_0EA784F33CA=
-15095806009C26E9DD624B809@qq.com?part=3D1
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8cc6a89130b5..08f08f25e597 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -80,7 +80,6 @@ struct pci_pme_device {
+  * limit, but 60 sec ought to be enough for any device to become
+  * responsive.
+  */
+-#define PCIE_RESET_READY_POLL_MS 60000 /* msec */
+ 
+ static void pci_dev_d3_sleep(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index ba3c3fddddc2..1e8ddcc013ff 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -61,6 +61,16 @@ struct pcie_tlp_log;
+  */
+ #define PCIE_RESET_CONFIG_WAIT_MS	100
+ 
++/*
++ * Time to wait for a device to become ready after a reset.
++ *
++ * Devices may extend the 1 sec period through Request Retry Status
++ * completions (PCIe r6.0 sec 2.3.1).  The spec does not provide an upper
++ * limit, but 60 sec ought to be enough for any device to become
++ * responsive.
++ */
++#define PCIE_RESET_READY_POLL_MS	60000	/* msec */
++
+ /* Parameters for the waiting for link up routine */
+ #define PCIE_LINK_WAIT_MAX_RETRIES	10
+ #define PCIE_LINK_WAIT_SLEEP_MS		90
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 2b779bd1d861..df1c469fa24c 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -116,12 +116,13 @@ bool pci_dpc_recovered(struct pci_dev *pdev)
+ 		return false;
+ 
+ 	/*
+-	 * Need a timeout in case DPC never completes due to failure of
+-	 * dpc_wait_rp_inactive().  The spec doesn't mandate a time limit,
+-	 * but reports indicate that DPC completes within 4 seconds.
++	 * Wait for DPC recovery completion.  Use PCIE_RESET_READY_POLL_MS
++	 * (60s) to match pci_dev_wait() timeout.  Some devices need >5 seconds
++	 * to recover after DPC containment.  The 4 second timeout is too short.
+ 	 */
+-	wait_event_timeout(dpc_completed_waitqueue, dpc_completed(pdev),
+-			   msecs_to_jiffies(4000));
++	wait_event_timeout(dpc_completed_waitqueue,
++			   dpc_completed(pdev),
++			   msecs_to_jiffies(PCIE_RESET_READY_POLL_MS));
+ 
+ 	return test_and_clear_bit(PCI_DPC_RECOVERED, &pdev->priv_flags);
+ }
+-- 
+2.53.0
+
