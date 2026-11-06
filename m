@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.194.51
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.62.52
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793943841;
-	b=Pr40uLQ8M6RTiJTaszSYLNmmHNNC9eszIRaWIfwJI0AE1oK1wP62B2xmmB7JVO3aWtVq
-	 l+LaEZSwLBqYgBscdaXdrHg/FU0ZnLsyCm8brMS3hxf8Auj9aHKtLi2OkAC+OplI8JABb
-	 zJpwbAgOFrCYPSdAWQbK3vvtSqLE0biErnOplOUC6cu/RhavSdQ0asoQtrLOURCuxAy4N
-	 7LhbO4wWM7cjFc4WTzF/fKg4KmbbOcRZQPNzKympNah8Qz9Ms8JQe9lXVHFw7YCXRqIcq
-	 H80qTr4wcoSJlokqacxFjfE7cBITKp8fdTCsqybZpfFQERKad9l+/HVBr9t8LIWry4g==
+	t=1793943872;
+	b=HBQqAMINnVk2NgbFzjQD8ToG383HuNeq7u+lPVcgXMmJ3E+FoRQJttycDEmwBMn8DgPS
+	 Y4ly4bYSi99gee2DVPfIXqamsF5OHZvSSAtpL5IGU7kdAybdlr0jx8DXbLrGPrTalBp48
+	 j6hLvEbmDWiHrlqhvtuOmRXN3lukCP545CBAEB1VnEcBWZJqNtvE6hUjBQ+dESFOn7PQ0
+	 fRjgx/4DojfvRbbND4uWn8zcfng8ObeOnq4cdk3OPETcR6w1AE19bkvC61AlA72+G/wn8
+	 hNp+955x69ks+qi+4u0nrDVG7Zq2jymg21+55aPId3+G9w7b4ocBpWn1QCM8NqOG5vw==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793943841;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793943872;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
 	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
@@ -26,35 +26,35 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=GaEkpJcFjAHzAJtS7rm32zam+RM1SMTq40uz/jMUhAA=;
-	b=bj1+DeVj0/Paj4PUmCBD7dahUULaUm63L8W7Tq3S+KW+myxH2uUWwwOoRmdD3stIM53j
-	 p98S5yNOWKe973wwX8qeX7ZM5jXR+mpPG0VnIVWfto8w5ff11dYdg9IMTtmgeo5W0JqYr
-	 7qbr49zCs+mvEgSnjqkkS0AyOcAHWtqoLa1a2LyRMWgZmVKddiBrFZnEgwrZMGXrwENxb
-	 +v43xfuuNyPuelCT45ysxELr2nDI6KX13oCDVmp4a90GkUXY7hAV85WAvsTR6kwyRHIJX
-	 Wr9iMd1Tcwyqf637O0TjAQZ9ZiJJ8t6DM2MoZiI8evRaCJk0MjRAOp3dKL9Qp71SxIg==
+	bh=2oexfqJvBlQ2Gq87Q3AJ95M/kddT8qTpZDxWywKsuso=;
+	b=HLYFw6MPup5tq/957F8bRz1FCS7vzjFhNXWlKi2pMUkR1i778aY3CwfGFo2K0Zp+2H9Q
+	 hTE58oJy7R7LuZZoHMRXFyW4fG3rTDU4Ga8eQchd5TVrVKMoj8mzNoUzu5coaLHIdGdFA
+	 q31kVMInsK234Wt3nBiYJf0al57tF0Q/LLp6a9Rf7CpgHJIeDjiQkGFHzQvmmR9teYYlv
+	 oTW//5ZSLEtDGHogdfCtOnYS8rjYmUvau5+1E6jF6ue5cKWsw81cOXqg8fBKdA17T4jE3
+	 ERnT1yMFCKt8ECN315rs1l9DXZbErUY+Nqgi8MA+/g5nH1I6n8iQQf8ErvMyFRYPLXg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nvidia.com;
 	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b="FofzY/LK";
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.194.51
-Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011051.outbound.protection.outlook.com [40.93.194.51])
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=VQr023HM;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.62.52
+Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011052.outbound.protection.outlook.com [52.101.62.52])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B93E9606A33C;
-	Fri,  6 Nov 2026 05:44:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B93E9606A33C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8236E606A326;
+	Fri,  6 Nov 2026 05:44:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8236E606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=FofzY/LK
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=VQr023HM
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=SI4Gh5L01aUTRryghnKtuKLAwdodIcg9nSf/sA3X1oTCNYObmJrbDFfqGqtMJN2G0goNlgu1YoxNUmpd8PcW2psWnQo9Yb2yD6HGb5gwVXttnkn1NTi/eNCWEErOhXTOKOOAcnPZrjMmTxYl2YGsdOR9xLTJB9OTkjaikLLgR8Io8KuNpzHR/ENgAd23RfVrIlBM25EVRkSnUU2WUEbLGZOAQaim2knowjodjb7M3EqYEjGDCw486yUeG9AEjoisGc9gqKlJZzq/mjhzbS64VG1CAcqzi7a3ta7lII1bkwEtAr+5qx6q+tul+7NEvn+KnNwfywFr4Xd25aqjMWWyVQ==
+ b=nbKtH59UbnPYWgQrw8tlSEVFc2aYqv+MCXr2fbmu7myW1j6Ycq+sPqpDyebhRjPUXavJWjsdFRGTV/zyiKpeT9qg4vBuEMn7CNbpkDuEvrckx/p0jbpa+/0SsVyMRJL17yv+N2sdslc5lrToncK5Xi0m0ygVtMzYCiHGxgKQGq0hoPzV8t/Y1pe2ti/pd1gnSwmyUJwQlNrE0agQdVK8yXBk8exeyS5+OFOi6KoTRVc5nD//C1i9ByUKbdoEnfLQOJFRbYN14OvyyowzW6hkJzTvbwZJ3sxCT6V5vey3MJXuOfaDjSCj7rBfj2jTpWoIkSF9st7ahDLCb6WBZAsuSQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=GaEkpJcFjAHzAJtS7rm32zam+RM1SMTq40uz/jMUhAA=;
- b=t5N8sXtUMiRkJB1Bxu4FSJr2jgw7kg3wFZOwMgBJe9vTHjBp29o1PZynLIpN8dYu+d0h6VVwx2PXJQYuxy8bcYwXj3yFNjgoz1ZhFh9//YtpuSR9AiaCAuGpzb3aNYXgVhOE65DaXdnp1/j7mByJ7vF0iwDy5CDWsoWwwNIdEmeWkXoVpVlPk9kz8e4ggiZhCbul5Wwn6K1x9tFfXwYWcfjSTnWvb+icpdM/QNte9J17cSWzzXN0dxt5rXRyJ3pyX/PKWs4qqFJ18DTSE43yaqOG8XO6/foG5ScVosvhy5PgnzWkysP4xJHPevTIT9JlH0BxR8k5kThDsuiiXLViiw==
+ bh=2oexfqJvBlQ2Gq87Q3AJ95M/kddT8qTpZDxWywKsuso=;
+ b=VqSW0N1TBJ7pOpt7YErcvC/DmvbXknzlSAtghMlxVgAYFlSI/78XimQ85v3KcqcSNzZYnYF0PkE+b7jU7znVFdgdKMxovASCqljuwzDwqQ10XuW70HWGTX/79zHdipjZUAFQElegiK8R2shjRHldm2huKViUnnCnVZfCEXLa9ouGy+B13GDSm0RQFFdlWWj5Oo9Fl5MoUZilT8iNYoZ5HfIqp1/fyPLBELZtwG/5BW9f5xT6sGaAYkznfjCZDUfxlPo/tTtTlcD6STeSPXKr/rhX421MJSVorGfBX7tCEnUGo+n/JfO75eJJ5fvtZZyGLlYjNfAbMxAgDjOH/YxlwQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.160) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -62,18 +62,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GaEkpJcFjAHzAJtS7rm32zam+RM1SMTq40uz/jMUhAA=;
- b=FofzY/LKyrbqCM4IwGhlXv6PP7oRSO3x4WNdq7w8RFw5bRxeXX6ccfpCAL2iMStSF7uFfzomyMNYtj/q4kQ3w3ddXrnJ7bFVQDk4Pp13a06JDxAXGSwpb3iEnbiYZbkDlnqL+x0lpKh1TAlbe3M9eNdPmEkjumOA6JpocZMXP61epm/MlyKeIhqE6lDzymM7asnhd4SV2543DpNS0ndmuqG5HD+nm39+tzuu5UOnbRM44+iiX6FNgBqTdrxg4rexkRHT0axqLVHl86z2PW+YmtcS6annssHkd88ZpKredjw+Puh8QY8wvVAofv+YvqoV/JuNYp3KKIDMrTNH8C1IxQ==
-Received: from CH5P223CA0015.NAMP223.PROD.OUTLOOK.COM (2603:10b6:610:1f3::15)
- by SN7PR12MB8791.namprd12.prod.outlook.com (2603:10b6:806:32a::12) with
+ bh=2oexfqJvBlQ2Gq87Q3AJ95M/kddT8qTpZDxWywKsuso=;
+ b=VQr023HMEvUI3z1DMvMUVjPK+BUyyfZFFdyV2rIITESc23ClMG0/xkBr3wdWwJrTv9kYHXmSI5rmEbZ5BXL+DNuFvXSGzudBXtVVSptTSeI83b2h7cx22QGhfCc99hokxDAILvO06bplYvxMSWaFi7OXt4t2SREoMRkq2M4eWEBEw47g1NrhfkvltkrsycQBHoQUKh4uJnvlROTGOxeLjFKnG2Iy/CCjMxt+9+eEtX2JJ6q5cOl/+cSXEpU9hF0UvvrabtSBeNoBdOpxNi3wu7JNddC9Es4w/Ps9KXZUWSw4C0PTDhmwJ5fKypAF4GXtGy6HTWwT7UOxHGMh4Vsx+A==
+Received: from DM6PR08CA0054.namprd08.prod.outlook.com (2603:10b6:5:1e0::28)
+ by MN2PR12MB4469.namprd12.prod.outlook.com (2603:10b6:208:268::22) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.10; Fri, 6 Nov
- 2026 05:43:56 +0000
-Received: from DM3PEPF000265C6.namprd03.prod.outlook.com
- (2603:10b6:610:1f3:cafe::52) by CH5P223CA0015.outlook.office365.com
- (2603:10b6:610:1f3::15) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.12; Fri, 6 Nov
+ 2026 05:44:20 +0000
+Received: from DM3PEPF000265C1.namprd03.prod.outlook.com
+ (2603:10b6:5:1e0:cafe::1a) by DM6PR08CA0054.outlook.office365.com
+ (2603:10b6:5:1e0::28) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.21.592.11 via Frontend Transport; Fri, 6
- Nov 2026 05:43:55 +0000
+ Nov 2026 05:44:20 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -81,17 +81,17 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.117.160 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.117.160) by
- DM3PEPF000265C6.mail.protection.outlook.com (10.167.23.187) with Microsoft
+ DM3PEPF000265C1.mail.protection.outlook.com (10.167.23.182) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.615.4 via Frontend Transport; Fri, 6 Nov 2026 05:43:55 +0000
+ 15.21.615.4 via Frontend Transport; Fri, 6 Nov 2026 05:44:19 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
  (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Thu, 5 Nov
- 2026 21:43:44 -0800
+ 2026 21:44:09 -0800
 Received: from kalok-SPC741D16QM3.nvidia.com (10.126.230.37) by
  rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Thu, 5 Nov 2026 21:43:32 -0800
+ 15.2.2562.56; Thu, 5 Nov 2026 21:43:57 -0800
 From: Alok Kumar <alkumar@nvidia.com>
 To: <dakr@kernel.org>, <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
 	<rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
@@ -111,9 +111,9 @@ CC: <alex@shazbot.org>, <jgg@nvidia.com>, <yishaih@nvidia.com>,
 	<work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
 	<kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
 	<peter@colberg.org>, <xinmengs@nvidia.com>
-Subject: [PATCH v4 12/32] gpu: nova-core: mm: add BarMapping
-Date: Fri, 6 Nov 2026 11:09:45 +0530
-Message-ID: <fb30f728f6ee24dd769d5629971a02cc53fa1d31.1793906667.git.alkumar@nvidia.com>
+Subject: [PATCH v4 14/32] gpu: nova-core: gsp: wait for GMC completion events
+Date: Fri, 6 Nov 2026 11:09:47 +0530
+Message-ID: <8ddb36b189feb56642ed531e5199d3a01e7d7f5e.1793906667.git.alkumar@nvidia.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <cover.1793906667.git.alkumar@nvidia.com>
 References: <cover.1793906667.git.alkumar@nvidia.com>
@@ -132,224 +132,180 @@ X-ClientProxiedBy: rnnvmail202.nvidia.com (10.129.68.7) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM3PEPF000265C6:EE_|SN7PR12MB8791:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8cdd0662-d798-47ba-3c08-08df3bc8f25e
+X-MS-TrafficTypeDiagnostic: DM3PEPF000265C1:EE_|MN2PR12MB4469:EE_
+X-MS-Office365-Filtering-Correlation-Id: 732dcb90-4ae6-4424-2952-08df3bc900f6
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|7416014|36860700016|376014|23010399003|1800799024|10067099003|22082099003|18002099003|56012099006|11063799006|261021135927099003|261028144727099003|261009223027099003|261102123227099003|261026121527099003|261026140227099003|261022075727099003|261022105027099003|261021121427099003;
+	BCL:0;ARA:13230040|23010399003|1800799024|7416014|82310400026|376014|36860700016|261026121527099003|56012099006|11063799006|261021121427099003|261102123227099003|261026140227099003|261009223027099003|261021135927099003|261028144727099003|261021123027099003|261022105027099003|10067099003|22082099003|18002099003|6133799003|3023799007;
 X-Microsoft-Antispam-Message-Info:
-	mu7dCoZV5gqeZOi2Ae2Su3uhuk0Gzw7F24MuuGNfi9uZV3Qyuxh+wFPmyj7UM3SuxrMmnquxj7rnAbB4dODj5CZNFwUfBvFGwSOX8MIlXpdO0vknutGfAfYkPsgqgzBbp81VETcd5tSEvN9XBxiC3tu5B1VcHTVM3k8XjL9vB4yDvctfzg0W0mKi0Lrm0ysRzMm34sul5ur3FUWdLA6doMop2sc3DmYtvi8ocNz1Wyh5SQEIlx8b4t/2f38U9EQxXAAaCBlzWvuTvvx9WA6zAedt4KzGRQWqCebgP+F49U4zqI2Jm3qEHR6/YDMZuuaOfaKuNJC+BWJw9NtFPpaiMMJvXfCqy8oCQfwzYLexrZFHc6beojxwv+vDWfdbJK3v2/4nU9HfclD7HOnTKu/FLlpZN6S6Ky7u9HwBUnyKNcNibinPML24Z4GaHdW/75OFFm87peu5IKYFcT9OnWk2G2DRdONiJA9KVPAEDCM/3uFGOegOlZ+MzcFD3cvGSiFAE5s4c6QgLXuimC7XTdvCIImUHwBbNDZeLmUXUeOb7Ajid8/Vsha0l22cj9DZr7K1JvaDtfmuwFu6w9PF7yHnlNCAzX5pd0xdZk6BR2efbIImPFzONlA1jgypYhgvTWv7f9uF3ie36MF55fabuavvifsj9gGG+fDWFI0e0rF6sbwVPcVVWKOGpPqCHOuj3GYTfs7NDX6fwLEc5cQLI95NpQ==
+	C/zKVAaXetEp9s30m/+Y47qOa45/eNDzm/7UIlRwCthKSwsoK+NlU3c5Z9uJZp49GxzohBIlOJ2oFO8IwHaMmASeKEg8bZU+HfRQpOsqQpZ9CYhILV4hfDbR40Cv4pkzXfxD1+e2HBRewoImddL75IoFNTGTaLoaJhu+vk7ZSsfY8qIhHhmLTUhTQEGvZ9aNJW9NUI+qvQ35GtRcABWnbt5DrZu2M12YJhfcnkdgD2uwpLAuhOlYSKPtcI25yIl26ipqZP2sS44hIF3bho1cJSRy4mVeF1JJyJPiGoSL2gUDH+vFb7HLBk+cQKiJxgjaH4K3z5N20h/Df9bnyVZBauXD/gL+RffWxMiNFJEh75A5Y/vZjMb2uamPc7p+YMKv6uRLzO3lh7CMOCTkNInMDJw+mN2alYsNQbmWVI8/UL9nJSlBJbxKE6iJSWZwY2FMVNliGidlsvLqFLID982dHruPZhICP/F6yTmFZtg5IILD/Z+ydIVhXt6U1uxetZ2R6TIgEz5KaEGucKbPABPtkisks/aTizUeTHd+tRla16l4AfKsuVkjXRyX15vVooKMfCbodb5wqZSN1M8kLjbc4ju2DyBNQcYnrDiEbCFVSLuAsnR23iT7RtxjKJbfB6VMHyWoqYnIhQ02YqPEmija+K6rQZ0mb/kNOcUtZPbSDiqooahzP+s9k+8k3tzED6IiXoMnFZ2Ylvuv53HyeJ1d6g==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(7416014)(36860700016)(376014)(23010399003)(1800799024)(10067099003)(22082099003)(18002099003)(56012099006)(11063799006)(261021135927099003)(261028144727099003)(261009223027099003)(261102123227099003)(261026121527099003)(261026140227099003)(261022075727099003)(261022105027099003)(261021121427099003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(7416014)(82310400026)(376014)(36860700016)(261026121527099003)(56012099006)(11063799006)(261021121427099003)(261102123227099003)(261026140227099003)(261009223027099003)(261021135927099003)(261028144727099003)(261021123027099003)(261022105027099003)(10067099003)(22082099003)(18002099003)(6133799003)(3023799007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	Vv/edCQ9TsX91Luh+/2/4zX+munRAqA6+bvSsrn+ukNogl17Vok9CZlVgqyvSyj6smwiTWgPJcNm6lDgbDNmr9cqJNQGssiV05mUj6cKqDVIRHGHPqldfzV8vO+eLKJddksQJfvWMeXOsCENC27kyw23AiVKvhp38ni7bGc0ipnp41LB7FrE8VXcrEaMZfd66ef/Pn3yoMA0dEEfP6T5ZQx2pHcquHzBbZXYg6eNH2hNEMctaOcSPKAJVCO1xzaOX34NKS1/cQXDYtzUmV2z/hGsD8e1p+3kljB0yUb/etqfZzKZt6j9q1iuzBnQ0/xt7HsXgbZOl+YO9+xUKrYwbcky95pHIPn60Tbkw75N49GROg4TRoBFtz+NiehYQ/AZhKwC2/7gQjk3pN4k8fu/cjtkzIiy/8FzTDTg+viHWzIFxdxglLCGCKeyFa0KyW33
+	uVxHotoR+4aXtXA4nN8HqLxglA08ywVhGYzXBTExKyoboucvZEbpx1p1qmLSh1trgOJYbixSlEGcXH8UKPridmtwnSDCb+anwritDzfsQMViAGHbmBqe86lPXz1ChuO/aMwklzW5SWx/nFG9ArqL+CCI5eLMOnCxfv0FmDLrtighzkLELDc77n/liBvbDRl6eyLoqcpyF/tOgldrozyvygGhw1GsGzMYRBLX36/oI4HZC/te1anp10VPUEhaUnr8RDMjx5ydYYorSZ8xCSpJFz/61OHXHMre/DdSxvawhG55VGLCgND/1dx1tUAUepYqYSwzwexl3H+9+X8sI1WGaQOvmBpf+RdrlWArBoDcWUiG/sbskkmA+6/TFVdoHZRL4FjyQLNLVfaJH6KdRLy1SxXGQxu+n4FtyIshi1vobidC4+fs/Z89Zrru6QjuVVW4
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Nov 2026 05:43:55.4619
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Nov 2026 05:44:19.9492
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8cdd0662-d798-47ba-3c08-08df3bc8f25e
+X-MS-Exchange-CrossTenant-Network-Message-Id: 732dcb90-4ae6-4424-2952-08df3bc900f6
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	DM3PEPF000265C6.namprd03.prod.outlook.com
+	DM3PEPF000265C1.namprd03.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB8791
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4469
 
 From: Zhi Wang <zhiw@nvidia.com>
 
-vGPU communication buffers need CPU access to regions within their
-VramBlocks. Add BarMapping to map these regions through BAR1, including
-regions that start or end within a page.
+GSP plugin shutdown completes through a separate event carrying the
+GFID. Releasing the queue guard after sending would let another receiver
+consume that completion.
 
-Retain the backing region and borrow BarUser and the MM mutex for the
-mapping's lifetime. Restrict CPU accesses to the region's byte range,
-and unmap on drop using the retained MM dependency.
+Keep the guard from sending through the matching event and use the
+shared Inner receive deadline. Offer GMC events to the completion
+predicate, pass unmatched events to the caller's handler, and consume
+interleaved responses and RPC messages. Represent completion with a
+value and all continuing cases with None.
 
-Provide an explicit unmap operation so owners can observe errors before
-releasing resources. Keep the mapping and backing region on failure,
-remember the first error and reject subsequent accesses. Owners must
-retain failed mappings until device teardown; drop does not retry an
-unmap that already failed.
+Propagate callback errors after consuming the current valid element.
+Document callback non-reentrancy and that the receive timeout starts
+after sending, excluding mutex acquisition and command-queue space
+waits.
 
-Cc: Alistair Popple <apopple@nvidia.com>
 Signed-off-by: Zhi Wang <zhiw@nvidia.com>
+Co-developed-by: Alok Kumar <alkumar@nvidia.com>
 Signed-off-by: Alok Kumar <alkumar@nvidia.com>
 ---
- drivers/gpu/nova-core/mm/bar_user.rs | 145 +++++++++++++++++++++++++++
- 1 file changed, 145 insertions(+)
+ Documentation/gpu/nova/core/interrupts.rst |  9 +--
+ drivers/gpu/nova-core/gsp/cmdq/gmc.rs      | 65 ++++++++++++++++++++++
+ drivers/gpu/nova-core/gsp/fw.rs            |  9 +++
+ 3 files changed, 79 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/gpu/nova-core/mm/bar_user.rs b/drivers/gpu/nova-core/mm/bar_user.rs
-index 7f389aea7ca3..d4364f94b13e 100644
---- a/drivers/gpu/nova-core/mm/bar_user.rs
-+++ b/drivers/gpu/nova-core/mm/bar_user.rs
-@@ -7,6 +7,10 @@
-     io::Io,
-     new_mutex,
-     prelude::*,
-+    ptr::{
-+        Alignable,
-+        Alignment, //
-+    },
-     sync::Mutex, //
- };
+diff --git a/Documentation/gpu/nova/core/interrupts.rst b/Documentation/gpu/nova/core/interrupts.rst
+index 7f61e5d6334e..d686d8004aea 100644
+--- a/Documentation/gpu/nova/core/interrupts.rst
++++ b/Documentation/gpu/nova/core/interrupts.rst
+@@ -582,7 +582,8 @@ command reply or an unsolicited event, and the two differ in the function code.
+   arrival with its sequence number, function code, and length.
+ * A GMC message carries a command id in place of a function code. The
+   ``GSP_INIT`` wait and synchronous GMC transactions claim responses with the
+-  expected command id and sequence number. These waits consume interleaved RPC
++  expected command id and sequence number. A GMC completion-event wait uses its
++  caller's predicate to select an event. These waits consume interleaved RPC
+   messages as events. Unmatched GMC messages are handled by the wait's callback
+   or logged and consumed; a queue drain with no waiting caller logs unclaimed
+   responses and unknown commands at warning level and drops them.
+@@ -607,9 +608,9 @@ mutex. Replies and events share one queue and one read pointer, so one lock is
+ held across the whole drain. A thread waiting for a reply logs each event that
+ arrives before the reply and keeps waiting. One receive deadline applies to
+ all messages in the wait. The default timeout is 5 seconds; GMC transactions
+-can specify another timeout. For send-and-wait operations the receive deadline
+-starts after sending, so it does not bound waiting for the mutex or for
+-command-queue space. The thread holds the mutex from sending through receiving,
++and completion-event waits can specify another timeout. For send-and-wait
++operations the receive deadline starts after sending, so it does not bound
++waiting for the mutex or for command-queue space. The thread holds the mutex from sending through receiving,
+ so no other caller consumes the message it waits for.
  
-@@ -18,6 +22,7 @@
-             MappedRange,
-             Vmm, //
-         },
-+        vram::VramRegion,
-         GpuMm,
-         Pfn,
-         Vfn,
-@@ -180,6 +185,146 @@ fn drop(&mut self) {
+ With one lock, a drain waits for an in-flight command's receive to finish or
+diff --git a/drivers/gpu/nova-core/gsp/cmdq/gmc.rs b/drivers/gpu/nova-core/gsp/cmdq/gmc.rs
+index 392143e534f6..c5ae5943c8b8 100644
+--- a/drivers/gpu/nova-core/gsp/cmdq/gmc.rs
++++ b/drivers/gpu/nova-core/gsp/cmdq/gmc.rs
+@@ -448,6 +448,71 @@ pub(crate) fn send_gmc_and_receive_timeout(
+         })
      }
- }
  
-+/// A BAR mapping that retains its backing VRAM region.
-+#[must_use]
-+pub(crate) struct BarMapping<'map, 'gpu> {
-+    access: BarUserAccess<'map, 'gpu>,
-+    mm: &'map Mutex<GpuMm<'gpu>>,
-+    region: VramRegion,
-+    region_offset: usize,
-+    region_size: usize,
-+    unmap_error: Option<Error>,
-+}
++    /// Sends an asynchronous GMC command and waits atomically for its event.
++    ///
++    /// The command queue remains locked from the send through the matching
++    /// event, preventing another transaction from consuming its completion.
++    /// GMC events are passed to `predicate`, then to `handler` if the predicate returns false.
++    /// GMC responses are debug-logged and consumed without invoking either callback. Interleaved
++    /// RPC messages are logged as events and consumed.
++    ///
++    /// One receive deadline starts after sending and is not extended by other messages. It does
++    /// not bound waiting for the mutex or for space to send the request.
++    ///
++    /// Both callbacks run with the queue locked and must not reenter this queue or reset it.
++    /// Their second argument is the raw `max_resp_or_status` word of the event header.
++    ///
++    /// # Errors
++    ///
++    /// - `EMSGSIZE` if the request exceeds the command queue's maximum element size.
++    /// - `ETIMEDOUT` if space does not become available to send the request, or if no event
++    ///   satisfies `predicate` before the receive deadline.
++    /// - `EIO` if the command queue slot cannot hold the request headers, the receive queue is
++    ///   stalled by an invalid element, or a received element fails framing validation.
++    ///
++    /// Errors from initializing the request headers and from either callback are propagated
++    /// as-is. The current valid element is consumed before a callback error is returned.
++    #[expect(dead_code)]
++    pub(crate) fn send_gmc_and_wait_event(
++        &self,
++        command_id: u32,
++        payload: &[u8],
++        timeout: Delta,
++        mut predicate: impl FnMut(u32, u32, u64, &[u8], &[u8]) -> Result<bool>,
++        mut handler: impl FnMut(u32, u32, u64, &[u8], &[u8]) -> Result,
++    ) -> Result {
++        let mut inner = self.inner.lock();
++        inner.send_command_element(RawGmcCommand {
++            command_id,
++            payload,
++            max_response_size: 0,
++        })?;
++        let dev = inner.dev;
++        let deadline = Instant::<Monotonic>::now() + timeout;
 +
-+#[expect(dead_code)]
-+impl<'map, 'gpu> BarMapping<'map, 'gpu> {
-+    /// Maps the containing pages while restricting CPU access to the requested byte range.
-+    pub(crate) fn new(
-+        bar_user: &'map BarUser<'gpu>,
-+        mm: &'map Mutex<GpuMm<'gpu>>,
-+        region: VramRegion,
-+        writable: bool,
-+    ) -> Result<Self> {
-+        let page_size: u64 = PAGE_SIZE.into_safe_cast();
-+        let page_align = Alignment::new::<PAGE_SIZE>();
++        inner.await_msg_with_deadline(deadline, |message| {
++            let GspParsedMessage::Gmc(message) = message else {
++                message.log(dev);
++                return Ok(None);
++            };
++            let header = message.header();
++            let (payload_0, payload_1) = message.payload();
++            if header.command().is_response() {
++                return Ok(None);
++            }
 +
-+        let region_start = region.address();
-+        let region_end = region_start.checked_add(region.size()).ok_or(EOVERFLOW)?;
++            let command = GmcCommand::from(header.command()).0;
++            let max_resp_or_status = header.raw_status_word();
++            let sequence = header.sequence();
++            if predicate(command, max_resp_or_status, sequence, payload_0, payload_1)? {
++                return Ok(Some(()));
++            }
 +
-+        let map_start = region_start.align_down(page_align);
-+        let map_end = region_end.align_up(page_align).ok_or(EOVERFLOW)?;
-+        let map_size = map_end.checked_sub(map_start).ok_or(EINVAL)?;
-+        let num_pages = usize::try_from(map_size / page_size).map_err(|_| EOVERFLOW)?;
-+        if num_pages == 0 {
-+            return Err(EINVAL);
-+        }
-+
-+        let region_offset = usize::try_from(region_start - map_start).map_err(|_| EOVERFLOW)?;
-+        let region_size = usize::try_from(region.size()).map_err(|_| EOVERFLOW)?;
-+
-+        let mut pfns = KVec::with_capacity(num_pages, GFP_KERNEL)?;
-+        for page in 0..num_pages {
-+            let page = u64::try_from(page).map_err(|_| EOVERFLOW)?;
-+            let byte_offset = page.checked_mul(page_size).ok_or(EOVERFLOW)?;
-+            let address = map_start.checked_add(byte_offset).ok_or(EOVERFLOW)?;
-+            pfns.push(Pfn::from(VramAddress::from_raw(address)), GFP_KERNEL)?;
-+        }
-+
-+        let access = bar_user.map(&mut mm.lock(), &pfns, writable)?;
-+
-+        Ok(Self {
-+            access,
-+            mm,
-+            region,
-+            region_offset,
-+            region_size,
-+            unmap_error: None,
++            handler(command, max_resp_or_status, sequence, payload_0, payload_1)?;
++            Ok(None)
 +        })
 +    }
 +
-+    pub(crate) fn region(&self) -> &VramRegion {
-+        &self.region
-+    }
-+
-+    pub(crate) fn gpu_va_addr(&self) -> Result<u64> {
-+        self.access()?
-+            .base()
-+            .into_raw()
-+            .checked_add(u64::try_from(self.region_offset).map_err(|_| EOVERFLOW)?)
-+            .ok_or(EOVERFLOW)
-+    }
-+
-+    pub(crate) const fn size(&self) -> usize {
-+        self.region_size
-+    }
-+
-+    fn access(&self) -> Result<&BarUserAccess<'map, 'gpu>> {
-+        if self.access.mapped.is_none() {
-+            return Err(ENODEV);
-+        }
-+        if let Some(error) = self.unmap_error {
-+            return Err(error);
-+        }
-+        Ok(&self.access)
-+    }
-+
-+    fn access_offset(&self, offset: usize, width: usize) -> Result<usize> {
-+        let region_end = offset.checked_add(width).ok_or(EOVERFLOW)?;
-+        if region_end > self.region_size {
-+            return Err(EINVAL);
-+        }
-+
-+        let access_offset = self.region_offset.checked_add(offset).ok_or(EOVERFLOW)?;
-+        if !access_offset.is_multiple_of(width) {
-+            return Err(EINVAL);
-+        }
-+
-+        Ok(access_offset)
-+    }
-+
-+    pub(crate) fn try_read32(&self, offset: usize) -> Result<u32> {
-+        self.access()?
-+            .try_read32(self.access_offset(offset, size_of::<u32>())?)
-+    }
-+
-+    pub(crate) fn try_write32(&self, value: u32, offset: usize) -> Result {
-+        self.access()?
-+            .try_write32(value, self.access_offset(offset, size_of::<u32>())?)
-+    }
-+
-+    pub(crate) fn try_write64(&self, value: u64, offset: usize) -> Result {
-+        self.access()?
-+            .try_write64(value, self.access_offset(offset, size_of::<u64>())?)
-+    }
-+
-+    /// Unmap while retaining the mapping and its backing storage on failure.
+     /// Sends `command` to the GSP and waits for the reply.
+     ///
+     /// GMC events that arrive before the reply are passed to `on_event`, and RPC messages are
+diff --git a/drivers/gpu/nova-core/gsp/fw.rs b/drivers/gpu/nova-core/gsp/fw.rs
+index c75488e7a787..ce4a7c45caf2 100644
+--- a/drivers/gpu/nova-core/gsp/fw.rs
++++ b/drivers/gpu/nova-core/gsp/fw.rs
+@@ -905,6 +905,15 @@ pub(crate) fn payload_size(&self) -> usize {
+         num::u32_as_usize(self.inner.size)
+     }
+ 
++    /// Returns the raw `max_resp_or_status` word carried by a GMC header.
 +    ///
-+    /// The first error is retained; later calls do not retry the operation.
-+    pub(crate) fn unmap(&mut self) -> Result {
-+        if let Some(error) = self.unmap_error {
-+            return Err(error);
-+        }
-+        let result = self.access.unmap(&mut self.mm.lock());
-+        if let Err(error) = result {
-+            self.unmap_error = Some(error);
-+        }
-+        result
++    /// Its meaning for an event is defined by that event's command.
++    pub(crate) fn raw_status_word(&self) -> u32 {
++        // SAFETY: Both union views contain a `u32` at the same offset, so every bit pattern is
++        // valid regardless of whether the header represents a request, response, or event.
++        unsafe { self.inner.__bindgen_anon_1.request.max_response_size }
 +    }
-+}
 +
-+impl Drop for BarMapping<'_, '_> {
-+    /// Drop unmaps the region and may sleep. Call [`Self::unmap`] to observe errors;
-+    /// on failure the owner must retain this object until device teardown.
-+    fn drop(&mut self) {
-+        if self.unmap_error.is_some() {
-+            return;
-+        }
-+        if let Err(error) = self.unmap() {
-+            kernel::pr_err!("failed to unmap BAR1 region: {:?}\n", error);
-+        }
-+    }
-+}
-+
- /// Run MM subsystem self-tests during probe.
- ///
- /// Tests page table infrastructure and `BAR1` MMIO access using the `BAR1`
+     /// Returns the `NV_STATUS` carried by a response to a command.
+     ///
+     /// Returns `Some` with the `NV_STATUS` code if the `response` flag of [`Self::command`] is set;
 -- 
 2.53.0
 
