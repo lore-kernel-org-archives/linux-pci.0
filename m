@@ -1,53 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.35
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793982195;
-	b=0k+eY5yzB1dLuTs9UQ8e4uM1BhN0M2u9CR9SxZ34tUwDkN5DZWVveoimDYE0S1v71PWA
-	 1drUGrtDg0mT+Kg77PMtlBVJEIfoyqkHQl//2ihVV4j7N6vrVj8QvwkXB5QqPfbXveB+P
-	 DZt34BESVNUUZFcWHGH7npLi3/zPgvDpvzz6/baFUImSLTmi9XfJsAXc7/bL5VFUj7t2L
-	 kZrO80nSjvwDYGG8DA/fDlXKxCFu37BFbWVw35bz418DKPcmNUTxmxQ9JNq7lTSIZbsbZ
-	 i1lOP1UBeBRxpdYkNc6lg3Hqyn+uecu0KZk90Ivi+EZB5ORFFMynpLkkPpEikhYRE5A==
+	t=1793982199;
+	b=DNeG80fRrdVSM+xm+4DmlI6fxu1HGf4cYXjeaHIgIoh5/TiNuk2HhocPoNnApg/VWAwH
+	 4AULqJ/wooTvcczLglQlJiv0rlhPwe0x2OEYxtTwz47y9sz1MC28eXDS1jRF1AsNhDlyK
+	 +fglRbhjopkVPAQIci0PDunekYLMMp5GjOcVhmF6em0iGO8ktZHIO6AbFkMg6mUhjeRDX
+	 gtJDvp+k6h8FeFncbqFszd623voWp6SI6pLi5XzoZHSjKsEb9qwXg1FJDOwmVh/EbDNY+
+	 XnKVxbk4yzwyuAZLs/V7astk3iFypljjodU1rYElbpUPhN12Ebo4XURKe8yJ3fmbBYw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793982195;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793982199;
 	h=DMARC-Filter:Received:Received:Received:X-Zmail-TransId:X-Mailer:
-	 Message-ID:Date:Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:
-	 X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:
-	 X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
-	bh=WfQG6NPUtmS4ZvN+fzcKamXJp/rcbxZu5GJRWpl9cQ4=;
-	b=wyEWuw7akAlzrVsq2gd2bJdNjDegPuVxSbDeqCCux5oE9JX5orCdFKW2Y4fd5WP4Ik79
-	 g/f0N5sxX/bmCCBn/5MZtWZoFn6IYmufo2aFEcrh02Tc+lnZ7NqviMkcqZNzX/yWrxLoj
-	 DMJupTQ28APb4Jd/2INmauN8XRPTv2JlXTZP9xlMYriR+klyp6OWzS8dK6PsWWrp6iqTJ
-	 qA50KAPzh4Cb4VhJzDdXeLH55oTpPFoCw4P8DcAO+U4GvXFtcE1eYdJsF3ffAWCNdfJg6
-	 bjUqcFafbjU0J+ohZ8dU3jnV4PW7g94+gYDHhMwgHWLo9Y+p4cLC7PVRFvzl/JV3ksg==
+	 Message-ID:In-Reply-To:References:Date:Mime-Version:From:To:Cc:
+	 Subject:Content-Type:X-MAIL:X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:
+	 X-CLEAN:X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
+	bh=wUqjA0sYy8npT9+d6Tj/dCL65ia0S9H97G7PC1jfIH0=;
+	b=HSm523Z8TuRhNw5Jyn8UhR4UtjHi6KzSp7dFbpRLvg3gIfLcX0mkmVXS2LhZvehYLQwy
+	 QzwQ9AQ8j6D5THFLc/TZgaSygjBZmvpW6lDnsqgh4PEgUNpsVXnV8W2tXGRGCQCNw3Y4T
+	 qgUcUqdsIW5S7fvLl81EX/bGcCkGVe1+JsJ4wIe/4BpJytg0rl9v4jBprGPdjnQy+unDs
+	 lIPRdJm8DSEXuK2Sc+jUa7lQ1AbNj5bjP5o+f1ba9vmRynCS/+7PP7U+MFtqxYX7/5s1f
+	 MoJjQRXKpe/WiMe+oxPe3y60njBpMdkMt1D0tw/86yGX63CGUlrkVQd1P7Yj4i0s6yQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=zte.com.cn;
 	spf=pass smtp.mailfrom=zte.com.cn;
-	arc=none smtp.remote-ip=160.30.148.34
-Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.34])
+	arc=none smtp.remote-ip=160.30.148.35
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.35])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00436606A329;
-	Fri,  6 Nov 2026 16:23:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 00436606A329
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C371606A329;
+	Fri,  6 Nov 2026 16:23:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5C371606A329
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
+Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jLkxX1TJ5z57DCj;
-	Sat, 07 Nov 2026 00:23:12 +0800 (CST)
+	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jLkxc5jVLz8XrrX;
+	Sat, 07 Nov 2026 00:23:16 +0800 (CST)
 Received: from xaxapp01.zte.com.cn ([10.88.99.176])
-	by mse-fl2.zte.com.cn with SMTP id 6A6GN2mL089040;
-	Sat, 7 Nov 2026 00:23:02 +0800 (+08)
+	by mse-fl1.zte.com.cn with SMTP id 6A6GN7PS011564;
+	Sat, 7 Nov 2026 00:23:07 +0800 (+08)
 	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp04[null])
+Received: from mapi (xaxapp02[null])
 	by mapi (Zmail) with MAPI id mid32;
-	Sat, 7 Nov 2026 00:23:05 +0800 (CST)
-X-Zmail-TransId: 2afb6aedfee91d8-bb14a
+	Sat, 7 Nov 2026 00:23:11 +0800 (CST)
+X-Zmail-TransId: 2afa6aedfeefdbc-c8d21
 X-Mailer: Zmail v1.0
-Message-ID: <20261107002305850zuBaVsGBz3wbco2Ae4ScR@zte.com.cn>
-Date: Sat, 7 Nov 2026 00:23:05 +0800 (CST)
+Message-ID: <20261107002311316z2o2PFtFGoXh-VbqXtTGg@zte.com.cn>
+In-Reply-To: <20261107002305850zuBaVsGBz3wbco2Ae4ScR@zte.com.cn>
+References: 20261107002305850zuBaVsGBz3wbco2Ae4ScR@zte.com.cn
+Date: Sat, 7 Nov 2026 00:23:11 +0800 (CST)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,57 +64,59 @@ To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
 Cc: <mani@kernel.org>, <kwilczynski@kernel.org>, <lpieralisi@kernel.org>,
         <kishon@kernel.org>, <Frank.Li@kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIIDAvNV0gUENJOiBGaXggaW52YWxpZCBpbnB1dCBoYW5kbGluZyBhbmQgYSBOVUxMIGRlcmVmZXJlbmNl?=
+Subject: =?UTF-8?B?W1BBVENIIDEvNV0gUENJOiBSZWplY3QgbmVnYXRpdmUgcmVzb3VyY2UgYWxpZ25tZW50IG9yZGVy?=
 Content-Type: text/plain;
 	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 6A6GN2mL089040
+X-MAIL:mse-fl1.zte.com.cn 6A6GN7PS011564
 X-TLS: YES
 X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.133 unknown Sat, 07 Nov 2026 00:23:12 +0800
+X-SOURCE-IP: 10.5.228.132 unknown Sat, 07 Nov 2026 00:23:16 +0800
 X-CLEAN: YES
 X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AEDFEF0.000/4jLkxX1TJ5z57DCj
+X-Fangmail-MID-QID: 6AEDFEF4.001/4jLkxc5jVLz8XrrX
 
-Several PCI paths consume values from the command line, a device tree,
-config space or an endpoint driver without validating them, and the
-ASPM link setup does not handle a downstream bus without function 0.
-The five fixes reject the bad values, or skip the unsafe state, before
-they reach a shift, an array index or a pointer dereference.
+From: Shao Mingyin <shao.mingyin@zte.com.cn>
 
-The series is ordered by severity and is independent patch-by-patch;
-each patch can be applied and reviewed on its own, and taking a subset
-is fine:
+pci_specified_resource_alignment() parses the pci=resource_alignment=
+boot parameter with sscanf("%d%n", &align_order, ...) and rejects only
+orders above 63.  A negative order, e.g. "pci=resource_alignment=-5@...",
+passes that check and later reaches "align = 1ULL << align_order" with a
+negative shift count, which is undefined behavior; on x86 the 64-bit
+shift count is masked to six bits, silently producing a 2^59-byte
+alignment that mis-aligns (or fails to align) the affected IOV resources.
 
-  1/5 PCI: Reject negative resource alignment order
-  2/5 PCI: of: Bound num_lanes in of_pci_get_equalization_presets()
-  3/5 PCI/ASPM: Skip link-state setup without downstream function 0
-  4/5 PCI: rebar: Guard pci_rebar_bytes_to_size() against overflow
-  5/5 PCI: endpoint: Reject a zero interrupt number in raise_irq
+Reject any order outside the valid [0, 63] range and fall back to the
+default page-size alignment, matching the existing handling of
+out-of-range positive orders.
 
-1/5 rejects a negative pci=resource_alignment= order, 2/5 rejects a
-num_lanes value larger than the 16-entry preset arrays, 3/5 skips ASPM
-link-state setup when the downstream bus has no function 0, 4/5 rejects
-resizable BAR sizes that cannot be encoded, and 5/5 rejects a zero
-MSI/MSI-X interrupt number before it underflows in the controller.
-
-All five are single-file changes under drivers/pci/ and pass git apply
-and checkpatch.  Each patch was tested on 7.3.0-next-20261030 in a
-QEMU/TCG guest with an unpatched/patched A/B comparison; the test
-section in each patch describes the setup and the observed results.
-
-Shao Mingyin (5):
-  PCI: Reject negative resource alignment order
-  PCI: of: Bound num_lanes in of_pci_get_equalization_presets()
-  PCI/ASPM: Skip link-state setup without downstream function 0
-  PCI: rebar: Guard pci_rebar_bytes_to_size() against overflow
-  PCI: endpoint: Reject a zero interrupt number in raise_irq
-
- drivers/pci/endpoint/pci-epc-core.c | 4 ++++
- drivers/pci/of.c                    | 3 +++
- drivers/pci/pci.c                   | 2 +-
- drivers/pci/pcie/aspm.c             | 3 +++
- drivers/pci/rebar.c                 | 7 +++++++
- 5 files changed, 18 insertions(+), 1 deletion(-)
-
+Fixes: 6534aac198b5 ("PCI: Bounds-check command-line resource alignment requests")
+Cc: stable@vger.kernel.org
+Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
 ---
-base-commit: 7649ba73f9e7e1e04d0b46213e39c79ae09dd55c
+Tested on 7.3.0-next-20261030 (QEMU/TCG guest) with the
+pci=resource_alignment= boot parameter and a QEMU e1000 NIC; no extra
+hardware is needed.
+
+Booting with pci=resource_alignment=-5@pci:8086:100e parses a negative
+order that the "> 63" check lets through, so "align = 1ULL << align_order"
+shifts by -5 (masked to 2^59 on x86-64); the e1000 BAR is resized to
+2^59 bytes, which cannot be assigned, and the e1000 fails to probe:
+
+  unpatched                            patched
+  requesting alignment to              PCI: Invalid requested alignment
+  0x800000000000000                    (order -5)
+  e1000 probe failed, no eth0          e1000 eth0 probes
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index bca3a5d84cd9..c2260ee1f956 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -6605,7 +6605,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 		if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
+ 		    p[count] == '@') {
+ 			p += count + 1;
+-			if (align_order > 63) {
++			if (align_order < 0 || align_order > 63) {
+ 				pr_err("PCI: Invalid requested alignment (order %d)\n",
+ 				       align_order);
+ 				align_order = PAGE_SHIFT;
