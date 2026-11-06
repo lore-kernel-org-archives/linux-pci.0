@@ -1,74 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793986639;
-	b=0DTzafLJnvoNDd60iqLnocDRG6mO4U9IK8R6naX1WTMQk9C9jWqALRMsuYssPIh0y0iF
-	 vXp8MC0d2mHw4pQOieFW0atqpd8pE8BDjLiHghskYI/w3kUUJuHdpEsgfZPkRpcLKVpsf
-	 hxJndqaKh4WHruy15iwRrO5Fvf35C8Khmgnvamf1U6dJ5ORF+GI8KsW66HXE6UA1EQRjg
-	 agsTYZq8sPLZQwd0gj7BKgNZaxOLdkIDj8z5+Jrai7zRRO8i4G01FQjVQMEvKFNOJqFds
-	 BiuSsmVSiDInRxyy8XR4eqa/2qElME3ZtySj4aoohp7TXe09qIwwd+GFoyRTjn4gitA==
+	t=1793987005;
+	b=yZZUNJQcmeivOUZau1IXTewb8gRnK6w4yFM54aLYDhJtjdmLMjm/z3ggsLeYpdHrX23a
+	 lYn2P1KBTFhfFiZAnGc6i7qrF/qt6QmE7K4rGO5CvJS3pysW0C5WNb4KDaL5MEoXkOkPI
+	 RQCWwGPrFGRVb2/H3Y2R83VvA56qtljfjchbiQhWDpZodT7X1vYxdW80A8ogBAzKH9QQ1
+	 sZh7O87bXpM86Qj/f9YzXIb0JpDEYhTlTpj7MTMI7cic1YqMqGGLX1nLRD6zKUEjRdBC3
+	 9b2nGmT+twn5EexWxgKLMIs2s3K2AxbDKsj1OvI0NOJHNzmsisMlhuTe3P6BXlbnlyw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793986639;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:Date:To:cc:
-	 Subject:In-Reply-To:Message-ID:References:MIME-Version:Content-Type;
-	bh=g7Oc6t0HtOz9X6Eiow3ZElCtdl5ie3dXLyf+O1EAwlE=;
-	b=2XOj4zSTvObG5pbKk+HL20x4oHnnZlB/b9l7Or3m+qZaQ1X+CTwD0CeJMdsgU0oOs/ZX
-	 9O0D9c5+xByG6C67bKHPM334EiVbXfi8wbZxGvJ8p66NC78IqapiQ7YJ2GerM9qFJDqax
-	 ith9jOQ65SGOqg46aNbuGf1iouhnffjBNjOoV8/tdgUtwa1iDZHbLc1aok4XmK2pvrBcL
-	 kPoSgnhVwt8pEqta3BR67Vv9359VG9e2TZIzn5ca4MJv3S0I5A3S3tz4fX+bGdoHHQHsL
-	 3MYpk7VI6osn1jjQmzRYiBf3cSligzLXq/VHcms0bBnC18wry8ywFbGasa46WAIBtyQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793987005;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=6wGlqMA/F4fTxwEsT9uA7hyyP8LHb9wChy2k5aVeW4E=;
+	b=f/P+PolgmovmuQvyCa/9MfC/aoPEjoPo1DyPtvOu+V7hcEz7Gzw30w0hxyiqRYhkusoL
+	 tTZfwvHcFRRkpE22WRZccyNDRdEd7KK1nhVbKI+uD+Wt4BDViSe//LDzNl4w9Y60rXEpP
+	 I/EnMPyZYKwbmloF8ASqh8nxCoo0BEmnYK/N8fyN4+hDW37XOKX5vSO410jZH8OVGe2aI
+	 er3ts2sVIVnWjzt/Pf134Iaq4zNXBeNrzqakgI3GmSS5Mo1otsqXL9zAE40bGFhYaQWOx
+	 fdLO8TlfAjK1MY3TbMS7eRRFMrc1IF46FMMNgghasveKEHmFWRd/jf7e/No9Fmd6AVg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Gh+M0kZL;
-	arc=none smtp.remote-ip=198.175.65.14
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DSW8m5eM;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5520606A336
-	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 17:37:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C5520606A336
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AA65606A33E;
+	Fri,  6 Nov 2026 17:43:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Gh+M0kZL
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793986638; x=1825522638;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=ALLV+zDwOuXdfesWRA5Se2m7/T8+dtzxg4wxXwQjkJo=;
-  b=Gh+M0kZLzdS0ExPYWxPRyeDx1TWWUC/1MfA12YWWGz/MldxwUCnOAVA8
-   OZcpso/Qz1ZjwZg4ZvAyQAMvX1fMssLusKqvPJbbnnyn+BEcdoyj8OxHj
-   FDBOumVJpkXYjobadZddYoB5Oas4Q7vNyo9plPZRypMaq6uY0+U2mmf/7
-   q7ocUqn+cWDBlrOhkYFOyhHxnhOABw5fStrttXx5LNVAeDf0HzcnSNr19
-   oAERjzt/a2ckpFVbp8ykM7kqLLpBU8DG1/CBK1hoxHBK0AE39PKKqUsI2
-   S/duW2fpJGLtzGg927Pa7mO9iW0qYJOk14TotRggWvE216lIfl8QM5+bG
-   w==;
-X-CSE-ConnectionGUID: CbMhEP3QR8uxhZTwYNXImw==
-X-CSE-MsgGUID: YTZYYm46QnSR8roueRSLGQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11958"; a="2697678"
-X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="2697678"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 09:37:18 -0800
-X-CSE-ConnectionGUID: 8ZcE/OWLQN+eAokLnIMkvg==
-X-CSE-MsgGUID: laJ+7Ot1SZ6qlmnjCwDIoA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="7659594"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.104])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 09:37:17 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Fri, 6 Nov 2026 19:37:13 +0200 (EET)
-To: Lukas Wunner <lukas@wunner.de>
-cc: sashiko-reviews@lists.linux.dev, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] PCI/AER: Check validity of Error Source ID
- register
-In-Reply-To: <au4NiO-rglobvYxo@wunner.de>
-Message-ID: <36c2c56c-59c4-4183-70ec-5d05e88569b5@linux.intel.com>
-References: <cover.1793982724.git.lukas@wunner.de> <357275f9c2554a61bfa6fcbe9a25416cafe9ce00.1793982724.git.lukas@wunner.de> <sashiko-outbox-201907@kernel.org> <au4NiO-rglobvYxo@wunner.de>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DSW8m5eM
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1C231F0089F;
+	Fri,  6 Nov 2026 17:43:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793987005;
+	bh=6wGlqMA/F4fTxwEsT9uA7hyyP8LHb9wChy2k5aVeW4E=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=DSW8m5eMB/det3mgB6XM5gVX5mjkKsYV4lKG5MFV2YZPwh5vVWskH9wDlPYfM9yF4
+	 irejDE8pRLdDjhP9zHiBNnixER+vM7evtS+4cWtmACeEQBCgHebhzpZ/uiYrzaMea/
+	 1YdpExGk+fg8NUHkgdFUUg7G31Woi4EuRLEz004dbhdS+1MEAI23TdYRU3SdSHugZW
+	 ZY+Jsj+VzbFLkArxQiB8Eqac9rlBY46naW9zkn3DQ4s66EvNM+0gmZO2rndk3ZKHNY
+	 llGT0pw6l6737MNIv0AkH4qeVD746k6WJLrSqWE532yl0Ri+47qLKSNdgmHtl8rdFZ
+	 PqNzeHOgByIOg==
+Date: Fri, 6 Nov 2026 11:43:23 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Matlack <dmatlack@google.com>
+Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-pci@vger.kernel.org,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Josh Hilke <jrhilke@google.com>,
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
+	Yi Liu <yi.l.liu@intel.com>
+Subject: Re: [PATCH v10 06/13] PCI: liveupdate: Preserve bus numbers during
+ Live Update
+Message-ID: <20261106174323.GA1635842@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -78,57 +76,348 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-518017135-1793986633=:2032"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261013162529.1928093-7-dmatlack@google.com>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Tue, Oct 13, 2026 at 04:25:22PM +0000, David Matlack wrote:
+> Keep the secondary and subordinate bus numbers that the previous kernel
+> programmed into bridges, rather than assigning new ones, if the previous
+> kernel preserved any device across a Live Update. Do this even on
+> architectures that would otherwise always assign bus numbers themselves,
+> e.g. when pci=assign-busses is passed.
+> 
+> Preserved devices must be allowed to continue performing memory
+> transactions across a Live Update, so the kernel cannot change the
+> fabric topology. Changing the bus numbers of a bridge changes the
+> RequesterIDs of the devices below it, which would require disabling and
+> flushing any in-flight memory transactions first.
+> 
+> Apply the policy globally rather than only to the paths that contain
+> preserved devices. Bus numbers have to be preserved above a preserved
+> device anyway, since an upstream bridge cannot expand its window. A
+> global policy matches the scope of pcibios_assign_all_busses(), and
+> gives an answer that cannot change part way through the two passes of a
+> bridge scan.
+> 
+> Bridges that do not have bus numbers are still assigned new ones, so
+> hot-adding a bridge keeps working, both during and after a Live Update.
+> The two-pass bridge scan guarantees such bridges are only assigned bus
+> numbers above those already claimed by preserved bridges.
+> 
+> The exception is a bridge that was preserved but comes up without a
+> valid bus number configuration, e.g. because it was reset during kexec.
+> Refuse to assign it new bus numbers, since that would silently change
+> the BDF of every preserved device in its hierarchy. Also refuse to
+> assign bus numbers to the other bridges on the same bus, since the bus
+> numbers of the failed bridge can no longer be read from hardware and
+> handing them out would let an unrelated device inherit the BDF of a
+> preserved device.
+> 
+> Require that CONFIG_CARDBUS is not enabled to enable
+> CONFIG_PCI_LIVEUPDATE since preserving bus numbers on PCI-to-CardBus
+> bridges requires additional work but is not a priority at the moment.
+> 
+> Signed-off-by: David Matlack <dmatlack@google.com>
 
---8323328-518017135-1793986633=:2032
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
 
-On Fri, 6 Nov 2026, Lukas Wunner wrote:
+When I download the series with "b4 am -om/
+https://lore.kernel.org/all/20261013162529.1928093-1-dmatlack@google.com",
+b4 finds and adds my Reviewed-by.  I suppose it notices the patch is
+identical to v9, where I did add the Reviewed-by:
+https://lore.kernel.org/linux-pci/20260925200407.GA2082921@bhelgaas/
 
-> On Fri, Nov 06, 2026 at 05:15:07PM +0000, sashiko-bot@kernel.org wrote:
-> > > +++ b/drivers/pci/pcie/aer.c
-> > > -=09/*
-> > > -=09 * When bus ID is equal to 0, it might be a bad ID
-> > > -=09 * reported by Root Port.
-> > > -=09 */
-> > > -=09if ((PCI_BUS_NUM(e_info->id) !=3D 0) &&
-> > > +=09/* Some Root Ports report an invalid Error Source ID */
-> > > +=09if (e_info->id_valid &&
-> > >  =09    !(dev->bus->bus_flags & PCI_BUS_FLAGS_NO_AERSID)) {
-> > >  =09=09/* Device ID match? */
-> > >  =09=09if (e_info->id =3D=3D pci_dev_id(dev))
-> >=20
-> > [Severity: Medium]
-> > As reported by Ilpo J=E4rvinen on v1 [1]
->=20
-> Hallucination, this was reported by sashiko itself and Ilpo merely confir=
-med
-> sashiko's finding.
-
-I agree. I've no problem with this change after the cases we expect this=20
-impact are not among the cases sashiko came up so the comment in the=20
-changelog is enough for me.
-
-> > can treating pci_dev_id(root) =3D=3D id
-> > as unconditionally valid cause a false-positive match on the Root Port =
-and
-> > skip searching the subordinate hierarchy when a Root Port at 00:00.0 (s=
-uch
-> > as on DesignWare, Cadence, or Aardvark SoC host bridges) reports 0x0000=
- for
-> > a downstream device error, or when a Root Port at 00:xx.y loses the bus
-> > number of a downstream error source at bus:xx.y?
->=20
-> The commit message addresses this concern, it seems sashiko overlooked th=
-at
-> paragraph.
-
-
---=20
- i.
-
---8323328-518017135-1793986633=:2032--
+> ---
+>  .../admin-guide/kernel-parameters.txt         |   7 +-
+>  drivers/pci/Kconfig                           |   2 +-
+>  drivers/pci/liveupdate.c                      | 114 ++++++++++++++++++
+>  drivers/pci/liveupdate.h                      |  13 ++
+>  drivers/pci/probe.c                           |  11 +-
+>  include/linux/pci_liveupdate.h                |   5 +
+>  6 files changed, 146 insertions(+), 6 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index 68647ff4bdd2..7eabf6320abf 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -5170,7 +5170,12 @@ Kernel parameters
+>  				explicitly which ones they are.
+>  		assign-busses	[X86] Always assign all PCI bus
+>  				numbers ourselves, overriding
+> -				whatever the firmware may have done.
+> +				whatever the firmware may have done. Ignored
+> +				if any device was preserved across a Live
+> +				Update, where the kernel must preserve the
+> +				PCI topology (including bus numbers) to
+> +				avoid interrupting ongoing memory transactions
+> +				of preserved devices.
+>  		usepirqmask	[X86] Honor the possible IRQ mask stored
+>  				in the BIOS $PIR table. This is needed on
+>  				some systems with broken BIOSes, notably
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 8af20f558086..16fbd4212e0f 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -273,7 +273,7 @@ config VGA_ARB_MAX_GPUS
+>  
+>  config PCI_LIVEUPDATE
+>  	bool "PCI Live Update Support"
+> -	depends on PCI && LIVEUPDATE && 64BIT
+> +	depends on PCI && LIVEUPDATE && 64BIT && !CARDBUS
+>  	help
+>  	  Enable PCI core support for preserving PCI devices across Live
+>  	  Update. This, in combination with support in a device's driver,
+> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> index bffb3e1d8b2d..8d5ad26e948c 100644
+> --- a/drivers/pci/liveupdate.c
+> +++ b/drivers/pci/liveupdate.c
+> @@ -148,6 +148,32 @@
+>   * This enables the PCI core and any drivers bound to the bridge to participate
+>   * in the Live Update so that preserved endpoints can continue issuing memory
+>   * transactions during the Live Update.
+> + *
+> + * BDF Stability
+> + * =============
+> + *
+> + * The PCI core guarantees that preserved devices can be identified by the same
+> + * bus, device, and function numbers for as long as they are preserved
+> + * (including across kexec). To accomplish this, the PCI core keeps the
+> + * secondary and subordinate bus numbers that the previous kernel programmed
+> + * into bridges, if the previous kernel preserved any device. This is true even
+> + * on architectures that always assign new bus numbers during scanning. The
+> + * kernel assumes the previous kernel established a sane bus topology across
+> + * kexec.
+> + *
+> + * Bridges that do not have bus numbers are assigned new ones as usual, so
+> + * hot-adding a bridge keeps working, both during and after a Live Update. The
+> + * two-pass bridge scan ensures such bridges are only assigned bus numbers above
+> + * those already claimed by preserved bridges.
+> + *
+> + * If a preserved bridge comes up without a valid bus number configuration, e.g.
+> + * because it was reset during kexec, the PCI core refuses to assign it new bus
+> + * numbers and does not enumerate anything below it. Assigning new bus numbers
+> + * would silently change the BDF of every preserved device in its hierarchy. The
+> + * PCI core also stops assigning bus numbers to the other bridges on the same
+> + * bus, since the bus numbers of the failed bridge can no longer be read from
+> + * hardware and handing them to another bridge would let an unrelated device
+> + * inherit the BDF of a preserved device.
+>   */
+>  
+>  #define pr_fmt(fmt) "PCI: liveupdate: " fmt
+> @@ -168,9 +194,13 @@
+>   * struct pci_liveupdate_global - Global state for PCI Live Update support
+>   * @rwsem: Reader/writer semaphore used to protect the incoming and outgoing
+>   *         FLBs, and the references to them in struct pci_dev.
+> + * @had_incoming: True if the previous kernel preserved at least one PCI device.
+> + *                Set when the incoming FLB is retrieved and never cleared, so
+> + *                it stays true after Live Update finishes.
+>   */
+>  struct pci_liveupdate_global {
+>  	struct rw_semaphore rwsem;
+> +	bool had_incoming;
+>  };
+>  
+>  static struct pci_liveupdate_global pci_liveupdate = {
+> @@ -316,6 +346,14 @@ static int pci_flb_retrieve(struct liveupdate_flb_op_args *args)
+>  			      ret);
+>  	}
+>  
+> +	/*
+> +	 * Remember that the previous kernel preserved devices for the lifetime
+> +	 * of this kernel, even after Live Update finishes and the incoming FLB
+> +	 * is freed. See pci_liveupdate_preserve_bus_numbers().
+> +	 */
+> +	if (!xa_empty(&incoming->xa))
+> +		pci_liveupdate.had_incoming = true;
+> +
+>  	args->obj = incoming;
+>  	return 0;
+>  }
+> @@ -624,6 +662,80 @@ static void pci_liveupdate_flb_put_incoming(void)
+>  	liveupdate_flb_put_incoming(&pci_liveupdate_flb);
+>  }
+>  
+> +/**
+> + * pci_liveupdate_preserve_bus_numbers() - Determine if the PCI core should
+> + *                                         preserve bus numbers when scanning
+> + *                                         bridges.
+> + *
+> + * This function is called by the PCI core when it is scanning a bridge. It
+> + * determines whether the PCI core should preserve the secondary and subordinate
+> + * bus numbers that the previous kernel programmed into that bridge, rather than
+> + * assigning new ones. This is necessary to keep RequesterIDs constant for
+> + * preserved devices issuing memory transactions.
+> + *
+> + * Bus numbers are preserved everywhere, and for the lifetime of the kernel, if
+> + * the previous kernel preserved any device. Bus numbers have to be preserved
+> + * above a preserved device anyway, since an upstream bridge cannot expand its
+> + * window. Applying the same policy everywhere matches the scope of
+> + * pcibios_assign_all_busses(), and gives an answer that cannot change part way
+> + * through the two passes of a bridge scan.
+> + *
+> + * The incoming FLB is retrieved while setting up the first device, which always
+> + * happens before any bridge is scanned, so this returns the same answer for the
+> + * entire enumeration.
+> + *
+> + * Note that this does not prevent the PCI core from assigning bus numbers to
+> + * bridges that do not have any, e.g. bridges that are hot-added after the
+> + * Live Update. See pci_liveupdate_refuse_bus_numbers() for the one case where
+> + * the PCI core must refuse to do so.
+> + *
+> + * Return: True if bus numbers should be preserved, false otherwise.
+> + */
+> +bool pci_liveupdate_preserve_bus_numbers(void)
+> +{
+> +	return pci_liveupdate.had_incoming;
+> +}
+> +
+> +/**
+> + * pci_liveupdate_refuse_bus_numbers() - Determine if the PCI core must refuse
+> + *                                       to assign bus numbers to the provided
+> + *                                       bridge.
+> + * @bus: The PCI bus the bus numbers would be assigned from.
+> + * @dev: The PCI bridge device the bus numbers would be assigned to.
+> + *
+> + * This function is called by the PCI core before it assigns bus numbers to a
+> + * bridge that does not have any.
+> + *
+> + * A bridge that was preserved by the previous kernel but came up without a
+> + * valid bus number configuration, e.g. because it was reset during kexec, is
+> + * left alone by the PCI core and therefore has no child bus once the first pass
+> + * of the bridge scan is done.
+> + *
+> + * The PCI core must not assign bus numbers from @bus while such a bridge is on
+> + * it, including to the failed bridge itself. Assigning new bus numbers to the
+> + * failed bridge would silently change the BDF of every preserved device in its
+> + * hierarchy. Its bus numbers cannot be read from hardware anymore either, so
+> + * they cannot be excluded from assignment, and handing them to another bridge
+> + * would let an unrelated device inherit the BDF of a preserved device.
+> + *
+> + * Return: True if @dev must not be assigned bus numbers, false otherwise.
+> + */
+> +bool pci_liveupdate_refuse_bus_numbers(struct pci_bus *bus, struct pci_dev *dev)
+> +{
+> +	struct pci_dev *bridge;
+> +
+> +	for_each_pci_bridge(bridge, bus) {
+> +		if (!bridge->liveupdate.was_incoming || bridge->subordinate)
+> +			continue;
+> +
+> +		pci_err(dev, "Not assigning bus numbers, preserved bridge %s lost its bus number configuration\n",
+> +			pci_name(bridge));
+> +		return true;
+> +	}
+> +
+> +	return false;
+> +}
+> +
+>  void pci_liveupdate_setup_device(struct pci_dev *dev)
+>  {
+>  	struct pci_flb_incoming *incoming;
+> @@ -652,6 +764,8 @@ void pci_liveupdate_setup_device(struct pci_dev *dev)
+>  
+>  	pci_info(dev, "Device was preserved by previous kernel across Live Update\n");
+>  	dev->liveupdate.incoming = dev_ser;
+> +	dev->liveupdate.was_incoming = true;
+> +
+>  	pci_liveupdate_flb_put_incoming();
+>  }
+>  
+> diff --git a/drivers/pci/liveupdate.h b/drivers/pci/liveupdate.h
+> index eaaa3559fd77..e5d2a19d2ca2 100644
+> --- a/drivers/pci/liveupdate.h
+> +++ b/drivers/pci/liveupdate.h
+> @@ -13,6 +13,8 @@
+>  #ifdef CONFIG_PCI_LIVEUPDATE
+>  void pci_liveupdate_setup_device(struct pci_dev *dev);
+>  void pci_liveupdate_cleanup_device(struct pci_dev *dev);
+> +bool pci_liveupdate_preserve_bus_numbers(void);
+> +bool pci_liveupdate_refuse_bus_numbers(struct pci_bus *bus, struct pci_dev *dev);
+>  #else
+>  static inline void pci_liveupdate_setup_device(struct pci_dev *dev)
+>  {
+> @@ -21,6 +23,17 @@ static inline void pci_liveupdate_setup_device(struct pci_dev *dev)
+>  static inline void pci_liveupdate_cleanup_device(struct pci_dev *dev)
+>  {
+>  }
+> +
+> +static inline bool pci_liveupdate_preserve_bus_numbers(void)
+> +{
+> +	return false;
+> +}
+> +
+> +static inline bool pci_liveupdate_refuse_bus_numbers(struct pci_bus *bus,
+> +						     struct pci_dev *dev)
+> +{
+> +	return false;
+> +}
+>  #endif
+>  
+>  #endif /* DRIVERS_PCI_LIVEUPDATE_H */
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ad7fdf0d56b6..debe0ad1ef68 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1397,6 +1397,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+>  				  int max, unsigned int available_buses,
+>  				  int pass)
+>  {
+> +	bool preserve_bus_numbers = !pcibios_assign_all_busses() ||
+> +				    pci_liveupdate_preserve_bus_numbers();
+>  	struct pci_bus *child;
+>  	u32 buses;
+>  	u16 bctl;
+> @@ -1449,8 +1451,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+>  		goto out;
+>  	}
+>  
+> -	if ((secondary || subordinate) &&
+> -	    !pcibios_assign_all_busses() && !broken) {
+> +	if ((secondary || subordinate) && preserve_bus_numbers && !broken) {
+>  		unsigned int cmax, buses;
+>  
+>  		/*
+> @@ -1492,8 +1493,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+>  		 * do in the second pass.
+>  		 */
+>  		if (!pass) {
+> -			if (pcibios_assign_all_busses() || broken)
+> -
+> +			if (!preserve_bus_numbers || broken)
+>  				/*
+>  				 * Temporarily disable forwarding of the
+>  				 * configuration cycles on all bridges in
+> @@ -1507,6 +1507,9 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+>  			goto out;
+>  		}
+>  
+> +		if (pci_liveupdate_refuse_bus_numbers(bus, dev))
+> +			goto out;
+> +
+>  		/* Clear errors */
+>  		pci_write_config_word(dev, PCI_STATUS, 0xffff);
+>  
+> diff --git a/include/linux/pci_liveupdate.h b/include/linux/pci_liveupdate.h
+> index 710026ada2d5..d45a5b524909 100644
+> --- a/include/linux/pci_liveupdate.h
+> +++ b/include/linux/pci_liveupdate.h
+> @@ -17,10 +17,15 @@
+>   * struct pci_liveupdate - PCI Live Update state for a struct pci_dev
+>   * @outgoing: State preserved for the next kernel.
+>   * @incoming: State preserved by the previous kernel.
+> + * @was_incoming: True if this struct pci_dev was incoming-preserved when it was
+> + *                set up, i.e. it was matched to state preserved by the previous
+> + *                kernel. Unlike @incoming, this is never cleared, so it stays
+> + *                true after the device finishes participating in Live Update.
+>   */
+>  struct pci_liveupdate {
+>  	struct pci_dev_ser *outgoing;
+>  	struct pci_dev_ser *incoming;
+> +	bool was_incoming;
+>  };
+>  
+>  struct pci_dev;
+> -- 
+> 2.56.0.385.gd3acb90ef8-goog
+> 
