@@ -1,44 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=154.81.10.87
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.71
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793925371;
-	b=vDwvkBqTUrGdVm2+Z3r1o4vAPbzyYL1N9Mxp/7w908soRQ7rZw3aSpI5MmdE2kLZKtgY
-	 Sse9y8id3yfcujN1NEHFu2RzYAJ9g2JH8gDzza7Zyh+3M3CqPdvKCRhNZVsZRJVScwu4m
-	 A1Wd6YXO1dF1m30YXtUpKMrzPc+HBG8DNyW/aHd4K5/3xMtANV/DRDtal8hApq6p8yU3Q
-	 uwUKdfB4SqlRMc2Z5hjv17jqOUy/kBweh+q8ZgZ0dtHVs7o333P5+CdJnu8eOifm0h2sR
-	 VJ5sz6JOMD5Y15sFmBP+FBzXUQ8G4wkFXG4t/quvxYJmCz3aads0pI2753ieZ3Oxing==
+	t=1793925778;
+	b=HZGvoMz6wTmXfWLz9XnD5EPuEzAc250TZbks/a6PX09qOCR+p0YOo9WDcyQazY49EuSg
+	 ecC4aHkEEhbMhLxfFtoaZ45U5ncHy53Q4Fscw8xUwggNWbeW+iNFDkT5WVaw2dba0z/n9
+	 8VyQDw6D617h6GCG3euxAlLGERgdFEyMJEgT9LsX3618O1JHTIq7Zc3mOQRisbuJV2yTB
+	 tfatr/zATfmTRHew9v05OFp9VYMA3GYzoez6L3rS9TC9Ewhy+cwgfwbI3aZkUm3B9t7wm
+	 XZRQGb1rzeh2HesdMdmG8F/5cMRLght3soswtd2v8sprS1gUySi/TyV4tnGL6Ztq38A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793925371;
-	h=DMARC-Filter:Received:Message-ID:Date:MIME-Version:User-Agent:Cc:
-	 Subject:To:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:X-HM-Spam-Status:
-	 DKIM-Signature;
-	bh=kQ/TzfU3HeuNw7uzOiPI9CLulv8c3xdEm3+EwYgyk6c=;
-	b=an/f1p5R9c5xrsj+wFSVBFOWqebKp4/l6lRflpH9OikSyR5oUdTVgBHyMMybt+tJ5cQd
-	 adkAuAbzDAXJK/K0n0ybhsT1hIwUJ1OCcC+2G4xzfHsNBBGzeWspJY6EQbVXQC0FjyXMB
-	 8cqxj0N/03HYVeKgoGYEXkFhmUhe6LjyYjYXsRpUqFH6+CG7YRyELgXIvzl32v6eFuTTL
-	 C1eklUQen2fkLTOU/orgssxHlItylfnx7qkiR1Ot3e9xIt5Cp7fZYHdO1wvr4VL8Z/CuB
-	 wToTTiSFK+RYnbTj8YaQCBA3GnfoN3h3PuJ1iqY7l8xlnpoJn+RhZ05OKh/8VVqASuQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793925778;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
+	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
+	bh=j3QnOqT1bd63wcrV6KvOAip3wCLe11FN2NBTadJaa9M=;
+	b=V+huwc9F64nWWa6li+cyGwMdsUiikKhrRU/LAbXDj4O3JKRQXAHlm2e2JxUSIPchINSj
+	 8Ne1GP2YqX2Aw0+a/ogL3NJT64sSGDUmI7pnGJDpu8ozA53CBUtwTiE3+Q8Wm40fNy4PD
+	 RdlbLQZnarUZXmNJSjaUPU+xWv2cl9QzFejoQS7ZM8xYgooJqmKEShgiwGIlc28jfTjim
+	 6V+idom4jQpvBA8AO1Np1HRPOSktjDB709Ffjo/roRDwtkf4UpG9AMnQtGUrsLDqyk42M
+	 MhlCopbpsuae6Upa3USPNwCjH++Jeydepahmi8t5ShU8BYIFDumP/JeXhRvVLa28rAg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=rock-chips.com;
-	spf=pass smtp.mailfrom=rock-chips.com;
-	dkim=pass header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=NQZjNUv8;
-	arc=none smtp.remote-ip=154.81.10.87
-Received: from mail-m1087.netease.com (mail-m1087.netease.com [154.81.10.87])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b="hIhm9N/a";
+	arc=none smtp.remote-ip=209.85.210.71
+Received: from mail-ot1-f71.google.com (mail-ot1-f71.google.com [209.85.210.71])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4D5D606A326;
-	Fri,  6 Nov 2026 00:36:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C4D5D606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86271606A31B
+	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 00:42:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 86271606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=NQZjNUv8
-Received: from [172.16.12.48] (unknown [61.154.14.86])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 53adeb366;
-	Fri, 6 Nov 2026 08:35:57 +0800 (GMT+08:00)
-Message-ID: <6a6ca2e5-9a61-465a-a877-e167188e0b81@rock-chips.com>
-Date: Fri, 6 Nov 2026 08:35:56 +0800
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=hIhm9N/a
+Received: by mail-ot1-f71.google.com with SMTP id 46e09a7af769-823d73ffca1so265225a34.2
+        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2026 16:42:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1793925776; x=1794530576; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=j3QnOqT1bd63wcrV6KvOAip3wCLe11FN2NBTadJaa9M=;
+        b=hIhm9N/aAW5eoDmq7Lh+66rWad9C2Y/yanhFRthBpH+FxJOk3Anrcf4Ikn9EdqX+37
+         QkBPCxiyj27NaWLe9GkMgw32gdGK4OhRxRD3/cUsG+Cmqy1Hzd3LeE0jz8MOBxu4cO0o
+         xQ7xuJuexvRhukDdaNp/qsbRbRVgIH0aMb0MLiMV+gPIeciIRr6jS4sKzfiwzl2VuIqm
+         bKn4dGwe8IqZwTiL0Pkju3zFhfSjTyG9BFs2y73iOrxtgejq3M73bkxeuPRKDPOUqsGt
+         e9DMG9Obt/9QjwWOz1msy5IFqwJlnBwY8gPPFfFfjS/kF8QoY5uU6+iDV6eAbJYGwlmi
+         yVKQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793925776; x=1794530576;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=j3QnOqT1bd63wcrV6KvOAip3wCLe11FN2NBTadJaa9M=;
+        b=KPpv1DNvkCap+rCwTMX0ypolZFxeFrVpZzoVi5DDKF8QJY5vvQF6kPGF9E1LBe8Btf
+         TMVjcAKWJm3puilYGReGEhItIi7bdbaxXzmBKaf57NDsjlN3bVmtldCcCPM4ryVutPGR
+         zz5mxxeyKR1K/ipKJacvWrTMFjeLJH2nxPuXOZQxNEd6b5990W/KxrHAzXf9RQUC1nhV
+         ZXHXJQ6VFovq4ysdKoVA6TRy+O06JEYlZMtRThZsVHoUKqSyuI1MgK56BGE4KbpoGJqa
+         LQzwCHiSNZ16L7dOEvOLp0DhyHv6YLofPpNKMeR+BsXdImpHQSX6NE6OrhE8tvZ0Br2k
+         nj7w==
+X-Forwarded-Encrypted: i=1; AKwUvBziU2lZmQSA9bVwDZPxFWhateJbwXNjJfaBUU9G8D1LS10o65/6KZru9Wy/YazmjBLFIwVWTxXc6TQ=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/ZpurvAvw3KzKtcQZxZMZqNhBuoLaalAW69rKMSw3aJpnfX6vT
+	hZrQiszd0GOPFkSdsxa36dOmNjhQQewbjVy5Wsck5ApGGcMIwIvTYK4DklRMkYaDbg4/+96WLiz
+	Ce6ISyuO7eA01pw==
+X-Received: from ilmt14.prod.google.com ([2002:a05:6e02:10e:b0:50d:9814:cccb])
+ (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6808:3a0d:b0:540:5827:6d8a with SMTP id 5614622812f47-567e185afd4mr616724b6e.66.1793925776141;
+ Thu, 05 Nov 2026 16:42:56 -0800 (PST)
+Date: Fri,  6 Nov 2026 00:42:01 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -47,192 +75,269 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, Alexey Charkov <alchark@flipper.net>,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
- kernel@collabora.com
-Subject: Re: [PATCH v9 0/9] PCI: dw-rockchip: add system suspend support
-To: Sebastian Reichel <sebastian.reichel@collabora.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>,
- Philipp Zabel <p.zabel@pengutronix.de>, Jingoo Han <jingoohan1@gmail.com>,
- Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>,
- "Yury Norov (NVIDIA)" <yury.norov@gmail.com>,
- Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-References: <20261105-rockchip-pcie-system-suspend-v9-0-a2e55846649e@collabora.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <20261105-rockchip-pcie-system-suspend-v9-0-a2e55846649e@collabora.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa1ae489ed603a4kunmfb28950e220837
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCHk8aVh8aSkhCTxlKGh4aQlYVFA
-	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUpLSE
-	pKQkxVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=NQZjNUv8fGoO9xeRIViLMwP/ALH9EtJ32byg9Zlp98Oo5UWNYhF+FVT4v0hp9AB7PEzNfWVkSOOuXk5nYWviqK68r2X7DnAEheG+rYyOneCft2zGxoHCGnZasO8O4EgkPHLvzu1+LZTPAYGaZxjef042RSCItLD4H9sn+MG5PgU=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=kQ/TzfU3HeuNw7uzOiPI9CLulv8c3xdEm3+EwYgyk6c=;
-	h=date:mime-version:subject:message-id:from;
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.56.0.455.g6c5a503b38-goog
+Message-ID: <20261106004218.604799-1-dmatlack@google.com>
+Subject: [PATCH v2 00/17] PCI: Index saved capability state by configuration
+ space offset
+From: David Matlack <dmatlack@google.com>
+To: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org
+Cc: Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, David Matlack <dmatlack@google.com>, 
+	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
+	Lukas Wunner <lukas@wunner.de>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, Mike Rapoport <rppt@kernel.org>, 
+	"Oliver O'Halloran" <oohall@gmail.com>, Pasha Tatashin <pasha.tatashin@soleen.com>, 
+	Pratyush Yadav <pratyush@kernel.org>, Randy Dunlap <rdunlap@infradead.org>, 
+	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Vipin Sharma <vipinsh@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Sebasitain,
+This series can be found on GitHub:
 
-在 2026/11/05 星期四 21:33, Sebastian Reichel 写道:
-> I've been working on fixing up at least basic system suspend support on
-> the Rockchip RK3576 platform. This series is a follow-up for Shawn Lin's
-> series with feedback from Niklas Cassel and Manivannan Sadhasivam being
-> handled as well as some of my own changes fixing up things I noticed.
-> 
-> Tested boards:
->   * Sige5 (RK3576)
->   * Rock 4D (RK3576)
->   * RK3588 EVB1 (RK3588)
->   * ODROID-M1 (RK3568), Igor Velkov (previous version)
-> 
-> Somewhat related, RK3588 also needs [0] to fix PCIe IOMMU issues after
-> resume. Additionally RK3588 runs into SError on resume due to a USB2 PHY
-> problem, which is fixed via [1]. RK3576 does not use PCIe IOMMU and does
-> not run into the USB2 PHY problem (at least Sige5 and Rock 4D), so this
-> series can easily be tested standalone on that platform.
-> 
-> [0] https://lore.kernel.org/all/20260929034510.2023173-1-praan@google.com/
-> [1] https://lore.kernel.org/linux-phy/20261105-phy-rockchip-inno-usb2-clock-fix-v3-0-b20608c08b94@collabora.com/
-> 
-> Changes in v9:
-> - Link to v8: https://patch.msgid.link/20261105-rockchip-pcie-system-suspend-v8-0-0434b4f373bc@collabora.com
-> - Collect Reviewed-by tag from Shawn Lin for pme_turn_off patch
-> - Ignore suggestion from Shawn Lin to make pme_turn_off return error
->    codes as out-of-scope. I think it is sensible, but should be done
->    in a separate series as it will touch all glue drivers. (Shawn Lin)
-> - Update rockchip_pcie_rc_reset_root_port() to also use the
->    rockchip_pcie_set_controller_mode() helper (Sashiko)
-> - Update DLL IRQ unmask helper to also handle instances not involving
->    PCIE_RDLH_LINK_UP_CHGED (Sashiko)
-> - Move INTx caching after dw_pcie_suspend_noirq() to avoid a race
->    condition (Sashiko)
-> 
+  https://github.com/dmatlack/linux/tree/liveupdate/pci/savedstate/v2
 
-You seem to forget to take TB tag from Igor Velkov as he tested your v8.
+This series replaces the per-capability save buffers with a single
+per-device store indexed by configuration space offset, lays out struct
+pci_saved_state the same way, and adds helpers for drivers to preserve
+struct pci_saved_state across a Live Update.
 
-> Changes in v8:
-> - Link to v7: https://patch.msgid.link/20261104-rockchip-pcie-system-suspend-v7-0-6ae6875939a2@collabora.com
-> - Drop the final debug patch; I took that over from Rockchip's vendor
->    tree as it seems useful for debug purposes. Using it involves reading
->    the register via /dev/mem. It's not directly tied to actual system PM
->    support itself, so it can be submitted separetely. It's not worth
->    fighting Sashiko for it.
-> - In LTSSM control mode patch also replace one occurance that I missed
-> - In system PM support patch add guard not suspending an already
->    suspended PCIe devices, which can happen when resume failed following
->    the example of UltraRISC (Sashiko)
-> - In the same patch replace 0xffff mask with PCIE_INTR_MASK to avoid
->    overflow issue; the new mask is not functional equivalent as we just
->    work on the lower 8 bit now. The following 8 bit are reserved on
->    RK3588 and RK3576 anyways, though. Thus this effectivly better
->    documents the purpose of the cached value. (Sashiko)
-> - Drop incorrect custom PERST# handling in the resume handler (Sashiko)
-> - Modify interrupt masking to follow RC instead of EP logic (Sashiko)
-> - I've not picked up the Tested-by tag from Igor Velkov on v7
->    as there are some changes (even though I'm fairly sure they
->    don't matter), which add RK3568 to the tested SoC range.
-> 
-> Changes in v7:
-> * Link to v6: https://patch.msgid.link/20260908-rockchip-pcie-system-suspend-v6-0-fbabcca9921b@collabora.com
-> * Rebased to v7.4-rc1
-> * Collect Reviewed-by tags from Shawn Lin to (mostly) unchanged patches;
->    I skipped some due to changes in v7
-> * Keep dev_err_probe() message for rockchip_pcie_phy_init in patch
->    restoring vpcie3v3 regulator handling
-> * Avoid dynamic mask for extra flags in "enhanced LTSSM control mode helper"
->    by just adding specific support for the extra flag needed. Apparently
->    some compiler configurations don't like it.
-> * Avoid duplicated register define in In pme_turn_off patch
-> * Move bit defines to the correct register defines in pme_turn_off patch
-> * In broken L1SS resume flag patch move the explanation comment from the
->    code to the commit message (FWIW this comment is not AI generated by
->    me, but was copied from the Qcom implementation).
-> * In system PM support patch, set pp->suspend_poweroff to fix the issue
->    identified by Igor
-> * In system PM support patch, just return 0 for DW_PCIE_EP_TYPE (Mani)
->    to keep the status-quo (I've not tested this specifically).
-> * In system PM support patch, use the same init order as probe (Sashiko)
-> * In clear debug buffer patch, drop dw_pcie_dbi_ro_wr_dis(), which
->    is already done by the core nowadays (Sashiko, Mani)
-> * In clear debug buffer patch, fix actual register write (Sashiko)
-> * In clear debug buffer patch, update patch description with
->    better explanation about the register (Mani)
-> 
-> Changes in v6:
->   * https://lore.kernel.org/r/20260316-rockchip-pcie-system-suspend-v5-0-5bb5ad37d643@collabora.com
->   * Rebase to pci/next
->   * Minor changes to make checkpatch happy
->   * Update patch description of the last patch and drop RFC tag
->     according to feedback from Shawn Lin
->   * Prepend new patch, which fixes Nicolas Frattaroli's conversion
->     to FIELD_PREP_WM16 accidently dropping a flag.
->   * Add another new patch, which sets .broken_l1ss_resume to tell the
->     PCI core that the controller is powered off during suspend following
->     the Qcom example
-> 
-> Changes in v5:
->   * https://lore.kernel.org/r/20251029-rockchip-pcie-system-suspend-v4-0-ce2e1b0692d2@collabora.com
->   * rebase to v7.0-rc1
->   * Add an RFC patch at the end with some bits I found in the Rockchip vendor kernel;
->   * Made some tests on Rock 5B+ (RK3588); with this patch series suspending works
->     when setting pm_test to devices. A full system suspend fails in a later step,
->     but that is independent of PCIe.
-> 
-> Changes in v4:
->   * https://lore.kernel.org/linux-pci/1744940759-23823-1-git-send-email-shawn.lin@rock-chips.com/
->   * rename rockchip_pcie_get_ltssm to rockchip_pcie_get_ltssm_status_reg
->     in a separate patch (Niklas Cassel)
->   * rename rockchip_pcie_get_pure_ltssm to rockchip_pcie_get_ltssm_state
->     in a separate patch (Niklas Cassel)
->   * Move devm_phy_get out of phy_init to probe in a separate patch
->     (Manivannan Sadhasivam)
->   * Add helper function for enhanced LTSSM control mode in a separate patch
->     (Niklas Cassel)
->   * Add helper function for controller mode in a separate patch
->     (Niklas Cassel)
->   * Add helper function for DDL indicator in a separate patch
->     (Niklas Cassel)
->   * Move rockchip_pcie_pme_turn_off implementation in a separate patch
->   * Rebase to v6.18-rc3 using new FIELD_PREP_WM16()
->   * Improve readability of PME_TURN_OFF/PME_TO_ACK defines (Manivannan Sadhasivam)
->   * Fix usage of reverse Xmas (Manivannan Sadhasivam)
->   * Assert PERST# before turning off other resources (Manivannan Sadhasivam)
->   * Improve some error messages (Manivannan Sadhasivam)
->   * Rename goto labels as per their purpose (Manivannan Sadhasivam)
->   * Add extra patch for dw_pcie_resume_noirq, since I've seen errors
->     during resume on boards not having anything plugged into their PCIe
->     port
-> 
-> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
-> ---
-> Sebastian Reichel (9):
->        PCI: dw-rockchip: Fix LTSSM set functions
->        PCI: dw-rockchip: Restore vpcie3v3 regulator handle
->        PCI: dw-rockchip: Move devm_phy_get out of phy_init
->        PCI: dw-rockchip: Add helper function for enhanced LTSSM control mode
->        PCI: dw-rockchip: Add helper function for controller mode
->        PCI: dw-rockchip: Add helper function for DLL interrupts
->        PCI: dw-rockchip: Add pme_turn_off support
->        PCI: dw-rockchip: Set broken L1SS resume flag
->        PCI: dw-rockchip: Add system PM support
-> 
->   drivers/pci/controller/dwc/pcie-dw-rockchip.c | 283 +++++++++++++++++++++-----
->   1 file changed, 228 insertions(+), 55 deletions(-)
-> ---
-> base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
-> change-id: 20251028-rockchip-pcie-system-suspend-86cf08a7b229
-> 
-> Best regards,
-> --
-> Sebastian Reichel <sebastian.reichel@collabora.com>
-> 
-> 
+The main motivation here is Live Update. VFIO snapshots a device's state
+with pci_store_saved_state() when the device is first opened and
+restores it with pci_load_and_free_saved_state() when it is last closed.
+A Live Update can happen in between, so VFIO needs to pass this state to
+the next kernel.
+
+This is not safe today because the layout of struct pci_saved_state is
+defined by the kernel that produced it: which capabilities get a record,
+how large each record is, and what each word in it means.  Nothing ties
+a saved value back to the register it came from, so preserving it as is
+would turn the private layout of every capability save buffer into Live
+Update ABI [1]. Indexing saved values by configuration space offset
+makes the layout a property of the hardware rather than of the kernel
+version, so it can be preserved as a bitmap of saved DWORDs plus their
+values, and the next kernel can decide per register what to restore.
+
+[1] https://lore.kernel.org/linux-pci/aukvTvnfyAvahb51@google.com/
+
+The same change also makes saving and restoring capabilities simpler
+and more robust:
+
+  - Capability save buffers were allocated at ten sites (plus one
+    hand-built by a quirk) across three phases of a device's life, and
+    four of them (AER, DPC, PTM, TPH) ignored allocation failure, so the
+    capability silently went unsaved (patch 1 fixes DPC). Now each
+    device has exactly one allocation, and its failure is reported.
+
+  - Each capability's save and restore routines had to walk the same
+    registers in the same order through a buffer cursor, and code
+    elsewhere had to know which slot held which register. Now saving is
+    a single pass over a bitmap of reserved registers, each restore
+    routine names its registers by offset, and the common logic lives
+    in one small helper library (drivers/pci/saved-caps.c).
+
+Patches 1-16 are roughly net-neutral in size. Outside of the new helper
+library (half of which is comments), this series removes about 250
+lines from the PCI core.
+
+Series Overview
+---------------
+
+This series implements the following:
+
+  1. Allocate the DPC save buffer during device setup instead of when
+     the portdrv DPC service binds, so that every capability is set up
+     in the same phase, and a reset before the service binds no longer
+     loses the DPC Control register (patch 1).
+
+  2. Add the per-device store. Capabilities reserve registers by offset
+     during device setup, and the values are allocated in one array once
+     every capability has been initialized (patch 2).
+
+  3. Lay out struct pci_saved_state as a bitmap of saved DWORDs plus
+     their values (patch 3).
+
+  4. Convert PCIe, PCI-X, LTR, L1SS, AER, PTM, TPH, DPC, ACS and VC to
+     the store, one capability at a time (patches 4-14).
+
+  5. Replace the per-capability save functions with a single pass over
+     the reservation bitmap (patch 15).
+
+  6. Remove struct pci_cap_saved_state and the code that managed it
+     (patch 16).
+
+  7. Add helpers that preserve a struct pci_saved_state in KHO memory
+     for the next kernel, which callers reference by its physical
+     address (patch 17).
+
+Design Notes
+------------
+
+  - The store only covers capability registers. The configuration space
+    header is still saved in pci_dev.saved_config_space.
+
+  - Registers are saved a DWORD at a time, since configuration space
+    reads have no side effects, but restored at their own width, since a
+    neighbouring register in the same DWORD may be RW1C (e.g.
+    PCI_EXP_DEVCTL and PCI_EXP_DEVSTA).
+
+  - struct pci_saved_state describes a device's complete saved state at
+    every commit, so a bisect landing in the middle of the series does
+    not silently lose state in pci_load_saved_state().
+
+  - PCIe capability registers are now saved with raw DWORD reads instead
+    of pcie_capability_read_word(), which returns 0 for registers the
+    device does not implement. Restore still goes through
+    pcie_capability_write_word(), which skips them.
+
+  - The reservation bitmap is embedded in struct pci_dev so that
+    reserving cannot fail. This grows struct pci_dev by 136 bytes on
+    x86_64 (2448 to 2584), which stays in the same kmalloc-4k bucket.
+    Removing the per-capability allocations, each with a 24-byte header,
+    saves 32 to 160 bytes of slab per device. The blob from
+    pci_store_saved_state() grows (e.g. from 192 to 256 bytes for a
+    typical endpoint), since it now carries a 128-byte bitmap.
+
+  - Along the way, quirk_intel_qat_vf_cap() no longer builds a PCIe save
+    buffer by hand, and pci_load_saved_state() no longer performs
+    potentially unaligned 32-bit reads of packed records.
+
+Merge Plan
+----------
+
+This series applies on top of v10 of the PCI core support for Live
+Update series [2], which is targeting Linux 7.5. This series is
+targeting Linux 7.5 as well.
+
+Both series will be merged through liveupdate.git, matching the
+agreed-upon tree in the MAINTAINERS entry for PCI LIVE UPDATE.
+
+[2] https://lore.kernel.org/linux-pci/20261013162529.1928093-1-dmatlack@google.com/
+
+Testing
+-------
+
+All patches were build-tested individually. The series was tested
+using the VFIO selftests, which reset devices many times and so exercise
+the PCI core's save and restore paths. The tests were run in a QEMU VM
+using an emulated igb device, and on bare metal using an Intel DSA
+device on an Intel server.
+
+To check that the series does not change what gets restored, every PCI
+config write made by the kernel with and without this series was traced
+in QEMU (pci_cfg_write trace event) while performing FLR, PM and VF
+resets, runtime suspend/resume under vfio-pci, and the VFIO selftests on
+an igb device below a PCIe Root Port, and while resetting a PCIe switch
+Downstream Port. The writes to all of these devices were identical. Of
+the capabilities this series touches, that setup covers PCIe and AER.
+
+The series was also build-tested on x86_64, i386, arm64 and ppc64le,
+with gcc and clang at W=1, with sparse, with CONFIG_PCI_LIVEUPDATE
+enabled and disabled, and with each of CONFIG_PCIEAER, CONFIG_PCIE_DPC,
+CONFIG_PCIE_PTM, CONFIG_PCIEASPM and CONFIG_PCI_IOV disabled.
+
+The helpers in patch 17 were tested across a Live Update selftests (not
+yet posted), extended so that the test driver preserves each device's
+struct pci_saved_state along with the device. On x86_64 and arm64 in
+QEMU, for every tested topology, the next kernel got back the state that
+was preserved, dropped a saved DWORD that it does not reserve, and
+restoring the state wrote back a register that had been changed before
+the Live Update. The full set of patches used for testing can be found
+on GitHub:
+
+  https://github.com/dmatlack/linux/tree/liveupdate/pci/savedstate/v2-test
+
+Future Work
+-----------
+
+The next version of the VFIO PCI Live Update series will use the new
+helpers to preserve the state that VFIO captures with
+pci_store_saved_state(), in place of [PATCH v6 05/27] [3]. Please see
+the PCI core Live Update Roadmap for the rest of the planned work:
+
+  https://lore.kernel.org/linux-pci/20261001232133.560284-1-dmatlack@google.com/
+
+[3] https://lore.kernel.org/linux-pci/20261102153656.1431701-6-vipinsh@google.com/
+
+Separately, the one remaining saved state allocation could be made fatal
+to device setup. pci_device_add() returns void today, so a device whose
+saved state could not be allocated is still added.
+
+AI Assistance
+-------------
+
+This series was developed with the help of an LLM-based coding
+assistant, which was used to draft code and commit messages and to
+review the series. I reviewed every change and take full responsibility
+for all of it.
+
+Changelog
+---------
+
+v2:
+ - Rebase onto v10 of the PCI core support for Live Update series, and
+   target liveupdate.git.
+ - Add patch 12 to convert the ACS save buffer added by the PCI core
+   support for Live Update series to the store.
+ - Add patch 17 with helpers to preserve struct pci_saved_state across
+   Live Update, replacing [PATCH v6 05/27] of the VFIO PCI Live Update
+   series [3] (Vipin, Bjorn).
+ - Drop the Assisted-by tags, which upstream no longer asks for, and
+   describe the use of AI tools in the cover letter instead.
+ - Add pci_saved_cap_shift() so the code reading and writing 16-bit
+   saved registers shares one shift calculation (Josh).
+ - Move the rename of pci_allocate_cap_save_buffers() to
+   pci_reserve_saved_caps() from patch 16 to patch 14, where it stops
+   allocating, and mention ACS and VC in the comment at its call site
+   (Josh).
+ - Fix inaccuracies in the commit messages of patches 2, 7 and 15
+   (Josh).
+
+v1: https://lore.kernel.org/linux-pci/20260924173501.856380-1-dmatlack@google.com/
+
+
+David Matlack (17):
+  PCI/DPC: Allocate the DPC save buffer during device setup
+  PCI: Add an offset-indexed store for saved capability registers
+  PCI: Lay out struct pci_saved_state by configuration space offset
+  PCI: Save PCIe state in the saved capability store
+  PCI: Save PCI-X state in the saved capability store
+  PCI/ASPM: Save LTR state in the saved capability store
+  PCI/ASPM: Save L1SS state in the saved capability store
+  PCI/AER: Save AER state in the saved capability store
+  PCI/PTM: Save PTM state in the saved capability store
+  PCI/TPH: Save TPH state in the saved capability store
+  PCI/DPC: Save DPC state in the saved capability store
+  PCI: Save ACS state in the saved capability store
+  PCI/VC: Split the VC Resource Control restore into a helper
+  PCI/VC: Save VC state in the saved capability store
+  PCI: Save reserved capability registers in a single pass
+  PCI: Remove the per-capability save buffers
+  PCI: liveupdate: Add helpers to preserve struct pci_saved_state
+
+ Documentation/PCI/liveupdate.rst |   3 +
+ drivers/pci/Makefile             |   3 +-
+ drivers/pci/liveupdate.c         | 133 ++++++++++-
+ drivers/pci/pci.c                | 383 +++++++++++--------------------
+ drivers/pci/pci.h                |  59 ++---
+ drivers/pci/pcie/aer.c           |  80 +++----
+ drivers/pci/pcie/aspm.c          | 111 ++++-----
+ drivers/pci/pcie/dpc.c           |  41 ++--
+ drivers/pci/pcie/ptm.c           |  42 ++--
+ drivers/pci/probe.c              |   9 +-
+ drivers/pci/quirks.c             |  30 +--
+ drivers/pci/saved-caps.c         | 308 +++++++++++++++++++++++++
+ drivers/pci/tph.c                |  68 ++----
+ drivers/pci/vc.c                 | 272 +++++++++++-----------
+ include/linux/kho/abi/pci.h      |  32 +++
+ include/linux/pci.h              |  31 ++-
+ include/linux/pci_liveupdate.h   |  23 ++
+ 17 files changed, 959 insertions(+), 669 deletions(-)
+ create mode 100644 drivers/pci/saved-caps.c
+
+
+base-commit: 312200e9211ede3f9a03cc17d094805e06e4674e
+-- 
+2.56.0.455.g6c5a503b38-goog
 
