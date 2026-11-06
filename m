@@ -1,66 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.17
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793972644;
-	b=ib9G/hpuV7yWKZaODqKTVj7mqX6HG/oVSR7D5+h0ISWRmFeJcQQhTNxYQWWNkp/Tqya3
-	 P+MnWKFxnSlhkchmFN3lpUJBCVJQ2OyVnDKme2057gQu32KO8lbTHGO0T75PNirW+FVHB
-	 scaS77uT++YIlYwc4rCQAYqsMUwAmIxM5LCVXkgw41o8pSfMH/qm24nMlb4Mg4xIqKOxh
-	 4VSc2K0vdUxo0CmboaLB1oTeVNoNfSFdTzdpaxhCaYqCqnCyl80Ehj82oPVdskbR4091X
-	 f0B4jfv1Bv51dkoyPZBHuBtmp3b69+UbPZqWvu2oIlHFGk/NM9UpE8nDP374vcVsZdw==
+	t=1793972653;
+	b=qKHaKR9jlygJcewD92ThIcXuvaDKddOlNpz4BI7YrPBrrHOzYiNsPZTFbw7ZIRWGyTlN
+	 ZQ1fgtQP0984Qg3QP0tAcMFe1/204T71zxGpJCdwA/qj8wZ7nI4r/da1Yy6EG+l/CNeZm
+	 H3ytPoqv+FoQsLQ78VDzEso8QvnaSiOM7s3fmlvzAr1SfthJnD7xYQhBTOcug7S0fI+88
+	 51EhLaaCu7bczHtQ7gBvi00bwAbLIeKpTUUlr+fqEP1DjpVpXl3xpHYZZbfzdEc/RCnNg
+	 p9P14vMyTRUL3HqEPT3wSZM/up0Rr6A97GbhPo4fNo5oTHj2GGVwgZ9P8QDxFV8AkFw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793972644;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793972653;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=MVtcyiwwIpQrlalc2ffQ1V7g80g9u1Dt15kZSc33gac=;
-	b=VCGAWS3lvr0+QOG/B0n8Yt1zPKR61y05OvbqGtOLp00p3NNpmpDFNoul0TTEngxbJVkL
-	 A+waVciEdRdKdJ5ZRDQ7Z4cP8+km/FbjJMQI6Su4DdK89/rGma+dcdMeervFhfY3rC+Xf
-	 inYLtd/6ZQfo8YpOkB2H0P2ur8K2nHH6RO0w6i9Feh9xMtD1HfO6LiZRqQqQIvOQHxfDK
-	 LV6P8udrL+WqMZMqoZHQrfvEsurNT+0Mzk38gyB9PvRCB0dnHdqeyIjztasGP08HRkp6W
-	 qeQz9o/EM9tVcfBgQRSDesrx1fA5lMe5fdnBg6derGNfVkCQ/jVvMQZ3wWuNMkjQJ3w==
+	bh=hrnBMF5HG/70kueceexSSj6tkrkIDjj6mHUicHbUSBw=;
+	b=qOXXp83sZBojMmaanAk7WAElpaDJEscCVd8ziMa1kcgteJs4Tj2OiZWxc64xm1mLsiQi
+	 eB9qGpYJMj8zP0+aRKQOVUiJZ6iD5tN5W7cbf3TpJABA9po6Qkc4efYWJpJGej+vOzyo+
+	 gGNoAsi66UwVf66vtmjETxlIq4O7yXcUvyU1WPwy442S3bdwpHQgg9Nm16VV+EMnvm/cy
+	 OC2vi5FHpztFf7nsEP6xHeJjtD6Ey3Rqh2nDqOm7Ei8TWyIJGhvvJno0OQEyH+NNKCMns
+	 Tjy+x7JQPpc3DS3BCOz7VPAlyJPyqN9nZzeElISBTABPH6XYiYbA6QgfmNx2Ux0nqdw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.intel.com;
 	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=CwJRBLdX;
-	arc=none smtp.remote-ip=198.175.65.20
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=TT7TCsA1;
+	arc=none smtp.remote-ip=198.175.65.17
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02625606D805;
-	Fri,  6 Nov 2026 13:44:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 02625606D805
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F547606A32D;
+	Fri,  6 Nov 2026 13:44:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2F547606A32D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=CwJRBLdX
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=TT7TCsA1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793972645; x=1825508645;
+  t=1793972653; x=1825508653;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=+65uSqUKD3zoC+C0IuzTUHsTPSi3Hi77oa7a/RxjKVI=;
-  b=CwJRBLdXCgvzaZmtbKkGgkvVeKmREKbFv8ihh06Zc3QtXfx5LnTN2pbe
-   B7soSovrWiBxIND/SV/NYsSEoDkVvZ95Yf2epePKcwcEUPvOpaMuy4+MG
-   2KgVJVfe4BqugDSbMPwP5nDVG3R0ZWhGDjJ5gsGabm3q1A81BeSu+oX9F
-   umSjnEL4qKwoXFIq/Qd8gUph8E+n+weqaDgKhjJarKsfkYqqsGJ5k7c7Y
-   uYpokIvHD8WmtOlXKlM+p337lvG3ixfE2RzhjhZho6DUSKilQ0/6GZCAK
-   LT/Q06mEO+/XGoxGkXrQ1sV3sc72pk9ueEr+yiiboci2lBCa6t12F7CEI
-   Q==;
-X-CSE-ConnectionGUID: Ww2e/+sWSJuh9mD+lpsJRw==
-X-CSE-MsgGUID: IIVRgweNSFOWpHozXVmCrw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2815508"
+  bh=1bQMHmLWPMUWCLfRWJYabQJKNfn+DLHWn2JMm+IlsDM=;
+  b=TT7TCsA1YQvUno+sT40NvW+r/Fukz0dOLGfENgSZczgKJFAqoh6Rg33X
+   A8x3eFj86dNx1Gsv4qn8kUS24DfrxnlCg422jbda78StDCUBgP/Ar/E13
+   y5EXSIixUG9b+YHkLKtrX1k3I/RKBQXowNF3i3R6NgNspPjeS9fQxhQKB
+   t6zccdKSEB72gNbq9mSP5Nmixq3/IAMI//QDkbcY8x487EZxx3Jb0IPsD
+   7dEdfNnije67o8lvBIYu/Frn3iQtiuXcKxJBA7KJxZCU8gulBvu5P+PAo
+   jwFSCCoZCyJX+oZIOcACb6lPnuj7Im53Ly0s8l7xVAuRH90/4QuHdUCpb
+   w==;
+X-CSE-ConnectionGUID: lF9IEn/+RdyGlKxVrvdiVQ==
+X-CSE-MsgGUID: 6vu6xIT2SB+Ir8PWSYAskQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2812214"
 X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="2815508"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:44:04 -0800
-X-CSE-ConnectionGUID: RLS2mJJlSy2n6mIPITc+og==
-X-CSE-MsgGUID: 8Gi+XH8cSWS3H/pJCHJzvA==
+   d="scan'208";a="2812214"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:44:12 -0800
+X-CSE-ConnectionGUID: kc4R8L/eR/+XBsE5xa9QbA==
+X-CSE-MsgGUID: Vpwxhw0RQyy478WaS4Iqyw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="7609177"
+   d="scan'208";a="7609856"
 Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.104])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:43:59 -0800
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:44:08 -0800
 From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
 	Geramy Loveless <gloveless@jqluv.com>,
@@ -72,12 +72,14 @@ To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
 	Rob Herring <robh@kernel.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
 	Mesih Kilinc <Mesih.Kilinc@sony.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Helge Deller <deller@gmx.de>,
+	linux-parisc@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Bradley Morgan <brads@mainlining.org>
-Subject: [PATCH v5 01/14] resource: Mark free space assigned
-Date: Fri,  6 Nov 2026 15:43:22 +0200
-Message-ID: <20261106134341.39493-2-ilpo.jarvinen@linux.intel.com>
+Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH v5 02/14] parisc/PCI: Clean up resource debug print & use dynamic debug
+Date: Fri,  6 Nov 2026 15:43:23 +0200
+Message-ID: <20261106134341.39493-3-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261106134341.39493-1-ilpo.jarvinen@linux.intel.com>
 References: <20261106134341.39493-1-ilpo.jarvinen@linux.intel.com>
@@ -93,39 +95,68 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Free space ranges are (part of) assigned ranges. Since new resources
-have IORESOURCE_UNSET, the flag gets copied also to full_avail.flags,
-which hampers printing them with %pR.
+Remove ad hoc DBG_RES() and use pci_dbg() instead.
 
-Clear IORESOURCE_UNSET for the free space indicator resource.
+Remove printing parent resource as the passed resource is a temporary
+one not within the resource tree so accessing ->parent does not make
+sense.
 
+Reformat the message to the typical format used by PCI core. Print the
+resource using %pR.
+
+Correct format specifiers and remove nonsensical res->flags int cast.
+
+Dynamic debug prints can be enabled by providing dyndbg command line
+parameter or through /sys/kernel/debug/dynamic_debug/control so this is
+a more versatile way to debug things than the previous compile time
+decision which could only be enabled by changing the source code.
+
+Acked-by: Helge Deller <deller@gmx.de>
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Reviewed-by: Bradley Morgan <brads@mainlining.org>
 ---
- kernel/resource.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ arch/parisc/kernel/pci.c | 15 +++------------
+ 1 file changed, 3 insertions(+), 12 deletions(-)
 
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 0c315c917fbb..eb38074ce5da 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -731,6 +731,7 @@ static int __find_resource_space(struct resource *root, struct resource *old,
- 	resource_alignf alignf = constraint->alignf;
+diff --git a/arch/parisc/kernel/pci.c b/arch/parisc/kernel/pci.c
+index b8007c7400d4..96950fe9c2b7 100644
+--- a/arch/parisc/kernel/pci.c
++++ b/arch/parisc/kernel/pci.c
+@@ -19,7 +19,6 @@
+ #include <asm/io.h>
+ #include <asm/superio.h>
  
- 	full_avail.start = root->start;
-+	full_avail.flags &= ~IORESOURCE_UNSET;
- 	/*
- 	 * Skip past an allocated resource that starts at 0, since the assignment
- 	 * of this->start - 1 to full_avail->end below would cause an underflow.
-@@ -754,7 +755,7 @@ static int __find_resource_space(struct resource *root, struct resource *old,
- 		/* Check for overflow after ALIGN() */
- 		avail.start = ALIGN(full_avail.start, constraint->align);
- 		avail.end = full_avail.end;
--		avail.flags = new->flags;
-+		avail.flags = full_avail.flags;
- 		if (avail.start >= full_avail.start) {
- 			alloc.flags = avail.flags;
- 			if (alignf) {
+-#define DEBUG_RESOURCES 0
+ #define DEBUG_CONFIG 0
+ 
+ #if DEBUG_CONFIG
+@@ -28,13 +27,6 @@
+ # define DBGC(x...)
+ #endif
+ 
+-
+-#if DEBUG_RESOURCES
+-#define DBG_RES(x...)	printk(KERN_DEBUG x)
+-#else
+-#define DBG_RES(x...)
+-#endif
+-
+ struct pci_port_ops *pci_port __ro_after_init;
+ struct pci_bios_ops *pci_bios __ro_after_init;
+ 
+@@ -204,10 +196,9 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 	struct pci_dev *dev = data;
+ 	resource_size_t align, start = res->start;
+ 
+-	DBG_RES("pcibios_align_resource(%s, (%p) [%lx,%lx]/%x, 0x%lx, 0x%lx)\n",
+-		pci_name(((struct pci_dev *) data)),
+-		res->parent, res->start, res->end,
+-		(int) res->flags, size, alignment);
++	pci_dbg(dev, "%pR: pcibios_align_resource(%lx, 0x%llx, 0x%llx)\n",
++		res, res->flags, (unsigned long long)size,
++		(unsigned long long)alignment);
+ 
+ 	/* If it's not IO, then it's gotta be MEM */
+ 	align = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
 -- 
 2.47.3
 
