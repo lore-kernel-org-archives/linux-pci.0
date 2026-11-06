@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793965424;
-	b=IeB27DtLb04qaOGg9uxv8muPZMRHhzD+DUp0Il9bDjm2sTS+uO1KP3QMwGpXcGxprkIY
-	 c84Gfj/gLMJMi4ZJwc3ltff0p0b/x/D81a6iuzhXA7ct3ZKAyeFEQeSQHEiJMcKo8q6Wv
-	 CsT58VbVj8LMGQVsphOBbOEUzSLuA0MRpAGvhE8gBgFbxJj2R2zHbBMxPnVQd/H3VZBRd
-	 qG8YUVnVkZ/VlPbepDQALqWGCFY4JOIFV5NNAGP+cxTgAEeG7sLhzKc6mzmggthvLpdyn
-	 s5acb0eoVF9tLdd0Xd5KFNyYDlmrKntY9/hb4NYRBaBJst8C/8Mit3wahIL9GoncMCw==
+	t=1793965419;
+	b=er5koLf2KMFlhlflhLtaqd1c0ElfWVTxoEWF5SER/cInDa+KJk/xNLyLFZKEDi9V2dFd
+	 WP1zapSkvD9Ai6YEeCaTs/4QCr/iqJ7ELHVlGBog9ja8L9+O+EdSUe6RKNIpHo/cIUXTU
+	 edA5CvzIaHmO/WxUdRRVGTSrj0RSVlvgPgp6rbAjS78q5DpJAp1WLsncjc8Y76nUXBsLL
+	 tKzZTAVqQl14wQ8qX1Ps3m4ZvkAKPT9M/3wcqQRifaZdZZPM1ya4l0ny76tyO7jKkj67R
+	 moJ2j71SmUQpvOiqF7VQYL+ScezV9eFlz9rnqEw/2n+tTuu6uwhLpPCzMPmE2gyHYUw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793965424;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793965419;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=w5RZHcMIxhwyU2L8aEreWxu5ISkiy3CoRS60GybIQJc=;
-	b=1/sKNrR3BEBACrsQh/fRP3QkHSq3qeB/HWLIi0TRo4qmxtGBhW9YUe6ADq/Abx99crG4
-	 Lb5XN1FQX/ZEnnIEsfqE6zsb5c4SrlxOlTdhP/0EQbTsH4GINXMQwRsG31tm8gk4/RBwh
-	 9w5nLo/TrtDwAijrfjolDo/Qk4B/aZWpAfK2zgEMzuCOpJ6BAQojPhK6eW03Po04imJ7V
-	 0s1igMs1p7fjtownzssigqAU7zjui6QOfo0TzVB/ZpTkVPrl1N4E8+E8x6P8eVTTOXeaU
-	 HbMUfMDMui4sgnlM++N++MfDd+R6rb5Hmdbj2pkyNGHThOCZQNzzm2svkaHDiwU+G2g==
+	bh=//1nDRyZxF741ECN3aSZ1BzdF8W9osxEdbYtbD5J8IE=;
+	b=AbDuOk3NOHao0Xb3B/qa+Qil43j8OExVAOXoCO5MUHXBmdKA4zpcJXM81NScBMAsmtiy
+	 QQ7aJ7aGZANthN75XhL0Kz1F6/2DqSQqb+8/7kH3WItAf812Y59oA5K6KpI1DavocOv8u
+	 IzRNDd0AZSNG4w7JgFBfIWI7XWBVzXqc04TFU0Ge8q24J8ZtJfulylp32geFskvNKVUh8
+	 zDb2ghZy2cyZ5FnbWWAhU4GS0ZRuAgSq73oWVgp/A/1tJyZnJ27KIKkzZHfCrSvdQnPmq
+	 66csfJJ30pZrL81CdJAr8yrk/rBHIfDLSWyWt7PfjXXxMxpGmdbYAeUfuHfbe912QPQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iKXEkQni;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=optI52EE;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAFDF606D822;
-	Fri,  6 Nov 2026 11:43:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A540606C7C6;
+	Fri,  6 Nov 2026 11:43:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iKXEkQni
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71C771F008A3;
-	Fri,  6 Nov 2026 11:43:43 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=optI52EE
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8102B1F00903;
+	Fri,  6 Nov 2026 11:43:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793965423;
-	bh=w5RZHcMIxhwyU2L8aEreWxu5ISkiy3CoRS60GybIQJc=;
+	s=k20260515; t=1793965418;
+	bh=//1nDRyZxF741ECN3aSZ1BzdF8W9osxEdbYtbD5J8IE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=iKXEkQnidpHs8DsxddX3kdjT3tEUo7P47BQimqfWYclcAK8TUNFEzV3YkifrVbIPV
-	 L4mHbKvK3C04CDwdbFJVoxohIOI8Lkt4qBAgSmbWkcUK6NxS4UgohsmfxOe5JgyPwC
-	 zfRiy2L9E4Oux+Qvo6CZqjl3zo1xspIowS2j522GVMnawOmR7Vm1K5Z9JGrCVYcl4p
-	 99hhoupEPgq7nuqjWuI6DK3M+PJvOOSeu9fSzXND1tJBHF8wvOK6A1q1twCcOwB0si
-	 xueDddj2GZrCMSpoMu8P62637ept8x6y002OIC09jKx1DrhfwhFLUBP7VUwBGoqr95
-	 e+FwcGfFrlK4Q==
-Message-ID: <sashiko-outbox-201341@kernel.org>
+	b=optI52EE6SxdAum9GVP8R7eOKXfXFW6RlkrXDoVRxD2EsSMRSeduEBtZNITM0FMCt
+	 doClio9D5ejWG/WgSFwk/KiHNFn8FJHjhXI9RF3gr2lYo7XCGgVM3J6yZE2Iz4lX+b
+	 ZVIZULpu9IVPr9JPdC0iOwsKb7D1ot5VmyB3um47ppv1OIV5gtPtql1uE2oxnZ6+86
+	 LrwNgbMh8qdA4T2djVXV4nGK0tXF2Flv1ge7hU5DQZbQRDB9s8f6J6cdPM+GZQfw2Z
+	 GceSgfDFQpxTAb+UAI1Keypw0ZH3sfyOdbu83YrMi9UtEdPQQJMAVWzZLWjYFuUvty
+	 gDAEARB836wUQ==
+Message-ID: <sashiko-outbox-201334@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 08/17] driver core: Allow userspace to detect
- EPROBE_DEFER when using sysfs drivers_probe
+Subject: Re: [PATCH 01/17] Input: gameport - attach manual drivers through
+ the driver core
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Leon Romanovsky" <leon@kernel.org>
 Cc: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20261105-device-trust-core-v1-8-1e536825b4eb@nvidia.com>
+In-Reply-To: <20261105-device-trust-core-v1-1-1e536825b4eb@nvidia.com>
 References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
- <20261105-device-trust-core-v1-8-1e536825b4eb@nvidia.com>
+ <20261105-device-trust-core-v1-1-1e536825b4eb@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 06 Nov 2026 11:43:43 +0000
+Date: Fri, 06 Nov 2026 11:43:38 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,18 +63,12 @@ Precedence: list
 
 > From: Leon Romanovsky <leonro@nvidia.com>
 >=20
-> commit b8c5cec23d5c ("Driver core: udev triggered device-<>driver
-> binding") introduced the concept of "Systems who want to control the
-> driver binding with udev" can use the drivers_probe sysfs to trigger a
-> driver bind based on the kernel's match list.
+> Manual gameport binding calls connect before publishing the binding, so
+> driver-core admission cannot reject a device before functional setup.
 >=20
-> If attaching the driver is deferred before its probe callback runs,
-> userspace sees EINVAL and cannot tell it should try again, maybe after
-> loading other drivers.
->=20
-> Map that deferral to EAGAIN and add missed documentation for the
-> drivers_probe sysfs. A deferral requested by the probe callback itself
-> is still not reported.
+> Use device_driver_attach() to run the existing bus probe and removal
+> callbacks under the device lock. This gives manual attachment the same
+> admission, setup and failure cleanup as automatic probing.
 >=20
 > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 
@@ -82,5 +76,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105-device-tru=
-st-core-v1-0-1e536825b4eb@nvidia.com?part=3D8
+st-core-v1-0-1e536825b4eb@nvidia.com?part=3D1
 
