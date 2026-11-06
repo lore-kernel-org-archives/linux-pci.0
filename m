@@ -1,67 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.151
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793928687;
-	b=i+72f/ci7Uh0T9ZUJTVsc3vovmbMR2PZLPJo4xsrysg+QxAgifWOJda80ZRm1d0ENPhv
-	 T3a69a3/qAVm0Ux4U0Ecd6WelU5Q9+PLMOf3LfwKUqlESVO0mQ/zhWHAuOszx2LYYz7YN
-	 3bL3Np8bOA6i0IoiGB8TIxwzyWUS2VduwvxiODI9Or5CAuBQELalWIq8ixPo2dcxOInPr
-	 TRTiyjHZ1ZlqjDTXChrsOabKXohl2pJxgmcIgoWmghjn+m4K+LPg22+x94KmcHQeMTvNC
-	 9bFe3/trdSdcqFf9YObXN0iMQsrZB7Sea1T/dgW/D9/4GQcUmKD/iGsR+kWzphOJYLg==
+	t=1793928820;
+	b=lBlNMM1eZV2Srx8was1W9XOExa+E3VCpEKmkIiWApxXEn9Yu4FkZMXctewhhB059ZF2q
+	 /ONQ47pKFxcsxyaDCHqFITZQs49FuPvmoTuNCDblrp2YEZExwigq5cHtAj95+0cUYoMLx
+	 k/BBgvZzPaW3EhHmOiA1iXp5VS6Kq88pCRrhbgLztPK/w/ExcTfqCxfmYX69DFhRG/unn
+	 zh6DDi0AQFCjRnA4W8MaDSkc70/qsx3nMVK/f/vMHx01qhdrAsxK+0YBhHRIxhEfWd9Kn
+	 Euu4YXIYl29HCzvrwMiEX7s78bnpv+nD+Z+uxzXiqH9c+7k1vyNbF1P9/5qBZVMD+0A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793928687;
-	h=DMARC-Filter:DKIM-Signature:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:
-	 X-RM-TRANSID:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:X-RM-TRANSID:From:
-	 To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=VZFjzE4JaCP7wPf5JkNzWBu5CcPsvgM0/fKZ0Mjg4xg=;
-	b=Pyi8eLzO7vI0PUhQcYb/Skmu0VPSMuWsQFwO01UH68N1gFkzbAqUGpxYJm0ObEiVsFbz
-	 V2MTth+kOnkrChQOhGz5pCxNWjEm0Pv1HRkecb9froCMXMDUW7xjdAxaJkPqM8BEQqb3k
-	 VrMZGdtUbNDxpAm9pbBvOyTqLE19wfgXVMjTbB4wj6q8dAx7WCcYE9hsZw2gZuRrpPZ19
-	 ocQwSKv32lgYwXOCkqNOEnckKowMj0ZxurzLBWz7qQp+3uoYV1U+iDH2RkmnP/dSwROgf
-	 a1PV4EyYBadQTeuS53ZQpaSew3baoiqj2KEvdWRHPgMpWusch7hXbECAZF7hhfp01HA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793928820;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=CdnjZns0js8EXeyV/PVj+lyLC44xJNnQLVnomUyHRI0=;
+	b=Z8UOBB8O0qU4rGKbGlQboXtpuU6r8fKTBaHr7LmRV4EWM6mygrAvU8hrFu4dT5APBLeH
+	 ctWA0/CMfY/Ty6qcC8aDhYzCG540KgtU6p4iAqsLZOzemP4p0BkEggPl3vCEVnHd8eJiX
+	 Bu4FDYTlG+MH8ukbVc9B2/PA73KphdicfBXate/sOn3UYI6iZAw6T05tmGU3hk6sEtVQR
+	 zcR12qOqIm37Qmh7U6jQx8TgaPph02s5gNhcqwbp5EYwj/Y9HBbAa+7hhi8sLmRZAcpdb
+	 8BwOMUsvQm0ImuffYF2QASRDFbYzOtnhMACUYE0xl+dZZGlfltRZ8H/Rl1LCNqZoYhA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=cmss.chinamobile.com;
-	spf=pass smtp.mailfrom=cmss.chinamobile.com;
-	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=Zw0FKRxt;
-	arc=none smtp.remote-ip=111.22.67.151
-Received: from cmccmta8.chinamobile.com (cmccmta8.chinamobile.com [111.22.67.151])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 75795606A31B;
-	Fri,  6 Nov 2026 01:31:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 75795606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GC4CHbvU;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9BCF606A31B
+	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 01:33:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=Zw0FKRxt
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=cmss.chinamobile.com; s=default; l=0;
-	h=from:subject:message-id:to:cc:mime-version;
-	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	b=Zw0FKRxtbhAaytD+dW2XOGlsdn5D9rY6RZMS7gvBPnruICfP4escli813RoSM/ut9QqR9flgh6KwD
-	 H32iwXqZFae3hlnKNnKD1zeYmaj81eVsCzm3dwMYRJ4IsBkVVJgT/ww1fPgYoAYInmmnSbKwxw6oly
-	 p7SLT+5H7XkJ3XPc=
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
-	by rmmx-syy-dmz-app06-12006 (RichMail) with SMTP id 2ee66aed2de574d-76fcc;
-	Fri, 06 Nov 2026 09:31:17 +0800 (CST)
-X-RM-TRANSID:2ee66aed2de574d-76fcc
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from [25.255.2.225] (unknown[10.55.1.70])
-	by rmsmtp-syy-appsvr04-12004 (RichMail) with SMTP id 2ee46aed2de4190-0c293;
-	Fri, 06 Nov 2026 09:31:17 +0800 (CST)
-X-RM-TRANSID:2ee46aed2de4190-0c293
-From: xujiahao <xujiahao@cmss.chinamobile.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Shijith Thotton <sthotton@marvell.com>,
-	Vamsi Attunuru <vattunuru@marvell.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	xujiahao <xujiahao@cmss.chinamobile.com>,
-	kernel test robot <lkp@intel.com>
-Subject: [PATCH v2] PCI: octep: Size the interrupt name buffer for the full format range
-Date: Fri,  6 Nov 2026 09:21:26 +0800
-Message-ID: <20261106012126.3385789-1-xujiahao@cmss.chinamobile.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GC4CHbvU
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19A6B1F0089F;
+	Fri,  6 Nov 2026 01:33:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793928819;
+	bh=CdnjZns0js8EXeyV/PVj+lyLC44xJNnQLVnomUyHRI0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=GC4CHbvUSpr/BPtixI7q7LvMSKNlEBduPBqrkg5bcnwzAGD2NRPHYRWbeIwrPzSdD
+	 42dF2VLyXawZh50xQ5DpH0p9Z8rHrUdZ/LOP3MCEqY2dCThpygpv05LdsPndss0YEI
+	 HFV/zUjqOmN8Fu6XdjMELp1U5EKZT/DAVIbmYd7Imka3/pAHqtZcBHm/PK1c0fQiCY
+	 hVsQ6cQFzbY9q/nHzJhs5vgbdw3kRhqCpAWo5INRMBlcOt5W2be+F5ZgBX4Bmy0NlY
+	 zbLILjyCTNoqT6UCprOdDmRJRKY/cBA7XtfGzXDuv70/tUQXJVQu7MHnCdfm71m+j9
+	 uHNN8pV6MYLSg==
+Message-ID: <sashiko-outbox-200520@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] PCI: octep: Size the interrupt name buffer for the
+ full format range
+Reply-To: sashiko-reviews@lists.linux.dev
+To: xujiahao <xujiahao@cmss.chinamobile.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261106012126.3385789-1-xujiahao@cmss.chinamobile.com>
+References: <20261106012126.3385789-1-xujiahao@cmss.chinamobile.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 06 Nov 2026 01:33:38 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -70,50 +59,34 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-octep_hp_request_irq() formats the interrupt name with "octep_hp_%d"
-into a 16-byte array.  The prefix is 9 bytes and a full-range %d
-argument can add up to 11 more, so the worst case needs 21 bytes
-including the terminator and 0-day reports:
+> octep_hp_request_irq() formats the interrupt name with "octep_hp_%d"
+> into a 16-byte array.  The prefix is 9 bytes and a full-range %d
+> argument can add up to 11 more, so the worst case needs 21 bytes
+> including the terminator and 0-day reports:
+>=20
+>   drivers/pci/hotplug/octep_hp.c:312:53: warning: '%d' directive output m=
+ay be truncated writing between 1 and 10 bytes into a region of size 7 [-Wf=
+ormat-truncation=3D]
+>   note: 'snprintf' output between 11 and 20 bytes into a destination of s=
+ize 16
+>=20
+> The values passed today are OCTEP_HP_INTR_ENA (0) and OCTEP_HP_INTR_DIS (=
+1),
+> so no truncation actually happens, but the buffer carries no margin over =
+the
+> format's worst case.  Give it the room so the warning stops coming back f=
+rom
+> builds that cannot narrow the argument.
+>=20
+> Reported-by: kernel test robot <lkp@intel.com>
+> Closes: https://lore.kernel.org/oe-kbuild-all/202507261457.SXXHOjUk-lkp@i=
+ntel.com/
+> Signed-off-by: xujiahao <xujiahao@cmss.chinamobile.com>
 
-  drivers/pci/hotplug/octep_hp.c:312:53: warning: '%d' directive output may be truncated writing between 1 and 10 bytes into a region of size 7 [-Wformat-truncation=]
-  note: 'snprintf' output between 11 and 20 bytes into a destination of size 16
+Sashiko has reviewed this patch and found no issues.
 
-The values passed today are OCTEP_HP_INTR_ENA (0) and OCTEP_HP_INTR_DIS (1),
-so no truncation actually happens, but the buffer carries no margin over the
-format's worst case.  Give it the room so the warning stops coming back from
-builds that cannot narrow the argument.
-
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202507261457.SXXHOjUk-lkp@intel.com/
-Signed-off-by: xujiahao <xujiahao@cmss.chinamobile.com>
----
-Changes in v2:
-- Keep the compiler warning text on single lines so it stays greppable in
-  the git log (Bjorn Helgaas)
-- Capitalize the subject to match drivers/pci/hotplug/ style (Bjorn Helgaas)
-- Spell out the enum values passed to the format (Bjorn Helgaas)
----
- drivers/pci/hotplug/octep_hp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/hotplug/octep_hp.c b/drivers/pci/hotplug/octep_hp.c
-index a0a7f9ccb..801c080e6 100644
---- a/drivers/pci/hotplug/octep_hp.c
-+++ b/drivers/pci/hotplug/octep_hp.c
-@@ -52,7 +52,7 @@ struct octep_hp_slot {
- struct octep_hp_intr_info {
- 	enum octep_hp_intr_type type;
- 	int number;
--	char name[16];
-+	char name[24];
- };
- 
- struct octep_hp_controller {
--- 
-2.43.0
-
-
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261106012126.3385=
+789-1-xujiahao@cmss.chinamobile.com?part=3D1
 
