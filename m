@@ -1,55 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793973652;
-	b=OvEAubh4m6yo9LAl2sMp1RVkXIls/yXTnBHX6vsASbtRzVBPmmAcEo6rDZC6ncOfvPSy
-	 Wmj8PSVzpSG35EWOvCtDiCSXqJ6q5iFTvtkaH69aPRtUKfuJ3EoSthE+92IUe4jxHctGm
-	 HujkKHUV/V/a1UF1u+ELeokxX6HSQ2nwreTMkbxXMqeNInftvQL8JZMYt7S1anTapzRM3
-	 MDcr+6c0JxHMJ/VbdicL0suB6igUxByntNXBXjbcaa+Ttah96NPLEZ/dZM0WoYe25VKJz
-	 jZPcYr/UxOtJ4Z51E8eyOhzQRRQ6a7h6PHIW8McwOyG1Pmet/GV1dP9pmfc6hSpmBtw==
+	t=1793974252;
+	b=jngj0WNgE7p4qLEwCQf62oGWeIhhi0j9CmJaR7oJqNUePvS8X4kfxGiU0UttlvvcW5Il
+	 lSwmCcYYAcBunJ8jUlQ6I3X+3mGFMqAyz0n5//wgW3L+WB8CklSMb1RtxnyNyKuJCLv4I
+	 Q5qQoA5pTXigzL6DtPQRuyZXWMWsD1G/2Nam65WI8CQHzGk9e0NK6WMhROD2yHzqvZgEB
+	 e85OGVHBUCqa1iSUMBUjRgHmqq25KoGtXO7DHAG2Myad6lY+WRGptIXNz7pgvT0wo++wz
+	 44kg9FqFy13R03yjLrgcHn2p1LBCaq+yD39SbeqOwVHhIwmo/G+7BntuMCyiFsmAqMQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793973652;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793974252;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=Kj/p1SysJ4suUaYxNSg33K2Ik7OXWYi6cZYFOinaY1Q=;
-	b=cgYRwYNO9OprtyYNpdaqDWxSkVff8k3WGwL0cbS3Wgds07tkkL43PZnvi5LmvqmnoizR
-	 /mN65kNRz0BFHZoh1HEBj91Mt0SK7kyP8Cc4EN2Jhjd0duymogiIdUp0QDHb4UQm95lGz
-	 chLPy4KbQ5vTWF4vu/L/XzGARLP5+y7zidOqod2kW3yfuZxi9q3pUjgH8iEIXnGmKbl9j
-	 kciVSX693bJtnntq7LPU8+Dc6kionYlQvb/Fpnx78wcYSfFTa5Yo2PQM5oHQIjGdr5E86
-	 NMJ0GykXf6/dNT5PsOISUyjUhhiW/cq4VBzyRN8lWioLsiDS7NJC5bvu94wEPUSRp1A==
+	bh=qA0O/vhjUACmlCRKTcDrxaSxG74QrIigHfeLqEfdudU=;
+	b=y67kGBiOWOzsB0DrcFOrHDY1/PH63XWmbn85Inb4UIFktWYAyMD7lRp8TcTm9MqXXAYE
+	 5c6x+hpPf1cYaN9wif/q3x5pJOHPVydufqTvXMCruyPAx8ShZrPetN9tlljemrryJKxFD
+	 7oedUJu/PLWottZXcNjv0O+LFnbtxoNpzfN/epIdxZ/274FKmcNx646gjvF/E6E9FTgim
+	 DKMvLGHxsYPJZvOnGVQLHWG9LA1/6TbIsDEngiXeVP5XJVH37BnXWeNacVv1x3k02oAZp
+	 DHi2xFXE1vRZQ4QJ2RkFy7m/kswubZZLBlNEh7xnoC4Un0ZRtgaml4gX9S3ZtDgi2cQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="jdUlnD9/";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=H9QmUzQO;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92F946082BF7
-	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 14:00:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69554606D804
+	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 14:10:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jdUlnD9/
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 276231F0089F;
-	Fri,  6 Nov 2026 14:00:52 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=H9QmUzQO
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2616C1F0089F;
+	Fri,  6 Nov 2026 14:10:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793973652;
-	bh=Kj/p1SysJ4suUaYxNSg33K2Ik7OXWYi6cZYFOinaY1Q=;
+	s=k20260515; t=1793974252;
+	bh=qA0O/vhjUACmlCRKTcDrxaSxG74QrIigHfeLqEfdudU=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=jdUlnD9/WOQthqdcSE++kZKMXPKMaWEikPFtj4r/DSAUNdz+5RachVwnWxUX7feZI
-	 KSSFa3OOm5fZtNXHg77R33OQKunmSknnNM2mfna+7sv5ULsZd1GDRD5jDaTuRJWH9v
-	 tihPnTXbFRxxtSdJKePEAonAQyDo97Z5bnqM6sQgIbKsY4oF+Urc0CTzQUTTp6WY3D
-	 HiTiYdA9PQFdatMnldetnxQVQCKsFyYBk52lT31jp1gSdiHumI5WyX+Wcjwl+yApYr
-	 iW8sXoR+tRSERtBfNbZDl8/fm9OU9zmiVOfUkrz3i3r0revpO8X/HaEyduy2eHUHLw
-	 TAs3oy8tH0J4Q==
-Message-ID: <sashiko-outbox-201528@kernel.org>
+	b=H9QmUzQOCN1Jr4/xLLQ4UpTwNrXrnSuJPgQsz3Gj3BrN/EOofldFTu5JC17kIVCDJ
+	 /TP702TqyqwahSrs3f5ALoaTRnFUlCpDTjfw9isI5053AjF//SNWvwq9S3DQDmYB79
+	 yIBooIJTzH6oUtqnT5dW11UaJBUKbMc0U2CattB1Pmw+0uNkARTlTxV8y900av7bk/
+	 84YoAWo3hk9a2kBswc7mxvFpds6tvrTWaCGxiDVHlbP3ej7PreQCD1CkaSAEpB/LmN
+	 qNASygggNSsLMKAewceYGMmqscdWopkmUySTTBLqojz0jTDCFfLmkfHRoIpmGkXwDl
+	 eCGuqtIGLbBJQ==
+Message-ID: <sashiko-outbox-201543@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 03/14] PCI: Don't size or assign disabled BARs
+Subject: Re: [PATCH v5 04/14] PCI: Use __ffs64() for resource_size_t typed
+ align
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?SWxwbyBKw6RydmluZW4=?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261106134341.39493-4-ilpo.jarvinen@linux.intel.com>
+In-Reply-To: <20261106134341.39493-5-ilpo.jarvinen@linux.intel.com>
 References: <20261106134341.39493-1-ilpo.jarvinen@linux.intel.com>
- <20261106134341.39493-4-ilpo.jarvinen@linux.intel.com>
+ <20261106134341.39493-5-ilpo.jarvinen@linux.intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 06 Nov 2026 14:00:51 +0000
+Date: Fri, 06 Nov 2026 14:10:51 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,24 +60,18 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> When a 64-bit BAR is larger than 4GB but pci_bus_addr_t or
-> resource_size_t is 32-bit, __pci_read_base() marks the BAR with
-> IORESOURCE_UNSET | IORESOURCE_DISABLED and sets its size to zero while
-> retaining the type flags. pdev_resource_assignable() only excludes
-> disabled bridge windows so such a BAR is still included in resource
-> sizing.
+> __ffs() inputs unsigned long. With some 32-bit configurations
+> resource_size_t can be 64 bits wide while unsigned long is only 32 bits
+> wide.
 >=20
-> pbus_size_mem() then calls __ffs() on its zero alignment, which is
-> undefined behavior. pdev_sort_resources() catches the zero alignment but
-> logs a bogus "alignment must not be zero" warning.
+> To prevent value truncation, convert __ffs() to __ffs64() when the
+> input is resource_size_t.
 >=20
-> Exclude all IORESOURCE_DISABLED resources in pdev_resource_assignable().
+> In practice >=3D4GB resource align is required for the problem to
+> manifest itself which might not be present on systems running 32-bit
+> kernels so the problem has not been noticed.
 >=20
-> A disabled expansion ROM is still assigned because ROM disabling is
-> tracked with IORESOURCE_ROM_ENABLE, not with IORESOURCE_DISABLED.
->=20
-> Fixes: 23b13bc76f35 ("PCI: Fail safely if we can't handle BARs larger tha=
-n 4GB")
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
 
@@ -84,5 +79,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261106134341.3949=
-3-1-ilpo.jarvinen@linux.intel.com?part=3D3
+3-1-ilpo.jarvinen@linux.intel.com?part=3D4
 
