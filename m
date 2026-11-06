@@ -1,84 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793985573;
-	b=caVefpiWvibdFITxZxUNxlqlC+tUj+z5XJJ1wZrbJci6R+s5zE8VZG7dFc+bZRe78jmo
-	 dIkAFm6vHJBYEuF9Lx0AVEMaJJ07VIp9SMQ0/maNhGxptiCFO7myZhlPZK8DQB9uu4I/p
-	 jRcVjUZ3l/lwgjl5jRy6iwxmqCcjDAw8ihHtxBcfEtpOwtqZM2SV3w++hx//P3tblb6gb
-	 434jsSzeZMct5Bs6AkZFXC6Prolz5Grx/ktFWbM6onrdB06udoEFKz6OgatTr+ZPtVmjf
-	 iK/6Jce+xcSfsFChT9Mm3EH1bOeoC9q06W/nsZjDnfGeJf/bq20zi+ngRvPmZFkox1w==
+	t=1793985813;
+	b=UUeiEV8nMPYjPkc90eTJRml82Xtfcwd8LU1gvagnYHiwnBOwHlZWqp717kL832gUxvho
+	 PiuKMZrv7N5SiIJfmlJXNDoO3gLBhjrIAYm4n5jISQut5kMxsuEnDpu46U3zp4x0PF0OH
+	 CHpxDBIVh2vcNDNjqb1lzEXkj2Noxw1JCNjIJqbQvBjd7r5ftEjRJsSZHA3ShLggyIEAK
+	 rvng5gwd0xvMq4nbCYV/Drknqvlj/DAdPjlwFsgVxKelq01LfZm8BflU5+6tjGa6AuwjJ
+	 XBs1T78b8v8TkzqyVGw/sXRGFhFcUEBelAuw0Oa67H2071TiUM5UC4t/1Sltl7w9TwA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793985573;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Mime-Version:Content-Transfer-Encoding:Content-Type:Date:Message-Id:
-	 Subject:From:To:Cc:X-Mailer:References:In-Reply-To;
-	bh=tEaeh2MQM8Yqh+InUxWcP/c3Ugn8r1gCgilB/e+XZTU=;
-	b=T7/xooTIO4MfJ55ytv+h/gnKscnoD4NHkCu5Brdd8XHpSxOabaXHHFc1KaFrCoRjVWye
-	 RQnHY1MRfK0RitvgrZCENGVSxo8KjRfEx5ujZK+V+RgHNzcP+RIxmGhc3wmps8Fi5gIA4
-	 qhm/hBXtlLphfm8fuMHK3/xUvt3WqzCqFRfst6jZSJStisdfJVNsIILTcY+6+0zlD09Xp
-	 0cGTu0rU08TRiNooGQtm8hq5F11L9ISOktPQRh6muxVyS+tT86GLXsQHzLk+Ufrc0s7ZE
-	 ABnAWanqqNsTfORex8B35imOLXmMI5CUF+rVMHzCf3ARSSKPtIUl9uQEEoejwcdmd3Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793985813;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=Km0IIbUZUcdQkBZ22OOYekL49gQEwnUdJs3Kk3qJEfQ=;
+	b=pF7PQpfxv1yg67748m4alC1ePhLGGO7W451gQjfkESZ4QB75pE2xSBEEAMBZYDE6Xswx
+	 Bil19el7iwP4s3CJEaQkOHN6HHp7ax5XB/nfL4zrUiIeNqVX1fO3bpXbRGxLRfxn0mh1r
+	 fmSmGwQI5PADyacjzAMzbbLc62ykf4kaMoLYkb7vJYz59pzyDRESSj024ZYxXrKszmNT9
+	 nceSkGKq4+JwifnpqxXuq6J424Hb0nQF/3JaFFKvotQRZ9DpBBPW1T9xYRHX/gcZdxOWC
+	 xhvoZ6QBTQJzMgVVorPbzssvOXTSq0BKJkiMtddWq7oznzTR1d8ZF5FVoO+IhuseuFQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=V3vuG2QG;
-	arc=none smtp.remote-ip=209.85.216.48
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kpTXFqD0;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1A8E606A32F
-	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 17:19:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D1A8E606A32F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26D89606A335
+	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 17:23:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=V3vuG2QG
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3b0d0b80fb9so551631a91.1
-        for <linux-pci@vger.kernel.org>; Fri, 06 Nov 2026 09:19:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793985572; x=1794590372; darn=vger.kernel.org;
-        h=in-reply-to:references:cc:to:from:subject:message-id:date
-         :content-type:content-transfer-encoding:mime-version:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=tEaeh2MQM8Yqh+InUxWcP/c3Ugn8r1gCgilB/e+XZTU=;
-        b=V3vuG2QGjhL8r2VuA4Y+96OnzymPavm7o7EgEyvr170YdIQ6DRl7oV53qhL1GcFHq9
-         pAuFDTumBKjC04cfsqiF/s9mzLQ7MxMB33+iWjjD6M/c6YfzXCbLDc+N7vG+f5wRPHnt
-         YGfusFO0BTgDqxJC3GAGWNZSjKJIGzOR0waqOm65uqs4mfbkFPtcjPreR4HJO5uzAwIM
-         aZJqv3Eu06A17GOsAL38uxdtzasGV3QnNWGft1JdKGB0XYClaHm6eqK5tjUpWsaDDnGv
-         L3j4WwyzVfe0Q7LrBT5u/+m8/nbkT0KO2eRt94r5hQOTgl8rRxeGomxzWEId9K33GS3u
-         IwQw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793985572; x=1794590372;
-        h=in-reply-to:references:cc:to:from:subject:message-id:date
-         :content-type:content-transfer-encoding:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=tEaeh2MQM8Yqh+InUxWcP/c3Ugn8r1gCgilB/e+XZTU=;
-        b=X4Hau1ZBL+AZaoex8mGph+EnsJspNPZLTZ0a/XVkoIQM51w1MM987zx54ODnFdy/nw
-         kw4/mHs1Ji8cyTJmSWFlRCJbK7dtHZjole8FRVwkRnRl8+QHBAKay9Fn1c+s4eE+I5AW
-         m2zM/uhRJhexGT3uC35EzXNp54aadmaGvd9Xh2ytwKhuBFrlTNM36SP3olJcoFIJmkxL
-         fWXku7r0m5jZWbdzvRMR/leOKB56IiYo0vNZF3yV0qAjwkD12xDVhPHnPtc6nJruMEBK
-         DgcNSQHrS4o3y5qQUHivK+BLO5rH2MMCydVQeLKndqPwJUptDYEzQzKebVisenoyYRD7
-         wGFA==
-X-Forwarded-Encrypted: i=1; AL+hErFIMsoNdpcfmgSoyYtyNjOo8wFvcsZBLgK8ldFyx3MByiKf82uw+XSEfHSrn2224ydAC/KO8ljeF6w=@vger.kernel.org
-X-Gm-Message-State: APuU4Z972x8raBMe4KPuN4qye8SejMVVve4ziRFDGTDWgpblinsKwkvV
-	1VPZJP97sk0LneKMfIpHtKvptesqJjNFtf8psyaAbdKmLrlLIOdXvy+2vxlmJnFlhw==
-X-Gm-Gg: AYBFou0qkDv6XDMBd1nRq6O+xlFiU1rahiZb/0vZHqmwLtk4i4hX7UMr9fZvKeNN31U
-	vPneCHzSdN1DHVnZRWc0+ecr7H53SlCyi4bq5lnP7OgFoU8oRufVUYmFxOXdwzjv/lOiZyf/C4Q
-	L7ksJSNZNcxF/KyXPi6FSSAQy4dmgiZfaH+HnzQwNUu9HThrP28X/RpdRpPORPcW9aMQylW+mJE
-	JbNe2omij6rtd4Iq/3DpU6nLkzjDc2LPwJDE7Io3fdb/ZmiV3NVVebnmZhu2KkNW2kPW4mE6mr8
-	1lMzFC13g/EPW7dIGY+Gmbc3XbYn1r2CqEOJzGGn8qtBcDApJ/C41vrBlgc7QMLI+BwyVoRb8NO
-	o6lWYUU38ldBjR/qxgQF9MQ+pvLAPyiRkjNbheoLA/6T2FB3A2eOVPyPq2e5O3qGEinoX5uBooI
-	uvgEGurWxc/tw/7dpLKftxZSXNBe1Uym4FM8X3rfltoQMEgy72LNW7VGEygJk83vf6VFyTQkyGi
-	O4XPW0EnScqUDVC33svsRCMtd4t/LFUU84Nwz1ThuvGuCGCtDtfEPtmklu5Q6Bory8SMl0PPFNd
-	wunaRCQW2Wk6ZHfl5jVCKafhbNAtd9BTUAjoXzubA8JG/y6pnNzIDbaQIt0oMRo3
-X-Received: by 2002:a17:90b:554d:b0:3ac:bfa7:b079 with SMTP id 98e67ed59e1d1-3b0db5edb73mr3411640a91.7.1793985571464;
-        Fri, 06 Nov 2026 09:19:31 -0800 (PST)
-Received: from localhost (33.79.127.34.bc.googleusercontent.com. [34.127.79.33])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cdb70a7fbcbsm795231a12.25.2026.11.06.09.19.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 06 Nov 2026 09:19:29 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kpTXFqD0
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B51581F008A5;
+	Fri,  6 Nov 2026 17:23:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793985812;
+	bh=Km0IIbUZUcdQkBZ22OOYekL49gQEwnUdJs3Kk3qJEfQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=kpTXFqD0wgcDCWNqDHRo+a8HnTWQ39wgmIkTnSwnZ9Cup0yTQJbarXdI3m7omgxWx
+	 t86tZlVAZYUI3eTwbW9SV31DF/uwgJ28Cxp8abznyc+0gI+G1Nfek3qdSmGxLIbQVl
+	 1YqSHx1YEnLqpwI9lC78DzAQZC3+wyf5w3P8d5kOyH84tkqrIJIeEh6pXeoJiyJb9W
+	 DguDMahDhQCBIbfrZAFKwTFDkBCqJfBsR5+0H6xTWyqMQKZ0RJIHf1Pp+dAQW7PiLF
+	 p28hrvMrOEDp1nk6P8StyXVck8uPJTBq552J6Zyfj23IkKiNQm26zKOCzAsGRp67HS
+	 BVgL8d/hMYJWg==
+Message-ID: <sashiko-outbox-201916@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v10 7/7] PCI: vmd: Add support for second rootbus under
+ VMD
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Szymon Durawa" <szymon.durawa@linux.intel.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261106184256.4130-8-szymon.durawa@linux.intel.com>
+References: <20261106184256.4130-1-szymon.durawa@linux.intel.com>
+ <20261106184256.4130-8-szymon.durawa@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 06 Nov 2026 17:23:32 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -87,113 +60,278 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Fri, 06 Nov 2026 17:19:28 +0000
-Message-Id: <DMOAT4VV939P.2DI8CEOMMSKMY@google.com>
-Subject: Re: [PATCH v6 11/27] vfio/pci: Retrieve preserved device files
- after Live Update
-From: "David Matlack" <dmatlack@google.com>
-To: "Vipin Sharma" <vipinsh@google.com>, <kexec@lists.infradead.org>,
- <linux-kernel@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <kvm@vger.kernel.org>, <linux-mm@kvack.org>,
- <linux-kselftest@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Cc: <ajayachandra@nvidia.com>, <alex@shazbot.org>, <amastro@fb.com>,
- <ankita@nvidia.com>, <apopple@nvidia.com>, <bhelgaas@google.com>,
- <chrisl@kernel.org>, <christian.koenig@amd.com>, <corbet@lwn.net>,
- <dmatlack@google.com>, <graf@amazon.com>, <jacob.pan@linux.microsoft.com>,
- <jgg@nvidia.com>, <jgg@ziepe.ca>, <jrhilke@google.com>,
- <julianr@linux.ibm.com>, <kees@kernel.org>, <kevin.tian@intel.com>,
- <leon@kernel.org>, <leonro@nvidia.com>, <lukas@wunner.de>,
- <mattev@meta.com>, <michal.winiarski@intel.com>, <parav@nvidia.com>,
- <pasha.tatashin@soleen.com>, <praan@google.com>, <pratyush@kernel.org>,
- <rananta@google.com>, <rdunlap@infradead.org>, <rientjes@google.com>,
- <rodrigo.vivi@intel.com>, <rppt@kernel.org>, <saeedm@nvidia.com>,
- <schnelle@linux.ibm.com>, <skhan@linuxfoundation.org>,
- <skhawaja@google.com>, <vivek.kasireddy@intel.com>, <witu@nvidia.com>,
- <yanjun.zhu@linux.dev>, <yi.l.liu@intel.com>
-X-Mailer: aerc 0.21.0
-References: <20261102153656.1431701-1-vipinsh@google.com>
- <20261102153656.1431701-12-vipinsh@google.com>
-In-Reply-To: <20261102153656.1431701-12-vipinsh@google.com>
 
-On Mon Nov 2, 2026 at 3:36 PM UTC, Vipin Sharma wrote:
-> During retrieve():
->  * Validate the handed-over struct vfio_pci_core_device_ser header,
->    sizes, and flags.
->  * Locate the registered vfio-pci device matching the serialized domain
->    and BDF (requiring device->ops =3D=3D &vfio_pci_ops) under the device
->    lock. vfio-pci registers the vfio device before its probe completes,
->    and the probe holds that lock, so a device that is still being probed
->    is not returned.
-[...]
->  * Open and return an anonymous VFIO cdev file via
->    vfio_device_liveupdate_cdev_open().
+Thank you for your contribution! Sashiko AI review found 4 potential
+issues to consider:
+- [High] PCI: vmd: overlapping busn_res and unisolated CFGBAR in
+  vmd_create_bus()
+- [Medium] PCI: vmd: missing VMD_BUSRANGE bounds check in
+  vmd_configure_cfgbar()
+- [Medium] PCI: vmd: wrong relative bus number for BUS1 in
+  vmd_acpi_find_companion()
+- [Medium] PCI: vmd: leak of srcu_struct on error paths in
+  vmd_enable_domain()
+--
 
-Here's an idea for how the device file could be created on retrieve,
-which I'd like to hear your thoughts on.
+commit e9682a58316a29ebd9d43933c4903d99f8a94e4b
+Author: Szymon Durawa <szymon.durawa@linux.intel.com>
 
-The patches from Pasha at [1] lets userspace pass a
-file-handler-specific argument to LIVEUPDATE_SESSION_RETRIEVE_FD. In the
-next version of the tmpfs series, I'm planning to use that to have
-userspace create the file and pass it in the argument, and the kernel
-then restores the preserved file into it.
+PCI: vmd: Add support for second rootbus under VMD
 
-I wonder if VFIO should work the same way, e.g.:
+This commit adds support for a second VMD root bus (BUS1) exposed via Bus
+Restriction type 3 on Intel Arrow Lake and later platforms, partitioning
+CFGBAR, MEMBAR1, and MEMBAR2 across two emulated PCI domains.
 
-  struct liveupdate_vfio_retrieve_arg {
-          __u32 size;
-          __s32 fd;
-  };
+> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> index 5733faf972d10..6831d0a5c443a 100644
+> --- a/drivers/pci/controller/vmd.c
+> +++ b/drivers/pci/controller/vmd.c
 
-Userspace would open /dev/vfio/devices/noiommu-vfioX itself and pass
-the fd. retrieve() would check that it's an unbound vfio-pci cdev file
-for the preserved device (domain/BDF, noiommu, incoming, cfg_size),
-attach the incoming state to that file, and LUO would track that file
-as the retrieved file. VFIO_DEVICE_BIND_IOMMUFD would then take over the
-device as it does now. Since VFIO preservation is new, the argument
-could simply be required.
+[ ... ]
 
-I think this could get rid of some of the special handling:
+> @@ -989,6 +1133,62 @@ static void vmd_configure_cfgbar(struct vmd_dev *vm=
+d)
+>  		.end   =3D busn_end,
+>  		.flags =3D IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
+>  	};
+> +
+> +	if (vmd->bus1_rootbus) {
+> +		int ret;
+> +		u16 bus0_range =3D 0;
+> +		u16 bus1_range =3D 0;
+> +		u8 bus0_start, bus0_end;
+> +		u8 bus1_start, bus1_end;
+> +
+> +		ret =3D pci_read_config_word(vmd->dev, VMD_BUSRANGE0, &bus0_range);
+> +		if (ret) {
+> +			pci_err(vmd->dev, "Failed to read VMD_BUSRANGE0: %d\n", ret);
+> +			return -EIO;
+> +		}
+> +
+> +		ret =3D pci_read_config_word(vmd->dev, VMD_BUSRANGE1, &bus1_range);
+> +		if (ret) {
+> +			pci_err(vmd->dev, "Failed to read VMD_BUSRANGE1: %d\n", ret);
+> +			return -EIO;
+> +		}
+> +
+> +		bus0_start =3D VMD_BUS_START(bus0_range);
+> +		bus0_end =3D VMD_BUS_END(bus0_range);
+> +		bus1_start =3D VMD_BUS_START(bus1_range);
+> +		bus1_end =3D VMD_BUS_END(bus1_range);
+> +
+> +		if (bus0_start > bus0_end || bus1_start > bus1_end) {
+> +			pci_err(vmd->dev,
+> +				"Invalid bus range(s): BUS0 [%02x-%02x], BUS1 [%02x-%02x]\n",
+> +				bus0_start, bus0_end, bus1_start, bus1_end);
+> +			return -EINVAL;
+> +		}
+> +
+> +		if (!(bus0_end < bus1_start || bus1_end < bus0_start)) {
+> +			pci_err(vmd->dev,
+> +				"Overlapping bus ranges: BUS0 [%02x-%02x], BUS1 [%02x-%02x]\n",
+> +				bus0_start, bus0_end, bus1_start, bus1_end);
+> +			return -EINVAL;
+> +		}
+> +
+> +		/*
+> +		 * Resize BUS0 CFGBAR range to make space for BUS1
+> +		 * owned devices by adjusting range end with value stored in
+> +		 * VMD_BUSRANGE0 register.
+> +		 */
+> +		vmd->resources[VMD_RES_CFGBAR].start =3D bus0_start;
+> +		vmd->resources[VMD_RES_CFGBAR].end =3D bus0_end;
+> +
+> +		vmd->resources[VMD_RES_BUS1_CFGBAR] =3D (struct resource){
+> +			.name =3D "VMD CFGBAR BUS1",
+> +			.start =3D bus1_start,
+> +			.end =3D bus1_end,
+> +			.flags =3D IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
+> +		};
+> +	}
+> +
+> +	return 0;
+>  }
 
- - There'd be no need to fake a cdev open with an anonymous inode, so
-   PATCH 09 and PATCH 10 could probably be dropped.
+[Severity: Medium]
+Does vmd_configure_cfgbar() need to validate that bus0_start and bus1_start
+are above vmd->busn_start[VMD_BUS_1] (0xe1) and that bus0_end and bus1_end
+do not exceed busn_end?
 
- - retrieve() wouldn't need to look up the device by BDF, or reason
-   about racing with probe under the device lock. If userspace was able
-   to open the cdev, the device is registered and probed.
+If firmware leaves VMD_BUSRANGE0 or VMD_BUSRANGE1 at 0x0000 when one root
+bus has no subordinate devices, or reports an end bus beyond the VMD_CFGBAR
+aperture, the checks above still pass and overwrite the bus resources with
+an inverted range such as [0xe0..0x00] or an out-of-bounds bus number.
 
- - The device file would be opened through the normal cdev path, so the
-   usual permission and LSM checks on the device node would apply.
+[ ... ]
 
- - It would be the same model across file types.
+> @@ -1040,55 +1241,132 @@ static int vmd_configure_membar1_membar2(struct =
+vmd_dev *vmd,
+>  static int vmd_create_bus(struct vmd_dev *vmd, enum vmd_rootbus bus_numb=
+er,
+>  			  struct pci_sysdata *sd, resource_size_t *offset,
+>  			  bool vmd_in_guest, u8 primary)
+>  {
+> +	u8 cfgbar =3D bus_number * 3;
+> +	u8 membar1 =3D cfgbar + 1;
+> +	u8 membar2 =3D cfgbar + 2;
+> +	struct pci_bus *vmd_bus;
+>  	LIST_HEAD(resources);
+> =20
+> -	pci_add_resource(&resources, &vmd->resources[VMD_RES_CFGBAR]);
+> -	pci_add_resource_offset(&resources, &vmd->resources[VMD_RES_MBAR_1],
+> +	pci_add_resource(&resources, &vmd->resources[cfgbar]);
+> +	pci_add_resource_offset(&resources, &vmd->resources[membar1],
+>  				offset[0]);
+> -	pci_add_resource_offset(&resources, &vmd->resources[VMD_RES_MBAR_2],
+> +	pci_add_resource_offset(&resources, &vmd->resources[membar2],
+>  				offset[1]);
+> =20
+> -	vmd->bus[VMD_BUS_0] =3D pci_create_root_bus(&vmd->dev->dev,
+> -						  vmd->busn_start[VMD_BUS_0],
+> -						  &vmd_ops, sd, &resources);
+> -	if (!vmd->bus[VMD_BUS_0]) {
+> +	vmd_bus =3D pci_create_root_bus(&vmd->dev->dev,
+> +				      vmd->busn_start[bus_number], &vmd_ops, sd,
+> +				      &resources);
 
-A few things I think would need care if you go this way. The file check
-and the attach would need to happen under dev_set->lock so they can't
-race with a concurrent VFIO_DEVICE_BIND_IOMMUFD on the same fd. And the
-incoming state should probably be tied to that specific
-vfio_device_file rather than just the vdev, so only the file passed to
-RETRIEVE_FD can take over the device.
+[Severity: High]
+Can VMD_BUS_0 and VMD_BUS_1 allocate and scan each other's ECAM bus numbers
+when a root port bridge is unconfigured?
 
-It would also change PATCH 12. Opening the cdev of an incoming device
-would have to succeed, so the check would move to the first open of the
-device instead: fail with -EBUSY if the device is incoming and the file
-being bound doesn't have the incoming state attached. That one check in
-vfio-pci would also cover VFIO_GROUP_GET_DEVICE_FD, which opens the
-device right away, so vfio_liveupdate_incoming_is_preserved() and its
-dev_is_pci() special case could be dropped from the VFIO core.
+vmd_configure_cfgbar() sets vmd->resources[VMD_RES_CFGBAR] to
+[bus0_start..bus0_end] (for example [0xe2..0xf0]) and
+vmd->resources[VMD_RES_BUS1_CFGBAR] to [bus1_start..bus1_end] (for example
+[0xf1..0xff]).  However, pci_create_root_bus() -> pci_register_host_bridge()
+ignores res->start and inserts bus->busn_res starting at bus->number:
 
-The next tmpfs version will also add a way for a file handler to say a
-failed retrieve can be retried, and a helper to claim an existing file
-before restoring into it (so a file LUO already manages, e.g. one that
-is preserved in an outgoing session, is rejected). Both seem useful
-here too, e.g. so that a mistake in the argument (wrong fd, an fd for
-another device, an already bound fd) doesn't make the device
-unretrievable. I'll Cc you when I send it, and I'm happy to share the
-branch before then.
+drivers/pci/probe.c:pci_register_host_bridge() {
+    ...
+	resource_list_for_each_entry(window, &bridge->windows) {
+		res =3D window->res;
+		if (resource_type(res) =3D=3D IORESOURCE_BUS)
+			pci_bus_insert_busn_res(bus, bus->number, res->end);
+	}
+    ...
+}
 
-What do you think?
+As a result, VMD_BUS_0 gets busn_res [0xe0..0xf0] (which includes 0xe1, the
+root bus of VMD_BUS_1) and VMD_BUS_1 gets busn_res [0xe1..0xff] (which
+includes 0xe2..0xf0, the subordinate bus range of VMD_BUS_0), while
+vmd_cfg_addr() maps bus->number directly into the shared vmd->cfgbar
+without checking which domain owns that bus number.  When
+pci_scan_child_bus_extend() encounters an unconfigured bridge on VMD_BUS_1
+(or on VMD_BUS_0 before max passes 0xe0), Pass 1 assigns max + 1 (0xe2 on
+VMD_BUS_1, or 0xe1 on VMD_BUS_0), scanning and reprogramming devices that
+belong to the other VMD root bus.
 
-[1] https://lore.kernel.org/kexec/20261103010216.3447716-1-dmatlack@google.=
-com/
+[ ... ]
+
+> @@ -1213,11 +1511,38 @@ static int vmd_enable_domain(struct vmd_dev *vmd,=
+ unsigned long features)
+> =20
+>  	sd->node =3D pcibus_to_node(vmd->dev->bus);
+> =20
+> -	ret =3D vmd_create_bus(vmd, sd, offset, vmd_in_guest);
+> +	if (vmd->bus1_rootbus) {
+> +		vmd->sysdata[VMD_BUS_1].vmd_dev =3D vmd->dev;
+> +		vmd->sysdata[VMD_BUS_1].node =3D pcibus_to_node(vmd->dev->bus);
+> +		vmd->sysdata[VMD_BUS_1].domain =3D pci_bus_find_emul_domain_nr(0, 0x10=
+000, INT_MAX);
+> +		if (vmd->sysdata[VMD_BUS_1].domain < 0) {
+> +			pci_warn(vmd->dev,
+> +				 "Can't allocate BUS1 domain: %d, continuing with BUS0 only\n",
+> +				 vmd->sysdata[VMD_BUS_1].domain);
+> +			vmd_disable_bus1(vmd);
+> +		}
+> +	}
+> +
+> +	ret =3D vmd_attach_resources(vmd);
+> +	if (ret) {
+> +		pci_bus_release_emul_domain_nr(sd->domain);
+> +		if (vmd->bus1_rootbus && vmd->sysdata[VMD_BUS_1].domain >=3D 0)
+> +			pci_bus_release_emul_domain_nr(vmd->sysdata[VMD_BUS_1].domain);
+> +
+> +		vmd_remove_irq_domain(vmd);
+> +		return ret;
+> +	}
+> +
+> +	ret =3D vmd_create_bus(vmd, VMD_BUS_0, sd, offset, vmd_in_guest,
+> +			     VMD_PRIMARY_BUS0);
+>  	if (ret) {
+>  		pci_err(vmd->dev, "Can't create bus: %d\n", ret);
+>  		pci_bus_release_emul_domain_nr(sd->domain);
+> +		if (vmd->bus1_rootbus && vmd->sysdata[VMD_BUS_1].domain >=3D 0)
+> +			pci_bus_release_emul_domain_nr(vmd->sysdata[VMD_BUS_1].domain);
+> +
+>  		vmd_remove_irq_domain(vmd);
+> +		vmd_detach_resources(vmd);
+>  		return ret;
+>  	}
+
+[Severity: Medium]
+Do these error paths leak the per-vector srcu_struct instances initialized
+by vmd_alloc_irqs()?
+
+When MSI remapping is enabled, vmd_alloc_irqs() calls init_srcu_struct() on
+each vmd->irqs[i].srcu, which allocates per-CPU memory not managed by
+devres.  If vmd_attach_resources() or vmd_create_bus() fails, returning
+without calling vmd_cleanup_srcu(vmd) leaks that memory and leaves active
+srcu_struct objects in devm-allocated vmd->irqs memory.
+
+>  	WARN(sysfs_create_link(&vmd->dev->dev.kobj,
+>  			       &vmd->bus[VMD_BUS_0]->dev.kobj, "domain"),
+>  	     "Can't create symlink to domain\n");
+> =20
+> +	if (vmd->bus1_rootbus && vmd->sysdata[VMD_BUS_1].domain >=3D 0) {
+> +		ret =3D vmd_create_bus(vmd, VMD_BUS_1, &vmd->sysdata[VMD_BUS_1], offse=
+t,
+> +				     vmd_in_guest, VMD_PRIMARY_BUS1);
+> +		if (ret) {
+> +			pci_warn(vmd->dev,
+> +				 "Can't create BUS1: %d, continuing with BUS0 only\n",
+> +				 ret);
+> +
+> +			release_resource(&vmd->resources[VMD_RES_BUS1_MBAR_2]);
+> +			release_resource(&vmd->resources[VMD_RES_BUS1_MBAR_1]);
+> +			pci_bus_release_emul_domain_nr(vmd->sysdata[VMD_BUS_1].domain);
+> +			vmd_disable_bus1(vmd);
+> +		}
+> +
+> +		if (vmd->bus1_rootbus && vmd->sysdata[VMD_BUS_1].domain >=3D 0) {
+> +			WARN(sysfs_create_link(&vmd->dev->dev.kobj,
+> +					       &vmd->bus[VMD_BUS_1]->dev.kobj,
+> +					       "domain1"),
+> +			     "Can't create symlink to domain1\n");
+> +		}
+> +	}
+> +
+>  	vmd_bus_enumeration(vmd->bus[VMD_BUS_0], features);
+> =20
+> +	if (vmd->bus1_rootbus && vmd->sysdata[VMD_BUS_1].domain >=3D 0)
+> +		vmd_bus_enumeration(vmd->bus[VMD_BUS_1], features);
+
+[Severity: Medium]
+Does vmd_acpi_find_companion() compute the wrong relative bus number when
+enumerating VMD_BUS_1?
+
+drivers/pci/controller/vmd.c:vmd_acpi_find_companion() {
+    ...
+	bridge =3D pci_find_host_bridge(pci_dev->bus);
+	busnr =3D pci_dev->bus->number - bridge->bus->number;
+    ...
+	addr =3D (busnr << 24) | ((u32)pci_dev->devfn << 16) | 0x8000FFFFU;
+
+	return acpi_find_child_device(ACPI_COMPANION(bridge->dev.parent), addr,
+				      false);
+}
+
+Both host bridges share &vmd->dev->dev as bridge->dev.parent, where the
+relative bus number in the ACPI _ADR is the offset from VMD_BUS_0's start
+bus (0xe0).  Because bridge->bus->number for VMD_BUS_1 is 0xe1, subtracting
+bridge->bus->number yields busnr =3D=3D 0 for root ports on 0xe1 (matching
+VMD_BUS_0's ACPI companion objects) and shifts all VMD_BUS_1 subordinate bus
+_ADR lookups down by one.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261106184256.4130=
+-1-szymon.durawa@linux.intel.com?part=3D7
